@@ -329,7 +329,14 @@ function zielAttrappe(int $id, string $prot, int $port, ?string $abdruck,
     ];
 }
 
-foreach ([['ftp', P_FTP, null], ['ftps', P_FTPS, null],
+/* NUR NOCH ZWEI PROTOKOLLE GEHEN DURCH `sz_weg()` (S10/AP4, E-S10-14).
+ *
+ * `ftp` steht hier nicht mehr: Es ist kein Weg mehr, sondern ein Fall für
+ * die Abweisung darunter. Der ADAPTER `ZielFtp` wird weiter geprüft (oben,
+ * `rundlauf('ftp', …)`) — er trägt auch FTPS, und seine Klartext-Betriebsart
+ * bleibt prüfbar, solange es die Klasse gibt. Was AP4 abschafft, ist der
+ * WEG dorthin, nicht die Klasse. */
+foreach ([['ftps', P_FTPS, null],
           ['sftp', P_SFTP, $sollAbdruck]] as $i => [$prot, $port, $abdruck]) {
     $e = sz_verbindung_pruefen(zielAttrappe(100 + $i, $prot, $port, $abdruck));
     pruef(strtoupper($prot) . ': die Prüfung läuft durch', $e['ok'] === true,
@@ -341,16 +348,31 @@ foreach ([['ftp', P_FTP, null], ['ftps', P_FTPS, null],
 }
 $dreck = array_merge(glob($wurzel . '/*/edverbindungsprobe-*') ?: [],
                      glob($wurzel . '/heim/edverbindungsprobe-*') ?: []);
-pruef('Keine Probedatei ist auf einer der drei Gegenstellen liegengeblieben',
+pruef('Keine Probedatei ist auf einer der Gegenstellen liegengeblieben',
       $dreck === [], count($dreck) . ' Rückstände');
 
-$e = sz_verbindung_pruefen(zielAttrappe(200, 'ftp', P_FTP, null, 'falsches-passwort'));
+/* ---- DER ENGPASS WEIST AB, STATT IM KLARTEXT ZU SENDEN ------------------
+ *
+ * E-S10-U-10: `sz_weg()` prüft POSITIV gegen den Katalog. Der zweite Fall
+ * ist der wichtigere — ein `ENUM`, das je nach `sql_mode` zum Leerstring
+ * wird, fiel vorher auf `ZielFtp` OHNE TLS zurück, und dann gingen
+ * Nutzername und Passwort offen über Port 21. Gemessen wird beides an
+ * `sz_verbindung_pruefen()`, also an dem Weg, der bis AP4 gesendet hätte. */
+foreach (['ftp' => 'das abgeschaffte Protokoll',
+          ''    => 'ein LEERES Protokoll (die ENUM-Falle)'] as $prot => $was) {
+    $e = sz_verbindung_pruefen(zielAttrappe(400 + strlen($prot), $prot, P_FTP, null));
+    pruef('Abgewiesen: ' . $was,
+          $e['ok'] === false && str_contains($e['meldung'], 'nicht mehr kennt'),
+          mb_substr($e['meldung'], 0, 70));
+}
+
+$e = sz_verbindung_pruefen(zielAttrappe(200, 'ftps', P_FTPS, null, 'falsches-passwort'));
 pruef('Ein falsches Passwort meldet sich als solches', $e['ok'] === false
       && str_contains($e['meldung'], 'Passwort'), mb_substr($e['meldung'], 0, 60));
 
 /* Ein Ziel, dessen Geheimnis mit einem ANDEREN Serverschlüssel versiegelt
  * wurde — der Fall „config.php neu aufgesetzt, Schlüssel vergessen". */
-$fremd = zielAttrappe(300, 'ftp', P_FTP, null);
+$fremd = zielAttrappe(300, 'ftps', P_FTPS, null);
 $alt = $CFG['server_key'];
 $CFG['server_key'] = bin2hex(random_bytes(32)); serverschluessel(true);
 $e = sz_verbindung_pruefen($fremd);
@@ -396,11 +418,32 @@ if ($db === null) {
     pruef('Die Chiffre eines Ziels öffnet nicht unter einer anderen Kennung',
           sz_geheim($verhaengt, 'geheim') === null);
 
+    /* DER DOPPELNAME UND DAS PROTOKOLL SIND ZWEI DINGE (S10/AP4).
+     *
+     * Hier stand EIN Aufruf: derselbe Name UND `protokoll => 'ftp'`. Er wurde
+     * abgewiesen — aber am NAMEN (`sicherungsziel_lib.php`, Doppelnamen-
+     * Prüfung), denn `ftp` war damals zulässig. Nach E-S10-14 wäre er weiter
+     * grün gewesen und hätte etwas anderes gemessen als draufsteht: eine
+     * Erwartung, die stumpf wird, ohne rot zu werden (Fund F-G). Jetzt zwei
+     * Aufrufe, jeder mit genau einem Grund. */
     [$ok2, $f2] = sz_speichern(null, [
-        'name' => 'Versandprobe SFTP', 'protokoll' => 'ftp', 'host' => HOST,
+        'name' => 'Versandprobe SFTP', 'protokoll' => 'sftp', 'host' => HOST,
+        'port' => 22, 'nutzer' => 'x', 'pfad' => '/', 'passiv' => 1, 'aktiv' => 1,
+    ], 'x', null);
+    pruef('Ein zweites Ziel mit demselben Namen wird abgewiesen', $ok2 === false,
+          implode(' ', (array)$f2));
+
+    [$okF, $fF] = sz_speichern(null, [
+        'name' => 'Versandprobe FTP-Altlast', 'protokoll' => 'ftp', 'host' => HOST,
         'port' => 21, 'nutzer' => 'x', 'pfad' => '/', 'passiv' => 1, 'aktiv' => 1,
     ], 'x', null);
-    pruef('Ein zweites Ziel mit demselben Namen wird abgewiesen', $ok2 === false);
+    pruef('Das Protokoll ftp wird abgewiesen — am PROTOKOLL, nicht am Namen',
+          $okF === false && is_array($fF)
+            && str_contains(implode(' ', $fF), 'Klartext'),
+          implode(' ', (array)$fF));
+    pruef('...und es steht danach kein ftp-Ziel in der Datenbank',
+          !in_array('ftp', array_column(sz_alle(), 'protokoll'), true),
+          implode(', ', array_unique(array_column(sz_alle(), 'protokoll'))) ?: '(keine)');
 
     [$ok3, $f3] = sz_speichern(null, [
         'name' => 'Versandprobe Murks', 'protokoll' => 'gopher', 'host' => '',

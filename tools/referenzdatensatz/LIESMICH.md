@@ -28,7 +28,7 @@ einer Zahl benennt.
 | `browser/` | was es nur im Browser gibt: CSV-Import, P-07, Exporte, Demo-Abnahme | `browser/LIESMICH.md` |
 | `referenz/` | die eingecheckten Referenz-Exporte (CSV-Archiv und `.edbak`) | — |
 | `vergleich/` | Vergleichswerkzeug und Kreislauftests | `vergleich/LIESMICH.md` |
-| `fixture/` | erzeugt `server/demo/fixture.json.gz` für die Demo-Funktion | — |
+| `fixture/` | erzeugt `server/demo/fixture.json.gz` für die Demo-Funktion, `riegelprobe.php` misst ihre beiden Riegel | — |
 | `docs/konzepte/erledigt/Konzept-P1.md` (seit Rahmenplan Fassung 16 dort, nicht mehr in diesem Ordner) | Konzept, Entscheidungen, Abdeckungsmatrix, Prüfprotokoll, Fehlerfunde | — |
 
 **Nichts davon wird ausgeliefert.** `tools/` ist vom Deploy ausgenommen; nur
@@ -154,6 +154,53 @@ Die Mechanik steht in `docs/Technik.md` 4.99a.
 
 Danach im Adminbereich unter **Demo-Konto** anlegen oder zurücksetzen.
 
+### Der Riegel auf der Schlüsselhülle (S10)
+
+```
+php fixture/riegelprobe.php [negativkonto]       # erwartet 4 von 4
+```
+
+`erzeugen.php` bricht ab, wenn die Hülle des Demo-Kontos **nicht** `edk1:`
+trägt. Der Grund ist die Reise, die die Fixture antritt: Sie wird auf der
+**Produktiv**installation eingespielt, und die führt einen **anderen**
+Server-Anteil. Eine Hülle mit Anteil (`edka1:<kennung>:`) wäre dort nicht zu
+öffnen — das Demo-Konto käme herein und sähe nichts, alle 30 Minuten aufs
+Neue und ohne Meldung.
+
+**Wann der Riegel beim Neubau zuschlägt — und warum das richtig ist.** Die
+drei Läufe melden sich mehrfach mit echtem Chromium als `demo@gen-em.org` an
+(`browser/csv_import.mjs`, `browser/referenz_export.mjs`), und `unlock.js`
+stellt beim ersten Anmelden still auf `edka1:` um. Dass das Demo-Konto
+verschont bleibt, hängt an einer einzigen Zeile: `api/kdf_upgrade.php`
+überspringt es, **sofern** `app_state.demo_user_id` auf dieses Konto zeigt
+(`demo_ist_demo()`, E-P1-19). Wer den Bestand neu aufbaut und sich anmeldet,
+**bevor** das Konto im Adminbereich als Demo-Konto angelegt ist, hat danach
+eine `edka1:`-Hülle — und `erzeugen.php` hält an. Das ist der Riegel bei der
+Arbeit, nicht sein Fehler: Die Reihenfolge aus „Die drei Läufe" setzt das
+Demo-Konto vor den Browserläufen.
+
+Dieselbe Bauart wie der Riegel auf `KDF_ITER_ZIEL` daneben (Backlog Nr. 155).
+`riegelprobe.php` misst **beide** Richtungen; ein Riegel, der immer zuschlägt,
+ist so kaputt wie einer, der es nie tut. Der Negativfall stellt **nichts** nach,
+sondern zeigt `erzeugen.php` auf ein Konto des Referenzbestands, das seine
+`edka1:`-Hülle regulär beim Anmelden bekommen hat — die Datenbank bleibt
+unberührt. (Warum das wichtig ist: In S10/AP3 hat ein nachgestellter
+Hüllenwechsel ein Konto dauerhaft ausgesperrt, F-S10-AP3-08.)
+
+### Öffnet der Prüfstand beide Hüllenfassungen? (S10)
+
+```
+python3 einspielen/sitzungsprobe.py              # erwartet 2 von 2
+```
+
+`sitzung.py` **stellt nicht um** (E-S10-15) — sie liest, was dasteht. Der
+Bestand führt deshalb auf absehbare Zeit beide Fassungen nebeneinander, und
+jede Probe, die sich anmeldet, hängt daran, dass beide aufgehen. Gemessen wird
+nicht „eine Ausnahme blieb aus", sondern der Inhaltsschlüssel gegen
+`users.pat_key_check` — dieselbe Rechnung wie `EdCrypto.contentKeyCheck()`.
+Tragen beide Konten dasselbe Präfix, meldet die Probe das als eigenen Befund
+statt als grüne Zwei.
+
 ---
 
 ## Zugangsdaten
@@ -166,6 +213,18 @@ Danach im Adminbereich unter **Demo-Konto** anlegen oder zurücksetzen.
 Beide sind **planmäßig öffentlich** und stehen auch im Handbuch. Sie schützen
 nichts: Der Bestand ist erfunden, und das Konto setzt sich alle 30 Minuten
 zurück.
+
+**Davon getrennt** — und *nicht* öffentlich gemeint, sondern nur örtlich:
+
+| | |
+|---|---|
+| Umlaufkonten der Kreisläufe | `umlauf-csv@gen-em.org`, `umlauf-edbak@gen-em.org` / `umlaufpruefung2026` |
+
+Sie entstehen auf der Prüfinstallation und leben nur dort; `vergleich/kreislauf.py`
+und `einspielen/sitzungsprobe.py` führen sie als Vorgabe. **Sie tragen seit S10
+die Hüllenfassung `edka1:`** — sie haben sich im Browser angemeldet und dabei
+still umgestellt, und genau deshalb sind sie der Gegenpart zum Demo-Konto,
+wenn eine Probe beide Fassungen messen will.
 
 ---
 

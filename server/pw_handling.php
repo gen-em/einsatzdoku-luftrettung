@@ -6,6 +6,10 @@ require_once __DIR__ . '/db.php';
  * nicht und fiele auf den Hubschrauber zurueck — F-P3-AN. */
 require_once __DIR__ . '/session_lib.php';
 require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung
+/* Der Server-Anteil dieses Kontos (S10) — diese Seite laeuft OHNE
+ * auth_guard.php und muss die beiden Bibliotheken deshalb selbst holen. */
+require_once __DIR__ . '/serverkrypto_lib.php';
+require_once __DIR__ . '/demo_lib.php';
 
 /**
  * Passwort setzen — die einzige Stelle, an der ein Passwort ueber einen
@@ -112,6 +116,10 @@ if (preg_match('/^[a-f0-9]{64}$/', $token)) {
 // Inhaltsschluessel — dann ist dies die Erstvergabe.
 $erstvergabe = $row !== null && $row['pat_wrap_rc'] === null;
 
+/* Die Kontonummer des Tokens — gebraucht fuer die Huellenpruefung unten und
+ * fuer die Konstanten der Seite. Das Demo-Konto ist ausgenommen (E-P1-19). */
+$pwUserIdPruef = $row !== null ? (int)$row['user_id'] : 0;
+
 $error = null; $done = false;
 if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $neuTok  = (string)($_POST['new_token'] ?? '');
@@ -136,6 +144,19 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
             : 'Der Wiederherstellungsschlüssel passt nicht. Es wurde nichts geändert.';
     } elseif ($erstvergabe && !preg_match(WRAP_RE, $wrapRc)) {
         $error = 'Die Schlüssel konnten nicht erzeugt werden. Es wurde nichts geändert.';
+    } elseif (($huellenFehler = huelle_pw_pruefen($wrapPw, demo_ist_demo($pwUserIdPruef)))
+              !== null) {
+        /* SEIT S10 (E-S10-08, Fund F-3): Die neue Huelle muss zum AKTUELLEN
+         * Server-Anteil gehoeren — oder zu keinem, wenn keiner ausgeliefert
+         * wird. Ohne diese Zeile koennte ein Reset waehrend einer Rotation
+         * eine Huelle auf dem ALTEN Anteil schreiben; unbrauchbar wuerde sie
+         * erst, wenn der alte Wert aus config.php verschwindet. */
+        $error = $huellenFehler;
+    } elseif ($erstvergabe
+              && ($huellenFehler = huelle_rc_pruefen($wrapRc)) !== null) {
+        /* Und die Wiederherstellungs-Huelle darf NIE am Anteil haengen — sie
+         * ist der Rueckweg fuer genau den Fall, dass er verloren ist. */
+        $error = $huellenFehler;
     } elseif ($keyChk !== '' && !preg_match('/^[0-9a-f]{32}$/', $keyChk)) {
         $error = 'Die Prüfsumme des Inhaltsschlüssels ist unbrauchbar. Es wurde nichts geändert.';
     } elseif (!$erstvergabe && $chkSoll !== null && $keyChk !== $chkSoll) {
@@ -371,6 +392,40 @@ const WRAP_RC = <?= json_js($erstvergabe ? null : $row['pat_wrap_rc']) ?>;
 // Zielwert der Rundenzahl (M2-01). Diese Seite baut die Ableitung immer neu
 // auf und nimmt deshalb nie einen Altwert.
 const KDF_ITER_ZIEL = <?= json_js(KDF_ITER_ZIEL) ?>;
+<?php /* ---- Der Server-Anteil (S10, E-S10-06) ----------------------------
+ *
+ * DIESE SEITE IST DIE EINE AUSNAHME VON „nur an die angemeldete Sitzung",
+ * und sie ist keine: Wer hier steht, hat einen gueltigen, unverbrauchten
+ * Einmal-Token aus `password_resets` — einen Nachweis, den der Server selbst
+ * ausgestellt und per E-Mail verschickt hat. Das ist derselbe Nachweis, mit
+ * dem gleich das Passwort gesetzt wird; ihm den Anteil DESSELBEN Kontos
+ * vorzuenthalten hiesse, die neue Huelle ohne Anteil zu bauen und das Konto
+ * beim naechsten Anmelden wieder umstellen zu lassen.
+ *
+ * Der Anteil gehoert zu `$row['user_id']` — dem Konto des Tokens —, nie zu
+ * einem, das der Browser nennt. Und das Demo-Konto bekommt keinen (E-P1-19):
+ * Sein Reset laeuft alle 30 Minuten und muss auf jeder Installation
+ * dieselbe Fixture ergeben.
+ *
+ * Beim RESET braucht die Seite den Anteil ZWEIMAL und fuer Verschiedenes:
+ * Die Wiederherstellungs-Huelle oeffnet OHNE ihn (`pat_wrap_rc` haengt nicht
+ * am Anteil, E-S10-04) — das ist der Rueckweg, der auch dann traegt, wenn
+ * der Anteil verloren ist. Die neue Passwort-Huelle wird MIT ihm gebaut. */ ?>
+<?php
+    $pwUserId = (int)$row['user_id'];
+    if (demo_ist_demo($pwUserId)) {
+        $pwAnteile = null; $pwKennung = null; $pwStand = 'demo';
+    } else {
+        $pwKennung = anteil_ausgeliefert();
+        $pwAnteile = $pwKennung === null ? [] : konto_anteile($pwUserId);
+        $pwStand   = $pwKennung !== null
+            ? 'bereit'
+            : (anteil_zustand()['stand'] === 'fehlt' ? 'fehlt' : 'abweichend');
+    }
+?>
+const KONTO_ANTEILE  = <?= json_js($pwAnteile) ?>;
+const ANTEIL_KENNUNG = <?= json_js($pwKennung) ?>;
+const ANTEIL_STAND   = <?= json_js($pwStand) ?>;
 const state = document.getElementById('state');
 const form  = document.getElementById('pwform');
 
@@ -422,6 +477,8 @@ if (ERSTVERGABE) {
       // Neues Konto: immer der Zielwert (M2-01). Es gibt keinen Altbestand,
       // der beruecksichtigt werden muesste.
       const k    = await EdCrypto.deriveKeys(pw1, salt, KDF_ITER_ZIEL);
+      const dk   = await EdCrypto.datenschluesselZu(k.haelfteHex, ANTEIL_KENNUNG,
+                                                    KONTO_ANTEILE);
       const ck   = EdCrypto.randomHex(32);          // Inhaltsschluessel
       const rc   = EdCrypto.newRecoveryCode();
       const rk   = await EdCrypto.recoveryKeyHex(rc);
@@ -429,7 +486,12 @@ if (ERSTVERGABE) {
       document.getElementById('new_salt').value  = salt;
       document.getElementById('new_iter').value  = KDF_ITER_ZIEL;
       document.getElementById('new_token').value = k.authToken;
-      document.getElementById('wrap_pw').value   = await EdCrypto.encrypt(k.dataKeyHex, ck);
+      document.getElementById('wrap_pw').value   =
+        await EdCrypto.huelleBauen(dk, ck, ANTEIL_KENNUNG);
+      /* DIE WIEDERHERSTELLUNGS-HUELLE BEKOMMT KEINEN ANTEIL (E-S10-04) — hier
+       * steht deshalb `encrypt()` und nicht `huelleBauen()`. Sie ist der
+       * Rueckweg fuer den Fall, dass der Anteil verloren ist; haengte sie
+       * selbst daran, gaebe es keinen. */
       document.getElementById('wrap_rc').value   = await EdCrypto.encrypt(rk, ck);
       // Pruefsumme des Inhaltsschluessels: Sie wird hier erstmals gesetzt und
       // ist ab jetzt der Massstab, an dem jedes spaetere Umpacken gemessen
@@ -521,13 +583,17 @@ if (ERSTVERGABE) {
       state.textContent = 'Neues Passwort wird eingerichtet …';
       const salt = EdCrypto.randomHex(16);
       // Zuruecksetzen baut die Ableitung vollstaendig neu auf — also gleich
-      // mit dem Zielwert (M2-01).
+      // mit dem Zielwert (M2-01) und, seit S10, mit dem AKTUELLEN
+      // Server-Anteil (E-S10-08).
       const k    = await EdCrypto.deriveKeys(pw1, salt, KDF_ITER_ZIEL);
+      const dk   = await EdCrypto.datenschluesselZu(k.haelfteHex, ANTEIL_KENNUNG,
+                                                    KONTO_ANTEILE);
 
       document.getElementById('new_salt').value  = salt;
       document.getElementById('new_iter').value  = KDF_ITER_ZIEL;
       document.getElementById('new_token').value = k.authToken;
-      document.getElementById('wrap_pw').value   = await EdCrypto.encrypt(k.dataKeyHex, ck);
+      document.getElementById('wrap_pw').value   =
+        await EdCrypto.huelleBauen(dk, ck, ANTEIL_KENNUNG);
       document.getElementById('key_check').value = await EdCrypto.contentKeyCheck(ck);
 
       form.dataset.ready = '1';

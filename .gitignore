@@ -97,6 +97,8 @@ tools/screenshots/ausgabe/
 # entstehen bei jedem Lauf neu und gehoeren als Zahl ins Pruefdokument, nicht
 # als Datei ins Repositorium -- dieselbe Regel wie beim Bilderlauf daneben.
 tools/klickprobe/ausgabe/
+# Belegbild des Betriebslaufs (S10/AP3) — entsteht bei jedem Lauf neu
+tools/anteilprobe/ausgabe-*.png
 # Bildschirmabzuege des Emulators (android/werkzeuge/emulator.sh, Vorgabe
 # `./emulator-bilder/`). Sie entstehen bei JEDEM Lauf neu und in Menge --
 # ein Paket wirft ein Dutzend ab, jedes rund 100 kB. Was davon etwas belegt,

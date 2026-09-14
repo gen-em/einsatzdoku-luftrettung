@@ -2,6 +2,9 @@
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/backup_lib.php';
+/* Fuer den Huellen-Riegel in `demo_fixture_laden()` (S10). Die Datei liegt
+ * unter `db.php` und greift nicht hierher zurueck — die Richtung stimmt. */
+require_once __DIR__ . '/serverkrypto_lib.php';
 
 /**
  * Demo-Konto (Baustein B14, Phase P1).
@@ -129,6 +132,62 @@ function demo_fixture_laden(): array
             . implode(', ', array_map('strval', KDF_ITER_LISTE))
             . ' an — das Demo-Konto koennte sich nicht anmelden.');
     }
+
+    /* DIE HUELLEN MUESSEN `edk1:` SEIN (S10, zweiter Riegel zu E-S10-15).
+     *
+     * DERSELBE GEDANKE WIE EINE ZEILE HOEHER, mit einem anderen Geheimnis.
+     * Die Rundenzahl entscheidet, ob sich das Demo-Konto anmelden kann; die
+     * Huellenfassung entscheidet, ob es danach etwas sieht.
+     *
+     * Seit S10 haengt der Datenschluessel am Server-Anteil aus `config.php`,
+     * und der ist je Installation ein anderer (`install.php` wuerfelt ihn).
+     * Eine Huelle mit Anteil (`edka1:<kennung>:`) laesst sich nur dort
+     * oeffnen, wo dieser Anteil steht. Die Fixture reist aber: Sie entsteht
+     * auf der Referenzmaschine und wird beim Deploy auf den Produktivserver
+     * gelegt.
+     *
+     * Und das Demo-Konto bekommt BAUARTBEDINGT gar keinen Anteil
+     * (`auth_guard.php`, E-P1-19/E-S10-06): `KONTO_ANTEILE` ist fuer es
+     * `null`, `ANTEIL_STAND` ist `'demo'`. `EdCrypto.datenschluessel()`
+     * wirft bei einer `edka1:`-Huelle ohne Anteil ausdruecklich, statt auf
+     * die PBKDF2-Haelfte zurueckzufallen — der Rueckfall ergaebe einen
+     * Schluessel, der nicht passt, und saehe aus wie ein falsches Passwort.
+     *
+     * OHNE DIESEN RIEGEL WAERE DER RESET STILL ERFOLGREICH. Das Konto kaeme
+     * herein (der bcrypt-Hash stimmt ja), und erst das Entsperren scheiterte
+     * — auf der oeffentlichen Demo, alle 30 Minuten aufs Neue. Genau dieselbe
+     * Begruendung wie beim Riegel auf die Rundenzahl (Backlog Nr. 155):
+     * „Ohne den zweiten Riegel waere ein Reset still erfolgreich und niemand
+     * kaeme mehr herein."
+     *
+     * DER ERSTE RIEGEL STEHT IM ERZEUGER (`tools/referenzdatensatz/fixture/
+     * erzeugen.php`, S10/AP5) und verhindert, dass eine solche Fixture
+     * ueberhaupt entsteht. Dieser hier verhindert, dass sie eingespielt wird.
+     * Zwei Riegel, weil der erste nur greift, wo das Werkzeug laeuft — und
+     * die Datei kommt auf dem Produktivserver an, nicht das Werkzeug.
+     *
+     * GEPRUEFT WIRD MIT DER GEMEINSAMEN PRUEFSCHICHT, nicht mit einem eigenen
+     * Ausdruck: `huelle_pw_pruefen($wrap, istDemo: true)` setzt den erwarteten
+     * Anteil auf `null` und weist damit jede Huelle ab, die eine Kennung
+     * nennt; `huelle_rc_pruefen()` haelt den Wiederherstellungsschluessel vom
+     * Anteil fern (E-S10-04). Ein zweiter Ausdruck an dieser Stelle liesse
+     * frueher oder spaeter die falsche Huelle durch. */
+    $grundPw = huelle_pw_pruefen((string)$fx['konto']['pat_wrap_pw'], true);
+    if ($grundPw !== null) {
+        throw new RuntimeException('Die Schluesselhuelle der Fixture ist fuer '
+            . 'das Demo-Konto unbrauchbar: ' . $grundPw
+            . ' Das Demo-Konto bekommt keinen Server-Anteil; seine Huelle muss '
+            . '`edk1:` tragen. Die Fixture neu erzeugen — '
+            . 'tools/referenzdatensatz/fixture/erzeugen.php haelt an, wenn sie '
+            . 'es nicht tut.');
+    }
+    $rc = $fx['konto']['pat_wrap_rc'] ?? null;
+    $grundRc = huelle_rc_pruefen($rc === null ? null : (string)$rc);
+    if ($grundRc !== null) {
+        throw new RuntimeException('Die Wiederherstellungs-Huelle der Fixture '
+            . 'ist unbrauchbar: ' . $grundRc);
+    }
+
     return $fx;
 }
 

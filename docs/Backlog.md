@@ -223,6 +223,19 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     selbst — eine Prüfung, die jeden übergebenen Wert gegen diese Liste hält,
     hätte den Fall sofort gemeldet.
 
+    **Und ein drittes Mal, S10/AP3 (14.09.2026): der Ton `ok`.** Er wird an
+    **zwei** Stellen des Bestands übergeben — `betrieb_server.php` (Karte
+    „Adresssuche") und `einstellungen.php` (Zeile „Adresssuche an") —, und
+    `.plakette-ok` gibt es im Stylesheet nicht. Beide Plaketten stehen dort
+    seit ihrer Einführung ohne Hintergrund als bloßer Text. Gefunden beim
+    Gegenlesen einer neuen Karte, die ihn übernehmen wollte; die neue Karte
+    benutzt jetzt `blau`, die zwei Altstellen sind **nicht** angefasst worden
+    (sie gehören nicht zu S10). **Das ist inzwischen der zweite Ton, der so
+    durchgerutscht ist, und beim zweiten Mal ist es kein Zufall mehr** — der
+    billige Sonderweg oben (Werte gegen den Vorrat des Bausteins halten)
+    hätte beide Fälle am Tag ihrer Entstehung gemeldet. Wer Nr. 36 angeht,
+    fängt damit an und räumt die zwei Stellen gleich mit.
+
 37. **Wie verhält sich die Anwendung, wenn ein Konto über Jahre wächst?**
     Aufgeworfen während P3, dort bewusst **nicht** weiterverfolgt — die Frage
     gehört nicht ins Oberflächen-Redesign. Der Bestand ist ausgelegt auf
@@ -455,9 +468,43 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     > — und im Ernstfall verlässt sich jemand darauf. Ein Datum, zu dem er
     > verschwindet, ist ehrlicher als ein „bleibt erstmal".
 
+    **Gehört zu Nr. 187** (14.09.2026). Dort geht es um dieselbe Sache von der
+    anderen Seite: Ab 1.0 gibt es nur noch neue Konten, also auch keinen
+    Bestand mehr, der still angehoben werden müsste. Beides ist **eine**
+    Aufräumung und gehört in ein Paket — wer nur das Backup-Altformat streicht
+    und die Anhebungswege stehen lässt, hat die halbe Lesetoleranz behalten.
+
+    **Und eine dritte Toleranz kommt mit Web 20.2.0 dazu** (S10/AP4, Nr. 139):
+    der Lesezweig für **unversiegelte Fassung-2-Teile** eines Adminpakets.
+    `edbak_teil_oeffnen()` lässt einen Eintrag ohne `edsk1:` unverändert
+    durch — das ist der Weg, auf dem vorhandene Pakete lesbar bleiben.
+    Geschrieben wird seit 20.2.0 nur noch Fassung 3. Zum Stichtag entfällt
+    die Weiche, und `edbak_teil_oeffnen()` gibt für einen unversiegelten
+    Eintrag `null` statt seines Inhalts.
+
     Vorher zu klären: Was geschieht mit einer alten Datei nach dem Stichtag?
     Vorschlag: Die Meldung nennt die letzte Fassung, die sie noch einspielen
     konnte — so wie es `version_alt` heute für Nutzlasten unter 6 tut.
+
+    **Die dritte Toleranz ist seit S10/AP5 gemessen, nicht nur behauptet.**
+    `tools/pruefkonten/` legt seine Testpakete als **Fassung 1** an
+    (einteiliges JSON, unversiegelt). Nach dem Umbau von AP4 wurden sie
+    einmal gegengelesen: `edbak_paket_kopf_lesen()` öffnet **16 von 16**.
+    Das ist der billigste verfügbare Beleg dafür, dass die Weiche wirklich
+    nach Fassung unterscheidet und nicht bloß aussieht, als täte sie es —
+    und er entsteht bei jedem Lauf von `pruefkonten.php` von selbst.
+
+    **Zwei Reste aus S10 gehen hier mit** (Konzept S10, E-S10-13 und
+    E-S10-14, 13.09.2026). Beide sind nach S10 nur noch **Toleranz**, nicht
+    mehr Funktion, und beide sind an keiner Stelle erreichbar, die sie
+    erzeugen könnte: der **Lesezweig für unversiegelte Adminpakete der
+    Fassung 2** (S10 schreibt ab AP4 nur noch Fassung 3, und Altpakete gibt
+    es auf der Installation keine) und der **`ENUM`-Wert `ftp`** in
+    `backup_targets.protokoll` (S10 nimmt ihn aus `SZ_PROTOKOLLE`, lässt aber
+    das Schema unberührt — eine Migration allein für einen Wert, den niemand
+    mehr wählen kann, wäre Aufwand ohne Gegenwert). Der Wert kann
+    alternativ mit dem P5-Schemarückbau (Nr. 168) fallen; wer zuerst kommt,
+    nimmt ihn mit.
 48. **Aufbewahrung je Konto einstellbar, nicht nur je Installation.**
     *Aufgenommen 01.09.2026 (S2/AP6).* E-S2-14 nennt „Standard 2 je Konto,
     manuell mehr je Konto möglich". Umgesetzt ist die Zahl für die ganze
@@ -1054,18 +1101,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     fremde Quelle zur Laufzeit" — eine Diagrammbibliothek müsste vendoriert
     werden. Zuordnung: Backlog-Runde oder P5 (Dashboard, R38).
 
-139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
-    Admin-Backups sind blankes JSON im ZIP (`adminbackup_lib.php:404,624`)
-    mit allen Klartextfeldern, E-Mail, Name und `pat_wrap_rc`; der Versand
-    lässt reines `ftp` zu (`backup_targets.protokoll` in `schema.sql`) und
-    prüft bei FTPS kein
-    Zertifikat (`sicherungsziel_lib.php:31-33`). Die Begründung in
-    `Backup-Format.md` 5 („kein Schlüssel, ohne ihn zu speichern") ist seit
-    dem Serverschlüssel (Web 12.1.0) überholt. Versiegeln mit
-    `sk_versiegeln()` wie das Komplettbackup, `ftp` aus der Auswahl,
-    bestehende `ftp`-Ziele mit rotem Hinweis. Zuordnung: **S10** (R78).
-
 140. **Push auf `main` ist Deploy — Zugang zum Repositorium ist Zugang zum Schlüssel.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-16).* Die
     FTPS-Action deployt jeden Push mit Klartext-Zugangsdaten in Secrets;
@@ -1092,6 +1127,26 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     2FA-Zwang (Zuarbeit, nicht im Repositorium machbar) und das Deploy-Tor
     (S10 mit R40 (2)).*
 
+    **Vermerk nach S10 (14.09.2026, AP6): Das Deploy-Tor ist NICHT in S10
+    gebaut worden, und das war richtig so.** Die Zuordnung „S10 mit R40 (2)"
+    oben las sich, als hinge es an Schritt 9b; R78 Punkt (7) sagt aber das
+    Gegenteil und ist die ältere Entscheidung: *„Deploy-Tor erst mit dem
+    Staging-Aufbau (R40 (2)) — bestätigt."* S10 hat kein Staging aufgebaut,
+    also war hier nichts fällig. **Der offene Rest von Nr. 140 hängt seither
+    allein an R40 (2)** — Branch-Schutz und 2FA bleiben Zuarbeit.
+
+    *Was S10 an dieser Nummer trotzdem verändert hat, und zwar zum
+    Schlechteren:* Der Angriff, den K-16 beschreibt — wer pushen darf, kann
+    `crypto.js` ändern und Passwörter beim nächsten Anmelden abgreifen —
+    **wiegt seit S10 schwerer**. Bis Web 19.6.0 kostete ein solcher Zugriff
+    die Passwörter derer, die sich danach anmelden. Seither liegt in
+    `config.php` zusätzlich der Server-Anteil, und wer `server/` beschreiben
+    kann, kann ihn mit ausliefern. **Der Server-Anteil schützt gegen den
+    Datenbankabzug, nicht gegen einen Angreifer, der Code ausliefert** —
+    genau die Grenze, die R78 Punkt (1) für das ganze Verfahren zieht. Das ist
+    kein neuer Befund, sondern ein Grund mehr, Branch-Schutz und 2FA nicht
+    weiter zu schieben.
+
 141. **Zweitfaktor für alle Konten.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-5).* Passwort ist
     Anmeldung **und** Datenschlüssel; Phishing genügt für alles. R38 sieht
@@ -1113,6 +1168,17 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Ersatz der Passwortableitung (Bitwarden seit 2024). Dazu die
     Design-Skizze für Weg B (Nr. 43, SP-9) zur Prüfung. Zuordnung: P6,
     R17 Stück 1.
+
+    *Vermerk 14.09.2026 (S10/AP2, Web 20.0.0):* **Der erste Punkt ist mit S10
+    kleiner geworden, und zwar messbar.** Die Begründung „nach S10 klein, weil
+    der Abzug allein dann nichts mehr nützt" ist ab Web 20.0.0 kein Vorgriff
+    mehr, sondern der Zustand: Der Datenschlüssel hängt am Server-Anteil aus
+    `config.php`, und ein Datenbankabzug ohne diese Datei reicht für einen
+    Offline-Angriff nicht. Argon2id bliebe der bessere Algorithmus, aber es
+    verteidigt jetzt gegen einen Angreifer, der ohnehin schon beides hat.
+    **Der zweite Punkt ist unberührt:** Der Inhaltsschlüssel liegt weiterhin
+    als Hex im `sessionStorage`, und daran ändert S10 nichts — der Anteil
+    schützt die Hülle, nicht den entpackten Schlüssel.
 
 150. **Der Cron-Befehl für den Job-Einstieg steht mit dem Repositoriumspfad in der Dokumentation.**
     *Aufgenommen 06.09.2026 vom Auftraggeber, geprüft gegen `main`.* Der
@@ -1456,11 +1522,114 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     eingeschleuste `confirm(`-Stelle im bisher verschluckten Bereich.
     Zuordnung: **Backlog-Runde**.
 
+187. **Alle „Anhebungs"-Wege werden mit NaDoku 1.0 abgeschafft.**
+    *Aufgenommen 14.09.2026 (S10/AP3) auf Anweisung des Auftraggebers.* Ab 1.0
+    gibt es **nur noch neue Konten** — also keinen Altbestand mehr, der still
+    von einer Fassung in die nächste gehoben werden müsste. Damit fällt der
+    Zweck jeder Anhebung weg, und was bleibt, ist Code, den niemand mehr
+    ausführt und trotzdem pflegen muss.
+
+    **Was eine „Anhebung" hier heißt:** ein Weg, der bestehende Daten beim
+    nächsten Anmelden oder Anzeigen **still** auf die aktuelle Fassung bringt,
+    ohne dass jemand etwas eingibt. Es gibt davon heute drei, und sie hängen
+    alle an `assets/unlock.js`:
+
+    | Weg | Was er hebt | Wo |
+    |---|---|---|
+    | **Rundenzahl** (M2-01) | `kdf_iter` eines Kontos auf `KDF_ITER_ZIEL` | `unlock.js` (`rundenAnheben`) → `api/kdf_upgrade.php` |
+    | **Schlüsselhülle** (S10, E-S10-07) | `edk1:` → `edka1:<kennung>:` | `unlock.js` (`huelleUmstellen`) → derselbe Endpunkt |
+    | **Einsatz-Notizen** (S9/AP7, E-S9-01) | Klartext-Notizen in den `pat_blob` | `unlock.js` → `api/pat_anheben.php` |
+
+    **Zu entfernen sind dann:** `server/api/kdf_upgrade.php` und
+    `server/api/pat_anheben.php` samt ihren Aufrufern in `assets/unlock.js`
+    (`loeseVormerkung()` behält nur noch das Bilden des Datenschlüssels),
+    `KDF_ITER_LISTE` in `server/db.php` (es bliebe **eine** Rundenzahl, und
+    damit fällt auch das Vormerkfach der Anmeldung weg, das es nur gibt, weil
+    `login.php` die Rundenzahl nicht kennt), die Statuszeile
+    „Schlüsselableitung" in `status_lib.php`, die Lesetoleranz für `edk1:`
+    in `serverkrypto_lib.php`/`validate_lib.php` (`WRAP_PRAEFIX_RE`) — und die
+    Prüfmittel, die genau diese Wege messen: `tools/anteilprobe/endpunkt.py`
+    (Teil E), `umstellungslauf.mjs` (Teil F) und `huelle_stellen.py`.
+
+    **Zwei Dinge, die dabei NICHT mitgehen dürfen.** Erstens die
+    *Formatkennung* selbst (`edk1:`, `edka1:`, M2-10): Sie ist kein
+    Altbestand, sondern das Merkmal, an dem eine künftige Fassung alt von neu
+    unterscheidet — ohne sie müsste man wieder raten. Zweitens die
+    **Rotation** des Server-Anteils (S10, E-S10-11): Sie sieht aus wie eine
+    Anhebung und ist keine — sie läuft nicht einmalig gegen einen Altbestand,
+    sondern jedes Mal, wenn eine Betreiberin den Anteil wechselt, und das
+    bleibt auch nach 1.0 möglich.
+
+    **Reihenfolge:** erst wenn feststeht, dass keine Installation mit
+    Altbestand mehr herüberkommt — dieselbe Bedingung wie bei **Nr. 46**
+    (Altformat des Backups). Beide gehören in dasselbe Paket; wer nur eines
+    von beiden macht, lässt die halbe Lesetoleranz stehen.
+
+    *Abnahme:* `grep -rn "anheben\|kdf_upgrade\|pat_anheben" server/` ist
+    **leer**; ein frisch angelegtes Konto meldet sich an und liest seine Daten
+    (Klickprobe, Kreisläufe unverändert grün); die Wortliste und die
+    Vollständigkeit melden keine ungenutzten Ausnahmen. Zuordnung: **vor 1.0**,
+    zusammen mit Nr. 46.
+
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
+    Admin-Backups sind blankes JSON im ZIP (`adminbackup_lib.php:404,624`)
+    mit allen Klartextfeldern, E-Mail, Name und `pat_wrap_rc`; der Versand
+    lässt reines `ftp` zu (`backup_targets.protokoll` in `schema.sql`) und
+    prüft bei FTPS kein
+    Zertifikat (`sicherungsziel_lib.php:31-33`). Die Begründung in
+    `Backup-Format.md` 5 („kein Schlüssel, ohne ihn zu speichern") ist seit
+    dem Serverschlüssel (Web 12.1.0) überholt. Versiegeln mit
+    `sk_versiegeln()` wie das Komplettbackup, `ftp` aus der Auswahl,
+    bestehende `ftp`-Ziele mit rotem Hinweis. Zuordnung: **S10** (R78).
+
+    *Konzept S10 liegt vor (13.09.2026), E-S10-13 und E-S10-14; Umsetzung in
+    **AP4**.* Entschieden ist dabei mehr, als der Punkt verlangte, und
+    zweierlei anders: **Auch `manifest.json` wird versiegelt**, nicht nur die
+    Teile — der Zweck bindet jeden Teil an Konto **und** Teilnamen
+    (`adminpaket|<konto>|<teil>`), sodass ein Umhängen an der Prüfsumme
+    scheitert; die Fassung erkennt der Leser am **Inhalt** (`sk_versiegelt()`),
+    nicht an der Dateiendung. Und **FTPS bleibt** (F-S10-5) statt mitzugehen,
+    mit dem Zusatz „prüft das Zertifikat der Gegenstelle nicht — SFTP
+    empfohlen" an Formular, Handbuch und Runbook; nur `ftp` fällt.
+    **Umzusiegeln ist nichts** (F-S10-4): Auf der Installation gibt es keine
+    Altpakete, also kein Job und kein Zähler — der Lesezweig für unversiegelte
+    Fassung-2-Teile bleibt als Toleranz und geht mit **Nr. 46**.
+
+    **Erledigt mit Web 20.2.0 (S10/AP4, 14.09.2026).** Umgesetzt wie
+    entschieden, mit **drei** Abweichungen, die beim Bauen entstanden sind:
+
+    - **Der Siegelzweck bindet auch den PAKETNAMEN**
+      (`adminpaket|<konto>|<paket>|<teil>`, E-S10-U-11). Der Einwand des
+      Konzepts — der Stempel müsse beim Lesen bekannt sein, komme also aus dem
+      versiegelten Manifest — trägt nicht: Alle vier Leser bekommen den
+      Dateinamen als Parameter, bevor sie irgendetwas öffnen. Ohne ihn liesse
+      sich ein Teil aus einem älteren Paket **desselben Kontos** unterschieben.
+      Der Preis steht in `Backup-Format.md` 5: Wer ein Paket umbenennt, macht
+      es unlesbar.
+    - **`konto.json` wird mitversiegelt** (E-S10-U-14). Die Begleitdatei neben
+      dem Paket trug E-Mail und Namen im Klartext — die Zusage „kein lesbarer
+      Name, keine E-Mail" hätte sonst nur für das ZIP gegolten und nicht für
+      den Ordner, in dem es liegt.
+    - **gzip vor dem Siegel** (E-S10-U-12), gemessen am Referenzkonto:
+      Fassung 2 **33 281** Byte, Siegel ohne Vorstufe **201 390** (+505 %),
+      gzip davor **45 290** (+36 %). Die 36 Prozent sind der base64-Rahmen
+      von `edsk1:`, nicht der Packlauf.
+
+    *Und einer, den der Punkt selbst nicht sah:* `sz_pruefen_eingabe()` prüfte
+    gegen `SZ_PORTS`, nicht gegen `SZ_PROTOKOLLE` — `ftp` nur aus dem
+    Anzeigekatalog zu streichen hätte gar nichts abgeschafft. Dazu fiel
+    `sz_weg()` für jedes **unbekannte oder leere** Protokoll still auf
+    Klartext-FTP zurück; geprüft wird jetzt positiv gegen den Katalog.
+
+    Die Toleranz für unversiegelte Fassung-2-Teile bleibt und geht mit
+    **Nr. 46** (und **Nr. 187**).
 
 124. **Das Aktionsblatt öffnet weit weg von seinem Knopf.**
     *Aufgenommen 05.09.2026, gemeldet mit Bild von der Auftraggeberin
@@ -3034,6 +3203,35 @@ zutreffen.
     (`lokal_einrichten.sh`), dann das Demo-Konto samt `app_state`-Marker
     entfernen, `lauf.json` leeren, **dann** die Stufen. Steht so jetzt nicht
     im LIESMICH — es beschreibt nur den Fall der leeren Installation.
+
+    **S10 legt einen zweiten Riegel derselben Art daneben** (Konzept S10,
+    E-S10-06 und E-S10-15, 13.09.2026). Ab S10 hängt der Datenschlüssel am
+    **Server-Anteil** aus `config.php`, und Hüllen tragen dann die Kennung
+    `edka1:<kennung>:`. Das **Demo-Konto bleibt ausgenommen**: Es bekommt
+    keinen Anteil ausgeliefert (`ANTEIL_STAND = 'demo'`), und seine Hülle
+    bleibt `edk1:` — aus demselben Grund wie hier die Rundenzahl: Die Fixture
+    muss auf **jeder** Installation aufgehen, und eine Hülle, die am Anteil
+    dieser einen Installation hängt, täte das nicht.
+    `tools/referenzdatensatz/fixture/erzeugen.php` prüft es künftig genauso,
+    wie es heute die Rundenzahl prüft — ein Abbruch statt einer Fixture, die
+    erst beim nächsten Reset auf einer fremden Installation auffällt.
+
+    **Gebaut in S10/AP5 (14.09.2026) — und zwar als PAAR, wie hier.** Der
+    Riegel im Erzeuger allein wäre die halbe Sache gewesen: Er läuft auf der
+    Referenzmaschine, die Datei kommt auf dem Produktivserver an. Seit
+    **Web 20.2.1** prüft deshalb auch `demo_fixture_laden()` beide Hüllen, mit
+    der gemeinsamen Prüfschicht (`huelle_pw_pruefen($wrap, istDemo: true)` und
+    `huelle_rc_pruefen()`) statt mit einem eigenen Ausdruck. Die Begründung
+    ist wörtlich die dieses Eintrags: *Ohne den zweiten Riegel wäre ein Reset
+    still erfolgreich und niemand käme mehr herein.*
+
+    Damit trägt jeder der beiden installationsgebundenen Werte der Fixture ein
+    Riegelpaar; die Tafel steht in `docs/Technik.md` 4.99a. Gemessen von
+    `tools/referenzdatensatz/fixture/riegelprobe.php`: **10 von 10**, beide
+    Riegel in beide Richtungen — denn ein Riegel, der immer zuschlägt, ist so
+    kaputt wie einer, der es nie tut — und dazu die Zusage, die das `throw`
+    vertretbar macht: Ein Reset mit verbogener Fixture wird abgefangen, das
+    Demo-Konto behält seine 88 Einsätze.
 
 38. **`nb_offen_gesamt()` holt Zeilen, um sie zu zählen.**
     *Gefunden in P3/O11.* Der Eintrag „Zuordnung offen" der Diensttage-Leiste

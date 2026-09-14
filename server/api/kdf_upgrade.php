@@ -1,28 +1,63 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/../auth_guard.php';      // liefert $userId, $kdfIter
+require_once __DIR__ . '/../auth_guard.php';      // liefert $userId, $kdfIter, $patWrapPw
 require_once __DIR__ . '/../validate_lib.php';   // WRAP_RE, Formatkennung
 require_once __DIR__ . '/../demo_lib.php';
+require_once __DIR__ . '/../serverkrypto_lib.php'; // anteil_ausgeliefert(), huelle_anteil_kennung()
 
 /**
- * POST api/kdf_upgrade.php — stille Anhebung der Rundenzahl (M2-01, Schritt 4)
+ * POST api/kdf_upgrade.php — die stille Umstellung (M2-01 Schritt 4; S10)
  *
- * WAS HIER GESCHIEHT
- * Das Konto rechnet seine Schluesselableitung bisher mit einer niedrigeren
- * Rundenzahl. Der Browser hat sich soeben angemeldet, hat also das Passwort
- * gehabt, und kann daraus beide Ableitungen bilden — die alte und die neue.
- * Er entpackt den Inhaltsschluessel mit dem alten Datenschluessel, verpackt
- * ihn mit dem neuen und schickt beides hierher. Der Server tauscht
- * Token-Hash, Rundenzahl und Schluesselhuelle in EINER Transaktion.
+ * WAS DIESE DATEI SEIT S10 IST
+ * Sie hiess einmal „Anhebung der Rundenzahl" und war genau das. Seit S10 ist
+ * sie der eine Weg, auf dem sich die SCHLUESSELHUELLE eines Kontos still
+ * ersetzen laesst — die Rundenzahl ist nur noch einer von zwei Anlaessen.
+ * Der Name bleibt, weil er in `unlock.js` und in drei Dokumenten steht; was
+ * die Datei tut, steht hier.
+ *
+ * ZWEI ANLAESSE, DIESELBE MECHANIK
+ *
+ *   RUNDENZAHL (M2-01). Das Konto rechnet mit einer niedrigeren Rundenzahl
+ *   als der Zielwert. Der Browser hat sich soeben angemeldet, hat also das
+ *   Passwort gehabt, und kann beide Ableitungen bilden.
+ *
+ *   HUELLENFASSUNG (S10, E-S10-07). Die Huelle des Kontos traegt noch kein
+ *   `edka1:`-Praefix — oder das eines ALTEN Server-Anteils, weil eine
+ *   Rotation laeuft. Der Browser oeffnet sie mit dem passenden
+ *   Datenschluessel, baut sie mit dem aktuellen Anteil neu und schickt sie
+ *   hierher. Die Rundenzahl bleibt dabei, wie sie ist.
+ *
+ * In beiden Faellen wird der INHALTSSCHLUESSEL nicht angefasst — er wird nur
+ * anders verpackt. Deshalb bleibt `pat_key_check` gleich, und deshalb bleibt
+ * jeder `pat_blob` unberuehrt. Stehen beide Anlaesse gleichzeitig an, erledigt
+ * ein einziger Aufruf sie zusammen.
  *
  * Body: {
  *   "alt_token": 64 Hex,     Nachweis: das Token der BISHERIGEN Rundenzahl
- *   "neu_token": 64 Hex,     Token der neuen Rundenzahl
- *   "neu_iter":  muss KDF_ITER_ZIEL sein,
+ *   "neu_token": 64 Hex,     Token der neuen Rundenzahl (bei reiner
+ *                            Huellenumstellung dasselbe wie alt_token)
+ *   "neu_iter":  muss KDF_ITER_ZIEL sein; DARF gleich der bisherigen
+ *                Rundenzahl sein, wenn sich die Huellenfassung aendert,
  *   "wrap_pw":   neue Schluesselhuelle (entfaellt bei Konten ohne Huelle),
  *   "key_check": Pruefsumme des Inhaltsschluessels (32 Hex, optional)
  * }
  * Antwort: { ok: true } — oder { error: ... }
+ *
+ * ---- WARUM DIE NEUE HUELLE DIE AKTUELLE ANTEIL-KENNUNG TRAGEN MUSS -------
+ *
+ * Der Server kann keine Huelle oeffnen und deshalb auch nicht pruefen, ob in
+ * der neuen dasselbe steckt wie in der alten. Was er pruefen KANN, ist das
+ * Praefix — und das genuegt fuer den einen Fehler, der hier teuer waere: eine
+ * Huelle, die auf den ALTEN Anteil zurueckgestellt wird. Sie liesse sich in
+ * dem Augenblick nicht mehr oeffnen, in dem `kdf_anteil_alt` aus `config.php`
+ * verschwindet — also genau dann, wenn die Statusseite meldet, es stehe
+ * niemand mehr auf dem alten Anteil. Ein Fehler, der eine Woche spaeter und
+ * an ganz anderer Stelle auffaellt, ist der teuerste; zwei Zeilen Pruefung
+ * hier schliessen ihn aus.
+ *
+ * Umgekehrt gilt dasselbe: Wird gar kein Anteil ausgeliefert (`fehlt`,
+ * `abweichend`, Demo), darf hier auch keine `edka1:`-Huelle ankommen. Sie
+ * waere mit einem Anteil gebaut, den diese Installation nicht kennt.
  *
  * ---- WARUM DAS ALTE TOKEN VERLANGT WIRD ----------------------------------
  *
@@ -107,12 +142,43 @@ if (!preg_match('/^[0-9a-f]{64}$/', $altToken)
  * den einen Wert, den diese Fassung anstrebt. */
 if ($neuIter !== KDF_ITER_ZIEL) { json_out(['error' => 'iter'], 400); }
 // Nur nach oben. Eine Anhebung, die senkt, ist keine.
-if ($neuIter <= $kdfIter) { json_out(['error' => 'nicht_noetig'], 400); }
+if ($neuIter < $kdfIter) { json_out(['error' => 'nicht_noetig'], 400); }
 
 // Dieselbe Laengengrenze wie beim Passwortwechsel (M2-08): Die Pruefung
 // begrenzt, das Speichern schneidet NICHT ab.
 if ($wrapPw !== null && !preg_match(WRAP_RE, $wrapPw)) {
     json_out(['error' => 'wrap'], 400);
+}
+
+/* ---- Die Huellenfassung (S10, E-S10-07) --------------------------------
+ *
+ * `$patWrapPw` kommt aus auth_guard.php und ist die Huelle, die HEUTE in der
+ * Datenbank steht. Ihr Praefix gegen das der neuen gehalten sagt, ob sich die
+ * Fassung ueberhaupt aendert — und damit, ob dieser Aufruf etwas zu tun hat,
+ * wenn die Rundenzahl schon stimmt. */
+$anteilKennung = anteil_ausgeliefert();
+$neuKennung    = $wrapPw === null ? null : huelle_anteil_kennung($wrapPw);
+$altKennung    = huelle_anteil_kennung($patWrapPw);
+
+/* DIESELBE PRUEFUNG WIE AN DEN DREI ANDEREN SCHREIBWEGEN (Fund F-3). Sie
+ * deckt beide Richtungen ab: eine Huelle auf dem ALTEN Anteil, eine Huelle
+ * OHNE Anteil, obwohl einer ausgeliefert wird, und eine Huelle MIT Anteil,
+ * obwohl keiner ausgeliefert wird. Alle drei sind ein Fehler des Browsers
+ * und keine Lage, die der Server stillschweigend speichern darf.
+ *
+ * Das Demo-Konto ist hier schon oben ausgestiegen — der Parameter steht
+ * trotzdem, damit die Aufrufe an allen vier Stellen gleich aussehen. */
+if (huelle_pw_pruefen($wrapPw, demo_ist_demo($userId)) !== null) {
+    json_out(['error' => 'anteil_kennung'], 400);
+}
+
+$huellenwechsel = $wrapPw !== null && $neuKennung !== $altKennung;
+
+/* Nichts zu tun: Die Rundenzahl stimmt schon, und die Huelle traegt bereits
+ * die richtige Kennung. Frueher stand hier `<=` — seit S10 ist Gleichstand
+ * ein gueltiger Anlass, sofern die Huelle wechselt. */
+if ($neuIter === $kdfIter && !$huellenwechsel) {
+    json_out(['error' => 'nicht_noetig'], 400);
 }
 if ($keyChk !== null && $keyChk !== '' && !preg_match('/^[0-9a-f]{32}$/', $keyChk)) {
     json_out(['error' => 'key_check'], 400);
@@ -140,8 +206,17 @@ if ($u['pat_wrap_pw'] !== null && ($wrapPw === null || $wrapPw === '')) {
 
 try {
     $pdo->beginTransaction();
-    $pdo->prepare('UPDATE users SET password_hash = ?, kdf_iter = ? WHERE id = ?')
-        ->execute([password_hash($neuToken, PASSWORD_DEFAULT), $neuIter, $userId]);
+    /* Token-Hash und Rundenzahl NUR, wenn die Rundenzahl wirklich steigt.
+     *
+     * Bei einer reinen Huellenumstellung sind altes und neues Token
+     * dasselbe — gleiches Passwort, gleiches Salz, gleiche Rundenzahl
+     * ergeben dieselbe Ableitung. Den Hash trotzdem neu zu rechnen waere
+     * eine bcrypt-Runde je Anmeldung fuer nichts, und es schriebe an einem
+     * Feld, das sich nicht aendern soll. */
+    if ($neuIter > $kdfIter) {
+        $pdo->prepare('UPDATE users SET password_hash = ?, kdf_iter = ? WHERE id = ?')
+            ->execute([password_hash($neuToken, PASSWORD_DEFAULT), $neuIter, $userId]);
+    }
     if ($u['pat_wrap_pw'] !== null) {
         /* Die Pruefsumme darf sich NICHT aendern: Es ist derselbe
          * Inhaltsschluessel, nur anders verpackt. Weicht sie ab, hat der
@@ -161,4 +236,8 @@ try {
     json_out(['error' => 'fehlgeschlagen'], 500);
 }
 
-json_out(['ok' => true, 'iter' => $neuIter]);
+/* Die Antwort sagt, WAS geschehen ist — nicht nur, dass etwas geschah. Der
+ * Browser wertet es heute nicht aus; der Prüfstand tut es (`tools/anteilprobe/`),
+ * und ein Mitschnitt im Netzwerkfenster wird damit lesbar. */
+json_out(['ok' => true, 'iter' => $neuIter,
+          'huelle' => $huellenwechsel ? ($neuKennung ?? 'edk1') : 'unveraendert']);

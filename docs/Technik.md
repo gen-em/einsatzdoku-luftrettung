@@ -119,8 +119,12 @@ Daten erst nach Server-Bestätigung.
 │   │                       Sperre)
 │   ├── backup_lib.php     Backup-Serialisierung (Kern mit oder ohne Spuren)
 │   │                       · trash_lib.php Papierkorb-Logik
-│   ├── adminbackup_lib.php  Konto-Backups: Ablage (ZIP, Fassung 2),
-│   │                       Übersicht, Freigabe, Speichergrenze, Auftrag (A8, S2/AP6)
+│   ├── adminbackup_lib.php  Konto-Backups: Ablage (ZIP, Fassung 3 — jeder
+│   │                       Eintrag gzip UND mit dem Serverschlüssel
+│   │                       versiegelt, die Begleitdatei konto.json daneben
+│   │                       ebenso; der Siegelzweck bindet Konto, PAKETNAME
+│   │                       und Teil, ein umbenanntes Paket ist unlesbar),
+│   │                       Übersicht, Freigabe, Speichergrenze, Auftrag (A8, S2/AP6, S10/AP4)
 │   ├── admin_sicherungen.php  Adminseite dazu — seit Web 9.10.0 nur noch
 │   │                       Regeln, Ablage und Backups ohne Konto;
 │   │                       die Konten stehen in admin_users.php, die
@@ -131,8 +135,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       · sicherungen/eingang/ was wiederhergestellt
 │   │                         werden soll — von Hand dorthin gelegt
 │   ├── sicherungsziel_lib.php  Backup-Ziele (S2/AP7): Schnittstelle
-│   │                       `Zielweg` und drei Adapter — FTP und FTPS über
-│   │                       ext/ftp, SFTP über phpseclib; dazu Pflege in der
+│   │                       `Zielweg` und zwei Adapter — FTPS über ext/ftp,
+│   │                       SFTP über phpseclib. `ftp` ist seit Web 20.2.0
+│   │                       abgeschafft (S10/AP4); ein bestehendes Ziel wird
+│   │                       übergangen, nicht gelöscht. Dazu Pflege in der
 │   │                       Tabelle backup_targets, „Verbindung prüfen" und
 │   │                       der Versandschub
 │   ├── admin_sicherungsziele.php  Adminseite dazu: Ziele anlegen und prüfen,
@@ -186,7 +192,24 @@ Daten erst nach Server-Bestätigung.
 │   │                       Kopieren (assets/kopieren.js), Regeln
 │   ├── betrieb_server.php  Betrieb → Servereinstellungen (S8/AP2): Speicher
 │   │                       der Installation als Balken, Grenze und Schwellen
-│   │                       der Konto-Backups, Webspace-Angabe
+│   │                       der Konto-Backups, Webspace-Angabe; seit S10/AP3
+│   │                       zuoberst die Karte „Schlüssel des Servers"
+│   │                       (Serverschlüssel und Server-Anteil: anlegen,
+│   │                       wechseln, alten entfernen, nachtragen, Neuanfang
+│   │                       — genannt wird nur die Kennung, nie der Wert)
+│   ├── betrieb_schluesselblatt.php
+│   │                       Das Schlüsselblatt (S10/AP3): die EINE Seite,
+│   │                       deren Zweck der Ausdruck ist. Ohne Gerüst, ohne
+│   │                       Zwischenspeicher (`no-store`, `no-referrer`,
+│   │                       `noindex`), Werte in Vierergruppen. Sie trägt
+│   │                       beide Geheimnisse im Klartext — der zweite Ort,
+│   │                       der überleben soll, was `config.php` nicht
+│   │                       überlebt
+│   ├── assets/blatt-drucken.js
+│   │                       Sechs Zeilen: Der Knopf „Drucken" ist ohne
+│   │                       JavaScript verborgen und ruft `window.print()`.
+│   │                       Ein Knopf, der ohne Skript nichts tut, ist
+│   │                       schlimmer als keiner
 │   ├── speicher_lib.php   Was die Installation belegt (S8/AP2): Datenbank aus
 │   │                       information_schema, Dateien per Verzeichnislauf,
 │   │                       Stand in settings, Ton nach Schwellen. Gemessen
@@ -325,12 +348,35 @@ Daten erst nach Server-Bestätigung.
 │   │                      zweimal richtig und einmal falsch
 │   ├── abmelde-probe/     zeigt, was der Abmeldeweg im sessionStorage
 │   │                      zurücklässt — Beleg zu V-10 (s. LIESMICH.md)
+│   ├── anteilprobe/       prüft den Server-Anteil (S10): `probe.php` die
+│   │                      Rechnungen (Kennung, HMAC je Konto) und die fünf
+│   │                      Lagen aus E-S10-09, mit `--schreiben` dazu den
+│   │                      Schreibweg in config.php; `endpunkt.py` die
+│   │                      Hüllenfassung von api/kdf_upgrade.php über ECHTES
+│   │                      HTTP; `umstellungslauf.mjs` die stille Umstellung
+│   │                      im Browser; `betriebslauf.mjs` (S10/AP3) die
+│   │                      OBERFLÄCHE der Lagen — Karte, Statuszeile und
+│   │                      Schlüsselblatt nennen dieselbe Kennung, das Blatt
+│   │                      im Druck bei 210 mm, Nachtragen mit falschem und
+│   │                      richtigem Wert, Rotation, Neuanfang.
+│   │                      `huelle_stellen.py` stellt eine Hülle auf edk1:
+│   │                      oder edka1: zurück — die Voraussetzung, ohne die
+│   │                      ein zweiter Lauf etwas anderes misst als der erste.
+│   │                      Vier der fünf Lagen entstehen nur, wenn man
+│   │                      config.php oder app_state verstellt — die Probe
+│   │                      stellt sie her und im finally zurück. **Nicht auf
+│   │                      einer Installation mit Betrieb** (s. LIESMICH.md)
 │   ├── containeraufbau/   zieht in einer Wegwerf-Umgebung nach, was das Abbild
 │   │                      nicht mitbringt: MariaDB, Android-SDK 36,
-│   │                      librsvg/imagemagick, socat, ein brauchbares
-│   │                      python3-cryptography. Baut NICHT den Uhr-Prüfstand
-│   │                      (der holt sein SDK selbst) und richtet NICHT die
-│   │                      Anwendung ein (s. LIESMICH.md)
+│   │                      librsvg/imagemagick, socat, die vier
+│   │                      WebKit-Bibliotheken und ein brauchbares
+│   │                      python3-cryptography. Der Teil `browser`
+│   │                      MISST NACH, dass alle drei Playwright-Engines
+│   │                      starten — WebKit tut es im Abbild ohne die Pakete
+│   │                      nicht, und ein Dreimotorenlauf wäre dann
+│   │                      stillschweigend ein Zweimotorenlauf. Baut NICHT den
+│   │                      Uhr-Prüfstand (der holt sein SDK selbst) und
+│   │                      richtet NICHT die Anwendung ein (s. LIESMICH.md)
 │   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
 │   ├── fristprobe/        belegt die Angleichung der Schlüsselfrist (R44, S6):
@@ -374,7 +420,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      seit Web 15.5.2 die Zählweise der Migrationen
 │   │                      (Teil 6, Backlog Nr. 149) und seit 15.6.0, dass die
 │   │                      Integritätswache im Wartungsmodus nicht rot wird
-│   │                      (12a, Nr. 140) — 55 Erwartungen.
+│   │                      (12a, Nr. 140) und seit S10 mit 6a, dass das
+│   │                      Schlüsselblatt erreichbar bleibt — 57 Erwartungen.
 │   │                      **Legt den Schalter selbst um** und nimmt für
 │   │                      Teil 6 eine Zeile aus dem Migrationsregister;
 │   │                      räumt beides im finally ab. Nicht auf einer
@@ -436,13 +483,18 @@ Daten erst nach Server-Bestätigung.
 │   │   ├── einspielen/    spielt alles über die REGULÄREN Wege ein, kein SQL;
 │   │   │                  lokal_einrichten.sh baut eine Installation von Null
 │   │   │                  auf (install.php über HTTP, Passwort im Browser,
-│   │   │                  Demo-Konto), lokal_starten.sh fährt sie nur hoch
+│   │   │                  Demo-Konto), lokal_starten.sh fährt sie nur hoch;
+│   │   │                  sitzungsprobe.py misst, dass sitzung.py BEIDE
+│   │   │                  Hüllenfassungen öffnet (edk1: und edka1:, S10)
 │   │   ├── browser/       was es nur im Browser gibt: CSV-Import, Angriffs-
 │   │   │                  werte (P-07), Exporte, Umläufe, Papierkorb-Mischfall,
 │   │   │                  Abnahme der Demo-Funktion
 │   │   ├── referenz/      die eingecheckten Referenz-Exporte
 │   │   ├── vergleich/     Vergleichswerkzeug und Kreislauftests
-│   │   └── fixture/       erzeugt server/demo/fixture.json.gz
+│   │   └── fixture/       erzeugt server/demo/fixture.json.gz; riegelprobe.php
+│   │                      misst die zwei Riegel darin (Zielrundenzahl,
+│   │                      Hülle bleibt edk1: — sonst wäre das Demo-Konto auf
+│   │                      der Produktivinstallation ausgesperrt, S10)
 │   ├── design/            erzeugt die Tabellen von docs/Design.md aus den
 │   │                      Quellen: Token aus :root, Schwellen aus den
 │   │                      @media-Bloecken, Symbole aus dem Vorrat, Bausteine
@@ -500,12 +552,14 @@ Daten erst nach Server-Bestätigung.
 │   │                      (S2/AP8): erzeugen in Häppchen, versiegeln, öffnen,
 │   │                      in eine LEERE Datenbank einspielen und Tabelle für
 │   │                      Tabelle vergleichen, aufs Backup-Ziel schieben.
-│   │                      76 Erwartungen. Arbeitet in einer Kopie unter /tmp,
-│   │                      liest aber aus der ECHTEN Datenbank
-│   ├── versandprobe/      prüft die drei Backup-Ziel-Adapter (S2/AP7)
-│   │                      gegen ECHTE Server auf 127.0.0.1: Rundlauf je
-│   │                      Protokoll, Fingerabdruck als Riegel, Fehlerfälle,
-│   │                      Versiegelung der Zugangsdaten. 115 Erwartungen.
+│   │                      72 Erwartungen mit allen Schaltern (64 ohne).
+│   │                      Arbeitet in einer Kopie unter /tmp, liest aber
+│   │                      aus der ECHTEN Datenbank
+│   ├── versandprobe/      prüft die beiden Backup-Ziel-Adapter (S2/AP7;
+│   │                      `ftp` ist seit S10/AP4 abgeschafft) gegen ECHTE
+│   │                      Server auf 127.0.0.1: Rundlauf je Protokoll,
+│   │                      Fingerabdruck als Riegel, Fehlerfälle,
+│   │                      Versiegelung der Zugangsdaten. 116 Erwartungen.
 │   │                      ZWEI Sätze Gegenstellen, und beide werden
 │   │                      gebraucht: gegenstellen.py (pyftpdlib/paramiko,
 │   │                      portabel) und echte_gegenstellen.sh (vsftpd und
@@ -544,8 +598,9 @@ Daten erst nach Server-Bestätigung.
 │   ├── wiederherstellungs-probe/
 │   │                      Grenzfälle von edbak_restore(), die der Kreislauf
 │   │                      nicht herstellen kann: Papierkorb-Mischfall,
-│   │                      kaputte Datei, Adminpaket Fassung 2, Speichergrenze
-│   │                      und der Auftrag „Alle sichern" (E-S1-04/19, S2/AP6,
+│   │                      kaputte Datei, Adminpaket Fassung 3, Speichergrenze,
+│   │                      der Auftrag „Alle sichern" und der Rückweg bei
+│   │                      verlorenem Server-Anteil (E-S1-04/19, S2/AP6, S10;
 │   │                      Backlog Nr. 31/35; s. LIESMICH.md)
 │   └── wortliste/         zählt nach, ob sichtbare Texte und normative
 │                          Dokumentation neutral von Land und Luft sprechen:
@@ -593,7 +648,7 @@ Daten erst nach Server-Bestätigung.
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
-| `backup_targets` | Backup-Ziele (seit Web 12.1.0, S2/AP7): FTP-, FTPS- oder SFTP-Gegenstelle je Zeile. `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
+| `backup_targets` | Backup-Ziele (seit Web 12.1.0, S2/AP7): FTPS- oder SFTP-Gegenstelle je Zeile. **`ftp` ist seit Web 20.2.0 abgeschafft** (S10/AP4, E-S10-14): nicht mehr wählbar, nicht mehr speicherbar, nicht mehr beschickt. Das `ENUM` behält den Wert, damit ein bestehendes Ziel lesbar, sichtbar und umstellbar bleibt — es trägt dann die rote Plakette *wird übergangen* und wird beim Versand übersprungen statt im Klartext beliefert. Der Rückbau der Spalte gehört zum ENUM-Aufräumen (Backlog Nr. 168/46). `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
 **Zum Wert `user_id IS NULL`.** Er bezeichnet einen **zentralen
@@ -632,13 +687,157 @@ lokal erst löschen, wenn `final` bestätigt und `next_seq` = Punktzahl.
 **Ende-zu-Ende-Verschlüsselung (Pflicht):** Beim Login leitet der Browser per
 PBKDF2-SHA256 (Rundenzahl je Konto, `users.kdf_iter`) aus Passwort + `kdf_salt` zwei Werte ab: ein
 Auth-Token (ersetzt das Passwort gegenüber dem Server, wird dort gehasht
-gespeichert) und einen Datenschlüssel (bleibt im Browser, `sessionStorage`).
+gespeichert) und eine **Hälfte**, aus der der Datenschlüssel entsteht (bleibt
+im Browser, `sessionStorage`).
 Ein zufälliger **Inhaltsschlüssel** (256 Bit, nicht vom Passwort abgeleitet)
 verschlüsselt `pat_blob` (`{last, first, dob, dx, age, mission_no,
 loc:{addr,lat,lon}, site_desc}`, AES-256-GCM) und liegt doppelt verpackt in `users`: mit dem Datenschlüssel
 (`pat_wrap_pw`) und mit dem aus dem Wiederherstellungsschlüssel abgeleiteten
 Schlüssel (`pat_wrap_rc`). Weil der Inhaltsschlüssel vom Passwort getrennt ist,
 kostet ein Passwortwechsel kein Neuverschlüsseln — nur die Hülle wird erneuert.
+
+**Der Server-Anteil (seit Web 19.7.0, S10 / Schritt 9b, R78, E-S10-02 bis
+E-S10-04).** Die PBKDF2-Hälfte ist seither **nicht mehr selbst** der
+Datenschlüssel. Dazwischen steht eine zweite Ableitung:
+
+```
+kontoAnteil     = HMAC-SHA256(schlüssel = kdf_anteil (32 Byte aus config.php),
+                              nachricht = "konto:" + users.id)          → 32 Byte
+Datenschlüssel  = HKDF-SHA256(ikm  = PBKDF2-Hälfte (32 Byte),
+                              salt = kontoAnteil (32 Rohbyte),
+                              info = "edka1|dk")                        → 32 Byte
+```
+
+*Wozu.* Wer die Datenbank hat, hat Salz, Rundenzahl und Hülle — und konnte bis
+dahin offline durchprobieren (Krypto-Review K-3, Weg 1). `kdf_anteil` steht in
+`config.php` und **nicht** in der Datenbank; ein Abzug allein genügt seither
+nicht mehr. Der Server gewinnt dabei nichts: Er kennt den Anteil, nicht die
+Hälfte aus dem Passwort.
+
+*Warum aus der Kontonummer und nicht aus dem Salz.* Passwortwechsel und Reset
+würfeln das **neue** Salz im Browser; der Anteil dazu wäre in genau dem
+Augenblick unbekannt, in dem die neue Hülle entsteht. Die Kontonummer ist
+unveränderlich und schon da. Dass sie erratbar ist, kostet nichts — das
+Geheimnis ist `kdf_anteil`, und HMAC sorgt dafür, dass aus dem Anteil eines
+Kontos kein anderer zu bilden ist.
+
+*Was **nicht** daran hängt:* `pat_wrap_rc`. Der Wiederherstellungsschlüssel
+öffnet weiterhin ohne Anteil — das ist der Rückweg, wenn der Anteil verloren
+geht. Ebenso unberührt: die PBKDF2-Ableitung selbst, das Auth-Token,
+`auth_salt.php`, der Inhaltsschlüssel, jeder `pat_blob`, `pat_key_check`, das
+`.edbak`-Format und der Freigabeweg.
+
+*Die fünf Stellen im Browser* (E-S10-08). Alle gehen über dieselben drei
+Funktionen in `crypto.js` — `datenschluessel()`, `huelleOeffnen()`,
+`huelleBauen()` — statt über `deriveKeys().haelfteHex` + `decrypt()`:
+
+| Stelle | Datei | öffnet mit | baut mit |
+|---|---|---|---|
+| Anmeldung (stille Umstellung) | `unlock.js`, `loeseVormerkung()` | Präfix der alten Hülle | aktuellem Anteil |
+| Entsperrdialog | `unlock.js`, `frage()` | Präfix der Hülle | — |
+| Passwortwechsel | `einstellungen.php` | Präfix der alten Hülle | aktuellem Anteil |
+| Export-Passwortprobe | `einstellungen.php` | Präfix der Hülle | — |
+| Erstvergabe und Reset | `pw_handling.php` | `pat_wrap_rc` (**ohne** Anteil) | aktuellem Anteil |
+
+**Eine sechste kam beim Gegenlesen dazu:** `EdCrypto.getContentKey()` rief
+`decrypt()` unmittelbar und wäre an jeder `edka1:`-Hülle gescheitert. Da
+`EdKeyGuard.contentKey()` darauf aufsetzt, betrifft das **jede** Anzeigeseite
+— und zwar erst beim zweiten Seitenaufbau, weil der erste den Schlüssel aus
+dem Vormerkfach bekommt. Sie geht seit Web 20.0.0 ebenfalls über
+`huelleOeffnen()`.
+
+*Geöffnet wird nach dem Präfix der Hülle, nicht nach dem Zustand der
+Installation.* Das ist der Unterschied zwischen „dieses Konto ist umgestellt"
+und „diese Installation liefert einen Anteil aus": Während einer Rotation
+gilt beides gleichzeitig, aber je nur für einen Teil der Konten. Wer statt des
+Präfixes `ANTEIL_STAND` fragte, öffnete dann die Hälfte der Hüllen mit dem
+falschen Schlüssel. **Gebaut** wird dagegen immer mit dem *aktuellen* Anteil
+(`ANTEIL_KENNUNG`) — so stellt jeder Schreibweg nebenbei um.
+
+*Die Umstellung selbst* läuft über `api/kdf_upgrade.php` (Abschnitt oben):
+Der Browser öffnet die alte Hülle, baut sie mit dem aktuellen Anteil neu und
+schickt sie mit dem Anmelde-Token als Nachweis. Ein Fehlschlag bleibt still —
+die alte Hülle bleibt gültig. **`login.php` setzt den Datenschlüssel seit
+Web 20.0.0 nie mehr selbst:** Ob die Hülle den Anteil braucht, steht in ihrem
+Präfix, und das kennt erst die angemeldete Seite. Das Vormerkfach liegt
+deshalb nach jeder Anmeldung einen Seitenwechsel lang im `sessionStorage`.
+
+*Ausgeliefert wird nur an die angemeldete Sitzung* und nur der eigene Anteil:
+`auth_guard.php` stellt `$kontoAnteile`, `$anteilKennung` und `$anteilStand`
+bereit, `ui_krypto_bootstrap()` gibt sie als `KONTO_ANTEILE`,
+`ANTEIL_KENNUNG` und `ANTEIL_STAND` aus. `pw_handling.php` tut dasselbe für
+das Konto des eingelösten Einmal-Tokens. Es gibt keinen Endpunkt, der den
+Anteil eines fremden Kontos herausgibt. **Das Demo-Konto bekommt keinen**
+(`null` / `'demo'`, E-P1-19): Seine Hülle kommt aus der Fixture und muss auf
+jeder Installation aufgehen.
+
+*Die Kennung.* Acht Hexzeichen aus SHA-256 über die 64 kleingeschriebenen
+Hexzeichen des Werts (`schluessel_kennung()`). Sie ist ein Vergleichsmerkmal,
+kein Schutzmerkmal: Damit lässt sich prüfen, ob zwei Stellen dasselbe
+Geheimnis meinen, ohne es zu zeigen. Sie steht im Präfix jeder Hülle, in
+`app_state` und auf dem Schlüsselblatt. Der **Serverschlüssel** bekommt ab S10
+dieselbe Kennung — nur zur Anzeige; seine Versiegelung `edsk1:` bleibt.
+
+*Die fünf Lagen* (`anteil_zustand()`, E-S10-09). `app_state.kdf_anteil_kennung`
+merkt sich, mit welchem Anteil die Hüllen gebaut werden; `config.php` sagt,
+welchen die Installation hat. Erst der Vergleich beider ergibt eine Aussage:
+
+| Lage | Bedingung | Verhalten |
+|---|---|---|
+| **nicht eingerichtet** | kein `kdf_anteil`, keine Marke | keine Auslieferung; Hüllen bleiben `edk1:`, alles läuft wie vor S10 |
+| **bereit** | Wert = Marke | Auslieferung, stille Umstellung |
+| **Rotation** | `kdf_anteil_alt` gesetzt | beide Anteile werden ausgeliefert; Umstellung je Konto beim nächsten Anmelden |
+| **abweichend** | Wert ≠ Marke, oder Wert fehlt bei gesetzter Marke | **keine Auslieferung**; die Seite nennt die erwartete Kennung statt „Passwort falsch" |
+| **Neuanfang** | frischer Wert, Marke mit ihm gesetzt | Konten mit alter Hülle setzen ihr Passwort über den Wiederherstellungsschlüssel neu — **kein Datenverlust** |
+
+Dass im Zweifel **gar nichts** ausgeliefert wird, ist die eigentliche
+Entscheidung: Ein Anteil, der nicht passt, ergäbe einen Datenschlüssel, der
+nicht passt — und der Fehlschlag sähe für jede NutzerIn gleichzeitig aus wie
+ein falsches Passwort. Belegt von `tools/anteilprobe/`.
+
+*Bedient werden die Lagen auf einer Seite* (seit Web 20.1.0, S10/AP3):
+**Betrieb → Servereinstellungen**, Karte „Schlüssel des Servers"
+(`betrieb_server.php`, Anker `#k-schluessel`). Sechs Handlungen, alle über
+POST mit CSRF und `require_betreiberin()`, alle in `serverkrypto_lib.php`:
+
+| Handlung | Funktion | angeboten bei |
+|---|---|---|
+| Serverschlüssel anlegen | `serverschluessel_eintragen()` | Serverschlüssel `fehlt` |
+| Server-Anteil anlegen | `anteil_anlegen()` | Anteil `fehlt` |
+| Server-Anteil wechseln | `anteil_wechseln()` | `bereit` oder `rotation` **ohne** `kdf_anteil_alt` |
+| Alten Anteil entfernen | `anteil_alt_entfernen()` | `kdf_anteil_alt` gesetzt **und** `anteil_zaehlung()['alt'] === 0` |
+| … nachtragen (beide) | `anteil_nachtragen()`, `serverschluessel_nachtragen()` | jeweils `abweichend` |
+| Server-Anteil neu erzeugen | `anteil_neuanfang()` | **nur** `abweichend` |
+
+Drei Dinge daran sind Absicht und keine Geschmacksfrage:
+
+- **Die Karte zeigt den Wert nicht**, nur die Kennung. Der Wert steht an
+  genau einer Stelle in der Oberfläche: auf dem Schlüsselblatt, das man
+  ausdruckt. Ein Wert, der auf jedem Bildschirm vollständig steht, steht
+  früher oder später in einem Screenshot in einem Ticket.
+- **Nachtragen schreibt nur bei Übereinstimmung.** `anteil_nachtragen()`
+  rechnet die Kennung des eingegebenen Werts und vergleicht sie mit
+  `anteil_zustand()['erwartet']`; passt sie nicht, wird nichts geschrieben
+  und die Meldung nennt beide Kennungen. Leerzeichen, Bindestriche und
+  Großschreibung werden vorher entfernt
+  (`schluessel_eingabe_normalisieren()`) — das Blatt druckt in
+  Vierergruppen, und wer sie mit abtippt, soll nicht dafür bestraft werden.
+- **`anteil_wechseln()` sichert den alten Wert zuerst** und nimmt ihn bei
+  einem Fehlschlag des zweiten Schreibvorgangs wieder zurück. Ein Wechsel,
+  der auf halbem Weg stehenbleibt, wäre die Lage `abweichend` ohne Blatt.
+
+*Der Neuanfang ist serverseitig einmalig.* `anteil_neuanfang()` prüft die Lage
+selbst und weist alles ab, was nicht `abweichend` ist — ein F5 nach dem
+Absenden erzeugt sonst einen zweiten neuen Anteil und macht die Konten, die
+gerade zurückgesetzt wurden, ein zweites Mal ungültig.
+
+*Das Schlüsselblatt* (`betrieb_schluesselblatt.php`) ist die einzige Seite der
+Anwendung ohne Gerüst, deren Zweck der Ausdruck ist. `Cache-Control: no-store`,
+`Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex`; Werte in
+Vierergruppen (`hex_vierergruppen()` in `db.php`). Sie steht in
+`WARTUNG_AUSNAHMEN` — die Lage, in der man sie braucht, ist eine Wartungslage.
+Das zugehörige `@media print` in `assets/style.css` (Abschnitt 26) ist das
+**erste und einzige** des Projekts und umfasst drei Regeln.
 
 **Formatkennung (seit Web 5.1.0, M2-10).** Jeder von `EdCrypto.encrypt()`
 erzeugte Chiffretext beginnt mit `edk1:` — sowohl `pat_blob` als auch die
@@ -662,6 +861,25 @@ beide Formen. `WRAP_RE` stand bis Web 5.0.1 dreifach im Projekt — als Konstant
 in `pw_handling.php` und wortgleich in `einstellungen.php` und
 `api/kdf_upgrade.php`; eine davon beim Nachziehen zu vergessen hätte einen
 Passwortwechsel scheitern lassen.
+
+**Die Hüllenkennung `edka1:` (seit Web 19.7.0, S10, E-S10-05).** Eine Hülle,
+die am Server-Anteil hängt, lautet `edka1:<kennung>:<base64>` — die acht
+Hexzeichen sind die Kennung des Anteils, mit dem sie gebaut wurde. Der
+Chiffretext dahinter ist derselbe AES-256-GCM-Aufbau wie bisher.
+
+*Warum nicht schlicht `edk2:`.* Zwei Gründe. `EdCrypto.decrypt()` weist jede
+Kennung außer `edk1:` als „neuere Programmfassung" ab — die Fassung der
+**Hülle** ist aber etwas anderes als die Fassung des **Verfahrens**. Und der
+Browser braucht bei einer Rotation die Auskunft, mit *welchem* von zwei
+Anteilen er öffnet; die Statusseite muss zählen können, wer noch auf dem alten
+steht. Beides steht im Präfix und ist lesbar, ohne dass jemand etwas öffnet
+(`SUBSTRING` in SQL, `huelle_anteil_kennung()` in PHP).
+
+*Nur `WRAP_RE` nimmt die neue Kennung an, `PAT_BLOB_RE` bleibt eng.* Das ist
+kein Versehen: Der Anteil steckt im Datenschlüssel, und der öffnet
+ausschließlich die Hülle. Der Inhaltsschlüssel darin und damit jeder
+`pat_blob` sind unverändert — **kein Datensatz wird angefasst**, wenn ein
+Konto umstellt. `pat_wrap_rc` bekommt ebenfalls kein `edka1:`-Präfix.
 
 Beide Hüllen entstehen **gemeinsam mit dem Passwort** in `pw_handling.php`
 (siehe unten). Ein anmeldbares Konto ohne Hüllen kann es dadurch nicht geben;
@@ -3152,7 +3370,7 @@ das sind die Zielkliniken einer Patientin, gepflegt unter Stammdaten. Zwei
 Dinge unter einem Wort, zwei Klicks voneinander entfernt — das lässt sich in
 einer Fehlermeldung nicht mehr auflösen (Konzept-S2, F-S2-G).
 
-#### Eine Schnittstelle, drei Adapter
+#### Eine Schnittstelle, zwei Adapter
 
 `server/sicherungsziel_lib.php` beschreibt mit `Zielweg`, was ein Ziel können
 muss: `verbinden`, `trennen`, `ordner`, `senden`, `holen`, `liste`,
@@ -3162,23 +3380,56 @@ eine Empfehlung und keine Grenze.
 
 | Adapter | Protokoll | Grundlage |
 |---|---|---|
-| `ZielFtp` | FTP und FTPS | PHP-Erweiterung `ftp` (`ftp_ssl_connect`) |
+| `ZielFtp` | FTPS | PHP-Erweiterung `ftp` (`ftp_ssl_connect`) |
 | `ZielSftp` | SFTP | phpseclib 3 (`server/vendor/`, docs/Lizenzen.md 3a) |
 
-Ein Adapter für FTP **und** FTPS, weil sich genau eine Zeile unterscheidet.
-Das Komplettbackup aus AP8 benutzt dieselbe Schnittstelle und weiss vom
-Protokoll nichts; ein vierter Adapter (WebDAV, Backlog) soll sie nicht
+Der erste Adapter trug bis Web 20.2.0 **FTP und FTPS**, weil sich genau eine
+Zeile unterscheidet; seither gibt es nur noch die verschlüsselte Hälfte
+(unten). Das Komplettbackup aus AP8 benutzt dieselbe Schnittstelle und weiss
+vom Protokoll nichts; ein dritter Adapter (WebDAV, Backlog) soll sie nicht
 anfassen.
 
-#### Was die drei taugen
+#### `ftp` ist abgeschafft (ab Web 20.2.0, S10/AP4, E-S10-14)
+
+`SZ_PROTOKOLLE` und `SZ_PORTS` führen seither **nur noch `sftp` und `ftps`**,
+und `sz_protokoll_erlaubt()` ist die eine Frage, die beide Listen stellt.
+Geprüft wird **positiv gegen den Katalog**, nicht negativ gegen `ftp` — das
+ist der Unterschied, auf den es ankommt: `sz_weg()` hatte genau einen
+benannten Zweig (`sftp`), und alles Übrige fiel in `ZielFtp`, wo
+`$prot === 'ftps'` über TLS entscheidet. FTPS war damit geschützt, ein
+**unbekanntes oder leeres** Protokoll aber fiel still auf Klartext-FTP zurück.
+
+**Ein bestehendes Ziel wird übergangen, nicht gelöscht.** Es bleibt lesbar,
+sichtbar und umstellbar:
+
+| Wo | Was geschieht |
+|---|---|
+| Liste der Backup-Ziele | rote Plakette **„wird übergangen"**; die Zeile „Zuletzt gescheitert" heisst dort „Zuletzt übergangen" und steht orange |
+| Formular | gesperrt mit Erklärung; die Protokollauswahl öffnet **ohne Vorauswahl** (`['' => '— bitte wählen —']`), ein Speichern stellt also zwangsläufig um |
+| „Verbindung prüfen" | gesperrt |
+| Versandschub | `sz_versand_schub()` überspringt es **vor** `sz_weg()` und zählt es als `uebersprungen`; im Lauf steht „Übergangen: …" |
+| Rückstand | `sz_versand_rueckstand()` filtert es heraus |
+| Cron | `php server/jobs.php versand` hängt `· N übergangen` an die Ergebniszeile |
+| Betrieb → Status | eigener Eimer, Ton **orange** (Design.md 9.23: etwas braucht Zuwendung, nichts ist kaputt) — sortiert nach **Protokoll**, nicht nach dem Text von `letzter_fehler` |
+
+**Kein `fehler`-Eintrag**, und das ist Absicht: `jobs_lib.php` wirft darauf,
+und der Versandjob stünde dauerhaft rot. Auf der Jobebene heisst die Zahl
+deshalb `uebergangen` und **nicht** `uebersprungen` — Letzteres ist im Bericht
+schon belegt („der Job lief gar nicht"), und `jobs.php` überspränge bei diesem
+Schlüssel die **ganze** Ergebniszeile.
+
+**Keine Schemaänderung.** Das `ENUM` von `backup_targets.protokoll` behält den
+Wert `ftp`; der Rückbau der Spalte gehört zum ENUM-Aufräumen (Backlog Nr. 168
+bzw. Nr. 46). Eine Migration braucht S10 nicht.
+
+#### Was die beiden taugen
 
 | | verschlüsselt | erkennt den Server wieder |
 |---|---|---|
 | **SFTP** | ja | **ja** — Fingerabdruck des Hostschlüssels |
 | **FTPS** | ja | nein |
-| **FTP** | **nein** | nein |
 
-Der mittlere Fall wird leicht überschätzt: **`ext/ftp` prüft das Zertifikat
+Der zweite Fall wird leicht überschätzt: **`ext/ftp` prüft das Zertifikat
 nicht.** Nachgemessen in `tools/versandprobe/` gegen eine Gegenstelle mit
 selbst ausgestelltem Zertifikat ohne Vertrauenskette — die Verbindung kommt
 zustande. Schutz gegen Mitlesen ja, Schutz gegen einen untergeschobenen Server
@@ -3204,12 +3455,24 @@ Datenbank:
 
 ```
 edsk1:base64( nonce(12) ‖ prüfsumme(16) ‖ chiffre )     AES-256-GCM
-Zusatzdaten: 'edsk1|sicherungsziel:<id>:<feld>'
+Zusatzdaten: 'edsk1|<zweck>'
 ```
 
-Der Zweck in den Zusatzdaten bindet die Chiffre an **dieses** Ziel und
-**dieses** Feld: Ein versiegeltes Passwort von Ziel 3 lässt sich nicht als
-Passwort von Ziel 7 einsetzen, obwohl beide denselben Schlüssel benutzen.
+Der Zweck in den Zusatzdaten bindet die Chiffre an **die eine Stelle**, für
+die sie gedacht ist. Vier Zwecke gibt es:
+
+| Zweck | Wofür | seit |
+|---|---|---|
+| `sicherungsziel:<id>:<feld>` | Passwort und privater Schlüssel eines Backup-Ziels | Web 12.1.0 |
+| `komplett:<datei>` | das Komplett-Backup der Installation | Web 15.3.0 |
+| `adminpaket\|<konto>\|<paket>\|<teil>` | jeder Eintrag eines Konto-Backups, Fassung 3 | Web 20.2.0 |
+| `adminkonto\|<konto>` | die Begleitdatei `konto.json` neben den Paketen | Web 20.2.0 |
+
+Ein versiegeltes Passwort von Ziel 3 lässt sich damit nicht als Passwort von
+Ziel 7 einsetzen, obwohl beide denselben Schlüssel benutzen — und ein Teil aus
+Paket A nicht in Paket B unterschieben, obwohl beide demselben Konto gehören.
+**Der Preis des Paketnamens:** Wer ein Paket umbenennt, macht es unlesbar
+(`docs/Backup-Format.md` 5).
 
 Warum `config.php` und nicht die Datenbank: Der Zweck ist der Fall „jemand hat
 die Datenbank". Für das Komplettbackup (AP8) wird es zwingend — dessen Dump
@@ -3274,7 +3537,7 @@ Gegenstellen:
 
 | | Dauer | PHP-Speicherspitze (Budget Z3: 64 MB) |
 |---|---|---|
-| FTP | 0,13 s | 2,0 MB |
+| FTP *(seit Web 20.2.0 abgeschafft, die Zahl bleibt als Vergleich)* | 0,13 s | 2,0 MB |
 | FTPS | 0,68 s | 2,0 MB |
 | SFTP | 3,08 s | 8,0 MB |
 
@@ -3285,7 +3548,8 @@ gekürzte Datei wurde beim nächsten Lauf **einzeln** erneut geschickt (1 von
 (34 + 30) und war danach vollständig.
 
 `tools/versandprobe/` deckt Adapter, Fingerabdruck-Riegel, Fehlerfälle und
-Versiegelung ab: **115 Erwartungen**, gefahren gegen zwei Sätze Gegenstellen
+Versiegelung ab: **116 Erwartungen** (115 bis S10/AP4 — die 116. weist ein
+**leeres** Protokoll ab), gefahren gegen zwei Sätze Gegenstellen
 — pyftpdlib/paramiko und **vsftpd/OpenSSH**. Beide werden gebraucht: vsftpd
 kennt kein `MLSD` und fährt damit als einziges den Rückfall auf `NLST` +
 `SIZE`; pyftpdlib fährt den Hauptweg. Gegen die echten Server: FTP 0,35 s,
@@ -3556,10 +3820,13 @@ Am Messbestand: 5 000 Einsätze, **1 121 802 Zeilen** in 34 Tabellen.
 | Einspielen | 784 Anweisungen in 6,0 s |
 | Rundlauf | **34 von 34** Schemata zeichengleich, **34 von 34** Prüfsummen gleich (`CHECKSUM TABLE EXTENDED`) |
 
-`tools/komplettprobe/` fährt den ganzen Zyklus: **76 Erwartungen**,
-einschliesslich Versand auf eine echte FTP-Gegenstelle, „halbe Datei liegt
-dort", abgeschnitten an einer Blockgrenze, veränderter Dateikopf und beide
-Wiederanlauf-Zweige. Was sie nicht prüfen kann — die Oberfläche, eine volle
+`tools/komplettprobe/` fährt den ganzen Zyklus: **72 Erwartungen mit allen
+Schaltern** (`--pruefdb` und `--ziel`; ohne sie sind es 64, weil die Teile 7
+und 10 dann mit `[ -- ]` ausfallen), einschliesslich Versand auf eine echte
+FTPS-Gegenstelle, „halbe Datei liegt dort", abgeschnitten an einer
+Blockgrenze, veränderter Dateikopf, beide Wiederanlauf-Zweige und seit S10
+Teil 11: **Server-Anteil und Serverschlüssel stehen 0× im Dump, die Kennung
+dagegen fährt mit**. Was sie nicht prüfen kann — die Oberfläche, eine volle
 Platte, ein echter Absturz mitten in der Anfrage, der Migrationslauf — steht
 an erster Stelle ihrer `LIESMICH.md`.
 
@@ -4619,6 +4886,39 @@ Gepackt abgelegt: roh rund 2,4 MB, im Wesentlichen 55 861 Spurpunkte als
 JSON-Zahlen. Gepackt sind es rund 745 KB, und die Datei geht bei jedem Deploy
 über FTPS mit.
 
+#### Zwei Riegel je Geheimnis — einer beim Erzeugen, einer beim Einspielen
+
+Die Fixture **reist**: Sie entsteht auf der Referenzmaschine und wird beim
+Deploy auf den Produktivserver gelegt. Ein Riegel im Erzeuger greift deshalb
+nur an einem der beiden Enden. Zwei Werte in ihr sind an die Installation
+gebunden, und beide haben darum ein Riegelpaar:
+
+| Wert | Riegel im Erzeuger (`fixture/erzeugen.php`) | Riegel im Einspieler (`demo_fixture_laden()`) |
+|---|---|---|
+| `kdf_iter` | bricht ab, wenn das Konto nicht auf `KDF_ITER_ZIEL` steht (Backlog Nr. 155, Web 19.2.0) | weist eine Rundenzahl ab, die `KDF_ITER_LISTE` nicht mehr anbietet |
+| `pat_wrap_pw` / `pat_wrap_rc` | bricht ab, wenn eine der beiden nicht `edk1:` trägt (S10/AP5) | weist sie ab — `huelle_pw_pruefen($wrap, istDemo: true)` und `huelle_rc_pruefen()`, Web 20.2.1 |
+
+**Warum die Hüllen `edk1:` bleiben müssen.** Seit S10 hängt der
+Datenschlüssel am Server-Anteil aus `config.php`, und den würfelt
+`install.php` je Installation neu. Eine Hülle mit Anteil
+(`edka1:<kennung>:`) lässt sich nur dort öffnen, wo dieser Anteil steht. Das
+Demo-Konto bekommt bauartbedingt **gar keinen** (E-P1-19/E-S10-06):
+`KONTO_ANTEILE` ist für es `null`, `ANTEIL_STAND` ist `'demo'`, und
+`api/kdf_upgrade.php` überspringt es. `EdCrypto.datenschluessel()` wirft bei
+einer `edka1:`-Hülle ohne Anteil ausdrücklich, statt auf die PBKDF2-Hälfte
+zurückzufallen — ein Rückfall ergäbe einen Schlüssel, der nicht passt, und der
+Fehlschlag sähe aus wie ein falsch getipptes Passwort.
+
+**Was ein Abbruch kostet.** `demo_reset_wenn_faellig()` fängt jede Ausnahme ab
+und schreibt ins `error_log`; eine verbogene Fixture lässt das Demo-Konto also
+aufhören, sich zurückzusetzen — es geht nichts verloren und niemand wird
+ausgesperrt. `demo_anlegen()` lässt die Ausnahme durch: Wer das Konto von Hand
+anlegt, soll den Grund lesen.
+
+Gemessen von `tools/referenzdatensatz/fixture/riegelprobe.php`: **10 von 10**,
+beide Riegel in beide Richtungen, der abgefangene Reset (Demo-Konto 88 → 88
+Einsätze) und die SHA-256 der echten Fixture vorher/nachher.
+
 #### Kein zweiter Einspielweg
 
 Der Bestand wird über `edbak_restore()` eingespielt — dieselbe Routine wie bei
@@ -5035,7 +5335,7 @@ geändert** (E-S5W-08).
 | Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
 | Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript `ingest.php` oder `pair.php` heißt — die beiden liegen nicht unter `/api/`, und genau sie brauchen JSON |
 | Kopfzeilen | `Retry-After: 300` (E-S5W-12), `Cache-Control: no-store`. Kein `Set-Cookie`: Das Tor greift vor `session_start()` |
-| Ausnahmen | elf Skripte, verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `logout.php`, `install.php`. **Die fünf Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
+| Ausnahmen | **dreizehn** Skripte (`WARTUNG_AUSNAHMEN` in `wartung_lib.php` — dort steht zu jedem der Grund), verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `auth_salt.php`, `logout.php`, `install.php`. **Die Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). `betrieb_schluesselblatt.php` kam mit S10/AP3 dazu: Die Lage, in der man das Blatt braucht, ist genau eine Wartungslage. **Die Zahl stand hier bis Web 20.1.0 auf „elf“ und die Aufzählung ließ `auth_salt.php` aus** — beide hinkten seit Web 19.1.2 (Nr. 171) hinterher; maßgeblich ist immer die Konstante, nicht dieser Satz. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
 | Schalten | `betrieb_updates.php`, Karte „Wartungsmodus", POST mit CSRF, nur BetreiberIn (S8/AP1). Idempotent: Ein zweites Einschalten überschreibt `seit` und `von` nicht. Scheitert das Schreiben oder Löschen, sagt die Seite es **mit Pfad** |
 | Sichtbarkeit | Es gibt kein automatisches Ausschalten (E-S5W-05). Ein oranger Balken auf `betrieb_updates.php` und `login.php` nennt Zeitpunkt und Konto — das sind die beiden einzigen Seiten, auf denen ein stehengebliebener Wartungsmodus überhaupt auffallen kann |
 | Jobs | laufen weiter (E-S5W-11). `jobs.php` mit Token ist Ausnahme, damit das Komplett-Backup **während** der Wartung läuft — genau dann ist es konsistent. Der Huckepack-Weg aus `auth_guard.php` läuft auf `betrieb_updates.php` mit, und zwar **vor** `require_betreiberin()` und damit vor jeder Migration desselben Aufrufs. Wer Ruhe braucht: `jobs.php --pause` |
@@ -5059,7 +5359,7 @@ Wartung automatisch bei ausstehender Migration — ist P5 und wird denselben
 Zustand setzen; Steuerung aus der Auslieferungskette ist P5 mit R67; eine
 eigene Wartungsmeldung auf Uhr und Handy ist Backlog-Kandidat.
 
-**Nachweis:** `php tools/wartungsprobe/probe.php` — 40 Erwartungen, beide
+**Nachweis:** `php tools/wartungsprobe/probe.php` — **57 Erwartungen**, beide
 Richtungen (zu wenig gesperrt / zu viel gesperrt), einschließlich der drei
 Regeln aus E-S5W-09 am Code. Betriebsablauf: Abschnitt 7.
 
@@ -6055,13 +6355,16 @@ und liefert nach. Die sieben Schritte:
    „arbeitet, braucht Aufmerksamkeit", rot „arbeitet nicht". Steht dort eine
    Zahl, ist der Deploy noch nicht fertig.
 
-**Was währenddessen erreichbar bleibt** (E-S5W-04): die fünf Betriebsseiten
-`betrieb_status.php`, `betrieb_statistik.php`, `betrieb_updates.php`,
-`betrieb_jobs.php` und `betrieb_server.php`, dazu
-`update.php` und
+**Was währenddessen erreichbar bleibt** (E-S5W-04): die **sechs**
+Betriebsseiten `betrieb_status.php`, `betrieb_statistik.php`,
+`betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php` und — seit
+S10 — `betrieb_schluesselblatt.php` (die Lage, in der man das Blatt braucht,
+ist genau eine Wartungslage), dazu `update.php` und
 `wiederherstellen.php` (die Arbeit selbst und der Rückweg), `jobs.php` mit
 Token — das Komplett-Backup der Kette läuft **während** der Wartung, genau
-dann ist es konsistent —, `login.php`/`logout.php` und `install.php`. Alles
+dann ist es konsistent —, `login.php` mit `auth_salt.php` (ohne den
+Nebenaufruf holt der Browser weder Salz noch Rundenzahl und leitet kein Token
+ab, Backlog Nr. 171), `logout.php` und `install.php`. Alles
 unter `assets/` läuft ohnehin nicht durch PHP. Der CLI-Notausgang
 `php update.php` ist nie getort.
 
@@ -6107,13 +6410,14 @@ für das sie da ist.
 
 **Der Wartungsmodus greift nicht:** Prüfen in dieser Reihenfolge —
 (1) Liegt `server/wartung.lock` wirklich dort, wo `WARTUNG_DATEI` hinzeigt
-(neben `db.php`)? (2) Ist die aufgerufene Seite eine der elf Ausnahmen?
+(neben `db.php`)? (2) Ist die aufgerufene Seite eine der **dreizehn** Ausnahmen?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
-`php tools/wartungsprobe/probe.php` (53 Erwartungen; seit Web 15.5.2 misst
-ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149, und
-seit 15.6.0 mit 12a, dass die Integritaetswache im Wartungsmodus nicht rot
-wird, Nr. 140).
+`php tools/wartungsprobe/probe.php` (**57 Erwartungen**; seit Web 15.5.2 misst
+ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149, seit
+15.6.0 mit 12a, dass die Integritaetswache im Wartungsmodus nicht rot wird,
+Nr. 140, und seit S10 mit 6a, dass das **Schluesselblatt** erreichbar bleibt —
+die Lage, in der man es braucht, ist eine Wartungslage).
 
 **Die Integritaetswache ist rot:** `tools/integritaetswache/LIESMICH.md`,
 Abschnitt „Wenn sie rot wird" — in dieser Reihenfolge: Wurde gerade deployt?
@@ -6493,9 +6797,28 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
 | „falscher Schlüssel, falsche Passphrase — oder der Dateikopf ist verändert" | der `server_key` in `config.php` ist nicht der, mit dem versiegelt wurde | den richtigen aus dem Wiederanlaufpaket eintragen |
 | „Dieses Backup ist unvollständig — die Endmarke fehlt" | der Lauf ist beim Erzeugen abgebrochen | einen älteren Stand nehmen |
 | „gescheitert an Anweisung *n*" | halb eingespielt; es wurde **nichts** zurückgenommen | Datenbank leeren und von vorn |
+| „Der Server-Anteil der Verschlüsselung fehlt oder ist nicht der, mit dem die Hüllen gebaut wurden" (seit Web 19.7.0) | **der Regelfall nach Schritt 5**, siehe unten | den `kdf_anteil` aus dem Wiederanlaufpaket eintragen |
 
-**Das Wiederanlaufpaket (seit Web 12.1.0, E-S2-21).** Getrennt von der
-Anwendung aufbewahren — auf einem anderen Rechner, nicht im selben Backup:
+**Nach Schritt 5 steht der Server-Anteil fast immer auf „abweichend" — und
+das ist richtig so (seit Web 19.7.0, S10).** Das Komplettbackup enthält
+**jede** Tabelle, also auch `app_state` mit der Kennung des Anteils, mit dem
+die Hüllen gebaut wurden. Es enthält **nicht** `config.php`; die hat Schritt 3
+frisch angelegt, und `install.php` hat darin einen **neuen**, zufälligen
+`kdf_anteil` gewürfelt. Wert und Marke gehen damit auseinander.
+
+Genau dafür gibt es die Marke. Ohne sie würde die Installation den neuen
+Anteil für den richtigen halten, und jede NutzerIn bekäme beim Anmelden
+„Passwort falsch" — für Daten, die vollständig da sind. Mit ihr sagt die
+Anwendung, was Sache ist, und nennt die **erwartete Kennung**. Der Griff
+danach: den `kdf_anteil` aus dem Wiederanlaufpaket über die Karte *Nachtragen
+vom Blatt* eintragen (die Kennung wird vor dem Schreiben verglichen). Ist er
+unwiederbringlich weg, bleibt der Neuanfang — dann setzt jede NutzerIn ihr
+Passwort über den Wiederherstellungsschlüssel neu; **die Daten selbst sind
+davon nicht betroffen**.
+
+**Das Wiederanlaufpaket (seit Web 12.1.0, E-S2-21; seit Web 19.7.0 mit einem
+vierten Stück).** Getrennt von der Anwendung aufbewahren — auf einem anderen
+Rechner, nicht im selben Backup:
 
 1. **`server/config.php`.** Sie steht in `.gitignore` **und** in der
    Ausnahmeliste des Deploys; es gibt sie also nur auf dem Server.
@@ -6504,11 +6827,26 @@ Anwendung aufbewahren — auf einem anderen Rechner, nicht im selben Backup:
    Komplettbackup. **Ohne ihn** sind die Zugangsdaten der Ziele neu
    einzutragen (verschmerzbar) und ein versiegeltes Komplettbackup **nicht
    mehr zu öffnen** (nicht verschmerzbar).
-3. **Der Zugang zum Backup-Ziel** — Rechnername, Nutzer, Passwort bzw.
+3. **Der Server-Anteil** darin (`'kdf_anteil' => '…'`, 64 Hexzeichen; seit
+   Web 19.7.0, S10). Er geht in den Datenschlüssel **jedes Kontos** ein.
+   **Ohne ihn** lässt sich keine `edka1:`-Hülle mehr öffnen — und zwar für
+   alle gleichzeitig. **Es ist trotzdem kein Datenverlust:** `pat_wrap_rc`
+   hängt nicht am Anteil, jede NutzerIn kommt über den
+   Wiederherstellungsschlüssel wieder herein und setzt dabei ihr Passwort
+   neu. Aus dem Verlust wird damit ein Vorgang für alle statt einer
+   Katastrophe — aber ein Vorgang, den niemand will.
+4. **Der Zugang zum Backup-Ziel** — Rechnername, Nutzer, Passwort bzw.
    privater Schlüssel. Er steht in der Datenbank, aber versiegelt; wer nur
    den Dump hat und den Serverschlüssel nicht, kommt an die Backups
    dort nicht heran. Das ist der Sinn der Sache und zugleich der Grund,
    ihn zusätzlich von Hand zu notieren.
+
+> **`config.php` ist seit S10 Schlüsselträger der ganzen Installation.** Bis
+> Web 19.6.0 kostete ihr Verlust die Betriebsgeheimnisse; seither kostet er
+> zusätzlich jeder NutzerIn einen Passwort-Reset. Das Schlüsselblatt
+> (Betrieb → Servereinstellungen; kommt mit S10/AP3) druckt beide Geheimnisse
+> mit Kennung — **zwei Ausdrucke, zwei Orte**. Es ist Pflicht, nicht
+> Empfehlung.
 
 **Probe-Wiederherstellung** ist ein Prüfpunkt und keine Formalie: einmal je
 Halbjahr ein Paket vom Ziel holen und in ein Wegwerfkonto einspielen. Ein
@@ -6520,8 +6858,9 @@ zeigt die Seite die fertige Zeile zum Einfügen — **genau eine** eintragen, be
 jedem Neuladen steht dort eine andere. Danach die Zeile ins Wiederanlaufpaket.
 
 **Backup-Ziel einrichten:** Adminbereich → **Backup-Ziele** → *Ziel
-anlegen*. **SFTP wählen, wenn das Ziel es anbietet** — es ist das einzige der
-drei Protokolle, das den Server am Hostschlüssel wiedererkennt. Danach
+anlegen*. **SFTP wählen, wenn das Ziel es anbietet** — es ist von den
+beiden das einzige, das den Server am Hostschlüssel wiedererkennt (`ftp` ist
+seit Web 20.2.0 abgeschafft, 4.97c). Danach
 **Verbindung prüfen**: Der Lauf schreibt eine Probedatei, liest sie zurück,
 vergleicht sie und löscht sie wieder; er beantwortet damit auch die Frage nach
 den Schreibrechten. Beim ersten Mal wird der Hostschlüssel übernommen.
@@ -6539,6 +6878,32 @@ wurde nichts übertragen und kein Passwort gesendet.
 `config.php` steht ein anderer Serverschlüssel als der, mit dem sie gespeichert
 wurden. Entweder den alten wieder eintragen (Wiederanlaufpaket) oder die
 Zugangsdaten am Ziel neu erfassen.
+
+**„Der Server-Anteil der Verschlüsselung fehlt oder ist nicht der, mit dem die
+Hüllen gebaut wurden" (seit Web 19.7.0, S10).** Das ist die Lage *abweichend*:
+`config.php` trägt einen anderen `kdf_anteil` als den, dessen Kennung in
+`app_state.kdf_anteil_kennung` steht — oder gar keinen. Die Anwendung läuft
+weiter, **es ist kein Wartungsmodus**; nur der Anteil wird nicht ausgeliefert,
+und Konten mit `edka1:`-Hülle kommen nicht an ihre geschützten Angaben.
+
+*Reihenfolge:*
+1. Betrieb → **Status**, Zeile „Server-Anteil". Sie nennt die **erwartete**
+   Kennung. Betrieb → Servereinstellungen zeigt daneben die vorhandene.
+2. Den richtigen Wert aus dem **Schlüsselblatt** oder dem Wiederanlaufpaket
+   nachtragen (Karte „Schlüssel des Servers", *Nachtragen vom Blatt*). Der
+   Server rechnet die Kennung des eingegebenen Werts und schreibt **nur bei
+   Übereinstimmung**; bei Abweichung nennt die Meldung beide Kennungen und
+   ändert nichts.
+3. Ist der Wert **unwiederbringlich** weg, bleibt der Neuanfang: einen
+   frischen Anteil erzeugen. Danach setzt jede NutzerIn ihr Passwort über den
+   **Wiederherstellungsschlüssel** neu — kein Datenverlust, aber ein Vorgang
+   für alle.
+
+*Was ausdrücklich **nicht** passiert:* „Passwort falsch". Die Meldung
+unterscheidet gegenüber der NutzerIn nicht zwischen „fehlt" und „anderer
+Wert" (dieselbe Linie wie `sk_oeffnen()`); den Unterschied sieht die
+Betreiberin auf Status und Karte. Konten mit `edk1:`-Hülle — darunter das
+Demo-Konto — sind von alledem nicht betroffen und melden sich weiter an.
 
 **Zeile „Schlüsselableitung" auf Betrieb → Status (seit Web 5.0.1; bis
 Web 15.0.0 auf der Wartungsseite, in 15.1.0 und 15.2.0 vorübergehend nicht

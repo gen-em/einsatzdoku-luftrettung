@@ -29,6 +29,7 @@ Rueckgabe: 0 = in Ordnung, 1 = Befunde
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import os
 import pathlib
@@ -165,6 +166,61 @@ def main() -> int:
                     f"{ref}: letzte Anfrage final={e['final']}, erwartet {erwartet}")
 
     # ---- 3. Krypto: Rundlauf ---------------------------------------------
+    #
+    # HKDF GEGEN DEN PRUEFVEKTOR, BEVOR IRGENDETWAS DAMIT GERECHNET WIRD (S10).
+    #
+    # `krypto.hkdf_sha256()` ist ausgeschrieben statt aus einer Bibliothek
+    # geholt — vier Zeilen, dafuer kein weiterer Fremdbestandteil (E-S10-15).
+    # Der Preis dafuer ist, dass niemand sie fuer uns prueft. Und eine falsche
+    # Schluesselableitung faellt nicht als Fehler auf: Sie liefert einen
+    # Schluessel, nur eben nicht den, den der Browser rechnet — und das sieht
+    # aus wie ein falsches Passwort.
+    #
+    # Prueffall 1 aus RFC 5869, Anhang A.1. In AP1 einmal von Hand
+    # nachgerechnet (E-S10-U-03); seit AP5 rechnet ihn jeder Lauf nach.
+    lauf.pruefe(
+        krypto.hkdf_sha256(bytes.fromhex("0b" * 22),
+                           bytes.fromhex("000102030405060708090a0b0c"),
+                           bytes.fromhex("f0f1f2f3f4f5f6f7f8f9"), 42).hex()
+        == "3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf"
+           "34007208d5b887185865",
+        "HKDF-SHA256 weicht vom Prueffall 1 aus RFC 5869 ab")
+
+    # UND DIE BEIDEN HUELLENFASSUNGEN, jede in ihre eigene Richtung. Ohne
+    # Kennung muss `edk1:` herauskommen und der Datenschluessel die blosse
+    # PBKDF2-Haelfte sein; mit Kennung `edka1:<kennung>:` und ein ANDERER
+    # Schluessel. Waeren beide gleich, ginge der Anteil ins Leere, ohne dass
+    # eine Zeile falsch aussaehe.
+    _haelfte = os.urandom(32).hex()
+    _anteil = os.urandom(32).hex()
+    _kennung = hashlib.sha256(bytes.fromhex(_anteil)).hexdigest()[:8]
+    _ck = os.urandom(32).hex()
+    _alt = krypto.huelle_bauen(_ck, _haelfte, None)
+    lauf.pruefe(_alt.startswith("edk1:"), "Huelle ohne Anteil traegt nicht `edk1:`")
+    lauf.pruefe(krypto.datenschluessel(_haelfte, _alt, {}) == _haelfte,
+                "Ohne Anteil ist der Datenschluessel nicht die PBKDF2-Haelfte")
+    lauf.pruefe(krypto.entpacken(_alt, _haelfte) == _ck,
+                "Huelle ohne Anteil geht nicht wieder auf")
+    _dkNeu = krypto.datenschluessel(_haelfte, f"edka1:{_kennung}:x",
+                                    {_kennung: _anteil})
+    lauf.pruefe(_dkNeu != _haelfte,
+                "Mit Anteil kommt derselbe Datenschluessel heraus wie ohne — "
+                "der Anteil geht ins Leere")
+    _neu = krypto.huelle_bauen(_ck, _dkNeu, _kennung)
+    lauf.pruefe(_neu.startswith(f"edka1:{_kennung}:"),
+                "Huelle mit Anteil traegt die Kennung nicht im Praefix")
+    lauf.pruefe(krypto.entpacken(_neu, krypto.datenschluessel(
+                    _haelfte, _neu, {_kennung: _anteil})) == _ck,
+                "Huelle mit Anteil geht nicht wieder auf")
+    # Und der Fall, der laut sein MUSS: eine Kennung, zu der kein Anteil da
+    # ist. Ein Rueckfall auf die Haelfte ergaebe einen Schluessel, der nicht
+    # passt — und der Fehlschlag saehe aus wie ein falsches Passwort.
+    try:
+        krypto.datenschluessel(_haelfte, _neu, {})
+        lauf.pruefe(False, "Unbekannte Anteil-Kennung wird still durchgelassen")
+    except ValueError:
+        lauf.pruefe(True, "")
+
     ck = os.urandom(32).hex()
     formulare = sorted((AUS / "formular").glob("*.json"))
     rundlaeufe = 0

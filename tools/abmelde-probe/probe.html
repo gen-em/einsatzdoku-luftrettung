@@ -13,8 +13,15 @@
 const FAECHER = {
   'edk':     { wert: 'aa'.repeat(32), was: 'Datenschlüssel (hex)' },
   'pck':     { wert: 'bb'.repeat(32), was: 'Inhaltsschlüssel (hex)' },
-  'edkvor':  { wert: JSON.stringify({ dk: 'cc'.repeat(32), tk: { t: 'x' } }),
-               was: 'Vormerkfach der stillen Anhebung — enthält den Datenschlüssel' },
+  /* SEIT S10/AP2 LIEGEN HIER HAELFTEN, KEINE DATENSCHLUESSEL.
+     `crypto.js` schreibt `{ hf: haelften, tk: tokens }` statt `{ dk, tk }`:
+     Der Datenschluessel entsteht erst aus Haelfte UND Server-Anteil, und der
+     steht nicht im Fach. Fuer diese Probe aendert das nichts — sie fuellt das
+     Fach selbst und misst nur, OB es nach dem Abmelden leer ist. Die Form
+     steht hier trotzdem richtig: Wer sie liest, liest sie als Auskunft
+     darueber, was im Browser liegt. Bis S10/AP5 stand hier `dk`. */
+  'edkvor':  { wert: JSON.stringify({ hf: { 600000: 'cc'.repeat(32) }, tk: { t: 'x' } }),
+               was: 'Vormerkfach der stillen Anhebung — enthält die PBKDF2-Hälften' },
   'edk_neu': { wert: 'dd'.repeat(32),
                was: 'Vormerkfach des Passwortwechsels — enthält den NEUEN Datenschlüssel' },
   'pckb':    { wert: '0123456789abcdef', was: 'Keyguard: Kennung der Hülle (Hash)' },

@@ -2484,7 +2484,14 @@ function ui_ortsfeld(array $o): void
  * unlock.js, patient.js, export.js, import_ui.js).
  *
  * VORAUSSETZUNG: auth_guard.php ist geladen. Von dort kommen $patWrapPw,
- * $patKeyCheck, $kdfSalt und $kdfIter; KDF_ITER_ZIEL kommt aus db.php.
+ * $patKeyCheck, $kdfSalt, $kdfIter und — seit S10 — $kontoAnteile,
+ * $anteilKennung und $anteilStand; KDF_ITER_ZIEL kommt aus db.php.
+ *
+ * DIE DREI S10-KONSTANTEN STEHEN IMMER, wie CSRF und aus demselben Grund
+ * (Backlog Nr. 136, Fund F-9a-01): Ein Schalter, den drei von sieben Seiten
+ * nicht stellen, nimmt der stillen Umstellung die Grundlage — und zwar
+ * dauerhaft, weil `loeseVormerkung()` das Vormerkfach danach verwirft. Die
+ * Lehre von damals kostet hier drei Zeilen Markup.
  *
  * $o: skripte  Liste der Verweise. Vorgabe: crypto.js, keyguard.js, unlock.js.
  *              Ein leeres Feld gibt keinen Verweis aus (fuer Seiten, die ihre
@@ -2502,6 +2509,7 @@ function ui_ortsfeld(array $o): void
 function ui_krypto_bootstrap(array $o = []): void
 {
     global $patWrapPw, $patKeyCheck, $kdfSalt, $kdfIter;
+    global $kontoAnteile, $anteilKennung, $anteilStand;
 
     static $schon = false;
     if ($schon) {
@@ -2533,6 +2541,15 @@ function ui_krypto_bootstrap(array $o = []): void
        bekommt einen anderen Schluessel. */
     $zeilen[] = 'const KDF_ITER      = ' . json_js($kdfIter) . ';';
     $zeilen[] = 'const KDF_ITER_ZIEL = ' . json_js(KDF_ITER_ZIEL) . ';';
+    /* Der Server-Anteil dieses Kontos (S10, E-S10-06). KONTO_ANTEILE ist ein
+       Objekt `{ kennung: 64 hex }` — waehrend einer Rotation zwei Eintraege —,
+       oder `null` fuer das Demo-Konto. ANTEIL_KENNUNG nennt den aktuellen;
+       mit ihm werden NEUE Huellen gebaut. ANTEIL_STAND ist 'bereit', 'fehlt',
+       'abweichend' oder 'demo' und entscheidet, welche Meldung erscheint,
+       wenn sich eine Huelle nicht oeffnen laesst. */
+    $zeilen[] = 'const KONTO_ANTEILE  = ' . json_js($kontoAnteile ?? null) . ';';
+    $zeilen[] = 'const ANTEIL_KENNUNG = ' . json_js($anteilKennung ?? null) . ';';
+    $zeilen[] = 'const ANTEIL_STAND   = ' . json_js($anteilStand ?? 'fehlt') . ';';
     /* CSRF IMMER, NICHT AUF ANFRAGE (Backlog Nr. 136, Fund F-9a-01).
      *
      * Bis zum Sofortpaket Sicherheit war das ein Schalter, und drei von sieben

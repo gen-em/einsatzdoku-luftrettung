@@ -90,6 +90,13 @@ function status_erhebung(): array
     $lauf       = migrationen_lauf($pdo, false);
     $stand      = migrationen_stand($pdo);
     $schluessel = serverschluessel_da();
+    /* Die zwei Geheimnisse des Servers (S10, E-S10-09). Beide Zustände kommen
+     * aus derselben Quelle wie die Karte in den Servereinstellungen — eine
+     * Statusseite, die anders rechnet als die Seite, auf die sie verweist,
+     * wäre eine zweite Wahrheit. */
+    $skZustand  = serverschluessel_zustand();
+    $anZustand  = anteil_zustand();
+    $anZaehlung = anteil_zaehlung();
 
     /* Verwaiste Rundenzahlen: Konten, deren `kdf_iter` diese Fassung nicht
      * mehr anbietet. Sie können sich NICHT anmelden, und an der Anmeldemaske
@@ -190,15 +197,100 @@ function status_erhebung(): array
         'betrieb_updates.php');
 
     /* ROT UND MIT WEG: Ohne Serverschlüssel entsteht kein Komplett-Backup und
-       kein Versand auf ein Backup-Ziel. */
+       kein Versand auf ein Backup-Ziel.
+       SEIT S10 MIT KENNUNG — und mit einer dritten Lage: „abweichend" heisst,
+       dass in `config.php` ein ANDERER Schlüssel steht als der, mit dem
+       versiegelt wurde. Das sah bis dahin aus wie ein beschädigtes Backup. */
     $server[] = status_z('Serverschlüssel',
-        $schluessel
-            ? 'Vorhanden — Komplett-Backups und Backup-Ziele können versiegeln'
-            : 'Fehlt. Ohne ihn gibt es kein Komplett-Backup und keinen Versand '
-              . 'auf ein Backup-Ziel',
-        $schluessel ? 'blau' : 'rot',
-        $schluessel ? 'vorhanden' : 'fehlt',
-        $schluessel ? null : 'admin_sicherungsziele.php');
+        $skZustand['stand'] === 'bereit'
+            ? 'Kennung ' . $skZustand['kennung'] . ' — Komplett-Backups, '
+              . 'Konto-Backups und Backup-Ziele können versiegeln'
+            : ($skZustand['stand'] === 'fehlt'
+                ? 'Fehlt. Ohne ihn gibt es kein Komplett-Backup, kein '
+                  . 'Konto-Backup und keinen Versand auf ein Backup-Ziel'
+                : 'In config.php steht Kennung ' . ($skZustand['kennung'] ?? '—')
+                  . ', versiegelt wurde mit ' . $skZustand['erwartet']
+                  . '. Versiegeltes lässt sich nicht öffnen, bis der richtige '
+                  . 'Wert nachgetragen ist (Blatt)'),
+        $skZustand['stand'] === 'bereit' ? 'blau' : 'rot',
+        ['bereit' => 'vorhanden', 'fehlt' => 'fehlt',
+         'abweichend' => 'abweichend'][$skZustand['stand']] ?? '?',
+        $skZustand['stand'] === 'bereit' ? null : 'betrieb_server.php#k-schluessel');
+
+    /* ---- Server-Anteil (S10, E-S10-09) ---------------------------------
+     *
+     * DIE ZEILE, DIE ES OHNE S10 NICHT GEBEN MUSSTE — und die ohne sie die
+     * teuerste Störung der Anwendung unsichtbar liesse: Ein Anteil, der nicht
+     * zu den Hüllen passt, sieht für JEDE NutzerIn gleichzeitig aus wie ein
+     * falsches Passwort. Hier steht, was wirklich los ist, samt der Kennung,
+     * die nachzutragen wäre.
+     *
+     * BLAU, SOLANGE DER ÜBERGANG LÄUFT. Das ist kein Fehler, sondern ein
+     * Zustand mit Ende: Jedes Konto stellt beim nächsten Anmelden um. Rot
+     * wäre eine Aufforderung zu etwas, das niemand tun kann und niemand tun
+     * muss. Dieselbe Unterscheidung wie bei der Zeile darunter
+     * („Schlüsselableitung"), und aus demselben Grund.
+     *
+     * DAS DEMO-KONTO ZÄHLT NICHT MIT (Backlog Nr. 155): Es bleibt bauartbedingt
+     * ohne Anteil, und es als „noch offen" zu führen hiesse, eine Zahl zu
+     * zeigen, die nie auf null geht. Genau dieser Fehler ist der Zeile
+     * „Schlüsselableitung" schon einmal unterlaufen. */
+    $anOffen = (int)$anZaehlung['ohne'] + (int)$anZaehlung['alt'];
+    if ($anZustand['stand'] === 'fehlt') {
+        /* NEUTRAL UND NICHT ROT — die Ampel in `Design.md` 9.23 ist dazu
+         * eindeutig: Rot heisst „arbeitet nicht, oder es geht etwas
+         * verloren", neutral heisst „nicht eingerichtet". Ohne Server-Anteil
+         * arbeitet ALLES wie vor Web 20.0.0; es geht nichts verloren, es
+         * fehlt nur ein zusaetzlicher Schutz.
+         *
+         * Das Konzept sah hier Rot vor (E-S10-09). Das ist beim Bauen
+         * verworfen worden, und zwar aus dem Grund, den die Ampeltabelle
+         * selbst nennt: Nach dem Merge steht JEDE Installation in diesem
+         * Zustand. Eine rote Zeile, die „alles in Ordnung, aber tu mal was"
+         * bedeutet, bringt Rot das Lesen ab — und dann wird auch die Zeile
+         * darueber nicht mehr gelesen, bei der Rot heisst, dass niemand mehr
+         * hereinkommt. */
+        $anText = 'Nicht eingerichtet. Alles läuft wie vor Web 20.0.0 — der '
+                . 'Schutz gegen einen Datenbankabzug fehlt aber. Anlegen unter '
+                . 'Betrieb → Servereinstellungen, danach Schlüsselblatt drucken';
+        $anTon = 'neutral'; $anPlak = 'nicht eingerichtet';
+    } elseif ($anZustand['stand'] === 'abweichend') {
+        $anText = 'In config.php steht Kennung ' . ($anZustand['kennung'] ?? '—')
+                . ', gebaut wurden die Hüllen mit ' . $anZustand['erwartet']
+                . '. Solange das so ist, kommt niemand mit umgestellter Hülle an '
+                . 'seine geschützten Angaben — und die Anmeldemaske sagt nicht, '
+                . 'warum. Wert vom Schlüsselblatt nachtragen';
+        $anTon = 'rot'; $anPlak = 'abweichend';
+    } else {
+        $teile = [$anZaehlung['neu'] . ' Konto/Konten auf dem aktuellen Anteil'];
+        if ($anZustand['kennung_alt'] !== null) {
+            $teile[] = $anZaehlung['alt'] . ' noch auf dem alten';
+        } elseif ($anZaehlung['alt'] > 0) {
+            $teile[] = $anZaehlung['alt'] . ' auf einem unbekannten';
+        }
+        if ($anZaehlung['ohne'] > 0) { $teile[] = $anZaehlung['ohne'] . ' noch ohne'; }
+        $anText = 'Kennung ' . $anZustand['kennung'] . ' — ' . implode(', ', $teile)
+                . '. Jedes Konto stellt beim nächsten Anmelden von selbst um';
+        if ($anZaehlung['demo'] > 0) {
+            $anText .= '. Das Demo-Konto bleibt ohne Anteil und zählt hier nicht mit';
+        }
+        if ($anZustand['kennung_alt'] !== null && $anZaehlung['alt'] === 0) {
+            $anText .= '. Der alte Anteil lässt sich jetzt entfernen';
+        }
+        /* BLAU IN ALLEN DREI FÄLLEN, und das ist Absicht: „bereit", „Übergang
+         * läuft" und „alten Anteil entfernen" sind Auskünfte, keine Störungen.
+         * Orange hiesse „hier stimmt etwas nicht", rot „hier kommt niemand
+         * mehr herein" — beides wäre für einen Zustand mit Ende falsch, und
+         * eine Farbe, die auch für Normalzustände warnt, wird beim vierten
+         * Mal nicht mehr gelesen. */
+        $anTon  = 'blau';
+        $anPlak = $anOffen > 0
+            ? 'Übergang läuft'
+            : ($anZustand['stand'] === 'rotation' ? 'alten entfernen' : 'in Ordnung');
+    }
+    $server[] = status_z('Server-Anteil', $anText, $anTon, $anPlak,
+        ($anZustand['stand'] === 'bereit' && $anOffen === 0)
+            ? null : 'betrieb_server.php#k-schluessel');
 
     $kdfText = $kdfVerwaist === []
         ? 'Alle Konten rechnen mit einer Rundenzahl, die diese Fassung anbietet ('
@@ -414,11 +506,37 @@ function status_erhebung(): array
             . 'Server, dessen Ausfall der Grund für ein Backup wäre',
             'neutral', 'keines', 'admin_sicherungsziele.php');
     } else {
+        /* ÜBERGANGENE ZIELE SIND EINE EIGENE SCHUBLADE (S10/AP4, E-S10-U-15).
+         *
+         * Ein Ziel mit abgeschafftem Protokoll trägt einen Vermerk in
+         * `letzter_fehler` und hätte damit in `$mitFehler` gestanden: rot,
+         * dauerhaft, und mit dem Text „Übergangen …" in der Zeile
+         * „Letzter Fehler". Das ist die falsche Auskunft — es ist nichts
+         * kaputt, es ist etwas umzustellen. Sortiert wird deshalb am
+         * PROTOKOLL und nicht am Text der Meldung: Das ist die Wahrheit,
+         * der Text ist nur ihre Beschreibung.
+         *
+         * Ton ORANGE und nicht rot (`Design.md` 9.23): „braucht
+         * Aufmerksamkeit", nicht „ist kaputt". Es geht deswegen kein Backup
+         * verloren — die Pakete liegen weiter da. */
+        $umzustellen = array_values(array_filter($aktiv,
+            static fn($z) => !sz_protokoll_erlaubt((string)$z['protokoll'])));
+        $aktiv = array_values(array_filter($aktiv,
+            static fn($z) => sz_protokoll_erlaubt((string)$z['protokoll'])));
         $nieVersandt = array_values(array_filter($aktiv,
             static fn($z) => empty($z['letzter_lauf'])));
         $mitFehler = array_values(array_filter($aktiv,
             static fn($z) => !empty($z['letzter_fehler'])));
-        if ($mitFehler !== []) {
+        if ($umzustellen !== []) {
+            $ton = 'orange';
+            $pl  = count($umzustellen) . ' umzustellen';
+            $klein = count($umzustellen) . ' aktives Ziel überträgt '
+                   . 'unverschlüsselt und wird nicht mehr beschickt ('
+                   . implode(', ', array_map(
+                        static fn($z) => (string)$z['name'],
+                        array_slice($umzustellen, 0, 2)))
+                   . ') — auf SFTP oder FTPS umstellen';
+        } elseif ($mitFehler !== []) {
             $ton = 'rot'; $pl = count($mitFehler) . ' mit Fehler';
             $klein = 'Letzter Fehler: ' . (string)$mitFehler[0]['letzter_fehler'];
         } elseif ($nieVersandt !== []) {

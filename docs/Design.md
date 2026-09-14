@@ -813,7 +813,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 20 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
-| `haken.svg` | Tabler Icons „check" (MIT) | 25 |
+| `haken.svg` | Tabler Icons „check" (MIT) | 26 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
 | `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 30 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
@@ -823,7 +823,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `karte.svg` | Tabler Icons „map-2" (MIT) | 15 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
-| `korb.svg` | Tabler Icons „trash" (MIT) | 21 |
+| `korb.svg` | Tabler Icons „trash" (MIT) | 22 |
 | `luftlinie.svg` | — | 0 |
 | `lupe.svg` | Tabler Icons „search" (MIT) | 12 |
 | `mail.svg` | Tabler Icons „mail" (MIT) | 3 |
@@ -839,21 +839,21 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 1 |
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 11 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 4 |
-| `schloss.svg` | Tabler Icons „lock" (MIT) | 14 |
+| `schloss.svg` | Tabler Icons „lock" (MIT) | 17 |
 | `server.svg` | Tabler Icons „server" (MIT) | 6 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 10 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 23 |
-| `status.svg` | Tabler Icons „activity" (MIT) | 27 |
+| `status.svg` | Tabler Icons „activity" (MIT) | 29 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
-| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 11 |
+| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 12 |
 | `uhr.svg` | Tabler Icons „device-watch" (MIT) | 277 |
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 9 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
-| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 29 |
+| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 30 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 18 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 1 |
@@ -955,7 +955,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2284 |
 | `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2314 |
 | `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2326 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2502 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2509 |
 
 39 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -1158,6 +1158,14 @@ sind **kein Bedienelement** — wer eine anklickbar braucht, nimmt einen Knopf
 > auf, weil der Klassenname zusammengesetzt wird (`'plakette-' . $ton`) und als
 > Literal nirgends auftaucht; `tools/vollstaendigkeit/` kann ihn deshalb nicht
 > finden. Behoben mit Web 10.3.0, vermerkt in Backlog Nr. 36.
+>
+> **Und es ist ein zweites Mal passiert — `ok`.** In S10/AP3 beim Gegenlesen
+> gefunden, bevor es ausgeliefert wurde: Die neue Karte „Schlüssel des
+> Servers" sollte `plakette-ok` tragen, und die Klasse gibt es im Stylesheet
+> nicht. Sie steht seit Längerem an **zwei Stellen im Bestand** und war dort
+> nie aufgefallen. Wer einen Zustand „alles in Ordnung" meint, nimmt `blau` —
+> das ist der Ton dafür (9.23). Die zwei Altstellen bleiben vorerst stehen;
+> sie sind in Backlog Nr. 36 vermerkt.
 
 > **Plakette und Schloss schließen einander nicht mehr aus** (S3/AP6,
 > E-S3-16). F-N1-B hatte in P3 entschieden: entweder die Plakette
@@ -1651,8 +1659,8 @@ Werts**:
 
 | Stufe | Klasse | Wofür | Schrift |
 |---|---|---|---|
-| groß | `.codeblock-wert` | sechs Zeichen, die jemand abschreibt: Geräte-ID, Wiederherstellungsschlüssel | `--groesse-5`, 600, gesperrt (`.06em`) |
-| klein | `.codeblock-wert-lang` | sechzig bis hundert Zeichen, die jemand kopiert: Cron-Zeile, Token-Adresse, Setz-Link, Serverschlüssel-Zeile, API-Schlüssel | `--groesse-2`, 400, ohne Sperrung, `word-break:break-all` |
+| groß | `.codeblock-wert` | Werte, die jemand **abschreibt**: Kopplungscode, Wiederherstellungsschlüssel, Schlüsselblatt (`+ .blatt-wert`) | `--groesse-5`, 600, gesperrt (`.06em`) |
+| klein | `.codeblock-wert-lang` | sechzig bis hundert Zeichen, die jemand **kopiert**: Cron-Zeile, Token-Adresse, Setz-Link, Einladungslink, Geräte-ID, API-Schlüssel, APK-Prüfsumme | `--groesse-2`, 400, ohne Sperrung, `word-break:break-all` |
 
 ```
 .codeblock.codeblock-lang     der Kasten (flex, Wert links, Knopf rechts)
@@ -1673,12 +1681,18 @@ Ohne JavaScript gäbe es sonst einen Knopf, der nichts tut — und das ist
 schlechter als keiner. Der Wert bleibt in beiden Fällen lesbar und markierbar.
 
 **Seit Web 15.4.1 ist die Umstellung vollständig** (S8/AP6). Die kleine Stufe
-steht jetzt an allen sieben Stellen mit langen Werten: Cron-Zeile und
-Token-Adresse (Hintergrundjobs), Setz-Link (Kontoseite), Einladungslink
-(NutzerInnen-Liste), Serverschlüssel-Zeile (Backup-Ziele), Geräte-ID und
-API-Schlüssel (Geräte) sowie die SHA-256-Prüfsumme des APK. **Die große Stufe
-bleibt zwei Werten:** dem Kopplungscode und dem Wiederherstellungsschlüssel —
-beide sind kurz und werden abgeschrieben, nicht kopiert.
+steht an den Stellen mit langen Werten: Cron-Zeile und Token-Adresse
+(Hintergrundjobs), Setz-Link (Kontoseite), Einladungslink
+(NutzerInnen-Liste), Geräte-ID und API-Schlüssel (Geräte) sowie die
+SHA-256-Prüfsumme des APK. **Die große Stufe bleibt den Werten, die
+abgeschrieben werden:** dem Kopplungscode, dem Wiederherstellungsschlüssel —
+und seit Web 20.1.0 dem Schlüsselblatt (Kasten unten).
+
+> *Die Liste hieß bis Web 20.1.0 „alle sieben Stellen" und nannte die
+> **Serverschlüssel-Zeile (Backup-Ziele)** mit. Die Karte ist mit S10/AP3
+> nach Betrieb → Servereinstellungen gezogen und nennt dort nur noch die
+> Kennung statt des Werts; ein Wertekasten steht da nicht mehr. Sechs
+> Stellen.*
 
 **Kein Symbol am Knopf.** Der Vorrat (Kapitel 8) hat keines für „kopieren",
 und ein neues bräuchte Freigabe mit Mockup. Das Wort tut es. Ohne
@@ -1689,6 +1703,23 @@ der aufklappt, den Rest der Seite verschiebt.
 > *Dieser Absatz stand bis Web 16.3.0 am Ende von 9.18a und handelte dort vom
 > Kopieren-Knopf, den 9.18a gar nicht kennt. Zurückgeschoben, als 9.18a beim
 > Anlegen des Kartenfilters gegengelesen wurde.*
+
+> **Und seit Web 20.1.0 gibt es eine dritte Stelle für die große Stufe — das
+> Schlüsselblatt** (S10/AP3). 64 Hexzeichen sind ein langer Wert, und nach
+> der Regel oben gehörten sie in die kleine Stufe. Sie stehen trotzdem groß
+> und gesperrt, weil das Blatt **abgeschrieben wird, nicht kopiert**: Es ist
+> ein Ausdruck auf Papier, es gibt dort keine Zwischenablage, und wer einen
+> Schlüssel abtippt, braucht jede Ziffer einzeln unterscheidbar. **Die
+> Unterscheidung der Stufen ist also nicht die Länge, sondern was mit dem
+> Wert geschieht** — abschreiben oder kopieren; die Länge ist nur der
+> häufigste Hinweis darauf. Die Zusatzklasse `.blatt-wert` ändert daran zwei
+> Dinge: Der Wert **darf** umbrechen (sechzehn Vierergruppen passen in keine
+> Zeile von 210 mm) und er bricht **nur zwischen** den Gruppen
+> (`word-break: keep-all`) — `break-all` der kleinen Stufe zerschnitte eine
+> Gruppe mitten durch, und dann zählt beim Abtippen niemand mehr nach.
+> Und **keinen Kopieren-Knopf**: Auf einem Ausdruck ist er ein Kasten, der
+> nichts tut, und am Bildschirm zeigte er den Wert einer Stelle, an der er
+> nicht hingehört.
 
 ### 9.18a Kopf einer langen Liste: Suche über den Filtern
 
@@ -2464,7 +2495,7 @@ unbedeckt nach 200 ms.
 
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
-### 10.1 Fünf Typen
+### 10.1 Sechs Typen
 
 | Typ | Hülle | Leiste | Beispiele |
 |---|---|---|---|
@@ -2473,6 +2504,7 @@ unbedeckt nach 200 ms.
 | **Suchseite** | `ui_geruest_start(['leiste' => 'filter'])` | Filter, von der Seite gefüllt | Suche |
 | **Öffentliche Lesespalte** | `ui_kopf(['menue' => false])` + `.rahmen rahmen-lesespalte` | keine | Impressum, Datenschutz, Abbruchseite |
 | **Anmeldehülle** | `.anmeldung-body` + `<main class="anmeldung">` | keine | Anmeldung, Passwort setzen, Einrichter |
+| **Druckseite** | `.blatt-seite` + `.rahmen rahmen-lesespalte` | keine | Schlüsselblatt (`betrieb_schluesselblatt.php`) |
 
 **Es gibt keine zweite Leiste.** Unter 1024 px liegt dieselbe
 `<aside class="leiste">` als Schublade über dem Inhalt, darüber steht sie fest
@@ -2497,6 +2529,34 @@ beiden Rechtstextseiten brauchen eine.
 > Installation mit eigenem Logo sieht während der Wartung eines der beiden
 > Standardlogos. Kein neuer Baustein, keine neue Regel im Stylesheet; wer
 > sie ändert, ändert die vorhandenen mit.
+
+> **Die Druckseite ist der zweite Sonderfall — und das erste `@media print`
+> des Projekts** (Web 20.1.0, S10/AP3). Sie ist kein neuer Baustein: Sie
+> benutzt die **Lesespalte** wie Impressum und Datenschutz, dazu Meldung
+> (`.meldung-warn`), Wertekasten (`.codeblock-wert`), Feldhinweis und Knopf.
+> Was sie zu einem eigenen Typ macht, ist ihr
+> **Zweck** — sie wird gedruckt, nicht gelesen. Das Schlüsselblatt ist bis
+> auf Weiteres die einzige; sie entsteht nur da, wo der Ausdruck der Zweck
+> ist und nicht eine Bequemlichkeit.
+>
+> **Drei Regeln im Druckblock, mehr nicht** (Stylesheet, Abschnitt 26). Ein
+> Druck-Stylesheet, das jede Seite umgestaltet, ist eine zweite Oberfläche
+> mit eigenen Fehlern — und niemand sieht sie sich an, weil niemand druckt.
+> Gestaltet wird die eine Seite, die gedruckt werden soll:
+>
+> | Regel | Was sie tut | Warum |
+> |---|---|---|
+> | `.nur-bildschirm { display: none }` | nimmt Knöpfe und Rückweg vom Papier | Ein Knopf auf einem Ausdruck ist ein Kasten, der nichts tut |
+> | `background: none` auf Blattseite, Rahmen, Inhalt | keine Fläche auf Papier | `--schnee`/`--rauch` drucken als grauer Kasten und kosten Tinte. **`none`, nicht Weiß:** Die Skala ist geschlossen, und einen Token für Weiß gibt es nicht — `--schnee` ist `#FFFCFA`. Was durchscheint, ist das Papier |
+> | `break-inside: avoid` auf `.blatt-wert`, `break-after: avoid` auf `h2` | kein Seitenumbruch mitten im Wert | Ein Schlüssel über zwei Blätter ist beim Abtippen die Stelle, an der eine Gruppe verlorengeht — und ein halb abgetippter Schlüssel sieht aus wie ein falscher |
+>
+> **`.blatt-wert` ist `.codeblock-wert` mit zwei Änderungen:** Er darf
+> umbrechen (sechzehn Vierergruppen passen in keine Zeile von 210 mm) und er
+> bricht **nur zwischen** den Gruppen (`word-break: keep-all`).
+> `break-all` zerschnitte eine Gruppe mitten durch, und dann zählt beim
+> Abtippen niemand mehr nach. Gemessen bei 718 px (210 mm abzüglich Rand) in
+> `media: print`: **16 Gruppen, 0 zerschnitten, 0 waagerechter Überlauf**
+> (`tools/anteilprobe/betriebslauf.mjs`, Abschnitt 2).
 
 ### 10.2 Rezept: eine neue Inhaltsseite
 
@@ -2600,6 +2660,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 20.1.0 (S10/AP3)** | **10.1 um einen sechsten Seitentyp ergänzt: die Druckseite** — und mit ihr das **erste `@media print` des Projekts** (Stylesheet, Abschnitt 26, drei Regeln). Kein neuer Baustein: Das Schlüsselblatt benutzt Lesespalte, Meldung, Wertekasten, Feldhinweis und Knopf; was es zum eigenen Typ macht, ist sein Zweck. Eine neue Klasse mit Regel — `.blatt-wert`, `.codeblock-wert` mit zwei Änderungen (darf umbrechen, bricht **nur zwischen** den Vierergruppen). **Kein neues Token, kein neuer Farbwert, kein neues Symbol:** Die Flächenregel im Druck setzt `background: none` statt eines weißen Hexwerts, weil die Skala geschlossen ist und es keinen Token für Weiß gibt. Kapitel **9.6** um den dritten durchgerutschten Plakettenton ergänzt (`ok`, zwei Altstellen ohne Regel, Backlog Nr. 36). Gemessen: Vollständigkeit **Hexfarben außerhalb `:root` 0**, Befunde 329 → 335 (die sechs sind das `→` der Pfadschreibweise *Betrieb → Servereinstellungen*); Bilderlauf `43b`, `45`, `48`, `48a` in acht Breiten, **beide Bedienhöhen**, je **0 Überlauf / 0 Knöpfe falscher Höhe**; Kontraste **22 Paare, 0 verfehlt**; Druckansicht bei 718 px (210 mm) **16 Gruppen, 0 zerschnitten, 0 Überlauf**. |
 | **Web 19.6.0 (Mockup-Runde 9c / AP4)** | **9.12 um zwei Absätze ergänzt** (E-P3-27 fortgeschrieben): Das Blatt **fährt auf** (`translateY(100%)` → `.blatt-auf`, `--dauer`, am Schreibtisch ausdrücklich nicht), und der **Öffner bleibt markiert**, solange sein Blatt offen ist. Kapitel **3.1** sagt dazu, dass Orange seither auch „hier ist gerade etwas offen" heißt — als Fortsetzung von „hier wird gehandelt", nicht als zweite Bedeutung. Die Markierung steht **am Attribut** `[data-blatt][aria-expanded="true"]` und erreicht damit alle vier Bauarten von Öffnern (6 × `ui_aktionen()`, 9 × `ui_zeilenaktionen()`, der Pin-Knopf des Ortsfelds, 3 handgeschriebene Sortierblatt-Knöpfe) — E-MR-25. **`--dauer` von .18 s auf .24 s** für die ganze Anwendung (E-MR-22, F-MR-12); der Grundsatz in Kapitel 6 nennt den neuen Wert. **Kein neues Token** — die Fassung D4 benutzt `--orange-hell` und `--orange-tief`, das Kontrastpaar „Orange tief auf Orange hell" war schon gerechnet. **Kein neues Symbol, kein neuer Baustein.** Gemessen in drei Motoren, fünf Öffner, mit und ohne abbestellte Bewegung: Fläche und Schrift überall richtig, nach `Escape` `hidden=true`, `aria-expanded=false`, Fokus zurück am Knopf; mit abbestellter Bewegung 0,01 ms und kein Zwischenbild. |
 | **Web 19.5.1 (Mockup-Runde 9c / AP3b)** | **9.35 nachgetragen** (siehe dort — die Kapitelpflicht aus 1.3 war mit 19.5.0 übersehen worden) und **9.7 um einen Absatz ergänzt:** Ein `<select>` bekommt `contain:paint`, weil WebKit den längsten Eintrag in den Überlauf des Kastens rechnet und `import.php` bei 360 px dadurch um 6 px überlief (Backlog Nr. 185) — gefunden vom ersten dreifachen Bilderlauf. **Kein neues Token, kein neues Symbol, kein neuer Baustein.** Gemessen in drei Motoren: Kaskade **758 → 759 Regeln, 0 entfallen, 1 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **46 150 Elementmessungen, 104 Abweichungen** — 8 Auswahlfelder × 13 Breiten, und die einzige geänderte Eigenschaft ist `contain: none → paint`. Chromium, Firefox und WebKit melden dieselben Zahlen. |
 | **Web 19.5.0 (Mockup-Runde 9c / AP3)** | **Neues Token `--karte-gross`** (`min(60vh, 520px)`; Tabelle 100 → 101) und **zwei neue Symbole** — `karte-gross.svg` und `karte-breit.svg`, Tabler „arrows-vertical" und „arrows-horizontal" (Vorrat 53 → 55). Der Baustein dazu ist erst mit 19.5.1 als **9.35** beschrieben worden; diese Zeile hält fest, dass er mit 19.5.0 entstanden ist. **Kein neuer Farbwert.** |

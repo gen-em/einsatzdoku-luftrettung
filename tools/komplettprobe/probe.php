@@ -175,7 +175,19 @@ while (true) {
     if ($runden > 500) { break; }
 }
 $dauer = microtime(true) - $anfangZeit;
-pruef('Der Lauf braucht mehr als ein Häppchen', $runden > 1, $runden . ' Häppchen');
+/* MEHR ALS EIN HÄPPCHEN BRAUCHT EINEN BESTAND, DER DAS HERGIBT (S10/AP4).
+ * Am Referenzbestand (rund 18 000 Zeilen) ist der Dump in einem Zug fertig;
+ * das ist keine Fehlfunktion, sondern eine kleine Datenbank. Gemeldet wird
+ * die Zahl, nicht ein roter Haken — messbar ist die Häppchenteilung im
+ * Messstand (5000er-Bestand). */
+if ($runden > 1) {
+    pruef('Der Lauf braucht mehr als ein Häppchen', true, $runden . ' Häppchen');
+} else {
+    offenlassen('Häppchenteilung',
+        'der Dump lief in einem Zug durch (' . $runden . ' Häppchen, '
+        . number_format((int)($z['roh_bytes'] ?? 0), 0, ',', '.')
+        . ' Byte roh) — zu kleiner Bestand, messbar im Messstand');
+}
 pruef('Der Lauf wird fertig', ($z['stand'] ?? '') === 'fertig', (string)($z['stand'] ?? '-'));
 pruef('Die Speicherspitze bleibt unter dem Z3-Budget von 64 MB', $spitze <= 64 * 1048576,
       sprintf('%.1f MB in %.2f s', $spitze / 1048576, $dauer));
@@ -435,10 +447,45 @@ if ($pruefPdo !== null) {
  * Teil 8 — Wiederanlauf: was passiert, wenn ein Häppchen abbricht
  * ====================================================================== */
 kopf('Teil 8 — Wiederanlauf nach einem abgebrochenen Häppchen');
+/* DIESER TEIL BRAUCHT EINEN BESTAND, DER NICHT IN EIN HÄPPCHEN PASST
+ * (S10/AP4, 14.09.2026).
+ *
+ * Er stellt einen Abbruch mitten im Dump nach. Läuft der Dump in EINEM Zug
+ * durch — am Referenzbestand sind es 18 376 Zeilen und 438 KB, das ist in
+ * Sekundenbruchteilen fertig —, dann gibt es keinen Bauordner mehr, den man
+ * beschädigen könnte: `komp_schub()` setzt den Zustand auf `fertig` und
+ * entfernt `bau`.
+ *
+ * Bis hierher stand das ungeprüft da. Die Folge war kein roter Haken, sondern
+ * ein ABSTURZ: `gzopen()` auf einen Pfad, den es nicht gibt, dann
+ * `gzread(false)` — ein TypeError, Rückgabewert 255, und die Teile 9 und 10
+ * liefen nie. Die Zahl „76 von 76", die in der Anleitung steht, stammt aus
+ * einer Zeit mit größerem Bestand; seither meldete diese Probe gar nichts
+ * mehr (Fund F-S10-AP4-02).
+ *
+ * Jetzt wird nachgesehen und gesagt, was ist — eine Auskunft statt eines
+ * Absturzes. Wer den Teil messen will, nimmt den Messstand
+ * (`tools/messstand/`, 5000er-Bestand). */
 $z2 = ['stand' => 'dump', 'bau' => KOMP_BAU_PRAEFIX . bin2hex(random_bytes(4)),
        'name' => komp_dateiname(), 'begonnen' => gmdate('Y-m-d\TH:i:s\Z'), 'roh_bytes' => 0];
 $start = microtime(true);
 komp_schub($pdo, $z2, static fn(): float => 5.6 - (microtime(true) - $start), 5.0);
+
+if (!isset($z2['bau']) || !in_array((string)($z2['stand'] ?? ''), ['dump', 'siegel'], true)) {
+    offenlassen('Wiederanlauf',
+        'der Dump lief in EINEM Häppchen durch (Zustand „'
+        . (string)($z2['stand'] ?? '?') . '", '
+        . number_format((int)($z2['roh_bytes'] ?? 0), 0, ',', '.')
+        . ' Byte roh) — ein Abbruch mitten im Dump ist an diesem Bestand nicht '
+        . 'herstellbar. Messbar im Messstand (5000er-Bestand).');
+    /* UND DEN STAND WIEDER WEGRÄUMEN, den dieser Durchlauf nebenbei erzeugt
+     * hat. Ohne das zählt Teil 9 einen Stand mehr, die Verdrängung mit
+     * Aufbewahrung 1 nimmt zwei statt einen — und „Der jüngste Stand bleibt"
+     * scheitert an der Probe selbst statt an der Anwendung. */
+    if (($z2['stand'] ?? '') === 'fertig' && isset($z2['name'])) {
+        @unlink(komp_wurzel() . '/' . (string)$z2['name']);
+    }
+} else {
 $bauRoh = komp_wurzel() . '/' . $z2['bau'] . '/' . KOMP_ROHNAME;
 $nachEins = (int)@filesize($bauRoh);
 pruef('Nach dem ersten Häppchen steht etwas da', $nachEins > 0,
@@ -485,6 +532,7 @@ pruef('Ist der Baustand verschwunden, beginnt der Lauf von vorn',
 pruef('...und das wird im Zustand vermerkt', isset($verlorenR['neu_begonnen']),
       (string)($verlorenR['neu_begonnen'] ?? '-'));
 komp_bau_weg((string)$z2['bau']);
+}
 
 /* =========================================================================
  * Teil 9 — Aufbewahrung, Speichergrenze, Rückstand
@@ -532,10 +580,26 @@ if ($zielWurzel === '' || !is_dir($zielWurzel)) {
     } else {
         /* Ein Wegwerf-Ziel auf die örtliche Gegenstelle. Es wird am Ende
          * wieder entfernt — eine Probe, die Einträge hinterlässt, ist keine. */
+        /* FTPS UND NICHT MEHR FTP (S10/AP4, E-S10-14).
+         *
+         * Hier stand `'protokoll' => 'ftp'` mit Port 2121 — und diese Probe
+         * war damit das EINZIGE Werkzeug des Projekts, das ein `ftp`-Ziel
+         * wirklich anlegt. Der AP4-Zuschnitt nannte sie nicht; sobald
+         * `sz_pruefen_eingabe()` das Protokoll abweist, scheitert schon das
+         * Anlegen, und die sieben Erwartungen darunter laufen nicht mehr.
+         * Aus 76/0 wäre 69/1 geworden — eine Probe, die nicht rot wird,
+         * sondern verstummt.
+         *
+         * Der Ordner wird AUS DEM PROTOKOLL abgeleitet und nicht geschrieben:
+         * `gegenstellen.py` legt je Protokoll ein eigenes Verzeichnis an, und
+         * ein fest verdrahtetes `/ftp/` daneben ist genau die Zeile, die beim
+         * nächsten Wechsel wieder vergessen wird. */
+        $protProbe = 'ftps';
+        $portProbe = '2122';
         $name = 'komplettprobe-' . bin2hex(random_bytes(3));
         [$ok, $was] = sz_speichern(null, [
-            'name' => $name, 'protokoll' => 'ftp', 'host' => '127.0.0.1',
-            'port' => '2121', 'nutzer' => 'probe', 'pfad' => '/',
+            'name' => $name, 'protokoll' => $protProbe, 'host' => '127.0.0.1',
+            'port' => $portProbe, 'nutzer' => 'probe', 'pfad' => '/',
             'passiv' => '1', 'aktiv' => '1',
         ], 'geheim-probe-2026', null);
         pruef('Ein Wegwerf-Ziel lässt sich anlegen', $ok,
@@ -550,7 +614,7 @@ if ($zielWurzel === '' || !is_dir($zielWurzel)) {
             pruef('Es geht etwas hinaus', $e['gesendet'] > 0,
                   $e['gesendet'] . ' Dateien, '
                   . number_format($e['bytes'] / 1048576, 1, ',', '.') . ' MB');
-            $dort = $zielWurzel . '/ftp/' . KOMP_ORDNER . '/' . $datei;
+            $dort = $zielWurzel . '/' . $protProbe . '/' . KOMP_ORDNER . '/' . $datei;
             pruef('Das Komplett-Backup liegt am Ziel unter „' . KOMP_ORDNER . '/"',
                   is_file($dort), $dort);
             pruef('...und ist Byte für Byte dieselbe',
@@ -571,6 +635,151 @@ if ($zielWurzel === '' || !is_dir($zielWurzel)) {
             pruef('Das Wegwerf-Ziel ist wieder weg',
                   !in_array($name, array_column(sz_alle(), 'name'), true));
         }
+    }
+}
+
+/* =========================================================================
+ * Teil 11 — Zwei Geheimnisse in config.php, und keines gehoert ins Archiv
+ *           (S10/AP5, E-S10-15; Zusage aus SP-3 „Was nicht ins Archiv gehoert")
+ *
+ * DIE ZUSAGE. `config.php` traegt seit S10 zwei Geheimnisse: den
+ * Serverschluessel, der jede Sicherung versiegelt, und den Server-Anteil, der
+ * in den Datenschluessel jedes Kontos eingeht. Das Komplettbackup sichert die
+ * DATENBANK — `config.php` ist ausdruecklich NICHT darin, und das ist kein
+ * Versehen, sondern der Sinn der Sache: Laege der Serverschluessel in der
+ * Datei, die er versiegelt, waere das Siegel eine Verzierung.
+ *
+ * Bis AP5 stand diese Zusage ungemessen da. Sie ist billig zu messen und
+ * teuer zu verlieren: Ein kuenftiger Eintrag in `app_state`, ein
+ * Diagnosefeld, eine Fehlermeldung, die den Wert mitschreibt — und der
+ * Serverschluessel laege im Archiv, ohne dass eine Zeile Code „falsch"
+ * aussaehe.
+ *
+ * DIE GEGENRICHTUNG GEHOERT DAZU. Die KENNUNG (acht Zeichen, aus dem Wert
+ * nicht zurueckzurechnen) MUSS mitfahren: Sie steht in `app_state` und ist
+ * das Einzige, woran eine wiederangelaufene Installation merkt, dass ihr
+ * `config.php` einen ANDEREN Anteil fuehrt als der Bestand erwartet. Ohne sie
+ * waere der Zustand nicht „abweichend", sondern „nicht eingerichtet" — und
+ * die Anwendung schriebe stillschweigend Huellen auf einen Anteil, mit dem
+ * der Altbestand nicht mehr aufgeht.
+ * ====================================================================== */
+kopf('Teil 11 — Kein Geheimnis im Archiv, aber die Kennung (S10/AP5)');
+
+global $CFG, $CFG_ECHT;
+$anteilHex = strtolower((string)($CFG['kdf_anteil'] ?? ''));
+$anteilAlt = strtolower((string)($CFG['kdf_anteil_alt'] ?? ''));
+/* DER SERVERSCHLUESSEL MUSS DER ECHTE SEIN, NICHT DER DER ARBEITSKOPIE.
+ *
+ * Diese Probe laeuft gegen eine Kopie von `server/`, und ihr `config.php`
+ * bekommt oben einen FRISCHEN Schluessel (`bin2hex(random_bytes(32))`) —
+ * damit sie nie mit dem echten siegelt. Genau deshalb waere die Suche nach
+ * `$CFG['server_key']` eine Scheinpruefung: Der Wert ist Sekunden alt und war
+ * nie in der Datenbank, 0 Treffer sind zwangslaeufig. Gesucht wird der
+ * Schluessel der INSTALLATION aus `$CFG_ECHT` — der einzige, der ueberhaupt
+ * im Bestand haette landen koennen.
+ *
+ * Der Anteil dagegen wird NICHT ersetzt: `$CFG` traegt ihn unveraendert aus
+ * `$CFG_ECHT`, die Suche darueber ist also schon die echte. Der Unterschied
+ * steht hier, weil er beim Lesen nicht zu sehen ist — beide Zeilen sehen
+ * gleich aus und messen Verschiedenes. */
+$skHex     = strtolower((string)($CFG_ECHT['server_key'] ?? ''));
+$skKopie   = strtolower((string)($CFG['server_key'] ?? ''));
+$dump      = strtolower((string)@file_get_contents($klar));
+
+if ($dump === '') {
+    offenlassen('Geheimnisse im Dump',
+        'der Klartext-Dump aus Teil 6 liegt nicht mehr da — Teil 11 misst nichts');
+} else {
+    pruef('Der Server-Anteil steht NICHT im Dump',
+          $anteilHex === '' || substr_count($dump, $anteilHex) === 0,
+          $anteilHex === '' ? 'kein Anteil eingerichtet — nichts zu suchen'
+                            : '0 Treffer fuer 64 Hexzeichen in '
+                              . number_format(strlen($dump), 0, ',', '.') . ' Byte');
+    pruef('Der Serverschluessel der INSTALLATION ebenso wenig',
+          $skHex === '' || substr_count($dump, $skHex) === 0,
+          $skHex === '' ? 'kein Serverschluessel eingetragen'
+                        : '0 Treffer (aus config.php der Installation, nicht der Kopie)');
+    /* Die Gegenprobe zur Gegenprobe: Der Schluessel der Arbeitskopie ist ein
+     * ANDERER. Waeren beide gleich, haette die Zeile darueber den falschen
+     * Wert gesucht — und niemand saehe es an ihrem gruenen Haken. */
+    pruef('...und der Schluessel der Arbeitskopie ist nachweislich ein anderer',
+          $skKopie !== '' && $skKopie !== $skHex,
+          'Kopie ' . substr($skKopie, 0, 8) . '… gegen Installation '
+          . ($skHex === '' ? '(keiner)' : substr($skHex, 0, 8) . '…'));
+    pruef('Und auch der VORHERIGE Anteil nicht (Rotation)',
+          $anteilAlt === '' || substr_count($dump, $anteilAlt) === 0,
+          $anteilAlt === '' ? 'keine Rotation im Gange' : '0 Treffer');
+
+    /* Die Kennung MUSS mitfahren — sie ist die Sollangabe, gegen die eine
+     * wiederangelaufene Installation ihren eigenen Anteil haelt. */
+    $kennungSoll = schluessel_kennung($anteilHex !== '' ? $anteilHex : null);
+    if ($kennungSoll === null) {
+        offenlassen('Die Kennung faehrt mit',
+            'kein Anteil eingerichtet — es gibt keine Kennung, die mitfahren koennte');
+    } else {
+        pruef('Die KENNUNG dagegen faehrt mit (sonst waere der Wiederanlauf blind)',
+              substr_count($dump, $kennungSoll) > 0
+              && str_contains($dump, 'kdf_anteil_kennung'),
+              'app_state.kdf_anteil_kennung = ' . $kennungSoll
+              . ', ' . substr_count($dump, $kennungSoll) . ' Treffer');
+        /* ACHT ZEICHEN SIND KEIN HALBES GEHEIMNIS. Die Kennung ist der Anfang
+         * eines SHA-256 ueber den Wert; aus ihr ist der Wert nicht
+         * zurueckzurechnen, und sie steht ohnehin auf jeder Statusseite. Die
+         * Erwartung nennt den Unterschied, damit ihn niemand fuer einen
+         * Widerspruch zu den drei Erwartungen darueber haelt. */
+        pruef('...und sie ist nicht der Wert: 8 Zeichen gegen 64',
+              strlen($kennungSoll) === 8 && strlen($anteilHex) === 64
+              && !str_starts_with($anteilHex, $kennungSoll),
+              'Kennung 8 Zeichen (SHA-256-Anfang), Anteil 64 — nicht rueckrechenbar');
+    }
+
+    /* ---- Der Wiederanlauf: Anteil weg, Sicherung trotzdem zu oeffnen ----- */
+    /* Im Speicher, nicht auf der Platte — dieselbe Bauart wie Teil 12 der
+     * Wiederherstellungsprobe. `config.php` wird nicht angefasst.
+     *
+     * ABER `anteil_zustand()` KANN SCHREIBEN, und die Datenbank ist hier die
+     * ECHTE (die Arbeitskopie betrifft nur `server/`, nicht MariaDB). Im
+     * Zweig `$erwartet === null` ruft die Funktion
+     * `schluessel_marke_setzen('kdf_anteil_kennung', …)` und legt die Marke an
+     * — auf einer Installation, die noch keine hat, entstuende sie also durch
+     * diese Probe. Das ist zwar dasselbe, was der erste Seitenaufruf ohnehin
+     * taete (E-S10-U-02), aber ein Pruefmittel soll den Zustand nicht
+     * herstellen, den es misst. Deshalb der Riegel: ohne vorhandene Marke
+     * wird dieser Block gar nicht erst betreten. */
+    if (schluessel_marke_lesen('kdf_anteil_kennung') === null) {
+        offenlassen('Wiederanlauf ohne Anteil',
+            'diese Installation fuehrt keine Marke `kdf_anteil_kennung` — der '
+          . 'Zustand waere `fehlt` statt `abweichend`, und `anteil_zustand()` '
+          . 'legte die Marke beim Zuruecklegen an. Nicht gemessen, statt etwas '
+          . 'zu hinterlassen.');
+    } else {
+    $anteilSicher = $CFG['kdf_anteil'] ?? null;
+    $standVor11   = anteil_zustand(true);
+    try {
+        unset($CFG['kdf_anteil']);
+        kdf_anteil(true); kdf_anteil_alt(true);
+        $stand11 = anteil_zustand(true);
+        pruef('Ohne Anteil, aber mit Marke: Stand „abweichend"',
+              ($stand11['stand'] ?? '') === 'abweichend'
+              || $anteilSicher === null,
+              'Stand „' . (string)($stand11['stand'] ?? '?') . '"');
+
+        $bl11 = 0;
+        $fehl11 = '';
+        try {
+            $bl11 = komp_oeffnen($pfad, (string)serverschluessel(), static fn() => null);
+        } catch (Throwable $e) { $fehl11 = $e->getMessage(); }
+        pruef('Die Komplettsicherung oeffnet TROTZDEM — sie haengt am Serverschluessel',
+              $bl11 > 0 && $fehl11 === '',
+              $fehl11 === '' ? $bl11 . ' Bloecke' : $fehl11);
+    } finally {
+        if ($anteilSicher !== null) { $CFG['kdf_anteil'] = $anteilSicher; }
+        kdf_anteil(true); kdf_anteil_alt(true);
+        $standNach11 = anteil_zustand(true);
+        pruef('Nach dem Zuruecklegen steht der Stand wieder wie zuvor',
+              ($standNach11['stand'] ?? '') === ($standVor11['stand'] ?? ''),
+              'Stand „' . (string)($standNach11['stand'] ?? '?') . '"');
+    }
     }
 }
 

@@ -2,8 +2,8 @@
 # Systemvoraussetzungen einer Wegwerf-Umgebung nachziehen.
 #
 # WOZU. Der Container von Claude Code on the web bringt PHP, Node, Python,
-# Java und Chromium mit — aber weder einen Datenbankserver noch das
-# Android-SDK, obwohl CLAUDE.md 6 und android/LIESMICH.md beides
+# Java und drei Playwright-Engines mit — aber weder einen Datenbankserver
+# noch das Android-SDK, obwohl CLAUDE.md 6 und android/LIESMICH.md beides
 # voraussetzen ("./gradlew build im Ordner android/, mit
 # ANDROID_HOME=/opt/android-sdk"). Wer das nicht weiss, sucht den Fehler in
 # der Anwendung.
@@ -15,16 +15,38 @@
 #   librsvg2-bin         tools/uhr-bilder/erzeugen.sh
 #   imagemagick          dasselbe, und tools/uhr-pruefstand (Bildvergleich)
 #   socat                tools/referenzdatensatz/einspielen/lokal_starten.sh
+#   WebKit-Bibliotheken  tools/motor.mjs -> Bilderlauf, Klickprobe,
+#                        Stilvergleich mit `--motor webkit`
 #   Android-SDK 36       ./gradlew build
 #   python3-cffi         cryptography -> tools/referenzdatensatz/vergleich
 #   jsonschema          tools/referenzdatensatz/quelldaten/pruefen.py
+#
+# DIE WEBKIT-BIBLIOTHEKEN SIND AM 14.09.2026 DAZUGEKOMMEN, und zwar nicht,
+# weil eine Engine fehlte, sondern weil eine vorhandene nicht STARTETE. Seit
+# AP3b (Backlog Nr. 183) fahren drei Pruefmittel wahlweise Chromium, Firefox
+# und WebKit ueber `tools/motor.mjs`. Alle drei Engines liegen im Abbild
+# unter /opt/pw-browsers; gemessen am 14.09.2026: Chromium 141.0.7390.37 und
+# Firefox 142.0.1 starten sofort, WebKit 26.0 bricht ab mit "Host system is
+# missing dependencies to run browsers" und nennt vier Pakete.
+#
+# DAS IST DIE GEFAEHRLICHE SORTE LUECKE. Ein Dreimotorenlauf ohne sie ist ein
+# Zweimotorenlauf — oder er bricht in der Mitte ab, nachdem der Bilderlauf
+# zwei Engines lang gerechnet hat. Beides meldet am Ende keine Null, sondern
+# gar nichts (CLAUDE.md 6: "Eine gruene Zahl ist erst dann ein Beleg, wenn
+# sie das Gemessene benennt").
 #
 # WAS ES NICHT TUT: den Uhr-Pruefstand aufbauen. Der holt sein SDK selbst
 # (tools/uhr-pruefstand/pruefstand.sh aufbau) und braucht dafuer die
 # Geraetedateien aus CIQ_GERAETE_URL, die nicht im Repositorium steht.
 #
+# EBENSO WENIG holt es die Engines selbst. `playwright install` ist
+# ausdruecklich NICHT der Weg: Die Engines liegen bereits im Abbild, und ein
+# Nachladen zoege eine zweite, abweichende Fassung daneben. Fehlt eine
+# Engine wirklich, ist das ein Befund ueber das Abbild und keine Aufgabe
+# dieses Skripts.
+#
 # Aufruf:  sh tools/containeraufbau/aufbau.sh [teil …]
-#          Teile: pakete, datenbank, android, python, alles (Vorgabe)
+#          Teile: pakete, browser, datenbank, android, python, alles (Vorgabe)
 set -eu
 
 ANDROID_SDK="${ANDROID_HOME:-/opt/android-sdk}"
@@ -48,6 +70,56 @@ pakete() {
     printf '   mariadb %s · rsvg %s · socat vorhanden\n' \
         "$(mariadbd --version 2>/dev/null | grep -o '1[0-9.]*' | head -1)" \
         "$(rsvg-convert --version 2>/dev/null | grep -o '[0-9.]*$')"
+}
+
+# Die Laufzeitabhaengigkeiten der Playwright-Engines — und die Gegenprobe,
+# dass alle drei WIRKLICH starten.
+#
+# WARUM DIE GEGENPROBE UND NICHT NUR DAS INSTALLIEREN. Ein `apt-get`, das
+# durchlaeuft, belegt nicht, dass WebKit startet: Die Paketliste unten ist
+# die, die Playwright 1.56 nennt, und die naechste Fassung kann eine andere
+# nennen. Der Lauf sagt deshalb, was er GEMESSEN hat — drei Namen mit drei
+# Fassungsnummern —, und bricht ab, wenn eine Engine fehlt. Eine Engine, die
+# hier stillschweigend fehlt, meldet spaeter im Bilderlauf keine Null,
+# sondern gar nichts.
+browser() {
+    melde "Playwright-Engines"
+    export DEBIAN_FRONTEND=noninteractive
+    # Chromium und Firefox starten im Abbild ohne Zutun; WebKit nicht. Die
+    # vier Namen stammen aus der Meldung von Playwright selbst
+    # ("Alternatively, use apt:"), gemessen am 14.09.2026.
+    apt-get install -y -qq libenchant-2-2 libsecret-1-0 libwayland-server0 \
+                           libmanette-0.2-0 >/dev/null 2>&1 \
+        || { echo "apt-get fehlgeschlagen (WebKit-Bibliotheken)"; exit 1; }
+    dpkg --configure -a >/dev/null 2>&1 || true
+
+    # Gegenprobe: jede der drei Engines einmal starten und ihre Fassung
+    # nennen. Derselbe Modulpfad wie in den Pruefmitteln
+    # (tools/screenshots/aufnehmen.mjs, tools/klickprobe/probe.mjs).
+    node --input-type=module -e '
+      const MODUL = process.env.PLAYWRIGHT_MODUL
+        || "/opt/node22/lib/node_modules/playwright/index.mjs";
+      const M = await import(MODUL.startsWith("/") ? "file://" + MODUL : MODUL);
+      const pw = M.default ?? M;
+      let fehlt = 0;
+      for (const name of ["chromium", "firefox", "webkit"]) {
+        try {
+          const b = await pw[name].launch();
+          console.log("   " + name.padEnd(9) + " " + b.version());
+          await b.close();
+        } catch (e) {
+          fehlt++;
+          console.log("   " + name.padEnd(9) + " FEHLT: "
+            + String(e).split("\n")[0].slice(0, 100));
+        }
+      }
+      if (fehlt) {
+        console.log("   " + fehlt + " von 3 Engines starten nicht — "
+          + "tools/motor.mjs kann sie nicht fahren.");
+        process.exit(1);
+      }
+      console.log("   3 von 3 Engines starten.");
+    ' || { echo "Engine-Gegenprobe fehlgeschlagen"; exit 1; }
 }
 
 datenbank() {
@@ -103,7 +175,7 @@ python_teile() {
     python3 -c 'import jsonschema; print("   jsonschema", jsonschema.__version__)'
 }
 
-alles() { pakete; datenbank; android; python_teile;
+alles() { pakete; browser; datenbank; android; python_teile;
     melde "fertig"
     cat <<ENDE
    Weiter mit:
@@ -118,10 +190,11 @@ if [ $# -eq 0 ]; then set -- alles; fi
 for teil in "$@"; do
     case "$teil" in
         pakete)    pakete ;;
+        browser)   browser ;;
         datenbank) datenbank ;;
         android)   android ;;
         python)    python_teile ;;
         alles)     alles ;;
-        *) echo "Unbekannter Teil: $teil (pakete, datenbank, android, python, alles)"; exit 1 ;;
+        *) echo "Unbekannter Teil: $teil (pakete, browser, datenbank, android, python, alles)"; exit 1 ;;
     esac
 done

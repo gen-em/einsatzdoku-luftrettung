@@ -9,7 +9,7 @@ denen das Komplett-Backup die übrige Anwendung berührt — den Versand
 
 | | |
 |---|---|
-| `probe.php` | die Bibliothek darunter — 76 Erwartungen, ohne Browser |
+| `probe.php` | die Bibliothek darunter — 72 Erwartungen mit allen Schaltern, ohne Browser |
 | `klickweg.mjs` | die Adminseite im Browser — 17 Prüfungen, mit Playwright |
 
 ## Was hier NICHT geprüft werden kann
@@ -93,9 +93,21 @@ Lauf ab. Auf dem Messbestand sind das rund zehn Sekunden und ein zusätzlicher
 Stand in der Ablage der laufenden Installation. Nichts für nebenbei.
 
 Erwartet: **17 Prüfungen, 0 Befunde** (`klickweg.mjs`) und mit allen
-Schaltern **76 Erwartungen, 0 nicht erfüllt** (`probe.php`). Ohne
+Schaltern **72 Erwartungen, 0 nicht erfüllt** (`probe.php`). Ohne
 `--pruefdb` und ohne `--ziel` fallen die betroffenen Teile mit `[ -- ]` aus,
-statt zu schweigen; die Zahl ist dann kleiner.
+statt zu schweigen; die Zahl ist dann **64**.
+
+> **Die Zahl muss sagen, WOMIT gemessen wurde.** Hier stand bis S10/AP5
+> „76 von 76" — eine Zahl aus einer Zeit mit grösserem Bestand, und zwar aus
+> einer Zeit, in der die Probe überhaupt noch bis zum Ende lief. Sie tat es
+> seit Längerem nicht: Teil 8 stürzte an einem `gzread(false)` ab
+> (Rückgabewert **255**), die Teile 9 und 10 liefen nie, und die Anleitung
+> nannte trotzdem eine runde Zahl (F-S10-AP4-02). Wer eine Zahl abschreibt,
+> statt sie zu messen, schreibt irgendwann eine ab, die es nicht mehr gibt.
+>
+> Die beiden heutigen Zahlen sind gemessen: **64** ohne Schalter, **72** mit
+> `--pruefdb` und `--ziel` (die 8 Unterschiedlichen sind die Teile 7 und 10).
+> **63** und **55** waren die Stände vor Teil 11 (S10/AP4).
 
 Der Rückgabewert ist 0, wenn alles hält, sonst 1.
 
@@ -113,6 +125,7 @@ Der Rückgabewert ist 0, wenn alles hält, sonst 1.
 | 8 | Wiederanlauf: abgeschnittener Rest, verschwundener Baustand |
 | 9 | Aufbewahrung, Verdrängung, Speicherbuchführung, Zeitplan |
 | 10 | Versand aufs Backup-Ziel — auch der Fall „halbe Datei liegt dort" |
+| 11 | **Kein Geheimnis im Archiv** (S10): Server-Anteil und Serverschlüssel stehen 0× im Dump, die **Kennung** dagegen fährt mit — und die Sicherung öffnet auch, wenn der Anteil fehlt |
 
 Und im Browser (`klickweg.mjs`): Bestätigungsdialog, Lauf mit Rückmeldung,
 beide Downloads (Inhalt geprüft: gzip-Magie bzw. `EDKOMP1` und `"pbkdf2"` im
@@ -142,7 +155,7 @@ mehr; wer den Bauordner prüfen will, merkt sich seinen Namen vorher.
 `http` bleibt man auf der Anmeldeseite stehen — ohne Fehlermeldung.
 
 **`waitForNavigation`, nicht `waitForLoadState`.** Die Anmeldung leitet den
-Schlüssel im Browser ab (PBKDF2, 320 000 Runden) und geht erst danach weiter.
+Schlüssel im Browser ab (PBKDF2, `KDF_ITER_ZIEL` Runden — heute 600 000) und geht erst danach weiter.
 `waitForLoadState` fällt sofort durch, weil es auf die *aktuelle* Seite
 wartet. Dasselbe Muster steht in `tools/screenshots/aufnehmen.mjs`.
 

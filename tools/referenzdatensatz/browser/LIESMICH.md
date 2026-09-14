@@ -21,6 +21,74 @@ nicht als Demo-Konto gekennzeichnet ist; `papierkorb_misch.mjs` arbeitet
 ausschließlich auf Konten, deren Adresse mit `umlauf-` beginnt. Beide Riegel
 brechen **hart** ab (Rückgabe 2) — sie melden nicht bloß.
 
+### `demo_pruefen.mjs` — erwartet: 24 Einzelprüfungen, 0 Befunde
+
+Stand 14.09.2026 (S10/AP5). Zwei Zahlen, nicht eine: Die Schlusszeile nennt
+**Einzelprüfungen**, **Konsolenfehler** und — wenn es welche gab — **nicht
+gemessene** Erwartungen mit Grund.
+
+> **„Nicht gemessen" ist ein regulärer Ausgang, kein Fehler.** Zwei Gründe
+> kommen vor, und beide sind Eigenschaften der Installation, nicht der
+> Anwendung:
+>
+> - **Es gibt schon ein Demo-Konto.** Dann steht der Knopf „Demo-Konto
+>   anlegen" nicht auf der Seite (`admin_demo.php` zeigt entweder ihn **oder**
+>   „Zurücksetzen"). Abschnitt 1 zählt als nicht gemessen; die Zahlen darunter
+>   werden trotzdem geprüft, denn sie gelten für den Sollstand.
+> - **Die Mengenbremse des Demo-Kontos greift** (E-P1-20: zwanzig Anmeldungen
+>   je Stunde). Dieses Skript meldet sich bis zu achtmal an — zwei Läufe
+>   hintereinander reichen. Der Lauf liest den Grund von der Anmeldeseite
+>   („wieder ab HH:MM Uhr") und überspringt den Abschnitt, statt einen
+>   Stapel roter Zeilen zu melden. Dieselbe Lösung wie in
+>   `tools/anteilprobe/umstellungslauf.mjs` (F-11).
+>
+> Wer sofort weitermessen muss, leert den Topf über den Weg der Anwendung:
+> `rate_erfolg('demo')` und `rate_erfolg('demog')` mit gesetztem
+> `$_SERVER['REMOTE_ADDR']`.
+
+**Vier Reparaturen in S10/AP5**, alle vier Probenfehler und keiner in der
+Anwendung — die Probe lief zuvor überhaupt nicht durch:
+
+| Was | Der Fehler |
+|---|---|
+| Kennzahlen fehlten | `zustand()` teilte an **einem** Umbruch, die Kachel liefert `"83\n\nEinsätze"`. Die vier Kennzahlen fielen weg, und jede Erwartung darauf verglich `undefined` gegen '83' |
+| Der Reset lief nie | Der Knopf heißt **„Zurücksetzen"**, gesucht wurde „Auf Standard zurücksetzen". Der ganze Zweig wurde übersprungen — sichtbar nur daran, dass der Papierkorb des Demo-Kontos mit jedem Lauf wuchs |
+| „Diagnose nicht lesbar" | Der Ausdruck suchte das Schloss als **Emoji**; `dtGeschuetzt()` setzt es seit Langem als `<svg>`, und `innerText` liefert dafür nichts. Der Klartext stand die ganze Zeit gut lesbar daneben |
+| `kdf_upgrade` → 403 | Das CSRF-Token steht als `const CSRF`, nicht auf `window`. Gemessen wurde die CSRF-Sperre statt der Zusage, dass der Endpunkt das Demo-Konto überspringt |
+
+Gegriffen wird seither am `form`-Attribut (`f-demo-anlegen`, `f-demo-reset`)
+und am `id` des Profilformulars (`pfform`) — nicht am Beschriftungstext. Ein
+Text ist eine Gestaltungsfrage; ein Formularbezug ist eine Aussage über den
+Aufbau der Seite.
+
+**Dazugekommen sind drei Erwartungen**, die es vorher nicht gab und die den
+Anlass überdauern:
+
+- **Das Schloss an den geschützten Feldern wird gezählt** (`.symbol-schutz`,
+  heute 5 auf der Einsatzseite). `CLAUDE.md` 4 verlangt es an jedem
+  verschlüsselten Feld; an dieser Stelle hat es bis S10/AP5 niemand
+  nachgesehen.
+- **`api/kdf_upgrade.php` überspringt das Demo-Konto** — jetzt eine
+  Erwartung statt einer Protokollzeile. Das ist die tragende Zusage seit S10:
+  Das Demo-Konto bekommt keinen Server-Anteil, seine Hülle bleibt `edk1:`.
+- **Die E-Mail-Adresse steht nach der Abweisung noch da.** Eine Meldung ist
+  eine Meldung; die Zusage ist, dass sich nichts geändert hat.
+
+**Kartenkacheln zählen nicht mit, aber mit Beleg.** Der Prüfstand hat keinen
+Weg ins Netz, jede Kachel scheitert. Gefiltert wurde bislang am *Text* der
+Konsolenmeldung — der trägt die Adresse aber nicht immer: Nach mehreren
+Versuchen meldet Chromium nur noch `Failed to load resource:
+net::ERR_TOO_MANY_RETRIES`. Ein Lauf stand deshalb auf „1 Konsolenfehler".
+Jetzt werden die Adressen der gescheiterten Anfragen mitgeschrieben, und eine
+Meldung ohne Adresse gilt nur dann als Kachelrauschen, wenn im selben Lauf
+tatsächlich eine fremde Kachel gescheitert ist. Scheitert etwas unter
+`127.0.0.1`, bleibt der Fehler stehen.
+
+**Der Rückgabewert folgt der Linie von `umstellungslauf.mjs`:** 0, solange es
+keine Befunde und keine Konsolenfehler gibt — auch dann, wenn Abschnitte nicht
+gemessen wurden. Die Zahl steht in der Schlusszeile; wer sie übersieht, liest
+einen halb gefahrenen Lauf für einen ganzen.
+
 Aufruf jeweils:
 
 ```

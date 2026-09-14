@@ -84,5 +84,10 @@ function apk_groesse(int $bytes): string
  */
 function apk_sha_lesbar(string $sha): string
 {
-    return trim(chunk_split($sha, 4, ' '));
+    /* Seit Web 20.1.0 ueber `hex_vierergruppen()` (db.php): Dieselbe Rechnung
+     * stand mit S10 ein zweites Mal im Projekt, fuer das Schluesselblatt. Zwei
+     * Fassungen derselben Formatierung laufen frueher oder spaeter
+     * auseinander, und dann sieht ein Wert an zwei Stellen verschieden aus,
+     * obwohl er derselbe ist. */
+    return hex_vierergruppen($sha);
 }

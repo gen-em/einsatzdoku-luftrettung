@@ -72,6 +72,27 @@ Die sechs Konten **ohne Kontokennung** sind Absicht: Sie bilden den Altbestand
 vor der Migration `2026_08_16_kontokennung` nach. Die Liste muss sie zeigen
 können, ohne sie als „nie gesichert" auszugeben — sie sind ein anderer Befund.
 
+## Was es NICHT anlegt — und warum das seit S10 eine Zusage ist
+
+**Keine Schlüsselhüllen.** Das `INSERT` schreibt acht Spalten (`email`, `name`,
+`role`, `account_key`, `kdf_iter`, `session_epoch`, `created_at`,
+`last_login`); `pat_wrap_pw`, `pat_wrap_rc`, `pat_key_check`, `password_hash`
+und `kdf_salt` bleiben `NULL`. Gemessen: **0 von 300** Prüfkonten mit einer
+Hülle.
+
+Das ist seit S10 nicht mehr nur eine Beobachtung, sondern erspart eine ganze
+Fehlerklasse: Eine Hülle, die hier von Hand entstünde, trüge kein `edka1:` und
+passte damit nicht zum ausgelieferten Server-Anteil — `huelle_pw_pruefen()`
+wiese sie beim nächsten Schreibweg ab, und 300 Konten stünden auf der
+Statusseite als „Schlüsselableitung offen". Die Prüfkonten sind Karteileichen
+mit Backup-Ständen, und genau das sollen sie sein.
+
+**Seit Web 20.2.0 braucht `anlegen` einen eingetragenen Serverschlüssel.** Die
+Begleitdatei `konto.json` ist seither versiegelt. Fehlt der Schlüssel, hält
+das Werkzeug **vorher** an, statt mitten im Bestand abzubrechen. Wer ihn
+zwischen `anlegen` und `entfernen` wechselt, kann die Begleitdateien nicht
+mehr öffnen — `entfernen` löscht die Ordner trotzdem, es liest sie nicht.
+
 ## Grenzen
 
 - Die Konten haben **keine Einsätze und keine Diensttage**. Die Backups

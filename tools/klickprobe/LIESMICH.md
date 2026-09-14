@@ -125,6 +125,24 @@ meldet sie sich **einmal** neu an und fährt die Adresse erneut an; gelingt auch
 das nicht, wirft sie. Kontext und Seite bleiben stehen — Eingabeart, Attrappe
 und Kachelsperre hängen daran.
 
+> **Die Wache fängt die Sitzung, nicht den Bestand** (S10/AP3, 14.09.2026).
+> Ein Weg, der seine Adresse erst aus einer Liste holen muss, findet nach dem
+> Reset **nichts** — und dann gibt es keine Seite, auf der die Wache greifen
+> könnte. Die Meldung lautete „Adresse nicht aufgelöst (Bestand leer?)" und
+> „Kein Diensttag im Bestand"; beide zeigen auf die Daten, und die Daten waren
+> in Ordnung. Gemessen: Reset um **14:01:15**, Lauf in derselben Minute
+> begonnen → **37 von 43**. Derselbe Lauf sechs Minuten später → **43 von 43**.
+>
+> Der Fall lässt sich nicht abfangen, ohne jeden einzelnen Weg umzubauen. Er
+> wird deshalb **benannt**: Die Probe liest `demo_letzter_reset` vor und nach
+> dem Lauf und schreibt, wenn sich die Marke geändert hat, eine Warnung an den
+> **Anfang** des Berichtsabschnitts und eine Zeile auf die Konsole. Der
+> Fehlertext von `gehZu()` nennt seither beide möglichen Ursachen statt nur
+> der falschen.
+>
+> **Eine Zahl aus einem Lauf mit dieser Warnung ist keine Zahl.** Wiederholen,
+> dann melden.
+
 Wer einen langen Lauf ganz aus dem Fenster halten will, stellt die Uhr vor dem
 Start: `UPDATE app_state SET v = UNIX_TIMESTAMP() WHERE k =
 'demo_letzter_reset';` — das verschiebt den nächsten Reset um volle 30 Minuten.

@@ -296,17 +296,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // config.php schreiben + Sperre setzen
     if (!$errors) {
-        /* DER SERVERSCHLUESSEL ENTSTEHT HIER UND NIRGENDWO SONST (E-S2-21,
-         * S2/AP7). Er versiegelt die Zugangsdaten der Backup-Ziele und —
-         * ab AP8 — das Komplettbackup. Eine neue Installation bekommt ihn
-         * mit, ohne dass jemand daran denken muss; bestehende Installationen
-         * tragen ihn ueber die Seite „Backup-Ziele" nach.
+        /* BEIDE GEHEIMNISSE DES SERVERS ENTSTEHEN HIER UND NIRGENDWO SONST
+         * (E-S2-21 / S2/AP7 fuer den Schluessel, E-S10-02 / S10 fuer den
+         * Anteil). Eine neue Installation bekommt beide mit, ohne dass jemand
+         * daran denken muss; eine bestehende traegt sie ueber Betrieb →
+         * Servereinstellungen nach, Karte „Schluessel des Servers".
          *
-         * ER GEHOERT INS WIEDERANLAUFPAKET. Steht in docs/Technik.md,
-         * Abschnitt 7, und im Kopf dieser config.php gleich mit — denn wer
-         * die Datei zum ersten Mal oeffnet, liest sie und nicht das Runbook.
-         * Geht er verloren, sind die Zugangsdaten der Ziele neu einzutragen
-         * und ein versiegeltes Komplettbackup ist nicht mehr zu oeffnen. */
+         * SIE TUN VERSCHIEDENES. Der SERVERSCHLUESSEL versiegelt, was der
+         * Server ohne Browser lesen koennen muss — die Zugangsdaten der
+         * Backup-Ziele, das Komplettbackup und (seit S10) die Adminpakete.
+         * Der SERVER-ANTEIL geht in die Ableitung des Datenschluessels ein,
+         * mit dem der Browser die Schluesselhuelle des Kontos oeffnet; der
+         * Server kann damit nichts oeffnen, aber ein Datenbankabzug allein
+         * reicht seither nicht mehr fuer einen Offline-Angriff.
+         *
+         * BEIDE GEHOEREN INS WIEDERANLAUFPAKET. Es hat seit S10 VIER Stuecke:
+         * config.php, Serverschluessel, Server-Anteil, Zugang zum Ziel. Das
+         * steht in docs/Technik.md, Abschnitt 7, und im Kopf dieser
+         * config.php gleich mit — denn wer die Datei zum ersten Mal oeffnet,
+         * liest sie und nicht das Runbook. */
         $config = [
             'db'  => ['dsn' => "mysql:host={$dbHost};dbname={$dbName};charset=utf8mb4",
                       'user' => $dbUser, 'pass' => $dbPass],
@@ -314,13 +322,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       'logo_path' => $logoPath, 'max_body_bytes' => 524288],
             'smtp' => $smtp,
             'server_key' => bin2hex(random_bytes(32)),
+            'kdf_anteil' => bin2hex(random_bytes(32)),
         ];
         $php = "<?php\n// Automatisch erzeugt vom Installer am " . date('c') . "\n"
-             . "// Diese Datei enthält Zugangsdaten — niemals ins Git-Repo committen!\n"
-             . "// server_key versiegelt die Zugangsdaten der Backup-Ziele und das\n"
-             . "// Komplettbackup. Geht er verloren, sind versiegelte Komplettbackups\n"
-             . "// nicht mehr zu öffnen. Er gehört zusammen mit dieser Datei ins\n"
-             . "// getrennt aufbewahrte Wiederanlaufpaket (docs/Technik.md, Runbook).\n"
+             . "// Diese Datei enthält Zugangsdaten UND ZWEI SCHLÜSSEL —\n"
+             . "// niemals ins Git-Repo committen!\n"
+             . "//\n"
+             . "// server_key versiegelt die Zugangsdaten der Backup-Ziele, das\n"
+             . "// Komplettbackup und die Adminpakete. Geht er verloren, sind\n"
+             . "// versiegelte Sicherungen nicht mehr zu öffnen.\n"
+             . "//\n"
+             . "// kdf_anteil geht in den Datenschlüssel JEDES Kontos ein. Geht er\n"
+             . "// verloren, muss jede NutzerIn ihr Passwort über den\n"
+             . "// Wiederherstellungsschlüssel neu setzen — kein Datenverlust, aber\n"
+             . "// ein Vorgang für alle. Diese Datei ist damit Schlüsselträger der\n"
+             . "// ganzen Installation.\n"
+             . "//\n"
+             . "// Beide gehören zusammen mit dieser Datei ins getrennt aufbewahrte\n"
+             . "// Wiederanlaufpaket. Das Schlüsselblatt (Betrieb →\n"
+             . "// Servereinstellungen) druckt sie mit Kennung; docs/Technik.md,\n"
+             . "// Runbook, sagt wohin.\n"
              . 'return ' . var_export($config, true) . ";\n";
 
         if (file_put_contents($configPath, $php, LOCK_EX) === false) {

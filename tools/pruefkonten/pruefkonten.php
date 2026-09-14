@@ -113,6 +113,25 @@ if ($befehl === 'anlegen') {
     [$bereit, $grund] = edbak_ablage_bereit();
     if (!$bereit) { fwrite(STDERR, "Ablage nicht bereit: $grund\n"); exit(2); }
 
+    /* OHNE SERVERSCHLUESSEL GEHT ES SEIT S10/AP4 NICHT MEHR (S10/AP5).
+     *
+     * Die Begleitdatei `konto.json` wird seit der Fassung 3 versiegelt
+     * (`edbak_begleit_schreiben()` ruft `sk_versiegeln()`), und ohne
+     * eingetragenen Schluessel wirft sie mitten in der Schleife — nach dem
+     * ersten `commit()`, also mit halbem Bestand in der Datenbank und einem
+     * Ablageordner, den `entfernen` dann zwar findet, aber dessen Begleitdatei
+     * fehlt. `edbak_sicherung_erzeugen()` hat diesen Riegel in AP4 bekommen;
+     * hier fehlte er, weil dieses Werkzeug `edbak_begleit_schreiben()`
+     * unmittelbar ruft. Lieber vorher anhalten mit einem Satz, der sagt, wo
+     * der Schluessel herkommt. */
+    if (!serverschluessel_da()) {
+        fwrite(STDERR, "Kein Serverschluessel eingetragen. Die Begleitdatei "
+            . "konto.json wird seit Web 20.2.0 versiegelt; ohne den Schluessel "
+            . "bricht der Lauf mitten im Bestand ab.\nEintragen unter "
+            . "Betrieb -> Servereinstellungen, Karte 'Schluessel des Servers'.\n");
+        exit(2);
+    }
+
     mt_srand(STARTWERT);
     $pdo = db();
     $jetzt = time();

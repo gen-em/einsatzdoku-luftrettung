@@ -333,6 +333,50 @@ pruefe($echteNachher === $echteVorher,
 printf("  [--] %-62s %s\n", 'Nebenbei abgeraeumte ECHTE Waisen (kein Fehler)',
        ($gesamtVorher - $gesamtNachher) . ' Zeilen');
 
+/* ======================================================================
+ * DIE ZAHL `uebergangen` UEBERSTEHT DEN BERICHT (S10/AP5)
+ *
+ * S10/AP4 hat ein neues Wort durch drei Ebenen gezogen: `sz_versand_schub()`
+ * zaehlt uebersprungene Ziele, `job_versand()` reicht die Zahl als
+ * `uebergangen` weiter, `jobs_lauf()` nimmt sie in seinen Bericht, und
+ * `jobs.php` haengt sie an die Cron-Zeile.
+ *
+ * DIE STELLE, DIE LEICHT BRICHT, IST DIE DRITTE. `jobs_lauf()` baut den
+ * Bericht je Job mit einem FESTEN Schluesselsatz neu zusammen; ein
+ * Schluessel, den der Job zurueckgibt und den diese Liste nicht kennt,
+ * verschwindet — lautlos, ohne Fehler, ohne dass irgendetwas rot wird. Genau
+ * deshalb heisst die Zahl `uebergangen` und nicht `uebersprungen`: Der
+ * Schluessel `uebersprungen` hat im Bericht bereits eine andere Bedeutung
+ * (der Job lief gar nicht), und `jobs.php` haette mit ihm die ganze
+ * Ergebniszeile des Versandjobs durch „uebersprungen" ersetzt.
+ *
+ * Gemessen wurde das in AP4 von Hand an der Cron-Ausgabe. Hier steht es als
+ * Erwartung — eine Zahl, die drei Ebenen durchquert, braucht eine, die es
+ * merkt, wenn eine davon sie fallen laesst.
+ *
+ * KEIN ZIEL WIRD ANGELEGT. Die Probe fasst `backup_targets` nicht an; sie
+ * liest den Bericht des reguleren Laufs. Steht kein uebergangenes Ziel da,
+ * ist die Zahl 0 — und auch die 0 muss ankommen, sonst faellt der Bruch erst
+ * dann auf, wenn er weh tut.
+ * ================================================================== */
+$berichtV = jobs_lauf('cli', ['versand']);
+pruefe(array_key_exists('versand', $berichtV)
+       && (array_key_exists('uebergangen', $berichtV['versand'])
+           || array_key_exists('uebersprungen', $berichtV['versand'])),
+       'Der Versandjob steht im Bericht (gelaufen oder uebersprungen)',
+       json_encode($berichtV['versand'] ?? null, JSON_UNESCAPED_UNICODE));
+if (array_key_exists('uebersprungen', $berichtV['versand'] ?? [])) {
+    printf("  [--] %-62s %s\n", 'Zahl `uebergangen` nicht gemessen',
+           'der Versandjob lief nicht: ' . (string)$berichtV['versand']['uebersprungen']);
+} else {
+    pruefe(array_key_exists('uebergangen', $berichtV['versand']),
+           'Die Zahl `uebergangen` ueberlebt den festen Schluesselsatz von jobs_lauf()',
+           'uebergangen = ' . var_export($berichtV['versand']['uebergangen'] ?? null, true));
+    pruefe(is_int($berichtV['versand']['uebergangen'] ?? null),
+           '...und sie ist eine Zahl, nicht null oder eine Zeichenkette',
+           gettype($berichtV['versand']['uebergangen'] ?? null));
+}
+
 } finally {
     aufraeumen($pdo, $basisM, $basisR);
 }

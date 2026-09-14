@@ -4300,5 +4300,227 @@ declare(strict_types=1);
  *
  * NEBENSTUFE: eine neue Darstellung an einer Stelle, an der bisher keine war.
  * Uhr und Android unberuehrt, keine Migration.
+ *
+ * 19.7.0 IST DER SERVERTEIL VON S10 — UND EINE STUFE, DIE NICHTS TUT. Schritt
+ * 9b (R78) gibt der Installation ein ZWEITES Geheimnis neben dem
+ * Serverschluessel: den SERVER-ANTEIL (`kdf_anteil` in config.php). Er geht
+ * per HKDF in den Datenschluessel jedes Kontos ein, mit dem der Browser die
+ * Schluesselhuelle oeffnet. Der Server kann damit weiterhin nichts oeffnen —
+ * er kennt den Anteil, nicht die PBKDF2-Haelfte aus dem Passwort. Was sich
+ * aendert, ist die Rechnung des Angreifers: Wer nur die Datenbank hat, hat
+ * seit S10 nicht mehr alles, was er zum Durchprobieren braucht (Krypto-Review
+ * K-3, Weg 1).
+ *
+ * DIESE STUFE BAUT NUR DIE GRUNDLAGE. `serverkrypto_lib.php` kann den Anteil
+ * lesen, je Konto per HMAC ableiten, seine Kennung rechnen und die fuenf
+ * Lagen aus E-S10-09 unterscheiden; `auth_guard.php` und
+ * `ui_krypto_bootstrap()` liefern ihn an die angemeldete Sitzung;
+ * `api/kdf_upgrade.php` nimmt eine Huelle mit Anteil an. NUR: Es gibt noch
+ * keinen Browser, der ihn benutzt. Jede Huelle bleibt `edk1:`, kein Weg durch
+ * die Anwendung aendert sich, und eine frisch eingerichtete Installation
+ * verhaelt sich Zeile fuer Zeile wie unter 19.6.0.
+ *
+ * DESHALB NEBEN- UND NICHT HAUPTNUMMER, obwohl S10 als Ganzes eine
+ * Hauptstufe ist (E-S10-16). Die Zaehlweise oben misst, was sich fuer die
+ * BENUTZUNG aendert — „spuerbar veraenderte Wege durch die Anwendung". Nach
+ * dieser Stufe ist das nichts. Die 20.0.0 gehoert an das naechste Paket, in
+ * dem der Datenschluessel tatsaechlich am Anteil haengt und jede Huelle ihr
+ * Format wechselt; eine 20.0.0 hier verspraeche einen Umbau, den erst der
+ * naechste Commit vollzieht (E-S10-U-01).
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. Die zwei neuen Marken
+ * (`kdf_anteil_kennung`, `server_key_kennung`) liegen in `app_state`, und die
+ * Tabelle steht seit der Wartungs-Migration vom 17.07.2026. `update.php` muss
+ * nach dem Merge NICHT laufen.
+ *
+ * WAS EINE BESTEHENDE INSTALLATION NACH DEM DEPLOY TUN MUSS: nichts — und
+ * genau das ist der Punkt. Ohne `kdf_anteil` in `config.php` meldet
+ * `anteil_zustand()` „nicht eingerichtet", es wird nichts ausgeliefert, und
+ * alles laeuft wie vorher. Der Anteil entsteht erst, wenn ihn jemand anlegt;
+ * die Karte dafuer kommt mit AP3, der Installer legt ihn ab sofort mit an.
+ *
+ * 20.0.0 IST DIE HAUPTNUMMER VON S10 — HIER HAENGT DER DATENSCHLUESSEL
+ * TATSAECHLICH AM SERVER-ANTEIL. Die erste Haelfte der PBKDF2-Ableitung ist
+ * nicht mehr selbst der Datenschluessel; zwischen ihr und ihm steht
+ * HKDF-SHA256 mit dem Anteil dieses Kontos. Jede Schluesselhuelle wechselt
+ * dabei ihr Format von `edk1:` auf `edka1:<kennung>:`, und zwar STILL beim
+ * naechsten Anmelden — niemand gibt etwas ein, niemand sieht einen Dialog.
+ *
+ * DAS IST DER UMBAU, FUER DEN DIE HAUPTNUMMER DA IST. Nicht wegen des
+ * Datenmodells — es bleibt unangetastet, und eine Migration gibt es NICHT —,
+ * sondern weil sich die Schluesselkette der Anwendung aendert. Wer die
+ * Datenbank hat, hatte bis 19.7.0 alles, was er zum Durchprobieren eines
+ * Passworts braucht. Ab 20.0.0 nicht mehr.
+ *
+ * WAS SICH IM BROWSER AENDERT. `EdCrypto` bekommt drei Funktionen
+ * (`datenschluessel()`, `huelleOeffnen()`, `huelleBauen()`), und die fuenf
+ * Stellen, die bisher `deriveKeys().dataKeyHex` + `decrypt()` riefen, gehen
+ * ueber sie: Anmeldung, Entsperrdialog, Passwortwechsel, Export-Passwortprobe
+ * und Reset. `deriveKeys()` liefert kein `dataKeyHex` mehr, sondern
+ * `haelfteHex` — der Name ist mitgewandert, weil ein Feld, das „dataKey"
+ * heisst und keiner ist, beim naechsten Mal wieder als einer benutzt wird.
+ *
+ * `login.php` SETZT DEN DATENSCHLUESSEL NICHT MEHR SELBST, auch nicht bei
+ * einer einzigen Rundenzahl. Ihm fehlt seit S10 eine zweite Angabe: Ob die
+ * Huelle dieses Kontos den Anteil braucht, steht in IHREM Praefix — und die
+ * kennt erst die angemeldete Seite. Das Vormerkfach liegt deshalb nach jeder
+ * Anmeldung einen Seitenwechsel lang im sessionStorage statt gar nicht.
+ *
+ * DREI FUNDE AUS DEM GEGENLESEN DES KONZEPTS SIND HIER MIT BEHOBEN, und alle
+ * drei waeren teuer geworden:
+ *   F-1  `EdCrypto.getContentKey()` rief `decrypt()` unmittelbar — das wirft
+ *        an jeder `edka1:`-Huelle. Ueber `EdKeyGuard.contentKey()` haette das
+ *        JEDE Anzeigeseite gesperrt, und zwar erst beim ZWEITEN Seitenaufbau
+ *        (der erste bekommt den Schluessel aus dem Vormerkfach).
+ *   F-2  `WRAP_RE` prueft beide Huellen mit EINER Regel. Seit 19.7.0 nahm sie
+ *        `edka1:` an — auch fuer `pat_wrap_rc`, das nie daran haengen darf.
+ *        Jetzt zwei Ausdruecke: `WRAP_PW_RE` und `WRAP_RC_RE`.
+ *   F-3  Die Kennungspruefung sass an EINEM von VIER Schreibwegen fuer
+ *        `pat_wrap_pw`. Jetzt an allen vier, ueber eine Funktion
+ *        (`huelle_pw_pruefen()`).
+ *
+ * GEMESSEN, NICHT GESCHAETZT: Die zusaetzliche HKDF-Ableitung kostet im
+ * Browser **unter 0,12 ms** (500 Ableitungen am Stueck, drei Engines; die
+ * Zahlen stehen im Changelog). Sie laeuft einmal je Anmeldung.
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION — dieselbe Lage wie bei 19.7.0.
+ * Eine Installation ohne `kdf_anteil` verhaelt sich weiterhin wie vor S10;
+ * die Umstellung beginnt erst, wenn der Anteil angelegt wird.
+ *
+ * 20.1.0 GIBT DEM ANTEIL EINE BEDIENUNG — UND EINEN ZWEITEN ORT. Bis 20.0.0
+ * war der Server-Anteil eine Zeile in `config.php`, die nur ein Mensch mit
+ * Dateizugang anlegen konnte, und niemand sah ihr an, ob sie die richtige
+ * war. Die Nebennummer traegt drei Dinge nach:
+ *
+ *   1. DIE KARTE „Schluessel des Servers" unter Betrieb -> Servereinstellungen
+ *      fuehrt beide Geheimnisse an einer Stelle: anlegen, wechseln, alten
+ *      Anteil entfernen, nachtragen, Neuanfang. Sie ZEIGT DEN WERT NICHT —
+ *      sie nennt nur seine Kennung, die ersten acht Hexzeichen des SHA-256
+ *      ueber den Wert. Damit laesst sich vergleichen, ohne vorzulesen.
+ *   2. DAS SCHLUESSELBLATT (`betrieb_schluesselblatt.php`) ist die eine
+ *      Seite, deren Zweck der Ausdruck ist. `config.php` traegt seit S10 die
+ *      Schluessel der ganzen Installation, und ein zweiter Ort dafuer muss
+ *      ueberleben, was die Datei nicht ueberlebt. Papier tut das.
+ *   3. FUENF ZUSTAENDE statt „da oder nicht da": nicht eingerichtet, bereit,
+ *      Rotation, abweichend, Neuanfang. Der interessante ist `abweichend` —
+ *      `config.php` traegt einen anderen Wert, als die Huellen verlangen. Er
+ *      entsteht nicht nur beim Verlieren der Datei, sondern PLANMAESSIG nach
+ *      einem Komplett-Backup: Das Paket stellt `app_state` wieder her,
+ *      `config.php` gehoert nicht dazu.
+ *
+ * NACHTRAGEN SCHREIBT NUR BEI UEBEREINSTIMMUNG. Der Server rechnet die
+ * Kennung des eingegebenen Werts und vergleicht sie mit der erwarteten; passt
+ * sie nicht, wird NICHTS geschrieben und die Meldung nennt beide Kennungen.
+ * Ein falsch abgetippter Wert, der stillschweigend landet, macht aus einer
+ * behebbaren Lage eine unbehebbare — er ueberschreibt den einzigen Ort, an
+ * dem der richtige noch stehen koennte.
+ *
+ * DAS ERSTE @media print DES PROJEKTS. Drei Regeln, und sie gelten nur fuer
+ * das Blatt: Bildschirmknoepfe fort, keine Flaechenfarbe, kein Seitenumbruch
+ * mitten im Wert. Ein Druck-Stylesheet, das jede Seite umgestaltet, waere
+ * eine zweite Oberflaeche mit eigenen Fehlern.
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `app_state` bekommt zwei Marken
+ * (`kdf_anteil_kennung`, `server_key_kennung`) — die Tabelle gibt es seit
+ * langem, und beide entstehen beim ersten Anlegen von selbst.
+ *
+ * 20.2.0 VERSIEGELT DIE ADMINPAKETE UND SCHAFFT `ftp` AB (S10/AP4). Zwei
+ * Dinge, die nichts miteinander zu tun haben ausser dem Ort, an dem sie
+ * wehtun: Ein Adminpaket geht per Versand an fremde Gegenstellen — bis
+ * hierher als blankes JSON, und bei einem `ftp`-Ziel auch noch ueber eine
+ * offene Leitung.
+ *
+ * FASSUNG 3 DES ADMINPAKETS. Jeder Teil im ZIP ist gzip-gepackt und mit dem
+ * SERVERSCHLUESSEL versiegelt (`edsk1:`), das Manifest eingeschlossen — und
+ * die Begleitdatei `konto.json` daneben ebenso, denn sie trug E-Mail und
+ * Namen im Klartext. Ohne sie haette die Abnahmezahl „kein lesbarer Name,
+ * keine E-Mail" nur fuer das ZIP gegolten und nicht fuer den Ordner.
+ *
+ * DAS IST KEINE ENDE-ZU-ENDE-VERSCHLUESSELUNG. Der Server kann das Siegel
+ * oeffnen — er haelt den Schluessel. Was es verhindert, ist der Zugriff OHNE
+ * den Server: ein kopiertes Backup, ein mitgelesener Versand, ein Blick in
+ * den Ablageordner. `pat_blob` bleibt davon unberuehrt Ende-zu-Ende
+ * verschluesselt; das Siegel liegt darueber.
+ *
+ * DER SIEGELZWECK BINDET DEN PAKETNAMEN (E-S10-U-11). Ohne ihn liesse sich
+ * ein Teil aus einem aelteren Paket desselben Kontos unterschieben — das
+ * Manifest fuehrt nur Namen, keine Pruefsummen je Teil. Der Preis steht in
+ * `docs/Backup-Format.md`: Wer ein Paket umbenennt, macht es unlesbar.
+ *
+ * GZIP VOR DEM SIEGEL, und die Zahl sagt warum (E-S10-U-12). Versiegelte
+ * Teile sind Zufallsrauschen; das ZIP kann sie nicht mehr packen. Gemessen
+ * am Referenzkonto (83 Einsaetze, 150 690 Byte Klartext): Fassung 2
+ * **33 281** Byte, Siegel ohne Vorstufe **201 390** (+505 %), gzip davor
+ * **45 290** (+36 %). Die verbleibenden 36 % sind der base64-Rahmen von
+ * `edsk1:` — das Format der Versiegelung, nicht der Packlauf.
+ *
+ * OHNE SERVERSCHLUESSEL ENTSTEHT KEIN PAKET. Derselbe Riegel wie beim
+ * Komplett-Backup: Die Wahl zwischen einem unversiegelten Paket und einem
+ * Abbruch mitten im Bau ist keine.
+ *
+ * `ftp` IST FORT (E-S10-14). Nicht mehr waehlbar, nicht mehr speicherbar,
+ * nicht mehr beschickt. Drei Stellen, und die mittlere war der Fund:
+ * `sz_pruefen_eingabe()` prueft gegen `SZ_PORTS`, nicht gegen
+ * `SZ_PROTOKOLLE` — wer nur aus dem Anzeigekatalog gestrichen haette, haette
+ * gar nichts abgeschafft. Beide Listen fuehren jetzt dieselben Schluessel,
+ * und `sz_protokoll_erlaubt()` ist die eine Frage.
+ *
+ * DER ENGPASS PRUEFT POSITIV (E-S10-U-10). `sz_weg()` hatte genau einen
+ * benannten Zweig (`sftp`); alles andere fiel in `ZielFtp`, wo
+ * `$prot === 'ftps'` ueber TLS entscheidet. FTPS war damit geschuetzt — ein
+ * UNBEKANNTES oder LEERES Protokoll aber fiel still auf Klartext-FTP zurueck.
+ * Geprueft wird jetzt gegen den Katalog, nicht auf `!== 'ftp'`.
+ *
+ * UEBERGANGEN STATT GESCHEITERT. Ein Altziel wird uebersprungen und bekommt
+ * einen Vermerk — nicht einen Eintrag in `fehler`, denn `jobs_lib.php` wirft
+ * darauf, und der Versandjob staende dauerhaft rot. Auf der Jobebene heisst
+ * die Zahl `uebergangen` und nicht `uebersprungen`: Letzteres ist dort schon
+ * belegt, und `jobs.php` ueberspringt bei diesem Schluessel die GANZE
+ * Ergebniszeile.
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. Das `ENUM` behaelt `ftp` — ein
+ * bestehendes Ziel bleibt lesbar, sichtbar und umstellbar. Der Rueckbau der
+ * Spalte gehoert zum ENUM-Aufraeumen (Backlog Nr. 168 / Nr. 46).
  */
-const WEB_VERSION = '19.6.0';
+/* ---------------------------------------------------------------------------
+ * 20.2.1 — DER ZWEITE RIEGEL AN DER DEMO-FIXTURE (S10/AP5)
+ *
+ * Eine Korrekturstufe mit fuenfzehn Zeilen und einem Gedanken: Ein Riegel,
+ * der nur dort greift, wo das Werkzeug laeuft, greift nicht dort, wo die
+ * Datei ankommt.
+ *
+ * S10/AP5 hat `tools/referenzdatensatz/fixture/erzeugen.php` beigebracht,
+ * anzuhalten, wenn die Schluesselhuelle des Demo-Kontos nicht `edk1:` traegt.
+ * Das verhindert, dass eine unbrauchbare Fixture ENTSTEHT. Es verhindert
+ * nicht, dass eine eingespielt wird: Der Erzeuger laeuft auf der
+ * Referenzmaschine, die Datei geht mit dem Deploy auf den Produktivserver.
+ *
+ * `demo_fixture_laden()` prueft deshalb jetzt beide Huellen — mit der
+ * gemeinsamen Pruefschicht (`huelle_pw_pruefen($wrap, istDemo: true)` und
+ * `huelle_rc_pruefen()`), nicht mit einem eigenen Ausdruck.
+ *
+ * WARUM DAS NOETIG IST. Seit S10 haengt der Datenschluessel am Server-Anteil,
+ * und der ist je Installation ein anderer. Das Demo-Konto bekommt
+ * bauartbedingt GAR KEINEN (E-P1-19/E-S10-06). Eine `edka1:`-Huelle in der
+ * Fixture hiesse: Das Konto meldet sich an — der bcrypt-Hash stimmt ja —, und
+ * erst das Entsperren scheitert. Auf der oeffentlichen Demo, alle 30 Minuten
+ * aufs Neue, ohne dass jemand etwas bemerkt.
+ *
+ * DIESELBE PAARUNG WIE BEI DER RUNDENZAHL (Backlog Nr. 155): dort ein Riegel
+ * im Erzeuger und einer in `demo_fixture_laden()`, mit derselben Begruendung
+ * — „Ohne den zweiten Riegel waere ein Reset still erfolgreich und niemand
+ * kaeme mehr herein."
+ *
+ * WAS EIN ABBRUCH KOSTET, und warum er trotzdem richtig ist:
+ * `demo_reset_wenn_faellig()` faengt jede Ausnahme ab und schreibt ins
+ * `error_log`. Eine verbogene Fixture laesst das Demo-Konto also aufhoeren,
+ * sich zurueckzusetzen — es geht nichts verloren, und niemand wird
+ * ausgesperrt. `demo_anlegen()` dagegen laesst die Ausnahme durch: Wer das
+ * Konto von Hand anlegt, soll den Grund lesen.
+ *
+ * Gemessen: `tools/referenzdatensatz/fixture/riegelprobe.php` **10 von 10** —
+ * beide Riegel in beide Richtungen, der abgefangene Reset (Demo-Konto 88 ->
+ * 88 Einsaetze), und am Ende die Pruefsumme der echten Fixture
+ * vorher/nachher.
+ */
+const WEB_VERSION = '20.2.1';

@@ -286,6 +286,12 @@
       "pfad": "betrieb_server.php"
     },
     {
+      "name": "48a-betrieb-schluesselblatt",
+      "gruppe": "Betrieb",
+      "rolle": "admin",
+      "pfad": "betrieb_schluesselblatt.php"
+    },
+    {
       "name": "07-wartungsseite",
       "gruppe": "Öffentlich",
       "rolle": "aus",

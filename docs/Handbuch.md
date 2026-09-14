@@ -1794,6 +1794,23 @@ es nicht mehr.
 - Verschlüsselte Felder sind serverseitig nicht durchsuchbar; der Schutz wirkt
   gegen Datenbank-Diebstahl und Mitleser, prinzipbedingt nicht gegen einen
   vollständig übernommenen Server.
+- **Seit dem Sicherheitsschritt kommt ein zweites Stück dazu, und du merkst
+  nichts davon.** Der Schlüssel entsteht nicht mehr allein aus deinem
+  Passwort: Ein zweiter Wert, der **Server-Anteil**, liegt in einer
+  Einstellungsdatei auf dem Server und geht mit ein. Der Server kann damit
+  weiterhin **nichts** öffnen — ihm fehlt der Teil, der aus deinem Passwort
+  kommt. Was es ändert: Wer nur die Datenbank stiehlt, hat jetzt nicht mehr
+  alles, was er zum Durchprobieren deines Passworts bräuchte. Deine Anmeldung
+  bleibt, wie sie war; beim ersten Mal nach dem Update stellt der Browser
+  deine Schlüsselhülle still um, ohne dass du etwas tust.
+- **Wenn eine Meldung vom „Server-Anteil" spricht, ist nicht dein Passwort
+  schuld.** Steht beim Entsperren *„Der Server-Anteil der Verschlüsselung
+  fehlt oder ist nicht der, mit dem die Hüllen gebaut wurden"*, dann fehlt auf
+  dem Server eine Einstellung — bitte die Administration verständigen und
+  **nicht** das Passwort zurücksetzen. Es sind keine Daten verloren, und es
+  betrifft alle gleichzeitig. Heißt die Meldung dagegen *„Der Server-Anteil
+  wurde erneuert"*, hilft der **Wiederherstellungsschlüssel**: Damit setzt du
+  dein Passwort neu, und alles ist wieder da.
 - **Verschlüsselt sind nicht alle Daten, sondern diese:** Name, Geburtsdatum,
   Alter, Diagnose, Einsatznummer sowie Adresse, Koordinate und Beschreibung des
   Einsatzorts. **Im Klartext liegen dagegen:** die GPS-Daten, die Koordinate
@@ -3775,6 +3792,60 @@ Adresse ungültig; ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
 
 ### 12.5 Servereinstellungen
 
+#### Karte „Schlüssel des Servers" (seit Web 20.1.0)
+
+**Zuoberst auf der Seite, und das ist Absicht.** Diese Installation hat zwei
+Geheimnisse, und beide stehen in `config.php` — nicht in der Datenbank:
+
+- der **Serverschlüssel** versiegelt, was der Server ohne Browser lesen können
+  muss: die Zugangsdaten der Backup-Ziele, das Komplett-Backup, die
+  Konto-Backups;
+- der **Server-Anteil** geht in den Datenschlüssel *jedes Kontos* ein. Der
+  Server kann damit trotzdem nichts öffnen — aber ein Datenbankabzug allein
+  reicht nicht mehr, um ein Passwort durchzuprobieren.
+
+**Die Karte zeigt die Werte nicht.** Sie nennt zu jedem eine **Kennung** aus
+acht Zeichen. Damit lässt sich vergleichen, ohne vorzulesen: Stimmt die
+Kennung auf dem Ausdruck in der Betriebsakte mit der auf dem Bildschirm
+überein, ist es derselbe Wert. Ein Wert, der vollständig auf dem Bildschirm
+steht, landet früher oder später in einem Screenshot.
+
+**Drucke das Schlüsselblatt, sobald du einen Anteil angelegt oder gewechselt
+hast.** Der Knopf steht auf der Karte. Was darauf steht und wohin es gehört,
+sagt das Blatt selbst; das Wichtigste in einem Satz: **zwei Ausdrucke, zwei
+getrennte Orte** — Betriebsakte und Passwortmanager der BetreiberIn. Nicht in
+den Serverordner, nicht in dasselbe Backup. Das Blatt soll genau das
+überleben, was `config.php` nicht überlebt.
+
+**Was die Karte anbietet, hängt an der Lage:**
+
+| Lage | Was sie sagt | Was zu tun ist |
+|---|---|---|
+| **nicht eingerichtet** | „nicht eingerichtet" | anlegen — bis dahin läuft alles wie vor Web 20.0.0 |
+| **bereit** | Kennung | nichts; das Blatt drucken, falls noch nicht geschehen |
+| **Rotation läuft** | neue und alte Kennung, dazu wie viele Konten noch auf dem alten stehen | warten, bis die Zahl auf null steht — jedes Konto stellt beim nächsten Anmelden von selbst um —, dann „Alten Anteil entfernen" |
+| **abweichend** | vorhandene **und** erwartete Kennung | den richtigen Wert *Nachtragen vom Blatt*; nur wenn er unwiederbringlich weg ist: Neuanfang |
+
+**Nachtragen vom Blatt ist sicher.** Der Server rechnet die Kennung des
+eingegebenen Werts und **schreibt nur bei Übereinstimmung**; passt sie nicht,
+wird nichts geändert und die Meldung nennt beide Kennungen. Leerzeichen,
+Bindestriche und Groß- oder Kleinschreibung dürfen drinbleiben — tippe den
+Wert ruhig in den Vierergruppen ab, in denen er auf dem Blatt steht.
+
+**„Server-Anteil wechseln"** legt einen neuen an und lässt den alten stehen,
+bis kein Konto mehr auf ihm steht. Danach **ein neues Blatt drucken und das
+alte vernichten**: Ein altes Blatt ist nicht nur überflüssig, es ist
+irreführend — es zeigt einen Wert, der nichts mehr öffnet.
+
+**„Server-Anteil neu erzeugen" ist die letzte Tür.** Sie steht nur offen, wenn
+der Anteil ohnehin schon abweicht. Danach muss **jede NutzerIn** ihr Passwort
+über ihren Wiederherstellungsschlüssel neu setzen. Das ist **kein
+Datenverlust** — die Daten selbst bleiben unversehrt —, aber ein Vorgang für
+alle, und wer seinen Wiederherstellungsschlüssel nicht hat, kommt nicht mehr
+an seine geschützten Angaben.
+
+#### Speicher
+
 Hier steht, wie viel Platz belegt ist — als **zwei Balken**:
 
 - **Backups** gegen die **Speichergrenze**: Konto-Backups und Komplett-Backups
@@ -3850,12 +3921,29 @@ Was von selbst auf ein Backup-Ziel geschoben wird, ist immer die
 verschlossene Fassung.
 
 **Das Wichtigste steht nicht in der Datei.** Das Komplett-Backup enthält
-absichtlich *nicht* die Datei `config.php` des Servers. In ihr steht der
-Schlüssel, mit dem sich das Backup öffnen lässt — beides zusammen
-aufzubewahren wäre, als klebte der Schlüssel am Schloss. Sie gehört an einen
-anderen Ort, zusammen mit dem Zugang zum Backup-Ziel. Diese drei Dinge
-zusammen heissen **Wiederanlaufpaket**, und ohne sie nützt das beste Backup
-nichts.
+absichtlich *nicht* die Datei `config.php` des Servers. In ihr stehen die
+Schlüssel — beides zusammen aufzubewahren wäre, als klebte der Schlüssel am
+Schloss. Sie gehört an einen anderen Ort, zusammen mit dem Zugang zum
+Backup-Ziel. Das alles zusammen heisst **Wiederanlaufpaket**, und ohne es
+nützt das beste Backup nichts.
+
+**Seit Web 19.7.0 hat es vier Stücke, nicht drei** — der **Server-Anteil** ist
+dazugekommen (12.5). Die vier:
+
+1. die Datei `config.php` selbst,
+2. der **Serverschlüssel** darin — er öffnet das Komplett-Backup,
+3. der **Server-Anteil** darin — er gehört zum Passwort *jeder* Nutzerin,
+4. der **Zugang zum Backup-Ziel** (Rechner, Nutzer, Passwort oder Schlüssel).
+
+Der Unterschied zwischen 2 und 3 ist wichtig: Ohne den **Serverschlüssel**
+lässt sich ein Komplett-Backup nicht mehr öffnen — das ist endgültig. Ohne den
+**Server-Anteil** kommt zunächst niemand mehr an die verschlüsselten Angaben,
+aber **verloren ist nichts**: Jede NutzerIn kommt über ihren
+Wiederherstellungsschlüssel wieder herein und vergibt dabei ein neues
+Passwort. Lästig für alle, aber kein Datenverlust.
+
+Beide stehen auf dem **Schlüsselblatt** (12.5) — drucken, sobald ein Anteil
+angelegt oder gewechselt wurde, zweimal und an zwei Orten.
 
 **Der Weg zurück** heisst `wiederherstellen.php` und wird genau einmal
 gebraucht: wenn alles weg ist. Er arbeitet nur auf einer **leeren** Datenbank
@@ -3872,7 +3960,7 @@ wurde, ist eine Vermutung.
 
 Seit Web 12.1.0 kann die BetreiberIn unter **Betrieb →
 Backup-Ziele** eine Gegenstelle eintragen, auf die die Konto-Backups
-geschoben werden — per FTP, FTPS oder SFTP. Der Grund ist schlicht: Ein
+geschoben werden — per **SFTP oder FTPS**. Der Grund ist schlicht: Ein
 Paket, das auf demselben Server liegt wie das Gesicherte, hilft nicht,
 wenn dieser Server ausfällt.
 
@@ -3881,13 +3969,21 @@ Zielklinik und steht unter Stammdaten.
 
 Was dabei zu wissen ist:
 
-- **SFTP ist die Empfehlung.** Es ist das einzige der drei Protokolle, das den
-  Server beim nächsten Mal wiedererkennt. Meldet sich dort plötzlich ein
+- **SFTP ist die Empfehlung.** Es ist das einzige der beiden Protokolle, das
+  den Server beim nächsten Mal wiedererkennt. Meldet sich dort plötzlich ein
   anderer, bricht die Verbindung ab, bevor ein Passwort hinausgeht.
 - **FTPS verschlüsselt die Leitung, prüft aber das Zertifikat nicht.** Das
   schützt gegen Mitlesen, nicht gegen einen untergeschobenen Server.
-- **FTP überträgt alles im Klartext**, auch das Passwort. Es steht zur
+- **FTP wird seit Web 20.2.0 nicht mehr angeboten.** Es überträgt alles im
+  Klartext, auch das Passwort — und seit derselben Fassung tragen die Pakete
+  Geheimnisse, die dort nicht mitlesbar sein dürfen. Es stand vorher zur
   Auswahl, weil einfacher Webspace oft nichts anderes anbietet.
+  **Steht noch ein Ziel darauf**, passiert Folgendes: Es trägt in der Liste
+  die rote Plakette *wird übergangen*, es wird beim Versand **übersprungen**
+  statt im Klartext beliefert, und der Versandlauf sagt es („Übersprungen: 1").
+  Zum Umstellen sind **drei** Angaben neu zu setzen: Protokoll, Port und die
+  Zugangsdaten — die alten gelten nicht notwendig auch für den
+  verschlüsselten Weg, und geraten wird nichts.
 - Die Zugangsdaten liegen **verschlüsselt** in der Datenbank. Der Schlüssel
   dazu steht in einer Datei, die nicht mitgesichert wird — wer den
   Datenbankdump hat, hat die Passwörter nicht.

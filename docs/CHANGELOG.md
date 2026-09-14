@@ -14,6 +14,477 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.2.1] — 2026-09-14
+
+Schritt 9b (**S10 — Sicherheit**, R78), fünftes Arbeitspaket: die Prüfmittel
+ziehen nach. Der Code darin ist eine einzige Stelle — **der zweite Riegel an
+der Demo-Fixture**; alles andere sind Werkzeuge und Dokumentation und stufen
+nichts hoch.
+
+### Web — eine Fixture mit Server-Anteil wird nicht mehr eingespielt
+
+**Der Riegel, den AP5 zuerst gebaut hat, sitzt am falschen Ende.**
+`tools/referenzdatensatz/fixture/erzeugen.php` hält jetzt an, wenn die
+Schlüsselhülle des Demo-Kontos nicht `edk1:` trägt — das verhindert, dass eine
+unbrauchbare Fixture **entsteht**. Es verhindert nicht, dass eine eingespielt
+wird: Der Erzeuger läuft auf der Referenzmaschine, die Datei geht mit dem
+Deploy auf den Produktivserver.
+
+`demo_fixture_laden()` prüft deshalb jetzt beide Hüllen. Der Grund ist
+derselbe wie überall in S10: Seit dem Server-Anteil hängt der Datenschlüssel
+an einem Wert, der **je Installation ein anderer** ist, und das Demo-Konto
+bekommt bauartbedingt gar keinen (E-P1-19). Eine `edka1:`-Hülle in der Fixture
+hieße: Das Konto meldet sich an — der bcrypt-Hash stimmt ja —, und erst das
+Entsperren scheitert. Auf der öffentlichen Demo, alle 30 Minuten aufs Neue.
+
+**Zwei Riegel, weil einer nicht reicht** — dieselbe Paarung, die Backlog
+Nr. 155 für die Rundenzahl gebaut hat, mit derselben Begründung: *Ohne den
+zweiten Riegel wäre ein Reset still erfolgreich und niemand käme mehr herein.*
+
+Geprüft wird mit der **gemeinsamen Prüfschicht**
+(`huelle_pw_pruefen($wrap, istDemo: true)`, `huelle_rc_pruefen()`), nicht mit
+einem eigenen Ausdruck — ein zweiter Ausdruck ließe früher oder später die
+falsche Hülle durch. Auch `pat_wrap_rc` wird mitgeprüft, obwohl sie nie einen
+Anteil tragen darf: Sie ist der einzige Rückweg, wenn der Anteil verlorengeht,
+und eine Fixture, die ihn mit einem Anteil verbindet, nähme dem Demo-Konto
+genau den (E-S10-04).
+
+**Was ein Abbruch kostet, und warum er trotzdem richtig ist.**
+`demo_reset_wenn_faellig()` fängt jede Ausnahme ab und schreibt ins
+`error_log`. Eine verbogene Fixture lässt das Demo-Konto also **aufhören, sich
+zurückzusetzen** — es geht nichts verloren, und niemand wird ausgesperrt.
+`demo_anlegen()` dagegen lässt die Ausnahme durch: Wer das Konto von Hand
+anlegt, soll den Grund lesen.
+
+**Gemessen:** `tools/referenzdatensatz/fixture/riegelprobe.php` **10 von 10** —
+beide Riegel in beide Richtungen (ein Riegel, der immer zuschlägt, ist so
+kaputt wie einer, der es nie tut), dazu die Zusage, die das `throw` überhaupt
+vertretbar macht: Ein Reset mit verbogener Fixture wird **abgefangen**, das
+Demo-Konto behält seine 88 Einsätze. Und am Ende die SHA-256 der echten
+Fixture vorher/nachher, damit die Probe belegt, dass sie nichts hinterlassen
+hat.
+
+### Prüfmittel — zwölf Funde, keiner in der Anwendung
+
+Der größere Teil von AP5 stuft nichts hoch und steht deshalb nicht hier,
+sondern in `docs/konzepte/Pruefdokument-S10-Sicherheit.md`. Zwei Sätze
+gehören trotzdem hierher, weil sie erklären, warum eine grüne Zahl kein
+Beleg ist:
+
+- **Die Wartungsprobe stand seit Web 20.1.0 auf „1 nicht erfüllt"** — die
+  Ausnahmeliste war auf dreizehn Einträge gewachsen, die Erwartung zählte
+  zwölf. Sie tat genau das, wofür sie gebaut ist; bemerkt hat es niemand,
+  weil sie nicht zu dem Satz gehört, den man nach einer Oberflächenänderung
+  fährt.
+- **Sieben Zahlen in Anleitungen waren Abschriften**, darunter zweimal
+  *verschiedene* Zahlen für dieselbe Probe in einem Dokument. Dass sie
+  nebeneinander stehen konnten, ist der Beleg, dass beide abgeschrieben
+  waren.
+
+## [Web 20.2.0] — 2026-09-14
+
+Schritt 9b (**S10 — Sicherheit**, R78), viertes Arbeitspaket: die Adminpakete
+werden versiegelt, `ftp` wird abgeschafft.
+
+### Web — Fassung 3 des Adminpakets
+
+**Ein Adminpaket lag bis hierher als blankes JSON im ZIP.** Name, E-Mail,
+Diagnosen — lesbar mit jedem Packprogramm. Das wäre für sich schon genug;
+entscheidend ist aber, **wo diese Datei überall liegt**: auf dem Server, in
+jeder Sicherung, und per Versand auf einer fremden Gegenstelle. Drei Orte, an
+denen niemand mehr hinsieht.
+
+Seit Fassung 3 ist **jeder Teil des Pakets gzip-gepackt und mit dem
+Serverschlüssel versiegelt** (`edsk1:`), das Manifest eingeschlossen — und die
+Begleitdatei `konto.json` daneben ebenso. Die gehört dazu, weil sie E-Mail und
+Anzeigenamen trägt: Ohne sie hätte die Zusage „kein lesbarer Name, keine
+E-Mail" nur für das ZIP gegolten und nicht für den Ordner, in dem es liegt.
+
+**Das ist keine Ende-zu-Ende-Verschlüsselung, und es soll keine sein.** Der
+Server kann das Siegel öffnen — er hält den Schlüssel. Verhindert wird der
+Zugriff *ohne* den Server: ein kopiertes Backup, ein mitgelesener Versand, ein
+Blick in den Ablageordner. `pat_blob` bleibt davon unberührt Ende-zu-Ende
+verschlüsselt; das Siegel liegt darüber, nicht darunter.
+
+**Der Siegelzweck bindet den Paketnamen.** Ohne ihn ließe sich ein Teil aus
+einem *älteren Paket desselben Kontos* unterschieben — das Manifest führt nur
+Namen, keine Prüfsummen je Teil. Das hat einen Preis, und er steht ab jetzt
+geschrieben: **Wer ein Paket umbenennt, macht es unlesbar.** Der Dateiname war
+schon vorher die Identität in der Ablage; neu ist, dass es jemand aufgeschrieben
+hat.
+
+**gzip vor dem Siegel — die Zahl sagt, warum.** Versiegelte Teile sind
+Zufallsrauschen; das ZIP kann sie nicht mehr packen, und die alte Begründung
+(„hier ist es blankes JSON, der Packlauf lohnt sich") fällt mit dieser Fassung
+weg. Gemessen am Referenzkonto (83 Einsätze, 150 690 Byte Klartext):
+
+| | Paketgröße | gegen Fassung 2 |
+|---|--:|--:|
+| Fassung 2 (JSON, im ZIP gepackt) | 33 281 Byte | — |
+| Siegel **ohne** Vorstufe | 201 390 Byte | **+505 %** |
+| **gzip, dann Siegel** | 45 290 Byte | +36 % |
+
+Die verbleibenden 36 Prozent sind der base64-Rahmen von `edsk1:`, nicht der
+Packlauf — das Format der Versiegelung kostet ein Drittel, und das ist der
+Preis dafür, dass ein Siegel als Text durch jede Stelle passt, die Text erwartet.
+
+**Ohne Serverschlüssel entsteht kein Paket.** Derselbe Riegel wie beim
+Komplett-Backup: Die Wahl zwischen einem unversiegelten Paket — also dem, was
+diese Stufe abschafft — und einem Abbruch mitten im Bau ist keine.
+
+### Web — `ftp` wird nicht mehr angeboten
+
+**FTP überträgt alles im Klartext, auch das Passwort.** Es stand bisher zur
+Wahl, weil einfacher Webspace oft nichts anderes anbietet. Eine Backup-Datei
+ist aber genau das, was man dabei nicht mitlesen lassen will — und seit
+Fassung 3 steht der Serverschlüssel mit im Paket, das dort hinausginge.
+
+**Drei Stellen, und die mittlere war der Fund.** `sz_pruefen_eingabe()` prüfte
+gegen `SZ_PORTS`, nicht gegen `SZ_PROTOKOLLE`: Wer das Protokoll nur aus dem
+Anzeigekatalog gestrichen hätte, hätte gar nichts abgeschafft — es wäre weiter
+speicherbar gewesen, nur nicht mehr wählbar. Beide Listen führen jetzt
+dieselben Schlüssel, und `sz_protokoll_erlaubt()` ist die eine Frage.
+
+**Der Engpass prüft positiv.** `sz_weg()` hatte genau einen benannten Zweig
+(`sftp`); alles andere landete in `ZielFtp`, wo `$prot === 'ftps'` über TLS
+entscheidet. FTPS war damit geschützt — ein **unbekanntes oder leeres**
+Protokoll aber fiel still auf Klartext-FTP zurück, und dann gingen Nutzername
+und Passwort offen über Port 21. Ein `ENUM`, das je nach `sql_mode` zum
+Leerstring wird, ist im Projekt belegt; geprüft wird deshalb gegen den Katalog
+und nicht auf „ist nicht `ftp`".
+
+**Ein bestehendes Ziel wird übergangen, nicht beschickt** — und es scheitert
+auch nicht. Es trägt in der Liste die rote Plakette *wird übergangen*, der
+Versandlauf zählt es getrennt („Übersprungen: 1"), und der Rückstand rechnet
+es heraus. Der Vermerk steht **nicht** in `fehler`: Der Versandjob wirft
+darauf, und er stünde sonst dauerhaft rot — womit das Signal für echte
+Störungen verbrannt wäre. Im Cron-Protokoll heißt die Zahl `übergangen` und
+nicht `übersprungen`, denn dieses Wort bedeutet dort schon etwas anderes
+(„dieser Job lief wegen einer Pause gar nicht") und hätte die Ergebniszeile
+nicht ergänzt, sondern ersetzt.
+
+**Ein Altziel lässt sich nicht durch bloßes Speichern umstellen.** Fällt das
+Protokoll aus dem Katalog, wählt der Browser die erste Option — `sftp` —,
+während Port 21 und die versiegelten Zugangsdaten stehenbleiben. Ein Druck auf
+„Speichern" ergäbe ein Ziel, das plausibel aussieht und beim nächsten Versand
+scheitert; die rote Plakette wäre dabei verschwunden. Das Formular sagt
+deshalb, was zu tun ist, und beginnt mit einer leeren Protokollwahl: Protokoll,
+Port **und** Zugangsdaten sind neu zu setzen. Geraten wird nichts.
+
+**Keine Schemaänderung, keine Migration.** Das `ENUM` behält `ftp` — ein
+bestehendes Ziel bleibt lesbar, sichtbar und umstellbar. Der Rückbau der Spalte
+gehört zum ENUM-Aufräumen (Backlog Nr. 168 / Nr. 46).
+
+### Behoben — an den Prüfmitteln
+
+- **Die Komplettprobe stürzte ab und meldete es nicht.** Ihr Teil 8 stellt
+  einen Abbruch mitten im Dump nach; am Referenzbestand läuft der Dump aber in
+  *einem* Zug durch, es gibt dann keinen Bauordner, und `gzopen()` auf einen
+  Pfad, den es nicht gibt, endete in einem TypeError — Rückgabewert 255, die
+  Teile 9 und 10 liefen nie. Die in der Anleitung stehende Zahl stammte aus
+  einer Zeit mit größerem Bestand. Jetzt wird nachgesehen und gesagt, was ist.
+- **Die Wiederherstellungsprobe scheiterte an ihrer eigenen Arithmetik.** Ihr
+  Teil 10 gab je Schub zwei Konten frei; der Referenzbestand hat vier, also
+  räumten zwei Schübe die Warteschlange leer, und drei Erwartungen meldeten
+  `cur 2 -> —`. Jetzt nimmt der zweite Schub ein Konto, und bei zu kleinem
+  Bestand sagt die Probe das mit einer Zahl.
+- **Ein Negativfall der Versandprobe wäre stumpf geworden**, ohne rot zu
+  werden: Er legte ein zweites Ziel mit demselben Namen *und* dem Protokoll
+  `ftp` an und erwartete die Abweisung — die kam vom Namen. Nach dieser Stufe
+  wäre er weiter grün gewesen und hätte etwas anderes gemessen, als draufsteht.
+  Jetzt zwei Fälle, jeder mit genau einem Grund.
+
+## [Web 20.1.0] — 2026-09-14
+
+Schritt 9b (**S10 — Sicherheit**, R78), drittes Arbeitspaket: der Anteil
+bekommt eine Bedienung und einen zweiten Ort.
+
+### Web — die Karte, das Blatt und die fünf Zustände
+
+**Bis 20.0.0 war der Server-Anteil eine Zeile in `config.php`**, die nur
+jemand mit Dateizugang anlegen konnte — und niemand sah ihr an, ob sie die
+richtige war. Wer den Anteil verliert, sperrt jedes Konto von seinen
+geschützten Angaben aus; das ist ein zu großer Hebel für eine Zeile, die nur
+per FTP erreichbar ist. Diese Stufe trägt drei Dinge nach.
+
+**Die Karte „Schlüssel des Servers"** unter *Betrieb → Servereinstellungen*
+führt beide Geheimnisse an einer Stelle: anlegen, wechseln, alten Anteil
+entfernen, nachtragen, Neuanfang. Sie ist von den Backup-Zielen dorthin
+gezogen, wo sie hingehört — der Serverschlüssel versiegelt längst mehr als
+nur deren Zugangsdaten (Komplett-Backup, Konto-Backups), und eine Karte, die
+unter „Backup-Ziele" steht, sieht nur die halbe Sache. Auf den Backup-Zielen
+bleibt ein Verweis stehen.
+
+**Sie zeigt den Wert nicht.** Sie nennt seine **Kennung** — die ersten acht
+Hexzeichen des SHA-256 über den Wert. Damit lässt sich vergleichen, ohne
+vorzulesen: Karte, Statusseite und Schlüsselblatt nennen dieselben acht
+Zeichen, und wer prüfen will, ob der Ausdruck in der Betriebsakte noch der
+richtige ist, vergleicht acht Zeichen statt vierundsechzig. Ein Wert, der
+vollständig auf jedem Bildschirm steht, steht früher oder später auch in
+einem Screenshot in einem Ticket.
+
+**Das Schlüsselblatt** (`betrieb_schluesselblatt.php`) ist die eine Seite,
+deren Zweck der Ausdruck ist. `config.php` trägt seit S10 die Schlüssel der
+ganzen Installation; ein zweiter Ort dafür muss überleben, was die Datei nicht
+überlebt — ein Serverausfall, ein verlorenes Hosting, ein Backup, das die
+Datei nicht enthält. Papier tut das, eine heruntergeladene Datei liegt im
+selben Unglück. Das Blatt sagt deshalb selbst, wohin es gehört: **zwei
+Ausdrucke, zwei getrennte Orte** — Betriebsakte und Passwortmanager der
+BetreiberIn, nicht in den Serverordner und nicht in dasselbe Backup.
+
+**Fünf Zustände statt „da oder nicht da":** nicht eingerichtet, bereit,
+Rotation, abweichend, Neuanfang. Der interessante ist **abweichend** —
+`config.php` trägt einen anderen Wert, als die Hüllen verlangen. Er entsteht
+nicht nur beim Verlieren der Datei, sondern **planmäßig nach einem
+Komplett-Backup**: Das Paket stellt `app_state` wieder her, `config.php`
+gehört nicht dazu und darf auch nicht dazugehören. Wer eine Sicherung auf
+einem neuen Server einspielt, landet also zwangsläufig hier, und die Karte
+sagt ihm, was zu tun ist, statt „Passwort falsch" zu melden.
+
+**Nachtragen schreibt nur bei Übereinstimmung.** Der Server rechnet die
+Kennung des eingegebenen Werts und vergleicht sie mit der erwarteten; passt
+sie nicht, wird **nichts** geschrieben und die Meldung nennt **beide**
+Kennungen. Ein falsch abgetippter Wert, der stillschweigend landet, macht aus
+einer behebbaren Lage eine unbehebbare — er überschreibt den einzigen Ort, an
+dem der richtige noch stehen könnte. Leerzeichen, Bindestriche und
+Großschreibung dürfen drinbleiben: Das Blatt druckt in Vierergruppen, und wer
+sie beim Abtippen mitnimmt, soll nicht dafür bestraft werden.
+
+**Rotation in zwei Schritten.** „Server-Anteil wechseln" legt den neuen an und
+lässt den alten als `kdf_anteil_alt` stehen; ausgeliefert werden beide, jedes
+Konto stellt beim nächsten Anmelden von selbst um. „Alten Anteil entfernen"
+wird erst angeboten, wenn **kein Konto** mehr auf ihm steht — die Karte zählt
+das nach. Ein Wechsel, der den alten Wert sofort wegnimmt, sperrt jedes Konto
+aus, das seither nicht angemeldet war.
+
+**Der Neuanfang ist die letzte Tür** und heißt deshalb so. Er ist nur aus der
+Lage *abweichend* erreichbar, fragt zurück und lässt sich nicht durch ein F5
+wiederholen — der zweite Versuch wird serverseitig abgewiesen. Danach setzt
+jede NutzerIn ihr Passwort über den Wiederherstellungsschlüssel neu; die Daten
+selbst bleiben unversehrt, weil die Wiederherstellungshülle nicht am Anteil
+hängt.
+
+**Das erste `@media print` des Projekts.** Drei Regeln, und sie gelten nur für
+das Blatt: Bildschirmknöpfe fort, keine Flächenfarbe, kein Seitenumbruch
+mitten im Wert. Ein Druck-Stylesheet, das jede Seite umgestaltet, wäre eine
+zweite Oberfläche mit eigenen Fehlern — gestaltet wird die eine Seite, die
+gedruckt werden soll. Gemessen bei 210 mm Papierbreite: **16 Vierergruppen,
+0 zerschnitten, 0 waagerechter Überlauf**.
+
+**Keine Schemaänderung, keine Migration.** `app_state` bekommt zwei Marken
+(`kdf_anteil_kennung`, `server_key_kennung`); die Tabelle gibt es seit langem,
+und beide entstehen beim ersten Anlegen von selbst.
+
+### Behoben
+
+- **`.plakette-ok` gab es im Stylesheet nicht.** Die Klasse stand an zwei
+  Stellen im Bestand und traf auf keine Regel — die Plakette war dort
+  unauffällig statt blau. Die neue Karte benutzt `blau`; die zwei Altstellen
+  bleiben vorerst, sie gehören nicht zu diesem Paket.
+- **Die Kennung in Vierergruppen stand zweimal im Code.** `apk_lib.php` hatte
+  dieselbe Zerlegung wie das Schlüsselblatt; sie liegt jetzt einmal in
+  `db.php` (`hex_vierergruppen()`).
+
+## [Web 20.0.0] — 2026-09-14
+
+Schritt 9b (**S10 — Sicherheit**, R78), zweites Arbeitspaket: der Browser
+benutzt den Server-Anteil. **Das ist die Hauptstufe von S10.**
+
+### Web — der Datenschlüssel hängt jetzt wirklich am Server-Anteil
+
+**Was 19.7.0 vorbereitet hat, wird hier wahr.** Die erste Hälfte der
+PBKDF2-Ableitung ist nicht mehr selbst der Datenschlüssel; dazwischen steht
+HKDF-SHA256 mit dem Anteil dieses Kontos. Jede Schlüsselhülle wechselt dabei
+ihr Format von `edk1:` auf `edka1:<kennung>:` — **still, beim nächsten
+Anmelden**. Niemand gibt etwas ein, niemand sieht einen Dialog, kein Datensatz
+wird angefasst: Der Inhaltsschlüssel bleibt derselbe, nur seine Hülle ist eine
+andere. Deshalb bleibt auch `pat_key_check` gleich, und deshalb ist ein
+abgebrochener Versuch folgenlos.
+
+**Warum die Hauptnummer.** Nicht wegen des Datenmodells — es bleibt
+unangetastet, und eine Migration gibt es nicht. Sondern weil sich die
+Schlüsselkette der Anwendung ändert: Wer die Datenbank hat, hatte bis 19.7.0
+alles, was er zum Durchprobieren eines Passworts braucht. Ab jetzt nicht mehr.
+
+**`login.php` setzt den Datenschlüssel nicht mehr selbst**, auch nicht bei
+einer einzigen Rundenzahl. Bis 19.7.0 fehlte ihm nur eine Angabe: welche
+Rundenzahl gilt. Jetzt fehlt eine zweite — ob die Hülle dieses Kontos den
+Anteil braucht, steht in *ihrem* Präfix, und die kennt erst die angemeldete
+Seite. Eine Anmeldeseite, die den Schlüssel setzt, ohne die Hülle gesehen zu
+haben, rät. Das Vormerkfach liegt dafür nach jeder Anmeldung einen
+Seitenwechsel lang im `sessionStorage` statt gar nicht; geräumt wird es
+unverändert von der ersten Seite, die den Inhaltsschlüssel braucht.
+
+**Die Meldung sagt endlich, was los ist.** Wenn der Anteil fehlt oder ein
+anderer ist, ließ sich das bisher nicht von einem falschen Passwort
+unterscheiden — und es trifft *alle Konten gleichzeitig*. Der Entsperrdialog
+nennt jetzt die erwartete Kennung („Der Server-Anteil der Verschlüsselung
+fehlt oder ist nicht der, mit dem die Hüllen gebaut wurden (Kennung `ab12cd34`
+erwartet)"), und nach einem Neuanfang sagt er stattdessen, dass der
+Wiederherstellungsschlüssel hilft. „Passwort falsch" bei einem richtigen
+Passwort ist die teuerste Auskunft, die diese Anwendung geben kann: Sie
+schickt die NutzerIn in den Reset und die Administration auf die falsche
+Fährte.
+
+**Drei Funde aus dem Gegenlesen des Konzepts sind mit behoben**, und alle drei
+wären teuer geworden:
+
+- **`EdCrypto.getContentKey()` rief `decrypt()` unmittelbar** — und das weist
+  jede Kennung außer `edk1:` ab. Über `EdKeyGuard.contentKey()` hätte das
+  **jede Anzeigeseite** gesperrt, und zwar erst beim *zweiten* Seitenaufbau:
+  Der erste bekommt den Schlüssel aus dem Vormerkfach. Ein Fehler, der beim
+  Ausprobieren nicht auftritt und im Betrieb sofort. Der Katalog der „fünf
+  Stellen" im Konzept zählt diese hier nicht mit.
+- **`WRAP_RE` prüfte beide Hüllen mit einer Regel.** Seit 19.7.0 nahm sie
+  `edka1:` an — damit auch für `pat_wrap_rc`, das nie am Anteil hängen darf.
+  Eine `edka1:`-Wiederherstellungshülle wäre der Verlust genau des Rückwegs,
+  den die Zusage verspricht, und man sähe es dem Feld nicht an, bis es zu spät
+  ist. Jetzt zwei Ausdrücke: `WRAP_PW_RE` und `WRAP_RC_RE`.
+- **Die Kennungsprüfung saß an einem von vier Schreibwegen** für
+  `pat_wrap_pw`. Nachgezählt: `pw_handling.php` zweimal (Erstvergabe, Reset),
+  `einstellungen.php` (Passwortwechsel), `api/kdf_upgrade.php`. Jetzt an allen
+  vier, über *eine* Funktion — „Feldkatalog statt Sonderfall" gilt auch für
+  Prüfungen.
+
+**`deriveKeys()` liefert `haelfteHex` statt `dataKeyHex`.** Das fasst jede
+Aufrufstelle an, und genau deshalb ist es so: Ein Feld, das „dataKey" heißt
+und keiner ist, wird beim nächsten Mal wieder als einer benutzt.
+`grep dataKeyHex server/` ergibt 0.
+
+**Das Demo-Konto bleibt außen vor** und behält seine `edk1:`-Hülle — dieselbe
+Begründung wie bei der Rundenzahl: Die Fixture muss auf jeder Installation
+aufgehen.
+
+**Gemessen, nicht geschätzt.** Die zusätzliche HKDF-Ableitung kostet im
+Browser **unter 0,12 ms** — sie läuft einmal je Anmeldung und ist neben
+600 000 PBKDF2-Runden nicht zu bemerken. Die Zahl stammt aus 500 Ableitungen
+am Stück: eine Einzelmessung liegt unter dem Raster, auf das die Engines
+`performance.now()` gegen Seitenkanäle grob stellen, und hätte nur „0,000 ms"
+gesagt.
+
+**Neu: `tools/anteilprobe/umstellungslauf.mjs`** — die eine Frage, die kein
+anderes Prüfmittel beantworten kann: Stellt der *Browser* von selbst um? Der
+Lauf setzt seine Voraussetzung selbst her (`huelle_stellen.py` stellt die
+Hülle des Prüfkontos auf `edk1:` zurück), sonst misst der zweite Aufruf etwas
+anderes als der erste.
+
+## [Web 19.7.0] — 2026-09-14
+
+Schritt 9b (**S10 — Sicherheit**, R78), erstes Arbeitspaket: die Grundlage im
+Server für den **Server-Anteil am Datenschlüssel**.
+
+### Web — ein zweites Geheimnis, das noch niemand benutzt
+
+**Das Problem, gegen das S10 gebaut ist.** Wer die Datenbank in die Hände
+bekommt, hat bis heute alles, was er zum Durchprobieren eines Passworts
+braucht: Salz, Rundenzahl und die Schlüsselhülle. 600 000 PBKDF2-Runden machen
+das teuer, aber nicht unmöglich — gegen ein schwaches Passwort hält das nicht
+(Krypto-Review K-3, Weg 1). Was fehlt, ist eine Zutat, die **nicht** in der
+Datenbank steht.
+
+**Die Zutat heißt Server-Anteil** und liegt als `kdf_anteil` in `config.php`,
+neben dem Serverschlüssel. Je Konto wird daraus per HMAC über die Kontonummer
+ein eigener Wert abgeleitet, und der geht per HKDF in den Datenschlüssel ein.
+Der Server kann damit weiterhin **nichts** öffnen: Er kennt den Anteil, nicht
+die PBKDF2-Hälfte aus dem Passwort. Ein Datenbankabzug allein reicht ab S10
+nicht mehr.
+
+**Warum aus der Kontonummer und nicht aus dem Salz** (E-S10-03). Die
+Vorbereitung schlug das Salz vor. Das geht nicht: Passwortwechsel und Reset
+würfeln das *neue* Salz im Browser, und der Anteil dazu wäre dem Browser in
+genau dem Augenblick unbekannt, in dem er die neue Hülle baut. Die Kontonummer
+ist unveränderlich und schon da; dass sie erratbar ist, kostet nichts — das
+Geheimnis ist der Anteil, und HMAC sorgt dafür, dass aus dem Anteil eines
+Kontos kein anderer zu bilden ist.
+
+**Der Rückweg bleibt serverunabhängig.** `pat_wrap_rc` — die Hülle am
+Wiederherstellungsschlüssel — hängt **nicht** am Anteil. Geht der Anteil
+verloren, ist das kein Datenverlust, sondern ein Vorgang für alle: Jede
+NutzerIn setzt ihr Passwort über den Wiederherstellungsschlüssel neu. Das ist
+die Entscheidung, die `config.php` zum Schlüsselträger der ganzen Installation
+macht, ohne sie zum Totalausfall zu machen.
+
+**Diese Stufe tut noch nichts — und das ist Absicht.** Es gibt noch keinen
+Browser, der den Anteil benutzt: Jede Hülle bleibt `edk1:`, kein Weg durch die
+Anwendung ändert sich. Gebaut ist die Grundlage — der Anteil wird gelesen,
+abgeleitet, seine Kennung gerechnet, sein Zustand unterschieden und an die
+angemeldete Sitzung ausgeliefert. Deshalb steht hier eine Neben- und keine
+Hauptnummer, obwohl S10 als Ganzes eine Hauptstufe ist: Die 20.0.0 gehört an
+das Paket, in dem der Datenschlüssel tatsächlich am Anteil hängt.
+
+**Die Kennung ist der Griff, mit dem sich das bedienen lässt.** Acht
+Hexzeichen aus SHA-256 über den Wert — genug, damit ein Vertippen auffällt,
+kurz genug, um sie am Telefon zu nennen. Sie steht im Präfix jeder Hülle
+(`edka1:<kennung>:`), in `app_state` und später auf dem Schlüsselblatt. Damit
+lässt sich vergleichen, ohne den Wert zu zeigen, und zählen, ohne eine Hülle
+zu öffnen. Der Serverschlüssel bekommt dieselbe Kennung — nur zur Anzeige,
+seine Versiegelung `edsk1:` bleibt.
+
+**Gegen die stille Aussperrung.** Wäre der Anteil in `config.php` ein anderer
+als der, mit dem die Hüllen gebaut wurden, sähe das für jede NutzerIn
+gleichzeitig aus wie ein falsches Passwort. Deshalb merkt sich `app_state` die
+Kennung, mit der gearbeitet wird. Stimmen Wert und Marke nicht überein, wird
+**gar nichts** ausgeliefert — lieber eine Meldung, die die erwartete Kennung
+nennt, als ein Schlüssel, der nicht passt. Fünf Lagen unterscheidet
+`anteil_zustand()`: nicht eingerichtet, bereit, Rotation, abweichend,
+Neuanfang.
+
+**`api/kdf_upgrade.php` ist jetzt die Hüllenfassung.** Der Endpunkt hieß
+„Anhebung der Rundenzahl" und war genau das; er nimmt seit S10 auch eine
+Umstellung bei *gleicher* Rundenzahl an, wenn sich die Hüllenfassung ändert.
+Neu ist eine Prüfung, die einen spät auffallenden Fehler ausschließt: Das
+Präfix der neuen Hülle muss die **aktuelle** Anteil-Kennung tragen. Eine
+Hülle, die auf den alten Anteil zurückgestellt würde, funktionierte — bis
+`kdf_anteil_alt` aus `config.php` verschwindet, also genau dann, wenn die
+Statusseite meldet, es stehe niemand mehr auf dem alten Anteil.
+
+**Der Schreibweg in `config.php` ist verallgemeinert.**
+`serverschluessel_eintragen()` konnte einen Wert nur *ergänzen*, nie ersetzen —
+aus gutem Grund. S10 braucht das Ersetzen für genau einen Fall: Nach einem
+Wiederanlauf steht ein falscher Wert in der Datei. Jetzt gilt: Steht dort kein
+gültiger Wert, wird ohne Rückfrage geschrieben; steht dort ein gültiger, muss
+„ersetzen" ausdrücklich angesagt werden. Dabei ist die Gegenprobe vor dem
+Umbenennen mitgewachsen — sie verglich drei benannte Abschnitte (`db`, `app`,
+`smtp`) und vergleicht jetzt **alle**. Dass die Liste bis heute stimmte, war
+Glück.
+
+**Das Demo-Konto bleibt außen vor** (E-P1-19, Backlog Nr. 155). Es bekommt
+keinen Anteil und behält seine `edk1:`-Hülle — dieselbe Begründung wie bei der
+Rundenzahl: Die Fixture muss auf jeder Installation aufgehen, und eine Hülle,
+die am Anteil dieser einen Installation hängt, täte das nicht.
+
+**Neu: `tools/anteilprobe/`.** Vier der fünf Lagen entstehen erst, wenn man
+`config.php` oder `app_state` von Hand verstellt — im Browser sind sie
+praktisch nicht herzustellen. Die Probe stellt sie her, misst und stellt
+zurück: **69 von 69** Erwartungen für die Rechnungen, die Zustände und den
+Schreibweg, **33 von 33** für den Endpunkt über echtes HTTP. Die Hüllen darin
+sind echt, keine Attrappen — der Rundlauf misst, dass nach der Umstellung
+derselbe Inhaltsschlüssel herauskommt.
+
+**Zwei Stücke aus AP5 sind vorgezogen** (E-S10-U-03): `krypto.py` bekommt
+HKDF und `datenschluessel()`, `sitzung.py` liest `KONTO_ANTEILE`. Ohne sie
+hätte die Probe eine Attrappe bauen müssen, und `sitzung.py` wäre an der
+ersten `edka1:`-Hülle gescheitert — eine Mine, die erst im übernächsten Paket
+hochgegangen wäre.
+
+**Keine Migration.** Die zwei Marken liegen in `app_state`, und die Tabelle
+steht seit Juli. Eine bestehende Installation muss nach dem Deploy **nichts**
+tun: Ohne `kdf_anteil` läuft alles wie vorher. Der Anteil entsteht erst, wenn
+ihn jemand anlegt — die Karte dafür kommt mit dem nächsten Paket, der
+Installer legt ihn ab sofort mit an.
+
+### Prüfstand — drei Engines, und eine startete nicht
+
+Ohne Versionsstufe (nur `tools/`), aber es gehört hierher, weil es jede
+Prüfzahl von S10 betrifft: Seit Web 19.5.1 fahren Bilderlauf, Klickprobe und
+Stilvergleich wahlweise Chromium, Firefox und WebKit. In einem frischen
+Container **startete WebKit nicht** — vier Systembibliotheken fehlten, und
+`tools/containeraufbau/` kannte sie nicht. Ein Dreimotorenlauf wäre
+stillschweigend ein Zweimotorenlauf gewesen oder mitten im Bilderlauf
+abgebrochen; beides meldet am Ende keine Null, sondern gar nichts. Der neue
+Teil `browser` installiert die Pakete **und misst nach**, dass jede Engine
+startet (3 von 3, Rückgabewert 1 bei einer fehlenden).
+
 ## [Web 19.6.0] — 2026-09-14
 
 Mockup-Runde 9c, viertes Arbeitspaket: **Backlog Nr. 124** — das Aktionsblatt.

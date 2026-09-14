@@ -352,6 +352,28 @@ function logo_src(): string {
 }
 
 /** UTC-DATETIME (aus DB) -> Anzeige in App-Zeitzone */
+/**
+ * Einen langen Hexwert in Vierergruppen — die Form zum Ablesen und Abtippen.
+ *
+ * WOFUER. Zwei Stellen brauchen dasselbe: die SHA-256 des APK (wer sie
+ * nachrechnet, verliert 64 Zeichen am Stueck beim dritten Blockwechsel) und
+ * seit S10 die beiden Geheimnisse auf dem Schluesselblatt (die werden im
+ * Ernstfall von Papier abgetippt).
+ *
+ * ER STEHT HIER UND NICHT IN EINER DER BEIDEN BIBLIOTHEKEN, weil sonst die
+ * eine die andere laden muesste — `serverkrypto_lib.php` haengt nicht an
+ * `apk_lib.php` und soll es nicht. Bis Web 20.1.0 stand die Rechnung zweimal
+ * da, wortgleich; gefunden beim Gegenlesen des Konzepts S10 (F-16).
+ *
+ * Der Wert selbst bleibt unveraendert; wer ihn kopiert, bekommt die
+ * Leerzeichen mit und muss sie entfernen — beim Nachtragen vom Blatt tut das
+ * `schluessel_eingabe_normalisieren()` von selbst.
+ */
+function hex_vierergruppen(string $hex): string
+{
+    return trim(chunk_split($hex, 4, ' '));
+}
+
 function fmt_local(?string $utc, string $format = 'H:i'): string {
     global $CFG;
     if ($utc === null || $utc === '') return '–';

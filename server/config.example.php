@@ -20,4 +20,23 @@ return [
         'from' => 'noreply@example.de',
         'from_name' => 'Gen-EM NAdoku',
     ],
+    // ---- Die zwei Geheimnisse des Servers -----------------------------
+    // Beide 64 Hexzeichen. Der Installer wuerfelt sie; eine bestehende
+    // Installation legt sie ueber Betrieb -> Servereinstellungen an, Karte
+    // "Schluessel des Servers". Beide gehoeren ins Wiederanlaufpaket
+    // (docs/Technik.md, Runbook) — das Schluesselblatt druckt sie.
+    //
+    // server_key versiegelt Zugangsdaten der Backup-Ziele, Komplettbackup
+    // und Adminpakete. Ohne ihn laeuft die Anwendung, aber nichts verlaesst
+    // versiegelt das Haus.
+    'server_key' => '',
+    // kdf_anteil geht in den Datenschluessel JEDES Kontos ein (S10). Ohne
+    // ihn laeuft alles wie vor S10 — der Schutz gegen den Datenbankabzug
+    // fehlt dann. Ein ANDERER Wert als der, mit dem die Huellen gebaut
+    // wurden, sperrt alle aus, bis er nachgetragen ist; der
+    // Wiederherstellungsschluessel oeffnet weiterhin ohne ihn.
+    'kdf_anteil' => '',
+    // kdf_anteil_alt steht nur waehrend einer Rotation daneben und
+    // verschwindet, sobald kein Konto mehr auf dem alten Anteil steht.
+    // 'kdf_anteil_alt' => '',
 ];

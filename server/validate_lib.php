@@ -100,6 +100,29 @@ const PAT_BLOB_RE = '#^' . CHIFFRE_PRAEFIX_RE
                   . '[A-Za-z0-9+/=]{' . PAT_BLOB_MIN . ',' . PAT_BLOB_MAX . '}$#';
 
 /**
+ * Kennung einer Schluesselhuelle MIT Server-Anteil (S10, E-S10-05).
+ *
+ * Eine solche Huelle lautet `edka1:<kennung>:<base64>`, wobei <kennung> die
+ * acht Hexzeichen des Anteils sind, mit dem sie gebaut wurde. Der Chiffretext
+ * dahinter ist derselbe AES-256-GCM-Aufbau wie bisher; was dazukommt, ist die
+ * Auskunft, WELCHER Schluessel sie oeffnet.
+ *
+ * WARUM NICHT SCHLICHT `edk2:`. Zwei Gruende, und beide sind praktisch.
+ * Erstens weist `EdCrypto.decrypt()` jede Kennung ausser `edk1:` als
+ * „neuere Programmfassung" ab — die Fassung der HUELLE ist aber etwas anderes
+ * als die Fassung des Verfahrens, und die beiden zu vermengen hiesse, jedem
+ * Huellenwechsel eine Fehlermeldung mitzugeben. Zweitens braucht der Browser
+ * bei einer Rotation die Auskunft, mit WELCHEM von zwei Anteilen er oeffnet,
+ * und die Statusseite muss zaehlen koennen, wer noch auf dem alten steht —
+ * beides steht im Praefix und ist lesbar, ohne dass jemand etwas oeffnet.
+ *
+ * `pat_wrap_rc` bekommt KEIN solches Praefix: Der Wiederherstellungsschluessel
+ * haengt nicht am Anteil, und das ist der Rueckweg, wenn der Anteil verloren
+ * geht (E-S10-04).
+ */
+const HUELLE_PRAEFIX = 'edka1:';
+
+/**
  * Zeichenvorrat einer Schluesselhuelle (pat_wrap_pw, pat_wrap_rc).
  *
  * Stand bis Web 5.0.1 dreimal im Projekt: als Konstante in pw_handling.php und
@@ -107,8 +130,38 @@ const PAT_BLOB_RE = '#^' . CHIFFRE_PRAEFIX_RE
  * Mit der Formatkennung waeren daraus drei Stellen geworden, die man einzeln
  * haette nachziehen muessen — und eine vergessene haette eine gueltige Huelle
  * abgewiesen, mit dem Ergebnis, dass ein Passwortwechsel scheitert.
+ *
+ * SEIT S10 SIND ZWEI KENNUNGEN ERLAUBT, und zwar nur hier — `PAT_BLOB_RE`
+ * bleibt unberuehrt. Das ist kein Versehen: Der Anteil steckt im
+ * DATENSCHLUESSEL, und der oeffnet ausschliesslich die Huelle. Der
+ * Inhaltsschluessel darin und damit jeder `pat_blob` sind unveraendert —
+ * kein Datensatz wird angefasst, wenn ein Konto umstellt.
  */
-const WRAP_RE = '#^' . CHIFFRE_PRAEFIX_RE . '[A-Za-z0-9+/=]{20,4000}$#';
+const WRAP_PRAEFIX_RE = '(?:edk1:|edka1:[0-9a-f]{8}:)?';
+
+/**
+ * ZWEI AUSDRUECKE, WEIL ES ZWEI HUELLEN MIT VERSCHIEDENEN ZUSAGEN SIND
+ * (S10, Fund F-2).
+ *
+ * Bis Web 19.7.0 pruefte EINE Regel beide Huellen. Als `WRAP_RE` in AP1 die
+ * Kennung `edka1:` dazunahm, galt das stillschweigend auch fuer
+ * `pat_wrap_rc` — und damit haette eine Wiederherstellungs-Huelle am
+ * Server-Anteil haengen koennen, ohne dass irgendetwas es aufgehalten haette.
+ *
+ * DAS WAERE DER VERLUST DES RUECKWEGS, also genau dessen, was die Zusage
+ * verspricht: `pat_wrap_rc` oeffnet OHNE Anteil, und deshalb ist der Verlust
+ * des Anteils kein Datenverlust (E-S10-04). Eine `edka1:`-Huelle dort waere
+ * ein Konto, das nach dem Verlust des Anteils nicht mehr zu retten ist — und
+ * man saehe es dem Feld nicht an, bis es zu spaet ist.
+ *
+ * Deshalb gilt: `WRAP_PW_RE` nimmt beide Kennungen, `WRAP_RC_RE` nur die
+ * alte. `WRAP_RE` bleibt als Name bestehen und ist `WRAP_PW_RE` — die
+ * Aufrufer, die beide Huellen pruefen, stehen in pw_handling.php und meinen
+ * dort die Passwort-Huelle.
+ */
+const WRAP_PW_RE = '#^' . WRAP_PRAEFIX_RE . '[A-Za-z0-9+/=]{20,4000}$#';
+const WRAP_RC_RE = '#^' . CHIFFRE_PRAEFIX_RE . '[A-Za-z0-9+/=]{20,4000}$#';
+const WRAP_RE    = WRAP_PW_RE;
 
 /**
  * Mengenbegrenzungen je Einsatz.

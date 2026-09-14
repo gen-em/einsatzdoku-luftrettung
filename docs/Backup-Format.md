@@ -1276,20 +1276,59 @@ Absicht: Es soll eine Entscheidung sein, keine Nebenwirkung.
 
 ---
 
-## 5. Konto-Backup, Fassung 2 (seit Web 12.0.0)
+## 5. Konto-Backup, Fassung 3 (seit Web 20.2.0)
 
 Ein anderes Format als die `.edbak`-Datei — es umschliesst sie. Erzeugt von
 `adminbackup_lib.php`, abgelegt unter `server/sicherungen/<kontokennung>/`.
-**Unverschlüsselt:** Der Server hat keinen Schlüssel, mit dem er es versiegeln
-könnte, ohne ihn ebenfalls zu speichern — das wäre ein Schloss mit dem
-Schlüssel daneben. Geschützt ist die Datei durch den Ort (`Require all denied`
-und der nicht erratbare Ordnername), und die empfindlichen Angaben darin
-stecken ohnehin verschlüsselt.
 
-**Seit Web 12.0.0 ist ein Paket ein ZIP** mit dem Namen
-`<zeitstempel>_<8 Hexziffern>.zip`. Die Endung ist zugleich die
-Fassungserkennung: `.json` = die einteilige Fassung 1 (Abschnitt 5a),
-`.zip` = Fassung 2.
+**VERSIEGELT seit Web 20.2.0** (S10/AP4). Jeder Eintrag im ZIP ist
+gzip-gepackt und mit dem **Serverschlüssel** versiegelt (`edsk1:`, Abschnitt
+zu `sk_versiegeln()` in `docs/Technik.md`), das `manifest.json`
+eingeschlossen — und die Begleitdatei `konto.json` daneben ebenso.
+
+> **Hier stand bis Web 20.1.0 das Gegenteil, und es war zu seiner Zeit
+> richtig:** „Unverschlüsselt: Der Server hat keinen Schlüssel, mit dem er es
+> versiegeln könnte, ohne ihn ebenfalls zu speichern." Den Schlüssel gibt es
+> seit Web 12.1.0 — er steht in `config.php` und nicht in der Datenbank, also
+> gerade nicht neben dem Schloss. Was den Ausschlag gab, war S10: Seit
+> Fassung 3 der Schlüsselkette ist `config.php` Schlüsselträger der ganzen
+> Installation, und ein Paket, das per Versand an eine fremde Gegenstelle
+> geht, soll unterwegs nicht lesbar sein.
+
+**Das ist keine Ende-zu-Ende-Verschlüsselung.** Der Server kann das Siegel
+öffnen. Was es verhindert, ist der Zugriff **ohne** den Server: ein kopiertes
+Backup, ein mitgelesener Versand, ein Blick in den Ablageordner. `pat_blob`
+bleibt unabhängig davon Ende-zu-Ende verschlüsselt; das Siegel liegt darüber.
+
+**Der Siegelzweck bindet drei Dinge:** `adminpaket|<kontokennung>|<paketname>|<teil>`.
+Der Paketname gehört dazu, weil sich sonst ein Teil aus einem *älteren Paket
+desselben Kontos* unterschieben ließe — das Manifest führt nur Namen, keine
+Prüfsummen je Teil.
+
+> **Wer ein Paket umbenennt, macht es unlesbar.** Der Dateiname ist Teil des
+> Siegels. Das gilt auch für ein Paket, das von einem Backup-Ziel unter einem
+> anderen Namen zurückkommt. Der Name war schon vorher die Identität in der
+> Ablage (`edbak_verzeichnis_abgleichen()`); seit Web 20.2.0 hängt die
+> Lesbarkeit daran.
+
+**Die Begleitdatei `konto.json`** trägt ihren eigenen Zweck
+(`adminkonto|<kontokennung>`) und ist **nicht** gzip-gepackt — sie ist ein
+paar hundert Byte gross, da kostet der Rahmen mehr, als er einspart. Eine
+unversiegelte Datei aus der Zeit davor wird weiter gelesen und versiegelt sich
+beim nächsten Schreiben von selbst.
+
+**Ohne Serverschlüssel entsteht kein Paket.** `edbak_sicherung_erzeugen()`
+bricht mit Grund ab, bevor irgendetwas gelesen wird — derselbe Riegel wie beim
+Komplett-Backup.
+
+**Ein Paket ist seit Web 12.0.0 ein ZIP** mit dem Namen
+`<zeitstempel>_<8 Hexziffern>.zip`. Die Endung unterscheidet **einteilig von
+mehrteilig**: `.json` = die einteilige Fassung 1 (Abschnitt 5a), `.zip` =
+mehrteilig. Sie sagt **nicht**, ob die Teile versiegelt sind — das entscheidet
+das Präfix `edsk1:` am `manifest.json`, und die Fassungsnummer steht in dessen
+`version`. Zwei Zahlen, die beide „Fassung" heissen: `edbak_paket_fassung()`
+liest die Endung und bleibt bei 2, `manifest.version` ist seit Web 20.2.0
+die 3.
 
 | Eintrag | Inhalt |
 |---|---|
@@ -1298,12 +1337,35 @@ Fassungserkennung: `.json` = die einteilige Fassung 1 (Abschnitt 5a),
 | `eintraege/0001.json` … | je 250 Einträge (Einsätze **und** Ruhesegmente) ohne Punktlisten |
 | `spuren/0001.json` … | je Teil `{spur_ref, blob, stufe, n_original, n}` — SPUR1, Base64 |
 
-**Gepackt**, anders als bei dem Nutzer-Backup: Dort sind die Teile bereits
-gzip *und* verschlüsselt, hier ist es blankes JSON. **Gemessen** am
-5000er-Bestand: 11,42 MB statt 94,28 MB derselben Daten als Fassung 1.
+**Ungepackt im ZIP, aber gzip davor.** Bis Fassung 2 packte das ZIP die Teile
+(sie waren blankes JSON). Ein Siegel ist Zufallsrauschen — darüber bringt ein
+Packlauf nichts und kostet Zeit; die Einträge stehen deshalb mit
+`ZipArchive::CM_STORE` darin, und die Kompression geschieht **vor** dem Siegel
+mit `gzencode`/`gzdecode`.
 
-Der Aufbau der Teile ist der der Containerfassung 4 (Abschnitt 1) — nur ohne
-Versiegelung, und `pat_blob` bleibt Chiffretext. Die `spur_ref` ist wie dort
+> `gzencode` und nicht `gzcompress`: `spur_lib.php` wählt zlib, **weil** Python
+> und JavaScript die Spur lesen müssen. Hier liest niemand ausser PHP — ohne
+> den Serverschlüssel kommt ohnehin keiner an den Inhalt. Der gzip-Rahmen
+> bringt dafür eine CRC mit, an der ein beschädigter Teil auffällt, statt halb
+> entpackt zu werden.
+
+**Gemessen** am Referenzkonto (83 Einsätze, 150 690 Byte Klartext in den
+Teilen):
+
+| | Paketgrösse | gegen Fassung 2 |
+|---|--:|--:|
+| Fassung 2 — JSON, vom ZIP gepackt | 33 281 Byte | — |
+| Siegel **ohne** gzip-Vorstufe | 201 390 Byte | **+505 %** |
+| **gzip, dann Siegel** (Fassung 3) | 45 290 Byte | +36 % |
+
+Die verbleibenden 36 Prozent sind der **base64-Rahmen** von `edsk1:` und nicht
+der Packlauf: Ein Siegel ist Text, damit es durch jede Stelle passt, die Text
+erwartet, und das kostet ein Drittel. Die ältere Zahl „11,42 MB statt 94,28 MB
+am 5000er-Bestand" vergleicht Fassung 2 gegen Fassung 1 und bleibt davon
+unberührt.
+
+Der Aufbau der Teile ist der der Containerfassung 4 (Abschnitt 1) — und
+`pat_blob` bleibt darin Chiffretext, unabhängig vom Siegel darüber. Die `spur_ref` ist wie dort
 der **Index des Eintrags über das ganze Backup** (erst Einsätze, dann
 Ruhesegmente).
 
@@ -1311,7 +1373,7 @@ Ruhesegmente).
 // manifest.json
 {
   "format":      "einsatzdoku-adminsicherung",
-  "version":     2,
+  "version":     3,
   "erzeugt":     "2026-09-01T04:53:17Z",
   "web_version": "12.0.0",
   "konto":  { "account_key": "…16 Hexziffern…", "email": "…", "name": "…" },

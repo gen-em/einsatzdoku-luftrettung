@@ -98,6 +98,35 @@ const MOTOR  = motorWahl(argv);
 const BILDER = flag('--bilder');
 const MARKE  = wert('--marke', '');     // freie Beschriftung des Laufs im Bericht
 
+/* ---- Die Uhr des Demo-Kontos ablesen (S10/AP3) ---------------------------
+ *
+ * WARUM DAS HIERHER GEHOERT. Die Sitzungswache unten faengt den Fall ab, dass
+ * der Demo-Reset eine SITZUNG beendet: Sie meldet sich neu an und faehrt die
+ * Adresse noch einmal. Sie faengt NICHT den Fall ab, dass der Reset den
+ * BESTAND wegnimmt, aus dem ein Weg seine Adresse erst noch holen muss —
+ * dann steht in `adresse` nichts, und die Meldung lautet „Adresse nicht
+ * aufgelöst (Bestand leer?)". Sie zeigt auf die Daten und nicht auf die
+ * Ursache, also genau dorthin, wo nichts ist.
+ *
+ * Gemessen am 14.09.2026: Der Reset lief um 14:01:15, der Lauf begann in
+ * derselben Minute — **37 von 43**, sechs Wege „Bestand leer?" und „Kein
+ * Diensttag im Bestand". Derselbe Lauf sechs Minuten spaeter: 43 von 43.
+ *
+ * Diese Datei kann den Fall nicht verhindern, ohne jeden einzelnen Weg
+ * umzubauen. Sie kann ihn aber BENENNEN: Sie liest die Marke vor und nach
+ * dem Lauf und sagt im Bericht, ob ein Reset hineingefallen ist. Aus einer
+ * irrefuehrenden Meldung wird damit eine Auskunft. */
+async function demoUhr() {
+  const { spawnSync: lauf } = await import('node:child_process');
+  const r = lauf('php', ['-r',
+    'require ' + JSON.stringify(join(HIER, '..', '..', 'server', 'db.php')) + ';'
+    + 'require_once ' + JSON.stringify(join(HIER, '..', '..', 'server', 'demo_lib.php')) + ';'
+    + 'echo demo_letzter_reset();'], { encoding: 'utf8' });
+  const n = Number((r.stdout || '').trim());
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+const DEMO_RESET_VOR = await demoUhr();
+
 /* BREITE UND EINGABEART, weil ein Bild ohne beides nichts belegt. Die Abnahme
  * einer Vorschlagsliste lautet „zwei Breiten, beide Bedienhoehen" — 44 px am
  * Finger, 36 px am Zeigergeraet ab 1024 px (R76). Dieselbe Weiche wie beim
@@ -299,7 +328,12 @@ async function kasten(rolle, weg, breite) {
      * ein echter Fehlschlag, und der gehoert gemeldet.
      */
     async gehZu(adresse) {
-      if (!adresse) { throw new Error('Adresse nicht aufgelöst (Bestand leer?)'); }
+      if (!adresse) {
+        throw new Error('Adresse nicht aufgelöst — entweder ist der Bestand '
+          + 'wirklich leer, oder das Demo-Konto hat sich mitten im Lauf '
+          + 'zurückgesetzt (alle 30 min, demo_lib.php). Der Bericht sagt am '
+          + 'Ende, welcher der beiden Fälle vorliegt.');
+      }
       await r.seite.goto(adresse, { waitUntil: 'domcontentloaded' });
       if (r.seite.url().includes('login.php') && !adresse.includes('login.php')) {
         await neuAnmelden(r);
@@ -524,6 +558,29 @@ if (mitBemerkung.length) {
   for (const e of mitBemerkung) { md.push(`- \`${e.name}\`: ${e.bemerkung}`); }
 }
 md.push('');
+/* Die Auskunft steht VOR den Grenzen und nicht darin: Sie ist kein
+ * dauerhafter Vorbehalt, sondern eine Aussage ueber DIESEN Lauf. */
+const DEMO_RESET_NACH = await demoUhr();
+if (DEMO_RESET_VOR !== null && DEMO_RESET_NACH !== null
+    && DEMO_RESET_NACH !== DEMO_RESET_VOR) {
+  const uhr = new Date(DEMO_RESET_NACH * 1000).toISOString().slice(11, 19);
+  md.push('## Achtung: der Demo-Reset lief WÄHREND dieses Laufs');
+  md.push('');
+  md.push(`Das Demo-Konto hat sich um **${uhr} UTC** zurückgesetzt `
+        + '(`DEMO_RESET_SEKUNDEN` = 1800, `demo_lib.php`). Dabei verschwindet '
+        + 'der Bestand kurz und die Sitzungs-Epoche steigt.');
+  md.push('');
+  md.push('**Jeder verfehlte Weg oben ist damit zunächst verdächtig**, und '
+        + 'zwar besonders die mit „Bestand leer?", „Kein Diensttag im '
+        + 'Bestand" oder einer Zeitgrenze. Die Sitzungswache fängt nur die '
+        + 'verlorene Sitzung ab, nicht den fehlenden Bestand. **Vor dem '
+        + 'Melden einer Zahl den Lauf wiederholen** — er dauert weniger als '
+        + 'das 30-Minuten-Fenster.');
+  md.push('');
+  console.log('');
+  console.log(`ACHTUNG: Der Demo-Reset lief um ${uhr} UTC mitten in diesem `
+            + `Lauf. Verfehlte Wege sind verdaechtig — bitte wiederholen.`);
+}
 md.push('## Grenzen dieses Laufs');
 md.push('');
 md.push('- Nur Chromium; WebKit und Gecko stehen im Prüfstand nicht zur Verfügung.');
