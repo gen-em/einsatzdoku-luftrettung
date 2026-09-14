@@ -137,8 +137,27 @@ class Sitzung:
         html = self.get("index.php").text
         self.csrf = self.konstante(html, "CSRF")
         self.kdf_iter = int(self.konstante(html, "KDF_ITER") or runden_liste[0])
-        self.data_key = self.ableitungen.get(self.kdf_iter, data_key)
+        self.haelfte = self.ableitungen.get(self.kdf_iter, data_key)
+
+        # ---- Der Server-Anteil (S10, E-S10-04) ---------------------------
+        #
+        # Seit S10 ist die PBKDF2-Haelfte nicht mehr selbst der
+        # Datenschluessel: Traegt die Huelle das Praefix `edka1:<kennung>:`,
+        # kommt der Datenschluessel aus HKDF(Haelfte, Konto-Anteil). Den
+        # Anteil liefert die angemeldete Seite als `KONTO_ANTEILE` — sie ist
+        # dieselbe Quelle, aus der auch der Browser ihn nimmt.
+        #
+        # DIESES SKRIPT STELLT NICHT UM (E-S10-15). Es liest, was dasteht;
+        # ein Konto, das nur ueber den Pruefstand angemeldet war, bleibt auf
+        # `edk1:`. Der Umstellungslauf braucht einen echten Browser, und das
+        # ist die Grenze dieses Pruefmittels.
+        self.anteile = self.konstante(html, "KONTO_ANTEILE") or {}
+        self.anteil_kennung = self.konstante(html, "ANTEIL_KENNUNG")
+        self.anteil_stand = self.konstante(html, "ANTEIL_STAND") or "fehlt"
+
         wrap = self.konstante(html, "PAT_WRAP")
+        self.wrap = wrap
+        self.data_key = krypto.datenschluessel(self.haelfte, wrap, self.anteile)
         if wrap:
             self.inhaltsschluessel = krypto.entpacken(wrap, self.data_key)
         return self

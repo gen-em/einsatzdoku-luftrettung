@@ -20,10 +20,10 @@ Dateien.
 >
 > | | |
 > |---|---|
-> | Stand | 14.09.2026 — **Umsetzung begonnen (AP0 erledigt).** Konzept freigegeben; fünf Fragen (F-S10-1 bis -5) am 13.09.2026 mit dem Auftraggeber entschieden und als E-S10-03, -05, -12, -13, -14 übernommen. Keine offene Frage. |
-> | Entschieden | E-S10-01 bis E-S10-18 (Abschnitt 2), dazu E-S10-U-01 bis -02 aus der Umsetzung (Abschnitt 2a) |
-> | Offen | nichts vor Umsetzungsbeginn. Zwei Zahlen werden **beim Bauen gemessen**, nicht hier gesetzt (Abschnitt 3, AP2 und AP4) |
-> | Umsetzung | **AP0 erledigt, AP1 als Nächstes.** Sechs Arbeitspakete (Abschnitt 3), eines nach dem anderen; nach jedem Paket Statusblock hier, Prüfprotokoll (Abschnitt 5), Push (K7). Voraussetzung erfüllt: Backlog-Runde 3 (PR #43) **und** Mockup-Runde 9c (PR #44) sind gemergt; `origin/main` steht am 14.09.2026 auf `3886e26`, **Web 19.6.0** |
+> | Stand | 14.09.2026 — **AP1 erledigt (Web 19.7.0).** Konzept freigegeben; fünf Fragen (F-S10-1 bis -5) am 13.09.2026 mit dem Auftraggeber entschieden und als E-S10-03, -05, -12, -13, -14 übernommen. Keine offene Frage. |
+> | Entschieden | E-S10-01 bis E-S10-18 (Abschnitt 2), dazu E-S10-U-01 bis -03 aus der Umsetzung (Abschnitt 2a) |
+> | Offen | nichts. Zwei Zahlen werden **beim Bauen gemessen**, nicht hier gesetzt (Abschnitt 3, AP2 und AP4) |
+> | Umsetzung | **AP0 und AP1 erledigt, AP2 als Nächstes.** Sechs Arbeitspakete (Abschnitt 3), eines nach dem anderen; nach jedem Paket Statusblock hier, Prüfprotokoll (Abschnitt 5), Push (K7). Voraussetzung erfüllt: Backlog-Runde 3 (PR #43) **und** Mockup-Runde 9c (PR #44) sind gemergt; `origin/main` stand am 14.09.2026 auf `3886e26`, **Web 19.6.0** |
 > | Fable-Schritte der Umsetzung | keine |
 
 > **Stand der Umsetzung**
@@ -31,7 +31,7 @@ Dateien.
 > | Paket | Stand | Stufe | Abnahmezahlen |
 > |---|---|---|---|
 > | AP0 Ablage und Buchführung | **erledigt** 14.09.2026 | keine (nur `docs/`, `tools/`) | Rahmenplan Fassung **60**; Backlog-Vermerke an **3** Nummern (46, 139, 155); Containeraufbau **3 von 3** Engines |
-> | AP1 Grundlage Server | offen | 19.7.0 vorgesehen | |
+> | AP1 Grundlage Server | **erledigt** 14.09.2026 | **19.7.0** | Anteilprobe **69 von 69** + Endpunktprobe **33 von 33**; `php -l` **0** Fehler in 9 Dateien; Klickprobe **43 von 43**; Kreisläufe csv **9120/0** und edbak **287 687/0**; Bilderlauf 48 Bilder **0/0/0**; Wortliste **0/0/0**; Linkprobe **117/0** |
 > | AP2 Browser: Datenschlüssel mit Anteil, stille Umstellung | offen | **20.0.0** vorgesehen (Haupt) | |
 > | AP3 Betrieb: Schlüsselblatt, Nachtragen, Rotation, Status | offen | 20.1.0 vorgesehen | |
 > | AP4 Adminpakete versiegeln, `ftp` abschaffen | offen | 20.2.0 vorgesehen | |
@@ -431,6 +431,31 @@ ausdrücklich benennt („Ohne Eintrag in `app_state` … gibt es nichts zu
 prüfen"); es gibt in diesem Zustand auch keine `edka1:`-Hülle, gegen die
 geprüft werden könnte.
 
+**E-S10-U-03 Zwei Stücke aus AP5 sind nach AP1 vorgezogen** (14.09.2026). Das
+Konzept gibt `generator/krypto.py` und `sitzung.py` an AP5 (E-S10-15). Beide
+werden schon in AP1 gebraucht, und das Verschieben ist kein Mehraufwand,
+sondern verhindert zweierlei:
+
+- **Die Endpunktprobe hätte eine Attrappe bauen müssen.** Der Server kann eine
+  Hülle nicht öffnen und prüft nur ihr Präfix — eine Hülle mit Zufallsinhalt
+  hätte für AP1 gereicht. Sie hätte aber im Fehlerfall etwas Unlesbares in der
+  Datenbank stehen lassen, und sie hätte den Rundlauf nicht messen können:
+  anmelden, öffnen, **derselbe Inhaltsschlüssel**. Genau das ist die Zahl, auf
+  die es ankommt — ein anderer hieße, alle Daten des Kontos sind weg.
+- **`sitzung.py` wäre eine Mine geworden.** Es entpackt den Inhaltsschlüssel
+  mit der PBKDF2-Hälfte; an der ersten `edka1:`-Hülle wäre es gescheitert.
+  Solange AP1 keine umstellt, fällt das nicht auf — AP2 stellt um, und dann
+  hätte es zwischen AP2 und AP5 stillgestanden.
+
+Vorgezogen sind: `hkdf_sha256()`, `datenschluessel()`, `huelle_kennung()`,
+`huelle_bauen()` und die Erweiterung von `entschluesseln()` auf das
+`edka1:`-Präfix in `krypto.py`; in `sitzung.py` das Lesen von
+`KONTO_ANTEILE` / `ANTEIL_KENNUNG` / `ANTEIL_STAND` und der Weg über
+`datenschluessel()`. **HKDF ist gegen den Prüfvektor 1 aus RFC 5869
+nachgerechnet.** AP5 hat damit weniger zu tun; was dort offenbleibt, steht
+unverändert in E-S10-15 (Fixture, Freigabe-, Wiederherstellungs- und
+Komplettprobe, Referenzbestand).
+
 ---
 
 ## 3. Arbeitspakete
@@ -613,6 +638,22 @@ Wird je Paket fortgeschrieben: Mittel, Zahl, Stand. Leer bis AP1.
 | AP0 | `sh tools/containeraufbau/aufbau.sh browser` | Engines, die starten | **3 von 3** (Chromium 141.0.7390.37, Firefox 142.0.1, WebKit 26.0) |
 | AP0 | dasselbe, Negativprobe mit `PLAYWRIGHT_BROWSERS_PATH=/tmp/gibtsnicht` | Engines gemeldet / Rückgabewert | **0 von 3**, Rückgabewert **1** (vorher: WebKit brach ab, der Lauf lief weiter) |
 | AP0 | `git fetch origin main` und Stand messen (Rahmenplan-Regel aus Fassung 42) | `origin/main` | `3886e26`, **Web 19.6.0**, Uhr 3.1.0, Android 0.15.0 |
+| AP1 | `php -l` | berührte PHP-Dateien | **0 Fehler in 9 Dateien** |
+| AP1 | `tools/anteilprobe/probe.php --schreiben` | Rechnungen, die fünf Lagen aus E-S10-09, Schreibweg in `config.php` | **69 von 69** |
+| AP1 | dieselbe Probe, Teil D | `config.php` vorher/nachher | **byte-gleich**, 0 Nebendateien liegengeblieben |
+| AP1 | `tools/anteilprobe/endpunkt.py` | `api/kdf_upgrade.php` über echtes HTTP | **33 von 33** |
+| AP1 | darin E2/E3 | Hülle mit fremder bzw. ohne Anteil-Kennung | **2 von 2** abgewiesen (400 `anteil_kennung`), Hülle in der Datenbank unverändert |
+| AP1 | darin E6 | Umstellung bei `neu_iter === kdf_iter` | **1 von 1** angenommen; `pat_key_check` und `kdf_iter` unverändert |
+| AP1 | darin E8 | Rundlauf: Inhaltsschlüssel vor/nach der Umstellung | **gleich** |
+| AP1 | darin E10 | Demo-Konto | `KONTO_ANTEILE` = `null`, `ANTEIL_STAND` = `'demo'`, Endpunkt meldet `uebersprungen` |
+| AP1 | Kennung von Hand gegengerechnet | `schluessel_kennung()` gegen `substr(hash('sha256', …), 0, 8)` | **2 Werte**, beide gleich |
+| AP1 | HKDF gegen RFC 5869, Prüfvektor 1 | `hkdf_sha256()` in `krypto.py` | **1 von 1** |
+| AP1 | frische Installation über `install.php` | trägt `server_key` **und** `kdf_anteil`, beide 64 Hex, verschieden | **1 Datei geprüft**, Zustand `bereit` |
+| AP1 | `tools/klickprobe/probe.mjs` | Regression über alle Bedienwege (Chromium) | **43 von 43** |
+| AP1 | Kreisläufe (R24) | csv / edbak, unerklärte Abweichungen | **9120 / 0** und **287 687 / 0** |
+| AP1 | `tools/screenshots/` (5 Seiten, 8 Breiten) | Überlauf / Konsolenfehler / Knopfhöhen | 48 Bilder, **0/0/0** |
+| AP1 | `tools/wortliste/` (alle fünf Bereiche) | Treffer / ungenutzte Ausnahmen / Fallen | **0/0/0** |
+| AP1 | `tools/linkprobe/` | Verweise / unbekannte Abweichungen | **117 / 0** |
 
 ---
 

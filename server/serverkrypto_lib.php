@@ -2,6 +2,37 @@
 declare(strict_types=1);
 
 /**
+ * DIE GEHEIMNISSE DES SERVERS — seit S10 sind es zwei.
+ *
+ * Der **Serverschlüssel** (`server_key`, seit S2/AP7) versiegelt, was der
+ * Server ohne Browser lesen können muss: die Zugangsdaten der Backup-Ziele
+ * und das Komplettbackup. Er öffnet keine Patientendaten und kann es auch
+ * nicht.
+ *
+ * Der **Server-Anteil** (`kdf_anteil`, seit S10 / Schritt 9b, R78) tut etwas
+ * anderes: Er geht in die Ableitung des DATENSCHLÜSSELS ein, mit dem der
+ * Browser die Schlüsselhülle des Kontos öffnet. Der Server kann damit
+ * trotzdem nichts öffnen — er kennt den Anteil, nicht die PBKDF2-Hälfte aus
+ * dem Passwort. Was sich ändert, ist die Rechnung des Angreifers: Wer nur
+ * die Datenbank hat, hat seit S10 Salz, Rundenzahl und Hülle — aber nicht
+ * mehr alles, was er zum Durchprobieren braucht (Krypto-Review K-3, Weg 1).
+ *
+ * BEIDE LIEGEN IN config.php UND NICHT IN DER DATENBANK, und beim Anteil
+ * wiegt der Grund schwerer als beim Serverschlüssel: Der Zweck ist der Fall
+ * „jemand hat die Datenbank". Läge der Anteil in einer Tabelle, wäre er im
+ * Abzug und der ganze Schritt gegenstandslos. Er gehört deshalb auch NICHT
+ * ins Komplettbackup (SP-3, „Was nicht ins Archiv gehört").
+ *
+ * WAS DAS FÜR DEN BETRIEB HEISST. `config.php` ist seit S10 Schlüsselträger
+ * ALLER Konten. Das Wiederanlaufpaket hat vier Stücke — `config.php`,
+ * Serverschlüssel, Server-Anteil, Zugang zum Ziel —, und das Schlüsselblatt
+ * (Betrieb → Servereinstellungen) ist Pflicht, nicht Empfehlung.
+ * **Der Rückweg bleibt serverunabhängig:** `pat_wrap_rc` hängt NICHT am
+ * Anteil. Wer ihn verliert, sperrt niemanden dauerhaft aus — jede NutzerIn
+ * kommt über den Wiederherstellungsschlüssel wieder herein (E-S10-04).
+ *
+ * ---------------------------------------------------------------------------
+ *
  * DER SERVERSCHLÜSSEL — das eine Geheimnis, das der Server selbst hat
  * (E-S2-21, S2/AP7).
  *
@@ -78,6 +109,44 @@ function serverschluessel_da(): bool
 }
 
 /**
+ * Die Kennung eines Geheimnisses — acht Hexzeichen, die man vorlesen kann.
+ *
+ * WOZU SIE DA IST. Ein 64-Zeichen-Geheimnis lässt sich nicht vergleichen,
+ * ohne es zu zeigen, und zeigen darf man es nicht. Die Kennung ist der
+ * Fingerabdruck: Sie steht auf dem Schlüsselblatt, auf der Karte, in
+ * `app_state` und im Präfix jeder Hülle — und wer zwei davon nebeneinander
+ * hält, sieht sofort, ob es dasselbe Geheimnis ist. Aus ihr zurückzurechnen
+ * geht nicht; sie ist kein Schutzmerkmal, sondern ein Vergleichsmerkmal.
+ *
+ * ACHT ZEICHEN, WEIL SIE ABGESCHRIEBEN WERDEN. Vier wären zu wenig (bei
+ * 65 536 Möglichkeiten ist eine zufällige Übereinstimmung denkbar), sechzehn
+ * wären auf Papier eine zweite Fehlerquelle. Acht Hexzeichen sind 32 Bit —
+ * genug, damit ein Vertippen auffällt, kurz genug, um sie am Telefon zu
+ * nennen.
+ *
+ * ÜBER DIE KLEINGESCHRIEBENEN HEXZEICHEN, NICHT ÜBER DIE ROHBYTES. Das ist
+ * eine Festlegung und keine Feinheit: Dieselbe Rechnung muss in PHP
+ * (`hash('sha256', …)`) und auf dem Schlüsselblatt herauskommen, und auf dem
+ * Blatt steht die Hexform. Wer vom Blatt abschreibt, darf gross schreiben —
+ * deshalb wird hier kleingeschrieben, bevor gerechnet wird.
+ *
+ * Gibt `null` für alles, was keine 64 Hexzeichen sind — dieselbe Linie wie
+ * `serverschluessel()`: ein halber Wert bekommt keine halbe Kennung.
+ */
+function schluessel_kennung(?string $hex): ?string
+{
+    if ($hex === null || !preg_match('/^[0-9a-fA-F]{64}$/', $hex)) { return null; }
+    return substr(hash('sha256', strtolower($hex)), 0, 8);
+}
+
+/** Kennung des Serverschlüssels — für Anzeige und Schlüsselblatt, nie der Wert. */
+function serverschluessel_kennung(): ?string
+{
+    global $CFG;
+    return schluessel_kennung((string)($CFG['server_key'] ?? ''));
+}
+
+/**
  * Ein frischer Schlüssel als 64 Hexzeichen.
  *
  * `random_bytes()` und nichts anderes: Es ist die einzige Quelle in PHP, die
@@ -88,10 +157,15 @@ function serverschluessel_neu(): string
     return bin2hex(random_bytes(32));
 }
 
-/** Die Zeile, die in `config.php` gehört — genau so, wie sie dort steht. */
+/** Die Zeile, die in `config.php` gehört — genau so, wie sie dort steht.
+ *
+ *  Seit S10 nur noch der Name über `config_eintrag_zeile()`: Zwei Funktionen,
+ *  die dieselbe Zeile bauen, laufen früher oder später auseinander, und dann
+ *  steht auf der Seite eine Zeile, die die schreibende Funktion nicht
+ *  wiederfindet. */
 function serverschluessel_zeile(string $hex): string
 {
-    return "    'server_key' => '" . $hex . "',";
+    return config_eintrag_zeile('server_key', $hex);
 }
 
 /**
@@ -160,74 +234,434 @@ function sk_versiegelt(string $wert): bool
     return str_starts_with($wert, SK_PRAEFIX);
 }
 
+/* ===========================================================================
+ * DER SERVER-ANTEIL AM DATENSCHLÜSSEL (S10, E-S10-02 bis E-S10-04)
+ * ======================================================================== */
+
 /**
- * Den Schlüssel in `config.php` eintragen — wenn die Datei beschreibbar ist.
+ * Der Server-Anteil als 32 Rohbytes — oder null, wenn keiner eingetragen ist.
+ *
+ * Wortgleich gebaut wie `serverschluessel()`, und das mit Absicht: Beide
+ * Werte stehen in derselben Datei, tragen dieselbe Form (64 Hexzeichen) und
+ * scheitern auf dieselbe Weise. Ein halber Anteil darf keine halben
+ * Datenschlüssel erzeugen — und ein halber Datenschlüssel öffnet keine Hülle
+ * und sieht dabei aus wie ein falsches Passwort.
+ */
+function kdf_anteil(bool $frisch = false): ?string
+{
+    static $roh = false;
+    if ($frisch) { $roh = false; }
+    if ($roh !== false) { return $roh; }
+    global $CFG;
+    $hex = (string)($CFG['kdf_anteil'] ?? '');
+    if (!preg_match('/^[0-9a-fA-F]{64}$/', $hex)) { return $roh = null; }
+    $bin = hex2bin(strtolower($hex));
+    return $roh = ($bin === false ? null : $bin);
+}
+
+/**
+ * Der VORHERIGE Server-Anteil — gesetzt, solange eine Rotation läuft.
+ *
+ * Während einer Rotation stehen beide Werte in `config.php`, und beide werden
+ * an die angemeldete Sitzung ausgeliefert: Der Browser muss eine Hülle noch
+ * öffnen können, die mit dem alten Anteil gebaut wurde, um sie mit dem neuen
+ * neu zu bauen. Steht niemand mehr auf dem alten (Statuszeile zählt es),
+ * verschwindet der Eintrag wieder.
+ */
+function kdf_anteil_alt(bool $frisch = false): ?string
+{
+    static $roh = false;
+    if ($frisch) { $roh = false; }
+    if ($roh !== false) { return $roh; }
+    global $CFG;
+    $hex = (string)($CFG['kdf_anteil_alt'] ?? '');
+    if (!preg_match('/^[0-9a-fA-F]{64}$/', $hex)) { return $roh = null; }
+    $bin = hex2bin(strtolower($hex));
+    return $roh = ($bin === false ? null : $bin);
+}
+
+/** Ein frischer Anteil als 64 Hexzeichen — dieselbe Quelle wie beim Schlüssel. */
+function kdf_anteil_neu(): string
+{
+    return bin2hex(random_bytes(32));
+}
+
+/**
+ * Der Anteil DIESES Kontos — 64 Hexzeichen, abgeleitet aus der Kontonummer.
+ *
+ *     kontoAnteil = HMAC-SHA256(schlüssel = kdf_anteil, nachricht = "konto:<id>")
+ *
+ * WARUM AUS DER KONTONUMMER UND NICHT AUS DEM SALZ (F-S10-1, E-S10-03). Die
+ * Vorbereitung (SP-3) schlug das Salz vor. Das geht nicht: Passwortwechsel
+ * und Reset würfeln das NEUE Salz im Browser, und der Anteil dazu wäre dem
+ * Browser in genau dem Augenblick unbekannt, in dem er die neue Hülle baut.
+ * Es bräuchte einen zweiten Umlauf zum Server oder der Server müsste das Salz
+ * wählen — beides teuer für nichts. Die Kontonummer ist unveränderlich, je
+ * Installation eindeutig und schon da.
+ *
+ * DASS DIE NUMMER ERRATBAR IST, KOSTET NICHTS. Sie ist keine Zutat, die
+ * geheim sein müsste — das Geheimnis ist `kdf_anteil`. Was die Ableitung
+ * leistet, ist die Trennung: Wer den Anteil EINES Kontos in die Hände
+ * bekommt (etwa aus einer offenen Sitzung), kann daraus keinen anderen
+ * bilden. Das ist die Eigenschaft von HMAC, und dafür steht es hier und
+ * nicht ein schlichtes Anhängen.
+ */
+function konto_anteil(int $userId, string $roh): string
+{
+    return hash_hmac('sha256', 'konto:' . $userId, $roh);
+}
+
+/**
+ * Die Anteil-Kennung, die eine Schlüsselhülle im Präfix trägt — oder null.
+ *
+ * Eine Hülle mit Anteil lautet `edka1:<kennung>:<base64>` (E-S10-05); eine
+ * ohne Anteil `edk1:<base64>` oder ganz ohne Präfix (Altbestand). An dieser
+ * einen Stelle wird das gelesen, serverseitig — der Server öffnet dabei
+ * nichts und kann es auch nicht.
+ *
+ * WOZU DER SERVER DAS ÜBERHAUPT BRAUCHT, obwohl er keine Hülle öffnet: Er
+ * muss zwei Dinge entscheiden, für die die Kennung reicht. Erstens, ob eine
+ * Hülle, die ihm zum Speichern gereicht wird, zum AKTUELLEN Anteil gehört
+ * (`api/kdf_upgrade.php` — sonst könnte ein Fehler das Konto auf den alten
+ * Anteil zurückstellen). Zweitens, wie viele Konten noch umzustellen sind
+ * (Statuszeile, `SUBSTRING` in SQL, ohne dass je eine Hülle geöffnet wird).
+ */
+function huelle_anteil_kennung(?string $huelle): ?string
+{
+    if ($huelle === null) { return null; }
+    return preg_match('/^edka1:([0-9a-f]{8}):/', $huelle, $m) ? $m[1] : null;
+}
+
+/* ---- Marken in app_state ------------------------------------------------
+ *
+ * Zwei Schlüssel, beide erst seit S10: `kdf_anteil_kennung` (mit welchem
+ * Anteil die Hüllen gebaut werden) und `server_key_kennung` (mit welchem
+ * Serverschlüssel versiegelt wurde).
+ *
+ * WARUM DIE KENNUNG IN DIE DATENBANK GEHÖRT UND NICHT NUR IN config.php.
+ * Sie ist das Gegenstück: `config.php` sagt, welchen Wert diese Installation
+ * HAT, `app_state` sagt, mit welchem sie GEARBEITET hat. Erst der Vergleich
+ * beider ergibt eine Aussage — und zwar genau die, die sonst niemand
+ * bekommt: „Der Anteil ist nicht der, mit dem die Hüllen gebaut wurden."
+ * Ohne sie sähe dieselbe Lage aus wie ein falsches Passwort, und zwar für
+ * jede NutzerIn gleichzeitig. Das ist die stille Aussperrung, gegen die
+ * diese zwei Zeilen stehen (SP-3).
+ *
+ * Ein Abzug der Datenbank gewinnt damit nichts: Eine Kennung ist ein
+ * Fingerabdruck, kein Wert.
+ */
+
+/** Eine Marke lesen. `null`, wenn sie fehlt — oder `app_state` noch nicht da ist. */
+function schluessel_marke_lesen(string $k): ?string
+{
+    try {
+        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
+        $st->execute([$k]);
+        $v = $st->fetchColumn();
+        return ($v === false || $v === null) ? null : (string)$v;
+    } catch (Throwable $ex) {
+        /* app_state fehlt (Migration noch nicht gelaufen) — dann verhält sich
+         * die Installation wie vor S10, und das ist der richtige Zustand. */
+        return null;
+    }
+}
+
+/** Eine Marke setzen. Scheitert leise; sie ist eine Auskunft, kein Riegel. */
+function schluessel_marke_setzen(string $k, string $v): void
+{
+    try {
+        db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
+                       ON DUPLICATE KEY UPDATE v = VALUES(v)')
+            ->execute([$k, $v]);
+    } catch (Throwable $ex) {
+        error_log('app_state: Marke ' . $k . ' liess sich nicht setzen — '
+                . $ex->getMessage());
+    }
+}
+
+/**
+ * Der Zustand des Server-Anteils — die fünf Lagen aus E-S10-09.
+ *
+ * Gibt zurück:
+ *   stand        'fehlt' | 'bereit' | 'rotation' | 'abweichend'
+ *   kennung      Kennung des aktuellen Anteils aus config.php, oder null
+ *   kennung_alt  Kennung des vorherigen Anteils (nur bei Rotation), oder null
+ *   erwartet     Kennung aus app_state — die, mit der die Hüllen gebaut sind
+ *
+ * DIE VIER LAGEN UND WAS SIE BEDEUTEN
+ *
+ *   fehlt        Keine `kdf_anteil`-Zeile, keine Marke. Das ist der Zustand
+ *                JEDER Installation unmittelbar nach dem Ausrollen von S10:
+ *                Es wird nichts ausgeliefert, die Hüllen bleiben `edk1:`, und
+ *                die Anwendung läuft Zeile für Zeile wie vorher. S10 tut
+ *                nichts, bis jemand auf der Karte „Anlegen" drückt — das ist
+ *                Absicht und steht als fällige Zuarbeit im Rahmenplan.
+ *   bereit       Wert und Marke stimmen überein. Der Regelfall.
+ *   rotation     Es gibt einen zweiten, vorherigen Anteil. Beide werden
+ *                ausgeliefert; die Umstellung läuft je Konto beim nächsten
+ *                Anmelden.
+ *   abweichend   Der Wert ist ein anderer als der, mit dem gearbeitet wurde
+ *                — oder er fehlt, obwohl gearbeitet wurde. DANN WIRD NICHTS
+ *                AUSGELIEFERT. Eine `edka1:`-Hülle lässt sich nicht öffnen,
+ *                und die Seite sagt das mit der erwarteten Kennung, statt
+ *                „Passwort falsch" zu behaupten.
+ *
+ * DIE MARKE WIRD NACHGETRAGEN, WENN SIE FEHLT (E-S10-U-02). E-S10-09 sagt
+ * „gesetzt bei der ersten Auslieferung"; die Abnahme von AP3 verlangt, dass
+ * unmittelbar nach dem ANLEGEN Karte, Blatt und `app_state` dieselbe Kennung
+ * zeigen — und beim Anlegen ist noch nichts ausgeliefert. Beides wird wahr,
+ * indem diese Funktion die Marke nachträgt, sobald sie fehlt und ein
+ * gültiger Wert dasteht. Sie wird sowohl von der Karte als auch von
+ * `ui_krypto_bootstrap()` gerufen, also greift es in beiden Fällen.
+ *
+ * Was dabei in Kauf genommen wird: Auf einer Installation ohne Marke
+ * übernimmt die Funktion, WAS DASTEHT — auch einen falsch abgeschriebenen
+ * Wert. Das ist derselbe Fall, den E-S10-10 benennt („Ohne Eintrag in
+ * `app_state` gibt es nichts zu prüfen"), und er ist harmlos: In diesem
+ * Zustand existiert keine `edka1:`-Hülle, gegen die man prüfen könnte.
+ *
+ * Das Ergebnis wird gemerkt — die Funktion läuft auf jeder angemeldeten
+ * Seite. `$frisch` setzt zurück, nachdem `config.php` geschrieben wurde.
+ */
+function anteil_zustand(bool $frisch = false): array
+{
+    static $merk = null;
+    if ($frisch) { $merk = null; }
+    if ($merk !== null) { return $merk; }
+
+    global $CFG;
+    $kennung    = schluessel_kennung((string)($CFG['kdf_anteil'] ?? ''));
+    $kennungAlt = schluessel_kennung((string)($CFG['kdf_anteil_alt'] ?? ''));
+    $erwartet   = schluessel_marke_lesen('kdf_anteil_kennung');
+
+    if ($kennung === null) {
+        /* Kein Wert. Ohne Marke ist das „noch nicht eingerichtet", MIT Marke
+         * ist es der Ernstfall: Es wurde schon mit einem Anteil gearbeitet,
+         * und der ist jetzt weg — etwa nach einem Wiederanlauf aus einer
+         * Sicherung ohne `config.php`. */
+        $stand = ($erwartet === null) ? 'fehlt' : 'abweichend';
+        return $merk = ['stand' => $stand, 'kennung' => null,
+                        'kennung_alt' => null, 'erwartet' => $erwartet];
+    }
+
+    if ($erwartet === null) {
+        schluessel_marke_setzen('kdf_anteil_kennung', $kennung);
+        $erwartet = $kennung;
+    } elseif ($erwartet === $kennungAlt && $kennungAlt !== null) {
+        /* Rotation soeben eingeleitet: Der neue Wert steht in `config.php`,
+         * die Marke nennt noch den alten. Sie wandert jetzt mit — ab hier
+         * werden neue Hüllen mit dem neuen Anteil gebaut, und der alte ist
+         * nur noch zum Öffnen da. */
+        schluessel_marke_setzen('kdf_anteil_kennung', $kennung);
+        $erwartet = $kennung;
+    }
+
+    if ($erwartet !== $kennung) {
+        return $merk = ['stand' => 'abweichend', 'kennung' => $kennung,
+                        'kennung_alt' => $kennungAlt, 'erwartet' => $erwartet];
+    }
+
+    return $merk = ['stand' => $kennungAlt === null ? 'bereit' : 'rotation',
+                    'kennung' => $kennung, 'kennung_alt' => $kennungAlt,
+                    'erwartet' => $erwartet];
+}
+
+/**
+ * Wird gerade ein Anteil ausgeliefert? Dann ist seine Kennung die Antwort.
+ *
+ * Die eine Frage, die Aufrufer wirklich stellen: `ui_krypto_bootstrap()`,
+ * `pw_handling.php` und `api/kdf_upgrade.php`. `null` heisst „kein Anteil" —
+ * und zwar gleichgültig, ob keiner eingetragen ist oder der eingetragene der
+ * falsche ist. Dieselbe Linie wie `sk_oeffnen()`: Die Unterscheidung nützt
+ * der Betreiberin (Karte, Status) und nicht dem Aufrufer.
+ */
+function anteil_ausgeliefert(): ?string
+{
+    $z = anteil_zustand();
+    return in_array($z['stand'], ['bereit', 'rotation'], true) ? $z['kennung'] : null;
+}
+
+/**
+ * Die Anteile, die dieses Konto bekommt — `{ kennung: 64 hex }`.
+ *
+ * Im Regelfall einer, während einer Rotation zwei. Leer, wenn nichts
+ * ausgeliefert wird. Das Demo-Konto fragt hier nicht an; darüber entscheidet
+ * `auth_guard.php` (E-S10-06).
+ */
+function konto_anteile(int $userId): array
+{
+    $z = anteil_zustand();
+    if (!in_array($z['stand'], ['bereit', 'rotation'], true)) { return []; }
+
+    $aus = [];
+    $roh = kdf_anteil();
+    if ($roh !== null && $z['kennung'] !== null) {
+        $aus[$z['kennung']] = konto_anteil($userId, $roh);
+    }
+    $rohAlt = kdf_anteil_alt();
+    if ($rohAlt !== null && $z['kennung_alt'] !== null) {
+        $aus[$z['kennung_alt']] = konto_anteil($userId, $rohAlt);
+    }
+    return $aus;
+}
+
+/* ===========================================================================
+ * SCHREIBEN IN config.php (S10, E-S10-10)
+ * ======================================================================== */
+
+/** Die Einträge, die diese Anwendung in `config.php` schreiben darf.
+ *
+ *  EINE GESCHLOSSENE LISTE, WEIL DER SCHLÜSSELNAME VON AUSSEN KOMMT. Das
+ *  Formular „Nachtragen vom Blatt" sagt, WELCHES Geheimnis gemeint ist. Ohne
+ *  diese Liste wäre das eine Handhabe, einen beliebigen Eintrag in die
+ *  Konfigurationsdatei zu schreiben — `db.dsn` etwa. Die Prüfung steht
+ *  deshalb in der Funktion und nicht im Formular: Ein zweiter Aufrufer
+ *  erbte sie sonst nicht. */
+const CONFIG_SCHREIBBAR = ['server_key', 'kdf_anteil', 'kdf_anteil_alt'];
+
+/** Die Zeile, die in `config.php` gehört — genau so, wie sie dort steht. */
+function config_eintrag_zeile(string $schluessel, string $hex): string
+{
+    return "    '" . $schluessel . "' => '" . strtolower($hex) . "',";
+}
+
+/**
+ * Die gemerkten Werte neu einlesen, nachdem `config.php` geschrieben wurde.
+ *
+ * Drei Funktionen halten ihr Ergebnis in einer `static`. Ohne diese Zeilen
+ * gäbe die Seite, die gerade geschrieben hat, im selben Aufruf noch den
+ * alten Stand zurück — und zeigte nach dem Anlegen weiter „kein Anteil".
+ * Genau dieser Fehler ist in S2/AP7 beim Serverschlüssel aufgetreten.
+ */
+function config_gemerktes_verwerfen(): void
+{
+    serverschluessel(true);
+    kdf_anteil(true);
+    kdf_anteil_alt(true);
+    anteil_zustand(true);
+}
+
+/**
+ * Einen Hexwert in `config.php` eintragen — wenn die Datei beschreibbar ist.
  *
  * Gibt `[true, hex]` zurück, wenn er drinsteht, sonst `[false, meldung]`.
+ * `$hex === null` ENTFERNT den Eintrag (gebraucht für „alten Anteil
+ * entfernen" nach einer Rotation, E-S10-11).
  *
  * WARUM DIESE FUNKTION ÜBERHAUPT SCHREIBT. Der Weg ohne sie hiesse: eine
  * Zeile abschreiben, per FTP in `config.php` einfügen, Datei hochladen. Das
  * geht — und ist genau die Art Handgriff, bei der ein Zeichen verlorengeht
  * und danach niemand weiss, warum der Versand nicht läuft. Klappt das
  * Schreiben nicht, bleibt der Weg von Hand; die Oberfläche zeigt dann die
- * fertige Zeile.
+ * fertige Zeile (`config_eintrag_zeile()`).
+ *
+ * ERSETZEN IST DIE AUSNAHME UND MUSS ANGESAGT WERDEN. Bis S10 konnte diese
+ * Funktion nur ERGÄNZEN: Steht schon ein Wert da, bricht sie ab. Der Grund
+ * war und ist gut — ein überschriebener Serverschlüssel macht jedes
+ * versiegelte Feld unlesbar, ein überschriebener Anteil jede Hülle.
+ *
+ * S10 braucht das Ersetzen trotzdem, und zwar für genau einen Fall: Nach
+ * einem Wiederanlauf steht ein FALSCHER Wert in der Datei — abgeschrieben,
+ * vertippt, aus der falschen Sicherung. Ihn nicht ersetzen zu können hiesse,
+ * die Datei doch von Hand anzufassen. Deshalb:
+ *
+ *   - Steht dort KEIN gültiger Wert (leer, halb, Unfug), wird ergänzt oder
+ *     ersetzt, ohne zu fragen — kaputtgehen kann nichts, was schon kaputt ist.
+ *   - Steht dort ein GÜLTIGER Wert, verlangt die Funktion `$ersetzen = true`.
+ *     Das Formular macht daraus ein Ankreuzfeld, das man bewusst setzt.
+ *
+ * Die Kennungsprüfung — „ist das der Wert, mit dem die Hüllen gebaut
+ * wurden?" — steht NICHT hier, sondern beim Aufrufer (E-S10-10): Sie gilt
+ * fürs Nachtragen, nicht fürs Anlegen und nicht fürs Rotieren, und eine
+ * Prüfung, die je nach Weg anders ausfällt, gehört nicht in die Funktion,
+ * die schreibt.
  *
  * WIE HIER GESCHRIEBEN WIRD, DAMIT NICHTS KAPUTTGEHT
- *   1. Es wird NUR ergänzt, nie ersetzt: Steht schon ein `server_key` in der
- *      Datei, bricht die Funktion ab. Ein Überschreiben würde jedes bereits
- *      versiegelte Feld unlesbar machen.
- *   2. Geschrieben wird in eine NEBENDATEI mit Endung `.php` und erst danach
+ *   1. Geschrieben wird in eine NEBENDATEI mit Endung `.php` und erst danach
  *      umbenannt. Die Endung ist kein Zufall: `server/` ist das Wurzel-
  *      verzeichnis des Webservers. Eine `config.php.tmp` läge dort als
  *      Textdatei mit dem Datenbankpasswort — abrufbar über den Browser.
- *   3. Die Nebendatei wird VOR dem Umbenennen eingelesen und geprüft: Sie
- *      muss ein Feld ergeben, das die alten Abschnitte unverändert enthält
- *      und den neuen Schlüssel dazu. Erst dann ersetzt sie das Original.
+ *   2. Die Nebendatei wird VOR dem Umbenennen eingelesen und geprüft: Sie
+ *      muss ein Feld ergeben, das JEDEN anderen Abschnitt unverändert enthält
+ *      und den neuen Wert dazu. Erst dann ersetzt sie das Original.
  */
-function serverschluessel_eintragen(): array
+function config_eintrag_schreiben(string $schluessel, ?string $hex,
+                                  bool $ersetzen = false): array
 {
     global $CFG;
+
+    if (!in_array($schluessel, CONFIG_SCHREIBBAR, true)) {
+        return [false, 'Dieser Eintrag darf nicht geschrieben werden.'];
+    }
+    if ($hex !== null && !preg_match('/^[0-9a-fA-F]{64}$/', $hex)) {
+        return [false, 'Der Wert sind nicht 64 Hexzeichen. Es wurde nichts geändert.'];
+    }
+    $hex = $hex === null ? null : strtolower($hex);
+
     $pfad = __DIR__ . '/config.php';
     if (!is_file($pfad)) {
         return [false, 'config.php wurde nicht gefunden.'];
-    }
-    if (serverschluessel_da()) {
-        return [false, 'Es steht bereits ein Serverschlüssel in config.php.'];
     }
     $inhalt = @file_get_contents($pfad);
     if ($inhalt === false) {
         return [false, 'config.php liess sich nicht lesen.'];
     }
-    if (preg_match("/'server_key'\s*=>/", $inhalt)) {
-        return [false, 'In config.php steht bereits ein Eintrag server_key — '
-            . 'er ist aber keine 64 Hexzeichen. Bitte von Hand berichtigen.'];
+
+    /* Eine ganze Zeile, die diesen Eintrag trägt. `var_export()` — und damit
+     * jede vom Installer erzeugte Datei — schreibt jeden Eintrag der obersten
+     * Ebene auf eine eigene Zeile; `config.example.php` ebenso. Dass hier
+     * zeilenweise gearbeitet wird statt mit einem Parser, ist die
+     * konservative Wahl: Was nicht auf eine Zeile passt, wird nicht angefasst,
+     * und dann greift die Gegenprobe unten. */
+    $zeilenMuster = '/^[ \t]*([\'"])' . preg_quote($schluessel, '/')
+                  . '\1\s*=>.*\R?/m';
+    $vorhanden = preg_match($zeilenMuster, $inhalt) === 1;
+    $gueltig   = preg_match('/^[0-9a-fA-F]{64}$/',
+                            (string)($CFG[$schluessel] ?? '')) === 1;
+
+    if ($hex === null && !$vorhanden) {
+        return [true, ''];                      // schon fort — nichts zu tun
+    }
+    if ($hex !== null && $vorhanden && $gueltig && !$ersetzen) {
+        return [false, 'In config.php steht bereits ein gültiger Eintrag '
+            . $schluessel . '. Zum Überschreiben bitte „ersetzen" ankreuzen.'];
     }
     if (!is_writable($pfad) || !is_writable(__DIR__)) {
         return [false, 'config.php ist nicht beschreibbar.'];
     }
 
-    /* Eingefügt wird direkt hinter dem Beginn des Feldes — der einzigen
-     * Stelle, die in jeder Fassung dieser Datei vorkommt.
-     *
-     * ZWEI SCHREIBWEISEN, UND DIE HÄUFIGERE STAND ZUERST NICHT DA. Der
-     * Installer schreibt die Datei mit `var_export()`, und das ergibt
-     * `return array (` — nicht `return [`. Nur `config.example.php` benutzt
-     * die kurze Form. Der erste Versuch traf deshalb ausgerechnet jede
-     * echte Installation nicht (Browserprobe S2/AP7).
-     *
-     * Die Einrückung wird von der Zeile darunter ABGESCHRIEBEN: `var_export`
-     * rückt zwei Zeichen ein, die Beispieldatei vier. Eine feste Einrückung
-     * sähe in einer der beiden Fassungen schief aus. */
-    $hex = serverschluessel_neu();
-    $treffer = 0;
-    $neu = preg_replace_callback(
-        '/(return\s*(?:\[|array\s*\()\s*\R)([ \t]*)/',
-        static fn(array $m): string =>
-            $m[1] . $m[2] . "'server_key' => '" . $hex . "',\n" . $m[2],
-        $inhalt, 1, $treffer);
-    if ($neu === null || $treffer !== 1) {
-        return [false, 'In config.php war weder „return [" noch „return array (" '
-            . 'zu finden.'];
+    if ($vorhanden) {
+        $ersatz = $hex === null ? '' : config_eintrag_zeile($schluessel, $hex) . "\n";
+        $treffer = 0;
+        $neu = preg_replace($zeilenMuster, $ersatz, $inhalt, 1, $treffer);
+        if ($neu === null || $treffer !== 1) {
+            return [false, 'Der vorhandene Eintrag ' . $schluessel
+                . ' in config.php steht nicht auf einer eigenen Zeile. '
+                . 'Bitte von Hand berichtigen.'];
+        }
+    } else {
+        /* Eingefügt wird direkt hinter dem Beginn des Feldes — der einzigen
+         * Stelle, die in jeder Fassung dieser Datei vorkommt.
+         *
+         * ZWEI SCHREIBWEISEN, UND DIE HÄUFIGERE STAND ZUERST NICHT DA. Der
+         * Installer schreibt die Datei mit `var_export()`, und das ergibt
+         * `return array (` — nicht `return [`. Nur `config.example.php`
+         * benutzt die kurze Form. Der erste Versuch traf deshalb ausgerechnet
+         * jede echte Installation nicht (Browserprobe S2/AP7).
+         *
+         * Die Einrückung wird von der Zeile darunter ABGESCHRIEBEN:
+         * `var_export` rückt zwei Zeichen ein, die Beispieldatei vier. Eine
+         * feste Einrückung sähe in einer der beiden Fassungen schief aus. */
+        $treffer = 0;
+        $neu = preg_replace_callback(
+            '/(return\s*(?:\[|array\s*\()\s*\R)([ \t]*)/',
+            static fn(array $m): string =>
+                $m[1] . $m[2] . "'" . $schluessel . "' => '" . $hex . "',\n" . $m[2],
+            $inhalt, 1, $treffer);
+        if ($neu === null || $treffer !== 1) {
+            return [false, 'In config.php war weder „return [" noch '
+                . '„return array (" zu finden.'];
+        }
     }
 
     $tmp = __DIR__ . '/config.neu.php';
@@ -239,18 +673,33 @@ function serverschluessel_eintragen(): array
     /* GEGENPROBE VOR DEM UMBENENNEN. Eine kaputte config.php legt die ganze
      * Anwendung still — jede Seite lädt sie. Deshalb wird die Nebendatei erst
      * ausgeführt und Abschnitt für Abschnitt mit dem verglichen, was gerade
-     * gilt. Schlägt das fehl, bleibt das Original stehen. */
+     * gilt. Schlägt das fehl, bleibt das Original stehen.
+     *
+     * VERGLICHEN WIRD ÜBER ALLE SCHLÜSSEL, NICHT ÜBER DREI BENANNTE. Bis S10
+     * standen `db`, `app` und `smtp` hier als Liste — und jeder vierte
+     * Abschnitt, den eine spätere Fassung dazunimmt, wäre stillschweigend
+     * ungeprüft geblieben. Dass die Liste heute noch stimmte, war Glück. */
     $probe = null;
     try {
         $probe = include $tmp;
     } catch (Throwable $e) {
         $probe = null;
     }
-    $heil = is_array($probe)
-        && ($probe['server_key'] ?? null) === $hex
-        && ($probe['db']  ?? null) == ($CFG['db']  ?? null)
-        && ($probe['app'] ?? null) == ($CFG['app'] ?? null)
-        && ($probe['smtp'] ?? null) == ($CFG['smtp'] ?? null);
+    $heil = is_array($probe);
+    if ($heil) {
+        $heil = $hex === null
+            ? !array_key_exists($schluessel, $probe)
+            : (($probe[$schluessel] ?? null) === $hex);
+    }
+    if ($heil) {
+        foreach ($CFG as $k => $v) {
+            if ($k === $schluessel) { continue; }
+            if (!array_key_exists($k, $probe) || $probe[$k] != $v) {
+                $heil = false;
+                break;
+            }
+        }
+    }
     if (!$heil) {
         @unlink($tmp);
         return [false, 'Die geänderte config.php hat die Gegenprobe nicht '
@@ -266,15 +715,38 @@ function serverschluessel_eintragen(): array
      * übersetzte config.php und prüft ihren Zeitstempel SEKUNDENGENAU. Wird
      * sie in derselben Sekunde ersetzt, in der die alte Fassung übersetzt
      * wurde, gilt sie als unverändert — und die nächste Anfrage liest
-     * weiterhin die Datei OHNE Serverschlüssel. Gemessen in der Browserprobe
-     * (S2/AP7): Die Seite meldete „steht jetzt in config.php", und der
-     * unmittelbar folgende Aufruf zeigte wieder „Serverschlüssel fehlt". */
+     * weiterhin die Datei OHNE den neuen Eintrag. Gemessen in der
+     * Browserprobe (S2/AP7): Die Seite meldete „steht jetzt in config.php",
+     * und der unmittelbar folgende Aufruf zeigte wieder „Serverschlüssel
+     * fehlt". */
     if (function_exists('opcache_invalidate')) { @opcache_invalidate($pfad, true); }
-    /* Der gelesene Wert liegt in einer `static` — ohne diese Zeile gaebe
-     * serverschluessel() im selben Aufruf noch „kein Schluessel" zurueck, und
-     * die Seite zeigte nach dem Anlegen weiter den Hinweis, dass keiner da
-     * ist. */
-    $CFG['server_key'] = $hex;
-    serverschluessel(true);
-    return [true, $hex];
+    /* Der gelesene Wert liegt in einer `static` — ohne diese Zeilen gaeben
+     * serverschluessel() und kdf_anteil() im selben Aufruf noch den alten
+     * Stand zurueck, und die Seite zeigte nach dem Anlegen weiter den
+     * Hinweis, dass nichts da ist. */
+    if ($hex === null) { unset($CFG[$schluessel]); }
+    else               { $CFG[$schluessel] = $hex; }
+    config_gemerktes_verwerfen();
+    return [true, (string)$hex];
+}
+
+/**
+ * Einen frischen Serverschlüssel erzeugen und eintragen.
+ *
+ * Seit S10 nur noch die halbe Funktion: Das Würfeln bleibt hier, das
+ * Schreiben macht `config_eintrag_schreiben()`. Ein zweiter, wortgleicher
+ * Schreibweg daneben wäre die Stelle, an der der eine irgendwann eine
+ * Gegenprobe bekommt und der andere nicht.
+ *
+ * ERSETZT NIE. Ein neuer Serverschlüssel macht jedes versiegelte Feld und
+ * jedes versiegelte Paket unlesbar — das ist keine Sache eines Knopfes.
+ * `$ersetzen` bleibt deshalb aus, und die Funktion bricht ab, wenn schon
+ * einer dasteht.
+ */
+function serverschluessel_eintragen(): array
+{
+    if (serverschluessel_da()) {
+        return [false, 'Es steht bereits ein Serverschlüssel in config.php.'];
+    }
+    return config_eintrag_schreiben('server_key', serverschluessel_neu());
 }

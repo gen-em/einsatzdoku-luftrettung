@@ -325,12 +325,26 @@ Daten erst nach Server-Bestätigung.
 │   │                      zweimal richtig und einmal falsch
 │   ├── abmelde-probe/     zeigt, was der Abmeldeweg im sessionStorage
 │   │                      zurücklässt — Beleg zu V-10 (s. LIESMICH.md)
+│   ├── anteilprobe/       prüft den Server-Anteil (S10): `probe.php` die
+│   │                      Rechnungen (Kennung, HMAC je Konto) und die fünf
+│   │                      Lagen aus E-S10-09, mit `--schreiben` dazu den
+│   │                      Schreibweg in config.php; `endpunkt.py` die
+│   │                      Hüllenfassung von api/kdf_upgrade.php über ECHTES
+│   │                      HTTP. Vier der fünf Lagen entstehen nur, wenn man
+│   │                      config.php oder app_state verstellt — die Probe
+│   │                      stellt sie her und im finally zurück. **Nicht auf
+│   │                      einer Installation mit Betrieb** (s. LIESMICH.md)
 │   ├── containeraufbau/   zieht in einer Wegwerf-Umgebung nach, was das Abbild
 │   │                      nicht mitbringt: MariaDB, Android-SDK 36,
-│   │                      librsvg/imagemagick, socat, ein brauchbares
-│   │                      python3-cryptography. Baut NICHT den Uhr-Prüfstand
-│   │                      (der holt sein SDK selbst) und richtet NICHT die
-│   │                      Anwendung ein (s. LIESMICH.md)
+│   │                      librsvg/imagemagick, socat, die vier
+│   │                      WebKit-Bibliotheken und ein brauchbares
+│   │                      python3-cryptography. Der Teil `browser`
+│   │                      MISST NACH, dass alle drei Playwright-Engines
+│   │                      starten — WebKit tut es im Abbild ohne die Pakete
+│   │                      nicht, und ein Dreimotorenlauf wäre dann
+│   │                      stillschweigend ein Zweimotorenlauf. Baut NICHT den
+│   │                      Uhr-Prüfstand (der holt sein SDK selbst) und
+│   │                      richtet NICHT die Anwendung ein (s. LIESMICH.md)
 │   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
 │   ├── fristprobe/        belegt die Angleichung der Schlüsselfrist (R44, S6):
@@ -632,13 +646,78 @@ lokal erst löschen, wenn `final` bestätigt und `next_seq` = Punktzahl.
 **Ende-zu-Ende-Verschlüsselung (Pflicht):** Beim Login leitet der Browser per
 PBKDF2-SHA256 (Rundenzahl je Konto, `users.kdf_iter`) aus Passwort + `kdf_salt` zwei Werte ab: ein
 Auth-Token (ersetzt das Passwort gegenüber dem Server, wird dort gehasht
-gespeichert) und einen Datenschlüssel (bleibt im Browser, `sessionStorage`).
+gespeichert) und eine **Hälfte**, aus der der Datenschlüssel entsteht (bleibt
+im Browser, `sessionStorage`).
 Ein zufälliger **Inhaltsschlüssel** (256 Bit, nicht vom Passwort abgeleitet)
 verschlüsselt `pat_blob` (`{last, first, dob, dx, age, mission_no,
 loc:{addr,lat,lon}, site_desc}`, AES-256-GCM) und liegt doppelt verpackt in `users`: mit dem Datenschlüssel
 (`pat_wrap_pw`) und mit dem aus dem Wiederherstellungsschlüssel abgeleiteten
 Schlüssel (`pat_wrap_rc`). Weil der Inhaltsschlüssel vom Passwort getrennt ist,
 kostet ein Passwortwechsel kein Neuverschlüsseln — nur die Hülle wird erneuert.
+
+**Der Server-Anteil (seit Web 19.7.0, S10 / Schritt 9b, R78, E-S10-02 bis
+E-S10-04).** Die PBKDF2-Hälfte ist seither **nicht mehr selbst** der
+Datenschlüssel. Dazwischen steht eine zweite Ableitung:
+
+```
+kontoAnteil     = HMAC-SHA256(schlüssel = kdf_anteil (32 Byte aus config.php),
+                              nachricht = "konto:" + users.id)          → 32 Byte
+Datenschlüssel  = HKDF-SHA256(ikm  = PBKDF2-Hälfte (32 Byte),
+                              salt = kontoAnteil (32 Rohbyte),
+                              info = "edka1|dk")                        → 32 Byte
+```
+
+*Wozu.* Wer die Datenbank hat, hat Salz, Rundenzahl und Hülle — und konnte bis
+dahin offline durchprobieren (Krypto-Review K-3, Weg 1). `kdf_anteil` steht in
+`config.php` und **nicht** in der Datenbank; ein Abzug allein genügt seither
+nicht mehr. Der Server gewinnt dabei nichts: Er kennt den Anteil, nicht die
+Hälfte aus dem Passwort.
+
+*Warum aus der Kontonummer und nicht aus dem Salz.* Passwortwechsel und Reset
+würfeln das **neue** Salz im Browser; der Anteil dazu wäre in genau dem
+Augenblick unbekannt, in dem die neue Hülle entsteht. Die Kontonummer ist
+unveränderlich und schon da. Dass sie erratbar ist, kostet nichts — das
+Geheimnis ist `kdf_anteil`, und HMAC sorgt dafür, dass aus dem Anteil eines
+Kontos kein anderer zu bilden ist.
+
+*Was **nicht** daran hängt:* `pat_wrap_rc`. Der Wiederherstellungsschlüssel
+öffnet weiterhin ohne Anteil — das ist der Rückweg, wenn der Anteil verloren
+geht. Ebenso unberührt: die PBKDF2-Ableitung selbst, das Auth-Token,
+`auth_salt.php`, der Inhaltsschlüssel, jeder `pat_blob`, `pat_key_check`, das
+`.edbak`-Format und der Freigabeweg.
+
+*Ausgeliefert wird nur an die angemeldete Sitzung* und nur der eigene Anteil:
+`auth_guard.php` stellt `$kontoAnteile`, `$anteilKennung` und `$anteilStand`
+bereit, `ui_krypto_bootstrap()` gibt sie als `KONTO_ANTEILE`,
+`ANTEIL_KENNUNG` und `ANTEIL_STAND` aus. `pw_handling.php` tut dasselbe für
+das Konto des eingelösten Einmal-Tokens. Es gibt keinen Endpunkt, der den
+Anteil eines fremden Kontos herausgibt. **Das Demo-Konto bekommt keinen**
+(`null` / `'demo'`, E-P1-19): Seine Hülle kommt aus der Fixture und muss auf
+jeder Installation aufgehen.
+
+*Die Kennung.* Acht Hexzeichen aus SHA-256 über die 64 kleingeschriebenen
+Hexzeichen des Werts (`schluessel_kennung()`). Sie ist ein Vergleichsmerkmal,
+kein Schutzmerkmal: Damit lässt sich prüfen, ob zwei Stellen dasselbe
+Geheimnis meinen, ohne es zu zeigen. Sie steht im Präfix jeder Hülle, in
+`app_state` und auf dem Schlüsselblatt. Der **Serverschlüssel** bekommt ab S10
+dieselbe Kennung — nur zur Anzeige; seine Versiegelung `edsk1:` bleibt.
+
+*Die fünf Lagen* (`anteil_zustand()`, E-S10-09). `app_state.kdf_anteil_kennung`
+merkt sich, mit welchem Anteil die Hüllen gebaut werden; `config.php` sagt,
+welchen die Installation hat. Erst der Vergleich beider ergibt eine Aussage:
+
+| Lage | Bedingung | Verhalten |
+|---|---|---|
+| **nicht eingerichtet** | kein `kdf_anteil`, keine Marke | keine Auslieferung; Hüllen bleiben `edk1:`, alles läuft wie vor S10 |
+| **bereit** | Wert = Marke | Auslieferung, stille Umstellung |
+| **Rotation** | `kdf_anteil_alt` gesetzt | beide Anteile werden ausgeliefert; Umstellung je Konto beim nächsten Anmelden |
+| **abweichend** | Wert ≠ Marke, oder Wert fehlt bei gesetzter Marke | **keine Auslieferung**; die Seite nennt die erwartete Kennung statt „Passwort falsch" |
+| **Neuanfang** | frischer Wert, Marke mit ihm gesetzt | Konten mit alter Hülle setzen ihr Passwort über den Wiederherstellungsschlüssel neu — **kein Datenverlust** |
+
+Dass im Zweifel **gar nichts** ausgeliefert wird, ist die eigentliche
+Entscheidung: Ein Anteil, der nicht passt, ergäbe einen Datenschlüssel, der
+nicht passt — und der Fehlschlag sähe für jede NutzerIn gleichzeitig aus wie
+ein falsches Passwort. Belegt von `tools/anteilprobe/`.
 
 **Formatkennung (seit Web 5.1.0, M2-10).** Jeder von `EdCrypto.encrypt()`
 erzeugte Chiffretext beginnt mit `edk1:` — sowohl `pat_blob` als auch die
@@ -662,6 +741,25 @@ beide Formen. `WRAP_RE` stand bis Web 5.0.1 dreifach im Projekt — als Konstant
 in `pw_handling.php` und wortgleich in `einstellungen.php` und
 `api/kdf_upgrade.php`; eine davon beim Nachziehen zu vergessen hätte einen
 Passwortwechsel scheitern lassen.
+
+**Die Hüllenkennung `edka1:` (seit Web 19.7.0, S10, E-S10-05).** Eine Hülle,
+die am Server-Anteil hängt, lautet `edka1:<kennung>:<base64>` — die acht
+Hexzeichen sind die Kennung des Anteils, mit dem sie gebaut wurde. Der
+Chiffretext dahinter ist derselbe AES-256-GCM-Aufbau wie bisher.
+
+*Warum nicht schlicht `edk2:`.* Zwei Gründe. `EdCrypto.decrypt()` weist jede
+Kennung außer `edk1:` als „neuere Programmfassung" ab — die Fassung der
+**Hülle** ist aber etwas anderes als die Fassung des **Verfahrens**. Und der
+Browser braucht bei einer Rotation die Auskunft, mit *welchem* von zwei
+Anteilen er öffnet; die Statusseite muss zählen können, wer noch auf dem alten
+steht. Beides steht im Präfix und ist lesbar, ohne dass jemand etwas öffnet
+(`SUBSTRING` in SQL, `huelle_anteil_kennung()` in PHP).
+
+*Nur `WRAP_RE` nimmt die neue Kennung an, `PAT_BLOB_RE` bleibt eng.* Das ist
+kein Versehen: Der Anteil steckt im Datenschlüssel, und der öffnet
+ausschließlich die Hülle. Der Inhaltsschlüssel darin und damit jeder
+`pat_blob` sind unverändert — **kein Datensatz wird angefasst**, wenn ein
+Konto umstellt. `pat_wrap_rc` bekommt ebenfalls kein `edka1:`-Präfix.
 
 Beide Hüllen entstehen **gemeinsam mit dem Passwort** in `pw_handling.php`
 (siehe unten). Ein anmeldbares Konto ohne Hüllen kann es dadurch nicht geben;
@@ -6494,8 +6592,9 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
 | „Dieses Backup ist unvollständig — die Endmarke fehlt" | der Lauf ist beim Erzeugen abgebrochen | einen älteren Stand nehmen |
 | „gescheitert an Anweisung *n*" | halb eingespielt; es wurde **nichts** zurückgenommen | Datenbank leeren und von vorn |
 
-**Das Wiederanlaufpaket (seit Web 12.1.0, E-S2-21).** Getrennt von der
-Anwendung aufbewahren — auf einem anderen Rechner, nicht im selben Backup:
+**Das Wiederanlaufpaket (seit Web 12.1.0, E-S2-21; seit Web 19.7.0 mit einem
+vierten Stück).** Getrennt von der Anwendung aufbewahren — auf einem anderen
+Rechner, nicht im selben Backup:
 
 1. **`server/config.php`.** Sie steht in `.gitignore` **und** in der
    Ausnahmeliste des Deploys; es gibt sie also nur auf dem Server.
@@ -6504,11 +6603,26 @@ Anwendung aufbewahren — auf einem anderen Rechner, nicht im selben Backup:
    Komplettbackup. **Ohne ihn** sind die Zugangsdaten der Ziele neu
    einzutragen (verschmerzbar) und ein versiegeltes Komplettbackup **nicht
    mehr zu öffnen** (nicht verschmerzbar).
-3. **Der Zugang zum Backup-Ziel** — Rechnername, Nutzer, Passwort bzw.
+3. **Der Server-Anteil** darin (`'kdf_anteil' => '…'`, 64 Hexzeichen; seit
+   Web 19.7.0, S10). Er geht in den Datenschlüssel **jedes Kontos** ein.
+   **Ohne ihn** lässt sich keine `edka1:`-Hülle mehr öffnen — und zwar für
+   alle gleichzeitig. **Es ist trotzdem kein Datenverlust:** `pat_wrap_rc`
+   hängt nicht am Anteil, jede NutzerIn kommt über den
+   Wiederherstellungsschlüssel wieder herein und setzt dabei ihr Passwort
+   neu. Aus dem Verlust wird damit ein Vorgang für alle statt einer
+   Katastrophe — aber ein Vorgang, den niemand will.
+4. **Der Zugang zum Backup-Ziel** — Rechnername, Nutzer, Passwort bzw.
    privater Schlüssel. Er steht in der Datenbank, aber versiegelt; wer nur
    den Dump hat und den Serverschlüssel nicht, kommt an die Backups
    dort nicht heran. Das ist der Sinn der Sache und zugleich der Grund,
    ihn zusätzlich von Hand zu notieren.
+
+> **`config.php` ist seit S10 Schlüsselträger der ganzen Installation.** Bis
+> Web 19.6.0 kostete ihr Verlust die Betriebsgeheimnisse; seither kostet er
+> zusätzlich jeder NutzerIn einen Passwort-Reset. Das Schlüsselblatt
+> (Betrieb → Servereinstellungen; kommt mit S10/AP3) druckt beide Geheimnisse
+> mit Kennung — **zwei Ausdrucke, zwei Orte**. Es ist Pflicht, nicht
+> Empfehlung.
 
 **Probe-Wiederherstellung** ist ein Prüfpunkt und keine Formalie: einmal je
 Halbjahr ein Paket vom Ziel holen und in ein Wegwerfkonto einspielen. Ein
@@ -6539,6 +6653,32 @@ wurde nichts übertragen und kein Passwort gesendet.
 `config.php` steht ein anderer Serverschlüssel als der, mit dem sie gespeichert
 wurden. Entweder den alten wieder eintragen (Wiederanlaufpaket) oder die
 Zugangsdaten am Ziel neu erfassen.
+
+**„Der Server-Anteil der Verschlüsselung fehlt oder ist nicht der, mit dem die
+Hüllen gebaut wurden" (seit Web 19.7.0, S10).** Das ist die Lage *abweichend*:
+`config.php` trägt einen anderen `kdf_anteil` als den, dessen Kennung in
+`app_state.kdf_anteil_kennung` steht — oder gar keinen. Die Anwendung läuft
+weiter, **es ist kein Wartungsmodus**; nur der Anteil wird nicht ausgeliefert,
+und Konten mit `edka1:`-Hülle kommen nicht an ihre geschützten Angaben.
+
+*Reihenfolge:*
+1. Betrieb → **Status**, Zeile „Server-Anteil". Sie nennt die **erwartete**
+   Kennung. Betrieb → Servereinstellungen zeigt daneben die vorhandene.
+2. Den richtigen Wert aus dem **Schlüsselblatt** oder dem Wiederanlaufpaket
+   nachtragen (Karte „Schlüssel des Servers", *Nachtragen vom Blatt*). Der
+   Server rechnet die Kennung des eingegebenen Werts und schreibt **nur bei
+   Übereinstimmung**; bei Abweichung nennt die Meldung beide Kennungen und
+   ändert nichts.
+3. Ist der Wert **unwiederbringlich** weg, bleibt der Neuanfang: einen
+   frischen Anteil erzeugen. Danach setzt jede NutzerIn ihr Passwort über den
+   **Wiederherstellungsschlüssel** neu — kein Datenverlust, aber ein Vorgang
+   für alle.
+
+*Was ausdrücklich **nicht** passiert:* „Passwort falsch". Die Meldung
+unterscheidet gegenüber der NutzerIn nicht zwischen „fehlt" und „anderer
+Wert" (dieselbe Linie wie `sk_oeffnen()`); den Unterschied sieht die
+Betreiberin auf Status und Karte. Konten mit `edk1:`-Hülle — darunter das
+Demo-Konto — sind von alledem nicht betroffen und melden sich weiter an.
 
 **Zeile „Schlüsselableitung" auf Betrieb → Status (seit Web 5.0.1; bis
 Web 15.0.0 auf der Wartungsseite, in 15.1.0 und 15.2.0 vorübergehend nicht

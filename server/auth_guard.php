@@ -254,6 +254,41 @@ $kdfSalt     = $row['kdf_salt'] ?? null;
  * die Spalte — sie kann seit P0 nicht mehr NULL sein. */
 $kdfIter     = (int)($row['kdf_iter'] ?? KDF_ITER_ZIEL) ?: KDF_ITER_ZIEL;
 
+/* ---- Der Server-Anteil dieses Kontos (S10, E-S10-06) ---------------------
+ *
+ * NUR AN DIE ANGEMELDETE SITZUNG, UND NUR FUER DAS EIGENE KONTO. Das ist der
+ * ganze Zuschnitt: Es gibt keinen Endpunkt, der den Anteil eines FREMDEN
+ * Kontos herausgibt, und `auth_salt.php` — der einzige unangemeldete Weg, auf
+ * dem Krypto-Angaben das Haus verlassen — bleibt unberuehrt. Wer den Anteil
+ * eines Kontos will, braucht dessen Sitzung; und wer die hat, hat ohnehin die
+ * Huelle.
+ *
+ * DAS DEMO-KONTO BEKOMMT KEINEN (E-P1-19, Backlog Nr. 155). Seine Huelle
+ * kommt aus der Fixture und muss auf JEDER Installation aufgehen — eine
+ * Huelle, die am Anteil dieser einen Installation haengt, taete das nicht.
+ * Es bekommt deshalb `null` und den Stand `'demo'`, und seine Huelle bleibt
+ * `edk1:`. Dasselbe Muster wie bei der Rundenzahl, aus demselben Grund.
+ *
+ * `$kontoAnteile` ist ein Feld `{ kennung => 64 hex }`: im Regelfall einer,
+ * waehrend einer Rotation zwei, im Zustand „abweichend" keiner. Welcher davon
+ * der AKTUELLE ist — der, mit dem neue Huellen gebaut werden —, sagt
+ * `$anteilKennung`; ohne diese Angabe muesste der Browser auf die
+ * Reihenfolge der Schluessel im Feld vertrauen, und das waere eine Zusage,
+ * die niemand aufgeschrieben hat. */
+require_once __DIR__ . '/serverkrypto_lib.php';
+require_once __DIR__ . '/demo_lib.php';
+if (demo_ist_demo($userId)) {
+    $kontoAnteile  = null;
+    $anteilKennung = null;
+    $anteilStand   = 'demo';
+} else {
+    $anteilKennung = anteil_ausgeliefert();
+    $kontoAnteile  = $anteilKennung === null ? [] : konto_anteile($userId);
+    $anteilStand   = $anteilKennung !== null
+        ? 'bereit'
+        : (anteil_zustand()['stand'] === 'fehlt' ? 'fehlt' : 'abweichend');
+}
+
 require_once __DIR__ . '/ui.php';
 
 run_cleanup_if_due();   // taegliche Wartung, huckepack auf Web-Anfragen

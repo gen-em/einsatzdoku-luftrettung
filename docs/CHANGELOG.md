@@ -14,6 +14,123 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.7.0] — 2026-09-14
+
+Schritt 9b (**S10 — Sicherheit**, R78), erstes Arbeitspaket: die Grundlage im
+Server für den **Server-Anteil am Datenschlüssel**.
+
+### Web — ein zweites Geheimnis, das noch niemand benutzt
+
+**Das Problem, gegen das S10 gebaut ist.** Wer die Datenbank in die Hände
+bekommt, hat bis heute alles, was er zum Durchprobieren eines Passworts
+braucht: Salz, Rundenzahl und die Schlüsselhülle. 600 000 PBKDF2-Runden machen
+das teuer, aber nicht unmöglich — gegen ein schwaches Passwort hält das nicht
+(Krypto-Review K-3, Weg 1). Was fehlt, ist eine Zutat, die **nicht** in der
+Datenbank steht.
+
+**Die Zutat heißt Server-Anteil** und liegt als `kdf_anteil` in `config.php`,
+neben dem Serverschlüssel. Je Konto wird daraus per HMAC über die Kontonummer
+ein eigener Wert abgeleitet, und der geht per HKDF in den Datenschlüssel ein.
+Der Server kann damit weiterhin **nichts** öffnen: Er kennt den Anteil, nicht
+die PBKDF2-Hälfte aus dem Passwort. Ein Datenbankabzug allein reicht ab S10
+nicht mehr.
+
+**Warum aus der Kontonummer und nicht aus dem Salz** (E-S10-03). Die
+Vorbereitung schlug das Salz vor. Das geht nicht: Passwortwechsel und Reset
+würfeln das *neue* Salz im Browser, und der Anteil dazu wäre dem Browser in
+genau dem Augenblick unbekannt, in dem er die neue Hülle baut. Die Kontonummer
+ist unveränderlich und schon da; dass sie erratbar ist, kostet nichts — das
+Geheimnis ist der Anteil, und HMAC sorgt dafür, dass aus dem Anteil eines
+Kontos kein anderer zu bilden ist.
+
+**Der Rückweg bleibt serverunabhängig.** `pat_wrap_rc` — die Hülle am
+Wiederherstellungsschlüssel — hängt **nicht** am Anteil. Geht der Anteil
+verloren, ist das kein Datenverlust, sondern ein Vorgang für alle: Jede
+NutzerIn setzt ihr Passwort über den Wiederherstellungsschlüssel neu. Das ist
+die Entscheidung, die `config.php` zum Schlüsselträger der ganzen Installation
+macht, ohne sie zum Totalausfall zu machen.
+
+**Diese Stufe tut noch nichts — und das ist Absicht.** Es gibt noch keinen
+Browser, der den Anteil benutzt: Jede Hülle bleibt `edk1:`, kein Weg durch die
+Anwendung ändert sich. Gebaut ist die Grundlage — der Anteil wird gelesen,
+abgeleitet, seine Kennung gerechnet, sein Zustand unterschieden und an die
+angemeldete Sitzung ausgeliefert. Deshalb steht hier eine Neben- und keine
+Hauptnummer, obwohl S10 als Ganzes eine Hauptstufe ist: Die 20.0.0 gehört an
+das Paket, in dem der Datenschlüssel tatsächlich am Anteil hängt.
+
+**Die Kennung ist der Griff, mit dem sich das bedienen lässt.** Acht
+Hexzeichen aus SHA-256 über den Wert — genug, damit ein Vertippen auffällt,
+kurz genug, um sie am Telefon zu nennen. Sie steht im Präfix jeder Hülle
+(`edka1:<kennung>:`), in `app_state` und später auf dem Schlüsselblatt. Damit
+lässt sich vergleichen, ohne den Wert zu zeigen, und zählen, ohne eine Hülle
+zu öffnen. Der Serverschlüssel bekommt dieselbe Kennung — nur zur Anzeige,
+seine Versiegelung `edsk1:` bleibt.
+
+**Gegen die stille Aussperrung.** Wäre der Anteil in `config.php` ein anderer
+als der, mit dem die Hüllen gebaut wurden, sähe das für jede NutzerIn
+gleichzeitig aus wie ein falsches Passwort. Deshalb merkt sich `app_state` die
+Kennung, mit der gearbeitet wird. Stimmen Wert und Marke nicht überein, wird
+**gar nichts** ausgeliefert — lieber eine Meldung, die die erwartete Kennung
+nennt, als ein Schlüssel, der nicht passt. Fünf Lagen unterscheidet
+`anteil_zustand()`: nicht eingerichtet, bereit, Rotation, abweichend,
+Neuanfang.
+
+**`api/kdf_upgrade.php` ist jetzt die Hüllenfassung.** Der Endpunkt hieß
+„Anhebung der Rundenzahl" und war genau das; er nimmt seit S10 auch eine
+Umstellung bei *gleicher* Rundenzahl an, wenn sich die Hüllenfassung ändert.
+Neu ist eine Prüfung, die einen spät auffallenden Fehler ausschließt: Das
+Präfix der neuen Hülle muss die **aktuelle** Anteil-Kennung tragen. Eine
+Hülle, die auf den alten Anteil zurückgestellt würde, funktionierte — bis
+`kdf_anteil_alt` aus `config.php` verschwindet, also genau dann, wenn die
+Statusseite meldet, es stehe niemand mehr auf dem alten Anteil.
+
+**Der Schreibweg in `config.php` ist verallgemeinert.**
+`serverschluessel_eintragen()` konnte einen Wert nur *ergänzen*, nie ersetzen —
+aus gutem Grund. S10 braucht das Ersetzen für genau einen Fall: Nach einem
+Wiederanlauf steht ein falscher Wert in der Datei. Jetzt gilt: Steht dort kein
+gültiger Wert, wird ohne Rückfrage geschrieben; steht dort ein gültiger, muss
+„ersetzen" ausdrücklich angesagt werden. Dabei ist die Gegenprobe vor dem
+Umbenennen mitgewachsen — sie verglich drei benannte Abschnitte (`db`, `app`,
+`smtp`) und vergleicht jetzt **alle**. Dass die Liste bis heute stimmte, war
+Glück.
+
+**Das Demo-Konto bleibt außen vor** (E-P1-19, Backlog Nr. 155). Es bekommt
+keinen Anteil und behält seine `edk1:`-Hülle — dieselbe Begründung wie bei der
+Rundenzahl: Die Fixture muss auf jeder Installation aufgehen, und eine Hülle,
+die am Anteil dieser einen Installation hängt, täte das nicht.
+
+**Neu: `tools/anteilprobe/`.** Vier der fünf Lagen entstehen erst, wenn man
+`config.php` oder `app_state` von Hand verstellt — im Browser sind sie
+praktisch nicht herzustellen. Die Probe stellt sie her, misst und stellt
+zurück: **69 von 69** Erwartungen für die Rechnungen, die Zustände und den
+Schreibweg, **33 von 33** für den Endpunkt über echtes HTTP. Die Hüllen darin
+sind echt, keine Attrappen — der Rundlauf misst, dass nach der Umstellung
+derselbe Inhaltsschlüssel herauskommt.
+
+**Zwei Stücke aus AP5 sind vorgezogen** (E-S10-U-03): `krypto.py` bekommt
+HKDF und `datenschluessel()`, `sitzung.py` liest `KONTO_ANTEILE`. Ohne sie
+hätte die Probe eine Attrappe bauen müssen, und `sitzung.py` wäre an der
+ersten `edka1:`-Hülle gescheitert — eine Mine, die erst im übernächsten Paket
+hochgegangen wäre.
+
+**Keine Migration.** Die zwei Marken liegen in `app_state`, und die Tabelle
+steht seit Juli. Eine bestehende Installation muss nach dem Deploy **nichts**
+tun: Ohne `kdf_anteil` läuft alles wie vorher. Der Anteil entsteht erst, wenn
+ihn jemand anlegt — die Karte dafür kommt mit dem nächsten Paket, der
+Installer legt ihn ab sofort mit an.
+
+### Prüfstand — drei Engines, und eine startete nicht
+
+Ohne Versionsstufe (nur `tools/`), aber es gehört hierher, weil es jede
+Prüfzahl von S10 betrifft: Seit Web 19.5.1 fahren Bilderlauf, Klickprobe und
+Stilvergleich wahlweise Chromium, Firefox und WebKit. In einem frischen
+Container **startete WebKit nicht** — vier Systembibliotheken fehlten, und
+`tools/containeraufbau/` kannte sie nicht. Ein Dreimotorenlauf wäre
+stillschweigend ein Zweimotorenlauf gewesen oder mitten im Bilderlauf
+abgebrochen; beides meldet am Ende keine Null, sondern gar nichts. Der neue
+Teil `browser` installiert die Pakete **und misst nach**, dass jede Engine
+startet (3 von 3, Rückgabewert 1 bei einer fehlenden).
+
 ## [Web 19.6.0] — 2026-09-14
 
 Mockup-Runde 9c, viertes Arbeitspaket: **Backlog Nr. 124** — das Aktionsblatt.

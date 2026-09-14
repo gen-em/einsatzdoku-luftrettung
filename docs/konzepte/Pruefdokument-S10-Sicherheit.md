@@ -13,8 +13,8 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 14.09.2026 — **AP0 erledigt** (Ablage und Buchführung), AP1 als Nächstes. |
-> | Geprüft | AP0: Containeraufbau (Abschnitt 2) |
+> | Stand | 14.09.2026 — **AP1 erledigt** (Web 19.7.0), AP2 als Nächstes. |
+> | Geprüft | AP0: Containeraufbau · AP1: Anteilprobe, Endpunktprobe, Klickprobe, Kreisläufe, Bilderlauf, Wortliste, Linkprobe (Abschnitt 2) |
 > | Offen | P-01 bis P-14 |
 > | Fragen | keine |
 > | Fehlerfunde | keine in der Anwendung; **ein Befund am Prüfstand** (F-S10-U-01, Abschnitt 4) |
@@ -39,6 +39,23 @@ ist Buchführung plus eine `tools/`-Änderung, und beides ist in Abschnitt 2 mit
 Zahl belegt. Die drei Punkte oben bleiben unverändert stehen; sie hängen an
 Paketen, die noch nicht gebaut sind.
 
+**Stand nach AP1 — drei Dinge, die hier nicht geprüft werden konnten:**
+
+1. **Der Browser benutzt den Anteil noch nicht.** Das ist kein Versäumnis,
+   sondern der Zuschnitt von AP1: Es gibt in dieser Stufe keinen Weg, auf dem
+   `unlock.js` eine `edka1:`-Hülle baut. Die Endpunktprobe schickt eine
+   selbstgebaute — dass der *Browser* dasselbe tut, ist damit **nicht**
+   gezeigt und wird es erst mit dem Umstellungslauf in AP2.
+2. **Die Zustände `abweichend` und `Rotation` sind nur in der Probe
+   hergestellt, nicht an der Oberfläche.** Wie die Meldung aussieht und ob sie
+   überhaupt erscheint, misst AP2 (Meldungen) und AP3 (Karte, Statuszeile).
+   Der Bilderlauf sieht beide Zustände grundsätzlich nicht — das steht in
+   Abschnitt 3 und bleibt so.
+3. **`config.php` der echten Installation.** Teil D der Anteilprobe schreibt
+   gegen die `config.php` des Prüfstands. Ob sie auf luftrettung.net
+   beschreibbar ist und wie sich der OPcache des Hosters verhält, ist nur dort
+   zu sehen → **P-01** und **P-06**.
+
 ---
 
 ## 1. Kurzfassung
@@ -61,6 +78,31 @@ Systembibliotheken fehlen. `tools/containeraufbau/` zieht sie nach und misst
 seither nach, dass alle drei Engines starten (**3 von 3**). Ohne das wäre jeder
 Dreimotorenlauf in S10 stillschweigend ein Zweimotorenlauf gewesen.
 
+**AP1 — Grundlage Server (Web 19.7.0).** Der Server kann den Server-Anteil
+lesen, je Konto per HMAC über die Kontonummer ableiten, seine Kennung rechnen
+und die fünf Lagen aus E-S10-09 unterscheiden; `auth_guard.php` und
+`ui_krypto_bootstrap()` liefern ihn an die angemeldete Sitzung, `pw_handling.php`
+an das Konto des eingelösten Einmal-Tokens, und `api/kdf_upgrade.php` ist zur
+Hüllenfassung geworden. **Der Browser benutzt davon noch nichts** — jede Hülle
+bleibt `edk1:`, und eine bestehende Installation verhält sich nach dem Deploy
+Zeile für Zeile wie unter 19.6.0. Deshalb Neben- und nicht Hauptnummer
+(E-S10-U-01).
+
+*Was die Zahlen sagen.* Die neue **Anteilprobe** stellt vier Lagen her, die im
+Browser praktisch nicht herzustellen sind, misst und stellt zurück: **69 von
+69**; `config.php` ist danach byte-gleich. Die **Endpunktprobe** fährt über
+echtes HTTP mit angemeldeter Sitzung: **33 von 33**. Zwei Zahlen darin sind die
+eigentlichen: Eine Hülle mit **fremder** Anteil-Kennung wird abgewiesen (der
+Fehler, der sonst erst auffiele, wenn `kdf_anteil_alt` verschwindet), und der
+**Rundlauf** liefert nach der Umstellung denselben Inhaltsschlüssel — wäre er
+ein anderer, wären alle Daten des Kontos verloren. Die Regression ist über die
+**Klickprobe** (43 von 43) und **beide Kreisläufe** (9120/0 und 287 687/0)
+gemessen; beide fassen die Schlüsselkette von einem Ende zum anderen an.
+
+*Zwei Stücke aus AP5 sind vorgezogen* (E-S10-U-03), weil die Probe sonst eine
+Attrappe hätte bauen müssen und `sitzung.py` an der ersten `edka1:`-Hülle
+gescheitert wäre. HKDF ist gegen Prüfvektor 1 aus RFC 5869 nachgerechnet.
+
 ---
 
 ## 2. Maschinelle Prüfungen (Mittel und Zahl)
@@ -71,8 +113,20 @@ Dreimotorenlauf in S10 stillschweigend ein Zweimotorenlauf gewesen.
 | AP0 | `aufbau.sh browser` | Playwright-Engines, die starten | **3 von 3** — Chromium 141.0.7390.37, Firefox 142.0.1, WebKit 26.0 |
 | AP0 | dasselbe, Negativprobe (`PLAYWRIGHT_BROWSERS_PATH` auf ein leeres Verzeichnis) | gemeldete Engines / Rückgabewert | **0 von 3** / **1** |
 | AP0 | `git fetch origin main` | Stand von `origin/main` | `3886e26` · Web **19.6.0** · Uhr **3.1.0** · Android **0.15.0** |
-| AP1 | `php -l` | berührte Dateien | |
-| AP1 | Zustandsprobe (`tools/anteilprobe/` oder `pruefkonten`) | fünf Zustände aus E-S10-09 | von 5 |
+| AP1 | `php -l` | berührte Dateien | **0 Fehler in 9** |
+| AP1 | `tools/anteilprobe/probe.php --schreiben` | Rechnungen, fünf Zustände aus E-S10-09, Schreibweg in `config.php` | **69 von 69**; Datei danach byte-gleich |
+| AP1 | `tools/anteilprobe/endpunkt.py` | `api/kdf_upgrade.php` über echtes HTTP | **33 von 33** |
+| AP1 | dieselbe, E2/E3 | Hülle mit fremder / ohne Anteil-Kennung wird abgewiesen | **2 von 2** (400 `anteil_kennung`) |
+| AP1 | dieselbe, E6 | Umstellung bei `neu_iter === kdf_iter` wird angenommen | **1 von 1**; `pat_key_check` und `kdf_iter` unverändert |
+| AP1 | dieselbe, E8 | Rundlauf: Inhaltsschlüssel vor / nach der Umstellung | **gleich** |
+| AP1 | dieselbe, E10 | Demo-Konto: `KONTO_ANTEILE` null, Endpunkt `uebersprungen` | **6 von 6** |
+| AP1 | Kennung von Hand gegengerechnet | `schluessel_kennung()` gegen SHA-256 über die Hexform | **2 Werte**, gleich |
+| AP1 | HKDF gegen RFC 5869 Prüfvektor 1 | `hkdf_sha256()` in `krypto.py` | **1 von 1** |
+| AP1 | frische Installation (`lokal_einrichten.sh`) | `install.php` trägt `server_key` **und** `kdf_anteil` | **1 Datei**, beide 64 Hex, verschieden, Zustand `bereit` |
+| AP1 | `tools/klickprobe/probe.mjs` | Regression über alle Bedienwege (Chromium) | **43 von 43** |
+| AP1 | Kreisläufe (R24) | csv / edbak, unerklärte Abweichungen | **9120/0** und **287 687/0** |
+| AP1 | `tools/screenshots/` (5 Seiten × 8 Breiten) | Überlauf / Konsole / Knopfhöhe | 48 Bilder, **0/0/0** |
+| AP1 | `tools/linkprobe/` | Verweise / unbekannte Abweichungen | **117 / 0** |
 | AP2 | Browserlauf am Referenzbestand | Umstellung `edk1:` → `edka1:`, Aufrufe von `kdf_upgrade.php` beim zweiten Anmelden | / 0 |
 | AP2 | HKDF-Dauer im Browser | ms je Ableitung, Gerät nennen | |
 | AP2 | Bilderlauf | berührte Seiten × Breiten × Bedienhöhen, Überlauf / Konsole / Knopfhöhe | 0/0/0 |
@@ -100,6 +154,14 @@ Dreimotorenlauf in S10 stillschweigend ein Zweimotorenlauf gewesen.
   war, bleibt `edk1:`. Der Umstellungslauf braucht einen echten Browser.
 - Die Versandprobe prüft FTPS gegen ein Wegwerfzertifikat; dass `ext/ftp` es
   nicht prüft, ist der belegte Befund und kein Fehler des Laufs.
+- **Die Anteilprobe stellt nicht um.** Sie baut die Hülle selbst und schickt
+  sie an den Endpunkt. Dass `unlock.js` dasselbe tut — Hülle lesen,
+  Datenschlüssel bilden, neu hüllen, absenden —, ist damit **nicht** gezeigt;
+  das misst der Umstellungslauf in AP2 im echten Browser.
+- **Der Server kann eine Hülle nicht öffnen**, also prüft er nur ihr Präfix.
+  Ob in einer Hülle wirklich derselbe Inhaltsschlüssel steckt, sieht nur, wer
+  sie öffnet. Deshalb misst die Endpunktprobe den Rundlauf (E8) und nicht
+  bloß den Statuscode — eine grüne 200 allein wäre hier kein Beleg.
 
 ---
 

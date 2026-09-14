@@ -4300,5 +4300,43 @@ declare(strict_types=1);
  *
  * NEBENSTUFE: eine neue Darstellung an einer Stelle, an der bisher keine war.
  * Uhr und Android unberuehrt, keine Migration.
+ *
+ * 19.7.0 IST DER SERVERTEIL VON S10 — UND EINE STUFE, DIE NICHTS TUT. Schritt
+ * 9b (R78) gibt der Installation ein ZWEITES Geheimnis neben dem
+ * Serverschluessel: den SERVER-ANTEIL (`kdf_anteil` in config.php). Er geht
+ * per HKDF in den Datenschluessel jedes Kontos ein, mit dem der Browser die
+ * Schluesselhuelle oeffnet. Der Server kann damit weiterhin nichts oeffnen —
+ * er kennt den Anteil, nicht die PBKDF2-Haelfte aus dem Passwort. Was sich
+ * aendert, ist die Rechnung des Angreifers: Wer nur die Datenbank hat, hat
+ * seit S10 nicht mehr alles, was er zum Durchprobieren braucht (Krypto-Review
+ * K-3, Weg 1).
+ *
+ * DIESE STUFE BAUT NUR DIE GRUNDLAGE. `serverkrypto_lib.php` kann den Anteil
+ * lesen, je Konto per HMAC ableiten, seine Kennung rechnen und die fuenf
+ * Lagen aus E-S10-09 unterscheiden; `auth_guard.php` und
+ * `ui_krypto_bootstrap()` liefern ihn an die angemeldete Sitzung;
+ * `api/kdf_upgrade.php` nimmt eine Huelle mit Anteil an. NUR: Es gibt noch
+ * keinen Browser, der ihn benutzt. Jede Huelle bleibt `edk1:`, kein Weg durch
+ * die Anwendung aendert sich, und eine frisch eingerichtete Installation
+ * verhaelt sich Zeile fuer Zeile wie unter 19.6.0.
+ *
+ * DESHALB NEBEN- UND NICHT HAUPTNUMMER, obwohl S10 als Ganzes eine
+ * Hauptstufe ist (E-S10-16). Die Zaehlweise oben misst, was sich fuer die
+ * BENUTZUNG aendert — „spuerbar veraenderte Wege durch die Anwendung". Nach
+ * dieser Stufe ist das nichts. Die 20.0.0 gehoert an das naechste Paket, in
+ * dem der Datenschluessel tatsaechlich am Anteil haengt und jede Huelle ihr
+ * Format wechselt; eine 20.0.0 hier verspraeche einen Umbau, den erst der
+ * naechste Commit vollzieht (E-S10-U-01).
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. Die zwei neuen Marken
+ * (`kdf_anteil_kennung`, `server_key_kennung`) liegen in `app_state`, und die
+ * Tabelle steht seit der Wartungs-Migration vom 17.07.2026. `update.php` muss
+ * nach dem Merge NICHT laufen.
+ *
+ * WAS EINE BESTEHENDE INSTALLATION NACH DEM DEPLOY TUN MUSS: nichts — und
+ * genau das ist der Punkt. Ohne `kdf_anteil` in `config.php` meldet
+ * `anteil_zustand()` „nicht eingerichtet", es wird nichts ausgeliefert, und
+ * alles laeuft wie vorher. Der Anteil entsteht erst, wenn ihn jemand anlegt;
+ * die Karte dafuer kommt mit AP3, der Installer legt ihn ab sofort mit an.
  */
-const WEB_VERSION = '19.6.0';
+const WEB_VERSION = '19.7.0';

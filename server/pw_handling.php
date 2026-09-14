@@ -6,6 +6,10 @@ require_once __DIR__ . '/db.php';
  * nicht und fiele auf den Hubschrauber zurueck — F-P3-AN. */
 require_once __DIR__ . '/session_lib.php';
 require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung
+/* Der Server-Anteil dieses Kontos (S10) — diese Seite laeuft OHNE
+ * auth_guard.php und muss die beiden Bibliotheken deshalb selbst holen. */
+require_once __DIR__ . '/serverkrypto_lib.php';
+require_once __DIR__ . '/demo_lib.php';
 
 /**
  * Passwort setzen — die einzige Stelle, an der ein Passwort ueber einen
@@ -371,6 +375,40 @@ const WRAP_RC = <?= json_js($erstvergabe ? null : $row['pat_wrap_rc']) ?>;
 // Zielwert der Rundenzahl (M2-01). Diese Seite baut die Ableitung immer neu
 // auf und nimmt deshalb nie einen Altwert.
 const KDF_ITER_ZIEL = <?= json_js(KDF_ITER_ZIEL) ?>;
+<?php /* ---- Der Server-Anteil (S10, E-S10-06) ----------------------------
+ *
+ * DIESE SEITE IST DIE EINE AUSNAHME VON „nur an die angemeldete Sitzung",
+ * und sie ist keine: Wer hier steht, hat einen gueltigen, unverbrauchten
+ * Einmal-Token aus `password_resets` — einen Nachweis, den der Server selbst
+ * ausgestellt und per E-Mail verschickt hat. Das ist derselbe Nachweis, mit
+ * dem gleich das Passwort gesetzt wird; ihm den Anteil DESSELBEN Kontos
+ * vorzuenthalten hiesse, die neue Huelle ohne Anteil zu bauen und das Konto
+ * beim naechsten Anmelden wieder umstellen zu lassen.
+ *
+ * Der Anteil gehoert zu `$row['user_id']` — dem Konto des Tokens —, nie zu
+ * einem, das der Browser nennt. Und das Demo-Konto bekommt keinen (E-P1-19):
+ * Sein Reset laeuft alle 30 Minuten und muss auf jeder Installation
+ * dieselbe Fixture ergeben.
+ *
+ * Beim RESET braucht die Seite den Anteil ZWEIMAL und fuer Verschiedenes:
+ * Die Wiederherstellungs-Huelle oeffnet OHNE ihn (`pat_wrap_rc` haengt nicht
+ * am Anteil, E-S10-04) — das ist der Rueckweg, der auch dann traegt, wenn
+ * der Anteil verloren ist. Die neue Passwort-Huelle wird MIT ihm gebaut. */ ?>
+<?php
+    $pwUserId = (int)$row['user_id'];
+    if (demo_ist_demo($pwUserId)) {
+        $pwAnteile = null; $pwKennung = null; $pwStand = 'demo';
+    } else {
+        $pwKennung = anteil_ausgeliefert();
+        $pwAnteile = $pwKennung === null ? [] : konto_anteile($pwUserId);
+        $pwStand   = $pwKennung !== null
+            ? 'bereit'
+            : (anteil_zustand()['stand'] === 'fehlt' ? 'fehlt' : 'abweichend');
+    }
+?>
+const KONTO_ANTEILE  = <?= json_js($pwAnteile) ?>;
+const ANTEIL_KENNUNG = <?= json_js($pwKennung) ?>;
+const ANTEIL_STAND   = <?= json_js($pwStand) ?>;
 const state = document.getElementById('state');
 const form  = document.getElementById('pwform');
 
