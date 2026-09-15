@@ -964,8 +964,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Erstens — die Vorbedingung widerspricht der eigenen Teilung.** Sie
     begründet sich oben wörtlich mit dem **Gerätemodell**: „ein schwaches
     Merkmal, in einer kleinen Gruppe aber möglicherweise identifizierend".
-    Die Teilung vom 05.09.2026 hat genau die **Gerätemodell-Tabelle** als
-    „Teil ohne Datenschutz-Vorbedingung" nach S8 vorgezogen, und sie ist seit
+    Die Teilung vom 05.09.2026 schickt genau die **Gerätemodell-Tabelle**
+    als „Der Teil, der **keine** Datenschutz-Vorbedingung hat" nach S8 vor, und sie ist seit
     Web 15.3.0 ausgeliefert. Entweder war die Teilung zu weit gefasst oder
     die Vorbedingung zu weit formuliert; heute steht beides nebeneinander im
     selben Eintrag, und `docs/Technik.md` hält unverändert die strenge Lesart
@@ -986,7 +986,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Drittens — die zweite Hälfte der Frage widerspricht R36.** Der Absatz
     oben verlangt, **Rechner über den User-Agent der Browsersitzung** zu
     zählen. R36 sagt: „Keine Telemetrie — Betriebszahlen ausschließlich aus
-    vorhandenen Spalten, es wird nichts Neues erfasst", und benennt die eine
+    vorhandenen Spalten (R38), es wird nichts Neues erfasst", und benennt die eine
     zugelassene Ausnahme namentlich: die Gerätekennung nach R42. Der
     User-Agent ist sie nicht. Gegengeprüft: `grep -rn "user_agent\|HTTP_USER_AGENT" server/`
     findet **null** Treffer — es gibt keine Spalte, kein Log, keine
@@ -1711,7 +1711,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `active = 0`) und entsteht an **vier** Stellen: beim ersten Handeintrag
     (`einsatz_form.php`), beim CSV-Import (`api/import_commit.php`), beim
     Schneiden (`api/schneiden.php`) und beim GPX-Import
-    (`api/gpx_import.php`) — `db.php` sagt es am Kopf der Konstanten selbst.
+    (`api/gpx_import.php`) — viermal derselbe `$devKey`. (`db.php` sagt es
+    **nicht**: Der Kopf der Konstanten ist eine Zeile, und der Kopf von
+    `geraete_des_kontos()` nennt zwei Anlässe — „von Hand anlegt oder
+    importiert" —, das Schneiden gar nicht.)
     Wer ausschließlich von Hand dokumentiert oder auch nur einmal eine
     GPX-Datei einliest, hat damit eine Gerätezeile und fällt aus „Ohne Gerät"
     heraus. Ausgerechnet aus der Gruppe, deren Kleinzeile „sie tragen von
@@ -1767,14 +1770,16 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     wollte — wer nur mit der Uhr arbeitet und sich nie anmeldet, erscheint
     unter „Zuletzt angemeldet" als tot.
 
-    **Die Fenster stehen schon als Nr. 122** („Freie Zeiträume und Diagramme
-    in der Statistik"); dieser Punkt fügt die ODER-Frage und die Zählgröße
-    hinzu. Zu entscheiden, **bevor** das Dashboard gebaut wird: ob die Seite
-    nachzieht oder R38 berichtigt wird. Beides ist vertretbar, beides
-    nebeneinander stehen zu lassen nicht. Zuordnung: **Entscheidung in einer
-    Backlog-Runde, Umsetzung P5** — wie bei Nr. 122.
+    **Nr. 122 berührt dieselben drei Fenster** („Freie Zeiträume und
+    Diagramme in der Statistik") — verlangt aber etwas anderes, nämlich frei
+    wählbare Zeiträume, und nennt den Widerspruch zu R38 nicht. Zu
+    entscheiden, **bevor** das Dashboard gebaut wird: ob die Seite nachzieht
+    oder R38 berichtigt wird. Beides ist vertretbar, beides nebeneinander
+    stehen zu lassen nicht. *Abnahme:* Die Entscheidung steht im Rahmenplan,
+    und R38 und die Seite beschreiben dieselbe Zählung. Zuordnung:
+    **Entscheidung in einer Backlog-Runde, Umsetzung P5** — wie bei Nr. 122.
 
-193. **Register und Handbuch führen die R42-Auswertung als offen, obwohl sie
+193. **Register und Doku führen die R42-Auswertung als offen, obwohl sie
     seit Web 15.3.0 läuft.**
     *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
     R42 verlangt unter „Auswertung" genau eines: eine **Geräteverteilung je
@@ -1782,21 +1787,23 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `manual-%`, ohne Demo-Konto**. Der Inhalt steht seit S8/AP4 in
     `betrieb_statistik.php` — am anderen Ort als beauftragt (R42 sagt „im
     Betriebslage-Dashboard") und mit dem Vorbehalt aus **Nr. 190**.
-    Nachgezogen ist das an zwei Stellen: Rahmenplan Abschnitt 5 und der
-    Eintrag Nr. 80 hier. **Vier sagen unverändert das Gegenteil:**
+    Nachgezogen ist das an **einer** Stelle: Rahmenplan Abschnitt 5.
+    **Fünf sagen unverändert das Gegenteil** — darunter die Kopfzeile von
+    Nr. 80, fünfundzwanzig Zeilen über deren eigenem Teilungsabsatz:
 
     | Stelle | Was dort steht |
     |---|---|
     | Rahmenplan Abschnitt 7, Zeile **R42** | „Auswertung P5 (Backlog 80)" |
     | Rahmenplan Abschnitt 7, Zeile **R64** | verweist auf die **Kachel Nr. 88** — verworfen am 12.09.2026 |
-    | `docs/Technik.md`, „Was ein Gerät beim Koppeln über sich meldet" | „**Die Auswertung ist P5.** Vorher muss die Datenschutzerklärung die Erhebung benennen" |
+    | `docs/Technik.md`, „Was ein Gerät beim Koppeln über sich meldet" | „**Die Auswertung ist P5** (Geräteverteilung im Betriebslage-Dashboard, R38). Vorher muss die Datenschutzerklärung die Erhebung benennen" |
     | `docs/Handbuch.md`, Kapitel 10 | „Bevor eine Auswertung entsteht, wird sie in der Datenschutzerklärung benannt" |
+    | `docs/Backlog.md`, Kopfzeile von **Nr. 80** | „Die Speicherung steht; **ausgewertet ist nichts**" |
 
     **Warum das mehr ist als Schreibarbeit.** Der Handbuchsatz ist keine
     Statusangabe, sondern eine **Zusage an die NutzerIn** — und er steht zwei
     Kapitel vor Abschnitt 12.2, der die Statistikseite mitsamt
     Gerätemodell-Tabelle beschreibt. Das Handbuch widerspricht sich damit
-    selbst. Beim Berichtigen ist zu trennen: Für die **Momentaufnahme am
+    selbst — und Nr. 80 ebenso, im Abstand von fünfundzwanzig Zeilen. Beim Berichtigen ist zu trennen: Für die **Momentaufnahme am
     Einsatz** (`missions.geraet_art`) bleibt der Satz wahr, sie wird
     nirgends ausgewertet; die Zusage darin gilt aber der Gerätekennung
     überhaupt. Die Datenschutz-Frage, die daran hängt, steht bei **Nr. 80**.
@@ -1805,8 +1812,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Verweise zwischen Dokumenten): vier Stellen, die neun Tage lang das
     Gegenteil des Ist-Stands sagten, neben lauter grünen Zahlen. Und die
     Arbeit ist die „größere Rahmenplan-Pflege", auf die **Nr. 177** wartet —
-    die drei gehören in einen Griff. *Abnahme:* Die vier Stellen sagen
-    dasselbe wie Abschnitt 5 und Nr. 80. Zuordnung: **Backlog-Runde**,
+    die drei gehören in einen Griff. *Abnahme:* Die fünf Stellen sagen
+    dasselbe wie Abschnitt 5. Zuordnung: **Backlog-Runde**,
     gemeinsam mit Nr. 177.
 
 194. **Das Handbuch nennt den Verschlüsselungsumfang dreimal ohne die
@@ -1815,9 +1822,12 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Seit **Web 19.0.0** (S9/AP7) sind die **Notizen des Einsatzes**
     Ende-zu-Ende-verschlüsselt; `mission_fields.php` führt sie mit
     `'store' => 'pat'`, `docs/Technik.md` 4.98 und `CLAUDE.md` 4 nennen sie
-    im Katalog. Das Handbuch weiß es an **einer** Stelle (Abschnitt 11.5:
-    „Notizen — seit Web 19 **verschlüsselt** wie die Patientendaten") und an
-    **drei** Stellen nicht:
+    im Katalog. Das Handbuch weiß es in **Abschnitt 4.3**, und dort gleich
+    viermal: in der Kartenliste („Notizen — seit Web 19 **verschlüsselt** wie
+    die Patientendaten"), im Absatz „Zwei Zeichen sagen dir, wer mitliest",
+    im Absatz zum Schloss am Kartentitel und im Merkkasten zu den beiden
+    Notizfeldern. An **drei** anderen Stellen weiß es das Gegenteil oder
+    nichts:
 
     - **Der Einstieg** sagt das Gegenteil: „Notizen und Freitextfelder sind
       davon **nicht** erfasst — dort gehören keine Patientendaten hinein."
@@ -1825,8 +1835,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
       nur noch für die des **Diensttags**.
     - **Kapitel 5** („Verschlüsselung der Patientendaten (Pflicht)") zählt
       die Felder auf und lässt die Notizen aus.
-    - **Der Textbaustein zum Übernehmen** (Kapitel 11, Backlog Nr. 138) tut
-      dasselbe — und der ist keine Beschreibung, sondern ein Absatz, der
+    - **Der Textbaustein zum Übernehmen** (Abschnitt 11.5, Backlog Nr. 138)
+      tut dasselbe — und der ist keine Beschreibung, sondern ein Absatz, der
       **in eine Rechtserklärung kopiert werden soll.**
 
     **Das ist die schwerere Hälfte.** Der Baustein untertreibt den Schutz,
@@ -1836,10 +1846,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **vollständig oder gar nicht** zitiert. Drei Handbuchstellen zitieren sie
     unvollständig, und eine widerspricht der vierten offen.
 
-    *Abnahme:* `CLAUDE.md` 4, `docs/Technik.md` 4.98 und die vier
-    Handbuchstellen nennen **dieselben** Felder; der Satz „Notizen und
-    Freitextfelder sind davon nicht erfasst" ist auf die Notizen des
-    Diensttags eingegrenzt. Zuordnung: **vor 1.0** — es ist ein Rechtstext,
+    *Abnahme:* `CLAUDE.md` 4, `docs/Technik.md` 4.98, die vier Passagen in
+    Abschnitt 4.3 und die drei berichtigten Stellen nennen **dieselben**
+    Felder; der Satz „Notizen und Freitextfelder sind davon nicht erfasst"
+    ist auf die Notizen des Diensttags eingegrenzt. Zuordnung: **vor 1.0** — es ist ein Rechtstext,
     kein Feinschliff; spätestens mit der Doku-Neufassung in P7 (R72).
 
 195. **`geraet_art` kommt auf dem Rückweg der Sicherung ungeprüft durch.**
@@ -1867,6 +1877,42 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `NULL` in der Datenbank, nicht als `radcomputer`. Zuordnung: **P5**,
     zusammen mit der Auswertung — vorher hat die Spalte keinen Leser.
 
+
+196. **65 von 192 Backlog-Einträgen rendern auf GitHub als grauer Kasten.**
+    *Aufgenommen 15.09.2026 beim Gegenlesen der Punkte 190–195.*
+    Ab der Nummer **100** ist der Listenmarker ein Zeichen breiter
+    (`100. ` statt `73. `). CommonMark verlangt für jeden weiteren Block
+    eines Listenpunkts genau so viel Einrückung, wie der Marker breit ist —
+    also **fünf** Leerzeichen. Diese Datei rückt durchgehend mit **vier**
+    ein. Bei zweistelligen Nummern passt das haargenau; bei dreistelligen
+    endet der Listenpunkt nach dem ersten Absatz, und alles Weitere wird zum
+    **eingerückten Codeblock**.
+
+    **Gemessen am 15.09.2026** mit `cmarkgfm` (cmark-gfm, GitHubs eigene
+    Engine), Eintrag für Eintrag: **192 Einträge, 65 rendern als Codeblock,
+    127 nicht.** Alle 65 sind dreistellig; kein zweistelliger ist betroffen.
+    (Dieser Eintrag ist selbst einer davon — die Zahl schloss ihn beim ersten
+    Lauf noch nicht ein und lautete 64 von 191.)
+    **Vier der 65 tragen eine Tabelle**, die damit vollständig verschwindet
+    — darunter Nr. 187 und die beiden neuen Nr. 192 und 193.
+
+    **Was das kostet:** Nicht die Optik. Wer den Backlog auf GitHub liest,
+    sieht bei jedem dritten Eintrag nur den ersten Absatz als Text und den
+    Rest als Rohfassung in einem Kasten — Begründung, Weg und die
+    *Abnahme:*-Zeile eingeschlossen. Genau die Sätze, für die dieses
+    Dokument geschrieben ist.
+
+    **Weg:** ein Leerzeichen mehr bei allen Fortsetzungszeilen dreistelliger
+    Einträge; mechanisch und in einem Zug. **Nicht** in Teilen — 7 von 65 zu
+    berichtigen ließe die Datei uneinheitlich und die anderen 58 kaputt.
+    Zu prüfen, ob dieselbe Einrückung auch `docs/Rahmenplan.md` und die
+    Konzeptdokumente trifft; gemessen ist bisher nur der Backlog.
+
+    *Abnahme:* Derselbe Lauf meldet **0 von 192** Einträgen mit `<pre>`, und
+    die vier Tabellen erscheinen als `<table>`. Zuordnung: **Backlog-Runde**
+    — und sinnvollerweise in demselben Griff wie **Nr. 188**, das die
+    fehlende Dokumentenprobe führt: Beides sind Fehler, die niemand sieht,
+    weil nichts sie misst.
 
 ## Erledigt
 
