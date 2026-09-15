@@ -12,6 +12,8 @@ Vier Pruefungen:
   3. KRYPTO     -- Chiffretext entschluesselt zum Quell-Klartext zurueck
   4. SPUR       -- Spuren liegen im Zeitfenster ihres Einsatzes, Hoehen und
                    Geschwindigkeiten sind plausibel
+  5a. FUSSWEG   -- Gehgeschwindigkeit jedes Fusswegs gegen eine Vertrags-
+                   grenze, wie Flug- und Fahrgeschwindigkeit (E-DA-13)
   5. CSV        -- die Importdatei gegen die Parser der Anwendung: jede
                    Kopfzeile ist eine dem Profil `export_csv_v1` bekannte
                    Spalte, und jeder Wert genuegt der Regel des Parsers, der
@@ -295,10 +297,12 @@ def main() -> int:
         art_je_ref[b["client_ref"]] = dienstart[pfad.parent.name]
 
     GRENZE_KMH = {"air": 300.0, "ground": 140.0}
-        # Die Bodengrenze liegt bei 1400 m, nicht tiefer: Im Allgaeu fuehren
+    # Die Bodengrenze liegt bei 1400 m, nicht tiefer: Im Allgaeu fuehren
     # Passstrassen tatsaechlich so hoch (Riedbergpass 1407 m). Sie liegt aber
     # auch nicht hoeher -- ein NEF auf 2100 m war der Fehler, den diese
-    # Pruefung gefunden hat.
+    # Pruefung gefunden hat. Ein Fussweg bleibt darunter: Der Bestand fuehrt
+    # keinen Einsatzort ueber 1400 m, und die Grenze ist damit auch fuer ihn
+    # die richtige.
     GRENZE_HOEHE = {"air": 3500.0, "ground": 1400.0}
     geprueft = 0
     for ref, pts in spuren_je_ref.items():
@@ -321,6 +325,31 @@ def main() -> int:
                     f"{ref} ({art}): {hoechste:.0f} m über der Grenze "
                     f"{GRENZE_HOEHE[art]:.0f} m")
         geprueft += 1
+
+    # ---- 5a. Gehgeschwindigkeit der Fusswege (E-DA-13) ---------------------
+    #
+    # WARUM GEGEN `fusswege.json` UND NICHT GEGEN DIE SPUR. Der fertigen Spur
+    # sieht niemand mehr an, welches Teilstueck gegangen wurde: Die Punkte
+    # liegen dicht beieinander, und ein Fussweg sieht dort aus wie ein Stau
+    # auf der Landstrasse. Die Pruefung darueber (5.) misst die SCHNELLSTE
+    # Momentangeschwindigkeit einer Spur — sie faende einen zu langsamen
+    # Fussweg nie und einen zu schnellen nur dann, wenn er 140 km/h erreichte.
+    #
+    # DIE GRENZEN. Unten 1,5 km/h: Langsamer als das geht niemand einen Weg,
+    # den er ueberhaupt geht — darunter steht man. Oben 6,0 km/h: Das ist
+    # zuegiges Gehen auf ebenem Grund; mit einem Akja bergab ist schon das
+    # viel. Wer eine der beiden Grenzen reisst, hat keine falsche Spur,
+    # sondern falsche PHASENZEITEN in den Quelldaten — deshalb nennt der
+    # Befund den Einsatz und nicht die Datei.
+    fuss_datei = AUS / "fusswege.json"
+    fusswege = json.loads(fuss_datei.read_text("utf-8")) if fuss_datei.exists() else []
+    FUSS_MIN, FUSS_MAX = 1.5, 6.0
+    for fw in fusswege:
+        lauf.pruefe(FUSS_MIN <= fw["tempo_kmh"] <= FUSS_MAX,
+                    f"{fw['ref']} Abschnitt {fw['abschnitt']}: Fussweg mit "
+                    f"{fw['tempo_kmh']:.1f} km/h ({fw['strecke_m']} m in "
+                    f"{fw['dauer_s'] // 60} min) — erwartet "
+                    f"{FUSS_MIN}–{FUSS_MAX} km/h")
 
     # ---- 5. CSV gegen die Parser der Anwendung ------------------------------
     #
@@ -456,6 +485,12 @@ def main() -> int:
     print(f"Pakete (Folge):       {len(folge)}")
     print(f"Krypto-Rundläufe:     {rundlaeufe}")
     print(f"Spuren im Zeitraum:   {spuren}")
+    if fusswege:
+        tempi = [f["tempo_kmh"] for f in fusswege]
+        print(f"Fußwege auf Tempo:    {len(fusswege)}  "
+              f"({min(tempi):.1f}–{max(tempi):.1f} km/h, Grenze {FUSS_MIN}–{FUSS_MAX})")
+    else:
+        print(f"Fußwege auf Tempo:    0")
     print(f"absichtlich offen:    {offen_erwartet} Pakete "
           f"(nicht abgeschlossener Einsatz und Ruhe-Segment)")
     print(f"Einzelprüfungen:      {lauf.n}")

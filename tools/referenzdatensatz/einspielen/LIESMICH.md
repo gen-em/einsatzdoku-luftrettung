@@ -54,7 +54,7 @@ Danach wird umbenannt: `pair.php` setzt beim Ja `label` auf „Uhr" bzw.
 > Bestand von seinen Geräten** — ohne Fehlermeldung, sichtbar erst als leeres
 > `days[].refs[].device_id` im Referenz-Export.
 
-### Der Schnitt — warum er am **Ende** steht
+### Die Schnitte — warum sie am **Ende** stehen
 
 Die Stufe `schneiden` ist die letzte, nicht — wie zuerst vorgesehen — die
 zwischen `zuordnen` und `nachtragen`. Der Grund sind die drei Stufen
@@ -64,6 +64,21 @@ still `treffer[0]`. Ein geschnittener Einsatz wäre ab der Stufe ein
 zusätzlicher Einsatz in derselben Liste. Am Ende gibt es diese
 Überschneidung nicht — und der geschnittene Einsatz braucht keine der drei:
 Er bleibt bewusst leer.
+
+**Wie viele es sind, steht nicht mehr fest.** Bis zum Demo-Ausbau verlangte
+die Stufe genau einen (`!= 1`); seither zählt sie die Aufträge in den
+Quelldaten und vergleicht (E-DA-11). Die Prüfung ist damit nicht gestrichen,
+sondern an die Quelle gebunden: Ein Schnitt, der still ausfällt, bliebe sonst
+unbemerkt — und mit ihm der Sperrvermerk, den Backlog Nr. 63 im Bestand haben
+will.
+
+### Der Diensttag ohne Standort
+
+Die Stufe `zuordnen` schickt `base_id: ""`, wenn der Dienst in den Quelldaten
+keinen Standort führt (`standort: null`, E-DA-08). Das ist der Weg, den auch
+das Formular geht — `dt_base_erlaubt()` macht daraus NULL. Die Kennung ganz
+**wegzulassen** täte es nicht: `api/day.php` ließe den Standort dann stehen,
+wie er ist, und ein zweiter Lauf hätte einen anderen Zustand als der erste.
 
 Der **CSV-Import** läuft bewusst nicht hier, sondern im Browser (B4).
 

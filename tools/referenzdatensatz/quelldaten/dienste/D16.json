@@ -15,10 +15,6 @@
     "beginn": "2026-12-27 07:00",
     "ende": "2026-12-27 19:00",
     "day_ref": "ad-12-7743019628",
-    "spur_ausgangspunkt": {
-      "lat": 47.559,
-      "lon": 10.217
-    },
     "besatzung": {
       "driver": "Selma Ibrahimović",
       "trainee": "Ronja Pfeil",
@@ -130,7 +126,7 @@
         "schockraum": 1,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -219,7 +215,7 @@
         "schockraum": 1,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -308,7 +304,7 @@
         "schockraum": 1,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -383,7 +379,7 @@
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -473,7 +469,7 @@
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -595,5 +591,6 @@
     }
   ],
   "$warum_ruhesegment": "DAS LETZTE RUHESEGMENT IST NICHT ABGESCHLOSSEN (final=0, ended_at leer). Es entsteht, wenn niemand „Einsatztag beenden\" drückt — auf der Uhr der häufigste unvollständige Zustand überhaupt. Die Matrixzeile Ruhezeiten verlangt ihn, und er prüft mit, dass Anzeige, Export und Sicherung ein Segment ohne Ende aushalten.",
-  "ziel_einsaetze": 6
+  "ziel_einsaetze": 6,
+  "$warum_spur_ausgangspunkt": "ENTFALLEN mit dem Demo-Ausbau (E-DA-09). Er trug 47.559 / 10.217 -- genau die Koordinate, die der Standort 'Notarztstandort Talwang' seither selbst fuehrt. `basis_von()` liest damit denselben Wert, und die Spur dieses Tages ist byteweise dieselbe geblieben (gemessen mit `diff -r` ueber den ganzen Ausgabeordner). Ein Ausgangspunkt NEBEN einem Standort mit Koordinaten waere eine zweite Wahrheit; pruefen.py laesst ihn dort nicht mehr zu."
 }

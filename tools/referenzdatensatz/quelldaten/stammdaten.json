@@ -24,10 +24,17 @@
     },
     {
       "name": "Notarztstandort Talwang",
-      "lat": null,
-      "lon": null,
+      "lat": 47.559,
+      "lon": 10.217,
       "standard": false,
-      "$warum": "OHNE Koordinaten (Matrixzeile Stammdaten). Folge, die der Datensatz mitprueft: Die Bodeneinsaetze von hier koennen start_src='base' NICHT verwenden."
+      "$warum": "MIT Koordinaten seit dem Demo-Ausbau (E-DA-09). Es sind EXAKT die, die seine acht Bodendienste vorher als `spur_ausgangspunkt` trugen -- `basis_von()` liest damit denselben Wert, und die Spuren dieser acht Tage bleiben byteweise gleich. Der Eintrag `spur_ausgangspunkt` ist an ihnen deshalb entfallen: Ein Ausgangspunkt neben einem Standort mit Koordinaten waere eine zweite Wahrheit."
+    },
+    {
+      "name": "Bergwachtstation Sonnenau",
+      "lat": 47.532,
+      "lon": 10.287,
+      "standard": false,
+      "$warum": "Standort des Bergwachtnotarztes (E-DA-05/E-DA-09). Die Koordinate ist ein Stuetzpunkt aus generator/gelaende.py (780 m) -- damit rechnet das Hoehenmodell dort nicht zwischen zwei weit entfernten Stuetzpunkten und die Hoehenprofile der Bergeinsaetze bleiben plausibel. DRITTER Standort: Er belegt die Matrixzeile 'Diensttag an einem Standort ohne Rollen-Vorlagen' -- Typ Bergwacht hat keine (E-S9-09), und dieser Standort fuehrt deshalb bewusst KEINE Besatzungs-Vorbelegung."
     }
   ],
   "rettungsmittel": [
@@ -121,6 +128,58 @@
       "faehigkeiten": [],
       "standard": false,
       "$warum": "TYP sonstiges OHNE Standort und MIT Kurznamen -- der Fall, den die Standortliste unter 'Ohne Standort' fuehrt (E-S9-18)."
+    },
+    {
+      "name": "Bergwachtnotarzt Sonnenau",
+      "kurz": "BW-NA",
+      "typ": "bergwacht",
+      "art": "ground",
+      "standort": "Bergwachtstation Sonnenau",
+      "rollen": [],
+      "faehigkeiten": [
+        "winch",
+        "bergwacht"
+      ],
+      "standard": false,
+      "$warum": "TYP bergwacht am BODEN, MIT beiden Faehigkeiten -- der Fall, fuer den Web 20.3.0 die Regel geaendert hat (E-DA-06): Ein Bergwachtnotarzt faehrt hin und wird von dort geflogen. Prueft dreierlei: dass die Pruefschicht `winch` und `bergwacht` an einem bodengebundenen Rettungsmittel dieses Typs ANNIMMT (vorher verwarf sie sie still), dass `day_capabilities` sie beim Zuordnen einfriert, und dass das Einsatzformular eines Bodendienstes die Windenkacheln zeigt (`cap_gate`, nicht `kind_gate`). Ohne Rollen -- Typ Bergwacht hat keine Vorlagen."
+    },
+    {
+      "name": "VEF Talwang 76/2",
+      "kurz": "VEF",
+      "typ": "standard",
+      "art": "ground",
+      "standort": "Notarztstandort Talwang",
+      "rollen": [
+        "driver",
+        "other"
+      ],
+      "faehigkeiten": [],
+      "standard": false,
+      "$warum": "Verlegungsfahrzeug (E-DA-07). Es traegt den bodengebundenen SEKUNDAERTRANSPORT -- den gab es im Bestand bisher nur in der Luft (D02, D03, D07). Typ standard mit Standort, also mit Vorschlagslisten und Rollen-Vorlagen; die zwei Rollen sind der kleinere Satz des NEF Talwang, damit der eingefrorene Rollensatz zweier Rettungsmittel am selben Standort unterscheidbar bleibt."
+    },
+    {
+      "name": "Boxkampf Rainer Maria Rilke",
+      "kurz": "Boxkampf",
+      "typ": "veranstaltung",
+      "art": "ground",
+      "standort": "Luftrettungsstation Hochkreuth",
+      "ohne_standort": true,
+      "rollen": [],
+      "faehigkeiten": [],
+      "standard": false,
+      "$warum": "TYP veranstaltung OHNE Standort, und anders als 'Sanitaetsdienst Seefest' traegt es einen DIENSTTAG (E-DA-08). Der Name ist eine historische Person als Veranstaltungstitel -- E-P1-02 verbietet reale RUFNAMEN und ORTE, nicht jede reale Person; VERBOTENE_NAMEN bleibt unveraendert und pruefen.py laeuft ohne Ausnahme durch. `standort` nennt nur die Karte, aus der das Formular abgeschickt wird; `ohne_standort` schlaegt sie und schickt base_id 0."
+    },
+    {
+      "name": "Konzert von Karl Marx",
+      "kurz": "Konzert",
+      "typ": "veranstaltung",
+      "art": "ground",
+      "standort": "Luftrettungsstation Hochkreuth",
+      "ohne_standort": true,
+      "rollen": [],
+      "faehigkeiten": [],
+      "standard": false,
+      "$warum": "Zweite Veranstaltung (E-DA-08). Sie traegt den Diensttag, an dem ALLE Einsaetze von Hand nachgetragen sind: keine Spur, aber Ort- und Zielkoordinate -- die Karte zeichnet daraus gestrichelte Luftlinien. Zwei Veranstaltungen und nicht eine, weil die beiden Diensttage verschiedene Erfassungsarten belegen."
     }
   ],
   "besatzung": [
@@ -250,6 +309,31 @@
       "lat": null,
       "lon": null,
       "standort": "Notarztstandort Talwang"
+    },
+    {
+      "name": "Bergklinik Sonnenau",
+      "lat": 47.559,
+      "lon": 10.217,
+      "standort": "Bergwachtstation Sonnenau"
+    },
+    {
+      "name": "Unfallklinik Felsberg",
+      "lat": 47.681,
+      "lon": 11.202,
+      "standort": "Bergwachtstation Sonnenau"
+    },
+    {
+      "name": "Kreisklinik Steinach",
+      "lat": 47.515,
+      "lon": 10.281,
+      "standort": "Bergwachtstation Sonnenau"
+    },
+    {
+      "name": "Universitätsklinikum Nordstadt",
+      "lat": 48.4011,
+      "lon": 9.9876,
+      "standort": "Notarztstandort Talwang",
+      "$warum": "Das Ziel der Verlegungen des VEF (E-DA-10). Dieselbe Klinik steht schon an Hochkreuth -- Stammdaten sind je Standort (E15), Dubletten ueber Standorte hinweg sind zulaessig und im Bestand gewollt."
     }
   ],
   "bereitschaften": [
@@ -264,6 +348,18 @@
     {
       "name": "Bergwacht Moosachtal",
       "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "name": "Bergwacht Sonnenau",
+      "standort": "Bergwachtstation Sonnenau"
+    },
+    {
+      "name": "Bergwacht Felsgrat",
+      "standort": "Bergwachtstation Sonnenau"
+    },
+    {
+      "name": "Bergwacht Moosachtal",
+      "standort": "Bergwachtstation Sonnenau"
     }
   ],
   "weitere_rettungsmittel": [
@@ -298,6 +394,14 @@
     {
       "name": "ELW Talwang 1",
       "standort": "Notarztstandort Talwang"
+    },
+    {
+      "name": "RTW Talwang 76/83",
+      "standort": "Bergwachtstation Sonnenau"
+    },
+    {
+      "name": "First Responder Sonnenau",
+      "standort": "Bergwachtstation Sonnenau"
     }
   ]
 }

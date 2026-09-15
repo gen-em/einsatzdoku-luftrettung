@@ -1,4 +1,4 @@
-"""Spurerzeugung — Lufttracks geometrisch, Bodentracks aus Strassengeometrie.
+"""Spurerzeugung — Luft und Fussweg geometrisch, Bodentracks aus Strassengeometrie.
 
 DIE AUSDUENNUNG IST DIE DER UHR. `watch/source/Track.mc` nimmt einen Punkt
 auf, wenn seit dem letzten >= 15 m zurueckgelegt wurden ODER >= 10 s vergangen
@@ -35,6 +35,7 @@ import gelaende
 
 TAKT_LUFT = 3         # s zwischen zwei Abtastungen in der Luft
 TAKT_BODEN = 5        # s zwischen zwei Abtastungen auf der Strasse
+TAKT_FUSS = 10        # s zwischen zwei Abtastungen zu Fuss
 TAKT_HALT = 30        # s im Stand (Einsatzort, Klinik)
 TAKT_RUHE = 60        # s im Ruhe-Segment
 
@@ -43,6 +44,7 @@ THIN_MAX_GAP_S = 10      # wie Const.THIN_MAX_GAP_S
 
 AGL_SPITZE = 350.0    # Hoehe ueber Grund im Reiseflug
 JITTER_M = 3.0        # GPS-Streuung im Stand
+JITTER_FUSS_M = 6.0   # GPS-Streuung zu Fuss (siehe `fussweg`)
 
 
 def _mitte(a, b, f):
@@ -130,6 +132,61 @@ def flug(von, nach, t0: int, t1: int, saat: str) -> list[tuple]:
             h = reise
         h = max(h, grund + 80.0)          # nie ins Gelaende fliegen
         punkte.append((round(lat, 6), round(lon, 6), round(h, 1), t))
+    return punkte
+
+
+def fussweg(von, nach, t0: int, t1: int, saat: str) -> list[tuple]:
+    """Punkte eines Teilstuecks, das GEGANGEN wird (E-DA-13).
+
+    WOFUER. Ein Bergwachtnotarzt faehrt bis zum Parkplatz, zur Talstation oder
+    zur Huettenzufahrt (`zustieg`) und geht von dort zum Patienten. Bis zum
+    Demo-Ausbau kannte der Generator genau zwei Fortbewegungsarten: fliegen
+    (geometrisch) und fahren (auf einer Strasse aus OSRM). Ein Fussweg als
+    Flug gezeichnet ergaebe eine schnurgerade Linie ueber den Hang mit
+    Reiseflughoehe darueber; als Fahrt gezeichnet braeuchte er eine Strasse,
+    die es dort nicht gibt.
+
+    DREI UNTERSCHIEDE ZU `flug`, und jeder hat einen Grund:
+
+      1. KEINE REISEFLUGHOEHE. Wer geht, bleibt auf dem Boden: Die Hoehe ist
+         die des Gelaendes (`gelaende.hoehe`) plus die Hoehe des Geraets ueber
+         Grund. Genau daran haengt `site_ele_m` -- die Anwendung rechnet die
+         Hoehe des Einsatzorts aus der Spur, und ein Fussweg, der 200 m ueber
+         dem Hang schwebt, machte aus einer Almwiese einen Gipfel.
+      2. MEHR STREUUNG. Unter Fels und Baumkronen ist der Empfang schlechter
+         als in der Luft oder auf der Strasse; sechs Meter statt drei sind das
+         Bild, das eine echte Aufzeichnung dort abgibt.
+      3. EIN WEG, DER SICH WINDET. Der Bogen ist staerker als beim Flug und
+         haengt an der Strecke -- ein Steig geht Serpentinen, keine Gerade.
+
+    DIE GEHGESCHWINDIGKEIT WIRD NICHT GESETZT, SIE ERGIBT SICH. Das Zeitfenster
+    kommt aus den Phasen (der Generator teilt es zwischen Fahren und Gehen
+    auf), die Strecke aus den Koordinaten. Ob dabei etwas Plausibles
+    herauskommt, misst `generator/pruefen.py` an `fusswege.json` -- und meldet
+    es als Befund, nicht als Nebensatz. Ein Zielwert stuende sonst zweimal da:
+    hier und in der Pruefung, und die zweite Fassung waere die, die niemand
+    nachzieht.
+    """
+    z = random.Random(f"fuss-{saat}-{von}-{nach}")
+    strecke = gelaende.abstand_m(von[0], von[1], nach[0], nach[1])
+    bogen = z.uniform(-1, 1) * min(strecke * 0.09, 120.0)
+    qlat, qlon = _quer(von, nach)
+    dauer = max(t1 - t0, 1)
+
+    punkte = []
+    for t in range(t0, t1 + 1, TAKT_FUSS):
+        w = _profil((t - t0) / dauer)
+        lat, lon = _mitte(von, nach, w)
+        s = math.sin(math.pi * w) * bogen / 111320.0
+        lat += qlat * s
+        lon += qlon * s
+        lat += z.gauss(0, JITTER_FUSS_M) / 111320.0
+        lon += z.gauss(0, JITTER_FUSS_M) / (111320.0 * math.cos(math.radians(lat)))
+        # 1,5 m ueber Grund: Das Geraet steckt in der Jacke, nicht im Boden.
+        # Ohne den Versatz lieferte `site_ele_m` die Gelaendehoehe auf den
+        # Zentimeter genau -- eine Genauigkeit, die eine GPS-Spur nie hat.
+        hoch = gelaende.hoehe(lat, lon) + 1.5 + z.gauss(0, 2.5)
+        punkte.append((round(lat, 6), round(lon, 6), round(hoch, 1), t))
     return punkte
 
 

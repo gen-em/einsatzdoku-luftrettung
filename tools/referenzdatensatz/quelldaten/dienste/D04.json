@@ -17,10 +17,6 @@
     "beginn": "2026-03-07 07:00",
     "ende": "2026-03-07 19:00",
     "day_ref": "ad-12-5290481736",
-    "spur_ausgangspunkt": {
-      "lat": 47.559,
-      "lon": 10.217
-    },
     "besatzung": {
       "driver": "Gerd Wallner",
       "trainee": "Ronja Pfeil",
@@ -132,7 +128,7 @@
         "schockraum": 1,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -219,7 +215,7 @@
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -306,7 +302,7 @@
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -395,7 +391,7 @@
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -514,7 +510,7 @@
         "schockraum": 1,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -631,7 +627,7 @@
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -663,5 +659,6 @@
       "abdeckung": []
     }
   ],
-  "ziel_einsaetze": 6
+  "ziel_einsaetze": 6,
+  "$warum_spur_ausgangspunkt": "ENTFALLEN mit dem Demo-Ausbau (E-DA-09). Er trug 47.559 / 10.217 -- genau die Koordinate, die der Standort 'Notarztstandort Talwang' seither selbst fuehrt. `basis_von()` liest damit denselben Wert, und die Spur dieses Tages ist byteweise dieselbe geblieben (gemessen mit `diff -r` ueber den ganzen Ausgabeordner). Ein Ausgangspunkt NEBEN einem Standort mit Koordinaten waere eine zweite Wahrheit; pruefen.py laesst ihn dort nicht mehr zu."
 }

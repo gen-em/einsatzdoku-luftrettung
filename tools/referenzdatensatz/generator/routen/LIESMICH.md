@@ -10,8 +10,15 @@ das merkt niemand, bis der Vergleich in einer späteren Phase Abweichungen
 meldet, die niemand erklären kann. Der Generator liest deshalb nur diese
 Dateien und braucht kein Netz.
 
-**Nur Boden.** Ein Hubschrauber folgt keiner Straße; Lufttracks entstehen
-geometrisch im Generator.
+**Nur Boden — und darin nicht alles.** Ein Hubschrauber folgt keiner Straße;
+Lufttracks entstehen geometrisch im Generator. Seit dem Demo-Ausbau gilt
+dasselbe für den **Fußweg**: Für die Teilstücke `zustieg → ort` und
+`ort → zustieg` (E-DA-13) wird **keine** Straße geholt. OSRM antwortete
+darauf mit der nächstgelegenen Fahrstraße — also mit einer Geometrie, die
+der Generator gar nicht benutzt, und mit einer Datei, die `routen_soll.json`
+als gebraucht führt. Beides wäre still falsch. Welches Teilstück gegangen
+wird, entscheidet `wegpunkte.ist_fussweg()`; dieselbe Frage, die auch der
+Generator stellt.
 
 ## Was hier liegt
 
@@ -22,8 +29,9 @@ geometrisch im Generator.
 
 Der Dateiname ist der Hash des **Koordinatenpaares**, nicht die
 Einsatzkennung. Viele Teilstücke wiederholen sich — derselbe Wagen fährt
-dieselbe Strecke Wache → Klinik zwanzigmal. Über das Paar zu benennen
-spart die Wiederholungen: 117 Teilstücke, 84 verschiedene Strecken.
+dieselbe Strecke Wache → Klinik zwanzigmal. Über das Paar zu benennen spart
+die Wiederholungen; `routen_holen.py` sagt am Ende des Laufs, wie viele
+Teilstücke es waren und wie viele verschiedene Strecken daraus wurden.
 
 Die Koordinaten sind auf **fünf Nachkommastellen** gerundet (rund ein
 Meter). Das ist feiner als jede Straßenmitte und feiner als jedes GPS; die
