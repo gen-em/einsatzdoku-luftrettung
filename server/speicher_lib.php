@@ -40,6 +40,17 @@ const SPEICHER_K_DB       = 'speicher_db_bytes';
 const SPEICHER_K_DATEIEN  = 'speicher_dateien_bytes';
 const SPEICHER_K_STAND    = 'speicher_stand';
 const SPEICHER_K_WEBSPACE = 'webspace_gb';
+/* Das DB-Kontingent (P5a/AP2, E-P5a-11, PP-2). Warum eine ANGABE und keine
+ * Messung: Kein Hoster macht das Kontingent abfragbar — `information_schema`
+ * sagt, wie gross die Datenbank IST, nicht, wie gross sie sein DARF. */
+const SPEICHER_K_DB_GB    = 'db_gb';
+/* Welche Schwellen schon gemeldet sind, je Kontingent. Dieselbe Mechanik wie
+ * `adminbackup_schwellen_gemeldet`: Wer aufraeumt und wieder unter die
+ * Schwelle faellt, soll beim naechsten Ueberschreiten erneut gewarnt werden. */
+const SPEICHER_K_GEMELDET = 'speicher_schwellen_gemeldet';
+
+/** Vorgabe des DB-Kontingents in GB — die Zielgroesse Z2 des S2-Konzepts. */
+const SPEICHER_DB_GB_VORGABE = 10.0;
 
 /**
  * Groesse der Datenbank in Byte — Daten und Indizes.
@@ -109,6 +120,40 @@ function speicher_messen(PDO $pdo): array
     edbak_marke_setzen(SPEICHER_K_DATEIEN, (string)$datei);
     edbak_marke_setzen(SPEICHER_K_STAND, gmdate('Y-m-d\TH:i:s\Z'));
     return ['datenbank' => $db, 'dateien' => $datei];
+}
+
+/**
+ * Das DB-Kontingent in Byte. Ohne Angabe gilt die Vorgabe (Z2: 10 GB).
+ *
+ * ANDERS ALS BEIM WEBSPACE GIBT ES HIER EINE VORGABE, und das hat einen
+ * Grund: Der Webspace ist je Tarif verschieden und ohne Angabe schlicht
+ * unbekannt — ein geratener Wert waere schlimmer als keiner. Die 10 GB
+ * dagegen sind die Untergrenze, die diese Anwendung nach Z2 tragen muss; sie
+ * ist eine Zusage des Projekts und keine Vermutung ueber den Hoster. Wer mehr
+ * hat, traegt mehr ein.
+ */
+function speicher_db_kontingent_bytes(): int
+{
+    $roh = (string)(edbak_marke_lesen(SPEICHER_K_DB_GB) ?? '');
+    $gb  = $roh === '' ? SPEICHER_DB_GB_VORGABE : (float)$roh;
+    return $gb > 0 ? (int)round($gb * 1024 * 1024 * 1024) : 0;
+}
+
+/**
+ * Das Kontingent setzen. 0 stellt die Vorgabe wieder her.
+ *
+ * DIE UNTERGRENZE 0,01 GB IST KEINE SCHIKANE. Abgelegt wird mit zwei
+ * Nachkommastellen; alles darunter rundete zu „0", und „0" heisst in dieser
+ * Funktion „Vorgabe". Wer 0,005 einträgt, bekäme also stillschweigend 10 GB
+ * zurück — eine Eingabe, die das Gegenteil dessen bewirkt, was sie sagt.
+ * Lieber ein Nein mit Grund.
+ */
+function speicher_db_kontingent_setzen(float $gb): bool
+{
+    if ($gb < 0 || $gb > 100000) { return false; }
+    if ($gb > 0 && $gb < 0.01)   { return false; }
+    return edbak_marke_setzen(SPEICHER_K_DB_GB,
+        $gb > 0 ? rtrim(rtrim(number_format($gb, 2, '.', ''), '0'), '.') : '');
 }
 
 /** Webspace laut Hosting in Byte — 0 heisst „nicht angegeben". */
@@ -198,3 +243,121 @@ function speicher_ton(int $prozent, array $schwellen): string
     if ($prozent >= (int)min($schwellen)) { return 'orange'; }
     return 'blau';
 }
+
+/* ---------------------------------------------------------------------------
+ * WARNMAIL DER KONTINGENTE (P5a/AP2, E-P5a-11)
+ * ---------------------------------------------------------------------------
+ *
+ * ZWEI BEFUNDE AUF EINMAL, UND DER ZWEITE IST DER UNANGENEHMERE.
+ *
+ * 1. Das DB-Kontingent bekommt eine Warnung — das verlangt E-P5a-11. Bis
+ *    hierher gab es fuer die Datenbank ueberhaupt keine Grenze: Die
+ *    Statusseite nannte ihre Groesse, und das war alles. Wer bei 10 GB
+ *    ankommt, merkt es daran, dass der Hoster das Schreiben verweigert.
+ *
+ * 2. `edbak_schwellen_melden()` — die Warnung fuer die Speichergrenze der
+ *    Backups, seit S8 vorhanden — WIRD IM BETRIEB VON NIEMANDEM AUFGERUFEN.
+ *    Nachgemessen am 15.09.2026: `grep -rn "schwellen_melden" --include=*.php`
+ *    findet die Definition und einen Aufruf in
+ *    `tools/wiederherstellungs-probe/probe.php`. Sonst nichts. Die Funktion
+ *    ist geschrieben, geprueft und tot — dieselbe Klasse Fehler wie Backlog
+ *    Nr. 89 („Dieser Job lief von Web 12.2.0 bis 12.9.2 nie"). Sie wird hier
+ *    mitgerufen, statt eine zweite Mechanik danebenzustellen.
+ *
+ * DIE SCHWELLEN SIND DIESELBEN wie ueberall (`edbak_schwellen()`, Vorgabe
+ * 70/90). Eine eigene Schwelle je Kontingent waere die dritte Zahl fuer
+ * dieselbe Frage.
+ *
+ * SIE LAEUFT IM TAEGLICHEN AUFRAEUMJOB, direkt nach der Messung — vorher
+ * stuenden dort die Zahlen von gestern.
+ */
+
+/**
+ * Die Kontingente gegen die Schwellen halten und, wo noetig, melden.
+ *
+ * @return array{gemeldet: list<string>, hinweis: list<string>, fehler: list<string>}
+ */
+function speicher_kontingente_melden(): array
+{
+    $aus = ['gemeldet' => [], 'hinweis' => [], 'fehler' => []];
+    $schwellen = edbak_schwellen();
+    if (!$schwellen) { return $aus; }
+
+    $db       = (int)(edbak_marke_lesen(SPEICHER_K_DB) ?? 0);
+    $dateien  = (int)(edbak_marke_lesen(SPEICHER_K_DATEIEN) ?? 0);
+    if ($db === 0 && $dateien === 0) { return $aus; }   // noch nie gemessen
+
+    $z       = edbak_ablage_zahlen();
+    $backups = (int)$z['pakete_bytes'] + (int)$z['komplett_bytes'] + (int)$z['sonstige_bytes'];
+
+    $kontingente = [
+        'db' => ['titel' => 'Datenbank', 'ist' => $db,
+                 'bezug' => speicher_db_kontingent_bytes(),
+                 'rat'   => 'Alte Diensttage archivieren oder das Kontingent beim '
+                          . 'Hoster erhöhen. Ist es erreicht, verweigert die '
+                          . 'Datenbank das Schreiben — und dann geht nichts mehr '
+                          . 'herein, auch nicht von der Uhr.'],
+        'webspace' => ['titel' => 'Webspace', 'ist' => $db + $dateien + $backups,
+                 'bezug' => speicher_webspace_bytes(),
+                 'rat'   => 'Alte Komplett-Stände entfernen, die Aufbewahrung '
+                          . 'senken oder den Tarif wechseln.'],
+    ];
+
+    /* Was schon gemeldet ist — je Kontingent eine Liste von Schwellen. */
+    $roh = json_decode((string)(edbak_marke_lesen(SPEICHER_K_GEMELDET) ?? ''), true);
+    $gemeldet = is_array($roh) ? $roh : [];
+
+    $ziele = null;   // erst holen, wenn wirklich etwas hinausgeht
+    $neu   = $gemeldet;
+
+    foreach ($kontingente as $k => $c) {
+        if ((int)$c['bezug'] <= 0) { continue; }         // keine Angabe, keine Warnung
+        $proz  = (int)floor($c['ist'] * 100 / $c['bezug']);
+        $alt   = array_map('intval', (array)($gemeldet[$k] ?? []));
+        /* UNTERSCHRITTENE SCHWELLEN VERGESSEN — sonst waere die Warnung ein
+         * einmaliges Ereignis im Leben einer Installation. */
+        $bleibt = array_values(array_filter($alt, static fn(int $s): bool => $proz >= $s));
+        $offen  = [];
+        foreach ($schwellen as $s) {
+            if ($proz >= $s && !in_array($s, $alt, true)) { $offen[] = $s; }
+        }
+        if (!$offen) { $neu[$k] = $bleibt; continue; }
+
+        require_once __DIR__ . '/smtp.php';
+        if (!smtp_eingerichtet()) {
+            $aus['hinweis'][] = $c['titel'] . ' ' . $proz . ' %';
+            $neu[$k] = $bleibt;
+            continue;
+        }
+        if ($ziele === null) {
+            $ziele = [];
+            foreach (db()->query('SELECT email FROM users WHERE ' . ROLLEN_VERWALTUNG_SQL
+                                 . ' ORDER BY id')->fetchAll(PDO::FETCH_COLUMN) as $m) {
+                if (is_string($m) && $m !== '') { $ziele[] = $m; }
+            }
+        }
+        foreach ($offen as $s) {
+            $text = 'Das Kontingent „' . $c['titel'] . '" hat ' . $s . ' % erreicht.' . "\n\n"
+                  . 'Belegt:     ' . edbak_groesse_text($c['ist']) . "\n"
+                  . 'Kontingent: ' . edbak_groesse_text((int)$c['bezug']) . "\n\n"
+                  . $c['rat'] . "\n\n"
+                  . 'Die Schwellen stehen unter Betrieb -> Servereinstellungen.' . "\n";
+            $ok = false;
+            foreach ($ziele as $m) {
+                if (smtp_send($m, $c['titel'] . ': ' . $s . ' % des Kontingents erreicht', $text)) {
+                    $ok = true;
+                }
+            }
+            if ($ok) { $bleibt[] = $s; $aus['gemeldet'][] = $c['titel'] . ' ' . $s . ' %'; }
+            else     { $aus['fehler'][] = $c['titel'] . ' ' . $s . ' %'; }
+        }
+        sort($bleibt);
+        $neu[$k] = array_values(array_unique($bleibt));
+    }
+
+    if ($neu !== $gemeldet) {
+        edbak_marke_setzen(SPEICHER_K_GEMELDET, (string)json_encode($neu));
+    }
+    return $aus;
+}
+

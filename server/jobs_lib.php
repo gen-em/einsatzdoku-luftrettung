@@ -200,7 +200,8 @@ function jobs_katalog(): array
         'aufraeumen' => [
             'titel'        => 'Aufräumen',
             'beschreibung' => 'Papierkorb, Kopplungssitzungen, Ratenschutz, '
-                            . 'Passwort-Token, Erinnerung an die Verwaltung',
+                            . 'Passwort-Token, Erinnerung an die Verwaltung, '
+                            . 'Speichermessung und Warnschwellen',
             'taeglich'     => true,
             'rueckstand'   => fn(PDO $pdo, array $z): ?int => null,
             'lauf'         => 'job_aufraeumen',
@@ -556,6 +557,31 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
         'Speicher messen' => function (PDO $pdo): void {
             require_once __DIR__ . '/speicher_lib.php';
             speicher_messen($pdo);
+        },
+        /* WARNSCHWELLEN MELDEN (P5a/AP2, E-P5a-11).
+         *
+         * ER STEHT HINTER „Speicher messen", nicht davor: Sonst hielte die
+         * Warnung die Zahlen von gestern gegen die Schwellen von heute.
+         *
+         * ZWEI AUFRUFE, ZWEI GESCHICHTEN. `speicher_kontingente_melden()`
+         * ist neu und deckt Datenbank und Webspace ab. `edbak_schwellen_melden()`
+         * gibt es seit S8 und deckt die Speichergrenze der Backups ab —
+         * ABER NIEMAND HAT SIE JE GERUFEN. Nachgemessen am 15.09.2026:
+         * `grep -rn "schwellen_melden" --include=*.php` findet die Definition
+         * und einen Aufruf in `tools/wiederherstellungs-probe/probe.php`,
+         * sonst nichts. Geschrieben, geprueft, tot — dieselbe Klasse Fehler
+         * wie Backlog Nr. 89 („Dieser Job lief von Web 12.2.0 bis 12.9.2
+         * nie"). Der Aufruf steht jetzt hier, wo er hingehoert.
+         *
+         * BEIDE DUERFEN SCHEITERN, OHNE DEN JOB ZU KIPPEN: Die Schleife
+         * darunter faengt jeden Fehler und meldet ihn mit Namen. Eine
+         * ausgefallene Warnmail ist ein Meldeproblem, kein Betriebsproblem —
+         * die Zahl steht daneben auf der Statusseite. */
+        'Warnschwellen melden' => function (PDO $pdo): void {
+            require_once __DIR__ . '/speicher_lib.php';
+            require_once __DIR__ . '/adminbackup_lib.php';
+            speicher_kontingente_melden();
+            edbak_schwellen_melden();
         },
     ];
 

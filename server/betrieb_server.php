@@ -90,6 +90,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
         }
     }
 
+    /* ---- Kontingent der Datenbank (P5a/AP2, E-P5a-11) -------------------
+     *
+     * ANDERS ALS DER WEBSPACE HAT ES EINE VORGABE (10 GB): Das ist die
+     * Untergrenze Z2, die diese Anwendung tragen muss — eine Zusage des
+     * Projekts, keine Vermutung ueber den Hoster. Leer setzt sie zurueck.
+     *
+     * Es gehoert in DIESES Formular und nicht in ein eigenes: Es steht neben
+     * dem Webspace, wird von denselben Schwellen gewarnt und hat dieselbe
+     * Frage im Ruecken. */
+    if ($error === null) {
+        $roh = str_replace(',', '.', trim((string)($_POST['db_gb'] ?? '')));
+        $istGb = speicher_db_kontingent_bytes() / (1024 * 1024 * 1024);
+        if ($roh === '') {
+            if (edbak_marke_lesen(SPEICHER_K_DB_GB) !== null
+                && (string)edbak_marke_lesen(SPEICHER_K_DB_GB) !== '') {
+                speicher_db_kontingent_setzen(0);
+                $teile[] = 'DB-Kontingent auf die Vorgabe zurückgesetzt';
+            }
+        } elseif (!is_numeric($roh) || (float)$roh < 0.01 || (float)$roh > 100000) {
+            $error = 'Das DB-Kontingent ist eine Zahl in GB, mindestens 0,01 (oder '
+                   . 'leer für die Vorgabe ' . SPEICHER_DB_GB_VORGABE . ' GB).';
+        } elseif (abs((float)$roh - $istGb) > 0.001) {
+            speicher_db_kontingent_setzen((float)$roh);
+            $teile[] = 'DB-Kontingent ' . $roh . ' GB';
+        }
+    }
+
     if ($error === null) {
         $notice = $teile ? implode(', ', $teile) . ' gespeichert.'
                          : 'Es gab nichts zu ändern.';
@@ -589,15 +616,25 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
             'klein' => 'Prozent, durch Komma getrennt — gelten für beide Balken. '
                      . 'Je Schwelle einmal eine Meldung.']); ?>
       </div>
-      <?php ui_feld(['name' => 'webspace', 'label' => 'Webspace laut Hosting',
-          'label_zusatz' => 'optional',
-          'wert' => speicher_webspace_bytes() > 0
-              ? rtrim(rtrim(number_format(
-                    speicher_webspace_bytes() / (1024 * 1024 * 1024), 2, '.', ''), '0'), '.')
-              : '',
-          'klein' => 'GB, aus dem Hosting-Tarif abgelesen. Ohne Angabe zeigt '
-                   . '„Installation gesamt" nur die Summe — ohne Anteil und ohne '
-                   . 'Warnung.']); ?>
+      <div class="fld-reihe">
+        <?php ui_feld(['name' => 'webspace', 'label' => 'Webspace laut Hosting',
+            'label_zusatz' => 'optional',
+            'wert' => speicher_webspace_bytes() > 0
+                ? rtrim(rtrim(number_format(
+                      speicher_webspace_bytes() / (1024 * 1024 * 1024), 2, '.', ''), '0'), '.')
+                : '',
+            'klein' => 'GB, aus dem Hosting-Tarif abgelesen. Ohne Angabe zeigt '
+                     . '„Installation gesamt" nur die Summe — ohne Anteil und ohne '
+                     . 'Warnung.']); ?>
+        <?php ui_feld(['name' => 'db_gb', 'label' => 'Kontingent der Datenbank',
+            'wert' => rtrim(rtrim(number_format(
+                          speicher_db_kontingent_bytes() / (1024 * 1024 * 1024),
+                          2, '.', ''), '0'), '.'),
+            'klein' => 'GB, aus dem Hosting-Tarif abgelesen. Kein Hoster macht es '
+                     . 'abfragbar, deshalb eine Angabe — leer setzt auf die Vorgabe '
+                     . SPEICHER_DB_GB_VORGABE . ' GB zurück. Gewarnt wird mit '
+                     . 'denselben Schwellen wie oben.']); ?>
+      </div>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
       </div>

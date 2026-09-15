@@ -93,6 +93,17 @@ jobs:
           fi
           echo "Doppelte Backlog-Nummern: 0"
 
+      - name: Die Weiche in install.php — traegt sie noch?
+        # `install.php` beginnt mit einer Versionspruefung. Die nuetzt nur,
+        # solange die Datei auf der alten Fassung ueberhaupt noch UEBERSETZT
+        # werden kann — PHP uebersetzt eine Datei ganz, bevor es die erste
+        # Zeile ausfuehrt. Eine `match`-Anweisung weiter unten, und die
+        # Besucherin auf PHP 8.0 bekommt statt der Erklaerung einen Parse
+        # Error. Gemessen wird mit dem Tokenizer, nicht mit `grep`.
+        run: |
+          php tools/installweiche/pruefen.php --selbstprobe
+          php tools/installweiche/pruefen.php
+
       - name: Migrationsregister — schema.sql gegen migration_lib.php
         # Selbstprobe zuerst: Ein grüner Lauf einer Prüfung, die immer grün
         # meldet, sieht genauso aus wie einer, der nichts gefunden hat.

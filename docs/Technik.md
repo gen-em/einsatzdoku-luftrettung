@@ -8,7 +8,7 @@ Historie: `CHANGELOG.md`.*
 ```
 ┌─────────────────┐  HTTPS POST /ingest.php   ┌──────────────────────────┐
 │ Uhr-App         │  JSON (JSON-Vertrag)      │  Webspace                │
-│ (derzeit Garmin,│ ────────────────────────► │  PHP ≥ 8.1  + MySQL      │
+│ (derzeit Garmin,│ ────────────────────────► │  PHP ≥ 8.2  + MySQL      │
 │  Monkey C)      │  X-Device-Id / X-Api-Key  │                          │
 └─────────────────┘                           │  ingest.php   (Uhr-API)  │
                                               │  api/…        (Lese-API) │
@@ -438,6 +438,13 @@ Daten erst nach Server-Bestätigung.
 │   │                      dorthin keinen Netzzugang, und ohne feste
 │   │                      Trefferzahl wäre jeder Sollwert geraten. Braucht
 │   │                      die lokale Installation (s. LIESMICH.md)
+│   ├── installweiche/     traegt die Versionspruefung am Kopf von
+│   │                      `install.php` noch? Misst mit dem Tokenizer, ob die
+│   │                      Datei PHP-7-lesbar geblieben ist — eine einzige
+│   │                      `match`-Anweisung macht aus der Meldung „PHP ist zu
+│   │                      alt" einen Parse Error. Nennt bei jedem Lauf ihre
+│   │                      eigenen Grenzen; mit `--selbstprobe` (8 Faelle,
+│   │                      davon 4 die NICHT anschlagen duerfen)
 │   ├── migrationsregister/ steht in `schema.sql` und `migration_lib.php`
 │   │                      dasselbe? Sieben Prüfungen über zwei Dateien —
 │   │                      Kennungen beidseits, Reihenfolge nach Datum, was
@@ -6344,6 +6351,141 @@ vermutet.
 Ob eine Nachricht ankommt, ob die beiden `WearableListenerService` mit einer
 echten Nachricht das Richtige tun, ob Paket- und Signaturgleichheit im Feld
 greift — das ist Gerätetest und steht aus.
+
+## 5b. Plattformprofil (ab Web 20.5.0, P5a/AP2, R81)
+
+**Was eine Installation von ihrer Plattform braucht — hosterneutral, in genau
+zwei Stufen.** Beschlossen am 15.09.2026 als R81; Volltext der Herleitung in
+`docs/konzepte/Vorbereitung-P5-Plattformprofil.md` (PP-1 bis PP-9).
+
+| Stufe | Bedeutung | Was die Anwendung daraus macht |
+|---|---|---|
+| **Muss** | Fehlt es, läuft die Anwendung nicht — und sagt es. | `install.php` prüft es **vor** der Einrichtung und lässt sie nicht zu; die Statusseite prüft es im Betrieb und zeigt **rot**. |
+| **Empfohlen** | Wird genutzt, wenn es da ist. Fehlt es, läuft die Anwendung vollständig — langsamer, mit Verzögerung oder mit einem Handgriff mehr. | Auf der Statusseite ein **Hinweis**; er färbt die Ampel nicht. |
+
+Es gibt keine dritte Stufe. Was weder Muss noch Empfohlen ist, wird **nicht
+vorausgesetzt** — namentlich der DDoS-Grundschutz des Hosters und die
+Verschlüsselung at rest. Beides ist eine Empfehlung an den Betreiber, keine
+Anforderung an die Plattform.
+
+### 5b.1 Eine Funktion, zwei Leser
+
+Die Liste steht an **einer** Stelle: `plattform_pruefen()` in
+`server/plattform_lib.php`. `install.php` ruft sie vor der Einrichtung, die
+Statusseite im Betrieb. Zwei Listen liefen auseinander — und ein Hoster kann
+eine PHP-Fassung oder ein Weblimit jederzeit umstellen, ohne jemanden zu
+fragen. Was die Einrichtung verlangt, muss die Installation auch im dritten
+Jahr noch erfüllen.
+
+**`ok` ist dreiwertig:** `true` erfüllt, `false` nicht erfüllt, **`null` nicht
+feststellbar**. Nur `false` auf der Muss-Stufe hält die Einrichtung auf. Wer
+nichts gemessen hat, darf nichts behaupten.
+
+### 5b.2 Die Prüfpunkte (Stand 15.09.2026)
+
+**Muss**
+
+| # | Prüfung | Sollwert |
+|---|---|---|
+| 1 | PHP-Version | ≥ 8.2 |
+| 2 | Erweiterungen | `pdo_mysql`, `openssl`, `mbstring`, `zip`, `zlib` |
+| 3 | Weblimits | `memory_limit` ≥ 64 MB, `max_execution_time` ≥ 30 s, `post_max_size` und `upload_max_filesize` ≥ 2 MB |
+| 4 | Schreibrechte | Anwendungswurzel, `sicherungen/`, `sys_get_temp_dir()` — je **mit Probedatei** |
+| 5 | Freier Platz | ≥ 1× größtes Komplett-Backup — oder ehrlich „unbekannt" |
+| 6 | HTTPS | die Anfrage kam über TLS (Ausnahme `localhost`) |
+| 7 | Datenbank | MySQL ≥ 8.0 oder MariaDB ≥ 10.6, InnoDB, `utf8mb4` |
+| 8 | Verbindungsgrenze | `max_user_connections` ≥ 10 (sonst `max_connections`) |
+| 9 | Kontingent der Datenbank | unter der obersten Warnschwelle (Vorgabe 10 GB, Z2) |
+| 10 | SMTP | eingerichtet; `install.php` wählt zusätzlich einmal an |
+
+**Empfohlen:** PHP ≥ 8.3 · OPcache aktiv · Datenbank in Herstellerpflege
+(MySQL 8.4, MariaDB 10.11/11.4) · `max_user_connections` ≥ 50 · `config.php`
+beschreibbar · vertrauenswürdige Proxys eingetragen (reine Auskunft).
+
+**Die Regel ist dauerhaft, die Zahl ist ein Stand** (E-PP-03): Für Versionen
+gilt „vom Hersteller noch mit Sicherheitskorrekturen versorgt". Die Zahlen
+oben sind der Stand vom 15.09.2026 und stehen im Code an **einer** Stelle, als
+Konstanten in `plattform_lib.php` — nicht in drei Meldungstexten.
+
+### 5b.3 Warum die Untergrenze bei PHP 8.2 liegt
+
+**Nicht, weil der Code mehr bräuchte.** Er kommt mit 8.1 aus (`array_is_list()`,
+Rückgabetyp `never`) und soll die Untergrenze auch nicht von selbst
+weiterschieben. Sie liegt bei 8.2, weil PHP 8.1 seit Ende 2025 keine
+Sicherheitskorrekturen mehr bekommt. Eine Anwendung, die Patientendaten führt,
+soll nicht auf einer ungepflegten Fassung laufen und es niemandem sagen.
+
+### 5b.4 Die Weiche in `install.php` — und ihre Grenze
+
+`install.php` beginnt mit einer Versionsprüfung, die eine Seite mit dem Grund
+zeigt. **Sie nützt nur, solange die Datei auf der alten Fassung noch übersetzt
+werden kann:** PHP übersetzt eine Datei vollständig, bevor es die erste Zeile
+ausführt. Eine einzige `match`-Anweisung weiter unten, und die Besucherin auf
+PHP 8.0 bekommt statt der Erklärung einen Parse Error.
+
+`install.php` bleibt deshalb **PHP-7-lesbar**, und Stufe 1 des Prüftors zählt
+das mit dem Tokenizer nach (`tools/installweiche/`) — für `install.php`
+**und** für `server/php_mindest.php`. Die Prüfung ist nicht vollständig —
+benannte Argumente und Eigenschaftenbeförderung sieht sie nicht —, und sie
+sagt das bei jedem Lauf selbst.
+
+**`server/php_mindest.php` ist drei Zeilen lang und trägt die Zahl.** E-PP-03
+verlangt, dass die Untergrenze an *einer* Stelle steht.
+`plattform_lib.php` — der natürliche Ort — ist PHP-8-Code (`match`) und darf
+von der Weiche nicht geladen werden. Ohne diese kleine Datei stünde die 8.2
+zweimal da: im Vergleich und im Satz „Diese Anwendung braucht PHP 8.2 oder
+neuer". Zwei Zahlen für dieselbe Aussage laufen beim nächsten Anheben
+auseinander, und zwar in der teuersten Richtung — der Vergleich stiege, der
+Satz bliebe stehen und sperrte jemanden mit einer falschen Auskunft aus.
+`php_mindest.php` ist aus demselben Grund altertümlich geschrieben wie die
+Weiche selbst: kein `declare`, kein Rückgabetyp, nichts, was PHP 5.3 nicht
+übersetzt.
+
+**Was sie nicht leisten kann:** `index.php` schützen. Jene Datei **ist**
+PHP-8-Code, und PHP übersetzt sie ganz, bevor die Weiterleitung auf
+`install.php` zur Ausführung käme. Wer auf einer zu alten Fassung die
+Startseite aufruft, sieht einen Parse Error; der Weg für eine Ersteinrichtung
+ist `install.php` unmittelbar.
+
+### 5b.5 Schreibrechte werden mit einer Probedatei geprüft
+
+`is_writable()` beantwortet die Frage anhand der Rechtebits — und liegt falsch,
+sobald ACLs, `open_basedir`, ein schreibgeschütztes Dateisystem oder SELinux im
+Spiel sind. Auf geteiltem Webspace ist genau das der Regelfall.
+`plattform_schreibprobe()` legt stattdessen eine Datei mit zufälligem Namen an,
+liest sie zurück und räumt sie weg. Der zufällige Name ist kein Schmuck: Eine
+feste Probedatei wäre über die Adresszeile abrufbar, wenn das Verzeichnis im
+Web-Wurzelverzeichnis liegt.
+
+### 5b.6 Die zwei Kontingente und ihre Warnung
+
+Seit Web 20.5.0 gibt es **zwei** Kontingent-Angaben unter Betrieb →
+Servereinstellungen:
+
+| Angabe | Vorgabe | Warum eine Angabe und keine Messung |
+|---|---|---|
+| `webspace_gb` | keine | `disk_free_space()` liefert auf geteiltem Hosting den Datenträger des **Hosts**, nicht die Quota dieses Kontos |
+| `db_gb` | **10 GB** (Z2) | Kein Hoster macht das DB-Kontingent abfragbar; `information_schema` sagt, wie groß die Datenbank **ist**, nicht wie groß sie sein **darf** |
+
+Der Unterschied bei der Vorgabe ist Absicht: Der Webspace ist je Tarif
+verschieden und ohne Angabe schlicht unbekannt — ein geratener Wert wäre
+schlimmer als keiner. Die 10 GB dagegen sind die Untergrenze, die diese
+Anwendung nach Z2 tragen muss; das ist eine Zusage des Projekts, keine
+Vermutung über den Hoster.
+
+**Gewarnt wird mit denselben Schwellen wie überall** (`edbak_schwellen()`,
+Vorgabe 70/90 %) und per Mail an alle mit Verwaltungsrecht — höchstens einmal
+je Schwelle, und eine unterschrittene Schwelle wird vergessen, damit die
+Warnung beim nächsten Überschreiten wiederkommt.
+
+> **Nebenbefund von AP2, und kein kleiner.** `edbak_schwellen_melden()` — die
+> Warnung für die Speichergrenze der Backups, seit S8 vorhanden — **wurde im
+> Betrieb von niemandem aufgerufen**. Nachgemessen am 15.09.2026:
+> `grep -rn "schwellen_melden" --include=*.php` findet die Definition und
+> einen Aufruf in `tools/wiederherstellungs-probe/probe.php`, sonst nichts.
+> Geschrieben, geprüft, tot — dieselbe Klasse Fehler wie Backlog Nr. 89
+> („Dieser Job lief von Web 12.2.0 bis 12.9.2 nie"). Der Aufruf steht jetzt im
+> täglichen Aufräumjob, direkt hinter der Messung.
 
 ## 6. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)
 

@@ -26,7 +26,8 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > |---|---|---|---|
 > | AP0 Aufnahme | **erledigt** | — | Rahmenplan Fassung 72, Vorbereitung und Konzept im Repositorium |
 > | **AP1 Auslieferungskette** | **erledigt** | **Web 20.4.0** | Register 46/46, 0 Befunde, Selbstprobe 4/4 · Backup-Tor 5/5 · Wortliste 0/0/0 · Kontraste 22/0 · Vollständigkeit 340 = unverändert · 3 Arbeitsläufe gültiges YAML |
-> | AP2 bis AP12 | offen | — | — |
+> | **AP2 Plattformprüfung** | **erledigt** | **Web 20.5.0** | 21 Befunde (15 ohne DB/config) · Muss offen 0 · Installweiche 8/8, 0 Befunde auf 658 Zeilen · Bilderlauf 16 Bilder, 0/0/0 · Wortliste 0/0/0 |
+> | AP3 bis AP12 | offen | — | — |
 
 ---
 
@@ -830,4 +831,92 @@ API, ob der Job `produktion` in diesem Lauf mit Erfolg geendet hat.
 
 **Was bewusst nicht geprüft werden konnte** steht im Prüfdokument, Abschnitt 0
 — voran die Arbeitsläufe selbst: Ein GitHub-Arbeitslauf läuft nur bei GitHub.
+
+### AP2 — Plattformprüfung · Web 20.5.0 · 15.09.2026
+
+**Entstanden.** `server/plattform_lib.php` (21 Befunde, zwei Stufen,
+dreiwertiges `ok`), `server/php_mindest.php` (drei Zeilen, PHP-5-lesbar),
+die Weiche am Kopf von `install.php`, die Karte „Plattform" auf Betrieb →
+Status, `db_gb` als zweites Kontingent samt Warnmail für **beide**
+Kontingente, `smtp_probe()` in `smtp.php`, `tools/installweiche/`;
+`docs/Technik.md` 5b, Handbuch 12.1 und 12.5, Changelog.
+
+**Problem 1 — die Versionsprüfung nützt nichts, wenn die Datei nicht
+übersetzt.** PP-1 verlangt sie „in einer Zeile, die jedes PHP 7 noch parst".
+Der Grund dahinter geht weiter, als der Satz sagt: PHP übersetzt eine Datei
+**vollständig**, bevor es die erste Zeile ausführt — eine `match`-Anweisung
+irgendwo weiter unten in `install.php`, und die Besucherin auf PHP 8.0 bekommt
+statt der Erklärung einen Parse Error. **Gelöst** dreifach: die Weiche ganz
+vorn und ohne `ui.php` (dessen Hülle ist PHP-8-Code), ein Absatz im Dateikopf,
+der die Regel im Klartext sagt, und `tools/installweiche/` in Stufe 1, das sie
+mit dem **Tokenizer** nachzählt — nicht mit `grep`, das `preg_match(` und
+jeden Kommentar träfe.
+
+**Was dabei nicht zu lösen war und ausdrücklich dasteht:** `index.php`
+schützen. Jene Datei **ist** PHP-8-Code und wird ganz übersetzt, bevor ihre
+Weiterleitung auf `install.php` liefe. Der Weg für eine Ersteinrichtung auf
+einem zu alten PHP ist `install.php` unmittelbar; das steht im Kopf von
+`install.php`, in `Technik.md` 5b.4 und in der LIESMICH des Werkzeugs.
+
+**Problem 2 — E-PP-03 gegen die Weiche.** „Die Zahl steht an einer Stelle im
+Code (Konstante)." Der natürliche Ort wäre `plattform_lib.php` — nur enthält
+die Datei `match` und darf von der Weiche deshalb nicht geladen werden.
+**Gelöst** durch `server/php_mindest.php`: drei Zeilen, absichtlich
+altertümlich geschrieben (kein `declare`, kein Rückgabetyp), von beiden
+geladen. Ohne sie stünde die 8.2 zweimal da, und beim nächsten Anheben liefe
+sie in der teuersten Richtung auseinander — der Vergleich stiege, der Satz
+bliebe stehen und sperrte jemanden mit einer falschen Auskunft aus. Das
+Prüfwerkzeug prüft deshalb **beide** Dateien.
+
+**Problem 3 — `SHOW VARIABLES LIKE ?` geht auf MariaDB nicht.** Die erste
+Fassung von `plattform_db_variable()` band den Namen als Platzhalter. MariaDB
+antwortet mit Fehler 1064, und weil die Anwendung `ATTR_EMULATE_PREPARES` auf
+`false` stellt, half keine Emulation. Die Folge war **kein Fehler, sondern ein
+stilles „Verbindungsgrenze unbekannt"** — gefunden erst beim Nachsehen in der
+Ausgabe, nicht durch eine Meldung. Gemessen gegen MariaDB 10.11.14. Der Name
+wird jetzt geprüft statt gebunden.
+
+**Problem 4 — der Einrichter hätte sich an SMTP aufgehängt.** SMTP ist
+Muss-Stufe (PP-7). Im Einrichter gibt es aber noch keine `config.php`, und das
+Formular erfragt den Zugang gerade erst. Ein Muss-Befund „nicht erfüllt" hätte
+die Einrichtung blockiert. **Gelöst** über das dreiwertige `ok`: Ohne
+`config.php` steht dort `null` — nicht feststellbar —, und nur `false` hält
+auf.
+
+**Nebenbefund (K4), und kein kleiner: `edbak_schwellen_melden()` wird im
+Betrieb von niemandem aufgerufen.** Nachgemessen am 15.09.2026:
+`grep -rn "schwellen_melden" --include=*.php` findet die Definition und einen
+Aufruf im Prüfwerkzeug, sonst nichts. Die Warnung bei 70 und 90 % der
+Speichergrenze ist seit S8 nie hinausgegangen. Dieselbe Klasse wie Backlog
+Nr. 89, und auf dieselbe Art gefunden: beim Anschließen von etwas Neuem
+daneben. Der Aufruf steht jetzt im täglichen Aufräumjob, **hinter** der
+Messung.
+
+**Entscheidung E-P5a-26 (neu) — die Kontingent-Warnung deckt Webspace mit
+ab.** E-P5a-11 verlangt sie nur für die Datenbank. Eine Mechanik, die den
+einen Kontingentbalken warnt und den danebenliegenden nicht, wäre willkürlich;
+und ein voller Webspace ist das, was das nächste Komplett-Backup scheitern
+lässt. `speicher_kontingente_melden()` deckt deshalb beide ab — dieselben
+Schwellen, dieselbe Mechanik des Vergessens beim Unterschreiten. Der Webspace
+warnt nur, wenn die Angabe gesetzt ist; ohne sie gibt es keinen Bezug.
+
+**Entscheidung E-P5a-27 (neu) — kein Prüfpunkt „Bounce-Postfach".** Die
+Vorbereitung nennt ihn in der Empfohlen-Liste der Statuskarte. Er gehört dort
+nicht hin: Ob die Anwendung ein Bounce-Postfach **liest**, ist eine
+Eigenschaft der Anwendung und keine der Plattform — und E-P5a-14 verschiebt
+die Funktion ausdrücklich ins Backlog. Ein Empfohlen-Punkt, der dauerhaft
+„fehlt" meldet und den niemand erfüllen kann, ist eine Zeile Rauschen. Er
+kommt wieder, wenn die Funktion kommt.
+
+**Entscheidung E-P5a-28 (neu) — die Plattform-Karte steht über die ganze
+Breite und eingeklappt.** Sie hat mehr Zeilen als die vier anderen Karten
+zusammen; in einer Spalte machte sie das Raster schief. Eingeklappt, weil man
+sie einmal nach einem Update braucht und sonst nicht. Und **erfüllte
+Empfehlungen stehen nicht einzeln da** — zehn Bestätigungen drängten die drei
+Zeilen weg, auf die es ankommt; die Schlusszeile nennt dafür die Zahl.
+
+**Was der Bilderlauf sagt:** 16 Bilder über acht Breiten für
+`betrieb_status.php` und `betrieb_server.php`, **0 Überlauf, 0
+Konsolenfehler, 0 falsche Knopfhöhen**. Die aufgeklappte Plattform-Karte ist
+zusätzlich einzeln angesehen worden (16 Zeilen, 0 Konsolenfehler).
 

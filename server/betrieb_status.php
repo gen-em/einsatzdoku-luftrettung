@@ -228,6 +228,29 @@ ui_seite_start(['titel' => 'Status']);
   </div><?php /* .form-spalte (rechts) */ ?>
   </div><?php /* .form-raster */ ?>
 
+  <?php /* DIE PLATTFORM STEHT UEBER DIE GANZE BREITE UND NICHT IN EINER SPALTE
+           (P5a/AP2). Sie hat mehr Zeilen als die vier anderen Karten zusammen
+           — in einer Spalte machte sie das Raster so schief, dass die rechte
+           Spalte auf halber Hoehe endete. Ueber die ganze Breite ist sie
+           ausserdem das, was sie ist: die Auskunft UNTER der Anwendung, nicht
+           eine vierte gleichrangige Sache.
+
+           EINGEKLAPPT (`vorschau`), wie „Was hier gilt". Wer sie braucht,
+           braucht sie einmal nach dem Deploy oder wenn oben etwas rot steht;
+           wer sie nicht braucht, soll nicht an zwanzig Zeilen vorbeiscrollen. */ ?>
+  <?php $kp = $nach('k-plattform'); ?>
+  <?php ui_karte_start(['titel' => $kp['titel'], 'id' => $kp['id'],
+                        'vorschau' => 'Muss · Empfohlen · gemessen']); ?>
+    <p class="feld-hinweis"><strong>Dieselbe Liste, die <code>install.php</code>
+       vor der Einrichtung prüft.</strong> <em>Muss</em>: Fehlt es, läuft die
+       Anwendung nicht — die Zeile steht rot. <em>Empfohlen</em>: Die Anwendung
+       läuft vollständig, nur langsamer oder mit einem Handgriff mehr — die
+       Zeile steht als Hinweis und <strong>färbt die Ampel nicht</strong>.
+       Erfüllte Empfehlungen stehen nicht einzeln da; die letzte Zeile nennt
+       ihre Zahl.</p>
+    <?php foreach ($kp['zeilen'] as $zeile) { status_zeile($zeile); } ?>
+  <?php ui_karte_ende(true); ?>
+
   <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt',
                         'vorschau' => 'Ampel · prüfen · zwei Ausnahmen']); ?>
     <p class="feld-hinweis"><strong>Die Ampel hat vier Töne, und sie bedeuten

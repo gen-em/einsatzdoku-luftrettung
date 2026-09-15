@@ -149,6 +149,58 @@ function smtp_versand_vermerken(bool $ok): void
     }
 }
 
+/**
+ * KOMMT EINE VERBINDUNG ZUSTANDE? Ohne einen Versand (P5a/AP2, PP-7).
+ *
+ * `smtp_eingerichtet()` sagt, ob eine Adresse in der `config.php` steht;
+ * „Testmail an mich" sagt, ob eine Nachricht ankommt. Dazwischen fehlte die
+ * billige Frage: Antwortet der Host ueberhaupt, und steht TLS? Genau die
+ * stellt der Einrichter — er hat noch kein Konto, an das er senden koennte,
+ * und er soll trotzdem nicht mit einem Tippfehler im Hostnamen fertig werden.
+ *
+ * SIE MELDET NICHTS. Kein `smtp_versand_vermerken()`: Hier wurde nichts
+ * versendet, und die Zeile „Letzter Versand" auf der Statusseite soll
+ * weiterhin von Versanden erzaehlen. Eine Probe, die die Statistik des
+ * Versands faerbt, waere eine Messung, die ihr Messobjekt veraendert.
+ *
+ * GEPRUEFT WIRD DER HOST, NICHT DAS PASSWORT — wie bei `smtp_eingerichtet()`
+ * und aus demselben Grund: Ein Relais ohne Authentifizierung ist eine
+ * gueltige Einrichtung.
+ *
+ * @return array{ok: bool, grund: ?string}
+ */
+function smtp_probe(int $zeitlimit = 5): array
+{
+    if (!file_exists(__DIR__ . '/config.php')) {
+        return ['ok' => false, 'grund' => 'Es gibt noch keine config.php.'];
+    }
+    $alles = require __DIR__ . '/config.php';
+    $cfg   = $alles['smtp'] ?? [];
+    $host  = trim((string)($cfg['host'] ?? ''));
+    if ($host === '') {
+        return ['ok' => false, 'grund' => 'In der config.php steht kein SMTP-Host.'];
+    }
+    $port = (int)($cfg['port'] ?? 465);
+    $fp = @stream_socket_client('ssl://' . $host . ':' . $port,
+        $errno, $errstr, $zeitlimit, STREAM_CLIENT_CONNECT,
+        stream_context_create(['ssl' => ['verify_peer' => true]]));
+    if (!$fp) {
+        return ['ok' => false,
+                'grund' => 'Keine Verbindung zu ' . $host . ':' . $port . ' — ' . $errstr
+                         . '. Geprüft wird der Host und das Zertifikat, nicht das Passwort.'];
+    }
+    stream_set_timeout($fp, $zeitlimit);
+    $begruessung = (string)fgets($fp, 1024);
+    fwrite($fp, "QUIT\r\n");
+    fclose($fp);
+    if (strncmp($begruessung, '220', 3) !== 0) {
+        return ['ok' => false,
+                'grund' => 'Der Host antwortet, aber nicht wie ein Mailserver: '
+                         . trim(mb_substr($begruessung, 0, 120))];
+    }
+    return ['ok' => true, 'grund' => null];
+}
+
 function smtp_send(string $toEmail, string $subject, string $textBody,
                    int $zeitlimit = 15): bool {
     /* Einmal laden, beides entnehmen (M1-14).

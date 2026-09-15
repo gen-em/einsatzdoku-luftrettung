@@ -14,6 +14,127 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.5.0] — 2026-09-15
+
+**P5a/AP2 — das Plattformprofil.** Zweites Arbeitspaket von Schritt 10a. Die
+Anwendung sagt jetzt, was sie von ihrer Plattform braucht — und misst nach, ob
+sie es bekommt. Vorher und im Betrieb, aus **einer** Liste.
+
+### Hinzugefügt — `plattform_lib.php`: eine Funktion, zwei Leser
+
+**Was galt.** `install.php` prüfte vier Erweiterungen (`zip`, `zlib`,
+`openssl`, `mbstring`) und sonst nichts: keine PHP-Version, kein `pdo_mysql`,
+keine Weblimits, keine Datenbankfassung, keine Verbindungsgrenze, Schreibrechte
+nur per `is_writable()`. Eine Installation auf PHP 8.0 fiel erst beim ersten
+Formular mit einem Fatal Error auf, ein `memory_limit` von 32 MB erst beim
+ersten großen Export, eine `max_user_connections` von 2 erst dann, wenn zwei
+Uhren gleichzeitig senden. Alle drei sind Eigenschaften der **Plattform**, und
+alle drei sind vorher messbar.
+
+**Was gilt.** `plattform_pruefen()` — 21 Befunde in zwei Stufen. `install.php`
+ruft sie vor der Einrichtung, die Statusseite im Betrieb. Zwei Listen liefen
+auseinander, und ein Hoster kann eine PHP-Fassung oder ein Weblimit jederzeit
+umstellen, ohne jemanden zu fragen: **Was die Einrichtung verlangt, muss die
+Installation auch im dritten Jahr noch erfüllen.**
+
+**Zwei Stufen, mehr nicht** (E-PP-01). *Muss*: Fehlt es, läuft die Anwendung
+nicht — die Einrichtung hält an, die Statuszeile steht rot. *Empfohlen*: Die
+Anwendung läuft vollständig, nur langsamer oder mit einem Handgriff mehr — ein
+Hinweis, der **die Ampel nicht färbt**.
+
+**`ok` ist dreiwertig**, und das ist der Kern: erfüllt, nicht erfüllt,
+**nicht feststellbar**. Nur das mittlere hält die Einrichtung auf. Der freie
+Plattenplatz ist der Fall, auf den es ankommt — `disk_free_space()` meldet auf
+geteiltem Webspace den Datenträger des *Hosts*, nicht das Kontingent dieses
+Kontos. Eine Zahl im Terabyte-Bereich wäre schlimmer als keine: Man glaubte, es
+sei Platz. **Wer nichts gemessen hat, darf nichts behaupten.**
+
+### Hinzugefügt — die Weiche in `install.php`, und was sie nicht kann
+
+`install.php` beginnt mit einer Versionsprüfung und zeigt auf PHP unter 8.2
+eine Seite mit dem Grund. **Die Untergrenze liegt nicht deshalb bei 8.2, weil
+der Code mehr bräuchte** — er kommt mit 8.1 aus. Sie liegt dort, weil PHP 8.1
+keine Sicherheitskorrekturen mehr bekommt.
+
+**Die Prüfung nützt nur, solange die Datei auf der alten Fassung noch
+übersetzt werden kann.** PHP übersetzt eine Datei vollständig, bevor es die
+erste Zeile ausführt; eine einzige `match`-Anweisung weiter unten, und die
+Besucherin auf PHP 8.0 bekommt statt der Erklärung einen Parse Error.
+`install.php` bleibt deshalb **PHP-7-lesbar**, und `tools/installweiche/` zählt
+das mit dem Tokenizer nach — nicht mit `grep`, das `preg_match(` und jeden
+Kommentar träfe.
+
+**Die Zahl steht trotzdem nur einmal da.** `server/php_mindest.php` — drei
+Zeilen, absichtlich altertümlich geschrieben — trägt `PLATTFORM_PHP_MIN`, und
+Weiche wie `plattform_lib.php` laden sie. Ohne diese kleine Datei stünde die
+8.2 zweimal: im Vergleich und im Satz „Diese Anwendung braucht PHP 8.2 oder
+neuer". Zwei Zahlen für dieselbe Aussage laufen beim nächsten Anheben
+auseinander, und zwar in der teuersten Richtung — der Vergleich stiege, der
+Satz bliebe stehen und sperrte jemanden mit einer falschen Auskunft aus.
+
+**Was die Weiche nicht leisten kann, steht in ihrem Kopf:** `index.php`
+schützen. Jene Datei *ist* PHP-8-Code und wird ganz übersetzt, bevor ihre
+Weiterleitung auf `install.php` zur Ausführung käme. Der Weg für eine
+Ersteinrichtung ist `install.php` unmittelbar.
+
+### Geändert — Schreibrechte werden mit einer Probedatei geprüft
+
+`is_writable()` antwortet anhand der Rechtebits und liegt falsch, sobald ACLs,
+`open_basedir`, ein schreibgeschütztes Dateisystem oder SELinux im Spiel sind —
+auf geteiltem Webspace der Regelfall. `plattform_schreibprobe()` legt
+stattdessen eine Datei mit **zufälligem** Namen an, liest sie zurück und räumt
+sie weg. Der zufällige Name ist kein Schmuck: Eine feste Probedatei wäre über
+die Adresszeile abrufbar, wenn das Verzeichnis im Web-Wurzelverzeichnis liegt.
+
+### Hinzugefügt — zwei Kontingente statt einem
+
+`db_gb` tritt neben `webspace_gb` (Betrieb → Servereinstellungen), mit
+denselben Warnschwellen. **Der Unterschied ist die Vorgabe:** Der Webspace hat
+keine — er ist je Tarif verschieden und ohne Angabe schlicht unbekannt. Die
+Datenbank hat **10 GB**; das ist die Untergrenze Z2, die diese Anwendung tragen
+muss, also eine Zusage des Projekts und keine Vermutung über den Hoster.
+
+Beide werden jetzt **per Mail gewarnt**, an alle mit Verwaltungsrecht, je
+Schwelle einmal; eine unterschrittene Schwelle wird vergessen, damit die
+Warnung beim nächsten Überschreiten wiederkommt.
+
+### Behoben — eine Warnmail, die niemand je ausgelöst hat
+
+**`edbak_schwellen_melden()` wurde im Betrieb von niemandem aufgerufen.**
+Nachgemessen am 15.09.2026: `grep -rn "schwellen_melden" --include=*.php`
+findet die Definition und *einen* Aufruf in
+`tools/wiederherstellungs-probe/probe.php` — sonst nichts. Die Funktion ist
+seit S8 geschrieben, geprüft und tot; die Warnung bei 70 und 90 % der
+Speichergrenze ist nie hinausgegangen. Dieselbe Klasse Fehler wie Backlog
+Nr. 89 („Dieser Job lief von Web 12.2.0 bis 12.9.2 nie"), und gefunden auf
+dieselbe Art: beim Anschließen von etwas Neuem daneben.
+
+Der Aufruf steht jetzt im täglichen Aufräumjob, **hinter** der Messung — davor
+hielte er die Zahlen von gestern gegen die Schwellen von heute.
+
+### Behoben — `SHOW VARIABLES LIKE ?` geht auf MariaDB nicht
+
+Die erste Fassung von `plattform_db_variable()` band den Variablennamen als
+Platzhalter. MariaDB antwortet darauf mit Fehler 1064 („syntax error … near
+'?'"), und weil die Anwendung `PDO::ATTR_EMULATE_PREPARES` ausdrücklich auf
+`false` stellt, half auch keine Emulation. Die Folge war kein Fehler, sondern
+ein stilles **„Verbindungsgrenze unbekannt"** — gemessen gegen MariaDB
+10.11.14. Der Name wird jetzt geprüft statt gebunden (`/^[a-z_]+$/`, und er
+kommt ohnehin aus einer festen Liste im Code).
+
+### Geändert — Dokumentation
+
+`docs/Technik.md` bekommt Abschnitt **5b Plattformprofil** (sechs
+Unterabschnitte: die zwei Stufen, die eine Funktion, die Prüfpunkte, warum 8.2,
+die Weiche und ihre Grenze, die Probedatei, die zwei Kontingente). Das
+Architekturbild in Zeile 11 sagt jetzt **PHP ≥ 8.2** statt 8.1 (Fund F3 des
+Konzepts). `docs/Handbuch.md` 12.1 beschreibt die Karte „Plattform" samt
+Stufen, 12.5 die zwei Kontingente.
+
+**Keine Schemaänderung, keine Migration.** `db_gb` und
+`speicher_schwellen_gemeldet` sind Zeilen in `app_state`. `update.php` muss
+nach dem Deploy nicht laufen.
+
 ## [Web 20.4.0] — 2026-09-15
 
 **P5a/AP1 — die Auslieferungskette.** Erstes Arbeitspaket von Schritt 10a

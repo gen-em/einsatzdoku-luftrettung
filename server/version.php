@@ -4622,5 +4622,58 @@ declare(strict_types=1);
  *
  * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `update.php` muss nach dem Deploy
  * NICHT laufen.
+ *
+ * 20.5.0 ist AP2 von P5a: DAS PLATTFORMPROFIL.
+ *
+ * WAS BIS HIERHER GEPRUEFT WURDE: vier Erweiterungen (`zip`, `zlib`,
+ * `openssl`, `mbstring`) im Einrichter, und sonst nichts. Keine PHP-Version,
+ * kein `pdo_mysql`, keine Weblimits, keine Datenbankfassung, keine
+ * Verbindungsgrenze, Schreibrechte nur per `is_writable()`. Eine Installation
+ * auf PHP 8.0 fiel erst beim ersten Formular mit einem Fatal Error auf.
+ *
+ * WAS GILT: `plattform_lib.php` mit `plattform_pruefen()` — EINE Funktion,
+ * ZWEI Leser. `install.php` fragt sie vor der Einrichtung, die Statusseite im
+ * Betrieb. Zwei Listen liefen auseinander, und ein Hoster kann eine
+ * PHP-Fassung jederzeit umstellen, ohne jemanden zu fragen.
+ *
+ * `ok` IST DREIWERTIG: erfuellt, nicht erfuellt, NICHT FESTSTELLBAR. Nur das
+ * mittlere haelt die Einrichtung auf. Der freie Plattenplatz ist der Fall, auf
+ * den es ankommt — `disk_free_space()` meldet auf geteiltem Webspace den
+ * Datentraeger des HOSTS, nicht das Kontingent dieses Kontos. Wer nichts
+ * gemessen hat, darf nichts behaupten.
+ *
+ * DIE WEICHE IN `install.php` IST EINE ZEILE UND EINE ZUSAGE. Sie prueft die
+ * Fassung, bevor irgendetwas anderes laeuft — und sie nuetzt nur, solange die
+ * Datei auf der alten Fassung noch UEBERSETZT werden kann. `install.php`
+ * bleibt deshalb PHP-7-lesbar, und `tools/installweiche/` zaehlt das mit dem
+ * Tokenizer nach — fuer `install.php` UND fuer `php_mindest.php`. Jene drei
+ * Zeilen tragen die Zahl, weil `plattform_lib.php` (PHP-8-Code) sie der
+ * Weiche nicht geben kann; ohne sie stuende die 8.2 zweimal da. Was die Weiche NICHT leisten kann, steht in ihrem Kopf:
+ * `index.php` ist PHP-8-Code und wird ganz uebersetzt, bevor seine
+ * Weiterleitung liefe.
+ *
+ * SCHREIBRECHTE MIT PROBEDATEI statt `is_writable()`. Jenes antwortet anhand
+ * der Rechtebits und liegt falsch, sobald ACLs, `open_basedir` oder ein
+ * schreibgeschuetztes Dateisystem im Spiel sind — auf geteiltem Webspace der
+ * Regelfall.
+ *
+ * ZWEI KONTINGENTE STATT EINEM (E-P5a-11). `db_gb` tritt neben
+ * `webspace_gb`, mit denselben Schwellen. Der Unterschied ist die Vorgabe:
+ * Der Webspace hat keine (ein geratener Wert waere schlimmer als keiner), die
+ * Datenbank hat 10 GB — das ist die Untergrenze Z2, die diese Anwendung
+ * tragen MUSS, also eine Zusage des Projekts und keine Vermutung ueber den
+ * Hoster.
+ *
+ * UND EIN NEBENBEFUND, DER KEIN KLEINER IST: `edbak_schwellen_melden()` —
+ * die Warnung fuer die Speichergrenze der Backups, seit S8 vorhanden —
+ * WURDE IM BETRIEB VON NIEMANDEM AUFGERUFEN. Nachgemessen am 15.09.2026:
+ * `grep -rn "schwellen_melden" --include=*.php` findet die Definition und
+ * einen Aufruf im Pruefwerkzeug, sonst nichts. Geschrieben, geprueft, tot —
+ * dieselbe Klasse wie Backlog Nr. 89. Der Aufruf steht jetzt im taeglichen
+ * Aufraeumjob, direkt hinter der Messung.
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `db_gb` und
+ * `speicher_schwellen_gemeldet` sind Zeilen in `app_state`, und die Tabelle
+ * steht seit Web 1.1. `update.php` muss nach dem Deploy NICHT laufen.
  */
-const WEB_VERSION = '20.4.0';
+const WEB_VERSION = '20.5.0';

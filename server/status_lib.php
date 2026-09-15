@@ -10,6 +10,7 @@ require_once __DIR__ . '/adminbackup_lib.php';
 require_once __DIR__ . '/komplett_lib.php';
 require_once __DIR__ . '/sicherungsziel_lib.php';
 require_once __DIR__ . '/smtp.php';
+require_once __DIR__ . '/plattform_lib.php';
 
 /**
  * DIE ERHEBUNG DER STATUSSEITE — ohne eine Zeile Markup (S8/AP5).
@@ -574,12 +575,67 @@ function status_erhebung(): array
         $ablageBereit ? 'beschreibbar' : 'nicht beschreibbar',
         'betrieb_server.php');
 
+    /* ---- Plattform (P5a/AP2, E-P5a-19) ----------------------------------
+     *
+     * DIESELBE FUNKTION, DIE `install.php` VOR DER EINRICHTUNG FRAGT. Was die
+     * Einrichtung verlangt, muss die Installation auch im dritten Jahr noch
+     * erfuellen — und ein Hoster kann eine PHP-Fassung oder ein Weblimit
+     * jederzeit umstellen, ohne jemanden zu fragen. Zwei Listen liefen dafuer
+     * auseinander; es gibt deshalb nur eine (`plattform_lib.php`).
+     *
+     * MUSS-ABWEICHUNG IST ROT, EMPFOHLEN-ABWEICHUNG IST EIN HINWEIS. „Kein
+     * Hinweis faerbt die Ampel" (Vorbereitung, Abschnitt 2): Die Ampel bleibt
+     * den Zustaenden vorbehalten, die Technik.md 4.99e nennt. Ein
+     * abgeschalteter OPcache ist kein Betriebsproblem, und eine Zahl im
+     * Menuepunkt, die davon kaeme, schickte jemanden auf die Suche nach einem
+     * Fehler, den es nicht gibt. Deshalb steht bei Empfohlen `neutral`.
+     *
+     * OHNE NETZ. `plattform_pruefen(..., mitNetz: false)`: Die Seite waehlt
+     * keinen Mailserver an. Ein haengender hielte sonst bei jedem Aufruf einen
+     * PHP-Arbeitsprozess; die Frage „antwortet er?" beantwortet der Knopf
+     * „Testmail an mich" darueber.
+     *
+     * NUR ABWEICHENDE EMPFOHLEN-ZEILEN. Erfuellte Empfehlungen sind
+     * Bestaetigung ohne Handlung — zehn davon draengten die drei Zeilen weg,
+     * auf die es ankommt. Die Schlusszeile nennt dafuer die Zahl.
+     */
+    $plattform = [];
+    $pBefunde  = plattform_pruefen($pdo, false);
+    $pZahlen   = plattform_zaehlen($pBefunde);
+    $empfGesamt = 0; $empfOk = 0;
+    foreach ($pBefunde as $f) {
+        if ($f['stufe'] === 'empfohlen') {
+            $empfGesamt++;
+            if ($f['ok'] === true) { $empfOk++; continue; }
+            if ($f['ok'] === null) { continue; }   // nicht messbar: nicht als Mangel zeigen
+            $plattform[] = status_z($f['name'],
+                'Empfohlen: ' . $f['soll'] . ' · gemessen: ' . $f['gemessen']
+                . ($f['klein'] !== '' ? ' — ' . $f['klein'] : ''),
+                'neutral', 'Hinweis');
+            continue;
+        }
+        $ton = $f['ok'] === true ? 'blau' : ($f['ok'] === null ? 'neutral' : 'rot');
+        $plakette = $f['ok'] === true ? $f['gemessen']
+                  : ($f['ok'] === null ? 'nicht messbar' : 'fehlt');
+        $plattform[] = status_z($f['name'],
+            'Gebraucht: ' . $f['soll'] . ' · gemessen: ' . $f['gemessen']
+            . ($f['klein'] !== '' ? ' — ' . $f['klein'] : ''),
+            $ton, (string)$plakette,
+            $f['einstellung'] === 'db_gb' ? 'betrieb_server.php' : null);
+    }
+    $plattform[] = status_z('Empfohlen insgesamt',
+        $empfOk . ' von ' . $empfGesamt . ' erfüllt. Eine Abweichung steht oben als '
+        . 'Hinweis; sie färbt die Ampel nicht — die Anwendung läuft vollständig, '
+        . 'nur langsamer oder mit einem Handgriff mehr',
+        'neutral', $empfOk . '/' . $empfGesamt);
+
     return [
         'karten' => [
             ['titel' => 'Server',          'id' => 'k-server',  'zeilen' => $server],
             ['titel' => 'E-Mail',          'id' => 'k-mail',    'zeilen' => $mail],
             ['titel' => 'Hintergrundjobs', 'id' => 'k-jobs',    'zeilen' => $jobZeilen],
             ['titel' => 'Backups',         'id' => 'k-backups', 'zeilen' => $backups],
+            ['titel' => 'Plattform',       'id' => 'k-plattform', 'zeilen' => $plattform],
         ],
         /* DIE ROHZAHLEN FUER DIE MENUEZAEHLER. Sie stammen aus derselben
          * Erhebung wie die Karten — nicht aus einer zweiten Rechnung. Ein
@@ -590,6 +646,7 @@ function status_erhebung(): array
             'job_fehler'    => count(array_filter($jobs,
                 static fn($j) => (string)($j['letzter_fehler'] ?? '') !== '')),
             'backups_krank' => $krank,
+            'plattform_muss' => $pZahlen['muss_offen'],
         ],
     ];
 }

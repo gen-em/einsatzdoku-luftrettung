@@ -3486,7 +3486,7 @@ abgeschaltet, und in **jeder Zahl der Statistik** (12.2) bleibt es außen vor.
 | **Statistik** | 12.2 | was diese Installation trägt: Konten, Geräte, Einsätze |
 | **Updates** | 12.3 | Wartungsmodus und ausstehende Datenbank-Updates |
 | **Hintergrundjobs** | 12.4 | ob die regelmäßige Arbeit läuft, und die drei Auslöser |
-| **Servereinstellungen** | 12.5 | Speichergrenze, Warnschwellen, Belegung, Ablage |
+| **Servereinstellungen** | 12.5 | Speichergrenze, Warnschwellen, Kontingente, Belegung, Ablage |
 | **Komplett-Backup** | 12.6 | die ganze Installation in eine Datei |
 | **Backup-Ziele** | 12.7 | wohin die Konto-Backups zusätzlich geschoben werden |
 
@@ -3505,9 +3505,9 @@ jede Seite trägt ein Anliegen. Was wohin gegangen ist:
 |---|---|
 | Wartungsmodus, ausstehende Updates, Fassung | Betrieb → **Updates** |
 | Zustand der Hintergrundjobs, die drei Auslöser, das Token | Betrieb → **Hintergrundjobs** |
-| Speichergrenze, Warnschwellen, Belegung, Ablage | Betrieb → **Servereinstellungen** |
+| Speichergrenze, Warnschwellen, Kontingente, Belegung, Ablage | Betrieb → **Servereinstellungen** |
 | Logo der Installation | Verwaltung → **Installation** |
-| Schlüsselableitung, Umgebung (PHP, Zeitzone) | Betrieb → **Status** |
+| Schlüsselableitung, Umgebung (PHP, Zeitzone), Plattformprofil | Betrieb → **Status** |
 | Einsätze ohne Diensttag | **entfallen** — jede NutzerIn sieht ihre eigenen als „Zuordnung offen" in der Diensttage-Leiste (8.1) und ordnet sie selbst zu |
 
 Die alte Adresse führt weiter zum Ziel; ein Lesezeichen bleibt gültig.
@@ -3524,6 +3524,7 @@ aufrufen.
 Oben steht eine Meldung mit einer Zahl — *„2 Punkte brauchen Aufmerksamkeit"*
 oder *„Alles läuft"*. Darunter vier Karten: **Server**, **E-Mail**,
 **Hintergrundjobs** und **Backups**, je Sache eine Zeile mit einer Plakette.
+Ganz unten, eingeklappt, eine fünfte: **Plattform** (seit Web 20.5.0).
 
 **Die Plakettenfarbe bedeutet auf dieser Seite überall dasselbe:**
 
@@ -3556,6 +3557,28 @@ ist nicht zugestellt. Steht kein SMTP in der `config.php`, wird gar nichts
 erst versucht; die Meldung sagt das, statt einen Fehlschlag zu erfinden.
 Höchstens **drei Testmails je Stunde**: Der Versand läuft in der Seitenanfrage
 mit, und öfter zu prüfen bringt keine andere Antwort.
+
+**Die Karte „Plattform"** (seit Web 20.5.0) beantwortet eine andere Frage als
+die vier darüber: nicht *was meldet die Anwendung*, sondern *was bietet der
+Server unter ihr*. Es ist **dieselbe Liste, die `install.php` vor der
+Einrichtung prüft** — PHP-Fassung, Erweiterungen, Weblimits, Schreibrechte,
+Datenbank, Verbindungsgrenze, Kontingent, SMTP.
+
+Sie hat zwei Stufen, und der Unterschied ist wichtig:
+
+| Stufe | heißt |
+|---|---|
+| **Muss** | Fehlt es, läuft die Anwendung nicht. Die Zeile steht **rot** und zählt oben mit. |
+| **Empfohlen** | Die Anwendung läuft vollständig — nur langsamer oder mit einem Handgriff mehr. Die Zeile steht als **Hinweis** und **färbt die Ampel nicht**. |
+
+Erfüllte Empfehlungen stehen nicht einzeln da; die letzte Zeile nennt ihre
+Zahl („6 von 6 erfüllt"). Und wo die Anwendung etwas **nicht messen kann**,
+sagt sie das, statt zu raten: Der freie Plattenplatz ist auf geteiltem
+Webspace die Zahl des ganzen Hosts und nicht dein Kontingent — die Zeile
+schreibt es dazu.
+
+Die Karte ist **eingeklappt**. Wer sie braucht, braucht sie einmal nach einem
+Update oder wenn oben etwas rot steht.
 
 **Die Seite ändert nichts am Bestand.** Jede Zeile führt auf die Seite, auf
 der sich etwas ändern lässt. **Zwei Ausnahmen** führen nicht weg, sondern
@@ -3886,7 +3909,25 @@ des Hosts und nicht dein Kontingent. Ohne die Angabe zeigt der zweite Balken
 nur die Zusammensetzung, ohne Füllstand.
 
 Gemessen wird **einmal täglich** im Aufräumjob; der Stand steht im Kartenkopf.
-Darunter Speichergrenze, Warnschwellen, Ablage und Reste abgebrochener Läufe.
+Darunter Speichergrenze, Warnschwellen, die beiden **Kontingente**, Ablage und
+Reste abgebrochener Läufe.
+
+**Zwei Kontingente, zwei Vorgaben** (seit Web 20.5.0). Neben *Webspace laut
+Hosting* steht jetzt *Kontingent der Datenbank*. Beides sind Angaben aus deinem
+Tarif — auch die Datenbankgrenze macht kein Hoster abfragbar. Der Unterschied
+ist die Vorgabe:
+
+- der **Webspace** hat keine. Ohne Angabe zeigt der Balken nur die Summe;
+  ein geratener Wert wäre schlimmer als keiner.
+- die **Datenbank** hat **10 GB**. Das ist die Größe, die diese Anwendung
+  tragen muss (500 Konten × 600 Einsätze) — eine Zusage des Projekts und keine
+  Vermutung über deinen Hoster. Wer mehr hat, trägt mehr ein; leer setzt
+  zurück.
+
+**Gewarnt wird per Mail**, an alle mit Verwaltungsrecht, mit **denselben
+Warnschwellen** wie die Speichergrenze (Vorgabe 70 und 90 %) — je Schwelle
+einmal. Wer aufräumt und wieder darunter fällt, wird beim nächsten
+Überschreiten erneut gewarnt.
 
 **Karte „Adresssuche"** (seit Web 15.8.0). Beim Tippen in einem Ortsfeld und
 nach jeder Wahl auf der Karte fragt die Anwendung einen **Adressdienst** —
