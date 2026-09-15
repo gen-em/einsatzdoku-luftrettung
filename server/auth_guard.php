@@ -17,6 +17,44 @@ if (empty($_SESSION['user_id'])) {
 }
 $userId = (int)$_SESSION['user_id'];
 
+/* ---- DER TORWAECHTER (P5a/AP3, E-P5a-20; R40 (4), Backlog Nr. 54) --------
+ *
+ * STEHT EINE MIGRATION AUS, SCHLIESST DIE ANWENDUNG SICH SELBST. Zwischen
+ * dem Hochladen neuer Dateien und dem Aufruf von Betrieb → Updates erwartet
+ * neuer Code Tabellen, die es noch nicht gibt; die Anwendung antwortet in
+ * diesem Fenster mit 500. Der Unterschied zwischen 500 und 503 ist der
+ * zwischen „kaputt" und „gleich wieder da": Der JSON-Vertrag sagt zu 5xx
+ * „spaeter unveraendert erneut", und Uhr wie Handy halten sich daran.
+ *
+ * WARUM HIER UND NICHT IN `db.php` NEBEN `wartung_tor()`. Jenes Tor ist
+ * ausdruecklich OHNE Datenbank gebaut — es muss antworten, WAEHREND die
+ * Datenbank umgebaut wird (`wartung_lib.php`, Eigenschaft 1). Eine Abfrage
+ * dort naehme ihm genau die Eigenschaft, um derentwillen es dort steht.
+ * Diese Pruefung braucht eine Verbindung, also steht sie eine Ebene hoeher.
+ *
+ * WAS DAS KOSTET, UND WAS ES OFFEN LAESST. Die Pruefung ist gecacht (Hash des
+ * Katalogs, `migration_lib.php`) und kostet im Regelfall eine Zeile aus
+ * `app_state`. Offen bleibt ein Fenster: `ingest.php` und `pair.php` laden
+ * `auth_guard.php` NICHT — bis zur ersten angemeldeten Anfrage bekommen die
+ * Geraete also weiter 500 statt 503. Verloren geht dabei nichts (5xx ist 5xx,
+ * sie puffern und liefern nach), und fuer die Auslieferungskette ist das
+ * Fenster null: Sie laesst den Wartungsmodus bei ausstehender Migration von
+ * sich aus an (P5a/AP1, E-P5a-12). Fuer den Weg von Hand — Dateien
+ * hochladen, `update.php` — schliesst es die erste angemeldete Anfrage.
+ *
+ * ERST SCHALTEN, DANN DAS TOR NOCH EINMAL FRAGEN. `wartung_tor()` ist in
+ * `db.php` bereits gelaufen, als es die Datei noch nicht gab. Ohne den
+ * zweiten Aufruf bekaeme genau die Anfrage, die den Wartungsmodus ausloest,
+ * ihre Seite noch ausgeliefert — aus einer Anwendung, die sich gerade fuer
+ * geschlossen erklaert hat. Fuer die Ausnahmeseiten (Betrieb → Updates)
+ * kehrt der Aufruf sofort zurueck.
+ */
+require_once __DIR__ . '/migration_lib.php';
+if (migrationen_ausstehend(db())) {
+    wartung_einschalten('torwaechter');
+    wartung_tor();
+}
+
 /* Formular-Token bereitstellen. Die Erzeugung steht seit Web 15.6.0 in
    `session_lib.php`, damit auch die Anmeldeseite sie hat (Backlog Nr. 127);
    hier wird sie einmal je angemeldeter Anfrage angestossen, damit

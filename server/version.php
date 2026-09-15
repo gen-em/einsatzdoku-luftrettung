@@ -4675,5 +4675,48 @@ declare(strict_types=1);
  * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `db_gb` und
  * `speicher_schwellen_gemeldet` sind Zeilen in `app_state`, und die Tabelle
  * steht seit Web 1.1. `update.php` muss nach dem Deploy NICHT laufen.
+ *
+ * 20.6.0 ist AP3 von P5a: DER TORWAECHTER (R40 (4), Backlog Nr. 54).
+ *
+ * WAS BIS HIERHER GALT. „Steht eine Migration aus?" war eine Frage AN DIE
+ * SEITE `betrieb_updates.php` — jemand musste sie aufrufen. Zwischen dem
+ * Hochladen neuer Dateien und diesem Aufruf erwartet neuer Code Tabellen, die
+ * es noch nicht gibt; die Anwendung antwortet in diesem Fenster mit 500, und
+ * zwar einer Uhr gegenueber, einem Handy gegenueber und einer Notaerztin
+ * gegenueber, die gerade dokumentiert.
+ *
+ * WAS GILT: Die Anwendung schliesst sich selbst. `migrationen_ausstehend()`
+ * beantwortet die Frage bei jeder angemeldeten Anfrage, und steht etwas aus,
+ * schaltet `auth_guard.php` den Wartungsmodus mit dem Urheber `torwaechter`.
+ * Der Unterschied zwischen 500 und 503 ist der zwischen „kaputt" und „gleich
+ * wieder da" — Uhr und Handy puffern und liefern nach.
+ *
+ * DER ZWISCHENSPEICHER HAENGT AM KATALOG-HASH, nicht an einer Frist. Ein
+ * voller Vorschaulauf geht 46 Katalogeintraege durch; das ist der Preis einer
+ * Statusseite, nicht der Preis JEDER Seite. Der Hash geht ueber die
+ * KENNUNGEN — `serialize()` ueber den Katalog scheiterte an den Closures.
+ *
+ * DREI STELLEN SCHREIBEN IHN FORT, und die zweite ist Nr. 54:
+ * `migrationen_lauf(…, true)` nach einem Lauf (der Hash aendert sich dabei
+ * nicht), `wiederherstellen.php` nach dem Einspielen (ein fremder Dump bringt
+ * ein fremdes Register mit, und der Hash passt trotzdem) und der Deploy
+ * selbst, aber nur mittelbar.
+ *
+ * BEI EINEM FEHLER BLEIBT DIE INSTALLATION OFFEN. Fehlt `app_state`,
+ * antwortet die Datenbank nicht, wirft eine `skip`-Pruefung — dann heisst die
+ * Antwort `false`. Der Torwaechter darf keine Installation schliessen, weil
+ * er selbst nicht messen konnte; dieselbe Richtung wie beim Ratenschutz.
+ *
+ * AUS GEHT ER NIE VON SELBST (R66). Betrieb → Updates nennt den Grund und
+ * bietet nach dem Lauf ein zweites „Wartung beenden" dort an, wo gerade
+ * geklickt wurde.
+ *
+ * WAS OFFEN BLEIBT, UND DAS STEHT AUCH IM CODE: `ingest.php` und `pair.php`
+ * laden `auth_guard.php` nicht. Bis zur ersten angemeldeten Anfrage bekommen
+ * die Geraete weiter 500 statt 503 — verloren geht nichts, und fuer die
+ * Auslieferungskette ist das Fenster null.
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `migration_tor_hash` und
+ * `migration_tor_offen` sind Zeilen in `app_state`.
  */
-const WEB_VERSION = '20.5.0';
+const WEB_VERSION = '20.6.0';

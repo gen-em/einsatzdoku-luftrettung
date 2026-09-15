@@ -27,7 +27,8 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | AP0 Aufnahme | **erledigt** | — | Rahmenplan Fassung 72, Vorbereitung und Konzept im Repositorium |
 > | **AP1 Auslieferungskette** | **erledigt** | **Web 20.4.0** | Register 46/46, 0 Befunde, Selbstprobe 4/4 · Backup-Tor 5/5 · Wortliste 0/0/0 · Kontraste 22/0 · Vollständigkeit 340 = unverändert · 3 Arbeitsläufe gültiges YAML |
 > | **AP2 Plattformprüfung** | **erledigt** | **Web 20.5.0** | 21 Befunde (15 ohne DB/config) · Muss offen 0 · Installweiche 8/8, 0 Befunde auf 658 Zeilen · Bilderlauf 16 Bilder, 0/0/0 · Wortliste 0/0/0 |
-> | AP3 bis AP12 | offen | — | — |
+> | **AP3 Torwächter** | **erledigt** | **Web 20.6.0** | Wartungsprobe **67 Erwartungen, 0 nicht erfüllt** (Teil 7 neu, 10 Erwartungen) · Browserprobe 12/12 · Bilderlauf 8 Bilder, 0/0/0 · Wortliste 0/0/0 |
+> | AP4 bis AP12 | offen | — | — |
 
 ---
 
@@ -919,4 +920,66 @@ Zeilen weg, auf die es ankommt; die Schlusszeile nennt dafür die Zahl.
 `betrieb_status.php` und `betrieb_server.php`, **0 Überlauf, 0
 Konsolenfehler, 0 falsche Knopfhöhen**. Die aufgeklappte Plattform-Karte ist
 zusätzlich einzeln angesehen worden (16 Zeilen, 0 Konsolenfehler).
+
+### AP3 — Torwächter und Wartung · Web 20.6.0 · 15.09.2026
+
+**Entstanden.** `migrationen_ausstehend()` samt Hash-Zwischenspeicher und
+`migrationen_tor_zuruecksetzen()` in `migration_lib.php`; der Aufruf in
+`auth_guard.php`; der Grund auf der Wartungsseite und im Balken
+(`wartung_lib.php`); Meldung und zweiter „Wartung beenden"-Knopf auf
+Betrieb → Updates; das Zurücksetzen in `wiederherstellen.php` (Nr. 54);
+**Teil 7 der Wartungsprobe** (10 Erwartungen); `docs/Technik.md` 4.99c und
+Runbook, Handbuch 12.4, Changelog.
+
+**Problem 1 — `serialize(migrationen_katalog())` geht nicht.** Das Konzept
+schreibt „gecacht in `app_state` unter dem Hash des Katalogs". Der Katalog
+enthält Closures (`skip`, `run`), und Closures lassen sich nicht
+serialisieren — der Aufruf hätte eine Ausnahme geworfen, und zwar bei **jeder
+angemeldeten Anfrage**. **Gelöst** über die Kennungen:
+`sha256(implode("\n", array_column($katalog, 'id')))`. Das beantwortet die
+Frage ohnehin genauer — was ein Deploy hinzufügt, sind Kennungen.
+
+**Problem 2 — der Zwischenspeicher überlebt einen ausgeführten Lauf.** Nach
+`migrationen_lauf(…, true)` ändert sich der Hash **nicht** (es kommt ja keine
+Migration hinzu, es wird eine ausgeführt). Ohne Fortschreibung schlösse der
+Torwächter die Installation unmittelbar wieder zu — die Betreiberin klickte
+„Ausstehende ausführen" und säße danach vor derselben Wartungsseite.
+**Gelöst** durch eine Zeile am Ende von `migrationen_lauf()`, und zwar nur im
+Ausführungszweig: Schriebe auch die Vorschau ihn, gäbe es zwei Schreibwege
+für dieselbe Zeile, und einer davon (die Statusseite, die nur vorschaut) wäre
+in einer Rolle, die er nicht hat.
+
+**Problem 3 — die Anfrage, die schaltet, bekäme ihre Seite noch.**
+`wartung_tor()` läuft in `db.php`, also **bevor** der Torwächter die Datei
+anlegt. Ohne einen zweiten Aufruf lieferte genau die Anfrage, die den
+Wartungsmodus auslöst, ihre Seite noch aus — aus einer Anwendung, die sich
+gerade für geschlossen erklärt hat. **Gelöst** durch `wartung_tor()` direkt
+hinter `wartung_einschalten()`; für die Ausnahmeseiten kehrt der Aufruf sofort
+zurück.
+
+**Entscheidung E-P5a-29 (neu) — der Knopf steht auf Betrieb → Updates, nicht
+in `update.php`.** Das Konzept schreibt in E-P5a-20 „bietet `update.php` den
+Knopf „Wartung beenden" direkt an". `update.php` ist im Web seit S8/AP3 aber
+**nur noch eine Weiterleitung** (302 auf `betrieb_updates.php`, Backlog
+Nr. 77); ein Knopf dort wäre unerreichbar. Abschnitt 2.3 desselben Konzepts
+nennt als Ort ausdrücklich „Betrieb → **Updates**" — dort steht er, und die
+Tabelle löst den Widerspruch in ihrem eigenen Sinn auf.
+
+**Entscheidung E-P5a-30 (neu) — das offene Fenster wird benannt, nicht
+geschlossen.** `ingest.php` und `pair.php` laden `auth_guard.php` nicht; bis
+zur ersten angemeldeten Anfrage bekommen die Geräte weiter 500 statt 503. Die
+Prüfung dorthin zu ziehen hieße, sie in `db.php` zu stellen — und damit
+`wartung_tor()` genau die Eigenschaft zu nehmen, um derentwillen es dort
+steht (es antwortet **ohne** Datenbank). Verloren geht nichts: 5xx ist 5xx,
+beide Clients puffern und liefern nach. Für die Auslieferungskette ist das
+Fenster ohnehin null. Der Satz steht im Code, in `Technik.md` 4.99c, im
+Handbuch und im Changelog — an allen vier Stellen, an denen jemand ihn
+suchen würde.
+
+**Was die Prüfung besonders macht:** Teil 7 misst Nr. 54 in der Richtung, die
+weh tut. Erwartung 32 verlangt, dass der Zwischenspeicher nach einer
+nachgestellten Wiederherstellung **lügt** — sonst hätte niemand gemerkt, dass
+`wiederherstellen.php` ihn zurücksetzen muss. Erwartung 33 verlangt, dass das
+Zurücksetzen hilft. Eine Prüfung, die nur das Richtige bestätigt, hätte diese
+Lücke nie gefunden.
 

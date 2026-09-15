@@ -3725,6 +3725,27 @@ geht nichts verloren.
    antwortet, und unten in der Fußzeile steht die neue Fassung.
 7. Uhr und Handy melden sich beim nächsten Mal von selbst. Nichts zu tun.
 
+**Seit Web 20.6.0 schaltet ihn auch die Anwendung selbst — der Torwächter.**
+Ist eine neue Fassung eingespielt worden und steht noch eine Migration aus,
+schließt die Installation bei der nächsten Anmeldung von selbst. Die
+Wartungsseite sagt dann ausdrücklich, dass sie **selbst** geschlossen hat und
+warum; auf **Betrieb → Updates** steht dieselbe Auskunft als Meldung, und
+nach „Ausstehende ausführen" erscheint dort ein zweiter Knopf **„Wartung
+beenden"** — genau da, wo du gerade geklickt hast.
+
+**Aus geht der Wartungsmodus nie von selbst**, auch nicht der des Torwächters.
+Das ist Absicht: Wer eine halb migrierte Installation wieder öffnet, tut das
+mit einem Klick und nicht aus Versehen. Im Balken oben steht bei einer
+automatisch geschalteten Wartung „automatisch geschaltet" statt eines Namens,
+dazu der Grund.
+
+**Ein Fenster bleibt, und es ist klein.** Uhr und Handy sprechen nicht über
+die Anmeldung, sondern direkt mit `ingest.php` — bis zur ersten Anmeldung nach
+einem Update bekommen sie deshalb noch die alte Fehlermeldung statt des
+freundlichen 503. **Verloren geht dabei nichts:** Beides ist ein Serverfehler,
+und beide Geräte puffern und liefern nach. Wer über die Auslieferungskette
+ausliefert, hat das Fenster gar nicht — die schaltet vorher.
+
 **Was währenddessen weiter geht.** Die **fünf Betriebsseiten** (Status,
 Statistik, Updates, Hintergrundjobs, Servereinstellungen), die Anmeldung, das
 Abmelden und der Abruf der Hintergrundjobs. **Sonst nichts** — auch nicht die

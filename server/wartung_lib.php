@@ -323,6 +323,28 @@ function wartung_antwort_seite(bool $rueckweg = true): never
  */
 function wartung_seite_html(bool $rueckweg = true): string
 {
+    /* DER GRUND STEHT AUF DER SEITE, WENN ES EINEN GIBT (P5a/AP3, E-P5a-20).
+     *
+     * `von` traegt seit dem Torwaechter nicht nur einen Namen, sondern auch
+     * eine Herkunft: `torwaechter` (die Anwendung hat selbst geschlossen) und
+     * `kette` (der Auslieferungslauf, P5a/AP1). Beide sind etwas anderes als
+     * „jemand hat den Schalter umgelegt", und wer davorsteht, soll es
+     * erfahren — sonst sieht eine automatisch geschlossene Installation aus
+     * wie eine vergessene.
+     *
+     * OHNE DATENBANK, wie alles hier: `wartung_daten()` liest die Datei. */
+    $von = (string)(wartung_daten()['von'] ?? '');
+    $grund = match ($von) {
+        'torwaechter' => 'Es ist eine neue Fassung eingespielt worden, und die '
+                       . 'Datenbank ist noch nicht nachgezogen. Die Anwendung hat '
+                       . 'deshalb selbst geschlossen — das ist kein Fehler, sondern '
+                       . 'die Vorsorge dagegen, dass jemand in eine halb umgebaute '
+                       . 'Datenbank schreibt. Die Betreiberin ist informiert.',
+        'kette'       => 'Eine Auslieferung laeuft gerade. Sie schaltet die Wartung '
+                       . 'hinterher von selbst wieder aus.',
+        default       => '',
+    };
+
     $stamm = random_int(0, 1) === 1 ? 'gen-em_logo_nef' : 'gen-em_logo_helicopter';
     $logo  = 'assets/images/' . $stamm . '.svg';
     /* Erkennungswert wie asset() ihn setzt, aber ohne db.php: die
@@ -354,6 +376,7 @@ function wartung_seite_html(bool $rueckweg = true): string
       . ' Minuten wieder da. Deine Uhr und dein Handy liefern ihre Daten danach'
       . ' von selbst nach.</p>' . "\n"
       . '      </div>' . "\n"
+      . ($grund !== '' ? '      <p>' . $h($grund) . '</p>' . "\n" : '')
       . '      <p>Hast du gerade ein Formular abgeschickt: Geh im Browser'
       . ' <strong>zurück</strong> — die Eingaben stehen noch im Formular — und'
       . ' schick es später erneut ab.</p>' . "\n"
@@ -430,7 +453,18 @@ function wartung_balken(): string
     }
     $von = $d['von'] !== null ? ' von ' . $h($d['von']) : '';
 
+    /* ZWEI URHEBER SIND KEINE NAMEN (P5a). `torwaechter` und `kette` stehen
+     * im selben Feld wie „Philipp Chadid" — und „von torwaechter" laese sich
+     * wie eine Person. Der Balken sagt deshalb, was gemeint ist. */
+    $zusatz = match ((string)($d['von'] ?? '')) {
+        'torwaechter' => ' Grund: eine ausstehende Migration. Betrieb → Updates '
+                       . 'ausführen, danach hier beenden.',
+        'kette'       => ' Grund: eine laufende Auslieferung.',
+        default       => '',
+    };
+    if ($zusatz !== '') { $von = ' — automatisch geschaltet'; }
+
     return '<div class="meldung meldung-warn" role="status">'
          . '<p><strong>Wartungsmodus ' . $h($seit) . $von . '</strong> — alle anderen '
-         . 'Anfragen bekommen 503. Geräte liefern nach.</p></div>';
+         . 'Anfragen bekommen 503. Geräte liefern nach.' . $h($zusatz) . '</p></div>';
 }

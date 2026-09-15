@@ -503,6 +503,21 @@ function wh_einspielen(array $stand, callable $zeitLinks): array
         $pdo->exec('SET UNIQUE_CHECKS = 1');
         $stand['phase'] = 'fertig';
         $stand['beendet'] = gmdate('Y-m-d\TH:i:s\Z');
+        /* DEN TORWAECHTER VERGESSEN LASSEN (P5a/AP3, Backlog Nr. 54).
+         *
+         * Der eingespielte Dump bringt das `schema_migrations` der
+         * QUELLINSTALLATION mit — und `app_state` gleich mit, also auch den
+         * Zwischenspeicher des Torwaechters. Der Katalog-Hash dieser
+         * Installation passt dazu unter Umstaenden trotzdem, und dann
+         * behauptete die gespeicherte Antwort einen Stand, den es hier nicht
+         * gibt: Eine Installation mit fehlenden Migrationen bliebe offen,
+         * oder eine fertige bliebe zu.
+         *
+         * Geworfen und nicht neu gerechnet: Das Rechnen kostet 46
+         * Katalogeintraege, und die naechste angemeldete Anfrage tut es
+         * ohnehin. */
+        require_once __DIR__ . '/migration_lib.php';
+        migrationen_tor_zuruecksetzen($pdo);
         /* DER KLARTEXT WIRD SOFORT GELÖSCHT. Er ist eine vollständige,
          * unverschlüsselte Abschrift jeder Tabelle und hat auf der Platte
          * nichts verloren, sobald er drin ist. */

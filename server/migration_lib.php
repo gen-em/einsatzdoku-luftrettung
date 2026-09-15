@@ -2737,8 +2737,160 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
         }
     }
 
+    /* DEN TORWAECHTER FORTSCHREIBEN — aber nur nach einem AUSGEFUEHRTEN Lauf
+     * (P5a/AP3, E-P5a-20).
+     *
+     * Warum nicht auch in der Vorschau: `migrationen_ausstehend()` RUFT die
+     * Vorschau, um den Zwischenspeicher zu fuellen. Schriebe die Vorschau ihn
+     * ebenfalls, stuenden zwei Schreibwege fuer dieselbe Zeile da, und der
+     * eine (die Statusseite, die auch nur vorschaut) faende sich in einer
+     * Rolle wieder, die er nicht hat.
+     *
+     * Warum nach dem Lauf zwingend: Der Hash aendert sich dabei NICHT — es
+     * kommt ja keine Migration hinzu, es wird eine ausgefuehrt. Ohne diese
+     * Zeile bliebe die gespeicherte Antwort „steht aus", und der Torwaechter
+     * schloesse die Installation gleich wieder zu. */
+    if ($ausfuehren) {
+        migrationen_tor_merken($pdo, ($offen + $blockiert) > 0);
+    }
+
     return ['results' => $results, 'offen' => $offen,
             'blockiert' => $blockiert, 'gelaufen' => $gelaufen];
+}
+
+/* ===========================================================================
+ * DER TORWAECHTER (P5a/AP3, E-P5a-20; Rahmenplan R40 (4), Backlog Nr. 54)
+ * ===========================================================================
+ *
+ * DIE FRAGE, DIE JEDE ANFRAGE STELLT. Bis Web 20.5.0 war „steht eine Migration
+ * aus?" eine Frage AN DIE SEITE `betrieb_updates.php` — jemand musste sie
+ * aufrufen. Zwischen dem Hochladen neuer Dateien und diesem Aufruf erwartet
+ * neuer Code Tabellen, die es noch nicht gibt; die Anwendung antwortet in
+ * diesem Fenster mit 500, und zwar einer Uhr gegenueber, einem Handy
+ * gegenueber und einer Notaerztin gegenueber, die gerade dokumentiert.
+ *
+ * WARUM SIE NICHT BEI JEDER ANFRAGE WIRKLICH GEPRUEFT WIRD. Ein voller
+ * `migrationen_lauf($pdo, false)` geht 46 Katalogeintraege durch und stellt
+ * je Eintrag mindestens eine `information_schema`-Abfrage. Das ist der Preis
+ * einer Statusseite, nicht der Preis JEDER Seite.
+ *
+ * DER HASH IST DER AUSLOESER. Was sich zwischen zwei Deploys aendert, ist der
+ * KATALOG — neue Migrationen kommen hinzu. Sein Hash steht in `app_state`
+ * neben der Antwort; stimmt er, gilt die gespeicherte Antwort, und die
+ * Anfrage kostet eine Zeile aus einer Tabelle mit Primaerschluessel. Stimmt
+ * er nicht, laeuft die echte Pruefung EINMAL und schreibt beides fort.
+ *
+ * DREI STELLEN SCHREIBEN DEN ZWISCHENSPEICHER FORT, und alle drei muessen es:
+ *
+ *   1. diese Datei nach einem AUSGEFUEHRTEN Lauf (`migrationen_lauf(…, true)`)
+ *      — sonst bliebe die Antwort „steht aus", obwohl gerade migriert wurde;
+ *      der Hash aendert sich dabei ja nicht.
+ *   2. `wiederherstellen.php` nach dem Einspielen (Backlog Nr. 54) — ein
+ *      eingespielter Dump bringt den FREMDEN Registerstand der
+ *      Quellinstallation mit, und der Hash passt trotzdem.
+ *   3. der Deploy selbst, aber nur mittelbar: Er aendert den Katalog, also
+ *      den Hash, also faellt der Zwischenspeicher von selbst.
+ *
+ * WAS ER NICHT LEISTET. Eine Aenderung INNERHALB einer Migration (anderes
+ * SQL, gleiche Kennung) aendert den Hash nicht. Das ist Absicht: Die Frage
+ * lautet „ist eine Migration hinzugekommen?", nicht „hat jemand eine
+ * bestehende umgeschrieben?" — Letzteres ist ohnehin verboten, sobald sie
+ * ausgeliefert war.
+ */
+
+/** Schluessel in `app_state`. Zwei Zeilen statt einer JSON-Zeile: `v` ist
+ *  VARCHAR(190), und zwei kurze Werte sind dort sicherer als ein langer. */
+const MIGRATION_TOR_HASH  = 'migration_tor_hash';
+const MIGRATION_TOR_OFFEN = 'migration_tor_offen';
+
+/**
+ * Der Hash des Katalogs — ueber die KENNUNGEN, nicht ueber den Katalog selbst.
+ *
+ * `serialize(migrationen_katalog())` waere das Naheliegende und scheitert:
+ * Der Katalog enthaelt Closures (`skip`, `run`), und Closures lassen sich
+ * nicht serialisieren — der Aufruf wuerfe eine Ausnahme. Die Kennungen
+ * beantworten die Frage ohnehin genauer: Sie sind das, was ein Deploy
+ * hinzufuegt.
+ */
+function migrationen_katalog_hash(): string
+{
+    return hash('sha256', implode("\n", array_column(migrationen_katalog(), 'id')));
+}
+
+/** Eine Zeile aus `app_state`. `null`, wenn es sie (oder die Tabelle) nicht gibt. */
+function _tor_lesen(PDO $pdo, string $k): ?string
+{
+    try {
+        $st = $pdo->prepare('SELECT v FROM app_state WHERE k = ?');
+        $st->execute([$k]);
+        $v = $st->fetchColumn();
+        return $v === false ? null : (string)$v;
+    } catch (Throwable) {
+        return null;   // app_state fehlt — dann gibt es auch keinen Zwischenspeicher
+    }
+}
+
+/** Den Zwischenspeicher fortschreiben. Still, wenn die Tabelle fehlt. */
+function migrationen_tor_merken(PDO $pdo, bool $offen): void
+{
+    try {
+        $st = $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?), (?, ?)
+                             ON DUPLICATE KEY UPDATE v = VALUES(v)');
+        $st->execute([MIGRATION_TOR_HASH, migrationen_katalog_hash(),
+                      MIGRATION_TOR_OFFEN, $offen ? '1' : '0']);
+    } catch (Throwable $ex) {
+        error_log('Torwaechter: Zwischenspeicher nicht schreibbar: ' . $ex->getMessage());
+    }
+}
+
+/**
+ * Den Zwischenspeicher verwerfen — die naechste Anfrage prueft wieder echt.
+ *
+ * FUER `wiederherstellen.php` (Backlog Nr. 54). Ein eingespielter Dump bringt
+ * das Register der QUELLINSTALLATION mit; der Katalog-Hash dieser Installation
+ * passt trotzdem, und der Zwischenspeicher behauptete danach den Stand von
+ * vorher. Er wird deshalb weggeworfen, nicht neu gerechnet: Das Rechnen
+ * kostet, und die naechste Anfrage tut es ohnehin.
+ */
+function migrationen_tor_zuruecksetzen(PDO $pdo): void
+{
+    try {
+        $pdo->prepare('DELETE FROM app_state WHERE k IN (?, ?)')
+            ->execute([MIGRATION_TOR_HASH, MIGRATION_TOR_OFFEN]);
+    } catch (Throwable $ex) {
+        error_log('Torwaechter: Zwischenspeicher nicht loeschbar: ' . $ex->getMessage());
+    }
+}
+
+/**
+ * Steht eine Migration aus? Die Frage, die jede angemeldete Anfrage stellt.
+ *
+ * `true` heisst: Es gibt etwas zu tun — eine Migration, die laeuft, eine, die
+ * nur noch verbucht werden muss (`skip`), oder eine, die am Inhalt blockiert
+ * (`stopp`). Alle drei sind Gruende, die Installation zu schliessen: Der Code
+ * ist neu, das Schema ist es nicht.
+ *
+ * `false` heisst: nichts zu tun. Bei einem FEHLER — Tabelle fehlt, Datenbank
+ * antwortet nicht — kommt ebenfalls `false`, und das ist Absicht: Der
+ * Torwaechter darf keine Installation schliessen, weil er selbst nicht messen
+ * konnte. Dieselbe Richtung wie beim Ratenschutz (`ratelimit_lib.php`:
+ * durchlassen statt selbstgebauter Ausfall).
+ */
+function migrationen_ausstehend(PDO $pdo): bool
+{
+    $hash = migrationen_katalog_hash();
+    if (_tor_lesen($pdo, MIGRATION_TOR_HASH) === $hash) {
+        return _tor_lesen($pdo, MIGRATION_TOR_OFFEN) === '1';
+    }
+    try {
+        $l = migrationen_lauf($pdo, false);
+        $offen = ((int)$l['offen'] + (int)$l['blockiert']) > 0;
+    } catch (Throwable $ex) {
+        error_log('Torwaechter: Pruefung fehlgeschlagen: ' . $ex->getMessage());
+        return false;
+    }
+    migrationen_tor_merken($pdo, $offen);
+    return $offen;
 }
 
 /**

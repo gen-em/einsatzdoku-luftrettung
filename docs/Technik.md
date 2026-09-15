@@ -421,7 +421,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      (Teil 6, Backlog Nr. 149) und seit 15.6.0, dass die
 │   │                      Integritätswache im Wartungsmodus nicht rot wird
 │   │                      (12a, Nr. 140) und seit S10 mit 6a, dass das
-│   │                      Schlüsselblatt erreichbar bleibt — 57 Erwartungen.
+│   │                      Schlüsselblatt erreichbar bleibt; seit Web 20.6.0
+│   │                      Teil 7, der Torwächter samt Nr. 54 — 67 Erwartungen.
 │   │                      **Legt den Schalter selbst um** und nimmt für
 │   │                      Teil 6 eine Zeile aus dem Migrationsregister;
 │   │                      räumt beides im finally ab. Nicht auf einer
@@ -5374,7 +5375,7 @@ geändert** (E-S5W-08).
 | | |
 |---|---|
 | Zustand | Datei `server/wartung.lock`, JSON mit `seit` (ISO-UTC) und `von` (Anzeigename). **Keine Datenbank** — der Schalter wird gerade dann gebraucht, wenn sie umgebaut wird oder eine Migration auf halber Strecke steht |
-| Tor | `wartung_tor()` in `wartung_lib.php`, gerufen aus `db.php` **hinter `json_out()` und vor jeder Verbindung**. Nicht in `auth_guard.php`: Dort liefen nur die Seiten durch — `ingest.php` und `pair.php` laden `db.php` direkt, und das sind die beiden, die die Daten der Uhr bringen |
+| Tor | `wartung_tor()` in `wartung_lib.php`, gerufen aus `db.php` **hinter `json_out()` und vor jeder Verbindung**. Nicht in `auth_guard.php`: Dort liefen nur die Seiten durch — `ingest.php` und `pair.php` laden `db.php` direkt, und das sind die beiden, die die Daten der Uhr bringen. Der **Torwächter** (unten) steht dagegen genau dort, und aus dem umgekehrten Grund: Er braucht eine Verbindung |
 | Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
 | Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript `ingest.php` oder `pair.php` heißt — die beiden liegen nicht unter `/api/`, und genau sie brauchen JSON |
 | Kopfzeilen | `Retry-After: 300` (E-S5W-12), `Cache-Control: no-store`. Kein `Set-Cookie`: Das Tor greift vor `session_start()` |
@@ -5391,20 +5392,80 @@ unlesbar oder kein gültiges JSON, gilt die Wartung trotzdem; der Balken sagt
 keine Installation öffnen, die jemand ausdrücklich geschlossen hat.
 
 **Zwei Einträge, die zusammengehören:** `server/wartung.lock` steht in
-`.gitignore` **und** in der Ausnahmeliste von
-`.github/workflows/deploy.yml`. Ohne den ersten schlösse ein Checkout jede
+`.gitignore` **und** in der Ausnahmeliste **beider** FTPS-Schritte von
+`.github/workflows/auslieferung.yml` (bis Web 20.3.0: `deploy.yml`). Ohne den ersten schlösse ein Checkout jede
 Installation; ohne den zweiten löschte der Push die Datei — mitten im Update,
 für das sie da ist. Dasselbe Muster wie `config.php`, `install.lock`,
 `sicherungen/` und `apk/`.
 
-**Nicht Umfang** (Konzept 9): der **Torwächter** aus Rahmenplan R40 (4) —
-Wartung automatisch bei ausstehender Migration — ist P5 und wird denselben
-Zustand setzen; Steuerung aus der Auslieferungskette ist P5 mit R67; eine
-eigene Wartungsmeldung auf Uhr und Handy ist Backlog-Kandidat.
+#### Der Torwächter (ab Web 20.6.0, P5a/AP3, E-P5a-20; R40 (4), Nr. 54)
 
-**Nachweis:** `php tools/wartungsprobe/probe.php` — **57 Erwartungen**, beide
+**Seit Web 20.6.0 schaltet nicht mehr nur ein Mensch.** `wartung.lock` trägt
+im Feld `von` jetzt auch zwei Herkünfte statt eines Namens:
+
+| `von` | wer | wann |
+|---|---|---|
+| ein Name oder eine Adresse | ein Mensch | Karte „Wartungsmodus" auf Betrieb → Updates |
+| `kette` | die Auslieferungskette | vor dem FTPS-Sync (P5a/AP1, E-P5a-12) |
+| `torwaechter` | die Anwendung selbst | erste angemeldete Anfrage nach einem Deploy mit ausstehender Migration |
+
+**Die Frage stellt `auth_guard.php`, nicht `db.php`.** Das Tor in `db.php` ist
+ausdrücklich *ohne* Datenbank gebaut — es muss antworten, während die
+Datenbank umgebaut wird. Eine Abfrage dort nähme ihm genau die Eigenschaft,
+um derentwillen es dort steht. `migrationen_ausstehend()` braucht eine
+Verbindung und steht deshalb eine Ebene höher.
+
+**Der Zwischenspeicher hängt am Katalog-Hash.** Ein voller
+`migrationen_lauf($pdo, false)` geht 46 Katalogeinträge durch und stellt je
+Eintrag mindestens eine `information_schema`-Abfrage — das ist der Preis
+einer Statusseite, nicht der Preis *jeder* Seite. In `app_state` stehen
+deshalb zwei Zeilen: `migration_tor_hash` (SHA-256 über die **Kennungen** des
+Katalogs — nicht über den Katalog selbst, der enthält Closures und lässt sich
+nicht serialisieren) und `migration_tor_offen`. Stimmt der Hash, gilt die
+gespeicherte Antwort.
+
+**Drei Stellen schreiben ihn fort, und alle drei müssen es:**
+
+1. `migrationen_lauf(…, true)` nach einem ausgeführten Lauf — der Hash ändert
+   sich dabei *nicht*, und ohne diese Zeile schlösse der Torwächter die
+   Installation gleich wieder zu.
+2. `wiederherstellen.php` nach dem Einspielen (**Nr. 54**) — ein eingespielter
+   Dump bringt das Register der *Quellinstallation* mit, und der Hash dieser
+   Installation passt trotzdem. Er wird **verworfen**, nicht neu gerechnet:
+   Das Rechnen kostet, und die nächste Anfrage tut es ohnehin.
+3. Der Deploy selbst, aber nur mittelbar — er ändert den Katalog, also den
+   Hash, also fällt der Zwischenspeicher von selbst.
+
+**Bei einem Fehler bleibt die Installation offen.** Fehlt `app_state`,
+antwortet die Datenbank nicht, wirft eine `skip`-Prüfung — dann liefert
+`migrationen_ausstehend()` `false`. Der Torwächter darf keine Installation
+schließen, weil er selbst nicht messen konnte; dieselbe Richtung wie beim
+Ratenschutz.
+
+**Was er offen lässt, und das steht auch im Code:** `ingest.php` und
+`pair.php` laden `auth_guard.php` nicht. Bis zur ersten angemeldeten Anfrage
+bekommen die Geräte also weiter 500 statt 503. **Verloren geht dabei nichts**
+— 5xx ist 5xx, sie puffern und liefern nach —, und für die
+Auslieferungskette ist das Fenster null: Sie lässt den Wartungsmodus bei
+ausstehender Migration von sich aus an. Für den Weg von Hand schließt es die
+erste angemeldete Anfrage.
+
+**Aus geht er nie von selbst** (R66). Betrieb → Updates zeigt den Grund und
+bietet nach dem Lauf einen zweiten „Wartung beenden" genau dort an, wo man
+gerade geklickt hat — drei Bedingungen: der Torwächter muss geschaltet haben,
+es darf nichts mehr ausstehen, und die Wartung muss noch stehen.
+
+**Nicht Umfang:** eine eigene Wartungsmeldung auf Uhr und Handy ist
+Backlog-Kandidat.
+
+**Nachweis:** `php tools/wartungsprobe/probe.php` — **67 Erwartungen**, beide
 Richtungen (zu wenig gesperrt / zu viel gesperrt), einschließlich der drei
-Regeln aus E-S5W-09 am Code. Betriebsablauf: Abschnitt 7.
+Regeln aus E-S5W-09 am Code und seit Web 20.6.0 **Teil 7**: der Torwächter
+schließt, nennt den Grund, gibt `ingest.php` sein JSON-503, lässt Betrieb →
+Updates offen, bietet „Wartung beenden" und öffnet wieder — dazu Nr. 54 in
+der Richtung, die weh tut (Erwartung 32 zeigt, dass der Zwischenspeicher nach
+einer Wiederherstellung *lügt*, Erwartung 33, dass das Zurücksetzen ihn
+wieder sehend macht). Betriebsablauf: Abschnitt 7.
 
 
 ### 5.1 Tastenbelegung je Geräteprofil
@@ -6627,6 +6688,12 @@ erwartet neuer Code Tabellen, die es noch nicht gibt. Wer in dieses Fenster
 gerät, bekommt **500**. Für eine Uhr ist das etwas anderes als ein 503: Der
 JSON-Vertrag sagt zu 5xx „später unverändert erneut versuchen" — sie puffert
 und liefert nach. Die sieben Schritte:
+
+> **Und seit Web 20.6.0 nimmt der Torwächter Schritt 2 auch ohne Kette ab**
+> (P5a/AP3): Steht nach dem Hochladen eine Migration aus, schaltet die
+> Anwendung den Wartungsmodus bei der ersten angemeldeten Anfrage selbst ein
+> und sagt auf der Wartungsseite, warum. **Aus geht er nie von selbst** — das
+> bleibt Schritt 6, von Hand (R66).
 
 > **Seit Web 20.4.0 nimmt die Kette die Schritte 1, 2 und 3 ab** (P5a/AP1,
 > Abschnitt 6.4): Der Produktionslauf fährt das Komplett-Backup zu Ende,

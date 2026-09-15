@@ -14,6 +14,116 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.6.0] — 2026-09-15
+
+**P5a/AP3 — der Torwächter.** Drittes Arbeitspaket von Schritt 10a; erledigt
+Rahmenplan R40 (4) und Backlog Nr. 54.
+
+### Hinzugefügt — die Anwendung schließt sich selbst
+
+**Was galt.** „Steht eine Migration aus?" war eine Frage *an die Seite*
+Betrieb → Updates — jemand musste sie aufrufen. Zwischen dem Hochladen neuer
+Dateien und diesem Aufruf erwartet neuer Code Tabellen, die es noch nicht
+gibt; die Anwendung antwortet in diesem Fenster mit **500**, und zwar einer
+Uhr gegenüber, einem Handy gegenüber und einer Notärztin gegenüber, die gerade
+dokumentiert. Der Wartungsmodus konnte das seit Web 13.2.0 abfangen — aber nur,
+wenn jemand daran dachte.
+
+**Was gilt.** `migrationen_ausstehend()` beantwortet die Frage bei jeder
+angemeldeten Anfrage. Steht etwas aus, schaltet `auth_guard.php` den
+Wartungsmodus mit dem Urheber **`torwaechter`**, und das Tor antwortet **503**
+statt 500. Der Unterschied ist der zwischen „kaputt" und „gleich wieder da":
+Der JSON-Vertrag sagt zu 5xx „später unverändert erneut", und Uhr wie Handy
+puffern und liefern nach.
+
+**Warum in `auth_guard.php` und nicht neben `wartung_tor()` in `db.php`.**
+Jenes Tor ist ausdrücklich *ohne* Datenbank gebaut — es muss antworten,
+während die Datenbank umgebaut wird. Eine Abfrage dort nähme ihm genau die
+Eigenschaft, um derentwillen es dort steht.
+
+### Hinzugefügt — ein Zwischenspeicher, der am Katalog-Hash hängt
+
+Ein voller `migrationen_lauf($pdo, false)` geht 46 Katalogeinträge durch und
+stellt je Eintrag mindestens eine `information_schema`-Abfrage. Das ist der
+Preis einer Statusseite, nicht der Preis **jeder** Seite. In `app_state`
+stehen deshalb zwei Zeilen: der SHA-256 über die **Kennungen** des Katalogs
+und die Antwort. Stimmt der Hash, kostet die Frage eine Zeile aus einer
+Tabelle mit Primärschlüssel.
+
+Über die *Kennungen*, nicht über den Katalog: `serialize()` scheitert an den
+Closures (`skip`, `run`). Die Kennungen beantworten die Frage ohnehin genauer
+— sie sind das, was ein Deploy hinzufügt.
+
+**Drei Stellen schreiben ihn fort**, und die zweite ist **Backlog Nr. 54**:
+
+1. `migrationen_lauf(…, true)` nach einem ausgeführten Lauf — der Hash ändert
+   sich dabei *nicht*, und ohne diese Zeile schlösse der Torwächter die
+   Installation gleich wieder zu.
+2. `wiederherstellen.php` nach dem Einspielen — ein eingespielter Dump bringt
+   das Register der **Quellinstallation** mit, und der Hash dieser
+   Installation passt trotzdem.
+3. Der Deploy selbst, mittelbar: Er ändert den Katalog, also den Hash.
+
+**Bei einem Fehler bleibt die Installation offen.** Fehlt `app_state`,
+antwortet die Datenbank nicht, wirft eine `skip`-Prüfung — dann heißt die
+Antwort `false`. Der Torwächter darf keine Installation schließen, weil er
+selbst nicht messen konnte; dieselbe Richtung wie beim Ratenschutz.
+
+### Hinzugefügt — die Wartungsseite sagt, warum
+
+`wartung.lock` trägt im Feld `von` jetzt auch zwei **Herkünfte** statt eines
+Namens: `torwaechter` und `kette`. Beides ist etwas anderes als „jemand hat
+den Schalter umgelegt", und wer davorsteht, soll es erfahren — **sonst sieht
+eine automatisch geschlossene Installation aus wie eine vergessene**, und
+genau davor warnt E-S5W-05.
+
+Die Wartungsseite nennt den Grund im Fließtext. Der Balken auf den
+Betriebsseiten schreibt „automatisch geschaltet" statt eines Namens — „von
+torwaechter" läse sich sonst wie eine Person — und hängt den Grund an. Auf
+Betrieb → Updates steht dieselbe Auskunft als Meldung in der Karte
+„Wartungsmodus".
+
+### Hinzugefügt — „Wartung beenden" dort, wo gerade geklickt wurde
+
+**R66 bleibt unberührt: Die Wartung geht nie von selbst aus.** Wer sie
+geschlossen hat, ist aber ein Unterschied — hat der Torwächter geschaltet, hat
+niemand sie bewusst eingeschaltet, und niemand rechnet damit, sie hinterher
+ausschalten zu müssen. Nach „Ausstehende ausführen" steht deshalb ein zweiter
+Knopf unter den Migrationen, die eben durchgelaufen sind. Drei Bedingungen,
+und alle drei sind nötig: Der Torwächter muss geschaltet haben, es darf nichts
+mehr ausstehen, und die Wartung muss noch stehen. Oben in der Karte
+„Wartungsmodus" steht derselbe Schalter weiterhin — es ist nicht ein zweiter.
+
+### Geändert — die Wartungsprobe misst zehn Erwartungen mehr
+
+`tools/wartungsprobe/` bekommt **Teil 7** und steht damit bei **67
+Erwartungen** (vorher 57). Er beginnt damit, den Wartungsmodus
+**auszuschalten** — sonst ließe sich nicht sehen, dass er von selbst angeht —,
+nimmt dieselbe Registerzeile heraus wie Teil 6 und misst: 503 auf einer
+angemeldeten Seite, `von = torwaechter` in der Schalterdatei, der Grund auf
+der Wartungsseite, JSON-503 für `ingest.php`, Betrieb → Updates offen mit „Vom
+Torwächter geschlossen", der Knopf „Wartung beenden" nach dem Lauf, danach
+wieder 200.
+
+**Nr. 54 wird in der Richtung gemessen, die weh tut.** Erwartung 32 zeigt,
+dass der Zwischenspeicher nach einer Wiederherstellung **lügt** — der
+Katalog-Hash ändert sich ja nicht —, Erwartung 33, dass
+`migrationen_tor_zuruecksetzen()` ihn wieder sehend macht. Eine Prüfung, die
+nur das Richtige bestätigt, hätte diese Lücke nie gefunden.
+
+### Was offen bleibt, und das steht auch im Code
+
+`ingest.php` und `pair.php` laden `auth_guard.php` nicht. Bis zur ersten
+angemeldeten Anfrage bekommen die Geräte also weiter 500 statt 503.
+**Verloren geht dabei nichts** — 5xx ist 5xx, sie puffern und liefern nach —,
+und für die Auslieferungskette ist das Fenster null: Sie lässt den
+Wartungsmodus bei ausstehender Migration von sich aus an (Web 20.4.0). Für den
+Weg von Hand schließt es die erste angemeldete Anfrage.
+
+**Keine Schemaänderung, keine Migration.** `migration_tor_hash` und
+`migration_tor_offen` sind Zeilen in `app_state`. `update.php` muss nach dem
+Deploy nicht laufen.
+
 ## [Web 20.5.0] — 2026-09-15
 
 **P5a/AP2 — das Plattformprofil.** Zweites Arbeitspaket von Schritt 10a. Die

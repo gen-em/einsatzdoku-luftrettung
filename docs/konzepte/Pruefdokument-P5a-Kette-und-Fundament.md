@@ -2,7 +2,7 @@
 
 **Konzept:** `Konzept-P5a-Kette-und-Fundament.md` (15.09.2026, E-P5a-01 bis
 -21, AP1 bis AP12). **Gemessen auf:** Zweig `claude/butte-umsetzen-5opi9u`.
-**Stand dieses Dokuments:** 15.09.2026, nach AP2.
+**Stand dieses Dokuments:** 15.09.2026, nach AP3.
 
 Das Prüfprotokoll im Konzept beantwortet „ist es belegt?". Dieses Dokument
 beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
@@ -48,6 +48,9 @@ Alles unten auf dem Stand nach AP1 (Web 20.4.0), im Wegwerf-Container
 | Die Weiche, Selbstprobe | `… --selbstprobe` | **8 von 8**; davon **4 Fälle, die NICHT anschlagen dürfen** (dieselben Wörter im Kommentar, `preg_match`, `match` als Zeichenkette, gewöhnlicher Rückgabetyp) |
 | Kontingent-Warnung | `speicher_kontingente_melden()` mit Schwellen 50/53 % und `db_gb = 0,01` | beide Schwellen schlagen an; ohne Mailserver **2 Fehler**, Marke bleibt leer → wird wiederholt |
 | Aufräumjob | `php jobs.php aufraeumen` | läuft durch, 8 Schritte, kein Fehler |
+| Wartungsprobe **mit Teil 7** | `php tools/wartungsprobe/probe.php https://127.0.0.1:8443` | **67 Erwartungen, 0 nicht erfüllt** (vorher 57; Teil 7 bringt 10) |
+| Torwächter im Browser | eigene Playwright-Probe, angemeldet als BetreiberIn | **12 von 12**: 503 auf der Startseite, Grund auf der Wartungsseite, JSON-503 für `ingest.php`, Betrieb → Updates offen mit Grund, „Wartung beenden" nach dem Lauf, danach wieder 200 · **0 Seitenfehler** |
+| Bilderlauf `betrieb_updates.php` | acht Breiten | **8 Bilder · 0 Überlauf · 0 Konsolenfehler · 0 falsche Knopfhöhen** |
 
 **Was die Zahlen benennen** (`CLAUDE.md` 6): Die Wortliste hat sechs Bereiche
 gemessen (Server-PHP, Skripte, Dokumentation, Android, `watch/`), nicht einen;
@@ -168,6 +171,19 @@ vergleicht sie Produktiv gegen einen Stand, der dort nicht liegt.
 `integritaet.yml` nicht mehr mit dem Anzeigenamen in `auslieferung.yml`
 überein (Fund F4).
 
+### P12 — Der Torwächter auf der echten Installation
+
+**Weg:** Nach dem nächsten Deploy **mit** Migration nichts tun außer sich
+anmelden.
+**Erwartet:** Die Wartungsseite mit „Die Anwendung hat selbst geschlossen".
+Auf Betrieb → Updates die Meldung „Vom Torwächter geschlossen", danach
+„Ausstehende ausführen", dann der Knopf „Wartung beenden".
+**Scheitern erkennbar an:** einer Startseite, die trotz ausstehender Migration
+antwortet. Dann prüfen, ob `app_state` die Zeilen `migration_tor_hash` und
+`migration_tor_offen` trägt — fehlen sie, ließ sich die Tabelle nicht
+beschreiben, und der Torwächter fällt (absichtlich) auf „offen lassen"
+zurück.
+
 ### P9 — Die Weiche auf einem echten alten PHP
 
 **Weg:** Beim Hoster im Kundenmenü PHP auf **8.0 oder 8.1** stellen,
@@ -240,6 +256,11 @@ Aus dem Rahmenplan, Abschnitt 6 — hier nur, was P1 bis P8 blockiert:
   Parameterliste und `new` in Initialisierern sieht sie **nicht** — sie druckt
   diese vier bei jedem Lauf mit aus, damit die Grenze nicht nur in der
   Dokumentation steht.
+- **Der Torwächter misst nur bei angemeldeten Anfragen.** `ingest.php` und
+  `pair.php` laden `auth_guard.php` nicht; bis zur ersten Anmeldung nach einem
+  Update bekommen die Geräte 500 statt 503. Verloren geht nichts, und mit der
+  Auslieferungskette ist das Fenster null — aber es ist da, und die
+  Wartungsprobe misst es nicht (sie meldet sich an).
 - **`plattform_pruefen()`** misst, was PHP messen kann. Der freie Plattenplatz
   ist auf geteiltem Webspace die Zahl des Hosts und nicht das Kontingent; die
   Zeile sagt es dazu und die Prüfung meldet `null` statt einer Entwarnung. Die
