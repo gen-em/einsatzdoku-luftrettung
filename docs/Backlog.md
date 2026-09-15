@@ -882,6 +882,24 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     lassen, oder eine Änderungsmarke (Zähler im Schreibweg des Demo-Kontos,
     Reset nur bei gesetzter Marke). Zuordnung: Backlog-Runde (Messung), die
     Entscheidung danach.
+    **Gemessen 15.09.2026 (Demo-Ausbau, AP3 — die Zahl fiel nebenbei an):**
+    `demo_zuruecksetzen()` auf dem Prüfstand (MariaDB und PHP 8.4 auf
+    demselben Rechner), je drei Läufe hintereinander. Mit dem **alten**
+    Bestand (88 Einsätze, 100 Ruhesegmente, 55 861 Spurpunkte) **5859 ms**
+    als mittlerer der drei Läufe (5845–5950); mit dem **neuen** (106 Einsätze,
+    119 Ruhesegmente, 63 752 Spurpunkte) **6610 ms** (6440–6631). Also rund
+    **0,75 s mehr für 20 % mehr Einsätze** — die Dauer wächst mit dem
+    Bestand, aber flacher als er.
+    **Was die Zahl heißt.** Ein Reset läuft huckepack auf einer Anfrage
+    (`demo_reset_wenn_faellig()` aus `auth_guard.php`). Sechseinhalb Sekunden
+    trägt **die Besucherin**, die ihn auslöst: Ihre Seite steht so lange.
+    Zweimal die Stunde ist das wenig Last, aber jedes Mal ein spürbarer
+    Aufenthalt für genau eine Person — und die hat nichts falsch gemacht,
+    sie kam nur als Erste nach Ablauf der dreißig Minuten. Das ist das
+    Argument für die Änderungsmarke, und es ist ein anderes als „Last".
+    **Nicht gemessen** ist die Produktivinstallation (dort liegt die
+    Datenbank auf einem anderen Rechner, die Zahl dürfte höher sein) und die
+    Last unter gleichzeitigen Zugriffen. Die Entscheidung bleibt offen.
 
 77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.**
     *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* Die Seite trägt heute

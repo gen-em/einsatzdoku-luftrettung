@@ -540,11 +540,22 @@ Datensatz ist so gebaut, dass jede Funktion der Anwendung darin vorkommt —
 Luft- und Bodeneinsätze, Windeneinsätze, Bergwacht, Reanimationen, ein Dienst
 über Mitternacht, ein Diensttag ohne Einsatz, ein gefüllter Papierkorb.
 
+**Seit dem Ausbau des Bestands auch die drei Rettungsmittel-Typen im
+Betrieb** (Abschnitt 9.1a): ein **Bergwachtnotarzt am Boden** mit Winde und
+Bergwacht-Bereitschaften, ein **Verlegungsfahrzeug** mit Sekundärtransporten,
+und zwei **Veranstaltungsdienste** — ein Boxkampf und ein Konzert — an
+Abenden, an denen tagsüber schon ein anderer Dienst lief. Die beiden
+Veranstaltungstage haben **keinen Standort**: kein Standortfeld im
+Diensttag, keine Rollen-Vorbelegung, und die Aufzeichnung beginnt dort, wo
+der Dienst begonnen hat. Beim Konzert ist **alles von Hand nachgetragen** —
+die Einsätze haben Koordinaten, aber keine Aufzeichnung, und die Tageskarte
+zeigt sie deshalb als gestrichelte Luftlinien.
+
 *Seit Web 14.2.1* auch die Herkunft: Unter **Einstellungen → Geräte** stehen
 zwei Geräte mit Modell — eine Uhr für die Luftdienste, ein Handy für die
 Bodendienste —, und jeder Einsatz trägt die Plakette des Geräts, das ihn
-aufgezeichnet hat. Ein Einsatz ist aus einer Ruhezeit **geschnitten**
-(Abschnitt 4.1b): Er trägt die Plakette „Schnitt", und am Ruhesegment steht
+aufgezeichnet hat. Drei Einsätze sind aus einer Ruhezeit **geschnitten**
+(Abschnitt 4.1b): Sie tragen die Plakette „Schnitt", und am Ruhesegment steht
 der gesperrte Bereich.
 
 **Ausprobieren ist ausdrücklich erwünscht.** Ändere Einsätze, lege neue an,

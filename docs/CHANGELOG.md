@@ -14,14 +14,19 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
-## [Web 20.3.0] — 2026-09-14
+## [Web 20.3.0] — 2026-09-15
 
-Schritt 9d (**Demo-Ausbau**), erstes Arbeitspaket (AP0). Der Referenzbestand
-soll die drei Rettungsmittel-Typen aus S9 **im Betrieb** zeigen, und dafür
-braucht ein Bergwachtnotarzt die Winde. Genau das ließ die Prüfschicht bisher
-nicht zu — deshalb steht diese eine Regeländerung **vor** allem anderen des
-Pakets: Ohne sie verwirft der Einspielweg die Fähigkeiten still, und kein
-Bergwacht-Einsatz bekäme seine Windenfelder.
+Schritt 9d (**Demo-Ausbau**). Der Referenzbestand soll die drei
+Rettungsmittel-Typen aus S9 **im Betrieb** zeigen — bisher kannte er sie nur
+als Stammdaten, ohne einen einzigen Diensttag. Die Versionsstufe kommt aus
+dem ersten Arbeitspaket (AP0): Ein Bergwachtnotarzt braucht die Winde, und
+genau das ließ die Prüfschicht nicht zu. Deshalb steht diese eine
+Regeländerung **vor** allem anderen des Pakets: Ohne sie verwirft der
+Einspielweg die Fähigkeiten still, und kein Bergwacht-Einsatz bekäme seine
+Windenfelder. Alles Weitere (AP1 bis AP3) liegt in `tools/`, `docs/` und der
+Demo-Fixture und stuft nichts hoch — es steht hier, weil der Referenzbestand
+Teil des Repositoriums ist und wer später vergleicht, wissen muss, seit wann
+er 106 Einsätze trägt.
 
 ### Geändert — Fähigkeiten beim Typ Bergwacht in beiden Betriebsarten
 
@@ -90,6 +95,122 @@ ausgeschrieben. Der Punkt wartete ausdrücklich auf „das nächste Paket, das
 **Gemessen:** `php -l` auf allen berührten Dateien fehlerfrei; die
 Regeltabelle `veh_caps_erlaubt()` über alle acht Paare aus vier Typen und zwei
 Betriebsarten nachgerechnet (Prüfdokument des Pakets, Abschnitt 2).
+
+### Hinzugefügt — der Referenzbestand kennt die drei Typen jetzt im Betrieb
+
+**Was fehlte.** S9 hat mit Web 16.0.0 vier Rettungsmittel-Typen eingeführt.
+Der Referenzbestand führte sie als Stammdatenzeilen und **keinen einzigen
+Diensttag** damit. Wer das Demo-Konto öffnete, sah davon nichts; und das
+Regressionsnetz (R24) prüfte davon nichts — eine Zusage ohne Prüffall.
+
+**Fünf neue Diensttage, D17 bis D21**, 16 von Hand geschriebene Einsätze und
+zwei weitere Schnitte. Der Bestand wächst damit von 16 auf **21 Diensttage**
+und von 88 auf **106 Einsätze** (101 aktiv, 5 im Papierkorb), von 100 auf
+**119 Ruhesegmente** und von 55 861 auf **63 752 Spurpunkte**. Was die fünf
+Tage mitbringen, das es vorher nicht gab:
+
+- **Bergwacht am Boden** (D17, D19): ein „Bergwachtnotarzt Sonnenau" an einer
+  dritten Wache — mit Winde und Bergwacht-Bereitschaften, also genau dem
+  Fall, den AP0 möglich gemacht hat. D19 führt einen Windeneinsatz mit
+  Polizeihubschrauber, D17 einen **Fußweg**: Der Wagen hält am Zustieg, die
+  Besatzung geht die letzten Meter, und die Aufzeichnung zeigt das als
+  eigenes Teilstück mit 2 bis 3,5 km/h.
+- **Verlegungsfahrzeug** (D18): „VEF Talwang 76/2", drei Einsätze, davon zwei
+  **Sekundärtransporte**. Einer beginnt dort, wo der vorige endete
+  (`start_src: prev_dest`) — die Verlegungsfahrt, die nicht an der Wache
+  anfängt.
+- **Zwei Veranstaltungsdienste ohne Standort** (D20 Boxkampf, D21 Konzert),
+  beide am **Abend eines Tages, an dem tagsüber schon ein anderer Dienst
+  lief**. „Ohne Standort" war bis dahin eine Stammdateneigenschaft von zwei
+  Rettungsmitteln; jetzt ist es ein **Weg durch die Anwendung**: kein
+  Standortfeld im Diensttag, keine Rollen-Vorbelegung, kein Standortschild an
+  der Spur, und die Aufzeichnung beginnt dort, wo der Dienst begonnen hat.
+- **Vier Einsätze ganz ohne Aufzeichnung** (D21): am Formular nachgetragen,
+  mit Koordinaten, aber ohne Spur. Die Tageskarte zeichnet sie als
+  gestrichelte Luftlinien — der Fall, für den es `start_src`, `dest_lat` und
+  `dest_lon` gibt und für den es bisher kein Bild gab.
+
+**Die Stammdaten wachsen mit:** ein dritter Standort („Bergwachtstation
+Sonnenau"), vier neue Rettungsmittel (10 statt 6, davon **4 ohne Standort**),
+vier weitere Zielkliniken und drei weitere Bergwacht-Bereitschaften. Und
+Talwang bekommt endlich **Koordinaten** — es war der einzige Standort ohne,
+und ein Bodendienst, dessen Wache auf keiner Karte liegt, ist ein Prüffall,
+den niemand bestellt hat. Die Folge steht im Prüfdokument: 36 erzeugte
+Einsätze tragen jetzt `start_src: base` statt `null`. Spuren, Phasen,
+Nutzlasten, GPX und CSV bleiben dabei **byteweise gleich** — gemessen, nicht
+vermutet.
+
+### Geändert — die Werkzeuge des Referenzbestands
+
+**Die Fensterableitung stand zweimal** — einmal im Generator, einmal in der
+Prüfung —, und der Kommentar begründete das damit, dass „die Regel selbst
+kurz" sei. Mit dem Wegpunkt `zustieg` ist sie es nicht mehr: vier Teilstücke
+bei drei Phasenfenstern, und die Zuteilung passt in keine sechs Zeilen. Zwei
+Fassungen hießen, dass die Prüfung die Erreichbarkeit eines **anderen**
+Ablaufs misst als den, den der Generator zeichnet — und dass beide dabei
+Erfolg melden. Sie liegt jetzt an einer Stelle (`quelldaten/wegpunkte.py`),
+zusammen mit `ist_fussweg()` und der Zeitrechnung.
+
+**Die Abdeckungsmatrix wächst von 83 auf 97 Zeilen**, 0 offen. Die Dimension
+„Luftspezifik" heißt jetzt **„Bergrettung"** — sie prüfte nie die Luft,
+sondern Winde und Bergwacht, und die gibt es seit AP0 auch am Boden. Dazu
+kommt eine neue Dimension **„Spur"** (Fußweg, Tag ohne Standort, Einsatz
+ohne Aufzeichnung). Neu geprüft wird außerdem, dass `spur_ausgangspunkt`
+**genau dann** dasteht, wenn der Diensttag keinen Standort hat — Pflicht und
+Verbot in einer Regel, statt einer Angabe, die man vergessen kann.
+
+**Für den Fußweg wird keine Straße geholt.** OSRM antwortete auf
+`zustieg → ort` mit der nächstgelegenen Fahrstraße — also mit einer
+Geometrie, die der Generator gar nicht benutzt, und mit einer Datei, die
+`routen_soll.json` als gebraucht führt. Beides wäre still falsch.
+
+**Und die Fußwege werden in einem zweiten Durchgang gezeichnet**, zwischen
+den **tatsächlichen** Endpunkten der Nachbarstücke. Vorher endete der Weg
+exakt am Wegpunkt, während die Fahrstrecke daneben auf der Straße anfing —
+der Sprung dazwischen las sich als 557 km/h.
+
+### Geändert — Referenzdateien, Fixture und ein fehlendes Glied im Aufbau
+
+Beide eingecheckten Referenz-Exporte (`.edbak` und CSV-Archiv) und
+`server/demo/fixture.json.gz` sind aus **einem** Einspiellauf neu erzeugt.
+Die Fixture wiegt gepackt rund 860 KB statt 745 KB.
+
+**`einspielen/demo_kennzeichnen.php` ist neu, und es schließt eine Lücke, die
+niemand bemerkt hatte.** Seit S10 entscheidet `pw_handling.php` über
+`demo_ist_demo()`, ob ein Konto beim ersten Anmelden still auf die
+Schlüsselhülle mit Server-Anteil umgestellt wird. Die Anleitung sagte
+deshalb: „Das Demo-Konto steht vor den Browserläufen." Nur ließ sich das
+nicht ausführen — der Adminbereich kann ein Demo-Konto erst anlegen, wenn es
+**eine Fixture gibt**, und die entsteht am Ende. Beim ersten Neubau danach
+hat der Riegel prompt zugeschlagen. Das kleine Skript löst den Knoten von der
+anderen Seite: Es vermerkt die Kontonummer unmittelbar nach `--stufen konto`
+in `app_state` und setzt die Reset-Marke in die Zukunft — ohne Fixture, ohne
+Adminbereich, über `demo_lib.php` und nicht per SQL.
+
+**Zwei Ordnungen, die die Datenbank nie zugesagt hat**, haben im
+edbak-Kreislauf 12 Abweichungen erzeugt: die Reihenfolge der Stammdatenlisten
+(zwei Bereitschaften gleichen Namens an verschiedenen Standorten tauschten
+ihren `base_ref`) und die der Reanimations-Ereignisse in der CSV-Spalte (zwei
+Ereignisse derselben Minute). Beides ist **normalisiert** worden, nicht in
+die Ausnahmeliste geschrieben — eine Ausnahme hätte jede künftige echte
+Abweichung an derselben Stelle mitverschluckt. Gegenproben belegen, dass ein
+geänderter **Wert** weiterhin gemeldet wird.
+
+**Dabei ist eine alte Ausnahme aufgefallen, die zu viel verschluckt hat.**
+Die Selbstprobe „Zeile in `diensttage.csv` entfernt" meldete 0 statt 1: Eine
+Regel mit dem Platzhalter `diensttage/*` deckte jedes fehlende Feld dieser
+Datei ab, nicht nur das gemeinte. Sie ist in zwei Regeln mit **Schlüssel**
+zerlegt; das Vergleichswerkzeug kann dafür jetzt reguläre Ausdrücke auf den
+Schlüssel anwenden. Der Fund ist älter als dieses Paket — nachgewiesen gegen
+die alte Referenz in einem eigenen Arbeitsbaum.
+
+**Der Bilderlauf bekommt drei Seiten dazu** (49 statt 46,
+392 statt 368 Bilder): ein Diensttag ohne Standort, einer mit gestrichelten
+Luftlinien und ein bodengebundener Bergwachteinsatz mit Windenkacheln. Sie
+suchen ihren Tag über den **Inhalt** — kein `base_name`, keine Spurpunkte,
+`winch` an einem Bergwachttag am Boden — und nicht über eine Kennung: Die
+wandern bei jedem Neubau des Bestands. Findet sich der Fall nicht, wird die
+Seite **nicht** fotografiert und im Lauf als „NICHT AUFGELÖST" genannt.
 
 ## [Web 20.2.1] — 2026-09-14
 

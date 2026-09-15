@@ -20,7 +20,7 @@ require_once __DIR__ . '/demo_lib.php';
  * OHNE DEMO-KONTO — durchgaengig und ohne Ausnahme (Rueckmeldung
  * 05.09.2026). Sein Bestand ist erfunden, liegt als Fixture im Repositorium
  * und wird alle dreissig Minuten daraus neu hergestellt. Er in einer
- * Statistik mitzuzaehlen hiesse, 88 erfundene Einsaetze als Nutzung
+ * Statistik mitzuzaehlen hiesse, 106 erfundene Einsaetze als Nutzung
  * auszugeben. Die Bezugsgroesse steht deshalb an jeder Karte: „von 11
  * Konten" meint elf ECHTE.
  *

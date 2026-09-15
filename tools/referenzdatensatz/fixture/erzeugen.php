@@ -36,7 +36,9 @@ declare(strict_types=1);
  * Aufzeichnungen — und zwar ohne jede Meldung. Gemessen am 12.09.2026:
  * 47 576 statt 55 861 Punkten, also 8285 weniger, nach einer Sitzung mit
  * einigen hundert Seitenaufrufen. Die Zahl steht am Ende des Laufs; wer sie
- * nicht gegen die erwartete haelt, merkt es nicht.
+ * nicht gegen die erwartete haelt, merkt es nicht. (Erwartet sind seit dem
+ * Demo-Ausbau 63 752 Punkte; die 55 861 oben sind der Stand, an dem die
+ * Ausduennung gemessen wurde, und bleiben als Messprotokoll stehen.)
  */
 
 $email = $argv[1] ?? 'demo@gen-em.org';
@@ -228,10 +230,10 @@ $fx = [
     'daten'    => $daten,
 ];
 
-/* GEPACKT ABLEGEN. Unkomprimiert sind es rund 2,4 MB — im Wesentlichen
- * 55 861 Spurpunkte als JSON-Zahlen (seit S1 mit denen des Papierkorbs).
+/* GEPACKT ABLEGEN. Unkomprimiert sind es rund 2,8 MB — im Wesentlichen
+ * 63 752 Spurpunkte als JSON-Zahlen (seit S1 mit denen des Papierkorbs).
  * Diese Datei liegt unter server/ und geht damit bei jedem Deploy ueber FTPS
- * mit; gepackt sind es rund 745 KB. Gelesen wird sie ohnehin nur beim
+ * mit; gepackt sind es rund 860 KB. Gelesen wird sie ohnehin nur beim
  * Anlegen und beim Reset, und `gzdecode()` darauf kostet Bruchteile einer
  * Sekunde.
  *

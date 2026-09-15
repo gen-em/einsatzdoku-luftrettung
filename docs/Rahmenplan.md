@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 65 (14.09.2026)** — dieses Dokument steuert das Programm:
+**Fassung 66 (15.09.2026)** — dieses Dokument steuert das Programm:
 Reihenfolge, Status, programmweite Entscheidungen. Es hält nur, was für die
 nächsten Schritte gebraucht wird. Der eingefrorene Altbestand — die
 Fassungsvermerke, die Phasentexte mit ihren Umsetzungsblöcken und die 50
@@ -24,6 +24,15 @@ weder `update.php` noch `schema.sql` anfasst. **Fällig sind dagegen die fünf
 Betriebsposten und die Prüfliste P-01 bis P-14** (Abschnitt 6) — ohne den
 ersten Posten, das Anlegen des Server-Anteils, arbeitet die Anwendung
 unverändert ohne Anteil weiter.
+
+**Seit dem 15.09.2026 steht ein Paket zum Merge:** **Schritt 9d
+(Demo-Ausbau)**, Zweig `claude/umsetzung-ohne-pausen-2vfppr`, **Web 20.3.0**,
+Uhr und Android unberührt, **keine Migration**. Der Referenzbestand wächst
+von 16 auf 21 Diensttage und von 88 auf 106 Einsätze und zeigt damit die drei
+Rettungsmittel-Typen aus S9 im Betrieb; die eine Regeländerung in `server/`
+erlaubt Fähigkeiten beim Typ Bergwacht **in beiden Betriebsarten**. Der Merge
+bringt `server/demo/fixture.json.gz` mit — das Demo-Konto zeigt den neuen
+Bestand erst nach einem **Zurücksetzen** im Adminbereich.
 
 Die jüngsten Merges in der Reihenfolge, in der sie liefen: die
 Korrekturstufe **Nr. 148 und 149** am 06.09.2026 (PR #36, Web 15.5.2),
@@ -207,6 +216,7 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 | 9a | **Sofortpaket Sicherheit** (R78) | Web: Nr. 127–131, 133–136, 138 (Rundenzahl 600 000, Login-CSRF, E-Mail-Nachweis, Ordner, GPX, `wiederherstellen.php`, Bauordner, Ersetzfenster der Uhr, Maskierung, Weg C, Integritätswache aus Nr. 140) — **ohne 132 und 137, die sind seit dem 07.09.2026 in S9**; Android: Nr. 142–145 und der Räumteil von 114 | Web sofort; Android nach Schritt 6 auf `main` | keins; `docs/konzepte/Vorbereitung-Sicherheitspaket.md` ist die Spezifikation (Muster R42, Prüfdokument mit Zahlen) | Opus | **gebaut, geprüft und gegengeprüft (Web 15.6.0 und Android 0.14.0, 07.09.2026)** — Nachbesserungen nach der adversarischen Gegenprüfung committet, Zweig gepusht; **am 08.09.2026 auf `main` gemergt** (PR #37, Merge-Commit `f299bbf`), **danach `update.php`** |
 | 9b | **S10 — Sicherheit** (R78) | Server-Anteil am Datenschlüssel mit Schlüsselblatt, Kennung und Rotation (SP-3); Adminpakete versiegeln, `ftp` abschaffen (Nr. 139) | Schritt 9a; **vor P5** (Hauptstufe, Umstellung aller Hüllen) | **gelöscht nach R62** (Fable, 13.09.2026; E-S10-01 bis -18, keine Mockups; Historie `a00f6b5`) | Fable (Konzept), Opus | **erledigt und gemergt (Web 19.7.0 bis 20.2.1, 14.09.2026, PR #45 `965ec11`)** — sechs Arbeitspakete, kein Fable-Schritt, **keine Migration**, `update.php` nicht fällig; Zahlen in Abschnitt 8. Offen sind die fünf Betriebsposten und die Prüfliste P-01 bis P-14 (Abschnitt 6) |
 | 9c | **Mockup-Runde** | Vier Gestaltungsaufgaben, eine Freigaberunde statt vier (Entscheidung 15 vom 12.09.2026): **Nr. 41** zwei Regeln für die Importvorschau (`imp-warn`, `imp-daygroup`), **Nr. 42** `×` am Koordinaten-Chip (`.rmx` neu bemaßen) und `⚠` im Fließtext, **Nr. 45** dritte Kartengröße, **Nr. 124** Aktionsblatt nach Weg (b) — **vier Bauarten** von Öffnern: sechs `ui_aktionen()`, neun `ui_zeilenaktionen()`, der Pin-Knopf des Ortsfelds und drei handgeschriebene Sortierblatt-Knöpfe (nachgezählt 13.09.2026, berichtigt in AP4 — die Regel hängt am Attribut und erreicht alle) | keine; **ab jetzt, parallel** — die Runde braucht eine Freigabe und läuft deshalb früh, damit sie nicht am Ende wartet | keins; Mockups nach `Design.md` 1, Freigabe je Mockup | Fable (Mockups), Opus (Umsetzung) | **Freigegeben am 13.09.2026** (`docs/konzepte/Konzept-Mockup-Runde.md`, vier Mockups in vier Fassungen, F-MR-1 bis F-MR-13 beantwortet; darunter `--dauer` fuer die ganze Anwendung auf 240 ms). **AP1 erledigt** (Web 19.4.0, 13.09.2026): Nr. 41 ist beantwortet — `imp-daygroup` hat eine Regel, `imp-warn` ist gestrichen, `pruefen.py` meldet **0** `[offen]` statt 2. Dabei **Nr. 182** entstanden und mit **Web 19.4.1 gleich erledigt** (M-MR-05, F-MR-14 = Weg B): Die Kopfzeile nimmt ueber eine Container-Abfrage die sichtbare Breite an — **ohne JavaScript**. Weg C war zuerst gewaehlt und ist nach einer Kartierung mit **58 Befunden, 22 davon „bricht"**, verworfen worden. **Erledigt am 14.09.2026, Web 19.6.0.** AP2 (Nr. 42, 19.4.2) — die beiden Chips und der Satz der Meldung tragen Symbole, das Treffziel waechst von 17 x 15 auf 28 x 28 px; **AP3** (Nr. 45, 19.5.0) — die dritte Kartengroesse, ein Zustand mit zwei Wirkungen je Breite; **AP3b** (Nr. 183, 19.5.1) — Bilderlauf, Klickprobe und Stilvergleich fahren seither `--motor chromium|firefox|webkit`, und der erste dreifache Lauf brachte gleich zwei Befunde (Nr. 185, Nr. 186, beide erledigt); **AP4** (Nr. 124, 19.6.0) — das Blatt faehrt auf, der offene Oeffner ist orange hinterlegt, `--dauer` steht auf 240 ms. Zahlen in Abschnitt 8. **Drei Rueckfragen vor Beginn beantwortet** (13.09.2026): die Unicode-Pruefung bekommt eine Ausnahmeliste ueber `zusagen.md` statt des wirkungslosen Eintrags in `ausnahmen.md` (E-MR-24), die orange Markierung gilt fuer **alle** Blatt-Oeffner und nicht nur fuer die beiden Bausteine (E-MR-25), und Fehlerfund 1 laeuft in AP2 mit statt als eigener Backlog-Punkt. **Nr. 124 ist der einzige der vier aus einer Rueckmeldung von aussen** und darf die Runde verlassen, wenn sie ins Rutschen geraet. Ort begruendet in Fassung 46: vor P5, nicht in P7 |
+| 9d | **Demo-Ausbau** | Referenzbestand und Demo-Konto um die S9-Typen im Betrieb erweitern: fünf Diensttage (Bergwachtnotarzt ×2, VEF Talwang, zwei Veranstaltungen), 16 Einsätze + 2 Schnitte, Standorte mit Koordinaten, Tage ohne Standort, Fußwege; dazu die Regeländerung **Fähigkeiten bei Typ Bergwacht in beiden Betriebsarten** (AP0, `server/`, keine Migration) | **Schritt 9b gemergt** — erfüllt am 14.09.2026; parallel zum P5-Konzept | `docs/konzepte/Konzept-Demo-Ausbau.md` (Fable, 15.09.2026; E-DA-01 bis E-DA-30) | Opus, kein Fable-Schritt | **Gebaut und geprüft** (Zweig `claude/umsetzung-ohne-pausen-2vfppr`): **AP0 bis AP4 erledigt** 14./15.09.2026, **Web 20.3.0**. Der Haltepunkt **H-DA-1 ist entfallen** — `router.project-osrm.org` war erreichbar, die Umsetzung hat die Strecken selbst geholt und eingecheckt (E-DA-22); **H-DA-3 nicht ausgelöst** (beide Kreisläufe 0 unerklärt). Zahlen in Abschnitt 8. **Offen:** Merge, Freigabe des Abschlusses und die Prüfliste (`docs/konzepte/Pruefdokument-Demo-Ausbau.md`) |
 | 10 | **P5 — Dienstbetrieb** | Registrierung, Rollen, Administration, Betrieb; Zweitfaktor für alle Konten (Nr. 141) und CSP nach Bauplan SP-5 (Nr. 8) | Schritte 2, 5, 7 und 9b; Hosting-Entscheidung; Staging | neu | Fable (Konzept) | offen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt: Store-Verteilung (R65), Update-Weg (R66), Auslieferungskette (R67), Repositorium (R68), Code-Review (R69), Web-App auf Android (R70), Phasenschnitt (R71), Doku-Anforderungen (R72), Problemsammlung (R73); Ergebnis sind die Konzepte der Phasen P6–P8 mit je eigenem Paketschnitt | Festlegungen: keine (vorgezogen); Paketschnitte: die jeweilige Vorphase, P6 nach der Freigaberunde des Reviews | `docs/konzepte/Konzept-Planung-v1.0.md` | Fable (R14) | **Festlegungen entschieden** 03.09.2026 (R65–R73); offen nur die Paketschnitte je Phasenkonzept |
 | 12 | **P6 — Review und Bereinigung** | Bedrohungsmodell (Eingang: `Review-Krypto-Sicherheit.md`, R78); Bug- und Sicherheitsreview in zwölf Stücken (R17, R69); Freigaberunde; Sofortpaket; Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); Fragen Nr. 146; R5-Ausnahmeliste | Schritte 8 und 10; Nr. 43-Fragen beantwortet (R78) | neu; `docs/konzepte/Review-R17.md` entsteht erst im Review als Sammelstelle der Funde, Paketschnitt nach der Freigaberunde | Fable (Review, Kryptographie), sonst Opus | offen |
@@ -1203,6 +1213,7 @@ und die Backlog-Nummern verlangen die Gegenproben aus Abschnitt 2.2.
 | S9-Konzept zu Schritt 9a (das Konzept schreibt keinen Code) | ~~S8 und S9~~ — **erfüllt** (S8 gemergt, Fassung 32). ~~**S9-Umsetzung zu 9a**~~ — **aufgehoben 07.09.2026:** Nr. 137 und 132 sind in S9, die gemeinsamen Dateien gehören S9 allein; beide laufen parallel, nur die Buchführung zieht nach (K7) |
 | S9 zu S11: `store => 'pat'` (E-S9-01) ist der Katalogschlüssel, den S11 für die Zielklinik benutzt — S11 baut darauf auf, nicht daneben | — |
 | Korrekturstufe Nr. 148/149 zu 9a (`index.php`, `betrieb_updates.php`, `migration_lib.php` gegen die Sicherheitsdateien; Buchführung mechanisch) | — die Korrekturstufe ist klein und geht **zuerst** auf `main` |
+| Demo-Ausbau (9d) zum P5-Konzept und zum R42-Rest (`betrieb_statistik.php`) — keine gemeinsamen Dateien außer der Buchführung | ~~**Demo-Ausbau zu S10**~~ — **erfüllt** (S10 am 14.09.2026 gemergt, 9d begann danach). Der Grund war doppelt: AP0 schreibt `einstellungen.php`, und S10 nimmt den **Referenzbestand** als Messlatte — ein Bestand, der sich unter der Messung ändert, ist keine |
 
 **Merge-Reihenfolge auf `main`:** ein Push je Paket nach Freigabe (K7);
 nach jeder Migration `update.php`.
@@ -1340,7 +1351,7 @@ damit „nach v1.0" verlassen — dort stehen noch **acht**: 50, 51, 52, 55,
 | 181 | Die Anwendung schickt keine Content-Security-Policy | **S10** (Schritt 9b) oder P6 (R69) — zu entscheiden | Zweite Hälfte von Nr. 179, dort ausdrücklich nicht mitgemacht: Die Zusage „keine fremde Quelle" ist seit dem 13.09.2026 **am Quelltext** nachgezählt, zur Laufzeit hält sie nichts (`grep -rn Content-Security-Policy server/` → **0**). Die Richtlinie braucht Ausnahmen für vier Kachelserver und den Adressdienst — **dessen Anschrift ist eine Einstellung**, sie muss also zur Laufzeit gebaut werden. Wer sie zu eng setzt, macht die Karten grau |
 | 184 | Kommentar-Abtaster verliert in PHP mit HTML die Spur | Backlog-Runde | Aufgenommen 14.09.2026 in AP2. `ohne_php_js_kommentare()` (Backlog-Runde 3) taktet in einer PHP-Datei mit HTML an einem ungepaarten `"` im Fliesstext aus und verschluckt alles bis zum naechsten — in `einsatz_form.php` **rund 800 Zeilen am Stueck**. Die Folge sind **falsche Negative** in den drei Zusagen-Pruefungen, die denselben Text durchsuchen: Was im verschluckten Bereich steht, wird nicht gefunden, und die Gruppe meldet trotzdem 0. Weg: fuer `.php` nur innerhalb `<?php>`/`<?=>`/`<script>` abtasten |
 | 188 | Kein Prüfmittel misst Verweise zwischen Dokumenten | **P6** (R69), früher wenn vorher ein Konzept gelöscht wird | Aufgenommen 14.09.2026 im S10-Nachlauf. Nach der Löschung des S10-Konzepts wurden Wortliste und Linkprobe als Beleg genannt; **keine von beiden misst diese Klasse** — die Linkprobe liest `<seite>.php?…` in `server/` und sieht `docs/` gar nicht. Der Beleg, dass das etwas kostet: Die Fahrplanzeile zu Schritt 7 sagte **acht Tage lang** „Konzept liegt vor" und nannte einen Pfad, den es seit dem S8-Abschluss nicht mehr gab — in derselben Zeile, die zwei Spalten weiter „nach R62 gelöscht" trug. Eine Probe nach dem Muster der Linkprobe, die relative Pfade auflöst, eingefrorene Dokumente auslässt und eine begründete Ausnahmeliste führt |
-| 189 | `server/schema.sql` nennt ein Verzeichnis von vor dem 02.09.2026 | **mitlaufend** — nächstes Paket unter `server/`, spätestens der Kommentardurchgang in P6 (R69) | Aufgenommen 14.09.2026 im S10-Nachlauf. Zeile 528 verweist auf `docs/Konzept-S2`; die Datei liegt seit `781e624` unter `docs/konzepte/erledigt/`. Der Zwilling in `migration_lib.php:1770` erklärt dieselbe Sache mit demselben Beleg F-S2-G und ist nachgezogen — von zwei gleichlautenden Kommentaren wurde einer vergessen. **Nicht im Nachlauf mitgemacht**, weil `server/` eine Versionsstufe und einen Deploy nach sich zieht; für einen Kommentar ist das der falsche Preis |
+| 191 | Die Zeitraumübersicht zählt Winde und Bergwacht nur luftgebunden | **Mockup-Runde** oder das nächste Paket mit Freigabe (`CLAUDE.md` 5) | Aufgenommen 15.09.2026 in 9d/AP0 (F-DA-4). Seit R80 darf ein bodengebundenes Rettungsmittel vom Typ Bergwacht Fähigkeiten führen; `api/range.php` beantwortet `faehigkeiten` aber weiter über `d.kind = 'air'`, und die beiden Windenkacheln stehen nur im Luft-Kachelsatz. Ein Bergwacht-Diensttag am Boden zeigt seine Windenfelder im Formular und fehlt in der Auswertung. **Warum nicht gleich mit:** zwei Kacheln mehr im Bodensatz wären zehn Kacheln in vier Spalten — eine Gestaltungsentscheidung, die eine Freigabe mit Mockup braucht. Der Kommentar an der Abfrage sagt seither, dass die Zeile eine Lücke ist und keine Herleitung |
 
 ## 6. Offene Abnahmen und Zuarbeiten
 
@@ -1362,6 +1373,9 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | **Prüfliste S10 — P-01 bis P-14** (`docs/konzepte/Pruefdokument-S10-Sicherheit.md`). Die fünf Betriebsposten oben sind die ersten Punkte davon; dazu kommen der **Ausdruck auf Papier** (P-02 — gemessen ist die *gerechnete* Druckansicht bei 210 mm, ob ein Drucker die Vierergruppen so setzt, sagt nur ein Ausdruck), die echte `config.php` des Hosters (P-06, Beschreibbarkeit und OPcache), der **Versand gegen die echten Gegenstellen** (P-12, FTPS-Zertifikat und SFTP-Hostschlüssel) und ein bestehendes `ftp`-Ziel, falls es eines gibt. **Abschnitt 0 des Prüfdokuments** sagt zuerst, was auf dem Prüfstand *nicht* herzustellen war | Schritt 9b | **fällig** — seit dem Merge am 14.09.2026 (`965ec11`) |
 | ~~**Freigabe des S10-Abschlusses**~~ | Schritt 9b | **erteilt 14.09.2026** — das Konzept ist gelöscht (Historie: `a00f6b5`), das Prüfdokument bleibt bis zum Abhaken seiner Prüfliste |
 | **Freigabe des Abschlusses der Mockup-Runde 9c** — danach löscht K9 das Konzept (`Konzept-Mockup-Runde.md`); das Prüfdokument bleibt, bis seine Prüfliste abgehakt ist | Schritt 9c | vor dem Merge |
+| ~~**OSRM-Routen für die neuen Bodeneinsätze zuliefern**~~ (H-DA-1) | Schritt 9d | **gegenstandslos 15.09.2026** — `router.project-osrm.org` antwortete der Umsetzungssitzung mit HTTP 200; die 24 neuen `strecke_*.geojson` sind selbst geholt und eingecheckt (E-DA-22) |
+| **Nach dem Merge von 9d: im Adminbereich unter Demo-Konto einmal „Auf Standard zurücksetzen" drücken** — der Deploy legt nur die neue `fixture.json.gz` ab; das bestehende Demo-Konto zeigt bis zum nächsten Reset den alten Bestand. Der Reset läuft ohnehin spätestens 30 Minuten nach der nächsten Anfrage, aber dann unangekündigt bei einer Besucherin (rund 6,6 s Wartezeit, Backlog Nr. 76). **`update.php` ist nicht fällig** — 9d bringt keine Migration | Schritt 9d | nach dem Merge |
+| **Prüfliste Demo-Ausbau 9d** (`docs/konzepte/Pruefdokument-Demo-Ausbau.md`) und die **Freigabe des Abschlusses** — danach löscht K9 das Konzept (`Konzept-Demo-Ausbau.md`), das Prüfdokument bleibt bis zum Abhaken | Schritt 9d | nach dem Merge |
 | **Freigabe des S9-Abschlusses** — danach löscht K9 das Konzept (`Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`); das Prüfdokument bleibt, bis seine Prüfliste abgehakt ist. **Ebenfalls zu löschen:** `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md` erst nach P5, sie wird dort gebraucht | Schritt 8 | — |
 | **Prüfliste S5 (12 Punkte)**, darunter: die Bestandsuhr **einmal neu koppeln** (E-S5-42, vorher den Sync leerlaufen lassen), beide Kopplungsmails im Postfach sichten, Antwortgleichheit auf Produktiv nachmessen, die Geräteseite **ohne JavaScript**, drei Punkte nur am Gerät (Verbindungsabriss, Tastensperre, Oberfläche auf zwei Geräteklassen), **ein Update mit Wartungsmodus** und **eine Kopplung mit dem Handbuch in der Hand** (P2-Punkt 4.1) | S5-Abnahme | nach `update.php` |
 | **Freigabe des S5-Abschlusses** — danach löscht R62 die beiden Konzepte (`Konzept-S5-Kopplung-umgekehrt.md`, `…-Zusatz-Wartungsmodus.md`); das Prüfdokument bleibt bis zur abgehakten Prüfliste | Schritt 5 | — |
@@ -1438,7 +1452,7 @@ werden nie neu vergeben.
 | R1 | Rahmenplan plus Phasenkonzepte statt eines Großdokuments | gilt; seit F16 mit Archiv (R51) |
 | R2 | Phasenfolge P0 → … → P6 mit Zwischenpaketen | überholt durch Abschnitt 3 |
 | R3 | Luftbegriffe nur ersetzen, wo sie Allgemeines meinen; Luftfahrt-Fachfelder bleiben | gilt; Wortliste in Konzept P2, 5; Prüfmittel R28 |
-| R4 | Referenzdatensatz wird generiert, über reguläre Wege eingespielt | erledigt (P1: 16 Diensttage, 87 Einsätze) |
+| R4 | Referenzdatensatz wird generiert, über reguläre Wege eingespielt | erledigt (P1: 16 Diensttage, 87 Einsätze); **seit 9d 21 Diensttage und 103 Einsätze in den Quelldaten**, 106 im Bestand |
 | R5 | Gespeicherte Namen bleiben; Ausnahmeliste in P7 beschließen (R71) | gilt; Liste zugeliefert und leer |
 | R6 | Backlog-Zuordnung (alt) | überholt durch Abschnitt 5 |
 | R7 | Ordnerumbau vor P3 | gegenstandslos (E-A6-12) |
@@ -1514,6 +1528,7 @@ werden nie neu vergeben.
 | R75 | **Rolle „BetreiberIn"** (Beschluss 05.09.2026, E-S8-02; Ausnahme zu R38, die Support-Rolle bleibt dort): dritte Rolle `betreiberin` in `users.role`. **Rechte:** BetreiberIn ⊇ Admin ⊇ NutzerIn — die BetreiberIn kann alles, was ein Admin kann, und sieht als Einzige den Block „Betrieb" (Server, Speicher, Updates, Jobs, Komplett-Backup, Backup-Ziele). **Bestand:** die Migration macht **alle** vorhandenen Admins zu BetreiberInnen — niemand verliert Zugriff, Rückstufung von Hand. **Vergabe:** nur eine BetreiberIn vergibt oder entzieht die Rolle; das **letzte** BetreiberIn-Konto lässt sich weder zurückstufen noch löschen; `install.php` legt das erste Konto als BetreiberIn an. Die Rechteänderung geht in das Bedrohungsmodell (R69, P6); Support-Rolle, TOTP und Audit bleiben P5 | gilt; umgesetzt in S8 AP1 |
 | R76 | **Bedienhöhe in zwei Stufen** (Beschluss 05.09.2026, E-S8-09; beantwortet Nr. 74): **44 px bleibt die Vorgabe**; für Zeigergeräte (`@media (hover: hover) and (pointer: fine)`, ab 1024 px) gilt eine **dichte Stufe von 36 px** für Knöpfe, Felder, Listenzeilen und Menüeinträge. Begründung: Die häufigste Arbeit — Einsätze nach der Aufzeichnung ausfüllen — ist Formulararbeit am Schreibtisch; 36 px liegt über der Mindestzielgröße von WCAG 2.5.8 (24 px); Touch-Laptops mit Maus als Hauptzeiger bekommen 36, reine Touch-Geräte 44. Kontrast ändert sich nicht (Höhe, keine Farbe). `CLAUDE.md` 5 und `Design.md` tragen beide Stufen, `tools/screenshots/` misst zwei Sollwerte. Die Android-Apps bleiben bei 48 dp (R58) | gilt; umgesetzt in S8 AP7, Voraussetzung für S9 PS-3 |
 | R77 | **Drei Backup-Begriffe** (Beschluss 05.09.2026, E-S8-06; beantwortet Nr. 79, setzt R50/R56 fort): **Backup** = die `.edbak`-Datei der NutzerIn (Einstellungen → Backup) · **Konto-Backup** = das Paket je Konto auf dem Server (Verwaltung → Konto-Backups) · **Komplett-Backup** = der Dump der Installation (Betrieb → Komplett-Backup). Dazu **Backup-Ziele** (Versand von Konto-Backups) und **Speicher** (Grenze und Belegung aller drei, Betrieb → Servereinstellungen). Verben: **sichern** für das Erzeugen (R56), **einspielen** für jeden Rückweg in ein Konto — für NutzerIn wie Verwaltung gleich —, **wiederherstellen** nur für die Installation. Kennzahlen und Filter heißen „Konto-Backup überfällig" und „nie Konto-Backup", weil sie genau das messen (B-S8-07). „Admin-Backup" und „Sicherung" als Substantiv sind gestrichen | gilt; umgesetzt in S8 AP2 und AP3 |
+| R80 | **Fähigkeiten hängen am Typ des Rettungsmittels, nicht an seiner Betriebsart** (Beschluss 15.09.2026, E-DA-06; schränkt E29 ein). Winde und Bergwacht sind seit Web 20.3.0 auch an **bodengebundenen** Rettungsmitteln vom Typ **Bergwacht** erlaubt — ein Bergwachtnotarzt fährt zum Einsatz und wird von dort geflogen. Die Regel steht als **Spalte** in `VEHICLE_TYPEN` (`faehigkeiten`: `'luft'` \| `'immer'`) und wird an einer Stelle beantwortet, `veh_caps_erlaubt()`; Prüfschicht, Rückspielweg der Sicherung, Markup und Dialogskript fragen sie. Für den Typ **Veranstaltung** bleibt es bei „keine" — das folgt schon aus der festen Betriebsart. **Nicht mitgeändert:** `pruef_tagesrettungsmittel()` kennt weiterhin keine Fähigkeiten (F19, E-S9-10), und die **Zeitraumübersicht** zählt Winde und Bergwacht weiter nur luftgebunden — das wäre eine Gestaltungsentscheidung mit Mockup und steht als Backlog Nr. 191 | gilt; umgesetzt in 9d AP0 |
 
 ## 8. Erledigt — Kurzübersicht
 
@@ -2316,6 +2331,68 @@ sagt es ausdrücklich.
 
 *Merge:* **steht an.**
 
+### Demo-Ausbau 9d · Web 20.3.0 · 14.–15.09.2026 (Schritt 9d)
+
+**Der Referenzbestand zeigt die drei Rettungsmittel-Typen aus S9 jetzt im
+Betrieb.** Bis dahin kannte er sie nur als Stammdatenzeilen — kein Diensttag,
+kein Einsatz; wer das Demo-Konto öffnete, sah davon nichts, und das
+Regressionsnetz (R24) prüfte davon nichts. Konzept `Konzept-Demo-Ausbau.md`
+(Fable, 15.09.2026, E-DA-01 bis E-DA-30); Zweig
+`claude/umsetzung-ohne-pausen-2vfppr`, fünf Arbeitspakete, je ein Commit und
+ein Push. **Eine Versionsstufe**, weil nur AP0 `server/` anfasst.
+
+**AP0 — die eine Regeländerung** (Web 20.3.0, **R80**): Winde und Bergwacht
+sind seit S9 an Typ **Bergwacht** auch **bodengebunden** erlaubt. Ein
+Bergwachtnotarzt fährt zum Einsatz und wird von dort geflogen; die Kopplung
+von Winde und Luft war eine Regel über Hubschrauber, nicht über Bergwacht.
+Die Regel ist eine **Spalte** in `VEHICLE_TYPEN` geworden und wird an einer
+Stelle beantwortet (`veh_caps_erlaubt()`) — sie wird an **vier** Stellen
+gebraucht, und genau daran war die alte Fassung gescheitert: Das Skript des
+Stammdatendialogs führte eine dritte, **engere** Fassung (F-DA-1), und die
+Karte „Bergwacht-Bereitschaften" hing am selben zu engen Merkmal (F-DA-2 —
+sie hätte AP1 stumm beschädigt). Mitgenommen: **Backlog Nr. 189**.
+
+**AP1 bis AP3 — der Bestand.** Fünf neue Diensttage D17–D21, 16 von Hand
+geschriebene Einsätze und zwei weitere Schnitte: Bergwacht am Boden mit Winde
+und **Fußweg** (der Wagen hält am Zustieg, die Besatzung geht), ein
+Verlegungsfahrzeug mit Sekundärtransporten, und zwei
+**Veranstaltungsdienste ohne Standort** am Abend eines Tages, an dem tagsüber
+schon ein anderer Dienst lief — einer davon vollständig am Formular
+nachgetragen, also mit Koordinaten und ohne Spur (gestrichelte Luftlinien).
+Dazu ein dritter Standort, vier neue Rettungsmittel und Koordinaten für
+Talwang. **16 → 21 Diensttage, 88 → 106 Einsätze, 100 → 119 Ruhesegmente,
+55 861 → 63 752 Spurpunkte.**
+
+*Prüfzahlen:* `quelldaten/pruefen.py` **21 Dienste / 103 Einsätze / 7042
+Einzelprüfungen / 97 Matrixzeilen, 0 offen / 0 Sachfehler** ·
+`generator/pruefen.py` **321 799 Einzelprüfungen, 0 Befunde** · Einspiellauf
+**612 Anfragen, 0 Fehlversuche** · edbak-Kreislauf **328 771 Einzelvergleiche,
+0 unerklärt, 0 ungenutzt**, Selbstproben **15/15** · CSV-Kreislauf **10 922 /
+0 / 0**, Selbstproben **10/10** · Klickprobe **47/47** · Bilderlauf
+**Zeiger 49 Seiten / 392 Bilder 0/0/0**, **Finger 16 Seiten /
+128 Bilder 0/0/0** · Papierkorb-Mischfall **15/0** · Linkprobe **117/0** ·
+Wartungsprobe **57/0** · Wortliste **0/0/0** · Vollständigkeit
+**340, unverändert** · Demo-Reset **5859 ms → 6610 ms**. *Keine Migration.*
+
+**Drei Funde unterwegs, alle behoben.** Der Riegel auf der Schlüsselhülle
+(S10) hielt den Aufbau an, weil die dokumentierte Reihenfolge gar nicht
+ausführbar war — der Adminbereich kann ein Demo-Konto erst **mit** Fixture
+anlegen, und die entsteht am Ende; `einspielen/demo_kennzeichnen.php` löst
+das von der anderen Seite (F-DA-7). Die **Klickprobe** hat D21 einen Standort
+verpasst, weil sie ihn aus einem Auswahlfeld las, das für einen Tag ohne
+Standort seine erste Option liefert — seit S9 vorhanden, erst mit diesem
+Bestand auslösbar (F-DA-8). Und eine **Wildcard-Ausnahme** verschluckte eine
+Selbstprobe des CSV-Vergleichs; der Fund ist älter als das Paket und gegen
+die alte Referenz nachgewiesen (F-DA-9).
+
+*Reste:* **Backlog Nr. 191** (die Zeitraumübersicht zählt Winde und Bergwacht
+weiter nur luftgebunden — zwei Kacheln mehr wären zehn in vier Spalten, also
+eine Gestaltungsentscheidung mit Mockup) und **Nr. 76**, die jetzt ihre
+Messung hat, aber noch keine Entscheidung. Die Prüfliste steht in
+`docs/konzepte/Pruefdokument-Demo-Ausbau.md`, zehn Punkte.
+
+*Merge:* **steht an.**
+
 ## 9. Pflege dieses Dokuments
 
 - **Status** einer Phase: Abschnitt 3 (Tabelle und Block) während der
@@ -2355,6 +2432,7 @@ sagt es ausdrücklich.
 
 | Fassung | Datum | Was |
 |---|---|---|
+| **66** | **15.09.2026** | **Schritt 9d (Demo-Ausbau) gebaut — Web 20.3.0.** Neue Fahrplanzeile **9d** nach 9c, Erledigt-Zeile in Abschnitt 8 mit allen Prüfzahlen, **R80** im Register (Fähigkeiten hängen am Typ, nicht an der Betriebsart — schränkt E29 ein), eine Zeile in der Sperrtabelle (Abschnitt 4) und **drei** in Abschnitt 6: die OSRM-Zuarbeit ist gegenstandslos geworden (der Host antwortete der Umsetzungssitzung), der Demo-Reset nach dem Merge ist neu, und die Prüfliste mit der Freigabe. In Abschnitt 5 tritt **Nr. 191** an die Stelle von **Nr. 189** (in AP0 erledigt); Selbstprüfzahl **53 = 53**, mit `diff` gegengeprüft (0 Zeilen Unterschied). **R4** trägt jetzt beide Stände (P1: 16/87 · seit 9d: 21/103). **Code:** eine Versionsstufe aus AP0; alles Weitere liegt in `tools/`, `docs/` und `server/demo/fixture.json.gz`. **Keine Migration** — `update.php` ist nach dem Merge *nicht* fällig; fällig ist ein **Reset des Demo-Kontos**, sonst zeigt es bis zu 30 Minuten den alten Bestand |
 | **65** | **14.09.2026** | **Nr. 189 angelegt** (S10-Nachlauf): `server/schema.sql` Zeile 528 nennt `docs/Konzept-S2` — ein Verzeichnis von vor der Neuordnung am 02.09.2026 (`781e624`). Der Zwillingskommentar in `migration_lib.php:1770` trägt denselben Beleg F-S2-G und ist damals nachgezogen worden; einer von zweien blieb stehen. **Bewusst nicht im Nachlauf mitgemacht** — die Datei liegt unter `server/`, das verlangt eine Versionsstufe und löst beim Merge einen Deploy aus, und dafür ist ein Kommentar ohne Wirkung auf Verhalten oder Schema der falsche Anlass; entschieden vom Auftraggeber am 14.09.2026. Selbstprüfzahl **53 = 53**. **Kein Code** — nur `docs/`, keine Versionsstufe |
 | **64** | **14.09.2026** | **S10 ist gemergt — und der Kopf sagte es wieder nicht.** PR #45 ist am 14.09.2026 als `965ec11` auf `main` gegangen, während die Sitzung, die dieses Dokument schreibt, noch daran arbeitete. Der Kopf nannte `main` weiterhin bei `3886e26` / Web 19.6.0 und führte S10 als „zum Merge stehend“; nachgemessen steht dort **Web 20.2.1**. Berichtigt sind die Standzeile, die Fahrplanzeile 9b und die Abschnitt-6-Zeile zur Prüfliste (jetzt **fällig** statt „nach dem Merge“). **`update.php` ist nicht fällig** — am Umfang des Merges nachgemessen: keine Datei unter `migrationen/`, weder `update.php` noch `schema.sql` angefasst. **Das ist die fünfte Runde dieser Art** (Fassungen 39, 41, 42, 60, 64), und die Ursache ist unverändert die aus Fassung 42: Der Merge geschieht außerhalb der Sitzung, die das Dokument schreibt — diesmal sogar *während* ihrer Arbeit. Das zeigt, dass ein Nachlesen am Anfang der Sitzung nicht genügt; es gehört ans Ende. **Kein Code** — nur `docs/`, keine Versionsstufe |
 | **63** | **14.09.2026** | **Tote Verweise nachgezogen — und zwei eigene Zahlenfehler berichtigt.** Der Anlass war klein (drei Konzeptnamen ohne Datei), der Befund nicht: **Die Fahrplanzeile zu Schritt 7 widersprach sich acht Tage lang selbst** — Konzeptspalte „liegt vor" samt Pfad, Statusspalte zwei Spalten weiter „Konzept nach R62 gelöscht". Berichtigt sind jetzt die Fahrplanzeile 7 und der Fließtext zu Schritt 7 (beide nach dem Muster von S7: „gelöscht nach R62", Historie `fc470b0`), dazu die Konzeptspalte zu Schritt 12, die einen Dateinamen nannte, **ohne zu sagen, dass es die Datei noch gar nicht gibt** (`Review-R17.md` entsteht erst im Review — geprüft: `git log --all --full-history` liefert null Zeilen). **Zwei Zahlen aus Fassung 61 waren falsch, beide von der Umsetzung selbst geschrieben:** Abschnitt 8 sagte „dreiundzwanzig am Prüfstand" und das S10-Prüfdokument „die dreiundzwanzig Fehlerfunde" — nachgezählt am Konzeptstand unter `a00f6b5` sind es **47** Funde, davon **28** mit einem `tools/`-Pfad als Ort; die 23 hatte keine Grundlage. Ebenso berichtigt: der Statusblock des Prüfdokuments stand noch vor der Freigabe, und **`docs/Backlog.md` sagte „Konzept S10 liegt vor"** — ohne Backticks, weshalb keine Suche nach `docs/konzepte/…` sie fand. **Neu: Nr. 188** — kein Prüfmittel misst Verweise zwischen Dokumenten, und genau deshalb konnten die S8-Verweise acht Tage neben lauter grünen Zahlen falsch stehen. Selbstprüfzahl **52 = 52**, mit `comm` gegengeprüft (0/0). **Kein Code** — nur `docs/`, keine Versionsstufe. *Unberührt geblieben und begründet:* der Kopf des S7-Prüfdokuments (er sagt bereits „gelöscht" samt Commit — eine richtige Stelle wird nicht umformuliert) und `server/schema.sql:528`, dessen Pfadangabe zwar veraltet ist, aber unter `server/` liegt und damit eine Versionsstufe und einen Deploy auslösen würde |

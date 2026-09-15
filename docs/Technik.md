@@ -472,10 +472,10 @@ Daten erst nach Server-Bestätigung.
 │   │                      Tabellengrößen. Browserprobe unter CPU-Drossel 6×.
 │   │                      Riegel: füllt nur ein Konto mit dem Präfix
 │   │                      „messstand" (s. LIESMICH.md)
-│   ├── referenzdatensatz/ erfundener Beispielbestand (16 Diensttage,
-│   │   │                  88 Einsätze) — Demo-Konto UND Regressionsreferenz
+│   ├── referenzdatensatz/ erfundener Beispielbestand (21 Diensttage,
+│   │   │                  106 Einsätze) — Demo-Konto UND Regressionsreferenz
 │   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu die zwei
-│   │   │                  Geräteblöcke (geraete.json), der eine Schnitt,
+│   │   │                  Geräteblöcke (geraete.json), die drei Schnitte,
 │   │   │                  Schema und Prüfung (Abdeckungsmatrix, Sperrwörter
 │   │   │                  in den Gerätenamen, keine realen Namen)
 │   │   ├── generator/     erzeugt Ingest-Payloads, Formulardaten, CSV, GPX;
@@ -485,7 +485,11 @@ Daten erst nach Server-Bestätigung.
 │   │   │                  auf (install.php über HTTP, Passwort im Browser,
 │   │   │                  Demo-Konto), lokal_starten.sh fährt sie nur hoch;
 │   │   │                  sitzungsprobe.py misst, dass sitzung.py BEIDE
-│   │   │                  Hüllenfassungen öffnet (edk1: und edka1:, S10)
+│   │   │                  Hüllenfassungen öffnet (edk1: und edka1:, S10);
+│   │   │                  demo_kennzeichnen.php vermerkt das frische Konto als
+│   │   │                  Demo-Konto — VOR der ersten Anmeldung, sonst stellt
+│   │   │                  unlock.js still auf edka1: um und die Fixture lässt
+│   │   │                  sich am Ende nicht mehr erzeugen
 │   │   ├── browser/       was es nur im Browser gibt: CSV-Import, Angriffs-
 │   │   │                  werte (P-07), Exporte, Umläufe, Papierkorb-Mischfall,
 │   │   │                  Abnahme der Demo-Funktion
@@ -4886,9 +4890,21 @@ Backup aufbaut, aber serverseitig — dort steht `pat_blob` noch als
 Chiffretext. Genau die Form, die `edbak_restore()` als Spalte wieder annimmt.
 Der Erzeuger bricht ab, wenn er Klartext findet.
 
-Gepackt abgelegt: roh rund 2,4 MB, im Wesentlichen 55 861 Spurpunkte als
-JSON-Zahlen. Gepackt sind es rund 745 KB, und die Datei geht bei jedem Deploy
+Gepackt abgelegt: roh rund 2,8 MB, im Wesentlichen 63 752 Spurpunkte als
+JSON-Zahlen. Gepackt sind es rund 860 KB, und die Datei geht bei jedem Deploy
 über FTPS mit.
+
+**Was ein Reset kostet — gemessen, nicht geschätzt** (15.09.2026, Prüfstand
+mit MariaDB und PHP auf demselben Rechner, je drei Läufe): **6,6 s** mit dem
+heutigen Bestand (106 Einsätze, 63 752 Punkte), **5,9 s** mit dem Stand davor
+(88 Einsätze, 55 861 Punkte). Die Zeit trägt **die Besucherin**, deren Anfrage
+den fälligen Reset auslöst (`demo_reset_wenn_faellig()` aus
+`auth_guard.php`) — sie sieht ihre Seite so lange nicht. Zweimal die Stunde
+ist das wenig Last und trotzdem jedes Mal ein spürbarer Aufenthalt für genau
+eine Person; ob es dabei bleibt, steht als Backlog Nr. 76 offen. **Nach einem
+Deploy mit neuer Fixture zeigt das bestehende Demo-Konto bis zum nächsten
+Reset den alten Bestand** — wer ihn sofort sehen will, drückt im Adminbereich
+„Auf Standard zurücksetzen".
 
 #### Zwei Riegel je Geheimnis — einer beim Erzeugen, einer beim Einspielen
 
