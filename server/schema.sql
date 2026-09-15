@@ -53,7 +53,7 @@ CREATE TABLE devices (
   -- einer Statistikangabe NIE scheitern (JSON-Vertrag 1a).
   geraet_art    VARCHAR(16) NULL,                    -- 'uhr' | 'handy' | 'sonstiges'; NULL = unbekannt
   geraet_modell VARCHAR(191) NULL,                   -- aufgeloest; Sammelnamen werden lang,
-                                                     -- der laengste hat 156 Zeichen
+                                                     -- der laengste hat 153 Zeichen
   geraet_teil   VARCHAR(64) NULL,                    -- Rohangabe des Geraets, siehe update.php
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -77,24 +77,44 @@ es nur im Luft-Kachelsatz. Ein bodengebundener Bergwacht-Diensttag zeigt seine
 Windenfelder also im **Einsatzformular**, wird in der **Zeitraumübersicht**
 aber nicht als Windendienst gezählt. Das zu ändern hieße zehn Kacheln in vier
 Spalten — eine Gestaltungsentscheidung, die eine Freigabe mit Mockup braucht
-(`CLAUDE.md` 5). Sie steht als **Backlog Nr. 191**; der Kommentar an der
+(`CLAUDE.md` 5). Sie steht als **Backlog Nr. 198**; der Kommentar an der
 Abfrage sagt es jetzt, statt sich weiter auf E29 zu berufen.
 
 **Keine Schemaänderung, keine Migration.** `vehicle_capabilities` und
 `day_capabilities` führen keine Art; sie konnten den Fall immer schon tragen.
 `update.php` muss nach dem Deploy **nicht** laufen.
 
-### Behoben — ein toter Verweis in zwei Kommentaren (Backlog Nr. 189)
+### Behoben — beide Hälften von Backlog Nr. 189 (Kommentare an `schema.sql`)
 
-`server/schema.sql` und `server/migration_lib.php` erklären dieselbe Sache mit
-demselben Beleg (F-S2-G); einer der beiden war beim Umzug der Konzepte am
-02.09.2026 nachgeführt worden, der andere nicht. Beide nennen den Pfad jetzt
-ausgeschrieben. Der Punkt wartete ausdrücklich auf „das nächste Paket, das
-`server/` ohnehin anfasst" — das ist dieses.
+**Der tote Verweis.** `server/schema.sql` und `server/migration_lib.php`
+erklären dieselbe Sache mit demselben Beleg (F-S2-G); einer der beiden war
+beim Umzug der Konzepte am 02.09.2026 nachgeführt worden, der andere nicht.
+Beide nennen den Pfad jetzt ausgeschrieben. Der Punkt wartete ausdrücklich auf
+„das nächste Paket, das `server/` ohnehin anfasst" — das ist dieses.
+
+**Und die falsche Zeichenzahl.** Der Kommentar an `geraet_modell` sagt, der
+längste Sammelname habe **156** Zeichen. Das war bis **Web 12.9.2** richtig
+und ist mit dem Streichen der Marken- und Schutzrechtszeichen überholt worden;
+`migration_lib.php` und `docs/Technik.md` sind damals mitgezogen, `schema.sql`
+nicht. Nachgemessen an `GERAETE_MODELLE`: **153 Zeichen** (154 Bytes), der
+Eintrag „fēnix 6X Pro / 6X Sapphire / … / quatix 6X Dual Power"; von 173
+Modellnamen liegen fünf über 64 Zeichen. Berichtigt sind die drei **lebenden**
+Stellen — `schema.sql`, Rahmenplan Abschnitt 3 (Schritt 2, E-S6-7) und
+`docs/konzepte/Konzept-R64-Herkunft-Geraet.md`. Die beiden Protokollzeilen
+(Changelog zu Web 12.9.1 und 12.9.2, Rahmenplan Fassung 19) bleiben stehen:
+Sie beschreiben, was damals galt.
+
+Dieser zweite Fund stammt aus der **Bestandsaufnahme zu R42** (PR #47) und ist
+beim Zusammenführen der beiden Zweige übernommen worden. Er kostet hier
+nichts, weil Web 20.3.0 noch nicht ausgeliefert ist — als eigener Anlass für
+eine Versionsstufe hätte er den Preis nicht wert gewesen, und genau deshalb
+lag er seit dem 14.09.2026.
 
 **Gemessen:** `php -l` auf allen berührten Dateien fehlerfrei; die
 Regeltabelle `veh_caps_erlaubt()` über alle acht Paare aus vier Typen und zwei
-Betriebsarten nachgerechnet (Prüfdokument des Pakets, Abschnitt 2).
+Betriebsarten nachgerechnet (Prüfdokument des Pakets, Abschnitt 2); der
+längste Modellname mit `mb_strlen()` über `GERAETE_MODELLE` nachgezählt
+(**153**).
 
 ### Hinzugefügt — der Referenzbestand kennt die drei Typen jetzt im Betrieb
 

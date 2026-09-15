@@ -9,12 +9,13 @@ gelöscht (R62).*
 
 > | | |
 > |---|---|
-> | Stand | **gebaut und geprüft**, 15.09.2026 · Zweig `claude/umsetzung-ohne-pausen-2vfppr` · fünf Commits (AP0–AP4) |
+> | Stand | **gebaut, geprüft und mit `main` zusammengeführt**, 15.09.2026 · Zweig `claude/umsetzung-ohne-pausen-2vfppr` · sechs Commits (AP0–AP4 und der Merge-Nachlauf) |
 > | Stufe | **Web 20.3.0** (Neben) — nur AP0 stuft; **keine Migration**, `update.php` muss nach dem Deploy **nicht** laufen; Uhr und Android unberührt |
 > | Bestand danach | **21 Diensttage** (20 aktiv, 1 im Papierkorb) · **106 Einsätze** (101 aktiv, 5 im Papierkorb; 103 aus den Quelldaten + 3 Schnitte) · **119 Ruhesegmente** (114 aktiv) · **63 752 Spurpunkte** · 3 Standorte (alle mit Koordinate) · 10 Rettungsmittel, davon **4 ohne Standort** · 12 Zielkliniken · 6 Bergwacht-Bereitschaften · 10 weitere Rettungsmittel · 2 Geräte (+ „Manuelle Einträge") |
 > | Neu entstanden | `quelldaten/dienste/D17.json` bis `D21.json` · `referenz/einsatzdoku-backup-2026-09-15.edbak` und `referenz/…_15-09-2026_csv_mit-pers_unverschl_demo-gen-em-org.zip` (die beiden alten Dateien vom 13.09.2026 sind ersetzt) · `server/demo/fixture.json.gz` neu · 24 neue `generator/routen/strecke_*.geojson` · `generator/ausgabe/fusswege.json` · `einspielen/demo_kennzeichnen.php` · `tools/klickprobe/wege/da.mjs` · drei neue Seiten im Bilderlauf |
 > | Prüfumgebung | Container ohne KVM · PHP **8.4.19** (cli, `php -S`) · MariaDB **10.11.14** · TLS über `socat` vor `127.0.0.1:8443` · Playwright mit **Chromium 141**, Firefox 142, WebKit 26 (`/opt/pw-browsers`) · Node **22.22.2** |
-> | Ergebnis | **Alle Prüfmittel grün.** Drei Fehlerfunde während des Laufs, alle behoben (F-DA-7 bis F-DA-9); eine Folge bewusst offen gelassen (Backlog Nr. 191) |
+> | Ergebnis | **Alle Prüfmittel grün.** Vier Fehlerfunde während des Laufs, alle behoben (F-DA-7 bis F-DA-10); eine Folge bewusst offen gelassen (Backlog Nr. 198) |
+> | Nach dem Merge | `main` ist am 15.09.2026 um PR #47 (R42-Nachlauf) gewachsen. Dabei **drei Nummernkollisionen** aufgelöst (Backlog 190/191 → **197/198**, Rahmenplan-Fassung 66 → **67**) und **eine stille Fehlverschmelzung** in `docs/Backlog.md` von Hand repariert (F-DA-10). Mitgenommen: die zweite Hälfte von **Nr. 189** |
 
 ---
 
@@ -52,7 +53,19 @@ Steht bewusst vor allem anderen.
    `server/ui.php` sind **unberührt** (`git diff --stat` über beide: keine
    Zeile). Während P3 wacht ohnehin die Vollständigkeitsprobe an seiner
    Stelle, und die ist gefahren.
-7. **Zwei Motoren.** Der Bilderlauf ist in **Chromium** gefahren, nicht
+7. **Nach dem Merge mit `main` sind nicht alle Prüfmittel erneut gefahren.**
+   Gemessen ist, was die Merge-Auflösung berühren konnte: Wortliste,
+   Vollständigkeit, Linkprobe, `php -l`, die beiden Zählungen über Backlog
+   und Rahmenplan — und die **Klickprobe** als Gegenprobe am laufenden
+   Programm. **Nicht** erneut gefahren sind Bilderlauf, Kreisläufe,
+   Papierkorb-Mischfall und Wartungsprobe. Der Grund ist eine Messung, keine
+   Annahme: `git diff HEAD -- server/` über die Merge-Auflösung zeigt
+   **ausschließlich Kommentarzeilen** (`api/range.php` Nr. 191 → 198,
+   `version.php` dasselbe plus ein neuer Absatz, `schema.sql` 156 → 153).
+   Kein Verhalten, keine Abfrage, keine Regel hat sich geändert; die
+   Prüfmittel würden denselben Stand messen. Wer das nicht glaubt, fährt
+   `node tools/screenshots/aufnehmen.mjs` nach — elf Minuten.
+8. **Zwei Motoren.** Der Bilderlauf ist in **Chromium** gefahren, nicht
    zusätzlich in Firefox und WebKit. Begründung: Dieses Paket ändert **keine
    Regel des Stylesheets** — es füllt den Bestand. Die Engine-Unterschiede,
    für die die Risikoliste da ist, entstehen an CSS-Merkmalen, nicht an einer
@@ -67,6 +80,8 @@ Steht bewusst vor allem anderen.
 | Matrixzeile „≥ 2 Standorte, einer ohne Koordinaten" | strukturell geprüft | ersetzt durch **„≥ 1 Diensttag ohne Standort mit `spur_ausgangspunkt`"** — F-DA-1, Weg (a) | **von der Umsetzung entschieden** (E-DA-24), zu bestätigen |
 | „Der Typ Sonstiges bekommt die Fähigkeiten nicht mit" (F-DA-2) | — | **bleibt bei E29** — nur der Typ Bergwacht fällt aus der Reihe | **von der Umsetzung entschieden** (E-DA-24), zu bestätigen |
 | E-R64-16 „genau ein Schnitt im Referenzbestand" | `schnittzahl == 1` | `schnittzahl == len(schnitte)` und `>= 1` (E-DA-11); heute **3** | Konzept |
+| Backlog-Nummern des Pakets | 190 (erledigt) und 191 (offen) | **197** und **198** — die Nummern 190–196 hat PR #47 zuerst auf `main` vergeben (E-DA-31) | Umsetzung, 15.09.2026 |
+| Rahmenplan-Fassung des Pakets | 66 | **67** — 66 gehört PR #47 | Umsetzung, 15.09.2026 |
 | CLAUDE.md 4 „Die Klartextliste" | 2 Rettungsmittel ohne Standort | zusätzlich **2 Diensttage ohne Standort** — an der Verschlüsselung ändert sich nichts, der Bestand deckt nur einen weiteren Weg ab | — (keine Zusage berührt) |
 
 ## 2. Was maschinell geprüft wurde — mit Mittel und Zahl
@@ -110,6 +125,8 @@ von `main` (`98d677d`, Web 20.2.1).*
 | `php -l` | Syntax aller berührten PHP-Dateien | — | **0 Fehler** |
 | `node --check` | Syntax aller berührten JS/MJS-Dateien | — | **0 Fehler** |
 | `grep -rn "88 Eins\|87 Eins\|55 861\|16 Diensttage"` | feste Zahlen im Repositorium | — | nur noch Messprotokoll-Stellen (Konzept 1.4, Absatz 2) und wörtliche, datierte Zitate — jedes davon als solches gekennzeichnet |
+| Backlog gegen Rahmenplan Abschnitt 5 | dieselben offenen Nummern? | 53 = 53 (vor dem Merge) | **60 = 60** nach dem Merge, mit `diff` gegengeprüft (0 Zeilen Unterschied); **keine doppelt vergebene Nummer** in beiden Abschnitten zusammen |
+| `mb_strlen()` über `GERAETE_MODELLE` | längster Sammelname (Nr. 189, zweite Hälfte) | Kommentar sagte 156 | **153 Zeichen** (154 Bytes) · 173 Modellnamen · **5** über 64 Zeichen |
 
 ## 3. Was im Browser geprüft wurde
 
@@ -180,7 +197,7 @@ sind zu **bestätigen**.*
 8. **Die Reset-Dauer zur Kenntnis nehmen** (Abschnitt 2, letzte Zeilen) — sie
    ist die Messung, auf die Backlog Nr. 76 seit dem 02.09.2026 wartet. Die
    Entscheidung („durchlaufen lassen" oder „Änderungsmarke") steht weiter aus.
-9. **Backlog Nr. 191 einordnen:** Ein bodengebundener Bergwacht-Diensttag
+9. **Backlog Nr. 198 einordnen:** Ein bodengebundener Bergwacht-Diensttag
    zeigt seine Windenfelder im Formular, wird in der **Zeitraumübersicht**
    aber nicht als Windendienst gezählt. Das zu ändern hieße zehn Kacheln in
    vier Spalten — eine Gestaltungsentscheidung mit Mockup. Gehört sie in die
@@ -223,13 +240,25 @@ sind zu **bestätigen**.*
 
 ## 6. Was aus dem Paket offen bleibt
 
-- **Backlog Nr. 191** (neu): Die Zeitraumübersicht zählt Winde und Bergwacht
+- **Backlog Nr. 198** (neu): Die Zeitraumübersicht zählt Winde und Bergwacht
   weiter nur luftgebunden. Bewusst nicht mitgemacht — es wäre eine
   Gestaltungsentscheidung mit Freigabe und Mockup (F-DA-4).
 - **Backlog Nr. 76** bleibt offen: gemessen ist sie jetzt, entschieden nicht.
 - **F-DA-6** (Beobachtung, kein Auftrag): Die Höhe des Einsatzorts
   (`site_ele_m`) erscheint nur an einem luftgebundenen Diensttag. Ein
   Bergwacht-Einsatz am Boden auf 1200 m führt sie in der Datenbank und zeigt
-  sie nicht. Gehört zusammen mit Nr. 191 in dieselbe Runde, falls es stört.
+  sie nicht. Gehört zusammen mit Nr. 198 in dieselbe Runde, falls es stört.
 - **Sonst nichts.** Alle Arbeitspakete des Konzepts sind abgearbeitet, die
-  drei Fehlerfunde des Laufs behoben.
+  vier Fehlerfunde des Laufs behoben.
+
+**Was der Merge mit `main` hinterlässt und was nicht.** Aufgelöst sind die
+drei Nummernkollisionen und die stille Fehlverschmelzung (F-DA-10);
+mitgenommen ist die zweite Hälfte von Nr. 189. **Nicht** angefasst sind die
+übrigen sechs Punkte aus PR #47 (Nr. 190 bis 196) — sie gehören dorthin und
+haben mit diesem Paket nichts zu tun. Zwei davon berühren allerdings Dateien,
+die dieses Paket ebenfalls anfasst, und sollten deshalb beim nächsten Griff
+zusammen betrachtet werden: **Nr. 190** (die Statistikseite lässt das
+virtuelle Gerät stehen — dieselbe Datei, in der hier die Zahl „106 erfundene
+Einsätze" steht) und **Nr. 196** (die Einrückung des Backlogs, die das
+Rendern bricht — sie ist auch der Grund, warum der Auto-Merge die Blöcke
+nicht auseinanderhalten konnte).

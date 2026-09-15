@@ -1671,7 +1671,7 @@ Objekt über `VEHICLE_CAPABILITIES`, heute `{winch, bergwacht}`, mit
 Wahrheitswerten. Es sagt, welche Fähigkeiten die **Luft**-Diensttage des
 Zeitraums tragen, gerechnet als `GROUP BY` über `day_capabilities` mit Join
 auf `days`. **Seit Web 20.3.0 ist „Luft" dabei eine Lücke und keine
-Herleitung mehr** (Backlog Nr. 191): Ein bodengebundener Bergwacht-Diensttag
+Herleitung mehr** (Backlog Nr. 198): Ein bodengebundener Bergwacht-Diensttag
 trägt die Fähigkeiten ebenfalls, wird hier aber übergangen — das
 Einsatzformular zeigt seine Windenfelder, die Zeitraumübersicht zählt sie
 nicht. Die Zeitraumübersicht entscheidet daran über die beiden

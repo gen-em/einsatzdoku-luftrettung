@@ -4565,8 +4565,18 @@ declare(strict_types=1);
  * zeigt seine Windenfelder also im EINSATZFORMULAR, wird in der
  * Zeitraumuebersicht aber nicht als Windendienst gezaehlt. Das aendern hiesse
  * zehn Kacheln in vier Spalten — eine Gestaltungsentscheidung, die eine
- * Freigabe mit Mockup braucht (Backlog Nr. 191). Der Kommentar an der Abfrage
+ * Freigabe mit Mockup braucht (Backlog Nr. 198). Der Kommentar an der Abfrage
  * sagt es jetzt, statt sich weiter auf E29 zu berufen.
+ *
+ * ZWEI KOMMENTARE BERICHTIGT (Backlog Nr. 189, beide Haelften). Erstens der
+ * tote Konzeptpfad in `schema.sql` und `migration_lib.php` — dieses Paket ist
+ * das naechste unter `server/`, auf das der Punkt ausdruecklich gewartet hat.
+ * Zweitens, beim Zusammenfuehren mit `main` uebernommen: Der Kommentar an
+ * `geraet_modell` nannte 156 Zeichen. Nachgemessen an `GERAETE_MODELLE` sind
+ * es 153; die 156 war bis Web 12.9.2 richtig und ist mit dem Streichen der
+ * Marken- und Schutzrechtszeichen ueberholt worden. Berichtigt sind die drei
+ * LEBENDEN Stellen; die Protokollzeilen (Changelog 12.9.1/12.9.2, Rahmenplan
+ * Fassung 19) bleiben, weil sie beschreiben, was damals galt.
  *
  * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `vehicle_capabilities` und
  * `day_capabilities` fuehren keine Art; sie konnten den Fall immer schon

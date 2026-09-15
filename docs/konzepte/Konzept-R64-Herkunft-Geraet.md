@@ -138,7 +138,7 @@ zehn Präfixe, `schneiden.php` vergibt ein elftes). → B-R64-01.
 
 `devices` trägt seit Web 12.9.0 (S6, R42) `geraet_art VARCHAR(16)`
 (`uhr` | `handy` | `sonstiges` | NULL), `geraet_modell VARCHAR(191)`
-(aufgelöst aus `geraetemodelle.php`, Sammelnamen bis 156 Zeichen) und
+(aufgelöst aus `geraetemodelle.php`, Sammelnamen bis 153 Zeichen) und
 `geraet_teil VARCHAR(64)` (Rohangabe). Alle drei NULL-bar, ausschließlich
 beim **Koppeln** gefüllt; von Hand angelegte, virtuelle und vor 12.9.0
 gekoppelte Geräte bleiben leer — mit Absicht, begründet in der Migration.

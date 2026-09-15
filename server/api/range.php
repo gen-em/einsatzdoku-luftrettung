@@ -157,7 +157,7 @@ try {
      * die Altlast zeigt.
      *
      * SEIT DEM DEMO-AUSBAU IST DAS EINE LUECKE UND KEINE HERLEITUNG MEHR
-     * (Backlog Nr. 191). Ein Rettungsmittel des Typs Bergwacht darf die
+     * (Backlog Nr. 198). Ein Rettungsmittel des Typs Bergwacht darf die
      * Faehigkeiten auch bodengebunden fuehren (`veh_caps_erlaubt()`); sein
      * Diensttag traegt sie dann in `day_capabilities`, und diese Abfrage
      * uebergeht ihn. Das Einsatzformular zeigt die Windenfelder trotzdem
