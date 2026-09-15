@@ -160,20 +160,27 @@ def aufloesen(dienst: dict, einsatz: dict, vorheriger: dict | None,
 # nicht: Dieses Modul liegt in `quelldaten/`, der Generator importiert es
 # ohnehin schon, und es kennt seinerseits nichts aus `generator/`.
 
-def phasenfenster(einsatz: dict, dienst: dict, legs: int) -> list[tuple[int, int]]:
-    """Zeitfenster der Bewegungsabschnitte, aus den Phasen abgeleitet.
+def phasenkandidaten(einsatz: dict, dienst: dict) -> list[tuple[int, int]]:
+    """Die Zeitfenster, die sich aus den Phasen ERGEBEN — hoechstens drei.
 
     Die Phasen sind die Wahrheit ueber den Ablauf: 3 -> 4 ist der Weg zum
     Einsatzort, 6 -> 7 der Transport, danach der Rueckweg bis Phase 9. Der
     Track wird an sie GEBUNDEN und nicht daneben erfunden -- sonst zeigte die
     Karte den Hubschrauber am Einsatzort, waehrend die Phasentabelle ihn schon
     in der Klinik fuehrt.
+
+    OHNE NOTNAGEL, und das ist der Grund, warum es diese Funktion gibt:
+    `fenster()` muss wissen, wie viele Fenster die Phasen WIRKLICH hergeben.
+    Solange das Auffuellen mit drinsteckte, meldete `phasenfenster(…, legs=4)`
+    vier Fenster -- und `fenster()` schloss daraus, es gebe genug, und nahm
+    den alten Weg. Der Fussweg zum Patienten bekam dadurch ein Viertel der
+    Einsatzdauer statt der Spanne zwischen Phase 4 und Phase 5 und lief mit
+    1,2 km/h. Gemessen an `fusswege.json`, nicht geraten.
     """
     p = {}
     for nr, zeit in einsatz["phasen"]:
         p.setdefault(nr, epoche(zeit))
     start = epoche(einsatz["beginn"])
-    ende = epoche(einsatz["ende"]) if einsatz["ende"] else epoche(dienst["ende"])
     kandidaten = []
     if 3 in p and 4 in p:
         kandidaten.append((p[3], p[4]))
@@ -185,6 +192,20 @@ def phasenfenster(einsatz: dict, dienst: dict, legs: int) -> list[tuple[int, int
         ab = p.get(8) or p.get(7) or p.get(5) or p.get(4) or start
         if p[9] > ab:
             kandidaten.append((ab, p[9]))
+    return kandidaten
+
+
+def phasenfenster(einsatz: dict, dienst: dict, legs: int) -> list[tuple[int, int]]:
+    """Ein Fenster je Teilstueck — die Phasen, notfalls gleichmaessig geteilt.
+
+    Der Notnagel greift, wenn die Phasen weniger Fenster hergeben als es
+    Teilstuecke gibt UND die Wegpunktnamen nichts Besseres wissen (siehe
+    `fenster()`). Er ist kein guter Weg, nur ein ehrlicher: gleichmaessig
+    teilen ist falsch, aber sichtbar falsch.
+    """
+    start = epoche(einsatz["beginn"])
+    ende = epoche(einsatz["ende"]) if einsatz["ende"] else epoche(dienst["ende"])
+    kandidaten = phasenkandidaten(einsatz, dienst)
     if len(kandidaten) < legs:                     # Notnagel: gleichmaessig teilen
         spanne = (ende - start) / max(legs, 1)
         kandidaten = [(int(start + i * spanne), int(start + (i + 1) * spanne))
@@ -249,57 +270,72 @@ def _wegpunkt_phasen(namen: list[str]) -> list[tuple[int | None, int | None]]:
 
 
 def fenster_je_teilstueck(einsatz: dict, dienst: dict, namen: list[str],
-                           koords: list) -> list[tuple[int, int]]:
-    """Zeitfenster je Teilstueck, aus den Phasen und den Wegpunktnamen."""
+                          koords: list) -> list[tuple[int, int]]:
+    """Zeitfenster je Teilstueck, aus den Phasen und den Wegpunktnamen.
+
+    JEDER WEGPUNKT HAT ZWEI ZEITEN, nicht eine: eine ANKUNFT und eine
+    ABFAHRT. Am Einsatzort sind das Phase 5 und Phase 6, und dazwischen liegt
+    die Versorgung -- der Unterschied ist der ganze Punkt. Ein Teilstueck
+    laeuft deshalb von der ABFAHRT seines Anfangs bis zur ANKUNFT seines
+    Endes. (Der erste Entwurf nahm je Wegpunkt nur einen Zeitpunkt; der
+    Fussweg zum Patienten bekam dadurch die Spanne bis zum Transportbeginn
+    und lief mit 1,1 km/h -- ein Wert, der wie ein Datenfehler aussieht und
+    keiner war.)
+
+    Wo eine der beiden Zeiten fehlt -- etwa am `zustieg` auf dem Rueckweg, wo
+    es zwischen Transportbeginn und Ankunft Klinik keine Phase gibt --, wird
+    die Spanne ueber mehrere Teilstuecke im Verhaeltnis ihrer geschaetzten
+    Dauer geteilt.
+    """
     p: dict[int, int] = {}
     for nr, zeit in einsatz["phasen"]:
         p.setdefault(nr, epoche(zeit))
     start = epoche(einsatz["beginn"])
     ende = epoche(einsatz["ende"]) if einsatz["ende"] else epoche(dienst["ende"])
 
-    def zeit(wunsch: int | None, rueckfall: int) -> int | None:
+    def zeit(wunsch: int | None) -> int | None:
         if wunsch is None:
             return None
         for nr in PHASE_ERSATZ.get(wunsch, [wunsch]):
             if nr in p:
                 return p[nr]
-        return rueckfall
+        return None
 
+    n = len(namen)
     paare = _wegpunkt_phasen(namen)
-    # Feste Zeitpunkte je Wegpunkt: Abfahrt zaehlt, sonst die Ankunft.
-    feste: list[int | None] = []
-    for i, (an, ab) in enumerate(paare):
-        rueck = start if i == 0 else ende
-        feste.append(zeit(ab if ab is not None else an, rueck))
+    an = [zeit(a) for a, _ in paare]
+    ab = [zeit(b) for _, b in paare]
+    if ab[0] is None:
+        ab[0] = start
+    if an[-1] is None:
+        an[-1] = ende
 
-    # Monoton halten — eine rueckwaerts laufende Uhr waere eine Spur, die
-    # springt, und die Pruefung meldete sie als Ueberschall.
-    letzte = start
-    for i, t in enumerate(feste):
-        if t is not None:
-            feste[i] = max(t, letzte)
-            letzte = feste[i]
-
-    # Luecken im Verhaeltnis der geschaetzten Dauer fuellen.
     fenster: list[tuple[int, int]] = []
+    zeiger = start
     i = 0
-    while i < len(feste) - 1:
-        j = i + 1
-        while j < len(feste) - 1 and feste[j] is None:
+    while i < n - 1:
+        j = i
+        while j < n - 1 and an[j + 1] is None:
             j += 1
-        t0, t1 = feste[i], feste[j]
+        t0 = ab[i] if ab[i] is not None else zeiger
+        t1 = an[j + 1] if an[j + 1] is not None else ende
+        # Monoton halten: Eine rueckwaerts laufende Uhr waere eine Spur, die
+        # springt, und die Pruefung meldete sie als Ueberschall.
+        t0 = max(t0, zeiger)
+        t1 = max(t1, t0 + (j - i + 1))
         gewichte = []
-        for k in range(i, j):
+        for k in range(i, j + 1):
             art = "fuss" if ist_fussweg(namen[k], namen[k + 1]) else "fahrt"
             strecke = abstand_m(*koords[k], *koords[k + 1]) / 1000.0
             gewichte.append(max(strecke / TEMPO_NOMINAL_KMH[art], 1e-6))
         summe = sum(gewichte)
-        zeiger = t0
+        lauf = t0
         for k, g in enumerate(gewichte):
-            bis = t1 if k == len(gewichte) - 1 else zeiger + int((t1 - t0) * g / summe)
-            fenster.append((zeiger, max(bis, zeiger + 1)))
-            zeiger = fenster[-1][1]
-        i = j
+            bis = t1 if k == len(gewichte) - 1 else lauf + int((t1 - t0) * g / summe)
+            fenster.append((lauf, max(bis, lauf + 1)))
+            lauf = fenster[-1][1]
+        zeiger = lauf
+        i = j + 1
     return fenster
 
 
@@ -317,7 +353,7 @@ def fenster(einsatz: dict, dienst: dict, namen: list[str] | None,
     legs = max(len(koords) - 1, 0)
     if legs == 0:
         return []
-    if namen and len(namen) == len(koords) and legs > len(phasenfenster(einsatz, dienst, legs)):
+    if namen and len(namen) == len(koords) and legs > len(phasenkandidaten(einsatz, dienst)):
         return fenster_je_teilstueck(einsatz, dienst, namen, koords)
     return phasenfenster(einsatz, dienst, legs)
 

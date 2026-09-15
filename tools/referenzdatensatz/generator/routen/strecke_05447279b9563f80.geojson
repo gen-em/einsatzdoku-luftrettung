@@ -1,0 +1,30 @@
+{
+ "type": "Feature",
+ "geometry": {
+  "coordinates": [
+   [
+    10.330799,
+    47.583868
+   ],
+   [
+    10.33078,
+    47.583817
+   ]
+  ],
+  "type": "LineString"
+ },
+ "properties": {
+  "quelle": "OSRM router.project-osrm.org, Profil driving",
+  "von": [
+   47.584,
+   10.33
+  ],
+  "nach": [
+   47.583,
+   10.331
+  ],
+  "distanz_m": 5.8,
+  "dauer_s": 0.9,
+  "punkte": 2
+ }
+}

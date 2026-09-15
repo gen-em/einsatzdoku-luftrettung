@@ -149,32 +149,54 @@ def spur_bauen(dienst: dict, einsatz: dict, koords: list, routen: dict,
     ref = einsatz["client_ref"] or einsatz.get("quell_kennung") or "?"
     start = epoche(einsatz["beginn"])
 
-    # --- 1. Die Bewegungsabschnitte ------------------------------------
-    abschnitte = []
+    # --- 1. Die Bewegungsabschnitte, in ZWEI Durchgaengen ---------------
+    #
+    # ZUERST, WAS EINER VORGEGEBENEN GEOMETRIE FOLGT (Strasse oder Flugbahn),
+    # DANN DIE FUSSWEGE. Der Grund ist derselbe, aus dem die Halte an den
+    # TATSAECHLICHEN Enden sitzen und nicht am Wegpunkt: OSRM rastet Anfang
+    # und Ende einer Route auf die naechste Strasse. Ein Fussweg, der exakt am
+    # Wegpunkt endet, waehrend die Fahrt danach zweihundert Meter weiter
+    # beginnt, laesst die Spur springen — und aus dem Sprung wird eine
+    # Momentangeschwindigkeit von einigen hundert km/h. Gemessen an D19/1:
+    # 557 km/h, gemeldet von `generator/pruefen.py`.
+    #
+    # Ein Fussweg ist geometrisch und kann deshalb anfangen und aufhoeren, wo
+    # sein Nachbar wirklich liegt. Zwei aufeinanderfolgende Fusswege
+    # (`zustieg -> ort -> zustieg`) haengen sich aneinander, weil der zweite
+    # den ersten schon vorfindet.
+    abschnitte: list[list | None] = [None] * legs
     for i in range(legs):
-        t0, t1 = fenster[i]
         if zu_fuss[i]:
-            # KEIN ROUTENABRUF FUER EINEN FUSSWEG. `routen_holen.py` holt fuer
-            # dieses Teilstueck bewusst keine Strasse; ein `geo` haette hier
-            # nur dann etwas zu suchen, wenn dieselbe Koordinatenfolge an
-            # anderer Stelle GEFAHREN wird — und dann waere es die falsche
-            # Geometrie, nicht die richtige.
-            abschnitte.append(spur.fussweg(koords[i], koords[i + 1], t0, t1, f"{ref}-{i}"))
-            strecke = wegpunkte.abstand_m(*koords[i], *koords[i + 1])
-            dauer = max(t1 - t0, 1)
-            fusswege.append({
-                "ref": ref, "abschnitt": i,
-                "von": list(koords[i]), "nach": list(koords[i + 1]),
-                "strecke_m": round(strecke),
-                "dauer_s": dauer,
-                "tempo_kmh": round(strecke / 1000.0 / (dauer / 3600.0), 2),
-            })
             continue
+        t0, t1 = fenster[i]
         geo = _routen_nachschlagen(routen, einsatz["client_ref"], i)
         if geo:
-            abschnitte.append(spur.fahrt(geo["geometry"]["coordinates"], t0, t1))
+            abschnitte[i] = spur.fahrt(geo["geometry"]["coordinates"], t0, t1)
         else:
-            abschnitte.append(spur.flug(koords[i], koords[i + 1], t0, t1, f"{ref}-{i}"))
+            abschnitte[i] = spur.flug(koords[i], koords[i + 1], t0, t1, f"{ref}-{i}")
+    for i in range(legs):
+        if not zu_fuss[i]:
+            continue
+        t0, t1 = fenster[i]
+        von = ((abschnitte[i - 1][-1][0], abschnitte[i - 1][-1][1])
+               if i > 0 and abschnitte[i - 1] else koords[i])
+        nach = ((abschnitte[i + 1][0][0], abschnitte[i + 1][0][1])
+                if i + 1 < legs and abschnitte[i + 1] else koords[i + 1])
+        abschnitte[i] = spur.fussweg(von, nach, t0, t1, f"{ref}-{i}")
+        # GEMESSEN WIRD, WAS GEZEICHNET WURDE: Strecke und Dauer kommen aus
+        # den tatsaechlichen Enden, nicht aus den Wegpunkten daneben. Sonst
+        # stuende in `fusswege.json` eine Gehgeschwindigkeit, die niemand
+        # gegangen ist.
+        strecke = wegpunkte.abstand_m(*von, *nach)
+        dauer = max(t1 - t0, 1)
+        fusswege.append({
+            "ref": ref, "abschnitt": i,
+            "von": [round(von[0], 6), round(von[1], 6)],
+            "nach": [round(nach[0], 6), round(nach[1], 6)],
+            "strecke_m": round(strecke),
+            "dauer_s": dauer,
+            "tempo_kmh": round(strecke / 1000.0 / (dauer / 3600.0), 2),
+        })
 
     # --- 2. Die Halte dazwischen, an den TATSAECHLICHEN Enden -----------
     #

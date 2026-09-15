@@ -1003,11 +1003,18 @@ def main() -> int:
                 offen.append((dimension, anforderung, hinweis))
 
     # ---- Umfang -----------------------------------------------------------
-    # Umfang: 16 Diensttage, im Schnitt rund 6 Einsätze je Dienst (Nachtrag B1
-    # zur Abdeckungsmatrix — die ursprünglichen 30–40 stammten aus einem
-    # Entwurf mit deutlich weniger Bodendiensten).
-    lauf.pruefe(80 <= einsatzzahl <= 100,
-                f"Umfang {einsatzzahl} Einsätze liegt außerhalb von 80–100")
+    # Umfang: 21 Diensttage, im Schnitt rund fünf Einsätze je Dienst (Nachtrag
+    # B1 zur Abdeckungsmatrix — die ursprünglichen 30–40 stammten aus einem
+    # Entwurf mit deutlich weniger Bodendiensten; das Fenster 80–100 aus dem
+    # Stand vor dem Demo-Ausbau).
+    #
+    # WOZU DIESE ZEILE ÜBERHAUPT. Sie prüft keine Regel der Anwendung, sondern
+    # fängt das Versehen: einen Lauf von `aufbauen.py`, der die Hälfte der
+    # Dienste nicht gefüllt hat, oder eine Quelldatei, die niemand mehr lädt.
+    # Beides sieht in jeder Einzelprüfung in Ordnung aus. Das Fenster ist
+    # deshalb weit und die Zahl daneben genau.
+    lauf.pruefe(95 <= einsatzzahl <= 125,
+                f"Umfang {einsatzzahl} Einsätze liegt außerhalb von 95–125")
 
     # ---- Bericht ----------------------------------------------------------
     print(f"Dokumente:        {len(dienstdateien)} Dienste + Stammdaten + 1 Prüfschritt")
