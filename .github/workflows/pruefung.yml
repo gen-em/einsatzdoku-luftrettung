@@ -1,0 +1,135 @@
+name: Prüfung
+
+# STUFE 1 DES PRÜFTORS (Konzept P5a, E-P5a-13; Rahmenplan R67/E-PV-3 (e)).
+#
+# WAS SIE IST. Die Prüfmittel, die OHNE laufende Installation auskommen —
+# Syntax, Wortliste, Vollständigkeit, Kontraste, Backlog-Nummern,
+# Migrationsregister, die Android-Bauläufe und, wenn die Adresse da ist, das
+# Übersetzen der Uhr-App für alle Zielgeräte. Sie laufen bei JEDEM Push auf
+# JEDEM Zweig und bei jedem Pull Request.
+#
+# WAS SIE NICHT IST. Kein Ersatz für die Browserprüfung (`CLAUDE.md` 6) und
+# kein Ersatz für Stufe 2: Kreisläufe, Bilderlauf und Messstand brauchen eine
+# Installation und laufen deshalb im Staging-Lauf (`auslieferung.yml`).
+#
+# ROT = KEIN MERGE. Das entscheidet nicht diese Datei, sondern der Zweigschutz
+# auf `main` mit `pruefung` als Pflichtprüfung (Zuarbeit, Rahmenplan
+# Abschnitt 6). Ohne ihn ist dieser Lauf eine Auskunft und keine Schranke.
+#
+# KEIN STILLES ÜBERSPRINGEN. Fehlt einem Schritt seine Voraussetzung — der
+# Uhr-Prüfstand braucht `CIQ_GERAETE_URL`, und die steht bewusst nicht im
+# Repositorium —, sagt er das mit einer Zeile und einer Zusammenfassung. Ein
+# Schritt, der ohne Voraussetzung grün meldet, ist schlimmer als ein roter:
+# Er sieht aus wie eine Prüfung.
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Ein zweiter Push auf denselben Zweig macht den ersten Lauf gegenstandslos.
+  group: pruefung-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pruefung:
+    name: Stufe 1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: Fassungen nennen — was misst hier eigentlich?
+        # ZUERST UND IMMER. Eine Zahl ohne die Fassung, die sie erzeugt hat,
+        # ist in einem Monat nicht mehr nachvollziehbar (`CLAUDE.md` 6).
+        run: |
+          echo "PHP:    $(php -v | head -1)"
+          echo "Python: $(python3 -V)"
+          echo "Node:   $(node -v)"
+          echo "Java:   $(java -version 2>&1 | head -1)"
+          echo "Web:    $(grep -oE "WEB_VERSION'?,\s*'[0-9.]+'" server/version.php | head -1)"
+
+      - name: PHP-Syntax über server/
+        # `php -l` je Datei. Ein Syntaxfehler in einer Datei, die nur auf einem
+        # selten begangenen Weg geladen wird, fällt sonst erst dort auf — und
+        # „dort" heisst nach einem Deploy auf Produktiv.
+        run: |
+          set -e
+          n=0
+          while IFS= read -r f; do
+            php -l "$f" > /dev/null
+            n=$((n+1))
+          done < <(find server tools -name '*.php' -type f)
+          echo "PHP-Dateien ohne Syntaxfehler: $n"
+          echo "PHP-Syntax: $n Dateien, 0 Fehler" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Wortliste — sind Land und Luft neutral benannt?
+        # Erwartet werden null Treffer ausserhalb der Ausnahmeliste UND null
+        # ungenutzte Ausnahmen; beides steckt im Rückgabewert.
+        run: |
+          python3 tools/wortliste/wortliste.py | tee /tmp/wortliste.txt
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          tail -20 /tmp/wortliste.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Vollständigkeit des Stylesheets
+        run: python3 tools/vollstaendigkeit/pruefen.py
+
+      - name: Kontraste der Token
+        run: python3 tools/screenshots/kontrast.py
+
+      - name: Backlog — keine Nummer zweimal
+        # Die Zeile stammt aus dem Kopf des Rahmenplans (Abschnitt 2.2).
+        run: |
+          doppelt=$(grep -oE '^[0-9]+\.' docs/Backlog.md | tr -d '.' | sort -n | uniq -d)
+          if [ -n "$doppelt" ]; then
+            echo "Doppelte Backlog-Nummern: $doppelt"
+            exit 1
+          fi
+          echo "Doppelte Backlog-Nummern: 0"
+
+      - name: Migrationsregister — schema.sql gegen migration_lib.php
+        # Selbstprobe zuerst: Ein grüner Lauf einer Prüfung, die immer grün
+        # meldet, sieht genauso aus wie einer, der nichts gefunden hat.
+        run: |
+          php tools/migrationsregister/pruefen.php --selbstprobe
+          php tools/migrationsregister/pruefen.php
+
+      - name: Android — bauen, prüfen, linten
+        # 0 Lint-Fehler und 0 Fehlschläge; der Rückgabewert von Gradle trägt
+        # beides. Das Android-SDK bringt der Läufer mit (ANDROID_HOME ist
+        # gesetzt); ist es das ausnahmsweise nicht, wird der Schritt
+        # AUSDRÜCKLICH übersprungen und sagt es.
+        working-directory: android
+        run: |
+          if [ -z "${ANDROID_HOME:-}" ] && [ -z "${ANDROID_SDK_ROOT:-}" ]; then
+            echo "::warning::Android-SDK fehlt auf diesem Läufer — Bauläufe ÜBERSPRUNGEN, nicht bestanden."
+            echo '**Android: ÜBERSPRUNGEN** (kein SDK auf dem Läufer) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          chmod +x ./gradlew
+          ./gradlew --no-daemon build
+
+      - name: Uhr Stufe I — für alle Zielgeräte übersetzen
+        # BRAUCHT `CIQ_GERAETE_URL`. Die Adresse steht bewusst nicht im
+        # Repositorium (`tools/uhr-pruefstand/LIESMICH.md`, Abschnitt
+        # „Quelle"): Es ist öffentlich, die Dateien gehören Garmin. Sie kommt
+        # als Umgebungsgeheimnis herein; fehlt sie, wird der Schritt
+        # ÜBERSPRUNGEN UND GESAGT — nie ein stilles Grün (E-P5a-13).
+        env:
+          CIQ_GERAETE_URL: ${{ secrets.CIQ_GERAETE_URL }}
+        run: |
+          if [ -z "${CIQ_GERAETE_URL:-}" ]; then
+            echo "::warning::CIQ_GERAETE_URL nicht gesetzt — Uhr Stufe I ÜBERSPRUNGEN, nicht bestanden."
+            echo '**Uhr Stufe I: ÜBERSPRUNGEN** (kein `CIQ_GERAETE_URL`) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          CIQ_ZIELE=alle tools/uhr-pruefstand/pruefstand.sh aufbau
+          python3 tools/uhr-pruefstand/geraeteklassen.py "$HOME/.Garmin/ConnectIQ/Devices" \
+                  --vertreter 5 --liste /tmp/vertreter.txt --alle-liste /tmp/auswahl.txt
+          tools/uhr-pruefstand/pruefstand.sh reihe /tmp/auswahl.txt

@@ -14,6 +14,141 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.4.0] — 2026-09-15
+
+**P5a/AP1 — die Auslieferungskette.** Erstes Arbeitspaket von Schritt 10a
+(R82). Bis Web 20.3.0 stand in `CLAUDE.md` 3 wörtlich: „Ein Push auf `main`
+mit Änderungen unter `server/` lädt sofort auf den Produktivserver hoch. Es
+gibt keine Zwischenstufe und keine Testumgebung." Das war richtig, und es war
+der Zustand, den R67 beenden sollte. Er endet hier.
+
+### Hinzugefügt — zwei Wege und drei Tore
+
+**Was galt.** Ein Arbeitslauf (`deploy.yml`), ein Ziel (Produktiv), ein
+Auslöser (Push auf `main`). Kein Prüftor, kein Freigabeschritt, kein
+Rollback-Weg — und kein Backup, von dem jemand wüsste, dass es zu diesem Stand
+gehört. Wer sich vertat, vertat sich auf dem Server, auf dem die Notärztin
+gerade dokumentiert.
+
+**Was gilt.** Ein Push auf `main` geht nach **Staging**, ein Tag `web-vX.Y.Z`
+nach **Produktiv**. Drei Arbeitsläufe statt zwei:
+
+- `pruefung.yml` — **Stufe 1**, bei jedem Push auf jedem Zweig und bei jedem
+  Pull Request. Acht Schritte, alle ohne Installation: `php -l`, Wortliste,
+  Vollständigkeit, Kontraste, Backlog-Nummern, Migrationsregister,
+  `./gradlew build`, Uhr Stufe I.
+- `auslieferung.yml` — die Jobs `staging`, `stufe2` (Kreisläufe, Bilderlauf,
+  bei Tags der Messstand) und `produktion`.
+- `integritaet.yml` — unverändert in der Sache, aber umgehängt.
+
+**Warum der Tag die Fassung trägt** (F-P5a-1): `web-vX.Y.Z` ist gleich
+`WEB_VERSION`, und der Produktionslauf verweigert, wenn beides
+auseinandergeht. Damit ist **Rollback ein Lauf mit dem vorigen Tag** und kein
+Suchen. Uhr und Android bekommen keine Auslieferungs-Tags — ihre Signatur
+liegt außerhalb der CI (E-S4-16).
+
+**Was die Pflichtfreigabe leistet und was nicht.** Sie ist eine Eigenschaft
+der GitHub-Umgebung, nicht des Arbeitslaufs: Zwischen „Tag gesetzt" und
+„Dateien auf Produktiv" steht ein Mensch. Über den Inhalt sagt sie nichts —
+dafür sind die Prüftore da.
+
+### Hinzugefügt — das Backup-Tor, und warum es zwei Bedingungen hat
+
+Vor dem Schreiben auf Produktiv läuft das Komplett-Backup **nachweislich zu
+Ende**. Der Token-Einstieg hat 20 s Budget je Aufruf; ein Backup von 10 GB
+braucht mehr. Der Lauf ruft deshalb bis zu 40-mal mit 20 s Pause, bis der Job
+`fertig` meldet.
+
+**`fertig` allein genügt nicht.** Ein Backup, das schon gestern fertig wurde,
+meldet ebenfalls `fertig` — und schützt diesen Deploy nicht. Der jüngste Stand
+muss deshalb **jünger sein als der Laufbeginn**. Das ist der Unterschied
+zwischen „es gibt ein Backup" und „es gibt ein Backup von diesem Stand".
+
+**Und der Aufruf legt einen Auftrag an, wenn keiner steht.** Bei Plan „Nur von
+Hand" ist `komp_faellig()` immer falsch; der Job täte nichts und meldete
+sofort `fertig`. Das Tor stünde offen, ohne dass ein Backup entstanden wäre.
+
+Die Logik steht in `tools/kette/tor.py` und nicht im YAML: Eine Bedingung, die
+einen Deploy verhindern soll, gehört dorthin, wo eine Selbstprobe sie
+nachweisen kann. Fünf Lagen prüft sie ohne Netz — darunter „meldet nie
+fertig" und „Stand ist von gestern"; **5 von 5 erfüllt**. Der Produktionslauf
+ruft die Selbstprobe vor dem Tor: Ein Tor, das immer aufgeht, sieht von außen
+aus wie eines, das geprüft hat.
+
+### Hinzugefügt — `jobs.php` nimmt eine `aktion`
+
+Am **Code** ändert dieses Paket eine einzige Datei, und das ist der Punkt: Die
+Anwendung soll weiterhin nicht wissen, wie sie auf den Server gekommen ist
+(PP-9, Muss). Der Token-Weg bekommt vier Aktionen, weil die Kette von außen
+genau vier Dinge tun können muss, für die es bisher nur einen Browser gab:
+`komplett`, `wartung_an`, `wartung_aus`, `zustand`. Ohne `aktion` verhält sich
+die Datei wie bisher.
+
+`zustand` ist die einzige Aktion ohne Nebenwirkung: jüngster Komplett-Stand
+mit Zeit und Größe, Wartung an/aus samt Urheber, Migration ausstehend ja/nein,
+`WEB_VERSION`.
+
+Steht nach dem Deploy eine Migration aus, **bleibt der Wartungsmodus an** und
+der Lauf endet **grün** mit dem Hinweis. Grün, weil das Ausliefern gelungen
+ist; der Hinweis, weil jetzt ein Mensch an der Reihe ist. R66 gilt unverändert:
+Die Installation ändert ihren Code nie selbst und fährt keine Migration von
+selbst.
+
+### Hinzugefügt — `tools/migrationsregister/`
+
+Eine Prüfung, die `schema.sql` und `migration_lib.php` gegeneinander hält.
+`migration_lib.php` führt im Kopf die Hausregel, eine neue Kennung
+**zusätzlich** am Ende von `schema.sql` einzutragen. Die Regel ist richtig und
+wurde trotzdem schon dreimal vergessen — die Kommentare am Ende von
+`schema.sql` sagen es selbst („Nachgetragen (Web 5.9.0): Beide Migrationen
+fehlten hier"). Bemerkt wurde es jedes Mal später und von Hand.
+
+Sieben Prüfungen, keine Installation nötig, gemessen auf diesem Stand:
+**46 Kennungen im Katalog, 46 in der Vorabliste, 30 Tabellen, 180 Spalten, 29
+Löschungen, 0 Befunde, 4 erklärte Ausnahmen, 0 ungenutzte.** Die Selbstprobe
+findet 4 von 4 eingebauten Schäden.
+
+**Ihre Grenze steht in ihrer LIESMICH, nicht im Kleingedruckten.** Ein
+`$pdo->exec("ALTER TABLE \`$tab\` DROP COLUMN \`$spalte\`")` ist für einen
+Leser des Quelltextes keine Zeichenkette mehr, sondern Text mit Löchern. Vier
+Spalten fallen heute genau so; sie stehen mit dieser Begründung in
+`ausnahmen.json`. Die Prüfung tut nicht so, als hätte sie sie gesehen.
+
+### Geändert — die Integritätswache hängt jetzt an „Auslieferung"
+
+Sie wird per `workflow_run` vom Namen des Deploy-Laufs angestoßen, und der
+hieß „Server per FTP hochladen". **Wer einen Lauf umbenennt, hängt die Wache
+ab — still, ohne Fehlermeldung** (Fund F4 des P5a-Konzepts). Der Name steht
+jetzt beidseits im Kommentar, mit genau diesem Satz.
+
+Dazu ein neuer erster Schritt: Seit der Kette hat der Auslieferungslauf **zwei
+Ziele**, die Wache misst aber Produktiv. Nach einem Staging-Deploy verglich
+sie sonst den Produktivserver mit einem Stand, der dort gar nicht liegt — und
+meldete eine Abweichung, die keine ist. Sie fragt deshalb über die API, ob der
+Job `produktion` in diesem Lauf mit Erfolg geendet hat, und hält sonst still.
+**Eine Wache, die regelmäßig falschen Alarm gibt, wird abgeschaltet**; das ist
+der eigentliche Schaden.
+
+### Geändert — Geheimnisse liegen an den Umgebungen
+
+`FTP_SERVER`, `FTP_USERNAME` und `FTP_PASSWORD` waren Repositoriums-Secrets
+und damit jedem Arbeitslauf zugänglich. Sie liegen jetzt an den Umgebungen
+`staging` und `produktion`, dazu `JOBS_TOKEN` nur an `produktion`. Der
+Staging-Lauf kommt an die Produktivzugänge nicht mehr heran.
+
+### Geändert — Dokumentation
+
+`docs/Technik.md` 6 ist neu geschrieben (sieben Unterabschnitte statt eines
+Absatzes) und nennt in 6.7 ausdrücklich den Weg **ohne** GitHub: Dateien
+hochladen, `update.php` aufrufen. Der Runbook-Abschnitt 7 sagt jetzt, welche
+seiner Schritte die Kette abnimmt und welche von Hand bleiben — und dass die
+Liste der Weg ohne Kette ist und bleibt. `CLAUDE.md` 3 ist berichtigt, mit dem
+Hinweis, dass ältere Protokolle das Gegenteil sagen und damals recht hatten.
+`README.md` nennt beide Wege.
+
+**Keine Schemaänderung, keine Migration.** `update.php` muss nach dem Deploy
+nicht laufen.
+
 ## [Web 20.3.0] — 2026-09-15
 
 Schritt 9d (**Demo-Ausbau**). Der Referenzbestand soll die drei

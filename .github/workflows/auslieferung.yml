@@ -1,0 +1,253 @@
+name: Auslieferung
+
+# ZWEI WEGE, ZWEI UMGEBUNGEN (Konzept P5a, E-P5a-10; Rahmenplan R67/E-PV-3).
+#
+# Bis zu dieser Fassung hiess diese Datei `deploy.yml` und hatte genau einen
+# Weg: Push auf `main` mit Änderung unter `server/` → FTPS auf **Produktiv**.
+# Keine Zwischenstufe, kein Prüftor, kein Rollback-Weg — in `CLAUDE.md` 3
+# stand dazu der Satz „Es gibt keine Zwischenstufe und keine Testumgebung".
+# Das endet hier.
+#
+#   staging      Push auf `main`   → Umgebung `staging`, danach Stufe 2
+#   produktion   Tag `web-vX.Y.Z`  → Umgebung `produktion` mit
+#                                    PFLICHTFREIGABE, davor das Backup-Tor
+#
+# WARUM KEIN `paths`-FILTER MEHR. Der alte Lauf beschränkte sich auf
+# Änderungen unter `server/**`. Ein `on.push` kann Zweige UND Tags auslösen,
+# aber `paths` gilt dann für beides — und für einen Tag-Push ist „welche
+# Dateien haben sich geändert" keine sinnvolle Frage. Der Filter fällt
+# deshalb weg. Er kostet wenig: Die FTPS-Aktion überträgt ohnehin nur, was
+# sich geändert hat, und **Staging soll `main` spiegeln**, auch wenn nur
+# `docs/` gewandert ist.
+#
+# WAS DIE PFLICHTFREIGABE LEISTET UND WAS NICHT. Sie ist eine Eigenschaft der
+# GitHub-Umgebung („required reviewers"), nicht dieser Datei — wer sie dort
+# abschaltet, hat sie abgeschaltet. Sie leistet: Zwischen „Tag gesetzt" und
+# „Dateien auf Produktiv" steht ein Mensch. Sie leistet nicht: irgendeine
+# Aussage über den Inhalt. Dafür sind die Prüftore da.
+#
+# DAS BACKUP-TOR STEHT IN `tools/kette/tor.py` und nicht hier (E-P5a-12).
+# Eine Bedingung, die einen Deploy verhindern soll, gehört dorthin, wo eine
+# `--selbstprobe` sie nachweisen kann — genau das verlangt die Abnahme von
+# AP1. Fünf Lagen prüft sie, darunter „meldet nie fertig" und „Stand ist von
+# gestern".
+#
+# ROLLBACK ist ein Lauf mit dem vorigen Tag (E-PV-3 (d)). Deshalb trägt der
+# Tag die Fassung und nicht die Uhrzeit.
+#
+# WER DIESEN LAUF UMBENENNT, LIEST `integritaet.yml`. Sie hängt per
+# `workflow_run` am NAMEN dieses Laufs. Eine Umbenennung hier hängt sie ab —
+# still, ohne Fehlermeldung (Fund F4 des Konzepts).
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'web-v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  staging:
+    name: staging
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: server/ per FTPS auf Staging synchronisieren
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server:     ${{ secrets.FTP_SERVER }}
+          username:   ${{ secrets.FTP_USERNAME }}
+          password:   ${{ secrets.FTP_PASSWORD }}
+          protocol:   ftps
+          port:       21
+          local-dir:  ./server/
+          # Das Verzeichnis der Subdomain. Umgebungsvariable und kein
+          # Geheimnis: Es ist ein Pfad, keine Zugangsberechtigung.
+          server-dir: ${{ vars.FTP_ZIELPFAD || './staging/' }}
+          # DIE AUSNAHMELISTE IST WORTGLEICH DIE DES ALTEN `deploy.yml` UND
+          # BLEIBT ES. Jede Zeile hat eine Geschichte, und jede fehlende
+          # Zeile hat eine teurere:
+          #   config.php, install.lock   liegen nur auf dem Server
+          #   sicherungen/               entstehen nur dort (A8.2)
+          #   wartung.lock               der Schalter des Wartungsmodus
+          #                              (E-S5W-02) — und der Deploy ist
+          #                              genau das, was währenddessen läuft
+          #   apk/                       die Android-Pakete (E-S4-16)
+          # sicherungen/ und apk/ stehen zweimal, weil die Aktion Datei- und
+          # Verzeichnismuster getrennt prüft.
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            config.php
+            install.lock
+            wartung.lock
+            sicherungen/**
+            sicherungen/
+            apk/**
+            apk/
+
+  stufe2:
+    name: Prüfung Stufe 2
+    needs: staging
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      STAGING_URL:   ${{ vars.STAGING_URL }}
+      STAGING_KONTO: ${{ secrets.STAGING_KONTO }}
+      STAGING_PASS:  ${{ secrets.STAGING_PASS }}
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: Kreisläufe csv und edbak gegen Staging
+        # BRAUCHT EIN PRÜFKONTO auf Staging (Umgebungsgeheimnis). Fehlt es,
+        # wird der Schritt ÜBERSPRUNGEN UND GESAGT — ein Lauf, der ohne
+        # Zugangsdaten grün meldet, hat nichts gemessen (`CLAUDE.md` 6).
+        run: |
+          if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ]; then
+            echo "::warning::Prüfkonto auf Staging fehlt — Kreisläufe ÜBERSPRUNGEN, nicht gemessen."
+            echo '**Kreisläufe: ÜBERSPRUNGEN** (kein Prüfkonto) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          pip -q install cffi cryptography
+          python3 tools/referenzdatensatz/vergleich/kreislauf.py \
+                  --basis "$STAGING_URL" --konto "$STAGING_KONTO" --passwort "$STAGING_PASS"
+
+      - name: Bilderlauf gegen Staging
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
+        run: |
+          if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ]; then
+            echo "::warning::Prüfkonto auf Staging fehlt — Bilderlauf ÜBERSPRUNGEN, nicht gemessen."
+            echo '**Bilderlauf: ÜBERSPRUNGEN** (kein Prüfkonto) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          npx --yes playwright@1.56 install chromium
+          node tools/screenshots/aufnehmen.mjs \
+               --basis "$STAGING_URL" --konto "$STAGING_KONTO" --passwort "$STAGING_PASS"
+
+      - name: Messstand — nur bei Tag-Läufen
+        if: startsWith(github.ref, 'refs/tags/web-v')
+        run: |
+          if [ -z "${STAGING_URL:-}" ]; then
+            echo "::warning::STAGING_URL fehlt — Messstand ÜBERSPRUNGEN, nicht gemessen."
+            exit 0
+          fi
+          python3 tools/messstand/serverprobe.py --basis "$STAGING_URL"
+
+  produktion:
+    name: produktion
+    if: startsWith(github.ref, 'refs/tags/web-v')
+    runs-on: ubuntu-latest
+    # DIE UMGEBUNG IST DAS TOR. Pflichtfreigabe durch die Betreiberin (T1 aus
+    # E-PV-3); die FTPS-Zugangsdaten und JOBS_TOKEN sind ihre Geheimnisse und
+    # stehen nicht mehr als Repositoriums-Secrets herum.
+    environment: produktion
+    env:
+      BASIS:      ${{ vars.PRODUKTION_URL }}
+      JOBS_TOKEN: ${{ secrets.JOBS_TOKEN }}
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: Tag gegen WEB_VERSION halten
+        # F-P5a-1: Der Tag heisst `web-vX.Y.Z` und ist gleich `WEB_VERSION`.
+        # Eine Auslieferung, deren Tag etwas anderes sagt als die Fusszeile
+        # der ausgelieferten Anwendung, ist beim nächsten Rollback ein Rätsel.
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          ver=$(php -r "require 'server/version.php'; echo WEB_VERSION;")
+          echo "Tag: $tag · WEB_VERSION: $ver"
+          if [ "$tag" != "web-v$ver" ]; then
+            echo "::error::Tag $tag passt nicht zu WEB_VERSION $ver (erwartet web-v$ver)."
+            exit 1
+          fi
+
+      - name: Grüner Staging- und Stufe-1-Lauf auf diesem Stand?
+        # Ein Tag darf nur ausliefern, was auf Staging schon stand und dort
+        # grün war (E-P5a-13). Gefragt wird nach dem COMMIT, nicht nach dem
+        # Zweig: Ein Tag kann auf einem Stand sitzen, der nie auf `main` war.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha="${GITHUB_SHA}"
+          echo "Commit: $sha"
+          pruef=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/pruefung.yml/runs?head_sha=$sha&status=success" \
+                   --jq '.workflow_runs | length' 2>/dev/null || echo 0)
+          stg=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/auslieferung.yml/runs?head_sha=$sha&status=success" \
+                   --jq '[.workflow_runs[] | select(.event == "push")] | length' 2>/dev/null || echo 0)
+          echo "Grüne Stufe-1-Läufe auf diesem Commit: $pruef"
+          echo "Grüne Staging-Läufe auf diesem Commit:  $stg"
+          if [ "$pruef" -lt 1 ]; then
+            echo "::error::Kein grüner Stufe-1-Lauf auf $sha — dieser Stand ist nicht freigabefähig."
+            exit 1
+          fi
+          if [ "$stg" -lt 1 ]; then
+            echo "::error::Kein grüner Staging-Lauf auf $sha — dieser Stand stand nie auf Staging."
+            exit 1
+          fi
+
+      - name: Backup-Tor — Komplett-Backup zu Ende laufen lassen
+        # Erst die Selbstprobe, dann das Tor: Ein Tor, das immer aufgeht,
+        # sieht von aussen aus wie eines, das geprüft hat.
+        run: |
+          python3 tools/kette/tor.py --selbstprobe
+          python3 tools/kette/tor.py backup --basis "$BASIS" --token "$JOBS_TOKEN"
+
+      - name: Wartung einschalten
+        run: python3 tools/kette/tor.py wartung-an --basis "$BASIS" --token "$JOBS_TOKEN"
+
+      - name: server/ per FTPS auf Produktiv synchronisieren
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server:     ${{ secrets.FTP_SERVER }}
+          username:   ${{ secrets.FTP_USERNAME }}
+          password:   ${{ secrets.FTP_PASSWORD }}
+          protocol:   ftps
+          port:       21
+          local-dir:  ./server/
+          server-dir: ${{ vars.FTP_ZIELPFAD || './httpdocs/' }}
+          # Wortgleich wie im Staging-Job — Begründung steht dort.
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            config.php
+            install.lock
+            wartung.lock
+            sicherungen/**
+            sicherungen/
+            apk/**
+            apk/
+
+      - name: Zustand — Migration ausstehend?
+        # R66 SAGT: KEIN SELBST-UPDATE. Die Installation ändert ihren Code nie
+        # selbst, und sie fährt auch keine Migration von selbst. Steht eine
+        # aus, BLEIBT DIE WARTUNG AN und der Lauf endet GRÜN mit dem Hinweis —
+        # grün, weil das Ausliefern gelungen ist; der Hinweis, weil jetzt ein
+        # Mensch an der Reihe ist. Ein roter Lauf sagte hier etwas Falsches.
+        run: |
+          python3 tools/kette/tor.py zustand --basis "$BASIS" --token "$JOBS_TOKEN"
+          offen=$(python3 tools/kette/tor.py zustand --basis "$BASIS" --token "$JOBS_TOKEN" --frage migration)
+          echo "Migration ausstehend: $offen"
+          if [ "$offen" = ja ]; then
+            echo "::warning::Migration ausstehend — die Wartung BLEIBT AN."
+            {
+              echo '## Migration ausstehend'
+              echo
+              echo 'Die Dateien sind oben, die Wartung ist **an** und bleibt es.'
+              echo 'Jetzt von Hand: **Betrieb → Updates** öffnen, die ausstehenden'
+              echo 'Migrationen ausführen, danach dort **Wartung beenden**.'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python3 tools/kette/tor.py wartung-aus --basis "$BASIS" --token "$JOBS_TOKEN"
+          echo 'Keine Migration ausstehend — Wartung wieder aus.' >> "$GITHUB_STEP_SUMMARY"

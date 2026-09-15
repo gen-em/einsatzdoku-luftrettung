@@ -4590,5 +4590,37 @@ declare(strict_types=1);
  * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `vehicle_capabilities` und
  * `day_capabilities` fuehren keine Art; sie konnten den Fall immer schon
  * tragen. `update.php` muss nach dem Deploy NICHT laufen.
+ *
+ * 20.4.0 ist das erste Paket von P5a (AP1): DIE AUSLIEFERUNGSKETTE.
+ *
+ * WAS BIS HIERHER GALT und in `CLAUDE.md` 3 wortwoertlich stand: „Ein Push
+ * auf `main` mit Aenderungen unter `server/` laedt sofort auf den
+ * Produktivserver hoch. Es gibt keine Zwischenstufe und keine Testumgebung."
+ * Kein Prueftor, kein Freigabeschritt, kein Rueckweg — und kein Backup, von
+ * dem jemand wuesste, dass es zu diesem Stand gehoert.
+ *
+ * WAS GILT: Push auf `main` geht nach STAGING, ein Tag `web-vX.Y.Z` geht nach
+ * PRODUKTIV, und davor stehen drei Tore — Stufe 1 (jeder Push, ohne
+ * Installation), Stufe 2 (gegen Staging) und die Pflichtfreigabe der
+ * Betreiberin. Vor dem Schreiben auf Produktiv laeuft das Komplett-Backup
+ * nachweislich zu Ende.
+ *
+ * AM CODE AENDERT SICH EINE EINZIGE DATEI, und das ist der Punkt: `jobs.php`
+ * nimmt am Token-Weg einen Parameter `aktion` (`komplett`, `wartung_an`,
+ * `wartung_aus`, `zustand`). Die Kette braucht ihn, weil sie von aussen
+ * genau vier Dinge tun koennen muss, fuer die es bisher nur einen Browser
+ * gab. Alles Weitere liegt in `.github/workflows/` und `tools/` — die
+ * Anwendung weiss weiterhin nicht, wie sie auf den Server gekommen ist
+ * (PP-9, Muss).
+ *
+ * ZWEI BEDINGUNGEN AM BACKUP-TOR, NICHT EINE (E-P5a-12). `fertig` allein
+ * genuegt nicht: Ein Backup, das schon gestern fertig wurde, meldet
+ * ebenfalls `fertig` und schuetzt diesen Deploy nicht. Der juengste Stand
+ * muss deshalb JUENGER SEIN ALS DER LAUFBEGINN. Und `aktion=komplett` legt
+ * einen Auftrag an, wenn keiner steht — ohne das taete der Aufruf bei Plan
+ * „Nur von Hand" nichts und meldete sofort `fertig`.
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `update.php` muss nach dem Deploy
+ * NICHT laufen.
  */
-const WEB_VERSION = '20.3.0';
+const WEB_VERSION = '20.4.0';

@@ -25,7 +25,8 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | Paket | Stand | Stufe | Abnahmezahlen |
 > |---|---|---|---|
 > | AP0 Aufnahme | **erledigt** | — | Rahmenplan Fassung 72, Vorbereitung und Konzept im Repositorium |
-> | AP1 bis AP12 | offen | — | — |
+> | **AP1 Auslieferungskette** | **erledigt** | **Web 20.4.0** | Register 46/46, 0 Befunde, Selbstprobe 4/4 · Backup-Tor 5/5 · Wortliste 0/0/0 · Kontraste 22/0 · Vollständigkeit 340 = unverändert · 3 Arbeitsläufe gültiges YAML |
+> | AP2 bis AP12 | offen | — | — |
 
 ---
 
@@ -745,3 +746,88 @@ Hinweis-Karte über dem Anmeldeformular) und brauchen kein Mockup.
   eigener Anlass; genügt für 10–60 min, 1.7) — niedrig.
 - **Nr. 8, 17, 49, 54, 67, 195:** „in P5a, AP…" mit der Paketnummer.
 - **Nr. 80:** Teil 1 (Nachlöse-Job) P5a AP11; Rest 10c.
+
+---
+
+## 9. Umsetzungsprotokoll
+
+Je Arbeitspaket: was entstanden ist, welche Probleme aufgetreten sind, wie sie
+gelöst wurden, welche Entscheidungen dabei gefallen sind (`CLAUDE.md` 7).
+
+### AP1 — Auslieferungskette · Web 20.4.0 · 15.09.2026
+
+**Entstanden.** `.github/workflows/pruefung.yml` (Stufe 1),
+`.github/workflows/auslieferung.yml` (Jobs `staging`, `stufe2`, `produktion`),
+`.github/workflows/deploy.yml` gelöscht, `integritaet.yml` umgehängt;
+`server/jobs.php` mit dem Parameter `aktion`; zwei neue Prüfmittel
+(`tools/migrationsregister/`, `tools/kette/`); `docs/Technik.md` 6 neu
+geschrieben, Runbook 7 ergänzt, `README.md`, `CLAUDE.md` 3, Changelog;
+Prüfdokument angelegt.
+
+**Problem 1 — „Migrationsregister" war als Prüfung noch nicht da.** Das
+Konzept nennt in E-P5a-13 „Migrationsregister (`schema.sql` gegen
+`migration_lib.php`, Prüfung aus `tools/wartungsprobe/` Teil 6)". Teil 6 der
+Wartungsprobe braucht aber eine **laufende Installation** — in Stufe 1 gibt es
+keine. **Gelöst** durch ein eigenes Werkzeug, das ohne Installation auskommt:
+`tools/migrationsregister/pruefen.php` liest den Katalog über
+`token_get_all()`, statt `migration_lib.php` zu laden (das zöge `db.php` und
+damit `config.php` nach). Sieben Prüfungen; die Wartungsprobe bleibt
+unverändert, sie misst etwas anderes (das Register **zur Laufzeit**).
+
+**Problem 2 — die erste Fassung der Prüfung meldete 12 Befunde, davon 8
+falsch.** Drei Ursachen, alle am Werkzeug, keine am Bestand:
+(a) Prüfung 4 verglich die **ganze** Kennung alphabetisch; innerhalb eines
+Tages ist die Reihenfolge aber eine Abhängigkeit und keine Sortierung (sechs
+Paare stehen mit Absicht so). Sie vergleicht jetzt nur das **Datum**.
+(b) `CREATE TABLE IF NOT EXISTS` wurde beim Lesen von `schema.sql` nicht
+erkannt — die Prüfung hielt `IF` für den Tabellennamen. (c) `RENAME TABLE`
+fehlte in der Simulation, deshalb blieb `aircraft` als „nicht im Schema"
+stehen. **Vier Befunde blieben echt und sind unauflösbar:** Die vier Spalten,
+die `2026_08_17_notarzt_erweiterung` im letzten Schritt über eine Schleife mit
+eingesetzten Namen löscht, sind für einen Leser des Quelltextes unsichtbar.
+Sie stehen in `ausnahmen.json`, mit dieser Begründung — die Prüfung tut nicht
+so, als hätte sie sie gesehen.
+
+**Problem 3 — das Backup-Tor ließ sich in YAML nicht sauber schreiben.** Der
+erste Entwurf trug die Schleife samt einer eingebetteten Python-Auswertung im
+`run:`-Block. Das ist nicht nur unleserlich, es ist **ungültiges YAML**: Ein
+Blockskalar endet an der ersten Zeile mit geringerer Einrückung, und
+Python-Code auf oberster Ebene hat keine. **Gelöst** durch `tools/kette/tor.py`
+— und das ist die bessere Lösung aus einem zweiten Grund: Die Abnahme von AP1
+verlangt, dass das Tor **nachweislich** abbricht. Als Werkzeug hat es eine
+`--selbstprobe`, die fünf Lagen ohne Netz prüft; als YAML-Feld hätte es
+nichts.
+
+**Entscheidung E-P5a-22 (neu) — `aktion=komplett` legt einen Auftrag an.**
+Beim Nachmessen fiel auf, dass `job_komplett` nur arbeitet, wenn
+`komp_faellig()` wahr ist — und das hängt am **Plan**. Steht der auf „Nur von
+Hand" (die Vorgabe), täte der Aufruf nichts und meldete sofort `fertig`: Das
+Tor stünde offen, ohne dass ein Backup entstanden wäre. `aktion=komplett` ruft
+deshalb `komp_auftrag_starten()`, wenn kein Auftrag offen steht. Dieselbe
+Überlegung führt zur zweiten Bedingung des Tors (`Stand jünger als der
+Laufbeginn`), die im Konzept schon steht — beide zusammen schließen die Lücke
+von zwei Seiten.
+
+**Entscheidung E-P5a-23 (neu) — `fertig` heißt „und kein Auftrag mehr offen".**
+Der Job-Bericht meldet `fertig`, wenn das Häppchen aufgehört hat. Das ist
+nicht dasselbe wie „das Backup ist fertig": Ein Häppchen, das sein Budget
+aufgebraucht hat, meldete sonst dasselbe. `jobs.php` fragt deshalb zusätzlich
+`komp_zustand()`.
+
+**Entscheidung E-P5a-24 (neu) — der `paths`-Filter des alten `deploy.yml`
+fällt weg.** Ein `on.push` kann Zweige **und** Tags auslösen, aber `paths` gilt
+dann für beides — und für einen Tag-Push ist „welche Dateien haben sich
+geändert" keine sinnvolle Frage. Der Filter kostet wenig: Die FTPS-Aktion
+überträgt ohnehin nur Geändertes, und Staging soll `main` spiegeln.
+
+**Entscheidung E-P5a-25 (neu) — die Wache fragt nach dem Job, nicht nach dem
+Lauf.** `workflow_run` kann nicht nach Job filtern. Liefe die Integritätswache
+nach **jedem** Auslieferungslauf, vergliche sie nach einem Staging-Deploy den
+Produktivserver mit einem Stand, der dort nicht liegt — und meldete eine
+Abweichung, die keine ist. Eine Wache, die regelmäßig falschen Alarm gibt,
+wird abgeschaltet; das ist der eigentliche Schaden. Sie fragt deshalb über die
+API, ob der Job `produktion` in diesem Lauf mit Erfolg geendet hat.
+
+**Was bewusst nicht geprüft werden konnte** steht im Prüfdokument, Abschnitt 0
+— voran die Arbeitsläufe selbst: Ein GitHub-Arbeitslauf läuft nur bei GitHub.
+

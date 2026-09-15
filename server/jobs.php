@@ -30,6 +30,33 @@ declare(strict_types=1);
  * WAS DIESE DATEI NICHT TUT: arbeiten. Sie prüft, wer fragt, und ruft
  * `jobs_lauf()`. Die Jobs stehen in `jobs_lib.php`.
  *
+ * SEIT P5a IST DER TOKEN-WEG AUCH DER EINSTIEG DER AUSLIEFERUNGSKETTE
+ * (E-P5a-12). Er nimmt dafür einen Parameter `aktion`:
+ *
+ *   (ohne)        wie bisher — alle fälligen Jobs, ein Häppchen
+ *   komplett      NUR das Komplett-Backup, und zwar mit Auftrag: Steht keiner
+ *                 an, legt dieser Aufruf einen an. Ohne das täte der Aufruf
+ *                 bei Plan „Nur von Hand" nichts und meldete sofort `fertig`
+ *                 — das Tor stünde offen, ohne dass ein Backup entstanden
+ *                 wäre.
+ *   wartung_an    Wartungsmodus einschalten, Urheber `kette`
+ *   wartung_aus   ausschalten
+ *   zustand       Auskunft ohne Nebenwirkung: jüngster Komplett-Stand mit
+ *                 Zeit, Wartung an/aus, Migration ausstehend ja/nein,
+ *                 `WEB_VERSION`
+ *
+ * WARUM DIE KETTE WIEDERHOLT RUFEN MUSS. Ein Aufruf hat 20 s Budget
+ * (`JOB_BUDGET_TOKEN`); ein Komplett-Backup von 10 GB braucht mehr. Der Lauf
+ * arbeitet in Häppchen und sagt je Aufruf, ob er fertig ist. `fertig` heisst
+ * hier ausserdem mehr als „der Job hat aufgehört": Es heisst, dass auch KEIN
+ * Auftrag mehr offen steht (`komp_zustand()`). Sonst meldete ein Häppchen,
+ * das sein Budget aufgebraucht hat, dasselbe wie ein fertiges Backup.
+ *
+ * DIESE DATEI BLEIBT IN `WARTUNG_AUSNAHMEN` (`wartung_lib.php`) — und das ist
+ * jetzt tragend, nicht bequem: Die Kette schaltet die Wartung ein und ruft
+ * danach `zustand` und `wartung_aus`. Stünde sie nicht in der Liste, sperrte
+ * sie sich nach dem ersten Aufruf selbst aus.
+ *
  * KEINE ANMELDUNG. Der Aufruf über die Adresse legitimiert sich mit dem
  * Token, nicht mit einer Sitzung — ein Zeitplandienst hat keine. Deshalb
  * lädt diese Datei ausdrücklich NICHT `auth_guard.php`: Der würde den
@@ -136,6 +163,122 @@ if ($erwartet === '' || $token === '' || !hash_equals($erwartet, $token)) {
     echo json_encode(['error' => 'token']);
     exit;
 }
+
+/* ---- 2b. Die Aktionen der Auslieferungskette (E-P5a-12) ------------------ */
+
+/** Antwort schreiben und Schluss. */
+function kette_antwort(array $feld, int $code = 200): never
+{
+    http_response_code($code);
+    echo json_encode($feld, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+/**
+ * Der jüngste Komplett-Stand — Datei, Zeit, Größe. `null`, wenn es keinen gibt.
+ *
+ * Die Zeit kommt aus dem DATEINAMEN (`komp_zeit_aus_name()`) und nicht aus
+ * `filemtime()`: Der Name trägt den Zeitpunkt, zu dem der Stand GEMEINT ist,
+ * die Änderungszeit den, zu dem zuletzt jemand die Datei angefasst hat. Die
+ * Kette vergleicht gegen ihren Laufbeginn; dafür ist nur die erste Zahl
+ * brauchbar.
+ */
+function kette_komplett_stand(): ?array
+{
+    require_once __DIR__ . '/komplett_lib.php';
+    $staende = komp_staende();
+    if ($staende === []) { return null; }
+    return ['datei'   => $staende[0]['datei'],
+            'zeit'    => $staende[0]['zeit'],
+            'groesse' => $staende[0]['groesse']];
+}
+
+/**
+ * Steht eine Migration aus?
+ *
+ * UNGEPUFFERT, UND DAS BLEIBT SO. AP3 gibt `migration_lib.php` ein
+ * `migrationen_ausstehend()` mit Zwischenspeicher — das braucht der
+ * Torwächter, der die Frage bei JEDER Anfrage stellt. Hier fällt sie
+ * höchstens zweimal je Auslieferung an; ein Zwischenspeicher wäre an dieser
+ * Stelle nur eine zweite Wahrheit.
+ */
+function kette_migration_offen(): bool
+{
+    require_once __DIR__ . '/migration_lib.php';
+    $m = migrationen_lauf(db(), false);
+    return ((int)$m['offen'] + (int)$m['blockiert']) > 0;
+}
+
+$aktion = (string)($_GET['aktion'] ?? $_POST['aktion'] ?? '');
+
+if ($aktion === 'zustand') {
+    $w = wartung_daten();
+    kette_antwort([
+        'ok'                   => true,
+        'aktion'               => 'zustand',
+        'version'              => WEB_VERSION,
+        'wartung'              => ['aktiv' => wartung_aktiv(),
+                                   'seit'  => $w['seit'], 'von' => $w['von']],
+        'komplett'             => kette_komplett_stand(),
+        'migration_ausstehend' => kette_migration_offen(),
+    ]);
+}
+
+if ($aktion === 'wartung_an' || $aktion === 'wartung_aus') {
+    /* `wartung_einschalten()` ist idempotent und überschreibt Zeitpunkt und
+     * Urheber NICHT — ein zweiter Aufruf der Kette nimmt einer von Hand
+     * eingeschalteten Wartung also nicht ihre Herkunft. */
+    $ok = $aktion === 'wartung_an'
+        ? wartung_einschalten('kette')
+        : wartung_ausschalten();
+    kette_antwort([
+        'ok'      => $ok,
+        'aktion'  => $aktion,
+        'wartung' => wartung_aktiv(),
+        'meldung' => $ok ? null
+            : 'Der Schalter liess sich nicht setzen: ' . WARTUNG_DATEI
+              . ' — Schreibrechte der Anwendungswurzel prüfen.',
+    ], $ok ? 200 : 500);
+}
+
+if ($aktion === 'komplett') {
+    require_once __DIR__ . '/komplett_lib.php';
+
+    /* EINEN AUFTRAG ANLEGEN, WENN KEINER STEHT. Ohne das täte der Job bei
+     * Plan „Nur von Hand" nichts (`komp_faellig()` ist dann immer false) und
+     * meldete sofort `fertig` — das Backup-Tor der Kette stünde offen, ohne
+     * dass ein Backup entstanden wäre. */
+    $offenerAuftrag = static fn(): bool =>
+        in_array((string)(komp_zustand()['stand'] ?? ''), ['dump', 'siegel'], true);
+
+    if (!$offenerAuftrag()) {
+        $r = komp_auftrag_starten();
+        if (!$r['ok'] && !$offenerAuftrag()) {
+            /* Kein Auftrag zustande gekommen UND keiner offen: Das ist ein
+             * echter Grund (kein Serverschlüssel, Speichergrenze, Ablage nicht
+             * beschreibbar) und kein Warten. Die Kette bricht daran sofort ab,
+             * statt vierzigmal zu fragen. */
+            kette_antwort(['ok' => false, 'aktion' => 'komplett', 'fertig' => false,
+                           'error' => 'auftrag', 'meldung' => $r['meldung']], 409);
+        }
+    }
+
+    $bericht = jobs_lauf('token', ['komplett'])['komplett'] ?? [];
+    /* `fertig` heisst: Der Job hat aufgehört UND es steht kein Auftrag mehr
+     * offen. Ein Häppchen, das sein Budget aufgebraucht hat, meldete sonst
+     * dasselbe wie ein fertiges Backup. */
+    $fertig = !empty($bericht['fertig']) && !$offenerAuftrag();
+    kette_antwort(['ok' => true, 'aktion' => 'komplett', 'fertig' => $fertig,
+                   'bericht' => $bericht, 'komplett' => kette_komplett_stand()]);
+}
+
+if ($aktion !== '') {
+    kette_antwort(['ok' => false, 'error' => 'aktion',
+                   'meldung' => 'Unbekannte Aktion. Bekannt: komplett, '
+                              . 'wartung_an, wartung_aus, zustand.'], 400);
+}
+
+/* ---- 2c. Ohne Aktion: wie bisher alle fälligen Jobs ---------------------- */
 
 $bericht = jobs_lauf('token');
 echo json_encode(['ok' => true, 'jobs' => $bericht],

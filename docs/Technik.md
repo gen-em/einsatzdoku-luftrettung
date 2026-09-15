@@ -438,6 +438,22 @@ Daten erst nach Server-Bestätigung.
 │   │                      dorthin keinen Netzzugang, und ohne feste
 │   │                      Trefferzahl wäre jeder Sollwert geraten. Braucht
 │   │                      die lokale Installation (s. LIESMICH.md)
+│   ├── migrationsregister/ steht in `schema.sql` und `migration_lib.php`
+│   │                      dasselbe? Sieben Prüfungen über zwei Dateien —
+│   │                      Kennungen beidseits, Reihenfolge nach Datum, was
+│   │                      eine Migration anlegt und löscht. **Ohne
+│   │                      Installation**: keine Datenbank, keine
+│   │                      `config.php`, kein Netz; deshalb Stufe 1 des
+│   │                      Prüftors. Liest den Katalog über `token_get_all()`
+│   │                      statt ihn zu laden — und sagt in ihrer LIESMICH,
+│   │                      was sie damit NICHT sieht (DDL aus eingesetzten
+│   │                      Namen). Mit `--selbstprobe`
+│   ├── kette/             die Tore der Auslieferungskette (P5a/AP1):
+│   │                      Backup-Tor, Wartung an/aus, Zustand — gegen
+│   │                      `jobs.php?aktion=…`. Das Backup-Tor verlangt
+│   │                      `fertig` UND einen Stand, der jünger ist als der
+│   │                      Laufbeginn; `--selbstprobe` weist an fünf Lagen
+│   │                      nach, dass es auch zugeht
 │   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit der des
 │   │                      Repositoriums: jede Datei unter `server/assets/`
 │   │                      über SHA-256, und auf `login.php` die GANZE Menge
@@ -6329,15 +6345,136 @@ Ob eine Nachricht ankommt, ob die beiden `WearableListenerService` mit einer
 echten Nachricht das Richtige tun, ob Paket- und Signaturgleichheit im Feld
 greift — das ist Gerätetest und steht aus.
 
-## 6. Deployment
+## 6. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)
 
-Push auf `main` mit Änderungen unter `server/` → GitHub Action
-(`.github/workflows/deploy.yml`) lädt per **FTPS** hoch. **Auf dem Server liegt
-dadurch 1:1 der Repositoriumsstand**; einzige Ausnahme ist die bei der
-Installation erzeugte `config.php` (und `install.lock`), die nur auf dem Server
-existieren. Secrets: `FTP_SERVER` (nackter Hostname!), `FTP_USERNAME`,
-`FTP_PASSWORD`. `.gitignore` hält `watch/bin/`, `*.prg` und `config.php` aus dem
-Repo.
+**Bis Web 20.3.0** gab es genau einen Weg: Push auf `main` mit Änderungen unter
+`server/` → GitHub Action → FTPS auf **Produktiv**. Keine Zwischenstufe, kein
+Prüftor, kein Freigabeschritt, kein Rollback-Weg — und kein Backup, von dem
+jemand wüsste, dass es zu diesem Stand gehört. Das beschreibt R67 und beendet
+E-P5a-10.
+
+### 6.1 Zwei Wege, drei Tore
+
+| Auslöser | Ziel | Umgebung | Davor |
+|---|---|---|---|
+| Push auf `main` | **Staging** | `staging` | Stufe 1 |
+| Tag `web-vX.Y.Z` | **Produktiv** | `produktion` | Stufe 1, Stufe 2, Pflichtfreigabe, Backup-Tor |
+
+Drei Arbeitsläufe unter `.github/workflows/`:
+
+| Datei | Was |
+|---|---|
+| `pruefung.yml` | **Stufe 1** — jeder Push, jeder Zweig, jeder Pull Request |
+| `auslieferung.yml` | Jobs `staging`, `stufe2` und `produktion` |
+| `integritaet.yml` | die Wache; läuft nach einem **Produktiv**-Deploy und täglich |
+
+**Der Tag ist die Fassung** (F-P5a-1, entschieden 15.09.2026): `web-vX.Y.Z`,
+gleich `WEB_VERSION` in `server/version.php`. Der Produktionslauf verweigert,
+wenn beides nicht übereinstimmt. Uhr und Android bekommen keine
+Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
+**Rollback ist ein Lauf mit dem vorigen Tag.**
+
+### 6.2 Stufe 1 — was ohne Installation messbar ist
+
+`pruefung.yml`, bei jedem Push auf jedem Zweig:
+
+| Schritt | Sollwert |
+|---|---|
+| `php -l` über `server/` und `tools/` | 0 Fehler |
+| `tools/wortliste/wortliste.py` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen |
+| `tools/vollstaendigkeit/pruefen.py` | 0 Befunde |
+| `tools/screenshots/kontrast.py` | 0 Befunde |
+| Backlog-Nummern (`grep … uniq -d`) | leer |
+| `tools/migrationsregister/pruefen.php` | 0 Befunde, Selbstprobe 4/4 |
+| `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge |
+| Uhr Stufe I (`pruefstand.sh reihe`) | übersetzt für alle Zielgeräte |
+
+**Rot heißt kein Merge** — das entscheidet aber nicht die Datei, sondern der
+Zweigschutz auf `main` mit `pruefung` als Pflichtprüfung. Ohne ihn ist der
+Lauf eine Auskunft und keine Schranke.
+
+**Kein stilles Überspringen.** Der Uhr-Prüfstand braucht `CIQ_GERAETE_URL`,
+und die steht bewusst nicht im Repositorium. Fehlt sie, sagt der Schritt das
+mit einer Warnung und einer Zeile in der Zusammenfassung — ein Schritt, der
+ohne seine Voraussetzung grün meldet, ist schlimmer als ein roter: Er sieht
+aus wie eine Prüfung.
+
+### 6.3 Stufe 2 — was eine Installation braucht
+
+Job `stufe2` in `auslieferung.yml`, nach dem Staging-Sync: Kreisläufe csv und
+edbak (0 unerklärt), Bilderlauf (0 Überlauf, 0 Konsolenfehler, 0 falsche
+Knopfhöhen), und **nur bei Tag-Läufen** der Messstand. Alle drei brauchen ein
+**Prüfkonto auf Staging** (Umgebungsgeheimnisse `STAGING_KONTO`,
+`STAGING_PASS`, Variable `STAGING_URL`); fehlt es, wird der Schritt
+ausdrücklich übersprungen und gemeldet.
+
+### 6.4 Das Backup-Tor
+
+Vor dem Schreiben auf Produktiv läuft das Komplett-Backup **nachweislich zu
+Ende**. Die Logik steht in `tools/kette/tor.py` und nicht im Arbeitslauf: Eine
+Bedingung, die einen Deploy verhindern soll, gehört dorthin, wo eine
+Selbstprobe sie nachweisen kann (5 Lagen, ohne Netz).
+
+Der Ablauf des Produktionslaufs:
+
+1. Tag gegen `WEB_VERSION` halten.
+2. Prüfen, dass es auf **diesem Commit** einen grünen Stufe-1- **und** einen
+   grünen Staging-Lauf gibt.
+3. **Backup-Tor:** `jobs.php?aktion=komplett` in einer Schleife (höchstens 40
+   Aufrufe, 20 s Pause), bis `fertig` kommt **und** der jüngste
+   Komplett-Stand jünger ist als der Laufbeginn. Sonst: **Abbruch ohne
+   Deploy.**
+4. `jobs.php?aktion=wartung_an` (Urheber `kette`).
+5. FTPS-Sync.
+6. `jobs.php?aktion=zustand`: Steht eine Migration aus, **bleibt die Wartung
+   an** und der Lauf endet grün mit dem Hinweis „Migration ausstehend —
+   `update.php` von Hand, dann Wartung aus"; sonst `wartung_aus`.
+
+**Zwei Bedingungen, nicht eine.** `fertig` allein genügt nicht: Ein Backup von
+gestern meldet ebenfalls `fertig` und schützt diesen Deploy nicht. Und
+`aktion=komplett` **legt einen Auftrag an**, wenn keiner steht — ohne das täte
+der Aufruf bei Plan „Nur von Hand" nichts und meldete sofort `fertig`.
+
+### 6.5 Was auf dem Server liegt
+
+**Auf dem Server liegt 1:1 der Repositoriumsstand von `server/`**; ausgenommen
+sind `config.php` und `install.lock` (bei der Einrichtung erzeugt),
+`wartung.lock` (der Schalter des Wartungsmodus), `sicherungen/` und `apk/`.
+Diese Ausnahmeliste steht in beiden FTPS-Schritten wortgleich und ist tragend
+— ohne sie löscht der nächste Deploy, was nur dort entsteht. Sie steht
+**zusätzlich** in `.gitignore`; beides muss so bleiben.
+
+Geheimnisse liegen seit Web 20.4.0 nicht mehr als Repositoriums-Secrets herum,
+sondern an den **Umgebungen**:
+
+| Umgebung | Geheimnisse | Variablen |
+|---|---|---|
+| `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS` | `FTP_ZIELPFAD`, `STAGING_URL` |
+| `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN` | `FTP_ZIELPFAD`, `PRODUKTION_URL` |
+| Repositorium | `CIQ_GERAETE_URL` (Stufe 1) | `WACHE_BASIS` |
+
+`FTP_SERVER` ist der **nackte Hostname**, ohne Protokoll und ohne Pfad.
+
+### 6.6 Die Integritätswache hängt am Namen
+
+`integritaet.yml` wird per `workflow_run` vom Lauf **„Auslieferung"**
+angestoßen. **Wer diesen Lauf umbenennt, hängt die Wache ab — still, ohne
+Fehlermeldung.** Genau das stand bis Web 20.3.0 im Raum: Dort hieß die
+Kupplung „Server per FTP hochladen" (Fund F4 des P5a-Konzepts).
+
+Seit der Kette hat der Auslieferungslauf **zwei Ziele**, die Wache misst aber
+Produktiv. Sie fragt deshalb zuerst über die API, ob der Job `produktion` in
+diesem Lauf mit Erfolg geendet hat, und hält sonst still — eine Wache, die
+nach jedem Staging-Deploy falschen Alarm gibt, wird abgeschaltet, und das ist
+der eigentliche Schaden.
+
+### 6.7 Selbst hosten — der Weg ohne GitHub bleibt vollständig
+
+Dateien hochladen, `update.php` aufrufen. Das ist der eine Weg, den jeder
+gehen kann, und er bleibt es (PP-9, Muss). Die Anwendung weiß nicht, wie sie
+auf den Server gekommen ist — FTPS, SFTP, rsync über SSH und ein Upload von
+Hand sind gleichwertig. Was sie weiß, ist ihre eigene Fassung
+(`version.php`) und ob eine Migration aussteht.
 
 ## 7. Betrieb (Runbook)
 
@@ -6349,6 +6486,15 @@ gerät, bekommt **500**. Für eine Uhr ist das etwas anderes als ein 503: Der
 JSON-Vertrag sagt zu 5xx „später unverändert erneut versuchen" — sie puffert
 und liefert nach. Die sieben Schritte:
 
+> **Seit Web 20.4.0 nimmt die Kette die Schritte 1, 2 und 3 ab** (P5a/AP1,
+> Abschnitt 6.4): Der Produktionslauf fährt das Komplett-Backup zu Ende,
+> schaltet die Wartung ein, lädt hoch und schaltet sie hinterher wieder aus —
+> **außer** es steht eine Migration aus, dann bleibt sie an und der Lauf sagt
+> es. Von Hand bleiben damit Schritt 4 und die Gegenproben 5 bis 8. Die
+> Schritte unten stehen weiterhin vollständig da: Sie sind der Weg **ohne**
+> Kette, und den geht jede Selbsthosterin und jede, bei der die Kette gerade
+> nicht läuft.
+
 1. **Komplett-Backup prüfen** (Zeitpunkt, Ziel erreichbar), bei Bedarf
    „Jetzt sichern". Der Weg dorthin steht auf **Betrieb → Updates** in der
    Karte „Ausstehende Updates": Sie nennt den jüngsten Komplett-Stand mit
@@ -6356,7 +6502,8 @@ und liefert nach. Die sieben Schritte:
 2. **Wartungsmodus einschalten** — Karte „Wartungsmodus" oben auf
    **Betrieb → Updates** (`betrieb_updates.php`). Ab jetzt bekommt jede
    Anfrage außer den Ausnahmen 503 mit `Retry-After: 300`.
-3. **Push auf `main`** (die GitHub-Action lädt `server/` hoch).
+3. **Dateien hochladen.** Mit Kette: Tag `web-vX.Y.Z` setzen und die Freigabe
+   erteilen. Ohne Kette: `server/` per FTPS, SFTP oder rsync hochladen.
 4. **Betrieb → Updates neu laden** → ausstehende Migrationen ausführen.
 5. **Startseite in einem zweiten Reiter prüfen.** Es *muss* 503 kommen —
    kommt eine Seite, steht der Wartungsmodus nicht.
