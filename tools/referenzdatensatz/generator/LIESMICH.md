@@ -18,6 +18,7 @@ python3 pruefen.py      # prüfen (Vertrag, Folge, Krypto, Spuren)
 | `formular/` | Daten für das Nachtragen über `einsatz_form.php`, im **Klartext** |
 | `import/einsaetze.csv` | Importdatei im Format `export_csv_v1` |
 | `gpx/` | Sichtprüfformat, abgeleitet (E-P1-04) |
+| `fusswege.json` | je **Fußweg** Strecke, Dauer und Gehgeschwindigkeit — `pruefen.py` misst gegen diese Datei und nicht gegen die Spur |
 | `kennzahlen.json` | Umfang in Zahlen |
 
 **`ausgabe/` steht in `.gitignore`.** Der Ordner ist rund 25 MB groß und
@@ -36,11 +37,68 @@ wenn das Konto existiert.
 | Datei | Aufgabe |
 |---|---|
 | `erzeugen.py` | Hauptlauf: Spuren, Payloads, Sendeplan, Formulardaten, CSV, GPX |
-| `spur.py` | Spurerzeugung; Ausdünnung wie auf der Uhr |
+| `spur.py` | Spurerzeugung: `flug` geometrisch, `fahrt` auf Straßengeometrie, `fussweg` am Boden entlang; Ausdünnung wie auf der Uhr |
 | `gelaende.py` | Höhenmodell aus rund fünfzig Stützpunkten |
 | `krypto.py` | PBKDF2, HKDF und AES-256-GCM nach `server/assets/crypto.js` — beide Hüllenfassungen (`edk1:` und `edka1:<kennung>:`, S10) |
 | `routen/` | Straßengeometrie und Fahrzeiten-Tafel (einmaliger Abruf, eingecheckt) |
 | `pruefen.py` | prüft die Erzeugnisse |
+
+## Drei Fortbewegungsarten, nicht zwei
+
+Bis zum Demo-Ausbau kannte der Generator **fliegen** (geometrisch, mit
+Reiseflughöhe) und **fahren** (auf einer Straße aus OSRM). Seit E-DA-13 gibt
+es die dritte: **gehen**.
+
+Ein Bergwachtnotarzt fährt bis zum Parkplatz, zur Talstation oder zur
+Hüttenzufahrt — in den Quelldaten der Wegpunkt **`zustieg`** — und geht von
+dort zum Patienten. Als Flug gezeichnet ergäbe das eine schnurgerade Linie
+über den Hang mit Reiseflughöhe darüber; als Fahrt gezeichnet bräuchte es
+eine Straße, die dort nicht liegt.
+
+`spur.fussweg()` unterscheidet sich in drei Punkten von `spur.flug()`, und
+jeder hat einen Grund:
+
+1. **Keine Reiseflughöhe** — die Höhe ist die des Geländes plus anderthalb
+   Meter. Daran hängt `site_ele_m`: Die Anwendung rechnet die Höhe des
+   Einsatzorts aus der Spur, und ein Fußweg, der 200 m über dem Hang
+   schwebt, machte aus einer Almwiese einen Gipfel.
+2. **Mehr Streuung** — sechs Meter statt drei. Unter Fels und Baumkronen ist
+   der Empfang schlechter als in der Luft oder auf der Straße.
+3. **Ein Weg, der sich windet** — der Bogen ist stärker als beim Flug. Ein
+   Steig geht Serpentinen, keine Gerade.
+
+**Welches Teilstück gegangen wird, steht nicht hier**, sondern in
+`quelldaten/wegpunkte.py` (`ist_fussweg`): die Paare `zustieg → ort` und
+`ort → zustieg`. Drei lesen diese eine Frage — der Generator zeichnet
+danach, der Routenabruf holt für einen Fußweg **keine** Straße, und die
+Prüfung misst die Gehgeschwindigkeit. Zwei Fassungen davon wären eine
+Straße, die niemand benutzt, oder ein Fußweg mit Straßengeometrie.
+
+**Die Gehgeschwindigkeit wird nicht gesetzt, sie ergibt sich.** Das
+Zeitfenster kommt aus den Phasen, die Strecke aus den Koordinaten; ob dabei
+etwas Plausibles herauskommt, misst `pruefen.py` gegen `fusswege.json` und
+meldet es als Befund, nicht als Nebensatz.
+
+## Wer welches Zeitfenster bekommt
+
+Mit dem `zustieg` hat ein Einsatz **vier** Teilstücke — hinfahren, hingehen,
+zurückgehen, wegfahren — und dafür gibt es keine vier Phasen: Zwischen
+Transportbeginn (6) und Ankunft Klinik (7) liegt **eine** Spanne, in der
+zweierlei passiert.
+
+Die Zuteilung steht in `quelldaten/wegpunkte.py` (`fenster()`), und zwar
+**einmal**. Bis zum Demo-Ausbau rechnete der Generator seine Fenster selbst
+und das Prüfskript dieselbe Ableitung noch einmal; der Kommentar dort
+begründete das mit „die Regel selbst ist kurz". Sie war es. Mit vier
+Teilstücken ist sie es nicht mehr, und zwei Fassungen hießen, dass das
+Prüfskript die Erreichbarkeit eines **anderen** Ablaufs misst als den, den
+der Generator zeichnet — und dass beide dabei Erfolg melden.
+
+Solange eine Route nicht mehr Teilstücke hat als es Phasenfenster gibt (alle
+Routen bis zum Demo-Ausbau), gilt der alte Weg unverändert. Das ist keine
+Höflichkeit gegenüber dem Bestand, sondern die Bedingung dafür, dass die 16
+alten Diensttage byteweise dieselben Spuren behalten — gemessen mit
+`diff -r` über den ganzen Ausgabeordner.
 
 ## Der Server-Anteil in `krypto.py` (S10)
 
@@ -88,12 +146,16 @@ mehreren Anfragen hinaus, 18 davon an der 500-Punkte-Grenze.
 ## Was `pruefen.py` misst
 
 Kein Stichprobenverfahren: **jede** Anfrage gegen jede Grenze des
-JSON-Vertrags. Zuletzt 283 990 Einzelprüfungen ohne Befund über 526
-Anfragen und 56 587 Trackpunkte. Dazu:
+JSON-Vertrags. Die Zahl steht im Prüfdokument des jeweiligen Pakets; sie
+wächst mit dem Bestand. Dazu:
 
 - **Folge der Teilstücke** — `seq_from` lückenlos und ohne Überlappung
-- **Krypto-Rundlauf** — 81 Chiffretexte entschlüsseln zum Quell-Klartext
+- **Krypto-Rundlauf** — jeder Chiffretext entschlüsselt zum Quell-Klartext
 - **Tempo und Höhe** je Spur, für Einsätze **und** Ruhe-Segmente
+- **Gehgeschwindigkeit** je Fußweg gegen 1,5–6,0 km/h, gemessen an
+  `fusswege.json` — der fertigen Spur sieht niemand mehr an, welches
+  Teilstück gegangen wurde: Die Punkte liegen dicht, und ein Fußweg sieht
+  dort aus wie ein Stau auf der Landstraße
 
 Die letzte Prüfung gäbe es ohne einen Befund nicht: Der erste Generator
 erzeugte Flüge mit 380 km/h und ein NEF auf 2 100 m Höhe. Auffällig war das

@@ -472,10 +472,10 @@ Daten erst nach Server-Bestätigung.
 │   │                      Tabellengrößen. Browserprobe unter CPU-Drossel 6×.
 │   │                      Riegel: füllt nur ein Konto mit dem Präfix
 │   │                      „messstand" (s. LIESMICH.md)
-│   ├── referenzdatensatz/ erfundener Beispielbestand (16 Diensttage,
-│   │   │                  88 Einsätze) — Demo-Konto UND Regressionsreferenz
+│   ├── referenzdatensatz/ erfundener Beispielbestand (21 Diensttage,
+│   │   │                  106 Einsätze) — Demo-Konto UND Regressionsreferenz
 │   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu die zwei
-│   │   │                  Geräteblöcke (geraete.json), der eine Schnitt,
+│   │   │                  Geräteblöcke (geraete.json), die drei Schnitte,
 │   │   │                  Schema und Prüfung (Abdeckungsmatrix, Sperrwörter
 │   │   │                  in den Gerätenamen, keine realen Namen)
 │   │   ├── generator/     erzeugt Ingest-Payloads, Formulardaten, CSV, GPX;
@@ -485,7 +485,11 @@ Daten erst nach Server-Bestätigung.
 │   │   │                  auf (install.php über HTTP, Passwort im Browser,
 │   │   │                  Demo-Konto), lokal_starten.sh fährt sie nur hoch;
 │   │   │                  sitzungsprobe.py misst, dass sitzung.py BEIDE
-│   │   │                  Hüllenfassungen öffnet (edk1: und edka1:, S10)
+│   │   │                  Hüllenfassungen öffnet (edk1: und edka1:, S10);
+│   │   │                  demo_kennzeichnen.php vermerkt das frische Konto als
+│   │   │                  Demo-Konto — VOR der ersten Anmeldung, sonst stellt
+│   │   │                  unlock.js still auf edka1: um und die Fixture lässt
+│   │   │                  sich am Ende nicht mehr erzeugen
 │   │   ├── browser/       was es nur im Browser gibt: CSV-Import, Angriffs-
 │   │   │                  werte (P-07), Exporte, Umläufe, Papierkorb-Mischfall,
 │   │   │                  Abnahme der Demo-Funktion
@@ -628,7 +632,7 @@ Daten erst nach Server-Bestätigung.
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
 | `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → der Job `waisen` entfernt Waisen (4.97a). **Seit Web 10.0.0 nur noch der Eingangspuffer der Uhr** (Stufe 1): Sobald ein Paket abgeschlossen ist, wandern die Punkte in `track_blobs`. Gelesen wird ausschließlich über `spur_lib.php`, nie direkt — siehe Abschnitt 4.97 |
 | `track_blobs` | Dieselben Punkte als **Blob** (Format SPUR1), eine Zeile je Spur, PK `(owner_type, owner_id)`. `stufe` 2 = verlustfrei, 3 = ausgedünnt; `n_original` = Punktzahl **vor** jeder Ausdünnung und damit die Grundlage der Fortsetzungsmarke der Uhr. Wie `track_points` ohne FK (polymorph) — die Löschwege räumen deshalb ausdrücklich mit, der Job `waisen` ist nur das Sicherheitsnetz. Der Grund für die Tabelle ist die Menge: gemessen **62,4 Byte je Punkt als Zeile gegen 3,58 als Blob** |
-| `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0 und trägt **zwei Achsen** (E-S9-09, Web 16.0.0): `kind` = `air`/`ground` ist die **Betriebsart** und steuert Rollenkatalog, Fähigkeiten, Kachelsatz und Höhe; `typ` = `standard`/`bergwacht`/`veranstaltung`/`sonstiges` ist die **Art des Dienstes**. Dazu `kurz` (Kurzname, bis 16 Zeichen, freiwillig) sowie `vehicle_roles` und `vehicle_capabilities`. **Der Standortbezug ist verbindlich (E15) — bei Rettungsmitteln aber nur noch für den Typ `standard`:** `vehicles.base_id` ist NULL-fähig, die drei anderen Typen dürfen ohne Standort bestehen und haben dann keine Vorschlagslisten. Die Regel steht in `pruef_rettungsmittel()` (`validate_lib.php`), nicht im Schema. `user_id` NULL = **zentral**, sonst persönlich — siehe den Hinweis unter der Tabelle |
+| `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0 und trägt **zwei Achsen** (E-S9-09, Web 16.0.0): `kind` = `air`/`ground` ist die **Betriebsart** und steuert Rollenkatalog, Fähigkeiten, Kachelsatz und Höhe; `typ` = `standard`/`bergwacht`/`veranstaltung`/`sonstiges` ist die **Art des Dienstes**. Dazu `kurz` (Kurzname, bis 16 Zeichen, freiwillig) sowie `vehicle_roles` und `vehicle_capabilities`. **Welches Rettungsmittel Fähigkeiten führen darf, entscheidet seit Web 20.3.0 `veh_caps_erlaubt()` (`db.php`) aus Typ UND Betriebsart** — `kind = 'air'` bei `standard`/`veranstaltung`/`sonstiges` (E29), beide Betriebsarten beim Typ `bergwacht`. Die Spalte `faehigkeiten` in `VEHICLE_TYPEN` ist die Quelle; das Schema führt die Regel nicht. **Der Standortbezug ist verbindlich (E15) — bei Rettungsmitteln aber nur noch für den Typ `standard`:** `vehicles.base_id` ist NULL-fähig, die drei anderen Typen dürfen ohne Standort bestehen und haben dann keine Vorschlagslisten. Die Regel steht in `pruef_rettungsmittel()` (`validate_lib.php`), nicht im Schema. `user_id` NULL = **zentral**, sonst persönlich — siehe den Hinweis unter der Tabelle |
 | `vehicle_roles` / `vehicle_capabilities` | Besetzte Rollen und Fähigkeiten (`winch`, `bergwacht`) je Rettungsmittel. Die Rollenkennungen stammen aus dem festen Katalog `CREW_ROLES` in `db.php`, nicht aus der Datenbank — deshalb VARCHAR und kein ENUM |
 | `user_bases` | Auswahl **zentraler** Standorte je NutzerIn (E16). Nur ausgewählte erscheinen in den Auswahllisten; eigene Standorte brauchen hier keine Zeile. **Seit Web 18.0.0 ohne Oberfläche** — die Karte, die aus- und abwählte, ist mit den zentralen Stammdaten entfallen; geschrieben wird die Tabelle nur noch beim Einspielen einer Kontosicherung |
 | `resources` | Vorbelegung „Andere Rettungsmittel" ; `user_id` NULL = zentral (ohne Oberfläche, s. u.), sonst persönlich |
@@ -1666,7 +1670,11 @@ nicht auftaucht, aber mitzählt.
 Objekt über `VEHICLE_CAPABILITIES`, heute `{winch, bergwacht}`, mit
 Wahrheitswerten. Es sagt, welche Fähigkeiten die **Luft**-Diensttage des
 Zeitraums tragen, gerechnet als `GROUP BY` über `day_capabilities` mit Join
-auf `days`. Die Zeitraumübersicht entscheidet daran über die beiden
+auf `days`. **Seit Web 20.3.0 ist „Luft" dabei eine Lücke und keine
+Herleitung mehr** (Backlog Nr. 198): Ein bodengebundener Bergwacht-Diensttag
+trägt die Fähigkeiten ebenfalls, wird hier aber übergangen — das
+Einsatzformular zeigt seine Windenfelder, die Zeitraumübersicht zählt sie
+nicht. Die Zeitraumübersicht entscheidet daran über die beiden
 Windenkacheln, statt sie aus der Einsatzliste zu erschließen: „null
 Windeneinsätze" ist eine Aussage über den Dienst, „Winde nicht eingerichtet"
 eine über die Stammdaten, und bis dahin waren beide nicht zu unterscheiden.
@@ -4882,9 +4890,21 @@ Backup aufbaut, aber serverseitig — dort steht `pat_blob` noch als
 Chiffretext. Genau die Form, die `edbak_restore()` als Spalte wieder annimmt.
 Der Erzeuger bricht ab, wenn er Klartext findet.
 
-Gepackt abgelegt: roh rund 2,4 MB, im Wesentlichen 55 861 Spurpunkte als
-JSON-Zahlen. Gepackt sind es rund 745 KB, und die Datei geht bei jedem Deploy
+Gepackt abgelegt: roh rund 2,8 MB, im Wesentlichen 63 752 Spurpunkte als
+JSON-Zahlen. Gepackt sind es rund 860 KB, und die Datei geht bei jedem Deploy
 über FTPS mit.
+
+**Was ein Reset kostet — gemessen, nicht geschätzt** (15.09.2026, Prüfstand
+mit MariaDB und PHP auf demselben Rechner, je drei Läufe): **6,6 s** mit dem
+heutigen Bestand (106 Einsätze, 63 752 Punkte), **5,9 s** mit dem Stand davor
+(88 Einsätze, 55 861 Punkte). Die Zeit trägt **die Besucherin**, deren Anfrage
+den fälligen Reset auslöst (`demo_reset_wenn_faellig()` aus
+`auth_guard.php`) — sie sieht ihre Seite so lange nicht. Zweimal die Stunde
+ist das wenig Last und trotzdem jedes Mal ein spürbarer Aufenthalt für genau
+eine Person; ob es dabei bleibt, steht als Backlog Nr. 76 offen. **Nach einem
+Deploy mit neuer Fixture zeigt das bestehende Demo-Konto bis zum nächsten
+Reset den alten Bestand** — wer ihn sofort sehen will, drückt im Adminbereich
+„Auf Standard zurücksetzen".
 
 #### Zwei Riegel je Geheimnis — einer beim Erzeugen, einer beim Einspielen
 

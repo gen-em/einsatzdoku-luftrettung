@@ -159,7 +159,10 @@ def stufe_stammdaten(lauf: Lauf) -> None:
         # ueberschrieb"). Das Feld las seither niemand mehr, und weil daneben
         # weiterhin eine echte Kennung stand, bekamen BEIDE Eintraege einen
         # Standort. Aufgefallen ist es erst am Referenzbestand: 0 von 6 statt
-        # 2 von 6 ohne Standort (Backlog Nr. 174).
+        # 2 von 6 ohne Standort (Backlog Nr. 174). Heute sind es VIER von
+        # ZEHN -- der Demo-Ausbau hat zwei Veranstaltungs-Rettungsmittel ohne
+        # Standort dazugelegt (E-DA-08). Wer die Zahl auf null fallen sieht,
+        # hat denselben Fehler wieder.
         #
         # Die Lehre steht in der LIESMICH: Ein Sender, der ein Feld schickt,
         # das niemand liest, meldet keinen Fehler -- er wird still ignoriert.
@@ -483,9 +486,14 @@ def stufe_zuordnen(lauf: Lauf) -> None:
         if not passend:
             raise RuntimeError(f"{d['kennung']}: kein Diensttag zu {dn['day']} {stunde}")
         tag = passend[0]
+        # DER DIENSTTAG OHNE STANDORT (E-DA-08). `base_id: ""` ist der Weg,
+        # den auch das Formular geht: `dt_base_erlaubt()` macht daraus NULL.
+        # Die Kennung ganz WEGZULASSEN taete es nicht -- `api/day.php` liesse
+        # den Standort dann stehen, wie er ist, und ein zweiter Lauf haette
+        # einen anderen Zustand als der erste.
         antwort = s.json_post("api/day.php", {
             "day_id": tag["id"],
-            "base_id": ids["standorte"][dn["standort"]],
+            "base_id": "" if dn["standort"] is None else ids["standorte"][dn["standort"]],
             "vehicle_id": ids["rettungsmittel"][dn["rettungsmittel"]],
             "crew": {r: n for r, n in (dn["besatzung"] or {}).items() if n},
             "notes": dn["notizen"] or "",
@@ -825,8 +833,15 @@ def stufe_schneiden(lauf: Lauf) -> None:
                   f"{o.get('mission_id')}, {o.get('genommen')} Punkte gewandert, "
                   f"{o.get('geblieben')} geblieben, {len(sc['phasen'])} Phasen")
 
-    if len(getan) != 1:
-        raise RuntimeError(f"erwartet wird genau ein Schnitt, ausgefuehrt: {len(getan)}")
+    # SO VIELE, WIE IN DEN QUELLDATEN STEHEN (E-DA-11). Die Zeile hiess bis
+    # zum Demo-Ausbau `!= 1`. Sie ist nicht gestrichen, sondern an die Quelle
+    # gebunden: Ein Schnitt, der still ausfaellt, bliebe sonst unbemerkt -- und
+    # mit ihm der Sperrvermerk, den Backlog Nr. 63 im Bestand haben will.
+    soll = sum(len(json.loads(pfad.read_text("utf-8")).get("schnitte", []))
+               for pfad in sorted((QUELLE / "dienste").glob("D*.json")))
+    if len(getan) != soll:
+        raise RuntimeError(f"erwartet werden {soll} Schnitte (so viele stehen in den "
+                           f"Quelldaten), ausgefuehrt: {len(getan)}")
     lauf.zustand["schnitte"] = getan
 
 

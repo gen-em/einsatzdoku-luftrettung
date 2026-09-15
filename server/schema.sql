@@ -53,7 +53,7 @@ CREATE TABLE devices (
   -- einer Statistikangabe NIE scheitern (JSON-Vertrag 1a).
   geraet_art    VARCHAR(16) NULL,                    -- 'uhr' | 'handy' | 'sonstiges'; NULL = unbekannt
   geraet_modell VARCHAR(191) NULL,                   -- aufgeloest; Sammelnamen werden lang,
-                                                     -- der laengste hat 156 Zeichen
+                                                     -- der laengste hat 153 Zeichen
   geraet_teil   VARCHAR(64) NULL,                    -- Rohangabe des Geraets, siehe update.php
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -131,9 +131,12 @@ CREATE TABLE vehicle_roles (
 
 -- Faehigkeiten je Rettungsmittel: 'winch' | 'bergwacht' (E29). Zwei getrennte
 -- Haken — ein Hubschrauber kann eine Winde fuehren, ohne in einer
--- Bergwachtkooperation zu stehen, und umgekehrt. Faehigkeiten kommen
--- AUSSCHLIESSLICH an Rettungsmitteln mit kind='air' vor; beim Speichern eines
--- bodengebundenen Rettungsmittels sind vorhandene Zeilen zu entfernen.
+-- Bergwachtkooperation zu stehen, und umgekehrt. WELCHES Rettungsmittel sie
+-- fuehren darf, entscheidet `veh_caps_erlaubt()` (db.php) aus Typ UND
+-- Betriebsart: kind='air' bei den Typen standard/veranstaltung/sonstiges,
+-- beide Betriebsarten beim Typ 'bergwacht'. Was die Regel nicht zulaesst, wird
+-- beim Speichern entfernt. Die Tabelle selbst fuehrt keine Art und muss das
+-- auch nicht: Die Regel steht an einer Stelle, nicht im Schema.
 CREATE TABLE vehicle_capabilities (
   vehicle_id INT UNSIGNED NOT NULL,
   capability VARCHAR(16) NOT NULL,
@@ -525,7 +528,8 @@ CREATE TABLE rate_limits (
 --
 -- Der Name ist nicht `transport_dests` -- das sind die Zielkliniken. Hier geht
 -- es um FTP-, FTPS- und SFTP-Gegenstellen. Begruendung in update.php bei der
--- Migration 2026_09_01_sicherungsziele und in docs/Konzept-S2 unter F-S2-G.
+-- Migration 2026_09_01_sicherungsziele und in
+-- docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md unter F-S2-G.
 --
 -- `geheim` und `schluessel` stehen VERSIEGELT drin (`edsk1:`,
 -- serverkrypto_lib.php). Der Schluessel dazu liegt in config.php, nicht in

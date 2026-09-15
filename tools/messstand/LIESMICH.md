@@ -138,6 +138,15 @@ Einsatzzahl** — die Einsätze kommen auch dann an, wenn die Spuren fehlen.
 
 ## Wie der Bestand entsteht
 
+> **Alle Zahlen dieses Dokuments sind Messprotokoll vom 04.09.2026** und
+> beziehen sich auf den damaligen Referenzbestand. Seit dem Demo-Ausbau ist
+> die Referenz größer (21 Diensttage, 106 Einsätze, 119 Ruhesegmente,
+> 63 752 Spurpunkte); die **Kennzahlen je Einsatz** — 28 KB Nutzlast,
+> Speicherspitzen, Tabellengrößen — gelten unverändert weiter, weil sie
+> genau darauf bezogen sind. Ein Messstandlauf gegen den neuen Bestand
+> liefert entsprechend größere Absolutzahlen; nachgerechnet worden ist er
+> nicht (R35, E-DA-18).
+
 Die Referenz (87 Einsätze, 100 Ruhesegmente, 55 861 Spurpunkte, 16 Diensttage
 über 345 Tage) wird **r-mal** kopiert. Jede Runde verschiebt alle Zeitangaben
 um `-runde × 3` Tage **und** um `+runde` Minuten:

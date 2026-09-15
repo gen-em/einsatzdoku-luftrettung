@@ -1,0 +1,365 @@
+{
+  "kennung": "D18",
+  "abdeckung": [],
+  "$warum": [
+    "DAS VERLEGUNGSFAHRZEUG (E-DA-07). Ein zweites Rettungsmittel am Standort",
+    "Talwang, mit einem KLEINEREN Rollensatz als das NEF daneben -- damit ist",
+    "nachpruefbar, dass der eingefrorene Rollensatz eines Diensttags wirklich",
+    "vom Rettungsmittel kommt und nicht vom Standort.",
+    "",
+    "DREI EINSAETZE UND EIN SCHNITT. Die Reihenfolge ist Absicht: Verlegung,",
+    "Primaereinsatz, Verlegung mit Abfahrt vom vorigen Ziel. Der zweite",
+    "Schnitt des Bestands liegt in einem Ruhe-Segment dieses Tages (E-DA-11)."
+  ],
+  "dienst": {
+    "day": "2026-04-18",
+    "art": "ground",
+    "standort": "Notarztstandort Talwang",
+    "rettungsmittel": "VEF Talwang 76/2",
+    "beginn": "2026-04-18 07:00",
+    "ende": "2026-04-18 19:00",
+    "day_ref": "ad-12-5738160294",
+    "besatzung": {
+      "driver": "Gerd Wallner",
+      "other": "Dr. Hanna Kestner"
+    },
+    "notizen": "Verlegungsdienst. Zwei angemeldete Sekundärtransporte, ein Primäreinsatz dazwischen."
+  },
+  "papierkorb": null,
+  "ruhesegmente": [
+    {
+      "client_ref": "ar-12-3382722704",
+      "beginn": "2026-04-18 07:00",
+      "ende": "2026-04-18 07:35",
+      "final": true
+    },
+    {
+      "client_ref": "ar-12-1073026965",
+      "beginn": "2026-04-18 10:10",
+      "ende": "2026-04-18 12:10",
+      "final": true
+    },
+    {
+      "client_ref": "ar-12-1512203627",
+      "beginn": "2026-04-18 13:20",
+      "ende": "2026-04-18 13:26",
+      "final": true
+    },
+    {
+      "client_ref": "ar-12-7539973209",
+      "beginn": "2026-04-18 14:32",
+      "ende": "2026-04-18 19:00",
+      "final": true
+    }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "am-12-6190473582",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-04-18 07:35",
+      "ende": "2026-04-18 10:10",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-04-18 07:35"
+        ],
+        [
+          3,
+          "2026-04-18 07:38"
+        ],
+        [
+          4,
+          "2026-04-18 07:44"
+        ],
+        [
+          5,
+          "2026-04-18 07:50"
+        ],
+        [
+          6,
+          "2026-04-18 08:05"
+        ],
+        [
+          7,
+          "2026-04-18 09:50"
+        ],
+        [
+          8,
+          "2026-04-18 10:05"
+        ],
+        [
+          9,
+          "2026-04-18 10:10"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Universitätsklinikum Nordstadt",
+        "dest_lat": 48.4011,
+        "dest_lon": 9.9876,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 1,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "KTW Talwang 76/85"
+        ],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Intensivpflichtige Sepsis bei Pneumonie",
+        "dob": "1963-07-19",
+        "age": null,
+        "mission_no": "2026-0811",
+        "loc": {
+          "addr": "Talstraße 8, 87427 Talwang",
+          "lat": 47.5605,
+          "lon": 10.2185
+        },
+        "site_desc": "Klinik Talwang, Intensivstation",
+        "start": null,
+        "notes": "Angemeldete Verlegung; Beatmung und Katecholamine unter Fahrt fortgeführt."
+      },
+      "abdeckung": [],
+      "$warum": [
+        "DER ERSTE BODENGEBUNDENE SEKUNDAERTRANSPORT des Bestands (E-DA-07).",
+        "Sekundaertransporte gab es bisher nur in der Luft (D02, D03, D07) --",
+        "die Matrixzeile war belegt, die Betriebsart dahinter aber immer",
+        "dieselbe. Neunzig Kilometer Verlegung mit Notarztbegleitung sind das,",
+        "wofuer ein Verlegungsfahrzeug da ist."
+      ]
+    },
+    {
+      "client_ref": "am-12-2748051639",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-04-18 12:10",
+      "ende": "2026-04-18 13:20",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-04-18 12:10"
+        ],
+        [
+          3,
+          "2026-04-18 12:13"
+        ],
+        [
+          4,
+          "2026-04-18 12:22"
+        ],
+        [
+          5,
+          "2026-04-18 12:26"
+        ],
+        [
+          6,
+          "2026-04-18 12:45"
+        ],
+        [
+          7,
+          "2026-04-18 13:02"
+        ],
+        [
+          8,
+          "2026-04-18 13:12"
+        ],
+        [
+          9,
+          "2026-04-18 13:20"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Schenkelhalsfraktur nach häuslichem Sturz",
+        "dob": null,
+        "age": 84,
+        "mission_no": "2026-0812",
+        "loc": {
+          "addr": "Am Anger 24, 87519 Auwiesen",
+          "lat": 47.548,
+          "lon": 10.244
+        },
+        "site_desc": "Wohnhaus, Badezimmer im Erdgeschoss",
+        "start": null,
+        "notes": "Angehörige vor Ort, Schmerztherapie vor dem Umlagern."
+      },
+      "abdeckung": [],
+      "$warum": "PRIMAEREINSATZ am Verlegungsfahrzeug. Ohne ihn saehe der Tag aus, als führe ein VEF ausschliesslich Verlegungen -- es ist aber ein Notarztfahrzeug wie das NEF daneben."
+    },
+    {
+      "client_ref": "am-12-9503826147",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-04-18 13:26",
+      "ende": "2026-04-18 14:32",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-04-18 13:26"
+        ],
+        [
+          3,
+          "2026-04-18 13:28"
+        ],
+        [
+          4,
+          "2026-04-18 13:30"
+        ],
+        [
+          5,
+          "2026-04-18 13:34"
+        ],
+        [
+          6,
+          "2026-04-18 13:50"
+        ],
+        [
+          7,
+          "2026-04-18 14:15"
+        ],
+        [
+          8,
+          "2026-04-18 14:25"
+        ],
+        [
+          9,
+          "2026-04-18 14:32"
+        ]
+      ],
+      "route": [
+        "ziel_vorher",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 1,
+        "start_src": "prev_dest",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Subarachnoidalblutung, Verlegung zur Neurochirurgie",
+        "dob": "1971-01-30",
+        "age": null,
+        "mission_no": "2026-0813",
+        "loc": {
+          "addr": "Kreuzwiese 3, 87411 Steinach im Tal",
+          "lat": 47.515,
+          "lon": 10.281
+        },
+        "site_desc": "Kreisklinik Steinach, Schockraum",
+        "start": null,
+        "notes": "Alarmierung während der Übergabe des vorigen Einsatzes; Abfahrt direkt von der Klinik."
+      },
+      "abdeckung": [],
+      "$warum": [
+        "ABFAHRT VOM VORIGEN ZIEL (`start_src = prev_dest`) an einem",
+        "BODENgebundenen Sekundaertransport. Die Regel gab es im Bestand",
+        "schon, aber nur in der Luft; hier traegt sie zugleich die Folge,",
+        "die sie beschreibt -- das Ruhe-Segment davor faehrt nicht heim,",
+        "sondern steht an der Klinik."
+      ]
+    }
+  ],
+  "ziel_einsaetze": 3,
+  "$warum_schnitt": [
+    "DER ZWEITE SCHNITT DES BESTANDS (E-DA-11). Bis zum Demo-Ausbau erzwang",
+    "`pruefen.py` GENAU EINEN (`schnittzahl == 1`, E-R64-16) -- die Zeile",
+    "verhinderte, dass der Bestand seinen Schnitt still verliert, verhinderte",
+    "aber auch einen zweiten, und dafuer gab es nie einen Grund. Mit Schnitten",
+    "an DREI Diensttagen ist der Weg `api/schneiden.php` nicht mehr ein",
+    "Einzelfall im Bestand, sondern ein Muster.",
+    "",
+    "WARUM HIER -- die vier Randbedingungen, jede an einem Pruefmittel",
+    "gemessen: (1) NICHT am neuesten Diensttag (das ist D16); (2) NICHT ueber",
+    "Mitternacht -- api/schneiden.php rechnet die Phasen mit dem Tagesversatz",
+    "des BEGINNS; (3) die Beginnminute 16:05 kommt an diesem Tag kein zweites",
+    "Mal als Einsatzbeginn vor (07:35, 12:10, 13:26) -- drei Einspielstufen",
+    "suchen Einsaetze ueber start_hhmm; (4) das Fenster liegt INNERHALB der",
+    "Spur des Segments, sonst wandert kein Punkt und der Server antwortet",
+    "409 `leer`."
+  ],
+  "schnitte": [
+    {
+      "abdeckung": [
+        "herkunft-schnitt"
+      ],
+      "segment": "ar-12-7539973209",
+      "beginn": "2026-04-18 16:05",
+      "ende": "2026-04-18 17:10",
+      "phasen": {
+        "3": "2026-04-18 16:07",
+        "4": "2026-04-18 16:22",
+        "7": "2026-04-18 16:58"
+      }
+    }
+  ]
+}

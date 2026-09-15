@@ -18,10 +18,6 @@
     "beginn": "2026-03-28 20:00",
     "ende": "2026-03-29 06:00",
     "day_ref": "ad-12-3947261805",
-    "spur_ausgangspunkt": {
-      "lat": 47.559,
-      "lon": 10.217
-    },
     "besatzung": {
       "driver": "Gerd Wallner",
       "trainee": "Ronja Pfeil",
@@ -121,7 +117,7 @@
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -208,7 +204,7 @@
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -480,14 +476,6 @@
     "   aus UTC rechnet, liegt hier um genau eine Stunde daneben — und das ist",
     "   der Zweck des Falls."
   ],
-  "$warum_spur_ausgangspunkt": [
-    "Der Standort Talwang trägt ABSICHTLICH keine Koordinaten (Matrixzeile",
-    "Stammdaten) — deshalb steht dort der Abfahrtort 'Standort' nicht zur",
-    "Auswahl, und start_src='base' kommt an diesem Dienst nicht vor.",
-    "",
-    "Das NEF fährt trotzdem von einem realen Ort los. 'spur_ausgangspunkt' ist",
-    "AUSSCHLIESSLICH für die Spurerzeugung da und wird NICHT als Stammdatum",
-    "gespeichert; in der Anwendung bleibt der Standort ohne Koordinaten."
-  ],
+  "$warum_spur_ausgangspunkt": "ENTFALLEN mit dem Demo-Ausbau (E-DA-09). Er trug 47.559 / 10.217 -- genau die Koordinate, die der Standort 'Notarztstandort Talwang' seither selbst fuehrt. `basis_von()` liest damit denselben Wert, und die Spur dieses Tages ist byteweise dieselbe geblieben (gemessen mit `diff -r` ueber den ganzen Ausgabeordner). Ein Ausgangspunkt NEBEN einem Standort mit Koordinaten waere eine zweite Wahrheit; pruefen.py laesst ihn dort nicht mehr zu.",
   "ziel_einsaetze": 4
 }

@@ -94,6 +94,19 @@ class Ausnahmen:
 
     Eine Regel trifft, wenn Bereich und Feld passen und — falls angegeben —
     auch die Werte davor und danach. `*` steht fuer „jedes Feld".
+
+    SEIT DEM DEMO-AUSBAU AUCH DER SCHLUESSEL (`schluessel_regex`), und der
+    Grund ist ein Fund: Die Regel `diensttage/*` mit Art `fehlt` erklaerte
+    zwei benannte Faelle — den Diensttag ohne Einsatz und den zweiten Dienst
+    an einem Kalendertag — und verschluckte dabei JEDEN fehlenden Diensttag.
+    Die Probe aufs Exempel („Zeile in diensttage.csv entfernt") lief deshalb
+    ins Leere: Sie entfernte eine Zeile, der Vergleich meldete sie, die Regel
+    erklaerte sie weg, und die Probe zaehlte null. Sie stand seither auf
+    9 von 10 und niemand hat hingesehen, weil `kreislauf.py`
+    `--testabweichung` nicht faehrt.
+
+    Eine Ausnahme ist kein Filter — sie beschreibt EINEN Fall. Wo der Fall am
+    Schluessel haengt, gehoert der Schluessel in die Regel.
     """
 
     def __init__(self, daten: dict | None):
@@ -112,6 +125,9 @@ class Ausnahmen:
             if r.get("bereich") not in (abw["bereich"], "*"):
                 continue
             if r.get("feld") not in (abw.get("feld"), "*"):
+                continue
+            if "schluessel_regex" in r and not re.fullmatch(
+                    r["schluessel_regex"], str(abw.get("schluessel", ""))):
                 continue
             if "art" in r and r["art"] != abw["art"]:
                 continue
@@ -327,6 +343,51 @@ PROBEN_CSV = [
          r"App-Version: [^\r\n]*", "App-Version: Web 99.9.9", d["liesmich"])), False),
 ]
 
+def _stammdaten_umordnen(d: dict) -> None:
+    """Zwei Stammdatenzeilen VERTAUSCHEN, ohne einen Wert zu aendern (Gegenprobe).
+
+    Genau das tut ein Umlauf in ein frisches Konto bei zwei Zeilen mit
+    demselben Namen an verschiedenen Standorten -- die Datenbank sagt nichts
+    darueber, welche zuerst kommt. Es darf NICHT gemeldet werden.
+    """
+    for name, liste in (d.get("stammdaten") or {}).items():
+        if isinstance(liste, list) and len(liste) >= 2:
+            liste[0], liste[1] = liste[1], liste[0]
+            return
+    raise RuntimeError("keine Stammdatenliste mit zwei Eintraegen in der Datei")
+
+
+def _stammdatenwert_aendern(d: dict) -> None:
+    """Den Standort einer Stammdatenzeile aendern (Hinprobe zur Umordnung).
+
+    Die Gegenprobe darueber nimmt der Reihenfolge ihre Bedeutung. Diese hier
+    belegt, dass sie ihr nicht auch noch den INHALT nimmt: Ein verschobener
+    Eintrag ist keine Abweichung, ein verschobener Standort sehr wohl.
+    """
+    for name, liste in (d.get("stammdaten") or {}).items():
+        for z in liste if isinstance(liste, list) else []:
+            if isinstance(z, dict) and "base_ref" in z:
+                z["base_ref"] = "Standort, den es nicht gibt"
+                return
+    raise RuntimeError("keine Stammdatenzeile mit base_ref in der Datei")
+
+
+def _rea_ereignisse_umordnen(d: dict) -> None:
+    """Zwei Reanimationsereignisse vertauschen (Gegenprobe).
+
+    Liegen sie in derselben Minute, ist ihre Reihenfolge nicht zugesagt --
+    und genau so einen Fall fuehrt der Bestand an D06, weil der Dienst ueber
+    die Fruehjahrsumstellung laeuft. Es darf NICHT gemeldet werden.
+    """
+    for m in d.get("missions", []):
+        for s in (m.get("resus") or []):
+            ev = s.get("events") or []
+            if len(ev) >= 2:
+                ev[0], ev[1] = ev[1], ev[0]
+                return
+    raise RuntimeError("keine Reanimation mit zwei Ereignissen in der Datei")
+
+
 def _kennungen_verschieben(d: dict) -> None:
     """Vergibt jeder Diensttag-Kennung eine neue Zahl — und zieht die Verweise mit.
 
@@ -397,6 +458,10 @@ PROBEN_EDBAK = [
     ("GEGENPROBE: Loeschzeitpunkte verschoben", _papierkorb_zeit_verschieben, False),
     ("GEGENPROBE: alle Diensttag-Kennungen verschoben",
      _kennungen_verschieben, False),
+    ("Standort einer Stammdatenzeile geändert", _stammdatenwert_aendern, True),
+    ("GEGENPROBE: zwei Stammdatenzeilen vertauscht", _stammdaten_umordnen, False),
+    ("GEGENPROBE: zwei Reanimationsereignisse vertauscht",
+     _rea_ereignisse_umordnen, False),
 ]
 
 

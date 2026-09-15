@@ -253,6 +253,12 @@ schritt(`Als ${ziel} anmelden`);
  *   „0 Einsaetze uebernommen ... Uebersprungen: 87 Einsaetze,
  *    100 Ruhesegmente — bereits vorhanden 187."
  *
+ * DIE ZAHLEN IN DEM ZITAT SIND DIE VON DAMALS und werden nicht nachgezogen —
+ * es ist eine woertliche Rueckmeldung vom 01.09.2026, kein Sollwert. Der
+ * Bestand zaehlt seit dem Demo-Ausbau 106 Einsaetze und 119 Ruhesegmente;
+ * die Probe liest die Meldung ohnehin nicht nach Zahlen, sondern nach
+ * `0 Einsätze übernommen` (unten).
+ *
  * Der Grund liegt in der Wiederherstellung selbst: Sie ERGAENZT und ersetzt
  * nicht (E22). Was schon da ist, wird uebersprungen — samt des
  * Papierkorbzustands, um den es hier geht.
@@ -314,6 +320,10 @@ pruefe(/meldung-ok/.test(impTon), `Einspielen nicht sauber: ${impZustand || '(ke
  *
  *   „0 Einsaetze uebernommen, 0 Ruhesegmente, 0 Diensttage.
  *    Uebersprungen: 87 Einsaetze, 100 Ruhesegmente — bereits vorhanden 187."
+ *
+ * (Woertliches Zitat vom 01.09.2026. Die Zahlen sind die des damaligen
+ * Bestands und bleiben stehen; gelesen wird unten nur `0 Einsätze
+ * übernommen`.)
  *
  * Sechs rote Zeilen aus einer unerfuellten Voraussetzung sind schlimmer als
  * gar keine Probe: Der schwerste Befund des Werkzeugs verliert seine

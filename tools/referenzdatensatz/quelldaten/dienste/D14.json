@@ -17,10 +17,6 @@
     "beginn": "2026-10-24 19:00",
     "ende": "2026-10-25 07:00",
     "day_ref": "ad-12-1573864029",
-    "spur_ausgangspunkt": {
-      "lat": 47.559,
-      "lon": 10.217
-    },
     "besatzung": {
       "driver": "Gerd Wallner",
       "trainee": null,
@@ -108,7 +104,7 @@
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -198,7 +194,7 @@
         "schockraum": 1,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -285,7 +281,7 @@
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": null,
+        "start_src": "base",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -525,5 +521,6 @@
     "die Umstellung: E2 läuft von 01:32 MESZ bis 03:40 MEZ, lokal gelesen",
     "2 h 08 min, tatsächlich 3 h 08 min."
   ],
-  "ziel_einsaetze": 5
+  "ziel_einsaetze": 5,
+  "$warum_spur_ausgangspunkt": "ENTFALLEN mit dem Demo-Ausbau (E-DA-09). Er trug 47.559 / 10.217 -- genau die Koordinate, die der Standort 'Notarztstandort Talwang' seither selbst fuehrt. `basis_von()` liest damit denselben Wert, und die Spur dieses Tages ist byteweise dieselbe geblieben (gemessen mit `diff -r` ueber den ganzen Ausgabeordner). Ein Ausgangspunkt NEBEN einem Standort mit Koordinaten waere eine zweite Wahrheit; pruefen.py laesst ihn dort nicht mehr zu."
 }

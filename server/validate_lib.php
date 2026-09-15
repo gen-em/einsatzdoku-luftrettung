@@ -929,16 +929,23 @@ function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
         $p?->melde('Rollen', 'bei diesem Typ nicht vorgesehen — verworfen');
     }
 
-    /* FAEHIGKEITEN — ausschliesslich an luftgebundenen Rettungsmitteln (E29).
-     * Fuer 'veranstaltung' folgt daraus von selbst „keine": Der Typ ist auf
-     * Boden festgelegt. Deshalb steht hier keine zweite Bedingung auf den Typ. */
+    /* FAEHIGKEITEN — was der TYP in dieser BETRIEBSART zulaesst
+     * (`veh_caps_erlaubt()` in db.php). Fuer Standard, Veranstaltung und
+     * Sonstiges heisst das weiter „nur luftgebunden" (E29); der Typ Bergwacht
+     * darf sie in beiden Betriebsarten fuehren, weil ein Bergwachtnotarzt
+     * hinfaehrt und geflogen wird.
+     *
+     * DIE REGEL STEHT NICHT HIER, sondern in `VEHICLE_TYPEN[...]['faehigkeiten']`
+     * — aus demselben Grund wie die Standortpflicht darueber: Das Skript des
+     * Dialogs liest dieselbe Tabelle, und eine abgetippte zweite Fassung liefe
+     * beim naechsten Typ auseinander. */
     $caps = [];
-    if ($kind === 'air') {
+    if (veh_caps_erlaubt($typ, $kind)) {
         foreach ((array)($roh['caps'] ?? []) as $c) {
             if (array_key_exists((string)$c, VEHICLE_CAPABILITIES)) { $caps[] = (string)$c; }
         }
     } elseif ($roh['caps'] ?? []) {
-        $p?->melde('Fähigkeiten', 'nur an luftgebundenen Rettungsmitteln — verworfen');
+        $p?->melde('Fähigkeiten', 'bei diesem Typ nur luftgebunden — verworfen');
     }
 
     if ($fehler !== [] || $name === null || $typ === null || $kind === null) {

@@ -1,0 +1,355 @@
+{
+  "kennung": "D19",
+  "abdeckung": [],
+  "$warum": [
+    "DER ZWEITE BERGWACHT-DIENSTTAG, und der mit dem Windeneinsatz. Er liegt",
+    "im August und belegt die Sommerzeit; der Tag im Februar (D17) die",
+    "Winterzeit.",
+    "",
+    "DREI EINSAETZE, DREI ERFASSUNGSARTEN: vom Handy (`am-`), an der Uhr",
+    "begonnen (`wm-`) und -- ueber den Schnitt aus einem Ruhe-Segment -- der",
+    "dritte Weg, auf dem ein Einsatz im Bestand entstehen kann."
+  ],
+  "dienst": {
+    "day": "2026-08-01",
+    "art": "ground",
+    "standort": "Bergwachtstation Sonnenau",
+    "rettungsmittel": "Bergwachtnotarzt Sonnenau",
+    "beginn": "2026-08-01 07:30",
+    "ende": "2026-08-01 18:30",
+    "day_ref": "ad-12-8305294761",
+    "besatzung": {},
+    "notizen": "Sommerdienst bei Föhn. Hubschrauberunterstützung nur eingeschränkt verfügbar."
+  },
+  "papierkorb": null,
+  "ruhesegmente": [
+    {
+      "client_ref": "ar-12-9264323776",
+      "beginn": "2026-08-01 07:30",
+      "ende": "2026-08-01 08:40",
+      "final": true
+    },
+    {
+      "client_ref": "ar-12-1456960675",
+      "beginn": "2026-08-01 10:45",
+      "ende": "2026-08-01 12:05",
+      "final": true
+    },
+    {
+      "client_ref": "ar-12-1109381048",
+      "beginn": "2026-08-01 13:00",
+      "ende": "2026-08-01 15:10",
+      "final": true
+    },
+    {
+      "client_ref": "ar-12-7415761798",
+      "beginn": "2026-08-01 16:20",
+      "ende": "2026-08-01 18:30",
+      "final": true
+    }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "am-12-4826137905",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-08-01 08:40",
+      "ende": "2026-08-01 10:45",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-08-01 08:40"
+        ],
+        [
+          3,
+          "2026-08-01 08:44"
+        ],
+        [
+          4,
+          "2026-08-01 08:55"
+        ],
+        [
+          5,
+          "2026-08-01 09:20"
+        ],
+        [
+          6,
+          "2026-08-01 09:55"
+        ],
+        [
+          9,
+          "2026-08-01 10:45"
+        ]
+      ],
+      "route": [
+        "basis",
+        "zustieg",
+        "ort",
+        "zustieg",
+        "basis"
+      ],
+      "spur": {
+        "zustieg": {
+          "lat": 47.485,
+          "lon": 10.348
+        }
+      },
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 0,
+        "transport_dest": "Unfallklinik Felsberg",
+        "dest_lat": 47.681,
+        "dest_lon": 11.202,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 1,
+        "winch_cycles": 1,
+        "winch_cycles_pat": 1,
+        "winch_airload": 1,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Felsgrat",
+        "bw_info": "Bereitschaft mit vier Einsatzkräften am Wandfuß, Sicherung des Geländes.",
+        "other_ema": null,
+        "other_resources": [
+          "First Responder Sonnenau"
+        ],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Unterschenkelfraktur und Thoraxprellung nach Kletterabsturz",
+        "dob": null,
+        "age": 31,
+        "mission_no": "2026-0821",
+        "loc": {
+          "addr": "Wandfuß am Felsgrat, Einstieg Südroute",
+          "lat": 47.476,
+          "lon": 10.359
+        },
+        "site_desc": "Steilgelände, Schuttfeld unterhalb der Wand",
+        "start": null,
+        "notes": "Rettung mit der Winde durch einen Polizeihubschrauber; ein Zyklus mit Patient, Luftverladung. Notarzt zu Fuß zurück zum Parkplatz."
+      },
+      "abdeckung": [],
+      "$warum": [
+        "DER EINSATZ, FUER DEN AP0 DIE REGEL GEAENDERT HAT (E-DA-06).",
+        "Windeneinsatz an einem BODENgebundenen Rettungsmittel: Der",
+        "Bergwachtnotarzt faehrt bis zum Parkplatz, geht zum Wandfuss, und",
+        "der Patient wird von dort geflogen. Bis Web 20.3.0 verwarf die",
+        "Pruefschicht die Faehigkeiten dieses Rettungsmittels still, und",
+        "der Diensttag zeigte keine Windenfelder.",
+        "",
+        "DER POLIZEIHUBSCHRAUBER STEHT NUR IN DER NOTIZ und nicht als",
+        "weiteres Rettungsmittel -- er gehoert nicht zur Rettungskette,",
+        "die dieses Konto dokumentiert.",
+        "",
+        "KEINE PHASEN 7 UND 8: Der Notarzt fliegt nicht mit (`na_escort = 0`).",
+        "Der Einsatz endet mit der Rueckkehr an die Station; `transport_mode`",
+        "ist trotzdem 'air', denn der PATIENT ist geflogen worden. Damit",
+        "belegt der Tag zugleich die Zeile 'unvollstaendige Phasen'."
+      ]
+    },
+    {
+      "client_ref": "wm-12-4517809362",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-08-01 12:05",
+      "ende": "2026-08-01 13:00",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-08-01 12:05"
+        ],
+        [
+          3,
+          "2026-08-01 12:08"
+        ],
+        [
+          4,
+          "2026-08-01 12:18"
+        ],
+        [
+          5,
+          "2026-08-01 12:22"
+        ],
+        [
+          9,
+          "2026-08-01 13:00"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Orthostatische Synkope bei Hitze",
+        "dob": null,
+        "age": 59,
+        "mission_no": "2026-0822",
+        "loc": {
+          "addr": "Höhenweg oberhalb Grünegg",
+          "lat": 47.548,
+          "lon": 10.321
+        },
+        "site_desc": "Wanderweg, schattige Rastbank",
+        "start": null,
+        "notes": "Patientin nach Flüssigkeitsgabe beschwerdefrei, selbstständiger Abstieg."
+      },
+      "abdeckung": [
+        "herkunft-wear"
+      ],
+      "$warum": [
+        "AN DER UHR BEGONNEN, VOM HANDY GESENDET (`wm-`). Die Herkunft",
+        "`wear` ist eine Aussage darueber, WO jemand einen Knopf gedrueckt",
+        "hat; `aufbauen.py` vergibt sie deshalb nie. Der vierte Fall dieser",
+        "Art im Bestand -- und der erste an einem Bergwacht-Dienst."
+      ]
+    },
+    {
+      "client_ref": "am-12-7038615249",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-08-01 15:10",
+      "ende": "2026-08-01 16:20",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-08-01 15:10"
+        ],
+        [
+          3,
+          "2026-08-01 15:13"
+        ],
+        [
+          4,
+          "2026-08-01 15:22"
+        ],
+        [
+          5,
+          "2026-08-01 15:27"
+        ],
+        [
+          6,
+          "2026-08-01 15:45"
+        ],
+        [
+          7,
+          "2026-08-01 16:00"
+        ],
+        [
+          8,
+          "2026-08-01 16:08"
+        ],
+        [
+          9,
+          "2026-08-01 16:20"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Moosachtal",
+        "bw_info": "Bereitschaft übernimmt die Sicherung der Strecke bis zum Eintreffen.",
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Schulterluxation nach Sturz mit dem Mountainbike",
+        "dob": "2001-06-08",
+        "age": null,
+        "mission_no": "2026-0823",
+        "loc": {
+          "addr": "Forstweg Richtung Burgstall, Kehre 4",
+          "lat": 47.525,
+          "lon": 10.33
+        },
+        "site_desc": "Forstweg, Kurve mit losem Schotter",
+        "start": null,
+        "notes": "Reposition erst in der Klinik; Analgesie vor dem Transport."
+      },
+      "abdeckung": [],
+      "$warum": "Bergwacht-Einsatz MIT bodengebundenem Transport -- der Regelfall des Dienstes, neben dem Windeneinsatz am Morgen."
+    }
+  ],
+  "ziel_einsaetze": 3,
+  "$warum_schnitt": [
+    "DER DRITTE SCHNITT. Er liegt in dem Ruhe-Segment, in dem das Fahrzeug an",
+    "der Station steht -- eine Mitfahrt ohne eigene Dokumentation, die erst im",
+    "Nachhinein auffaellt. Die Beginnminute 13:40 kommt an diesem Diensttag",
+    "kein zweites Mal als Einsatzbeginn vor (08:40, 12:05, 15:10).",
+    "",
+    "Wie jeder geschnittene Einsatz traegt er KEINE geschuetzten Angaben:",
+    "api/schneiden.php legt keinen pat_blob an. Der Sperrvermerk am",
+    "Quellsegment geht mit in die Sicherung (Nutzlast 9, Backlog Nr. 63) --",
+    "und weil der Demo-Reset die Fixture alle 30 Minuten einspielt, wird er",
+    "auf dem Produktivserver alle 30 Minuten geprueft."
+  ],
+  "schnitte": [
+    {
+      "abdeckung": [
+        "herkunft-schnitt"
+      ],
+      "segment": "ar-12-1109381048",
+      "beginn": "2026-08-01 13:40",
+      "ende": "2026-08-01 14:35",
+      "phasen": {
+        "3": "2026-08-01 13:42",
+        "4": "2026-08-01 13:55",
+        "7": "2026-08-01 14:25"
+      }
+    }
+  ]
+}

@@ -4523,4 +4523,72 @@ declare(strict_types=1);
  * 88 Einsaetze), und am Ende die Pruefsumme der echten Fixture
  * vorher/nachher.
  */
-const WEB_VERSION = '20.2.1';
+/* ---------------------------------------------------------------------------
+ * 20.3.0 — FAEHIGKEITEN BEI TYP BERGWACHT, IN BEIDEN BETRIEBSARTEN
+ *          (Demo-Ausbau, AP0)
+ *
+ * Eine Nebenstufe mit einer Regel und drei Kommentaren, die diese Regel bisher
+ * als Herleitung fuehrten.
+ *
+ * WAS GALT. E29: Faehigkeiten (Winde, Bergwacht) kommen ausschliesslich an
+ * luftgebundenen Rettungsmitteln vor. `pruef_rettungsmittel()` pruefte
+ * `$kind === 'air'`, `db.php` begruendete daneben, warum VEHICLE_TYPEN dafuer
+ * keine eigene Spalte brauche: Bei 'veranstaltung' folge „keine" schon aus der
+ * festen Betriebsart, bei den uebrigen aus E29.
+ *
+ * WAS NICHT GALT. Ein Bergwachtnotarzt FAEHRT zum Einsatz und wird von dort
+ * GEFLOGEN. Er braucht die Winde, und seine Betriebsart ist Boden. Die
+ * Kopplung von Winde und Luft war eine Regel ueber Hubschrauber, nicht ueber
+ * Bergwacht — und sie war die EINZIGE Stelle, die beides aneinanderband: Die
+ * Einsatzfelder haengen laengst an der FAEHIGKEIT des Diensttags
+ * (`cap_gate`), nicht an seiner Art.
+ *
+ * WAS SICH AENDERT. VEHICLE_TYPEN bekommt die Spalte `faehigkeiten`
+ * ('luft' | 'immer'), `veh_caps_erlaubt()` wertet sie aus, und die
+ * Pruefschicht fragt nur noch diese eine Funktion. Der Typ Bergwacht steht
+ * auf 'immer', die drei anderen auf 'luft' — fuer 'veranstaltung' bleibt die
+ * alte Herleitung gueltig (fest bodengebunden, also nie Faehigkeiten), und die
+ * Spalte sagt deshalb nur, was NICHT schon aus der Betriebsart folgt.
+ *
+ * ZWEI LUECKEN FALLEN NEBENBEI ZU, und beide standen nicht im Auftrag.
+ * Das Skript des Stammdatendialogs fuehrte mit `regel.rollen && kind === 'air'`
+ * eine DRITTE Fassung der Regel — enger als der Server. Ein Rettungsmittel des
+ * Typs Bergwacht oder Sonstiges mit Betriebsart LUFT durfte Faehigkeiten
+ * fuehren (der Server nahm sie an), bekam die Haekchen aber nie zu sehen: Die
+ * Zeile war an `regel.rollen` gehaengt, und das hat ausser 'standard' keiner.
+ * Sichtbar wurde es erst, als jemand dieselbe Regel an zwei Stellen nebeneinander
+ * las. Jetzt liest das Skript dieselbe Tabelle wie die Pruefschicht.
+ *
+ * Die zweite: Die Karte BERGWACHT-BEREITSCHAFTEN auf der Standortseite
+ * erschien nur, wenn dort ein luftgebundenes Rettungsmittel stand. Eine
+ * Bergwachtstation mit einem bodengebundenen Notarzt haette danach ein Feld
+ * `bergwacht` im Einsatz gehabt und keinen Ort, an dem sich Bereitschaften
+ * anlegen lassen — der Schreibweg legt sie naemlich trotzdem an. Gefragt wird
+ * jetzt `veh_caps_erlaubt()`, also: Darf hier ueberhaupt jemand die Faehigkeit
+ * fuehren? (Dieser Absatz hat bis zum 15.09.2026 gefehlt, waehrend die Zeile
+ * darueber ZWEI Luecken ankuendigte — nachgetragen beim Gegenlesen.)
+ *
+ * WAS BEWUSST STEHEN BLEIBT. `api/range.php` zaehlt die Faehigkeiten des
+ * Zeitraums weiter nur ueber `d.kind = 'air'`, und die beiden Windenkacheln
+ * gibt es nur im Luft-Kachelsatz. Ein bodengebundener Bergwacht-Diensttag
+ * zeigt seine Windenfelder also im EINSATZFORMULAR, wird in der
+ * Zeitraumuebersicht aber nicht als Windendienst gezaehlt. Das aendern hiesse
+ * zehn Kacheln in vier Spalten — eine Gestaltungsentscheidung, die eine
+ * Freigabe mit Mockup braucht (Backlog Nr. 198). Der Kommentar an der Abfrage
+ * sagt es jetzt, statt sich weiter auf E29 zu berufen.
+ *
+ * ZWEI KOMMENTARE BERICHTIGT (Backlog Nr. 189, beide Haelften). Erstens der
+ * tote Konzeptpfad in `schema.sql` und `migration_lib.php` — dieses Paket ist
+ * das naechste unter `server/`, auf das der Punkt ausdruecklich gewartet hat.
+ * Zweitens, beim Zusammenfuehren mit `main` uebernommen: Der Kommentar an
+ * `geraet_modell` nannte 156 Zeichen. Nachgemessen an `GERAETE_MODELLE` sind
+ * es 153; die 156 war bis Web 12.9.2 richtig und ist mit dem Streichen der
+ * Marken- und Schutzrechtszeichen ueberholt worden. Berichtigt sind die drei
+ * LEBENDEN Stellen; die Protokollzeilen (Changelog 12.9.1/12.9.2, Rahmenplan
+ * Fassung 19) bleiben, weil sie beschreiben, was damals galt.
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `vehicle_capabilities` und
+ * `day_capabilities` fuehren keine Art; sie konnten den Fall immer schon
+ * tragen. `update.php` muss nach dem Deploy NICHT laufen.
+ */
+const WEB_VERSION = '20.3.0';

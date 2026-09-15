@@ -154,8 +154,19 @@ try {
      * gewachsenen Bestand traegt deshalb auch ein NEF-Tag von 2025 die Winde.
      * Ohne diese Zeile stuenden die Kacheln in jedem Zeitraum, der einen
      * Alttag enthaelt — und die Aenderung saehe richtig aus, waehrend sie nur
-     * die Altlast zeigt. `db.php` sagt es ohnehin: Faehigkeiten kommen
-     * ausschliesslich an luftgebundenen Rettungsmitteln vor.
+     * die Altlast zeigt.
+     *
+     * SEIT DEM DEMO-AUSBAU IST DAS EINE LUECKE UND KEINE HERLEITUNG MEHR
+     * (Backlog Nr. 198). Ein Rettungsmittel des Typs Bergwacht darf die
+     * Faehigkeiten auch bodengebunden fuehren (`veh_caps_erlaubt()`); sein
+     * Diensttag traegt sie dann in `day_capabilities`, und diese Abfrage
+     * uebergeht ihn. Das Einsatzformular zeigt die Windenfelder trotzdem
+     * (es fragt `day_capabilities` ohne Artfilter, mission_fields.php) — die
+     * Zeitraumuebersicht wertet sie nur nicht aus. Die beiden Windenkacheln
+     * gibt es ausserdem nur im LUFT-Kachelsatz; sie in den Bodensatz zu
+     * nehmen ist eine Gestaltungsentscheidung (zehn Kacheln in vier Spalten)
+     * und braucht eine Freigabe mit Mockup. Bis dahin bleibt die Zeile, und
+     * dieser Absatz sagt, was sie kostet.
      *
      * BERGWACHT FAEHRT MIT, obwohl heute keine Kachel daran haengt. Der
      * Schluessel spannt sich ueber VEHICLE_CAPABILITIES auf und waechst mit

@@ -882,6 +882,24 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     lassen, oder eine Änderungsmarke (Zähler im Schreibweg des Demo-Kontos,
     Reset nur bei gesetzter Marke). Zuordnung: Backlog-Runde (Messung), die
     Entscheidung danach.
+    **Gemessen 15.09.2026 (Demo-Ausbau, AP3 — die Zahl fiel nebenbei an):**
+    `demo_zuruecksetzen()` auf dem Prüfstand (MariaDB und PHP 8.4 auf
+    demselben Rechner), je drei Läufe hintereinander. Mit dem **alten**
+    Bestand (88 Einsätze, 100 Ruhesegmente, 55 861 Spurpunkte) **5859 ms**
+    als mittlerer der drei Läufe (5845–5950); mit dem **neuen** (106 Einsätze,
+    119 Ruhesegmente, 63 752 Spurpunkte) **6610 ms** (6440–6631). Also rund
+    **0,75 s mehr für 20 % mehr Einsätze** — die Dauer wächst mit dem
+    Bestand, aber flacher als er.
+    **Was die Zahl heißt.** Ein Reset läuft huckepack auf einer Anfrage
+    (`demo_reset_wenn_faellig()` aus `auth_guard.php`). Sechseinhalb Sekunden
+    trägt **die Besucherin**, die ihn auslöst: Ihre Seite steht so lange.
+    Zweimal die Stunde ist das wenig Last, aber jedes Mal ein spürbarer
+    Aufenthalt für genau eine Person — und die hat nichts falsch gemacht,
+    sie kam nur als Erste nach Ablauf der dreißig Minuten. Das ist das
+    Argument für die Änderungsmarke, und es ist ein anderes als „Last".
+    **Nicht gemessen** ist die Produktivinstallation (dort liegt die
+    Datenbank auf einem anderen Rechner, die Zahl dürfte höher sein) und die
+    Last unter gleichzeitigen Zugriffen. Die Entscheidung bleibt offen.
 
 77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.**
     *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* Die Seite trägt heute
@@ -1652,47 +1670,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zahl ist keiner. Zuordnung: **P6** (Review und Bereinigung, R69) oder
     früher, wenn vorher ein weiteres Konzept gelöscht wird.
 
-189. **`server/schema.sql` nennt einen Pfad, den es seit dem 02.09.2026 nicht
-    mehr gibt.**
-    *Aufgenommen 14.09.2026 (S10-Nachlauf, Fund der Vollständigkeitskritik.)*
-    Zeile 528 verweist auf `docs/Konzept-S2`; die Datei liegt seit der
-    Neuordnung vom 02.09.2026 (`781e624`) unter
-    `docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md`.
-
-    **Dass es ein Versehen ist und keine Protokollzeile, belegt der Zwilling:**
-    `server/migration_lib.php:1770` erklärt **dieselbe** Sache mit **demselben**
-    Beleg F-S2-G und ist auf das neue Verzeichnis gezogen worden. Von zwei
-    gleichlautenden Kommentaren wurde einer nachgeführt. Beide kürzen den
-    Dateinamen auf `Konzept-S2` ab — wer hier anfasst, schreibt ihn an beiden
-    Stellen aus, sonst bleibt die Hälfte des Fundes stehen.
-
-    **Warum es nicht im Nachlauf mitging:** Die Datei liegt unter `server/`.
-    Eine Änderung dort verlangt eine Versionsstufe (`CLAUDE.md` 2) und löst
-    beim Merge einen Deploy aus (`CLAUDE.md` 3) — für einen Kommentar, der
-    weder Verhalten noch Schema berührt, ist das der falsche Preis. Gehört in
-    das nächste Paket, das `server/` ohnehin anfasst.
-
-    **Ein zweiter Kommentarfehler in derselben Datei** *(nachgetragen
-    14.09.2026 aus der Bestandsaufnahme zu R42)*: An `geraet_modell` steht
-    „Sammelnamen werden lang, der laengste hat **156** Zeichen". Es sind
-    **153** — nachgemessen an `GERAETE_MODELLE`, längster Name
-    „fēnix 6X Pro / 6X Sapphire / …". **Und es ist kein Zahlendreher:** Die
-    156 war am 02.09.2026 richtig und ist mit **Web 12.9.2** überholt worden,
-    als `erzeugen.py` die Marken- und Schutzrechtszeichen aus den Namen nahm
-    — der Changelog-Eintrag sagt es wörtlich („schrumpft von 156 auf 153
-    Zeichen"). `migration_lib.php` und `docs/Technik.md` sind mitgezogen,
-    `schema.sql` nicht. **Zwei weitere lebende Stellen führen die 156**:
-    Rahmenplan Abschnitt 3, Schritt 2 (E-S6-7) und
-    `docs/konzepte/Konzept-R64-Herkunft-Geraet.md`. Die Fassung-19-Zeile des
-    Rahmenplans und der Changelog-Eintrag zu Web 12.9.1 **bleiben** — sie
-    beschreiben, was damals galt.
-
-    *Abnahme:* Beide Kommentare nennen denselben, vollständigen Pfad, und die
-    Datei dort existiert; die drei lebenden Stellen nennen **153**, die zwei
-    Protokollzeilen bleiben unberührt. Zuordnung: **mitlaufend** — nächstes
-    Paket unter `server/`, spätestens der Kommentardurchgang in P6 (R69), der
-    die Konzept- und Beschlussverweise im Code ohnehin durchgeht.
-
 190. **Die Statistikseite lässt das virtuelle Gerät stehen — „Ohne Gerät"
     zählt zu niedrig.**
     *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
@@ -1878,7 +1855,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zusammen mit der Auswertung — vorher hat die Spalte keinen Leser.
 
 
-196. **65 von 192 Backlog-Einträgen rendern auf GitHub als grauer Kasten.**
+196. **68 von 195 Backlog-Einträgen rendern auf GitHub als grauer Kasten.**
     *Aufgenommen 15.09.2026 beim Gegenlesen der Punkte 190–195.*
     Ab der Nummer **100** ist der Listenmarker ein Zeichen breiter
     (`100. ` statt `73. `). CommonMark verlangt für jeden weiteren Block
@@ -1893,8 +1870,16 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     127 nicht.** Alle 65 sind dreistellig; kein zweistelliger ist betroffen.
     (Dieser Eintrag ist selbst einer davon — die Zahl schloss ihn beim ersten
     Lauf noch nicht ein und lautete 64 von 191.)
-    **Vier der 65 tragen eine Tabelle**, die damit vollständig verschwindet
-    — darunter Nr. 187 und die beiden neuen Nr. 192 und 193.
+    **Vier tragen eine Tabelle**, die damit vollständig verschwindet —
+    Nr. 123, 187, 192 und 193.
+
+    **Nachgemessen am 15.09.2026 nach dem Merge des Demo-Ausbaus** (derselbe
+    Lauf, dieselbe Engine): **195 Einträge, 68 als Codeblock, 127 nicht**,
+    unverändert vier mit Tabelle. Dazugekommen sind die drei neuen
+    dreistelligen Einträge **197, 198 und 199** — die Zahl wächst mit jedem
+    weiteren Eintrag, und der Titel oben ist deshalb mitgezogen worden. Die
+    Zahl **65 von 192** im Absatz darüber bleibt als Messprotokoll des
+    15.09.2026 **vor** dem Merge stehen.
 
     **Was das kostet:** Nicht die Optik. Wer den Backlog auf GitHub liest,
     sieht bei jedem dritten Eintrag nur den ersten Absatz als Text und den
@@ -1903,22 +1888,189 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Dokument geschrieben ist.
 
     **Weg:** ein Leerzeichen mehr bei allen Fortsetzungszeilen dreistelliger
-    Einträge; mechanisch und in einem Zug. **Nicht** in Teilen — 7 von 65 zu
-    berichtigen ließe die Datei uneinheitlich und die anderen 58 kaputt.
-    Zu prüfen, ob dieselbe Einrückung auch `docs/Rahmenplan.md` und die
-    Konzeptdokumente trifft; gemessen ist bisher nur der Backlog.
+    Einträge; mechanisch und in einem Zug. **Nicht** in Teilen — 7 von 68 zu
+    berichtigen ließe die Datei uneinheitlich und die anderen 61 kaputt.
 
-    *Abnahme:* Derselbe Lauf meldet **0 von 192** Einträgen mit `<pre>`, und
-    die vier Tabellen erscheinen als `<table>`. Zuordnung: **Backlog-Runde**
-    — und sinnvollerweise in demselben Griff wie **Nr. 188**, das die
-    fehlende Dokumentenprobe führt: Beides sind Fehler, die niemand sieht,
-    weil nichts sie misst.
+    **Der Rahmenplan ist jetzt mitgemessen, und er ist schlimmer dran**
+    *(nachgetragen 15.09.2026; dieser Eintrag hatte die Prüfung selbst
+    verlangt)*. Dort liegt es **nicht** an der Einrückung, sondern an zwei
+    anderen Ursachen — beide älter als der Demo-Ausbau, beide mit cmark-gfm
+    gemessen und auch auf dem Stand `98d677d` schon vorhanden:
+
+    - **Abschnitt 10 bricht als Tabelle ab.** Der Eintrag zu Fassung 61
+      besteht aus zwei Absätzen mit einer **Leerzeile** dazwischen, und eine
+      Leerzeile beendet in GFM die Tabelle. Gemessen: **58 Fassungszeilen im
+      Markdown, 8 `<tr>` im HTML** — Kopf und sieben Zeilen. Die 51 Zeilen ab
+      Fassung 60 abwärts stehen als Fließtext mit sichtbaren Pipes. Der
+      ganze Änderungsverlauf des Steuerungsdokuments ist damit auf GitHub
+      unlesbar.
+    - **Die Fahrplanzeile 9c hat neun Zellen bei einem Kopf mit sieben.**
+      Ursache sind drei **ungeschützte Pipes in einem Code-Span**
+      (`--motor chromium|firefox|webkit`); in GFM trennen auch die eine
+      Zelle. Die überzähligen Zellen 8 und 9 werden verworfen — verloren geht
+      der **gesamte Statustext** der Zeile. Die Registerzeile R80 macht es an
+      derselben Konstruktion bereits richtig und escapt die Pipes.
+
+    Beides ist mechanisch und klein (eine Leerzeile, drei Escapes), gehört
+    aber in denselben Griff wie der Rest — dieser Eintrag wird sonst dreimal
+    halb erledigt.
+
+    *Abnahme:* Derselbe Lauf meldet **0 von 195** Einträgen mit `<pre>`, die
+    vier Tabellen erscheinen als `<table>`, Rahmenplan Abschnitt 10 rendert
+    **58 `<tr>`** statt 8, und die Fahrplanzeile 9c hat sieben Zellen.
+    Zuordnung: **Backlog-Runde** — und sinnvollerweise in demselben Griff wie
+    **Nr. 188**, das die fehlende Dokumentenprobe führt, und **Nr. 199**:
+    Alle drei sind Fehler, die niemand sieht, weil nichts sie misst.
+
+198. **Die Zeitraumübersicht zählt Windendienste nur luftgebunden.**
+    *Aufgenommen 14.09.2026 (Demo-Ausbau, AP0.)* Seit Web 20.3.0 darf ein
+    Rettungsmittel des Typs **Bergwacht** die Fähigkeiten Winde und Bergwacht
+    auch **bodengebunden** führen (`veh_caps_erlaubt()`). Sein Diensttag trägt
+    sie dann in `day_capabilities`, und das Einsatzformular zeigt die
+    Windenfelder — `cap_gate` fragt den Diensttag ohne Artfilter. Die
+    **Zeitraumübersicht** übergeht ihn an zwei Stellen: `api/range.php`
+    beantwortet `faehigkeiten` nur über `d.kind = 'air'`, und die beiden
+    Windenkacheln (`winchcycles`, `avgwinch`) stehen ausschließlich im
+    Luft-Kachelsatz `KACHELN_LUFT`.
+
+    **Warum es nicht in AP0 mitging.** Die Abfrage wäre eine Zeile. Der
+    Bodensatz hat heute **acht** Kacheln in **vier** Spalten
+    (`SPALTEN_JE_SATZ.ground`); zwei weitere ergäben zehn in vier Spalten, also
+    zwei volle Reihen und eine mit zwei — genau die halb leere Reihe, die
+    E-P3-37 vermeiden wollte. Das ist eine Gestaltungsentscheidung und braucht
+    eine Freigabe mit Mockup (`CLAUDE.md` 5), nicht einen Nebenbeischritt in
+    einem Paket über Referenzdaten.
+
+    **Der Artfilter selbst bleibt nötig**, er ist nur zu eng formuliert: Die
+    Migration `2026_08_17_notarzt_erweiterung` hat **jedem** damals
+    bestehenden Diensttag beide Fähigkeiten gegeben, ohne nach der Art zu
+    fragen. Wer die Zeile streicht, holt auf einem gewachsenen Bestand diese
+    Altlast zurück. Die tragfähige Bedingung ist
+    `d.kind = 'air' OR d.vehicle_typ = 'bergwacht'` — Bergwacht-Diensttage
+    kann es vor Web 16.0.0 nicht gegeben haben, also trägt keiner die Altlast.
+
+    *Abnahme:* Ein bodengebundener Bergwacht-Diensttag mit Windeneinsatz (im
+    Referenzbestand **D19**) zeigt im Zeitraum, der ihn enthält, die
+    Windenkacheln mit dem richtigen Wert. *Fehlschlag:* die Kacheln fehlen oder
+    zeigen 0. Zuordnung: **P6** (Review der Oberfläche) oder ein eigenes
+    kleines Paket mit Mockup.
+
+199. **Die Nummer 5 fehlt im Backlog, obwohl der Changelog sie unter
+    *Erledigt* verortet.**
+    *Aufgenommen 15.09.2026 (Gegenlesen des Merges von PR #47 in den
+    Demo-Ausbau; Befund einer unabhängigen Durchsicht, nicht dieses Pakets.)*
+    `grep -cE '^5\. ' docs/Backlog.md` liefert **0** — es gibt weder unter
+    *Offen* noch unter *Erledigt* einen Eintrag mit dieser Nummer. Die
+    Kopfnotiz dieses Dokuments nennt als fehlend ausdrücklich nur **4, 6 und
+    7**. Der Changelog zu **Web 7.2.0** sagt dagegen zweimal das Gegenteil:
+    „Die Nummer 5 war doppelt vergeben. Sie bleibt beim Geräte-Limit; die
+    Typprüfer-Warnungen im Uhr-Code haben die freie Nummer 13 bekommen" und
+    „Das Geräte-Limit (Nr. 5) ist längst umgesetzt und steht jetzt unter
+    *Erledigt*."
+
+    **Warum das mehr ist als eine Lücke.** Die Hausregel lautet: Nummern sind
+    dauerhaft, Erledigtes wird **verschoben statt gelöscht**, damit ältere
+    Verweise aus Code und Dokumentation weiter zutreffen. Ein Verweis auf
+    „Nr. 5" löst heute ins Leere — und weil die Kopfnotiz die 5 nicht als
+    frei führt, sieht auch niemand, dass sie fehlt. Dritter Beleg für
+    **Nr. 188** (kein Prüfmittel misst Verweise zwischen Dokumenten): Die
+    Widersprüchlichkeit steht seit Web 7.2.0 da und ist erst bei einer
+    Durchsicht von Hand aufgefallen.
+
+    **Zwei Wege, und nur einer ist richtig.** Entweder der Eintrag
+    „5. Geräte-Limit" wird aus der Historie (`git log -S`) unter *Erledigt*
+    wiederhergestellt — so sagen es Changelog und Hausregel —, oder die 5
+    wird in der Kopfnotiz neben 4, 6 und 7 als dauerhaft frei geführt und der
+    Changelog-Satz als überholt gekennzeichnet. Beides zugleich geht nicht.
+
+    *Abnahme:* Entweder `grep -cE '^5\. '` liefert 1, oder die Kopfnotiz
+    nennt vier fehlende Nummern statt drei. Zuordnung: **Backlog-Runde** —
+    zusammen mit **Nr. 196**, das dieselbe Datei ohnehin in einem Zug anfasst.
 
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+197. **Fähigkeiten lassen sich an einem bodengebundenen Bergwacht-Rettungsmittel
+    nicht hinterlegen.** *Aufgenommen und erledigt 14.09.2026 (Demo-Ausbau,
+    AP0, Web 20.3.0).* E29 erlaubte Winde und Bergwacht ausschließlich an
+    luftgebundenen Rettungsmitteln. Ein **Bergwachtnotarzt** fährt aber zum
+    Einsatz und wird von dort geflogen: Er braucht die Winde, und seine
+    Betriebsart ist Boden. `pruef_rettungsmittel()` verwarf die Häkchen still,
+    und der zugehörige Diensttag bekam im Einsatzformular keine Windenfelder
+    (`cap_gate` über `day_capabilities`).
+
+    **Erledigt mit einer Spalte statt einer Bedingung.** `VEHICLE_TYPEN` führt
+    seither `faehigkeiten` (`'luft'` | `'immer'`), `veh_caps_erlaubt()` wertet
+    sie aus, und Prüfschicht, Stammdatendialog und Rückspielweg der Sicherung
+    fragen dieselbe Funktion. Nebenbei geschlossen: Das Dialogskript führte
+    eine dritte, engere Fassung der Regel (Typ Bergwacht oder Sonstiges mit
+    Betriebsart Luft durfte Fähigkeiten führen, sah die Häkchen aber nie), und
+    die Karte *Bergwacht-Bereitschaften* erschien nur an einem Standort mit
+    luftgebundenem Rettungsmittel.
+
+    **Was offen blieb, steht als Nr. 198:** Die Zeitraumübersicht zählt
+    Windendienste weiter nur luftgebunden. Einzelheiten und Begründung im
+    Changelog zu Web 20.3.0.
+
+189. **`server/schema.sql` nennt einen Pfad, den es seit dem 02.09.2026 nicht
+    mehr gibt.**
+    *Aufgenommen 14.09.2026 (S10-Nachlauf, Fund der Vollständigkeitskritik.)*
+    Zeile 528 verweist auf `docs/Konzept-S2`; die Datei liegt seit der
+    Neuordnung vom 02.09.2026 (`781e624`) unter
+    `docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md`.
+
+    **Dass es ein Versehen ist und keine Protokollzeile, belegt der Zwilling:**
+    `server/migration_lib.php:1770` erklärt **dieselbe** Sache mit **demselben**
+    Beleg F-S2-G und ist auf das neue Verzeichnis gezogen worden. Von zwei
+    gleichlautenden Kommentaren wurde einer nachgeführt. Beide kürzen den
+    Dateinamen auf `Konzept-S2` ab — wer hier anfasst, schreibt ihn an beiden
+    Stellen aus, sonst bleibt die Hälfte des Fundes stehen.
+
+    **Warum es nicht im Nachlauf mitging:** Die Datei liegt unter `server/`.
+    Eine Änderung dort verlangt eine Versionsstufe (`CLAUDE.md` 2) und löst
+    beim Merge einen Deploy aus (`CLAUDE.md` 3) — für einen Kommentar, der
+    weder Verhalten noch Schema berührt, ist das der falsche Preis. Gehört in
+    das nächste Paket, das `server/` ohnehin anfasst.
+
+    **Ein zweiter Kommentarfehler in derselben Datei** *(nachgetragen
+    14.09.2026 aus der Bestandsaufnahme zu R42)*: An `geraet_modell` steht
+    „Sammelnamen werden lang, der laengste hat **156** Zeichen". Es sind
+    **153** — nachgemessen an `GERAETE_MODELLE`, längster Name
+    „fēnix 6X Pro / 6X Sapphire / …". **Und es ist kein Zahlendreher:** Die
+    156 war am 02.09.2026 richtig und ist mit **Web 12.9.2** überholt worden,
+    als `erzeugen.py` die Marken- und Schutzrechtszeichen aus den Namen nahm
+    — der Changelog-Eintrag sagt es wörtlich („schrumpft von 156 auf 153
+    Zeichen"). `migration_lib.php` und `docs/Technik.md` sind mitgezogen,
+    `schema.sql` nicht. **Zwei weitere lebende Stellen führen die 156**:
+    Rahmenplan Abschnitt 3, Schritt 2 (E-S6-7) und
+    `docs/konzepte/Konzept-R64-Herkunft-Geraet.md`. **Drei Protokollstellen
+    bleiben** — die Fassung-19-Zeile des Rahmenplans und die **beiden**
+    Changelog-Einträge zu Web 12.9.1 („der längste Eintrag hat 156 Zeichen")
+    und zu Web 12.9.2 („schrumpft von 156 auf 153 Zeichen"); sie beschreiben,
+    was damals galt. *(Hier stand „zwei", benannt waren aber schon damals
+    nur zwei von drei — nachgezählt am 15.09.2026 beim Zusammenführen.)*
+
+    *Abnahme:* Beide Kommentare nennen denselben, vollständigen Pfad, und die
+    Datei dort existiert; die drei lebenden Stellen nennen **153**, die drei
+    Protokollzeilen bleiben unberührt.
+
+    *Erledigt 14./15.09.2026 (Demo-Ausbau, AP0 und Nachlauf, Web 20.3.0)* —
+    das war das nächste Paket unter `server/`, und es hat beide Funde
+    mitgenommen. **Erster Fund:** `schema.sql` und `migration_lib.php` nennen
+    `docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md`
+    ausgeschrieben; die Datei liegt dort. **Zweiter Fund** (aus der
+    Bestandsaufnahme zu R42, beim Zusammenführen der beiden Zweige
+    übernommen): Die drei lebenden Stellen nennen jetzt **153** —
+    `server/schema.sql`, Rahmenplan Abschnitt 3 (Schritt 2, E-S6-7) und
+    `docs/konzepte/Konzept-R64-Herkunft-Geraet.md`. Eigens nachgemessen an
+    `GERAETE_MODELLE`, nicht abgeschrieben: **153 Zeichen** (154 Bytes), der
+    Eintrag „fēnix 6X Pro / 6X Sapphire / … / quatix 6X Dual Power"; von 173
+    Modellen liegen **fünf** über 64 Zeichen. Die Fassung-19-Zeile des
+    Rahmenplans und die beiden Changelog-Einträge zu Web 12.9.1/12.9.2
+    bleiben unberührt — sie beschreiben, was damals galt.
 
 139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des

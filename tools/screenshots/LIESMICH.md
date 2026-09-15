@@ -13,8 +13,8 @@ Phase.
 > `tools/motor.mjs`, einmal für alle drei Prüfmittel.
 >
 > **Die Empfehlung ist gestaffelt, und zwar aus einer Zahl heraus:** Der volle
-> Lauf misst 45 Seiten in acht Breiten und braucht je Motor rund neun Minuten
-> (gemessen: 360 Bilder in 8 min 47 s). Dreimal voll sind eine knappe halbe
+> Lauf misst 49 Seiten in acht Breiten und braucht je Motor rund zehn Minuten
+> (gemessen: 392 Bilder). Dreimal voll sind eine gute halbe
 > Stunde nach **jedem** Arbeitspaket, und das Meiste davon ist Wiederholung.
 > Deshalb:
 >
@@ -89,12 +89,27 @@ Phase.
 
 Ein Redesign, das „voll mobiltauglich auf allen Seiten" verspricht, muss das
 auf allen Seiten belegen — und zwar bei jeder Breite, nicht bei der einen,
-die gerade offen war. 44 Seiten mal acht Breiten sind 352 Bilder; von Hand
+die gerade offen war. 49 Seiten mal acht Breiten sind 392 Bilder; von Hand
 macht das niemand zweimal. (Die Zahl stand hier lange bei „30 Seiten … 240
 Bilder" und war schon vor S9/AP5b falsch — `seiten.json` führte 46 Seiten,
-ein voller Lauf machte 368 Bilder. Sie ist mit dem Streichen der beiden
-Admin-Stammdatenseiten nachgezogen worden; maßgeblich ist immer
+ein voller Lauf machte 368 Bilder. Sie ist seither zweimal nachgezogen
+worden: beim Streichen der beiden Admin-Stammdatenseiten und beim
+Demo-Ausbau, der drei Seiten dazugelegt hat. Maßgeblich ist immer
 `seiten.json`, nicht dieser Satz.)
+
+**Drei Seiten zeigen ausdrücklich den Sonderfall, nicht den Regelfall**
+(Demo-Ausbau): `10a-tagesuebersicht-ohne-standort` einen Diensttag **ohne
+Standort**, `10b-tagesuebersicht-luftlinie` einen, dessen Einsätze
+Koordinaten, aber keine Spur haben (gestrichelte Luftlinien), und
+`12a-einsatzansicht-winde` einen **bodengebundenen** Bergwachteinsatz mit
+Windenkacheln. Die drei Platzhalter suchen ihren Tag über den **Inhalt** —
+kein `base_name`, keine Spurpunkte, `winch` an einem Bergwachttag am Boden —
+und nicht über eine Kennung oder einen Namen: Kennungen wandern bei jedem
+Neubau des Referenzbestands. Findet sich der Fall nicht, bleibt der
+Platzhalter `null`, und die Seite wird **nicht** fotografiert; sie steht dann
+im Lauf als „NICHT AUFGELÖST". Das ist die richtige Antwort — ein Bestand
+ohne diese Fälle soll keine Bilder liefern, die so aussehen, als hätte er
+sie.
 
 **Eine Seite braucht ihre Parameter.** Steht in `seiten.json` ein Pfad, den
 die Anwendung ohne Abfrageteil ablehnt, fotografiert das Werkzeug die Seite,

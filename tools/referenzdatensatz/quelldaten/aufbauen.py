@@ -373,6 +373,14 @@ def main() -> int:
         von, bis = nach_utc(dn["beginn"]), nach_utc(dn["ende"])
 
         basis = wegpunkte.basis_von(dn, {s["name"]: s for s in stammdaten["standorte"]})
+        # EIN DIENSTTAG OHNE STANDORT BEKOMMT NICHTS ERZEUGT, und zwar von
+        # selbst: Seine Zielzahl ist die Zahl seiner handgeschriebenen
+        # Prueffaelle (E-DA-14), `fehlend` ist damit null, und die Schleife
+        # darunter laeuft gar nicht erst an. Das `Werk` entsteht trotzdem --
+        # mit `standort = None` findet es keine Klinik, keine Bereitschaft und
+        # kein weiteres Rettungsmittel, was richtig ist: Die Vorschlagslisten
+        # haengen am Standort (E15). Eine Sonderbehandlung hier waere eine
+        # zweite Fassung derselben Aussage.
         werk = Werk(z, dn["art"], stammdaten, dn["standort"],
                     rm["faehigkeiten"], int(dn["day"][5:7]), basis)
         neue: list[dict] = []

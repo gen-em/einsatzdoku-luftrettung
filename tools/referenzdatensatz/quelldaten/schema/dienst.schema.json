@@ -72,10 +72,13 @@
       "$ref": "#/$defs/erlaeuterung"
     },
     "$warum_schnitt": {
-      "type": "string"
+      "$ref": "#/$defs/erlaeuterung"
+    },
+    "$warum_standort": {
+      "$ref": "#/$defs/erlaeuterung"
     },
     "schnitte": {
-      "$kommentar": "Der Schnitt-Auftrag der Einspielstufe `schneiden` (R64/AP4, E-R64-16). Er ist KEIN Einsatz der Quelldaten -- der geschnittene Einsatz entsteht erst serverseitig ueber api/schneiden.php und traegt dort eine Kennung mit Praefix cut-. Deshalb zaehlt pruefen.py weiter 87 Einsaetze und nicht 88.",
+      "$kommentar": "Schnitt-Auftraege der Einspielstufe `schneiden` (R64/AP4, E-R64-16; seit dem Demo-Ausbau BELIEBIG VIELE an beliebig vielen Diensten, E-DA-11). Sie sind KEINE Einsaetze der Quelldaten -- der geschnittene Einsatz entsteht erst serverseitig ueber api/schneiden.php und traegt dort eine Kennung mit Praefix cut-. Deshalb zaehlt pruefen.py die Einsaetze der Quelldaten, und der Bestand traegt danach mehr.",
       "type": "array",
       "items": {
         "type": "object",
@@ -212,7 +215,11 @@
           ]
         },
         "standort": {
-          "type": "string",
+          "$kommentar": "NULL = Diensttag OHNE Standort (seit Web 16.0.0 moeglich, E-DA-08). Dann gibt es keine Vorschlagslisten, keine Rollen und kein `base_id`; das Transportziel ist Freitext mit Koordinate. Zulaessig nur, wenn das Rettungsmittel `ohne_standort` traegt -- pruefen.py prueft das.",
+          "type": [
+            "string",
+            "null"
+          ],
           "minLength": 1
         },
         "rettungsmittel": {
@@ -393,11 +400,13 @@
             {
               "type": "array",
               "items": {
+                "$kommentar": "`zustieg` (Demo-Ausbau, E-DA-13): der Punkt, bis zu dem gefahren wird -- Parkplatz, Talstation, Huettenzufahrt. Die Teilstuecke zustieg->ort und ort->zustieg zeichnet der Generator ZU FUSS (spur.fussweg), alles andere faehrt oder fliegt.",
                 "enum": [
                   "basis",
                   "start",
                   "ort",
                   "ziel",
+                  "zustieg",
                   "ort_vorher",
                   "ziel_vorher",
                   null
@@ -511,10 +520,20 @@
             },
             "ziel": {
               "$ref": "#/$defs/koordinate"
+            },
+            "zustieg": {
+              "$kommentar": "Pflicht, sobald `route` den Wegpunkt `zustieg` nennt -- er loest auf nichts anderes auf.",
+              "$ref": "#/$defs/koordinate"
             }
           }
         },
         "$warum_spur": {
+          "$ref": "#/$defs/erlaeuterung"
+        },
+        "$warum_zustieg": {
+          "$ref": "#/$defs/erlaeuterung"
+        },
+        "$warum_felder": {
           "$ref": "#/$defs/erlaeuterung"
         },
         "erzeugt": {

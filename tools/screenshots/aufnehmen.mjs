@@ -105,8 +105,8 @@ const { seiten } = JSON.parse(readFileSync(join(HIER, 'seiten.json'), 'utf-8'));
 
 /* ---- Die Risikoliste (--risiko, AP3b) -----------------------------------
  *
- * WOZU. Der volle Lauf misst 45 Seiten in acht Breiten und braucht in jeder
- * Engine rund neun Minuten; dreimal gefahren sind das eine knappe halbe
+ * WOZU. Der volle Lauf misst 49 Seiten in acht Breiten und braucht in jeder
+ * Engine rund zehn Minuten; dreimal gefahren sind das eine gute halbe
  * Stunde nach JEDEM Arbeitspaket. Das Meiste davon ist Wiederholung — ein
  * Layoutfehler in Chromium ist fast immer auch in Gecko und WebKit einer.
  * Chromium faehrt deshalb weiter den vollen Lauf; Firefox und WebKit fahren
@@ -571,6 +571,74 @@ async function platzhalter() {
   const href = await a.locator('a[href*="admin_user.php?id="]').first()
                       .getAttribute('href').catch(() => null);
   p['__KONTO__'] = href || null;
+
+  /* ---- DREI SEITEN, DIE ES ERST SEIT DEM DEMO-AUSBAU GIBT ----------------
+   *
+   * Die Platzhalter darueber nehmen den ERSTEN Diensttag der Uebersicht und
+   * seinen ersten Einsatz. Das ist fuer die meisten Seiten richtig — sie
+   * sollen irgendeinen befuellten Tag zeigen — und fuer drei Faelle falsch:
+   * Der erste Tag hat einen Standort, eine Spur und keine Winde, und genau
+   * die drei Gegenteile sind seit dem Demo-Ausbau im Bestand.
+   *
+   *   __TAG_OHNE_STANDORT__  Tagesuebersicht eines Diensttags OHNE Standort
+   *                          (D20) — kein Standortfeld, keine Rollen
+   *   __EINSATZ_WINDE__      Einsatzansicht eines BODEN-Bergwachteinsatzes
+   *                          mit Winde (D19) — die Windenkacheln, die es vor
+   *                          Web 20.3.0 am Boden nicht geben konnte
+   *   __TAG_LUFTLINIE__      Tageskarte eines Diensttags, dessen Einsaetze
+   *                          Koordinaten, aber KEINE Spur haben (D21) — die
+   *                          gestrichelten Luftlinien aus `start_src`,
+   *                          `dest_lat`/`dest_lon` (E34/E35)
+   *
+   * GESUCHT WIRD UEBER DEN INHALT, NICHT UEBER EINEN NAMEN ODER EINE NUMMER.
+   * Kennungen wandern bei jedem Neubau des Referenzbestands, und ein Name
+   * („Boxkampf …") waere ein zweiter Ort, an dem die Quelldaten stehen. Der
+   * Bestand wird deshalb gefragt: ein Tag ohne `base_name`, ein Einsatz mit
+   * `winch` an einem bodengebundenen Bergwachttag, ein Tag ohne Spurpunkte.
+   * Findet sich keiner, bleibt der Platzhalter `null` — die Seite wird dann
+   * NICHT fotografiert und steht im Bericht als nicht aufgeloest. Das ist die
+   * richtige Antwort: Ein Bestand ohne diese Faelle soll keine Bilder
+   * liefern, die so aussehen, als haette er sie.
+   *
+   * ZWEI GEZIELTE ABFRAGEN STATT EINUNDZWANZIG. `api/day.php?d=` liefert die
+   * Spur mit; ueber alle Diensttage zu gehen waere ein paar Megabyte JSON bei
+   * jedem Lauf. Die Liste sagt schon, welche Tage ueberhaupt in Frage kommen:
+   * `base_name === null` fuer die beiden Veranstaltungstage, `art_symbol ===
+   * 'bergwacht'` mit `kind === 'ground'` fuer die Windenkacheln. */
+  const tagListe = await s.evaluate(async (b) => {
+    const r = await fetch(b + '/api/day.php', { credentials: 'same-origin' });
+    return (await r.json()).days || [];
+  }, BASIS).catch(() => []);
+
+  const tagInhalt = (id) => s.evaluate(async ([b, d]) => {
+    const r = await fetch(b + '/api/day.php?d=' + d, { credentials: 'same-origin' });
+    return await r.json();
+  }, [BASIS, id]).catch(() => null);
+
+  p['__TAG_OHNE_STANDORT__'] = null;
+  p['__TAG_LUFTLINIE__']     = null;
+  p['__EINSATZ_WINDE__']     = null;
+
+  for (const t of tagListe.filter((x) => x.base_name === null)) {
+    const i = await tagInhalt(t.id);
+    const m = (i && i.missions) || [];
+    if (!m.length) { continue; }
+    const mitSpur = m.filter((x) => (x.track || []).length > 0).length;
+    if (!p['__TAG_OHNE_STANDORT__'] && mitSpur > 0) {
+      p['__TAG_OHNE_STANDORT__'] = `index.php?d=${t.id}`;
+    }
+    if (!p['__TAG_LUFTLINIE__'] && mitSpur === 0
+        && m.some((x) => x.dest_lat !== null || x.start_src !== null)) {
+      p['__TAG_LUFTLINIE__'] = `index.php?d=${t.id}`;
+    }
+  }
+
+  for (const t of tagListe.filter((x) => x.art_symbol === 'bergwacht'
+                                      && x.kind === 'ground')) {
+    const i = await tagInhalt(t.id);
+    const m = ((i && i.missions) || []).find((x) => x.winch === true);
+    if (m) { p['__EINSATZ_WINDE__'] = `einsatz.php?id=${m.id}`; break; }
+  }
 
   const fehlend = Object.entries(p).filter(([, v]) => v === null).map(([k]) => k);
   if (fehlend.length) {

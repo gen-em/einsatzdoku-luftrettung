@@ -1987,13 +1987,22 @@ ui_seite_start(['titel' => 'Einstellungen',
                sieben Rollen und einem Dutzend Zielkliniken war aufgeklappt eine
                Bildschirmseite, durch die man zum Suchen scrollte.
                Die Bergwacht erscheint nur, wenn an diesem Standort ein
-               luftgebundenes Rettungsmittel steht: Die Fähigkeit kommt
-               ausschließlich dort vor (E29), und ein leerer Block für einen
-               reinen NEF-Standort wäre ein Angebot ohne Sinn. */ ?>
+               Rettungsmittel steht, das die Fähigkeit überhaupt führen DARF;
+               ein leerer Block für einen reinen NEF-Standort wäre ein Angebot
+               ohne Sinn. Gefragt wird `veh_caps_erlaubt()` und nicht
+               `kind === 'air'`: Seit dem Demo-Ausbau darf ein Rettungsmittel
+               des Typs Bergwacht die Fähigkeit auch bodengebunden führen, und
+               eine Bergwachtstation mit einem bodengebundenen Notarzt hätte
+               sonst Bereitschaften, die sie nirgends anlegen kann. */ ?>
       <?php
         $vehListe = $sdVeh[$bid] ?? [];
-        $hatLuft = false;
-        foreach ($vehListe as $v) { if ($v['kind'] === 'air') { $hatLuft = true; break; } }
+        $hatBergrettung = false;
+        foreach ($vehListe as $v) {
+            if (veh_caps_erlaubt((string)$v['typ'], (string)$v['kind'])) {
+                $hatBergrettung = true;
+                break;
+            }
+        }
         $anker = 'sd-' . $bid;
         $rollenHier = $rollenAmStandort($bid);
       ?>
@@ -2054,7 +2063,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         <section class="sd-liste" id="<?= e($anker) ?>-veh">
           <p class="feld-hinweis">Die Art entscheidet über Besatzungsrollen und die
              im Einsatzformular sichtbaren Felder. Fähigkeiten (Winde, Bergwacht)
-             gibt es nur luftgebunden.</p>
+             gibt es nur luftgebunden — beim Typ Bergwacht in beiden Arten.</p>
           <?php if (!$vehListe): ?>
             <p class="feld-hinweis">Noch keine Rettungsmittel an diesem Standort.</p>
           <?php endif; ?>
@@ -2275,11 +2284,11 @@ ui_seite_start(['titel' => 'Einstellungen',
 
       <?php ui_nach_oben(); ui_karte_ende(); ?>
 
-      <?php /* DIE BERGWACHT-KARTE ERSCHEINT NUR MIT EINEM LUFTGEBUNDENEN
-               RETTUNGSMITTEL (E29). Die Karte davor schliesst deshalb VOR der
-               Bedingung — sonst bliebe sie an einem reinen NEF-Standort offen,
-               und das Markup zerfiele ab dort. */ ?>
-        <?php if ($hatLuft): ?>
+      <?php /* DIE BERGWACHT-KARTE ERSCHEINT NUR, WENN EIN RETTUNGSMITTEL DES
+               STANDORTS DIE FAEHIGKEIT FUEHREN DARF. Die Karte davor schliesst
+               deshalb VOR der Bedingung — sonst bliebe sie an einem reinen
+               NEF-Standort offen, und das Markup zerfiele ab dort. */ ?>
+        <?php if ($hatBergrettung): ?>
       <?php ui_karte_start(['titel' => 'Bergwacht', 'id' => 'k-bergwacht',
                             'zahl' => count($sdBw[$bid] ?? []),
                             'aktion' => ['text' => 'Anlegen', 'symbol' => 'plus',
@@ -2289,8 +2298,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                                              'knopf' => 'Anlegen', 'id' => '0', 'name' => ''])]]); ?>
           <p class="feld-hinweis">Bereitschaften für das Feld „Bergwacht" im
              Einsatz. Der Abschnitt erscheint, weil an diesem Standort ein
-             luftgebundenes Rettungsmittel steht — die Fähigkeit kommt nur
-             dort vor.</p>
+             Rettungsmittel steht, das die Fähigkeit führen darf.</p>
           <?php if (count($sdBw[$bid] ?? []) >= SD_HILFE_AB) {
                      ui_kartenfilter(['id' => 'filt-bw-' . $bid,
                                       'ziel' => $anker . '-bw',
@@ -2372,7 +2380,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                 'hinweis' => 'Vorschlag im Feld „Weitere Rettungsmittel“ am Einsatz.',
                 'werte' => $dlgWerte('dlg-res'), 'fehler' => $dlgMeldung('dlg-res'),
             ]);
-            if ($hatLuft) {
+            if ($hatBergrettung) {
                 sd_dialog_eintrag([
                     'id' => 'dlg-bw', 'seite' => sd_seite($bid), 'base_id' => $bid,
                     'unterzeile' => $sdUnter, 'action' => 'bw_save',
@@ -2446,8 +2454,10 @@ ui_seite_start(['titel' => 'Einstellungen',
      *
      * DIE REGELN KOMMEN AUS `VEHICLE_TYPEN` und nicht aus einer zweiten,
      * abgetippten Aufzählung hier: `betriebsart` (fest oder frei), `rollen`
-     * (hat der Typ Vorlagen?), `standort` (Pflicht?). Eine Kopie liefe beim
-     * nächsten Typ auseinander, und zwar still.
+     * (hat der Typ Vorlagen?), `standort` (Pflicht?), `faehigkeiten` (nur
+     * luftgebunden oder in beiden Betriebsarten?). Eine Kopie liefe beim
+     * nächsten Typ auseinander, und zwar still — genau das war mit den
+     * Fähigkeiten bis zum Demo-Ausbau passiert.
      *
      * OHNE GEWÄHLTE BETRIEBSART sind Rollen und Fähigkeiten verborgen
      * (Web 7.0.0). Die Betriebsart ist nicht vorbelegt; Rollenhaken zu zeigen,
@@ -2495,14 +2505,31 @@ ui_seite_start(['titel' => 'Einstellungen',
         });
         f.querySelector('.rollen-zeile').hidden = !regel.rollen || kind === null;
 
-        /* 3. Fähigkeiten — nur luftgebunden, und nur beim Typ Standard. */
+        /* 3. Fähigkeiten — was der Typ in dieser Betriebsart zulässt.
+              Die Regel steht in `VEHICLE_TYPEN[...].faehigkeiten` und nicht
+              hier; sie ist dieselbe, die `veh_caps_erlaubt()` serverseitig
+              anwendet. Bis zum Demo-Ausbau stand hier `regel.rollen &&
+              kind === 'air'` — eine DRITTE Fassung der Regel, und sie war an
+              zwei Stellen enger als der Server: Ein Rettungsmittel des Typs
+              Bergwacht oder Sonstiges mit Betriebsart Luft durfte
+              Fähigkeiten führen, bekam die Häkchen aber nie zu sehen. */
         var caps = f.querySelector('.vehcaps-zeile');
-        var capsAn = regel.rollen && kind === 'air';
+        var capsAn = regel.faehigkeiten === 'immer'
+                     ? (kind === 'air' || kind === 'ground')
+                     : kind === 'air';
         caps.hidden = !capsAn;
         if (!capsAn) {
           caps.querySelectorAll('input').forEach(function (i) { i.checked = false; });
         }
-        f.querySelector('[data-veh-ohne-vorlagen]').hidden = regel.rollen;
+        caps.querySelector('[data-veh-caps-luft]').hidden  = regel.faehigkeiten === 'immer';
+        caps.querySelector('[data-veh-caps-immer]').hidden = regel.faehigkeiten !== 'immer';
+
+        /* 3a. Der Satz darunter erklärt, was FEHLT — und erst, wenn eine
+               Betriebsart feststeht: vorher fehlt noch nichts, es ist nur noch
+               nichts entschieden. */
+        var rollenAn = regel.rollen && kind !== null;
+        f.querySelector('[data-veh-ohne-vorlagen]').hidden = kind === null || rollenAn || capsAn;
+        f.querySelector('[data-veh-ohne-rollen]').hidden   = kind === null || rollenAn || !capsAn;
 
         /* 4. Standort — Feld oder Satz. */
         var wahl = !regel.standort || heimat === '0';

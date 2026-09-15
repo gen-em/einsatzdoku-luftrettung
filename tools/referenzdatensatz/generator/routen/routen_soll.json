@@ -1753,5 +1753,410 @@
       10.217
     ],
     "datei": "strecke_faf65f688f59fbc0.geojson"
+  },
+  {
+    "dienst": "D17",
+    "art": "einsatz",
+    "client_ref": "am-12-3071845926",
+    "abschnitt": 0,
+    "von": [
+      47.532,
+      10.287
+    ],
+    "nach": [
+      47.513,
+      10.398
+    ],
+    "datei": "strecke_ab6973b44c739934.geojson"
+  },
+  {
+    "dienst": "D17",
+    "art": "einsatz",
+    "client_ref": "am-12-3071845926",
+    "abschnitt": 3,
+    "von": [
+      47.513,
+      10.398
+    ],
+    "nach": [
+      47.559,
+      10.217
+    ],
+    "datei": "strecke_aa4ee22d33072469.geojson"
+  },
+  {
+    "dienst": "D17",
+    "art": "ruhe",
+    "client_ref": "ar-12-3446650314",
+    "abschnitt": 0,
+    "von": [
+      47.559,
+      10.217
+    ],
+    "nach": [
+      47.532,
+      10.287
+    ],
+    "datei": "strecke_991f87d2db717f68.geojson"
+  },
+  {
+    "dienst": "D17",
+    "art": "einsatz",
+    "client_ref": "am-12-8462039517",
+    "abschnitt": 0,
+    "von": [
+      47.532,
+      10.287
+    ],
+    "nach": [
+      47.5405,
+      10.314
+    ],
+    "datei": "strecke_a37830c2cf2276ca.geojson"
+  },
+  {
+    "dienst": "D17",
+    "art": "einsatz",
+    "client_ref": "am-12-8462039517",
+    "abschnitt": 1,
+    "von": [
+      47.5405,
+      10.314
+    ],
+    "nach": [
+      47.532,
+      10.287
+    ],
+    "datei": "strecke_1b489274414a25a3.geojson"
+  },
+  {
+    "dienst": "D18",
+    "art": "einsatz",
+    "client_ref": "am-12-6190473582",
+    "abschnitt": 0,
+    "von": [
+      47.559,
+      10.217
+    ],
+    "nach": [
+      47.5605,
+      10.2185
+    ],
+    "datei": "strecke_d9d02be820822f8e.geojson"
+  },
+  {
+    "dienst": "D18",
+    "art": "einsatz",
+    "client_ref": "am-12-6190473582",
+    "abschnitt": 1,
+    "von": [
+      47.5605,
+      10.2185
+    ],
+    "nach": [
+      48.4011,
+      9.9876
+    ],
+    "datei": "strecke_01315838e02534ea.geojson"
+  },
+  {
+    "dienst": "D18",
+    "art": "ruhe",
+    "client_ref": "ar-12-1073026965",
+    "abschnitt": 0,
+    "von": [
+      48.4011,
+      9.9876
+    ],
+    "nach": [
+      47.559,
+      10.217
+    ],
+    "datei": "strecke_6825d24a0df11997.geojson"
+  },
+  {
+    "dienst": "D18",
+    "art": "einsatz",
+    "client_ref": "am-12-2748051639",
+    "abschnitt": 0,
+    "von": [
+      47.559,
+      10.217
+    ],
+    "nach": [
+      47.548,
+      10.244
+    ],
+    "datei": "strecke_7d9ec935fd9ffb48.geojson"
+  },
+  {
+    "dienst": "D18",
+    "art": "einsatz",
+    "client_ref": "am-12-2748051639",
+    "abschnitt": 1,
+    "von": [
+      47.548,
+      10.244
+    ],
+    "nach": [
+      47.515,
+      10.281
+    ],
+    "datei": "strecke_98077257460e6bcb.geojson"
+  },
+  {
+    "dienst": "D18",
+    "art": "einsatz",
+    "client_ref": "am-12-9503826147",
+    "abschnitt": 0,
+    "von": [
+      47.515,
+      10.281
+    ],
+    "nach": [
+      47.515,
+      10.281
+    ],
+    "datei": "strecke_01cd1ef75fae46fd.geojson"
+  },
+  {
+    "dienst": "D18",
+    "art": "einsatz",
+    "client_ref": "am-12-9503826147",
+    "abschnitt": 1,
+    "von": [
+      47.515,
+      10.281
+    ],
+    "nach": [
+      47.718,
+      10.322
+    ],
+    "datei": "strecke_86fe592d62c1e19c.geojson"
+  },
+  {
+    "dienst": "D18",
+    "art": "ruhe",
+    "client_ref": "ar-12-7539973209",
+    "abschnitt": 0,
+    "von": [
+      47.718,
+      10.322
+    ],
+    "nach": [
+      47.559,
+      10.217
+    ],
+    "datei": "strecke_c9dcab40795af50f.geojson"
+  },
+  {
+    "dienst": "D19",
+    "art": "einsatz",
+    "client_ref": "am-12-4826137905",
+    "abschnitt": 0,
+    "von": [
+      47.532,
+      10.287
+    ],
+    "nach": [
+      47.485,
+      10.348
+    ],
+    "datei": "strecke_2b9ba1dc91f8cd03.geojson"
+  },
+  {
+    "dienst": "D19",
+    "art": "einsatz",
+    "client_ref": "am-12-4826137905",
+    "abschnitt": 3,
+    "von": [
+      47.485,
+      10.348
+    ],
+    "nach": [
+      47.532,
+      10.287
+    ],
+    "datei": "strecke_17fcba6930f34d8e.geojson"
+  },
+  {
+    "dienst": "D19",
+    "art": "einsatz",
+    "client_ref": "wm-12-4517809362",
+    "abschnitt": 0,
+    "von": [
+      47.532,
+      10.287
+    ],
+    "nach": [
+      47.548,
+      10.321
+    ],
+    "datei": "strecke_5cc948d809050e05.geojson"
+  },
+  {
+    "dienst": "D19",
+    "art": "einsatz",
+    "client_ref": "wm-12-4517809362",
+    "abschnitt": 1,
+    "von": [
+      47.548,
+      10.321
+    ],
+    "nach": [
+      47.532,
+      10.287
+    ],
+    "datei": "strecke_303751c058dbeaa2.geojson"
+  },
+  {
+    "dienst": "D19",
+    "art": "einsatz",
+    "client_ref": "am-12-7038615249",
+    "abschnitt": 0,
+    "von": [
+      47.532,
+      10.287
+    ],
+    "nach": [
+      47.525,
+      10.33
+    ],
+    "datei": "strecke_6eab3eff9b3efaaf.geojson"
+  },
+  {
+    "dienst": "D19",
+    "art": "einsatz",
+    "client_ref": "am-12-7038615249",
+    "abschnitt": 1,
+    "von": [
+      47.525,
+      10.33
+    ],
+    "nach": [
+      47.515,
+      10.281
+    ],
+    "datei": "strecke_dc8ab20c032403e2.geojson"
+  },
+  {
+    "dienst": "D19",
+    "art": "ruhe",
+    "client_ref": "ar-12-7415761798",
+    "abschnitt": 0,
+    "von": [
+      47.515,
+      10.281
+    ],
+    "nach": [
+      47.532,
+      10.287
+    ],
+    "datei": "strecke_f199c003fa7656cf.geojson"
+  },
+  {
+    "dienst": "D20",
+    "art": "einsatz",
+    "client_ref": "am-12-5062847193",
+    "abschnitt": 0,
+    "von": [
+      47.583,
+      10.331
+    ],
+    "nach": [
+      47.5835,
+      10.3325
+    ],
+    "datei": "strecke_c52dabf5a3a1adba.geojson"
+  },
+  {
+    "dienst": "D20",
+    "art": "einsatz",
+    "client_ref": "am-12-5062847193",
+    "abschnitt": 1,
+    "von": [
+      47.5835,
+      10.3325
+    ],
+    "nach": [
+      47.515,
+      10.281
+    ],
+    "datei": "strecke_61203213941c4a7d.geojson"
+  },
+  {
+    "dienst": "D20",
+    "art": "ruhe",
+    "client_ref": "ar-12-2837881200",
+    "abschnitt": 0,
+    "von": [
+      47.515,
+      10.281
+    ],
+    "nach": [
+      47.583,
+      10.331
+    ],
+    "datei": "strecke_6c4e13bd15cca699.geojson"
+  },
+  {
+    "dienst": "D20",
+    "art": "einsatz",
+    "client_ref": "am-12-3629057184",
+    "abschnitt": 0,
+    "von": [
+      47.583,
+      10.331
+    ],
+    "nach": [
+      47.5825,
+      10.3295
+    ],
+    "datei": "strecke_dc018d0fd8db2bd7.geojson"
+  },
+  {
+    "dienst": "D20",
+    "art": "einsatz",
+    "client_ref": "am-12-3629057184",
+    "abschnitt": 1,
+    "von": [
+      47.5825,
+      10.3295
+    ],
+    "nach": [
+      47.583,
+      10.331
+    ],
+    "datei": "strecke_fe22dc5331e07400.geojson"
+  },
+  {
+    "dienst": "D20",
+    "art": "einsatz",
+    "client_ref": "am-12-8154902673",
+    "abschnitt": 0,
+    "von": [
+      47.583,
+      10.331
+    ],
+    "nach": [
+      47.584,
+      10.33
+    ],
+    "datei": "strecke_764271cd78ae0f14.geojson"
+  },
+  {
+    "dienst": "D20",
+    "art": "einsatz",
+    "client_ref": "am-12-8154902673",
+    "abschnitt": 1,
+    "von": [
+      47.584,
+      10.33
+    ],
+    "nach": [
+      47.583,
+      10.331
+    ],
+    "datei": "strecke_05447279b9563f80.geojson"
   }
 ]

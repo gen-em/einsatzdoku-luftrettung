@@ -64,10 +64,29 @@ async function tagAuf(k, tag) {
 /** Den aktuellen Stand der Zuordnung lesen (für das Zurückstellen). */
 async function zuordnungLesen(k, tag) {
   await tagAuf(k, tag);
-  return k.seite.evaluate(() => ({
+  /* DER STANDORT KOMMT AUS `api/day.php`, NICHT AUS DEM AUSWAHLFELD.
+   *
+   * Ein `<select>` ohne passende Option liefert den Wert seiner ERSTEN —
+   * bei einem Diensttag OHNE Standort also eine Kennung, die dort nie stand.
+   * Wer diesen Wert liest und im `finally` zurückschreibt, RESTAURIERT nicht,
+   * sondern ändert: Der Tag hatte keinen Standort und hat danach den ersten
+   * der Liste.
+   *
+   * Gemessen am 15.09.2026: Nach einem Lauf der Klickprobe trug der
+   * Diensttag „Konzert von Karl Marx" den Standort „Luftrettungsstation
+   * Hochkreuth", obwohl er bauartbedingt keinen hat (E-DA-08). Die Referenz
+   * war zu dem Zeitpunkt längst exportiert — aufgefallen ist es nur, weil
+   * jemand die Karte angesehen hat. Ein Prüfmittel, das den Bestand
+   * verändert, den es prüft, ist schlimmer als keines. */
+  const gespeichert = await k.seite.evaluate(async ([basis, d]) => {
+    const r = await fetch(basis + '/api/day.php?d=' + d, { credentials: 'same-origin' });
+    const j = await r.json();
+    return (j.meta || j).base_name ?? null;
+  }, [k.basis, tag]);
+  return k.seite.evaluate((hatStandort) => ({
     veh: document.getElementById('vehsel').value,
-    base: document.getElementById('basesel').value,
-  }));
+    base: hatStandort ? document.getElementById('basesel').value : '',
+  }), gespeichert !== null);
 }
 
 /**
@@ -167,7 +186,7 @@ export const wege = [
                08.09.2026). Die Klasse darf dort nicht stehen. */
             kurzMitUhrzeit: kurz.filter(e => /\d{2}:\d{2}/.test(
               e.closest('.eintrag')?.querySelector('.eintrag-text')?.textContent || '')).length,
-            text: kurz.map(e => e.textContent.trim())[0] || null,
+            texte: kurz.map(e => e.textContent.trim()),
             einrueckung: ak ? getComputedStyle(ak).paddingLeft : null,
           };
         });
@@ -175,20 +194,27 @@ export const wege = [
         const band = breite >= 1024 && breite < 1200;
         const sollEin = band ? '4px' : '12px';   // Freigabe M-S9-11, Weg 2
         const sollSicht = band ? m.mitKurz : m.gesamt;
-        const ok = m.gesamt > 0 && m.mitKurz === 1 && m.text === 'BW Hoch'
-                && m.sichtbar === sollSicht && m.sichtbarKurz === 1
+        /* SEIT DEM DEMO-AUSBAU SIND ES MEHRERE. Bis dahin trug KEIN Diensttag
+           des Bestands einen Kurznamen, und dieser Weg setzte den einen, den
+           er selbst zuordnete („BW Hoch"). Jetzt fuehren D17, D18 und D19
+           welche (BW-NA, VEF). Verlangt wird deshalb nicht mehr „genau
+           einer", sondern: der selbst gesetzte ist dabei, und JEDER Kurzname
+           im Band ist auch sichtbar — das ist die Zusage, um die es geht. */
+        const ok = m.gesamt > 0 && m.mitKurz >= 1 && m.texte.includes('BW Hoch')
+                && m.sichtbar === sollSicht && m.sichtbarKurz === m.mitKurz
                 && m.kurzMitUhrzeit === 0
                 && m.einrueckung === sollEin;
         return {
           ist: `${m.sichtbar} von ${m.gesamt} Nebentexten sichtbar, davon `
-             + `${m.sichtbarKurz} mit Kurznamen („${m.text}"), Datum ${m.datumBreite} px, `
+             + `${m.sichtbarKurz} von ${m.mitKurz} mit Kurznamen `
+             + `(${m.texte.map(t => `„${t}"`).join(', ') || '—'}), Datum ${m.datumBreite} px, `
              + `frei ${m.frei} px für ${m.noetig} nötige (${m.ellipsen} Ellipsen), `
              + `${m.kurzMitUhrzeit} Kurznamen an einem mehrfachen Tag, `
              + `Einrückung ${m.einrueckung}`,
           ok,
           bemerkung: ok ? ''
-            : `Soll bei ${breite} px: ${sollSicht} sichtbar, 1 davon Kurzname, `
-            + `0 an mehrfachen Tagen, Einrückung ${sollEin}`,
+            : `Soll bei ${breite} px: ${sollSicht} sichtbar, alle ${m.mitKurz} Kurznamen `
+            + `darunter (mit „BW Hoch"), 0 an mehrfachen Tagen, Einrückung ${sollEin}`,
         };
       } finally {
         await zuordnen(k, tag, vorher.veh, vorher.base);
@@ -219,7 +245,17 @@ export const wege = [
           const art = a.querySelector('svg title')?.textContent || '';
           (nach[datum] ||= []).push({ id, art });
         }
-        const doppelt = Object.entries(nach).find(([, e]) => e.length === 2);
+        /* EIN DATUM MIT ZWEI DIENSTEN VERSCHIEDENER BETRIEBSART. Seit dem
+           Demo-Ausbau gibt es DREI Kalendertage mit zwei Diensten, und an
+           zweien davon sind beide bodengebunden (die Veranstaltungen laufen
+           abends nach einem NEF-Dienst, E-DA-04). Wer dort den einen auf das
+           luftgebundene Bergwacht-Rettungsmittel umstellt, macht die beiden
+           erst unvereinbar — und die Vorschau zeigt statt der Zeile „Typ"
+           eine Fehlermeldung. Gesucht wird deshalb das Paar, das heute schon
+           je eine Art traegt. */
+        const doppelt = Object.entries(nach).find(([, e]) =>
+          e.length === 2 && e.some(x => /luftgebunden/i.test(x.art))
+                         && e.some(x => !/luftgebunden/i.test(x.art)));
         if (!doppelt) { return null; }
         const [a, b] = doppelt[1];
         /* UMGESTELLT WIRD DER BODENGEBUNDENE TAG. Das Bergwacht-Rettungsmittel
@@ -231,7 +267,7 @@ export const wege = [
         const ziel = quelle === a ? b : a;
         return { datum: doppelt[0], ziel: ziel.id, quelle: quelle.id };
       });
-      if (!paar) { return { ist: 'Kein Datum mit zwei Diensttagen im Bestand', ok: false }; }
+      if (!paar) { return { ist: 'Kein Datum mit zwei Diensttagen verschiedener Betriebsart im Bestand', ok: false }; }
 
       const bw = await bergwachtWert(k, paar.quelle);
       if (!bw) { return { ist: 'Kein Bergwacht-Rettungsmittel in der Auswahlliste', ok: false }; }

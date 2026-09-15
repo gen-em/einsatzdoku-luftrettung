@@ -40,6 +40,37 @@ async function ersterStandort(k) {
   return bid;
 }
 
+/**
+ * Ein Standort, der eine BESATZUNGSKARTE hat.
+ *
+ * WARUM NICHT DER ERSTE. Die Besatzungspflege zeigt nur die Rollen, die es am
+ * Standort gibt — eine Rolle erscheint, sobald ein Rettungsmittel dieses
+ * Standorts sie fuehrt (Handbuch 9.1). Ein Standort, an dem ausschliesslich
+ * ein Rettungsmittel vom Typ BERGWACHT steht, hat gar keine: Der Typ fuehrt
+ * keine Rollen-Vorlagen (E-S9-09). Seine Karte traegt dann weder Zeilen noch
+ * einen Anlegen-Knopf.
+ *
+ * SEIT DEM DEMO-AUSBAU IST DAS DER ERSTE STANDORT DER LISTE:
+ * „Bergwachtstation Sonnenau" steht alphabetisch vor „Luftrettungsstation
+ * Hochkreuth", und dort steht nur der Bergwachtnotarzt. Zwei Wege sind
+ * daraufhin gescheitert und haben auf ein Formular gezeigt, das es an dieser
+ * Stelle bauartbedingt nicht gibt.
+ */
+async function standortMitBesatzung(k) {
+  await k.gehZu(LISTE(k));
+  const ids = await k.seite.evaluate(() =>
+    Array.from(document.querySelectorAll('a.zeile[href*="t=standort&s="]'))
+      .map(a => Number(new URL(a.href, location.href).searchParams.get('s'))));
+  for (const bid of ids) {
+    await k.gehZu(SEITE(k, bid));
+    const da = await k.seite.evaluate(() =>
+      !!document.querySelector('.karte#k-besatzung .karte-aktion[data-dialog="dlg-crew"]'));
+    if (da) { return bid; }
+  }
+  throw new Error('Kein Standort mit Besatzungskarte — hat noch eines der '
+                + 'Rettungsmittel einen Rollensatz?');
+}
+
 /** Ein Rettungsmittel über den Dialog der Standortseite anlegen (S9/AP5-4). */
 async function anlegen(k, bid, name) {
   await k.gehZu(SEITE(k, bid));
@@ -208,7 +239,7 @@ export const wege = [
     was: 'Das Filterfeld der Besatzung blendet Zeilen und Zwischentitel aus — nicht den Anlegen-Weg',
     soll: 'Treffer < Gesamt · leere Rollen weg · „Anlegen" bleibt · Leerzustand bei 0 Treffern · Leeren stellt alles her',
     async fahren(k) {
-      const bid = await ersterStandort(k);
+      const bid = await standortMitBesatzung(k);
       await k.gehZu(SEITE(k, bid));
       const zaehl = () => k.seite.evaluate(() => {
         const box = document.querySelector('.kartenfilter[data-kartenfilter]');
@@ -573,7 +604,7 @@ export const wege = [
          dieselbe Zusage (E-S9-19: Anlegen im Dialog landet auf der neuen
          Zeile) am eigenen Bestand — und räumt hinterher auf. */
       const NAME = 'KP Prüfperson';
-      const bid = await ersterStandort(k);
+      const bid = await standortMitBesatzung(k);
       try {
         await k.gehZu(SEITE(k, bid));
         await k.seite.click('.karte-aktion[data-dialog="dlg-crew"]');

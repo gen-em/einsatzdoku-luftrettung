@@ -1,0 +1,312 @@
+{
+  "kennung": "D20",
+  "abdeckung": [],
+  "$warum": [
+    "DER ERSTE DIENSTTAG OHNE STANDORT (E-DA-08). Die Anwendung kann das seit",
+    "Web 16.0.0 -- `index.php` laesst das Standortfeld weg, sobald der Typ",
+    "keinen verlangt, und `api/day.php` bietet dann keine Vorschlaege an. Im",
+    "Referenzbestand war dieser Zustand nie eingespielt worden.",
+    "",
+    "WAS DARAN HAENGT: keine Vorschlagslisten (Zielklinik, Bereitschaft und",
+    "weitere Rettungsmittel sind Freitext), keine Rollen, keine Besatzung. Der",
+    "`spur_ausgangspunkt` traegt dafuer die Halle -- ohne ihn loeste der",
+    "Wegpunkt `basis` auf nichts auf.",
+    "",
+    "ZWEITER DIENST AN DEMSELBEN KALENDERTAG (E-DA-04): D08 faehrt von 07:00",
+    "bis 19:00, dieser Dienst ab 19:30. Ohne Ueberschneidung -- R57 meldet",
+    "ueberlappende Dienste, und sie hat recht damit."
+  ],
+  "dienst": {
+    "day": "2026-06-14",
+    "art": "ground",
+    "standort": null,
+    "rettungsmittel": "Boxkampf Rainer Maria Rilke",
+    "beginn": "2026-06-14 19:30",
+    "ende": "2026-06-14 23:45",
+    "day_ref": "ad-12-1947260385",
+    "spur_ausgangspunkt": {
+      "lat": 47.583,
+      "lon": 10.331
+    },
+    "besatzung": {},
+    "notizen": "Sanitätsdienst bei einer Abendveranstaltung. Kein Standort, Sanitätsraum in der Halle."
+  },
+  "papierkorb": null,
+  "ruhesegmente": [
+    {
+      "client_ref": "ar-12-3813216011",
+      "beginn": "2026-06-14 19:30",
+      "ende": "2026-06-14 20:15",
+      "final": true
+    },
+    {
+      "client_ref": "ar-12-2837881200",
+      "beginn": "2026-06-14 21:20",
+      "ende": "2026-06-14 22:05",
+      "final": true
+    },
+    {
+      "client_ref": "ar-12-5235744256",
+      "beginn": "2026-06-14 22:30",
+      "ende": "2026-06-14 23:00",
+      "final": true
+    },
+    {
+      "client_ref": "ar-12-7324347524",
+      "beginn": "2026-06-14 23:25",
+      "ende": "2026-06-14 23:45",
+      "final": true
+    }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "am-12-5062847193",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-06-14 20:15",
+      "ende": "2026-06-14 21:20",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-06-14 20:15"
+        ],
+        [
+          3,
+          "2026-06-14 20:17"
+        ],
+        [
+          4,
+          "2026-06-14 20:20"
+        ],
+        [
+          5,
+          "2026-06-14 20:24"
+        ],
+        [
+          6,
+          "2026-06-14 20:40"
+        ],
+        [
+          7,
+          "2026-06-14 20:58"
+        ],
+        [
+          8,
+          "2026-06-14 21:06"
+        ],
+        [
+          9,
+          "2026-06-14 21:20"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Grünegg 74/83"
+        ],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Commotio cerebri nach Knockout",
+        "dob": "1998-09-14",
+        "age": null,
+        "mission_no": "2026-0831",
+        "loc": {
+          "addr": "Hallenstraße 2, 87538 Grünegg",
+          "lat": 47.5835,
+          "lon": 10.3325
+        },
+        "site_desc": "Veranstaltungshalle, Ringseite Nord",
+        "start": null,
+        "notes": "Kurze Bewusstlosigkeit, Überwachung im Sanitätsraum, dann Transport."
+      },
+      "abdeckung": [],
+      "$warum": [
+        "DAS TRANSPORTZIEL AD HOC (E-DA-08). Der Diensttag hat keinen",
+        "Standort, also gibt es keine Vorschlagsliste: Der Klinikname ist",
+        "FREITEXT, und die Koordinate kommt aus dem Ortsfeld daneben",
+        "(`f_transport_dest_lat/lon`). Genau diesen Weg sieht S9 PS-7 vor,",
+        "und bis zum Demo-Ausbau belegte ihn kein Dokument.",
+        "",
+        "Dasselbe gilt fuer `other_resources`: 'RTW Gruenegg 74/83' steht in",
+        "keiner Vorbelegung, weil es an einem Tag ohne Standort keine gibt."
+      ]
+    },
+    {
+      "client_ref": "am-12-3629057184",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-06-14 22:05",
+      "ende": "2026-06-14 22:30",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-06-14 22:05"
+        ],
+        [
+          3,
+          "2026-06-14 22:06"
+        ],
+        [
+          4,
+          "2026-06-14 22:09"
+        ],
+        [
+          5,
+          "2026-06-14 22:12"
+        ],
+        [
+          9,
+          "2026-06-14 22:30"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Vasovagale Synkope",
+        "dob": null,
+        "age": 24,
+        "mission_no": "2026-0832",
+        "loc": {
+          "addr": "Hallenstraße 2, 87538 Grünegg",
+          "lat": 47.5825,
+          "lon": 10.3295
+        },
+        "site_desc": "Veranstaltungshalle, Zuschauerrang Ost",
+        "start": null,
+        "notes": "Zuschauerin nach kurzer Betreuung wieder auf dem Platz."
+      },
+      "abdeckung": [],
+      "$warum": "Der kurze Weg IN der Halle: wenige hundert Meter zwischen Sanitätsraum und Einsatzort. Er prueft, dass eine Spur ueber eine so kurze Strecke ueberhaupt entsteht und die Ausduennung sie nicht auf einen Punkt zusammenzieht."
+    },
+    {
+      "client_ref": "am-12-8154902673",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-06-14 23:00",
+      "ende": "2026-06-14 23:25",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-06-14 23:00"
+        ],
+        [
+          3,
+          "2026-06-14 23:01"
+        ],
+        [
+          4,
+          "2026-06-14 23:04"
+        ],
+        [
+          5,
+          "2026-06-14 23:07"
+        ],
+        [
+          9,
+          "2026-06-14 23:25"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Schnittwunde am Handrücken",
+        "dob": null,
+        "age": 37,
+        "mission_no": "2026-0833",
+        "loc": {
+          "addr": "Hallenstraße 2, 87538 Grünegg",
+          "lat": 47.584,
+          "lon": 10.33
+        },
+        "site_desc": "Ausschank; Glasbruch hinter der \"Theke Nord\"",
+        "start": null,
+        "notes": "Wunde gereinigt und verbunden; Tetanusschutz vorhanden."
+      },
+      "abdeckung": [],
+      "$warum": "SONDERZEICHEN in der Ortsbeschreibung: ein Semikolon und ein Paar Anfuehrungszeichen. Beides steht im verschluesselten pat_blob und muss den Umlauf durch Sicherung und CSV-Export ueberstehen."
+    }
+  ],
+  "ziel_einsaetze": 3
+}

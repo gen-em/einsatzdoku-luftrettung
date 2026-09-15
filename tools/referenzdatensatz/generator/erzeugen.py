@@ -55,7 +55,9 @@ PHASE_SLUG = {2: "alarmierung", 3: "ausruecken", 4: "ankunft_einsatzort",
 
 
 def epoche(lokal: str) -> int:
-    return int(datetime.strptime(lokal, "%Y-%m-%d %H:%M").replace(tzinfo=TZ).timestamp())
+    """Eine Umrechnung fuer alle: Sie steht in `wegpunkte.py`, weil die
+    Fensterrechnung dort sie braucht und beide Leser dieselbe benutzen."""
+    return wegpunkte.epoche(lokal)
 
 
 def iso_z(ts: int | None) -> str | None:
@@ -126,56 +128,75 @@ def _routen_index() -> dict:
     return index
 
 
-def _fenster(einsatz: dict, dienst: dict, legs: int) -> list[tuple[int, int]]:
-    """Zeitfenster der Bewegungsabschnitte, aus den Phasen abgeleitet.
+def spur_bauen(dienst: dict, einsatz: dict, koords: list, routen: dict,
+               namen: list[str] | None = None) -> tuple[list[tuple], list[dict]]:
+    """Spur eines Einsatzes — und die Fusswege darin, zum Nachmessen.
 
-    Die Phasen sind die Wahrheit ueber den Ablauf: 3 -> 4 ist der Weg zum
-    Einsatzort, 6 -> 7 der Transport, danach der Rueckweg bis Phase 9. Der
-    Track wird an sie GEBUNDEN und nicht daneben erfunden -- sonst zeigte die
-    Karte den Hubschrauber am Einsatzort, waehrend die Phasentabelle ihn schon
-    in der Klinik fuehrt.
+    Rueckgabe: (Spurpunkte, Liste der Fusswege). Die zweite Haelfte ist keine
+    Zierde: Ob eine Gehgeschwindigkeit plausibel ist, laesst sich der fertigen
+    Spur nicht mehr ansehen — die Punkte liegen dicht, und ein Fussweg sieht
+    dort aus wie ein Stau. `generator/pruefen.py` misst deshalb gegen diese
+    Liste, nicht gegen die Punkte.
     """
-    p = {}
-    for nr, zeit in einsatz["phasen"]:
-        p.setdefault(nr, epoche(zeit))
-    start = epoche(einsatz["beginn"])
-    ende = epoche(einsatz["ende"]) if einsatz["ende"] else epoche(dienst["ende"])
-    kandidaten = []
-    if 3 in p and 4 in p:
-        kandidaten.append((p[3], p[4]))
-    elif 4 in p:
-        kandidaten.append((start, p[4]))
-    if 6 in p and 7 in p:
-        kandidaten.append((p[6], p[7]))
-    if 9 in p:
-        ab = p.get(8) or p.get(7) or p.get(5) or p.get(4) or start
-        if p[9] > ab:
-            kandidaten.append((ab, p[9]))
-    if len(kandidaten) < legs:                     # Notnagel: gleichmaessig teilen
-        spanne = (ende - start) / max(legs, 1)
-        kandidaten = [(int(start + i * spanne), int(start + (i + 1) * spanne))
-                      for i in range(legs)]
-    return kandidaten[:legs]
-
-
-def spur_bauen(dienst: dict, einsatz: dict, koords: list, routen: dict) -> list[tuple]:
     punkte_roh: list[tuple] = []
+    fusswege: list[dict] = []
     if len(koords) < 2:
-        return []
+        return [], []
     legs = len(koords) - 1
-    fenster = _fenster(einsatz, dienst, legs)
+    zu_fuss = [bool(namen) and wegpunkte.ist_fussweg(namen[i], namen[i + 1])
+               for i in range(legs)]
+    fenster = wegpunkte.fenster(einsatz, dienst, namen, koords)
     ref = einsatz["client_ref"] or einsatz.get("quell_kennung") or "?"
     start = epoche(einsatz["beginn"])
 
-    # --- 1. Die Bewegungsabschnitte ------------------------------------
-    abschnitte = []
+    # --- 1. Die Bewegungsabschnitte, in ZWEI Durchgaengen ---------------
+    #
+    # ZUERST, WAS EINER VORGEGEBENEN GEOMETRIE FOLGT (Strasse oder Flugbahn),
+    # DANN DIE FUSSWEGE. Der Grund ist derselbe, aus dem die Halte an den
+    # TATSAECHLICHEN Enden sitzen und nicht am Wegpunkt: OSRM rastet Anfang
+    # und Ende einer Route auf die naechste Strasse. Ein Fussweg, der exakt am
+    # Wegpunkt endet, waehrend die Fahrt danach zweihundert Meter weiter
+    # beginnt, laesst die Spur springen — und aus dem Sprung wird eine
+    # Momentangeschwindigkeit von einigen hundert km/h. Gemessen an D19/1:
+    # 557 km/h, gemeldet von `generator/pruefen.py`.
+    #
+    # Ein Fussweg ist geometrisch und kann deshalb anfangen und aufhoeren, wo
+    # sein Nachbar wirklich liegt. Zwei aufeinanderfolgende Fusswege
+    # (`zustieg -> ort -> zustieg`) haengen sich aneinander, weil der zweite
+    # den ersten schon vorfindet.
+    abschnitte: list[list | None] = [None] * legs
     for i in range(legs):
+        if zu_fuss[i]:
+            continue
         t0, t1 = fenster[i]
         geo = _routen_nachschlagen(routen, einsatz["client_ref"], i)
         if geo:
-            abschnitte.append(spur.fahrt(geo["geometry"]["coordinates"], t0, t1))
+            abschnitte[i] = spur.fahrt(geo["geometry"]["coordinates"], t0, t1)
         else:
-            abschnitte.append(spur.flug(koords[i], koords[i + 1], t0, t1, f"{ref}-{i}"))
+            abschnitte[i] = spur.flug(koords[i], koords[i + 1], t0, t1, f"{ref}-{i}")
+    for i in range(legs):
+        if not zu_fuss[i]:
+            continue
+        t0, t1 = fenster[i]
+        von = ((abschnitte[i - 1][-1][0], abschnitte[i - 1][-1][1])
+               if i > 0 and abschnitte[i - 1] else koords[i])
+        nach = ((abschnitte[i + 1][0][0], abschnitte[i + 1][0][1])
+                if i + 1 < legs and abschnitte[i + 1] else koords[i + 1])
+        abschnitte[i] = spur.fussweg(von, nach, t0, t1, f"{ref}-{i}")
+        # GEMESSEN WIRD, WAS GEZEICHNET WURDE: Strecke und Dauer kommen aus
+        # den tatsaechlichen Enden, nicht aus den Wegpunkten daneben. Sonst
+        # stuende in `fusswege.json` eine Gehgeschwindigkeit, die niemand
+        # gegangen ist.
+        strecke = wegpunkte.abstand_m(*von, *nach)
+        dauer = max(t1 - t0, 1)
+        fusswege.append({
+            "ref": ref, "abschnitt": i,
+            "von": [round(von[0], 6), round(von[1], 6)],
+            "nach": [round(nach[0], 6), round(nach[1], 6)],
+            "strecke_m": round(strecke),
+            "dauer_s": dauer,
+            "tempo_kmh": round(strecke / 1000.0 / (dauer / 3600.0), 2),
+        })
 
     # --- 2. Die Halte dazwischen, an den TATSAECHLICHEN Enden -----------
     #
@@ -206,7 +227,7 @@ def spur_bauen(dienst: dict, einsatz: dict, koords: list, routen: dict) -> list[
                                 fenster[-1][1], ende, spur.TAKT_HALT, ref)
 
     punkte_roh.sort(key=lambda p: p[3])
-    return spur.ausduennen(punkte_roh)
+    return spur.ausduennen(punkte_roh), fusswege
 
 
 def ruhespur(dienst: dict, stueck: dict, routen: dict) -> list[tuple]:
@@ -546,7 +567,8 @@ def main() -> int:
             "spurpunkte_luft": 0, "spurpunkte_boden": 0, "spurpunkte_ruhe": 0,
             "anfragen": 0, "anfragen_mit_teilstuecken": 0,
             "formular_nachtrag": 0, "formular_neu": 0, "import_zeilen": 0,
-            "groesster_body_bytes": 0, "gpx_dateien": 0}
+            "groesster_body_bytes": 0, "gpx_dateien": 0, "fusswege": 0}
+    fusswege_gesamt: list[dict] = []
 
     dateien = sorted((QUELLE / "dienste").glob("D*.json"))
     sperr = json.loads((QUELLE / "pruefschritte" / "sperrliste.json").read_text("utf-8"))
@@ -575,7 +597,11 @@ def main() -> int:
                 zahl["einsaetze"] += 1
             ref = e["client_ref"] or e.get("quell_kennung")
             koords = stueck_je_ref[ref]["wegpunkte"] if e.get("route") else []
-            punkte = spur_bauen(dn, e, koords, routen) if koords else []
+            namen = stueck_je_ref[ref].get("wegpunkt_namen") if e.get("route") else None
+            punkte, fusswege = (spur_bauen(dn, e, koords, routen, namen) if koords
+                                else ([], []))
+            fusswege_gesamt += fusswege
+            zahl["fusswege"] += len(fusswege)
             phasen = phasen_mit_ort(e, punkte, dn, vorheriger, standorte)
             vorheriger = e
 
@@ -639,6 +665,11 @@ def main() -> int:
         json.dumps(plan_gesamt, ensure_ascii=False, indent=1) + "\n", "utf-8")
     (AUS / "kennzahlen.json").write_text(
         json.dumps(zahl, ensure_ascii=False, indent=2) + "\n", "utf-8")
+    # DIE FUSSWEGE EINZELN, ZUM NACHMESSEN (E-DA-13). Der fertigen Spur sieht
+    # niemand mehr an, welches Teilstueck gegangen wurde; `generator/pruefen.py`
+    # misst die Gehgeschwindigkeit deshalb hier und nicht an den Punkten.
+    (AUS / "fusswege.json").write_text(
+        json.dumps(fusswege_gesamt, ensure_ascii=False, indent=1) + "\n", "utf-8")
 
     print(f"Dienste                  {zahl['dienste']}")
     print(f"Einsätze                 {zahl['einsaetze']}")
@@ -654,6 +685,12 @@ def main() -> int:
     print(f"Formular: neu anlegen    {zahl['formular_neu']}")
     print(f"CSV-Importzeilen         {zahl['import_zeilen']}")
     print(f"GPX-Dateien              {zahl['gpx_dateien']}")
+    if fusswege_gesamt:
+        tempi = [f["tempo_kmh"] for f in fusswege_gesamt]
+        print(f"Fusswege                 {len(fusswege_gesamt)}  "
+              f"({min(tempi):.1f}–{max(tempi):.1f} km/h)")
+    else:
+        print(f"Fusswege                 0")
     print(f"Strecken aus OSRM        {STRASSE_GEFUNDEN}  "
           f"(Luftlinie ersatzweise: {STRASSE_ERSATZ})")
     return 0

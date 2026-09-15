@@ -323,7 +323,13 @@ function sd_dialog_rettungsmittel(array $o): void
         </span>
       </div>
       <div class="feld vehcaps-zeile" hidden>
-        <span class="feld-label">Fähigkeiten <span class="feld-klein-inline">nur luftgebunden</span></span>
+        <?php /* ZWEI KLEINZEILEN IM MARKUP, nicht eine im Skript. Welche gilt,
+                 haengt am Typ (`VEHICLE_TYPEN[...]['faehigkeiten']`) — aber
+                 beide Saetze sind sichtbarer Text und muessen deshalb hier
+                 stehen, wo `tools/wortliste/` sie sieht. */ ?>
+        <span class="feld-label">Fähigkeiten <span class="feld-klein-inline"
+              data-veh-caps-luft>nur luftgebunden</span><span class="feld-klein-inline"
+              data-veh-caps-immer hidden>bei diesem Typ auch bodengebunden</span></span>
         <span class="acroles vehcaps">
           <?php foreach (VEHICLE_CAPABILITIES as $ck => $cl): ?>
             <label><input type="checkbox" name="caps[]" value="<?= ui_e($ck) ?>" data-fuell="caps"
@@ -334,6 +340,11 @@ function sd_dialog_rettungsmittel(array $o): void
       </div>
       <p class="feld-klein" data-veh-ohne-vorlagen hidden>Keine Besatzungsrollen und keine
          Fähigkeiten — nur der Typ Standard hat Vorlagen.</p>
+      <?php /* Der zweite Satz gilt beim Typ Bergwacht: Rollen-Vorlagen hat er
+               keine, Fähigkeiten sehr wohl (in beiden Betriebsarten). Der Satz
+               darüber behauptete dort beides und war damit zur Hälfte falsch. */ ?>
+      <p class="feld-klein" data-veh-ohne-rollen hidden>Keine Besatzungsrollen — nur der
+         Typ Standard hat Rollen-Vorlagen.</p>
       <?php /* DER STANDORT IST EIN FELD, ABER NICHT IMMER (E-S9-19, M-S9-07).
                Beim Typ Standard gehoert das Rettungsmittel zu der Seite, auf
                der man steht — dann sagt es die Zeile darunter, und es gibt

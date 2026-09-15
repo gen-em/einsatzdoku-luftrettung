@@ -61,7 +61,15 @@ def teilstuecke() -> list[dict]:
         for s in wegpunkte.tagesablauf(d["dienst"], d["einsaetze"],
                                        d["ruhesegmente"], standorte):
             koords = s["wegpunkte"]
+            namen = s.get("wegpunkt_namen") or []
             for i in range(len(koords) - 1):
+                # FUER EINEN FUSSWEG WIRD KEINE STRASSE GEHOLT (E-DA-13).
+                # OSRM antwortete darauf mit der naechstgelegenen Fahrstrasse
+                # -- also mit einer Geometrie, die der Generator gar nicht
+                # benutzt, und mit einer Datei, die `routen_soll.json` als
+                # gebraucht fuehrt. Beides waere still falsch.
+                if len(namen) > i + 1 and wegpunkte.ist_fussweg(namen[i], namen[i + 1]):
+                    continue
                 von, nach = koords[i], koords[i + 1]
                 auftraege.append({
                     "dienst": d["kennung"], "art": s["art"], "client_ref": s["ref"],

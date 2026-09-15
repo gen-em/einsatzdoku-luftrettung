@@ -540,11 +540,22 @@ Datensatz ist so gebaut, dass jede Funktion der Anwendung darin vorkommt —
 Luft- und Bodeneinsätze, Windeneinsätze, Bergwacht, Reanimationen, ein Dienst
 über Mitternacht, ein Diensttag ohne Einsatz, ein gefüllter Papierkorb.
 
+**Seit dem Ausbau des Bestands auch die drei Rettungsmittel-Typen im
+Betrieb** (Abschnitt 9.1a): ein **Bergwachtnotarzt am Boden** mit Winde und
+Bergwacht-Bereitschaften, ein **Verlegungsfahrzeug** mit Sekundärtransporten,
+und zwei **Veranstaltungsdienste** — ein Boxkampf und ein Konzert — an
+Abenden, an denen tagsüber schon ein anderer Dienst lief. Die beiden
+Veranstaltungstage haben **keinen Standort**: kein Standortfeld im
+Diensttag, keine Rollen-Vorbelegung, und die Aufzeichnung beginnt dort, wo
+der Dienst begonnen hat. Beim Konzert ist **alles von Hand nachgetragen** —
+die Einsätze haben Koordinaten, aber keine Aufzeichnung, und die Tageskarte
+zeigt sie deshalb als gestrichelte Luftlinien.
+
 *Seit Web 14.2.1* auch die Herkunft: Unter **Einstellungen → Geräte** stehen
 zwei Geräte mit Modell — eine Uhr für die Luftdienste, ein Handy für die
 Bodendienste —, und jeder Einsatz trägt die Plakette des Geräts, das ihn
-aufgezeichnet hat. Ein Einsatz ist aus einer Ruhezeit **geschnitten**
-(Abschnitt 4.1b): Er trägt die Plakette „Schnitt", und am Ruhesegment steht
+aufgezeichnet hat. Drei Einsätze sind aus einer Ruhezeit **geschnitten**
+(Abschnitt 4.1b): Sie tragen die Plakette „Schnitt", und am Ruhesegment steht
 der gesperrte Bereich.
 
 **Ausprobieren ist ausdrücklich erwünscht.** Ändere Einsätze, lege neue an,
@@ -1282,9 +1293,10 @@ aus den Stammdaten plus Namen/Infos), Sekundärtransport, Anderer
 Notarzt, **Weitere Rettungsmittel** (Abschnitt 9.2) und Notizen.
 
 **Winde und Bergwacht erscheinen nur**, wenn das Rettungsmittel des Diensttags
-sie führt (Abschnitt 9.1). Wird ein Haken dort später abgewählt, verlieren
-bereits dokumentierte Einsätze nichts: Ihr Diensttag hat die Fähigkeit beim
-Anlegen eingefroren.
+sie führt (Abschnitt 9.1a) — unabhängig davon, ob der Tag luft- oder
+bodengebunden ist. Wird ein Haken dort später abgewählt, verlieren bereits
+dokumentierte Einsätze nichts: Ihr Diensttag hat die Fähigkeit beim Anlegen
+eingefroren.
 
 **Abweichende Besatzung.** Normalerweise gilt für jeden Einsatz die Besatzung
 des Diensttags — sie wird einmal am Tag eingetragen und muss am Einsatz nicht
@@ -2500,7 +2512,7 @@ Standortseite: Wer einen Standort löscht, sieht vorher, was daran hängt.
 
 **Auf der Standortseite** steht je Datenart eine eigene Karte — Standort,
 Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel und (nur bei
-einem luftgebundenen Rettungsmittel) Bergwacht. Drei Kennzahlen am Kopf
+einem Rettungsmittel, das die Fähigkeit führen darf) Bergwacht. Drei Kennzahlen am Kopf
 springen in die drei größten; am Ende jeder Karte führt **„Zum Anfang"**
 zurück. Am Schreibtisch stehen dieselben Karten als Unterpunkte in der Leiste
 links. Nach dem Speichern kehrt die Seite an die Stelle zurück, an der du
@@ -2587,14 +2599,26 @@ Seit Web 16.0.0 hat ein Rettungsmittel **zwei** Angaben, nicht eine:
 
 | Typ | Art | Rollen-Vorlagen | Fähigkeiten | Standort |
 |---|---|---|---|---|
-| **Standard** | wählbar | ja | nach Art | **Pflicht** |
-| **Bergwacht** | wählbar | keine | nach Art | freiwillig |
+| **Standard** | wählbar | ja | nur luftgebunden | **Pflicht** |
+| **Bergwacht** | wählbar | keine | **in beiden Arten** | freiwillig |
 | **Veranstaltung** | fest bodengebunden | keine | keine | freiwillig |
-| **Sonstiges** | wählbar | keine | nach Art | freiwillig |
+| **Sonstiges** | wählbar | keine | nur luftgebunden | freiwillig |
 
 Die beiden Angaben sind **unabhängig**: Eine Bergwacht fliegt oder fährt, und
 beides ist ein Bergwacht-Dienst. Wählst du „Veranstaltung", setzt die Anwendung
 die Art auf bodengebunden — auch wenn im Formular etwas anderes stand.
+
+**Warum der Typ Bergwacht bei den Fähigkeiten aus der Reihe fällt** (seit
+Web 20.3.0): Ein Bergwachtnotarzt fährt zum Einsatz und wird von dort geflogen.
+Er braucht die Winde, und seine Art ist bodengebunden. Bei allen anderen Typen
+gilt weiter: Winde und Bergwacht gibt es nur luftgebunden. Im Formular siehst
+du das an der Kleinzeile neben „Fähigkeiten" — sie sagt „nur luftgebunden"
+oder „bei diesem Typ auch bodengebunden".
+
+Ein bodengebundener Bergwacht-Diensttag zeigt die Windenfelder im
+**Einsatzformular** genauso wie ein luftgebundener. In der
+**Zeitraumübersicht** zählen sie noch nicht mit: Die beiden Windenkacheln gibt
+es dort bisher nur in der Luftansicht.
 
 **„Keine Rollen-Vorlagen"** heißt: Ein Diensttag mit einem solchen
 Rettungsmittel bekommt keine Besatzungsfelder angeboten. Das ist keine
@@ -2639,8 +2663,9 @@ Rettungsmitteln.
 Dasselbe gilt für alle übrigen Listen: Ein **Standort** ist unter
 *Rettungsmittel* eine zugeklappte Karte; aufgeklappt stehen darin die fünf
 Abschnitte Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel
-und Bergwacht — der letzte nur, wenn an diesem Standort ein luftgebundenes
-Rettungsmittel steht.
+und Bergwacht — der letzte nur, wenn an diesem Standort ein Rettungsmittel
+steht, das die Fähigkeit Bergwacht führen darf: ein luftgebundenes oder eines
+vom Typ Bergwacht.
 
 Ein **Rettungsmittel** ist entweder **luftgebunden** oder **bodengebunden**.
 Diese Wahl entscheidet über alles Weitere:
@@ -2648,7 +2673,7 @@ Diese Wahl entscheidet über alles Weitere:
 | Art | Wählbare Rollen | Fähigkeiten |
 |---|---|---|
 | Luftgebunden | Pilot 1, Pilot 2, HEMS-TC, Flugretter, Sonstige | Winde, Bergwacht — zwei getrennte Häkchen |
-| Bodengebunden | Fahrer, Praktikant, Sonstige | keine |
+| Bodengebunden | Fahrer, Praktikant, Sonstige | keine — außer beim Typ Bergwacht (9.1a) |
 
 **Die Art ist Pflicht und nicht vorbelegt** (seit Web 7.0.0). Vorher stand
 „luftgebunden" von selbst da — an einem Standort mit NEF war das die falsche

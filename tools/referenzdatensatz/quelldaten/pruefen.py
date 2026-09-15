@@ -86,6 +86,12 @@ MATRIX = [
     ("Erfassungsart (R4)", "luftgebunden mit Track (Ingest)", ["erfassung-luft-track"]),
     ("Erfassungsart (R4)", "bodengebunden mit Track (Ingest)", ["erfassung-boden-track"]),
     ("Erfassungsart (R4)", "nachträglich ohne Track", ["erfassung-nachtraeglich-ohne-track"]),
+    # SEIT DEM DEMO-AUSBAU EIGENS: ein nachgetragener Einsatz, der zwar keine
+    # Spur hat, aber Ort- UND Zielkoordinate. Die Karte zeichnet daraus eine
+    # gestrichelte Luftlinie — die einzige Darstellung, die es ohne Track
+    # ueberhaupt gibt, und bis dahin belegte sie kein Dokument.
+    ("Erfassungsart (R4)", "ohne Track, mit Ort- und Zielkoordinate (Luftlinie)",
+     ["luftlinie-ort-ziel"]),
     # ALLE SECHS HERKUNFTSWERTE (server/geraete_lib.php HERKUNFT_WERTE), seit
     # R64/AP4. Bis dahin standen hier drei -- und die Zeile "watch" blieb
     # gruen, obwohl sechs der Einsaetze, die sie trugen, an einem HANDY
@@ -97,6 +103,7 @@ MATRIX = [
     ("Herkunft", "manual", ["herkunft-manuell"]),
     ("Herkunft", "import", ["herkunft-import"]),
     ("Herkunft", "schnitt", ["herkunft-schnitt"]),
+    ("Herkunft", "Schnitte an mehr als einem Diensttag", []),
     ("Geräte", "beide Geräte mit Block (Momentaufnahme möglich)", []),
     ("Geräte", "eine Uhr und ein Handy", []),
     ("Diensttage", "Luftdienst", ["dienst-luft"]),
@@ -106,6 +113,14 @@ MATRIX = [
     ("Diensttage", "Einsatzdatum ≠ Diensttag", ["einsatzdatum-abweichend"]),
     ("Diensttage", "Diensttag ohne Einsatz", ["dienst-ohne-einsatz"]),
     ("Diensttage", "Tagesnotizen", ["notizen-diensttag"]),
+    # DIE DREI TYPEN AUS S9 IM BETRIEB (Demo-Ausbau). Sie standen seit Web
+    # 16.0.0 als Stammdaten im Bestand und trugen keinen einzigen Diensttag —
+    # der Bestand kannte sie, die Anwendung zeigte sie nie.
+    ("Diensttage", "Typ Bergwacht", ["dienst-bergwacht"]),
+    ("Diensttage", "Typ Veranstaltung", ["dienst-veranstaltung"]),
+    ("Diensttage", "ohne Standort (base_id NULL)", ["tag-ohne-standort"]),
+    ("Diensttage", "ohne Rollensatz (Typ ohne Vorlagen)", ["tag-ohne-rollen"]),
+    ("Diensttage", "zweiter Dienst am Abend, ohne Überschneidung", ["abenddienst"]),
     ("Besatzung", "alle Rollen des Katalogs belegt", []),
     ("Besatzung", "abweichende Besatzung (crew_override)", ["besatzung-abweichend"]),
     ("Phasen", "alle Phasen 2–9 im Datensatz", []),
@@ -122,6 +137,8 @@ MATRIX = [
     ("Transport", "NA-Begleitung", ["na-escort"]),
     ("Transport", "Fehleinsatz / Storno", ["fehleinsatz"]),
     ("Transport", "Sekundärtransport", ["sekundaertransport"]),
+    ("Transport", "Sekundärtransport bodengebunden", ["sekundaer-boden"]),
+    ("Transport", "Transportziel ad hoc (Freitext mit Koordinate)", ["ziel-adhoc"]),
     ("Transport", "Schockraum", ["schockraum"]),
     ("Transport", "Zielklinik mit Koordinate", ["zielklinik-koordinate"]),
     ("Transport", "Zielklinik ohne Koordinate", ["zielklinik-ohne-koordinate"]),
@@ -129,10 +146,17 @@ MATRIX = [
     ("Abfahrtort", "Regel prev_site", ["start-prevsite"]),
     ("Abfahrtort", "Regel prev_dest", ["start-prevdest"]),
     ("Abfahrtort", "Regel manual (verschlüsselter pat.start)", ["start-manual"]),
-    ("Luftspezifik", "Winde mit Cycles", ["winde-cycles"]),
-    ("Luftspezifik", "Cycles mit Patient", ["winde-cycles-patient"]),
-    ("Luftspezifik", "Luftverladung", ["winde-luftverladung"]),
-    ("Luftspezifik", "Bergwacht mit Einheit und bw_info", ["bergwacht-info"]),
+    # DIE DIMENSION HIESS „LUFTSPEZIFIK" UND IST ES NICHT MEHR (E-DA-06):
+    # Winde und Bergwacht haengen an der Faehigkeit des Diensttags, nicht an
+    # seiner Art, und seit Web 20.3.0 fuehrt ein Bergwachtnotarzt sie auch am
+    # Boden. Der Name der Dimension steht in `matrix_abgleich.md` und im
+    # Prueffdokument; ein falscher Name dort faerbt jede spaetere Lesung.
+    ("Bergrettung", "Winde mit Cycles", ["winde-cycles"]),
+    ("Bergrettung", "Cycles mit Patient", ["winde-cycles-patient"]),
+    ("Bergrettung", "Luftverladung", ["winde-luftverladung"]),
+    ("Bergrettung", "Bergwacht mit Einheit und bw_info", ["bergwacht-info"]),
+    ("Bergrettung", "Winde am bodengebundenen Bergwacht-Dienst",
+     ["winde-boden-bergwacht"]),
     ("Geschützte Angaben", "Geburtsdatum (Alter gerechnet)", ["geschuetzt-dob"]),
     ("Geschützte Angaben", "Handalter (pat_alter)", ["geschuetzt-alter"]),
     ("Geschützte Angaben", "R20-Angriffswert im Altersfeld", ["r20-alter"]),
@@ -150,6 +174,7 @@ MATRIX = [
     ("Sonderzeichen", "Formel-Anfangszeichen -", ["sonderzeichen-formel-minus"]),
     ("Sonderzeichen", "Formel-Anfangszeichen @", ["sonderzeichen-formel-at"]),
     ("Sonderzeichen", "Umlaute und ß", ["sonderzeichen-umlaute"]),
+    ("Spur", "Fußweg (Wegpunkt `zustieg`)", ["fussweg-zustieg"]),
     ("Ruhezeiten", "Segmente mit Track", ["ruhe-track"]),
     ("Ruhezeiten", "mehrere Segmente je Dienst", ["ruhe-mehrere"]),
     ("Ruhezeiten", "nicht abgeschlossenes Segment", ["ruhe-nicht-abgeschlossen"]),
@@ -157,9 +182,12 @@ MATRIX = [
     ("Papierkorb", "gelöschter Diensttag", ["papierkorb-diensttag"]),
     ("Papierkorb", "Einsätze mit deleted_with_day", ["papierkorb-einsatz-mit-tag"]),
     ("Papierkorb", "Sperrlisten-Fall als Ablaufschritt", ["sperrliste-ablaufschritt"]),
-    ("Stammdaten", "≥ 2 Standorte, einer ohne Koordinaten", []),
+    ("Stammdaten", "≥ 3 Standorte, alle mit Koordinaten", []),
+    ("Stammdaten", "≥ 1 Diensttag ohne Standort mit `spur_ausgangspunkt`", []),
     ("Stammdaten", "≥ 2 Luft-Rettungsmittel mit/ohne Fähigkeiten", []),
     ("Stammdaten", "≥ 1 Boden-Rettungsmittel", []),
+    ("Stammdaten", "Fähigkeiten am bodengebundenen Bergwacht-Rettungsmittel", []),
+    ("Stammdaten", "Rettungsmittel mit und ohne Standort", []),
     ("Stammdaten", "Zielkliniken mit und ohne Koordinate", []),
     ("Stammdaten", "Vorbelegungen aller Arten", []),
     ("Stammdaten", "Standard-Markierungen", []),
@@ -215,21 +243,20 @@ def ph_zeiten(einsatz: dict) -> dict[int, datetime]:
     return p
 
 
-def bewegungsfenster(einsatz: dict, p: dict[int, datetime]) -> list[tuple]:
-    """Zeitfenster der Bewegungsabschnitte — dieselbe Ableitung wie im
-    Generator (`erzeugen._fenster`). Sie steht zweimal, weil Quelldaten und
-    Generator sonst voneinander abhingen; die Regel selbst ist kurz und in
-    FORMAT.md beschrieben."""
-    f = []
-    if 3 in p and 4 in p:
-        f.append((p[3], p[4]))
-    if 6 in p and 7 in p:
-        f.append((p[6], p[7]))
-    if 9 in p:
-        ab = p.get(8) or p.get(7) or p.get(5) or p.get(4)
-        if ab and p[9] > ab:
-            f.append((ab, p[9]))
-    return f
+def bewegungsfenster(dienst: dict, einsatz: dict, namen: list[str],
+                     koords: list) -> list[tuple[float, float]]:
+    """Zeitfenster der Bewegungsabschnitte — als Dauer in Minuten je Abschnitt.
+
+    SIE STAND BIS ZUM DEMO-AUSBAU ZWEIMAL, hier und in `erzeugen._fenster()`.
+    Der Kommentar begruendete das mit „die Regel selbst ist kurz". Sie war es;
+    mit dem Wegpunkt `zustieg` (E-DA-13) ist sie es nicht mehr — vier
+    Teilstuecke und drei Phasenfenster verlangen eine Zuteilung. Zwei
+    Fassungen davon hiessen, dass dieses Skript die Erreichbarkeit eines
+    ANDEREN Ablaufs misst als den, den der Generator zeichnet, und dass beide
+    dabei Erfolg melden. Die Ableitung steht deshalb jetzt in `wegpunkte.py`,
+    dem Modul, das es fuer genau diesen Zweck schon gibt.
+    """
+    return wegpunkte.fenster(einsatz, dienst, namen, koords)
 
 
 def alle_zeitpunkte(knoten, treffer: list[str]) -> None:
@@ -313,14 +340,49 @@ def main() -> int:
         dn = d["dienst"]
         dienste_je_datum.setdefault(dn["day"], []).append(n)
 
-        lauf.pruefe(dn["standort"] in standort, f"{n}: Standort {dn['standort']!r} fehlt in den Stammdaten")
         lauf.pruefe(dn["rettungsmittel"] in fahrzeug, f"{n}: Rettungsmittel {dn['rettungsmittel']!r} fehlt in den Stammdaten")
         rm = fahrzeug.get(dn["rettungsmittel"], {})
         lauf.pruefe(rm.get("art") == dn["art"], f"{n}: Art {dn['art']!r} passt nicht zum Rettungsmittel ({rm.get('art')!r})")
-        lauf.pruefe(rm.get("standort") == dn["standort"], f"{n}: Rettungsmittel gehört zu {rm.get('standort')!r}, nicht zu {dn['standort']!r}")
+
+        # DER DIENSTTAG OHNE STANDORT (E-DA-08, seit Web 16.0.0 moeglich).
+        #
+        # Er ist kein Sonderfall der Quelldaten, sondern einer der Anwendung:
+        # `index.php` (`vehicleBaseSync()`) laesst das Standortfeld weg, sobald
+        # der Typ keinen verlangt, und `api/day.php` bietet dann keine
+        # Vorschlagslisten an. Was daran haengt, prueft dieser Block — und zwar
+        # in BEIDE Richtungen: Ein Tag ohne Standort an einem Rettungsmittel
+        # MIT Standort waere so falsch wie umgekehrt.
+        ohne_standort = dn["standort"] is None
+        if ohne_standort:
+            lauf.pruefe(bool(rm.get("ohne_standort")),
+                        f"{n}: Diensttag ohne Standort, aber {dn['rettungsmittel']!r} "
+                        f"hat einen — der Einspielweg setzt base_id aus dem Rettungsmittel")
+            lauf.pruefe("spur_ausgangspunkt" in dn,
+                        f"{n}: Diensttag ohne Standort braucht einen 'spur_ausgangspunkt' "
+                        f"— ohne ihn loest kein Wegpunkt 'basis' auf")
+            lauf.pruefe(not any(dn["besatzung"].values()),
+                        f"{n}: Diensttag ohne Standort darf keine Besatzung führen "
+                        f"— die Vorbelegungen hängen am Standort (E15)")
+            merke(["tag-ohne-standort"], n)
+        else:
+            lauf.pruefe(dn["standort"] in standort,
+                        f"{n}: Standort {dn['standort']!r} fehlt in den Stammdaten")
+            lauf.pruefe(rm.get("standort") == dn["standort"] and not rm.get("ohne_standort"),
+                        f"{n}: Rettungsmittel gehört zu "
+                        f"{'keinem Standort' if rm.get('ohne_standort') else repr(rm.get('standort'))}, "
+                        f"nicht zu {dn['standort']!r}")
 
         lauf.pruefe(dn["day_ref"] not in day_refs, f"{n}: day_ref {dn['day_ref']} kommt schon in {day_refs.get(dn['day_ref'])} vor")
         day_refs[dn["day_ref"]] = n
+
+        # MARKEN AUS DEM INHALT, NICHT AUS DER BEHAUPTUNG (FORMAT.md). Welcher
+        # Typ ein Diensttag ist und ob er einen Rollensatz bekommt, steht am
+        # Rettungsmittel — nicht in einer Markenliste, die jemand tippt.
+        typ = rm.get("typ", "standard")
+        if typ in ("bergwacht", "veranstaltung", "sonstiges"):
+            merke([f"dienst-{typ}"], n)
+        if not rm.get("rollen"):
+            merke(["tag-ohne-rollen"], n)
 
         dbeg, dend = lokal(dn["beginn"]), lokal(dn["ende"])
         lauf.pruefe(dbeg < dend, f"{n}: Dienstende liegt nicht nach dem Beginn")
@@ -338,10 +400,24 @@ def main() -> int:
                 rollen_belegt.add(rolle)
                 lauf.pruefe((dn["standort"], rolle, name) in vorbeleg,
                             f"{n}: Besatzung {name!r} ({rolle}) fehlt als Vorbelegung am Standort")
-        # Standort ohne Koordinaten braucht einen Spur-Ausgangspunkt
-        if standort.get(dn["standort"], {}).get("lat") is None:
+        # SPUR-AUSGANGSPUNKT: PFLICHT UND VERBOT IN EINEM (E-DA-09).
+        #
+        # Er ist noetig, wo der Wegpunkt `basis` sonst auf nichts aufloest —
+        # an einem Standort ohne Koordinaten und an einem Tag ohne Standort.
+        # Er ist VERBOTEN, wo der Standort selbst Koordinaten fuehrt: Dann
+        # stuenden zwei Wahrheiten uebereinander, `basis_von()` naehme
+        # stillschweigend die eine, und niemand wuesste, welche. Bis zum
+        # Demo-Ausbau gab es nur die Pflicht; die acht Bodendienste an Talwang
+        # trugen den Punkt, und der Standort trug keine Koordinaten.
+        standort_hat_koord = (not ohne_standort
+                              and standort.get(dn["standort"], {}).get("lat") is not None)
+        if not standort_hat_koord:
             lauf.pruefe("spur_ausgangspunkt" in dn,
-                        f"{n}: Standort ohne Koordinaten, aber ohne 'spur_ausgangspunkt'")
+                        f"{n}: ohne Standortkoordinaten, aber ohne 'spur_ausgangspunkt'")
+        else:
+            lauf.pruefe("spur_ausgangspunkt" not in dn,
+                        f"{n}: 'spur_ausgangspunkt' neben einem Standort MIT Koordinaten "
+                        f"— eine zweite Wahrheit (E-DA-09)")
 
         # Ruhesegmente
         if len(d["ruhesegmente"]) > 1:
@@ -432,18 +508,32 @@ def main() -> int:
             # Gemessen wird die LUFTLINIE. Fuer den Boden ist die Grenze
             # deshalb deutlich niedriger als jede Strassengeschwindigkeit:
             # Die Strasse ist im Voralpenland rund anderthalbmal so lang.
-            grenze = 250.0 if dn["art"] == "air" else 80.0
+            grenze_fahrt = 250.0 if dn["art"] == "air" else 80.0
             koords = [k for _, k in aufgeloest if k]
-            fenster = bewegungsfenster(e, ph_zeiten(e))
+            namen = [nm for nm, k in aufgeloest if k]
+            fenster = bewegungsfenster(dn, e, namen, koords)
             for i in range(min(len(koords) - 1, len(fenster))):
+                # DER FUSSWEG HAT SEINE EIGENE GRENZE (E-DA-13). 80 km/h waeren
+                # fuer ihn keine Pruefung, sondern eine Erlaubnis: Ein Steig,
+                # fuer den zwei Minuten vorgesehen sind, laege mit 12 km/h weit
+                # darunter und trotzdem weit ueber allem, was ein Mensch mit
+                # einem Akja geht. Acht km/h ist zuegiges Bergabgehen ohne Last
+                # — darueber ist die Zeitangabe der Phasen falsch, nicht der
+                # Generator.
+                zu_fuss = wegpunkte.ist_fussweg(namen[i], namen[i + 1])
+                grenze = 8.0 if zu_fuss else grenze_fahrt
                 strecke = wegpunkte.abstand_m(*koords[i], *koords[i + 1]) / 1000.0
-                minuten = (fenster[i][1] - fenster[i][0]).total_seconds() / 60.0
+                minuten = (fenster[i][1] - fenster[i][0]) / 60.0
                 if minuten <= 0:
                     lauf.pruefe(False, f"{wo}: Abschnitt {i} hat keine Dauer")
                     continue
                 tempo = strecke / (minuten / 60.0)
+                if zu_fuss:
+                    merke(["fussweg-zustieg"], wo)
                 lauf.pruefe(tempo <= grenze,
-                            f"{wo}: Abschnitt {i} verlangt {tempo:.0f} km/h "
+                            f"{wo}: Abschnitt {i}"
+                            + (" (zu Fuß)" if zu_fuss else "")
+                            + f" verlangt {tempo:.1f} km/h "
                             f"({strecke:.1f} km in {minuten:.0f} min), Grenze {grenze:.0f}")
             vorheriger = e
 
@@ -462,6 +552,8 @@ def main() -> int:
                                           ("winch_airload", "winde-luftverladung")):
                     if f[schluessel]:
                         merke([marke], wo)
+                if f["secondary"] and dn["art"] == "ground":
+                    merke(["sekundaer-boden"], wo)
                 if f["start_src"]:
                     merke([{"base": "start-base", "prev_site": "start-prevsite",
                             "prev_dest": "start-prevdest", "manual": "start-manual"}[f["start_src"]]], wo)
@@ -484,19 +576,39 @@ def main() -> int:
                 if f["transport_dest"]:
                     merke(["zielklinik-koordinate" if f["dest_lat"] is not None
                            else "zielklinik-ohne-koordinate"], wo)
-                    lauf.pruefe((dn["standort"], f["transport_dest"]) in kliniken,
-                                f"{wo}: Zielklinik {f['transport_dest']!r} fehlt als Vorbelegung am Standort")
+                    # OHNE STANDORT GIBT ES KEINE VORSCHLAGSLISTE (E-DA-08).
+                    # Das Ziel ist dann Freitext — `nachtragen` schickt es mit
+                    # `f_transport_dest` samt Koordinatenpaar, und die Marke
+                    # kommt aus dem INHALT und nicht aus einer Behauptung.
+                    if ohne_standort:
+                        merke(["ziel-adhoc"], wo)
+                        lauf.pruefe(f["dest_lat"] is not None,
+                                    f"{wo}: Transportziel ad hoc ohne Koordinate — dann "
+                                    f"bliebe die Karte leer, und der Fall verlöre seinen "
+                                    f"Gegenstand")
+                    else:
+                        lauf.pruefe((dn["standort"], f["transport_dest"]) in kliniken,
+                                    f"{wo}: Zielklinik {f['transport_dest']!r} fehlt als Vorbelegung am Standort")
 
-                # Faehigkeiten: Winde und Bergwacht nur, wo das Rettungsmittel sie hat
+                # Faehigkeiten: Winde und Bergwacht nur, wo das Rettungsmittel
+                # sie hat -- UNABHAENGIG von der Betriebsart. Die Frage, ob es
+                # sie haben DARF, steht weiter unten bei den Stammdaten; hier
+                # zaehlt nur, ob der Diensttag sie eingefroren hat. Genau so
+                # entscheidet die Anwendung (`cap_gate` ueber
+                # `day_capabilities`, kein `kind_gate`), und deshalb zeigt ein
+                # bodengebundener Bergwacht-Dienst seine Windenfelder.
                 for haken, faehigkeit in (("winch", "winch"), ("bergwacht", "bergwacht")):
                     lauf.pruefe(not f[haken] or faehigkeit in rm.get("faehigkeiten", []),
                                 f"{wo}: {haken}=1, aber {dn['rettungsmittel']!r} hat die Fähigkeit {faehigkeit!r} nicht")
+                if f["winch"] and rm.get("art") == "ground":
+                    merke(["winde-boden-bergwacht"], wo)
                 if f["winch"] and f["winch_cycles"]:
                     merke(["winde-cycles"], wo)
                 if f["winch"] and f["winch_cycles_pat"]:
                     merke(["winde-cycles-patient"], wo)
                 if f["bergwacht"]:
-                    lauf.pruefe(not f["bw_unit"] or (dn["standort"], f["bw_unit"]) in bereitsch,
+                    lauf.pruefe(ohne_standort or not f["bw_unit"]
+                                or (dn["standort"], f["bw_unit"]) in bereitsch,
                                 f"{wo}: Bereitschaft {f['bw_unit']!r} fehlt als Vorbelegung am Standort")
                     if f["bw_unit"] and f["bw_info"]:
                         merke(["bergwacht-info"], wo)
@@ -506,7 +618,7 @@ def main() -> int:
                 # (mission_fields.php); ein Wert ausserhalb der Liste ist
                 # gueltig und muss vorkommen, sonst prueft der Datensatz nur
                 # den bequemen Teil des Feldes.
-                freitext_erlaubt = "stammdaten-freitext" in e["abdeckung"]
+                freitext_erlaubt = ohne_standort or "stammdaten-freitext" in e["abdeckung"]
                 for res in f["other_resources"]:
                     lauf.pruefe(freitext_erlaubt
                                 or (dn["standort"], res) in weitere
@@ -517,8 +629,17 @@ def main() -> int:
                                 f"{wo}: abweichende Rolle {rolle!r} wird vom Rettungsmittel nicht angeboten")
                 # Abfahrtort 'base' braucht einen Standort MIT Koordinaten
                 if f["start_src"] == "base":
-                    lauf.pruefe(standort.get(dn["standort"], {}).get("lat") is not None,
-                                f"{wo}: start_src='base' an einem Standort ohne Koordinaten")
+                    lauf.pruefe(not ohne_standort
+                                and standort.get(dn["standort"], {}).get("lat") is not None,
+                                f"{wo}: start_src='base' ohne Standort mit Koordinaten")
+
+            # OHNE TRACK, ABER MIT BEIDEN KOORDINATEN — die gestrichelte
+            # Luftlinie der Karte (E-DA-08). Aus dem INHALT abgeleitet: kein
+            # `route`, ein Einsatzort mit Koordinate und ein Ziel mit
+            # Koordinate. Fehlt eines davon, zeichnet die Karte nichts, und
+            # die Zeile waere unbelegt — auch wenn eine Marke es behauptete.
+            if not e.get("route") and wegpunkte.ort_von(e) and wegpunkte.ziel_von(e):
+                merke(["luftlinie-ort-ziel"], wo)
 
             g = e["geschuetzt"]
             if g is None:
@@ -622,6 +743,29 @@ def main() -> int:
         existiert, eindeutig = zeitpunkt_existiert(z)
         lauf.pruefe(existiert, f"Ortszeit {z} gibt es an diesem Tag nicht (Frühjahrsumstellung)")
         lauf.pruefe(eindeutig, f"Ortszeit {z} ist mehrdeutig (Herbstumstellung)")
+
+    # ---- Zwei Dienste an einem Kalendertag: der zweite am Abend (E-DA-04) --
+    #
+    # OHNE UEBERSCHNEIDUNG. R57 meldet ueberlappende Dienste, und sie hat
+    # recht: Niemand faehrt zwei Dienste gleichzeitig. Der Fall, den der
+    # Bestand belegen soll, ist der ANDERE — Notarztdienst tagsueber, danach
+    # der Sanitaetsdienst auf der Veranstaltung. Beides derselbe Kalendertag,
+    # beides derselbe Mensch, und nichts davon gleichzeitig.
+    nach_datum: dict[str, list[dict]] = {}
+    for d in dienste:
+        nach_datum.setdefault(d["dienst"]["day"], []).append(d)
+    for tag, gruppe in nach_datum.items():
+        if len(gruppe) < 2:
+            continue
+        sortiert = sorted(gruppe, key=lambda d: d["dienst"]["beginn"])
+        for d in sortiert:
+            merke(["zwei-dienste-ein-tag"], d["kennung"])
+        for vorher, danach in zip(sortiert, sortiert[1:]):
+            lauf.pruefe(lokal(vorher["dienst"]["ende"]) <= lokal(danach["dienst"]["beginn"]),
+                        f"{danach['kennung']}: überschneidet sich mit "
+                        f"{vorher['kennung']} am {tag} (R57)")
+            if lokal(danach["dienst"]["beginn"]).hour >= 17:
+                merke(["abenddienst"], danach["kennung"])
 
     # ---- Import nur an Kalendertagen mit genau EINEM Dienst (B-04) --------
     for pfad, d in zip(dienstdateien, dienste):
@@ -751,8 +895,21 @@ def main() -> int:
             # aber keine entschluesselbare Diagnose.
             lauf.pruefe(d["dienst"]["day"] != neuester_tag,
                         f"{wo}: der Schnitt liegt am neuesten Diensttag ({neuester_tag})")
-    lauf.pruefe(schnittzahl == 1,
-                f"erwartet wird genau ein Schnitt im Bestand (E-R64-16), gezaehlt: {schnittzahl}")
+    # WIE VIELE SCHNITTE — die Zahl steht nicht mehr fest (E-DA-11).
+    #
+    # E-R64-16 verlangte GENAU EINEN, und die Zeile hiess `schnittzahl == 1`.
+    # Sie prueft seither die Summe gegen die Liste: So viele, wie in den
+    # Quelldaten stehen, und mindestens einer. Der Sinn der alten Zeile bleibt
+    # damit erhalten — sie sollte verhindern, dass der Bestand den Schnitt
+    # STILL verliert (Backlog Nr. 63: Der Sperrvermerk muss die Sicherung
+    # ueberstehen, und ohne einen Schnitt belegt ihn niemand). Was sie
+    # zusaetzlich verhinderte, war ein zweiter Schnitt, und dafuer gab es nie
+    # einen Grund.
+    auftraege = sum(len(d.get("schnitte", [])) for d in dienste)
+    lauf.pruefe(schnittzahl == auftraege and schnittzahl >= 1,
+                f"erwartet wird mindestens ein Schnitt, und so viele wie Auftraege "
+                f"in den Quelldaten stehen (E-DA-11): {auftraege} Auftraege, "
+                f"{schnittzahl} gezaehlt")
 
     # ---- Reale Namen ------------------------------------------------------
     # NUR IN DEN DATEN, nicht in den Erlaeuterungen: Die $warum-Bloecke nennen
@@ -781,22 +938,47 @@ def main() -> int:
         "eine Uhr und ein Handy": (
             sorted(g["block"]["art"] for g in geraete) == ["handy", "uhr"],
             f"Arten: {sorted(g['block']['art'] for g in geraete)}"),
+        "Schnitte an mehr als einem Diensttag": (
+            sum(1 for d in dienste if d.get("schnitte")) >= 2,
+            f"Dienste mit Schnitt: {[d['kennung'] for d in dienste if d.get('schnitte')]}"),
         "alle Rollen des Katalogs belegt": (rollen_belegt == CREW_ROLES,
                                             f"belegt: {sorted(rollen_belegt)}"),
         "alle Phasen 2–9 im Datensatz": (alle_phasen == PHASEN,
                                          f"vorhanden: {sorted(alle_phasen)}"),
         "alle speicherbaren Ereignisarten (neun)": (alle_rea_typen == REA_TYPEN,
                                     f"fehlen: {sorted(REA_TYPEN - alle_rea_typen)}"),
-        "≥ 2 Standorte, einer ohne Koordinaten": (
-            len(stammdaten["standorte"]) >= 2
-            and any(s["lat"] is None for s in stammdaten["standorte"])
-            and any(s["lat"] is not None for s in stammdaten["standorte"]), ""),
+        # FRUEHER: „≥ 2 Standorte, einer ohne Koordinaten". Diese Zeile ist mit
+        # dem Demo-Ausbau umformuliert (F-DA-1, Weg a). Der Auftrag gibt allen
+        # Standorten Koordinaten (E-DA-09) — die alte Zeile pruefte danach
+        # einen Zustand, den es nicht mehr gibt, und mit ihr den einzigen
+        # lebenden Fall fuer `spur_ausgangspunkt`. Den gibt es weiterhin, nur
+        # an anderer Stelle: am DIENSTTAG OHNE STANDORT, den die Anwendung
+        # seit Web 16.0.0 kennt. Die Zeile prueft jetzt ihn.
+        "≥ 3 Standorte, alle mit Koordinaten": (
+            len(stammdaten["standorte"]) >= 3
+            and all(s["lat"] is not None and s["lon"] is not None
+                    for s in stammdaten["standorte"]), ""),
+        "≥ 1 Diensttag ohne Standort mit `spur_ausgangspunkt`": (
+            any(d["dienst"]["standort"] is None and "spur_ausgangspunkt" in d["dienst"]
+                for d in dienste), ""),
         "≥ 2 Luft-Rettungsmittel mit/ohne Fähigkeiten": (
             sum(1 for r in stammdaten["rettungsmittel"] if r["art"] == "air") >= 2
             and any(r["faehigkeiten"] for r in stammdaten["rettungsmittel"])
             and any(not r["faehigkeiten"] and r["art"] == "air" for r in stammdaten["rettungsmittel"]), ""),
         "≥ 1 Boden-Rettungsmittel": (
             any(r["art"] == "ground" for r in stammdaten["rettungsmittel"]), ""),
+        # SEIT WEB 20.3.0 ZULAESSIG (E-DA-06) und damit pruefbar: Faehigkeiten
+        # an einem BODENgebundenen Rettungsmittel — aber nur beim Typ
+        # Bergwacht. Die Zeile prueft beide Haelften: dass es den Fall gibt,
+        # und dass er auf diesen einen Typ beschraenkt bleibt.
+        "Fähigkeiten am bodengebundenen Bergwacht-Rettungsmittel": (
+            any(r["art"] == "ground" and r.get("typ") == "bergwacht" and r["faehigkeiten"]
+                for r in stammdaten["rettungsmittel"])
+            and not any(r["art"] == "ground" and r.get("typ", "standard") != "bergwacht"
+                        and r["faehigkeiten"] for r in stammdaten["rettungsmittel"]), ""),
+        "Rettungsmittel mit und ohne Standort": (
+            sum(1 for r in stammdaten["rettungsmittel"] if r.get("ohne_standort")) >= 2
+            and sum(1 for r in stammdaten["rettungsmittel"] if not r.get("ohne_standort")) >= 2, ""),
         "Zielkliniken mit und ohne Koordinate": (
             any(k["lat"] is not None for k in stammdaten["zielkliniken"])
             and any(k["lat"] is None for k in stammdaten["zielkliniken"]), ""),
@@ -821,11 +1003,18 @@ def main() -> int:
                 offen.append((dimension, anforderung, hinweis))
 
     # ---- Umfang -----------------------------------------------------------
-    # Umfang: 16 Diensttage, im Schnitt rund 6 Einsätze je Dienst (Nachtrag B1
-    # zur Abdeckungsmatrix — die ursprünglichen 30–40 stammten aus einem
-    # Entwurf mit deutlich weniger Bodendiensten).
-    lauf.pruefe(80 <= einsatzzahl <= 100,
-                f"Umfang {einsatzzahl} Einsätze liegt außerhalb von 80–100")
+    # Umfang: 21 Diensttage, im Schnitt rund fünf Einsätze je Dienst (Nachtrag
+    # B1 zur Abdeckungsmatrix — die ursprünglichen 30–40 stammten aus einem
+    # Entwurf mit deutlich weniger Bodendiensten; das Fenster 80–100 aus dem
+    # Stand vor dem Demo-Ausbau).
+    #
+    # WOZU DIESE ZEILE ÜBERHAUPT. Sie prüft keine Regel der Anwendung, sondern
+    # fängt das Versehen: einen Lauf von `aufbauen.py`, der die Hälfte der
+    # Dienste nicht gefüllt hat, oder eine Quelldatei, die niemand mehr lädt.
+    # Beides sieht in jeder Einzelprüfung in Ordnung aus. Das Fenster ist
+    # deshalb weit und die Zahl daneben genau.
+    lauf.pruefe(95 <= einsatzzahl <= 125,
+                f"Umfang {einsatzzahl} Einsätze liegt außerhalb von 95–125")
 
     # ---- Bericht ----------------------------------------------------------
     print(f"Dokumente:        {len(dienstdateien)} Dienste + Stammdaten + 1 Prüfschritt")

@@ -1,0 +1,339 @@
+{
+  "kennung": "D17",
+  "abdeckung": [],
+  "$warum": [
+    "DER ERSTE DIENSTTAG AN EINEM RETTUNGSMITTEL VOM TYP BERGWACHT (E-DA-05).",
+    "Seit Web 16.0.0 kennt die Anwendung die drei Typen aus S9; der",
+    "Referenzbestand fuehrte sie als Stammdaten und keinen einzigen Dienst",
+    "darauf. Wer das Demo-Konto oeffnete, sah davon nichts, und das",
+    "Regressionsnetz prueft davon nichts.",
+    "",
+    "OHNE BESATZUNG: Typ Bergwacht hat keine Rollen-Vorlagen (E-S9-09), also",
+    "bietet der Diensttag keine Besatzungsfelder an. Das ist keine",
+    "Einschraenkung der Dokumentation, sondern der VORLAGE -- und es ist der",
+    "Grund, warum dieser Standort bewusst KEINE Besatzungs-Vorbelegung fuehrt.",
+    "",
+    "MEZ: Der Tag liegt im Februar und belegt die Winterzeit an einem",
+    "Bergwacht-Dienst."
+  ],
+  "dienst": {
+    "day": "2026-02-14",
+    "art": "ground",
+    "standort": "Bergwachtstation Sonnenau",
+    "rettungsmittel": "Bergwachtnotarzt Sonnenau",
+    "beginn": "2026-02-14 08:00",
+    "ende": "2026-02-14 17:00",
+    "day_ref": "ad-12-2064815397",
+    "besatzung": {},
+    "notizen": "Winterdienst. Betrieb im Skigebiet, Lawinenwarnstufe 2."
+  },
+  "papierkorb": null,
+  "ruhesegmente": [
+    {
+      "client_ref": "ar-12-2287439328",
+      "beginn": "2026-02-14 08:00",
+      "ende": "2026-02-14 09:12",
+      "final": true
+    },
+    {
+      "client_ref": "ar-12-3446650314",
+      "beginn": "2026-02-14 11:35",
+      "ende": "2026-02-14 12:30",
+      "final": true
+    },
+    {
+      "client_ref": "ar-12-4105101642",
+      "beginn": "2026-02-14 13:20",
+      "ende": "2026-02-14 14:30",
+      "final": true
+    },
+    {
+      "client_ref": "ar-12-8127757683",
+      "beginn": "2026-02-14 16:50",
+      "ende": "2026-02-14 17:00",
+      "final": true
+    }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "am-12-3071845926",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-02-14 09:12",
+      "ende": "2026-02-14 11:35",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-02-14 09:12"
+        ],
+        [
+          3,
+          "2026-02-14 09:15"
+        ],
+        [
+          4,
+          "2026-02-14 09:27"
+        ],
+        [
+          5,
+          "2026-02-14 09:45"
+        ],
+        [
+          6,
+          "2026-02-14 10:05"
+        ],
+        [
+          7,
+          "2026-02-14 10:55"
+        ],
+        [
+          8,
+          "2026-02-14 11:08"
+        ],
+        [
+          9,
+          "2026-02-14 11:35"
+        ]
+      ],
+      "route": [
+        "basis",
+        "zustieg",
+        "ort",
+        "zustieg",
+        "ziel"
+      ],
+      "spur": {
+        "zustieg": {
+          "lat": 47.513,
+          "lon": 10.398
+        }
+      },
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Bergklinik Sonnenau",
+        "dest_lat": 47.559,
+        "dest_lon": 10.217,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Sonnenau",
+        "bw_info": "Zwei Einsatzkräfte der Bereitschaft am Unfallort, Akja-Transport zur Talstation.",
+        "other_ema": null,
+        "other_resources": [
+          "RTW Talwang 76/83"
+        ],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Knieluxation mit Verdacht auf Kreuzbandruptur",
+        "dob": "1994-03-22",
+        "age": null,
+        "mission_no": "2026-0801",
+        "loc": {
+          "addr": "Jochwang, Talabfahrt unterhalb der Mittelstation",
+          "lat": 47.5175,
+          "lon": 10.4045
+        },
+        "site_desc": "Skipiste, Pistenrand bei Streckenkilometer 2",
+        "start": null,
+        "notes": "Abtransport im Akja bis zur Talstation, von dort mit dem Fahrzeug."
+      },
+      "abdeckung": [],
+      "$warum": [
+        "DER FUSSWEG (E-DA-13). Das Fahrzeug faehrt bis zur Talstation",
+        "(Wegpunkt `zustieg`); die letzten 700 m zur Unfallstelle und der",
+        "Rueckweg mit dem Akja werden GEGANGEN. Er belegt die Matrixzeile",
+        "'Fussweg' -- und zwar aus dem Inhalt: `pruefen.py` erkennt das",
+        "Teilstueck an den Wegpunktnamen, nicht an einer Marke.",
+        "",
+        "DIE PHASEN TEILEN DIE ANKUNFT IN ZWEI SCHRITTE. Phase 4 ist die",
+        "Talstation, an der das Fahrzeug haelt; Phase 5 der Patient am Hang.",
+        "Ohne diese Trennung bekaeme der Fussweg die ganze Spanne bis zum",
+        "Transportbeginn und liefe mit gut einem Kilometer je Stunde."
+      ]
+    },
+    {
+      "client_ref": "am-12-8462039517",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-02-14 12:30",
+      "ende": "2026-02-14 13:20",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-02-14 12:30"
+        ],
+        [
+          3,
+          "2026-02-14 12:33"
+        ],
+        [
+          4,
+          "2026-02-14 12:41"
+        ],
+        [
+          5,
+          "2026-02-14 12:44"
+        ],
+        [
+          9,
+          "2026-02-14 13:20"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Sonnenau",
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Prellung der rechten Hüfte nach Sturz",
+        "dob": null,
+        "age": 68,
+        "mission_no": "2026-0802",
+        "loc": {
+          "addr": "Winterwanderweg oberhalb Burgstall",
+          "lat": 47.5405,
+          "lon": 10.314
+        },
+        "site_desc": "Geräumter Winterwanderweg, Abschnitt am Hang",
+        "start": null,
+        "notes": "Patient nach Untersuchung vor Ort belassen, Transport durch Angehörige."
+      },
+      "abdeckung": [],
+      "$warum": "Bergwacht-Einsatz OHNE Transport: ambulant belassen. Er belegt, dass ein Bergwacht-Diensttag nicht nur Transporte kennt."
+    },
+    {
+      "client_ref": null,
+      "quell_kennung": "MAN-03",
+      "kanal": "formular",
+      "nachtrag": false,
+      "papierkorb": null,
+      "beginn": "2026-02-14 14:30",
+      "ende": "2026-02-14 16:50",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-02-14 14:30"
+        ],
+        [
+          3,
+          "2026-02-14 14:34"
+        ],
+        [
+          4,
+          "2026-02-14 15:02"
+        ],
+        [
+          5,
+          "2026-02-14 15:20"
+        ],
+        [
+          6,
+          "2026-02-14 15:40"
+        ],
+        [
+          7,
+          "2026-02-14 16:35"
+        ],
+        [
+          8,
+          "2026-02-14 16:44"
+        ],
+        [
+          9,
+          "2026-02-14 16:50"
+        ]
+      ],
+      "route": null,
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Unfallklinik Felsberg",
+        "dest_lat": 47.681,
+        "dest_lon": 11.202,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Moosachtal",
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {}
+      },
+      "geschuetzt": {
+        "dx": "Akzidentelle Hypothermie Stadium II",
+        "dob": "1957-11-02",
+        "age": null,
+        "mission_no": "2026-0803",
+        "loc": {
+          "addr": "Schattwald am Berg, Zufahrt zur Hütte",
+          "lat": 47.4785,
+          "lon": 10.3475
+        },
+        "site_desc": "Selbstversorgerhütte, Aufenthaltsraum",
+        "start": null,
+        "notes": "Patient von der Bereitschaft aufgefunden.\nVerlegung in ein Zentrum mit Wiedererwärmungsverfahren."
+      },
+      "abdeckung": [
+        "herkunft-manuell"
+      ],
+      "$warum": [
+        "NACHGETRAGEN OHNE SPUR, aber MIT Ort- und Zielkoordinate. Die Karte",
+        "zeichnet daraus eine gestrichelte Luftlinie -- die einzige",
+        "Darstellung, die es ohne Track ueberhaupt gibt, und bis zum",
+        "Demo-Ausbau belegte sie kein Dokument. Die Marke kommt aus dem",
+        "INHALT: kein `route`, beide Koordinaten gesetzt.",
+        "",
+        "Dazu ein ZEILENUMBRUCH in den Notizen -- die gehoeren seit",
+        "Web 19.0.0 in den verschluesselten pat_blob, und ein Umbruch darin",
+        "muss den Umlauf ueberstehen."
+      ]
+    }
+  ],
+  "ziel_einsaetze": 3
+}
