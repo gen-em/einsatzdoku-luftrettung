@@ -105,9 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!hash_equals($_SESSION['csrf'] ?? '', $_SERVER['HTTP_X_CSRF'] ?? '')) {
-        json_out(['error' => 'csrf'], 403);
-    }
+    csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
     $f = edbak_freigabe_fuer($userId);
     if ($f === null) { json_out(['error' => 'keine_freigabe'], 404); }
     /* Als eingelöst vermerken, nicht löschen: Das Backup selbst bleibt

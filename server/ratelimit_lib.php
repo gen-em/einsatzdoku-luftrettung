@@ -120,21 +120,44 @@ const RATE_GRENZEN = [
      * UND IP (rate_merkmale()) — die Kontokennung, nicht die Adresse, aus
      * demselben Grund wie in einstellungen.php. */
     'testmail' => ['max' => 3, 'fenster' => 3600, 'sperre' => 3600],
+
+    /* CSP-BERICHTE ZAEHLEN WIE DEMO: die MENGE (P5a/AP4, E-P5a-15).
+     *
+     * `api/csp_bericht.php` nimmt Meldungen des Browsers entgegen und
+     * braucht dafuer KEINE Anmeldung — ein Verstoss auf der Anmeldeseite ist
+     * der interessanteste von allen. Damit ist der Endpunkt von aussen
+     * erreichbar, und jeder kann ihn fuellen.
+     *
+     * 200 je Stunde und Adresse: Eine Seite mit einem echten Verstoss meldet
+     * ihn ein- bis zweimal je Aufruf; wer darueber liegt, laesst ein Skript
+     * laufen. Die zweite, wirksamere Schranke ist nicht diese Zahl, sondern
+     * die ZUSAMMENFASSUNG in der Tabelle: Tausend gleiche Meldungen werden
+     * eine Zeile mit einem Zaehler. */
+    'csp' => ['max' => 200, 'fenster' => 3600, 'sperre' => 3600],
 ];
 
 /**
  * IP-Adresse des Aufrufers, in der Form, in der sie als Merkmal taugt.
  *
- * Kopfzeilen von Zwischenstationen (X-Forwarded-For und Verwandte) werden
- * BEWUSST NICHT ausgewertet: Sie stammen vom Aufrufer und liessen sich zum
- * Zuruecksetzen des Zaehlers frei erfinden — genau der Fehler, den dieser
- * Baustein beheben soll. Steht die Anwendung hinter einem Proxy, gehoert das
- * Auswerten in die Serverkonfiguration, nicht hierher.
+ * BIS WEB 20.6.0 STAND HIER: „Kopfzeilen von Zwischenstationen
+ * (X-Forwarded-For und Verwandte) werden BEWUSST NICHT ausgewertet: Sie
+ * stammen vom Aufrufer und liessen sich zum Zuruecksetzen des Zaehlers frei
+ * erfinden." Der Satz war richtig und hat die falsche Antwort gegeben: Hinter
+ * einem Reverse Proxy ist `REMOTE_ADDR` die Adresse des Proxys, und dieser
+ * Baustein zaehlt dann ALLE Nutzerinnen als eine — und sperrt sie gemeinsam
+ * aus. Die IP-Grenzwerte fuer Klinik-NAT (R37) rechnen mit der Client-Adresse.
+ *
+ * SEIT WEB 20.7.0 (E-P5a-17) entscheidet eine LISTE: `netz_client_ip()`
+ * wertet `X-Forwarded-For` genau dann aus, wenn `REMOTE_ADDR` in
+ * `config.php` unter `netz.vertrauenswuerdige_proxys` steht. Die Vorgabe ist
+ * **leer**, und leer heisst: exakt das Verhalten von vorher. Die Begruendung
+ * oben gilt also unveraendert fuer jede Installation, die nichts eintraegt —
+ * und wer eintraegt, trifft eine Aussage ueber seine eigene Netztopologie.
  */
 function rate_ip(): string
 {
-    $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '');
-    return $ip !== '' ? mb_substr($ip, 0, 45) : 'unbekannt';
+    require_once __DIR__ . '/netz_lib.php';
+    return netz_client_ip();
 }
 
 /**

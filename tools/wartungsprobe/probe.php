@@ -426,7 +426,16 @@ pruefe($a12['code'] === 200, '12  assets/style.css -> 200 (statisch, ungetort)',
  * Gemessen wird beides an derselben Stelle: Das Stylesheet kommt (12), und der
  * Inline-Block der Anmeldeseite ist derselbe wie in der Quelldatei -- der
  * Wartungsbalken steht im Markup, nicht im Skript. */
-$blockRe = '/<script(?![^>]*\bsrc=)[^>]*>(.*?)<\/script>/s';
+/* EIN `?>` IM TAG BEENDET DAS TAG NICHT -- fuer HTML schon, fuer uns nicht.
+ * Seit Web 20.7.0 traegt jedes Inline-Skript seinen CSP-Nonce, und in der
+ * QUELLE steht das als `<script<?= kopf_nonce_attr() ?>>`. Ein `[^>]*>` endet
+ * am `>` des PHP-Schlusses, und der Block begann danach mit einem
+ * ueberzaehligen `>` -- die Auslieferung hat es nicht, also stimmte keine
+ * Pruefsumme mehr. Dieselbe Falle traf die Integritaetswache (Fund 23);
+ * `$tagRest` ist ihre Antwort, hier in PCRE: erst ein PHP-Stueck am Stueck,
+ * sonst ein einzelnes Zeichen, das kein `>` ist. */
+$tagRest = '(?:<\?(?:php\b|=).*?\?>|[^>])*';
+$blockRe = '/<script(?!' . $tagRest . '\bsrc=)' . $tagRest . '>(.*?)<\/script>/s';
 preg_match_all($blockRe, (string)file_get_contents(dirname(__DIR__, 2) . '/server/login.php'), $mQ);
 preg_match_all($blockRe, (string)$a10['rumpf'], $mA);
 $quellBloecke = array_values(array_filter($mQ[1] ?? [], static fn($b) => !str_contains($b, '<?')));

@@ -14,6 +14,198 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.7.0] — 2026-09-15
+
+**P5a/AP4 — die Kopfzeilen kommen aus dem Programm.** Viertes Arbeitspaket von
+Schritt 10a; erledigt Rahmenplan R40 (5) und setzt SP-5 um.
+
+### Hinzugefügt — eine Content-Security-Policy, zweistufig
+
+**Was galt.** Vier Sicherheitskopfzeilen standen in `server/.htaccess`. Eine
+Content-Security-Policy gab es nicht. Das hatte drei Folgen, und jede einzelne
+war ein Loch:
+
+- **Kein Schutz gegen eingeschleustes Skript.** Ohne CSP genügt ein einziges
+  nicht maskiertes Feld irgendwo, und fremdes JavaScript läuft im Kontext
+  einer angemeldeten Sitzung — also *neben dem entschlüsselten
+  Datenschlüssel*. Diese Anwendung entschlüsselt Patientendaten im Browser;
+  ein Skript dort ist kein Schönheitsfehler.
+- **`.htaccess` gilt nur auf Apache.** Wer hinter nginx, Caddy oder einem
+  Container läuft, hatte gar keine Kopfzeilen — und merkte es nicht.
+- **HSTS war nicht verhandelbar.** Ein Jahr Bindung, fest in einer Datei.
+
+**Was gilt.** `kopfzeilen_lib.php` schreibt sie. `kopfzeilen_seite()` steht in
+`ui_seite_start()`, `kopfzeilen_json()` in `json_out()` — beide Wege gehen
+durch *eine* Stelle, und deshalb bekommt jede Seite und jede API-Antwort die
+Kopfzeilen, gleich auf welchem Webserver.
+
+Die Richtlinie beginnt bei `default-src 'none'` und zählt auf, was erlaubt
+ist, nicht umgekehrt. `script-src 'self' 'nonce-…'` **ohne**
+`'unsafe-inline'`: Der Nonce sind 16 Zufallsbytes je Anfrage, und ein Skript,
+das ihn nicht trägt, läuft nicht. Damit ist die klassische XSS-Kette
+unterbrochen, auch wenn die Maskierung einmal versagt.
+
+**Zwei Stufen, weil die erste Stufe sonst die Anwendung wäre.** Zuerst
+`Content-Security-Policy-Report-Only`: Der Browser meldet, was er blockiert
+*hätte*, und führt es trotzdem aus. Erst wenn zwei Wochen lang nichts Neues
+gemeldet wird, legt eine BetreiberIn den Schalter **„CSP scharf schalten"**
+um (Betrieb → Servereinstellungen). Eine Richtlinie, die man am ersten Tag
+scharf schaltet, schaltet man am zweiten wieder ab.
+
+### Hinzugefügt — `api/csp_bericht.php`, und warum er keine Anmeldung verlangt
+
+Ohne Sammelstelle wäre die Report-Only-Phase eine Wartezeit ohne Erkenntnis:
+Die Meldung stünde in der Konsole desjenigen, bei dem sie auftritt, und sonst
+nirgends. Der Endpunkt verlangt **ausdrücklich keine Anmeldung** — ein Verstoß
+auf der *Anmeldeseite* ist der interessanteste von allen, dort steht der Weg
+des Passworts. Ein Endpunkt, der eine Sitzung verlangt, sähe genau den nicht.
+
+Daraus folgt, dass jeder ihn füllen kann. Drei Schranken dagegen, und keine
+davon ist eine Anmeldung: ein Ratentopf `csp` (200 je Stunde und Adresse), ein
+UNIQUE-Schlüssel über (Richtlinie, Quelle, Seite), der aus tausend gleichen
+Meldungen **eine** Zeile mit Zähler macht, und harte Längengrenzen samt 8-kB-
+Schnitt am Rumpf. Gespeichert wird keine IP, kein Konto und kein Abfrageteil
+der Adresse: `einsatz.php?id=4711` wird zu `einsatz.php`. Diese Anwendung
+führt kein Protokoll darüber, wer wann welchen Einsatz geöffnet hat, und eine
+CSP-Meldung soll daran nichts ändern. Der Aufräum-Job löscht nach 30 Tagen.
+
+### Behoben — der Meldeweg schwieg, und die Null sah aus wie ein Erfolg
+
+Noch vor der ersten Auslieferung gefunden, und lehrreich genug für einen
+eigenen Absatz. Die Richtlinie nannte **beide** Meldewege: `report-uri`
+(relative Adresse, löst sich gegen die Seite auf) und `report-to csp` (nennt
+nur einen Namen; wohin der zeigt, steht in `Reporting-Endpoints`). Diese
+Kopfzeile trug eine *relative* Adresse — und die nimmt der Browser dort nicht
+an. Damit war die Gruppe `csp` nie auflösbar. **Chromium bevorzugt `report-to`
+gegenüber `report-uri` und verwirft den Bericht dann ersatzlos.**
+
+Der Bilderlauf über 49 Seiten und 392 Bilder meldete daraufhin „0
+CSP-Berichte" — das Abnahmekriterium, wörtlich erfüllt und vollkommen
+wertlos. Aufgefallen ist es erst der Gegenprobe, die zwei Verstöße
+**absichtlich** auslöst: Sie standen in der Konsole, die Tabelle blieb leer.
+
+`report-to` und `Reporting-Endpoints` stehen jetzt nur noch da, wenn
+`kopf_melde_url()` eine vollständige HTTPS-Adresse bauen kann — aus der
+laufenden Anfrage, nicht aus `app.base_url`, denn ein abweichender Name wäre
+fremder Herkunft und der Browser schickte erst recht nichts. Sonst trägt
+`report-uri` allein. Eine Kopfzeile, die auf eine Gruppe zeigt, die es nicht
+gibt, ist schlimmer als keine.
+
+**Die Lehre steht in `tools/cspprobe/browserprobe.mjs`** und bleibt dort: Eine
+Prüfung, die nur nachsieht, ob nichts gemeldet wurde, kann den Unterschied
+zwischen „alles in Ordnung" und „der Meldeweg ist kaputt" nicht sehen. Sie
+löst deshalb bei jedem Lauf einen Verstoß aus und verlangt, ihn in der
+Tabelle wiederzufinden.
+
+### Behoben — der Nonce hätte die Integritätswache täglich rot gemacht
+
+Die Wache vergleicht jeden Tag den Inline-Block der Anmeldeseite mit dem
+Repositorium. Ihr Muster liest das Tag als `<script…[^>]*>` — und in der
+*Quelle* steht seit diesem Paket `<script<?= kopf_nonce_attr() ?>>`. Das
+`[^>]*>` endet am `>` des PHP-Schlusses, der Block begann danach mit einem
+überzähligen `>`, und in der Auslieferung (`<script nonce="…">`) fehlt das
+Zeichen. Prüfsumme verschieden, Wache rot — bei jedem Lauf.
+
+**Der Schaden wäre nicht die rote Zeile gewesen, sondern ihre Folge:** Eine
+Wache, die regelmäßig aus einem harmlosen Grund rot wird, ist nach dem dritten
+Mal abgeschaltet — und danach fällt eine echte Manipulation nicht mehr auf.
+
+Das Tag-Muster kennt jetzt PHP: erst ein `<?php … ?>`- oder `<?= … ?>`-Stück
+am Stück, sonst ein einzelnes Zeichen, das kein `>` ist. Dieselbe Änderung in
+`tools/wartungsprobe/`, deren Erwartung 12a genau dies nachhält — sie hat den
+Fehler gefunden, und sie steht dort seit S10 mit genau dieser Begründung.
+
+### Geändert — HSTS ist eine Einstellung, und `.htaccess` verliert die Zeile
+
+Die Bindungsdauer ist jetzt wählbar: **aus / 1 Tag / 7 Tage / 1 Jahr**,
+Vorgabe **1 Tag**. Wer eine Installation aufsetzt, will nicht mit dem ersten
+Aufruf ein Jahr an einen Namen gebunden sein, den er vielleicht nicht behält;
+wer seit Jahren produktiv läuft, will die 365 Tage. Beides ist richtig, und
+deshalb entscheidet es die Betreiberin.
+
+**Damit die Einstellung keine Lüge ist, hat `.htaccess` die HSTS-Zeile
+verloren.** `Header always set` *überschreibt*, was PHP schickt — die
+Einstellung hätte auf Apache nichts bewirkt, und die Oberfläche hätte etwas
+angezeigt, was nicht stimmt. Zwei Wahrheiten über dieselbe Kopfzeile sind
+schlimmer als eine. Die drei übrigen Kopfzeilen stehen weiterhin dort, aber
+als `setifempty`: PHP führt, wo PHP läuft, und `.htaccess` deckt die
+statischen Dateien, die nie durch PHP gehen.
+
+**Der Preis ist benannt:** Auf einer bestehenden Installation fällt die
+Bindung von einem Jahr auf einen Tag, bis jemand sie wieder hochstellt. Das
+ist der richtige Weg herum — eine zu kurze Bindung kostet einen Klick, eine zu
+lange kostet ein Jahr.
+
+### Behoben — hinter einem Reverse Proxy zählte der Ratenschutz alle als eine
+
+Bislang rechnete er mit `REMOTE_ADDR`. Steht die Anwendung hinter einem
+Reverse Proxy, einem Loadbalancer oder einem DDoS-Schutz, ist das die Adresse
+**des Proxys** — der Ratenschutz zählte damit alle Nutzerinnen als eine und
+hätte sie gemeinsam ausgesperrt.
+
+`netz_lib.php` wertet jetzt `X-Forwarded-For` aus, **aber nur**, wenn die
+unmittelbare Gegenstelle in `config.php` unter `netz.vertrauenswuerdige_proxys`
+eingetragen ist (Adressen oder CIDR-Bereiche, IPv4 und IPv6). Die Liste ist
+**leer vorgegeben**: Wer hier einträgt, sagt „von diesen Adressen glaube ich
+der Kopfzeile", und das ist eine Aussage über die eigene Netztopologie, die
+nur die Betreiberin treffen kann. Ohne Eintrag rechnet alles wie vor 20.7.0.
+Genommen wird der **letzte** Eintrag der Kette, nicht der erste — der erste
+ist der, den der Client selbst geschrieben haben kann.
+
+Dieselbe Liste entscheidet über `X-Forwarded-Proto` (HTTPS-Zwang, HSTS): Wer
+die Client-Adresse fälschen könnte, könnte sonst auch behaupten, eine Anfrage
+sei über HTTPS gekommen.
+
+### Geändert — CSRF geht jetzt auch als Kopfzeile
+
+Zwölf API-Dateien trugen denselben handgeschriebenen Prüfblock. Sie rufen nun
+`csrf_check()`, und `csrf_ok()` nimmt das POST-Feld **oder** die Kopfzeile
+`X-CSRF`. Nötig wurde das, weil ein `fetch()` ohne Formular sonst ein
+Pseudo-Feld mitschleppen müsste; nebenbei verschwinden zwölf Kopien einer
+Prüfung, die an zwölf Stellen hätte auseinanderlaufen können.
+
+### Hinzugefügt — `tools/cspprobe/`
+
+Ein vergessener Nonce legt eine Seite **still** lahm: kein PHP-Fehler, kein
+Protokolleintrag, keine rote Seite — der Knopf tut nichts, und die Meldung
+steht in der Konsole derjenigen, der es passiert. Der Fehler ist nicht selten,
+sondern der Normalfall: Wer eine neue Seite anlegt, schreibt `<script>`.
+
+Die Probe zählt nach — fünf Regeln, gemessen mit dem Tokenizer über ein
+**Markup-Bild** der Datei. Der erste Entwurf sammelte die
+`T_INLINE_HTML`-Stücke einzeln ein und meldete *null* Skript-Stellen bei 108
+tatsächlichen: `<script src="<?= asset(…) ?>">` zerfällt in drei Stücke, und
+keines davon ist ein vollständiges Tag. Eine Prüfung, die null meldet, weil
+sie nichts ansieht, sieht aus wie eine, die nichts gefunden hat — der Grund
+steht jetzt in ihrem Kopf.
+
+### Bekannt und bewusst so
+
+- **Zehn `style="…"` bleiben.** `style-src 'self'` **plus**
+  `style-src-attr 'unsafe-inline'`. Drei statische Stellen sind umgebaut; die
+  zehn übrigen entstehen zur Laufzeit in JavaScript (Leaflet-divIcons,
+  Zeilenvorlagen per `innerHTML`, die Balken der Schnittleiste). Sie
+  umzubauen hieße, für jeden einzelnen Pfeil einer Spur einen eigenen
+  Listener zu setzen — und es änderte an der Angriffsfläche **nichts**, weil
+  `el.style.x` CSSOM ist und von CSP ohnehin nicht erfasst wird. Was ein
+  Stilattribut anrichten kann, begrenzen `default-src 'none'` und das enge
+  `img-src`.
+- **`connect-src` nennt den eingestellten Geocoder**, nicht einen fest
+  verdrahteten Namen — und lässt ihn weg, wenn die Adresssuche aus ist.
+- **`img-src` erlaubt `data:`, und das war zuerst anders.** Eine Zählung im
+  eigenen Quelltext ergab 0 Treffer, also wurde es gestrichen — mit dem Satz
+  „der Report-Only-Lauf sagt, wenn das ein Irrtum war". Er hat es gesagt:
+  **140 Verstöße** auf den vier Kartenseiten. `leaflet.js` trägt ein 1×1 Pixel
+  großes, durchsichtiges GIF als `data:`-Konstante und setzt es als `src`,
+  wenn es eine Kachel wegräumt — in einer minifizierten Bibliothek, die keine
+  Zählung im Quelltext sieht. **Der Preis ist ausgesprochen:** `data:` ist die
+  schwächste Zeile dieser Richtlinie; sie bleibt, weil die Alternative das
+  Patchen einer vendorierten Bibliothek wäre und weil ein Bild kein Skript
+  ausführt.
+- **Eine Migration:** `2026_09_15_csp_berichte` legt die Tabelle an. Nach dem
+  Deploy muss eine Administratorin Betrieb → Updates aufrufen; der Torwächter
+  aus 20.6.0 hält die Anwendung bis dahin geschlossen.
+
 ## [Web 20.6.0] — 2026-09-15
 
 **P5a/AP3 — der Torwächter.** Drittes Arbeitspaket von Schritt 10a; erledigt

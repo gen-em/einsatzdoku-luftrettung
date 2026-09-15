@@ -123,24 +123,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ## Offen
 
-8. **Content-Security-Policy als zusätzliche Verteidigungslinie.**
-    *Ergänzung 06.09.2026 (Krypto-Review, R78):* Die Bestandsaufnahme
-    macht sie enger möglich als hier angenommen — **null**
-    Inline-Ereignisbehandler, **ein** `style`-Attribut, alle Skriptblöcke
-    über `ui_seite_start()`. Der Bauplan (Nonce je Anfrage, Report-Only
-    zuerst, Quellenliste für Kacheln und Photon) steht in
-    `docs/konzepte/Vorbereitung-Sicherheitspaket.md`, SP-5. Warum es
-    zählt: Daten- und Inhaltsschlüssel liegen als Hex im `sessionStorage`;
-    jede XSS-Lücke, auch eine in Leaflet oder SheetJS, liest sie aus.
-   Seit Web 5.2.0 eng fassbar: Es wird keine fremde Quelle mehr geladen
-   (Nr. 12), die Regel muss also nichts von außen erlauben.
 17. **`ingest.php` hat als einziger anmeldungsfreier Endpunkt keine
     Mengenbremse.** `RATE_GRENZEN` (`ratelimit_lib.php`) kennt keinen Topf
     `ingest`, und die Datei ruft weder `rate_erlaubt()` noch
     `rate_misserfolg()`. Die übrigen offenen Endpunkte haben ihn — `RATE_GRENZEN`
-    führt **neun** Töpfe (gemessen 13.09.2026: `login`, `salt`, `reset`,
-    `pair`, `pair_start`, `pair_code`, `demo`, `demog`, `testmail`; bei
-    Aufnahme waren es „die drei übrigen", genannt vier). Gefunden in P0/A6 (dort F-16); die
+    führt **zehn** Töpfe (gemessen 15.09.2026: `login`, `salt`, `reset`,
+    `pair`, `pair_start`, `pair_code`, `demo`, `demog`, `testmail`, seit
+    Web 20.7.0 `csp`; am 13.09.2026 waren es neun, bei Aufnahme
+    „die drei übrigen", genannt vier). Gefunden in P0/A6 (dort F-16); die
     Konzeptarbeit dazu ist an **Phase P5** übergeben (Rahmenplan R19), weil
     die richtige Grenze von der Uhr-Seite her zu bestimmen ist — eine Uhr, die
     einen Tag Rückstand nachliefert, darf nicht ausgesperrt werden. **P1 misst
@@ -1516,36 +1506,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     statt zurückgezogen: Er kostet nichts, solange niemand ihn anfasst, und er
     ist mit der nächsten größeren Rahmenplan-Pflege in einem Zug zu machen.
 
-181. **Die Anwendung schickt keine Content-Security-Policy.**
-    *Aufgenommen 13.09.2026 als zweite Hälfte von Nr. 179; dort ausdrücklich
-    nicht mitgemacht, weil es eine Festlegung ist und kein Nachtrag.* Seit dem
-    13.09.2026 zählt `tools/vollstaendigkeit/` die Zusage „keine fremde Quelle
-    zur Laufzeit" nach (Prüfung `fremde Quelle`, Nr. 179) — **am Quelltext**.
-    Zur Laufzeit hält sie nichts: `grep -rn "Content-Security-Policy" server/`
-    ergibt **0**. Ein eingeschleustes Skript, das nicht im Repositorium steht
-    — über eine Lücke, ein Fremdpaket, einen kompromittierten Deploy —, lädt
-    ungehindert.
-    **Was zu entscheiden ist, nicht nur zu bauen.** Die Richtlinie braucht
-    Ausnahmen für genau die Quellen, die Nr. 179 als gewollt aufführt: vier
-    Kachelserver (`tile.openstreetmap.org`, `tile.openmaps.fr`,
-    `{s}.tile.opentopomap.org`, `server.arcgisonline.com`) unter `img-src`,
-    und den Adressdienst unter `connect-src` — **dessen Anschrift ist seit
-    S9/AP2 eine Einstellung je Installation** (`app_state.geocoder_url`), die
-    Richtlinie muss also zur Laufzeit gebaut werden und kann nicht als
-    feste Zeichenkette im Code stehen. Dazu die Frage, ob `'unsafe-inline'`
-    für `style-src` bleibt oder die Inline-Stile weichen (das entscheidet über
-    den Aufwand), und ob `report-only` vorgeschaltet wird, um eine Woche zu
-    messen, bevor die Richtlinie greift.
-    **Wer sie zu eng setzt, macht die Karten grau** — und das fällt erst im
-    Einsatz auf. *Abnahme:* Jede Seite schickt die Richtlinie; die vier
-    Kachelserver und der eingestellte Adressdienst funktionieren; ein
-    eingeschleustes `<script src="https://cdn.example/x.js">` wird vom Browser
-    **blockiert** (Konsolenmeldung im Bilderlauf, der solche Fehler seit
-    Nr. 176 wieder zählt); der Bilderlauf bleibt bei 0 Konsolenfehlern.
-    Zuordnung: **S10 Sicherheit** (Schritt 9b) oder das Bedrohungsmodell
-    (P6, R69) — die Entscheidung gehört in den Rahmenplan.
-
-
 184. **Der Kommentar-Abtaster der Prüfmittel verliert in PHP-Dateien mit HTML die Spur.**
     *Aufgenommen 14.09.2026 in AP2 der Mockup-Runde, als die Symbolprüfung ihn
     benutzen wollte.* `ohne_php_js_kommentare()` in
@@ -1992,6 +1952,74 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+8. **Content-Security-Policy als zusätzliche Verteidigungslinie.**
+    *Ergänzung 06.09.2026 (Krypto-Review, R78):* Die Bestandsaufnahme
+    macht sie enger möglich als hier angenommen — **null**
+    Inline-Ereignisbehandler, **ein** `style`-Attribut, alle Skriptblöcke
+    über `ui_seite_start()`. Der Bauplan (Nonce je Anfrage, Report-Only
+    zuerst, Quellenliste für Kacheln und Photon) steht in
+    `docs/konzepte/Vorbereitung-Sicherheitspaket.md`, SP-5. Warum es
+    zählt: Daten- und Inhaltsschlüssel liegen als Hex im `sessionStorage`;
+    jede XSS-Lücke, auch eine in Leaflet oder SheetJS, liest sie aus.
+   Seit Web 5.2.0 eng fassbar: Es wird keine fremde Quelle mehr geladen
+   (Nr. 12), die Regel muss also nichts von außen erlauben.
+
+    **Erledigt am 15.09.2026 mit Web 20.7.0 (P5a/AP4).** `kopfzeilen_lib.php`
+    baut die Richtlinie zur Laufzeit; `kopfzeilen_seite()` steht in
+    `ui_seite_start()`, `kopfzeilen_json()` in `json_out()`. Die Vermutung von
+    2026 hat sich gehalten: **null** Inline-Ereignisbehandler, **null**
+    `javascript:`-Adressen — `script-src 'self' 'nonce-…'` ohne
+    `'unsafe-inline'` war ohne Umbau erreichbar. Nicht gehalten hat sich „ein
+    `style`-Attribut": es waren dreizehn. Drei sind gewichen, die zehn
+    übrigen entstehen zur Laufzeit in JavaScript und bleiben unter
+    `style-src-attr 'unsafe-inline'` (E-P5a-32, Begründung im Kopf von
+    `kopfzeilen_lib.php`). Nachweis: `tools/cspprobe/`, 0 Befunde über 106
+    Dateien und 108 Skript-Stellen.
+
+181. **Die Anwendung schickt keine Content-Security-Policy.**
+    *Aufgenommen 13.09.2026 als zweite Hälfte von Nr. 179; dort ausdrücklich
+    nicht mitgemacht, weil es eine Festlegung ist und kein Nachtrag.* Seit dem
+    13.09.2026 zählt `tools/vollstaendigkeit/` die Zusage „keine fremde Quelle
+    zur Laufzeit" nach (Prüfung `fremde Quelle`, Nr. 179) — **am Quelltext**.
+    Zur Laufzeit hält sie nichts: `grep -rn "Content-Security-Policy" server/`
+    ergibt **0**. Ein eingeschleustes Skript, das nicht im Repositorium steht
+    — über eine Lücke, ein Fremdpaket, einen kompromittierten Deploy —, lädt
+    ungehindert.
+    **Was zu entscheiden ist, nicht nur zu bauen.** Die Richtlinie braucht
+    Ausnahmen für genau die Quellen, die Nr. 179 als gewollt aufführt: vier
+    Kachelserver (`tile.openstreetmap.org`, `tile.openmaps.fr`,
+    `{s}.tile.opentopomap.org`, `server.arcgisonline.com`) unter `img-src`,
+    und den Adressdienst unter `connect-src` — **dessen Anschrift ist seit
+    S9/AP2 eine Einstellung je Installation** (`app_state.geocoder_url`), die
+    Richtlinie muss also zur Laufzeit gebaut werden und kann nicht als
+    feste Zeichenkette im Code stehen. Dazu die Frage, ob `'unsafe-inline'`
+    für `style-src` bleibt oder die Inline-Stile weichen (das entscheidet über
+    den Aufwand), und ob `report-only` vorgeschaltet wird, um eine Woche zu
+    messen, bevor die Richtlinie greift.
+    **Wer sie zu eng setzt, macht die Karten grau** — und das fällt erst im
+    Einsatz auf. *Abnahme:* Jede Seite schickt die Richtlinie; die vier
+    Kachelserver und der eingestellte Adressdienst funktionieren; ein
+    eingeschleustes `<script src="https://cdn.example/x.js">` wird vom Browser
+    **blockiert** (Konsolenmeldung im Bilderlauf, der solche Fehler seit
+    Nr. 176 wieder zählt); der Bilderlauf bleibt bei 0 Konsolenfehlern.
+    Zuordnung: **S10 Sicherheit** (Schritt 9b) oder das Bedrohungsmodell
+    (P6, R69) — die Entscheidung gehört in den Rahmenplan.
+
+    **Erledigt am 15.09.2026 mit Web 20.7.0 (P5a/AP4)** — zusammen mit Nr. 8;
+    dieser Punkt trug die offenen *Entscheidungen*, und die sind gefallen:
+
+    - **Kachelserver und Adressdienst:** vier Domains unter `img-src`, der
+      Adressdienst unter `connect-src` — **aus `geocoder_dienst()` zur
+      Laufzeit gelesen**, nicht fest verdrahtet, und weggelassen, wenn die
+      Adresssuche aus ist. Genau der Grund, aus dem der Punkt hier stand.
+    - **`'unsafe-inline'` für `style-src`:** nein — aber
+      `style-src-attr 'unsafe-inline'` (E-P5a-32). Die Trennung gibt es seit
+      CSP 3; sie erlaubt Stil**attribute** und verbietet weiterhin
+      eingeschleuste `<style>`-Blöcke und fremde Stylesheets.
+    - **Report-Only vorgeschaltet:** ja, und nicht „eine Woche", sondern bis
+      eine BetreiberIn den Schalter umlegt. Die Meldungen sammelt
+      `api/csp_bericht.php`; Betrieb → Servereinstellungen zeigt sie.
 
 197. **Fähigkeiten lassen sich an einem bodengebundenen Bergwacht-Rettungsmittel
     nicht hinterlegen.** *Aufgenommen und erledigt 14.09.2026 (Demo-Ausbau,

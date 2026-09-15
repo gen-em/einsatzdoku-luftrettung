@@ -123,6 +123,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
     }
 }
 
+/* ---- Sicherheitskopfzeilen (P5a/AP4, E-P5a-15) ---------------------------
+ *
+ * EIGENES FORMULAR, wie die Adresssuche darunter und aus demselben Grund: Ein
+ * Tippfehler in der Speichergrenze soll die CSP nicht mit abweisen.
+ *
+ * ZWEI EINSTELLUNGEN, ZWEI GESCHICHTEN. `csp_scharf` ist der Schritt von
+ * „melden" auf „blockieren" — er gehoert ans Ende einer Report-Only-Phase und
+ * nicht an ihren Anfang. `hsts_tage` ist die Dauer, fuer die ein Browser sich
+ * merkt, dass diese Domain nur ueber HTTPS zu haben ist; sie stand bis Web
+ * 20.6.0 fest in der `.htaccess` auf einem Jahr.
+ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'kopfzeilen') {
+    csrf_check();
+    $teile = [];
+    $scharf = !empty($_POST['csp_scharf']);
+    if ($scharf !== kopf_csp_scharf()) {
+        kopf_csp_scharf_setzen($scharf);
+        $teile[] = $scharf ? 'CSP scharf' : 'CSP auf „nur melden"';
+    }
+    $tage = (int)($_POST['hsts_tage'] ?? -1);
+    if ($tage !== kopf_hsts_tage()) {
+        if (!kopf_hsts_tage_setzen($tage)) {
+            $error = 'Für HSTS sind nur „aus", 1, 7 oder 365 Tage vorgesehen.';
+        } else {
+            $teile[] = 'HSTS ' . ($tage === 0 ? 'aus' : $tage . ' Tage');
+        }
+    }
+    if ($error === null) {
+        $notice = $teile ? implode(', ', $teile) . ' gespeichert.'
+                         : 'Es gab nichts zu ändern.';
+    }
+}
+
 /* ---- Adresssuche (S9/AP2, E-S9-05, R79; Backlog Nr. 137) ------------------
  *
  * EIGENE HANDLUNG, EIGENES FORMULAR. Sie hat mit dem Speicher nichts zu tun,
@@ -231,10 +264,17 @@ $anZaehlung = anteil_zaehlung();
 /**
  * Ein Balken mit Segmenten und Legende (Baustein `.speicher-balken`).
  *
- * DIE BREITE STEHT INLINE, DIE FARBE NICHT. Die Breite ist ein gerechneter
- * Wert und kann gar nicht anders als am Element stehen; die Farbe kommt aus
- * einer Klasse, damit kein Hexwert und kein Token in das Markup wandert
+ * DIE BREITE KOMMT AUS `data-breite`, DIE FARBE AUS EINER KLASSE. Die Breite
+ * ist ein gerechneter Wert und kann nicht in eine Klasse; die Farbe kommt aus
+ * einer, damit kein Hexwert und kein Token in das Markup wandert
  * (`CLAUDE.md` 5).
+ *
+ * BIS WEB 20.6.0 STAND DIE BREITE ALS STILATTRIBUT AM ELEMENT. Ein
+ * Stilattribut im Markup faellt unter `style-src` der CSP (P5a/AP4,
+ * E-P5a-15); `el.style.width = …` faellt als CSSOM gar nicht darunter. Die
+ * drei Zeilen am Ende dieser Seite setzen die Breite deshalb nach dem
+ * Aufbau. Ohne Skript bleibt der Balken leer — die Zahlen darunter in der
+ * Legende stehen trotzdem, und das ist die Auskunft, auf die es ankommt.
  *
  * OHNE BEZUG KEINE ANTEILE. Fehlt die Webspace-Angabe, werden die Segmente
  * anteilig ZUEINANDER gezeichnet und die Legende nennt nur die Summe — der
@@ -254,8 +294,8 @@ function speicher_balken(array $teile, int $bezug, array $schwellen): string
     foreach ($teile as $t) {
         $p = $nenner > 0 ? (float)$t['bytes'] * 100 / $nenner : 0.0;
         if ($p <= 0) { continue; }
-        $h .= '<span class="' . ui_e($t['klasse']) . '" style="width:'
-            . number_format(min(100, $p), 3, '.', '') . '%"></span>';
+        $h .= '<span class="' . ui_e($t['klasse']) . '" data-breite="'
+            . number_format(min(100, $p), 3, '.', '') . '"></span>';
     }
     /* Der Schwellenstrich sitzt als leeres Segment an seiner Stelle — ohne
      * absolute Positionierung und ohne zweite Ebene: Er ist ein Punkt AUF dem
@@ -264,8 +304,8 @@ function speicher_balken(array $teile, int $bezug, array $schwellen): string
         $erste  = (int)min($schwellen);
         $bisher = $nenner > 0 ? $summe * 100 / $nenner : 0;
         if ($erste > $bisher) {
-            $h .= '<span class="speicher-luecke" style="width:'
-                . number_format(max(0, $erste - $bisher), 3, '.', '') . '%"></span>';
+            $h .= '<span class="speicher-luecke" data-breite="'
+                . number_format(max(0, $erste - $bisher), 3, '.', '') . '"></span>';
             $h .= '<span class="speicher-marke"></span>';
         }
     }
@@ -666,6 +706,77 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     ?>
   <?php ui_karte_ende(); ?>
 
+  <?php /* ---- Sicherheitskopfzeilen (P5a/AP4, E-P5a-15, Backlog Nr. 8) --
+           Sie steht zwischen Speicher und Adresssuche: naeher an „was der
+           Server tut" als an „was er speichert". */ ?>
+  <?php
+    $cspBerichte = [];
+    try {
+        $cspBerichte = db()->query(
+            'SELECT richtlinie, quelle, seite, anzahl, zuletzt
+               FROM csp_berichte ORDER BY zuletzt DESC LIMIT 20')->fetchAll();
+    } catch (Throwable $ex) { /* Tabelle fehlt — Migration steht noch aus */ }
+  ?>
+  <?php ui_karte_start(['titel' => 'Sicherheitskopfzeilen', 'id' => 'k-kopfzeilen',
+      'plakette' => kopf_csp_scharf()
+          ? ui_plakette('CSP scharf', ['ton' => 'blau'])
+          : ui_plakette('CSP meldet nur', ['ton' => 'orange'])]); ?>
+    <p class="feld-hinweis">Seit Web 20.7.0 setzt <strong>PHP</strong> die
+       Sicherheitskopfzeilen, nicht mehr die <code>.htaccess</code> — die liest
+       nur Apache. <strong>Die Content-Security-Policy sagt dem Browser, woher
+       er etwas laden darf.</strong> Sie ist die Linie gegen eingeschleuste
+       Skripte; gegen einen Server, der selbst verändert wurde, hilft sie
+       nicht (dafür läuft die Integritätswache).</p>
+    <form method="post" action="betrieb_server.php">
+      <?= csrf_field() ?><input type="hidden" name="action" value="kopfzeilen">
+      <?php ui_schalter(['name' => 'csp_scharf', 'label' => 'Richtlinie scharf schalten',
+          'an' => kopf_csp_scharf(),
+          'klein' => 'Aus heißt „nur melden": Der Browser lädt alles wie bisher und '
+                   . 'schickt einen Bericht, wenn die Richtlinie etwas blockiert '
+                   . 'hätte. So gehört es nach dem Ausrollen — mindestens zwei '
+                   . 'Wochen, und erst wenn unten keine unerklärten Berichte mehr '
+                   . 'stehen, scharf schalten.']); ?>
+      <h3 class="listen-form-titel">Dauer der HTTPS-Bindung (HSTS)</h3>
+      <p class="feld-hinweis">So lange merkt sich ein Browser, dass diese Domain
+         <strong>nur</strong> über HTTPS zu haben ist — und lässt bis dahin kein
+         <code>http://</code> mehr zu, auch nicht auf Klick.
+         <strong>Deshalb klein anfangen:</strong> Ein zu lang gesetzter Wert sperrt
+         die Domain aus, wenn das Zertifikat wegfällt, und zwar für die ganze
+         Dauer. <strong>Für bestehende Installationen:</strong> Bis Web 20.6.0
+         stand in der <code>.htaccess</code> fest ein Jahr; diese Einstellung
+         beginnt bei einem Tag. Nach ein bis zwei ruhigen Wochen gehört sie
+         zurück auf ein Jahr.</p>
+      <?php ui_segment(['name' => 'hsts_tage', 'wert' => (string)kopf_hsts_tage(),
+          'label' => 'Dauer der HTTPS-Bindung',
+          'optionen' => ['0' => 'aus', '1' => '1 Tag', '7' => '7 Tage',
+                         '365' => '1 Jahr']]); ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+      </div>
+    </form>
+
+    <?php if ($cspBerichte): ?>
+      <p class="feld-hinweis"><strong>Berichte der letzten 30 Tage</strong> —
+         zusammengefasst nach Richtlinie, Quelle und Seite. Jede Zeile ist eine
+         Quelle, die die Richtlinie blockiert hätte; solange hier etwas steht,
+         das nicht erklärt ist, bleibt sie auf „nur melden".</p>
+      <?php foreach ($cspBerichte as $b): ?>
+        <?php ui_zeile([
+          'text'  => (string)$b['richtlinie'] . ' · ' . (string)$b['quelle'],
+          'klein' => 'auf ' . (string)$b['seite'] . ' · zuletzt '
+                   . fmt_local((string)$b['zuletzt'], 'd.m.Y · H:i') . ' Uhr',
+          'plaketten' => ui_plakette((string)$b['anzahl'] . ' Meldungen', ['ton' => 'orange']),
+        ]); ?>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <?php ui_zeile(['text' => 'Berichte der letzten 30 Tage',
+          'klein' => 'Keine. Entweder ist die Richtlinie vollständig — oder es war '
+                   . 'noch niemand auf einer Seite, die etwas nachlädt. Karten, '
+                   . 'Import und Export sind die interessanten drei.',
+          'plaketten' => ui_plakette('0', ['ton' => 'blau'])]); ?>
+    <?php endif; ?>
+  <?php ui_karte_ende(); ?>
+
   <?php /* ---- Adresssuche (S9/AP2, E-S9-05, R79) ------------------------
            Sie steht im Betrieb und nicht in den Kontoeinstellungen, weil sie
            die Installation betrifft: Wer sie hier abschaltet, schaltet sie
@@ -741,6 +852,16 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
        wer ihn wechselt, sollte den Text gegenlesen (Verwaltung →
        Rechtstexte).</p>
   <?php ui_karte_ende(true); ?>
+
+<?php /* DIE BALKENBREITEN — nach dem Aufbau, nicht im Markup (P5a/AP4).
+         Siehe `speicher_balken()` oben: Ein `style`-Attribut faellt unter
+         `style-src` der CSP, `el.style.width` nicht. Der Block traegt den
+         Nonce der Anfrage. */ ?>
+<script<?= kopf_nonce_attr() ?>>
+document.querySelectorAll('.speicher-balken [data-breite]').forEach(function (el) {
+  el.style.width = el.getAttribute('data-breite') + '%';
+});
+</script>
 
 <?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

@@ -558,7 +558,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
          Stelle muss davon nichts wissen. */ ?>
 <script src="<?= asset('assets/schneiden.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
-<script>
+<script<?= kopf_nonce_attr() ?>>
 const SEL_DAY_ID = <?= json_js($selDay) ?>;
 const DEF_VEHICLE = <?= (int)($SD_DEFAULTS['vehicle_id'] ?? 0) ?>;
 /* Für „Anderes Rettungsmittel" (S9/AP6, E-S9-10): die Typregeln aus
@@ -671,7 +671,14 @@ function renderMissionTable(){
        brach „1h 06min" in schmaler Spalte nach der Stunde um und las sich
        wie zwei Angaben. Dass es zwei Aufbauten fuer dieselbe Tabelle gibt,
        ist der eigentliche Fund (F-S3-A). */
-    tr.innerHTML = `<td class="streifen-spalte"><span class="streifen" style="background:${m._col}"></span></td>
+    /* DIE FARBE WIRD NACH DEM AUFBAU GESETZT, NICHT INS MARKUP GESCHRIEBEN
+       (P5a/AP4, E-P5a-15). Ein Stilattribut, das per innerHTML ins Dokument
+       kommt, ist fuer die CSP ein INLINE-STIL und faellt unter `style-src`;
+       `el.style.x = …` ist CSSOM und faellt gar nicht darunter. Der
+       Unterschied kostet hier zwei Zeilen und erspart der Richtlinie ein
+       `'unsafe-inline'`. Dieselbe Umstellung in `missiontable.js`,
+       `geo.js` und `schneiden.js`. */
+    tr.innerHTML = `<td class="streifen-spalte"><span class="streifen"></span></td>
       <td class="mitte-spalte">${m._no}</td>
       <td class="mitte-spalte">${m.start_hhmm}</td>
       <td class="zahl-spalte zeit-spalte">${EdMissionTable.zelleDauer(m.duration_s)}</td>
@@ -680,6 +687,7 @@ function renderMissionTable(){
       ${zelleGeschuetzt(m, m._dx)}
       ${dcZellen}
       <td class="zahl-spalte">${EdMissionTable.fmtKmZahl(m.distance_m)}</td>`;
+    if (m._col) { tr.querySelector('.streifen').style.background = m._col; }
     /* Die Zeile ist die Schaltflaeche — auch fuer die Tastatur (Backlog Nr. 16).
      * Bis Web 6.3.0 hatte sie hier nur einen Klick-Handler und `cursor:pointer`:
      * Die Tagesuebersicht war damit die einzige der drei Einsatztabellen, die

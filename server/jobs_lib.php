@@ -524,6 +524,20 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
                         WHERE fenster_start < DATE_SUB(NOW(), INTERVAL 1 DAY)
                           AND (gesperrt_bis IS NULL OR gesperrt_bis < NOW())');
         },
+        /* CSP-BERICHTE: 30 TAGE, FEST (E-P5a-09). Betriebsdaten ohne
+         * Kontobezug verfallen nach 30 Tagen, und die Zahl ist KEINE
+         * Einstellung — Sicherheitsdaten sollen nicht versehentlich Jahre
+         * liegen. Geloescht wird nach `zuletzt`: Eine Meldung, die noch
+         * gestern kam, ist frisch, auch wenn ihre Zeile drei Monate alt ist. */
+        'CSP-Berichte' => function (PDO $pdo): void {
+            try {
+                $pdo->exec('DELETE FROM csp_berichte
+                            WHERE zuletzt < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)');
+            } catch (Throwable $ex) {
+                /* Tabelle fehlt (Migration noch nicht gelaufen) — kein Grund,
+                 * den ganzen Aufraeumlauf scheitern zu lassen. */
+            }
+        },
         'Papierkorb' => function (PDO $pdo): void {
             require_once __DIR__ . '/trash_lib.php';
             trash_purge_expired($pdo);

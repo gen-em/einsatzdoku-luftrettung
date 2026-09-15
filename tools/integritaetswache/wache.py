@@ -110,7 +110,25 @@ SEITEN = ['login.php']
 # <script data-src="x">…</script> galt damit als Fremdskript "x" statt als
 # Inline-Block; sein Inhalt wurde nie verglichen (Fund 22). `(?<![\w-])`
 # verlangt, dass vor `src` weder Buchstabe, Ziffer noch Bindestrich steht.
-SKRIPT_RE = re.compile(r'<script\b(?![^>]*(?<![\w-])src\s*=)[^>]*>(.*?)</script\s*>', re.I | re.S)
+# EIN `?>` IM TAG BEENDET DAS TAG NICHT -- fuer HTML schon, fuer uns nicht.
+# Seit Web 20.7.0 traegt jedes Inline-Skript seinen CSP-Nonce, und in der
+# QUELLE steht das so:
+#
+#     <script<?= kopf_nonce_attr() ?>>
+#
+# Ein `[^>]*>` endet am `>` des PHP-Schlusses, und der Block begann danach mit
+# einem ueberzaehligen `>`. In der AUSLIEFERUNG steht `<script nonce="...">`,
+# also ohne dieses Zeichen -- und damit stimmte keine Pruefsumme mehr. Die
+# Wache wurde bei JEDEM Lauf rot, aus einem harmlosen Grund (Fund 23,
+# 15.09.2026). Eine Wache, die regelmaessig grundlos rot wird, ist nach dem
+# dritten Mal abgeschaltet; das ist der eigentliche Schaden.
+#
+# TAG_REST liest den Tag-Rumpf deshalb in zwei Formen: ein PHP-Stueck am
+# Stueck, oder ein einzelnes Zeichen, das kein `>` ist. Die PHP-Form steht
+# VORN, damit sie greift, bevor `[^>]` das `<` einzeln wegnimmt.
+TAG_REST  = r'(?:<\?(?:php\b|=).*?\?>|[^>])*'
+SKRIPT_RE = re.compile(r'<script\b(?!' + TAG_REST + r'(?<![\w-])src\s*=)'
+                       + TAG_REST + r'>(.*?)</script\s*>', re.I | re.S)
 # Der Wert darf `>` und das jeweils andere Anfuehrungszeichen enthalten: In der
 # Quelle steht `src="<?= asset('assets/crypto.js') ?>"`. Ein Muster, das am
 # ersten inneren Anfuehrungszeichen abbricht, hielte dieses Skript fuer

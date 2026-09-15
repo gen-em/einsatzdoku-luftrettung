@@ -2425,6 +2425,40 @@ function migrationen_katalog(): array
                 SET d.vehicle_typ = v.typ, d.vehicle_kurz = v.kurz",
         ],
     ],
+    [
+        'id'    => '2026_09_15_csp_berichte',
+        'web'   => '20.7',
+        'label' => 'Berichte der Content-Security-Policy (Report-Only-Phase)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'csp_berichte'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* ZUSAMMENGEFASST STATT PROTOKOLLIERT. Eine gebrochene Seite
+             * meldet JEDEN Verstoss einzeln — bei einer Karte mit 200
+             * Kacheln sind das 200 Anfragen je Seitenaufruf. Ein Protokoll
+             * davon fuellte in Minuten mehr Zeilen als die Einsatztabelle in
+             * Jahren. Der UNIQUE-Schluessel ueber (Richtlinie, Quelle, Seite)
+             * macht daraus EINE Zeile mit einem Zaehler.
+             *
+             * `seite` ist der PFAD, nicht die volle Adresse: Die Anwendung
+             * fuehrt kein Protokoll darueber, wer wann welchen Einsatz
+             * geoeffnet hat, und eine CSP-Meldung soll daran nichts aendern.
+             * Aus demselben Grund steht hier keine IP und kein Konto. */
+            'CREATE TABLE csp_berichte (
+               id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               richtlinie VARCHAR(64)  NOT NULL,
+               quelle     VARCHAR(190) NOT NULL,
+               seite      VARCHAR(190) NOT NULL,
+               anzahl     INT UNSIGNED NOT NULL DEFAULT 1,
+               erstellt   DATETIME     NOT NULL,
+               zuletzt    DATETIME     NOT NULL,
+               UNIQUE KEY uq_bericht (richtlinie, quelle, seite),
+               INDEX idx_zuletzt (zuletzt)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

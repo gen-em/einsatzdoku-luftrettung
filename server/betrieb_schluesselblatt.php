@@ -97,6 +97,19 @@ $v = static function (string $rel): string {
     return $rel . ($t !== false ? '?v=' . $t : '');
 };
 $h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+
+/* DIE KOPFZEILEN VON HAND (P5a/AP4, E-P5a-15).
+ *
+ * Diese Seite baut ihre Huelle selbst und laeuft deshalb NICHT durch
+ * `ui_seite_start()` — die eine Stelle, an der die Kopfzeilen sonst gesetzt
+ * werden. Ohne diese Zeile stuende ausgerechnet das Blatt mit den beiden
+ * Geheimnissen des Servers ohne CSP und ohne `nosniff` da.
+ *
+ * MIT NONCE, obwohl heute kein Inline-Block darauf steht: Wer hier je einen
+ * ergaenzt, soll ihn benutzen koennen, statt eine still gebrochene Seite zu
+ * hinterlassen. Ein ungenutzter Nonce kostet nichts. */
+require_once __DIR__ . '/kopfzeilen_lib.php';
+kopfzeilen_seite();
 ?><!doctype html>
 <html lang="de">
 <head>

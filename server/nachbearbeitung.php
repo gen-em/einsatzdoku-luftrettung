@@ -419,7 +419,7 @@ ui_seite_start(['titel' => 'Zuordnung nachtragen']);
 <?php ui_geruest_ende(); ?>
 <?php /* confirm.js kommt aus ui_geruest_ende() (ui.php) — eine zweite Einbindung
          haette den Rueckfragedialog doppelt geoeffnet. */ ?>
-<script>
+<script<?= kopf_nonce_attr() ?>>
 /* Standort und Rettungsmittel gehören zusammen (E15): Die Auswahl eines
    Rettungsmittels zieht seinen Standort nach. Ohne Standort am Rettungsmittel
    (selbst noch nicht nachbearbeitet) bleibt der gewählte stehen. */

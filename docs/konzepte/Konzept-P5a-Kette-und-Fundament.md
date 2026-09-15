@@ -17,7 +17,7 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | Stand | 15.09.2026 — **Konzept freigegeben, Umsetzung läuft.** Die Grundsatzfragen sind am 15.09.2026 im Gespräch entschieden (E-P5a-01 bis -09); die übrigen Festlegungen (E-P5a-10 bis -21) stammen aus dem Nachmessen im Code und stehen mit der Freigabe. |
 > | Entschieden | E-P5a-01 bis E-P5a-21 (Abschnitt 2); E-PP-01 bis -09 übernommen; **F-P5a-1 entschieden** (2.4) |
 > | Offen | — |
-> | Umsetzung | **läuft.** Reihenfolge AP1 → AP2 → … → AP12; Abhängigkeiten in 3.0 |
+> | Umsetzung | **läuft.** AP1–AP4 erledigt, **AP5 als Nächstes**; Abhängigkeiten in 3.0 |
 > | Fable-Schritte der Umsetzung | **keiner mehr** — M-P5a-01 ist nach Auftrag vom 15.09.2026 ohne Pause umgesetzt worden (2.5) |
 
 > **Stand der Umsetzung**
@@ -28,7 +28,8 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | **AP1 Auslieferungskette** | **erledigt** | **Web 20.4.0** | Register 46/46, 0 Befunde, Selbstprobe 4/4 · Backup-Tor 5/5 · Wortliste 0/0/0 · Kontraste 22/0 · Vollständigkeit 340 = unverändert · 3 Arbeitsläufe gültiges YAML |
 > | **AP2 Plattformprüfung** | **erledigt** | **Web 20.5.0** | 21 Befunde (15 ohne DB/config) · Muss offen 0 · Installweiche 8/8, 0 Befunde auf 658 Zeilen · Bilderlauf 16 Bilder, 0/0/0 · Wortliste 0/0/0 |
 > | **AP3 Torwächter** | **erledigt** | **Web 20.6.0** | Wartungsprobe **67 Erwartungen, 0 nicht erfüllt** (Teil 7 neu, 10 Erwartungen) · Browserprobe 12/12 · Bilderlauf 8 Bilder, 0/0/0 · Wortliste 0/0/0 |
-> | AP4 bis AP12 | offen | — | — |
+> | **AP4 Kopfzeilen und HTTPS** | **erledigt** | **Web 20.7.0** | CSP-Probe **0 Befunde** (106 Dateien, 108 Skript-Stellen), Selbstprobe 8/8 · Browserprobe **33/33, 0 Seitenfehler** · Bilderlauf **392 Bilder, 0/0/0** und **0 CSP-Berichte** (dritter Lauf — die zwei davor fanden F6 und F7) · Wartungsprobe 67/0 · Integritätswache 30/30 und **kein Unterschied** · Wortliste 0/0/0 · Kontraste 22/0 · Vollständigkeit 365 gegen 351 (`style=` **13→10**, Unicode +17 — alle in Kommentaren) |
+> | AP5 bis AP12 | offen | — | — |
 
 ---
 
@@ -703,6 +704,8 @@ oder als Backlog:
 | F3 | `docs/Technik.md` Zeile 11 nennt „PHP ≥ 8.1"; mit PP-1 (F-PP-1) wird es 8.2 | `docs/Technik.md` | AP2 zieht nach |
 | F4 | `integritaet.yml` hängt am Anzeigenamen des Deploy-Laufs | `.github/workflows/` | AP1 |
 | F5 | Nr. 37 mischt drei Messungen (P5a) und Speichergrenzen je Konto (10b) | Rahmenplan Abschnitt 5 | Einschub 7 teilt die Zeile |
+| F6 | **Der Meldeweg der CSP schwieg — und sah dabei aus wie Erfolg.** Die Richtlinie trug `report-to csp`; die Gruppe `csp` war nie auflösbar definiert (die `Reporting-Endpoints`-Zeile enthielt eine *relative* Adresse). Chromium **bevorzugt `report-to` und verwirft den Bericht dann ersatzlos** — der erste Bilderlauf meldete „0 CSP-Berichte“ bei zwei Verstößen, die in der Konsole standen | `kopfzeilen_lib.php` | **In AP4 behoben:** `report-to` steht nur noch da, wenn `kopf_melde_url()` eine vollständige HTTPS-Adresse liefert; sonst trägt `report-uri` allein. Gefunden hat es die Gegenprobe in `tools/cspprobe/browserprobe.mjs`, die einen Verstoß **absichtlich** auslöst |
+| F7 | **Der Nonce machte die Integritätswache rot — täglich und grundlos.** Ihr Muster las `<script…[^>]*>`; in der Quelle steht `<script<?= kopf_nonce_attr() ?>>`, und das `[^>]*>` endet am `?>`. Der Block begann danach mit einem überzähligen `>` | `tools/integritaetswache/wache.py`, `tools/wartungsprobe/probe.php` | **In AP4 behoben** (Fund 23): Tag-Muster, das PHP kennt. Gefunden hat es Erwartung 12a der Wartungsprobe, die seit S10 genau dafür da ist |
 
 ---
 
@@ -983,3 +986,192 @@ nachgestellten Wiederherstellung **lügt** — sonst hätte niemand gemerkt, das
 Zurücksetzen hilft. Eine Prüfung, die nur das Richtige bestätigt, hätte diese
 Lücke nie gefunden.
 
+
+### AP4 — Kopfzeilen und HTTPS · Web 20.7.0 · 15.09.2026
+
+**Entstanden.** `kopfzeilen_lib.php` (CSP mit Nonce je Anfrage, HSTS als
+Einstellung, `https_tor()`, die vier übrigen Kopfzeilen) und `netz_lib.php`
+(Client-Adresse hinter vertrauenswürdigen Proxys); die Aufrufe in
+`ui_seite_start()` und `json_out()`; `api/csp_bericht.php` samt Tabelle
+`csp_berichte`, Migration `2026_09_15_csp_berichte`, Ratentopf `csp` und
+Aufräumschritt; `app_state_lesen()`/`app_state_setzen()` in `db.php`; die
+Karte „Sicherheitskopfzeilen" auf Betrieb → Servereinstellungen; 23
+Inline-Skripte auf `kopf_nonce_attr()` umgestellt; drei statische `style=`
+aufgelöst; zwölf API-Dateien auf `csrf_check()` (Nr. 67) und `csrf_ok()` auf
+`X-CSRF`; der `netz`-Block in `config.example.php`; `.htaccess` umgebaut;
+**`tools/cspprobe/`** neu; `docs/Technik.md` 5c samt Runbook und
+Verzeichnisstruktur, Handbuch 12.5, Changelog, Backlog Nr. 8 und Nr. 181 nach
+*Erledigt*.
+
+**Problem 1 — `.htaccess` hätte die neue Einstellung überschrieben.** Das
+Konzept sagt „`.htaccess`-Zusatz" und behandelt die Datei als Ergänzung. Sie
+ist das Gegenteil: `Header always set` **überschreibt** auf Apache, was PHP
+schickt. Die Einstellung `hsts_tage` hätte dort nichts bewirkt — die
+Oberfläche hätte „1 Tag" angezeigt und der Server ein Jahr geschickt. Zwei
+Wahrheiten über dieselbe Kopfzeile sind schlimmer als eine. **Gelöst** in
+E-P5a-31.
+
+**Problem 2 — dreizehn `style=`, nicht eines.** Das Konzept erbt aus der
+Krypto-Bestandsaufnahme vom 06.09.2026 die Zahl „**ein** `style`-Attribut"
+(Backlog Nr. 8) und plant „Auflösung der 3 `style=`". Gemessen am 15.09.2026
+waren es **dreizehn**: drei statische in PHP und **zehn zur Laufzeit in
+JavaScript**. Die zehn sind nicht dieselbe Art Arbeit wie die drei. **Gelöst**
+in E-P5a-32.
+
+**Problem 3 — die erste Fassung der CSP-Probe meldete null von 108.** Sie
+sammelte die `T_INLINE_HTML`-Stücke einzeln ein und suchte in jedem nach
+einem vollständigen `<script…>`-Tag. Die Schreibweise dieses Projekts ist
+aber `<script src="<?= asset('assets/html.js') ?>"></script>`, und die
+zerfällt in drei Stücke, von denen keines ein Tag ist. Der Lauf meldete „0
+Skript-Stellen, 0 Befunde" — und sah genau aus wie ein sauberer Lauf.
+**Gelöst** durch ein **Markup-Bild** je Datei: zeichengenau so lang wie die
+Quelle (damit Zeilennummern stimmen), Markup und Zeichenketten verbatim,
+Kommentare geleert, `<?php`/`<?=`/`?>` zu Leerzeichen, und im übrigen
+PHP-Code `<` und `>` zu `_`, damit ein `=>` kein Tag vorzeitig schließt. Der
+Fehler steht jetzt im Kopf der Probe und in ihrer `LIESMICH.md` — er ist das
+Lehrstück zu CLAUDE.md 6 („eine grüne Zahl ist erst dann ein Beleg, wenn sie
+das Gemessene benennt").
+
+**Problem 5 — der Meldeweg schwieg, und die Null sah aus wie ein Erfolg
+(F6).** Der erste Bilderlauf über 49 Seiten und 392 Bilder meldete **0
+CSP-Berichte**. Das war das Abnahmekriterium — und es war wertlos: Die
+Gegenprobe der Browserprobe löste zwei Verstöße **absichtlich** aus, sah sie
+in der Konsole stehen und fand die Tabelle trotzdem leer. Ursache: Die
+Richtlinie trug `report-to csp`, die Gruppe `csp` war aber nie auflösbar
+definiert (`Reporting-Endpoints` enthielt eine *relative* Adresse, und die
+nimmt der Browser dort nicht an). **Chromium bevorzugt `report-to` gegenüber
+`report-uri` und verwirft den Bericht dann ersatzlos** — gemessen: ohne die
+Zeile `report-to csp` kam derselbe Verstoß sofort als Zeile in
+`csp_berichte`. **Gelöst** durch `kopf_melde_url()`: `report-to` und
+`Reporting-Endpoints` erscheinen nur, wenn eine vollständige HTTPS-Adresse
+gebaut werden kann (aus der laufenden Anfrage, nicht aus `app.base_url` —
+ein abweichender Name wäre fremder Herkunft); sonst trägt `report-uri`
+allein. Danach: 4 provozierte Verstöße, 4 Zeilen, richtig zusammengefasst
+(`inline` mit Zähler 2).
+
+Der eigentliche Fund ist nicht der Tippfehler, sondern **dass die Prüfung ihn
+fast nicht gefunden hätte**. Die zweiwöchige Report-Only-Phase wäre eine
+Wartezeit ohne Erkenntnis geblieben, und der leere Kasten auf der
+Servereinstellungsseite hätte wie ein gutes Zeichen ausgesehen — bis jemand
+scharf schaltet und Seiten still brechen. Seither steht die Gegenprobe als
+fester Punkt in `browserprobe.mjs`.
+
+**Problem 6 — `Technik.md` behauptete eine CSP auf JSON-Antworten.** Der
+erste Entwurf von 5c.1 schrieb „dieselben ohne Nonce“. `kopfzeilen_json()`
+setzt aber bewusst **keine** CSP — so steht es in E-P5a-15 („kein CSP
+nötig“), und so ist es richtig: Eine JSON-Antwort ist kein Dokument, der
+Browser führt darin nichts aus; die tragende Zeile ist `nosniff`. Gefunden
+von der Browserprobe, die zuerst das Falsche erwartete. **Gelöst** in der
+Dokumentation, nicht im Code — und die Erwartung steht jetzt umgekehrt in
+der Probe, damit ein späteres versehentliches Hinzufügen auffällt.
+
+**Problem 7 — `img-src data:` war gestrichen, und das war falsch.** SP-5
+führt `data:` mit. Eine Zählung im eigenen Quelltext (`server/`,
+`assets/style.css`) ergab **0 Treffer**, also wurde es gestrichen — mit dem
+Satz „der Report-Only-Lauf sagt, wenn das ein Irrtum war". **Er hat es
+gesagt:** Der zweite Bilderlauf, der erste mit funktionierendem Meldeweg,
+brachte **140 Verstöße** auf genau vier Seiten — `index.php` 65,
+`zeitraum.php` 31, `einsatz.php` 28, `tag_spuren.php` 16 —, alle mit der
+Quelle `data`. Das sind die vier Kartenseiten.
+
+**Ursache:** `leaflet.js` trägt eine eingebaute Konstante, ein 1×1 Pixel
+großes durchsichtiges GIF als `data:image/gif;base64,…`
+(`L.Util.emptyImageUrl`); Leaflet setzt sie als `src`, wenn es eine Kachel
+wegräumt. Sie steht in einer **minifizierten Bibliothek** und nicht in
+unserem Quelltext — und genau deshalb hat die Zählung sie nicht gesehen.
+**Gelöst** durch `data:` in `img-src`; der Preis steht ausgesprochen im Kopf
+von `kopfzeilen_lib.php`, in `Technik.md` 5c.2 und im Changelog: Es ist die
+schwächste Zeile der Richtlinie, sie bleibt, weil die Alternative das Patchen
+einer vendorierten Bibliothek wäre und weil ein Bild kein Skript ausführt.
+
+Zusammen mit Problem 5 ist das der eigentliche Ertrag dieses Pakets: **Zwei
+Fehler, die beide nur ein laufender Browser finden konnte** — und der zweite
+war nur zu finden, weil der erste behoben war. Hätte der Meldeweg
+geschwiegen, wäre die Installation mit einer Richtlinie in Betrieb gegangen,
+die nach dem Scharfschalten alle vier Kartenseiten beschädigt hätte, und die
+zwei Wochen Report-Only hätten dazu **null** gesagt.
+
+**Problem 8 — der Nonce machte die Integritätswache rot. Jeden Tag.** Die
+Wache vergleicht täglich den Inline-Block der Anmeldeseite mit dem
+Repositorium (Backlog Nr. 140, SP-6). Ihr Muster liest das Tag als
+`<script…[^>]*>` — und in der **Quelle** steht seit diesem Paket
+
+    <script<?= kopf_nonce_attr() ?>>
+
+Das `[^>]*>` endet am `>` des PHP-Schlusses, und der Block begann danach mit
+einem überzähligen `>`. In der **Auslieferung** steht `<script nonce="…">`,
+also ohne dieses Zeichen. Prüfsumme verschieden, Wache rot — bei jedem Lauf,
+aus einem vollkommen harmlosen Grund. Gemessen: „login.php: ein Inline-Block
+der Quelle steht nicht so in der Auslieferung".
+
+**Der Schaden wäre nicht die rote Zeile gewesen, sondern ihre Folge.** Der
+Kopf der Wartungsprobe sagt es selbst: „Eine Wache, die regelmäßig aus einem
+harmlosen Grund rot wird, ist nach dem dritten Mal abgeschaltet." Danach fällt
+eine echte Manipulation nicht mehr auf.
+
+**Gelöst** durch ein Tag-Muster, das PHP kennt:
+`(?:<\?(?:php\b|=).*?\?>|[^>])*` — erst ein PHP-Stück am Stück, sonst ein
+einzelnes Zeichen, das kein `>` ist. Dieselbe Änderung in
+`tools/integritaetswache/wache.py` (Fund 23) und in Erwartung 12a der
+Wartungsprobe, die genau dies nachhält. Danach: Selbstprobe **30 von 30**,
+Lauf gegen die lokale Installation **122 Dateien gleich, 1 Inline-Block
+gleich, kein Unterschied**; Wartungsprobe **67 Erwartungen, 0 nicht erfüllt**.
+
+**Warum es überhaupt auffiel:** weil die Wartungsprobe eine Erwartung dafür
+hat. Sie steht dort seit S10 mit der Begründung, die oben zitiert ist — jemand
+hat vorausgedacht, und drei Pakete später hat es sich ausgezahlt.
+
+**Problem 4 — `vendor/` verfälschte die Stilzahl.** Die Probe zählte vier
+`style="` in PHP und meldete sie als Befund-Nachbarn; alle vier standen in
+`vendor/phpseclib3/File/ANSI.php`, das ein Terminal malt und von dieser
+Anwendung nie aufgerufen wird. **Gelöst** durch Ausschluss von `vendor/` —
+eine Zahl, die beim nächsten Bibliotheks-Update grundlos springt, sagt nichts
+über die Oberfläche. Die Laufzeitstellen zählt die Probe seither dort, wo sie
+stehen: in `assets/*.js` (**10**).
+
+**Entscheidung E-P5a-31 (neu) — HSTS hat genau eine Quelle, und das ist
+PHP.** `.htaccess` verliert die HSTS-Zeile ganz; die drei übrigen Kopfzeilen
+bleiben dort, aber als **`setifempty`** statt `set`. So führt PHP, wo PHP
+läuft, und `.htaccess` deckt weiterhin die statischen Dateien, die nie durch
+PHP gehen. **Der Preis wird benannt, nicht verschwiegen:** Auf einer
+bestehenden Installation fällt die Bindung von einem Jahr auf einen Tag
+(Vorgabe), bis jemand sie wieder hochstellt. Das ist der richtige Weg herum —
+eine zu kurze Bindung kostet einen Klick, eine zu lange kostet ein Jahr. Der
+Satz steht im Runbook, im Handbuch 12.5 und im Changelog.
+
+**Entscheidung E-P5a-32 (neu) — `style-src 'self'` plus
+`style-src-attr 'unsafe-inline'`.** Die drei statischen Stellen sind
+aufgelöst (`betrieb_server.php` über `data-breite` und ein genonctes Skript,
+`index.php` über `.style.background` nach dem `innerHTML`). Die zehn
+Laufzeitstellen bleiben. Drei Gründe, und der dritte ist der eigentliche:
+
+1. **Der Umbau wäre unverhältnismäßig.** Leaflet-divIcons (`geo.js`) bekommen
+   ihr Markup als Zeichenkette; jeder Pfeil einer Spur ist ein eigenes Icon.
+   Ein Konto mit 600 Einsätzen zeigt Tausende davon.
+2. **Es änderte an der Angriffsfläche nichts.** `el.style.transform = …` ist
+   CSSOM und wird von CSP **nicht** erfasst. Wer die Attribute in
+   JavaScript-Zuweisungen umschreibt, hat dieselbe Fähigkeit mit anderer
+   Schreibweise.
+3. **`style-src-attr` ist die schmalere Ausnahme, nicht die bequemere.**
+   `style-src 'self'` bleibt scharf: Ein eingeschleuster `<style>`-Block und
+   ein fremdes Stylesheet werden weiterhin blockiert. Erlaubt ist nur das
+   Attribut — und was ein Stilattribut anrichten kann, begrenzen
+   `default-src 'none'` und das enge `img-src`.
+
+Nachgehalten wird die Zahl: `tools/cspprobe/` meldet sie bei jedem Lauf, und
+ein Wachsen fällt auf.
+
+**Entscheidung E-P5a-33 (neu) — `connect-src` liest den Geocoder zur
+Laufzeit.** SP-5 nennt `https://photon.komoot.io` als feste Zeichenkette.
+Die Anschrift ist seit S9/AP2 aber eine Einstellung je Installation
+(`geocoder_dienst()`), und genau darauf weist Backlog Nr. 181 hin. Die
+Richtlinie liest sie deshalb bei jeder Anfrage — und **lässt sie weg**, wenn
+die Adresssuche ausgeschaltet ist. Wer einen eigenen Photon-Dienst einträgt,
+braucht keine Code-Änderung; wer die Suche abschaltet, hat auch keine
+`connect-src`-Ausnahme mehr stehen.
+
+**Was die Prüfung besonders macht:** Die CSP-Probe prüft **vier Fälle, die
+nicht anschlagen dürfen** — darunter einen Kommentar, der `<script>` nennt,
+und `data-onload="1" name="onlineform"`. Beide hätten ein `grep` zum Fehlalarm
+gebracht, und eine Prüfung mit Fehlalarm wird nach dem zweiten Lauf
+abgeschaltet.

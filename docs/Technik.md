@@ -165,6 +165,22 @@ Daten erst nach Server-Bestätigung.
 │   │                       Herkunft und Prüfsummen in HERKUNFT.md
 │   ├── validate_lib.php   Gemeinsame Prüfschicht für Einsatzdaten (alle vier Schreibwege)
 │   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
+│   ├── kopfzeilen_lib.php  Sicherheitskopfzeilen und CSP (P5a/AP4, Web 20.7.0):
+│   │                       kopfzeilen_seite() in ui_seite_start(),
+│   │                       kopfzeilen_json() in json_out() — EINE Stelle,
+│   │                       deshalb auf jedem Webserver. Nonce je Anfrage,
+│   │                       csp_scharf und hsts_tage als Einstellung,
+│   │                       https_tor(). Siehe Abschnitt 5c
+│   ├── netz_lib.php       Client-Adresse hinter einem Reverse Proxy (P5a/AP4):
+│   │                       X-Forwarded-For NUR von vertrauenswuerdigen
+│   │                       Proxys (config.php, netz.vertrauenswuerdige_proxys),
+│   │                       byteweiser CIDR-Vergleich, letzter Eintrag der
+│   │                       Kette. Dieselbe Liste traegt X-Forwarded-Proto
+│   ├── api/csp_bericht.php  Sammelstelle fuer CSP-Meldungen (P5a/AP4). OHNE
+│   │                       Anmeldung — ein Verstoss auf der ANMELDESEITE ist
+│   │                       der interessanteste von allen. Topf `csp`,
+│   │                       zusammengefasst per UNIQUE, ohne IP und ohne
+│   │                       Abfrageteil der Adresse; Antwort immer 204
 │   ├── api/kopplung_stand.php  Wartet dieses Konto noch auf ein Gerät, und
 │   │                       hat es Ja gesagt? (S5, Web 13.1.0) GET, nimmt
 │   │                       KEINE Eingabe — welche Sitzung gemeint ist, steht
@@ -456,6 +472,17 @@ Daten erst nach Server-Bestätigung.
 │   │                      statt ihn zu laden — und sagt in ihrer LIESMICH,
 │   │                      was sie damit NICHT sieht (DDL aus eingesetzten
 │   │                      Namen). Mit `--selbstprobe`
+│   ├── cspprobe/          traegt die Content-Security-Policy noch? (P5a/AP4)
+│   │                      Fuenf Regeln: Inline-`<script>` ohne Nonce,
+│   │                      `<style>`-Block, Ereignis-Attribut,
+│   │                      `javascript:`-Adresse, fremde Herkunft. Ein
+│   │                      vergessener Nonce legt eine Seite STILL lahm —
+│   │                      kein Fehler, kein Protokoll, der Knopf tut nichts.
+│   │                      Gemessen ueber ein MARKUP-BILD der Datei: der
+│   │                      erste Entwurf meldete null von 108 Stellen, weil
+│   │                      `<script src="<?= asset(…) ?>">` in drei Stuecke
+│   │                      zerfaellt. Ohne Installation; mit `--selbstprobe`
+│   │                      (8 Faelle, davon 4 die NICHT anschlagen duerfen)
 │   ├── kette/             die Tore der Auslieferungskette (P5a/AP1):
 │   │                      Backup-Tor, Wartung an/aus, Zustand — gegen
 │   │                      `jobs.php?aktion=…`. Das Backup-Tor verlangt
@@ -672,7 +699,8 @@ Daten erst nach Server-Bestätigung.
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand |
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
-| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e); seit Web 20.5.0 `speicher_db_grenze_gb` = Kontingent der Datenbank laut Hosting; seit Web 20.6.0 `migration_tor_hash` und `migration_tor_offen` = der Zwischenspeicher des Torwächters; seit Web 20.7.0 `csp_scharf` = Content-Security-Policy scharf statt Report-Only und `hsts_tage` = Bindungsdauer von HSTS in Tagen, 0/1/7/365, fehlend = **1** (siehe 5c)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 5c) |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
@@ -6548,6 +6576,195 @@ Warnung beim nächsten Überschreiten wiederkommt.
 > („Dieser Job lief von Web 12.2.0 bis 12.9.2 nie"). Der Aufruf steht jetzt im
 > täglichen Aufräumjob, direkt hinter der Messung.
 
+## 5c. Sicherheitskopfzeilen, CSP und die Client-Adresse (ab Web 20.7.0, P5a/AP4)
+
+**Bis Web 20.6.0** standen vier Kopfzeilen in `server/.htaccess`. Eine
+Content-Security-Policy gab es nicht. Drei Folgen, und jede war ein Loch:
+kein Schutz gegen eingeschleustes Skript — und diese Anwendung entschlüsselt
+Patientendaten *im Browser*, ein Skript dort läuft neben dem Datenschlüssel;
+`.htaccess` gilt nur auf Apache, wer hinter nginx oder Caddy läuft hatte gar
+keine Kopfzeilen; und HSTS war ein Jahr, fest verdrahtet.
+
+### 5c.1 Eine Stelle schreibt sie: `kopfzeilen_lib.php`
+
+| Funktion | Ruft wer | Setzt |
+|---|---|---|
+| `kopfzeilen_seite()` | `ui_seite_start()` (jede HTML-Seite), `wartung_kopfzeilen()`, `betrieb_schluesselblatt.php` | CSP mit Nonce, HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy` |
+| `kopfzeilen_json()` | `json_out()` (jede API-Antwort) | nur `X-Content-Type-Options`, `Referrer-Policy` und HSTS — **keine CSP** (E-P5a-15). Eine JSON-Antwort ist kein Dokument, der Browser führt darin nichts aus; die wichtige Zeile ist `nosniff`, damit er sie nicht als HTML deutet |
+| `kopf_nonce_attr()` | jedes Inline-`<script>` | ` nonce="…"` |
+| `https_tor()` | `auth_guard.php`, `login.php` — **vor** `session_start()` | 301 auf HTTPS, wenn HSTS an ist |
+
+Weil beide Wege durch *eine* Stelle gehen, bekommt jede Seite und jede
+API-Antwort die Kopfzeilen — gleich auf welchem Webserver.
+
+### 5c.2 Die Richtlinie
+
+    default-src 'none';
+    script-src 'self' 'nonce-<16 Zufallsbytes je Anfrage>';
+    style-src 'self'; style-src-attr 'unsafe-inline';
+    img-src 'self' data: <vier Kacheldomains>;
+    font-src 'self'; connect-src 'self' <Geocoder, wenn eingeschaltet>;
+    worker-src 'self' blob:;
+    frame-ancestors 'none'; base-uri 'none'; form-action 'self';
+    object-src 'none';
+    report-uri api/csp_bericht.php; report-to csp
+
+Sie beginnt bei `default-src 'none'` und zählt auf, was erlaubt ist — nicht
+umgekehrt. Ein Skript ohne den Nonce der laufenden Anfrage läuft nicht; damit
+ist die klassische XSS-Kette unterbrochen, auch wenn die Maskierung einmal
+versagt.
+
+**Drei Abweichungen vom Konzept (SP-5), alle im Kopf von
+`kopfzeilen_lib.php` begründet:**
+
+1. **`style-src-attr 'unsafe-inline'`** (E-P5a-32). Drei statische
+   `style="…"` sind umgebaut; **zehn** entstehen zur Laufzeit in JavaScript —
+   Leaflet-divIcons (`geo.js`), Zeilenvorlagen per `innerHTML`
+   (`missiontable.js`), die Balken der Schnittleiste (`schneiden.js`). Sie
+   umzubauen hieße, für jeden einzelnen Pfeil einer Spur einen eigenen
+   Listener zu setzen — und es änderte an der Angriffsfläche **nichts**, weil
+   `el.style.x` CSSOM ist und von CSP ohnehin nicht erfasst wird. Was ein
+   Stilattribut anrichten kann, begrenzen `default-src 'none'` und das enge
+   `img-src`.
+2. **`connect-src` nennt den eingestellten Geocoder** (`geocoder_dienst()`),
+   nicht den fest verdrahteten Namen aus dem Konzept — und lässt ihn weg,
+   wenn die Adresssuche aus ist.
+3. **`img-src` mit `data:` — und das war zuerst anders.** SP-5 führt `data:`
+   mit; eine Zählung im eigenen Quelltext ergab **0 Treffer**, also wurde es
+   gestrichen, mit dem Satz „der Report-Only-Lauf sagt, wenn das ein Irrtum
+   war". Er hat es gesagt: **140 Verstöße** auf den vier Kartenseiten
+   (`index.php` 65, `zeitraum.php` 31, `einsatz.php` 28, `tag_spuren.php` 16).
+   Ursache ist eine eingebaute Konstante in `leaflet.js` — ein 1×1 Pixel
+   großes, durchsichtiges GIF als `data:` (`L.Util.emptyImageUrl`), das
+   Leaflet als `src` setzt, wenn es eine Kachel wegräumt. Sie steht in einer
+   **minifizierten Bibliothek** und nicht in unserem Quelltext, und genau
+   deshalb hat die Zählung sie nicht gesehen.
+
+   **Der Preis ist ausgesprochen:** `data:` in `img-src` erlaubt
+   eingeschleustem Markup ein beliebiges Bild aus der Zeichenkette selbst —
+   die schwächste Zeile dieser Richtlinie. Sie bleibt, weil die Alternative
+   das Patchen einer vendorierten Bibliothek wäre und weil ein Bild kein
+   Skript ausführt: Der Weg zum Datenschlüssel bleibt über `script-src`
+   verschlossen.
+
+### 5c.3 Zwei Stufen: Report-Only, dann scharf
+
+Zuerst `Content-Security-Policy-Report-Only`: Der Browser meldet, was er
+blockiert *hätte*, und führt es trotzdem aus. Erst wenn zwei Wochen lang
+nichts Neues gemeldet wird, legt eine BetreiberIn den Schalter
+**„CSP scharf schalten"** um (Betrieb → Servereinstellungen, Zeile
+`csp_scharf` in `app_state`). Eine Richtlinie, die man am ersten Tag scharf
+schaltet, schaltet man am zweiten wieder ab.
+
+`api/csp_bericht.php` sammelt die Meldungen. Er **verlangt ausdrücklich keine
+Anmeldung**: Ein Verstoß auf der *Anmeldeseite* ist der interessanteste von
+allen — dort steht der Weg des Passworts —, und ein Endpunkt, der eine
+Sitzung verlangt, sähe genau den nicht. Daraus folgt, dass jeder ihn füllen
+kann; drei Schranken dagegen, keine davon eine Anmeldung:
+
+- **Ratentopf `csp`**, 200 je Stunde und Adresse.
+- **Zusammenfassung statt Protokoll:** UNIQUE über
+  (`richtlinie`, `quelle`, `seite`) macht aus tausend gleichen Meldungen eine
+  Zeile mit Zähler. Eine gebrochene Kartenseite meldete sonst je Kachel
+  einmal — deshalb wird die *Quelle* auf Schema und Host gekürzt.
+- **Längen werden gekappt**, der Rumpf bei 8 kB abgeschnitten.
+
+**Was nicht gespeichert wird:** keine IP, kein Konto, kein Abfrageteil der
+Adresse — `einsatz.php?id=4711` wird zu `einsatz.php`. Diese Anwendung führt
+kein Protokoll darüber, wer wann welchen Einsatz geöffnet hat, und eine
+CSP-Meldung soll daran nichts ändern. Der Job `aufraeumen` löscht Zeilen,
+deren `zuletzt` älter als 30 Tage ist.
+
+Beide Meldeformate werden angenommen: `report-uri` schickt
+`{"csp-report": {…}}`, die Reporting-API (`report-to`) eine Liste von
+`{"type":"csp-violation","body":{…}}`. Welches ein Browser schickt, ist seine
+Sache. Die Antwort ist **immer 204**, auch wenn nichts gespeichert wurde —
+eine Fehlermeldung wäre eine Auskunft an jemanden, der nichts zu fragen hatte.
+
+> **Die Falle, und warum `report-to` an einer Bedingung hängt.**
+> `report-uri` nimmt eine **relative** Adresse — sie löst sich gegen die Seite
+> auf und stimmt damit auch in einem Unterverzeichnis. `report-to` nennt nur
+> einen **Namen**; wohin der zeigt, steht in einer eigenen Kopfzeile
+> `Reporting-Endpoints`. Stehen beide da, **bevorzugt Chromium `report-to` —
+> und verwirft den Bericht ersatzlos, wenn die Gruppe nicht auflösbar ist.**
+>
+> Gemessen am 15.09.2026 (F6): Mit `report-to csp` und einer
+> `Reporting-Endpoints`-Zeile, die eine *relative* Adresse trug, kamen
+> **null** Berichte an — der Bilderlauf über 49 Seiten meldete „0
+> CSP-Berichte“, während zwei absichtlich ausgelöste Verstöße in der Konsole
+> standen. Ohne `report-to` landete derselbe Verstoß sofort in der Tabelle.
+>
+> Deshalb setzt `kopf_melde_url()` die Bedingung: `report-to` und
+> `Reporting-Endpoints` erscheinen **nur**, wenn eine vollständige
+> HTTPS-Adresse gebaut werden kann — aus der laufenden Anfrage, nicht aus
+> `app.base_url` (ein abweichender Name wäre fremder Herkunft, und der
+> Browser schickte erst recht nichts). Sonst trägt `report-uri` allein. Eine
+> Kopfzeile, die auf eine Gruppe zeigt, die es nicht gibt, ist schlimmer als
+> keine.
+>
+> Nachgehalten wird das von `tools/cspprobe/browserprobe.mjs`, Abschnitt 7:
+> Sie löst einen Verstoß **absichtlich** aus und sieht nach, ob er ankommt.
+
+### 5c.4 HSTS ist eine Einstellung — und `.htaccess` hat die Zeile verloren
+
+Wählbar sind **aus / 1 Tag / 7 Tage / 1 Jahr**, Vorgabe **1 Tag**
+(`hsts_tage` in `app_state`). Wer eine Installation aufsetzt, will nicht mit
+dem ersten Aufruf ein Jahr an einen Namen gebunden sein, den er vielleicht
+nicht behält; wer seit Jahren produktiv läuft, will die 365 Tage.
+
+> **E-P5a-31 — warum `.htaccess` die HSTS-Zeile verliert.**
+> `Header always set` **überschreibt**, was PHP schickt. Die Einstellung
+> hätte auf Apache nichts bewirkt, und die Oberfläche hätte etwas angezeigt,
+> was nicht stimmt. Zwei Wahrheiten über dieselbe Kopfzeile sind schlimmer
+> als eine. Die drei übrigen Kopfzeilen stehen weiterhin in `.htaccess`, aber
+> als **`setifempty`**: PHP führt, wo PHP läuft, und `.htaccess` deckt die
+> statischen Dateien, die nie durch PHP gehen.
+>
+> **Der Preis ist benannt:** Auf einer bestehenden Installation fällt die
+> Bindung von einem Jahr auf einen Tag, bis jemand sie wieder hochstellt.
+> Das ist der richtige Weg herum — eine zu kurze Bindung kostet einen Klick,
+> eine zu lange kostet ein Jahr.
+
+### 5c.5 Die Client-Adresse: `netz_lib.php`
+
+`rate_ip()` rechnete mit `REMOTE_ADDR`. Hinter einem Reverse Proxy, einem
+Loadbalancer oder einem DDoS-Schutz ist das die Adresse **des Proxys** — der
+Ratenschutz zählte damit alle Nutzerinnen als eine und hätte sie gemeinsam
+ausgesperrt.
+
+`netz_client_ip()` wertet `X-Forwarded-For` aus, **aber nur**, wenn
+`REMOTE_ADDR` in `config.php` unter `netz.vertrauenswuerdige_proxys` steht
+(Adressen oder CIDR, IPv4 und IPv6; der Vergleich läuft byteweise über
+`inet_pton`). Die Liste ist **leer vorgegeben** — wer hier einträgt, sagt
+„von diesen Adressen glaube ich der Kopfzeile", und das ist eine Aussage über
+die eigene Netztopologie, die nur die Betreiberin treffen kann. Ohne Eintrag
+rechnet alles wie vor 20.7.0.
+
+Genommen wird der **letzte** Eintrag der Kette, nicht der erste: Den ersten
+kann der Client selbst geschrieben haben.
+
+Dieselbe Liste entscheidet über `X-Forwarded-Proto` (`kopf_https()`, und
+damit HSTS und `https_tor()`): Wer die Client-Adresse fälschen könnte, könnte
+sonst auch behaupten, eine Anfrage sei über HTTPS gekommen.
+
+### 5c.6 CSRF als Kopfzeile
+
+`csrf_ok()` nimmt seit 20.7.0 das POST-Feld **oder** die Kopfzeile `X-CSRF`.
+Zwölf API-Dateien trugen denselben handgeschriebenen Prüfblock; sie rufen nun
+`csrf_check()`. Nötig wurde das, weil ein `fetch()` ohne Formular sonst ein
+Pseudo-Feld mitschleppen müsste — nebenbei verschwinden zwölf Kopien einer
+Prüfung, die hätten auseinanderlaufen können.
+
+### 5c.7 Nachweis: `tools/cspprobe/`
+
+Ein vergessener Nonce legt eine Seite **still** lahm — kein PHP-Fehler, kein
+Protokolleintrag, keine rote Seite. Die Probe zählt nach: fünf Regeln
+(Inline-Skript ohne Nonce, `<style>`-Block, Ereignis-Attribut,
+`javascript:`-Adresse, fremde Herkunft), gemessen mit dem Tokenizer über ein
+**Markup-Bild** der Datei. Anleitung und Grenzen in
+`tools/cspprobe/LIESMICH.md`; sie läuft auch in Stufe 1 der
+Auslieferungskette.
+
 ## 6. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)
 
 **Bis Web 20.3.0** gab es genau einen Weg: Push auf `main` mit Änderungen unter
@@ -6589,6 +6806,8 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | Backlog-Nummern (`grep … uniq -d`) | leer |
 | `tools/migrationsregister/pruefen.php` | 0 Befunde, Selbstprobe 4/4 |
+| `tools/installweiche/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
+| `tools/cspprobe/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge |
 | Uhr Stufe I (`pruefstand.sh reihe`) | übersetzt für alle Zielgeräte |
 
@@ -7046,6 +7265,51 @@ das Gerät neuer als die Tabelle, oder sie wurde nie gefüllt. Zwei Schritte:
 Solange die Tabelle die Teilenummer nicht kennt, steht in `geraet_art` die
 **ungeprüfte Selbstauskunft** des Geräts, und die Garmin-App sendet dort fest
 `"uhr"` — ein Radcomputer wäre bis zum Nachauflösen als Uhr gezählt.
+
+**CSP scharf schalten (nach Web 20.7.0, einmalig je Installation):** Nach dem
+Ausrollen läuft die Content-Security-Policy als **Report-Only** — der Browser
+meldet, was er blockiert *hätte*, und führt es trotzdem aus. So gehört es
+sich: Eine Richtlinie, die man am ersten Tag scharf schaltet, schaltet man am
+zweiten wieder ab.
+
+1. **Zwei Wochen laufen lassen**, im normalen Betrieb.
+2. **Betrieb → Servereinstellungen** → Karte **„Sicherheitskopfzeilen"**.
+   Darunter stehen die letzten 20 Meldungen mit Richtlinie, Quelle, Seite und
+   Zähler. **Leer ist das Ziel.** Steht dort etwas, ist es *vor* dem
+   Umschalten zu klären: Jede Zeile ist etwas, das nach dem Scharfschalten
+   nicht mehr funktioniert — und zwar ohne Fehlermeldung.
+3. Schalter **„CSP scharf schalten"** umlegen.
+4. **Danach durchklicken**, nicht nur die Startseite: Karte in allen vier
+   Anbietern, Einsatzformular mit Adresssuche, Import (zip.js), Export,
+   Druckansicht. Was hier bricht, bricht still.
+
+Zurückschalten geht jederzeit über denselben Schalter. Die Meldungen bleiben
+stehen; der Job `aufraeumen` löscht sie nach 30 Tagen.
+
+**HSTS-Bindung einstellen (nach Web 20.7.0):** Dieselbe Karte, Segment
+**„HSTS"** — aus / 1 Tag / 7 Tage / 1 Jahr. **Nach dem Update auf 20.7.0
+steht sie auf 1 Tag**, auch auf einer Installation, die vorher über
+`.htaccess` ein Jahr band: Die HSTS-Zeile ist dort entfallen, weil
+`Header always set` überschrieben hätte, was PHP schickt (E-P5a-31, siehe
+5c.4). **Wer produktiv läuft und bei seiner Domain bleibt, stellt hier wieder
+auf 1 Jahr.** Wer gerade erst aufsetzt, lässt es auf 1 Tag, bis die Adresse
+endgültig ist.
+
+**Hinter einem Reverse Proxy (nach Web 20.7.0):** Steht die Anwendung hinter
+einem Reverse Proxy, Loadbalancer oder DDoS-Schutz, ist `REMOTE_ADDR` die
+Adresse *des Proxys* — der Ratenschutz zählt dann alle Nutzerinnen als eine
+und sperrt sie **gemeinsam** aus. Abhilfe: in `config.php` den Block `netz`
+füllen.
+
+```php
+'netz' => [
+    'vertrauenswuerdige_proxys' => ['10.0.0.8', '192.168.1.0/24', '2001:db8::/32'],
+],
+```
+
+Nur wer hier steht, darf `X-Forwarded-For` **und** `X-Forwarded-Proto` setzen.
+Leer lassen, wenn die Anwendung direkt am Netz hängt — ein zu weiter Eintrag
+lässt jeden seine eigene Adresse behaupten und hebelt den Ratenschutz aus.
 
 **Code-Update mit DB-Änderung ausrollen:** pushen (Deploy läuft automatisch)
 → als BetreiberIn **Betrieb → Updates** aufrufen → nach dem Lauf muss die

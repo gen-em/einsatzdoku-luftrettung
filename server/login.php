@@ -6,6 +6,13 @@ require_once __DIR__ . '/session_lib.php';
 require_once __DIR__ . '/ratelimit_lib.php';
 require_once __DIR__ . '/demo_lib.php';
 
+/* HTTPS ZUERST (P5a/AP4, E-P5a-16). Diese Seite ist die, auf der es
+ * auffaellt: Ihr Sitzungscookie traegt `secure`, und ueber HTTP sendet der
+ * Browser es nicht — das Formular kaeme zurueck, als waere das Passwort
+ * falsch. `https_tor()` sagt stattdessen, was los ist. Vor `session_start()`,
+ * damit gar nicht erst eine Sitzung ohne Cookie entsteht. */
+https_tor();
+
 // Zeitpunkt fuer die konstante Antwortdauer im Fehlerzweig — muss VOR jeder
 // Arbeit stehen, sonst misst er nicht die ganze Anfrage.
 $t0 = microtime(true);
@@ -317,7 +324,7 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
  </div>
 </main>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
-<script>
+<script<?= kopf_nonce_attr() ?>>
 // Der Browser leitet aus dem Passwort zwei Schluessel ab: das Auth-Token
 // (geht zum Server) und den Daten-Schluessel (bleibt hier, entsperrt das
 // PatientInnendaten-Modul). Das Passwort selbst verlaesst den Browser nie.

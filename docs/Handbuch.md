@@ -3486,7 +3486,7 @@ abgeschaltet, und in **jeder Zahl der Statistik** (12.2) bleibt es außen vor.
 | **Statistik** | 12.2 | was diese Installation trägt: Konten, Geräte, Einsätze |
 | **Updates** | 12.3 | Wartungsmodus und ausstehende Datenbank-Updates |
 | **Hintergrundjobs** | 12.4 | ob die regelmäßige Arbeit läuft, und die drei Auslöser |
-| **Servereinstellungen** | 12.5 | Speichergrenze, Warnschwellen, Kontingente, Belegung, Ablage |
+| **Servereinstellungen** | 12.5 | Speichergrenze, Warnschwellen, Kontingente, Belegung, Ablage, Adresssuche, Sicherheitskopfzeilen |
 | **Komplett-Backup** | 12.6 | die ganze Installation in eine Datei |
 | **Backup-Ziele** | 12.7 | wohin die Konto-Backups zusätzlich geschoben werden |
 
@@ -3506,6 +3506,7 @@ jede Seite trägt ein Anliegen. Was wohin gegangen ist:
 | Wartungsmodus, ausstehende Updates, Fassung | Betrieb → **Updates** |
 | Zustand der Hintergrundjobs, die drei Auslöser, das Token | Betrieb → **Hintergrundjobs** |
 | Speichergrenze, Warnschwellen, Kontingente, Belegung, Ablage | Betrieb → **Servereinstellungen** |
+| CSP scharf schalten, HSTS-Dauer | Betrieb → **Servereinstellungen** |
 | Logo der Installation | Verwaltung → **Installation** |
 | Schlüsselableitung, Umgebung (PHP, Zeitzone), Plattformprofil | Betrieb → **Status** |
 | Einsätze ohne Diensttag | **entfallen** — jede NutzerIn sieht ihre eigenen als „Zuordnung offen" in der Diensttage-Leiste (8.1) und ordnet sie selbst zu |
@@ -3972,6 +3973,51 @@ soll die Dienstadresse nicht mit abweisen und umgekehrt. Welcher Dienst
 eingetragen ist, erscheint anschließend im Hinweis unter dem Ortsfeld, in der
 Karte „Datenschutz" jedes Profils und im Textbaustein für die
 Datenschutzerklärung (11.5).
+
+**Karte „Sicherheitskopfzeilen"** (seit Web 20.7.0). Zwei Einstellungen, die
+den Browser betreffen, nicht die Daten.
+
+**„CSP scharf schalten".** Die Anwendung schickt jeder Seite eine Regel mit,
+welche Skripte, Bilder und Schriften geladen werden dürfen — eine
+*Content-Security-Policy*. Sie ist der Schutz für den Fall, dass trotz aller
+Prüfungen einmal fremder Programmcode in eine Seite gerät: Der Browser führt
+ihn dann gar nicht erst aus. Das ist hier mehr wert als anderswo, weil die
+Patientendaten **im Browser** entschlüsselt werden.
+
+Die Regel läuft in zwei Stufen:
+
+1. **Beobachten** (so kommt die Installation an). Der Browser *meldet*, was er
+   blockiert hätte, führt es aber trotzdem aus. Es kann also nichts kaputtgehen.
+   Unter dem Schalter stehen die letzten 20 Meldungen mit Regel, Quelle und
+   Seite.
+2. **Scharf.** Der Browser blockiert wirklich.
+
+**So gehst du vor:** Lass die Installation zwei Wochen im normalen Betrieb
+laufen. Bleibt die Liste darunter **leer**, leg den Schalter um. Steht dort
+etwas, kläre es vorher — jede Zeile ist etwas, das nach dem Umlegen nicht mehr
+funktioniert, und zwar **ohne Fehlermeldung**: Der Knopf tut dann einfach
+nichts. Nach dem Umlegen einmal durchklicken, was du wirklich benutzt: Karte,
+Einsatzformular mit Adresssuche, Import, Export, Druckansicht. Zurückschalten
+geht jederzeit.
+
+Die Meldungen enthalten **keine IP, kein Konto und keine Einsatznummer** — von
+der Seitenadresse bleibt nur der Dateiname. Nach 30 Tagen räumt der
+Aufräumjob sie weg.
+
+**„HSTS".** Damit sagt der Server dem Browser: *Diese Seite immer über HTTPS
+aufrufen, auch wenn jemand einen `http://`-Link schickt.* Das ist gut — aber
+der Browser merkt es sich für die eingestellte Dauer, und in dieser Zeit
+kommst du unter diesem Namen **nicht mehr unverschlüsselt** ans Ziel. Vier
+Stufen: **aus / 1 Tag / 7 Tage / 1 Jahr**.
+
+- **Gerade erst aufgesetzt, Adresse steht noch nicht fest?** 1 Tag lassen.
+- **Läuft seit Jahren unter dieser Domain?** 1 Jahr.
+
+**Nach dem Update auf Web 20.7.0 steht die Einstellung auf 1 Tag** — auch dann,
+wenn deine Installation vorher über die Serverkonfiguration ein Jahr gebunden
+hat. Das ist kein Versehen: Die Dauer wird jetzt von der Anwendung bestimmt,
+damit sie an *einer* Stelle steht und die Anzeige nicht lügt. **Wer produktiv
+läuft, stellt hier wieder auf 1 Jahr.**
 
 ### 12.6 Komplett-Backup
 

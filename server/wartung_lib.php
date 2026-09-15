@@ -257,6 +257,18 @@ function wartung_tor(): void
 /** Die gemeinsamen Kopfzeilen beider Antworten. */
 function wartung_kopfzeilen(): void
 {
+    /* DIE SICHERHEITSKOPFZEILEN GELTEN AUCH HIER (P5a/AP4, E-P5a-15).
+     *
+     * Diese Datei laedt nichts (Eigenschaft 2 im Kopf) — `kopfzeilen_lib.php`
+     * ist die eine Ausnahme, und sie ist es, weil jene Datei ihrerseits ohne
+     * Datenbank auskommt: Jede Einstellung hat eine Vorgabe, und faellt die
+     * Abfrage aus, gilt die. Genau dafuer ist sie so gebaut.
+     *
+     * OHNE NONCE: Die Wartungsseite traegt KEIN Skript, und das ist Absicht
+     * (siehe `wartung_antwort_seite()`). Ein Nonce ohne Block waere eine
+     * Erlaubnis ohne Empfaenger. */
+    if (function_exists('kopfzeilen_seite')) { kopfzeilen_seite(false); }
+
     http_response_code(503);
     header('Retry-After: ' . WARTUNG_RETRY_S);
     /* Kein Zwischenspeichern: Eine 503 ist ein Zustand von Minuten. Was ein

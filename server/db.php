@@ -414,6 +414,12 @@ function local_to_utc(string $day, string $hhmm, int $addDays = 0): ?string {
    die Umwandlung in pruef_utc(). */
 
 function json_out(array $data, int $code = 200): never {
+    /* Der schmale Kopfzeilensatz der Endpunkte (P5a/AP4, E-P5a-15). Keine
+     * CSP — eine JSON-Antwort ist kein Dokument. `nosniff` dagegen ist genau
+     * hier die wichtige Zeile. */
+    require_once __DIR__ . '/kopfzeilen_lib.php';
+    kopfzeilen_json();
+
     http_response_code($code);
     header('Content-Type: application/json');
     /* Kein Zwischenspeichern (M3-11).
@@ -451,6 +457,11 @@ function json_out(array $data, int $code = 200): never {
  * kehrt auf der Kommandozeile sofort zurueck. Steht keine `wartung.lock`,
  * kostet der Aufruf einen `file_exists()`.
  */
+/* DIE KOPFZEILEN STEHEN JEDER DATEI ZUR VERFUEGUNG, DIE `db.php` LAEDT
+ * (P5a/AP4). `kopf_nonce_attr()` wird in 25 Inline-Bloecken gebraucht — auch
+ * in `session_lib.php`, das ohne `ui.php` auskommt. Eine Datei, die nur
+ * Funktionen definiert, kostet nichts. */
+require_once __DIR__ . '/kopfzeilen_lib.php';
 require_once __DIR__ . '/wartung_lib.php';
 wartung_tor();
 
@@ -1276,6 +1287,61 @@ function geraete_neu(PDO $pdo, int $userId): array {
                          ORDER BY created_at DESC');
     $st->execute([$userId, GERAETE_NEU_TAGE, $seit, $seit]);
     return $st->fetchAll();
+}
+
+/* ---------------------------------------------------------------------------
+ * `app_state` — der kleine Schluessel/Wert-Speicher, jetzt mit EINEM Zugang
+ * ---------------------------------------------------------------------------
+ *
+ * WARUM HIER. Die Tabelle wird an acht Stellen gelesen und geschrieben, und
+ * bis Web 20.6.0 brachte JEDE ihren eigenen Zugriff mit: `edbak_marke_lesen()`
+ * (`adminbackup_lib.php`), `schluessel_marke_lesen()` (`serverkrypto_lib.php`),
+ * `geocoder_state()` (`geocoder_lib.php`), `_tor_lesen()`
+ * (`migration_lib.php`), dazu blankes SQL in `smtp.php`, `auth_salt.php`,
+ * `jobs.php` und `komplett_lib.php`. Fuenf Fassungen derselben zwei Zeilen,
+ * und jede mit ihrer eigenen Antwort auf die Frage, was passiert, wenn die
+ * Tabelle fehlt.
+ *
+ * DAS IST KEIN AUFRAEUMPAKET. Diese beiden Funktionen sind der Ort, an dem
+ * die anderen zusammenlaufen KOENNEN; zusammengefuehrt sind sie nicht (das
+ * waere eine Aenderung an fuenf Bibliotheken fuer einen Gewinn, den niemand
+ * sieht — Backlog). Neue Verbraucher nehmen diese hier.
+ *
+ * `v` IST `VARCHAR(190)`. Wer mehr schreibt, bekommt `false` und eine Zeile
+ * im Fehlerprotokoll — nicht einen stillen Abschnitt.
+ */
+
+/** Maximale Laenge eines Werts in `app_state` (Spaltenbreite). */
+const APP_STATE_MAX = 190;
+
+/** Eine Zeile lesen. `null`, wenn es sie — oder die Tabelle — nicht gibt. */
+function app_state_lesen(string $k): ?string {
+    try {
+        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
+        $st->execute([$k]);
+        $v = $st->fetchColumn();
+        return $v === false || $v === null ? null : (string)$v;
+    } catch (Throwable $ex) {
+        return null;   // Tabelle fehlt (Migration noch nicht gelaufen)
+    }
+}
+
+/** Eine Zeile schreiben. `false` = zu lang oder nicht schreibbar, mit Log. */
+function app_state_setzen(string $k, string $v): bool {
+    if (strlen($v) > APP_STATE_MAX) {
+        error_log('app_state: "' . $k . '" ist ' . strlen($v) . ' Zeichen lang, '
+                . 'erlaubt sind ' . APP_STATE_MAX . '.');
+        return false;
+    }
+    try {
+        db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
+                       ON DUPLICATE KEY UPDATE v = VALUES(v)')->execute([$k, $v]);
+        return true;
+    } catch (Throwable $ex) {
+        error_log('app_state: "' . $k . '" liess sich nicht schreiben: '
+                . $ex->getMessage());
+        return false;
+    }
 }
 
 /** Zeitpunkt der letzten Bestaetigung, oder null. */

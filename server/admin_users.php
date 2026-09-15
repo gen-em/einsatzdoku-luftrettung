@@ -739,13 +739,13 @@ ui_seite_start(['titel' => 'NutzerInnen']);
   </dialog>
 
 <?php ui_geruest_ende(); ?>
-<script>
+<script<?= kopf_nonce_attr() ?>>
   document.body.dataset.konto = <?= json_js((string)$userId) ?>;
 <?php if ($auswahlVerbraucht): ?>
   document.body.dataset.auswahlRest = <?= json_js($auswahlRest) ?>;
 <?php endif; ?>
 </script>
-<script>
+<script<?= kopf_nonce_attr() ?>>
 /* AUSWAHL UEBER SEITEN HINWEG (E-P3-41).
  *
  * Die Sammelleiste soll „n ausgewählt" auch dann noch sagen, wenn man auf

@@ -1590,7 +1590,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script src="<?= asset('assets/ortswahl.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
-<script>
+<script<?= kopf_nonce_attr() ?>>
 const PHASE_LABELS = <?= json_js(PHASE_LABELS) ?>;
 const START_ROWS = <?= json_js($prefillRows) ?>;
 /* Dienstbeginn in Minuten — Anker der Mitternachtsregel beim Sortieren

@@ -47,10 +47,35 @@ RewriteRule ^(apk|demo)(/|$) - [F,L]
   Require all denied
 </FilesMatch>
 
-# Security-Header
-Header always set X-Content-Type-Options "nosniff"
-Header always set X-Frame-Options "DENY"
+# Security-Header -- SEIT WEB 20.7.0 NUR NOCH FUER DAS, WAS NICHT DURCH PHP
+# LAEUFT (P5a/AP4, E-P5a-15).
+#
+# WAS SICH GEAENDERT HAT UND WARUM. Bis Web 20.6.0 standen hier vier
+# Kopfzeilen mit `Header always set` -- und `set` ERSETZT, was PHP gesetzt
+# hat. Solange PHP nichts setzte, war das die einzige Quelle und richtig so.
+# Seit `kopfzeilen_lib.php` setzt PHP sie selbst, und zwar auf JEDEM
+# Webserver: Diese Datei liest nur Apache. Auf nginx, Caddy oder LiteSpeed
+# stand die Installation vorher ohne `nosniff`, ohne `Referrer-Policy`, ohne
+# `X-Frame-Options` und ohne HSTS da, und niemand sah es.
+#
+# `setifempty` STATT `set`: Damit fuehrt PHP, wo PHP laeuft, und diese Datei
+# springt nur dort ein, wo es nicht laeuft -- bei den statischen Dateien unter
+# `assets/` (Stylesheet, Schriften, Symbole, Skripte). Genau die brauchen
+# `nosniff` ebenso, und genau die bekommen es von PHP nie.
+#
+# `Strict-Transport-Security` IST HIER GANZ VERSCHWUNDEN, und das ist die
+# unangenehme Zeile: Sie stand auf `max-age=31536000` -- ein Jahr. Seit AP4
+# ist die Dauer eine EINSTELLUNG (Betrieb -> Servereinstellungen, Vorgabe
+# **ein Tag**, Stufen 1/7/365). Zwei Stellen fuer dieselbe Kopfzeile waeren
+# auf Apache keine Wiederholung, sondern ein Ueberschreiben: Die Einstellung
+# haette nichts bewirkt und trotzdem einen Wert angezeigt.
+#
+# **Der Preis, benannt:** Auf einer Installation, die bisher ein Jahr gesendet
+# hat, sinkt die Bindung nach dem Deploy auf einen Tag, bis jemand den Wert
+# hochstellt. Das steht im Pruefdokument als Punkt fuer die Betreiberin und
+# als Hinweis an der Einstellung selbst.
+Header always setifempty X-Content-Type-Options "nosniff"
+Header always setifempty X-Frame-Options "DENY"
 # strict-origin-when-cross-origin: sendet die Herkunft (ohne Pfad) auch an
 # fremde Domains -> Kartenkacheln von OpenStreetMap laden wieder.
-Header always set Referrer-Policy "strict-origin-when-cross-origin"
-Header always set Strict-Transport-Security "max-age=31536000"
+Header always setifempty Referrer-Policy "strict-origin-when-cross-origin"

@@ -20,6 +20,27 @@ return [
         'from' => 'noreply@example.de',
         'from_name' => 'Gen-EM NAdoku',
     ],
+    // ---- Netz: vertrauenswuerdige Proxys (P5a/AP4, E-P5a-17) ----------
+    //
+    // LEER LASSEN, WENN DIE ANWENDUNG DIREKT AM NETZ HAENGT. Dann rechnet der
+    // Ratenschutz mit REMOTE_ADDR — genau wie vor Web 20.7.0.
+    //
+    // Steht sie hinter einem Reverse Proxy, einem Loadbalancer oder einem
+    // DDoS-Schutz, ist REMOTE_ADDR die Adresse DES PROXYS. Der Ratenschutz
+    // zaehlt dann ALLE Nutzerinnen als eine und sperrt sie gemeinsam aus.
+    // Wer hier eintraegt, sagt: „Von diesen Adressen glaube ich der Kopfzeile
+    // X-Forwarded-For." Das ist eine Aussage ueber die eigene Netztopologie,
+    // und nur die Betreiberin kann sie treffen — deshalb gibt es keine
+    // Vorgabe. Adressen oder CIDR-Bereiche, IPv4 und IPv6:
+    //
+    //   'vertrauenswuerdige_proxys' => ['10.0.0.8', '192.168.1.0/24', '2001:db8::/32'],
+    //
+    // Dieselbe Liste entscheidet ueber X-Forwarded-Proto (HTTPS-Zwang, HSTS):
+    // Wer die Client-Adresse faelschen koennte, koennte sonst auch behaupten,
+    // eine Anfrage sei ueber HTTPS gekommen.
+    'netz' => [
+        'vertrauenswuerdige_proxys' => [],
+    ],
     // ---- Die zwei Geheimnisse des Servers -----------------------------
     // Beide 64 Hexzeichen. Der Installer wuerfelt sie; eine bestehende
     // Installation legt sie ueber Betrieb -> Servereinstellungen an, Karte

@@ -6,6 +6,14 @@ require_once __DIR__ . '/db.php';
  * angemeldeten Seite gebraucht — nicht nur, wenn eine Sitzung endet. */
 require_once __DIR__ . '/session_lib.php';
 
+/* ---- HTTPS ZUERST (P5a/AP4, E-P5a-16) -----------------------------------
+ *
+ * VOR `session_start()`, und das ist der Punkt: Das Sitzungscookie traegt
+ * `secure`. Ueber HTTP sendet der Browser es nicht — die Anmeldung scheitert
+ * STUMM, und wer das nicht weiss, sucht den Fehler bei sich. Die Seite von
+ * `https_tor()` sagt es stattdessen. */
+https_tor();
+
 session_set_cookie_params([
     'httponly' => true, 'secure' => true, 'samesite' => 'Strict', 'path' => '/',
 ]);
@@ -263,9 +271,20 @@ function rollen_auswahl(): array
  * nicht (Backlog Nr. 127). Hier bleibt nur der Abbruchweg, den es nur fuer
  * angemeldete Seiten gibt. */
 function csrf_check(): void {
-    if (!csrf_ok()) {
-        ui_abbruch(403, 'Ungültiges Formular-Token.');
-    }
+    if (csrf_ok()) { return; }
+    /* DER API-ZWEIG (P5a/AP4, Backlog Nr. 67, R21).
+     *
+     * `ui_abbruch()` liefert eine HTML-Seite aus. Ein `fetch()` bekaeme damit
+     * Markup, wo es JSON erwartet, und meldete einen Syntaxfehler statt
+     * „Formular-Token abgelaufen" — dieselbe Falle wie bei einer Sitzung, die
+     * mitten in einer Anfrage endet (siehe `sitzung_beenden_passend()` oben).
+     *
+     * Bis Web 20.6.0 gab es diesen Zweig nicht, und die zwoelf Endpunkte
+     * prueften deshalb jeder fuer sich. Jetzt fragen alle dieselbe Funktion:
+     * `csrf_ok()` nimmt Feld UND Kopfzeile, und hier faellt die Entscheidung,
+     * in welcher Sprache das Nein kommt. */
+    if (ist_api_aufruf()) { json_out(['error' => 'csrf'], 403); }
+    ui_abbruch(403, 'Ungültiges Formular-Token.');
 }
 
 // Anzeigename fuer die Kopfleiste (name-Spalte existiert erst nach Migration)

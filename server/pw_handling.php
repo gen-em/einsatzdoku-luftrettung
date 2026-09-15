@@ -386,7 +386,7 @@ ui_seite_start([
          an keiner Stelle eingebunden — die Mindestlaenge stand hier als
          HTML-Attribut und im Skript, die Staerkeanzeige gab es nicht (M2-02). */ ?>
 <script src="<?= asset('assets/pwquality.js') ?>"></script>
-<script>
+<script<?= kopf_nonce_attr() ?>>
 const ERSTVERGABE = <?= $erstvergabe ? 'true' : 'false' ?>;
 const WRAP_RC = <?= json_js($erstvergabe ? null : $row['pat_wrap_rc']) ?>;
 // Zielwert der Rundenzahl (M2-01). Diese Seite baut die Ableitung immer neu

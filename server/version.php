@@ -4718,5 +4718,107 @@ declare(strict_types=1);
  *
  * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `migration_tor_hash` und
  * `migration_tor_offen` sind Zeilen in `app_state`.
+ *
+ * ------------------------------------------------------------------
+ *
+ * 20.7.0 ist AP4 von P5a: DIE KOPFZEILEN KOMMEN AUS DEM PROGRAMM
+ * (R40 (5), E-P5a-15/17, SP-5).
+ *
+ * WAS BIS HIERHER GALT. Vier Sicherheitskopfzeilen standen in
+ * `server/.htaccess`: `X-Content-Type-Options`, `Referrer-Policy`,
+ * `X-Frame-Options` und `Strict-Transport-Security` mit einem Jahr. Eine
+ * Content-Security-Policy gab es nicht. Das hatte drei Folgen, und jede
+ * einzelne war ein Loch:
+ *
+ *   · KEIN SCHUTZ GEGEN EINGESCHLEUSTES SKRIPT. Ohne CSP genuegt ein
+ *     einziges nicht maskiertes Feld irgendwo, und fremdes JavaScript laeuft
+ *     im Kontext einer angemeldeten Sitzung — also neben dem entschluesselten
+ *     Datenschluessel. Diese Anwendung entschluesselt Patientendaten IM
+ *     BROWSER; ein Skript dort ist kein Schoenheitsfehler.
+ *   · `.htaccess` GILT NUR AUF APACHE. Wer hinter nginx, Caddy oder einem
+ *     Container laeuft, hatte gar keine Kopfzeilen — und merkte es nicht.
+ *   · HSTS WAR NICHT VERHANDELBAR. Ein Jahr Bindung, fest in einer Datei,
+ *     die beim Deploy mitkommt. Wer eine Installation aufsetzt und die
+ *     Domain noch umziehen koennte, hat mit dem ersten Aufruf ein Jahr
+ *     Bindung an einen Namen, den er vielleicht nicht behaelt.
+ *
+ * WAS GILT: `kopfzeilen_lib.php` schreibt sie. `kopfzeilen_seite()` steht in
+ * `ui_seite_start()`, `kopfzeilen_json()` in `json_out()` — beide Wege gehen
+ * durch eine Stelle, und deshalb bekommt jede Seite und jede API-Antwort die
+ * Kopfzeilen, egal auf welchem Webserver.
+ *
+ * DIE RICHTLINIE BEGINNT BEI `default-src 'none'` und zaehlt auf, was
+ * erlaubt ist — nicht umgekehrt. `script-src 'self' 'nonce-…'` ohne
+ * `'unsafe-inline'`: Der Nonce ist 16 Zufallsbytes JE ANFRAGE, und ein
+ * Skript, das ihn nicht traegt, laeuft nicht. Damit ist die klassische
+ * XSS-Kette unterbrochen, auch wenn die Maskierung einmal versagt.
+ *
+ * ZWEI STUFEN, WEIL DIE ERSTE STUFE SONST DIE ANWENDUNG WAERE. Zuerst
+ * `Content-Security-Policy-Report-Only` — der Browser meldet, was er
+ * blockiert HAETTE, und fuehrt es trotzdem aus. Die Meldungen sammelt
+ * `api/csp_bericht.php` zusammengefasst in `csp_berichte`; Betrieb →
+ * Servereinstellungen zeigt sie. Erst wenn dort zwei Wochen lang nichts
+ * Neues steht, legt eine BetreiberIn den Schalter `csp_scharf` um. Der
+ * Endpunkt verlangt AUSDRUECKLICH KEINE ANMELDUNG: Ein Verstoss auf der
+ * ANMELDESEITE ist der interessanteste von allen.
+ *
+ * DREI ABWEICHUNGEN VOM KONZEPT, alle im Kopf von `kopfzeilen_lib.php`
+ * begruendet:
+ *
+ *   1. `style-src 'self'` PLUS `style-src-attr 'unsafe-inline'`
+ *      (E-P5a-32). Drei statische Stilattribute sind weg; die zehn
+ *      uebrigen entstehen zur Laufzeit in JavaScript (Leaflet-divIcons,
+ *      Zeilenvorlagen, die Balken der Schnittleiste). Sie umzubauen hiesse,
+ *      fuer jeden einzelnen Pfeil einer Spur einen eigenen Listener zu
+ *      setzen — und es aenderte an der Angriffsflaeche nichts, weil
+ *      `el.style.x` CSSOM ist und von CSP ohnehin nicht erfasst wird. Was
+ *      ein Stilattribut anrichten kann, begrenzen `default-src 'none'` und
+ *      das enge `img-src`.
+ *   2. `connect-src` nennt den EINGESTELLTEN Geocoder, nicht einen fest
+ *      verdrahteten Namen — und laesst ihn weg, wenn die Adresssuche aus ist.
+ *   3. `img-src` MIT `data:` — und das war zuerst anders. Die Zaehlung im
+ *      eigenen Quelltext ergab 0 Treffer, also wurde es gestrichen. Der
+ *      Report-Only-Lauf meldete daraufhin 140 Verstoesse auf den vier
+ *      Kartenseiten: `leaflet.js` traegt ein 1x1 grosses durchsichtiges
+ *      GIF als `data:`-Konstante (`L.Util.emptyImageUrl`) und setzt es als
+ *      `src`, wenn es eine Kachel wegraeumt — in einer minifizierten
+ *      Bibliothek, die keine Zaehlung im Quelltext sieht. Der Preis ist
+ *      benannt: `data:` ist die schwaechste Zeile dieser Richtlinie; sie
+ *      bleibt, weil ein Bild kein Skript ausfuehrt.
+ *
+ * HSTS IST EINE EINSTELLUNG GEWORDEN (0 / 1 / 7 / 365 Tage, Vorgabe 1). Und
+ * damit sie keine Luege ist, HAT `.htaccess` DIE ZEILE VERLOREN (E-P5a-31):
+ * `Header always set` UEBERSCHREIBT, was PHP schickt — die Einstellung haette
+ * auf Apache nichts bewirkt. Die drei uebrigen Kopfzeilen stehen dort
+ * weiterhin, aber als `setifempty`: PHP fuehrt, wo PHP laeuft, und
+ * `.htaccess` deckt weiterhin die statischen Dateien. DER PREIS IST BENANNT:
+ * Auf einer bestehenden Installation faellt die Bindung von einem Jahr auf
+ * einen Tag, bis jemand sie wieder hochstellt.
+ *
+ * DIE CLIENT-ADRESSE KOMMT AUS `netz_lib.php` (E-P5a-17). Hinter einem
+ * Reverse Proxy war `REMOTE_ADDR` die Adresse DES PROXYS — der Ratenschutz
+ * zaehlte alle Nutzerinnen als eine und sperrte sie gemeinsam aus.
+ * `X-Forwarded-For` wird jetzt ausgewertet, ABER NUR, wenn die unmittelbare
+ * Gegenstelle in `config.php` als vertrauenswuerdig eingetragen ist. Ohne
+ * Eintrag rechnet alles wie vorher. Dieselbe Liste entscheidet ueber
+ * `X-Forwarded-Proto`: Wer die Client-Adresse faelschen koennte, koennte
+ * sonst auch behaupten, eine Anfrage sei ueber HTTPS gekommen.
+ *
+ * CSRF GEHT JETZT AUCH ALS KOPFZEILE (`X-CSRF`). Zwoelf API-Dateien hatten
+ * denselben Block von Hand; sie rufen nun `csrf_check()`, und das nimmt Feld
+ * ODER Kopfzeile.
+ *
+ * EINE MIGRATION: `2026_09_15_csp_berichte` legt die Tabelle an.
+ *
+ * UND EIN FUND, DER FAST DURCHGERUTSCHT WAERE. Die Richtlinie nannte beide
+ * Meldewege — `report-uri` (relative Adresse) und `report-to csp` (nennt nur
+ * einen Namen). Die zugehoerige `Reporting-Endpoints`-Zeile trug ebenfalls
+ * eine relative Adresse, und die nimmt der Browser dort nicht an: Die Gruppe
+ * `csp` war nie aufloesbar. CHROMIUM BEVORZUGT `report-to` UND VERWIRFT DEN
+ * BERICHT DANN ERSATZLOS. Der Bilderlauf ueber 49 Seiten meldete daraufhin
+ * „0 CSP-Berichte" — das Abnahmekriterium, woertlich erfuellt und voellig
+ * wertlos. Gefunden hat es die Gegenprobe, die einen Verstoss ABSICHTLICH
+ * ausloest: Er stand in der Konsole, die Tabelle blieb leer. Seither haengt
+ * `report-to` an `kopf_melde_url()` — nur bei vollstaendiger HTTPS-Adresse.
  */
-const WEB_VERSION = '20.6.0';
+const WEB_VERSION = '20.7.0';

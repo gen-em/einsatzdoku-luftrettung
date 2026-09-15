@@ -111,6 +111,18 @@ jobs:
           php tools/migrationsregister/pruefen.php --selbstprobe
           php tools/migrationsregister/pruefen.php
 
+      - name: CSP — Inline-Skripte ohne Nonce
+        # Seit Web 20.7.0 gilt `script-src 'self' 'nonce-…'` ohne
+        # `'unsafe-inline'`. Ein vergessener Nonce legt eine Seite STILL
+        # lahm: kein PHP-Fehler, kein Protokolleintrag — der Knopf tut
+        # nichts, und die Meldung steht in der Konsole derjenigen, der es
+        # passiert. Gemessen mit dem Tokenizer über ein Markup-Bild, weil
+        # `<script src="<?= asset(…) ?>">` in drei Stücke zerfällt und ein
+        # naives `grep` deshalb null von 108 Stellen fände.
+        run: |
+          php tools/cspprobe/pruefen.php --selbstprobe
+          php tools/cspprobe/pruefen.php
+
       - name: Android — bauen, prüfen, linten
         # 0 Lint-Fehler und 0 Fehlschläge; der Rückgabewert von Gradle trägt
         # beides. Das Android-SDK bringt der Läufer mit (ANDROID_HOME ist

@@ -53,6 +53,19 @@ declare(strict_types=1);
  * ------------------------------------------------------------------------- */
 function ui_seite_start(array $o): void
 {
+    /* DIE KOPFZEILEN STEHEN VOR DER ERSTEN AUSGABEZEILE (P5a/AP4, E-P5a-15).
+     *
+     * Hier und nicht in jeder Seite: Diese Huelle ist die eine Stelle, durch
+     * die jede Seite laeuft — dafuer hat P3 gesorgt. Drei Stellen erzeugen
+     * eine eigene Huelle (`wartung_lib.php`, `betrieb_schluesselblatt.php`,
+     * `apk.php`); die rufen `kopfzeilen_seite()` selbst.
+     *
+     * `headers_sent()` faengt den Fall ab, dass ein Aufrufer schon etwas
+     * ausgegeben hat — dann waere ein `header()` eine Warnung im Protokoll
+     * und sonst nichts. */
+    require_once __DIR__ . '/kopfzeilen_lib.php';
+    kopfzeilen_seite();
+
     /* Zeilenweise zusammengesetzt statt als Vorlage mit eingestreutem PHP:
        Bedingte Zeilen in einer Vorlage bringen ein Durcheinander aus
        geschluckten Zeilenumbruechen mit sich (PHP frisst den Umbruch direkt
@@ -2288,7 +2301,7 @@ function ui_geocoder_bootstrap(): void
     $schon = true;
 
     require_once __DIR__ . '/geocoder_lib.php';
-    echo '<script>window.GEO_AN = ' . json_encode(geocoder_an())
+    echo '<script' . kopf_nonce_attr() . '>window.GEO_AN = ' . json_encode(geocoder_an())
        . '; window.GEO_DIENST = ' . json_encode(geocoder_dienst(),
             JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)
        . ";</script>\n";
@@ -2528,7 +2541,7 @@ function ui_krypto_bootstrap(array $o = []): void
     foreach ($skripte as $s) {
         $zeilen[] = '<script src="' . ui_asset((string)$s) . '"></script>';
     }
-    $zeilen[] = '<script>';
+    $zeilen[] = '<script' . kopf_nonce_attr() . '>';
     if (($o['wrap'] ?? true) !== false) {
         $zeilen[] = 'const PAT_WRAP = ' . json_js($patWrapPw) . ';';
     }

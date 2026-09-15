@@ -669,6 +669,24 @@ CREATE TABLE rechtstexte (
   stand_am   DATE NULL                          -- im Editor von Hand gesetzt; NULL = keine Standzeile
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Berichte der Content-Security-Policy (P5a/AP4, Web 20.7.0). Zusammengefasst
+-- statt protokolliert: Der UNIQUE-Schluessel macht aus tausend gleichen
+-- Meldungen eine Zeile mit einem Zaehler. `seite` ist der PFAD, nicht die
+-- volle Adresse -- diese Anwendung fuehrt kein Protokoll darueber, wer wann
+-- welchen Einsatz geoeffnet hat. Der Aufraeumjob entsorgt Zeilen aelter als
+-- 30 Tage (E-P5a-09).
+CREATE TABLE csp_berichte (
+  id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  richtlinie VARCHAR(64)  NOT NULL,          -- verletzte Direktive, z. B. 'script-src'
+  quelle     VARCHAR(190) NOT NULL,          -- blockierte Quelle ('inline', 'eval', URL)
+  seite      VARCHAR(190) NOT NULL,          -- Pfad der Seite, ohne Abfrageteil
+  anzahl     INT UNSIGNED NOT NULL DEFAULT 1,
+  erstellt   DATETIME     NOT NULL,
+  zuletzt    DATETIME     NOT NULL,
+  UNIQUE KEY uq_bericht (richtlinie, quelle, seite),
+  INDEX idx_zuletzt (zuletzt)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS schema_migrations (
   id         VARCHAR(120) NOT NULL PRIMARY KEY,
   applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -756,4 +774,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- Installation nichts zu tun: Sie hat keine Diensttage.
   ('2026_09_07_rettungsmittel_typ', 'skipped'),
   -- rest_segments.created_at steht oben schon im Schema (Web 15.6.0).
-  ('2026_09_07_rest_segments_created_at', 'skipped');
+  ('2026_09_07_rest_segments_created_at', 'skipped'),
+  -- csp_berichte steht oben schon im Schema (Web 20.7.0, P5a/AP4).
+  ('2026_09_15_csp_berichte', 'skipped');

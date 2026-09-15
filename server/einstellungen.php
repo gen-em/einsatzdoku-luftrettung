@@ -1335,7 +1335,7 @@ ui_seite_start(['titel' => 'Einstellungen',
              wechselt das Passwort. */ ?>
     <?php ui_krypto_bootstrap(['skripte' => ['assets/crypto.js'],
                                'guete' => true, 'einzug' => '    ']); ?>
-    <script>
+    <script<?= kopf_nonce_attr() ?>>
     /* Zweiter Teil des Passwortwechsels (M2-07): Das Vormerkfach aus dem
      * vorigen Seitenaufruf aufloesen, bevor irgendetwas anderes geschieht. */
     (() => {
@@ -2428,7 +2428,7 @@ ui_seite_start(['titel' => 'Einstellungen',
              fuenf von sechs nichts findet, ist Ballast. Er braucht keine
              Reihenfolge — er haengt an nichts. */ ?>
     <script src="<?= asset('assets/kartenfilter.js') ?>"></script>
-    <script>
+    <script<?= kopf_nonce_attr() ?>>
     /* Ortsfelder der Stammdatenpflege beleben (E37). Dieselbe Komponente wie
      * am Einsatz — mit getrennter Suche, weil das Namensfeld hier den NAMEN
      * trägt und nicht die Adresse. Ohne Vorschlagsliste: Was hier entsteht,
@@ -2444,7 +2444,7 @@ ui_seite_start(['titel' => 'Einstellungen',
     </script>
 
     <script src="<?= asset('assets/dialog.js') ?>"></script>
-    <script>
+    <script<?= kopf_nonce_attr() ?>>
     /* DER RETTUNGSMITTEL-DIALOG RICHTET SICH NACH DEM TYP (E-S9-09/E-S9-19).
      *
      * Rein anzeigend: Was zulässig ist, entscheidet der Server in 'veh_save'
@@ -2546,7 +2546,7 @@ ui_seite_start(['titel' => 'Einstellungen',
     })();
     </script>
 <?php if ($dlgFehler !== null): ?>
-    <script>
+    <script<?= kopf_nonce_attr() ?>>
     /* NACH EINEM ABGELEHNTEN SPEICHERN GEHT DER DIALOG WIEDER AUF (E-S9-19).
        Er trägt dann die verworfene Eingabe und die Meldung; `auf()` füllt
        bewusst NICHTS nach — im Markup steht schon das Richtige. */
@@ -2715,7 +2715,7 @@ ui_seite_start(['titel' => 'Einstellungen',
              Skriptliste von ui_krypto_bootstrap(): Der Baustein ersetzt dort
              seine Vorgabeliste, und crypto.js fiele weg. */ ?>
     <script src="<?= asset('assets/vendor/zipjs.min.js') ?>"></script>
-    <script>
+    <script<?= kopf_nonce_attr() ?>>
     // Eigenes Konto — nur fuer den Vergleich mit der Herkunft der Datei (M5-13).
     const KONTO_MAIL = <?= json_js($userEmail) ?>;
     const KONTO_NAME = <?= json_js($userName) ?>;
@@ -4299,7 +4299,7 @@ ui_seite_start(['titel' => 'Einstellungen',
     <?php endif; ?>
   <?php endif; ?>
 
-  <script>
+  <script<?= kopf_nonce_attr() ?>>
   /* ---- Abschnitt aus dem Anker wieder aufklappen -------------------------
    *
    * Nach jedem Speichern und Löschen leitet der Server auf einen Anker um; wer
