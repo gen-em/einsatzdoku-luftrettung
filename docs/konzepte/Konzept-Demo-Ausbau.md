@@ -26,6 +26,7 @@ Rückfragen beantwortet, siehe Abschnitt 2) und die Messung am ZIP von `main`
 | **Erledigt** | **AP0** (Web 20.3.0) · **AP1** · **AP2** · **H-DA-1** (selbst geholt) · **AP3** · **AP4** |
 | **Offen** | Merge und Freigabe des Abschlusses (Prüfdokument, zehn Punkte) |
 | **Nachlauf** | 15.09.2026 — `origin/main` ist um PR #47 (R42-Nachlauf) gewachsen und in den Zweig **gemergt**. Dabei aufgelöst: **drei Nummernkollisionen** (Backlog 190/191, Rahmenplan-Fassung 66) und **eine stille Fehlverschmelzung** in `docs/Backlog.md` (F-DA-10). Der Demo-Ausbau führt seither **Nr. 197/198** und **Fassung 67** |
+| **Gegenprüfung** | 15.09.2026, fünf unabhängige Blickwinkel auf den zusammengeführten Stand, jeder Befund adversarisch nachgeprüft: **21 gemeldet, 15 bestätigt, 6 widerlegt**. Elf davon gingen auf dieses Paket zurück und sind behoben (Abschnitt 7, F-DA-11); drei sind älter als der Zweig und stehen jetzt als Backlog **Nr. 196** (erweitert) und **Nr. 199** (neu) |
 | **Haltepunkte** | **H-DA-1 entfällt** (OSRM ist erreichbar, E-DA-22) · **H-DA-2 gefahren** (E-DA-23) · **H-DA-3 nicht ausgelöst** — beide Kreisläufe melden 0 unerklärt |
 | **Prüfstand** | lokal aufgebaut: MariaDB, PHP 8.4.19, TLS über socat, Playwright (Chromium/Firefox/WebKit), Node 22 |
 | **Zweig** | `claude/umsetzung-ohne-pausen-2vfppr` |
@@ -205,6 +206,18 @@ Antworten des Auftraggebers vom 15.09.2026 sind als solche gekennzeichnet.
 ## 3. Offene Fragen und Haltepunkte
 
 ### 3.1 Fragen — vor AP1 zu entscheiden (K6)
+
+> **`F-DA-…` steht in diesem Konzept für zweierlei, und das ist ein Mangel
+> der Vorlage** (bemerkt beim Gegenlesen am 15.09.2026). Hier unten sind es
+> **Fragen** (F-DA-1, F-DA-2), in Abschnitt 7 sind es **Fehlerfunde** (F-DA-1
+> bis F-DA-10) — zwei verschiedene Sachen unter denselben zwei Kennungen.
+> Die Schwesterkonzepte trennen das: Dort heißen Fehlerfunde `B-…`
+> (`B-S5-…`, `B-R64-…`). **Umbenannt wird jetzt nicht mehr**, weil die
+> Kennungen `F-DA-7` bis `F-DA-10` bereits in gepushten Commit-Nachrichten,
+> im Prüfdokument und im Rahmenplan stehen; ein Umbenennen machte dort
+> tote Verweise. Stattdessen gilt: **Gemeint ist immer der Fehlerfund**,
+> außer der Text sagt ausdrücklich „Frage". Die beiden Fragen sind ohnehin
+> beantwortet (E-DA-24). Wer das nächste Konzept schreibt, nimmt `B-…`.
 
 | Nr. | Frage | Empfehlung |
 |---|---|---|
@@ -502,6 +515,7 @@ Fähigkeitsregel (AP0).
 | **F-DA-8** | `tools/klickprobe/wege/ap3.mjs`, Hilfsfunktion `zuordnungLesen()` | Die Klickprobe hat den **Bestand beschädigt**: Sie las den Standort eines Diensttags aus dem `<select>` `#basesel` und schrieb ihn im `finally` zurück. Bei einem Tag **ohne** Standort liefert das Auswahlfeld seine erste Option — D21 bekam dadurch „Luftrettungsstation Hochkreuth". Vor dem Demo-Ausbau gab es keinen Tag ohne Standort; der Fehler war seit S9 da und konnte nicht auffallen. | nein — die Fixture war bereits gebaut und sauber (`base_ref: null`) | **behoben in AP3.** Die Hilfsfunktion liest jetzt `api/day.php` statt des Auswahlfelds; D20 und D21 sind über `api/day.php` zurückgesetzt und nachgemessen. |
 | **F-DA-9** | `tools/referenzdatensatz/vergleich/ausnahmen/csv_umlauf.json` | Die Selbstprobe „Zeile in `diensttage.csv` entfernt" meldete **0 statt 1**: Eine Ausnahme mit dem Platzhalter `diensttage/*` und der Art `fehlt` deckte **jedes** fehlende Feld dieser Datei ab — auch eines, das die Probe absichtlich herbeiführt. Der Fund ist **älter als dieses Paket**; nachgewiesen gegen die alte Referenz in einem eigenen Arbeitsbaum. | nein | **behoben in AP3.** Die Wildcard-Regel ist in zwei Regeln mit **Schlüssel** zerlegt (`2026-09-12` und `20\d\d-\d\d-\d\d#\d+`); `vergleichen.py` kann dafür jetzt `schluessel_regex`. Die Probe meldet **10 von 10**. |
 | **F-DA-10** | `git merge origin/main` → `docs/Backlog.md` | **Der Auto-Merge hat die Datei ohne Konflikt und falsch zusammengesetzt.** Beide Seiten hatten hinten angehängt: `main` die Punkte 190–196 unter *Offen*, der Zweig die Nummern 190 (nach *Erledigt*) und 191 (unter *Offen*) samt einer **neu eingefügten Überschrift `## Erledigt`**. Git hat daraus eine Datei gemacht, in der mains sieben Punkte **hinter** der neuen Überschrift stehen — also als erledigt gelten —, 190 und 191 **doppelt** vorkommen und die Erledigt-Zeile von Nr. 189 hinter Nr. 196 verwaist. Kein Konfliktmarker, kein Hinweis. | **ja** — unbemerkt hätte der Merge sieben offene Punkte stillschweigend geschlossen | **behoben von Hand.** Die Datei ist blockweise neu zusammengesetzt; gegengeprüft mit zwei Zählungen (keine doppelte Nummer; Abschnitt 5 des Rahmenplans und *Offen* im Backlog **deckungsgleich, 60 = 60**, mit `diff`). Der Fund gehört zu **Nr. 196**: Dieselbe vierstellige Einrückung, die dort das Rendern bricht, macht die Blöcke für `git merge` ununterscheidbar. |
+| **F-DA-11** | elf Stellen in `server/version.php`, `docs/Rahmenplan.md`, `docs/CHANGELOG.md`, `docs/Backlog.md` und beiden Konzeptdokumenten | **Was eine unabhängige Gegenprüfung des zusammengeführten Stands gefunden hat.** Die gewichtigsten: (1) Backlog **Nr. 196** misst „65 von 192 Einträgen" — der Merge hat die Datei auf 194 erweitert, und beide neuen Einträge sind selbst betroffen; die *Abnahme* „0 von 192" wäre nie erfüllbar gewesen. (2) `version.php` kündigt **zwei** nebenbei geschlossene Lücken an und beschreibt nur eine — es fehlte ausgerechnet die folgenschwerere (F-DA-2, „hätte AP1 stumm beschädigt"). (3) Die Registerzeile **R80** überschrieb sich mit „Fähigkeiten hängen am Typ, **nicht** an der Betriebsart" — sie hängen an beidem; nur der Typ Bergwacht ist von der Betriebsart unabhängig. (4) „Die **beiden** Protokollzeilen" — benannt waren drei. (5) „E-DA-01 bis E-DA-30" — es sind 32, seit der Merge zwei dazugelegt hat. (6) Die Fassung-67-Zeile behauptete, außer AP0 liege kein Code unter `server/` — AP4 hat dort zwei Zahlenkommentare geändert. Dazu fünf kleinere Zahlen- und Datumsabweichungen. | nein | **alle elf behoben** am 15.09.2026. Die Zahl in Nr. 196 ist mit `cmarkgfm` **selbst nachgemessen** (195 Einträge, 68 als Codeblock, 4 mit verschluckter Tabelle), nicht aus dem Befund übernommen. |
 
 ---
 

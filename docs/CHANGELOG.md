@@ -100,9 +100,10 @@ nicht. Nachgemessen an `GERAETE_MODELLE`: **153 Zeichen** (154 Bytes), der
 Eintrag „fēnix 6X Pro / 6X Sapphire / … / quatix 6X Dual Power"; von 173
 Modellnamen liegen fünf über 64 Zeichen. Berichtigt sind die drei **lebenden**
 Stellen — `schema.sql`, Rahmenplan Abschnitt 3 (Schritt 2, E-S6-7) und
-`docs/konzepte/Konzept-R64-Herkunft-Geraet.md`. Die beiden Protokollzeilen
-(Changelog zu Web 12.9.1 und 12.9.2, Rahmenplan Fassung 19) bleiben stehen:
-Sie beschreiben, was damals galt.
+`docs/konzepte/Konzept-R64-Herkunft-Geraet.md`. Die **drei** Protokollzeilen
+bleiben stehen: die beiden Changelog-Einträge zu Web 12.9.1 („der längste
+Eintrag hat 156 Zeichen") und zu Web 12.9.2 („schrumpft von 156 auf 153
+Zeichen") sowie Rahmenplan-Fassung 19. Sie beschreiben, was damals galt.
 
 Dieser zweite Fund stammt aus der **Bestandsaufnahme zu R42** (PR #47) und ist
 beim Zusammenführen der beiden Zweige übernommen worden. Er kostet hier

@@ -4559,6 +4559,15 @@ declare(strict_types=1);
  * Sichtbar wurde es erst, als jemand dieselbe Regel an zwei Stellen nebeneinander
  * las. Jetzt liest das Skript dieselbe Tabelle wie die Pruefschicht.
  *
+ * Die zweite: Die Karte BERGWACHT-BEREITSCHAFTEN auf der Standortseite
+ * erschien nur, wenn dort ein luftgebundenes Rettungsmittel stand. Eine
+ * Bergwachtstation mit einem bodengebundenen Notarzt haette danach ein Feld
+ * `bergwacht` im Einsatz gehabt und keinen Ort, an dem sich Bereitschaften
+ * anlegen lassen — der Schreibweg legt sie naemlich trotzdem an. Gefragt wird
+ * jetzt `veh_caps_erlaubt()`, also: Darf hier ueberhaupt jemand die Faehigkeit
+ * fuehren? (Dieser Absatz hat bis zum 15.09.2026 gefehlt, waehrend die Zeile
+ * darueber ZWEI Luecken ankuendigte — nachgetragen beim Gegenlesen.)
+ *
  * WAS BEWUSST STEHEN BLEIBT. `api/range.php` zaehlt die Faehigkeiten des
  * Zeitraums weiter nur ueber `d.kind = 'air'`, und die beiden Windenkacheln
  * gibt es nur im Luft-Kachelsatz. Ein bodengebundener Bergwacht-Diensttag

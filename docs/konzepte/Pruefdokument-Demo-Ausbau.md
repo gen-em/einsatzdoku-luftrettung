@@ -16,6 +16,7 @@ gelöscht (R62).*
 > | Prüfumgebung | Container ohne KVM · PHP **8.4.19** (cli, `php -S`) · MariaDB **10.11.14** · TLS über `socat` vor `127.0.0.1:8443` · Playwright mit **Chromium 141**, Firefox 142, WebKit 26 (`/opt/pw-browsers`) · Node **22.22.2** |
 > | Ergebnis | **Alle Prüfmittel grün.** Vier Fehlerfunde während des Laufs, alle behoben (F-DA-7 bis F-DA-10); eine Folge bewusst offen gelassen (Backlog Nr. 198) |
 > | Nach dem Merge | `main` ist am 15.09.2026 um PR #47 (R42-Nachlauf) gewachsen. Dabei **drei Nummernkollisionen** aufgelöst (Backlog 190/191 → **197/198**, Rahmenplan-Fassung 66 → **67**) und **eine stille Fehlverschmelzung** in `docs/Backlog.md` von Hand repariert (F-DA-10). Mitgenommen: die zweite Hälfte von **Nr. 189** |
+> | Gegenprüfung | fünf unabhängige Blickwinkel auf den zusammengeführten Stand: **21 Befunde gemeldet, 15 bestätigt, 6 widerlegt**. Elf gehören diesem Paket und sind behoben (F-DA-11); drei sind älter als der Zweig und stehen jetzt als **Nr. 196** (erweitert) und **Nr. 199** (neu) im Backlog |
 
 ---
 
@@ -124,9 +125,12 @@ von `main` (`98d677d`, Web 20.2.1).*
 | Fixture-Umlauf | überlebt der Bestand einen Reset? | — | nach dem letzten Reset wieder **106 / 21 / 119 / 63 752** — dieselben Zahlen wie vorher |
 | `php -l` | Syntax aller berührten PHP-Dateien | — | **0 Fehler** |
 | `node --check` | Syntax aller berührten JS/MJS-Dateien | — | **0 Fehler** |
-| `grep -rn "88 Eins\|87 Eins\|55 861\|16 Diensttage"` | feste Zahlen im Repositorium | — | nur noch Messprotokoll-Stellen (Konzept 1.4, Absatz 2) und wörtliche, datierte Zitate — jedes davon als solches gekennzeichnet |
+| `grep -rn "88 Eins\|87 Eins\|55 861\|16 Diensttage"` | feste Zahlen im Repositorium | — | nur noch Messprotokoll-Stellen (Konzept 1.4, Absatz 2) und wörtliche, datierte Zitate — jedes davon als solches gekennzeichnet. **Eine Fundstelle führt Konzept 1.4 nicht auf:** `server/adminbackup_lib.php` nennt „87 Einsätze" als **Beispieltext** dafür, wie eine Meldung aussieht — dieselbe Gattung wie `admin_sicherungen.php`, das dort ausdrücklich steht. Inhaltlich ist nichts falsch; die Liste ist unvollständig, nicht der Kommentar |
 | Backlog gegen Rahmenplan Abschnitt 5 | dieselben offenen Nummern? | 53 = 53 (vor dem Merge) | **60 = 60** nach dem Merge, mit `diff` gegengeprüft (0 Zeilen Unterschied); **keine doppelt vergebene Nummer** in beiden Abschnitten zusammen |
 | `mb_strlen()` über `GERAETE_MODELLE` | längster Sammelname (Nr. 189, zweite Hälfte) | Kommentar sagte 156 | **153 Zeichen** (154 Bytes) · 173 Modellnamen · **5** über 64 Zeichen |
+| `cmarkgfm` über `docs/Backlog.md`, Eintrag für Eintrag | wie viele Einträge rendern auf GitHub als Codeblock (Nr. 196)? | 192 Einträge / 65 (Stand `origin/main`) | **195 Einträge / 68**, vier davon mit verschluckter Tabelle (123, 187, 192, 193) — die drei neuen dreistelligen Einträge 197, 198 und 199 sind selbst betroffen; Titel und Abnahme von Nr. 196 sind nachgezogen |
+| `cmarkgfm` über `docs/Rahmenplan.md` | rendert Abschnitt 10 als Tabelle? hat die Fahrplanzeile 9c sieben Zellen? | — | **8 von 58** Fassungszeilen im HTML (eine Leerzeile im Eintrag zu Fassung 61 beendet die Tabelle) · Zeile 9c hat **9 Zellen** bei einem Kopf mit 7, zwei werden verworfen. **Beides älter als dieser Zweig** (auf `98d677d` nachgemessen) und deshalb **nicht** hier behoben, sondern in Nr. 196 nachgetragen |
+| Gegenprüfung des zusammengeführten Stands | fünf unabhängige Blickwinkel, jeder Befund adversarisch widerlegt oder bestätigt | — | **21 gemeldet, 15 bestätigt, 6 widerlegt** · elf gingen auf dieses Paket zurück und sind behoben (F-DA-11), drei sind älter und stehen als Backlog Nr. 196 (erweitert) und Nr. 199 (neu), einer war die Dublette eines anderen |
 
 ## 3. Was im Browser geprüft wurde
 
@@ -144,7 +148,7 @@ einer gezielten Sichtprüfung; angesehen, nicht nur gezählt.*
 | Diensttag 06.07.2026 abends (D21) | Tageskarte | keine Spur an den Einsätzen, **gestrichelte Luftlinien** | **wie erwartet** — Bild `10b-tagesuebersicht-luftlinie-1280.png`; vier Einsätze ohne km-Wert („–"), zwei gestrichelte Linien auf der Karte |
 | Diensttag 06.07.2026, GPS-Daten | Spurenseite | Einsätze „keine Aufzeichnung", Ruhezeiten mit Punkten | **wie erwartet** — „3 von 7 Einträgen tragen GPS-Daten · 68 Punkte insgesamt" |
 | Diensttag 18.04.2026 (D18) | Tagesübersicht mit Karte | Pin am Standort Talwang, Spuren der Verlegungen, geschnittener Einsatz sichtbar | **wie erwartet** — Standort „Notarztstandort Talwang" in den Diensttag-Daten und als **Schild auf der Karte** (das war vor diesem Paket nicht möglich — Talwang hatte keine Koordinate), Besatzung „Fahrer Gerd Wallner · Sonstige Dr. Hanna Kestner", vier Einsätze mit **zwei** Sekundär-Haken, und der geschnittene Einsatz Nr. 4 (16:05) mit der Marke „geschnitten 16:05 – 17:10" und „Schnitt zurücknehmen" am Ruhesegment |
-| Adminbereich → Demo-Konto | zurücksetzen | läuft durch; Bestand danach 21 / 106 | **wie erwartet** — sechsmal gefahren (Messung zu Nr. 76), zuletzt 6802 ms; danach 106 Einsätze, 21 Diensttage, 119 Ruhesegmente, 63 752 Spurpunkte |
+| Adminbereich → Demo-Konto | zurücksetzen | läuft durch; Bestand danach 21 / 106 | **wie erwartet** — **siebenmal** gefahren: sechs Läufe der Messung zu Nr. 76 (dreimal alte, dreimal neue Fixture, Zeile oben) und ein siebter, der den Bestand wiederherstellt (E-DA-30). Dieser siebte lief **6802 ms** und gehört **nicht** zur Messung — er liegt deshalb außerhalb ihrer Spanne 6440–6631. Danach 106 Einsätze, 21 Diensttage, 119 Ruhesegmente, 63 752 Spurpunkte |
 
 ## 4. Prüfliste — was der Auftraggeber noch tun muss
 
@@ -244,6 +248,14 @@ sind zu **bestätigen**.*
   weiter nur luftgebunden. Bewusst nicht mitgemacht — es wäre eine
   Gestaltungsentscheidung mit Freigabe und Mockup (F-DA-4).
 - **Backlog Nr. 76** bleibt offen: gemessen ist sie jetzt, entschieden nicht.
+- **Backlog Nr. 199** (neu, aus der Gegenprüfung): Die Nummer **5** fehlt im
+  Backlog, obwohl der Changelog zu Web 7.2.0 zweimal sagt, sie stehe unter
+  *Erledigt*. Älter als dieser Zweig, nicht hier behoben.
+- **Backlog Nr. 196** ist um zwei gemessene Befunde am **Rahmenplan**
+  gewachsen (Abschnitt 10 rendert 8 von 58 Zeilen als Tabelle; die
+  Fahrplanzeile 9c verliert ihren Statustext an ungeschützte Pipes). Beides
+  älter als dieser Zweig — und beides beantwortet die Frage, die Nr. 196
+  selbst gestellt hatte.
 - **F-DA-6** (Beobachtung, kein Auftrag): Die Höhe des Einsatzorts
   (`site_ele_m`) erscheint nur an einem luftgebundenen Diensttag. Ein
   Bergwacht-Einsatz am Boden auf 1200 m führt sie in der Datenbank und zeigt
