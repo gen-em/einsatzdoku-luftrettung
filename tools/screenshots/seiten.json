@@ -46,6 +46,20 @@
       "karte": true
     },
     {
+      "name": "10a-tagesuebersicht-ohne-standort",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "__TAG_OHNE_STANDORT__",
+      "karte": true
+    },
+    {
+      "name": "10b-tagesuebersicht-luftlinie",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "__TAG_LUFTLINIE__",
+      "karte": true
+    },
+    {
       "name": "11-tagesuebersicht-schublade",
       "gruppe": "Inhalt",
       "rolle": "demo",
@@ -69,6 +83,13 @@
       "gruppe": "Inhalt",
       "rolle": "demo",
       "pfad": "__EINSATZ__",
+      "karte": true
+    },
+    {
+      "name": "12a-einsatzansicht-winde",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "__EINSATZ_WINDE__",
       "karte": true
     },
     {

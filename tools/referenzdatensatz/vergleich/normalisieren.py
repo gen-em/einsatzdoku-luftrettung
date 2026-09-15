@@ -39,6 +39,8 @@ verglich also nichts).
 """
 from __future__ import annotations
 
+import json
+
 import re
 
 MARKE_ID = "<ID>"
@@ -56,6 +58,16 @@ ID_SPALTEN = {
     "diensttage": ["diensttag_id"],
     "ruhezeiten": ["ruhezeit_id", "diensttag_id"],
 }
+
+
+def _ordnung(x):
+    """Ein stabiler Sortierschluessel fuer beliebige Eintraege.
+
+    Ueber den JSON-Text und nicht ueber ein benanntes Feld: Welches Feld die
+    Reihenfolge entscheidet, ist je Liste ein anderes, und eine Liste, die
+    morgen ein Feld dazubekommt, sortierte sonst weiter nach dem alten.
+    """
+    return json.dumps(x, ensure_ascii=False, sort_keys=True)
 
 
 def _trackname(n: str) -> str:
@@ -79,6 +91,36 @@ def _liesmich(text: str) -> str:
     return "\r\n".join(zeilen)
 
 
+def _rea_json(text: str) -> str:
+    """Reanimationsverlauf mit fester Reihenfolge der Ereignisse.
+
+    DIESELBE URSACHE WIE BEI DEN STAMMDATEN WEITER UNTEN (siehe `edbak`):
+    Zwei Ereignisse in DERSELBEN Minute haben keine zugesagte Reihenfolge, und
+    der Bestand fuehrt genau so einen Fall — an D06, weil der Dienst ueber die
+    Fruehjahrsumstellung laeuft und die Stunde danach nicht existiert. Im
+    CSV-Weg steht der Verlauf als eine Zeichenkette in der Spalte `rea_json`;
+    ohne diese Zeile meldete der Vergleich die ganze Spalte als geaendert und
+    zeigte zwei Texte, die sich in zwei vertauschten Woertern unterscheiden.
+
+    NUR DIE REIHENFOLGE. Ein Ereignis, das FEHLT oder eine andere Art traegt,
+    faellt weiter auf -- die Gegenprobe in `vergleichen.py` belegt beides.
+    Ist die Spalte kein brauchbares JSON, bleibt sie, wie sie ist: Ein
+    Vergleich, der unlesbare Werte stillschweigend gleichmacht, prueft nichts.
+    """
+    try:
+        daten = json.loads(text)
+    except (ValueError, TypeError):
+        return text
+    if not isinstance(daten, list):
+        return text
+    for sitzung in daten:
+        ev = isinstance(sitzung, dict) and sitzung.get("ereignisse")
+        if isinstance(ev, list):
+            sitzung["ereignisse"] = sorted(ev, key=_ordnung)
+    daten.sort(key=_ordnung)
+    return json.dumps(daten, ensure_ascii=False, separators=(",", ":"))
+
+
 def archiv(a: dict) -> dict:
     """Normalisiert ein mit lesen.lesen_archiv() eingelesenes Archiv."""
     aus: dict = {}
@@ -91,6 +133,8 @@ def archiv(a: dict) -> dict:
                     n[sp] = MARKE_ID
             if n.get("track_datei"):
                 n["track_datei"] = _trackname(n["track_datei"])
+            if n.get("rea_json"):
+                n["rea_json"] = _rea_json(n["rea_json"])
             zeilen.append(n)
         aus[tabelle] = zeilen
     aus["felder"] = [dict(z) for z in a.get("felder", [])]
@@ -144,6 +188,41 @@ def edbak(b: dict) -> dict:
 
     aus["missions"] = zeilen("missions")
     aus["rest_segments"] = zeilen("rest_segments")
+
+    # ---- Reihenfolgen, die niemand zugesagt hat -------------------------
+    #
+    # ZWEI STELLEN, EINE URSACHE: Die Sicherung schreibt Stammdaten und
+    # Reanimationsereignisse in der Reihenfolge, die die Datenbank liefert.
+    # Bei GLEICHEM Sortierwert ist die nicht festgelegt -- MySQL darf zwei
+    # Zeilen mit demselben `name` in jeder Reihenfolge zurueckgeben, und nach
+    # einem Umlauf in ein frisches Konto tut es das auch.
+    #
+    # BEIDE FAELLE STEHEN SEIT DEM DEMO-AUSBAU IM BESTAND:
+    #   - `Bergwacht Sonnenau` gibt es an ZWEI Standorten. Stammdaten sind je
+    #     Standort (E15), Dubletten ueber Standorte hinweg sind zulaessig --
+    #     und im Bestand gewollt (E-DA-10).
+    #   - An D06 liegen zwei Reanimationsereignisse in DERSELBEN Minute. Das
+    #     ist kein Versehen: Der Dienst laeuft ueber die Fruehjahrsumstellung,
+    #     und die Stunde danach gibt es nicht.
+    #
+    # Der Vergleich meldete daraufhin zwoelf Abweichungen, die keine waren:
+    # paarweise vertauschte `base_ref`-Werte und zwei vertauschte
+    # Ereignisarten. Eine Ausnahmeregel waere hier falsch -- sie erklaerte
+    # etwas, das gar nicht abweicht. Normalisiert wird deshalb die
+    # REIHENFOLGE, und nur sie: Was in den Zeilen steht, bleibt unangetastet,
+    # und ein geaenderter Wert faellt weiter auf (Probe aufs Exempel in
+    # vergleichen.py).
+    if isinstance(aus.get("stammdaten"), dict):
+        sd = {}
+        for name, liste in aus["stammdaten"].items():
+            sd[name] = (sorted(liste, key=_ordnung) if isinstance(liste, list) else liste)
+        aus["stammdaten"] = sd
+    for m in aus["missions"]:
+        for sitzung in (m.get("resus") or []):
+            if isinstance(sitzung, dict) and isinstance(sitzung.get("events"), list):
+                sitzung["events"] = sorted(sitzung["events"], key=_ordnung)
+        if isinstance(m.get("resus"), list):
+            m["resus"] = sorted(m["resus"], key=_ordnung)
     # Der Pruefwert des Inhaltsschluessels haengt am KONTO, nicht am Bestand.
     # Nach einem Umlauf in ein frisches Konto ist er zwangslaeufig ein anderer.
     if "pat_key_check" in aus:

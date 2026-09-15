@@ -328,8 +328,15 @@ export const wege = [
     name: 'ap4-ohne-standort-sichtbar',
     paket: 'AP4', punkt: 'E-S9-18', rolle: 'demo',
     was: 'Ein Rettungsmittel ohne Standort ist auf der Stammdatenseite auffindbar',
-    soll: 'Karte „Ohne Standort" mit 2 Einträgen (Referenzbestand)',
+    soll: 'Karte „Ohne Standort" mit 4 von 10 Einträgen (Referenzbestand nach dem Demo-Ausbau)',
     async fahren(k) {
+      /* DIE ZAHL STEHT HIER UND WÄCHST MIT DEM BESTAND. Bis zum Demo-Ausbau
+         waren es 2 von 6 — „Sanitätsdienst Seefest" und „Reserve Talwang".
+         Dazu kamen die beiden Veranstaltungs-Rettungsmittel, die einen
+         Diensttag tragen (E-DA-08). Wer die Zahl auf 0 fallen sieht, hat
+         Backlog Nr. 174 wieder: Der Einspielweg verliert den leeren Standort,
+         und zwar still. */
+      const OHNE_SOLL = 4, GESAMT_SOLL = 10;
       const l = await liste(k);
       const ohne = l.filter(z => /Ohne Standort/i.test(z.karte));
       await k.bild('ap4-ohne-standort-sichtbar');
@@ -337,8 +344,9 @@ export const wege = [
         ist: `${ohne.length} Rettungsmittel in der Karte „Ohne Standort" `
            + `(${ohne.map(z => z.text.split(' ')[0]).join(', ') || '—'}), `
            + `${l.length} insgesamt`,
-        ok: ohne.length === 2 && l.length === 6,
-        bemerkung: ohne.length === 2 ? '' : 'Soll: 2 ohne Standort, 6 insgesamt',
+        ok: ohne.length === OHNE_SOLL && l.length === GESAMT_SOLL,
+        bemerkung: (ohne.length === OHNE_SOLL && l.length === GESAMT_SOLL) ? ''
+          : `Soll: ${OHNE_SOLL} ohne Standort, ${GESAMT_SOLL} insgesamt`,
       };
     },
   },

@@ -43,6 +43,55 @@ async function einsaetze(k) {
   return EINSAETZE;
 }
 
+/**
+ * Eine Karte suchen, auf der ein RINGPUNKT tatsaechlich steht.
+ *
+ * WARUM DAS SUCHEN NOETIG IST. `einsatz.php` zeichnet den Ring am Anfang und
+ * am Ende der Spur nur dann, wenn dort nicht schon ein SCHILD steht
+ * (`ringLos()`, Abstand NAH_M): Der Standort und die Zielklinik tragen ihren
+ * Ring selbst. Beginnt und endet die Spur an einem Schild, gibt es keinen
+ * freistehenden Ringpunkt — und dann laesst sich seine Antippflaeche nicht
+ * messen.
+ *
+ * GENAU DAS IST MIT DEM DEMO-AUSBAU EINGETRETEN. Der Standort
+ * „Notarztstandort Talwang" fuehrte bis dahin bewusst KEINE Koordinaten
+ * (E-P1-02); seine Bodeneinsaetze hatten deshalb kein Standort-Schild und
+ * immer einen freistehenden Ring am Spuranfang. Seit E-DA-09 hat er welche,
+ * das Schild steht da, und der Ring faellt weg — richtig so, und fuer diesen
+ * Weg der Grund, warum er nicht mehr den erstbesten Einsatz nehmen darf.
+ *
+ * Gesucht wird ueber `api/day.php`, nicht durch Anklicken: Der Weg misst ein
+ * MASS, nicht einen Bedienpfad, und eine Suche ueber zwanzig Diensttage im
+ * Browser waere teurer als der Weg selbst.
+ */
+async function ringpunktSuchen(k) {
+  const tage = await k.seite.evaluate(async (basis) => {
+    const r = await fetch(basis + '/api/day.php', { credentials: 'same-origin' });
+    const j = await r.json();
+    return (j.days || []).map(d => d.id);
+  }, k.basis);
+  for (const tag of tage) {
+    const ids = await k.seite.evaluate(async ([basis, d]) => {
+      const r = await fetch(basis + '/api/day.php?d=' + d, { credentials: 'same-origin' });
+      const j = await r.json();
+      return (j.missions || []).map(m => m.id);
+    }, [k.basis, tag]);
+    for (const id of ids) {
+      await k.gehZu(k.basis + '/einsatz.php?id=' + id);
+      await k.seite.waitForSelector('.leaflet-container', { timeout: 20000 }).catch(() => {});
+      await k.seite.waitForTimeout(900);
+      const px = await k.seite.evaluate(() => {
+        const e = document.querySelector('.geo-ringpunkt-feld');
+        if (!e) { return null; }
+        const r = e.getBoundingClientRect();
+        return Math.round(Math.min(r.width, r.height));
+      });
+      if (px !== null) { return { px, einsatz: id, tag }; }
+    }
+  }
+  return { px: null, einsatz: null, tag: null };
+}
+
 /** Eine Seite mit Karte, damit die Marker-Regeln geladen sind. */
 async function karteSeite(k) {
   const e = await einsaetze(k);
@@ -106,12 +155,8 @@ export const wege = [
       /* Und die Antippflaeche am ECHTEN Marker der Karte — sie ist
        * durchsichtig und steht in keinem gerechneten Kasten (WCAG 2.5.8,
        * 24 px; die Zeichnung darin bleibt 14). */
-      m.feld = await k.seite.evaluate(() => {
-        const e = document.querySelector('.geo-ringpunkt-feld');
-        if (!e) { return null; }
-        const r = e.getBoundingClientRect();
-        return Math.round(Math.min(r.width, r.height));
-      });
+      const ring = await ringpunktSuchen(k);
+      m.feld = ring.px;
       await k.bild('ap3-schildmasse');
       const ab = Object.entries(SOLL).filter(([n, v]) => m[n] !== v)
         .map(([n, v]) => n + ' ' + m[n] + ' statt ' + v);
@@ -123,7 +168,7 @@ export const wege = [
            + ' · beide ' + m.beide + ' · Kreis ' + m.kreis + ' · Ringpunkt ' + m.ringpunkt
            + ' · Ring beide ' + m.ringBeide + ' px · Symbol im Schild ' + m.symbolSchild
            + ', im Kreis ' + m.symbolKreis + ' px · Antippfläche des Ringpunkts '
-           + m.feld + ' px',
+           + m.feld + ' px (gemessen an Einsatz ' + (ring.einsatz ?? '—') + ')',
         ok: ab.length === 0 && symOk && feldOk,
         bemerkung: ab.join(', ') || (symOk ? '' : 'Symbolgröße: Soll 18 / 16 px'),
       };

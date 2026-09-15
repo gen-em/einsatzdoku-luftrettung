@@ -119,6 +119,7 @@ selbst richtet nichts ein.
 
 ```
 python3 einspielen.py --stufen konto
+php  demo_kennzeichnen.php                          # zwischen konto und Anmeldung
 node passwort_setzen.mjs '<Einrichtungslink>' 'nadokudemo0815' rc.json
 python3 einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste,schneiden
 python3 messprotokoll.py
@@ -127,6 +128,25 @@ node sichtpruefung.mjs
 
 Die Stufen sind einzeln aufrufbar und merken sich ihren Fortschritt in
 `lauf.json`. Ein abgebrochener Ingest-Lauf setzt dort fort, wo er stand.
+
+**`demo_kennzeichnen.php` steht zwischen `konto` und der ersten Anmeldung,
+und zwar zwingend** (Demo-Ausbau). Es schreibt die Kontonummer nach
+`app_state.demo_user_id` und setzt die Reset-Marke in die Zukunft. Zwei
+Dinge hängen daran:
+
+- **Die Schlüsselhülle bleibt `edk1:`.** `api/kdf_upgrade.php` überspringt
+  das Demo-Konto (`demo_ist_demo()`); jedes andere Konto stellt beim ersten
+  Anmelden still auf `edka1:<kennung>:` um. Eine solche Hülle wäre auf der
+  Produktivinstallation nicht zu öffnen, und `fixture/erzeugen.php` hält
+  deshalb an — am Ende der dritten Runde, nach vier Minuten Einspielen.
+- **Kein Reset mitten im Aufbau.** Ein Demo-Konto ohne Marke gilt als
+  überfällig; der nächste Seitenaufruf räumt den halb aufgebauten Bestand
+  weg.
+
+Es benutzt **kein** SQL an der Anwendung vorbei, sondern `demo_lib.php` und
+`db()` — dieselben Wege wie der Adminbereich. Was es nicht kann und nicht
+können soll: ein Demo-Konto **anlegen**. Das braucht eine Fixture, und die
+gibt es an dieser Stelle noch nicht.
 
 **Der Browserschritt dazwischen ist keine Bequemlichkeit.** Passwort,
 Salz, Inhaltsschlüssel, beide Schlüsselhüllen und der

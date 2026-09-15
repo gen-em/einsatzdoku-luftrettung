@@ -22,7 +22,7 @@ einer Zahl benennt.
 
 | Ordner | Inhalt | eigene Anleitung |
 |---|---|---|
-| `quelldaten/` | die Wahrheit: 16 Diensttage, 87 Einsätze als JSON, dazu die zwei Geräteblöcke, der eine Schnitt, Schema und Prüfung | `quelldaten/FORMAT.md` |
+| `quelldaten/` | die Wahrheit: 21 Diensttage, 103 Einsätze als JSON, dazu die zwei Geräteblöcke, die drei Schnitte, Schema und Prüfung | `quelldaten/FORMAT.md` |
 | `generator/` | erzeugt daraus Ingest-Payloads, Formulardaten, CSV und GPX | `generator/LIESMICH.md` |
 | `einspielen/` | spielt alles über die **regulären** Wege ein (kein SQL) | `einspielen/LIESMICH.md` |
 | `browser/` | was es nur im Browser gibt: CSV-Import, P-07, Exporte, Demo-Abnahme | `browser/LIESMICH.md` |
@@ -40,23 +40,34 @@ einer Zahl benennt.
 
 | | |
 |---|---|
-| Diensttage | 16 (15 aktiv, 1 im Papierkorb) |
-| Einsätze | **88** (83 aktiv, 5 im Papierkorb) — 87 aus den Quelldaten plus der eine geschnittene, der erst auf dem Server entsteht |
-| Ruhesegmente | 100 (95 aktiv) |
-| Spurpunkte | 55 861 |
-| Stammdaten | 2 Standorte, **6 Rettungsmittel — davon 2 OHNE Standort**, 15 Besatzungs-Vorbelegungen, 8 Zielkliniken, 3 Bergwacht-Bereitschaften, 8 weitere Rettungsmittel |
+| Diensttage | 21 (20 aktiv, 1 im Papierkorb) — **2 davon ohne Standort** |
+| Einsätze | **106** (101 aktiv, 5 im Papierkorb) — 103 aus den Quelldaten plus die drei geschnittenen, die erst auf dem Server entstehen |
+| Ruhesegmente | 119 (114 aktiv) |
+| Spurpunkte | 63 752 |
+| Stammdaten | 3 Standorte (**alle mit Koordinate**), **10 Rettungsmittel — davon 4 OHNE Standort**, 15 Besatzungs-Vorbelegungen, 13 Rollen-Vorbelegungen, 12 Zielkliniken, 6 Bergwacht-Bereitschaften, 10 weitere Rettungsmittel |
 | Geräte | 2 — dazu entsteht beim Nachtragen und beim Import das virtuelle „Manuelle Einträge" (`manual-<konto>`), also 3 Zeilen in `devices` |
+| Herkunft der Einsätze | Uhr 39, Handy 49, Wear 4, manuell 7, Import 4, Schnitt 3 |
 
-**Die zwei Rettungsmittel ohne Standort sind kein Schmuck, sondern der
-zweite von zwei Fällen** (E-S9-18): „Sanitätsdienst Seefest" und „Reserve
-Talwang" tragen `base_id = NULL`, und nur dadurch deckt der Bestand ab,
-was S9/AP4 ausdrücklich erlaubt — Bergwacht, Veranstaltung und Sonstiges
-brauchen keinen Standort. Bis zum 13.09.2026 fehlte der Fall: Nicht in
-den Quelldaten, die ihn seit Web 16.0.0 tragen, sondern im **Einspielweg**
+**Die vier Rettungsmittel ohne Standort sind kein Schmuck, sondern der
+zweite von zwei Fällen** (E-S9-18): „Sanitätsdienst Seefest", „Reserve
+Talwang", „Boxkampf Rainer Maria Rilke" und „Konzert von Karl Marx" tragen
+`base_id = NULL`, und nur dadurch deckt der Bestand ab, was S9/AP4
+ausdrücklich erlaubt — Bergwacht, Veranstaltung und Sonstiges brauchen
+keinen Standort. Bis zum 13.09.2026 fehlte der Fall: Nicht in den
+Quelldaten, die ihn seit Web 16.0.0 tragen, sondern im **Einspielweg**
 (Backlog Nr. 174, Einzelheiten im Changelog zu Web 19.3.1). Wer die Zahl
-2 hier auf 0 fallen sieht, hat denselben Fehler wieder.
+4 hier auf 0 fallen sieht, hat denselben Fehler wieder.
 
-Die Verteilung ist ungleich, mit Häufungen — acht luft- und acht
+**Seit dem Demo-Ausbau gibt es den Fall auch einen Schritt weiter oben: zwei
+Diensttage ohne Standort** (D20, D21 — die beiden Veranstaltungsdienste).
+Ein Rettungsmittel ohne Standort ist eine Stammdatenzeile; ein Diensttag
+ohne Standort ist ein **Weg durch die Anwendung**: kein Standortfeld im
+Formular, kein Standortschild an der Spur, keine Rollen-Vorbelegung, und
+die Spur beginnt dort, wo der Dienst begonnen hat, statt an einer Wache.
+Wer die Zahl 2 hier auf 0 fallen sieht, hat den Weg verloren, nicht nur
+eine Zeile.
+
+Die Verteilung ist ungleich, mit Häufungen — acht luft- und dreizehn
 bodengebundene Diensttage, im Schnitt gut fünf Einsätze je Tag.
 
 **Alle Namen sind erfunden.** Keine realen Rufnamen, keine „Christoph"-Kennung,
@@ -82,6 +93,7 @@ Beide Prüfungen nennen ihre Zahl. Eine Prüfung ohne Zahl ist keine.
 ```
 sh   einspielen/lokal_starten.sh                     # MariaDB, PHP, TLS davor
 python3 einspielen/einspielen.py --stufen konto
+php  einspielen/demo_kennzeichnen.php                # VOR dem ersten Anmelden
 node einspielen/passwort_setzen.mjs '<Link>' nadokudemo0815
 python3 einspielen/einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste,schneiden
 node browser/csv_import.mjs                          # die vier CSV-Einsätze
@@ -89,6 +101,16 @@ node browser/csv_import.mjs                          # die vier CSV-Einsätze
 
 Dauer rund vier Minuten. **Alles über die regulären Wege** — `ingest.php`,
 `api/day.php`, `einsatz_form.php`, die Weboberfläche. Keine Zeile per SQL.
+
+**Die dritte Zeile ist neu und sie ist nicht wahlfrei.** Sie trägt das frisch
+angelegte Konto in `app_state.demo_user_id` ein und setzt die Reset-Marke weit
+in die Zukunft. Ohne sie stellt `unlock.js` beim **ersten** Anmelden still auf
+die Hülle mit Server-Anteil um (`edka1:`), und `fixture/erzeugen.php` hält am
+Ende der dritten Runde an — richtigerweise, siehe „Der Riegel auf der
+Schlüsselhülle". Bis zum Demo-Ausbau stand die Reihenfolge nur als Satz in
+diesem Dokument; jetzt steht sie als Befehl in der Folge. Die Marke in der
+Zukunft verhindert außerdem, dass ein Demo-Reset mitten in den vier Minuten
+losläuft und den halb aufgebauten Bestand wegräumt.
 
 ### 3. Exportieren und vergleichen
 
@@ -174,10 +196,19 @@ stellt beim ersten Anmelden still auf `edka1:` um. Dass das Demo-Konto
 verschont bleibt, hängt an einer einzigen Zeile: `api/kdf_upgrade.php`
 überspringt es, **sofern** `app_state.demo_user_id` auf dieses Konto zeigt
 (`demo_ist_demo()`, E-P1-19). Wer den Bestand neu aufbaut und sich anmeldet,
-**bevor** das Konto im Adminbereich als Demo-Konto angelegt ist, hat danach
-eine `edka1:`-Hülle — und `erzeugen.php` hält an. Das ist der Riegel bei der
-Arbeit, nicht sein Fehler: Die Reihenfolge aus „Die drei Läufe" setzt das
-Demo-Konto vor den Browserläufen.
+**bevor** das Konto als Demo-Konto vermerkt ist, hat danach eine
+`edka1:`-Hülle — und `erzeugen.php` hält an. Das ist der Riegel bei der
+Arbeit, nicht sein Fehler.
+
+**Genau das ist im Demo-Ausbau passiert, und deshalb gibt es jetzt
+`einspielen/demo_kennzeichnen.php`.** Der Satz „die Reihenfolge setzt das
+Demo-Konto vor die Browserläufe" stand hier seit S10 — aber der Adminbereich
+kann das Konto erst dann als Demo-Konto anlegen, wenn es **eine Fixture
+gibt**, und die entsteht erst am Ende. Die Anweisung war also nicht
+ausführbar, und der Riegel hat beim ersten Neubau danach zugeschlagen. Das
+kleine Skript löst den Knoten von der anderen Seite: Es vermerkt die
+Kontonummer unmittelbar nach `--stufen konto` in `app_state`, ohne Fixture
+und ohne Adminbereich.
 
 Dieselbe Bauart wie der Riegel auf `KDF_ITER_ZIEL` daneben (Backlog Nr. 155).
 `riegelprobe.php` misst **beide** Richtungen; ein Riegel, der immer zuschlägt,
