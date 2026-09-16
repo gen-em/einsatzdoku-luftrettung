@@ -37,10 +37,10 @@ Steuerungsdokumente trägt. **206 bis 212 sind in der Umsetzung von P5a auf
 demselben Zweig vergeben** (206 Messstand-Schritt, 207 `gen-em.org` in `tools/`,
 208 Jobregister von Hand geführt, 209 Bausteintabelle in `Design.md`,
 210 Deadlocks in `ingest.php`, 211 `/api/`-Aufruf ohne Sitzung, 212 zwei
-Erwartungen der Wiederherstellungsprobe), **213 aus der Durchsicht vom
-16.09.2026** (Zustandsdatei der Kette im Webroot). Jeder weitere Zweig, der
-Nummern vergibt, beginnt bei **214** und trägt seine Spanne hier ein, bevor
-er pusht.
+Erwartungen der Wiederherstellungsprobe), **213 und 214 aus der Durchsicht vom
+16.09.2026** (Zustandsdatei der Kette im Webroot; `install.php` in der
+Auslieferung). Jeder weitere Zweig, der Nummern vergibt, beginnt bei **215**
+und trägt seine Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
@@ -2271,6 +2271,41 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Dateien, die es nicht gibt) — und als Gegenprobe **404 und nicht 403** für
     `.well-known/acme-challenge/`, weil eine zu breite Sperre die
     Zertifikatserneuerung lautlos umbringt.
+
+214. **`install.php` wurde bei jedem Lauf wieder ausgeliefert.**
+    *Angewiesen von der Betreiberin am 16.09.2026, umgesetzt am selben Tag in
+    Web 20.15.2.*
+    `docs/Technik.md` sagt zur Neuinstallation seit jeher: „Nach Erfolg sperrt
+    `install.lock`; `install.php` danach löschen." Die Auslieferungskette hat
+    das bei jedem Lauf rückgängig gemacht — die Datei stand nicht in der
+    Ausnahmeliste (dort steht `install.lock`, nicht `install.php`) und wurde
+    mitgeschickt. Wer sie von Hand entfernte, fand sie nach dem nächsten Lauf
+    wieder vor.
+
+    **Es war nie eine Lücke.** `install.php:136` verweigert sich selbst,
+    solange `config.php` **oder** `install.lock` existiert. Der Punkt ist, dass
+    zwei Anweisungen desselben Projekts einander widersprachen.
+
+    **Der Preis, und er bleibt bestehen:** Eine leere Anlage lässt sich nicht
+    mehr allein über die Kette einrichten — `server/install.php` muss einmal
+    von Hand hinauf, dann einrichten, dann wieder löschen. Ein Fehler **im**
+    Einrichter erreicht über die Kette ebenfalls keinen Server mehr. Stufe 2
+    fängt den Fall ab und nennt ihn beim Namen, damit niemand den
+    `FTP_ZIELPFAD` verdächtigt.
+
+    **Wie es aufgefallen ist, und was daran lehrreich bleibt.** Gemeldet wurde
+    zuerst „install.php wird nicht gesynct". Die Ursache war eine andere und
+    liegt weiter offen: Die Aktion vergleicht die lokalen Dateien gegen ihre
+    **State-Datei**, nie gegen den Server (`deploy.ts:84`, `:150`, `:155`).
+    Wer auf dem Server von Hand löscht, bekommt die Datei **nie** zurück —
+    gemessen an der Live-State-Datei von Staging, die `install.php` mit Hash
+    führte, während der Lauf 14 Sekunden später belegte, dass sie dort fehlte.
+    Für `install.php` ist das jetzt gegenstandslos, weil sie ausgenommen ist.
+    **Für jede andere Datei gilt es weiter** — siehe den nächsten Absatz.
+
+    *Offen daraus:* Ein Hinweis im Runbook, dass eine von Hand auf dem Server
+    gelöschte Datei nur zurückkommt, wenn man die State-Datei mitlöscht. Noch
+    nicht geschrieben.
 
 ## Erledigt
 

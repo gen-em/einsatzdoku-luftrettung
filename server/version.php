@@ -5502,5 +5502,40 @@ declare(strict_types=1);
  *
  * KEINE MIGRATION. Kein Code der Anwendung ist angefasst — `.htaccess`,
  * die Kette und `.gitignore`.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.15.2 — `install.php` GEHOERT NICHT MEHR ZUR AUSLIEFERUNG
+ * ---------------------------------------------------------------------------
+ *
+ * Backlog Nr. 214, auf Anweisung der Betreiberin vom 16.09.2026. Das Runbook
+ * sagt zur Neuinstallation seit jeher "Nach Erfolg sperrt install.lock;
+ * install.php danach loeschen" — und die Kette machte genau das bei jedem
+ * Lauf wieder rueckgaengig. Jetzt steht `install.php` in der Ausnahmeliste
+ * beider FTPS-Schritte, neben `config.php` und `install.lock`.
+ *
+ * WARUM DAS NICHT DER SCHUTZ IST, DER OHNEHIN SCHON GREIFT. `install.php:136`
+ * verweigert sich selbst, solange `config.php` ODER `install.lock` existiert
+ * ("Die Anwendung ist bereits eingerichtet"). Die Datei war also nie
+ * gefaehrlich, nur ueberfluessig — und eine Datei, die das Runbook loeschen
+ * heisst, gehoert nicht in eine Auslieferung, die sie zurueckbringt.
+ *
+ * DER PREIS, BENANNT: Eine LEERE Anlage laesst sich nicht mehr allein ueber
+ * die Kette einrichten. `server/install.php` muss einmal von Hand hinauf,
+ * dann wird eingerichtet, dann wird sie wieder geloescht. Ein Fehler IM
+ * Einrichter erreicht ausserdem keinen Server mehr ueber die Kette — auch er
+ * braucht dann den Handgriff. Beides ist in `docs/Technik.md`
+ * (Neuinstallation) und im Backlog festgehalten, und Stufe 2 der Kette sagt
+ * es von selbst: Landet der Aufruf auf `install.php` und antwortet die mit
+ * 404, nennt die Fehlermeldung Nr. 214 und den Handgriff statt den
+ * FTP-Zielpfad zu verdaechtigen.
+ *
+ * WARUM EINE NUMMER FUER EINE AENDERUNG OHNE SERVERDATEI. Angefasst sind nur
+ * `.github/` und Dokumentation, und `CLAUDE.md` 2 stuft dafuer sonst nicht
+ * hoch. Hier aendert sich aber, WAS auf dem Server landet — eine Datei
+ * weniger —, und das ist eine Aussage ueber die Auslieferung selbst. Der
+ * Changelog braucht dafuer eine Ueberschrift, unter der eine Betreiberin sie
+ * findet.
+ *
+ * KEINE MIGRATION.
  */
-const WEB_VERSION = '20.15.1';
+const WEB_VERSION = '20.15.2';
