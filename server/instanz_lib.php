@@ -60,13 +60,23 @@ declare(strict_types=1);
  *    URHEBERSCHAFT der Software, nicht der Name des Betriebs. Wer diese
  *    Anwendung aufsetzt, darf seinen Dienst benennen — nicht den, der sie
  *    geschrieben hat.
- * 2. `GPX_CREATOR` in `gpx_lib.php`. Der Wert steht in jeder ausgelieferten
- *    GPX-Datei und gehoert damit zum EXPORTFORMAT (`docs/Export-Format.md`);
- *    ihn einstellbar zu machen hiesse, dass zwei Installationen
- *    unterschiedliche Dateien erzeugen — und die eingecheckten
- *    Referenzausfuehrungen (`tools/referenzdatensatz/referenz/`) verglichen
- *    dann Aepfel mit Birnen. Das ist eine eigene Entscheidung und gehoert
- *    nicht nebenbei gemacht.
+ * 2. `creator` IN JEDER GPX-DATEI (`gpx_creator()` in `gpx_lib.php`,
+ *    `assets/export.js` fuer den grossen Export). Das Feld benennt die
+ *    SOFTWARE, nicht die Installation — GPX 1.1 beschreibt es als „the name
+ *    and URL of the software that created your GPX document". Wer diese
+ *    Anwendung aufsetzt, hat sie nicht geschrieben.
+ *
+ *    ENTSCHIEDEN UND AUSGESCHRIEBEN, nicht stillschweigend stehengelassen
+ *    (P5a/AP5, Weg B). Die Begruendung in voller Laenge steht an zwei
+ *    Stellen: im Kopf von `gpx_lib.php` (fuer den, der den Code liest) und
+ *    in `docs/Export-Format.md` 3.5 (fuer den, der das Format liest). Wer
+ *    diese Ausnahme in Frage stellt, faengt dort an.
+ *
+ *    Nachgemessen am 16.09.2026, weil die fruehere Begruendung an dieser
+ *    Stelle eine offene Behauptung war: Der Referenz-Export enthaelt **204**
+ *    GPX-Dateien, alle mit `creator`, und `normalisieren.py` blendete das
+ *    Attribut NICHT aus — es wurde 204-mal byteweise verglichen. Seither ist
+ *    die FASSUNG dort maskiert und der NAME weiterhin verglichen.
  */
 
 /* DIESE DATEI LAEDT NICHTS. Das ist Absicht und derselbe Kniff wie in

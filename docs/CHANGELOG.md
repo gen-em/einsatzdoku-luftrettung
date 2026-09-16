@@ -84,11 +84,33 @@ Vorgabe in der Datenbank stehen.
   *Urheberschaft der Software*, nicht der Name des Betriebs. Wer diese
   Anwendung aufsetzt, darf seinen Dienst benennen — nicht den, der sie
   geschrieben hat.
-- **`GPX_CREATOR` bleibt fest.** Der Wert steht in jeder ausgelieferten
-  GPX-Datei und gehört damit zum Exportformat; einstellbar gemacht, erzeugten
-  zwei Installationen unterschiedliche Dateien und die eingecheckten
-  Referenzausführungen verglichen Äpfel mit Birnen. Das ist eine eigene
-  Entscheidung und wird nicht nebenbei getroffen.
+- **`creator` in GPX-Dateien bleibt fest — und sagt jetzt, warum.** Das Feld
+  benennt die **Software**, nicht die Installation: GPX 1.1 beschreibt es als
+  *„the software that created your GPX document"*, und wer diese Anwendung
+  aufsetzt, hat sie nicht geschrieben. Bis Web 20.7.0 war der Wert schlicht
+  ein **Überbleibsel** — eine umbenannte Installation lieferte Dateien aus,
+  die weiterhin „Gen-EM NAdoku" sagten. Jetzt ist es eine ausgeschriebene
+  Entscheidung (`docs/Export-Format.md` 3.5).
+
+  **Neu ist die Fassung im Wert** (`Gen-EM NAdoku 20.8.0`), weil diese
+  Anwendung GPX auch wieder **einliest**: Eine Datei, die nach einem Jahr
+  zurückkommt, sagt selbst, welche Fassung sie geschrieben hat.
+
+  **Gemessen, bevor entschieden wurde** — das war die offene Stelle der
+  früheren Begründung: Der Referenz-Export enthält **204** GPX-Dateien, alle
+  mit `creator`, und `normalisieren.py` blendete das Attribut **nicht** aus,
+  verglich es also 204-mal byteweise. Ohne Gegenmaßnahme meldete der
+  Kreislauf bei **jeder** Auslieferung 204 Unterschiede — und ein Werkzeug,
+  das bei jeder Auslieferung rauscht, wird abgeschaltet. Dort ist deshalb
+  jetzt die **Fassung** maskiert und der **Name** weiterhin verglichen, genau
+  wie `App-Version:` es seit jeher ist. **204 von 204** normalisieren danach
+  gleich, **0** Unterschiede; die Referenzausführungen mussten **nicht** neu
+  erzeugt werden. Gegenprobe: ein fremder `creator` fällt weiterhin auf.
+
+  **Nebenbefund:** Der Wert stand an **zwei** Stellen — `gpx_lib.php` und
+  `assets/export.js`, das seinen eigenen GPX-Kopf schreibt. Beide erzeugen
+  ihn jetzt gleich; der Browser nimmt die Fassung aus
+  `<html data-webversion>`.
 - **Noch offen:** `install.php` fragt den Namen bei der Ersteinrichtung noch
   nicht ab, und `smtp.from_name` führt ihn weiterhin selbst. Beides kommt mit
   dem zweiten Teil von AP5, der die Mails ohnehin anfasst.

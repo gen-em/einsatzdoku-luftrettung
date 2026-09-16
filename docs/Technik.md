@@ -6847,11 +6847,19 @@ in der Datenbank stehen.
 - **Die Fußzeile „© Gen-EM · Open Source"** (`ui.php`) ist die *Urheberschaft
   der Software*, nicht der Name des Betriebs. Wer diese Anwendung aufsetzt,
   darf seinen Dienst benennen — nicht den, der sie geschrieben hat.
-- **`GPX_CREATOR`** (`gpx_lib.php`) steht in jeder ausgelieferten GPX-Datei
-  und gehört damit zum **Exportformat**. Einstellbar gemacht, erzeugten zwei
-  Installationen unterschiedliche Dateien, und die eingecheckten
-  Referenzausführungen (`tools/referenzdatensatz/referenz/`) verglichen Äpfel
-  mit Birnen. Das ist eine eigene Entscheidung.
+- **`creator` in jeder GPX-Datei** (`gpx_creator()` in `gpx_lib.php`,
+  `assets/export.js` für den großen Export) benennt die **Software**, nicht
+  die Installation — GPX 1.1 beschreibt es als *„the software that created
+  your GPX document"*. Wer die Anwendung aufsetzt, hat sie nicht geschrieben.
+  Seit Web 20.8.0 mit Fassung (`Gen-EM NAdoku 20.8.0`), weil diese Anwendung
+  GPX auch wieder **einliest**. Volle Begründung: `docs/Export-Format.md` 3.5.
+
+  **Gemessen am 16.09.2026:** Der Referenz-Export enthält **204** GPX-Dateien,
+  alle mit `creator`, und `normalisieren.py` blendete das Attribut **nicht**
+  aus. Seither ist dort die **Fassung** maskiert (wie `App-Version:` seit
+  jeher) und der **Name** weiterhin verglichen — **204 von 204** normalisieren
+  danach gleich, **0** Unterschiede, die Referenz musste nicht neu erzeugt
+  werden. Gegenprobe: ein fremder `creator` fällt weiterhin auf.
 
 **Noch offen:** `install.php` fragt den Namen bei der Ersteinrichtung nicht ab,
 und `smtp.from_name` führt ihn weiterhin selbst — beides zieht der zweite Teil

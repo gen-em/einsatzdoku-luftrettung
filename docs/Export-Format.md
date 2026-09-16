@@ -357,6 +357,36 @@ verworfen — maßgeblich ist `typ`.
 - `<name>` = `Einsatz <id> — <Datum> <Uhrzeit>` bzw. `Ruhezeit <id> — …`.
   Kein Patientenbezug.
 - `<metadata><time>` = Erzeugungszeit des Exports.
+- **`creator` benennt die _Software_, nicht die Installation** — seit Web
+  20.8.0 in der Form `Gen-EM NAdoku <Fassung>`, etwa
+  `creator="Gen-EM NAdoku 20.8.0"`.
+
+  > **Warum das ausdrücklich dasteht.** Seit Web 20.8.0 hängt der Name dieser
+  > Anlage an einer Einstellung (`instanz_kurz()`, siehe `docs/Technik.md`
+  > 5d) und lässt sich umbenennen. **Dieses Feld ist davon ausgenommen**, und
+  > zwar nach dem Format selbst: GPX 1.1 beschreibt `creator` als *„the name
+  > and URL of the software that created your GPX document"* — es benennt das
+  > **erzeugende Programm**. Wer die Anwendung aufsetzt, hat sie nicht
+  > geschrieben; sein Name gehört in `<metadata>`, nicht hierher.
+  >
+  > Ohne diesen Absatz wäre der Wert das, was er bis Web 20.7.0 war: ein
+  > **Überbleibsel**. Eine umbenannte Installation lieferte Dateien aus, die
+  > weiterhin „Gen-EM NAdoku" sagten — weder der Name der Installation noch
+  > ein bewusst gewählter Softwarename.
+
+  **Die Fassung steht mit dabei**, weil diese Anwendung GPX auch wieder
+  **einliest** (`api/gpx_import.php`): Eine Datei, die nach einem Jahr
+  zurückkommt, sagt damit selbst, welche Fassung sie geschrieben hat.
+
+  **Zwei Stellen schreiben den Kopf** und müssen denselben Wert erzeugen:
+  `gpx_creator()` in `server/gpx_lib.php` (Spur-Download) und
+  `server/assets/export.js` (großer Export, nimmt die Fassung aus
+  `<html data-webversion>`).
+
+  **Für den Referenzvergleich** ist die **Fassung** maskiert, der **Name**
+  nicht (`tools/referenzdatensatz/vergleich/normalisieren.py`) — genau wie
+  `App-Version:` in der LIESMICH. Sonst meldete der Kreislauf bei jeder
+  Auslieferung 204 Unterschiede, einen je GPX-Datei des Referenz-Exports.
 - Einsätze ohne Punkte bekommen **keine** Datei; `track_datei` bleibt leer.
 - **Nur mit personenbezogenen Angaben** (seit Web 5.8.0, A9). Ein Track
   endet am Einsatzort und nennt ihn genauer als jede Koordinatenspalte — der

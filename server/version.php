@@ -4861,9 +4861,17 @@ declare(strict_types=1);
  *
  * ZWEI STELLEN BLEIBEN AUSDRUECKLICH FEST: die Fusszeile „© Gen-EM · Open
  * Source" (das ist die URHEBERSCHAFT der Software, nicht der Name des
- * Betriebs) und `GPX_CREATOR` (steht in jeder ausgelieferten GPX-Datei und
- * gehoert damit zum Exportformat — einstellbar gemacht, verglichen die
- * eingecheckten Referenzausfuehrungen Aepfel mit Birnen).
+ * Betriebs) und `creator` in jeder GPX-Datei. Letzteres ist ausgeschrieben
+ * worden statt stillschweigend stehengelassen (Weg B): Das Feld benennt die
+ * SOFTWARE, nicht die Installation — GPX 1.1 nennt es „the software that
+ * created your GPX document", und wer die Anwendung aufsetzt, hat sie nicht
+ * geschrieben. Es traegt seit 20.8.0 die Fassung mit (`Gen-EM NAdoku 20.8.0`),
+ * weil diese Anwendung GPX auch wieder EINLIEST. Nachgemessen: Der
+ * Referenz-Export enthaelt 204 GPX-Dateien, alle mit `creator`, und der
+ * Vergleich blendete das Attribut nicht aus — seither ist dort die Fassung
+ * maskiert (wie `App-Version:` seit jeher) und der Name weiterhin verglichen.
+ * 204 von 204 normalisieren danach gleich, 0 Unterschiede; die Referenz
+ * musste nicht neu erzeugt werden.
  *
  * DER LANGNAME GEHT IN EINEN BETREFF, deshalb prueft
  * `instanz_namen_setzen()` eng: Steuerzeichen und Zeilenumbrueche werden

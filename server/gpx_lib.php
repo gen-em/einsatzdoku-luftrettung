@@ -45,7 +45,49 @@ require_once __DIR__ . '/validate_lib.php';
 /** Formatfassung, die wir schreiben. */
 const GPX_FASSUNG = '1.1';
 const GPX_NS      = 'http://www.topografix.com/GPX/1/1';
+
+/**
+ * `creator` BENENNT DIE SOFTWARE, NICHT DIE INSTALLATION — und das ist eine
+ * Entscheidung, keine Nachlaessigkeit (P5a/AP5, Weg B).
+ *
+ * Seit Web 20.8.0 haengt der Name dieser Anlage an `instanz_kurz()`, und eine
+ * Betreiberin kann ihn umbenennen. Dieses Feld ist davon AUSGENOMMEN, und der
+ * Grund steht im Format selbst: GPX 1.1 beschreibt `creator` als „the name and
+ * URL of the software that created your GPX document" — es benennt das
+ * ERZEUGENDE PROGRAMM. Wer diese Anwendung aufsetzt, hat sie nicht
+ * geschrieben; sein Name gehoert in `<metadata>`, nicht hierher.
+ *
+ * Ohne diesen Absatz waere der Wert das, was er bis Web 20.7.0 war: ein
+ * Ueberbleibsel. Eine umbenannte Installation lieferte GPX-Dateien aus, die
+ * weiterhin „Gen-EM NAdoku" sagten — weder der Name der Installation noch ein
+ * bewusst gewaehlter Softwarename. Jetzt ist es Letzteres.
+ *
+ * DIE FASSUNG STEHT MIT DABEI (`Gen-EM NAdoku 20.8.0`). Das ist die uebliche
+ * Form, und sie hat hier einen handfesten Nutzen: Diese Anwendung LIEST GPX
+ * auch wieder ein (`api/gpx_import.php`, S4/A3). Eine Datei, die nach einem
+ * Jahr zurueckkommt, sagt damit selbst, welche Fassung sie geschrieben hat.
+ *
+ * WAS DAS KOSTET, ausgesprochen: Das Feld aendert sich bei JEDER
+ * Versionserhoehung, und der Referenzvergleich vergleicht es — 204 GPX-Dateien
+ * im Referenz-Export, alle mit `creator`, und `normalisieren.py` blendete es
+ * bis Web 20.8.0 nicht aus. Ohne Gegenmassnahme meldete der Kreislauf bei
+ * jeder Auslieferung 204 Unterschiede, und ein Werkzeug, das bei jeder
+ * Auslieferung rauscht, wird abgeschaltet. Die Fassung wird deshalb dort
+ * maskiert — genau wie `App-Version:` in der LIESMICH schon seit jeher
+ * maskiert wird (`MARKE_VERSION`). Der NAME bleibt verglichen, die Fassung
+ * nicht.
+ *
+ * Die zweite Stelle, die `creator` schreibt, ist `assets/export.js` (der
+ * Browser-Export baut seinen eigenen Kopf). Sie nimmt die Fassung aus
+ * `<html data-webversion>` und muss denselben Wert erzeugen.
+ */
 const GPX_CREATOR = 'Gen-EM NAdoku';
+
+/** `creator` samt Fassung — siehe den Absatz ueber GPX_CREATOR. */
+function gpx_creator(): string
+{
+    return GPX_CREATOR . (defined('WEB_VERSION') ? ' ' . WEB_VERSION : '');
+}
 
 /**
  * Wie viele Spuren hoechstens in EINE Datei duerfen (S2/AP4).
@@ -203,7 +245,7 @@ function gpx_bauen_viele(iterable $spuren, string $name,
     $erzeugt = gmdate('Y-m-d\TH:i:s\Z', $erzeugtAm ?? time());
 
     $x  = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-    $x .= '<gpx version="' . GPX_FASSUNG . '" creator="' . GPX_CREATOR . '"'
+    $x .= '<gpx version="' . GPX_FASSUNG . '" creator="' . e(gpx_creator()) . '"'
         . ' xmlns="' . GPX_NS . '">' . "\n";
     $x .= '<metadata><name>' . gpx_e($name) . '</name>'
         . '<desc>' . gpx_e($beschreibung) . '</desc>'
