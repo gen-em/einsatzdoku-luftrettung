@@ -33,8 +33,12 @@ Notiz steht hier, damit die Frage nicht bei jedem Durchsehen erneut aufkommt.
 (Rahmenplan Fassung 73) und 202–205 (Fassung 74) sind mit dem Doku-Paket der
 Konzeptinstanz vergeben und liegen auf dem P5a-Zweig
 `claude/butte-umsetzen-5opi9u`, der bis zu seinem Merge die
-Steuerungsdokumente trägt. Jeder Zweig, der Nummern vergibt, beginnt bei
-**206** und trägt seine Spanne hier ein, bevor er pusht.
+Steuerungsdokumente trägt. **206 bis 212 sind in der Umsetzung von P5a auf
+demselben Zweig vergeben** (206 Messstand-Schritt, 207 `gen-em.org` in `tools/`,
+208 Jobregister von Hand geführt, 209 Bausteintabelle in `Design.md`,
+210 Deadlocks in `ingest.php`, 211 `/api/`-Aufruf ohne Sitzung, 212 zwei
+Erwartungen der Wiederherstellungsprobe). Jeder weitere Zweig, der Nummern
+vergibt, beginnt bei **213** und trägt seine Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
@@ -629,30 +633,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     gescheitert; der Punkt steht hier, damit die Frage nicht verlorengeht,
     nicht weil die Antwort feststünde.
 
-54. **Der Migrationslauf nach einer Wiederherstellung ist ein zweiter Gang.**
-    Aus S2/AP8. Das Konzept sieht in E-S2-20 vor, dass die Wiederherstellung
-    „danach einen Migrationslauf" ausführt. `wiederherstellen.php` tut das
-    nicht: Es sagt am Ende, ob der Dump aus einer anderen Fassung stammt, und
-    schickt zur Wartung. Der Grund ist gut — `update.php` ist seit M6-01
-    zweistufig, weil Migrationen Spalten löschen können, und eine Seite ohne
-    Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese
-    Absicherung heraus.
-
-    Damit bleibt der Schritt aber **an einem Menschen hängen**, und zwar an
-    dem Tag, an dem er am meisten zu tun hat. Wer ihn vergisst, hat eine
-    Installation mit altem Schema und neuem Code — und merkt es an der Stelle,
-    an der zuerst eine Spalte fehlt.
-
-    **Zu entscheiden:** Ob `$MIGRATIONS` und der Ausführungsteil aus
-    `update.php` in eine eigene Datei wandern (dann liesse sich der Lauf von
-    beiden Seiten aufrufen, mit derselben Zweistufigkeit), oder ob
-    `wiederherstellen.php` nach dem Einspielen unmittelbar auf `update.php`
-    weiterleitet und die Anmeldung dazwischen als das genommen wird, was sie
-    ist: die Bestätigung. Die zweite Möglichkeit ist billiger und ändert
-    nichts an einer Datei mit 37 Migrationen.
-
-    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP3 (E-P5a-20: `wiederherstellen.php` setzt den Katalog-Hash zurück, die nächste Anfrage prüft und der Torwächter schaltet die Wartung).
-
 55. **Das Komplett-Backup kennt keinen scharfen Schnappschuss.**
     Aus S2/AP8. Der Dump entsteht über mehrere Anfragen; ein Lesestand über
     den ganzen Lauf (`--single-transaction`) ginge nur innerhalb EINER
@@ -814,77 +794,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nichts (CLAUDE.md 6): Die 14 stehen und werden gezählt; sie sind das
     Preisschild an einer aufgeschobenen Entscheidung, und genau das sollen sie
     sein.
-
-67. **`csrf_check()` hat keinen API-Zweig.**
-    *Aufgenommen aus einer Gegenprüfung vom 23.08.2026; die Zahlen sind am
-    02.09.2026 nachgezählt (S4/D2).*
-    `require_admin()` verzweigt daneben nach `ist_api_aufruf()` und antwortet
-    einem Endpunkt mit JSON; `csrf_check()` rendert unbedingt eine HTML-Seite.
-    Ein Endpunkt, der sie aufriefe, schickte einer `fetch()`-Anfrage also eine
-    Fehlerseite statt eines Fehlerobjekts — die Oberfläche zeigte „unerwartete
-    Antwort" statt „Sitzung abgelaufen".
-    **Bisher folgenlos, weil es diesen Aufrufer nicht gibt.** Von den **17**
-    Dateien unter `server/api/` (gemessen 13.09.2026; 15 bei der Zählung vom
-    02.09.2026) ruft **keine** `csrf_check()` auf. Die **zwölf**, die POST
-    annehmen, prüfen jede selbst gegen `HTTP_X_CSRF` — seit dem 02.09.2026
-    ist `pat_anheben.php` dazugekommen; die meisten ändern Zustand, zwei
-    (`backup_spuren.php`, `export_data.php`) lesen nur und benutzen POST für
-    die Nutzlast. Die übrigen **fünf** (`backup_data.php`,
-    `kopplung_stand.php`, `mission.php`, `range.php`, `suchindex.php`) sind
-    streng GET-only, weisen alles andere mit 405 ab und haben kein
-    Schreib-SQL; ihnen fehlt die Prüfung also nicht — `kopplung_stand.php`
-    sagt im Kopf, warum. Die Invariante hält.
-    Es ist damit eine **unausgesprochene Invariante**, keine Störung — und die
-    Nachzählung hat keinen ungeschützten schreibenden Endpunkt gefunden.
-    **Zwei Einschränkungen an diesen Sätzen**, aus einer Gegenprüfung vom
-    02.09.2026, damit die nächste Zählung nicht darauf hereinfällt:
-    `kdf_upgrade.php` prüft `HTTP_X_CSRF` erst **nach** dem Demo-Ausstieg —
-    die Zeile davor steigt für das Demo-Konto mit `json_out(['ok' => true,
-    …])` aus (Zeilen 69 und 70, gemessen 13.09.2026; 66 und 67 bei
-    Aufnahme). Heute folgenlos,
-    weil hinter dem Ausstieg nichts steht; kippt aber, sobald dort mehr steht
-    als ein `json_out()`. Die beiden Zeilen gehören getauscht. Und „kein
-    Schreib-SQL" gilt für die vier **Dateien**, nicht für die vier
-    **Endpunkte**: `auth_guard.php` ruft bei *jeder* Anfrage — GET
-    eingeschlossen — `run_cleanup_if_due()` und beim Demo-Konto
-    `demo_reset_wenn_faellig()`, und `jobs_lauf()` schreibt dabei
-    (`INSERT IGNORE INTO jobs`, `UPDATE jobs`). Ein GET auf
-    `api/suchindex.php` kann also die tägliche Wartung auslösen. Das ist
-    gewollte Huckepack-Bauweise und harmlos, weil ein Angreifer nichts
-    gewinnt, was der nächste Seitenaufruf ohnehin auslöst — aber schreibfrei
-    ist der Endpunkt nicht.
-    **Zu tun:** entweder denselben `ist_api_aufruf()`-Zweig in `csrf_check()`
-    ergänzen, oder die Invariante im Kopf der Funktion festhalten, damit der
-    nächste Endpunkt sie nicht versehentlich bricht.
-    **Und eine Lehre über die Sache hinaus.** Die ursprüngliche Fassung dieses
-    Punktes nannte „alle sechs schreibenden Endpunkte". Am 23.08.2026 war das
-    **richtig**: Damals lagen zehn Dateien unter `server/api/`, und genau sechs
-    prüften gegen `HTTP_X_CSRF` (`adminbackup_freigabe`, `backup_restore`,
-    `day`, `export_data`, `import_commit`, `kdf_upgrade`). In den zehn Tagen
-    bis zum Eintragen sind fünf dazugekommen — `backup_eintraege_restore`,
-    `backup_spuren`, `backup_spuren_restore`, `gpx_import`, `schneiden` —, und
-    alle fünf prüfen ebenfalls. Aus sechs wurden elf. **Eine Zahl in einem
-    Backlog-Punkt altert also, während der Punkt liegt**, und sie altert
-    lautlos: Nichts an ihr sieht falsch aus. Wer diesen Punkt anfasst, zählt
-    vorher wieder nach — die Zählung von heute ist morgen genauso alt.
-    **Der Unterpunkt ist erledigt (Backlog-Runde 3, AP4, Web 19.3.1, 13.09.2026);
-    der Punkt selbst bleibt offen und liegt bei P5.** In
-    `server/api/kdf_upgrade.php` steht die CSRF-Prüfung jetzt **vor** dem
-    Demo-Ausstieg. Bis dahin kam ein Aufruf ohne Formular-Token für das
-    Demo-Konto mit 200 zurück, während jedes andere Konto 403 sah — folgenlos
-    nur, weil hinter dem Ausstieg nichts steht. Am Prüfstand gemessen, alter
-    gegen neuer Stand bei sonst gleichem Aufbau: **ohne Header vorher 200,
-    jetzt 403 `{"error":"csrf"}`; mit Header unverändert 200 mit
-    `uebersprungen: demo`.** Dazu falscher und leerer Header, beide 403. Die
-    Reihenfolge ist im Kopfkommentar der Datei begründet, der stille Erfolg in
-    `docs/Technik.md` als bedingt gekennzeichnet.
-    **Offen bleibt der Hauptpunkt:** der `ist_api_aufruf()`-Zweig in
-    `csrf_check()` (oder die Invariante im Funktionskopf), damit die Endpunkte
-    unter `server/api/` die Prüfung nicht jeder selbst schreiben. Vor dem
-    Anfassen neu zählen — siehe die Lehre oben.
-
-    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP4 (mit den Kopfzeilen, weil beides in `auth_guard.php` wohnt).
-
 
 76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
     hat.**
@@ -2203,6 +2112,16 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `job_aufraeumen()`, sechs in der Registerzeile, zehn in der Beschreibung
     des Katalogs (beide inzwischen berichtigt).*
 
+    **Nachtrag 16.09.2026 (P5a/AP12): dieselbe Ursache, dritte Stelle.** Der
+    **Werkzeugbaum** in `docs/Technik.md` ist ebenso eine von Hand geführte
+    Aufzählung, und beim Abschluss von P5a fiel auf, dass `tools/containerprobe/`
+    darin fehlte — seit **Web 12.0.0** (S2/AP6), also fünf Monate lang.
+    Nachgetragen. Gezählt mit einem Fünfzeiler, der die Ordner unter `tools/`
+    gegen die Einträge im Baum hält: **44 auf der Platte, 43 im Baum**, danach
+    44 zu 44. Genau so ein Fünfzeiler ist das Prüfmittel, das dieser Punkt
+    oben verlangt — er gehört in Stufe 1 der Kette, nicht in eine Sitzung, die
+    zufällig hinsieht.
+
 209. **`docs/Design.md` führt die erzeugte Bausteintabelle mit falschen
     Zeilennummern.** Die Tabelle trägt den Vermerk „ERZEUGT von
     `tools/design/tabellen.py` — nicht von Hand ändern", und ihre Spalte
@@ -2308,6 +2227,133 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+54. **Der Migrationslauf nach einer Wiederherstellung ist ein zweiter Gang.**
+    Aus S2/AP8. Das Konzept sieht in E-S2-20 vor, dass die Wiederherstellung
+    „danach einen Migrationslauf" ausführt. `wiederherstellen.php` tut das
+    nicht: Es sagt am Ende, ob der Dump aus einer anderen Fassung stammt, und
+    schickt zur Wartung. Der Grund ist gut — `update.php` ist seit M6-01
+    zweistufig, weil Migrationen Spalten löschen können, und eine Seite ohne
+    Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese
+    Absicherung heraus.
+
+    Damit bleibt der Schritt aber **an einem Menschen hängen**, und zwar an
+    dem Tag, an dem er am meisten zu tun hat. Wer ihn vergisst, hat eine
+    Installation mit altem Schema und neuem Code — und merkt es an der Stelle,
+    an der zuerst eine Spalte fehlt.
+
+    **Zu entscheiden:** Ob `$MIGRATIONS` und der Ausführungsteil aus
+    `update.php` in eine eigene Datei wandern (dann liesse sich der Lauf von
+    beiden Seiten aufrufen, mit derselben Zweistufigkeit), oder ob
+    `wiederherstellen.php` nach dem Einspielen unmittelbar auf `update.php`
+    weiterleitet und die Anmeldung dazwischen als das genommen wird, was sie
+    ist: die Bestätigung. Die zweite Möglichkeit ist billiger und ändert
+    nichts an einer Datei mit 37 Migrationen.
+
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP3 (E-P5a-20: `wiederherstellen.php` setzt den Katalog-Hash zurück, die nächste Anfrage prüft und der Torwächter schaltet die Wartung).
+
+    **Erledigt am 15.09.2026 in P5a/AP3 (Web 20.6.0).** Weder die eine noch die
+    andere der beiden zur Wahl gestellten Möglichkeiten — eine dritte, die
+    beide überflüssig macht: `wiederherstellen.php` **wirft am Ende des
+    Einspielens den Zwischenspeicher des Torwächters weg**
+    (`migrationen_tor_zuruecksetzen()`), und die nächste angemeldete Anfrage
+    rechnet neu. Findet sie fehlende Migrationen, **schaltet der Torwächter
+    die Wartung ein** und führt zur Anmeldung; `update.php` bleibt zweistufig
+    und der Mensch bestätigt weiterhin. Der Schritt hängt damit nicht mehr am
+    Gedächtnis, sondern an der Anwendung.
+
+    **Warum der Zwischenspeicher überhaupt wegmuss:** Der eingespielte Dump
+    bringt `schema_migrations` **und `app_state`** der Quellinstallation mit —
+    also auch die gespeicherte Antwort des Torwächters. Passte der
+    Katalog-Hash dieser Installation zufällig dazu, behauptete sie einen Stand,
+    den es hier nicht gibt: eine unfertige Installation bliebe offen, eine
+    fertige bliebe zu. Geworfen statt neu gerechnet, weil das Rechnen 46
+    Katalogeinträge kostet und die nächste Anfrage es ohnehin tut.
+    Gemessen in `tools/wartungsprobe/` (67 Erwartungen, 0 nicht erfüllt).
+
+67. **`csrf_check()` hat keinen API-Zweig.**
+    *Aufgenommen aus einer Gegenprüfung vom 23.08.2026; die Zahlen sind am
+    02.09.2026 nachgezählt (S4/D2).*
+    `require_admin()` verzweigt daneben nach `ist_api_aufruf()` und antwortet
+    einem Endpunkt mit JSON; `csrf_check()` rendert unbedingt eine HTML-Seite.
+    Ein Endpunkt, der sie aufriefe, schickte einer `fetch()`-Anfrage also eine
+    Fehlerseite statt eines Fehlerobjekts — die Oberfläche zeigte „unerwartete
+    Antwort" statt „Sitzung abgelaufen".
+    **Bisher folgenlos, weil es diesen Aufrufer nicht gibt.** Von den **17**
+    Dateien unter `server/api/` (gemessen 13.09.2026; 15 bei der Zählung vom
+    02.09.2026) ruft **keine** `csrf_check()` auf. Die **zwölf**, die POST
+    annehmen, prüfen jede selbst gegen `HTTP_X_CSRF` — seit dem 02.09.2026
+    ist `pat_anheben.php` dazugekommen; die meisten ändern Zustand, zwei
+    (`backup_spuren.php`, `export_data.php`) lesen nur und benutzen POST für
+    die Nutzlast. Die übrigen **fünf** (`backup_data.php`,
+    `kopplung_stand.php`, `mission.php`, `range.php`, `suchindex.php`) sind
+    streng GET-only, weisen alles andere mit 405 ab und haben kein
+    Schreib-SQL; ihnen fehlt die Prüfung also nicht — `kopplung_stand.php`
+    sagt im Kopf, warum. Die Invariante hält.
+    Es ist damit eine **unausgesprochene Invariante**, keine Störung — und die
+    Nachzählung hat keinen ungeschützten schreibenden Endpunkt gefunden.
+    **Zwei Einschränkungen an diesen Sätzen**, aus einer Gegenprüfung vom
+    02.09.2026, damit die nächste Zählung nicht darauf hereinfällt:
+    `kdf_upgrade.php` prüft `HTTP_X_CSRF` erst **nach** dem Demo-Ausstieg —
+    die Zeile davor steigt für das Demo-Konto mit `json_out(['ok' => true,
+    …])` aus (Zeilen 69 und 70, gemessen 13.09.2026; 66 und 67 bei
+    Aufnahme). Heute folgenlos,
+    weil hinter dem Ausstieg nichts steht; kippt aber, sobald dort mehr steht
+    als ein `json_out()`. Die beiden Zeilen gehören getauscht. Und „kein
+    Schreib-SQL" gilt für die vier **Dateien**, nicht für die vier
+    **Endpunkte**: `auth_guard.php` ruft bei *jeder* Anfrage — GET
+    eingeschlossen — `run_cleanup_if_due()` und beim Demo-Konto
+    `demo_reset_wenn_faellig()`, und `jobs_lauf()` schreibt dabei
+    (`INSERT IGNORE INTO jobs`, `UPDATE jobs`). Ein GET auf
+    `api/suchindex.php` kann also die tägliche Wartung auslösen. Das ist
+    gewollte Huckepack-Bauweise und harmlos, weil ein Angreifer nichts
+    gewinnt, was der nächste Seitenaufruf ohnehin auslöst — aber schreibfrei
+    ist der Endpunkt nicht.
+    **Zu tun:** entweder denselben `ist_api_aufruf()`-Zweig in `csrf_check()`
+    ergänzen, oder die Invariante im Kopf der Funktion festhalten, damit der
+    nächste Endpunkt sie nicht versehentlich bricht.
+    **Und eine Lehre über die Sache hinaus.** Die ursprüngliche Fassung dieses
+    Punktes nannte „alle sechs schreibenden Endpunkte". Am 23.08.2026 war das
+    **richtig**: Damals lagen zehn Dateien unter `server/api/`, und genau sechs
+    prüften gegen `HTTP_X_CSRF` (`adminbackup_freigabe`, `backup_restore`,
+    `day`, `export_data`, `import_commit`, `kdf_upgrade`). In den zehn Tagen
+    bis zum Eintragen sind fünf dazugekommen — `backup_eintraege_restore`,
+    `backup_spuren`, `backup_spuren_restore`, `gpx_import`, `schneiden` —, und
+    alle fünf prüfen ebenfalls. Aus sechs wurden elf. **Eine Zahl in einem
+    Backlog-Punkt altert also, während der Punkt liegt**, und sie altert
+    lautlos: Nichts an ihr sieht falsch aus. Wer diesen Punkt anfasst, zählt
+    vorher wieder nach — die Zählung von heute ist morgen genauso alt.
+    **Der Unterpunkt ist erledigt (Backlog-Runde 3, AP4, Web 19.3.1, 13.09.2026);
+    der Punkt selbst bleibt offen und liegt bei P5.** In
+    `server/api/kdf_upgrade.php` steht die CSRF-Prüfung jetzt **vor** dem
+    Demo-Ausstieg. Bis dahin kam ein Aufruf ohne Formular-Token für das
+    Demo-Konto mit 200 zurück, während jedes andere Konto 403 sah — folgenlos
+    nur, weil hinter dem Ausstieg nichts steht. Am Prüfstand gemessen, alter
+    gegen neuer Stand bei sonst gleichem Aufbau: **ohne Header vorher 200,
+    jetzt 403 `{"error":"csrf"}`; mit Header unverändert 200 mit
+    `uebersprungen: demo`.** Dazu falscher und leerer Header, beide 403. Die
+    Reihenfolge ist im Kopfkommentar der Datei begründet, der stille Erfolg in
+    `docs/Technik.md` als bedingt gekennzeichnet.
+    **Offen bleibt der Hauptpunkt:** der `ist_api_aufruf()`-Zweig in
+    `csrf_check()` (oder die Invariante im Funktionskopf), damit die Endpunkte
+    unter `server/api/` die Prüfung nicht jeder selbst schreiben. Vor dem
+    Anfassen neu zählen — siehe die Lehre oben.
+
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP4 (mit den Kopfzeilen, weil beides in `auth_guard.php` wohnt).
+
+    **Erledigt am 15.09.2026 in P5a/AP4 (Web 20.6.0).** Von den beiden unter
+    „Zu tun" genannten Wegen der erste: `csrf_check()` hat jetzt denselben
+    `ist_api_aufruf()`-Zweig wie `require_admin()` daneben — ein `fetch()`
+    bekommt `{"error":"csrf"}` mit 403 statt einer HTML-Seite, an der es sich
+    einen Syntaxfehler holt. Die zwölf Endpunkte prüfen nicht mehr jeder für
+    sich: `csrf_ok()` nimmt Feld **und** Kopfzeile, und in `csrf_check()` fällt
+    die eine Entscheidung, in welcher Sprache das Nein kommt.
+
+    **Und die Lehre oben ist eingehalten worden:** vor dem Anfassen neu
+    gezählt. Die Zahl **17 Dateien** vom 13.09.2026 stand noch, die zwölf
+    POST-Annehmer auch. Ein ungeschützter schreibender Endpunkt war wieder
+    nicht darunter — die Invariante hat drei Zählungen überlebt, und jetzt
+    steht sie nicht mehr nur im Kopf der Funktion, sondern im Code.
 
 49. **Aufbewahrung auch auf dem Backup-Ziel.**
     Der Versand (Web 12.1.0, S2/AP7) **ergänzt nur**: Auf der Gegenstelle

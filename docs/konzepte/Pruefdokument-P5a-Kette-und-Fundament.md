@@ -2,7 +2,10 @@
 
 **Konzept:** `Konzept-P5a-Kette-und-Fundament.md` (15.09.2026, E-P5a-01 bis
 -58, AP1 bis AP12). **Gemessen auf:** Zweig `claude/butte-umsetzen-5opi9u`.
-**Stand dieses Dokuments:** 16.09.2026, nach AP11 (Web 20.15.0).
+**Stand dieses Dokuments:** 16.09.2026, **nach AP12** — die Umsetzung ist fertig
+(Web 20.4.0 bis 20.15.0), Merge und Tag stehen aus. **32 Prüfpunkte** in
+Abschnitt 3; neun davon (P1–P8, P12) betreffen die Auslieferungskette und
+brauchen GitHub-Umgebungen, die es hier nicht gibt (N36).
 
 Das Prüfprotokoll im Konzept beantwortet „ist es belegt?". Dieses Dokument
 beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
@@ -49,6 +52,8 @@ beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
 | N33 | **Die zwei roten Erwartungen der Wiederherstellungsprobe** (Teil 10) | Sie sind **nicht** von AP10 verursacht: am unveränderten Stand ebenso rot (nachgemessen 16.09.2026, `git stash`). Der Prüffall gibt dem Sammelvorgang „Alle sichern" ein enges Zeitbudget und erwartet, dass danach etwas offen bleibt; auf einer Installation mit zwei fast leeren Konten passen beide hinein. | Aufgenommen als **Backlog Nr. 212**. Bis dahin sind es zwei rote Zeilen, die als solche benannt sind — und das ist der Punkt: Eine unerklärte rote Zeile gewöhnt jeden daran, rote Zeilen zu übersehen. |
 | N34 | **Die 325 ausgelieferten Teilenummern gegen echte Geräte** | Die Geräteprobe setzt eine **eigene, kleine** Modelltabelle (fünf Geräte A bis E) und prüft damit das Verhalten des Nachlösens, nicht den Inhalt der ausgelieferten Tabelle. Ob die 325 Einträge in `GERAETE_MODELLE` **richtig** sind, sagt keine Probe — nur ein Gerät, das sich meldet. | Gemessen ist die **Mechanik**: dass eine erweiterte Tabelle genau die Zeilen der neuen Teilenummer nachzieht (1 von 5) und alle anderen unberührt lässt, und dass der Fingerabdruck sich mit dem Inhalt ändert. Ein falscher Eintrag in der Tabelle führt zu einem falschen Modellnamen an genau den Zeilen dieser Teilenummer — sichtbar in der Geräteliste, korrigierbar durch einen Tabelleneintrag und den nächsten Lauf. Prüfpunkt **P32**. |
 | N35 | **Der Nachlöse-Job über einen großen Altbestand** | Hier stehen fünf Gerätezeilen mit Rohangabe. Ob das Zeitbudget (3 s huckepack, 20 s im eigenen Lauf) über Tausende reicht und wie viele Läufe es dann braucht, sagt nur eine Installation mit Bestand. | Gemessen ist die **Fortsetzung**: mit Blockgröße 1 meldet der Lauf `geprueft 1`, `fertig false`, die Marke wandert, und der **Hash wird erst am Ende geschrieben** — ein abgebrochener Lauf gilt also nicht als erledigt. Damit ist ein Bestand jeder Größe in endlich vielen Läufen durch; offen ist nur, in wie vielen. Prüfpunkt **P32**. |
+| N36 | **Die Auslieferungskette selbst — sie ist gebaut, aber nie gelaufen** | Sie braucht GitHub-Umgebungen, Geheimnisse, eine Pflichtfreigabe, einen Zweigschutz und eine Staging-Installation. Nichts davon gibt es in einem Wegwerf-Container, und die Zuarbeiten dazu standen am 16.09.2026 noch aus (Rahmenplan 6a). **Die ganze Phase hat damit ihren zentralen Gegenstand nicht im Lauf gesehen.** | Gemessen ist, was sich ohne GitHub messen lässt: die drei Arbeitsläufe sind **gültiges YAML**, das Backup-Tor entscheidet in `tools/kette/tor.py --selbstprobe` **5 von 5** Lagen richtig, und das Migrationsregister läuft ohne Installation. Was nur der Ernstfall zeigt, steht als Prüfpunkte **P1 bis P8** und **P12** — neun der 32. Wer diese Phase für abgenommen hält, weil die Proben grün sind, verwechselt „gebaut" mit „läuft". |
+| N37 | **Der Merge nach `main` und der Tag** | Beide brauchen die ausdrückliche Freigabe (`CLAUDE.md` 3 und 8, K7). Ein Push auf `main` löst seit Web 20.4.0 den **Staging**-Deploy aus, ein Tag `web-v20.15.0` die **Produktion** — und zwar erst nach Pflichtfreigabe und Backup-Tor. | Beides ist bewusst **nicht** getan. Die Phase liegt vollständig auf `claude/butte-umsetzen-5opi9u`. Was beim ersten Tag passieren **soll**, steht in P2, P3 und P8; was schiefgehen kann, ebenso. |
 | N8 | **Die Kontingent-Warnmail auf einem echten Mailserver** | Der Container hat keinen. | Die Logik ist mit abgesenkten Schwellen (50/53 %) durchgespielt: Beide Schwellen schlagen an, der Versand scheitert erwartungsgemäß und wird **nicht** als gemeldet vermerkt — also am nächsten Tag erneut versucht. Prüfpunkt **P10**. |
 
 ---
@@ -391,6 +396,34 @@ zitiert, zitiert eine Tabelle und keinen Bestand.
 > (N35). Gemessen ist damit das **Verhalten** des Nachlösens — wen es anfasst,
 > wen nicht, wann es wieder läuft —, nicht der Inhalt der Tabelle und nicht das
 > Zeitbudget über Tausende Zeilen.
+
+---
+
+### 1m. Abschluss AP12 (16.09.2026), im selben Container
+
+**Die Kreisläufe — der Regressionsdurchgang nach R24.** Je Lauf ein frisches Konto, Referenz hinein, wieder heraus, Feld gegen Feld:
+
+| Lauf | Einzelvergleiche | unerklärt | erwartet | ungenutzte Regeln |
+|---|---:|---:|---:|---:|
+| `kreislauf.py --art edbak --frisch` | **328 771** | **0** | 21 | 0 |
+| `kreislauf.py --art csv --frisch` | **10 922** | **0** | 1271 | 0 |
+| `kreislauf.py --art edbak-alt --frisch` (R11, Altformat) | **287 852** | **0** | 795 | **0** (nach der Korrektur unten) |
+
+**Und die Probe aufs Exempel — weil ein Vergleich, der nichts meldet, zweideutig ist:** `vergleichen.py --testabweichung` legt dem Werkzeug Veränderungen hin, die es finden **muss**, und solche, die es **nicht** melden darf. **Backup 15/15, CSV 10/10** — darunter die Gegenproben, die vor der Normalisierung angreifen (verschobene Diensttag-Kennungen, vertauschte Stammdatenzeilen, vertauschte Reanimationsereignisse, geändertes Herkunftskonto): **0 Meldungen**, wie es sein soll.
+
+> **Ein Nebenbefund am Prüfmittel, gefunden weil die Zahl nicht null war.** Der Altformatlauf meldete zuerst **1 ungenutzte Ausnahmeregel**. Die Regel beschrieb den Sprung der Nutzlastfassung `7 → 10`; gemessen sind aber **7 → 11** (seit Web 19.0.0, S9/AP7 — die Notiz des Einsatzes wanderte in den verschlüsselten Block). Eine zweite Regel ohne `von` fing den Fall auf, deshalb blieb „unerklärt" bei 0 **und niemand sah, dass die erste tot war**. Zu **einer** Regel zusammengefasst, die beide Enden nennt. Der Befund ist **nicht** von P5a — er liegt seit S9 —, aber er ist hier aufgefallen, und eine ungenutzte Regel ist genau das, wovor das Werkzeug in seiner eigenen Ausgabe warnt: „Entweder beschreiben sie etwas, das es nicht mehr gibt — dann gehören sie weg."
+
+> **Ein zweiter Nebenbefund, diesmal an der Dokumentation.** Die Ordner unter `tools/` gegen den Werkzeugbaum in `docs/Technik.md` gezählt: **44 auf der Platte, 43 im Baum**. Es fehlte `tools/containerprobe/`, seit **Web 12.0.0** (S2/AP6, fünf Monate). Nachgetragen, jetzt **44 zu 44**. Dieselbe Ursache wie Backlog **Nr. 208** — eine von Hand geführte Aufzählung neben einer Wahrheit, die woanders steht; dort mit der Zählung nachgetragen.
+
+**Der Stilvergleich ist nicht gefahren worden, und das ist kein Übergehen:** `git diff origin/main..HEAD -- server/assets/style.css` ist **leer**. Die ganze Phase hat das Stylesheet nicht angefasst — alle Oberflächenänderungen laufen über vorhandene Bausteine (`ui_karte_start`, `ui_zeilenaktionen`, `meldung-warn`). Der Stilvergleich misst Regelverschiebungen; ohne geänderte Regeln misst er den Vergleichsstand gegen sich selbst.
+
+| Mittel | Aufruf | Ergebnis |
+|---|---|---|
+| Wortliste | `python3 wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** · 99 Regeln, **99 gegriffen** · gemessen über **190 Dateien** in fünf Bereichen: 109 PHP, 36 JS, 8 Dokumente, 2 Android, 35 Uhr — also jeden Client |
+| Bilderlauf, **voller Lauf** | `node aufnehmen.mjs` (ohne `--nur`) | **400 Einzelbilder · 50 Seiten · 8 Breiten (360–1920 px) · 0 waagerechter Überlauf · 0 Konsolenfehler · 0 Knöpfe falscher Höhe** (Zeiger, 44/36 px). **Gegenprobe gefahren** — `md5sum *.png | sort -u`: **400 verschiedene Prüfsummen zu 400 Bildern**, also zeigt keine Seite das Bild einer anderen. Die Gruppen: 20 Inhalt, 8 Einstellungen, 8 Betrieb, 7 Öffentlich, 7 Administration |
+| Vollständigkeit | `python3 pruefen.py` | **377 = unverändert** (der Stand seit AP8) |
+| Kontraste | `python3 kontrast.py` | **22 Paare gerechnet, 0 verfehlt** |
+| PHP-Syntax | `php -l` über `server/` und `tools/` | **485 Dateien, 0 Fehler** |
 
 ---
 

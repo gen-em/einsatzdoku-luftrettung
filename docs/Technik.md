@@ -425,6 +425,13 @@ Daten erst nach Server-Bestätigung.
 │   │                      stillschweigend ein Zweimotorenlauf. Baut NICHT den
 │   │                      Uhr-Prüfstand (der holt sein SDK selbst) und
 │   │                      richtet NICHT die Anwendung ein (s. LIESMICH.md)
+│   ├── containerprobe/    hält Containerfassung 4 der Sicherung gegen DREI
+│   │                  unabhängige Umsetzungen — die Anwendung, ein
+│   │                  Node-Leser und ein Python-Leser. Ein Format, das nur
+│   │                  die eine Anwendung öffnen kann, ist genau in dem Fall
+│   │                  wertlos, für den man ein Backup aufbewahrt. Prüft dazu
+│   │                  die Bindung der Teile: ein vertauschtes Teil darf nicht
+│   │                  klaglos entsiegeln (s. LIESMICH.md)
 │   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
 │   ├── fristprobe/        belegt die Angleichung der Schlüsselfrist (R44, S6):

@@ -14,10 +14,10 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 >
 > | | |
 > |---|---|
-> | Stand | 15.09.2026 — **Konzept freigegeben, Umsetzung läuft.** Die Grundsatzfragen sind am 15.09.2026 im Gespräch entschieden (E-P5a-01 bis -09); die übrigen Festlegungen (E-P5a-10 bis -21) stammen aus dem Nachmessen im Code und stehen mit der Freigabe. |
+> | Stand | 16.09.2026 — **Umsetzung abgeschlossen, Freigabe des Abschlusses steht aus.** Konzept freigegeben 15.09.2026. Die Grundsatzfragen sind am 15.09.2026 im Gespräch entschieden (E-P5a-01 bis -09); die übrigen Festlegungen (E-P5a-10 bis -21) stammen aus dem Nachmessen im Code und stehen mit der Freigabe. |
 > | Entschieden | E-P5a-01 bis E-P5a-21 (Abschnitt 2), dazu die in der Umsetzung gefallenen E-P5a-22 bis **-58**; E-PP-01 bis -09 übernommen; **F-P5a-1 entschieden** (2.4) |
 > | Offen | — |
-> | Umsetzung | **läuft.** AP1–AP11 und AP4a erledigt, **AP12 als Nächstes** (Abschluss); Abhängigkeiten in 3.0 |
+> | Umsetzung | **alle zwölf Pakete und AP4a erledigt** (Web 20.4.0 bis 20.15.0). **Offen sind nur noch Merge und Tag** — beide brauchen die ausdrückliche Freigabe (K7, `CLAUDE.md` 3 und 8) |
 > | Fable-Schritte der Umsetzung | **keiner mehr** — M-P5a-01 ist nach Auftrag vom 15.09.2026 ohne Pause umgesetzt worden (2.5) |
 
 > **Stand der Umsetzung**
@@ -37,7 +37,7 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | **AP9 Verbindungsgrenze und Messungen** | **erledigt** | **Web 20.13.0** | `tools/verbindungsprobe/` neu: **24 Erwartungen, 0 nicht erfüllt** · **drei** Fehlernummern statt zwei — die GRANT-Grenze eines Hosters meldet **1226**, nicht 1203 (E-P5a-51), gemessen an MariaDB 10.11 · alles belegt: `login.php` **503** mit `Retry-After: 5`, `no-store`, dem Satz aus E-P5a-18, **kein Skript** und **keiner von 7** Datenbank-Begriffen im Rumpf; `ingest.php` und `auth_salt.php` **503 JSON** `error=ausgelastet`; `index.php` bleibt **302** (erreicht die Datenbank nie — ausdrücklich mitgemessen) · Zähler **genau 3 von 3** Abweisungen, nicht mehr (das ist der Nachweis für den Riegel gegen die Rückkopplung über `app_state_lesen()`) · Enge statt Sperre, 20 Pakete gleichzeitig bei 8 Arbeitern und 2 freien Plätzen: **8 × 200, 12 × 503, 0 anderes**, davon **10 aus der Verbindungsgrenze und 2 aus Gedrängel** — nach Wiederholung **20 von 20 Einsätzen und 400 von 400 Spurpunkten** in der Datenbank · **zwei Fehler gefunden, die ohne Meldung durchgegangen wären**: 12 × HTTP 500 durch Deadlock auf der `days`-Zeile (E-P5a-52, Nr. 210) und der verborgene Setz-Link bei `wartet` (E-P5a-54) · Ausgelastet-Seite im Browser bei 360/768/1280 px: **503 · Retry-After 5 · 0 px waagerechter Überlauf**, Stylesheet und Münzwurf des Logos tragen · Messstand **5050 Einsätze / 2 813 201 Punkte**: Suche **3,18 s** (≤ 5), Tagesansicht **1,11 s** (≤ 3), Backup **49,84 s** (≤ 300) und **11,8 MB** (≤ 25), Wiederherstellung **231,9 s** (≤ 900), Spuren **3,66 MB/1000** (Ziel 3, knapp verfehlt), **Zeitraumübersicht 42,61 s bei 3983 Einsätzen** (Befund), Nachbearbeitung **2,83 s** (leere Liste) · Wartungsprobe **67/0** · Ratenprobe 50/0 · Ingestprobe 83/0 · Kopplungsprobe 76/0 · Mailprobe 41/0 · Jobprobe 35/0 · Spurprobe 45/0 · Bilderlauf 3 Seiten **24 Bilder, 0/0/0** · Wortliste **0/0/0** (98 Regeln, 98 gegriffen) · Vollständigkeit **377 = unverändert** · CSP 0 (109 Stellen) · Sitzungshärtung 0 · Installweiche 0 · Migrationsregister 0 · Kontraste 22/0 · PHP-Syntax 484 Dateien, 0 Fehler |
 > | **AP10 Sicherungsziele** | **erledigt** | **Web 20.14.0** | `tools/versandprobe/` um Teil 12 erweitert: **135 Erwartungen, 0 nicht erfüllt** (19 neu) · Regel AUS → **0 Löschungen**; Regel AN (N = 2) → **3 Löschungen**, **alle 5 fremden Dateien bleiben** — darunter eine mit gültigem Namensmuster, die nie von uns kam —, **7 statt 2** Dateien am Ziel, Protokollzeilen **3 = 3** Löschungen, jede mit Grund · **ein Kreislauf gefunden, der still gelaufen wäre**: dritter Lauf **3 gelöscht statt 0**, weil der Versand die eben entfernten wieder hinüberschickte (E-P5a-57); jetzt `nicht_wieder = 3`, `gesendet = 0` · `tools/wiederherstellungs-probe/` **110** (5 neu, Nr. 195): `geraet_art: "radcomputer"` → `NULL` mit Protokollzeile, `"HANDY"` → `handy` als Gegenprobe, dasselbe am Ruhesegment · sechste Sicherheitskarte gebaut (fehlte in AP8 mangels Tabelle) · Statuszeile „Aufbewahrung am Ziel" · Platzwarnung jetzt **zweischwellig** (rot < 1×, orange < 2× — vorher prüfte sie 1× und versprach 2×) · Migration `2026_09_16_sicherungsziel_aufbewahrung` **erfolgreich angewendet**, `ON DELETE CASCADE` gemessen (2 Ziele entfernt → 0 Protokollzeilen übrig) · Bilderlauf **fand +156 px Überlauf** und ist nach `blatt_immer` bei **24 Bildern, 0/0/0** · Browser: „Nachsehen" fährt gegen eine echte SFTP-Gegenstelle — **4 eigene Dateien (2,0 MB) in 2 Ordnern, 2 fremde (15 KB)**, 0 Konsolenfehler · Wartungsprobe 67/0 · Ratenprobe 50/0 · Ingestprobe 83/0 · Kopplungsprobe 76/0 · Mailprobe 41/0 · Jobprobe 35/0 · Spurprobe 45/0 · Verbindungsprobe 24/0 · Wortliste 0/0/0 · Vollständigkeit · CSP 0 · Sitzungshärtung 0 · Migrationsregister 0 · Kontraste 22/0 |
 > | **AP11 Nachlöse-Job** | **erledigt** | **Web 20.15.0** | `server/geraetemodelle_lib.php` neu — Job **und** Skript benutzen dieselbe Fassung · Job `nachaufloesen` läuft **nur bei geändertem Fingerabdruck** der Tabelle (Hash statt Datum: ein Deploy ändert jede Änderungszeit, nicht den Inhalt), in Blöcken von **200**, eine Transaktion je Block, Hash **erst am Ende** · Statuszeile „Gerätemodelle" in drei Zuständen im Browser gemessen: **aktuell** („325 Teilenummern · zuletzt nachgelöst … · 0 nachgezogen, 0 unbekannt"), **steht aus** (orange, nach geändertem Hash) und **ungeprüft** · `tools/geraeteprobe/` von **39 auf 59** Erwartungen, Teil 2 **gegen die Datenbank**: fünf Zeilen mit je einer Frage — A wird nachgezogen, **B: die Tabelle schlägt die Selbstauskunft** („uhr" → „sonstiges"), C (Handy) und D (unbekannt) **unberührt**, E erst mit der **erweiterten** Tabelle · Vorschau und Schreiben liefern **dieselbe Menge** · zweiter Lauf mit derselben Tabelle schreibt **0** · Job bei stehendem Hash **0**, bei geändertem **1** · Fortsetzungsmarke mit Blockgröße 1 gemessen · die **Rohangabe** ist bei allen fünf unverändert · Konto und `app_state` danach wiederhergestellt · **vier von acht Jobs fehlten im Register der Technik-Dokumentation** (Nr. 208) — nachgetragen · Wartungsprobe 67/0 · Jobprobe 35/0 · Kopplungsprobe 76/0 · Ingestprobe 83/0 · Bilderlauf 8 Bilder 0/0/0 · Wortliste **0/0/0** (99 Regeln, 99 gegriffen) · Vollständigkeit **377 = unverändert** · CSP 0 · Sitzungshärtung 0 · Installweiche 0 · Migrationsregister 0 · Kontraste 22/0 · PHP-Syntax 485/0 |
-> | AP12 | offen | — | — |
+> | **AP12 Abschluss** | **erledigt** | — (kein Code) | Kreislauf edbak **328 771 Einzelvergleiche, 0 unerklärt** · Kreislauf csv **10 922, 0 unerklärt** · Kreislauf edbak-alt (Altformat, R11) **287 852, 0 unerklärt** · Selbstproben **15/15** und **10/10** · Wortliste **0/0/0** (99 Regeln, 99 gegriffen; 190 Dateien in fünf Bereichen) · Bilderlauf ****400 Bilder · 50 Seiten · 0/0/0** · Gegenprobe **400 verschiedene Prüfsummen** (keine Seite zeigt das Bild einer anderen)** · Vollständigkeit **377 = unverändert** · Kontraste **22/0** · PHP-Syntax **485 Dateien, 0 Fehler** · Stilvergleich **entfällt begründet** — `style.css` ist in der ganzen Phase nicht angefasst worden (gemessen: leerer Diff gegen `origin/main`) · **ein Nebenbefund am Prüfmittel**: eine tote Ausnahmeregel im Altformatlauf (Nutzlast `7 → 10` statt `7 → 11`), zusammengefasst |
 
 ---
 
@@ -2229,3 +2229,58 @@ die Quelle.
 | Vollständigkeit | **377 = unverändert** |
 | CSP · Sitzungshärtung · Installweiche · Migrationsregister | **0 · 0 · 0 · 0** |
 | Kontraste · PHP-Syntax | **22/0** · **485 Dateien, 0 Fehler** |
+
+---
+
+### AP12 — Abschluss · kein Code · 16.09.2026
+
+**Was AP12 ist.** Kein Arbeitspaket mit Code, sondern die Frage, ob die elf davor die Anwendung heil gelassen haben — und das Aufräumen der Steuerungsdokumente.
+
+#### Die Kreisläufe: nimmt der Bestand den Umbau übel?
+
+Elf Pakete haben `db.php`, `auth_guard.php`, `ingest.php`, `backup_lib.php`, `jobs_lib.php` und ein Dutzend Seiten angefasst. Die Frage, die keine Einzelprobe beantwortet, lautet: **Kommt derselbe Bestand nach einem Umlauf unverändert wieder heraus?** Je Lauf ein frisches Konto (in dasselbe zurück wäre ein Vergleich mit sich selbst — die Dublettenerkennung überspränge alles), Referenz hinein, wieder heraus, Feld gegen Feld über einen natürlichen Schlüssel:
+
+| Lauf | Einzelvergleiche | unerklärt |
+|---|---:|---:|
+| edbak (Fassung 4) | 328 771 | **0** |
+| csv | 10 922 | **0** |
+| edbak-alt (Nutzlast 7, R11) | 287 852 | **0** |
+
+Dazu die Probe aufs Exempel, **weil ein Vergleich, der nichts meldet, zweideutig ist**: Entweder ist alles gleich, oder das Werkzeug sieht an der falschen Stelle hin. `--testabweichung` legt ihm Veränderungen hin, die es finden muss, und solche, die es nicht melden darf — **15/15** und **10/10**.
+
+#### Ein Nebenbefund, gefunden weil eine Zahl nicht null war
+
+Der Altformatlauf meldete **1 ungenutzte Ausnahmeregel**. Sie beschrieb den Sprung der Nutzlastfassung `7 → 10`; gemessen sind **7 → 11**, und zwar seit Web 19.0.0 (S9/AP7, die Notiz des Einsatzes wanderte in den verschlüsselten Block). Eine **zweite** Regel ohne `von` fing den Fall auf — deshalb stand „unerklärt" bei 0, und die tote Regel fiel niemandem auf. Zu einer Regel zusammengefasst, die beide Enden nennt.
+
+Der Befund ist **nicht** von P5a; er liegt seit S9. Er steht hier, weil er hier aufgefallen ist, und weil eine ungenutzte Regel genau das ist, wovor das Werkzeug in seiner eigenen Ausgabe warnt.
+
+#### Ein zweiter Nebenbefund: der Werkzeugbaum hinkt seit fünf Monaten
+
+Beim Gegenlesen der Dokumentation — `CLAUDE.md` 2.3 verlangt es — sind die Ordner unter `tools/` gegen den Baum in `docs/Technik.md` gezählt worden: **44 auf der Platte, 43 im Baum**. Es fehlte `tools/containerprobe/`, und zwar seit **Web 12.0.0** (S2/AP6). Nachgetragen; jetzt 44 zu 44.
+
+Der Befund ist nicht von P5a, aber er hat dieselbe Ursache wie **Backlog Nr. 208** (das Jobregister, das in AP8 sechs von zwölf Schritten nannte): eine von Hand geführte Aufzählung neben einer Wahrheit, die woanders steht. Dort nachgetragen — **und mit der Zählung, die ihn gefunden hat**, denn ein Fünfzeiler, der `os.listdir('tools')` gegen den Baum hält, ist genau das Prüfmittel, das der Punkt seit AP8 fordert. Er gehört in Stufe 1 der Kette, nicht in eine Sitzung, die zufällig hinsieht.
+
+#### Der Stilvergleich — warum er nicht gefahren ist
+
+`CLAUDE.md` 6 verlangt ihn für jede Änderung an `server/assets/style.css`, die Regeln verschiebt oder zusammenführt. **Gemessen: `git diff origin/main..HEAD -- server/assets/style.css` ist leer.** Die ganze Phase hat das Stylesheet nicht berührt — jede Oberflächenänderung läuft über vorhandene Bausteine (`ui_karte_start`, `ui_zeilenaktionen` mit `blatt_immer`, `meldung-warn`, `ui_plakette`). Das war keine Sparmaßnahme, sondern `CLAUDE.md` 5: Ein neuer Baustein entsteht nur mit Mockup und Freigabe, und die gab es nicht.
+
+#### Was AP12 in den Steuerungsdokumenten getan hat
+
+- **Rahmenplan:** Fahrplanzeile 10a auf „Umsetzung abgeschlossen, Merge und Tag stehen aus"; der Kopfblock ebenso; Fassung **75** im Änderungsverlauf.
+- **Backlog:** **Nr. 54** (Migrationslauf nach Wiederherstellung) und **Nr. 67** (`csrf_check()` ohne API-Zweig) nach *Erledigt* verschoben — beide sind in AP3 und AP4 gebaut worden, lagen aber noch unter *Offen*. Nr. 8, 17, 49 und 195 waren schon dort. Die Nummernvergabe im Kopf trägt jetzt die Spanne **206 bis 212**, die diese Umsetzung verbraucht hat.
+- **Prüfdokument:** Abschnitt 1m mit den Abschlusszahlen, N34/N35 zu AP11, Prüfpunkt P32.
+
+**Was AP12 NICHT getan hat, und zwar mit Absicht:** die Erledigt-Zeile in Rahmenplan Abschnitt 8 geschrieben und dieses Konzept gelöscht. Beides geschieht nach `CLAUDE.md` 7 **nach der Freigabe des Abschlusses** — und die steht aus. Ebenso der Merge nach `main` und der Tag `web-v20.15.0`: Ein Push auf `main` löst den Staging-Deploy aus, ein Tag ist die Auslieferung. Keines von beiden geschieht nebenbei.
+
+#### Zahlen
+
+| Mittel | Ergebnis |
+|---|---|
+| Kreisläufe (drei) | **0 unerklärte Abweichungen** über **627 545** Einzelvergleiche zusammen |
+| Selbstproben der Kreisläufe | **15/15** (Backup) und **10/10** (CSV) |
+| Wortliste | **0/0/0** · 99 Regeln, 99 gegriffen · **190 Dateien** in fünf Bereichen (109 PHP, 36 JS, 8 Dokumente, 2 Android, 35 Uhr) |
+| Bilderlauf, voll | **400 Bilder · 50 Seiten · 0/0/0** · Gegenprobe **400 verschiedene Prüfsummen** (keine Seite zeigt das Bild einer anderen) |
+| Vollständigkeit | **377 = unverändert** (Stand seit AP8) |
+| Kontraste | **22 Paare, 0 verfehlt** |
+| PHP-Syntax | **485 Dateien, 0 Fehler** |
+| Stilvergleich | **entfällt begründet** — leerer Diff auf `style.css` |

@@ -7,8 +7,8 @@
       "feld": "version",
       "art": "wert",
       "von": "7",
-      "nach": "10",
-      "begruendung": "GEMESSEN 1x. Die Nutzlastfassung steigt von 7 auf 10 — genau das ist der Zweck dieses Laufs. Die Zahl ist dreimal gewandert: bis Web 14.1.0 stand hier 8, mit Nutzlast 9 (Geraete-Momentaufnahme und Sperrvermerke, R64) eine 9, und seit Web 16.0.0 (Typ und Kurzname am Rettungsmittel, E-S9-09) eine 10. Die Regel steht auf 'von 7', weil die Altformat-Referenz eingefroren bleibt: Sie IST der Beleg dafuer, dass eine alte Datei noch einspielbar ist."
+      "nach": "11",
+      "begruendung": "GEMESSEN 1x. Die Nutzlastfassung steigt von 7 auf 11 — genau das ist der Zweck dieses Laufs. Die Zahl ist viermal gewandert: bis Web 14.1.0 stand hier 8, mit Nutzlast 9 (Geraete-Momentaufnahme und Sperrvermerke, R64) eine 9, seit Web 16.0.0 (Typ und Kurzname am Rettungsmittel, E-S9-09) eine 10, und seit Web 19.0.0 (S9/AP7: die Notiz des Einsatzes wandert in den verschluesselten pat-Block) eine 11. Die Regel steht auf 'von 7', weil die Altformat-Referenz eingefroren bleibt: Sie IST der Beleg dafuer, dass eine alte Datei noch einspielbar ist. WER DIE ZAHL 11 AENDERT, aendert sie hier mit — sonst meldet der Lauf eine ungenutzte Regel und eine unerklaerte Abweichung zugleich, und das ist derselbe Befund zweimal. (Bis zum 16.09.2026 standen hier ZWEI Regeln: diese auf 'nach 10' und eine zweite ohne 'von' auf 'nach 11'. Die erste konnte nach S9/AP7 nicht mehr greifen, die zweite fing den Fall auf — der Lauf meldete deshalb 0 unerklaerte Abweichungen UND 1 ungenutzte Regel. Zusammengefasst zu einer, die beide Enden nennt.)"
     },
     {
       "bereich": "missions",
@@ -89,13 +89,6 @@
       "feld": "notes",
       "art": "zusaetzlich",
       "begruendung": "GEMESSEN 143x (71 Einsaetze, je zwei Haelften, dazu einer aus dem Papierkorb). S9/AP7, Nutzlast 11: Die Notiz des Einsatzes steht nicht mehr in der Klartextspalte `notes`, sondern als Schluessel `notes` im verschluesselten `pat`-Block. Der Umlauf zeigt deshalb ZWEI Abweichungen je Einsatz — die Spalte wird leer, der Blobschluessel kommt hinzu. GENAU DAS IST DER BELEG, dass der Text nicht verlorengeht, sondern umzieht: Beide Haelften tragen denselben Wortlaut. Die Referenzdatei stammt vom 07.09.2026 und beschreibt den alten Stand; sie wird NICHT neu erzeugt, weil eine frische Referenz jede echte Abweichung in den uebrigen 287 699 Vergleichen mit zudecken wuerde."
-    },
-    {
-      "bereich": "kopf",
-      "feld": "version",
-      "art": "wert",
-      "nach": "11",
-      "begruendung": "GEMESSEN 1x. S9/AP7: Die Nutzlastnummer steigt von 10 auf 11, weil die Notiz des Einsatzes in den verschluesselten pat-Block gewandert ist. Eine Installation vor Web 19 suchte sie in der Spalte, faende dort NULL und meldete trotzdem Erfolg — genau dieser stille Schaden ist der Zweck der Zahl. Die Referenzdatei vom 07.09.2026 traegt noch die 10."
     }
   ]
 }
