@@ -276,6 +276,12 @@
       "pfad": "betrieb_status.php"
     },
     {
+      "name": "45b-betrieb-sicherheit",
+      "gruppe": "Betrieb",
+      "rolle": "admin",
+      "pfad": "betrieb_sicherheit.php"
+    },
+    {
       "name": "45a-betrieb-statistik",
       "gruppe": "Betrieb",
       "rolle": "admin",

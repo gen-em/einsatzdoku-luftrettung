@@ -49,6 +49,7 @@ declare(strict_types=1);
 $configPath = __DIR__ . '/config.php';
 if (!file_exists($configPath)) {
     require_once __DIR__ . '/ui.php';
+require_once __DIR__ . '/instanz_lib.php';
     http_response_code(409);
     /* DIESELBE OEFFENTLICHE HUELLE WIE DER EINRICHTER (O10, Tabelle 5.4):
      * Kopf ohne Menue, Lesespalte, Fuss ohne Rechtslinks. Ohne `config.php`
@@ -210,7 +211,7 @@ if (!$darfNachweis) {
     $nachweisOk = false;
 } elseif (!file_exists($nachweisDatei)) {
     $inhalt = $nachweis . "\n\n"
-            . "Diese Datei gehoert zur Wiederherstellung von Gen-EM NAdoku.\n"
+            . "Diese Datei gehoert zur Wiederherstellung von " . instanz_kurz() . ".\n"
             . "Die Zeichenfolge oben ist im Formular einzutragen. Sie beweist,\n"
             . "dass die wiederherstellende Person Zugriff auf dieses Verzeichnis\n"
             . "hat. Nach getaner Arbeit wird die Datei geloescht; sie kann auch\n"
@@ -503,6 +504,21 @@ function wh_einspielen(array $stand, callable $zeitLinks): array
         $pdo->exec('SET UNIQUE_CHECKS = 1');
         $stand['phase'] = 'fertig';
         $stand['beendet'] = gmdate('Y-m-d\TH:i:s\Z');
+        /* DEN TORWAECHTER VERGESSEN LASSEN (P5a/AP3, Backlog Nr. 54).
+         *
+         * Der eingespielte Dump bringt das `schema_migrations` der
+         * QUELLINSTALLATION mit — und `app_state` gleich mit, also auch den
+         * Zwischenspeicher des Torwaechters. Der Katalog-Hash dieser
+         * Installation passt dazu unter Umstaenden trotzdem, und dann
+         * behauptete die gespeicherte Antwort einen Stand, den es hier nicht
+         * gibt: Eine Installation mit fehlenden Migrationen bliebe offen,
+         * oder eine fertige bliebe zu.
+         *
+         * Geworfen und nicht neu gerechnet: Das Rechnen kostet 46
+         * Katalogeintraege, und die naechste angemeldete Anfrage tut es
+         * ohnehin. */
+        require_once __DIR__ . '/migration_lib.php';
+        migrationen_tor_zuruecksetzen($pdo);
         /* DER KLARTEXT WIRD SOFORT GELÖSCHT. Er ist eine vollständige,
          * unverschlüsselte Abschrift jeder Tabelle und hat auf der Platte
          * nichts verloren, sobald er drin ist. */

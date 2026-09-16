@@ -48,9 +48,7 @@ if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) {
 
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!hash_equals($_SESSION['csrf'] ?? '', $_SERVER['HTTP_X_CSRF'] ?? '')) {
-            json_out(['error' => 'csrf'], 403);
-        }
+        csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
         $b = json_decode(file_get_contents('php://input'), true);
         $dayId = isset($b['day_id']) ? (int)$b['day_id'] : 0;
         if (!is_array($b) || $dayId <= 0) {

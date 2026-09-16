@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
+require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/smtp.php';
 require_admin();
 require_once __DIR__ . '/adminbackup_lib.php';
@@ -203,21 +204,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if ($angelegt) {
-                    $link = $CFG['app']['base_url'] . '/pw_handling.php?token=' . $token;
-                    $ok = smtp_send($email,
-                        'Willkommen bei der Gen-EM Einsatzdokumentation Notarzt',
-                        "Hallo,\n\n"
-                        . "für dich wurde ein Zugang zur Gen-EM Einsatzdokumentation Notarzt angelegt.\n"
-                        . "Über den folgenden Link legst du dein persönliches Passwort fest — der Link ist\n"
-                        . "24 Stunden gültig:\n\n"
-                        . $link . "\n\n"
-                        . "Dabei wird auch dein Wiederherstellungsschlüssel angezeigt. Bitte notiere ihn dir\n"
-                        . "sicher — ohne ihn lassen sich die verschlüsselten Angaben nach einem späteren\n"
-                        . "Passwort-Reset von niemandem mehr öffnen.\n\n"
-                        . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
-                        . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n");
-                    if ($ok) {
+                    $link = app_url('/pw_handling.php?token=' . $token);
+                    /* DREI ZUSTAENDE, UND `wartet` GEHOERT AUF DIE ANDERE SEITE
+                     * (E-P5a-14, berichtigt in AP9 als E-P5a-54).
+                     *
+                     * AP5 hat `wartet` als „liegt in der Warteschlange und
+                     * geht gleich hinaus" gelesen und den Link deshalb
+                     * verborgen. Das ist die falsche Haelfte: `wartet`
+                     * heisst, dass der ERSTE VERSUCH GESCHEITERT IST
+                     * (`mail_zeile_versuchen()` gibt nur dann false zurueck)
+                     * — genau das sagt die Statusseite auch, wortgleich,
+                     * seit AP5.
+                     *
+                     * Die Folge war eine Sackgasse: Auf einer Installation
+                     * mit eingetragenem, aber unerreichbarem SMTP-Server
+                     * (falsches Passwort, gesperrter Port, abgelaufenes
+                     * Zertifikat) kam die Einladung nie an, und der Link war
+                     * nirgends mehr zu bekommen — auch „Setz-Link erneut
+                     * schicken" verbarg ihn. Das Konto blieb unbenutzbar.
+                     *
+                     * GEFUNDEN AM 16.09.2026 in P5a/AP9, weil der Messstand
+                     * daran haengenblieb: `kreislauf.py` liest den Link aus
+                     * dieser Antwort, und die lokale Installation hat keinen
+                     * erreichbaren Mailserver. Ein Werkzeug, das ueber den
+                     * regulaeren Weg geht, misst eben auch den Weg.
+                     *
+                     * Nur `zugestellt` heisst „die Mail ist raus". */
+                    $zustellung = mail_einreihen('einladung', $email, ['link' => $link]);
+                    if ($zustellung === MAIL_ZUGESTELLT) {
                         $notice = 'Konto angelegt — Setz-Link per E-Mail verschickt.';
+                    } elseif ($zustellung === MAIL_WARTET) {
+                        $notice = 'Konto angelegt — die E-Mail ist beim ersten Versuch '
+                                . 'NICHT hinausgegangen und steht in der Warteschlange. '
+                                . 'Sie wird erneut versucht; bis dahin ist der Link unten '
+                                . 'der sichere Weg.';
+                        $setzLink = $link;
                     } else {
                         // Das Konto steht, nur die Mail kam nicht weg. Den Link
                         // hier zeigen ist der einzige Weg, der die Person noch
@@ -739,13 +760,13 @@ ui_seite_start(['titel' => 'NutzerInnen']);
   </dialog>
 
 <?php ui_geruest_ende(); ?>
-<script>
+<script<?= kopf_nonce_attr() ?>>
   document.body.dataset.konto = <?= json_js((string)$userId) ?>;
 <?php if ($auswahlVerbraucht): ?>
   document.body.dataset.auswahlRest = <?= json_js($auswahlRest) ?>;
 <?php endif; ?>
 </script>
-<script>
+<script<?= kopf_nonce_attr() ?>>
 /* AUSWAHL UEBER SEITEN HINWEG (E-P3-41).
  *
  * Die Sammelleiste soll „n ausgewählt" auch dann noch sagen, wenn man auf

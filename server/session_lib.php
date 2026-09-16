@@ -76,6 +76,10 @@ function session_beenden(string $grund = 'abgemeldet'): never
         session_set_cookie_params([
             'httponly' => true, 'secure' => true, 'samesite' => 'Strict', 'path' => '/',
         ]);
+        /* `use_strict_mode` — siehe `auth_guard.php` (E-P5a-38, Nr. 205).
+         * Hier geht es ums ABMELDEN, und gerade deshalb: Wer eine Sitzung
+         * beendet, soll nicht eine untergeschobene Kennung beenden. */
+        ini_set('session.use_strict_mode', '1');
         session_start();
     }
     $_SESSION = [];
@@ -116,7 +120,7 @@ function session_beenden(string $grund = 'abgemeldet'): never
 </main>
 <?php ui_fuss_seite(['dunkel' => true]); ?>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
-<script>
+<script<?= kopf_nonce_attr() ?>>
 // Beide Schluessel raeumen: Daten- UND Inhaltsschluessel. Faengt das Skript
 // nicht, bleibt die Seite ueber den Verweis oben bedienbar.
 try { EdCrypto.clearSession(); } catch (e) { /* Skript blockiert */ }
@@ -337,6 +341,22 @@ function csrf_field(): string
 function csrf_ok(): bool
 {
     $mit = $_POST['csrf'] ?? '';
+    /* DER ZWEITE WEG: DIE KOPFZEILE (P5a/AP4, Backlog Nr. 67, R21).
+     *
+     * Die zwoelf JSON-Endpunkte schicken ihr Token als `X-CSRF` — sie senden
+     * einen JSON-Rumpf und haben kein Formularfeld. Bis Web 20.6.0 pruefte
+     * jeder von ihnen die Kopfzeile SELBST, mit derselben handgeschriebenen
+     * Zeile: `hash_equals($_SESSION['csrf'] ?? '', $_SERVER['HTTP_X_CSRF'] ?? '')`.
+     * Zwoelf Kopien einer Sicherheitspruefung sind zwoelf Gelegenheiten, eine
+     * davon beim naechsten Umbau zu vergessen — und genau das meint Nr. 67
+     * mit „die JSON-Endpunkte laufen an `csrf_check()` vorbei".
+     *
+     * Das Formularfeld hat Vorrang; die Kopfzeile greift nur, wenn keines da
+     * ist. Beide werden mit `hash_equals()` gegen denselben Sitzungswert
+     * gehalten — ein zweiter Weg ist keine zweite Regel. */
+    if ($mit === '' && isset($_SERVER['HTTP_X_CSRF'])) {
+        $mit = $_SERVER['HTTP_X_CSRF'];
+    }
     if (!is_string($mit)) { return false; }
     $soll = (string)($_SESSION['csrf'] ?? '');
     return $soll !== '' && hash_equals($soll, $mit);

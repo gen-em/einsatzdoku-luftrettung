@@ -6,9 +6,28 @@ require_once __DIR__ . '/db.php';
  * angemeldeten Seite gebraucht — nicht nur, wenn eine Sitzung endet. */
 require_once __DIR__ . '/session_lib.php';
 
+/* ---- HTTPS ZUERST (P5a/AP4, E-P5a-16) -----------------------------------
+ *
+ * VOR `session_start()`, und das ist der Punkt: Das Sitzungscookie traegt
+ * `secure`. Ueber HTTP sendet der Browser es nicht — die Anmeldung scheitert
+ * STUMM, und wer das nicht weiss, sucht den Fehler bei sich. Die Seite von
+ * `https_tor()` sagt es stattdessen. */
+https_tor();
+
 session_set_cookie_params([
     'httponly' => true, 'secure' => true, 'samesite' => 'Strict', 'path' => '/',
 ]);
+/* `use_strict_mode` VOR `session_start()` (P5a/AP4a, E-P5a-38, Backlog
+ * Nr. 205). Ohne das uebernimmt PHP eine Sitzungskennung, die der Browser
+ * mitbringt, auch wenn es sie nie vergeben hat — wer eine Kennung setzen
+ * kann (ueber einen Link, eine fremde Seite auf derselben Domain, ein
+ * gesetztes Cookie), kennt damit die Sitzung, in der sich gleich jemand
+ * anmeldet. Das ist Session-Fixation, und der Schutz dagegen hing bis
+ * Web 20.9.1 an der `php.ini` des Hosters.
+ *
+ * `install.php` und `wiederherstellen.php` setzten die Zeile seit jeher —
+ * ausgerechnet die beiden Wege, die KEINE Anmeldesitzung tragen. */
+ini_set('session.use_strict_mode', '1');
 session_start();
 
 if (empty($_SESSION['user_id'])) {
@@ -16,6 +35,44 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 $userId = (int)$_SESSION['user_id'];
+
+/* ---- DER TORWAECHTER (P5a/AP3, E-P5a-20; R40 (4), Backlog Nr. 54) --------
+ *
+ * STEHT EINE MIGRATION AUS, SCHLIESST DIE ANWENDUNG SICH SELBST. Zwischen
+ * dem Hochladen neuer Dateien und dem Aufruf von Betrieb → Updates erwartet
+ * neuer Code Tabellen, die es noch nicht gibt; die Anwendung antwortet in
+ * diesem Fenster mit 500. Der Unterschied zwischen 500 und 503 ist der
+ * zwischen „kaputt" und „gleich wieder da": Der JSON-Vertrag sagt zu 5xx
+ * „spaeter unveraendert erneut", und Uhr wie Handy halten sich daran.
+ *
+ * WARUM HIER UND NICHT IN `db.php` NEBEN `wartung_tor()`. Jenes Tor ist
+ * ausdruecklich OHNE Datenbank gebaut — es muss antworten, WAEHREND die
+ * Datenbank umgebaut wird (`wartung_lib.php`, Eigenschaft 1). Eine Abfrage
+ * dort naehme ihm genau die Eigenschaft, um derentwillen es dort steht.
+ * Diese Pruefung braucht eine Verbindung, also steht sie eine Ebene hoeher.
+ *
+ * WAS DAS KOSTET, UND WAS ES OFFEN LAESST. Die Pruefung ist gecacht (Hash des
+ * Katalogs, `migration_lib.php`) und kostet im Regelfall eine Zeile aus
+ * `app_state`. Offen bleibt ein Fenster: `ingest.php` und `pair.php` laden
+ * `auth_guard.php` NICHT — bis zur ersten angemeldeten Anfrage bekommen die
+ * Geraete also weiter 500 statt 503. Verloren geht dabei nichts (5xx ist 5xx,
+ * sie puffern und liefern nach), und fuer die Auslieferungskette ist das
+ * Fenster null: Sie laesst den Wartungsmodus bei ausstehender Migration von
+ * sich aus an (P5a/AP1, E-P5a-12). Fuer den Weg von Hand — Dateien
+ * hochladen, `update.php` — schliesst es die erste angemeldete Anfrage.
+ *
+ * ERST SCHALTEN, DANN DAS TOR NOCH EINMAL FRAGEN. `wartung_tor()` ist in
+ * `db.php` bereits gelaufen, als es die Datei noch nicht gab. Ohne den
+ * zweiten Aufruf bekaeme genau die Anfrage, die den Wartungsmodus ausloest,
+ * ihre Seite noch ausgeliefert — aus einer Anwendung, die sich gerade fuer
+ * geschlossen erklaert hat. Fuer die Ausnahmeseiten (Betrieb → Updates)
+ * kehrt der Aufruf sofort zurueck.
+ */
+require_once __DIR__ . '/migration_lib.php';
+if (migrationen_ausstehend(db())) {
+    wartung_einschalten('torwaechter');
+    wartung_tor();
+}
 
 /* Formular-Token bereitstellen. Die Erzeugung steht seit Web 15.6.0 in
    `session_lib.php`, damit auch die Anmeldeseite sie hat (Backlog Nr. 127);
@@ -225,9 +282,20 @@ function rollen_auswahl(): array
  * nicht (Backlog Nr. 127). Hier bleibt nur der Abbruchweg, den es nur fuer
  * angemeldete Seiten gibt. */
 function csrf_check(): void {
-    if (!csrf_ok()) {
-        ui_abbruch(403, 'Ungültiges Formular-Token.');
-    }
+    if (csrf_ok()) { return; }
+    /* DER API-ZWEIG (P5a/AP4, Backlog Nr. 67, R21).
+     *
+     * `ui_abbruch()` liefert eine HTML-Seite aus. Ein `fetch()` bekaeme damit
+     * Markup, wo es JSON erwartet, und meldete einen Syntaxfehler statt
+     * „Formular-Token abgelaufen" — dieselbe Falle wie bei einer Sitzung, die
+     * mitten in einer Anfrage endet (siehe `sitzung_beenden_passend()` oben).
+     *
+     * Bis Web 20.6.0 gab es diesen Zweig nicht, und die zwoelf Endpunkte
+     * prueften deshalb jeder fuer sich. Jetzt fragen alle dieselbe Funktion:
+     * `csrf_ok()` nimmt Feld UND Kopfzeile, und hier faellt die Entscheidung,
+     * in welcher Sprache das Nein kommt. */
+    if (ist_api_aufruf()) { json_out(['error' => 'csrf'], 403); }
+    ui_abbruch(403, 'Ungültiges Formular-Token.');
 }
 
 // Anzeigename fuer die Kopfleiste (name-Spalte existiert erst nach Migration)

@@ -90,6 +90,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
         }
     }
 
+    /* ---- Kontingent der Datenbank (P5a/AP2, E-P5a-11) -------------------
+     *
+     * ANDERS ALS DER WEBSPACE HAT ES EINE VORGABE (10 GB): Das ist die
+     * Untergrenze Z2, die diese Anwendung tragen muss — eine Zusage des
+     * Projekts, keine Vermutung ueber den Hoster. Leer setzt sie zurueck.
+     *
+     * Es gehoert in DIESES Formular und nicht in ein eigenes: Es steht neben
+     * dem Webspace, wird von denselben Schwellen gewarnt und hat dieselbe
+     * Frage im Ruecken. */
+    if ($error === null) {
+        $roh = str_replace(',', '.', trim((string)($_POST['db_gb'] ?? '')));
+        $istGb = speicher_db_kontingent_bytes() / (1024 * 1024 * 1024);
+        if ($roh === '') {
+            if (edbak_marke_lesen(SPEICHER_K_DB_GB) !== null
+                && (string)edbak_marke_lesen(SPEICHER_K_DB_GB) !== '') {
+                speicher_db_kontingent_setzen(0);
+                $teile[] = 'DB-Kontingent auf die Vorgabe zurückgesetzt';
+            }
+        } elseif (!is_numeric($roh) || (float)$roh < 0.01 || (float)$roh > 100000) {
+            $error = 'Das DB-Kontingent ist eine Zahl in GB, mindestens 0,01 (oder '
+                   . 'leer für die Vorgabe ' . SPEICHER_DB_GB_VORGABE . ' GB).';
+        } elseif (abs((float)$roh - $istGb) > 0.001) {
+            speicher_db_kontingent_setzen((float)$roh);
+            $teile[] = 'DB-Kontingent ' . $roh . ' GB';
+        }
+    }
+
+    if ($error === null) {
+        $notice = $teile ? implode(', ', $teile) . ' gespeichert.'
+                         : 'Es gab nichts zu ändern.';
+    }
+}
+
+/* ---- Sicherheitskopfzeilen (P5a/AP4, E-P5a-15) ---------------------------
+ *
+ * EIGENES FORMULAR, wie die Adresssuche darunter und aus demselben Grund: Ein
+ * Tippfehler in der Speichergrenze soll die CSP nicht mit abweisen.
+ *
+ * ZWEI EINSTELLUNGEN, ZWEI GESCHICHTEN. `csp_scharf` ist der Schritt von
+ * „melden" auf „blockieren" — er gehoert ans Ende einer Report-Only-Phase und
+ * nicht an ihren Anfang. `hsts_tage` ist die Dauer, fuer die ein Browser sich
+ * merkt, dass diese Domain nur ueber HTTPS zu haben ist; sie stand bis Web
+ * 20.6.0 fest in der `.htaccess` auf einem Jahr.
+ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'kopfzeilen') {
+    csrf_check();
+    $teile = [];
+    $scharf = !empty($_POST['csp_scharf']);
+    if ($scharf !== kopf_csp_scharf()) {
+        kopf_csp_scharf_setzen($scharf);
+        $teile[] = $scharf ? 'CSP scharf' : 'CSP auf „nur melden"';
+    }
+    $tage = (int)($_POST['hsts_tage'] ?? -1);
+    if ($tage !== kopf_hsts_tage()) {
+        if (!kopf_hsts_tage_setzen($tage)) {
+            $error = 'Für HSTS sind nur „aus", 1, 7 oder 365 Tage vorgesehen.';
+        } else {
+            $teile[] = 'HSTS ' . ($tage === 0 ? 'aus' : $tage . ' Tage');
+        }
+    }
     if ($error === null) {
         $notice = $teile ? implode(', ', $teile) . ' gespeichert.'
                          : 'Es gab nichts zu ändern.';
@@ -102,6 +162,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
  * und ein gemeinsames „Speichern" ueber zwei Karten hinweg hiesse, dass ein
  * Tippfehler in der Speichergrenze die Dienstadresse mit abweist.
  */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'ratenschutz') {
+    csrf_check();
+    require_once __DIR__ . '/ratelimit_lib.php';
+
+    /* ERST ALLES PRUEFEN, DANN ALLES SPEICHERN (P5a/AP6).
+     *
+     * Die Nachbarkarten auf dieser Seite schreiben Wert fuer Wert und brechen
+     * beim ersten Mangel ab — dann steht die Haelfte in der Datenbank und die
+     * Meldung „nicht gespeichert" ist zur Haelfte falsch. `admin_installation.php`
+     * macht es seit S8 richtig und schreibt den Grund dazu; hier steht er
+     * wieder, weil es die naechste Karte sonst wieder falsch macht. */
+    $neuLeiter = null; $neuLogin = null; $neuLoginIp = null; $neuBremse = null;
+
+    $pruefListe = static function (string $roh, int $anzahl, int $minWert,
+                                   int $maxWert, string $name) use (&$error): ?array {
+        $teile = array_map('trim', explode(',', $roh));
+        if (count($teile) !== $anzahl) {
+            $error = $name . ': genau ' . $anzahl . ' Werte, durch Komma getrennt.';
+            return null;
+        }
+        $zahlen = []; $vorher = 0;
+        foreach ($teile as $t) {
+            if (!ctype_digit($t) || (int)$t < $minWert || (int)$t > $maxWert) {
+                $error = $name . ': ganze Zahlen zwischen ' . $minWert . ' und '
+                       . $maxWert . '.';
+                return null;
+            }
+            if ((int)$t <= $vorher) {
+                $error = $name . ': die Werte müssen aufsteigen — eine Leiter, die '
+                       . 'rückwärts läuft, sperrt beim zweiten Mal kürzer.';
+                return null;
+            }
+            $zahlen[] = (int)$t; $vorher = (int)$t;
+        }
+        return $zahlen;
+    };
+
+    $roh = trim((string)($_POST['leiter'] ?? ''));
+    $neuLeiter = $pruefListe($roh, 4, 1, 1440, 'Sperrleiter');
+
+    if ($error === null) {
+        $roh = trim((string)($_POST['bremse'] ?? ''));
+        $neuBremse = $pruefListe($roh, 4, 10, 1000000, 'Schwellen der Verlangsamung');
+    }
+    foreach ([['login', 'Fehlversuche je Konto', &$neuLogin],
+              ['login_ip', 'Fehlversuche je Anschluss', &$neuLoginIp]] as [$feld, $name, &$ziel]) {
+        if ($error !== null) { break; }
+        $roh = trim((string)($_POST[$feld] ?? ''));
+        if (!ctype_digit($roh) || (int)$roh < 3 || (int)$roh > 10000) {
+            $error = $name . ': eine ganze Zahl zwischen 3 und 10000.';
+        } else {
+            $ziel = (int)$roh;
+        }
+    }
+    unset($ziel);
+
+    if ($error === null) {
+        /* Die Leiter steht in SEKUNDEN in `app_state`, eingegeben wird sie in
+         * MINUTEN — Sekunden in ein Formular zu schreiben, das von Menschen
+         * ausgefuellt wird, waere eine Einladung zum Vertippen um den Faktor
+         * sechzig. */
+        app_state_setzen(RATE_K_LEITER,
+                         implode(',', array_map(static fn(int $m): int => $m * 60, $neuLeiter)));
+        app_state_setzen(RATE_K_BREMSE, implode(',', $neuBremse));
+        app_state_setzen(RATE_K_LOGIN, (string)$neuLogin);
+        app_state_setzen(RATE_K_LOGIN_IP, (string)$neuLoginIp);
+        app_state_setzen(RATE_K_MAIL, empty($_POST['mail']) ? '0' : '');
+        $notice = 'Ratenschutz gespeichert: Sperrleiter '
+                . implode(' / ', $neuLeiter) . ' min · ' . $neuLogin
+                . ' Fehlversuche je Konto, ' . $neuLoginIp . ' je Anschluss · '
+                . 'Verlangsamung ab ' . $neuBremse[0] . ' Fehlversuchen je 15 Minuten.';
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'geocoder') {
     csrf_check();
     $adresse = geocoder_adresse_pruefen((string)($_POST['dienst'] ?? ''));
@@ -204,10 +338,17 @@ $anZaehlung = anteil_zaehlung();
 /**
  * Ein Balken mit Segmenten und Legende (Baustein `.speicher-balken`).
  *
- * DIE BREITE STEHT INLINE, DIE FARBE NICHT. Die Breite ist ein gerechneter
- * Wert und kann gar nicht anders als am Element stehen; die Farbe kommt aus
- * einer Klasse, damit kein Hexwert und kein Token in das Markup wandert
+ * DIE BREITE KOMMT AUS `data-breite`, DIE FARBE AUS EINER KLASSE. Die Breite
+ * ist ein gerechneter Wert und kann nicht in eine Klasse; die Farbe kommt aus
+ * einer, damit kein Hexwert und kein Token in das Markup wandert
  * (`CLAUDE.md` 5).
+ *
+ * BIS WEB 20.6.0 STAND DIE BREITE ALS STILATTRIBUT AM ELEMENT. Ein
+ * Stilattribut im Markup faellt unter `style-src` der CSP (P5a/AP4,
+ * E-P5a-15); `el.style.width = …` faellt als CSSOM gar nicht darunter. Die
+ * drei Zeilen am Ende dieser Seite setzen die Breite deshalb nach dem
+ * Aufbau. Ohne Skript bleibt der Balken leer — die Zahlen darunter in der
+ * Legende stehen trotzdem, und das ist die Auskunft, auf die es ankommt.
  *
  * OHNE BEZUG KEINE ANTEILE. Fehlt die Webspace-Angabe, werden die Segmente
  * anteilig ZUEINANDER gezeichnet und die Legende nennt nur die Summe — der
@@ -227,8 +368,8 @@ function speicher_balken(array $teile, int $bezug, array $schwellen): string
     foreach ($teile as $t) {
         $p = $nenner > 0 ? (float)$t['bytes'] * 100 / $nenner : 0.0;
         if ($p <= 0) { continue; }
-        $h .= '<span class="' . ui_e($t['klasse']) . '" style="width:'
-            . number_format(min(100, $p), 3, '.', '') . '%"></span>';
+        $h .= '<span class="' . ui_e($t['klasse']) . '" data-breite="'
+            . number_format(min(100, $p), 3, '.', '') . '"></span>';
     }
     /* Der Schwellenstrich sitzt als leeres Segment an seiner Stelle — ohne
      * absolute Positionierung und ohne zweite Ebene: Er ist ein Punkt AUF dem
@@ -237,8 +378,8 @@ function speicher_balken(array $teile, int $bezug, array $schwellen): string
         $erste  = (int)min($schwellen);
         $bisher = $nenner > 0 ? $summe * 100 / $nenner : 0;
         if ($erste > $bisher) {
-            $h .= '<span class="speicher-luecke" style="width:'
-                . number_format(max(0, $erste - $bisher), 3, '.', '') . '%"></span>';
+            $h .= '<span class="speicher-luecke" data-breite="'
+                . number_format(max(0, $erste - $bisher), 3, '.', '') . '"></span>';
             $h .= '<span class="speicher-marke"></span>';
         }
     }
@@ -589,15 +730,25 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
             'klein' => 'Prozent, durch Komma getrennt — gelten für beide Balken. '
                      . 'Je Schwelle einmal eine Meldung.']); ?>
       </div>
-      <?php ui_feld(['name' => 'webspace', 'label' => 'Webspace laut Hosting',
-          'label_zusatz' => 'optional',
-          'wert' => speicher_webspace_bytes() > 0
-              ? rtrim(rtrim(number_format(
-                    speicher_webspace_bytes() / (1024 * 1024 * 1024), 2, '.', ''), '0'), '.')
-              : '',
-          'klein' => 'GB, aus dem Hosting-Tarif abgelesen. Ohne Angabe zeigt '
-                   . '„Installation gesamt" nur die Summe — ohne Anteil und ohne '
-                   . 'Warnung.']); ?>
+      <div class="fld-reihe">
+        <?php ui_feld(['name' => 'webspace', 'label' => 'Webspace laut Hosting',
+            'label_zusatz' => 'optional',
+            'wert' => speicher_webspace_bytes() > 0
+                ? rtrim(rtrim(number_format(
+                      speicher_webspace_bytes() / (1024 * 1024 * 1024), 2, '.', ''), '0'), '.')
+                : '',
+            'klein' => 'GB, aus dem Hosting-Tarif abgelesen. Ohne Angabe zeigt '
+                     . '„Installation gesamt" nur die Summe — ohne Anteil und ohne '
+                     . 'Warnung.']); ?>
+        <?php ui_feld(['name' => 'db_gb', 'label' => 'Kontingent der Datenbank',
+            'wert' => rtrim(rtrim(number_format(
+                          speicher_db_kontingent_bytes() / (1024 * 1024 * 1024),
+                          2, '.', ''), '0'), '.'),
+            'klein' => 'GB, aus dem Hosting-Tarif abgelesen. Kein Hoster macht es '
+                     . 'abfragbar, deshalb eine Angabe — leer setzt auf die Vorgabe '
+                     . SPEICHER_DB_GB_VORGABE . ' GB zurück. Gewarnt wird mit '
+                     . 'denselben Schwellen wie oben.']); ?>
+      </div>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
       </div>
@@ -627,6 +778,165 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         'plaketten' => ui_plakette((string)$sp['pakete'], ['ton' => 'neutral']),
       ]);
     ?>
+  <?php ui_karte_ende(); ?>
+
+  <?php /* ---- Sicherheitskopfzeilen (P5a/AP4, E-P5a-15, Backlog Nr. 8) --
+           Sie steht zwischen Speicher und Adresssuche: naeher an „was der
+           Server tut" als an „was er speichert". */ ?>
+  <?php
+    $cspBerichte = [];
+    try {
+        $cspBerichte = db()->query(
+            'SELECT richtlinie, quelle, seite, anzahl, zuletzt
+               FROM csp_berichte ORDER BY zuletzt DESC LIMIT 20')->fetchAll();
+    } catch (Throwable $ex) { /* Tabelle fehlt — Migration steht noch aus */ }
+  ?>
+  <?php ui_karte_start(['titel' => 'Sicherheitskopfzeilen', 'id' => 'k-kopfzeilen',
+      'plakette' => kopf_csp_scharf()
+          ? ui_plakette('CSP scharf', ['ton' => 'blau'])
+          : ui_plakette('CSP meldet nur', ['ton' => 'orange'])]); ?>
+    <p class="feld-hinweis">Seit Web 20.7.0 setzt <strong>PHP</strong> die
+       Sicherheitskopfzeilen, nicht mehr die <code>.htaccess</code> — die liest
+       nur Apache. <strong>Die Content-Security-Policy sagt dem Browser, woher
+       er etwas laden darf.</strong> Sie ist die Linie gegen eingeschleuste
+       Skripte; gegen einen Server, der selbst verändert wurde, hilft sie
+       nicht (dafür läuft die Integritätswache).</p>
+    <form method="post" action="betrieb_server.php">
+      <?= csrf_field() ?><input type="hidden" name="action" value="kopfzeilen">
+      <?php ui_schalter(['name' => 'csp_scharf', 'label' => 'Richtlinie scharf schalten',
+          'an' => kopf_csp_scharf(),
+          'klein' => 'Aus heißt „nur melden": Der Browser lädt alles wie bisher und '
+                   . 'schickt einen Bericht, wenn die Richtlinie etwas blockiert '
+                   . 'hätte. So gehört es nach dem Ausrollen — mindestens zwei '
+                   . 'Wochen, und erst wenn unten keine unerklärten Berichte mehr '
+                   . 'stehen, scharf schalten.']); ?>
+      <h3 class="listen-form-titel">Dauer der HTTPS-Bindung (HSTS)</h3>
+      <p class="feld-hinweis">So lange merkt sich ein Browser, dass diese Domain
+         <strong>nur</strong> über HTTPS zu haben ist — und lässt bis dahin kein
+         <code>http://</code> mehr zu, auch nicht auf Klick.
+         <strong>Deshalb klein anfangen:</strong> Ein zu lang gesetzter Wert sperrt
+         die Domain aus, wenn das Zertifikat wegfällt, und zwar für die ganze
+         Dauer. <strong>Für bestehende Installationen:</strong> Bis Web 20.6.0
+         stand in der <code>.htaccess</code> fest ein Jahr; diese Einstellung
+         beginnt bei einem Tag. Nach ein bis zwei ruhigen Wochen gehört sie
+         zurück auf ein Jahr.</p>
+      <?php ui_segment(['name' => 'hsts_tage', 'wert' => (string)kopf_hsts_tage(),
+          'label' => 'Dauer der HTTPS-Bindung',
+          'optionen' => ['0' => 'aus', '1' => '1 Tag', '7' => '7 Tage',
+                         '365' => '1 Jahr']]); ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+      </div>
+    </form>
+
+    <?php if ($cspBerichte): ?>
+      <p class="feld-hinweis"><strong>Berichte der letzten 30 Tage</strong> —
+         zusammengefasst nach Richtlinie, Quelle und Seite. Jede Zeile ist eine
+         Quelle, die die Richtlinie blockiert hätte; solange hier etwas steht,
+         das nicht erklärt ist, bleibt sie auf „nur melden".</p>
+      <?php foreach ($cspBerichte as $b): ?>
+        <?php ui_zeile([
+          'text'  => (string)$b['richtlinie'] . ' · ' . (string)$b['quelle'],
+          'klein' => 'auf ' . (string)$b['seite'] . ' · zuletzt '
+                   . fmt_local((string)$b['zuletzt'], 'd.m.Y · H:i') . ' Uhr',
+          'plaketten' => ui_plakette((string)$b['anzahl'] . ' Meldungen', ['ton' => 'orange']),
+        ]); ?>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <?php ui_zeile(['text' => 'Berichte der letzten 30 Tage',
+          'klein' => 'Keine. Entweder ist die Richtlinie vollständig — oder es war '
+                   . 'noch niemand auf einer Seite, die etwas nachlädt. Karten, '
+                   . 'Import und Export sind die interessanten drei.',
+          'plaketten' => ui_plakette('0', ['ton' => 'blau'])]); ?>
+    <?php endif; ?>
+  <?php ui_karte_ende(); ?>
+
+  <?php /* ---- Ratenschutz (P5a/AP6, E-P5a-04 bis -07) --------------------
+           Sie steht NEBEN den Sicherheitskopfzeilen, weil beide dieselbe Frage
+           beantworten: Was haelt jemanden auf, der es von aussen versucht?
+           Die LISTE der laufenden Sperren steht bewusst NICHT hier, sondern
+           kommt nach Status -> Sicherheit (E-P5a-08, Mockup M-P5a-01) — wer
+           sie jetzt hier baut, baut sie zweimal. */ ?>
+  <?php require_once __DIR__ . '/ratelimit_lib.php'; ?>
+  <?php $vBr = rate_verlangsamung(true); ?>
+  <?php ui_karte_start(['titel' => 'Ratenschutz', 'id' => 'k-ratenschutz',
+      'plakette' => $vBr['stufe'] > 0
+          ? ui_plakette('Verlangsamung Stufe ' . $vBr['stufe'], ['ton' => 'orange'])
+          : ui_plakette('ruhig', ['ton' => 'blau'])]); ?>
+    <p class="feld-hinweis"><strong>Eine Sperre dauert beim zweiten Mal
+       länger.</strong> Wer sich zu oft vertippt, ist eine Viertelstunde
+       draußen; wer es am selben Tag noch einmal tut, länger. Nach
+       <strong>24 Stunden ohne Fehlversuch</strong> fängt die Leiter wieder
+       von vorn an. Gezählt wird am <em>eingetippten</em> Namen und nicht am
+       Konto — deshalb verrät eine Sperre nicht, ob es das Konto gibt.</p>
+    <form method="post" action="betrieb_server.php">
+      <?= csrf_field() ?><input type="hidden" name="action" value="ratenschutz">
+
+      <?php ui_feld(['name' => 'leiter', 'label' => 'Sperrleiter',
+          'label_zusatz' => 'vier Dauern in Minuten, aufsteigend',
+          'wert' => implode(', ', array_map(
+                        static fn(int $s): int => (int)($s / 60), rate_leiter())),
+          'platzhalter' => '15, 20, 30, 60']); ?>
+      <p class="feld-hinweis">Die erste Sprosse gilt für die erste Sperre, die
+         vierte für jede weitere. <strong>Nicht unter 15 setzen, ohne es zu
+         wollen:</strong> Bis Web 20.9.1 sperrte die Anmeldung fest 15 Minuten
+         — eine kürzere erste Sprosse macht den ersten Verstoß milder als
+         vorher.</p>
+
+      <?php ui_feld(['name' => 'login', 'label' => 'Fehlversuche je Konto',
+          'art' => 'number',
+          'label_zusatz' => 'bis zur Sperre, je 15 Minuten',
+          'wert' => (string)rate_grenze('login')['max']]); ?>
+      <?php ui_feld(['name' => 'login_ip', 'label' => 'Fehlversuche je Anschluss',
+          'art' => 'number',
+          'label_zusatz' => 'bis zur Sperre, je 15 Minuten',
+          'wert' => (string)rate_grenze('login_ip')['max']]); ?>
+      <p class="feld-hinweis"><strong>Die zweite Zahl ist die größere, und das
+         ist Absicht.</strong> Hinter einem Klinik-Anschluss teilen sich viele
+         eine Adresse; läge sie auf zehn, sperrte die zehnte Vertipperin die
+         übrigen neunzehn aus. Eine gelungene Anmeldung setzt beide Zähler
+         zurück.</p>
+
+      <h3 class="listen-form-titel">Verlangsamung statt globaler Sperre</h3>
+      <p class="feld-hinweis">Zählt die ganze Installation zu viele
+         Fehlversuche, antwortet <strong>jede fehlgeschlagene</strong> Anmeldung
+         langsamer — 1, 2, 4, 8 Sekunden. Wer das richtige Passwort hat, kommt
+         ohne Verzögerung durch. <strong>Eine globale Sperre gibt es bewusst
+         nicht:</strong> Sie wäre ein Schalter, den jeder von außen umlegt.</p>
+      <?php ui_feld(['name' => 'bremse', 'label' => 'Schwellen der Verlangsamung',
+          'label_zusatz' => 'vier Zahlen, Fehlversuche je 15 Minuten',
+          'wert' => implode(', ', rate_bremse_schwellen()),
+          'platzhalter' => '200, 400, 800, 1600']); ?>
+
+      <?php ui_schalter(['name' => 'mail', 'label' => 'Bei der höchsten Stufe melden',
+          'an' => rate_mail_an(),
+          'klein' => 'Eine Sammelmeldung an die Betreiberadresse, sobald eine Sperre '
+                   . 'die letzte Sprosse erreicht oder die Verlangsamung ihre vierte '
+                   . 'Stufe — höchstens eine je Stunde. Wohin sie geht, steht unter '
+                   . 'Verwaltung → Installation.']); ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+      </div>
+    </form>
+
+    <?php $sperren = rate_sperren_aktiv(8); ?>
+    <?php if ($sperren): ?>
+      <p class="feld-hinweis"><strong>Läuft gerade</strong> — die vollständige
+         Liste samt „Sperre aufheben" kommt auf Betrieb → Status → Sicherheit.</p>
+      <?php foreach ($sperren as $sp): ?>
+        <?php ui_zeile([
+          'text'  => (string)$sp['merkmal'],
+          'klein' => 'Topf ' . (string)$sp['topf'] . ' · noch '
+                   . max(1, (int)round($sp['rest'] / 60)) . ' Minuten',
+          'plaketten' => ui_plakette('Stufe ' . (int)$sp['stufe'], ['ton' => 'orange']),
+        ]); ?>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <?php ui_zeile(['text' => 'Laufende Sperren',
+          'klein' => 'Keine. Das ist der Normalfall — eine Sperre ist ein Ereignis, '
+                   . 'kein Zustand.',
+          'plaketten' => ui_plakette('0', ['ton' => 'blau'])]); ?>
+    <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
   <?php /* ---- Adresssuche (S9/AP2, E-S9-05, R79) ------------------------
@@ -704,6 +1014,16 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
        wer ihn wechselt, sollte den Text gegenlesen (Verwaltung →
        Rechtstexte).</p>
   <?php ui_karte_ende(true); ?>
+
+<?php /* DIE BALKENBREITEN — nach dem Aufbau, nicht im Markup (P5a/AP4).
+         Siehe `speicher_balken()` oben: Ein `style`-Attribut faellt unter
+         `style-src` der CSP, `el.style.width` nicht. Der Block traegt den
+         Nonce der Anfrage. */ ?>
+<script<?= kopf_nonce_attr() ?>>
+document.querySelectorAll('.speicher-balken [data-breite]').forEach(function (el) {
+  el.style.width = el.getAttribute('data-breite') + '%';
+});
+</script>
 
 <?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

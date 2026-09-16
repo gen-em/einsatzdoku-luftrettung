@@ -144,8 +144,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
     } elseif ($aktion === 'stand_loeschen') {
         $datei = (string)($_POST['datei'] ?? '');
         $notice = komp_loeschen($datei)
-            ? 'Der Stand wurde gelöscht. Was auf einem Backup-Ziel liegt, '
-            . 'bleibt dort — gelöscht wird auf dem Ziel nichts.'
+            /* DER SATZ IST SEIT WEB 20.14.0 GENAUER (P5a/AP10). Vorher hiess
+             * er „gelöscht wird auf dem Ziel nichts" — als Zusage über die
+             * Anwendung. Seit es die Aufbewahrungsregel je Ziel gibt, stimmt
+             * das nur noch für DIESE Handlung: Ein hier gelöschter Stand
+             * verschwindet drüben nicht deswegen. Ob er dort irgendwann
+             * fällt, entscheidet die Regel des Ziels, und die ist eine
+             * andere Sache. */
+            ? 'Der Stand wurde gelöscht. Was auf einem Backup-Ziel liegt, bleibt '
+            . 'dort — dieses Löschen greift nicht hinüber. (Ob dort aufgeräumt '
+            . 'wird, entscheidet die Aufbewahrungsregel des jeweiligen Ziels.)'
             : null;
         if ($notice === null) { $error = 'Diesen Stand gibt es nicht (mehr).'; }
     }

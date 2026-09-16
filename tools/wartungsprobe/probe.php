@@ -209,7 +209,7 @@ $geraet = null;
  * dem `try`, damit der `finally` sie auch dann kennt, wenn es vorher
  * abbricht — sonst bliebe das Migrationsregister der Installation stehen,
  * wie die Probe es hinterlassen hat. */
-$kandidat = null; $migAlt = null; $registerWeg = null;
+$kandidat = null; $migAlt = null; $registerWeg = null; $torWeg = null;
 
 try {
 
@@ -426,7 +426,16 @@ pruefe($a12['code'] === 200, '12  assets/style.css -> 200 (statisch, ungetort)',
  * Gemessen wird beides an derselben Stelle: Das Stylesheet kommt (12), und der
  * Inline-Block der Anmeldeseite ist derselbe wie in der Quelldatei -- der
  * Wartungsbalken steht im Markup, nicht im Skript. */
-$blockRe = '/<script(?![^>]*\bsrc=)[^>]*>(.*?)<\/script>/s';
+/* EIN `?>` IM TAG BEENDET DAS TAG NICHT -- fuer HTML schon, fuer uns nicht.
+ * Seit Web 20.7.0 traegt jedes Inline-Skript seinen CSP-Nonce, und in der
+ * QUELLE steht das als `<script<?= kopf_nonce_attr() ?>>`. Ein `[^>]*>` endet
+ * am `>` des PHP-Schlusses, und der Block begann danach mit einem
+ * ueberzaehligen `>` -- die Auslieferung hat es nicht, also stimmte keine
+ * Pruefsumme mehr. Dieselbe Falle traf die Integritaetswache (Fund 23);
+ * `$tagRest` ist ihre Antwort, hier in PCRE: erst ein PHP-Stueck am Stueck,
+ * sonst ein einzelnes Zeichen, das kein `>` ist. */
+$tagRest = '(?:<\?(?:php\b|=).*?\?>|[^>])*';
+$blockRe = '/<script(?!' . $tagRest . '\bsrc=)' . $tagRest . '>(.*?)<\/script>/s';
 preg_match_all($blockRe, (string)file_get_contents(dirname(__DIR__, 2) . '/server/login.php'), $mQ);
 preg_match_all($blockRe, (string)$a10['rumpf'], $mA);
 $quellBloecke = array_values(array_filter($mQ[1] ?? [], static fn($b) => !str_contains($b, '<?')));
@@ -506,7 +515,8 @@ pruefe($rc === 0 && count($aus) > 3,
  * Eintraege, die Erwartung zaehlte weiter 12, und die Wartungsprobe stand
  * seither auf 1 nicht erfuellt — bemerkt hat es niemand, weil AP3 sie nicht
  * gefahren hat. Genau dafuer ist die Erwartung da. */
-$sollAusnahmen = ['betrieb_status.php', 'betrieb_statistik.php',
+$sollAusnahmen = ['betrieb_status.php', 'betrieb_sicherheit.php',
+                  'betrieb_statistik.php',
                   'betrieb_updates.php', 'betrieb_jobs.php', 'betrieb_server.php',
                   'betrieb_schluesselblatt.php',
                   'update.php', 'wiederherstellen.php', 'jobs.php',
@@ -515,7 +525,7 @@ sort($sollAusnahmen);
 $istAusnahmen = WARTUNG_AUSNAHMEN;
 sort($istAusnahmen);
 pruefe($istAusnahmen === $sollAusnahmen,
-       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171 + S10',
+       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171 + S10 + P5a/AP8',
        implode(', ', $istAusnahmen));
 
 /* E-S5W-09 am Code: login.php muss `role` lesen und im Wartungsmodus fuer
@@ -713,7 +723,139 @@ if ($bereit) {
     pruefe(false, '27  Nach dem Klick: 0 offen, Register „skipped", Meldung sagt es', $nichtGemessen);
 }
 
+/* ======================================================================
+ * Teil 7 — DER TORWAECHTER (P5a/AP3, E-P5a-20; R40 (4), Backlog Nr. 54)
+ * ======================================================================
+ *
+ * DER FALL: Der Katalog kennt eine Migration, das Register nicht — und
+ * NIEMAND hat den Wartungsmodus eingeschaltet. Bis Web 20.5.0 blieb die
+ * Installation dann offen, und wer in dieses Fenster geriet, bekam einen
+ * Fehler aus einer halb umgebauten Datenbank. Seit AP3 schliesst die
+ * Anwendung sich selbst.
+ *
+ * ER STEHT HINTER TEIL 6, weil er dieselbe Kennung braucht und weil Teil 6
+ * sie sauber hinterlaesst. Und er beginnt damit, den Wartungsmodus
+ * AUSZUSCHALTEN — sonst liesse sich nicht sehen, dass er von selbst angeht.
+ *
+ * NR. 54 WIRD MITGEMESSEN, und zwar in der Richtung, die weh tut: Der
+ * Zwischenspeicher haengt am Katalog-Hash, und der aendert sich beim
+ * Einspielen eines fremden Dumps NICHT. Erwartung 32 zeigt, dass der
+ * Torwaechter dann stumm bliebe; Erwartung 33 zeigt, dass
+ * `migrationen_tor_zuruecksetzen()` — der Aufruf, den
+ * `wiederherstellen.php` jetzt macht — ihn wieder sehend macht.
+ * ====================================================================== */
+echo "\n  Teil 7 — der Torwaechter (E-P5a-20, Nr. 54)\n";
+
+$torBereit = $bereit && $kandidat !== null && $migAlt !== null;
+$torWeg    = null;   // Kennung, die dieser Teil aus dem Register genommen hat
+
+if ($torBereit) {
+    wartung_weg();
+    migrationen_tor_zuruecksetzen($pdo);
+    $frisch();
+    pruefe(!wartung_aktiv(), '28  Vorbedingung: Wartung aus, Zwischenspeicher leer');
+
+    /* Die Registerzeile wieder herausnehmen — ohne den Schalter anzufassen. */
+    $pdo->prepare('DELETE FROM schema_migrations WHERE id = ?')->execute([$kandidat]);
+    $torWeg = $kandidat;
+    migrationen_tor_zuruecksetzen($pdo);
+
+    /* Eine ANGEMELDETE Seite, die keine Ausnahme ist. `auth_guard.php`
+     * stellt die Frage; `index.php` beantwortet sie mit 503. */
+    $t1 = hole('index.php', $sidAdmin);
+    pruefe($t1['code'] === 503, '29  Angemeldete Seite antwortet 503',
+           'HTTP ' . $t1['code']);
+    pruefe(wartung_aktiv()
+           && (string)(wartung_daten()['von'] ?? '') === 'torwaechter',
+           '29  ... und der Schalter steht auf „torwaechter"',
+           'von ' . var_export(wartung_daten()['von'] ?? null, true));
+    pruefe(str_contains($t1['rumpf'], 'selbst geschlossen')
+           && str_contains($t1['rumpf'], 'Betreiberin ist informiert'),
+           '30  Die Wartungsseite nennt den Grund');
+
+    /* Die Geraete bekommen ihr 503 als JSON — dieselbe Zusage wie in Teil 1,
+     * nur ausgeloest vom Torwaechter statt von einem Menschen. */
+    $t2 = hole('ingest.php', null, ['leer' => 1],
+               ['X-Device-Id: torprobe', 'X-Api-Key: torprobe']);
+    pruefe($t2['code'] === 503 && ($t2['daten']['error'] ?? '') === 'maintenance',
+           '30  ... und ingest.php bekommt sein 503 als JSON',
+           'HTTP ' . $t2['code'] . ', error '
+           . var_export($t2['daten']['error'] ?? null, true));
+
+    $t3 = hole('betrieb_updates.php', $sidAdmin);
+    pruefe($t3['code'] === 200 && str_contains($t3['rumpf'], 'Vom Torwächter geschlossen'),
+           '31  Betrieb → Updates bleibt offen und nennt den Torwaechter',
+           'HTTP ' . $t3['code']);
+
+    $t4 = hole('betrieb_updates.php', $sidAdmin,
+               ['action' => 'migrate', 'csrf' => $csrfAdmin]);
+    $st7 = $pdo->prepare('SELECT status FROM schema_migrations WHERE id = ?');
+    $st7->execute([$kandidat]);
+    if ($st7->fetchColumn() !== false) { $torWeg = null; }
+    pruefe(str_contains($t4['rumpf'], 'Wartung beenden')
+           && str_contains($t4['rumpf'], 'Migrationen erledigt'),
+           '31  ... und bietet nach dem Lauf „Wartung beenden" an',
+           'HTTP ' . $t4['code']);
+
+    $t5 = hole('betrieb_updates.php', $sidAdmin,
+               ['action' => 'wartung_aus', 'csrf' => $csrfAdmin]);
+    $t6 = hole('index.php', $sidAdmin);
+    pruefe(!wartung_aktiv() && $t6['code'] === 200,
+           '31  ... und danach ist die Installation wieder offen',
+           'HTTP ' . $t6['code']);
+
+    /* ---- Nr. 54: der Zwischenspeicher ueberlebt eine Wiederherstellung --- */
+    $pdo->prepare('DELETE FROM schema_migrations WHERE id = ?')->execute([$kandidat]);
+    $torWeg = $kandidat;
+    /* KEIN Zuruecksetzen — genau so kaeme die Lage nach einem eingespielten
+     * Dump: fremdes Register, eigener Katalog, gleicher Hash. */
+    pruefe(migrationen_ausstehend($pdo) === false,
+           '32  Nach einer Wiederherstellung: der Zwischenspeicher luegt (erwartet)',
+           'ausstehend = false, obwohl eine Zeile fehlt');
+    migrationen_tor_zuruecksetzen($pdo);
+    pruefe(migrationen_ausstehend($pdo) === true,
+           '33  ... und `migrationen_tor_zuruecksetzen()` macht ihn wieder sehend',
+           'ausstehend = true');
+
+    /* Aufraeumen: Zeile zurueck, Schalter aus, Zwischenspeicher frisch. */
+    $pdo->prepare('INSERT INTO schema_migrations (id, status, applied_at)
+                   VALUES (?, ?, ?)
+                   ON DUPLICATE KEY UPDATE status = VALUES(status),
+                                           applied_at = VALUES(applied_at)')
+        ->execute([$kandidat, $migAlt['status'], $migAlt['applied_at']]);
+    $torWeg = null;
+    migrationen_tor_zuruecksetzen($pdo);
+    wartung_weg();
+} else {
+    foreach ([['28', 'Vorbedingung: Wartung aus, Zwischenspeicher leer'],
+              ['29', 'Angemeldete Seite antwortet 503'],
+              ['29', '... und der Schalter steht auf „torwaechter"'],
+              ['30', 'Die Wartungsseite nennt den Grund'],
+              ['30', '... und ingest.php bekommt sein 503 als JSON'],
+              ['31', 'Betrieb → Updates bleibt offen und nennt den Torwaechter'],
+              ['31', '... und bietet nach dem Lauf „Wartung beenden" an'],
+              ['31', '... und danach ist die Installation wieder offen'],
+              ['32', 'Nach einer Wiederherstellung: der Zwischenspeicher luegt (erwartet)'],
+              ['33', '... und `migrationen_tor_zuruecksetzen()` macht ihn wieder sehend']]
+             as [$nr, $was]) {
+        pruefe(false, $nr . '  ' . $was, $nichtGemessen);
+    }
+}
+
 } finally {
+    if ($torWeg !== null && ($migAlt ?? null) !== null) {
+        $pdo->prepare('INSERT INTO schema_migrations (id, status, applied_at)
+                       VALUES (?, ?, ?)
+                       ON DUPLICATE KEY UPDATE status = VALUES(status),
+                                               applied_at = VALUES(applied_at)')
+            ->execute([$torWeg, $migAlt['status'], $migAlt['applied_at']]);
+    }
+    /* Der Zwischenspeicher des Torwaechters wird IMMER verworfen — auch bei
+     * einem Abbruch mitten in Teil 7. Ein stehengebliebener „steht aus"
+     * schloesse die Installation bei der naechsten Anfrage. */
+    if (function_exists('migrationen_tor_zuruecksetzen')) {
+        migrationen_tor_zuruecksetzen($pdo);
+    }
     if ($warVorher) { wartung_setzen($inhaltVorher ?? ''); } else { wartung_weg(); }
     sitzung_weg($sidAdmin);
     sitzung_weg($sidUser);

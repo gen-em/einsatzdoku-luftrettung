@@ -180,7 +180,7 @@ ui_seite_start(['titel' => 'Diensttag anlegen']);
   <?php ui_karte_ende(); ?>
 
 <?php ui_geruest_ende(); ?>
-<script>
+<script<?= kopf_nonce_attr() ?>>
 /* Standort und Rettungsmittel gehören zusammen (E15): Die Auswahl eines
    Rettungsmittels zieht seinen Standort nach, statt eine Kombination
    zuzulassen, die es nicht geben kann. Ohne Standort am Rettungsmittel

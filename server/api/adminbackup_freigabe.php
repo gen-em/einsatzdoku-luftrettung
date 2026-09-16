@@ -59,10 +59,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                       'meldung' => 'Dieser Teil gehört nicht zur freigegebenen '
                                  . 'Backup.'], 404);
         }
-        header('Content-Type: application/json; charset=utf-8');
-        header('Cache-Control: no-store');
-        echo $klar;
-        exit;
+        /* Fertiger Text, direkt hinaus — seit Web 20.9.1 ueber
+         * `json_roh_out()` und damit mit demselben Kopfzeilensatz wie jede
+         * andere Antwort (`nosniff` inbegriffen, der hier fehlte). */
+        json_roh_out($klar);
     }
 
     $paket = edbak_paket_kopf_lesen($f['account_key'], $f['datei']);
@@ -73,7 +73,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
     $fassung = (int)($paket['version'] ?? 1);
 
-    header('Cache-Control: no-store');
+    /* Hier stand `header('Cache-Control: no-store')`. Seit Web 20.9.1 setzt
+     * `json_roh_out()` den Satz, und `json_out()` unten geht durch sie — die
+     * Zeile war ab da eine Wiederholung derselben Kopfzeile. */
     $antwort = [
         'freigabe' => [
             'erstellt'       => $f['erstellt'],
@@ -105,9 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!hash_equals($_SESSION['csrf'] ?? '', $_SERVER['HTTP_X_CSRF'] ?? '')) {
-        json_out(['error' => 'csrf'], 403);
-    }
+    csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
     $f = edbak_freigabe_fuer($userId);
     if ($f === null) { json_out(['error' => 'keine_freigabe'], 404); }
     /* Als eingelöst vermerken, nicht löschen: Das Backup selbst bleibt

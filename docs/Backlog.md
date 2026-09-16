@@ -20,14 +20,33 @@ Werte: „53, gemessen 13.09.2026" kostet eine Klammer und sagt der nächsten
 Instanz sofort, wie alt der Wert ist. Anlass war die Durchsicht
 vom 12.09.2026: Von sechs Einträgen mit Zeilennummern waren alle sechs
 verschoben, von sieben gezählten Werten alle sieben veraltet — und keiner
-davon sah falsch aus. (Nebenbei: Kein Absatz darf mit einer Zahl und einem
-Punkt beginnen — der Einzeiler oben hielte ein Datum am Zeilenanfang für
-eine Nummer.)
+davon sah falsch aus. (Nebenbei: **Keine ZEILE darf mit einer Zahl und einem
+Punkt beginnen** — der Prüfschritt „Backlog — keine Nummer zweimal" in Stufe 1
+liest dort eine Backlog-Nummer. Es geht nicht nur um Absätze: Ein
+**Zeilenumbruch mitten im Fließtext**, nach dem zufällig ein Datum steht,
+genügt. Am 16.09.2026 ist genau das passiert — zwanzig Zeilen unter dieser
+Warnung, im Absatz zur Nummernvergabe: „… aus der Durchsicht vom
+**16.**09.2026" wurde als Nummer 16 gelesen, die es schon gab, und Stufe 1
+brach ab. Wer hier ein Datum schreibt, setzt den Umbruch davor, nicht
+mittendrin.)
 
 **Zu den fehlenden Nummern 4, 6 und 7.** Sie waren vergeben und sind ohne
 Eintrag verschwunden; ihr Inhalt ist nicht mehr rekonstruierbar. Sie bleiben
 deshalb dauerhaft frei — weder werden sie neu vergeben noch nachgetragen. Diese
 Notiz steht hier, damit die Frage nicht bei jedem Durchsehen erneut aufkommt.
+
+**Nummernvergabe zwischen Zweigen (Stand 16.09.2026).** 200 und 201
+(Rahmenplan Fassung 73) und 202–205 (Fassung 74) sind mit dem Doku-Paket der
+Konzeptinstanz vergeben und liegen auf dem P5a-Zweig
+`claude/butte-umsetzen-5opi9u`, der bis zu seinem Merge die
+Steuerungsdokumente trägt. **206 bis 212 sind in der Umsetzung von P5a auf
+demselben Zweig vergeben** (206 Messstand-Schritt, 207 `gen-em.org` in `tools/`,
+208 Jobregister von Hand geführt, 209 Bausteintabelle in `Design.md`,
+210 Deadlocks in `ingest.php`, 211 `/api/`-Aufruf ohne Sitzung, 212 zwei
+Erwartungen der Wiederherstellungsprobe), **213 und 214 aus der
+Durchsicht vom 16.09.2026** (Zustandsdatei der Kette im Webroot;
+`install.php` in der Auslieferung). Jeder weitere Zweig, der Nummern vergibt, beginnt bei **215**
+und trägt seine Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
@@ -123,37 +142,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ## Offen
 
-8. **Content-Security-Policy als zusätzliche Verteidigungslinie.**
-    *Ergänzung 06.09.2026 (Krypto-Review, R78):* Die Bestandsaufnahme
-    macht sie enger möglich als hier angenommen — **null**
-    Inline-Ereignisbehandler, **ein** `style`-Attribut, alle Skriptblöcke
-    über `ui_seite_start()`. Der Bauplan (Nonce je Anfrage, Report-Only
-    zuerst, Quellenliste für Kacheln und Photon) steht in
-    `docs/konzepte/Vorbereitung-Sicherheitspaket.md`, SP-5. Warum es
-    zählt: Daten- und Inhaltsschlüssel liegen als Hex im `sessionStorage`;
-    jede XSS-Lücke, auch eine in Leaflet oder SheetJS, liest sie aus.
-   Seit Web 5.2.0 eng fassbar: Es wird keine fremde Quelle mehr geladen
-   (Nr. 12), die Regel muss also nichts von außen erlauben.
-17. **`ingest.php` hat als einziger anmeldungsfreier Endpunkt keine
-    Mengenbremse.** `RATE_GRENZEN` (`ratelimit_lib.php`) kennt keinen Topf
-    `ingest`, und die Datei ruft weder `rate_erlaubt()` noch
-    `rate_misserfolg()`. Die übrigen offenen Endpunkte haben ihn — `RATE_GRENZEN`
-    führt **neun** Töpfe (gemessen 13.09.2026: `login`, `salt`, `reset`,
-    `pair`, `pair_start`, `pair_code`, `demo`, `demog`, `testmail`; bei
-    Aufnahme waren es „die drei übrigen", genannt vier). Gefunden in P0/A6 (dort F-16); die
-    Konzeptarbeit dazu ist an **Phase P5** übergeben (Rahmenplan R19), weil
-    die richtige Grenze von der Uhr-Seite her zu bestimmen ist — eine Uhr, die
-    einen Tag Rückstand nachliefert, darf nicht ausgesperrt werden. **P1 misst
-    nur das Aufrufverhalten** und legt keine Grenze fest; die frühere Zuordnung
-    „an P1/P2 übergeben" war überholt und ist mit Web 7.2.1 berichtigt.
-    **Stand nach P1:** Die Messgrundlage liegt jetzt vor. Der Referenzlauf hat
-    das Sendeverhalten der Uhr über 16 Diensttage nachgestellt und protokolliert
-    (`tools/referenzdatensatz/einspielen/messprotokoll.md`): Spitze **14
-    Anfragen an einem Auslöser**, **174 Abstände von 0 Sekunden**, Median
-    1 020 s. Eine Grenze muss also den Stoß zulassen und über die Zeit deckeln —
-    ein fester Abstand je Anfrage wäre falsch. Das Demo-Konto ist mit
-    abgedeckt, sobald der Topf existiert (E-P1-09 führt es als benanntes
-    Restrisiko).
 21. **Die 43 weiteren Funde der A4-Nachlese sichten.** Die Erhebung „toter
     Code" in P0/A4 hat mit einer zweiten, breiteren Methode 43 zusätzliche
     Kandidaten geliefert (Abschnitt 9.3 des P0-Konzepts). Sie sind **nicht**
@@ -358,11 +346,68 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
       am Messstand 6 202 931 verwaiste Punkte aus zwei Konten (F-S2-B,
       behoben in AP1).
 
-    **Was hier offen bleibt,** bis die Phase durch ist — drei Messungen:
-    Zeitraumübersicht und Nachbearbeitung bei 5 000 Einsätzen, die Frage, ob
-    die Zielzahlen aus E-S2-24 (Suche ≤ 5 s, Tagesansicht ≤ 3 s, Backup
-    ≤ 5 min) gehalten werden, und `post_max_size` des Produktivservers
-    (siehe oben). Dieser Eintrag ist die **führende** Fassung; die Bemerkung
+    **Die drei Messungen sind am 16.09.2026 in P5a/AP9 gefahren worden**
+    (Messstand, 5050 Einsätze · 1000 Diensttage · 2 813 201 Spurpunkte, CPU
+    sechsfach gedrosselt, lokale Installation). Zwei davon sind beantwortet,
+    die dritte bleibt offen.
+
+    **(a) Die Zeitraumübersicht ist der Engpass, und zwar deutlich.** Jahr
+    2026 mit **3983 Einsätzen**: **42,61 s** bis zur ersten sichtbaren Zeile,
+    **3983 `<tr>`** im DOM, 2,2 MB JSON, Halde 55 MB. Zum Vergleich in
+    derselben Messreihe: die Suche über **alle 5050** Einsätze in **3,18 s**
+    (sie zeigt 200 Zeilen und zählt über alles). Die Vermutung der Sondierung
+    von P3 ist damit bestätigt und zugespitzt: `zeitraum.php` ruft
+    `EdMissionTable.erzeuge` ohne `seite`, und das ist die **einzige** Ansicht
+    ohne Seitengrenze. Die 854 ms der Sondierung waren ohne Drossel und ohne
+    Kartenmarker gemessen; auch durch sechs geteilt bleiben hier gut sieben
+    Sekunden. **Zu tun:** dieselbe Seitengrenze wie in der Suche, oder eine
+    Vorauswahl auf Monat statt Jahr. Das ist ein eigenes Paket und nicht
+    AP9 — AP9 hat gemessen, nicht umgebaut.
+
+    **(b) Die Nachbearbeitung ist unauffällig — mit einer Einschränkung, die
+    dazugehört.** „Zuordnung nachtragen" braucht **2,83 s**, und zwar
+    **mit null offenen Zuordnungen**: Der Messstandbestand kommt aus einem
+    Backup, in dem jeder Diensttag zugeordnet ist, die Seite hat also nichts
+    zu zeigen. Gemessen ist damit die **Abfrage** über 1000 Diensttage und
+    5050 Einsätze, nicht das Aufbauen der Liste. Das ist die interessantere
+    Hälfte (die Abfrage wächst mit dem Bestand, die Liste mit der Zahl der
+    Versäumnisse), aber es ist nicht die ganze. Eine Messung mit gefüllter
+    Liste steht aus und ist billig nachzuholen, sobald jemand einen Bestand
+    mit unzugeordneten Tagen hat.
+
+    **(c) Die Zielzahlen aus E-S2-24** — fünf von sechs gehalten:
+
+    | Zielzahl | Soll | Gemessen (5050 Einsätze, 6× Drossel) | |
+    |---|---|---|---|
+    | Suche | ≤ 5 s | **3,18 s** | ✔ |
+    | Tagesansicht | ≤ 3 s | **1,11 s** | ✔ |
+    | Backup erstellen | ≤ 5 min | **49,84 s** | ✔ |
+    | Backup-Datei | ≤ 25 MB | **11,8 MB** | ✔ |
+    | Wiederherstellung | ≤ 15 min | **231,9 s** (17 Dateien über den regulären Weg) | ✔ |
+    | Spuren je 1000 Einsätze | ≤ 3 MB | **3,66 MB** | ✘ knapp |
+
+    Zur letzten Zeile gehört die Zahl daneben: Sie ist **nach** Verdichtung
+    und Ausdünnung gemessen (`OPTIMIZE TABLE` davor, sonst zählt man
+    freigegebene Seiten mit — ohne ihn kamen 19,30 MB heraus). Der
+    Verdichtungsjob lässt dabei **434 von 5050** Einsätzen liegen: Ihr
+    letzter Punkt ist keine zwei Wochen alt, und er fasst nur abgeschlossene
+    Aufzeichnungen an. Das ist richtig so, aber es heißt, dass 3,66 MB nicht
+    der Endstand eines gewachsenen Bestands sind, sondern der eines frisch
+    eingespielten. **Die Zielzahl ist damit knapp verfehlt und nicht
+    widerlegt;** wer sie halten will, misst an einem Bestand nach, dessen
+    jüngster Einsatz älter ist als die Verdichtungsfrist.
+
+    **(d) `post_max_size` bleibt ungemessen — und das ist zu sagen, nicht
+    wegzulassen.** Die Zahl ist die des **Zielservers**, nicht die einer
+    Entwicklungsmaschine; sie zu messen setzt eine laufende Installation
+    voraus. Staging stand am 16.09.2026 noch nicht (die Auslieferungskette
+    ist gebaut, die Anlage selbst wird erst eingerichtet — Rahmenplan 6a).
+    **Der Weg dorthin steht aber seit P5a/AP2 fest und braucht keine
+    Messung mehr:** Die Plattformkarte auf Betrieb → Status nennt
+    `post_max_size` und `upload_max_filesize` mit Sollwert (Z3: 2 MB) und
+    Ist-Wert. Sobald Staging antwortet, ist die Antwort ein Seitenaufruf.
+
+    Dieser Eintrag ist die **führende** Fassung; die Bemerkung
     in Rahmenplan Abschnitt 5 verweist hierher.
 
 40. **Altklassen ohne Gegenstück — 53 (gemessen 13.09.2026), 55 bei Aufnahme.**
@@ -524,25 +569,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     „Jetzt sichern". `edbak_aufbewahrung()` bekäme dafür einen optionalen
     Parameter; `edbak_verdraengen()` liest ihn.
 
-49. **Aufbewahrung auch auf dem Backup-Ziel.**
-    Der Versand (Web 12.1.0, S2/AP7) **ergänzt nur**: Auf der Gegenstelle
-    löscht diese Anwendung nie, auch nicht im Sinne der Regel „höchstens zwei
-    je Konto", die für die Ablage auf dem eigenen Server gilt. Bei zwei
-    Backups je Konto und Monat läuft ein Ziel damit über kurz oder lang
-    voll, und niemand merkt es hier.
-
-    Das ist zunächst Absicht und keine Lücke: Der Zweck eines auswärtigen Ziels
-    ist, den Ausfall dieses Servers zu überleben — samt eines Fehlers, der
-    **hier** zu viel löscht. Ein Versand, der drüben aufräumt, trägt genau
-    diesen Fehler mit hinüber.
-
-    **Zu entscheiden** ist deshalb nicht *ob* aufgeräumt wird, sondern wer
-    haftet: eine eigene Zahl je Ziel („dort höchstens N je Konto"), die
-    ausdrücklich eingeschaltet werden muss und nie die Vorgabe ist — oder eine
-    blosse **Anzeige** des Belegten am Ziel, damit die Betreiberin es sieht und
-    dort selbst entscheidet. Der zweite Weg löscht nichts und beantwortet die
-    Frage vielleicht schon.
-
 50. **Der Versand liest je Konto ein Verzeichnis.**
     `sz_versand_schub()` fragt für jeden Kontoordner die Verzeichnisliste des
     Ziels ab, um zu erkennen, was dort fehlt. Bei 33 Ordnern ist das
@@ -614,28 +640,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     verlorenen Konto ist sie es nicht. Genau daran ist E-S2-19 einmal
     gescheitert; der Punkt steht hier, damit die Frage nicht verlorengeht,
     nicht weil die Antwort feststünde.
-
-54. **Der Migrationslauf nach einer Wiederherstellung ist ein zweiter Gang.**
-    Aus S2/AP8. Das Konzept sieht in E-S2-20 vor, dass die Wiederherstellung
-    „danach einen Migrationslauf" ausführt. `wiederherstellen.php` tut das
-    nicht: Es sagt am Ende, ob der Dump aus einer anderen Fassung stammt, und
-    schickt zur Wartung. Der Grund ist gut — `update.php` ist seit M6-01
-    zweistufig, weil Migrationen Spalten löschen können, und eine Seite ohne
-    Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese
-    Absicherung heraus.
-
-    Damit bleibt der Schritt aber **an einem Menschen hängen**, und zwar an
-    dem Tag, an dem er am meisten zu tun hat. Wer ihn vergisst, hat eine
-    Installation mit altem Schema und neuem Code — und merkt es an der Stelle,
-    an der zuerst eine Spalte fehlt.
-
-    **Zu entscheiden:** Ob `$MIGRATIONS` und der Ausführungsteil aus
-    `update.php` in eine eigene Datei wandern (dann liesse sich der Lauf von
-    beiden Seiten aufrufen, mit derselben Zweistufigkeit), oder ob
-    `wiederherstellen.php` nach dem Einspielen unmittelbar auf `update.php`
-    weiterleitet und die Anmeldung dazwischen als das genommen wird, was sie
-    ist: die Bestätigung. Die zweite Möglichkeit ist billiger und ändert
-    nichts an einer Datei mit 37 Migrationen.
 
 55. **Das Komplett-Backup kennt keinen scharfen Schnappschuss.**
     Aus S2/AP8. Der Dump entsteht über mehrere Anfragen; ein Lesestand über
@@ -799,75 +803,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Preisschild an einer aufgeschobenen Entscheidung, und genau das sollen sie
     sein.
 
-67. **`csrf_check()` hat keinen API-Zweig.**
-    *Aufgenommen aus einer Gegenprüfung vom 23.08.2026; die Zahlen sind am
-    02.09.2026 nachgezählt (S4/D2).*
-    `require_admin()` verzweigt daneben nach `ist_api_aufruf()` und antwortet
-    einem Endpunkt mit JSON; `csrf_check()` rendert unbedingt eine HTML-Seite.
-    Ein Endpunkt, der sie aufriefe, schickte einer `fetch()`-Anfrage also eine
-    Fehlerseite statt eines Fehlerobjekts — die Oberfläche zeigte „unerwartete
-    Antwort" statt „Sitzung abgelaufen".
-    **Bisher folgenlos, weil es diesen Aufrufer nicht gibt.** Von den **17**
-    Dateien unter `server/api/` (gemessen 13.09.2026; 15 bei der Zählung vom
-    02.09.2026) ruft **keine** `csrf_check()` auf. Die **zwölf**, die POST
-    annehmen, prüfen jede selbst gegen `HTTP_X_CSRF` — seit dem 02.09.2026
-    ist `pat_anheben.php` dazugekommen; die meisten ändern Zustand, zwei
-    (`backup_spuren.php`, `export_data.php`) lesen nur und benutzen POST für
-    die Nutzlast. Die übrigen **fünf** (`backup_data.php`,
-    `kopplung_stand.php`, `mission.php`, `range.php`, `suchindex.php`) sind
-    streng GET-only, weisen alles andere mit 405 ab und haben kein
-    Schreib-SQL; ihnen fehlt die Prüfung also nicht — `kopplung_stand.php`
-    sagt im Kopf, warum. Die Invariante hält.
-    Es ist damit eine **unausgesprochene Invariante**, keine Störung — und die
-    Nachzählung hat keinen ungeschützten schreibenden Endpunkt gefunden.
-    **Zwei Einschränkungen an diesen Sätzen**, aus einer Gegenprüfung vom
-    02.09.2026, damit die nächste Zählung nicht darauf hereinfällt:
-    `kdf_upgrade.php` prüft `HTTP_X_CSRF` erst **nach** dem Demo-Ausstieg —
-    die Zeile davor steigt für das Demo-Konto mit `json_out(['ok' => true,
-    …])` aus (Zeilen 69 und 70, gemessen 13.09.2026; 66 und 67 bei
-    Aufnahme). Heute folgenlos,
-    weil hinter dem Ausstieg nichts steht; kippt aber, sobald dort mehr steht
-    als ein `json_out()`. Die beiden Zeilen gehören getauscht. Und „kein
-    Schreib-SQL" gilt für die vier **Dateien**, nicht für die vier
-    **Endpunkte**: `auth_guard.php` ruft bei *jeder* Anfrage — GET
-    eingeschlossen — `run_cleanup_if_due()` und beim Demo-Konto
-    `demo_reset_wenn_faellig()`, und `jobs_lauf()` schreibt dabei
-    (`INSERT IGNORE INTO jobs`, `UPDATE jobs`). Ein GET auf
-    `api/suchindex.php` kann also die tägliche Wartung auslösen. Das ist
-    gewollte Huckepack-Bauweise und harmlos, weil ein Angreifer nichts
-    gewinnt, was der nächste Seitenaufruf ohnehin auslöst — aber schreibfrei
-    ist der Endpunkt nicht.
-    **Zu tun:** entweder denselben `ist_api_aufruf()`-Zweig in `csrf_check()`
-    ergänzen, oder die Invariante im Kopf der Funktion festhalten, damit der
-    nächste Endpunkt sie nicht versehentlich bricht.
-    **Und eine Lehre über die Sache hinaus.** Die ursprüngliche Fassung dieses
-    Punktes nannte „alle sechs schreibenden Endpunkte". Am 23.08.2026 war das
-    **richtig**: Damals lagen zehn Dateien unter `server/api/`, und genau sechs
-    prüften gegen `HTTP_X_CSRF` (`adminbackup_freigabe`, `backup_restore`,
-    `day`, `export_data`, `import_commit`, `kdf_upgrade`). In den zehn Tagen
-    bis zum Eintragen sind fünf dazugekommen — `backup_eintraege_restore`,
-    `backup_spuren`, `backup_spuren_restore`, `gpx_import`, `schneiden` —, und
-    alle fünf prüfen ebenfalls. Aus sechs wurden elf. **Eine Zahl in einem
-    Backlog-Punkt altert also, während der Punkt liegt**, und sie altert
-    lautlos: Nichts an ihr sieht falsch aus. Wer diesen Punkt anfasst, zählt
-    vorher wieder nach — die Zählung von heute ist morgen genauso alt.
-    **Der Unterpunkt ist erledigt (Backlog-Runde 3, AP4, Web 19.3.1, 13.09.2026);
-    der Punkt selbst bleibt offen und liegt bei P5.** In
-    `server/api/kdf_upgrade.php` steht die CSRF-Prüfung jetzt **vor** dem
-    Demo-Ausstieg. Bis dahin kam ein Aufruf ohne Formular-Token für das
-    Demo-Konto mit 200 zurück, während jedes andere Konto 403 sah — folgenlos
-    nur, weil hinter dem Ausstieg nichts steht. Am Prüfstand gemessen, alter
-    gegen neuer Stand bei sonst gleichem Aufbau: **ohne Header vorher 200,
-    jetzt 403 `{"error":"csrf"}`; mit Header unverändert 200 mit
-    `uebersprungen: demo`.** Dazu falscher und leerer Header, beide 403. Die
-    Reihenfolge ist im Kopfkommentar der Datei begründet, der stille Erfolg in
-    `docs/Technik.md` als bedingt gekennzeichnet.
-    **Offen bleibt der Hauptpunkt:** der `ist_api_aufruf()`-Zweig in
-    `csrf_check()` (oder die Invariante im Funktionskopf), damit die Endpunkte
-    unter `server/api/` die Prüfung nicht jeder selbst schreiben. Vor dem
-    Anfassen neu zählen — siehe die Lehre oben.
-
-
 76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
     hat.**
     *Aufgenommen 02.09.2026 als Frage des Auftraggebers (Rahmenplan Fassung
@@ -973,8 +908,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Die Modelltabelle steht** (Web 12.9.1): 325 Teilenummern auf 173
     Modelle, davon 28 keine Uhren. Eine Zählung nach `geraet_art` trägt damit
     — aber nur für Geräte, die **nach** dem Füllen gekoppelt haben. Ältere
-    Zeilen tragen die ungeprüfte Selbstauskunft; vor der ersten Auswertung
-    deshalb `php tools/geraetemodelle/nachaufloesen.php` fahren.
+    Zeilen tragen die ungeprüfte Selbstauskunft.
+
+    **Teil 1 dieses Eintrags ist mit P5a/AP11 erledigt** (Web 20.15.0,
+    E-P5a-21): Der Job `nachaufloesen` zieht bestehende Zeilen nach, sobald
+    sich die Modelltabelle geändert hat — erkannt am Hash, in Blöcken von 200,
+    mit Fortsetzungsmarke. Der Handgriff
+    `php tools/geraetemodelle/nachaufloesen.php` bleibt als Vorschau und Weg
+    von Hand, ist aber **keine Voraussetzung mehr**: Er brauchte Shell-Zugriff,
+    und auf einem Webspace ohne SSH holten die betroffenen Geräte ihre Angabe
+    erst bei der nächsten Kopplung nach — also womöglich nie. Die Zahl, die
+    dieser Eintrag auswerten will, hing damit daran, ob jemand SSH hat.
+    Betrieb → Status, Zeile **Gerätemodelle**, sagt den Stand.
+
+    **Offen bleibt der Rest dieses Eintrags**: die Auswertung selbst (Herkunft
+    je Einsatz, Betriebslage-Dashboard) samt ihrer Datenschutz-Vorbedingung.
 
     **Drei Befunde vom 14.09.2026 (Bestandsaufnahme zu R42), alle zu
     entscheiden, bevor der P5-Rest angefasst wird:**
@@ -1017,6 +965,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 ---
 
 ---
+
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP11 nur für den Nachlöse-Job (E-P5a-21, E-PP-06); Herkunft je Einsatz und Dashboard bleiben 10c.
 
 90. **Der Simulator kann keinen Verbindungsabriss herstellen.**
     *Aufgenommen 03.09.2026 aus S5 Paket C.*
@@ -1249,8 +1199,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     „`* * * * * php …/server/jobs.php`"; am 13.09.2026 Zeilen 13, 2674,
     6042 und 8722 — bei Aufnahme 13, 2424, 5220 und 6210). Wer den Befehl aus dem Docstring
     oder aus `Technik.md` abtippt, bekommt **„Could not open input file"** —
-    genau das ist beim Einrichten des Plesk-Cron auf der Installation
-    luftrettung.net passiert.
+    genau das ist beim Einrichten des Plesk-Cron auf dem Produktivserver
+    passiert.
     **Nicht betroffen, und das gehört ausdrücklich festgehalten:**
     der Wertekasten in `server/betrieb_jobs.php` baut den Befehl über
     `__DIR__` und gibt damit den korrekten Installationspfad aus. Die Karte
@@ -1515,36 +1465,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Wirkung auf Code, Daten oder Oberfläche** — deshalb bleibt der Punkt offen
     statt zurückgezogen: Er kostet nichts, solange niemand ihn anfasst, und er
     ist mit der nächsten größeren Rahmenplan-Pflege in einem Zug zu machen.
-
-181. **Die Anwendung schickt keine Content-Security-Policy.**
-    *Aufgenommen 13.09.2026 als zweite Hälfte von Nr. 179; dort ausdrücklich
-    nicht mitgemacht, weil es eine Festlegung ist und kein Nachtrag.* Seit dem
-    13.09.2026 zählt `tools/vollstaendigkeit/` die Zusage „keine fremde Quelle
-    zur Laufzeit" nach (Prüfung `fremde Quelle`, Nr. 179) — **am Quelltext**.
-    Zur Laufzeit hält sie nichts: `grep -rn "Content-Security-Policy" server/`
-    ergibt **0**. Ein eingeschleustes Skript, das nicht im Repositorium steht
-    — über eine Lücke, ein Fremdpaket, einen kompromittierten Deploy —, lädt
-    ungehindert.
-    **Was zu entscheiden ist, nicht nur zu bauen.** Die Richtlinie braucht
-    Ausnahmen für genau die Quellen, die Nr. 179 als gewollt aufführt: vier
-    Kachelserver (`tile.openstreetmap.org`, `tile.openmaps.fr`,
-    `{s}.tile.opentopomap.org`, `server.arcgisonline.com`) unter `img-src`,
-    und den Adressdienst unter `connect-src` — **dessen Anschrift ist seit
-    S9/AP2 eine Einstellung je Installation** (`app_state.geocoder_url`), die
-    Richtlinie muss also zur Laufzeit gebaut werden und kann nicht als
-    feste Zeichenkette im Code stehen. Dazu die Frage, ob `'unsafe-inline'`
-    für `style-src` bleibt oder die Inline-Stile weichen (das entscheidet über
-    den Aufwand), und ob `report-only` vorgeschaltet wird, um eine Woche zu
-    messen, bevor die Richtlinie greift.
-    **Wer sie zu eng setzt, macht die Karten grau** — und das fällt erst im
-    Einsatz auf. *Abnahme:* Jede Seite schickt die Richtlinie; die vier
-    Kachelserver und der eingestellte Adressdienst funktionieren; ein
-    eingeschleustes `<script src="https://cdn.example/x.js">` wird vom Browser
-    **blockiert** (Konsolenmeldung im Bilderlauf, der solche Fehler seit
-    Nr. 176 wieder zählt); der Bilderlauf bleibt bei 0 Konsolenfehlern.
-    Zuordnung: **S10 Sicherheit** (Schritt 9b) oder das Bedrohungsmodell
-    (P6, R69) — die Entscheidung gehört in den Rahmenplan.
-
 
 184. **Der Kommentar-Abtaster der Prüfmittel verliert in PHP-Dateien mit HTML die Spur.**
     *Aufgenommen 14.09.2026 in AP2 der Mockup-Runde, als die Symbolprüfung ihn
@@ -1829,32 +1749,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ist auf die Notizen des Diensttags eingegrenzt. Zuordnung: **vor 1.0** — es ist ein Rechtstext,
     kein Feinschliff; spätestens mit der Doku-Neufassung in P7 (R72).
 
-195. **`geraet_art` kommt auf dem Rückweg der Sicherung ungeprüft durch.**
-    *Aufgenommen 14.09.2026 als Nebenfund der Bestandsaufnahme zu R42.*
-    Beim Koppeln verengt `geraete_lib.php` die Geräteart auf die drei
-    erlaubten Werte — was nicht in `GERAET_ARTEN` steht, wird `NULL`, und
-    `docs/Technik.md` führt das ausdrücklich als Zusage („eine Geräteart
-    außerhalb der drei erlaubten Werte zu `NULL`"). Auf dem Rückweg der
-    Konto-Sicherung gilt sie nicht: `backup_lib.php` prüft
-    `missions.geraet_art` und `rest_segments.geraet_art` nur mit
-    `pruef_text(…, GERAET_MAX_ART, …)`, also allein auf die Länge von 16
-    Zeichen. Jede Zeichenkette bis dahin geht durch. Bei `origin` ist es
-    anders — der wird gegen `HERKUNFT_WERTE` gehalten; die Asymmetrie ist im
-    Code nicht begründet.
-
-    Heute fällt das nirgends auf, weil die Statistik `devices` liest und
-    nicht `missions`. Genau diese beiden Spalten sind aber das, was der
-    offene R42-Rest auswerten soll („Herkunft je Einsatz", R64) — eine
-    Zählung darüber würde eine eingespielte Sicherung ungefiltert
-    übernehmen. Kein Sicherheitsproblem: Der Weg setzt voraus, dass jemand
-    seine eigene Sicherung verändert. Aber eine Zählung, die man verunreinigen
-    kann, taugt nicht als Betriebszahl.
-
-    *Abnahme:* Ein Sicherungspaket mit `geraet_art: "radcomputer"` landet als
-    `NULL` in der Datenbank, nicht als `radcomputer`. Zuordnung: **P5**,
-    zusammen mit der Auswertung — vorher hat die Spalte keinen Leser.
-
-
 196. **68 von 195 Backlog-Einträgen rendern auf GitHub als grauer Kasten.**
     *Aufgenommen 15.09.2026 beim Gegenlesen der Punkte 190–195.*
     Ab der Nummer **100** ist der Listenmarker ein Zeichen breiter
@@ -1987,11 +1881,800 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nennt vier fehlende Nummern statt drei. Zuordnung: **Backlog-Runde** —
     zusammen mit **Nr. 196**, das dieselbe Datei ohnehin in einem Zug anfasst.
 
+200. **Bounce-Postfach: Unzustellbares erkennen, nicht nur zählen.**
+    *Aufgenommen 15.09.2026 (Konzept P5a, E-P5a-14; Vorbereitung
+    Plattformprofil PP-7, Stufe Empfohlen).* Die Mail-Warteschlange aus P5a
+    zählt Zustellversuche und führt eine Unzustellbar-Liste auf der
+    Statusseite — was der SMTP-Server annimmt und die Gegenstelle später
+    zurückschickt, sieht sie nicht. Fehlt: ein Postfach, das die Anwendung
+    per IMAP liest (Job), mit dem eine dreimal zurückgekommene Adresse am
+    Konto als „unzustellbar" vermerkt und die Nutzerin beim nächsten
+    Anmelden gefragt wird. Ohne Postfach bleibt der Vermerk aus. Zuordnung:
+    nach P5a, mit dem Konto-Lebenszyklus (10b) oder als Backlog-Runde.
+
+201. **`Retry-After` in Uhr und Handy auswerten.**
+    *Aufgenommen 15.09.2026 (Konzept P5a, Befund 1.7).* Beide Clients
+    behandeln jeden Antwortcode außer 200/400/401/403/413 als „später
+    erneut" und wiederholen zum nächsten eigenen Anlass — die Kopfzeile
+    `Retry-After`, die die Mengenbremse (E-P5a-02) mitschickt, liest keiner.
+    Für Sperren von 10 bis 60 Minuten genügt das; sauberer wäre, die
+    genannte Zeit abzuwarten statt bei jedem Auslöser anzuklopfen. Niedrig;
+    Uhr-Stufe und Android-Stufe je eine Zeile in der Antwortauswertung
+    (`Uploader.mc`, `Sendeantwort.kt`).
+
+202. **Zentralisierung Web — eine Stelle je Sache** (Sammelnummer,
+    Rahmenplan **Schritt 15**, R83).
+    *Aufgenommen 16.09.2026.* Eine eigene Sitzung hat den Web-Teil
+    (`server/`, ohne `assets/vendor/`) auf Code untersucht, der nach dem
+    Vorbild von `mission_fields.php` an eine Stelle gehört; Android und Uhr
+    sind nicht Gegenstand. Zahlen sind nachgezählt, Stand `main` vom
+    16.09.2026 — der P5a-Zweig hat Teile bereits erledigt (vermerkt). Regel
+    R83: zentralisiert wird beim zweiten echten Verbraucher; ein Helfer mit
+    einem Verbraucher liegt in einer `_lib.php`, nicht in einer Seite.
+
+    **Paket 1 — Marke, Mail, Link, Token.**
+    - Mailrahmen (Anrede, Produktname, Kontaktadresse, Grußformel) an sieben
+      Versandstellen von Hand: `email_lib.php`, `admin_user.php`,
+      `admin_users.php`, `reset_request.php`, `pair.php` (2×),
+      `adminbackup_lib.php`; die Testmail in `betrieb_status.php` weicht ab.
+      Langname 20× in 6 Dateien, Kurzname 15× in 10, Kontaktadresse 7×.
+      **Erledigt in P5a/AP5:** der Name (E-P5a-35, Web 20.8.0),
+      `mail_rahmen()` und `app_url()` (E-P5a-36, Web 20.9.0) — alle zehn
+      Versandstellen benutzen `mail_einreihen()` und damit den Rahmen, die
+      Testmail eingeschlossen. Dazu die **Kontaktadresse als Einstellung**
+      (E-P5a-40): Sie stand nicht nur an sieben Stellen, sie war auch die
+      persönliche Adresse des Entwicklers — `grep -rn "gen-em\.org" server/`
+      ergibt seit Web 20.9.0 **0**.
+    - `base_url`-Verkettung 5× ohne `rtrim` (`admin_users.php`,
+      `admin_user.php`, `reset_request.php`, `pair.php` 2×), 2× mit
+      (`adminbackup_lib.php`, `betrieb_jobs.php`) — ein Schrägstrich am Ende
+      der Konfiguration ergibt `//pw_handling.php`. **Erledigt** mit
+      `app_url()` (Web 20.9.0); `grep -rn "base_url" server/` zeigt nur noch
+      die Bibliothek, `install.php` (die Quelle) und `config.example.php`.
+      Nebenbei gefunden: Bei leerer `base_url` schickte `smtp.php` ein
+      nacktes `EHLO ` — `parse_url('')` liefert `false`.
+    - **Empfängerliste der Betriebspost** an drei Stellen
+      (`speicher_lib.php`, `adminbackup_lib.php` 2×), die dritte bereits mit
+      abweichender Sortierung. **Erledigt** mit `mail_betriebsziele()`
+      (E-P5a-40, Web 20.9.0) — zugleich der Ort, an dem die neue Einstellung
+      `betrieb_mail` greift. *Nachtrag zur Aufnahme: Dieser Punkt stand nicht
+      in der ursprünglichen Analyse; er ist beim Umzug aufgefallen.*
+    - Passwort-Setz-Link (Token erzeugen, alte entwerten, einfügen, Link,
+      Mailtext) in `reset_request.php`, `admin_user.php`, `admin_users.php`,
+      `install.php`; „höchstens ein gültiger Token je Konto" nur in zwei
+      der vier; Laufzeit als vier SQL-Literale (1 h, 1 h, 24 h, 24 h). →
+      `reset_token_ausstellen()` plus Mailtext in `email_lib.php`. Bleibt
+      Schritt 15.
+
+    **Paket 2 — Datenzugriff.**
+    - `app_state` lesen/schreiben: 24 Stellen in 11 Dateien, fünf
+      Wrapper-Paare (`edbak_marke_*`, `schluessel_marke_*`, `geocoder_state*`,
+      `demo_*`, `jobs_*`), roh in `auth_salt.php`, `jobs.php`,
+      `admin_installation.php`, `smtp.php`, `session_lib.php`, `db.php`. Nur
+      die edbak-Fassung kennt die 190-Zeichen-Grenze und schreibt Fehler ins
+      Log. → zwei Funktionen in `db.php`.
+    - Virtuelles Gerät `manual-<userId>`: vier zeichengleiche Kopien samt
+      Kommentar (`einsatz_form.php`, `api/schneiden.php`,
+      `api/gpx_import.php`, `api/import_commit.php`); die
+      `user_id`-Bedingung ist ein Datentrennungsriegel (M3-12/M6-09). →
+      `geraet_manuell()` in `db.php` neben `geraet_virtuell()`.
+    - Einsatz per ID mit Besitzprüfung (`WHERE id = ? AND user_id = ? AND
+      deleted_at IS NULL`) in 9 Dateien, 11 Stellen, vier Spaltenauswahlen;
+      `dt_laden()` hat kein Gegenstück. → `einsatz_laden()`.
+    - **Handlisten der `missions`-Spalten trotz Feldkatalog:**
+      `api/export_data.php`, `api/suchindex.php`, `api/import_commit.php`
+      und der Schreibweg in `backup_lib.php` — acht Listen, obwohl
+      `mf_ist_spalte()` existiert und von `api/mission.php`,
+      `einsatz_form.php` und dem Einspielweg benutzt wird; ein neues
+      Katalogfeld fehlt in den drei APIs still. → `mf_spalten_missions()`
+      in `mission_fields_lib.php`, mit Variante ohne personenbezogene
+      Spalten für die Export-Schranke. **Sorgfältigstes Paket** — berührt
+      Export-Format und Backup-Format; Kreisläufe csv und edbak Pflicht.
+    - Transaktionsrahmen in 21 Dateien ohne Helfer; die
+      verschachtelungsfeste Fassung in `spur_lib.php` und `backup_lib.php`
+      je einzeln. → `db_transaktion(callable)`, schrittweise.
+    - Kindtabellen eines Einsatzes ersetzen (Phasen, Reanimationen,
+      Rettungsmittel) in vier Schreibwegen (`einsatz_form.php`,
+      `api/import_commit.php`, `ingest.php`, `backup_lib.php`). → drei
+      Datenzugriffsfunktionen ohne Prüfpolitik.
+
+    **Paket 3 — API-Eingang, Sitzung, Flash.**
+    - API-Eingangsgatter (Methode, CSRF-Kopfzeile, JSON-Rumpf) in 12
+      Dateien unter `api/` wortgleich; Inline-Fassung ohne den Leerwächter
+      aus `csrf_ok()`; Fehlerschlüssel uneinheitlich
+      (`payload`/`format`/`leer`), `post_max_size`-Hinweis in drei
+      Fassungen. **Der CSRF-Teil ist auf dem P5a-Zweig erledigt** (AP4,
+      Nr. 67: 12 Dateien auf `csrf_check()`, 0 inline). Übrig: Methode,
+      Rumpf, Fehlerschlüssel → `api_eingang()`.
+    - Sitzungsstart (`session_set_cookie_params` + `session_start`) 7× in
+      drei Varianten. → `sitzung_starten($art)` in `session_lib.php`
+      (Nr. 205 setzt vorab nur `use_strict_mode`).
+    - Flash-Meldung über die Sitzung in `einstellungen.php`,
+      `nachbearbeitung.php`, `papierkorb.php`. → `flash_setzen()`/
+      `flash_holen()`, daraus `post_ende()` für Admin-Seiten, die heute
+      nicht umleiten.
+    - Verzögerte JSON-Fehlerantwort der unangemeldeten Endpunkte:
+      `pair.php` sauber (`abweisen()`/`antworten()`/`gesperrt()`),
+      `auth_salt.php` 4× und `jobs.php` 3× inline. → nach
+      `ratelimit_lib.php`.
+    - **Nicht hier:** der Log-Helfer (`error_log()` 39× in 19 Dateien,
+      Präfixe uneinheitlich, nur `json_fehler()` mit Kennung). Er ist der
+      Schreibweg des 10c-Protokolls und wird dort entworfen
+      (`Vorbereitung-P5c-Protokollierung.md`, V7).
+
+    **Paket 4 — JavaScript.**
+    - JSON-POST mit CSRF-Kopf 15× in 6 Dateien (`export.js` 2,
+      `schneiden.js` 2, `einstellungen.php` 6, `import_ui.js` 2,
+      `unlock.js` 2, `index.php` 1), vier Fehlerschemata; „JSON laden plus
+      Fehlerbox" in `index.php`, `zeitraum.php`, `einsatz.php`, `suche.php`.
+      → `assets/api.js` (`EdApi.post`, `EdApi.lade`).
+    - Meldungs-Markup 6× im JS nachgebaut (`import_ui.js`,
+      `einstellungen.php`, `zeitraum.js` 2×, `schneiden.js`, `patient.js`,
+      `index.php`), Ton-zu-Symbol schon auseinander. → `EdMeldung.markup()`
+      als Zwilling von `ui_meldung_markup()`.
+    - Dauer in drei Schreibweisen (`missiontable.js` `1h 05min`,
+      `einsatz.php` `1h 5min`, `schneiden.js` `1 h 5 min`) trotz
+      exportiertem `EdMissionTable.fmtDur`; Datum `YYYY-MM-DD` →
+      `TT.MM.JJJJ` 6× mit drei Fehlerverhalten; Kilometer 7 Stellen in 4
+      Dateien. → schmale `format.js`.
+    - Karten-Präambel in `einsatz.php`, `index.php`, `tag_spuren.php`,
+      `zeitraum.php` mit zwei Fallback-Ausschnitten (`[47.7, 10.3] z9`
+      gegen `[48.5, 10.5] z7`); `fitBounds`-Padding 4× wortgleich mit drei
+      Kommentaren zum selben Fehler; `index.php` benutzt das
+      Array-Padding, vor dem sie warnen. → `EdKarte.erzeuge()`,
+      `EdGeo.passeAusschnittAn()`.
+    - Rahmen um `EdPat.entschluessleListe()` in `index.php`,
+      `zeitraum.php`, `suche.php` (`#lockbanner` 4×). →
+      `EdPat.uebernimm()`, `EdUnlock.sperrhinweis()`.
+
+    **Paket 5 — Zeit, Zahl, Migration.**
+    - ISO-UTC-Marke 21× schreiben in 8 Dateien, 9× lesen in 5, obwohl
+      `edbak_zeitpunkt_text()` genau das tut. → `jetzt_iso()`,
+      `iso_zu_sql()` neben `fmt_local()`.
+    - Datumsformate 45× in 23 Dateien in vier Trennervarianten; drei
+      `date()` in Server-Zeitzone statt `fmt_local()` (`einsatz_form.php`,
+      `admin_installation.php`, `rechtstexte_lib.php`). → benannte Wrapper.
+    - Tausendertrennung 22× in 13 Dateien, `stat_zahl()` nur in
+      `betrieb_statistik.php`; Bytes lesbar in `edbak_groesse_text()` (GB)
+      und `apk_groesse()` (nur MB); GB-Umrechnung 7× inline; relative Zeit
+      „vor N Minuten" in drei Fassungen mit verschiedenen Schwellen
+      (`status_lib.php` 90 min, `betrieb_updates.php` 60 min); Prozent in 5
+      Dateien. → nach `db.php`. **R83 gilt für P5a AP8–AP10 sofort.**
+    - `migration_lib.php`: rund 40 Inline-Abfragen gegen
+      `information_schema`, obwohl `_hat_tabelle()`, `_hat_spalte()`,
+      `_hat_index()` in derselben Datei stehen (älterer Katalogteil). Rein
+      mechanisch.
+
+    **Paket 6 — Beifang, nur zusammen mit Arbeit an der Datei, kein
+    Termin.** Stammdaten-CRUD in `einstellungen.php` (vier Speichern-, vier
+    Löschzweige; der Kommentar bei `crew_save` belegt einen Fehler, der in
+    drei Kopien Jahre unbemerkt blieb) → Tabelle plus Schleife.
+    Verwaltungsseiten-Auftakt (Titel 3×, `ui_meldung` in 12 Dateien gleich
+    komponiert, Ton `info`/`ok` uneinheitlich) → `ui_verwaltungsseite()`.
+    Umfangsliste mit Zahl-Plakette 3× wortgleich (`einsatz_loeschen.php`,
+    `diensttag_loeschen.php`, `diensttag_datum.php`) → `ui_umfangsliste()`;
+    keine ganze Bestätigungsseite als Baustein. Nachweisdatei-Mechanik in
+    `install.php` und `wiederherstellen.php` ~35 Zeilen 1:1 samt eigenem
+    CSRF → `nachweis_lib.php`. Ablage anlegen und Dateiname mit
+    Zeitstempel in `adminbackup_lib.php`, `komplett_lib.php`,
+    `wiederherstellen.php` (dort einmal ohne Fehlerprüfung).
+    `betrieb_schluesselblatt.php` kopiert `asset()` und `e()` als Closures;
+    `wartung_lib.php` hat `$h` zweimal. **Vormerkung ZIP:** alle vier
+    `ZipArchive`-Aufrufe liegen in `adminbackup_lib.php`, ein Verbraucher —
+    beim zweiten (Log-Dateien als ZIP, 10c) mit herauslösen.
+
+    **Geprüft, bereits zentral (nicht Gegenstand):** Sicherungsziele
+    (`Zielweg`), ZIP und Prüfsummen (je eine Stelle), Aufräumlogik
+    (`job_aufraeumen()`), Tab- und Formularaufbau (`ui.php`), POST-Auftakt
+    der HTML-Seiten (`csrf_check()`), Kataloge (Phasen, Reanimation,
+    Besatzung, Geräteart, Jobs), Papierkorb, Spuren, Escaping,
+    Entschlüsselungsschleife (`patient.js`); die PHP-JS-Spiegelungen von
+    `PHASE_LABELS`, `RESUS_LABELS`, `dt_art_symbole()` bleiben als bewusste
+    Spiegelung.
+
+    *Abnahme:* je Paket im Konzept nach K1; Paket 2 mit beiden Kreisläufen
+    (0 unerklärt) und Messstand; nach jedem Paket `grep`-Zählungen der
+    Muster gegen die Zahlen hier (Ziel 0 außerhalb der Bibliothek).
+
+207. **`gen-em.org` steht 96× in `tools/` und `.github/`.** In `server/` ist
+    die Adresse seit Web 20.9.0 auf **0** (Nr. 203, E-P5a-40): Kontaktadresse
+    und Betreiberpost sind Einstellungen. Die Prüfmittel sind dabei
+    übergangen worden — dort stehen Prüfkonten (`ingestprobe@gen-em.org`,
+    `demo@gen-em.org`, `umlauf-csv@gen-em.org`, `messstand@gen-em.org` …),
+    Schema-`$id`s (`https://gen-em.org/nadoku/…`) und Anleitungen in den
+    `LIESMICH.md`.
+
+    **Das ist etwas anderes als eine Adresse im Programm**, und deshalb ist es
+    ein eigener Punkt und kein Fehler: Ein Prüfkonto ist eine erfundene
+    Adresse, an die nie jemand schreibt. Es ist trotzdem der Name einer realen
+    Domain in einem Repositorium, das weitergegeben werden soll. **Vorschlag:**
+    `.invalid` (RFC 2606) für alle Prüfkonten — die Mailprobe benutzt es
+    bereits —, eine `urn:`-Kennung oder `example.org` für die Schema-`$id`s.
+    Die Umstellung ist mechanisch, berührt aber **Bestandsdaten**: Wer eine
+    lokale Installation mit `demo@gen-em.org` stehen hat, muss sie neu
+    aufsetzen, sonst greift kein Kreislauf mehr. Deshalb ein Paket mit Ansage
+    und nicht nebenbei.
+
+    *Aufgenommen 16.09.2026 in P5a/AP7. Gezählt: `grep -rn "gen-em\.org"
+    tools/ .github/ | wc -l` → 96; `server/` → 0.*
+
+
+208. **Der Job-Katalog und das Jobregister in `docs/Technik.md` beschreiben
+    den Aufräumjob nicht mehr.** Berichtigt am 16.09.2026 in P5a/AP8 — der
+    Eintrag steht hier trotzdem, weil die **Ursache** bleibt: `job_aufraeumen()`
+    hat inzwischen **zwölf** Schritte, und jede der beiden Beschreibungen ist
+    eine von Hand gepflegte Aufzählung, die bei jedem neuen Schritt
+    mitgeschrieben werden muss. Sie hinkte in AP5 schon einmal drei Pakete
+    hinterher (der Kommentar im Katalog sagt es selbst), und jetzt wieder: Das
+    Register in `docs/Technik.md` nannte **sechs von zwölf**.
+
+    **Vorschlag:** Die sichtbare Beschreibung aus den Schlüsseln des
+    Schrittarrays erzeugen, statt sie danebenzuschreiben — `job_aufraeumen()`
+    kennt seine Schritte, sie heißen dort bereits „Kopplungssitzungen",
+    „Sperrereignisse", „Geraetevermerke". Dann kann sie nicht mehr altern.
+    Betrifft `jobs_lib.php` (Katalog) und `docs/Technik.md` (Jobregister);
+    für das Dokument wäre ein Prüfmittel nötig, das die Zahl nachzählt — sonst
+    wandert das Problem nur eine Ebene weiter.
+
+    *Aufgenommen 16.09.2026 in P5a/AP8. Gezählt: zwölf Schritte in
+    `job_aufraeumen()`, sechs in der Registerzeile, zehn in der Beschreibung
+    des Katalogs (beide inzwischen berichtigt).*
+
+    **Nachtrag 16.09.2026 (P5a/AP12): dieselbe Ursache, dritte Stelle.** Der
+    **Werkzeugbaum** in `docs/Technik.md` ist ebenso eine von Hand geführte
+    Aufzählung, und beim Abschluss von P5a fiel auf, dass `tools/containerprobe/`
+    darin fehlte — seit **Web 12.0.0** (S2/AP6), also fünf Monate lang.
+    Nachgetragen. Gezählt mit einem Fünfzeiler, der die Ordner unter `tools/`
+    gegen die Einträge im Baum hält: **44 auf der Platte, 43 im Baum**, danach
+    44 zu 44. Genau so ein Fünfzeiler ist das Prüfmittel, das dieser Punkt
+    oben verlangt — er gehört in Stufe 1 der Kette, nicht in eine Sitzung, die
+    zufällig hinsieht.
+
+209. **`docs/Design.md` führt die erzeugte Bausteintabelle mit falschen
+    Zeilennummern.** Die Tabelle trägt den Vermerk „ERZEUGT von
+    `tools/design/tabellen.py` — nicht von Hand ändern", und ihre Spalte
+    `ui.php` nennt zu jeder Funktion eine Zeilennummer. Diese Nummern liegen
+    durchgängig **rund 26 Zeilen zu niedrig**: `ui_seite_start()` steht dort
+    mit 54 und im Code bei 80. Ursache ist schlicht, dass das Werkzeug seit
+    einigen Paketen nicht gelaufen ist.
+
+    **Das ist kein Schönheitsfehler:** Eine erzeugte Tabelle, die nicht mehr
+    zu ihrer Quelle passt, ist schlechter als keine — wer ihr folgt, landet
+    mitten in einer anderen Funktion und hält das für den Baustein. Abhilfe
+    ist ein Aufruf (`python3 tools/design/tabellen.py alle`); der Punkt steht
+    hier, weil dabei **alle vier** erzeugten Tabellen neu entstehen und das
+    Ergebnis gegengelesen werden will.
+
+    *Aufgenommen 16.09.2026 in P5a/AP8, gefunden bei der Bestandsaufnahme der
+    Bausteine.*
+
+
+210. **`ingest.php` läuft bei gleichzeitigen Uploads auf denselben
+    Diensttag in einen Deadlock.** *Gemessen am 16.09.2026 in P5a/AP9 von
+    `tools/verbindungsprobe/`:* Zwanzig Pakete desselben Geräts, gleichzeitig
+    abgeschickt, ergaben **zwölf** `SQLSTATE[40001] 1213 Deadlock found when
+    trying to get lock`. Die Fundstellen sind zwei: der `UPDATE days` in
+    `dt_zeitraum_fortschreiben()` (`diensttag_lib.php`) und der
+    `INSERT … ON DUPLICATE KEY` auf `missions` in `ingest.php`.
+
+    **Die Ursache ist die gemeinsame Zeile.** Jeder Upload eines Diensttags
+    schreibt `days.started_at`/`ended_at` fort, und zwar in derselben
+    Transaktion, in der er seinen Einsatz anlegt. Zwei Uploads desselben Tages
+    halten damit Sperren in umgekehrter Reihenfolge, und InnoDB bricht eine
+    von beiden ab.
+
+    **Was AP9 getan hat, ist die halbe Miete:** Die Antwort ist nicht mehr
+    500, sondern 503 `ausgelastet` (E-P5a-52) — für die Uhr heißt das
+    „gleich noch einmal" statt „kaputt", und in der Probe kommen seither alle
+    zwanzig Pakete an. **Was fehlt, ist die Vermeidung:** Die Transaktion
+    gehört wiederholt, statt sie dem Aufrufer zurückzugeben. InnoDB sagt es
+    wörtlich — „try restarting transaction".
+
+    **Zu tun:** Den Transaktionsrumpf von `ingest.php` in eine Schleife mit
+    zwei bis drei Anläufen und kurzer Wartezeit fassen. Dabei ist zu klären,
+    was zwischen den Anläufen neu gelesen werden muss (der Umriss der
+    vorhandenen Spur, die Fortsetzungsmarke) — ein Wiederholen mit
+    veralteten Werten wäre schlimmer als der Deadlock. Zu prüfen ist
+    außerdem, ob die `days`-Fortschreibung überhaupt in dieselbe Transaktion
+    gehört: Sie ist idempotent (`WHERE … started_at > ?`) und könnte
+    **nach** dem Commit stehen, womit die Sperre auf der gemeinsamen Zeile
+    entfiele.
+    *Abnahme:* `php tools/verbindungsprobe/probe.php --frei 20` (also ohne
+    Verbindungsenge) meldet **0 × 503** und 0 Gedrängel im Fehlerprotokoll.
+    Zuordnung: offen, ein eigenes Paket.
+
+211. **Ein `/api/`-Aufruf ohne Sitzung bekommt eine Weiterleitung statt
+    einer JSON-Antwort.** `auth_guard.php` prüft in Zeile 33
+    `empty($_SESSION['user_id'])` und antwortet mit
+    `header('Location: login.php')` — **vor** jeder Unterscheidung, ob das
+    Gegenüber JSON erwartet. `ist_api_aufruf()` gibt es, aber es wird erst
+    weiter unten benutzt, für die Fälle „Sitzung abgelaufen" und „Rolle reicht
+    nicht" (dort korrekt: 401 bzw. 403 als JSON).
+
+    **Die Folge ist klein, aber sie ist eine Unwahrheit:** Ein Werkzeug oder
+    ein Skript, das einen Endpunkt kalt aufruft, bekommt HTTP 302 und danach
+    die HTML-Anmeldeseite — und wird daran hängenbleiben, statt „nicht
+    angemeldet" zu lesen. Im Betrieb tritt das selten auf: Die Aufrufe des
+    Browsers kommen aus einer angemeldeten Seite, und eine **ablaufende**
+    Sitzung fängt der richtige Zweig ab.
+
+    **Zu tun:** Die Weiterleitung in Zeile 33 an `ist_api_aufruf()` vorbei
+    nicht mehr unbedingt machen, sondern denselben JSON-Weg nehmen wie
+    `sitzung_beenden_passend()` — 401 mit einem lesbaren Grund.
+    *Abnahme:* `curl -s -o /dev/null -w '%{http_code}' <basis>/api/day.php?day=2026-01-01`
+    liefert **401** und `{"error":…}` statt 302.
+    *Aufgenommen 16.09.2026 in P5a/AP9, gefunden beim Bau der
+    Verbindungsprobe: Sie wollte einen `/api/`-Endpunkt unter Überlast messen
+    und bekam eine 302, weil die Anfrage die Datenbank nie erreichte.*
+
+212. **Zwei Erwartungen der Wiederherstellungsprobe sind auf einer leeren
+    Installation rot — ohne dass etwas kaputt ist.** *Aufgenommen 16.09.2026
+    in P5a/AP10, nachgemessen gegen den unveränderten Stand: dieselben zwei.*
+    Teil 10 („Der Auftrag Alle sichern") gibt dem Sammelvorgang ein enges
+    Zeitbudget und erwartet, dass er **wenigstens ein Konto sichert und dann
+    aufhört** — also dass danach etwas offen bleibt und der Zeiger auf dem
+    zuletzt gesicherten Konto steht. Auf einer Installation mit zwei fast
+    leeren Konten passen beide in das Budget: `2 erledigt, 0 von 2 offen`,
+    `cur=—`.
+
+    **Das ist ein Mangel des Prüfmittels, nicht der Anwendung** — und der
+    unangenehmere von beiden Sorten: Er meldet Rot, wo nichts ist, und
+    gewöhnt damit jeden, der die Probe fährt, an zwei rote Zeilen. Genau so
+    verschwindet später ein echter Befund darin.
+
+    **Zu tun:** Die Erwartung an einen Bestand binden, statt an eine Zeit —
+    etwa, indem der Prüffall zwei Konten mit genug Inhalt herstellt, oder
+    indem das Budget aus der gemessenen Dauer des ersten Backups abgeleitet
+    wird statt fest zu stehen. Ein drittes Konto anzulegen wäre die billigste
+    Fassung und verschöbe das Problem nur auf die nächste schnellere Maschine.
+    *Abnahme:* `php tools/wiederherstellungs-probe/probe.php` meldet **110 von
+    110** auf einer frisch aufgesetzten Installation. Zuordnung: Backlog-Runde.
+
+213. **Die Zustandsdatei der Auslieferungskette lag im Webroot.**
+    *Aufgenommen 16.09.2026 aus einer Durchsicht des Auftraggebers; behoben
+    am selben Tag in Web 20.15.1.*
+    `SamKirkland/FTP-Deploy-Action` legt `.ftp-deploy-sync-state.json` in das
+    Zielverzeichnis — bei uns also in den Webroot, neben `.htaccess`, über
+    HTTP abrufbar. Inhalt laut den Typdefinitionen der Bibliothek:
+    `{ description, version, generatedTime, data: [{type, name, size, hash}] }`
+    — je ausgelieferter Datei **Pfad, Größe und Hash**, dazu der Zeitpunkt der
+    letzten Auslieferung.
+
+    **Kein Schlüsselleck, und das soll auch nicht größer geredet werden:**
+    `config.php`, `install.lock`, `wartung.lock`, `ueberlast.json`,
+    `sicherungen/` und `apk/` stehen in der Ausnahmeliste der Kette, werden
+    nie ausgeliefert und stehen folglich nicht in der Datei. Was austritt, ist
+    die vollständige Struktur und — über die Hashes — der Versionsstand jeder
+    einzelnen Datei; also die Vorlage für einen Abgleich gegen bekannte
+    Schwachstellen, ohne eine einzige Anfrage an die Anwendung.
+
+    **Behoben mit zwei Schranken** (wie bei den Nachweis-Dateien): `state-name`
+    legt sie eine Ebene über den Webroot (`../.deploy-state-staging.json` bzw.
+    `…-produktion.json` — **zwei** Namen, weil Staging und Produktion sich
+    einen FTP-Zugang teilen könnten und zwei gleichnamige Dateien einander
+    überschrieben), und `server/.htaccess` sperrt Punktdateien pauschal mit
+    der Ausnahme `.well-known/`.
+
+    **Der Eintrag bleibt hier stehen, weil drei Dinge offen sind:**
+
+    1. **Die bereits abgelegte Datei muss von Hand per FTP gelöscht werden.**
+       Die Sperre verbirgt sie, entfernt sie nicht. Auf jeder Anlage, auf die
+       schon einmal ausgeliefert wurde.
+    2. **Ob `../` im Käfig des FTP-Zugangs erlaubt ist, ist nicht gemessen** —
+       Port 21 und 990 verlassen den Prüfcontainer nicht (in AP10 gemessen).
+       Es zeigt sich beim ersten echten Lauf; schlägt es fehl, **bricht die
+       Auslieferung**, und die Variable `FTP_STATE_PFAD` ist der Rückweg.
+    3. **Die `.htaccess` gilt nur auf Apache.** Auf nginx, Caddy oder
+       LiteSpeed ist die zweite Schranke nicht da — dasselbe steht schon bei
+       Nr. 129 und den Sicherheits-Kopfzeilen.
+
+    **Und eine Lehre, die über die Sache hinausgeht.** Die erste Abfrage zu
+    diesem Befund gab **404** und sah nach Entwarnung aus. Sie lief gegen ein
+    Staging, auf das noch nie etwas ausgeliefert worden war — dort gibt
+    *jeder* Pfad 404, auch `login.php`. Ein 404 unterscheidet „gesperrt" nicht
+    von „nicht vorhanden". Der neue Prüfschritt in Stufe 2 misst deshalb
+    **403** (`RewriteRule [F]` antwortet vor der Dateisuche, also auch für
+    Dateien, die es nicht gibt) — und als Gegenprobe **404 und nicht 403** für
+    `.well-known/acme-challenge/`, weil eine zu breite Sperre die
+    Zertifikatserneuerung lautlos umbringt.
+
+214. **`install.php` wurde bei jedem Lauf wieder ausgeliefert.**
+    *Angewiesen von der Betreiberin am 16.09.2026, umgesetzt am selben Tag in
+    Web 20.15.2.*
+    `docs/Technik.md` sagt zur Neuinstallation seit jeher: „Nach Erfolg sperrt
+    `install.lock`; `install.php` danach löschen." Die Auslieferungskette hat
+    das bei jedem Lauf rückgängig gemacht — die Datei stand nicht in der
+    Ausnahmeliste (dort steht `install.lock`, nicht `install.php`) und wurde
+    mitgeschickt. Wer sie von Hand entfernte, fand sie nach dem nächsten Lauf
+    wieder vor.
+
+    **Es war nie eine Lücke.** `install.php:136` verweigert sich selbst,
+    solange `config.php` **oder** `install.lock` existiert. Der Punkt ist, dass
+    zwei Anweisungen desselben Projekts einander widersprachen.
+
+    **Der Preis, und er bleibt bestehen:** Eine leere Anlage lässt sich nicht
+    mehr allein über die Kette einrichten — `server/install.php` muss einmal
+    von Hand hinauf, dann einrichten, dann wieder löschen. Ein Fehler **im**
+    Einrichter erreicht über die Kette ebenfalls keinen Server mehr. Stufe 2
+    fängt den Fall ab und nennt ihn beim Namen, damit niemand den
+    `FTP_ZIELPFAD` verdächtigt.
+
+    **Wie es aufgefallen ist, und was daran lehrreich bleibt.** Gemeldet wurde
+    zuerst „install.php wird nicht gesynct". Die Ursache war eine andere und
+    liegt weiter offen: Die Aktion vergleicht die lokalen Dateien gegen ihre
+    **State-Datei**, nie gegen den Server (`deploy.ts:84`, `:150`, `:155`).
+    Wer auf dem Server von Hand löscht, bekommt die Datei **nie** zurück —
+    gemessen an der Live-State-Datei von Staging, die `install.php` mit Hash
+    führte, während der Lauf 14 Sekunden später belegte, dass sie dort fehlte.
+    Für `install.php` ist das jetzt gegenstandslos, weil sie ausgenommen ist.
+    **Für jede andere Datei gilt es weiter** — siehe den nächsten Absatz.
+
+    *Offen daraus:* Ein Hinweis im Runbook, dass eine von Hand auf dem Server
+    gelöschte Datei nur zurückkommt, wenn man die State-Datei mitlöscht. Noch
+    nicht geschrieben.
+
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+54. **Der Migrationslauf nach einer Wiederherstellung ist ein zweiter Gang.**
+    Aus S2/AP8. Das Konzept sieht in E-S2-20 vor, dass die Wiederherstellung
+    „danach einen Migrationslauf" ausführt. `wiederherstellen.php` tut das
+    nicht: Es sagt am Ende, ob der Dump aus einer anderen Fassung stammt, und
+    schickt zur Wartung. Der Grund ist gut — `update.php` ist seit M6-01
+    zweistufig, weil Migrationen Spalten löschen können, und eine Seite ohne
+    Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese
+    Absicherung heraus.
+
+    Damit bleibt der Schritt aber **an einem Menschen hängen**, und zwar an
+    dem Tag, an dem er am meisten zu tun hat. Wer ihn vergisst, hat eine
+    Installation mit altem Schema und neuem Code — und merkt es an der Stelle,
+    an der zuerst eine Spalte fehlt.
+
+    **Zu entscheiden:** Ob `$MIGRATIONS` und der Ausführungsteil aus
+    `update.php` in eine eigene Datei wandern (dann liesse sich der Lauf von
+    beiden Seiten aufrufen, mit derselben Zweistufigkeit), oder ob
+    `wiederherstellen.php` nach dem Einspielen unmittelbar auf `update.php`
+    weiterleitet und die Anmeldung dazwischen als das genommen wird, was sie
+    ist: die Bestätigung. Die zweite Möglichkeit ist billiger und ändert
+    nichts an einer Datei mit 37 Migrationen.
+
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP3 (E-P5a-20: `wiederherstellen.php` setzt den Katalog-Hash zurück, die nächste Anfrage prüft und der Torwächter schaltet die Wartung).
+
+    **Erledigt am 15.09.2026 in P5a/AP3 (Web 20.6.0).** Weder die eine noch die
+    andere der beiden zur Wahl gestellten Möglichkeiten — eine dritte, die
+    beide überflüssig macht: `wiederherstellen.php` **wirft am Ende des
+    Einspielens den Zwischenspeicher des Torwächters weg**
+    (`migrationen_tor_zuruecksetzen()`), und die nächste angemeldete Anfrage
+    rechnet neu. Findet sie fehlende Migrationen, **schaltet der Torwächter
+    die Wartung ein** und führt zur Anmeldung; `update.php` bleibt zweistufig
+    und der Mensch bestätigt weiterhin. Der Schritt hängt damit nicht mehr am
+    Gedächtnis, sondern an der Anwendung.
+
+    **Warum der Zwischenspeicher überhaupt wegmuss:** Der eingespielte Dump
+    bringt `schema_migrations` **und `app_state`** der Quellinstallation mit —
+    also auch die gespeicherte Antwort des Torwächters. Passte der
+    Katalog-Hash dieser Installation zufällig dazu, behauptete sie einen Stand,
+    den es hier nicht gibt: eine unfertige Installation bliebe offen, eine
+    fertige bliebe zu. Geworfen statt neu gerechnet, weil das Rechnen 46
+    Katalogeinträge kostet und die nächste Anfrage es ohnehin tut.
+    Gemessen in `tools/wartungsprobe/` (67 Erwartungen, 0 nicht erfüllt).
+
+67. **`csrf_check()` hat keinen API-Zweig.**
+    *Aufgenommen aus einer Gegenprüfung vom 23.08.2026; die Zahlen sind am
+    02.09.2026 nachgezählt (S4/D2).*
+    `require_admin()` verzweigt daneben nach `ist_api_aufruf()` und antwortet
+    einem Endpunkt mit JSON; `csrf_check()` rendert unbedingt eine HTML-Seite.
+    Ein Endpunkt, der sie aufriefe, schickte einer `fetch()`-Anfrage also eine
+    Fehlerseite statt eines Fehlerobjekts — die Oberfläche zeigte „unerwartete
+    Antwort" statt „Sitzung abgelaufen".
+    **Bisher folgenlos, weil es diesen Aufrufer nicht gibt.** Von den **17**
+    Dateien unter `server/api/` (gemessen 13.09.2026; 15 bei der Zählung vom
+    02.09.2026) ruft **keine** `csrf_check()` auf. Die **zwölf**, die POST
+    annehmen, prüfen jede selbst gegen `HTTP_X_CSRF` — seit dem 02.09.2026
+    ist `pat_anheben.php` dazugekommen; die meisten ändern Zustand, zwei
+    (`backup_spuren.php`, `export_data.php`) lesen nur und benutzen POST für
+    die Nutzlast. Die übrigen **fünf** (`backup_data.php`,
+    `kopplung_stand.php`, `mission.php`, `range.php`, `suchindex.php`) sind
+    streng GET-only, weisen alles andere mit 405 ab und haben kein
+    Schreib-SQL; ihnen fehlt die Prüfung also nicht — `kopplung_stand.php`
+    sagt im Kopf, warum. Die Invariante hält.
+    Es ist damit eine **unausgesprochene Invariante**, keine Störung — und die
+    Nachzählung hat keinen ungeschützten schreibenden Endpunkt gefunden.
+    **Zwei Einschränkungen an diesen Sätzen**, aus einer Gegenprüfung vom
+    02.09.2026, damit die nächste Zählung nicht darauf hereinfällt:
+    `kdf_upgrade.php` prüft `HTTP_X_CSRF` erst **nach** dem Demo-Ausstieg —
+    die Zeile davor steigt für das Demo-Konto mit `json_out(['ok' => true,
+    …])` aus (Zeilen 69 und 70, gemessen 13.09.2026; 66 und 67 bei
+    Aufnahme). Heute folgenlos,
+    weil hinter dem Ausstieg nichts steht; kippt aber, sobald dort mehr steht
+    als ein `json_out()`. Die beiden Zeilen gehören getauscht. Und „kein
+    Schreib-SQL" gilt für die vier **Dateien**, nicht für die vier
+    **Endpunkte**: `auth_guard.php` ruft bei *jeder* Anfrage — GET
+    eingeschlossen — `run_cleanup_if_due()` und beim Demo-Konto
+    `demo_reset_wenn_faellig()`, und `jobs_lauf()` schreibt dabei
+    (`INSERT IGNORE INTO jobs`, `UPDATE jobs`). Ein GET auf
+    `api/suchindex.php` kann also die tägliche Wartung auslösen. Das ist
+    gewollte Huckepack-Bauweise und harmlos, weil ein Angreifer nichts
+    gewinnt, was der nächste Seitenaufruf ohnehin auslöst — aber schreibfrei
+    ist der Endpunkt nicht.
+    **Zu tun:** entweder denselben `ist_api_aufruf()`-Zweig in `csrf_check()`
+    ergänzen, oder die Invariante im Kopf der Funktion festhalten, damit der
+    nächste Endpunkt sie nicht versehentlich bricht.
+    **Und eine Lehre über die Sache hinaus.** Die ursprüngliche Fassung dieses
+    Punktes nannte „alle sechs schreibenden Endpunkte". Am 23.08.2026 war das
+    **richtig**: Damals lagen zehn Dateien unter `server/api/`, und genau sechs
+    prüften gegen `HTTP_X_CSRF` (`adminbackup_freigabe`, `backup_restore`,
+    `day`, `export_data`, `import_commit`, `kdf_upgrade`). In den zehn Tagen
+    bis zum Eintragen sind fünf dazugekommen — `backup_eintraege_restore`,
+    `backup_spuren`, `backup_spuren_restore`, `gpx_import`, `schneiden` —, und
+    alle fünf prüfen ebenfalls. Aus sechs wurden elf. **Eine Zahl in einem
+    Backlog-Punkt altert also, während der Punkt liegt**, und sie altert
+    lautlos: Nichts an ihr sieht falsch aus. Wer diesen Punkt anfasst, zählt
+    vorher wieder nach — die Zählung von heute ist morgen genauso alt.
+    **Der Unterpunkt ist erledigt (Backlog-Runde 3, AP4, Web 19.3.1, 13.09.2026);
+    der Punkt selbst bleibt offen und liegt bei P5.** In
+    `server/api/kdf_upgrade.php` steht die CSRF-Prüfung jetzt **vor** dem
+    Demo-Ausstieg. Bis dahin kam ein Aufruf ohne Formular-Token für das
+    Demo-Konto mit 200 zurück, während jedes andere Konto 403 sah — folgenlos
+    nur, weil hinter dem Ausstieg nichts steht. Am Prüfstand gemessen, alter
+    gegen neuer Stand bei sonst gleichem Aufbau: **ohne Header vorher 200,
+    jetzt 403 `{"error":"csrf"}`; mit Header unverändert 200 mit
+    `uebersprungen: demo`.** Dazu falscher und leerer Header, beide 403. Die
+    Reihenfolge ist im Kopfkommentar der Datei begründet, der stille Erfolg in
+    `docs/Technik.md` als bedingt gekennzeichnet.
+    **Offen bleibt der Hauptpunkt:** der `ist_api_aufruf()`-Zweig in
+    `csrf_check()` (oder die Invariante im Funktionskopf), damit die Endpunkte
+    unter `server/api/` die Prüfung nicht jeder selbst schreiben. Vor dem
+    Anfassen neu zählen — siehe die Lehre oben.
+
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP4 (mit den Kopfzeilen, weil beides in `auth_guard.php` wohnt).
+
+    **Erledigt am 15.09.2026 in P5a/AP4 (Web 20.6.0).** Von den beiden unter
+    „Zu tun" genannten Wegen der erste: `csrf_check()` hat jetzt denselben
+    `ist_api_aufruf()`-Zweig wie `require_admin()` daneben — ein `fetch()`
+    bekommt `{"error":"csrf"}` mit 403 statt einer HTML-Seite, an der es sich
+    einen Syntaxfehler holt. Die zwölf Endpunkte prüfen nicht mehr jeder für
+    sich: `csrf_ok()` nimmt Feld **und** Kopfzeile, und in `csrf_check()` fällt
+    die eine Entscheidung, in welcher Sprache das Nein kommt.
+
+    **Und die Lehre oben ist eingehalten worden:** vor dem Anfassen neu
+    gezählt. Die Zahl **17 Dateien** vom 13.09.2026 stand noch, die zwölf
+    POST-Annehmer auch. Ein ungeschützter schreibender Endpunkt war wieder
+    nicht darunter — die Invariante hat drei Zählungen überlebt, und jetzt
+    steht sie nicht mehr nur im Kopf der Funktion, sondern im Code.
+
+49. **Aufbewahrung auch auf dem Backup-Ziel.**
+    Der Versand (Web 12.1.0, S2/AP7) **ergänzt nur**: Auf der Gegenstelle
+    löscht diese Anwendung nie, auch nicht im Sinne der Regel „höchstens zwei
+    je Konto", die für die Ablage auf dem eigenen Server gilt. Bei zwei
+    Backups je Konto und Monat läuft ein Ziel damit über kurz oder lang
+    voll, und niemand merkt es hier.
+
+    Das ist zunächst Absicht und keine Lücke: Der Zweck eines auswärtigen Ziels
+    ist, den Ausfall dieses Servers zu überleben — samt eines Fehlers, der
+    **hier** zu viel löscht. Ein Versand, der drüben aufräumt, trägt genau
+    diesen Fehler mit hinüber.
+
+    **Zu entscheiden** ist deshalb nicht *ob* aufgeräumt wird, sondern wer
+    haftet: eine eigene Zahl je Ziel („dort höchstens N je Konto"), die
+    ausdrücklich eingeschaltet werden muss und nie die Vorgabe ist — oder eine
+    blosse **Anzeige** des Belegten am Ziel, damit die Betreiberin es sieht und
+    dort selbst entscheidet. Der zweite Weg löscht nichts und beantwortet die
+    Frage vielleicht schon.
+
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP10 (E-P5a-03: Anzeige je Ziel als Grundlage, Löschregel als Option je Ziel mit drei Sicherungen).
+
+    **Erledigt am 16.09.2026 in P5a/AP10 (Web 20.14.0).** Beide Wege, und in
+    dieser Reihenfolge: **Anzeige zuerst** — „Nachsehen, was dort liegt" im
+    Menü einer Zielzeile nennt Anzahl, Größe, ältesten und jüngsten Stand und
+    **wie viele fremde Dateien** dort liegen; sie löscht nichts und
+    beantwortet die Frage in vielen Fällen schon. **Löschregel als Option je
+    Ziel**, ausdrücklich einzuschalten, nie Vorgabe, mit den drei Sicherungen
+    aus E-P5a-03: Herkunft (Namensmuster **und** Versandprotokoll), Menge (nie
+    unter N/M, nur eigene Dateien gezählt) und Lauf (nie nach einem
+    gescheiterten Versand). Dazu eine Statuszeile für Ziele **ohne** Regel,
+    auf die seit über einem Monat geschickt wird und von denen nie etwas
+    entfernt wurde. Belegt in `tools/versandprobe/` Teil 12: fünf fremde
+    Dateien, fünf eigene, N = 2 → **3 gelöscht, alle fünf fremden bleiben**.
+
+195. **`geraet_art` kommt auf dem Rückweg der Sicherung ungeprüft durch.**
+    *Aufgenommen 14.09.2026 als Nebenfund der Bestandsaufnahme zu R42.*
+    Beim Koppeln verengt `geraete_lib.php` die Geräteart auf die drei
+    erlaubten Werte — was nicht in `GERAET_ARTEN` steht, wird `NULL`, und
+    `docs/Technik.md` führt das ausdrücklich als Zusage („eine Geräteart
+    außerhalb der drei erlaubten Werte zu `NULL`"). Auf dem Rückweg der
+    Konto-Sicherung gilt sie nicht: `backup_lib.php` prüft
+    `missions.geraet_art` und `rest_segments.geraet_art` nur mit
+    `pruef_text(…, GERAET_MAX_ART, …)`, also allein auf die Länge von 16
+    Zeichen. Jede Zeichenkette bis dahin geht durch. Bei `origin` ist es
+    anders — der wird gegen `HERKUNFT_WERTE` gehalten; die Asymmetrie ist im
+    Code nicht begründet.
+
+    Heute fällt das nirgends auf, weil die Statistik `devices` liest und
+    nicht `missions`. Genau diese beiden Spalten sind aber das, was der
+    offene R42-Rest auswerten soll („Herkunft je Einsatz", R64) — eine
+    Zählung darüber würde eine eingespielte Sicherung ungefiltert
+    übernehmen. Kein Sicherheitsproblem: Der Weg setzt voraus, dass jemand
+    seine eigene Sicherung verändert. Aber eine Zählung, die man verunreinigen
+    kann, taugt nicht als Betriebszahl.
+
+    *Abnahme:* Ein Sicherungspaket mit `geraet_art: "radcomputer"` landet als
+    `NULL` in der Datenbank, nicht als `radcomputer`. Zuordnung: **P5**,
+    zusammen mit der Auswertung — vorher hat die Spalte keinen Leser.
+
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP10 (`backup_lib.php` prüft `geraet_art` gegen `GERAETE_ARTEN` wie beim Koppeln).
+
+    **Erledigt am 16.09.2026 in P5a/AP10 (Web 20.14.0).** `backup_lib.php`
+    hält `geraet_art` jetzt über `edbak_geraet_art()` gegen `GERAET_ARTEN` —
+    dieselbe Verengung wie beim Koppeln, an beiden Stellen (Einsatz und
+    Ruhesegment). Und sie **meldet** es: Der Vorgang steht in der Prüfliste
+    der Wiederherstellung (`geraet_art: keine bekannte Geräteart — als
+    „unbekannt" übernommen`), statt still zu geschehen — ein stilles `NULL`
+    sähe aus wie „stand nicht drin". `geraet_modell` bleibt Freitext; ein
+    Katalog dafür wäre beim nächsten Modell veraltet.
+    *Abnahme erfüllt:* `tools/wiederherstellungs-probe/` Teil 11, fünf neue
+    Erwartungen — `geraet_art: "radcomputer"` landet als `NULL`, das Modell
+    daneben bleibt stehen, `"HANDY"` kommt als `handy` durch (Gegenprobe),
+    dasselbe am Ruhesegment, und beides steht im Prüfprotokoll.
+
+206. **Der Messstand-Schritt der Auslieferungskette bricht bei JEDEM Tag-Lauf
+    ab.** `.github/workflows/auslieferung.yml` ruft in Zeile 144
+    `python3 tools/messstand/serverprobe.py --basis "$STAGING_URL"` — und
+    `serverprobe.py` kennt **kein** `--basis`. Sein `argparse` führt `--konto`,
+    `--ausgabe`, `--wartung-fahren` und `--optimieren`; ein unbekanntes
+    Argument beendet das Skript mit Code 2. Der Schritt steht unter
+    `if: startsWith(github.ref, 'refs/tags/web-v')` und läuft deshalb genau
+    dann, wenn ausgeliefert wird — und bisher wurde nach P5a/AP1 kein Tag
+    gesetzt, weshalb es niemandem aufgefallen ist.
+
+    **Der Fehler sitzt tiefer als ein fehlendes Argument:** `serverprobe.py`
+    misst gegen eine **lokale Datenbank** (PDO, `EXPLAIN`, `OPTIMIZE TABLE`),
+    nicht gegen eine Adresse. Gegen Staging über HTTP zu messen ist etwas
+    anderes als das, was das Skript tut — die Zeile ist also nicht falsch
+    geschrieben, sie ist falsch gedacht. Entweder fällt der Schritt weg, oder
+    der Messstand bekommt einen Weg, der über die Leitung geht.
+
+    *Aufgenommen 16.09.2026 in P5a/AP7, gefunden bei der Durchsicht der Kette.
+    **Zuständig ist P5a/AP9**, das den Messstand ohnehin anfasst
+    (Verbindungsgrenze, drei Messungen aus Nr. 37). Bewusst nicht nebenbei
+    geändert: Ein Paket über den Ratenschutz baut die Auslieferungskette nicht
+    um.*
+
+    **Erledigt am 16.09.2026 in P5a/AP9 (E-P5a-53): der Schritt ist
+    ersatzlos gestrichen.** Von den beiden Möglichkeiten oben ist die erste
+    die richtige, und zwar nicht aus Bequemlichkeit: Was `serverprobe.py`
+    misst — Tabellengrößen, Speicherspitze von `edbak_build()`, den
+    Waisen-Vollscan — ist über HTTP grundsätzlich nicht zu sehen. Ein „Weg
+    über die Leitung" hätte einen Endpunkt gebraucht, der einer
+    unangemeldeten Kette Innereien der Datenbank ausliefert; genau den soll es
+    nicht geben. Der Messstand bleibt, was er ist: ein **manuelles**
+    Regressionsmittel (R35), das lokal vor einer Auslieferung läuft. An der
+    Stelle des Schrittes steht jetzt eine Zeile in der Laufzusammenfassung,
+    die sagt, wo seine Zahlen stehen (`tools/messstand/ausgangsmessung.md`)
+    und wo die Grenzen der Zielanlage stehen (Betrieb → Status → Plattform).
+
+17. **`ingest.php` hat als einziger anmeldungsfreier Endpunkt keine
+    Mengenbremse.** `RATE_GRENZEN` (`ratelimit_lib.php`) kennt keinen Topf
+    `ingest`, und die Datei ruft weder `rate_erlaubt()` noch
+    `rate_misserfolg()`. Die übrigen offenen Endpunkte haben ihn — `RATE_GRENZEN`
+    führt **zehn** Töpfe (gemessen 15.09.2026: `login`, `salt`, `reset`,
+    `pair`, `pair_start`, `pair_code`, `demo`, `demog`, `testmail`, seit
+    Web 20.7.0 `csp`; am 13.09.2026 waren es neun, bei Aufnahme
+    „die drei übrigen", genannt vier). Gefunden in P0/A6 (dort F-16); die
+    Konzeptarbeit dazu ist an **Phase P5** übergeben (Rahmenplan R19), weil
+    die richtige Grenze von der Uhr-Seite her zu bestimmen ist — eine Uhr, die
+    einen Tag Rückstand nachliefert, darf nicht ausgesperrt werden. **P1 misst
+    nur das Aufrufverhalten** und legt keine Grenze fest; die frühere Zuordnung
+    „an P1/P2 übergeben" war überholt und ist mit Web 7.2.1 berichtigt.
+    **Stand nach P1:** Die Messgrundlage liegt jetzt vor. Der Referenzlauf hat
+    das Sendeverhalten der Uhr über 16 Diensttage nachgestellt und protokolliert
+    (`tools/referenzdatensatz/einspielen/messprotokoll.md`): Spitze **14
+    Anfragen an einem Auslöser**, **174 Abstände von 0 Sekunden**, Median
+    1 020 s. Eine Grenze muss also den Stoß zulassen und über die Zeit deckeln —
+    ein fester Abstand je Anfrage wäre falsch. Das Demo-Konto ist mit
+    abgedeckt, sobald der Topf existiert (E-P1-09 führt es als benanntes
+    Restrisiko).
+
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP7 (E-P5a-01: Grundsatzfrage entschieden — die Bremse kommt; E-P5a-02: 30 Fehlversuche je 15 min je Gerätekennung, Leiter 10/20/30/60 min, `429` mit `Retry-After`).
+
+    **Erledigt am 16.09.2026 mit Web 20.11.0 (P5a/AP7).** Zwei Töpfe:
+    `ingest` je Gerätekennung (bekannte Kennung, falscher Schlüssel) und
+    `ingest_ip` je Adresse (unbekannte Kennung), **je 30 Fehlversuche pro
+    15 Minuten**, danach die Sperrleiter aus 20.10.0 — erste Sprosse **15
+    Minuten und nicht 10** (E-P5a-43/-49). Antwort `429` mit `Retry-After`.
+    Gezählt werden ausschließlich Fehlversuche; `405`, `413`, `403
+    device_disabled`, `400` und `500` zählen nicht. Dazu der Vermerk am
+    Gerät (`devices.abgewiesen_seit`, `abgewiesen_anzahl`, Migration
+    `2026_09_16_geraet_abgewiesen`) auf Kontoseite und Betrieb → Status.
+
+    **Zwei Zahlen oben in diesem Eintrag waren falsch, und die Berichtigung
+    gehört hierher, nicht in eine Fußnote.** „Spitze 14 Anfragen an einem
+    Auslöser" stand seit P1 — `messprotokoll.json` führt unter
+    `spitze_je_dienst` die **3**; die 14 ist `teilstuecke_je_paket.max`, also
+    die Zahl der Teilstücke **eines Pakets**, nicht die Zahl der Anfragen an
+    einem Zeitpunkt. Und „174 Abstände von 0 Sekunden" stammt aus einem
+    älteren Protokollstand (16 Diensttage); der heutige nennt **199** bei 21
+    Diensten und 612 Anfragen. **Die Schlussfolgerung bleibt**: Die 30 hängt
+    an den 14 Teilstücken eines Schlüsselwechsel-Stoßes, nicht an der Spitze
+    je Auslöser — die Begründung ist nur jetzt die richtige.
+
+    **Und die Zahl der Töpfe steht nicht mehr da.** „`RATE_GRENZEN` führt
+    **zehn** Töpfe" war am 15.09.2026 richtig und am 16.09.2026 falsch (es
+    sind mit `login_ip`, `global`, `ingest` und `ingest_ip` vierzehn). Dieselbe
+    Zahl stand in `schema.sql` und in `docs/Technik.md`; an allen drei Stellen
+    ist sie jetzt durch den Verweis auf `RATE_GRENZEN` ersetzt. Eine Zahl im
+    Fließtext altert genauso still wie eine Aufzählung.
+
+8. **Content-Security-Policy als zusätzliche Verteidigungslinie.**
+    *Ergänzung 06.09.2026 (Krypto-Review, R78):* Die Bestandsaufnahme
+    macht sie enger möglich als hier angenommen — **null**
+    Inline-Ereignisbehandler, **ein** `style`-Attribut, alle Skriptblöcke
+    über `ui_seite_start()`. Der Bauplan (Nonce je Anfrage, Report-Only
+    zuerst, Quellenliste für Kacheln und Photon) steht in
+    `docs/konzepte/Vorbereitung-Sicherheitspaket.md`, SP-5. Warum es
+    zählt: Daten- und Inhaltsschlüssel liegen als Hex im `sessionStorage`;
+    jede XSS-Lücke, auch eine in Leaflet oder SheetJS, liest sie aus.
+   Seit Web 5.2.0 eng fassbar: Es wird keine fremde Quelle mehr geladen
+   (Nr. 12), die Regel muss also nichts von außen erlauben.
+
+    **Erledigt am 15.09.2026 mit Web 20.7.0 (P5a/AP4).** `kopfzeilen_lib.php`
+    baut die Richtlinie zur Laufzeit; `kopfzeilen_seite()` steht in
+    `ui_seite_start()`, `kopfzeilen_json()` in `json_out()`. Die Vermutung von
+    2026 hat sich gehalten: **null** Inline-Ereignisbehandler, **null**
+    `javascript:`-Adressen — `script-src 'self' 'nonce-…'` ohne
+    `'unsafe-inline'` war ohne Umbau erreichbar. Nicht gehalten hat sich „ein
+    `style`-Attribut": es waren dreizehn. Drei sind gewichen, die zehn
+    übrigen entstehen zur Laufzeit in JavaScript und bleiben unter
+    `style-src-attr 'unsafe-inline'` (E-P5a-32, Begründung im Kopf von
+    `kopfzeilen_lib.php`). Nachweis: `tools/cspprobe/`, 0 Befunde über 106
+    Dateien und 108 Skript-Stellen.
+
+181. **Die Anwendung schickt keine Content-Security-Policy.**
+    *Aufgenommen 13.09.2026 als zweite Hälfte von Nr. 179; dort ausdrücklich
+    nicht mitgemacht, weil es eine Festlegung ist und kein Nachtrag.* Seit dem
+    13.09.2026 zählt `tools/vollstaendigkeit/` die Zusage „keine fremde Quelle
+    zur Laufzeit" nach (Prüfung `fremde Quelle`, Nr. 179) — **am Quelltext**.
+    Zur Laufzeit hält sie nichts: `grep -rn "Content-Security-Policy" server/`
+    ergibt **0**. Ein eingeschleustes Skript, das nicht im Repositorium steht
+    — über eine Lücke, ein Fremdpaket, einen kompromittierten Deploy —, lädt
+    ungehindert.
+    **Was zu entscheiden ist, nicht nur zu bauen.** Die Richtlinie braucht
+    Ausnahmen für genau die Quellen, die Nr. 179 als gewollt aufführt: vier
+    Kachelserver (`tile.openstreetmap.org`, `tile.openmaps.fr`,
+    `{s}.tile.opentopomap.org`, `server.arcgisonline.com`) unter `img-src`,
+    und den Adressdienst unter `connect-src` — **dessen Anschrift ist seit
+    S9/AP2 eine Einstellung je Installation** (`app_state.geocoder_url`), die
+    Richtlinie muss also zur Laufzeit gebaut werden und kann nicht als
+    feste Zeichenkette im Code stehen. Dazu die Frage, ob `'unsafe-inline'`
+    für `style-src` bleibt oder die Inline-Stile weichen (das entscheidet über
+    den Aufwand), und ob `report-only` vorgeschaltet wird, um eine Woche zu
+    messen, bevor die Richtlinie greift.
+    **Wer sie zu eng setzt, macht die Karten grau** — und das fällt erst im
+    Einsatz auf. *Abnahme:* Jede Seite schickt die Richtlinie; die vier
+    Kachelserver und der eingestellte Adressdienst funktionieren; ein
+    eingeschleustes `<script src="https://cdn.example/x.js">` wird vom Browser
+    **blockiert** (Konsolenmeldung im Bilderlauf, der solche Fehler seit
+    Nr. 176 wieder zählt); der Bilderlauf bleibt bei 0 Konsolenfehlern.
+    Zuordnung: **S10 Sicherheit** (Schritt 9b) oder das Bedrohungsmodell
+    (P6, R69) — die Entscheidung gehört in den Rahmenplan.
+
+    **Erledigt am 15.09.2026 mit Web 20.7.0 (P5a/AP4)** — zusammen mit Nr. 8;
+    dieser Punkt trug die offenen *Entscheidungen*, und die sind gefallen:
+
+    - **Kachelserver und Adressdienst:** vier Domains unter `img-src`, der
+      Adressdienst unter `connect-src` — **aus `geocoder_dienst()` zur
+      Laufzeit gelesen**, nicht fest verdrahtet, und weggelassen, wenn die
+      Adresssuche aus ist. Genau der Grund, aus dem der Punkt hier stand.
+    - **`'unsafe-inline'` für `style-src`:** nein — aber
+      `style-src-attr 'unsafe-inline'` (E-P5a-32). Die Trennung gibt es seit
+      CSP 3; sie erlaubt Stil**attribute** und verbietet weiterhin
+      eingeschleuste `<style>`-Blöcke und fremde Stylesheets.
+    - **Report-Only vorgeschaltet:** ja, und nicht „eine Woche", sondern bis
+      eine BetreiberIn den Schalter umlegt. Die Meldungen sammelt
+      `api/csp_bericht.php`; Betrieb → Servereinstellungen zeigt sie.
 
 197. **Fähigkeiten lassen sich an einem bodengebundenen Bergwacht-Rettungsmittel
     nicht hinterlegen.** *Aufgenommen und erledigt 14.09.2026 (Demo-Ausbau,
@@ -6266,3 +6949,116 @@ zutreffen.
     Prüffall.
 
     **Erledigt am 04.09.2026** mit **Web 14.2.0** (Nutzlast 9) und **14.2.1** (Referenzbestand). Die Konto-Sicherung trägt seither je Einsatz eine Liste `schnitte`; der Vermerk verweist über `quelle_ref` auf die **Kennung** der Quelle, nicht auf ihre interne Nummer — genau das Muster, das `day_refs` schon benutzte. Ein Vermerk ohne Ziel wird gezählt und benannt, nicht stillschweigend verworfen. Belegt im **Dauerbetrieb**: Der Referenzbestand enthält seit 14.2.1 einen Schnitt, und weil der Demo-Reset die Fixture alle 30 Minuten einspielt, wird der Vermerk auf dem Produktivserver alle 30 Minuten geprüft. Zahlen: Wiederherstellungsprobe 94/0 (18 neue Erwartungen in Teil 11), edbak-Kreislauf 287 713 Einzelvergleiche / 0 unerklärt, Demo-Konto nach dem Reset 1 Sperrvermerk.
+
+204. **`smtp.php` schreibt bei Fehlschlag die Empfängeradresse ins
+    Fehlerprotokoll.** *Aufgenommen 16.09.2026; Zuordnung P5a AP5
+    (Nachtrag).* `error_log('SMTP: Versand an ' . $toEmail . '
+    fehlgeschlagen')`, obwohl der Kopf derselben Datei und
+    `betrieb_status.php` zusagen, dass kein Protokoll über Mailempfänger
+    geführt wird. Es war die einzige Stelle mit Personenbezug im
+    Fehlerprotokoll.
+
+    **Erledigt am 16.09.2026 mit Web 20.8.0/20.9.0 (P5a/AP5, E-P5a-37).**
+    Die Zusage gilt — entschieden vom Auftraggeber am selben Tag. Die
+    Meldung lautet jetzt `[<Kennung>] SMTP: Versand fehlgeschlagen:
+    <Grund>`; der Empfänger steht in `mail_warteschlange` und verfällt dort
+    nach 30 Tagen (E-P5a-09).
+
+    **Die Kennung ist der Punkt, nicht das Weglassen.** Eine Zusage, die
+    einem die Fehlersuche nimmt, tauscht ein Problem gegen ein anderes.
+    Die Warteschlange schreibt dieselbe Kennung in ihre Fehlerspalte: Wer
+    einem Fehlschlag nachgeht, hat dort den Empfänger und im Protokoll des
+    Webspace den technischen Grund. Das Protokoll allein sagt nicht, wer
+    gemeint war — und genau das war die Zusage.
+
+    *Nachgemessen:* `grep -rn "toEmail" server/smtp.php` trifft **keinen**
+    `error_log()`-Aufruf mehr; `tools/mailprobe/` Abschnitt 13 löst einen
+    Fehlschlag aus und prüft das erzeugte Protokoll (**108 Byte, 1 Zeile,
+    kein „@", eine Kennung**). Die übrigen `error_log()`-Aufrufe in
+    `email_lib.php`, `pair.php` und `reset_request.php` sind durchgesehen —
+    sie nennen weder Adresse noch Token („Hinweismail an die alte Adresse
+    ging nicht weg").
+
+    *Ein Fund am selben Ort:* `smtp_letzter_fehler()` konnte den Grund des
+    **vorigen** Versuchs liefern — der Merker wurde erst nach der
+    Adressprüfung geleert. Eine Kennung, die auf eine andere Nachricht
+    zeigt, ist schlimmer als gar keine; behoben in Web 20.9.0.
+
+203. **`api/export_data.php` gibt JSON roh aus — ohne `Cache-Control:
+    no-store`.** *Aufgenommen 16.09.2026 (Nebenfund der
+    Zentralisierungsanalyse); Zuordnung P5a AP4a (Nachtrag).* Zwei Stellen
+    geben mit `header('Content-Type: application/json')` + `echo` aus, ohne
+    den Kopf, den `json_out()` (M3-11) begründet zentral setzt. Der Export
+    liefert **Spurpunkte** — ein Zwischenspeicher darf sie nicht behalten.
+
+    **Erledigt am 16.09.2026 mit Web 20.9.1 (P5a/AP4a, E-P5a-38).** Drei
+    Funktionen in `db.php`, eine Stelle: `json_kopf()` setzt den Satz,
+    `json_roh_out()` gibt fertigen Text aus, `json_out()` ruft
+    `json_roh_out()`.
+
+    **Es waren sieben Stellen, nicht drei.** Der Punkt nannte
+    `api/export_data.php` (2×), `api/backup_data.php` und
+    `api/adminbackup_freigabe.php`. Beim Nachzählen kamen `auth_salt.php`,
+    `jobs.php` und `pair.php` dazu — **derselbe Mangel**, und bei zweien
+    wiegt er schwerer als beim Ausgangspunkt: `auth_salt.php` liefert das
+    Salt der Schlüsselableitung **je Konto** und ist unangemeldet
+    erreichbar, `pair.php` nennt die maskierte Adresse des Kontos. Beiden
+    fehlten außerdem `nosniff` und `Referrer-Policy`.
+
+    **`json_kopf()` gibt es, weil `pair.php` an zwei Stellen antwortet und
+    dann weiterarbeitet** — es schließt die Antwort ab und reiht erst danach
+    die Hinweismail ein, weil die Uhr auf das `ok` wartet. Ein `never`
+    schließt diese Stelle aus.
+
+    **Eine Ausnahme, benannt:** `wartung_lib.php` setzt seinen Satz weiter
+    selbst; die Wartungsseite ist ausdrücklich ohne Datenbank gebaut und darf
+    `db.php` nicht laden. `no-store` steht dort trotzdem.
+
+    *Nachgemessen im Browser gegen die lokale Installation:*
+    `api/export_data.php` mit drei echten Einsatz-IDs → **HTTP 200, 68 820
+    Byte Spurpunkte**, `cache-control: no-store`, `nosniff`;
+    `api/backup_data.php?teil=kopf` → **200, 19 603 Byte**, dieselben
+    Kopfzeilen; `auth_salt.php`, `jobs.php` und `pair.php` je in ihrem
+    Fehler- **und** Erfolgszweig, alle mit vollem Satz. Und:
+    `grep -rn "Content-Type: application/json" server/` trifft genau **zwei**
+    Codezeilen — `db.php` und `wartung_lib.php`.
+
+    *Eine Nebenwirkung, ausgeschrieben:* `json_out()` schickt jetzt
+    `application/json; charset=utf-8` statt `application/json`. RFC 8259
+    definiert für `application/json` keinen charset-Parameter; kein Client
+    bricht daran, vier der sieben Stellen schickten ihn ohnehin, und die Uhr
+    übergeht ihn ganz (`:responseType => HTTP_RESPONSE_CONTENT_TYPE_JSON`).
+
+205. **`session.use_strict_mode` fehlt auf den Anmeldewegen.** *Aufgenommen
+    16.09.2026; Zuordnung P5a AP4a (Nachtrag).* Gesetzt nur in
+    `install.php` und `wiederherstellen.php`, nicht in `auth_guard.php`,
+    `login.php` und `session_lib.php` — also nicht auf den Wegen, die eine
+    echte Anmeldesitzung tragen. Der Schutz gegen Session-Fixation hing
+    damit an der `php.ini` des Hosters.
+
+    **Erledigt am 16.09.2026 mit Web 20.9.1 (P5a/AP4a, E-P5a-38).** Die Zeile
+    steht jetzt vor **allen sieben** `session_start()`-Aufrufen; dazu kamen
+    `pw_handling.php` (die Sitzung, die das Passwort-Token trägt) und
+    `rechtstext_seite.php` (die fragt nur, erzwingt nicht — die Zeile steht
+    trotzdem, damit die Regel keine Ausnahme hat, an der sie später jemand
+    aufhängt).
+
+    **Kein `sitzung_starten()`-Helfer** — der ist Schritt 15 (Nr. 202
+    Paket 3). Hier steht nur die Zeile.
+
+    *Nachgemessen, mit Gegenprobe:* Auf dem Prüfstand steht
+    `session.use_strict_mode` in der `php.ini` auf **Off**. **Ohne** die
+    Zeile nimmt `login.php` eine frisch erfundene Kennung an und schickt
+    **gar kein `Set-Cookie`** zurück; **mit** ihr verwirft es sie und vergibt
+    eine neue. Beide Läufe mit jeweils frischer Zufallskennung — eine schon
+    benutzte ist dem Server bekannt und wird auch mit der Härtung
+    angenommen, und der zweite Lauf maß deshalb beim ersten Versuch das
+    Gegenteil des ersten.
+
+    **Neu dazu: `tools/sitzungshaertung/`, in Stufe 1.** Die Zeile ist
+    unscheinbar und steht neben dem Aufruf, den sie schützt; ein neuer Weg,
+    der sie vergisst, sieht genauso aus wie einer, der sie hat. Gemessen mit
+    dem Tokenizer, nicht mit `grep` — die erste Fassung meldete zwei
+    Befunde, und beide waren Kommentarzeilen über das Werkzeug selbst.
+    **Selbstprobe 8/8; im Lauf 108 Dateien, 7 echte Aufrufe, 0 ohne
+    Härtung.**

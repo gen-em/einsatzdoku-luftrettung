@@ -7,12 +7,25 @@ php tools/wartungsprobe/probe.php https://127.0.0.1:8443
 ```
 
 Rückgabewert 0 = alle Erwartungen erfüllt, 1 = mindestens eine nicht.
+Stand 15.09.2026: **67 Erwartungen, 0 nicht erfüllt.**
 
 > **Diese Probe legt den Schalter um.** Sie schreibt `server/wartung.lock`
 > und räumt sie im `finally` wieder weg — auch bei einem Abbruch. Findet sie
 > beim Start schon eine vor, stellt sie deren Inhalt am Ende wieder her und
 > sagt es in der ersten Zeile. **Auf einer Installation mit Betrieb nicht
 > fahren:** Für die Dauer des Laufs ist die Installation geschlossen.
+
+> **Seit Teil 7 prüft sie den Torwächter** (P5a/AP3, E-P5a-20). Er beginnt
+> damit, den Wartungsmodus **auszuschalten** — sonst ließe sich nicht sehen,
+> dass er von selbst angeht —, nimmt dieselbe Registerzeile wie Teil 6 heraus
+> und misst: 503 auf einer angemeldeten Seite, `von = torwaechter` in der
+> Schalterdatei, der Grund auf der Wartungsseite, JSON-503 für `ingest.php`,
+> Betrieb → Updates offen mit „Vom Torwächter geschlossen", der Knopf
+> „Wartung beenden" nach dem Lauf, und danach wieder 200. **Backlog Nr. 54
+> wird dabei in der Richtung gemessen, die weh tut:** Erwartung 32 zeigt, dass
+> der Zwischenspeicher nach einer Wiederherstellung *lügt* (der Katalog-Hash
+> ändert sich ja nicht), Erwartung 33, dass
+> `migrationen_tor_zuruecksetzen()` ihn wieder sehend macht.
 
 > **Und seit Teil 6 fasst sie das Migrationsregister an** (Backlog Nr. 149).
 > Sie nimmt **eine** Zeile aus `schema_migrations` heraus, misst daran, drückt

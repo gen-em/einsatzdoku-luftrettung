@@ -133,7 +133,7 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
          der Tagesleiste. Gleiches Muster wie CREW_ROLLEN in import.php
          (Befund P9); assets/missiontable.js führt einen Rückfall, falls die
          Vorgabe fehlt. */ ?>
-<script>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
+<script<?= kopf_nonce_attr() ?>>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
         /* Die Zeichen der Diensttag-TYPEN daneben (E-S9-13, Web 16.0.0) — sonst
            zeichnet diese Tabelle die Betriebsart, waehrend die Leiste den Typ
            zeichnet. Dieselbe Quelle wie auf der Serverseite. */
@@ -145,7 +145,7 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
 <?php /* geo.js liefert das Standort-Haus (E-P3-40) und die Farben aus den
          Token — dieselbe Quelle wie auf Tages- und Einsatzkarte. */ ?>
 <script src="<?= asset('assets/geo.js') ?>"></script>
-<script>
+<script<?= kopf_nonce_attr() ?>>
 const JAHR  = <?= json_js($jahr) ?>;
 const MONAT = <?= json_js($monat) ?>;
 

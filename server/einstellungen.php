@@ -1136,12 +1136,24 @@ if ($tab === 'geraete') {
      * ein TIMESTAMP und kommt in der Zeitrechnung der Datenbank an. Ein
      * Vergleich gegen eine in PHP gebildete Grenze haette stillschweigend
      * angenommen, dass beide dieselbe Zeitzone benutzen. */
-    $st = db()->prepare('SELECT id, device_id, label, active, last_seen, created_at,
-                                geraet_art, geraet_modell, geraet_teil,
-                                (created_at > DATE_SUB(NOW(), INTERVAL ? DAY)) AS ist_neu
-                         FROM devices
-                         WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . ' ORDER BY created_at');
-    $st->execute([GERAETE_NEU_TAGE, $userId]);
+    /* DIE BEIDEN ABGEWIESEN-SPALTEN MIT RUECKFALL (Web 20.11.0, P5a/AP7).
+       Zwischen dem Hochladen der Dateien und dem Aufruf von `update.php` gibt
+       es sie nicht; ohne Rueckfall zeigte der Reiter Geraete in diesem Fenster
+       eine Fehlerseite. Dieselbe Bauart wie in `ingest.php`. */
+    $devSql = static fn(string $spalten): string =>
+        'SELECT ' . $spalten . '
+           FROM devices
+          WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . ' ORDER BY created_at';
+    $devFelder = 'id, device_id, label, active, last_seen, created_at,
+                  geraet_art, geraet_modell, geraet_teil,
+                  (created_at > DATE_SUB(NOW(), INTERVAL ? DAY)) AS ist_neu';
+    try {
+        $st = db()->prepare($devSql($devFelder . ', abgewiesen_seit, abgewiesen_anzahl'));
+        $st->execute([GERAETE_NEU_TAGE, $userId]);
+    } catch (PDOException $ex) {
+        $st = db()->prepare($devSql($devFelder));
+        $st->execute([GERAETE_NEU_TAGE, $userId]);
+    }
     $devices = $st->fetchAll();
     foreach ($devices as $d) {
         if ((int)$d['id'] === (int)($_GET['ed'] ?? 0)) { $editDev = $d; }
@@ -1335,7 +1347,7 @@ ui_seite_start(['titel' => 'Einstellungen',
              wechselt das Passwort. */ ?>
     <?php ui_krypto_bootstrap(['skripte' => ['assets/crypto.js'],
                                'guete' => true, 'einzug' => '    ']); ?>
-    <script>
+    <script<?= kopf_nonce_attr() ?>>
     /* Zweiter Teil des Passwortwechsels (M2-07): Das Vormerkfach aus dem
      * vorigen Seitenaufruf aufloesen, bevor irgendetwas anderes geschieht. */
     (() => {
@@ -2428,7 +2440,7 @@ ui_seite_start(['titel' => 'Einstellungen',
              fuenf von sechs nichts findet, ist Ballast. Er braucht keine
              Reihenfolge — er haengt an nichts. */ ?>
     <script src="<?= asset('assets/kartenfilter.js') ?>"></script>
-    <script>
+    <script<?= kopf_nonce_attr() ?>>
     /* Ortsfelder der Stammdatenpflege beleben (E37). Dieselbe Komponente wie
      * am Einsatz — mit getrennter Suche, weil das Namensfeld hier den NAMEN
      * trägt und nicht die Adresse. Ohne Vorschlagsliste: Was hier entsteht,
@@ -2444,7 +2456,7 @@ ui_seite_start(['titel' => 'Einstellungen',
     </script>
 
     <script src="<?= asset('assets/dialog.js') ?>"></script>
-    <script>
+    <script<?= kopf_nonce_attr() ?>>
     /* DER RETTUNGSMITTEL-DIALOG RICHTET SICH NACH DEM TYP (E-S9-09/E-S9-19).
      *
      * Rein anzeigend: Was zulässig ist, entscheidet der Server in 'veh_save'
@@ -2546,7 +2558,7 @@ ui_seite_start(['titel' => 'Einstellungen',
     })();
     </script>
 <?php if ($dlgFehler !== null): ?>
-    <script>
+    <script<?= kopf_nonce_attr() ?>>
     /* NACH EINEM ABGELEHNTEN SPEICHERN GEHT DER DIALOG WIEDER AUF (E-S9-19).
        Er trägt dann die verworfene Eingabe und die Meldung; `auf()` füllt
        bewusst NICHTS nach — im Markup steht schon das Richtige. */
@@ -2715,7 +2727,7 @@ ui_seite_start(['titel' => 'Einstellungen',
              Skriptliste von ui_krypto_bootstrap(): Der Baustein ersetzt dort
              seine Vorgabeliste, und crypto.js fiele weg. */ ?>
     <script src="<?= asset('assets/vendor/zipjs.min.js') ?>"></script>
-    <script>
+    <script<?= kopf_nonce_attr() ?>>
     // Eigenes Konto — nur fuer den Vergleich mit der Herkunft der Datei (M5-13).
     const KONTO_MAIL = <?= json_js($userEmail) ?>;
     const KONTO_NAME = <?= json_js($userName) ?>;
@@ -4078,6 +4090,26 @@ ui_seite_start(['titel' => 'Einstellungen',
                    . ' · gekoppelt ' . fmt_local($d['created_at'], 'd.m.Y')
                    . ' · zuletzt gemeldet '
                    . ($d['last_seen'] ? fmt_local($d['last_seen'], 'd.m.Y H:i') : 'nie');
+            /* ABGEWIESENE ANMELDUNGEN (Web 20.11.0, P5a/AP7, E-P5a-02).
+               Seit die Mengenbremse in `ingest.php` steht, sperrt sich eine
+               Uhr mit veraltetem Schluessel selbst aus. Ohne diese Zeile stuende
+               eine Notaerztin vor einem Geraet, das nichts mehr hochlaedt, und
+               nichts in der Anwendung sagte ihr, warum.
+
+               VORHANDENE BAUSTEINE, KEINE NEUE DARSTELLUNG: dieselbe
+               Kleinzeile, die schon Modell und letzten Kontakt traegt, und
+               dieselbe orange Plakette wie „neu". Beide erscheinen NUR im
+               Ausnahmefall — ein Geraet, das arbeitet, sieht aus wie bisher.
+
+               DIE ZAHL STEHT NEBEN DEM DATUM, weil erst beides die Lage sagt:
+               „3 seit heute 14:20" ist ein Schluesselwechsel, „400 seit
+               Montag" ist ein Geraet, das seit Tagen gegen eine Wand laeuft. */
+            $abgewiesen = (int)($d['abgewiesen_anzahl'] ?? 0);
+            if ($abgewiesen > 0) {
+                $klein .= ' · ' . $abgewiesen . ' abgewiesen'
+                        . (($d['abgewiesen_seit'] ?? null) !== null
+                           ? ' seit ' . fmt_local($d['abgewiesen_seit'], 'd.m.Y H:i') : '');
+            }
             ?>
         <form method="post" id="f-dev-<?= $did ?>" class="nur-vorlesen"
               action="einstellungen.php?t=geraete">
@@ -4104,6 +4136,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                Kleinzeile mit Modell, Art und Kopplungsdatum besser, und die
                Zeile hat vier Angaben statt fuenf. */
             'plaketten' => ((int)$d['ist_neu'] ? ui_plakette('neu', ['ton' => 'orange']) : '')
+                . ($abgewiesen > 0 ? ui_plakette('abgewiesen', ['ton' => 'orange']) : '')
                 . ($aktiv ? '' : ui_plakette('deaktiviert', ['ton' => 'neutral'])),
             'aktionen' => ui_zeilenaktionen([
                 'titel' => (string)($d['label'] ?? $d['device_id']),
@@ -4299,7 +4332,7 @@ ui_seite_start(['titel' => 'Einstellungen',
     <?php endif; ?>
   <?php endif; ?>
 
-  <script>
+  <script<?= kopf_nonce_attr() ?>>
   /* ---- Abschnitt aus dem Anker wieder aufklappen -------------------------
    *
    * Nach jedem Speichern und Löschen leitet der Server auf einen Anker um; wer

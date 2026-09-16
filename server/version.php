@@ -4590,5 +4590,952 @@ declare(strict_types=1);
  * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `vehicle_capabilities` und
  * `day_capabilities` fuehren keine Art; sie konnten den Fall immer schon
  * tragen. `update.php` muss nach dem Deploy NICHT laufen.
+ *
+ * 20.4.0 ist das erste Paket von P5a (AP1): DIE AUSLIEFERUNGSKETTE.
+ *
+ * WAS BIS HIERHER GALT und in `CLAUDE.md` 3 wortwoertlich stand: „Ein Push
+ * auf `main` mit Aenderungen unter `server/` laedt sofort auf den
+ * Produktivserver hoch. Es gibt keine Zwischenstufe und keine Testumgebung."
+ * Kein Prueftor, kein Freigabeschritt, kein Rueckweg — und kein Backup, von
+ * dem jemand wuesste, dass es zu diesem Stand gehoert.
+ *
+ * WAS GILT: Push auf `main` geht nach STAGING, ein Tag `web-vX.Y.Z` geht nach
+ * PRODUKTIV, und davor stehen drei Tore — Stufe 1 (jeder Push, ohne
+ * Installation), Stufe 2 (gegen Staging) und die Pflichtfreigabe der
+ * Betreiberin. Vor dem Schreiben auf Produktiv laeuft das Komplett-Backup
+ * nachweislich zu Ende.
+ *
+ * AM CODE AENDERT SICH EINE EINZIGE DATEI, und das ist der Punkt: `jobs.php`
+ * nimmt am Token-Weg einen Parameter `aktion` (`komplett`, `wartung_an`,
+ * `wartung_aus`, `zustand`). Die Kette braucht ihn, weil sie von aussen
+ * genau vier Dinge tun koennen muss, fuer die es bisher nur einen Browser
+ * gab. Alles Weitere liegt in `.github/workflows/` und `tools/` — die
+ * Anwendung weiss weiterhin nicht, wie sie auf den Server gekommen ist
+ * (PP-9, Muss).
+ *
+ * ZWEI BEDINGUNGEN AM BACKUP-TOR, NICHT EINE (E-P5a-12). `fertig` allein
+ * genuegt nicht: Ein Backup, das schon gestern fertig wurde, meldet
+ * ebenfalls `fertig` und schuetzt diesen Deploy nicht. Der juengste Stand
+ * muss deshalb JUENGER SEIN ALS DER LAUFBEGINN. Und `aktion=komplett` legt
+ * einen Auftrag an, wenn keiner steht — ohne das taete der Aufruf bei Plan
+ * „Nur von Hand" nichts und meldete sofort `fertig`.
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `update.php` muss nach dem Deploy
+ * NICHT laufen.
+ *
+ * 20.5.0 ist AP2 von P5a: DAS PLATTFORMPROFIL.
+ *
+ * WAS BIS HIERHER GEPRUEFT WURDE: vier Erweiterungen (`zip`, `zlib`,
+ * `openssl`, `mbstring`) im Einrichter, und sonst nichts. Keine PHP-Version,
+ * kein `pdo_mysql`, keine Weblimits, keine Datenbankfassung, keine
+ * Verbindungsgrenze, Schreibrechte nur per `is_writable()`. Eine Installation
+ * auf PHP 8.0 fiel erst beim ersten Formular mit einem Fatal Error auf.
+ *
+ * WAS GILT: `plattform_lib.php` mit `plattform_pruefen()` — EINE Funktion,
+ * ZWEI Leser. `install.php` fragt sie vor der Einrichtung, die Statusseite im
+ * Betrieb. Zwei Listen liefen auseinander, und ein Hoster kann eine
+ * PHP-Fassung jederzeit umstellen, ohne jemanden zu fragen.
+ *
+ * `ok` IST DREIWERTIG: erfuellt, nicht erfuellt, NICHT FESTSTELLBAR. Nur das
+ * mittlere haelt die Einrichtung auf. Der freie Plattenplatz ist der Fall, auf
+ * den es ankommt — `disk_free_space()` meldet auf geteiltem Webspace den
+ * Datentraeger des HOSTS, nicht das Kontingent dieses Kontos. Wer nichts
+ * gemessen hat, darf nichts behaupten.
+ *
+ * DIE WEICHE IN `install.php` IST EINE ZEILE UND EINE ZUSAGE. Sie prueft die
+ * Fassung, bevor irgendetwas anderes laeuft — und sie nuetzt nur, solange die
+ * Datei auf der alten Fassung noch UEBERSETZT werden kann. `install.php`
+ * bleibt deshalb PHP-7-lesbar, und `tools/installweiche/` zaehlt das mit dem
+ * Tokenizer nach — fuer `install.php` UND fuer `php_mindest.php`. Jene drei
+ * Zeilen tragen die Zahl, weil `plattform_lib.php` (PHP-8-Code) sie der
+ * Weiche nicht geben kann; ohne sie stuende die 8.2 zweimal da. Was die Weiche NICHT leisten kann, steht in ihrem Kopf:
+ * `index.php` ist PHP-8-Code und wird ganz uebersetzt, bevor seine
+ * Weiterleitung liefe.
+ *
+ * SCHREIBRECHTE MIT PROBEDATEI statt `is_writable()`. Jenes antwortet anhand
+ * der Rechtebits und liegt falsch, sobald ACLs, `open_basedir` oder ein
+ * schreibgeschuetztes Dateisystem im Spiel sind — auf geteiltem Webspace der
+ * Regelfall.
+ *
+ * ZWEI KONTINGENTE STATT EINEM (E-P5a-11). `db_gb` tritt neben
+ * `webspace_gb`, mit denselben Schwellen. Der Unterschied ist die Vorgabe:
+ * Der Webspace hat keine (ein geratener Wert waere schlimmer als keiner), die
+ * Datenbank hat 10 GB — das ist die Untergrenze Z2, die diese Anwendung
+ * tragen MUSS, also eine Zusage des Projekts und keine Vermutung ueber den
+ * Hoster.
+ *
+ * UND EIN NEBENBEFUND, DER KEIN KLEINER IST: `edbak_schwellen_melden()` —
+ * die Warnung fuer die Speichergrenze der Backups, seit S8 vorhanden —
+ * WURDE IM BETRIEB VON NIEMANDEM AUFGERUFEN. Nachgemessen am 15.09.2026:
+ * `grep -rn "schwellen_melden" --include=*.php` findet die Definition und
+ * einen Aufruf im Pruefwerkzeug, sonst nichts. Geschrieben, geprueft, tot —
+ * dieselbe Klasse wie Backlog Nr. 89. Der Aufruf steht jetzt im taeglichen
+ * Aufraeumjob, direkt hinter der Messung.
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `db_gb` und
+ * `speicher_schwellen_gemeldet` sind Zeilen in `app_state`, und die Tabelle
+ * steht seit Web 1.1. `update.php` muss nach dem Deploy NICHT laufen.
+ *
+ * 20.6.0 ist AP3 von P5a: DER TORWAECHTER (R40 (4), Backlog Nr. 54).
+ *
+ * WAS BIS HIERHER GALT. „Steht eine Migration aus?" war eine Frage AN DIE
+ * SEITE `betrieb_updates.php` — jemand musste sie aufrufen. Zwischen dem
+ * Hochladen neuer Dateien und diesem Aufruf erwartet neuer Code Tabellen, die
+ * es noch nicht gibt; die Anwendung antwortet in diesem Fenster mit 500, und
+ * zwar einer Uhr gegenueber, einem Handy gegenueber und einer Notaerztin
+ * gegenueber, die gerade dokumentiert.
+ *
+ * WAS GILT: Die Anwendung schliesst sich selbst. `migrationen_ausstehend()`
+ * beantwortet die Frage bei jeder angemeldeten Anfrage, und steht etwas aus,
+ * schaltet `auth_guard.php` den Wartungsmodus mit dem Urheber `torwaechter`.
+ * Der Unterschied zwischen 500 und 503 ist der zwischen „kaputt" und „gleich
+ * wieder da" — Uhr und Handy puffern und liefern nach.
+ *
+ * DER ZWISCHENSPEICHER HAENGT AM KATALOG-HASH, nicht an einer Frist. Ein
+ * voller Vorschaulauf geht 46 Katalogeintraege durch; das ist der Preis einer
+ * Statusseite, nicht der Preis JEDER Seite. Der Hash geht ueber die
+ * KENNUNGEN — `serialize()` ueber den Katalog scheiterte an den Closures.
+ *
+ * DREI STELLEN SCHREIBEN IHN FORT, und die zweite ist Nr. 54:
+ * `migrationen_lauf(…, true)` nach einem Lauf (der Hash aendert sich dabei
+ * nicht), `wiederherstellen.php` nach dem Einspielen (ein fremder Dump bringt
+ * ein fremdes Register mit, und der Hash passt trotzdem) und der Deploy
+ * selbst, aber nur mittelbar.
+ *
+ * BEI EINEM FEHLER BLEIBT DIE INSTALLATION OFFEN. Fehlt `app_state`,
+ * antwortet die Datenbank nicht, wirft eine `skip`-Pruefung — dann heisst die
+ * Antwort `false`. Der Torwaechter darf keine Installation schliessen, weil
+ * er selbst nicht messen konnte; dieselbe Richtung wie beim Ratenschutz.
+ *
+ * AUS GEHT ER NIE VON SELBST (R66). Betrieb → Updates nennt den Grund und
+ * bietet nach dem Lauf ein zweites „Wartung beenden" dort an, wo gerade
+ * geklickt wurde.
+ *
+ * WAS OFFEN BLEIBT, UND DAS STEHT AUCH IM CODE: `ingest.php` und `pair.php`
+ * laden `auth_guard.php` nicht. Bis zur ersten angemeldeten Anfrage bekommen
+ * die Geraete weiter 500 statt 503 — verloren geht nichts, und fuer die
+ * Auslieferungskette ist das Fenster null.
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `migration_tor_hash` und
+ * `migration_tor_offen` sind Zeilen in `app_state`.
+ *
+ * ------------------------------------------------------------------
+ *
+ * 20.7.0 ist AP4 von P5a: DIE KOPFZEILEN KOMMEN AUS DEM PROGRAMM
+ * (R40 (5), E-P5a-15/17, SP-5).
+ *
+ * WAS BIS HIERHER GALT. Vier Sicherheitskopfzeilen standen in
+ * `server/.htaccess`: `X-Content-Type-Options`, `Referrer-Policy`,
+ * `X-Frame-Options` und `Strict-Transport-Security` mit einem Jahr. Eine
+ * Content-Security-Policy gab es nicht. Das hatte drei Folgen, und jede
+ * einzelne war ein Loch:
+ *
+ *   · KEIN SCHUTZ GEGEN EINGESCHLEUSTES SKRIPT. Ohne CSP genuegt ein
+ *     einziges nicht maskiertes Feld irgendwo, und fremdes JavaScript laeuft
+ *     im Kontext einer angemeldeten Sitzung — also neben dem entschluesselten
+ *     Datenschluessel. Diese Anwendung entschluesselt Patientendaten IM
+ *     BROWSER; ein Skript dort ist kein Schoenheitsfehler.
+ *   · `.htaccess` GILT NUR AUF APACHE. Wer hinter nginx, Caddy oder einem
+ *     Container laeuft, hatte gar keine Kopfzeilen — und merkte es nicht.
+ *   · HSTS WAR NICHT VERHANDELBAR. Ein Jahr Bindung, fest in einer Datei,
+ *     die beim Deploy mitkommt. Wer eine Installation aufsetzt und die
+ *     Domain noch umziehen koennte, hat mit dem ersten Aufruf ein Jahr
+ *     Bindung an einen Namen, den er vielleicht nicht behaelt.
+ *
+ * WAS GILT: `kopfzeilen_lib.php` schreibt sie. `kopfzeilen_seite()` steht in
+ * `ui_seite_start()`, `kopfzeilen_json()` in `json_out()` — beide Wege gehen
+ * durch eine Stelle, und deshalb bekommt jede Seite und jede API-Antwort die
+ * Kopfzeilen, egal auf welchem Webserver.
+ *
+ * DIE RICHTLINIE BEGINNT BEI `default-src 'none'` und zaehlt auf, was
+ * erlaubt ist — nicht umgekehrt. `script-src 'self' 'nonce-…'` ohne
+ * `'unsafe-inline'`: Der Nonce ist 16 Zufallsbytes JE ANFRAGE, und ein
+ * Skript, das ihn nicht traegt, laeuft nicht. Damit ist die klassische
+ * XSS-Kette unterbrochen, auch wenn die Maskierung einmal versagt.
+ *
+ * ZWEI STUFEN, WEIL DIE ERSTE STUFE SONST DIE ANWENDUNG WAERE. Zuerst
+ * `Content-Security-Policy-Report-Only` — der Browser meldet, was er
+ * blockiert HAETTE, und fuehrt es trotzdem aus. Die Meldungen sammelt
+ * `api/csp_bericht.php` zusammengefasst in `csp_berichte`; Betrieb →
+ * Servereinstellungen zeigt sie. Erst wenn dort zwei Wochen lang nichts
+ * Neues steht, legt eine BetreiberIn den Schalter `csp_scharf` um. Der
+ * Endpunkt verlangt AUSDRUECKLICH KEINE ANMELDUNG: Ein Verstoss auf der
+ * ANMELDESEITE ist der interessanteste von allen.
+ *
+ * DREI ABWEICHUNGEN VOM KONZEPT, alle im Kopf von `kopfzeilen_lib.php`
+ * begruendet:
+ *
+ *   1. `style-src 'self'` PLUS `style-src-attr 'unsafe-inline'`
+ *      (E-P5a-32). Drei statische Stilattribute sind weg; die zehn
+ *      uebrigen entstehen zur Laufzeit in JavaScript (Leaflet-divIcons,
+ *      Zeilenvorlagen, die Balken der Schnittleiste). Sie umzubauen hiesse,
+ *      fuer jeden einzelnen Pfeil einer Spur einen eigenen Listener zu
+ *      setzen — und es aenderte an der Angriffsflaeche nichts, weil
+ *      `el.style.x` CSSOM ist und von CSP ohnehin nicht erfasst wird. Was
+ *      ein Stilattribut anrichten kann, begrenzen `default-src 'none'` und
+ *      das enge `img-src`.
+ *   2. `connect-src` nennt den EINGESTELLTEN Geocoder, nicht einen fest
+ *      verdrahteten Namen — und laesst ihn weg, wenn die Adresssuche aus ist.
+ *   3. `img-src` MIT `data:` — und das war zuerst anders. Die Zaehlung im
+ *      eigenen Quelltext ergab 0 Treffer, also wurde es gestrichen. Der
+ *      Report-Only-Lauf meldete daraufhin 140 Verstoesse auf den vier
+ *      Kartenseiten: `leaflet.js` traegt ein 1x1 grosses durchsichtiges
+ *      GIF als `data:`-Konstante (`L.Util.emptyImageUrl`) und setzt es als
+ *      `src`, wenn es eine Kachel wegraeumt — in einer minifizierten
+ *      Bibliothek, die keine Zaehlung im Quelltext sieht. Der Preis ist
+ *      benannt: `data:` ist die schwaechste Zeile dieser Richtlinie; sie
+ *      bleibt, weil ein Bild kein Skript ausfuehrt.
+ *
+ * HSTS IST EINE EINSTELLUNG GEWORDEN (0 / 1 / 7 / 365 Tage, Vorgabe 1). Und
+ * damit sie keine Luege ist, HAT `.htaccess` DIE ZEILE VERLOREN (E-P5a-31):
+ * `Header always set` UEBERSCHREIBT, was PHP schickt — die Einstellung haette
+ * auf Apache nichts bewirkt. Die drei uebrigen Kopfzeilen stehen dort
+ * weiterhin, aber als `setifempty`: PHP fuehrt, wo PHP laeuft, und
+ * `.htaccess` deckt weiterhin die statischen Dateien. DER PREIS IST BENANNT:
+ * Auf einer bestehenden Installation faellt die Bindung von einem Jahr auf
+ * einen Tag, bis jemand sie wieder hochstellt.
+ *
+ * DIE CLIENT-ADRESSE KOMMT AUS `netz_lib.php` (E-P5a-17). Hinter einem
+ * Reverse Proxy war `REMOTE_ADDR` die Adresse DES PROXYS — der Ratenschutz
+ * zaehlte alle Nutzerinnen als eine und sperrte sie gemeinsam aus.
+ * `X-Forwarded-For` wird jetzt ausgewertet, ABER NUR, wenn die unmittelbare
+ * Gegenstelle in `config.php` als vertrauenswuerdig eingetragen ist. Ohne
+ * Eintrag rechnet alles wie vorher. Dieselbe Liste entscheidet ueber
+ * `X-Forwarded-Proto`: Wer die Client-Adresse faelschen koennte, koennte
+ * sonst auch behaupten, eine Anfrage sei ueber HTTPS gekommen.
+ *
+ * CSRF GEHT JETZT AUCH ALS KOPFZEILE (`X-CSRF`). Zwoelf API-Dateien hatten
+ * denselben Block von Hand; sie rufen nun `csrf_check()`, und das nimmt Feld
+ * ODER Kopfzeile.
+ *
+ * EINE MIGRATION: `2026_09_15_csp_berichte` legt die Tabelle an.
+ *
+ * UND EIN FUND, DER FAST DURCHGERUTSCHT WAERE. Die Richtlinie nannte beide
+ * Meldewege — `report-uri` (relative Adresse) und `report-to csp` (nennt nur
+ * einen Namen). Die zugehoerige `Reporting-Endpoints`-Zeile trug ebenfalls
+ * eine relative Adresse, und die nimmt der Browser dort nicht an: Die Gruppe
+ * `csp` war nie aufloesbar. CHROMIUM BEVORZUGT `report-to` UND VERWIRFT DEN
+ * BERICHT DANN ERSATZLOS. Der Bilderlauf ueber 49 Seiten meldete daraufhin
+ * „0 CSP-Berichte" — das Abnahmekriterium, woertlich erfuellt und voellig
+ * wertlos. Gefunden hat es die Gegenprobe, die einen Verstoss ABSICHTLICH
+ * ausloest: Er stand in der Konsole, die Tabelle blieb leer. Seither haengt
+ * `report-to` an `kopf_melde_url()` — nur bei vollstaendiger HTTPS-Adresse.
+ *
+ * ------------------------------------------------------------------
+ *
+ * 20.8.0 ist AP5 von P5a, erster Teil: DER NAME DIESER INSTALLATION
+ * (E-P5a-35; Auftrag vom 16.09.2026).
+ *
+ * WAS BIS HIERHER GALT. Der Name stand 38-mal von Hand im Quelltext, in DREI
+ * Schreibweisen fuer dieselbe Sache: „Gen-EM NAdoku" (Tab-Titel, Kopfleiste,
+ * Anmeldeseite, Wartungsseite, Schluesselblatt, Installer, GPX-Datei),
+ * „Gen-EM Einsatzdokumentation Notarzt" (alle acht Mailtexte) und
+ * „Einsatzdokumentation Notarzt" in der Testmail — ohne „Gen-EM".
+ *
+ * DIE DRITTE IST DER BEWEIS, nicht der Sonderfall: Eine abweichende
+ * Schreibweise faellt niemandem auf, solange man acht Dateien
+ * nebeneinanderlegen muesste, um sie zu sehen.
+ *
+ * DER ZWEITE GRUND WIEGT SCHWERER: „Gen-EM" IST EINE MARKE, KEINE FUNKTION.
+ * Logo, Impressum und Datenschutztext sind laengst je Installation
+ * einstellbar (E-P3-19/20, R32) — der Name war es nicht. Eine fremde
+ * Betreiberin verschickte Post, die mit „Gen-EM" unterschrieben ist.
+ *
+ * WAS GILT: `instanz_lib.php` mit zwei Werten in `app_state` —
+ * `instanz_name` (Langname, fuer Mailbetreff und Grussformel) und
+ * `instanz_kurz` (Kurzname, fuer Browsertab und Kopfleiste). Gepflegt unter
+ * Verwaltung → Installation, wo Logo und Rechtstexte schon stehen. Die
+ * Vorgaben sind die heutigen Zeichenketten: Wer nichts einstellt, sieht nach
+ * dem Update genau das, was vorher dastand.
+ *
+ * DIE DATEI LAEDT NICHTS, und das ist der Kniff. Drei Seiten duerfen hier
+ * nicht anklopfen — `install.php` laeuft vor der Datenbank, die Wartungsseite
+ * ist ausdruecklich ohne Datenbank gebaut, das HTTPS-Tor antwortet vor allem
+ * anderen. Sie benutzen `INSTANZ_KURZ_VORGABE` unmittelbar; die Funktionen
+ * pruefen selbst mit `function_exists()`, ob es `app_state_lesen()` gibt.
+ *
+ * DIE WARTUNGSSEITE BEKOMMT DEN NAMEN AUS DEM SCHALTER. `wartung_einschalten()`
+ * schreibt ihn in `wartung.lock` — dort steht die Datenbank noch. Fehlt er
+ * oder ist die Datei unlesbar, gilt die Vorgabe; „die Datei ist der Schalter,
+ * nicht ihr Inhalt" bleibt unveraendert.
+ *
+ * ZWEI STELLEN BLEIBEN AUSDRUECKLICH FEST: die Fusszeile „© Gen-EM · Open
+ * Source" (das ist die URHEBERSCHAFT der Software, nicht der Name des
+ * Betriebs) und `creator` in jeder GPX-Datei. Letzteres ist ausgeschrieben
+ * worden statt stillschweigend stehengelassen (Weg B): Das Feld benennt die
+ * SOFTWARE, nicht die Installation — GPX 1.1 nennt es „the software that
+ * created your GPX document", und wer die Anwendung aufsetzt, hat sie nicht
+ * geschrieben. Es traegt seit 20.8.0 die Fassung mit (`Gen-EM NAdoku 20.8.0`),
+ * weil diese Anwendung GPX auch wieder EINLIEST. Nachgemessen: Der
+ * Referenz-Export enthaelt 204 GPX-Dateien, alle mit `creator`, und der
+ * Vergleich blendete das Attribut nicht aus — seither ist dort die Fassung
+ * maskiert (wie `App-Version:` seit jeher) und der Name weiterhin verglichen.
+ * 204 von 204 normalisieren danach gleich, 0 Unterschiede; die Referenz
+ * musste nicht neu erzeugt werden.
+ *
+ * DER LANGNAME GEHT IN EINEN BETREFF, deshalb prueft
+ * `instanz_namen_setzen()` eng: Steuerzeichen und Zeilenumbrueche werden
+ * abgewiesen. Ein Zeilenumbruch im Betreff waere eine eingeschleuste
+ * Kopfzeile, und der Betreff ist die eine Stelle, an der ein selbst
+ * eingetippter Wert das Haus verlaesst, ohne dass ein Mensch ihn noch einmal
+ * ansieht.
+ *
+ * KEINE SCHEMAAENDERUNG: zwei Zeilen in `app_state`.
+ *
+ * ------------------------------------------------------------------
+ *
+ * 20.9.0 ist AP5 von P5a, ZWEITER Teil: ALLE ZEHN VERSANDSTELLEN GEHEN
+ * DURCH DIE WARTESCHLANGE, und die Installation bekommt ihre Adressen
+ * (E-P5a-36, E-P5a-40, E-P5a-41; Backlog Nr. 202 AP1, R83).
+ *
+ * WAS BIS HIERHER GALT. 20.8.0 hat das Geruest gebaut — Katalog,
+ * Warteschlange, Job — und NIEMAND benutzte es. Zehn Stellen riefen
+ * weiterhin `smtp_send()` unmittelbar. Ein Geruest ohne Benutzer ist kein
+ * halber Fortschritt, sondern eine Zusage, die nicht gilt: „Eine Mail geht
+ * nicht mehr verloren" stimmte fuer null von zehn Mails.
+ *
+ * WAS GILT: `pair.php` (2x), `admin_users.php`, `admin_user.php`,
+ * `reset_request.php`, `email_lib.php`, `speicher_lib.php`,
+ * `adminbackup_lib.php` (2x) und `betrieb_status.php` reihen ein. Der
+ * einzige verbliebene Aufrufer von `smtp_send()` ist `mail_lib.php` selbst.
+ *
+ * DREI AUSGAENGE STATT ZWEI. `mail_einreihen()` liefert `zugestellt`,
+ * `wartet` oder `abgelehnt`. Die Aufrufer, die am Rueckgabewert eine MARKE
+ * setzen (Schwellenwarnungen, Einladungsmarke), zaehlen `wartet` als
+ * erledigt — sonst reihte der naechste Lauf dieselbe Warnung erneut ein und
+ * eine dreitaegige Mailstoerung ergaebe sie dreifach. Nur `abgelehnt` — gar
+ * nicht erst eingereiht — laesst die Marke offen.
+ *
+ * ZWEI ADRESSEN WERDEN EINSTELLBAR (E-P5a-40), Verwaltung → Installation,
+ * Karte „Adressen":
+ *
+ *   `instanz_kontakt`  Die Kontaktzeile JEDER Mail. Bis 20.8.0 stand in
+ *                      SIEBEN Mailtexten dieselbe persoenliche Adresse des
+ *                      Entwicklers, fest im Quelltext — dieselbe
+ *                      Fehlerklasse wie der Instanzname. Bleibt sie leer,
+ *                      FAELLT DIE ZEILE WEG, statt auf ein Postfach zu
+ *                      verweisen, das niemand liest.
+ *   `betrieb_mail`     Wohin Betriebspost geht (volles Kontingent,
+ *                      ueberfaellige Sicherungen). Leer = weiterhin an alle
+ *                      mit Verwaltungsrecht; eine leere Einstellung darf
+ *                      keine Warnung verschlucken.
+ *
+ * `mail_betriebsziele()` haelt diese Auswahl an EINER Stelle. Drei Stellen
+ * bauten dieselbe Liste, und die dritte hatte bereits eine abweichende
+ * Sortierung — genau der Fall, fuer den R83 das Zentralisieren verlangt.
+ *
+ * `app_url()` ERSETZT SIEBEN HANDVERKETTUNGEN, fuenf davon ohne `rtrim()`.
+ * Steht in `config.php` ein Schraegstrich am Ende, entstand
+ * `https://host//pw_handling.php` — in einer Mail, die zum Passwortsetzen
+ * auffordert, die falsche Stelle fuer eine Unsauberkeit. Nebenbei
+ * behoben: `smtp.php` schickte bei leerer `base_url` ein nacktes „EHLO "
+ * (`parse_url('')` liefert FALSE); jetzt steht dort ein Rueckfall.
+ *
+ * EINE ZEILE AUF DER STATUSSEITE (E-P5a-41), Karte E-Mail: „Warteschlange".
+ * Blau wenn leer, ORANGE wenn etwas wartet (der Normalfall eines kurz
+ * gestoerten Mailservers, er heilt von selbst), ROT mit ADRESSE, wenn etwas
+ * endgueltig liegengeblieben ist. Keine eigene Seite und kein Knopf: Eine
+ * Liste waere eine neue Darstellung und braucht eine Freigabe mit Mockup;
+ * die Frage einer BetreiberIn — „ist etwas liegengeblieben?" — passt in eine
+ * Zeile. Der volle Bereich mit Reitern kommt in P5c.
+ *
+ * NACHGEMESSEN mit `tools/mailprobe/` gegen eine eigene SMTPS-Gegenstelle,
+ * die auf Kommando ablehnt, schweigt oder zwoelf Fortsetzungszeilen
+ * schickt: 41 Pruefungen, 0 Befunde. Dazu `tools/jobprobe/` 35 von 35
+ * (Teil 10 neu: der Job `mail` steht als ERSTER im Katalog — stuende er
+ * hinter der Verdichtung, bekaeme er am Huckepack-Weg regelmaessig nichts,
+ * und die Statusseite meldete trotzdem „in Ordnung").
+ *
+ * ZWEI FUNDE AUS DER PROBE, beide behoben:
+ *
+ *  1. `smtp_letzter_fehler()` konnte den Grund des VORIGEN Versuchs
+ *     liefern. Der Merker wurde erst NACH der Adresspruefung geleert; eine
+ *     abgewiesene Adresse liess also die Kennung des letzten Fehlschlags
+ *     stehen — eine Kennung, die auf eine andere Nachricht zeigt, ist
+ *     schlimmer als keine.
+ *  2. Die Leiter laeuft bei kurzlebigen Nachrichten NICHT zu Ende, und das
+ *     ist richtig: `passwort_reset` gilt 3600 s, die dritte Sprosse laege
+ *     bei 9300 s. Die Zeile wird nach DREI Versuchen `zu_spaet`, nicht nach
+ *     fuenf `unzustellbar`. Die Probe misst beides getrennt — die erste
+ *     Fassung erwartete fuenf und meldete einen Befund, den es nicht gab.
+ *
+ * KEINE SCHEMAAENDERUNG: zwei weitere Zeilen in `app_state`.
+ *
+ * ------------------------------------------------------------------
+ *
+ * 20.9.1 ist AP4a von P5a — ZWEI SICHERHEITSZEILEN, die an den falschen
+ * Stellen standen (E-P5a-38; Backlog Nr. 203 und 205, Nebenfunde der
+ * Zentralisierungsanalyse vom 16.09.2026).
+ *
+ * ERSTENS: `session.use_strict_mode` FEHLTE AUF DEN ANMELDEWEGEN. Gesetzt war
+ * es in `install.php` und `wiederherstellen.php` — ausgerechnet den beiden
+ * Wegen, die KEINE Anmeldesitzung tragen. Auf den fuenf, die eine tragen
+ * (`auth_guard.php`, `login.php`, `session_lib.php`, `pw_handling.php`,
+ * `rechtstext_seite.php`), fehlte es.
+ *
+ * Ohne die Einstellung uebernimmt PHP eine Sitzungskennung, die der Browser
+ * mitbringt, AUCH WENN ES SIE NIE VERGEBEN HAT. Wer eine Kennung setzen kann,
+ * kennt damit die Sitzung, in der sich gleich jemand anmeldet — das ist
+ * Session-Fixation, und der Schutz dagegen hing an der `php.ini` des
+ * Hosters. Auf dem Pruefstand steht dort `Off`.
+ *
+ * GEMESSEN, NICHT BEHAUPTET: Ohne die Zeile nimmt `login.php` eine frei
+ * erfundene Kennung an und schickt GAR KEIN `Set-Cookie` zurueck; mit ihr
+ * verwirft es sie und vergibt eine neue. Beide Laeufe mit jeweils frischer
+ * Zufallskennung — eine schon benutzte waere dem Server bekannt und wuerde
+ * auch mit der Haertung angenommen, und der zweite Lauf haette das Gegenteil
+ * des ersten gemessen.
+ *
+ * NEU DAZU: `tools/sitzungshaertung/`, in Stufe 1. Die Zeile ist unscheinbar
+ * und steht neben dem Aufruf, den sie schuetzt; ein neuer Weg, der sie
+ * vergisst, sieht genauso aus wie einer, der sie hat. Gemessen mit dem
+ * Tokenizer, nicht mit `grep` — die erste Fassung meldete zwei Befunde, und
+ * beide waren Kommentarzeilen ueber das Werkzeug selbst. Selbstprobe 8/8, im
+ * Lauf 7 echte Aufrufe, 0 ohne Haertung.
+ *
+ * KEIN `sitzung_starten()`-HELFER. Der ist Schritt 15 (Backlog Nr. 202
+ * Paket 3); hier steht nur die Zeile. Ein Helfer waere die groessere
+ * Aenderung an denselben sieben Stellen und gehoert nicht in ein Paket, das
+ * eine Luecke schliesst.
+ *
+ * ZWEITENS: `json_roh_out()` NEBEN `json_out()`. Sieben Stellen gaben JSON
+ * aus, ohne durch `json_out()` zu gehen — `header('Content-Type: ...')` und
+ * `echo` von Hand. Zwei davon (`api/export_data.php`) setzten KEIN
+ * `Cache-Control: no-store`, und DIESE ANTWORT ENTHAELT GPS-SPURPUNKTE.
+ * Die Begruendung, die seit M3-11 bei `json_out()` steht — „der Kopf gehoert
+ * an die Stelle, durch die JEDE Antwort geht" —, galt fuer sie schlicht
+ * nicht.
+ *
+ * Warum sie ueberhaupt vorbeigehen: Sie HABEN den Text schon.
+ * `api/export_data.php` baut ihn stueckweise, `api/backup_data.php` reicht
+ * Chiffretext durch, `jobs.php` braucht eigene `json_encode`-Schalter. Sie
+ * sollen ihn nicht dekodieren muessen, nur um ihn wieder zu kodieren.
+ *
+ * DREI FUNKTIONEN, EINE STELLE: `json_kopf()` setzt den Satz, `json_roh_out()`
+ * ruft sie und gibt fertigen Text aus, `json_out()` ruft `json_roh_out()`.
+ * `json_kopf()` gibt es, weil `pair.php` an zwei Stellen antwortet und DANN
+ * WEITERARBEITET — es schliesst die Antwort ab und reiht erst danach die
+ * Hinweismail ein, weil die Uhr auf das `ok` wartet. Ein `never` schliesst
+ * diese Stelle aus.
+ *
+ * UMGESTELLT WURDEN SIEBEN STELLEN, nicht die drei aus dem Auftrag:
+ * `api/export_data.php` (2x), `api/backup_data.php`,
+ * `api/adminbackup_freigabe.php` — und dazu `auth_salt.php`, `jobs.php`,
+ * `pair.php`, weil sie denselben Mangel hatten. `auth_salt.php` liefert das
+ * Salt JE KONTO und ist unangemeldet erreichbar; `pair.php` nennt die
+ * maskierte Adresse des Kontos. Eine zwischengespeicherte Antwort ist dort
+ * nicht unsauber, sondern falsch.
+ *
+ * `wartung_lib.php` BLEIBT AUSSEN VOR, und das ist keine Nachlaessigkeit: Die
+ * Wartungsseite ist ausdruecklich ohne Datenbank gebaut und darf `db.php`
+ * nicht laden. Sie setzt ihren Satz selbst — einschliesslich `no-store`,
+ * nachgesehen.
+ *
+ * EINE NEBENWIRKUNG, ausgeschrieben: `json_out()` schickt jetzt
+ * `application/json; charset=utf-8` statt `application/json`. RFC 8259
+ * definiert fuer `application/json` keinen charset-Parameter; kein Client
+ * bricht daran, und vier der sieben umgestellten Stellen schickten ihn
+ * ohnehin. Die Uhr uebergeht ihn ganz
+ * (`:responseType => HTTP_RESPONSE_CONTENT_TYPE_JSON`).
+ *
+ * KEINE SCHEMAAENDERUNG.
+ *
+ * ------------------------------------------------------------------
+ *
+ * 20.10.0 ist AP6 von P5a: DER RATENSCHUTZ BEKOMMT EIN GEDAECHTNIS
+ * (E-P5a-04 bis -07, E-P5a-43 bis -46; R37 (8)).
+ *
+ * WAS BIS HIERHER GALT. Eine Sperre dauerte fest 15 Minuten — die erste wie
+ * die hundertste. Wer geduldig ist, bekommt damit 10 Versuche je
+ * Viertelstunde, dauerhaft, ohne dass irgendetwas eskaliert. Und alle
+ * Fehlversuche der Installation zusammen wurden nirgends gezaehlt: Ein
+ * Angriff ueber tausend Namen sah aus wie tausend einzelne Vertipperinnen.
+ *
+ * WAS GILT — VIER STUECKE:
+ *
+ * 1. EINE SPERRLEITER. Je Merkmal eine Stufe 1 bis 4, Dauer 15/20/30/60 min,
+ *    Verfall nach 24 h ohne Fehlversuch. Einstellbar unter Betrieb ->
+ *    Servereinstellungen.
+ * 2. ZWEI SCHWELLEN STATT EINER. 10 Fehlversuche je Konto, 50 je Anschluss
+ *    (neuer Topf `login_ip`). Hinter einem Klinik-NAT teilen sich viele eine
+ *    Adresse; bei 10 sperrte die zehnte Vertipperin die uebrigen neunzehn aus.
+ * 3. EINE VERLANGSAMUNG STATT EINER GLOBALEN SPERRE. Ab 200/400/800/1600
+ *    Fehlversuchen je 15 min wartet jede FEHLGESCHLAGENE Anmeldung 1/2/4/8 s.
+ *    Wer das richtige Passwort hat, kommt durch. Eine globale Sperre waere
+ *    ein Schalter, den jeder von aussen umlegt.
+ * 4. EINE SAMMELMAIL bei der hoechsten Stufe, hoechstens eine je Stunde,
+ *    ueber die Warteschlange aus AP5.
+ *
+ * DAZU `sicherheit_ereignisse` — was WAR, nicht was IST. `rate_limits` haelt
+ * den Zustand; laeuft die Sperre ab und raeumt der Job die Zeile weg, ist
+ * nichts mehr da. Dieselbe Luecke, die `job_laeufe` in 20.8.0 fuer die
+ * Hintergrundjobs geschlossen hat.
+ *
+ * ---------------------------------------------------------------------------
+ * VIER ABWEICHUNGEN VOM KONZEPT, ALLE BENANNT
+ * ---------------------------------------------------------------------------
+ *
+ * (a) DIE ERSTE SPROSSE IST 15 MINUTEN, NICHT 10 (E-P5a-43). Das Konzept sagt
+ *     10/20/30/60 — und `login` sperrt heute fest 900 s, also 15. Mit 10 waere
+ *     der ERSTE Verstoss nach dem Update MILDER als davor. Ein
+ *     Sicherheitspaket, das eine Schranke senkt, ohne es zu sagen, ist die
+ *     Art Fehler, die niemandem auffaellt. Die Leiter ist einstellbar.
+ *
+ * (b) `reset` BEKOMMT KEINE LEITER, obwohl das Konzept ihn nennt. Er sperrt
+ *     heute 3600 s; jede Sprosse unterhalb der vierten waere SCHWAECHER.
+ *     Dazu: `reset_request.php` antwortet im gesperrten Fall wortgleich wie
+ *     im erlaubten — eine Leiter dort streckt ein Fenster, in dem jemand
+ *     fuenfmal klickt, fuenfmal dieselbe Zusage liest und keine Mail bekommt.
+ *
+ * (c) DER COUNTDOWN STEHT NICHT IN `forms.js` (E-P5a-45). Das Konzept nennt
+ *     „login.php, forms.js"; login.php LAEDT forms.js gar nicht, und jene
+ *     Datei ist Aenderungsverfolgung, Strg-Enter und Abbrechen-Rueckfrage.
+ *     Sie hier nachzutragen schaltete nebenbei eine beforeunload-Warnung auf
+ *     einer Seite frei, auf der jemand ein Passwort tippt. Der Countdown
+ *     steht im vorhandenen genoncten Block.
+ *
+ * (d) DIE SAMMELMAIL GEHT AN `mail_betriebsziele()`, nicht an eine eigene
+ *     Liste „alle Konten mit Rolle BetreiberIn". Seit E-P5a-40 ist das die
+ *     EINE Stelle, an der der Empfaengerkreis der Betriebspost steht (R83);
+ *     eine zweite Liste waere der Rueckfall in den Zustand, den R83
+ *     abgeschafft hat.
+ *
+ * ---------------------------------------------------------------------------
+ * DREI FEHLER, DIE OHNE MELDUNG DURCHGEGANGEN WAEREN
+ * ---------------------------------------------------------------------------
+ *
+ * 1. DER GESPERRTE HAETTE SICH DURCH KLOPFEN BEFREIT. `rate_misserfolg()`
+ *    setzte `gesperrt_bis = NULL`, sobald das Zaehlfenster abgelaufen war.
+ *    Folgenlos, solange bei ALLEN zehn Toepfen `sperre == fenster` galt — und
+ *    das galt. Mit einer Leiter bis 60 min bei 15 min Fenster haette ein
+ *    einziger Fehlversuch nach Fensterablauf die LAUFENDE Sperre geloescht.
+ *    Die Bedingung heisst jetzt „und keine laufende Sperre".
+ *
+ * 2. DIE STUFE WAERE NIE ZURUECKGEFALLEN. Der Verfall (`stufe_bis`) wurde nur
+ *    dort aufgefrischt, wo NICHT gesperrt wurde — also bei den ersten neun
+ *    Fehlversuchen. Jeder schob die Frist um 24 h vor, sodass sie beim
+ *    zehnten nie abgelaufen war: Ein Konto, das vor einem halben Jahr einmal
+ *    die vierte Sprosse erreicht hatte, bekam beim naechsten Tippfehler
+ *    sofort wieder 60 Minuten. Gefunden von `tools/ratenprobe/`.
+ *
+ * 3. EIN VARIABLENNAME. Die neue Schleife auf der Statusseite hiess `$sp` —
+ *    so wie der Speicherstand, den `status_erhebung()` dreihundert Zeilen
+ *    weiter unten braucht. Ergebnis: HTTP 500 auf Betrieb -> Status, aber nur,
+ *    wenn gerade etwas gesperrt war.
+ *
+ * ZWEI MIGRATIONEN: `2026_09_16_ratenschutz_stufen` (zwei Spalten auf
+ * `rate_limits`, dazu ein Index auf `gesperrt_bis`) und
+ * `2026_09_16_sicherheit_ereignisse`. NACH DEM DEPLOY MUSS EINE
+ * ADMINISTRATORIN BETRIEB -> UPDATES AUFRUFEN.
+ *
+ * DAS FENSTER DAZWISCHEN IST MITGEDACHT: Die Grundzaehlung nennt die neuen
+ * Spalten mit keinem Wort und laeuft unveraendert weiter; die Leiter steht in
+ * einem zweiten, eigen gefangenen Statement und tut in diesem Fenster nichts.
+ * Gesperrt wird dann mit der festen Dauer wie vor 20.10.0 — der Ratenschutz
+ * faellt NICHT aus, er ist nur wieder so streng wie vorher.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.11.0 — DIE LETZTE ASYMMETRIE ENDET: `ingest.php` BEKOMMT EINE BREMSE
+ * ---------------------------------------------------------------------------
+ *
+ * (P5a/AP7; E-P5a-01, -02, -47, -48, -49; R19, Backlog Nr. 17.)
+ *
+ * Bis hierher war `ingest.php` der EINZIGE Endpunkt der Anwendung ohne
+ * Ratenschutz — und zugleich der, an dem die Clients aus den Stores haengen.
+ * E-R45-6 nennt genau diese Kombination als die Flutungsgefahr aus P5. Zwei
+ * Toepfe schliessen sie: `ingest` je Geraetekennung, `ingest_ip` je Adresse
+ * fuer Kennungen, die es nicht gibt. 30 Fehlversuche je 15 Minuten, danach
+ * die Sperrleiter aus 20.10.0, erste Sprosse 15 Minuten, Antwort 429 mit
+ * `Retry-After`.
+ *
+ * GEZAEHLT WERDEN NUR FEHLVERSUCHE. Ein gelungener Upload geht nie auf das
+ * Kontingent; eine Uhr, die einen ganzen Dienst nachliefert, sendet beliebig
+ * viele Stuecke. Nicht gezaehlt werden ausserdem 405, 413, 403
+ * `device_disabled`, 400 und 500 — und der Wartungsmodus schon gar nicht, der
+ * antwortet in `db.php`, bevor diese Datei laeuft.
+ *
+ * SICHTBAR AN ZWEI STELLEN, denn eine Uhr, die nichts mehr hochlaedt, ist
+ * sonst ein Raetsel: `devices.abgewiesen_seit` und `abgewiesen_anzahl`
+ * (Migration) stehen als Kleinzeile und orange Plakette auf der Kontoseite am
+ * Geraet und als Zeile auf Betrieb -> Status. Beide werden beim naechsten
+ * gelungenen Upload geleert — ein Vermerk, der stehenbleibt, nachdem neu
+ * gekoppelt wurde, ist eine Falschmeldung.
+ *
+ * ---------------------------------------------------------------------------
+ * DREI ABWEICHUNGEN VOM KONZEPT, ALLE BENANNT
+ * ---------------------------------------------------------------------------
+ *
+ * (a) DER ADRESSTOPF HAT 30 UND NICHT 50 (E-P5a-47). Verschiedene Schwellen
+ *     sind ein EXISTENZORAKEL: Wer dieselbe geratene Kennung haemmert,
+ *     bekaeme sie bei existierender Kennung ab dem 31. Versuch abgewiesen,
+ *     bei nicht existierender erst ab dem 51. Genau diese Auskunft hat M4-07
+ *     in `ingest.php` mit einem Blindvergleich beseitigt; sie als
+ *     Zaehlunterschied wieder einzubauen waere ein Rueckschritt durch die
+ *     Hintertuer. Die Absenkung kostet keinen legitimen Verkehr: In den
+ *     Adresstopf zaehlen ausschliesslich UNBEKANNTE Kennungen, und ein
+ *     gekoppeltes Geraet sendet nie eine unbekannte. WAS BLEIBT, STEHT DA:
+ *     Eine zweistufige Probe unterscheidet weiter. Sie zu schliessen hiesse,
+ *     auch bekannte Kennungen in den Adresstopf zu zaehlen — dann sperrte ein
+ *     einziges Geraet mit veraltetem Schluessel seine ganze Adresse,
+ *     einschliesslich des neu gekoppelten, das die Abhilfe ist.
+ *
+ * (b) DIE INGEST-TOEPFE BEKOMMEN EINE LEITER, und die Trennlinie im
+ *     Kopfkommentar von `ratelimit_lib.php` musste dafuer umgeschrieben
+ *     werden (E-P5a-48). Sie lautete: Kopplungstoepfe bekommen keine, weil
+ *     „dahinter ein Geraet steht, das nicht lesen kann, was auf der Seite
+ *     steht". Auf `ingest.php` trifft das woertlich genauso zu — die Regel
+ *     haette also gegen die Leiter entschieden, die AP7 baut. Die tragfaehige
+ *     Trennlinie ist: Unterbricht die laengere Sperre einen Vorgang, der
+ *     GERADE LAEUFT? Bei der Kopplung ja (jemand steht am Geraet mit einem
+ *     Code, der in zehn Minuten verfaellt), bei `ingest.php` nein (die Daten
+ *     liegen in der Warteschlange des Geraets).
+ *
+ * (c) ZWEI ABNAHMEZEILEN WAREN SO NICHT ERFUELLBAR (E-P5a-49). „Sperre
+ *     10 min" — die erste Sprosse ist seit E-P5a-43 fuenfzehn. Und
+ *     „Messstand-Zahlen fuer `ingest.php`" — der Messstand erhebt fuer
+ *     `ingest.php` keine Zahl und hat nie eine erhoben. Gemessen wurde
+ *     stattdessen der Sendeplan des Referenzdatensatzes: 612 echte Anfragen,
+ *     64 478 Punkte, je zwei Laeufe mit und ohne Bremse.
+ *
+ * ---------------------------------------------------------------------------
+ * WAS DIE MESSUNG SAGT, UND WAS SIE NICHT SAGT
+ * ---------------------------------------------------------------------------
+ *
+ * Die Bremse kostet EINE zusaetzliche Abfrage je Upload — die Pruefung vor
+ * der Geraeteabfrage, ueber beide Toepfe in EINEM Statement. Gemessen (612
+ * Anfragen je Lauf): Median 14,43 ms ohne, 15,14 ms mit; Mittel 19,67 ms
+ * ohne, 20,33 ms mit. Das sind +4,9 % beziehungsweise +3,4 %. Die Streuung
+ * ZWISCHEN ZWEI GLEICHEN LAEUFEN liegt bei 3 bis 4 % — der Aufschlag liegt
+ * also in derselben Groessenordnung wie das Rauschen und ist damit die obere
+ * Schranke, nicht der Messwert.
+ *
+ * ---------------------------------------------------------------------------
+ * EIN FEHLER, DER NEBENBEI AUFFIEL
+ * ---------------------------------------------------------------------------
+ *
+ * `$pdo->rollBack()` im Fehlerzweig von `ingest.php` lief unbedingt — und
+ * `commit()` steht MITTEN im try-Block, danach kommen noch Hoehenberechnung
+ * und Antwortaufbau. Warf eine von beiden, traf der Rollback auf keine offene
+ * Transaktion und warf seinerseits. Diese zweite Ausnahme ersetzte die erste:
+ * Die `kennung` im Fehlerprotokoll benannte den Rollback statt der Ursache —
+ * also genau das Schweigen, das M3-10 abgestellt hat.
+ *
+ * EINE MIGRATION: `2026_09_16_geraet_abgewiesen` (zwei Spalten auf
+ * `devices`). NACH DEM DEPLOY MUSS EINE ADMINISTRATORIN
+ * BETRIEB -> UPDATES AUFRUFEN. Das Fenster dazwischen ist mitgedacht: Die
+ * Abfrage in `ingest.php` und die auf der Kontoseite haben einen Rueckfall
+ * ohne die beiden Spalten, die Statusseite faengt. Der Schutz selbst haengt
+ * nicht daran — er zaehlt in `rate_limits`, und die Tabelle steht seit
+ * 20.10.0.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.12.0 — DER RATENSCHUTZ BEKOMMT EIN GESICHT: STATUS -> SICHERHEIT
+ * ---------------------------------------------------------------------------
+ *
+ * (P5a/AP8; E-P5a-08, -09; M-P5a-01 ohne Mockup-Pause, Konzept 2.5.)
+ *
+ * AP6 und AP7 haben gebaut, was still arbeitet: Sperrleiter, Verlangsamung,
+ * Mengenbremse, ein Ereignisprotokoll. Sichtbar war davon eine Zeile auf der
+ * Statusseite je Sache — sie sagt, DASS etwas ist. Wer wissen wollte, WER
+ * gesperrt ist, seit wann, auf welcher Sprosse, und wer es aufheben wollte,
+ * fand nichts. `betrieb_sicherheit.php` ist diese Seite.
+ *
+ * SIE HAENGT AN STATUS UND IST KEIN ACHTZEHNTER MENUEPUNKT (E-P5a-08). Fuer
+ * eine BetreiberIn stehen siebzehn Eintraege in der Leiste; einer mehr fuer
+ * eine Seite, die man an guten Tagen nie braucht, waere an der falschen
+ * Stelle teuer. `ui_geruest_start(['menue' => 'betrieb_status'])` haelt den
+ * Eintrag „Status" aktiv — dasselbe Muster wie `admin_user.php`.
+ *
+ * SIE AENDERT GENAU EINES: Eine Sperre aufheben. Das ist der Unterschied zur
+ * Elternseite, die rein liest, und er ist gewollt: Eine Kollegin, die sich
+ * ausgesperrt hat, ruft an, und die Betreiberin soll ihr helfen koennen, ohne
+ * in die Datenbank zu greifen.
+ *
+ * ---------------------------------------------------------------------------
+ * VIER ABWEICHUNGEN, ALLE BENANNT
+ * ---------------------------------------------------------------------------
+ *
+ * (a) FUENF KARTEN STATT SECHS. E-P5a-08 nennt „Loeschungen auf
+ *     Sicherungszielen". Dafuer gibt es heute weder Tabelle noch Schreibweg
+ *     noch `app_state`-Schluessel — die Loeschregel je Ziel entsteht erst in
+ *     AP10 (E-P5a-03). Eine Karte, die sagt „hier steht noch nichts, weil es
+ *     die Sache noch nicht gibt", ist kein Befund, sondern Laerm. Sie kommt
+ *     mit AP10.
+ *
+ * (b) KEINE TABELLE, OBWOHL DIE MOCKUP-SKIZZE FUER DIE ERSTE KARTE EINE
+ *     NENNT. `docs/Design.md` 9.0 fuehrt „eine Liste von Eintraegen"
+ *     ausdruecklich auf `ui_zeile()` in einer Karte und die `<table>` unter
+ *     „nicht"; die Tabelle ist dort fuer „Zahlen nebeneinander vergleichen"
+ *     gedacht und im Bestand ueberhaupt kein Baustein, sondern rohes Markup
+ *     auf sechs Seiten. Eine Liste mit einer Handlung je Eintrag ist der
+ *     Fall, fuer den `ui_zeilenaktionen()` gebaut ist.
+ *
+ * (c) DIE KARTE HEISST „VERLANGSAMUNG" UND ZEIGT ANSTIEGE, KEINE PHASEN.
+ *     Vermerkt wird, WENN DIE STUFE STEIGT; ein Ende hat kein eigenes
+ *     Ereignis. Eine Karte, die „Phasen" verspricht und Punkte zeigt, gaebe
+ *     eine falsche Auskunft — also steht „seit" da und nicht „von bis", und
+ *     der Vorbehalt steht auf der Karte.
+ *
+ * (d) DER DATENSCHUTZTEXT WIRD VORGESCHLAGEN, NICHT GESCHRIEBEN. Die
+ *     Anwendung liefert keinen Rechtstext mit (R32) — der Text ist eine Zeile
+ *     in `rechtstexte` und gehoert der Betreiberin. AP8 legt deshalb einen
+ *     zweiten Textbaustein unter Verwaltung -> Installation, neben den zur
+ *     Adresssuche aus S9/AP2, und zwar OHNE Bedingung: Den Ratenschutz gibt
+ *     es in jeder Installation, und er laesst sich nicht abschalten.
+ *
+ * ---------------------------------------------------------------------------
+ * DREI FEHLER, DIE OHNE MELDUNG DURCHGEGANGEN WAEREN
+ * ---------------------------------------------------------------------------
+ *
+ * 1. DAS PROTOKOLL HING AM MAILSCHALTER. `sicherheit_melden_pruefen()` kehrte
+ *    als ERSTE Zeile zurueck, wenn `rate_mail_an()` false ist — und genau
+ *    dort drin stand das Vermerken der Verlangsamungsstufe. Wer die
+ *    Sammelmail abschaltete, weil er sie nicht braucht, schaltete
+ *    stillschweigend auch das Protokoll ab; die Karte waere auf einer solchen
+ *    Installation dauerhaft leer geblieben, ohne dass irgendwo stuende,
+ *    warum. Protokollieren und Melden stehen jetzt in zwei Funktionen.
+ *
+ * 2. DER GERAETEVERMERK VERFIEL NIE. `devices.abgewiesen_seit` und
+ *    `abgewiesen_anzahl` (AP7) werden beim naechsten gelungenen Upload
+ *    geleert — und den gibt es nicht mehr, wenn das Geraet ausgemustert ist.
+ *    Ein verlorenes Geraet truege seine orange Plakette „abgewiesen" fuer
+ *    immer, und die Statuszeile stuende dauerhaft orange auf einer
+ *    Installation, an der nichts mehr zu tun ist. Der Aufraeumjob raeumt den
+ *    Vermerk jetzt nach 30 Tagen (E-P5a-09 nennt die „Bremse-Treffer").
+ *
+ * 3. `ui_knopf()` KENNT KEIN `form`. Der Schluessel, mit dem ein Knopf ein
+ *    Formular ausserhalb seiner selbst absendet, gibt es nur in
+ *    `ui_zeilenaktionen()` und in der Kopfaktion der Karte. Ein
+ *    `ui_knopf(['form' => ...])` haette einen Knopf ergeben, der nichts tut —
+ *    ohne Fehlermeldung, ohne dass ein Bild es zeigt. Gefunden bei der
+ *    Durchsicht des Vorrats, nicht im Betrieb.
+ *
+ * DAZU EINE FALLE DES VORRATS, die jetzt in `docs/Design.md` steht: Eine
+ * EINGEKLAPPTE Karte (`zu`/`vorschau`) zeigt weder `plakette` noch `aktion` —
+ * `ui_karte_start()` kehrt im `<details>`-Zweig zurueck, bevor beides
+ * ausgegeben wird. Wer eine Plakette an eine klappbare Karte haengt, verliert
+ * sie still.
+ *
+ * DREI ABLEITUNGEN WURDEN EINE. „Ist dieses Merkmal ein Konto oder eine
+ * Adresse?" stand dreimal im Bestand nachgebaut. `rate_sperren_aktiv()`
+ * liefert `art` jetzt mit; die Statusseite rechnet es nicht mehr selbst, und
+ * die Sicherheitsseite haette die vierte Kopie gebraucht.
+ *
+ * KEINE MIGRATION. Alle Tabellen stehen seit AP6 und AP7.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.13.0 — DIE VERBINDUNGSGRENZE: „AUSGELASTET" IST NICHT „KAPUTT"
+ * ---------------------------------------------------------------------------
+ *
+ * AP9 von P5a (E-P5a-18). MySQL/MariaDB weist eine Verbindung ab, wenn eine
+ * von drei Grenzen erreicht ist: `max_connections` des Servers (1040), die
+ * Systemvariable `max_user_connections` (1203) oder die GRANT-Grenze dieses
+ * einen Datenbankkontos (1226). Auf einem geteilten Webspace ist die dritte
+ * die alltaegliche — der Hoster gibt jedem Kunden seine Zahl, und sie liegt
+ * regelmaessig bei 10 bis 30.
+ *
+ * Bis 20.12.0 kam dann eine **500** heraus, mit dem ungefilterten Text der
+ * PDO-Ausnahme. Darin stehen Hostname und Benutzername der Datenbank. Zwei
+ * Fehler in einem: Die Anfrage war nicht kaputt, sie war verfrueht — und was
+ * auf dem Bildschirm stand, ging niemanden etwas an.
+ *
+ * JETZT: 503 mit `Retry-After: 5`. Seiten bekommen eine Seite im Aufbau der
+ * Wartungsseite („Der Server ist gerade ausgelastet — bitte in einer Minute
+ * noch einmal"), JSON-Endpunkte `{"error":"ausgelastet"}`. Fuer die Geraete
+ * ist das dieselbe Zusage wie der Wartungsmodus; KEIN CLIENT WIRD DAFUER
+ * GEAENDERT.
+ *
+ * DIE DRITTE NUMMER STAND NICHT IM KONZEPT (E-P5a-51). Gemessen am
+ * 16.09.2026 gegen MariaDB 10.11: Eine GRANT-Grenze am Konto meldet 1226,
+ * nicht 1203. Ohne diese Zeile haette das Paket genau den Fall nicht
+ * abgedeckt, fuer den es gebaut ist — und zwar still.
+ *
+ * DER ZAEHLER STEHT IN EINER DATEI (E-P5a-50), nicht in `app_state` wie
+ * geplant. In dem Augenblick, in dem gezaehlt werden muesste, gibt es keine
+ * Verbindung zur Datenbank. Derselbe Satz wie bei `wartung.lock`.
+ * `server/ueberlast.json` liegt nur auf dem Server; die Statusseite zeigt die
+ * Zahlen in der Karte Server, Zeile „Verbindungen", und sagt ausdruecklich,
+ * wenn die Datei nicht schreibbar ist — „0 Vorfaelle" und „nicht gezaehlt"
+ * saehen sonst gleich aus.
+ *
+ * ZWEI FEHLER, DIE OHNE MELDUNG DURCHGEGANGEN WAEREN
+ *
+ * 1. ZWOELF VON ZWANZIG GLEICHZEITIGEN UPLOADS BEKAMEN 500 (E-P5a-52).
+ *    Deadlock 1213 auf der `days`-Zeile, die jeder Upload eines Diensttags
+ *    fortschreibt. Derselbe Fehler wie die Verbindungsgrenze, eine Ebene
+ *    hoeher — und nie gemessen, weil kein Pruefmittel bisher gleichzeitig
+ *    hochgeladen hat. 1213 und 1205 antworten jetzt ebenfalls 503; die
+ *    Abhilfe (Transaktion wiederholen) ist Backlog Nr. 210.
+ *
+ * 2. DER EINLADUNGSLINK WAR IN EINER SACKGASSE (E-P5a-54). AP5 las den
+ *    Zustand `wartet` als „geht gleich hinaus" und verbarg den Setz-Link.
+ *    `wartet` heisst aber, dass der ERSTE VERSUCH GESCHEITERT ist. Auf einer
+ *    Installation mit eingetragenem, aber unerreichbarem SMTP-Server war der
+ *    Link nirgends mehr zu bekommen, und das Konto blieb unbenutzbar.
+ *
+ * DAZU: `JSON_SKRIPTE_AUSSERHALB_API` waechst von zwei auf vier (E-P5a-55).
+ * Der Wartungsmodus kam mit zweien aus, weil `auth_salt.php` und `jobs.php`
+ * in seiner Ausnahmeliste stehen. DIE UEBERLAST KENNT KEINE AUSNAHMEN.
+ *
+ * KEINE MIGRATION.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.14.0 — AUFBEWAHRUNG AUF DEM SICHERUNGSZIEL: ERST SEHEN, DANN LOESCHEN
+ * ---------------------------------------------------------------------------
+ *
+ * AP10 von P5a (E-P5a-03, Backlog Nr. 49 und Nr. 195). Der Versand ERGAENZT
+ * nur; auf der Gegenstelle hat diese Anwendung nie geloescht. Das ist Absicht
+ * und keine Luecke — der Zweck eines auswaertigen Ziels ist, den Ausfall
+ * dieses Servers zu ueberleben, SAMT eines Fehlers, der HIER zu viel loescht.
+ *
+ * Bei zwei Sicherungen je Konto und Monat laeuft ein Ziel trotzdem voll, und
+ * niemand merkt es hier. Zwei Stufen dagegen:
+ *
+ *   ANZEIGE ist die Grundlage und loescht nichts. Im Menue einer Zielzeile
+ *   steht „Nachsehen, was dort liegt": Anzahl, Groesse, aeltester und
+ *   juengster Stand — und wie viele FREMDE Dateien dort liegen. Auf
+ *   Knopfdruck, nicht bei jedem Seitenaufruf.
+ *
+ *   LOESCHREGEL ist die Option, je Ziel, ausdruecklich einzuschalten. Mit
+ *   drei Sicherungen: HERKUNFT (Namensmuster UND Versandprotokoll), MENGE
+ *   (nie unter N bzw. M, nur eigene Dateien gezaehlt) und LAUF (nie nach
+ *   einem gescheiterten Versand).
+ *
+ * DER KREISLAUF, DER BEIM BAUEN DER PROBE HERAUSKAM (E-P5a-57). Der zweite
+ * Lauf raeumte drei alte Sicherungen weg, der DRITTE schickte dieselben drei
+ * wieder hinueber — sie liegen hier ja noch —, und der vierte raeumte sie
+ * erneut weg. Bandbreite bei jedem Job, ein volles Protokoll, und beide
+ * Seiten taten genau das, wofuer sie gebaut sind. Gemessen: dritter Lauf
+ * 3 geloescht statt 0. Seither geht nicht wieder hinueber, was die Regel
+ * dort entfernt hat.
+ *
+ * NR. 195: Die Geraeteart kam auf dem Rueckweg der Sicherung ungeprueft
+ * durch — geprueft wurde allein die Laenge. Jetzt dieselbe Verengung wie
+ * beim Koppeln, und sie steht im Pruefprotokoll statt still zu geschehen.
+ *
+ * PP-5: Die Platzwarnung nannte das Zweifache des groessten Komplett-Backups
+ * als Sollwert und pruefte gegen das Einfache. Jetzt zwei Schwellen: rot
+ * unter dem Einfachen, orange unter dem Zweifachen.
+ *
+ * MIGRATION `2026_09_16_sicherungsziel_aufbewahrung`: zwei Spalten an
+ * `backup_targets` und die Tabelle `sicherungsziel_dateien` (Versand- UND
+ * Loeschprotokoll). NACH DEM DEPLOY MUSS UPDATE.PHP LAUFEN — sonst bleibt
+ * die Regel aus, und sie sagt es.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.15.0 — DER NACHLOESE-JOB: DIE MODELLTABELLE HOLT DIE GERAETE EIN
+ * ---------------------------------------------------------------------------
+ *
+ * AP11 von P5a (E-P5a-21, Backlog Nr. 80). `pair.php` loest die Teilenummer
+ * einer Garmin-Uhr IM MOMENT DER KOPPLUNG auf, und nur dann. Trifft sie dabei
+ * auf eine leere oder aeltere Tabelle, bleibt das Modell leer — und
+ * `geraet_art` steht auf der UNGEPRUEFTEN SELBSTAUSKUNFT: Die Uhr-App sendet
+ * dort fest „uhr", weil eine Connect-IQ-App Uhr und Radcomputer nicht
+ * unterscheiden kann.
+ *
+ * Nachtragen ging seit Web 12.9.1 nur ueber die KOMMANDOZEILE. Auf einem
+ * Webspace ohne SSH gibt es diesen Weg nicht; dort holten die betroffenen
+ * Geraete ihre Angabe erst bei der naechsten Kopplung nach, also womoeglich
+ * nie. Die Zahl, die Nr. 80 auswerten will, hing damit daran, ob jemand SSH
+ * hat.
+ *
+ * JETZT: der Job `nachaufloesen`. Er laeuft nur nach einer neuen Tabelle,
+ * erkannt am HASH und nicht an einem Datum — ein Deploy fasst die
+ * Aenderungszeit jeder Datei an, der Inhalt bleibt derselbe. In Bloecken von
+ * 200, eine Transaktion je Block, Fortsetzungsmarke im Jobzustand; der Hash
+ * wird ERST AM ENDE geschrieben, sonst gaelte ein halb durchgegangener
+ * Bestand als erledigt.
+ *
+ * DREI REGELN, UNVERAENDERT AUS DEM SKRIPT: nur aendern, was die Tabelle
+ * wirklich kennt; die Rohangabe nie anfassen; Handy-Zeilen bleiben unberuehrt.
+ *
+ * Die Logik steckt in `geraetemodelle_lib.php` und wird von Job UND Skript
+ * benutzt; das Skript behaelt die Vorschau. Die Modelltabelle ist dabei ein
+ * PARAMETER geworden — die Naht fuer die Probe, die zwei Tabellen in einem
+ * Lauf braucht.
+ *
+ * Statusseite, Karte Server, Zeile „Geraetemodelle": orange „steht aus", wenn
+ * die Tabelle sich geaendert hat und der Job noch nicht gelaufen ist.
+ *
+ * NEBENBEI: Vier von acht Jobs fehlten im Register der Technik-Dokumentation
+ * (`mail`, `adminbackup`, `versand`, `komplett`) — aufgefallen beim Eintragen
+ * des neunten. Nachgetragen; die Ursache bleibt Nr. 208.
+ *
+ * KEINE MIGRATION.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.15.1 — DIE ZUSTANDSDATEI DER KETTE LAG IM WEBROOT
+ * ---------------------------------------------------------------------------
+ *
+ * Backlog Nr. 213, gemeldet am 16.09.2026 aus einer Durchsicht. Die
+ * Auslieferungskette benutzt `SamKirkland/FTP-Deploy-Action`, und die legt
+ * ihre Zustandsdatei `.ftp-deploy-sync-state.json` in das ZIELVERZEICHNIS —
+ * also in den Webroot, neben `.htaccess`. Darin steht je ausgelieferter
+ * Datei Pfad, Groesse und Hash, dazu der Zeitpunkt der letzten Auslieferung.
+ *
+ * WAS NICHT DARIN STEHT, und das ist der einzige Trost: `config.php`,
+ * `install.lock`, `wartung.lock`, `ueberlast.json`, `sicherungen/` und `apk/`
+ * stehen in der Ausnahmeliste der Kette, werden also nie ausgeliefert und
+ * tauchen folglich nicht auf. Es ist kein Schluesselleck. Es ist die
+ * vollstaendige Struktur und — ueber die Hashes — der Versionsstand jeder
+ * einzelnen Datei, also die Vorlage fuer einen gezielten Abgleich gegen
+ * bekannte Schwachstellen.
+ *
+ * ZWEI SCHRANKEN, WIE BEI DEN NACHWEIS-DATEIEN. Erstens legt `state-name` die
+ * Datei eine Ebene UEBER den Webroot; zweitens sperrt `server/.htaccess`
+ * Punktdateien pauschal. Die zweite ist nicht Zierde: Erlaubt der Kaefig des
+ * FTP-Zugangs kein `../`, landet die Datei wieder hier — und die Sperre
+ * faengt sie. Sie faengt ausserdem jede kuenftige Punktdatei, an die niemand
+ * denkt.
+ *
+ * DIE AUSNAHME `.well-known/` IST DER GEFAEHRLICHSTE TEIL DER AENDERUNG. Eine
+ * pauschale Punktdatei-Sperre erschlaegt die ACME-Herausforderung und damit
+ * die Zertifikatserneuerung — lautlos, bis das Zertifikat in bis zu 90 Tagen
+ * ablaeuft. Deshalb prueft Stufe 2 der Kette BEIDE Richtungen: 403 fuer vier
+ * Punktpfade, und **404 und nicht 403** fuer `.well-known/acme-challenge/`.
+ *
+ * WARUM DIE PRUEFUNG UEBERHAUPT ETWAS BEWEIST: `RewriteRule [F]` antwortet
+ * 403, OB DIE DATEI DA IST ODER NICHT — mod_rewrite laeuft vor der
+ * Dateisuche. Ein 404 wuerde dagegen auch von einer leeren Adresse kommen.
+ * Genau daran ist die erste Abfrage zu diesem Befund gescheitert: Sie lief
+ * gegen ein noch leeres Staging, gab 404, und das sah aus wie Entwarnung.
+ *
+ * KEINE MIGRATION. Kein Code der Anwendung ist angefasst — `.htaccess`,
+ * die Kette und `.gitignore`.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.15.2 — `install.php` GEHOERT NICHT MEHR ZUR AUSLIEFERUNG
+ * ---------------------------------------------------------------------------
+ *
+ * Backlog Nr. 214, auf Anweisung der Betreiberin vom 16.09.2026. Das Runbook
+ * sagt zur Neuinstallation seit jeher "Nach Erfolg sperrt install.lock;
+ * install.php danach loeschen" — und die Kette machte genau das bei jedem
+ * Lauf wieder rueckgaengig. Jetzt steht `install.php` in der Ausnahmeliste
+ * beider FTPS-Schritte, neben `config.php` und `install.lock`.
+ *
+ * WARUM DAS NICHT DER SCHUTZ IST, DER OHNEHIN SCHON GREIFT. `install.php:136`
+ * verweigert sich selbst, solange `config.php` ODER `install.lock` existiert
+ * ("Die Anwendung ist bereits eingerichtet"). Die Datei war also nie
+ * gefaehrlich, nur ueberfluessig — und eine Datei, die das Runbook loeschen
+ * heisst, gehoert nicht in eine Auslieferung, die sie zurueckbringt.
+ *
+ * DER PREIS, BENANNT: Eine LEERE Anlage laesst sich nicht mehr allein ueber
+ * die Kette einrichten. `server/install.php` muss einmal von Hand hinauf,
+ * dann wird eingerichtet, dann wird sie wieder geloescht. Ein Fehler IM
+ * Einrichter erreicht ausserdem keinen Server mehr ueber die Kette — auch er
+ * braucht dann den Handgriff. Beides ist in `docs/Technik.md`
+ * (Neuinstallation) und im Backlog festgehalten, und Stufe 2 der Kette sagt
+ * es von selbst: Landet der Aufruf auf `install.php` und antwortet die mit
+ * 404, nennt die Fehlermeldung Nr. 214 und den Handgriff statt den
+ * FTP-Zielpfad zu verdaechtigen.
+ *
+ * WARUM EINE NUMMER FUER EINE AENDERUNG OHNE SERVERDATEI. Angefasst sind nur
+ * `.github/` und Dokumentation, und `CLAUDE.md` 2 stuft dafuer sonst nicht
+ * hoch. Hier aendert sich aber, WAS auf dem Server landet — eine Datei
+ * weniger —, und das ist eine Aussage ueber die Auslieferung selbst. Der
+ * Changelog braucht dafuer eine Ueberschrift, unter der eine Betreiberin sie
+ * findet.
+ *
+ * KEINE MIGRATION.
  */
-const WEB_VERSION = '20.3.0';
+const WEB_VERSION = '20.15.2';

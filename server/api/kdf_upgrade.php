@@ -103,9 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_out(['error' => 'method'], 405
 /* Formular-Token zuerst — die Begruendung der Reihenfolge steht im
  * Kopfkommentar. auth_guard.php hat das Sitzungstoken bereits angelegt, also
  * ist die linke Seite hier nie leer. */
-if (!hash_equals($_SESSION['csrf'] ?? '', $_SERVER['HTTP_X_CSRF'] ?? '')) {
-    json_out(['error' => 'csrf'], 403);
-}
+csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
 
 /* Demo-Konto: Die Rundenzahl bleibt, wie sie ist (E-P1-19).
  *

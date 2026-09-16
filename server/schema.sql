@@ -55,6 +55,14 @@ CREATE TABLE devices (
   geraet_modell VARCHAR(191) NULL,                   -- aufgeloest; Sammelnamen werden lang,
                                                      -- der laengste hat 153 Zeichen
   geraet_teil   VARCHAR(64) NULL,                    -- Rohangabe des Geraets, siehe update.php
+  -- Abgewiesene Anmeldungen (Web 20.11.0, P5a/AP7, E-P5a-02). Seit dort hat
+  -- auch ingest.php eine Mengenbremse; eine Uhr mit veraltetem Schluessel
+  -- sperrt sich damit selbst aus. Diese zwei Spalten machen das SICHTBAR --
+  -- auf der Kontoseite und auf Betrieb -> Status. Beide werden bei der
+  -- naechsten gelungenen Anmeldung geleert: Ein Vermerk, der stehenbleibt,
+  -- nachdem neu gekoppelt wurde, ist eine Falschmeldung.
+  abgewiesen_seit   DATETIME NULL,
+  abgewiesen_anzahl INT UNSIGNED NOT NULL DEFAULT 0,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -515,13 +523,54 @@ CREATE TABLE deleted_refs (
 -- Aufraeumjob entsorgt abgelaufene Zeilen.
 CREATE TABLE rate_limits (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  topf          VARCHAR(32)  NOT NULL,          -- login | salt | reset | pair
-  merkmal       VARCHAR(190) NOT NULL,          -- 'ip:<adresse>' oder 'id:<kennung>'
+  -- Die Toepfe stehen in RATE_GRENZEN (ratelimit_lib.php) und nirgends sonst.
+  -- Hier stand bis Web 20.10.0 eine Aufzaehlung von vieren; es waren laengst
+  -- mehr, und niemandem ist es aufgefallen. Eine Liste, die sich fuer
+  -- vollstaendig ausgibt und es nicht ist, ist schlechter als keine.
+  -- UND AUCH KEINE ZAHL: In Web 20.10.0 stand hier ersatzweise "es waren
+  -- laengst zehn"; mit den beiden Ingest-Toepfen aus 20.11.0 war auch das
+  -- falsch. Eine Zahl im Kommentar altert genauso still wie eine Liste.
+  topf          VARCHAR(32)  NOT NULL,
+  merkmal       VARCHAR(190) NOT NULL,          -- 'ip:<adresse>', 'id:<kennung>' oder 'alle'
   versuche      INT UNSIGNED NOT NULL DEFAULT 0,
   fenster_start DATETIME     NOT NULL,
   gesperrt_bis  DATETIME     NULL,
+  -- Die Sperrleiter (Web 20.10.0, P5a/AP6, E-P5a-43). 0 = nie gesperrt,
+  -- 1..4 = 15/20/30/60 min (die erste Sprosse ist 15 und nicht 10 -- die
+  -- Begruendung steht in ratelimit_lib.php). `stufe_bis` ist der Verfall der
+  -- STUFE (letzter Fehlversuch + 24 h), nicht der der Sperre — danach gilt
+  -- die Stufe als 0, auch wenn die Zeile noch dasteht.
+  stufe         TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  stufe_bis     DATETIME     NULL,
   UNIQUE KEY uq_topf_merkmal (topf, merkmal),
-  INDEX idx_fenster (fenster_start)
+  INDEX idx_fenster (fenster_start),
+  INDEX idx_gesperrt (gesperrt_bis)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- SPERREREIGNISSE: was war, nicht was IST (Web 20.10.0, P5a/AP6, E-P5a-46).
+--
+-- `rate_limits` haelt den Zustand; laeuft die Sperre ab und raeumt der Job die
+-- Zeile weg, ist nichts mehr da. Dieselbe Luecke, die `job_laeufe` fuer die
+-- Hintergrundjobs geschlossen hat: Man sieht, was jetzt ansteht, nie, dass es
+-- wiederkehrt.
+--
+-- EIN EINTRAG JE SPERRE, nicht je Fehlversuch. Und `merkmal` steht im
+-- KLARTEXT — mit IP- und E-Mail-Adressen. Ohne sie waere die Liste wertlos;
+-- die Folge ist, dass diese Tabelle in jeder Komplettsicherung mitfaehrt
+-- (`komp_tabellen()` hat keine Ausnahmeliste). Der Aufraeumjob loescht nach
+-- 30 Tagen, fest (E-P5a-09).
+CREATE TABLE sicherheit_ereignisse (
+  id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  art       VARCHAR(24)  NOT NULL,              -- sperre | verlangsamung | aufgehoben
+  topf      VARCHAR(32)  NULL,
+  merkmal   VARCHAR(190) NULL,
+  stufe     TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  versuche  INT UNSIGNED NULL,
+  zeitpunkt DATETIME     NOT NULL,
+  bis       DATETIME     NULL,
+  wer       VARCHAR(190) NULL,                  -- wer eine Sperre aufgehoben hat
+  INDEX idx_zeitpunkt (zeitpunkt),
+  INDEX idx_art_zeit (art, zeitpunkt)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- SICHERUNGSZIELE: wohin die Sicherungen geschoben werden (S2/AP7, E-S2-22).
@@ -550,8 +599,33 @@ CREATE TABLE backup_targets (
   letzter_lauf   DATETIME NULL,
   letzter_erfolg DATETIME NULL,
   letzter_fehler TEXT NULL,
+  -- Aufbewahrung DORT (P5a/AP10, E-P5a-03): NULL = Option aus. Nicht 0 --
+  -- das hiesse "nichts behalten". Zwei Zahlen, weil Kontopakete und
+  -- Komplett-Staende verschiedene Dinge sind.
+  behalten_konto    SMALLINT UNSIGNED NULL,
+  behalten_komplett SMALLINT UNSIGNED NULL,
   erstellt_am    DATETIME NOT NULL,
   UNIQUE KEY uq_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Was diese Installation auf welches Ziel geschickt hat -- und was sie dort
+-- wieder entfernt hat (P5a/AP10, E-P5a-03/-56). Zugleich Versandprotokoll
+-- (die zweite der drei Sicherungen der Loeschregel) und Loeschprotokoll.
+-- `geloescht_am IS NULL` heisst "liegt dort", soweit wir wissen.
+CREATE TABLE sicherungsziel_dateien (
+  id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  ziel_id      INT UNSIGNED NOT NULL,
+  ordner       VARCHAR(190) NOT NULL,
+  datei        VARCHAR(190) NOT NULL,
+  bytes        BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  gesendet_am  DATETIME NOT NULL,
+  geloescht_am DATETIME NULL,
+  grund        VARCHAR(190) NULL,
+  UNIQUE KEY uq_ziel_datei (ziel_id, ordner, datei),
+  KEY idx_ziel_geloescht (ziel_id, geloescht_am),
+  KEY idx_geloescht (geloescht_am),
+  CONSTRAINT fk_szd_ziel FOREIGN KEY (ziel_id)
+    REFERENCES backup_targets (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Kleiner Schluessel/Wert-Speicher fuer App-interne Zustaende (z. B. Wartung)
@@ -669,6 +743,65 @@ CREATE TABLE rechtstexte (
   stand_am   DATE NULL                          -- im Editor von Hand gesetzt; NULL = keine Standzeile
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Berichte der Content-Security-Policy (P5a/AP4, Web 20.7.0). Zusammengefasst
+-- statt protokolliert: Der UNIQUE-Schluessel macht aus tausend gleichen
+-- Meldungen eine Zeile mit einem Zaehler. `seite` ist der PFAD, nicht die
+-- volle Adresse -- diese Anwendung fuehrt kein Protokoll darueber, wer wann
+-- welchen Einsatz geoeffnet hat. Der Aufraeumjob entsorgt Zeilen aelter als
+-- 30 Tage (E-P5a-09).
+CREATE TABLE csp_berichte (
+  id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  richtlinie VARCHAR(64)  NOT NULL,          -- verletzte Direktive, z. B. 'script-src'
+  quelle     VARCHAR(190) NOT NULL,          -- blockierte Quelle ('inline', 'eval', URL)
+  seite      VARCHAR(190) NOT NULL,          -- Pfad der Seite, ohne Abfrageteil
+  anzahl     INT UNSIGNED NOT NULL DEFAULT 1,
+  erstellt   DATETIME     NOT NULL,
+  zuletzt    DATETIME     NOT NULL,
+  UNIQUE KEY uq_bericht (richtlinie, quelle, seite),
+  INDEX idx_zuletzt (zuletzt)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Verlauf der Hintergrundjobs (Web 20.8.0, P5a/AP5). `jobs` haelt je Job nur
+-- den LETZTEN Lauf, und `letzter_fehler` wird beim naechsten Erfolg auf NULL
+-- gesetzt — ein Job, der jede zweite Nacht scheitert, ist morgens unsichtbar.
+-- Geschrieben wird nur, was etwas aussagt: ein Fehler oder ein Lauf, der etwas
+-- erledigt hat. Frist 30 Tage (E-P5a-09), keine Einstellung.
+CREATE TABLE job_laeufe (
+  id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  job       VARCHAR(32)  NOT NULL,
+  zeitpunkt DATETIME     NOT NULL,
+  ausloeser VARCHAR(16)  NULL,
+  erledigt  INT UNSIGNED NOT NULL DEFAULT 0,
+  fehler    TEXT         NULL,
+  INDEX idx_job_zeit (job, zeitpunkt),
+  INDEX idx_zeitpunkt (zeitpunkt)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Mail-Warteschlange (Web 20.8.0, P5a/AP5). Jede Nachricht wird erst
+-- gespeichert, dann sofort versucht; scheitert der Versuch, wiederholt ihn der
+-- Job `mail`. Drei Spalten werden geleert, sobald eine Zeile ihren Endzustand
+-- erreicht: `text` IMMER (Einladung und Reset tragen einen gueltigen Token),
+-- `empfaenger` und `betreff` nur bei ZUGESTELLT. Bei UNZUSTELLBAR bleiben sie
+-- — „die Einladung an X kam nie an" ist ohne X wertlos (E-P5a-39).
+CREATE TABLE mail_warteschlange (
+  id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  schluessel        VARCHAR(32)  NOT NULL,
+  art               VARCHAR(16)  NOT NULL,
+  empfaenger        VARCHAR(190) NULL,
+  betreff           VARCHAR(190) NULL,
+  text              MEDIUMTEXT   NULL,
+  zustand           VARCHAR(16)  NOT NULL DEFAULT 'offen',
+  versuche          INT UNSIGNED NOT NULL DEFAULT 0,
+  erstellt          DATETIME     NOT NULL,
+  naechster_versuch DATETIME     NULL,
+  beendet           DATETIME     NULL,
+  gueltig_bis       DATETIME     NULL,
+  fehler            TEXT         NULL,
+  INDEX idx_faellig (zustand, naechster_versuch),
+  INDEX idx_erstellt (erstellt),
+  INDEX idx_empfaenger (empfaenger)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS schema_migrations (
   id         VARCHAR(120) NOT NULL PRIMARY KEY,
   applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -756,4 +889,19 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- Installation nichts zu tun: Sie hat keine Diensttage.
   ('2026_09_07_rettungsmittel_typ', 'skipped'),
   -- rest_segments.created_at steht oben schon im Schema (Web 15.6.0).
-  ('2026_09_07_rest_segments_created_at', 'skipped');
+  ('2026_09_07_rest_segments_created_at', 'skipped'),
+  -- csp_berichte steht oben schon im Schema (Web 20.7.0, P5a/AP4).
+  ('2026_09_15_csp_berichte', 'skipped'),
+  -- job_laeufe steht oben schon im Schema (Web 20.8.0, P5a/AP5).
+  ('2026_09_16_job_laeufe', 'skipped'),
+  -- mail_warteschlange steht oben schon im Schema (Web 20.8.0, P5a/AP5).
+  ('2026_09_16_mail_warteschlange', 'skipped'),
+  -- rate_limits.stufe/stufe_bis stehen oben schon im Schema (Web 20.10.0, P5a/AP6).
+  ('2026_09_16_ratenschutz_stufen', 'skipped'),
+  -- sicherheit_ereignisse steht oben schon im Schema (Web 20.10.0, P5a/AP6).
+  ('2026_09_16_sicherheit_ereignisse', 'skipped'),
+  -- devices.abgewiesen_* stehen oben schon im Schema (Web 20.11.0, P5a/AP7).
+  ('2026_09_16_geraet_abgewiesen', 'skipped'),
+  -- backup_targets.behalten_* und sicherungsziel_dateien stehen oben schon
+  -- im Schema (Web 20.14.0, P5a/AP10).
+  ('2026_09_16_sicherungsziel_aufbewahrung', 'skipped');

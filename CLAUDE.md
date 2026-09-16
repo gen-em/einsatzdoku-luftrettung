@@ -60,7 +60,8 @@ Welches Dokument zu welcher Änderung gehört, steht in Abschnitt 9
 
 ## 3. Deployment — Vorsicht
 
-**Seit dem 16.09.2026 gibt es zwei Wege** (P5a/AP1, R67; die Kette steht in
+**Seit Web 20.4.0 gibt es zwei Wege** (P5a/AP1, R67; Einzelheiten in
+`docs/Technik.md` 6, die Kette selbst in
 `.github/workflows/auslieferung.yml`):
 
 - **Push auf `main`** → per FTPS auf **Staging**
@@ -68,16 +69,15 @@ Welches Dokument zu welcher Änderung gehört, steht in Abschnitt 9
 - **Tag `web-vX.Y.Z`** → nach **Pflichtfreigabe durch die Betreiberin**
   (GitHub-Umgebung `produktion`) und nach dem **Backup-Tor** auf Produktiv.
 
-**Bis dahin stand hier das Gegenteil**, und es stimmte: Ein Push auf `main`
-mit Änderungen unter `server/` lud sofort auf den Produktivserver, ohne
+Davor stehen zwei Prüftore: Stufe 1 (`pruefung.yml`, jeder Push, ohne
+Installation) und Stufe 2 (gegen Staging). **Der Produktionslauf verlangt einen
+grünen Stufe-1-Lauf auf demselben Commit** — fehlt er, bricht er ab, statt
+ungeprüft auszuliefern.
+
+**Bis Web 20.3.0 stand hier das Gegenteil**, und es stimmte: Ein Push auf
+`main` mit Änderungen unter `server/` lud sofort auf den Produktivserver, ohne
 Zwischenstufe und ohne Testumgebung. Wer eine alte Sitzung, ein altes
 Protokoll oder einen alten Kommentar liest, liest das noch.
-
-> **Eine Auslieferung ist derzeit NICHT möglich, und das ist Absicht.** Der
-> Produktionslauf verlangt einen grünen **Stufe-1-Lauf** auf demselben Commit
-> (`pruefung.yml`). Diese Datei kommt erst mit dem Merge der Phase P5a; bis
-> dahin bricht jeder Tag-Lauf an dieser Stelle ab. Das Tor fällt zu, statt
-> ungeprüft auszuliefern.
 
 - **Niemals ungefragt pushen.** Committen ja, wenn beauftragt; pushen nur auf
   ausdrückliche Anweisung. Das gilt weiter — ein Push auf `main` löst zwar
@@ -85,12 +85,23 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
 - **Ein Tag ist die Auslieferung.** Er wird nie nebenbei gesetzt.
 - Nach einem Deploy mit Schemaänderung muss eine Administratorin `update.php`
   aufrufen. Das steht sonst still und die Anwendung läuft ins Leere — beim
-  Vorschlagen einer Migration ausdrücklich mit ansagen.
-- Ohne erhöhte `WEB_VERSION` sieht der Browser alte Dateien.
+  Vorschlagen einer Migration ausdrücklich mit ansagen. Die Kette lässt in
+  diesem Fall den **Wartungsmodus an** und sagt es im Lauf; ab P5a/AP3 tut es
+  der Torwächter auch ohne Kette.
+- Ohne erhöhte `WEB_VERSION` sieht der Browser alte Dateien. Seit P5a
+  verweigert der Produktionslauf außerdem, wenn Tag und `WEB_VERSION`
+  auseinandergehen.
 - `server/config.php`, `install.lock`, `server/wartung.lock`,
+  `server/ueberlast.json` (der Zähler der Verbindungsgrenze, P5a/AP9),
   `server/sicherungen/` und `server/apk/` liegen nur auf dem Server. Sie
   stehen in `.gitignore` **und** in der Ausnahmeliste **beider** FTPS-Schritte
   — beides muss so bleiben.
+- **`server/install.php` steht seit Web 20.15.2 ebenfalls in der
+  Ausnahmeliste** (Nr. 214) — anders als die Zeile darüber aber **nicht** in
+  `.gitignore`: Sie liegt im Repositorium, wird nur nicht ausgeliefert, weil
+  das Runbook „danach löschen" sagt. **Preis:** Eine leere Anlage lässt sich
+  nicht mehr allein über die Kette einrichten — die Datei muss einmal von Hand
+  hinauf.
 - **`integritaet.yml` hängt am Anzeigenamen des Auslieferungslaufs.** Er heißt
   jetzt „Auslieferung" und nicht mehr „Server per FTP hochladen". Wer ihn
   umbenennt, hängt die Wache ab, und zwar still.

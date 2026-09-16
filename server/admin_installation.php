@@ -74,11 +74,26 @@ const INSTALLATION_LOGOS = [
 
 $notice = null; $error = null;
 $logoMeldung = null;
+$nameMeldung = null;
+$adrMeldung  = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
 
-    if (($_POST['action'] ?? '') === 'logo_standard') {
+    if (($_POST['action'] ?? '') === 'instanz_name') {
+        /* DER NAME DIESER INSTALLATION (P5a/AP5, E-P5a-35). Eigenes
+         * „Speichern", wie bei Logo und Adresssuche: Ein Tippfehler im Namen
+         * soll die Rechtstexte nicht mit abweisen und umgekehrt. */
+        [$ok, $meldung] = instanz_namen_setzen((string)($_POST['instanz_name'] ?? ''),
+                                               (string)($_POST['instanz_kurz'] ?? ''));
+        $nameMeldung = [$ok ? 'ok' : 'fehler', $meldung];
+    } elseif (($_POST['action'] ?? '') === 'instanz_adressen') {
+        /* DIE ADRESSEN DIESER INSTALLATION (P5a/AP5, E-P5a-40). Eigenes
+         * „Speichern" wie beim Namen, und aus demselben Grund. */
+        [$ok, $meldung] = instanz_adressen_setzen((string)($_POST['instanz_kontakt'] ?? ''),
+                                                  (string)($_POST['betrieb_mail'] ?? ''));
+        $adrMeldung = [$ok ? 'ok' : 'fehler', $meldung];
+    } elseif (($_POST['action'] ?? '') === 'logo_standard') {
         $wahl = (string)($_POST['logo'] ?? '');
         if (!isset(INSTALLATION_LOGOS[$wahl])) {
             $logoMeldung = ['fehler', 'Unbekannte Logo-Wahl — es wurde nichts geändert.'];
@@ -168,6 +183,82 @@ ui_seite_start(['titel' => 'Installation']);
   <div class="form-raster">
 
     <div class="form-spalte">
+      <?php /* DER NAME STEHT ZUOBERST, und zwar vor dem Logo: Er ist das,
+               was in jedem Browsertab, in jedem Mailbetreff und unter jeder
+               Grussformel steht — das Logo sieht man nur auf Seiten dieser
+               Anwendung. */ ?>
+      <?php ui_karte_start(['titel' => 'Name', 'id' => 'k-name',
+                            'zahl' => 'Wie diese Installation heißt']); ?>
+        <?php if ($nameMeldung !== null): ?>
+          <?= ui_meldung_markup($nameMeldung[0], $nameMeldung[1]) ?>
+        <?php endif; ?>
+
+        <p class="feld-hinweis">Bis Web 20.7.0 stand der Name an
+          <strong>38 Stellen</strong> fest im Programm, in drei verschiedenen
+          Schreibweisen. Hier steht er einmal — und gilt für Browsertab,
+          Kopfleiste, Anmeldeseite, Wartungsseite, Schlüsselblatt
+          <strong>und jede E-Mail</strong>, die diese Installation
+          verschickt.</p>
+
+        <form method="post" class="listen-form">
+          <?= csrf_field() ?>
+          <input type="hidden" name="action" value="instanz_name">
+          <?php ui_feld(['name' => 'instanz_name', 'label' => 'Name',
+                         'label_zusatz' => 'in E-Mails und auf dem Schlüsselblatt',
+                         'wert' => instanz_name(),
+                         'platzhalter' => INSTANZ_NAME_VORGABE]); ?>
+          <?php ui_feld(['name' => 'instanz_kurz', 'label' => 'Kurzname',
+                         'label_zusatz' => 'im Browsertab und in der Kopfleiste',
+                         'wert' => instanz_kurz(),
+                         'platzhalter' => INSTANZ_KURZ_VORGABE]); ?>
+          <p class="feld-hinweis">Leer lassen setzt auf die Vorgabe zurück
+            („<?= e(INSTANZ_NAME_VORGABE) ?>" bzw.
+            „<?= e(INSTANZ_KURZ_VORGABE) ?>“). Höchstens
+            <?= INSTANZ_MAX ?> Zeichen, keine Zeilenumbrüche — der Name steht
+            in Mailbetreffs.</p>
+          <?= ui_knopf(['text' => 'Namen speichern', 'art' => 'primaer']) ?>
+        </form>
+      <?php ui_karte_ende(); ?>
+
+      <?php /* DIE ADRESSEN STEHEN NEBEN DEM NAMEN, weil sie dasselbe Problem
+               hatten: eine persoenliche Adresse, fest im Quelltext, in jeder
+               Mail einer fremden Installation. */ ?>
+      <?php ui_karte_start(['titel' => 'Adressen', 'id' => 'k-adressen',
+                            'zahl' => 'Wohin Fragen und Betriebspost gehen']); ?>
+        <?php if ($adrMeldung !== null): ?>
+          <?= ui_meldung_markup($adrMeldung[0], $adrMeldung[1]) ?>
+        <?php endif; ?>
+
+        <p class="feld-hinweis">Bis Web 20.7.0 stand in <strong>sieben
+          Mailtexten</strong> dieselbe fest eingebaute Adresse. Hier steht sie
+          einmal — und sie darf auch leer bleiben: Dann fällt die Zeile
+          „Bei Fragen wende dich an …“ aus den Mails weg, statt auf ein
+          Postfach zu verweisen, das niemand liest.</p>
+
+        <form method="post" class="listen-form">
+          <?= csrf_field() ?>
+          <input type="hidden" name="action" value="instanz_adressen">
+          <?php ui_feld(['name' => 'instanz_kontakt', 'label' => 'Kontaktadresse',
+                         'art' => 'email',
+                         'label_zusatz' => 'steht in jeder E-Mail an NutzerInnen',
+                         'wert' => instanz_kontakt(),
+                         'platzhalter' => 'leer = keine Kontaktzeile']); ?>
+          <?php ui_feld(['name' => 'betrieb_mail', 'label' => 'Betreiberadresse',
+                         'art' => 'email',
+                         'label_zusatz' => 'Warnungen zu Speicher und Sicherungen',
+                         'wert' => betrieb_mail(),
+                         'platzhalter' => 'leer = an alle mit Verwaltungsrecht']); ?>
+          <p class="feld-hinweis">Die <strong>Kontaktadresse</strong> ist nicht
+            der Absender — der steht als <code>smtp.from</code> in der
+            <code>config.php</code> und ist auf einer gut eingerichteten Anlage
+            ein <code>noreply@</code>. Die <strong>Betreiberadresse</strong>
+            lenkt Betriebspost (Speicherkontingent, überfällige Sicherungen) an
+            eine Stelle; bleibt sie leer, geht sie weiterhin an alle Konten mit
+            Verwaltungsrecht.</p>
+          <?= ui_knopf(['text' => 'Adressen speichern', 'art' => 'primaer']) ?>
+        </form>
+      <?php ui_karte_ende(); ?>
+
       <?php ui_karte_start(['titel' => 'Logo', 'id' => 'k-logo',
                             'zahl' => 'Standard dieser Installation']); ?>
         <?php if ($logoMeldung !== null): ?>
@@ -321,6 +412,41 @@ ui_seite_start(['titel' => 'Installation']);
                   . 'sich abschalten: in deinem Profil unter „Datenschutz".',
                     'Vorschlag für den Abschnitt „Adresssuche"') ?>
             <?php endif; ?>
+
+            <?php /* ZWEITER TEXTBAUSTEIN: SICHERHEITSEREIGNISSE (P5a/AP8,
+                     E-P5a-08). Dieselbe Bauart und derselbe Vorbehalt wie
+                     oben — die Anwendung liefert KEINEN Rechtstext mit (R32),
+                     sie kann nur vorschlagen.
+
+                     WARUM ER OHNE BEDINGUNG DASTEHT, anders als der Baustein
+                     zur Adresssuche: Den Ratenschutz gibt es in jeder
+                     Installation, und er laesst sich nicht abschalten. Es
+                     gibt also keine Lage, in der dieser Absatz eine falsche
+                     Auskunft waere. */ ?>
+            <p class="feld-hinweis"><strong>Zum Übernehmen: die
+               Sicherheitsereignisse.</strong> Seit Web 20.12.0 führt diese
+               Installation unter <em>Betrieb → Status → Sicherheit</em> eine
+               Liste der Sperren und Verlangsamungen der letzten
+               <strong>30 Tage</strong>. Sie enthält <strong>IP-Adressen und
+               E-Mail-Adressen im Klartext</strong> — ohne sie ließe sich keine
+               Sperre aufheben. Wer das nennt, nennt eine Verarbeitung
+               personenbezogener Daten; der Baustein unten ist ein Vorschlag,
+               keine Rechtsberatung.</p>
+            <?= ui_codeblock_lang(
+                  '### Schutz vor unbefugten Anmeldeversuchen' . "\n\n"
+                . 'Wenn bei der Anmeldung mehrfach ein falsches Passwort eingegeben '
+                . 'wird oder ein Gerät sich wiederholt mit einem ungültigen '
+                . 'Schlüssel meldet, sperrt die Anwendung den betroffenen Zugang '
+                . 'vorübergehend. Dafür werden die betroffene E-Mail-Adresse '
+                . 'beziehungsweise IP-Adresse zusammen mit Zeitpunkt und Anzahl '
+                . 'der Versuche gespeichert. Diese Angaben dienen ausschließlich '
+                . 'der Abwehr von Angriffen, werden nicht ausgewertet und nach '
+                . '**30 Tagen automatisch gelöscht**. Eine laufende Sperre kann '
+                . 'die Betreiberin vorzeitig aufheben; auch das wird mit '
+                . 'Zeitpunkt vermerkt.' . "\n\n"
+                . 'Hinweis: Sicherungskopien der Datenbank können diese Angaben '
+                . 'enthalten, solange die Sicherung aufbewahrt wird.',
+                  'Vorschlag für den Abschnitt „Schutz vor unbefugten Anmeldeversuchen"') ?>
           <?php endif; ?>
 
           <?php if (!$leer): ?>

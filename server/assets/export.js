@@ -1052,6 +1052,25 @@
 
     /** GPX 1.1, ein <trk> mit einem <trkseg>. Punkte kommen sortiert vom Server. */
     function buildGpx(points, name, genTimeIso) {
+        /* `creator` BENENNT DIE SOFTWARE, NICHT DIE INSTALLATION (P5a/AP5,
+         * Weg B). Der Name dieser Anlage haengt seit Web 20.8.0 an
+         * `instanz_kurz()` und ist umbenennbar — dieses Feld ist davon
+         * ausgenommen, weil GPX 1.1 `creator` als das ERZEUGENDE PROGRAMM
+         * beschreibt. Die Begruendung steht vollstaendig im Kopf von
+         * `server/gpx_lib.php` und in `docs/Export-Format.md`.
+         *
+         * DIESELBE ZEICHENKETTE WIE SERVERSEITIG. Es gibt zwei Stellen, die
+         * einen GPX-Kopf schreiben — diese hier und `gpx_creator()` in
+         * `gpx_lib.php`. Gehen sie auseinander, erzeugt dieselbe Anwendung
+         * zwei verschiedene Angaben, je nachdem ob die Datei aus dem grossen
+         * Export oder aus dem Spur-Download stammt. Die Fassung kommt aus
+         * `<html data-webversion>`; fehlt sie (Einrichter), bleibt der Name
+         * allein stehen — genauso wie serverseitig. */
+        function gpxCreator() {
+            var v = (document.documentElement.dataset || {}).webversion || '';
+            return 'Gen-EM NAdoku' + (v ? ' ' + v : '');
+        }
+
         var trkpts = points.map(function (p) {
             var lat = p[0], lon = p[1], ele = p[2], ts = p[3];
             var timeIso = new Date(ts * 1000).toISOString();
@@ -1059,7 +1078,7 @@
             return '<trkpt lat="' + lat + '" lon="' + lon + '">' + eleTag + '<time>' + timeIso + '</time></trkpt>';
         }).join('');
         return '<?xml version="1.0" encoding="UTF-8"?>\n'
-            + '<gpx version="1.1" creator="Gen-EM NAdoku" xmlns="http://www.topografix.com/GPX/1/1">\n'
+            + '<gpx version="1.1" creator="' + xmlEscape(gpxCreator()) + '" xmlns="http://www.topografix.com/GPX/1/1">\n'
             + '<metadata><time>' + genTimeIso + '</time></metadata>\n'
             + '<trk><name>' + xmlEscape(name) + '</name><trkseg>' + trkpts + '</trkseg></trk>\n'
             + '</gpx>';

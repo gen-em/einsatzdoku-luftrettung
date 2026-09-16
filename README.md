@@ -73,5 +73,12 @@ Geräte eingeben; die Uhr fragt danach noch einmal nach, und erst das Ja dort
 schließt die Kopplung ab (seit Web 13.0.0 ist der Weg umgedreht; Details:
 Handbuch, Abschnitte 10 und 12; Tastenwege je Uhr in 2.0).
 
-**Deployment:** Push auf `main` deployt `server/` automatisch per FTPS
-(GitHub Actions). Nach DB-Änderungen als Admin `update.php` aufrufen.
+**Deployment — zwei Wege:** Ein Push auf `main` geht per FTPS auf **Staging**,
+ein Tag `web-vX.Y.Z` nach Freigabe auf **Produktiv** (GitHub Actions,
+`.github/workflows/auslieferung.yml`). Nach DB-Änderungen als Admin
+`update.php` aufrufen; steht eine Migration aus, lässt die Kette den
+Wartungsmodus an und sagt es.
+
+**Selbst hosten geht ohne das alles:** Dateien hochladen, `update.php`
+aufrufen — fertig. Die Kette ist der bequeme Weg des Projekts, nicht die
+Voraussetzung (Details: Technik-Doku, Abschnitt 6).

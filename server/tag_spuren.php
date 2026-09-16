@@ -264,7 +264,7 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
          steht weiter oben; die eigene Zeile hier waere ein zweiter Abruf
          derselben Datei. */ ?>
 <script src="<?= asset('assets/geo.js') ?>"></script>
-<script>
+<script<?= kopf_nonce_attr() ?>>
 const SPUREN = <?= json_js($spuren, JSON_UNESCAPED_UNICODE) ?>;
 
 const map = L.map('map');

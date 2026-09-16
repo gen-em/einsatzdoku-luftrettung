@@ -520,11 +520,7 @@ function export_track(array $b, int $userId): never
         json_out(['error' => 'zu_viele_ids',
                   'meldung' => 'Höchstens 25 IDs je Anfrage.'], 400);
     }
-    if (!$ids) {
-        header('Content-Type: application/json');
-        echo '{}';
-        exit;
-    }
+    if (!$ids) { json_roh_out('{}'); }
 
     // Datentrennung + Papierkorb: nur IDs zulassen, die dem Konto gehoeren
     // und nicht geloescht sind (I3, I4).
@@ -548,18 +544,19 @@ function export_track(array $b, int $userId): never
         }
     }
 
-    header('Content-Type: application/json');
-    echo $result ? json_encode($result) : '{}';
-    exit;
+    /* UEBER `json_roh_out()`, nicht `json_out()` (P5a/AP4a, Nr. 203): Der
+     * Text steht fertig da, und er kann gross werden. Bis Web 20.9.0 stand
+     * hier `header()` + `echo` von Hand — OHNE `Cache-Control: no-store`.
+     * DIESE ANTWORT ENTHAELT GPS-SPURPUNKTE; ein Zwischenspeicher darf sie
+     * nicht behalten. */
+    json_roh_out($result ? (string)json_encode($result) : '{}');
 }
 
 try {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         json_out(['error' => 'method'], 405);
     }
-    if (!hash_equals($_SESSION['csrf'] ?? '', $_SERVER['HTTP_X_CSRF'] ?? '')) {
-        json_out(['error' => 'csrf'], 403);
-    }
+    csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
 
     $b = json_decode(file_get_contents('php://input'), true);
     if (!is_array($b)) { json_out(['error' => 'payload'], 400); }

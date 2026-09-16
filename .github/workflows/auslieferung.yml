@@ -132,14 +132,53 @@ jobs:
           # Das Verzeichnis der Subdomain. Umgebungsvariable und kein
           # Geheimnis: Es ist ein Pfad, keine Zugangsberechtigung.
           server-dir: ${{ vars.FTP_ZIELPFAD || './staging/' }}
+          # DIE ZUSTANDSDATEI GEHOERT NICHT IN DEN WEBROOT (Nr. 213).
+          #
+          # Ohne diese Zeile legt die Aktion `.ftp-deploy-sync-state.json`
+          # in `server-dir` ab -- also dorthin, wo der Webserver ausliefert.
+          # Darin steht je Datei Pfad, Groesse und Hash. Kein Geheimnis, aber
+          # die ganze Struktur und der Versionsstand jeder einzelnen Datei.
+          #
+          # `../` HEBT SIE EINE EBENE HERAUS, und das geht nur, weil der
+          # FTP-Zugang eine Ebene UEBER dem Webroot landet -- `server-dir`
+          # sagt es selbst (`./staging/`). Erlaubt der Kaefig das nicht,
+          # bricht die Auslieferung; dann traegt man `FTP_STATE_PFAD` als
+          # Variable ein und zeigt wieder nach innen. Die Punktdatei-Sperre
+          # in `server/.htaccess` faengt sie dort ab -- deshalb ist der
+          # Rueckbau eine Variable und kein Notfall.
+          #
+          # ZWEI NAMEN, NICHT EINER: Teilen sich Staging und Produktion einen
+          # FTP-Zugang, landeten beide Staende in derselben Datei und
+          # ueberschrieben einander -- die Kette lieferte dann jedes Mal
+          # alles neu aus oder, schlimmer, uebersaehe Aenderungen.
+          state-name: ${{ vars.FTP_STATE_PFAD || '../.deploy-state-staging.json' }}
           # DIE AUSNAHMELISTE IST WORTGLEICH DIE DES ALTEN `deploy.yml` UND
           # BLEIBT ES. Jede Zeile hat eine Geschichte, und jede fehlende
           # Zeile hat eine teurere:
           #   config.php, install.lock   liegen nur auf dem Server
+          #   install.php                der Einrichter. NICHT weil er
+          #                              gefaehrlich waere -- er verweigert
+          #                              sich selbst, solange config.php oder
+          #                              install.lock existiert
+          #                              (install.php:136) --, sondern weil
+          #                              das Runbook seit jeher sagt
+          #                              "install.php danach loeschen"
+          #                              (Technik.md, Neuinstallation) und die
+          #                              Kette genau das jedes Mal rueckgaengig
+          #                              machte. Nr. 214.
+          #                              **PREIS, BENANNT:** Eine LEERE Anlage
+          #                              laesst sich damit nicht mehr allein
+          #                              ueber die Kette einrichten -- die
+          #                              Datei muss einmal von Hand hinauf.
+          #                              Stufe 2 sagt es, wenn dieser Fall
+          #                              eintritt.
           #   sicherungen/               entstehen nur dort (A8.2)
           #   wartung.lock               der Schalter des Wartungsmodus
           #                              (E-S5W-02) — und der Deploy ist
           #                              genau das, was währenddessen läuft
+          #   ueberlast.json             der Zähler der Verbindungsgrenze
+          #                              (P5a/AP9, E-P5a-50) — ein Zustand
+          #                              dieser Installation, kein Quelltext
           #   apk/                       die Android-Pakete (E-S4-16)
           # sicherungen/ und apk/ stehen zweimal, weil die Aktion Datei- und
           # Verzeichnismuster getrennt prüft.
@@ -148,8 +187,10 @@ jobs:
             **/.git*/**
             **/node_modules/**
             config.php
+            install.php
             install.lock
             wartung.lock
+            ueberlast.json
             sicherungen/**
             sicherungen/
             apk/**
@@ -203,7 +244,19 @@ jobs:
           echo "login.php: HTTP $code · gelandet bei $ziel"
           case "$ziel" in
             *install.php*)
-              echo "::error::Die Dateien liegen oben, die Anlage ist aber noch nicht eingerichtet — der Aufruf landet auf install.php. Rahmenplan 6a, Schritte 6 bis 8."
+              # SEIT NR. 214 GIBT ES HIER ZWEI FAELLE, UND SIE BRAUCHEN ZWEI
+              # ANTWORTEN. `install.php` steht seither in der Ausnahmeliste
+              # (das Runbook sagt "danach loeschen", und die Kette machte das
+              # jedes Mal rueckgaengig). Der Preis: Eine LEERE Anlage laesst
+              # sich nicht mehr allein ueber die Kette einrichten. Ohne diese
+              # Unterscheidung faende man an dieser Stelle einen 404 vor und
+              # suchte den Fehler im FTP-Zielpfad -- im falschen Ort.
+              icode=$(curl -sS -o /dev/null --max-time 20 -w '%{http_code}' "$STAGING_URL/install.php" || echo '000')
+              if [ "$icode" = "404" ]; then
+                echo "::error::Die Anlage ist noch nicht eingerichtet, und install.php liegt nicht oben — sie steht seit Nr. 214 in der Ausnahmeliste und wird bewusst NICHT ausgeliefert. Für eine leere Anlage die Datei server/install.php EINMAL von Hand per FTP hochladen, einrichten, danach wieder löschen. Rahmenplan 6a, Schritte 6 bis 8."
+              else
+                echo "::error::Die Dateien liegen oben, die Anlage ist aber noch nicht eingerichtet — der Aufruf landet auf install.php (HTTP $icode). Rahmenplan 6a, Schritte 6 bis 8."
+              fi
               exit 1 ;;
           esac
           if [ "$code" = "000" ]; then
@@ -219,6 +272,55 @@ jobs:
             exit 1
           fi
           echo "Staging liefert die Anmeldeseite der Anwendung aus."
+
+      - name: Punktdateien gesperrt, .well-known offen?
+        # WARUM DIESER SCHRITT ES BEWEIST UND EIN BLOSSER 404 ES NICHT TAT
+        # (Nr. 213, 16.09.2026).
+        #
+        # `RewriteRule ... [F]` antwortet **403, ob die Datei da ist oder
+        # nicht** -- mod_rewrite laeuft vor der Dateisuche. Genau daran
+        # haengt die Aussagekraft: Ein 404 hiesse nur „dort liegt nichts"
+        # und wuerde auch von einer leeren Subdomain kommen. Der Befund, der
+        # diesen Schritt ausgeloest hat, wurde zuerst genau so
+        # fehlgedeutet -- die Abfrage gegen ein noch leeres Staging gab 404,
+        # und das sah nach Entwarnung aus.
+        #
+        # DIE ZWEITE ZEILE IST DIE WICHTIGERE. `.well-known/` traegt die
+        # ACME-Herausforderung. Antwortet sie 403, ist die
+        # Zertifikatserneuerung tot -- und zwar lautlos, bis das Zertifikat
+        # in bis zu 90 Tagen ablaeuft. Diese Pruefung ist das einzige, was
+        # zwischen einer zu breiten Sperre und einer abgelaufenen Anlage
+        # steht.
+        run: |
+          if [ -z "${STAGING_URL:-}" ]; then
+            echo "::warning::STAGING_URL fehlt — Punktdatei-Prüfung ÜBERSPRUNGEN, nicht gemessen."
+            echo '**Punktdateien: ÜBERSPRUNGEN** (keine STAGING_URL) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          fehler=0
+
+          for pfad in ".ftp-deploy-sync-state.json" ".deploy-state-staging.json" ".env" ".git/config"; do
+            code=$(curl -sS -o /dev/null --max-time 20 -w '%{http_code}' "$STAGING_URL/$pfad" || echo '000')
+            echo "  /$pfad → HTTP $code"
+            if [ "$code" != "403" ]; then
+              echo "::error::/$pfad antwortet $code statt 403. Die Punktdatei-Sperre in server/.htaccess greift nicht — liest dieser Webserver .htaccess überhaupt? Ein 404 ist KEINE Entwarnung: er kommt auch von einer leeren Adresse."
+              fehler=1
+            fi
+          done
+
+          wk=$(curl -sS -o /dev/null --max-time 20 -w '%{http_code}' \
+                    "$STAGING_URL/.well-known/acme-challenge/kettenpruefung" || echo '000')
+          echo "  /.well-known/acme-challenge/kettenpruefung → HTTP $wk (erwartet 404, NICHT 403)"
+          if [ "$wk" = "403" ]; then
+            echo "::error::.well-known/ ist mitgesperrt. Die Zertifikatserneuerung (ACME) schlägt damit fehl, und zwar lautlos bis zum Ablauf. Die Ausnahme (?!well-known/) in server/.htaccess prüfen."
+            fehler=1
+          fi
+
+          if [ "$fehler" != "0" ]; then exit 1; fi
+          {
+            echo '**Punktdateien:** 4 Pfade → 403 (gesperrt), `.well-known/acme-challenge/` → '"$wk"' (offen).'
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "Punktdateien gesperrt, .well-known offen."
 
       - name: Kreisläufe csv und edbak gegen Staging
         # BRAUCHT EIN PRÜFKONTO auf Staging (Umgebungsgeheimnis). Fehlt es,
@@ -247,14 +349,35 @@ jobs:
           node tools/screenshots/aufnehmen.mjs \
                --basis "$STAGING_URL" --konto "$STAGING_KONTO" --passwort "$STAGING_PASS"
 
-      - name: Messstand — nur bei Tag-Läufen
+      # DER MESSSTAND STAND HIER UND KONNTE NIE LAUFEN (Backlog Nr. 206,
+      # behoben in P5a/AP9, E-P5a-53).
+      #
+      # Der Schritt rief `serverprobe.py --basis "$STAGING_URL"` auf. Diese
+      # Kennzeichnung gibt es nicht — `serverprobe.py` kennt `--konto`,
+      # `--ausgabe`, `--wartung-fahren` und `--optimieren` —, also wäre jeder
+      # Tag-Lauf hier mit „unrecognized arguments" abgebrochen. Und die
+      # Kennzeichnung fehlt nicht aus Versehen: Die Serverprobe misst
+      # TABELLENGRÖSSEN, SPEICHERSPITZEN und den Waisen-Vollscan, und dafür
+      # braucht sie die Datenbank selbst. Über HTTP ist davon nichts zu
+      # sehen. Eine Adresse als Ziel war ein Denkfehler, kein Tippfehler.
+      #
+      # Ersatzlos gestrichen und nicht ersetzt: Der Messstand ist ein
+      # MANUELLES Regressionsmittel (R35) und läuft lokal vor einer
+      # Auslieferung, nicht in der Kette. Seine Zahlen stehen in
+      # `tools/messstand/ausgangsmessung.md`, und was von ihnen auf der
+      # Zielanlage gilt, steht dort auf der Plattformkarte
+      # (Betrieb → Status → Plattform, seit P5a/AP2) — einschließlich
+      # `post_max_size`, der Zahl, um die es in Backlog Nr. 37 geht.
+      - name: Messstand — wo seine Zahlen stehen
         if: startsWith(github.ref, 'refs/tags/web-v')
         run: |
-          if [ -z "${STAGING_URL:-}" ]; then
-            echo "::warning::STAGING_URL fehlt — Messstand ÜBERSPRUNGEN, nicht gemessen."
-            exit 0
-          fi
-          python3 tools/messstand/serverprobe.py --basis "$STAGING_URL"
+          {
+            echo '**Messstand: läuft nicht in der Kette** — er misst die Datenbank'
+            echo 'selbst (Tabellengrößen, Speicherspitzen) und ist über HTTP nicht'
+            echo 'zu haben. Er ist ein manuelles Regressionsmittel (R35); seine'
+            echo 'Zahlen stehen in `tools/messstand/ausgangsmessung.md`, die Grenzen'
+            echo 'der Zielanlage auf Betrieb → Status → Plattform.'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   produktion:
     name: produktion
@@ -364,14 +487,19 @@ jobs:
           port:       21
           local-dir:  ./server/
           server-dir: ${{ vars.FTP_ZIELPFAD || './httpdocs/' }}
+          # Wie im Staging-Job (Nr. 213) — Begründung steht dort. Der
+          # Dateiname ist ein anderer, und genau darauf kommt es an.
+          state-name: ${{ vars.FTP_STATE_PFAD || '../.deploy-state-produktion.json' }}
           # Wortgleich wie im Staging-Job — Begründung steht dort.
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
             config.php
+            install.php
             install.lock
             wartung.lock
+            ueberlast.json
             sicherungen/**
             sicherungen/
             apk/**

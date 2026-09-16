@@ -133,7 +133,7 @@ im Browser, Hochladen) und die Anzeige danach; dafür ist der Kreislauf da.
 
     php tools/wiederherstellungs-probe/probe.php
 
-Erwartet: **106 von 106**, Rückgabe `0`.
+Erwartet: **110 von 110**, Rückgabe `0`.
 
 > **Die Zahl hier war jahrelang falsch.** Sie stand auf **30**, während die
 > Probe längst auf zwölf Teile gewachsen war — dieselbe Krankheit, an der die
@@ -142,6 +142,21 @@ Erwartet: **106 von 106**, Rückgabe `0`.
 > geschätzt: **94** bis S10/AP4, **98** nach dessen vier neuen Erwartungen an
 > der Fassung 3, **106** mit Teil 12. Wer eine Zahl abschreibt statt sie zu
 > messen, schreibt irgendwann eine ab, die es nicht mehr gibt.
+>
+> **Und genau das ist wieder passiert.** Am 16.09.2026 meldete der Lauf
+> **105**, hier stand 106 — eine Erwartung Unterschied, entstanden irgendwann
+> zwischen S10/AP4 und heute, ohne dass es jemandem auffiel. Mit den fünf
+> neuen aus P5a/AP10 (Backlog Nr. 195, die Geräteart auf dem Rückweg) sind es
+> **110**, und diese Zahl ist am selben Tag gemessen.
+
+> **Zwei Erwartungen in Teil 10 sind auf einer leeren Installation rot**, und
+> das ist ein Mangel des Prüfmittels und nicht der Anwendung (nachgemessen am
+> 16.09.2026 gegen den unveränderten Stand: dieselben zwei). „Ein knapper
+> Schub sichert wenigstens ein Konto und hört dann auf" gibt ein enges
+> Zeitbudget vor und erwartet, dass der Sammelvorgang danach etwas offen
+> lässt. Auf einer Installation mit zwei fast leeren Konten passen beide
+> hinein, und der Zeiger steht danach auf `—`. Aufgenommen als **Backlog
+> Nr. 212**.
 
 Der Vorher-Vergleich braucht eine **ganze** Kopie von `server/` aus dem
 Vergleichsstand — die Änderungen liegen in mehreren Dateien:

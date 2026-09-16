@@ -53,6 +53,19 @@ declare(strict_types=1);
  * ------------------------------------------------------------------------- */
 function ui_seite_start(array $o): void
 {
+    /* DIE KOPFZEILEN STEHEN VOR DER ERSTEN AUSGABEZEILE (P5a/AP4, E-P5a-15).
+     *
+     * Hier und nicht in jeder Seite: Diese Huelle ist die eine Stelle, durch
+     * die jede Seite laeuft — dafuer hat P3 gesorgt. Drei Stellen erzeugen
+     * eine eigene Huelle (`wartung_lib.php`, `betrieb_schluesselblatt.php`,
+     * `apk.php`); die rufen `kopfzeilen_seite()` selbst.
+     *
+     * `headers_sent()` faengt den Fall ab, dass ein Aufrufer schon etwas
+     * ausgegeben hat — dann waere ein `header()` eine Warnung im Protokoll
+     * und sonst nichts. */
+    require_once __DIR__ . '/kopfzeilen_lib.php';
+    kopfzeilen_seite();
+
     /* Zeilenweise zusammengesetzt statt als Vorlage mit eingestreutem PHP:
        Bedingte Zeilen in einer Vorlage bringen ein Durcheinander aus
        geschluckten Zeilenumbruechen mit sich (PHP frisst den Umbruch direkt
@@ -71,7 +84,7 @@ function ui_seite_start(array $o): void
             . (defined('WEB_VERSION') ? ui_e(WEB_VERSION) : '') . '">',
         '<head>',
         '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
-        '<title>' . ui_e((string)$o['titel']) . ' — Gen-EM NAdoku</title>',
+        '<title>' . ui_e((string)$o['titel']) . ' — ' . ui_e(ui_instanz_kurz()) . '</title>',
     ];
     if (!empty($o['kopf'])) {
         $zeilen[] = rtrim((string)$o['kopf'], "\n");
@@ -135,6 +148,19 @@ function ui_asset(string $pfad): string
 function ui_e(string $s): string
 {
     return function_exists('e') ? e($s) : htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Der Kurzname dieser Installation — instanz_kurz(), wo es sie gibt.
+ *
+ * Dasselbe Muster wie ui_asset(): `install.php` laedt diese Datei VOR der
+ * Ersteinrichtung, und dann gibt es weder Datenbank noch `app_state`. Der
+ * Rueckfall ist die Vorgabe, nicht ein leerer Titel.
+ */
+function ui_instanz_kurz(): string
+{
+    if (function_exists('instanz_kurz')) { return instanz_kurz(); }
+    return defined('INSTANZ_KURZ_VORGABE') ? INSTANZ_KURZ_VORGABE : 'Gen-EM NAdoku';
 }
 
 /** Favicon-Verweise — favicon_tags() aus db.php, wo es sie gibt (s. ui_asset()). */
@@ -375,7 +401,7 @@ function ui_kopf(array $o = []): void
       <?php $lm = ui_logo_masse(34); ?>
       <img src="<?= ui_e(ui_logo(true)) ?>" alt=""
            width="<?= $lm['breite'] ?>" height="<?= $lm['hoehe'] ?>">
-      <span class="kopf-name">Gen-EM NAdoku</span>
+      <span class="kopf-name"><?= ui_e(ui_instanz_kurz()) ?></span>
       <?php if ($menue): ?><span class="kopf-nutzer"><?= ui_e(ui_user_label()) ?></span><?php endif; ?>
     </a>
 
@@ -466,7 +492,7 @@ function ui_geruest_start(array $o = []): void
       <button type="button" class="knopf knopf-symbol" data-schublade="zu" aria-label="Menü schließen">
         <?= ui_symbol('schliessen', 'symbol-gross') ?>
       </button>
-      <span class="kopf-name">Gen-EM NAdoku</span>
+      <span class="kopf-name"><?= ui_e(ui_instanz_kurz()) ?></span>
     </div>
     <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche">
       <a class="eintrag<?= ($o['aktiv'] ?? '') === 'start' ? ' aktiv' : '' ?>" href="index.php">
@@ -2288,7 +2314,7 @@ function ui_geocoder_bootstrap(): void
     $schon = true;
 
     require_once __DIR__ . '/geocoder_lib.php';
-    echo '<script>window.GEO_AN = ' . json_encode(geocoder_an())
+    echo '<script' . kopf_nonce_attr() . '>window.GEO_AN = ' . json_encode(geocoder_an())
        . '; window.GEO_DIENST = ' . json_encode(geocoder_dienst(),
             JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)
        . ";</script>\n";
@@ -2528,7 +2554,7 @@ function ui_krypto_bootstrap(array $o = []): void
     foreach ($skripte as $s) {
         $zeilen[] = '<script src="' . ui_asset((string)$s) . '"></script>';
     }
-    $zeilen[] = '<script>';
+    $zeilen[] = '<script' . kopf_nonce_attr() . '>';
     if (($o['wrap'] ?? true) !== false) {
         $zeilen[] = 'const PAT_WRAP = ' . json_js($patWrapPw) . ';';
     }

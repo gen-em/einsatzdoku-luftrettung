@@ -1,6 +1,6 @@
 # JSON-Vertrag Gerät → Server
 
-**Version:** 2.2 — die Kopplung ist seit 2.0 umgekehrt (1a): Das **Gerät**
+**Version:** 2.3 — die Kopplung ist seit 2.0 umgekehrt (1a): Das **Gerät**
 zeigt den Code, das Web nimmt ihn entgegen, das Gerät bestätigt das Konto.
 `pair.php` kennt vier Anliegen statt zwei. Die Hauptnummer stieg auf 2.0, weil
 kein Client der Fassung 1.x sich mehr koppeln kann — bestehende Kopplungen und
@@ -8,8 +8,11 @@ alles ab Abschnitt 2 sind unberührt. **2.1** trägt den Wartungsmodus nach
 (Abschnitt 5): ein 503 mit `{"error":"maintenance"}`, das jeder Endpunkt
 schicken kann. **2.2** vervollständigt die Präfix-Tabelle (Abschnitt 8) um
 `cut-` und sagt, welche **Herkunft** der Server aus jedem Präfix ableitet
-(R64). Beide Nebennummern, weil es für die Clients keine neue Regel ist: Den
-Wartungsmodus behandeln sie als 5xx wie bisher, und die Herkunft leitet der
+(R64). **2.3** trägt die zweite 503 nach (Abschnitt 5): ein
+`{"error":"ausgelastet"}`, wenn die Datenbank keine Verbindung mehr annimmt
+oder eine Transaktion einem Deadlock zum Opfer gefallen ist. Alle drei
+Nebennummern, weil es für die Clients keine neue Regel ist: Wartungsmodus und
+Überlast behandeln sie als 5xx wie bisher, und die Herkunft leitet der
 Server allein ab — kein Client schickt sie, keiner liest sie.
 **Endpunkt:** `POST https://<host>/ingest.php`
 **Content-Type:** `application/json`
@@ -52,6 +55,7 @@ schon durchsetzt und welche noch nicht.
 | Antwortfeld `cut_points` (5) | durchgesetzt seit Web 12.5.0 |
 | Block `geraet` wird gespeichert (1a) | durchgesetzt seit Web 12.9.0; davor stillschweigend verworfen |
 | Kopplung in drei Anliegen (1a) | durchgesetzt seit Web 13.0.0 — der alte Weg (Code aus dem Web, Uhr tippt ihn ein) ist ersatzlos entfallen |
+| 503 `{"error":"ausgelastet"}` bei Verbindungsgrenze und Gedrängel (5) | durchgesetzt seit Web 20.13.0 (P5a/AP9, E-P5a-18). **Für die Clients keine neue Regel** — dieselbe Lage wie beim Wartungsmodus: ein 5xx mit `Retry-After` als Hinweis. Vorher kam in beiden Fällen eine **500**, und die ist für die Uhr dasselbe (Backoff, unverändert erneut) — geändert hat sich, was die Antwort BEHAUPTET, und dass sie nichts mehr über die Datenbank verrät |
 | 503 `{"error":"maintenance"}` während der Wartung (5) | durchgesetzt seit Web 13.2.0. **Für die Clients keine neue Regel** — es ist ein 5xx und wird als solches behandelt; der Zusatz `Retry-After` ist ein Hinweis, kein Auftrag |
 | `400` „nicht wiederholen, lokal als fehlerhaft markieren" (5) | durchgesetzt seit Uhr 3.1.0 — **nur mit erkennbarer Antwort des Servers** (`{"error":…}`). Ein blankes `400` kann von einem Zwischenstück kommen; ohne Kennzeichen wiederholt die Uhr weiter, statt ein gesundes Paket zu parken |
 | `401`/`403` halten den Upload an (5) | durchgesetzt seit Uhr 3.1.0. Sie sagen nichts über das Paket, sondern über das **Gerät**: gelöscht, Schlüssel ungültig, oder auf inaktiv gestellt. Die Uhr hört auf zu senden, behält alles und nennt den Grund; das Trennen ist dann **nicht** mehr gesperrt (Backlog Nr. 159) |
@@ -749,8 +753,28 @@ Fehler:
 | 401 | `{"error":"auth"}` | Schlüssel ungültig — Upload pausieren, Hinweis anzeigen |
 | 405 | `{"error":"method"}` | Falsche HTTP-Methode |
 | 413 | `{"error":"too_large"}` | Chunk zu groß — Uhr halbiert die Chunk-Größe und wiederholt |
+| 429 | `{"error":"zu_viele_versuche"}` | **Mengenbremse** (seit Web 20.11.0) — zu viele *fehlgeschlagene* Anmeldungen. Behandlung wie 401: Upload pausieren, Puffer behalten, später erneut. Die Antwort trägt `Retry-After` in Sekunden; **die Geräte müssen ihn nicht auswerten** und tun es heute nicht |
 | 5xx | — | Später unverändert erneut versuchen (Backoff) |
+| 503 | `{"error":"ausgelastet","meldung":"…"}` | **Verbindungsgrenze oder Gedrängel** (seit Web 20.13.0) — ebenfalls ein Sonderfall von 5xx und **kein neues Verhalten**: Die Datenbank nimmt gerade keine Verbindung mehr an (MySQL 1040/1203/1226) oder eine Transaktion ist einem Deadlock zum Opfer gefallen (1213/1205). Behandlung genau wie 5xx. `Retry-After` steht auf **5** Sekunden — bei den Stundengrenzen eines Datenbankkontos (`MAX_QUERIES_PER_HOUR` und Geschwister) auf 300; **die Geräte müssen ihn nicht auswerten** und tun es heute nicht |
 | 503 | `{"error":"maintenance","meldung":"…"}` | **Wartungsmodus** — ein Sonderfall von 5xx, **kein neues Verhalten**: Der Server wird gerade aktualisiert und schließt sich für die Dauer. Behandlung genau wie 5xx, also Backoff und unverändert erneut. Die Antwort trägt zusätzlich `Retry-After` in Sekunden (heute 300) als Hinweis für Browser und Werkzeuge; **die Geräte müssen ihn nicht auswerten** und tun es heute nicht |
+
+**Die 429 ist die einzige Vertragsänderung seit langem — und sie verlangt vom
+Client nichts Neues.** Bis Web 20.10.0 war `ingest.php` der einzige Endpunkt
+ohne Mengenbremse; seit 20.11.0 zählt er fehlgeschlagene Geräteanmeldungen
+(30 je 15 Minuten, je Gerätekennung beziehungsweise — bei unbekannter Kennung
+— je Adresse) und sperrt dann für die Dauer der Sperrleiter, erste Sprosse
+15 Minuten.
+
+Ein Client, der 401 schon richtig behandelt, behandelt 429 damit ebenfalls
+richtig: pausieren, nichts verwerfen, später erneut. **Gezählt werden
+ausschließlich Fehlversuche** — ein gelungener Upload geht nie auf das
+Kontingent, und eine Uhr, die einen ganzen Dienst nachliefert, sendet
+beliebig viele Stücke.
+
+`Retry-After` steht dabei nicht, weil ein Gerät ihn liest — die Uhr **kann**
+es nicht, der Rückruf von Connect IQ bekommt `(code, data)` und keine
+Kopfzeilen. Die Zeile steht für den Fall, den der Vertrag ausdrücklich
+zulässt: einen fremden Client an derselben Schnittstelle.
 
 **Warum das eigens dasteht, obwohl sich nichts ändert.** Der Wartungsmodus
 (Web 13.2.0) ist die einzige Lage, in der der Server ein 5xx **absichtlich**

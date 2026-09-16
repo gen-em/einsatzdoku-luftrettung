@@ -84,12 +84,18 @@ declare(strict_types=1);
  * es nicht mehr. Bestehende Kopplungen sind davon nicht beruehrt.
  */
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/ratelimit_lib.php';
 require_once __DIR__ . '/smtp.php';
 require_once __DIR__ . '/geraete_lib.php';
 require_once __DIR__ . '/kopplung_lib.php';
 
-header('Content-Type: application/json; charset=utf-8');
+/* DIE KOPFZEILEN SETZT `db.php` (P5a/AP4a, Nr. 203) — `json_out()`,
+ * `json_roh_out()` oder, wo die Antwort nicht das Ende ist, `json_kopf()`.
+ * Hier stand eine einzelne `header()`-Zeile ganz oben; `nosniff`,
+ * `Referrer-Policy` und `Cache-Control: no-store` fehlten. DIESE ANTWORT
+ * NENNT DIE MASKIERTE ADRESSE DES KONTOS (`ph***@beispiel.de`) — eine, die
+ * Zwischenspeicher behalten darf, ist die falsche. */
 
 // Zeitpunkt fuer die konstante Antwortdauer. Jeder Fehlerzweig, der etwas
 // ueber Fremdes aussagen koennte, endet ueber abweisen(), damit ein Angreifer
@@ -101,17 +107,13 @@ function abweisen(int $status, string $fehler, bool $zaehlen = true, array $mehr
     global $t0;
     if ($zaehlen) { rate_misserfolg('pair'); }
     rate_gleiche_dauer($t0);
-    http_response_code($status);
-    echo json_encode(['error' => $fehler] + $mehr);
-    exit;
+    json_out(['error' => $fehler] + $mehr, $status);
 }
 
 /** Antwort OHNE Verzoegerung — fuer Zweige, die einem Fremden nichts sagen (E-S5-31). */
 function antworten(int $status, array $rumpf): never
 {
-    http_response_code($status);
-    echo json_encode($rumpf);
-    exit;
+    json_out($rumpf, $status);
 }
 
 /** 429 — mit Verzoegerung, damit eine Sperre die Schleife eines Angreifers mitbremst. */
@@ -303,6 +305,9 @@ if ($sitzung !== null) {
     }
 
     if (!$verschwunden) {
+        /* `json_kopf()` und nicht `json_out()`: Diese Antwort ist NICHT das
+         * Ende der Anfrage — darunter steht der Versand der Hinweismail. */
+        json_kopf();
         echo json_encode(['ok' => true]);
 
         /* ---- Den Kontoinhaber benachrichtigen (M4-10, E-S5-20) ---------------
@@ -322,23 +327,12 @@ if ($sitzung !== null) {
             $ust->execute([(int)$frisch['user_id']]);
             $mail = $ust->fetchColumn();
             if ($mail !== false && $mail !== null && $mail !== '') {
-                smtp_send((string)$mail,
-                    'Neues Gerät gekoppelt — Gen-EM Einsatzdokumentation Notarzt',
-                    "Hallo,\n\n"
-                    . "mit deinem Konto der Gen-EM Einsatzdokumentation Notarzt wurde soeben ein\n"
-                    . "neues Gerät gekoppelt. Das Gerät hat den Code gezeigt, du hast ihn im Web\n"
-                    . "eingegeben und am Gerät mit Ja bestätigt:\n\n"
-                    . "  Gerät:     " . geraet_bezeichnung($frisch['geraet_art'], $frisch['geraet_modell'],
-                                                                $frisch['geraet_teil']) . "\n"
-                    . "  Geräte-ID: " . (string)$frisch['device_id'] . "\n"
-                    . "  Zeitpunkt: " . fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y H:i') . " Uhr\n\n"
-                    . "War das dein Gerät, ist alles in Ordnung — du musst nichts tun.\n\n"
-                    . "War es das nicht, deaktiviere oder lösche das Gerät bitte umgehend unter\n"
-                    . "Einstellungen → Geräte. Ab diesem Moment kann es keine Daten mehr hochladen.\n"
-                    . $CFG['app']['base_url'] . "/einstellungen.php?t=geraete\n\n"
-                    . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
-                    . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n",
-                    5);
+                mail_einreihen('geraet_gekoppelt', (string)$mail, [
+                    'geraet'    => geraet_bezeichnung($frisch['geraet_art'],
+                                       $frisch['geraet_modell'], $frisch['geraet_teil']),
+                    'geraet_id' => (string)$frisch['device_id'],
+                    'zeitpunkt' => fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y H:i'),
+                ]);
             }
         } catch (Throwable $ex) {
             error_log('Hinweis auf neues Geraet konnte nicht verschickt werden: ' . $ex->getMessage());
@@ -424,6 +418,9 @@ try {
  * zehn Versuchen fuer zehn Minuten aus, und das gilt dann auch fuer den
  * GPX-Abruf. Genau dafuer ist der Topf da.
  */
+/* `json_kopf()` und nicht `json_out()`: Auch hier ist die Antwort nicht das
+ * Ende der Anfrage. */
+json_kopf();
 echo json_encode(['ok' => true]);
 
 /* Den Kontoinhaber unterrichten — dieselbe Ueberlegung wie beim Koppeln: Es
@@ -436,22 +433,10 @@ try {
     $ust->execute([(int)$dev['user_id']]);
     $mail = $ust->fetchColumn();
     if ($mail !== false && $mail !== null && $mail !== '') {
-        smtp_send((string)$mail,
-            'Gerät getrennt — Gen-EM Einsatzdokumentation Notarzt',
-            "Hallo,\n\n"
-            . "ein Gerät hat seine Verbindung zu deinem Konto der Gen-EM\n"
-            . "Einsatzdokumentation Notarzt soeben selbst getrennt:\n\n"
-            . "  Geräte-ID: " . $devId . "\n"
-            . "  Zeitpunkt: " . fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y H:i') . " Uhr\n\n"
-            . "Das geschieht, wenn jemand das Gerät an sein Konto koppelt. Bereits\n"
-            . "hochgeladene Einsätze bleiben vollständig erhalten.\n\n"
-            . "War das nicht beabsichtigt, verbinde es einfach wieder: Starte die\n"
-            . "Kopplung auf dem Gerät (Sync-Seite → Gerät koppeln) und gib den Code,\n"
-            . "den es zeigt, hier ein:\n"
-            . $CFG['app']['base_url'] . "/einstellungen.php?t=geraete\n\n"
-            . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
-            . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n",
-            5);
+        mail_einreihen('geraet_getrennt', (string)$mail, [
+            'geraet_id' => $devId,
+            'zeitpunkt' => fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y H:i'),
+        ]);
     }
 } catch (Throwable $ex) {
     error_log('Hinweis auf getrenntes Geraet konnte nicht verschickt werden: ' . $ex->getMessage());

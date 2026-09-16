@@ -71,11 +71,11 @@ try {
     } else {
         $out = edbak_build($userId);
     }
-    header('Content-Type: application/json; charset=utf-8');
-    // Dieser Weg gibt das Paket direkt aus, nicht ueber json_out() — der
-    // Kopf gegen das Zwischenspeichern muss deshalb hier stehen (M3-11).
-    header('Cache-Control: no-store');
-    echo $out;
+    /* Dieser Weg gibt das Paket direkt aus — `$out` ist fertiger Text und
+     * kann gross werden. Seit Web 20.9.1 ueber `json_roh_out()`: DERSELBE
+     * Kopfzeilensatz wie `json_out()`, nur ein anderer Rumpf. Vorher standen
+     * die zwei `header()`-Zeilen hier von Hand, und `nosniff` fehlte. */
+    json_roh_out((string)$out);
 } catch (Throwable $ex) {
     json_fehler($ex, 'backup');
 }

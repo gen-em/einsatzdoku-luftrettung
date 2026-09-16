@@ -2425,6 +2425,357 @@ function migrationen_katalog(): array
                 SET d.vehicle_typ = v.typ, d.vehicle_kurz = v.kurz",
         ],
     ],
+    [
+        'id'    => '2026_09_15_csp_berichte',
+        'web'   => '20.7',
+        'label' => 'Berichte der Content-Security-Policy (Report-Only-Phase)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'csp_berichte'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* ZUSAMMENGEFASST STATT PROTOKOLLIERT. Eine gebrochene Seite
+             * meldet JEDEN Verstoss einzeln — bei einer Karte mit 200
+             * Kacheln sind das 200 Anfragen je Seitenaufruf. Ein Protokoll
+             * davon fuellte in Minuten mehr Zeilen als die Einsatztabelle in
+             * Jahren. Der UNIQUE-Schluessel ueber (Richtlinie, Quelle, Seite)
+             * macht daraus EINE Zeile mit einem Zaehler.
+             *
+             * `seite` ist der PFAD, nicht die volle Adresse: Die Anwendung
+             * fuehrt kein Protokoll darueber, wer wann welchen Einsatz
+             * geoeffnet hat, und eine CSP-Meldung soll daran nichts aendern.
+             * Aus demselben Grund steht hier keine IP und kein Konto. */
+            'CREATE TABLE csp_berichte (
+               id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               richtlinie VARCHAR(64)  NOT NULL,
+               quelle     VARCHAR(190) NOT NULL,
+               seite      VARCHAR(190) NOT NULL,
+               anzahl     INT UNSIGNED NOT NULL DEFAULT 1,
+               erstellt   DATETIME     NOT NULL,
+               zuletzt    DATETIME     NOT NULL,
+               UNIQUE KEY uq_bericht (richtlinie, quelle, seite),
+               INDEX idx_zuletzt (zuletzt)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
+    [
+        'id'    => '2026_09_16_job_laeufe',
+        'web'   => '20.8',
+        'label' => 'Verlauf der Hintergrundjobs — damit ein wiederkehrender Fehler sichtbar wird',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'job_laeufe'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* WARUM ES DIESE TABELLE GIBT. `jobs` haelt je Job EINE Zeile mit
+             * lauter `letzter_*`-Spalten, und `letzter_fehler` wird beim
+             * naechsten Erfolg auf NULL gesetzt (jobs_lib.php). Ein Job, der
+             * jede zweite Nacht scheitert und morgens durchlaeuft, ist damit
+             * um acht Uhr unsichtbar — man sieht nur, ob gerade etwas ansteht,
+             * nie, dass es wiederkehrt.
+             *
+             * NICHT JEDER LAUF KOMMT HINEIN. Am Huckepack-Weg laufen sieben
+             * Jobs alle fuenf Minuten; das waeren rund 2000 Zeilen am Tag,
+             * von denen die allermeisten „nichts zu tun" sagen. Geschrieben
+             * wird nur, was etwas AUSSAGT: ein Fehler, oder ein Lauf, der
+             * etwas erledigt hat. Ein Protokoll, das jeden Anstoss verbucht,
+             * wird nicht gelesen.
+             *
+             * DIE FRIST STAND SCHON FEST, bevor die Tabelle existierte:
+             * E-P5a-09 nennt „Job-Laeufe" unter dem, was der Aufraeumjob nach
+             * 30 Tagen loescht — keine Einstellung. */
+            'CREATE TABLE job_laeufe (
+               id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               job       VARCHAR(32)  NOT NULL,
+               zeitpunkt DATETIME     NOT NULL,
+               ausloeser VARCHAR(16)  NULL,
+               erledigt  INT UNSIGNED NOT NULL DEFAULT 0,
+               fehler    TEXT         NULL,
+               INDEX idx_job_zeit (job, zeitpunkt),
+               INDEX idx_zeitpunkt (zeitpunkt)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
+    [
+        'id'    => '2026_09_16_mail_warteschlange',
+        'web'   => '20.8',
+        'label' => 'Mail-Warteschlange — nichts geht verloren, weil ein SMTP-Server schweigt',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'mail_warteschlange'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* DREI SPALTEN WERDEN GELEERT, SOBALD EINE ZEILE IHREN
+             * ENDZUSTAND ERREICHT — und welche, haengt davon ab, WELCHER
+             * Endzustand (E-P5a-39).
+             *
+             * `text` faellt IMMER. Die Einladungs- und die Reset-Mail tragen
+             * einen GUELTIGEN Token im Rumpf; bisher lebte der nur in der
+             * Mail, in der Datenbank stand allein sein Hash. Er darf nicht 30
+             * Tage hier liegen und in jeder Komplettsicherung mitfahren.
+             *
+             * `empfaenger` und `betreff` fallen bei ZUGESTELLT. Die Anwendung
+             * fuehrt kein Protokoll ueber Mailempfaenger (`smtp.php`), und
+             * fuer die Frage „geht hier Post hinaus?" braucht die Liste die
+             * Adresse nicht.
+             *
+             * BEI UNZUSTELLBAR BLEIBEN SIE. „Die Einladung an X kam nie an"
+             * ist ohne X wertlos, und E-P5a-14 verlangt die Unzustellbar-Liste
+             * ausdruecklich „mit Empfaenger und Grund". Das ist kein
+             * Protokoll darueber, wer Post BEKOMMEN hat, sondern eine
+             * Maengelliste — und wer sie sieht, kann ohnehin jede
+             * Kontoadresse einsehen. Die Ausnahme steht im Kopf von
+             * `smtp.php` neben der Zusage, nicht davon getrennt.
+             *
+             * `zustand` statt zweier Flaggen: offen · zugestellt ·
+             * unzustellbar · ueberholt · zu_spaet. Die letzten beiden
+             * stammen aus dem Angriff auf den Entwurf — ein Reset-Token lebt
+             * eine Stunde, die Wiederholungsleiter geht bis 24 h. */
+            'CREATE TABLE mail_warteschlange (
+               id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               schluessel        VARCHAR(32)  NOT NULL,
+               art               VARCHAR(16)  NOT NULL,
+               empfaenger        VARCHAR(190) NULL,
+               betreff           VARCHAR(190) NULL,
+               text              MEDIUMTEXT   NULL,
+               zustand           VARCHAR(16)  NOT NULL DEFAULT \'offen\',
+               versuche          INT UNSIGNED NOT NULL DEFAULT 0,
+               erstellt          DATETIME     NOT NULL,
+               naechster_versuch DATETIME     NULL,
+               beendet           DATETIME     NULL,
+               gueltig_bis       DATETIME     NULL,
+               fehler            TEXT         NULL,
+               INDEX idx_faellig (zustand, naechster_versuch),
+               INDEX idx_erstellt (erstellt),
+               INDEX idx_empfaenger (empfaenger)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
+    [
+        'id'    => '2026_09_16_ratenschutz_stufen',
+        'web'   => '20.10',
+        'label' => 'Sperrleiter — eine Sperre, die beim naechsten Mal laenger dauert',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'rate_limits' AND column_name = 'stufe'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* ZWEI SPALTEN AUF EINER ZEILE, DIE ES SCHON GIBT. `rate_limits`
+             * fuehrt genau EINE Zeile je (topf, merkmal) — die Stufe gehoert
+             * deshalb dorthin und braucht keine eigene Tabelle.
+             *
+             * `stufe` ZAEHLT AB 1, NICHT AB 0 (E-P5a-43). Das Konzept sagt an
+             * einer Stelle „Stufe 0-3" und an der anderen „Sammelmail bei
+             * Stufe 4"; beides zusammen geht nicht auf. Gewaehlt ist die
+             * zweite Lesart, weil sie die ist, die jemand ausspricht:
+             *
+             *   0  nie gesperrt gewesen
+             *   1  10 min   2  20 min   3  30 min   4  60 min
+             *
+             * Damit heisst „Stufe 4" woertlich die 60-Minuten-Sperre, und die
+             * Sammelmail haengt an einer Zahl, die man nachzaehlen kann.
+             *
+             * `stufe_bis` IST DER VERFALL DER STUFE, nicht der Sperre. Es
+             * steht auf „letzter Fehlversuch + 24 h"; danach gilt die Stufe
+             * als 0, auch wenn die Zeile noch dasteht. Die Zeile selbst
+             * raeumt der Aufraeumjob weg — aber der laeuft hoechstens einmal
+             * je Kalendertag, und eine Leiter, die von der Laufzeit eines
+             * Jobs abhaengt, waere keine.
+             *
+             * WARUM TINYINT: Vier Stufen brauchen kein INT, und die Spalte
+             * steht auf einer Zeile, die bei jedem Fehlversuch geschrieben
+             * wird. */
+            /* OHNE `COMMENT` an der Spalte, und das ist kein Geschmack: Das
+             * Migrationsregister liest beide Fassungen mit demselben
+             * Tokenizer und haelt `COMMENT` fuer einen Spaltennamen — der
+             * erste Versuch meldete prompt „der Katalog legt
+             * `sicherheit_ereignisse.comment` an; schema.sql kennt die Spalte
+             * nicht". Die Erklaerung steht ohnehin besser hier und in
+             * `schema.sql` als in einem Feld, das man nur mit
+             * `SHOW CREATE TABLE` sieht. */
+            'ALTER TABLE rate_limits
+               ADD COLUMN stufe     TINYINT UNSIGNED NOT NULL DEFAULT 0,
+               ADD COLUMN stufe_bis DATETIME NULL',
+
+            /* EIN INDEX AUF `gesperrt_bis` FEHLTE BISHER, und mit AP8 faellt
+             * das auf: „alle aktiven Sperren zeigen" ist eine Abfrage ueber
+             * die ganze Tabelle. Sie ist heute klein; auf einer Installation
+             * unter Beschuss ist sie es nicht. */
+            'CREATE INDEX idx_gesperrt ON rate_limits (gesperrt_bis)',
+        ],
+    ],
+    [
+        'id'    => '2026_09_16_sicherheit_ereignisse',
+        'web'   => '20.10',
+        'label' => 'Sperrereignisse — damit man sieht, DASS etwas wiederkehrt',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'sicherheit_ereignisse'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* WOGEGEN. `rate_limits` haelt den ZUSTAND — wer ist gerade
+             * gesperrt. Sobald die Sperre ablaeuft und der Aufraeumjob die
+             * Zeile wegnimmt, ist nichts mehr da. Dieselbe Luecke wie bei
+             * `jobs.letzter_fehler` vor Web 20.8.0: Man sieht, was JETZT
+             * ansteht, nie, dass es wiederkehrt. Eine Betreiberin, die
+             * morgens nachsieht, ob in der Nacht jemand an der Tuer war,
+             * findet heute nichts.
+             *
+             * EIN EREIGNIS JE SPERRE, NICHT JE FEHLVERSUCH. `rate_misserfolg()`
+             * laeuft bei jeder Anmeldung ueber zwei Merkmale und fuehrt je
+             * Merkmal zwei Statements aus; ein Ereignis je Versuch machte
+             * daraus sechs und schriebe jeden Tippfehler mit. Dieselbe
+             * Ueberlegung wie bei `job_laeufe`: Geschrieben wird, was etwas
+             * AUSSAGT.
+             *
+             * `merkmal` STEHT IM KLARTEXT, und das ist eine Entscheidung
+             * (E-P5a-46). Es enthaelt IP-Adressen und — bei Merkmalen der
+             * Form `id:` an der Anmeldung — E-Mail-Adressen. Ohne sie waere
+             * die Liste „irgendwo war irgendwer gesperrt" und damit wertlos;
+             * genau dieselbe Abwaegung wie bei der Unzustellbar-Liste
+             * (E-P5a-39). Die Folge ist benannt: `komp_tabellen()` zaehlt
+             * seine Tabellen ueber SHOW FULL TABLES und hat keine
+             * Ausnahmeliste — diese Tabelle liegt damit in JEDER
+             * Komplettsicherung, und die 30-Tage-Frist gilt in der laufenden
+             * Datenbank, nicht im versiegelten Abzug.
+             *
+             * `art` STATT EINER ENUM: Die Liste waechst in P5c um
+             * Audit-Ereignisse, und eine ENUM zu erweitern ist eine
+             * Migration. VARCHAR(24) kostet hier nichts. */
+            'CREATE TABLE sicherheit_ereignisse (
+               id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               art       VARCHAR(24)  NOT NULL,
+               topf      VARCHAR(32)  NULL,
+               merkmal   VARCHAR(190) NULL,
+               stufe     TINYINT UNSIGNED NOT NULL DEFAULT 0,
+               versuche  INT UNSIGNED NULL,
+               zeitpunkt DATETIME     NOT NULL,
+               bis       DATETIME     NULL,
+               wer       VARCHAR(190) NULL,
+               INDEX idx_zeitpunkt (zeitpunkt),
+               INDEX idx_art_zeit (art, zeitpunkt)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
+    [
+        'id'    => '2026_09_16_geraet_abgewiesen',
+        'web'   => '20.11',
+        'label' => 'Abgewiesene Geraeteanmeldungen — damit ein veralteter Schluessel sichtbar wird',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'devices'
+                                AND column_name = 'abgewiesen_seit'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* WOGEGEN (E-P5a-02). Ab Web 20.11.0 hat auch `ingest.php` eine
+             * Mengenbremse. Eine Uhr mit veraltetem Schluessel sperrt sich
+             * damit selbst aus — hinnehmbar, kurz, und der Rueckstand bleibt
+             * auf dem Geraet. Aber sie muss SICHTBAR sein: Sonst steht eine
+             * Notaerztin vor einer Uhr, die nichts mehr hochlaedt, und nichts
+             * in der Anwendung sagt ihr, warum.
+             *
+             * ZWEI SPALTEN, NICHT EINE TABELLE. Die Frage ist „laeuft dieses
+             * Geraet gegen eine Wand?" und nicht „wann genau war der 17.
+             * Versuch" — das steht in `sicherheit_ereignisse`. Hier genuegt
+             * ein Zeitpunkt und eine Zahl auf der Zeile, die ohnehin bei
+             * jedem Upload gelesen wird.
+             *
+             * SIE WERDEN BEI DER NAECHSTEN GELUNGENEN ANMELDUNG GELEERT. Ein
+             * Vermerk, der stehenbleibt, nachdem das Geraet neu gekoppelt
+             * wurde, ist eine Falschmeldung — und zwar eine, die genau dann
+             * dasteht, wenn alles wieder gut ist. */
+            'ALTER TABLE devices
+               ADD COLUMN abgewiesen_seit   DATETIME NULL,
+               ADD COLUMN abgewiesen_anzahl INT UNSIGNED NOT NULL DEFAULT 0',
+        ],
+    ],
+    [
+        'id'    => '2026_09_16_sicherungsziel_aufbewahrung',
+        'web'   => '20.14',
+        'label' => 'Aufbewahrung auf dem Sicherungsziel — Regel je Ziel und ein Versandprotokoll',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'backup_targets'
+                                AND column_name = 'behalten_konto'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* WOGEGEN (E-P5a-03, Backlog Nr. 49). Der Versand ERGAENZT nur;
+             * auf der Gegenstelle loescht diese Anwendung nie. Das ist
+             * Absicht und keine Luecke — der Zweck eines auswaertigen Ziels
+             * ist, den Ausfall dieses Servers zu ueberleben, SAMT eines
+             * Fehlers, der HIER zu viel loescht. Ein Versand, der drueben
+             * aufraeumt, traegt genau diesen Fehler mit hinueber.
+             *
+             * Bei zwei Sicherungen je Konto und Monat laeuft ein Ziel
+             * trotzdem ueber kurz oder lang voll, und niemand merkt es hier.
+             * Deshalb: eine Zahl JE ZIEL, die AUSDRUECKLICH eingeschaltet
+             * werden muss und nie die Vorgabe ist. `NULL` heisst „Option
+             * aus" — nicht `0`, denn `0` hiesse „nichts behalten".
+             *
+             * ZWEI ZAHLEN, NICHT EINE. Die Kontopakete und die
+             * Komplett-Staende sind verschiedene Dinge: Von einem Konto
+             * genuegen wenige Staende, vom Komplett-Backup will man die
+             * laengere Reihe (aus ihm laesst sich jedes Konto
+             * wiederherstellen, umgekehrt nicht). Eine gemeinsame Zahl
+             * zwaenge beide auf denselben Wert. */
+            'ALTER TABLE backup_targets
+               ADD COLUMN behalten_konto    SMALLINT UNSIGNED NULL,
+               ADD COLUMN behalten_komplett SMALLINT UNSIGNED NULL',
+
+            /* DAS VERSANDPROTOKOLL — die zweite der drei Sicherungen.
+             *
+             * WARUM EINE TABELLE UND NICHT `app_state` (E-P5a-56). Das
+             * Konzept sagt „Versandprotokoll in `app_state`". Das geht
+             * nicht: `app_state.v` ist `VARCHAR(190)`, und die Frage, die
+             * beantwortet werden muss, ist „hat DIESE Installation die Datei
+             * X auf Ziel Y geschickt?" — eine Zeile je Datei und Ziel, bei
+             * einem gewachsenen Bestand tausende. In 190 Zeichen passt das
+             * nicht einmal fuer ein Konto.
+             *
+             * DIE TABELLE TUT ZWEI DINGE, und das ist kein Zufall: Sie ist
+             * das Versandprotokoll (was haben wir dorthin geschickt?) UND
+             * das Loeschprotokoll (was haben wir dort entfernt, wann, warum?
+             * — E-P5a-03 verlangt beides). Zwei Tabellen dafuer waeren zwei
+             * Fassungen derselben Zeile.
+             *
+             * `geloescht_am IS NULL` heisst „liegt dort" — soweit wir wissen.
+             * Wer die Datei am Ziel VON HAND wegnimmt, hinterlaesst hier eine
+             * Zeile, die luegt; genau deshalb ist das Namensmuster die ERSTE
+             * Sicherung und diese Tabelle die zweite. Geloescht wird nur,
+             * was BEIDE Proben besteht und dort auch wirklich liegt.
+             *
+             * ON DELETE CASCADE: Wer ein Ziel austraegt, traegt seine
+             * Buchfuehrung mit aus. Was dort liegt, bleibt liegen — das sagt
+             * die Seite beim Entfernen ausdruecklich —, aber diese
+             * Installation fuehrt darueber kein Buch mehr. */
+            'CREATE TABLE sicherungsziel_dateien (
+               id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               ziel_id      INT UNSIGNED NOT NULL,
+               ordner       VARCHAR(190) NOT NULL,
+               datei        VARCHAR(190) NOT NULL,
+               bytes        BIGINT UNSIGNED NOT NULL DEFAULT 0,
+               gesendet_am  DATETIME NOT NULL,
+               geloescht_am DATETIME NULL,
+               grund        VARCHAR(190) NULL,
+               UNIQUE KEY uq_ziel_datei (ziel_id, ordner, datei),
+               KEY idx_ziel_geloescht (ziel_id, geloescht_am),
+               KEY idx_geloescht (geloescht_am),
+               CONSTRAINT fk_szd_ziel FOREIGN KEY (ziel_id)
+                 REFERENCES backup_targets (id) ON DELETE CASCADE
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }
@@ -2737,8 +3088,160 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
         }
     }
 
+    /* DEN TORWAECHTER FORTSCHREIBEN — aber nur nach einem AUSGEFUEHRTEN Lauf
+     * (P5a/AP3, E-P5a-20).
+     *
+     * Warum nicht auch in der Vorschau: `migrationen_ausstehend()` RUFT die
+     * Vorschau, um den Zwischenspeicher zu fuellen. Schriebe die Vorschau ihn
+     * ebenfalls, stuenden zwei Schreibwege fuer dieselbe Zeile da, und der
+     * eine (die Statusseite, die auch nur vorschaut) faende sich in einer
+     * Rolle wieder, die er nicht hat.
+     *
+     * Warum nach dem Lauf zwingend: Der Hash aendert sich dabei NICHT — es
+     * kommt ja keine Migration hinzu, es wird eine ausgefuehrt. Ohne diese
+     * Zeile bliebe die gespeicherte Antwort „steht aus", und der Torwaechter
+     * schloesse die Installation gleich wieder zu. */
+    if ($ausfuehren) {
+        migrationen_tor_merken($pdo, ($offen + $blockiert) > 0);
+    }
+
     return ['results' => $results, 'offen' => $offen,
             'blockiert' => $blockiert, 'gelaufen' => $gelaufen];
+}
+
+/* ===========================================================================
+ * DER TORWAECHTER (P5a/AP3, E-P5a-20; Rahmenplan R40 (4), Backlog Nr. 54)
+ * ===========================================================================
+ *
+ * DIE FRAGE, DIE JEDE ANFRAGE STELLT. Bis Web 20.5.0 war „steht eine Migration
+ * aus?" eine Frage AN DIE SEITE `betrieb_updates.php` — jemand musste sie
+ * aufrufen. Zwischen dem Hochladen neuer Dateien und diesem Aufruf erwartet
+ * neuer Code Tabellen, die es noch nicht gibt; die Anwendung antwortet in
+ * diesem Fenster mit 500, und zwar einer Uhr gegenueber, einem Handy
+ * gegenueber und einer Notaerztin gegenueber, die gerade dokumentiert.
+ *
+ * WARUM SIE NICHT BEI JEDER ANFRAGE WIRKLICH GEPRUEFT WIRD. Ein voller
+ * `migrationen_lauf($pdo, false)` geht 46 Katalogeintraege durch und stellt
+ * je Eintrag mindestens eine `information_schema`-Abfrage. Das ist der Preis
+ * einer Statusseite, nicht der Preis JEDER Seite.
+ *
+ * DER HASH IST DER AUSLOESER. Was sich zwischen zwei Deploys aendert, ist der
+ * KATALOG — neue Migrationen kommen hinzu. Sein Hash steht in `app_state`
+ * neben der Antwort; stimmt er, gilt die gespeicherte Antwort, und die
+ * Anfrage kostet eine Zeile aus einer Tabelle mit Primaerschluessel. Stimmt
+ * er nicht, laeuft die echte Pruefung EINMAL und schreibt beides fort.
+ *
+ * DREI STELLEN SCHREIBEN DEN ZWISCHENSPEICHER FORT, und alle drei muessen es:
+ *
+ *   1. diese Datei nach einem AUSGEFUEHRTEN Lauf (`migrationen_lauf(…, true)`)
+ *      — sonst bliebe die Antwort „steht aus", obwohl gerade migriert wurde;
+ *      der Hash aendert sich dabei ja nicht.
+ *   2. `wiederherstellen.php` nach dem Einspielen (Backlog Nr. 54) — ein
+ *      eingespielter Dump bringt den FREMDEN Registerstand der
+ *      Quellinstallation mit, und der Hash passt trotzdem.
+ *   3. der Deploy selbst, aber nur mittelbar: Er aendert den Katalog, also
+ *      den Hash, also faellt der Zwischenspeicher von selbst.
+ *
+ * WAS ER NICHT LEISTET. Eine Aenderung INNERHALB einer Migration (anderes
+ * SQL, gleiche Kennung) aendert den Hash nicht. Das ist Absicht: Die Frage
+ * lautet „ist eine Migration hinzugekommen?", nicht „hat jemand eine
+ * bestehende umgeschrieben?" — Letzteres ist ohnehin verboten, sobald sie
+ * ausgeliefert war.
+ */
+
+/** Schluessel in `app_state`. Zwei Zeilen statt einer JSON-Zeile: `v` ist
+ *  VARCHAR(190), und zwei kurze Werte sind dort sicherer als ein langer. */
+const MIGRATION_TOR_HASH  = 'migration_tor_hash';
+const MIGRATION_TOR_OFFEN = 'migration_tor_offen';
+
+/**
+ * Der Hash des Katalogs — ueber die KENNUNGEN, nicht ueber den Katalog selbst.
+ *
+ * `serialize(migrationen_katalog())` waere das Naheliegende und scheitert:
+ * Der Katalog enthaelt Closures (`skip`, `run`), und Closures lassen sich
+ * nicht serialisieren — der Aufruf wuerfe eine Ausnahme. Die Kennungen
+ * beantworten die Frage ohnehin genauer: Sie sind das, was ein Deploy
+ * hinzufuegt.
+ */
+function migrationen_katalog_hash(): string
+{
+    return hash('sha256', implode("\n", array_column(migrationen_katalog(), 'id')));
+}
+
+/** Eine Zeile aus `app_state`. `null`, wenn es sie (oder die Tabelle) nicht gibt. */
+function _tor_lesen(PDO $pdo, string $k): ?string
+{
+    try {
+        $st = $pdo->prepare('SELECT v FROM app_state WHERE k = ?');
+        $st->execute([$k]);
+        $v = $st->fetchColumn();
+        return $v === false ? null : (string)$v;
+    } catch (Throwable) {
+        return null;   // app_state fehlt — dann gibt es auch keinen Zwischenspeicher
+    }
+}
+
+/** Den Zwischenspeicher fortschreiben. Still, wenn die Tabelle fehlt. */
+function migrationen_tor_merken(PDO $pdo, bool $offen): void
+{
+    try {
+        $st = $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?), (?, ?)
+                             ON DUPLICATE KEY UPDATE v = VALUES(v)');
+        $st->execute([MIGRATION_TOR_HASH, migrationen_katalog_hash(),
+                      MIGRATION_TOR_OFFEN, $offen ? '1' : '0']);
+    } catch (Throwable $ex) {
+        error_log('Torwaechter: Zwischenspeicher nicht schreibbar: ' . $ex->getMessage());
+    }
+}
+
+/**
+ * Den Zwischenspeicher verwerfen — die naechste Anfrage prueft wieder echt.
+ *
+ * FUER `wiederherstellen.php` (Backlog Nr. 54). Ein eingespielter Dump bringt
+ * das Register der QUELLINSTALLATION mit; der Katalog-Hash dieser Installation
+ * passt trotzdem, und der Zwischenspeicher behauptete danach den Stand von
+ * vorher. Er wird deshalb weggeworfen, nicht neu gerechnet: Das Rechnen
+ * kostet, und die naechste Anfrage tut es ohnehin.
+ */
+function migrationen_tor_zuruecksetzen(PDO $pdo): void
+{
+    try {
+        $pdo->prepare('DELETE FROM app_state WHERE k IN (?, ?)')
+            ->execute([MIGRATION_TOR_HASH, MIGRATION_TOR_OFFEN]);
+    } catch (Throwable $ex) {
+        error_log('Torwaechter: Zwischenspeicher nicht loeschbar: ' . $ex->getMessage());
+    }
+}
+
+/**
+ * Steht eine Migration aus? Die Frage, die jede angemeldete Anfrage stellt.
+ *
+ * `true` heisst: Es gibt etwas zu tun — eine Migration, die laeuft, eine, die
+ * nur noch verbucht werden muss (`skip`), oder eine, die am Inhalt blockiert
+ * (`stopp`). Alle drei sind Gruende, die Installation zu schliessen: Der Code
+ * ist neu, das Schema ist es nicht.
+ *
+ * `false` heisst: nichts zu tun. Bei einem FEHLER — Tabelle fehlt, Datenbank
+ * antwortet nicht — kommt ebenfalls `false`, und das ist Absicht: Der
+ * Torwaechter darf keine Installation schliessen, weil er selbst nicht messen
+ * konnte. Dieselbe Richtung wie beim Ratenschutz (`ratelimit_lib.php`:
+ * durchlassen statt selbstgebauter Ausfall).
+ */
+function migrationen_ausstehend(PDO $pdo): bool
+{
+    $hash = migrationen_katalog_hash();
+    if (_tor_lesen($pdo, MIGRATION_TOR_HASH) === $hash) {
+        return _tor_lesen($pdo, MIGRATION_TOR_OFFEN) === '1';
+    }
+    try {
+        $l = migrationen_lauf($pdo, false);
+        $offen = ((int)$l['offen'] + (int)$l['blockiert']) > 0;
+    } catch (Throwable $ex) {
+        error_log('Torwaechter: Pruefung fehlgeschlagen: ' . $ex->getMessage());
+        return false;
+    }
+    migrationen_tor_merken($pdo, $offen);
+    return $offen;
 }
 
 /**

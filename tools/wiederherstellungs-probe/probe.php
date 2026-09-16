@@ -55,10 +55,19 @@ declare(strict_types=1);
  *     cp server/config.php /tmp/vorher/
  *     php tools/wiederherstellungs-probe/probe.php /tmp/vorher
  *
- * Erwartet: **106 von 106** mit dem heutigen Stand, Rueckgabe 0.
+ * Erwartet: **110 von 110** mit dem heutigen Stand, Rueckgabe 0.
  * (94 bis S10/AP4 — Teil 8 hat mit der Fassung 3 vier Erwartungen dazu
- *  bekommen, Teil 12 acht. Wer die Zahl hier nicht mitfuehrt, hat beim
- *  naechsten Lauf keinen Vergleich, sondern nur ein Gefuehl.)
+ *  bekommen, Teil 12 acht. Am 16.09.2026 stand hier 106 und gemessen wurden
+ *  105: eine Erwartung Unterschied, entstanden ohne Spur. Mit den fuenf
+ *  neuen aus P5a/AP10 — Nr. 195, die Geraeteart auf dem Rueckweg — sind es
+ *  110, gemessen am selben Tag. Wer die Zahl hier nicht mitfuehrt, hat beim
+ *  naechsten Lauf keinen Vergleich, sondern nur ein Gefuehl.
+ *
+ *  ZWEI DAVON SIND AUF EINER LEEREN INSTALLATION ROT (Teil 10, Backlog
+ *  Nr. 212): Der Sammelvorgang „Alle sichern" bekommt ein enges Zeitbudget
+ *  und soll danach etwas offen lassen — bei zwei fast leeren Konten passen
+ *  beide hinein. Ein Mangel des Pruefmittels, nicht der Anwendung;
+ *  nachgemessen gegen den unveraenderten Stand.)
  *
  * (Die Zahl stand bis Web 14.2.0 auf 30 und war seit Langem falsch — die
  * Probe ist auf elf Teile gewachsen. Sie ist ausserdem seit einiger Zeit
@@ -1274,6 +1283,60 @@ $sag('Dasselbe am Ruhesegment',
      ($g3['geraet_art'] ?? null) === 'uhr'
        && ($g3['geraet_modell'] ?? null) === 'fēnix 7 / fēnix 7 Solar',
      json_encode($g3, JSON_UNESCAPED_UNICODE));
+
+/* ---- Nr. 195: die Geraeteart auf dem RUECKWEG (P5a/AP10) ------------------
+ *
+ * WAS FALSCH WAR. Beim Koppeln verengt `geraete_lib.php` die Geraeteart auf
+ * die drei Werte aus `GERAET_ARTEN`; `docs/Technik.md` fuehrt das als Zusage.
+ * Auf dem Rueckweg der Sicherung galt sie nicht — geprueft wurde allein die
+ * LAENGE (16 Zeichen), also ging jede Zeichenkette durch. Beim Nachbarfeld
+ * `origin` war es anders; die Asymmetrie stand ohne Begruendung da.
+ *
+ * WARUM DAS ZAEHLT: Genau diese Spalte soll der offene R42-Rest auswerten
+ * (R64). Eine Zaehlung, die man durch das Bearbeiten der EIGENEN Sicherung
+ * verunreinigen kann, taugt nicht als Betriebszahl.
+ *
+ * ZWEI ERWARTUNGEN, nicht eine: Der Wert muss NULL werden, UND es muss
+ * dastehen. Ein stilles NULL saehe aus wie „stand nicht drin". */
+$uid195 = $konto('probe-195@example.invalid');
+$s195 = edbak_restore($uid195, $paket9([], ['missions' => [
+    ['client_ref' => 'art-195', 'day_id' => 910,
+     'started_at' => '2026-08-03 09:00:00', 'ended_at' => '2026-08-03 09:30:00',
+     'origin' => 'manual', 'manual' => 1,
+     'geraet_art' => 'radcomputer', 'geraet_modell' => 'Irgendein Radcomputer'],
+    ['client_ref' => 'art-ok', 'day_id' => 910,
+     'started_at' => '2026-08-03 11:00:00', 'ended_at' => '2026-08-03 11:30:00',
+     'origin' => 'manual', 'manual' => 1,
+     'geraet_art' => 'HANDY', 'geraet_modell' => 'Google Pixel 8'],
+], 'rest_segments' => [
+    ['client_ref' => 'r-195', 'day_id' => 910,
+     'started_at' => '2026-08-03 06:00:00', 'ended_at' => '2026-08-03 07:00:00',
+     'geraet_art' => 'fahrrad'],
+]]));
+$hole195 = function (string $tab, string $ref) use ($pdo, $uid195): array {
+    $st = $pdo->prepare("SELECT geraet_art, geraet_modell FROM `$tab`
+                          WHERE user_id = ? AND client_ref = ?");
+    $st->execute([$uid195, $ref]);
+    return $st->fetch(PDO::FETCH_ASSOC) ?: [];
+};
+$a195 = $hole195('missions', 'art-195');
+$sag('Nr. 195: eine unbekannte Geraeteart landet als NULL, nicht als Text',
+     array_key_exists('geraet_art', $a195) && $a195['geraet_art'] === null,
+     json_encode($a195, JSON_UNESCAPED_UNICODE));
+$sag('...das MODELL daneben bleibt stehen — es ist Freitext und keine Liste',
+     ($a195['geraet_modell'] ?? null) === 'Irgendein Radcomputer',
+     json_encode($a195, JSON_UNESCAPED_UNICODE));
+$aOk = $hole195('missions', 'art-ok');
+$sag('GEGENPROBE: ein bekannter Wert kommt durch — auch in Grossbuchstaben',
+     ($aOk['geraet_art'] ?? null) === 'handy', json_encode($aOk));
+$r195 = $hole195('rest_segments', 'r-195');
+$sag('Dasselbe am Ruhesegment', array_key_exists('geraet_art', $r195)
+     && $r195['geraet_art'] === null, json_encode($r195));
+$gruende195 = implode(' | ', array_keys((array)($s195['rejected'] ?? [])));
+$sag('...und es steht im Pruefprotokoll, statt still zu geschehen',
+     str_contains($gruende195, 'geraet_art: keine bekannte Geräteart')
+     && str_contains($gruende195, 'rest.geraet_art: keine bekannte Geräteart'),
+     $gruende195 !== '' ? $gruende195 : '(leer)');
 
 /* ---- Der Vermerk selbst -------------------------------------------------- */
 $v = $vermerke($uid11);

@@ -38,6 +38,11 @@ $notice = null; $error = null; $ergebnis = null;
 $bearbeiten = null;
 
 $tabelleDa = sz_tabelle_da();
+/* Ergebnis des Knopfes „Nachsehen“ (P5a/AP10) — null, solange niemand
+ * geklickt hat. Es wird NICHT gespeichert: Es ist eine Momentaufnahme der
+ * Gegenstelle, und eine gespeicherte Momentaufnahme ist beim nächsten
+ * Aufruf eine Behauptung. */
+$bestand = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -116,6 +121,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     . (count((array)($e['uebersprungen_namen'] ?? [])) > 3 ? ' …' : '')
                     . ') — unverschlüsseltes Protokoll, bitte umstellen.'
                   : '')
+              /* WAS DORT ENTFERNT WURDE, STEHT IM ERFOLGSSATZ (P5a/AP10).
+               * Eine Löschung auf einer fremden Maschine ist die Sorte
+               * Handlung, die man nicht erst auf einer anderen Seite
+               * nachlesen sollte. Die vollständige Liste steht in
+               * Betrieb / Status / Sicherheit. */
+              . ((int)($e['geloescht'] ?? 0) > 0
+                  ? ' Auf den Zielen entfernt: ' . (int)$e['geloescht']
+                    . ((int)$e['geloescht'] === 1 ? ' alte Sicherung (' : ' alte Sicherungen (')
+                    . edbak_groesse_text((int)($e['geloescht_bytes'] ?? 0))
+                    . ') — nach der Aufbewahrungsregel des jeweiligen Ziels.'
+                  : '')
+              . ((int)($e['nicht_wieder'] ?? 0) > 0
+                  ? ' ' . (int)$e['nicht_wieder'] . ' Sicherung'
+                    . ((int)$e['nicht_wieder'] === 1 ? ' ging' : 'en gingen')
+                    . ' nicht erneut hinaus — sie '
+                    . ((int)$e['nicht_wieder'] === 1 ? 'wurde' : 'wurden')
+                    . ' dort schon nach der Aufbewahrungsregel entfernt.'
+                  : '')
               . ($e['fertig'] ? '' : ' Der Durchgang war nicht fertig — ein '
                               . 'zweiter Klick macht dort weiter, wo dieser aufhörte.');
         if ($e['fehler'] !== []) {
@@ -142,6 +165,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             sz_lauf_merken($id, (bool)$ergebnis['ok'],
                            $ergebnis['ok'] ? null : (string)$ergebnis['meldung']);
+        }
+    } elseif ($aktion === 'ziel_bestand' && $id > 0) {
+        /* ---- NACHSEHEN, WAS DORT LIEGT (P5a/AP10, E-P5a-03) --------------
+         *
+         * AUF KNOPFDRUCK UND NICHT BEI JEDEM SEITENAUFRUF. Diese Auskunft
+         * kostet eine Verbindung und je Ordner eine Listenabfrage; bei drei
+         * Zielen und dreissig Konten sind das neunzig Anfragen über eine
+         * Leitung, die auch mal langsam ist. Dieselbe Überlegung wie bei
+         * `sz_versand_rueckstand()`, und dieselbe wie beim Knopf „Verbindung
+         * prüfen" daneben: Wer es wissen will, fragt.
+         *
+         * SIE LÖSCHT NICHTS. Das ist die Grundlage aus E-P5a-03 — die
+         * Anzeige beantwortet die Frage vielleicht schon, und dann braucht
+         * es die Löschregel gar nicht. */
+        $z = sz_lesen($id);
+        if ($z === null) {
+            $error = 'Dieses Ziel gibt es nicht (mehr).';
+        } elseif (!sz_protokoll_erlaubt((string)$z['protokoll'])) {
+            $error = 'Dieses Ziel wird nicht mehr beschickt — sein Protokoll '
+                   . 'überträgt im Klartext. Erst umstellen, dann nachsehen.';
+        } else {
+            $weg = null;
+            try {
+                $weg = sz_weg($z);
+                $weg->verbinden();
+                $bestand = sz_bestand($weg, $id);
+                $bestand['ziel'] = (string)$z['name'];
+            } catch (ZielFehler $e) {
+                $error = 'Bei „' . (string)$z['name'] . '" ging es nicht weiter: '
+                       . $e->getMessage();
+            } finally {
+                if ($weg !== null) { try { $weg->trennen(); } catch (Throwable $x) {} }
+            }
         }
     }
 }
@@ -236,6 +292,51 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
     <?php endif; ?>
   <?php endif; ?>
 
+  <?php /* ---- Was auf dem Ziel liegt (P5a/AP10, E-P5a-03) ----------------
+       DIE ANZEIGE IST DIE GRUNDLAGE, nicht die Löschregel. Backlog Nr. 49
+       sagt es so: „oder eine blosse Anzeige des Belegten am Ziel, damit die
+       Betreiberin es sieht und dort selbst entscheidet. Der zweite Weg
+       löscht nichts und beantwortet die Frage vielleicht schon."
+
+       FREMDE DATEIEN STEHEN MIT EIGENER ZAHL DA. Sie sind der Grund, warum
+       die Löschregel eine Herkunftsprobe braucht — und wer sie sieht, weiß
+       auf einen Blick, dass dieses Ziel nicht nur uns gehört. */ ?>
+  <?php if ($bestand !== null): ?>
+    <?php ui_karte_start(['titel' => 'Was auf „' . e((string)$bestand['ziel']) . '" liegt',
+                          'id' => 'k-bestand']); ?>
+      <?php
+      ui_zeile(['text' => 'Sicherungen dieser Installation',
+                'klein' => $bestand['dateien'] === 0
+                    ? 'Dort liegt nichts von hier — entweder ist noch nichts gesendet '
+                    . 'worden, oder es liegt unter einem anderen Pfad.'
+                    : edbak_groesse_text((int)$bestand['bytes']) . ' in '
+                    . (int)$bestand['ordner'] . ' Ordner'
+                    . ((int)$bestand['ordner'] === 1 ? '' : 'n'),
+                'plaketten' => ui_plakette((string)(int)$bestand['dateien'] . ' '
+                    . ((int)$bestand['dateien'] === 1 ? 'Datei' : 'Dateien'),
+                    ['ton' => (int)$bestand['dateien'] > 0 ? 'blau' : 'neutral'])]);
+      if ($bestand['aeltester'] !== null) {
+          ui_zeile(['text' => 'Ältester Stand',
+                    'klein' => 'Der jüngste ist von '
+                             . fmt_local((string)$bestand['juengster'], 'd.m.Y · H:i') . ' Uhr',
+                    'plaketten' => ui_plakette(
+                        fmt_local((string)$bestand['aeltester'], 'd.m.Y'), ['ton' => 'neutral'])]);
+      }
+      ui_zeile(['text' => 'Fremde Dateien',
+                'klein' => (int)$bestand['fremd'] === 0
+                    ? 'Auf diesem Ziel liegt nichts, was nicht von hier stammt.'
+                    : edbak_groesse_text((int)$bestand['fremd_bytes'])
+                    . ' — diese Anwendung fasst sie nie an, auch nicht mit '
+                    . 'eingeschalteter Aufbewahrungsregel.',
+                'plaketten' => ui_plakette((string)(int)$bestand['fremd'],
+                    ['ton' => (int)$bestand['fremd'] > 0 ? 'orange' : 'blau'])]);
+      ?>
+      <p class="feld-hinweis">Eine Momentaufnahme, gelesen in diesem Augenblick —
+         sie wird nicht gespeichert. Gezählt wird, was dem Namensmuster einer
+         Sicherung entspricht; alles andere steht unter „Fremde Dateien".</p>
+    <?php ui_karte_ende(); ?>
+  <?php endif; ?>
+
   <?php /* ---- Der Serverschlüssel steht jetzt woanders (S10, E-S10-12) --
        DIE KARTE IST NACH BETRIEB → SERVEREINSTELLUNGEN GEZOGEN und dort mit
        dem Server-Anteil zusammengelegt („Schlüssel des Servers"). Der Grund
@@ -281,9 +382,16 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         <?= csrf_field() ?><input type="hidden" name="action" value="versand_schalter">
         <?php ui_schalter(['name' => 'versand_auto', 'label' => 'Backups automatisch versenden',
                            'an' => $autoAn,
+                           /* DER SATZ WAR BIS WEB 20.13.0 UNEINGESCHRÄNKT
+                            * RICHTIG und ist es seit AP10 nicht mehr: Wo die
+                            * Aufbewahrungsregel eines Ziels eingeschaltet
+                            * ist, löscht der Versand dort sehr wohl. Eine
+                            * Zusage, die neben einer Option steht, die sie
+                            * aufhebt, ist schlimmer als keine. */
                            'klein' => 'Der Aufräumjob schiebt neue Pakete auf die '
-                                    . 'aktiven Ziele. Es wird nur ergänzt — auf dem '
-                                    . 'Ziel wird nie etwas gelöscht.']); ?>
+                                    . 'aktiven Ziele. Es wird nur ergänzt — gelöscht '
+                                    . 'wird dort nur, wo die Aufbewahrungsregel des '
+                                    . 'Ziels ausdrücklich eingeschaltet ist.']); ?>
         <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
         </div>
@@ -355,6 +463,20 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                    . '(Protokoll, Port und Zugangsdaten). · ' . $klein;
         }
         if (($z['schluessel'] ?? null) !== null) { $klein .= ' · mit privatem Schlüssel'; }
+        /* DIE AUFBEWAHRUNG STEHT AN DER ZEILE, nicht nur im Formular
+         * (P5a/AP10). Eine Regel, die drüben löscht, gehört dorthin, wo man
+         * die Ziele überfliegt — und zwar in BEIDEN Zuständen: „aus" ist hier
+         * die Auskunft, dass dort nichts entfernt wird, und nicht ein
+         * fehlender Satz. */
+        $bk = $z['behalten_konto'] === null ? null : (int)$z['behalten_konto'];
+        $bm = $z['behalten_komplett'] === null ? null : (int)$z['behalten_komplett'];
+        if ($bk !== null || $bm !== null) {
+            $plaketten .= ui_plakette('räumt dort auf', ['ton' => 'orange']);
+            $klein .= ' · behält dort ' . ($bk ?? '—') . ' je Konto und '
+                    . ($bm ?? '—') . ' Komplett-Stände';
+        } else {
+            $klein .= ' · räumt dort nicht auf';
+        }
         if (($z['letzter_erfolg'] ?? null) !== null) {
             /* NICHT noch einmal „zuletzt in Ordnung" — das steht schon als
                Plakette daneben. Bei 390 px umfliesst die Kleinzeile die
@@ -374,10 +496,20 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
           <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$z['id'] ?>">
           <input type="hidden" name="action" value="abdruck_vergessen">
         </form>
+        <form method="post" id="zb-<?= (int)$z['id'] ?>" hidden>
+          <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$z['id'] ?>">
+          <input type="hidden" name="action" value="ziel_bestand">
+        </form>
         <?php
         $eintraege = [
             ['text' => 'Verbindung prüfen', 'symbol' => 'haken',
              'form' => 'zp-' . (int)$z['id']],
+            /* NACHSEHEN STEHT NEBEN PRÜFEN, weil es dasselbe kostet: eine
+             * Verbindung auf Knopfdruck. Es löscht nichts — das ist die
+             * Grundlage aus E-P5a-03, und die Löschregel darunter ist die
+             * Option, die man danach vielleicht gar nicht braucht. */
+            ['text' => 'Nachsehen, was dort liegt', 'symbol' => 'lupe',
+             'form' => 'zb-' . (int)$z['id']],
             ['text' => 'Bearbeiten', 'symbol' => 'stift',
              'href' => '?bearbeiten=' . (int)$z['id']],
         ];
@@ -400,7 +532,28 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
             'text' => (string)$z['name'],
             'klein' => $klein,
             'plaketten' => $plaketten,
-            'aktionen' => ui_zeilenaktionen(['eintraege' => $eintraege]),
+            /* ---- ALLES INS MENUE (P5a/AP10, `blatt_immer`) ---------------
+             *
+             * DIE ZEILE TRUEG SONST FUENF KNOEPFE. Mit „Nachsehen, was dort
+             * liegt" ist die Knopfreihe zu breit geworden, und zwar gemessen:
+             * Der Bilderlauf fand **+156 px waagerechten Überlauf bei 768 px**
+             * und +120 bei 1024 (Verursacher `div.zeile-aktionen`). Den Text
+             * zu kürzen half nicht genug (+49 / +13) — fünf Knöpfe passen
+             * dort nicht, egal wie sie heissen.
+             *
+             * `blatt_immer` IST DAFUER DA, und die Begründung im Baustein
+             * passt hier wörtlich (S8/AP6, Mockup 10): „Die Geräteliste trägt
+             * drei Handlungen, von denen eine unumkehrbar ist. Als Knopfreihe
+             * stünde ‚Entkoppeln' in Rot unmittelbar neben ‚Deaktivieren'."
+             * Genau das war hier der Zustand — „Löschen" in Rot neben
+             * „Bearbeiten", in jeder Zeile. Im Menü liegt es eine Ebene
+             * tiefer, abgesetzt und rot.
+             *
+             * KEIN NEUER BAUSTEIN: `blatt_immer` ist eine vorhandene Option
+             * derselben Funktion und steht so in `docs/Design.md` 9. */
+            'aktionen' => ui_zeilenaktionen(['eintraege' => $eintraege,
+                                             'blatt_immer' => true,
+                                             'titel' => (string)$z['name']]),
         ]);
         if (($z['letzter_fehler'] ?? null) !== null) {
             /* DER FEHLER STEHT DA, BIS ER WEG IST. Ein Versand, der seit drei
@@ -520,6 +673,54 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                            'an' => (int)($form['aktiv'] ?? 1) === 1,
                            'klein' => 'Aus heisst: Es bleibt eingetragen, der Versand '
                                     . 'überspringt es aber.']); ?>
+
+        <?php /* ---- Die Aufbewahrung auf DEM ZIEL (P5a/AP10, E-P5a-03) ----
+                 SIE IST EINE OPTION UND NIE DIE VORGABE. Der Zweck eines
+                 auswärtigen Ziels ist, den Ausfall dieses Servers zu
+                 überleben — samt eines Fehlers, der HIER zu viel löscht.
+                 Ein Versand, der drüben aufräumt, trägt genau diesen Fehler
+                 mit hinüber. Wer den Haken setzt, entscheidet sich
+                 ausdrücklich dafür, dass er beides will.
+
+                 DER SATZ DARUNTER NENNT DIE DREI SICHERUNGEN, weil sie die
+                 Antwort auf die Frage sind, die beim Setzen des Hakens
+                 entsteht: „Und was, wenn dort noch etwas anderes liegt?" */ ?>
+        <?php /* NACH EINEM FEHLSCHLAG GILT, WAS DAGESTANDEN HAT. `$form` ist
+                 dann die Verschmelzung aus Datenbankzeile und `$_POST`, und
+                 ein NICHT gesetzter Haken kommt in `$_POST` gar nicht vor —
+                 die beiden Zahlen aber schon. Ohne diese Unterscheidung
+                 stünde der Haken nach einem Tippfehler im Port wieder an,
+                 obwohl ihn niemand gesetzt hat. */ ?>
+        <?php $aufAn = $_SERVER['REQUEST_METHOD'] === 'POST'
+                       ? !empty($_POST['aufraeumen'])
+                       : (($form['behalten_konto'] ?? null) !== null
+                          || ($form['behalten_komplett'] ?? null) !== null); ?>
+        <?php ui_schalter(['name' => 'aufraeumen',
+                           'label' => 'Auf dem Ziel aufräumen',
+                           'an' => $aufAn,
+                           'klein' => 'Aus ist die Vorgabe: Der Versand ergänzt nur, '
+                                    . 'gelöscht wird dort nie. An heisst, dass alte '
+                                    . 'Sicherungen dieser Installation dort entfernt '
+                                    . 'werden, sobald mehr liegen als unten steht. '
+                                    . 'Fremde Dateien bleiben immer; gelöscht wird nur, '
+                                    . 'was dem Namensmuster entspricht UND im '
+                                    . 'Versandprotokoll steht, nie unter der Zahl, und '
+                                    . 'nie in einem Lauf, dessen eigener Versand '
+                                    . 'gescheitert ist.']); ?>
+        <div class="fld-reihe">
+          <?php ui_feld(['name' => 'behalten_konto', 'label' => 'Je Konto behalten',
+                         'art' => 'number', 'attr' => 'min="1" max="999"',
+                         'wert' => (string)($form['behalten_konto'] ?? 6),
+                         'klein' => 'Wie viele Konto-Sicherungen je Konto dort bleiben. '
+                                  . 'Hier auf dem Server sind es zwei — dort darf es '
+                                  . 'mehr sein, das ist der Sinn der Sache.']); ?>
+          <?php ui_feld(['name' => 'behalten_komplett', 'label' => 'Komplett-Stände behalten',
+                         'art' => 'number', 'attr' => 'min="1" max="999"',
+                         'wert' => (string)($form['behalten_komplett'] ?? 12),
+                         'klein' => 'Aus einem Komplett-Stand lässt sich jedes Konto '
+                                  . 'wiederherstellen, umgekehrt nicht — deshalb hier '
+                                  . 'die längere Reihe.']); ?>
+        </div>
         <div class="listen-form-fuss">
           <?= ui_knopf(['text' => $neu ? 'Anlegen' : 'Speichern', 'symbol' => 'haken',
                         'art' => 'primaer']) ?>

@@ -245,13 +245,194 @@ foreach ($kennungen as [$roh, $erwartet]) {
     }
 }
 
+/* ======================================================================
+ * Teil 2 — Der Nachloese-Job gegen die Datenbank (P5a/AP11, E-P5a-21)
+ *
+ * WOFUER. Teil 1 misst `geraet_block_lesen()`, also den Weg HEREIN. Der
+ * Nachloese-Job geht den Weg spaeter noch einmal — fuer Zeilen, die beim
+ * Koppeln auf eine Tabelle trafen, die ihr Geraet noch nicht kannte. Dabei
+ * kommt es auf zweierlei an, und beides laesst sich ohne Datenbank nicht
+ * messen: dass er die richtigen Zeilen anfasst, UND dass er die uebrigen in
+ * Ruhe laesst.
+ *
+ * ZWEI TABELLEN IN EINEM LAUF. Die eigentliche Frage lautet: „Kommt eine
+ * neue Modelltabelle wirklich nur bei den Zeilen an, die sie neu kennt?"
+ * Dafuer braucht es zwei Tabellen — die kleine von oben und dieselbe um
+ * einen Eintrag erweitert. `geraet_modell_aufloesen()` und
+ * `gm_nachaufloesen()` nehmen sie deshalb als Parameter (P5a/AP11).
+ *
+ * SIE AENDERT ZEILEN. Deshalb ein eigenes Konto mit eigenen Geraeten, und
+ * `app_state` wird gemerkt und zurueckgeschrieben — sonst stuende auf der
+ * Statusseite der Installation hinterher der Hash einer Vier-Zeilen-Tabelle.
+ * ==================================================================== */
+
+$dbTeil = "übersprungen";
+$serverPfad = __DIR__ . '/../../server';
+$pdo = null;
+try {
+    require_once $serverPfad . '/db.php';
+    require_once $serverPfad . '/geraetemodelle_lib.php';
+    require_once $serverPfad . '/jobs_lib.php';   // job_nachaufloesen()
+    $pdo = db();
+    $pdo->query('SELECT 1 FROM devices LIMIT 1');
+} catch (Throwable $e) { $pdo = null; }
+
+if ($pdo === null) {
+    $dbTeil = "AUSGEFALLEN — keine Datenbank erreichbar";
+} else {
+    /* Die erweiterte Tabelle: dieselbe wie oben plus EINE Teilenummer. */
+    $gross = GERAETE_MODELLE + ['006-B3121-00' => ['Forerunner 745', 'uhr']];
+
+    $standVorher = app_state_lesen(GM_STAND_SCHLUESSEL);
+    $email = 'geraeteprobe@gen-em.org';
+    $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$email]);
+    $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
+                   VALUES (?, 'Geraeteprobe', 'user', '', '', 320000)")->execute([$email]);
+    $uid = (int)$pdo->lastInsertId();
+
+    /* Fuenf Zeilen, jede mit einer Frage:
+     *   A  bekannte Teilenummer, Modell fehlt          -> wird nachgezogen
+     *   B  bekannte Teilenummer, ART ist falsch        -> Tabelle schlaegt
+     *                                                     die Selbstauskunft
+     *   C  Handy: Rohangabe ist der Klarname           -> unberuehrt
+     *   D  unbekannte Teilenummer                      -> unberuehrt
+     *   E  erst in der ERWEITERTEN Tabelle bekannt     -> erst im 2. Lauf */
+    $ins = $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label,
+                            active, geraet_art, geraet_modell, geraet_teil)
+                          VALUES (?,?,?,?,1,?,?,?)');
+    $dev = [];
+    foreach ([
+        ['A', 'uhr',   null,               '006-B4261-00'],
+        ['B', 'uhr',   null,               '006-XXXXX-99'],
+        ['C', 'handy', 'Google Pixel 8',   'Google Pixel 8'],
+        ['D', 'uhr',   null,               '006-ZZZZZ-00'],
+        ['E', 'uhr',   null,               '006-B3121-00'],
+    ] as [$n, $art, $modell, $teil]) {
+        $ins->execute([$uid, 'gp-' . $n, str_repeat('x', 60), 'Probe ' . $n,
+                       $art, $modell, $teil]);
+        $dev[$n] = (int)$pdo->lastInsertId();
+    }
+
+    $lies = function (string $n) use ($pdo, $dev): array {
+        $st = $pdo->prepare('SELECT geraet_art, geraet_modell, geraet_teil
+                               FROM devices WHERE id = ?');
+        $st->execute([$dev[$n]]);
+        return $st->fetch(PDO::FETCH_ASSOC) ?: [];
+    };
+    $sag = function (string $titel, bool $ok, string $zusatz = '') use (&$geprueft, &$fehler): void {
+        $geprueft++;
+        if (!$ok) { $fehler[] = $titel . ($zusatz !== '' ? " — $zusatz" : ''); }
+    };
+
+    try {
+        /* ---- Vorschau: was WUERDE er tun? ---------------------------- */
+        $v1 = gm_nachaufloesen($pdo, 200, false, $dev['A'] - 1, GERAETE_MODELLE);
+        $ids1 = array_column($v1['kandidaten'], 'id');
+        $sag('Nachlösen: die Vorschau nennt genau A und B',
+             $ids1 === [$dev['A'], $dev['B']],
+             'Kandidaten: ' . (implode(',', $ids1) ?: 'keine'));
+        $sag('...und zählt C, D und E als unbekannt',
+             $v1['unbekannt'] === 3, 'unbekannt ' . $v1['unbekannt']);
+        $sag('...und schreibt dabei nichts', $v1['geschrieben'] === 0);
+
+        /* ---- Schreiben ---------------------------------------------- */
+        $s1 = gm_nachaufloesen($pdo, 200, true, $dev['A'] - 1, GERAETE_MODELLE);
+        $sag('Der Lauf schreibt dieselbe Menge, die die Vorschau zeigte',
+             $s1['geschrieben'] === count($ids1),
+             $s1['geschrieben'] . ' geschrieben gegen ' . count($ids1) . ' in der Vorschau');
+
+        $a = $lies('A');
+        $sag('A bekommt sein Modell', ($a['geraet_modell'] ?? null) === 'Venu 3S',
+             json_encode($a, JSON_UNESCAPED_UNICODE));
+        $b = $lies('B');
+        $sag('B: die TABELLE schlägt die Selbstauskunft („uhr" wird „sonstiges")',
+             ($b['geraet_art'] ?? null) === 'sonstiges'
+             && ($b['geraet_modell'] ?? null) === 'Edge (erfunden)',
+             json_encode($b, JSON_UNESCAPED_UNICODE));
+        $c = $lies('C');
+        $sag('C (Handy) bleibt unberührt — die Tabelle kennt keine Handys',
+             ($c['geraet_art'] ?? null) === 'handy'
+             && ($c['geraet_modell'] ?? null) === 'Google Pixel 8',
+             json_encode($c, JSON_UNESCAPED_UNICODE));
+        $d = $lies('D');
+        $sag('D (unbekannte Teilenummer) bleibt unberührt',
+             ($d['geraet_art'] ?? null) === 'uhr' && ($d['geraet_modell'] ?? null) === null,
+             json_encode($d));
+        $e = $lies('E');
+        $sag('E bleibt vorerst unberührt — die kleine Tabelle kennt es nicht',
+             ($e['geraet_modell'] ?? null) === null, json_encode($e));
+        $sag('Die ROHANGABE ist bei allen fünf unverändert',
+             ($a['geraet_teil'] ?? '') === '006-B4261-00'
+             && ($b['geraet_teil'] ?? '') === '006-XXXXX-99'
+             && ($c['geraet_teil'] ?? '') === 'Google Pixel 8'
+             && ($d['geraet_teil'] ?? '') === '006-ZZZZZ-00'
+             && ($e['geraet_teil'] ?? '') === '006-B3121-00');
+
+        /* ---- Ein zweiter Lauf mit derselben Tabelle tut nichts ------- */
+        $s2 = gm_nachaufloesen($pdo, 200, true, $dev['A'] - 1, GERAETE_MODELLE);
+        $sag('Ein zweiter Lauf mit derselben Tabelle schreibt nichts',
+             $s2['geschrieben'] === 0, $s2['geschrieben'] . ' geschrieben');
+
+        /* ---- Die Tabelle wächst um EINEN Eintrag --------------------- */
+        $sag('Eine erweiterte Tabelle hat einen anderen Fingerabdruck',
+             gm_tabellen_hash(GERAETE_MODELLE) !== gm_tabellen_hash($gross));
+        $s3 = gm_nachaufloesen($pdo, 200, true, $dev['A'] - 1, $gross);
+        $sag('Der nächste Lauf zieht GENAU die Zeilen der neuen Teilenummer nach',
+             $s3['geschrieben'] === 1, $s3['geschrieben'] . ' geschrieben');
+        $e2 = $lies('E');
+        $sag('...nämlich E', ($e2['geraet_modell'] ?? null) === 'Forerunner 745',
+             json_encode($e2, JSON_UNESCAPED_UNICODE));
+        $sag('...und C und D sind immer noch unberührt',
+             ($lies('C')['geraet_modell'] ?? null) === 'Google Pixel 8'
+             && ($lies('D')['geraet_modell'] ?? null) === null);
+
+        /* ---- Der Job: er läuft nur bei geändertem Hash --------------- */
+        gm_stand_merken(gm_tabellen_hash(), 0, 0);
+        $j1 = job_nachaufloesen($pdo, [], static fn(): float => 30.0);
+        $sag('Der Job tut nichts, solange der Hash steht',
+             $j1['erledigt'] === 0 && $j1['fertig'] === true);
+        app_state_setzen(GM_STAND_SCHLUESSEL, '{"h":"anders","am":"2026-01-01 00:00:00"}');
+        /* B und E auf den alten Stand zuruecksetzen, damit es etwas zu tun gibt. */
+        $pdo->prepare('UPDATE devices SET geraet_art = ?, geraet_modell = NULL
+                        WHERE id IN (?, ?)')->execute(['uhr', $dev['B'], $dev['E']]);
+        $j2 = job_nachaufloesen($pdo, [], static fn(): float => 30.0);
+        $sag('Bei geändertem Hash läuft er — und schreibt die eine auflösbare Zeile',
+             $j2['erledigt'] === 1 && $j2['fertig'] === true,
+             'erledigt ' . $j2['erledigt']);
+        $sag('...und schreibt den Hash der AUSGELIEFERTEN Tabelle zurück',
+             gm_stand_lesen()['hash'] === gm_tabellen_hash());
+
+        /* ---- Blockweise: die Fortsetzungsmarke -------------------------- */
+        $pdo->prepare('UPDATE devices SET geraet_modell = NULL WHERE id IN (?, ?)')
+            ->execute([$dev['A'], $dev['B']]);
+        $blk = gm_nachaufloesen($pdo, 1, true, $dev['A'] - 1, GERAETE_MODELLE);
+        $sag('Ein Block von 1 sieht genau eine Zeile an und ist nicht fertig',
+             $blk['geprueft'] === 1 && $blk['fertig'] === false
+             && $blk['letzte_id'] === $dev['A'],
+             'geprueft ' . $blk['geprueft'] . ', letzte_id ' . $blk['letzte_id']);
+        $blk2 = gm_nachaufloesen($pdo, 1, true, $blk['letzte_id'], GERAETE_MODELLE);
+        $sag('...und der nächste macht bei der folgenden weiter',
+             $blk2['letzte_id'] === $dev['B'], 'letzte_id ' . $blk2['letzte_id']);
+    } finally {
+        /* ---- Aufräumen ---------------------------------------------- */
+        $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$email]);
+        if ($standVorher === null) {
+            $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([GM_STAND_SCHLUESSEL]);
+        } else {
+            app_state_setzen(GM_STAND_SCHLUESSEL, $standVorher);
+        }
+    }
+    $dbTeil = "gelaufen (Konto und app_state wiederhergestellt)";
+}
+
 /* ---- Ergebnis ----------------------------------------------------------- */
 
-echo "Geräteprobe — Block `geraet` der Kopplung (JSON-Vertrag 1a, R42)\n\n";
+echo "Geräteprobe — Block `geraet` der Kopplung (JSON-Vertrag 1a, R42)\n";
+echo "  Teil 2 (Nachlöse-Job gegen die Datenbank): $dbTeil\n\n";
 echo "  $geprueft Erwartungen geprüft\n";
 if ($fehler === []) {
     echo "  0 Abweichungen\n\n";
-    echo "NICHT geprüft (braucht Datenbank bzw. echtes Gerät):\n";
+    echo "NICHT geprüft (braucht ein echtes Gerät):\n";
     echo "  · dass pair.php das Ergebnis in die drei Spalten schreibt\n";
     echo "  · dass die erzeugte Modelltabelle richtig ist\n";
     echo "  · dass eine echte Uhr sendet, was der Vertrag sagt\n";

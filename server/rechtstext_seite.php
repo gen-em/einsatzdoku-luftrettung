@@ -54,6 +54,11 @@ if (session_status() === PHP_SESSION_NONE) {
         'httponly' => true, 'secure' => !empty($_SERVER['HTTPS']),
         'samesite' => 'Strict', 'path' => '/',
     ]);
+    /* `use_strict_mode` — siehe `auth_guard.php` (E-P5a-38, Nr. 205). Diese
+     * Seite ERZWINGT keine Anmeldung, sie FRAGT nur; die Zeile steht
+     * trotzdem, damit die Regel keine Ausnahme hat, an der sie später
+     * jemand aufhängt. */
+    ini_set('session.use_strict_mode', '1');
     @session_start();
 }
 if (!empty($_SESSION['user_id'])) {

@@ -196,11 +196,42 @@ function jobs_pause_bis(): ?string
  */
 function jobs_katalog(): array
 {
+    require_once __DIR__ . '/mail_lib.php';
     $katalog = [
+        /* `mail` STEHT GANZ VORN, und das ist kein Zufall (P5a/AP5).
+         *
+         * `jobs_lauf()` arbeitet den Katalog der Reihe nach ab und
+         * ueberspringt, was ins Restbudget nicht mehr passt — am
+         * Huckepack-Weg sind das 3 s fuer ALLE Jobs zusammen. Ein Job, der
+         * hinter der Verdichtung stuende, bekaeme dort regelmaessig nichts,
+         * und die Statusseite meldete trotzdem „in Ordnung", weil kein
+         * Fehler anliegt. Bei einer Warteschlange, in der ein Reset-Link
+         * wartet, ist das der teuerste aller stillen Fehler.
+         *
+         * `taeglich => false`: Ein gescheiterter Lauf zaehlt trotzdem als
+         * Lauf (`letzter_lauf` wird auch im Fehlerfall gesetzt). Bei
+         * `taeglich` sperrte ein einziger Fehlschlag den Versand bis zum
+         * naechsten Kalendertag. */
+        'mail' => [
+            'titel'        => 'Post zustellen',
+            'beschreibung' => 'Nachrichten, deren erster Versuch scheiterte — '
+                            . 'fünf Versuche über 24 Stunden, danach steht die '
+                            . 'Nachricht als unzustellbar auf der Statusseite',
+            'taeglich'     => false,
+            'rueckstand'   => 'mail_rueckstand',
+            'lauf'         => 'mail_job',
+        ],
         'aufraeumen' => [
             'titel'        => 'Aufräumen',
-            'beschreibung' => 'Papierkorb, Kopplungssitzungen, Ratenschutz, '
-                            . 'Passwort-Token, Erinnerung an die Verwaltung',
+            /* DIESE ZEILE IST SICHTBARER TEXT (Betrieb -> Hintergrundjobs) und
+             * hinkte den Schritten drei Pakete hinterher: CSP-Berichte,
+             * Mail-Warteschlange und Job-Verlauf standen nicht darin. Wer
+             * einen Schritt ergaenzt, ergaenzt sie mit. */
+            'beschreibung' => 'Papierkorb, Kopplungssitzungen, Ratenschutz und '
+                            . 'Sperrereignisse, Gerätevermerke, Passwort-Token, '
+                            . 'CSP-Berichte, Mail-Warteschlange, Job-Verlauf, '
+                            . 'Erinnerung an die Verwaltung, Speichermessung '
+                            . 'und Warnschwellen',
             'taeglich'     => true,
             'rueckstand'   => fn(PDO $pdo, array $z): ?int => null,
             'lauf'         => 'job_aufraeumen',
@@ -273,6 +304,21 @@ function jobs_katalog(): array
             'taeglich'     => false,
             'rueckstand'   => 'job_komplett_rueckstand',
             'lauf'         => 'job_komplett',
+        ],
+        /* NACHLOESEN STEHT VOR `waisen` UND HINTER ALLEM ANDEREN (P5a/AP11,
+         * E-P5a-21). Er laeuft nur, wenn sich die Modelltabelle geaendert hat
+         * — also nach einem Update, das eine neue `geraetemodelle.php`
+         * mitbringt, und sonst nie. Dann aber soll er durchkommen, und zwar
+         * bevor das Sicherheitsnetz `waisen` das Restbudget nimmt. */
+        'nachaufloesen' => [
+            'titel'        => 'Gerätemodelle nachlösen',
+            'beschreibung' => 'Nach einer neuen Modelltabelle die Teilenummern '
+                            . 'bestehender Geräte erneut auflösen — in Blöcken '
+                            . 'von 200, nur was die Tabelle kennt, die Rohangabe '
+                            . 'bleibt unberührt',
+            'taeglich'     => false,
+            'rueckstand'   => 'job_nachaufloesen_rueckstand',
+            'lauf'         => 'job_nachaufloesen',
         ],
         'waisen' => [
             'titel'        => 'Verwaiste GPS-Daten',
@@ -389,6 +435,7 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
     if (!is_array($zustand)) { $zustand = []; }
 
     $erledigt = 0; $fertig = false; $fehler = null; $uebergangen = 0;
+    $geloescht = 0;
     try {
         $e = ($job['lauf'])($pdo, $zustand, $zeitLinks);
         $zustand  = $e['zustand'] ?? [];
@@ -399,6 +446,11 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
          * Versandjob entstanden und auf dem Weg zur Ausgabe verschwunden —
          * eine Zahl, die es gibt und die niemand sieht. */
         $uebergangen = (int)($e['uebergangen'] ?? 0);
+        /* Dieselbe Ueberlegung fuer `geloescht` (P5a/AP10): Was die
+         * Aufbewahrungsregel auf einem Ziel entfernt hat, ist eine Handlung
+         * auf einer FREMDEN Maschine. Sie gehoert in den Lauf, nicht nur in
+         * die Karte, die man dafuer aufrufen muss. */
+        $geloescht = (int)($e['geloescht'] ?? 0);
     } catch (Throwable $ex) {
         $fehler = get_class($ex) . ': ' . $ex->getMessage();
         // Still gegenueber der Anfrage — die Wartung darf keine Seite
@@ -430,9 +482,37 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
         ->execute([json_encode($zustand), $rueckstand, $fehler, $fehler,
                    $erledigt, $name]);
 
+    /* DER VERLAUF — damit ein WIEDERKEHRENDER Fehler sichtbar wird
+     * (P5a/AP5, E-P5a-09).
+     *
+     * Die Zeile darueber setzt `letzter_fehler` beim naechsten Erfolg auf
+     * NULL. Das ist fuer die Ampel richtig — sie soll sagen, was JETZT
+     * ansteht — und fuer die Fehlersuche verheerend: Ein Job, der jede
+     * zweite Nacht scheitert und morgens durchlaeuft, ist um acht Uhr
+     * spurlos. Man sieht nie, DASS er wiederkehrt.
+     *
+     * NICHT JEDER LAUF KOMMT HINEIN. Am Huckepack-Weg laufen sieben Jobs
+     * alle fuenf Minuten; das waeren rund 2000 Zeilen am Tag, fast alle mit
+     * der Aussage „nichts zu tun". Geschrieben wird, was etwas AUSSAGT: ein
+     * Fehler, oder ein Lauf, der etwas erledigt hat.
+     *
+     * EIGENES try/catch, und zwar zwingend: Zwischen dem Deploy und dem
+     * Migrationslauf gibt es die Tabelle noch nicht. Ohne diesen Block
+     * risse das Schreiben des Verlaufs den ganzen Job mit — ein Protokoll,
+     * das seinen Gegenstand kaputtmacht, ist schlechter als keines. */
+    if ($fehler !== null || $erledigt > 0) {
+        try {
+            $pdo->prepare('INSERT INTO job_laeufe (job, zeitpunkt, ausloeser, erledigt, fehler)
+                           VALUES (?, UTC_TIMESTAMP(), ?, ?, ?)')
+                ->execute([$name, $ausloeser, $erledigt, $fehler]);
+        } catch (Throwable $ex) {
+            error_log('job_laeufe: ' . $ex->getMessage());
+        }
+    }
+
     return ['erledigt' => $erledigt, 'fertig' => $fertig,
             'rueckstand' => $rueckstand, 'fehler' => $fehler,
-            'uebergangen' => $uebergangen];
+            'uebergangen' => $uebergangen, 'geloescht' => $geloescht];
 }
 
 /** Zustand aller Jobs — fuer die Wartungsseite. */
@@ -519,9 +599,108 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
                         WHERE deleted_at < DATE_SUB(NOW(), INTERVAL 90 DAY)');
         },
         'Ratenschutz-Zaehler' => function (PDO $pdo): void {
-            $pdo->exec('DELETE FROM rate_limits
-                        WHERE fenster_start < DATE_SUB(NOW(), INTERVAL 1 DAY)
-                          AND (gesperrt_bis IS NULL OR gesperrt_bis < NOW())');
+            /* DIE STUFE DARF NICHT MITGELOESCHT WERDEN, SOLANGE SIE GILT
+             * (P5a/AP6). Verschwindet die Zeile, ist die Stufe 0 — das ist
+             * der gewollte Verfall nach 24 h ohne Fehlversuch, und
+             * `fenster_start` ist dafuer ein brauchbarer Anhalt. Brauchbar
+             * ist aber nicht genau: `fenster_start` springt erst beim
+             * naechsten Fehlversuch NACH Fensterablauf, kann der letzten
+             * Eingabe also bis zu 15 Minuten vorauslaufen. `stufe_bis` ist
+             * der ausdrueckliche Wert; wo es ihn gibt, gilt er. */
+            try {
+                $pdo->exec('DELETE FROM rate_limits
+                            WHERE fenster_start < DATE_SUB(NOW(), INTERVAL 1 DAY)
+                              AND (gesperrt_bis IS NULL OR gesperrt_bis < NOW())
+                              AND (stufe_bis IS NULL OR stufe_bis < NOW())');
+            } catch (Throwable $ex) {
+                /* Die Spalte `stufe_bis` gibt es noch nicht (Migration steht
+                 * aus) — dann die Fassung von vor Web 20.10.0. */
+                $pdo->exec('DELETE FROM rate_limits
+                            WHERE fenster_start < DATE_SUB(NOW(), INTERVAL 1 DAY)
+                              AND (gesperrt_bis IS NULL OR gesperrt_bis < NOW())');
+            }
+        },
+        'Sperrereignisse' => function (PDO $pdo): void {
+            /* 30 Tage, fest (E-P5a-09). Die Tabelle fuehrt IP- und
+             * E-Mail-Adressen im Klartext — sie ist genau die Art
+             * Betriebsdatum, das nicht versehentlich Jahre liegen soll.
+             *
+             * Eigenes try/catch wie bei den drei Nachbarn: Zwischen Deploy
+             * und Migrationslauf gibt es die Tabelle nicht. */
+            try {
+                $pdo->exec('DELETE FROM sicherheit_ereignisse
+                            WHERE zeitpunkt < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)');
+            } catch (Throwable $ex) {
+                /* Tabelle fehlt (Migration noch nicht gelaufen). */
+            }
+        },
+        /* CSP-BERICHTE: 30 TAGE, FEST (E-P5a-09). Betriebsdaten ohne
+         * Kontobezug verfallen nach 30 Tagen, und die Zahl ist KEINE
+         * Einstellung — Sicherheitsdaten sollen nicht versehentlich Jahre
+         * liegen. Geloescht wird nach `zuletzt`: Eine Meldung, die noch
+         * gestern kam, ist frisch, auch wenn ihre Zeile drei Monate alt ist. */
+        'Geraetevermerke' => function (PDO $pdo): void {
+            /* 30 TAGE, FEST (E-P5a-09 nennt die „Bremse-Treffer"). Der Vermerk
+             * `devices.abgewiesen_seit` / `abgewiesen_anzahl` (P5a/AP7) wird
+             * sonst NUR beim naechsten gelungenen Upload geleert — und genau
+             * den gibt es nicht mehr, wenn das Geraet endgueltig ausgemustert
+             * ist. Ohne diesen Schritt truege ein verlorenes Geraet seine
+             * orange Plakette „abgewiesen" fuer immer, und die Statuszeile
+             * stuende dauerhaft orange auf einer Installation, an der nichts
+             * mehr zu tun ist.
+             *
+             * GEZAEHLT WIRD AB `abgewiesen_seit`, dem ERSTEN Fehlversuch der
+             * Serie. Das ist der Zeitpunkt, den auch die Anzeige nennt; ein
+             * zweiter Zeitstempel fuer „zuletzt" existiert nicht und waere
+             * fuer diese Frage auch der falsche: Gefragt ist, wie lange das
+             * schon so geht. */
+            try {
+                $pdo->exec('UPDATE devices
+                               SET abgewiesen_seit = NULL, abgewiesen_anzahl = 0
+                             WHERE abgewiesen_seit IS NOT NULL
+                               AND abgewiesen_seit < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)');
+            } catch (Throwable $ex) {
+                /* Spalten fehlen (Migration aus P5a/AP7 noch nicht gelaufen). */
+            }
+        },
+        'CSP-Berichte' => function (PDO $pdo): void {
+            try {
+                $pdo->exec('DELETE FROM csp_berichte
+                            WHERE zuletzt < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)');
+            } catch (Throwable $ex) {
+                /* Tabelle fehlt (Migration noch nicht gelaufen) — kein Grund,
+                 * den ganzen Aufraeumlauf scheitern zu lassen. */
+            }
+        },
+        'Mail-Warteschlange' => function (PDO $pdo): void {
+            /* 30 Tage (E-P5a-09 nennt „erledigte Warteschlangeneintraege"
+             * ausdruecklich). Geloescht wird ab `erstellt`, nicht ab
+             * `beendet`: Eine Zeile, die nie einen Endzustand erreicht, weil
+             * die Installation stillag, soll trotzdem verfallen. */
+            try {
+                $pdo->exec('DELETE FROM mail_warteschlange
+                            WHERE erstellt < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)');
+            } catch (Throwable $ex) {
+                /* Tabelle fehlt (Migration noch nicht gelaufen). */
+            }
+        },
+        'Job-Verlauf' => function (PDO $pdo): void {
+            /* 30 Tage, keine Einstellung (E-P5a-09). Steht NEBEN den
+             * CSP-Berichten und nicht hinter „Speicher messen" /
+             * „Warnschwellen melden": Die beiden muessen am Ende bleiben,
+             * weil sie messen, was die Schritte davor hinterlassen haben.
+             *
+             * Eigenes try/catch wie beim Nachbarn: Zwischen Deploy und
+             * Migrationslauf gibt es die Tabelle noch nicht, und ein
+             * fehlender Aufraeumschritt darf nicht den ganzen Job kippen —
+             * job_aufraeumen sammelt die Fehler und wirft am Ende, dann
+             * liefe bis zum naechsten Tag keiner mehr. */
+            try {
+                $pdo->exec('DELETE FROM job_laeufe
+                            WHERE zeitpunkt < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)');
+            } catch (Throwable $ex) {
+                /* Tabelle fehlt (Migration noch nicht gelaufen). */
+            }
         },
         'Papierkorb' => function (PDO $pdo): void {
             require_once __DIR__ . '/trash_lib.php';
@@ -556,6 +735,31 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
         'Speicher messen' => function (PDO $pdo): void {
             require_once __DIR__ . '/speicher_lib.php';
             speicher_messen($pdo);
+        },
+        /* WARNSCHWELLEN MELDEN (P5a/AP2, E-P5a-11).
+         *
+         * ER STEHT HINTER „Speicher messen", nicht davor: Sonst hielte die
+         * Warnung die Zahlen von gestern gegen die Schwellen von heute.
+         *
+         * ZWEI AUFRUFE, ZWEI GESCHICHTEN. `speicher_kontingente_melden()`
+         * ist neu und deckt Datenbank und Webspace ab. `edbak_schwellen_melden()`
+         * gibt es seit S8 und deckt die Speichergrenze der Backups ab —
+         * ABER NIEMAND HAT SIE JE GERUFEN. Nachgemessen am 15.09.2026:
+         * `grep -rn "schwellen_melden" --include=*.php` findet die Definition
+         * und einen Aufruf in `tools/wiederherstellungs-probe/probe.php`,
+         * sonst nichts. Geschrieben, geprueft, tot — dieselbe Klasse Fehler
+         * wie Backlog Nr. 89 („Dieser Job lief von Web 12.2.0 bis 12.9.2
+         * nie"). Der Aufruf steht jetzt hier, wo er hingehoert.
+         *
+         * BEIDE DUERFEN SCHEITERN, OHNE DEN JOB ZU KIPPEN: Die Schleife
+         * darunter faengt jeden Fehler und meldet ihn mit Namen. Eine
+         * ausgefallene Warnmail ist ein Meldeproblem, kein Betriebsproblem —
+         * die Zahl steht daneben auf der Statusseite. */
+        'Warnschwellen melden' => function (PDO $pdo): void {
+            require_once __DIR__ . '/speicher_lib.php';
+            require_once __DIR__ . '/adminbackup_lib.php';
+            speicher_kontingente_melden();
+            edbak_schwellen_melden();
         },
     ];
 
@@ -1183,7 +1387,80 @@ function job_versand(PDO $pdo, array $zustand, callable $zeitLinks): array
      * nicht ergänzt, sondern ersetzt: „versand übersprungen (1)" statt
      * „versand fertig · erledigt 3 · 1 übergangen". */
     return ['zustand' => [], 'erledigt' => $e['gesendet'], 'fertig' => $e['fertig'],
-            'uebergangen' => (int)($e['uebersprungen'] ?? 0)];
+            'uebergangen' => (int)($e['uebersprungen'] ?? 0),
+            'geloescht'   => (int)($e['geloescht'] ?? 0)];
+}
+
+/**
+ * Geraetemodelle nachloesen (P5a/AP11, E-P5a-21; Backlog Nr. 80).
+ *
+ * ER LAEUFT NUR NACH EINER NEUEN TABELLE. Verglichen wird der Hash der
+ * ausgelieferten `GERAETE_MODELLE` gegen den zuletzt verarbeiteten in
+ * `app_state`. Stimmen sie ueberein und steht keine Fortsetzungsmarke, kostet
+ * der Job eine Abfrage und ist fertig.
+ *
+ * WARUM EIN HASH UND KEIN DATUM: Ein Deploy fasst die Aenderungszeit jeder
+ * Datei an, der Inhalt bleibt derselbe. Ein Job, der nach jedem Deploy
+ * dreihundert Zeilen durchgeht, ist ein Job, der nichts tut und dafuer Zeit
+ * verbraucht — und auf dem Huckepack-Weg (3 s) nimmt er sie jemandem weg.
+ *
+ * DER HASH WIRD ERST AM ENDE GESCHRIEBEN. Bricht der Lauf mitten im Bestand
+ * ab (Zeitbudget), bleibt die Fortsetzungsmarke im Zustand und der alte Hash
+ * stehen; der naechste Lauf macht weiter. Waere der Hash schon geschrieben,
+ * gaelte der halb durchgegangene Bestand als erledigt — und zwar still.
+ */
+function job_nachaufloesen(PDO $pdo, array $zustand, callable $zeitLinks): array
+{
+    require_once __DIR__ . '/geraetemodelle_lib.php';
+
+    $soll = gm_tabellen_hash();
+    $ab   = (int)($zustand['ab_id'] ?? 0);
+    $stand = gm_stand_lesen();
+    if ($ab === 0 && $stand['hash'] === $soll) {
+        return ['zustand' => [], 'erledigt' => 0, 'fertig' => true];
+    }
+
+    /* Die Zaehlung laeuft ueber den GANZEN Lauf, nicht je Block — sonst
+     * stuende auf der Statusseite die Zahl des letzten Blocks. */
+    $nachgeloest = (int)($zustand['n'] ?? 0);
+    $unbekannt   = (int)($zustand['u'] ?? 0);
+    $fertig      = false;
+
+    while ($zeitLinks() > GM_RESERVE_S) {
+        $e = gm_nachaufloesen($pdo, GM_BLOCK, true, $ab);
+        $nachgeloest += $e['geschrieben'];
+        $unbekannt   += $e['unbekannt'];
+        $ab           = $e['letzte_id'];
+        if ($e['fertig']) { $fertig = true; break; }
+    }
+
+    if (!$fertig) {
+        return ['zustand' => ['ab_id' => $ab, 'n' => $nachgeloest, 'u' => $unbekannt],
+                'erledigt' => $nachgeloest, 'fertig' => false];
+    }
+    gm_stand_merken($soll, $nachgeloest, $unbekannt);
+    return ['zustand' => [], 'erledigt' => $nachgeloest, 'fertig' => true];
+}
+
+/**
+ * Wie viele Zeilen noch anzusehen sind.
+ *
+ * `null`, wenn der Hash steht — dann gibt es nichts zu tun, und eine 0 saehe
+ * aus wie „gerade fertig geworden". Sonst die Zahl der Geraetezeilen MIT
+ * Rohangabe ab der Fortsetzungsmarke: eine Obergrenze, keine Zahl der zu
+ * aendernden. Welche das sind, weiss man erst beim Ansehen.
+ */
+function job_nachaufloesen_rueckstand(PDO $pdo, array $zustand): ?int
+{
+    require_once __DIR__ . '/geraetemodelle_lib.php';
+    $ab = (int)($zustand['ab_id'] ?? 0);
+    if ($ab === 0 && gm_stand_lesen()['hash'] === gm_tabellen_hash()) { return null; }
+    try {
+        $st = $pdo->prepare('SELECT COUNT(*) FROM devices
+                              WHERE geraet_teil IS NOT NULL AND id > ?');
+        $st->execute([$ab]);
+        return (int)$st->fetchColumn();
+    } catch (Throwable $ex) { return null; }
 }
 
 /** Wie viele Dateien warten noch? Eine Schätzung — siehe sz_versand_rueckstand(). */

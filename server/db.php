@@ -10,13 +10,63 @@ $CFG = require __DIR__ . '/config.php';
 
 function db(): PDO {
     static $pdo = null;
+    /* DER RIEGEL GEGEN DIE SCHLEIFE (P5a/AP9). Siehe den Block unten. */
+    static $inUeberlast = false;
     global $CFG;
     if ($pdo === null) {
-        $pdo = new PDO($CFG['db']['dsn'], $CFG['db']['user'], $CFG['db']['pass'], [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
-        ]);
+        try {
+            $pdo = new PDO($CFG['db']['dsn'], $CFG['db']['user'], $CFG['db']['pass'], [
+                /* KEINE PERSISTENTEN VERBINDUNGEN (E-P5a-18). Die Zeile
+                 * fehlt hier mit Absicht: `PDO::ATTR_PERSISTENT` haelt die
+                 * Verbindung ueber das Ende der Anfrage hinaus offen und
+                 * belegt damit genau den Platz, um den es im Block unten
+                 * geht. Auf einem Webspace mit `max_user_connections = 10`
+                 * genuegen zehn ruhende PHP-Prozesse, und die elfte Anfrage
+                 * bekommt 1203, obwohl niemand arbeitet. Gezaehlt am
+                 * 16.09.2026: 0 Treffer fuer `ATTR_PERSISTENT` unter
+                 * `server/` und `tools/` — es ist eine Zusage, keine
+                 * Feststellung. */
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES   => false,
+            ]);
+        } catch (PDOException $ex) {
+            /* ---- DIE VERBINDUNGSGRENZE (P5a/AP9, E-P5a-18) --------------
+             *
+             * 1040 und 1203 heissen nicht „kaputt", sondern „gerade kein
+             * Platz". Bis hierher kamen sie als 500 heraus, mit dem
+             * ungefilterten Ausnahmetext — in dem Hostname und Benutzername
+             * der Datenbank stehen. Beides ist falsch; die Begruendung
+             * steht bei `ueberlast_antwort()` in `wartung_lib.php`.
+             *
+             * DIE SCHLEIFE, DIE DER RIEGEL ABFAENGT: Alles, was unterhalb
+             * einer 503-Antwort noch eine Einstellung nachsehen will
+             * (`kopfzeilen_lib.php` liest zwei aus `app_state`), landet
+             * ueber `app_state_lesen()` wieder hier — und zwar mit `$pdo`
+             * weiterhin `null`, also mit einem zweiten Verbindungsversuch,
+             * der genauso scheitert. Ohne den Riegel waere das eine
+             * Endlosschleife bis zum Speicherende, und zwar ausgerechnet
+             * unter Last. Mit ihm fliegt die Ausnahme beim zweiten Mal
+             * einfach weiter; `app_state_lesen()` faengt sie und nimmt
+             * seine Vorgabe — genau das, wofuer sie gebaut ist.
+             *
+             * Der Riegel wird NICHT zurueckgesetzt: `ueberlast_antwort()`
+             * endet mit `exit`, und auf der Kommandozeile ist der zweite
+             * Versuch ohnehin derselbe Fehler.
+             *
+             * AUF DER KOMMANDOZEILE wird gezaehlt, aber nicht geantwortet.
+             * Ein Job, der eine HTML-Seite nach stdout schreibt und sich
+             * beendet, verschluckt seinen eigenen Fehler; der Aufrufer soll
+             * die Ausnahme sehen. Dieselbe Unterscheidung trifft
+             * `wartung_tor()` eine Ebene hoeher. */
+            if (!$inUeberlast && function_exists('ueberlast_erkannt')
+                && ueberlast_erkannt($ex)) {
+                $inUeberlast = true;
+                ueberlast_vermerken();
+                if (!wartung_cli()) { ueberlast_antwort(ueberlast_retry_s($ex)); }
+            }
+            throw $ex;
+        }
         /* ZEITZONE DER VERBINDUNG AUSDRUECKLICH SETZEN (M5-09).
          *
          * Ohne diese Zeile rechnet NOW() in der Zeitzone des Datenbank-
@@ -413,9 +463,51 @@ function local_to_utc(string $day, string $hhmm, int $addDays = 0): ?string {
    seither ohne Verwendung (A4, T-01). Wer das Format wieder braucht, findet
    die Umwandlung in pruef_utc(). */
 
-function json_out(array $data, int $code = 200): never {
+/**
+ * EINE JSON-ANTWORT AUS FERTIGEM TEXT (P5a/AP4a, E-P5a-38, Backlog Nr. 203).
+ *
+ * WOGEGEN. Sieben Stellen gaben JSON aus, ohne durch `json_out()` zu gehen —
+ * mit `header('Content-Type: application/json')` und `echo` von Hand. Zwei
+ * davon (`api/export_data.php`) setzten dabei **kein** `Cache-Control:
+ * no-store`, und der Export liefert GPS-Spurpunkte. Die Begruendung, die
+ * unten bei `json_out()` steht („der Kopf gehoert an die Stelle, durch die
+ * JEDE Antwort geht"), galt fuer sie schlicht nicht.
+ *
+ * WARUM SIE UEBERHAUPT AN `json_out()` VORBEIGEHEN: Sie haben den Text
+ * bereits. `api/export_data.php` baut ihn stueckweise (ein Export kann
+ * hunderte Megabyte umfassen), `api/backup_data.php` reicht Chiffretext
+ * durch, `jobs.php` braucht eigene `json_encode`-Schalter. Sie sollen ihn
+ * NICHT dekodieren muessen, nur um ihn wieder zu kodieren.
+ *
+ * Also: dieselben Kopfzeilen, ein anderer Rumpf. `json_out()` ist seither
+ * ein Aufruf hiervon — es gibt genau EINE Stelle, die den Satz setzt.
+ *
+ * NICHT HIER: `wartung_lib.php`. Die Wartungsseite ist ausdruecklich ohne
+ * Datenbank gebaut und darf `db.php` nicht laden (sie antwortet, waehrend die
+ * Datenbank umgebaut wird). Sie setzt ihren Satz selbst — und zwar
+ * einschliesslich `no-store`, nachgesehen.
+ */
+/**
+ * NUR DIE KOPFZEILEN EINER JSON-ANTWORT — ohne Rumpf und ohne `exit`.
+ *
+ * WOFUER. `pair.php` antwortet an zwei Stellen und ARBEITET DANN WEITER: Es
+ * schliesst die Antwort ab (`antwort_abschliessen()`) und reiht erst danach
+ * die Hinweismail ein — die Uhr wartet auf das `ok`, und ein langsamer
+ * Mailserver darf sie nicht in den Abbruch laufen lassen. Ein `never`
+ * schliesst diese Stelle aus.
+ *
+ * ES BLEIBT EINE STELLE, die den Satz setzt: `json_roh_out()` ruft dies hier
+ * auf, `json_out()` ruft `json_roh_out()`.
+ */
+function json_kopf(int $code = 200): void {
+    /* Der schmale Kopfzeilensatz der Endpunkte (P5a/AP4, E-P5a-15). Keine
+     * CSP — eine JSON-Antwort ist kein Dokument. `nosniff` dagegen ist genau
+     * hier die wichtige Zeile. */
+    require_once __DIR__ . '/kopfzeilen_lib.php';
+    kopfzeilen_json();
+
     http_response_code($code);
-    header('Content-Type: application/json');
+    header('Content-Type: application/json; charset=utf-8');
     /* Kein Zwischenspeichern (M3-11).
      *
      * Bisher setzte GENAU EIN Endpunkt diesen Kopf: das Backup. Vier
@@ -430,8 +522,16 @@ function json_out(array $data, int $code = 200): never {
      * Der Kopf gehoert deshalb an die Stelle, durch die JEDE Antwort geht,
      * und nicht in die Zustaendigkeit des einzelnen Endpunkts. */
     header('Cache-Control: no-store');
-    echo json_encode($data);
+}
+
+function json_roh_out(string $json, int $code = 200): never {
+    json_kopf($code);
+    echo $json;
     exit;
+}
+
+function json_out(array $data, int $code = 200): never {
+    json_roh_out((string)json_encode($data), $code);
 }
 
 /* ---- DAS TOR DES WARTUNGSMODUS (S5 Paket W, E-S5W-06) --------------------
@@ -451,6 +551,12 @@ function json_out(array $data, int $code = 200): never {
  * kehrt auf der Kommandozeile sofort zurueck. Steht keine `wartung.lock`,
  * kostet der Aufruf einen `file_exists()`.
  */
+/* DIE KOPFZEILEN STEHEN JEDER DATEI ZUR VERFUEGUNG, DIE `db.php` LAEDT
+ * (P5a/AP4). `kopf_nonce_attr()` wird in 25 Inline-Bloecken gebraucht — auch
+ * in `session_lib.php`, das ohne `ui.php` auskommt. Eine Datei, die nur
+ * Funktionen definiert, kostet nichts. */
+require_once __DIR__ . '/kopfzeilen_lib.php';
+require_once __DIR__ . '/instanz_lib.php';   // Name dieser Installation (P5a/AP5)
 require_once __DIR__ . '/wartung_lib.php';
 wartung_tor();
 
@@ -534,6 +640,14 @@ function fehler_kennung(Throwable $ex, string $bereich): string
  */
 function json_fehler(Throwable $ex, string $bereich): never
 {
+    /* GEDRAENGEL IST KEIN DEFEKT (P5a/AP9, E-P5a-52). Ein Deadlock oder ein
+     * abgelaufener Sperrzeitraum sagt „noch einmal versuchen", nicht
+     * „kaputt". Die Begruendung und der Fund stehen bei `gedraengel_erkannt()`
+     * in `wartung_lib.php`. */
+    if (gedraengel_erkannt($ex)) {
+        gedraengel_vermerken($ex, $bereich);
+        ueberlast_antwort();
+    }
     $kennung = fehler_kennung($ex, $bereich);
     json_out(['error'   => $bereich,
               'kennung' => $kennung,
@@ -821,7 +935,7 @@ const PAIR_SITZUNGEN_MAX = 1000;
 /**
  * E-Mail-Adresse fuer die Rueckbestaetigung am Geraet maskieren (E-S5-21).
  *
- * `philipp@gen-em.org` -> `ph***@gen-em.org`; ein lokaler Teil aus einem
+ * `vorname@beispieldomain.de` -> `vo***@beispieldomain.de`; ein lokaler Teil aus einem
  * Zeichen zeigt dieses eine (`a@b.de` -> `a***@b.de`). Kleingeschrieben.
  *
  * DIE DOMAIN BLEIBT VOLL, mit Absicht: Sie laesst die Traegerin ihr Konto
@@ -1276,6 +1390,61 @@ function geraete_neu(PDO $pdo, int $userId): array {
                          ORDER BY created_at DESC');
     $st->execute([$userId, GERAETE_NEU_TAGE, $seit, $seit]);
     return $st->fetchAll();
+}
+
+/* ---------------------------------------------------------------------------
+ * `app_state` — der kleine Schluessel/Wert-Speicher, jetzt mit EINEM Zugang
+ * ---------------------------------------------------------------------------
+ *
+ * WARUM HIER. Die Tabelle wird an acht Stellen gelesen und geschrieben, und
+ * bis Web 20.6.0 brachte JEDE ihren eigenen Zugriff mit: `edbak_marke_lesen()`
+ * (`adminbackup_lib.php`), `schluessel_marke_lesen()` (`serverkrypto_lib.php`),
+ * `geocoder_state()` (`geocoder_lib.php`), `_tor_lesen()`
+ * (`migration_lib.php`), dazu blankes SQL in `smtp.php`, `auth_salt.php`,
+ * `jobs.php` und `komplett_lib.php`. Fuenf Fassungen derselben zwei Zeilen,
+ * und jede mit ihrer eigenen Antwort auf die Frage, was passiert, wenn die
+ * Tabelle fehlt.
+ *
+ * DAS IST KEIN AUFRAEUMPAKET. Diese beiden Funktionen sind der Ort, an dem
+ * die anderen zusammenlaufen KOENNEN; zusammengefuehrt sind sie nicht (das
+ * waere eine Aenderung an fuenf Bibliotheken fuer einen Gewinn, den niemand
+ * sieht — Backlog). Neue Verbraucher nehmen diese hier.
+ *
+ * `v` IST `VARCHAR(190)`. Wer mehr schreibt, bekommt `false` und eine Zeile
+ * im Fehlerprotokoll — nicht einen stillen Abschnitt.
+ */
+
+/** Maximale Laenge eines Werts in `app_state` (Spaltenbreite). */
+const APP_STATE_MAX = 190;
+
+/** Eine Zeile lesen. `null`, wenn es sie — oder die Tabelle — nicht gibt. */
+function app_state_lesen(string $k): ?string {
+    try {
+        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
+        $st->execute([$k]);
+        $v = $st->fetchColumn();
+        return $v === false || $v === null ? null : (string)$v;
+    } catch (Throwable $ex) {
+        return null;   // Tabelle fehlt (Migration noch nicht gelaufen)
+    }
+}
+
+/** Eine Zeile schreiben. `false` = zu lang oder nicht schreibbar, mit Log. */
+function app_state_setzen(string $k, string $v): bool {
+    if (strlen($v) > APP_STATE_MAX) {
+        error_log('app_state: "' . $k . '" ist ' . strlen($v) . ' Zeichen lang, '
+                . 'erlaubt sind ' . APP_STATE_MAX . '.');
+        return false;
+    }
+    try {
+        db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
+                       ON DUPLICATE KEY UPDATE v = VALUES(v)')->execute([$k, $v]);
+        return true;
+    } catch (Throwable $ex) {
+        error_log('app_state: "' . $k . '" liess sich nicht schreiben: '
+                . $ex->getMessage());
+        return false;
+    }
 }
 
 /** Zeitpunkt der letzten Bestaetigung, oder null. */
