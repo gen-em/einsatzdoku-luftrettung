@@ -1,11 +1,15 @@
 # Prüfdokument P5a — Kette und Fundament
 
 **Konzept:** `Konzept-P5a-Kette-und-Fundament.md` (15.09.2026, E-P5a-01 bis
--58, AP1 bis AP12). **Gemessen auf:** Zweig `claude/butte-umsetzen-5opi9u`.
+-58, AP1 bis AP12) — **nach der Freigabe am 16.09.2026 gelöscht**; die Historie
+behält es unter `bcbb04f`, die Zusammenfassung steht in `docs/Rahmenplan.md`
+Abschnitt 8. **Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist.** **Gemessen auf:** Zweig `claude/butte-umsetzen-5opi9u`.
 **Stand dieses Dokuments:** 16.09.2026, **nach AP12 und dem Nachtrag Nr. 213**
 (Web 20.4.0 bis **20.15.1**), Merge und Tag stehen aus. **33 Prüfpunkte** in
-Abschnitt 3; zehn davon (P1–P8, P12, P33) betreffen die Auslieferungskette und
-brauchen GitHub-Umgebungen, die es hier nicht gibt (N36, N38). **P33 ist der
+Abschnitt 3. **P1 ist am 16.09.2026 gefahren und hat im ersten Anlauf einen
+echten Fehler gefangen** (Einzelheiten dort); neun weitere (P2–P8, P12, P33)
+betreffen die Auslieferungskette und brauchen GitHub-Umgebungen, eine
+Pflichtfreigabe und einen Zweigschutz (N36, N38). **P33 ist der
 einzige Punkt der Liste, bei dem ein Fehler das Zertifikat der Anlage kostet.**
 
 Das Prüfprotokoll im Konzept beantwortet „ist es belegt?". Dieses Dokument
@@ -56,6 +60,7 @@ beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
 | N36 | **Die Auslieferungskette selbst — sie ist gebaut, aber nie gelaufen** | Sie braucht GitHub-Umgebungen, Geheimnisse, eine Pflichtfreigabe, einen Zweigschutz und eine Staging-Installation. Nichts davon gibt es in einem Wegwerf-Container, und die Zuarbeiten dazu standen am 16.09.2026 noch aus (Rahmenplan 6a). **Die ganze Phase hat damit ihren zentralen Gegenstand nicht im Lauf gesehen.** | Gemessen ist, was sich ohne GitHub messen lässt: die drei Arbeitsläufe sind **gültiges YAML**, das Backup-Tor entscheidet in `tools/kette/tor.py --selbstprobe` **5 von 5** Lagen richtig, und das Migrationsregister läuft ohne Installation. Was nur der Ernstfall zeigt, steht als Prüfpunkte **P1 bis P8** und **P12** — neun der 32. Wer diese Phase für abgenommen hält, weil die Proben grün sind, verwechselt „gebaut" mit „läuft". |
 | N37 | **Der Merge nach `main` und der Tag** | Beide brauchen die ausdrückliche Freigabe (`CLAUDE.md` 3 und 8, K7). Ein Push auf `main` löst seit Web 20.4.0 den **Staging**-Deploy aus, ein Tag `web-v20.15.0` die **Produktion** — und zwar erst nach Pflichtfreigabe und Backup-Tor. | Beides ist bewusst **nicht** getan. Die Phase liegt vollständig auf `claude/butte-umsetzen-5opi9u`. Was beim ersten Tag passieren **soll**, steht in P2, P3 und P8; was schiefgehen kann, ebenso. |
 | N38 | **Die Punktdatei-Sperre und `state-name`** (Nr. 213, Web 20.15.1) | Drei Dinge gehen von hier aus nicht: Der Prüfserver ist der eingebaute PHP-Server, der **`.htaccess` gar nicht liest**; Port 21 und 990 verlassen den Container nicht, also ist `../` im FTP-Käfig nicht zu messen; und `nadoku.gen-em.org` ist vom Ausgangs-Gateway dieser Umgebung gesperrt (403 auf CONNECT, gemessen). Die Staging-Abfrage gab **404** — aber Staging ist leer, dort gibt auch `login.php` 404. | Gemessen ist der **Auslöser**, nicht die Abhilfe: Die Aktion legt die Datei laut ihrem eigenen README nach `server-dir` (Vorgabe `.ftp-deploy-sync-state.json`), ihr Inhalt steht in den Typdefinitionen der Bibliothek (`{type, name, size, hash}` je Datei), und `server/.htaccess` hatte **keine** Regel, die auf Punktdateien passt — alle 81 Zeilen gelesen. Die Abhilfe prüft **Stufe 2 der Kette** beim ersten Lauf gegen Staging, in beide Richtungen. Prüfpunkt **P33**. |
+| N39 | **Uhr Stufe I in der Kette** (P5) | Der Schritt steigt aus, solange das Repositoriums-Secret **`CIQ_GERAETE_URL`** fehlt — am 16.09.2026 im ersten echten Stufe-1-Lauf gemessen: `CIQ_GERAETE_URL:` leer, Warnung „ÜBERSPRUNGEN, nicht bestanden". Die Adresse steht bewusst nicht im Repositorium. | Der Lauf sagt es **laut**: als `::warning::` und als Zeile in der Zusammenfassung. Das ist die Bauart, nicht der Mangel — ein Schritt, der stillschweigend aussetzte, wäre der Mangel. Gemessen ist damit: **13 von 14** Schritten der Stufe 1 prüfen wirklich. Sobald das Secret steht, wird P5 eine Messung. |
 | N8 | **Die Kontingent-Warnmail auf einem echten Mailserver** | Der Container hat keinen. | Die Logik ist mit abgesenkten Schwellen (50/53 %) durchgespielt: Beide Schwellen schlagen an, der Versand scheitert erwartungsgemäß und wird **nicht** als gemeldet vermerkt — also am nächsten Tag erneut versucht. Prüfpunkt **P10**. |
 
 ---
@@ -581,16 +586,56 @@ BetreiberIn):
 Je Punkt: der Bedienweg, das erwartete Ergebnis, und **woran ein Scheitern zu
 erkennen ist**.
 
-### P1 — Stufe 1 läuft grün (nach dem ersten Push)
+### P1 — Stufe 1 läuft grün (nach dem ersten Push) — **GEFAHREN am 16.09.2026**
 
-**Weg:** Den Arbeitszweig pushen, in GitHub → Actions den Lauf **Prüfung**
-öffnen.
-**Erwartet:** Alle Schritte grün. In der Zusammenfassung stehen Zahlen: „PHP-
-Syntax: N Dateien, 0 Fehler", der Wortlisten-Auszug, das Migrationsregister
-mit seinen sechs Zahlen.
-**Scheitern erkennbar an:** einem roten Schritt — **oder** an einer
-Zusammenfassung, in der „ÜBERSPRUNGEN" steht, wo es nicht stehen soll. Ein
-grüner Lauf mit zwei übersprungenen Schritten ist kein grüner Lauf.
+**Ergebnis: grün im zweiten Anlauf, und der erste war der wertvollere.**
+
+**Erster Lauf** (`35159206479`, Commit `7d6dd31`): **rot** bei Schritt 8 von 14,
+„Backlog — keine Nummer zweimal":
+
+```
+Doppelte Backlog-Nummern: 16
+```
+
+Die 16 war **keine Nummer, sondern ein Datum**. Im Absatz zur Nummernvergabe
+stand „… aus der Durchsicht vom" am Zeilenende und „16.09.2026**" am Anfang
+der nächsten; der Schritt liest mit `grep -oE '^[0-9]+\.'` und fand dort die
+Nummer 16, die es als echten Backlog-Punkt gibt. Genau die Falle, vor der der
+Backlog-Kopf zwanzig Zeilen weiter oben warnt — die Warnung sprach von
+**Absätzen**, der Fehler stand in einem **Zeilenumbruch mitten im Fließtext**.
+Behoben in `5f939bc`, die Warnung sagt seither ZEILE und führt diesen Fall
+als Beispiel.
+
+> **Das ist der Beleg für P1, nicht das grüne Häkchen danach.** Der Fehler lag
+> seit `5566859` im Zweig und ist **vier Prüfmitteln und mehreren Durchsichten
+> entgangen** — er fiel erst auf, weil `pruefung.yml` mit diesem Merge zum
+> ersten Mal auf `main` lief. Stufe 1 hat im ersten Anlauf etwas gefangen, das
+> sonst ausgeliefert worden wäre.
+
+**Zweiter Lauf** (`35159382270`, Commit `5f939bc`): **grün**, 8m 51s.
+
+| Schritt | Ergebnis |
+|---|---|
+| PHP-Syntax über `server/` | grün |
+| Wortliste · Vollständigkeit · Kontraste | grün |
+| **Backlog — keine Nummer zweimal** | grün (vorher der Fund oben) |
+| Weiche in `install.php` · Migrationsregister | grün |
+| CSP · Sitzungshärtung | grün |
+| **Android — bauen, prüfen, linten** | **`BUILD SUCCESSFUL in 8m 16s`**, 230 Tasks (213 ausgeführt, 17 aus dem Cache) — also mit JUnit/Robolectric und Lint, 0 Fehlschläge |
+| **Uhr Stufe I** | **ÜBERSPRUNGEN** — `CIQ_GERAETE_URL` ist leer |
+
+**Und damit ist P1 noch nicht ganz erfüllt.** Der Lauf ist grün, aber **ein
+Schritt ist übersprungen** — genau der Fall, den dieser Prüfpunkt seit jeher
+nennt: „Ein grüner Lauf mit zwei übersprungenen Schritten ist kein grüner
+Lauf." Die Zeile steht so in der Zusammenfassung:
+
+```
+**Uhr Stufe I: ÜBERSPRUNGEN** (kein `CIQ_GERAETE_URL`) — nicht gemessen.
+```
+
+**Offen:** `CIQ_GERAETE_URL` als **Repositoriums-Secret** eintragen (Rahmenplan
+Abschnitt 6). Erst dann wird aus P5 eine Messung statt einer Warnung. Bis
+dahin gilt: Stufe 1 prüft **13 von 14** Schritten.
 
 ### P2 — Das Backup-Tor bricht gegen die echte Installation ab
 

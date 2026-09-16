@@ -5754,8 +5754,8 @@ keine Installation öffnen, die jemand ausdrücklich geschlossen hat.
 `.gitignore` **und** in der Ausnahmeliste **beider** FTPS-Schritte von
 `.github/workflows/auslieferung.yml` (bis Web 20.3.0: `deploy.yml`). Ohne den ersten schlösse ein Checkout jede
 Installation; ohne den zweiten löschte der Push die Datei — mitten im Update,
-für das sie da ist. Dasselbe Muster wie `config.php`, `install.lock`,
-`sicherungen/`, `apk/` — und seit Web 20.13.0 `ueberlast.json` (Abschnitt 5e).
+für das sie da ist. Dasselbe Muster wie `config.php`, `install.php`,
+`install.lock`, `sicherungen/`, `apk/` — und seit Web 20.13.0 `ueberlast.json` (Abschnitt 5e).
 
 #### Der Torwächter (ab Web 20.6.0, P5a/AP3, E-P5a-20; R40 (4), Nr. 54)
 
@@ -7660,8 +7660,8 @@ der über `wartung.lock` steht. Erwogen und verworfen wurde, den Vorfall in
 eine Datei zu schreiben und beim nächsten gelungenen Verbindungsaufbau nach
 `app_state` nachzutragen — das hätte den Buchstaben erfüllt und **zwei
 Speicher für eine Zahl** gebraucht. Die Datei steht in `.gitignore` **und** in
-der Ausnahmeliste beider FTPS-Schritte, wie `config.php`, `install.lock`,
-`wartung.lock`, `sicherungen/` und `apk/`.
+der Ausnahmeliste beider FTPS-Schritte, wie `config.php`, `install.php`
+(Nr. 214), `install.lock`, `wartung.lock`, `sicherungen/` und `apk/`.
 
 **Der Riegel gegen die Schleife.** Alles, was unterhalb der 503-Antwort noch
 eine Einstellung nachsehen will (`kopfzeilen_lib.php` liest zwei aus
@@ -7783,6 +7783,13 @@ Knopfhöhen), und **nur bei Tag-Läufen** der Messstand. Alle drei brauchen ein
 **Prüfkonto auf Staging** (Umgebungsgeheimnisse `STAGING_KONTO`,
 `STAGING_PASS`, Variable `STAGING_URL`); fehlt es, wird der Schritt
 ausdrücklich übersprungen und gemeldet.
+
+**Der erste Schritt unterscheidet seit Nr. 214 zwei Fälle.** Landet der
+Aufruf auf `install.php`, fragt er diese Datei zusätzlich ab: Kommt **404**,
+liegt es nicht am `FTP_ZIELPFAD`, sondern daran, dass `install.php` seither
+in der Ausnahmeliste steht und bewusst nicht ausgeliefert wird — die Meldung
+sagt dann, die Datei einmal von Hand hochzuladen. Ohne diese Unterscheidung
+suchte man den Fehler im falschen Ort.
 
 **Dazu seit Web 20.15.1 ein vierter Schritt: „Punktdateien gesperrt,
 .well-known offen?"** (Nr. 213). Er braucht **kein** Prüfkonto — nur
@@ -8586,7 +8593,13 @@ Browser, kein Backup. Betroffen sind die Phasenzeiten im Einsatzformular
 letztere sind reine Clientfilter und erreichen den Server nie.
 
 **Neuinstallation:** leere DB + `server/` hochladen → `index.php` leitet zum
-Installer. Der Installer fragt **kein** Passwort mehr ab; er legt den
+Installer. **Seit Nr. 214 gehört `install.php` nicht mehr zur Auslieferung** —
+sie steht in der Ausnahmeliste beider FTPS-Schritte. Eine leere Anlage lässt
+sich damit **nicht allein über die Kette** einrichten: Die Datei
+`server/install.php` muss **einmal von Hand** hinauf, danach wird eingerichtet
+und danach wird sie wieder gelöscht — so, wie es der letzte Satz dieses
+Absatzes seit jeher verlangt. Stufe 2 der Kette erkennt genau diesen Fall und
+sagt es (Abschnitt 6.3). Der Installer fragt **kein** Passwort mehr ab; er legt den
 Zugang ohne Passwort an und zeigt auf der Erfolgsseite einen 24 h gültigen
 Einmal-Link auf `pw_handling.php`, über den Passwort und
 Wiederherstellungsschlüssel im Browser entstehen. Nach Erfolg sperrt

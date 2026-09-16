@@ -14,9 +14,9 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
-## [Web 20.15.2] — 2026-09-16
+## [Web 20.15.3] — 2026-09-16
 
-**Die Anwendung ließ sich nicht mehr installieren** (Backlog Nr. 214).
+**Die Anwendung ließ sich nicht mehr installieren** (Backlog Nr. 215).
 
 ### Behoben
 
@@ -47,7 +47,55 @@ und fallen auf dieselben Vorgaben zurück, die auch bei fehlender Tabelle
 gelten: Report-Only und ein Tag HSTS. Nachgemessen — mehr als diese beiden
 Funktionen braucht sie aus `db.php` nicht.
 
+**Nicht zu verwechseln mit 20.15.2**, obwohl beide dieselbe Datei betreffen:
+Die Fassung davor nimmt `install.php` aus der **Auslieferung**, weil das
+Runbook sie löschen heißt. Diese hier macht sie überhaupt erst wieder
+**lauffähig**. Die beiden greifen ineinander — seit 20.15.2 muss die Datei von
+Hand auf den Server, und eine Datei, die man von Hand hinauflädt, um genau
+einmal eine Anlage einzurichten, muss beim ersten Aufruf funktionieren.
+
 Keine Migration.
+
+## [Web 20.15.2] — 2026-09-16
+
+**`install.php` gehört nicht mehr zur Auslieferung** (Backlog Nr. 214).
+
+### Geändert
+
+Das Runbook sagt zur Neuinstallation seit jeher: *„Nach Erfolg sperrt
+`install.lock`; `install.php` danach löschen."* Die Auslieferungskette hat
+genau das bei jedem Lauf wieder rückgängig gemacht — die Datei war nicht
+ausgenommen und wurde mitgeschickt. Jetzt steht sie in der Ausnahmeliste
+**beider** FTPS-Schritte, neben `config.php` und `install.lock`.
+
+**Was das NICHT ist: eine Sicherheitslücke, die geschlossen wird.**
+`install.php:136` verweigert sich selbst, solange `config.php` **oder**
+`install.lock` existiert — „Die Anwendung ist bereits eingerichtet." Die Datei
+war nie gefährlich, nur überflüssig. Der Punkt ist ein anderer: Eine Datei,
+die das eigene Runbook zu löschen heißt, gehört nicht in eine Auslieferung,
+die sie zurückbringt. Wer sie von Hand entfernte, fand sie nach dem nächsten
+Lauf wieder vor und hielt das für einen Fehler.
+
+### Der Preis, benannt
+
+**Eine leere Anlage lässt sich nicht mehr allein über die Kette einrichten.**
+`server/install.php` muss einmal von Hand per FTP hinauf, dann wird
+eingerichtet, dann wird sie wieder gelöscht. Und ein Fehler **im** Einrichter
+erreicht über die Kette keinen Server mehr — auch dafür braucht es den
+Handgriff.
+
+Damit dieser Preis nicht stumm zuschnappt, unterscheidet Stufe 2 seither zwei
+Fälle: Landet der Aufruf von `login.php` auf `install.php`, wird diese Datei
+zusätzlich abgefragt. Kommt **404**, nennt die Fehlermeldung Nr. 214 und den
+nötigen Handgriff — statt, wie bisher, den `FTP_ZIELPFAD` zu verdächtigen.
+Ohne diese Unterscheidung suchte man den Fehler im falschen Ort.
+
+### Warum eine Nummer für eine Änderung ohne Serverdatei
+
+Angefasst sind nur `.github/` und Dokumentation; dafür stuft `CLAUDE.md` 2
+sonst nicht hoch. Hier ändert sich aber, **was auf dem Server landet** — eine
+Datei weniger —, und das ist eine Aussage über die Auslieferung selbst. Sie
+braucht eine Überschrift, unter der eine Betreiberin sie findet.
 
 ## [Web 20.15.1] — 2026-09-16
 

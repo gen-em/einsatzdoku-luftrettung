@@ -20,9 +20,15 @@ Werte: „53, gemessen 13.09.2026" kostet eine Klammer und sagt der nächsten
 Instanz sofort, wie alt der Wert ist. Anlass war die Durchsicht
 vom 12.09.2026: Von sechs Einträgen mit Zeilennummern waren alle sechs
 verschoben, von sieben gezählten Werten alle sieben veraltet — und keiner
-davon sah falsch aus. (Nebenbei: Kein Absatz darf mit einer Zahl und einem
-Punkt beginnen — der Einzeiler oben hielte ein Datum am Zeilenanfang für
-eine Nummer.)
+davon sah falsch aus. (Nebenbei: **Keine ZEILE darf mit einer Zahl und einem
+Punkt beginnen** — der Prüfschritt „Backlog — keine Nummer zweimal" in Stufe 1
+liest dort eine Backlog-Nummer. Es geht nicht nur um Absätze: Ein
+**Zeilenumbruch mitten im Fließtext**, nach dem zufällig ein Datum steht,
+genügt. Am 16.09.2026 ist genau das passiert — zwanzig Zeilen unter dieser
+Warnung, im Absatz zur Nummernvergabe: „… aus der Durchsicht vom
+**16.**09.2026" wurde als Nummer 16 gelesen, die es schon gab, und Stufe 1
+brach ab. Wer hier ein Datum schreibt, setzt den Umbruch davor, nicht
+mittendrin.)
 
 **Zu den fehlenden Nummern 4, 6 und 7.** Sie waren vergeben und sind ohne
 Eintrag verschwunden; ihr Inhalt ist nicht mehr rekonstruierbar. Sie bleiben
@@ -37,12 +43,13 @@ Steuerungsdokumente trägt. **206 bis 212 sind in der Umsetzung von P5a auf
 demselben Zweig vergeben** (206 Messstand-Schritt, 207 `gen-em.org` in `tools/`,
 208 Jobregister von Hand geführt, 209 Bausteintabelle in `Design.md`,
 210 Deadlocks in `ingest.php`, 211 `/api/`-Aufruf ohne Sitzung, 212 zwei
-Erwartungen der Wiederherstellungsprobe), **213 aus der Durchsicht vom
-16.09.2026** (Zustandsdatei der Kette im Webroot). **214 und aufwärts liegen
-auf dem P5b-Zweig `claude/magical-dirac-we2y1z`** (214 Anwendung nicht
-installierbar; die Einschübe des P5b-Konzepts folgen dort). Jeder weitere
-Zweig, der Nummern vergibt, beginnt hinter der dort zuletzt vergebenen und
-trägt seine Spanne hier ein, bevor er pusht.
+Erwartungen der Wiederherstellungsprobe), **213 und 214 aus der
+Durchsicht vom 16.09.2026** (Zustandsdatei der Kette im Webroot;
+`install.php` in der Auslieferung). **215 und aufwärts liegen auf dem
+P5b-Zweig `claude/magical-dirac-we2y1z`** (215 Anwendung nicht installierbar;
+die Einschübe des P5b-Konzepts folgen dort). Jeder weitere Zweig, der Nummern
+vergibt, beginnt hinter der dort zuletzt vergebenen und trägt seine Spanne
+hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
@@ -2274,9 +2281,44 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `.well-known/acme-challenge/`, weil eine zu breite Sperre die
     Zertifikatserneuerung lautlos umbringt.
 
-214. **Die Anwendung ließ sich nicht mehr installieren.**
+214. **`install.php` wurde bei jedem Lauf wieder ausgeliefert.**
+    *Angewiesen von der Betreiberin am 16.09.2026, umgesetzt am selben Tag in
+    Web 20.15.2.*
+    `docs/Technik.md` sagt zur Neuinstallation seit jeher: „Nach Erfolg sperrt
+    `install.lock`; `install.php` danach löschen." Die Auslieferungskette hat
+    das bei jedem Lauf rückgängig gemacht — die Datei stand nicht in der
+    Ausnahmeliste (dort steht `install.lock`, nicht `install.php`) und wurde
+    mitgeschickt. Wer sie von Hand entfernte, fand sie nach dem nächsten Lauf
+    wieder vor.
+
+    **Es war nie eine Lücke.** `install.php:136` verweigert sich selbst,
+    solange `config.php` **oder** `install.lock` existiert. Der Punkt ist, dass
+    zwei Anweisungen desselben Projekts einander widersprachen.
+
+    **Der Preis, und er bleibt bestehen:** Eine leere Anlage lässt sich nicht
+    mehr allein über die Kette einrichten — `server/install.php` muss einmal
+    von Hand hinauf, dann einrichten, dann wieder löschen. Ein Fehler **im**
+    Einrichter erreicht über die Kette ebenfalls keinen Server mehr. Stufe 2
+    fängt den Fall ab und nennt ihn beim Namen, damit niemand den
+    `FTP_ZIELPFAD` verdächtigt.
+
+    **Wie es aufgefallen ist, und was daran lehrreich bleibt.** Gemeldet wurde
+    zuerst „install.php wird nicht gesynct". Die Ursache war eine andere und
+    liegt weiter offen: Die Aktion vergleicht die lokalen Dateien gegen ihre
+    **State-Datei**, nie gegen den Server (`deploy.ts:84`, `:150`, `:155`).
+    Wer auf dem Server von Hand löscht, bekommt die Datei **nie** zurück —
+    gemessen an der Live-State-Datei von Staging, die `install.php` mit Hash
+    führte, während der Lauf 14 Sekunden später belegte, dass sie dort fehlte.
+    Für `install.php` ist das jetzt gegenstandslos, weil sie ausgenommen ist.
+    **Für jede andere Datei gilt es weiter** — siehe den nächsten Absatz.
+
+    *Offen daraus:* Ein Hinweis im Runbook, dass eine von Hand auf dem Server
+    gelöschte Datei nur zurückkommt, wenn man die State-Datei mitlöscht. Noch
+    nicht geschrieben.
+
+215. **Die Anwendung ließ sich nicht mehr installieren.**
     *Aufgenommen 16.09.2026 beim Aufbau des Prüfstands für P5b; behoben am
-    selben Tag in Web 20.15.2.*
+    selben Tag in Web 20.15.3.*
     `install.php` antwortete HTTP 500 mit leerem Rumpf — kein Formular, keine
     Meldung. Die Kette ist kurz und jedes Glied für sich richtig:
     `install.php` lädt `ui.php`, damit ihr Formular aussieht wie die
@@ -2300,6 +2342,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Jetzt `is_file()` vor dem `require` und `function_exists()` vor den vier
     `app_state`-Aufrufen, mit Rückfall auf dieselben Vorgaben wie bei
     fehlender Tabelle.
+
+    **Nicht zu verwechseln mit Nr. 214**, obwohl beide am selben Tag
+    entstanden sind und dieselbe Datei betreffen: 214 nimmt `install.php` aus
+    der **Auslieferung**, weil das Runbook sie löschen heißt. Dieser Eintrag
+    macht sie überhaupt erst wieder **lauffähig**. Die beiden greifen
+    ineinander — seit 214 muss die Datei von Hand hinauf, und eine Datei, die
+    man von Hand hinauflädt, um genau einmal eine Anlage einzurichten, muss
+    beim ersten Aufruf funktionieren. Ohne 215 wäre 214 der Weg in eine
+    Sackgasse.
 
     **Zu tun bleibt die Wache:** ein Prüfschritt, der die Einrichtung selbst
     fährt (`lokal_einrichten.sh` ist der fertige Weg, Stufe 1 könnte ihn gegen

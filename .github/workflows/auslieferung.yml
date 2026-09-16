@@ -156,6 +156,22 @@ jobs:
           # BLEIBT ES. Jede Zeile hat eine Geschichte, und jede fehlende
           # Zeile hat eine teurere:
           #   config.php, install.lock   liegen nur auf dem Server
+          #   install.php                der Einrichter. NICHT weil er
+          #                              gefaehrlich waere -- er verweigert
+          #                              sich selbst, solange config.php oder
+          #                              install.lock existiert
+          #                              (install.php:136) --, sondern weil
+          #                              das Runbook seit jeher sagt
+          #                              "install.php danach loeschen"
+          #                              (Technik.md, Neuinstallation) und die
+          #                              Kette genau das jedes Mal rueckgaengig
+          #                              machte. Nr. 214.
+          #                              **PREIS, BENANNT:** Eine LEERE Anlage
+          #                              laesst sich damit nicht mehr allein
+          #                              ueber die Kette einrichten -- die
+          #                              Datei muss einmal von Hand hinauf.
+          #                              Stufe 2 sagt es, wenn dieser Fall
+          #                              eintritt.
           #   sicherungen/               entstehen nur dort (A8.2)
           #   wartung.lock               der Schalter des Wartungsmodus
           #                              (E-S5W-02) — und der Deploy ist
@@ -171,6 +187,7 @@ jobs:
             **/.git*/**
             **/node_modules/**
             config.php
+            install.php
             install.lock
             wartung.lock
             ueberlast.json
@@ -227,7 +244,19 @@ jobs:
           echo "login.php: HTTP $code · gelandet bei $ziel"
           case "$ziel" in
             *install.php*)
-              echo "::error::Die Dateien liegen oben, die Anlage ist aber noch nicht eingerichtet — der Aufruf landet auf install.php. Rahmenplan 6a, Schritte 6 bis 8."
+              # SEIT NR. 214 GIBT ES HIER ZWEI FAELLE, UND SIE BRAUCHEN ZWEI
+              # ANTWORTEN. `install.php` steht seither in der Ausnahmeliste
+              # (das Runbook sagt "danach loeschen", und die Kette machte das
+              # jedes Mal rueckgaengig). Der Preis: Eine LEERE Anlage laesst
+              # sich nicht mehr allein ueber die Kette einrichten. Ohne diese
+              # Unterscheidung faende man an dieser Stelle einen 404 vor und
+              # suchte den Fehler im FTP-Zielpfad -- im falschen Ort.
+              icode=$(curl -sS -o /dev/null --max-time 20 -w '%{http_code}' "$STAGING_URL/install.php" || echo '000')
+              if [ "$icode" = "404" ]; then
+                echo "::error::Die Anlage ist noch nicht eingerichtet, und install.php liegt nicht oben — sie steht seit Nr. 214 in der Ausnahmeliste und wird bewusst NICHT ausgeliefert. Für eine leere Anlage die Datei server/install.php EINMAL von Hand per FTP hochladen, einrichten, danach wieder löschen. Rahmenplan 6a, Schritte 6 bis 8."
+              else
+                echo "::error::Die Dateien liegen oben, die Anlage ist aber noch nicht eingerichtet — der Aufruf landet auf install.php (HTTP $icode). Rahmenplan 6a, Schritte 6 bis 8."
+              fi
               exit 1 ;;
           esac
           if [ "$code" = "000" ]; then
@@ -467,6 +496,7 @@ jobs:
             **/.git*/**
             **/node_modules/**
             config.php
+            install.php
             install.lock
             wartung.lock
             ueberlast.json

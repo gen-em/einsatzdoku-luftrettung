@@ -5502,9 +5502,44 @@ declare(strict_types=1);
  *
  * KEINE MIGRATION. Kein Code der Anwendung ist angefasst — `.htaccess`,
  * die Kette und `.gitignore`.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.15.2 — `install.php` GEHOERT NICHT MEHR ZUR AUSLIEFERUNG
+ * ---------------------------------------------------------------------------
+ *
+ * Backlog Nr. 214, auf Anweisung der Betreiberin vom 16.09.2026. Das Runbook
+ * sagt zur Neuinstallation seit jeher "Nach Erfolg sperrt install.lock;
+ * install.php danach loeschen" — und die Kette machte genau das bei jedem
+ * Lauf wieder rueckgaengig. Jetzt steht `install.php` in der Ausnahmeliste
+ * beider FTPS-Schritte, neben `config.php` und `install.lock`.
+ *
+ * WARUM DAS NICHT DER SCHUTZ IST, DER OHNEHIN SCHON GREIFT. `install.php:136`
+ * verweigert sich selbst, solange `config.php` ODER `install.lock` existiert
+ * ("Die Anwendung ist bereits eingerichtet"). Die Datei war also nie
+ * gefaehrlich, nur ueberfluessig — und eine Datei, die das Runbook loeschen
+ * heisst, gehoert nicht in eine Auslieferung, die sie zurueckbringt.
+ *
+ * DER PREIS, BENANNT: Eine LEERE Anlage laesst sich nicht mehr allein ueber
+ * die Kette einrichten. `server/install.php` muss einmal von Hand hinauf,
+ * dann wird eingerichtet, dann wird sie wieder geloescht. Ein Fehler IM
+ * Einrichter erreicht ausserdem keinen Server mehr ueber die Kette — auch er
+ * braucht dann den Handgriff. Beides ist in `docs/Technik.md`
+ * (Neuinstallation) und im Backlog festgehalten, und Stufe 2 der Kette sagt
+ * es von selbst: Landet der Aufruf auf `install.php` und antwortet die mit
+ * 404, nennt die Fehlermeldung Nr. 214 und den Handgriff statt den
+ * FTP-Zielpfad zu verdaechtigen.
+ *
+ * WARUM EINE NUMMER FUER EINE AENDERUNG OHNE SERVERDATEI. Angefasst sind nur
+ * `.github/` und Dokumentation, und `CLAUDE.md` 2 stuft dafuer sonst nicht
+ * hoch. Hier aendert sich aber, WAS auf dem Server landet — eine Datei
+ * weniger —, und das ist eine Aussage ueber die Auslieferung selbst. Der
+ * Changelog braucht dafuer eine Ueberschrift, unter der eine Betreiberin sie
+ * findet.
+ *
+ * KEINE MIGRATION.
  */
 /* ---------------------------------------------------------------------------
- * 20.15.2 — DIE ANWENDUNG LIESS SICH NICHT MEHR INSTALLIEREN (Backlog Nr. 214)
+ * 20.15.3 — DIE ANWENDUNG LIESS SICH NICHT MEHR INSTALLIEREN (Backlog Nr. 215)
  * ---------------------------------------------------------------------------
  *
  * Gefunden beim Aufbau des Pruefstands fuer P5b, am Zweigstand nach P5a.
@@ -5536,6 +5571,15 @@ declare(strict_types=1);
  * Nachgemessen: Mehr als diese beiden Funktionen braucht sie aus `db.php`
  * nicht.
  *
+ * ZUM VERHAELTNIS ZU 20.15.2. Die beiden Befunde sind am selben Tag
+ * entstanden, betreffen dieselbe Datei und sind trotzdem verschiedene Dinge:
+ * 20.15.2 nimmt `install.php` aus der AUSLIEFERUNG, weil das Runbook sie
+ * loeschen heisst. Dieser Eintrag macht sie ueberhaupt erst wieder
+ * LAUFFAEHIG. Seit 20.15.2 muss sie von Hand hinauf — und eine Datei, die
+ * man von Hand hinauflaedt, um genau einmal eine Anlage einzurichten, MUSS
+ * beim ersten Aufruf funktionieren. Die beiden Fassungen greifen ineinander;
+ * ohne diese hier waere die andere der Weg in eine Sackgasse.
+ *
  * KEINE MIGRATION.
  */
-const WEB_VERSION = '20.15.2';
+const WEB_VERSION = '20.15.3';
