@@ -45,8 +45,10 @@ demselben Zweig vergeben** (206 Messstand-Schritt, 207 `gen-em.org` in `tools/`,
 210 Deadlocks in `ingest.php`, 211 `/api/`-Aufruf ohne Sitzung, 212 zwei
 Erwartungen der Wiederherstellungsprobe), **213 und 214 aus der
 Durchsicht vom 16.09.2026** (Zustandsdatei der Kette im Webroot;
-`install.php` in der Auslieferung). Jeder weitere Zweig, der Nummern vergibt, beginnt bei **215**
-und trägt seine Spanne hier ein, bevor er pusht.
+`install.php` in der Auslieferung), **215 und 216 aus der unabhängigen
+Durchsicht des P5a-Abschlusses** (16.09.2026, nach dem Merge). Jeder weitere
+Zweig, der Nummern vergibt, beginnt bei **217** und trägt seine Spanne hier
+ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
@@ -2312,6 +2314,34 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Offen daraus:* Ein Hinweis im Runbook, dass eine von Hand auf dem Server
     gelöschte Datei nur zurückkommt, wenn man die State-Datei mitlöscht. Noch
     nicht geschrieben.
+
+215. **Fünf Werkzeuge begründen ihre Arbeitsweise mit der gelöschten
+    `deploy.yml`.**
+    *Aufgenommen 16.09.2026 aus einer unabhängigen Durchsicht des
+    P5a-Abschlusses.*
+    `deploy.yml` ist mit Web 20.4.0 gelöscht worden; die Kette heißt seither
+    `auslieferung.yml` und hat **zwei** FTPS-Schritte statt einem. In
+    `docs/Technik.md` sind die Erwähnungen berichtigt — in den Werkzeugen nicht:
+    `tools/integritaetswache/wache.py` erklärt ihren Zweck mit „Der Deploy
+    (`.github/workflows/deploy.yml`) synchronisiert `server/` byteweise per
+    FTPS", und vier weitere Stellen ähnlich.
+
+    **Folgenlos für den Lauf** — es sind Kommentare, kein Code. Aber sie sind
+    die Erklärung, warum es das Werkzeug gibt, und wer sie liest, sucht eine
+    Datei, die es nicht mehr gibt. Dazu stimmt die **Einzahl** nicht mehr: Wer
+    „der Deploy" liest, denkt an einen Weg, und es sind zwei mit
+    unterschiedlichen Toren.
+
+    *Zu tun:* Die fünf Stellen auf `auslieferung.yml` umschreiben und dabei die
+    Zweiwegigkeit nennen. **Kein eigenes Paket** — Beifang, sobald jemand das
+    jeweilige Werkzeug ohnehin anfasst (R83-Muster).
+
+216. **Zwei Trennlinien hintereinander an vier Stellen des P5a-Prüfdokuments.**
+    *Aufgenommen 16.09.2026, gleiche Durchsicht.*
+    Rein kosmetisch: `---` gefolgt von `---` erzeugt in manchen
+    Markdown-Darstellungen eine doppelte Linie, in anderen eine Überschrift.
+    Beim Abhaken der Prüfliste mit wegräumen, nicht dafür eigens anfassen — das
+    Dokument verschwindet ohnehin, sobald seine 33 Punkte abgehakt sind.
 
 ## Erledigt
 

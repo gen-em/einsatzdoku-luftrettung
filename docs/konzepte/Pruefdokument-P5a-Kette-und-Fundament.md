@@ -129,7 +129,7 @@ Alles unten auf dem Stand nach AP1 (Web 20.4.0), im Wegwerf-Container
 > ist kaputt" unterscheiden. Sie muss bei jedem Lauf einen Verstoß auslösen
 > und ihn wiederfinden. In `browserprobe.mjs` steht das als fester Punkt.
 
-**Was die Zahlen benennen** (`CLAUDE.md` 6): Die Wortliste hat sechs Bereiche
+**Was die Zahlen benennen** (`CLAUDE.md` 6): Die Wortliste hat **fünf** Bereiche
 gemessen (Server-PHP, Skripte, Dokumentation, Android, `watch/`), nicht einen;
 die Vollständigkeitszahl ist ein **Vergleich gegen den Ausgangsstand**, keine
 absolute Güte — 340 ist der Altbestand aus P3, den AP4 und spätere Pakete
@@ -144,7 +144,7 @@ AP4 auflöst).
 |---|---|---|
 | **Mailprobe** (neu) | `php tools/mailprobe/probe.php` | **41 Prüfungen, 0 Befunde** über 13 Abschnitte, gegen eine eigene SMTPS-Gegenstelle in fünf Betriebsarten |
 | **Jobprobe** | `php tools/jobprobe/probe.php` | **35 Erwartungen, 0 nicht erfüllt** (Teil 10 neu: 7 Erwartungen zum Job `mail`) |
-| Wortliste | `python3 tools/wortliste/wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen**; 96 Regeln, 96 gegriffen; sechs Bereiche (Server-PHP, Skripte, Doku, Android, `watch/`) |
+| Wortliste | `python3 tools/wortliste/wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen**; 96 Regeln, 96 gegriffen; **fünf** Bereiche (Server-PHP, Skripte, Doku, Android, `watch/`) |
 | Vollständigkeit | `python3 tools/vollstaendigkeit/pruefen.py --hoechstens 367` | **367** (50 + 10 + 299 + 8). Die Kette stand während des Umzugs auf 371 (Doppelbestand: dieselben Texte im Katalog *und* in den alten Aufrufern) und ist zurückgezogen. **Im AP5-Commit standen 366, und das war um 1 zu niedrig** — siehe den Kasten unten |
 | Migrationsregister | `php tools/migrationsregister/pruefen.php` | **0 Befunde**; 206 Katalogspalten, 29 Löschungen, 4 erklärte Ausnahmen, 0 ungenutzt |
 | CSP-Probe | `php tools/cspprobe/pruefen.php` | **0 Befunde** über 108 PHP-Dateien und 108 `<script>`-Stellen |
@@ -309,7 +309,7 @@ Zählschritte dazu, und der Fehlerzweig ist der, den niemand schnell braucht.
 | Wortliste | `python3 tools/wortliste/wortliste.py` | **0/0/0** |
 | Vollständigkeit | `… --hoechstens 377` | **377** — 372 + 5 Pfeile in neuen sichtbaren Texten |
 | CSP · Sitzungshärtung · Installweiche · Kontraste | je eigener Lauf | **0 · 0 · 0 · 22/0** |
-| PHP-Syntax | `php -l` je Datei | **458 Dateien, 0 Fehler** |
+| PHP-Syntax | `php -l` je Datei | **458 Dateien, 0 Fehler** — gemessen über **`server/` allein**. Die Nachbarzeilen (482, 484, 485) messen `server/` **und** `tools/`; die Zahlen sind deshalb nicht vergleichbar, und keine von beiden ist falsch. Genau dafür steht die Regel „eine grüne Zahl ist erst dann ein Beleg, wenn sie das Gemessene benennt" |
 
 **Die Zahlen der Klickprobe im Einzelnen** — sie sind die Abnahme von AP8,
 und sie sind der Grund, warum der Weg überhaupt entstanden ist: Der Bilderlauf

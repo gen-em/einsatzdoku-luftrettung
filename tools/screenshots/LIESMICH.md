@@ -13,8 +13,8 @@ Phase.
 > `tools/motor.mjs`, einmal für alle drei Prüfmittel.
 >
 > **Die Empfehlung ist gestaffelt, und zwar aus einer Zahl heraus:** Der volle
-> Lauf misst 49 Seiten in acht Breiten und braucht je Motor rund zehn Minuten
-> (gemessen: 392 Bilder). Dreimal voll sind eine gute halbe
+> Lauf misst **50** Seiten in acht Breiten und braucht je Motor rund zehn Minuten
+> (gemessen 16.09.2026: **400** Bilder; bis AP8 waren es 49 und 392). Dreimal voll sind eine gute halbe
 > Stunde nach **jedem** Arbeitspaket, und das Meiste davon ist Wiederholung.
 > Deshalb:
 >
@@ -89,7 +89,7 @@ Phase.
 
 Ein Redesign, das „voll mobiltauglich auf allen Seiten" verspricht, muss das
 auf allen Seiten belegen — und zwar bei jeder Breite, nicht bei der einen,
-die gerade offen war. 49 Seiten mal acht Breiten sind 392 Bilder; von Hand
+die gerade offen war. **50** Seiten mal acht Breiten sind **400** Bilder (Stand 16.09.2026; die 50. kam mit P5a/AP8 dazu — `betrieb_sicherheit.php`); von Hand
 macht das niemand zweimal. (Die Zahl stand hier lange bei „30 Seiten … 240
 Bilder" und war schon vor S9/AP5b falsch — `seiten.json` führte 46 Seiten,
 ein voller Lauf machte 368 Bilder. Sie ist seither zweimal nachgezogen

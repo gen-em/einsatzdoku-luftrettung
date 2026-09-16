@@ -168,6 +168,11 @@ Daten erst nach Server-Bestätigung.
 │   │                       .htaccess, geladen über vendor/laden.php;
 │   │                       Herkunft und Prüfsummen in HERKUNFT.md
 │   ├── validate_lib.php   Gemeinsame Prüfschicht für Einsatzdaten (alle vier Schreibwege)
+│   ├── php_mindest.php    die Weiche: PHP zu alt → lesbare Seite statt
+│   │                      Parse-Fehler (P5a/AP2). Lädt NICHTS
+│   ├── plattform_lib.php  Plattformprüfung — was die Anlage kann und was
+│   │                      sie können muss (P5a/AP2, R81); Status und
+│   │                      install.php lesen dieselbe Funktion
 │   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
 │   ├── instanz_lib.php    Der Name dieser Installation (P5a/AP5, Web 20.8.0):
 │   │                       instanz_name() lang (Mailbetreff, Grussformel),
@@ -226,6 +231,16 @@ Daten erst nach Server-Bestätigung.
 │   │                       der Elternseite aktiv, wie `admin_user.php`.
 │   │                       Die einzige Seite des Betriebsbereichs mit
 │   │                       Sperrrecht — und die einzige, die etwas ändert
+│   ├── betrieb_status.php  Betrieb → Status: die Karten aus status_lib.php
+│   ├── logout.php         Abmelden (die Räumung steht in session_lib.php)
+│   ├── betrieb_statistik.php
+│   │                       Betrieb → Statistik: Gerätemodelle und Nutzung
+│   │                       (S8/AP4, Backlog Nr. 80)
+│   ├── status_lib.php     die Karten der Statusseite an einer Stelle —
+│   │                      Server, Backups, Plattform, Sicherheit. In P5a
+│   │                      viermal erweitert (AP2, AP9, AP10, AP11)
+│   ├── site_elevation_lib.php
+│   │                       Höhe über dem Einsatzort (`site_ele_m`)
 │   ├── betrieb_updates.php  Betrieb → Updates (S8/AP2): Wartungsmodus,
 │   │                       ausstehende Migrationen mit Vorschau und Lauf,
 │   │                       ausgeführte Migrationen, Fassung
@@ -735,7 +750,12 @@ Daten erst nach Server-Bestätigung.
 │                          MariaDB, ImageMagick, rsvg-convert, Python-
 │                          jsonschema. STARTET nichts — das macht
 │                          tools/referenzdatensatz/einspielen/lokal_starten.sh
-└── .github/workflows/deploy.yml   FTPS-Deploy (nur server/, exkl. config)
+└── .github/workflows/     die Auslieferungskette (P5a/AP1, Abschnitt 6)
+    ├── pruefung.yml       Stufe 1: jeder Push, ohne Installation
+    ├── auslieferung.yml   Staging (Push auf main), Stufe 2, Produktion
+    │                      (Tag, Pflichtfreigabe, Backup-Tor)
+    └── integritaet.yml    die Wache — hängt am Anzeigenamen „Auslieferung"
+                          (`deploy.yml` ist mit Web 20.4.0 gelöscht worden)
 ```
 
 ## 3. Datenmodell (MySQL)
@@ -4510,7 +4530,7 @@ Trägt der Name keine, steht keine da.
 | Ort | Eintrag | ohne ihn |
 |---|---|---|
 | `.gitignore` | `server/apk/` | Ein signiertes APK läge im Verlauf — ein Erzeugnis, kein Quelltext, bei jeder Fassung ein zweistelliges MB |
-| `.github/workflows/deploy.yml` | `apk/**` und `apk/` | **Der nächste Push löschte die Dateien.** Die Action synchronisiert `server/` und entfernt, was nicht ausgenommen ist |
+| `.github/workflows/deploy.yml` (bis Web 20.3.0; seither `auslieferung.yml`, beide FTPS-Schritte) | `apk/**` und `apk/` | **Der nächste Push löschte die Dateien.** Die Action synchronisiert `server/` und entfernt, was nicht ausgenommen ist |
 
 Der zweite ist der, den man vergisst. Dasselbe Muster wie `config.php` und
 `sicherungen/`, inklusive der doppelten Schreibweise: Die Action prüft
@@ -8724,7 +8744,7 @@ Verzeichnis. Ohne eingerichtetes SMTP (`smtp_eingerichtet()`) steht statt der
 Mail ein dauerhafter Hinweis im Adminbereich. Einzelheiten:
 `docs/Backup-Format.md` 5b.
 
-**`sicherungen/` steht in der `exclude`-Liste von `.github/workflows/deploy.yml`.**
+**`sicherungen/` steht in der `exclude`-Liste beider FTPS-Schritte von `.github/workflows/auslieferung.yml`** (bis Web 20.3.0: `deploy.yml`).**
 Das ist keine Feinheit: Der FTP-Deploy synchronisiert `server/` und löscht alles,
 was nicht ausgenommen ist. Deshalb wird die `.htaccess` auch zur Laufzeit
 erzeugt und nicht mitgeliefert — eine mitgelieferte käme im ausgenommenen Ordner
