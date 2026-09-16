@@ -1168,6 +1168,49 @@ API, ob der Job `produktion` in diesem Lauf mit Erfolg geendet hat.
 **Was bewusst nicht geprüft werden konnte** steht im Prüfdokument, Abschnitt 0
 — voran die Arbeitsläufe selbst: Ein GitHub-Arbeitslauf läuft nur bei GitHub.
 
+#### Nachtrag 16.09.2026 — ein Riegel vor die drei FTP-Geheimnisse
+
+Beim Anlegen der Umgebung `staging` fiel eine Lücke in AP1 auf, die kein
+Prüfmittel hätte finden können, weil sie erst beim ersten echten Lauf
+zuschlägt: **GitHub setzt ein Geheimnis, das es nicht gibt, auf leer und
+bricht nicht ab.** Die FTPS-Aktion wäre mit leerem Benutzernamen losgelaufen
+und erst an der Gegenstelle gescheitert — mit einer Meldung über die
+*Anmeldung*, nicht über den *fehlenden Eintrag*. Wer den Namen eines
+Geheimnisses vertippt, sucht den Fehler dann beim Hoster.
+
+Beide Deploy-Jobs tragen deshalb jetzt einen Riegel, der (a) die drei Werte
+auf Vorhandensein prüft und (b) nachsieht, ob der Host wirklich ein Hostname
+ist und nicht `ftps://…/staging` oder `ftp.example.de:21`. Im
+**Produktions-Job steht er ganz oben**, vor dem Backup-Tor: weiter unten
+hätte der Lauf schon die Wartung eingeschaltet, und ein vertippter Name ließe
+die Anwendung zu.
+
+**Zwei Fallen dabei, beide gemessen statt vermutet.** Erstens ist
+`[ -z "$X" ] && y=1` unter `set -e` — und GitHub setzt es — als *letzte* Zeile
+eines Skripts ein Abbruch mit Code 1, sobald die Bedingung **nicht** zutrifft,
+also genau dann, wenn alles in Ordnung ist. Der Riegel benutzt deshalb
+ausgeschriebene `if`-Blöcke. Zweitens ist der Wert ein **Hostname**; ein
+Geheimnis namens `…_FTP_URL` lädt dazu ein, eine Adresse einzutragen.
+Nachgewiesen an **zehn Fällen** (je Job: alles gesetzt, einer fehlt, alle drei
+fehlen, Host mit Schema, Host mit Port) gegen `bash -e`.
+
+**Die Namen bleiben generisch** (`FTP_SERVER`, `FTP_USERNAME`,
+`FTP_PASSWORD`) und stehen in **beiden** Umgebungen gleich. Zwischendurch
+waren sie auf `NADOKU_STAGING_*` / `NADOKU_PRODUKTION_*` umgestellt und sind
+zurückgedreht worden: Die Umgebung soll entscheiden, welcher Wert ankommt —
+dann kann ein kopierter Job die Zugangsdaten der falschen Seite gar nicht
+erwischen, weil es die anderen dort nicht gibt.
+
+**Keine Versionserhöhung.** Die Änderung fasst `.github/` und `docs/` an und
+liefert an keine der drei Zählungen etwas aus. Muster: `e9d59c4` vom
+16.09.2026, ebenfalls eine Korrektur an der Kette ohne Version.
+
+Der Einrichtungsweg steht jetzt als abhakbare Liste in **Rahmenplan
+Abschnitt 6a** — angelegt, weil in der Umsetzung die Annahme aufkam, die Kette
+richte die Instanz selbst ein. Sie tut es nicht: Sie überträgt `server/` in ein
+Verzeichnis, das es schon geben muss, und legt `config.php` ausdrücklich
+**nicht** an.
+
 ### AP2 — Plattformprüfung · Web 20.5.0 · 15.09.2026
 
 **Entstanden.** `server/plattform_lib.php` (21 Befunde, zwei Stufen,

@@ -38,6 +38,35 @@ name: Auslieferung
 # WER DIESEN LAUF UMBENENNT, LIEST `integritaet.yml`. Sie hängt per
 # `workflow_run` am NAMEN dieses Laufs. Eine Umbenennung hier hängt sie ab —
 # still, ohne Fehlermeldung (Fund F4 des Konzepts).
+#
+# ------------------------------------------------------------------------
+# DIE DREI GEHEIMNISSE HEISSEN IN BEIDEN UMGEBUNGEN GLEICH
+# ------------------------------------------------------------------------
+#
+# `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` — und die UMGEBUNG entscheidet,
+# welcher Wert ankommt. Das ist die Bauart, fuer die es Umgebungen gibt, und
+# sie hat einen Vorzug, den sprechende Namen nicht haben: **Ein Job kann die
+# Zugangsdaten der falschen Seite nicht erwischen, weil es die anderen in
+# seiner Umgebung gar nicht gibt.** Mit `NADOKU_STAGING_*` und
+# `NADOKU_PRODUKTION_*` waere ein kopierter Job, der den falschen Praefix
+# stehen laesst, ein Deploy auf die falsche Anlage — und niemand saehe es,
+# bis er es sieht.
+#
+# SIE GEHOEREN AN DIE UMGEBUNG, NICHT AN DIE ORGANISATION. Ein
+# Organisationsgeheimnis mit "All repositories" ist von jedem Arbeitslauf in
+# jedem Repositorium der Organisation lesbar; die Pflichtfreigabe an
+# `produktion` waere damit eine Formalie.
+#
+# DER RIEGEL UNTEN IST DER WICHTIGERE TEIL. GitHub setzt ein Geheimnis, das es
+# nicht gibt, auf LEER und bricht nicht ab. Die FTPS-Aktion lief damit mit
+# leerem Benutzernamen los und scheiterte erst an der Gegenstelle — mit einer
+# Meldung ueber die Anmeldung, nicht ueber den fehlenden Eintrag. Wer den
+# Namen eines Geheimnisses vertippt, sucht den Fehler dann beim Hoster.
+#
+# UND `FTP_SERVER` HEISST SO, WEIL DER WERT EIN HOSTNAME IST. Ein Feld namens
+# `..._URL` laedt dazu ein, `ftps://…/staging` einzutragen; die Aktion setzt
+# den Wert unveraendert als Server ein, und die Namensaufloesung gelingt nie.
+# Der Riegel prueft es deshalb mit.
 
 on:
   push:
@@ -58,6 +87,38 @@ jobs:
     steps:
       - name: Code auschecken
         uses: actions/checkout@v4
+
+      - name: Sind die drei Geheimnisse der Umgebung `staging` da?
+        # Siehe Kopf: ein fehlendes Geheimnis ist LEER, nicht rot.
+        env:
+          FTP_SERVER:   ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          # AUSGESCHRIEBENE `if`-BLOECKE UND KEINE `&&`-KETTEN. Unter `set -e`,
+          # und GitHub setzt es, ist `[ -z "$X" ] && y=1` als LETZTE Zeile eines
+          # Skripts ein Abbruch mit Code 1, sobald die Bedingung nicht zutrifft
+          # — also genau dann, wenn alles in Ordnung ist. Die Falle ist bekannt
+          # und kostet eine halbe Stunde; drei Zeilen mehr kosten nichts.
+          fehlt=""
+          if [ -z "${FTP_SERVER:-}" ];   then fehlt="$fehlt FTP_SERVER"; fi
+          if [ -z "${FTP_USERNAME:-}" ]; then fehlt="$fehlt FTP_USERNAME"; fi
+          if [ -z "${FTP_PASSWORD:-}" ]; then fehlt="$fehlt FTP_PASSWORD"; fi
+          if [ -n "$fehlt" ]; then
+            echo "::error::Umgebung staging: es fehlt$fehlt. Sie gehoeren als ENVIRONMENT SECRETS an die Umgebung, nicht als Repositoriums- oder Organisationsgeheimnis."
+            exit 1
+          fi
+          # Der Wert ist ein HOSTNAME, keine Adresse. Die FTPS-Aktion setzt ihn
+          # unveraendert als Server ein; ein `ftps://` davor, ein Pfad dahinter
+          # oder ein `:21` am Ende (die Aktion hat `port:` getrennt) ergibt eine
+          # Namensaufloesung, die nie gelingt — und eine Fehlermeldung ueber die
+          # Anmeldung statt ueber den Eintrag.
+          case "$FTP_SERVER" in
+            *://*|*/*|*:*)
+              echo "::error::FTP_SERVER traegt ein Schema, einen Pfad oder einen Port. Erwartet wird der blosse Hostname, z. B. ftp.example.de."
+              exit 1 ;;
+          esac
+          echo "Drei Geheimnisse vorhanden; der Host sieht wie ein Hostname aus."
 
       - name: server/ per FTPS auf Staging synchronisieren
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
@@ -157,6 +218,42 @@ jobs:
     steps:
       - name: Code auschecken
         uses: actions/checkout@v4
+
+      - name: Sind die drei Geheimnisse der Umgebung `produktion` da?
+        # HIER WIEGT ER SCHWERER ALS AUF STAGING, UND DESHALB STEHT ER GANZ
+        # OBEN: Weiter unten haette der Lauf schon das Komplett-Backup
+        # angestossen und die Wartung EINGESCHALTET. Braeche er dann an der
+        # FTPS-Anmeldung ab, staende die Anwendung zu, und jemand muesste
+        # sie von Hand wieder aufmachen — wegen eines vertippten Namens.
+        env:
+          FTP_SERVER:   ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          # AUSGESCHRIEBENE `if`-BLOECKE UND KEINE `&&`-KETTEN. Unter `set -e`,
+          # und GitHub setzt es, ist `[ -z "$X" ] && y=1` als LETZTE Zeile eines
+          # Skripts ein Abbruch mit Code 1, sobald die Bedingung nicht zutrifft
+          # — also genau dann, wenn alles in Ordnung ist. Die Falle ist bekannt
+          # und kostet eine halbe Stunde; drei Zeilen mehr kosten nichts.
+          fehlt=""
+          if [ -z "${FTP_SERVER:-}" ];   then fehlt="$fehlt FTP_SERVER"; fi
+          if [ -z "${FTP_USERNAME:-}" ]; then fehlt="$fehlt FTP_USERNAME"; fi
+          if [ -z "${FTP_PASSWORD:-}" ]; then fehlt="$fehlt FTP_PASSWORD"; fi
+          if [ -n "$fehlt" ]; then
+            echo "::error::Umgebung produktion: es fehlt$fehlt. Sie gehoeren als ENVIRONMENT SECRETS an die Umgebung, nicht als Repositoriums- oder Organisationsgeheimnis."
+            exit 1
+          fi
+          # Der Wert ist ein HOSTNAME, keine Adresse. Die FTPS-Aktion setzt ihn
+          # unveraendert als Server ein; ein `ftps://` davor, ein Pfad dahinter
+          # oder ein `:21` am Ende (die Aktion hat `port:` getrennt) ergibt eine
+          # Namensaufloesung, die nie gelingt — und eine Fehlermeldung ueber die
+          # Anmeldung statt ueber den Eintrag.
+          case "$FTP_SERVER" in
+            *://*|*/*|*:*)
+              echo "::error::FTP_SERVER traegt ein Schema, einen Pfad oder einen Port. Erwartet wird der blosse Hostname, z. B. ftp.example.de."
+              exit 1 ;;
+          esac
+          echo "Drei Geheimnisse vorhanden; der Host sieht wie ein Hostname aus."
 
       - name: Tag gegen WEB_VERSION halten
         # F-P5a-1: Der Tag heisst `web-vX.Y.Z` und ist gleich `WEB_VERSION`.
