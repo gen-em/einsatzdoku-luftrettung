@@ -29,7 +29,7 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | **AP2 Plattformprüfung** | **erledigt** | **Web 20.5.0** | 21 Befunde (15 ohne DB/config) · Muss offen 0 · Installweiche 8/8, 0 Befunde auf 658 Zeilen · Bilderlauf 16 Bilder, 0/0/0 · Wortliste 0/0/0 |
 > | **AP3 Torwächter** | **erledigt** | **Web 20.6.0** | Wartungsprobe **67 Erwartungen, 0 nicht erfüllt** (Teil 7 neu, 10 Erwartungen) · Browserprobe 12/12 · Bilderlauf 8 Bilder, 0/0/0 · Wortliste 0/0/0 |
 > | **AP4 Kopfzeilen und HTTPS** | **erledigt** | **Web 20.7.0** | CSP-Probe **0 Befunde** (106 Dateien, 108 Skript-Stellen), Selbstprobe 8/8 · Browserprobe **33/33, 0 Seitenfehler** · Bilderlauf **392 Bilder, 0/0/0** und **0 CSP-Berichte** (dritter Lauf — die zwei davor fanden F6 und F7) · Wartungsprobe 67/0 · Integritätswache 30/30 und **kein Unterschied** · Wortliste 0/0/0 · Kontraste 22/0 · Vollständigkeit 365 gegen 351 (`style=` **13→10**, Unicode +17 — alle in Kommentaren) |
-> | **AP5 Mail-Warteschlange** | **in Arbeit** | Teil 1: **Web 20.8.0** | Teil 1 (Name der Installation, E-P5a-35) steht: 38 Stellen auf zwei Werte zusammengezogen · 6/6 Einschleusversuche abgewiesen · 3 Rückfälle der Wartungsseite · 0 Seitenfehler. **Teil 2 (Warteschlange + Mailkatalog) offen** |
+> | **AP5 Mail-Warteschlange** | **in Arbeit** | **Web 20.8.0** | Teil 1 (Name der Installation, E-P5a-35) **steht**: 38 Stellen auf zwei Werte, 6/6 Einschleusversuche abgewiesen · Teil 2 **Gerüst steht**: Katalog mit 9 Nachrichten, Warteschlange, Job `mail`; Leiter 5/30/120/480 min gemessen, `zu_spaet` nach 3 Versuchen, Job am Huckepack-Weg 3 Nachrichten in 0,16 s, Bremse 3,0 s → 3,00 s · `smtp_send()` mit Frist: 5 s Limit vorher 31,06 s, jetzt 5,00 s · E-P5a-37 gemessen (0 Adressen im Protokoll) · **offen: Umzug der zehn Aufrufstellen, `mail_rahmen()`/`app_url()` (Nr. 202), Unzustellbar-Liste** |
 > | AP6 bis AP12 | offen | — | — |
 
 ---
@@ -492,6 +492,40 @@ Katalogeinträge zu schreiben, hieße, das Problem in neuen Code einzubauen.
 Source" (Urheberschaft der Software, nicht Name des Betriebs) und
 `GPX_CREATOR` (gehört zum Exportformat; einstellbar verglichen die
 eingecheckten Referenzausführungen Äpfel mit Birnen).
+
+**E-P5a-37 (neu, 16.09.2026, Auftraggeber; Backlog Nr. 204) — `smtp.php`
+protokolliert keine Empfängeradresse.** Die Zeile
+`error_log('SMTP: Versand an ' . $toEmail . ' fehlgeschlagen')` war die
+**einzige Stelle mit Personenbezug** im Fehlerprotokoll und widersprach der
+Zusage im Kopf derselben Datei. **Entscheidung: Die Zusage gilt.** Die Meldung
+nennt Kennung und Grund; der Empfänger steht in `mail_warteschlange`, wo er
+nach 30 Tagen verfällt (E-P5a-09).
+
+**Damit die Kennung nicht ins Leere zeigt** (Zusatz dieser Instanz): Die
+Warteschlange schreibt **dieselbe** Kennung in ihre Fehlerspalte. Sonst wäre
+die Änderung keine Verbesserung, sondern ein Verlust — ein Protokoll ohne
+Adressat und eine Liste ohne Ursache. Die übrigen zehn `error_log()`-Aufrufe
+in `smtp.php`, `email_lib.php`, `pair.php` und `reset_request.php` sind
+mitgeprüft: keiner nennt Adresse, Kennung oder Token.
+
+**E-P5a-39 (neu, 16.09.2026) — was beim Endzustand geleert wird, hängt vom
+Endzustand ab.** Der Auftraggeber hat „Weg B" freigegeben (Zeile bleibt 30
+Tage, Rumpf fällt) und dabei zu Recht nachgefasst: *„Fehler sollten mit
+Mailadresse protokolliert bleiben, damit sie nachvollziehbar sind."*
+
+| Zustand | `empfaenger` | `betreff` | `text` |
+|---|---|---|---|
+| offen | bleibt | bleibt | bleibt — sonst kann der Job nicht senden |
+| zugestellt | **fällt** | **fällt** | **fällt** |
+| unzustellbar | **bleibt** | bleibt | **fällt** |
+| ueberholt / zu_spaet | fällt | fällt | fällt |
+
+Der **Rumpf fällt immer** (Token). Bei **unzustellbar bleibt die Adresse** —
+„die Einladung an X kam nie an" ist ohne X wertlos, und E-P5a-14 verlangt die
+Liste ausdrücklich „mit Empfänger und Grund". Das ist eine benannte Ausnahme
+von der Zusage in `smtp.php`, und sie steht **dort neben der Zusage**, nicht
+davon getrennt: Eine Liste *gescheiterter* Zustellungen ist kein Protokoll
+darüber, wer Post *bekommen* hat, sondern eine Mängelliste.
 
 ### 2.3 Ort je Funktion (K1, R74)
 

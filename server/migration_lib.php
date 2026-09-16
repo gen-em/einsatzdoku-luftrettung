@@ -2498,6 +2498,62 @@ function migrationen_katalog(): array
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
         ],
     ],
+    [
+        'id'    => '2026_09_16_mail_warteschlange',
+        'web'   => '20.8',
+        'label' => 'Mail-Warteschlange — nichts geht verloren, weil ein SMTP-Server schweigt',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'mail_warteschlange'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* DREI SPALTEN WERDEN GELEERT, SOBALD EINE ZEILE IHREN
+             * ENDZUSTAND ERREICHT — und welche, haengt davon ab, WELCHER
+             * Endzustand (E-P5a-39).
+             *
+             * `text` faellt IMMER. Die Einladungs- und die Reset-Mail tragen
+             * einen GUELTIGEN Token im Rumpf; bisher lebte der nur in der
+             * Mail, in der Datenbank stand allein sein Hash. Er darf nicht 30
+             * Tage hier liegen und in jeder Komplettsicherung mitfahren.
+             *
+             * `empfaenger` und `betreff` fallen bei ZUGESTELLT. Die Anwendung
+             * fuehrt kein Protokoll ueber Mailempfaenger (`smtp.php`), und
+             * fuer die Frage „geht hier Post hinaus?" braucht die Liste die
+             * Adresse nicht.
+             *
+             * BEI UNZUSTELLBAR BLEIBEN SIE. „Die Einladung an X kam nie an"
+             * ist ohne X wertlos, und E-P5a-14 verlangt die Unzustellbar-Liste
+             * ausdruecklich „mit Empfaenger und Grund". Das ist kein
+             * Protokoll darueber, wer Post BEKOMMEN hat, sondern eine
+             * Maengelliste — und wer sie sieht, kann ohnehin jede
+             * Kontoadresse einsehen. Die Ausnahme steht im Kopf von
+             * `smtp.php` neben der Zusage, nicht davon getrennt.
+             *
+             * `zustand` statt zweier Flaggen: offen · zugestellt ·
+             * unzustellbar · ueberholt · zu_spaet. Die letzten beiden
+             * stammen aus dem Angriff auf den Entwurf — ein Reset-Token lebt
+             * eine Stunde, die Wiederholungsleiter geht bis 24 h. */
+            'CREATE TABLE mail_warteschlange (
+               id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               schluessel        VARCHAR(32)  NOT NULL,
+               art               VARCHAR(16)  NOT NULL,
+               empfaenger        VARCHAR(190) NULL,
+               betreff           VARCHAR(190) NULL,
+               text              MEDIUMTEXT   NULL,
+               zustand           VARCHAR(16)  NOT NULL DEFAULT \'offen\',
+               versuche          INT UNSIGNED NOT NULL DEFAULT 0,
+               erstellt          DATETIME     NOT NULL,
+               naechster_versuch DATETIME     NULL,
+               beendet           DATETIME     NULL,
+               gueltig_bis       DATETIME     NULL,
+               fehler            TEXT         NULL,
+               INDEX idx_faellig (zustand, naechster_versuch),
+               INDEX idx_erstellt (erstellt),
+               INDEX idx_empfaenger (empfaenger)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

@@ -196,7 +196,31 @@ function jobs_pause_bis(): ?string
  */
 function jobs_katalog(): array
 {
+    require_once __DIR__ . '/mail_lib.php';
     $katalog = [
+        /* `mail` STEHT GANZ VORN, und das ist kein Zufall (P5a/AP5).
+         *
+         * `jobs_lauf()` arbeitet den Katalog der Reihe nach ab und
+         * ueberspringt, was ins Restbudget nicht mehr passt — am
+         * Huckepack-Weg sind das 3 s fuer ALLE Jobs zusammen. Ein Job, der
+         * hinter der Verdichtung stuende, bekaeme dort regelmaessig nichts,
+         * und die Statusseite meldete trotzdem „in Ordnung", weil kein
+         * Fehler anliegt. Bei einer Warteschlange, in der ein Reset-Link
+         * wartet, ist das der teuerste aller stillen Fehler.
+         *
+         * `taeglich => false`: Ein gescheiterter Lauf zaehlt trotzdem als
+         * Lauf (`letzter_lauf` wird auch im Fehlerfall gesetzt). Bei
+         * `taeglich` sperrte ein einziger Fehlschlag den Versand bis zum
+         * naechsten Kalendertag. */
+        'mail' => [
+            'titel'        => 'Post zustellen',
+            'beschreibung' => 'Nachrichten, deren erster Versuch scheiterte — '
+                            . 'fünf Versuche über 24 Stunden, danach steht die '
+                            . 'Nachricht als unzustellbar auf der Statusseite',
+            'taeglich'     => false,
+            'rueckstand'   => 'mail_rueckstand',
+            'lauf'         => 'mail_job',
+        ],
         'aufraeumen' => [
             'titel'        => 'Aufräumen',
             'beschreibung' => 'Papierkorb, Kopplungssitzungen, Ratenschutz, '
@@ -564,6 +588,18 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
             } catch (Throwable $ex) {
                 /* Tabelle fehlt (Migration noch nicht gelaufen) — kein Grund,
                  * den ganzen Aufraeumlauf scheitern zu lassen. */
+            }
+        },
+        'Mail-Warteschlange' => function (PDO $pdo): void {
+            /* 30 Tage (E-P5a-09 nennt „erledigte Warteschlangeneintraege"
+             * ausdruecklich). Geloescht wird ab `erstellt`, nicht ab
+             * `beendet`: Eine Zeile, die nie einen Endzustand erreicht, weil
+             * die Installation stillag, soll trotzdem verfallen. */
+            try {
+                $pdo->exec('DELETE FROM mail_warteschlange
+                            WHERE erstellt < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)');
+            } catch (Throwable $ex) {
+                /* Tabelle fehlt (Migration noch nicht gelaufen). */
             }
         },
         'Job-Verlauf' => function (PDO $pdo): void {

@@ -51,6 +51,131 @@ dort, wo Logo und Rechtstexte schon stehen:
 **Die Vorgaben sind die heutigen Zeichenketten.** Wer nichts einstellt, sieht
 nach dem Update genau das, was vorher dastand. Leer lassen setzt zurück.
 
+### Hinzugefügt — die Mail-Warteschlange (Gerüst; die Aufrufer ziehen noch um)
+
+**Was galt.** Scheiterte `smtp_send()`, war die Nachricht **weg** — der
+Reset-Link, die Einladung, die Warnung vor der vollen Platte.
+`smtp_versand_vermerken(false)` hielt nur fest, *dass* etwas schiefging.
+
+**Was gilt.** `mail_lib.php` mit einem **Nachrichtenkatalog** (neun Einträge)
+und einer Warteschlange: erst speichern, dann sofort versuchen; scheitert der
+Versuch, wiederholt ihn der neue Job **`mail`** — fünf Versuche über 24 h
+(5 min, 30 min, 2 h, 8 h, 24 h), danach „unzustellbar".
+
+**Der erste Versuch läuft synchron, und das ist keine Bequemlichkeit:** Der
+Job läuft huckepack auf einer Web-Anfrage, höchstens alle fünf Minuten, und
+nur wenn überhaupt jemand eine Seite aufruft. Nachts oder auf einer stillen
+Installation läuft er **gar nicht**. Eine Warteschlange ohne synchronen ersten
+Versuch wäre für einen Reset-Link kein Fortschritt, sondern ein Rückschritt.
+
+**Drei Spalten werden beim Endzustand geleert — und welche, hängt davon ab,
+welcher Endzustand** (E-P5a-39):
+
+| Zustand | Empfänger | Betreff | Rumpf |
+|---|---|---|---|
+| offen | bleibt | bleibt | bleibt (sonst kann nicht gesendet werden) |
+| **zugestellt** | fällt | fällt | fällt |
+| **unzustellbar** | **bleibt** | bleibt | fällt |
+
+Der **Rumpf fällt immer**: Einladung und Reset tragen einen *gültigen Token*.
+Bisher lebte der nur in der Mail — in der Datenbank stand allein sein Hash.
+Er darf nicht 30 Tage hier liegen und in jeder Komplettsicherung mitfahren.
+
+Bei **unzustellbar bleibt die Adresse**, und das ist eine ausdrückliche
+Ausnahme von der Zusage in `smtp.php`: „Die Einladung an X kam nie an" ist
+ohne X wertlos. Eine Liste *gescheiterter* Zustellungen ist kein Protokoll
+darüber, wer Post *bekommen* hat, sondern eine Mängelliste.
+
+**Noch nicht umgezogen:** Die zehn Versandstellen rufen weiterhin
+`smtp_send()` unmittelbar. Im Betrieb ändert sich mit dieser Fassung also
+noch nichts am Versandweg — was sich ändert, sind das Zeitbudget und das
+Fehlerprotokoll (siehe unten).
+
+### Behoben — zwei Funde aus dem Angriff auf den Entwurf
+
+Der Entwurf des Katalogs wurde vor dem Bau angegriffen (28 Prüfläufe, 7 von
+24 Befunden überlebten die Gegenprüfung). Zwei davon hätten gebaut werden
+müssen und nicht nachträglich:
+
+**Die Wiederholungsleiter überlebte den Token, den sie trägt.** Ein
+Reset-Token lebt **eine Stunde**, die Leiter geht bis **24 h** — die Stufen 4
+und 5 hätten nur noch tote Links zugestellt, samt dem Satz „es gilt immer nur
+der zuletzt verschickte" im Rumpf. Jeder Katalogeintrag trägt jetzt eine
+**Frist**; ein Versuch, der nach Ablauf fällig wäre, unterbleibt (Zustand
+`zu_spaet`). Gemessen: Die Reset-Mail gibt nach **3** Versuchen auf.
+Zusätzlich schließt eine neue Anforderung die ältere offene Zeile
+(`ueberholt`) — der zweite Link entwertet den ersten ohnehin.
+
+**Der Rückgabewert log.** `smtp_send()` gab `true`/`false`, und sieben
+Aufrufer lasen `false` als „geht nie". Mit einer Warteschlange heißt es „noch
+nicht": `admin_users.php` hätte den Einladungslink **im Klartext** angezeigt,
+obwohl die Mail fünf Minuten später hinausgeht, und die beiden Warnmail-Stellen
+hätten ihre Schwellenmarke nicht gesetzt — eine dreitägige Mailstörung ergäbe
+dieselbe Warnung dreifach. Deshalb **drei** Zustände:
+`zugestellt` · `wartet` · `abgelehnt`.
+
+### Behoben — das Zeitbudget des Jobs war größer als sein Budget
+
+Der erste Entwurf verlangte die vollen 5 s je Versuch. Am Huckepack-Weg stehen
+aber **3,0 s für alle Jobs zusammen** zur Verfügung — die Bedingung war beim
+ersten Durchgang immer wahr, der Job brach ab, **bevor er eine einzige
+Nachricht versuchte**. Gemessen: „erledigt 0" bei drei fälligen Zeilen. Auf
+einer Installation ohne Cron wäre die Warteschlange nie geleert worden, und
+nichts hätte es gemeldet.
+
+Der Versuch bekommt jetzt die **Restzeit** als Budget, höchstens 5 s, mit
+einer Untergrenze von 1,5 s. Gemessen gegen ein gesundes Relais: 3 Nachrichten
+in **0,16 s**. Gegen ein hängendes: Budget 3,0 s → 3,00 s, Budget 20 s →
+20,01 s.
+
+### Geändert — `smtp.php` protokolliert keine Empfängeradresse mehr
+
+`error_log('SMTP: Versand an ' . $toEmail . ' fehlgeschlagen')` war die
+**einzige Stelle mit Personenbezug** im Fehlerprotokoll — und sie widersprach
+der Zusage im Kopf derselben Datei, die `betrieb_status.php` als Zusage der
+Statusseite wiederholt. **Die Zusage gilt** (E-P5a-37).
+
+Die Meldung nennt jetzt eine **Kennung** und den **Grund**:
+`[11ED8898] SMTP connect: Connection refused`. Damit die Kennung nicht ins
+Leere zeigt, schreibt die Warteschlange **dieselbe Kennung** in ihre
+Fehlerspalte — wer einem Fehlschlag nachgeht, hat dort den Empfänger und im
+Protokoll des Webspace den technischen Grund. Die übrigen zehn
+`error_log()`-Aufrufe in `smtp.php`, `email_lib.php`, `pair.php` und
+`reset_request.php` wurden mitgeprüft: keiner nennt Adresse, Kennung oder
+Token.
+
+### Hinzugefügt — `job_laeufe`: ein Job, der jede zweite Nacht scheitert, war unsichtbar
+
+`jobs.letzter_fehler` wird beim nächsten Erfolg auf `NULL` gesetzt. Für die
+Ampel richtig — sie soll sagen, was *jetzt* ansteht —, für die Fehlersuche
+verheerend. Die Tabelle war übrigens nicht erfunden: **E-P5a-09 nennt
+„Job-Läufe" längst** unter dem, was nach 30 Tagen gelöscht wird.
+
+**Nicht jeder Lauf kommt hinein.** Am Huckepack-Weg laufen acht Jobs alle fünf
+Minuten; das wären rund 2000 Zeilen am Tag, fast alle mit der Aussage „nichts
+zu tun". Geschrieben wird, was etwas **aussagt**: ein Fehler, oder ein Lauf,
+der etwas erledigt hat.
+
+### Behoben — `smtp_send()` rechnet mit einer Frist statt einer Dauer
+
+Das Zeitlimit ging an `stream_set_timeout()`, und das gilt **je
+Leseoperation**. Die Multiline-Schleife las, solange das vierte Zeichen ein
+`-` ist — jedes `fgets` bekam die vollen Sekunden neu, bei **neun**
+Protokollschritten.
+
+Gemessen gegen ein Relais mit 26 s Lesezeit:
+
+| Zeitlimit | vorher | nachher |
+|---|---|---|
+| 5 s | **31,06 s** | 5,00 s |
+| 15 s | **41,07 s** | 15,00 s |
+
+**15 s ist die Vorgabe, mit der der Aufräumjob sendet** — und der läuft
+huckepack auf der Seitenanfrage einer Unbeteiligten. Ein hängendes Relais
+hielt damit die Seite einer Notärztin über vierzig Sekunden fest. Was
+außerhalb der Frist liegt, steht jetzt im Kopfkommentar: die Namensauflösung
+des Hosts.
+
 ### Hinzugefügt — die Wartungsseite bekommt den Namen aus dem Schalter
 
 `instanz_lib.php` **lädt nichts**, und das ist der Kniff: Drei Seiten dürfen
@@ -114,7 +239,10 @@ Vorgabe in der Datenbank stehen.
 - **Noch offen:** `install.php` fragt den Namen bei der Ersteinrichtung noch
   nicht ab, und `smtp.from_name` führt ihn weiterhin selbst. Beides kommt mit
   dem zweiten Teil von AP5, der die Mails ohnehin anfasst.
-- **Keine Schemaänderung**, keine Migration — zwei Zeilen in `app_state`.
+- **Zwei Migrationen:** `2026_09_16_job_laeufe` und
+  `2026_09_16_mail_warteschlange`. Nach dem Deploy muss eine Administratorin
+  **Betrieb → Updates** aufrufen; der Torwächter hält die Anwendung bis dahin
+  geschlossen.
 
 ## [Web 20.7.0] — 2026-09-15
 

@@ -29,6 +29,13 @@ Eintrag verschwunden; ihr Inhalt ist nicht mehr rekonstruierbar. Sie bleiben
 deshalb dauerhaft frei — weder werden sie neu vergeben noch nachgetragen. Diese
 Notiz steht hier, damit die Frage nicht bei jedem Durchsehen erneut aufkommt.
 
+**Nummernvergabe zwischen Zweigen (Stand 16.09.2026).** 200 und 201
+(Rahmenplan Fassung 73) und 202–205 (Fassung 74) sind mit dem Doku-Paket der
+Konzeptinstanz vergeben und liegen auf dem P5a-Zweig
+`claude/butte-umsetzen-5opi9u`, der bis zu seinem Merge die
+Steuerungsdokumente trägt. Jeder Zweig, der Nummern vergibt, beginnt bei
+**206** und trägt seine Spanne hier ein, bevor er pusht.
+
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
 Uhr-Auslieferung nach R47 und das Zwischenpaket S2), beide für sich lückenlos
@@ -144,6 +151,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ein fester Abstand je Anfrage wäre falsch. Das Demo-Konto ist mit
     abgedeckt, sobald der Topf existiert (E-P1-09 führt es als benanntes
     Restrisiko).
+
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP7 (E-P5a-01: Grundsatzfrage entschieden — die Bremse kommt; E-P5a-02: 30 Fehlversuche je 15 min je Gerätekennung, Leiter 10/20/30/60 min, `429` mit `Retry-After`).
 21. **Die 43 weiteren Funde der A4-Nachlese sichten.** Die Erhebung „toter
     Code" in P0/A4 hat mit einer zweiten, breiteren Methode 43 zusätzliche
     Kandidaten geliefert (Abschnitt 9.3 des P0-Konzepts). Sie sind **nicht**
@@ -533,6 +542,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     dort selbst entscheidet. Der zweite Weg löscht nichts und beantwortet die
     Frage vielleicht schon.
 
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP10 (E-P5a-03: Anzeige je Ziel als Grundlage, Löschregel als Option je Ziel mit drei Sicherungen).
+
 50. **Der Versand liest je Konto ein Verzeichnis.**
     `sz_versand_schub()` fragt für jeden Kontoordner die Verzeichnisliste des
     Ziels ab, um zu erkennen, was dort fehlt. Bei 33 Ordnern ist das
@@ -626,6 +637,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     weiterleitet und die Anmeldung dazwischen als das genommen wird, was sie
     ist: die Bestätigung. Die zweite Möglichkeit ist billiger und ändert
     nichts an einer Datei mit 37 Migrationen.
+
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP3 (E-P5a-20: `wiederherstellen.php` setzt den Katalog-Hash zurück, die nächste Anfrage prüft und der Torwächter schaltet die Wartung).
 
 55. **Das Komplett-Backup kennt keinen scharfen Schnappschuss.**
     Aus S2/AP8. Der Dump entsteht über mehrere Anfragen; ein Lesestand über
@@ -857,6 +870,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     unter `server/api/` die Prüfung nicht jeder selbst schreiben. Vor dem
     Anfassen neu zählen — siehe die Lehre oben.
 
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP4 (mit den Kopfzeilen, weil beides in `auth_guard.php` wohnt).
+
 
 76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
     hat.**
@@ -1007,6 +1022,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 ---
 
 ---
+
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP11 nur für den Nachlöse-Job (E-P5a-21, E-PP-06); Herkunft je Einsatz und Dashboard bleiben 10c.
 
 90. **Der Simulator kann keinen Verbindungsabriss herstellen.**
     *Aufgenommen 03.09.2026 aus S5 Paket C.*
@@ -1814,6 +1831,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `NULL` in der Datenbank, nicht als `radcomputer`. Zuordnung: **P5**,
     zusammen mit der Auswertung — vorher hat die Spalte keinen Leser.
 
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP10 (`backup_lib.php` prüft `geraet_art` gegen `GERAETE_ARTEN` wie beim Koppeln).
+
 
 196. **68 von 195 Backlog-Einträgen rendern auf GitHub als grauer Kasten.**
     *Aufgenommen 15.09.2026 beim Gegenlesen der Punkte 190–195.*
@@ -1946,6 +1965,221 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Abnahme:* Entweder `grep -cE '^5\. '` liefert 1, oder die Kopfnotiz
     nennt vier fehlende Nummern statt drei. Zuordnung: **Backlog-Runde** —
     zusammen mit **Nr. 196**, das dieselbe Datei ohnehin in einem Zug anfasst.
+
+200. **Bounce-Postfach: Unzustellbares erkennen, nicht nur zählen.**
+    *Aufgenommen 15.09.2026 (Konzept P5a, E-P5a-14; Vorbereitung
+    Plattformprofil PP-7, Stufe Empfohlen).* Die Mail-Warteschlange aus P5a
+    zählt Zustellversuche und führt eine Unzustellbar-Liste auf der
+    Statusseite — was der SMTP-Server annimmt und die Gegenstelle später
+    zurückschickt, sieht sie nicht. Fehlt: ein Postfach, das die Anwendung
+    per IMAP liest (Job), mit dem eine dreimal zurückgekommene Adresse am
+    Konto als „unzustellbar" vermerkt und die Nutzerin beim nächsten
+    Anmelden gefragt wird. Ohne Postfach bleibt der Vermerk aus. Zuordnung:
+    nach P5a, mit dem Konto-Lebenszyklus (10b) oder als Backlog-Runde.
+
+201. **`Retry-After` in Uhr und Handy auswerten.**
+    *Aufgenommen 15.09.2026 (Konzept P5a, Befund 1.7).* Beide Clients
+    behandeln jeden Antwortcode außer 200/400/401/403/413 als „später
+    erneut" und wiederholen zum nächsten eigenen Anlass — die Kopfzeile
+    `Retry-After`, die die Mengenbremse (E-P5a-02) mitschickt, liest keiner.
+    Für Sperren von 10 bis 60 Minuten genügt das; sauberer wäre, die
+    genannte Zeit abzuwarten statt bei jedem Auslöser anzuklopfen. Niedrig;
+    Uhr-Stufe und Android-Stufe je eine Zeile in der Antwortauswertung
+    (`Uploader.mc`, `Sendeantwort.kt`).
+
+202. **Zentralisierung Web — eine Stelle je Sache** (Sammelnummer,
+    Rahmenplan **Schritt 15**, R83).
+    *Aufgenommen 16.09.2026.* Eine eigene Sitzung hat den Web-Teil
+    (`server/`, ohne `assets/vendor/`) auf Code untersucht, der nach dem
+    Vorbild von `mission_fields.php` an eine Stelle gehört; Android und Uhr
+    sind nicht Gegenstand. Zahlen sind nachgezählt, Stand `main` vom
+    16.09.2026 — der P5a-Zweig hat Teile bereits erledigt (vermerkt). Regel
+    R83: zentralisiert wird beim zweiten echten Verbraucher; ein Helfer mit
+    einem Verbraucher liegt in einer `_lib.php`, nicht in einer Seite.
+
+    **Paket 1 — Marke, Mail, Link, Token.**
+    - Mailrahmen (Anrede, Produktname, Kontaktadresse, Grußformel) an sieben
+      Versandstellen von Hand: `email_lib.php`, `admin_user.php`,
+      `admin_users.php`, `reset_request.php`, `pair.php` (2×),
+      `adminbackup_lib.php`; die Testmail in `betrieb_status.php` weicht ab.
+      Langname 20× in 6 Dateien, Kurzname 15× in 10, Kontaktadresse 7×.
+      **Vorgezogen in P5a:** der Name (E-P5a-35, Web 20.8.0), `mail_rahmen()`
+      und `app_url()` (AP5 Teil 2, Nachtrag 16.09.2026).
+    - `base_url`-Verkettung 5× ohne `rtrim` (`admin_users.php`,
+      `admin_user.php`, `reset_request.php`, `pair.php` 2×), 2× mit
+      (`adminbackup_lib.php`, `betrieb_jobs.php`) — ein Schrägstrich am Ende
+      der Konfiguration ergibt `//pw_handling.php`. → `app_url()` (P5a).
+    - Passwort-Setz-Link (Token erzeugen, alte entwerten, einfügen, Link,
+      Mailtext) in `reset_request.php`, `admin_user.php`, `admin_users.php`,
+      `install.php`; „höchstens ein gültiger Token je Konto" nur in zwei
+      der vier; Laufzeit als vier SQL-Literale (1 h, 1 h, 24 h, 24 h). →
+      `reset_token_ausstellen()` plus Mailtext in `email_lib.php`. Bleibt
+      Schritt 15.
+
+    **Paket 2 — Datenzugriff.**
+    - `app_state` lesen/schreiben: 24 Stellen in 11 Dateien, fünf
+      Wrapper-Paare (`edbak_marke_*`, `schluessel_marke_*`, `geocoder_state*`,
+      `demo_*`, `jobs_*`), roh in `auth_salt.php`, `jobs.php`,
+      `admin_installation.php`, `smtp.php`, `session_lib.php`, `db.php`. Nur
+      die edbak-Fassung kennt die 190-Zeichen-Grenze und schreibt Fehler ins
+      Log. → zwei Funktionen in `db.php`.
+    - Virtuelles Gerät `manual-<userId>`: vier zeichengleiche Kopien samt
+      Kommentar (`einsatz_form.php`, `api/schneiden.php`,
+      `api/gpx_import.php`, `api/import_commit.php`); die
+      `user_id`-Bedingung ist ein Datentrennungsriegel (M3-12/M6-09). →
+      `geraet_manuell()` in `db.php` neben `geraet_virtuell()`.
+    - Einsatz per ID mit Besitzprüfung (`WHERE id = ? AND user_id = ? AND
+      deleted_at IS NULL`) in 9 Dateien, 11 Stellen, vier Spaltenauswahlen;
+      `dt_laden()` hat kein Gegenstück. → `einsatz_laden()`.
+    - **Handlisten der `missions`-Spalten trotz Feldkatalog:**
+      `api/export_data.php`, `api/suchindex.php`, `api/import_commit.php`
+      und der Schreibweg in `backup_lib.php` — acht Listen, obwohl
+      `mf_ist_spalte()` existiert und von `api/mission.php`,
+      `einsatz_form.php` und dem Einspielweg benutzt wird; ein neues
+      Katalogfeld fehlt in den drei APIs still. → `mf_spalten_missions()`
+      in `mission_fields_lib.php`, mit Variante ohne personenbezogene
+      Spalten für die Export-Schranke. **Sorgfältigstes Paket** — berührt
+      Export-Format und Backup-Format; Kreisläufe csv und edbak Pflicht.
+    - Transaktionsrahmen in 21 Dateien ohne Helfer; die
+      verschachtelungsfeste Fassung in `spur_lib.php` und `backup_lib.php`
+      je einzeln. → `db_transaktion(callable)`, schrittweise.
+    - Kindtabellen eines Einsatzes ersetzen (Phasen, Reanimationen,
+      Rettungsmittel) in vier Schreibwegen (`einsatz_form.php`,
+      `api/import_commit.php`, `ingest.php`, `backup_lib.php`). → drei
+      Datenzugriffsfunktionen ohne Prüfpolitik.
+
+    **Paket 3 — API-Eingang, Sitzung, Flash.**
+    - API-Eingangsgatter (Methode, CSRF-Kopfzeile, JSON-Rumpf) in 12
+      Dateien unter `api/` wortgleich; Inline-Fassung ohne den Leerwächter
+      aus `csrf_ok()`; Fehlerschlüssel uneinheitlich
+      (`payload`/`format`/`leer`), `post_max_size`-Hinweis in drei
+      Fassungen. **Der CSRF-Teil ist auf dem P5a-Zweig erledigt** (AP4,
+      Nr. 67: 12 Dateien auf `csrf_check()`, 0 inline). Übrig: Methode,
+      Rumpf, Fehlerschlüssel → `api_eingang()`.
+    - Sitzungsstart (`session_set_cookie_params` + `session_start`) 7× in
+      drei Varianten. → `sitzung_starten($art)` in `session_lib.php`
+      (Nr. 205 setzt vorab nur `use_strict_mode`).
+    - Flash-Meldung über die Sitzung in `einstellungen.php`,
+      `nachbearbeitung.php`, `papierkorb.php`. → `flash_setzen()`/
+      `flash_holen()`, daraus `post_ende()` für Admin-Seiten, die heute
+      nicht umleiten.
+    - Verzögerte JSON-Fehlerantwort der unangemeldeten Endpunkte:
+      `pair.php` sauber (`abweisen()`/`antworten()`/`gesperrt()`),
+      `auth_salt.php` 4× und `jobs.php` 3× inline. → nach
+      `ratelimit_lib.php`.
+    - **Nicht hier:** der Log-Helfer (`error_log()` 39× in 19 Dateien,
+      Präfixe uneinheitlich, nur `json_fehler()` mit Kennung). Er ist der
+      Schreibweg des 10c-Protokolls und wird dort entworfen
+      (`Vorbereitung-P5c-Protokollierung.md`, V7).
+
+    **Paket 4 — JavaScript.**
+    - JSON-POST mit CSRF-Kopf 15× in 6 Dateien (`export.js` 2,
+      `schneiden.js` 2, `einstellungen.php` 6, `import_ui.js` 2,
+      `unlock.js` 2, `index.php` 1), vier Fehlerschemata; „JSON laden plus
+      Fehlerbox" in `index.php`, `zeitraum.php`, `einsatz.php`, `suche.php`.
+      → `assets/api.js` (`EdApi.post`, `EdApi.lade`).
+    - Meldungs-Markup 6× im JS nachgebaut (`import_ui.js`,
+      `einstellungen.php`, `zeitraum.js` 2×, `schneiden.js`, `patient.js`,
+      `index.php`), Ton-zu-Symbol schon auseinander. → `EdMeldung.markup()`
+      als Zwilling von `ui_meldung_markup()`.
+    - Dauer in drei Schreibweisen (`missiontable.js` `1h 05min`,
+      `einsatz.php` `1h 5min`, `schneiden.js` `1 h 5 min`) trotz
+      exportiertem `EdMissionTable.fmtDur`; Datum `YYYY-MM-DD` →
+      `TT.MM.JJJJ` 6× mit drei Fehlerverhalten; Kilometer 7 Stellen in 4
+      Dateien. → schmale `format.js`.
+    - Karten-Präambel in `einsatz.php`, `index.php`, `tag_spuren.php`,
+      `zeitraum.php` mit zwei Fallback-Ausschnitten (`[47.7, 10.3] z9`
+      gegen `[48.5, 10.5] z7`); `fitBounds`-Padding 4× wortgleich mit drei
+      Kommentaren zum selben Fehler; `index.php` benutzt das
+      Array-Padding, vor dem sie warnen. → `EdKarte.erzeuge()`,
+      `EdGeo.passeAusschnittAn()`.
+    - Rahmen um `EdPat.entschluessleListe()` in `index.php`,
+      `zeitraum.php`, `suche.php` (`#lockbanner` 4×). →
+      `EdPat.uebernimm()`, `EdUnlock.sperrhinweis()`.
+
+    **Paket 5 — Zeit, Zahl, Migration.**
+    - ISO-UTC-Marke 21× schreiben in 8 Dateien, 9× lesen in 5, obwohl
+      `edbak_zeitpunkt_text()` genau das tut. → `jetzt_iso()`,
+      `iso_zu_sql()` neben `fmt_local()`.
+    - Datumsformate 45× in 23 Dateien in vier Trennervarianten; drei
+      `date()` in Server-Zeitzone statt `fmt_local()` (`einsatz_form.php`,
+      `admin_installation.php`, `rechtstexte_lib.php`). → benannte Wrapper.
+    - Tausendertrennung 22× in 13 Dateien, `stat_zahl()` nur in
+      `betrieb_statistik.php`; Bytes lesbar in `edbak_groesse_text()` (GB)
+      und `apk_groesse()` (nur MB); GB-Umrechnung 7× inline; relative Zeit
+      „vor N Minuten" in drei Fassungen mit verschiedenen Schwellen
+      (`status_lib.php` 90 min, `betrieb_updates.php` 60 min); Prozent in 5
+      Dateien. → nach `db.php`. **R83 gilt für P5a AP8–AP10 sofort.**
+    - `migration_lib.php`: rund 40 Inline-Abfragen gegen
+      `information_schema`, obwohl `_hat_tabelle()`, `_hat_spalte()`,
+      `_hat_index()` in derselben Datei stehen (älterer Katalogteil). Rein
+      mechanisch.
+
+    **Paket 6 — Beifang, nur zusammen mit Arbeit an der Datei, kein
+    Termin.** Stammdaten-CRUD in `einstellungen.php` (vier Speichern-, vier
+    Löschzweige; der Kommentar bei `crew_save` belegt einen Fehler, der in
+    drei Kopien Jahre unbemerkt blieb) → Tabelle plus Schleife.
+    Verwaltungsseiten-Auftakt (Titel 3×, `ui_meldung` in 12 Dateien gleich
+    komponiert, Ton `info`/`ok` uneinheitlich) → `ui_verwaltungsseite()`.
+    Umfangsliste mit Zahl-Plakette 3× wortgleich (`einsatz_loeschen.php`,
+    `diensttag_loeschen.php`, `diensttag_datum.php`) → `ui_umfangsliste()`;
+    keine ganze Bestätigungsseite als Baustein. Nachweisdatei-Mechanik in
+    `install.php` und `wiederherstellen.php` ~35 Zeilen 1:1 samt eigenem
+    CSRF → `nachweis_lib.php`. Ablage anlegen und Dateiname mit
+    Zeitstempel in `adminbackup_lib.php`, `komplett_lib.php`,
+    `wiederherstellen.php` (dort einmal ohne Fehlerprüfung).
+    `betrieb_schluesselblatt.php` kopiert `asset()` und `e()` als Closures;
+    `wartung_lib.php` hat `$h` zweimal. **Vormerkung ZIP:** alle vier
+    `ZipArchive`-Aufrufe liegen in `adminbackup_lib.php`, ein Verbraucher —
+    beim zweiten (Log-Dateien als ZIP, 10c) mit herauslösen.
+
+    **Geprüft, bereits zentral (nicht Gegenstand):** Sicherungsziele
+    (`Zielweg`), ZIP und Prüfsummen (je eine Stelle), Aufräumlogik
+    (`job_aufraeumen()`), Tab- und Formularaufbau (`ui.php`), POST-Auftakt
+    der HTML-Seiten (`csrf_check()`), Kataloge (Phasen, Reanimation,
+    Besatzung, Geräteart, Jobs), Papierkorb, Spuren, Escaping,
+    Entschlüsselungsschleife (`patient.js`); die PHP-JS-Spiegelungen von
+    `PHASE_LABELS`, `RESUS_LABELS`, `dt_art_symbole()` bleiben als bewusste
+    Spiegelung.
+
+    *Abnahme:* je Paket im Konzept nach K1; Paket 2 mit beiden Kreisläufen
+    (0 unerklärt) und Messstand; nach jedem Paket `grep`-Zählungen der
+    Muster gegen die Zahlen hier (Ziel 0 außerhalb der Bibliothek).
+
+203. **`api/export_data.php` gibt JSON roh aus — ohne `Cache-Control:
+    no-store`.** *Aufgenommen 16.09.2026 (Nebenfund der
+    Zentralisierungsanalyse); Zuordnung P5a AP4a (Nachtrag).* Zwei Stellen
+    (auf `main` 16.09.2026 Zeilen 524 und 551) geben mit
+    `header('Content-Type: application/json')` + `echo` aus, ohne den Kopf,
+    den `json_out()` (M3-11) begründet zentral setzt; `api/backup_data.php`
+    und `api/adminbackup_freigabe.php` setzen ihn bei Rohausgabe von Hand.
+    Der Export liefert Spurpunkte — ein Zwischenspeicher darf sie nicht
+    behalten. Ziel: `json_roh_out()` neben `json_out()` in `db.php`, drei
+    Stellen umstellen. *Abnahme:* `grep -rn "Content-Type: application/json"
+    server/` zeigt nur `db.php`; Selbstprobe der Kopfzeilen 3/3 `no-store`.
+
+204. **`smtp.php` schreibt bei Fehlschlag die Empfängeradresse ins
+    Fehlerprotokoll.** *Aufgenommen 16.09.2026; Zuordnung P5a AP5
+    (Nachtrag).* `error_log('SMTP: Versand an ' . $toEmail . '
+    fehlgeschlagen')` (auf dem P5a-Zweig Zeile 272), obwohl der Kopf
+    derselben Datei und `betrieb_status.php` zusagen, dass kein Protokoll
+    über Mailempfänger geführt wird. **Entschieden 16.09.2026: Die Zusage
+    gilt** — die Meldung nennt Kennung und Grund; der Empfänger steht in
+    `mail_warteschlange` (Unzustellbar-Liste, 30 Tage, E-P5a-09). Gleiches
+    Muster in `email_lib.php`, `pair.php`, `reset_request.php` prüfen.
+    *Abnahme:* `grep -rn "toEmail" server/smtp.php` trifft keinen
+    `error_log()`-Aufruf mehr.
+
+205. **`session.use_strict_mode` fehlt auf den Anmeldewegen.** *Aufgenommen
+    16.09.2026; Zuordnung P5a AP4a (Nachtrag).* Gesetzt nur in
+    `install.php` und `wiederherstellen.php`, nicht in `auth_guard.php`,
+    `login.php` und `session_lib.php` — also nicht auf den Wegen, die eine
+    echte Anmeldesitzung tragen. Der Schutz gegen Session-Fixation hängt
+    damit an der `php.ini` des Hosters. Vorab nur die Zeile vor jedem
+    `session_start()` (sieben Stellen auf `main`); der Helfer
+    `sitzung_starten($art)` kommt mit Nr. 202 Paket 3. *Abnahme:* eine vom
+    Client vorgegebene Sitzungskennung wird verworfen (`curl`-Probe: die
+    Antwort setzt eine andere `Set-Cookie`-Kennung).
 
 ## Erledigt
 

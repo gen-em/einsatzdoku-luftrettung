@@ -703,6 +703,31 @@ CREATE TABLE job_laeufe (
   INDEX idx_zeitpunkt (zeitpunkt)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Mail-Warteschlange (Web 20.8.0, P5a/AP5). Jede Nachricht wird erst
+-- gespeichert, dann sofort versucht; scheitert der Versuch, wiederholt ihn der
+-- Job `mail`. Drei Spalten werden geleert, sobald eine Zeile ihren Endzustand
+-- erreicht: `text` IMMER (Einladung und Reset tragen einen gueltigen Token),
+-- `empfaenger` und `betreff` nur bei ZUGESTELLT. Bei UNZUSTELLBAR bleiben sie
+-- — „die Einladung an X kam nie an" ist ohne X wertlos (E-P5a-39).
+CREATE TABLE mail_warteschlange (
+  id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  schluessel        VARCHAR(32)  NOT NULL,
+  art               VARCHAR(16)  NOT NULL,
+  empfaenger        VARCHAR(190) NULL,
+  betreff           VARCHAR(190) NULL,
+  text              MEDIUMTEXT   NULL,
+  zustand           VARCHAR(16)  NOT NULL DEFAULT 'offen',
+  versuche          INT UNSIGNED NOT NULL DEFAULT 0,
+  erstellt          DATETIME     NOT NULL,
+  naechster_versuch DATETIME     NULL,
+  beendet           DATETIME     NULL,
+  gueltig_bis       DATETIME     NULL,
+  fehler            TEXT         NULL,
+  INDEX idx_faellig (zustand, naechster_versuch),
+  INDEX idx_erstellt (erstellt),
+  INDEX idx_empfaenger (empfaenger)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS schema_migrations (
   id         VARCHAR(120) NOT NULL PRIMARY KEY,
   applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -794,4 +819,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- csp_berichte steht oben schon im Schema (Web 20.7.0, P5a/AP4).
   ('2026_09_15_csp_berichte', 'skipped'),
   -- job_laeufe steht oben schon im Schema (Web 20.8.0, P5a/AP5).
-  ('2026_09_16_job_laeufe', 'skipped');
+  ('2026_09_16_job_laeufe', 'skipped'),
+  -- mail_warteschlange steht oben schon im Schema (Web 20.8.0, P5a/AP5).
+  ('2026_09_16_mail_warteschlange', 'skipped');

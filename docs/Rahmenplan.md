@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 72 (15.09.2026)** — dieses Dokument steuert das Programm:
+**Fassung 74 (16.09.2026)** — dieses Dokument steuert das Programm:
 Reihenfolge, Status, programmweite Entscheidungen. Es hält nur, was für die
 nächsten Schritte gebraucht wird. Der eingefrorene Altbestand — die
 Fassungsvermerke, die Phasentexte mit ihren Umsetzungsblöcken und die 50
@@ -103,9 +103,11 @@ an keinem frischen Merge und deshalb nur in Abschnitt 6.
 Dienstbetrieb)** an — seit dem 15.09.2026 **in drei Teilen** (R82: 10a
 Kette und Fundament, 10b Konto und Registrierung, 10c Rollen, Sicherheit
 und Betriebslage), und zwar zuerst das **Konzept zu 10a** (Fable) — es
-**liegt seit dem 15.09.2026 vor** und wartet auf die Freigabe
-(`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`, E-P5a-01 bis -21,
-zwölf Arbeitspakete, eine offene Frage F-P5a-1 zum Tag-Muster). Seine
+**ist am 15.09.2026 freigegeben**
+(`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`, E-P5a-01 bis -22,
+zwölf Arbeitspakete, ein Fable-Schritt); die Umsetzung kann beginnen — auf
+einem Zweig, AP1 zuerst, mit den Zuarbeiten aus Abschnitt 6 vor seinem
+Merge. Seine
 Voraussetzungen im Fahrplan — die Schritte 2, 5, 7 und 9b — sind erfüllt,
 und die Runden 9, 9c und 9d, die vor P5 lagen, sind gemergt. **Zwei
 Zuarbeiten gehören davor** (Abschnitt 6, „vor Schritt 10"): Die
@@ -121,6 +123,23 @@ Festlegungen für v1.0 sind entschieden (R65 bis R73; der Schnitt ist in
 die drei Phasen P6, P7 und P8 geteilt, R71). Von den Zuarbeiten hat die
 **D-U-N-S-Nummer** für das Play-Console-Organisationskonto die längste
 Vorlaufzeit — bis zu vier Wochen (R65, Abschnitt 6).
+
+**Seit dem 16.09.2026 dazu, dreierlei.** Erstens ein neuer **Schritt 15 —
+Zentralisierung: eine Stelle je Sache** — rund 20 Muster verstreuten Codes
+im Web-Teil, in sechs Paketen, mit der Programmentscheidung **R83**
+(zentralisiert wird beim zweiten Verbraucher; Bibliothek statt Seite); er
+läuft **zwischen 10a und 10b**, weil 10b und 10c sonst genau die Muster
+neu kopierten, die er entfernt (Begründung in Abschnitt 3). Zweitens liegt
+für **10c** eine **Vorbereitung zur Protokollierung** vor
+(`docs/konzepte/Vorbereitung-P5c-Protokollierung.md`, auf dem P5a-Zweig)
+mit neun Fragen V1–V9; V1 — ob die Zusage „kein Zugriffsprotokoll"
+gehalten wird — muss vor der 10b-Umsetzung entschieden sein, weil 10b die
+Verwaltungsereignisse erzeugt, die 10c protokollieren will. Drittens hat
+die P5a-Instanz drei **Nachträge** bekommen (Mailrahmen und `app_url()` in
+AP5, kein Empfänger im SMTP-Log, AP4a mit `use_strict_mode` und
+`json_roh_out()` — Backlog 203–205), weil sie die betroffenen Dateien
+ohnehin gerade umbaut. **Der P5a-Zweig ist seither der Zweig, auf dem die
+Steuerungsdokumente gepflegt werden**, bis er auf `main` geht.
 
 **So wird gelesen:** Abschnitt 3 sagt, was als Nächstes dran ist und in
 welcher Reihenfolge. Abschnitt 5 sagt, wohin jeder offene Backlog-Punkt
@@ -240,6 +259,12 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 
 ## 3. Fahrplan — die nächsten Schritte
 
+Schrittnummern sind **Namen**, keine Reihenfolge (Kopf, „Was hier steht");
+sie werden nie umvergeben, weil Konzepte, Register und Erledigt-Zeilen sie
+nennen. **Die Reihenfolge der offenen Schritte ist:** 10a (läuft) → **15**
+→ 10b → 10c → 12 → 12a → 13 → 14. Schritt 11 ist erledigt; 15 steht vor
+10b, obwohl er die höhere Nummer trägt, weil er am 16.09.2026 dazukam.
+
 | Schritt | Kennung | Inhalt | Voraussetzung | Konzept | Modell | Status |
 |---|---|---|---|---|---|---|
 | 1 | **S4 — Merge** | Fehlerbehebung abschließen, Backlog-Nummern nachziehen, `main` holen, Merge = Deploy, `update.php` | — | liegt vor | Opus | **gemergt** (Web 12.8.0, Android 0.7.7 auf `main`); `update.php` für `2026_09_02_schnitte` vom Auftraggeber zu bestätigen; Prüfliste S4 (1, 2, 3, 5) offen |
@@ -255,14 +280,15 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 | 9b | **S10 — Sicherheit** (R78) | Server-Anteil am Datenschlüssel mit Schlüsselblatt, Kennung und Rotation (SP-3); Adminpakete versiegeln, `ftp` abschaffen (Nr. 139) | Schritt 9a; **vor P5** (Hauptstufe, Umstellung aller Hüllen) | **gelöscht nach R62** (Fable, 13.09.2026; E-S10-01 bis -18, keine Mockups; Historie `a00f6b5`) | Fable (Konzept), Opus | **erledigt und gemergt (Web 19.7.0 bis 20.2.1, 14.09.2026, PR #45 `965ec11`)** — sechs Arbeitspakete, kein Fable-Schritt, **keine Migration**, `update.php` nicht fällig; Zahlen in Abschnitt 8. Offen sind die fünf Betriebsposten und die Prüfliste P-01 bis P-14 (Abschnitt 6) |
 | 9c | **Mockup-Runde** | Vier Gestaltungsaufgaben, eine Freigaberunde statt vier (Entscheidung 15 vom 12.09.2026): **Nr. 41** zwei Regeln für die Importvorschau (`imp-warn`, `imp-daygroup`), **Nr. 42** `×` am Koordinaten-Chip (`.rmx` neu bemaßen) und `⚠` im Fließtext, **Nr. 45** dritte Kartengröße, **Nr. 124** Aktionsblatt nach Weg (b) — **vier Bauarten** von Öffnern: sechs `ui_aktionen()`, neun `ui_zeilenaktionen()`, der Pin-Knopf des Ortsfelds und drei handgeschriebene Sortierblatt-Knöpfe (nachgezählt 13.09.2026, berichtigt in AP4 — die Regel hängt am Attribut und erreicht alle) | keine; **ab jetzt, parallel** — die Runde braucht eine Freigabe und läuft deshalb früh, damit sie nicht am Ende wartet | keins; Mockups nach `Design.md` 1, Freigabe je Mockup | Fable (Mockups), Opus (Umsetzung) | **Freigegeben am 13.09.2026** (`docs/konzepte/Konzept-Mockup-Runde.md`, vier Mockups in vier Fassungen, F-MR-1 bis F-MR-13 beantwortet; darunter `--dauer` fuer die ganze Anwendung auf 240 ms). **AP1 erledigt** (Web 19.4.0, 13.09.2026): Nr. 41 ist beantwortet — `imp-daygroup` hat eine Regel, `imp-warn` ist gestrichen, `pruefen.py` meldet **0** `[offen]` statt 2. Dabei **Nr. 182** entstanden und mit **Web 19.4.1 gleich erledigt** (M-MR-05, F-MR-14 = Weg B): Die Kopfzeile nimmt ueber eine Container-Abfrage die sichtbare Breite an — **ohne JavaScript**. Weg C war zuerst gewaehlt und ist nach einer Kartierung mit **58 Befunden, 22 davon „bricht"**, verworfen worden. **Erledigt am 14.09.2026, Web 19.6.0.** AP2 (Nr. 42, 19.4.2) — die beiden Chips und der Satz der Meldung tragen Symbole, das Treffziel waechst von 17 x 15 auf 28 x 28 px; **AP3** (Nr. 45, 19.5.0) — die dritte Kartengroesse, ein Zustand mit zwei Wirkungen je Breite; **AP3b** (Nr. 183, 19.5.1) — Bilderlauf, Klickprobe und Stilvergleich fahren seither `--motor chromium|firefox|webkit`, und der erste dreifache Lauf brachte gleich zwei Befunde (Nr. 185, Nr. 186, beide erledigt); **AP4** (Nr. 124, 19.6.0) — das Blatt faehrt auf, der offene Oeffner ist orange hinterlegt, `--dauer` steht auf 240 ms. Zahlen in Abschnitt 8. **Drei Rueckfragen vor Beginn beantwortet** (13.09.2026): die Unicode-Pruefung bekommt eine Ausnahmeliste ueber `zusagen.md` statt des wirkungslosen Eintrags in `ausnahmen.md` (E-MR-24), die orange Markierung gilt fuer **alle** Blatt-Oeffner und nicht nur fuer die beiden Bausteine (E-MR-25), und Fehlerfund 1 laeuft in AP2 mit statt als eigener Backlog-Punkt. **Nr. 124 ist der einzige der vier aus einer Rueckmeldung von aussen** und darf die Runde verlassen, wenn sie ins Rutschen geraet. Ort begruendet in Fassung 46: vor P5, nicht in P7 |
 | 9d | **Demo-Ausbau** | Referenzbestand und Demo-Konto um die S9-Typen im Betrieb erweitern: fünf Diensttage (Bergwachtnotarzt ×2, VEF Talwang, zwei Veranstaltungen), 16 Einsätze + 2 Schnitte, Standorte mit Koordinaten, Tage ohne Standort, Fußwege; dazu die Regeländerung **Fähigkeiten bei Typ Bergwacht in beiden Betriebsarten** (AP0, `server/`, keine Migration) | **Schritt 9b gemergt** — erfüllt am 14.09.2026; parallel zum P5-Konzept | `docs/konzepte/Konzept-Demo-Ausbau.md` (Fable, 15.09.2026; E-DA-01 bis E-DA-32) | Opus, kein Fable-Schritt | **Gebaut und geprüft** (Zweig `claude/umsetzung-ohne-pausen-2vfppr`): **AP0 bis AP4 erledigt** 14./15.09.2026, **Web 20.3.0**. Der Haltepunkt **H-DA-1 ist entfallen** — `router.project-osrm.org` war erreichbar, die Umsetzung hat die Strecken selbst geholt und eingecheckt (E-DA-22); **H-DA-3 nicht ausgelöst** (beide Kreisläufe 0 unerklärt). Zahlen in Abschnitt 8. **Am 15.09.2026 auf `main` gemergt** (PR #48, `7f334cb`; berichtigt mit Fassung 68 — hier stand „Offen: Merge"). **Offen:** Freigabe des Abschlusses, die Prüfliste (`docs/konzepte/Pruefdokument-Demo-Ausbau.md`) und der Demo-Reset (Abschnitt 6) |
-| 10a | **P5a — Kette und Fundament** (R82) | `deploy.yml` nach R67 (Staging automatisch, Prüftor Stufen 1–2, Produktion mit Freigabe- und Backup-Tor); Plattformprüfung in `install.php` und Status (R81); Torwächter mit Wartungsmodus (R40.4, Nr. 54); Kopfzeilen aus PHP nach SP-5 (Nr. 8); Mail-Warteschlange; Mengenbremse `ingest.php` (R19, Nr. 17 — Grundsatzfrage zuerst); IP-Grenzwerte und vertrauenswürdige Proxys; 503-Weg an der Verbindungsgrenze; Job für Nr. 80; Aufbewahrung auf dem Sicherungsziel (Nr. 49); Nr. 37, 67, 195 | Schritte 2, 5, 7 und 9b **erfüllt**; Hosting-Entscheidung **gefallen 15.09.2026 (R81)**; Staging-Ziel **festgelegt 15.09.2026** (Einrichtung offen) | **liegt vor:** `docs/konzepte/Konzept-P5a-Kette-und-Fundament.md` (Fable, 15.09.2026, E-P5a-01 bis -21, AP1–AP12, ein Fable-Schritt M-P5a-01); Vorbereitung `Vorbereitung-P5-Plattformprofil.md` (PP-1 bis PP-9, E-PP-01 bis -09) | Fable (Konzept) | **Konzept zur Freigabe** (15.09.2026); offen F-P5a-1 (Tag-Muster, Vorschlag `web-vX.Y.Z`); Zuarbeiten vor AP1 in Abschnitt 6 |
-| 10b | **P5b — Konto und Registrierung** (R82) | Registrierung mit drei Betriebsarten und Sicherheitspaket; Konto-Lebenszyklus (Bibliothek, Kontostatus bis `ingest.php`, Double-Opt-In, Selbstlöschung mit Karenz, E-Mail-Wechsel, Einwilligungen mit Fassungskennung); Onboarding mit Notfallblatt; Geräteschlüssel auf SHA-256; Mengengrenze je Konto; Aufbewahrung je Konto (Nr. 48); Demo-Konto je Betriebsart (R25) | Schritt 10a | neu | Fable (Konzept) | offen |
-| 10c | **P5c — Rollen, Sicherheit, Betriebslage** (R82) | Support-Rolle; Zweitfaktor für alle Konten (Nr. 141) und Admin-TOTP; Audit-Protokoll; Ankündigungsbanner; Fehlerprotokoll-Sicht; Health-Endpunkt; Betriebslage-Dashboard mit Geräteverteilung nach R64-Herkunft (R38, R42, Nr. 80 Rest, 122, 191, 192); Rückbau R39 (Nr. 168, 169) | Schritt 10b | neu | Fable (Konzept) | offen |
+| 10a | **P5a — Kette und Fundament** (R82) | `deploy.yml` nach R67 (Staging automatisch, Prüftor Stufen 1–2, Produktion mit Freigabe- und Backup-Tor); Plattformprüfung in `install.php` und Status (R81); Torwächter mit Wartungsmodus (R40.4, Nr. 54); Kopfzeilen aus PHP nach SP-5 (Nr. 8); Mail-Warteschlange; Mengenbremse `ingest.php` (R19, Nr. 17 — Grundsatzfrage zuerst); IP-Grenzwerte und vertrauenswürdige Proxys; 503-Weg an der Verbindungsgrenze; Job für Nr. 80; Aufbewahrung auf dem Sicherungsziel (Nr. 49); Nr. 37, 67, 195 | Schritte 2, 5, 7 und 9b **erfüllt**; Hosting-Entscheidung **gefallen 15.09.2026 (R81)**; Staging-Ziel **festgelegt 15.09.2026** (Einrichtung offen) | **liegt vor:** `docs/konzepte/Konzept-P5a-Kette-und-Fundament.md` (Fable, 15.09.2026, E-P5a-01 bis -21, AP1–AP12, ein Fable-Schritt M-P5a-01); Vorbereitung `Vorbereitung-P5-Plattformprofil.md` (PP-1 bis PP-9, E-PP-01 bis -09) | Fable (Konzept), Umsetzung Opus (K2) | **Konzept freigegeben 15.09.2026** — Umsetzung kann beginnen; F-P5a-1 ist E-P5a-22 (Tag-Muster `web-vX.Y.Z`); Zuarbeiten vor dem Merge von AP1 in Abschnitt 6 |
+| 10b | **P5b — Konto und Registrierung** (R82) | Registrierung mit drei Betriebsarten und Sicherheitspaket; Konto-Lebenszyklus (Bibliothek, Kontostatus bis `ingest.php`, Double-Opt-In, Selbstlöschung mit Karenz, E-Mail-Wechsel, Einwilligungen mit Fassungskennung); Onboarding mit Notfallblatt; Geräteschlüssel auf SHA-256; Mengengrenze je Konto; Aufbewahrung je Konto (Nr. 48); Demo-Konto je Betriebsart (R25) | Schritt 10a; **Schritt 15** (Umsetzung; das 10b-Konzept darf parallel entstehen); **V1** aus der P5c-Vorbereitung entschieden | neu | Fable (Konzept) | offen |
+| 10c | **P5c — Rollen, Sicherheit, Betriebslage** (R82) | Support-Rolle; Zweitfaktor für alle Konten (Nr. 141) und Admin-TOTP; Audit-Protokoll; Ankündigungsbanner; Fehlerprotokoll-Sicht; Health-Endpunkt; Betriebslage-Dashboard mit Geräteverteilung nach R64-Herkunft (R38, R42, Nr. 80 Rest, 122, 191, 192); Rückbau R39 (Nr. 168, 169); **Protokollierung** nach Vorgabe des Auftraggebers vom 16.09.2026 (Bereich mit Reitern, versiegeltes Archiv, Download) | Schritt 10b; V1–V9 entschieden | neu; **Vorbereitung liegt vor:** `docs/konzepte/Vorbereitung-P5c-Protokollierung.md` (16.09.2026, Befund, Grenzen, V1–V9; auf dem P5a-Zweig) | Fable (Konzept) | offen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt: Store-Verteilung (R65), Update-Weg (R66), Auslieferungskette (R67), Repositorium (R68), Code-Review (R69), Web-App auf Android (R70), Phasenschnitt (R71), Doku-Anforderungen (R72), Problemsammlung (R73); Ergebnis sind die Konzepte der Phasen P6–P8 mit je eigenem Paketschnitt | Festlegungen: keine (vorgezogen); Paketschnitte: die jeweilige Vorphase, P6 nach der Freigaberunde des Reviews | `docs/konzepte/Konzept-Planung-v1.0.md` | Fable (R14) | **Festlegungen entschieden** 03.09.2026 (R65–R73); offen nur die Paketschnitte je Phasenkonzept |
 | 12 | **P6 — Review und Bereinigung** | Bedrohungsmodell (Eingang: `Review-Krypto-Sicherheit.md`, R78); Bug- und Sicherheitsreview in zwölf Stücken (R17, R69); Freigaberunde; Sofortpaket; Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); Fragen Nr. 146; R5-Ausnahmeliste | Schritte 8 und 10; Nr. 43-Fragen beantwortet (R78) | neu; `docs/konzepte/Review-R17.md` entsteht erst im Review als Sammelstelle der Funde, Paketschnitt nach der Freigaberunde | Fable (Review, Kryptographie), sonst Opus | offen |
 | 12a | **S11 — Ortsdaten verschlüsselt (Weg B)** (R78) | Konto-Schlüsselpaar (Nr. 53); Uhr und Handy verschlüsseln Spur, Phasenkoordinaten, Reanimationsereignisse und Zielklinik vor dem Upload; serverseitige Spurfunktionen wandern in den Browser; Altbestand per Einmalwerkzeug (Nr. 43) | Schritt 12; **vor der Öffnung** — die Entscheidung zum Altbestand setzt ein einziges Konto voraus | neu, nach K1 (Skizze SP-9 in `Vorbereitung-Sicherheitspaket.md`) | Fable (Konzept), Opus | offen |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall, neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung (R16, R72); Web-App-Manifest (R70; die Erhebung Nr. 87 ist seit 13.09.2026 ausgetragen); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung abschaffen (Nr. 46); Kommentarregel `CLAUDE.md` (R69) | Schritt 12 | eigenes Konzept nach K1 | Opus | offen |
 | 14 | **P8 — Schnitt** | Neuaufsetzen (R40 (3)); Migrationsregister neu (R66); Repo-Umzug und Inventur (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Erklärung v1.0 | Schritt 13 | eigenes Konzept nach K1 | Opus | offen |
+| 15 | **Zentralisierung — eine Stelle je Sache** (R83) | Rund 20 Muster verstreuten Codes im Web-Teil (`server/`, ohne `assets/vendor/`) nach dem Vorbild von `mission_fields.php` an je eine Stelle: sechs Pakete — Marke/Mail/Link/Token · Datenzugriff (`app_state`, `manual-<userId>`, Einsatz laden, `missions`-Spaltenlisten, Transaktionen, Kindtabellen) · API-Eingang/Sitzung/Flash · JavaScript (JSON-POST, Meldungs-Markup, Dauer/Datum, Karten-Präambel) · Zeit/Zahl/Migration · Beifang nur mit Arbeit an der Datei. Backlog **Nr. 202** (Sammelnummer) | Merge von Schritt 10a; danach **vor der Umsetzung von 10b** | neu, nach K1 — misst nach dem Merge von 10a neu, weil die Zahlen Stand `main` 16.09.2026 sind und der P5a-Zweig Teile schon erledigt hat | Fable (Konzept), Opus (Umsetzung, kein Mockup) | offen — aufgenommen 16.09.2026 |
 | — | Betriebsübergang | Öffnung in Wellen; Produktionsfreigabe in den Stores (R65) | nach v1.0 | — | — | — |
 
 Reihenfolge und Begründung: S4 zuerst, weil der Zweig fertig gebaut ist
@@ -1132,6 +1158,28 @@ Einstellung; die Umstellung von `deploy.yml` ist das erste Code-Paket von
 P5; Staging bekommt ein eigenes SFTP-Backup-Ziel. Offen: die Einrichtung
 (Abschnitt 6).
 
+**Vorbereitung zu 10c — Protokollierung (16.09.2026).** Auf Anweisung des
+Auftraggebers ist während P5a/AP5
+`docs/konzepte/Vorbereitung-P5c-Protokollierung.md` entstanden (P5a-Zweig,
+Commit `8fa3101`): Auftrag wörtlich (Bereich „Log" mit Reitern je
+Ereignisart, mit dem Serverschlüssel versiegeltes Archiv in Fristen, Download;
+IPs nur bei Sperren und Angriffen), gemessener Befund (Zustände statt
+Verläufe; in 36 Tabellen keine Spalte, die den Urheber festhält; 42
+`error_log()`-Aufrufe ohne Sicht; kein globaler Ausnahmebehandler), drei
+Grenzen, die das Konzept nicht übergehen darf (die Zusage „kein
+Zugriffsprotokoll" in `schema.sql` und `Technik.md`; R36 „keine
+Telemetrie"; der schmale Wirkungsbereich der Verschlüsselung), neun Fragen
+**V1–V9** und die Liste dessen, was P5a schon anlegt und 10c **übernimmt
+statt neu baut** (Mail-Warteschlange, `sicherheit_ereignisse`, Status →
+Sicherheit, Lösch-Protokoll der Ziele, `csp_berichte`). Zwei Folgen für die
+Reihenfolge: **V1 ist vor der 10b-Umsetzung zu entscheiden** (10b erzeugt
+die Verwaltungsereignisse — Konto angelegt, Rolle geändert, Adresse
+geändert —, die 10c protokollieren will; ohne Antwort schreibt 10b nichts
+oder Eigenes); und der **Log-Helfer `protokoll()`** aus der
+Zentralisierungsanalyse (Schritt 15, Paket 3) gehört **nicht** in Schritt
+15, sondern ist der Schreibweg des 10c-Protokolls und wird dort entworfen
+(V7).
+
 ### Schritt 11 — Planung v1.0 · **Festlegungen entschieden 03.09.2026**
 
 **Ziel:** Bevor etwas als v1.0 veröffentlicht wird, noch einmal planen
@@ -1267,6 +1315,102 @@ Seitenladung**: Karte „NAdoku für Android", `apk.php`, Handbuch 10.1 und die
 Deploy-Ausnahme `apk/` (R65) · Verteilung der Garmin-Uhr über den
 Connect-IQ-Store (R41) · halbjährliche Probe-Wiederherstellung.
 
+### Schritt 15 — Zentralisierung: eine Stelle je Sache
+
+**Anlass.** Eine eigene Sitzung hat am 16.09.2026 den Web-Teil (`server/`,
+ohne `assets/vendor/`) auf Code untersucht, der nach dem Vorbild von
+`mission_fields.php` an eine Stelle gehört — Android und Uhr ausdrücklich
+nicht. Der Auftraggeber hat entschieden: **alles wird angegangen, in
+Paketen.** Der Befund liegt im Backlog (**Nr. 202**, mit Dateien und
+Zahlen); dieser Block hält, was die Steuerung braucht. Kein Code, kein
+Konzept in dieser Fassung — das Konzept entsteht nach K1 in einer eigenen
+Sitzung, **nach dem Merge von 10a**, und misst dann neu.
+
+**Ziel.** Jede Sache hat im Web-Teil eine Stelle: Marke, Mailrahmen, Link,
+Token; `app_state`, virtuelles Gerät, Einsatz laden, `missions`-Spalten,
+Transaktion, Kindtabellen; API-Eingang, Sitzungsstart, Flash;
+JSON-POST, Meldungs-Markup, Dauer, Datum, Karte im JavaScript; Zeit, Zahl,
+Bytes, relative Zeit, Migrationshelfer. Danach findet ein Review (P6)
+weniger Stellen, und 10b, 10c und S11 treffen je Sache eine Stelle statt
+vier.
+
+**Ausgangslage — bereits zentral, geprüft am 16.09.2026:** Phasen,
+Reanimationsarten, Besatzungsrollen, Gerätearten, Sicherungsziele
+(`Zielweg`), Jobs, Papierkorb, Spuren (`spur_lib.php`), Escaping,
+Meldungszeile, Seitenhülle, Knöpfe, Aufräumlogik (`job_aufraeumen()`),
+ZIP und Prüfsummen (je eine Stelle), Tab- und Formularaufbau (`ui.php`),
+POST-Auftakt der HTML-Seiten (`csrf_check()`), die Entschlüsselungsschleife
+(`patient.js`). Die PHP-JS-Spiegelungen von `PHASE_LABELS`, `RESUS_LABELS`
+und `dt_art_symbole()` sind als bewusste Spiegelung mit Quellenverweis
+kommentiert und **bleiben**.
+
+**Entscheidung R83** (Abschnitt 7): Zentralisiert wird beim **zweiten
+echten Verbraucher**, nicht vorher; ein Helfer mit einem Verbraucher liegt
+in einer `_lib.php`, nicht in einer Seite. Beleg: `edbak_groesse_text()`
+steckt in `adminbackup_lib.php` und wird von `admin_sicherungsziele.php` und
+`betrieb_updates.php` nur dafür geladen. Anwendungsfall vorgemerkt: die
+vier `ZipArchive`-Stellen in `adminbackup_lib.php` werden herausgelöst,
+sobald ein zweiter Verbraucher kommt (Log-Dateien als ZIP, 10c).
+
+**Die sechs Pakete** (Reihenfolge = Reihenfolge; Zahlen Stand `main`
+16.09.2026, Einzelheiten in Backlog Nr. 202):
+
+1. **Marke, Mail, Link, Token** — Mailrahmen 7 Versandstellen von Hand,
+   Testmail weicht ab; `base_url`-Verkettung 5× ohne `rtrim`;
+   Passwort-Setz-Link 4× mit zwei Fassungen der Regel „ein gültiger Token
+   je Konto" und vier SQL-Literalen für die Laufzeit. **Mailrahmen und
+   `app_url()` werden in P5a AP5 vorgezogen** (Nachtrag 16.09.2026); es
+   bleibt `reset_token_ausstellen()`.
+2. **Datenzugriff** — `app_state` 24 Stellen, fünf Wrapper-Paare;
+   `manual-<userId>` 4× zeichengleich; Einsatz per ID mit Besitzprüfung 11
+   Stellen in 9 Dateien ohne Gegenstück zu `dt_laden()`; **acht
+   Handlisten der `missions`-Spalten** trotz Feldkatalog (Export,
+   Suchindex, Import, Backup — das sorgfältigste Paket, berührt Export- und
+   Backup-Format); Transaktionsrahmen in 21 Dateien; Kindtabellen eines
+   Einsatzes in vier Schreibwegen.
+3. **API-Eingang, Sitzung, Flash** — Eingangsgatter in 12 API-Dateien
+   (der CSRF-Teil ist **auf dem P5a-Zweig erledigt**, AP4/Nr. 67; übrig
+   Methode, JSON-Rumpf, Fehlerschlüssel); Sitzungsstart 7× in drei
+   Varianten; Flash-Meldung 3×; verzögerte JSON-Antwort der unangemeldeten
+   Endpunkte 7× inline. **Nicht hier:** der Log-Helfer — er ist der
+   Schreibweg des 10c-Protokolls (oben).
+4. **JavaScript** — JSON-POST mit CSRF-Kopf 15× in 6 Dateien, vier
+   Fehlerschemata; Meldungs-Markup 6× nachgebaut; Dauer in drei
+   Schreibweisen, Datum 6× definiert, Kilometer 7×; Karten-Präambel in
+   vier Seiten mit zwei Fallback-Ausschnitten; Rahmen um
+   `EdPat.entschluessleListe()` 3×.
+5. **Zeit, Zahl, Migration** — ISO-UTC-Marke 21× schreiben, 9× lesen;
+   Datumsformate 45× in vier Trennervarianten, drei `date()` in
+   Server-Zeitzone; Tausendertrennung 22×, Bytes lesbar in zwei
+   Funktionen, GB-Umrechnung 7×, relative Zeit 3×, Prozent 5 Dateien;
+   `migration_lib.php` mit 40 Inline-Abfragen gegen `information_schema`
+   trotz eigener Helfer. **R83 gilt für P5a AP8–AP10 sofort**: Bytes und
+   relative Zeit werden dort gehoben, nicht kopiert.
+6. **Beifang — nur zusammen mit Arbeit an der jeweiligen Datei, kein
+   Termin:** Stammdaten-CRUD in `einstellungen.php` (4+4 Zweige);
+   Verwaltungsseiten-Auftakt; Umfangsliste der Bestätigungsseiten 3×;
+   Nachweisdatei-Mechanik in `install.php` und `wiederherstellen.php`;
+   Ablage und Zeitstempel-Dateiname 3×; kopierte `asset()`/`e()` in
+   `betrieb_schluesselblatt.php`.
+
+**Drei Nebenfunde sind Fehler, keine Aufräumarbeit** und stehen mit
+eigenen Nummern: **203** (`api/export_data.php` ohne `Cache-Control:
+no-store`), **204** (`smtp.php` protokolliert die Empfängeradresse gegen
+die eigene Zusage), **205** (`session.use_strict_mode` fehlt auf den
+Anmeldewegen). Alle drei gehen als **Nachträge in P5a** (AP4a, AP5), weil
+die Dateien dort gerade umgebaut werden; Schritt 15 findet sie erledigt
+vor.
+
+**Voraussetzung:** Merge von 10a. **Konzept:** Fable, nach K1, mit
+Neumessung. **Umsetzung:** Opus, ohne Mockup. **Status:** offen. **Warum
+vor 10b und nicht vor P6**, wie die analysierende Instanz empfahl: 10b
+(Registrierung, Konto-Lebenszyklus) und 10c (Audit, Dashboard) bauen
+Sitzungsstart, `app_state`-Zugriff, Flash-Meldungen und Zahl-/Zeitformate
+— jede Kopie, die vorher weg ist, entsteht dort nicht neu; und S11
+(12a) schreibt die Export- und Backup-Pfade um, die Paket 2 auf eine Stelle
+zieht. Preis: Die 10b-Umsetzung wartet auf sechs Pakete; das 10b-Konzept
+entsteht parallel.
+
 ## 4. Parallelität und Sperren
 
 **Faustregel:** Ein Paket, das nur `android/` oder nur `watch/` anfasst,
@@ -1332,7 +1476,10 @@ dem Gegenlesen dieser sechs; **197 und 198 mit Fassung 67** aus dem
 Demo-Ausbau (Schritt 9d) — sie hießen auf dem Zweig zunächst 190 und 191 und
 sind beim Zusammenführen nachgezogen worden, weil der R42-Nachlauf dieselben
 Nummern zuerst auf `main` hatte; **199 ebenfalls mit Fassung 67**, aus dem
-Gegenlesen dieses Merges.
+Gegenlesen dieses Merges; **200 und 201 mit Fassung 73** aus dem
+P5a-Konzept (Bounce-Postfach, `Retry-After`); **202–205 mit Fassung 74**
+aus der Zentralisierungsanalyse vom 16.09.2026 (202 das Vorhaben als
+Sammelnummer, 203–205 drei Nebenfunde, die Fehler sind).
 
 **Mit Fassung 41 ist die Tabelle wieder deckungsgleich mit dem Backlog.**
 Sie war es nicht mehr: **24 Zeilen** nannten Punkte, die längst erledigt
@@ -1444,6 +1591,12 @@ damit „nach v1.0" verlassen — dort stehen noch **acht**: 50, 51, 52, 55,
 | 196 | 68 von 195 Backlog-Einträgen rendern auf GitHub als grauer Kasten — und der Rahmenplan schlimmer | Backlog-Runde, mit **Nr. 188** und **Nr. 199** | Fund 15.09.2026, gemessen mit cmark-gfm: Ab Nr. 100 ist der Listenmarker ein Zeichen breiter, die Datei rückt aber durchgehend mit vier Leerzeichen ein — bei dreistelligen Nummern endet der Listenpunkt nach dem ersten Absatz, alles Weitere wird Codeblock. **Vier verlieren dabei eine Tabelle** (123, 187, 192, 193). Nachgemessen nach dem Merge des Demo-Ausbaus: **68 von 195**. **Der Rahmenplan ist seither mitgemessen und schlimmer dran** — Abschnitt 10 rendert **8 von 58** Fassungszeilen als Tabelle (eine Leerzeile im Eintrag zu Fassung 61 beendet sie), und die Fahrplanzeile 9c verliert ihren ganzen Statustext an drei ungeschützte Pipes in einem Code-Span. Beides älter als der Demo-Ausbau. Mechanisch in einem Zug, nicht in Teilen |
 | 198 | Die Zeitraumübersicht zählt Winde und Bergwacht nur luftgebunden | **Mockup-Runde** oder das nächste Paket mit Freigabe (`CLAUDE.md` 5) | Aufgenommen 14.09.2026 in 9d/AP0 (F-DA-4). Seit R80 darf ein bodengebundenes Rettungsmittel vom Typ Bergwacht Fähigkeiten führen; `api/range.php` beantwortet `faehigkeiten` aber weiter über `d.kind = 'air'`, und die beiden Windenkacheln stehen nur im Luft-Kachelsatz. Ein Bergwacht-Diensttag am Boden zeigt seine Windenfelder im Formular und fehlt in der Auswertung. **Warum nicht gleich mit:** zwei Kacheln mehr im Bodensatz wären zehn Kacheln in vier Spalten — eine Gestaltungsentscheidung, die eine Freigabe mit Mockup braucht. Der Kommentar an der Abfrage sagt seither, dass die Zeile eine Lücke ist und keine Herleitung |
 | 199 | Die Backlog-Nummer 5 fehlt, obwohl der Changelog sie unter *Erledigt* verortet | Backlog-Runde, mit **Nr. 196** | Aufgenommen 15.09.2026 beim Gegenlesen des Merges von PR #47. `grep -cE '^5\. '` liefert **0**; die Kopfnotiz des Backlogs führt als fehlend nur 4, 6 und 7, der Changelog zu Web 7.2.0 sagt zweimal, Nr. 5 stehe unter *Erledigt*. Das verletzt die Hausregel „Nummern bleiben, Erledigtes wird verschoben statt gelöscht": Ein Verweis auf Nr. 5 löst ins Leere, und weil die Kopfnotiz sie nicht als frei führt, sieht das niemand. Dritter Beleg für **Nr. 188**. Entweder Eintrag wiederherstellen oder die 5 als dauerhaft frei führen; beides zugleich geht nicht |
+| 200 | Bounce-Postfach per IMAP (PP-7 Empfohlen) | nach P5a — **P5b** (Konto-Lebenszyklus) oder Backlog-Runde | Aufgenommen 15.09.2026 (Konzept P5a, E-P5a-14): Die Warteschlange zählt Versuche und führt Unzustellbares; was die Gegenstelle später zurückschickt, sieht sie nicht |
+| 201 | `Retry-After` in Uhr und Handy auswerten | niedrig; nächste Uhr- und Android-Stufe mit Anlass | Aufgenommen 15.09.2026 (Konzept P5a, Befund 1.7): beide Clients wiederholen zum nächsten eigenen Anlass; genügt für 10–60 min |
+| 202 | **Zentralisierung Web — eine Stelle je Sache** (Sammelnummer, sechs Pakete) | **Schritt 15** | Aufgenommen 16.09.2026 aus der Analyse einer eigenen Sitzung; Paket 1 teils und Paket 3 (CSRF-Teil) auf dem P5a-Zweig vorgezogen; der Log-Helfer geht nach 10c |
+| 203 | `api/export_data.php` gibt JSON roh aus, ohne `Cache-Control: no-store` | **P5a AP4a** (Nachtrag 16.09.2026) | Zwei Stellen mit `header()` + `echo`; `json_out()` setzt den Kopf zentral, `backup_data.php` und `adminbackup_freigabe.php` von Hand. Der Export liefert Spurpunkte. Ziel `json_roh_out()` in `db.php`, drei Stellen umstellen |
+| 204 | `smtp.php` schreibt bei Fehlschlag die Empfängeradresse ins Fehlerprotokoll | **P5a AP5** (Nachtrag 16.09.2026) | Gegen die Zusage im Kopf derselben Datei und in `betrieb_status.php`. **Entschieden 16.09.2026: Die Zusage gilt** — Kennung und Grund ins Log, der Empfänger steht in der Warteschlange |
+| 205 | `session.use_strict_mode` fehlt auf den Anmeldewegen | **P5a AP4a** (Nachtrag 16.09.2026) | Gesetzt nur in `install.php` und `wiederherstellen.php`; Schutz gegen Session-Fixation hängt an der `php.ini` des Hosters. Nur die Zeile je `session_start()`; der Helfer `sitzung_starten()` bleibt Schritt 15 Paket 3 |
 
 ## 6. Offene Abnahmen und Zuarbeiten
 
@@ -1509,6 +1662,8 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | **Prüfliste des S8-Prüfdokuments abarbeiten** — Bedienwege, die keine Maschine fahren kann: die Migration auf dem Produktivserver (Rollen vorher/nachher), der Kopieren-Knopf in einem **zweiten Browser**, Mengen und Laufzeiten an echten Daten (Status, Statistik, Speichermessung), der Fall „Freigabe läuft, Zielkonto gelöscht" | Schritt 7 (S8) | nach dem Ausrollen; danach wird auch das Prüfdokument gelöscht (R62) |
 | ~~Hosting-Entscheidung (Cron/SSH, DB-Kontingent, `max_user_connections`, DDoS-Schutz, Verschlüsselung at rest)~~ | P5-Konzept | **entschieden 15.09.2026 (R81):** der Betrieb bleibt beim jetzigen Hoster; die fünf Punkte sind **hosterneutral** als Plattformprofil in zwei Stufen festgelegt (`docs/konzepte/Vorbereitung-P5-Plattformprofil.md`, PP-1 bis PP-9). **Offen:** Freigabe der Vorbereitung — darin vier Festlegungen zum Gegenlesen (F-PP-1 bis -4) |
 | GitHub im **jetzigen** Repositorium, vor P5a AP1: Umgebungen `staging` (drei FTP-Geheimnisse) und `produktion` (drei FTP-Geheimnisse plus `JOBS_TOKEN`, **Pflichtfreigabe** durch die Betreiberin), Zweigschutz `main` mit `pruefung` als Pflichtprüfung, ein Prüfkonto auf Staging als Umgebungsgeheimnis (Konzept P5a, E-P5a-10, -12, -13) | P5a AP1 | vor dem Merge von AP1 |
+| **V1 und V2 aus der P5c-Vorbereitung entscheiden** (Auftraggeber): V1 — bleibt die Zusage „kein Zugriffsprotokoll", also Betriebsereignisse statt Datenzugriffe; V2 — IP nur bei Sperren und Angriffen, mit welcher Frist | 10c-Konzept; **V1 auch vor der 10b-Umsetzung** | Erörterung am 16.09.2026 begonnen |
+| Nachträge an die P5a-Instanz übergeben: Doku-Paket (Fassungen 73–74, Backlog 200–205) auf den Zweig; Mailrahmen und `app_url()` in AP5; kein Empfänger im SMTP-Log (Nr. 204); AP4a mit `use_strict_mode` und `json_roh_out()` (Nr. 203, 205); R83 für AP8–AP10 | P5a | **übergeben 16.09.2026** (Anweisung `Prompt-P5a-Nachtraege-2026-09-16.md`) |
 | Staging-Installation samt FTP-Zugang; **samt Demo-Konto, Referenzdatensatz und Messstand-Konto — Staging ist die Prüfumgebung (R67)**. **Ziel festgelegt 15.09.2026:** `staging.nadoku.gen-em.org`, gleicher Hoster und Tarif, Absender `staging@gen-em.org` (Vorbereitung PP-9, E-PP-09). **Offen:** Subdomain mit Verzeichnis, eigene DB samt Nutzer, FTPS-Konto nur für das Staging-Verzeichnis, GitHub-Umgebung `staging` mit den drei FTP-Geheimnissen, eigenes **SFTP-Backup-Ziel** für Staging (zugesagt 15.09.2026) | P5-Beginn | Einrichtung bis zum ersten Code-Paket von P5 (`deploy.yml`-Umstellung); die Prüfkonten danach |
 | GitHub-Umgebung „produktion" mit Pflichtfreigabe (Betreiberin) und den FTPS-Zugangsdaten der Produktion als Umgebungsgeheimnisse; GitHub-App auf dem Handy mit Push-Nachrichten; prüfen, ob `CIQ_GERAETE_URL` als CI-Secret taugt (Stufe 1) | R67, Freigabe-Tor | mit dem Aufbau der Kette in P5 |
 | SPF/DKIM/DMARC der Versanddomain, Bounce-Postfach | P5 | vor der P5-Abnahme |
@@ -1625,6 +1780,7 @@ werden nie neu vergeben.
 | R80 | **Ob ein Rettungsmittel Fähigkeiten führen darf, entscheidet sein Typ mit** — nicht mehr die Betriebsart allein (Beschluss 15.09.2026, E-DA-06; schränkt E29 ein). Winde und Bergwacht sind seit Web 20.3.0 auch an **bodengebundenen** Rettungsmitteln vom Typ **Bergwacht** erlaubt — ein Bergwachtnotarzt fährt zum Einsatz und wird von dort geflogen. Die Regel steht als **Spalte** in `VEHICLE_TYPEN` (`faehigkeiten`: `'luft'` \| `'immer'`) und wird an einer Stelle beantwortet, `veh_caps_erlaubt()`; Prüfschicht, Rückspielweg der Sicherung, Markup und Dialogskript fragen sie. Für den Typ **Veranstaltung** bleibt es bei „keine" — das folgt schon aus der festen Betriebsart. **Nicht mitgeändert:** `pruef_tagesrettungsmittel()` kennt weiterhin keine Fähigkeiten (F19, E-S9-10), und die **Zeitraumübersicht** zählt Winde und Bergwacht weiter nur luftgebunden — das wäre eine Gestaltungsentscheidung mit Mockup und steht als Backlog Nr. 198 | gilt; umgesetzt in 9d AP0 |
 | R81 | **Plattformprofil hosterneutral, in zwei Stufen** (Beschluss 15.09.2026, E-PP-01 bis E-PP-04; beantwortet die Hosting-Zuarbeit aus R36). Der Dienstbetrieb bleibt beim jetzigen Hoster (Plesk, geteilter Webspace), die Anwendung wird aber **nicht auf ihn zugeschnitten**: Ein Hosterwechsel ändert `config.php`, keine Codezeile. Die Anforderungen an die Plattform stehen als Profil mit genau zwei Stufen — **Muss** (Untergrenze Z2/Z3; `install.php` prüft es vor der Einrichtung, die Statusseite im Betrieb, Ausfall ist rot) und **Empfohlen** (wird genutzt, wenn vorhanden; Abweichung ist ein Hinweis, keine Ampelfarbe). Jede P5-Funktion nennt ihre Stufe und ihren Rückfall auf Muss. Für Versionen gilt die dauerhafte **Regel** „vom Hersteller mit Sicherheitskorrekturen versorgt"; die Zahl im Code ist ein datierter Stand an einer Stelle. **Nicht vorausgesetzt:** DDoS-Schutz des Hosters und Verschlüsselung at rest — beides Empfehlung an den Betreiber, weil auch nach S11 der Betrieb (wer, wann, womit) im Klartext liegt, nur der Einsatz nicht. Volltext: `docs/konzepte/Vorbereitung-P5-Plattformprofil.md` | gilt |
 | R82 | **Schritt 10 (P5) wird in drei Teilkonzepten umgesetzt** (Beschluss 15.09.2026): **10a Kette und Fundament**, **10b Konto und Registrierung**, **10c Rollen, Sicherheit und Betriebslage** — in dieser Reihenfolge, jedes nach K1 mit eigenem Paketschnitt, eigener Freigabe und eigenem Prüfdokument; 10b setzt 10a voraus, 10c setzt 10b voraus. Die Ortsvorgabe aus E-S8-12 und der Inhalt nach R9, R10, R31, R33, R36 bis R41 bleiben; nur der Schnitt ist neu. Verworfen: ein Konzept mit Paketschnitt wie S9/S10 — die Freigabe hätte auf alles gewartet | gilt |
+| R83 | **Zentralisiert wird beim zweiten echten Verbraucher, nicht vorher.** Ein Helfer mit einem Verbraucher ist keine Zentralisierung, sondern eine Schnittstelle, die gegen einen Fall entworfen wird. Was vorab zählt, ist der Ort: **Bibliotheksdatei statt Seite**, damit der zweite Verbraucher ohne Umbau zugreifen kann. (Beschluss 16.09.2026, Anlass Schritt 15.) Begründung: `edbak_groesse_text()` steckt in `adminbackup_lib.php` und wird von `admin_sicherungsziele.php` und `betrieb_updates.php` nur dafür geladen — der zweite Verbraucher kam, und die Funktion lag auf der falschen Seite. Gilt ab sofort für jede laufende Umsetzung (P5a AP8–AP10: Bytes und relative Zeit heben, nicht kopieren) | gilt |
 
 ## 8. Erledigt — Kurzübersicht
 
@@ -2558,6 +2714,8 @@ mit Fassung 68; Fassung 67 führte ihn noch als ausstehend.
 
 | Fassung | Datum | Was |
 |---|---|---|
+| **74** | **16.09.2026** | **Schritt 15 Zentralisierung, R83, P5c-Vorbereitung, Nachträge an P5a.** Aus der Analyse einer eigenen Sitzung (16.09.2026, Stand `main`; zwei Fassungen desselben Befunds, die ausführlichere ist maßgeblich): neuer **Schritt 15 — Zentralisierung: eine Stelle je Sache** mit sechs Paketen, Ausgangslage („bereits zentral"), R83 und Backlog **Nr. 202** als Sammelnummer; Einordnung **zwischen 10a und 10b** statt vor P6 (Begründung im Block); Abschnitt 3 bekommt den Satz zur Reihenfolge der offenen Schritte (Nummern sind Namen). Drei Nebenfunde als Fehler **203–205**, alle als Nachträge an P5a (AP4a, AP5), weil die Dateien dort gerade umgebaut werden — Anweisung an die Instanz übergeben (Abschnitt 6). Nachgemessen am P5a-Zweig: Marke (E-P5a-35) und CSRF-Gatter (Nr. 67) sind dort schon zentral, die Analyse ist insoweit überholt. **P5c-Vorbereitung** (`Vorbereitung-P5c-Protokollierung.md`, Zweig, `8fa3101`) im Schritt-10-Block und in Fahrplanzeile 10c; V1 vor der 10b-Umsetzung als Zuarbeit; der Log-Helfer wandert aus Schritt 15 nach 10c. Abschnitt 5: 200 und 201 nachgetragen (Fassung 73 hatte sie im Backlog, nicht hier), 202–205 neu — Tabelle 67 Zeilen = 67 offene Punkte. **Kein Code** — nur `docs/`, keine Versionsstufe |
+| **73** | **15.09.2026** | **Konzept P5a freigegeben.** Ohne Änderungen; F-P5a-1 wird E-P5a-22 (Tag `web-vX.Y.Z` gleich `WEB_VERSION`). Fahrplanzeile 10a und Kopf auf „freigegeben — Umsetzung kann beginnen". Backlog: **Nr. 200** (Bounce-Postfach, aus PP-7 Empfohlen) und **Nr. 201** (`Retry-After` in Uhr und Handy) angelegt; Nr. 8, 17, 49, 54, 67, 80, 195 tragen ihre Zuordnung zu P5a-Paketen. **Kein Code** — nur `docs/`, keine Versionsstufe |
 | **72** | **15.09.2026** | **Konzept P5a liegt vor.** `docs/konzepte/Konzept-P5a-Kette-und-Fundament.md` (Fable) — Befund an `7f334cb` nachgemessen, E-P5a-01 bis -09 aus dem Gespräch vom 15.09.2026 (Mengenbremse ja; Aussperrung nach Schlüsselwechsel hinnehmbar; Sicherungsziel Anzeige plus Option; **eine Sperrleiter 10/20/30/60 min** für Konto und IP mit 24-h-Rückfall; global **Verlangsamung** 1/2/4/8 s statt Sperre; Hinweise mit Countdown; Sammelmail bei Stufe 4; Unterseite Status → Sicherheit; Betriebsdaten 30 Tage fest), E-P5a-10 bis -21 aus dem Nachmessen (Kette in zwei Läufen mit Backup-Tor über `jobs.php?aktion=…`, Prüftor Stufen 1 und 2, Warteschlange mit synchronem erstem Versuch, Kopfzeilen nach SP-5 mit Report-Only, HTTPS-Zwang, Proxy-Liste, 503-Weg, Plattformprüfung als Funktion, Torwächter mit Katalog-Hash, Nachlöse-Job). Zwölf Arbeitspakete, ein Fable-Schritt (M-P5a-01), eine offene Frage F-P5a-1 (Tag-Muster). **Zwei Zahlen der Vorbereitung berichtigt** (E-P5a-11: DB-Kontingent-Schwellen 70/90 wie Webspace, Komplett-Aufbewahrung Vorgabe 2). Register: R19 „entschieden", R37 „(8) und (9) in P5a". Abschnitt 5: Nr. 37 geteilt. Abschnitt 6: Zuarbeiten vor AP1 (GitHub-Umgebungen im jetzigen Repositorium, Zweigschutz, Prüfkonto). Fahrplanzeile 10a auf „Konzept zur Freigabe". Gemessen und **nicht** nötig: Uhr und Handy behandeln `429` schon als „später erneut" — keine Client-Stufe. **Kein Code** — nur `docs/`, keine Versionsstufe |
 | **71** | **15.09.2026** | **P5 in drei Teilen — R82.** Der Auftraggeber hat den Schnitt von Schritt 10 entschieden: **10a Kette und Fundament**, **10b Konto und Registrierung**, **10c Rollen, Sicherheit und Betriebslage**, in dieser Reihenfolge, je eigenes Konzept nach K1. Die Fahrplanzeile 10 ist durch drei Zeilen 10a bis 10c ersetzt, die den Zuschnitt samt Backlog-Nummern tragen; der Schritt-10-Block bekommt den Schnitt als Vorspann und beschreibt P5 weiter als Ganzes; Abschnitt 5 ordnet die 15 P5-Punkte den Teilen zu (8, 17, 37, 49, 54, 67, 195 → 10a; 48 → 10b; 122, 141, 168, 169, 191, 192 → 10c; 80 geteilt: Nachlöse-Job 10a, Herkunft und Dashboard 10c). Kopf nachgezogen: Als Nächstes das Konzept zu 10a. **Kein Code** — nur `docs/`, keine Versionsstufe |
 | **70** | **15.09.2026** | **Staging-Ziel festgelegt, F-PP-2 entschieden.** Der Auftraggeber nennt `staging.nadoku.gen-em.org` beim selben Hoster im selben Tarif und `staging@gen-em.org` als Absender; die Vorbereitung trägt es als **E-PP-09** (PP-9) mit Betreff-Präfix „[Staging]" als Einstellung und der Regel, dass die `deploy.yml`-Umstellung das erste Code-Paket von P5 ist. Staging bekommt ein eigenes SFTP-Backup-Ziel (zugesagt); offen bleibt die Einrichtung (Abschnitt 6, Zeile nachgezogen). **F-PP-2** ist auf Rückfrage anders entschieden als in Fassung 69 gesetzt: kein Knopf, sondern ein **Job mit Hash-Auslöser**, der Nr. 80 von selbst nachlöst — mit Cron binnen Minuten, ohne Cron Huckepack; E-PP-06 umgeschrieben, Abschnitt-3-Tabelle der Vorbereitung um drei Zeilen ergänzt. Kopf, Fahrplanzeile 10 und Schritt-10-Block nachgezogen. **Kein Code** — nur `docs/`, keine Versionsstufe |

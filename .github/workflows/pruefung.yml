@@ -89,7 +89,16 @@ jobs:
         # Die Schwelle wirkt in BEIDE Richtungen: Wächst der Altbestand, ist
         # das ein Befund. Schrumpft er, ebenfalls — dann ist die Zahl hier
         # nachzuziehen, sonst bekommt er stillschweigend wieder Luft.
-        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 366
+        #
+        # 371 STATT 366 IST EIN DOPPELBESTAND AUF ZEIT (Web 20.8.0, AP5).
+        # Die vier Pfeile „Einstellungen → Geräte" in `mail_lib.php` stehen
+        # dort UND noch in den alten Aufrufern; das Werkzeug liest ganze
+        # Dateien, nicht nur Markup (Backlog Nr. 184). Sobald die zehn
+        # Versandstellen auf den Katalog umgezogen sind, faellt die Zahl
+        # zurueck — und dann MUSS sie hier nachgezogen werden, weil ein
+        # Unterschreiten ebenfalls rot meldet. Das Werkzeug laesst es nicht
+        # vergessen.
+        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 371
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py

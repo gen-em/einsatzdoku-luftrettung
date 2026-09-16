@@ -262,6 +262,23 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
      * die Namensaufloesung des Hosts. Ein DNS-Server, der nicht antwortet,
      * haengt weiterhin so lange, wie das System ihm zugesteht — dagegen
      * hilft nur die Aufloesung selbst zu begrenzen, und das kann PHP nicht. */
+    /* WAS BEIM FEHLSCHLAG INS PROTOKOLL GEHT — und was NICHT (E-P5a-37).
+     *
+     * Bis Web 20.7.0 stand dort `'SMTP: Versand an ' . $toEmail . '
+     * fehlgeschlagen'`. Das war die EINZIGE Stelle mit Personenbezug im
+     * Fehlerprotokoll — und sie widersprach der Zusage im Kopf dieser Datei
+     * („ein Protokoll ueber Mailempfaenger ist etwas, das diese Anwendung
+     * nicht fuehren will"), die `betrieb_status.php` als Zusage der
+     * Statusseite wiederholt.
+     *
+     * Jetzt nennt die Meldung eine KENNUNG und den GRUND. Der Empfaenger
+     * steht in `mail_warteschlange` — dort gehoert er hin, dort verfaellt er
+     * nach 30 Tagen (E-P5a-09), und dort steht er neben derselben Kennung.
+     * Wer einem Fehlschlag nachgeht, findet ueber die Kennung beides
+     * zusammen; das Protokoll allein sagt nicht, wer gemeint war. */
+    $GLOBALS['__smtp_fehler'] = null;
+    $kennung = strtoupper(bin2hex(random_bytes(4)));
+
     $frist = microtime(true) + $zeitlimit;
     $rest  = static function () use ($frist): float {
         return $frist - microtime(true);
@@ -271,16 +288,19 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
         $errno, $errstr, max(0.1, $rest()), STREAM_CLIENT_CONNECT,
         stream_context_create(['ssl' => ['verify_peer' => true]]));
     if (!$fp) {
-        error_log("SMTP connect: $errstr");
+        $GLOBALS['__smtp_fehler'] = ['kennung' => $kennung,
+                                     'grund'   => 'Verbindung nicht moeglich: ' . $errstr];
+        error_log('[' . $kennung . '] SMTP connect: ' . $errstr);
         smtp_versand_vermerken(false);
         return false;
     }
 
-    $expect = function (string $code) use ($fp, $rest): bool {
+    $expect = function (string $code) use ($fp, $rest, $kennung): bool {
         do {
             $r = $rest();
             if ($r <= 0) {
-                error_log('SMTP: Zeitbudget erschoepft, Versuch abgebrochen');
+                $GLOBALS['__smtp_fehler'] = 'Zeitbudget erschoepft';
+                error_log('[' . $kennung . '] SMTP: Zeitbudget erschoepft, Versuch abgebrochen');
                 return false;
             }
             /* Vor JEDEM Lesen neu — auch in der Fortsetzungsschleife. Sonst
@@ -288,9 +308,19 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
              * Fehler. */
             stream_set_timeout($fp, (int)$r, (int)(fmod($r, 1.0) * 1000000));
             $line = fgets($fp, 1024);
-            if ($line === false) { return false; }
+            if ($line === false) {
+                $GLOBALS['__smtp_fehler'] = 'Verbindung abgebrochen (erwartet ' . $code . ')';
+                return false;
+            }
         } while (isset($line[3]) && $line[3] === '-');           // Multiline-Antworten
-        return strncmp($line, $code, 3) === 0;
+        if (strncmp($line, $code, 3) === 0) { return true; }
+        /* NUR DER ANTWORTCODE, nicht die ganze Zeile: Ein Mailserver haengt
+         * gern die Empfaengeradresse an seine Absage („550 5.1.1 <x@y>: user
+         * unknown"). Die erste Ziffernfolge genuegt, um den Schritt zu
+         * erkennen. */
+        $GLOBALS['__smtp_fehler'] = 'Server antwortete ' . substr(trim($line), 0, 3)
+                                  . ', erwartet war ' . $code;
+        return false;
     };
     $send = function (string $cmd) use ($fp): void { fwrite($fp, $cmd . "\r\n"); };
 
@@ -314,7 +344,28 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
     $ok = $ok && $expect('250');
     $send('QUIT');
     fclose($fp);
-    if (!$ok) error_log('SMTP: Versand an ' . $toEmail . ' fehlgeschlagen');
+    if (!$ok) {
+        $grund = (string)($GLOBALS['__smtp_fehler'] ?? 'Grund unbekannt');
+        $GLOBALS['__smtp_fehler'] = ['kennung' => $kennung, 'grund' => $grund];
+        error_log('[' . $kennung . '] SMTP: Versand fehlgeschlagen: ' . $grund);
+    }
     smtp_versand_vermerken($ok);
     return $ok;
+}
+
+/**
+ * Kennung und Grund des letzten Fehlschlags — oder `null`.
+ *
+ * DAMIT DIE KENNUNG NICHT INS LEERE ZEIGT. `smtp_send()` nennt im
+ * Fehlerprotokoll nur noch eine Kennung und einen Grund, nie den Empfaenger
+ * (E-P5a-37). Das ist nur dann eine Verbesserung und keine Verschlechterung,
+ * wenn sich beides wieder zusammenfuehren laesst: Die Warteschlange schreibt
+ * dieselbe Kennung in ihre Fehlerspalte, und die Unzustellbar-Liste zeigt
+ * sie. Wer einem Fehlschlag nachgeht, hat dort den Empfaenger und im
+ * Protokoll des Webspace den technischen Grund.
+ */
+function smtp_letzter_fehler(): ?array
+{
+    $f = $GLOBALS['__smtp_fehler'] ?? null;
+    return is_array($f) ? $f : null;
 }
