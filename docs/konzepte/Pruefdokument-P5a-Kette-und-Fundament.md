@@ -696,13 +696,39 @@ wurde nichts**.
 **Offen bleibt P4**, bis der Job **ganz** grün ist — mit Kreisläufen und
 Bilderlauf.
 
-### P5 — Uhr Stufe I im Lauf
+### P5 — Uhr Stufe I im Lauf — **ANGELAUFEN am 16.09.2026, noch nicht grün**
 
 **Weg:** `CIQ_GERAETE_URL` als Repositoriums-Secret hinterlegen, Push.
 **Erwartet:** Der Schritt übersetzt die App für alle Zielgeräte und endet
 grün.
 **Scheitern erkennbar an:** der Warnung „CIQ_GERAETE_URL nicht gesetzt — Uhr
 Stufe I ÜBERSPRUNGEN, nicht bestanden".
+
+**Das Secret ist eingetragen** (gemessen: der Lauf zeigt `CIQ_GERAETE_URL: ***`
+statt leer), der Schritt läuft also wirklich — und scheiterte sofort:
+
+```
+== SDK 9.2.0 beschaffen
+== Systembibliotheken aufloesen
+FEHLER: apt-get fehlgeschlagen
+```
+
+**Zwei Ursachen, beide behoben:**
+
+1. `bibliotheken()` rief `apt-get` **ohne `sudo`**. Im Wegwerf-Container läuft
+   alles als `root`, auf einem GitHub-Läufer heißt der Benutzer `runner`.
+   Die Funktion setzt jetzt `sudo` davor, wo sie es braucht, und ihre
+   Fehlermeldung nennt den Benutzer — vorher stand nur „fehlgeschlagen", weil
+   die Ausgabe nach `/dev/null` ging.
+2. **Der Schritt brauchte die Bibliotheken gar nicht.** `aufbau` holt
+   webkit2gtk 4.0, xvfb, xdotool und imagemagick — alles für den
+   **Simulator**, also Stufe II. Stufe I **übersetzt nur**. Die Kette ruft
+   jetzt `aufbau-uebersetzen` (SDK, Schlüssel, Gerätedateien) und spart sich
+   `sudo`, mehrere `.deb`-Pakete von `archive.ubuntu.com` und einige Minuten
+   für etwas, das dort nie startet.
+
+**Noch nicht grün:** Ob das SDK danach wirklich für alle Zielgeräte übersetzt,
+zeigt erst der nächste Lauf. Der Punkt bleibt offen.
 
 ### P6 — Die vier Aktionen von `jobs.php` gegen eine echte Installation
 

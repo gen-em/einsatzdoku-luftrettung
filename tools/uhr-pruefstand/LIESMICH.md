@@ -40,6 +40,21 @@ export CIQ_GERAETE_URL=https://beispiel.invalid/ciq
 tools/uhr-pruefstand/pruefstand.sh aufbau
 ```
 
+**Zwei Aufbauten, und die Kette nimmt den kleineren** (seit 16.09.2026):
+
+| Befehl | holt | wofür |
+|---|---|---|
+| `aufbau` | SDK, **Simulator-Bibliotheken**, Schlüssel, Gerätedateien | Stufe I **und** II |
+| `aufbau-uebersetzen` | SDK, Schlüssel, Gerätedateien | **nur Stufe I** |
+
+`bibliotheken` holt webkit2gtk 4.0, xvfb, xdotool und imagemagick per
+`apt-get` — alles für den **Simulator**. Zum Übersetzen braucht es davon
+nichts. Auf einem GitHub-Läufer braucht `apt-get` außerdem `sudo` (dort heißt
+der Benutzer `runner`, nicht `root`), und genau daran ist der erste echte Lauf
+von Stufe I gescheitert: *„FEHLER: apt-get fehlgeschlagen"*. Die Funktion
+setzt jetzt `sudo` davor, wo sie es braucht — **und die Kette ruft
+`aufbau-uebersetzen`,** weil sie die Bibliotheken ohnehin nie benutzt.
+
 **Die Adresse steht bewusst nicht in diesem Repositorium.** Es ist öffentlich,
 die Dateien gehören Garmin, und eine Bereitstellung für den eigenen Gebrauch
 ist etwas anderes als eine Veröffentlichung. Aus demselben Grund werden die

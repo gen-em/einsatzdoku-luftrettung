@@ -202,7 +202,14 @@ jobs:
             echo '**Uhr Stufe I: ÜBERSPRUNGEN** (kein `CIQ_GERAETE_URL`) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          CIQ_ZIELE=alle tools/uhr-pruefstand/pruefstand.sh aufbau
+          # `aufbau-uebersetzen` UND NICHT `aufbau` (16.09.2026): Stufe I
+          # uebersetzt nur. `aufbau` holt zusaetzlich die
+          # Simulator-Bibliotheken (webkit2gtk, xvfb, xdotool) per
+          # apt-get — das braucht auf einem Laeufer `sudo`, laedt .deb-
+          # Pakete nach und kostet Minuten fuer etwas, das hier nie
+          # startet. Der erste echte Lauf ist genau daran gescheitert:
+          # "FEHLER: apt-get fehlgeschlagen".
+          CIQ_ZIELE=alle tools/uhr-pruefstand/pruefstand.sh aufbau-uebersetzen
           python3 tools/uhr-pruefstand/geraeteklassen.py "$HOME/.Garmin/ConnectIQ/Devices" \
                   --vertreter 5 --liste /tmp/vertreter.txt --alle-liste /tmp/auswahl.txt
           tools/uhr-pruefstand/pruefstand.sh reihe /tmp/auswahl.txt

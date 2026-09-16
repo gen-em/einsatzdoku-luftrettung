@@ -79,13 +79,24 @@ bibliotheken() {
     [ -f "$LIB_DIR/libwebkit2gtk-4.0.so.37" ] && { melde "Bibliotheken liegen bereits"; return; }
 
     melde "Systembibliotheken aufloesen"
-    apt-get update -qq >/dev/null 2>&1 || true
-    apt-get install -y -qq \
+    # ROOT ODER SUDO, und zwar gemessen statt angenommen (16.09.2026).
+    # Im Wegwerf-Container laeuft alles als root und `apt-get` geht direkt.
+    # Auf einem GitHub-Laeufer heisst der Benutzer `runner`, und derselbe
+    # Aufruf endete mit "FEHLER: apt-get fehlgeschlagen" — die Meldung sagte
+    # nicht, WARUM, weil die Ausgabe nach /dev/null ging.
+    local ALS=""
+    if [ "$(id -u)" -ne 0 ]; then
+        command -v sudo >/dev/null 2>&1 \
+            || fehler "Systembibliotheken brauchen root oder sudo; beides fehlt"
+        ALS="sudo"
+    fi
+    $ALS apt-get update -qq >/dev/null 2>&1 || true
+    $ALS apt-get install -y -qq \
         libsecret-1-0 libusb-1.0-0 libenchant-2-2 libmanette-0.2-0 \
         libwayland-server0 libwebpdemux2 libwebpmux3 libwoff1 \
         libgstreamer-plugins-base1.0-0 libgstreamer-gl1.0-0 \
         wget unzip imagemagick x11-apps x11-utils xdotool xvfb >/dev/null 2>&1 \
-        || fehler "apt-get fehlgeschlagen"
+        || fehler "apt-get fehlgeschlagen (als ${ALS:-root}) — die Pakete stehen im Aufruf darueber"
 
     mkdir -p "$BASIS/libs" && cd "$BASIS/libs"
     local pool=http://archive.ubuntu.com/ubuntu/pool/main
@@ -554,6 +565,20 @@ pruefen() {
 
 aufbau() { sdk_holen; bibliotheken; schluessel; geraetedateien; pruefen; }
 
+# AUFBAU OHNE DIE SIMULATOR-BIBLIOTHEKEN (16.09.2026, fuer Stufe I der Kette).
+#
+# `bibliotheken` holt webkit2gtk 4.0, xvfb, xdotool und imagemagick — alles
+# fuer den SIMULATOR, also fuer Stufe II. Stufe I UEBERSETZT nur, und dafuer
+# reichen SDK, Schluessel und Geraetedateien.
+#
+# Der Unterschied ist nicht Feinschliff: Auf einem GitHub-Laeufer braucht das
+# Nachladen der Simulator-Bibliotheken `sudo`, laedt mehrere .deb-Pakete von
+# archive.ubuntu.com nach und kostet Minuten — fuer etwas, das dort nie
+# startet. Der erste echte Lauf der Kette ist genau daran gescheitert.
+#
+# `aufbau` bleibt unveraendert; wer den Simulator will, nimmt weiter ihn.
+aufbau_uebersetzen() { sdk_holen; schluessel; geraetedateien; pruefen; }
+
 alle() {
     aufbau
     # Bei CIQ_ZIELE=alle geht es um die Beschaffung, nicht ums Uebersetzen —
@@ -568,6 +593,9 @@ hilfe() {
 
 Befehle:
   aufbau                     SDK, Bibliotheken, Schluessel, Geraetedateien
+  aufbau-uebersetzen         wie aufbau, aber OHNE die Simulator-
+                             Bibliotheken — reicht fuer Stufe I
+                             (uebersetzen) und braucht kein sudo
   pruefen                    Bestand auflisten
   bauen <geraet> [jungle]    uebersetzen (weitere Schalter werden durchgereicht)
   alle [schalter]            aufbauen und alle Zielgeraete uebersetzen
@@ -600,6 +628,8 @@ befehl="${1:-hilfe}"; shift || true
 case "$befehl" in
     aufbau|pruefen|bauen|alle|reihe|bildreihe|starten|konsole|abbild|tippen|halten|wischen|taste|beenden|hilfe)
         "$befehl" "$@" ;;
+    aufbau-uebersetzen)
+        aufbau_uebersetzen ;;
     einstellungen-leeren)
         einstellungen_leeren ;;
     speicher-leeren)
