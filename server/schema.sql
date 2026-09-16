@@ -573,6 +573,33 @@ CREATE TABLE sicherheit_ereignisse (
   INDEX idx_art_zeit (art, zeitpunkt)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- BETRIEBSPROTOKOLL: Betriebsereignisse, KEINE Datenzugriffe (P5b/AP1, V1).
+--
+-- Die Nachbartabelle darueber (`sicherheit_ereignisse`) ist der siebte
+-- Reiter und bleibt ausdruecklich getrennt: Dort stehen IP-Adressen mit einer
+-- festen Frist von 30 Tagen, hier steht das Audit mit bis zu drei Jahren.
+-- Zwei Fristen in einer Tabelle sind eine Einladung, die kuerzere zu
+-- vergessen. Begruendung in protokoll_lib.php und E-P5b-12.
+--
+-- KEIN FREMDSCHLUESSEL AUF `users`: Der haeufigste Eintrag ist „Konto
+-- geloescht". Mit CASCADE loeschte die Kontoloeschung ihren eigenen
+-- Protokolleintrag, mit RESTRICT verhinderte der Eintrag die Loeschung.
+CREATE TABLE protokoll_ereignisse (
+  id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  zeit              DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+  reiter            ENUM('verwaltung','email','jobs',
+                         'sicherung','ziele','system') NOT NULL,
+  art               VARCHAR(64) NOT NULL,
+  urheber_user_id   INT UNSIGNED NOT NULL DEFAULT 0,   -- 0 = kein Mensch
+  urheber_art       ENUM('mensch','job','cli') NOT NULL DEFAULT 'mensch',
+  betroffen_user_id INT UNSIGNED NULL,
+  text              TEXT NOT NULL,
+  daten             JSON NULL,
+  KEY idx_reiter_zeit (reiter, zeit),
+  KEY idx_betroffen (betroffen_user_id, zeit),
+  KEY idx_urheber (urheber_user_id, zeit)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- SICHERUNGSZIELE: wohin die Sicherungen geschoben werden (S2/AP7, E-S2-22).
 --
 -- Der Name ist nicht `transport_dests` -- das sind die Zielkliniken. Hier geht
@@ -904,4 +931,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_09_16_geraet_abgewiesen', 'skipped'),
   -- backup_targets.behalten_* und sicherungsziel_dateien stehen oben schon
   -- im Schema (Web 20.14.0, P5a/AP10).
-  ('2026_09_16_sicherungsziel_aufbewahrung', 'skipped');
+  ('2026_09_16_sicherungsziel_aufbewahrung', 'skipped'),
+  -- protokoll_ereignisse steht oben schon im Schema (Web 20.16.0, P5b/AP1).
+  ('2026_09_16_protokoll_ereignisse', 'skipped');

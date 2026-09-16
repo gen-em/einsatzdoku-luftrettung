@@ -46,8 +46,9 @@ demselben Zweig vergeben** (206 Messstand-Schritt, 207 `gen-em.org` in `tools/`,
 Erwartungen der Wiederherstellungsprobe), **213 und 214 aus der
 Durchsicht vom 16.09.2026** (Zustandsdatei der Kette im Webroot;
 `install.php` in der Auslieferung). **215 und aufwärts liegen auf dem
-P5b-Zweig `claude/magical-dirac-we2y1z`** (215 Anwendung nicht installierbar;
-die Einschübe des P5b-Konzepts folgen dort). Jeder weitere Zweig, der Nummern
+P5b-Zweig `claude/magical-dirac-we2y1z`** (215 Anwendung nicht installierbar,
+216 `frame-ancestors` in Report-Only; die Einschübe des P5b-Konzepts folgen
+dort). Jeder weitere Zweig, der Nummern
 vergibt, beginnt hinter der dort zuletzt vergebenen und trägt seine Spanne
 hier ein, bevor er pusht.
 
@@ -2358,6 +2359,33 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nächsten Umbau der Ladekette wieder auf. *Abnahme:* Ein Prüflauf, der auf
     einem Stand ohne `server/config.php` HTTP 200 und ein Formular-Token von
     `install.php` bekommt. Zuordnung: Backlog-Runde oder P5c.
+
+216. **`frame-ancestors` stand in einer Report-Only-Richtlinie und war dort wirkungslos.**
+    *Gefunden 16.09.2026 beim Bilderlauf mit drei Engines (P5b/AP1, auf Rückfrage
+    des Auftraggebers); behoben am selben Tag in Web 20.16.0.*
+    CSP Level 3 sagt, dass `frame-ancestors` in einer Report-Only-Richtlinie
+    **ignoriert** wird. WebKit sagt es laut: „The Content Security Policy
+    directive 'frame-ancestors' is ignored when delivered in a report-only
+    policy." — **ein Konsolenfehler je Seitenaufruf**, auf jeder Seite der
+    Anwendung. Gemessen: **16 Konsolenfehler bei 16 Bildern**; Chromium und
+    Firefox melden nichts.
+
+    **Was das gekostet hat, ist nicht der Schutz, sondern das Prüfmittel.**
+    Clickjacking wehrt `X-Frame-Options: DENY` ab, und die Zeile steht
+    unabhängig davon in beiden Fällen — es gab **kein** Loch. Die
+    CSP-Direktive schützte in Report-Only nichts und meldete nichts; was sie
+    tat, war, den Bilderlauf mit WebKit auf **jeder** Seite rauschen zu
+    lassen. Ein Prüfmittel, das überall meldet, findet nichts mehr: Der echte
+    Fehler stünde daneben und fiele nicht auf.
+
+    Behoben: Die Direktive steht jetzt nur in der **scharfen** Fassung, wo sie
+    auch wirkt.
+
+    **Die Lehre ist die Engine-Wahl.** Der Fund kam zustande, weil der
+    Auftraggeber nachfragte, ob auf drei Browsern geprüft wird — es war
+    nur Chromium gelaufen. `tools/screenshots/LIESMICH.md` empfiehlt den
+    dreifachen Lauf bei Gestaltungsrunden; die Empfehlung hat sich zum
+    zweiten Mal bezahlt gemacht (das erste Mal war Nr. 185).
 
 ## Erledigt
 

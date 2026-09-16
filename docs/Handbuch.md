@@ -3833,6 +3833,38 @@ Tabelle nicht kennt — Handys (die ihren Namen selbst mitbringen) und Modelle,
 die noch nicht in der Tabelle stehen. Sie werden **nicht** angefasst: Was ein
 Gerät über sich gesagt hat, bleibt stehen.
 
+#### Karte „Betriebsprotokoll" (seit Web 20.16.0)
+
+**Die Anwendung führt Buch über den Betrieb** — Konten angelegt,
+freigeschaltet, gesperrt, gelöscht; Rollen und Adressen geändert; Sicherungen
+eingespielt; Wartung gefahren; Post versandt.
+
+**Sie führt kein Buch darüber, wer welchen Einsatz angesehen hat.** Das steht
+nicht darin und soll nicht darin stehen. Wenn dich jemand fragt, ob du
+nachsehen kannst, wer einen bestimmten Einsatz geöffnet hat: Du kannst es
+nicht, und zwar mit Absicht.
+
+**Sechs Reiter, zwei Fristen.** *Verwaltung* ist das Audit — wer wann was
+getan hat — und bleibt **365 Tage**; die Zahl stellst du unter
+Servereinstellungen → Konten ein (zwischen 90 und 1095). E-Mail, Jobs,
+Sicherung, Ziele und System verfallen nach **30 Tagen**, und das ist keine
+Einstellung.
+
+*Sperren und Angriffsversuche* stehen **nicht** hier, sondern unter
+Status → Sicherheit. Sie führen IP-Adressen und verfallen deshalb nach 30
+Tagen, ohne Ausnahme.
+
+**Lesen lässt sich das Protokoll noch nicht.** Die Karte zählt nur — Einträge
+je Reiter, heute und insgesamt. Die Ansicht mit Filter, Archiv und Download
+kommt mit dem nächsten Schritt.
+
+**Steht dort eine rote Plakette „n nicht geschrieben", sieh hin.** Die
+Handlungen selbst sind gelungen — das Protokoll lässt nie eine Handlung
+scheitern, nur weil es selbst nicht schreiben kann. Aber es hat sie nicht
+festgehalten, und der Grund steht im Serverprotokoll deines Hosters unter der
+Kennung `protokoll:`. Der häufigste Grund: Ein Update ist eingespielt, aber
+`update.php` ist noch nicht gelaufen.
+
 ### 12.2 Statistik
 
 **Was diese Installation trägt** — Konten, Geräte, Einsätze. Rein lesend,
@@ -4258,6 +4290,58 @@ wenn deine Installation vorher über die Serverkonfiguration ein Jahr gebunden
 hat. Das ist kein Versehen: Die Dauer wird jetzt von der Anwendung bestimmt,
 damit sie an *einer* Stelle steht und die Anzeige nicht lügt. **Wer produktiv
 läuft, stellt hier wieder auf 1 Jahr.**
+
+#### Karte „Konten" (seit Web 20.16.0)
+
+Was diese Installation mit Konten tut: wer eines bekommt, was es halten darf,
+wie lange das Protokoll sie behält.
+
+**Registrierung — drei Betriebsarten.**
+
+| | |
+|---|---|
+| **offen** | Wer die Seite findet, kann sich registrieren. Nach der Bestätigung per Mail ist das Konto sofort nutzbar |
+| **offen mit Freischaltung** | Dasselbe, aber danach wartet das Konto auf dich. Du bekommst eine Sammelmail, freigeschaltet wird mit einem Knopf in der Kontoverwaltung |
+| **nur auf Einladung** | Es gibt keine Registrierungsseite. Konten legst du selbst an |
+
+**Die Vorgabe ist „nur auf Einladung", und das ist Absicht.** Wer diese Seite
+nie aufschlägt, bekommt keine offene Registrierung durch Untätigkeit. Ein
+Umschalten wirkt sofort; Registrierungen, die schon laufen, laufen zu Ende.
+
+**Zwei Fristen, zwei verschiedene Dinge.** *Wartende Registrierungen* — also
+bestätigte, die auf deine Freischaltung warten — verfallen nach der Zahl, die
+du hier einträgst (Vorgabe 30 Tage). Davon getrennt: Wer seine Adresse gar
+nicht erst bestätigt, verfällt nach **48 Stunden**, und das ist keine
+Einstellung. Ein unbestätigtes Konto ist eine Adresse, die jemand eingetippt
+hat — möglicherweise nicht die eigene.
+
+**Wegwerfadressen.** Die Liste bekannter Anbieter kommt mit jeder
+Auslieferung mit und liegt in der Anwendung; **es wird nichts bei Dritten
+abgefragt**. Abgewiesen wird mit *derselben* Antwort wie jede andere
+Registrierung — die Seite verrät nicht, welche Adressen sie kennt. Eigene
+Domains trägst du darunter ein. Ohne Wirkung bei „nur auf Einladung".
+
+**Was ein Konto halten darf.** Zwei Grenzen, beide je Konto in der
+Kontoverwaltung überschreibbar: Zahl der Einsätze und Speicher in Megabyte
+(Einsätze samt GPS-Daten und Ruhesegmenten).
+
+- Ab **80 %** geht einmalig eine Nachricht heraus, und die Kontoseite trägt
+  einen Hinweis.
+- Bei **100 %** nimmt der Server keine Gerätedaten mehr an, und der Import
+  bricht mit einer Erklärung ab. **Bearbeiten und Löschen bleiben frei** —
+  sonst säße jemand in der eigenen Grenze fest und käme nicht heraus.
+
+**Einsätze aufbewahren** ist leer, solange nichts von selbst verschwinden
+soll. Eine **0 gibt es hier nicht**: Sie hieße „nichts aufbewahren", und das
+ist bei Einsatzdaten die eine Antwort, die niemand aus Versehen geben soll.
+
+**Demo-Anmeldung zulassen.** Ist sie aus, wird die Demo-Adresse bei der
+Anmeldung wie ein falsches Passwort behandelt — gleiche Antwort, gleiche
+Dauer. Der Bestand bleibt liegen und lässt sich jederzeit wieder
+freischalten. **Einen Demo-Knopf auf der Anmeldeseite gibt es bewusst nicht;**
+die Zugangsdaten stehen in diesem Handbuch.
+
+**Verwaltungseinträge im Protokoll aufbewahren** — siehe 12.1.
 
 ### 12.6 Komplett-Backup
 

@@ -14,6 +14,89 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.16.0] — 2026-09-16
+
+**Das Betriebsprotokoll bekommt einen Schreibweg** (P5b/AP1, V1, E-P5b-06,
+-12, -14).
+
+### Neu
+
+Erstes Paket der Phase P5b. Es baut nichts, was eine Nutzerin sieht — es baut
+das, worauf die neun folgenden Pakete schreiben.
+
+**Das Protokoll** (`protokoll_lib.php`, Tabelle `protokoll_ereignisse`) hält
+Betriebsereignisse: Konto angelegt, freigeschaltet, gesperrt, gelöscht; Rolle
+oder Adresse geändert; Sicherung eingespielt; Wartung gefahren; Mail
+versandt. Sechs Reiter, zwei Fristen — *Verwaltung* ist das Audit und bleibt
+365 Tage (einstellbar zwischen 90 und 1095), alle übrigen verfallen nach 30
+Tagen, fest.
+
+**Was nicht hineingeschrieben wird, ist die eigentliche Aussage.** Dass jemand
+einen Einsatz geöffnet, gelesen oder exportiert hat, steht nicht darin und
+soll nicht darin stehen. Das ist keine Lücke, sondern eine Zusage; wer sie
+aufhebt, ändert eine Programmentscheidung und nicht eine Funktion.
+
+**Der siebte Reiter bleibt getrennt.** Sperren und Angriffsversuche liegen
+weiter in `sicherheit_ereignisse` (P5a), weil dort IP-Adressen im Klartext
+stehen und nach 30 Tagen verfallen müssen. Zwei Fristen in einer Tabelle sind
+eine Einladung, die kürzere zu vergessen.
+
+**Kein Fremdschlüssel auf `users`** — der häufigste Verwaltungseintrag ist
+„Konto gelöscht". Mit `ON DELETE CASCADE` löschte die Kontolöschung ihren
+eigenen Protokolleintrag; mit `RESTRICT` verhinderte der Eintrag die
+Löschung. Die Kontonummer bleibt als Zahl stehen, auch wenn es das Konto
+nicht mehr gibt — genau dafür ist ein Audit da.
+
+**Scheitert das Schreiben, scheitert die Handlung nicht.** Ein Protokoll, das
+eine Kontolöschung verhindert, weil seine Tabelle fehlt, hält den Betrieb an,
+um über den Betrieb zu berichten. Eines, das unbemerkt nichts schreibt, ist
+keines. Deshalb drei Stufen statt einer: `error_log()` mit der Kennung
+`protokoll:`, ein Zähler in `app_state`, und eine rote Plakette auf
+Betrieb → Status.
+
+**Die Karte „Konten"** in den Servereinstellungen trägt acht Werte:
+Betriebsart der Registrierung, Verfallsfrist wartender Registrierungen,
+Wegwerfadressen, zwei Mengengrenzen je Konto, Aufbewahrung, Demo-Anmeldung
+und die Protokollfrist. **Nur einer davon hat in diesem Paket schon einen
+Verbraucher** (die Demo-Anmeldung); die übrigen wirken mit AP3 und AP6. Sie
+stehen trotzdem schon da, weil eine Einstellung, die es beim Bauen ihres
+Verbrauchers noch nicht gibt, dort erfunden wird — an einer zweiten Stelle,
+mit einer zweiten Vorgabe.
+
+**Die Vorgabe der Betriebsart ist „nur auf Einladung",** und das ist nicht
+die, die nadoku selbst fahren wird. Sie ist die sicherste Grundstellung für
+eine Selbsthosterin, die diese Seite nie aufschlägt: heutiges Verhalten, keine
+offene Tür durch Untätigkeit.
+
+**Betrieb → Status** zeigt die Zählkarte (Einträge je Reiter, heute und
+gesamt). Lesen lässt sich das Protokoll noch nicht — die Reiter mit Filter,
+Archiv und Download kommen mit 10c und hängen an Entscheidungen, die noch
+nicht gefallen sind.
+
+### Nebenbei berichtigt
+
+Der Kopfkommentar von `betrieb_server.php` begründete die Einspaltigkeit der
+Seite damit, sie trage „zwei Karten". Es sind sieben. Die Seite bleibt
+einspaltig — ihre Karten sind Formulare mit langen Erklärungstexten und leben
+von der Lesebreite —, aber die Begründung stimmte nicht mehr und steht jetzt
+richtig da.
+
+### Nebenbei behoben
+
+**`frame-ancestors` stand in einer Report-Only-Richtlinie** und war dort
+wirkungslos (Backlog Nr. 216). CSP Level 3 sagt, dass die Direktive in einer
+Report-Only-Richtlinie ignoriert wird; WebKit sagt es laut — ein
+Konsolenfehler je Seitenaufruf, auf jeder Seite.
+
+**Es war kein Loch:** Clickjacking wehrt `X-Frame-Options: DENY` ab, und die
+Zeile steht unabhängig davon in beiden Fällen. Was die Direktive kostete, war
+das Prüfmittel — der Bilderlauf mit WebKit rauschte auf jeder Seite, und ein
+echter Fehler wäre darin untergegangen. Gemessen: 16 Konsolenfehler bei 16
+Bildern, Chromium und Firefox null. Sie steht jetzt nur in der scharfen
+Fassung, wo sie auch wirkt.
+
+**Migration** `2026_09_16_protokoll_ereignisse`. **`update.php` ist fällig.**
+
 ## [Web 20.15.3] — 2026-09-16
 
 **Die Anwendung ließ sich nicht mehr installieren** (Backlog Nr. 215).

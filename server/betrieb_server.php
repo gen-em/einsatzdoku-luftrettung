@@ -20,9 +20,23 @@ require_once __DIR__ . '/serverkrypto_lib.php';   // Karte „Schlüssel des Ser
  * Betrieb, wo die uebrigen Einstellungen der Installation stehen. Was je Konto
  * gilt (Erinnerung, Aufbewahrung, Admin-Mail), bleibt bei den Konto-Backups.
  *
- * DIE SEITE IST EINSPALTIG AUF LESEBREITE, auch am Schreibtisch: Sie traegt
- * zwei Karten, und ein zweispaltiges Raster fuer zwei Karten waere Raster um
- * des Rasters willen (E-S8-18 — Zweispaltigkeit gilt ab mehr als vier Karten).
+ * DIE SEITE IST EINSPALTIG AUF LESEBREITE, auch am Schreibtisch.
+ *
+ * DIESER ABSATZ HAT SEINE EIGENE BEGRUENDUNG UEBERLEBT, und das wird hier
+ * vermerkt statt stillschweigend berichtigt. Er lautete: „Sie traegt zwei
+ * Karten, und ein zweispaltiges Raster fuer zwei Karten waere Raster um des
+ * Rasters willen (E-S8-18 — Zweispaltigkeit gilt ab mehr als vier Karten)."
+ * Seit S8 sind fuenf Karten dazugekommen (Kopfzeilen, Ratenschutz,
+ * CSP-Berichte, Schluessel des Servers, Konten); es sind SIEBEN, und die
+ * Zahl, die die Einspaltigkeit begruendete, ist ueberschritten.
+ *
+ * EINSPALTIG BLEIBT SIE TROTZDEM, und zwar bis jemand das Gegenteil mit
+ * einem Mockup freigibt (`CLAUDE.md` 5): Die Karten hier sind keine Kacheln,
+ * sondern Formulare mit langen Erklaerungstexten — sie leben von der
+ * Lesebreite. Zwei Spalten haetten zur Folge, dass ein Hinweissatz, der
+ * erklaert, warum eine Zahl nicht unter 15 gesetzt werden sollte, in einer
+ * 40-Zeichen-Spalte steht. Der Befund gehoert ins Backlog, nicht in eine
+ * stille Aenderung.
  */
 
 $pdo = db();
@@ -247,6 +261,162 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'geoco
         $teile = geocoder_installation_setzen(!empty($_POST['adresssuche']), $adresse);
         $notice = $teile ? implode(', ', $teile) . ' gespeichert.'
                          : 'Es gab nichts zu ändern.';
+    }
+}
+
+/* ---- Konten: Registrierung, Fristen, Grenzen (P5b/AP1, E-P5b-14) --------
+ *
+ * EINE KARTE, EIN FORMULAR, ALLES ODER NICHTS. Der Ratenschutz darueber hat
+ * es vorgemacht und den Grund mitgeschrieben: Wer Wert fuer Wert schreibt und
+ * beim ersten Mangel abbricht, hinterlaesst die Haelfte in der Datenbank und
+ * eine Meldung „nicht gespeichert", die zur Haelfte falsch ist. Hier steht es
+ * wieder so — erst alles pruefen, dann alles schreiben.
+ *
+ * WAS IN DIESEM PAKET NOCH KEINEN VERBRAUCHER HAT, steht trotzdem schon hier:
+ * Betriebsart, Freischaltfrist, Wegwerfadressen, Mengengrenzen und die
+ * Aufbewahrung je Konto wirken erst mit AP3 bzw. AP6. Das Konzept sagt es so
+ * (AP1: „alle Felder, noch ohne Verbraucher ausser Demo-Anmeldung"), und der
+ * Grund ist die Reihenfolge: Die Registrierung liest ihre Betriebsart aus
+ * `app_state`, und eine Einstellung, die es beim Bauen der Registrierung noch
+ * nicht gibt, wird beim Bauen erfunden — an einer zweiten Stelle, mit einer
+ * zweiten Vorgabe.
+ *
+ * DIE VORGABE DER BETRIEBSART IST „nur auf Einladung" (E-P5b-01), und das ist
+ * nicht die Vorgabe, die nadoku selbst fahren wird. Sie ist die sicherste
+ * Grundstellung fuer eine Selbsthosterin, die die Seite nie aufschlaegt —
+ * heutiges Verhalten, keine offene Tuer durch Untaetigkeit.
+ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konten') {
+    csrf_check();
+    require_once __DIR__ . '/konten_einstellungen_lib.php';
+
+    $neu = [];   // Schluessel => Wert, erst am Ende geschrieben
+
+    /* ---- Betriebsart ---------------------------------------------------- */
+    $art = (string)($_POST['reg_art'] ?? '');
+    if (!isset(KONTEN_REG_ARTEN[$art])) {
+        $error = 'Betriebsart: bitte eine der drei Möglichkeiten wählen.';
+    } else {
+        $neu[KONTEN_K_REG_ART] = $art;
+    }
+
+    /* ---- Freischaltfrist in Tagen --------------------------------------- */
+    if ($error === null) {
+        $roh = trim((string)($_POST['reg_frist'] ?? ''));
+        if (!ctype_digit($roh) || (int)$roh < KONTEN_REG_FRIST_MIN
+                               || (int)$roh > KONTEN_REG_FRIST_MAX) {
+            $error = 'Verfall wartender Registrierungen: eine ganze Zahl zwischen '
+                   . KONTEN_REG_FRIST_MIN . ' und ' . KONTEN_REG_FRIST_MAX . ' Tagen.';
+        } else {
+            $neu[KONTEN_K_REG_FRIST] = $roh;
+        }
+    }
+
+    /* ---- Wegwerfadressen ------------------------------------------------ */
+    if ($error === null) {
+        $neu[KONTEN_K_WEGWERF] = empty($_POST['wegwerf']) ? '0' : '1';
+
+        /* EIGENE DOMAINS: eine je Zeile im Formular, mit Komma getrennt in
+         * `app_state` — dort passen 190 Zeichen, und mehr als eine Handvoll
+         * eigener Domains ist kein Anwendungsfall (die mitgelieferte Liste
+         * hat 8870). Wer mehr braucht, ergaenzt die Datei. */
+        $roh = trim((string)($_POST['wegwerf_eigene'] ?? ''));
+        $domains = [];
+        foreach (preg_split('/[\s,;]+/', $roh) ?: [] as $d) {
+            $d = mb_strtolower(trim($d, " \t\n\r.@"));
+            if ($d === '') { continue; }
+            if (!preg_match('/^[a-z0-9.-]+\.[a-z]{2,}$/', $d)) {
+                $error = 'Eigene Wegwerfdomains: „' . $d . '" ist kein Domainname. '
+                       . 'Erwartet wird die reine Domain, ohne „@" und ohne „https://".';
+                break;
+            }
+            $domains[] = $d;
+        }
+        if ($error === null) {
+            $domains = array_values(array_unique($domains));
+            $wert = implode(',', $domains);
+            if (strlen($wert) > APP_STATE_MAX) {
+                $error = 'Eigene Wegwerfdomains: die Liste ist zu lang (höchstens '
+                       . APP_STATE_MAX . ' Zeichen). Für längere Listen ist '
+                       . '`server/wegwerfdomains.txt` der Ort.';
+            } else {
+                $neu[KONTEN_K_WEGWERF_EIGENE] = $wert;
+            }
+        }
+    }
+
+    /* ---- Mengengrenzen je Konto ----------------------------------------- */
+    foreach ([['grenze_einsaetze', 'Mengengrenze Einsätze', KONTEN_K_GRENZE_EINSAETZE,
+               1, 1000000],
+              ['grenze_mb', 'Mengengrenze Speicher (MB)', KONTEN_K_GRENZE_MB,
+               1, 1000000]] as [$feld, $name, $schluessel, $min, $max]) {
+        if ($error !== null) { break; }
+        $roh = trim((string)($_POST[$feld] ?? ''));
+        if (!ctype_digit($roh) || (int)$roh < $min || (int)$roh > $max) {
+            $error = $name . ': eine ganze Zahl zwischen ' . $min . ' und ' . $max . '.';
+        } else {
+            $neu[$schluessel] = $roh;
+        }
+    }
+
+    /* ---- Aufbewahrung je Konto (Vorgabe, Backlog Nr. 48) ---------------- */
+    if ($error === null) {
+        $roh = trim((string)($_POST['aufbewahrung'] ?? ''));
+        /* LEER HEISST „unbegrenzt" UND NICHT „0". Eine 0 hiesse „nichts
+         * aufbewahren", und das ist bei Einsatzdaten die eine Antwort, die
+         * niemand aus Versehen geben soll. */
+        if ($roh === '') {
+            $neu[KONTEN_K_AUFBEWAHRUNG] = '';
+        } elseif (!ctype_digit($roh) || (int)$roh < 30 || (int)$roh > 36500) {
+            $error = 'Aufbewahrung je Konto: leer lassen für „unbegrenzt", sonst '
+                   . 'eine ganze Zahl zwischen 30 und 36500 Tagen.';
+        } else {
+            $neu[KONTEN_K_AUFBEWAHRUNG] = $roh;
+        }
+    }
+
+    /* ---- Demo-Anmeldung (der einzige Wert mit Verbraucher in AP1) ------- */
+    if ($error === null) {
+        $neu[KONTEN_K_DEMO_ANMELDUNG] = empty($_POST['demo_anmeldung']) ? '0' : '1';
+    }
+
+    /* ---- Protokollfrist Verwaltung -------------------------------------- */
+    if ($error === null) {
+        require_once __DIR__ . '/protokoll_lib.php';
+        $roh = trim((string)($_POST['protokoll_frist'] ?? ''));
+        if (!ctype_digit($roh) || (int)$roh < PROTOKOLL_FRIST_MIN
+                               || (int)$roh > PROTOKOLL_FRIST_MAX) {
+            $error = 'Aufbewahrung der Verwaltungseinträge: eine ganze Zahl zwischen '
+                   . PROTOKOLL_FRIST_MIN . ' und ' . PROTOKOLL_FRIST_MAX . ' Tagen.';
+        } else {
+            $neu[PROTOKOLL_K_FRIST_VERWALTUNG] = $roh;
+        }
+    }
+
+    if ($error === null) {
+        $vorher = konten_einstellungen();
+        foreach ($neu as $k => $v) { app_state_setzen($k, $v); }
+
+        /* WAS SICH GEAENDERT HAT, STEHT IM PROTOKOLL — nicht der ganze
+         * Formularinhalt. Ein Audit, das bei jedem „Speichern" zwoelf
+         * unveraenderte Werte auffuehrt, macht die eine Aenderung
+         * unauffindbar. */
+        $nachher  = konten_einstellungen_neu_lesen();
+        $geaendert = [];
+        foreach ($nachher as $k => $v) {
+            if ((string)($vorher[$k] ?? '') !== (string)$v) { $geaendert[] = $k; }
+        }
+        if ($geaendert) {
+            protokoll('verwaltung', 'einstellungen_konten',
+                      'Konten-Einstellungen geändert: ' . implode(', ', $geaendert),
+                      ['geaendert' => $geaendert]);
+        }
+
+        $notice = 'Konten-Einstellungen gespeichert: Registrierung '
+                . KONTEN_REG_ARTEN[$art] . ' · Wartende verfallen nach '
+                . $neu[KONTEN_K_REG_FRIST] . ' Tagen · Grenzen '
+                . $neu[KONTEN_K_GRENZE_EINSAETZE] . ' Einsätze / '
+                . $neu[KONTEN_K_GRENZE_MB] . ' MB je Konto.';
     }
 }
 
@@ -849,6 +1019,108 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                    . 'Import und Export sind die interessanten drei.',
           'plaketten' => ui_plakette('0', ['ton' => 'blau'])]); ?>
     <?php endif; ?>
+  <?php ui_karte_ende(); ?>
+
+  <?php /* ---- Konten (P5b/AP1, E-P5b-14) ---------------------------------
+     *
+     * VOR dem Ratenschutz und nach den Kopfzeilen: Was diese Installation
+     * mit Konten TUT, steht vor dem, womit sie sich WEHRT. Beides gehoert
+     * auf diese Seite (R74/E-S8-12 — was alle trifft, steht im Betrieb),
+     * aber die Betriebsart ist die Frage, die eine Betreiberin zuerst
+     * stellt.
+     * ------------------------------------------------------------------- */ ?>
+  <?php require_once __DIR__ . '/konten_einstellungen_lib.php';
+        require_once __DIR__ . '/protokoll_lib.php';
+        $kE = konten_einstellungen(); ?>
+  <?php ui_karte_start(['titel' => 'Konten', 'id' => 'k-konten',
+      'plakette' => ui_plakette(
+          ['offen' => 'Registrierung offen',
+           'freischaltung' => 'mit Freischaltung',
+           'einladung' => 'nur auf Einladung'][konten_reg_art()],
+          ['ton' => konten_reg_art() === 'offen' ? 'orange' : 'blau'])]); ?>
+    <p class="feld-hinweis"><strong>Die Vorgabe ist „nur auf Einladung", und
+       das ist Absicht.</strong> Wer diese Seite nie aufschlägt, bekommt keine
+       offene Registrierung durch Untätigkeit. Ein Umschalten wirkt sofort auf
+       die Registrierungsseite; Registrierungen, die schon laufen, laufen zu
+       Ende.</p>
+
+    <form method="post" action="betrieb_server.php">
+      <?= csrf_field() ?><input type="hidden" name="action" value="konten">
+
+      <?php ui_feld(['name' => 'reg_art', 'label' => 'Registrierung', 'art' => 'select',
+          'optionen' => KONTEN_REG_ARTEN, 'wert' => konten_reg_art()]); ?>
+
+      <?php ui_feld(['name' => 'reg_frist', 'label' => 'Wartende Registrierungen verfallen nach',
+          'art' => 'number', 'label_zusatz' => 'Tagen',
+          'wert' => (string)konten_reg_frist_tage(),
+          'klein' => 'Gilt nur bei „mit Freischaltung". Die Frist steht auf der '
+                   . 'Registrierungsseite und in der Bestätigungsmail; beim Verfall '
+                   . 'geht eine letzte Nachricht heraus. Davon getrennt und nicht '
+                   . 'einstellbar: Wer seine Adresse nicht bestätigt, verfällt nach '
+                   . KONTEN_UNBESTAETIGT_H . ' Stunden.']); ?>
+
+      <h3 class="listen-form-titel">Wegwerfadressen</h3>
+      <?php ui_schalter(['name' => 'wegwerf', 'label' => 'Wegwerfadressen abweisen',
+          'an' => konten_wegwerf_an(),
+          'klein' => 'Gegen die mitgelieferte Liste, die mit jeder Auslieferung kommt — '
+                   . 'sie liegt in der Anwendung, es wird nichts bei Dritten '
+                   . 'abgefragt. Abgewiesen wird mit derselben Antwort wie jede '
+                   . 'andere Registrierung, damit die Seite nicht verrät, welche '
+                   . 'Adressen sie kennt. Ohne Wirkung bei „nur auf Einladung".']); ?>
+      <?php ui_feld(['name' => 'wegwerf_eigene', 'label' => 'Zusätzlich abweisen',
+          'art' => 'textarea', 'zeilen' => 2,
+          'wert' => implode(', ', konten_wegwerf_eigene()),
+          'platzhalter' => 'beispiel.invalid, noch-eine.test',
+          'klein' => 'Eigene Domains, durch Komma oder Zeilenumbruch getrennt — die '
+                   . 'reine Domain, ohne „@". Für längere Listen ist die Datei der '
+                   . 'Ort.']); ?>
+
+      <h3 class="listen-form-titel">Was ein Konto halten darf</h3>
+      <p class="feld-hinweis">Vorgaben für neue und bestehende Konten. <strong>Je
+         Konto überschreibbar</strong> in der Kontoverwaltung. Ab
+         <?= (int)(KONTEN_WARNSCHWELLE * 100) ?> % geht einmalig eine Nachricht
+         heraus und die Kontoseite trägt einen Hinweis; bei 100 % nimmt der
+         Server keine Gerätedaten mehr an und der Import bricht ab —
+         <strong>Bearbeiten und Löschen bleiben frei</strong>, sonst säße man in
+         der eigenen Grenze fest.</p>
+      <?php ui_feld(['name' => 'grenze_einsaetze', 'label' => 'Einsätze je Konto',
+          'art' => 'number', 'wert' => (string)konten_grenze_einsaetze()]); ?>
+      <?php ui_feld(['name' => 'grenze_mb', 'label' => 'Speicher je Konto',
+          'art' => 'number', 'label_zusatz' => 'MB',
+          'wert' => (string)konten_grenze_mb(),
+          'klein' => 'Einsätze samt GPS-Daten und Ruhesegmenten, gemessen wie die '
+                   . 'Statistik zählt.']); ?>
+      <?php ui_feld(['name' => 'aufbewahrung', 'label' => 'Einsätze aufbewahren',
+          'art' => 'number', 'label_zusatz' => 'Tage — leer heißt unbegrenzt',
+          'wert' => konten_aufbewahrung_tage() === null
+                    ? '' : (string)konten_aufbewahrung_tage(),
+          'klein' => 'Leer lassen, wenn nichts von selbst verschwinden soll. Eine 0 '
+                   . 'gibt es hier nicht — sie hieße „nichts aufbewahren", und das '
+                   . 'ist bei Einsatzdaten die eine Antwort, die niemand aus '
+                   . 'Versehen geben soll.']); ?>
+
+      <h3 class="listen-form-titel">Demo und Protokoll</h3>
+      <?php ui_schalter(['name' => 'demo_anmeldung', 'label' => 'Demo-Anmeldung zulassen',
+          'an' => konten_demo_anmeldung_an(),
+          'klein' => 'Ist sie aus, wird die Demo-Adresse bei der Anmeldung wie ein '
+                   . 'falsches Passwort behandelt — gleiche Antwort, gleiche Dauer. '
+                   . 'Der Bestand bleibt und lässt sich jederzeit wieder '
+                   . 'freischalten. Einen Demo-Knopf auf der Anmeldeseite gibt es '
+                   . 'bewusst nicht; die Zugangsdaten stehen im Handbuch.']); ?>
+      <?php ui_feld(['name' => 'protokoll_frist',
+          'label' => 'Verwaltungseinträge im Protokoll aufbewahren',
+          'art' => 'number', 'label_zusatz' => 'Tage',
+          'wert' => (string)protokoll_frist_verwaltung(),
+          'klein' => 'Zwischen ' . PROTOKOLL_FRIST_MIN . ' und ' . PROTOKOLL_FRIST_MAX
+                   . ' Tagen. Betrifft nur das Audit — wer wann ein Konto angelegt, '
+                   . 'freigeschaltet, gesperrt oder gelöscht hat. Alle übrigen '
+                   . 'Einträge verfallen nach ' . PROTOKOLL_FRIST_UEBRIGE
+                   . ' Tagen, und das ist keine Einstellung.']); ?>
+
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+      </div>
+    </form>
   <?php ui_karte_ende(); ?>
 
   <?php /* ---- Ratenschutz (P5a/AP6, E-P5a-04 bis -07) --------------------

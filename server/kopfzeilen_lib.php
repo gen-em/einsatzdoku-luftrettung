@@ -318,11 +318,34 @@ function kopf_csp(bool $mitNonce = true): string
         "font-src 'self'",
         'connect-src ' . implode(' ', $verbinde),
         "worker-src 'self' blob:",
-        "frame-ancestors 'none'",
         "base-uri 'none'",
         "form-action 'self'",
         "object-src 'none'",
     ];
+    /* `frame-ancestors` NUR IN DER SCHARFEN FASSUNG (Backlog Nr. 216).
+     *
+     * In einer Report-Only-Richtlinie wird die Direktive vom Browser
+     * IGNORIERT — so steht es in CSP Level 3, und WebKit sagt es laut:
+     * „The Content Security Policy directive 'frame-ancestors' is ignored
+     * when delivered in a report-only policy." Ein Fehler je Seitenaufruf.
+     *
+     * WAS DAS GEKOSTET HAT, IST NICHT DER SCHUTZ, SONDERN DAS PRUEFMITTEL.
+     * Der Clickjacking-Schutz steht unabhaengig davon in
+     * `X-Frame-Options: DENY` (unten, in beiden Faellen). Die Zeile hier war
+     * in Report-Only wirkungslos — sie hat nichts geschuetzt und nichts
+     * gemeldet. Was sie tat, war: den Bilderlauf mit WebKit auf JEDER Seite
+     * einen Konsolenfehler melden zu lassen. Ein Pruefmittel, das ueberall
+     * rauscht, findet nichts mehr; der echte Fehler stuende daneben und
+     * fiele nicht auf. Gemessen am 16.09.2026: 16 Konsolenfehler bei 16
+     * Bildern, Chromium und Firefox 0.
+     *
+     * SCHARF GESCHALTET GEHOERT SIE DAZU, und dann wirkt sie auch. Deshalb
+     * steht sie unten im `if` und nicht hier.
+     */
+    if (kopf_csp_scharf()) {
+        $teile[] = "frame-ancestors 'none'";
+    }
+
     /* DER BERICHTSENDPUNKT GEHOERT IN BEIDE FASSUNGEN: Auch eine scharfe
      * Richtlinie soll melden, was sie blockiert hat — sonst merkt niemand,
      * dass eine Seite gerade halb ist.

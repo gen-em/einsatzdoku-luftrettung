@@ -119,6 +119,15 @@ Daten erst nach Server-Bestätigung.
 │   │                       Liste, Einsätze UND Ruhesegmente (4.97b)
 │   ├── jobs.php           Einstieg der Hintergrundjobs: Kommandozeile, Adresse
 │   │                       mit Token, huckepack auf einer Anfrage (4.97a)
+│   ├── konten_einstellungen_lib.php
+│   │                      Betriebsart der Registrierung, Fristen, Mengengrenzen,
+│   │                      Demo-Anmeldung — die Werte der Karte „Konten"
+│   │                      (P5b/AP1). Bibliothek und nicht Seite, weil die
+│   │                      Verbraucher woanders sitzen: registrieren.php,
+│   │                      login.php, ingest.php, der Verfalljob (R83)
+│   ├── protokoll_lib.php  Das Betriebsprotokoll — Schreibweg, sechs Reiter,
+│   │                      zwei Fristen, Bereinigung (P5b/AP1). KEIN
+│   │                      Zugriffsprotokoll: siehe 4.99g
 │   ├── jobs_lib.php       Katalog und Ausführung der Jobs (Häppchen, Zustand,
 │   │                       Sperre)
 │   ├── backup_lib.php     Backup-Serialisierung (Kern mit oder ohne Spuren)
@@ -772,6 +781,7 @@ Daten erst nach Server-Bestätigung.
 | `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 5c) |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
+| `protokoll_ereignisse` | Das **Betriebsprotokoll** (seit Web 20.16.0, P5b/AP1, V1). `reiter` = `verwaltung` / `email` / `jobs` / `sicherung` / `ziele` / `system`, dazu `art` (die maschinelle Kennung, nach der 10c filtert), `urheber_user_id` / `urheber_art`, `betroffen_user_id`, `text` und `daten` (JSON). **Betriebsereignisse, keine Datenzugriffe** — dass jemand einen Einsatz geöffnet, gelesen oder exportiert hat, steht hier nicht und soll hier nicht stehen. **Kein Fremdschlüssel auf `users`**, und das ist der wichtigste Satz dieser Zeile: Der häufigste Verwaltungseintrag ist „Konto gelöscht"; mit CASCADE löschte die Kontolöschung ihren eigenen Eintrag, mit RESTRICT verhinderte der Eintrag die Löschung. `urheber_user_id` ist **`0` und nicht NULL**, wenn kein Mensch gehandelt hat — `urheber_art` sagt, welche Art von Niemand (`cli` / `job`). **Zwei Fristen:** `verwaltung` 365 Tage (einstellbar 90–1095), alle übrigen 30 Tage fest; der Job `aufraeumen` räumt beide in einem Schritt. Siehe 4.99g |
 | `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **Die Folge ist benannt:** `komp_tabellen()` zählt seine Tabellen über `SHOW FULL TABLES` und hat keine Ausnahmeliste — diese Tabelle liegt damit in **jeder** Komplettsicherung, und die 30-Tage-Frist gilt in der laufenden Datenbank, nicht im versiegelten Abzug. Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09). **Gelesen wird sie seit Web 20.12.0 über `sicherheit_ereignisse()`** und gezeigt auf Betrieb → Status → Sicherheit (5e.8); geschrieben wird nur an den **fünf Töpfen mit Leiter** — die übrigen neun sperren ohne Protokollzeile |
 | `mail_warteschlange` | Jede ausgehende Nachricht, eine Zeile (seit Web 20.8.0, P5a/AP5). `schluessel` = Eintrag aus `mail_katalog()`, `art` = `konto`/`geraet`/`betrieb` (das wird in P5c der Reiter im Protokoll), `zustand` = `offen` / `zugestellt` / `unzustellbar` / `zu_spaet` / `ueberholt`, `versuche`, `naechster_versuch`, `gueltig_bis` (ein Reset-Link gilt eine Stunde), `fehler` = Grund **samt Kennung**. **Was beim Endzustand geleert wird, hängt vom Zustand ab** (E-P5a-39): `zugestellt`, `zu_spaet` und `ueberholt` verlieren Adresse, Betreff und Rumpf — es bleibt „eine Nachricht dieser Art ging zu dieser Zeit hinaus". Bei `unzustellbar` **bleibt die Adresse stehen**, weil „die Einladung an X kam nie an" ohne X wertlos ist; der Rumpf fällt trotzdem, wegen des Tokens darin. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `job_laeufe` | Verlauf der Hintergrundjobs (seit Web 20.8.0), eine Zeile je Lauf, der etwas getan hat oder scheiterte — ein Leerlauf schreibt nichts, sonst füllte sich die Tabelle mit Nichts. `job`, `zeitpunkt`, `ausloeser`, `erledigt`, `fehler`. Der Job `aufraeumen` löscht nach 30 Tagen |
@@ -3239,7 +3249,7 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 
 | Job | täglich? | was er tut |
 |---|---|---|
-| `aufraeumen` | ja, höchstens 1×/Kalendertag | **zwölf Schritte** — verfallene Kopplungssitzungen, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speichermessung und Warnschwellen. **Maßgeblich ist `job_aufraeumen()`, nicht diese Zeile** — sie nannte bis Web 20.12.0 sechs von zwölf, und die fehlenden sechs sind zwischen S10 und P5a/AP7 dazugekommen, ohne dass es jemandem auffiel. Die **sichtbare** Beschreibung steht im Job-Katalog (`jobs_lib.php`) und ist mitzuführen |
+| `aufraeumen` | ja, höchstens 1×/Kalendertag | **dreizehn Schritte** — verfallene Kopplungssitzungen, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speichermessung und Warnschwellen. **Maßgeblich ist `job_aufraeumen()`, nicht diese Zeile** — sie nannte bis Web 20.12.0 sechs von zwölf, und die fehlenden sechs sind zwischen S10 und P5a/AP7 dazugekommen, ohne dass es jemandem auffiel. Die **sichtbare** Beschreibung steht im Job-Katalog (`jobs_lib.php`) und ist mitzuführen |
 | `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
 | `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
 | `adminbackup` | nein, nur mit Auftrag | Konto-Backups aus der Sammelaktion „Alle sichern" |
@@ -6402,6 +6412,129 @@ abzieht. Drei Regeln, die alle aus einer Messung stammen:
 seit Langem `scroll-padding-top: calc(var(--kopf) + var(--abstand-4))`, und
 beides addiert sich — gemessen landete die angesprungene Karte 68 px zu tief.
 Mit `scroll-padding-top` allein sitzt der Sprung bei 72 px.
+
+### 4.99g Das Betriebsprotokoll: der Schreibweg (ab Web 20.16.0, P5b/AP1)
+
+*Entscheidungen: V1 (16.09.2026), V2, E-P5b-06, E-P5b-12. Code:
+`server/protokoll_lib.php`, Tabelle `protokoll_ereignisse`.*
+
+#### Was hineingeschrieben wird — und was ausdrücklich nicht
+
+**Betriebsereignisse.** Konto angelegt, freigeschaltet, gesperrt, gelöscht;
+Rolle oder Adresse geändert; Sicherung eingespielt; Wartung gefahren;
+Schlüsselblatt bestätigt; Mail versandt; Job gelaufen.
+
+**Kein Zugriffsprotokoll.** Wer wann welchen Einsatz geöffnet, gelesen oder
+exportiert hat, steht hier nicht. Das ist V1, entschieden am 16.09.2026, und
+es ist eine Zusage und keine Lücke: Wer hier einen Eintrag „Einsatz 417
+angesehen" ergänzt, ändert eine Programmentscheidung und nicht eine Funktion.
+
+**Keine IP-Adressen** (V2, E-P5b-06). Sie stehen ausschließlich im Reiter
+*Sicherheit*, und der liegt in einer **anderen Tabelle**.
+
+#### Sieben Reiter, zwei Tabellen — und warum das so bleibt
+
+| Reiter | Tabelle | Frist | einstellbar |
+|---|---|---|---|
+| **Verwaltung** (das Audit) | `protokoll_ereignisse` | **365 Tage** | ja, 90–1095 |
+| E-Mail, Jobs, Sicherung, Ziele, System | `protokoll_ereignisse` | 30 Tage | **nein** |
+| **Sicherheit** (Sperren, Angriffe) | `sicherheit_ereignisse` (P5a/AP6) | 30 Tage | **nein** |
+
+Die Trennung ist kein Übergangszustand, sondern die Frist: In
+`sicherheit_ereignisse` stehen IP- und E-Mail-Adressen im Klartext und
+verfallen nach 30 Tagen (E-P5a-09), hier steht das Audit und bleibt bis zu
+drei Jahre. **Zwei Fristen in einer Tabelle sind eine Einladung, die kürzere
+zu vergessen.** Ob die beiden später zusammenrücken, entscheidet 10c (V6).
+
+#### Kein Fremdschlüssel auf `users`, und das ist der wichtigste Satz
+
+Weder für `urheber_user_id` noch für `betroffen_user_id`. Der häufigste
+Verwaltungseintrag überhaupt ist **„Konto gelöscht"**:
+
+- mit `ON DELETE CASCADE` löschte die Kontolöschung ihren eigenen
+  Protokolleintrag,
+- mit `RESTRICT` verhinderte der Eintrag die Löschung.
+
+Beides ist falsch. Die Id bleibt als Zahl stehen, auch wenn es das Konto
+nicht mehr gibt — genau dafür ist ein Audit da.
+
+`urheber_user_id` ist **`0` und nicht `NULL`**, wenn kein Mensch gehandelt
+hat; `urheber_art` sagt dann, welche Art von Niemand es war (`cli` an der
+Konsole, `job` im Huckepack). Ein `NULL` ließe offen, ob niemand handelte
+oder ob jemand vergessen wurde.
+
+#### Wenn das Schreiben scheitert (V7)
+
+**Still scheitern ist schlechter als laut, laut abbrechen ist schlechter als
+still.** Ein Protokoll, das eine Kontolöschung verhindert, weil seine Tabelle
+fehlt, hält den Betrieb an, um über den Betrieb zu berichten. Eines, das
+unbemerkt nichts schreibt, ist keines.
+
+Der Mittelweg hat **drei Stufen, und alle drei müssen da sein**:
+
+1. `error_log()` mit der Kennung `protokoll:` — für die Betreiberin, die ins
+   Serverprotokoll sieht.
+2. Der Zähler `protokoll_fehler` in `app_state` — er überlebt die Anfrage.
+3. Der Hinweis auf **Betrieb → Status** — er fällt jemandem auf, der nicht
+   sucht. Die Karte trägt dann eine rote Plakette „*n* nicht geschrieben".
+
+`protokoll()` gibt `false` zurück. **Der Rückgabewert ist ein Hinweis und kein
+Grund abzubrechen** — kein Aufrufer prüft ihn.
+
+#### Was `error_log()` nicht ersetzt
+
+Die 42 `error_log()`-Aufrufe in 21 Dateien bleiben, wo sie sind. Sie
+flächendeckend umzustellen wäre Backlog Nr. 202 Paket 3 in anderem Gewand,
+und der richtige Zeitpunkt dafür ist, wenn der Reiter „System" steht und
+jemand die Einträge auch lesen kann.
+
+#### Lesen kommt mit 10c
+
+10b baut den Schreibweg und schreibt hinein. **Betrieb → Status** zeigt eine
+Zählkarte (Einträge je Reiter, heute und gesamt) — mehr nicht. Die Reiter mit
+Filter, Archiv und Download hängen an Entscheidungen (V4, V5, V8, V9), die
+noch nicht gefallen sind.
+
+### 4.99h Die Einstellungen rund um Konten (ab Web 20.16.0, P5b/AP1)
+
+*E-P5b-14. Code: `server/konten_einstellungen_lib.php`, Oberfläche
+Betrieb → Servereinstellungen, Karte „Konten".*
+
+**Bibliothek und nicht Seite** (R83): Die zweiten Verbraucher stehen
+namentlich im Konzept — `registrieren.php` liest die Betriebsart,
+`login.php` die Demo-Anmeldung, `ingest.php` die Mengengrenzen, der Job
+`konto_verfall` die Freischaltfrist. Sie in die Seite zu schreiben und später
+herauszuziehen wäre derselbe Umbau, nur mit vier Aufrufern mehr.
+
+| Schlüssel in `app_state` | Vorgabe | wirkt ab |
+|---|---|---|
+| `konten_reg_art` | **`einladung`** | AP3 |
+| `konten_reg_frist` | 30 Tage | AP3 |
+| `konten_wegwerf` / `…_eigene` | an / leer | AP3 |
+| `konten_grenze_einsaetze` | 5000 | AP6 |
+| `konten_grenze_mb` | 250 | AP6 |
+| `konten_aufbewahrung` | leer = unbegrenzt | AP6 |
+| `konten_demo_anmeldung` | an | **AP1** |
+| `protokoll_frist_verwaltung` | 365 | **AP1** |
+
+**Die Vorgabe der Betriebsart ist `einladung`**, und das ist nicht die, die
+nadoku selbst fährt. Sie ist die sicherste Grundstellung für eine
+Selbsthosterin, die die Seite nie aufschlägt — heutiges Verhalten, keine
+offene Tür durch Untätigkeit (E-P5b-01).
+
+**Zwei Fallen, beide im Code vermerkt:**
+
+- **Leer ist ein Wert.** Die Aufbewahrung „unbegrenzt" ist der leere String;
+  sie darf nicht auf die Vorgabe zurückfallen, sonst ließe sie sich nie
+  einschalten. Eine `0` gibt es nicht — sie hieße „nichts aufbewahren".
+- **Eine unbekannte Betriebsart fällt auf die Vorgabe zurück**, statt zu
+  gelten. `offen` durch einen Tippfehler wäre die teuerste aller stillen
+  Änderungen.
+
+`konten_einstellungen()` holt **alle acht Schlüssel in einer Abfrage** und
+hält sie je Anfrage. `app_state_lesen()` hat keinen Zwischenspeicher und
+fragt bei jedem Aufruf neu; acht Einzelaufrufe wären acht Abfragen je
+Seitenaufbau.
 
 ## 5a. Android-Apps (Kotlin/Compose) — Handy und Wear OS
 

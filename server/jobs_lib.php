@@ -229,9 +229,9 @@ function jobs_katalog(): array
              * einen Schritt ergaenzt, ergaenzt sie mit. */
             'beschreibung' => 'Papierkorb, Kopplungssitzungen, Ratenschutz und '
                             . 'Sperrereignisse, Gerätevermerke, Passwort-Token, '
-                            . 'CSP-Berichte, Mail-Warteschlange, Job-Verlauf, '
-                            . 'Erinnerung an die Verwaltung, Speichermessung '
-                            . 'und Warnschwellen',
+                            . 'CSP-Berichte, Mail-Warteschlange, Betriebsprotokoll, '
+                            . 'Job-Verlauf, Erinnerung an die Verwaltung, '
+                            . 'Speichermessung und Warnschwellen',
             'taeglich'     => true,
             'rueckstand'   => fn(PDO $pdo, array $z): ?int => null,
             'lauf'         => 'job_aufraeumen',
@@ -680,6 +680,27 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
             try {
                 $pdo->exec('DELETE FROM mail_warteschlange
                             WHERE erstellt < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)');
+            } catch (Throwable $ex) {
+                /* Tabelle fehlt (Migration noch nicht gelaufen). */
+            }
+        },
+        'Betriebsprotokoll' => function (PDO $pdo): void {
+            /* ZWEI FRISTEN, EIN SCHRITT (P5b/AP1, E-P5b-06). Der Reiter
+             * *Verwaltung* ist das Audit und bleibt 365 Tage, einstellbar
+             * zwischen 90 und 1095; alle uebrigen verfallen nach 30 Tagen,
+             * fest — dieselbe Zahl und derselbe Grund wie bei den Nachbarn
+             * darueber (E-P5a-09).
+             *
+             * Die Fristen stehen NICHT hier, sondern in
+             * `protokoll_bereinigen()`: Sie gehoeren zu der Bibliothek, die
+             * sie auch beim Schreiben kennt. Eine Frist, die an zwei Stellen
+             * steht, laeuft auseinander, sobald jemand nur eine aendert.
+             *
+             * Eigenes try/catch wie bei den Nachbarn: Zwischen Deploy und
+             * Migrationslauf gibt es die Tabelle noch nicht. */
+            try {
+                require_once __DIR__ . '/protokoll_lib.php';
+                protokoll_bereinigen($pdo);
             } catch (Throwable $ex) {
                 /* Tabelle fehlt (Migration noch nicht gelaufen). */
             }

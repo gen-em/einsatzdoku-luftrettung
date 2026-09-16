@@ -5582,4 +5582,43 @@ declare(strict_types=1);
  *
  * KEINE MIGRATION.
  */
-const WEB_VERSION = '20.15.3';
+/* ---------------------------------------------------------------------------
+ * 20.16.0 — DAS BETRIEBSPROTOKOLL BEKOMMT EINEN SCHREIBWEG (P5b/AP1)
+ * ---------------------------------------------------------------------------
+ *
+ * Erstes Paket der Phase P5b (Konto und Registrierung). Es baut nichts, was
+ * eine Nutzerin sieht — es baut das, worauf die neun folgenden Pakete
+ * schreiben.
+ *
+ * DREI STUECKE:
+ *
+ * 1. `protokoll_lib.php` und die Tabelle `protokoll_ereignisse`. Sechs
+ *    Reiter, zwei Fristen (Verwaltung 365 Tage einstellbar, alle uebrigen 30
+ *    fest). Der siebte Reiter — Sicherheit — bleibt in seiner eigenen Tabelle
+ *    aus P5a; zwei Fristen in einer Tabelle sind eine Einladung, die kuerzere
+ *    zu vergessen.
+ *
+ * 2. `konten_einstellungen_lib.php` und die Karte „Konten" in den
+ *    Servereinstellungen. Acht Werte, von denen in diesem Paket nur einer
+ *    einen Verbraucher hat (Demo-Anmeldung). Die uebrigen stehen trotzdem
+ *    schon da, weil die Reihenfolge es verlangt: Eine Einstellung, die es
+ *    beim Bauen ihres Verbrauchers noch nicht gibt, wird dort erfunden — an
+ *    einer zweiten Stelle, mit einer zweiten Vorgabe.
+ *
+ * 3. Die Zaehlkarte auf Betrieb -> Status. Lesbar wird das Protokoll erst mit
+ *    10c; bis dahin belegt die Karte, DASS geschrieben wird — und meldet
+ *    rot, wenn es nicht geht.
+ *
+ * WAS HIER NICHT HINEINGESCHRIEBEN WIRD, ist die eigentliche Aussage: kein
+ * Zugriffsprotokoll. Dass jemand einen Einsatz geoeffnet, gelesen oder
+ * exportiert hat, steht nicht darin und soll nicht darin stehen (V1,
+ * 16.09.2026). Wer das aendert, aendert eine Programmentscheidung.
+ *
+ * SCHEITERT DAS SCHREIBEN, SCHEITERT DIE HANDLUNG NICHT (V7) — aber es faellt
+ * auf: `error_log()`, ein Zaehler in `app_state`, eine rote Plakette auf der
+ * Statusseite. Alle drei, weil still scheitern schlechter ist als laut und
+ * laut abbrechen schlechter als still.
+ *
+ * MIGRATION: `2026_09_16_protokoll_ereignisse`. `update.php` ist faellig.
+ */
+const WEB_VERSION = '20.16.0';

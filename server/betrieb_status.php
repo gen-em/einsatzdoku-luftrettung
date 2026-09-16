@@ -291,6 +291,56 @@ ui_seite_start(['titel' => 'Status']);
     <?php foreach ($kp['zeilen'] as $zeile) { status_zeile($zeile); } ?>
   <?php ui_karte_ende(true); ?>
 
+  <?php /* ---- Betriebsprotokoll: eine Zaehlkarte, mehr nicht (P5b/AP1) ----
+     *
+     * WARUM HIER NUR ZAHLEN STEHEN UND KEINE EINTRAEGE. 10b baut den
+     * Schreibweg, 10c die Oberflaeche mit Reitern, Archiv und Download
+     * (V4 bis V9). Diese Karte ist der Beleg, dass geschrieben wird —
+     * nicht die Sicht auf das Geschriebene. Ohne sie wuesste niemand, ob
+     * das Protokoll laeuft, bis 10c fertig ist; mit einer halben Sicht
+     * haette 10c einen Vorgaenger, den es wegraeumen muss.
+     *
+     * DIE FEHLERZEILE IST DER EIGENTLICHE ZWECK. Ein Protokoll, dessen
+     * Schreiben scheitert, laesst die Handlung weiterlaufen (V7) — richtig
+     * so, aber dann muss es jemandem auffallen. Hier faellt es auf.
+     * ------------------------------------------------------------------- */ ?>
+  <?php require_once __DIR__ . '/protokoll_lib.php';
+        $pz = protokoll_zaehlkarte();
+        $pf = protokoll_fehler_zahl(); ?>
+  <?php ui_karte_start(['titel' => 'Betriebsprotokoll', 'id' => 'k-protokoll',
+      'plakette' => $pf > 0
+          ? ui_plakette($pf . ' nicht geschrieben', ['ton' => 'rot'])
+          : ui_plakette((string)$pz['alle'] . ' Einträge', ['ton' => 'blau'])]); ?>
+    <p class="feld-hinweis"><strong>Was hier gezählt wird, sind
+       Betriebsereignisse</strong> — Konten, Post, Jobs, Sicherungen. <strong>Kein
+       Zugriffsprotokoll:</strong> Dass jemand einen Einsatz geöffnet, gelesen
+       oder exportiert hat, steht hier nicht und soll hier nicht stehen. Sperren
+       und Angriffsversuche stehen getrennt unter <em>Sicherheit</em>, weil sie
+       IP-Adressen führen und nach 30 Tagen verfallen.</p>
+    <?php if ($pf > 0): ?>
+      <?php status_zeile(['text' => 'Einträge, die nicht geschrieben werden konnten',
+          'klein' => 'Die Handlungen selbst sind gelungen — das Protokoll lässt sie '
+                   . 'nie scheitern. Aber es hat sie nicht festgehalten. Der Grund '
+                   . 'steht im Serverprotokoll unter „protokoll:".',
+          'href' => null, 'plakette' => (string)$pf, 'ton' => 'rot']); ?>
+    <?php endif; ?>
+    <?php foreach (PROTOKOLL_REITER as $r => $titel): ?>
+      <?php status_zeile([
+          'text'  => $titel,
+          'klein' => $r === 'verwaltung'
+              ? 'Das Audit — ' . protokoll_frist_verwaltung() . ' Tage, einstellbar '
+                . 'unter Servereinstellungen → Konten'
+              : 'verfällt nach ' . PROTOKOLL_FRIST_UEBRIGE . ' Tagen',
+          'href'  => null,
+          'plakette' => $pz['tag'][$r] . ' heute · ' . $pz['gesamt'][$r] . ' gesamt',
+          'ton'   => $pz['gesamt'][$r] > 0 ? 'blau' : 'neutral']); ?>
+    <?php endforeach; ?>
+    <p class="feld-hinweis"><strong>Lesen lässt sich das Protokoll noch
+       nicht.</strong> Die Reiter mit Filter, Archiv und Download kommen mit dem
+       nächsten Schritt; bis dahin belegt diese Karte, dass geschrieben
+       wird.</p>
+  <?php ui_karte_ende(true); ?>
+
   <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt',
                         'vorschau' => 'Ampel · prüfen · zwei Ausnahmen']); ?>
     <p class="feld-hinweis"><strong>Die Ampel hat vier Töne, und sie bedeuten

@@ -2776,6 +2776,70 @@ function migrationen_katalog(): array
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
         ],
     ],
+    [
+        'id'    => '2026_09_16_protokoll_ereignisse',
+        'web'   => '20.16',
+        'label' => 'Betriebsprotokoll — der Schreibweg (P5b/AP1)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'protokoll_ereignisse'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* EINE TABELLE FUER SECHS REITER, UND EINE SIEBTE DANEBEN
+             * (E-P5b-12, V1, V2, V6).
+             *
+             * `sicherheit_ereignisse` (P5a/AP6) bleibt, wo sie ist, und wird
+             * NICHT hierher gezogen. Der Grund ist keine Bequemlichkeit,
+             * sondern die Frist: Dort stehen IP- und E-Mail-Adressen und
+             * verfallen nach 30 Tagen, fest (E-P5a-09). Hier steht das Audit
+             * und bleibt bis zu drei Jahre. Zwei Fristen in einer Tabelle
+             * sind eine Einladung, die kuerzere zu vergessen. Ob die beiden
+             * spaeter zusammenrueckten, entscheidet 10c (V6).
+             *
+             * `urheber_user_id` IST `0` UND NICHT `NULL`, wenn kein Mensch
+             * gehandelt hat. `NULL` liesse offen, ob niemand handelte oder ob
+             * jemand vergessen wurde; `urheber_art` sagt dann, welche Art von
+             * Niemand es war (`cli` an der Konsole, `job` im Huckepack).
+             *
+             * KEIN FREMDSCHLUESSEL AUF `users`, weder fuer den Urheber noch
+             * fuer den Betroffenen — und das ist der wichtigste Satz dieser
+             * Migration: Der haeufigste Verwaltungseintrag ueberhaupt ist
+             * „Konto geloescht". Mit `ON DELETE CASCADE` loeschte die
+             * Kontoloeschung ihren eigenen Protokolleintrag; mit `RESTRICT`
+             * verhinderte der Eintrag die Loeschung. Beides ist falsch. Die
+             * Id bleibt als Zahl stehen, auch wenn es das Konto nicht mehr
+             * gibt — genau dafuer ist ein Audit da.
+             *
+             * `text` IST `TEXT` UND NICHT `VARCHAR`: Ein Eintrag wie
+             * „Rolle von … auf … geaendert" mit zwei Kontoadressen sprengt
+             * 255 Zeichen schneller, als man denkt. Gekuerzt wird beim
+             * Schreiben auf 500 Zeichen (`protokoll_lib.php`), damit die
+             * Datenbank nicht traegt, was niemand liest.
+             *
+             * DIE DREI INDIZES sind die drei Fragen, die 10c stellen wird:
+             * „was ist in diesem Reiter zuletzt passiert" (idx_reiter_zeit,
+             * zugleich der Index der Bereinigung), „was ist mit diesem Konto
+             * passiert" (idx_betroffen) und „was hat diese Person getan"
+             * (idx_urheber). */
+            'CREATE TABLE protokoll_ereignisse (
+               id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               zeit              DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+               reiter            ENUM(\'verwaltung\',\'email\',\'jobs\',
+                                      \'sicherung\',\'ziele\',\'system\') NOT NULL,
+               art               VARCHAR(64) NOT NULL,
+               urheber_user_id   INT UNSIGNED NOT NULL DEFAULT 0,
+               urheber_art       ENUM(\'mensch\',\'job\',\'cli\') NOT NULL DEFAULT \'mensch\',
+               betroffen_user_id INT UNSIGNED NULL,
+               text              TEXT NOT NULL,
+               daten             JSON NULL,
+               KEY idx_reiter_zeit (reiter, zeit),
+               KEY idx_betroffen (betroffen_user_id, zeit),
+               KEY idx_urheber (urheber_user_id, zeit)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }
