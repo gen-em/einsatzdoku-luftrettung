@@ -657,7 +657,7 @@ läuft er los.
 **Scheitern erkennbar an:** einem Job, der ohne Rückfrage durchläuft — dann ist
 in der Umgebung `produktion` kein Reviewer eingetragen.
 
-### P4 — Stufe 2 misst gegen Staging
+### P4 — Stufe 2 misst gegen Staging — **TEILS GEFAHREN am 16.09.2026**
 
 **Weg:** Nach der Einrichtung von Staging (Zuarbeit) einen Push auf `main`.
 **Erwartet:** Job `stufe2` grün; Kreisläufe **0 unerklärt**, Bilderlauf
@@ -665,6 +665,36 @@ in der Umgebung `produktion` kein Reviewer eingetragen.
 **Scheitern erkennbar an:** „ÜBERSPRUNGEN (kein Prüfkonto)" in der
 Zusammenfassung — dann fehlen `STAGING_KONTO`/`STAGING_PASS`, und **gemessen
 wurde nichts**.
+
+**Erster Lauf gegen die eingerichtete Anlage** (Lauf #4, `14f99ac`):
+
+| Schritt | Ergebnis |
+|---|---|
+| Antwortet Staging wie eine eingerichtete Installation? | **grün** — zum ersten Mal; bis dahin scheiterte er daran, dass `install.php` noch nicht gelaufen war |
+| **Punktdateien gesperrt, .well-known offen?** | **grün beim allerersten Lauf** — vier Punktpfade **403**, `.well-known/acme-challenge/` **404 und nicht 403**. Damit ist **P33 auf der echten Anlage belegt**: Die Sperre greift, und die Zertifikatserneuerung ist **nicht** kaputtgegangen |
+| Kreisläufe csv und edbak | **rot** — und der Fehler war der Aufruf, nicht die Anwendung (siehe unten) |
+| Bilderlauf, Messstand | nie erreicht (der Lauf brach davor ab) |
+
+> **Der rote Schritt war ein Aufruffehler aus AP1, der nie gelaufen war.**
+> ```
+> kreislauf.py: error: the following arguments are required: --art
+> ```
+> Drei Fehler in einer Zeile: `--art` fehlte (Pflichtargument) · `--passwort`
+> **gibt es nicht** (das Werkzeug kennt `--konto-passwort`,
+> `--backup-passwort`, `--admin-email`, `--admin-passwort`; das Prüfkonto der
+> Umgebung ist das **Admin**-Konto) · und es war **ein** Aufruf, obwohl der
+> Schrittname „csv **und** edbak" verspricht — selbst mit `--art` hätte er nur
+> die Hälfte gemessen und grün gemeldet.
+>
+> **Das ist die Lehre dieses Prüfpunkts, und sie gilt für die ganze Kette:**
+> Ein Schritt, der in einer Sitzung geschrieben und nie gelaufen ist, ist
+> **ungeprüfter Code** — auch wenn das YAML gültig ist und die Shell-Syntax
+> stimmt. Beides war hier der Fall. Berichtigt am 16.09.2026; **Bilderlauf,
+> Messstand, das Backup-Tor und der gesamte Job `produktion` sind weiterhin
+> nie gelaufen** und stehen unter demselben Vorbehalt.
+
+**Offen bleibt P4**, bis der Job **ganz** grün ist — mit Kreisläufen und
+Bilderlauf.
 
 ### P5 — Uhr Stufe I im Lauf
 
@@ -1278,7 +1308,12 @@ Job möglicherweise über **mehrere Tage** — dann steht die Zeile so lange auf
   für einen Block — dann `jobs.php?aktion=lauf` mehrmals anstoßen und
   zusehen, ob die Zahl wächst (N35).
 
-### P33 — Die Punktdatei-Sperre auf der echten Anlage (Nr. 213, Web 20.15.1)
+### P33 — Die Punktdatei-Sperre auf der echten Anlage (Nr. 213, Web 20.15.1) — **AUF STAGING BELEGT am 16.09.2026**
+
+> **Gemessen von der Kette selbst**, Stufe 2, Lauf #4 gegen `staging.nadoku.gen-em.org`: vier Punktpfade **403**, `.well-known/acme-challenge/` **404 und nicht 403**. Die Sperre greift auf einer echten Apache-Installation, **und die Zertifikatserneuerung ist nicht kaputtgegangen** — das war der gefährliche Teil der Änderung.
+>
+> **Offen bleibt der Punkt für PRODUKTIV**: Dort ist er nicht gemessen (diese Umgebung erreicht `nadoku.gen-em.org` nicht, N38), und dort liegt die alte `.ftp-deploy-sync-state.json` noch im Webroot — gesperrt, aber vorhanden. Schritt 5 unten (von Hand löschen) steht weiter aus.
+
 
 **Wofür:** N38 — von hier aus ist weder `.htaccess` noch der FTP-Käfig
 messbar. Und dies ist der einzige Prüfpunkt der Liste, bei dem ein Fehler

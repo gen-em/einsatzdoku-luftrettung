@@ -333,8 +333,36 @@ jobs:
             exit 0
           fi
           pip -q install cffi cryptography
-          python3 tools/referenzdatensatz/vergleich/kreislauf.py \
-                  --basis "$STAGING_URL" --konto "$STAGING_KONTO" --passwort "$STAGING_PASS"
+          # DREI FEHLER IN EINER ZEILE, gefunden beim ERSTEN Lauf dieses
+          # Schritts am 16.09.2026 (er war in AP1 geschrieben und nie
+          # gelaufen):
+          #
+          #   `--art` FEHLTE, und es ist ein Pflichtargument. Der Lauf brach
+          #   mit "the following arguments are required: --art" ab.
+          #
+          #   `--passwort` GIBT ES NICHT. Das Werkzeug kennt
+          #   `--konto-passwort` (das Umlaufkonto, das es selbst anlegt),
+          #   `--backup-passwort` und `--admin-passwort` (der Zugang, mit dem
+          #   es das Umlaufkonto anlegt und wieder loescht). Das Pruefkonto
+          #   der Umgebung ist das ADMIN-Konto — also `--admin-email` und
+          #   `--admin-passwort`, nicht `--konto`/`--passwort`.
+          #
+          #   EIN Aufruf, obwohl der Schrittname "csv UND edbak" verspricht.
+          #   Jetzt zwei, und beide muessen gruen sein.
+          #
+          # `--frisch` ist Pflicht und keine Bequemlichkeit: Ein Umlauf in ein
+          # GEFUELLTES Konto misst nichts, weil die Dublettenerkennung alles
+          # ueberspringt (steht so im Kopf von kreislauf.py). Der Schalter
+          # loescht ein vorhandenes Umlaufkonto ueber den Adminbereich.
+          for art in edbak csv; do
+            echo "--- Kreislauf $art ---"
+            python3 tools/referenzdatensatz/vergleich/kreislauf.py \
+                    --art "$art" --frisch \
+                    --basis "$STAGING_URL" \
+                    --admin-email "$STAGING_KONTO" \
+                    --admin-passwort "$STAGING_PASS" \
+              || { echo "::error::Kreislauf $art gegen Staging gescheitert."; exit 1; }
+          done
 
       - name: Bilderlauf gegen Staging
         env:
