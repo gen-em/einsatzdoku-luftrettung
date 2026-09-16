@@ -14,6 +14,122 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.9.1] — 2026-09-16
+
+**P5a/AP4a — zwei Sicherheitszeilen, die an den falschen Stellen standen.**
+Nebenfunde der Zentralisierungsanalyse vom 16.09.2026, als eigenes kleines
+Paket umgesetzt, damit sie nicht in AP5 untergehen.
+
+### Behoben — `session.use_strict_mode` fehlte auf den Anmeldewegen
+
+**Was galt.** Die Zeile stand an genau **zwei** Stellen: `install.php` und
+`wiederherstellen.php` — ausgerechnet den beiden Wegen, die **keine**
+Anmeldesitzung tragen. Auf den fünf, die eine tragen (`auth_guard.php`,
+`login.php`, `session_lib.php`, `pw_handling.php`, `rechtstext_seite.php`),
+fehlte sie.
+
+**Warum das zählt.** Ohne die Einstellung übernimmt PHP eine Sitzungskennung,
+die der Browser mitbringt, **auch wenn es sie nie vergeben hat**. Wer eine
+Kennung setzen kann — über einen Link, eine fremde Seite auf derselben Domain,
+ein gesetztes Cookie —, kennt damit die Sitzung, in der sich gleich jemand
+anmeldet. Das ist Session-Fixation, und der Schutz dagegen hing an der
+`php.ini` des Hosters; auf dem Prüfstand steht dort `Off`.
+
+**Gemessen, nicht behauptet:**
+
+| | vorgegebene Kennung | Antwort |
+|---|---|---|
+| **ohne** die Zeile | frisch erfunden | **kein `Set-Cookie`** — die Kennung wurde übernommen |
+| **mit** der Zeile | frisch erfunden | `Set-Cookie` mit einer **anderen** Kennung |
+
+> Dabei eine Falle, die beim ersten Versuch zuschlug: Eine Kennung, die schon
+> einmal **benutzt** wurde, ist dem Server bekannt und wird auch mit der
+> Härtung angenommen — richtig so. Der zweite Lauf maß deshalb das Gegenteil
+> des ersten, bis beide eine frische Zufallskennung bekamen.
+
+**Kein `sitzung_starten()`-Helfer.** Der ist Schritt 15 (Backlog Nr. 202
+Paket 3). Hier steht nur die Zeile: Ein Helfer wäre die größere Änderung an
+denselben sieben Stellen und gehört nicht in ein Paket, das eine Lücke
+schließt.
+
+### Hinzugefügt — `tools/sitzungshaertung/`
+
+Die Zeile ist unscheinbar und steht neben dem Aufruf, den sie schützt. Ein
+neuer Weg, der `session_start()` aufruft und sie vergisst, sieht genauso aus
+wie einer, der sie hat — und es passiert nichts, was auffiele. Die Probe läuft
+in **Stufe 1**, bei jedem Push: **Selbstprobe 8/8**, im Lauf **108 Dateien, 7
+echte Aufrufe, 0 ohne Härtung**.
+
+Gemessen mit dem **Tokenizer**, nicht mit `grep`: Die erste Fassung meldete
+zwei Befunde, und beide waren Kommentarzeilen, die das Werkzeug selbst
+beschrieben.
+
+### Behoben — die Schwelle der Vollständigkeit stand um 1 zu niedrig
+
+Web 20.9.0 setzte sie auf **366**. Gemessen wurde diese Zahl **mitten im
+Paket**, vor den letzten Kommentar- und Dokumentationszeilen desselben
+Pakets; committet wurde ein Stand mit **367**. Der Lauf auf dem Zweig war
+damit rot — und zwar wegen **Unterschreitung**, also genau dafür, wofür die
+Schwelle seit Web 20.8.0 in beide Richtungen wirkt.
+
+`CLAUDE.md` 6 sagt es als Regel: *„Die Prüfmittel laufen zuletzt, nicht
+zwischendurch. Ein Werkzeug, das vor der letzten Änderung lief, misst einen
+Stand, den es nicht mehr gibt."* Nachgemessen wird seither gegen einen
+**ausgecheckten Stand** (eigener Arbeitsbaum), nicht gegen die Arbeitskopie:
+50 + 10 + 299 + 8 = **367**.
+
+> Zum Vergleich: der AP5-Gerüststand (Web 20.8.0) lag bei **371**, der
+> Rücklauf auf 367 ist der weggefallene Doppelbestand der Mailtexte. Die
+> Richtung stimmte also; nur die letzte Stelle nicht.
+
+### Behoben — sieben Stellen gaben JSON ohne den zentralen Kopfzeilensatz aus
+
+**Was galt.** Sieben Stellen setzten `header('Content-Type: application/json')`
+und `echo`ten von Hand, ohne durch `json_out()` zu gehen. **Zwei davon
+(`api/export_data.php`) setzten kein `Cache-Control: no-store` — und diese
+Antwort enthält GPS-Spurpunkte.** Die Begründung, die seit M3-11 bei
+`json_out()` steht („der Kopf gehört an die Stelle, durch die *jede* Antwort
+geht"), galt für sie schlicht nicht.
+
+**Warum sie überhaupt vorbeigehen:** Sie **haben** den Text schon.
+`api/export_data.php` baut ihn stückweise (ein Export kann hunderte Megabyte
+umfassen), `api/backup_data.php` reicht Chiffretext durch, `jobs.php` braucht
+eigene `json_encode`-Schalter. Sie sollen ihn nicht dekodieren müssen, nur um
+ihn wieder zu kodieren.
+
+**Was gilt.** Drei Funktionen in `db.php`, eine Stelle:
+
+| | tut |
+|---|---|
+| `json_kopf($code)` | setzt den Satz — `kopfzeilen_json()`, Status, Content-Type, `no-store` |
+| `json_roh_out($json, $code)` | ruft `json_kopf()`, gibt **fertigen Text** aus, `exit` |
+| `json_out($daten, $code)` | ruft `json_roh_out(json_encode($daten))` |
+
+`json_kopf()` gibt es, weil `pair.php` an zwei Stellen antwortet und **dann
+weiterarbeitet**: Es schließt die Antwort ab und reiht erst danach die
+Hinweismail ein, weil die Uhr auf das `ok` wartet. Ein `never` schließt diese
+Stelle aus.
+
+**Umgestellt wurden sieben Stellen, nicht die drei aus dem Auftrag:**
+`api/export_data.php` (2×), `api/backup_data.php`,
+`api/adminbackup_freigabe.php` — und dazu `auth_salt.php`, `jobs.php`,
+`pair.php`, weil sie **denselben Mangel** hatten. Das ist keine
+Scope-Erweiterung um ihrer selbst willen: `auth_salt.php` liefert das Salt der
+Schlüsselableitung **je Konto** und ist unangemeldet erreichbar; `pair.php`
+nennt die maskierte Adresse des Kontos. Eine zwischengespeicherte Antwort ist
+dort nicht unsauber, sondern falsch. Beiden fehlten außerdem `nosniff` und
+`Referrer-Policy`.
+
+**`wartung_lib.php` bleibt außen vor**, und das ist keine Nachlässigkeit: Die
+Wartungsseite ist ausdrücklich ohne Datenbank gebaut und darf `db.php` nicht
+laden. Sie setzt ihren Satz selbst — einschließlich `no-store`, nachgesehen.
+
+**Eine Nebenwirkung, ausgeschrieben:** `json_out()` schickt jetzt
+`application/json; charset=utf-8` statt `application/json`. RFC 8259 definiert
+für `application/json` keinen charset-Parameter; kein Client bricht daran, und
+vier der sieben umgestellten Stellen schickten ihn ohnehin. Die Uhr übergeht
+ihn ganz (`:responseType => HTTP_RESPONSE_CONTENT_TYPE_JSON`).
+
 ## [Web 20.9.0] — 2026-09-16
 
 **P5a/AP5, zweiter Teil — alle zehn Versandstellen gehen durch die

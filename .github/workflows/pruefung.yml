@@ -90,16 +90,25 @@ jobs:
         # das ein Befund. Schrumpft er, ebenfalls — dann ist die Zahl hier
         # nachzuziehen, sonst bekommt er stillschweigend wieder Luft.
         #
-        # WIEDER 366 (Web 20.8.0, AP5 Teil 2). Zwischenzeitlich stand hier
-        # 371: Waehrend des Umzugs standen die vier Pfeile „Einstellungen →
-        # Geräte" in `mail_lib.php` UND noch in den alten Aufrufern, und das
+        # 367 (Web 20.9.1). Der Weg dahin, weil er eine Lehre enthaelt:
+        #
+        # 371 stand hier waehrend des Umzugs auf den Mailkatalog — dieselben
+        # Texte lagen im Katalog UND noch in den alten Aufrufern, und das
         # Werkzeug liest ganze Dateien, nicht nur Markup (Backlog Nr. 184).
-        # Mit dem letzten der zehn Umzuege ist der Doppelbestand weg und die
-        # Zahl nachgezogen — dass sie nachgezogen WERDEN MUSSTE, hat das
-        # Werkzeug erzwungen: Ein Unterschreiten meldet es ebenso rot wie ein
-        # Ueberschreiten. Eine Obergrenze allein haette den Ruecklauf still
-        # durchgehen lassen.
-        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 366
+        # Mit dem letzten Umzug fiel der Doppelbestand weg.
+        #
+        # DANN STAND HIER 366, UND DAS WAR FALSCH GEMESSEN. Die Zahl entstand
+        # mitten in AP5, VOR den letzten Kommentar- und Dokumentationszeilen
+        # desselben Pakets; committet wurde ein Stand mit 367. Der Lauf auf
+        # `main` war damit rot, und zwar wegen UNTERSCHREITUNG — das Werkzeug
+        # hat genau das getan, wofuer die Schwelle in beide Richtungen wirkt.
+        # `CLAUDE.md` 6 sagt es als Regel: „Die Pruefmittel laufen zuletzt,
+        # nicht zwischendurch. Ein Werkzeug, das vor der letzten Aenderung
+        # lief, misst einen Stand, den es nicht mehr gibt."
+        #
+        # Gemessen am 16.09.2026 gegen den ausgecheckten Stand (eigener
+        # Arbeitsbaum, nicht der Arbeitskopie): 50 + 10 + 299 + 8 = 367.
+        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 367
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py
@@ -143,6 +152,18 @@ jobs:
         run: |
           php tools/cspprobe/pruefen.php --selbstprobe
           php tools/cspprobe/pruefen.php
+
+      - name: Sitzungshärtung — `use_strict_mode` vor jedem `session_start()`
+        # Die Zeile ist unscheinbar und steht neben dem Aufruf, den sie
+        # schuetzt. Ein neuer Weg, der sie vergisst, sieht genauso aus wie
+        # einer, der sie hat — und es passiert nichts, was auffiele. Bis
+        # Web 20.9.1 stand sie an genau zwei Stellen, und zwar ausgerechnet
+        # den beiden, die KEINE Anmeldesitzung tragen (Backlog Nr. 205).
+        # Gemessen mit dem Tokenizer, nicht mit `grep`: Die erste Fassung
+        # dieser Pruefung meldete zwei Befunde, und beide waren Kommentare.
+        run: |
+          php tools/sitzungshaertung/pruefen.php --selbstprobe
+          php tools/sitzungshaertung/pruefen.php
 
       - name: Android — bauen, prüfen, linten
         # 0 Lint-Fehler und 0 Fehlschläge; der Rückgabewert von Gradle trägt

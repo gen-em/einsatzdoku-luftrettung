@@ -4960,5 +4960,84 @@ declare(strict_types=1);
  *     Fassung erwartete fuenf und meldete einen Befund, den es nicht gab.
  *
  * KEINE SCHEMAAENDERUNG: zwei weitere Zeilen in `app_state`.
+ *
+ * ------------------------------------------------------------------
+ *
+ * 20.9.1 ist AP4a von P5a — ZWEI SICHERHEITSZEILEN, die an den falschen
+ * Stellen standen (E-P5a-38; Backlog Nr. 203 und 205, Nebenfunde der
+ * Zentralisierungsanalyse vom 16.09.2026).
+ *
+ * ERSTENS: `session.use_strict_mode` FEHLTE AUF DEN ANMELDEWEGEN. Gesetzt war
+ * es in `install.php` und `wiederherstellen.php` — ausgerechnet den beiden
+ * Wegen, die KEINE Anmeldesitzung tragen. Auf den fuenf, die eine tragen
+ * (`auth_guard.php`, `login.php`, `session_lib.php`, `pw_handling.php`,
+ * `rechtstext_seite.php`), fehlte es.
+ *
+ * Ohne die Einstellung uebernimmt PHP eine Sitzungskennung, die der Browser
+ * mitbringt, AUCH WENN ES SIE NIE VERGEBEN HAT. Wer eine Kennung setzen kann,
+ * kennt damit die Sitzung, in der sich gleich jemand anmeldet — das ist
+ * Session-Fixation, und der Schutz dagegen hing an der `php.ini` des
+ * Hosters. Auf dem Pruefstand steht dort `Off`.
+ *
+ * GEMESSEN, NICHT BEHAUPTET: Ohne die Zeile nimmt `login.php` eine frei
+ * erfundene Kennung an und schickt GAR KEIN `Set-Cookie` zurueck; mit ihr
+ * verwirft es sie und vergibt eine neue. Beide Laeufe mit jeweils frischer
+ * Zufallskennung — eine schon benutzte waere dem Server bekannt und wuerde
+ * auch mit der Haertung angenommen, und der zweite Lauf haette das Gegenteil
+ * des ersten gemessen.
+ *
+ * NEU DAZU: `tools/sitzungshaertung/`, in Stufe 1. Die Zeile ist unscheinbar
+ * und steht neben dem Aufruf, den sie schuetzt; ein neuer Weg, der sie
+ * vergisst, sieht genauso aus wie einer, der sie hat. Gemessen mit dem
+ * Tokenizer, nicht mit `grep` — die erste Fassung meldete zwei Befunde, und
+ * beide waren Kommentarzeilen ueber das Werkzeug selbst. Selbstprobe 8/8, im
+ * Lauf 7 echte Aufrufe, 0 ohne Haertung.
+ *
+ * KEIN `sitzung_starten()`-HELFER. Der ist Schritt 15 (Backlog Nr. 202
+ * Paket 3); hier steht nur die Zeile. Ein Helfer waere die groessere
+ * Aenderung an denselben sieben Stellen und gehoert nicht in ein Paket, das
+ * eine Luecke schliesst.
+ *
+ * ZWEITENS: `json_roh_out()` NEBEN `json_out()`. Sieben Stellen gaben JSON
+ * aus, ohne durch `json_out()` zu gehen — `header('Content-Type: ...')` und
+ * `echo` von Hand. Zwei davon (`api/export_data.php`) setzten KEIN
+ * `Cache-Control: no-store`, und DIESE ANTWORT ENTHAELT GPS-SPURPUNKTE.
+ * Die Begruendung, die seit M3-11 bei `json_out()` steht — „der Kopf gehoert
+ * an die Stelle, durch die JEDE Antwort geht" —, galt fuer sie schlicht
+ * nicht.
+ *
+ * Warum sie ueberhaupt vorbeigehen: Sie HABEN den Text schon.
+ * `api/export_data.php` baut ihn stueckweise, `api/backup_data.php` reicht
+ * Chiffretext durch, `jobs.php` braucht eigene `json_encode`-Schalter. Sie
+ * sollen ihn nicht dekodieren muessen, nur um ihn wieder zu kodieren.
+ *
+ * DREI FUNKTIONEN, EINE STELLE: `json_kopf()` setzt den Satz, `json_roh_out()`
+ * ruft sie und gibt fertigen Text aus, `json_out()` ruft `json_roh_out()`.
+ * `json_kopf()` gibt es, weil `pair.php` an zwei Stellen antwortet und DANN
+ * WEITERARBEITET — es schliesst die Antwort ab und reiht erst danach die
+ * Hinweismail ein, weil die Uhr auf das `ok` wartet. Ein `never` schliesst
+ * diese Stelle aus.
+ *
+ * UMGESTELLT WURDEN SIEBEN STELLEN, nicht die drei aus dem Auftrag:
+ * `api/export_data.php` (2x), `api/backup_data.php`,
+ * `api/adminbackup_freigabe.php` — und dazu `auth_salt.php`, `jobs.php`,
+ * `pair.php`, weil sie denselben Mangel hatten. `auth_salt.php` liefert das
+ * Salt JE KONTO und ist unangemeldet erreichbar; `pair.php` nennt die
+ * maskierte Adresse des Kontos. Eine zwischengespeicherte Antwort ist dort
+ * nicht unsauber, sondern falsch.
+ *
+ * `wartung_lib.php` BLEIBT AUSSEN VOR, und das ist keine Nachlaessigkeit: Die
+ * Wartungsseite ist ausdruecklich ohne Datenbank gebaut und darf `db.php`
+ * nicht laden. Sie setzt ihren Satz selbst — einschliesslich `no-store`,
+ * nachgesehen.
+ *
+ * EINE NEBENWIRKUNG, ausgeschrieben: `json_out()` schickt jetzt
+ * `application/json; charset=utf-8` statt `application/json`. RFC 8259
+ * definiert fuer `application/json` keinen charset-Parameter; kein Client
+ * bricht daran, und vier der sieben umgestellten Stellen schickten ihn
+ * ohnehin. Die Uhr uebergeht ihn ganz
+ * (`:responseType => HTTP_RESPONSE_CONTENT_TYPE_JSON`).
+ *
+ * KEINE SCHEMAAENDERUNG.
  */
-const WEB_VERSION = '20.9.0';
+const WEB_VERSION = '20.9.1';

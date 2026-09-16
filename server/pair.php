@@ -90,7 +90,12 @@ require_once __DIR__ . '/smtp.php';
 require_once __DIR__ . '/geraete_lib.php';
 require_once __DIR__ . '/kopplung_lib.php';
 
-header('Content-Type: application/json; charset=utf-8');
+/* DIE KOPFZEILEN SETZT `db.php` (P5a/AP4a, Nr. 203) — `json_out()`,
+ * `json_roh_out()` oder, wo die Antwort nicht das Ende ist, `json_kopf()`.
+ * Hier stand eine einzelne `header()`-Zeile ganz oben; `nosniff`,
+ * `Referrer-Policy` und `Cache-Control: no-store` fehlten. DIESE ANTWORT
+ * NENNT DIE MASKIERTE ADRESSE DES KONTOS (`ph***@beispiel.de`) — eine, die
+ * Zwischenspeicher behalten darf, ist die falsche. */
 
 // Zeitpunkt fuer die konstante Antwortdauer. Jeder Fehlerzweig, der etwas
 // ueber Fremdes aussagen koennte, endet ueber abweisen(), damit ein Angreifer
@@ -102,17 +107,13 @@ function abweisen(int $status, string $fehler, bool $zaehlen = true, array $mehr
     global $t0;
     if ($zaehlen) { rate_misserfolg('pair'); }
     rate_gleiche_dauer($t0);
-    http_response_code($status);
-    echo json_encode(['error' => $fehler] + $mehr);
-    exit;
+    json_out(['error' => $fehler] + $mehr, $status);
 }
 
 /** Antwort OHNE Verzoegerung — fuer Zweige, die einem Fremden nichts sagen (E-S5-31). */
 function antworten(int $status, array $rumpf): never
 {
-    http_response_code($status);
-    echo json_encode($rumpf);
-    exit;
+    json_out($rumpf, $status);
 }
 
 /** 429 — mit Verzoegerung, damit eine Sperre die Schleife eines Angreifers mitbremst. */
@@ -304,6 +305,9 @@ if ($sitzung !== null) {
     }
 
     if (!$verschwunden) {
+        /* `json_kopf()` und nicht `json_out()`: Diese Antwort ist NICHT das
+         * Ende der Anfrage — darunter steht der Versand der Hinweismail. */
+        json_kopf();
         echo json_encode(['ok' => true]);
 
         /* ---- Den Kontoinhaber benachrichtigen (M4-10, E-S5-20) ---------------
@@ -414,6 +418,9 @@ try {
  * zehn Versuchen fuer zehn Minuten aus, und das gilt dann auch fuer den
  * GPX-Abruf. Genau dafuer ist der Topf da.
  */
+/* `json_kopf()` und nicht `json_out()`: Auch hier ist die Antwort nicht das
+ * Ende der Anfrage. */
+json_kopf();
 echo json_encode(['ok' => true]);
 
 /* Den Kontoinhaber unterrichten — dieselbe Ueberlegung wie beim Koppeln: Es

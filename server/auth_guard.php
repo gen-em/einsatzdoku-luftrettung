@@ -17,6 +17,17 @@ https_tor();
 session_set_cookie_params([
     'httponly' => true, 'secure' => true, 'samesite' => 'Strict', 'path' => '/',
 ]);
+/* `use_strict_mode` VOR `session_start()` (P5a/AP4a, E-P5a-38, Backlog
+ * Nr. 205). Ohne das uebernimmt PHP eine Sitzungskennung, die der Browser
+ * mitbringt, auch wenn es sie nie vergeben hat — wer eine Kennung setzen
+ * kann (ueber einen Link, eine fremde Seite auf derselben Domain, ein
+ * gesetztes Cookie), kennt damit die Sitzung, in der sich gleich jemand
+ * anmeldet. Das ist Session-Fixation, und der Schutz dagegen hing bis
+ * Web 20.9.1 an der `php.ini` des Hosters.
+ *
+ * `install.php` und `wiederherstellen.php` setzten die Zeile seit jeher —
+ * ausgerechnet die beiden Wege, die KEINE Anmeldesitzung tragen. */
+ini_set('session.use_strict_mode', '1');
 session_start();
 
 if (empty($_SESSION['user_id'])) {

@@ -27,6 +27,7 @@ beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
 | N11 | **Der Weg über die Reporting-API (`report-to`)** | Aus demselben Grund: `kopf_melde_url()` liefert ohne HTTPS bewusst nichts, also steht `report-to` lokal gar nicht in der Richtlinie. Gemessen ist deshalb nur der Weg über `report-uri` — der, den heute ohnehin jeder Browser nimmt. | Prüfpunkt **P15** auf einer echten HTTPS-Installation. Dass der Endpunkt **beide** Formate versteht, ist einzeln geprüft: `report-uri`-Rumpf (`{"csp-report":{…}}`) und Reporting-API-Liste (`[{"type":"csp-violation",…}]`) — beide **204**, beide als Zeile gespeichert, und in beiden Fällen ist der **Abfrageteil der Adresse weg** (`suche.php?q=geheim` → `suche.php`). |
 | N12 | **Die zwei Wochen Report-Only** | Sie sind Betrieb, keine Abnahme — und sie messen genau das, was ein Prüflauf nicht sieht: was **Nutzerinnen** auf Wegen tun, die der Bilderlauf nicht geht. | Prüfpunkt **P16**; dort steht auch, woran man erkennt, dass man zu früh scharf geschaltet hat. |
 | N13 | **Die Anwendung hinter einem echten Reverse Proxy** | Der Container hat keinen. | `netz_in_bereich()` ist gegen **18 Fälle** geprüft, alle richtig: IPv4 und IPv6, Einzeladresse und CIDR, die Ränder eines /24, `0.0.0.0/0`, ein IPv4 gegen einen IPv6-Bereich, eine unlesbare Adresse und zwei unmögliche Präfixlängen (`/33`, `/-1`) — die letzten vier müssen **false** ergeben und tun es. Der Echtlauf ist Prüfpunkt **P17**. |
+| N18 | **`api/adminbackup_freigabe.php` mit einem echten freigegebenen Backup** | Dafür müsste eine Administration ein Konto-Backup freigeben und eine zweite Person es abholen; der Prüfstand hat keine Freigabe liegen. | Der Fehlerzweig läuft über `json_out()` und ist damit mitgeprüft; der Rohausgabe-Zweig (`json_roh_out($klar)`) ist **gelesen, nicht gelaufen**. Prüfpunkt **P21**. |
 | N14 | **Ob eine Mail ANKOMMT** | Die Gegenstelle von `tools/mailprobe/` nimmt an und wirft weg; der Container hat keinen Mailserver und keine Freigabe nach draußen. | Gemessen ist der Weg BIS zum „250 angenommen" — Katalog, Rahmen, Warteschlange, Leiter, Frist, Endzustände (41 Prüfungen, 0 Befunde). Ob ein Empfänger die Nachricht im Postfach findet, sagt nur ein Postfach: Prüfpunkt **P18**. |
 | N15 | **Das Aussehen einer Mail in einem Mailprogramm** | Dasselbe. Der Rahmen ist auf seine **Bestandteile** geprüft (Anrede, Kern, Kontaktzeile, Grußformel mit `instanz_name()`), nicht auf seine Wirkung. | Prüfpunkt **P18** — eine echte Einladung und eine echte Reset-Mail ansehen. |
 | N16 | **Eine hängende Namensauflösung** | `smtp_send()` rechnet mit einer Frist ab dem ersten Byte; die DNS-Auflösung liegt **davor** und lässt sich in PHP nicht begrenzen. Das steht im Kopf der Datei ausgeschrieben. | Nicht nachstellbar. Was gemessen ist: ein Server, der **antwortet und dann schweigt** (5,01 s bei 5 s Budget), und einer mit **12 Fortsetzungszeilen je 1 s** (5,00 s; ohne Frist über 13 s). |
@@ -115,7 +116,7 @@ AP4 auflöst).
 | **Mailprobe** (neu) | `php tools/mailprobe/probe.php` | **41 Prüfungen, 0 Befunde** über 13 Abschnitte, gegen eine eigene SMTPS-Gegenstelle in fünf Betriebsarten |
 | **Jobprobe** | `php tools/jobprobe/probe.php` | **35 Erwartungen, 0 nicht erfüllt** (Teil 10 neu: 7 Erwartungen zum Job `mail`) |
 | Wortliste | `python3 tools/wortliste/wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen**; 96 Regeln, 96 gegriffen; sechs Bereiche (Server-PHP, Skripte, Doku, Android, `watch/`) |
-| Vollständigkeit | `python3 tools/vollstaendigkeit/pruefen.py --hoechstens 366` | **366 — auf der Schwelle, unverändert.** Die Kette stand während des Umzugs auf 371 (Doppelbestand: dieselben Texte im Katalog *und* in den alten Aufrufern) und ist zurückgezogen |
+| Vollständigkeit | `python3 tools/vollstaendigkeit/pruefen.py --hoechstens 367` | **367** (50 + 10 + 299 + 8). Die Kette stand während des Umzugs auf 371 (Doppelbestand: dieselben Texte im Katalog *und* in den alten Aufrufern) und ist zurückgezogen. **Im AP5-Commit standen 366, und das war um 1 zu niedrig** — siehe den Kasten unten |
 | Migrationsregister | `php tools/migrationsregister/pruefen.php` | **0 Befunde**; 206 Katalogspalten, 29 Löschungen, 4 erklärte Ausnahmen, 0 ungenutzt |
 | CSP-Probe | `php tools/cspprobe/pruefen.php` | **0 Befunde** über 108 PHP-Dateien und 108 `<script>`-Stellen |
 | Installweiche | `php tools/installweiche/pruefen.php` | **0 Befunde** — der neue `require` auf `instanz_lib.php` steht hinter der PHP-Weiche |
@@ -133,8 +134,50 @@ AP4 auflöst).
 
 **Was die Zahlen benennen:** Die 41 der Mailprobe sind **Zusagen über
 Fehlerfälle**, nicht über den Normalfall — gegen einen funktionierenden
-Mailserver ließe sich keine einzige davon messen. Die 366 der Vollständigkeit
+Mailserver ließe sich keine einzige davon messen. Die 367 der Vollständigkeit
 sind ein **Vergleich gegen den Ausgangsstand** aus P3, keine absolute Güte.
+
+> **Ein Messfehler, hier und nicht in einer Fußnote.** Im AP5-Commit stand
+> **366**, und die Kette bekam diese Schwelle mit. Gemessen worden war sie
+> **mitten im Paket**, vor den letzten Kommentar- und Dokumentationszeilen
+> desselben Pakets — committet wurde ein Stand mit **367**. Der Lauf war
+> damit rot, und zwar wegen **Unterschreitung**: genau dafür wirkt die
+> Schwelle seit Web 20.8.0 in beide Richtungen. Behoben in AP4a.
+>
+> **Die Lehre ist nicht „die Zahl war falsch", sondern „sie wurde zu früh
+> genommen".** `CLAUDE.md` 6 sagt es wörtlich. Nachgemessen wird seither
+> gegen einen **ausgecheckten Stand** (`git worktree add --detach`), nicht
+> gegen die Arbeitskopie — sonst misst man, was man gerade tippt.
+
+---
+
+### 1f. Nach AP4a (Web 20.9.1), im selben Container
+
+| Mittel | Aufruf | Ergebnis |
+|---|---|---|
+| Vollständigkeit | `python3 tools/vollstaendigkeit/pruefen.py --hoechstens 367` | **367 — auf der Schwelle, unverändert.** AP4a fügt netto **0** hinzu: Zwei Auslassungszeichen in neuen Kommentaren sind wieder entfernt worden, statt die Zahl wachsen zu lassen |
+| Wortliste | `python3 tools/wortliste/wortliste.py` | **0/0/0**. Beim ersten Lauf **2 Treffer in 1 Zeile** — der Satz in `Technik.md` 5d.8, der das Verschwinden der alten Produktivdomain beschreibt und sie dabei nannte. Umformuliert; ein Werkzeug, das die eigene Erfolgsmeldung als Befund liest, hat recht |
+| **Sitzungshärtung** (neu) | `php tools/sitzungshaertung/pruefen.php --selbstprobe` | **8 von 8** |
+| dieselbe | `php tools/sitzungshaertung/pruefen.php` | **108 PHP-Dateien, 7 echte `session_start()`-Aufrufe, 0 ohne Härtung** (vor AP4a wären es 5 gewesen) |
+| Fixations-Gegenprobe | `curl` mit vorgegebener, **frischer** Sitzungskennung gegen `login.php` | **ohne** die Zeile: kein `Set-Cookie` — die Kennung wurde übernommen. **Mit** ihr: `Set-Cookie` mit einer anderen Kennung. `php.ini` des Prüfstands: `session.use_strict_mode => Off` |
+| Kopfzeilen der sieben umgestellten Endpunkte | Browser (angemeldet) und `curl` | alle mit `Content-Type: application/json; charset=utf-8`, `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, `Referrer-Policy` |
+| `api/export_data.php` mit drei echten Einsatz-IDs | `fetch` aus der angemeldeten Seite | **HTTP 200, 68 820 Byte** Spurpunkte |
+| `api/backup_data.php?teil=kopf` | dasselbe | **HTTP 200, 19 603 Byte** |
+| `jobs.php` mit falschem und richtigem Token | `curl` | **403** bzw. **200** mit dem vollen Jobbericht |
+| `auth_salt.php`, bekannte und unbekannte Adresse | `curl` | beide **200**, beide 32-Zeichen-Salt, ununterscheidbar |
+| `pair.php`, Methode und unbekannte Aktion | `curl` | **405** bzw. **400** |
+| Zählung | `grep -rn "Content-Type: application/json" server/` | **2 Codezeilen**: `db.php` und `wartung_lib.php` |
+
+**Was die Zahlen benennen:** Die Fixations-Gegenprobe misst **den Unterschied**
+und nicht den Zustand — „eine neue Kennung kommt zurück" belegt für sich
+genommen nichts, solange nicht feststeht, dass die `php.ini` es nicht ohnehin
+täte. Deshalb steht dort auch die `Off`-Zeile.
+
+> **Eine Falle, die beim ersten Versuch zuschlug:** Eine Sitzungskennung, die
+> schon einmal **benutzt** wurde, ist dem Server bekannt und wird auch mit
+> `use_strict_mode` angenommen — richtig so. Der zweite Lauf maß deshalb das
+> Gegenteil des ersten, bis beide eine frische Zufallskennung bekamen. Wer die
+> Probe wiederholt, würfelt jedes Mal neu.
 
 ---
 
@@ -521,6 +564,26 @@ verschluckt.
 
 ---
 
+### P21 — Ein freigegebenes Backup abholen
+
+**Wofür:** N18 — der Rohausgabe-Zweig von `api/adminbackup_freigabe.php` ist
+gelesen, nicht gelaufen.
+
+**Weg:** Als Administration ein Konto-Backup freigeben (Verwaltung →
+NutzerInnen → Konto → Backup freigeben). Als die berechtigte Person die
+Freigabe abholen und dabei die Netzwerkansicht des Browsers offen haben.
+
+**Erwartet:** Die Antworten auf `api/adminbackup_freigabe.php` tragen
+`Cache-Control: no-store`, `X-Content-Type-Options: nosniff` und
+`Content-Type: application/json; charset=utf-8` — **auch die mit `?teil=…`**,
+die den Klartext eines Pakets durchreicht. Das Einspielen gelingt wie bisher.
+
+**Woran ein Scheitern zu erkennen ist:** Fehlt `no-store`, ist die Umstellung
+an dieser einen Stelle nicht angekommen — die Antwort enthält dann den
+entschlüsselten Inhalt eines fremden Kontos in einem Zwischenspeicher.
+
+---
+
 ## 4. Zuarbeiten, ohne die Punkte offen bleiben
 
 Aus dem Rahmenplan, Abschnitt 6 — hier nur, was P1 bis P8 blockiert:
@@ -537,6 +600,22 @@ Aus dem Rahmenplan, Abschnitt 6 — hier nur, was P1 bis P8 blockiert:
 ---
 
 ## 5. Grenzen der benutzten Prüfmittel
+
+### 5b. `tools/sitzungshaertung/` (seit AP4a)
+
+- **Sie misst, dass die Zeile dasteht — nicht, dass sie wirkt.** `ini_set()`
+  kann scheitern (`session.*` lässt sich nach `session_start()` nicht mehr
+  setzen, und manche Hoster sperren einzelne Direktiven). Das misst nur eine
+  laufende Installation; der Befehl steht in der dortigen `LIESMICH.md`.
+- **Sie sieht nicht, ob die Zeile erreicht wird.** Steht sie in einem `if`,
+  das nie zutrifft, zählt sie trotzdem.
+- **`vendor/` ist ausgenommen.** `phpseclib3/Crypt/Random.php` startet eine
+  eigene Sitzung und wird nicht von uns gepflegt.
+- **Der Abstand ist eine Annahme**: bis zu zwölf Zeilen vor dem Aufruf.
+  Dazwischen liegt in der Anwendung regelmäßig ein Kommentarblock und
+  `session_set_cookie_params()`. Wer mehr dazwischenschreibt, bekommt einen
+  Befund, der keiner ist — dann ist die Konstante `ABSTAND` zu erhöhen und
+  **nicht** die Prüfung abzuschalten.
 
 ### 5a. `tools/mailprobe/` (seit AP5)
 

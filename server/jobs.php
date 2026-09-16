@@ -118,9 +118,11 @@ if ($aufKommandozeile) {
 /* ---- 2. Adresse mit Token ------------------------------------------------ */
 
 $t0 = microtime(true);
-header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store');
 
+/* DIE KOPFZEILEN SETZT `json_roh_out()` (P5a/AP4a, Nr. 203). Hier standen
+ * zwei `header()`-Zeilen; `nosniff` und `Referrer-Policy` fehlten, und das
+ * ist an einem Endpunkt, der mit einem Token erreichbar ist und den Zustand
+ * der Auslieferung ausgibt, kein Schoenheitsfehler. */
 require_once __DIR__ . '/ratelimit_lib.php';
 
 /* SPERRE VOR JEDER WEITEREN ARBEIT — dasselbe Muster wie in `pair.php`.
@@ -129,9 +131,7 @@ require_once __DIR__ . '/ratelimit_lib.php';
  * in zehn Minuten, dann zehn Minuten Ruhe. */
 if (!rate_erlaubt('pair')) {
     rate_gleiche_dauer($t0);
-    http_response_code(429);
-    echo json_encode(['error' => 'zu_viele_versuche']);
-    exit;
+    json_out(['error' => 'zu_viele_versuche'], 429);
 }
 
 $token = (string)($_GET['token'] ?? $_POST['token'] ?? '');
@@ -143,9 +143,7 @@ try {
     $erwartet = (string)($st->fetchColumn() ?: '');
 } catch (Throwable $ex) {
     rate_gleiche_dauer($t0);
-    http_response_code(500);
-    echo json_encode(['error' => 'datenbank']);
-    exit;
+    json_out(['error' => 'datenbank'], 500);
 }
 
 /* `hash_equals` und nicht `===`: Ein Zeichenvergleich, der beim ersten
@@ -157,11 +155,9 @@ try {
 if ($erwartet === '' || $token === '' || !hash_equals($erwartet, $token)) {
     rate_misserfolg('pair');
     rate_gleiche_dauer($t0);
-    http_response_code(403);
     // Nicht sagen, ob ueberhaupt ein Token eingerichtet ist. Wer den Weg
     // benutzen darf, kennt es aus dem Wartungsbereich.
-    echo json_encode(['error' => 'token']);
-    exit;
+    json_out(['error' => 'token'], 403);
 }
 
 /* ---- 2b. Die Aktionen der Auslieferungskette (E-P5a-12) ------------------ */
@@ -169,9 +165,12 @@ if ($erwartet === '' || $token === '' || !hash_equals($erwartet, $token)) {
 /** Antwort schreiben und Schluss. */
 function kette_antwort(array $feld, int $code = 200): never
 {
-    http_response_code($code);
-    echo json_encode($feld, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    exit;
+    /* UEBER `json_roh_out()` und nicht `json_out()`, weil die beiden
+     * `json_encode`-Schalter gebraucht werden: Die Antwort nennt Dateinamen
+     * und Umlaute, und ein `\/` oder `\u00e4` darin ist zwar gueltiges JSON,
+     * aber in einem Cron-Protokoll nicht mehr zu lesen. */
+    json_roh_out((string)json_encode($feld,
+        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), $code);
 }
 
 /**
@@ -281,5 +280,4 @@ if ($aktion !== '') {
 /* ---- 2c. Ohne Aktion: wie bisher alle fälligen Jobs ---------------------- */
 
 $bericht = jobs_lauf('token');
-echo json_encode(['ok' => true, 'jobs' => $bericht],
-                 JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+kette_antwort(['ok' => true, 'jobs' => $bericht]);

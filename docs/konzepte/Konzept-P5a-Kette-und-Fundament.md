@@ -17,7 +17,7 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | Stand | 15.09.2026 — **Konzept freigegeben, Umsetzung läuft.** Die Grundsatzfragen sind am 15.09.2026 im Gespräch entschieden (E-P5a-01 bis -09); die übrigen Festlegungen (E-P5a-10 bis -21) stammen aus dem Nachmessen im Code und stehen mit der Freigabe. |
 > | Entschieden | E-P5a-01 bis E-P5a-21 (Abschnitt 2); E-PP-01 bis -09 übernommen; **F-P5a-1 entschieden** (2.4) |
 > | Offen | — |
-> | Umsetzung | **läuft.** AP1–AP5 erledigt, **AP4a** (Nachtrag 16.09.2026) als Nächstes, dann AP6; Abhängigkeiten in 3.0 |
+> | Umsetzung | **läuft.** AP1–AP5 und AP4a erledigt, **AP6 als Nächstes**; Abhängigkeiten in 3.0 |
 > | Fable-Schritte der Umsetzung | **keiner mehr** — M-P5a-01 ist nach Auftrag vom 15.09.2026 ohne Pause umgesetzt worden (2.5) |
 
 > **Stand der Umsetzung**
@@ -29,8 +29,8 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | **AP2 Plattformprüfung** | **erledigt** | **Web 20.5.0** | 21 Befunde (15 ohne DB/config) · Muss offen 0 · Installweiche 8/8, 0 Befunde auf 658 Zeilen · Bilderlauf 16 Bilder, 0/0/0 · Wortliste 0/0/0 |
 > | **AP3 Torwächter** | **erledigt** | **Web 20.6.0** | Wartungsprobe **67 Erwartungen, 0 nicht erfüllt** (Teil 7 neu, 10 Erwartungen) · Browserprobe 12/12 · Bilderlauf 8 Bilder, 0/0/0 · Wortliste 0/0/0 |
 > | **AP4 Kopfzeilen und HTTPS** | **erledigt** | **Web 20.7.0** | CSP-Probe **0 Befunde** (106 Dateien, 108 Skript-Stellen), Selbstprobe 8/8 · Browserprobe **33/33, 0 Seitenfehler** · Bilderlauf **392 Bilder, 0/0/0** und **0 CSP-Berichte** (dritter Lauf — die zwei davor fanden F6 und F7) · Wartungsprobe 67/0 · Integritätswache 30/30 und **kein Unterschied** · Wortliste 0/0/0 · Kontraste 22/0 · Vollständigkeit 365 gegen 351 (`style=` **13→10**, Unicode +17 — alle in Kommentaren) |
-> | **AP5 Mail-Warteschlange** | **erledigt** | **Web 20.8.0 · 20.9.0** | Teil 1 (Name der Installation, E-P5a-35): 38 Stellen auf zwei Werte, 6/6 Einschleusversuche abgewiesen · Teil 2 (Warteschlange): Katalog mit **10** Nachrichten, **alle zehn** Versandstellen umgezogen — `smtp_send()` hat ausserhalb von `mail_lib.php` **0** Aufrufer · `tools/mailprobe/` **41 Prüfungen, 0 Befunde** gegen eine eigene SMTPS-Gegenstelle · `tools/jobprobe/` **35/35** (Teil 10 neu) · Frist statt Dauer: schweigender Server **5,01 s** bei 5 s Budget, 12 Fortsetzungszeilen je 1 s **5,00 s** (ohne Frist wären es über 13 s) · Leiter 300 s gemessen, `unzustellbar` nach 5, `zu_spaet` nach **3** bei 1 h Frist · Job am Huckepack-Weg 4 Nachrichten in 0,37 s, hängender Server **3,01 s** bei 3,0 s Vorgabe · Adressen (E-P5a-40) 7 Fälle, **5 abgewiesen** · `grep gen-em.org server/` = **0**, `grep base_url server/` = nur Bibliothek und Quelle · Wortliste **0/0/0** (96 Ausnahmen, 96 gegriffen) · Vollständigkeit **366 = Ausgangswert** (Schwelle in der Kette von 371 zurückgezogen) · Migrationsregister **0 Befunde**, 49/49 Kennungen · CSP-Probe **0** auf 108 Stellen · Browser: Status und Installation, **0 Konsolenfehler** |
-> | **AP4a Sicherheitszeilen** (Nachtrag 16.09.2026) | **in Arbeit** | — | Backlog Nr. 203 + 205, E-P5a-38 |
+> | **AP5 Mail-Warteschlange** | **erledigt** | **Web 20.8.0 · 20.9.0** | Teil 1 (Name der Installation, E-P5a-35): 38 Stellen auf zwei Werte, 6/6 Einschleusversuche abgewiesen · Teil 2 (Warteschlange): Katalog mit **10** Nachrichten, **alle zehn** Versandstellen umgezogen — `smtp_send()` hat ausserhalb von `mail_lib.php` **0** Aufrufer · `tools/mailprobe/` **41 Prüfungen, 0 Befunde** gegen eine eigene SMTPS-Gegenstelle · `tools/jobprobe/` **35/35** (Teil 10 neu) · Frist statt Dauer: schweigender Server **5,01 s** bei 5 s Budget, 12 Fortsetzungszeilen je 1 s **5,00 s** (ohne Frist wären es über 13 s) · Leiter 300 s gemessen, `unzustellbar` nach 5, `zu_spaet` nach **3** bei 1 h Frist · Job am Huckepack-Weg 4 Nachrichten in 0,37 s, hängender Server **3,01 s** bei 3,0 s Vorgabe · Adressen (E-P5a-40) 7 Fälle, **5 abgewiesen** · `grep gen-em.org server/` = **0**, `grep base_url server/` = nur Bibliothek und Quelle · Wortliste **0/0/0** (96 Ausnahmen, 96 gegriffen) · Vollständigkeit **367** (371 → 367, der Doppelbestand der Mailtexte ist weg; die im Commit genannten 366 waren **mitten im Paket gemessen** und um 1 zu niedrig — nachgezogen in AP4a) · Migrationsregister **0 Befunde**, 49/49 Kennungen · CSP-Probe **0** auf 108 Stellen · Browser: Status und Installation, **0 Konsolenfehler** |
+> | **AP4a Sicherheitszeilen** (Nachtrag 16.09.2026) | **erledigt** | **Web 20.9.1** | Nr. 205: `use_strict_mode` vor **7 von 7** `session_start()`-Aufrufen (vorher 2, und zwar die beiden ohne Anmeldesitzung) · Gegenprobe gemessen: **ohne** die Zeile kein `Set-Cookie` (Kennung übernommen), **mit** ihr eine neue — `php.ini` des Prüfstands steht auf `Off` · neu `tools/sitzungshaertung/` in Stufe 1, Selbstprobe **8/8**, Lauf **108 Dateien, 7 Aufrufe, 0 ohne Härtung** · Nr. 203: `json_kopf()` / `json_roh_out()` / `json_out()`, **7 Stellen** umgestellt (nicht 3 — `auth_salt.php`, `jobs.php`, `pair.php` hatten denselben Mangel) · gemessen im Browser: `export_data.php` **200, 68 820 Byte Spurpunkte** mit `no-store`+`nosniff`, `backup_data.php` **200, 19 603 Byte** · `grep Content-Type: application/json server/` = **2 Codezeilen** (`db.php`, `wartung_lib.php` — jene darf `db.php` nicht laden) · Wortliste **0/0/0** (erster Lauf: 2 Treffer, der eigene Satz über die verschwundene Domain) · Vollständigkeit **367 = unverändert** (AP4a fügt netto 0 hinzu; die Schwelle der Kette von 366 auf 367 richtiggestellt) · Kontraste 22/0 · CSP-Probe **0** · Migrationsregister **0** |
 > | AP6 bis AP12 | offen | — | — |
 
 ---
@@ -584,6 +584,40 @@ Der volle Bereich mit Reitern kommt in **P5c** (Protokollierung). Bis dahin
 ist diese Zeile die Auskunft, und sie ist vollständig: Was sie nicht zeigt,
 zeigt auch keine Liste — die Adressen der *zugestellten* Nachrichten sind
 gelöscht, und zwar mit Absicht.
+
+**E-P5a-38 (neu, 16.09.2026) — zwei Sicherheitszeilen, ein eigenes Paket**
+(Nachtrag des Auftraggebers; Backlog Nr. 203 und 205). Klein, eigene Version,
+eigener Commit — „damit es nicht in AP5 untergeht", und das war richtig: Der
+Umzug der zehn Versandstellen hätte die beiden Zeilen im Diff verschluckt.
+
+- **`session.use_strict_mode`** vor jedem `session_start()`. Stand an zwei
+  Stellen, und zwar den beiden **ohne** Anmeldesitzung. **Kein
+  `sitzung_starten()`-Helfer** — der ist Schritt 15; hier nur die Zeile.
+- **`json_kopf()` / `json_roh_out()`** in `db.php`. Sieben Stellen gaben JSON
+  ohne den zentralen Kopfzeilensatz aus; zwei davon ohne `no-store`, und die
+  liefern **GPS-Spurpunkte**.
+
+**Zwei Abweichungen vom Auftrag, beide nach oben:**
+
+1. Der Auftrag nannte **drei** Dateien für Nr. 203; es waren **sieben**.
+   `auth_salt.php`, `jobs.php` und `pair.php` hatten denselben Mangel, und
+   bei zweien wiegt er schwerer als beim Ausgangspunkt — `auth_salt.php`
+   liefert das Salt der Schlüsselableitung je Konto und ist unangemeldet
+   erreichbar, `pair.php` nennt die maskierte Adresse des Kontos. Sie
+   auszulassen hieße, nach einer Durchsicht wissentlich eine Lücke
+   stehenzulassen.
+2. Der Auftrag verlangte für Nr. 205 die Zeile; dazugekommen ist
+   **`tools/sitzungshaertung/`** in Stufe 1. Eine Zeile, die neben dem Aufruf
+   steht, den sie schützt, ist genau die Art Zusage, die beim nächsten neuen
+   Weg still wegfällt — und niemand merkt es, weil nichts passiert.
+
+**Die Abnahme des Auftrags war zu optimistisch formuliert**, und das steht
+hier, weil es sich wiederholen wird: „`grep -rn "Content-Type:
+application/json" server/` zeigt nur `db.php`" — es zeigt **zwei**
+Codezeilen. `wartung_lib.php` darf `db.php` nicht laden (die Wartungsseite
+antwortet, während die Datenbank umgebaut wird) und setzt seinen Satz
+weiterhin selbst, `no-store` eingeschlossen. Eine Abnahmezahl, die eine
+benannte Ausnahme nicht kennt, macht aus ihr einen Befund.
 
 ### 2.3 Ort je Funktion (K1, R74)
 

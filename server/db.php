@@ -413,7 +413,43 @@ function local_to_utc(string $day, string $hhmm, int $addDays = 0): ?string {
    seither ohne Verwendung (A4, T-01). Wer das Format wieder braucht, findet
    die Umwandlung in pruef_utc(). */
 
-function json_out(array $data, int $code = 200): never {
+/**
+ * EINE JSON-ANTWORT AUS FERTIGEM TEXT (P5a/AP4a, E-P5a-38, Backlog Nr. 203).
+ *
+ * WOGEGEN. Sieben Stellen gaben JSON aus, ohne durch `json_out()` zu gehen —
+ * mit `header('Content-Type: application/json')` und `echo` von Hand. Zwei
+ * davon (`api/export_data.php`) setzten dabei **kein** `Cache-Control:
+ * no-store`, und der Export liefert GPS-Spurpunkte. Die Begruendung, die
+ * unten bei `json_out()` steht („der Kopf gehoert an die Stelle, durch die
+ * JEDE Antwort geht"), galt fuer sie schlicht nicht.
+ *
+ * WARUM SIE UEBERHAUPT AN `json_out()` VORBEIGEHEN: Sie haben den Text
+ * bereits. `api/export_data.php` baut ihn stueckweise (ein Export kann
+ * hunderte Megabyte umfassen), `api/backup_data.php` reicht Chiffretext
+ * durch, `jobs.php` braucht eigene `json_encode`-Schalter. Sie sollen ihn
+ * NICHT dekodieren muessen, nur um ihn wieder zu kodieren.
+ *
+ * Also: dieselben Kopfzeilen, ein anderer Rumpf. `json_out()` ist seither
+ * ein Aufruf hiervon — es gibt genau EINE Stelle, die den Satz setzt.
+ *
+ * NICHT HIER: `wartung_lib.php`. Die Wartungsseite ist ausdruecklich ohne
+ * Datenbank gebaut und darf `db.php` nicht laden (sie antwortet, waehrend die
+ * Datenbank umgebaut wird). Sie setzt ihren Satz selbst — und zwar
+ * einschliesslich `no-store`, nachgesehen.
+ */
+/**
+ * NUR DIE KOPFZEILEN EINER JSON-ANTWORT — ohne Rumpf und ohne `exit`.
+ *
+ * WOFUER. `pair.php` antwortet an zwei Stellen und ARBEITET DANN WEITER: Es
+ * schliesst die Antwort ab (`antwort_abschliessen()`) und reiht erst danach
+ * die Hinweismail ein — die Uhr wartet auf das `ok`, und ein langsamer
+ * Mailserver darf sie nicht in den Abbruch laufen lassen. Ein `never`
+ * schliesst diese Stelle aus.
+ *
+ * ES BLEIBT EINE STELLE, die den Satz setzt: `json_roh_out()` ruft dies hier
+ * auf, `json_out()` ruft `json_roh_out()`.
+ */
+function json_kopf(int $code = 200): void {
     /* Der schmale Kopfzeilensatz der Endpunkte (P5a/AP4, E-P5a-15). Keine
      * CSP — eine JSON-Antwort ist kein Dokument. `nosniff` dagegen ist genau
      * hier die wichtige Zeile. */
@@ -421,7 +457,7 @@ function json_out(array $data, int $code = 200): never {
     kopfzeilen_json();
 
     http_response_code($code);
-    header('Content-Type: application/json');
+    header('Content-Type: application/json; charset=utf-8');
     /* Kein Zwischenspeichern (M3-11).
      *
      * Bisher setzte GENAU EIN Endpunkt diesen Kopf: das Backup. Vier
@@ -436,8 +472,16 @@ function json_out(array $data, int $code = 200): never {
      * Der Kopf gehoert deshalb an die Stelle, durch die JEDE Antwort geht,
      * und nicht in die Zustaendigkeit des einzelnen Endpunkts. */
     header('Cache-Control: no-store');
-    echo json_encode($data);
+}
+
+function json_roh_out(string $json, int $code = 200): never {
+    json_kopf($code);
+    echo $json;
     exit;
+}
+
+function json_out(array $data, int $code = 200): never {
+    json_roh_out((string)json_encode($data), $code);
 }
 
 /* ---- DAS TOR DES WARTUNGSMODUS (S5 Paket W, E-S5W-06) --------------------

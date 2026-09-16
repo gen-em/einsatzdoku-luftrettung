@@ -76,6 +76,10 @@ function session_beenden(string $grund = 'abgemeldet'): never
         session_set_cookie_params([
             'httponly' => true, 'secure' => true, 'samesite' => 'Strict', 'path' => '/',
         ]);
+        /* `use_strict_mode` — siehe `auth_guard.php` (E-P5a-38, Nr. 205).
+         * Hier geht es ums ABMELDEN, und gerade deshalb: Wer eine Sitzung
+         * beendet, soll nicht eine untergeschobene Kennung beenden. */
+        ini_set('session.use_strict_mode', '1');
         session_start();
     }
     $_SESSION = [];

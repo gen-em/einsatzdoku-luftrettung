@@ -489,6 +489,10 @@ Daten erst nach Server-Bestätigung.
 │   │                      statt ihn zu laden — und sagt in ihrer LIESMICH,
 │   │                      was sie damit NICHT sieht (DDL aus eingesetzten
 │   │                      Namen). Mit `--selbstprobe`
+│   ├── sitzungshaertung/  steht vor jedem session_start() die Haertung
+│   │                      `session.use_strict_mode`? (P5a/AP4a, Nr. 205).
+│   │                      Tokenizer statt grep; Selbstprobe 8 Faelle. Laeuft
+│   │                      in Stufe 1 (s. LIESMICH.md)
 │   ├── cspprobe/          traegt die Content-Security-Policy noch? (P5a/AP4)
 │   │                      Fuenf Regeln: Inline-`<script>` ohne Nonce,
 │   │                      `<style>`-Block, Ereignis-Attribut,
@@ -2698,7 +2702,44 @@ beim nächsten Mal.
 denselben Chiffretext aus. Der Inhalt ist verschlüsselt, die Hülle darum herum
 — Datum, Uhrzeit, Einsatznummer, Koordinaten — nicht. Der Kopf gehört deshalb
 an die Stelle, durch die jede Antwort geht, nicht in die Zuständigkeit des
-einzelnen Endpunkts. `api/backup_data.php` gibt direkt aus und setzt ihn eigens.
+einzelnen Endpunkts.
+
+> **Der Satz stimmte bis Web 20.9.0 nur für die Antworten, die durch
+> `json_out()` gingen** (Backlog Nr. 203, behoben mit Web 20.9.1). **Sieben**
+> Stellen gingen daran vorbei, und zwei davon — die Rohausgaben in
+> `api/export_data.php` — setzten den Kopf gar nicht. **Diese Antwort enthält
+> GPS-Spurpunkte.** Seither gibt es drei Funktionen und eine Stelle:
+
+| Funktion in `db.php` | tut |
+|---|---|
+| `json_kopf($code)` | setzt den Satz: `kopfzeilen_json()`, Status, `Content-Type: application/json; charset=utf-8`, `Cache-Control: no-store` |
+| `json_roh_out($json, $code)` | ruft `json_kopf()`, gibt **fertigen Text** aus, `exit` |
+| `json_out($daten, $code)` | ruft `json_roh_out((string)json_encode($daten), $code)` |
+
+**Warum es `json_roh_out()` überhaupt gibt:** Die Rohausgaben **haben** den
+Text schon. `api/export_data.php` baut ihn stückweise (ein Export kann
+hunderte Megabyte umfassen), `api/backup_data.php` reicht Chiffretext durch,
+`jobs.php` braucht eigene `json_encode`-Schalter. Sie sollen ihn nicht
+dekodieren müssen, nur um ihn wieder zu kodieren.
+
+**Warum es `json_kopf()` gibt:** `pair.php` antwortet an zwei Stellen und
+**arbeitet dann weiter** — es schließt die Antwort ab
+(`antwort_abschliessen()`) und reiht erst danach die Hinweismail ein, weil die
+Uhr auf das `ok` wartet. Ein `never` schließt diese Stelle aus.
+
+**Sieben Stellen umgestellt, nicht drei:** `api/export_data.php` (2×),
+`api/backup_data.php`, `api/adminbackup_freigabe.php` — dazu `auth_salt.php`,
+`jobs.php` und `pair.php`, die denselben Mangel hatten. `auth_salt.php`
+liefert das Salt der Schlüsselableitung **je Konto** und ist unangemeldet
+erreichbar; `pair.php` nennt die maskierte Adresse des Kontos. Eine
+zwischengespeicherte Antwort ist dort nicht unsauber, sondern falsch; beiden
+fehlten außerdem `nosniff` und `Referrer-Policy`.
+
+**Eine Ausnahme, benannt:** `wartung_lib.php` setzt seinen Satz weiter selbst.
+Die Wartungsseite ist ausdrücklich ohne Datenbank gebaut und darf `db.php`
+nicht laden — `no-store` steht dort trotzdem. `grep -rn "Content-Type:
+application/json" server/` trifft seither genau zwei Codezeilen: `db.php` und
+`wartung_lib.php`.
 
 Die nur **lesenden** Endpunkte (`range`, `suchindex`, `mission`) weisen seit
 4.5.2 alles außer GET mit 405 ab; `day.php` kennt GET und POST und weist alles
@@ -6690,9 +6731,21 @@ keine Kopfzeilen; und HSTS war ein Jahr, fest verdrahtet.
 | Funktion | Ruft wer | Setzt |
 |---|---|---|
 | `kopfzeilen_seite()` | `ui_seite_start()` (jede HTML-Seite), `wartung_kopfzeilen()`, `betrieb_schluesselblatt.php` | CSP mit Nonce, HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy` |
-| `kopfzeilen_json()` | `json_out()` (jede API-Antwort) | nur `X-Content-Type-Options`, `Referrer-Policy` und HSTS — **keine CSP** (E-P5a-15). Eine JSON-Antwort ist kein Dokument, der Browser führt darin nichts aus; die wichtige Zeile ist `nosniff`, damit er sie nicht als HTML deutet |
+| `kopfzeilen_json()` | `json_kopf()`, und damit `json_roh_out()` und `json_out()` — **jede** API-Antwort (seit Web 20.9.1 auch die sieben Rohausgaben, Nr. 203) | nur `X-Content-Type-Options`, `Referrer-Policy` und HSTS — **keine CSP** (E-P5a-15). Eine JSON-Antwort ist kein Dokument, der Browser führt darin nichts aus; die wichtige Zeile ist `nosniff`, damit er sie nicht als HTML deutet |
 | `kopf_nonce_attr()` | jedes Inline-`<script>` | ` nonce="…"` |
 | `https_tor()` | `auth_guard.php`, `login.php` — **vor** `session_start()` | 301 auf HTTPS, wenn HSTS an ist |
+
+**Und vor jedem `session_start()` steht seit Web 20.9.1
+`ini_set('session.use_strict_mode', '1')`** (E-P5a-38, Backlog Nr. 205).
+Ohne die Zeile übernimmt PHP eine Sitzungskennung, die der Browser mitbringt,
+auch wenn es sie nie vergeben hat — Session-Fixation. Sie stand bis dahin an
+genau **zwei** Stellen (`install.php`, `wiederherstellen.php`), ausgerechnet
+den beiden Wegen, die **keine** Anmeldesitzung tragen.
+
+`tools/sitzungshaertung/` zählt in Stufe 1 nach, mit dem Tokenizer: **7 echte
+`session_start()`-Aufrufe, 0 ohne Härtung**, Selbstprobe 8/8. Was sie *nicht*
+messen kann, ist ob die Einstellung **wirkt** — das misst nur eine laufende
+Installation (Befehl in der dortigen `LIESMICH.md`).
 
 Weil beide Wege durch *eine* Stelle gehen, bekommt jede Seite und jede
 API-Antwort die Kopfzeilen — gleich auf welchem Webserver.
@@ -7027,11 +7080,17 @@ dort nichts geladen werden. Der `require` auf `instanz_lib.php` steht deshalb
 **hinter** der Weiche — eine Besucherin auf PHP 8.0 hat die Seite dort längst
 verlassen.
 
-Die alte Domain `luftrettung.net` ist aus der lebenden Dokumentation
-verschwunden. Stehen bleibt sie in der **Historie** (Changelog,
-Rahmenplan-Archiv, `docs/konzepte/erledigt/`) und im **Prüffall der
-Wortliste** — eine Historie, die man umschreibt, ist keine mehr, und ein
+Die **alte Produktivdomain** ist aus der lebenden Dokumentation verschwunden
+(sie stand zuletzt siebenmal darin; wie sie hieß, steht im Changelog zu
+Web 20.9.0). Stehen bleibt sie in der **Historie** — Changelog,
+Rahmenplan-Archiv, `docs/konzepte/erledigt/` — und im **Prüffall der
+Wortliste**: Eine Historie, die man umschreibt, ist keine mehr, und ein
 Prüffall, aus dem man den Suchbegriff entfernt, prüft nichts.
+
+> Dass dieser Absatz den Namen selbst **nicht** nennt, ist kein Versehen.
+> `docs/Technik.md` steht im Bereich `c` der Wortliste, und die zählte ihn
+> beim ersten Versuch prompt als zwei Treffer. Ein Werkzeug, das die eigene
+> Erfolgsmeldung als Befund liest, hat recht.
 
 ## 6. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)
 

@@ -2161,29 +2161,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (0 unerklärt) und Messstand; nach jedem Paket `grep`-Zählungen der
     Muster gegen die Zahlen hier (Ziel 0 außerhalb der Bibliothek).
 
-203. **`api/export_data.php` gibt JSON roh aus — ohne `Cache-Control:
-    no-store`.** *Aufgenommen 16.09.2026 (Nebenfund der
-    Zentralisierungsanalyse); Zuordnung P5a AP4a (Nachtrag).* Zwei Stellen
-    (auf `main` 16.09.2026 Zeilen 524 und 551) geben mit
-    `header('Content-Type: application/json')` + `echo` aus, ohne den Kopf,
-    den `json_out()` (M3-11) begründet zentral setzt; `api/backup_data.php`
-    und `api/adminbackup_freigabe.php` setzen ihn bei Rohausgabe von Hand.
-    Der Export liefert Spurpunkte — ein Zwischenspeicher darf sie nicht
-    behalten. Ziel: `json_roh_out()` neben `json_out()` in `db.php`, drei
-    Stellen umstellen. *Abnahme:* `grep -rn "Content-Type: application/json"
-    server/` zeigt nur `db.php`; Selbstprobe der Kopfzeilen 3/3 `no-store`.
-
-205. **`session.use_strict_mode` fehlt auf den Anmeldewegen.** *Aufgenommen
-    16.09.2026; Zuordnung P5a AP4a (Nachtrag).* Gesetzt nur in
-    `install.php` und `wiederherstellen.php`, nicht in `auth_guard.php`,
-    `login.php` und `session_lib.php` — also nicht auf den Wegen, die eine
-    echte Anmeldesitzung tragen. Der Schutz gegen Session-Fixation hängt
-    damit an der `php.ini` des Hosters. Vorab nur die Zeile vor jedem
-    `session_start()` (sieben Stellen auf `main`); der Helfer
-    `sitzung_starten($art)` kommt mit Nr. 202 Paket 3. *Abnahme:* eine vom
-    Client vorgegebene Sitzungskennung wird verworfen (`curl`-Probe: die
-    Antwort setzt eine andere `Set-Cookie`-Kennung).
-
 ## Erledigt
 
 
@@ -6565,3 +6542,82 @@ zutreffen.
     **vorigen** Versuchs liefern — der Merker wurde erst nach der
     Adressprüfung geleert. Eine Kennung, die auf eine andere Nachricht
     zeigt, ist schlimmer als gar keine; behoben in Web 20.9.0.
+
+203. **`api/export_data.php` gibt JSON roh aus — ohne `Cache-Control:
+    no-store`.** *Aufgenommen 16.09.2026 (Nebenfund der
+    Zentralisierungsanalyse); Zuordnung P5a AP4a (Nachtrag).* Zwei Stellen
+    geben mit `header('Content-Type: application/json')` + `echo` aus, ohne
+    den Kopf, den `json_out()` (M3-11) begründet zentral setzt. Der Export
+    liefert **Spurpunkte** — ein Zwischenspeicher darf sie nicht behalten.
+
+    **Erledigt am 16.09.2026 mit Web 20.9.1 (P5a/AP4a, E-P5a-38).** Drei
+    Funktionen in `db.php`, eine Stelle: `json_kopf()` setzt den Satz,
+    `json_roh_out()` gibt fertigen Text aus, `json_out()` ruft
+    `json_roh_out()`.
+
+    **Es waren sieben Stellen, nicht drei.** Der Punkt nannte
+    `api/export_data.php` (2×), `api/backup_data.php` und
+    `api/adminbackup_freigabe.php`. Beim Nachzählen kamen `auth_salt.php`,
+    `jobs.php` und `pair.php` dazu — **derselbe Mangel**, und bei zweien
+    wiegt er schwerer als beim Ausgangspunkt: `auth_salt.php` liefert das
+    Salt der Schlüsselableitung **je Konto** und ist unangemeldet
+    erreichbar, `pair.php` nennt die maskierte Adresse des Kontos. Beiden
+    fehlten außerdem `nosniff` und `Referrer-Policy`.
+
+    **`json_kopf()` gibt es, weil `pair.php` an zwei Stellen antwortet und
+    dann weiterarbeitet** — es schließt die Antwort ab und reiht erst danach
+    die Hinweismail ein, weil die Uhr auf das `ok` wartet. Ein `never`
+    schließt diese Stelle aus.
+
+    **Eine Ausnahme, benannt:** `wartung_lib.php` setzt seinen Satz weiter
+    selbst; die Wartungsseite ist ausdrücklich ohne Datenbank gebaut und darf
+    `db.php` nicht laden. `no-store` steht dort trotzdem.
+
+    *Nachgemessen im Browser gegen die lokale Installation:*
+    `api/export_data.php` mit drei echten Einsatz-IDs → **HTTP 200, 68 820
+    Byte Spurpunkte**, `cache-control: no-store`, `nosniff`;
+    `api/backup_data.php?teil=kopf` → **200, 19 603 Byte**, dieselben
+    Kopfzeilen; `auth_salt.php`, `jobs.php` und `pair.php` je in ihrem
+    Fehler- **und** Erfolgszweig, alle mit vollem Satz. Und:
+    `grep -rn "Content-Type: application/json" server/` trifft genau **zwei**
+    Codezeilen — `db.php` und `wartung_lib.php`.
+
+    *Eine Nebenwirkung, ausgeschrieben:* `json_out()` schickt jetzt
+    `application/json; charset=utf-8` statt `application/json`. RFC 8259
+    definiert für `application/json` keinen charset-Parameter; kein Client
+    bricht daran, vier der sieben Stellen schickten ihn ohnehin, und die Uhr
+    übergeht ihn ganz (`:responseType => HTTP_RESPONSE_CONTENT_TYPE_JSON`).
+
+205. **`session.use_strict_mode` fehlt auf den Anmeldewegen.** *Aufgenommen
+    16.09.2026; Zuordnung P5a AP4a (Nachtrag).* Gesetzt nur in
+    `install.php` und `wiederherstellen.php`, nicht in `auth_guard.php`,
+    `login.php` und `session_lib.php` — also nicht auf den Wegen, die eine
+    echte Anmeldesitzung tragen. Der Schutz gegen Session-Fixation hing
+    damit an der `php.ini` des Hosters.
+
+    **Erledigt am 16.09.2026 mit Web 20.9.1 (P5a/AP4a, E-P5a-38).** Die Zeile
+    steht jetzt vor **allen sieben** `session_start()`-Aufrufen; dazu kamen
+    `pw_handling.php` (die Sitzung, die das Passwort-Token trägt) und
+    `rechtstext_seite.php` (die fragt nur, erzwingt nicht — die Zeile steht
+    trotzdem, damit die Regel keine Ausnahme hat, an der sie später jemand
+    aufhängt).
+
+    **Kein `sitzung_starten()`-Helfer** — der ist Schritt 15 (Nr. 202
+    Paket 3). Hier steht nur die Zeile.
+
+    *Nachgemessen, mit Gegenprobe:* Auf dem Prüfstand steht
+    `session.use_strict_mode` in der `php.ini` auf **Off**. **Ohne** die
+    Zeile nimmt `login.php` eine frisch erfundene Kennung an und schickt
+    **gar kein `Set-Cookie`** zurück; **mit** ihr verwirft es sie und vergibt
+    eine neue. Beide Läufe mit jeweils frischer Zufallskennung — eine schon
+    benutzte ist dem Server bekannt und wird auch mit der Härtung
+    angenommen, und der zweite Lauf maß deshalb beim ersten Versuch das
+    Gegenteil des ersten.
+
+    **Neu dazu: `tools/sitzungshaertung/`, in Stufe 1.** Die Zeile ist
+    unscheinbar und steht neben dem Aufruf, den sie schützt; ein neuer Weg,
+    der sie vergisst, sieht genauso aus wie einer, der sie hat. Gemessen mit
+    dem Tokenizer, nicht mit `grep` — die erste Fassung meldete zwei
+    Befunde, und beide waren Kommentarzeilen über das Werkzeug selbst.
+    **Selbstprobe 8/8; im Lauf 108 Dateien, 7 echte Aufrufe, 0 ohne
+    Härtung.**

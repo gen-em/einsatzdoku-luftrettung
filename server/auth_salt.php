@@ -30,7 +30,19 @@ declare(strict_types=1);
  */
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/ratelimit_lib.php';
-header('Content-Type: application/json; charset=utf-8');
+
+/* DIE KOPFZEILEN SETZT `json_roh_out()`, nicht diese Datei (P5a/AP4a,
+ * Nr. 203). Hier stand eine einzelne `header()`-Zeile ganz oben —
+ * `Content-Type` und sonst nichts. Ihr fehlten `nosniff`, `Referrer-Policy`
+ * und vor allem `Cache-Control: no-store`, und DIESER ENDPUNKT LIEFERT EINEN
+ * WERT JE KONTO (das Salt der Schluesselableitung). Eine zwischengespeicherte
+ * Antwort waere hier nicht nur unsauber, sondern falsch: Der Endpunkt ist
+ * unangemeldet erreichbar, ein Zwischenspeicher auf dem Weg unterschiede die
+ * Adressen nicht.
+ *
+ * DIE GLEICHE ANTWORTDAUER BLEIBT UNBERUEHRT: `kopfzeilen_json()` tut in
+ * BEIDEN Zweigen dasselbe und steht in beiden NACH
+ * `rate_gleiche_dauer()`. */
 
 // Zeitpunkt fuer die gleiche Antwortdauer beider Zweige — vor jeder Arbeit.
 $t0 = microtime(true);
@@ -62,10 +74,8 @@ $email = email_normalisieren($b['email'] ?? '');
  * dabei bisher fehlte. */
 if (!rate_erlaubt('salt', $email)) {
     rate_gleiche_dauer($t0, SALT_MINDESTDAUER);
-    http_response_code(429);
-    echo json_encode(['error'   => 'zu_viele_versuche',
-                      'meldung' => 'Zu viele Versuche. Bitte später erneut.']);
-    exit;
+    json_out(['error'   => 'zu_viele_versuche',
+              'meldung' => 'Zu viele Versuche. Bitte später erneut.'], 429);
 }
 // Jede Anfrage zaehlt, nicht nur eine fehlgeschlagene: Dieser Endpunkt kennt
 // kein Scheitern, er antwortet jeder Adresse. Begrenzt wird die Menge.
@@ -74,7 +84,7 @@ rate_zaehlen('salt', $email);
 
 if ($email === '' || strlen($email) > 190) {
     rate_gleiche_dauer($t0, SALT_MINDESTDAUER);
-    http_response_code(400); echo json_encode(['error' => 'email']); exit;
+    json_out(['error' => 'email'], 400);
 }
 
 $pdo = db();
@@ -88,8 +98,7 @@ $runden = KDF_ITER_LISTE;
 
 if ($u && $u['kdf_salt'] !== null) {
     rate_gleiche_dauer($t0, SALT_MINDESTDAUER);
-    echo json_encode(['salt' => $u['kdf_salt'], 'iter' => $runden]);
-    exit;
+    json_out(['salt' => $u['kdf_salt'], 'iter' => $runden]);
 }
 
 // Server-Geheimnis fuer Pseudo-Salts (einmalig erzeugt, app_state)
@@ -120,4 +129,4 @@ if ($sec === false) {
  */
 $pseudo = substr(hash_hmac('sha256', $email, (string)$sec), 0, 32);
 rate_gleiche_dauer($t0, SALT_MINDESTDAUER);
-echo json_encode(['salt' => $pseudo, 'iter' => $runden]);
+json_out(['salt' => $pseudo, 'iter' => $runden]);

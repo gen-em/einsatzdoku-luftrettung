@@ -77,6 +77,10 @@ function pw_session_start(): void {
     session_set_cookie_params([
         'httponly' => true, 'secure' => true, 'samesite' => 'Lax', 'path' => '/',
     ]);
+    /* `use_strict_mode` — siehe `auth_guard.php` (E-P5a-38, Nr. 205). Diese
+     * Sitzung traegt das Passwort-Token; eine untergeschobene Kennung waere
+     * hier die teuerste von allen. */
+    ini_set('session.use_strict_mode', '1');
     session_start();
 }
 
