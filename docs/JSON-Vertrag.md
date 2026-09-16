@@ -749,8 +749,27 @@ Fehler:
 | 401 | `{"error":"auth"}` | Schlüssel ungültig — Upload pausieren, Hinweis anzeigen |
 | 405 | `{"error":"method"}` | Falsche HTTP-Methode |
 | 413 | `{"error":"too_large"}` | Chunk zu groß — Uhr halbiert die Chunk-Größe und wiederholt |
+| 429 | `{"error":"zu_viele_versuche"}` | **Mengenbremse** (seit Web 20.11.0) — zu viele *fehlgeschlagene* Anmeldungen. Behandlung wie 401: Upload pausieren, Puffer behalten, später erneut. Die Antwort trägt `Retry-After` in Sekunden; **die Geräte müssen ihn nicht auswerten** und tun es heute nicht |
 | 5xx | — | Später unverändert erneut versuchen (Backoff) |
 | 503 | `{"error":"maintenance","meldung":"…"}` | **Wartungsmodus** — ein Sonderfall von 5xx, **kein neues Verhalten**: Der Server wird gerade aktualisiert und schließt sich für die Dauer. Behandlung genau wie 5xx, also Backoff und unverändert erneut. Die Antwort trägt zusätzlich `Retry-After` in Sekunden (heute 300) als Hinweis für Browser und Werkzeuge; **die Geräte müssen ihn nicht auswerten** und tun es heute nicht |
+
+**Die 429 ist die einzige Vertragsänderung seit langem — und sie verlangt vom
+Client nichts Neues.** Bis Web 20.10.0 war `ingest.php` der einzige Endpunkt
+ohne Mengenbremse; seit 20.11.0 zählt er fehlgeschlagene Geräteanmeldungen
+(30 je 15 Minuten, je Gerätekennung beziehungsweise — bei unbekannter Kennung
+— je Adresse) und sperrt dann für die Dauer der Sperrleiter, erste Sprosse
+15 Minuten.
+
+Ein Client, der 401 schon richtig behandelt, behandelt 429 damit ebenfalls
+richtig: pausieren, nichts verwerfen, später erneut. **Gezählt werden
+ausschließlich Fehlversuche** — ein gelungener Upload geht nie auf das
+Kontingent, und eine Uhr, die einen ganzen Dienst nachliefert, sendet
+beliebig viele Stücke.
+
+`Retry-After` steht dabei nicht, weil ein Gerät ihn liest — die Uhr **kann**
+es nicht, der Rückruf von Connect IQ bekommt `(code, data)` und keine
+Kopfzeilen. Die Zeile steht für den Fall, den der Vertrag ausdrücklich
+zulässt: einen fremden Client an derselben Schnittstelle.
 
 **Warum das eigens dasteht, obwohl sich nichts ändert.** Der Wartungsmodus
 (Web 13.2.0) ist die einzige Lage, in der der Server ein 5xx **absichtlich**

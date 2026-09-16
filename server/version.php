@@ -5133,5 +5133,99 @@ declare(strict_types=1);
  * einem zweiten, eigen gefangenen Statement und tut in diesem Fenster nichts.
  * Gesperrt wird dann mit der festen Dauer wie vor 20.10.0 — der Ratenschutz
  * faellt NICHT aus, er ist nur wieder so streng wie vorher.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.11.0 — DIE LETZTE ASYMMETRIE ENDET: `ingest.php` BEKOMMT EINE BREMSE
+ * ---------------------------------------------------------------------------
+ *
+ * (P5a/AP7; E-P5a-01, -02, -47, -48, -49; R19, Backlog Nr. 17.)
+ *
+ * Bis hierher war `ingest.php` der EINZIGE Endpunkt der Anwendung ohne
+ * Ratenschutz — und zugleich der, an dem die Clients aus den Stores haengen.
+ * E-R45-6 nennt genau diese Kombination als die Flutungsgefahr aus P5. Zwei
+ * Toepfe schliessen sie: `ingest` je Geraetekennung, `ingest_ip` je Adresse
+ * fuer Kennungen, die es nicht gibt. 30 Fehlversuche je 15 Minuten, danach
+ * die Sperrleiter aus 20.10.0, erste Sprosse 15 Minuten, Antwort 429 mit
+ * `Retry-After`.
+ *
+ * GEZAEHLT WERDEN NUR FEHLVERSUCHE. Ein gelungener Upload geht nie auf das
+ * Kontingent; eine Uhr, die einen ganzen Dienst nachliefert, sendet beliebig
+ * viele Stuecke. Nicht gezaehlt werden ausserdem 405, 413, 403
+ * `device_disabled`, 400 und 500 — und der Wartungsmodus schon gar nicht, der
+ * antwortet in `db.php`, bevor diese Datei laeuft.
+ *
+ * SICHTBAR AN ZWEI STELLEN, denn eine Uhr, die nichts mehr hochlaedt, ist
+ * sonst ein Raetsel: `devices.abgewiesen_seit` und `abgewiesen_anzahl`
+ * (Migration) stehen als Kleinzeile und orange Plakette auf der Kontoseite am
+ * Geraet und als Zeile auf Betrieb -> Status. Beide werden beim naechsten
+ * gelungenen Upload geleert — ein Vermerk, der stehenbleibt, nachdem neu
+ * gekoppelt wurde, ist eine Falschmeldung.
+ *
+ * ---------------------------------------------------------------------------
+ * DREI ABWEICHUNGEN VOM KONZEPT, ALLE BENANNT
+ * ---------------------------------------------------------------------------
+ *
+ * (a) DER ADRESSTOPF HAT 30 UND NICHT 50 (E-P5a-47). Verschiedene Schwellen
+ *     sind ein EXISTENZORAKEL: Wer dieselbe geratene Kennung haemmert,
+ *     bekaeme sie bei existierender Kennung ab dem 31. Versuch abgewiesen,
+ *     bei nicht existierender erst ab dem 51. Genau diese Auskunft hat M4-07
+ *     in `ingest.php` mit einem Blindvergleich beseitigt; sie als
+ *     Zaehlunterschied wieder einzubauen waere ein Rueckschritt durch die
+ *     Hintertuer. Die Absenkung kostet keinen legitimen Verkehr: In den
+ *     Adresstopf zaehlen ausschliesslich UNBEKANNTE Kennungen, und ein
+ *     gekoppeltes Geraet sendet nie eine unbekannte. WAS BLEIBT, STEHT DA:
+ *     Eine zweistufige Probe unterscheidet weiter. Sie zu schliessen hiesse,
+ *     auch bekannte Kennungen in den Adresstopf zu zaehlen — dann sperrte ein
+ *     einziges Geraet mit veraltetem Schluessel seine ganze Adresse,
+ *     einschliesslich des neu gekoppelten, das die Abhilfe ist.
+ *
+ * (b) DIE INGEST-TOEPFE BEKOMMEN EINE LEITER, und die Trennlinie im
+ *     Kopfkommentar von `ratelimit_lib.php` musste dafuer umgeschrieben
+ *     werden (E-P5a-48). Sie lautete: Kopplungstoepfe bekommen keine, weil
+ *     „dahinter ein Geraet steht, das nicht lesen kann, was auf der Seite
+ *     steht". Auf `ingest.php` trifft das woertlich genauso zu — die Regel
+ *     haette also gegen die Leiter entschieden, die AP7 baut. Die tragfaehige
+ *     Trennlinie ist: Unterbricht die laengere Sperre einen Vorgang, der
+ *     GERADE LAEUFT? Bei der Kopplung ja (jemand steht am Geraet mit einem
+ *     Code, der in zehn Minuten verfaellt), bei `ingest.php` nein (die Daten
+ *     liegen in der Warteschlange des Geraets).
+ *
+ * (c) ZWEI ABNAHMEZEILEN WAREN SO NICHT ERFUELLBAR (E-P5a-49). „Sperre
+ *     10 min" — die erste Sprosse ist seit E-P5a-43 fuenfzehn. Und
+ *     „Messstand-Zahlen fuer `ingest.php`" — der Messstand erhebt fuer
+ *     `ingest.php` keine Zahl und hat nie eine erhoben. Gemessen wurde
+ *     stattdessen der Sendeplan des Referenzdatensatzes: 612 echte Anfragen,
+ *     64 478 Punkte, je zwei Laeufe mit und ohne Bremse.
+ *
+ * ---------------------------------------------------------------------------
+ * WAS DIE MESSUNG SAGT, UND WAS SIE NICHT SAGT
+ * ---------------------------------------------------------------------------
+ *
+ * Die Bremse kostet EINE zusaetzliche Abfrage je Upload — die Pruefung vor
+ * der Geraeteabfrage, ueber beide Toepfe in EINEM Statement. Gemessen (612
+ * Anfragen je Lauf): Median 14,43 ms ohne, 15,14 ms mit; Mittel 19,67 ms
+ * ohne, 20,33 ms mit. Das sind +4,9 % beziehungsweise +3,4 %. Die Streuung
+ * ZWISCHEN ZWEI GLEICHEN LAEUFEN liegt bei 3 bis 4 % — der Aufschlag liegt
+ * also in derselben Groessenordnung wie das Rauschen und ist damit die obere
+ * Schranke, nicht der Messwert.
+ *
+ * ---------------------------------------------------------------------------
+ * EIN FEHLER, DER NEBENBEI AUFFIEL
+ * ---------------------------------------------------------------------------
+ *
+ * `$pdo->rollBack()` im Fehlerzweig von `ingest.php` lief unbedingt — und
+ * `commit()` steht MITTEN im try-Block, danach kommen noch Hoehenberechnung
+ * und Antwortaufbau. Warf eine von beiden, traf der Rollback auf keine offene
+ * Transaktion und warf seinerseits. Diese zweite Ausnahme ersetzte die erste:
+ * Die `kennung` im Fehlerprotokoll benannte den Rollback statt der Ursache —
+ * also genau das Schweigen, das M3-10 abgestellt hat.
+ *
+ * EINE MIGRATION: `2026_09_16_geraet_abgewiesen` (zwei Spalten auf
+ * `devices`). NACH DEM DEPLOY MUSS EINE ADMINISTRATORIN
+ * BETRIEB -> UPDATES AUFRUFEN. Das Fenster dazwischen ist mitgedacht: Die
+ * Abfrage in `ingest.php` und die auf der Kontoseite haben einen Rueckfall
+ * ohne die beiden Spalten, die Statusseite faengt. Der Schutz selbst haengt
+ * nicht daran — er zaehlt in `rate_limits`, und die Tabelle steht seit
+ * 20.10.0.
  */
-const WEB_VERSION = '20.10.0';
+const WEB_VERSION = '20.11.0';

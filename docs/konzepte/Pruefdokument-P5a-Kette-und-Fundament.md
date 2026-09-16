@@ -35,6 +35,9 @@ beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
 | N15 | **Das Aussehen einer Mail in einem Mailprogramm** | Dasselbe. Der Rahmen ist auf seine **Bestandteile** geprüft (Anrede, Kern, Kontaktzeile, Grußformel mit `instanz_name()`), nicht auf seine Wirkung. | Prüfpunkt **P18** — eine echte Einladung und eine echte Reset-Mail ansehen. |
 | N16 | **Eine hängende Namensauflösung** | `smtp_send()` rechnet mit einer Frist ab dem ersten Byte; die DNS-Auflösung liegt **davor** und lässt sich in PHP nicht begrenzen. Das steht im Kopf der Datei ausgeschrieben. | Nicht nachstellbar. Was gemessen ist: ein Server, der **antwortet und dann schweigt** (5,01 s bei 5 s Budget), und einer mit **12 Fortsetzungszeilen je 1 s** (5,00 s; ohne Frist über 13 s). |
 | N17 | **Zwei Job-Läufe, die dieselbe Warteschlangenzeile gleichzeitig greifen** | Nicht nachgestellt. | Die Sperre `laeuft_seit` in `jobs` verhindert zwei gleichzeitige Läufe desselben Jobs (jobprobe Teil 5); zwei **verschiedene** Auslöser am selben Job sind damit abgedeckt, ein manueller Direktaufruf von `mail_zeile_versuchen()` nicht. |
+| N22 | **Der vollständige Einspiellauf des Referenzdatensatzes** (`tools/referenzdatensatz/einspielen/`) | Der Generator lief (21 Dienste, 612 Ingest-Anfragen, 64 478 Punkte). Die Stufe `geraet` bricht ab: Sie koppelt über die **Weboberfläche** und braucht eine angemeldete Sitzung des Demo-Kontos; dessen Einladungslink war in diesem Container nicht mehr zu haben (`Konto demo@gen-em.org besteht bereits`), und ohne ihn wirkt das Einlösen des Kopplungscodes nicht (`409 nicht_beansprucht`). | Gemessen wurde **der erzeugte Sendeplan selbst** — dieselben 612 Anfragen, dieselben Körper, über echtes HTTP, mit per SQL angelegten Geräten: **0 Fehlversuche**, Median 14,43 ms ohne und 15,14 ms mit Bremse (je zwei Läufe). Das prüft `ingest.php`, nicht die Geräteverwaltung — und das ist die Frage von AP7. Der Kopplungsweg und die beiden Kreisläufe gehören zu **AP12**. |
+| N23 | **Ob `Retry-After` einen Client erreicht** | Kein Client dieses Projekts liest die Kopfzeile, und die Garmin-Uhr **kann** es nicht: Der Rückruf von Connect IQ bekommt `(code, data)` und keine Kopfzeilen. | Gemessen ist, dass die Zeile **dasteht und den richtigen Wert trägt** (`Retry-After: 900`, Ingestprobe Teil 10). Dass beide Clients die `429` richtig behandeln, ist am **Quelltext** belegt (`Uploader.mc` fällt in „später erneut", `Sendeantwort.lese()` in `SpaeterErneut` bei `code != 200`, und `Sender.sendeAlles()` bricht den Lauf ab) — **nicht** an einem laufenden Gerät. Prüfpunkt **P24**. |
+| N24 | **Die Mengenbremse unter echtem Mobilfunk-NAT** | Der Container hat eine Adresse. Ob hinter einem Anbieter-NAT Geräte zusammenfallen, sagt nur der Betrieb. | Die Bauart nimmt das Risiko heraus: In den Adresstopf zählen **ausschließlich unbekannte** Kennungen, und ein gekoppeltes Gerät sendet nie eine unbekannte — gemessen als eigene Erwartung („Der Adresstopf ist leer — bekannte Kennungen zählen dort nicht"). Prüfpunkt **P24**. |
 | N8 | **Die Kontingent-Warnmail auf einem echten Mailserver** | Der Container hat keinen. | Die Logik ist mit abgesenkten Schwellen (50/53 %) durchgespielt: Beide Schwellen schlagen an, der Versand scheitert erwartungsgemäß und wird **nicht** als gemeldet vermerkt — also am nächsten Tag erneut versucht. Prüfpunkt **P10**. |
 
 ---
@@ -217,6 +220,58 @@ täte. Deshalb steht dort auch die `Off`-Zeile.
 nicht über den Weg durch `login.php` — den misst der Browser (Abschnitt 2).
 Und die Uhr ist gestellt: „Nach 24 Stunden fällt die Stufe" ist gemessen,
 indem `stufe_bis` zurückdatiert wurde, nicht indem gewartet wurde.
+
+### 1h. Nach AP7 (Web 20.11.0), im selben Container
+
+| Mittel | Aufruf | Ergebnis |
+|---|---|---|
+| **Ingestprobe** (um Teil 10 erweitert) | `php tools/ingestprobe/probe.php` | **83 Erwartungen, 0 nicht erfüllt** — davon **21 neu** |
+| Ratenprobe | `php tools/ratenprobe/probe.php` | **50 Prüfungen, 0 Befunde** (zwei neu) |
+| Migrationsregister | `php tools/migrationsregister/pruefen.php` | **0 Befunde**; 52/52 Kennungen, 34 Tabellen, **219 Spalten** |
+| **Laufzeit über den erzeugten Sendeplan** | eigenes Messskript, 612 Anfragen je Lauf | siehe Tabelle unten; **0 Fehlversuche in allen vier Läufen** |
+| Bilderlauf (zwei berührte Seiten, acht Breiten) | `node tools/screenshots/aufnehmen.mjs --nur 33-,45-` | **16 Bilder · 0 Überlauf · 0 Konsolenfehler · 0 Knöpfe falscher Höhe** |
+| Wortliste | `python3 tools/wortliste/wortliste.py` | **0/0/0** (98 Regeln, 98 gegriffen) |
+| Vollständigkeit | `… --hoechstens 372` | **372 — unverändert** |
+| PHP-Syntax | `php -l` je geänderte Datei | 0 Fehler |
+
+**Die Zahlen der Ingestprobe Teil 10 im Einzelnen** — sie sind die Abnahme
+von AP7:
+
+| Was | Gemessen |
+|---|---|
+| 14 Fehlversuche in einem Stoß | **alle `401`**, `gesperrt_bis` leer, Zähler 14 |
+| Versuche 15 bis 30 | **weiterhin `401`** — der *sperrende* Versuch selbst wird nicht abgewiesen |
+| Versuch 31 | **`429`**, Rumpf `{"error":"zu_viele_versuche"}`, **`Retry-After: 900`**, Tabelle: Stufe 1, Rest 900 s |
+| Die Antwort | nennt den Topf **nicht** (ein Schlüssel im Rumpf, sonst nichts) |
+| Sperrereignisse | **genau 1** — eines je Sperre, nicht eines je Fehlversuch |
+| Vermerk am Gerät | **30** mit Beginnzeitpunkt; der 31. Versuch ist **nicht** mitgezählt (er kam nicht bis zur Prüfung) |
+| Nachbar an derselben Adresse | **`200`** — und der Adresstopf ist **leer** |
+| `403 device_disabled` | **zählt nicht** (keine Zeile im Topf) |
+| `400 payload` | **zählt nicht** |
+| `413 too_large` | **zählt nicht** |
+| Gelungener Upload | leert Topf **und** Vermerk (`anzahl 30 → 0`, `seit → NULL`) |
+| 30 erfundene Kennungen | alle `401`, der 31. **`429`** — **dieselbe Schwelle** wie bei bekannter Kennung (E-P5a-47) |
+| Erfundene Kennung | hinterlässt **keinen** Gerätevermerk (0 Geräte) |
+| Gesperrte Adresse | auch ein gültiges Gerät bekommt **`429`** — der in E-P5a-47 benannte Kollateralschaden, gemessen und nicht behauptet |
+
+**Die Laufzeitmessung, je zwei Läufe:**
+
+| | ohne Bremse | mit Bremse | Δ |
+|---|---|---|---|
+| Median je Anfrage | **14,43 ms** | **15,14 ms** | +4,9 % |
+| Mittel je Anfrage | **19,67 ms** | **20,33 ms** | +3,4 % |
+| Gesamtdauer 612 Anfragen | 12,10 s | 12,51 s | +3,4 % |
+| Fehlversuche | **0** | **0** | — |
+
+**Was diese Zahl benennt — und was nicht.** Die Streuung **zwischen zwei
+gleichen Läufen** liegt bei 3 bis 4 %; der Aufschlag ist damit die **obere
+Schranke**, nicht der Messwert. Gemessen ist der Weg durch `ingest.php` auf
+einem Container mit lokaler MariaDB — nicht auf geteiltem Webspace, wo eine
+zusätzliche Abfrage anders wiegt. Und gemessen ist der **gelungene** Weg: Die
+Bremse kostet dort genau eine indizierte Abfrage; im Fehlerzweig kommen die
+Zählschritte dazu, und der Fehlerzweig ist der, den niemand schnell braucht.
+
+---
 
 ---
 
@@ -693,6 +748,57 @@ Weitere Anlässe in derselben Stunde erzeugen keine zweite.
 `ratenschutz_mail_last`). Gar keine Mail: erst prüfen, ob unter Verwaltung →
 Installation eine Betreiberadresse steht und ob der Schalter „Bei der höchsten
 Stufe melden" an ist; danach Betrieb → Status, Zeile „Warteschlange".
+
+### P24 — Eine echte Uhr mit veraltetem Schlüssel
+
+**Wofür:** N23 und N24 — dass beide Clients die `429` richtig behandeln, ist
+am Quelltext belegt, nicht an einem laufenden Gerät. Und ob die Adressgrenze
+hinter einem Mobilfunk-NAT trägt, sagt nur der Betrieb.
+
+**Weg:**
+
+1. Ein gekoppeltes Gerät einen Dienst aufzeichnen lassen, **ohne** dass es
+   hochlädt (Flugmodus genügt) — so entsteht ein Rückstand in seiner
+   Warteschlange.
+2. Im Web **Verwaltung → Konto → Geräte** das Gerät entkoppeln und **neu**
+   koppeln. Das alte Gerät trägt jetzt einen veralteten Schlüssel.
+3. Das alte Gerät online nehmen und seinen Rückstand senden lassen.
+
+**Erwartet:**
+
+- Das Gerät **verliert nichts**. Sein Rückstand bleibt vollständig —
+  Punktzahl vorher gleich Punktzahl nachher.
+- Die Uhr zeigt eine Störung an und hört auf zu senden; die Android-App
+  ebenso. **Kein** Paket wird als „fehlerhaft" markiert.
+- In **Einstellungen → Geräte** trägt das alte Gerät eine orange Plakette
+  **„abgewiesen"** und in der Kleinzeile eine Zahl mit Zeitpunkt.
+- In **Betrieb → Status** steht die Zeile **„Abgewiesene Geräte"** (orange)
+  mit derselben Zahl.
+- Das **neu gekoppelte** Gerät lädt die ganze Zeit ungestört weiter hoch —
+  auch wenn beide im selben WLAN hängen.
+
+**Woran ein Scheitern zu erkennen ist:**
+
+- **Das alte Gerät verwirft Pakete** oder markiert sie als fehlerhaft: Dann
+  behandelt es die `429` wie eine `400`. Das wäre ein Fehler im Client, nicht
+  im Server — nachzusehen in `Uploader.mc` (`onResponse`) beziehungsweise
+  `Sendeantwort.lese()`.
+- **Das neue Gerät kommt nicht mehr durch**: Dann zählen Fehlversuche mit
+  *bekannter* Kennung in den Adresstopf, und das darf nicht sein (E-P5a-47).
+  In `rate_limits` nachsehen: Steht dort eine Zeile mit `topf = 'ingest_ip'`,
+  obwohl nur bekannte Kennungen gesendet haben, sitzt der Fehler in
+  `ingest.php` an den beiden `401`-Zweigen.
+- **Der Vermerk bleibt stehen**, nachdem das Gerät wieder hochlädt: Dann
+  greift die Rücksetzung hinter der Schlüsselprüfung nicht — sichtbar daran,
+  dass `abgewiesen_anzahl` in `devices` größer als 0 bleibt, obwohl
+  `last_seen` frisch ist.
+- **Mehrere Geräte im selben Netz werden gemeinsam gesperrt**, ohne dass
+  jemand erfundene Kennungen sendet: Dann ist die Aufteilung der Töpfe
+  verletzt. Das ist der einzige Fall, in dem die Adressgrenze von 30 zu
+  niedrig wäre — und dann ist nicht die Zahl das Problem, sondern die
+  Zuordnung.
+
+---
 
 ---
 

@@ -427,8 +427,11 @@ Daten erst nach Server-Bestätigung.
 │   ├── ingestprobe/       prüft die Uhr-Schnittstelle nach der Ausdünnung
 │   │                      (S2/AP3) über ECHTES HTTP: Nachzügler an Stufe 2
 │   │                      werden angenommen, Punkte hinter einer Stufe-3-Spur
-│   │                      verworfen UND quittiert. Legt ihr eigenes Konto an
-│   │                      und räumt es ab (s. LIESMICH.md)
+│   │                      verworfen UND quittiert. Seit P5a/AP7 dazu Teil 10,
+│   │                      die Mengenbremse (14 ohne Sperre, 30 mit,
+│   │                      Retry-After, was NICHT zählt) — 83 Erwartungen.
+│   │                      Legt ihr eigenes Konto an und räumt es ab
+│   │                      (s. LIESMICH.md)
 │   ├── mailprobe/         Warteschlange, Katalog und Frist gegen eine EIGENE
 │   │                      SMTPS-Gegenstelle, die auf Kommando ablehnt,
 │   │                      schweigt oder zwölf Fortsetzungszeilen schickt
@@ -701,7 +704,7 @@ Daten erst nach Server-Bestätigung.
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“ |
 | Backup | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist im Backup, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
-| `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname, **VARCHAR(191)** — die Gerätedateien liefern Sammelnamen bis 153 Zeichen; die zunächst gewählten 64 waren geraten und sind mit Web 12.9.1 nachgezogen) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Siehe Abschnitt 5 |
+| `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname, **VARCHAR(191)** — die Gerätedateien liefern Sammelnamen bis 153 Zeichen; die zunächst gewählten 64 waren geraten und sind mit Web 12.9.1 nachgezogen) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Seit Web 20.11.0 dazu **`abgewiesen_seit`** (der **erste** Fehlversuch einer Serie, nicht der letzte) und **`abgewiesen_anzahl`** — der Vermerk der Mengenbremse aus P5a/AP7 (Abschnitt 5e.7). Beide werden beim nächsten gelungenen Upload geleert; ein Vermerk, der stehenbleibt, nachdem neu gekoppelt wurde, ist eine Falschmeldung. Siehe Abschnitt 5 |
 | `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
@@ -722,7 +725,7 @@ Daten erst nach Server-Bestätigung.
 | `day_capabilities` | Eingefrorene Fähigkeiten des Diensttags. Wird der Windenhaken am Rettungsmittel später entfernt, verlieren alte Einsätze ihre Windenfelder nicht (A13e) |
 | `pair_sessions` | Kopplungssitzungen (seit Web 13.0.0, S5): Das **Gerät** holt sich mit `start` eine Sitzung und zeigt den Code, ein Mensch gibt ihn im Web ein (`user_id` wird gesetzt: beansprucht), das Gerät bestätigt mit Ja — erst dann entsteht die `devices`-Zeile; bis dahin sind Kennung und Schlüssel **schwebend**. Code **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **eine Frist von 10 Minuten ab `erstellt_am` für alles**; Schlüssel als SHA-256; die Datenbank ist der Schiedsrichter (Beanspruchen per `UPDATE … WHERE user_id IS NULL`, gültig bei `rowCount() = 1`); keine Endzustände — bestätigt und verworfen werden gelöscht, verfallen entsorgt der Job `aufraeumen`; Obergrenze `PAIR_SITZUNGEN_MAX` (1000) über unverfallene Zeilen. Löste `pair_codes` ab (Code im Web erzeugt, an der Uhr getippt); Ratenschutz über `rate_limits` mit drei Töpfen |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
-| `rate_limits` | Ratenschutz: Versuche je `topf` und `merkmal` (`ip:…`, `id:…` oder `alle`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. **Die Töpfe stehen in `RATE_GRENZEN` und nirgends sonst**; es sind zwölf — hier stand bis Web 20.10.0 „alle vier“, und das war seit sechs Töpfen falsch. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand. Seit Web 20.10.0 dazu **`stufe`** (0 = nie gesperrt, 1–4 = Sprosse der Sperrleiter) und **`stufe_bis`** (letzter Fehlversuch + 24 h; danach gilt die Stufe als 0, auch wenn die Zeile noch dasteht) sowie ein Index auf `gesperrt_bis` |
+| `rate_limits` | Ratenschutz: Versuche je `topf` und `merkmal` (`ip:…`, `id:…` oder `alle`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. **Die Töpfe stehen in `RATE_GRENZEN` und nirgends sonst** — und hier steht ihre Zahl absichtlich **nicht** mehr: Bis Web 20.10.0 stand „alle vier“ (falsch seit sechs Töpfen), bis 20.11.0 „es sind zwölf“ (falsch mit den beiden Ingest-Töpfen). Eine Zahl in einem Fließtext altert genauso still wie eine Aufzählung. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand. Seit Web 20.10.0 dazu **`stufe`** (0 = nie gesperrt, 1–4 = Sprosse der Sperrleiter) und **`stufe_bis`** (letzter Fehlversuch + 24 h; danach gilt die Stufe als 0, auch wenn die Zeile noch dasteht) sowie ein Index auf `gesperrt_bis` |
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
 | `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e); seit Web 20.5.0 `speicher_db_grenze_gb` = Kontingent der Datenbank laut Hosting; seit Web 20.6.0 `migration_tor_hash` und `migration_tor_offen` = der Zwischenspeicher des Torwächters; seit Web 20.7.0 `csp_scharf` = Content-Security-Policy scharf statt Report-Only und `hsts_tage` = Bindungsdauer von HSTS in Tagen, 0/1/7/365, fehlend = **1** (siehe 5c); seit Web 20.8.0 `instanz_name` und `instanz_kurz` = der Name dieser Installation, fehlend = „Gen-EM Einsatzdokumentation Notarzt" bzw. „Gen-EM NAdoku" (siehe 5d)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 5c) |
@@ -5234,8 +5237,10 @@ zu erfahren warum.
 
 #### Mengenbremse
 
-Zwei neue Töpfe in `ratelimit_lib.php`, die **anders zählen** als die vier
-bestehenden: nicht Fehlversuche, sondern **gelungene** Anmeldungen.
+Zwei neue Töpfe in `ratelimit_lib.php`, die **anders zählen** als die
+übrigen: nicht Fehlversuche, sondern **gelungene** Anmeldungen. (Eine Zahl
+stand hier bis Web 20.11.0 — „als die vier bestehenden“ —, und sie war
+schon lange falsch.)
 
 | Topf | Merkmal | Grenze | Fenster |
 |---|---|---|---|
@@ -7129,7 +7134,7 @@ entfällt, weil ein Paketname keinen trägt — steht in
 Installation — Betriebskonfiguration der Auslieferungskette, keine Eigenschaft
 der Software.
 
-### 5e Der Ratenschutz — Leiter, zwei Schwellen, Verlangsamung (P5a/AP6)
+### 5e Der Ratenschutz — Leiter, zwei Schwellen, Verlangsamung, Mengenbremse (P5a/AP6, AP7)
 
 **Was bis Web 20.9.1 galt.** Eine Sperre dauerte fest 15 Minuten — die erste
 wie die hundertste. Wer geduldig ist, bekommt damit 10 Versuche je
@@ -7148,13 +7153,21 @@ Vorgabe **15 / 20 / 30 / 60 min**. Verfall: **24 h ohne Fehlversuch**
 > beides zusammen geht nicht auf. Gewählt ist die Lesart, die jemand
 > ausspricht: Stufe 4 heißt wörtlich die 60-Minuten-Sperre.
 
-**Nicht jeder Topf bekommt eine Leiter** — nur `login`, `login_ip` und `salt`:
+**Nicht jeder Topf bekommt eine Leiter** — nur `login`, `login_ip`, `salt`
+und seit Web 20.11.0 `ingest` und `ingest_ip`:
 
 | Topf | Leiter | warum |
 |---|---|---|
+| `ingest`, `ingest_ip` | **ja** (seit 20.11.0) | bei `ingest.php` läuft kein Vorgang, den die längere Sperre unterbricht — die Daten liegen in der Warteschlange des Geräts und kommen später an. Die Sperre kostet den legitimen Fall nichts als Zeit, und Zeit ist genau das, was sie den illegitimen kosten soll (E-P5a-48) |
 | `reset` | **nein** | sperrt heute 3600 s; jede Sprosse unterhalb der vierten wäre *schwächer*. Und sein Scheitern ist absichtlich still — `reset_request.php` antwortet im gesperrten Fall wortgleich wie im erlaubten |
-| `pair`, `pair_start`, `pair_code` | nein | dahinter steht ein Gerät, das nicht lesen kann, was auf der Seite steht |
+| `pair`, `pair_start`, `pair_code` | nein | eine längere Sperre unterbräche dort einen Vorgang, der **gerade läuft**: Jemand steht am Gerät mit einem Code, der in zehn Minuten verfällt. Eine Stunde Sperre schreckt keinen Automaten ab, sie beendet die Kopplung für den Menschen |
 | `demo`, `demog`, `testmail`, `csp` | nein | die zählen **Menge**, nicht Fehlversuche — es gibt dort niemanden, der eskaliert |
+
+> **Die Trennlinie stand bis Web 20.11.0 falsch da.** Bei den Kopplungstöpfen
+> hieß es, „dahinter steht ein Gerät, das nicht lesen kann, was auf der Seite
+> steht" — auf `ingest.php` trifft das wörtlich genauso zu, die Regel hätte
+> also gegen die Leiter entschieden, die AP7 dort baut. Sie war nicht falsch
+> gemeint, sondern falsch formuliert (E-P5a-48).
 
 #### 5e.2 Zwei Schwellen, zwei Töpfe
 
@@ -7237,7 +7250,108 @@ werfen — und weil `rate_misserfolg()` alles in *einem* `try/catch` fängt und
 still zurückkehrt, zählte der Ratenschutz gar nicht mehr. Für **alle** Töpfe,
 nicht nur für die Leiter, und ohne dass irgendetwas rot würde.
 
-**Nachweis:** `php tools/ratenprobe/probe.php` — 49 Prüfungen, 0 Befunde.
+**Nachweis:** `php tools/ratenprobe/probe.php` — 50 Prüfungen, 0 Befunde.
+
+#### 5e.7 Die Mengenbremse von `ingest.php` (Web 20.11.0, P5a/AP7)
+
+**Was bis Web 20.10.0 galt.** `ingest.php` war der **einzige Endpunkt der
+Anwendung ohne Ratenschutz**. Das war kein Versehen, sondern eine offene
+Grundsatzfrage (R19, Backlog Nr. 17): Ein Zähler am Upload-Endpunkt kann eine
+Uhr aussperren, die ihre Daten loswerden will. Mit der Verteilung der Clients
+über die Stores (E-PV-1) hat sich die Abwägung gedreht — E-R45-6 nennt genau
+diese Kombination, öffentlicher Client mit Geräteschlüssel ohne Bremse, als
+die Flutungsgefahr aus P5. Entschieden mit E-P5a-01.
+
+**Zwei Töpfe, je 30 Fehlversuche pro 15 Minuten, mit Leiter:**
+
+| Topf | Merkmal | wann er zählt |
+|---|---|---|
+| `ingest` | `id:<Gerätekennung>` | die Kennung **gibt es**, der Schlüssel passt nicht |
+| `ingest_ip` | `ip:<Adresse>` | die Kennung **gibt es nicht** |
+
+**Gezählt werden ausschließlich Fehlversuche** (E-P5a-01 (1)). Nicht gezählt
+werden `405`, `413`, `403 device_disabled`, `400` und `500` — und der
+Wartungsmodus schon gar nicht, der antwortet in `db.php`, bevor `ingest.php`
+läuft. Ein gelungener Upload leert den Kennungstopf.
+
+**Die Bremse sitzt geteilt**, und das ist wesentlich:
+
+- Die **Prüfung** steht **vor** der Geräteabfrage — genau die will sie
+  einsparen — und damit auch vor `demo_reset_wenn_faellig()` und vor
+  `beginTransaction()`. Eine Bremse, die erst hinter der Arbeit greift, bremst
+  nichts. Sie liest beide Töpfe in **einem** Statement
+  (`rate_sperre_paare()`), weil das der heißeste Weg der Anwendung ist.
+- Die **Zählung** steht nur an den beiden Zweigen, die mit `401` enden.
+
+**Die Antwort ist `429` mit `{"error":"zu_viele_versuche"}` und
+`Retry-After`** — und sie nennt nicht, welcher Topf gegriffen hat.
+
+##### Warum 30 und nicht 10
+
+Gemessen am Sendeplan des Referenzdatensatzes
+(`tools/referenzdatensatz/einspielen/messprotokoll.json`): 612 Anfragen, Spitze
+**3** an einem einzelnen Auslöser, 199 Abstände von 0 s — ein Dienst kommt in
+**Stößen**. Der Stoß, der die Grenze bestimmt, ist aber ein anderer: ein
+**Schlüsselwechsel**. Danach liegen die Pakete eines ganzen Dienstes in der
+Warteschlange des Geräts und laufen der Reihe nach in die Abweisung;
+**14 Teilstücke in einem Paket** sind gemessen (`teilstuecke_je_paket.max`).
+30 lässt zwei solche Stöße durch.
+
+##### Das Existenzorakel — benannt, verkleinert, nicht geschlossen
+
+Das Konzept nannte **50** für den Adresstopf. Verschiedene Schwellen sind eine
+Auskunft: Wer dieselbe geratene Kennung von einer Adresse aus hämmert, bekäme
+sie bei existierender Kennung ab dem 31. Versuch abgewiesen, bei nicht
+existierender erst ab dem 51. Genau diese Auskunft hat **M4-07** in
+`ingest.php` mit dem Blindvergleich gegen `GERAET_VERGLEICHSWERT` beseitigt.
+
+**Deshalb 30 gegen 30** (E-P5a-47). Die Absenkung kostet keinen legitimen
+Verkehr: In den Adresstopf zählen ausschließlich *unbekannte* Kennungen, und
+ein gekoppeltes Gerät sendet nie eine unbekannte. Der NAT-Einwand trifft nur
+Geräte, deren Eintrag im Web gelöscht wurde (R47) und die weitersenden — die
+sollen aufhören.
+
+> **Was bleibt, wird nicht beschönigt.** Eine zweistufige Probe unterscheidet
+> weiterhin: 31 Versuche mit der fraglichen Kennung, danach einer mit einer
+> offensichtlich erfundenen. Kommt darauf `401`, war die erste bekannt. Das zu
+> schließen hieße, auch Fehlversuche **bekannter** Kennungen in den Adresstopf
+> zu zählen — dann sperrt ein einziges Gerät mit veraltetem Schlüssel seine
+> ganze Adresse, einschließlich des soeben neu gekoppelten, das die Abhilfe
+> ist. Die Kennung ist `dev-` + 128 Bit Zufall und laut `pair.php`
+> ausdrücklich **kein Geheimnis**; das Orakel beantwortet nur die Frage „ist
+> diese Kennung, die ich ohnehin schon habe, noch eingetragen?"
+
+##### Der Vermerk am Gerät
+
+`devices.abgewiesen_seit` (der **erste** Fehlversuch einer Serie, nicht der
+letzte) und `devices.abgewiesen_anzahl`. Sichtbar unter **Einstellungen →
+Geräte** (Kleinzeile und orange Plakette) und unter **Betrieb → Status**
+(Zeile „Abgewiesene Geräte"). Beide werden beim nächsten gelungenen Upload
+geleert.
+
+##### Das Fenster zwischen Deploy und `update.php`
+
+Die beiden Spalten kommen mit einer Migration. Die Geräteabfrage in
+`ingest.php` und die auf der Kontoseite haben deshalb einen **Rückfall** ohne
+sie; die Statusseite fängt. Der Schutz selbst hängt nicht daran — er zählt in
+`rate_limits`, und die Tabelle steht seit Web 20.10.0.
+
+##### Was die Clients tun müssen: nichts
+
+Ein Client, der `401` richtig behandelt, behandelt `429` ebenfalls richtig.
+Beide tun es bereits: Die Uhr fällt in ihren Zweig „später erneut"
+(`Uploader.mc`), die Android-App in `Sendeantwort.SpaeterErneut`
+(`code != 200`), und beide brechen den Sendelauf ab, ohne etwas zu verwerfen.
+`Retry-After` liest keiner von beiden — die Uhr **kann** es nicht, der Rückruf
+von Connect IQ bekommt `(code, data)` und keine Kopfzeilen. Die Zeile steht
+für einen fremden Client an derselben Schnittstelle.
+
+**Nachweis:** `php tools/ingestprobe/probe.php` — 83 Erwartungen, 0 nicht
+erfüllt, davon 21 in Teil 10. Laufzeit über den erzeugten Sendeplan (612
+Anfragen, 64 478 Punkte, je zwei Läufe): Median **14,43 ms ohne**,
+**15,14 ms mit** Bremse (+4,9 %), Mittel 19,67 gegen 20,33 ms (+3,4 %), 0
+Fehlversuche in allen vier Läufen — bei einer Streuung von 3 bis 4 % zwischen
+zwei *gleichen* Läufen.
 
 
 ## 6. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)

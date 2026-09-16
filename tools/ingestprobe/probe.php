@@ -102,6 +102,41 @@ $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, act
     ->execute([$uid, $handyKennung, geraet_schluessel_hash($handyKey),
                'Ingestprobe Handy', 'handy', 'Google Pixel 8']);
 
+/* DREI WEITERE GERAETE FUER DIE MENGENBREMSE (Teil 10, P5a/AP7).
+ *
+ * WARUM EIGENE UND NICHT DAS UHR-GERAET: Teil 10 sperrt absichtlich, und eine
+ * Sperre auf der Kennung des Uhr-Geraets machte die Teile 1 bis 9 beim
+ * naechsten Lauf unbrauchbar. Die Toepfe heissen `ingest` (je Kennung) und
+ * `ingest_ip` (je Adresse) — die Kennung laesst sich trennen, die Adresse
+ * nicht, deshalb steht Teil 10 am Ende.
+ *
+ *   `bremse`     wird gesperrt (bekannte Kennung, falscher Schluessel)
+ *   `nachbar`    beweist, dass die Sperre des ersten ihn NICHT trifft
+ *   `abgeschaltet` beweist, dass `device_disabled` NICHT zaehlt */
+$bremseKennung = 'dev-ingestprobe-bremse';
+$bremseKey     = bin2hex(random_bytes(24));
+$nachbarKennung = 'dev-ingestprobe-nachbar';
+$nachbarKey     = bin2hex(random_bytes(24));
+$ausKennung    = 'dev-ingestprobe-aus';
+$ausKey        = bin2hex(random_bytes(24));
+$insG = $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active,
+                                            geraet_art, geraet_modell)
+                       VALUES (?,?,?,?,?,?,?)');
+$insG->execute([$uid, $bremseKennung, geraet_schluessel_hash($bremseKey),
+                'Ingestprobe Bremse', 1, 'uhr', 'Forerunner 955']);
+$insG->execute([$uid, $nachbarKennung, geraet_schluessel_hash($nachbarKey),
+                'Ingestprobe Nachbar', 1, 'uhr', 'Forerunner 955']);
+$insG->execute([$uid, $ausKennung, geraet_schluessel_hash($ausKey),
+                'Ingestprobe Abgeschaltet', 0, 'uhr', 'Forerunner 955']);
+
+/* DIE TOEPFE WERDEN VOR DEM LAUF GELEERT, NICHT NUR DANACH.
+ *
+ * Bricht ein Lauf mitten in Teil 10 ab, bleibt die Adresse 15 Minuten
+ * gesperrt — und der naechste Lauf faellt dann in JEDEM Teil um, mit 429
+ * statt 200, ohne dass an der Sache etwas falsch waere. Eine Probe, die sich
+ * selbst so vergiften kann, raeumt am Anfang. */
+$pdo->exec("DELETE FROM rate_limits WHERE topf IN ('ingest','ingest_ip')");
+
 /**
  * Eine Anfrage an ingest.php — echtes HTTP, wie die Uhr sie stellt.
  *
@@ -112,6 +147,13 @@ function senden(array $koerper, ?string $dev = null, ?string $key = null): array
     global $basis, $geraetKennung, $geraetKey;
     $dev = $dev ?? $geraetKennung;
     $key = $key ?? $geraetKey;
+    /* DIE KOPFZEILEN KOMMEN SEIT WEB 20.11.0 MIT (P5a/AP7).
+     *
+     * Bis dahin lieferte diese Funktion nur Code und Rumpf — und damit liess
+     * sich die halbe Zusage der Mengenbremse nicht nachweisen: `Retry-After`
+     * ist eine KOPFZEILE. Eine Probe, die genau das nicht sehen kann, was
+     * das Paket zugesagt hat, ist keine Probe. */
+    $kopf = [];
     $ch = curl_init("$basis/ingest.php");
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
@@ -121,12 +163,20 @@ function senden(array $koerper, ?string $dev = null, ?string $key = null): array
                                'X-Api-Key: ' . $key],
         CURLOPT_POSTFIELDS => json_encode($koerper),
         CURLOPT_TIMEOUT => 60,
+        CURLOPT_HEADERFUNCTION => static function ($ch, string $zeile) use (&$kopf): int {
+            $teile = explode(':', $zeile, 2);
+            if (count($teile) === 2) {
+                $kopf[strtolower(trim($teile[0]))] = trim($teile[1]);
+            }
+            return strlen($zeile);
+        },
     ]);
     $roh = curl_exec($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
     $d = json_decode((string)$roh, true);
-    return ['code' => $code, 'daten' => is_array($d) ? $d : ['roh' => $roh]];
+    return ['code' => $code, 'daten' => is_array($d) ? $d : ['roh' => $roh],
+            'kopf' => $kopf];
 }
 
 /* ---- DIE ZEITSTEMPEL LIEGEN IM ERSETZFENSTER (Backlog Nr. 134) ------------
@@ -966,6 +1016,211 @@ pruefe(($vt['daten']['ok'] ?? false) === true && isset($vt['daten']['rejected'])
 
 printf("  Ergebnis des Fensters: innerhalb angenommen, ausserhalb abgewiesen und genannt (%d h ab dem Anlegen)\n",
        INGEST_ERSETZFENSTER_H);
+
+
+/* ---- Teil 10 — Die Mengenbremse (P5a/AP7, E-P5a-01/-02/-47/-48) ----------
+ *
+ * WOFUER. Bis Web 20.10.0 war `ingest.php` der einzige Endpunkt der Anwendung
+ * OHNE Ratenschutz. Seit 20.11.0 zaehlt er Fehlversuche — und was hier
+ * geprueft wird, ist beides: dass die Bremse greift, UND dass sie nichts
+ * bremst, was sie nicht bremsen soll. Der zweite Teil ist der wichtigere:
+ * Eine Bremse, die gelungene Uploads mitnimmt, kostet Einsatzdaten.
+ *
+ * DIESER TEIL STEHT AM ENDE, weil sein letzter Abschnitt die ADRESSE sperrt.
+ * Danach kommt nur noch das Aufraeumen.
+ *
+ * ER BRAUCHT KEINE WARTEZEIT. Alles, was hier gemessen wird, geschieht
+ * innerhalb des 15-Minuten-Fensters; das Ablaufen der Sperre prueft die
+ * Ratenprobe an der Datenbank, nicht diese hier ueber HTTP. */
+echo "\n  Teil 10 — Die Mengenbremse\n";
+
+$bMerkmal = 'id:' . $bremseKennung;
+
+$zaehlerLesen = static function (string $topf, string $merkmal) use ($pdo): array {
+    $q = $pdo->prepare('SELECT versuche, stufe, gesperrt_bis,
+                               TIMESTAMPDIFF(SECOND, NOW(), gesperrt_bis) AS rest
+                          FROM rate_limits WHERE topf = ? AND merkmal = ?');
+    $q->execute([$topf, $merkmal]);
+    return $q->fetch(PDO::FETCH_ASSOC) ?: [];
+};
+
+$fehlversuch = static function (string $dev, string $key = 'falsch-falsch-falsch'): array {
+    return senden(['kind' => 'mission', 'client_ref' => 'probe-bremse',
+                   'day' => gmdate('Y-m-d'),
+                   'started_at' => gmdate('Y-m-d\TH:i:s\Z'),
+                   'track' => ['seq_from' => 0, 'points' => []]], $dev, $key);
+};
+
+/* (1) VIERZEHN FEHLVERSUCHE SIND EIN SCHLUESSELWECHSEL, KEIN ANGRIFF.
+ *
+ * Das ist die Zahl, an der die Grenze haengt (E-P5a-02): 14 Teilstuecke in
+ * einem Paket sind am Referenzlauf gemessen. Wer die Grenze auf 10 senkt,
+ * sperrt eine Uhr aus, die gerade neu gekoppelt wurde. */
+$codes14 = [];
+for ($i = 1; $i <= 14; $i++) { $codes14[] = $fehlversuch($bremseKennung)['code']; }
+pruefe($codes14 === array_fill(0, 14, 401),
+       'Vierzehn Fehlversuche in einem Stoss: alle 401, keine Sperre',
+       'Codes ' . implode(',', array_unique($codes14)));
+$z14 = $zaehlerLesen('ingest', $bMerkmal);
+pruefe((int)($z14['versuche'] ?? 0) === 14 && ($z14['gesperrt_bis'] ?? null) === null,
+       'Der Zaehler steht auf 14 und `gesperrt_bis` ist leer',
+       'versuche ' . ($z14['versuche'] ?? '-') . ', gesperrt_bis '
+       . json_encode($z14['gesperrt_bis'] ?? null));
+
+/* (2) DER DREISSIGSTE SPERRT, DER EINUNDDREISSIGSTE BEKOMMT 429.
+ *
+ * Die Reihenfolge ist wesentlich und nicht Haarspalterei: Die PRUEFUNG laeuft
+ * VOR der Zaehlung, also traegt der Versuch, der die Sperre ausloest, noch
+ * die alte Antwort. Erst der naechste sieht sie. */
+$codesBis30 = [];
+for ($i = 15; $i <= 30; $i++) { $codesBis30[] = $fehlversuch($bremseKennung)['code']; }
+pruefe($codesBis30 === array_fill(0, 16, 401),
+       'Versuche 15 bis 30: noch immer 401 — der sperrende Versuch selbst wird nicht abgewiesen',
+       'Codes ' . implode(',', array_unique($codesBis30)));
+
+$a31 = $fehlversuch($bremseKennung);
+pruefe($a31['code'] === 429 && ($a31['daten']['error'] ?? '') === 'zu_viele_versuche',
+       'Versuch 31: 429 mit `zu_viele_versuche`',
+       'HTTP ' . $a31['code'] . ', Rumpf ' . json_encode($a31['daten']));
+pruefe(($a31['daten']['topf'] ?? null) === null && count($a31['daten']) === 1,
+       'Die Antwort nennt NICHT, welcher Topf gegriffen hat (E-P5a-47)',
+       json_encode($a31['daten']));
+
+/* (3) `Retry-After` — die Kopfzeile, die das Paket zugesagt hat.
+ *
+ * Erste Sprosse der Leiter: 900 Sekunden (E-P5a-43; NICHT 10 Minuten, das war
+ * die Zahl des Konzepts, und sie waere MILDER als die Sperre davor). */
+$ra = (int)($a31['kopf']['retry-after'] ?? 0);
+pruefe($ra > 840 && $ra <= 900,
+       'Kopfzeile `Retry-After` liegt auf der ersten Sprosse (900 s, E-P5a-43)',
+       'Retry-After ' . ($a31['kopf']['retry-after'] ?? '(fehlt)'));
+$z31 = $zaehlerLesen('ingest', $bMerkmal);
+pruefe((int)($z31['stufe'] ?? 0) === 1 && (int)($z31['rest'] ?? 0) > 840,
+       'In der Tabelle: Stufe 1, Sperre laeuft',
+       'stufe ' . ($z31['stufe'] ?? '-') . ', rest ' . ($z31['rest'] ?? '-'));
+$ereignis = (int)$pdo->query("SELECT COUNT(*) FROM sicherheit_ereignisse
+                              WHERE topf = 'ingest'")->fetchColumn();
+pruefe($ereignis === 1,
+       'Genau EIN Sperrereignis — eines je Sperre, nicht eines je Fehlversuch',
+       $ereignis . ' Zeile(n)');
+
+/* (4) DER VERMERK AM GERAET (E-P5a-02). Ohne ihn stuende eine Notaerztin vor
+ *     einer Uhr, die nichts mehr hochlaedt, und nichts sagte ihr, warum. */
+$vq = $pdo->prepare('SELECT abgewiesen_seit, abgewiesen_anzahl FROM devices WHERE device_id = ?');
+$vq->execute([$bremseKennung]);
+$vermerk = $vq->fetch(PDO::FETCH_ASSOC) ?: [];
+pruefe((int)($vermerk['abgewiesen_anzahl'] ?? 0) === 30
+       && ($vermerk['abgewiesen_seit'] ?? null) !== null,
+       'Am Geraet stehen 30 abgewiesene Anmeldungen mit Beginnzeitpunkt',
+       'anzahl ' . ($vermerk['abgewiesen_anzahl'] ?? '-')
+       . ', seit ' . json_encode($vermerk['abgewiesen_seit'] ?? null));
+pruefe((int)($vermerk['abgewiesen_anzahl'] ?? 0) === 30,
+       'Der 31. Versuch wurde NICHT mitgezaehlt — er kam gar nicht bis zur Pruefung',
+       'anzahl ' . ($vermerk['abgewiesen_anzahl'] ?? '-'));
+
+/* (5) DER NACHBAR AN DERSELBEN ADRESSE KOMMT DURCH.
+ *
+ * Das ist die Zusage, an der die ganze Aufteilung haengt: Fehlversuche mit
+ * BEKANNTER Kennung zaehlen je Kennung und NICHT je Adresse. Zaehlten sie je
+ * Adresse, sperrte ein einziges Geraet mit veraltetem Schluessel jedes andere
+ * im selben Netz aus — einschliesslich des soeben neu gekoppelten, das die
+ * Abhilfe ist. */
+$nb = senden(['kind' => 'mission', 'client_ref' => 'probe-bremse-nachbar',
+              'day' => gmdate('Y-m-d'),
+              'started_at' => gmdate('Y-m-d\TH:i:s\Z'), 'final' => true,
+              'track' => ['seq_from' => 0, 'points' => []]], $nachbarKennung, $nachbarKey);
+pruefe($nb['code'] === 200 && ($nb['daten']['ok'] ?? false) === true,
+       'Ein zweites Geraet an DERSELBEN Adresse laedt weiter hoch',
+       'HTTP ' . $nb['code']);
+pruefe($zaehlerLesen('ingest_ip', 'ip:127.0.0.1') === [],
+       'Der Adresstopf ist leer — bekannte Kennungen zaehlen dort nicht',
+       'keine Zeile');
+
+/* (6) WAS NICHT ZAEHLT. Gezaehlt werden Fehlversuche, nichts sonst
+ *     (E-P5a-01 (1)). Drei Gegenproben: */
+$aus = senden(['kind' => 'mission', 'client_ref' => 'probe-bremse-aus',
+               'day' => gmdate('Y-m-d'),
+               'started_at' => gmdate('Y-m-d\TH:i:s\Z'),
+               'track' => ['seq_from' => 0, 'points' => []]], $ausKennung, $ausKey);
+pruefe($aus['code'] === 403 && $zaehlerLesen('ingest', 'id:' . $ausKennung) === [],
+       '403 `device_disabled` zaehlt NICHT — die Betreiberin soll wieder einschalten koennen',
+       'HTTP ' . $aus['code']);
+
+$mies = senden(['kind' => 'unsinn', 'client_ref' => '', 'day' => 'kein-tag',
+                'started_at' => 'niemals'], $nachbarKennung, $nachbarKey);
+pruefe($mies['code'] === 400 && $zaehlerLesen('ingest', 'id:' . $nachbarKennung) === [],
+       '400 `payload` zaehlt NICHT — ein fehlerhafter Client raet nicht',
+       'HTTP ' . $mies['code']);
+
+$gross = senden(['kind' => 'mission', 'client_ref' => 'probe-bremse-gross',
+                 'day' => gmdate('Y-m-d'), 'started_at' => gmdate('Y-m-d\TH:i:s\Z'),
+                 'fuell' => str_repeat('x', (int)$CFG['app']['max_body_bytes'] + 1000),
+                 'track' => ['seq_from' => 0, 'points' => []]], $nachbarKennung, $nachbarKey);
+pruefe($gross['code'] === 413 && $zaehlerLesen('ingest', 'id:' . $nachbarKennung) === [],
+       '413 `too_large` zaehlt NICHT — es ist eine Groesse, kein Rateversuch',
+       'HTTP ' . $gross['code']);
+
+/* (7) EIN GELUNGENER UPLOAD RAEUMT TOPF UND VERMERK.
+ *
+ * Die Sperre wird dafuer von Hand aufgehoben — sie laeuft 15 Minuten, und
+ * darauf wartet keine Probe. Das ist derselbe Weg, den der Knopf „aufheben"
+ * auf der Sicherheitsseite geht. */
+$pdo->prepare('DELETE FROM rate_limits WHERE topf = ? AND merkmal = ?')
+    ->execute(['ingest', $bMerkmal]);
+$heil = senden(['kind' => 'mission', 'client_ref' => 'probe-bremse-heil',
+                'day' => gmdate('Y-m-d'),
+                'started_at' => gmdate('Y-m-d\TH:i:s\Z'), 'final' => true,
+                'track' => ['seq_from' => 0, 'points' => []]], $bremseKennung, $bremseKey);
+$vq->execute([$bremseKennung]);
+$vermerk2 = $vq->fetch(PDO::FETCH_ASSOC) ?: [];
+pruefe($heil['code'] === 200 && (int)($vermerk2['abgewiesen_anzahl'] ?? -1) === 0
+       && ($vermerk2['abgewiesen_seit'] ?? null) === null,
+       'Ein gelungener Upload leert den Vermerk am Geraet',
+       'HTTP ' . $heil['code'] . ', anzahl ' . ($vermerk2['abgewiesen_anzahl'] ?? '-'));
+
+/* (8) UNBEKANNTE KENNUNG → ADRESSTOPF, UND ZWAR MIT DERSELBEN SCHWELLE.
+ *
+ * Das ist die Gegenprobe zu E-P5a-47: Waeren die Schwellen verschieden — 30
+ * fuer die Kennung, 50 fuer die Adresse —, verriete die Zahl der Versuche bis
+ * zum 429, ob es die geratene Kennung GIBT. Genau diese Auskunft hat M4-07
+ * mit dem Blindvergleich beseitigt; sie als Zaehlunterschied wieder
+ * einzubauen waere ein Rueckschritt durch die Hintertuer.
+ *
+ * DIESER ABSCHNITT SPERRT DIE ADRESSE. Danach geht nichts mehr durch — er
+ * steht deshalb zuletzt. */
+$codesFremd = [];
+for ($i = 1; $i <= 30; $i++) {
+    $codesFremd[] = $fehlversuch('dev-gibt-es-nicht-' . $i)['code'];
+}
+pruefe($codesFremd === array_fill(0, 30, 401),
+       'Dreissig erfundene Kennungen: alle 401 — dieselbe Schwelle wie bei bekannter Kennung',
+       'Codes ' . implode(',', array_unique($codesFremd)));
+$f31 = $fehlversuch('dev-gibt-es-nicht-31');
+pruefe($f31['code'] === 429 && ($f31['daten']['error'] ?? '') === 'zu_viele_versuche',
+       'Versuch 31 mit erfundener Kennung: 429 — Zahl und Rumpf gleich wie bei bekannter',
+       'HTTP ' . $f31['code'] . ', Rumpf ' . json_encode($f31['daten']));
+$zIp = $zaehlerLesen('ingest_ip', 'ip:127.0.0.1');
+pruefe((int)($zIp['versuche'] ?? 0) === 30 && (int)($zIp['stufe'] ?? 0) === 1,
+       'Der Adresstopf steht auf 30 mit Stufe 1',
+       'versuche ' . ($zIp['versuche'] ?? '-') . ', stufe ' . ($zIp['stufe'] ?? '-'));
+$fremdVermerk = (int)$pdo->query("SELECT COUNT(*) FROM devices
+                                  WHERE abgewiesen_anzahl > 0")->fetchColumn();
+pruefe($fremdVermerk === 0,
+       'Eine erfundene Kennung hinterlaesst KEINEN Geraetevermerk — es gibt keine Zeile dafuer',
+       $fremdVermerk . ' Geraet(e) mit Vermerk');
+
+/* Und jetzt ist die Adresse zu. Das gehoert zum Nachweis: */
+$zu = senden(['kind' => 'mission', 'client_ref' => 'probe-bremse-zu',
+              'day' => gmdate('Y-m-d'),
+              'started_at' => gmdate('Y-m-d\TH:i:s\Z'),
+              'track' => ['seq_from' => 0, 'points' => []]], $nachbarKennung, $nachbarKey);
+pruefe($zu['code'] === 429,
+       'Solange der Adresstopf gesperrt ist, kommt auch ein gueltiges Geraet nicht durch',
+       'HTTP ' . $zu['code'] . ' — hinnehmbarer Kollateralschaden, in E-P5a-47 benannt');
+
+$pdo->exec("DELETE FROM rate_limits WHERE topf IN ('ingest','ingest_ip')");
+$pdo->exec("DELETE FROM sicherheit_ereignisse WHERE topf IN ('ingest','ingest_ip')");
+echo "  Ergebnis der Bremse: 14 ohne Sperre, 30 mit; Retry-After 900 s; Vermerk gesetzt und geraeumt.\n";
 
 } finally {
     jobs_pause(0);

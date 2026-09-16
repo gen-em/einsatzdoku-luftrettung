@@ -1136,12 +1136,24 @@ if ($tab === 'geraete') {
      * ein TIMESTAMP und kommt in der Zeitrechnung der Datenbank an. Ein
      * Vergleich gegen eine in PHP gebildete Grenze haette stillschweigend
      * angenommen, dass beide dieselbe Zeitzone benutzen. */
-    $st = db()->prepare('SELECT id, device_id, label, active, last_seen, created_at,
-                                geraet_art, geraet_modell, geraet_teil,
-                                (created_at > DATE_SUB(NOW(), INTERVAL ? DAY)) AS ist_neu
-                         FROM devices
-                         WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . ' ORDER BY created_at');
-    $st->execute([GERAETE_NEU_TAGE, $userId]);
+    /* DIE BEIDEN ABGEWIESEN-SPALTEN MIT RUECKFALL (Web 20.11.0, P5a/AP7).
+       Zwischen dem Hochladen der Dateien und dem Aufruf von `update.php` gibt
+       es sie nicht; ohne Rueckfall zeigte der Reiter Geraete in diesem Fenster
+       eine Fehlerseite. Dieselbe Bauart wie in `ingest.php`. */
+    $devSql = static fn(string $spalten): string =>
+        'SELECT ' . $spalten . '
+           FROM devices
+          WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . ' ORDER BY created_at';
+    $devFelder = 'id, device_id, label, active, last_seen, created_at,
+                  geraet_art, geraet_modell, geraet_teil,
+                  (created_at > DATE_SUB(NOW(), INTERVAL ? DAY)) AS ist_neu';
+    try {
+        $st = db()->prepare($devSql($devFelder . ', abgewiesen_seit, abgewiesen_anzahl'));
+        $st->execute([GERAETE_NEU_TAGE, $userId]);
+    } catch (PDOException $ex) {
+        $st = db()->prepare($devSql($devFelder));
+        $st->execute([GERAETE_NEU_TAGE, $userId]);
+    }
     $devices = $st->fetchAll();
     foreach ($devices as $d) {
         if ((int)$d['id'] === (int)($_GET['ed'] ?? 0)) { $editDev = $d; }
@@ -4078,6 +4090,26 @@ ui_seite_start(['titel' => 'Einstellungen',
                    . ' · gekoppelt ' . fmt_local($d['created_at'], 'd.m.Y')
                    . ' · zuletzt gemeldet '
                    . ($d['last_seen'] ? fmt_local($d['last_seen'], 'd.m.Y H:i') : 'nie');
+            /* ABGEWIESENE ANMELDUNGEN (Web 20.11.0, P5a/AP7, E-P5a-02).
+               Seit die Mengenbremse in `ingest.php` steht, sperrt sich eine
+               Uhr mit veraltetem Schluessel selbst aus. Ohne diese Zeile stuende
+               eine Notaerztin vor einem Geraet, das nichts mehr hochlaedt, und
+               nichts in der Anwendung sagte ihr, warum.
+
+               VORHANDENE BAUSTEINE, KEINE NEUE DARSTELLUNG: dieselbe
+               Kleinzeile, die schon Modell und letzten Kontakt traegt, und
+               dieselbe orange Plakette wie „neu". Beide erscheinen NUR im
+               Ausnahmefall — ein Geraet, das arbeitet, sieht aus wie bisher.
+
+               DIE ZAHL STEHT NEBEN DEM DATUM, weil erst beides die Lage sagt:
+               „3 seit heute 14:20" ist ein Schluesselwechsel, „400 seit
+               Montag" ist ein Geraet, das seit Tagen gegen eine Wand laeuft. */
+            $abgewiesen = (int)($d['abgewiesen_anzahl'] ?? 0);
+            if ($abgewiesen > 0) {
+                $klein .= ' · ' . $abgewiesen . ' abgewiesen'
+                        . (($d['abgewiesen_seit'] ?? null) !== null
+                           ? ' seit ' . fmt_local($d['abgewiesen_seit'], 'd.m.Y H:i') : '');
+            }
             ?>
         <form method="post" id="f-dev-<?= $did ?>" class="nur-vorlesen"
               action="einstellungen.php?t=geraete">
@@ -4104,6 +4136,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                Kleinzeile mit Modell, Art und Kopplungsdatum besser, und die
                Zeile hat vier Angaben statt fuenf. */
             'plaketten' => ((int)$d['ist_neu'] ? ui_plakette('neu', ['ton' => 'orange']) : '')
+                . ($abgewiesen > 0 ? ui_plakette('abgewiesen', ['ton' => 'orange']) : '')
                 . ($aktiv ? '' : ui_plakette('deaktiviert', ['ton' => 'neutral'])),
             'aktionen' => ui_zeilenaktionen([
                 'titel' => (string)($d['label'] ?? $d['device_id']),

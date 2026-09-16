@@ -26,6 +26,39 @@ ob überhaupt ein Blob dasteht, wirft bei Stufe 2 genau die Punkte weg, die der
 nächste Verdichtungslauf einarbeiten soll — und quittiert sie, so dass die Uhr
 sie löscht. Genau dafür ist Teil 3 da.
 
+## Teil 10 — die Mengenbremse (seit Web 20.11.0, P5a/AP7)
+
+Seit Web 20.11.0 zählt `ingest.php` Fehlversuche (Backlog Nr. 17, R19). Teil 10
+prüft **beides**: dass die Bremse greift **und** dass sie nichts bremst, was
+sie nicht bremsen soll — der zweite Teil ist der wichtigere, denn eine Bremse,
+die gelungene Uploads mitnimmt, kostet Einsatzdaten.
+
+| Was | Erwartet |
+|---|---|
+| 14 Fehlversuche in einem Stoß | alle `401`, **keine** Sperre — das ist ein Schlüsselwechsel |
+| Versuche 15 bis 30 | noch immer `401`; der *sperrende* Versuch selbst wird nicht abgewiesen |
+| Versuch 31 | `429` mit `{"error":"zu_viele_versuche"}` und `Retry-After: 900` |
+| die Antwort | nennt **nicht**, welcher Topf gegriffen hat |
+| `403 device_disabled`, `400 payload`, `413 too_large` | zählen **nicht** |
+| zweites Gerät an derselben Adresse | lädt weiter hoch |
+| gelungener Upload | leert Topf **und** Gerätevermerk |
+| 30 erfundene Kennungen | dieselbe Schwelle wie eine bekannte (E-P5a-47) |
+
+**Sie legt dafür drei eigene Geräte an** (`bremse`, `nachbar`,
+`abgeschaltet`). Das Uhr-Gerät der Teile 1 bis 9 bleibt unberührt — eine
+Sperre auf dessen Kennung machte den nächsten Lauf unbrauchbar.
+
+**Der letzte Abschnitt sperrt die ADRESSE**, und das lässt sich nicht trennen:
+`ip:127.0.0.1` ist dieselbe für alle Geräte. Deshalb steht Teil 10 am Ende,
+und deshalb leert die Probe `rate_limits` **am Anfang und am Ende**. Bricht ein
+Lauf mitten in Teil 10 ab, bliebe die Adresse sonst 15 Minuten gesperrt — und
+der nächste Lauf fiele in *jedem* Teil um, mit `429` statt `200`, ohne dass an
+der Sache etwas falsch wäre.
+
+**`senden()` liest seit AP7 die Kopfzeilen.** Vorher lieferte die Funktion nur
+Code und Rumpf; damit ließ sich `Retry-After` — die halbe Zusage des Pakets —
+gar nicht nachweisen.
+
 ## Über echtes HTTP
 
 Geprüft wird ein **Endpunkt**: Kopfzeilen, Authentifizierung, JSON-Antwort. Ein
@@ -54,7 +87,8 @@ Gemessen: **1 Paket angenommen, 1 abgewiesen**, dazu die Gegenprobe, dass ein
 
 ## Was sie am Bestand ändert
 
-Sie legt ihr **eigenes Konto** (`ingestprobe@gen-em.org`) samt Gerät an und
+Sie legt ihr **eigenes Konto** (`ingestprobe@gen-em.org`, Backlog Nr. 207)
+samt fünf Geräten an und
 räumt beides am Ende wieder ab — auch bei einem Abbruch (`finally`), und
 ausdrücklich einschließlich der Spuren: Die hängen an keinem Fremdschlüssel
 (F-S2-B). Bestehende Daten fasst sie nicht an.
@@ -69,9 +103,14 @@ den Weg über die Oberfläche gibt es `tools/referenzdatensatz/einspielen/`.
 
 ## Was sie nicht prüft
 
-- **Den vollständigen Referenz-Sendeplan** (526 Anfragen, 182 Pakete). Dafür
-  ist `tools/referenzdatensatz/einspielen/` da; diese Probe fährt gezielte
-  Grenzfälle, nicht die Menge.
+- **Den vollständigen Referenz-Sendeplan** (612 Anfragen, 212 Pakete — die
+  Zahlen stehen in `tools/referenzdatensatz/einspielen/messprotokoll.json`;
+  hier stand bis Web 20.11.0 „526 Anfragen, 182 Pakete" aus einem älteren
+  Stand). Dafür ist `tools/referenzdatensatz/einspielen/` da; diese Probe
+  fährt gezielte Grenzfälle, nicht die Menge.
+- **Das Ablaufen einer Sperre.** Teil 10 hebt sie von Hand auf, statt
+  15 Minuten zu warten; dass sie von selbst abläuft und die Stufe nach 24 h
+  verfällt, prüft `tools/ratenprobe/` an der Datenbank.
 - **Nebenläufigkeit.** Ob ein Upload, der genau während eines Verdichtungslaufs
   eintrifft, richtig behandelt wird, lässt sich hier nicht herstellen — einen
   Nebenläufigkeitsprüfstand gibt es im Repositorium nicht. Die Vorkehrung
@@ -83,4 +122,5 @@ den Weg über die Oberfläche gibt es `tools/referenzdatensatz/einspielen/`.
 ## Voraussetzungen
 
 Eine laufende Installation (der Entwicklungsserver genügt) und die Migrationen
-bis `2026_09_01_letzter_punkt_am`.
+bis `2026_09_16_geraet_abgewiesen` — ohne sie fällt Teil 10 an den beiden
+Vermerk-Erwartungen um (die Bremse selbst zählt auch ohne die Spalten).

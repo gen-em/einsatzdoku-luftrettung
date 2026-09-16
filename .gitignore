@@ -21,6 +21,11 @@ server/wartung.lock
 server/install-nachweis-*.txt
 server/wiederher-nachweis-*.txt
 
+# Arbeitsablage fuer Workflow-Skripte (Bestandsaufnahmen). Sie muessen im
+# Arbeitsverzeichnis liegen, damit das Werkzeug sie lesen darf — gehoeren aber
+# nicht ins Repositorium: Es sind Notizen eines Laufs, keine Quelltexte.
+.wf/
+
 # Betriebssystem-Kram
 .DS_Store
 Thumbs.db

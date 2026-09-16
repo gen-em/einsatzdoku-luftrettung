@@ -55,6 +55,14 @@ CREATE TABLE devices (
   geraet_modell VARCHAR(191) NULL,                   -- aufgeloest; Sammelnamen werden lang,
                                                      -- der laengste hat 153 Zeichen
   geraet_teil   VARCHAR(64) NULL,                    -- Rohangabe des Geraets, siehe update.php
+  -- Abgewiesene Anmeldungen (Web 20.11.0, P5a/AP7, E-P5a-02). Seit dort hat
+  -- auch ingest.php eine Mengenbremse; eine Uhr mit veraltetem Schluessel
+  -- sperrt sich damit selbst aus. Diese zwei Spalten machen das SICHTBAR --
+  -- auf der Kontoseite und auf Betrieb -> Status. Beide werden bei der
+  -- naechsten gelungenen Anmeldung geleert: Ein Vermerk, der stehenbleibt,
+  -- nachdem neu gekoppelt wurde, ist eine Falschmeldung.
+  abgewiesen_seit   DATETIME NULL,
+  abgewiesen_anzahl INT UNSIGNED NOT NULL DEFAULT 0,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -517,17 +525,21 @@ CREATE TABLE rate_limits (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   -- Die Toepfe stehen in RATE_GRENZEN (ratelimit_lib.php) und nirgends sonst.
   -- Hier stand bis Web 20.10.0 eine Aufzaehlung von vieren; es waren laengst
-  -- zehn, und niemandem ist es aufgefallen. Eine Liste, die sich fuer
+  -- mehr, und niemandem ist es aufgefallen. Eine Liste, die sich fuer
   -- vollstaendig ausgibt und es nicht ist, ist schlechter als keine.
+  -- UND AUCH KEINE ZAHL: In Web 20.10.0 stand hier ersatzweise "es waren
+  -- laengst zehn"; mit den beiden Ingest-Toepfen aus 20.11.0 war auch das
+  -- falsch. Eine Zahl im Kommentar altert genauso still wie eine Liste.
   topf          VARCHAR(32)  NOT NULL,
   merkmal       VARCHAR(190) NOT NULL,          -- 'ip:<adresse>', 'id:<kennung>' oder 'alle'
   versuche      INT UNSIGNED NOT NULL DEFAULT 0,
   fenster_start DATETIME     NOT NULL,
   gesperrt_bis  DATETIME     NULL,
   -- Die Sperrleiter (Web 20.10.0, P5a/AP6, E-P5a-43). 0 = nie gesperrt,
-  -- 1..4 = 10/20/30/60 min. `stufe_bis` ist der Verfall der STUFE (letzter
-  -- Fehlversuch + 24 h), nicht der der Sperre — danach gilt die Stufe als 0,
-  -- auch wenn die Zeile noch dasteht.
+  -- 1..4 = 15/20/30/60 min (die erste Sprosse ist 15 und nicht 10 -- die
+  -- Begruendung steht in ratelimit_lib.php). `stufe_bis` ist der Verfall der
+  -- STUFE (letzter Fehlversuch + 24 h), nicht der der Sperre — danach gilt
+  -- die Stufe als 0, auch wenn die Zeile noch dasteht.
   stufe         TINYINT UNSIGNED NOT NULL DEFAULT 0,
   stufe_bis     DATETIME     NULL,
   UNIQUE KEY uq_topf_merkmal (topf, merkmal),
@@ -862,4 +874,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- rate_limits.stufe/stufe_bis stehen oben schon im Schema (Web 20.10.0, P5a/AP6).
   ('2026_09_16_ratenschutz_stufen', 'skipped'),
   -- sicherheit_ereignisse steht oben schon im Schema (Web 20.10.0, P5a/AP6).
-  ('2026_09_16_sicherheit_ereignisse', 'skipped');
+  ('2026_09_16_sicherheit_ereignisse', 'skipped'),
+  -- devices.abgewiesen_* stehen oben schon im Schema (Web 20.11.0, P5a/AP7).
+  ('2026_09_16_geraet_abgewiesen', 'skipped');

@@ -39,7 +39,7 @@ require_once __DIR__ . '/db.php';
  * mit keinem Wort und laeuft in diesem Fenster unveraendert weiter. Naehme man
  * sie in das vorhandene INSERT auf, wuerde es dort werfen — und weil
  * `rate_misserfolg()` alles in EINEM try/catch faengt und still zurueckkehrt,
- * zaehlte der Ratenschutz gar nicht mehr. Fuer ALLE zehn Toepfe, nicht nur
+ * zaehlte der Ratenschutz gar nicht mehr. Fuer ALLE vierzehn Toepfe, nicht nur
  * fuer die Leiter, und ohne dass irgendetwas rot wuerde.
  *
  * ---------------------------------------------------------------------------
@@ -58,8 +58,8 @@ require_once __DIR__ . '/db.php';
  * Art Fehler, die niemandem auffaellt. Die Leiter ist ausserdem eine
  * Einstellung; wer 10 will, traegt 10 ein.
  *
- * NICHT JEDER TOPF BEKOMMT EINE LEITER. `login`, der neue `login_ip` und
- * `salt` — sonst keiner:
+ * NICHT JEDER TOPF BEKOMMT EINE LEITER. `login`, `login_ip`, `salt` und seit
+ * P5a/AP7 `ingest` und `ingest_ip` — sonst keiner:
  *
  *   `reset` NICHT, obwohl das Konzept ihn nennt. Er sperrt heute 3600 s; jede
  *   Sprosse unterhalb der vierten waere SCHWAECHER als das. Dazu kommt das
@@ -68,10 +68,27 @@ require_once __DIR__ . '/db.php';
  *   unterwegs"). Eine Leiter dort streckt ein Fenster, in dem jemand fuenfmal
  *   klickt, fuenfmal dieselbe Zusage liest und keine Mail bekommt.
  *
- *   Die Kopplungstoepfe (`pair`, `pair_start`, `pair_code`) NICHT: Dahinter
- *   steht ein Geraet, das nicht lesen kann, was auf der Seite steht.
+ *   Die Kopplungstoepfe (`pair`, `pair_start`, `pair_code`) NICHT.
  *   `demo`/`demog`/`testmail`/`csp` NICHT: Die zaehlen MENGE, nicht
  *   Fehlversuche — es gibt dort niemanden, der eskaliert.
+ *
+ * DIE TRENNLINIE STAND BIS WEB 20.11.0 FALSCH DA (E-P5a-48). Sie lautete: bei
+ * den Kopplungstoepfen „steht dahinter ein Geraet, das nicht lesen kann, was
+ * auf der Seite steht". Auf `ingest.php` trifft das woertlich genauso zu — die
+ * Regel haette also gegen die Leiter entschieden, die AP7 dort einbaut. Sie
+ * war nicht falsch gemeint, sondern falsch formuliert.
+ *
+ * DIE TRAGFAEHIGE TRENNLINIE IST: Unterbricht die laengere Sperre einen
+ * Vorgang, der GERADE LAEUFT? Bei der Kopplung ja — jemand steht am Geraet
+ * mit einem sechsstelligen Code, der in zehn Minuten verfaellt; eine Stunde
+ * Sperre schreckt dort keinen Automaten ab, sie beendet die Kopplung fuer den
+ * Menschen. Bei `ingest.php` nein: Die Daten liegen in der Warteschlange des
+ * Geraets und kommen spaeter an. Die Sperre kostet den legitimen Fall nichts
+ * als Zeit — und Zeit ist genau das, was sie den illegitimen kosten soll.
+ *
+ * UND SIE SPERRT KEIN REPARIERTES GERAET AUS: Die Abhilfe bei veraltetem
+ * Schluessel ist Neukopplung, und die erzeugt eine NEUE Kennung (`pair.php`);
+ * der alte Topf bleibt zurueck und laeuft ab.
  *
  * ---------------------------------------------------------------------------
  * DIE VERLANGSAMUNG (E-P5a-05)
@@ -150,6 +167,62 @@ const RATE_GRENZEN = [
      * ueber den Tag in ihre 50 hinein, ohne dass irgendjemand etwas falsch
      * gemacht hat. */
     'login_ip' => ['max' => 50, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
+
+    /* DIE MENGENBREMSE VON `ingest.php` (P5a/AP7, E-P5a-01/-02, -47, -48;
+     * R19, Backlog Nr. 17).
+     *
+     * SIE WAR DIE LETZTE ASYMMETRIE: `ingest.php` war der einzige Endpunkt
+     * ohne Ratenschutz — und zugleich der, an dem die Clients aus den Stores
+     * haengen (E-R45-6 nennt genau diese Kombination als Flutungsgefahr).
+     *
+     * GEZAEHLT WERDEN NUR FEHLVERSUCHE (E-P5a-01 (1)). Ein gelungener Upload
+     * geht nie auf das Kontingent — eine Uhr, die einen Dienst nachliefert,
+     * darf beliebig viele Stuecke senden.
+     *
+     * 30 UND NICHT 10, UND DAS IST DIE WICHTIGSTE ZAHL DES PAKETS. Gemessen
+     * am Referenzlauf (`tools/referenzdatensatz/einspielen/messprotokoll.json`,
+     * Backlog Nr. 17): 612 Anfragen, Spitze 3 an einem einzigen Ausloeser,
+     * 199 Abstaende von 0 s — ein Dienst kommt in STOESSEN, nicht gleichmaessig.
+     * Der Stoss, der die Grenze bestimmt, ist aber ein anderer: ein
+     * SCHLUESSELWECHSEL. Danach liegen die Pakete eines ganzen Dienstes in der
+     * Warteschlange des Geraets und laufen der Reihe nach in die Abweisung;
+     * 14 Teilstuecke in einem Paket sind gemessen
+     * (`teilstuecke_je_paket.max`). 30 laesst zwei solche Stoesse durch, bevor
+     * gesperrt wird. Wer die Zahl auf 10 senkt, sperrt Uhren im Dienst aus,
+     * und zwar genau dann, wenn jemand gerade neu gekoppelt hat.
+     *
+     * ZWEI TOEPFE, WEIL ES ZWEI LAGEN SIND (E-P5a-01 (3)):
+     *
+     *   `ingest`     je GERAETEKENNUNG, wenn es die Kennung GIBT. Dahinter
+     *                steht ein echtes Geraet mit einem veralteten Schluessel.
+     *   `ingest_ip`  je ADRESSE, wenn es die Kennung NICHT gibt. Eine
+     *                erfundene Kennung laesst sich beliebig oft neu erfinden
+     *                — ein Zaehler je Kennung waere dort wertlos.
+     *
+     * BEIDE HABEN DIESELBE ZAHL, UND ZWAR ABSICHTLICH (E-P5a-47). Das Konzept
+     * nannte 50 fuer die Adresse. Verschiedene Schwellen sind ein
+     * EXISTENZORAKEL: Wer dieselbe geratene Kennung haemmert, bekaeme sie bei
+     * existierender Kennung ab dem 31. Versuch abgewiesen, bei nicht
+     * existierender erst ab dem 51. Genau diese Auskunft hat M4-07 weiter
+     * unten in `ingest.php` mit einem Blindvergleich beseitigt; sie als
+     * Zaehlunterschied wieder einzubauen waere ein Rueckschritt durch die
+     * Hintertuer. Mit 30 gegen 30 kommt die Antwort beide Male beim 31.
+     * Versuch und mit demselben Rumpf.
+     *
+     * DIE ABSENKUNG KOSTET KEINEN LEGITIMEN VERKEHR. In den Adresstopf zaehlen
+     * ausschliesslich UNBEKANNTE Kennungen; ein gekoppeltes Geraet sendet nie
+     * eine unbekannte. Der NAT-Einwand — ein Mobilfunkanbieter teilt EINE
+     * Adresse unter Tausenden auf — trifft deshalb nur Geraete, deren Eintrag
+     * im Web GELOESCHT wurde (R47) und die weitersenden; die sollen aufhoeren.
+     *
+     * WAS BLEIBT, STEHT IN E-P5a-47 und wird nicht beschoenigt: Eine
+     * zweistufige Probe unterscheidet weiterhin. Sie zu schliessen hiesse,
+     * auch Fehlversuche bekannter Kennungen in den Adresstopf zu zaehlen —
+     * dann sperrt ein einziges Geraet mit veraltetem Schluessel seine ganze
+     * Adresse, einschliesslich des soeben neu gekoppelten Geraets, das die
+     * Abhilfe ist. */
+    'ingest'    => ['max' => 30, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
+    'ingest_ip' => ['max' => 30, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
 
     /* DER GLOBALE ZAEHLER SPERRT NIE (E-P5a-05). `max` steht auf der
      * groesstmoeglichen Zahl, damit die Sperrbedingung in `rate_misserfolg()`
@@ -271,13 +344,41 @@ function rate_ip(): string
  */
 function rate_merkmale(?string $konto = null): array
 {
-    $m = ['ip:' . rate_ip()];
+    $m = [rate_merkmal_ip()];
     if ($konto !== null && $konto !== '') {
-        // Kleinschreibung, damit "A@b.de" und "a@b.de" denselben Zaehler
-        // treffen — sonst waere die Sperre mit der Umschalttaste zu umgehen.
-        $m[] = 'id:' . mb_substr(mb_strtolower(trim($konto)), 0, 180);
+        $m[] = rate_merkmal_kennung($konto);
     }
     return $m;
+}
+
+/**
+ * Das Adressmerkmal allein (P5a/AP7).
+ *
+ * `ingest.php` braucht die beiden Merkmale EINZELN und in verschiedenen
+ * Toepfen: die Kennung im Topf `ingest`, die Adresse im Topf `ingest_ip`.
+ * `rate_merkmale()` liefert immer beide zusammen; wer sie dort abgreift und
+ * dem Topf `ingest` uebergibt, legt eine `ip:`-Zeile in einem Topf an, der
+ * nur Kennungen zaehlen soll. Deshalb zwei Bausteine statt einer Zerlegung
+ * beim Aufrufer — die Normalisierung steht weiter an EINER Stelle.
+ */
+function rate_merkmal_ip(): string
+{
+    return 'ip:' . rate_ip();
+}
+
+/**
+ * Das Kennungsmerkmal allein — Konto-Adresse oder Geraetekennung.
+ *
+ * Kleinschreibung, damit "A@b.de" und "a@b.de" denselben Zaehler treffen —
+ * sonst waere die Sperre mit der Umschalttaste zu umgehen. FUER DIE
+ * GERAETEKENNUNG IST DAS NICHT NUR KOSMETIK: Die Spalte `devices.device_id`
+ * steht auf einer Kollation ohne Gross-/Kleinunterscheidung, ein `SELECT`
+ * findet die Zeile also auch zu `DEV-AB...`. Ohne die Kleinschreibung haette
+ * dieselbe Kennung so viele Zaehler wie Schreibweisen.
+ */
+function rate_merkmal_kennung(string $kennung): string
+{
+    return 'id:' . mb_substr(mb_strtolower(trim($kennung)), 0, 180);
 }
 
 /* ===========================================================================
@@ -360,7 +461,7 @@ function rate_bremse_schwellen(): array
  * Konstante wegnimmt, bricht die Probe still.
  *
  * NUR ZWEI ZAHLEN SIND EINSTELLBAR, und beide gehoeren zur Anmeldung. Die
- * uebrigen acht Toepfe haben Zahlen mit einer Begruendung (oben je Topf
+ * uebrigen zwoelf Toepfe haben Zahlen mit einer Begruendung (oben je Topf
  * ausgeschrieben) — sie einstellbar zu machen hiesse, die Begruendung gegen
  * ein Eingabefeld zu tauschen.
  */
@@ -773,12 +874,20 @@ function rate_zaehlen(string $topf, ?string $konto = null,
  * Bewusst auch fuer die IP-Adresse: Wer sich erfolgreich anmeldet, ist mit
  * hoher Wahrscheinlichkeit kein Angreifer, und mehrere Personen hinter einer
  * gemeinsamen Adresse sollen sich nicht gegenseitig aussperren.
+ *
+ * `$merkmale` UEBERSTIMMT DAS (P5a/AP7). `ingest.php` raeumt nach einem
+ * gelungenen Upload NUR den Kennungstopf und ausdruecklich NICHT die Adresse:
+ * Im Topf `ingest_ip` stehen ausschliesslich Fehlversuche mit UNBEKANNTEN
+ * Kennungen, und ein gueltiger Upload sagt ueber die nichts aus. Wer ihn
+ * dort mitraeumen liesse, gaebe jedem, der ein einziges gueltiges Geraet
+ * besitzt, den Rueckstellknopf fuer seine ganze Adresse.
  */
-function rate_erfolg(string $topf, ?string $konto = null): void
+function rate_erfolg(string $topf, ?string $konto = null,
+                     ?array $merkmale = null): void
 {
     try {
         $st = db()->prepare('DELETE FROM rate_limits WHERE topf = ? AND merkmal = ?');
-        foreach (rate_merkmale($konto) as $merkmal) {
+        foreach ($merkmale ?? rate_merkmale($konto) as $merkmal) {
             $st->execute([$topf, $merkmal]);
         }
     } catch (Throwable $ex) {
@@ -889,6 +998,55 @@ function rate_sperre(string $topf, ?string $konto = null,
         return $beste;
     } catch (Throwable $ex) {
         error_log('Ratenschutz: Sperrstand nicht lesbar (' . $topf . '): ' . $ex->getMessage());
+        return null;
+    }
+}
+
+/**
+ * Die laengste laufende Sperre ueber MEHRERE Toepfe — in EINER Abfrage
+ * (P5a/AP7).
+ *
+ * WARUM NICHT ZWEIMAL `rate_sperre()`. `ingest.php` fragt bei JEDEM Upload,
+ * bevor irgendetwas anderes geschieht; das ist der heisseste Weg der
+ * Anwendung. Zwei Aufrufe sind zwei Umlaeufe zur Datenbank je Upload, und der
+ * Referenzlauf schickt sechshundert. Eine Abfrage mit zwei ODER-Zweigen
+ * trifft denselben Schluessel `uq_topf_merkmal` und kostet einen.
+ *
+ * @param list<array{0:string,1:string}> $paare  je [Topf, Merkmal]
+ * @return array{topf:string, bis:string, rest:int, stufe:int, merkmal:string}|null
+ */
+function rate_sperre_paare(array $paare): ?array
+{
+    if ($paare === []) { return null; }
+    try {
+        $wo = [];
+        $args = [];
+        foreach ($paare as $p) {
+            $wo[]   = '(topf = ? AND merkmal = ?)';
+            $args[] = (string)$p[0];
+            $args[] = (string)$p[1];
+        }
+        $st = db()->prepare(
+            'SELECT topf, merkmal, gesperrt_bis, stufe,
+                    TIMESTAMPDIFF(SECOND, NOW(), gesperrt_bis) AS rest
+               FROM rate_limits
+              WHERE gesperrt_bis > NOW() AND (' . implode(' OR ', $wo) . ')
+              ORDER BY gesperrt_bis DESC LIMIT 1');
+        $st->execute($args);
+        $z = $st->fetch(PDO::FETCH_ASSOC);
+        if (!$z) { return null; }
+        return [
+            'topf'    => (string)$z['topf'],
+            'merkmal' => (string)$z['merkmal'],
+            'bis'     => (string)$z['gesperrt_bis'],
+            'rest'    => max(0, (int)$z['rest']),
+            'stufe'   => (int)($z['stufe'] ?? 0),
+        ];
+    } catch (Throwable $ex) {
+        /* Wie `rate_erlaubt()`: durchlassen statt selbstgebauter Ausfall.
+         * Die Tabelle fehlt genau dann, wenn `update.php` noch nicht lief. */
+        error_log('Ratenschutz: Sperrstand nicht lesbar (mehrere Toepfe): '
+                  . $ex->getMessage());
         return null;
     }
 }

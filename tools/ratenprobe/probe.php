@@ -360,14 +360,19 @@ foreach (RATE_GRENZEN as $topf => $g) {
     if (!empty($g['leiter'])) { $mitLeiter[] = $topf; } else { $ohne[] = $topf; }
 }
 sort($mitLeiter);
-pruef('Genau drei Toepfe haben eine Leiter',
-      $mitLeiter === ['login', 'login_ip', 'salt'], implode(', ', $mitLeiter));
+pruef('Genau fuenf Toepfe haben eine Leiter',
+      $mitLeiter === ['ingest', 'ingest_ip', 'login', 'login_ip', 'salt'],
+      implode(', ', $mitLeiter));
+pruef('Die beiden Ingest-Toepfe haben DIESELBE Zahl (E-P5a-47)',
+      RATE_GRENZEN['ingest']['max'] === RATE_GRENZEN['ingest_ip']['max']
+      && RATE_GRENZEN['ingest']['max'] === 30,
+      'je ' . RATE_GRENZEN['ingest']['max'] . ' — verschiedene Schwellen waeren ein Existenzorakel');
 pruef('`reset` hat KEINE — er sperrt heute schon eine Stunde',
       in_array('reset', $ohne, true),
       'jede Sprosse unterhalb der vierten waere schwaecher');
 pruef('Die Kopplungstoepfe haben keine',
       !array_diff(['pair', 'pair_start', 'pair_code'], $ohne),
-      'dahinter steht ein Geraet, das die Seite nicht lesen kann');
+      'eine laengere Sperre unterbraeche dort einen laufenden Vorgang (E-P5a-48)');
 pruef('Der globale Zaehler sperrt nie',
       RATE_GRENZEN['global']['max'] === PHP_INT_MAX, 'max = PHP_INT_MAX');
 

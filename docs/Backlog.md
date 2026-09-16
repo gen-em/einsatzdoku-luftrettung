@@ -130,29 +130,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ## Offen
 
-17. **`ingest.php` hat als einziger anmeldungsfreier Endpunkt keine
-    Mengenbremse.** `RATE_GRENZEN` (`ratelimit_lib.php`) kennt keinen Topf
-    `ingest`, und die Datei ruft weder `rate_erlaubt()` noch
-    `rate_misserfolg()`. Die übrigen offenen Endpunkte haben ihn — `RATE_GRENZEN`
-    führt **zehn** Töpfe (gemessen 15.09.2026: `login`, `salt`, `reset`,
-    `pair`, `pair_start`, `pair_code`, `demo`, `demog`, `testmail`, seit
-    Web 20.7.0 `csp`; am 13.09.2026 waren es neun, bei Aufnahme
-    „die drei übrigen", genannt vier). Gefunden in P0/A6 (dort F-16); die
-    Konzeptarbeit dazu ist an **Phase P5** übergeben (Rahmenplan R19), weil
-    die richtige Grenze von der Uhr-Seite her zu bestimmen ist — eine Uhr, die
-    einen Tag Rückstand nachliefert, darf nicht ausgesperrt werden. **P1 misst
-    nur das Aufrufverhalten** und legt keine Grenze fest; die frühere Zuordnung
-    „an P1/P2 übergeben" war überholt und ist mit Web 7.2.1 berichtigt.
-    **Stand nach P1:** Die Messgrundlage liegt jetzt vor. Der Referenzlauf hat
-    das Sendeverhalten der Uhr über 16 Diensttage nachgestellt und protokolliert
-    (`tools/referenzdatensatz/einspielen/messprotokoll.md`): Spitze **14
-    Anfragen an einem Auslöser**, **174 Abstände von 0 Sekunden**, Median
-    1 020 s. Eine Grenze muss also den Stoß zulassen und über die Zeit deckeln —
-    ein fester Abstand je Anfrage wäre falsch. Das Demo-Konto ist mit
-    abgedeckt, sobald der Topf existiert (E-P1-09 führt es als benanntes
-    Restrisiko).
-
-    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP7 (E-P5a-01: Grundsatzfrage entschieden — die Bremse kommt; E-P5a-02: 30 Fehlversuche je 15 min je Gerätekennung, Leiter 10/20/30/60 min, `429` mit `Retry-After`).
 21. **Die 43 weiteren Funde der A4-Nachlese sichten.** Die Erhebung „toter
     Code" in P0/A4 hat mit einer zweiten, breiteren Methode 43 zusätzliche
     Kandidaten geliefert (Abschnitt 9.3 des P0-Konzepts). Sie sind **nicht**
@@ -2161,11 +2138,109 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (0 unerklärt) und Messstand; nach jedem Paket `grep`-Zählungen der
     Muster gegen die Zahlen hier (Ziel 0 außerhalb der Bibliothek).
 
+206. **Der Messstand-Schritt der Auslieferungskette bricht bei JEDEM Tag-Lauf
+    ab.** `.github/workflows/auslieferung.yml` ruft in Zeile 144
+    `python3 tools/messstand/serverprobe.py --basis "$STAGING_URL"` — und
+    `serverprobe.py` kennt **kein** `--basis`. Sein `argparse` führt `--konto`,
+    `--ausgabe`, `--wartung-fahren` und `--optimieren`; ein unbekanntes
+    Argument beendet das Skript mit Code 2. Der Schritt steht unter
+    `if: startsWith(github.ref, 'refs/tags/web-v')` und läuft deshalb genau
+    dann, wenn ausgeliefert wird — und bisher wurde nach P5a/AP1 kein Tag
+    gesetzt, weshalb es niemandem aufgefallen ist.
+
+    **Der Fehler sitzt tiefer als ein fehlendes Argument:** `serverprobe.py`
+    misst gegen eine **lokale Datenbank** (PDO, `EXPLAIN`, `OPTIMIZE TABLE`),
+    nicht gegen eine Adresse. Gegen Staging über HTTP zu messen ist etwas
+    anderes als das, was das Skript tut — die Zeile ist also nicht falsch
+    geschrieben, sie ist falsch gedacht. Entweder fällt der Schritt weg, oder
+    der Messstand bekommt einen Weg, der über die Leitung geht.
+
+    *Aufgenommen 16.09.2026 in P5a/AP7, gefunden bei der Durchsicht der Kette.
+    **Zuständig ist P5a/AP9**, das den Messstand ohnehin anfasst
+    (Verbindungsgrenze, drei Messungen aus Nr. 37). Bewusst nicht nebenbei
+    geändert: Ein Paket über den Ratenschutz baut die Auslieferungskette nicht
+    um.*
+
+207. **`gen-em.org` steht 96× in `tools/` und `.github/`.** In `server/` ist
+    die Adresse seit Web 20.9.0 auf **0** (Nr. 203, E-P5a-40): Kontaktadresse
+    und Betreiberpost sind Einstellungen. Die Prüfmittel sind dabei
+    übergangen worden — dort stehen Prüfkonten (`ingestprobe@gen-em.org`,
+    `demo@gen-em.org`, `umlauf-csv@gen-em.org`, `messstand@gen-em.org` …),
+    Schema-`$id`s (`https://gen-em.org/nadoku/…`) und Anleitungen in den
+    `LIESMICH.md`.
+
+    **Das ist etwas anderes als eine Adresse im Programm**, und deshalb ist es
+    ein eigener Punkt und kein Fehler: Ein Prüfkonto ist eine erfundene
+    Adresse, an die nie jemand schreibt. Es ist trotzdem der Name einer realen
+    Domain in einem Repositorium, das weitergegeben werden soll. **Vorschlag:**
+    `.invalid` (RFC 2606) für alle Prüfkonten — die Mailprobe benutzt es
+    bereits —, eine `urn:`-Kennung oder `example.org` für die Schema-`$id`s.
+    Die Umstellung ist mechanisch, berührt aber **Bestandsdaten**: Wer eine
+    lokale Installation mit `demo@gen-em.org` stehen hat, muss sie neu
+    aufsetzen, sonst greift kein Kreislauf mehr. Deshalb ein Paket mit Ansage
+    und nicht nebenbei.
+
+    *Aufgenommen 16.09.2026 in P5a/AP7. Gezählt: `grep -rn "gen-em\.org"
+    tools/ .github/ | wc -l` → 96; `server/` → 0.*
+
+
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+17. **`ingest.php` hat als einziger anmeldungsfreier Endpunkt keine
+    Mengenbremse.** `RATE_GRENZEN` (`ratelimit_lib.php`) kennt keinen Topf
+    `ingest`, und die Datei ruft weder `rate_erlaubt()` noch
+    `rate_misserfolg()`. Die übrigen offenen Endpunkte haben ihn — `RATE_GRENZEN`
+    führt **zehn** Töpfe (gemessen 15.09.2026: `login`, `salt`, `reset`,
+    `pair`, `pair_start`, `pair_code`, `demo`, `demog`, `testmail`, seit
+    Web 20.7.0 `csp`; am 13.09.2026 waren es neun, bei Aufnahme
+    „die drei übrigen", genannt vier). Gefunden in P0/A6 (dort F-16); die
+    Konzeptarbeit dazu ist an **Phase P5** übergeben (Rahmenplan R19), weil
+    die richtige Grenze von der Uhr-Seite her zu bestimmen ist — eine Uhr, die
+    einen Tag Rückstand nachliefert, darf nicht ausgesperrt werden. **P1 misst
+    nur das Aufrufverhalten** und legt keine Grenze fest; die frühere Zuordnung
+    „an P1/P2 übergeben" war überholt und ist mit Web 7.2.1 berichtigt.
+    **Stand nach P1:** Die Messgrundlage liegt jetzt vor. Der Referenzlauf hat
+    das Sendeverhalten der Uhr über 16 Diensttage nachgestellt und protokolliert
+    (`tools/referenzdatensatz/einspielen/messprotokoll.md`): Spitze **14
+    Anfragen an einem Auslöser**, **174 Abstände von 0 Sekunden**, Median
+    1 020 s. Eine Grenze muss also den Stoß zulassen und über die Zeit deckeln —
+    ein fester Abstand je Anfrage wäre falsch. Das Demo-Konto ist mit
+    abgedeckt, sobald der Topf existiert (E-P1-09 führt es als benanntes
+    Restrisiko).
+
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP7 (E-P5a-01: Grundsatzfrage entschieden — die Bremse kommt; E-P5a-02: 30 Fehlversuche je 15 min je Gerätekennung, Leiter 10/20/30/60 min, `429` mit `Retry-After`).
+
+    **Erledigt am 16.09.2026 mit Web 20.11.0 (P5a/AP7).** Zwei Töpfe:
+    `ingest` je Gerätekennung (bekannte Kennung, falscher Schlüssel) und
+    `ingest_ip` je Adresse (unbekannte Kennung), **je 30 Fehlversuche pro
+    15 Minuten**, danach die Sperrleiter aus 20.10.0 — erste Sprosse **15
+    Minuten und nicht 10** (E-P5a-43/-49). Antwort `429` mit `Retry-After`.
+    Gezählt werden ausschließlich Fehlversuche; `405`, `413`, `403
+    device_disabled`, `400` und `500` zählen nicht. Dazu der Vermerk am
+    Gerät (`devices.abgewiesen_seit`, `abgewiesen_anzahl`, Migration
+    `2026_09_16_geraet_abgewiesen`) auf Kontoseite und Betrieb → Status.
+
+    **Zwei Zahlen oben in diesem Eintrag waren falsch, und die Berichtigung
+    gehört hierher, nicht in eine Fußnote.** „Spitze 14 Anfragen an einem
+    Auslöser" stand seit P1 — `messprotokoll.json` führt unter
+    `spitze_je_dienst` die **3**; die 14 ist `teilstuecke_je_paket.max`, also
+    die Zahl der Teilstücke **eines Pakets**, nicht die Zahl der Anfragen an
+    einem Zeitpunkt. Und „174 Abstände von 0 Sekunden" stammt aus einem
+    älteren Protokollstand (16 Diensttage); der heutige nennt **199** bei 21
+    Diensten und 612 Anfragen. **Die Schlussfolgerung bleibt**: Die 30 hängt
+    an den 14 Teilstücken eines Schlüsselwechsel-Stoßes, nicht an der Spitze
+    je Auslöser — die Begründung ist nur jetzt die richtige.
+
+    **Und die Zahl der Töpfe steht nicht mehr da.** „`RATE_GRENZEN` führt
+    **zehn** Töpfe" war am 15.09.2026 richtig und am 16.09.2026 falsch (es
+    sind mit `login_ip`, `global`, `ingest` und `ingest_ip` vierzehn). Dieselbe
+    Zahl stand in `schema.sql` und in `docs/Technik.md`; an allen drei Stellen
+    ist sie jetzt durch den Verweis auf `RATE_GRENZEN` ersetzt. Eine Zahl im
+    Fließtext altert genauso still wie eine Aufzählung.
 
 8. **Content-Security-Policy als zusätzliche Verteidigungslinie.**
     *Ergänzung 06.09.2026 (Krypto-Review, R78):* Die Bestandsaufnahme

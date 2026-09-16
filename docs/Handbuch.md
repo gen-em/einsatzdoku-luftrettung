@@ -2782,6 +2782,13 @@ drei Punkten am rechten Rand der Zeile, in jeder Bildschirmbreite. Darin:
 bereits hochgeladenen Daten bleiben erhalten, und Aktivieren schaltet dasselbe
 Gerät wieder frei.
 
+**Eine orange Plakette „abgewiesen"** *(seit Web 20.11.0)* sagt, dass dieses
+Gerät am Hochladen gescheitert ist — fast immer, weil sein Schlüssel veraltet
+ist. In der Kleinzeile steht daneben, wie oft und seit wann. **Die Abhilfe ist
+neu koppeln**; das Gerät verliert dabei nichts, es behält seine Warteschlange.
+Plakette und Zahl verschwinden von selbst, sobald wieder ein Upload durchkommt.
+Mehr dazu in Abschnitt 11.4a.
+
 > **Uhr verloren? Sofort trennen.** Auf der Garmin-Uhr liegt der
 > Zugangsschlüssel im Klartext — die Plattform bietet nichts Besseres. Lesen
 > kann ein Finder damit nichts: Er kommt an keinen einzigen Datensatz. Er kann
@@ -3411,9 +3418,29 @@ oder die Verlangsamung ihre vierte Stufe, geht eine Sammelmeldung an die
 **Betreiberadresse** (11.5) — höchstens eine je Stunde. Sie sagt nicht, dass
 jemand hereingekommen ist, sondern dass es jemand *versucht*. Abschaltbar.
 
-**Auf Betrieb → Status** stehen dazu zwei Zeilen, sobald es etwas zu sagen
-gibt: „Verlangsamung" (orange) und „Gesperrt". Die vollständige Liste mit
-einem Knopf zum Aufheben kommt in einem späteren Paket.
+**Auch Geräte werden gebremst** *(seit Web 20.11.0)*. Bis dahin war der
+Upload-Weg der Uhren und Handys der einzige Zugang ohne Zähler. Jetzt gilt:
+**30 fehlgeschlagene Geräteanmeldungen je Viertelstunde**, danach dieselbe
+Leiter wie oben. Gezählt werden ausschließlich **Fehlversuche** — ein
+gelungener Upload geht nie auf das Kontingent, und eine Uhr, die einen ganzen
+Dienst nachliefert, sendet beliebig viele Stücke.
+
+> **Was das im Alltag heißt.** Der einzige Fall, in dem es ein echtes Gerät
+> trifft, ist ein **veralteter Schlüssel** — etwa nach einer
+> Wiederherstellung. Das Gerät verliert dabei **nichts**: Es behält seine
+> Warteschlange und sendet später. Die Abhilfe ist **neu koppeln**
+> (Abschnitt 10), und danach geht es sofort wieder, denn eine Neukopplung
+> vergibt eine neue Gerätekennung.
+>
+> **Woran du es siehst:** In **Einstellungen → Geräte** trägt die Zeile des
+> Geräts eine orange Plakette „abgewiesen" und in der Kleinzeile die Zahl mit
+> Zeitpunkt — „30 abgewiesen seit 16.09.2026 11:01". Beides verschwindet von
+> selbst, sobald wieder ein Upload durchkommt.
+
+**Auf Betrieb → Status** stehen dazu bis zu drei Zeilen, sobald es etwas zu
+sagen gibt: „Verlangsamung" (orange), „Gesperrt" und „Abgewiesene Geräte"
+(orange). Die vollständige Liste mit einem Knopf zum Aufheben kommt in einem
+späteren Paket.
 
 ### 11.5 Installation
 

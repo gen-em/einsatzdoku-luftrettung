@@ -118,6 +118,12 @@
       "begruendung": "DeviceProfile.mc IST der plattformspezifische Teil der Uhr-App: Die Datei haelt je Tastenprofil die Beschriftungen, die auf dem Gehaeuse stehen — „START“ auf Fenix und Forerunner, „Action“ auf der Venu 3s (source-tasten3, deshalb dort kein Treffer). Genau diese Trennung sieht E-P2-02 vor: geraetefreier Ablauf, Garmin-Weg als benannter Zusatz. Die Oberflaechen setzen den Namen ueber Input.lSelectHold() ein und kennen ihn nicht selbst; wer ihn hier ersetzte, schriebe eine Bedienanweisung auf ein echtes Geraet, die dort nicht ausfuehrbar waere. Nur `taste-start` — DOWN und BACK stehen in dieser Datei nicht, und eine Regel auf Vorrat greift nicht und faellt als ungenutzt auf."
     },
     {
+      "id": "connect-iq-rueckruf",
+      "zeile": "von Connect IQ bekommt",
+      "klasse": "G",
+      "begruendung": "Die Signatur des Rueckrufs — `(code, data)` ohne Kopfzeilen — ist eine Eigenschaft der Garmin-Plattform und nicht der Uhr im Allgemeinen. Sie ist der GRUND, warum `ingest.php` seit Web 20.11.0 ein `Retry-After` schickt, das kein Geraet dieses Projekts liest (P5a/AP7, E-P5a-01). Ein geraetefreies „die Uhr bekommt keine Kopfzeilen\" waere hier keine Neutralitaet, sondern eine falsche Verallgemeinerung: Ein Wear-OS-Client koennte sie lesen. Dieselbe Ueberlegung wie `garmin-zusatz-kopplung` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST. Zwei Stellen, docs/Technik.md 5e.7 und docs/JSON-Vertrag.md 5."
+    },
+    {
       "id": "connect-iq-projekt",
       "zeile": "Connect-IQ-Projekt|Connect-IQ-Probe",
       "klasse": "G",

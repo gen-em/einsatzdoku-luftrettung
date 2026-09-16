@@ -15,9 +15,9 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | | |
 > |---|---|
 > | Stand | 15.09.2026 — **Konzept freigegeben, Umsetzung läuft.** Die Grundsatzfragen sind am 15.09.2026 im Gespräch entschieden (E-P5a-01 bis -09); die übrigen Festlegungen (E-P5a-10 bis -21) stammen aus dem Nachmessen im Code und stehen mit der Freigabe. |
-> | Entschieden | E-P5a-01 bis E-P5a-21 (Abschnitt 2); E-PP-01 bis -09 übernommen; **F-P5a-1 entschieden** (2.4) |
+> | Entschieden | E-P5a-01 bis E-P5a-21 (Abschnitt 2), dazu die in der Umsetzung gefallenen E-P5a-22 bis **-49**; E-PP-01 bis -09 übernommen; **F-P5a-1 entschieden** (2.4) |
 > | Offen | — |
-> | Umsetzung | **läuft.** AP1–AP6 und AP4a erledigt, **AP7 als Nächstes**; Abhängigkeiten in 3.0 |
+> | Umsetzung | **läuft.** AP1–AP7 und AP4a erledigt, **AP8 als Nächstes** (Status → Sicherheit, nach Mockup M-P5a-01); Abhängigkeiten in 3.0 |
 > | Fable-Schritte der Umsetzung | **keiner mehr** — M-P5a-01 ist nach Auftrag vom 15.09.2026 ohne Pause umgesetzt worden (2.5) |
 
 > **Stand der Umsetzung**
@@ -32,7 +32,8 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | **AP5 Mail-Warteschlange** | **erledigt** | **Web 20.8.0 · 20.9.0** | Teil 1 (Name der Installation, E-P5a-35): 38 Stellen auf zwei Werte, 6/6 Einschleusversuche abgewiesen · Teil 2 (Warteschlange): Katalog mit **10** Nachrichten, **alle zehn** Versandstellen umgezogen — `smtp_send()` hat ausserhalb von `mail_lib.php` **0** Aufrufer · `tools/mailprobe/` **41 Prüfungen, 0 Befunde** gegen eine eigene SMTPS-Gegenstelle · `tools/jobprobe/` **35/35** (Teil 10 neu) · Frist statt Dauer: schweigender Server **5,01 s** bei 5 s Budget, 12 Fortsetzungszeilen je 1 s **5,00 s** (ohne Frist wären es über 13 s) · Leiter 300 s gemessen, `unzustellbar` nach 5, `zu_spaet` nach **3** bei 1 h Frist · Job am Huckepack-Weg 4 Nachrichten in 0,37 s, hängender Server **3,01 s** bei 3,0 s Vorgabe · Adressen (E-P5a-40) 7 Fälle, **5 abgewiesen** · `grep gen-em.org server/` = **0**, `grep base_url server/` = nur Bibliothek und Quelle · Wortliste **0/0/0** (96 Ausnahmen, 96 gegriffen) · Vollständigkeit **367** (371 → 367, der Doppelbestand der Mailtexte ist weg; die im Commit genannten 366 waren **mitten im Paket gemessen** und um 1 zu niedrig — nachgezogen in AP4a) · Migrationsregister **0 Befunde**, 49/49 Kennungen · CSP-Probe **0** auf 108 Stellen · Browser: Status und Installation, **0 Konsolenfehler** |
 > | **AP4a Sicherheitszeilen** (Nachtrag 16.09.2026) | **erledigt** | **Web 20.9.1** | Nr. 205: `use_strict_mode` vor **7 von 7** `session_start()`-Aufrufen (vorher 2, und zwar die beiden ohne Anmeldesitzung) · Gegenprobe gemessen: **ohne** die Zeile kein `Set-Cookie` (Kennung übernommen), **mit** ihr eine neue — `php.ini` des Prüfstands steht auf `Off` · neu `tools/sitzungshaertung/` in Stufe 1, Selbstprobe **8/8**, Lauf **108 Dateien, 7 Aufrufe, 0 ohne Härtung** · Nr. 203: `json_kopf()` / `json_roh_out()` / `json_out()`, **7 Stellen** umgestellt (nicht 3 — `auth_salt.php`, `jobs.php`, `pair.php` hatten denselben Mangel) · gemessen im Browser: `export_data.php` **200, 68 820 Byte Spurpunkte** mit `no-store`+`nosniff`, `backup_data.php` **200, 19 603 Byte** · `grep Content-Type: application/json server/` = **2 Codezeilen** (`db.php`, `wartung_lib.php` — jene darf `db.php` nicht laden) · Wortliste **0/0/0** (erster Lauf: 2 Treffer, der eigene Satz über die verschwundene Domain) · Vollständigkeit **367 = unverändert** (AP4a fügt netto 0 hinzu; die Schwelle der Kette von 366 auf 367 richtiggestellt) · Kontraste 22/0 · CSP-Probe **0** · Migrationsregister **0** |
 > | **AP6 Ratenschutz neu** | **erledigt** | **Web 20.10.0** | `tools/ratenprobe/` neu: **49 Prüfungen, 0 Befunde** · Leiter 15/20/30/60 min gemessen, Stufe 1→2→3→4 und Deckel bei 4 · Verfall nach 24 h gemessen, Gegenprobe (laufende Frist wird verlängert) ebenso · **zwei Fehler gefunden, die ohne Meldung durchgegangen wären**: Klopfen hätte die laufende Sperre gelöscht, und die Stufe wäre nie zurückgefallen · zwei Schwellen 10/50 gemessen · Verlangsamung 200/400/800/1600 → 1/2/4/8 s, Stufe 1 **1,00 s**, Stufe 4 **8,0 s** (gedeckelt), abgelaufenes Fenster → 0 · gleiche Antwortzeit **0,3 ms Differenz über 100 Messungen** · Sammelmail 1 je Stunde gemessen, abschaltbar · Einstellungen 6 Fälle im Browser, 4 abgewiesen, **nichts halb gespeichert** (Gegenprobe) · Anmeldeseite: Sperrmeldung **wortgleich für echtes und erfundenes Konto**, Countdown tickt (43→38 s), Formular entsperrt sich nach Ablauf, 0 Konsolenfehler · Migrationsregister **51/51, 34 Tabellen, 0 Befunde** · kopplungsprobe **76/0** (ein Prüffall hing an einer festen Migrationszahl und war schon vorher rot), wartungsprobe **67/0**, mailprobe **41/0**, jobprobe **35/0** · Wortliste **0/0/0** · Vollständigkeit **372** (367 + 5 Pfeile in neuen sichtbaren Texten; 5 Auslassungszeichen wieder entfernt) · CSP **0**, Sitzungshärtung **0**, Kontraste **22/0** |
-> | AP7 bis AP12 | offen | — | — |
+> | **AP7 Mengenbremse `ingest.php`** | **erledigt** | **Web 20.11.0** | Ingestprobe um Teil 10 erweitert: **83 Erwartungen, 0 nicht erfüllt** (21 davon neu) · gemessen: **14 Fehlversuche ohne Sperre**, Versuche 15–30 weiterhin `401`, **Versuch 31 = `429`** mit `Retry-After: 900` und Rumpf `zu_viele_versuche` · die Antwort nennt den Topf **nicht** · `403 device_disabled`, `400 payload`, `413 too_large` zählen **nicht** (drei Gegenproben) · zweites Gerät an derselben Adresse **`200`** — Adresstopf leer · gelungener Upload leert Topf und Vermerk (`anzahl 30 → 0`) · **30 erfundene Kennungen erreichen dieselbe Schwelle** wie eine bekannte (E-P5a-47) · genau **ein** Sperrereignis je Sperre · Laufzeit über den erzeugten Sendeplan (612 Anfragen, 64 478 Punkte, **je zwei Läufe**): Median **14,43 ms ohne / 15,14 ms mit** (+4,9 %), Mittel **19,67 / 20,33 ms** (+3,4 %), **0 Fehlversuche in allen vier Läufen** — bei 3 bis 4 % Streuung zwischen zwei *gleichen* Läufen · Ratenprobe **50/0** (zwei Prüfungen neu) · Migrationsregister **52/52, 219 Spalten, 0 Befunde** · Bilderlauf der zwei berührten Seiten **16 Bilder, 0 Überlauf / 0 Konsole / 0 Knopfhöhen**, mit gesetztem Vermerk aufgenommen · Wortliste **0/0/0** (98 Regeln, 98 gegriffen) · Vollständigkeit **372 = unverändert** |
+> | AP8 bis AP12 | offen | — | — |
 
 ---
 
@@ -725,6 +726,76 @@ einer Anmeldung vier Statements aus; ein Ereignis je Merkmal machte sechs und
 schriebe jeden Tippfehler mit. Ein Protokoll, das jeden Tippfehler verbucht,
 wird nicht gelesen.
 
+
+**E-P5a-47 (neu, 16.09.2026) — das Existenzorakel der Mengenbremse: benannt,
+verkleinert, nicht geschlossen.**
+
+E-P5a-01 (3) legt fest: Merkmal ist die Gerätekennung, die IP **nur** für
+unbekannte Kennungen. Genau daraus entsteht eine Auskunft, die `ingest.php`
+an anderer Stelle mit Aufwand vermeidet: M4-07 hat den Zeitunterschied
+zwischen bekannter und unbekannter Kennung beseitigt (Blindvergleich gegen
+`GERAET_VERGLEICHSWERT`), weil er ohne jede Zugangsdaten messbar war. Zwei
+Töpfe mit **verschiedenen Schwellen** stellen ihn als Zählunterschied wieder
+her: Wer dieselbe geratene Kennung von einer Adresse aus hämmert, bekommt bei
+existierender Kennung ab dem 31. Versuch `429`, bei nicht existierender erst
+ab dem 51.
+
+**Was getan wird:** Beide Töpfe bekommen **dieselbe Zahl — 30 je 15 min**.
+Damit endet der einfache Sonderfall: Ein Hämmern auf *eine* Kennung
+unterscheidet die beiden Fälle nicht mehr, die Antwort kommt beide Male beim
+31. Versuch und mit demselben Rumpf (`zu_viele_versuche`, nie ein Hinweis,
+welcher Topf gegriffen hat). Die Absenkung von 50 auf 30 kostet **keinen
+legitimen Verkehr**: In den Adresstopf zählen ausschließlich *unbekannte*
+Kennungen, und ein gekoppeltes Gerät sendet nie eine unbekannte.
+
+**Was bleibt, und das wird nicht beschönigt:** Eine zweistufige Probe
+unterscheidet weiterhin — 31 Versuche mit der fraglichen Kennung, danach
+einer mit einer offensichtlich erfundenen. Kommt darauf `401`, war die erste
+bekannt; kommt `429`, war sie es nicht. Das zu schließen hieße, auch
+Fehlversuche **bekannter** Kennungen in den Adresstopf zu zählen — und dann
+sperrt ein einziges Gerät mit veraltetem Schlüssel seine ganze Adresse,
+einschließlich des soeben neu gekoppelten Geräts, das die Abhilfe ist. Die
+Heilung wäre schlimmer als der Schaden.
+
+**Warum der Rest hinnehmbar ist:** Die Kennung ist `dev-` + 16 Zufallsbytes
+(128 Bit) und ausdrücklich **kein Geheimnis** — `pair.php` schreibt das so
+hin, die Berechtigung hängt am Schlüssel (192 Bit). Das Orakel beantwortet
+also nur die Frage „ist diese Kennung, die ich ohnehin schon habe, noch
+eingetragen?" Raten kann man sie nicht.
+
+**E-P5a-48 (neu, 16.09.2026) — `ingest` und `ingest_ip` bekommen eine Leiter,
+und die Trennlinie im Kopfkommentar wird umgeschrieben.**
+
+`ratelimit_lib.php` begründete bisher, die Kopplungstöpfe bekämen keine
+Leiter, weil „dahinter ein Gerät steht, das nicht lesen kann, was auf der
+Seite steht". Auf `ingest.php` trifft das wörtlich genauso zu — die Regel
+hätte also gegen die Leiter entschieden. Sie war falsch formuliert.
+
+**Die tragfähige Trennlinie ist eine andere:** Bei den Kopplungstöpfen
+unterbricht eine längere Sperre einen Vorgang, der **gerade läuft** — jemand
+steht am Gerät mit einem sechsstelligen Code, der in zehn Minuten verfällt.
+Eine Stunde Sperre schreckt dort keinen Automaten ab, sie beendet die
+Kopplung für den Menschen. Bei `ingest.php` läuft nichts: Die Daten liegen in
+der Warteschlange des Geräts (1.7) und kommen später an. Die Sperre kostet den
+legitimen Fall **nichts als Zeit** — und Zeit ist genau das, was sie den
+illegitimen kosten soll. Deshalb: Leiter ja.
+
+**Und sie sperrt kein repariertes Gerät aus:** Die Abhilfe bei veraltetem
+Schlüssel ist Neukopplung, und die erzeugt eine **neue** Kennung
+(`pair.php`); der alte Topf bleibt zurück und läuft ab.
+
+**E-P5a-49 (neu, 16.09.2026) — zwei Abnahmezeilen aus AP7 waren so nicht
+erfüllbar.**
+
+1. „30 → Sperre **10 min**" (auch im Text von E-P5a-02). Die erste Sprosse
+   ist seit E-P5a-43 **15 Minuten**, und zwar mit Begründung: Mit 10 wäre der
+   erste Verstoß nach dem Update milder als davor. Die Abnahme liest sich
+   jetzt „Sperre 15 min (erste Sprosse)".
+2. „**Messstand-Zahlen für `ingest.php`** unverändert (± 5 %)". Der Messstand
+   misst keine Ingest-Zahl — er hat nie eine erhoben. An ihre Stelle tritt die
+   Zahl, die es wirklich gibt: `dauer_ms` aus der `lauf.json` des
+   Referenzlaufs, vorher gegen nachher.
+
 ### 2.3 Ort je Funktion (K1, R74)
 
 | Funktion | Ort |
@@ -861,16 +932,19 @@ Zweigs, Statusblock, Prüfprotokoll (K5, K7).
 
 ### AP7 — Mengenbremse `ingest.php` (E-P5a-01, -02; R19, Nr. 17)
 
-- Topf `ingest` (30/900 s, Leiter) je Gerätekennung, je IP für unbekannte
-  Kennungen (50/900 s); `429` mit `Retry-After`; Vermerk am Gerät
-  (`devices.abgewiesen_seit`, `abgewiesen_anzahl` — Migration) für
-  Kontoseite und Status; Begründung der (nun beendeten) Asymmetrie in
-  `docs/Technik.md`.
+- Topf `ingest` (30/900 s, Leiter) je Gerätekennung, Topf `ingest_ip`
+  je IP für unbekannte Kennungen — **ebenfalls 30/900 s, nicht 50**
+  (E-P5a-47); Leiter für beide (E-P5a-48); `429` mit `Retry-After`;
+  Vermerk am Gerät (`devices.abgewiesen_seit`, `abgewiesen_anzahl` —
+  Migration) für Kontoseite und Status; Begründung der (nun beendeten)
+  Asymmetrie in `docs/Technik.md`.
 - **Abnahme:** Referenzlauf (`tools/referenzdatensatz/einspielen/`)
   unverändert 0 Fehlversuche; Ingestprobe mit veraltetem Schlüssel: 14
-  Fehlversuche in einem Stoß **ohne** Sperre, 30 → Sperre 10 min, Uhr-
-  Simulator sendet danach den Rückstand vollständig (Punktzahl vorher =
-  nachher); Messstand-Zahlen für `ingest.php` unverändert (± 5 %).
+  Fehlversuche in einem Stoß **ohne** Sperre, 30 → Sperre **15 min**
+  (erste Sprosse, E-P5a-43/-49), Uhr-Simulator sendet danach den Rückstand
+  vollständig (Punktzahl vorher = nachher); `dauer_ms` des Referenzlaufs
+  vorher gegen nachher (± 5 %, E-P5a-49 — der Messstand erhebt für
+  `ingest.php` keine Zahl).
 
 ### AP8 — Status → Sicherheit (E-P5a-08, -03 Anzeige, -09; **nach M-P5a-01**)
 
@@ -935,7 +1009,7 @@ Zweigs, Statusblock, Prüfprotokoll (K5, K7).
 | Wartungsprobe | AP3 | Torwächter-Fall grün |
 | Versandprobe | AP5, AP10 | Zahlen wie in den Abnahmen |
 | Prüfkonten-Lauf | AP6 | Leiter 10/20; Verlangsamung ≥ 1 s; Δ Antwortzeit < 50 ms |
-| Ingestprobe, Referenzlauf | AP7 | 0 Fehlversuche Referenz; 14 ohne Sperre, 30 mit |
+| Ingestprobe, Referenzlauf | AP7 | 0 Fehlversuche Referenz; 14 ohne Sperre, 30 mit (15 min); `dauer_ms` ± 5 % |
 | Messstand | AP9, und Stufe 2 bei Tags | Verbindungsgrenze 0 Verluste; drei Messungen mit Zahlen |
 | Wiederherstellungsprobe | AP10 | `geraet_art` unbekannt → NULL |
 | Geräteprobe | AP11 | Nachlösung zählt genau |
@@ -1433,3 +1507,108 @@ nicht anschlagen dürfen** — darunter einen Kommentar, der `<script>` nennt,
 und `data-onload="1" name="onlineform"`. Beide hätten ein `grep` zum Fehlalarm
 gebracht, und eine Prüfung mit Fehlalarm wird nach dem zweiten Lauf
 abgeschaltet.
+
+---
+
+### AP4a, AP5, AP6 — wo ihr Protokoll steht
+
+Diese drei Pakete haben **keinen eigenen Abschnitt hier**, und das ist ein
+Bruch in diesem Dokument, kein Versehen der Ablage: Ihre Zahlen stehen im
+**Statusblock** (Tabelle „Stand der Umsetzung"), ihre Entscheidungen als
+**E-P5a-35 bis -46** in Abschnitt 2, ihre Fehlerfunde in Abschnitt 5 und die
+ausführliche Begründung jeweils im Kopfkommentar der geänderten Datei
+(`mail_lib.php`, `ratelimit_lib.php`) und in `docs/CHANGELOG.md`. Wer das
+Protokoll dieser drei Pakete sucht, findet es dort vollständig — aber an vier
+Stellen statt an einer.
+
+### AP7 — Mengenbremse `ingest.php` · Web 20.11.0 · 16.09.2026
+
+**Was entstanden ist.** Zwei Töpfe (`ingest` je Gerätekennung, `ingest_ip` je
+Adresse), je 30 Fehlversuche pro 15 Minuten, mit der Sperrleiter aus AP6;
+`429` mit `Retry-After`; der Vermerk am Gerät (`devices.abgewiesen_seit`,
+`abgewiesen_anzahl`, Migration `2026_09_16_geraet_abgewiesen`) auf Kontoseite
+und Betrieb → Status. Dazu `rate_sperre_paare()`, `rate_merkmal_ip()`,
+`rate_merkmal_kennung()` und ein `$merkmale`-Parameter an `rate_erfolg()`.
+
+#### Drei Fragen, die vor der ersten Codezeile zu klären waren
+
+Eine Vorprüfung des Pakets hat drei Widersprüche gefunden, die im Code nicht
+mehr lösbar gewesen wären. Sie sind als **E-P5a-47, -48 und -49** entschieden
+und in Abschnitt 2.2 ausgeschrieben:
+
+1. **Das Existenzorakel** (E-P5a-47). Die im Konzept vorgesehenen
+   verschiedenen Schwellen (30 je Kennung, 50 je Adresse) hätten genau die
+   Auskunft wiederhergestellt, die M4-07 in `ingest.php` mit einem
+   Blindvergleich beseitigt hat. **Gelöst:** 30 gegen 30 — die einfache Probe
+   unterscheidet nicht mehr. **Nicht gelöst und benannt:** die zweistufige
+   Probe; die Heilung wäre schlimmer als der Schaden.
+2. **Die Leiter** (E-P5a-48). Die Begründung in `ratelimit_lib.php`, warum die
+   Kopplungstöpfe keine bekommen, hätte auch gegen die Leiter für `ingest`
+   entschieden. **Gelöst:** Die Trennlinie war falsch formuliert und ist
+   umgeschrieben — sie fragt jetzt, ob die längere Sperre einen Vorgang
+   unterbricht, der *gerade läuft*.
+3. **Zwei Abnahmezeilen** (E-P5a-49): „Sperre 10 min" (die erste Sprosse ist
+   seit E-P5a-43 fünfzehn) und „Messstand-Zahlen für `ingest.php`" (der
+   Messstand erhebt keine).
+
+#### Probleme, die in der Umsetzung aufgetreten sind
+
+- **Der Rollback verschluckte die Ursache.** `$pdo->rollBack()` lief im
+  Fehlerzweig unbedingt, obwohl `commit()` mitten im `try` steht. Behoben mit
+  `if ($pdo->inTransaction())`; Begründung im Code und im Changelog. Gefunden
+  beim Lesen, nicht von einem Prüfmittel.
+- **Die Messgrundlage der 30 war falsch zitiert.** „Spitze 14 Anfragen an
+  einem Auslöser" steht so seit P1 im Backlog — `messprotokoll.json` führt
+  unter `spitze_je_dienst` die **3**; die 14 ist `teilstuecke_je_paket.max`.
+  Die **Schlussfolgerung** (30, nicht 10) bleibt, die Begründung ist
+  berichtigt — in `ratelimit_lib.php`, in `docs/Technik.md` 5e.7 und im
+  Backlog-Eintrag selbst.
+- **Fünf Unicode-Zeichen in eigenen Kommentaren** hätten die
+  Vollständigkeitszahl von 372 auf 377 getrieben. Sie sind durch Worte
+  ersetzt; die Prüfung „Unicode-Zeichen als Symbol im Markup" meint Markup,
+  nicht Kommentare, und eine Zahl, die an Rauschen wächst, verliert ihren
+  Sinn. Gemessen wurde gegen einen **ausgecheckten** Stand
+  (`git worktree add --detach HEAD`), nicht gegen die Arbeitskopie.
+- **Die Wortliste fand zwei eigene Sätze** („Rückruf von Connect IQ"). Sie
+  bleiben mit einer begründeten Ausnahme (Klasse G): Die Signatur
+  `(code, data)` ohne Kopfzeilen ist eine Eigenschaft der Garmin-Plattform und
+  nicht der Uhr im Allgemeinen — ein Wear-OS-Client könnte `Retry-After`
+  lesen.
+
+#### Was der vollständige Referenzlauf nicht hergab
+
+Die Abnahme nennt den Einspiellauf (`tools/referenzdatensatz/einspielen/`).
+Der Generator lief (21 Dienste, 612 Ingest-Anfragen, 64 478 Punkte), die Stufe
+`geraet` brach ab: Sie koppelt über die **Weboberfläche** und braucht dafür
+eine angemeldete Sitzung des Demo-Kontos, deren Einladungslink in diesem
+Container nicht mehr zu haben war (`Konto demo@gen-em.org besteht bereits`).
+
+**Gemessen wurde stattdessen der erzeugte Sendeplan selbst** — dieselben 612
+Anfragen, dieselben Körper, über echtes HTTP, mit per SQL angelegten Geräten.
+Das prüft `ingest.php`, nicht die Geräteverwaltung, und ist für die Frage
+dieses Pakets die richtige Messung. **Was dabei nicht geprüft wurde**, steht
+so auch im Prüfdokument: der Kopplungsweg über die Oberfläche und die beiden
+Kreisläufe (csv, edbak). Beide gehören zu AP12.
+
+**Zahlen, je zwei Läufe mit und ohne Bremse:**
+
+| | ohne Bremse | mit Bremse | Δ |
+|---|---|---|---|
+| Median je Anfrage | 14,43 ms | 15,14 ms | +4,9 % |
+| Mittel je Anfrage | 19,67 ms | 20,33 ms | +3,4 % |
+| Fehlversuche | 0 | 0 | — |
+
+Die Streuung **zwischen zwei gleichen Läufen** liegt bei 3 bis 4 %. Der
+Aufschlag ist damit die **obere Schranke**, nicht der Messwert — die Bremse
+kostet eine zusätzliche, indizierte Abfrage je Upload.
+
+#### Zwei Funde neben der Sache
+
+Beide sind als Backlog **Nr. 206** und **Nr. 207** aufgenommen und
+ausdrücklich *nicht* nebenbei geändert worden:
+
+- `.github/workflows/auslieferung.yml:144` ruft `serverprobe.py --basis …` —
+  ein Argument, das es nicht gibt. Der Schritt läuft nur bei Tag-Läufen und
+  bricht dort **jedes Mal** ab. Zuständig ist AP9, das den Messstand ohnehin
+  anfasst.
+- `gen-em.org` steht 96× in `tools/` und `.github/` (in `server/`: 0).

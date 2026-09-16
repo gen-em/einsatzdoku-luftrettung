@@ -386,6 +386,47 @@ function status_erhebung(): array
             'betrieb_server.php#k-ratenschutz');
     }
 
+    /* ---- ABGEWIESENE GERAETEANMELDUNGEN (P5a/AP7, E-P5a-02) -------------
+     *
+     * Die zweite der beiden Stellen, an denen die Mengenbremse sichtbar wird;
+     * die erste ist die Kontoseite am Geraet selbst. Hier steht sie, weil die
+     * Betreiberin es sonst nie erfaehrt: Das Geraet gehoert einer Nutzerin,
+     * die Statusseite gehoert ihr — und die Uhr, die seit Montag nichts mehr
+     * hochlaedt, ist ihr Problem, sobald jemand nach den fehlenden Daten
+     * fragt.
+     *
+     * KEIN LINK. Der Vermerk steht auf der Kontoseite der BESITZERIN, und
+     * dorthin fuehrt von der Betriebsseite kein Weg — eine Verknuepfung, die
+     * auf einer Rechteprüfung endet, ist schlechter als keine.
+     *
+     * IM TRY, WEIL ES DIE SPALTEN IM DEPLOY-FENSTER NOCH NICHT GIBT. Die
+     * Statusseite ist genau die Seite, die in diesem Fenster aufgerufen wird
+     * — sie darf daran nicht scheitern. */
+    try {
+        $abgSt = db()->query('SELECT label, device_id, abgewiesen_anzahl, abgewiesen_seit
+                                FROM devices WHERE abgewiesen_anzahl > 0
+                               ORDER BY abgewiesen_anzahl DESC');
+        $abgRows = $abgSt->fetchAll(PDO::FETCH_ASSOC);
+        if ($abgRows !== []) {
+            $abgErst = $abgRows[0];
+            $abgName = trim((string)($abgErst['label'] ?? '')) !== ''
+                     ? (string)$abgErst['label'] : (string)$abgErst['device_id'];
+            $abgSumme = 0;
+            foreach ($abgRows as $r) { $abgSumme += (int)$r['abgewiesen_anzahl']; }
+            $klein = 'Gerät „' . $abgName . '": ' . (int)$abgErst['abgewiesen_anzahl']
+                   . ' abgewiesene Anmeldungen'
+                   . (($abgErst['abgewiesen_seit'] ?? null) !== null
+                      ? ' seit ' . fmt_local($abgErst['abgewiesen_seit'], 'd.m.Y H:i') : '')
+                   . (count($abgRows) > 1 ? ' (und ' . (count($abgRows) - 1) . ' weitere)' : '')
+                   . '. Fast immer ein veralteter Schlüssel — das Gerät koppelt neu, '
+                   . 'und der Vermerk verschwindet beim nächsten gelungenen Upload';
+            $server[] = status_z('Abgewiesene Geräte', $klein, 'orange',
+                (string)$abgSumme, null);
+        }
+    } catch (Throwable $ex) {
+        /* Spalten fehlen (Migration noch nicht gelaufen) — ohne Folgen. */
+    }
+
     /* ---- E-Mail --------------------------------------------------------- */
     $mail = [];
     $mail[] = status_z('SMTP',

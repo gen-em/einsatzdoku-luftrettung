@@ -14,6 +14,154 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.11.0] — 2026-09-16
+
+**P5a/AP7 — die letzte Asymmetrie endet: `ingest.php` bekommt eine
+Mengenbremse.**
+
+### Hinzugefügt — ein Ratenschutz an dem Endpunkt, der keinen hatte
+
+**Was galt.** Anmeldung, Salz, Passwort-Reset, Kopplung, Demo, Testmail,
+CSP-Berichte — alle hatten einen Zähler. `ingest.php` nicht. Das war kein
+Versehen, sondern eine offene Grundsatzfrage (R19, Backlog Nr. 17): Ein
+Zähler am Upload-Endpunkt kann eine Uhr aussperren, die ihre Daten loswerden
+will, und das wiegt schwer. Mit der Verteilung der Clients über die Stores
+(E-PV-1) hat sich die Abwägung gedreht — E-R45-6 nennt genau diese
+Kombination, öffentlicher Client mit Geräteschlüssel ohne Bremse, als die
+Flutungsgefahr aus P5.
+
+**Was gilt.** Zwei Töpfe, **30 Fehlversuche je 15 Minuten**, danach die
+Sperrleiter aus 20.10.0 (erste Sprosse 15 Minuten), Antwort `429` mit
+`Retry-After`:
+
+| Topf | Merkmal | Wann |
+|---|---|---|
+| `ingest` | Gerätekennung | die Kennung gibt es, der Schlüssel passt nicht |
+| `ingest_ip` | IP-Adresse | die Kennung gibt es nicht |
+
+**Gezählt werden ausschließlich Fehlversuche.** Ein gelungener Upload geht nie
+auf das Kontingent; eine Uhr, die einen ganzen Dienst nachliefert, sendet
+beliebig viele Stücke. Nicht gezählt werden außerdem `405`, `413`, `403
+device_disabled`, `400` und `500` — und der Wartungsmodus schon gar nicht, der
+antwortet in `db.php`, bevor `ingest.php` überhaupt läuft.
+
+**Warum 30 und nicht 10.** Gemessen am Sendeplan des Referenzdatensatzes: Ein
+Dienst kommt in Stößen, und der Stoß, der die Grenze bestimmt, ist ein
+**Schlüsselwechsel** — danach liegen die Pakete eines ganzen Dienstes in der
+Warteschlange des Geräts und laufen der Reihe nach in die Abweisung. 14
+Teilstücke in einem Paket sind gemessen. 30 lässt zwei solche Stöße durch. Mit
+10 sperrte die Bremse Uhren aus, und zwar genau dann, wenn jemand gerade neu
+gekoppelt hat.
+
+### Hinzugefügt — der Vermerk am Gerät, damit es niemand raten muss
+
+Eine Uhr, die nichts mehr hochlädt, ist sonst ein Rätsel. `devices`
+bekommt zwei Spalten (`abgewiesen_seit`, `abgewiesen_anzahl`, Migration), und
+sie stehen an zwei Stellen:
+
+- **Einstellungen → Geräte**, in der Kleinzeile des Geräts („30 abgewiesen
+  seit 16.09.2026 11:01") und als orange Plakette „abgewiesen" — dieselben
+  Bausteine wie „neu" und „gekoppelt am", keine neue Darstellung.
+- **Betrieb → Status**, als Zeile „Abgewiesene Geräte" mit dem Gerät, das die
+  meisten hat.
+
+Beide werden beim **nächsten gelungenen Upload geleert**. Ein Vermerk, der
+stehenbleibt, nachdem neu gekoppelt wurde, ist eine Falschmeldung — und zwar
+eine, die genau dann dasteht, wenn alles wieder gut ist.
+
+### Behoben — ein Rollback, der die Ursache verschluckte
+
+`$pdo->rollBack()` im Fehlerzweig von `ingest.php` lief unbedingt. `commit()`
+steht aber **mitten** im try-Block; danach kommen noch die Höhenberechnung und
+der Aufbau der Antwort. Warf eine von beiden, traf der Rollback auf keine
+offene Transaktion mehr und warf seinerseits „There is no active
+transaction" — und diese zweite Ausnahme ersetzte die erste. Die Uhr bekam
+ihre 500, aber die `kennung` im Fehlerprotokoll benannte den Rollback statt
+der Ursache, also genau das Schweigen, das M3-10 abgestellt hat. Er läuft
+jetzt nur noch, wenn etwas offen ist.
+
+### Geändert — drei Abweichungen vom Konzept, alle benannt
+
+**(a) Der Adresstopf hat 30 und nicht 50** (E-P5a-47). Verschiedene Schwellen
+sind ein **Existenzorakel**: Wer dieselbe geratene Kennung hämmert, bekäme sie
+bei existierender Kennung ab dem 31. Versuch abgewiesen, bei nicht
+existierender erst ab dem 51. Genau diese Auskunft hat M4-07 in `ingest.php`
+mit einem Blindvergleich beseitigt; sie als Zählunterschied wieder einzubauen
+wäre ein Rückschritt durch die Hintertür. Die Absenkung kostet **keinen
+legitimen Verkehr**: In den Adresstopf zählen ausschließlich unbekannte
+Kennungen, und ein gekoppeltes Gerät sendet nie eine unbekannte.
+
+> **Was bleibt, wird nicht beschönigt.** Eine zweistufige Probe unterscheidet
+> weiterhin — 31 Versuche mit der fraglichen Kennung, danach einer mit einer
+> offensichtlich erfundenen. Das zu schließen hieße, auch Fehlversuche
+> **bekannter** Kennungen in den Adresstopf zu zählen, und dann sperrt ein
+> einziges Gerät mit veraltetem Schlüssel seine ganze Adresse — einschließlich
+> des soeben neu gekoppelten, das die Abhilfe ist. Die Heilung wäre schlimmer
+> als der Schaden. Die Kennung ist `dev-` + 128 Bit Zufall und ausdrücklich
+> kein Geheimnis; das Orakel beantwortet nur die Frage „ist diese Kennung, die
+> ich ohnehin schon habe, noch eingetragen?"
+
+**(b) Beide Ingest-Töpfe bekommen eine Leiter** (E-P5a-48) — und die
+Trennlinie im Kopfkommentar von `ratelimit_lib.php` musste dafür
+umgeschrieben werden. Sie lautete: Die Kopplungstöpfe bekommen keine, weil
+„dahinter ein Gerät steht, das nicht lesen kann, was auf der Seite steht". Auf
+`ingest.php` trifft das wörtlich genauso zu — die Regel hätte also gegen die
+Leiter entschieden, die dieses Paket baut. Sie war nicht falsch gemeint,
+sondern falsch formuliert. Die tragfähige Trennlinie ist: **Unterbricht die
+längere Sperre einen Vorgang, der gerade läuft?** Bei der Kopplung ja — jemand
+steht am Gerät mit einem sechsstelligen Code, der in zehn Minuten verfällt,
+und eine Stunde Sperre schreckt dort keinen Automaten ab, sie beendet die
+Kopplung für den Menschen. Bei `ingest.php` nein: Die Daten liegen in der
+Warteschlange des Geräts und kommen später an.
+
+**(c) Zwei Abnahmezeilen waren so nicht erfüllbar** (E-P5a-49). „Sperre
+10 min" — die erste Sprosse ist seit E-P5a-43 fünfzehn. Und „Messstand-Zahlen
+für `ingest.php`" — der Messstand erhebt für `ingest.php` keine Zahl und hat
+nie eine erhoben.
+
+### Geändert — der JSON-Vertrag kennt jetzt 429
+
+Ein Client, der `401` schon richtig behandelt, behandelt `429` ebenfalls
+richtig: pausieren, nichts verwerfen, später erneut. **Beide Clients tun das
+bereits** — die Uhr fällt in ihren Zweig „später erneut" (`Uploader.mc`), die
+Android-App in `Sendeantwort.SpaeterErneut` (`code != 200`). Deshalb ändert
+sich an Uhr und App nichts, und beide Versionen bleiben stehen.
+
+`Retry-After` steht dabei nicht, weil ein Gerät es liest — die Uhr **kann** es
+nicht, der Rückruf von Connect IQ bekommt `(code, data)` und keine
+Kopfzeilen. Die Zeile steht für den Fall, den der Vertrag ausdrücklich
+zulässt: einen fremden Client an derselben Schnittstelle.
+
+### Migration
+
+`2026_09_16_geraet_abgewiesen` — zwei Spalten auf `devices`. **Nach dem Deploy
+muss eine Administratorin Betrieb → Updates aufrufen.**
+
+Das Fenster dazwischen ist mitgedacht: Die Geräteabfrage in `ingest.php` und
+die auf der Kontoseite haben einen Rückfall ohne die beiden Spalten, die
+Statusseite fängt. Der Schutz selbst hängt nicht daran — er zählt in
+`rate_limits`, und die Tabelle steht seit 20.10.0.
+
+### Geprüft
+
+- **Ingestprobe** (`tools/ingestprobe/`), um Teil 10 erweitert: **83
+  Erwartungen, 0 nicht erfüllt.** Darin: 14 Fehlversuche ohne Sperre, der 30.
+  sperrt, der 31. bekommt 429 mit `Retry-After: 900`; `403`, `400` und `413`
+  zählen nicht; ein zweites Gerät an derselben Adresse lädt weiter hoch; ein
+  gelungener Upload leert den Vermerk; 30 erfundene Kennungen erreichen die
+  **gleiche** Schwelle wie eine bekannte. `senden()` liest dafür jetzt die
+  Kopfzeilen — vorher ließ sich `Retry-After` gar nicht nachweisen.
+- **Ratenprobe** (`tools/ratenprobe/`): **50 Prüfungen, 0 Befunde**, darunter
+  die beiden neuen („genau fünf Töpfe haben eine Leiter", „die beiden
+  Ingest-Töpfe haben dieselbe Zahl").
+- **Migrationsregister:** 52 Kennungen, 219 Spalten, **0 Befunde**.
+- **Laufzeit** über den erzeugten Sendeplan des Referenzdatensatzes (612
+  Anfragen, 64 478 Punkte, je zwei Läufe): Median **14,43 ms ohne**,
+  **15,14 ms mit** Bremse; Mittel 19,67 gegen 20,33 ms; **0 Fehlversuche** in
+  allen vier Läufen. Das sind +4,9 % beziehungsweise +3,4 % — und die
+  Streuung zwischen zwei **gleichen** Läufen liegt bei 3 bis 4 %. Der
+  Aufschlag ist damit die obere Schranke, nicht der Messwert.
+
 ## [Web 20.10.0] — 2026-09-16
 
 **P5a/AP6 — der Ratenschutz bekommt ein Gedächtnis.**

@@ -2664,6 +2664,40 @@ function migrationen_katalog(): array
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
         ],
     ],
+    [
+        'id'    => '2026_09_16_geraet_abgewiesen',
+        'web'   => '20.11',
+        'label' => 'Abgewiesene Geraeteanmeldungen — damit ein veralteter Schluessel sichtbar wird',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'devices'
+                                AND column_name = 'abgewiesen_seit'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* WOGEGEN (E-P5a-02). Ab Web 20.11.0 hat auch `ingest.php` eine
+             * Mengenbremse. Eine Uhr mit veraltetem Schluessel sperrt sich
+             * damit selbst aus — hinnehmbar, kurz, und der Rueckstand bleibt
+             * auf dem Geraet. Aber sie muss SICHTBAR sein: Sonst steht eine
+             * Notaerztin vor einer Uhr, die nichts mehr hochlaedt, und nichts
+             * in der Anwendung sagt ihr, warum.
+             *
+             * ZWEI SPALTEN, NICHT EINE TABELLE. Die Frage ist „laeuft dieses
+             * Geraet gegen eine Wand?" und nicht „wann genau war der 17.
+             * Versuch" — das steht in `sicherheit_ereignisse`. Hier genuegt
+             * ein Zeitpunkt und eine Zahl auf der Zeile, die ohnehin bei
+             * jedem Upload gelesen wird.
+             *
+             * SIE WERDEN BEI DER NAECHSTEN GELUNGENEN ANMELDUNG GELEERT. Ein
+             * Vermerk, der stehenbleibt, nachdem das Geraet neu gekoppelt
+             * wurde, ist eine Falschmeldung — und zwar eine, die genau dann
+             * dasteht, wenn alles wieder gut ist. */
+            'ALTER TABLE devices
+               ADD COLUMN abgewiesen_seit   DATETIME NULL,
+               ADD COLUMN abgewiesen_anzahl INT UNSIGNED NOT NULL DEFAULT 0',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }
