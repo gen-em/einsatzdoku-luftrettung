@@ -1,7 +1,9 @@
 # Prüfdokument P5a — Kette und Fundament
 
 **Konzept:** `Konzept-P5a-Kette-und-Fundament.md` (15.09.2026, E-P5a-01 bis
--58, AP1 bis AP12). **Gemessen auf:** Zweig `claude/butte-umsetzen-5opi9u`.
+-58, AP1 bis AP12) — **nach der Freigabe am 16.09.2026 gelöscht**; die Historie
+behält es unter `bcbb04f`, die Zusammenfassung steht in `docs/Rahmenplan.md`
+Abschnitt 8. **Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist.** **Gemessen auf:** Zweig `claude/butte-umsetzen-5opi9u`.
 **Stand dieses Dokuments:** 16.09.2026, **nach AP12 und dem Nachtrag Nr. 213**
 (Web 20.4.0 bis **20.15.1**), Merge und Tag stehen aus. **33 Prüfpunkte** in
 Abschnitt 3; zehn davon (P1–P8, P12, P33) betreffen die Auslieferungskette und
