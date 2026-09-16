@@ -2840,6 +2840,55 @@ function migrationen_katalog(): array
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
         ],
     ],
+    [
+        'id'    => '2026_09_16_konto_lebenszyklus',
+        'web'   => '20.17',
+        'label' => 'Kontostatus und Lebenszyklus (P5b/AP2)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'users'
+                                AND column_name = 'status'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* DER BESTAND WIRD `aktiv`, UND ZWAR OHNE AUSNAHME (E-P5b-12).
+             *
+             * Das ist die einzige richtige Vorgabe, und sie ist es aus einem
+             * Grund, der nicht auf der Hand liegt: Jeder andere Wert waere
+             * eine AUSSAGE ueber Konten, die es zum Zeitpunkt dieser
+             * Migration schon gab. `unbestaetigt` behauptete, ihre Adresse
+             * sei nie geprueft worden — sie ist es nie worden, weil es die
+             * Pruefung nicht gab, und das ist etwas anderes. Und praktisch:
+             * Jedes Bestandskonto koennte sich am Tag nach dem Update nicht
+             * mehr anmelden.
+             *
+             * `DEFAULT 'aktiv'` gilt auch fuer die Spalte selbst und nicht
+             * nur fuer das Nachfuellen — eine Einfuegung, die `status`
+             * vergisst, soll ein brauchbares Konto ergeben und keinen
+             * Zombie. `konto_anlegen()` setzt ihn trotzdem ausdruecklich.
+             *
+             * `bestaetigt_am` BEKOMMT DEN BESTAND NICHT NACHTRAEGLICH: NULL
+             * heisst hier „die Frage stellte sich nicht", und ein erfundenes
+             * Datum waere schlimmer als eine Leerstelle — dieselbe
+             * Entscheidung wie bei `last_login` in Web 9.8.0. */
+            "ALTER TABLE users
+               ADD COLUMN status ENUM('unbestaetigt','wartet','aktiv','gesperrt')
+                   NOT NULL DEFAULT 'aktiv',
+               ADD COLUMN bestaetigt_am  DATETIME NULL,
+               ADD COLUMN gesperrt_seit  DATETIME NULL,
+               ADD COLUMN gesperrt_grund VARCHAR(64) NULL,
+               ADD COLUMN loeschung_am   DATETIME NULL",
+
+            /* DER INDEX IST FUER DEN VERFALLJOB, nicht fuer die Anzeige.
+             * `konto_verfall` (AP3) und `konto_loeschung` (AP5) suchen
+             * beide „alle Konten in einem Zustand, deren Frist abgelaufen
+             * ist" — ohne Index ein Vollscan ueber `users` bei jedem
+             * Joblauf. Bei dreihundert Konten ist das nichts; die
+             * Zielmenge ist eine andere. */
+            'ALTER TABLE users ADD INDEX idx_status_loeschung (status, loeschung_am)',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

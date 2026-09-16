@@ -211,17 +211,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * gueltiger Token in der Datenbank, von dem niemand weiss, ist die
      * schlechteste aller Lagen.
      */
+    /* ---- Status: sperren, entsperren, freischalten (P5b/AP2, E-P5b-12) --
+     *
+     * DREI HANDGRIFFE, EIN ZWEIG. Sie sind dasselbe — ein Statuswechsel —,
+     * und `konto_status_setzen()` entscheidet, ob er erlaubt ist; ein
+     * Freischalten aus `aktiv` heraus laeuft dort ins Leere statt hier in
+     * einen vergessenen `if`-Zweig.
+     *
+     * DAS EIGENE KONTO NICHT. Wer sich selbst sperrt, sperrt sich aus, und
+     * die Sperre laesst sich nur von innen wieder loesen. Dieselbe Schranke
+     * wie beim Loeschen eine Karte tiefer.
+     *
+     * UND NICHT DIE LETZTE BETREIBERIN: Eine Installation ohne zugaengliches
+     * Betreiberinnenkonto hat keinen Weg mehr zu Serverschluessel,
+     * Migrationen und Wartungsmodus. Derselbe Grund wie beim Loeschen. */
+    if ($action === 'konto_status') {
+        require_once __DIR__ . '/konto_lib.php';
+        $ziel  = (string)($_POST['status'] ?? '');
+        $grund = trim((string)($_POST['grund'] ?? ''));
+
+        if ($uid === $userId) {
+            $error = 'Das eigene Konto lässt sich hier nicht sperren.';
+        } elseif ($ziel === 'gesperrt'
+                  && ist_letzte_betreiberin(db(), $uid, $u['role'] ?? null)) {
+            $error = 'Das ist das letzte Konto mit der Rolle „BetreiberIn" — es lässt '
+                   . 'sich nicht sperren. Lege zuerst eine zweite BetreiberIn an.';
+        } elseif (!konto_status_setzen($uid, $ziel, $ziel === 'gesperrt'
+                                       ? ($grund !== '' ? $grund : 'von der Verwaltung')
+                                       : null)) {
+            $error = 'Dieser Wechsel des Kontostatus ist nicht vorgesehen — es wurde '
+                   . 'nichts geändert.';
+        } else {
+            $notice = match ($ziel) {
+                'gesperrt' => 'Das Konto ist gesperrt. Laufende Sitzungen enden beim '
+                            . 'nächsten Seitenaufruf; Geräte bekommen ab sofort eine '
+                            . 'Absage und puffern.',
+                'aktiv'    => 'Das Konto ist wieder offen. Gepufferte Gerätedaten kommen '
+                            . 'beim nächsten Versuch an.',
+                default    => 'Der Kontostatus wurde geändert.',
+            };
+            /* Die Zeile neu lesen — die Karte darunter zeigt sonst den
+             * Stand von vor dem Klick. */
+            $st = db()->prepare('SELECT * FROM users WHERE id = ?');
+            $st->execute([$uid]);
+            $u = $st->fetch() ?: $u;
+        }
+    }
+
     if ($action === 'pw_reset') {
         if (demo_ist_demo($uid)) {
             $error = 'Das Demo-Konto bekommt keinen Setz-Link: Sein Passwort ist '
                    . 'öffentlich und steht im Handbuch (E-P1-19).';
         } else {
-            db()->prepare('UPDATE password_resets SET used_at = NOW()
-                           WHERE user_id = ? AND used_at IS NULL')->execute([$uid]);
-            $token = bin2hex(random_bytes(32));
-            db()->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at)
-                           VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))')
-                ->execute([$uid, hash('sha256', $token)]);
+            /* Entwerten und Ausstellen in einer Funktion (P5b/AP2,
+             * Backlog Nr. 202 Paket 1). Die Regel „hoechstens ein gueltiger
+             * Token je Konto" galt hier schon; jetzt gilt sie an allen vier
+             * Stellen, und die Stunde steht als `TOKEN_RESET_S` statt als
+             * SQL-Literal. */
+            require_once __DIR__ . '/konto_lib.php';
+            $token = reset_token_ausstellen($uid, TOKEN_RESET_S);
             $link = app_url('/pw_handling.php?token=' . $token);
             /* `passwort_neu`, nicht `passwort_reset`: Der Text der
              * Selbstbedienung endet mit „Falls du das nicht angefordert
@@ -722,6 +770,91 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
          im Aktionsmenü verschickt denselben Link wie „Passwort vergessen" auf der
          Anmeldeseite; entsperrt wird danach mit dem Wiederherstellungsschlüssel
          der Person.</p>
+    <?php ui_karte_ende(); ?>
+
+    <?php /* ---- Status (P5b/AP2, E-P5b-12) ---------------------------------
+       *
+       * EIGENE KARTE UND NICHT EIN FELD IM FORMULAR DARUEBER. Name, Rolle
+       * und Adresse sind Angaben ueber ein Konto; der Status ist eine
+       * Handlung an ihm, und sie wirkt sofort auf laufende Sitzungen und auf
+       * die Geraete. Ein Auswahlfeld neben „Name" liesse sich versehentlich
+       * mitspeichern.
+       * ------------------------------------------------------------------ */ ?>
+    <?php require_once __DIR__ . '/konto_lib.php';
+          $kStatus = (string)($u['status'] ?? 'aktiv'); ?>
+    <?php ui_karte_start(['titel' => 'Status', 'id' => 'karte-status',
+        'plakette' => ui_plakette(KONTO_STATUS[$kStatus] ?? $kStatus,
+            ['ton' => match ($kStatus) {
+                'aktiv'    => 'blau',
+                'gesperrt' => 'rot',
+                default    => 'orange',
+            }])]); ?>
+      <?php if ($kStatus === 'gesperrt' && ($u['gesperrt_grund'] ?? '') !== ''): ?>
+        <?php ui_zeile([
+            'text'  => ($u['gesperrt_grund'] === 'selbstloeschung')
+                     ? 'Löschung beantragt'
+                     : 'Gesperrt: ' . (string)$u['gesperrt_grund'],
+            'klein' => ($u['gesperrt_seit'] ?? null)
+                     ? 'seit ' . fmt_local((string)$u['gesperrt_seit'], 'd.m.Y · H:i') . ' Uhr'
+                     : '',
+            'plaketten' => ($u['loeschung_am'] ?? null)
+                ? ui_plakette('löscht sich am '
+                    . fmt_local((string)$u['loeschung_am'], 'd.m.Y'), ['ton' => 'rot'])
+                : '']); ?>
+      <?php endif; ?>
+
+      <?php if ($istDemo): ?>
+        <p class="feld-hinweis">Das Demo-Konto lässt sich hier nicht sperren. Ob die
+           Anmeldung daran zugelassen ist, steht unter Betrieb →
+           Servereinstellungen → Konten.</p>
+      <?php elseif ($uid === $userId): ?>
+        <p class="feld-hinweis">Das eigene Konto lässt sich hier nicht sperren — die
+           Sperre ließe sich danach nur von einem anderen Konto aus lösen.</p>
+      <?php else: ?>
+        <?php if ($kStatus === 'wartet' || $kStatus === 'unbestaetigt'): ?>
+          <p class="feld-hinweis"><?= e(konto_status_text($kStatus)) ?></p>
+          <form method="post">
+            <?= csrf_field() ?><input type="hidden" name="action" value="konto_status">
+            <input type="hidden" name="id" value="<?= $uid ?>">
+            <input type="hidden" name="status" value="aktiv">
+            <div class="listen-form-fuss">
+              <?= ui_knopf(['text' => 'Freischalten', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+            </div>
+          </form>
+        <?php elseif ($kStatus === 'gesperrt'): ?>
+          <p class="feld-hinweis">Beim Entsperren verschwindet auch ein
+             <strong>beantragter Löschtermin</strong> — das Konto bleibt dann
+             bestehen. Gepufferte Gerätedaten kommen beim nächsten Versuch
+             vollständig an; es ist nichts verlorengegangen.</p>
+          <form method="post">
+            <?= csrf_field() ?><input type="hidden" name="action" value="konto_status">
+            <input type="hidden" name="id" value="<?= $uid ?>">
+            <input type="hidden" name="status" value="aktiv">
+            <div class="listen-form-fuss">
+              <?= ui_knopf(['text' => 'Entsperren', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+            </div>
+          </form>
+        <?php else: ?>
+          <p class="feld-hinweis">Eine Sperre beendet laufende Sitzungen beim nächsten
+             Seitenaufruf. <strong>Geräte verlieren nichts:</strong> Sie bekommen eine
+             Absage, behalten ihre Warteschlange und senden nach dem Entsperren
+             alles nach. Der Bestand bleibt unberührt — gelöscht wird nichts.</p>
+          <form method="post">
+            <?= csrf_field() ?><input type="hidden" name="action" value="konto_status">
+            <input type="hidden" name="id" value="<?= $uid ?>">
+            <input type="hidden" name="status" value="gesperrt">
+            <?php ui_feld(['name' => 'grund', 'label' => 'Grund',
+                'label_zusatz' => 'erscheint im Protokoll, nicht bei der Nutzerin',
+                'attr' => 'maxlength="64" placeholder="z. B. auf eigenen Wunsch"',
+                'klein' => 'Die Nutzerin sieht nur, dass das Konto gesperrt ist, und den '
+                         . 'Hinweis, sich an die Verwaltung zu wenden. Den Grund '
+                         . 'hier liest die Verwaltung.']); ?>
+            <div class="listen-form-fuss">
+              <?= ui_knopf(['text' => 'Sperren', 'symbol' => 'schloss', 'art' => 'neutral']) ?>
+            </div>
+          </form>
+        <?php endif; ?>
+      <?php endif; ?>
     <?php ui_karte_ende(); ?>
 
     <?php /* ---- Geräte ---------------------------------------------------- */ ?>

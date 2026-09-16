@@ -178,7 +178,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
          * Sitzung — das war M1-05, und daran aendert sich nichts; sie wird
          * hier einmal gelesen und danach vergessen. auth_guard.php liest sie
          * weiterhin bei jeder Anfrage neu. */
-        $st = db()->prepare('SELECT id, password_hash, session_epoch, kdf_iter, logo_wahl, role
+        $st = db()->prepare('SELECT id, password_hash, session_epoch, kdf_iter, logo_wahl, role,
+                                    status, gesperrt_grund
                              FROM users WHERE email = ?');
         $st->execute([$email]);
         $u = $st->fetch();
@@ -292,6 +293,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * „Passwort falsch" und tippte weiter — bis der Ratenschutz
              * zuschlaegt. Es ist die Wartungsseite, und die sagt, was los
              * ist. */
+            /* ---- KONTOSTATUS (P5b/AP2, E-P5b-12, E-P5b-16) ----------------
+             *
+             * DIE STELLE IST DIESELBE ABWAEGUNG WIE BEIM WARTUNGSMODUS
+             * darunter: Der Zweig haengt am ERFOLG des Passwortvergleichs
+             * und nicht am Vergleich selbst. Die Antwortgleichheit des
+             * Fehlerzweigs bleibt damit unberuehrt, und ein Angreifer
+             * erfaehrt hier nichts, was er nicht schon wuesste — er hat das
+             * Passwort.
+             *
+             * DIE SELBSTLOESCHUNG IST DER SONDERFALL, UND ZWAR DER WICHTIGE:
+             * Waehrend der Karenz steht das Konto auf `gesperrt`, aber
+             * **die Anmeldung IST der Rueckzug** (E-P5b-16). Wer sich
+             * anmeldet, will sein Konto behalten. Es hier abzuweisen hiesse,
+             * den einen Weg zu versperren, der aus der Loeschung
+             * herausfuehrt — und danach loescht der Job.
+             *
+             * `konto_status_setzen()` schreibt den Protokolleintrag und
+             * raeumt `loeschung_am` mit weg; beides steht dort, damit es
+             * nicht an zwei Stellen steht. */
+            $kStatus = (string)($u['status'] ?? 'aktiv');
+            if ($kStatus === 'gesperrt'
+                && ($u['gesperrt_grund'] ?? null) === 'selbstloeschung') {
+                require_once __DIR__ . '/konto_lib.php';
+                konto_status_setzen((int)$u['id'], 'aktiv');
+                $kStatus = 'aktiv';
+                $rueckzug = true;
+            }
+            if ($kStatus !== 'aktiv') {
+                require_once __DIR__ . '/konto_lib.php';
+                session_verwerfen();
+                /* KEINE SITZUNG, und eine eigene Seite statt des Formulars —
+                 * derselbe Weg, den der Wartungsmodus eine Zeile darunter
+                 * geht, und aus demselben Grund (Backlog Nr. 126): Wer hier
+                 * landete und wieder die Anmeldemaske saehe, laese das als
+                 * „Passwort falsch" und tippte weiter, bis der Ratenschutz
+                 * zuschlaegt. Das Passwort war richtig.
+                 *
+                 * `stoerung_seite_html()` ist dasselbe Geruest, das Wartung
+                 * und Ausgelastet benutzen (P5a/AP9) — kein neuer Baustein
+                 * (Design.md 9), nur ein dritter Aufrufer.
+                 *
+                 * DIE ANTWORTDAUER WIRD TROTZDEM ANGEGLICHEN. Sonst waere
+                 * ein gesperrtes Konto an der Antwortzeit zu erkennen — und
+                 * zwar von jemandem, der das Passwort hat, also genau von
+                 * dem, vor dem die Sperre schuetzen soll. */
+                rate_gleiche_dauer($t0);
+                require_once __DIR__ . '/wartung_lib.php';
+                header('Content-Type: text/html; charset=utf-8');
+                echo stoerung_seite_html(
+                    'Kein Zugang — ' . instanz_kurz(),
+                    '<h1>' . htmlspecialchars(KONTO_STATUS[$kStatus], ENT_QUOTES)
+                  . '</h1><p class="text">'
+                  . htmlspecialchars(konto_status_text($kStatus,
+                        $u['gesperrt_grund'] ?? null), ENT_QUOTES)
+                  . '</p><p class="text"><a href="login.php">Zurück zur Anmeldung</a></p>');
+                exit;
+            }
+
             if (wartung_aktiv() && !rolle_darf_verwalten($u['role'] ?? null)) {
                 session_verwerfen();
                 /* OHNE RUECKWEG (Backlog Nr. 126). Das ist die einzige Stelle,

@@ -173,26 +173,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($vorh->fetch()) {
                 $error = 'Es gibt bereits ein Konto mit dieser E-Mail-Adresse.';
             } else {
-                $token = bin2hex(random_bytes(32));
-                $pdo = db();
-                $pdo->beginTransaction();
+                /* EINE STELLE FUER VIER (P5b/AP2, Backlog Nr. 202 Paket 1).
+                 *
+                 * Konto, Kontokennung und Setz-Token entstehen jetzt in
+                 * `konto_anlegen()`. Die Transaktionsklammer, die hier seit
+                 * E17 richtig stand, steht damit auch in `install.php`, wo
+                 * sie fehlte — und die Laufzeit kommt aus
+                 * `TOKEN_EINLADUNG_S` statt aus einem SQL-Literal.
+                 *
+                 * Die Kontokennung entsteht weiterhin BEI DER ANLAGE und
+                 * nicht spaeter (E17): Sie ist ab dann unveraenderlich und
+                 * der Ordnername des Admin-Backups; ein Konto ohne sie waere
+                 * eines, das sich nicht sichern laesst. */
+                require_once __DIR__ . '/konto_lib.php';
                 try {
-                    /* Kontokennung bei der Anlage, nicht spaeter (E17).
-                     * Sie ist ab hier unveraenderlich und der Ordnername des
-                     * Admin-Backups; ein Konto ohne sie waere ein Konto, das
-                     * sich nicht sichern laesst. */
-                    $pdo->prepare('INSERT INTO users (email, name, role, account_key)
-                                   VALUES (?, ?, ?, ?)')
-                        ->execute([$email, $name !== '' ? $name : null, $role,
-                                   bin2hex(random_bytes(8))]);
-                    $uid = (int)$pdo->lastInsertId();
-                    $pdo->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at)
-                                   VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))')
-                        ->execute([$uid, hash('sha256', $token)]);
-                    $pdo->commit();
+                    $angelegtes = konto_anlegen($email, $name, $role, 'einladung');
+                    $uid   = $angelegtes['id'];
+                    $token = $angelegtes['token'];
                     $angelegt = true;
                 } catch (PDOException $ex) {
-                    $pdo->rollBack();
                     $angelegt = false;
                     if (ist_dublettenfehler($ex)) {
                         $error = 'Es gibt bereits ein Konto mit dieser E-Mail-Adresse.';

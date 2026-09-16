@@ -119,6 +119,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       Liste, Einsätze UND Ruhesegmente (4.97b)
 │   ├── jobs.php           Einstieg der Hintergrundjobs: Kommandozeile, Adresse
 │   │                       mit Token, huckepack auf einer Anfrage (4.97a)
+│   ├── konto_lib.php      Lebenszyklus eines Kontos: anlegen, Token ausstellen,
+│   │                      Status wechseln, loeschen (P5b/AP2). Die EINE Stelle
+│   │                      fuer vier — Backlog Nr. 202 Paket 1. Laeuft auch
+│   │                      ohne config.php, weil install.php sie braucht
 │   ├── konten_einstellungen_lib.php
 │   │                      Betriebsart der Registrierung, Fristen, Mengengrenzen,
 │   │                      Demo-Anmeldung — die Werte der Karte „Konten"
@@ -751,9 +755,9 @@ Daten erst nach Server-Bestätigung.
 
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
-| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“ |
+| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige |
 | Backup | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist im Backup, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
-| `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
+| `password_resets` | **Seit Web 20.17.0 schreibt nur noch `konto_lib.php` hierher** (P5b/AP2, Backlog Nr. 202 Paket 1) — nachweisbar mit `grep -rn "INSERT INTO password_resets" server/`. Die Laufzeiten stehen als `TOKEN_EINLADUNG_S` / `TOKEN_RESET_S` statt als SQL-Literale, und „höchstens ein gültiger Token je Konto" gilt damit an **allen vier** Stellen statt an zweien. Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname, **VARCHAR(191)** — die Gerätedateien liefern Sammelnamen bis 153 Zeichen; die zunächst gewählten 64 waren geraten und sind mit Web 12.9.1 nachgezogen) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Seit Web 20.11.0 dazu **`abgewiesen_seit`** (der **erste** Fehlversuch einer Serie, nicht der letzte) und **`abgewiesen_anzahl`** — der Vermerk der Mengenbremse aus P5a/AP7 (Abschnitt 5e.7). Beide werden beim nächsten gelungenen Upload geleert; ein Vermerk, der stehenbleibt, nachdem neu gekoppelt wurde, ist eine Falschmeldung. **Und seit Web 20.12.0 nach 30 Tagen auch ohne Upload** (Schritt `Geraetevermerke` im Aufräumjob): Den gelungenen Upload gibt es nicht mehr, wenn das Gerät ausgemustert ist — ohne den Schritt trüge ein verlorenes Gerät seine orange Plakette für immer. Siehe Abschnitt 5 |
 | `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
@@ -6494,6 +6498,96 @@ jemand die Einträge auch lesen kann.
 Zählkarte (Einträge je Reiter, heute und gesamt) — mehr nicht. Die Reiter mit
 Filter, Archiv und Download hängen an Entscheidungen (V4, V5, V8, V9), die
 noch nicht gefallen sind.
+
+### 4.99i Der Lebenszyklus eines Kontos (ab Web 20.17.0, P5b/AP2)
+
+*E-P5b-11, -12; R37 (1); Backlog Nr. 202 Paket 1. Code: `server/konto_lib.php`.*
+
+#### Vier Fassungen derselben Sache — und warum das aufgelöst wurde
+
+Ein Konto entstand an zwei Stellen, ein Token an vier, und keine glich der
+anderen:
+
+| Stelle | legte an | Transaktion | entwertete Vorgänger | Laufzeit |
+|---|---|---|---|---|
+| `admin_users.php` | Konto + Token | **ja** (E17) | nein | `INTERVAL 24 HOUR` |
+| `install.php` | Konto + Token | **nein** | nein | `INTERVAL 24 HOUR` |
+| `admin_user.php` | nur Token | — | ja | `INTERVAL 1 HOUR` |
+| `reset_request.php` | nur Token | — | ja | `INTERVAL 1 HOUR` |
+
+**`install.php` war die gefährliche**: Ein Abbruch zwischen den beiden
+`INSERT` hinterließ ein Konto ohne Weg hinein — anmelden ging nicht (kein
+Passwort), und der Einrichter lief nicht mehr, weil `install.lock` stand. Eine
+Installation, aus der man sich beim Einrichten selbst ausgesperrt hat.
+
+Aufgelöst wurde es hier und nicht in Schritt 15, weil die Selbstregistrierung
+aus AP3 sonst die **fünfte** Fassung geworden wäre — und sie ist die einzige,
+die von außen erreichbar ist.
+
+**Nachweis:** `grep -rn "INSERT INTO password_resets" server/` zeigt nur noch
+`konto_lib.php`.
+
+#### Die Bibliothek läuft ohne `config.php`
+
+`install.php` ist der vierte Aufrufer und der einzige, der läuft, **bevor** es
+eine `config.php` gibt: Er schreibt sie erst, nachdem er das erste Konto
+angelegt hat, und bringt deshalb seine eigene PDO-Verbindung mit. `konto_lib.php`
+lädt `db.php` und `protokoll_lib.php` deshalb nur mit `is_file()`, und jede
+Funktion nimmt ein `?PDO` entgegen. Dieselbe Falle wie Backlog Nr. 215 — und
+hier von vornherein vermieden statt hinterher behoben.
+
+Der Protokolleintrag „erstes Konto angelegt" fällt im Einrichter aus
+(`function_exists('protokoll')`). Das ist richtig: Er trüge ohnehin keinen
+Urheber, weil es zu diesem Zeitpunkt noch niemanden gibt, der handeln könnte.
+
+#### Die vier Zustände und ihre Übergänge
+
+| von → nach | `unbestaetigt` | `wartet` | `aktiv` | `gesperrt` |
+|---|---|---|---|---|
+| **`unbestaetigt`** | — | ja | ja | ja |
+| **`wartet`** | nein | — | ja | ja |
+| **`aktiv`** | **nein** | **nein** | — | ja |
+| **`gesperrt`** | nein | nein | ja | — |
+
+**Die Übergänge stehen als Tabelle und nicht als `if`-Zweige** (`KONTO_UEBERGAENGE`).
+Die Rückwege sind die interessanten: Aus `gesperrt` geht es nach `aktiv`
+zurück (Entsperren, Rücknahme der Selbstlöschung), aus `aktiv` aber **nicht**
+nach `unbestaetigt` — ein Konto, dessen Besitzerin sich plötzlich nicht mehr
+anmelden kann, ohne dass jemand es angeordnet hat, wäre ein Fehler mit Ansage.
+
+**Entsperren räumt auf**: `gesperrt_seit`, `gesperrt_grund` und
+**`loeschung_am`** werden geleert. Ohne das Letzte fände der Löschjob ein
+`loeschung_am` in der Vergangenheit und löschte ein Konto, dessen Besitzerin
+die Löschung gerade zurückgenommen hat — kein Schönheits-, sondern ein
+Datenverlustfehler.
+
+#### Wo der Status geprüft wird
+
+| Ort | Verhalten |
+|---|---|
+| `login.php` | **vor** der Sitzung, im Erfolgszweig der Passwortprüfung. Eigene Seite über `stoerung_seite_html()` (dritter Aufrufer, kein neuer Baustein), Antwortdauer angeglichen |
+| `auth_guard.php` | jede angemeldete Anfrage. Endegrund **`gesperrt`** — neu in `SESSION_ENDE_GRUENDE`, **mit beiden Texten** |
+| `ingest.php` | **`403`** mit `{"error":"konto","grund":"<status>"}`, **nach** der Schlüsselprüfung |
+
+**Die Selbstlöschung ist der Sonderfall, und zwar der wichtige** (E-P5b-16):
+Während der Karenz steht das Konto auf `gesperrt`, aber **die Anmeldung IST
+der Rückzug**. `login.php` nimmt die Löschung zurück, statt abzuweisen; hier
+abzuweisen hieße, den einen Weg zu versperren, der aus der Löschung
+herausführt — und danach löscht der Job. `auth_guard.php` lässt eine laufende
+Sitzung mit diesem Grund deshalb ebenfalls durch.
+
+**`ingest.php`: `403` und nicht `401`.** Die Uhr behandelt `403` heute als
+„abgemeldet" und puffert — genau das soll sie tun. Der Unterschied steht im
+JSON-Rumpf, nicht im Code; **eine Uhr-Stufe ist dafür nicht nötig**. Dass die
+Uhr „abgemeldet" statt „gesperrt" anzeigt, ist ein Backlog-Eintrag für die
+nächste Auslieferung.
+
+**Der Ratenschutz zählt das nicht mit.** Ein gesperrtes Konto ist kein
+Angriff; sein Gerät sendet weiter, weil niemand es abgeschaltet hat. Zählte es
+als Fehlversuch, sperrte der Ratenschutz nach kurzer Zeit eine Kennung, die
+nichts falsch macht — und nach dem Entsperren käme der Rückstand dann **nicht**
+durch. Gemessen: fünf Uploads mit gesperrtem Konto, **null** Zeilen in
+`rate_limits`.
 
 ### 4.99h Die Einstellungen rund um Konten (ab Web 20.16.0, P5b/AP1)
 

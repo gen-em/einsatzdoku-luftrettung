@@ -1947,8 +1947,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
       Mailtext) in `reset_request.php`, `admin_user.php`, `admin_users.php`,
       `install.php`; „höchstens ein gültiger Token je Konto" nur in zwei
       der vier; Laufzeit als vier SQL-Literale (1 h, 1 h, 24 h, 24 h). →
-      `reset_token_ausstellen()` plus Mailtext in `email_lib.php`. Bleibt
-      Schritt 15.
+      `reset_token_ausstellen()` plus Mailtext in `email_lib.php`.
+      **Erledigt in P5b/AP2** (Web 20.17.0, E-P5b-11): `konto_lib.php` mit
+      `konto_anlegen()` und `reset_token_ausstellen()`, Laufzeiten als
+      `TOKEN_EINLADUNG_S` / `TOKEN_RESET_S`. Alle vier Stellen ziehen um;
+      `grep -rn "INSERT INTO password_resets" server/` zeigt nur noch die
+      Bibliothek. **Nicht in Schritt 15, sondern hier** — die
+      Selbstregistrierung aus AP3 wäre sonst die fünfte Fassung geworden,
+      und sie ist die einzige, die von außen erreichbar ist. Dabei
+      aufgefallen und mitbehoben: `install.php` hatte als einzige **keine
+      Transaktionsklammer**; ein Abbruch zwischen den beiden `INSERT`
+      hinterließ eine Installation, aus der man sich beim Einrichten selbst
+      ausgesperrt hatte.
 
     **Paket 2 — Datenzugriff.**
     - `app_state` lesen/schreiben: 24 Stellen in 11 Dateien, fünf

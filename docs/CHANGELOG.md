@@ -14,6 +14,74 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.17.0] — 2026-09-16
+
+**Der Lebenszyklus eines Kontos** (P5b/AP2, E-P5b-11, -12; Backlog Nr. 202
+Paket 1 erledigt).
+
+### Geändert
+
+**Ein Konto entstand an zwei Stellen, ein Token an vier, und keine glich der
+anderen.** `admin_users.php` legte Konto und Token in einer Transaktion an,
+`install.php` ohne; zwei Stellen entwerteten die Vorgängertoken, zwei nicht;
+die Laufzeiten standen als SQL-Literale (`INTERVAL 24 HOUR`, `INTERVAL 1 HOUR`)
+an vier Stellen im Text.
+
+**`install.php` war die gefährliche.** Ein Abbruch zwischen den beiden
+`INSERT` hinterließ ein Konto ohne Weg hinein — anmelden ging nicht, weil kein
+Passwort gesetzt war, und der Einrichter lief nicht mehr, weil `install.lock`
+stand. Eine Installation, aus der man sich beim Einrichten selbst ausgesperrt
+hat. Jetzt hat auch sie die Klammer.
+
+Alles vier läuft über `konto_lib.php`. Nachweisbar:
+`grep -rn "INSERT INTO password_resets" server/` zeigt nur noch diese eine
+Datei. „Höchstens ein gültiger Token je Konto" gilt damit an **allen vier**
+Stellen statt an zweien.
+
+**Aufgelöst wurde es hier und nicht in Schritt 15**, weil die
+Selbstregistrierung aus dem nächsten Paket sonst die fünfte Fassung geworden
+wäre — und sie ist die einzige, die von außen erreichbar ist.
+
+### Neu
+
+**Vier Zustände:** `unbestaetigt` · `wartet` · `aktiv` · `gesperrt`. Der
+Bestand wird bei der Migration **`aktiv`** — jeder andere Wert wäre eine
+Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt`
+sperrte am Tag nach dem Update alle aus.
+
+**Die Übergänge stehen als Tabelle, nicht als `if`-Zweige.** Die Rückwege sind
+die interessanten: aus `gesperrt` nach `aktiv` ja (Entsperren, Rücknahme der
+Löschung), aus `aktiv` nach `unbestaetigt` nein.
+
+**Entsperren räumt den Löschtermin mit weg.** Ohne das fände der Löschjob ein
+`loeschung_am` in der Vergangenheit und löschte ein Konto, dessen Besitzerin
+die Löschung gerade zurückgenommen hat. Kein Schönheits-, sondern ein
+Datenverlustfehler.
+
+**Verwaltung → Konten** bekommt die Karte „Status": sperren mit Grund,
+entsperren, freischalten. Nicht das eigene Konto und nicht die letzte
+BetreiberIn — dieselben Schranken wie beim Löschen.
+
+**Was eine Sperre bedeutet, steht dabei:** Laufende Sitzungen enden beim
+nächsten Seitenaufruf. **Geräte verlieren nichts** — sie bekommen eine Absage,
+behalten ihre Warteschlange und senden nach dem Entsperren alles nach. Der
+Bestand bleibt unberührt.
+
+`ingest.php` antwortet **`403`** mit `{"error":"konto","grund":"…"}`. Die Uhr
+behandelt `403` heute als „abgemeldet" und puffert — genau richtig; der
+Unterschied steht im Rumpf, **eine Uhr-Stufe ist dafür nicht nötig**.
+
+**Der Ratenschutz zählt die Absage nicht mit.** Ein gesperrtes Konto ist kein
+Angriff; sein Gerät sendet weiter, weil niemand es abgeschaltet hat. Zählte es
+mit, sperrte der Ratenschutz nach kurzer Zeit eine Kennung, die nichts falsch
+macht — und nach dem Entsperren käme der Rückstand dann nicht durch.
+
+**Die Bibliothek läuft ohne `config.php`**, weil `install.php` sie braucht,
+bevor es eine gibt. Dieselbe Falle wie Backlog Nr. 215 — hier von vornherein
+vermieden statt hinterher behoben.
+
+**Migration** `2026_09_16_konto_lebenszyklus`. **`update.php` ist fällig.**
+
 ## [Web 20.16.0] — 2026-09-16
 
 **Das Betriebsprotokoll bekommt einen Schreibweg** (P5b/AP1, V1, E-P5b-06,

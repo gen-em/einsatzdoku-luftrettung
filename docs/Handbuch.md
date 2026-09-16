@@ -3155,6 +3155,40 @@ zurück. Bleiben sie erhalten, überleben sie die Löschung und erscheinen unter
 **Konto-Backups** als „Backup ohne Konto". Zur Bestätigung ist die
 E-Mail-Adresse abzutippen.
 
+#### Status: sperren, entsperren, freischalten (seit Web 20.17.0)
+
+Ein Konto hat vier Zustände, und die Karte „Status" auf der Kontoseite zeigt
+und ändert sie.
+
+| Zustand | heißt |
+|---|---|
+| **aktiv** | Der Normalfall. Alle Konten, die es vor Web 20.17.0 gab, sind das |
+| **unbestätigt** | Registriert, Adresse noch nicht bestätigt. Verfällt nach 48 Stunden |
+| **wartet auf Freischaltung** | Adresse bestätigt, wartet auf dich. Hier steht dann ein Knopf „Freischalten" |
+| **gesperrt** | Von dir gesperrt — oder die Person hat ihr Konto selbst zur Löschung angemeldet |
+
+**Was eine Sperre bewirkt, und was sie nicht bewirkt.** Laufende Sitzungen
+enden beim nächsten Seitenaufruf. Die Person kann sich nicht mehr anmelden und
+bekommt den Hinweis, sich an die Verwaltung zu wenden — **den Grund, den du
+einträgst, sieht sie nicht**; der steht im Protokoll.
+
+**Geräte verlieren nichts.** Uhr und Handy bekommen eine Absage, behalten ihre
+Warteschlange und senden nach dem Entsperren **alles nach**. Auf der Uhr steht
+in dieser Zeit „abgemeldet" — das ist ungenau, aber harmlos, und es ändert
+sich mit der nächsten Uhr-Fassung.
+
+**Der Bestand bleibt unberührt.** Eine Sperre löscht nichts. Wer ein Konto
+loswerden will, löscht es — das ist die Karte ganz unten und etwas anderes.
+
+**Zwei Konten lassen sich nicht sperren:** das eigene (die Sperre ließe sich
+danach nur von einem anderen Konto aus lösen) und das letzte mit der Rolle
+BetreiberIn (die Installation stünde ohne Zugang zu ihrem eigenen
+Betriebsbereich da). Dieselben Schranken wie beim Löschen.
+
+**Beim Entsperren verschwindet auch ein beantragter Löschtermin.** Hat jemand
+sein Konto zur Löschung angemeldet und du entsperrst es, bleibt es bestehen —
+der Termin ist damit vom Tisch.
+
 ### 11.2 Die Liste der NutzerInnen
 
 Oben stehen vier Zahlen: **Konten**, **Admins**, **Konto-Backup überfällig**,

@@ -1,0 +1,1098 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=1400">
+<title>P5b · Mockup M-P5b-01 — Dokumentseite (hilfe.php, ueber.php, Fußzeile)</title>
+<link rel="stylesheet" href="../../../../server/assets/style.css">
+<style>
+/* ---- Nur der Mockup-Rahmen, NICHT Teil der Anwendung ---- */
+body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
+.mock-kopf{padding:20px 24px 4px}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p{margin:0 0 6px;color:var(--gedaempft);font-size:var(--groesse-2);max-width:900px}
+.reihe{padding:18px 24px 6px}
+.reihe h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0 0 2px;color:var(--dunkelblau)}
+.reihe .unter{margin:0 0 12px;color:var(--gedaempft);font-size:var(--groesse-2);max-width:900px}
+.frames{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.frame{background:var(--rauch);border-radius:var(--radius);overflow:hidden;
+       box-shadow:0 8px 24px rgba(26,46,77,.10);flex:0 0 auto}
+.frame-kopf{background:var(--dunkelblau);color:#fff;font-size:11px;padding:3px 10px;
+            font-family:var(--schrift-fest)}
+.frame iframe{border:0;display:block;background:var(--rauch)}
+.anm{background:var(--blau-hell);border-left:3px solid var(--blau);padding:8px 12px;
+     margin:10px 0 0;font-size:var(--groesse-2);max-width:900px;border-radius:0 6px 6px 0}
+.anm strong{color:var(--blau-tief)}
+.anm ul{margin:4px 0 0 18px;list-style:disc}
+.anm li{margin-bottom:2px}
+.schluss{padding:18px 24px 40px}
+.schluss h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0 0 6px;color:var(--dunkelblau)}
+.schluss ol{margin:0 0 0 20px;list-style:decimal;max-width:900px;font-size:var(--groesse-3)}
+.schluss li{margin-bottom:8px}
+</style></head><body>
+
+<div class="mock-kopf">
+  <h1>P5b · M-P5b-01 — Dokumentseite</h1>
+  <p>Sechs Darstellungen zu E-P5b-08 (Handbuch und „Was ist NAdoku" als Seiten der
+     Anwendung) und E-P5b-22 (Renderer, Fundorte, Fehlen der Dokumentation).
+     Jede Darstellung steht in einem eigenen Rahmen mit der Breite, für die sie gilt;
+     darin ist das <em>echte</em> Stylesheet der Anwendung geladen
+     (<code>server/assets/style.css</code>), damit die Schwellen 720 / 1024 / 1200 px
+     und die Bedienhöhen 44 / 36 px tatsächlich greifen und nicht nachgebaut sind.</p>
+  <p>Verwendet werden ausschließlich vorhandene Bausteine. Wo ein Baustein an einer
+     neuen Stelle steht oder wo es keinen gibt, sagt es die Anmerkung unter der
+     Darstellung — und benennt, was zu entscheiden ist. Am Ende der Datei steht die
+     Liste dieser Entscheidungen.</p>
+</div>
+
+<!-- ======================================================================= -->
+<!-- 1. hilfe.php — Desktop 1180 px                                           -->
+<!-- ======================================================================= -->
+<div class="reihe">
+  <h2>1. <code>hilfe.php</code> — Schreibtisch, 1180 px</h2>
+  <p class="unter">Das gerenderte Handbuch als öffentliche Seite, ohne Anmeldung.
+     Links das Inhaltsverzeichnis aus den Überschriften der Markdown-Datei mit
+     Sprungmarken, darüber ein Feld zum Filtern; rechts der Text. Der Textbereich
+     zeigt die vier Markdown-Formen: Überschrift, Absatz, Tabelle, Codeblock.</p>
+  <div class="frames">
+    <div class="frame"><div class="frame-kopf">hilfe.php · 1180 px · nicht angemeldet</div>
+<template data-breite="1180">
+<header class="kopf">
+  <div class="kopf-innen">
+    <a class="kopf-marke" href="index.php">
+      <img src="../../../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="" height="34">
+      <span class="kopf-name">Gen-EM NAdoku</span>
+    </a>
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+      <a class="kopf-punkt kopf-zurueck" href="login.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/></svg><span>Zur Anmeldung</span>
+      </a>
+    </nav>
+  </div>
+</header>
+<div class="rahmen">
+  <aside class="leiste" id="leiste">
+    <p class="leiste-kopfzeile">Inhalt</p>
+    <div class="leiste-haupt">
+      <div class="kartenfilter" data-kartenfilter="doku-inhalt">
+        <svg class="symbol kartenfilter-lupe" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg>
+        <label class="nur-vorlesen" for="doku-filter">Abschnitte filtern</label>
+        <input type="search" id="doku-filter" autocomplete="off" spellcheck="false" placeholder="Abschnitt suchen">
+        <button type="button" class="kartenfilter-x" hidden title="Filter leeren">
+          <svg class="symbol" viewBox="0 0 24 24" role="img"><title>Filter leeren</title><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <nav class="leiste-liste" id="doku-inhalt" aria-label="Inhalt des Handbuchs">
+      <a class="eintrag" href="#h-1"><span class="eintrag-text">1. Was ist Gen-EM NAdoku?</span></a>
+
+      <a class="eintrag aktiv" href="#h-2"><span class="eintrag-text">2. Die Uhr-App</span></a>
+      <div class="eintrag-unterliste">
+        <a class="eintrag-unter hier" href="#h-2-0">2.0 Unterstützte Uhren und ihre Bedienung</a>
+        <a class="eintrag-unter" href="#h-2-1">2.1 Dienst beginnen und beenden</a>
+        <a class="eintrag-unter" href="#h-2-2">2.2 Die Oberflächen</a>
+        <a class="eintrag-unter" href="#h-2-3">2.3 Reanimationsmodus</a>
+        <a class="eintrag-unter" href="#h-2-4">2.4 Datenübertragung</a>
+      </div>
+
+      <a class="eintrag" href="#h-3"><span class="eintrag-text">3. Die Web-Oberfläche — Überblick</span></a>
+      <div class="eintrag-unterliste">
+        <a class="eintrag-unter" href="#h-3-1">3.1 Anmelden und Passwort</a>
+        <a class="eintrag-unter" href="#h-3-1a">3.1a Profil: Name, Adresse und Logo</a>
+        <a class="eintrag-unter" href="#h-3-2">3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen</a>
+      </div>
+
+      <a class="eintrag" href="#h-4"><span class="eintrag-text">4. Einsätze ansehen und bearbeiten</span></a>
+      <div class="eintrag-unterliste">
+        <a class="eintrag-unter" href="#h-4-1">4.1 Tagesübersicht</a>
+        <a class="eintrag-unter" href="#h-4-1a">4.1a GPS-Daten des Diensttages</a>
+        <a class="eintrag-unter" href="#h-4-1b">4.1b Einen vergessenen Einsatz aus der Ruhezeit schneiden</a>
+        <a class="eintrag-unter" href="#h-4-1c">4.1c GPX-Datei importieren</a>
+        <a class="eintrag-unter" href="#h-4-2">4.2 Einsatzansicht</a>
+        <a class="eintrag-unter" href="#h-4-2a">4.2a Falsche Tageszuordnung korrigieren</a>
+        <a class="eintrag-unter" href="#h-4-3">4.3 Einsätze nachtragen und bearbeiten</a>
+        <a class="eintrag-unter" href="#h-4-4">4.4 Diensttage-Leiste, Jahres- und Monatsübersicht</a>
+        <a class="eintrag-unter" href="#h-4-5">4.5 Diensttag von Hand anlegen</a>
+        <a class="eintrag-unter" href="#h-4-5a">4.5a Zwei Diensttage zusammenführen</a>
+        <a class="eintrag-unter" href="#h-4-5b">4.5b Wenn zwei Diensttage sich zeitlich überschneiden</a>
+        <a class="eintrag-unter" href="#h-4-6">4.6 Suche</a>
+      </div>
+
+      <a class="eintrag" href="#h-5"><span class="eintrag-text">5. Verschlüsselung der Patientendaten (Pflicht)</span></a>
+      <a class="eintrag eintrag-leise" href="#h-6"><span class="eintrag-text">6. … (gekürzt für das Mockup)</span></a>
+    </nav>
+  </aside>
+
+  <main class="inhalt" id="inhalt">
+    <h1>Gen-EM NAdoku — Handbuch</h1>
+    <p class="seiten-erklaerung">Stand: 06.09.2026 · Für die technische Struktur siehe
+       <a href="#">Technik.md</a>, für Änderungen <a href="#">CHANGELOG.md</a>.</p>
+
+    <section class="karte">
+      <div class="karte-inhalt">
+        <div class="text">
+          <div class="meldung meldung-info" role="status">
+            <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M12 9h.01"/><path d="M11 12h1v4h1"/></svg>
+            <p><strong>Aufbau.</strong> Kapitel 1 bis 10 gelten für alle: die Uhr, die
+               Weboberfläche, die eigenen Daten. Kapitel 11 (Verwaltung) und Kapitel 12
+               (Betrieb) folgen den beiden Menüblöcken, die nur Admins bzw.
+               BetreiberInnen sehen — Abschnitt für Abschnitt in der Reihenfolge des
+               Menüs. Wer nur dokumentiert, braucht die beiden nicht.</p>
+          </div>
+
+          <h2 id="h-2">2. Die Uhr-App</h2>
+          <h3 id="h-2-0">2.0 Unterstützte Uhren und ihre Bedienung</h3>
+          <p>Die App läuft auf der <strong>Fenix 6 Pro</strong>, der
+             <strong>Forerunner 945</strong> und der <strong>Venu 3s</strong>. Fenix und
+             Forerunner werden gleich bedient. Die Venu 3s hat nur zwei Tasten, die Apps
+             überhaupt erreichen — die mittlere ist von Garmin belegt — und wird deshalb
+             zusätzlich über den Touchscreen bedient:</p>
+          <div class="tabelle-scroll">
+            <table class="tabelle">
+              <thead><tr><th>Auf Fenix / Forerunner</th><th>Auf der Venu 3s</th></tr></thead>
+              <tbody>
+                <tr><td>kurz UP / DOWN</td><td>nach oben / unten wischen</td></tr>
+                <tr><td>kurz START</td><td>kurz Action (Taste oben rechts)</td></tr>
+                <tr><td>lang START</td><td>lang Action <strong>oder</strong> lang Zurück</td></tr>
+                <tr><td>lang UP / lang DOWN</td><td>nicht verfügbar — die Ereignisse liegen im Rea-Untermenü</td></tr>
+                <tr><td>BACK</td><td>kurz Zurück (Taste unten rechts) oder nach rechts wischen</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Der lange Druck liegt auf der Venu bewusst doppelt: Sollte die Uhr den
+             langen Druck der Action-Taste für ihr eigenes Steuerungsmenü abfangen,
+             bleibt die App über den langen Zurück-Druck vollständig bedienbar.</p>
+
+          <h3 id="h-7-1">7.1 Export <span class="feld-klein-inline">— hier nur, um den Codeblock zu zeigen</span></h3>
+          <p><strong>Der Dateiname sagt, was drin ist.</strong> Er ist so aufgebaut:</p>
+<pre><code>einsatzdokumentation_export_06-08-2026_standard_mit-pers_verschl_philipp-mueller.zip</code></pre>
+          <p>Der Reihe nach: der Tag der Erstellung, das gewählte Format
+             (<code>standard</code>, <code>guteseele</code> oder <code>csv</code>), ob
+             personenbezogene Angaben enthalten sind, ob die Datei verschlüsselt ist und
+             zuletzt das Konto, aus dem der Export stammt.</p>
+        </div>
+      </div>
+    </section>
+
+    <p class="nach-oben"><a class="knopf knopf-leise" href="#inhalt"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></svg><span>Zum Anfang</span></a></p>
+  </main>
+</div>
+<footer class="fuss-seite">
+  <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
+    <span class="fuss-version">v20.16.0</span></p>
+  <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
+</footer>
+</template>
+    </div>
+  </div>
+
+  <div class="anm">
+    <strong>Was zu sehen ist.</strong> Die Seite benutzt das vorhandene Gerüst
+    (<code>.kopf</code> ohne Menü mit Rückweg wie <code>impressum.php</code>,
+    <code>.rahmen</code>, <code>.leiste</code>, <code>.inhalt</code>,
+    <code>.fuss-seite</code>) und keinen neuen Baustein. Das Inhaltsverzeichnis ist
+    <em>die Einstellungsleiste ohne Akkordeon</em>: <code>h2</code> wird ein
+    <code>.eintrag</code> (44 px), <code>h3</code> wird ein
+    <code>.eintrag-unter</code> in <code>.eintrag-unterliste</code> (28 px, ohne Symbol) —
+    genau das Verhältnis, für das Design.md 9.25 diese Unterpunkte gebaut hat. Aktiver
+    Abschnitt orange, oberste sichtbare Unterüberschrift fett (<code>.hier</code>).
+    <ul>
+      <li><strong>Neu ist nur der Ort, nicht der Baustein:</strong> Bisher steht eine
+        <code>.leiste</code> nur hinter der Anmeldung. <code>hilfe.php</code> ist
+        öffentlich. Design.md 10.1 kennt dafür den Typ „Öffentliche Lesespalte" —
+        <em>ohne</em> Leiste. Mit dieser Seite bekommt der Typenkatalog einen siebten
+        Eintrag: „öffentliche Seite mit Leiste". Das ist einzutragen, nicht nebenbei zu
+        tun.</li>
+      <li><strong>Das Suchfeld ist ein <code>.kartenfilter</code></strong> (44 / 36 px),
+        kein <code>.suchfeld</code> (48 px). Es filtert die 25 Überschriften im Browser —
+        ohne Anfrage, ohne Adressänderung, CSP-konform. Ein <code>.suchfeld</code> wäre
+        das zweite der Anwendung und verspricht Volltextsuche im ganzen Handbuch; die
+        bräuchte ein Skript, das den gerenderten Text durchgeht und Treffer markiert.
+        <em>Das ist Entscheidung 1.</em></li>
+      <li><strong>Der Blockzitat-Kasten oben im Handbuch</strong> („Aufbau. Kapitel 1 bis
+        10 …") ist hier als <code>.meldung meldung-info</code> gerendert. Markdown-
+        <code>&gt;</code>-Zitate haben im Stylesheet <em>keine</em> Regel:
+        <code>.text</code> kennt h1–h3, p, ul, ol, li, a — mehr nicht. Ohne Entscheidung
+        sieht ein Zitat aus wie ein Absatz. <em>Das ist Entscheidung 2.</em></li>
+      <li><strong>Tabelle und Codeblock brauchen keine neue Klasse:</strong>
+        <code>.tabelle</code> in <code>.tabelle-scroll</code> und das globale
+        <code>pre</code>/<code>code</code> (Stylesheet Abschnitt 17) tragen beide.
+        Was fehlt, ist ein Außenabstand: In <code>.text</code> steht die Tabelle
+        unmittelbar am Absatz darüber. Eine Zeile <code>.text .tabelle-scroll{margin}</code>
+        wäre keine neue Darstellung, aber eine neue Regel. <em>Entscheidung 3.</em></li>
+    </ul>
+    <strong>Zu entscheiden:</strong> 1, 2, 3 — und ob das Inhaltsverzeichnis wirklich
+    <em>alle</em> h3 zeigt (25 Zeilen, die Leiste rollt) oder nur die h3 des gerade
+    gelesenen Kapitels, wie die Einstellungsleiste es tut.
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- 2. hilfe.php — Handy 360 px                                              -->
+<!-- ======================================================================= -->
+<div class="reihe">
+  <h2>2. <code>hilfe.php</code> — Handy, 360 px</h2>
+  <p class="unter">Dieselbe Seite. Die Leiste gibt es hier nicht: Das
+     Inhaltsverzeichnis ist eine <strong>klappbare Karte</strong> über dem Text
+     (<code>ui_karte_start(['zu' =&gt; true])</code>, also
+     <code>&lt;details class="karte karte-klappbar"&gt;</code>). Links zugeklappt — so
+     kommt die Seite an —, rechts aufgeklappt.</p>
+  <div class="frames">
+    <div class="frame"><div class="frame-kopf">360 px · Inhalt zugeklappt (Ankunft)</div>
+<template data-breite="360">
+<header class="kopf">
+  <div class="kopf-innen">
+    <a class="kopf-marke" href="index.php">
+      <img src="../../../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="" height="34">
+      <span class="kopf-name">Gen-EM NAdoku</span>
+    </a>
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+      <a class="kopf-punkt kopf-zurueck" href="login.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/></svg><span>Zur Anmeldung</span>
+      </a>
+    </nav>
+  </div>
+</header>
+<div class="rahmen">
+  <main class="inhalt" id="inhalt">
+    <h1>Gen-EM NAdoku — Handbuch</h1>
+    <p class="seiten-erklaerung">Stand: 06.09.2026</p>
+
+    <details class="karte karte-klappbar">
+      <summary class="karte-kopf">
+        <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg>
+        <h2 class="karte-titel">Inhalt</h2>
+        <span class="karte-zahl">25</span>
+        <span class="karte-vorschau">1. Was ist Gen-EM NAdoku? …</span>
+      </summary>
+      <div class="karte-inhalt">
+        <p class="feld-hinweis">(zugeklappt — Inhalt siehe rechts)</p>
+      </div>
+    </details>
+
+    <section class="karte">
+      <div class="karte-inhalt">
+        <div class="text">
+          <h2 id="h-2">2. Die Uhr-App</h2>
+          <h3 id="h-2-0">2.0 Unterstützte Uhren und ihre Bedienung</h3>
+          <p>Die App läuft auf der <strong>Fenix 6 Pro</strong>, der
+             <strong>Forerunner 945</strong> und der <strong>Venu 3s</strong>. Fenix und
+             Forerunner werden gleich bedient. Die Venu 3s hat nur zwei Tasten, die Apps
+             überhaupt erreichen — die mittlere ist von Garmin belegt — und wird deshalb
+             zusätzlich über den Touchscreen bedient:</p>
+          <div class="tabelle-scroll">
+            <table class="tabelle">
+              <thead><tr><th>Auf Fenix / Forerunner</th><th>Auf der Venu 3s</th></tr></thead>
+              <tbody>
+                <tr><td>kurz UP / DOWN</td><td>nach oben / unten wischen</td></tr>
+                <tr><td>kurz START</td><td>kurz Action (Taste oben rechts)</td></tr>
+                <tr><td>lang START</td><td>lang Action <strong>oder</strong> lang Zurück</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p><strong>Der Dateiname sagt, was drin ist.</strong> Er ist so aufgebaut:</p>
+<pre><code>einsatzdokumentation_export_06-08-2026_standard_mit-pers_verschl_philipp-mueller.zip</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <p class="nach-oben"><a class="knopf knopf-leise" href="#inhalt"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></svg><span>Zum Anfang</span></a></p>
+  </main>
+</div>
+<footer class="fuss-seite">
+  <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
+    <span class="fuss-version">v20.16.0</span></p>
+  <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
+</footer>
+</template>
+    </div>
+
+    <div class="frame"><div class="frame-kopf">360 px · Inhalt aufgeklappt</div>
+<template data-breite="360">
+<div class="rahmen">
+  <main class="inhalt" id="inhalt2">
+    <h1>Gen-EM NAdoku — Handbuch</h1>
+    <p class="seiten-erklaerung">Stand: 06.09.2026</p>
+
+    <details class="karte karte-klappbar" open>
+      <summary class="karte-kopf">
+        <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg>
+        <h2 class="karte-titel">Inhalt</h2>
+        <span class="karte-zahl">25</span>
+      </summary>
+      <div class="karte-inhalt">
+        <div class="kartenfilter" data-kartenfilter="doku-inhalt-m">
+          <svg class="symbol kartenfilter-lupe" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg>
+          <label class="nur-vorlesen" for="doku-filter-m">Abschnitte filtern</label>
+          <input type="search" id="doku-filter-m" autocomplete="off" spellcheck="false" placeholder="Abschnitt suchen">
+          <button type="button" class="kartenfilter-x" hidden title="Filter leeren">
+            <svg class="symbol" viewBox="0 0 24 24" role="img"><title>Filter leeren</title><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <nav id="doku-inhalt-m" aria-label="Inhalt des Handbuchs">
+          <a class="eintrag" href="#h-1"><span class="eintrag-text">1. Was ist Gen-EM NAdoku?</span></a>
+          <a class="eintrag aktiv" href="#h-2"><span class="eintrag-text">2. Die Uhr-App</span></a>
+          <div class="eintrag-unterliste">
+            <a class="eintrag-unter hier" href="#h-2-0">2.0 Unterstützte Uhren und ihre Bedienung</a>
+            <a class="eintrag-unter" href="#h-2-1">2.1 Dienst beginnen und beenden</a>
+            <a class="eintrag-unter" href="#h-2-2">2.2 Die Oberflächen</a>
+            <a class="eintrag-unter" href="#h-2-3">2.3 Reanimationsmodus</a>
+            <a class="eintrag-unter" href="#h-2-4">2.4 Datenübertragung</a>
+          </div>
+          <a class="eintrag" href="#h-3"><span class="eintrag-text">3. Die Web-Oberfläche — Überblick</span></a>
+          <div class="eintrag-unterliste">
+            <a class="eintrag-unter" href="#h-3-1">3.1 Anmelden und Passwort</a>
+            <a class="eintrag-unter" href="#h-3-1a">3.1a Profil: Name, Adresse und Logo</a>
+            <a class="eintrag-unter" href="#h-3-2">3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen</a>
+          </div>
+          <a class="eintrag" href="#h-4"><span class="eintrag-text">4. Einsätze ansehen und bearbeiten</span></a>
+          <div class="eintrag-unterliste">
+            <a class="eintrag-unter" href="#h-4-1">4.1 Tagesübersicht</a>
+            <a class="eintrag-unter" href="#h-4-1a">4.1a GPS-Daten des Diensttages</a>
+            <a class="eintrag-unter" href="#h-4-1b">4.1b Einen vergessenen Einsatz aus der Ruhezeit schneiden</a>
+            <a class="eintrag-unter" href="#h-4-1c">4.1c GPX-Datei importieren</a>
+            <a class="eintrag-unter" href="#h-4-2">4.2 Einsatzansicht</a>
+            <a class="eintrag-unter" href="#h-4-2a">4.2a Falsche Tageszuordnung korrigieren</a>
+            <a class="eintrag-unter" href="#h-4-3">4.3 Einsätze nachtragen und bearbeiten</a>
+            <a class="eintrag-unter" href="#h-4-4">4.4 Diensttage-Leiste, Jahres- und Monatsübersicht</a>
+            <a class="eintrag-unter" href="#h-4-5">4.5 Diensttag von Hand anlegen</a>
+            <a class="eintrag-unter" href="#h-4-5a">4.5a Zwei Diensttage zusammenführen</a>
+            <a class="eintrag-unter" href="#h-4-5b">4.5b Wenn zwei Diensttage sich zeitlich überschneiden</a>
+            <a class="eintrag-unter" href="#h-4-6">4.6 Suche</a>
+          </div>
+          <a class="eintrag" href="#h-5"><span class="eintrag-text">5. Verschlüsselung der Patientendaten (Pflicht)</span></a>
+          <a class="eintrag eintrag-leise" href="#h-6"><span class="eintrag-text">6. … (gekürzt für das Mockup)</span></a>
+        </nav>
+      </div>
+    </details>
+
+    <section class="karte">
+      <div class="karte-inhalt">
+        <div class="text">
+          <h2>2. Die Uhr-App</h2>
+          <p>Die App läuft auf der <strong>Fenix 6 Pro</strong>, der
+             <strong>Forerunner 945</strong> und der <strong>Venu 3s</strong>. …</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</template>
+    </div>
+  </div>
+
+  <div class="anm">
+    <strong>Was zu sehen ist.</strong> Am Handy trägt die klappbare Karte das
+    Inhaltsverzeichnis — der Baustein, den Design.md 9.0 für „ein Block, der zugeklappt
+    anfängt" ausdrücklich nennt. Der Filter steht hier an seinem kanonischen Platz: in
+    einer Karte, über einer langen Liste (9.32). Zugeklappt zeigt der Kartenkopf die Zahl
+    (25) und eine Vorschau; Design.md 9.1 erlaubt einer klappbaren Karte genau diese
+    beiden Zusätze — Plakette und Kopfaktion fallen dort still weg.
+    <ul>
+      <li><strong>Zugeklappt oder aufgeklappt beim Ankommen?</strong> Zugeklappt beginnt
+        die Seite mit dem Text, und das Verzeichnis ist ein Griff entfernt. Aufgeklappt
+        sieht man erst eine Liste von 25 Zeilen und muss an ihr vorbei. Der Entwurf
+        schlägt <em>zugeklappt</em> vor. <em>Entscheidung 4.</em></li>
+      <li><strong>Springt der Link die Karte wieder zu?</strong> Wer auf „4.1
+        Tagesübersicht" tippt, will lesen, nicht auf eine offene Liste zurückkommen. Ohne
+        Skript bleibt <code>&lt;details&gt;</code> offen — der Sprung landet richtig, aber
+        oben steht weiter die Liste. <em>Entscheidung 5.</em></li>
+      <li>Die Kopfzeile und die Fußzeile sind dieselben wie am Schreibtisch; die vier
+        Fußzeilen-Verweise brechen bei 360 px auf zwei Zeilen um — siehe Darstellung 5.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- 3. ueber.php — Desktop 1180 px                                           -->
+<!-- ======================================================================= -->
+<div class="reihe">
+  <h2>3. <code>ueber.php</code> — Schreibtisch, 1180 px</h2>
+  <p class="unter">Dieselbe Seite, kürzer: der Text aus Konzept Abschnitt 9
+     („Was ist NAdoku"). <strong>Ohne Leiste</strong> — fünf Abschnitte liegen unter der
+     Schwelle von sechs, ab der Design.md 9.31/9.32 überhaupt eine Sprunghilfe vorsieht;
+     ein Verzeichnis wäre hier dieselbe Aufzählung ein zweites Mal. Die Seite ist damit
+     der vorhandene Typ „Öffentliche Lesespalte" (10.1), wie Impressum und Datenschutz.
+     Am Ende der Einstieg — hier in der Fassung für <em>offen</em> bzw.
+     <em>offen mit Freischaltung</em>.</p>
+  <div class="frames">
+    <div class="frame"><div class="frame-kopf">ueber.php · 1180 px · Betriebsart „offen" / „offen mit Freischaltung"</div>
+<template data-breite="1180">
+<header class="kopf">
+  <div class="kopf-innen">
+    <a class="kopf-marke" href="index.php">
+      <img src="../../../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="" height="34">
+      <span class="kopf-name">Gen-EM NAdoku</span>
+    </a>
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+      <a class="kopf-punkt kopf-zurueck" href="login.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/></svg><span>Zur Anmeldung</span>
+      </a>
+    </nav>
+  </div>
+</header>
+<div class="rahmen rahmen-lesespalte">
+  <main class="inhalt" id="inhalt">
+    <h1>Was ist NAdoku?</h1>
+
+    <section class="karte">
+      <div class="karte-inhalt">
+        <div class="text">
+          <p>NAdoku ist ein Werkzeug, mit dem du deine Notarzteinsätze dokumentierst —
+             Zeiten, Ort, Rettungsmittel, Besatzung, Verlauf — und das dir am Ende eines
+             Jahres sagt, was du gemacht hast. Es läuft im Browser und, wenn du willst,
+             auf einer passenden Uhr oder einem Android-Handy, die deine Einsätze
+             unterwegs erfassen und später abgleichen — welche Geräte das sind, steht im
+             <a href="hilfe.php#h-2-0">Handbuch</a>.</p>
+
+          <h2 id="u-wen">Für wen</h2>
+          <p>Für Menschen, die im Rettungsdienst ärztlich tätig sind und ihre Einsätze für
+             sich selbst festhalten wollen: für die Weiterbildung, die
+             Fortbildungsnachweise, den eigenen Überblick. Es ist kein Einsatzprotokoll
+             der Leitstelle und ersetzt keine Dokumentation, die dein Träger von dir
+             verlangt.</p>
+
+          <h2 id="u-daten">Was mit deinen Daten passiert</h2>
+          <p>Alles, was Patientinnen und Patienten betrifft — Alter, Geschlecht, Diagnose,
+             Maßnahmen, Freitext —, verschlüsselt dein Browser, bevor es den Server
+             erreicht. Der Server speichert nur, was er nicht lesen kann. Das gilt auch
+             für den Betreiber: Er sieht, wie viele Einsätze du hast, nicht, worum es
+             ging. Deshalb gibt es einen Wiederherstellungsschlüssel, den nur du hast —
+             verlierst du ihn und vergisst dein Passwort, kann niemand die Daten öffnen.
+             NAdoku sagt dir das bei der Einrichtung und fragt dich später, ob du ihn noch
+             hast.</p>
+          <p>Zeiten, Orte und Namen deiner Kolleginnen liegen lesbar auf dem Server, damit
+             die Anwendung damit rechnen kann. Was genau verschlüsselt ist und was nicht,
+             steht in der <a href="datenschutz.php">Datenschutzerklärung</a> dieser
+             Installation.</p>
+
+          <h2 id="u-nicht">Was es nicht ist</h2>
+          <p>Kein Produkt einer Firma. NAdoku ist freie Software (AGPL) und wird von
+             Gen-EM betrieben, einer Gruppe von Notärzten. Es gibt keine Werbung, keine
+             Weitergabe, keine Auswertung deiner Daten durch Dritte. Es gibt aber auch
+             keine Hotline: Hilfe steht im <a href="hilfe.php">Handbuch</a>, und was dort
+             fehlt, erreicht uns über die Kontaktadresse im
+             <a href="impressum.php">Impressum</a>.</p>
+
+          <h2 id="u-anfang">Wie du anfängst</h2>
+          <p>Je nach Installation kannst du dich selbst registrieren oder brauchst eine
+             Einladung — was hier gilt, steht unten. Nach der Anmeldung führt dich ein
+             kurzer Einstieg durch die ersten Schritte: ein Standort, ein Rettungsmittel,
+             eine Uhr oder ein Handy. Wer erst schauen will, findet im
+             <a href="hilfe.php#h-3-2">Handbuch</a> ein Demo-Konto mit erfundenen
+             Einsätzen.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="karte">
+      <div class="karte-inhalt">
+        <p class="feld-hinweis">Auf dieser Installation kannst du dir selbst ein Konto
+           anlegen. Du bekommst eine E-Mail mit einem Link; erst der Klick darauf legt das
+           Konto an. <strong>Die Betreiberin schaltet es danach frei — das kann ein paar
+           Tage dauern.</strong></p>
+        <div class="listen-form-fuss">
+          <a class="knopf knopf-primaer" href="registrieren.php"><span>Registrieren</span></a>
+          <a class="knopf knopf-neutral" href="login.php"><span>Anmelden</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<footer class="fuss-seite">
+  <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
+    <span class="fuss-version">v20.16.0</span></p>
+  <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
+</footer>
+</template>
+    </div>
+  </div>
+
+  <div class="frames" style="margin-top:14px">
+    <div class="frame"><div class="frame-kopf">ueber.php · 1180 px · nur der Einstieg · Betriebsart „nur auf Einladung"</div>
+<template data-breite="1180" data-innen="16">
+<div class="rahmen rahmen-lesespalte">
+  <main class="inhalt">
+    <section class="karte">
+      <div class="karte-inhalt">
+        <p class="feld-hinweis">Auf dieser Installation entstehen Konten nur auf
+           Einladung. Wenn du eines brauchst, schreib an die Adresse im
+           <a href="impressum.php">Impressum</a>; du bekommst dann eine E-Mail mit einem
+           Link, über den du dein Passwort setzt.</p>
+        <div class="listen-form-fuss">
+          <a class="knopf knopf-primaer" href="login.php"><span>Anmelden</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</template>
+    </div>
+  </div>
+
+  <div class="anm">
+    <strong>Was zu sehen ist.</strong> Oben die ganze Seite mit dem Einstieg für
+    <em>offen</em> bzw. <em>offen mit Freischaltung</em>, darunter derselbe Einstieg für
+    <em>nur auf Einladung</em> — die Vorgabe nach der Einrichtung (E-P5b-01). Der Einstieg
+    ist eine <strong>Karte ohne Titel</strong> mit einem <code>.feld-hinweis</code> und
+    <code>.listen-form-fuss</code>; kein neuer Baustein.
+    <ul>
+      <li><strong>Drei Betriebsarten, zwei Bilder.</strong> <em>offen</em> und
+        <em>offen mit Freischaltung</em> zeigen dieselben zwei Knöpfe; der Unterschied ist
+        der fett gesetzte Satz über die Freischaltung, der bei <em>offen</em> entfällt.
+        <em>nur auf Einladung</em> zeigt einen Knopf und sagt, wie man zu einem Konto
+        kommt — eine Sackgasse ohne Ausweg wäre schlechter als kein Knopf.</li>
+      <li><strong>Der Markdown-Entwurf endet heute mit einer Zeile Verweise</strong>
+        („Zum Handbuch · Registrieren oder anmelden"). Die muss heraus: Sie steht fest im
+        Text und kann nicht wissen, welche Betriebsart gilt — bei <em>nur auf Einladung</em>
+        führte „Registrieren" auf eine Seite, die es dort nicht gibt. Der letzte Absatz
+        von „Wie du anfängst" ist deshalb hier umformuliert („was hier gilt, steht
+        unten"). <em>Entscheidung 6.</em></li>
+      <li><strong>Keine Leiste, kein Inhaltsverzeichnis.</strong> Wenn der Auftraggeber
+        beide Seiten gleich haben will, bekommt <code>ueber.php</code> dieselbe Leiste mit
+        fünf Einträgen — dann sind die beiden Seiten eine Vorlage statt zweier.
+        <em>Entscheidung 7.</em></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- 4. ueber.php — Handy 360 px                                              -->
+<!-- ======================================================================= -->
+<div class="reihe">
+  <h2>4. <code>ueber.php</code> — Handy, 360 px</h2>
+  <p class="unter">Beide Betriebsarten nebeneinander. Am Handy sind die Knöpfe 44 px hoch
+     (am Schreibtisch oben 36 px) — der Unterschied ist im Bild messbar, weil hier das
+     echte Stylesheet mit seinen Schwellen läuft.</p>
+  <div class="frames">
+    <div class="frame"><div class="frame-kopf">360 px · „offen mit Freischaltung"</div>
+<template data-breite="360">
+<header class="kopf">
+  <div class="kopf-innen">
+    <a class="kopf-marke" href="index.php">
+      <img src="../../../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="" height="34">
+      <span class="kopf-name">Gen-EM NAdoku</span>
+    </a>
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+      <a class="kopf-punkt kopf-zurueck" href="login.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/></svg><span>Zur Anmeldung</span>
+      </a>
+    </nav>
+  </div>
+</header>
+<div class="rahmen rahmen-lesespalte">
+  <main class="inhalt" id="inhalt">
+    <h1>Was ist NAdoku?</h1>
+    <section class="karte">
+      <div class="karte-inhalt">
+        <div class="text">
+          <p>NAdoku ist ein Werkzeug, mit dem du deine Notarzteinsätze dokumentierst —
+             Zeiten, Ort, Rettungsmittel, Besatzung, Verlauf — und das dir am Ende eines
+             Jahres sagt, was du gemacht hast.</p>
+          <h2>Für wen</h2>
+          <p>Für Menschen, die im Rettungsdienst ärztlich tätig sind und ihre Einsätze für
+             sich selbst festhalten wollen: für die Weiterbildung, die
+             Fortbildungsnachweise, den eigenen Überblick.</p>
+          <h2>Was mit deinen Daten passiert</h2>
+          <p>Alles, was Patientinnen und Patienten betrifft, verschlüsselt dein Browser,
+             bevor es den Server erreicht. Der Server speichert nur, was er nicht lesen
+             kann. Das gilt auch für den Betreiber.</p>
+          <h2>Wie du anfängst</h2>
+          <p>Je nach Installation kannst du dich selbst registrieren oder brauchst eine
+             Einladung — was hier gilt, steht unten.</p>
+        </div>
+      </div>
+    </section>
+    <section class="karte">
+      <div class="karte-inhalt">
+        <p class="feld-hinweis">Auf dieser Installation kannst du dir selbst ein Konto
+           anlegen. Du bekommst eine E-Mail mit einem Link; erst der Klick darauf legt das
+           Konto an. <strong>Die Betreiberin schaltet es danach frei — das kann ein paar
+           Tage dauern.</strong></p>
+        <div class="listen-form-fuss">
+          <a class="knopf knopf-primaer" href="registrieren.php"><span>Registrieren</span></a>
+          <a class="knopf knopf-neutral" href="login.php"><span>Anmelden</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<footer class="fuss-seite">
+  <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
+    <span class="fuss-version">v20.16.0</span></p>
+  <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
+</footer>
+</template>
+    </div>
+
+    <div class="frame"><div class="frame-kopf">360 px · „nur auf Einladung" (Vorgabe)</div>
+<template data-breite="360">
+<header class="kopf">
+  <div class="kopf-innen">
+    <a class="kopf-marke" href="index.php">
+      <img src="../../../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="" height="34">
+      <span class="kopf-name">Gen-EM NAdoku</span>
+    </a>
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+      <a class="kopf-punkt kopf-zurueck" href="login.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/></svg><span>Zur Anmeldung</span>
+      </a>
+    </nav>
+  </div>
+</header>
+<div class="rahmen rahmen-lesespalte">
+  <main class="inhalt" id="inhalt">
+    <h1>Was ist NAdoku?</h1>
+    <section class="karte">
+      <div class="karte-inhalt">
+        <div class="text">
+          <p>NAdoku ist ein Werkzeug, mit dem du deine Notarzteinsätze dokumentierst —
+             Zeiten, Ort, Rettungsmittel, Besatzung, Verlauf — und das dir am Ende eines
+             Jahres sagt, was du gemacht hast.</p>
+          <h2>Für wen</h2>
+          <p>Für Menschen, die im Rettungsdienst ärztlich tätig sind und ihre Einsätze für
+             sich selbst festhalten wollen: für die Weiterbildung, die
+             Fortbildungsnachweise, den eigenen Überblick.</p>
+          <h2>Was mit deinen Daten passiert</h2>
+          <p>Alles, was Patientinnen und Patienten betrifft, verschlüsselt dein Browser,
+             bevor es den Server erreicht. Der Server speichert nur, was er nicht lesen
+             kann. Das gilt auch für den Betreiber.</p>
+          <h2>Wie du anfängst</h2>
+          <p>Je nach Installation kannst du dich selbst registrieren oder brauchst eine
+             Einladung — was hier gilt, steht unten.</p>
+        </div>
+      </div>
+    </section>
+    <section class="karte">
+      <div class="karte-inhalt">
+        <p class="feld-hinweis">Auf dieser Installation entstehen Konten nur auf
+           Einladung. Wenn du eines brauchst, schreib an die Adresse im
+           <a href="impressum.php">Impressum</a>; du bekommst dann eine E-Mail mit einem
+           Link, über den du dein Passwort setzt.</p>
+        <div class="listen-form-fuss">
+          <a class="knopf knopf-primaer" href="login.php"><span>Anmelden</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<footer class="fuss-seite">
+  <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
+    <span class="fuss-version">v20.16.0</span></p>
+  <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
+</footer>
+</template>
+    </div>
+  </div>
+
+  <div class="anm">
+    <strong>Was zu sehen ist.</strong> Der Text ist für das Mockup gekürzt; in der
+    Anwendung steht er vollständig, wie am Schreibtisch. Die beiden Knöpfe des Einstiegs
+    stehen bei 360 px nebeneinander und passen (<code>.listen-form-fuss</code> bricht
+    um, wenn sie es nicht täten).
+    <ul>
+      <li><strong>Soll der Einstieg am Handy <code>knopf-breit</code> tragen?</strong>
+        Die Anmeldeseite tut es — dort ist „Anmelden" die einzige Handlung. Hier sind es
+        zwei, und zwei Knöpfe über die volle Breite untereinander sind eine Liste, kein
+        Einstieg. Der Entwurf lässt sie nebeneinander. <em>Entscheidung 8.</em></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- 5. Fußzeile der Anmeldeseite — Ist und Soll                              -->
+<!-- ======================================================================= -->
+<div class="reihe">
+  <h2>5. Fußzeile der Anmeldeseite — Ist und Soll</h2>
+  <p class="unter">Heute trägt die zweite Zeile „Impressum · Datenschutz". Künftig
+     „Was ist NAdoku · Handbuch · Impressum · Datenschutz" (E-P5b-08). Ist und Soll
+     untereinander, in beiden Breiten. Das Markup ist unverändert das der laufenden
+     Installation; es kommen zwei <code>&lt;a&gt;</code> in
+     <code>&lt;p class="fuss-zeile fuss-rechts"&gt;</code> hinzu — keine neue Klasse,
+     keine neue Regel.</p>
+  <div class="frames">
+    <div class="frame"><div class="frame-kopf">1180 px · IST (heute, v20.16.0)</div>
+<template data-breite="1180">
+<div class="anmeldung-body">
+  <main class="anmeldung">
+    <div class="anmeldung-karte">
+      <img src="../../../../server/assets/images/gen-em_logo_helicopter.svg" alt="" class="anmeldung-logo">
+      <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
+      <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+      <form method="post">
+        <label>E-Mail <input type="email" name="email"></label>
+        <label>Passwort <input type="password" name="password"></label>
+        <div class="listen-form-fuss">
+          <button class="knopf knopf-primaer knopf-breit" type="submit"><span>Anmelden</span></button>
+        </div>
+      </form>
+      <p class="anmeldung-neben"><a href="#">Passwort vergessen?</a></p>
+    </div>
+  </main>
+  <footer class="fuss-seite fuss-dunkel">
+    <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
+      <span class="fuss-version">v20.16.0</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+</div>
+</template>
+    </div>
+  </div>
+
+  <div class="frames" style="margin-top:14px">
+    <div class="frame"><div class="frame-kopf">1180 px · SOLL (mit P5b)</div>
+<template data-breite="1180">
+<div class="anmeldung-body">
+  <main class="anmeldung">
+    <div class="anmeldung-karte">
+      <img src="../../../../server/assets/images/gen-em_logo_helicopter.svg" alt="" class="anmeldung-logo">
+      <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
+      <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+      <form method="post">
+        <label>E-Mail <input type="email" name="email"></label>
+        <label>Passwort <input type="password" name="password"></label>
+        <div class="listen-form-fuss">
+          <button class="knopf knopf-primaer knopf-breit" type="submit"><span>Anmelden</span></button>
+        </div>
+      </form>
+      <p class="anmeldung-neben"><a href="#">Passwort vergessen?</a></p>
+    </div>
+  </main>
+  <footer class="fuss-seite fuss-dunkel">
+    <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
+      <span class="fuss-version">v20.16.0</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+</div>
+</template>
+    </div>
+  </div>
+
+  <div class="frames" style="margin-top:14px">
+    <div class="frame"><div class="frame-kopf">360 px · IST</div>
+<template data-breite="360">
+<div class="anmeldung-body">
+  <main class="anmeldung">
+    <div class="anmeldung-karte">
+      <img src="../../../../server/assets/images/gen-em_logo_helicopter.svg" alt="" class="anmeldung-logo">
+      <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
+      <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+      <form method="post">
+        <label>E-Mail <input type="email" name="email"></label>
+        <label>Passwort <input type="password" name="password"></label>
+        <div class="listen-form-fuss">
+          <button class="knopf knopf-primaer knopf-breit" type="submit"><span>Anmelden</span></button>
+        </div>
+      </form>
+      <p class="anmeldung-neben"><a href="#">Passwort vergessen?</a></p>
+    </div>
+  </main>
+  <footer class="fuss-seite fuss-dunkel">
+    <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
+      <span class="fuss-version">v20.16.0</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+</div>
+</template>
+    </div>
+
+    <div class="frame"><div class="frame-kopf">360 px · SOLL (mit P5b)</div>
+<template data-breite="360">
+<div class="anmeldung-body">
+  <main class="anmeldung">
+    <div class="anmeldung-karte">
+      <img src="../../../../server/assets/images/gen-em_logo_helicopter.svg" alt="" class="anmeldung-logo">
+      <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
+      <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+      <form method="post">
+        <label>E-Mail <input type="email" name="email"></label>
+        <label>Passwort <input type="password" name="password"></label>
+        <div class="listen-form-fuss">
+          <button class="knopf knopf-primaer knopf-breit" type="submit"><span>Anmelden</span></button>
+        </div>
+      </form>
+      <p class="anmeldung-neben"><a href="#">Passwort vergessen?</a></p>
+    </div>
+  </main>
+  <footer class="fuss-seite fuss-dunkel">
+    <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
+      <span class="fuss-version">v20.16.0</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+</div>
+</template>
+    </div>
+  </div>
+
+  <div class="anm">
+    <strong>Was zu sehen ist.</strong> Bei 1180 px stehen alle vier Verweise in einer
+    Zeile. Bei 360 px bricht <code>.fuss-zeile</code> um
+    (<code>flex-wrap:wrap</code>) — der Mockup zeigt, wie: die vier Verweise verteilen
+    sich auf zwei Zeilen, zentriert. Das ist kein Fehler, sondern das Verhalten des
+    Bausteins; es ist nur zu sehen, bevor es jemandem auffällt.
+    <ul>
+      <li><strong>Reihenfolge.</strong> „Was ist NAdoku" steht vorn, weil es die
+        Antwort auf die Frage ist, die jemand vor der Anmeldung hat. Danach das Handbuch,
+        dann die beiden Pflichtangaben. Andere Reihenfolgen sind möglich —
+        <em>Entscheidung 9.</em></li>
+      <li><strong>Beschriftung.</strong> „Was ist NAdoku" ist vier Wörter lang und
+        derselbe Text wie die Überschrift der Seite. Kürzer wäre „Über NAdoku" (passt
+        eher in eine Fußzeile, sagt aber weniger). <em>Entscheidung 10.</em></li>
+      <li>Die Fußzeile der beiden Dokumentseiten selbst (Darstellungen 1–4) trägt
+        dieselben vier Verweise, nur hell statt dunkel — sie steht dort nicht auf
+        Dunkelblau.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- 6. Wenn die Dokumentation fehlt                                          -->
+<!-- ======================================================================= -->
+<div class="reihe">
+  <h2>6. Wenn die Dokumentation fehlt (E-P5b-22)</h2>
+  <p class="unter">Die Anwendung sucht erst <code>../docs/</code> (Selbsthoster, die das
+     Repositorium hochladen), dann <code>doku/</code> (was die Auslieferungskette dorthin
+     kopiert). Ist keines von beidem da, darf kein leerer Bildschirm stehen. Oben, was
+     die Besucherin sieht; darunter, was die Betreiberin auf der Statusseite sieht.</p>
+  <div class="frames">
+    <div class="frame"><div class="frame-kopf">hilfe.php · 1180 px · Dokumentation nicht gefunden</div>
+<template data-breite="1180">
+<header class="kopf">
+  <div class="kopf-innen">
+    <a class="kopf-marke" href="index.php">
+      <img src="../../../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="" height="34">
+      <span class="kopf-name">Gen-EM NAdoku</span>
+    </a>
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+      <a class="kopf-punkt kopf-zurueck" href="login.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/></svg><span>Zur Anmeldung</span>
+      </a>
+    </nav>
+  </div>
+</header>
+<div class="rahmen rahmen-lesespalte">
+  <main class="inhalt" id="inhalt">
+    <h1>Handbuch</h1>
+    <section class="karte">
+      <div class="karte-inhalt">
+        <div class="meldung meldung-warn" role="status">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0"/><path d="M12 16h.01"/></svg>
+          <p><strong>Auf dieser Installation ist kein Handbuch hinterlegt.</strong>
+             Die Anwendung hat an beiden vorgesehenen Stellen nachgesehen und keine
+             Datei gefunden. Das ist nichts, was du beheben kannst — sag der
+             Betreiberin Bescheid; die Kontaktadresse steht im
+             <a href="impressum.php">Impressum</a>.</p>
+        </div>
+
+        <p class="feld-hinweis">Gesucht wurde, in dieser Reihenfolge:</p>
+        <div class="codeblock">
+          <p class="codeblock-titel">1. neben der Anwendung (Selbsthoster)</p>
+          <p class="codeblock-wert-lang">/var/www/nadoku/docs/Handbuch.md</p>
+          <p class="codeblock-titel">2. im Auslieferungsordner</p>
+          <p class="codeblock-wert-lang">/var/www/nadoku/server/doku/Handbuch.md</p>
+        </div>
+
+        <p class="feld-hinweis">Du bist mit Verwaltungsrechten angemeldet: Unter
+           <a href="betrieb_status.php">Betrieb → Status</a> steht, wo die Anwendung
+           gesucht hat und welche der beiden Dateien fehlt. Abhilfe: das Verzeichnis
+           <code>docs/</code> neben <code>server/</code> hochladen — oder die
+           Auslieferung wiederholen, die es nach <code>server/doku/</code> kopiert.</p>
+
+        <div class="listen-form-fuss">
+          <a class="knopf knopf-neutral" href="ueber.php"><span>Was ist NAdoku</span></a>
+          <a class="knopf knopf-leise" href="login.php"><span>Zur Anmeldung</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<footer class="fuss-seite">
+  <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
+    <span class="fuss-version">v20.16.0</span></p>
+  <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
+</footer>
+</template>
+    </div>
+  </div>
+
+  <div class="frames" style="margin-top:14px">
+    <div class="frame"><div class="frame-kopf">Betrieb → Status · 1180 px · Ausschnitt: die neue Zeile</div>
+<template data-breite="1180" data-innen="16">
+<div class="rahmen">
+  <main class="inhalt">
+    <section class="karte">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">System</h2>
+        <span class="karte-zahl">6</span>
+      </div>
+      <div class="karte-inhalt">
+        <div class="zeile">
+          <div class="zeile-text">
+            <a href="#"><span class="zeile-haupt">Schreibrechte</span></a>
+            <span class="zeile-klein">sicherungen/, apk/ beschreibbar</span>
+          </div>
+          <div class="zeile-plaketten"><span class="plakette plakette-blau">in Ordnung</span></div>
+        </div>
+        <div class="zeile">
+          <div class="zeile-text">
+            <a href="#"><span class="zeile-haupt">Dokumentation</span></a>
+            <span class="zeile-klein">weder ../docs/ noch doku/ — hilfe.php und ueber.php zeigen eine Meldung</span>
+          </div>
+          <div class="zeile-plaketten"><span class="plakette plakette-rot">fehlt</span></div>
+        </div>
+        <div class="zeile">
+          <div class="zeile-text">
+            <a href="#"><span class="zeile-haupt">Wartungsmodus</span></a>
+            <span class="zeile-klein">aus</span>
+          </div>
+          <div class="zeile-plaketten"><span class="plakette plakette-neutral">aus</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</template>
+    </div>
+  </div>
+
+  <div class="anm">
+    <strong>Was zu sehen ist.</strong> Kein leerer Bildschirm, sondern drei Auskünfte in
+    der Reihenfolge, in der sie gebraucht werden: <em>was fehlt</em> (Meldung im Ton
+    <code>warn</code>), <em>wo gesucht wurde</em> (Wertekasten, Design.md 9.18 — Pfade
+    sind Werte zum Abschreiben) und <em>was zu tun ist</em>. Der letzte Absatz erscheint
+    nur, wenn eine Administration angemeldet ist — dieselbe Unterscheidung, die
+    <code>rechtstext_seite.php</code> beim leeren Impressum schon macht.
+    <ul>
+      <li><strong>Der Ton ist <code>warn</code>, nicht <code>info</code>.</strong> Beim
+        leeren Impressum ist der Leerzustand eine <em>gültige</em> Antwort über den
+        Betreiber — deshalb steht dort <code>info</code>. Ein fehlendes Handbuch ist
+        keine Auskunft, sondern eine unvollständige Installation. <em>Entscheidung 11,
+        falls der Auftraggeber das anders sieht.</em></li>
+      <li><strong>Die Seite fällt auf die Lesespalte zurück</strong> — keine Leiste, denn
+        es gibt kein Inhaltsverzeichnis. Eine leere Leiste neben einer Fehlermeldung wäre
+        die zweite Meldung.</li>
+      <li><strong>Der Verweis „Handbuch" bleibt in der Fußzeile stehen</strong>, auch wenn
+        es keines gibt. Ihn zu verbergen hieße, dass die Fußzeile je nach Dateibestand
+        anders aussieht — und dann fällt niemandem auf, dass etwas fehlt. Wer klickt,
+        bekommt genau diese Seite.</li>
+      <li><strong>Die Statuszeile ist <code>status_zeile()</code></strong> aus
+        <code>betrieb_status.php</code>: <code>ui_zeile()</code> mit Plakette, kein neuer
+        Baustein. Rot heißt auf dieser Seite „fehlt" (Design.md 9.23).</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<div class="schluss">
+  <h2>Was hier zu entscheiden ist</h2>
+  <ol>
+    <li><strong>Suchfeld: Filter über dem Inhaltsverzeichnis oder Volltextsuche?</strong>
+      Der Entwurf zeigt einen <code>.kartenfilter</code> (44 / 36 px), der die 25
+      Überschriften im Browser filtert — kein Skript auf dem Server, keine
+      Adressänderung, CSP-konform. Die Alternative ist ein <code>.suchfeld</code>
+      (48 px) mit Volltextsuche im gerenderten Handbuch; das wäre das zweite
+      <code>.suchfeld</code> der Anwendung (das erste gehört <code>suche.php</code>) und
+      braucht ein eigenes Skript samt Trefferhervorhebung.</li>
+
+    <li><strong>Markdown-Blockzitate (<code>&gt;</code>): welche Darstellung?</strong>
+      Das Handbuch benutzt sie für Merksätze („Aufbau. Kapitel 1 bis 10 …").
+      <code>.text</code> hat dafür keine Regel — ohne Entscheidung sieht ein Zitat aus
+      wie ein Absatz. Vorschlag: der Renderer setzt sie als
+      <code>.meldung meldung-info</code> (so im Mockup). Alternative: eine neue Regel
+      <code>.text blockquote</code> — das wäre eine neue Darstellung und braucht nach
+      CLAUDE.md 5 eine ausdrückliche Freigabe.</li>
+
+    <li><strong>Abstand um Tabellen und Codeblöcke in <code>.text</code>.</strong>
+      <code>.tabelle</code> und <code>pre</code> tragen beide, aber <code>.text</code>
+      gibt ihnen keinen Außenabstand; die Tabelle klebt am Absatz darüber. Eine Zeile
+      (<code>.text .tabelle-scroll{margin:… 0}</code>) genügt — sie ist trotzdem eine
+      neue Regel im Stylesheet und gehört in <code>docs/Design.md</code>.</li>
+
+    <li><strong>Inhaltsverzeichnis am Handy: zugeklappt oder aufgeklappt?</strong>
+      Der Entwurf schlägt <em>zugeklappt</em> vor, damit die Seite mit dem Text beginnt.</li>
+
+    <li><strong>Schließt sich das Verzeichnis am Handy nach einem Sprung?</strong>
+      Ohne Skript bleibt <code>&lt;details&gt;</code> offen. Zuklappen braucht drei
+      Zeilen JavaScript; offen lassen braucht nichts, lässt aber 25 Zeilen über dem
+      angesprungenen Abschnitt stehen.</li>
+
+    <li><strong>Die Schlusszeile des Entwurfs „Was ist NAdoku" muss aus dem Markdown
+      heraus.</strong> „[Zum Handbuch](hilfe.php) · [Registrieren oder anmelden]
+      (login.php)" kann die Betriebsart nicht kennen; bei <em>nur auf Einladung</em>
+      führte sie auf eine Seite, die es dann nicht gibt. Der Einstieg wird von der Seite
+      erzeugt, nicht vom Text. Mit derselben Änderung wird der letzte Absatz von „Wie du
+      anfängst" umformuliert („was hier gilt, steht unten") — bitte gegenlesen.</li>
+
+    <li><strong>Bekommt <code>ueber.php</code> dieselbe Leiste wie
+      <code>hilfe.php</code>?</strong> Der Entwurf sagt nein: fünf Abschnitte liegen unter
+      der Schwelle von sechs (Design.md 9.31/9.32), und die Seite ist damit der
+      vorhandene Typ „Öffentliche Lesespalte". Ja hieße: beide Seiten sind eine Vorlage
+      und sehen gleich aus.</li>
+
+    <li><strong>Einstiegsknöpfe am Handy: nebeneinander oder
+      <code>knopf-breit</code>?</strong> Der Entwurf lässt sie nebeneinander, weil es
+      zwei Handlungen sind; die Anmeldeseite macht ihren einen Knopf breit.</li>
+
+    <li><strong>Reihenfolge der vier Fußzeilen-Verweise.</strong> Entwurf:
+      Was ist NAdoku · Handbuch · Impressum · Datenschutz.</li>
+
+    <li><strong>Beschriftung des ersten Verweises.</strong> „Was ist NAdoku" (gleicher
+      Wortlaut wie die Seitenüberschrift) oder kürzer „Über NAdoku".</li>
+
+    <li><strong>Ton der Meldung bei fehlender Dokumentation.</strong> Entwurf:
+      <code>warn</code> (orange), weil eine unvollständige Installation keine Auskunft
+      ist. <code>info</code> (blau) wäre die zurückhaltendere Wahl und entspräche dem
+      leeren Impressum.</li>
+
+    <li><strong>Neuer Seitentyp im Katalog.</strong> Mit <code>hilfe.php</code> bekommt
+      Design.md 10.1 einen siebten Typ: „öffentliche Seite mit Leiste". Das ist keine neue
+      Klasse und keine neue Regel — aber eine Erweiterung des Katalogs, die einzutragen
+      ist, bevor jemand sie als Muster benutzt.</li>
+  </ol>
+</div>
+
+<script>
+/* ---- Nur der Mockup-Rahmen, NICHT Teil der Anwendung ----------------------
+ *
+ * Jede Darstellung steht in einem eigenen <iframe> und nicht als <div> auf
+ * dieser Seite. Grund: Die Medienabfragen des echten Stylesheets messen die
+ * Breite des ANSICHTSFENSTERS, nicht die eines Kastens. In einem 360 px
+ * breiten <div> auf einer 1400 px breiten Seite griffen die Regeln fuer
+ * 1024+ — und dann waere ein Knopf im "Handy"-Bild 36 statt 44 px hoch. Ein
+ * Mockup, das die Bedienhoehe falsch zeigt, ist schlimmer als keines.
+ *
+ * Das <iframe> bekommt seine Breite aus data-breite; die Hoehe wird nach dem
+ * Aufbau am Inhalt gemessen. Der Stylesheet-Verweis ist derselbe wie oben —
+ * relative Adressen loesen sich am Ort DIESER Datei auf.
+ * ------------------------------------------------------------------------ */
+document.querySelectorAll('template[data-breite]').forEach(function (t) {
+  var breite = t.getAttribute('data-breite');
+  var innen  = t.getAttribute('data-innen') || '0';
+  var rahmen = document.createElement('iframe');
+  rahmen.setAttribute('scrolling', 'no');
+  rahmen.setAttribute('title', 'Darstellung ' + breite + ' px');
+  rahmen.style.width  = breite + 'px';
+  rahmen.style.height = '400px';
+  t.parentNode.insertBefore(rahmen, t);
+
+  var d = rahmen.contentDocument;
+  d.open();
+  d.write('<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">'
+        + '<link rel="stylesheet" href="../../../../server/assets/style.css">'
+        + '<style>body{margin:0;padding:' + innen + 'px;min-height:0}'
+        + 'html{scroll-behavior:auto}</style></head><body>'
+        + t.innerHTML
+        + '</body></html>');
+  d.close();
+
+  var messen = function () {
+    try {
+      rahmen.style.height = '0px';
+      rahmen.style.height = Math.ceil(d.documentElement.scrollHeight) + 'px';
+    } catch (e) { /* nichts zu tun */ }
+  };
+  rahmen.addEventListener('load', messen);
+  messen();
+  setTimeout(messen, 200);
+  setTimeout(messen, 900);
+  if (d.fonts && d.fonts.ready) { d.fonts.ready.then(messen); }
+});
+</script>
+</body></html>

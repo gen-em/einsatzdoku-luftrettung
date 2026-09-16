@@ -23,7 +23,20 @@ CREATE TABLE users (
   logo_wahl     VARCHAR(20) NOT NULL DEFAULT '',     -- '' = Standard der Installation, sonst 'hubschrauber' | 'fahrzeug' | 'wechselnd' (E-P3-20)
   adresssuche   TINYINT(1) NOT NULL DEFAULT 1,       -- Adressvorschlaege aus dem Internet; die Installation ist die Obergrenze (app_state.adresssuche, E-S9-05/R79)
   last_login    DATETIME NULL,                       -- UTC, letzte erfolgreiche Anmeldung; NULL = noch nie (Kontoseite, NutzerInnen-Liste)
-  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  -- LEBENSZYKLUS (P5b/AP2, E-P5b-12). Der Bestand wird bei der Migration
+  -- `aktiv`: Jeder andere Wert waere eine Aussage ueber Konten, die es vor
+  -- der Pruefung schon gab. `bestaetigt_am` bleibt dort NULL — „die Frage
+  -- stellte sich nicht", und ein erfundenes Datum waere schlimmer als eine
+  -- Leerstelle (dieselbe Entscheidung wie bei `last_login`).
+  status        ENUM('unbestaetigt','wartet','aktiv','gesperrt') NOT NULL DEFAULT 'aktiv',
+  bestaetigt_am  DATETIME NULL,                      -- wann die Adresse bestaetigt wurde; NULL = nicht noetig (Einladung, Einrichtung)
+  gesperrt_seit  DATETIME NULL,
+  gesperrt_grund VARCHAR(64) NULL,                   -- 'selbstloeschung' ist die Karenz (E-P5b-16), sonst freier Grund der Verwaltung
+  loeschung_am   DATETIME NULL,                      -- Ende der Loeschkarenz; der Job raeumt danach endgueltig ab
+  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  -- Fuer die Verfalljobs, nicht fuer die Anzeige: „alle Konten in einem
+  -- Zustand, deren Frist abgelaufen ist" waere sonst ein Vollscan je Joblauf.
+  INDEX idx_status_loeschung (status, loeschung_am)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE password_resets (
@@ -933,4 +946,7 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- im Schema (Web 20.14.0, P5a/AP10).
   ('2026_09_16_sicherungsziel_aufbewahrung', 'skipped'),
   -- protokoll_ereignisse steht oben schon im Schema (Web 20.16.0, P5b/AP1).
-  ('2026_09_16_protokoll_ereignisse', 'skipped');
+  ('2026_09_16_protokoll_ereignisse', 'skipped'),
+  -- users.status und die Lebenszyklus-Spalten stehen oben schon im Schema
+  -- (Web 20.17.0, P5b/AP2).
+  ('2026_09_16_konto_lebenszyklus', 'skipped');

@@ -268,6 +268,45 @@ if (!geraet_schluessel_gueltig($apiKey, (string)$dev['api_key_hash'])) {
 }
 if (!(int)$dev['active']) json_out(['error' => 'device_disabled'], 403);
 
+/* ---- KONTOSTATUS (P5b/AP2, E-P5b-12) -------------------------------------
+ *
+ * NACH der Schluesselpruefung und nicht davor. Ein Angreifer mit einer
+ * erfundenen Kennung soll nicht erfahren, in welchem Zustand ein Konto ist,
+ * das er nicht kennt — und ein falscher Schluessel soll weiterhin `401`
+ * bekommen und nicht `403`. Erst wer sich ausgewiesen hat, bekommt eine
+ * Auskunft ueber sein eigenes Konto.
+ *
+ * `403` UND NICHT `401`: Die Uhr behandelt `403` heute als „abgemeldet" und
+ * puffert — genau das soll sie tun. Der Unterschied steht im JSON-Rumpf
+ * (`grund`), nicht im Code. **Damit braucht es keine Uhr-Stufe**: Die
+ * bestehende Fassung tut schon das Richtige, sie sagt nur „abgemeldet", wo
+ * „gesperrt" genauer waere. Das ist ein Backlog-Eintrag fuer die naechste
+ * Uhr-Auslieferung und kein Fehler.
+ *
+ * WAS NICHT PASSIERT: Es geht nichts verloren. Die Warteschlange der Uhr
+ * bleibt, und nach dem Entsperren kommt der Rueckstand vollstaendig an —
+ * dieselbe Zusage wie bei `401` und `429` (E-P5a-02).
+ *
+ * DER TOPF BLEIBT UNBERUEHRT. Ein gesperrtes Konto ist kein Angriff; sein
+ * Geraet sendet weiter, weil niemand es abgeschaltet hat. Zaehlte das hier
+ * als Fehlversuch, sperrte der Ratenschutz nach kurzer Zeit eine Kennung,
+ * die nichts falsch macht — und nach dem Entsperren des Kontos kaeme der
+ * Rueckstand dann NICHT durch. */
+$kontoStatus = 'aktiv';
+try {
+    $stK = db()->prepare('SELECT status FROM users WHERE id = ?');
+    $stK->execute([(int)$dev['user_id']]);
+    $kontoStatus = (string)($stK->fetchColumn() ?: 'aktiv');
+} catch (PDOException $ex) {
+    /* Die Spalte gibt es noch nicht (Migration aus P5b/AP2 steht aus).
+     * Dann gilt `aktiv` — die Uhr soll nicht dadurch stehenbleiben, dass
+     * ein Update eingespielt, aber `update.php` noch nicht gefahren
+     * wurde. */
+}
+if ($kontoStatus !== 'aktiv') {
+    json_out(['error' => 'konto', 'grund' => $kontoStatus], 403);
+}
+
 /* Geglueckt: den Kennungstopf und den Vermerk raeumen.
  *
  * NUR DEN KENNUNGSTOPF, NICHT DIE ADRESSE. Im Topf `ingest_ip` stehen

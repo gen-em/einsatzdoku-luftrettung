@@ -11,7 +11,7 @@ abgehakt ist, und wird dann gelöscht (`CLAUDE.md` 7).
 |---|---|---|
 | Vorarbeit | erledigt — P5a-Merge, Prüfstand, F4 | 20.15.3 |
 | **AP1** Protokoll-Schreibweg und Einstellungen | **erledigt** | **20.16.0** |
-| AP2 Lebenszyklus-Bibliothek | offen | — |
+| **AP2** Lebenszyklus-Bibliothek | **erledigt** | **20.17.0** |
 | AP3 Registrierung | **wartet auf M-P5b-02** | — |
 | AP4 Einwilligungen | offen | — |
 | AP5 Selbstlöschung, E-Mail-Wechsel | offen | — |
@@ -38,6 +38,7 @@ Dieser Abschnitt steht vorn, nicht in einer Fußnote (`CLAUDE.md` 7).
 | **Die Wartungsprobe** um den Protokoll-Fehlfall erweitert (Abnahme AP1) | Das Werkzeug `tools/wartungsprobe/` prüft den Wartungsmodus, nicht das Protokoll; eine Erweiterung wäre ein Umbau am Werkzeug, den AP1 nicht rechtfertigt | Der Fehlfall ist **von Hand gemessen** und in Abschnitt 3 mit Zahlen belegt: Tabelle umbenannt → `protokoll()` meldet `false`, Zähler 0 → 1, Handlung läuft weiter (`users` lesbar, 2 Konten), Tabelle zurück → Schreiben geht wieder, Zähler bleibt bis zum Quittieren stehen |
 | Das Protokoll unter **echter Last** | Es gibt auf diesem Prüfstand keine | Die drei Indizes sind nach den drei Fragen gelegt, die 10c stellen wird; gemessen wird, wenn 10c die Abfragen hat |
 | **`cmark-gfm`** (Markdown-Prüfung, Abnahme AP8) | Im Container nicht vorhanden | Wird in AP8 nachinstalliert |
+| **Der Uhr-Simulator** mit gesperrtem Konto (Abnahme AP2 nennt ihn) | Der Prüfstand braucht rund 500 MB SDK und einen Simulatorlauf je Fall; `CIQ_GERAETE_URL` ist gesetzt, der Aufbau war für diesen einen Fall nicht verhältnismäßig | **Gegen `ingest.php` selbst gemessen**, mit echten HTTP-Aufrufen und demselben Schlüsselverfahren (`geraet_schluessel_hash()`): Die Uhr sieht genau diese Antwort. Was der Simulator zusätzlich zeigte, wäre die **Anzeige** auf dem Gerät — und die ist ausdrücklich unverändert (die Uhr sagt „abgemeldet", der Grund im Rumpf ist für die nächste Uhr-Stufe) |
 
 ---
 
@@ -123,7 +124,16 @@ Umbau der Ladekette wieder auf.
 | **Fehlfall V7** (Abnahme AP1) | AP1 | `protokoll()` → `false`, Zähler **0 → 1**, Handlung läuft weiter, Statuskarte rot; nach Rückbau Schreiben wieder `true`, Zähler bleibt bis zum Quittieren | alle **drei** Stufen belegt |
 | Schreibweg allgemein | AP1 | 3 Einträge über 3 Reiter; unbekannter Reiter landet unter `system` **mit** `error_log`-Meldung; Zählkarte zählt 3 | — |
 | **Bilderlauf, drei Engines** | AP1 | `betrieb_status.php` und `betrieb_server.php` in **8 Breiten** (360–1920): **Chromium** 16 Bilder 0/0/0 · **Firefox** 16 Bilder 0/0/0 · **WebKit** 16 Bilder 0/0/0. Gemessen wird Überlauf, Konsolenfehler und Knopfhöhe (44/36 px am Zeigergerät) | — |
-| **Wortliste** | AP1 | **alle fünf Bereiche**: (a) 111 PHP-Dateien, (b) 36 JS, (c) 8 Dokumente, (d) 2 Android, (e) 35 Uhr — **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 99 Regeln | — |
+| `grep -rn "INSERT INTO password_resets" server/` (Abnahme AP2) | AP2 | **2 Treffer, beide in `konto_lib.php`** — vorher 4 Dateien | **bestanden** |
+| Übergangstabelle (Abnahme AP2) | AP2 | **6 von 6** Übergängen wie festgelegt; `gesperrt → wartet` und `aktiv → unbestaetigt` werden abgewiesen, Status bleibt unverändert | **bestanden** |
+| Token-Regel (Abnahme AP2) | AP2 | Nach Anlage + 2× Ausstellen: **1** offener Token (erwartet 1) | **bestanden** |
+| Entsperren räumt auf (Abnahme AP2) | AP2 | `gesperrt_seit`, `gesperrt_grund`, **`loeschung_am`** alle NULL nach dem Entsperren | **bestanden** |
+| **Migration `konto_lebenszyklus`** | AP2 | `php update.php` → erfolgreich; Bestand (2 Konten) auf **`aktiv`**, `bestaetigt_am` **NULL** wie vorgesehen | **bestanden** |
+| **`ingest.php` mit gesperrtem Konto** (Abnahme AP2) | AP2 | aktiv → **200**; gesperrt → **403** `{"error":"konto","grund":"gesperrt"}`; `wartet` → 403 `grund=wartet`; `unbestaetigt` → 403 `grund=unbestaetigt` | **bestanden** |
+| **Uhr verliert nichts** (Abnahme AP2) | AP2 | Ein während der Sperre abgewiesener Upload, nach dem Entsperren erneut gesendet: **2 Einsätze im Konto** (erwartet 2) — Punkte vorher = nachher | **bestanden** |
+| **Ratenschutz zählt die Absage nicht** | AP2 | 5 Uploads mit gesperrtem Konto → **0 Zeilen** in `rate_limits`. Wichtig, weil eine Sperre der Kennung den Rückstand nach dem Entsperren blockierte | **bestanden** |
+| **Ingestprobe** (Regression) | AP2 | **83 Erwartungen, 0 nicht erfüllt** — die Statusprüfung hat den Ingest-Weg nicht verändert | **bestanden** |
+| **Wortliste** | AP1, AP2 | **alle fünf Bereiche**: (a) 111 PHP-Dateien, (b) 36 JS, (c) 8 Dokumente, (d) 2 Android, (e) 35 Uhr — **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 99 Regeln | — |
 
 ---
 
@@ -145,6 +155,12 @@ je Reiter „0 heute · 0 gesamt" und der Frist in der Unterzeile
 standen Backticks um einen Dateinamen — sichtbarer Text geht durch `ui_e()`,
 die Zeichen wären als Literal erschienen. Ersetzt durch eine Formulierung
 ohne Dateinamen.
+
+**AP2 — Verwaltung → Kontoseite.** Die Karte „Status" steht zwischen „Konto"
+und „Geräte", trägt die Plakette des Zustands (blau/orange/rot) und zeigt je
+nach Zustand einen anderen Weg: „Freischalten" bei *wartet*, „Entsperren" bei
+*gesperrt*, sonst das Grundfeld mit dem Knopf „Sperren". Beim eigenen Konto
+und beim Demo-Konto steht statt dessen der Satz, warum es hier nicht geht.
 
 ---
 

@@ -5621,4 +5621,50 @@ declare(strict_types=1);
  *
  * MIGRATION: `2026_09_16_protokoll_ereignisse`. `update.php` ist faellig.
  */
-const WEB_VERSION = '20.16.0';
+/* ---------------------------------------------------------------------------
+ * 20.17.0 — DER LEBENSZYKLUS EINES KONTOS (P5b/AP2)
+ * ---------------------------------------------------------------------------
+ *
+ * `konto_lib.php`, und damit ist Backlog Nr. 202 Paket 1 (Token) erledigt.
+ *
+ * VIER FASSUNGEN DERSELBEN SACHE gab es vorher, und sie waren nicht gleich:
+ * `admin_users.php` legte Konto und Token in einer Transaktion an,
+ * `install.php` ohne; zwei Stellen entwerteten die Vorgaengertoken, zwei
+ * nicht; die Laufzeiten standen als SQL-Literale an vier Stellen.
+ *
+ * `install.php` WAR DIE GEFAEHRLICHE. Ein Abbruch zwischen den beiden
+ * `INSERT` hinterliess ein Konto ohne Weg hinein — anmelden ging nicht (kein
+ * Passwort), und der Einrichter lief nicht mehr, weil `install.lock` stand.
+ * Eine Installation, aus der man sich beim Einrichten selbst ausgesperrt hat.
+ *
+ * AUFGELOEST WURDE ES HIER UND NICHT IN SCHRITT 15, weil die
+ * Selbstregistrierung aus AP3 sonst die fuenfte Fassung geworden waere — und
+ * sie ist die einzige, die von aussen erreichbar ist.
+ *
+ * DIE BIBLIOTHEK LAEUFT OHNE `config.php`. `install.php` schreibt sie erst,
+ * nachdem es das erste Konto angelegt hat, und bringt seine eigene
+ * PDO-Verbindung mit. Dieselbe Falle wie Nr. 215, hier von vornherein
+ * vermieden statt hinterher behoben.
+ *
+ * VIER ZUSTAENDE, und die Uebergaenge stehen als TABELLE statt als
+ * `if`-Zweige. Die Rueckwege sind die interessanten: aus `gesperrt` nach
+ * `aktiv` ja, aus `aktiv` nach `unbestaetigt` nein.
+ *
+ * ENTSPERREN RAEUMT `loeschung_am` MIT WEG. Ohne das faende der Loeschjob
+ * einen Termin in der Vergangenheit und loeschte ein Konto, dessen
+ * Besitzerin die Loeschung gerade zurueckgenommen hat — kein Schoenheits-,
+ * sondern ein Datenverlustfehler.
+ *
+ * DIE SELBSTLOESCHUNG IST DER SONDERFALL: Waehrend der Karenz ist das Konto
+ * `gesperrt`, aber DIE ANMELDUNG IST DER RUECKZUG (E-P5b-16). `login.php`
+ * nimmt sie zurueck, statt abzuweisen.
+ *
+ * `ingest.php` ANTWORTET `403` MIT GRUND IM RUMPF. Die Uhr puffert dann und
+ * schickt nach dem Entsperren alles nach — gemessen: zwei Einsaetze, einer
+ * davon waehrend der Sperre abgewiesen, beide angekommen. Der Ratenschutz
+ * zaehlt die Absage NICHT mit; sonst sperrte er eine Kennung, die nichts
+ * falsch macht, und der Rueckstand kaeme nicht durch.
+ *
+ * MIGRATION: `2026_09_16_konto_lebenszyklus`. `update.php` ist faellig.
+ */
+const WEB_VERSION = '20.17.0';

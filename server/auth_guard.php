@@ -162,7 +162,8 @@ $_SESSION['last_seen'] = time();
  * (name existiert seit der Migration von Web 2.x; wer die nicht gefahren hat,
  * kann sich schon heute nicht anmelden — die Spalte wird in ui.php gelesen.) */
 $u = db()->prepare('SELECT id, email, name, role, session_epoch,
-                           pat_wrap_pw, pat_key_check, kdf_salt, kdf_iter
+                           pat_wrap_pw, pat_key_check, kdf_salt, kdf_iter,
+                           status, gesperrt_grund
                     FROM users WHERE id = ?');
 $u->execute([$userId]);
 $row = $u->fetch();
@@ -199,6 +200,39 @@ if (!isset($_SESSION['epoch'])) {
     $_SESSION['epoch'] = $epocheDb;
 } elseif ((int)$_SESSION['epoch'] !== $epocheDb) {
     sitzung_beenden_passend('passwort');
+}
+
+/* ---- Kontostatus (P5b/AP2, E-P5b-12) -------------------------------------
+ *
+ * HIER UND NICHT IN `login.php`: Dort faellt die Entscheidung frueher und
+ * verhindert, dass ein gesperrtes Konto ueberhaupt eine Sitzung bekommt.
+ * Diese Pruefung hier gilt einer Sitzung, die ALTER ist als die
+ * Statusaenderung — jemand ist angemeldet, und waehrenddessen wird das Konto
+ * gesperrt oder die Loeschung beantragt. Ohne sie klickte er sich weiter
+ * durch eine Anwendung, die ihm nicht mehr offensteht, bis die halbe Stunde
+ * Untaetigkeit abgelaufen ist.
+ *
+ * DIE SELBSTLOESCHUNG IST DIE AUSNAHME (E-P5b-16): Waehrend der Karenz ist
+ * das Konto `gesperrt`, aber die Anmeldung IST der Rueckzug. Wer sich
+ * anmeldet, nimmt die Loeschung zurueck — deshalb darf diese Pruefung ihn
+ * nicht hinauswerfen. `login.php` erledigt die Ruecknahme; bis dahin laesst
+ * dieser Zweig ihn durch.
+ *
+ * WARUM `status` UND NICHT `gesperrt_seit IS NOT NULL`: Der Status ist die
+ * eine Wahrheit. Eine zweite Bedingung neben ihm waere eine zweite Stelle,
+ * an der „gesperrt" definiert ist. */
+$kontoStatus = (string)($row['status'] ?? 'aktiv');
+$kontoGrund  = $row['gesperrt_grund'] ?? null;
+if ($kontoStatus === 'gesperrt'
+    && $kontoGrund !== 'selbstloeschung') {
+    sitzung_beenden_passend('gesperrt');
+}
+if ($kontoStatus === 'unbestaetigt' || $kontoStatus === 'wartet') {
+    /* Diese beiden kommen ueber `login.php` gar nicht erst herein. Erreicht
+     * die Anfrage sie trotzdem, ist die Sitzung aelter als der Status — dann
+     * ist Abmelden die richtige Antwort und nicht eine Seite, die erklaert,
+     * warum man hier ist. */
+    sitzung_beenden_passend('gesperrt');
 }
 
 /* ---- Rolle: aus der Zeile, nicht aus der Sitzung -------------------------- */
