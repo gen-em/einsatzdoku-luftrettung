@@ -20,9 +20,15 @@ Werte: „53, gemessen 13.09.2026" kostet eine Klammer und sagt der nächsten
 Instanz sofort, wie alt der Wert ist. Anlass war die Durchsicht
 vom 12.09.2026: Von sechs Einträgen mit Zeilennummern waren alle sechs
 verschoben, von sieben gezählten Werten alle sieben veraltet — und keiner
-davon sah falsch aus. (Nebenbei: Kein Absatz darf mit einer Zahl und einem
-Punkt beginnen — der Einzeiler oben hielte ein Datum am Zeilenanfang für
-eine Nummer.)
+davon sah falsch aus. (Nebenbei: **Keine ZEILE darf mit einer Zahl und einem
+Punkt beginnen** — der Prüfschritt „Backlog — keine Nummer zweimal" in Stufe 1
+liest dort eine Backlog-Nummer. Es geht nicht nur um Absätze: Ein
+**Zeilenumbruch mitten im Fließtext**, nach dem zufällig ein Datum steht,
+genügt. Am 16.09.2026 ist genau das passiert — zwanzig Zeilen unter dieser
+Warnung, im Absatz zur Nummernvergabe: „… aus der Durchsicht vom
+**16.**09.2026" wurde als Nummer 16 gelesen, die es schon gab, und Stufe 1
+brach ab. Wer hier ein Datum schreibt, setzt den Umbruch davor, nicht
+mittendrin.)
 
 **Zu den fehlenden Nummern 4, 6 und 7.** Sie waren vergeben und sind ohne
 Eintrag verschwunden; ihr Inhalt ist nicht mehr rekonstruierbar. Sie bleiben
@@ -37,9 +43,9 @@ Steuerungsdokumente trägt. **206 bis 212 sind in der Umsetzung von P5a auf
 demselben Zweig vergeben** (206 Messstand-Schritt, 207 `gen-em.org` in `tools/`,
 208 Jobregister von Hand geführt, 209 Bausteintabelle in `Design.md`,
 210 Deadlocks in `ingest.php`, 211 `/api/`-Aufruf ohne Sitzung, 212 zwei
-Erwartungen der Wiederherstellungsprobe), **213 und 214 aus der Durchsicht vom
-16.09.2026** (Zustandsdatei der Kette im Webroot; `install.php` in der
-Auslieferung). Jeder weitere Zweig, der Nummern vergibt, beginnt bei **215**
+Erwartungen der Wiederherstellungsprobe), **213 und 214 aus der
+Durchsicht vom 16.09.2026** (Zustandsdatei der Kette im Webroot;
+`install.php` in der Auslieferung). Jeder weitere Zweig, der Nummern vergibt, beginnt bei **215**
 und trägt seine Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
