@@ -14,6 +14,86 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.8.0] — 2026-09-16
+
+**P5a/AP5, erster Teil — der Name dieser Installation.** Entstanden aus einer
+Rückfrage während der Umsetzung: „Sollen wir den Namen der Instanz und den
+Kurznamen in den Einstellungen als Variable festlegen?"
+
+### Hinzugefügt — ein Name statt achtunddreißig
+
+**Was galt.** Der Name stand **38-mal von Hand** im Quelltext, und zwar in
+**drei** Schreibweisen für dieselbe Sache:
+
+| Schreibweise | Wo |
+|---|---|
+| „Gen-EM NAdoku" | Browsertab, Kopfleiste, Anmeldeseite, Wartungsseite, Schlüsselblatt, Installer, GPX-Datei, `from_name` |
+| „Gen-EM Einsatzdokumentation Notarzt" | alle acht Mailtexte |
+| „Einsatzdokumentation Notarzt" | die Testmail — **ohne „Gen-EM"** |
+
+Die dritte ist nicht der Sonderfall, sondern der Beweis: Eine abweichende
+Schreibweise fällt niemandem auf, solange man acht Dateien nebeneinanderlegen
+müsste, um sie zu sehen.
+
+**Der zweite Grund wiegt schwerer: „Gen-EM" ist eine Marke, keine Funktion.**
+Diese Anwendung ist dafür gebaut, dass sie jemand anders aufsetzt — Logo,
+Impressum und Datenschutztext sind längst je Installation einstellbar. Der
+Name war es nicht. Eine fremde Betreiberin verschickte Post, die mit „Gen-EM"
+unterschrieben ist, und zeigte im Browsertab einen Namen, der ihr nicht
+gehört. Bei einer Dokumentation für Notärztinnen ist das keine Kleinigkeit.
+
+**Was gilt.** Zwei Werte unter **Verwaltung → Installation**, Karte „Name" —
+dort, wo Logo und Rechtstexte schon stehen:
+
+- **Name** (lang) — Mailbetreff, Grußformel, Schlüsselblatt
+- **Kurzname** — Browsertab, Kopfleiste, Anmeldeseite
+
+**Die Vorgaben sind die heutigen Zeichenketten.** Wer nichts einstellt, sieht
+nach dem Update genau das, was vorher dastand. Leer lassen setzt zurück.
+
+### Hinzugefügt — die Wartungsseite bekommt den Namen aus dem Schalter
+
+`instanz_lib.php` **lädt nichts**, und das ist der Kniff: Drei Seiten dürfen
+hier nicht anklopfen — `install.php` läuft *vor* der Datenbank, die
+Wartungsseite ist ausdrücklich ohne Datenbank gebaut, das HTTPS-Tor antwortet
+vor allem anderen. Sie benutzen die Vorgabe unmittelbar.
+
+Für die Wartungsseite wäre das aber ein Rückschritt gewesen: Ausgerechnet die
+Seite, die Fremde zu sehen bekommen, hätte „Gen-EM NAdoku" gezeigt, während
+die Installation „BW-Doku" heißt. Sie bekommt den Namen deshalb **aus dem
+Schalter**: `wartung_einschalten()` schreibt ihn in `wartung.lock` — dort
+steht die Datenbank noch. Fehlt er (Schalter aus einer älteren Fassung) oder
+ist die Datei unlesbar, gilt die Vorgabe. **„Die Datei ist der Schalter, nicht
+ihr Inhalt"** bleibt unverändert.
+
+### Geändert — der Name wird geprüft, weil er in einen Mailbetreff geht
+
+Steuerzeichen und Zeilenumbrüche werden abgewiesen, ebenso alles über 80
+Zeichen. Ein Zeilenumbruch im Betreff wäre eine **eingeschleuste Kopfzeile**,
+und der Betreff ist die eine Stelle, an der ein selbst eingetippter Wert das
+Haus verlässt, ohne dass ein Mensch ihn noch einmal ansieht.
+
+Gemessen gegen den Endpunkt (nicht gegen das Formular — ein `<input
+type="text">` entfernt Zeilenumbrüche von sich aus, ein gebastelter POST nicht):
+**6 von 6** Versuchen wie erwartet, bei allen fünf abgewiesenen bleibt die
+Vorgabe in der Datenbank stehen.
+
+### Bekannt und bewusst so
+
+- **Die Fußzeile „© Gen-EM · Open Source" bleibt fest.** Das ist die
+  *Urheberschaft der Software*, nicht der Name des Betriebs. Wer diese
+  Anwendung aufsetzt, darf seinen Dienst benennen — nicht den, der sie
+  geschrieben hat.
+- **`GPX_CREATOR` bleibt fest.** Der Wert steht in jeder ausgelieferten
+  GPX-Datei und gehört damit zum Exportformat; einstellbar gemacht, erzeugten
+  zwei Installationen unterschiedliche Dateien und die eingecheckten
+  Referenzausführungen verglichen Äpfel mit Birnen. Das ist eine eigene
+  Entscheidung und wird nicht nebenbei getroffen.
+- **Noch offen:** `install.php` fragt den Namen bei der Ersteinrichtung noch
+  nicht ab, und `smtp.from_name` führt ihn weiterhin selbst. Beides kommt mit
+  dem zweiten Teil von AP5, der die Mails ohnehin anfasst.
+- **Keine Schemaänderung**, keine Migration — zwei Zeilen in `app_state`.
+
 ## [Web 20.7.0] — 2026-09-15
 
 **P5a/AP4 — die Kopfzeilen kommen aus dem Programm.** Viertes Arbeitspaket von

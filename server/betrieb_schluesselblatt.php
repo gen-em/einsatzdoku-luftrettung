@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
+require_once __DIR__ . '/instanz_lib.php';
 require_betreiberin();
 require_once __DIR__ . '/serverkrypto_lib.php';
 
@@ -115,7 +116,7 @@ kopfzeilen_seite();
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Schlüsselblatt — Gen-EM NAdoku</title>
+<title>Schlüsselblatt — <?= e(instanz_kurz()) ?></title>
 <link rel="stylesheet" href="<?= $h($v('assets/style.css')) ?>">
 </head>
 <body class="blatt-seite">

@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/instanz_lib.php';   // nur fuer INSTANZ_KURZ_VORGABE — die Datei laedt nichts
+
 /**
  * WARTUNGSMODUS (S5 Paket W) — die Installation voruebergehend fuer alle
  * ausser der Administration schliessen.
@@ -164,15 +166,20 @@ function wartung_aktiv(): bool
  */
 function wartung_daten(): array
 {
-    $leer = ['seit' => null, 'von' => null];
+    /* DIE AUSWAHL IST EINE WEISSE LISTE, und das bleibt so: Was hier
+     * herauskommt, geht in eine Seite. Ein neuer Schluessel muss deshalb
+     * ausdruecklich aufgenommen werden — `wer` kam mit P5a/AP5 dazu und
+     * wurde beim ersten Versuch still verschluckt, weil nur die Datei ihn
+     * trug und diese Liste nicht. */
+    $leer = ['seit' => null, 'von' => null, 'wer' => null];
     if (!wartung_aktiv()) { return $leer; }
     $roh = @file_get_contents(WARTUNG_DATEI);
     if ($roh === false || $roh === '') { return $leer; }
     $d = json_decode($roh, true);
     if (!is_array($d)) { return $leer; }
-    $seit = isset($d['seit']) && is_string($d['seit']) && $d['seit'] !== '' ? $d['seit'] : null;
-    $von  = isset($d['von'])  && is_string($d['von'])  && $d['von']  !== '' ? $d['von']  : null;
-    return ['seit' => $seit, 'von' => $von];
+    $str = static fn(string $k): ?string =>
+        isset($d[$k]) && is_string($d[$k]) && $d[$k] !== '' ? $d[$k] : null;
+    return ['seit' => $str('seit'), 'von' => $str('von'), 'wer' => $str('wer')];
 }
 
 /**
@@ -186,9 +193,22 @@ function wartung_daten(): array
 function wartung_einschalten(string $von): bool
 {
     if (wartung_aktiv()) { return true; }
+    /* DER NAME WIRD MITGESCHRIEBEN, WEIL DIE SEITE IHN SPAETER NICHT MEHR
+     * HOLEN KANN (P5a/AP5). Seit dem Instanznamen koennte die Wartungsseite
+     * „Gen-EM NAdoku" zeigen, waehrend die Installation „BW-Doku" heisst —
+     * ausgerechnet auf der Seite, die Fremde zu sehen bekommen. Ihn dort
+     * nachzuschlagen geht aber nicht: Diese Seite ist ohne Datenbank gebaut,
+     * und ein Verbindungsversuch waehrend eines Schemaumbaus laeuft im
+     * schlechten Fall in die Zeitgrenze statt in eine Ausnahme.
+     *
+     * BEIM EINSCHALTEN steht die Datenbank dagegen noch — also wird der Name
+     * hier festgehalten. Er bleibt ein ZUSATZ: Fehlt er oder ist die Datei
+     * unlesbar, zeigt die Seite die Vorgabe. „Die Datei ist der Schalter,
+     * nicht ihr Inhalt" gilt unveraendert. */
     $inhalt = json_encode([
         'seit' => gmdate('Y-m-d\TH:i:s\Z'),
         'von'  => $von,
+        'wer'  => function_exists('instanz_kurz') ? instanz_kurz() : INSTANZ_KURZ_VORGABE,
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     $ok = @file_put_contents(WARTUNG_DATEI, (string)$inhalt . "\n", LOCK_EX);
     clearstatcache(true, WARTUNG_DATEI);
@@ -345,7 +365,8 @@ function wartung_seite_html(bool $rueckweg = true): string
      * wie eine vergessene.
      *
      * OHNE DATENBANK, wie alles hier: `wartung_daten()` liest die Datei. */
-    $von = (string)(wartung_daten()['von'] ?? '');
+    $daten = wartung_daten();
+    $von = (string)($daten['von'] ?? '');
     $grund = match ($von) {
         'torwaechter' => 'Es ist eine neue Fassung eingespielt worden, und die '
                        . 'Datenbank ist noch nicht nachgezogen. Die Anwendung hat '
@@ -370,11 +391,17 @@ function wartung_seite_html(bool $rueckweg = true): string
     };
     $h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 
+    /* Der Name aus dem Schalter — siehe wartung_einschalten(). Fehlt er
+     * (Schalter aus einer aelteren Fassung, unlesbarer Inhalt), gilt die
+     * Vorgabe. */
+    $wer = trim((string)($daten['wer'] ?? ''));
+    if ($wer === '') { $wer = INSTANZ_KURZ_VORGABE; }
+
     return '<!doctype html>' . "\n"
       . '<html lang="de">' . "\n"
       . '<head>' . "\n"
       . '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' . "\n"
-      . '<title>Wartung — Gen-EM NAdoku</title>' . "\n"
+      . '<title>Wartung — ' . $h($wer) . '</title>' . "\n"
       . '<link rel="stylesheet" href="' . $h($v('assets/style.css')) . '">' . "\n"
       . '</head>' . "\n"
       . '<body>' . "\n"

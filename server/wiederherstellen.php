@@ -49,6 +49,7 @@ declare(strict_types=1);
 $configPath = __DIR__ . '/config.php';
 if (!file_exists($configPath)) {
     require_once __DIR__ . '/ui.php';
+require_once __DIR__ . '/instanz_lib.php';
     http_response_code(409);
     /* DIESELBE OEFFENTLICHE HUELLE WIE DER EINRICHTER (O10, Tabelle 5.4):
      * Kopf ohne Menue, Lesespalte, Fuss ohne Rechtslinks. Ohne `config.php`
@@ -210,7 +211,7 @@ if (!$darfNachweis) {
     $nachweisOk = false;
 } elseif (!file_exists($nachweisDatei)) {
     $inhalt = $nachweis . "\n\n"
-            . "Diese Datei gehoert zur Wiederherstellung von Gen-EM NAdoku.\n"
+            . "Diese Datei gehoert zur Wiederherstellung von " . instanz_kurz() . ".\n"
             . "Die Zeichenfolge oben ist im Formular einzutragen. Sie beweist,\n"
             . "dass die wiederherstellende Person Zugriff auf dieses Verzeichnis\n"
             . "hat. Nach getaner Arbeit wird die Datei geloescht; sie kann auch\n"

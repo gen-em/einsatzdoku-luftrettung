@@ -3064,7 +3064,7 @@ ihnen:
 |---|---|---|
 | **NutzerInnen** | 11.2, 11.3 | Konten sehen, anlegen, ändern, löschen; je Konto die Kontoseite (11.1) |
 | **Konto-Backups** | 11.4 | die Regeln, die für **alle** Konten gelten |
-| **Installation** | 11.5 | Logo, Impressum, Datenschutzerklärung |
+| **Installation** | 11.5 | Name, Logo, Impressum, Datenschutzerklärung |
 | **Demo-Konto** | 11.6 | anlegen, zurücksetzen, entfernen |
 
 Angelegt wird in der Liste, gelöscht auf der Kontoseite — dort gehört die
@@ -3370,12 +3370,37 @@ funktioniert und wohin die Pakete von hier aus gehen.
 
 ### 11.5 Installation
 
-Unter **„Installation"** steht, wie diese Anlage nach außen auftritt: das
-**Logo**, das **Impressum** und die **Datenschutzerklärung**. Bis Web 15.1.0
+Unter **„Installation"** steht, wie diese Anlage nach außen auftritt: der
+**Name**, das **Logo**, das **Impressum** und die **Datenschutzerklärung**. Bis Web 15.1.0
 hieß die Seite „Rechtstexte", und das Logo lag auf der alten Seite „Wartung"; die alte
 Adresse führt weiterhin hierher.
 
-**Das Logo** links wählt zwischen *Hubschrauber (RTH)*, *Fahrzeug (NEF)* und
+**Der Name** (seit Web 20.8.0) steht zuoberst und gilt für **alles**:
+Browsertab, Kopfleiste, Anmeldeseite, Wartungsseite, Schlüsselblatt — und
+**jede E-Mail**, die diese Anlage verschickt. Zwei Felder:
+
+- **Name** — der lange. Er steht im Betreff jeder Mail und unter der
+  Grußformel. Vorgabe: *Gen-EM Einsatzdokumentation Notarzt*.
+- **Kurzname** — der kurze. Er steht dort, wo wenig Platz ist: im Browsertab
+  und oben in der Kopfleiste. Vorgabe: *Gen-EM NAdoku*.
+
+**Wer nichts einträgt, ändert nichts** — dann gelten die Vorgaben, und alles
+sieht aus wie bisher. Leer lassen setzt auch wieder darauf zurück.
+
+**Warum es das gibt:** Bis Web 20.7.0 stand der Name an **38 Stellen** fest im
+Programm, in drei verschiedenen Schreibweisen — eine davon hatte das „Gen-EM"
+verloren, ohne dass es jemandem auffiel. Und wer diese Anwendung für eine
+andere Organisation aufsetzt, verschickte Post, die mit einem fremden Namen
+unterschrieben ist.
+
+Höchstens 80 Zeichen, **keine Zeilenumbrüche** — der Name geht in Mailbetreffs,
+und dort wäre ein Zeilenumbruch ein Einfallstor.
+
+> **Eine Stelle bleibt fest:** Die Fußzeile „© Gen-EM · Open Source". Das ist
+> nicht der Name deiner Anlage, sondern die Angabe, wer die Software
+> geschrieben hat — die darf eine Installation nicht überschreiben.
+
+**Das Logo** darunter wählt zwischen *Hubschrauber (RTH)*, *Fahrzeug (NEF)* und
 *wechselnd*. Es ist der **Standard dieser Installation** — er gilt für die
 Anmeldeseite und für jedes Konto, das im Profil keine eigene Wahl getroffen
 hat; eine getroffene Wahl bleibt unberührt. Die Änderung wirkt sofort, auch für
@@ -3507,7 +3532,7 @@ jede Seite trägt ein Anliegen. Was wohin gegangen ist:
 | Zustand der Hintergrundjobs, die drei Auslöser, das Token | Betrieb → **Hintergrundjobs** |
 | Speichergrenze, Warnschwellen, Kontingente, Belegung, Ablage | Betrieb → **Servereinstellungen** |
 | CSP scharf schalten, HSTS-Dauer | Betrieb → **Servereinstellungen** |
-| Logo der Installation | Verwaltung → **Installation** |
+| Name und Logo der Installation | Verwaltung → **Installation** |
 | Schlüsselableitung, Umgebung (PHP, Zeitzone), Plattformprofil | Betrieb → **Status** |
 | Einsätze ohne Diensttag | **entfallen** — jede NutzerIn sieht ihre eigenen als „Zuordnung offen" in der Diensttage-Leiste (8.1) und ordnet sie selbst zu |
 

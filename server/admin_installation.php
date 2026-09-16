@@ -74,11 +74,19 @@ const INSTALLATION_LOGOS = [
 
 $notice = null; $error = null;
 $logoMeldung = null;
+$nameMeldung = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
 
-    if (($_POST['action'] ?? '') === 'logo_standard') {
+    if (($_POST['action'] ?? '') === 'instanz_name') {
+        /* DER NAME DIESER INSTALLATION (P5a/AP5, E-P5a-35). Eigenes
+         * „Speichern", wie bei Logo und Adresssuche: Ein Tippfehler im Namen
+         * soll die Rechtstexte nicht mit abweisen und umgekehrt. */
+        [$ok, $meldung] = instanz_namen_setzen((string)($_POST['instanz_name'] ?? ''),
+                                               (string)($_POST['instanz_kurz'] ?? ''));
+        $nameMeldung = [$ok ? 'ok' : 'fehler', $meldung];
+    } elseif (($_POST['action'] ?? '') === 'logo_standard') {
         $wahl = (string)($_POST['logo'] ?? '');
         if (!isset(INSTALLATION_LOGOS[$wahl])) {
             $logoMeldung = ['fehler', 'Unbekannte Logo-Wahl — es wurde nichts geändert.'];
@@ -168,6 +176,43 @@ ui_seite_start(['titel' => 'Installation']);
   <div class="form-raster">
 
     <div class="form-spalte">
+      <?php /* DER NAME STEHT ZUOBERST, und zwar vor dem Logo: Er ist das,
+               was in jedem Browsertab, in jedem Mailbetreff und unter jeder
+               Grussformel steht — das Logo sieht man nur auf Seiten dieser
+               Anwendung. */ ?>
+      <?php ui_karte_start(['titel' => 'Name', 'id' => 'k-name',
+                            'zahl' => 'Wie diese Installation heißt']); ?>
+        <?php if ($nameMeldung !== null): ?>
+          <?= ui_meldung_markup($nameMeldung[0], $nameMeldung[1]) ?>
+        <?php endif; ?>
+
+        <p class="feld-hinweis">Bis Web 20.7.0 stand der Name an
+          <strong>38 Stellen</strong> fest im Programm, in drei verschiedenen
+          Schreibweisen. Hier steht er einmal — und gilt für Browsertab,
+          Kopfleiste, Anmeldeseite, Wartungsseite, Schlüsselblatt
+          <strong>und jede E-Mail</strong>, die diese Installation
+          verschickt.</p>
+
+        <form method="post" class="listen-form">
+          <?= csrf_field() ?>
+          <input type="hidden" name="action" value="instanz_name">
+          <?php ui_feld(['name' => 'instanz_name', 'label' => 'Name',
+                         'label_zusatz' => 'in E-Mails und auf dem Schlüsselblatt',
+                         'wert' => instanz_name(),
+                         'platzhalter' => INSTANZ_NAME_VORGABE]); ?>
+          <?php ui_feld(['name' => 'instanz_kurz', 'label' => 'Kurzname',
+                         'label_zusatz' => 'im Browsertab und in der Kopfleiste',
+                         'wert' => instanz_kurz(),
+                         'platzhalter' => INSTANZ_KURZ_VORGABE]); ?>
+          <p class="feld-hinweis">Leer lassen setzt auf die Vorgabe zurück
+            („<?= e(INSTANZ_NAME_VORGABE) ?>" bzw.
+            „<?= e(INSTANZ_KURZ_VORGABE) ?>“). Höchstens
+            <?= INSTANZ_MAX ?> Zeichen, keine Zeilenumbrüche — der Name steht
+            in Mailbetreffs.</p>
+          <?= ui_knopf(['text' => 'Namen speichern', 'art' => 'primaer']) ?>
+        </form>
+      <?php ui_karte_ende(); ?>
+
       <?php ui_karte_start(['titel' => 'Logo', 'id' => 'k-logo',
                             'zahl' => 'Standard dieser Installation']); ?>
         <?php if ($logoMeldung !== null): ?>

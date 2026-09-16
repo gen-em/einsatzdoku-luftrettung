@@ -84,7 +84,7 @@ function ui_seite_start(array $o): void
             . (defined('WEB_VERSION') ? ui_e(WEB_VERSION) : '') . '">',
         '<head>',
         '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
-        '<title>' . ui_e((string)$o['titel']) . ' — Gen-EM NAdoku</title>',
+        '<title>' . ui_e((string)$o['titel']) . ' — ' . ui_e(ui_instanz_kurz()) . '</title>',
     ];
     if (!empty($o['kopf'])) {
         $zeilen[] = rtrim((string)$o['kopf'], "\n");
@@ -148,6 +148,19 @@ function ui_asset(string $pfad): string
 function ui_e(string $s): string
 {
     return function_exists('e') ? e($s) : htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Der Kurzname dieser Installation — instanz_kurz(), wo es sie gibt.
+ *
+ * Dasselbe Muster wie ui_asset(): `install.php` laedt diese Datei VOR der
+ * Ersteinrichtung, und dann gibt es weder Datenbank noch `app_state`. Der
+ * Rueckfall ist die Vorgabe, nicht ein leerer Titel.
+ */
+function ui_instanz_kurz(): string
+{
+    if (function_exists('instanz_kurz')) { return instanz_kurz(); }
+    return defined('INSTANZ_KURZ_VORGABE') ? INSTANZ_KURZ_VORGABE : 'Gen-EM NAdoku';
 }
 
 /** Favicon-Verweise — favicon_tags() aus db.php, wo es sie gibt (s. ui_asset()). */
@@ -388,7 +401,7 @@ function ui_kopf(array $o = []): void
       <?php $lm = ui_logo_masse(34); ?>
       <img src="<?= ui_e(ui_logo(true)) ?>" alt=""
            width="<?= $lm['breite'] ?>" height="<?= $lm['hoehe'] ?>">
-      <span class="kopf-name">Gen-EM NAdoku</span>
+      <span class="kopf-name"><?= ui_e(ui_instanz_kurz()) ?></span>
       <?php if ($menue): ?><span class="kopf-nutzer"><?= ui_e(ui_user_label()) ?></span><?php endif; ?>
     </a>
 
@@ -479,7 +492,7 @@ function ui_geruest_start(array $o = []): void
       <button type="button" class="knopf knopf-symbol" data-schublade="zu" aria-label="Menü schließen">
         <?= ui_symbol('schliessen', 'symbol-gross') ?>
       </button>
-      <span class="kopf-name">Gen-EM NAdoku</span>
+      <span class="kopf-name"><?= ui_e(ui_instanz_kurz()) ?></span>
     </div>
     <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche">
       <a class="eintrag<?= ($o['aktiv'] ?? '') === 'start' ? ' aktiv' : '' ?>" href="index.php">

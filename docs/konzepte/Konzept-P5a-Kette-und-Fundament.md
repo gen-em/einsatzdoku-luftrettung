@@ -17,7 +17,7 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | Stand | 15.09.2026 — **Konzept freigegeben, Umsetzung läuft.** Die Grundsatzfragen sind am 15.09.2026 im Gespräch entschieden (E-P5a-01 bis -09); die übrigen Festlegungen (E-P5a-10 bis -21) stammen aus dem Nachmessen im Code und stehen mit der Freigabe. |
 > | Entschieden | E-P5a-01 bis E-P5a-21 (Abschnitt 2); E-PP-01 bis -09 übernommen; **F-P5a-1 entschieden** (2.4) |
 > | Offen | — |
-> | Umsetzung | **läuft.** AP1–AP4 erledigt, **AP5 als Nächstes**; Abhängigkeiten in 3.0 |
+> | Umsetzung | **läuft.** AP1–AP4 erledigt, **AP5 in Arbeit** (Teil 1 steht); Abhängigkeiten in 3.0 |
 > | Fable-Schritte der Umsetzung | **keiner mehr** — M-P5a-01 ist nach Auftrag vom 15.09.2026 ohne Pause umgesetzt worden (2.5) |
 
 > **Stand der Umsetzung**
@@ -29,7 +29,8 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | **AP2 Plattformprüfung** | **erledigt** | **Web 20.5.0** | 21 Befunde (15 ohne DB/config) · Muss offen 0 · Installweiche 8/8, 0 Befunde auf 658 Zeilen · Bilderlauf 16 Bilder, 0/0/0 · Wortliste 0/0/0 |
 > | **AP3 Torwächter** | **erledigt** | **Web 20.6.0** | Wartungsprobe **67 Erwartungen, 0 nicht erfüllt** (Teil 7 neu, 10 Erwartungen) · Browserprobe 12/12 · Bilderlauf 8 Bilder, 0/0/0 · Wortliste 0/0/0 |
 > | **AP4 Kopfzeilen und HTTPS** | **erledigt** | **Web 20.7.0** | CSP-Probe **0 Befunde** (106 Dateien, 108 Skript-Stellen), Selbstprobe 8/8 · Browserprobe **33/33, 0 Seitenfehler** · Bilderlauf **392 Bilder, 0/0/0** und **0 CSP-Berichte** (dritter Lauf — die zwei davor fanden F6 und F7) · Wartungsprobe 67/0 · Integritätswache 30/30 und **kein Unterschied** · Wortliste 0/0/0 · Kontraste 22/0 · Vollständigkeit 365 gegen 351 (`style=` **13→10**, Unicode +17 — alle in Kommentaren) |
-> | AP5 bis AP12 | offen | — | — |
+> | **AP5 Mail-Warteschlange** | **in Arbeit** | Teil 1: **Web 20.8.0** | Teil 1 (Name der Installation, E-P5a-35) steht: 38 Stellen auf zwei Werte zusammengezogen · 6/6 Einschleusversuche abgewiesen · 3 Rückfälle der Wartungsseite · 0 Seitenfehler. **Teil 2 (Warteschlange + Mailkatalog) offen** |
+> | AP6 bis AP12 | offen | — | — |
 
 ---
 
@@ -466,6 +467,31 @@ läuft, wenn `sha256(serialize(GERAETE_MODELLE))` vom Wert in `app_state`
 abweicht, in Blöcken von **200** mit Zeitbudget, schreibt den Hash am
 Ende; Statusseite Hinweis „Modelltabelle vom …: N nachgelöst, M
 unbekannt". Das Skript ruft die Bibliothek und behält die Vorschau.
+
+**E-P5a-35 (neu, 16.09.2026) — der Name dieser Installation steht an einer
+Stelle.** Aufgekommen als Rückfrage während AP5: „Sollen wir den Namen der
+Instanz und den Kurznamen in den Einstellungen als Variable festlegen?"
+
+**Gemessen, bevor entschieden wurde:** 38 sichtbare Stellen, **drei**
+Schreibweisen — „Gen-EM NAdoku" (Browsertab, Kopfleiste, Anmeldeseite,
+Wartungsseite, Schlüsselblatt, Installer, GPX-Datei, `from_name`), „Gen-EM
+Einsatzdokumentation Notarzt" (alle acht Mailtexte) und „Einsatzdokumentation
+Notarzt" in der Testmail, **ohne „Gen-EM"**. Die dritte ist der Beweis: Eine
+abweichende Schreibweise fällt niemandem auf, solange man acht Dateien
+nebeneinanderlegen müsste.
+
+**Zwei Werte in `app_state`** (`instanz_name` lang, `instanz_kurz` kurz),
+gepflegt unter Verwaltung → Installation. Vorgaben sind die heutigen
+Zeichenketten — wer nichts einstellt, merkt nichts.
+
+**Warum es in AP5 gehört und nicht in ein eigenes Paket:** AP5 schreibt alle
+zehn Mail-Aufrufstellen ohnehin um. Den Namen dabei hartkodiert in zehn frische
+Katalogeinträge zu schreiben, hieße, das Problem in neuen Code einzubauen.
+
+**Zwei Stellen bleiben fest**, beide begründet: die Fußzeile „© Gen-EM · Open
+Source" (Urheberschaft der Software, nicht Name des Betriebs) und
+`GPX_CREATOR` (gehört zum Exportformat; einstellbar verglichen die
+eingecheckten Referenzausführungen Äpfel mit Birnen).
 
 ### 2.3 Ort je Funktion (K1, R74)
 

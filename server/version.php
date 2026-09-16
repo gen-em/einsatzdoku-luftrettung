@@ -4820,5 +4820,58 @@ declare(strict_types=1);
  * wertlos. Gefunden hat es die Gegenprobe, die einen Verstoss ABSICHTLICH
  * ausloest: Er stand in der Konsole, die Tabelle blieb leer. Seither haengt
  * `report-to` an `kopf_melde_url()` — nur bei vollstaendiger HTTPS-Adresse.
+ *
+ * ------------------------------------------------------------------
+ *
+ * 20.8.0 ist AP5 von P5a, erster Teil: DER NAME DIESER INSTALLATION
+ * (E-P5a-35; Auftrag vom 16.09.2026).
+ *
+ * WAS BIS HIERHER GALT. Der Name stand 38-mal von Hand im Quelltext, in DREI
+ * Schreibweisen fuer dieselbe Sache: „Gen-EM NAdoku" (Tab-Titel, Kopfleiste,
+ * Anmeldeseite, Wartungsseite, Schluesselblatt, Installer, GPX-Datei),
+ * „Gen-EM Einsatzdokumentation Notarzt" (alle acht Mailtexte) und
+ * „Einsatzdokumentation Notarzt" in der Testmail — ohne „Gen-EM".
+ *
+ * DIE DRITTE IST DER BEWEIS, nicht der Sonderfall: Eine abweichende
+ * Schreibweise faellt niemandem auf, solange man acht Dateien
+ * nebeneinanderlegen muesste, um sie zu sehen.
+ *
+ * DER ZWEITE GRUND WIEGT SCHWERER: „Gen-EM" IST EINE MARKE, KEINE FUNKTION.
+ * Logo, Impressum und Datenschutztext sind laengst je Installation
+ * einstellbar (E-P3-19/20, R32) — der Name war es nicht. Eine fremde
+ * Betreiberin verschickte Post, die mit „Gen-EM" unterschrieben ist.
+ *
+ * WAS GILT: `instanz_lib.php` mit zwei Werten in `app_state` —
+ * `instanz_name` (Langname, fuer Mailbetreff und Grussformel) und
+ * `instanz_kurz` (Kurzname, fuer Browsertab und Kopfleiste). Gepflegt unter
+ * Verwaltung → Installation, wo Logo und Rechtstexte schon stehen. Die
+ * Vorgaben sind die heutigen Zeichenketten: Wer nichts einstellt, sieht nach
+ * dem Update genau das, was vorher dastand.
+ *
+ * DIE DATEI LAEDT NICHTS, und das ist der Kniff. Drei Seiten duerfen hier
+ * nicht anklopfen — `install.php` laeuft vor der Datenbank, die Wartungsseite
+ * ist ausdruecklich ohne Datenbank gebaut, das HTTPS-Tor antwortet vor allem
+ * anderen. Sie benutzen `INSTANZ_KURZ_VORGABE` unmittelbar; die Funktionen
+ * pruefen selbst mit `function_exists()`, ob es `app_state_lesen()` gibt.
+ *
+ * DIE WARTUNGSSEITE BEKOMMT DEN NAMEN AUS DEM SCHALTER. `wartung_einschalten()`
+ * schreibt ihn in `wartung.lock` — dort steht die Datenbank noch. Fehlt er
+ * oder ist die Datei unlesbar, gilt die Vorgabe; „die Datei ist der Schalter,
+ * nicht ihr Inhalt" bleibt unveraendert.
+ *
+ * ZWEI STELLEN BLEIBEN AUSDRUECKLICH FEST: die Fusszeile „© Gen-EM · Open
+ * Source" (das ist die URHEBERSCHAFT der Software, nicht der Name des
+ * Betriebs) und `GPX_CREATOR` (steht in jeder ausgelieferten GPX-Datei und
+ * gehoert damit zum Exportformat — einstellbar gemacht, verglichen die
+ * eingecheckten Referenzausfuehrungen Aepfel mit Birnen).
+ *
+ * DER LANGNAME GEHT IN EINEN BETREFF, deshalb prueft
+ * `instanz_namen_setzen()` eng: Steuerzeichen und Zeilenumbrueche werden
+ * abgewiesen. Ein Zeilenumbruch im Betreff waere eine eingeschleuste
+ * Kopfzeile, und der Betreff ist die eine Stelle, an der ein selbst
+ * eingetippter Wert das Haus verlaesst, ohne dass ein Mensch ihn noch einmal
+ * ansieht.
+ *
+ * KEINE SCHEMAAENDERUNG: zwei Zeilen in `app_state`.
  */
-const WEB_VERSION = '20.7.0';
+const WEB_VERSION = '20.8.0';

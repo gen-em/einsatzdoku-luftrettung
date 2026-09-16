@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/instanz_lib.php';
 /* Fuer logo_src(): Die Seite hat keine Sitzung und zeigt den Standard der
  * Installation (E-P3-20). Ohne session_lib.php faende logo_src() logo_stamm()
  * nicht und fiele auf den Hubschrauber zurueck — F-P3-AN. */
@@ -245,7 +246,7 @@ ui_seite_start([
           aber Fliesstext, und bei 400 px liest er sich wie auf dem
           Handy — was er dort ohnehin tut. */ ?>
  <div class="anmeldung-karte">
-  <img src="<?= e(logo_src()) ?>" alt="Gen-EM NAdoku" class="anmeldung-logo">
+  <img src="<?= e(logo_src()) ?>" alt="<?= e(instanz_kurz()) ?>" class="anmeldung-logo">
 
   <?php if ($done): ?>
     <h1 class="anmeldung-titel">Fertig</h1>

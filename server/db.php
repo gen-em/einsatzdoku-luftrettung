@@ -462,6 +462,7 @@ function json_out(array $data, int $code = 200): never {
  * in `session_lib.php`, das ohne `ui.php` auskommt. Eine Datei, die nur
  * Funktionen definiert, kostet nichts. */
 require_once __DIR__ . '/kopfzeilen_lib.php';
+require_once __DIR__ . '/instanz_lib.php';   // Name dieser Installation (P5a/AP5)
 require_once __DIR__ . '/wartung_lib.php';
 wartung_tor();
 

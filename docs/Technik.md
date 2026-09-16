@@ -165,6 +165,12 @@ Daten erst nach Server-Bestätigung.
 │   │                       Herkunft und Prüfsummen in HERKUNFT.md
 │   ├── validate_lib.php   Gemeinsame Prüfschicht für Einsatzdaten (alle vier Schreibwege)
 │   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
+│   ├── instanz_lib.php    Der Name dieser Installation (P5a/AP5, Web 20.8.0):
+│   │                       instanz_name() lang (Mailbetreff, Grussformel),
+│   │                       instanz_kurz() kurz (Browsertab, Kopfleiste).
+│   │                       LAEDT NICHTS — install.php, die Wartungsseite und
+│   │                       das HTTPS-Tor brauchen die Vorgaben ohne
+│   │                       Datenbank. Gepflegt unter Verwaltung -> Installation
 │   ├── kopfzeilen_lib.php  Sicherheitskopfzeilen und CSP (P5a/AP4, Web 20.7.0):
 │   │                       kopfzeilen_seite() in ui_seite_start(),
 │   │                       kopfzeilen_json() in json_out() — EINE Stelle,
@@ -699,7 +705,7 @@ Daten erst nach Server-Bestätigung.
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand |
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
-| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e); seit Web 20.5.0 `speicher_db_grenze_gb` = Kontingent der Datenbank laut Hosting; seit Web 20.6.0 `migration_tor_hash` und `migration_tor_offen` = der Zwischenspeicher des Torwächters; seit Web 20.7.0 `csp_scharf` = Content-Security-Policy scharf statt Report-Only und `hsts_tage` = Bindungsdauer von HSTS in Tagen, 0/1/7/365, fehlend = **1** (siehe 5c)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e); seit Web 20.5.0 `speicher_db_grenze_gb` = Kontingent der Datenbank laut Hosting; seit Web 20.6.0 `migration_tor_hash` und `migration_tor_offen` = der Zwischenspeicher des Torwächters; seit Web 20.7.0 `csp_scharf` = Content-Security-Policy scharf statt Report-Only und `hsts_tage` = Bindungsdauer von HSTS in Tagen, 0/1/7/365, fehlend = **1** (siehe 5c); seit Web 20.8.0 `instanz_name` und `instanz_kurz` = der Name dieser Installation, fehlend = „Gen-EM Einsatzdokumentation Notarzt" bzw. „Gen-EM NAdoku" (siehe 5d)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 5c) |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
@@ -6764,6 +6770,92 @@ Protokolleintrag, keine rote Seite. Die Probe zählt nach: fünf Regeln
 **Markup-Bild** der Datei. Anleitung und Grenzen in
 `tools/cspprobe/LIESMICH.md`; sie läuft auch in Stufe 1 der
 Auslieferungskette.
+
+## 5d. Der Name dieser Installation (ab Web 20.8.0, P5a/AP5)
+
+**Bis Web 20.7.0** stand der Name **38-mal von Hand** im Quelltext, in **drei**
+Schreibweisen: „Gen-EM NAdoku" (Browsertab, Kopfleiste, Anmeldeseite,
+Wartungsseite, Schlüsselblatt, Installer, GPX-Datei, `from_name`), „Gen-EM
+Einsatzdokumentation Notarzt" (alle acht Mailtexte) und „Einsatzdokumentation
+Notarzt" in der Testmail — **ohne „Gen-EM"**. Die dritte ist der Beweis, nicht
+der Sonderfall: Eine abweichende Schreibweise fällt niemandem auf, solange man
+acht Dateien nebeneinanderlegen müsste, um sie zu sehen.
+
+Der zweite Grund wiegt schwerer: **„Gen-EM" ist eine Marke, keine Funktion.**
+Logo, Impressum und Datenschutztext sind längst je Installation einstellbar
+(E-P3-19/20, R32) — der Name war es nicht.
+
+### 5d.1 Zwei Werte, zwei Gebrauchslagen
+
+| Funktion | Vorgabe | Wo sie steht |
+|---|---|---|
+| `instanz_kurz()` | `Gen-EM NAdoku` | Browsertab, Kopfleiste, Anmeldeseite, Wartungsseite, Schlüsselblatt |
+| `instanz_name()` | `Gen-EM Einsatzdokumentation Notarzt` | Mailbetreff, Grußformel |
+
+Beide liegen in `app_state` (`instanz_name`, `instanz_kurz`) und werden unter
+**Verwaltung → Installation**, Karte „Name" gepflegt — dort, wo Logo und
+Rechtstexte schon stehen. Leer heißt „zurück auf die Vorgabe"; höchstens 80
+Zeichen.
+
+### 5d.2 Die Datei lädt nichts — und das ist der Kniff
+
+`instanz_lib.php` hat **keine** Abhängigkeit auf oberster Ebene, dasselbe
+Muster wie `smtp.php`. Drei Stellen dürfen hier nicht anklopfen:
+
+- **`install.php`** läuft, bevor es eine Datenbank gibt;
+- **`wartung_lib.php`** ist ausdrücklich ohne Datenbank gebaut — sie muss
+  antworten, während die Datenbank umgebaut wird;
+- **das HTTPS-Tor** in `kopfzeilen_lib.php` antwortet vor allem anderen.
+
+Alle drei benutzen `INSTANZ_KURZ_VORGABE` unmittelbar. Die Funktionen prüfen
+mit `function_exists('app_state_lesen')` selbst, ob es eine Datenbank gibt —
+ein Verbindungsversuch während eines Schemaumbaus läuft im schlechten Fall in
+die Zeitgrenze statt in eine Ausnahme.
+
+`ui.php` benutzt `ui_instanz_kurz()` mit demselben Rückfall, weil `install.php`
+die Seitenhülle vor der Ersteinrichtung lädt.
+
+### 5d.3 Die Wartungsseite bekommt den Namen aus dem Schalter
+
+Sonst zeigte ausgerechnet die Seite, die Fremde zu sehen bekommen, „Gen-EM
+NAdoku", während die Installation anders heißt. `wartung_einschalten()`
+schreibt den Namen deshalb als Schlüssel `wer` in `wartung.lock` — beim
+Einschalten steht die Datenbank noch. Fehlt er oder ist die Datei unlesbar,
+gilt die Vorgabe; **„Die Datei ist der Schalter, nicht ihr Inhalt"** bleibt
+unverändert.
+
+> `wartung_daten()` ist eine **weiße Liste**. Beim ersten Versuch stand `wer`
+> in der Datei und wurde beim Lesen still verschluckt, weil die Liste ihn
+> nicht kannte — die Seite zeigte die Vorgabe, und nichts deutete auf einen
+> Fehler hin. Wer dort einen Schlüssel ergänzt, ergänzt beides.
+
+### 5d.4 Der Name wird geprüft, weil er in einen Mailbetreff geht
+
+`instanz_namen_setzen()` weist Steuerzeichen und Zeilenumbrüche ab. Ein
+Zeilenumbruch im Betreff wäre eine **eingeschleuste Kopfzeile**, und der
+Betreff ist die eine Stelle, an der ein selbst eingetippter Wert das Haus
+verlässt, ohne dass ein Mensch ihn noch einmal ansieht.
+
+**Gemessen wird gegen den Endpunkt, nicht gegen das Formular:** Ein `<input
+type="text">` entfernt Zeilenumbrüche von sich aus — ein gebastelter POST
+nicht. 6 von 6 Versuchen wie erwartet (Zeilenumbruch, Wagenrücklauf, Nullbyte,
+Tabulator, 81 Zeichen, gültig); bei allen fünf abgewiesenen bleibt die Vorgabe
+in der Datenbank stehen.
+
+### 5d.5 Zwei Stellen bleiben ausdrücklich fest
+
+- **Die Fußzeile „© Gen-EM · Open Source"** (`ui.php`) ist die *Urheberschaft
+  der Software*, nicht der Name des Betriebs. Wer diese Anwendung aufsetzt,
+  darf seinen Dienst benennen — nicht den, der sie geschrieben hat.
+- **`GPX_CREATOR`** (`gpx_lib.php`) steht in jeder ausgelieferten GPX-Datei
+  und gehört damit zum **Exportformat**. Einstellbar gemacht, erzeugten zwei
+  Installationen unterschiedliche Dateien, und die eingecheckten
+  Referenzausführungen (`tools/referenzdatensatz/referenz/`) verglichen Äpfel
+  mit Birnen. Das ist eine eigene Entscheidung.
+
+**Noch offen:** `install.php` fragt den Namen bei der Ersteinrichtung nicht ab,
+und `smtp.from_name` führt ihn weiterhin selbst — beides zieht der zweite Teil
+von AP5 nach.
 
 ## 6. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)
 

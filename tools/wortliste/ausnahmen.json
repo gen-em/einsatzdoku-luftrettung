@@ -586,9 +586,9 @@
     {
       "id": "handbuch-logowahl-installation",
       "datei": "docs/Handbuch.md",
-      "zeile": "\\*\\*Das Logo\\*\\* links wählt zwischen",
+      "zeile": "\\*\\*Das Logo\\*\\* darunter wählt zwischen",
       "klasse": "Homonym",
-      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz benennt, WELCHES BILD zur Wahl steht — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Dieselbe Begruendung wie `logowahl-installation` fuer den Code (server/admin_installation.php); der Handbuch-Abschnitt „Installation“ (11.3) ist mit S8/AP3 entstanden und beschreibt dieselbe Bedienung."
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz benennt, WELCHES BILD zur Wahl steht — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Dieselbe Begruendung wie `logowahl-installation` fuer den Code (server/admin_installation.php); der Handbuch-Abschnitt „Installation“ (11.3) ist mit S8/AP3 entstanden und beschreibt dieselbe Bedienung. Der Anker hiess bis Web 20.8.0 „Das Logo links waehlt zwischen\"; seit der Karte „Name\" (P5a/AP5) steht das Logo DARUNTER statt links, und der Satz wurde entsprechend umgeschrieben."
     },
     {
       "id": "spur-fachbegriff-code",
@@ -612,7 +612,7 @@
       "zeile": "eine eigene Spur",
       "begruendung": "Hier ist „Spur“ der Fachbegriff des GPX-FORMATS: Eine GPX-Datei enthaelt Tracks, und der Satz erklaert genau das — „jede Aufzeichnung bleibt darin eine eigene Spur“. Ein Kartenprogramm nennt sie so; die Anwendung waere die einzige, die es anders schriebe."
     },
-        {
+    {
       "id": "spur-fachdokument-technik",
       "bereich": "c",
       "datei": "docs/Technik.md",
