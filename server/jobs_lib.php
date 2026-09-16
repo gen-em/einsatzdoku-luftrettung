@@ -566,6 +566,24 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
                  * den ganzen Aufraeumlauf scheitern zu lassen. */
             }
         },
+        'Job-Verlauf' => function (PDO $pdo): void {
+            /* 30 Tage, keine Einstellung (E-P5a-09). Steht NEBEN den
+             * CSP-Berichten und nicht hinter „Speicher messen" /
+             * „Warnschwellen melden": Die beiden muessen am Ende bleiben,
+             * weil sie messen, was die Schritte davor hinterlassen haben.
+             *
+             * Eigenes try/catch wie beim Nachbarn: Zwischen Deploy und
+             * Migrationslauf gibt es die Tabelle noch nicht, und ein
+             * fehlender Aufraeumschritt darf nicht den ganzen Job kippen —
+             * job_aufraeumen sammelt die Fehler und wirft am Ende, dann
+             * liefe bis zum naechsten Tag keiner mehr. */
+            try {
+                $pdo->exec('DELETE FROM job_laeufe
+                            WHERE zeitpunkt < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)');
+            } catch (Throwable $ex) {
+                /* Tabelle fehlt (Migration noch nicht gelaufen). */
+            }
+        },
         'Papierkorb' => function (PDO $pdo): void {
             require_once __DIR__ . '/trash_lib.php';
             trash_purge_expired($pdo);

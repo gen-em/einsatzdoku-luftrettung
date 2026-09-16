@@ -86,9 +86,22 @@ function status_zeile(array $z): void
  *    `adminbackup_lib.php`, das vor dem Erinnerungsversand ebenso prueft.
  * 2. EIN KURZES ZEITLIMIT. Der Versand laeuft synchron, weil sein Ergebnis
  *    gezeigt werden soll. `smtp_send()` nimmt das Limit als vierten Wert
- *    (Vorgabe 15 s, und KEINER der acht Aufrufer im Bestand setzt ihn); bei
- *    15 s koennte ein haengender Mailserver die Seite ueber zwei Minuten
- *    halten, weil jeder Protokollschritt sein eigenes Limit hat. 5 s.
+ *    (Vorgabe 15 s). 5 s.
+ *
+ *    HIER STAND BIS WEB 20.8.0 EINE RECHNUNG, DIE STIMMTE — und ein Limit,
+ *    das sie nur abmilderte: „bei 15 s koennte ein haengender Mailserver die
+ *    Seite ueber zwei Minuten halten, weil jeder Protokollschritt sein
+ *    eigenes Limit hat." Das war richtig beobachtet und an der falschen
+ *    Stelle behoben: Diese Datei setzte 5 s, die uebrigen neun Aufrufstellen
+ *    blieben bei 15 s — darunter der Aufraeumjob, der HUCKEPACK auf der
+ *    Anfrage einer Unbeteiligten laeuft.
+ *
+ *    `smtp_send()` rechnet seit Web 20.8.0 mit einer FRIST statt einer Dauer
+ *    (P5a/AP5). Gemessen gegen ein Relais mit 26 s Lesezeit: 5 s Limit
+ *    ergaben vorher 31,06 s und ergeben jetzt 5,00 s; 15 s ergaben 41,07 s
+ *    und ergeben 15,00 s. Die 5 s hier bleiben trotzdem stehen — auf einer
+ *    Seite, auf der jemand auf die Antwort wartet, sind fuenf Sekunden
+ *    genug, und mehr will man nicht warten.
  * 3. KEIN `antwort_abschliessen()`. Die uebrigen Verwender entkoppeln den
  *    Versand oder verwerfen sein Ergebnis — hier ist das Ergebnis der Zweck.
  *

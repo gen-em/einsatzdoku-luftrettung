@@ -232,19 +232,64 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
         return false;
     }
 
+    /* EINE FRIST, KEINE DAUER — und das war bis Web 20.8.0 falsch herum.
+     *
+     * `$zeitlimit` ging an `stream_socket_client()` UND an
+     * `stream_set_timeout()`, und Letzteres gilt JE LESEOPERATION. Die
+     * Multiline-Schleife unten liest so lange, wie das vierte Zeichen ein
+     * `-` ist — jedes `fgets` bekam die vollen Sekunden neu. Danach folgen
+     * NEUN `$expect`-Aufrufe.
+     *
+     * Gerechnet: Ein Relais, das seine EHLO-Antwort in zwoelf
+     * Fortsetzungszeilen liefert (Postfix und Exchange tun das) und je Zeile
+     * 4 s braucht, haelt EINEN `$expect('250')` 48 s lang — bei einem
+     * Aufrufer, der 5 s uebergeben hat. `betrieb_status.php` rechnet
+     * dasselbe fuer die Testmail selbst vor („bei 15 s koennte ein
+     * haengender Mailserver die Seite ueber zwei Minuten halten").
+     *
+     * WARUM DAS MEHR IST ALS EINE FEINHEIT: Der Aufraeumjob sendet im
+     * Schritt „Warnschwellen melden" mit der Vorgabe 15 s, und er laeuft
+     * HUCKEPACK auf einer beliebigen Web-Anfrage. Ein haengendes Relais
+     * haelt damit die Seite einer Notaerztin, die mit der Sache nichts zu
+     * tun hat. `max_execution_time` schneidet das nicht ab: PHP rechnet die
+     * Zeit in Streamoperationen unter Unix nicht mit.
+     *
+     * DESHALB EIN ABLAUFZEITPUNKT. Er wird vor dem Verbindungsaufbau
+     * gestellt und vor JEDEM Lesen nachgerechnet, auch innerhalb der
+     * Multiline-Schleife. Ist er ueberschritten, bricht der Versuch ab.
+     *
+     * WAS AUSSERHALB DER FRIST LIEGT, weil es vor dem ersten Byte passiert:
+     * die Namensaufloesung des Hosts. Ein DNS-Server, der nicht antwortet,
+     * haengt weiterhin so lange, wie das System ihm zugesteht — dagegen
+     * hilft nur die Aufloesung selbst zu begrenzen, und das kann PHP nicht. */
+    $frist = microtime(true) + $zeitlimit;
+    $rest  = static function () use ($frist): float {
+        return $frist - microtime(true);
+    };
+
     $fp = @stream_socket_client('ssl://' . $cfg['host'] . ':' . $cfg['port'],
-        $errno, $errstr, $zeitlimit, STREAM_CLIENT_CONNECT,
+        $errno, $errstr, max(0.1, $rest()), STREAM_CLIENT_CONNECT,
         stream_context_create(['ssl' => ['verify_peer' => true]]));
     if (!$fp) {
         error_log("SMTP connect: $errstr");
         smtp_versand_vermerken(false);
         return false;
     }
-    stream_set_timeout($fp, $zeitlimit);
 
-    $expect = function (string $code) use ($fp): bool {
-        do { $line = fgets($fp, 1024); if ($line === false) return false; }
-        while (isset($line[3]) && $line[3] === '-');           // Multiline-Antworten
+    $expect = function (string $code) use ($fp, $rest): bool {
+        do {
+            $r = $rest();
+            if ($r <= 0) {
+                error_log('SMTP: Zeitbudget erschoepft, Versuch abgebrochen');
+                return false;
+            }
+            /* Vor JEDEM Lesen neu — auch in der Fortsetzungsschleife. Sonst
+             * waere die Frist nur eine Frist je Zeile, und genau das war der
+             * Fehler. */
+            stream_set_timeout($fp, (int)$r, (int)(fmod($r, 1.0) * 1000000));
+            $line = fgets($fp, 1024);
+            if ($line === false) { return false; }
+        } while (isset($line[3]) && $line[3] === '-');           // Multiline-Antworten
         return strncmp($line, $code, 3) === 0;
     };
     $send = function (string $cmd) use ($fp): void { fwrite($fp, $cmd . "\r\n"); };
