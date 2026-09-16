@@ -5667,4 +5667,35 @@ declare(strict_types=1);
  *
  * MIGRATION: `2026_09_16_konto_lebenszyklus`. `update.php` ist faellig.
  */
-const WEB_VERSION = '20.17.0';
+/* ---------------------------------------------------------------------------
+ * 20.18.0 — DIE DEMO-ANMELDUNG LAESST SICH ABSCHALTEN (P5b/AP7, E-P5b-07)
+ * ---------------------------------------------------------------------------
+ *
+ * EINE ZEILE IN `login.php`, und die Stelle ist die ganze Ueberlegung: Bei
+ * abgeschalteter Demo-Anmeldung wird `$u` auf `false` gesetzt, unmittelbar
+ * nach dem `SELECT`. Ab da laeuft die Anfrage durch GENAU DENSELBEN Weg wie
+ * eine erfundene Adresse — Blindvergleich gegen `AUTH_VERGLEICHSWERT`,
+ * Fehlversuch im Topf, `rate_gleiche_dauer()` am Ende.
+ *
+ * WARUM NICHT WEITER UNTEN, MIT EIGENER MELDUNG: Jede eigene Meldung und
+ * jeder eigene Zweig macht die beiden Faelle wieder unterscheidbar — an der
+ * Antwort oder an der Dauer. Eine Auskunft „das Demo-Konto ist abgeschaltet"
+ * waere freundlicher und genau deshalb falsch.
+ *
+ * GEMESSEN IM BROWSER (nicht mit curl — ohne die im Browser abgeleiteten
+ * Token scheitert JEDE Anmeldung, und eine Messung davon belegte nichts):
+ * Demo mit RICHTIGEM Passwort 1241 ms, Demo mit falschem 1270 ms, erfundene
+ * Adresse 1263 ms — dieselbe Meldung, Spanne 29 ms. Das Adminkonto meldet
+ * sich in derselben Lage normal an.
+ *
+ * DER BESTAND BLEIBT (R25). Abgeschaltet ist die ANMELDUNG, nicht das Konto.
+ *
+ * DIE RUECKFRAGE BEIM UMSCHALTEN steht als Meldung mit Knopf und nicht als
+ * Bestaetigungsdialog: `data-confirm` kann nur ja/nein ZUM ABSENDEN, nicht
+ * „und schalte dabei noch etwas anderes ab". Ein Dialog, der das koennte,
+ * waere ein NEUER Baustein und braeuchte eine Freigabe mit Mockup
+ * (Design.md 9).
+ *
+ * KEINE MIGRATION — die Einstellung steht seit 20.16.0 in `app_state`.
+ */
+const WEB_VERSION = '20.18.0';

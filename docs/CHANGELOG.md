@@ -14,6 +14,48 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.18.0] — 2026-09-16
+
+**Die Demo-Anmeldung lässt sich abschalten** (P5b/AP7, E-P5b-07, R25).
+
+### Neu
+
+Die Einstellung stand seit Web 20.16.0 in der Karte „Konten"; jetzt wirkt sie.
+Ist sie aus, wird die Demo-Adresse bei der Anmeldung **wie eine unbekannte
+Adresse** behandelt — dieselbe Meldung, dieselbe Antwortdauer, auch beim
+richtigen Passwort.
+
+**Das ist eine Zeile, und die Stelle ist die ganze Überlegung.** Sie steht
+unmittelbar nach der Abfrage der Kontozeile: Ab da läuft die Anfrage durch
+genau denselben Weg wie eine erfundene Adresse. Jede eigene Meldung und jeder
+eigene Zweig weiter unten machte die beiden Fälle wieder unterscheidbar — an
+der Antwort oder an der Dauer. Eine Auskunft „das Demo-Konto ist
+abgeschaltet" wäre freundlicher und genau deshalb falsch: Die Demo-Adresse
+steht im Handbuch, und wer sie probiert, soll nicht erfahren, ob diese
+Installation sie kennt.
+
+**Gemessen im Browser** — mit `curl` allein ließe sich das nicht belegen, weil
+ohne die im Browser abgeleiteten Token *jede* Anmeldung scheitert und eine
+Messung davon nichts aussagt. Demo mit **richtigem** Passwort 1241 ms, Demo
+mit falschem 1270 ms, erfundene Adresse 1263 ms — dieselbe Meldung, Spanne
+29 ms. Das Adminkonto meldet sich in derselben Lage normal an.
+
+**Der Bestand bleibt liegen.** Abgeschaltet ist die Anmeldung, nicht das
+Konto: Einsätze, Selbst-Reset und Platz in der Kontoverwaltung sind unberührt,
+und ein Umlegen des Schalters macht es sofort wieder zugänglich.
+
+**Beim Umschalten der Registrierung auf „nur auf Einladung" fragt die Seite
+einmal nach**, ob die Demo-Anmeldung mit abgeschaltet werden soll. Als Meldung
+mit Knopf und nicht als Bestätigungsdialog: Der vorhandene Rückfrage-Baustein
+kann nur ja/nein zum Absenden, nicht „und schalte dabei noch etwas anderes
+ab" — ein Dialog, der das könnte, wäre ein neuer Baustein und bräuchte eine
+Freigabe mit Mockup.
+
+**Einen Demo-Knopf auf der Anmeldeseite gibt es weiterhin bewusst nicht.** Das
+stand bisher nirgends und steht jetzt im README und im Handbuch.
+
+Keine Migration.
+
 ## [Web 20.17.0] — 2026-09-16
 
 **Der Lebenszyklus eines Kontos** (P5b/AP2, E-P5b-11, -12; Backlog Nr. 202

@@ -4370,10 +4370,23 @@ soll. Eine **0 gibt es hier nicht**: Sie hieße „nichts aufbewahren", und das
 ist bei Einsatzdaten die eine Antwort, die niemand aus Versehen geben soll.
 
 **Demo-Anmeldung zulassen.** Ist sie aus, wird die Demo-Adresse bei der
-Anmeldung wie ein falsches Passwort behandelt — gleiche Antwort, gleiche
-Dauer. Der Bestand bleibt liegen und lässt sich jederzeit wieder
-freischalten. **Einen Demo-Knopf auf der Anmeldeseite gibt es bewusst nicht;**
-die Zugangsdaten stehen in diesem Handbuch.
+Anmeldung **wie eine unbekannte Adresse** behandelt — dieselbe Meldung,
+dieselbe Antwortdauer, auch beim richtigen Passwort. Die Seite verrät damit
+nicht, ob diese Installation ein Demo-Konto hat.
+
+**Der Bestand bleibt liegen.** Abgeschaltet ist die Anmeldung, nicht das
+Konto: Seine Einsätze, sein Selbst-Reset und sein Platz in der
+Kontoverwaltung sind unberührt, und ein Umlegen des Schalters macht es sofort
+wieder zugänglich.
+
+**Schaltest du die Registrierung auf „nur auf Einladung", fragt die Seite
+einmal nach**, ob die Demo-Anmeldung mit abgeschaltet werden soll — wer die
+Tür schließt, hat meist auch das Demo-Konto im Sinn. Ein Angebot, keine
+Bedingung: Eine geschlossene Installation kann gute Gründe für ein
+Demo-Konto zum Vorzeigen haben.
+
+**Einen Demo-Knopf auf der Anmeldeseite gibt es bewusst nicht;** die
+Zugangsdaten stehen in diesem Handbuch und im README.
 
 **Verwaltungseinträge im Protokoll aufbewahren** — siehe 12.1.
 

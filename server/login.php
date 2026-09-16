@@ -184,6 +184,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
         $st->execute([$email]);
         $u = $st->fetch();
 
+        /* ---- DEMO-ANMELDUNG ABGESCHALTET (P5b/AP7, E-P5b-07) --------------
+         *
+         * DIE ZEILE IST DIE GANZE UMSETZUNG, und sie steht hier und nicht
+         * weiter unten, weil das der einzige Ort ist, an dem sie NICHTS
+         * verraet: Ein Konto, das nicht gefunden wurde, laeuft ab hier durch
+         * denselben Weg wie eine erfundene Adresse — Blindvergleich gegen
+         * `AUTH_VERGLEICHSWERT`, Fehlversuch im Topf, `rate_gleiche_dauer()`
+         * am Ende. **Gleiche Antwort, gleiche Dauer**, ohne dass irgendwo ein
+         * zweiter Zweig entstuende, der die beiden wieder unterscheidbar
+         * macht.
+         *
+         * WARUM NICHT EINE EIGENE MELDUNG: Eine Auskunft „das Demo-Konto ist
+         * abgeschaltet" waere freundlicher und genau deshalb falsch. Die
+         * Demo-Adresse steht im Handbuch; wer sie probiert, soll nicht
+         * erfahren, ob diese Installation sie kennt. Und die Betreiberin, die
+         * abschaltet, will nicht, dass die Seite ueber ihre Einstellung
+         * Auskunft gibt.
+         *
+         * DER BESTAND BLEIBT. Abgeschaltet ist die ANMELDUNG, nicht das
+         * Konto: Seine Einsaetze, sein Reset und sein Platz in der
+         * Kontoverwaltung sind unberuehrt, und ein Umlegen des Schalters
+         * macht es sofort wieder zugaenglich (R25). */
+        if ($u && $istDemoAdresse) {
+            require_once __DIR__ . '/konten_einstellungen_lib.php';
+            if (!konten_demo_anmeldung_an()) { $u = false; }
+        }
+
         /* ---- Ein Token je Rundenzahl (M2-01, Schritt 3) -------------------
          *
          * Der Salz-Endpunkt nennt jeder Adresse dieselbe Liste von

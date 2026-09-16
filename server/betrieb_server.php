@@ -41,6 +41,9 @@ require_once __DIR__ . '/serverkrypto_lib.php';   // Karte „Schlüssel des Ser
 
 $pdo = db();
 $notice = null; $error = null;
+/* Die Rueckfrage zur Demo-Anmeldung (P5b/AP7) — sie entsteht im
+ * Konten-Zweig und wird unten in der Karte gezeigt. */
+$demoFrage = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speicher') {
     csrf_check();
@@ -264,6 +267,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'geoco
     }
 }
 
+/* Der eine Handgriff der Rueckfrage (P5b/AP7): Demo-Anmeldung abschalten,
+ * ohne das ganze Formular noch einmal zu schicken. Eigener `action`, weil er
+ * eine eigene Handlung ist — dieselbe Ordnung wie bei den Schluesseln. */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'demo_aus') {
+    csrf_check();
+    require_once __DIR__ . '/konten_einstellungen_lib.php';
+    require_once __DIR__ . '/protokoll_lib.php';
+    app_state_setzen(KONTEN_K_DEMO_ANMELDUNG, '0');
+    konten_einstellungen_neu_lesen();
+    protokoll('verwaltung', 'einstellungen_konten',
+              'Demo-Anmeldung abgeschaltet (mit dem Wechsel auf „nur auf Einladung")',
+              ['geaendert' => [KONTEN_K_DEMO_ANMELDUNG]]);
+    $notice = 'Die Demo-Anmeldung ist abgeschaltet. Der Bestand des Demo-Kontos '
+            . 'bleibt; ein Umlegen des Schalters macht es sofort wieder zugänglich.';
+}
+
 /* ---- Konten: Registrierung, Fristen, Grenzen (P5b/AP1, E-P5b-14) --------
  *
  * EINE KARTE, EIN FORMULAR, ALLES ODER NICHTS. Der Ratenschutz darueber hat
@@ -417,6 +436,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
                 . $neu[KONTEN_K_REG_FRIST] . ' Tagen · Grenzen '
                 . $neu[KONTEN_K_GRENZE_EINSAETZE] . ' Einsätze / '
                 . $neu[KONTEN_K_GRENZE_MB] . ' MB je Konto.';
+
+        /* DIE RUECKFRAGE ZUR DEMO-ANMELDUNG (P5b/AP7, E-P5b-07).
+         *
+         * Nur beim WECHSEL auf „nur auf Einladung" und nur, solange die
+         * Demo-Anmeldung noch an ist. Wer die Tuer schliesst, hat meist auch
+         * das Demo-Konto im Sinn — aber nicht immer: Eine Installation kann
+         * geschlossen sein und trotzdem ein Demo-Konto zum Vorzeigen haben.
+         * Deshalb gefragt und nicht getan.
+         *
+         * ALS ANGEBOT UND NICHT ALS BESTAETIGUNGSDIALOG. Das Konzept sagt
+         * „fragt die Seite einmal"; `data-confirm` (der vorhandene
+         * Rueckfrage-Baustein) kann aber nur ja/nein ZUM ABSENDEN, nicht
+         * „und schalte dabei noch etwas anderes ab". Ein Dialog, der das
+         * koennte, waere ein NEUER Baustein und braeuchte eine Freigabe mit
+         * Mockup (Design.md 9). Die Meldung mit Knopf ist aus vorhandenen
+         * Teilen gebaut und hat denselben Zweck — sie fragt einmal, sie
+         * blockiert nichts, und sie verschwindet beim naechsten Speichern. */
+        if ($art === 'einladung'
+            && ($vorher[KONTEN_K_REG_ART] ?? '') !== 'einladung'
+            && $neu[KONTEN_K_DEMO_ANMELDUNG] === '1') {
+            $demoFrage = true;
+        }
     }
 }
 
@@ -1038,6 +1079,23 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
            'freischaltung' => 'mit Freischaltung',
            'einladung' => 'nur auf Einladung'][konten_reg_art()],
           ['ton' => konten_reg_art() === 'offen' ? 'orange' : 'blau'])]); ?>
+    <?php if ($demoFrage): ?>
+      <?php /* Kein neuer Baustein: `.meldung` mit einem Knopf darin, wie ihn
+               die Anwendung an mehreren Stellen fuehrt. */ ?>
+      <div class="meldung meldung-blau">
+        <p><strong>Die Registrierung ist jetzt geschlossen.</strong> Die
+           <strong>Demo-Anmeldung</strong> ist weiterhin zugelassen — wer die
+           Adresse aus dem Handbuch kennt, kommt also weiter herein. Soll sie
+           mit abgeschaltet werden?</p>
+        <p class="feld-hinweis">Der Bestand des Demo-Kontos bleibt in jedem
+           Fall erhalten; abgeschaltet wird nur die Anmeldung daran.</p>
+        <form method="post" action="betrieb_server.php">
+          <?= csrf_field() ?><input type="hidden" name="action" value="demo_aus">
+          <?= ui_knopf(['text' => 'Demo-Anmeldung auch abschalten',
+                        'symbol' => 'schloss', 'art' => 'neutral']) ?>
+        </form>
+      </div>
+    <?php endif; ?>
     <p class="feld-hinweis"><strong>Die Vorgabe ist „nur auf Einladung", und
        das ist Absicht.</strong> Wer diese Seite nie aufschlägt, bekommt keine
        offene Registrierung durch Untätigkeit. Ein Umschalten wirkt sofort auf

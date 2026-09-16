@@ -61,15 +61,16 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
      <code>docs/konzepte/Konzept-P5b-Konto-und-Registrierung.md</code>.
      Es ist das echte Stylesheet der Anwendung eingebunden
      (<code>server/assets/style.css</code>), es sind die vorhandenen Bausteine aus
-     <code>server/ui.php</code> benutzt und kein Farbwert steht ausserhalb des
+     <code>server/ui.php</code> benutzt und kein Farbwert steht außerhalb des
      Mockup-Rahmens.</p>
-  <p><strong>Grenze dieses Bildes, an den Anfang und nicht in eine Fussnote:</strong>
+  <p><strong>Grenze dieses Bildes, an den Anfang und nicht in eine Fußnote:</strong>
      Das Dokument misst in einem 1400 px breiten Fenster. Die Schwellen der
      Anwendung (720, 1024, 1200 px) entscheiden nach der <em>Fensterbreite</em>,
      nicht nach der Rahmenbreite — die Rahmen mit 360 px zeigen deshalb die
      <em>Breite</em> des Handys, nicht dessen <em>Verhalten</em>. Was mobil
      umschaltet (Zeilenaktionen werden zum „⋯“ mit Blatt, die Leiste wird zur
-     Schublade, Feldreihen brechen um), ist hier nicht zu sehen und muss am
+     Schublade, Feldreihen brechen um, und der Menüknopf der Kopfleiste ist ab
+     1024 px ausgeblendet und fehlt deshalb auch im 360er Rahmen), ist hier nicht zu sehen und muss am
      Gerät oder mit <code>tools/screenshots/</code> geprüft werden. Ebenso nicht
      zu sehen: Bedienzustände (Fokus, Hover, offene Schublade) und der
      tatsächliche Druck des Notfallblatts.</p>
@@ -271,7 +272,10 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
     blanke Muster <code>&lt;label&gt;Text &lt;input&gt;&lt;/label&gt;</code>; hier
     steht <code>ui_feld()</code>, weil drei der vier Felder eine Kleinzeile
     brauchen und <code>.feld-klein</code> zu <code>ui_feld()</code> gehört.
-    Neue Klassen sind dafür keine nötig.<br>
+    Neue Klassen sind dafür keine nötig. <em>Beobachtung dazu, keine eigene
+    Entscheidung:</em> Bei zwei- und dreizeiligem Häkchentext steht das Kästchen
+    mittig neben dem Text — das ist die vorhandene Grundregel
+    <code>label:has(&gt; input[type=checkbox])</code> und gilt überall gleich.<br>
     <strong>Mockup-Gerüst, kein Baustein:</strong> der gestrichelte Kasten um das
     Honeypot-Feld (<code>.mock-unsichtbar</code>). Im Betrieb ist das Feld nicht zu
     sehen — wie es unsichtbar wird, entscheidet AP3; ein
@@ -731,7 +735,7 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
                 <p class="feld-hinweis">Drei Schritte: Passwort eingeben, neuen Schlüssel
                    entgegennehmen, Notfallblatt drucken. Der Schlüssel entsteht in deinem
                    Browser; der Server bekommt nur die neu verpackte Hülle.</p>
-                <div class="feld feld-fest">
+                <div class="feld">
                   <label class="feld-label" for="d-pw">Passwort <span class="feld-pflicht" aria-hidden="true">*</span></label>
                   <input class="feld-eingabe" type="password" id="d-pw" required autocomplete="current-password">
                   <p class="feld-klein">Damit wird dein Datenschlüssel geöffnet und neu
@@ -900,7 +904,11 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
     (15) Bleiben die vier Felder im Fehlerfall gefüllt stehen oder werden sie geleert?
     (16) Soll der Fehlschlag die Felder überhaupt noch zeigen, oder ist der Weg zum
     Blatt die bessere Antwort? (17) Ist „Gruppe 3“ oder „Gruppen 3 und 11“ die
-    Beschriftung — das Konzept nennt beides.
+    Beschriftung — das Konzept nennt beides. (18) <strong>Breite der vier
+    Felder:</strong> <code>.feld-reihe</code> gibt jedem Feld die halbe Zeile,
+    hier rund 230 px für vier Zeichen — das sieht aus, als solle der ganze
+    Schlüssel hineinpassen. Ein schmales Feld gibt es im Vorrat nicht und wäre
+    ein neuer Baustein.
   </div>
 </div>
 
@@ -982,12 +990,12 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
     in der heutigen Fassung. Mit S11 (Schritt 12a, R78) kommen GPS-Daten,
     Phasenkoordinaten, Reanimationsverlauf und Transportziel dazu — dann ist dieser
     Satz nachzuziehen.<br>
-    <strong>Zu entscheiden:</strong> (18) Trennzeichen zwischen den Gruppen:
+    <strong>Zu entscheiden:</strong> (19) Trennzeichen zwischen den Gruppen:
     Bindestrich (so erzeugt <code>newRecoveryCode()</code> ihn) oder Leerzeichen (so
     zeigt ihn das Schlüsselblatt)? Beim Zurücktippen ist beides gleich — auf Papier
-    ist es eine Entscheidung. (19) Kommt die Kontoadresse aufs Blatt? Sie sagt, zu
+    ist es eine Entscheidung. (20) Kommt die Kontoadresse aufs Blatt? Sie sagt, zu
     welchem Konto der Schlüssel gehört, und macht das Blatt zugleich zu einem
-    Zettel mit Adresse und Schlüssel darauf. (20) Soll das Blatt eine Zeile zum
+    Zettel mit Adresse und Schlüssel darauf. (21) Soll das Blatt eine Zeile zum
     Handeintragen haben („aufbewahrt am: ________“)?
   </div>
 </div>
@@ -1023,7 +1031,7 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
                 <p class="feld-hinweis">Drei Schritte: Passwort eingeben, neuen Schlüssel
                    entgegennehmen, Notfallblatt drucken. Der Schlüssel entsteht in deinem
                    Browser; der Server bekommt nur die neu verpackte Hülle.</p>
-                <div class="feld feld-fest">
+                <div class="feld">
                   <label class="feld-label" for="k-pw">Passwort <span class="feld-pflicht" aria-hidden="true">*</span></label>
                   <input class="feld-eingabe" type="password" id="k-pw" required autocomplete="current-password">
                   <p class="feld-klein">Damit wird dein Datenschlüssel geöffnet und neu
@@ -1089,11 +1097,11 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
     <strong>Das Schloss am Kartentitel</strong> steht dort, weil der Inhalt der
     Karte den Zugang zu den verschlüsselten Angaben betrifft und kein einzelnes
     Feld das Zeichen tragen kann (Design.md 9.1, Web 19.1.1).<br>
-    <strong>Zu entscheiden:</strong> (21) Trägt die Karte das Schloss zu Recht? Das
+    <strong>Zu entscheiden:</strong> (22) Trägt die Karte das Schloss zu Recht? Das
     Zeichen ist bisher für verschlüsselte <em>Inhalte</em> reserviert, hier steht
-    der <em>Schlüssel</em> dazu. (22) Soll der primäre Knopf im zweiten Schritt
+    der <em>Schlüssel</em> dazu. (23) Soll der primäre Knopf im zweiten Schritt
     „Notfallblatt drucken“ heißen oder „Fertig“ — was ist die Haupthandlung?
-    (23) Bleibt der Schlüssel sichtbar, bis das Häkchen gesetzt ist, oder wird der
+    (24) Bleibt der Schlüssel sichtbar, bis das Häkchen gesetzt ist, oder wird der
     Kasten nach dem Verlassen der Seite in jedem Fall leer?
   </div>
 </div>
@@ -1107,7 +1115,7 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
 
   <div class="karte mock-liste">
     <div class="karte-kopf"><h2 class="karte-titel">Offene Punkte</h2>
-      <span class="karte-zahl">23</span></div>
+      <span class="karte-zahl">24</span></div>
     <div class="karte-inhalt">
       <div class="text">
         <ol>
@@ -1146,6 +1154,9 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
               zum Blatt?</li>
           <li><strong>Beschriftung der Gruppen:</strong> „Gruppe 3“ je Feld oder
               „Gruppen 3 und 11“ als Satz?</li>
+          <li><strong>Breite der vier Gruppenfelder.</strong> Ein halbzeiliges
+              Feld für vier Zeichen lädt dazu ein, den ganzen Schlüssel
+              hineinzuschreiben. Ein schmales Feld wäre ein neuer Baustein.</li>
           <li><strong>Trennzeichen des Schlüssels auf dem Notfallblatt:</strong>
               Bindestrich oder Leerzeichen?</li>
           <li><strong>Kontoadresse auf dem Notfallblatt</strong> — zeigen oder
