@@ -14,6 +14,129 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.12.0] — 2026-09-16
+
+**P5a/AP8 — der Ratenschutz bekommt ein Gesicht: Betrieb → Status →
+Sicherheit.**
+
+### Hinzugefügt — die Unterseite, auf der steht, wer ausgesperrt ist
+
+**Was galt.** AP6 und AP7 haben gebaut, was still arbeitet: Sperrleiter,
+Verlangsamung, Mengenbremse, ein Ereignisprotokoll. Sichtbar war davon je eine
+Zeile auf der Statusseite — sie sagt, **dass** etwas ist. Wer wissen wollte,
+**wer** gesperrt ist, seit wann, auf welcher Sprosse, und wer es wieder
+aufheben wollte, fand nichts.
+
+**Was gilt.** `betrieb_sicherheit.php` mit fünf Karten:
+
+| Karte | Was sie zeigt |
+|---|---|
+| **Aktive Sperren** | Art (Kontokennung/Anschluss), Merkmal, Topf, Stufe, bis wann, Restzeit — und je Zeile den Knopf **„Aufheben"** |
+| **Verlangsamung** | der laufende Stand und jeder **Anstieg** der Stufe in 30 Tagen |
+| **Mengenbremse der Geräte** | Geräte mit abgewiesenen Anmeldungen, dazu die gesperrten Kennungen und Adressen |
+| **Ereignisse der letzten 30 Tage** | alles aus `sicherheit_ereignisse`, jüngste zuerst |
+| **Meldung per Mail** | an/aus, wann zuletzt, an wen |
+
+**Sie hängt an Status und ist kein achtzehnter Menüpunkt.** Für eine
+BetreiberIn stehen siebzehn Einträge in der Leiste; einer mehr für eine Seite,
+die man an guten Tagen nie braucht, wäre an der falschen Stelle teuer. Der
+Weg dorthin ist ein Knopf neben dem Titel der Statusseite, und die drei
+Status-Zeilen „Verlangsamung", „Gesperrt" und „Abgewiesene Geräte" führen
+jetzt ebenfalls hierher statt auf die Servereinstellungen.
+
+**Sie ändert genau eines: eine Sperre aufheben.** Das ist der Unterschied zur
+Elternseite, die rein liest, und er ist gewollt — eine Kollegin, die sich
+ausgesperrt hat, ruft an, und die Betreiberin soll ihr helfen können, ohne in
+die Datenbank zu greifen. Der Vorgang wird mit ihrem Namen protokolliert.
+
+**Sie steht in den Wartungsausnahmen.** Wer im Wartungsmodus jemanden wieder
+hereinlassen muss, braucht genau diese Seite; sie hinter der Sperre zu lassen
+hieße, sie dann zu schließen, wenn man sie braucht.
+
+### Hinzugefügt — ein Textbaustein für den Datenschutztext
+
+Die Liste führt **IP-Adressen und E-Mail-Adressen im Klartext**; ohne sie
+ließe sich keine Sperre aufheben. Das gehört in den Datenschutztext — aber die
+Anwendung liefert **keinen Rechtstext mit** (R32), der Text gehört der
+Betreiberin. Unter **Verwaltung → Installation** steht deshalb jetzt ein
+zweiter Baustein zum Übernehmen, neben dem zur Adresssuche aus S9/AP2. Anders
+als jener steht er **ohne Bedingung** da: Den Ratenschutz gibt es in jeder
+Installation, und er lässt sich nicht abschalten.
+
+### Behoben — drei Fehler, die ohne Meldung durchgegangen wären
+
+**(1) Das Protokoll hing am Mailschalter.** `sicherheit_melden_pruefen()`
+kehrte als *erste* Zeile zurück, wenn die Sammelmail abgeschaltet ist — und
+genau dort drin stand das Vermerken der Verlangsamungsstufe. Wer die Mail
+abschaltete, weil er sie nicht braucht, schaltete stillschweigend auch das
+Protokoll ab; die Karte wäre auf einer solchen Installation dauerhaft leer
+geblieben, ohne dass irgendwo stünde, warum. Protokollieren und Melden stehen
+jetzt in zwei Funktionen.
+
+**(2) Der Gerätevermerk verfiel nie.** `devices.abgewiesen_seit` und
+`abgewiesen_anzahl` aus AP7 werden beim nächsten gelungenen Upload geleert —
+und den gibt es nicht mehr, wenn das Gerät ausgemustert ist. Ein verlorenes
+Gerät trüge seine orange Plakette „abgewiesen" für immer, und die Statuszeile
+stünde dauerhaft orange auf einer Installation, an der nichts mehr zu tun ist.
+Der Aufräumjob räumt den Vermerk jetzt nach **30 Tagen** (E-P5a-09 nennt die
+„Bremse-Treffer" ausdrücklich).
+
+**(3) `ui_knopf()` kennt kein `form`.** Der Schlüssel, mit dem ein Knopf ein
+Formular außerhalb seiner selbst absendet, gibt es nur in
+`ui_zeilenaktionen()` und in der Kopfaktion der Karte. Ein
+`ui_knopf(['form' => …])` hätte einen Knopf ergeben, der nichts tut — ohne
+Fehlermeldung, und kein Bild hätte es gezeigt. Gefunden bei der Durchsicht des
+Bausteinvorrats.
+
+### Geändert — drei Ableitungen wurden eine
+
+„Ist dieses Merkmal ein Konto oder eine Adresse?" stand dreimal im Bestand
+nachgebaut. `rate_sperren_aktiv()` liefert `art` jetzt mit; die Statusseite
+rechnet es nicht mehr selbst, und die Sicherheitsseite hätte die vierte Kopie
+gebraucht. Dasselbe bei den Gerätevermerken: Die Statusseite stellte eine
+eigene Abfrage auf dieselben zwei Spalten — sie ruft jetzt
+`sicherheit_bremse_geraete()`.
+
+### Geändert — vier Abweichungen vom Konzept, alle benannt
+
+- **Fünf Karten statt sechs.** „Löschungen auf Sicherungszielen" hat heute
+  weder Tabelle noch Schreibweg noch `app_state`-Schlüssel — die Löschregel je
+  Ziel entsteht erst in **AP10**. Eine Karte, die sagt „hier steht noch nichts,
+  weil es die Sache noch nicht gibt", ist kein Befund, sondern Lärm.
+- **Keine Tabelle**, obwohl die Mockup-Skizze für die erste Karte eine nennt.
+  `docs/Design.md` 9.0 führt „eine Liste von Einträgen" ausdrücklich auf
+  `ui_zeile()` in einer Karte und die `<table>` unter „nicht".
+- **Die Karte heißt „Verlangsamung" und zeigt Anstiege, keine Phasen.**
+  Vermerkt wird, wenn die Stufe *steigt*; ein Ende hat kein eigenes Ereignis.
+- **Der Datenschutztext wird vorgeschlagen, nicht geschrieben** (R32).
+
+> **Und ein Satz steht auf der Karte, den niemand vermuten würde:** Ein
+> Sperrereignis entsteht nur an den **fünf Töpfen mit Sperrleiter** —
+> Anmeldung, Anschluss, Schlüsselableitung und die beiden der Mengenbremse.
+> Kopplung, Passwort-Reset, Demo-Konto, Testmail und CSP-Berichte sperren
+> ebenfalls, schreiben aber keine Zeile. Ohne diesen Satz liest sich eine
+> kurze Liste als „es war fast nichts", obwohl neun Töpfe gar nicht berichten.
+
+### Notiert — eine Falle des Bausteinvorrats
+
+Eine **eingeklappte** Karte (`zu` / `vorschau`) zeigt weder `plakette` noch
+`aktion`: `ui_karte_start()` kehrt im `<details>`-Zweig zurück, bevor beides
+ausgegeben wird. Wer eine Plakette an eine klappbare Karte hängt, verliert sie
+still. Steht jetzt in `docs/Design.md` 9.1.
+
+### Geprüft
+
+- **Klickprobe** (`tools/klickprobe/`), neuer Weg `p5a-ap8-sperre-aufheben`:
+  **1 von 1 erfüllt.** Gemessen am DOM *und* an der Datenbank — Zeile mit
+  Prüfmerkmal **1 → 0**, `rate_limits` **1 → 0**, Ereignis „aufgehoben" durch
+  **`admin@gen-em.org`**. Dazwischen die Rückfrage aus `data-confirm`. Der Weg
+  legt seine Sperre selbst an und räumt sie im `finally` wieder ab.
+- **Bilderlauf** der neuen und der Elternseite in acht Breiten: **16 Bilder ·
+  0 Überlauf · 0 Konsolenfehler · 0 Knöpfe falscher Höhe**, aufgenommen mit
+  hergestelltem Bestand (zwei Sperren, vier Ereignisse) — eine leere Seite
+  hätte nichts gemessen.
+- **Wartungsprobe:** die Ausnahmeliste zählt jetzt **14** statt 13.
+
 ## [Web 20.11.0] — 2026-09-16
 
 **P5a/AP7 — die letzte Asymmetrie endet: `ingest.php` bekommt eine

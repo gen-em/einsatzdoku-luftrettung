@@ -515,7 +515,8 @@ pruefe($rc === 0 && count($aus) > 3,
  * Eintraege, die Erwartung zaehlte weiter 12, und die Wartungsprobe stand
  * seither auf 1 nicht erfuellt — bemerkt hat es niemand, weil AP3 sie nicht
  * gefahren hat. Genau dafuer ist die Erwartung da. */
-$sollAusnahmen = ['betrieb_status.php', 'betrieb_statistik.php',
+$sollAusnahmen = ['betrieb_status.php', 'betrieb_sicherheit.php',
+                  'betrieb_statistik.php',
                   'betrieb_updates.php', 'betrieb_jobs.php', 'betrieb_server.php',
                   'betrieb_schluesselblatt.php',
                   'update.php', 'wiederherstellen.php', 'jobs.php',
@@ -524,7 +525,7 @@ sort($sollAusnahmen);
 $istAusnahmen = WARTUNG_AUSNAHMEN;
 sort($istAusnahmen);
 pruefe($istAusnahmen === $sollAusnahmen,
-       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171 + S10',
+       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171 + S10 + P5a/AP8',
        implode(', ', $istAusnahmen));
 
 /* E-S5W-09 am Code: login.php muss `role` lesen und im Wartungsmodus fuer

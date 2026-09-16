@@ -228,9 +228,10 @@ function jobs_katalog(): array
              * Mail-Warteschlange und Job-Verlauf standen nicht darin. Wer
              * einen Schritt ergaenzt, ergaenzt sie mit. */
             'beschreibung' => 'Papierkorb, Kopplungssitzungen, Ratenschutz und '
-                            . 'Sperrereignisse, Passwort-Token, CSP-Berichte, '
-                            . 'Mail-Warteschlange, Job-Verlauf, Erinnerung an '
-                            . 'die Verwaltung, Speichermessung und Warnschwellen',
+                            . 'Sperrereignisse, Gerätevermerke, Passwort-Token, '
+                            . 'CSP-Berichte, Mail-Warteschlange, Job-Verlauf, '
+                            . 'Erinnerung an die Verwaltung, Speichermessung '
+                            . 'und Warnschwellen',
             'taeglich'     => true,
             'rueckstand'   => fn(PDO $pdo, array $z): ?int => null,
             'lauf'         => 'job_aufraeumen',
@@ -617,6 +618,30 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
          * Einstellung — Sicherheitsdaten sollen nicht versehentlich Jahre
          * liegen. Geloescht wird nach `zuletzt`: Eine Meldung, die noch
          * gestern kam, ist frisch, auch wenn ihre Zeile drei Monate alt ist. */
+        'Geraetevermerke' => function (PDO $pdo): void {
+            /* 30 TAGE, FEST (E-P5a-09 nennt die „Bremse-Treffer"). Der Vermerk
+             * `devices.abgewiesen_seit` / `abgewiesen_anzahl` (P5a/AP7) wird
+             * sonst NUR beim naechsten gelungenen Upload geleert — und genau
+             * den gibt es nicht mehr, wenn das Geraet endgueltig ausgemustert
+             * ist. Ohne diesen Schritt truege ein verlorenes Geraet seine
+             * orange Plakette „abgewiesen" fuer immer, und die Statuszeile
+             * stuende dauerhaft orange auf einer Installation, an der nichts
+             * mehr zu tun ist.
+             *
+             * GEZAEHLT WIRD AB `abgewiesen_seit`, dem ERSTEN Fehlversuch der
+             * Serie. Das ist der Zeitpunkt, den auch die Anzeige nennt; ein
+             * zweiter Zeitstempel fuer „zuletzt" existiert nicht und waere
+             * fuer diese Frage auch der falsche: Gefragt ist, wie lange das
+             * schon so geht. */
+            try {
+                $pdo->exec('UPDATE devices
+                               SET abgewiesen_seit = NULL, abgewiesen_anzahl = 0
+                             WHERE abgewiesen_seit IS NOT NULL
+                               AND abgewiesen_seit < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)');
+            } catch (Throwable $ex) {
+                /* Spalten fehlen (Migration aus P5a/AP7 noch nicht gelaufen). */
+            }
+        },
         'CSP-Berichte' => function (PDO $pdo): void {
             try {
                 $pdo->exec('DELETE FROM csp_berichte

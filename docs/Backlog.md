@@ -2184,6 +2184,46 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     tools/ .github/ | wc -l` → 96; `server/` → 0.*
 
 
+208. **Der Job-Katalog und das Jobregister in `docs/Technik.md` beschreiben
+    den Aufräumjob nicht mehr.** Berichtigt am 16.09.2026 in P5a/AP8 — der
+    Eintrag steht hier trotzdem, weil die **Ursache** bleibt: `job_aufraeumen()`
+    hat inzwischen **zwölf** Schritte, und jede der beiden Beschreibungen ist
+    eine von Hand gepflegte Aufzählung, die bei jedem neuen Schritt
+    mitgeschrieben werden muss. Sie hinkte in AP5 schon einmal drei Pakete
+    hinterher (der Kommentar im Katalog sagt es selbst), und jetzt wieder: Das
+    Register in `docs/Technik.md` nannte **sechs von zwölf**.
+
+    **Vorschlag:** Die sichtbare Beschreibung aus den Schlüsseln des
+    Schrittarrays erzeugen, statt sie danebenzuschreiben — `job_aufraeumen()`
+    kennt seine Schritte, sie heißen dort bereits „Kopplungssitzungen",
+    „Sperrereignisse", „Geraetevermerke". Dann kann sie nicht mehr altern.
+    Betrifft `jobs_lib.php` (Katalog) und `docs/Technik.md` (Jobregister);
+    für das Dokument wäre ein Prüfmittel nötig, das die Zahl nachzählt — sonst
+    wandert das Problem nur eine Ebene weiter.
+
+    *Aufgenommen 16.09.2026 in P5a/AP8. Gezählt: zwölf Schritte in
+    `job_aufraeumen()`, sechs in der Registerzeile, zehn in der Beschreibung
+    des Katalogs (beide inzwischen berichtigt).*
+
+209. **`docs/Design.md` führt die erzeugte Bausteintabelle mit falschen
+    Zeilennummern.** Die Tabelle trägt den Vermerk „ERZEUGT von
+    `tools/design/tabellen.py` — nicht von Hand ändern", und ihre Spalte
+    `ui.php` nennt zu jeder Funktion eine Zeilennummer. Diese Nummern liegen
+    durchgängig **rund 26 Zeilen zu niedrig**: `ui_seite_start()` steht dort
+    mit 54 und im Code bei 80. Ursache ist schlicht, dass das Werkzeug seit
+    einigen Paketen nicht gelaufen ist.
+
+    **Das ist kein Schönheitsfehler:** Eine erzeugte Tabelle, die nicht mehr
+    zu ihrer Quelle passt, ist schlechter als keine — wer ihr folgt, landet
+    mitten in einer anderen Funktion und hält das für den Baustein. Abhilfe
+    ist ein Aufruf (`python3 tools/design/tabellen.py alle`); der Punkt steht
+    hier, weil dabei **alle vier** erzeugten Tabellen neu entstehen und das
+    Ergebnis gegengelesen werden will.
+
+    *Aufgenommen 16.09.2026 in P5a/AP8, gefunden bei der Bestandsaufnahme der
+    Bausteine.*
+
+
 ## Erledigt
 
 

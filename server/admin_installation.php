@@ -412,6 +412,41 @@ ui_seite_start(['titel' => 'Installation']);
                   . 'sich abschalten: in deinem Profil unter „Datenschutz".',
                     'Vorschlag für den Abschnitt „Adresssuche"') ?>
             <?php endif; ?>
+
+            <?php /* ZWEITER TEXTBAUSTEIN: SICHERHEITSEREIGNISSE (P5a/AP8,
+                     E-P5a-08). Dieselbe Bauart und derselbe Vorbehalt wie
+                     oben — die Anwendung liefert KEINEN Rechtstext mit (R32),
+                     sie kann nur vorschlagen.
+
+                     WARUM ER OHNE BEDINGUNG DASTEHT, anders als der Baustein
+                     zur Adresssuche: Den Ratenschutz gibt es in jeder
+                     Installation, und er laesst sich nicht abschalten. Es
+                     gibt also keine Lage, in der dieser Absatz eine falsche
+                     Auskunft waere. */ ?>
+            <p class="feld-hinweis"><strong>Zum Übernehmen: die
+               Sicherheitsereignisse.</strong> Seit Web 20.12.0 führt diese
+               Installation unter <em>Betrieb → Status → Sicherheit</em> eine
+               Liste der Sperren und Verlangsamungen der letzten
+               <strong>30 Tage</strong>. Sie enthält <strong>IP-Adressen und
+               E-Mail-Adressen im Klartext</strong> — ohne sie ließe sich keine
+               Sperre aufheben. Wer das nennt, nennt eine Verarbeitung
+               personenbezogener Daten; der Baustein unten ist ein Vorschlag,
+               keine Rechtsberatung.</p>
+            <?= ui_codeblock_lang(
+                  '### Schutz vor unbefugten Anmeldeversuchen' . "\n\n"
+                . 'Wenn bei der Anmeldung mehrfach ein falsches Passwort eingegeben '
+                . 'wird oder ein Gerät sich wiederholt mit einem ungültigen '
+                . 'Schlüssel meldet, sperrt die Anwendung den betroffenen Zugang '
+                . 'vorübergehend. Dafür werden die betroffene E-Mail-Adresse '
+                . 'beziehungsweise IP-Adresse zusammen mit Zeitpunkt und Anzahl '
+                . 'der Versuche gespeichert. Diese Angaben dienen ausschließlich '
+                . 'der Abwehr von Angriffen, werden nicht ausgewertet und nach '
+                . '**30 Tagen automatisch gelöscht**. Eine laufende Sperre kann '
+                . 'die Betreiberin vorzeitig aufheben; auch das wird mit '
+                . 'Zeitpunkt vermerkt.' . "\n\n"
+                . 'Hinweis: Sicherungskopien der Datenbank können diese Angaben '
+                . 'enthalten, solange die Sicherung aufbewahrt wird.',
+                  'Vorschlag für den Abschnitt „Schutz vor unbefugten Anmeldeversuchen"') ?>
           <?php endif; ?>
 
           <?php if (!$leer): ?>

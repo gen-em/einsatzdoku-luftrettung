@@ -980,6 +980,18 @@ Zahl (gedämpft), genau **eine** Kopfaktion rechts.
 **Zustände:** offen (`<section>`) · klappbar (`<details class="karte
 karte-klappbar">` mit Winkel links und Vorschau rechts) · mit Plakette.
 
+> **Die drei Zustände sind nicht frei kombinierbar, und der Unterschied fällt
+> still aus** (notiert 16.09.2026, P5a/AP8). Eine **klappbare** Karte zeigt
+> **weder `plakette` noch `aktion`**: `ui_karte_start()` kehrt im
+> `<details>`-Zweig zurück, bevor beides ausgegeben wird. Sie kennt dort nur
+> Winkel, Titel, `zahl` und `vorschau`. Wer `vorschau` setzt und eine Plakette
+> mitgibt, verliert die Plakette — ohne Fehlermeldung, und kein Bild zeigt es,
+> weil der zugeklappte Kartenkopf ohnehin anders aussieht.
+>
+> **Wer beides braucht, nimmt eine offene Karte.** Was in die Plakette
+> gehörte, steht dann nicht zusätzlich in der Vorschau: Die Vorschau ist der
+> Ersatz für den Inhalt, nicht für den Zustand.
+
 **Eine zweite Kopfaktion gibt es nicht** (E-P3-25). Was mehr braucht, bekommt
 ein Aktionsmenü.
 

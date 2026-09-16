@@ -206,6 +206,16 @@ Daten erst nach Server-Bestätigung.
 │   │                       Ausnahmeliste. Lädt NICHTS — der Zustand ist eine
 │   │                       Datei (`wartung.lock`), damit er auch bei
 │   │                       umgebauter Datenbank greift
+│   ├── betrieb_sicherheit.php
+│   │                       Betrieb → Status → **Sicherheit** (P5a/AP8,
+│   │                       E-P5a-08): fünf Karten — aktive Sperren mit
+│   │                       Knopf „Aufheben", Verlangsamung, Mengenbremse
+│   │                       der Geräte, Ereignisse der letzten 30 Tage,
+│   │                       Mailregel. UNTERSEITE, kein Menüpunkt: sie
+│   │                       hält über `menue => betrieb_status` den Eintrag
+│   │                       der Elternseite aktiv, wie `admin_user.php`.
+│   │                       Die einzige Seite des Betriebsbereichs mit
+│   │                       Sperrrecht — und die einzige, die etwas ändert
 │   ├── betrieb_updates.php  Betrieb → Updates (S8/AP2): Wartungsmodus,
 │   │                       ausstehende Migrationen mit Vorschau und Lauf,
 │   │                       ausgeführte Migrationen, Fassung
@@ -704,7 +714,7 @@ Daten erst nach Server-Bestätigung.
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“ |
 | Backup | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist im Backup, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
-| `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname, **VARCHAR(191)** — die Gerätedateien liefern Sammelnamen bis 153 Zeichen; die zunächst gewählten 64 waren geraten und sind mit Web 12.9.1 nachgezogen) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Seit Web 20.11.0 dazu **`abgewiesen_seit`** (der **erste** Fehlversuch einer Serie, nicht der letzte) und **`abgewiesen_anzahl`** — der Vermerk der Mengenbremse aus P5a/AP7 (Abschnitt 5e.7). Beide werden beim nächsten gelungenen Upload geleert; ein Vermerk, der stehenbleibt, nachdem neu gekoppelt wurde, ist eine Falschmeldung. Siehe Abschnitt 5 |
+| `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname, **VARCHAR(191)** — die Gerätedateien liefern Sammelnamen bis 153 Zeichen; die zunächst gewählten 64 waren geraten und sind mit Web 12.9.1 nachgezogen) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Seit Web 20.11.0 dazu **`abgewiesen_seit`** (der **erste** Fehlversuch einer Serie, nicht der letzte) und **`abgewiesen_anzahl`** — der Vermerk der Mengenbremse aus P5a/AP7 (Abschnitt 5e.7). Beide werden beim nächsten gelungenen Upload geleert; ein Vermerk, der stehenbleibt, nachdem neu gekoppelt wurde, ist eine Falschmeldung. **Und seit Web 20.12.0 nach 30 Tagen auch ohne Upload** (Schritt `Geraetevermerke` im Aufräumjob): Den gelungenen Upload gibt es nicht mehr, wenn das Gerät ausgemustert ist — ohne den Schritt trüge ein verlorenes Gerät seine orange Plakette für immer. Siehe Abschnitt 5 |
 | `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
@@ -731,7 +741,7 @@ Daten erst nach Server-Bestätigung.
 | `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 5c) |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
-| `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **Die Folge ist benannt:** `komp_tabellen()` zählt seine Tabellen über `SHOW FULL TABLES` und hat keine Ausnahmeliste — diese Tabelle liegt damit in **jeder** Komplettsicherung, und die 30-Tage-Frist gilt in der laufenden Datenbank, nicht im versiegelten Abzug. Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09) |
+| `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **Die Folge ist benannt:** `komp_tabellen()` zählt seine Tabellen über `SHOW FULL TABLES` und hat keine Ausnahmeliste — diese Tabelle liegt damit in **jeder** Komplettsicherung, und die 30-Tage-Frist gilt in der laufenden Datenbank, nicht im versiegelten Abzug. Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09). **Gelesen wird sie seit Web 20.12.0 über `sicherheit_ereignisse()`** und gezeigt auf Betrieb → Status → Sicherheit (5e.8); geschrieben wird nur an den **fünf Töpfen mit Leiter** — die übrigen neun sperren ohne Protokollzeile |
 | `mail_warteschlange` | Jede ausgehende Nachricht, eine Zeile (seit Web 20.8.0, P5a/AP5). `schluessel` = Eintrag aus `mail_katalog()`, `art` = `konto`/`geraet`/`betrieb` (das wird in P5c der Reiter im Protokoll), `zustand` = `offen` / `zugestellt` / `unzustellbar` / `zu_spaet` / `ueberholt`, `versuche`, `naechster_versuch`, `gueltig_bis` (ein Reset-Link gilt eine Stunde), `fehler` = Grund **samt Kennung**. **Was beim Endzustand geleert wird, hängt vom Zustand ab** (E-P5a-39): `zugestellt`, `zu_spaet` und `ueberholt` verlieren Adresse, Betreff und Rumpf — es bleibt „eine Nachricht dieser Art ging zu dieser Zeit hinaus". Bei `unzustellbar` **bleibt die Adresse stehen**, weil „die Einladung an X kam nie an" ohne X wertlos ist; der Rumpf fällt trotzdem, wegen des Tokens darin. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `job_laeufe` | Verlauf der Hintergrundjobs (seit Web 20.8.0), eine Zeile je Lauf, der etwas getan hat oder scheiterte — ein Leerlauf schreibt nichts, sonst füllte sich die Tabelle mit Nichts. `job`, `zeitpunkt`, `ausloeser`, `erledigt`, `fehler`. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
@@ -3196,7 +3206,7 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 
 | Job | täglich? | was er tut |
 |---|---|---|
-| `aufraeumen` | ja, höchstens 1×/Kalendertag | verfallene Kopplungssitzungen, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung |
+| `aufraeumen` | ja, höchstens 1×/Kalendertag | **zwölf Schritte** — verfallene Kopplungssitzungen, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speichermessung und Warnschwellen. **Maßgeblich ist `job_aufraeumen()`, nicht diese Zeile** — sie nannte bis Web 20.12.0 sechs von zwölf, und die fehlenden sechs sind zwischen S10 und P5a/AP7 dazugekommen, ohne dass es jemandem auffiel. Die **sichtbare** Beschreibung steht im Job-Katalog (`jobs_lib.php`) und ist mitzuführen |
 | `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
 | `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
 | `waisen` | nein, läuft solange Rückstand da ist | Spurpunkte und Blobs ohne Eigentümer — **bereichsweise** über den Primärschlüssel |
@@ -5558,7 +5568,7 @@ geändert** (E-S5W-08).
 | Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
 | Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript `ingest.php` oder `pair.php` heißt — die beiden liegen nicht unter `/api/`, und genau sie brauchen JSON |
 | Kopfzeilen | `Retry-After: 300` (E-S5W-12), `Cache-Control: no-store`. Kein `Set-Cookie`: Das Tor greift vor `session_start()` |
-| Ausnahmen | **dreizehn** Skripte (`WARTUNG_AUSNAHMEN` in `wartung_lib.php` — dort steht zu jedem der Grund), verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `auth_salt.php`, `logout.php`, `install.php`. **Die Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). `betrieb_schluesselblatt.php` kam mit S10/AP3 dazu: Die Lage, in der man das Blatt braucht, ist genau eine Wartungslage. **Die Zahl stand hier bis Web 20.1.0 auf „elf“ und die Aufzählung ließ `auth_salt.php` aus** — beide hinkten seit Web 19.1.2 (Nr. 171) hinterher; maßgeblich ist immer die Konstante, nicht dieser Satz. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
+| Ausnahmen | **vierzehn** Skripte (`WARTUNG_AUSNAHMEN` in `wartung_lib.php` — dort steht zu jedem der Grund), verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_sicherheit.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `auth_salt.php`, `logout.php`, `install.php`. **Die Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). `betrieb_schluesselblatt.php` kam mit S10/AP3 dazu: Die Lage, in der man das Blatt braucht, ist genau eine Wartungslage. `betrieb_sicherheit.php` mit P5a/AP8, aus demselben Grund und schärfer: Dort steht der Knopf, mit dem sich eine Sperre aufheben lässt — wer im Wartungsmodus jemanden wieder hereinlassen muss, braucht genau diese Seite. **Die Zahl stand hier bis Web 20.1.0 auf „elf“ und die Aufzählung ließ `auth_salt.php` aus** — beide hinkten seit Web 19.1.2 (Nr. 171) hinterher; maßgeblich ist immer die Konstante, nicht dieser Satz. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
 | Schalten | `betrieb_updates.php`, Karte „Wartungsmodus", POST mit CSRF, nur BetreiberIn (S8/AP1). Idempotent: Ein zweites Einschalten überschreibt `seit` und `von` nicht. Scheitert das Schreiben oder Löschen, sagt die Seite es **mit Pfad** |
 | Sichtbarkeit | Es gibt kein automatisches Ausschalten (E-S5W-05). Ein oranger Balken auf `betrieb_updates.php` und `login.php` nennt Zeitpunkt und Konto — das sind die beiden einzigen Seiten, auf denen ein stehengebliebener Wartungsmodus überhaupt auffallen kann |
 | Jobs | laufen weiter (E-S5W-11). `jobs.php` mit Token ist Ausnahme, damit das Komplett-Backup **während** der Wartung läuft — genau dann ist es konsistent. Der Huckepack-Weg aus `auth_guard.php` läuft auf `betrieb_updates.php` mit, und zwar **vor** `require_betreiberin()` und damit vor jeder Migration desselben Aufrufs. Wer Ruhe braucht: `jobs.php --pause` |
@@ -7134,7 +7144,7 @@ entfällt, weil ein Paketname keinen trägt — steht in
 Installation — Betriebskonfiguration der Auslieferungskette, keine Eigenschaft
 der Software.
 
-### 5e Der Ratenschutz — Leiter, zwei Schwellen, Verlangsamung, Mengenbremse (P5a/AP6, AP7)
+### 5e Der Ratenschutz — Leiter, Schwellen, Verlangsamung, Mengenbremse, Sicherheitsseite (P5a/AP6–AP8)
 
 **Was bis Web 20.9.1 galt.** Eine Sperre dauerte fest 15 Minuten — die erste
 wie die hundertste. Wer geduldig ist, bekommt damit 10 Versuche je
@@ -7352,6 +7362,91 @@ Anfragen, 64 478 Punkte, je zwei Läufe): Median **14,43 ms ohne**,
 **15,14 ms mit** Bremse (+4,9 %), Mittel 19,67 gegen 20,33 ms (+3,4 %), 0
 Fehlversuche in allen vier Läufen — bei einer Streuung von 3 bis 4 % zwischen
 zwei *gleichen* Läufen.
+
+#### 5e.8 Die Sicherheitsseite (Web 20.12.0, P5a/AP8)
+
+**Betrieb → Status → Sicherheit** (`betrieb_sicherheit.php`). Fünf Karten:
+aktive Sperren mit dem Knopf „Aufheben", Verlangsamung, Mengenbremse der
+Geräte, Ereignisse der letzten 30 Tage, Mailregel.
+
+**Sie ist eine Unterseite und kein Menüpunkt** (E-P5a-08). Für eine
+BetreiberIn stehen siebzehn Einträge in der Leiste; einer mehr für eine Seite,
+die man an guten Tagen nie braucht, wäre an der falschen Stelle teuer.
+`ui_geruest_start(['menue' => 'betrieb_status'])` hält den Eintrag der
+Elternseite aktiv — dasselbe Muster wie `admin_user.php` unter
+`admin_users.php`. In `ui_einstellungen_punkte()` ist **nichts** einzutragen;
+die Sprungmarken der Karten entstehen von selbst aus `.karte[id]`.
+
+##### Drei Lesefunktionen und keine vierte
+
+Sie stehen in `ratelimit_lib.php` neben `rate_ereignis()`, nicht als
+Einzelabfragen in der Seite — dieselbe Trennung wie zwischen `status_lib.php`
+und `betrieb_status.php`:
+
+| Funktion | liefert |
+|---|---|
+| `sicherheit_ereignisse($arten, $toepfe, $grenze)` | die Ereignisse der letzten 30 Tage **plus die Gesamtzahl** |
+| `sicherheit_bremse_geraete($grenze)` | Geräte mit `abgewiesen_anzahl > 0` |
+| `sicherheit_mailregel()` | an/aus, letzte Meldung, Empfänger, höchste Sprosse |
+
+`sicherheit_ereignisse()` liefert die **Gesamtzahl** mit, nicht nur die Zeilen:
+`LIMIT 200` ist unter Beschuss schnell erreicht, und eine Karte, die dann
+zweihundert Zeilen zeigt und schweigt, sagt „das war alles".
+
+##### Drei Ableitungen wurden eine
+
+„Ist dieses Merkmal ein Konto oder eine Adresse?" stand dreimal nachgebaut —
+in `rate_sperre()`, in `sicherheit_melden_pruefen()` und auf der Statusseite.
+`rate_sperren_aktiv()` liefert **`art`** jetzt mit. Dasselbe bei den
+Gerätevermerken: Die Statusseite stellte eine eigene Abfrage auf dieselben zwei
+Spalten und ruft jetzt `sicherheit_bremse_geraete()`.
+
+##### Was die Seite ändert — genau eines
+
+`rate_sperre_aufheben($topf, $merkmal, $wer)`, über POST mit CSRF-Token.
+**Nicht `rate_erfolg()`**: Jene bildet die Merkmale aus dem *Aufrufer* — das
+wäre die Adresse der Administratorin; der Knopf löschte ihre eigene Zeile,
+meldete Erfolg, und die Sperre bliebe stehen. `$wer` ist die Kontokennung der
+Handelnden; ohne sie bliebe die Spalte `wer` leer, und das Ereignis
+„aufgehoben" sagte nicht, wer aufgehoben hat.
+
+##### Was **nicht** protokolliert wird, und warum das auf der Karte steht
+
+Ein Sperrereignis entsteht nur an den **fünf Töpfen mit Leiter** — `login`,
+`login_ip`, `salt`, `ingest`, `ingest_ip`. Die übrigen neun (`reset`, die drei
+Kopplungstöpfe, `demo`, `demog`, `testmail`, `csp`) sperren über den
+Rückfallweg **ohne** Protokollzeile. Ohne diesen Satz auf der Karte liest sich
+eine kurze Liste als „es war fast nichts", obwohl neun Töpfe gar nicht
+berichten.
+
+Und die Karte „Verlangsamung" zeigt **Anstiege, keine Phasen**: Vermerkt wird,
+wenn die Stufe steigt; ein Ende hat kein eigenes Ereignis.
+
+##### Zwei Fehler, die AP8 nebenbei behoben hat
+
+**Das Protokoll hing am Mailschalter.** `sicherheit_melden_pruefen()` kehrte
+als *erste* Zeile zurück, wenn `rate_mail_an()` false ist — und darin stand
+das Vermerken der Verlangsamungsstufe. Wer die Sammelmail abschaltete,
+schaltete stillschweigend auch das Protokoll ab. Protokollieren und Melden
+stehen jetzt in zwei Funktionen
+(`sicherheit_verlangsamung_vermerken()` / `sicherheit_melden_pruefen()`).
+
+**Der Gerätevermerk verfiel nie.** `devices.abgewiesen_*` wird beim nächsten
+gelungenen Upload geleert — den gibt es nicht mehr, wenn das Gerät ausgemustert
+ist. Der Aufräumjob hat dafür jetzt den Schritt **`Geraetevermerke`**
+(30 Tage ab `abgewiesen_seit`).
+
+##### Der Datenschutztext
+
+Die Seite zeigt IP- und E-Mail-Adressen im Klartext. Die Anwendung liefert
+**keinen Rechtstext mit** (R32); sie kann nur **vorschlagen**. Unter
+*Verwaltung → Installation* steht deshalb ein zweiter Textbaustein neben dem
+zur Adresssuche aus S9/AP2 — und anders als jener **ohne Bedingung**: Den
+Ratenschutz gibt es in jeder Installation, und er lässt sich nicht abschalten.
+
+**Nachweis:** `node tools/klickprobe/probe.mjs --nur P5a-AP8` — 1 von 1 Weg
+erfüllt, gemessen am DOM *und* an der Datenbank (Zeile 1 → 0, `rate_limits`
+1 → 0, Ereignis „aufgehoben" mit Kontokennung).
 
 
 ## 6. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)

@@ -38,6 +38,8 @@ beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
 | N22 | **Der vollständige Einspiellauf des Referenzdatensatzes** (`tools/referenzdatensatz/einspielen/`) | Der Generator lief (21 Dienste, 612 Ingest-Anfragen, 64 478 Punkte). Die Stufe `geraet` bricht ab: Sie koppelt über die **Weboberfläche** und braucht eine angemeldete Sitzung des Demo-Kontos; dessen Einladungslink war in diesem Container nicht mehr zu haben (`Konto demo@gen-em.org besteht bereits`), und ohne ihn wirkt das Einlösen des Kopplungscodes nicht (`409 nicht_beansprucht`). | Gemessen wurde **der erzeugte Sendeplan selbst** — dieselben 612 Anfragen, dieselben Körper, über echtes HTTP, mit per SQL angelegten Geräten: **0 Fehlversuche**, Median 14,43 ms ohne und 15,14 ms mit Bremse (je zwei Läufe). Das prüft `ingest.php`, nicht die Geräteverwaltung — und das ist die Frage von AP7. Der Kopplungsweg und die beiden Kreisläufe gehören zu **AP12**. |
 | N23 | **Ob `Retry-After` einen Client erreicht** | Kein Client dieses Projekts liest die Kopfzeile, und die Garmin-Uhr **kann** es nicht: Der Rückruf von Connect IQ bekommt `(code, data)` und keine Kopfzeilen. | Gemessen ist, dass die Zeile **dasteht und den richtigen Wert trägt** (`Retry-After: 900`, Ingestprobe Teil 10). Dass beide Clients die `429` richtig behandeln, ist am **Quelltext** belegt (`Uploader.mc` fällt in „später erneut", `Sendeantwort.lese()` in `SpaeterErneut` bei `code != 200`, und `Sender.sendeAlles()` bricht den Lauf ab) — **nicht** an einem laufenden Gerät. Prüfpunkt **P24**. |
 | N24 | **Die Mengenbremse unter echtem Mobilfunk-NAT** | Der Container hat eine Adresse. Ob hinter einem Anbieter-NAT Geräte zusammenfallen, sagt nur der Betrieb. | Die Bauart nimmt das Risiko heraus: In den Adresstopf zählen **ausschließlich unbekannte** Kennungen, und ein gekoppeltes Gerät sendet nie eine unbekannte — gemessen als eigene Erwartung („Der Adresstopf ist leer — bekannte Kennungen zählen dort nicht"). Prüfpunkt **P24**. |
+| N25 | **Die Karte „Löschungen auf Sicherungszielen“** (E-P5a-08 nennt sechs Karten, gebaut sind fünf) | Es gibt dafür heute weder Tabelle noch Schreibweg noch `app_state`-Schlüssel — die Löschregel je Ziel entsteht erst in **AP10** (E-P5a-03). An fünf Stellen nachgesehen: `schema.sql` kennt keine Löschspalte in `backup_targets`, `Zielweg::loeschen()` hat genau einen Aufrufer (die Probedatei), `sz_loeschen()` löscht nur den DB-Eintrag, kein `app_state`-Schlüssel, kein Jobschritt. | Sie ist in den **Umfang von AP10** eingetragen (Abschnitt 3, AP10). Eine Karte, die sagt „hier steht noch nichts, weil es die Sache noch nicht gibt“, wäre kein Befund, sondern Lärm. |
+| N26 | **Ob ein Ereignis nach 30 Tagen wirklich verschwindet** — in Echtzeit | Der Aufräumjob läuft höchstens einmal je Kalendertag; 30 Tage lassen sich nicht abwarten. | Gemessen ist die **Regel**, nicht die Uhr: Das `DELETE` steht mit `INTERVAL 30 DAY` in `job_aufraeumen()` (Schritte `Sperrereignisse` und, neu, `Geraetevermerke`), und die Lesefunktion `sicherheit_ereignisse()` blickt auf **dieselbe** Frist zurück — eine Seite, die weiter zurückblickt als der Job aufhebt, zeigte eine Lücke, die wie ein ruhiger Monat aussieht. Der Echtlauf ist Prüfpunkt **P25**. |
 | N8 | **Die Kontingent-Warnmail auf einem echten Mailserver** | Der Container hat keinen. | Die Logik ist mit abgesenkten Schwellen (50/53 %) durchgespielt: Beide Schwellen schlagen an, der Versand scheitert erwartungsgemäß und wird **nicht** als gemeldet vermerkt — also am nächsten Tag erneut versucht. Prüfpunkt **P10**. |
 
 ---
@@ -270,6 +272,50 @@ einem Container mit lokaler MariaDB — nicht auf geteiltem Webspace, wo eine
 zusätzliche Abfrage anders wiegt. Und gemessen ist der **gelungene** Weg: Die
 Bremse kostet dort genau eine indizierte Abfrage; im Fehlerzweig kommen die
 Zählschritte dazu, und der Fehlerzweig ist der, den niemand schnell braucht.
+
+---
+
+### 1i. Nach AP8 (Web 20.12.0), im selben Container
+
+| Mittel | Aufruf | Ergebnis |
+|---|---|---|
+| **Klickprobe** (neuer Weg) | `node tools/klickprobe/probe.mjs --nur P5a-AP8` | **1 von 1 erfüllt** |
+| Bilderlauf (3 Seiten, 8 Breiten) | `… --nur 45b-,45-,43a-` | **24 Bilder · 0 Überlauf · 0 Konsole · 0 Knopfhöhen** |
+| Wartungsprobe | `php tools/wartungsprobe/probe.php` | **67/0**; Ausnahmeliste **14** statt 13 |
+| Ratenprobe · Ingestprobe · Kopplungsprobe | je eigener Lauf | **50/0 · 83/0 · 76/0** |
+| Mailprobe · Jobprobe | je eigener Lauf | **41/0 · 35/0** |
+| Migrationsregister | `php tools/migrationsregister/pruefen.php` | **0 Befunde** — AP8 bringt **keine** Migration |
+| Wortliste | `python3 tools/wortliste/wortliste.py` | **0/0/0** |
+| Vollständigkeit | `… --hoechstens 377` | **377** — 372 + 5 Pfeile in neuen sichtbaren Texten |
+| CSP · Sitzungshärtung · Installweiche · Kontraste | je eigener Lauf | **0 · 0 · 0 · 22/0** |
+| PHP-Syntax | `php -l` je Datei | **458 Dateien, 0 Fehler** |
+
+**Die Zahlen der Klickprobe im Einzelnen** — sie sind die Abnahme von AP8,
+und sie sind der Grund, warum der Weg überhaupt entstanden ist: Der Bilderlauf
+hat noch nie einen Knopf gedrückt.
+
+| Was | Gemessen |
+|---|---|
+| Sperre in der Karte | genau **eine** Zeile mit dem Prüfmerkmal, und sie trägt einen Knopf |
+| Klick auf „Aufheben“ | öffnet die **Rückfrage** aus `data-confirm` (Dialog im DOM) |
+| nach dem Bestätigen | Zeile mit Prüfmerkmal **1 → 0** |
+| in der Datenbank | `rate_limits` **1 → 0** |
+| im Protokoll | Ereignis `aufgehoben` mit `wer` = **`admin@gen-em.org`** |
+| Meldung | „Die Sperre ist aufgehoben. Der Vorgang steht unten in den Ereignissen …“ |
+
+Der Weg **legt seine Sperre selbst an** (`id:klickprobe-ap8@example.invalid`,
+Topf `login`) und räumt sie im `finally` ab — auch wenn er unterwegs
+scheitert. Eine echte Sperre zu benutzen hieße, sich selbst auszusperren.
+
+**Ein Befund, der keiner war, und warum er hier steht.** Die Kopplungsprobe
+meldete zwischendurch **1 von 76 verfehlt** („Versandweg nach der Antwort
+betreten, Protokollzeile SMTP“). Die Ursache lag nicht im Code, sondern
+daran, dass der PHP-Server von Hand in ein **anderes Protokoll** gestartet
+worden war als das, in das die Probe sieht (`/tmp/php-server.log`, Vorgabe in
+`probe.php:54`). Nach einem Start über
+`tools/referenzdatensatz/einspielen/lokal_starten.sh`: **76 von 76**. Wer die
+Proben fährt, startet die Installation über das Skript — sonst misst er den
+Prüfstand und nicht die Anwendung.
 
 ---
 
@@ -797,6 +843,64 @@ hinter einem Mobilfunk-NAT trägt, sagt nur der Betrieb.
   verletzt. Das ist der einzige Fall, in dem die Adressgrenze von 30 zu
   niedrig wäre — und dann ist nicht die Zahl das Problem, sondern die
   Zuordnung.
+
+---
+
+### P25 — Ein Ereignis, das nach 30 Tagen verschwindet
+
+**Wofür:** N26 — gemessen ist die Regel, nicht die Uhr.
+
+**Weg:** Nach dem Ausrollen einen Monat vergehen lassen. Dann **Betrieb →
+Status → Sicherheit** öffnen, Karte „Ereignisse der letzten 30 Tage“.
+
+**Erwartet:** Das älteste Ereignis ist höchstens 30 Tage alt. Steht in der
+Karte eine Gesamtzahl („die jüngsten 200 von …“), ist auch die um die
+verfallenen Zeilen kleiner geworden.
+
+**Woran ein Scheitern zu erkennen ist:**
+
+- Ein Ereignis mit einem Datum **älter als 30 Tage**: Dann läuft der Schritt
+  `Sperrereignisse` im Aufräumjob nicht. Nachsehen unter **Betrieb →
+  Hintergrundjobs**, ob `aufraeumen` überhaupt läuft — und ob er einen Fehler
+  meldet.
+- Ein Gerät trägt auf **Einstellungen → Geräte** seit über 30 Tagen die
+  orange Plakette „abgewiesen“, obwohl es längst ausgemustert ist: Dann
+  greift der Schritt `Geraetevermerke` nicht. Das ist der Fall, den AP8
+  behoben hat — er fällt sonst niemandem auf, weil die Statuszeile einfach
+  dauerhaft orange steht.
+- **Umgekehrt** auffällig: eine Karte, die plötzlich **leer** ist, obwohl es
+  Sperren gab. Dann löscht der Job zu viel — die Frist steht als
+  `INTERVAL 30 DAY` in `job_aufraeumen()` und ist **keine** Einstellung; wer
+  dort etwas anderes findet, hat den Fehler.
+
+---
+
+### P26 — Der Knopf „Aufheben“ an einer echten Sperre
+
+**Wofür:** Die Klickprobe fährt gegen eine **selbst angelegte** Sperre auf ein
+erfundenes Merkmal. Dass der Weg auch dann stimmt, wenn eine echte Kollegin
+sich ausgesperrt hat, sagt nur der Ernstfall.
+
+**Weg:** Eine zweite Person tippt ihr Passwort zehnmal falsch. Dann **Betrieb
+→ Status → Sicherheit** öffnen, ihre Zeile suchen, **Aufheben** drücken,
+bestätigen — und sie bitten, sich sofort anzumelden.
+
+**Erwartet:** Die Anmeldung gelingt **ohne Wartezeit**. Die Zeile ist fort, und
+in „Ereignisse der letzten 30 Tage“ steht ein Eintrag „aufgehoben“ **mit
+deinem Namen**.
+
+**Woran ein Scheitern zu erkennen ist:**
+
+- Sie ist **weiterhin gesperrt**: Dann greift eine zweite Sperre, die die
+  Karte auch zeigt — die auf ihren **Anschluss** (Topf `login_ip`). Beide
+  müssen fallen. Zeigt die Karte nur eine, sitzt der Fehler in
+  `rate_sperren_aktiv()`.
+- Das Ereignis steht ohne Namen da (`durch —`): Dann wird `$wer` nicht
+  übergeben, und das Protokoll sagt nicht, wer gehandelt hat — also genau
+  das nicht, wofür die Spalte da ist.
+- **Deine eigene** Anmeldung hängt danach: Dann ist statt
+  `rate_sperre_aufheben()` irgendwo `rate_erfolg()` gelandet, und der Knopf
+  hat die Zeile der handelnden Person gelöscht statt der gemeinten.
 
 ---
 

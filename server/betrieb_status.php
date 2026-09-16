@@ -170,7 +170,22 @@ ui_seite_start(['titel' => 'Status']);
       'titel' => 'Status',
       'unter' => 'Was diese Installation gerade meldet. Geändert wird auf der '
                . 'Seite, auf die die Zeile führt — hier wird nur geprüft.',
-      'aktionen' => ui_knopf(['text' => 'Aktualisieren', 'symbol' => 'sortieren',
+      /* ZWEI HANDLUNGEN NEBEN DEM TITEL, seit P5a/AP8 die Unterseite
+         „Sicherheit" dazugekommen ist. `ui_aktionen()` ist der Baustein fuer
+         Handlungen DER SEITE; die Titelzeile reicht ihr Markup durch. Die
+         Unterseite steht bewusst NICHT als achtzehnter Eintrag in der
+         Leiste (E-P5a-08) — sie haengt an Status, und hier ist der Weg
+         dorthin. */
+      /* OHNE SYMBOL, und das ist eine Entscheidung. Der Vorrat haette
+         `schloss` — aber das Zeichen ist in dieser Anwendung schon zweifach
+         belegt: Es traegt die Zusage „Ende-zu-Ende-verschluesselt"
+         (`CLAUDE.md` 4) und auf dem Geraete-Reiter den Zustand „aktiv". Eine
+         dritte Bedeutung waere genau die Verwechslungsgefahr, wegen der
+         Mockup 13 fuenf neue Zeichen bekommen hat. Ein NEUES Zeichen braucht
+         eine Freigabe; der Knopf braucht keins. */
+      'aktionen' => ui_knopf(['text' => 'Sicherheit',
+                              'art' => 'neutral', 'href' => 'betrieb_sicherheit.php'])
+                  . ui_knopf(['text' => 'Aktualisieren', 'symbol' => 'sortieren',
                               'art' => 'neutral', 'href' => 'betrieb_status.php']),
   ]); ?>
 

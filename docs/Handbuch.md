@@ -3439,8 +3439,45 @@ Dienst nachliefert, sendet beliebig viele Stücke.
 
 **Auf Betrieb → Status** stehen dazu bis zu drei Zeilen, sobald es etwas zu
 sagen gibt: „Verlangsamung" (orange), „Gesperrt" und „Abgewiesene Geräte"
-(orange). Die vollständige Liste mit einem Knopf zum Aufheben kommt in einem
-späteren Paket.
+(orange). Jede führt auf die Unterseite **Sicherheit** (11.4b), und dort
+steht auch der Knopf zum Aufheben.
+
+### 11.4b Sicherheit — wer ausgesperrt ist, und wie man ihn wieder hereinlässt
+
+Unter **Betrieb → Status**, Knopf **„Sicherheit"** neben dem Titel *(seit
+Web 20.12.0)*. Fünf Karten:
+
+| Karte | Was dort steht |
+|---|---|
+| **Aktive Sperren** | Wer gerade draußen ist — Kontokennung oder Anschluss, Topf, Stufe, bis wann, Restzeit. Je Zeile ein Knopf **„Aufheben"** |
+| **Verlangsamung** | Ob die Bremse gerade läuft, und jeder **Anstieg** der Stufe in den letzten 30 Tagen |
+| **Mengenbremse der Geräte** | Geräte mit abgewiesenen Anmeldungen, dazu gesperrte Gerätekennungen und Anschlüsse |
+| **Ereignisse der letzten 30 Tage** | Alles zusammen, das Jüngste zuerst |
+| **Meldung per Mail** | Ob die Sammelmeldung eingeschaltet ist, wann zuletzt eine hinausging, an wen |
+
+**Der Knopf „Aufheben" ist für den Anruf gedacht**, nicht als Regelweg: Eine
+Sperre läuft von selbst ab, und wer sein Passwort neu setzt, ist danach
+ohnehin nicht mehr gesperrt. Es kommt eine Rückfrage, und der Vorgang wird
+**mit deinem Namen** vermerkt — er steht danach in den Ereignissen.
+
+> **Nicht jede Sperre steht in den Ereignissen.** Vermerkt werden die fünf
+> Töpfe mit Sperrleiter: Anmeldung, Anschluss, Schlüsselableitung und die
+> beiden der Mengenbremse. Kopplung, Passwort-Reset, Demo-Konto, Testmail und
+> CSP-Berichte sperren ebenfalls, schreiben aber keine Zeile — dort eskaliert
+> nichts, und ein Protokoll jedes Tippfehlers würde die Liste zudecken.
+
+> **Hier stehen IP-Adressen und E-Mail-Adressen im Klartext.** Ohne sie wäre
+> die Liste „irgendwo war irgendwer gesperrt" und damit wertlos — man kann
+> eine Sperre nicht aufheben, ohne zu wissen, welche. Alles verfällt nach
+> **30 Tagen**, und das ist keine Einstellung. Die Angaben fahren allerdings
+> in **jeder Komplettsicherung** mit, solange die Sicherung aufbewahrt wird.
+> **Der Datenschutztext deiner Installation gehört deshalb nachgezogen** —
+> einen Baustein zum Übernehmen findest du unter *Verwaltung → Installation*
+> beim Datenschutztext.
+
+Die Seite ist auch im **Wartungsmodus** erreichbar. Das ist Absicht: Wer
+jemanden wieder hereinlassen muss, während die Anwendung zu ist, braucht
+genau sie.
 
 ### 11.5 Installation
 
@@ -3646,6 +3683,12 @@ Oben steht eine Meldung mit einer Zahl — *„2 Punkte brauchen Aufmerksamkeit"
 oder *„Alles läuft"*. Darunter vier Karten: **Server**, **E-Mail**,
 **Hintergrundjobs** und **Backups**, je Sache eine Zeile mit einer Plakette.
 Ganz unten, eingeklappt, eine fünfte: **Plattform** (seit Web 20.5.0).
+
+**Neben dem Titel steht seit Web 20.12.0 ein zweiter Knopf: „Sicherheit".**
+Er führt auf die Unterseite, auf der steht, wer gerade ausgesperrt ist — und
+auf der sich eine Sperre aufheben lässt. Beschrieben in Abschnitt **11.4b**.
+Dorthin führen auch die drei Zeilen „Verlangsamung", „Gesperrt" und
+„Abgewiesene Geräte" der Karte **Server**.
 
 **Die Plakettenfarbe bedeutet auf dieser Seite überall dasselbe:**
 

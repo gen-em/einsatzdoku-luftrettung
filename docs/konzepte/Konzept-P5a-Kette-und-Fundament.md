@@ -17,7 +17,7 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | Stand | 15.09.2026 — **Konzept freigegeben, Umsetzung läuft.** Die Grundsatzfragen sind am 15.09.2026 im Gespräch entschieden (E-P5a-01 bis -09); die übrigen Festlegungen (E-P5a-10 bis -21) stammen aus dem Nachmessen im Code und stehen mit der Freigabe. |
 > | Entschieden | E-P5a-01 bis E-P5a-21 (Abschnitt 2), dazu die in der Umsetzung gefallenen E-P5a-22 bis **-49**; E-PP-01 bis -09 übernommen; **F-P5a-1 entschieden** (2.4) |
 > | Offen | — |
-> | Umsetzung | **läuft.** AP1–AP7 und AP4a erledigt, **AP8 als Nächstes** (Status → Sicherheit, nach Mockup M-P5a-01); Abhängigkeiten in 3.0 |
+> | Umsetzung | **läuft.** AP1–AP8 und AP4a erledigt, **AP9 als Nächstes** (Verbindungsgrenze und Messungen); Abhängigkeiten in 3.0 |
 > | Fable-Schritte der Umsetzung | **keiner mehr** — M-P5a-01 ist nach Auftrag vom 15.09.2026 ohne Pause umgesetzt worden (2.5) |
 
 > **Stand der Umsetzung**
@@ -33,7 +33,8 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | **AP4a Sicherheitszeilen** (Nachtrag 16.09.2026) | **erledigt** | **Web 20.9.1** | Nr. 205: `use_strict_mode` vor **7 von 7** `session_start()`-Aufrufen (vorher 2, und zwar die beiden ohne Anmeldesitzung) · Gegenprobe gemessen: **ohne** die Zeile kein `Set-Cookie` (Kennung übernommen), **mit** ihr eine neue — `php.ini` des Prüfstands steht auf `Off` · neu `tools/sitzungshaertung/` in Stufe 1, Selbstprobe **8/8**, Lauf **108 Dateien, 7 Aufrufe, 0 ohne Härtung** · Nr. 203: `json_kopf()` / `json_roh_out()` / `json_out()`, **7 Stellen** umgestellt (nicht 3 — `auth_salt.php`, `jobs.php`, `pair.php` hatten denselben Mangel) · gemessen im Browser: `export_data.php` **200, 68 820 Byte Spurpunkte** mit `no-store`+`nosniff`, `backup_data.php` **200, 19 603 Byte** · `grep Content-Type: application/json server/` = **2 Codezeilen** (`db.php`, `wartung_lib.php` — jene darf `db.php` nicht laden) · Wortliste **0/0/0** (erster Lauf: 2 Treffer, der eigene Satz über die verschwundene Domain) · Vollständigkeit **367 = unverändert** (AP4a fügt netto 0 hinzu; die Schwelle der Kette von 366 auf 367 richtiggestellt) · Kontraste 22/0 · CSP-Probe **0** · Migrationsregister **0** |
 > | **AP6 Ratenschutz neu** | **erledigt** | **Web 20.10.0** | `tools/ratenprobe/` neu: **49 Prüfungen, 0 Befunde** · Leiter 15/20/30/60 min gemessen, Stufe 1→2→3→4 und Deckel bei 4 · Verfall nach 24 h gemessen, Gegenprobe (laufende Frist wird verlängert) ebenso · **zwei Fehler gefunden, die ohne Meldung durchgegangen wären**: Klopfen hätte die laufende Sperre gelöscht, und die Stufe wäre nie zurückgefallen · zwei Schwellen 10/50 gemessen · Verlangsamung 200/400/800/1600 → 1/2/4/8 s, Stufe 1 **1,00 s**, Stufe 4 **8,0 s** (gedeckelt), abgelaufenes Fenster → 0 · gleiche Antwortzeit **0,3 ms Differenz über 100 Messungen** · Sammelmail 1 je Stunde gemessen, abschaltbar · Einstellungen 6 Fälle im Browser, 4 abgewiesen, **nichts halb gespeichert** (Gegenprobe) · Anmeldeseite: Sperrmeldung **wortgleich für echtes und erfundenes Konto**, Countdown tickt (43→38 s), Formular entsperrt sich nach Ablauf, 0 Konsolenfehler · Migrationsregister **51/51, 34 Tabellen, 0 Befunde** · kopplungsprobe **76/0** (ein Prüffall hing an einer festen Migrationszahl und war schon vorher rot), wartungsprobe **67/0**, mailprobe **41/0**, jobprobe **35/0** · Wortliste **0/0/0** · Vollständigkeit **372** (367 + 5 Pfeile in neuen sichtbaren Texten; 5 Auslassungszeichen wieder entfernt) · CSP **0**, Sitzungshärtung **0**, Kontraste **22/0** |
 > | **AP7 Mengenbremse `ingest.php`** | **erledigt** | **Web 20.11.0** | Ingestprobe um Teil 10 erweitert: **83 Erwartungen, 0 nicht erfüllt** (21 davon neu) · gemessen: **14 Fehlversuche ohne Sperre**, Versuche 15–30 weiterhin `401`, **Versuch 31 = `429`** mit `Retry-After: 900` und Rumpf `zu_viele_versuche` · die Antwort nennt den Topf **nicht** · `403 device_disabled`, `400 payload`, `413 too_large` zählen **nicht** (drei Gegenproben) · zweites Gerät an derselben Adresse **`200`** — Adresstopf leer · gelungener Upload leert Topf und Vermerk (`anzahl 30 → 0`) · **30 erfundene Kennungen erreichen dieselbe Schwelle** wie eine bekannte (E-P5a-47) · genau **ein** Sperrereignis je Sperre · Laufzeit über den erzeugten Sendeplan (612 Anfragen, 64 478 Punkte, **je zwei Läufe**): Median **14,43 ms ohne / 15,14 ms mit** (+4,9 %), Mittel **19,67 / 20,33 ms** (+3,4 %), **0 Fehlversuche in allen vier Läufen** — bei 3 bis 4 % Streuung zwischen zwei *gleichen* Läufen · Ratenprobe **50/0** (zwei Prüfungen neu) · Migrationsregister **52/52, 219 Spalten, 0 Befunde** · Bilderlauf der zwei berührten Seiten **16 Bilder, 0 Überlauf / 0 Konsole / 0 Knopfhöhen**, mit gesetztem Vermerk aufgenommen · Wortliste **0/0/0** (98 Regeln, 98 gegriffen) · Vollständigkeit **372 = unverändert** |
-> | AP8 bis AP12 | offen | — | — |
+> | **AP8 Status → Sicherheit** | **erledigt** | **Web 20.12.0** | `betrieb_sicherheit.php` mit **fünf** Karten (nicht sechs — „Löschungen auf Sicherungszielen“ hat bis AP10 keine Datenquelle, geprüft an fünf Stellen) · Klickprobe **neuer Weg, 1 von 1 erfüllt**, gemessen am DOM UND an der Datenbank: Zeile mit Prüfmerkmal **1 → 0**, `rate_limits` **1 → 0**, Ereignis „aufgehoben“ durch **admin@gen-em.org**, dazwischen die Rückfrage aus `data-confirm` · Bilderlauf **24 Bilder, 0 Überlauf / 0 Konsole / 0 Knopfhöhen** mit hergestelltem Bestand aufgenommen · **drei Fehler behoben, die ohne Meldung durchgegangen wären**: das Protokoll hing am Mailschalter, der Gerätevermerk verfiel nie, `ui_knopf()` kennt kein `form` · drei Ableitungen (Konto/Adresse) wurden eine · Wartungsprobe **67/0** mit **14** statt 13 Ausnahmen · Ratenprobe 50/0, Ingestprobe 83/0, kopplungsprobe 76/0, mailprobe 41/0, jobprobe 35/0 · Migrationsregister **0 Befunde** (keine Migration) · Wortliste **0/0/0** · Vollständigkeit **377** (372 + 5 Pfeile in neuen sichtbaren Texten; 2 Auslassungszeichen aus Kommentaren wieder entfernt) · CSP **0**, Sitzungshärtung **0**, Kontraste **22/0** |
+> | AP9 bis AP12 | offen | — | — |
 
 ---
 
@@ -948,13 +949,17 @@ Zweigs, Statusblock, Prüfprotokoll (K5, K7).
 
 ### AP8 — Status → Sicherheit (E-P5a-08, -03 Anzeige, -09; **nach M-P5a-01**)
 
-- Unterseite nach Mockup; Karten aus E-P5a-08; Knöpfe „aufheben";
-  Bereinigung 30 Tage im Job `aufraeumen`; Datenschutztext-Nachtrag
-  (Rechtstexte, `stand_am` — Re-Consent kommt mit 10b, hier nur der
-  Text).
+- Unterseite; **fünf** Karten aus E-P5a-08 — die sechste („Löschungen auf
+  Sicherungszielen") hat bis AP10 keine Datenquelle und **gehört in den
+  Umfang von AP10**; Knöpfe „aufheben"; Bereinigung 30 Tage im Job
+  `aufraeumen` (war für `sicherheit_ereignisse` schon in AP6 gebaut — neu
+  ist der **Gerätevermerk** aus AP7, der nie verfiel);
+  Datenschutztext-**Vorschlag** (die Anwendung liefert keinen Rechtstext
+  mit, R32 — Re-Consent kommt mit 10b).
 - **Abnahme:** Bilderlauf der neuen Seite in acht Breiten (0 Überlauf,
-  0 Konsole, Knopfhöhen 0); Ereignis älter als 30 Tage verschwindet im
-  nächsten Job; Wortliste 0/0/0.
+  0 Konsole, Knopfhöhen 0); **Klickprobe** für „aufheben" — die einzige
+  Handlung der Seite, und ein Bild drückt keinen Knopf; Ereignis älter als
+  30 Tage verschwindet im nächsten Job; Wortliste 0/0/0.
 
 ### AP9 — Verbindungsgrenze und Messungen (E-P5a-18; PP-2, Nr. 37)
 
@@ -968,6 +973,11 @@ Zweigs, Statusblock, Prüfprotokoll (K5, K7).
 
 ### AP10 — Sicherungsziele (E-P5a-03; Nr. 49, Nr. 195, PP-5)
 
+- **Dazu aus AP8 (16.09.2026):** die sechste Karte der Sicherheitsseite,
+  „Löschungen auf Sicherungszielen". Sie ist in AP8 bewusst NICHT gebaut
+  worden, weil es dafür weder Tabelle noch Schreibweg noch
+  `app_state`-Schlüssel gab; wer hier das Versandprotokoll anlegt, hängt die
+  Karte in `betrieb_sicherheit.php` daneben.
 - Anzeige je Ziel über `liste()`; Option Löschregel mit den drei
   Sicherungen; Versandprotokoll in `app_state`; Status-Hinweis
   „wächst seit über einem Monat"; **Platzwarnung** gegen das größte
@@ -1678,3 +1688,93 @@ ausdrücklich *nicht* nebenbei geändert worden:
   bricht dort **jedes Mal** ab. Zuständig ist AP9, das den Messstand ohnehin
   anfasst.
 - `gen-em.org` steht 96× in `tools/` und `.github/` (in `server/`: 0).
+
+### AP8 — Status → Sicherheit · Web 20.12.0 · 16.09.2026
+
+**Was entstanden ist.** `server/betrieb_sicherheit.php` — eine Unterseite von
+Status mit fünf Karten; dazu drei Lesefunktionen in `ratelimit_lib.php`
+(`sicherheit_ereignisse()`, `sicherheit_bremse_geraete()`,
+`sicherheit_mailregel()`), ein Aufräumschritt `Geraetevermerke`, ein zweiter
+Textbaustein im Datenschutz-Editor und ein neuer Weg in der Klickprobe.
+
+#### Der Bestand wurde vor der ersten Codezeile aufgenommen
+
+Acht Agenten, 364 Werkzeugaufrufe: fünf Leser (Datenquellen, Bausteine,
+Gerüst, Aufräumjob, Datenschutztext) und drei Kritiker, die deren Befunde
+gegen den Code prüfen sollten statt sie zu bestätigen. **Das hat sich
+gelohnt** — vier der Funde hätten im Code nicht mehr wehgetan, sondern
+still danebengelegen:
+
+1. **`ui_knopf()` kennt kein `form`.** Der Schlüssel, mit dem ein Knopf ein
+   Formular außerhalb seiner selbst absendet, existiert nur in
+   `ui_zeilenaktionen()` und in der Kopfaktion der Karte. Der erste Entwurf
+   hätte `ui_knopf(['form' => ...])` benutzt — ein Knopf, der nichts tut,
+   ohne Fehlermeldung, und kein Bild hätte es gezeigt.
+2. **Eine eingeklappte Karte zeigt weder `plakette` noch `aktion`.**
+   `ui_karte_start()` kehrt im `<details>`-Zweig zurück, bevor beides
+   ausgegeben wird. Wer `vorschau` setzt und eine Plakette mitgibt, verliert
+   sie still. Steht jetzt in `docs/Design.md` 9.1.
+3. **Die Ableitung Konto/Adresse stand dreimal nachgebaut.**
+   `rate_sperren_aktiv()` liefert `art` jetzt mit; die Sicherheitsseite hätte
+   die vierte Kopie gebraucht.
+4. **Die Bausteinregel widerspricht der Mockup-Skizze.** Jene nennt für die
+   erste Karte eine *Tabelle*; `docs/Design.md` 9.0 führt „eine Liste von
+   Einträgen" ausdrücklich auf `ui_zeile()` und die `<table>` unter „nicht".
+   Entschieden zugunsten der Bausteinregel — die Tabelle ist im Bestand
+   überhaupt kein Baustein, sondern rohes Markup auf sechs Seiten.
+
+**Ein Kritiker hat außerdem die Bestandsaufnahme selbst widerlegt**, und das
+ist der lehrreichste Teil: Er bemerkte, dass der Arbeitsbaum während der
+Prüfung uncommittet weiterwuchs — zwei der fünf Leser hatten `HEAD` gelesen
+und meldeten als fehlend, was auf der Platte längst stand. Wer parallel
+aufnimmt und baut, muss sagen, gegen welchen Stand aufgenommen wurde.
+
+#### Drei Fehler, die ohne Meldung durchgegangen wären
+
+- **Das Protokoll hing am Mailschalter.** `sicherheit_melden_pruefen()`
+  kehrte als *erste* Zeile zurück, wenn `rate_mail_an()` false ist — und darin
+  stand das Vermerken der Verlangsamungsstufe. Wer die Sammelmail abschaltete,
+  schaltete stillschweigend auch das Protokoll ab; die Karte wäre auf einer
+  solchen Installation dauerhaft leer geblieben. Jetzt zwei Funktionen.
+- **Der Gerätevermerk verfiel nie.** `devices.abgewiesen_*` (AP7) wird beim
+  nächsten gelungenen Upload geleert — den gibt es nicht mehr, wenn das Gerät
+  ausgemustert ist. Neuer Aufräumschritt, 30 Tage.
+- **`ui_knopf()` und `form`**, siehe oben.
+
+#### Vier benannte Abweichungen
+
+(a) **Fünf Karten statt sechs** — „Löschungen auf Sicherungszielen" hat bis
+AP10 keine Datenquelle (an fünf Stellen nachgesehen: `schema.sql` kennt
+keine Löschspalte in `backup_targets`, `Zielweg::loeschen()` hat genau einen
+Aufrufer für die Probedatei, `sz_loeschen()` löscht nur den DB-Eintrag, kein
+`app_state`-Schlüssel, kein Jobschritt). **Sie gehört in den Umfang von
+AP10.**
+(b) **Keine Tabelle**, siehe oben.
+(c) **„Verlangsamung" zeigt Anstiege, keine Phasen** — ein Ende hat kein
+eigenes Ereignis.
+(d) **Der Datenschutztext wird vorgeschlagen, nicht geschrieben** (R32).
+
+#### Was der Prüfstand dabei über sich selbst gesagt hat
+
+Die Kopplungsprobe meldete zwischendurch **1 von 76 verfehlt**: „Versandweg
+nach der Antwort betreten (Protokollzeile SMTP)". Die Ursache lag **nicht im
+Code**, sondern daran, dass ich den PHP-Server von Hand in ein anderes
+Protokoll gestartet hatte als das, in das die Probe sieht
+(`/tmp/php-server.log`). Nach einem Start über `lokal_starten.sh`: **76 von
+76**. Festgehalten, weil die Meldung wie ein Befund aussah und keiner war —
+und weil die nächste Instanz denselben Weg gehen wird.
+
+#### Zahlen
+
+| Mittel | Ergebnis |
+|---|---|
+| Klickprobe `p5a-ap8-sperre-aufheben` | **1 von 1**; Zeile 1 → 0, `rate_limits` 1 → 0, Ereignis „aufgehoben" durch `admin@gen-em.org` |
+| Bilderlauf (3 Seiten, 8 Breiten) | **24 Bilder · 0 Überlauf · 0 Konsole · 0 Knopfhöhen** |
+| Wartungsprobe | **67/0**, Ausnahmeliste jetzt **14** |
+| Ratenprobe · Ingestprobe · Kopplungsprobe | **50/0 · 83/0 · 76/0** |
+| Mailprobe · Jobprobe | **41/0 · 35/0** |
+| Migrationsregister | **0 Befunde** (AP8 bringt keine Migration) |
+| Wortliste | **0/0/0** |
+| Vollständigkeit | **377** (372 + 5 Pfeile in sichtbarem Text) |
+| CSP · Sitzungshärtung · Installweiche · Kontraste | **0 · 0 · 0 · 22/0** |
+| PHP-Syntax | 458 Dateien, 0 Fehler |

@@ -132,6 +132,12 @@ const WARTUNG_RETRY_S = 300;
  */
 const WARTUNG_AUSNAHMEN = [
     'betrieb_status.php',
+    /* SEIT P5a/AP8. Aus demselben Grund wie die Elternseite, nur schaerfer:
+     * Auf der Sicherheitsseite steht der Knopf, mit dem sich eine Sperre
+     * aufheben laesst. Wer im Wartungsmodus jemanden wieder hereinlassen
+     * muss, braucht genau diese Seite — sie hinter der Sperre zu lassen
+     * hiesse, sie dann zu schliessen, wenn man sie braucht. */
+    'betrieb_sicherheit.php',
     'betrieb_statistik.php',
     'betrieb_updates.php',
     'betrieb_jobs.php',
@@ -455,9 +461,10 @@ function wartung_seite_html(bool $rueckweg = true): string
 }
 
 /**
- * Der Balken fuer die Ausnahmeseiten: die FUENF Betriebsseiten
- * (`betrieb_status.php`, `betrieb_statistik.php`, `betrieb_updates.php`,
- * `betrieb_jobs.php`, `betrieb_server.php`) und `login.php`. NICHT
+ * Der Balken fuer die Ausnahmeseiten: die SECHS Betriebsseiten
+ * (`betrieb_status.php`, `betrieb_sicherheit.php`, `betrieb_statistik.php`,
+ * `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`) und
+ * `login.php`. NICHT
  * `update.php` — die ist im Web seit S8/AP3 nur noch eine Weiterleitung.
  *
  * Er ist die einzige Stelle, an der ein stehengebliebener Wartungsmodus

@@ -1054,8 +1054,9 @@ function rate_sperre_paare(array $paare): ?array
 /**
  * Alle laufenden Sperren — fuer die Statusseite und AP8.
  *
- * @return list<array{topf:string, merkmal:string, stufe:int, versuche:int,
- *                    bis:string, rest:int}>
+ * @return list<array{topf:string, merkmal:string, art:string, stufe:int,
+ *                    versuche:int, bis:string, rest:int}>
+ *         `art` ist 'konto' oder 'adresse' — wie bei `rate_sperre()`.
  */
 function rate_sperren_aktiv(int $grenze = 50): array
 {
@@ -1069,8 +1070,16 @@ function rate_sperren_aktiv(int $grenze = 50): array
               LIMIT ' . max(1, min(500, $grenze)));
         $aus = [];
         foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $z) {
+            $merkmal = (string)$z['merkmal'];
             $aus[] = ['topf'     => (string)$z['topf'],
-                      'merkmal'  => (string)$z['merkmal'],
+                      'merkmal'  => $merkmal,
+                      /* `art` KOMMT SEIT P5a/AP8 MIT (E-P5a-08 nennt die Spalte
+                       * ausdruecklich). Die Ableitung stand bis dahin dreimal
+                       * im Bestand nachgebaut — in `rate_sperre()`, in
+                       * `sicherheit_melden_pruefen()` und auf der Statusseite.
+                       * Drei Stellen, drei Gelegenheiten, die Woerter
+                       * auseinanderlaufen zu lassen. */
+                      'art'      => str_starts_with($merkmal, 'id:') ? 'konto' : 'adresse',
                       'stufe'    => (int)($z['stufe'] ?? 0),
                       'versuche' => (int)$z['versuche'],
                       'bis'      => (string)$z['gesperrt_bis'],
@@ -1080,6 +1089,139 @@ function rate_sperren_aktiv(int $grenze = 50): array
     } catch (Throwable $ex) {
         return [];
     }
+}
+
+/* ===========================================================================
+ * WAS DIE SICHERHEITSSEITE LIEST (P5a/AP8, E-P5a-08)
+ *
+ * DREI LESEFUNKTIONEN UND KEINE VIERTE. `betrieb_sicherheit.php` zeichnet und
+ * rechnet nicht — dieselbe Trennung wie zwischen `status_lib.php` und
+ * `betrieb_status.php`, und aus demselben Grund: Eine Seite, die ihre eigenen
+ * Abfragen stellt, sagt frueher oder spaeter etwas anderes als die Zahl am
+ * Menuepunkt.
+ * ======================================================================== */
+
+/**
+ * Die Sicherheitsereignisse der letzten 30 Tage (E-P5a-09).
+ *
+ * DIE FRIST STEHT HIER UND IST KEINE EINSTELLUNG — sie ist dieselbe, mit der
+ * der Job `aufraeumen` loescht. Eine Seite, die weiter zurueckblickt als der
+ * Job aufhebt, zeigt eine Luecke, die wie ein ruhiger Monat aussieht.
+ *
+ * SIE LIEFERT DIE GESAMTZAHL MIT, nicht nur die Zeilen. `LIMIT 200` ist unter
+ * Beschuss schnell erreicht — 30 Tage mit einem laufenden Angriff bringen
+ * mehr. Eine Karte, die dann zweihundert Zeilen zeigt und schweigt, sagt
+ * „das war alles"; sie soll „die juengsten 200 von 1 384" sagen koennen.
+ *
+ * @param list<string> $arten   leer = alle ('sperre', 'verlangsamung', 'aufgehoben')
+ * @param list<string>|null $toepfe  null = alle
+ * @return array{zeilen: list<array{art:string, topf:?string, merkmal:?string,
+ *                    stufe:int, versuche:?int, zeitpunkt:string, bis:?string,
+ *                    wer:?string}>, gesamt:int}
+ */
+function sicherheit_ereignisse(array $arten = [], ?array $toepfe = null,
+                               int $grenze = 200): array
+{
+    try {
+        $wo   = ['zeitpunkt >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)'];
+        $args = [];
+        if ($arten !== []) {
+            $wo[] = 'art IN (' . implode(',', array_fill(0, count($arten), '?')) . ')';
+            foreach ($arten as $a) { $args[] = $a; }
+        }
+        if ($toepfe !== null && $toepfe !== []) {
+            $wo[] = 'topf IN (' . implode(',', array_fill(0, count($toepfe), '?')) . ')';
+            foreach ($toepfe as $t) { $args[] = $t; }
+        }
+        $st = db()->prepare(
+            'SELECT art, topf, merkmal, stufe, versuche, zeitpunkt, bis, wer
+               FROM sicherheit_ereignisse
+              WHERE ' . implode(' AND ', $wo) . '
+           ORDER BY zeitpunkt DESC
+              LIMIT ' . max(1, min(500, $grenze)));
+        $st->execute($args);
+        $aus = [];
+        foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $z) {
+            $aus[] = ['art'       => (string)$z['art'],
+                      'topf'      => $z['topf'] !== null ? (string)$z['topf'] : null,
+                      'merkmal'   => $z['merkmal'] !== null ? (string)$z['merkmal'] : null,
+                      'stufe'     => (int)($z['stufe'] ?? 0),
+                      'versuche'  => $z['versuche'] !== null ? (int)$z['versuche'] : null,
+                      'zeitpunkt' => (string)$z['zeitpunkt'],
+                      'bis'       => $z['bis'] !== null ? (string)$z['bis'] : null,
+                      'wer'       => $z['wer'] !== null ? (string)$z['wer'] : null];
+        }
+
+        $zaehl = db()->prepare('SELECT COUNT(*) FROM sicherheit_ereignisse
+                                 WHERE ' . implode(' AND ', $wo));
+        $zaehl->execute($args);
+        return ['zeilen' => $aus, 'gesamt' => (int)$zaehl->fetchColumn()];
+    } catch (Throwable $ex) {
+        /* Tabelle fehlt (Migration steht aus) — eine leere Liste ist hier die
+         * richtige Antwort: Die Seite zeigt dann ihren Leerzustand und nicht
+         * eine Fehlerseite. */
+        return ['zeilen' => [], 'gesamt' => 0];
+    }
+}
+
+/**
+ * Geraete mit abgewiesenen Anmeldungen — die Treffer der Mengenbremse
+ * (P5a/AP7).
+ *
+ * SIE STEHT HIER UND NICHT IN `status_lib.php`, obwohl die Statusseite
+ * dieselbe Frage stellt: Zwei Abfragen auf dieselben zwei Spalten laufen
+ * auseinander, sobald eine von beiden eine Bedingung dazubekommt. Die
+ * Statuszeile nimmt seit P5a/AP8 diese Funktion.
+ *
+ * @return list<array{id:int, name:string, anzahl:int, seit:?string}>
+ */
+function sicherheit_bremse_geraete(int $grenze = 50): array
+{
+    try {
+        $st = db()->query(
+            'SELECT id, label, device_id, abgewiesen_anzahl, abgewiesen_seit
+               FROM devices
+              WHERE abgewiesen_anzahl > 0
+           ORDER BY abgewiesen_anzahl DESC
+              LIMIT ' . max(1, min(200, $grenze)));
+        $aus = [];
+        foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $z) {
+            $name = trim((string)($z['label'] ?? ''));
+            $aus[] = ['id'     => (int)$z['id'],
+                      'name'   => $name !== '' ? $name : (string)$z['device_id'],
+                      'anzahl' => (int)$z['abgewiesen_anzahl'],
+                      'seit'   => $z['abgewiesen_seit'] !== null
+                                  ? (string)$z['abgewiesen_seit'] : null];
+        }
+        return $aus;
+    } catch (Throwable $ex) {
+        /* Die beiden Spalten gibt es erst nach der Migration aus P5a/AP7. */
+        return [];
+    }
+}
+
+/**
+ * Der Stand der Mailregel — an/aus, wann zuletzt, an wen (E-P5a-07, R83).
+ *
+ * @return array{an:bool, zuletzt:?string, ziele:list<string>, stufe:int}
+ */
+function sicherheit_mailregel(): array
+{
+    $marke = function_exists('app_state_lesen') ? app_state_lesen(RATE_K_MAIL_MARK) : null;
+    $ziele = [];
+    try {
+        require_once __DIR__ . '/mail_lib.php';
+        $ziele = mail_betriebsziele();
+    } catch (Throwable $ex) {
+        /* Ohne Datenbank keine Empfaengerliste — die Karte sagt dann nur
+         * an/aus, und das ist mehr als nichts. */
+    }
+    return [
+        'an'      => rate_mail_an(),
+        'zuletzt' => is_string($marke) && $marke !== '' ? $marke : null,
+        'ziele'   => $ziele,
+        'stufe'   => rate_stufe_hoechste(),
+    ];
 }
 
 /* ===========================================================================
@@ -1099,6 +1241,45 @@ function rate_mail_an(): bool
 }
 
 /**
+ * Die Stufe der Verlangsamung protokollieren, wenn sie GESTIEGEN ist
+ * (P5a/AP8).
+ *
+ * WARUM EIGENSTAENDIG UND NICHT IN `sicherheit_melden_pruefen()`: Jene
+ * kehrt zurueck, wenn die Sammelmail abgeschaltet ist — das Protokoll haengt
+ * aber nicht am Versand. Eine Betreiberin, die keine Mail will, will
+ * trotzdem auf der Sicherheitsseite sehen, dass die Anmeldung heute Nacht
+ * eine Stunde lang verlangsamt war.
+ *
+ * NUR BEIM STEIGEN. Ein Ereignis je Fehlversuch waere ein Protokoll, das
+ * seinen eigenen Gegenstand zudeckt: Unter Beschuss laeuft dieser Weg
+ * mehrmals je Sekunde.
+ *
+ * DAS FALLEN WIRD NICHT PROTOKOLLIERT, nur vermerkt. „Die Bremse ist wieder
+ * aus" ist kein Sicherheitsereignis; es ist das Ende eines Ereignisses, das
+ * schon dasteht. Ohne den Vermerk aber koennte dieselbe Stufe nie wieder
+ * anschlagen — deshalb wird `RATE_K_BREMSE_ST` in beide Richtungen
+ * fortgeschrieben.
+ */
+function sicherheit_verlangsamung_vermerken(): void
+{
+    try {
+        $v = rate_verlangsamung();
+        $zuletzt = (int)(app_state_lesen(RATE_K_BREMSE_ST) ?? '0');
+        if ($v['stufe'] > $zuletzt) {
+            rate_ereignis('verlangsamung', 'global', RATE_GLOBAL_MERKMAL,
+                          $v['stufe'], $v['versuche']);
+            app_state_setzen(RATE_K_BREMSE_ST, (string)$v['stufe']);
+        } elseif ($v['stufe'] < $zuletzt) {
+            app_state_setzen(RATE_K_BREMSE_ST, (string)$v['stufe']);
+        }
+    } catch (Throwable $ex) {
+        /* Wie unten: ein Protokoll, das nicht geschrieben werden kann, darf
+         * die Anmeldung nicht mitreissen. */
+        error_log('Verlangsamungsstufe nicht vermerkbar: ' . $ex->getMessage());
+    }
+}
+
+/**
  * Melden, wenn etwas zu melden ist — hoechstens eine Mail je Stunde.
  *
  * AUFGERUFEN AN ZWEI STELLEN: wenn eine Sperre die hoechste Sprosse erreicht
@@ -1114,30 +1295,29 @@ function rate_mail_an(): bool
  * keinen Grund mehr, das Risiko einer Mailflut einzugehen — unter Beschuss
  * liefe diese Funktion sonst mehrmals je Sekunde.
  *
- * DIE VERLANGSAMUNGSSTUFE WIRD HIER AUCH VERMERKT, und zwar nur, wenn sie
- * STEIGT. Sonst stuende nach einer Stunde Angriff ein Ereignis je
- * Fehlversuch in der Tabelle — das waere ein Protokoll, das seinen eigenen
- * Gegenstand zudeckt.
+ * DIE VERLANGSAMUNGSSTUFE WIRD VERMERKT, und zwar nur, wenn sie STEIGT.
+ * Sonst stuende nach einer Stunde Angriff ein Ereignis je Fehlversuch in der
+ * Tabelle — das waere ein Protokoll, das seinen eigenen Gegenstand zudeckt.
+ *
+ * DAS PROTOKOLL HAENGT SEIT WEB 20.12.0 NICHT MEHR AN DER MAIL (P5a/AP8).
+ * Bis dahin stand `if (!rate_mail_an()) { return; }` als ERSTE Zeile dieser
+ * Funktion — und damit hing das Vermerken der Verlangsamungsstufe am
+ * Mailschalter. Wer die Sammelmail abschaltete, weil er sie nicht braucht,
+ * schaltete stillschweigend auch das Protokoll ab: Die Karte
+ * „Verlangsamungsphasen" auf der Sicherheitsseite waere auf einer solchen
+ * Installation dauerhaft leer geblieben, ohne dass irgendwo stuende, warum.
+ * Protokollieren und Melden sind zwei Dinge; sie stehen jetzt in zwei
+ * Funktionen.
  */
 function sicherheit_melden_pruefen(): void
 {
+    sicherheit_verlangsamung_vermerken();
     if (!rate_mail_an()) { return; }
 
     try {
         $pdo = db();
 
-        /* 1. Stieg die Verlangsamung? Dann ein Ereignis, einmal je Stufe. */
-        $v = rate_verlangsamung();
-        $zuletzt = (int)(app_state_lesen(RATE_K_BREMSE_ST) ?? '0');
-        if ($v['stufe'] > $zuletzt) {
-            rate_ereignis('verlangsamung', 'global', RATE_GLOBAL_MERKMAL,
-                          $v['stufe'], $v['versuche']);
-            app_state_setzen(RATE_K_BREMSE_ST, (string)$v['stufe']);
-        } elseif ($v['stufe'] < $zuletzt) {
-            app_state_setzen(RATE_K_BREMSE_ST, (string)$v['stufe']);
-        }
-
-        /* 2. Hoechstens eine Mail je Stunde. */
+        /* Hoechstens eine Mail je Stunde. */
         $marke = app_state_lesen(RATE_K_MAIL_MARK);
         if (is_string($marke) && $marke !== '') {
             $stempel = strtotime($marke . ' UTC');

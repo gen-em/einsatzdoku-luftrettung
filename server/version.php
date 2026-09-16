@@ -5227,5 +5227,100 @@ declare(strict_types=1);
  * ohne die beiden Spalten, die Statusseite faengt. Der Schutz selbst haengt
  * nicht daran — er zaehlt in `rate_limits`, und die Tabelle steht seit
  * 20.10.0.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.12.0 — DER RATENSCHUTZ BEKOMMT EIN GESICHT: STATUS -> SICHERHEIT
+ * ---------------------------------------------------------------------------
+ *
+ * (P5a/AP8; E-P5a-08, -09; M-P5a-01 ohne Mockup-Pause, Konzept 2.5.)
+ *
+ * AP6 und AP7 haben gebaut, was still arbeitet: Sperrleiter, Verlangsamung,
+ * Mengenbremse, ein Ereignisprotokoll. Sichtbar war davon eine Zeile auf der
+ * Statusseite je Sache — sie sagt, DASS etwas ist. Wer wissen wollte, WER
+ * gesperrt ist, seit wann, auf welcher Sprosse, und wer es aufheben wollte,
+ * fand nichts. `betrieb_sicherheit.php` ist diese Seite.
+ *
+ * SIE HAENGT AN STATUS UND IST KEIN ACHTZEHNTER MENUEPUNKT (E-P5a-08). Fuer
+ * eine BetreiberIn stehen siebzehn Eintraege in der Leiste; einer mehr fuer
+ * eine Seite, die man an guten Tagen nie braucht, waere an der falschen
+ * Stelle teuer. `ui_geruest_start(['menue' => 'betrieb_status'])` haelt den
+ * Eintrag „Status" aktiv — dasselbe Muster wie `admin_user.php`.
+ *
+ * SIE AENDERT GENAU EINES: Eine Sperre aufheben. Das ist der Unterschied zur
+ * Elternseite, die rein liest, und er ist gewollt: Eine Kollegin, die sich
+ * ausgesperrt hat, ruft an, und die Betreiberin soll ihr helfen koennen, ohne
+ * in die Datenbank zu greifen.
+ *
+ * ---------------------------------------------------------------------------
+ * VIER ABWEICHUNGEN, ALLE BENANNT
+ * ---------------------------------------------------------------------------
+ *
+ * (a) FUENF KARTEN STATT SECHS. E-P5a-08 nennt „Loeschungen auf
+ *     Sicherungszielen". Dafuer gibt es heute weder Tabelle noch Schreibweg
+ *     noch `app_state`-Schluessel — die Loeschregel je Ziel entsteht erst in
+ *     AP10 (E-P5a-03). Eine Karte, die sagt „hier steht noch nichts, weil es
+ *     die Sache noch nicht gibt", ist kein Befund, sondern Laerm. Sie kommt
+ *     mit AP10.
+ *
+ * (b) KEINE TABELLE, OBWOHL DIE MOCKUP-SKIZZE FUER DIE ERSTE KARTE EINE
+ *     NENNT. `docs/Design.md` 9.0 fuehrt „eine Liste von Eintraegen"
+ *     ausdruecklich auf `ui_zeile()` in einer Karte und die `<table>` unter
+ *     „nicht"; die Tabelle ist dort fuer „Zahlen nebeneinander vergleichen"
+ *     gedacht und im Bestand ueberhaupt kein Baustein, sondern rohes Markup
+ *     auf sechs Seiten. Eine Liste mit einer Handlung je Eintrag ist der
+ *     Fall, fuer den `ui_zeilenaktionen()` gebaut ist.
+ *
+ * (c) DIE KARTE HEISST „VERLANGSAMUNG" UND ZEIGT ANSTIEGE, KEINE PHASEN.
+ *     Vermerkt wird, WENN DIE STUFE STEIGT; ein Ende hat kein eigenes
+ *     Ereignis. Eine Karte, die „Phasen" verspricht und Punkte zeigt, gaebe
+ *     eine falsche Auskunft — also steht „seit" da und nicht „von bis", und
+ *     der Vorbehalt steht auf der Karte.
+ *
+ * (d) DER DATENSCHUTZTEXT WIRD VORGESCHLAGEN, NICHT GESCHRIEBEN. Die
+ *     Anwendung liefert keinen Rechtstext mit (R32) — der Text ist eine Zeile
+ *     in `rechtstexte` und gehoert der Betreiberin. AP8 legt deshalb einen
+ *     zweiten Textbaustein unter Verwaltung -> Installation, neben den zur
+ *     Adresssuche aus S9/AP2, und zwar OHNE Bedingung: Den Ratenschutz gibt
+ *     es in jeder Installation, und er laesst sich nicht abschalten.
+ *
+ * ---------------------------------------------------------------------------
+ * DREI FEHLER, DIE OHNE MELDUNG DURCHGEGANGEN WAEREN
+ * ---------------------------------------------------------------------------
+ *
+ * 1. DAS PROTOKOLL HING AM MAILSCHALTER. `sicherheit_melden_pruefen()` kehrte
+ *    als ERSTE Zeile zurueck, wenn `rate_mail_an()` false ist — und genau
+ *    dort drin stand das Vermerken der Verlangsamungsstufe. Wer die
+ *    Sammelmail abschaltete, weil er sie nicht braucht, schaltete
+ *    stillschweigend auch das Protokoll ab; die Karte waere auf einer solchen
+ *    Installation dauerhaft leer geblieben, ohne dass irgendwo stuende,
+ *    warum. Protokollieren und Melden stehen jetzt in zwei Funktionen.
+ *
+ * 2. DER GERAETEVERMERK VERFIEL NIE. `devices.abgewiesen_seit` und
+ *    `abgewiesen_anzahl` (AP7) werden beim naechsten gelungenen Upload
+ *    geleert — und den gibt es nicht mehr, wenn das Geraet ausgemustert ist.
+ *    Ein verlorenes Geraet truege seine orange Plakette „abgewiesen" fuer
+ *    immer, und die Statuszeile stuende dauerhaft orange auf einer
+ *    Installation, an der nichts mehr zu tun ist. Der Aufraeumjob raeumt den
+ *    Vermerk jetzt nach 30 Tagen (E-P5a-09 nennt die „Bremse-Treffer").
+ *
+ * 3. `ui_knopf()` KENNT KEIN `form`. Der Schluessel, mit dem ein Knopf ein
+ *    Formular ausserhalb seiner selbst absendet, gibt es nur in
+ *    `ui_zeilenaktionen()` und in der Kopfaktion der Karte. Ein
+ *    `ui_knopf(['form' => ...])` haette einen Knopf ergeben, der nichts tut —
+ *    ohne Fehlermeldung, ohne dass ein Bild es zeigt. Gefunden bei der
+ *    Durchsicht des Vorrats, nicht im Betrieb.
+ *
+ * DAZU EINE FALLE DES VORRATS, die jetzt in `docs/Design.md` steht: Eine
+ * EINGEKLAPPTE Karte (`zu`/`vorschau`) zeigt weder `plakette` noch `aktion` —
+ * `ui_karte_start()` kehrt im `<details>`-Zweig zurueck, bevor beides
+ * ausgegeben wird. Wer eine Plakette an eine klappbare Karte haengt, verliert
+ * sie still.
+ *
+ * DREI ABLEITUNGEN WURDEN EINE. „Ist dieses Merkmal ein Konto oder eine
+ * Adresse?" stand dreimal im Bestand nachgebaut. `rate_sperren_aktiv()`
+ * liefert `art` jetzt mit; die Statusseite rechnet es nicht mehr selbst, und
+ * die Sicherheitsseite haette die vierte Kopie gebraucht.
+ *
+ * KEINE MIGRATION. Alle Tabellen stehen seit AP6 und AP7.
  */
-const WEB_VERSION = '20.11.0';
+const WEB_VERSION = '20.12.0';
