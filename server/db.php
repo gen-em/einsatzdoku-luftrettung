@@ -833,7 +833,7 @@ const PAIR_SITZUNGEN_MAX = 1000;
 /**
  * E-Mail-Adresse fuer die Rueckbestaetigung am Geraet maskieren (E-S5-21).
  *
- * `philipp@gen-em.org` -> `ph***@gen-em.org`; ein lokaler Teil aus einem
+ * `vorname@beispieldomain.de` -> `vo***@beispieldomain.de`; ein lokaler Teil aus einem
  * Zeichen zeigt dieses eine (`a@b.de` -> `a***@b.de`). Kleingeschrieben.
  *
  * DIE DOMAIN BLEIBT VOLL, mit Absicht: Sie laesst die Traegerin ihr Konto

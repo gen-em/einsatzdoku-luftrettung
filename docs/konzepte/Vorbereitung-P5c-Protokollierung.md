@@ -1,6 +1,13 @@
 # Vorbereitung P5c — Protokollierung („Log")
 
 **Angelegt:** 16.09.2026, während P5a/AP5, auf Anweisung des Auftraggebers.
+**Stand:** 16.09.2026 — **V1 entschieden** (gehalten, Abschnitt 5); V2–V9
+offen. Der Schreibweg (Tabelle, `protokoll()`, Ereignisformat) wird nach
+Rahmenplan Fassung 74 im **10b-Konzept** als erstes Paket festgelegt, weil
+10b vor 10c läuft und dessen Verwaltungsereignisse erzeugt; 10c baut
+Reiter, Archiv und Download darauf. Der Log-Helfer aus der
+Zentralisierungsanalyse (Schritt 15) ist derselbe Schreibweg und wird
+nicht doppelt gebaut.
 **Zweck:** Dieses Dokument ist **vor** dem P5c-Konzept zu lesen und **zu
 diskutieren**. Es ist kein Konzept: Es sammelt den gemessenen Befund, den
 Auftrag, die offenen Fragen und die Grenzen, die nicht verhandelbar sind.
@@ -114,7 +121,7 @@ Die drei, die am meisten wehtun:
 
 ## 3. Was daraus folgt — Vorschläge zur Diskussion
 
-### 3.1 Der Name „Log" ist zu weit, und das ist gefährlich
+### 3.1 Der Name „Log" ist zu weit, und das ist gefährlich — **angenommen 16.09.2026 (V1)**
 
 „Wo einfach alles geschrieben steht" kollidiert frontal mit einer **schriftlich
 gegebenen Zusage** (Abschnitt 4.1). Vorschlag: Der Bereich heißt **„Protokoll"**
@@ -204,7 +211,7 @@ bewegt, der einzige unprotokollierte.
 
 | # | Frage | Warum sie jetzt beantwortet werden muss |
 |---|---|---|
-| **V1** | **Wird die Zusage „kein Zugriffsprotokoll" gehalten oder zurückgenommen?** | Sie entscheidet, was „alles" bedeutet, und sie steht an zwei Stellen schriftlich. |
+| **V1** | **Wird die Zusage „kein Zugriffsprotokoll" gehalten oder zurückgenommen?** — **Entschieden 16.09.2026 (Auftraggeber): gehalten.** Der Bereich heißt **Protokoll** und führt **Betriebsereignisse**, keine Datenzugriffe (3.1). Lesen, Exportieren, Herunterladen von Einsätzen bleiben ungeloggt; Handlungen — Backup eingespielt, Rolle oder Adresse geändert, Löschungen, der Download des Protokolls selbst — werden protokolliert. |
 | **V2** | **IP nur bei Sperren/Angriffen — bestätigt?** Und mit welcher Frist? | Vorgabe des Auftraggebers ist Datenminimierung und damit der verteidigungsfähige Entwurf. **Die Fristlänge braucht juristische Bestätigung, keine technische.** R41 verlangt die Speicherdauer ohnehin in der Datenschutzerklärung. |
 | **V3** | **Wie lange werden Protokolle aufbewahrt, je Reiter?** | E-P5a-09 hat 30 Tage für Betriebsdaten **fest** entschieden. „Einstellbar" widerspräche dem — außer für das Audit, für das dort „länger" steht. Die Einstellbarkeit ist also auf einen Teil zu begrenzen. |
 | **V4** | **Was passiert mit alten Logs beim Wechsel des Serverschlüssels?** | Sonst sind sie nach der ersten Rotation stumm. |
@@ -240,7 +247,9 @@ Download). Ein Konzept, das bei null anfängt, baut vier Dinge zweimal.
 
 ## 7. Vorschlag für die Reihenfolge
 
-1. **V1 und V2 entscheiden** (Zusage, IP) — alles andere hängt daran.
+1. ~~**V1 und V2 entscheiden** (Zusage, IP) — alles andere hängt daran.~~
+   **V1 ist entschieden** (gehalten); **V2** (IP nur bei Sperren; Frist)
+   steht noch aus.
 2. Bestand aus P5a sichten (Abschnitt 6) und festlegen, was übernommen wird.
 3. Datenmodell: ein Ereignisformat für alle Reiter, oder je Reiter eines.
 4. Archivweg: Rotation, Versiegelung, Frist, Schlüsselwechsel (V4).

@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/adminbackup_lib.php';   // Ablagezahlen, Grenze, Schwellen, Marken
 
 /**
@@ -329,22 +330,23 @@ function speicher_kontingente_melden(): array
             $neu[$k] = $bleibt;
             continue;
         }
-        if ($ziele === null) {
-            $ziele = [];
-            foreach (db()->query('SELECT email FROM users WHERE ' . ROLLEN_VERWALTUNG_SQL
-                                 . ' ORDER BY id')->fetchAll(PDO::FETCH_COLUMN) as $m) {
-                if (is_string($m) && $m !== '') { $ziele[] = $m; }
-            }
-        }
+        if ($ziele === null) { $ziele = mail_betriebsziele(); }
         foreach ($offen as $s) {
-            $text = 'Das Kontingent „' . $c['titel'] . '" hat ' . $s . ' % erreicht.' . "\n\n"
-                  . 'Belegt:     ' . edbak_groesse_text($c['ist']) . "\n"
-                  . 'Kontingent: ' . edbak_groesse_text((int)$c['bezug']) . "\n\n"
-                  . $c['rat'] . "\n\n"
-                  . 'Die Schwellen stehen unter Betrieb -> Servereinstellungen.' . "\n";
+            /* `wartet` ZAEHLT ALS ERLEDIGT. Die Marke unten entscheidet, ob
+             * diese Schwelle je wieder gemeldet wird. Bei „liegt in der
+             * Warteschlange" die Marke NICHT zu setzen hiesse: Der naechste
+             * taegliche Lauf reiht dieselbe Warnung erneut ein, und eine
+             * dreitaegige Mailstoerung ergaebe sie dreifach. Nur `abgelehnt`
+             * — gar nicht erst eingereiht — laesst die Schwelle offen. */
             $ok = false;
             foreach ($ziele as $m) {
-                if (smtp_send($m, $c['titel'] . ': ' . $s . ' % des Kontingents erreicht', $text)) {
+                if (mail_einreihen('speicher_kontingent', $m, [
+                        'titel'      => $c['titel'],
+                        'prozent'    => $s,
+                        'belegt'     => edbak_groesse_text($c['ist']),
+                        'kontingent' => edbak_groesse_text((int)$c['bezug']),
+                        'rat'        => $c['rat'],
+                    ]) !== MAIL_ABGELEHNT) {
                     $ok = true;
                 }
             }

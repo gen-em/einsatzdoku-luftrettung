@@ -243,6 +243,12 @@ Daten erst nach Server-Bestätigung.
 │   │                       gelöschtes Konto, Passwortwechsel)
 │   ├── email_lib.php      E-Mail: Normalisierung, Prüfung, Dublettenerkennung
 │   │                       (ohne Abhängigkeiten — auch für install.php)
+│   ├── mail_lib.php       Nachrichtenkatalog, Warteschlange, Job `mail`
+│   │                       (P5a/AP5, Web 20.8.0/20.9.0): zehn Einträge mit
+│   │                       Betreff und Text, `mail_einreihen()` als einziger
+│   │                       Versandweg, Wiederholungsleiter über 24 h,
+│   │                       `mail_betriebsziele()` — der einzige Aufrufer von
+│   │                       smtp_send() ausserhalb von smtp.php selbst
 │   ├── impressum.php · datenschutz.php   die beiden OEFFENTLICHEN Seiten
 │   │                      (R32) — zwei Zeilen je Datei, der Rest steht in
 │   │                      rechtstext_seite.php
@@ -423,6 +429,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      werden angenommen, Punkte hinter einer Stufe-3-Spur
 │   │                      verworfen UND quittiert. Legt ihr eigenes Konto an
 │   │                      und räumt es ab (s. LIESMICH.md)
+│   ├── mailprobe/         Warteschlange, Katalog und Frist gegen eine EIGENE
+│   │                      SMTPS-Gegenstelle, die auf Kommando ablehnt,
+│   │                      schweigt oder zwölf Fortsetzungszeilen schickt
+│   │                      (P5a/AP5). Tauscht server/config.php aus und stellt
+│   │                      sie wieder her — auch bei Abbruch (s. LIESMICH.md)
 │   ├── jobprobe/          prüft den Job-Rahmen (S2/AP2): dass alle drei
 │   │                      Auslöser denselben Rückstand abtragen, dass die
 │   │                      gemeldete Zahl stimmt, dass die Sperre greift und
@@ -709,6 +720,8 @@ Daten erst nach Server-Bestätigung.
 | `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 5c) |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
+| `mail_warteschlange` | Jede ausgehende Nachricht, eine Zeile (seit Web 20.8.0, P5a/AP5). `schluessel` = Eintrag aus `mail_katalog()`, `art` = `konto`/`geraet`/`betrieb` (das wird in P5c der Reiter im Protokoll), `zustand` = `offen` / `zugestellt` / `unzustellbar` / `zu_spaet` / `ueberholt`, `versuche`, `naechster_versuch`, `gueltig_bis` (ein Reset-Link gilt eine Stunde), `fehler` = Grund **samt Kennung**. **Was beim Endzustand geleert wird, hängt vom Zustand ab** (E-P5a-39): `zugestellt`, `zu_spaet` und `ueberholt` verlieren Adresse, Betreff und Rumpf — es bleibt „eine Nachricht dieser Art ging zu dieser Zeit hinaus". Bei `unzustellbar` **bleibt die Adresse stehen**, weil „die Einladung an X kam nie an" ohne X wertlos ist; der Rumpf fällt trotzdem, wegen des Tokens darin. Der Job `aufraeumen` löscht nach 30 Tagen |
+| `job_laeufe` | Verlauf der Hintergrundjobs (seit Web 20.8.0), eine Zeile je Lauf, der etwas getan hat oder scheiterte — ein Leerlauf schreibt nichts, sonst füllte sich die Tabelle mit Nichts. `job`, `zeitpunkt`, `ausloeser`, `erledigt`, `fehler`. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
 | `backup_targets` | Backup-Ziele (seit Web 12.1.0, S2/AP7): FTPS- oder SFTP-Gegenstelle je Zeile. **`ftp` ist seit Web 20.2.0 abgeschafft** (S10/AP4, E-S10-14): nicht mehr wählbar, nicht mehr speicherbar, nicht mehr beschickt. Das `ENUM` behält den Wert, damit ein bestehendes Ziel lesbar, sichtbar und umstellbar bleibt — es trägt dann die rote Plakette *wird übergangen* und wird beim Versand übersprungen statt im Klartext beliefert. Der Rückbau der Spalte gehört zum ENUM-Aufräumen (Backlog Nr. 168/46). `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
 | `schema_migrations` | Buchführung des Migrations-Runners |
@@ -2454,14 +2467,95 @@ Web 15.3.0 steht sie auf Betrieb → Status**, in der Zeile „Antwort und
 Versand" der Karte E-Mail. In Web 15.1.0 und 15.2.0 war sie vorübergehend
 nicht abzulesen.
 
-**Bewusst keine Warteschlange.** Es gibt keinen Cronjob; die Wartung läuft
-huckepack, höchstens einmal täglich. Eine Warteschlange hätte den Link zum
-Zurücksetzen genau so lange liegen lassen, bis zufällig jemand eine Seite
-aufruft. Der Preis des gewählten Weges: Auf Hosts ohne FPM oder LiteSpeed
-bleibt der PHP-Arbeitsprozess nach dem Abschluss der Antwort noch bis zum
-Zeitlimit des Versands belegt. Bei fünf Anforderungen je Stunde und Konto ist
-das klein, aber nicht null — deshalb steht das Zeitlimit bei der Kopplung, wo
-die Uhr wartet, auf fünf statt fünfzehn Sekunden.
+> **Hier stand bis Web 20.7.0 „bewusst keine Warteschlange"** — mit der
+> Begründung, es gebe keinen Cronjob, und eine Warteschlange hätte den Link zum
+> Zurücksetzen so lange liegen lassen, bis zufällig jemand eine Seite aufruft.
+> **Die Begründung war richtig und die Folgerung falsch.** Sie vergleicht die
+> Warteschlange mit einem Versand, der klappt. Klappt er nicht — und das ist
+> der einzige Fall, in dem es auf den Unterschied ankommt —, dann ist die
+> Nachricht ohne Warteschlange **weg**, und mit ihr liegt sie wenigstens da.
+> Seit Web 20.8.0 gibt es sie (Abschnitt 4.99); der Reset-Link wird weiterhin
+> **sofort** versucht, die Warteschlange fängt nur den Fehlschlag auf.
+
+Der Preis des gewählten Weges bleibt: Auf Hosts ohne FPM oder LiteSpeed bleibt
+der PHP-Arbeitsprozess nach dem Abschluss der Antwort noch bis zum Zeitlimit
+des Versands belegt. Bei fünf Anforderungen je Stunde und Konto ist das klein,
+aber nicht null — das Zeitlimit steht seit Web 20.9.0 als `MAIL_BUDGET_S`
+(5 s) an **einer** Stelle statt an zehn.
+
+### 4.99 Der Mailweg — Katalog, Warteschlange, Job (P5a/AP5)
+
+**Was bis Web 20.7.0 galt.** Zehn Stellen riefen `smtp_send()` unmittelbar.
+Scheiterte es, war die Nachricht weg — der Reset-Link, die Einladung, die
+Warnung vor der vollen Platte. `smtp_versand_vermerken(false)` hielt nur fest,
+*dass* etwas schiefging, nicht *was* und nicht *für wen*.
+
+**Was gilt.** `mail_lib.php` ist der einzige Versandweg. Der einzige Aufrufer
+von `smtp_send()` ist sie selbst.
+
+```
+mail_einreihen($schluessel, $empfaenger, $daten)
+   → Katalogeintrag suchen, Pflichtwerte prüfen, Adresse prüfen
+   → überholte Zeilen derselben Art an dieselbe Adresse schließen
+   → Zeile in mail_warteschlange
+   → EINEN Versuch sofort
+   → 'zugestellt' | 'wartet' | 'abgelehnt'
+```
+
+**Der Katalog** (`mail_katalog()`) führt **zehn** Einträge mit `art`, `frist`,
+`pflicht`, `betreff` und `text`. Der Name der Installation kommt aus
+`instanz_name()`, die Kontaktzeile aus `instanz_kontakt()` — über
+`mail_rahmen()`, den alle zehn benutzen. Vorher gab es acht Mailtexte mit
+handgeschriebener Grußformel, und einer davon fehlte das „Gen-EM" im Betreff.
+
+**Die Leiter**: `MAIL_LEITER = [300, 1800, 7200, 28800, 86400]` — der Abstand
+**zum vorigen Versuch**, nicht zum Einreihen. Fünf Versuche über 24 Stunden.
+
+**Die Frist geht vor der Leiter.** Hat ein Eintrag eine `frist` (ein
+Reset-Link gilt 3600 s), wird ein Versuch, der erst **nach** Ablauf fällig
+wäre, gar nicht erst unternommen — die Zeile wird `zu_spaet`. Für
+`passwort_reset` heißt das: **drei** Versuche, nicht fünf, denn die dritte
+Sprosse läge bei 9300 s. Besser gar nichts als ein toter Link.
+
+| Zustand | heißt | was geleert wird |
+|---|---|---|
+| `offen` | wartet auf den nächsten Versuch | — |
+| `zugestellt` | der Mailserver hat sie angenommen | Adresse, Betreff, Rumpf |
+| `unzustellbar` | fünf Versuche, alle gescheitert | **nur** Rumpf — die Adresse bleibt |
+| `zu_spaet` | die Frist lief vor der Leiter ab | Adresse, Betreff, Rumpf |
+| `ueberholt` | eine neuere Nachricht derselben Art entwertet sie | Adresse, Betreff, Rumpf |
+
+**Der Job `mail`** steht als **erster** im Katalog von `jobs_lib.php`, und das
+ist kein Zufall: `jobs_lauf()` arbeitet den Katalog der Reihe nach ab und
+überspringt, was ins Restbudget nicht mehr passt — am Huckepack-Weg sind das
+3 s für **alle** Jobs zusammen. Stünde `mail` hinter der Verdichtung, bekäme
+er dort regelmäßig nichts, und die Statusseite meldete trotzdem „in Ordnung",
+weil kein Fehler anliegt. Bei einer Warteschlange, in der ein Reset-Link
+wartet, ist das der teuerste aller stillen Fehler.
+
+Er ist **nicht** `taeglich`: Ein gescheiterter Lauf zählt trotzdem als Lauf,
+und bei `taeglich` sperrte ein einziger Fehlschlag den Versand bis zum
+nächsten Kalendertag.
+
+> **`MAIL_MINDEST_S = 1.5` ist die Lehre aus einem stillen Totalausfall.** Die
+> erste Fassung verlangte die vollen 5 s Restzeit, bevor sie anfing — am
+> Huckepack-Weg stehen 3,0 s zur Verfügung, also war die Bedingung beim ersten
+> Durchgang **immer** wahr. Der Job brach ab, bevor er eine einzige Nachricht
+> versuchte; gemessen: „erledigt 0" bei drei fälligen Zeilen. Auf einer
+> Installation ohne Cron wäre die Warteschlange nie geleert worden, und nichts
+> hätte es gemeldet. Jetzt bekommt der Versuch die **Restzeit** als Budget,
+> höchstens `MAIL_BUDGET_S`.
+
+**Das Fehlerprotokoll nennt keinen Empfänger** (E-P5a-37). Bis Web 20.7.0
+stand dort `SMTP: Versand an <Adresse> fehlgeschlagen` — die einzige Stelle mit
+Personenbezug im Fehlerprotokoll, und sie widersprach der Zusage im Kopf von
+`smtp.php`, die `betrieb_status.php` wiederholt. Jetzt nennt die Meldung eine
+**Kennung** und den **Grund**; die Warteschlange schreibt dieselbe Kennung in
+ihre Fehlerspalte. Wer einem Fehlschlag nachgeht, findet über die Kennung
+beides zusammen — das Protokoll allein sagt nicht, wer gemeint war.
+
+**Nachweis:** `tools/mailprobe/` gegen eine eigene SMTPS-Gegenstelle — 41
+Prüfungen, 0 Befunde; `tools/jobprobe/` Teil 10 — 35 von 35.
 
 ### Was ein Gerät beim Koppeln über sich meldet — seit Web 12.9.0 gespeichert
 
@@ -6861,9 +6955,83 @@ in der Datenbank stehen.
   danach gleich, **0** Unterschiede, die Referenz musste nicht neu erzeugt
   werden. Gegenprobe: ein fremder `creator` fällt weiterhin auf.
 
-**Noch offen:** `install.php` fragt den Namen bei der Ersteinrichtung nicht ab,
-und `smtp.from_name` führt ihn weiterhin selbst — beides zieht der zweite Teil
-von AP5 nach.
+### 5d.6 Zwei Adressen der Installation (Web 20.9.0, E-P5a-40)
+
+Dieselbe Fehlerklasse wie beim Namen, eine Fassung später gefunden: In
+**sieben** Mailtexten stand dieselbe persönliche Adresse des Entwicklers, fest
+im Quelltext. Eine fremde Betreiberin verwies ihre NutzerInnen an einen
+Unbekannten.
+
+| Funktion | `app_state` | Wofür | Wenn leer |
+|---|---|---|---|
+| `instanz_kontakt()` | `instanz_kontakt` | die Zeile „Bei Fragen wende dich an …" in **jeder** E-Mail (`mail_rahmen()`) | die Zeile **fällt weg** |
+| `betrieb_mail()` | `betrieb_mail` | Betriebspost: volles Speicherkontingent, überfällige Sicherungen | weiterhin an **alle** mit Verwaltungsrecht |
+
+Gepflegt unter **Verwaltung → Installation**, Karte „Adressen".
+
+**Sie stehen in `app_state`, nicht in `config.php`.** Jene wird zur Laufzeit
+nicht geschrieben; was dort steht, lässt sich nur über FTP ändern. Eine
+Adresse, die in jeder Mail steht, muss eine BetreiberIn selbst umstellen
+können.
+
+**Die Kontaktadresse ist nicht `smtp.from`.** Das ist der *Absender* und auf
+einer gut eingerichteten Anlage ein `noreply@`. Eine Mail, die im Fehlerfall
+auf ein Postfach verweist, das niemand liest, ist schlimmer als eine ohne
+Verweis — deshalb fällt die Zeile weg, statt etwas Falsches zu behaupten.
+
+**Die Betreiberadresse geht in die vorsichtige Richtung.** Steht etwas drin,
+geht die Betriebspost **nur** dorthin; bleibt sie leer, gilt die bisherige
+Rollenliste. Eine leere Einstellung darf keine Warnung verschlucken.
+`mail_betriebsziele(bool $nurAngemeldete = false)` in `mail_lib.php` hält die
+Auswahl an **einer** Stelle — drei Stellen bauten dieselbe Liste, und die
+dritte hatte bereits eine abweichende Sortierung (R83).
+
+**Geprüft** gegen den Endpunkt, nicht gegen das Formular: 7 Fälle (ohne `@`,
+Zeilenumbruch, CRLF, 191 Zeichen, Betreiberadresse ohne `@`, beide gültig,
+beide leer), **5 abgewiesen, 2 angenommen**, alle mit der erwarteten Meldung.
+Die Längenprüfung steht **vor** der Syntaxprüfung — `filter_var()` weist eine
+überlange Adresse ebenfalls ab, aber mit der Meldung „keine gültige
+E-Mail-Adresse", und wer eine syntaktisch einwandfreie Adresse eintippt und
+das liest, sucht an der falschen Stelle.
+
+### 5d.7 `app_url()` — eine Basisadresse statt sieben Verkettungen
+
+`base_url` wurde an sieben Stellen von Hand verkettet, **fünf davon ohne
+`rtrim()`**. Steht in der `config.php` ein Schrägstrich am Ende, entstand
+`https://host//pw_handling.php`. `app_url(string $pfad = '')` liefert
+`rtrim(base_url, '/')` plus Pfad; ohne `base_url` eine leere Zeichenkette (ein
+halber Link ist besser als eine Ausnahme mitten im Anlegen eines Kontos).
+
+Seit Web 20.9.0 liest **nur noch** `instanz_lib.php` selbst den Wert
+(2 Stellen) und `install.php`, das ihn erfragt und in die `config.php`
+schreibt (4 Stellen). Drei weitere Treffer stehen in **Kommentaren** —
+`grep` ohne Kommentarfilter zählt 10 und sagt damit nichts.
+
+Sie liest **zuerst das schon geladene `$GLOBALS['CFG']`** und fällt nur dann
+auf `require config.php` zurück, wenn dort nichts steht — sonst wäre es ein
+Dateizugriff je Aufruf.
+
+> Nebenbei gefunden: `smtp.php` schickte bei leerer `base_url` ein nacktes
+> `EHLO ` — `parse_url('')` liefert `false`. Das ist kein gültiger Befehl;
+> strenge Relais antworten mit 501, und der Versand scheitert an einer Stelle,
+> an der niemand ihn vermutet. Jetzt steht dort ein Rückfall auf `localhost`.
+
+### 5d.8 Was von „Gen-EM" im Quelltext bleibt
+
+`grep -rn "gen-em\.org" server/` ergibt seit Web 20.9.0 **0**. Von den festen
+`'Gen-EM NAdoku'` benutzen Installer und HTTPS-Tor jetzt
+`INSTANZ_KURZ_VORGABE`; **eine** bleibt als Zeichenkette stehen, und zwar mit
+Grund: die **PHP-zu-alt-Meldung** ganz oben in `install.php`. Alles oberhalb
+der Weiche muss auf einer alten PHP-Fassung noch übersetzbar sein, also darf
+dort nichts geladen werden. Der `require` auf `instanz_lib.php` steht deshalb
+**hinter** der Weiche — eine Besucherin auf PHP 8.0 hat die Seite dort längst
+verlassen.
+
+Die alte Domain `luftrettung.net` ist aus der lebenden Dokumentation
+verschwunden. Stehen bleibt sie in der **Historie** (Changelog,
+Rahmenplan-Archiv, `docs/konzepte/erledigt/`) und im **Prüffall der
+Wortliste** — eine Historie, die man umschreibt, ist keine mehr, und ein
+Prüffall, aus dem man den Suchbegriff entfernt, prüft nichts.
 
 ## 6. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)
 

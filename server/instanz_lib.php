@@ -163,3 +163,184 @@ function instanz_namen_setzen(string $name, string $kurz): array
     }
     return [true, 'Name der Installation gespeichert.'];
 }
+
+/**
+ * Die Adresse dieser Installation samt Pfad (Backlog Nr. 202, E-P5a-36).
+ *
+ * WOGEGEN. `base_url` wurde an sieben Stellen von Hand verkettet, und FUENF
+ * davon ohne `rtrim()`:
+ *
+ *     $CFG['app']['base_url'] . '/pw_handling.php?token=' . $token
+ *
+ * Steht in `config.php` ein Schraegstrich am Ende — und die Beispieldatei
+ * sagt zwar „ohne Slash am Ende", aber niemand hindert daran —, entsteht
+ * `https://host//pw_handling.php`. Das funktioniert bei den meisten
+ * Webservern und bricht bei manchen; vor allem aber erzeugt es einen Link,
+ * der nicht so aussieht wie der, den man erwartet. In einer Mail, die zum
+ * Passwortsetzen auffordert, ist das die falsche Stelle fuer eine
+ * Unsauberkeit.
+ *
+ * DIE ZWEI STELLEN MIT `rtrim()` sind der Beweis, dass es aufgefallen ist —
+ * nur eben nicht ueberall.
+ *
+ * Steht `base_url` nicht zur Verfuegung (Einrichter vor `config.php`), kommt
+ * eine leere Zeichenkette zurueck. Ein halber Link ist besser als eine
+ * Ausnahme mitten im Anlegen eines Kontos.
+ */
+function app_url(string $pfad = ''): string
+{
+    static $basis = null;
+    if ($basis === null) {
+        $basis = '';
+        /* ERST DIE SCHON GELADENE FASSUNG. `db.php` legt `$CFG` global ab;
+         * die Datei ein zweites Mal zu lesen waere ein Dateizugriff je
+         * Aufruf und je Anfrage — bei acht Links in einer Mail achtmal. */
+        $cfg = $GLOBALS['CFG'] ?? null;
+        if (is_array($cfg)) {
+            $basis = rtrim((string)($cfg['app']['base_url'] ?? ''), '/');
+        }
+        if ($basis === '') {
+            $datei = __DIR__ . '/config.php';
+            if (is_file($datei)) {
+                $alles = require $datei;
+                $basis = rtrim((string)($alles['app']['base_url'] ?? ''), '/');
+            }
+        }
+    }
+    if ($pfad === '') { return $basis; }
+    return $basis . '/' . ltrim($pfad, '/');
+}
+
+/**
+ * Die Kontaktadresse dieser Installation — oder leer (E-P5a-40).
+ *
+ * WOGEGEN. Bis Web 20.7.0 stand in SIEBEN Mailtexten dieselbe Zeile:
+ * „Bei Fragen oder Problemen wende dich gerne an <Adresse>." Darin stand die
+ * PERSOENLICHE Adresse des Entwicklers, fest im Quelltext — dieselbe
+ * Fehlerklasse wie
+ * der Instanzname. Eine fremde Betreiberin verschickte Post, die ihre
+ * Nutzerinnen an einen Unbekannten verweist.
+ *
+ * SIE STEHT IN `app_state`, NICHT IN `config.php`. Jene wird zur Laufzeit
+ * nicht geschrieben; was dort steht, laesst sich nur ueber FTP aendern. Eine
+ * Adresse, die in JEDER Mail steht, muss eine BetreiberIn selbst umstellen
+ * koennen — sie steht deshalb unter Betrieb -> Servereinstellungen.
+ *
+ * NICHT `smtp.from`: Das ist der ABSENDER und auf einer gut eingerichteten
+ * Anlage ein `noreply@`. Eine Mail, die im Fehlerfall auf ein Postfach
+ * verweist, das niemand liest, ist schlimmer als eine ohne Verweis. Deshalb
+ * faellt die Zeile weg, wenn nichts eingetragen ist, statt etwas Falsches zu
+ * behaupten.
+ */
+function instanz_kontakt(): string
+{
+    static $k = null;
+    if ($k === null) {
+        $v = function_exists('app_state_lesen') ? app_state_lesen('instanz_kontakt') : null;
+        $k = $v === null ? '' : trim($v);
+    }
+    return $k;
+}
+
+/**
+ * Die Betreiberadresse fuer Betriebsmeldungen — oder leer (E-P5a-40).
+ *
+ * WOFUER. Warnungen ueber volle Kontingente und ueberfaellige Sicherungen
+ * gingen bisher an ALLE Konten mit Verwaltungsrecht — eine Liste, die aus
+ * der Datenbank kommt und mit jedem neuen Admin waechst. Wer den Betrieb
+ * fuehrt, ist aber nicht notwendig dieselbe Person wie die, die Konten
+ * verwaltet.
+ *
+ * STEHT HIER ETWAS, GEHT DIE BETRIEBSPOST DORTHIN — und nur dorthin. Bleibt
+ * es leer, gilt die bisherige Liste. Das ist die vorsichtige Richtung: Eine
+ * leere Einstellung darf keine Warnung verschlucken.
+ */
+function betrieb_mail(): string
+{
+    static $m = null;
+    if ($m === null) {
+        $v = function_exists('app_state_lesen') ? app_state_lesen('betrieb_mail') : null;
+        $m = $v === null ? '' : trim($v);
+    }
+    return $m;
+}
+
+/**
+ * Beide Adressen setzen. Leer heisst „nicht eingetragen".
+ *
+ * @return array{0:bool,1:string}
+ */
+function instanz_adressen_setzen(string $kontakt, string $betrieb): array
+{
+    /* DIESE PRUEFUNG STEHT GANZ OBEN, nicht unten bei den uebrigen: Die
+     * Laengengrenze unten ist `APP_STATE_MAX`, und die steht in `db.php`.
+     * Diese Datei laedt nichts (siehe Kopf) — ohne `db.php` waere die
+     * Konstante undefiniert und die Funktion stuerzte ab, statt eine
+     * Meldung zu liefern. `app_state_setzen()` und `APP_STATE_MAX` kommen
+     * aus derselben Datei; ist das eine da, ist das andere es auch. */
+    if (!function_exists('app_state_setzen')) {
+        return [false, 'Ohne Datenbank laesst sich nichts speichern.'];
+    }
+
+    foreach ([['Kontaktadresse', $kontakt], ['Betreiberadresse', $betrieb]] as [$was, $v]) {
+        $v = trim($v);
+        if ($v === '') { continue; }
+        /* DIE LAENGE ZUERST, und das ist nicht Geschmack: `filter_var()` weist
+         * eine ueberlange Adresse ebenfalls ab, aber mit der Meldung „keine
+         * gueltige E-Mail-Adresse" — und wer eine syntaktisch einwandfreie
+         * Adresse eintippt und das liest, sucht an der falschen Stelle. Die
+         * Grenze ist `APP_STATE_MAX`; dort steht der Wert. */
+        if (mb_strlen($v) > APP_STATE_MAX) {
+            return [false, 'Die ' . $was . ' ist zu lang (hoechstens '
+                         . APP_STATE_MAX . ' Zeichen).'];
+        }
+        if (!filter_var($v, FILTER_VALIDATE_EMAIL)
+            || strcspn($v, "\r\n") !== strlen($v)) {
+            return [false, 'Die ' . $was . ' ist keine gueltige E-Mail-Adresse.'];
+        }
+    }
+    $a = app_state_setzen('instanz_kontakt', trim($kontakt));
+    $b = app_state_setzen('betrieb_mail', trim($betrieb));
+    if (!$a || !$b) {
+        return [false, 'Die Adressen liessen sich nicht speichern. Die Einzelheiten '
+                     . 'stehen im Fehlerprotokoll des Webspace.'];
+    }
+    return [true, 'Adressen dieser Installation gespeichert.'];
+}
+
+/**
+ * DER RAHMEN JEDER MAIL (Backlog Nr. 202 AP1, E-P5a-36).
+ *
+ * WOGEGEN. Sechs von neun Mails endeten mit derselben, von Hand geschriebenen
+ * Grussformel und dem Namen als Zeichenkette; die Testmail hatte GAR KEINEN
+ * Abschluss und keine Kontaktzeile. Sieben Stellen, ein Aufbau — und eine,
+ * die abwich, ohne dass es jemandem auffiel.
+ *
+ * WAS ER ERZEUGT:
+ *
+ *     <anrede>
+ *
+ *     <kern>
+ *
+ *     [<schluss>]
+ *
+ *     [Bei Fragen wende dich an <kontakt>.]
+ *
+ *     Viele Grüße
+ *     <Name der Installation>
+ *
+ * Die Kontaktzeile faellt weg, wenn keine Adresse eingetragen ist — siehe
+ * `instanz_kontakt()`. Der Name kommt aus `instanz_name()`, nicht aus einer
+ * Zeichenkette: Sonst haette der Rahmen genau den Fehler, den er beseitigt.
+ */
+function mail_rahmen(string $anrede, string $kern, ?string $schluss = null): string
+{
+    $teile = [rtrim($anrede), rtrim($kern)];
+    if ($schluss !== null && trim($schluss) !== '') { $teile[] = rtrim($schluss); }
+    $kontakt = instanz_kontakt();
+    if ($kontakt !== '') {
+        $teile[] = 'Bei Fragen wende dich an ' . $kontakt . '.';
+    }
+    $teile[] = "Viele Grüße\n" . instanz_name();
+    return implode("\n\n", $teile) . "\n";
+}

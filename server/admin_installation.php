@@ -75,6 +75,7 @@ const INSTALLATION_LOGOS = [
 $notice = null; $error = null;
 $logoMeldung = null;
 $nameMeldung = null;
+$adrMeldung  = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -86,6 +87,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         [$ok, $meldung] = instanz_namen_setzen((string)($_POST['instanz_name'] ?? ''),
                                                (string)($_POST['instanz_kurz'] ?? ''));
         $nameMeldung = [$ok ? 'ok' : 'fehler', $meldung];
+    } elseif (($_POST['action'] ?? '') === 'instanz_adressen') {
+        /* DIE ADRESSEN DIESER INSTALLATION (P5a/AP5, E-P5a-40). Eigenes
+         * „Speichern" wie beim Namen, und aus demselben Grund. */
+        [$ok, $meldung] = instanz_adressen_setzen((string)($_POST['instanz_kontakt'] ?? ''),
+                                                  (string)($_POST['betrieb_mail'] ?? ''));
+        $adrMeldung = [$ok ? 'ok' : 'fehler', $meldung];
     } elseif (($_POST['action'] ?? '') === 'logo_standard') {
         $wahl = (string)($_POST['logo'] ?? '');
         if (!isset(INSTALLATION_LOGOS[$wahl])) {
@@ -210,6 +217,45 @@ ui_seite_start(['titel' => 'Installation']);
             <?= INSTANZ_MAX ?> Zeichen, keine Zeilenumbrüche — der Name steht
             in Mailbetreffs.</p>
           <?= ui_knopf(['text' => 'Namen speichern', 'art' => 'primaer']) ?>
+        </form>
+      <?php ui_karte_ende(); ?>
+
+      <?php /* DIE ADRESSEN STEHEN NEBEN DEM NAMEN, weil sie dasselbe Problem
+               hatten: eine persoenliche Adresse, fest im Quelltext, in jeder
+               Mail einer fremden Installation. */ ?>
+      <?php ui_karte_start(['titel' => 'Adressen', 'id' => 'k-adressen',
+                            'zahl' => 'Wohin Fragen und Betriebspost gehen']); ?>
+        <?php if ($adrMeldung !== null): ?>
+          <?= ui_meldung_markup($adrMeldung[0], $adrMeldung[1]) ?>
+        <?php endif; ?>
+
+        <p class="feld-hinweis">Bis Web 20.7.0 stand in <strong>sieben
+          Mailtexten</strong> dieselbe fest eingebaute Adresse. Hier steht sie
+          einmal — und sie darf auch leer bleiben: Dann fällt die Zeile
+          „Bei Fragen wende dich an …“ aus den Mails weg, statt auf ein
+          Postfach zu verweisen, das niemand liest.</p>
+
+        <form method="post" class="listen-form">
+          <?= csrf_field() ?>
+          <input type="hidden" name="action" value="instanz_adressen">
+          <?php ui_feld(['name' => 'instanz_kontakt', 'label' => 'Kontaktadresse',
+                         'art' => 'email',
+                         'label_zusatz' => 'steht in jeder E-Mail an NutzerInnen',
+                         'wert' => instanz_kontakt(),
+                         'platzhalter' => 'leer = keine Kontaktzeile']); ?>
+          <?php ui_feld(['name' => 'betrieb_mail', 'label' => 'Betreiberadresse',
+                         'art' => 'email',
+                         'label_zusatz' => 'Warnungen zu Speicher und Sicherungen',
+                         'wert' => betrieb_mail(),
+                         'platzhalter' => 'leer = an alle mit Verwaltungsrecht']); ?>
+          <p class="feld-hinweis">Die <strong>Kontaktadresse</strong> ist nicht
+            der Absender — der steht als <code>smtp.from</code> in der
+            <code>config.php</code> und ist auf einer gut eingerichteten Anlage
+            ein <code>noreply@</code>. Die <strong>Betreiberadresse</strong>
+            lenkt Betriebspost (Speicherkontingent, überfällige Sicherungen) an
+            eine Stelle; bleibt sie leer, geht sie weiterhin an alle Konten mit
+            Verwaltungsrecht.</p>
+          <?= ui_knopf(['text' => 'Adressen speichern', 'art' => 'primaer']) ?>
         </form>
       <?php ui_karte_ende(); ?>
 

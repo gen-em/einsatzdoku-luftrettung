@@ -4881,5 +4881,84 @@ declare(strict_types=1);
  * ansieht.
  *
  * KEINE SCHEMAAENDERUNG: zwei Zeilen in `app_state`.
+ *
+ * ------------------------------------------------------------------
+ *
+ * 20.9.0 ist AP5 von P5a, ZWEITER Teil: ALLE ZEHN VERSANDSTELLEN GEHEN
+ * DURCH DIE WARTESCHLANGE, und die Installation bekommt ihre Adressen
+ * (E-P5a-36, E-P5a-40, E-P5a-41; Backlog Nr. 202 AP1, R83).
+ *
+ * WAS BIS HIERHER GALT. 20.8.0 hat das Geruest gebaut — Katalog,
+ * Warteschlange, Job — und NIEMAND benutzte es. Zehn Stellen riefen
+ * weiterhin `smtp_send()` unmittelbar. Ein Geruest ohne Benutzer ist kein
+ * halber Fortschritt, sondern eine Zusage, die nicht gilt: „Eine Mail geht
+ * nicht mehr verloren" stimmte fuer null von zehn Mails.
+ *
+ * WAS GILT: `pair.php` (2x), `admin_users.php`, `admin_user.php`,
+ * `reset_request.php`, `email_lib.php`, `speicher_lib.php`,
+ * `adminbackup_lib.php` (2x) und `betrieb_status.php` reihen ein. Der
+ * einzige verbliebene Aufrufer von `smtp_send()` ist `mail_lib.php` selbst.
+ *
+ * DREI AUSGAENGE STATT ZWEI. `mail_einreihen()` liefert `zugestellt`,
+ * `wartet` oder `abgelehnt`. Die Aufrufer, die am Rueckgabewert eine MARKE
+ * setzen (Schwellenwarnungen, Einladungsmarke), zaehlen `wartet` als
+ * erledigt — sonst reihte der naechste Lauf dieselbe Warnung erneut ein und
+ * eine dreitaegige Mailstoerung ergaebe sie dreifach. Nur `abgelehnt` — gar
+ * nicht erst eingereiht — laesst die Marke offen.
+ *
+ * ZWEI ADRESSEN WERDEN EINSTELLBAR (E-P5a-40), Verwaltung → Installation,
+ * Karte „Adressen":
+ *
+ *   `instanz_kontakt`  Die Kontaktzeile JEDER Mail. Bis 20.8.0 stand in
+ *                      SIEBEN Mailtexten dieselbe persoenliche Adresse des
+ *                      Entwicklers, fest im Quelltext — dieselbe
+ *                      Fehlerklasse wie der Instanzname. Bleibt sie leer,
+ *                      FAELLT DIE ZEILE WEG, statt auf ein Postfach zu
+ *                      verweisen, das niemand liest.
+ *   `betrieb_mail`     Wohin Betriebspost geht (volles Kontingent,
+ *                      ueberfaellige Sicherungen). Leer = weiterhin an alle
+ *                      mit Verwaltungsrecht; eine leere Einstellung darf
+ *                      keine Warnung verschlucken.
+ *
+ * `mail_betriebsziele()` haelt diese Auswahl an EINER Stelle. Drei Stellen
+ * bauten dieselbe Liste, und die dritte hatte bereits eine abweichende
+ * Sortierung — genau der Fall, fuer den R83 das Zentralisieren verlangt.
+ *
+ * `app_url()` ERSETZT SIEBEN HANDVERKETTUNGEN, fuenf davon ohne `rtrim()`.
+ * Steht in `config.php` ein Schraegstrich am Ende, entstand
+ * `https://host//pw_handling.php` — in einer Mail, die zum Passwortsetzen
+ * auffordert, die falsche Stelle fuer eine Unsauberkeit. Nebenbei
+ * behoben: `smtp.php` schickte bei leerer `base_url` ein nacktes „EHLO "
+ * (`parse_url('')` liefert FALSE); jetzt steht dort ein Rueckfall.
+ *
+ * EINE ZEILE AUF DER STATUSSEITE (E-P5a-41), Karte E-Mail: „Warteschlange".
+ * Blau wenn leer, ORANGE wenn etwas wartet (der Normalfall eines kurz
+ * gestoerten Mailservers, er heilt von selbst), ROT mit ADRESSE, wenn etwas
+ * endgueltig liegengeblieben ist. Keine eigene Seite und kein Knopf: Eine
+ * Liste waere eine neue Darstellung und braucht eine Freigabe mit Mockup;
+ * die Frage einer BetreiberIn — „ist etwas liegengeblieben?" — passt in eine
+ * Zeile. Der volle Bereich mit Reitern kommt in P5c.
+ *
+ * NACHGEMESSEN mit `tools/mailprobe/` gegen eine eigene SMTPS-Gegenstelle,
+ * die auf Kommando ablehnt, schweigt oder zwoelf Fortsetzungszeilen
+ * schickt: 41 Pruefungen, 0 Befunde. Dazu `tools/jobprobe/` 35 von 35
+ * (Teil 10 neu: der Job `mail` steht als ERSTER im Katalog — stuende er
+ * hinter der Verdichtung, bekaeme er am Huckepack-Weg regelmaessig nichts,
+ * und die Statusseite meldete trotzdem „in Ordnung").
+ *
+ * ZWEI FUNDE AUS DER PROBE, beide behoben:
+ *
+ *  1. `smtp_letzter_fehler()` konnte den Grund des VORIGEN Versuchs
+ *     liefern. Der Merker wurde erst NACH der Adresspruefung geleert; eine
+ *     abgewiesene Adresse liess also die Kennung des letzten Fehlschlags
+ *     stehen — eine Kennung, die auf eine andere Nachricht zeigt, ist
+ *     schlimmer als keine.
+ *  2. Die Leiter laeuft bei kurzlebigen Nachrichten NICHT zu Ende, und das
+ *     ist richtig: `passwort_reset` gilt 3600 s, die dritte Sprosse laege
+ *     bei 9300 s. Die Zeile wird nach DREI Versuchen `zu_spaet`, nicht nach
+ *     fuenf `unzustellbar`. Die Probe misst beides getrennt — die erste
+ *     Fassung erwartete fuenf und meldete einen Befund, den es nicht gab.
+ *
+ * KEINE SCHEMAAENDERUNG: zwei weitere Zeilen in `app_state`.
  */
-const WEB_VERSION = '20.8.0';
+const WEB_VERSION = '20.9.0';

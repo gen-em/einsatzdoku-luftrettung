@@ -11,6 +11,11 @@ return [
         'timezone'  => 'Europe/Berlin',               // Anzeige; Speicherung ist UTC
         'logo_path' => 'assets/images/gen-em_logo_helicopter.svg',  // Logo auf Login- und Einrichtungsseite
         'max_body_bytes' => 524288,                   // 512 KB Ingest-Limit
+        // Die KONTAKTADRESSE und die BETREIBERMAIL stehen NICHT hier, sondern
+        // unter Betrieb -> Servereinstellungen (P5a/AP5, E-P5a-40). Grund:
+        // config.php wird zur Laufzeit nicht geschrieben — was hier steht,
+        // laesst sich nur ueber FTP aendern. Eine Adresse, die in jeder Mail
+        // steht, muss eine BetreiberIn selbst umstellen koennen.
     ],
     'smtp' => [                                       // z. B. eigener Stalwart-Server
         'host' => 'mail.example.de',

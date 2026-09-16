@@ -166,106 +166,186 @@ const MAIL_JE_LAUF = 10;
 function mail_katalog(): array
 {
     $n = instanz_name();
-    $gruss = "\n\nViele Grüße\n" . $n . "\n";
 
     return [
         'einladung' => [
             'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
             'betreff' => fn(array $d): string => 'Willkommen bei der ' . $n,
-            'text' => fn(array $d): string =>
-                "Hallo,\n\n"
-                . "für dich wurde ein Zugang zur " . $n . " angelegt.\n"
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "für dich wurde ein Zugang zur " . $n . " angelegt.\n"
                 . "Über den folgenden Link legst du dein persönliches Passwort fest — der Link ist\n"
                 . "24 Stunden gültig:\n\n"
-                . $d['link'] . "\n\n"
-                . "Dabei wird auch dein Wiederherstellungsschlüssel angezeigt. Bitte notiere ihn dir\n"
+                . $d['link'],
+                "Dabei wird auch dein Wiederherstellungsschlüssel angezeigt. Bitte notiere ihn dir\n"
                 . "sicher — ohne ihn lassen sich die verschlüsselten Angaben nach einem späteren\n"
-                . "Passwortwechsel nicht mehr öffnen." . $gruss,
+                . "Passwort-Reset von niemandem mehr öffnen."),
         ],
+
+        /* ZWEI EINTRAEGE FUER DENSELBEN LINK, und das ist kein Versehen:
+         * `admin_user.php` (Verwaltung loest aus) und `reset_request.php`
+         * (die Nutzerin selbst) schickten bis Web 20.7.0 fast denselben Text
+         * — die Selbstbedienung aber MIT dem Satz „Falls du das nicht
+         * angefordert hast, kannst du diese E-Mail einfach ignorieren".
+         * Der gehoert dorthin und nur dorthin: Wer die Verwaltung gebeten
+         * hat zurueckzusetzen, hat es angefordert. Beim Zusammenlegen waere
+         * dieser Unterschied verlorengegangen, ohne dass es auffiele. */
         'passwort_neu' => [
             'art' => 'konto', 'frist' => 3600, 'pflicht' => ['link'],
             'betreff' => fn(array $d): string => 'Neues Passwort — ' . $n,
-            'text' => fn(array $d): string =>
-                "Hallo,\n\n"
-                . "für deinen Zugang zur " . $n . " wurde ein neues\n"
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "für deinen Zugang zur " . $n . " wurde ein neues\n"
                 . "Passwort angefordert. Über den folgenden Link kannst du es setzen — der Link ist\n"
                 . "eine Stunde gültig:\n\n"
-                . $d['link'] . "\n\n"
-                . "Dafür brauchst du deinen Wiederherstellungsschlüssel, den du bei der Einrichtung\n"
-                . "notiert hast. Wurden mehrere Links angefordert, gilt immer nur der zuletzt\n"
-                . "verschickte." . $gruss,
+                . $d['link'],
+                "Dafür brauchst du deinen Wiederherstellungsschlüssel, den du bei der Einrichtung\n"
+                . "erhalten hast.\n\n"
+                . "Ein zuvor angeforderter Link ist damit ungültig geworden — es gilt immer nur der\n"
+                . "zuletzt verschickte."),
         ],
+        'passwort_reset' => [
+            'art' => 'konto', 'frist' => 3600, 'pflicht' => ['link'],
+            'betreff' => fn(array $d): string => 'Neues Passwort — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "für deinen Zugang zur " . $n . " wurde ein neues\n"
+                . "Passwort angefordert. Über den folgenden Link kannst du es setzen — der Link ist\n"
+                . "eine Stunde gültig:\n\n"
+                . $d['link'],
+                "Dafür brauchst du deinen Wiederherstellungsschlüssel, den du bei der Einrichtung\n"
+                . "erhalten hast.\n\n"
+                . "Ein zuvor angeforderter Link ist damit ungültig geworden — es gilt immer nur der\n"
+                . "zuletzt verschickte.\n\n"
+                . "Falls du das nicht angefordert hast, kannst du diese E-Mail einfach ignorieren —\n"
+                . "es wurde nichts geändert."),
+        ],
+
         'adresswechsel' => [
             'art' => 'konto', 'frist' => null, 'pflicht' => ['alt', 'neu', 'durch'],
             'betreff' => fn(array $d): string => 'Anmeldeadresse geändert — ' . $n,
-            'text' => fn(array $d): string =>
-                "Hallo,\n\n"
-                . "die Anmeldeadresse deines Zugangs zur " . $n . "\n"
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "die Anmeldeadresse deines Zugangs zur " . $n . "\n"
                 . "wurde geändert:\n\n"
                 . "  bisher: " . $d['alt'] . "\n"
                 . "  jetzt:  " . $d['neu'] . "\n\n"
-                . $d['durch'] . "\n\n"
-                . "Warst du das nicht, melde dich bitte umgehend bei der Verwaltung." . $gruss,
+                . $d['durch'],
+                "WARST DU DAS NICHT, handle bitte sofort: Melde dich mit deinem Passwort an\n"
+                . "und setze die Adresse zurück, oder wende dich an die Verwaltung deiner\n"
+                . "Installation. Diese Nachricht geht bewusst an die ALTE Adresse — sie ist die\n"
+                . "einzige, die im Missbrauchsfall noch dir gehört."),
         ],
+
         'geraet_gekoppelt' => [
-            'art' => 'geraet', 'frist' => null, 'pflicht' => [],
+            'art' => 'geraet', 'frist' => null,
+            'pflicht' => ['geraet', 'geraet_id', 'zeitpunkt'],
             'betreff' => fn(array $d): string => 'Neues Gerät gekoppelt — ' . $n,
-            'text' => fn(array $d): string =>
-                "Hallo,\n\n"
-                . "mit deinem Konto der " . $n . " wurde soeben ein\n"
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "mit deinem Konto der " . $n . " wurde soeben ein\n"
                 . "neues Gerät gekoppelt. Das Gerät hat den Code gezeigt, du hast ihn im Web\n"
-                . "bestätigt.\n\n"
-                . "Warst du das nicht, trenne das Gerät bitte umgehend unter\n"
-                . "Einstellungen → Geräte." . $gruss,
+                . "eingegeben und am Gerät mit Ja bestätigt:\n\n"
+                . "  Gerät:     " . $d['geraet'] . "\n"
+                . "  Geräte-ID: " . $d['geraet_id'] . "\n"
+                . "  Zeitpunkt: " . $d['zeitpunkt'] . " Uhr",
+                "War das dein Gerät, ist alles in Ordnung — du musst nichts tun.\n\n"
+                . "War es das nicht, deaktiviere oder lösche das Gerät bitte umgehend unter\n"
+                . "Einstellungen, Bereich Geräte. Ab diesem Moment kann es keine Daten mehr\n"
+                . "hochladen.\n"
+                . app_url('/einstellungen.php?t=geraete')),
         ],
         'geraet_getrennt' => [
-            'art' => 'geraet', 'frist' => null, 'pflicht' => [],
+            'art' => 'geraet', 'frist' => null, 'pflicht' => ['geraet_id', 'zeitpunkt'],
             'betreff' => fn(array $d): string => 'Gerät getrennt — ' . $n,
-            'text' => fn(array $d): string =>
-                "Hallo,\n\n"
-                . "ein Gerät hat seine Verbindung zu deinem Konto der\n" . $n . " selbst getrennt.\n\n"
-                . "Warst du das nicht, prüfe bitte unter Einstellungen → Geräte, welche Geräte\n"
-                . "noch gekoppelt sind." . $gruss,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "ein Gerät hat seine Verbindung zu deinem Konto der\n"
+                . $n . " soeben selbst getrennt:\n\n"
+                . "  Geräte-ID: " . $d['geraet_id'] . "\n"
+                . "  Zeitpunkt: " . $d['zeitpunkt'] . " Uhr",
+                "Das geschieht, wenn jemand das Gerät an sein Konto koppelt. Bereits\n"
+                . "hochgeladene Einsätze bleiben vollständig erhalten.\n\n"
+                . "War das nicht beabsichtigt, verbinde es einfach wieder: Starte die\n"
+                . "Kopplung auf dem Gerät (Sync-Seite, Punkt „Gerät koppeln\") und gib den\n"
+                . "Code, den es zeigt, hier ein:\n"
+                . app_url('/einstellungen.php?t=geraete')),
         ],
+
         'speicher_kontingent' => [
             'art' => 'betrieb', 'frist' => null,
             'pflicht' => ['titel', 'prozent', 'belegt', 'kontingent', 'rat'],
             'betreff' => fn(array $d): string =>
                 $d['titel'] . ': ' . $d['prozent'] . ' % des Kontingents erreicht',
-            'text' => fn(array $d): string =>
-                'Das Kontingent „' . $d['titel'] . '" hat ' . $d['prozent'] . ' % erreicht.' . "\n\n"
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                'das Kontingent „' . $d['titel'] . '" hat ' . $d['prozent'] . " % erreicht.\n\n"
                 . 'Belegt:     ' . $d['belegt'] . "\n"
-                . 'Kontingent: ' . $d['kontingent'] . "\n\n"
-                . $d['rat'] . "\n\n"
-                . 'Die Schwellen stehen unter Betrieb → Servereinstellungen.' . "\n",
+                . 'Kontingent: ' . $d['kontingent'],
+                $d['rat'] . "\n\n"
+                . 'Die Schwellen stehen unter Betrieb, Seite Servereinstellungen.'),
         ],
         'backup_grenze' => [
             'art' => 'betrieb', 'frist' => null,
             'pflicht' => ['prozent', 'belegt', 'grenze', 'pakete', 'ordner'],
             'betreff' => fn(array $d): string =>
                 'Backups: ' . $d['prozent'] . ' % der Speichergrenze erreicht',
-            'text' => fn(array $d): string =>
-                'Die Ablage der Backups hat ' . $d['prozent'] . ' % der Speichergrenze erreicht.' . "\n\n"
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                'die Ablage der Backups hat ' . $d['prozent'] . " % der Speichergrenze erreicht.\n\n"
                 . 'Belegt:  ' . $d['belegt'] . "\n"
                 . 'Grenze:  ' . $d['grenze'] . "\n"
-                . 'Pakete:  ' . $d['pakete'] . ' in ' . $d['ordner'] . " Konten\n\n"
-                . 'Ist die Grenze erreicht, wird nicht mehr gesichert — es wird '
-                . 'nichts still verdrängt. Bitte alte Backups entfernen, die '
-                . "Aufbewahrung senken oder die Grenze erhöhen.\n",
+                . 'Pakete:  ' . $d['pakete'] . ' in ' . $d['ordner'] . ' Konten',
+                'Ist die Grenze erreicht, wird nicht mehr gesichert — es wird nichts still '
+                . 'verdrängt. Bitte alte Backups entfernen, die Aufbewahrung senken oder die '
+                . 'Grenze erhöhen.'),
         ],
         'backup_faellig' => [
-            'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['text'],
+            'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['kern'],
             'betreff' => fn(array $d): string => 'Backups fällig — ' . $n,
-            'text' => fn(array $d): string => $d['text'],
+            'text' => fn(array $d): string => mail_rahmen('Hallo,', $d['kern']),
         ],
+
         'testmail' => [
             'art' => 'betrieb', 'frist' => 3600, 'pflicht' => [],
+            /* DIE TESTMAIL BEKOMMT DENSELBEN RAHMEN wie jede andere, und das
+             * ist der Punkt: Bis Web 20.7.0 war sie die einzige ohne Anrede,
+             * ohne Kontaktzeile und ohne Grussformel — und die einzige, deren
+             * Betreff „Gen-EM" fehlte. Wer den Versand prueft, soll sehen,
+             * wie eine ECHTE Mail dieser Anlage aussieht. */
             'betreff' => fn(array $d): string => 'Testmail — ' . $n,
-            'text' => fn(array $d): string =>
-                "Diese Nachricht wurde auf der Seite Betrieb → Status ausgelöst.\n"
-              . "Kommt sie an, funktioniert der Versand dieser Installation.\n",
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "diese Nachricht wurde auf der Seite Betrieb, Bereich Status, ausgelöst.\n"
+                . "Kommt sie an, funktioniert der Versand dieser Installation."),
         ],
     ];
+}
+
+/**
+ * WER BETRIEBSPOST BEKOMMT — an einer Stelle (E-P5a-40, R83).
+ *
+ * DREI STELLEN BAUTEN DIESELBE LISTE: `speicher_lib.php` (Kontingente),
+ * `adminbackup_lib.php` zweimal (Speichergrenze, faellige Sicherungen). Drei
+ * Verbraucher sind zwei mehr als der eine, ab dem R83 das Zentralisieren
+ * verlangt — und die dritte hatte bereits eine abweichende Sortierung
+ * (`ORDER BY email` statt `ORDER BY id`) und eine zusaetzliche Bedingung.
+ *
+ * STEHT EINE BETREIBERADRESSE IN DEN EINSTELLUNGEN, GEHT DIE POST NUR DORTHIN.
+ * Sonst an alle Konten mit Verwaltungsrecht, wie bisher. Die Richtung ist
+ * bewusst die vorsichtige: Eine leere Einstellung darf keine Warnung
+ * verschlucken, und deshalb ist „leer" der Rueckfall auf die alte Liste und
+ * nicht auf „niemand".
+ *
+ * @param bool $nurAngemeldete Nur Konten mit gesetztem Passwort. Die
+ *        Sicherungserinnerung will keine Post an ein Konto schicken, das noch
+ *        nie angemeldet war — die Einladung dorthin ist noch offen.
+ * @return string[] Adressen; leer heisst „es gibt niemanden".
+ */
+function mail_betriebsziele(bool $nurAngemeldete = false): array
+{
+    $b = betrieb_mail();
+    if ($b !== '') { return [$b]; }
+
+    $sql = 'SELECT email FROM users WHERE ' . ROLLEN_VERWALTUNG_SQL
+         . ($nurAngemeldete ? ' AND password_hash IS NOT NULL' : '')
+         . ' ORDER BY id';
+    $ziele = [];
+    foreach (db()->query($sql)->fetchAll(PDO::FETCH_COLUMN) as $m) {
+        if (is_string($m) && $m !== '') { $ziele[] = $m; }
+    }
+    return $ziele;
 }
 
 /**
@@ -486,6 +566,51 @@ function mail_job(PDO $pdo, array $zustand, callable $zeitLinks): array
     }
     return ['zustand' => $zustand, 'erledigt' => $erledigt,
             'fertig'  => $erledigt >= count($ids)];
+}
+
+/**
+ * DIE LAGE DER WARTESCHLANGE — fuer die eine Zeile auf der Statusseite.
+ *
+ * KEINE EIGENE SEITE UND KEIN KNOPF, und das ist eine Entscheidung
+ * (E-P5a-41): Eine Liste ist eine neue Darstellung und braucht nach
+ * `CLAUDE.md` 5 eine Freigabe mit Mockup. Was eine BetreiberIn hier braucht,
+ * ist zudem keine Liste, sondern eine Antwort auf eine Frage — „ist etwas
+ * liegengeblieben?" —, und die passt in eine Zeile. Der volle Bereich mit
+ * Reitern kommt in P5c (Protokoll); bis dahin ist diese Zeile die Auskunft.
+ *
+ * DIE ADRESSEN STEHEN IN DER ZEILE, hoechstens drei. „2 unzustellbar" ohne
+ * Adresse ist eine Aussage, mit der niemand etwas anfangen kann — und der
+ * Grund, aus dem E-P5a-39 die Adresse beim Endzustand `unzustellbar`
+ * ueberhaupt stehenlaesst.
+ *
+ * @return array{offen:int, unzustellbar:int, zuspaet:int, adressen:string[],
+ *               grund:?string}|null  `null` = die Tabelle gibt es nicht
+ */
+function mail_lage(): ?array
+{
+    try {
+        $pdo = db();
+        $z = $pdo->query("SELECT
+                 SUM(zustand = 'offen')        AS offen,
+                 SUM(zustand = 'unzustellbar') AS unzustellbar,
+                 SUM(zustand = 'zu_spaet')     AS zuspaet
+               FROM mail_warteschlange")->fetch(PDO::FETCH_ASSOC);
+        $st = $pdo->query("SELECT empfaenger, fehler FROM mail_warteschlange
+                            WHERE zustand = 'unzustellbar' AND empfaenger IS NOT NULL
+                         ORDER BY beendet DESC LIMIT 3");
+        $adressen = []; $grund = null;
+        foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $adressen[] = (string)$r['empfaenger'];
+            if ($grund === null) { $grund = (string)$r['fehler']; }
+        }
+        return ['offen'        => (int)($z['offen'] ?? 0),
+                'unzustellbar' => (int)($z['unzustellbar'] ?? 0),
+                'zuspaet'      => (int)($z['zuspaet'] ?? 0),
+                'adressen'     => $adressen,
+                'grund'        => $grund];
+    } catch (Throwable $ex) {
+        return null;
+    }
 }
 
 /** Wie viele Zeilen warten noch? Fuer die Rueckstandsanzeige. */

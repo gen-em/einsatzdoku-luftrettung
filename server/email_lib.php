@@ -125,6 +125,7 @@ function profil_adresswechsel_melden(string $alt, string $neu,
                                      string $wer = 'profil'): bool
 {
     require_once __DIR__ . '/smtp.php';
+require_once __DIR__ . '/mail_lib.php';
     if ($alt === '' || $alt === $neu) { return false; }
 
     $durch = $wer === 'verwaltung'
@@ -132,20 +133,9 @@ function profil_adresswechsel_melden(string $alt, string $neu,
         : "Die Änderung wurde im Profil dieses Kontos vorgenommen, nach Eingabe\n"
           . "des Passworts.";
 
-    $ok = smtp_send($alt,
-        'Anmeldeadresse geändert — Gen-EM Einsatzdokumentation Notarzt',
-        "Hallo,\n\n"
-        . "die Anmeldeadresse deines Zugangs zur Gen-EM Einsatzdokumentation Notarzt\n"
-        . "wurde geändert:\n\n"
-        . "  bisher: " . $alt . "\n"
-        . "  jetzt:  " . $neu . "\n\n"
-        . $durch . "\n\n"
-        . "WARST DU DAS NICHT, handle bitte sofort: Melde dich mit deinem Passwort an\n"
-        . "und setze die Adresse zurück, oder wende dich an die Verwaltung deiner\n"
-        . "Installation. Diese Nachricht geht bewusst an die ALTE Adresse -- sie ist die\n"
-        . "einzige, die im Missbrauchsfall noch dir gehört.\n\n"
-        . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
-        . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n");
+    $zustellung = mail_einreihen('adresswechsel', $alt,
+        ['alt' => $alt, 'neu' => $neu, 'durch' => $durch]);
+    $ok = $zustellung !== MAIL_ABGELEHNT;
     if (!$ok) {
         error_log('Adresswechsel: Hinweismail an die alte Adresse ging nicht weg');
     }

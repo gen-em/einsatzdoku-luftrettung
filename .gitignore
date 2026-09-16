@@ -6,6 +6,10 @@ watch/bin/
 
 # Lokale Server-Konfiguration (enthält Zugangsdaten — niemals ins Repo!)
 server/config.php
+# Die Sicherung, die tools/mailprobe/ waehrend ihres Laufs anlegt. Sie liegt
+# nur da, wenn die Probe nicht sauber zu Ende gekommen ist (kill -9, Behaelter
+# weg) -- und sie enthaelt dann dieselben Zugangsdaten wie config.php.
+server/config.php.mailprobe
 server/install.lock
 # Der Schalter des Wartungsmodus (S5 Paket W, E-S5W-02). Wie install.lock:
 # Er ist ein ZUSTAND DIESER EINEN INSTALLATION und gehoert nicht ins

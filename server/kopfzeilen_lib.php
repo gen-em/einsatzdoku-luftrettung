@@ -122,20 +122,30 @@ declare(strict_types=1);
  * Pruefdokument steht es als Punkt fuer die Betreiberin.
  *
  * `includeSubDomains` bleibt aussen vor, bis geklaert ist, dass keine
- * Subdomain ohne TLS laeuft (SP-5) — und `staging.nadoku.gen-em.org` ist
- * genau so eine Subdomain.
+ * Subdomain ohne TLS laeuft (SP-5) — und die Staging-Adresse dieser
+ * Auslieferungskette ist genau so eine Subdomain. Die Anschrift steht
+ * absichtlich nicht hier: Sie ist eine Eigenschaft der Installation und
+ * gehoert in die Geheimnisse der Kette, nicht in den Quelltext.
  *
  * ---------------------------------------------------------------------------
  * WAS DIESE DATEI NICHT TUT
  * ---------------------------------------------------------------------------
  *
- * Sie laedt nichts ausser `db.php`, und sie kommt **ohne Datenbank aus**:
- * Jede Einstellung hat eine Vorgabe, und faellt die Abfrage aus, gilt die.
- * Der Grund ist die Wartungsseite — sie antwortet, waehrend die Datenbank
- * umgebaut wird, und soll trotzdem ihre Kopfzeilen bekommen.
+ * Sie laedt nichts ausser `db.php` und `instanz_lib.php`, und sie kommt
+ * **ohne Datenbank aus**: Jede Einstellung hat eine Vorgabe, und faellt die
+ * Abfrage aus, gilt die. Der Grund ist die Wartungsseite — sie antwortet,
+ * waehrend die Datenbank umgebaut wird, und soll trotzdem ihre Kopfzeilen
+ * bekommen.
+ *
+ * `instanz_lib.php` STEHT AUSGESCHRIEBEN, obwohl `db.php` es ohnehin zieht:
+ * Das HTTPS-Tor braucht `INSTANZ_KURZ_VORGABE` fuer seinen Titel und ist die
+ * Antwort, die auch dann stehen soll, wenn sonst nichts steht. Eine
+ * Abhaengigkeit ueber zwei Ecken ist genau die, die beim naechsten Umbau
+ * still wegfaellt. Die Datei laedt selbst nichts (dort ausgeschrieben).
  */
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/instanz_lib.php';
 
 /* ---- Einstellungen, je mit Vorgabe --------------------------------------- */
 
@@ -468,7 +478,7 @@ function https_tor(): void
      * Stylesheet ist verlinkt — es ist eine statische Datei. */
     echo '<!doctype html><html lang="de"><head><meta charset="utf-8">'
        . '<meta name="viewport" content="width=device-width,initial-scale=1">'
-       . '<title>Nur über HTTPS — Gen-EM NAdoku</title>'
+       . '<title>Nur über HTTPS — ' . $h(INSTANZ_KURZ_VORGABE) . '</title>'
        . '<link rel="stylesheet" href="assets/style.css"></head><body>'
        . '<div class="rahmen rahmen-lesespalte"><main class="inhalt"><div class="text">'
        . '<h1>Diese Anwendung läuft nur über HTTPS</h1>'

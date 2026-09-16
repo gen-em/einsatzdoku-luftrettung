@@ -40,6 +40,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/backup_lib.php';
+require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/serverkrypto_lib.php';   // Siegel der Fassung 3 (S10/AP4)
 
 /* ===========================================================================
@@ -1945,16 +1946,14 @@ function edbak_schwellen_melden(): array
         return $aus;
     }
 
-    /* An ALLE mit Verwaltungsrechten, also auch an die BetreiberInnen
-     * (R75). Die Speichergrenze ist seit S8 eine Betriebseinstellung — wer
-     * sie aendern kann, muss von ihrem Erreichen erfahren. Die Bedingung
-     * steht als Konstante in db.php, damit die naechste Rolle (Support, R38)
-     * nicht genau hier vergessen wird. */
-    $ziele = [];
-    foreach (db()->query("SELECT email FROM users WHERE " . ROLLEN_VERWALTUNG_SQL . "
-                          ORDER BY id")->fetchAll(PDO::FETCH_COLUMN) as $m) {
-        if (is_string($m) && $m !== '') { $ziele[] = $m; }
-    }
+    /* An die Betreiberadresse aus den Einstellungen — und nur ersatzweise an
+     * ALLE mit Verwaltungsrechten, also auch an die BetreiberInnen (R75). Die
+     * Speichergrenze ist seit S8 eine Betriebseinstellung; wer sie aendern
+     * kann, muss von ihrem Erreichen erfahren. Die Auswahl steht seit
+     * E-P5a-40 in `mail_betriebsziele()` — an einer Stelle statt an drei,
+     * damit die naechste Rolle (Support, R38) nicht genau hier vergessen
+     * wird. */
+    $ziele = mail_betriebsziele();
     foreach ($offen as $s) {
         $text = "Die Ablage der Backups hat " . $s . " % ihrer Grenze erreicht.\n\n"
               . "Belegt:  " . edbak_groesse_text($st['bytes']) . "\n"
@@ -1963,9 +1962,17 @@ function edbak_schwellen_melden(): array
               . "Ist die Grenze erreicht, wird nicht mehr gesichert — es wird "
               . "nichts still verdraengt. Bitte alte Backups entfernen, die "
               . "Aufbewahrung senken oder die Grenze erhoehen.\n";
+        /* Siehe `speicher_lib.php`: `wartet` zaehlt als erledigt, sonst
+         * kaeme dieselbe Warnung nach einer Mailstoerung mehrfach. */
         $ok = false;
         foreach ($ziele as $m) {
-            if (smtp_send($m, 'Backups: ' . $s . ' % der Speichergrenze erreicht', $text)) {
+            if (mail_einreihen('backup_grenze', $m, [
+                    'prozent' => $s,
+                    'belegt'  => edbak_groesse_text($st['bytes']),
+                    'grenze'  => edbak_groesse_text($st['grenze']),
+                    'pakete'  => (string)$st['pakete'],
+                    'ordner'  => (string)$st['ordner'],
+                ]) !== MAIL_ABGELEHNT) {
                 $ok = true;
             }
         }
@@ -2112,10 +2119,7 @@ function edbak_erinnerung_planen(): int
     $faellig = edbak_faellige_konten();
     if (!$faellig) { return 0; }
 
-    $admins = db()->query("SELECT email, name FROM users
-                            WHERE " . ROLLEN_VERWALTUNG_SQL . "
-                              AND password_hash IS NOT NULL
-                            ORDER BY email")->fetchAll();
+    $admins = mail_betriebsziele(true);
     if (!$admins) { return 0; }
 
     /* Die Marke steht VOR dem Versand, wie beim Aufräumjob selbst: Zwei
@@ -2124,12 +2128,18 @@ function edbak_erinnerung_planen(): int
      * sieben Tagen. */
     edbak_marke_setzen('adminbackup_mail_last', gmdate('Y-m-d'));
 
-    $text = edbak_erinnerung_text($faellig);
-    register_shutdown_function(static function () use ($admins, $text): void {
-        require_once __DIR__ . '/smtp.php';
+    $kern = edbak_erinnerung_text($faellig);
+
+    /* DER VERSAND BLEIBT HINTER DER ANTWORT — wie vor Web 20.8.0. Neu ist
+     * nur, WAS dort passiert: `mail_einreihen()` schreibt die Zeile in die
+     * Warteschlange und versucht sie einmal. Scheitert der Versuch, steht
+     * die Zeile da und der Mail-Job holt sie nach; bis Web 20.7.0 war eine
+     * hier verlorene Mail verloren, und die Marke oben stand schon. Genau
+     * diese Lage — Marke gesetzt, Mail weg, naechste Erinnerung in sieben
+     * Tagen — ist der Grund fuer die Warteschlange. */
+    register_shutdown_function(static function () use ($admins, $kern): void {
         foreach ($admins as $a) {
-            @smtp_send((string)$a['email'],
-                'Backups fällig — Gen-EM Einsatzdokumentation Notarzt', $text);
+            mail_einreihen('backup_faellig', $a, ['kern' => $kern]);
         }
     });
     return count($faellig);
@@ -2149,7 +2159,6 @@ function edbak_erinnerung_planen(): int
  */
 function edbak_erinnerung_text(array $faellig): string
 {
-    global $CFG;
     $nie   = array_filter($faellig, static fn($k) => $k['stand'] === 'nie');
     $alt   = array_filter($faellig, static fn($k) => $k['stand'] === 'ueberfaellig');
     $zeilen = [];
@@ -2157,21 +2166,19 @@ function edbak_erinnerung_text(array $faellig): string
     foreach ($alt as $k) {
         $zeilen[] = '  ' . $k['email'] . ' — letztes Backup vor ' . (int)$k['tage'] . ' Tagen';
     }
-    $basis = (string)($CFG['app']['base_url'] ?? '');
+    $basis = app_url();
 
-    return "Hallo,\n\n"
-         . "in der Gen-EM Einsatzdokumentation Notarzt sind " . count($faellig)
+    return "in " . instanz_name() . " sind " . count($faellig)
          . " Konten ohne aktuelles Backup:\n\n"
          . implode("\n", $zeilen) . "\n\n"
          . "Als überfällig gilt ein Konto, dessen letztes Backup älter ist als "
          . edbak_intervall() . " Tage.\n\n"
          . "Sichern lässt sich jedes Konto auf seiner Kontoseite, mehrere auf einmal\n"
          . "über die Auswahl in der NutzerInnen-Liste:\n\n"
-         . ($basis !== '' ? $basis . "/admin_users.php?f=nie\n" . $basis . "/admin_users.php?f=ueberfaellig\n\n" : '')
+         . ($basis !== '' ? app_url('admin_users.php?f=nie') . "\n"
+                          . app_url('admin_users.php?f=ueberfaellig') . "\n\n" : '')
          . "Diese Erinnerung kommt höchstens einmal je Woche und nur, wenn es etwas zu\n"
-         . "melden gibt. Abschalten lässt sie sich unter Einstellungen → Backups.\n\n"
-         . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
-         . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n";
+         . "melden gibt. Abschalten lässt sie sich unter Einstellungen → Backups.";
 }
 
 /** Plakettentext und -ton zu einem Stand aus edbak_konto_stand(). */

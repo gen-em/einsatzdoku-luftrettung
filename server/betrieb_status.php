@@ -7,6 +7,7 @@ require_once __DIR__ . '/status_lib.php';
  * `smtp.php` nach, aber `ratelimit_lib.php` zieht niemand — ohne diese Zeile
  * gibt es einen Fatal Error beim ersten Klick, und zwar erst dann. */
 require_once __DIR__ . '/ratelimit_lib.php';
+require_once __DIR__ . '/mail_lib.php';
 
 /**
  * BETRIEB -> STATUS (S8/AP4, E-S8-16, Mockup 03).
@@ -85,8 +86,8 @@ function status_zeile(array $z): void
  *    Statusseite, die ein Problem behauptet, das es nicht gibt. Vorbild:
  *    `adminbackup_lib.php`, das vor dem Erinnerungsversand ebenso prueft.
  * 2. EIN KURZES ZEITLIMIT. Der Versand laeuft synchron, weil sein Ergebnis
- *    gezeigt werden soll. `smtp_send()` nimmt das Limit als vierten Wert
- *    (Vorgabe 15 s). 5 s.
+ *    gezeigt werden soll — `mail_einreihen()` versucht die Zeile sofort,
+ *    mit `MAIL_BUDGET_S` = 5 s.
  *
  *    HIER STAND BIS WEB 20.8.0 EINE RECHNUNG, DIE STIMMTE — und ein Limit,
  *    das sie nur abmilderte: „bei 15 s koennte ein haengender Mailserver die
@@ -99,15 +100,25 @@ function status_zeile(array $z): void
  *    `smtp_send()` rechnet seit Web 20.8.0 mit einer FRIST statt einer Dauer
  *    (P5a/AP5). Gemessen gegen ein Relais mit 26 s Lesezeit: 5 s Limit
  *    ergaben vorher 31,06 s und ergeben jetzt 5,00 s; 15 s ergaben 41,07 s
- *    und ergeben 15,00 s. Die 5 s hier bleiben trotzdem stehen — auf einer
- *    Seite, auf der jemand auf die Antwort wartet, sind fuenf Sekunden
- *    genug, und mehr will man nicht warten.
+ *    und ergeben 15,00 s. Und das Limit steht seither NICHT MEHR HIER,
+ *    sondern einmal in `mail_lib.php` — genau die Verteilung auf zehn
+ *    Aufrufstellen, aus der der Fehler entstand, gibt es nicht mehr.
  * 3. KEIN `antwort_abschliessen()`. Die uebrigen Verwender entkoppeln den
  *    Versand oder verwerfen sein Ergebnis — hier ist das Ergebnis der Zweck.
  *
+ * DREI AUSGAENGE STATT ZWEI, seit die Warteschlange dazwischensteht: Geht sie
+ * sofort hinaus, ist es „hinausgegangen"; scheitert der erste Versuch, ist es
+ * NICHT mehr endgueltig gescheitert, sondern eingereiht — der Mail-Job holt
+ * sie nach, und zwar innerhalb der Stundenfrist des Katalogeintrags. Das ist
+ * keine Beschoenigung, sondern der Zustand: Wer „gescheitert" liest und eine
+ * Stunde spaeter doch eine Testmail im Postfach findet, misstraut der Seite.
+ *
  * NICHT PROTOKOLLIERT WIRD DIE EMPFAENGERADRESSE: `smtp.php` fuehrt
- * ausdruecklich kein Protokoll ueber Mailempfaenger, und diese Zusage bleibt.
- * Sie steht nur in der Meldung dieser einen Antwort. */
+ * ausdruecklich kein Protokoll ueber Mailempfaenger, und diese Zusage bleibt
+ * — seit E-P5a-37 haelt sie auch die Fehlermeldung ein, die bis dahin
+ * „Versand an <Adresse> fehlgeschlagen" schrieb. Die Adresse steht in der
+ * Warteschlange, solange die Zeile offen oder unzustellbar ist; das ist der
+ * Ort dafuer, nicht das Fehlerprotokoll des Webspace. */
 $mailMeldung = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'testmail') {
     csrf_check();
@@ -121,18 +132,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'testm
                              : ' Bitte später erneut versuchen.')];
     } else {
         rate_zaehlen('testmail', (string)$userId);
-        $ok = smtp_send((string)$userEmail,
-            'Testmail — Einsatzdokumentation Notarzt',
-            "Diese Nachricht wurde auf der Seite Betrieb → Status ausgelöst.\n"
-          . "Kommt sie an, funktioniert der Versand dieser Installation.\n",
-            5);
-        $mailMeldung = $ok
-            ? ['ok', 'Die Testmail ist an ' . (string)$userEmail . ' hinausgegangen. '
-                   . 'Ob sie ankommt, sagt erst das Postfach — der Server hat sie '
-                   . 'angenommen.']
-            : ['fehler', 'Der Versand ist gescheitert. Die Zeile „Letzter Versand" '
-                       . 'steht jetzt rot; die Ursache steht im Fehlerprotokoll des '
-                       . 'Webspace.'];
+        $mailMeldung = match (mail_einreihen('testmail', (string)$userEmail)) {
+            MAIL_ZUGESTELLT => ['ok', 'Die Testmail ist an ' . (string)$userEmail
+                   . ' hinausgegangen. Ob sie ankommt, sagt erst das Postfach — '
+                   . 'der Server hat sie angenommen.'],
+            MAIL_WARTET     => ['warn', 'Der erste Versuch ist gescheitert. Die '
+                   . 'Nachricht steht in der Warteschlange und wird innerhalb der '
+                   . 'nächsten Stunde erneut versucht; die Zeile „Letzter Versand" '
+                   . 'steht bis dahin rot. Der Grund steht in der Warteschlange.'],
+            default         => ['fehler', 'Die Testmail wurde nicht eingereiht. Das '
+                   . 'passiert, wenn die eigene Adresse unbrauchbar ist oder die '
+                   . 'Warteschlange nicht erreichbar war; die Ursache steht im '
+                   . 'Fehlerprotokoll des Webspace.'],
+        };
     }
 }
 

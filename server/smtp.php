@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+/* DIE EINZIGE ABHAENGIGKEIT: `instanz_lib.php` laedt selbst nichts (dort
+ * ausgeschrieben) und bringt `app_url()` fuer den EHLO-Namen. Damit bleibt
+ * `smtp.php` weiterhin ohne Datenbank benutzbar. */
+require_once __DIR__ . '/instanz_lib.php';
+
 /**
  * DIE ANTWORT ABSCHLIESSEN, BEVOR LANGSAME ARBEIT BEGINNT.
  *
@@ -226,8 +231,16 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
      * gar keine solche Adresse liefern. Diese Pruefung steht trotzdem hier:
      * Die Absicherung gehoert an die Stelle, die das Protokoll spricht, nicht
      * in die Disziplin der Aufrufer. */
+    /* DER MERKER WIRD HIER GELEERT, nicht erst nach der Adresspruefung: Sonst
+     * gibt `smtp_letzter_fehler()` bei einer abgewiesenen Adresse den Grund
+     * des VORIGEN Versuchs zurueck — eine Kennung, die auf eine andere
+     * Nachricht zeigt, ist schlimmer als gar keine. */
+    $GLOBALS['__smtp_fehler'] = null;
+
     if ($toEmail === '' || strcspn($toEmail, "\r\n") !== strlen($toEmail)
         || !filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
+        $GLOBALS['__smtp_fehler'] = ['kennung' => 'ADRESSE',
+                                     'grund'   => 'Die Empfaengeradresse ist unbrauchbar.'];
         error_log('SMTP: unzulaessige Empfaengeradresse abgewiesen');
         return false;
     }
@@ -276,7 +289,6 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
      * nach 30 Tagen (E-P5a-09), und dort steht er neben derselben Kennung.
      * Wer einem Fehlschlag nachgeht, findet ueber die Kennung beides
      * zusammen; das Protokoll allein sagt nicht, wer gemeint war. */
-    $GLOBALS['__smtp_fehler'] = null;
     $kennung = strtoupper(bin2hex(random_bytes(4)));
 
     $frist = microtime(true) + $zeitlimit;
@@ -325,7 +337,14 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
     $send = function (string $cmd) use ($fp): void { fwrite($fp, $cmd . "\r\n"); };
 
     $ok = $expect('220');
-    $send('EHLO ' . parse_url($alles['app']['base_url'], PHP_URL_HOST));
+    /* DER EHLO-NAME KOMMT AUS `app_url()`, nicht mehr aus dem Rohwert — und
+     * er hat einen Rueckfall. Steht `base_url` leer (frisch eingerichtet,
+     * Wert vergessen), lieferte `parse_url('')` FALSE und es ging ein nacktes
+     * „EHLO " hinaus. Das ist kein gueltiger Befehl; strenge Relais
+     * antworten mit 501 und der Versand scheitert an einer Stelle, an der
+     * niemand ihn vermutet. */
+    $ehlo = parse_url(app_url(), PHP_URL_HOST);
+    $send('EHLO ' . (is_string($ehlo) && $ehlo !== '' ? $ehlo : 'localhost'));
     $ok = $ok && $expect('250');
     $send('AUTH LOGIN');                        $ok = $ok && $expect('334');
     $send(base64_encode($cfg['user']));         $ok = $ok && $expect('334');

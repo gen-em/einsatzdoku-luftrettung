@@ -43,7 +43,7 @@ je Paket zu füllen.* Erwartbar sind mindestens diese Punkte — jeder mit dem
 Grund und dem Weg, auf dem der Auftraggeber ihn nachholt:
 
 - **Die echte `config.php` der Installation** (Beschreibbarkeit, OPcache-
-  Verhalten des Hosters): nur auf luftrettung.net prüfbar → P-06.
+  Verhalten des Hosters): nur auf dem Produktivserver prüfbar → P-06.
 - **Der Druck des Schlüsselblatts** auf Papier: nur am Drucker → P-07.
 - **Versand gegen die echten Backup-Ziele** (FTPS-Zertifikat, SFTP-Hostschlüssel):
   nur mit den Zugängen der Installation → P-12.
@@ -60,7 +60,7 @@ die echten Backup-Ziele) bleibt und ist jetzt der einzige, der an AP4 hängt:
    (`tools/versandprobe/gegenstellen.py`) und, für den Komplett-Backup-Weg,
    gegen dieselben. Ob das FTPS-Zertifikat des echten Ziels angenommen wird
    und ob dessen Hostschlüssel passt, sieht nur, wer die Zugänge hat.
-2. **Ein bestehendes `ftp`-Ziel auf luftrettung.net.** Auf der
+2. **Ein bestehendes `ftp`-Ziel auf dem Produktivserver.** Auf der
    Prüfinstallation ist es von Hand hergestellt worden (per SQL, weil der
    reguläre Weg es ja gerade abweist) und alle fünf Wege daran sind gemessen.
    Ob dort überhaupt eines steht, weiß nur die Betreiberin → **P-12**.
@@ -127,7 +127,7 @@ stellt sie zurück — in drei Engines. Offen bleiben:
    0 waagerechter Überlauf. Das ist das **gerechnete** Bild. Ob ein Drucker
    die Gruppen so setzt, sagt nur ein Ausdruck.
 3. **Die Umstellung an echtem Bestand** → **P-03**. Gemessen an
-   `umlauf-csv@gen-em.org` mit 83 Einsätzen; auf luftrettung.net liegt mehr.
+   `umlauf-csv@gen-em.org` mit 83 Einsätzen; auf dem Produktivserver liegt mehr.
 4. **Versand gegen die echten Backup-Ziele** → **P-12** (gehört zu AP4).
 
 > **Ein Konto der Prüfinstallation ist ausgesperrt worden und neu
@@ -144,7 +144,7 @@ stellt sie zurück — in drei Engines. Offen bleiben:
 > zurücknehmen lässt; **am 14.09.2026 hat der Auftraggeber das Löschen
 > freigegeben, und es ist über den regulären Weg geschehen** (Verwaltung →
 > NutzerInnen → Konto löschen). Die Prüfinstallation führt seither wieder
-> **vier** Konten. Auf luftrettung.net ist
+> **vier** Konten. Auf dem Produktivserver ist
 > davon nichts passiert und nichts zu tun — es betrifft ausschließlich die
 > Prüfinstallation. *Der Fehler lag im Prüfmittel, nicht in der Anwendung:
 > Die stille Umstellung hat genau das getan, was sie soll.*
@@ -163,7 +163,7 @@ bleiben:
    Hosters) → **P-01** und **P-06**.
 3. **Die Umstellung an echtem Bestand.** Gemessen ist sie an
    `umlauf-csv@gen-em.org` mit 83 Einsätzen (80 mit verschlüsseltem Block,
-   alle 80 nach der Umstellung geöffnet). Auf luftrettung.net liegt mehr →
+   alle 80 nach der Umstellung geöffnet). Auf dem Produktivserver liegt mehr →
    **P-03**.
 
 **Stand nach AP1 — drei Dinge, die dort nicht geprüft werden konnten:**
@@ -179,7 +179,7 @@ bleiben:
    Der Bilderlauf sieht beide Zustände grundsätzlich nicht — das steht in
    Abschnitt 3 und bleibt so.
 3. **`config.php` der echten Installation.** Teil D der Anteilprobe schreibt
-   gegen die `config.php` des Prüfstands. Ob sie auf luftrettung.net
+   gegen die `config.php` des Prüfstands. Ob sie auf dem Produktivserver
    beschreibbar ist und wie sich der OPcache des Hosters verhält, ist nur dort
    zu sehen → **P-01** und **P-06**.
 

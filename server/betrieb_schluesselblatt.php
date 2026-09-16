@@ -87,7 +87,7 @@ if (preg_match('/^[0-9a-f]{64}$/i', $anAlt)) {
                             . 'Konto mehr auf ihm steht.'];
 }
 
-$adresse = (string)($CFG['app']['base_url'] ?? '');
+$adresse = app_url();
 $jetzt   = fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y, H:i');
 
 /* Erkennungswert wie `asset()`, aber diese Seite lädt db.php ohnehin — der

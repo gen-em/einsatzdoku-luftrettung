@@ -90,15 +90,16 @@ jobs:
         # das ein Befund. Schrumpft er, ebenfalls — dann ist die Zahl hier
         # nachzuziehen, sonst bekommt er stillschweigend wieder Luft.
         #
-        # 371 STATT 366 IST EIN DOPPELBESTAND AUF ZEIT (Web 20.8.0, AP5).
-        # Die vier Pfeile „Einstellungen → Geräte" in `mail_lib.php` stehen
-        # dort UND noch in den alten Aufrufern; das Werkzeug liest ganze
-        # Dateien, nicht nur Markup (Backlog Nr. 184). Sobald die zehn
-        # Versandstellen auf den Katalog umgezogen sind, faellt die Zahl
-        # zurueck — und dann MUSS sie hier nachgezogen werden, weil ein
-        # Unterschreiten ebenfalls rot meldet. Das Werkzeug laesst es nicht
-        # vergessen.
-        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 371
+        # WIEDER 366 (Web 20.8.0, AP5 Teil 2). Zwischenzeitlich stand hier
+        # 371: Waehrend des Umzugs standen die vier Pfeile „Einstellungen →
+        # Geräte" in `mail_lib.php` UND noch in den alten Aufrufern, und das
+        # Werkzeug liest ganze Dateien, nicht nur Markup (Backlog Nr. 184).
+        # Mit dem letzten der zehn Umzuege ist der Doppelbestand weg und die
+        # Zahl nachgezogen — dass sie nachgezogen WERDEN MUSSTE, hat das
+        # Werkzeug erzwungen: Ein Unterschreiten meldet es ebenso rot wie ein
+        # Ueberschreiten. Eine Obergrenze allein haette den Ruecklauf still
+        # durchgehen lassen.
+        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 366
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py

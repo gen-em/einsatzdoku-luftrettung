@@ -3371,7 +3371,8 @@ funktioniert und wohin die Pakete von hier aus gehen.
 ### 11.5 Installation
 
 Unter **„Installation"** steht, wie diese Anlage nach außen auftritt: der
-**Name**, das **Logo**, das **Impressum** und die **Datenschutzerklärung**. Bis Web 15.1.0
+**Name**, die **Adressen**, das **Logo**, das **Impressum** und die
+**Datenschutzerklärung**. Bis Web 15.1.0
 hieß die Seite „Rechtstexte", und das Logo lag auf der alten Seite „Wartung"; die alte
 Adresse führt weiterhin hierher.
 
@@ -3399,6 +3400,26 @@ und dort wäre ein Zeilenumbruch ein Einfallstor.
 > **Eine Stelle bleibt fest:** Die Fußzeile „© Gen-EM · Open Source". Das ist
 > nicht der Name deiner Anlage, sondern die Angabe, wer die Software
 > geschrieben hat — die darf eine Installation nicht überschreiben.
+
+**Die Adressen** (seit Web 20.9.0) stehen in der Karte darunter. Zwei Felder,
+beide dürfen leer bleiben:
+
+- **Kontaktadresse** — sie steht als Zeile „Bei Fragen wende dich an …" in
+  **jeder** E-Mail an NutzerInnen. **Bleibt sie leer, fällt die Zeile weg.**
+  Das ist Absicht: Eine Mail, die im Fehlerfall auf ein Postfach verweist, das
+  niemand liest, ist schlimmer als eine ohne Verweis.
+- **Betreiberadresse** — dorthin gehen die Betriebsmeldungen: Speicherplatz
+  wird knapp, Konto-Backups sind überfällig. **Bleibt sie leer, gehen sie
+  weiterhin an alle Konten mit Verwaltungsrecht**, wie bisher.
+
+> **Die Kontaktadresse ist nicht der Absender.** Von welcher Adresse die Post
+> kommt, steht in der `config.php` und ist auf einer gut eingerichteten Anlage
+> ein `noreply@`. Die Kontaktadresse ist die, an die man *antworten* soll.
+
+**Warum es das gibt:** Bis Web 20.8.0 stand in **sieben** Mailtexten dieselbe
+fest eingebaute Adresse — die des Entwicklers. Wer diese Anwendung für eine
+andere Organisation aufsetzt, verwies seine NutzerInnen an jemanden, den sie
+nicht kennen.
 
 **Das Logo** darunter wählt zwischen *Hubschrauber (RTH)*, *Fahrzeug (NEF)* und
 *wechselnd*. Es ist der **Standard dieser Installation** — er gilt für die
@@ -3576,13 +3597,36 @@ und beantwortet damit die Frage, die die Zeile „SMTP" nicht beantworten kann:
 SMTP-Zugang fiel bis dahin erst auf, wenn jemand einen Einladungslink
 vermisste.
 
-Nach dem Klick sagt die Meldung oben, ob der Mailserver die Nachricht
-angenommen hat, und die Zeile **„Letzter Versand"** steht auf *zugestellt*
-oder *fehlgeschlagen*. **Ob sie ankommt, sagt erst das Postfach** — angenommen
-ist nicht zugestellt. Steht kein SMTP in der `config.php`, wird gar nichts
-erst versucht; die Meldung sagt das, statt einen Fehlschlag zu erfinden.
-Höchstens **drei Testmails je Stunde**: Der Versand läuft in der Seitenanfrage
-mit, und öfter zu prüfen bringt keine andere Antwort.
+Nach dem Klick sagt die Meldung oben, was passiert ist — seit Web 20.9.0
+**drei** Antworten statt zwei:
+
+| Meldung | heißt |
+|---|---|
+| *hinausgegangen* | Der Mailserver hat sie angenommen. |
+| *Der erste Versuch ist gescheitert* | Sie steht in der **Warteschlange** und wird innerhalb der nächsten Stunde erneut versucht. Nicht verloren. |
+| *nicht eingereiht* | Es wurde nichts versucht — die eigene Adresse ist unbrauchbar oder die Warteschlange war nicht erreichbar. |
+
+**Ob sie ankommt, sagt erst das Postfach** — angenommen ist nicht zugestellt.
+Steht kein SMTP in der `config.php`, wird gar nichts erst versucht; die
+Meldung sagt das, statt einen Fehlschlag zu erfinden. Höchstens **drei
+Testmails je Stunde**: Der Versand läuft in der Seitenanfrage mit, und öfter
+zu prüfen bringt keine andere Antwort.
+
+**Die Zeile „Warteschlange"** (seit Web 20.9.0) beantwortet die Frage, die
+„Letzter Versand" nicht beantworten kann: Jene sagt etwas über den **letzten**
+Versuch — eine Einladung, die vorgestern scheiterte, war danach unsichtbar.
+
+| Zeile | heißt | was zu tun ist |
+|---|---|---|
+| blau **leer** | Nichts liegt an. | nichts |
+| orange **N wartet** | Der Mailserver war kurz gestört. Die Anwendung versucht es über 24 Stunden bis zu fünfmal. | abwarten |
+| rot **N unzustellbar** | Fünf Versuche, alle gescheitert. Die Zeile **nennt die Adressen** und den letzten Grund. | Grund lesen, Adresse prüfen, Vorgang von Hand wiederholen |
+
+Die Zeilen verfallen nach **30 Tagen**. Bei einer zugestellten Nachricht
+bleibt nur „eine Nachricht dieser Art ging zu dieser Zeit hinaus" — Adresse,
+Betreff und Text werden gelöscht. **Bei einer unzustellbaren bleibt die
+Adresse stehen**, sonst wäre die Meldung wertlos; der Text fällt trotzdem,
+weil ein Einladungs- oder Reset-Link darin steht.
 
 **Die Karte „Plattform"** (seit Web 20.5.0) beantwortet eine andere Frage als
 die vier darüber: nicht *was meldet die Anwendung*, sondern *was bietet der

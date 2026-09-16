@@ -14,6 +14,150 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.9.0] — 2026-09-16
+
+**P5a/AP5, zweiter Teil — alle zehn Versandstellen gehen durch die
+Warteschlange, und die Installation bekommt ihre Adressen.**
+
+### Hinzugefügt — der Umzug, der die Zusage von 20.8.0 erst gelten lässt
+
+**Was galt.** Web 20.8.0 hat das Gerüst gebaut — Katalog, Warteschlange,
+Job `mail` — und **niemand benutzte es**. Zehn Stellen riefen weiterhin
+`smtp_send()` unmittelbar. Ein Gerüst ohne Benutzer ist kein halber
+Fortschritt, sondern eine Zusage, die nicht gilt: „Eine Mail geht nicht mehr
+verloren" stimmte für **null von zehn** Mails.
+
+**Was gilt.** `pair.php` (2×), `admin_users.php`, `admin_user.php`,
+`reset_request.php`, `email_lib.php`, `speicher_lib.php`,
+`adminbackup_lib.php` (2×) und die Testmail in `betrieb_status.php` reihen
+ein. Der einzige verbliebene Aufrufer von `smtp_send()` ist `mail_lib.php`
+selbst.
+
+**Drei Ausgänge statt zwei.** `mail_einreihen()` liefert `zugestellt`,
+`wartet` oder `abgelehnt`. Die Aufrufer, die am Rückgabewert eine **Marke**
+setzen — Schwellenwarnungen, Einladungsmarke —, zählen `wartet` als
+erledigt. Täten sie es nicht, reihte der nächste Lauf dieselbe Warnung
+erneut ein, und eine dreitägige Mailstörung ergäbe sie dreifach. Nur
+`abgelehnt` (gar nicht erst eingereiht) lässt die Marke offen.
+
+**Die Testmail sagt jetzt drei Dinge statt zwei.** Ging sie sofort hinaus:
+„hinausgegangen". Scheiterte der erste Versuch, ist das **nicht mehr
+endgültig gescheitert**, sondern eingereiht — der Job holt sie innerhalb der
+Stundenfrist nach. Wer „gescheitert" liest und eine Stunde später doch eine
+Testmail im Postfach findet, misstraut der Seite.
+
+### Hinzugefügt — zwei Adressen der Installation (Verwaltung → Installation)
+
+Neben der Karte „Name" steht jetzt **„Adressen"**:
+
+| Einstellung | Wofür | Wenn leer |
+|---|---|---|
+| **Kontaktadresse** | die Zeile „Bei Fragen wende dich an …" in **jeder** E-Mail | die Zeile **fällt weg** |
+| **Betreiberadresse** | Betriebspost: volles Speicherkontingent, überfällige Sicherungen | weiterhin an **alle** mit Verwaltungsrecht |
+
+**Warum das nötig war.** Bis Web 20.8.0 stand in **sieben** Mailtexten
+dieselbe persönliche Adresse des Entwicklers, fest im Quelltext — dieselbe
+Fehlerklasse wie der Instanzname, den 20.8.0 behoben hat. Eine fremde
+Betreiberin verwies ihre NutzerInnen an einen Unbekannten.
+
+**Leer heißt weglassen, nicht raten.** Die Kontaktzeile ist **nicht** der
+Absender: Der steht als `smtp.from` in der `config.php` und ist auf einer gut
+eingerichteten Anlage ein `noreply@`. Eine Mail, die im Fehlerfall auf ein
+Postfach verweist, das niemand liest, ist schlimmer als eine ohne Verweis.
+
+**Die Betreiberadresse geht in die vorsichtige Richtung.** Steht etwas drin,
+geht die Betriebspost **nur** dorthin; bleibt sie leer, gilt die bisherige
+Rollenliste. Eine leere Einstellung darf keine Warnung verschlucken.
+`mail_betriebsziele()` hält diese Auswahl an **einer** Stelle — drei Stellen
+bauten dieselbe Liste, und die dritte hatte bereits eine abweichende
+Sortierung (`ORDER BY email` statt `ORDER BY id`). Genau der Fall, für den
+R83 das Zentralisieren verlangt.
+
+### Behoben — `app_url()` statt sieben Handverkettungen
+
+`base_url` wurde an sieben Stellen von Hand verkettet, **fünf davon ohne
+`rtrim()`**. Steht in der `config.php` ein Schrägstrich am Ende — und die
+Beispieldatei sagt zwar „ohne Slash am Ende", aber niemand hindert daran —,
+entstand `https://host//pw_handling.php`. Das funktioniert bei den meisten
+Webservern und bricht bei manchen; vor allem aber erzeugt es einen Link, der
+nicht so aussieht wie der, den man erwartet. In einer Mail, die zum
+Passwortsetzen auffordert, ist das die falsche Stelle für eine Unsauberkeit.
+Die zwei Stellen **mit** `rtrim()` waren der Beweis, dass es aufgefallen ist
+— nur eben nicht überall.
+
+Nebenbei gefunden: `smtp.php` schickte bei leerer `base_url` ein nacktes
+`EHLO ` — `parse_url('')` liefert `false`. Das ist kein gültiger Befehl;
+strenge Relais antworten mit 501, und der Versand scheitert an einer Stelle,
+an der niemand ihn vermutet. Jetzt steht dort ein Rückfall auf `localhost`.
+
+### Behoben — `smtp_letzter_fehler()` konnte den falschen Grund nennen
+
+Der Merker für Kennung und Grund wurde erst **nach** der Adressprüfung
+geleert. Eine abgewiesene Empfängeradresse ließ damit die Kennung des
+**vorigen** Fehlschlags stehen — und eine Kennung, die auf eine andere
+Nachricht zeigt, ist schlimmer als gar keine: Sie führt die Fehlersuche
+zielsicher in die falsche Richtung. Gefunden von `tools/mailprobe/`.
+
+### Hinzugefügt — eine Zeile auf der Statusseite
+
+Karte **E-Mail**, Zeile **„Warteschlange"**:
+
+- **blau „leer"** — nichts liegt an
+- **orange „N wartet"** — der Normalfall eines kurz gestörten Mailservers;
+  die Leiter geht über 24 Stunden, und er heilt von selbst
+- **rot „N unzustellbar"** — mit **Adresse** und dem letzten Grund
+
+Die Adresse steht dort, weil „2 unzustellbar" ohne sie eine Aussage ist, mit
+der niemand etwas anfangen kann — und das ist der Grund, aus dem der
+Endzustand `unzustellbar` die Adresse überhaupt stehen lässt (die
+zugestellten Zeilen werden geleert).
+
+**Keine eigene Seite und kein Knopf, und das ist eine Entscheidung.** Eine
+Liste wäre eine neue Darstellung und bräuchte eine Freigabe mit Mockup; was
+eine BetreiberIn hier braucht, ist zudem keine Liste, sondern eine Antwort
+auf eine Frage. Der volle Bereich mit Reitern kommt in P5c.
+
+### Hinzugefügt — `tools/mailprobe/`
+
+Eine eigene **SMTPS-Gegenstelle**, die auf Kommando ablehnt (`550`),
+schweigt oder zwölf Fortsetzungszeilen schickt. Gegen einen funktionierenden
+Mailserver lässt sich nicht messen, was die Warteschlange behauptet — nämlich
+etwas über **Fehlerfälle**. **41 Prüfungen, 0 Befunde.** Dazu `jobprobe`
+Teil 10 (der Job `mail`): **35 von 35**.
+
+Zwei Sätze zu dem, was sie gefunden hat:
+
+1. **Die Leiter läuft bei kurzlebigen Nachrichten nicht zu Ende**, und das
+   ist richtig so: `passwort_reset` gilt 3600 s, die dritte Sprosse läge bei
+   9300 s. Die Zeile wird nach **drei** Versuchen `zu_spaet`, nicht nach fünf
+   `unzustellbar`. Die erste Fassung der Probe erwartete fünf und meldete
+   einen Befund, den es nicht gab; sie misst beides jetzt getrennt.
+2. **Ein Gegenpart, der das Protokoll nur ungefähr spricht, misst nichts.**
+   Die erste Fassung beantwortete den Dreischritt `AUTH LOGIN`
+   (334 → 334 → **235**) dreimal mit 334. `smtp_send()` brach daraufhin ab,
+   **bevor** es je ein `RCPT TO` schickte — die Betriebsart `ablehnen` war
+   von `ok` nicht zu unterscheiden, und die Probe meldete acht Befunde, von
+   denen keiner die Anwendung betraf.
+
+### Entfernt — was von „Gen-EM" im Quelltext stand
+
+`grep -rn "gen-em\.org" server/` ergibt **0** — Code wie Kommentare. Weg sind: die persönliche
+Adresse in sieben Mailtexten (jetzt Einstellung), dieselbe Adresse als
+Beispiel im Kopfkommentar von `db.php`, und die Staging-Anschrift im Kopf von
+`kopfzeilen_lib.php` — die ist eine Eigenschaft der Installation und gehört
+in die Geheimnisse der Auslieferungskette, nicht in den Quelltext. Die fünf
+verbliebenen festen `'Gen-EM NAdoku'` im Installer und im HTTPS-Tor benutzen
+jetzt `INSTANZ_KURZ_VORGABE`; **eine bleibt stehen**, und zwar mit Grund: die
+PHP-zu-alt-Meldung ganz oben in `install.php`, weil dort noch nichts geladen
+sein darf.
+
+Die alte Domain **`luftrettung.net`** ist aus der lebenden Dokumentation
+verschwunden (`Pruefdokument-S10-Sicherheit.md` 6×, `Backlog.md` 1×; überall
+„der Produktivserver"). Stehen bleibt sie in der **Historie** — Changelog,
+Rahmenplan-Archiv, `docs/konzepte/erledigt/` — und im **Prüffall der
+Wortliste** (`tools/wortliste/zerlegen.py`), der genau prüft, dass das
+Werkzeug sie noch findet. Eine Historie, die man umschreibt, ist keine mehr.
+
 ## [Web 20.8.0] — 2026-09-16
 
 **P5a/AP5, erster Teil — der Name dieser Installation.** Entstanden aus einer

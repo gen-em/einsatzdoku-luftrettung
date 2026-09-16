@@ -27,6 +27,10 @@ beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
 | N11 | **Der Weg über die Reporting-API (`report-to`)** | Aus demselben Grund: `kopf_melde_url()` liefert ohne HTTPS bewusst nichts, also steht `report-to` lokal gar nicht in der Richtlinie. Gemessen ist deshalb nur der Weg über `report-uri` — der, den heute ohnehin jeder Browser nimmt. | Prüfpunkt **P15** auf einer echten HTTPS-Installation. Dass der Endpunkt **beide** Formate versteht, ist einzeln geprüft: `report-uri`-Rumpf (`{"csp-report":{…}}`) und Reporting-API-Liste (`[{"type":"csp-violation",…}]`) — beide **204**, beide als Zeile gespeichert, und in beiden Fällen ist der **Abfrageteil der Adresse weg** (`suche.php?q=geheim` → `suche.php`). |
 | N12 | **Die zwei Wochen Report-Only** | Sie sind Betrieb, keine Abnahme — und sie messen genau das, was ein Prüflauf nicht sieht: was **Nutzerinnen** auf Wegen tun, die der Bilderlauf nicht geht. | Prüfpunkt **P16**; dort steht auch, woran man erkennt, dass man zu früh scharf geschaltet hat. |
 | N13 | **Die Anwendung hinter einem echten Reverse Proxy** | Der Container hat keinen. | `netz_in_bereich()` ist gegen **18 Fälle** geprüft, alle richtig: IPv4 und IPv6, Einzeladresse und CIDR, die Ränder eines /24, `0.0.0.0/0`, ein IPv4 gegen einen IPv6-Bereich, eine unlesbare Adresse und zwei unmögliche Präfixlängen (`/33`, `/-1`) — die letzten vier müssen **false** ergeben und tun es. Der Echtlauf ist Prüfpunkt **P17**. |
+| N14 | **Ob eine Mail ANKOMMT** | Die Gegenstelle von `tools/mailprobe/` nimmt an und wirft weg; der Container hat keinen Mailserver und keine Freigabe nach draußen. | Gemessen ist der Weg BIS zum „250 angenommen" — Katalog, Rahmen, Warteschlange, Leiter, Frist, Endzustände (41 Prüfungen, 0 Befunde). Ob ein Empfänger die Nachricht im Postfach findet, sagt nur ein Postfach: Prüfpunkt **P18**. |
+| N15 | **Das Aussehen einer Mail in einem Mailprogramm** | Dasselbe. Der Rahmen ist auf seine **Bestandteile** geprüft (Anrede, Kern, Kontaktzeile, Grußformel mit `instanz_name()`), nicht auf seine Wirkung. | Prüfpunkt **P18** — eine echte Einladung und eine echte Reset-Mail ansehen. |
+| N16 | **Eine hängende Namensauflösung** | `smtp_send()` rechnet mit einer Frist ab dem ersten Byte; die DNS-Auflösung liegt **davor** und lässt sich in PHP nicht begrenzen. Das steht im Kopf der Datei ausgeschrieben. | Nicht nachstellbar. Was gemessen ist: ein Server, der **antwortet und dann schweigt** (5,01 s bei 5 s Budget), und einer mit **12 Fortsetzungszeilen je 1 s** (5,00 s; ohne Frist über 13 s). |
+| N17 | **Zwei Job-Läufe, die dieselbe Warteschlangenzeile gleichzeitig greifen** | Nicht nachgestellt. | Die Sperre `laeuft_seit` in `jobs` verhindert zwei gleichzeitige Läufe desselben Jobs (jobprobe Teil 5); zwei **verschiedene** Auslöser am selben Job sind damit abgedeckt, ein manueller Direktaufruf von `mail_zeile_versuchen()` nicht. |
 | N8 | **Die Kontingent-Warnmail auf einem echten Mailserver** | Der Container hat keinen. | Die Logik ist mit abgesenkten Schwellen (50/53 %) durchgespielt: Beide Schwellen schlagen an, der Versand scheitert erwartungsgemäß und wird **nicht** als gemeldet vermerkt — also am nächsten Tag erneut versucht. Prüfpunkt **P10**. |
 
 ---
@@ -104,6 +108,36 @@ AP4 auflöst).
 
 ---
 
+### 1e. Nach AP5 (Web 20.9.0), im selben Container
+
+| Mittel | Aufruf | Ergebnis |
+|---|---|---|
+| **Mailprobe** (neu) | `php tools/mailprobe/probe.php` | **41 Prüfungen, 0 Befunde** über 13 Abschnitte, gegen eine eigene SMTPS-Gegenstelle in fünf Betriebsarten |
+| **Jobprobe** | `php tools/jobprobe/probe.php` | **35 Erwartungen, 0 nicht erfüllt** (Teil 10 neu: 7 Erwartungen zum Job `mail`) |
+| Wortliste | `python3 tools/wortliste/wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen**; 96 Regeln, 96 gegriffen; sechs Bereiche (Server-PHP, Skripte, Doku, Android, `watch/`) |
+| Vollständigkeit | `python3 tools/vollstaendigkeit/pruefen.py --hoechstens 366` | **366 — auf der Schwelle, unverändert.** Die Kette stand während des Umzugs auf 371 (Doppelbestand: dieselben Texte im Katalog *und* in den alten Aufrufern) und ist zurückgezogen |
+| Migrationsregister | `php tools/migrationsregister/pruefen.php` | **0 Befunde**; 206 Katalogspalten, 29 Löschungen, 4 erklärte Ausnahmen, 0 ungenutzt |
+| CSP-Probe | `php tools/cspprobe/pruefen.php` | **0 Befunde** über 108 PHP-Dateien und 108 `<script>`-Stellen |
+| Installweiche | `php tools/installweiche/pruefen.php` | **0 Befunde** — der neue `require` auf `instanz_lib.php` steht hinter der PHP-Weiche |
+| PHP-Syntax | `php -l` je berührter Datei | 0 Fehler |
+
+**Zählungen zur Abnahme des Umzugs:**
+
+| Was | Befehl | Ergebnis |
+|---|---|---|
+| Aufrufer von `smtp_send()` außerhalb von `mail_lib.php` | `grep -rn "smtp_send" server/*.php` | **0** (nur noch Kommentare, die die Geschichte erzählen) |
+| Fest eingebaute gen-em-Adressen und -Domains | `grep -rn "gen-em\.org\|@gen-em" server/` | **0** |
+| `base_url` von Hand | `grep -rn "base_url" server/ --include=*.php \| grep -vE ":[0-9]+: *(\*\|//\|#)"` | **7 Stellen, alle rechtmäßig**: `instanz_lib.php` 2× (die Bibliothek selbst), `install.php` 4× (die Quelle — dort wird der Wert erfragt und geschrieben), `config.example.php` 1×. Ohne den Kommentarfilter kommen 3 weitere Treffer dazu, alle in **Kommentaren** (`smtp.php`, `kopfzeilen_lib.php`, `version.php`) — die Zahl ohne Filter wäre 10 und hieße nichts |
+| Empfängeradresse im Fehlerprotokoll | `grep -n "toEmail" server/smtp.php` \| `grep error_log` | **0** |
+| `luftrettung.net` in lebender Dokumentation | `grep -rn "luftrettung\.net" docs/ --include=*.md`, ohne Changelog, Archiv und `konzepte/erledigt/` | **7 → 1**, und die eine ist der **Satz in `Technik.md` 5d.8, der das Weglassen erklärt**. Weiterhin da, mit Absicht: Changelog (3), Rahmenplan-Archiv (1), `konzepte/erledigt/` (9) und der **Prüffall der Wortliste** (`tools/wortliste/zerlegen.py`) — eine Historie, die man umschreibt, ist keine mehr, und ein Prüffall ohne Suchbegriff prüft nichts |
+
+**Was die Zahlen benennen:** Die 41 der Mailprobe sind **Zusagen über
+Fehlerfälle**, nicht über den Normalfall — gegen einen funktionierenden
+Mailserver ließe sich keine einzige davon messen. Die 366 der Vollständigkeit
+sind ein **Vergleich gegen den Ausgangsstand** aus P3, keine absolute Güte.
+
+---
+
 ## 2. Was im Browser geprüft wurde
 
 **Nach AP1: nichts, und das ist richtig.** AP1 ändert an der Oberfläche keine
@@ -143,6 +177,28 @@ scheiterte zuerst an der Probe, nicht an der Anwendung — Browser **verstecken*
 den Wert des `nonce`-Attributs nach dem Parsen, `getAttribute('nonce')` liefert
 eine leere Zeichenkette. Der Wert steht nur in der Eigenschaft `.nonce`. Die
 Probe fragt seither danach.
+
+---
+
+**Nach AP5**, gegen die lokale Installation (Chromium 141, angemeldet als
+BetreiberIn):
+
+| Was | Ergebnis |
+|---|---|
+| Betrieb → Status, Karte **E-Mail**, Zeile „Warteschlange" im Zustand *leer* | blau, Plakette „leer", Text „Nichts liegt an" |
+| dieselbe Zeile mit **zwei unzustellbaren** Zeilen im Bestand | **rot**, Plakette „2 unzustellbar", beide Adressen und der letzte Grund im Kleintext; Abzug `ap5-mailkarte-rot.png` |
+| dieselbe Zeile mit **einer offenen** Zeile | orange, „1 wartet" |
+| Verwaltung → Installation, Karte **„Adressen"** | da, unter „Name"; zwei Felder vom Typ `email`, eigener Knopf |
+| Beide Adressen eingetragen und gespeichert | Meldung „Adressen dieser Installation gespeichert."; Werte stehen nach dem Neuladen im Feld |
+| Adresse ohne `@` eingetippt | Der Browser weist sie ab (`type="email"`), **das Formular wird gar nicht abgeschickt** |
+| Konsolenfehler auf beiden Seiten | **0** |
+
+> **Die Browserprüfung der ungültigen Adresse belegt nichts über den Server.**
+> `type="email"` hält den Klick auf, aber ein gebastelter POST nicht — dieselbe
+> Lücke wie beim Namen in Teil 1. Gemessen ist deshalb der **Endpunkt**:
+> `instanz_adressen_setzen()` gegen 7 Fälle (ohne `@`, Zeilenumbruch, CRLF,
+> 191 Zeichen, Betreiberadresse ohne `@`, beide gültig, beide leer) —
+> **5 abgewiesen, 2 angenommen**, jede mit der zutreffenden Meldung.
 
 ---
 
@@ -383,6 +439,88 @@ wie vor Web 20.7.0.
 
 ---
 
+### P18 — Eine echte Mail auf einem echten Mailserver
+
+**Wofür:** N14 und N15 — der ganze Weg endet hier lokal beim „250
+angenommen". Was danach kommt, sagt nur ein Postfach.
+
+**Weg:**
+
+1. Auf der Installation unter **Verwaltung → Installation → Adressen** eine
+   Kontaktadresse eintragen (eine, die gelesen wird).
+2. **Betrieb → Status → „Testmail an mich"** klicken.
+3. Die Mail im Postfach öffnen.
+4. Eine **Einladung** verschicken (Verwaltung → NutzerInnen → anlegen) und
+   die Mail dort ebenfalls öffnen.
+5. **Passwort vergessen** auslösen und die dritte Mail ansehen.
+
+**Erwartet:**
+
+- Alle drei tragen denselben Rahmen: Anrede, Sache, **„Bei Fragen wende dich
+  an <deine Kontaktadresse>."**, „Viele Grüße" + **Name der Installation**.
+- Der Betreff trägt den Namen der Installation — **auch die Testmail**; sie
+  war bis Web 20.7.0 die einzige ohne.
+- Der Link in Einladung und Reset-Mail ist **einfach** geschrägstrichelt
+  (`https://host/pw_handling.php?token=…`), nicht `host//pw_handling.php`.
+  Zur Gegenprobe vorher in der `config.php` einen Schrägstrich an `base_url`
+  anhängen — der Link muss trotzdem stimmen.
+- **Woran ein Scheitern zu erkennen ist:** eine fremde oder fehlende
+  Kontaktzeile (dann greift `instanz_kontakt()` nicht), ein „Gen-EM" im
+  Betreff einer Installation, die anders heißt (dann greift `instanz_name()`
+  nicht), oder ein doppelter Schrägstrich im Link (dann ist irgendwo wieder
+  von Hand verkettet worden).
+
+---
+
+### P19 — Die Warteschlange trägt über eine echte Störung
+
+**Wofür:** Die Leiter ist lokal in Sekunden gemessen, nicht über 24 Stunden,
+und gegen eine Gegenstelle, die auf Kommando ablehnt — nicht gegen einen
+Mailserver, der wirklich aus ist.
+
+**Weg:**
+
+1. In der `config.php` den SMTP-Host auf einen unerreichbaren Namen setzen.
+2. Eine **Einladung** verschicken.
+3. Betrieb → Status ansehen.
+4. Den SMTP-Host zurückstellen.
+5. `php server/jobs.php` von Hand aufrufen (oder warten, bis der Cron läuft).
+
+**Erwartet:**
+
+- Nach 2: Die Einladung wird **trotzdem angelegt**, die Schwellenmarke steht,
+  der Link ist **nicht** im Klartext auf der Seite gelandet.
+- Nach 3: Die Zeile „Warteschlange" steht **orange** auf „1 wartet".
+- Nach 5: Sie steht auf **blau/leer**, und die Mail ist da.
+- **Woran ein Scheitern zu erkennen ist:** Bleibt die Zeile nach Schritt 5
+  orange, hat der Job nicht gegriffen — dann steht in `job_laeufe` nichts
+  Neues zu `mail`, und die Ursache ist entweder die Sperre (`laeuft_seit` in
+  `jobs`) oder das Budget. Steht sie auf **rot** mit „unzustellbar", war die
+  Störung länger als 24 Stunden; das ist dann richtig und kein Fehler.
+
+---
+
+### P20 — Der Name und die Adressen auf einer fremden Installation
+
+**Wofür:** Der ganze Sinn von E-P5a-35 und E-P5a-40 — dass eine fremde
+Betreiberin nicht mit „Gen-EM" unterschreibt.
+
+**Weg:** Auf einer Installation, die **nicht** Gen-EM ist, Name, Kurzname und
+beide Adressen eintragen. Dann: Browsertab, Kopfleiste, Anmeldeseite,
+Wartungsseite (einschalten!), Schlüsselblatt und **eine Mail** ansehen.
+
+**Erwartet:** Nirgends „Gen-EM" — **außer** in der Fußzeile „© Gen-EM · Open
+Source" und im `creator` einer exportierten GPX-Datei. Beides ist die
+**Urheberschaft der Software** und bleibt mit Absicht stehen (Konzept 2.2,
+`docs/Export-Format.md` 3.5).
+
+**Woran ein Scheitern zu erkennen ist:** Zeigt die **Wartungsseite** den alten
+Namen, steht er nicht in `wartung.lock` — `wartung_daten()` ist eine weiße
+Liste, und ein Schlüssel, den sie nicht kennt, wird beim Lesen still
+verschluckt.
+
+---
+
 ## 4. Zuarbeiten, ohne die Punkte offen bleiben
 
 Aus dem Rahmenplan, Abschnitt 6 — hier nur, was P1 bis P8 blockiert:
@@ -399,6 +537,29 @@ Aus dem Rahmenplan, Abschnitt 6 — hier nur, was P1 bis P8 blockiert:
 ---
 
 ## 5. Grenzen der benutzten Prüfmittel
+
+### 5a. `tools/mailprobe/` (seit AP5)
+
+- **Sie misst den Code, nicht das Netz.** Alles läuft über Loopback; die
+  gemessenen Fristen (5,00 s / 5,01 s / 3,01 s) sind die **obere Schranke des
+  Codes**, nicht die eines Netzes.
+- **Sie tauscht `server/config.php` aus** und stellt sie wieder her — beim
+  regulären Ende, bei einer Ausnahme und bei einem `exit`. **Nicht** bei
+  `kill -9` oder einem wegbrechenden Behälter; dann liegt die Sicherung als
+  `server/config.php.mailprobe` daneben. Liegt sie da, ist die Probe nicht
+  sauber zu Ende gekommen.
+- **Ihre Gegenstelle ist ein Nachbau.** Sie spricht SMTP genau genug für
+  diese Anwendung, nicht für jeden Mailserver der Welt. Was sie **nicht**
+  nachstellt: STARTTLS (die Anwendung benutzt implizites TLS auf 465),
+  Größenbeschränkungen, Greylisting, DKIM/SPF.
+  > Dass „genau genug" nicht selbstverständlich ist, hat sie selbst gezeigt:
+  > Die erste Fassung beantwortete den Dreischritt `AUTH LOGIN`
+  > (334 → 334 → **235**) dreimal mit 334. `smtp_send()` brach ab, **bevor**
+  > es je ein `RCPT TO` schickte — die Betriebsart `ablehnen` war von `ok`
+  > nicht zu unterscheiden, und die Probe meldete acht Befunde, von denen
+  > keiner die Anwendung betraf.
+
+
 
 - **`tools/migrationsregister/`** sieht keine DDL, die aus eingesetzten Namen
   gebaut wird (`ALTER TABLE \`$tab\` …`). Vier Spalten fallen heute genau so;

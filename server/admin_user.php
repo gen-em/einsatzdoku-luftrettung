@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
+require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/spur_lib.php';   // Spuren loeschen (F-S2-B)
 // Eine Rollenpruefung fuer alle Seiten (M1-15). Hier stand als einziger Stelle
 // eine handgeschriebene Fassung mit eigenem Wortlaut ("Nur fuer Admins.").
@@ -221,20 +222,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             db()->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at)
                            VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))')
                 ->execute([$uid, hash('sha256', $token)]);
-            $link = $CFG['app']['base_url'] . '/pw_handling.php?token=' . $token;
-            $ok = smtp_send((string)$u['email'],
-                'Neues Passwort — Gen-EM Einsatzdokumentation Notarzt',
-                "Hallo,\n\n"
-                . "für deinen Zugang zur Gen-EM Einsatzdokumentation Notarzt wurde ein neues\n"
-                . "Passwort angefordert. Über den folgenden Link kannst du es setzen — der Link ist\n"
-                . "eine Stunde gültig:\n\n"
-                . $link . "\n\n"
-                . "Dafür brauchst du deinen Wiederherstellungsschlüssel, den du bei der Einrichtung\n"
-                . "erhalten hast.\n\n"
-                . "Ein zuvor angeforderter Link ist damit ungültig geworden — es gilt immer nur der\n"
-                . "zuletzt verschickte.\n\n"
-                . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
-                . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n");
+            $link = app_url('/pw_handling.php?token=' . $token);
+            /* `passwort_neu`, nicht `passwort_reset`: Der Text der
+             * Selbstbedienung endet mit „Falls du das nicht angefordert
+             * hast…" — wer die Verwaltung darum gebeten hat, hat es
+             * angefordert. Der Unterschied steht im Katalog. */
+            $zustellung = mail_einreihen('passwort_neu', (string)$u['email'], ['link' => $link]);
+            $ok = $zustellung !== MAIL_ABGELEHNT;
             if ($ok) {
                 $notice = 'Setz-Link an ' . $u['email'] . ' verschickt — eine Stunde gültig.';
             } else {

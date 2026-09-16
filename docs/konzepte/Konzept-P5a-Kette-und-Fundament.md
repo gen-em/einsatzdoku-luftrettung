@@ -17,7 +17,7 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | Stand | 15.09.2026 — **Konzept freigegeben, Umsetzung läuft.** Die Grundsatzfragen sind am 15.09.2026 im Gespräch entschieden (E-P5a-01 bis -09); die übrigen Festlegungen (E-P5a-10 bis -21) stammen aus dem Nachmessen im Code und stehen mit der Freigabe. |
 > | Entschieden | E-P5a-01 bis E-P5a-21 (Abschnitt 2); E-PP-01 bis -09 übernommen; **F-P5a-1 entschieden** (2.4) |
 > | Offen | — |
-> | Umsetzung | **läuft.** AP1–AP4 erledigt, **AP5 in Arbeit** (Teil 1 steht); Abhängigkeiten in 3.0 |
+> | Umsetzung | **läuft.** AP1–AP5 erledigt, **AP4a** (Nachtrag 16.09.2026) als Nächstes, dann AP6; Abhängigkeiten in 3.0 |
 > | Fable-Schritte der Umsetzung | **keiner mehr** — M-P5a-01 ist nach Auftrag vom 15.09.2026 ohne Pause umgesetzt worden (2.5) |
 
 > **Stand der Umsetzung**
@@ -29,7 +29,8 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | **AP2 Plattformprüfung** | **erledigt** | **Web 20.5.0** | 21 Befunde (15 ohne DB/config) · Muss offen 0 · Installweiche 8/8, 0 Befunde auf 658 Zeilen · Bilderlauf 16 Bilder, 0/0/0 · Wortliste 0/0/0 |
 > | **AP3 Torwächter** | **erledigt** | **Web 20.6.0** | Wartungsprobe **67 Erwartungen, 0 nicht erfüllt** (Teil 7 neu, 10 Erwartungen) · Browserprobe 12/12 · Bilderlauf 8 Bilder, 0/0/0 · Wortliste 0/0/0 |
 > | **AP4 Kopfzeilen und HTTPS** | **erledigt** | **Web 20.7.0** | CSP-Probe **0 Befunde** (106 Dateien, 108 Skript-Stellen), Selbstprobe 8/8 · Browserprobe **33/33, 0 Seitenfehler** · Bilderlauf **392 Bilder, 0/0/0** und **0 CSP-Berichte** (dritter Lauf — die zwei davor fanden F6 und F7) · Wartungsprobe 67/0 · Integritätswache 30/30 und **kein Unterschied** · Wortliste 0/0/0 · Kontraste 22/0 · Vollständigkeit 365 gegen 351 (`style=` **13→10**, Unicode +17 — alle in Kommentaren) |
-> | **AP5 Mail-Warteschlange** | **in Arbeit** | **Web 20.8.0** | Teil 1 (Name der Installation, E-P5a-35) **steht**: 38 Stellen auf zwei Werte, 6/6 Einschleusversuche abgewiesen · Teil 2 **Gerüst steht**: Katalog mit 9 Nachrichten, Warteschlange, Job `mail`; Leiter 5/30/120/480 min gemessen, `zu_spaet` nach 3 Versuchen, Job am Huckepack-Weg 3 Nachrichten in 0,16 s, Bremse 3,0 s → 3,00 s · `smtp_send()` mit Frist: 5 s Limit vorher 31,06 s, jetzt 5,00 s · E-P5a-37 gemessen (0 Adressen im Protokoll) · **offen: Umzug der zehn Aufrufstellen, `mail_rahmen()`/`app_url()` (Nr. 202), Unzustellbar-Liste** |
+> | **AP5 Mail-Warteschlange** | **erledigt** | **Web 20.8.0 · 20.9.0** | Teil 1 (Name der Installation, E-P5a-35): 38 Stellen auf zwei Werte, 6/6 Einschleusversuche abgewiesen · Teil 2 (Warteschlange): Katalog mit **10** Nachrichten, **alle zehn** Versandstellen umgezogen — `smtp_send()` hat ausserhalb von `mail_lib.php` **0** Aufrufer · `tools/mailprobe/` **41 Prüfungen, 0 Befunde** gegen eine eigene SMTPS-Gegenstelle · `tools/jobprobe/` **35/35** (Teil 10 neu) · Frist statt Dauer: schweigender Server **5,01 s** bei 5 s Budget, 12 Fortsetzungszeilen je 1 s **5,00 s** (ohne Frist wären es über 13 s) · Leiter 300 s gemessen, `unzustellbar` nach 5, `zu_spaet` nach **3** bei 1 h Frist · Job am Huckepack-Weg 4 Nachrichten in 0,37 s, hängender Server **3,01 s** bei 3,0 s Vorgabe · Adressen (E-P5a-40) 7 Fälle, **5 abgewiesen** · `grep gen-em.org server/` = **0**, `grep base_url server/` = nur Bibliothek und Quelle · Wortliste **0/0/0** (96 Ausnahmen, 96 gegriffen) · Vollständigkeit **366 = Ausgangswert** (Schwelle in der Kette von 371 zurückgezogen) · Migrationsregister **0 Befunde**, 49/49 Kennungen · CSP-Probe **0** auf 108 Stellen · Browser: Status und Installation, **0 Konsolenfehler** |
+> | **AP4a Sicherheitszeilen** (Nachtrag 16.09.2026) | **in Arbeit** | — | Backlog Nr. 203 + 205, E-P5a-38 |
 > | AP6 bis AP12 | offen | — | — |
 
 ---
@@ -526,6 +527,63 @@ Liste ausdrücklich „mit Empfänger und Grund". Das ist eine benannte Ausnahme
 von der Zusage in `smtp.php`, und sie steht **dort neben der Zusage**, nicht
 davon getrennt: Eine Liste *gescheiterter* Zustellungen ist kein Protokoll
 darüber, wer Post *bekommen* hat, sondern eine Mängelliste.
+
+**E-P5a-36 (neu, 16.09.2026) — ein Mailrahmen und eine Basisadresse**
+(Nachtrag des Auftraggebers, Herkunft Backlog Nr. 202 Paket 1, R83).
+`mail_rahmen($anrede, $kern, $schluss = null)` und `app_url($pfad = '')`
+liegen in `instanz_lib.php`, also dort, wo E-P5a-35 den Namen hält. Alle zehn
+Katalogeinträge benutzen den Rahmen — die Testmail eingeschlossen, die bis
+Web 20.7.0 die einzige ohne Anrede, ohne Kontaktzeile und ohne „Gen-EM" im
+Betreff war.
+
+`app_url()` ersetzt sieben Handverkettungen, **fünf davon ohne `rtrim()`**.
+Die zwei mit sind der Beweis, dass es aufgefallen ist — nur eben nicht
+überall. *Nicht* angefasst: die Token-Ausstellung (`reset_token_ausstellen()`,
+vier Stellen) — das bleibt Schritt 15.
+
+**E-P5a-40 (neu, 16.09.2026) — Kontaktadresse und Betreiberadresse sind
+Einstellungen.** Aufgekommen als Anweisung des Auftraggebers während AP5:
+*„Kontaktadresse muss in die Servereinstellungen … es sollte idealerweise
+nichts von gen-em.org und keine gen-em E-Mail-Adressen im Code hartkodiert
+stehen."*
+
+Dieselbe Fehlerklasse wie der Name, eine Fassung später gefunden: In **sieben**
+Mailtexten stand dieselbe **persönliche** Adresse des Entwicklers.
+
+- `instanz_kontakt()` — die Zeile „Bei Fragen wende dich an …" in **jeder**
+  Mail. **Leer heißt: die Zeile fällt weg.** Nicht `smtp.from` — das ist der
+  Absender und auf einer gut eingerichteten Anlage ein `noreply@`; eine Mail,
+  die im Fehlerfall auf ein ungelesenes Postfach verweist, ist schlimmer als
+  eine ohne Verweis.
+- `betrieb_mail()` — wohin Betriebspost geht. **Leer heißt: weiterhin an alle
+  mit Verwaltungsrecht.** Die vorsichtige Richtung; eine leere Einstellung darf
+  keine Warnung verschlucken.
+- `mail_betriebsziele()` hält diese Auswahl an **einer** Stelle. Drei Stellen
+  bauten dieselbe Liste, und die dritte hatte bereits eine abweichende
+  Sortierung — genau der Fall, für den R83 das Zentralisieren verlangt. Der
+  Punkt stand **nicht** in der Zentralisierungsanalyse; er ist beim Umzug
+  aufgefallen und in Nr. 202 nachgetragen.
+
+> **Die E-Nummer ist die zweite.** Der erste Entwurf trug E-P5a-38 — die ist
+> im Nachtrag des Auftraggebers für AP4a vergeben. Umgezogen auf 40;
+> **E-P5a-34 bleibt unvergeben** (eine Lücke, kein Fehler).
+
+**E-P5a-41 (neu, 16.09.2026) — die Warteschlange bekommt eine Zeile, keine
+Seite.** E-P5a-14 verlangt eine „Unzustellbar-Liste" auf Betrieb → Status.
+Eine Liste ist eine **neue Darstellung** und bräuchte nach `CLAUDE.md` 5 eine
+Freigabe mit Mockup. Was eine BetreiberIn hier braucht, ist zudem keine Liste,
+sondern eine Antwort auf eine Frage — *ist etwas liegengeblieben, und für
+wen?* —, und die passt in eine `status_z()`-Zeile mit vorhandenem Baustein.
+
+Drei Zustände, **zwei Töne für drei Fälle**: blau „leer", **orange** „N
+wartet" (der Normalfall eines kurz gestörten Mailservers — er heilt von
+selbst), **rot** „N unzustellbar" **mit Adresse** und letztem Grund. Rot ist
+erst, was nicht mehr heilt.
+
+Der volle Bereich mit Reitern kommt in **P5c** (Protokollierung). Bis dahin
+ist diese Zeile die Auskunft, und sie ist vollständig: Was sie nicht zeigt,
+zeigt auch keine Liste — die Adressen der *zugestellten* Nachrichten sind
+gelöscht, und zwar mit Absicht.
 
 ### 2.3 Ort je Funktion (K1, R74)
 

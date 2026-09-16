@@ -10,6 +10,7 @@ require_once __DIR__ . '/adminbackup_lib.php';
 require_once __DIR__ . '/komplett_lib.php';
 require_once __DIR__ . '/sicherungsziel_lib.php';
 require_once __DIR__ . '/smtp.php';
+require_once __DIR__ . '/mail_lib.php';   // Lage der Warteschlange (P5a/AP5)
 require_once __DIR__ . '/plattform_lib.php';
 
 /**
@@ -369,6 +370,45 @@ function status_erhebung(): array
                           . 'geprüft wird der Host, nicht die Zugangsdaten'),
             $gut ? 'blau' : 'rot',
             $gut ? 'zugestellt' : 'fehlgeschlagen');
+    }
+
+    /* DIE WARTESCHLANGE (P5a/AP5, E-P5a-41). Bis Web 20.7.0 sagte die Zeile
+       „Letzter Versand" alles, was es zu sagen gab — sie sagte aber nur
+       etwas über den LETZTEN Versuch. Eine Einladung, die vor zwei Tagen
+       scheiterte, war danach unsichtbar, und die Marke stand längst. Diese
+       Zeile ist die fehlende Auskunft: Liegt etwas? Ist etwas endgültig
+       liegengeblieben, und für wen?
+
+       ZWEI TÖNE, KEINE DREI. „Wartet" ist ORANGE, nicht rot: Eine Zeile in
+       der Leiter ist der Normalfall eines kurz gestörten Mailservers und
+       heilt von selbst. Rot ist erst, was nicht mehr heilt. */
+    $lage = mail_lage();
+    if ($lage !== null) {
+        if ($lage['unzustellbar'] > 0) {
+            $wer = implode(', ', $lage['adressen']);
+            if ($lage['unzustellbar'] > count($lage['adressen'])) {
+                $wer .= ' und ' . ($lage['unzustellbar'] - count($lage['adressen'])) . ' weitere';
+            }
+            $mail[] = status_z('Warteschlange',
+                'Endgültig nicht zugestellt an ' . $wer
+                . ($lage['grund'] !== null ? '. Zuletzt: ' . $lage['grund'] : '')
+                . '. Die Zeilen verfallen nach 30 Tagen',
+                'rot', $lage['unzustellbar'] . ' unzustellbar');
+        } elseif ($lage['offen'] > 0) {
+            $mail[] = status_z('Warteschlange',
+                $lage['offen'] . ($lage['offen'] === 1 ? ' Nachricht wartet' : ' Nachrichten warten')
+                . ' auf einen weiteren Versuch. Der Job `mail` holt sie nach; '
+                . 'die Leiter geht über 24 Stunden',
+                'orange', $lage['offen'] . ' wartet');
+        } else {
+            $mail[] = status_z('Warteschlange',
+                'Nichts liegt an'
+                . ($lage['zuspaet'] > 0
+                   ? '. ' . $lage['zuspaet'] . ' Nachricht(en) sind abgelaufen, bevor sie '
+                     . 'zugestellt werden konnten — ein Reset-Link gilt eine Stunde'
+                   : ''),
+                'blau', 'leer');
+        }
     }
 
     $entkoppelt = antwort_entkoppelbar();

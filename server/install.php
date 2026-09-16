@@ -68,6 +68,19 @@ if (version_compare(PHP_VERSION, PLATTFORM_PHP_MIN, '<')) {
 // email_lib.php, dieselbe Fassung wie im Rest der Anwendung.
 require_once __DIR__ . '/email_lib.php';
 
+/* DER NAME DIESER INSTALLATION (P5a/AP5, E-P5a-35). `instanz_lib.php` laedt
+ * selbst nichts und laeuft deshalb auch hier, vor der Ersteinrichtung — es
+ * gibt weder `app_state` noch eine Verbindung, und die Funktionen fallen von
+ * selbst auf die Vorgaben zurueck.
+ *
+ * DER REQUIRE STEHT HINTER DER PHP-WEICHE, nicht davor, und das ist kein
+ * Zufall: Alles oberhalb muss auf einer alten Fassung noch uebersetzbar sein.
+ * Eine Besucherin auf PHP 8.0 hat die Seite an dieser Stelle laengst verlassen
+ * — deshalb darf ab hier geladen werden, was PHP 8.2 verlangt. Die
+ * PHP-zu-alt-Meldung oben behaelt ihre feste Zeichenkette aus genau diesem
+ * Grund; sie ist die einzige, die sie behaelt. */
+require_once __DIR__ . '/instanz_lib.php';
+
 /* DIE SEITENHUELLE MUSS HIER STEHEN, NICHT IN render_page() (Web 9.10.1).
  *
  * Sie stand seit P3/O2 in render_page() selbst — an der Stelle, an der sie
@@ -198,7 +211,7 @@ if (!is_writable(__DIR__)) {
     $nachweisOk = false;
 } elseif (!file_exists($nachweisDatei)) {
     $inhalt = $nachweis . "\n\n"
-            . "Diese Datei gehoert zur Ersteinrichtung von Gen-EM NAdoku.\n"
+            . "Diese Datei gehoert zur Ersteinrichtung von " . INSTANZ_KURZ_VORGABE . ".\n"
             . "Die Zeichenfolge oben ist im Einrichtungsformular einzutragen.\n"
             . "Sie beweist, dass die einrichtende Person Zugriff auf dieses\n"
             . "Verzeichnis hat. Nach der Einrichtung wird die Datei geloescht;\n"
@@ -228,7 +241,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $smtp = [
         'host' => $in('smtp_host'), 'port' => (int)($in('smtp_port') ?: 465),
         'user' => $in('smtp_user'), 'pass' => (string)($_POST['smtp_pass'] ?? ''),
-        'from' => $in('smtp_from'), 'from_name' => $in('smtp_from_name') ?: 'Gen-EM NAdoku',
+        'from' => $in('smtp_from'), 'from_name' => $in('smtp_from_name') ?: INSTANZ_KURZ_VORGABE,
     ];
 
     /* Nachweis zuerst pruefen (M1-11).
@@ -450,7 +463,7 @@ function render_form(array $v, array $errors, string $nachweis,
                      string $nachweisMuster, bool $nachweisOk): void {
     $guessUrl = 'https://' . ($_SERVER['HTTP_HOST'] ?? 'einsatz.example.de');
     ob_start(); ?>
-    <h1>Gen-EM NAdoku einrichten</h1>
+    <h1><?= htmlspecialchars(INSTANZ_KURZ_VORGABE, ENT_QUOTES, 'UTF-8') ?> einrichten</h1>
     <p class="seiten-erklaerung">Diese Angaben werden in <code>config.php</code>
        gespeichert und die Datenbank wird angelegt. Der Einrichter läuft nur
        dieses eine Mal.</p>
@@ -559,7 +572,7 @@ function render_form(array $v, array $errors, string $nachweis,
           <?php ui_feld(['name' => 'smtp_from', 'label' => 'Absender-Adresse',
                          'wert' => (string)($v['smtp_from'] ?? '')]); ?>
           <?php ui_feld(['name' => 'smtp_from_name', 'label' => 'Absender-Name',
-                         'wert' => (string)($v['smtp_from_name'] ?? 'Gen-EM NAdoku')]); ?>
+                         'wert' => (string)($v['smtp_from_name'] ?? INSTANZ_KURZ_VORGABE)]); ?>
         </div>
       <?php ui_karte_ende(); ?>
 

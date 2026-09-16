@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
+require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/smtp.php';
 require_admin();
 require_once __DIR__ . '/adminbackup_lib.php';
@@ -203,19 +204,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if ($angelegt) {
-                    $link = $CFG['app']['base_url'] . '/pw_handling.php?token=' . $token;
-                    $ok = smtp_send($email,
-                        'Willkommen bei der Gen-EM Einsatzdokumentation Notarzt',
-                        "Hallo,\n\n"
-                        . "für dich wurde ein Zugang zur Gen-EM Einsatzdokumentation Notarzt angelegt.\n"
-                        . "Über den folgenden Link legst du dein persönliches Passwort fest — der Link ist\n"
-                        . "24 Stunden gültig:\n\n"
-                        . $link . "\n\n"
-                        . "Dabei wird auch dein Wiederherstellungsschlüssel angezeigt. Bitte notiere ihn dir\n"
-                        . "sicher — ohne ihn lassen sich die verschlüsselten Angaben nach einem späteren\n"
-                        . "Passwort-Reset von niemandem mehr öffnen.\n\n"
-                        . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
-                        . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n");
+                    $link = app_url('/pw_handling.php?token=' . $token);
+                    /* DREI ZUSTAENDE, NICHT ZWEI (E-P5a-14). `wartet` heisst
+                     * „liegt in der Warteschlange und geht gleich hinaus" —
+                     * dann den Setz-Link NICHT im Klartext anzeigen, denn die
+                     * Mail kommt ja. Nur `abgelehnt` ist der Fall, in dem
+                     * jemand den Link von Hand weitergeben muss. */
+                    $zustellung = mail_einreihen('einladung', $email, ['link' => $link]);
+                    $ok = $zustellung !== MAIL_ABGELEHNT;
                     if ($ok) {
                         $notice = 'Konto angelegt — Setz-Link per E-Mail verschickt.';
                     } else {

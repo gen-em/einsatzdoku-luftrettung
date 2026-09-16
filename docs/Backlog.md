@@ -1256,8 +1256,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     „`* * * * * php …/server/jobs.php`"; am 13.09.2026 Zeilen 13, 2674,
     6042 und 8722 — bei Aufnahme 13, 2424, 5220 und 6210). Wer den Befehl aus dem Docstring
     oder aus `Technik.md` abtippt, bekommt **„Could not open input file"** —
-    genau das ist beim Einrichten des Plesk-Cron auf der Installation
-    luftrettung.net passiert.
+    genau das ist beim Einrichten des Plesk-Cron auf dem Produktivserver
+    passiert.
     **Nicht betroffen, und das gehört ausdrücklich festgehalten:**
     der Wertekasten in `server/betrieb_jobs.php` baut den Befehl über
     `__DIR__` und gibt damit den korrekten Installationspfad aus. Die Karte
@@ -2003,12 +2003,27 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
       `admin_users.php`, `reset_request.php`, `pair.php` (2×),
       `adminbackup_lib.php`; die Testmail in `betrieb_status.php` weicht ab.
       Langname 20× in 6 Dateien, Kurzname 15× in 10, Kontaktadresse 7×.
-      **Vorgezogen in P5a:** der Name (E-P5a-35, Web 20.8.0), `mail_rahmen()`
-      und `app_url()` (AP5 Teil 2, Nachtrag 16.09.2026).
+      **Erledigt in P5a/AP5:** der Name (E-P5a-35, Web 20.8.0),
+      `mail_rahmen()` und `app_url()` (E-P5a-36, Web 20.9.0) — alle zehn
+      Versandstellen benutzen `mail_einreihen()` und damit den Rahmen, die
+      Testmail eingeschlossen. Dazu die **Kontaktadresse als Einstellung**
+      (E-P5a-40): Sie stand nicht nur an sieben Stellen, sie war auch die
+      persönliche Adresse des Entwicklers — `grep -rn "gen-em\.org" server/`
+      ergibt seit Web 20.9.0 **0**.
     - `base_url`-Verkettung 5× ohne `rtrim` (`admin_users.php`,
       `admin_user.php`, `reset_request.php`, `pair.php` 2×), 2× mit
       (`adminbackup_lib.php`, `betrieb_jobs.php`) — ein Schrägstrich am Ende
-      der Konfiguration ergibt `//pw_handling.php`. → `app_url()` (P5a).
+      der Konfiguration ergibt `//pw_handling.php`. **Erledigt** mit
+      `app_url()` (Web 20.9.0); `grep -rn "base_url" server/` zeigt nur noch
+      die Bibliothek, `install.php` (die Quelle) und `config.example.php`.
+      Nebenbei gefunden: Bei leerer `base_url` schickte `smtp.php` ein
+      nacktes `EHLO ` — `parse_url('')` liefert `false`.
+    - **Empfängerliste der Betriebspost** an drei Stellen
+      (`speicher_lib.php`, `adminbackup_lib.php` 2×), die dritte bereits mit
+      abweichender Sortierung. **Erledigt** mit `mail_betriebsziele()`
+      (E-P5a-40, Web 20.9.0) — zugleich der Ort, an dem die neue Einstellung
+      `betrieb_mail` greift. *Nachtrag zur Aufnahme: Dieser Punkt stand nicht
+      in der ursprünglichen Analyse; er ist beim Umzug aufgefallen.*
     - Passwort-Setz-Link (Token erzeugen, alte entwerten, einfügen, Link,
       Mailtext) in `reset_request.php`, `admin_user.php`, `admin_users.php`,
       `install.php`; „höchstens ein gültiger Token je Konto" nur in zwei
@@ -2157,18 +2172,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     behalten. Ziel: `json_roh_out()` neben `json_out()` in `db.php`, drei
     Stellen umstellen. *Abnahme:* `grep -rn "Content-Type: application/json"
     server/` zeigt nur `db.php`; Selbstprobe der Kopfzeilen 3/3 `no-store`.
-
-204. **`smtp.php` schreibt bei Fehlschlag die Empfängeradresse ins
-    Fehlerprotokoll.** *Aufgenommen 16.09.2026; Zuordnung P5a AP5
-    (Nachtrag).* `error_log('SMTP: Versand an ' . $toEmail . '
-    fehlgeschlagen')` (auf dem P5a-Zweig Zeile 272), obwohl der Kopf
-    derselben Datei und `betrieb_status.php` zusagen, dass kein Protokoll
-    über Mailempfänger geführt wird. **Entschieden 16.09.2026: Die Zusage
-    gilt** — die Meldung nennt Kennung und Grund; der Empfänger steht in
-    `mail_warteschlange` (Unzustellbar-Liste, 30 Tage, E-P5a-09). Gleiches
-    Muster in `email_lib.php`, `pair.php`, `reset_request.php` prüfen.
-    *Abnahme:* `grep -rn "toEmail" server/smtp.php` trifft keinen
-    `error_log()`-Aufruf mehr.
 
 205. **`session.use_strict_mode` fehlt auf den Anmeldewegen.** *Aufgenommen
     16.09.2026; Zuordnung P5a AP4a (Nachtrag).* Gesetzt nur in
@@ -6528,3 +6531,37 @@ zutreffen.
     Prüffall.
 
     **Erledigt am 04.09.2026** mit **Web 14.2.0** (Nutzlast 9) und **14.2.1** (Referenzbestand). Die Konto-Sicherung trägt seither je Einsatz eine Liste `schnitte`; der Vermerk verweist über `quelle_ref` auf die **Kennung** der Quelle, nicht auf ihre interne Nummer — genau das Muster, das `day_refs` schon benutzte. Ein Vermerk ohne Ziel wird gezählt und benannt, nicht stillschweigend verworfen. Belegt im **Dauerbetrieb**: Der Referenzbestand enthält seit 14.2.1 einen Schnitt, und weil der Demo-Reset die Fixture alle 30 Minuten einspielt, wird der Vermerk auf dem Produktivserver alle 30 Minuten geprüft. Zahlen: Wiederherstellungsprobe 94/0 (18 neue Erwartungen in Teil 11), edbak-Kreislauf 287 713 Einzelvergleiche / 0 unerklärt, Demo-Konto nach dem Reset 1 Sperrvermerk.
+
+204. **`smtp.php` schreibt bei Fehlschlag die Empfängeradresse ins
+    Fehlerprotokoll.** *Aufgenommen 16.09.2026; Zuordnung P5a AP5
+    (Nachtrag).* `error_log('SMTP: Versand an ' . $toEmail . '
+    fehlgeschlagen')`, obwohl der Kopf derselben Datei und
+    `betrieb_status.php` zusagen, dass kein Protokoll über Mailempfänger
+    geführt wird. Es war die einzige Stelle mit Personenbezug im
+    Fehlerprotokoll.
+
+    **Erledigt am 16.09.2026 mit Web 20.8.0/20.9.0 (P5a/AP5, E-P5a-37).**
+    Die Zusage gilt — entschieden vom Auftraggeber am selben Tag. Die
+    Meldung lautet jetzt `[<Kennung>] SMTP: Versand fehlgeschlagen:
+    <Grund>`; der Empfänger steht in `mail_warteschlange` und verfällt dort
+    nach 30 Tagen (E-P5a-09).
+
+    **Die Kennung ist der Punkt, nicht das Weglassen.** Eine Zusage, die
+    einem die Fehlersuche nimmt, tauscht ein Problem gegen ein anderes.
+    Die Warteschlange schreibt dieselbe Kennung in ihre Fehlerspalte: Wer
+    einem Fehlschlag nachgeht, hat dort den Empfänger und im Protokoll des
+    Webspace den technischen Grund. Das Protokoll allein sagt nicht, wer
+    gemeint war — und genau das war die Zusage.
+
+    *Nachgemessen:* `grep -rn "toEmail" server/smtp.php` trifft **keinen**
+    `error_log()`-Aufruf mehr; `tools/mailprobe/` Abschnitt 13 löst einen
+    Fehlschlag aus und prüft das erzeugte Protokoll (**108 Byte, 1 Zeile,
+    kein „@", eine Kennung**). Die übrigen `error_log()`-Aufrufe in
+    `email_lib.php`, `pair.php` und `reset_request.php` sind durchgesehen —
+    sie nennen weder Adresse noch Token („Hinweismail an die alte Adresse
+    ging nicht weg").
+
+    *Ein Fund am selben Ort:* `smtp_letzter_fehler()` konnte den Grund des
+    **vorigen** Versuchs liefern — der Merker wurde erst nach der
+    Adressprüfung geleert. Eine Kennung, die auf eine andere Nachricht
+    zeigt, ist schlimmer als gar keine; behoben in Web 20.9.0.

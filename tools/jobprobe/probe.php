@@ -377,6 +377,75 @@ if (array_key_exists('uebersprungen', $berichtV['versand'] ?? [])) {
            gettype($berichtV['versand']['uebergangen'] ?? null));
 }
 
+/* ======================================================================
+ * TEIL 10 — DER JOB `mail` (P5a/AP5)
+ *
+ * WAS HIER GEMESSEN WIRD UND WAS NICHT. Die Warteschlange selbst — Leiter,
+ * Fristen, Endzustaende, Rahmen — misst `tools/mailprobe/` gegen eine
+ * Gegenstelle, die auf Kommando scheitert. HIER geht es um die EINBINDUNG:
+ * Steht der Job im Katalog, meldet er seinen Rueckstand, laeuft er am
+ * Huckepack-Weg als ERSTER, und traegt er sich in `job_laeufe` ein?
+ *
+ * DIE REIHENFOLGE IST DER PUNKT. `jobs_lauf()` arbeitet den Katalog der
+ * Reihe nach ab und ueberspringt, was ins Restbudget nicht mehr passt (3 s
+ * fuer ALLE Jobs am Huckepack-Weg). Stuende `mail` hinter der Verdichtung,
+ * bekaeme er dort regelmaessig nichts — und die Statusseite meldete „in
+ * Ordnung", weil kein Fehler anliegt. Eine Behauptung ueber die Reihenfolge
+ * gehoert deshalb in eine Erwartung und nicht in einen Kommentar.
+ * ================================================================== */
+echo "\n  Teil 10 — Der Job `mail`\n";
+
+$katalog = jobs_katalog();
+pruefe(isset($katalog['mail']), 'Der Job `mail` steht im Katalog',
+       implode(', ', array_keys($katalog)));
+pruefe(array_key_first($katalog) === 'mail',
+       'und zwar als ERSTER — sonst verhungert er am Huckepack-Weg',
+       'erster Eintrag: ' . (string)array_key_first($katalog));
+pruefe(($katalog['mail']['taeglich'] ?? true) === false,
+       'Er ist NICHT taeglich — ein Fehlschlag darf nicht bis morgen sperren',
+       var_export($katalog['mail']['taeglich'] ?? null, true));
+
+/* Drei faellige Zeilen anlegen. Die Gegenstelle fehlt hier — der Versand
+ * scheitert also, und GENAU DAS soll er: Gemessen wird, dass der Job sie
+ * anfasst und im Budget bleibt, nicht dass er sie loswird. */
+$pdoM = db();
+$vorher = (int)$pdoM->query('SELECT COUNT(*) FROM mail_warteschlange')->fetchColumn();
+for ($i = 0; $i < 3; $i++) {
+    $pdoM->prepare('INSERT INTO mail_warteschlange
+                      (schluessel, art, empfaenger, betreff, text, zustand, versuche,
+                       erstellt, naechster_versuch)
+                    VALUES (?,?,?,?,?,\'offen\',0, UTC_TIMESTAMP(), UTC_TIMESTAMP())')
+         ->execute(['testmail', 'betrieb', 'jobprobe' . $i . '@beispiel.invalid', 'B', 'R']);
+}
+$rueck = mail_rueckstand($pdoM, []);
+pruefe($rueck !== null && $rueck >= 3, 'Der Rueckstand wird gemeldet',
+       'rueckstand=' . var_export($rueck, true));
+
+$t0 = microtime(true);
+$berichtM = jobs_lauf('cli', ['mail']);
+$dauerM = microtime(true) - $t0;
+pruefe(array_key_exists('mail', $berichtM), 'Der Job steht im Bericht',
+       json_encode($berichtM['mail'] ?? null, JSON_UNESCAPED_UNICODE));
+pruefe($dauerM < 3 * MAIL_BUDGET_S + 2.0,
+       'Drei unerreichbare Empfaenger sprengen die Frist nicht',
+       sprintf('%.2f s bei 3 x %d s Budget', $dauerM, MAIL_BUDGET_S));
+
+/* `job_laeufe` — der Verlauf. Er wird nur geschrieben, wenn etwas passiert
+ * ist (Fehler oder erledigte Zeilen); ein Leerlauf soll die Tabelle nicht
+ * fuellen. Drei faellige Zeilen sind etwas. */
+try {
+    $laeufe = (int)$pdoM->query("SELECT COUNT(*) FROM job_laeufe WHERE job = 'mail'")
+                        ->fetchColumn();
+    pruefe($laeufe >= 1, 'Der Lauf steht in `job_laeufe`', $laeufe . ' Zeilen');
+} catch (Throwable $ex) {
+    printf("  [--] %-62s %s\n", 'job_laeufe nicht gemessen', $ex->getMessage());
+}
+
+$pdoM->exec("DELETE FROM mail_warteschlange WHERE empfaenger LIKE 'jobprobe%@beispiel.invalid'");
+$nachher = (int)$pdoM->query('SELECT COUNT(*) FROM mail_warteschlange')->fetchColumn();
+pruefe($nachher === $vorher, 'Die Probe hinterlaesst keine Zeile',
+       $vorher . ' -> ' . $nachher);
+
 } finally {
     aufraeumen($pdo, $basisM, $basisR);
 }
