@@ -418,7 +418,36 @@ async function anmeldenAuf(seite, rolle) {
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
     seite.click('button[type="submit"]'),
   ]);
-  return !seite.url().includes('login.php');
+  if (seite.url().includes('login.php')) { return false; }
+
+  /* DAS EINWILLIGUNGSTOR DURCHKLICKEN (P5b/AP4, Web 20.19.0).
+   *
+   * Hat die Installation Nutzungsbedingungen oder eine Vereinbarung zur
+   * Auftragsverarbeitung in Kraft, landet JEDES angemeldete Konto auf
+   * `einwilligung.php`, bis es angenommen hat. Für den Bilderlauf heißt
+   * das: Jede Aufnahme zeigt das Tor statt der Seite, die gemessen werden
+   * soll.
+   *
+   * Gefunden am 16.09.2026, und der Lauf hat es selbst gemeldet — „OHNE
+   * BILD: 32 Aufnahmen — 32× Seite leitete auf die Anmeldung um". Ohne
+   * diesen Block stünde die nächste Instanz vor 52 Konsolenfehlern und
+   * einer Zahl, die nichts misst.
+   *
+   * ES WIRD GEKLICKT UND NICHT ÜBERGANGEN: Das Tor ist echtes Verhalten der
+   * Anwendung, kein Hindernis des Prüfstands. Ein Bilderlauf, der es
+   * aushebelte, misste eine Anwendung, die es so nicht gibt. */
+  if (seite.url().includes('einwilligung.php')) {
+    const boxen = await seite.locator('.schalter-box').count();
+    for (let i = 0; i < boxen; i++) {
+      await seite.locator('.schalter-box').nth(i).evaluate(el => { el.checked = true; });
+    }
+    await Promise.all([
+      seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {}),
+      seite.click('button[type="submit"]'),
+    ]);
+    if (seite.url().includes('einwilligung.php')) { return false; }
+  }
+  return true;
 }
 
 async function anmelden(rolle) {

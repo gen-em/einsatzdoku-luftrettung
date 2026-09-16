@@ -2889,6 +2889,111 @@ function migrationen_katalog(): array
             'ALTER TABLE users ADD INDEX idx_status_loeschung (status, loeschung_am)',
         ],
     ],
+    [
+        'id'    => '2026_09_16_einwilligungen',
+        'web'   => '20.19',
+        'label' => 'Einwilligungen je Konto, Fassungskennung auf die Sekunde (P5b/AP4)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'konto_einwilligungen'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* `stand_am` WIRD DATETIME (Fehlerfund F3 des Konzepts).
+             *
+             * Es war `DATE`. Damit waeren zwei Aenderungen am selben Tag
+             * EINE Fassung — und die Nutzerin, die die erste angenommen hat,
+             * gaelte als Annehmerin der zweiten. Genau das darf eine
+             * Fassungskennung nicht.
+             *
+             * DER BESTAND VERLIERT NICHTS: `DATE` -> `DATETIME` fuellt die
+             * Uhrzeit mit `00:00:00`. Das ist richtig — das Standdatum wurde
+             * im Editor VON HAND gesetzt und hatte nie eine Uhrzeit; sie
+             * jetzt zu erfinden waere schlechter.
+             *
+             * DER EDITOR BLEIBT EIN DATUMSFELD. Wer ein Standdatum setzt,
+             * denkt in Tagen, nicht in Sekunden; die Uhrzeit entsteht nur,
+             * wenn zwei Fassungen am selben Tag auseinandergehalten werden
+             * muessen — und dann setzt sie der Speicherweg, nicht die
+             * Betreiberin. */
+            'ALTER TABLE rechtstexte MODIFY stand_am DATETIME NULL',
+
+            /* DIE EINWILLIGUNGEN JE KONTO (E-P5b-15).
+             *
+             * EINE ZEILE JE KONTO UND SCHLUESSEL, nicht je Annahme: Der
+             * Primaerschluessel ist `(user_id, schluessel)`, und eine neue
+             * Annahme ueberschreibt die alte. Ein Verlauf „wer hat wann
+             * welche Fassung angenommen" waere etwas anderes — er gehoert
+             * ins Protokoll (Reiter Verwaltung) und nicht hierher, wo bei
+             * jedem Seitenaufbau gefragt wird „ist die aktuelle Fassung
+             * angenommen?".
+             *
+             * `stand_am` IST DIE FASSUNG, DIE ANGENOMMEN WURDE, und nicht
+             * die aktuelle. Der Vergleich gegen `rechtstexte.stand_am` ist
+             * die ganze Pruefung — deshalb steht der Wert hier und nicht
+             * ein Verweis auf die Zeile.
+             *
+             * ON DELETE CASCADE: Anders als beim Protokoll ist das hier
+             * richtig. Eine Einwilligung ist eine Aussage UEBER das Konto;
+             * ohne Konto hat sie keinen Gegenstand. Der Nachweis, DASS
+             * jemand angenommen hat, steht im Protokoll und ueberlebt. */
+            'CREATE TABLE konto_einwilligungen (
+               user_id    INT UNSIGNED NOT NULL,
+               schluessel VARCHAR(32) NOT NULL,
+               stand_am   DATETIME NULL,
+               zeit       DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+               PRIMARY KEY (user_id, schluessel),
+               CONSTRAINT fk_kew_user FOREIGN KEY (user_id)
+                 REFERENCES users (id) ON DELETE CASCADE
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
+    [
+        'id'    => '2026_09_16_adresswechsel_bestaetigt',
+        'web'   => '20.20',
+        'label' => 'E-Mail-Wechsel mit Bestätigung der neuen Adresse (P5b/AP5)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'users'
+                                AND column_name = 'email_neu'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* BEIDE ADRESSEN BIS ZUM KLICK (E-P5b-16).
+             *
+             * Bis Web 20.19.0 schrieb `einstellungen.php` die neue Adresse
+             * SOFORT — mit Passwortnachweis und einer Hinweismail an die
+             * alte, aber ohne jede Pruefung, ob die neue ueberhaupt
+             * erreichbar ist. Ein Tippfehler sperrte damit aus: Die
+             * Anmeldung laeuft ueber die Adresse, und „Passwort vergessen"
+             * schickt an eine Adresse, die es nicht gibt.
+             *
+             * DIE ALTE BLEIBT DIE GUELTIGE, bis der Klick kommt. Deshalb
+             * `email_neu` NEBEN `email` und nicht statt ihrer — und deshalb
+             * kein UNIQUE darauf: Zwei Konten duerfen dieselbe Adresse
+             * vormerken; erst der Klick entscheidet, und der laeuft gegen
+             * das UNIQUE auf `email`. Ein UNIQUE hier liesse den Zweiten
+             * nicht einmal den Versuch machen und verriete ihm dabei, dass
+             * jemand anders sie vorgemerkt hat.
+             *
+             * `_bis` UND NICHT `password_resets`: Der Token gehoert zu einer
+             * Adresse, nicht zu einem Passwort. In `password_resets` waere
+             * er ein zweiter Tokentyp in einer Tabelle, deren Regel
+             * „hoechstens ein gueltiger je Konto" lautet — ein
+             * Adresswechsel wuerde dann einen offenen Einladungslink
+             * entwerten. */
+            "ALTER TABLE users
+               ADD COLUMN email_neu            VARCHAR(190) NULL,
+               ADD COLUMN email_neu_token_hash CHAR(64) NULL,
+               ADD COLUMN email_neu_bis        DATETIME NULL",
+
+            /* Der Index ist fuer den Klick auf den Link: Er sucht ueber den
+             * Hash, nicht ueber das Konto. */
+            'ALTER TABLE users ADD INDEX idx_email_neu_token (email_neu_token_hash)',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

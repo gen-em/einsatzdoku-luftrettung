@@ -9,6 +9,11 @@ require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), 
  * ueber demo_lib.php ohnehin mit — aber eine Frist, die auf der Seite steht,
  * darf nicht an einem zufaelligen Umweg haengen. */
 require_once __DIR__ . '/trash_lib.php';
+/* Zwei Nachrichten dieses Reiters (P5b/AP5): die Bestaetigung der neuen
+ * Anmeldeadresse und der Termin der beantragten Loeschung. Ohne diese Zeile
+ * liefe `mail_einreihen()` in einen Fatal Error — und zwar genau in dem
+ * Augenblick, in dem jemand sein Konto loeschen will. */
+require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/apk_lib.php';    // APK-Karte des Geraete-Reiters (S4/A1)
 require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste (S6)
 require_once __DIR__ . '/kopplung_lib.php';  // Kopplungssitzungen: Code suchen, beanspruchen (S5)
@@ -217,18 +222,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $altAdresse = (string)$userEmail;
             try {
-                db()->prepare('UPDATE users SET name = ?, email = ?, logo_wahl = ? WHERE id = ?')
-                    ->execute([$name !== '' ? $name : null, $email, $logo, $userId]);
+                /* DIE ADRESSE WIRD NICHT MEHR SOFORT GESCHRIEBEN (P5b/AP5,
+                 * E-P5b-16).
+                 *
+                 * Bis Web 20.19.0 stand sie unmittelbar in der Zeile — mit
+                 * Passwortnachweis und einer Hinweismail an die alte, aber
+                 * OHNE jede Pruefung, ob die neue ueberhaupt erreichbar ist.
+                 * Ein Tippfehler sperrte damit aus: Die Anmeldung laeuft
+                 * ueber die Adresse, und „Passwort vergessen" schickt an
+                 * eine Adresse, die es nicht gibt. Der Weg zurueck fuehrte
+                 * ueber die Verwaltung — oder, auf einer
+                 * Einzelinstallation, ueber die Datenbank.
+                 *
+                 * NAME UND LOGO GEHEN WEITER SOFORT. Sie sind harmlos, und
+                 * sie an eine Bestaetigung zu haengen waere eine Huerde ohne
+                 * Zweck. */
+                db()->prepare('UPDATE users SET name = ?, logo_wahl = ? WHERE id = ?')
+                    ->execute([$name !== '' ? $name : null, $logo, $userId]);
                 $userName = $name !== '' ? $name : null;
-                $userEmail = $email;
                 $logoWahl  = $logo;
-                if ($adressWechsel) { profil_adresswechsel_melden($altAdresse, $email); }
+
+                if ($adressWechsel) {
+                    require_once __DIR__ . '/konto_lib.php';
+                    $tok  = adresse_vormerken($userId, $email);
+                    $link = app_url('/adresse_bestaetigen.php?token=' . $tok);
+
+                    /* ZWEI NACHRICHTEN, UND BEIDE SIND NOETIG. Die eine
+                     * fragt (an die NEUE Adresse — nur wer sie liest, kann
+                     * bestaetigen), die andere warnt (an die ALTE — sie ist
+                     * die einzige, die im Missbrauchsfall noch der Nutzerin
+                     * gehoert). */
+                    mail_einreihen('adresse_bestaetigen', $email,
+                                   ['link' => $link, 'alt' => $altAdresse]);
+                    profil_adresswechsel_melden($altAdresse, $email);
+
+                    $adresseVorgemerkt = $email;
+                }
                 /* Sofort wirksam, ohne Neuanmeldung: Wer die Wahl ändert,
                    soll das Ergebnis auf derselben Seite sehen. Bei
                    „wechselnd" fällt hier ein neuer Würfel — das ist richtig,
                    denn eine Wahl IST eine Gelegenheit zu würfeln. */
                 logo_sitzung_setzen($logo);
-                $notice = 'Profil gespeichert.';
+                /* DIE MELDUNG SAGT, DASS DIE ADRESSE NOCH NICHT GILT
+                 * (P5b/AP5). Ein blosses „Profil gespeichert." waere hier
+                 * die gefaehrlichste aller Auskuenfte: Die Nutzerin
+                 * schlösse daraus, sie könne sich ab jetzt mit der neuen
+                 * Adresse anmelden — und stünde beim nächsten Mal vor einer
+                 * Anmeldung, die sie nicht kennt. */
+                $notice = isset($adresseVorgemerkt)
+                    ? 'Profil gespeichert. An ' . $adresseVorgemerkt . ' ist eine '
+                    . 'Nachricht unterwegs — erst der Klick darin ändert die '
+                    . 'Anmeldeadresse. Bis dahin meldest du dich weiter mit '
+                    . $altAdresse . ' an.'
+                    : 'Profil gespeichert.';
             } catch (PDOException $ex) {
                 /* NUR der Schluesselkonflikt heisst "bereits verwendet" (M1-16).
                  * Jeder andere Datenbankfehler bekommt eine ehrliche Meldung —
@@ -246,6 +292,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     /* ---- Profil: Passwort (nur mit korrektem alten Passwort) ----------- */
+    /* ---- Konto zur Loeschung anmelden (P5b/AP5, E-P5b-16) --------------
+     *
+     * DER PASSWORTNACHWEIS IST SERVERSEITIG, und er ist hier wichtiger als
+     * beim Adresswechsel: Dort schuetzt die Bestaetigungsmail, hier gibt es
+     * keine zweite Schranke. Der Fall, um den es geht, ist ein offener
+     * Rechner in einer Wache.
+     *
+     * ANDERS ALS BEIM ADRESSWECHSEL wird hier das PASSWORT selbst geprueft
+     * und nicht das abgeleitete Token: Diese Karte laedt kein `crypto.js`
+     * (sie entsperrt nichts), und ein Feld, das ein Token erwartet, braeuchte
+     * genau das. `password_verify()` gegen den Hash tut dasselbe — der
+     * Server sieht das Passwort in dieser einen Anfrage, und das ist
+     * derselbe Weg, den `login.php` ohnehin geht.
+     *
+     * DEMO-KONTO NICHT. Es setzt sich alle 30 Minuten selbst zurueck; eine
+     * Loeschung mit 30 Tagen Karenz waere dort sinnlos und wuerde den
+     * Pruefstand abraeumen. */
+    if ($action === 'konto_loeschen') {
+        require_once __DIR__ . '/konto_lib.php';
+        if (demo_ist_demo($userId)) {
+            $error = 'Das Demo-Konto lässt sich nicht löschen.';
+        } else {
+            $stp = db()->prepare('SELECT password_hash, email FROM users WHERE id = ?');
+            $stp->execute([$userId]);
+            $z = $stp->fetch(PDO::FETCH_ASSOC) ?: [];
+            $hash = (string)($z['password_hash'] ?? '');
+            if ($hash === '' || !password_verify((string)($_POST['pw_loesch'] ?? ''), $hash)) {
+                $error = 'Das Passwort war leer oder falsch — es wurde nichts geändert.';
+            } else {
+                $termin = konto_loeschung_beantragen($userId);
+                mail_einreihen('loeschung_beantragt', (string)$z['email'],
+                               ['termin' => fmt_local($termin, 'd.m.Y') . ' um '
+                                          . fmt_local($termin, 'H:i') . ' Uhr',
+                                'link'   => app_url('/login.php')]);
+                /* SOFORT ABMELDEN. Das Konto ist ab jetzt gesperrt; die
+                 * Sitzung stehen zu lassen hiesse, dass die naechste Seite
+                 * sie beendet — mit einer Meldung, die nach einem Fehler
+                 * aussieht statt nach der Folge des eigenen Klicks. */
+                session_beenden('gesperrt');
+            }
+        }
+    }
+
     if ($action === 'password') {
         // Browser-Krypto: alt wird per Token (oder Alt-Passwort) belegt,
         // neu kommt als Token+Salt; bei aktivem Modul zusaetzlich der neu
@@ -1491,6 +1580,54 @@ ui_seite_start(['titel' => 'Einstellungen',
       } catch (e) { st.textContent = 'Fehler bei der Schlüsselableitung.'; }
     });
     </script>
+
+    <?php /* ---- Konto löschen (P5b/AP5, E-P5b-16) ------------------------
+       *
+       * WARUM ES DIESEN WEG GIBT: Bis Web 20.19.0 konnte eine Nutzerin ihr
+       * Konto nicht selbst loeschen — sie musste die Verwaltung bitten, und
+       * die loeschte sofort und unwiderruflich. Beides ist falsch herum:
+       * Ueber die eigenen Daten entscheidet, wem sie gehoeren, und eine
+       * Loeschung ohne Frist ist ein Klick, der nicht zurueckzunehmen ist.
+       *
+       * DIE KARENZ IST DREISSIG TAGE, und die Ruecknahme ist die ANMELDUNG
+       * selbst — kein Knopf, kein zweiter Link, kein zweites Token. Ein
+       * Ruecknahmeweg ohne Passwort waere genau das, was ein Angreifer
+       * wollte, der die Loeschung verhindern will, um weiter mitzulesen.
+       * ------------------------------------------------------------------ */ ?>
+    <?php require_once __DIR__ . '/konto_lib.php'; ?>
+    <?php ui_karte_start(['titel' => 'Konto löschen', 'klasse' => 'karte-gefahr',
+                          'id' => 'k-konto-loeschen']); ?>
+      <?php if (demo_ist_demo($userId)): ?>
+        <p class="feld-hinweis">Das Demo-Konto lässt sich nicht löschen — es setzt
+           sich ohnehin alle 30 Minuten selbst zurück.</p>
+      <?php else: ?>
+        <p class="feld-hinweis"><strong>Dein Konto wird sofort gesperrt und nach
+           <?= KONTO_KARENZ_TAGE ?> Tagen endgültig gelöscht.</strong> In dieser Zeit
+           genügt eine Anmeldung, und die Löschung ist zurückgenommen — einen Knopf
+           dafür brauchst du nicht.</p>
+        <p class="feld-hinweis">Nach dem Termin sind Einsätze, GPS-Daten, Stammdaten
+           und Konto-Backups <strong>endgültig fort</strong>. Es gibt danach keinen
+           Weg zurück, auch nicht über die Verwaltung: Deine Daten sind mit deinem
+           Passwort verschlüsselt, und niemand sonst kann sie öffnen.</p>
+        <p class="feld-hinweis"><strong>Willst du sie behalten, leite sie vorher
+           aus</strong> — unter <a href="import.php">Import / Export</a>. Danach ist
+           es zu spät.</p>
+        <form method="post"
+              data-confirm="Konto wirklich zur Löschung anmelden? Es wird sofort gesperrt und nach <?= KONTO_KARENZ_TAGE ?> Tagen endgültig gelöscht. Eine Anmeldung in dieser Zeit nimmt die Löschung zurück."
+              data-confirm-ok="Zur Löschung anmelden">
+          <?= csrf_field() ?><input type="hidden" name="action" value="konto_loeschen">
+          <?php /* DAS PASSWORT ALS NACHWEIS, wie beim Adresswechsel — und
+                   zwar SERVERSEITIG geprueft. Ein offener Rechner in einer
+                   Wache ist der Fall, um den es geht. */ ?>
+          <?php ui_feld(['label' => 'Aktuelles Passwort', 'name' => 'pw_loesch',
+                         'art' => 'password', 'pflicht' => true,
+                         'attr' => ' autocomplete="current-password"']); ?>
+          <div class="listen-form-fuss">
+            <?= ui_knopf(['text' => 'Konto zur Löschung anmelden', 'art' => 'gefahr']) ?>
+          </div>
+        </form>
+      <?php endif; ?>
+    <?php ui_karte_ende(); ?>
 
   <?php elseif ($tab === 'standorte' || $tab === 'standort'): ?>
     <?php

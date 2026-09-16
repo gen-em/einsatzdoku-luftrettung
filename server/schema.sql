@@ -33,10 +33,21 @@ CREATE TABLE users (
   gesperrt_seit  DATETIME NULL,
   gesperrt_grund VARCHAR(64) NULL,                   -- 'selbstloeschung' ist die Karenz (E-P5b-16), sonst freier Grund der Verwaltung
   loeschung_am   DATETIME NULL,                      -- Ende der Loeschkarenz; der Job raeumt danach endgueltig ab
+  -- ADRESSWECHSEL MIT BESTAETIGUNG (P5b/AP5, E-P5b-16). Die ALTE Adresse
+  -- bleibt die gueltige, bis der Klick kommt: Ein Tippfehler in der neuen
+  -- sperrte sonst aus, weil die Anmeldung ueber die Adresse laeuft.
+  -- KEIN UNIQUE auf email_neu — zwei Konten duerfen dieselbe Adresse
+  -- vormerken; erst der Klick entscheidet, und dort faengt das UNIQUE auf
+  -- `email`. Eine Sperre schon beim Vormerken verriete, dass jemand anders
+  -- dieselbe Adresse vorgemerkt hat.
+  email_neu            VARCHAR(190) NULL,
+  email_neu_token_hash CHAR(64) NULL,
+  email_neu_bis        DATETIME NULL,
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   -- Fuer die Verfalljobs, nicht fuer die Anzeige: „alle Konten in einem
   -- Zustand, deren Frist abgelaufen ist" waere sonst ein Vollscan je Joblauf.
-  INDEX idx_status_loeschung (status, loeschung_am)
+  INDEX idx_status_loeschung (status, loeschung_am),
+  INDEX idx_email_neu_token (email_neu_token_hash)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE password_resets (
@@ -780,7 +791,29 @@ CREATE TABLE jobs (
 CREATE TABLE rechtstexte (
   schluessel VARCHAR(32) NOT NULL PRIMARY KEY,  -- 'impressum' | 'datenschutz'
   inhalt     MEDIUMTEXT NULL,                   -- Markdown-Quelle; NULL/leer = nichts hinterlegt
-  stand_am   DATE NULL                          -- im Editor von Hand gesetzt; NULL = keine Standzeile
+  -- DATETIME und nicht DATE (P5b/AP4, Fehlerfund F3): Zwei Aenderungen am
+  -- selben Tag waeren sonst EINE Fassung — und wer die erste angenommen hat,
+  -- gaelte als Annehmer der zweiten. Der Editor bleibt ein Datumsfeld; die
+  -- Uhrzeit setzt der Speicherweg, nicht die Betreiberin.
+  stand_am   DATETIME NULL                      -- im Editor von Hand gesetzt; NULL = keine Standzeile
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- EINWILLIGUNGEN JE KONTO (P5b/AP4, E-P5b-05, -15).
+--
+-- Eine Zeile je Konto UND Schluessel, nicht je Annahme: Eine neue Annahme
+-- ueberschreibt die alte. Der Verlauf „wer hat wann welche Fassung
+-- angenommen" gehoert ins Protokoll (Reiter Verwaltung) und ueberlebt dort
+-- auch die Kontoloeschung.
+--
+-- `stand_am` ist die Fassung, die ANGENOMMEN wurde; der Vergleich gegen
+-- `rechtstexte.stand_am` ist die ganze Pruefung.
+CREATE TABLE konto_einwilligungen (
+  user_id    INT UNSIGNED NOT NULL,
+  schluessel VARCHAR(32) NOT NULL,
+  stand_am   DATETIME NULL,
+  zeit       DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+  PRIMARY KEY (user_id, schluessel),
+  CONSTRAINT fk_kew_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Berichte der Content-Security-Policy (P5a/AP4, Web 20.7.0). Zusammengefasst
@@ -949,4 +982,9 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_09_16_protokoll_ereignisse', 'skipped'),
   -- users.status und die Lebenszyklus-Spalten stehen oben schon im Schema
   -- (Web 20.17.0, P5b/AP2).
-  ('2026_09_16_konto_lebenszyklus', 'skipped');
+  ('2026_09_16_konto_lebenszyklus', 'skipped'),
+  -- rechtstexte.stand_am ist oben schon DATETIME, konto_einwilligungen steht
+  -- oben schon im Schema (Web 20.19.0, P5b/AP4).
+  ('2026_09_16_einwilligungen', 'skipped'),
+  -- users.email_neu* stehen oben schon im Schema (Web 20.20.0, P5b/AP5).
+  ('2026_09_16_adresswechsel_bestaetigt', 'skipped');

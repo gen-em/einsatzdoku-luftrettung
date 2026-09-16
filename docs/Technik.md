@@ -119,6 +119,11 @@ Daten erst nach Server-Bestätigung.
 │   │                       Liste, Einsätze UND Ruhesegmente (4.97b)
 │   ├── jobs.php           Einstieg der Hintergrundjobs: Kommandozeile, Adresse
 │   │                       mit Token, huckepack auf einer Anfrage (4.97a)
+│   ├── einwilligung_lib.php
+│   │                      Welche Rechtstexte dieses Konto noch annehmen oder
+│   │                      zur Kenntnis nehmen muss (P5b/AP4). Zwei sperren
+│   │                      den Login, eine weist nur hin — der Unterschied ist
+│   │                      die Rechtsnatur, nicht der Rang
 │   ├── konto_lib.php      Lebenszyklus eines Kontos: anlegen, Token ausstellen,
 │   │                      Status wechseln, loeschen (P5b/AP2). Die EINE Stelle
 │   │                      fuer vier — Backlog Nr. 202 Paket 1. Laeuft auch
@@ -786,6 +791,7 @@ Daten erst nach Server-Bestätigung.
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
 | `protokoll_ereignisse` | Das **Betriebsprotokoll** (seit Web 20.16.0, P5b/AP1, V1). `reiter` = `verwaltung` / `email` / `jobs` / `sicherung` / `ziele` / `system`, dazu `art` (die maschinelle Kennung, nach der 10c filtert), `urheber_user_id` / `urheber_art`, `betroffen_user_id`, `text` und `daten` (JSON). **Betriebsereignisse, keine Datenzugriffe** — dass jemand einen Einsatz geöffnet, gelesen oder exportiert hat, steht hier nicht und soll hier nicht stehen. **Kein Fremdschlüssel auf `users`**, und das ist der wichtigste Satz dieser Zeile: Der häufigste Verwaltungseintrag ist „Konto gelöscht"; mit CASCADE löschte die Kontolöschung ihren eigenen Eintrag, mit RESTRICT verhinderte der Eintrag die Löschung. `urheber_user_id` ist **`0` und nicht NULL**, wenn kein Mensch gehandelt hat — `urheber_art` sagt, welche Art von Niemand (`cli` / `job`). **Zwei Fristen:** `verwaltung` 365 Tage (einstellbar 90–1095), alle übrigen 30 Tage fest; der Job `aufraeumen` räumt beide in einem Schritt. Siehe 4.99g |
+| `konto_einwilligungen` | Welche Fassung eines Rechtstextes dieses Konto angenommen hat (seit Web 20.19.0, P5b/AP4). `(user_id, schluessel)` als Primärschlüssel — **eine Zeile je Konto und Dokument, nicht je Annahme**; eine neue überschreibt die alte. `stand_am` ist die **angenommene** Fassung, der Vergleich gegen `rechtstexte.stand_am` ist die ganze Prüfung. Der Verlauf steht im Protokoll und überlebt dort die Kontolöschung; `ON DELETE CASCADE` ist hier richtig, weil eine Einwilligung ohne Konto keinen Gegenstand hat. Siehe 4.99j |
 | `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **Die Folge ist benannt:** `komp_tabellen()` zählt seine Tabellen über `SHOW FULL TABLES` und hat keine Ausnahmeliste — diese Tabelle liegt damit in **jeder** Komplettsicherung, und die 30-Tage-Frist gilt in der laufenden Datenbank, nicht im versiegelten Abzug. Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09). **Gelesen wird sie seit Web 20.12.0 über `sicherheit_ereignisse()`** und gezeigt auf Betrieb → Status → Sicherheit (5e.8); geschrieben wird nur an den **fünf Töpfen mit Leiter** — die übrigen neun sperren ohne Protokollzeile |
 | `mail_warteschlange` | Jede ausgehende Nachricht, eine Zeile (seit Web 20.8.0, P5a/AP5). `schluessel` = Eintrag aus `mail_katalog()`, `art` = `konto`/`geraet`/`betrieb` (das wird in P5c der Reiter im Protokoll), `zustand` = `offen` / `zugestellt` / `unzustellbar` / `zu_spaet` / `ueberholt`, `versuche`, `naechster_versuch`, `gueltig_bis` (ein Reset-Link gilt eine Stunde), `fehler` = Grund **samt Kennung**. **Was beim Endzustand geleert wird, hängt vom Zustand ab** (E-P5a-39): `zugestellt`, `zu_spaet` und `ueberholt` verlieren Adresse, Betreff und Rumpf — es bleibt „eine Nachricht dieser Art ging zu dieser Zeit hinaus". Bei `unzustellbar` **bleibt die Adresse stehen**, weil „die Einladung an X kam nie an" ohne X wertlos ist; der Rumpf fällt trotzdem, wegen des Tokens darin. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `job_laeufe` | Verlauf der Hintergrundjobs (seit Web 20.8.0), eine Zeile je Lauf, der etwas getan hat oder scheiterte — ein Leerlauf schreibt nichts, sonst füllte sich die Tabelle mit Nichts. `job`, `zeitpunkt`, `ausloeser`, `erledigt`, `fehler`. Der Job `aufraeumen` löscht nach 30 Tagen |
@@ -3253,6 +3259,7 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 
 | Job | täglich? | was er tut |
 |---|---|---|
+| `konto_loeschung` | nein | Konten, deren 30-Tage-Karenz abgelaufen ist, endgültig löschen (P5b/AP5, E-P5b-16) — **höchstens fünf je Lauf**, weil eine Löschung die Spuren von Hand räumt, einen Ordner im Dateisystem löscht und über vierzehn Tabellen kaskadiert. Steht weit vorn: im Regelfall eine Abfrage über einen Index, und wenn er etwas zu tun hat, ist es das, worauf jemand ein Recht hat |
 | `aufraeumen` | ja, höchstens 1×/Kalendertag | **dreizehn Schritte** — verfallene Kopplungssitzungen, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speichermessung und Warnschwellen. **Maßgeblich ist `job_aufraeumen()`, nicht diese Zeile** — sie nannte bis Web 20.12.0 sechs von zwölf, und die fehlenden sechs sind zwischen S10 und P5a/AP7 dazugekommen, ohne dass es jemandem auffiel. Die **sichtbare** Beschreibung steht im Job-Katalog (`jobs_lib.php`) und ist mitzuführen |
 | `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
 | `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
@@ -6498,6 +6505,145 @@ jemand die Einträge auch lesen kann.
 Zählkarte (Einträge je Reiter, heute und gesamt) — mehr nicht. Die Reiter mit
 Filter, Archiv und Download hängen an Entscheidungen (V4, V5, V8, V9), die
 noch nicht gefallen sind.
+
+### 4.99k Selbstlöschung und Adresswechsel (ab Web 20.20.0, P5b/AP5)
+
+*E-P5b-16. Code: `server/konto_lib.php`, `server/adresse_bestaetigen.php`,
+Job `konto_loeschung`.*
+
+#### Der Adresswechsel geht über die neue Adresse
+
+| | bis Web 20.19.0 | seit 20.20.0 |
+|---|---|---|
+| Schreiben | **sofort** | erst beim Klick |
+| Prüfung der neuen Adresse | **keine** | Link, 24 h |
+| Nachricht an die alte | Hinweis | Hinweis (unverändert) |
+| Nachweis | Passwort-Token | Passwort-Token (unverändert) |
+
+**Ein Tippfehler sperrte aus.** Die Anmeldung läuft über die Adresse, und
+„Passwort vergessen" schickt an eine Adresse, die es nicht gibt — der Weg
+zurück führte über die Verwaltung oder, auf einer Einzelinstallation, über die
+Datenbank.
+
+**Kein `UNIQUE` auf `email_neu`.** Zwei Konten dürfen dieselbe Adresse
+vormerken; erst der Klick entscheidet, und dort fängt das `UNIQUE` auf `email`.
+Eine Sperre schon beim Vormerken verriete, dass jemand anders dieselbe Adresse
+vorgemerkt hat.
+
+**Der Token steht nicht in `password_resets`.** Er gehört zu einer Adresse,
+nicht zu einem Passwort; dort wäre er ein zweiter Tokentyp in einer Tabelle,
+deren Regel „höchstens ein gültiger je Konto" lautet — ein Adresswechsel würde
+dann einen offenen Einladungslink entwerten.
+
+**`adresse_bestaetigen.php` läuft ohne Anmeldung**, und das ist der Zweck: Wer
+den Link hat, hat Zugang zum Postfach der neuen Adresse — genau das ist der
+Nachweis. Eine Anmeldung wäre gerade dann unmöglich, wenn sie am meisten hülfe.
+
+#### Die Selbstlöschung
+
+`gesperrt` mit dem Grund `selbstloeschung`, `loeschung_am` = jetzt + **30
+Tage**. **Die Rücknahme ist die Anmeldung** — `login.php` setzt den Status
+zurück, ohne dass es einen Knopf braucht.
+
+**Warum kein eigener Rücknahmeweg:** Ein Link in der Mail, der etwas anderes
+tut als anmelden, wäre ein zweiter Weg mit eigenem Token und eigener Frist —
+und er müsste ohne Passwort wirken, sonst braucht man ohnehin die Anmeldung.
+Ein Rückzug ohne Passwort ist aber genau das, was ein Angreifer wollte, der
+die Löschung verhindern will, um weiter mitzulesen.
+
+**Der Job löscht höchstens fünf je Lauf.** Eine Kontolöschung räumt die Spuren
+von Hand (die Kaskade erreicht sie nicht), löscht den Backup-Ordner im
+Dateisystem und kaskadiert über vierzehn Tabellen. Das Huckepack-Budget sind
+drei Sekunden für **alle** Jobs zusammen; einen Tag später zu löschen ist kein
+Zusagenbruch, eine hängende Anfrage schon.
+
+**Er steht weit vorn im Katalog**, gleich hinter dem Aufräumen: Im Regelfall
+hat er nichts zu tun (eine Abfrage über einen Index), und wenn doch, ist es
+das, worauf jemand ein Recht hat.
+
+#### Das Protokoll nennt beim Wechsel keine Adressen
+
+Nur die Kontonummer und dass gewechselt wurde. Ein Audit, in dem jede je
+benutzte Adresse eines Kontos steht, ist ein Verzeichnis von Adressen und
+nicht eines von Handlungen. Nachgemessen: Der Eintrag enthält kein `@`.
+
+Beim **Löschen** stehen Adresse und Termin dagegen im Eintrag — dort ist die
+Adresse der einzige Anhalt, der die Löschung überhaupt noch nachvollziehbar
+macht, und die Zeile überlebt das Konto.
+
+### 4.99j Einwilligungen (ab Web 20.19.0, P5b/AP4)
+
+*E-P5b-05, -15. Code: `server/einwilligung_lib.php`, `server/einwilligung.php`,
+Tabelle `konto_einwilligungen`.*
+
+#### Vier Rechtstexte, drei mit Einwilligung
+
+| Schlüssel | Seite | Einwilligung | Wirkung bei neuer Fassung |
+|---|---|---|---|
+| `impressum` | `impressum.php` | **keine** | — |
+| `datenschutz` | `datenschutz.php` | „zur Kenntnis genommen" | Hinweis auf jeder Seite |
+| `nutzungsbedingungen` | `nutzungsbedingungen.php` | „angenommen" | **sperrt den Login** |
+| `avv` | `avv.php` | „angenommen" | **sperrt den Login** |
+
+**Der Unterschied ist die Rechtsnatur, nicht der Rang.** Ein Vertrag kommt
+durch Annahme zustande und darf ohne sie nicht weiterlaufen. Eine
+Datenschutzerklärung informiert; Widerspruch dagegen ist kein
+Vertragsschluss, sondern ein Recht. Sie darf den Zugang nicht sperren — muss
+aber auffallen, sonst ist die Kenntnisnahme eine Behauptung.
+
+**Das Impressum steht bewusst nicht in der Reihe.** Es wird weder angenommen
+noch zur Kenntnis genommen; es ist eine Pflichtangabe. `RT_EINWILLIGUNG` sagt,
+welche der vier eine Einwilligung verlangen.
+
+#### Was „aktuelle Fassung" heißt
+
+`rechtstexte.stand_am`, und seit AP4 ist das ein **`DATETIME`** und kein
+`DATE` mehr — der Fehlerfund F3 des Konzepts: Zwei Änderungen am selben Tag
+wären sonst *eine* Fassung, und wer die erste angenommen hat, gälte als
+Annehmer der zweiten. Der Editor bleibt ein Datumsfeld; die Uhrzeit setzt der
+Speicherweg.
+
+`konto_einwilligungen.stand_am` hält, **welche** Fassung angenommen wurde. Der
+Vergleich der beiden ist die ganze Prüfung.
+
+**Ein Text ohne Standdatum verlangt nichts.** Sonst sperrte ein leer
+angelegter Platzhalter alle Konten aus — genau der Zustand zwischen dem
+Einspielen der Mechanik (AP4) und dem Einspielen der geprüften Texte (R41).
+
+#### Das Tor
+
+`auth_guard.php` leitet auf `einwilligung.php`, solange eine Annahme fehlt.
+**Drei Wege bleiben offen — Abmelden, Export, Konto löschen.** Wer nicht
+zustimmen will, muss an seine Daten kommen und gehen können; ein Tor, das auch
+den Ausgang versperrt, wäre Nötigung. Die Ausnahmeliste steht in
+`auth_guard.php` neben dem Tor, nicht in einer Konstante: Sie gehört dazu und
+wird mit ihm gelesen.
+
+**API und `ingest.php` bleiben unberührt.** Die Uhr fragt niemanden um
+Zustimmung — sie hat keinen Bildschirm dafür, und ihre Besitzerin hat der
+Nutzung zugestimmt, als sie das Gerät gekoppelt hat. Ein Tor vor `api/day.php`
+ließe eine laufende Aufzeichnung ins Leere laufen.
+
+#### Eine Zeile je Konto und Schlüssel, nicht je Annahme
+
+Der Primärschlüssel ist `(user_id, schluessel)`; eine neue Annahme
+überschreibt die alte. Der Verlauf — wer wann welche Fassung angenommen hat —
+steht im **Protokoll** (Reiter Verwaltung) und überlebt dort auch die
+Kontolöschung. Die Tabelle beantwortet nur die eine Frage, die bei jedem
+Seitenaufbau gestellt wird: *Liegt die aktuelle Fassung vor?*
+
+`ON DELETE CASCADE` ist hier — anders als beim Protokoll — richtig: Eine
+Einwilligung ist eine Aussage **über** das Konto; ohne Konto hat sie keinen
+Gegenstand.
+
+#### Der Leerzustand kommt aus einem Katalog
+
+In `rechtstext_seite.php` stand er als *zweiwertiger* ternärer Ausdruck. Das
+war die eine Stelle, an der ein dritter Schlüssel **stillschweigend falsch**
+geantwortet hätte: Die Nutzungsbedingungen hätten gemeldet, es sei „noch keine
+Datenschutzerklärung hinterlegt". Kein Fehler, keine Meldung — nur ein
+falscher Satz. `RT_LEERTEXT` kann das nicht: Ein fehlender Eintrag fällt beim
+Nachsehen auf, ein falscher Zweig nicht.
 
 ### 4.99i Der Lebenszyklus eines Kontos (ab Web 20.17.0, P5b/AP2)
 

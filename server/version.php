@@ -5698,4 +5698,87 @@ declare(strict_types=1);
  *
  * KEINE MIGRATION — die Einstellung steht seit 20.16.0 in `app_state`.
  */
-const WEB_VERSION = '20.18.0';
+/* ---------------------------------------------------------------------------
+ * 20.19.0 — EINWILLIGUNGEN (P5b/AP4, E-P5b-05, -15)
+ * ---------------------------------------------------------------------------
+ *
+ * VIER RECHTSTEXTE STATT ZWEI. Nutzungsbedingungen und die Vereinbarung zur
+ * Auftragsverarbeitung kommen dazu; `nutzungsbedingungen.php` und `avv.php`
+ * sind zwei Zeilen nach dem Muster von `impressum.php`.
+ *
+ * DREI HAEKCHEN, ZWEI WIRKUNGEN, und der Unterschied ist kein Rang, sondern
+ * die Rechtsnatur: Ein Vertrag kommt durch ANNAHME zustande und darf ohne sie
+ * nicht weiterlaufen — deshalb sperren Nutzungsbedingungen und AVV den
+ * naechsten Login. Eine Datenschutzerklaerung informiert; Widerspruch dagegen
+ * ist kein Vertragsschluss, sondern ein Recht — deshalb zeigt sie nur einen
+ * Hinweis. Der Wortlaut traegt das („angenommen" gegen „zur Kenntnis
+ * genommen") und steht im Katalog `RT_EINWILLIGUNG`, nicht im Markup.
+ *
+ * DREI WEGE BLEIBEN AM TOR OFFEN: Abmelden, Export, Konto loeschen. Wer nicht
+ * zustimmen will, muss an seine Daten kommen und gehen koennen; ein Tor, das
+ * auch den Ausgang versperrt, waere Noetigung.
+ *
+ * `stand_am` WIRD DATETIME (Fehlerfund F3 des Konzepts). Es war `DATE` —
+ * zwei Aenderungen am selben Tag waeren EINE Fassung gewesen, und wer die
+ * erste angenommen hat, gaelte als Annehmer der zweiten. Nachgemessen: Nach
+ * der Umstellung sperrt eine zweite Fassung am selben Tag erneut.
+ *
+ * EIN TEXT OHNE STANDDATUM VERLANGT NICHTS. Sonst sperrte ein leer
+ * angelegter Platzhalter alle Konten aus — genau der Zustand zwischen dem
+ * Einspielen der Mechanik und dem Einspielen der geprueften Texte (R41).
+ *
+ * `ingest.php` UND DIE API BLEIBEN UNBERUEHRT. Die Uhr fragt niemanden um
+ * Zustimmung; ein Tor davor liesse eine laufende Aufzeichnung ins Leere
+ * laufen, ohne dass irgendwo jemand einen Haken setzen koennte. Gemessen:
+ * Ingestprobe 83 Erwartungen, 0 Fehlschlaege, bei leerer
+ * `konto_einwilligungen`.
+ *
+ * NEBENBEI BEHOBEN: In `rechtstext_seite.php` stand der Leerzustandstext als
+ * ZWEIWERTIGER ternaerer Ausdruck — ein dritter Schluessel haette gemeldet,
+ * es sei „noch keine Datenschutzerklaerung hinterlegt". Kein Fehler, keine
+ * Meldung, nur ein falscher Satz. Jetzt ein Katalog (`RT_LEERTEXT`).
+ *
+ * MIGRATION: `2026_09_16_einwilligungen`. `update.php` ist faellig.
+ */
+/* ---------------------------------------------------------------------------
+ * 20.20.0 — SELBSTLOESCHUNG MIT KARENZ, ADRESSWECHSEL MIT BESTAETIGUNG
+ * ---------------------------------------------------------------------------
+ *
+ * P5b/AP5, E-P5b-16.
+ *
+ * DIE ADRESSE WIRD NICHT MEHR SOFORT GESCHRIEBEN. Bis Web 20.19.0 stand sie
+ * unmittelbar in der Zeile — mit Passwortnachweis und einer Hinweismail an
+ * die alte, aber OHNE jede Pruefung, ob die neue ueberhaupt erreichbar ist.
+ * **Ein Tippfehler sperrte damit aus**: Die Anmeldung laeuft ueber die
+ * Adresse, und „Passwort vergessen" schickt an eine Adresse, die es nicht
+ * gibt. Jetzt geht ein Link an die NEUE Adresse (24 h), eine Warnung an die
+ * ALTE, und **die alte bleibt die gueltige, bis der Klick kommt**.
+ *
+ * KEIN UNIQUE AUF `email_neu`. Zwei Konten duerfen dieselbe Adresse
+ * vormerken; erst der Klick entscheidet, und dort faengt das UNIQUE auf
+ * `email`. Eine Sperre schon beim Vormerken verriete, dass jemand anders
+ * dieselbe Adresse vorgemerkt hat.
+ *
+ * SELBSTLOESCHUNG MIT DREISSIG TAGEN KARENZ, und **die Ruecknahme ist die
+ * ANMELDUNG** — kein Knopf, kein zweiter Link, kein zweites Token. Ein
+ * Ruecknahmeweg ohne Passwort waere genau das, was ein Angreifer wollte, der
+ * die Loeschung verhindern will, um weiter mitzulesen.
+ *
+ * ENTSPERREN RAEUMT DEN TERMIN MIT WEG (schon seit 20.17.0) — ohne das faende
+ * der Job einen Termin in der Vergangenheit und loeschte ein Konto, dessen
+ * Besitzerin die Loeschung gerade zurueckgenommen hat.
+ *
+ * DER JOB LOESCHT HOECHSTENS FUENF JE LAUF. Eine Kontoloeschung raeumt die
+ * Spuren von Hand, loescht einen Ordner im Dateisystem und kaskadiert ueber
+ * vierzehn Tabellen; das Huckepack-Budget sind drei Sekunden fuer ALLE Jobs.
+ * Einen Tag spaeter zu loeschen ist kein Zusagenbruch, eine haengende
+ * Anfrage schon.
+ *
+ * DAS PROTOKOLL NENNT KEINE ADRESSEN beim Wechsel — nur die Kontonummer und
+ * dass gewechselt wurde. Ein Audit, in dem jede je benutzte Adresse eines
+ * Kontos steht, ist ein Verzeichnis von Adressen und nicht eines von
+ * Handlungen. Gemessen: der Eintrag enthaelt kein `@`.
+ *
+ * MIGRATION: `2026_09_16_adresswechsel_bestaetigt`. `update.php` ist faellig.
+ */
+const WEB_VERSION = '20.20.0';

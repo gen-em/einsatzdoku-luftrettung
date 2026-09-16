@@ -13,10 +13,10 @@ abgehakt ist, und wird dann gelöscht (`CLAUDE.md` 7).
 | **AP1** Protokoll-Schreibweg und Einstellungen | **erledigt** | **20.16.0** |
 | **AP2** Lebenszyklus-Bibliothek | **erledigt** | **20.17.0** |
 | AP3 Registrierung | **wartet auf M-P5b-02** | — |
-| AP4 Einwilligungen | offen | — |
-| AP5 Selbstlöschung, E-Mail-Wechsel | offen | — |
+| **AP4** Einwilligungen | **erledigt** | **20.19.0** |
+| **AP5** Selbstlöschung, E-Mail-Wechsel | **erledigt** | **20.20.0** |
 | AP6 Mengengrenze, SHA-256 | offen | — |
-| AP7 Demo-Anmeldung | offen | — |
+| **AP7** Demo-Anmeldung | **erledigt** | **20.18.0** |
 | AP8 Handbuch-Seiten | **wartet auf M-P5b-01** | — |
 | AP9 Onboarding, Rückfragen | **wartet auf M-P5b-02** | — |
 | AP10 Abschluss | offen | — |
@@ -133,7 +133,15 @@ Umbau der Ladekette wieder auf.
 | **Uhr verliert nichts** (Abnahme AP2) | AP2 | Ein während der Sperre abgewiesener Upload, nach dem Entsperren erneut gesendet: **2 Einsätze im Konto** (erwartet 2) — Punkte vorher = nachher | **bestanden** |
 | **Ratenschutz zählt die Absage nicht** | AP2 | 5 Uploads mit gesperrtem Konto → **0 Zeilen** in `rate_limits`. Wichtig, weil eine Sperre der Kennung den Rückstand nach dem Entsperren blockierte | **bestanden** |
 | **Ingestprobe** (Regression) | AP2 | **83 Erwartungen, 0 nicht erfüllt** — die Statusprüfung hat den Ingest-Weg nicht verändert | **bestanden** |
-| **Wortliste** | AP1, AP2 | **alle fünf Bereiche**: (a) 111 PHP-Dateien, (b) 36 JS, (c) 8 Dokumente, (d) 2 Android, (e) 35 Uhr — **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 99 Regeln | — |
+| **Demo-Anmeldung aus** (Abnahme AP7) | AP7 | **Im Browser gemessen** (nicht mit curl — ohne die dort abgeleiteten Token scheitert jede Anmeldung): Demo mit **richtigem** Passwort 1241 ms, Demo mit falschem 1270 ms, erfundene Adresse 1263 ms; alle drei **dieselbe Meldung**, Spanne **29 ms** (Soll < 50). Das Adminkonto meldet sich in derselben Lage normal an | **bestanden** |
+| Einwilligung: sechs Fälle (Abnahme AP4) | AP4 | leer → verlangt nichts · Text ohne Standdatum → verlangt nichts · mit Standdatum → **2 sperren, 1 weist hin** · nach drei Häkchen → frei · **zweite Fassung am selben Tag sperrt erneut** (F3) · neue Datenschutzerklärung sperrt nicht | **6 von 6 bestanden** |
+| **Das Tor im Browser** (Abnahme AP4) | AP4 | Anmeldung → `/einwilligung.php`; `suche.php` → zurück ans Tor; **`import.php` bleibt offen**; 3 Häkchen; nach dem Absenden → `/index.php`; danach `suche.php` frei | **bestanden** |
+| **`ingest.php` unberührt vom Tor** (Abnahme AP4) | AP4 | Ingestprobe bei **leerer** `konto_einwilligungen` (alle Konten am Tor): **83 Erwartungen, 0 nicht erfüllt** | **bestanden** |
+| `tools/rechtstexte/pruefen.php` | AP4 | **81 Proben, 0 fehlgeschlagen**, dazu 65 Ausgaben gegen die Tag- und Attributliste — mit den zwei neuen Schlüsseln unverändert grün | **bestanden** |
+| **Karenz und Löschung** (Abnahme AP5) | AP5 | Antrag → `gesperrt`/`selbstloeschung`, Termin **30,0 Tage**; noch nicht fällig → 0 Konten; **Rückzug → Bestand unverändert** (bases 1, days 1 vorher wie nachher); Uhr vorgestellt → Job löscht 1, **Kaskade räumt alle Reste** | **bestanden** |
+| **Adresswechsel** (Abnahme AP5) | AP5 | Vormerken → **alte Adresse gilt weiter**, Frist 24,0 h; falscher Token ändert nichts; richtiger Token wechselt und räumt die Vormerkung; **zweiter Klick auf denselben Token** wird abgewiesen; **belegte Adresse** wird beim Klick abgewiesen, alte bleibt | **6 von 6 bestanden** |
+| **Protokoll ohne Adressen** (E-P5b-16) | AP5 | Der Eintrag `adresse_geaendert` enthält **kein `@`** | **bestanden** |
+| **Wortliste** | AP1, AP2, AP4, AP5, AP7 | **alle fünf Bereiche**: (a) 111 PHP-Dateien, (b) 36 JS, (c) 8 Dokumente, (d) 2 Android, (e) 35 Uhr — **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 99 Regeln | — |
 
 ---
 
@@ -156,6 +164,22 @@ standen Backticks um einen Dateinamen — sichtbarer Text geht durch `ui_e()`,
 die Zeichen wären als Literal erschienen. Ersetzt durch eine Formulierung
 ohne Dateinamen.
 
+**Beim Bilderlauf aufgefallen und behoben:** Steht ein Rechtstext in Kraft und
+hat das Prüfkonto nicht zugestimmt, landet **jede** Aufnahme auf
+`einwilligung.php` statt auf der Seite, die gemessen werden soll. Der Lauf
+meldete es selbst („OHNE BILD: 32 Aufnahmen — 32× Seite leitete auf die
+Anmeldung um", dazu 52 Konsolenfehler in Firefox), aber die nächste Instanz
+hätte davor gestanden wie vor einem Rätsel. `aufnehmen.mjs` klickt das Tor
+jetzt durch — **geklickt und nicht übergangen**: Das Tor ist echtes Verhalten
+der Anwendung, und ein Bilderlauf, der es aushebelte, misste eine Anwendung,
+die es so nicht gibt.
+
+**Ebenfalls aufgefallen:** Nach dem Eintragen einer Migration, die noch nicht
+gelaufen ist, schaltet der Torwächter den **Wartungsmodus** ein — die
+Demo-Anmeldung scheitert dann mit „NAdoku wird gerade aktualisiert". Das ist
+korrektes Verhalten (P5a/AP3) und kein Fehler; es steht hier, weil es beim
+Prüfen zweimal wie einer aussah.
+
 **AP2 — Verwaltung → Kontoseite.** Die Karte „Status" steht zwischen „Konto"
 und „Geräte", trägt die Plakette des Zustands (blau/orange/rot) und zeigt je
 nach Zustand einen anderen Weg: „Freischalten" bei *wartet*, „Entsperren" bei
@@ -163,6 +187,17 @@ nach Zustand einen anderen Weg: „Freischalten" bei *wartet*, „Entsperren" be
 und beim Demo-Konto steht statt dessen der Satz, warum es hier nicht geht.
 
 ---
+
+## 4a. Was das Konzept anders beschrieb, als es ist
+
+Drei Stellen, an denen die Bestandsaufnahme das Konzept berichtigt hat. Sie
+stehen hier, weil sie beim nächsten Lesen sonst wieder Verwirrung stiften.
+
+| Konzept sagt | Tatsächlich | Folge |
+|---|---|---|
+| 1.5: „Die Anmeldeseite hat keine Fußzeile mit Verweisen" | Sie **hat** eine — `ui_fuss_seite(['dunkel' => true])` mit Impressum und Datenschutz | AP8 **ergänzt** die Fußzeile um zwei Verweise, statt eine zu bauen |
+| 1.2 und E-P5b-15 nennen `admin_rechtstexte.php` als Editor | Die Datei ist seit S8/AP3 eine 19-zeilige Weiterleitung; der Editor steht in **`admin_installation.php`** | Der Protokolleintrag bei Textänderung sitzt dort |
+| E-P5b-11: „alle vier Token-Stellen ziehen um" | Stimmt — aber `install.php` läuft **ohne `config.php`** und mit eigener PDO-Verbindung | `konto_lib.php` lädt `db.php` bedingt und nimmt ein `?PDO`; ohne das wäre `install.php` als fünfte Fassung stehengeblieben |
 
 ## 5. Prüfliste für die Betreiberin
 

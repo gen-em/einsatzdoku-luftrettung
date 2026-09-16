@@ -235,6 +235,47 @@ if ($kontoStatus === 'unbestaetigt' || $kontoStatus === 'wartet') {
     sitzung_beenden_passend('gesperrt');
 }
 
+/* ---- Das Einwilligungstor (P5b/AP4, E-P5b-05, -15) -----------------------
+ *
+ * WAS ES SPERRT UND WAS NICHT. Fehlt die Annahme der aktuellen Fassung von
+ * Nutzungsbedingungen oder Auftragsverarbeitung, fuehrt jeder Weg auf
+ * `einwilligung.php`. Fehlt nur die Kenntnisnahme der Datenschutzerklaerung,
+ * steht ein Hinweis oben auf jeder Seite und sonst nichts — der Unterschied
+ * ist kein Rang, sondern die Rechtsnatur (siehe `einwilligung_lib.php`).
+ *
+ * DREI WEGE BLEIBEN OFFEN, und das ist Teil der Entscheidung (E-P5b-05):
+ * Abmelden, Export, Konto loeschen. Wer nicht zustimmen will, muss an seine
+ * Daten kommen und gehen koennen; ein Tor, das auch den Ausgang versperrt,
+ * waere Noetigung.
+ *
+ * API UND `ingest.php` BLEIBEN UNBERUEHRT. Die Uhr fragt niemanden um
+ * Zustimmung — sie hat keinen Bildschirm dafuer, und ihre Besitzerin hat der
+ * Nutzung zugestimmt, als sie das Geraet gekoppelt hat. Ein Tor vor
+ * `api/day.php` liesse eine laufende Aufzeichnung ins Leere laufen, ohne
+ * dass irgendwo jemand einen Haken setzen koennte.
+ *
+ * DIE STELLE: nach dem Kontostatus (ein gesperrtes Konto ist schon draussen)
+ * und vor der Rolle (das Tor gilt fuer alle, auch fuer die Verwaltung —
+ * gerade sie soll die Texte gelesen haben, die sie hinterlegt).
+ */
+$einwilligungOffen = ['sperrt' => [], 'hinweis' => []];
+if (!ist_api_aufruf()) {
+    require_once __DIR__ . '/einwilligung_lib.php';
+    $einwilligungOffen = einwilligung_offen($userId);
+
+    if ($einwilligungOffen['sperrt']) {
+        $hier = basename((string)($_SERVER['SCRIPT_NAME'] ?? ''));
+        /* Die Ausnahmeliste ist kurz und steht hier, nicht in einer
+         * Konstante: Sie gehoert zum Tor und wird mit ihm gelesen. */
+        $offen = ['einwilligung.php', 'logout.php', 'import.php',
+                  'export.php', 'einstellungen.php'];
+        if (!in_array($hier, $offen, true)) {
+            header('Location: einwilligung.php');
+            exit;
+        }
+    }
+}
+
 /* ---- Rolle: aus der Zeile, nicht aus der Sitzung -------------------------- */
 $userRole = rolle_normieren($row['role'] ?? null);
 

@@ -233,6 +233,38 @@ function mail_katalog(): array
                 . "einzige, die im Missbrauchsfall noch dir gehört."),
         ],
 
+        /* DIE DREI NACHRICHTEN DES KONTO-LEBENSZYKLUS (P5b/AP5, E-P5b-16). */
+
+        'adresse_bestaetigen' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link', 'alt'],
+            'betreff' => fn(array $d): string => 'Neue Anmeldeadresse bestätigen — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "für deinen Zugang zur " . $n . " soll diese Adresse die neue\n"
+                . "Anmeldeadresse werden. Bisher ist es " . $d['alt'] . ".\n\n"
+                . "Bestätige den Wechsel hier:\n\n"
+                . "  " . $d['link'] . "\n\n"
+                . "Der Link gilt 24 Stunden. Bis zum Klick bleibt die bisherige Adresse\n"
+                . "die gültige — du kannst dich also weiter wie gewohnt anmelden.",
+                "HAST DU DAS NICHT VERANLASST, tu nichts. Ohne Klick ändert sich nichts,\n"
+                . "und ohne Zugang zu diesem Postfach kommt niemand an deinen Zugang.")
+        ],
+
+        'loeschung_beantragt' => [
+            'art' => 'konto', 'frist' => null, 'pflicht' => ['termin', 'link'],
+            'betreff' => fn(array $d): string => 'Löschung deines Zugangs — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "du hast die Löschung deines Zugangs zur " . $n . " beantragt.\n\n"
+                . "  Endgültig gelöscht wird am: " . $d['termin'] . "\n\n"
+                . "Bis dahin ist der Zugang gesperrt, aber nichts ist fort. **Melde dich\n"
+                . "einfach an, und die Löschung ist zurückgenommen** — ein eigener Knopf\n"
+                . "dafür ist nicht nötig:\n\n"
+                . "  " . $d['link'] . "\n\n"
+                . "Nach dem Termin sind deine Einsätze, GPS-Daten und Stammdaten endgültig\n"
+                . "fort. Es gibt danach keinen Weg zurück — auch nicht über die\n"
+                . "Verwaltung, denn deine Daten sind mit deinem Passwort verschlüsselt.",
+                "WOLLTEST DU DAS NICHT, melde dich an. Das genügt.")
+        ],
+
         'geraet_gekoppelt' => [
             'art' => 'geraet', 'frist' => null,
             'pflicht' => ['geraet', 'geraet_id', 'zeitpunkt'],

@@ -321,6 +321,160 @@ function konto_status_text(string $status, ?string $grund = null): string
     };
 }
 
+/* ---- Adresswechsel mit Bestaetigung (E-P5b-16) --------------------------- */
+
+/** Laufzeit des Bestaetigungslinks fuer eine neue Adresse: 24 Stunden. */
+const TOKEN_ADRESSE_S = 86400;
+
+/**
+ * Eine neue Anmeldeadresse vormerken und den Bestaetigungslink ausstellen.
+ *
+ * **Die alte bleibt die gueltige, bis der Klick kommt.** Bis Web 20.19.0
+ * schrieb `einstellungen.php` die neue Adresse sofort — mit Passwortnachweis
+ * und Hinweismail an die alte, aber ohne jede Pruefung, ob die neue
+ * ueberhaupt erreichbar ist. Ein Tippfehler sperrte damit aus: Die Anmeldung
+ * laeuft ueber die Adresse, und „Passwort vergessen" schickt an eine
+ * Adresse, die es nicht gibt.
+ *
+ * @return string der KLARTEXT-Token fuer den Link
+ */
+function adresse_vormerken(int $userId, string $neueAdresse): string
+{
+    $token = bin2hex(random_bytes(32));
+    db()->prepare('UPDATE users
+                      SET email_neu = ?, email_neu_token_hash = ?,
+                          email_neu_bis = DATE_ADD(NOW(), INTERVAL ? SECOND)
+                    WHERE id = ?')
+        ->execute([$neueAdresse, hash('sha256', $token), TOKEN_ADRESSE_S, $userId]);
+    return $token;
+}
+
+/**
+ * Einen Bestaetigungslink einloesen.
+ *
+ * @return array{ok:bool, grund:string, alt:string, neu:string}
+ *
+ * DER ZWEITE, DER DIESELBE ADRESSE VORGEMERKT HAT, SCHEITERT HIER — und das
+ * ist die richtige Stelle: `email_neu` traegt bewusst KEIN UNIQUE, weil eine
+ * Sperre beim Vormerken verraten haette, dass jemand anders dieselbe Adresse
+ * vorgemerkt hat. Das UNIQUE auf `email` faengt es beim Klick, und dann ist
+ * die Auskunft „diese Adresse wird bereits verwendet" auch wahr.
+ */
+function adresse_bestaetigen(string $token): array
+{
+    $pdo = db();
+
+    $st = $pdo->prepare('SELECT id, email, email_neu FROM users
+                          WHERE email_neu_token_hash = ?
+                            AND email_neu_bis > NOW()
+                            AND email_neu IS NOT NULL');
+    $st->execute([hash('sha256', $token)]);
+    $z = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$z) {
+        return ['ok' => false, 'alt' => '', 'neu' => '',
+                'grund' => 'Dieser Link ist abgelaufen oder wurde schon benutzt. '
+                         . 'Stelle den Wechsel in den Einstellungen noch einmal.'];
+    }
+
+    $alt = (string)$z['email'];
+    $neu = (string)$z['email_neu'];
+
+    try {
+        $pdo->prepare('UPDATE users
+                          SET email = ?, email_neu = NULL,
+                              email_neu_token_hash = NULL, email_neu_bis = NULL
+                        WHERE id = ?')->execute([$neu, (int)$z['id']]);
+    } catch (PDOException $ex) {
+        if (ist_dublettenfehler($ex)) {
+            /* Die Vormerkung bleibt stehen: Vielleicht wird die andere
+             * Adresse frei, und dann genuegt ein zweiter Klick auf denselben
+             * Link — solange er gilt. */
+            return ['ok' => false, 'alt' => $alt, 'neu' => $neu,
+                    'grund' => 'Diese E-Mail-Adresse wird inzwischen von einem anderen '
+                             . 'Konto verwendet. Die Adresse wurde nicht geändert.'];
+        }
+        throw $ex;
+    }
+
+    /* OHNE ADRESSEN IM TEXT (E-P5b-16). Das Protokoll haelt, DASS gewechselt
+     * wurde, und die Kontonummer — nicht die beiden Adressen. Ein Audit, in
+     * dem jede je benutzte Adresse eines Kontos steht, ist ein Verzeichnis
+     * von Adressen und nicht ein Verzeichnis von Handlungen. */
+    protokoll('verwaltung', 'adresse_geaendert',
+              'Anmeldeadresse geändert (bestätigt über den Link an die neue Adresse)',
+              [], (int)$z['id']);
+
+    return ['ok' => true, 'grund' => '', 'alt' => $alt, 'neu' => $neu];
+}
+
+/** Eine vorgemerkte Adresse verwerfen (Abbruch durch die Nutzerin). */
+function adresse_vormerkung_loeschen(int $userId): void
+{
+    db()->prepare('UPDATE users SET email_neu = NULL, email_neu_token_hash = NULL,
+                          email_neu_bis = NULL WHERE id = ?')->execute([$userId]);
+}
+
+/* ---- Selbstloeschung mit Karenz (E-P5b-16) ------------------------------- */
+
+/** Karenz zwischen Antrag und endgueltiger Loeschung, in Tagen. */
+const KONTO_KARENZ_TAGE = 30;
+
+/**
+ * Die Loeschung des eigenen Kontos beantragen.
+ *
+ * Das Konto geht auf `gesperrt` mit dem Grund `selbstloeschung`, und
+ * `loeschung_am` traegt den Termin. **Die Anmeldung ist der Rueckzug** —
+ * `login.php` nimmt sie zurueck, ohne dass es dafuer einen Knopf braucht.
+ *
+ * WARUM KEIN EIGENER RUECKNAHMEWEG: Ein Link in der Mail, der etwas anderes
+ * tut als anmelden, waere ein zweiter Weg mit eigenem Token und eigener
+ * Frist — und er muesste ohne Passwort wirken, sonst braucht man ohnehin die
+ * Anmeldung. Ein Rueckzug ohne Passwort ist aber genau das, was ein
+ * Angreifer wollte, der die Loeschung verhindern will, um weiter mitzulesen.
+ *
+ * @return string der Termin als `Y-m-d H:i:s` (UTC)
+ */
+function konto_loeschung_beantragen(int $userId): string
+{
+    $pdo = db();
+    $pdo->prepare('UPDATE users
+                      SET status = "gesperrt", gesperrt_seit = NOW(),
+                          gesperrt_grund = ?,
+                          loeschung_am = DATE_ADD(NOW(), INTERVAL ? DAY)
+                    WHERE id = ?')
+        ->execute([KONTO_SPERRGRUND_SELBSTLOESCHUNG, KONTO_KARENZ_TAGE, $userId]);
+
+    $st = $pdo->prepare('SELECT loeschung_am, email FROM users WHERE id = ?');
+    $st->execute([$userId]);
+    $z = $st->fetch(PDO::FETCH_ASSOC) ?: ['loeschung_am' => null, 'email' => ''];
+
+    protokoll('verwaltung', 'loeschung_beantragt',
+              'Konto ' . $z['email'] . ' zur Löschung angemeldet, Termin '
+            . (string)$z['loeschung_am'],
+              ['termin' => $z['loeschung_am']], $userId);
+
+    return (string)$z['loeschung_am'];
+}
+
+/**
+ * Konten, deren Karenz abgelaufen ist.
+ *
+ * Der Job holt sie sich hier und nicht mit eigener Abfrage: Die Bedingung
+ * „welche sind faellig" gehoert neben die, die den Termin setzt.
+ */
+function konto_loeschung_faellig(int $grenze = 50): array
+{
+    $st = db()->prepare('SELECT id, email FROM users
+                          WHERE status = "gesperrt"
+                            AND gesperrt_grund = ?
+                            AND loeschung_am IS NOT NULL
+                            AND loeschung_am <= NOW()
+                          ORDER BY loeschung_am
+                          LIMIT ' . (int)$grenze);
+    $st->execute([KONTO_SPERRGRUND_SELBSTLOESCHUNG]);
+    return $st->fetchAll(PDO::FETCH_ASSOC);
+}
+
 /* ---- Loeschen ------------------------------------------------------------ */
 
 /**

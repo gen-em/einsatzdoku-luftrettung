@@ -31,16 +31,70 @@ declare(strict_types=1);
  * sagt es ausdrücklich.
  */
 
-/** Die beiden Dokumente: Schlüssel => Überschrift der Seite. */
+/**
+ * Die Dokumente: Schlüssel => Überschrift der Seite.
+ *
+ * SEIT P5b/AP4 SIND ES VIER. Nutzungsbedingungen und die Vereinbarung zur
+ * Auftragsverarbeitung kommen mit den Einwilligungen dazu (E-P5b-05, -15):
+ * Beide werden bei der Registrierung **angenommen**, beide sperren bei einer
+ * neuen Fassung den nächsten Login. Die Datenschutzerklärung wird dagegen
+ * nur **zur Kenntnis genommen** — der Wortlaut trägt den rechtlichen
+ * Unterschied, die Form ist dieselbe.
+ *
+ * DAS IMPRESSUM STEHT BEWUSST NICHT IN DIESER REIHE. Es wird weder
+ * angenommen noch zur Kenntnis genommen; es ist eine Pflichtangabe und keine
+ * Vereinbarung. `RT_EINWILLIGUNG` unten sagt, welche der vier eine sind.
+ */
 const RT_TEXTE = [
-    'impressum'   => 'Impressum',
-    'datenschutz' => 'Datenschutzerklärung',
+    'impressum'           => 'Impressum',
+    'datenschutz'         => 'Datenschutzerklärung',
+    'nutzungsbedingungen' => 'Nutzungsbedingungen',
+    'avv'                 => 'Auftragsverarbeitung',
 ];
 
 /** Die zugehörige Seite je Schlüssel — für Verweise und den Editor. */
 const RT_SEITEN = [
-    'impressum'   => 'impressum.php',
-    'datenschutz' => 'datenschutz.php',
+    'impressum'           => 'impressum.php',
+    'datenschutz'         => 'datenschutz.php',
+    'nutzungsbedingungen' => 'nutzungsbedingungen.php',
+    'avv'                 => 'avv.php',
+];
+
+/**
+ * Der Leerzustandstext je Schlüssel.
+ *
+ * WARUM ALS KATALOG UND NICHT ALS TERNAERER AUSDRUCK. In
+ * `rechtstext_seite.php` stand er als zweiwertiger Ausdruck
+ * (`… === 'impressum' ? … : …`), und das war die eine Stelle, an der ein
+ * dritter Schlüssel **stillschweigend falsch** geantwortet hätte: Die
+ * Nutzungsbedingungen hätten gemeldet, es sei „noch keine
+ * Datenschutzerklärung hinterlegt". Kein Fehler, keine Meldung — nur ein
+ * falscher Satz. Ein Katalog kann das nicht: Ein fehlender Eintrag fällt
+ * beim Nachsehen auf, ein falscher Zweig nicht.
+ */
+const RT_LEERTEXT = [
+    'impressum'           => 'noch kein Impressum hinterlegt.',
+    'datenschutz'         => 'noch keine Datenschutzerklärung hinterlegt.',
+    'nutzungsbedingungen' => 'noch keine Nutzungsbedingungen hinterlegt.',
+    'avv'                 => 'noch keine Vereinbarung zur Auftragsverarbeitung hinterlegt.',
+];
+
+/**
+ * Welche Dokumente eine Einwilligung verlangen — und welcher Art (E-P5b-05).
+ *
+ * `annahme` sperrt den nächsten Login, bis die aktuelle Fassung angenommen
+ * ist. `kenntnis` zeigt einen Hinweis, der mit demselben Häkchen quittiert
+ * wird, und lässt durch.
+ *
+ * **Der Wortlaut trägt den rechtlichen Unterschied, die Form ist gleich** —
+ * deshalb steht er hier und nicht in der Seite: Ein Häkchen, das an einer
+ * Stelle „angenommen" und an der anderen „zur Kenntnis genommen" heißt, darf
+ * seinen Text nicht aus dem Markup beziehen.
+ */
+const RT_EINWILLIGUNG = [
+    'nutzungsbedingungen' => ['art' => 'annahme',  'wort' => 'angenommen'],
+    'avv'                 => ['art' => 'annahme',  'wort' => 'angenommen'],
+    'datenschutz'         => ['art' => 'kenntnis', 'wort' => 'zur Kenntnis genommen'],
 ];
 
 /**

@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="../../../../server/assets/style.css">
 <style>
 /* ---- Nur der Mockup-Rahmen, NICHT Teil der Anwendung ---- */
-body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
+body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
 .mock-kopf{padding:20px 24px 4px}
 .mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
 .mock-kopf p{margin:0 0 6px;color:var(--gedaempft);font-size:var(--groesse-2);max-width:900px}
@@ -21,6 +21,10 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
      margin:10px 0 0;font-size:var(--groesse-2);max-width:900px;border-radius:0 6px 6px 0}
 .anm strong{color:var(--blau-tief)}
 .anm ul{margin:4px 0 0 18px;list-style:disc}
+.mock-grenzen{margin:2px 0 0 18px;list-style:disc;max-width:900px;
+              font-size:var(--groesse-2);color:var(--gedaempft)}
+.mock-grenzen li{margin-bottom:3px}
+.mock-grenzen strong{color:var(--dunkelblau)}
 .anm li{margin-bottom:2px}
 .schluss{padding:18px 24px 40px}
 .schluss h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0 0 6px;color:var(--dunkelblau)}
@@ -32,28 +36,62 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
   <h1>P5b · M-P5b-01 — Dokumentseite</h1>
   <p>Sechs Darstellungen zu E-P5b-08 (Handbuch und „Was ist NAdoku" als Seiten der
      Anwendung) und E-P5b-22 (Renderer, Fundorte, Fehlen der Dokumentation).
-     Jede Darstellung steht in einem eigenen Rahmen mit der Breite, für die sie gilt;
-     darin ist das <em>echte</em> Stylesheet der Anwendung geladen
-     (<code>server/assets/style.css</code>), damit die Schwellen 720 / 1024 / 1200 px
-     und die Bedienhöhen 44 / 36 px tatsächlich greifen und nicht nachgebaut sind.</p>
-  <p>Verwendet werden ausschließlich vorhandene Bausteine. Wo ein Baustein an einer
-     neuen Stelle steht oder wo es keinen gibt, sagt es die Anmerkung unter der
-     Darstellung — und benennt, was zu entscheiden ist. Am Ende der Datei steht die
-     Liste dieser Entscheidungen.</p>
+     Jede Darstellung steht in einem eigenen <code>&lt;iframe&gt;</code> mit der Breite,
+     für die sie gilt; darin ist das <em>echte</em> Stylesheet der Anwendung geladen
+     (<code>server/assets/style.css</code>). Weil ein <code>&lt;iframe&gt;</code> ein
+     eigenes Ansichtsfenster hat, greifen die Medienabfragen wirklich: <em>gemessen</em>
+     ist <code>--knopf</code> im 1440er Rahmen <strong>36 px</strong> und im 360er
+     <strong>44 px</strong> — nachgebaut ist nichts.</p>
+  <p>Verwendet werden ausschließlich vorhandene Bausteine, und zwar in dem Markup, das
+     <code>server/ui.php</code> erzeugt. Wo ein Baustein an einer neuen Stelle steht
+     oder wo es keinen gibt, sagt es die Anmerkung unter der Darstellung — und benennt,
+     was zu entscheiden ist. Am Ende der Datei steht die Liste dieser Entscheidungen.</p>
+  <p><strong>Was dieses Bild NICHT zeigt — an den Anfang und nicht in eine Fußnote:</strong></p>
+  <ul class="mock-grenzen">
+    <li><strong>Die Schwelle 720 px</strong> liegt zwischen den beiden gezeigten
+      Breiten und ist hier nicht abgebildet; gezeigt sind 1440 px (über 1200: Leiste
+      <strong>260 px</strong>) und 360 px. Der schmale Schreibtisch <strong>1024–1199 px</strong>
+      fehlt ebenfalls — dort ist die Leiste <code>--leiste-schmal</code> = 220 px breit,
+      und das ist der engere Fall für ein Inhaltsverzeichnis (Darstellung 1, Anmerkung).</li>
+    <li><strong>Die Leiste steht hier auf <code>height:auto</code></strong>, damit alle
+      26 Zeilen im Bild stehen. In der Anwendung ist sie
+      <code>calc(100vh - var(--kopf))</code> hoch, klebt und rollt in sich: Bei einem
+      900 px hohen Fenster sind das <strong>844 px</strong>, davon 735,5 px für die
+      Liste — von den 26 Zeilen (25 Überschriften plus die eine, mit der das Mockup
+      kürzt) sind <strong>11 ohne Rollen zu sehen</strong> (gemessen); die Liste selbst
+      ist 1748 px hoch. Das ist die Zahl zu der Frage, ob das Verzeichnis
+      alle Unterabschnitte zeigen soll.</li>
+    <li><strong>Die Symbole sind eingebettet, nicht verwiesen.</strong> Die Anwendung
+      bindet sie über <code>&lt;use href="assets/images/symbole/…svg#i"&gt;</code> ein
+      (<code>ui_symbol()</code>); über <code>file://</code> sperrt Chromium diesen
+      Verweis, und jeder Kasten bliebe leer. Die Pfaddaten stammen unverändert aus den
+      Dateien unter <code>server/assets/images/symbole/</code> (Tabler Icons, MIT). Im
+      Betrieb bleibt es beim Dateiverweis; ein Sprite geht hier nicht, weil jeder Rahmen
+      ein eigenes Dokument ist.</li>
+    <li><strong>Bedienzustände</strong> (Fokus, Überfahren, geöffnete Schublade, der
+      leere Filter) und alles, was ein Skript tut — der Filter selbst, das Kopieren im
+      Wertekasten, das Zuklappen nach einem Sprung. Das Markup dieser Zustände steht
+      da, gezeichnet ist der Ruhezustand.</li>
+    <li><strong>Das Dokument ist 1500 px breit</strong> (1440 Rahmen plus Rand); ein
+      1400-px-Fenster rollt um 100 px waagerecht. Das ist der Mockup-Rahmen, nicht die
+      Anwendung: <em>in</em> den Rahmen ist der waagerechte Überlauf in allen dreizehn
+      Darstellungen <strong>0 px</strong> (gemessen), ebenso die Zahl der
+      Konsolenfehler.</li>
+  </ul>
 </div>
 
 <!-- ======================================================================= -->
-<!-- 1. hilfe.php — Desktop 1180 px                                           -->
+<!-- 1. hilfe.php — Desktop 1440 px                                           -->
 <!-- ======================================================================= -->
 <div class="reihe">
-  <h2>1. <code>hilfe.php</code> — Schreibtisch, 1180 px</h2>
+  <h2>1. <code>hilfe.php</code> — Schreibtisch, 1440 px</h2>
   <p class="unter">Das gerenderte Handbuch als öffentliche Seite, ohne Anmeldung.
      Links das Inhaltsverzeichnis aus den Überschriften der Markdown-Datei mit
      Sprungmarken, darüber ein Feld zum Filtern; rechts der Text. Der Textbereich
      zeigt die vier Markdown-Formen: Überschrift, Absatz, Tabelle, Codeblock.</p>
   <div class="frames">
-    <div class="frame"><div class="frame-kopf">hilfe.php · 1180 px · nicht angemeldet</div>
-<template data-breite="1180">
+    <div class="frame"><div class="frame-kopf">hilfe.php · 1440 px · nicht angemeldet</div>
+<template data-breite="1440">
 <header class="kopf">
   <div class="kopf-innen">
     <a class="kopf-marke" href="index.php">
@@ -67,7 +105,7 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
     </nav>
   </div>
 </header>
-<div class="rahmen">
+<div class="rahmen rahmen-lesespalte">
   <aside class="leiste" id="leiste">
     <p class="leiste-kopfzeile">Inhalt</p>
     <div class="leiste-haupt">
@@ -79,38 +117,39 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
           <svg class="symbol" viewBox="0 0 24 24" role="img"><title>Filter leeren</title><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>
         </button>
       </div>
+      <p class="kartenfilter-leer feld-hinweis" data-leer-fuer="doku-inhalt" hidden>Kein Eintrag passt dazu. Leere den Filter, um wieder alle zu sehen.</p>
     </div>
     <nav class="leiste-liste" id="doku-inhalt" aria-label="Inhalt des Handbuchs">
-      <a class="zeile" href="#h-1"><div class="zeile-text"><span class="zeile-haupt">1. Was ist Gen-EM NAdoku?</span></div></a>
+      <a class="zeile" href="#h-1"><div class="zeile-text"><span class="zeile-haupt">1. Was ist Gen-EM NAdoku?</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
 
-      <a class="zeile zeile-hervor" href="#h-2"><div class="zeile-text"><span class="zeile-haupt">2. Die Uhr-App</span><span class="zeile-klein">5 Abschnitte</span></div></a>
-      <a class="zeile" href="#h-2-0"><div class="zeile-text"><span class="zeile-haupt">2.0 Unterstützte Uhren und ihre Bedienung</span></div></a>
-      <a class="zeile" href="#h-2-1"><div class="zeile-text"><span class="zeile-haupt">2.1 Dienst beginnen und beenden</span></div></a>
-      <a class="zeile" href="#h-2-2"><div class="zeile-text"><span class="zeile-haupt">2.2 Die Oberflächen</span></div></a>
-      <a class="zeile" href="#h-2-3"><div class="zeile-text"><span class="zeile-haupt">2.3 Reanimationsmodus</span></div></a>
-      <a class="zeile" href="#h-2-4"><div class="zeile-text"><span class="zeile-haupt">2.4 Datenübertragung</span></div></a>
+      <a class="zeile zeile-hervor" href="#h-2"><div class="zeile-text"><span class="zeile-haupt">2. Die Uhr-App</span><span class="zeile-klein">5 Abschnitte</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-2-0"><div class="zeile-text"><span class="zeile-haupt">2.0 Unterstützte Uhren und ihre Bedienung</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-2-1"><div class="zeile-text"><span class="zeile-haupt">2.1 Dienst beginnen und beenden</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-2-2"><div class="zeile-text"><span class="zeile-haupt">2.2 Die Oberflächen</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-2-3"><div class="zeile-text"><span class="zeile-haupt">2.3 Reanimationsmodus</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-2-4"><div class="zeile-text"><span class="zeile-haupt">2.4 Datenübertragung</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
 
-      <a class="zeile" href="#h-3"><div class="zeile-text"><span class="zeile-haupt">3. Die Web-Oberfläche — Überblick</span><span class="zeile-klein">3 Abschnitte</span></div></a>
-      <a class="zeile" href="#h-3-1"><div class="zeile-text"><span class="zeile-haupt">3.1 Anmelden und Passwort</span></div></a>
-      <a class="zeile" href="#h-3-1a"><div class="zeile-text"><span class="zeile-haupt">3.1a Profil: Name, Adresse und Logo</span></div></a>
-      <a class="zeile" href="#h-3-2"><div class="zeile-text"><span class="zeile-haupt">3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen</span></div></a>
+      <a class="zeile" href="#h-3"><div class="zeile-text"><span class="zeile-haupt">3. Die Web-Oberfläche — Überblick</span><span class="zeile-klein">3 Abschnitte</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-3-1"><div class="zeile-text"><span class="zeile-haupt">3.1 Anmelden und Passwort</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-3-1a"><div class="zeile-text"><span class="zeile-haupt">3.1a Profil: Name, Adresse und Logo</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-3-2"><div class="zeile-text"><span class="zeile-haupt">3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
 
-      <a class="zeile" href="#h-4"><div class="zeile-text"><span class="zeile-haupt">4. Einsätze ansehen und bearbeiten</span><span class="zeile-klein">12 Abschnitte</span></div></a>
-      <a class="zeile" href="#h-4-1"><div class="zeile-text"><span class="zeile-haupt">4.1 Tagesübersicht</span></div></a>
-      <a class="zeile" href="#h-4-1a"><div class="zeile-text"><span class="zeile-haupt">4.1a GPS-Daten des Diensttages</span></div></a>
-      <a class="zeile" href="#h-4-1b"><div class="zeile-text"><span class="zeile-haupt">4.1b Einen vergessenen Einsatz aus der Ruhezeit schneiden</span></div></a>
-      <a class="zeile" href="#h-4-1c"><div class="zeile-text"><span class="zeile-haupt">4.1c GPX-Datei importieren</span></div></a>
-      <a class="zeile" href="#h-4-2"><div class="zeile-text"><span class="zeile-haupt">4.2 Einsatzansicht</span></div></a>
-      <a class="zeile" href="#h-4-2a"><div class="zeile-text"><span class="zeile-haupt">4.2a Falsche Tageszuordnung korrigieren</span></div></a>
-      <a class="zeile" href="#h-4-3"><div class="zeile-text"><span class="zeile-haupt">4.3 Einsätze nachtragen und bearbeiten</span></div></a>
-      <a class="zeile" href="#h-4-4"><div class="zeile-text"><span class="zeile-haupt">4.4 Diensttage-Leiste, Jahres- und Monatsübersicht</span></div></a>
-      <a class="zeile" href="#h-4-5"><div class="zeile-text"><span class="zeile-haupt">4.5 Diensttag von Hand anlegen</span></div></a>
-      <a class="zeile" href="#h-4-5a"><div class="zeile-text"><span class="zeile-haupt">4.5a Zwei Diensttage zusammenführen</span></div></a>
-      <a class="zeile" href="#h-4-5b"><div class="zeile-text"><span class="zeile-haupt">4.5b Wenn zwei Diensttage sich zeitlich überschneiden</span></div></a>
-      <a class="zeile" href="#h-4-6"><div class="zeile-text"><span class="zeile-haupt">4.6 Suche</span></div></a>
+      <a class="zeile" href="#h-4"><div class="zeile-text"><span class="zeile-haupt">4. Einsätze ansehen und bearbeiten</span><span class="zeile-klein">12 Abschnitte</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-4-1"><div class="zeile-text"><span class="zeile-haupt">4.1 Tagesübersicht</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-4-1a"><div class="zeile-text"><span class="zeile-haupt">4.1a GPS-Daten des Diensttages</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-4-1b"><div class="zeile-text"><span class="zeile-haupt">4.1b Einen vergessenen Einsatz aus der Ruhezeit schneiden</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-4-1c"><div class="zeile-text"><span class="zeile-haupt">4.1c GPX-Datei importieren</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-4-2"><div class="zeile-text"><span class="zeile-haupt">4.2 Einsatzansicht</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-4-2a"><div class="zeile-text"><span class="zeile-haupt">4.2a Falsche Tageszuordnung korrigieren</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-4-3"><div class="zeile-text"><span class="zeile-haupt">4.3 Einsätze nachtragen und bearbeiten</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-4-4"><div class="zeile-text"><span class="zeile-haupt">4.4 Diensttage-Leiste, Jahres- und Monatsübersicht</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-4-5"><div class="zeile-text"><span class="zeile-haupt">4.5 Diensttag von Hand anlegen</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-4-5a"><div class="zeile-text"><span class="zeile-haupt">4.5a Zwei Diensttage zusammenführen</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-4-5b"><div class="zeile-text"><span class="zeile-haupt">4.5b Wenn zwei Diensttage sich zeitlich überschneiden</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-4-6"><div class="zeile-text"><span class="zeile-haupt">4.6 Suche</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
 
-      <a class="zeile" href="#h-5"><div class="zeile-text"><span class="zeile-haupt">5. Verschlüsselung der Patientendaten (Pflicht)</span></div></a>
-      <a class="zeile" href="#h-6"><div class="zeile-text"><span class="zeile-haupt">6. … (für das Mockup gekürzt — es folgen die Kapitel 6 bis 12)</span></div></a>
+      <a class="zeile" href="#h-5"><div class="zeile-text"><span class="zeile-haupt">5. Verschlüsselung der Patientendaten (Pflicht)</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+      <a class="zeile" href="#h-6"><div class="zeile-text"><span class="zeile-haupt">6. … (für das Mockup gekürzt — es folgen die Kapitel 6 bis 12)</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
     </nav>
   </aside>
 
@@ -170,7 +209,7 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
 </div>
 <footer class="fuss-seite">
   <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-    <span class="fuss-version">v20.16.0</span></p>
+    <span class="fuss-version">v20.19.0</span></p>
   <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
 </footer>
 </template>
@@ -191,26 +230,50 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
         der Leistenbaustein — und das geht nicht.</strong> <code>.eintrag-text</code>
         trägt <code>flex:1 0 auto</code>: Es wächst, aber es <em>schrumpft nicht</em>.
         Der Kommentar im Stylesheet verspricht daneben eine Ellipse („NEF Neubran…") —
-        die kann so nie entstehen. Gemessen in dieser Leiste: Inhaltsbreite 219 px,
-        Rollbreite <strong>357 px</strong>, also 138 px, die seitwärts verschwinden; am
-        Handy in einer Karte waren es <strong>378 statt 360 px</strong> waagerechter
-        Überlauf der ganzen Seite. Für Diensttagsnamen fällt das nicht auf, für
+        die kann so nie entstehen. Nachgemessen mit den fünf längsten Überschriften des
+        Handbuchs (Probe: <code>.eintrag</code> in <code>.leiste-liste</code>):
+        Inhaltsbreite 259 px, <strong>Rollbreite 467 px</strong> — und bei 1180 px, wo
+        die Leiste 220 px schmal ist, dieselben <strong>467 px</strong>. Das ist der
+        Punkt: Die Rollbreite hängt nicht an der Leiste, sondern am längsten Titel,
+        weil der Eintrag nicht schrumpft. Am Handy, derselbe Baustein in einer Karte:
+        Die Seite läuft auf <strong>488 statt 360 px</strong> über. Für Diensttagsnamen fällt das nicht auf, für
         Handbuch-Überschriften sofort. <code>a.zeile</code> bricht dagegen um und ist
         ausserdem das, was <code>assets/kartenfilter.js</code> filtert — der Filter
-        darüber greift nur auf <code>.zeile</code> zu. <em>Entscheidung 12</em> — und
+        darüber greift nur auf <code>.zeile</code> zu. <em>Entscheidung 13</em> — und
         unabhängig davon ein Befund am Bestand.</li>
+      <li><strong>Die Lesespalte gilt auch neben der Leiste.</strong> Der Rahmen trägt
+        <code>rahmen rahmen-lesespalte</code> (Design.md 9.20) — dieselbe Kombination
+        wie Betrieb → Servereinstellungen. Ohne sie stünde die Karte über die ganze
+        Restbreite neben der Leiste und der Text darin bei 760 px (<code>.text</code>)
+        mitten drin auf; gemessen ist die Karte <strong>728 px</strong> breit und der
+        Text füllt sie mit 694 px. Die Zahl ist in <em>beiden</em> Schreibtischbreiten
+        dieselbe — sie kommt aus <code>--lesespalte</code> und nicht aus dem Fenster.</li>
       <li><strong>Neu ist der Ort, nicht der Baustein:</strong> Bisher steht eine
         <code>.leiste</code> nur hinter der Anmeldung, und <code>.zeile</code> steht
         bisher nur in einer Karte. <code>hilfe.php</code> ist öffentlich und setzt
         Zeilen in die Leiste. Design.md 10.1 kennt dafür den Typ „Öffentliche
         Lesespalte" — <em>ohne</em> Leiste. Mit dieser Seite bekommt der Typenkatalog
         einen siebten Eintrag. Das ist einzutragen, nicht nebenbei zu tun.</li>
-      <li><strong>Das Suchfeld ist ein <code>.kartenfilter</code></strong> (44 / 36 px),
-        kein <code>.suchfeld</code> (48 px). Es filtert die 25 Überschriften im Browser —
+      <li><strong>Das Suchfeld ist ein <code>.kartenfilter</code></strong>, kein
+        <code>.suchfeld</code> (48 px, die eine benannte Ausnahme von der 44/36-Regel). Es filtert die 25 Überschriften im Browser —
         ohne Anfrage, ohne Adressänderung, CSP-konform. Ein <code>.suchfeld</code> wäre
         das zweite der Anwendung und verspricht Volltextsuche im ganzen Handbuch; die
         bräuchte ein Skript, das den gerenderten Text durchgeht und Treffer markiert.
-        <em>Das ist Entscheidung 1.</em></li>
+        <em>Das ist Entscheidung 1.</em>
+        <br>Nebenbefund am Bestand: Design.md 9.32 sagt für den Kartenfilter 44 / 36 px;
+        gemessen sind es <strong>44 px am Handy und 41 px am Zeigergerät</strong>. Sein
+        Eingabefeld trägt kein <code>.feld-eingabe</code> (das setzt
+        <code>height:var(--knopf)</code>) und kommt nur über <code>padding</code> plus
+        <code>min-height</code> auf seine Höhe. Dieselbe Ursache an der zweiten Stelle:
+        Die beiden Eingabefelder der <strong>Anmeldeseite</strong> (Darstellung 5) messen
+        ebenfalls 41,3 px statt 36. Beides gilt heute schon — es ist kein Zutun dieser
+        Seite, gehört aber in den Backlog, weil es zwei Stellen sind und nicht eine.
+        <br>Vollständig ist der Baustein erst mit seinem <strong>Leerzustand</strong>:
+        <code>&lt;p class="kartenfilter-leer feld-hinweis" data-leer-fuer="…" hidden&gt;</code>
+        steht hier im Markup, wie <code>ui_kartenfilter()</code> ihn setzt (Design.md
+        9.32, Punkt 4: „Ein Text, den das Skript zusammensetzt, liefe an der Wortliste
+        vorbei"). Im Bild ist er nicht zu sehen — er ist <code>hidden</code>, bis
+        gefiltert wird und nichts übrig bleibt.</li>
       <li><strong>Der Blockzitat-Kasten oben im Handbuch</strong> („Aufbau. Kapitel 1 bis
         10 …") ist hier als <code>.meldung meldung-info</code> gerendert. Markdown-
         <code>&gt;</code>-Zitate haben im Stylesheet <em>keine</em> Regel:
@@ -222,10 +285,33 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
         Was fehlt, ist ein Außenabstand: In <code>.text</code> steht die Tabelle
         unmittelbar am Absatz darüber. Eine Zeile <code>.text .tabelle-scroll{margin}</code>
         wäre keine neue Darstellung, aber eine neue Regel. <em>Entscheidung 3.</em></li>
+      <li><strong>Der Winkel rechts gehört zum Baustein, nicht zur Seite.</strong>
+        <code>ui_zeile(['href_ganz' =&gt; …])</code> hängt an <em>jede</em> ganz
+        verlinkte Zeile ein <code>&lt;div class="zeile-aktionen"&gt;</code> mit
+        <code>.zeile-weiter</code> — es gibt im ganzen Bestand keine handgeschriebene
+        <code>a.zeile</code> ohne ihn. Er steht deshalb hier an allen 26 Zeilen.
+        <em>Er sagt aber „führt woanders hin"</em>, und eine Sprungmarke führt auf
+        dieselbe Seite. Wer ihn weglassen will, ändert den Baustein (eine Option
+        <code>ohne_winkel</code>) — das ist kein Weglassen im Markup.
+        <em>Entscheidung 15.</em></li>
+      <li><strong>Der Kopf zeigt hier den nicht angemeldeten Fall.</strong>
+        <code>hilfe.php</code> ist öffentlich, aber E-P5b-08 gibt ihr zusätzlich einen
+        <strong>Menüeintrag „Hilfe"</strong> für Angemeldete. Dann steht im Kopf das
+        gewöhnliche Menü und <em>nicht</em> „Zur Anmeldung", und die Seite hat zwei
+        Leisten nebeneinander (Einstellungsmenü und Inhaltsverzeichnis) oder eben nur
+        eine. Dieser Fall ist hier <strong>nicht gezeichnet</strong> und in AP8 zu
+        entscheiden. <em>Entscheidung 16.</em></li>
     </ul>
-    <strong>Zu entscheiden:</strong> 1, 2, 3 — und ob das Inhaltsverzeichnis wirklich
-    <em>alle</em> h3 zeigt (25 Zeilen, die Leiste rollt) oder nur die h3 des gerade
-    gelesenen Kapitels, wie die Einstellungsleiste es tut.
+    <strong>Zur Wortliste.</strong> Der Textbereich zitiert Kapitel 2 des Handbuchs
+    wörtlich; die Gerätenamen darin (Garmin, Fenix, Forerunner, Venu) und die
+    Tastennamen stehen in der Ausnahmeliste unter <code>handbuch-uhrkapitel</code>
+    (Klasse G — plattformspezifisch). Neue sichtbare Texte dieser Seite sind land- und
+    luftneutral; Mockups selbst liegen nicht im Prüfbereich der Wortliste.
+    <br><strong>Zu entscheiden:</strong> 1, 2, 3, 13, 15, 16 — und ob das
+    Inhaltsverzeichnis wirklich <em>alle</em> h3 zeigt oder nur die h3 des gerade
+    gelesenen Kapitels, wie die Einstellungsleiste es tut. Die Zahl dazu steht oben:
+    Von 26 Zeilen sind bei einem 900 px hohen Fenster <strong>11</strong> ohne Rollen
+    zu sehen.
   </div>
 </div>
 
@@ -303,13 +389,13 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
 </div>
 <footer class="fuss-seite">
   <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-    <span class="fuss-version">v20.16.0</span></p>
+    <span class="fuss-version">v20.19.0</span></p>
   <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
 </footer>
 </template>
     </div>
 
-    <div class="frame"><div class="frame-kopf">360 px · Inhalt aufgeklappt</div>
+    <div class="frame"><div class="frame-kopf">360 px · Inhalt aufgeklappt · Ausschnitt ohne Kopf- und Fußzeile</div>
 <template data-breite="360">
 <div class="rahmen">
   <main class="inhalt" id="inhalt2">
@@ -331,33 +417,34 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
             <svg class="symbol" viewBox="0 0 24 24" role="img"><title>Filter leeren</title><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>
           </button>
         </div>
+        <p class="kartenfilter-leer feld-hinweis" data-leer-fuer="doku-inhalt-m" hidden>Kein Eintrag passt dazu. Leere den Filter, um wieder alle zu sehen.</p>
         <nav id="doku-inhalt-m" aria-label="Inhalt des Handbuchs">
-          <a class="zeile" href="#h-1"><div class="zeile-text"><span class="zeile-haupt">1. Was ist Gen-EM NAdoku?</span></div></a>
-          <a class="zeile zeile-hervor" href="#h-2"><div class="zeile-text"><span class="zeile-haupt">2. Die Uhr-App</span><span class="zeile-klein">5 Abschnitte</span></div></a>
-          <a class="zeile" href="#h-2-0"><div class="zeile-text"><span class="zeile-haupt">2.0 Unterstützte Uhren und ihre Bedienung</span></div></a>
-          <a class="zeile" href="#h-2-1"><div class="zeile-text"><span class="zeile-haupt">2.1 Dienst beginnen und beenden</span></div></a>
-          <a class="zeile" href="#h-2-2"><div class="zeile-text"><span class="zeile-haupt">2.2 Die Oberflächen</span></div></a>
-          <a class="zeile" href="#h-2-3"><div class="zeile-text"><span class="zeile-haupt">2.3 Reanimationsmodus</span></div></a>
-          <a class="zeile" href="#h-2-4"><div class="zeile-text"><span class="zeile-haupt">2.4 Datenübertragung</span></div></a>
-          <a class="zeile" href="#h-3"><div class="zeile-text"><span class="zeile-haupt">3. Die Web-Oberfläche — Überblick</span><span class="zeile-klein">3 Abschnitte</span></div></a>
-          <a class="zeile" href="#h-3-1"><div class="zeile-text"><span class="zeile-haupt">3.1 Anmelden und Passwort</span></div></a>
-          <a class="zeile" href="#h-3-1a"><div class="zeile-text"><span class="zeile-haupt">3.1a Profil: Name, Adresse und Logo</span></div></a>
-          <a class="zeile" href="#h-3-2"><div class="zeile-text"><span class="zeile-haupt">3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen</span></div></a>
-          <a class="zeile" href="#h-4"><div class="zeile-text"><span class="zeile-haupt">4. Einsätze ansehen und bearbeiten</span><span class="zeile-klein">12 Abschnitte</span></div></a>
-          <a class="zeile" href="#h-4-1"><div class="zeile-text"><span class="zeile-haupt">4.1 Tagesübersicht</span></div></a>
-          <a class="zeile" href="#h-4-1a"><div class="zeile-text"><span class="zeile-haupt">4.1a GPS-Daten des Diensttages</span></div></a>
-          <a class="zeile" href="#h-4-1b"><div class="zeile-text"><span class="zeile-haupt">4.1b Einen vergessenen Einsatz aus der Ruhezeit schneiden</span></div></a>
-          <a class="zeile" href="#h-4-1c"><div class="zeile-text"><span class="zeile-haupt">4.1c GPX-Datei importieren</span></div></a>
-          <a class="zeile" href="#h-4-2"><div class="zeile-text"><span class="zeile-haupt">4.2 Einsatzansicht</span></div></a>
-          <a class="zeile" href="#h-4-2a"><div class="zeile-text"><span class="zeile-haupt">4.2a Falsche Tageszuordnung korrigieren</span></div></a>
-          <a class="zeile" href="#h-4-3"><div class="zeile-text"><span class="zeile-haupt">4.3 Einsätze nachtragen und bearbeiten</span></div></a>
-          <a class="zeile" href="#h-4-4"><div class="zeile-text"><span class="zeile-haupt">4.4 Diensttage-Leiste, Jahres- und Monatsübersicht</span></div></a>
-          <a class="zeile" href="#h-4-5"><div class="zeile-text"><span class="zeile-haupt">4.5 Diensttag von Hand anlegen</span></div></a>
-          <a class="zeile" href="#h-4-5a"><div class="zeile-text"><span class="zeile-haupt">4.5a Zwei Diensttage zusammenführen</span></div></a>
-          <a class="zeile" href="#h-4-5b"><div class="zeile-text"><span class="zeile-haupt">4.5b Wenn zwei Diensttage sich zeitlich überschneiden</span></div></a>
-          <a class="zeile" href="#h-4-6"><div class="zeile-text"><span class="zeile-haupt">4.6 Suche</span></div></a>
-          <a class="zeile" href="#h-5"><div class="zeile-text"><span class="zeile-haupt">5. Verschlüsselung der Patientendaten (Pflicht)</span></div></a>
-          <a class="zeile" href="#h-6"><div class="zeile-text"><span class="zeile-haupt">6. … (für das Mockup gekürzt)</span></div></a>
+          <a class="zeile" href="#h-1"><div class="zeile-text"><span class="zeile-haupt">1. Was ist Gen-EM NAdoku?</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile zeile-hervor" href="#h-2"><div class="zeile-text"><span class="zeile-haupt">2. Die Uhr-App</span><span class="zeile-klein">5 Abschnitte</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-2-0"><div class="zeile-text"><span class="zeile-haupt">2.0 Unterstützte Uhren und ihre Bedienung</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-2-1"><div class="zeile-text"><span class="zeile-haupt">2.1 Dienst beginnen und beenden</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-2-2"><div class="zeile-text"><span class="zeile-haupt">2.2 Die Oberflächen</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-2-3"><div class="zeile-text"><span class="zeile-haupt">2.3 Reanimationsmodus</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-2-4"><div class="zeile-text"><span class="zeile-haupt">2.4 Datenübertragung</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-3"><div class="zeile-text"><span class="zeile-haupt">3. Die Web-Oberfläche — Überblick</span><span class="zeile-klein">3 Abschnitte</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-3-1"><div class="zeile-text"><span class="zeile-haupt">3.1 Anmelden und Passwort</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-3-1a"><div class="zeile-text"><span class="zeile-haupt">3.1a Profil: Name, Adresse und Logo</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-3-2"><div class="zeile-text"><span class="zeile-haupt">3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-4"><div class="zeile-text"><span class="zeile-haupt">4. Einsätze ansehen und bearbeiten</span><span class="zeile-klein">12 Abschnitte</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-4-1"><div class="zeile-text"><span class="zeile-haupt">4.1 Tagesübersicht</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-4-1a"><div class="zeile-text"><span class="zeile-haupt">4.1a GPS-Daten des Diensttages</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-4-1b"><div class="zeile-text"><span class="zeile-haupt">4.1b Einen vergessenen Einsatz aus der Ruhezeit schneiden</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-4-1c"><div class="zeile-text"><span class="zeile-haupt">4.1c GPX-Datei importieren</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-4-2"><div class="zeile-text"><span class="zeile-haupt">4.2 Einsatzansicht</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-4-2a"><div class="zeile-text"><span class="zeile-haupt">4.2a Falsche Tageszuordnung korrigieren</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-4-3"><div class="zeile-text"><span class="zeile-haupt">4.3 Einsätze nachtragen und bearbeiten</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-4-4"><div class="zeile-text"><span class="zeile-haupt">4.4 Diensttage-Leiste, Jahres- und Monatsübersicht</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-4-5"><div class="zeile-text"><span class="zeile-haupt">4.5 Diensttag von Hand anlegen</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-4-5a"><div class="zeile-text"><span class="zeile-haupt">4.5a Zwei Diensttage zusammenführen</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-4-5b"><div class="zeile-text"><span class="zeile-haupt">4.5b Wenn zwei Diensttage sich zeitlich überschneiden</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-4-6"><div class="zeile-text"><span class="zeile-haupt">4.6 Suche</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-5"><div class="zeile-text"><span class="zeile-haupt">5. Verschlüsselung der Patientendaten (Pflicht)</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
+          <a class="zeile" href="#h-6"><div class="zeile-text"><span class="zeile-haupt">6. … (für das Mockup gekürzt)</span></div><div class="zeile-aktionen"><svg class="symbol symbol-rechts zeile-weiter" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></div></a>
         </nav>
       </div>
     </details>
@@ -395,17 +482,36 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
         Tagesübersicht" tippt, will lesen, nicht auf eine offene Liste zurückkommen. Ohne
         Skript bleibt <code>&lt;details&gt;</code> offen — der Sprung landet richtig, aber
         oben steht weiter die Liste. <em>Entscheidung 5.</em></li>
+      <li><strong>Tabelle und Codeblock rollen bei 360 px waagerecht</strong> — das
+        Bild zeigt den Anschnitt am rechten Rand. Das ist das Verhalten der Bausteine
+        (<code>.tabelle-scroll</code> und <code>pre</code> tragen beide
+        <code>overflow-x:auto</code>) und nicht der Anschnitt der Seite: die Seite
+        selbst läuft bei 360 px nirgends über (gemessen 360 von 360 px). Wer es anders
+        will, muss dem Renderer für schmale Geräte etwas anderes sagen — und das wäre
+        eine neue Darstellung.</li>
       <li>Die Kopfzeile und die Fußzeile sind dieselben wie am Schreibtisch; die vier
-        Fußzeilen-Verweise brechen bei 360 px auf zwei Zeilen um — siehe Darstellung 5.</li>
+        Fußzeilen-Verweise stehen bei 360 px noch in einer Zeile — siehe Darstellung 5.
+        Der rechte Rahmen zeigt nur den Ausschnitt mit dem Verzeichnis, damit die
+        26 Zeilen nicht noch einmal einen ganzen Seitenkopf mitschleppen.</li>
+      <li><strong>Befund am Bestand: die erste und die letzte Zeile sind zu flach.</strong>
+        <code>.zeile</code> holt ihre Höhe aus <code>padding</code>, nicht aus
+        <code>--knopf</code>; <code>.zeile:first-child</code> nimmt den oberen,
+        <code>.zeile:last-child</code> den unteren Innenabstand wieder weg. Gemessen bei
+        360 px: eine gewöhnliche Zeile <strong>48,3 px</strong>, die erste
+        <strong>36,3 px</strong>, die letzte <strong>35,3 px</strong> — zwei von 26
+        unter der Bedienhöhe von 44 px. In einer Liste aus <code>div.zeile</code> fällt
+        das nicht auf, hier ist <em>jede</em> Zeile ein Verweis, und die erste ist
+        „1. Was ist Gen-EM NAdoku?". Kein Zutun dieser Seite, aber eine Stelle, an der
+        sie sichtbar wird — Backlog.</li>
     </ul>
   </div>
 </div>
 
 <!-- ======================================================================= -->
-<!-- 3. ueber.php — Desktop 1180 px                                           -->
+<!-- 3. ueber.php — Desktop 1440 px                                           -->
 <!-- ======================================================================= -->
 <div class="reihe">
-  <h2>3. <code>ueber.php</code> — Schreibtisch, 1180 px</h2>
+  <h2>3. <code>ueber.php</code> — Schreibtisch, 1440 px</h2>
   <p class="unter">Dieselbe Seite, kürzer: der Text aus Konzept Abschnitt 9
      („Was ist NAdoku"). <strong>Ohne Leiste</strong> — fünf Abschnitte liegen unter der
      Schwelle von sechs, ab der Design.md 9.31/9.32 überhaupt eine Sprunghilfe vorsieht;
@@ -414,8 +520,8 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
      Am Ende der Einstieg — hier in der Fassung für <em>offen</em> bzw.
      <em>offen mit Freischaltung</em>.</p>
   <div class="frames">
-    <div class="frame"><div class="frame-kopf">ueber.php · 1180 px · Betriebsart „offen" / „offen mit Freischaltung"</div>
-<template data-breite="1180">
+    <div class="frame"><div class="frame-kopf">ueber.php · 1440 px · Betriebsart „offen" / „offen mit Freischaltung"</div>
+<template data-breite="1440">
 <header class="kopf">
   <div class="kopf-innen">
     <a class="kopf-marke" href="index.php">
@@ -485,10 +591,10 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
 
     <section class="karte">
       <div class="karte-inhalt">
-        <p class="feld-hinweis">Auf dieser Installation kannst du dir selbst ein Konto
+        <div class="text"><p>Auf dieser Installation kannst du dir selbst ein Konto
            anlegen. Du bekommst eine E-Mail mit einem Link; erst der Klick darauf legt das
            Konto an. <strong>Die Betreiberin schaltet es danach frei — das kann ein paar
-           Tage dauern.</strong></p>
+           Tage dauern.</strong></p></div>
         <div class="listen-form-fuss">
           <a class="knopf knopf-primaer" href="registrieren.php"><span>Registrieren</span></a>
           <a class="knopf knopf-neutral" href="login.php"><span>Anmelden</span></a>
@@ -499,7 +605,7 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
 </div>
 <footer class="fuss-seite">
   <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-    <span class="fuss-version">v20.16.0</span></p>
+    <span class="fuss-version">v20.19.0</span></p>
   <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
 </footer>
 </template>
@@ -507,16 +613,16 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
   </div>
 
   <div class="frames" style="margin-top:14px">
-    <div class="frame"><div class="frame-kopf">ueber.php · 1180 px · nur der Einstieg · Betriebsart „nur auf Einladung"</div>
-<template data-breite="1180" data-innen="16">
+    <div class="frame"><div class="frame-kopf">ueber.php · 1440 px · nur der Einstieg · Betriebsart „nur auf Einladung"</div>
+<template data-breite="1440" data-innen="16">
 <div class="rahmen rahmen-lesespalte">
   <main class="inhalt">
     <section class="karte">
       <div class="karte-inhalt">
-        <p class="feld-hinweis">Auf dieser Installation entstehen Konten nur auf
+        <div class="text"><p>Auf dieser Installation entstehen Konten nur auf
            Einladung. Wenn du eines brauchst, schreib an die Adresse im
            <a href="impressum.php">Impressum</a>; du bekommst dann eine E-Mail mit einem
-           Link, über den du dein Passwort setzt.</p>
+           Link, über den du dein Passwort setzt.</p></div>
         <div class="listen-form-fuss">
           <a class="knopf knopf-primaer" href="login.php"><span>Anmelden</span></a>
         </div>
@@ -532,7 +638,7 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
     <strong>Was zu sehen ist.</strong> Oben die ganze Seite mit dem Einstieg für
     <em>offen</em> bzw. <em>offen mit Freischaltung</em>, darunter derselbe Einstieg für
     <em>nur auf Einladung</em> — die Vorgabe nach der Einrichtung (E-P5b-01). Der Einstieg
-    ist eine <strong>Karte ohne Titel</strong> mit einem <code>.feld-hinweis</code> und
+    ist eine <strong>Karte ohne Titel</strong> mit <code>.text</code> und
     <code>.listen-form-fuss</code>; kein neuer Baustein.
     <ul>
       <li><strong>Drei Betriebsarten, zwei Bilder.</strong> <em>offen</em> und
@@ -550,6 +656,20 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
         beide Seiten gleich haben will, bekommt <code>ueber.php</code> dieselbe Leiste mit
         fünf Einträgen — dann sind die beiden Seiten eine Vorlage statt zweier.
         <em>Entscheidung 7.</em></li>
+      <li><strong>Der Einstiegstext ist <code>.text</code>, nicht
+        <code>.feld-hinweis</code>.</strong> Er trägt die einzige Auskunft, wegen der
+        jemand auf dieser Seite nach unten liest — wie komme ich an ein Konto. Ein
+        <code>.feld-hinweis</code> ist <code>--groesse-2</code> in
+        <code>--gedaempft</code>: der Kleingedruckte unter einem Eingabefeld. Der Satz
+        stünde damit kleiner und blasser als jeder Satz darüber. <code>.text</code> ist
+        derselbe Baustein wie in der Karte davor, also weder neu noch neu zu gestalten.</li>
+      <li><strong>Was AP8 mitbringen muss, sonst prüft die Wortliste weniger als
+        gedacht:</strong> <code>docs/Was-ist-NAdoku.md</code> ist ab dieser Seite ein
+        <em>sichtbarer Text der Anwendung</em> und steht heute in keinem Bereich von
+        <code>tools/wortliste/</code>. Bereich <code>c</code> führt acht Dateien,
+        <code>docs/Handbuch.md</code> darunter — die neue Datei fehlt. Ein Lauf, der sie
+        übergeht, meldet 0 Treffer über etwas, das er nicht gelesen hat (CLAUDE.md 6,
+        B-S4-06). Eintragen im selben Paket, in dem die Datei entsteht.</li>
     </ul>
   </div>
 </div>
@@ -603,10 +723,10 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
     </section>
     <section class="karte">
       <div class="karte-inhalt">
-        <p class="feld-hinweis">Auf dieser Installation kannst du dir selbst ein Konto
+        <div class="text"><p>Auf dieser Installation kannst du dir selbst ein Konto
            anlegen. Du bekommst eine E-Mail mit einem Link; erst der Klick darauf legt das
            Konto an. <strong>Die Betreiberin schaltet es danach frei — das kann ein paar
-           Tage dauern.</strong></p>
+           Tage dauern.</strong></p></div>
         <div class="listen-form-fuss">
           <a class="knopf knopf-primaer" href="registrieren.php"><span>Registrieren</span></a>
           <a class="knopf knopf-neutral" href="login.php"><span>Anmelden</span></a>
@@ -617,7 +737,7 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
 </div>
 <footer class="fuss-seite">
   <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-    <span class="fuss-version">v20.16.0</span></p>
+    <span class="fuss-version">v20.19.0</span></p>
   <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
 </footer>
 </template>
@@ -663,10 +783,10 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
     </section>
     <section class="karte">
       <div class="karte-inhalt">
-        <p class="feld-hinweis">Auf dieser Installation entstehen Konten nur auf
+        <div class="text"><p>Auf dieser Installation entstehen Konten nur auf
            Einladung. Wenn du eines brauchst, schreib an die Adresse im
            <a href="impressum.php">Impressum</a>; du bekommst dann eine E-Mail mit einem
-           Link, über den du dein Passwort setzt.</p>
+           Link, über den du dein Passwort setzt.</p></div>
         <div class="listen-form-fuss">
           <a class="knopf knopf-primaer" href="login.php"><span>Anmelden</span></a>
         </div>
@@ -676,7 +796,7 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
 </div>
 <footer class="fuss-seite">
   <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-    <span class="fuss-version">v20.16.0</span></p>
+    <span class="fuss-version">v20.19.0</span></p>
   <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
 </footer>
 </template>
@@ -709,8 +829,8 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
      <code>&lt;p class="fuss-zeile fuss-rechts"&gt;</code> hinzu — keine neue Klasse,
      keine neue Regel.</p>
   <div class="frames">
-    <div class="frame"><div class="frame-kopf">1180 px · IST (heute, v20.16.0)</div>
-<template data-breite="1180">
+    <div class="frame"><div class="frame-kopf">1440 px · IST (heute, v20.19.0)</div>
+<template data-breite="1440">
 <div class="anmeldung-body">
   <main class="anmeldung">
     <div class="anmeldung-karte">
@@ -729,7 +849,7 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
   </main>
   <footer class="fuss-seite fuss-dunkel">
     <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-      <span class="fuss-version">v20.16.0</span></p>
+      <span class="fuss-version">v20.19.0</span></p>
     <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
   </footer>
 </div>
@@ -738,8 +858,8 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
   </div>
 
   <div class="frames" style="margin-top:14px">
-    <div class="frame"><div class="frame-kopf">1180 px · SOLL (mit P5b)</div>
-<template data-breite="1180">
+    <div class="frame"><div class="frame-kopf">1440 px · SOLL (mit P5b)</div>
+<template data-breite="1440">
 <div class="anmeldung-body">
   <main class="anmeldung">
     <div class="anmeldung-karte">
@@ -758,7 +878,7 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
   </main>
   <footer class="fuss-seite fuss-dunkel">
     <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-      <span class="fuss-version">v20.16.0</span></p>
+      <span class="fuss-version">v20.19.0</span></p>
     <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
   </footer>
 </div>
@@ -787,7 +907,7 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
   </main>
   <footer class="fuss-seite fuss-dunkel">
     <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-      <span class="fuss-version">v20.16.0</span></p>
+      <span class="fuss-version">v20.19.0</span></p>
     <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
   </footer>
 </div>
@@ -814,7 +934,7 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
   </main>
   <footer class="fuss-seite fuss-dunkel">
     <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-      <span class="fuss-version">v20.16.0</span></p>
+      <span class="fuss-version">v20.19.0</span></p>
     <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
   </footer>
 </div>
@@ -823,12 +943,26 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
   </div>
 
   <div class="anm">
-    <strong>Was zu sehen ist.</strong> Bei 1180 px stehen alle vier Verweise in einer
-    Zeile. Bei 360 px bricht <code>.fuss-zeile</code> um
-    (<code>flex-wrap:wrap</code>) — der Mockup zeigt, wie: die vier Verweise verteilen
-    sich auf zwei Zeilen, zentriert. Das ist kein Fehler, sondern das Verhalten des
-    Bausteins; es ist nur zu sehen, bevor es jemandem auffällt.
+    <strong>Was zu sehen ist.</strong> Die vier Verweise stehen in <em>beiden</em>
+    Breiten in einer Zeile — auch bei 360 px, und zwar knapp:
+    <strong>gemessen 331 px Inhalt in 336 px verfügbarer Breite</strong>, also 5 px
+    Luft. <code>.fuss-zeile</code> würde umbrechen (<code>flex-wrap:wrap</code>), muss
+    es hier aber noch nicht.
     <ul>
+      <li><strong>Der fünfte Verweis passt nicht mehr.</strong> Nutzungsbedingungen und
+        AVV liegen seit AP4 als eigene Seiten vor
+        (<code>nutzungsbedingungen.php</code>, <code>avv.php</code>) und stehen
+        <em>nicht</em> in der Fußzeile (E-P5b-05/-15). Soll einer der beiden hinein,
+        bricht die Zeile bei 360 px um — bei 5 px Luft reicht dafür jedes Wort. Das ist
+        kein Fehler, aber es ist die Stelle, an der jetzt zu entscheiden ist, ob die
+        Fußzeile eine Zeile bleiben soll. <em>Entscheidung 14.</em></li>
+      <li><strong>Zwei Zahlen zum Ist-Zustand, die nicht in der Fußzeile stehen.</strong>
+        Die beiden Eingabefelder der Anmeldeseite messen am Zeigergerät
+        <strong>41,3 px</strong> statt 36 (sie tragen kein <code>.feld-eingabe</code>,
+        derselbe Mechanismus wie beim Kartenfilter in Darstellung 1), und die Verweise
+        der Fußzeile sind an beiden Breiten <strong>20,1 px</strong> hoch. Das zweite
+        gilt für jede Fußzeile der Anwendung und ist keine Folge dieser Änderung — sie
+        verdoppelt aber die Zahl der Ziele am Handy von zwei auf vier.</li>
       <li><strong>Reihenfolge.</strong> „Was ist NAdoku" steht vorn, weil es die
         Antwort auf die Frage ist, die jemand vor der Anmeldung hat. Danach das Handbuch,
         dann die beiden Pflichtangaben. Andere Reihenfolgen sind möglich —
@@ -853,8 +987,8 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
      kopiert). Ist keines von beidem da, darf kein leerer Bildschirm stehen. Oben, was
      die Besucherin sieht; darunter, was die Betreiberin auf der Statusseite sieht.</p>
   <div class="frames">
-    <div class="frame"><div class="frame-kopf">hilfe.php · 1180 px · Dokumentation nicht gefunden</div>
-<template data-breite="1180">
+    <div class="frame"><div class="frame-kopf">hilfe.php · 1440 px · Dokumentation nicht gefunden</div>
+<template data-breite="1440">
 <header class="kopf">
   <div class="kopf-innen">
     <a class="kopf-marke" href="index.php">
@@ -883,11 +1017,19 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
         </div>
 
         <p class="feld-hinweis">Gesucht wurde, in dieser Reihenfolge:</p>
-        <div class="codeblock">
-          <p class="codeblock-titel">1. neben der Anwendung (Selbsthoster)</p>
-          <p class="codeblock-wert-lang">/var/www/nadoku/docs/Handbuch.md</p>
-          <p class="codeblock-titel">2. im Auslieferungsordner</p>
-          <p class="codeblock-wert-lang">/var/www/nadoku/server/doku/Handbuch.md</p>
+        <div class="codeblock codeblock-lang">
+          <div class="codeblock-text">
+            <p class="codeblock-titel">1. neben der Anwendung (Selbsthoster)</p>
+            <p class="codeblock-wert-lang" data-kopierwert>/var/www/nadoku/docs/Handbuch.md</p>
+          </div>
+          <button class="knopf knopf-leise" type="button" data-kopieren hidden><span>Kopieren</span></button>
+        </div>
+        <div class="codeblock codeblock-lang">
+          <div class="codeblock-text">
+            <p class="codeblock-titel">2. im Auslieferungsordner</p>
+            <p class="codeblock-wert-lang" data-kopierwert>/var/www/nadoku/server/doku/Handbuch.md</p>
+          </div>
+          <button class="knopf knopf-leise" type="button" data-kopieren hidden><span>Kopieren</span></button>
         </div>
 
         <p class="feld-hinweis">Du bist mit Verwaltungsrechten angemeldet: Unter
@@ -906,7 +1048,7 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
 </div>
 <footer class="fuss-seite">
   <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-    <span class="fuss-version">v20.16.0</span></p>
+    <span class="fuss-version">v20.19.0</span></p>
   <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
 </footer>
 </template>
@@ -914,8 +1056,8 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
   </div>
 
   <div class="frames" style="margin-top:14px">
-    <div class="frame"><div class="frame-kopf">Betrieb → Status · 1180 px · Ausschnitt: die neue Zeile</div>
-<template data-breite="1180" data-innen="16">
+    <div class="frame"><div class="frame-kopf">Betrieb → Status · 1440 px · Ausschnitt: die neue Zeile</div>
+<template data-breite="1440" data-innen="16">
 <div class="rahmen">
   <main class="inhalt">
     <section class="karte">
@@ -956,8 +1098,14 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
   <div class="anm">
     <strong>Was zu sehen ist.</strong> Kein leerer Bildschirm, sondern drei Auskünfte in
     der Reihenfolge, in der sie gebraucht werden: <em>was fehlt</em> (Meldung im Ton
-    <code>warn</code>), <em>wo gesucht wurde</em> (Wertekasten, Design.md 9.18 — Pfade
-    sind Werte zum Abschreiben) und <em>was zu tun ist</em>. Der letzte Absatz erscheint
+    <code>warn</code>), <em>wo gesucht wurde</em> (zwei Wertekästen der kleinen Stufe,
+    Design.md 9.18 — Pfade sind Werte zum <em>Kopieren</em>, nicht zum Abschreiben) und
+    <em>was zu tun ist</em>. Die beiden Kästen sind je ein
+    <code>ui_codeblock_lang($pfad, $titel)</code>: <code>.codeblock.codeblock-lang</code>
+    mit <code>.codeblock-text</code> und dem <code>hidden</code>-Knopf „Kopieren", den
+    <code>assets/kopieren.js</code> einblendet. Ein Kasten mit zwei Werten darin wäre
+    eine dritte Stufe neben den zwei Stufen des Katalogs — und ohne Knopf, obwohl
+    der Knopf laut 9.18 zum Baustein gehört und nicht zur Seite. Der letzte Absatz erscheint
     nur, wenn eine Administration angemeldet ist — dieselbe Unterscheidung, die
     <code>rechtstext_seite.php</code> beim leeren Impressum schon macht.
     <ul>
@@ -985,8 +1133,8 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
   <h2>Was hier zu entscheiden ist</h2>
   <ol>
     <li><strong>Suchfeld: Filter über dem Inhaltsverzeichnis oder Volltextsuche?</strong>
-      Der Entwurf zeigt einen <code>.kartenfilter</code> (44 / 36 px), der die 25
-      Überschriften im Browser filtert — kein Skript auf dem Server, keine
+      Der Entwurf zeigt einen <code>.kartenfilter</code> (44 px am Finger, gemessen 41 px am
+      Zeigergerät), der die 25 Überschriften im Browser filtert — kein Skript auf dem Server, keine
       Adressänderung, CSP-konform. Die Alternative ist ein <code>.suchfeld</code>
       (48 px) mit Volltextsuche im gerenderten Handbuch; das wäre das zweite
       <code>.suchfeld</code> der Anwendung (das erste gehört <code>suche.php</code>) und
@@ -1050,15 +1198,42 @@ body{margin:0;background:#EDE9DF;width:1400px;font-family:var(--schrift-text)}
     <li><strong><code>a.zeile</code> statt <code>.eintrag</code> für das
       Inhaltsverzeichnis — und der Befund dahinter.</strong> <code>.eintrag-text</code>
       trägt <code>flex:1 0 auto</code> und schrumpft deshalb nicht, obwohl der Kommentar
-      daneben eine Ellipse beschreibt. Gemessen mit den 25 Handbuch-Überschriften: in
-      der 219 px breiten Leiste rollt die Liste 357 px weit seitwärts (138 px
-      unsichtbar), in einer Karte bei 360 px läuft die Seite auf 378 px über. Der
+      daneben eine Ellipse beschreibt. Nachgemessen mit den längsten
+      Handbuch-Überschriften: Die Liste rollt <strong>467 px</strong> weit seitwärts —
+      in der 260 px breiten Leiste (ab 1200 px) ebenso wie in der 220 px schmalen
+      (1024–1199 px), weil die Rollbreite am längsten Titel hängt und nicht am Fenster;
+      in einer Karte bei 360 px läuft die Seite auf <strong>488 statt 360 px</strong>
+      über. Der
       Entwurf weicht deshalb auf <code>a.zeile</code> aus — das ist der Baustein, den
       <code>kartenfilter.js</code> ohnehin filtert. Die Alternative wäre, im Bestand
       <code>.eintrag-text</code> auf <code>flex:1 1 auto</code> zu setzen: Das trifft
       Diensttage-Leiste und Einstellungsmenü mit und braucht den Stilvergleich. Zu
       entscheiden ist beides getrennt — der Weg für P5b und ob der Bestand nachgezogen
       wird (Backlog).</li>
+
+    <li><strong>Bleibt die Fußzeile der Anmeldeseite einzeilig?</strong> Gemessen bei
+      360 px: die vier Verweise brauchen 331 px, verfügbar sind 336 — fünf Pixel Luft.
+      Ein fünfter Verweis (Nutzungsbedingungen oder AVV aus AP4) bricht die Zeile um.
+      Entweder man nimmt den Umbruch hin, oder die Rechtstexte bleiben aus der Fußzeile
+      heraus und stehen nur dort, wo sie angenommen werden
+      (<code>einwilligung.php</code>, Kontoseite). Beide Seiten gibt es seit AP4
+      (<code>nutzungsbedingungen.php</code>, <code>avv.php</code>); heute steht keine
+      davon in der Fußzeile.</li>
+
+    <li><strong>Trägt jede Zeile des Inhaltsverzeichnisses den Winkel rechts?</strong>
+      <code>ui_zeile(['href_ganz' =&gt; …])</code> setzt ihn immer, und es gibt im
+      Bestand keine <code>a.zeile</code> ohne ihn — im Bild steht er deshalb an allen
+      26 Zeilen. Er bedeutet „führt woanders hin"; eine Sprungmarke führt an dieselbe
+      Seite. Entweder er bleibt (dann ist nichts zu tun), oder <code>ui_zeile()</code>
+      bekommt eine Option, ihn wegzulassen — <em>das ist eine Änderung am Baustein und
+      kein Weglassen im Markup</em>, und sie trifft jede künftige Zeile mit Sprungziel.</li>
+
+    <li><strong>Was steht im Kopf, wenn <code>hilfe.php</code> aus dem Menü heraus
+      aufgerufen wird?</strong> E-P5b-08 gibt der Seite einen Menüeintrag „Hilfe" für
+      Angemeldete. Der Kopf trägt dann das gewöhnliche Menü statt „Zur Anmeldung" — und
+      damit steht die Frage im Raum, ob neben dem Einstellungsmenü <em>zwei</em> Leisten
+      stehen oder nur das Inhaltsverzeichnis. Dieser Fall ist hier nicht gezeichnet; er
+      gehört vor AP8 entschieden, weil er über die Hülle der Seite entscheidet.</li>
   </ol>
 </div>
 

@@ -14,6 +14,133 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.20.0] — 2026-09-16
+
+**Selbstlöschung mit Karenz, Adresswechsel mit Bestätigung** (P5b/AP5,
+E-P5b-16).
+
+### Geändert
+
+**Die E-Mail-Adresse wird nicht mehr sofort geschrieben.** Bis Web 20.19.0
+stand sie unmittelbar in der Zeile — mit Passwortnachweis und einer
+Hinweismail an die alte, aber **ohne jede Prüfung, ob die neue überhaupt
+erreichbar ist**. Ein Tippfehler sperrte damit aus: Die Anmeldung läuft über
+die Adresse, und „Passwort vergessen" schickt an eine Adresse, die es nicht
+gibt. Der Weg zurück führte über die Verwaltung — oder, auf einer
+Einzelinstallation, über die Datenbank.
+
+Jetzt geht ein Bestätigungslink an die **neue** Adresse (24 Stunden), eine
+Warnung an die **alte**, und **die alte bleibt die gültige, bis der Klick
+kommt**. Name und Logo werden weiterhin sofort gespeichert; sie sind harmlos,
+und eine Bestätigung dafür wäre eine Hürde ohne Zweck.
+
+**Die Meldung sagt es.** Ein bloßes „Profil gespeichert." wäre hier die
+gefährlichste aller Auskünfte: Die Nutzerin schlösse daraus, sie könne sich ab
+jetzt mit der neuen Adresse anmelden.
+
+### Neu
+
+**Konto löschen — durch die Besitzerin selbst.** Bis jetzt konnte sie das
+nicht; sie musste die Verwaltung bitten, und die löschte sofort und
+unwiderruflich. Beides ist falsch herum: Über die eigenen Daten entscheidet,
+wem sie gehören, und eine Löschung ohne Frist ist ein Klick, der sich nicht
+zurücknehmen lässt.
+
+**Dreißig Tage Karenz, und die Rücknahme ist die Anmeldung.** Kein Knopf, kein
+zweiter Link, kein zweites Token — ein Rücknahmeweg ohne Passwort wäre genau
+das, was ein Angreifer wollte, der die Löschung verhindern will, um weiter
+mitzulesen.
+
+**Was die Karte sagt, bevor es losgeht:** dass nach dem Termin Einsätze,
+GPS-Daten, Stammdaten und Konto-Backups endgültig fort sind; dass es danach
+keinen Weg zurück gibt, auch nicht über die Verwaltung (die Daten sind mit dem
+Passwort der Person verschlüsselt); und dass man sie vorher ausleiten kann.
+
+**Ein neuer Hintergrundjob** („Beantragte Löschungen ausführen") räumt nach
+Ablauf ab — **höchstens fünf je Lauf**. Eine Kontolöschung räumt die Spuren von
+Hand, löscht einen Ordner im Dateisystem und kaskadiert über vierzehn
+Tabellen; das Huckepack-Budget sind drei Sekunden für alle Jobs zusammen.
+Einen Tag später zu löschen ist kein Zusagenbruch, eine hängende Anfrage schon.
+
+**Das Protokoll nennt beim Adresswechsel keine Adressen** — nur die
+Kontonummer und dass gewechselt wurde. Ein Audit, in dem jede je benutzte
+Adresse eines Kontos steht, ist ein Verzeichnis von Adressen und nicht eines
+von Handlungen.
+
+### Nebenbei
+
+**Der Bilderlauf klickt jetzt durch das Einwilligungstor.** Steht ein Rechtstext
+in Kraft und hat das Prüfkonto nicht zugestimmt, landete jede Aufnahme auf
+`einwilligung.php` statt auf der Seite, die gemessen werden sollte — der Lauf
+meldete es selbst („32× Seite leitete auf die Anmeldung um"), aber die nächste
+Instanz hätte davor gestanden wie vor einem Rätsel. Geklickt und nicht
+übergangen: Das Tor ist echtes Verhalten der Anwendung.
+
+**Migration** `2026_09_16_adresswechsel_bestaetigt`. **`update.php` ist
+fällig.**
+
+## [Web 20.19.0] — 2026-09-16
+
+**Einwilligungen** (P5b/AP4, E-P5b-05, -15; Fehlerfund F3).
+
+### Neu
+
+**Vier Rechtstexte statt zwei.** Neben Impressum und Datenschutzerklärung
+führt die Anwendung jetzt **Nutzungsbedingungen** und die **Vereinbarung zur
+Auftragsverarbeitung**. Beide werden im selben Editor gepflegt (Verwaltung →
+Installation) und sind unter `nutzungsbedingungen.php` und `avv.php`
+erreichbar. **Die Anwendung liefert weiterhin keinen Text mit** (R32) —
+Entwürfe liegen unter `docs/rechtstexte/`, und sie sind **nicht anwaltlich
+geprüft**; das steht in ihrem Kopf.
+
+**Drei Häkchen, zwei Wirkungen.** Nutzungsbedingungen und AVV werden
+**angenommen** und sperren bei einer neuen Fassung den nächsten Login; die
+Datenschutzerklärung wird **zur Kenntnis genommen** und zeigt nur einen
+Hinweis auf jeder Seite.
+
+**Das ist kein Rang, sondern die Rechtsnatur.** Ein Vertrag kommt durch
+Annahme zustande und darf ohne sie nicht weiterlaufen. Eine
+Datenschutzerklärung informiert; Widerspruch dagegen ist kein
+Vertragsschluss, sondern ein Recht — sie darf den Zugang nicht sperren, muss
+aber auffallen, sonst ist die Kenntnisnahme eine Behauptung. Der Wortlaut
+trägt den Unterschied und steht deshalb im Katalog, nicht im Markup.
+
+**Drei Wege bleiben am Tor offen: Abmelden, Export, Konto löschen.** Wer
+nicht zustimmen will, muss an seine Daten kommen und gehen können; ein Tor,
+das auch den Ausgang versperrt, wäre Nötigung. Nachgemessen im Browser:
+`suche.php` führt zurück ans Tor, `import.php` bleibt offen.
+
+**Der Bestand holt nach.** Kein Konto hat vor P5b eine Einwilligung
+abgegeben, weil es nichts gab, wozu. Beim ersten Login nach dem Einspielen
+der Texte landen deshalb alle am Tor — es gibt keinen Weg, eine Annahme
+rückwirkend anzunehmen.
+
+**Ein Text ohne Standdatum verlangt nichts.** Sonst sperrte ein leer
+angelegter Platzhalter alle Konten aus — genau der Zustand zwischen dem
+Einspielen der Mechanik und dem Einspielen der geprüften Texte.
+
+**`ingest.php` und die API bleiben unberührt.** Die Uhr fragt niemanden um
+Zustimmung; ein Tor davor ließe eine laufende Aufzeichnung ins Leere laufen,
+ohne dass irgendwo jemand einen Haken setzen könnte. Gemessen: Ingestprobe
+**83 Erwartungen, 0 Fehlschläge** bei leerer Einwilligungstabelle.
+
+### Behoben
+
+**Das Standdatum war ein Tagesdatum** (Fehlerfund F3). Zwei Änderungen am
+selben Tag wären damit *eine* Fassung gewesen — und wer die erste angenommen
+hat, hätte als Annehmer der zweiten gegolten. `stand_am` ist jetzt ein
+`DATETIME`; nachgemessen sperrt eine zweite Fassung am selben Tag erneut. Der
+Editor bleibt ein Datumsfeld: Wer ein Standdatum setzt, denkt in Tagen.
+
+**Ein dritter Rechtstext hätte stillschweigend falsch geantwortet.** Der
+Leerzustandstext in `rechtstext_seite.php` war ein *zweiwertiger* ternärer
+Ausdruck — die Nutzungsbedingungen hätten gemeldet, es sei „noch keine
+Datenschutzerklärung hinterlegt". Kein Fehler, keine Meldung, nur ein
+falscher Satz. Jetzt ein Katalog: Ein fehlender Eintrag fällt beim Nachsehen
+auf, ein falscher Zweig nicht.
+
+**Migration** `2026_09_16_einwilligungen`. **`update.php` ist fällig.**
+
 ## [Web 20.18.0] — 2026-09-16
 
 **Die Demo-Anmeldung lässt sich abschalten** (P5b/AP7, E-P5b-07, R25).

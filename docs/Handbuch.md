@@ -464,12 +464,24 @@ lässt, ändert, wem das Konto gehört. Deshalb steht unter der Adresse ein Feld
 für das Passwort. Für **Name und Logo** brauchst du es nicht; leer lassen
 genügt, solange die Adresse stehen bleibt.
 
-**An die alte Adresse geht eine Nachricht.** Sie sagt, welche Adresse jetzt
-gilt und dass du dich melden sollst, falls du es nicht warst. Sie geht bewusst
-an die **alte** Adresse — sie ist die einzige, die im Missbrauchsfall noch dir
-gehört. Dasselbe gilt, wenn die Verwaltung die Adresse eines Kontos ändert
-(11.1). Eine **Bestätigung der neuen** Adresse gibt es noch nicht; die neue
-gilt sofort.
+**Seit Web 20.20.0 gilt die neue Adresse erst nach einem Klick.** Du bekommst
+an die **neue** Adresse eine Nachricht mit einem Link, der 24 Stunden gilt;
+erst dieser Klick schreibt sie um. Bis dahin meldest du dich weiter mit der
+alten an — **nichts ist kaputt, wenn du dich vertippt hast**.
+
+Genau darum geht es: Bis Web 20.19.0 galt die neue Adresse sofort, ohne dass
+irgendjemand geprüft hätte, ob sie überhaupt erreichbar ist. Ein Tippfehler
+sperrte damit aus — die Anmeldung läuft über die Adresse, und „Passwort
+vergessen" schickt an eine Adresse, die es nicht gibt.
+
+**An die alte Adresse geht zusätzlich eine Warnung.** Sie sagt, was gerade
+beantragt wurde und dass du dich melden sollst, falls du es nicht warst. Sie
+geht bewusst an die **alte** Adresse — sie ist die einzige, die im
+Missbrauchsfall noch dir gehört. Dasselbe gilt, wenn die Verwaltung die
+Adresse eines Kontos ändert (11.1).
+
+**Ist die neue Adresse inzwischen von einem anderen Konto belegt**, sagt die
+Seite das beim Klick, und deine bisherige Adresse bleibt unverändert.
 
 Seit Web 15.0.0 steht dort auch deine **Rolle** — NutzerIn, Admin oder
 BetreiberIn — als reine Anzeige. Sie erklärt, warum zwei Konten unter dem
@@ -524,6 +536,34 @@ Die Karte hat einen **eigenen** Speichern-Knopf; sie hängt nicht am Knopf
 darüber. Hat die **Installation** die Adresssuche abgeschaltet, steht der
 Schalter ausgegraut da und sagt es — dann ändert er nichts, und wer ihn
 braucht, wendet sich an die BetreiberIn.
+
+### 3.1b Konto löschen (seit Web 20.20.0)
+
+Unter dem Zahnrad → **Profil**, ganz unten. **Du brauchst niemanden zu fragen.**
+
+**Was passiert:** Dein Konto wird sofort gesperrt und nach **30 Tagen**
+endgültig gelöscht. In dieser Zeit genügt eine **Anmeldung**, und die Löschung
+ist zurückgenommen — einen Knopf dafür brauchst du nicht. Eine Nachricht mit
+dem Termin geht an deine Adresse.
+
+**Warum die Anmeldung und kein Link:** Ein Link, der ohne Passwort wirkt, wäre
+genau das, was jemand bräuchte, der deine Löschung verhindern will, um weiter
+mitzulesen.
+
+**Nach dem Termin ist es endgültig.** Einsätze, GPS-Daten, Stammdaten und
+Konto-Backups sind fort. Es gibt danach **keinen Weg zurück, auch nicht über
+die Verwaltung** — deine Daten sind mit deinem Passwort verschlüsselt, und
+niemand sonst kann sie öffnen.
+
+**Willst du sie behalten, leite sie vorher aus** (Import / Export). Danach ist
+es zu spät.
+
+**Was in der Karenz mit deinen Geräten passiert:** Uhr und Handy bekommen eine
+Absage und behalten ihre Warteschlange. Nimmst du die Löschung zurück, kommt
+alles nach. Lässt du es laufen, ist es mit dem Konto fort.
+
+**Das Demo-Konto lässt sich nicht löschen** — es setzt sich ohnehin alle 30
+Minuten selbst zurück.
 
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
@@ -3516,8 +3556,9 @@ genau sie.
 ### 11.5 Installation
 
 Unter **„Installation"** steht, wie diese Anlage nach außen auftritt: der
-**Name**, die **Adressen**, das **Logo**, das **Impressum** und die
-**Datenschutzerklärung**. Bis Web 15.1.0
+**Name**, die **Adressen**, das **Logo** und die **vier Rechtstexte** —
+Impressum, Datenschutzerklärung, Nutzungsbedingungen und die Vereinbarung zur
+Auftragsverarbeitung. Bis Web 15.1.0
 hieß die Seite „Rechtstexte", und das Logo lag auf der alten Seite „Wartung"; die alte
 Adresse führt weiterhin hierher.
 
@@ -3652,6 +3693,43 @@ nicht. Einfügen und an die eigene Erklärung anpassen musst du ihn selbst.
 Der Baustein erscheint nur, solange die Adresssuche eingeschaltet ist. Wer sie
 abschaltet, braucht den Absatz nicht — und ein Absatz über eine Übertragung,
 die nicht stattfindet, wäre falsch.
+
+#### Nutzungsbedingungen und Auftragsverarbeitung (seit Web 20.19.0)
+
+**Zwei Texte, die deine Nutzerinnen annehmen müssen** — anders als Impressum
+und Datenschutzerklärung.
+
+**Der Unterschied ist kein Rang, sondern die Rechtsnatur.** Ein Vertrag kommt
+durch Annahme zustande; ohne sie darf er nicht weiterlaufen. Deshalb:
+
+| Dokument | Häkchen | Was eine neue Fassung bewirkt |
+|---|---|---|
+| Nutzungsbedingungen | „angenommen" | **Sperrt den nächsten Login**, bis angenommen |
+| Auftragsverarbeitung | „angenommen" | **Sperrt den nächsten Login**, bis angenommen |
+| Datenschutzerklärung | „zur Kenntnis genommen" | Hinweis auf jeder Seite, sperrt nichts |
+| Impressum | keines | — |
+
+**Was du wissen musst, bevor du ein Standdatum setzt:** Ein neues Standdatum
+bei Nutzungsbedingungen oder AVV stellt **alle Konten** beim nächsten Anmelden
+vor das Häkchen. Das ist gewollt und steht so im Protokoll (Verwaltung → das
+Betriebsprotokoll zählt es mit).
+
+**Solange kein Standdatum gesetzt ist, verlangt der Text nichts.** Du kannst
+also in Ruhe einen Entwurf hinterlegen, ihn ansehen, ihn ändern — erst das
+Datum setzt ihn in Kraft.
+
+**Wer nicht zustimmt, kommt trotzdem an seine Daten.** Am Tor bleiben drei
+Wege offen: abmelden, Daten ausleiten, Konto löschen. Ein Tor, das auch den
+Ausgang versperrt, wäre Nötigung — und das soll diese Anwendung nicht sein.
+
+**Uhr und Handy sind nicht betroffen.** Sie laden weiter hoch; ein Gerät hat
+keinen Bildschirm für ein Häkchen, und eine laufende Aufzeichnung soll nicht
+ins Leere laufen.
+
+**Die Anwendung liefert keinen Text mit** (wie beim Impressum). Entwürfe für
+beide Dokumente liegen im Repositorium unter `docs/rechtstexte/` — sie sind
+ausdrücklich **nicht anwaltlich geprüft** und als Vorlage gedacht, nicht als
+fertiger Text.
 
 ### 11.6 Demo-Konto
 

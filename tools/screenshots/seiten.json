@@ -20,6 +20,24 @@
       "pfad": "impressum.php"
     },
     {
+      "name": "04b-nutzungsbedingungen",
+      "gruppe": "Öffentlich",
+      "rolle": "aus",
+      "pfad": "nutzungsbedingungen.php"
+    },
+    {
+      "name": "04c-avv",
+      "gruppe": "Öffentlich",
+      "rolle": "aus",
+      "pfad": "avv.php"
+    },
+    {
+      "name": "04d-adresse-bestaetigen",
+      "gruppe": "Öffentlich",
+      "rolle": "aus",
+      "pfad": "adresse_bestaetigen.php"
+    },
+    {
       "name": "05-datenschutz",
       "gruppe": "Öffentlich",
       "rolle": "aus",

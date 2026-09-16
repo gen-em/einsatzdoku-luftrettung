@@ -533,6 +533,7 @@ function ui_leiste_ende(): void
     echo "  </aside>\n";
     echo '  <main class="inhalt" id="inhalt">' . "\n";
     ui_demo_hinweis();
+    ui_datenschutz_hinweis();
 }
 
 
@@ -1173,6 +1174,41 @@ function ui_demo_hinweis(): void
   zurückgesetzt<?= $rest > 0 ? ', das nächste Mal in etwa '
       . (int)ceil($rest / 60) . '&nbsp;Minuten' : '' ?>.
   <strong>Bitte niemals echte Patienten- oder Einsatzdaten erfassen.</strong></p>
+</div>
+<?php }
+
+
+/**
+ * DER HINWEIS AUF EINE NEUE DATENSCHUTZERKLAERUNG (P5b/AP4, E-P5b-05).
+ *
+ * WARUM HIER UND NICHT ALS TOR. Eine Datenschutzerklaerung wird nicht
+ * angenommen, sondern zur Kenntnis genommen — Widerspruch dagegen ist kein
+ * Vertragsschluss, sondern ein Recht. Sie darf deshalb NICHT den Zugang
+ * sperren; sie muss aber auffallen, sonst ist die Kenntnisnahme eine
+ * Behauptung.
+ *
+ * DERSELBE PLATZ WIE DER DEMO-HINWEIS, und das ist kein Zufall: Beide sind
+ * Aussagen ueber den Zustand dieses Kontos, die auf JEDER Seite gelten und
+ * keine Handlung der Seite betreffen. Ein `ui_meldung()` waere falsch — das
+ * gehoert zur Handlung, die die Seite gerade ausfuehrt.
+ *
+ * `$einwilligungOffen` KOMMT AUS `auth_guard.php` und wird hier nicht neu
+ * gelesen: Die Abfrage liefe sonst zweimal je Seitenaufbau. Steht die
+ * Variable nicht (Seiten ohne Wache, oder ein API-Aufruf), zeigt die
+ * Funktion nichts — richtig so, denn dann gibt es auch keine Sitzung.
+ */
+function ui_datenschutz_hinweis(): void
+{
+    $offen = $GLOBALS['einwilligungOffen']['hinweis'] ?? [];
+    if (!$offen) { return; }
+    ?>
+<div class="demo-hinweis" role="status">
+  <?= ui_symbol('hinweis', 'symbol-gross') ?>
+  <p><strong>Die Datenschutzerklärung hat eine neue Fassung.</strong> Sie sagt,
+  was mit deinen Daten geschieht — was verschlüsselt liegt, was im Klartext,
+  wie lange und warum. <a href="einwilligung.php">Ansehen und bestätigen</a>;
+  bis dahin bleibt dieser Hinweis stehen. <strong>Gesperrt wird dafür
+  nichts</strong> — eine Kenntnisnahme ist keine Zustimmung.</p>
 </div>
 <?php }
 

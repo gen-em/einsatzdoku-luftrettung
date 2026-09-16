@@ -236,6 +236,24 @@ function jobs_katalog(): array
             'rueckstand'   => fn(PDO $pdo, array $z): ?int => null,
             'lauf'         => 'job_aufraeumen',
         ],
+        /* DER LOESCHJOB STEHT WEIT VORN, gleich hinter dem Aufraeumen.
+         *
+         * Er hat im Regelfall NICHTS zu tun — eine Abfrage ueber einen Index
+         * — und darf deshalb vor der Spurarbeit stehen, ohne ihr Budget zu
+         * nehmen. Wenn er doch etwas zu tun hat, ist es das, worauf jemand
+         * ein Recht hat: Eine beantragte Loeschung, die nach Ablauf der
+         * Karenz noch Tage wartet, weil die Verdichtung das Budget
+         * verbraucht, ist eine nicht eingehaltene Zusage. */
+        'konto_loeschung' => [
+            'titel'        => 'Beantragte Löschungen ausführen',
+            'beschreibung' => 'Konten, deren 30-tägige Karenz abgelaufen ist, '
+                            . 'endgültig löschen — mitsamt GPS-Daten, Stammdaten und '
+                            . 'Konto-Backups. Eine Anmeldung in der Karenz nimmt '
+                            . 'den Antrag zurück',
+            'taeglich'     => false,
+            'rueckstand'   => 'job_konto_loeschung_rueckstand',
+            'lauf'         => 'job_konto_loeschung',
+        ],
         'verdichtung' => [
             'titel'        => 'GPS-Daten verdichten',
             'beschreibung' => 'Abgeschlossene GPS-Daten von Zeilen in den '
@@ -820,6 +838,70 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
  * Sicherheitsnetz, kein Hauptweg: Seit AP1 raeumen die Loeschwege selbst ab
  * (F-S2-B).
  */
+/**
+ * BEANTRAGTE LOESCHUNGEN AUSFUEHREN (P5b/AP5, E-P5b-16).
+ *
+ * WARUM HOECHSTENS FUENF JE LAUF. Eine Kontoloeschung ist teuer: Sie raeumt
+ * die Spuren von Hand (die Kaskade erreicht sie nicht), loescht den
+ * Backup-Ordner im Dateisystem und kaskadiert ueber vierzehn Tabellen. Bei
+ * einem grossen Konto sind das Sekunden — am Huckepack-Weg steht dafuer ein
+ * Budget von drei Sekunden fuer ALLE Jobs.
+ *
+ * Fuenf ist die Zahl, bei der der Job im Regelfall (null bis eine Loeschung
+ * am Tag) nie an die Grenze kommt und im Ausnahmefall (jemand raeumt eine
+ * Installation ab) nicht die ganze Anfrage blockiert. Der Rest kommt beim
+ * naechsten Lauf; einen Tag spaeter zu loeschen ist kein Zusagenbruch, eine
+ * haengende Anfrage schon.
+ *
+ * DIE BACKUPS GEHEN MIT. `konto_loeschen()` bekommt `true` — die Nutzerin
+ * hat ihre Loeschung beantragt, und die Zusage „danach ist nichts mehr
+ * lesbar" ist der Grund, aus dem jemand das tut. Die Admin-Loeschung fragt
+ * an dieser Stelle (E25); hier gibt es niemanden zu fragen, und die Antwort
+ * stuende ohnehin fest.
+ */
+const JOB_KONTO_LOESCHUNG_BLOCK = 5;
+
+function job_konto_loeschung(PDO $pdo, array $zustand, callable $zeitLinks): array
+{
+    require_once __DIR__ . '/konto_lib.php';
+    $faellig = konto_loeschung_faellig(JOB_KONTO_LOESCHUNG_BLOCK);
+    $erledigt = 0;
+
+    foreach ($faellig as $k) {
+        if ($zeitLinks() <= 0.0) { break; }
+        $r = konto_loeschen((int)$k['id'], true);
+        if ($r['ok']) {
+            $erledigt++;
+        } else {
+            /* NICHT ABBRECHEN, ABER MERKEN. Ein Konto, dessen Backups sich
+             * nicht entfernen lassen, bleibt stehen — `konto_loeschen()`
+             * loescht dann ausdruecklich NICHTS. Der naechste Lauf versucht
+             * es wieder; bleibt es dabei, faellt es in der Statusliste auf,
+             * weil der Rueckstand nicht sinkt. */
+            error_log('konto_loeschung: Konto ' . $k['id'] . ' nicht gelöscht — '
+                    . $r['grund']);
+        }
+    }
+
+    return ['zustand' => [], 'erledigt' => $erledigt,
+            'fertig'  => count($faellig) < JOB_KONTO_LOESCHUNG_BLOCK];
+}
+
+/** Wie viele Loeschungen faellig sind — fuer die Statusseite. */
+function job_konto_loeschung_rueckstand(PDO $pdo, array $zustand): ?int
+{
+    try {
+        require_once __DIR__ . '/konto_lib.php';
+        $st = $pdo->prepare('SELECT COUNT(*) FROM users
+                              WHERE status = "gesperrt" AND gesperrt_grund = ?
+                                AND loeschung_am IS NOT NULL AND loeschung_am <= NOW()');
+        $st->execute([KONTO_SPERRGRUND_SELBSTLOESCHUNG]);
+        return (int)$st->fetchColumn();
+    } catch (Throwable $ex) {
+        return null;   // Spalten fehlen (Migration steht aus)
+    }
+}
+
 const JOB_WAISEN_BLOCK = 2000;
 
 function job_waisen(PDO $pdo, array $zustand, callable $zeitLinks): array
