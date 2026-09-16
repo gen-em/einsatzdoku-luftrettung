@@ -14,6 +14,71 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.15.1] — 2026-09-16
+
+**Die Zustandsdatei der Auslieferungskette lag im Webroot** (Backlog Nr. 213).
+
+### Behoben
+
+`SamKirkland/FTP-Deploy-Action` legt ihre Zustandsdatei
+`.ftp-deploy-sync-state.json` in das Zielverzeichnis — bei uns also in den
+Webroot, neben `.htaccess`, und damit über HTTP abrufbar. Darin steht je
+ausgelieferter Datei **Pfad, Größe und Hash**, dazu der Zeitpunkt der letzten
+Auslieferung.
+
+Der Schaden ist begrenzt und soll auch nicht größer gemacht werden, als er
+ist: `config.php`, `install.lock`, `wartung.lock`, `ueberlast.json`,
+`sicherungen/` und `apk/` stehen in der Ausnahmeliste der Kette, werden nie
+ausgeliefert und tauchen folglich nicht in der Datei auf. **Kein Geheimnis
+tritt aus.** Was austritt, ist die vollständige Verzeichnisstruktur und — über
+die Hashes — der Versionsstand jeder einzelnen Datei; das ist genau die
+Vorlage, mit der jemand einen Bestand gegen bekannte Schwachstellen abgleicht,
+ohne eine einzige Anfrage an die Anwendung zu stellen.
+
+**Zwei Schranken, nicht eine.** `state-name` legt die Datei jetzt eine Ebene
+über den Webroot (`../.deploy-state-staging.json` bzw.
+`../.deploy-state-produktion.json`), und `server/.htaccess` sperrt Punktdateien
+pauschal. Die zweite ist nicht Zierde, sondern der Fall, mit dem zu rechnen
+ist: Erlaubt der Käfig des FTP-Zugangs kein `../`, landet die Datei wieder im
+Webroot — und wird dort abgefangen. Wer den ersten Weg zurückbauen muss, trägt
+die Variable `FTP_STATE_PFAD` ein und ändert keine Zeile der Kette.
+
+**Zwei Namen statt einem**, weil Staging und Produktion sich einen FTP-Zugang
+teilen könnten. Zwei gleichnamige Zustandsdateien in derselben Ebene
+überschrieben einander; die Kette lieferte dann jedes Mal alles neu aus oder,
+schlimmer, übersähe Änderungen.
+
+### Hinzugefügt
+
+Stufe 2 der Kette hat einen Schritt **„Punktdateien gesperrt, .well-known
+offen?"**. Er fragt vier Punktpfade ab und verlangt **403**, dann
+`.well-known/acme-challenge/` und verlangt **404 und ausdrücklich nicht 403**.
+
+Die zweite Hälfte ist die wichtigere. Eine pauschale Punktdatei-Sperre
+erschlägt die ACME-Herausforderung und damit die Zertifikatserneuerung — und
+zwar lautlos, bis das Zertifikat in bis zu 90 Tagen abläuft. Niemand ruft
+diesen Pfad von Hand auf. Diese Prüfung ist das Einzige, was zwischen einer zu
+breiten Sperre und einer abgelaufenen Anlage steht.
+
+Und sie beweist überhaupt etwas, weil `RewriteRule [F]` **403 antwortet, ob
+die Datei da ist oder nicht** — mod_rewrite läuft vor der Dateisuche. Ein 404
+käme auch von einer leeren Adresse. Genau daran ist die erste Abfrage zu
+diesem Befund gescheitert: Sie lief gegen ein noch leeres Staging, gab 404,
+und das sah aus wie Entwarnung. Ein Prüfmittel, das „gesperrt" nicht von
+„nicht vorhanden" unterscheiden kann, misst nichts.
+
+### Was offen bleibt
+
+**Die bereits abgelegte Datei verschwindet dadurch nicht.** Auf einer Anlage,
+auf die schon ausgeliefert wurde, liegt sie weiter im Webroot — die
+`.htaccess` sperrt sie ab sofort, aber entfernt wird sie nur von Hand per FTP.
+Das steht als Schritt im Prüfdokument.
+
+**Ob `../` im Käfig des FTP-Zugangs erlaubt ist, ist nicht gemessen.** Die
+Ports 21 und 990 verlassen den Prüfcontainer nicht (in AP10 gemessen). Es
+zeigt sich beim ersten echten Lauf; schlägt es fehl, bricht die Auslieferung,
+und die Variable `FTP_STATE_PFAD` ist der Rückweg.
+
 ## [Web 20.15.0] — 2026-09-16
 
 **P5a/AP11 — der Nachlöse-Job: die Modelltabelle holt die Geräte ein.**

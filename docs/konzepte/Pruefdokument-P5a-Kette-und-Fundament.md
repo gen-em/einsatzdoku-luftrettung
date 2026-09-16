@@ -2,10 +2,11 @@
 
 **Konzept:** `Konzept-P5a-Kette-und-Fundament.md` (15.09.2026, E-P5a-01 bis
 -58, AP1 bis AP12). **Gemessen auf:** Zweig `claude/butte-umsetzen-5opi9u`.
-**Stand dieses Dokuments:** 16.09.2026, **nach AP12** — die Umsetzung ist fertig
-(Web 20.4.0 bis 20.15.0), Merge und Tag stehen aus. **32 Prüfpunkte** in
-Abschnitt 3; neun davon (P1–P8, P12) betreffen die Auslieferungskette und
-brauchen GitHub-Umgebungen, die es hier nicht gibt (N36).
+**Stand dieses Dokuments:** 16.09.2026, **nach AP12 und dem Nachtrag Nr. 213**
+(Web 20.4.0 bis **20.15.1**), Merge und Tag stehen aus. **33 Prüfpunkte** in
+Abschnitt 3; zehn davon (P1–P8, P12, P33) betreffen die Auslieferungskette und
+brauchen GitHub-Umgebungen, die es hier nicht gibt (N36, N38). **P33 ist der
+einzige Punkt der Liste, bei dem ein Fehler das Zertifikat der Anlage kostet.**
 
 Das Prüfprotokoll im Konzept beantwortet „ist es belegt?". Dieses Dokument
 beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
@@ -54,6 +55,7 @@ beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
 | N35 | **Der Nachlöse-Job über einen großen Altbestand** | Hier stehen fünf Gerätezeilen mit Rohangabe. Ob das Zeitbudget (3 s huckepack, 20 s im eigenen Lauf) über Tausende reicht und wie viele Läufe es dann braucht, sagt nur eine Installation mit Bestand. | Gemessen ist die **Fortsetzung**: mit Blockgröße 1 meldet der Lauf `geprueft 1`, `fertig false`, die Marke wandert, und der **Hash wird erst am Ende geschrieben** — ein abgebrochener Lauf gilt also nicht als erledigt. Damit ist ein Bestand jeder Größe in endlich vielen Läufen durch; offen ist nur, in wie vielen. Prüfpunkt **P32**. |
 | N36 | **Die Auslieferungskette selbst — sie ist gebaut, aber nie gelaufen** | Sie braucht GitHub-Umgebungen, Geheimnisse, eine Pflichtfreigabe, einen Zweigschutz und eine Staging-Installation. Nichts davon gibt es in einem Wegwerf-Container, und die Zuarbeiten dazu standen am 16.09.2026 noch aus (Rahmenplan 6a). **Die ganze Phase hat damit ihren zentralen Gegenstand nicht im Lauf gesehen.** | Gemessen ist, was sich ohne GitHub messen lässt: die drei Arbeitsläufe sind **gültiges YAML**, das Backup-Tor entscheidet in `tools/kette/tor.py --selbstprobe` **5 von 5** Lagen richtig, und das Migrationsregister läuft ohne Installation. Was nur der Ernstfall zeigt, steht als Prüfpunkte **P1 bis P8** und **P12** — neun der 32. Wer diese Phase für abgenommen hält, weil die Proben grün sind, verwechselt „gebaut" mit „läuft". |
 | N37 | **Der Merge nach `main` und der Tag** | Beide brauchen die ausdrückliche Freigabe (`CLAUDE.md` 3 und 8, K7). Ein Push auf `main` löst seit Web 20.4.0 den **Staging**-Deploy aus, ein Tag `web-v20.15.0` die **Produktion** — und zwar erst nach Pflichtfreigabe und Backup-Tor. | Beides ist bewusst **nicht** getan. Die Phase liegt vollständig auf `claude/butte-umsetzen-5opi9u`. Was beim ersten Tag passieren **soll**, steht in P2, P3 und P8; was schiefgehen kann, ebenso. |
+| N38 | **Die Punktdatei-Sperre und `state-name`** (Nr. 213, Web 20.15.1) | Drei Dinge gehen von hier aus nicht: Der Prüfserver ist der eingebaute PHP-Server, der **`.htaccess` gar nicht liest**; Port 21 und 990 verlassen den Container nicht, also ist `../` im FTP-Käfig nicht zu messen; und `nadoku.gen-em.org` ist vom Ausgangs-Gateway dieser Umgebung gesperrt (403 auf CONNECT, gemessen). Die Staging-Abfrage gab **404** — aber Staging ist leer, dort gibt auch `login.php` 404. | Gemessen ist der **Auslöser**, nicht die Abhilfe: Die Aktion legt die Datei laut ihrem eigenen README nach `server-dir` (Vorgabe `.ftp-deploy-sync-state.json`), ihr Inhalt steht in den Typdefinitionen der Bibliothek (`{type, name, size, hash}` je Datei), und `server/.htaccess` hatte **keine** Regel, die auf Punktdateien passt — alle 81 Zeilen gelesen. Die Abhilfe prüft **Stufe 2 der Kette** beim ersten Lauf gegen Staging, in beide Richtungen. Prüfpunkt **P33**. |
 | N8 | **Die Kontingent-Warnmail auf einem echten Mailserver** | Der Container hat keinen. | Die Logik ist mit abgesenkten Schwellen (50/53 %) durchgespielt: Beide Schwellen schlagen an, der Versand scheitert erwartungsgemäß und wird **nicht** als gemeldet vermerkt — also am nächsten Tag erneut versucht. Prüfpunkt **P10**. |
 
 ---
@@ -1230,6 +1232,46 @@ Job möglicherweise über **mehrere Tage** — dann steht die Zeile so lange auf
   sähe man auch an den anderen Jobs) oder das Zeitbudget reicht je Lauf nur
   für einen Block — dann `jobs.php?aktion=lauf` mehrmals anstoßen und
   zusehen, ob die Zahl wächst (N35).
+
+### P33 — Die Punktdatei-Sperre auf der echten Anlage (Nr. 213, Web 20.15.1)
+
+**Wofür:** N38 — von hier aus ist weder `.htaccess` noch der FTP-Käfig
+messbar. Und dies ist der einzige Prüfpunkt der Liste, bei dem ein Fehler
+**das Zertifikat der Anlage kostet**.
+
+**Weg, in dieser Reihenfolge:**
+
+1. **Zuerst nachsehen, was heute dasteht.** Im Browser
+   `https://nadoku.gen-em.org/.ftp-deploy-sync-state.json` aufrufen, **bevor**
+   ausgeliefert wird. Kommt JSON, ist der Befund bestätigt; kommt 403 oder
+   404, notieren welches — das ist der Ausgangswert.
+2. Ausliefern (Tag). Der Lauf bricht ab, **wenn `../` im Käfig nicht erlaubt
+   ist** — dann Variable `FTP_STATE_PFAD` auf einen Pfad **innerhalb** des
+   Zielverzeichnisses setzen (z. B. `.deploy-state-produktion.json`) und
+   erneut laufen lassen. Die `.htaccess` sperrt ihn dort.
+3. Dieselbe Adresse noch einmal aufrufen. **Erwartet: 403.**
+4. **`https://nadoku.gen-em.org/.well-known/acme-challenge/pruefung` aufrufen.
+   Erwartet: 404 — und ausdrücklich NICHT 403.**
+5. **Die alte Datei von Hand per FTP löschen.** Sie liegt weiter im Webroot;
+   die Sperre verbirgt sie nur.
+
+**Woran ein Scheitern zu erkennen ist:**
+
+- **Schritt 3 gibt 200 und JSON.** Dann liest dieser Webserver die
+  `.htaccess` nicht (nginx? LiteSpeed?) oder `mod_rewrite` fehlt. Dann hilft
+  nur Schritt 2 — die Datei muss physisch aus dem Webroot.
+- **Schritt 4 gibt 403.** **Das ist der teure Fall.** Die Sperre ist zu breit,
+  die Zertifikatserneuerung ist tot, und zwar lautlos: Es fällt erst auf,
+  wenn das Zertifikat in bis zu 90 Tagen abläuft und der Browser warnt. Sofort
+  die Ausnahme `(?!well-known/)` in `server/.htaccess` prüfen. Der
+  Stufe-2-Schritt der Kette fängt genau das ab — aber nur, wenn Staging
+  steht.
+- **Schritt 3 gibt 404 statt 403.** Kein Beweis, sondern eine Nichtmessung:
+  404 heißt „dort liegt nichts" und käme auch von einer leeren Adresse.
+  Genau daran ist die erste Abfrage zu diesem Befund gescheitert. Dann
+  zusätzlich einen Pfad abfragen, den es sicher nicht gibt
+  (`/.pruefung-213`): **403** heißt, die Regel greift; 404 heißt, sie greift
+  nicht.
 
 ---
 

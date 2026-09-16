@@ -24,6 +24,45 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 # unverschluesselte Kanal mit einer Auskunft.
 RewriteRule ^(apk|demo)(/|$) - [F,L]
 
+# PUNKTDATEIEN NIEMALS AUSLIEFERN -- MIT GENAU EINER AUSNAHME (Nr. 213).
+#
+# ANLASS. Die Auslieferungskette benutzt SamKirkland/FTP-Deploy-Action, und
+# die legt ihre Zustandsdatei `.ftp-deploy-sync-state.json` in das
+# ZIELVERZEICHNIS -- also hierher, neben diese Datei. Darin steht je
+# ausgelieferter Datei Pfad, Groesse und Hash, dazu der Zeitpunkt der letzten
+# Auslieferung. Kein Geheimnis (config.php und Konsorten stehen in der
+# Ausnahmeliste der Kette und damit nicht darin), aber die vollstaendige
+# Struktur und -- ueber die Hashes -- der Versionsstand JEDER EINZELNEN DATEI.
+# Die Zeilen darueber nennen sieben Dateien und zwei Muster beim Namen; eine
+# Punktdatei war nicht darunter, weil niemand mit ihr gerechnet hatte.
+#
+# EINE REGEL STATT EINES WEITEREN NAMENS. `state-name` in der Kette legt die
+# Datei inzwischen ausserhalb des Webroots ab -- diese Regel ist die ZWEITE
+# Schranke, wie bei den Nachweis-Dateien unten: Sie greift auch dann, wenn
+# der Kaefig des FTP-Zugangs kein `../` erlaubt und die Datei deshalb doch
+# wieder hier landet, und sie greift fuer jede kuenftige Punktdatei, an die
+# ebenfalls niemand denkt (`.env`, `.git/`, `.DS_Store`).
+#
+# DIE AUSNAHME IST NICHT SCHMUCK: `.well-known/` traegt die
+# ACME-Herausforderung der Zertifikatserneuerung. Eine pauschale Sperre
+# nimmt der Anlage in spaetestens 90 Tagen das Zertifikat, und zwar lautlos
+# -- niemand ruft diesen Pfad von Hand auf. Der negative Vorgriff
+# `(?!well-known/)` laesst genau ihn durch.
+#
+# WAS DIE REGEL BEWEISBAR MACHT: `[F]` antwortet 403, OB DIE DATEI DA IST
+# ODER NICHT -- mod_rewrite laeuft vor der Dateisuche. Damit laesst sich die
+# Sperre messen und nicht nur glauben: Stufe 2 der Kette fragt beide Pfade
+# ab und verlangt 403 fuer die Zustandsdatei und **404, nicht 403** fuer
+# `.well-known/`. Ein 404 auf die erste hiesse „nichts da" und bewiese
+# nichts; ein 403 auf die zweite hiesse, die Zertifikatserneuerung ist tot.
+#
+# Ein blosses `/.well-known` OHNE Schraegstrich faellt unter die Sperre. Das
+# ist gewollt: ACME fragt immer `/.well-known/acme-challenge/<Token>`, und
+# ein Verzeichnislisting braucht dort niemand.
+#
+# NACH dem HTTPS-Zwang, aus demselben Grund wie die Zeile darueber.
+RewriteRule "(^|/)\.(?!well-known/)" - [F,L]
+
 # Sensible Dateien niemals ausliefern
 <FilesMatch "^(config\.php|config\.example\.php|schema\.sql|db\.php|smtp\.php|auth_guard\.php|install\.lock)$">
   Require all denied

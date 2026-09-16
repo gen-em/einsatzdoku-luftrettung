@@ -367,7 +367,8 @@ Daten erst nach Server-Bestätigung.
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
 │   ├── migrations/        Migrationen als nachlesbare SQL-Dateien (ausgeführt
 │   │                      wird über Betrieb → Updates, siehe migration_lib.php)
-│   └── .htaccess          HTTPS-Zwang, Dateisperren, Sicherheits-Kopfzeilen
+│   └── .htaccess          HTTPS-Zwang, Dateisperren (auch Punktdateien, mit
+│                      Ausnahme `.well-known/`), Sicherheits-Kopfzeilen
 ├── watch/                 Connect-IQ-Projekt (Monkey C)
 │   ├── manifest.xml, monkey.jungle
 │   ├── resources/         Vorgabe für alle Geräte
@@ -4545,6 +4546,57 @@ angelegt würde, ohne dafür eine zu erfinden. Wer die Anwendung auf einen
 Webserver ohne `.htaccess`-Auswertung stellt (nginx), muss die Sperre dort
 selbst setzen — das gilt für die Regeln darüber genauso.
 
+#### Punktdateien — und die eine Ausnahme (seit Web 20.15.1, Nr. 213)
+
+Eine Zeile weiter unten, aus demselben Grund hinter dem HTTPS-Zwang:
+
+```
+RewriteRule "(^|/)\.(?!well-known/)" - [F,L]
+```
+
+**Der Anlass** war die Zustandsdatei der Auslieferungskette.
+`SamKirkland/FTP-Deploy-Action` legt `.ftp-deploy-sync-state.json` in das
+Zielverzeichnis — also in den Webroot. Inhalt: je ausgelieferter Datei Pfad,
+Größe und Hash, dazu der Zeitpunkt der letzten Auslieferung. Kein Geheimnis
+(die Ausnahmeliste der Kette hält `config.php` und Konsorten draußen, sie
+stehen daher auch nicht in der Datei), aber die vollständige Struktur und der
+Versionsstand jeder einzelnen Datei.
+
+Die Regeln darüber nennen **sieben Dateien und zwei Muster beim Namen**. Eine
+Punktdatei war nicht darunter, weil niemand mit ihr gerechnet hatte — deshalb
+sperrt diese Zeile die Gattung und nicht den Namen. Sie fängt damit auch
+`.env`, `.git/` und `.DS_Store`.
+
+**Die Ausnahme ist der gefährliche Teil.** `.well-known/` trägt die
+ACME-Herausforderung der Zertifikatserneuerung. Eine pauschale Sperre nimmt
+der Anlage spätestens nach 90 Tagen das Zertifikat, und zwar lautlos — niemand
+ruft diesen Pfad von Hand auf. Der negative Vorgriff `(?!well-known/)` lässt
+genau ihn durch. Ein bloßes `/.well-known` **ohne** Schrägstrich fällt unter
+die Sperre; das ist gewollt, ACME fragt immer
+`/.well-known/acme-challenge/<Token>`.
+
+**Zwei Schranken, nicht eine.** `state-name` in `auslieferung.yml` legt die
+Datei zusätzlich eine Ebene über den Webroot
+(`../.deploy-state-staging.json`, `../.deploy-state-produktion.json` — zwei
+Namen, weil sich Staging und Produktion einen FTP-Zugang teilen könnten und
+zwei gleichnamige Zustandsdateien einander überschrieben). Erlaubt der Käfig
+des FTP-Zugangs kein `../`, bricht der Lauf; dann trägt man die Variable
+`FTP_STATE_PFAD` ein und zeigt wieder nach innen — und die `.htaccess` fängt
+die Datei dort ab. Der Rückbau ist deshalb eine Variable und kein Notfall.
+
+**Warum das messbar ist und ein 404 nichts beweist.** `RewriteRule [F]`
+antwortet **403, ob die Datei da ist oder nicht** — mod_rewrite läuft vor der
+Dateisuche. Stufe 2 der Kette nutzt genau das: vier Punktpfade müssen **403**
+geben, `.well-known/acme-challenge/` muss **404 und ausdrücklich nicht 403**
+geben. Der Befund, der zu dieser Zeile geführt hat, wurde zuerst falsch
+entlastet: Die Abfrage lief gegen ein noch leeres Staging, gab 404, und das
+sah aus wie eine Sperre. Ein Prüfmittel, das „gesperrt" nicht von „nicht
+vorhanden" unterscheidet, misst nichts.
+
+**Was die Regel nicht tut:** eine bereits abgelegte Datei entfernen. Auf einer
+Anlage, auf die schon ausgeliefert wurde, liegt sie weiter im Webroot —
+gesperrt, aber vorhanden. Sie wird einmal von Hand per FTP gelöscht.
+
 #### Der Name wird nicht geprüft, sondern gesucht
 
 `apk.php` liest den Ordner (`apk_liste()`) und wählt aus dem **Gelesenen**
@@ -7731,6 +7783,28 @@ Knopfhöhen), und **nur bei Tag-Läufen** der Messstand. Alle drei brauchen ein
 **Prüfkonto auf Staging** (Umgebungsgeheimnisse `STAGING_KONTO`,
 `STAGING_PASS`, Variable `STAGING_URL`); fehlt es, wird der Schritt
 ausdrücklich übersprungen und gemeldet.
+
+**Dazu seit Web 20.15.1 ein vierter Schritt: „Punktdateien gesperrt,
+.well-known offen?"** (Nr. 213). Er braucht **kein** Prüfkonto — nur
+`STAGING_URL` — und misst die `.htaccess`-Sperre aus Abschnitt 4.97g in
+beide Richtungen:
+
+| Pfad | erwartet | wofür |
+|---|---|---|
+| `/.ftp-deploy-sync-state.json` | **403** | die Zustandsdatei der Kette (der Anlass) |
+| `/.deploy-state-staging.json` | **403** | auch der neue Name, falls `../` scheitert |
+| `/.env`, `/.git/config` | **403** | die Gattung, nicht nur der Name |
+| `/.well-known/acme-challenge/kettenpruefung` | **404, NICHT 403** | die Zertifikatserneuerung |
+
+Die letzte Zeile ist die wichtigere. Antwortet `.well-known/` mit 403, ist die
+ACME-Herausforderung tot und das Zertifikat läuft in bis zu 90 Tagen ab —
+lautlos. Dieser Schritt ist das Einzige, was zwischen einer zu breiten Sperre
+und einer abgelaufenen Anlage steht.
+
+Und er beweist überhaupt etwas, weil `RewriteRule [F]` **403 antwortet, ob die
+Datei da ist oder nicht**: mod_rewrite läuft vor der Dateisuche. Ein 404
+käme auch von einer leeren Adresse — genau so wurde der auslösende Befund
+zuerst falsch entlastet.
 
 ### 6.4 Das Backup-Tor
 

@@ -5462,5 +5462,45 @@ declare(strict_types=1);
  * des neunten. Nachgetragen; die Ursache bleibt Nr. 208.
  *
  * KEINE MIGRATION.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.15.1 — DIE ZUSTANDSDATEI DER KETTE LAG IM WEBROOT
+ * ---------------------------------------------------------------------------
+ *
+ * Backlog Nr. 213, gemeldet am 16.09.2026 aus einer Durchsicht. Die
+ * Auslieferungskette benutzt `SamKirkland/FTP-Deploy-Action`, und die legt
+ * ihre Zustandsdatei `.ftp-deploy-sync-state.json` in das ZIELVERZEICHNIS —
+ * also in den Webroot, neben `.htaccess`. Darin steht je ausgelieferter
+ * Datei Pfad, Groesse und Hash, dazu der Zeitpunkt der letzten Auslieferung.
+ *
+ * WAS NICHT DARIN STEHT, und das ist der einzige Trost: `config.php`,
+ * `install.lock`, `wartung.lock`, `ueberlast.json`, `sicherungen/` und `apk/`
+ * stehen in der Ausnahmeliste der Kette, werden also nie ausgeliefert und
+ * tauchen folglich nicht auf. Es ist kein Schluesselleck. Es ist die
+ * vollstaendige Struktur und — ueber die Hashes — der Versionsstand jeder
+ * einzelnen Datei, also die Vorlage fuer einen gezielten Abgleich gegen
+ * bekannte Schwachstellen.
+ *
+ * ZWEI SCHRANKEN, WIE BEI DEN NACHWEIS-DATEIEN. Erstens legt `state-name` die
+ * Datei eine Ebene UEBER den Webroot; zweitens sperrt `server/.htaccess`
+ * Punktdateien pauschal. Die zweite ist nicht Zierde: Erlaubt der Kaefig des
+ * FTP-Zugangs kein `../`, landet die Datei wieder hier — und die Sperre
+ * faengt sie. Sie faengt ausserdem jede kuenftige Punktdatei, an die niemand
+ * denkt.
+ *
+ * DIE AUSNAHME `.well-known/` IST DER GEFAEHRLICHSTE TEIL DER AENDERUNG. Eine
+ * pauschale Punktdatei-Sperre erschlaegt die ACME-Herausforderung und damit
+ * die Zertifikatserneuerung — lautlos, bis das Zertifikat in bis zu 90 Tagen
+ * ablaeuft. Deshalb prueft Stufe 2 der Kette BEIDE Richtungen: 403 fuer vier
+ * Punktpfade, und **404 und nicht 403** fuer `.well-known/acme-challenge/`.
+ *
+ * WARUM DIE PRUEFUNG UEBERHAUPT ETWAS BEWEIST: `RewriteRule [F]` antwortet
+ * 403, OB DIE DATEI DA IST ODER NICHT — mod_rewrite laeuft vor der
+ * Dateisuche. Ein 404 wuerde dagegen auch von einer leeren Adresse kommen.
+ * Genau daran ist die erste Abfrage zu diesem Befund gescheitert: Sie lief
+ * gegen ein noch leeres Staging, gab 404, und das sah aus wie Entwarnung.
+ *
+ * KEINE MIGRATION. Kein Code der Anwendung ist angefasst — `.htaccess`,
+ * die Kette und `.gitignore`.
  */
-const WEB_VERSION = '20.15.0';
+const WEB_VERSION = '20.15.1';

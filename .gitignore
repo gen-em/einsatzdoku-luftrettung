@@ -121,3 +121,10 @@ tools/anteilprobe/ausgabe-*.png
 # wird bewusst einzeln nach `android/mockups/` uebernommen und im Konzept
 # oder in der Dokumentation verwiesen; der Rest ist Arbeitsstand.
 emulator-bilder/
+
+# Zustandsdateien der Auslieferungskette (Nr. 213). Die FTP-Aktion laedt sie
+# waehrend eines Laufs herunter; auf einem Entwicklungsrechner haben sie
+# nichts verloren, und im Repositorium erst recht nicht -- sie nennen jede
+# ausgelieferte Datei mit Pfad und Hash.
+.ftp-deploy-sync-state.json
+.deploy-state-*.json

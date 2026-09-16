@@ -37,8 +37,10 @@ Steuerungsdokumente trägt. **206 bis 212 sind in der Umsetzung von P5a auf
 demselben Zweig vergeben** (206 Messstand-Schritt, 207 `gen-em.org` in `tools/`,
 208 Jobregister von Hand geführt, 209 Bausteintabelle in `Design.md`,
 210 Deadlocks in `ingest.php`, 211 `/api/`-Aufruf ohne Sitzung, 212 zwei
-Erwartungen der Wiederherstellungsprobe). Jeder weitere Zweig, der Nummern
-vergibt, beginnt bei **213** und trägt seine Spanne hier ein, bevor er pusht.
+Erwartungen der Wiederherstellungsprobe), **213 aus der Durchsicht vom
+16.09.2026** (Zustandsdatei der Kette im Webroot). Jeder weitere Zweig, der
+Nummern vergibt, beginnt bei **214** und trägt seine Spanne hier ein, bevor
+er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
@@ -2221,6 +2223,54 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Fassung und verschöbe das Problem nur auf die nächste schnellere Maschine.
     *Abnahme:* `php tools/wiederherstellungs-probe/probe.php` meldet **110 von
     110** auf einer frisch aufgesetzten Installation. Zuordnung: Backlog-Runde.
+
+213. **Die Zustandsdatei der Auslieferungskette lag im Webroot.**
+    *Aufgenommen 16.09.2026 aus einer Durchsicht des Auftraggebers; behoben
+    am selben Tag in Web 20.15.1.*
+    `SamKirkland/FTP-Deploy-Action` legt `.ftp-deploy-sync-state.json` in das
+    Zielverzeichnis — bei uns also in den Webroot, neben `.htaccess`, über
+    HTTP abrufbar. Inhalt laut den Typdefinitionen der Bibliothek:
+    `{ description, version, generatedTime, data: [{type, name, size, hash}] }`
+    — je ausgelieferter Datei **Pfad, Größe und Hash**, dazu der Zeitpunkt der
+    letzten Auslieferung.
+
+    **Kein Schlüsselleck, und das soll auch nicht größer geredet werden:**
+    `config.php`, `install.lock`, `wartung.lock`, `ueberlast.json`,
+    `sicherungen/` und `apk/` stehen in der Ausnahmeliste der Kette, werden
+    nie ausgeliefert und stehen folglich nicht in der Datei. Was austritt, ist
+    die vollständige Struktur und — über die Hashes — der Versionsstand jeder
+    einzelnen Datei; also die Vorlage für einen Abgleich gegen bekannte
+    Schwachstellen, ohne eine einzige Anfrage an die Anwendung.
+
+    **Behoben mit zwei Schranken** (wie bei den Nachweis-Dateien): `state-name`
+    legt sie eine Ebene über den Webroot (`../.deploy-state-staging.json` bzw.
+    `…-produktion.json` — **zwei** Namen, weil Staging und Produktion sich
+    einen FTP-Zugang teilen könnten und zwei gleichnamige Dateien einander
+    überschrieben), und `server/.htaccess` sperrt Punktdateien pauschal mit
+    der Ausnahme `.well-known/`.
+
+    **Der Eintrag bleibt hier stehen, weil drei Dinge offen sind:**
+
+    1. **Die bereits abgelegte Datei muss von Hand per FTP gelöscht werden.**
+       Die Sperre verbirgt sie, entfernt sie nicht. Auf jeder Anlage, auf die
+       schon einmal ausgeliefert wurde.
+    2. **Ob `../` im Käfig des FTP-Zugangs erlaubt ist, ist nicht gemessen** —
+       Port 21 und 990 verlassen den Prüfcontainer nicht (in AP10 gemessen).
+       Es zeigt sich beim ersten echten Lauf; schlägt es fehl, **bricht die
+       Auslieferung**, und die Variable `FTP_STATE_PFAD` ist der Rückweg.
+    3. **Die `.htaccess` gilt nur auf Apache.** Auf nginx, Caddy oder
+       LiteSpeed ist die zweite Schranke nicht da — dasselbe steht schon bei
+       Nr. 129 und den Sicherheits-Kopfzeilen.
+
+    **Und eine Lehre, die über die Sache hinausgeht.** Die erste Abfrage zu
+    diesem Befund gab **404** und sah nach Entwarnung aus. Sie lief gegen ein
+    Staging, auf das noch nie etwas ausgeliefert worden war — dort gibt
+    *jeder* Pfad 404, auch `login.php`. Ein 404 unterscheidet „gesperrt" nicht
+    von „nicht vorhanden". Der neue Prüfschritt in Stufe 2 misst deshalb
+    **403** (`RewriteRule [F]` antwortet vor der Dateisuche, also auch für
+    Dateien, die es nicht gibt) — und als Gegenprobe **404 und nicht 403** für
+    `.well-known/acme-challenge/`, weil eine zu breite Sperre die
+    Zertifikatserneuerung lautlos umbringt.
 
 ## Erledigt
 
