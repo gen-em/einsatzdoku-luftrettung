@@ -253,10 +253,22 @@ function geraet_block_lesen(mixed $block): array
  * sieht nach einem Muster aus, ist aber keines, aus dem sich ein Modellname
  * herleiten liesse — nur die Gerätedateien wissen es.
  */
-function geraet_modell_aufloesen(string $teil): ?array
+function geraet_modell_aufloesen(string $teil, ?array $tabelle = null): ?array
 {
+    /* `$tabelle` IST DIE NAHT FUER DIE PROBE (P5a/AP11). Ohne sie muesste
+     * `tools/geraeteprobe/` gegen den AUSGELIEFERTEN Bestand messen — 325
+     * Teilenummern, die sich mit dem naechsten Lauf des Erzeugers aendern
+     * koennen, und damit gegen eine bewegliche Zielscheibe. Die Probe setzt
+     * deshalb schon heute eine eigene, kleine Tabelle (sie definiert
+     * `GERAETE_MODELLE`, bevor diese Datei laedt).
+     *
+     * Der Nachloese-Job braucht mehr: ZWEI Tabellen in EINEM Lauf — die
+     * kleine, dann dieselbe um einen Eintrag erweitert, um zu messen, dass
+     * genau dessen Zeilen nachgezogen werden. Mit einer Konstanten geht das
+     * nicht. Der Parameter kostet nichts und aendert am Regelfall nichts:
+     * `null` heisst die ausgelieferte Tabelle. */
     $schluessel = strtoupper(trim($teil));
-    $eintrag = GERAETE_MODELLE[$schluessel] ?? null;
+    $eintrag = ($tabelle ?? GERAETE_MODELLE)[$schluessel] ?? null;
     if ($eintrag === null) { return null; }
     return ['modell' => $eintrag[0], 'art' => $eintrag[1] ?? null];
 }

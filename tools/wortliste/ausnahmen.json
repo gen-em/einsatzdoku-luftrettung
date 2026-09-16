@@ -118,6 +118,12 @@
       "begruendung": "DeviceProfile.mc IST der plattformspezifische Teil der Uhr-App: Die Datei haelt je Tastenprofil die Beschriftungen, die auf dem Gehaeuse stehen — „START“ auf Fenix und Forerunner, „Action“ auf der Venu 3s (source-tasten3, deshalb dort kein Treffer). Genau diese Trennung sieht E-P2-02 vor: geraetefreier Ablauf, Garmin-Weg als benannter Zusatz. Die Oberflaechen setzen den Namen ueber Input.lSelectHold() ein und kennen ihn nicht selbst; wer ihn hier ersetzte, schriebe eine Bedienanweisung auf ein echtes Geraet, die dort nicht ausfuehrbar waere. Nur `taste-start` — DOWN und BACK stehen in dieser Datei nicht, und eine Regel auf Vorrat greift nicht und faellt als ungenutzt auf."
     },
     {
+      "id": "connect-iq-rueckruf",
+      "zeile": "von Connect IQ bekommt",
+      "klasse": "G",
+      "begruendung": "Die Signatur des Rueckrufs — `(code, data)` ohne Kopfzeilen — ist eine Eigenschaft der Garmin-Plattform und nicht der Uhr im Allgemeinen. Sie ist der GRUND, warum `ingest.php` seit Web 20.11.0 ein `Retry-After` schickt, das kein Geraet dieses Projekts liest (P5a/AP7, E-P5a-01). Ein geraetefreies „die Uhr bekommt keine Kopfzeilen\" waere hier keine Neutralitaet, sondern eine falsche Verallgemeinerung: Ein Wear-OS-Client koennte sie lesen. Dieselbe Ueberlegung wie `garmin-zusatz-kopplung` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST. Zwei Stellen, docs/Technik.md 5e.7 und docs/JSON-Vertrag.md 5."
+    },
+    {
       "id": "connect-iq-projekt",
       "zeile": "Connect-IQ-Projekt|Connect-IQ-Probe",
       "klasse": "G",
@@ -288,9 +294,9 @@
     },
     {
       "id": "maschine-als-rechner",
-      "zeile": "auf der Maschine|\\| Maschinen \\|",
+      "zeile": "auf der Maschine|\\| (Antwort, )?Maschinen \\|",
       "klasse": "Homonym",
-      "begruendung": "„Maschine\" meint hier den Rechner (Runbook) bzw. die maschinelle Zielgruppe eines Formats — nicht das Rettungsmittel. Ausdruecklich so in der Wortliste, Abschnitt 5.2."
+      "begruendung": "„Maschine\" meint hier den Rechner (Runbook) bzw. die maschinelle Zielgruppe eines Formats — nicht das Rettungsmittel. Ausdruecklich so in der Wortliste, Abschnitt 5.2. Die Zeilenkoepfe „Antwort, Maschinen\" in Technik.md 4.99c und 5e stellen JSON-Antworten den Seiten gegenueber; 4.99c lag bis P5a/AP9 zufaellig im Uhr-Kapitel und war darueber erklaert, 5e liegt es nicht — die Regel nennt den Fall seither selbst."
     },
     {
       "id": "flugmodus",
@@ -502,6 +508,13 @@
       "begruendung": "Die Beschriftung der Logo-Wahl in der App: „RTH“, mit „NEF“ als Gegenstück in derselben Datei. Sie benennt, WELCHES BILD gewählt ist; beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Dieselbe Lage wie logowahl-option in server/einstellungen.php, nur in der App. Der Ausdruck verlangt, dass die ganze Zeile aus „RTH“ besteht — ein RTH in einem Satz wäre etwas anderes und bliebe ein Treffer."
     },
     {
+      "id": "technik-nachloesejob",
+      "datei": "docs/Technik.md",
+      "abschnitt": "^#### Der Nachl\u00f6se-Job",
+      "klasse": "G",
+      "begruendung": "Derselbe Gegenstand wie `technik-geraetekennung`, nur eine Ebene weiter: Der Nachloese-Job (P5a/AP11) loest TEILENUMMERN auf, und die gibt es nur bei Garmin — eine Connect-IQ-App laeuft nirgendwo sonst. Der Absatz erklaert, warum die Selbstauskunft „uhr\" der Tabelle unterliegt, und das ist eine Aussage ueber die Garmin-Plattform, keine ueber Uhren im Allgemeinen. Plattformspezifisch wie Kapitel 5 (E-P2-15)."
+    },
+    {
       "id": "technik-geraetekennung",
       "datei": "docs/Technik.md",
       "abschnitt": "^### Was ein Gerät beim Koppeln über sich meldet",
@@ -586,9 +599,9 @@
     {
       "id": "handbuch-logowahl-installation",
       "datei": "docs/Handbuch.md",
-      "zeile": "\\*\\*Das Logo\\*\\* links wählt zwischen",
+      "zeile": "\\*\\*Das Logo\\*\\* darunter wählt zwischen",
       "klasse": "Homonym",
-      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz benennt, WELCHES BILD zur Wahl steht — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Dieselbe Begruendung wie `logowahl-installation` fuer den Code (server/admin_installation.php); der Handbuch-Abschnitt „Installation“ (11.3) ist mit S8/AP3 entstanden und beschreibt dieselbe Bedienung."
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz benennt, WELCHES BILD zur Wahl steht — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Dieselbe Begruendung wie `logowahl-installation` fuer den Code (server/admin_installation.php); der Handbuch-Abschnitt „Installation“ (11.3) ist mit S8/AP3 entstanden und beschreibt dieselbe Bedienung. Der Anker hiess bis Web 20.8.0 „Das Logo links waehlt zwischen\"; seit der Karte „Name\" (P5a/AP5) steht das Logo DARUNTER statt links, und der Satz wurde entsprechend umgeschrieben."
     },
     {
       "id": "spur-fachbegriff-code",
@@ -612,7 +625,7 @@
       "zeile": "eine eigene Spur",
       "begruendung": "Hier ist „Spur“ der Fachbegriff des GPX-FORMATS: Eine GPX-Datei enthaelt Tracks, und der Satz erklaert genau das — „jede Aufzeichnung bleibt darin eine eigene Spur“. Ein Kartenprogramm nennt sie so; die Anwendung waere die einzige, die es anders schriebe."
     },
-        {
+    {
       "id": "spur-fachdokument-technik",
       "bereich": "c",
       "datei": "docs/Technik.md",
@@ -668,6 +681,13 @@
       "bis": "^\\*\\*„Entkoppeln\\\" hiess",
       "klasse": "G",
       "begruendung": "Der Kasten zum Geraeteverlust (Abschnitt 10, Backlog Nr. 134) sagt, dass der Zugangsschluessel auf der GARMIN-Uhr im Klartext liegt. Das ist keine Plattformnennung aus Bequemlichkeit, sondern die Sache selbst: Genau dieser Satz gilt fuer die Garmin-Uhr und NICHT fuer die Wear-OS-Uhr, die weder Serveradresse noch Schluessel kennt (E-S4-11) -- der Kasten sagt das im letzten Absatz ausdruecklich. Ein geraetefreies „Uhr“ waere hier keine Neutralitaet, sondern eine falsche Warnung an alle, die eine Wear-OS-Uhr tragen. Dieselbe Ueberlegung wie `statistik-hersteller-garmin` und `garmin-zusatz-kopplung` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST."
+    },
+    {
+      "id": "technik-uhrvorgabe-garmin",
+      "datei": "docs/Technik.md",
+      "zeile": "sichtbar in Garmin Connect|die Uhr zeigt das Feld in Garmin Connect",
+      "klasse": "G",
+      "begruendung": "Technik.md 5d.8 begruendet, warum die Vorgabe-Serveradresse der Uhr-App auf gen-em.org stehen BLEIBT (E-P5a-42, Auftraggeber 16.09.2026). Die Begruendung IST die Plattform: Das Feld steht in Garmin Connect und ist dort von jeder Betreiberin aenderbar — deshalb ist die Vorgabe eine Vorgabe und keine Festverdrahtung. Ohne den Namen waere der Satz „die Uhr zeigt das Feld irgendwo\" und begruendete gar nichts; die Wear-OS-Uhr hat dieses Feld ausdruecklich NICHT (E-S4-11, sie kennt weder Adresse noch Schluessel). Dieselbe Ueberlegung wie `statistik-hersteller-garmin` und `handbuch-geraete-verlust-garmin` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST."
     }
   ]
 }

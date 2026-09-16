@@ -2782,6 +2782,13 @@ drei Punkten am rechten Rand der Zeile, in jeder Bildschirmbreite. Darin:
 bereits hochgeladenen Daten bleiben erhalten, und Aktivieren schaltet dasselbe
 Gerät wieder frei.
 
+**Eine orange Plakette „abgewiesen"** *(seit Web 20.11.0)* sagt, dass dieses
+Gerät am Hochladen gescheitert ist — fast immer, weil sein Schlüssel veraltet
+ist. In der Kleinzeile steht daneben, wie oft und seit wann. **Die Abhilfe ist
+neu koppeln**; das Gerät verliert dabei nichts, es behält seine Warteschlange.
+Plakette und Zahl verschwinden von selbst, sobald wieder ein Upload durchkommt.
+Mehr dazu in Abschnitt 11.4a.
+
 > **Uhr verloren? Sofort trennen.** Auf der Garmin-Uhr liegt der
 > Zugangsschlüssel im Klartext — die Plattform bietet nichts Besseres. Lesen
 > kann ein Finder damit nichts: Er kommt an keinen einzigen Datensatz. Er kann
@@ -3064,7 +3071,7 @@ ihnen:
 |---|---|---|
 | **NutzerInnen** | 11.2, 11.3 | Konten sehen, anlegen, ändern, löschen; je Konto die Kontoseite (11.1) |
 | **Konto-Backups** | 11.4 | die Regeln, die für **alle** Konten gelten |
-| **Installation** | 11.5 | Logo, Impressum, Datenschutzerklärung |
+| **Installation** | 11.5 | Name, Logo, Impressum, Datenschutzerklärung |
 | **Demo-Konto** | 11.6 | anlegen, zurücksetzen, entfernen |
 
 Angelegt wird in der Liste, gelöscht auf der Kontoseite — dort gehört die
@@ -3368,14 +3375,164 @@ Einspielen ist weiterhin die E-Mail-Adresse des Zielkontos abzutippen.
 unterscheidet, warum Konto-Backups nie von selbst entstehen, wie die Freigabe
 funktioniert und wohin die Pakete von hier aus gehen.
 
+### 11.4a Ratenschutz — was jemanden aufhält, der es von außen versucht
+
+Unter **Betrieb → Servereinstellungen**, Karte **„Ratenschutz"** (seit
+Web 20.10.0).
+
+**Eine Sperre dauert beim zweiten Mal länger.** Wer sich zu oft vertippt, ist
+eine Viertelstunde draußen; wer es am selben Tag noch einmal tut, länger:
+
+| Stufe | Sperre |
+|---|---|
+| 1 | 15 Minuten |
+| 2 | 20 Minuten |
+| 3 | 30 Minuten |
+| 4 | 60 Minuten |
+
+Nach **24 Stunden ohne Fehlversuch** fängt die Leiter wieder von vorn an. Alle
+vier Dauern lassen sich ändern — **aber nicht unter 15 setzen, ohne es zu
+wollen:** Bis Web 20.9.1 sperrte die Anmeldung fest 15 Minuten, eine kürzere
+erste Sprosse macht den ersten Verstoß milder als vorher.
+
+**Zwei Zahlen, und die zweite ist die größere.** Zehn Fehlversuche je *Konto*,
+fünfzig je *Anschluss*. Hinter einem Klinik-Anschluss teilen sich viele eine
+Adresse; läge die zweite Zahl auch auf zehn, sperrte die zehnte Vertipperin
+die übrigen neunzehn aus. Eine gelungene Anmeldung setzt beide Zähler zurück.
+
+**Verlangsamung statt globaler Sperre.** Zählt die ganze Installation zu viele
+Fehlversuche, antwortet **jede fehlgeschlagene** Anmeldung langsamer — 1, 2, 4
+oder 8 Sekunden. Wer das richtige Passwort hat, kommt ohne Verzögerung durch.
+Eine *globale Sperre* gibt es bewusst nicht: Sie wäre ein Schalter, den jeder
+von außen umlegt.
+
+> **Was die Anmeldeseite dabei sagt.** Läuft die Verlangsamung, steht dort
+> ruhig: „Die Anmeldung antwortet derzeit verzögert, etwa 2 Sekunden. Das ist
+> eine Schutzmaßnahme; dein Passwort wird ganz normal geprüft." Ist ein Name
+> oder ein Anschluss gesperrt, steht bis wann — und darunter läuft ein
+> Countdown. **„Passwort vergessen?" bleibt anklickbar**, und wer sein
+> Passwort neu setzt, ist danach nicht mehr gesperrt.
+
+**Meldung bei der höchsten Stufe.** Erreicht eine Sperre die letzte Sprosse
+oder die Verlangsamung ihre vierte Stufe, geht eine Sammelmeldung an die
+**Betreiberadresse** (11.5) — höchstens eine je Stunde. Sie sagt nicht, dass
+jemand hereingekommen ist, sondern dass es jemand *versucht*. Abschaltbar.
+
+**Auch Geräte werden gebremst** *(seit Web 20.11.0)*. Bis dahin war der
+Upload-Weg der Uhren und Handys der einzige Zugang ohne Zähler. Jetzt gilt:
+**30 fehlgeschlagene Geräteanmeldungen je Viertelstunde**, danach dieselbe
+Leiter wie oben. Gezählt werden ausschließlich **Fehlversuche** — ein
+gelungener Upload geht nie auf das Kontingent, und eine Uhr, die einen ganzen
+Dienst nachliefert, sendet beliebig viele Stücke.
+
+> **Was das im Alltag heißt.** Der einzige Fall, in dem es ein echtes Gerät
+> trifft, ist ein **veralteter Schlüssel** — etwa nach einer
+> Wiederherstellung. Das Gerät verliert dabei **nichts**: Es behält seine
+> Warteschlange und sendet später. Die Abhilfe ist **neu koppeln**
+> (Abschnitt 10), und danach geht es sofort wieder, denn eine Neukopplung
+> vergibt eine neue Gerätekennung.
+>
+> **Woran du es siehst:** In **Einstellungen → Geräte** trägt die Zeile des
+> Geräts eine orange Plakette „abgewiesen" und in der Kleinzeile die Zahl mit
+> Zeitpunkt — „30 abgewiesen seit 16.09.2026 11:01". Beides verschwindet von
+> selbst, sobald wieder ein Upload durchkommt.
+
+**Auf Betrieb → Status** stehen dazu bis zu drei Zeilen, sobald es etwas zu
+sagen gibt: „Verlangsamung" (orange), „Gesperrt" und „Abgewiesene Geräte"
+(orange). Jede führt auf die Unterseite **Sicherheit** (11.4b), und dort
+steht auch der Knopf zum Aufheben.
+
+### 11.4b Sicherheit — wer ausgesperrt ist, und wie man ihn wieder hereinlässt
+
+Unter **Betrieb → Status**, Knopf **„Sicherheit"** neben dem Titel *(seit
+Web 20.12.0)*. Fünf Karten:
+
+| Karte | Was dort steht |
+|---|---|
+| **Aktive Sperren** | Wer gerade draußen ist — Kontokennung oder Anschluss, Topf, Stufe, bis wann, Restzeit. Je Zeile ein Knopf **„Aufheben"** |
+| **Verlangsamung** | Ob die Bremse gerade läuft, und jeder **Anstieg** der Stufe in den letzten 30 Tagen |
+| **Mengenbremse der Geräte** | Geräte mit abgewiesenen Anmeldungen, dazu gesperrte Gerätekennungen und Anschlüsse |
+| **Ereignisse der letzten 30 Tage** | Alles zusammen, das Jüngste zuerst |
+| **Meldung per Mail** | Ob die Sammelmeldung eingeschaltet ist, wann zuletzt eine hinausging, an wen |
+
+**Der Knopf „Aufheben" ist für den Anruf gedacht**, nicht als Regelweg: Eine
+Sperre läuft von selbst ab, und wer sein Passwort neu setzt, ist danach
+ohnehin nicht mehr gesperrt. Es kommt eine Rückfrage, und der Vorgang wird
+**mit deinem Namen** vermerkt — er steht danach in den Ereignissen.
+
+> **Nicht jede Sperre steht in den Ereignissen.** Vermerkt werden die fünf
+> Töpfe mit Sperrleiter: Anmeldung, Anschluss, Schlüsselableitung und die
+> beiden der Mengenbremse. Kopplung, Passwort-Reset, Demo-Konto, Testmail und
+> CSP-Berichte sperren ebenfalls, schreiben aber keine Zeile — dort eskaliert
+> nichts, und ein Protokoll jedes Tippfehlers würde die Liste zudecken.
+
+> **Hier stehen IP-Adressen und E-Mail-Adressen im Klartext.** Ohne sie wäre
+> die Liste „irgendwo war irgendwer gesperrt" und damit wertlos — man kann
+> eine Sperre nicht aufheben, ohne zu wissen, welche. Alles verfällt nach
+> **30 Tagen**, und das ist keine Einstellung. Die Angaben fahren allerdings
+> in **jeder Komplettsicherung** mit, solange die Sicherung aufbewahrt wird.
+> **Der Datenschutztext deiner Installation gehört deshalb nachgezogen** —
+> einen Baustein zum Übernehmen findest du unter *Verwaltung → Installation*
+> beim Datenschutztext.
+
+Die Seite ist auch im **Wartungsmodus** erreichbar. Das ist Absicht: Wer
+jemanden wieder hereinlassen muss, während die Anwendung zu ist, braucht
+genau sie.
+
 ### 11.5 Installation
 
-Unter **„Installation"** steht, wie diese Anlage nach außen auftritt: das
-**Logo**, das **Impressum** und die **Datenschutzerklärung**. Bis Web 15.1.0
+Unter **„Installation"** steht, wie diese Anlage nach außen auftritt: der
+**Name**, die **Adressen**, das **Logo**, das **Impressum** und die
+**Datenschutzerklärung**. Bis Web 15.1.0
 hieß die Seite „Rechtstexte", und das Logo lag auf der alten Seite „Wartung"; die alte
 Adresse führt weiterhin hierher.
 
-**Das Logo** links wählt zwischen *Hubschrauber (RTH)*, *Fahrzeug (NEF)* und
+**Der Name** (seit Web 20.8.0) steht zuoberst und gilt für **alles**:
+Browsertab, Kopfleiste, Anmeldeseite, Wartungsseite, Schlüsselblatt — und
+**jede E-Mail**, die diese Anlage verschickt. Zwei Felder:
+
+- **Name** — der lange. Er steht im Betreff jeder Mail und unter der
+  Grußformel. Vorgabe: *Gen-EM Einsatzdokumentation Notarzt*.
+- **Kurzname** — der kurze. Er steht dort, wo wenig Platz ist: im Browsertab
+  und oben in der Kopfleiste. Vorgabe: *Gen-EM NAdoku*.
+
+**Wer nichts einträgt, ändert nichts** — dann gelten die Vorgaben, und alles
+sieht aus wie bisher. Leer lassen setzt auch wieder darauf zurück.
+
+**Warum es das gibt:** Bis Web 20.7.0 stand der Name an **38 Stellen** fest im
+Programm, in drei verschiedenen Schreibweisen — eine davon hatte das „Gen-EM"
+verloren, ohne dass es jemandem auffiel. Und wer diese Anwendung für eine
+andere Organisation aufsetzt, verschickte Post, die mit einem fremden Namen
+unterschrieben ist.
+
+Höchstens 80 Zeichen, **keine Zeilenumbrüche** — der Name geht in Mailbetreffs,
+und dort wäre ein Zeilenumbruch ein Einfallstor.
+
+> **Eine Stelle bleibt fest:** Die Fußzeile „© Gen-EM · Open Source". Das ist
+> nicht der Name deiner Anlage, sondern die Angabe, wer die Software
+> geschrieben hat — die darf eine Installation nicht überschreiben.
+
+**Die Adressen** (seit Web 20.9.0) stehen in der Karte darunter. Zwei Felder,
+beide dürfen leer bleiben:
+
+- **Kontaktadresse** — sie steht als Zeile „Bei Fragen wende dich an …" in
+  **jeder** E-Mail an NutzerInnen. **Bleibt sie leer, fällt die Zeile weg.**
+  Das ist Absicht: Eine Mail, die im Fehlerfall auf ein Postfach verweist, das
+  niemand liest, ist schlimmer als eine ohne Verweis.
+- **Betreiberadresse** — dorthin gehen die Betriebsmeldungen: Speicherplatz
+  wird knapp, Konto-Backups sind überfällig. **Bleibt sie leer, gehen sie
+  weiterhin an alle Konten mit Verwaltungsrecht**, wie bisher.
+
+> **Die Kontaktadresse ist nicht der Absender.** Von welcher Adresse die Post
+> kommt, steht in der `config.php` und ist auf einer gut eingerichteten Anlage
+> ein `noreply@`. Die Kontaktadresse ist die, an die man *antworten* soll.
+
+**Warum es das gibt:** Bis Web 20.8.0 stand in **sieben** Mailtexten dieselbe
+fest eingebaute Adresse — die des Entwicklers. Wer diese Anwendung für eine
+andere Organisation aufsetzt, verwies seine NutzerInnen an jemanden, den sie
+nicht kennen.
+
+**Das Logo** darunter wählt zwischen *Hubschrauber (RTH)*, *Fahrzeug (NEF)* und
 *wechselnd*. Es ist der **Standard dieser Installation** — er gilt für die
 Anmeldeseite und für jedes Konto, das im Profil keine eigene Wahl getroffen
 hat; eine getroffene Wahl bleibt unberührt. Die Änderung wirkt sofort, auch für
@@ -3486,7 +3643,7 @@ abgeschaltet, und in **jeder Zahl der Statistik** (12.2) bleibt es außen vor.
 | **Statistik** | 12.2 | was diese Installation trägt: Konten, Geräte, Einsätze |
 | **Updates** | 12.3 | Wartungsmodus und ausstehende Datenbank-Updates |
 | **Hintergrundjobs** | 12.4 | ob die regelmäßige Arbeit läuft, und die drei Auslöser |
-| **Servereinstellungen** | 12.5 | Speichergrenze, Warnschwellen, Belegung, Ablage |
+| **Servereinstellungen** | 12.5 | Speichergrenze, Warnschwellen, Kontingente, Belegung, Ablage, Adresssuche, Sicherheitskopfzeilen |
 | **Komplett-Backup** | 12.6 | die ganze Installation in eine Datei |
 | **Backup-Ziele** | 12.7 | wohin die Konto-Backups zusätzlich geschoben werden |
 
@@ -3505,9 +3662,10 @@ jede Seite trägt ein Anliegen. Was wohin gegangen ist:
 |---|---|
 | Wartungsmodus, ausstehende Updates, Fassung | Betrieb → **Updates** |
 | Zustand der Hintergrundjobs, die drei Auslöser, das Token | Betrieb → **Hintergrundjobs** |
-| Speichergrenze, Warnschwellen, Belegung, Ablage | Betrieb → **Servereinstellungen** |
-| Logo der Installation | Verwaltung → **Installation** |
-| Schlüsselableitung, Umgebung (PHP, Zeitzone) | Betrieb → **Status** |
+| Speichergrenze, Warnschwellen, Kontingente, Belegung, Ablage | Betrieb → **Servereinstellungen** |
+| CSP scharf schalten, HSTS-Dauer | Betrieb → **Servereinstellungen** |
+| Name und Logo der Installation | Verwaltung → **Installation** |
+| Schlüsselableitung, Umgebung (PHP, Zeitzone), Plattformprofil | Betrieb → **Status** |
 | Einsätze ohne Diensttag | **entfallen** — jede NutzerIn sieht ihre eigenen als „Zuordnung offen" in der Diensttage-Leiste (8.1) und ordnet sie selbst zu |
 
 Die alte Adresse führt weiter zum Ziel; ein Lesezeichen bleibt gültig.
@@ -3524,6 +3682,13 @@ aufrufen.
 Oben steht eine Meldung mit einer Zahl — *„2 Punkte brauchen Aufmerksamkeit"*
 oder *„Alles läuft"*. Darunter vier Karten: **Server**, **E-Mail**,
 **Hintergrundjobs** und **Backups**, je Sache eine Zeile mit einer Plakette.
+Ganz unten, eingeklappt, eine fünfte: **Plattform** (seit Web 20.5.0).
+
+**Neben dem Titel steht seit Web 20.12.0 ein zweiter Knopf: „Sicherheit".**
+Er führt auf die Unterseite, auf der steht, wer gerade ausgesperrt ist — und
+auf der sich eine Sperre aufheben lässt. Beschrieben in Abschnitt **11.4b**.
+Dorthin führen auch die drei Zeilen „Verlangsamung", „Gesperrt" und
+„Abgewiesene Geräte" der Karte **Server**.
 
 **Die Plakettenfarbe bedeutet auf dieser Seite überall dasselbe:**
 
@@ -3549,13 +3714,58 @@ und beantwortet damit die Frage, die die Zeile „SMTP" nicht beantworten kann:
 SMTP-Zugang fiel bis dahin erst auf, wenn jemand einen Einladungslink
 vermisste.
 
-Nach dem Klick sagt die Meldung oben, ob der Mailserver die Nachricht
-angenommen hat, und die Zeile **„Letzter Versand"** steht auf *zugestellt*
-oder *fehlgeschlagen*. **Ob sie ankommt, sagt erst das Postfach** — angenommen
-ist nicht zugestellt. Steht kein SMTP in der `config.php`, wird gar nichts
-erst versucht; die Meldung sagt das, statt einen Fehlschlag zu erfinden.
-Höchstens **drei Testmails je Stunde**: Der Versand läuft in der Seitenanfrage
-mit, und öfter zu prüfen bringt keine andere Antwort.
+Nach dem Klick sagt die Meldung oben, was passiert ist — seit Web 20.9.0
+**drei** Antworten statt zwei:
+
+| Meldung | heißt |
+|---|---|
+| *hinausgegangen* | Der Mailserver hat sie angenommen. |
+| *Der erste Versuch ist gescheitert* | Sie steht in der **Warteschlange** und wird innerhalb der nächsten Stunde erneut versucht. Nicht verloren. |
+| *nicht eingereiht* | Es wurde nichts versucht — die eigene Adresse ist unbrauchbar oder die Warteschlange war nicht erreichbar. |
+
+**Ob sie ankommt, sagt erst das Postfach** — angenommen ist nicht zugestellt.
+Steht kein SMTP in der `config.php`, wird gar nichts erst versucht; die
+Meldung sagt das, statt einen Fehlschlag zu erfinden. Höchstens **drei
+Testmails je Stunde**: Der Versand läuft in der Seitenanfrage mit, und öfter
+zu prüfen bringt keine andere Antwort.
+
+**Die Zeile „Warteschlange"** (seit Web 20.9.0) beantwortet die Frage, die
+„Letzter Versand" nicht beantworten kann: Jene sagt etwas über den **letzten**
+Versuch — eine Einladung, die vorgestern scheiterte, war danach unsichtbar.
+
+| Zeile | heißt | was zu tun ist |
+|---|---|---|
+| blau **leer** | Nichts liegt an. | nichts |
+| orange **N wartet** | Der Mailserver war kurz gestört. Die Anwendung versucht es über 24 Stunden bis zu fünfmal. | abwarten |
+| rot **N unzustellbar** | Fünf Versuche, alle gescheitert. Die Zeile **nennt die Adressen** und den letzten Grund. | Grund lesen, Adresse prüfen, Vorgang von Hand wiederholen |
+
+Die Zeilen verfallen nach **30 Tagen**. Bei einer zugestellten Nachricht
+bleibt nur „eine Nachricht dieser Art ging zu dieser Zeit hinaus" — Adresse,
+Betreff und Text werden gelöscht. **Bei einer unzustellbaren bleibt die
+Adresse stehen**, sonst wäre die Meldung wertlos; der Text fällt trotzdem,
+weil ein Einladungs- oder Reset-Link darin steht.
+
+**Die Karte „Plattform"** (seit Web 20.5.0) beantwortet eine andere Frage als
+die vier darüber: nicht *was meldet die Anwendung*, sondern *was bietet der
+Server unter ihr*. Es ist **dieselbe Liste, die `install.php` vor der
+Einrichtung prüft** — PHP-Fassung, Erweiterungen, Weblimits, Schreibrechte,
+Datenbank, Verbindungsgrenze, Kontingent, SMTP.
+
+Sie hat zwei Stufen, und der Unterschied ist wichtig:
+
+| Stufe | heißt |
+|---|---|
+| **Muss** | Fehlt es, läuft die Anwendung nicht. Die Zeile steht **rot** und zählt oben mit. |
+| **Empfohlen** | Die Anwendung läuft vollständig — nur langsamer oder mit einem Handgriff mehr. Die Zeile steht als **Hinweis** und **färbt die Ampel nicht**. |
+
+Erfüllte Empfehlungen stehen nicht einzeln da; die letzte Zeile nennt ihre
+Zahl („6 von 6 erfüllt"). Und wo die Anwendung etwas **nicht messen kann**,
+sagt sie das, statt zu raten: Der freie Plattenplatz ist auf geteiltem
+Webspace die Zahl des ganzen Hosts und nicht dein Kontingent — die Zeile
+schreibt es dazu.
+
+Die Karte ist **eingeklappt**. Wer sie braucht, braucht sie einmal nach einem
+Update oder wenn oben etwas rot steht.
 
 **Die Seite ändert nichts am Bestand.** Jede Zeile führt auf die Seite, auf
 der sich etwas ändern lässt. **Zwei Ausnahmen** führen nicht weg, sondern
@@ -3568,6 +3778,60 @@ zuständige Seite: Der Zugang steht allein in der `config.php`.
 Konto-Backups und die Ablage werden bei jedem Aufruf gelesen. Die Größe von
 Datenbank und Dateien kommt aus der täglichen Messung im Aufräumjob; die
 Zeile „Datenbank" sagt, wann sie entstanden ist.
+
+#### Die Zeile „Verbindungen" (seit Web 20.13.0)
+
+In der Karte **Server**, unter „Datenbank". Sie beantwortet eine Frage, die
+sonst niemand stellt: **Wie oft hat die Datenbank in der letzten Zeit keine
+Verbindung mehr angenommen?**
+
+Jeder Webspace begrenzt, wie viele Anfragen gleichzeitig mit der Datenbank
+sprechen dürfen — häufig zehn bis dreißig. Wird die Zahl erreicht, bekommt
+die nächste Anfrage eine Absage. Für den Menschen davor sieht das aus wie eine
+Seite, die nicht lädt; die Uhr und das Handy merken es gar nicht, sie liefern
+später von selbst nach. **Es fällt also niemandem auf — bis es auffällt.**
+
+Die Zeile zeigt, wie oft es in der laufenden Stunde eng war, die größte je
+gemessene Stunde, die Gesamtzahl und wann es zuletzt vorkam. Sie wird
+**orange**, wenn es in der laufenden Stunde zehnmal oder öfter eng war — oder
+wenn die Spitze diese Schwelle erreicht hat und der letzte Vorfall keine 24
+Stunden her ist. Dann steht auch dabei, was zu tun ist:
+`max_user_connections` beim Hoster anheben lassen.
+
+> **„Keine abgewiesene Verbindung" und „Nicht gezählt" sind zwei
+> verschiedene Auskünfte.** Der Zähler liegt in einer Datei neben der
+> Anwendung — er muss auch dann schreiben können, wenn die Datenbank gerade
+> nicht antwortet. Lässt sich diese Datei nicht anlegen, sagt die Zeile das
+> ausdrücklich, statt eine beruhigende Null zu zeigen.
+
+**Was die Anwendung selbst dabei tut:** Sie antwortet mit einer eigenen Seite
+— *„Der Server ist gerade ausgelastet — bitte in einer Minute noch einmal"* —
+statt mit einer Fehlermeldung. Wer gerade ein Formular abgeschickt hat, geht
+im Browser **zurück**, findet die Eingaben noch im Formular und schickt es
+gleich noch einmal ab. Uhr und Handy behalten ihre Daten und liefern von
+selbst nach.
+
+#### Die Zeile „Gerätemodelle" (seit Web 20.15.0)
+
+Ebenfalls in der Karte **Server**. Eine Garmin-Uhr kennt ihren Modellnamen
+nicht — sie sendet beim Koppeln eine **Teilenummer**, und eine Tabelle in der
+Anwendung macht daraus „Venu 3S". Kennt diese Tabelle die Nummer noch nicht
+(das Gerät ist neuer als die Tabelle), steht in der Geräteliste die
+Teilenummer, und die Geräteart ist nur das, was die Uhr-App über sich selbst
+behauptet.
+
+Die Zeile sagt, ob das nachgetragen ist:
+
+| Plakette | heißt |
+|---|---|
+| **aktuell** | Die Tabelle ist verarbeitet. Daneben steht, wann und wie viele Zeilen nachgezogen wurden. |
+| **steht aus** (orange) | Ein Update hat eine neue Tabelle mitgebracht. Der Hintergrundjob zieht beim nächsten Lauf nach — meist innerhalb weniger Minuten. Ist es nach einem Tag noch orange, laufen die Hintergrundjobs nicht (Karte *Hintergrundjobs*). |
+| **ungeprüft** | Es ist noch nie gelaufen. Auch das holt der nächste Jobdurchlauf. |
+
+**„M unbekannt" ist kein Fehler.** So viele Geräte tragen eine Angabe, die die
+Tabelle nicht kennt — Handys (die ihren Namen selbst mitbringen) und Modelle,
+die noch nicht in der Tabelle stehen. Sie werden **nicht** angefasst: Was ein
+Gerät über sich gesagt hat, bleibt stehen.
 
 ### 12.2 Statistik
 
@@ -3701,6 +3965,27 @@ geht nichts verloren.
 6. **„Wartungsmodus ausschalten"** klicken. Startseite erneut aufrufen: Sie
    antwortet, und unten in der Fußzeile steht die neue Fassung.
 7. Uhr und Handy melden sich beim nächsten Mal von selbst. Nichts zu tun.
+
+**Seit Web 20.6.0 schaltet ihn auch die Anwendung selbst — der Torwächter.**
+Ist eine neue Fassung eingespielt worden und steht noch eine Migration aus,
+schließt die Installation bei der nächsten Anmeldung von selbst. Die
+Wartungsseite sagt dann ausdrücklich, dass sie **selbst** geschlossen hat und
+warum; auf **Betrieb → Updates** steht dieselbe Auskunft als Meldung, und
+nach „Ausstehende ausführen" erscheint dort ein zweiter Knopf **„Wartung
+beenden"** — genau da, wo du gerade geklickt hast.
+
+**Aus geht der Wartungsmodus nie von selbst**, auch nicht der des Torwächters.
+Das ist Absicht: Wer eine halb migrierte Installation wieder öffnet, tut das
+mit einem Klick und nicht aus Versehen. Im Balken oben steht bei einer
+automatisch geschalteten Wartung „automatisch geschaltet" statt eines Namens,
+dazu der Grund.
+
+**Ein Fenster bleibt, und es ist klein.** Uhr und Handy sprechen nicht über
+die Anmeldung, sondern direkt mit `ingest.php` — bis zur ersten Anmeldung nach
+einem Update bekommen sie deshalb noch die alte Fehlermeldung statt des
+freundlichen 503. **Verloren geht dabei nichts:** Beides ist ein Serverfehler,
+und beide Geräte puffern und liefern nach. Wer über die Auslieferungskette
+ausliefert, hat das Fenster gar nicht — die schaltet vorher.
 
 **Was währenddessen weiter geht.** Die **fünf Betriebsseiten** (Status,
 Statistik, Updates, Hintergrundjobs, Servereinstellungen), die Anmeldung, das
@@ -3886,7 +4171,25 @@ des Hosts und nicht dein Kontingent. Ohne die Angabe zeigt der zweite Balken
 nur die Zusammensetzung, ohne Füllstand.
 
 Gemessen wird **einmal täglich** im Aufräumjob; der Stand steht im Kartenkopf.
-Darunter Speichergrenze, Warnschwellen, Ablage und Reste abgebrochener Läufe.
+Darunter Speichergrenze, Warnschwellen, die beiden **Kontingente**, Ablage und
+Reste abgebrochener Läufe.
+
+**Zwei Kontingente, zwei Vorgaben** (seit Web 20.5.0). Neben *Webspace laut
+Hosting* steht jetzt *Kontingent der Datenbank*. Beides sind Angaben aus deinem
+Tarif — auch die Datenbankgrenze macht kein Hoster abfragbar. Der Unterschied
+ist die Vorgabe:
+
+- der **Webspace** hat keine. Ohne Angabe zeigt der Balken nur die Summe;
+  ein geratener Wert wäre schlimmer als keiner.
+- die **Datenbank** hat **10 GB**. Das ist die Größe, die diese Anwendung
+  tragen muss (500 Konten × 600 Einsätze) — eine Zusage des Projekts und keine
+  Vermutung über deinen Hoster. Wer mehr hat, trägt mehr ein; leer setzt
+  zurück.
+
+**Gewarnt wird per Mail**, an alle mit Verwaltungsrecht, mit **denselben
+Warnschwellen** wie die Speichergrenze (Vorgabe 70 und 90 %) — je Schwelle
+einmal. Wer aufräumt und wieder darunter fällt, wird beim nächsten
+Überschreiten erneut gewarnt.
 
 **Karte „Adresssuche"** (seit Web 15.8.0). Beim Tippen in einem Ortsfeld und
 nach jeder Wahl auf der Karte fragt die Anwendung einen **Adressdienst** —
@@ -3910,6 +4213,51 @@ soll die Dienstadresse nicht mit abweisen und umgekehrt. Welcher Dienst
 eingetragen ist, erscheint anschließend im Hinweis unter dem Ortsfeld, in der
 Karte „Datenschutz" jedes Profils und im Textbaustein für die
 Datenschutzerklärung (11.5).
+
+**Karte „Sicherheitskopfzeilen"** (seit Web 20.7.0). Zwei Einstellungen, die
+den Browser betreffen, nicht die Daten.
+
+**„CSP scharf schalten".** Die Anwendung schickt jeder Seite eine Regel mit,
+welche Skripte, Bilder und Schriften geladen werden dürfen — eine
+*Content-Security-Policy*. Sie ist der Schutz für den Fall, dass trotz aller
+Prüfungen einmal fremder Programmcode in eine Seite gerät: Der Browser führt
+ihn dann gar nicht erst aus. Das ist hier mehr wert als anderswo, weil die
+Patientendaten **im Browser** entschlüsselt werden.
+
+Die Regel läuft in zwei Stufen:
+
+1. **Beobachten** (so kommt die Installation an). Der Browser *meldet*, was er
+   blockiert hätte, führt es aber trotzdem aus. Es kann also nichts kaputtgehen.
+   Unter dem Schalter stehen die letzten 20 Meldungen mit Regel, Quelle und
+   Seite.
+2. **Scharf.** Der Browser blockiert wirklich.
+
+**So gehst du vor:** Lass die Installation zwei Wochen im normalen Betrieb
+laufen. Bleibt die Liste darunter **leer**, leg den Schalter um. Steht dort
+etwas, kläre es vorher — jede Zeile ist etwas, das nach dem Umlegen nicht mehr
+funktioniert, und zwar **ohne Fehlermeldung**: Der Knopf tut dann einfach
+nichts. Nach dem Umlegen einmal durchklicken, was du wirklich benutzt: Karte,
+Einsatzformular mit Adresssuche, Import, Export, Druckansicht. Zurückschalten
+geht jederzeit.
+
+Die Meldungen enthalten **keine IP, kein Konto und keine Einsatznummer** — von
+der Seitenadresse bleibt nur der Dateiname. Nach 30 Tagen räumt der
+Aufräumjob sie weg.
+
+**„HSTS".** Damit sagt der Server dem Browser: *Diese Seite immer über HTTPS
+aufrufen, auch wenn jemand einen `http://`-Link schickt.* Das ist gut — aber
+der Browser merkt es sich für die eingestellte Dauer, und in dieser Zeit
+kommst du unter diesem Namen **nicht mehr unverschlüsselt** ans Ziel. Vier
+Stufen: **aus / 1 Tag / 7 Tage / 1 Jahr**.
+
+- **Gerade erst aufgesetzt, Adresse steht noch nicht fest?** 1 Tag lassen.
+- **Läuft seit Jahren unter dieser Domain?** 1 Jahr.
+
+**Nach dem Update auf Web 20.7.0 steht die Einstellung auf 1 Tag** — auch dann,
+wenn deine Installation vorher über die Serverkonfiguration ein Jahr gebunden
+hat. Das ist kein Versehen: Die Dauer wird jetzt von der Anwendung bestimmt,
+damit sie an *einer* Stelle steht und die Anzeige nicht lügt. **Wer produktiv
+läuft, stellt hier wieder auf 1 Jahr.**
 
 ### 12.6 Komplett-Backup
 
@@ -4012,10 +4360,39 @@ Was dabei zu wissen ist:
 - Die Zugangsdaten liegen **verschlüsselt** in der Datenbank. Der Schlüssel
   dazu steht in einer Datei, die nicht mitgesichert wird — wer den
   Datenbankdump hat, hat die Passwörter nicht.
-- **Auf dem Ziel wird nie etwas gelöscht.** Die Regel „höchstens zwei je
-  Konto" gilt für die Ablage auf dem eigenen Server; drüben sammelt sich
-  alles an, bis dort jemand aufräumt. Was dort liegt, zählt deshalb auch
-  nicht in die Speichergrenze — der Server kennt die Größe nicht.
+- **Auf dem Ziel wird nur gelöscht, wo es ausdrücklich eingeschaltet ist**
+  (seit Web 20.14.0). Ohne diese Option ergänzt der Versand nur: Die Regel
+  „höchstens zwei je Konto" gilt für die Ablage auf dem eigenen Server,
+  drüben sammelt sich alles an, bis dort jemand aufräumt. Das ist die
+  Voreinstellung und der Grund dafür ist ernst — der Zweck eines auswärtigen
+  Ziels ist, den Ausfall dieses Servers zu überleben, **samt eines Fehlers,
+  der hier zu viel löscht**. Ein Versand, der drüben aufräumt, trägt diesen
+  Fehler mit hinüber.
+- **Wenn du es doch willst:** Beim Bearbeiten eines Ziels steht der Haken
+  *Auf dem Ziel aufräumen* und darunter zwei Zahlen — wie viele
+  Konto-Sicherungen je Konto und wie viele Komplett-Stände dort bleiben
+  sollen. Drei Dinge gelten dann immer:
+  1. **Fremde Dateien bleibt es fern.** Entfernt wird nur, was dem
+     Namensmuster einer Sicherung entspricht **und** im Versandprotokoll
+     dieser Installation steht. Ein Archiv, das jemand anderes dorthin gelegt
+     hat, wird nie angefasst — auch dann nicht, wenn es zufällig so heißt
+     wie eine Sicherung.
+  2. **Nie unter deine Zahl.** Und was einmal entfernt wurde, geht nicht
+     wieder hinüber; wer die Zahl später anhebt, bekommt die alten Stände
+     nicht zurück.
+  3. **Nie nach einem gescheiterten Versand.** Wer nicht sicher weiß, dass
+     der neue Stand drüben angekommen ist, räumt den alten nicht weg.
+
+  Was dabei entfernt wurde, steht unter **Betrieb → Status → Sicherheit** in
+  der Karte *Löschungen auf Sicherungszielen* — mit Ziel, Datei und Grund.
+- **Nachsehen, was dort liegt**, geht auf Knopfdruck: im Menü einer Zielzeile.
+  Es zählt, was von hier stammt, und was nicht — und es löscht nichts. Die
+  Zahlen kommen in dem Augenblick von der Gegenstelle und werden nicht
+  gespeichert.
+- Was am Ziel liegt, zählt **nicht** in die Speichergrenze — der Server kennt
+  die Größe nicht. Wächst ein Ziel seit über einem Monat, ohne dass dort je
+  etwas entfernt wurde, sagt es die Statusseite (Karte *Backups*, Zeile
+  *Aufbewahrung am Ziel*).
 
 Für dein Konto ändert sich dadurch nichts: Der Inhalt des Backups bleibt
 verschlüsselt, und ohne deinen Wiederherstellungsschlüssel ist er auch dort

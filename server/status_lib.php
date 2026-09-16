@@ -10,6 +10,8 @@ require_once __DIR__ . '/adminbackup_lib.php';
 require_once __DIR__ . '/komplett_lib.php';
 require_once __DIR__ . '/sicherungsziel_lib.php';
 require_once __DIR__ . '/smtp.php';
+require_once __DIR__ . '/mail_lib.php';   // Lage der Warteschlange (P5a/AP5)
+require_once __DIR__ . '/plattform_lib.php';
 
 /**
  * DIE ERHEBUNG DER STATUSSEITE — ohne eine Zeile Markup (S8/AP5).
@@ -332,10 +334,194 @@ function status_erhebung(): array
         $sp['stand'] !== null ? 'erreichbar' : 'ungemessen',
         'betrieb_server.php');
 
+    /* ---- DIE VERBINDUNGSGRENZE (P5a/AP9, E-P5a-18) ----------------------
+     *
+     * Die Zeile darueber sagt, dass die Datenbank erreichbar IST — das
+     * beweist diese Seite dadurch, dass es sie gibt. Sie sagt nicht, wie oft
+     * sie es NICHT war. Genau das ist die Zahl, an der man merkt, dass
+     * `max_user_connections` des Hosters fuer diesen Betrieb zu eng steht:
+     * Wer 1203 bekommt, sieht eine 503 und liefert spaeter nach — es faellt
+     * niemandem auf, bis es auffaellt.
+     *
+     * DER ZAEHLER STEHT IN EINER DATEI, nicht in der Datenbank. Warum, steht
+     * bei `ueberlast_vermerken()` in `wartung_lib.php` (E-P5a-50): In dem
+     * Moment, in dem gezaehlt werden muesste, gibt es keine Verbindung.
+     *
+     * WANN ORANGE — und warum nicht einfach „ab Spitze 10". Die Ampel soll
+     * sagen, wie es JETZT steht, und sie muss wieder gruen werden koennen.
+     * Eine Spitze von 41 aus dem letzten Herbst faerbte sie sonst fuer immer,
+     * und was sich nie aendert, liest bald niemand mehr. Sie faerbt deshalb
+     * bei zehn Vorfaellen in der LAUFENDEN Stunde — und zusaetzlich, wenn
+     * die Spitze diese Schwelle erreicht hat und der letzte Vorfall keine 24
+     * Stunden her ist. Damit geht eine Nacht, in der es dreissigmal eng war,
+     * nicht unter, nur weil gerade Ruhe ist; und nach einem ruhigen Tag ist
+     * die Zeile von selbst wieder blau. */
+    $ul = ueberlast_stand();
+    if (!$ul['schreibbar']) {
+        /* DIE NULL, DIE NICHTS BEDEUTET (CLAUDE.md 6). Ohne diesen Zweig
+         * saehe eine Installation, in der die Datei nicht angelegt werden
+         * kann, aus wie eine ohne einen einzigen Vorfall. */
+        $ulText = 'Nicht gezählt — die Zähldatei neben wartung.lock lässt sich '
+                . 'nicht schreiben. Eine Null bedeutet hier nichts';
+        $ulTon  = 'orange';
+        $ulPlak = 'ungezählt';
+    } elseif ($ul['gesamt'] === 0) {
+        $ulText = 'Keine abgewiesene Verbindung seit Beginn der Zählung · '
+                . 'persistente Verbindungen sind aus';
+        $ulTon  = 'blau';
+        $ulPlak = 'in Ordnung';
+    } else {
+        $ulAkut  = $ul['stunde'] === gmdate('Y-m-d H') ? $ul['n'] : 0;
+        $ulFrisch = $ul['letzt'] !== null
+                 && strtotime($ul['letzt'] . ' UTC') > time() - 86400;
+        $ulEng   = $ulAkut >= UEBERLAST_ORANGE
+                || ($ulFrisch && $ul['spitze'] >= UEBERLAST_ORANGE);
+        $ulText = ($ulAkut > 0
+                    ? $ulAkut . ' in dieser Stunde'
+                    : 'in dieser Stunde keine')
+                . ' · Spitze ' . $ul['spitze'] . ' je Stunde'
+                . ($ul['spitze_stunde'] !== null
+                    ? ' (' . fmt_local($ul['spitze_stunde'] . ':00:00', 'd.m.Y H') . ' Uhr)'
+                    : '')
+                . ' · insgesamt ' . $ul['gesamt']
+                . ' · zuletzt ' . status_alter($ul['letzt'])
+                . ($ulEng ? ' — max_user_connections beim Hoster anheben lassen' : '');
+        $ulTon  = $ulEng ? 'orange' : 'blau';
+        $ulPlak = $ulEng ? 'zu eng' : $ul['gesamt'] . ' gezählt';
+    }
+    $server[] = status_z('Verbindungen', $ulText, $ulTon, $ulPlak);
+
+    /* ---- DIE MODELLTABELLE UND IHR NACHLOESE-JOB (P5a/AP11, E-P5a-21) ---
+     *
+     * WOGEGEN. `pair.php` löst die Teilenummer einer Uhr im Moment der
+     * Kopplung auf. Trifft sie dabei auf eine ältere Tabelle, bleibt das
+     * Modell leer und die Geräteart steht auf der ungeprüften Selbstauskunft
+     * des Geräts — die Uhr-App sendet dort fest „uhr". Der Job zieht das
+     * nach, sobald eine neue Tabelle da ist.
+     *
+     * DREI ZUSTÄNDE, und der mittlere ist der Grund für die Zeile: Ein Update
+     * hat eine neue Tabelle mitgebracht, der Job hat sie noch nicht
+     * verarbeitet. Ohne diesen Hinweis wäre das ein Zustand, den niemand
+     * sieht — er löst sich beim nächsten Jobdurchlauf von selbst, und wenn
+     * nicht, merkt es keiner. */
+    require_once __DIR__ . '/geraetemodelle_lib.php';
+    $gmStand = gm_stand_lesen();
+    $gmSoll  = gm_tabellen_hash();
+    $gmZahl  = count(GERAETE_MODELLE);
+    if ($gmStand['hash'] === null) {
+        $gmText = $gmZahl . ' Teilenummern · noch nie nachgelöst — der Job holt '
+                . 'es beim nächsten Lauf nach';
+        $gmTon  = 'neutral';
+        $gmPlak = 'ungeprüft';
+    } elseif ($gmStand['hash'] !== $gmSoll) {
+        $gmText = $gmZahl . ' Teilenummern · die Tabelle hat sich geändert, der '
+                . 'Nachlöse-Job zieht beim nächsten Lauf nach';
+        $gmTon  = 'orange';
+        $gmPlak = 'steht aus';
+    } else {
+        $gmText = $gmZahl . ' Teilenummern · zuletzt nachgelöst '
+                . fmt_local((string)$gmStand['am'], 'd.m.Y H:i') . ' Uhr · '
+                . $gmStand['nachgeloest'] . ' nachgezogen, '
+                . $gmStand['unbekannt'] . ' unbekannt (Handys und fremde Modelle, '
+                . 'sie bleiben unberührt)';
+        $gmTon  = 'blau';
+        $gmPlak = 'aktuell';
+    }
+    $server[] = status_z('Gerätemodelle', $gmText, $gmTon, $gmPlak,
+                         'betrieb_jobs.php');
+
     $server[] = status_z('PHP und Zeitzone',
         PHP_VERSION . ' · Anzeige in ' . date_default_timezone_get()
         . ' · gespeichert wird UTC',
         'neutral', PHP_SAPI);
+
+    /* ---- RATENSCHUTZ (P5a/AP6, E-P5a-05) --------------------------------
+     *
+     * ZWEI ZEILEN, NICHT EINE KARTE. Die vollstaendige Sicherheitssicht —
+     * alle Sperren mit Knopf „aufheben", die Ereignisse der letzten 30 Tage,
+     * die Verlangsamungsphasen — ist eine UNTERSEITE von Status und wartet
+     * auf Mockup M-P5a-01 (E-P5a-08, AP8). Wer sie jetzt hier baut, baut sie
+     * zweimal.
+     *
+     * Was NICHT warten kann, ist die Verlangsamung: Sie aendert das Verhalten
+     * der Anmeldung fuer alle, und eine Betreiberin, die nicht weiss, dass
+     * sie laeuft, sucht den Fehler am Server. E-P5a-05 nennt sie
+     * ausdruecklich „orange". */
+    require_once __DIR__ . '/ratelimit_lib.php';
+    $vBremse = rate_verlangsamung(true);
+    if ($vBremse['stufe'] > 0) {
+        $server[] = status_z('Verlangsamung',
+            'Stufe ' . $vBremse['stufe'] . ' — jede fehlgeschlagene Anmeldung '
+            . 'wartet ' . rtrim(rtrim(number_format($vBremse['sekunden'], 1, ',', ''), '0'), ',')
+            . ' Sekunden. Gezählt sind ' . $vBremse['versuche'] . ' Fehlversuche in den '
+            . 'letzten 15 Minuten. Wer das richtige Passwort hat, kommt durch',
+            'orange', 'aktiv', 'betrieb_sicherheit.php#k-bremse-global');
+    }
+
+    $rsSperren = rate_sperren_aktiv(200);
+    if ($rsSperren !== []) {
+        /* `$rsZeile` und nicht `$sp` — jene Variable traegt in dieser Funktion
+         * seit S8 den SPEICHERSTAND, und die Schleife hat sie beim ersten
+         * Versuch ueberschrieben. Die Folge war kein Syntaxfehler, sondern
+         * ein 500er dreihundert Zeilen weiter unten
+         * (`speicher_ton(): Argument #2 must be of type array, null given`) —
+         * und zwar NUR, wenn gerade etwas gesperrt war. */
+        /* `art` KOMMT AUS DER BIBLIOTHEK, nicht aus einem zweiten
+         * `str_starts_with` hier (P5a/AP8). Die Ableitung stand dreimal im
+         * Bestand; jetzt steht sie einmal, in `rate_sperren_aktiv()`. */
+        $konten = 0; $adressen = 0; $hoechste = 0;
+        foreach ($rsSperren as $rsZeile) {
+            if ($rsZeile['art'] === 'konto') { $konten++; } else { $adressen++; }
+            $hoechste = max($hoechste, $rsZeile['stufe']);
+        }
+        $teile = [];
+        if ($adressen > 0) { $teile[] = $adressen . ' Anschluss' . ($adressen === 1 ? '' : 'e'); }
+        if ($konten > 0)   { $teile[] = $konten . ' Name' . ($konten === 1 ? '' : 'n'); }
+        $server[] = status_z('Gesperrt',
+            implode(' und ', $teile) . ' — höchste Stufe ' . $hoechste
+            . '. Eine Sperre ist ein Ereignis, kein Fehler: Sie läuft von selbst ab',
+            $hoechste >= rate_stufe_hoechste() ? 'orange' : 'blau',
+            count($rsSperren) . ($hoechste >= rate_stufe_hoechste() ? ' · Stufe ' . $hoechste : ''),
+            'betrieb_sicherheit.php#k-sperren');
+    }
+
+    /* ---- ABGEWIESENE GERAETEANMELDUNGEN (P5a/AP7, E-P5a-02) -------------
+     *
+     * Die zweite der beiden Stellen, an denen die Mengenbremse sichtbar wird;
+     * die erste ist die Kontoseite am Geraet selbst. Hier steht sie, weil die
+     * Betreiberin es sonst nie erfaehrt: Das Geraet gehoert einer Nutzerin,
+     * die Statusseite gehoert ihr — und die Uhr, die seit Montag nichts mehr
+     * hochlaedt, ist ihr Problem, sobald jemand nach den fehlenden Daten
+     * fragt.
+     *
+     * KEIN LINK. Der Vermerk steht auf der Kontoseite der BESITZERIN, und
+     * dorthin fuehrt von der Betriebsseite kein Weg — eine Verknuepfung, die
+     * auf einer Rechteprüfung endet, ist schlechter als keine.
+     *
+     * IM TRY, WEIL ES DIE SPALTEN IM DEPLOY-FENSTER NOCH NICHT GIBT. Die
+     * Statusseite ist genau die Seite, die in diesem Fenster aufgerufen wird
+     * — sie darf daran nicht scheitern. */
+    /* SIE FRAGT NICHT SELBST, SIE RUFT (P5a/AP8). Bis Web 20.11.0 stand hier
+     * eine eigene Abfrage auf dieselben zwei Spalten, und die
+     * Sicherheitsseite haette eine zweite daneben gestellt. Zwei Abfragen auf
+     * denselben Bestand laufen auseinander, sobald eine von beiden eine
+     * Bedingung dazubekommt. `sicherheit_bremse_geraete()` faengt den
+     * Deploy-Fall selbst ab und liefert dann eine leere Liste. */
+    $abgRows = sicherheit_bremse_geraete();
+    if ($abgRows !== []) {
+        $abgErst  = $abgRows[0];
+        $abgSumme = 0;
+        foreach ($abgRows as $r) { $abgSumme += $r['anzahl']; }
+        $klein = 'Gerät „' . $abgErst['name'] . '": ' . $abgErst['anzahl']
+               . ' abgewiesene Anmeldungen'
+               . ($abgErst['seit'] !== null
+                  ? ' seit ' . fmt_local($abgErst['seit'], 'd.m.Y H:i') : '')
+               . (count($abgRows) > 1 ? ' (und ' . (count($abgRows) - 1) . ' weitere)' : '')
+               . '. Fast immer ein veralteter Schlüssel — das Gerät koppelt neu, '
+               . 'und der Vermerk verschwindet beim nächsten gelungenen Upload';
+        $server[] = status_z('Abgewiesene Geräte', $klein, 'orange',
+            (string)$abgSumme, 'betrieb_sicherheit.php#k-bremse');
+    }
 
     /* ---- E-Mail --------------------------------------------------------- */
     $mail = [];
@@ -368,6 +554,45 @@ function status_erhebung(): array
                           . 'geprüft wird der Host, nicht die Zugangsdaten'),
             $gut ? 'blau' : 'rot',
             $gut ? 'zugestellt' : 'fehlgeschlagen');
+    }
+
+    /* DIE WARTESCHLANGE (P5a/AP5, E-P5a-41). Bis Web 20.7.0 sagte die Zeile
+       „Letzter Versand" alles, was es zu sagen gab — sie sagte aber nur
+       etwas über den LETZTEN Versuch. Eine Einladung, die vor zwei Tagen
+       scheiterte, war danach unsichtbar, und die Marke stand längst. Diese
+       Zeile ist die fehlende Auskunft: Liegt etwas? Ist etwas endgültig
+       liegengeblieben, und für wen?
+
+       ZWEI TÖNE, KEINE DREI. „Wartet" ist ORANGE, nicht rot: Eine Zeile in
+       der Leiter ist der Normalfall eines kurz gestörten Mailservers und
+       heilt von selbst. Rot ist erst, was nicht mehr heilt. */
+    $lage = mail_lage();
+    if ($lage !== null) {
+        if ($lage['unzustellbar'] > 0) {
+            $wer = implode(', ', $lage['adressen']);
+            if ($lage['unzustellbar'] > count($lage['adressen'])) {
+                $wer .= ' und ' . ($lage['unzustellbar'] - count($lage['adressen'])) . ' weitere';
+            }
+            $mail[] = status_z('Warteschlange',
+                'Endgültig nicht zugestellt an ' . $wer
+                . ($lage['grund'] !== null ? '. Zuletzt: ' . $lage['grund'] : '')
+                . '. Die Zeilen verfallen nach 30 Tagen',
+                'rot', $lage['unzustellbar'] . ' unzustellbar');
+        } elseif ($lage['offen'] > 0) {
+            $mail[] = status_z('Warteschlange',
+                $lage['offen'] . ($lage['offen'] === 1 ? ' Nachricht wartet' : ' Nachrichten warten')
+                . ' auf einen weiteren Versuch. Der Job `mail` holt sie nach; '
+                . 'die Leiter geht über 24 Stunden',
+                'orange', $lage['offen'] . ' wartet');
+        } else {
+            $mail[] = status_z('Warteschlange',
+                'Nichts liegt an'
+                . ($lage['zuspaet'] > 0
+                   ? '. ' . $lage['zuspaet'] . ' Nachricht(en) sind abgelaufen, bevor sie '
+                     . 'zugestellt werden konnten — ein Reset-Link gilt eine Stunde'
+                   : ''),
+                'blau', 'leer');
+        }
     }
 
     $entkoppelt = antwort_entkoppelbar();
@@ -552,6 +777,45 @@ function status_erhebung(): array
         $backups[] = status_z('Backup-Ziele', $klein, $ton, $pl, 'admin_sicherungsziele.php');
     }
 
+    /* ---- WÄCHST EIN ZIEL, OHNE DASS DORT JE ETWAS ENTFERNT WURDE?
+     *      (P5a/AP10, E-P5a-03) ------------------------------------------
+     *
+     * Der Versand ergänzt nur. Bei zwei Sicherungen je Konto und Monat läuft
+     * ein Ziel damit über kurz oder lang voll — und niemand merkt es hier,
+     * weil auf der Gegenstelle nichts von dieser Anwendung nachsieht. Genau
+     * das ist Backlog Nr. 49.
+     *
+     * DIE ZEILE FRAGT DIE ZIELE NICHT. Sie liest das Versandprotokoll: Ein
+     * Ziel, auf das seit über einem Monat geschickt wird und von dem nie
+     * etwas entfernt wurde, wächst. Drei FTP-Verbindungen bei jedem Aufruf
+     * der Statusseite wären eine Seite, die zehn Sekunden lädt — dieselbe
+     * Überlegung wie bei `sz_versand_rueckstand()`.
+     *
+     * WAS SIE DAMIT NICHT SIEHT: eine Betreiberin, die dort von Hand
+     * aufgeräumt hat. Der Satz sagt deshalb „es ist nie etwas entfernt
+     * worden" und nicht „dort liegt zu viel" — er beschreibt, was diese
+     * Installation weiß, nicht den Zustand der Gegenstelle.
+     *
+     * NUR FÜR ZIELE OHNE REGEL. Wo die Aufbewahrung eingeschaltet ist,
+     * räumt der Versand selbst auf; die Zeile wäre dort eine Mahnung an
+     * jemanden, der schon gehandelt hat (`sz_waechst()` filtert das). */
+    $waechst = sz_waechst();
+    if ($waechst !== []) {
+        $erstes = $waechst[0];
+        $backups[] = status_z('Aufbewahrung am Ziel',
+            count($waechst) === 1
+                ? 'Auf „' . $erstes['name'] . '" liegen ' . $erstes['dateien']
+                  . ' Sicherungen (' . edbak_groesse_text($erstes['bytes'])
+                  . '), und es ist dort nie etwas entfernt worden — seit '
+                  . fmt_local($erstes['seit'], 'd.m.Y')
+                : count($waechst) . ' Ziele wachsen seit über einem Monat, ohne dass '
+                  . 'dort je etwas entfernt wurde — das größte ist „'
+                  . $erstes['name'] . '" mit ' . edbak_groesse_text($erstes['bytes']),
+            'orange',
+            count($waechst) === 1 ? 'wächst' : count($waechst) . ' wachsen',
+            'admin_sicherungsziele.php');
+    }
+
     /* Speicher: derselbe Ton wie der Balken auf den Servereinstellungen —
        `speicher_ton()` ist die eine Regel dafür (S8/AP2). */
     $proz = (int)$sp['backups']['prozent'];
@@ -574,12 +838,73 @@ function status_erhebung(): array
         $ablageBereit ? 'beschreibbar' : 'nicht beschreibbar',
         'betrieb_server.php');
 
+    /* ---- Plattform (P5a/AP2, E-P5a-19) ----------------------------------
+     *
+     * DIESELBE FUNKTION, DIE `install.php` VOR DER EINRICHTUNG FRAGT. Was die
+     * Einrichtung verlangt, muss die Installation auch im dritten Jahr noch
+     * erfuellen — und ein Hoster kann eine PHP-Fassung oder ein Weblimit
+     * jederzeit umstellen, ohne jemanden zu fragen. Zwei Listen liefen dafuer
+     * auseinander; es gibt deshalb nur eine (`plattform_lib.php`).
+     *
+     * MUSS-ABWEICHUNG IST ROT, EMPFOHLEN-ABWEICHUNG IST EIN HINWEIS. „Kein
+     * Hinweis faerbt die Ampel" (Vorbereitung, Abschnitt 2): Die Ampel bleibt
+     * den Zustaenden vorbehalten, die Technik.md 4.99e nennt. Ein
+     * abgeschalteter OPcache ist kein Betriebsproblem, und eine Zahl im
+     * Menuepunkt, die davon kaeme, schickte jemanden auf die Suche nach einem
+     * Fehler, den es nicht gibt. Deshalb steht bei Empfohlen `neutral`.
+     *
+     * OHNE NETZ. `plattform_pruefen(..., mitNetz: false)`: Die Seite waehlt
+     * keinen Mailserver an. Ein haengender hielte sonst bei jedem Aufruf einen
+     * PHP-Arbeitsprozess; die Frage „antwortet er?" beantwortet der Knopf
+     * „Testmail an mich" darueber.
+     *
+     * NUR ABWEICHENDE EMPFOHLEN-ZEILEN. Erfuellte Empfehlungen sind
+     * Bestaetigung ohne Handlung — zehn davon draengten die drei Zeilen weg,
+     * auf die es ankommt. Die Schlusszeile nennt dafuer die Zahl.
+     */
+    $plattform = [];
+    $pBefunde  = plattform_pruefen($pdo, false);
+    $pZahlen   = plattform_zaehlen($pBefunde);
+    $empfGesamt = 0; $empfOk = 0;
+    foreach ($pBefunde as $f) {
+        if ($f['stufe'] === 'empfohlen') {
+            $empfGesamt++;
+            if ($f['ok'] === true) { $empfOk++; continue; }
+            if ($f['ok'] === null) { continue; }   // nicht messbar: nicht als Mangel zeigen
+            $plattform[] = status_z($f['name'],
+                'Empfohlen: ' . $f['soll'] . ' · gemessen: ' . $f['gemessen']
+                . ($f['klein'] !== '' ? ' — ' . $f['klein'] : ''),
+                'neutral', 'Hinweis');
+            continue;
+        }
+        /* `knapp` IST ERFUELLT, ABER NICHT MEHR LANGE (P5a/AP10, PP-5).
+         * Heute trägt nur der freie Platz das Feld: rot unter dem Einfachen
+         * des größten Komplett-Backups, orange unter dem Zweifachen. Ein
+         * Befund ohne das Feld verhält sich wie vorher — `?? false`. */
+        $knapp = (bool)($f['knapp'] ?? false);
+        $ton = $f['ok'] === true ? ($knapp ? 'orange' : 'blau')
+             : ($f['ok'] === null ? 'neutral' : 'rot');
+        $plakette = $f['ok'] === true ? ($knapp ? 'knapp' : $f['gemessen'])
+                  : ($f['ok'] === null ? 'nicht messbar' : 'fehlt');
+        $plattform[] = status_z($f['name'],
+            'Gebraucht: ' . $f['soll'] . ' · gemessen: ' . $f['gemessen']
+            . ($f['klein'] !== '' ? ' — ' . $f['klein'] : ''),
+            $ton, (string)$plakette,
+            $f['einstellung'] === 'db_gb' ? 'betrieb_server.php' : null);
+    }
+    $plattform[] = status_z('Empfohlen insgesamt',
+        $empfOk . ' von ' . $empfGesamt . ' erfüllt. Eine Abweichung steht oben als '
+        . 'Hinweis; sie färbt die Ampel nicht — die Anwendung läuft vollständig, '
+        . 'nur langsamer oder mit einem Handgriff mehr',
+        'neutral', $empfOk . '/' . $empfGesamt);
+
     return [
         'karten' => [
             ['titel' => 'Server',          'id' => 'k-server',  'zeilen' => $server],
             ['titel' => 'E-Mail',          'id' => 'k-mail',    'zeilen' => $mail],
             ['titel' => 'Hintergrundjobs', 'id' => 'k-jobs',    'zeilen' => $jobZeilen],
             ['titel' => 'Backups',         'id' => 'k-backups', 'zeilen' => $backups],
+            ['titel' => 'Plattform',       'id' => 'k-plattform', 'zeilen' => $plattform],
         ],
         /* DIE ROHZAHLEN FUER DIE MENUEZAEHLER. Sie stammen aus derselben
          * Erhebung wie die Karten — nicht aus einer zweiten Rechnung. Ein
@@ -590,6 +915,7 @@ function status_erhebung(): array
             'job_fehler'    => count(array_filter($jobs,
                 static fn($j) => (string)($j['letzter_fehler'] ?? '') !== '')),
             'backups_krank' => $krank,
+            'plattform_muss' => $pZahlen['muss_offen'],
         ],
     ];
 }

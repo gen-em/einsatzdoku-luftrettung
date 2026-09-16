@@ -58,7 +58,7 @@ Die sechs Schritte einzeln:
 | `konto` | legt `messstand@gen-em.org` über den Einladungsweg an (`--frisch` löscht ein vorhandenes vorher) |
 | `bestand` | `vervielfaeltigen.py` — aus der Referenz eine Folge `.edbak`-Dateien |
 | `einspielen` | `einspielen.mjs` — über den regulären Weg im Browser, mit Zeit- und Haldenmessung je Datei |
-| `browser` | `browserprobe.mjs` — Suche, Tagesansicht, Sichern unter CPU-Drossel |
+| `browser` | `browserprobe.mjs` — Anmelden, Tagesliste, Tagesansicht, Suche, **Zeitraumübersicht**, **Nachbearbeitung**, Sichern; alles unter CPU-Drossel. Die beiden fett gesetzten sind in P5a/AP9 dazugekommen: Sie sind die zwei Messungen, die Backlog Nr. 37 seit S2 als offen führt, und sie fehlten nicht, weil der Bestand fehlte, sondern weil niemand hingesehen hat |
 | `server` | `serverprobe.py` — Tabellengrößen, `edbak_build()` auf **beiden** Wegen, Speicherspitze, Waisen-Vollscan |
 | `protokoll` | fasst alles zu `messprotokoll.json` zusammen |
 

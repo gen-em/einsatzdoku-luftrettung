@@ -1,0 +1,208 @@
+name: Prüfung
+
+# STUFE 1 DES PRÜFTORS (Konzept P5a, E-P5a-13; Rahmenplan R67/E-PV-3 (e)).
+#
+# WAS SIE IST. Die Prüfmittel, die OHNE laufende Installation auskommen —
+# Syntax, Wortliste, Vollständigkeit, Kontraste, Backlog-Nummern,
+# Migrationsregister, die Android-Bauläufe und, wenn die Adresse da ist, das
+# Übersetzen der Uhr-App für alle Zielgeräte. Sie laufen bei JEDEM Push auf
+# JEDEM Zweig und bei jedem Pull Request.
+#
+# WAS SIE NICHT IST. Kein Ersatz für die Browserprüfung (`CLAUDE.md` 6) und
+# kein Ersatz für Stufe 2: Kreisläufe, Bilderlauf und Messstand brauchen eine
+# Installation und laufen deshalb im Staging-Lauf (`auslieferung.yml`).
+#
+# ROT = KEIN MERGE. Das entscheidet nicht diese Datei, sondern der Zweigschutz
+# auf `main` mit `pruefung` als Pflichtprüfung (Zuarbeit, Rahmenplan
+# Abschnitt 6). Ohne ihn ist dieser Lauf eine Auskunft und keine Schranke.
+#
+# KEIN STILLES ÜBERSPRINGEN. Fehlt einem Schritt seine Voraussetzung — der
+# Uhr-Prüfstand braucht `CIQ_GERAETE_URL`, und die steht bewusst nicht im
+# Repositorium —, sagt er das mit einer Zeile und einer Zusammenfassung. Ein
+# Schritt, der ohne Voraussetzung grün meldet, ist schlimmer als ein roter:
+# Er sieht aus wie eine Prüfung.
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Ein zweiter Push auf denselben Zweig macht den ersten Lauf gegenstandslos.
+  group: pruefung-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pruefung:
+    name: Stufe 1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: Fassungen nennen — was misst hier eigentlich?
+        # ZUERST UND IMMER. Eine Zahl ohne die Fassung, die sie erzeugt hat,
+        # ist in einem Monat nicht mehr nachvollziehbar (`CLAUDE.md` 6).
+        run: |
+          echo "PHP:    $(php -v | head -1)"
+          echo "Python: $(python3 -V)"
+          echo "Node:   $(node -v)"
+          echo "Java:   $(java -version 2>&1 | head -1)"
+          echo "Web:    $(grep -oE "WEB_VERSION'?,\s*'[0-9.]+'" server/version.php | head -1)"
+
+      - name: PHP-Syntax über server/
+        # `php -l` je Datei. Ein Syntaxfehler in einer Datei, die nur auf einem
+        # selten begangenen Weg geladen wird, fällt sonst erst dort auf — und
+        # „dort" heisst nach einem Deploy auf Produktiv.
+        run: |
+          set -e
+          n=0
+          while IFS= read -r f; do
+            php -l "$f" > /dev/null
+            n=$((n+1))
+          done < <(find server tools -name '*.php' -type f)
+          echo "PHP-Dateien ohne Syntaxfehler: $n"
+          echo "PHP-Syntax: $n Dateien, 0 Fehler" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Wortliste — sind Land und Luft neutral benannt?
+        # Erwartet werden null Treffer ausserhalb der Ausnahmeliste UND null
+        # ungenutzte Ausnahmen; beides steckt im Rückgabewert.
+        run: |
+          python3 tools/wortliste/wortliste.py | tee /tmp/wortliste.txt
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          tail -20 /tmp/wortliste.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Vollständigkeit des Stylesheets
+        # GEGEN EINE SCHWELLE, NICHT GEGEN NULL — und das war hier von Anfang
+        # an falsch (behoben mit Web 20.8.0). Dieses Werkzeug misst einen
+        # ALTBESTAND aus P3: Unicode-Zeichen im Markup, `style=`-Attribute in
+        # JavaScript, Emoji. „0 Befunde" ist ein Ziel, kein erreichbarer
+        # Zustand — der Stand lag schon bei der Einführung dieses Laufs bei
+        # 340. Der Schritt verlangte trotzdem `exit 0` und war damit bei JEDEM
+        # Push rot; ein Tor, das immer rot ist, sagt nichts mehr.
+        #
+        # Die Schwelle wirkt in BEIDE Richtungen: Wächst der Altbestand, ist
+        # das ein Befund. Schrumpft er, ebenfalls — dann ist die Zahl hier
+        # nachzuziehen, sonst bekommt er stillschweigend wieder Luft.
+        #
+        # 367 (Web 20.9.1). Der Weg dahin, weil er eine Lehre enthaelt:
+        #
+        # 371 stand hier waehrend des Umzugs auf den Mailkatalog — dieselben
+        # Texte lagen im Katalog UND noch in den alten Aufrufern, und das
+        # Werkzeug liest ganze Dateien, nicht nur Markup (Backlog Nr. 184).
+        # Mit dem letzten Umzug fiel der Doppelbestand weg.
+        #
+        # DANN STAND HIER 366, UND DAS WAR FALSCH GEMESSEN. Die Zahl entstand
+        # mitten in AP5, VOR den letzten Kommentar- und Dokumentationszeilen
+        # desselben Pakets; committet wurde ein Stand mit 367. Der Lauf auf
+        # `main` war damit rot, und zwar wegen UNTERSCHREITUNG — das Werkzeug
+        # hat genau das getan, wofuer die Schwelle in beide Richtungen wirkt.
+        # `CLAUDE.md` 6 sagt es als Regel: „Die Pruefmittel laufen zuletzt,
+        # nicht zwischendurch. Ein Werkzeug, das vor der letzten Aenderung
+        # lief, misst einen Stand, den es nicht mehr gibt."
+        #
+        # Gemessen am 16.09.2026 gegen den ausgecheckten Stand (eigener
+        # Arbeitsbaum, nicht der Arbeitskopie): 50 + 10 + 299 + 8 = 367.
+        #
+        # 372 MIT AP6 (Web 20.10.0): +5 Pfeile „Betrieb -> Status" in den neuen
+        # sichtbaren Texten. Die Zahl zaehlt Unicode-Zeichen im Markup und kann
+        # Prosa nicht von einem Symbol unterscheiden (Backlog Nr. 184) — der
+        # Pfeil in „Verwaltung -> Installation" ist die Hausschreibweise und
+        # steht so an hundert Stellen. Was AP6 an ZIERDE mitgebracht hatte —
+        # fuenf Auslassungszeichen in Kommentaren und Probenbeschriftungen —
+        # ist wieder entfernt, statt die Zahl damit wachsen zu lassen.
+        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 377
+
+      - name: Kontraste der Token
+        run: python3 tools/screenshots/kontrast.py
+
+      - name: Backlog — keine Nummer zweimal
+        # Die Zeile stammt aus dem Kopf des Rahmenplans (Abschnitt 2.2).
+        run: |
+          doppelt=$(grep -oE '^[0-9]+\.' docs/Backlog.md | tr -d '.' | sort -n | uniq -d)
+          if [ -n "$doppelt" ]; then
+            echo "Doppelte Backlog-Nummern: $doppelt"
+            exit 1
+          fi
+          echo "Doppelte Backlog-Nummern: 0"
+
+      - name: Die Weiche in install.php — traegt sie noch?
+        # `install.php` beginnt mit einer Versionspruefung. Die nuetzt nur,
+        # solange die Datei auf der alten Fassung ueberhaupt noch UEBERSETZT
+        # werden kann — PHP uebersetzt eine Datei ganz, bevor es die erste
+        # Zeile ausfuehrt. Eine `match`-Anweisung weiter unten, und die
+        # Besucherin auf PHP 8.0 bekommt statt der Erklaerung einen Parse
+        # Error. Gemessen wird mit dem Tokenizer, nicht mit `grep`.
+        run: |
+          php tools/installweiche/pruefen.php --selbstprobe
+          php tools/installweiche/pruefen.php
+
+      - name: Migrationsregister — schema.sql gegen migration_lib.php
+        # Selbstprobe zuerst: Ein grüner Lauf einer Prüfung, die immer grün
+        # meldet, sieht genauso aus wie einer, der nichts gefunden hat.
+        run: |
+          php tools/migrationsregister/pruefen.php --selbstprobe
+          php tools/migrationsregister/pruefen.php
+
+      - name: CSP — Inline-Skripte ohne Nonce
+        # Seit Web 20.7.0 gilt `script-src 'self' 'nonce-…'` ohne
+        # `'unsafe-inline'`. Ein vergessener Nonce legt eine Seite STILL
+        # lahm: kein PHP-Fehler, kein Protokolleintrag — der Knopf tut
+        # nichts, und die Meldung steht in der Konsole derjenigen, der es
+        # passiert. Gemessen mit dem Tokenizer über ein Markup-Bild, weil
+        # `<script src="<?= asset(…) ?>">` in drei Stücke zerfällt und ein
+        # naives `grep` deshalb null von 108 Stellen fände.
+        run: |
+          php tools/cspprobe/pruefen.php --selbstprobe
+          php tools/cspprobe/pruefen.php
+
+      - name: Sitzungshärtung — `use_strict_mode` vor jedem `session_start()`
+        # Die Zeile ist unscheinbar und steht neben dem Aufruf, den sie
+        # schuetzt. Ein neuer Weg, der sie vergisst, sieht genauso aus wie
+        # einer, der sie hat — und es passiert nichts, was auffiele. Bis
+        # Web 20.9.1 stand sie an genau zwei Stellen, und zwar ausgerechnet
+        # den beiden, die KEINE Anmeldesitzung tragen (Backlog Nr. 205).
+        # Gemessen mit dem Tokenizer, nicht mit `grep`: Die erste Fassung
+        # dieser Pruefung meldete zwei Befunde, und beide waren Kommentare.
+        run: |
+          php tools/sitzungshaertung/pruefen.php --selbstprobe
+          php tools/sitzungshaertung/pruefen.php
+
+      - name: Android — bauen, prüfen, linten
+        # 0 Lint-Fehler und 0 Fehlschläge; der Rückgabewert von Gradle trägt
+        # beides. Das Android-SDK bringt der Läufer mit (ANDROID_HOME ist
+        # gesetzt); ist es das ausnahmsweise nicht, wird der Schritt
+        # AUSDRÜCKLICH übersprungen und sagt es.
+        working-directory: android
+        run: |
+          if [ -z "${ANDROID_HOME:-}" ] && [ -z "${ANDROID_SDK_ROOT:-}" ]; then
+            echo "::warning::Android-SDK fehlt auf diesem Läufer — Bauläufe ÜBERSPRUNGEN, nicht bestanden."
+            echo '**Android: ÜBERSPRUNGEN** (kein SDK auf dem Läufer) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          chmod +x ./gradlew
+          ./gradlew --no-daemon build
+
+      - name: Uhr Stufe I — für alle Zielgeräte übersetzen
+        # BRAUCHT `CIQ_GERAETE_URL`. Die Adresse steht bewusst nicht im
+        # Repositorium (`tools/uhr-pruefstand/LIESMICH.md`, Abschnitt
+        # „Quelle"): Es ist öffentlich, die Dateien gehören Garmin. Sie kommt
+        # als Umgebungsgeheimnis herein; fehlt sie, wird der Schritt
+        # ÜBERSPRUNGEN UND GESAGT — nie ein stilles Grün (E-P5a-13).
+        env:
+          CIQ_GERAETE_URL: ${{ secrets.CIQ_GERAETE_URL }}
+        run: |
+          if [ -z "${CIQ_GERAETE_URL:-}" ]; then
+            echo "::warning::CIQ_GERAETE_URL nicht gesetzt — Uhr Stufe I ÜBERSPRUNGEN, nicht bestanden."
+            echo '**Uhr Stufe I: ÜBERSPRUNGEN** (kein `CIQ_GERAETE_URL`) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          CIQ_ZIELE=alle tools/uhr-pruefstand/pruefstand.sh aufbau
+          python3 tools/uhr-pruefstand/geraeteklassen.py "$HOME/.Garmin/ConnectIQ/Devices" \
+                  --vertreter 5 --liste /tmp/vertreter.txt --alle-liste /tmp/auswahl.txt
+          tools/uhr-pruefstand/pruefstand.sh reihe /tmp/auswahl.txt

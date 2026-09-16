@@ -6,6 +6,10 @@ watch/bin/
 
 # Lokale Server-Konfiguration (enthält Zugangsdaten — niemals ins Repo!)
 server/config.php
+# Die Sicherung, die tools/mailprobe/ waehrend ihres Laufs anlegt. Sie liegt
+# nur da, wenn die Probe nicht sauber zu Ende gekommen ist (kill -9, Behaelter
+# weg) -- und sie enthaelt dann dieselben Zugangsdaten wie config.php.
+server/config.php.mailprobe
 server/install.lock
 # Der Schalter des Wartungsmodus (S5 Paket W, E-S5W-02). Wie install.lock:
 # Er ist ein ZUSTAND DIESER EINEN INSTALLATION und gehoert nicht ins
@@ -14,8 +18,20 @@ server/install.lock
 # (.github/workflows/deploy.yml), sonst loeschte ihn der naechste Push --
 # und zwar mitten im Update, fuer das er da ist.
 server/wartung.lock
+# Der Zaehler der Verbindungsgrenze (P5a/AP9, E-P5a-50). Wie wartung.lock:
+# Er ist ein ZUSTAND DIESER EINEN INSTALLATION -- wie oft ihr Datenbankkonto
+# in welcher Stunde abgewiesen wurde. Er steht in einer DATEI und nicht in
+# app_state, weil er genau dann geschrieben werden muss, wenn die Datenbank
+# keine Verbindung mehr annimmt. Zusaetzlich in der Ausnahmeliste beider
+# FTPS-Schritte, sonst loeschte ihn der naechste Push.
+server/ueberlast.json
 server/install-nachweis-*.txt
 server/wiederher-nachweis-*.txt
+
+# Arbeitsablage fuer Workflow-Skripte (Bestandsaufnahmen). Sie muessen im
+# Arbeitsverzeichnis liegen, damit das Werkzeug sie lesen darf — gehoeren aber
+# nicht ins Repositorium: Es sind Notizen eines Laufs, keine Quelltexte.
+.wf/
 
 # Betriebssystem-Kram
 .DS_Store
@@ -105,3 +121,10 @@ tools/anteilprobe/ausgabe-*.png
 # wird bewusst einzeln nach `android/mockups/` uebernommen und im Konzept
 # oder in der Dokumentation verwiesen; der Rest ist Arbeitsstand.
 emulator-bilder/
+
+# Zustandsdateien der Auslieferungskette (Nr. 213). Die FTP-Aktion laedt sie
+# waehrend eines Laufs herunter; auf einem Entwicklungsrechner haben sie
+# nichts verloren, und im Repositorium erst recht nicht -- sie nennen jede
+# ausgelieferte Datei mit Pfad und Hash.
+.ftp-deploy-sync-state.json
+.deploy-state-*.json

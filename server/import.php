@@ -331,7 +331,7 @@ ui_seite_start(['titel' => 'Import / Export']);
 
              Die Quelle ist CREW_ROLES in server/db.php — nicht eine zweite
              Liste im Browser, die damit auseinanderlaufen könnte. */ ?>
-    <script>
+    <script<?= kopf_nonce_attr() ?>>
       const CREW_ROLLEN = <?= json_js(array_keys(CREW_ROLES)) ?>;
       const CREW_LABELS = <?= json_js(array_map(
               static fn(array $r): string => $r['label'], CREW_ROLES),
@@ -339,7 +339,7 @@ ui_seite_start(['titel' => 'Import / Export']);
     </script>
     <script src="<?= asset('assets/import_profiles.js') ?>"></script>
     <script src="<?= asset('assets/import.js') ?>"></script>
-    <script>
+    <script<?= kopf_nonce_attr() ?>>
       const APP_TZ = <?= json_js($CFG['app']['timezone']) ?>;
       const WEB_VERSION = <?= json_js(WEB_VERSION) ?>;
       // Kennung des Kontos fuer den Exportdateinamen (export.js). Beide Werte

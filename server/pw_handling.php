@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/instanz_lib.php';
 /* Fuer logo_src(): Die Seite hat keine Sitzung und zeigt den Standard der
  * Installation (E-P3-20). Ohne session_lib.php faende logo_src() logo_stamm()
  * nicht und fiele auf den Hubschrauber zurueck — F-P3-AN. */
@@ -76,6 +77,10 @@ function pw_session_start(): void {
     session_set_cookie_params([
         'httponly' => true, 'secure' => true, 'samesite' => 'Lax', 'path' => '/',
     ]);
+    /* `use_strict_mode` — siehe `auth_guard.php` (E-P5a-38, Nr. 205). Diese
+     * Sitzung traegt das Passwort-Token; eine untergeschobene Kennung waere
+     * hier die teuerste von allen. */
+    ini_set('session.use_strict_mode', '1');
     session_start();
 }
 
@@ -104,7 +109,11 @@ $keinCookie = ($token === '' && $getauscht);
 
 $row = null;
 if (preg_match('/^[a-f0-9]{64}$/', $token)) {
-    $st = db()->prepare('SELECT r.id, r.user_id, u.pat_key_check, u.pat_wrap_rc
+    /* `u.email` seit Web 20.10.0 (P5a/AP6): Wer sein Passwort setzt, hat
+     * nachgewiesen, dass ihm das Postfach gehoert — und soll danach nicht an
+     * einer Anmeldesperre haengenbleiben. Die Adresse ist das Merkmal, unter
+     * dem der Ratenschutz zaehlt. */
+    $st = db()->prepare('SELECT r.id, r.user_id, u.email, u.pat_key_check, u.pat_wrap_rc
                          FROM password_resets r
                          JOIN users u ON u.id = r.user_id
                          WHERE r.token_hash = ? AND r.used_at IS NULL AND r.expires_at > NOW()');
@@ -216,6 +225,26 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([(int)$row['user_id']]);
             $pdo->commit();
             $done = true;
+
+            /* DIE ANMELDESPERRE DIESES KONTOS FAELLT (P5a/AP6, E-P5a-45).
+             *
+             * Bis Web 20.9.1 rief diese Datei keine einzige `rate_*`-Funktion.
+             * Wer sein Passwort ueber den Link zuruecksetzte — also gerade
+             * nachgewiesen hatte, dass ihm das Postfach gehoert —, blieb an
+             * der Anmeldung gesperrt: bis zu 15 Minuten. Mit der Sperrleiter
+             * waere daraus eine Stunde geworden, und die STUFE stuende danach
+             * noch 24 h, sodass die naechste Vertipperin sofort wieder eine
+             * Stunde draussen waere. Das Konzept sagt „der Passwort-Reset
+             * bleibt offen" — offen ist er nur, wenn er auch hilft.
+             *
+             * NUR DAS KONTO, NICHT DIE ADRESSE: Wer ein Postfach uebernommen
+             * hat, soll damit nicht die Sperre einer ganzen Klinik aufheben.
+             *
+             * NACH dem Commit und ausserhalb der Transaktion — ein Fehler
+             * beim Aufraeumen darf das gesetzte Passwort nicht mitreissen. */
+            require_once __DIR__ . '/ratelimit_lib.php';
+            rate_konto_freigeben((string)($row['email'] ?? ''));
+
             // Der Token hat seinen Zweck erfuellt — die Sitzung dieser Seite
             // wird nicht laenger gebraucht (M1-06).
             unset($_SESSION['pw_token']);
@@ -245,7 +274,7 @@ ui_seite_start([
           aber Fliesstext, und bei 400 px liest er sich wie auf dem
           Handy — was er dort ohnehin tut. */ ?>
  <div class="anmeldung-karte">
-  <img src="<?= e(logo_src()) ?>" alt="Gen-EM NAdoku" class="anmeldung-logo">
+  <img src="<?= e(logo_src()) ?>" alt="<?= e(instanz_kurz()) ?>" class="anmeldung-logo">
 
   <?php if ($done): ?>
     <h1 class="anmeldung-titel">Fertig</h1>
@@ -386,7 +415,7 @@ ui_seite_start([
          an keiner Stelle eingebunden — die Mindestlaenge stand hier als
          HTML-Attribut und im Skript, die Staerkeanzeige gab es nicht (M2-02). */ ?>
 <script src="<?= asset('assets/pwquality.js') ?>"></script>
-<script>
+<script<?= kopf_nonce_attr() ?>>
 const ERSTVERGABE = <?= $erstvergabe ? 'true' : 'false' ?>;
 const WRAP_RC = <?= json_js($erstvergabe ? null : $row['pat_wrap_rc']) ?>;
 // Zielwert der Rundenzahl (M2-01). Diese Seite baut die Ableitung immer neu

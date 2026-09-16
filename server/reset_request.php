@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/demo_lib.php';
 require_once __DIR__ . '/smtp.php';
 require_once __DIR__ . '/ratelimit_lib.php';
@@ -90,22 +91,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             db()->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at)
                            VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))')
                 ->execute([(int)$u['id'], hash('sha256', $token)]);
-            $link = $CFG['app']['base_url'] . '/pw_handling.php?token=' . $token;
-            $mailAuftrag = [$email,
-                'Neues Passwort — Gen-EM Einsatzdokumentation Notarzt',
-                "Hallo,\n\n"
-                . "für deinen Zugang zur Gen-EM Einsatzdokumentation Notarzt wurde ein neues\n"
-                . "Passwort angefordert. Über den folgenden Link kannst du es setzen — der Link ist\n"
-                . "eine Stunde gültig:\n\n"
-                . $link . "\n\n"
-                . "Dafür brauchst du deinen Wiederherstellungsschlüssel, den du bei der Einrichtung\n"
-                . "erhalten hast.\n\n"
-                . "Ein zuvor angeforderter Link ist damit ungültig geworden — es gilt immer nur der\n"
-                . "zuletzt verschickte.\n\n"
-                . "Falls du das nicht angefordert hast, kannst du diese E-Mail einfach ignorieren —\n"
-                . "es wurde nichts geändert.\n\n"
-                . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
-                . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n"];
+            $link = app_url('/pw_handling.php?token=' . $token);
+            $mailAuftrag = ['passwort_reset', $email, ['link' => $link]];
         }
     }
     // Auch der gesperrte Fall bekommt dieselbe Antwort: Eine eigene Meldung
@@ -159,5 +146,5 @@ ui_seite_ende();
  * Antworttext gerade verhindern soll (M1-07). */
 if ($mailAuftrag !== null) {
     antwort_abschliessen();
-    smtp_send($mailAuftrag[0], $mailAuftrag[1], $mailAuftrag[2]);
+    mail_einreihen($mailAuftrag[0], $mailAuftrag[1], $mailAuftrag[2]);
 }

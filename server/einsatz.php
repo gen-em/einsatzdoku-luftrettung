@@ -239,7 +239,7 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script src="<?= asset('assets/luftlinie.js') ?>"></script>
-<script>
+<script<?= kopf_nonce_attr() ?>>
 const MID = <?= $mid ?>;
 /* Der Spurzustand kommt vom Server (S2/AP4) und nicht aus der API-Antwort:
    Dasselbe Ergebnis entscheidet oben ueber den Menueeintrag; zwei Quellen

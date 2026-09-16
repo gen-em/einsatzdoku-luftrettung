@@ -361,7 +361,7 @@ ui_seite_start(['titel' => 'Suche']);
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* Artsymbole für die Spalte „Art" der Einsatztabelle — dieselben wie in
          der Tagesleiste, aus dt_art_symbole() (Befund P9). */ ?>
-<script>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
+<script<?= kopf_nonce_attr() ?>>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
         /* Die Zeichen der Diensttag-TYPEN daneben (E-S9-13, Web 16.0.0) — sonst
            zeichnet diese Tabelle die Betriebsart, waehrend die Leiste den Typ
            zeichnet. Dieselbe Quelle wie auf der Serverseite. */
@@ -375,7 +375,7 @@ ui_seite_start(['titel' => 'Suche']);
          EdGeo.spurFarbe() ist die eine Stelle, die sie liest. Leaflet braucht
          diese Seite nicht — die Markerfunktionen bleiben ungenutzt. */ ?>
 <script src="<?= asset('assets/geo.js') ?>"></script>
-<script>
+<script<?= kopf_nonce_attr() ?>>
 let missions = [];        // gesamter Bestand aus api/suchindex.php
 let entsperrt = false;    // geschuetzte Angaben verfuegbar?
 

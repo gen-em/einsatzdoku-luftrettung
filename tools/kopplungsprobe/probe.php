@@ -515,8 +515,23 @@ $tab = $pdo->query("SELECT table_name FROM information_schema.tables WHERE table
 pruefe($reg !== false && in_array('pair_sessions', $tab, true) && !in_array('pair_codes', $tab, true),
        '29  Register kennt die Migration, pair_sessions da, pair_codes weg',
        'status ' . var_export($reg, true) . ', Tabellen ' . implode(',', $tab));
-$zahl = (int)$pdo->query('SELECT COUNT(*) FROM schema_migrations')->fetchColumn();
-pruefe($zahl === 41, '29  Migrationsregister: 41 Kennungen (Z-19)', (string)$zahl);
+/* HIER STAND `$zahl === 41` (Z-19), UND DAS WAR EINE ZAHL MIT ABLAUFDATUM.
+ *
+ * Sie waechst mit jeder Migration. Beim Schreiben dieser Zeile waren es 41;
+ * am 16.09.2026 sind es 51, und die Probe meldete seit Monaten einen Befund,
+ * der nichts ueber die Kopplung aussagte — genau die Sorte roter Zeile, die
+ * man irgendwann nicht mehr liest.
+ *
+ * Gemeint war nie die Zahl, sondern die AUSSAGE dahinter: Der Bestand kennt
+ * jede Kennung des Katalogs. Das steht jetzt da, und es bleibt richtig, wenn
+ * die naechste Migration dazukommt. Die Zahl wird trotzdem gemeldet, damit
+ * ein Sprung auffaellt. */
+require_once dirname(__DIR__, 2) . '/server/migration_lib.php';
+$zahl    = (int)$pdo->query('SELECT COUNT(*) FROM schema_migrations')->fetchColumn();
+$katalog = count(migrationen_katalog());
+pruefe($zahl === $katalog,
+       '29  Migrationsregister kennt jede Kennung des Katalogs (Z-19)',
+       $zahl . ' von ' . $katalog);
 
 $s11 = start()['daten'];
 pair_sitzung_beanspruchen($pdo, (string)$s11['code'], $uid2);

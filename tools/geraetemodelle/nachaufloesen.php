@@ -62,17 +62,21 @@ if (!is_file($serverPfad . '/db.php')) {
 }
 require_once $serverPfad . '/db.php';
 require_once $serverPfad . '/geraete_lib.php';
+/* DIE LOGIK STECKT SEIT WEB 20.15.0 IN DER BIBLIOTHEK (P5a/AP11, E-P5a-21).
+ *
+ * Sie stand bis dahin HIER, und das war die Grenze der Sache: Auf einem
+ * Webspace ohne SSH gibt es diesen Weg nicht, und die betroffenen Geraete
+ * holten ihre Angabe erst bei der naechsten Kopplung nach — also womoeglich
+ * nie. Jetzt fuehrt derselbe Kern auch der Hintergrundjob `nachaufloesen`
+ * aus, und dieses Skript bleibt, was es immer war: die VORSCHAU mit Namen
+ * und Zeile, und der Weg fuer den, der lieber selbst zusieht. */
+require_once $serverPfad . '/geraetemodelle_lib.php';
 
 $pdo = db();
-$st  = $pdo->query('SELECT id, device_id, label, geraet_art, geraet_modell, geraet_teil
-                    FROM devices
-                    WHERE geraet_teil IS NOT NULL
-                    ORDER BY id');
-$zeilen = $st->fetchAll();
 
 $bekannt = count(GERAETE_MODELLE);
 echo "Modelltabelle: $bekannt Teilenummern.\n";
-echo 'Geräte mit Rohangabe: ' . count($zeilen) . "\n\n";
+echo 'Geräte mit Rohangabe: ' . gm_zeilen_mit_rohangabe($pdo) . "\n\n";
 
 if ($bekannt === 0) {
     echo "Die Modelltabelle ist leer — es gibt nichts aufzulösen.\n";
@@ -80,48 +84,66 @@ if ($bekannt === 0) {
     exit(0);
 }
 
+/* ERST SAMMELN, DANN SCHREIBEN — auch mit `--schreiben`.
+ *
+ * `gm_nachaufloesen()` koennte je Block gleich eintragen. Hier ist das
+ * falsch: Die Vorschau ist der Zweck dieses Skripts, und sie soll die GANZE
+ * Liste zeigen, bevor eine Zeile faellt. Wer `--schreiben` setzt, hat sie
+ * beim vorigen Lauf gesehen. */
 $aendern = [];
-foreach ($zeilen as $z) {
-    $treffer = geraet_modell_aufloesen((string)$z['geraet_teil']);
-    if ($treffer === null) { continue; }
-
-    $neuModell = $treffer['modell'];
-    $neuArt    = $treffer['art'] ?? $z['geraet_art'];
-    if ((string)$z['geraet_modell'] === (string)$neuModell
-        && (string)$z['geraet_art'] === (string)$neuArt) {
-        continue;                        // steht schon richtig da
-    }
-    $aendern[] = ['zeile' => $z, 'modell' => $neuModell, 'art' => $neuArt];
+$unbekannt = 0;
+$ab = 0;
+while (true) {
+    $e = gm_nachaufloesen($pdo, GM_BLOCK, false, $ab);
+    foreach ($e['kandidaten'] as $k) { $aendern[] = $k; }
+    $unbekannt += $e['unbekannt'];
+    $ab = $e['letzte_id'];
+    if ($e['fertig']) { break; }
 }
 
 if ($aendern === []) {
     echo "Nichts zu tun — jede auflösbare Zeile steht bereits richtig.\n";
+    if ($unbekannt > 0) {
+        echo "($unbekannt Zeile(n) mit einer Rohangabe, die die Tabelle nicht "
+           . "kennt — Handys und unbekannte Modelle; sie bleiben unberührt.)\n";
+    }
     exit(0);
 }
 
 foreach ($aendern as $a) {
-    $z = $a['zeile'];
-    printf("  #%-4d %-24s %s\n", (int)$z['id'], (string)$z['geraet_teil'],
+    printf("  #%-4d %-24s %s\n", $a['id'], $a['teil'],
         sprintf('%s / %s  →  %s / %s',
-            $z['geraet_art']    ?? '—', $z['geraet_modell'] ?? '—',
-            $a['art']           ?? '—', $a['modell']));
+            $a['alt_art'] ?? '—', $a['alt_modell'] ?? '—',
+            $a['art'] ?? '—', $a['modell']));
 }
-echo "\n" . count($aendern) . " Zeile(n) betroffen.\n";
+echo "\n" . count($aendern) . " Zeile(n) betroffen";
+echo $unbekannt > 0 ? ", $unbekannt unbekannt (unberührt).\n" : ".\n";
 
 if (!$schreiben) {
     echo "Nichts geschrieben. Mit --schreiben eintragen.\n";
     exit(0);
 }
 
-$up = $pdo->prepare('UPDATE devices SET geraet_art = ?, geraet_modell = ? WHERE id = ?');
-$pdo->beginTransaction();
+/* GESCHRIEBEN WIRD UEBER DIESELBE BIBLIOTHEK, nicht mit eigenem SQL: Zwei
+ * Fassungen desselben UPDATE waeren zwei Gelegenheiten, die Rohangabe
+ * mitzuschreiben. */
+$geschrieben = 0;
+$ab = 0;
 try {
-    foreach ($aendern as $a) {
-        $up->execute([$a['art'], $a['modell'], (int)$a['zeile']['id']]);
+    while (true) {
+        $e = gm_nachaufloesen($pdo, GM_BLOCK, true, $ab);
+        $geschrieben += $e['geschrieben'];
+        $ab = $e['letzte_id'];
+        if ($e['fertig']) { break; }
     }
-    $pdo->commit();
 } catch (Throwable $ex) {
-    $pdo->rollBack();
-    exit('Fehlgeschlagen, nichts geändert: ' . $ex->getMessage() . "\n");
+    exit('Fehlgeschlagen: ' . $ex->getMessage() . "\n"
+       . "Bereits eingetragene Blöcke bleiben stehen — jeder Block ist eine "
+       . "eigene Transaktion.\n");
 }
-echo count($aendern) . " Zeile(n) eingetragen.\n";
+
+/* DER HASH WIRD MITGESCHRIEBEN. Sonst liefe der Job gleich darauf noch
+ * einmal ueber denselben Bestand — er wuesste nicht, dass hier schon jemand
+ * war. */
+gm_stand_merken(gm_tabellen_hash(), $geschrieben, $unbekannt);
+echo "$geschrieben Zeile(n) eingetragen.\n";

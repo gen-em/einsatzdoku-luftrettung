@@ -107,8 +107,7 @@ $jobPause = jobs_pause_bis();
 $tokenAdresse = null;
 if ($jobs !== []) {
     try {
-        $tokenAdresse = rtrim((string)($CFG['app']['base_url'] ?? ''), '/')
-                      . '/jobs.php?token=' . jobs_token();
+        $tokenAdresse = app_url('jobs.php?token=' . jobs_token());
     } catch (Throwable $ex) { $tokenAdresse = null; }
 }
 

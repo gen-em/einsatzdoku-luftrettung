@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
+require_once __DIR__ . '/instanz_lib.php';
 require_betreiberin();
 require_once __DIR__ . '/serverkrypto_lib.php';
 
@@ -86,7 +87,7 @@ if (preg_match('/^[0-9a-f]{64}$/i', $anAlt)) {
                             . 'Konto mehr auf ihm steht.'];
 }
 
-$adresse = (string)($CFG['app']['base_url'] ?? '');
+$adresse = app_url();
 $jetzt   = fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y, H:i');
 
 /* Erkennungswert wie `asset()`, aber diese Seite lädt db.php ohnehin — der
@@ -97,12 +98,25 @@ $v = static function (string $rel): string {
     return $rel . ($t !== false ? '?v=' . $t : '');
 };
 $h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+
+/* DIE KOPFZEILEN VON HAND (P5a/AP4, E-P5a-15).
+ *
+ * Diese Seite baut ihre Huelle selbst und laeuft deshalb NICHT durch
+ * `ui_seite_start()` — die eine Stelle, an der die Kopfzeilen sonst gesetzt
+ * werden. Ohne diese Zeile stuende ausgerechnet das Blatt mit den beiden
+ * Geheimnissen des Servers ohne CSP und ohne `nosniff` da.
+ *
+ * MIT NONCE, obwohl heute kein Inline-Block darauf steht: Wer hier je einen
+ * ergaenzt, soll ihn benutzen koennen, statt eine still gebrochene Seite zu
+ * hinterlassen. Ein ungenutzter Nonce kostet nichts. */
+require_once __DIR__ . '/kopfzeilen_lib.php';
+kopfzeilen_seite();
 ?><!doctype html>
 <html lang="de">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Schlüsselblatt — Gen-EM NAdoku</title>
+<title>Schlüsselblatt — <?= e(instanz_kurz()) ?></title>
 <link rel="stylesheet" href="<?= $h($v('assets/style.css')) ?>">
 </head>
 <body class="blatt-seite">

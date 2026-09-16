@@ -929,6 +929,17 @@ in Abschnitt 3.
   der Verweis gälte nur in der Datenbank, aus der die Datei stammt. Die
   Momentaufnahme gilt überall.
 
+  **Auf dem Rückweg wird `geraet_art` gegen die drei Werte gehalten** (seit
+  Web 20.14.0, Backlog Nr. 195) — dieselbe Verengung wie beim Koppeln: Was
+  nicht `uhr`, `handy` oder `sonstiges` heißt, landet als `NULL`, und das
+  Prüfprotokoll der Wiederherstellung sagt es. Bis dahin wurde allein die
+  **Länge** geprüft (16 Zeichen), also ging jede Zeichenkette durch. Beim
+  Nachbarfeld `origin` war es schon immer anders.
+
+  `geraet_modell` bleibt **Freitext** und wird nicht verengt: Es ist die
+  Bezeichnung, die das Gerät von sich gemeldet hat, und ein Katalog dafür
+  wäre beim nächsten Modell veraltet.
+
 - **`schnitte`** (seit Nutzlast 9): die Sperrvermerke des Schnitts, **an jedem
   Einsatz, leer erlaubt**. Ein fehlender Schlüssel wäre zweideutig — „keine
   Vermerke" oder „diese Fassung kennt sie nicht"; eine leere Liste sagt das

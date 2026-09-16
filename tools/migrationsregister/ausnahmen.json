@@ -1,0 +1,21 @@
+{
+  "_": "Erklaerte Befunde der Registerpruefung. Jede Zeile braucht einen Grund; eine Ausnahme ohne Befund meldet das Werkzeug selbst und gehoert dann entfernt.",
+  "ausnahmen": [
+    {
+      "was": "fehlt:days.aircraft",
+      "grund": "2026_08_17_notarzt_erweiterung loescht die Spalte im letzten Schritt ueber eine Schleife mit eingesetzten Namen (ALTER TABLE `$tab` DROP COLUMN `$spalte`). Ein Leser des Quelltextes sieht dort keine Zeichenkette, sondern Text mit Loechern — die Pruefung kann den DROP nicht sehen, der Katalog fuehrt ihn aber aus. schema.sql ist richtig: days hat die Spalte nicht mehr."
+    },
+    {
+      "was": "fehlt:days.base",
+      "grund": "Dieselbe Schleife, dieselbe Migration, derselbe Grund wie days.aircraft."
+    },
+    {
+      "was": "fehlt:days.crew",
+      "grund": "Dieselbe Schleife, dieselbe Migration, derselbe Grund wie days.aircraft. Die Besatzung liegt seit Web 6.0.0 in day_crew."
+    },
+    {
+      "was": "fehlt:bases.is_default",
+      "grund": "Dieselbe Schleife, dieselbe Migration. Die Vorauswahl steht seit Web 6.0.0 in user_defaults."
+    }
+  ]
+}

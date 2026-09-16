@@ -5,6 +5,7 @@ require_once __DIR__ . '/spur_lib.php';   // Fortsetzungsmarke ueber beide Stufe
 require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/geraete_lib.php';  // herkunft_ableiten() (R64)
+require_once __DIR__ . '/ratelimit_lib.php'; // Mengenbremse (P5a/AP7, R19)
 
 /** Gibt es die Spalte? Eine Abfrage am Informationsschema -- ingest.php
  *  laedt migration_lib.php nicht, deshalb steht die Frage hier noch einmal. */
@@ -14,6 +15,36 @@ function ingest_hat_spalte(PDO $pdo, string $tabelle, string $spalte): bool
                         WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?');
     $q->execute([$tabelle, $spalte]);
     return (int)$q->fetchColumn() > 0;
+}
+
+/**
+ * Den Vermerk am Geraet fortschreiben (P5a/AP7, E-P5a-02).
+ *
+ * `abgewiesen_seit` ist der ERSTE Fehlversuch einer Serie, nicht der letzte —
+ * `COALESCE` laesst ihn stehen. „Seit 14:20 abgewiesen, 47 Versuche" sagt der
+ * Betreiberin, wie lange das schon so geht; „zuletzt 14:53" sagte ihr das
+ * nicht. Zurueckgesetzt wird beides beim naechsten gelungenen Upload.
+ *
+ * ER ZAEHLT NUR BEKANNTE KENNUNGEN — eine erfundene hat keine Zeile, an der
+ * etwas zu vermerken waere. Das ist dieselbe Aufteilung wie bei den Toepfen.
+ *
+ * STILL BEI EINEM FEHLER, und zwar mit Absicht: Im Deploy-Fenster gibt es die
+ * beiden Spalten noch nicht (`$hatSpalten` ist dann false, und selbst wenn
+ * die Abfrage oben durchkam und diese hier nicht, faellt nur der Vermerk aus).
+ * Ein Vermerk ist eine Anzeige, kein Schutz — der Schutz ist der Topf, und
+ * der zaehlt unabhaengig davon weiter.
+ */
+function ingest_abweisung_vermerken(array $dev, bool $hatSpalten): void
+{
+    if (!$hatSpalten) { return; }
+    try {
+        db()->prepare('UPDATE devices
+                          SET abgewiesen_anzahl = abgewiesen_anzahl + 1,
+                              abgewiesen_seit   = COALESCE(abgewiesen_seit, UTC_TIMESTAMP())
+                        WHERE id = ?')->execute([(int)$dev['id']]);
+    } catch (Throwable $ex) {
+        error_log('Geraetevermerk nicht schreibbar: ' . $ex->getMessage());
+    }
 }
 
 /**
@@ -142,22 +173,123 @@ if (strlen($raw) > $CFG['app']['max_body_bytes']) json_out(['error' => 'too_larg
  */
 $deviceId = (string)($_SERVER['HTTP_X_DEVICE_ID'] ?? '');
 $apiKey   = (string)($_SERVER['HTTP_X_API_KEY']   ?? '');
+
+/* --- DIE MENGENBREMSE (P5a/AP7; E-P5a-01, -02, -47, -48; R19, Nr. 17) ------
+ *
+ * Bis Web 20.11.0 war dies der einzige Endpunkt der Anwendung OHNE
+ * Ratenschutz. Das war kein Versehen, sondern eine offene Grundsatzfrage
+ * (R19); mit E-P5a-01 ist sie entschieden, und die Asymmetrie endet hier.
+ *
+ * SIE STEHT GETEILT: die PRUEFUNG hier oben, die ZAEHLUNG unten in den beiden
+ * Zweigen, die mit 401 enden. Das ist wesentlich und nicht Geschmackssache.
+ *
+ *   Die PRUEFUNG muss VOR die Geraeteabfrage, denn genau die will sie
+ *   einsparen — und vor `demo_reset_wenn_faellig()` (weiter unten) und vor
+ *   `beginTransaction()`. Eine Bremse, die erst hinter der Arbeit greift,
+ *   bremst nichts.
+ *
+ *   Die ZAEHLUNG darf NUR an den beiden 401-Zweigen stehen. Gezaehlt werden
+ *   Fehlversuche, nichts sonst (E-P5a-01 (1)). Ausdruecklich NICHT gezaehlt
+ *   werden: 405 (falsche Methode), 413 (zu gross), 403 `device_disabled`
+ *   (das Geraet ist bekannt, der Schluessel stimmt — abgeschaltet hat es die
+ *   Betreiberin, und die soll es wieder einschalten koennen, ohne auf eine
+ *   Sperre zu treffen), 400 (unbrauchbare Nutzlast — das ist ein Fehler des
+ *   Clients, kein Rateversuch) und 500. Und der Wartungsmodus schon gar
+ *   nicht: Der antwortet in `db.php` mit 503, lange bevor diese Datei laeuft.
+ *
+ * WELCHER TOPF, das entscheidet sich unten an `$dev`: Eine bekannte Kennung
+ * zaehlt in `ingest` je Kennung, eine unbekannte in `ingest_ip` je Adresse
+ * (E-P5a-01 (3)).
+ * Beide Merkmale werden schon hier gebildet, damit die Pruefung mit EINER
+ * Abfrage auskommt.
+ *
+ * DIE ANTWORT IST 429 MIT `Retry-After` und nennt NICHT, welcher Topf
+ * gegriffen hat — das waere die Auskunft, die E-P5a-47 klein haelt.
+ *
+ * `Retry-After` LIEST HEUTE KEIN CLIENT, und die Uhr KANN es nicht: Der
+ * Rueckruf von Connect IQ bekommt `(code, data)` und keine Kopfzeilen. Die
+ * Zeile steht trotzdem, und zwar fuer den Fall, der laut Vertrag eintreten
+ * darf: einen fremden Client an derselben Schnittstelle. Sie kostet nichts.
+ */
+$rateKennung = rate_merkmal_kennung($deviceId);
+$rateAdresse = rate_merkmal_ip();
+$rateSperre  = rate_sperre_paare([['ingest', $rateKennung], ['ingest_ip', $rateAdresse]]);
+if ($rateSperre !== null) {
+    header('Retry-After: ' . max(1, $rateSperre['rest']));
+    json_out(['error' => 'zu_viele_versuche'], 429);
+}
+
 /* Die Abfrage holt seit Web 14.0.0 zwei Spalten mehr: `geraet_art` und
  * `geraet_modell` wandern als MOMENTAUFNAHME an jeden Einsatz und jedes
  * Segment, das hier entsteht (R64). Sie kosten nichts — die Zeile wird
  * ohnehin gelesen —, und sie sind der einzige Augenblick, in dem die Angabe
  * ueberhaupt zu haben ist: Danach kann das Geraet getrennt werden (R47),
- * und `device_id` steht auf ON DELETE SET NULL. */
-$st = db()->prepare('SELECT id, user_id, api_key_hash, active, geraet_art, geraet_modell
-                     FROM devices WHERE device_id = ?');
-$st->execute([$deviceId]);
+ * und `device_id` steht auf ON DELETE SET NULL.
+ *
+ * SEIT WEB 20.11.0 KOMMEN ZWEI WEITERE MIT: `abgewiesen_seit` und
+ * `abgewiesen_anzahl` — der Vermerk am Geraet (E-P5a-02), den Kontoseite und
+ * Statusseite zeigen. Sie stehen in DERSELBEN Abfrage und nicht in einer
+ * zweiten, weil diese Zeile ohnehin gelesen wird.
+ *
+ * DER RUECKFALL DARUNTER IST DAS DEPLOY-FENSTER und kein Zierat. Zwischen
+ * dem Hochladen der Dateien und dem Aufruf von `update.php` gibt es die
+ * beiden Spalten NICHT. Ohne den Rueckfall wuerfe diese Abfrage, und weil sie
+ * die erste jeder Anfrage ist, antwortete `ingest.php` in diesem Fenster auf
+ * JEDEN Upload mit 500 — die Uhren verloren nichts, aber sie kaemen nicht
+ * durch, bis jemand die Wartungsseite oeffnet. Dasselbe Fenster hat in AP6
+ * schon einmal ein Statement geteilt (`ratelimit_lib.php`). */
+$devSpalten = 'id, user_id, api_key_hash, active, geraet_art, geraet_modell';
+$devVermerk = true;
+try {
+    $st = db()->prepare("SELECT $devSpalten, abgewiesen_seit, abgewiesen_anzahl
+                         FROM devices WHERE device_id = ?");
+    $st->execute([$deviceId]);
+} catch (PDOException $ex) {
+    $devVermerk = false;
+    $st = db()->prepare("SELECT $devSpalten FROM devices WHERE device_id = ?");
+    $st->execute([$deviceId]);
+}
 $dev = $st->fetch();
 if (!$dev) {
     geraet_schluessel_gueltig($apiKey, GERAET_VERGLEICHSWERT);
+    /* Unbekannte Kennung: der Adresstopf. Eine erfundene Kennung laesst sich
+     * beliebig oft neu erfinden; ein Zaehler je Kennung waere hier wertlos. */
+    rate_misserfolg('ingest_ip', null, [$rateAdresse]);
     json_out(['error' => 'auth'], 401);
 }
-if (!geraet_schluessel_gueltig($apiKey, (string)$dev['api_key_hash'])) json_out(['error' => 'auth'], 401);
+if (!geraet_schluessel_gueltig($apiKey, (string)$dev['api_key_hash'])) {
+    /* Bekannte Kennung, falscher Schluessel: der Kennungstopf. Das ist der
+     * haeufige, harmlose Fall: eine Uhr mit veraltetem Schluessel. Sie
+     * verliert nichts — ihre Warteschlange bleibt, sie sendet spaeter
+     * (E-P5a-02). */
+    rate_misserfolg('ingest', null, [$rateKennung]);
+    ingest_abweisung_vermerken($dev, $devVermerk);
+    json_out(['error' => 'auth'], 401);
+}
 if (!(int)$dev['active']) json_out(['error' => 'device_disabled'], 403);
+
+/* Geglueckt: den Kennungstopf und den Vermerk raeumen.
+ *
+ * NUR DEN KENNUNGSTOPF, NICHT DIE ADRESSE. Im Topf `ingest_ip` stehen
+ * ausschliesslich Fehlversuche mit UNBEKANNTEN Kennungen; ein gueltiger
+ * Upload sagt ueber die nichts aus. Wer ihn dort mitraeumen liesse, gaebe
+ * jedem, der ein einziges gueltiges Geraet besitzt, den Rueckstellknopf fuer
+ * seine ganze Adresse.
+ *
+ * DER VERMERK WIRD NUR GESCHRIEBEN, WENN ETWAS DASTEHT. Diese Zeile laeuft
+ * bei JEDEM gelungenen Upload; ein bedingungsloses UPDATE waere ein
+ * Schreibzugriff je Paket, und der Referenzlauf schickt sechshundert. */
+rate_erfolg('ingest', null, [$rateKennung]);
+if ($devVermerk
+    && (($dev['abgewiesen_seit'] ?? null) !== null
+        || (int)($dev['abgewiesen_anzahl'] ?? 0) !== 0)) {
+    try {
+        db()->prepare('UPDATE devices SET abgewiesen_seit = NULL, abgewiesen_anzahl = 0
+                        WHERE id = ?')->execute([(int)$dev['id']]);
+    } catch (Throwable $ex) {
+        error_log('Geraetevermerk nicht zuruecksetzbar: ' . $ex->getMessage());
+    }
+}
 
 /* Demo-Konto: faelliger Reset VOR der Verarbeitung (E-P1-18).
  *
@@ -983,7 +1115,25 @@ try {
     foreach ($behalten as $feld => $zahl) { $antwort[$feld] = $zahl; }
     json_out($antwort);
 } catch (Throwable $ex) {
-    $pdo->rollBack();
+    /* NUR ZURUECKROLLEN, WENN ETWAS OFFEN IST (Web 20.11.0, beim Einbau der
+     * Mengenbremse gefunden). `commit()` steht oben MITTEN im try-Block —
+     * danach laufen noch die Hoehenberechnung und der Aufbau der Antwort.
+     * Wirft eine von beiden, traf `rollBack()` auf keine offene Transaktion
+     * mehr und warf seinerseits „There is no active transaction". Diese
+     * zweite Ausnahme ersetzte die erste: Die Uhr bekam ihre 500, aber die
+     * `kennung` im Fehlerprotokoll benannte den Rollback statt der Ursache —
+     * also genau das Schweigen, das M3-10 abgestellt hat. */
+    if ($pdo->inTransaction()) { $pdo->rollBack(); }
+    /* GEDRAENGEL ZUERST (P5a/AP9, E-P5a-52). `ingest.php` gibt seine 500
+     * selbst aus und geht nicht ueber `json_fehler()` — die Unterscheidung
+     * muss deshalb hier ein zweites Mal stehen. Sie steht NACH dem Rollback:
+     * Bei einem Deadlock hat InnoDB die Transaktion bereits abgebrochen, und
+     * die Fortsetzungsmarke der Spur soll da bleiben, wo sie war. Genau
+     * dieser Fall ist es, den die Verbindungsprobe zwoelfmal gemessen hat. */
+    if (gedraengel_erkannt($ex)) {
+        gedraengel_vermerken($ex, 'ingest');
+        ueberlast_antwort();
+    }
     /* Kennung statt Schweigen (M3-10/M4-06).
      *
      * Die Uhr zeigt nur, DASS der Upload scheiterte — mehr braucht sie auch

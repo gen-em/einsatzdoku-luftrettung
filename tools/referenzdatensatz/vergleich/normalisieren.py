@@ -5,7 +5,8 @@ byteweise gleich, und das ist kein Fehler:
 
   interne IDs        gelten nur in der Datenbank, aus der der Export stammt
   Erzeugungszeit     steht im LIESMICH, im Dateinamen und in jeder GPX-Datei
-  App-Version        steht im LIESMICH
+  App-Version        steht im LIESMICH — und seit Web 20.8.0 auch im
+                     `creator` jeder GPX-Datei
   Trackdateinamen    tragen die interne Einsatz-ID
   deleted_at         Zeitpunkt des Loeschens — der Zustand bleibt vergleichbar
 
@@ -52,6 +53,18 @@ MARKE_KONTO = "<KONTO>"
 RE_TRACKNAME = re.compile(r"^(tracks/(?:mission|rest)_)(\d+)(_.*\.gpx)$")
 RE_GPX_ZEIT = re.compile(r"(<metadata><time>)[^<]*(</time></metadata>)")
 RE_GPX_NAME = re.compile(r"(<name>(?:Einsatz|Ruhezeit|Ruhe) )(\d+)( )")
+# `creator` TRAEGT SEIT WEB 20.8.0 DIE FASSUNG: `Gen-EM NAdoku 20.8.0`. Der
+# NAME bleibt verglichen — er ist die Aussage „diese Software hat die Datei
+# geschrieben" (Weg B, siehe den Kopf von server/gpx_lib.php). Die FASSUNG
+# wird maskiert, genau wie `App-Version:` in der LIESMICH: Sie steigt bei
+# jeder Auslieferung, und der Referenz-Export enthaelt 204 GPX-Dateien. Ohne
+# diese Zeile meldete der Kreislauf bei JEDER Auslieferung 204 Unterschiede —
+# und ein Werkzeug, das bei jeder Auslieferung rauscht, wird abgeschaltet.
+#
+# Die Fassung ist OPTIONAL im Muster, damit aeltere Referenzstaende (ohne
+# Fassung im creator) auf denselben Wert normalisieren. Sonst waere der
+# Uebergang selbst ein Unterschied.
+RE_GPX_CREATOR = re.compile(r'(creator="Gen-EM NAdoku)(?: [0-9][0-9A-Za-z.\-]*)?(")')
 
 ID_SPALTEN = {
     "einsaetze": ["einsatz_id", "diensttag_id"],
@@ -77,6 +90,7 @@ def _trackname(n: str) -> str:
 
 def _gpx(text: str) -> str:
     text = RE_GPX_ZEIT.sub(rf"\1{MARKE_ZEIT}\2", text)
+    text = RE_GPX_CREATOR.sub(rf"\1 {MARKE_VERSION}\2", text)
     return RE_GPX_NAME.sub(rf"\1{MARKE_ID}\3", text)
 
 

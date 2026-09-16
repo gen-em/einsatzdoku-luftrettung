@@ -151,6 +151,26 @@ ui_seite_start(['titel' => 'Updates']);
     <?php if ($wartungMeldung !== null): ?>
       <?= ui_meldung_markup($wartungMeldung[0], $wartungMeldung[1]) ?>
     <?php endif; ?>
+    <?php /* DER TORWAECHTER HAT EINEN NAMEN UND EINEN GRUND (P5a/AP3,
+             E-P5a-20). `wartung.lock` traegt seit AP1/AP3 nicht nur
+             Personennamen im Feld `von`, sondern auch `torwaechter` und
+             `kette`. Wer die Seite oeffnet, weil die Installation ploetzlich
+             geschlossen ist, soll hier erfahren, WARUM — sonst sieht eine
+             automatisch geschlossene Installation aus wie eine vergessene,
+             und genau das ist der Fehler, vor dem E-S5W-05 warnt. */ ?>
+    <?php if (($wartungVon = (string)(wartung_daten()['von'] ?? '')) !== ''
+              && in_array($wartungVon, ['torwaechter', 'kette'], true)): ?>
+      <?= ui_meldung_markup('warn', $wartungVon === 'torwaechter'
+          ? 'Die Anwendung hat selbst geschlossen: Es ist eine neue Fassung '
+          . 'eingespielt worden, und mindestens eine Migration steht noch aus. '
+          . 'Unten „Ausstehende ausführen", danach hier beenden — von Hand, '
+          . 'damit niemand eine halb migrierte Installation stillschweigend '
+          . 'wieder öffnet.'
+          : 'Eine Auslieferung läuft. Sie schaltet die Wartung hinterher von '
+          . 'selbst wieder aus — außer es steht danach eine Migration aus; dann '
+          . 'bleibt sie an und du bist dran.',
+          $wartungVon === 'torwaechter' ? 'Vom Torwächter geschlossen' : 'Von der Kette geschaltet') ?>
+    <?php endif; ?>
     <p class="feld-hinweis">Schließt die Installation vorübergehend für alle außer
        Verwaltung und Betrieb: Jede andere Anfrage bekommt <strong>503</strong> mit
        <code>Retry-After: <?= WARTUNG_RETRY_S ?></code> statt eines Fehlers aus einer
@@ -167,10 +187,12 @@ ui_seite_start(['titel' => 'Updates']);
     <div class="text">
       <ol>
         <li>Komplett-Backup prüfen oder anstoßen</li>
-        <li>Wartungsmodus einschalten</li>
+        <li>Wartungsmodus einschalten <em>(nimmt die Auslieferungskette ab; und
+            wenn nicht, schaltet der Torwächter spätestens bei der ersten
+            Anfrage nach dem Deploy)</em></li>
         <li>Dateien einspielen (Deploy)</li>
         <li>Hier „Ausstehende ausführen"</li>
-        <li>Wartungsmodus ausschalten</li>
+        <li>Wartungsmodus ausschalten <em>(immer von Hand — R66)</em></li>
       </ol>
     </div>
     <form method="post" action="betrieb_updates.php">
@@ -283,6 +305,37 @@ ui_seite_start(['titel' => 'Updates']);
       <p class="feld-klein">Führt der Reihe nach aus, was oben steht; blockierte
          Einträge nur mit gesetztem Häkchen. Der Aufruf dieser Seite ändert
          nichts — erst dieser Knopf.</p>
+    <?php endif; ?>
+
+    <?php /* „WARTUNG BEENDEN" STEHT HIER UND NICHT NUR OBEN (P5a/AP3,
+             E-P5a-20).
+             R66 bleibt unberührt: Die Wartung geht NIE von selbst aus. Wer
+             sie geschlossen hat, ist aber ein Unterschied — hat der
+             Torwächter sie geschaltet, hat niemand sie bewusst eingeschaltet,
+             und niemand rechnet damit, sie hinterher ausschalten zu müssen.
+             Der Knopf steht deshalb genau dort, wo man gerade geklickt hat:
+             unter den Migrationen, die eben durchgelaufen sind. Oben in der
+             Karte „Wartungsmodus" steht er weiterhin — das ist derselbe
+             Schalter, nicht ein zweiter.
+
+             DREI BEDINGUNGEN, und alle drei sind nötig: Der Torwächter muss
+             geschaltet haben (sonst ist es die Wartung eines Menschen, und
+             die geht ihn nichts an), es darf nichts mehr ausstehen (sonst
+             öffnete der Knopf in eine halb migrierte Installation), und die
+             Wartung muss überhaupt noch stehen. */ ?>
+    <?php if (!$ausstehend && wartung_aktiv()
+              && (string)(wartung_daten()['von'] ?? '') === 'torwaechter'): ?>
+      <?= ui_meldung_markup('ok', 'Es steht nichts mehr aus. Der Wartungsmodus '
+          . 'läuft noch, weil der Torwächter ihn geschaltet hat — er geht nicht '
+          . 'von selbst aus (R66). Prüfe die Startseite in einem zweiten Reiter, '
+          . 'dann beende ihn hier.', 'Migrationen erledigt') ?>
+      <form method="post" action="betrieb_updates.php">
+        <?= csrf_field() ?><input type="hidden" name="action" value="wartung_aus">
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Wartung beenden', 'art' => 'primaer',
+                        'symbol' => 'haken']) ?>
+        </div>
+      </form>
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 

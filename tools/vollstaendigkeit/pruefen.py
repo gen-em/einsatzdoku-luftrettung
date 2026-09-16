@@ -674,8 +674,9 @@ def pruefung_zusagen(bericht):
 
 
 class Bericht:
-    def __init__(self, ausfuehrlich):
+    def __init__(self, ausfuehrlich, grenze=None):
         self.ausfuehrlich = ausfuehrlich
+        self.grenze = grenze
         self.zeilen = []
         self.befunde = 0
 
@@ -717,6 +718,39 @@ class Bericht:
             print('BEFUNDE: %d' % self.befunde)
         else:
             print('Keine Befunde.')
+
+        # ---- Rueckgabewert: gegen eine SCHWELLE, nicht gegen Null ----------
+        #
+        # DIESES WERKZEUG MISST EINEN ALTBESTAND, KEINE GUETE. Die Zahl ist
+        # ein VERGLEICH gegen den Stand vor P3 — 366 davon sind Unicode-
+        # Zeichen im Markup, `style=`-Attribute in JavaScript und Emoji, die
+        # seit Jahren dastehen und nicht in einem Zug verschwinden. „0
+        # Befunde" ist deshalb kein erreichbarer Zustand, sondern ein Ziel.
+        #
+        # BIS WEB 20.8.0 GAB DIE FUNKTION TROTZDEM 1 ZURUECK, SOBALD DIE ZAHL
+        # UEBER NULL LAG. Fuer einen Lauf von Hand war das gleichgueltig —
+        # man liest die Zahl. Als das Werkzeug mit P5a/AP1 in Stufe 1 der
+        # Auslieferungskette kam, war es ein Dauerrot: Der Pruefschritt
+        # verlangte `exit 0` und bekam 366, bei JEDEM Push. Ein Tor, das
+        # immer rot ist, sagt nichts mehr — und wird abgeschaltet.
+        #
+        # `--hoechstens N` macht daraus, was gemeint war: Waechst der
+        # Altbestand, ist das ein Befund; schrumpft er, ist es einer im
+        # guten Sinn und wird GEMELDET, damit die Schwelle nachgezogen wird
+        # und nicht stillschweigend Luft bekommt.
+        if self.grenze is not None:
+            if self.befunde > self.grenze:
+                print('UEBER DER SCHWELLE: %d statt hoechstens %d — um %d gewachsen.'
+                      % (self.befunde, self.grenze, self.befunde - self.grenze))
+                return 1
+            if self.befunde < self.grenze:
+                print('UNTER DER SCHWELLE: %d statt %d — %d weniger. Bitte die '
+                      'Schwelle in .github/workflows/pruefung.yml nachziehen, '
+                      'sonst bekommt der Altbestand stillschweigend wieder Luft.'
+                      % (self.befunde, self.grenze, self.grenze - self.befunde))
+                return 1
+            print('AUF DER SCHWELLE: %d — unveraendert.' % self.befunde)
+            return 0
         return 1 if self.befunde else 0
 
 
@@ -743,12 +777,17 @@ def main():
     p.add_argument('--vorher', action='store_true',
                    help='Klassenliste des jetzigen Stylesheets als Sollmenge sichern')
     p.add_argument('--ausfuehrlich', action='store_true', help='alle Fundstellen zeigen')
+    p.add_argument('--hoechstens', type=int, default=None,
+                   help='Schwelle: hoechstens so viele Befunde. Abweichung nach '
+                        'OBEN und nach UNTEN ergibt Rueckgabewert 1 — der '
+                        'Altbestand soll weder wachsen noch stillschweigend '
+                        'Luft bekommen.')
     a = p.parse_args()
 
     if a.vorher:
         return vorher_sichern()
 
-    b = Bericht(a.ausfuehrlich)
+    b = Bericht(a.ausfuehrlich, a.hoechstens)
     pruefung_klassen(b)
     pruefung_werte(b)
     pruefung_symbole(b)

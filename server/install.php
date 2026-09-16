@@ -6,13 +6,80 @@ declare(strict_types=1);
  * - Testet die DB-Verbindung, spielt schema.sql ein, legt die BetreiberIn an,
  *   schreibt config.php und setzt danach install.lock (Wiederausführungssperre).
  * Diese Datei benötigt selbst KEINE config.php.
+ *
+ * ---------------------------------------------------------------------------
+ * DIESE DATEI BLEIBT PHP-7-LESBAR (P5a/AP2, PP-1)
+ * ---------------------------------------------------------------------------
+ *
+ * PHP übersetzt eine Datei VOLLSTÄNDIG, bevor es die erste Zeile ausführt.
+ * Eine Versionsprüfung nützt deshalb nur, wenn die Datei, in der sie steht,
+ * auf der alten Fassung überhaupt noch übersetzt werden kann. Enthielte diese
+ * Datei `match`, `?->`, `: never`, `enum`, `readonly` oder ein Attribut
+ * `#[…]`, bekäme eine Besucherin auf PHP 8.0 statt der Meldung unten einen
+ * Parse Error — also genau die stumme Wand, die die Prüfung verhindern soll.
+ *
+ * **Wer hier PHP-8-Syntax einbaut, hebelt die Prüfung aus.** Stufe 1 des
+ * Prüftors (`.github/workflows/pruefung.yml`) zählt die gängigen Formen nach;
+ * eine Grep-Prüfung ist nicht vollständig, aber sie fängt jede Form, die man
+ * versehentlich benutzt.
+ *
+ * WAS SIE NICHT LEISTEN KANN: `index.php` zu schützen. Jene Datei IST
+ * PHP-8-Code, und PHP übersetzt sie ganz, bevor die Weiterleitung auf
+ * `install.php` in Zeile 4 zur Ausführung käme. Wer auf PHP 8.0 die
+ * Startseite aufruft, sieht deshalb einen Parse Error; der Weg für eine
+ * Ersteinrichtung ist `install.php` unmittelbar.
  */
+
+/* ---- Die Weiche. Nur Syntax, die jedes PHP 5.3 noch versteht. ------------ */
+/* Die Zahl steht in `php_mindest.php` und nur dort (E-PP-03). Jene Datei ist
+ * aus demselben Grund so altertuemlich geschrieben wie dieser Block. */
+require __DIR__ . '/php_mindest.php';
+if (version_compare(PHP_VERSION, PLATTFORM_PHP_MIN, '<')) {
+    http_response_code(500);
+    header('Content-Type: text/html; charset=utf-8');
+    /* OHNE `ui.php`: Dessen Seitenhülle ist PHP-8-Code und würde beim
+     * `require` genau den Parse Error auslösen, den diese Meldung erklären
+     * soll. Reines Markup, verlinktes Stylesheet — dieselbe Überlegung wie
+     * bei der Wartungsseite. */
+    echo '<!doctype html><html lang="de"><head><meta charset="utf-8">'
+       . '<meta name="viewport" content="width=device-width,initial-scale=1">'
+       . '<title>PHP zu alt — Gen-EM NAdoku</title>'
+       . '<link rel="stylesheet" href="assets/style.css"></head><body>'
+       . '<div class="rahmen rahmen-lesespalte"><main class="inhalt"><div class="text">'
+       . '<h1>PHP ist zu alt</h1>'
+       . '<div class="meldung meldung-fehler" role="status"><p>'
+       . 'Diese Anwendung braucht <strong>PHP ' . PLATTFORM_PHP_MIN . ' oder neuer</strong>. '
+       . 'Auf diesem Server läuft <strong>PHP ' . htmlspecialchars(PHP_VERSION, ENT_QUOTES, 'UTF-8')
+       . '</strong>.</p></div>'
+       . '<p>Die Untergrenze steht nicht deshalb bei ' . PLATTFORM_PHP_MIN . ', weil der Code mehr '
+       . 'bräuchte — er kommt mit 8.1 aus. Sie steht dort, weil PHP 8.1 keine '
+       . 'Sicherheitskorrekturen mehr bekommt. Eine Anwendung, die '
+       . 'Patientendaten führt, soll nicht auf einer ungepflegten Fassung '
+       . 'laufen und es niemandem sagen.</p>'
+       . '<p>Die meisten Hoster stellen die PHP-Fassung im Kundenmenü um. '
+       . 'Danach diese Seite neu laden.</p>'
+       . '</div></main></div></body></html>';
+    exit;
+}
 
 // E-Mail-Normalisierung (M1-13). Diese Datei laeuft VOR der Ersteinrichtung
 // und kann weder db.php noch validate_lib.php laden — beide brauchen die
 // config.php, die es hier noch nicht gibt. Deshalb die abhaengigkeitsfreie
 // email_lib.php, dieselbe Fassung wie im Rest der Anwendung.
 require_once __DIR__ . '/email_lib.php';
+
+/* DER NAME DIESER INSTALLATION (P5a/AP5, E-P5a-35). `instanz_lib.php` laedt
+ * selbst nichts und laeuft deshalb auch hier, vor der Ersteinrichtung — es
+ * gibt weder `app_state` noch eine Verbindung, und die Funktionen fallen von
+ * selbst auf die Vorgaben zurueck.
+ *
+ * DER REQUIRE STEHT HINTER DER PHP-WEICHE, nicht davor, und das ist kein
+ * Zufall: Alles oberhalb muss auf einer alten Fassung noch uebersetzbar sein.
+ * Eine Besucherin auf PHP 8.0 hat die Seite an dieser Stelle laengst verlassen
+ * — deshalb darf ab hier geladen werden, was PHP 8.2 verlangt. Die
+ * PHP-zu-alt-Meldung oben behaelt ihre feste Zeichenkette aus genau diesem
+ * Grund; sie ist die einzige, die sie behaelt. */
+require_once __DIR__ . '/instanz_lib.php';
 
 /* DIE SEITENHUELLE MUSS HIER STEHEN, NICHT IN render_page() (Web 9.10.1).
  *
@@ -33,6 +100,7 @@ require_once __DIR__ . '/email_lib.php';
  * noch db.php, also weder asset() noch favicon_tags(). Die Huelle faengt das
  * ab (ui_asset(), ui_favicon()). */
 require_once __DIR__ . '/ui.php';
+require_once __DIR__ . '/plattform_lib.php';
 
 $configPath = __DIR__ . '/config.php';
 $lockPath   = __DIR__ . '/install.lock';
@@ -143,7 +211,7 @@ if (!is_writable(__DIR__)) {
     $nachweisOk = false;
 } elseif (!file_exists($nachweisDatei)) {
     $inhalt = $nachweis . "\n\n"
-            . "Diese Datei gehoert zur Ersteinrichtung von Gen-EM NAdoku.\n"
+            . "Diese Datei gehoert zur Ersteinrichtung von " . INSTANZ_KURZ_VORGABE . ".\n"
             . "Die Zeichenfolge oben ist im Einrichtungsformular einzutragen.\n"
             . "Sie beweist, dass die einrichtende Person Zugriff auf dieses\n"
             . "Verzeichnis hat. Nach der Einrichtung wird die Datei geloescht;\n"
@@ -173,7 +241,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $smtp = [
         'host' => $in('smtp_host'), 'port' => (int)($in('smtp_port') ?: 465),
         'user' => $in('smtp_user'), 'pass' => (string)($_POST['smtp_pass'] ?? ''),
-        'from' => $in('smtp_from'), 'from_name' => $in('smtp_from_name') ?: 'Gen-EM NAdoku',
+        'from' => $in('smtp_from'), 'from_name' => $in('smtp_from_name') ?: INSTANZ_KURZ_VORGABE,
     ];
 
     /* Nachweis zuerst pruefen (M1-11).
@@ -212,25 +280,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!is_readable($schemaPath)) {
         $errors[] = 'schema.sql wurde nicht gefunden (muss neben install.php liegen).';
     }
-    /* DIE ERWEITERUNGEN, OHNE DIE ES SPAETER KLEMMT (S2/AP6).
+    /* DAS PLATTFORMPROFIL, MUSS-STUFE (P5a/AP2, E-P5a-19).
      *
-     * Bis Web 12.0.0 hat der Installer gar keine Erweiterung geprueft. Das
-     * ging gut, solange alles Benoetigte im PHP-Kern steckt — seit das
-     * Admin-Backup ein ZIP ist, gilt das nicht mehr. Ohne `ext/zip` faellt
-     * es sonst erst beim ersten Backup-Lauf auf, und dann als „liess sich
-     * nicht schreiben" auf einer Installation, die laengst in Betrieb ist.
+     * BIS WEB 20.4.0 STANDEN HIER VIER ERWEITERUNGEN und sonst nichts — keine
+     * PHP-Version, kein `pdo_mysql`, keine Weblimits, keine Schreibprobe. Die
+     * Liste ist seither `plattform_pruefen()`, und zwar dieselbe, die die
+     * Statusseite im Betrieb fragt: Was die Einrichtung verlangt, muss die
+     * Installation auch im dritten Jahr noch erfüllen, und zwei Listen liefen
+     * dafür auseinander.
      *
-     * Hier steht die Pruefung deshalb VOR der Einrichtung. Sie ist nicht
-     * vollstaendig — sie nennt, was diese Anwendung nachweislich braucht und
-     * was ein Hoster tatsaechlich abschalten kann. */
-    foreach (['zip' => 'Backups sind ZIP-Dateien (ext/zip, Klasse ZipArchive)',
-              'zlib' => 'GPS-Daten werden komprimiert gespeichert (ext/zlib)',
-              'openssl' => 'Zufall und Pruefsummen (ext/openssl)',
-              'mbstring' => 'Texte in UTF-8 (ext/mbstring)'] as $erw => $wofuer) {
-        if (!extension_loaded($erw)) {
-            $errors[] = 'Die PHP-Erweiterung „' . $erw . '" fehlt: ' . $wofuer
-                      . '. Bitte beim Hoster freischalten lassen.';
-        }
+     * NUR DIE MUSS-STUFE HÄLT AUF. Eine Empfohlen-Abweichung (PHP unter 8.3,
+     * OPcache aus) ist ein Hinweis und kein Grund, jemanden an der
+     * Einrichtung zu hindern. Ein `null` — nicht feststellbar — hält
+     * ebenfalls nicht auf: Wer nichts gemessen hat, darf nichts behaupten. */
+    foreach (plattform_pruefen(null) as $f) {
+        if ($f['stufe'] !== 'muss' || $f['ok'] !== false) { continue; }
+        $errors[] = $f['name'] . ': gemessen „' . $f['gemessen'] . '", gebraucht wird „'
+                  . $f['soll'] . '". ' . $f['klein'];
     }
 
     // DB-Verbindung testen
@@ -397,7 +463,7 @@ function render_form(array $v, array $errors, string $nachweis,
                      string $nachweisMuster, bool $nachweisOk): void {
     $guessUrl = 'https://' . ($_SERVER['HTTP_HOST'] ?? 'einsatz.example.de');
     ob_start(); ?>
-    <h1>Gen-EM NAdoku einrichten</h1>
+    <h1><?= htmlspecialchars(INSTANZ_KURZ_VORGABE, ENT_QUOTES, 'UTF-8') ?> einrichten</h1>
     <p class="seiten-erklaerung">Diese Angaben werden in <code>config.php</code>
        gespeichert und die Datenbank wird angelegt. Der Einrichter läuft nur
        dieses eine Mal.</p>
@@ -506,7 +572,7 @@ function render_form(array $v, array $errors, string $nachweis,
           <?php ui_feld(['name' => 'smtp_from', 'label' => 'Absender-Adresse',
                          'wert' => (string)($v['smtp_from'] ?? '')]); ?>
           <?php ui_feld(['name' => 'smtp_from_name', 'label' => 'Absender-Name',
-                         'wert' => (string)($v['smtp_from_name'] ?? 'Gen-EM NAdoku')]); ?>
+                         'wert' => (string)($v['smtp_from_name'] ?? INSTANZ_KURZ_VORGABE)]); ?>
         </div>
       <?php ui_karte_ende(); ?>
 
