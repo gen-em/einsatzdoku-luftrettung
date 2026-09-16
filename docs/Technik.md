@@ -7092,6 +7092,38 @@ Prüffall, aus dem man den Suchbegriff entfernt, prüft nichts.
 > beim ersten Versuch prompt als zwei Treffer. Ein Werkzeug, das die eigene
 > Erfolgsmeldung als Befund liest, hat recht.
 
+**In den mobilen Clients bleibt `gen-em.org` stehen, und zwar mit Ansage**
+(Auftraggeber, 16.09.2026 — E-P5a-42). Betroffen sind vier Stellen:
+
+| Stelle | Was |
+|---|---|
+| `watch/resources/settings/properties.xml` | Vorgabe-Serveradresse der Uhr-App — **sichtbar in Garmin Connect** |
+| `watch/resources/settings/settings.xml` | die Beschriftung dazu |
+| `android/handy/build.gradle.kts` | Vorgabe-Serverbasis des ausgelieferten APK |
+| `android/…/kopplung/Serveradresse.kt` | der Fehlertext „Erwartet wird ein Rechnername wie …" |
+
+**Es sind Vorgaben, keine Festverdrahtungen** — beide Clients nehmen eine
+andere Adresse an, und die Uhr zeigt das Feld in Garmin Connect. Eine
+Betreiberin, die diese Anwendung aufsetzt, baut ihre Apps ohnehin selbst
+(Signatur, Store-Eintrag); dabei setzt sie die Vorgabe. Sie auf
+`nadoku.beispieldomain.de` zu ziehen hieße, dass die App **dieser**
+Installation ab Werk ins Leere zeigt — und kostete je eine eigene
+Auslieferung von Uhr und Android.
+
+> **P2 hatte genau das schon einmal getan** (R29/R48, Uhr 1.11.1): Die
+> Beispieldomain zog von der alten Produktivdomain auf
+> `nadoku.beispieldomain.de`. Später wurde sie auf `nadoku.gen-em.org`
+> zurückgestellt. Wer diesen Absatz ändern will, ändert damit eine
+> Entscheidung, die **zweimal** gefallen ist — nicht ein Versehen.
+
+Ebenso bleibt der **Paketname** `org.genem.nadoku`: Er lässt sich nicht
+ändern, ohne installierte Apps zu brechen (der Bindestrich aus `gen-em.org`
+entfällt, weil ein Paketname keinen trägt — steht in
+`android/handy/build.gradle.kts`). Und `WACHE_BASIS` in
+`.github/workflows/integritaet.yml` ist die Adresse **dieser**
+Installation — Betriebskonfiguration der Auslieferungskette, keine Eigenschaft
+der Software.
+
 ## 6. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)
 
 **Bis Web 20.3.0** gab es genau einen Weg: Push auf `main` mit Änderungen unter

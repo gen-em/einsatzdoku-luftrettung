@@ -619,6 +619,25 @@ antwortet, während die Datenbank umgebaut wird) und setzt seinen Satz
 weiterhin selbst, `no-store` eingeschlossen. Eine Abnahmezahl, die eine
 benannte Ausnahme nicht kennt, macht aus ihr einen Befund.
 
+**E-P5a-42 (neu, 16.09.2026, Auftraggeber) — in den mobilen Clients bleibt
+`gen-em.org` stehen.** Vorgelegt im Anschluss an E-P5a-40 mit vier
+Fundstellen (Uhr-`properties.xml` und -`settings.xml`, Android
+`build.gradle.kts`, `Serveradresse.kt`) und der Rechnung dazu: je eine eigene
+Auslieferung von Uhr und Android. Antwort: *„In den Apps passt es."*
+
+**Der Unterschied zu E-P5a-40 ist nicht Bequemlichkeit, sondern die Sache.**
+Im Server war die Adresse eine **Festverdrahtung** — eine fremde Betreiberin
+konnte sie nicht ändern und verschickte Post, die auf einen Unbekannten
+verweist. In den Clients ist sie eine **Vorgabe**: Die Uhr zeigt das Feld in
+Garmin Connect, das APK nimmt `-Pnadoku.serverBasis=…`. Wer die Anwendung
+aufsetzt, baut seine Apps ohnehin selbst und setzt die Vorgabe dabei.
+
+Ausgeschrieben in `docs/Technik.md` 5d.8, weil das Konzept am Phasenende
+gelöscht wird und die Entscheidung sonst mit ihm verschwände — und weil P2
+dieselbe Frage schon einmal andersherum entschieden hatte (R29/R48). Ein
+Fund, der zweimal gemacht und zweimal anders entschieden wurde, braucht seine
+Begründung an einer bleibenden Stelle.
+
 ### 2.3 Ort je Funktion (K1, R74)
 
 | Funktion | Ort |
