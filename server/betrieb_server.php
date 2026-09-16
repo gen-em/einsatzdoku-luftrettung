@@ -162,6 +162,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'kopfz
  * und ein gemeinsames „Speichern" ueber zwei Karten hinweg hiesse, dass ein
  * Tippfehler in der Speichergrenze die Dienstadresse mit abweist.
  */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'ratenschutz') {
+    csrf_check();
+    require_once __DIR__ . '/ratelimit_lib.php';
+
+    /* ERST ALLES PRUEFEN, DANN ALLES SPEICHERN (P5a/AP6).
+     *
+     * Die Nachbarkarten auf dieser Seite schreiben Wert fuer Wert und brechen
+     * beim ersten Mangel ab — dann steht die Haelfte in der Datenbank und die
+     * Meldung „nicht gespeichert" ist zur Haelfte falsch. `admin_installation.php`
+     * macht es seit S8 richtig und schreibt den Grund dazu; hier steht er
+     * wieder, weil es die naechste Karte sonst wieder falsch macht. */
+    $neuLeiter = null; $neuLogin = null; $neuLoginIp = null; $neuBremse = null;
+
+    $pruefListe = static function (string $roh, int $anzahl, int $minWert,
+                                   int $maxWert, string $name) use (&$error): ?array {
+        $teile = array_map('trim', explode(',', $roh));
+        if (count($teile) !== $anzahl) {
+            $error = $name . ': genau ' . $anzahl . ' Werte, durch Komma getrennt.';
+            return null;
+        }
+        $zahlen = []; $vorher = 0;
+        foreach ($teile as $t) {
+            if (!ctype_digit($t) || (int)$t < $minWert || (int)$t > $maxWert) {
+                $error = $name . ': ganze Zahlen zwischen ' . $minWert . ' und '
+                       . $maxWert . '.';
+                return null;
+            }
+            if ((int)$t <= $vorher) {
+                $error = $name . ': die Werte müssen aufsteigen — eine Leiter, die '
+                       . 'rückwärts läuft, sperrt beim zweiten Mal kürzer.';
+                return null;
+            }
+            $zahlen[] = (int)$t; $vorher = (int)$t;
+        }
+        return $zahlen;
+    };
+
+    $roh = trim((string)($_POST['leiter'] ?? ''));
+    $neuLeiter = $pruefListe($roh, 4, 1, 1440, 'Sperrleiter');
+
+    if ($error === null) {
+        $roh = trim((string)($_POST['bremse'] ?? ''));
+        $neuBremse = $pruefListe($roh, 4, 10, 1000000, 'Schwellen der Verlangsamung');
+    }
+    foreach ([['login', 'Fehlversuche je Konto', &$neuLogin],
+              ['login_ip', 'Fehlversuche je Anschluss', &$neuLoginIp]] as [$feld, $name, &$ziel]) {
+        if ($error !== null) { break; }
+        $roh = trim((string)($_POST[$feld] ?? ''));
+        if (!ctype_digit($roh) || (int)$roh < 3 || (int)$roh > 10000) {
+            $error = $name . ': eine ganze Zahl zwischen 3 und 10000.';
+        } else {
+            $ziel = (int)$roh;
+        }
+    }
+    unset($ziel);
+
+    if ($error === null) {
+        /* Die Leiter steht in SEKUNDEN in `app_state`, eingegeben wird sie in
+         * MINUTEN — Sekunden in ein Formular zu schreiben, das von Menschen
+         * ausgefuellt wird, waere eine Einladung zum Vertippen um den Faktor
+         * sechzig. */
+        app_state_setzen(RATE_K_LEITER,
+                         implode(',', array_map(static fn(int $m): int => $m * 60, $neuLeiter)));
+        app_state_setzen(RATE_K_BREMSE, implode(',', $neuBremse));
+        app_state_setzen(RATE_K_LOGIN, (string)$neuLogin);
+        app_state_setzen(RATE_K_LOGIN_IP, (string)$neuLoginIp);
+        app_state_setzen(RATE_K_MAIL, empty($_POST['mail']) ? '0' : '');
+        $notice = 'Ratenschutz gespeichert: Sperrleiter '
+                . implode(' / ', $neuLeiter) . ' min · ' . $neuLogin
+                . ' Fehlversuche je Konto, ' . $neuLoginIp . ' je Anschluss · '
+                . 'Verlangsamung ab ' . $neuBremse[0] . ' Fehlversuchen je 15 Minuten.';
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'geocoder') {
     csrf_check();
     $adresse = geocoder_adresse_pruefen((string)($_POST['dienst'] ?? ''));
@@ -773,6 +847,94 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           'klein' => 'Keine. Entweder ist die Richtlinie vollständig — oder es war '
                    . 'noch niemand auf einer Seite, die etwas nachlädt. Karten, '
                    . 'Import und Export sind die interessanten drei.',
+          'plaketten' => ui_plakette('0', ['ton' => 'blau'])]); ?>
+    <?php endif; ?>
+  <?php ui_karte_ende(); ?>
+
+  <?php /* ---- Ratenschutz (P5a/AP6, E-P5a-04 bis -07) --------------------
+           Sie steht NEBEN den Sicherheitskopfzeilen, weil beide dieselbe Frage
+           beantworten: Was haelt jemanden auf, der es von aussen versucht?
+           Die LISTE der laufenden Sperren steht bewusst NICHT hier, sondern
+           kommt nach Status -> Sicherheit (E-P5a-08, Mockup M-P5a-01) — wer
+           sie jetzt hier baut, baut sie zweimal. */ ?>
+  <?php require_once __DIR__ . '/ratelimit_lib.php'; ?>
+  <?php $vBr = rate_verlangsamung(true); ?>
+  <?php ui_karte_start(['titel' => 'Ratenschutz', 'id' => 'k-ratenschutz',
+      'plakette' => $vBr['stufe'] > 0
+          ? ui_plakette('Verlangsamung Stufe ' . $vBr['stufe'], ['ton' => 'orange'])
+          : ui_plakette('ruhig', ['ton' => 'blau'])]); ?>
+    <p class="feld-hinweis"><strong>Eine Sperre dauert beim zweiten Mal
+       länger.</strong> Wer sich zu oft vertippt, ist eine Viertelstunde
+       draußen; wer es am selben Tag noch einmal tut, länger. Nach
+       <strong>24 Stunden ohne Fehlversuch</strong> fängt die Leiter wieder
+       von vorn an. Gezählt wird am <em>eingetippten</em> Namen und nicht am
+       Konto — deshalb verrät eine Sperre nicht, ob es das Konto gibt.</p>
+    <form method="post" action="betrieb_server.php">
+      <?= csrf_field() ?><input type="hidden" name="action" value="ratenschutz">
+
+      <?php ui_feld(['name' => 'leiter', 'label' => 'Sperrleiter',
+          'label_zusatz' => 'vier Dauern in Minuten, aufsteigend',
+          'wert' => implode(', ', array_map(
+                        static fn(int $s): int => (int)($s / 60), rate_leiter())),
+          'platzhalter' => '15, 20, 30, 60']); ?>
+      <p class="feld-hinweis">Die erste Sprosse gilt für die erste Sperre, die
+         vierte für jede weitere. <strong>Nicht unter 15 setzen, ohne es zu
+         wollen:</strong> Bis Web 20.9.1 sperrte die Anmeldung fest 15 Minuten
+         — eine kürzere erste Sprosse macht den ersten Verstoß milder als
+         vorher.</p>
+
+      <?php ui_feld(['name' => 'login', 'label' => 'Fehlversuche je Konto',
+          'art' => 'number',
+          'label_zusatz' => 'bis zur Sperre, je 15 Minuten',
+          'wert' => (string)rate_grenze('login')['max']]); ?>
+      <?php ui_feld(['name' => 'login_ip', 'label' => 'Fehlversuche je Anschluss',
+          'art' => 'number',
+          'label_zusatz' => 'bis zur Sperre, je 15 Minuten',
+          'wert' => (string)rate_grenze('login_ip')['max']]); ?>
+      <p class="feld-hinweis"><strong>Die zweite Zahl ist die größere, und das
+         ist Absicht.</strong> Hinter einem Klinik-Anschluss teilen sich viele
+         eine Adresse; läge sie auf zehn, sperrte die zehnte Vertipperin die
+         übrigen neunzehn aus. Eine gelungene Anmeldung setzt beide Zähler
+         zurück.</p>
+
+      <h3 class="listen-form-titel">Verlangsamung statt globaler Sperre</h3>
+      <p class="feld-hinweis">Zählt die ganze Installation zu viele
+         Fehlversuche, antwortet <strong>jede fehlgeschlagene</strong> Anmeldung
+         langsamer — 1, 2, 4, 8 Sekunden. Wer das richtige Passwort hat, kommt
+         ohne Verzögerung durch. <strong>Eine globale Sperre gibt es bewusst
+         nicht:</strong> Sie wäre ein Schalter, den jeder von außen umlegt.</p>
+      <?php ui_feld(['name' => 'bremse', 'label' => 'Schwellen der Verlangsamung',
+          'label_zusatz' => 'vier Zahlen, Fehlversuche je 15 Minuten',
+          'wert' => implode(', ', rate_bremse_schwellen()),
+          'platzhalter' => '200, 400, 800, 1600']); ?>
+
+      <?php ui_schalter(['name' => 'mail', 'label' => 'Bei der höchsten Stufe melden',
+          'an' => rate_mail_an(),
+          'klein' => 'Eine Sammelmeldung an die Betreiberadresse, sobald eine Sperre '
+                   . 'die letzte Sprosse erreicht oder die Verlangsamung ihre vierte '
+                   . 'Stufe — höchstens eine je Stunde. Wohin sie geht, steht unter '
+                   . 'Verwaltung → Installation.']); ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+      </div>
+    </form>
+
+    <?php $sperren = rate_sperren_aktiv(8); ?>
+    <?php if ($sperren): ?>
+      <p class="feld-hinweis"><strong>Läuft gerade</strong> — die vollständige
+         Liste samt „Sperre aufheben" kommt auf Betrieb → Status → Sicherheit.</p>
+      <?php foreach ($sperren as $sp): ?>
+        <?php ui_zeile([
+          'text'  => (string)$sp['merkmal'],
+          'klein' => 'Topf ' . (string)$sp['topf'] . ' · noch '
+                   . max(1, (int)round($sp['rest'] / 60)) . ' Minuten',
+          'plaketten' => ui_plakette('Stufe ' . (int)$sp['stufe'], ['ton' => 'orange']),
+        ]); ?>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <?php ui_zeile(['text' => 'Laufende Sperren',
+          'klein' => 'Keine. Das ist der Normalfall — eine Sperre ist ein Ereignis, '
+                   . 'kein Zustand.',
           'plaketten' => ui_plakette('0', ['ton' => 'blau'])]); ?>
     <?php endif; ?>
   <?php ui_karte_ende(); ?>

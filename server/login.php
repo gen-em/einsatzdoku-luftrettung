@@ -43,6 +43,30 @@ if (!empty($_SESSION['user_id'])) { header('Location: index.php'); exit; }
 $hinweis = session_ende_text($_GET['ende'] ?? null);
 if ($hinweis === '' && isset($_GET['timeout'])) { $hinweis = session_ende_text('abgelaufen'); }
 
+/* DIE VERLANGSAMUNG SAGT SICH AN (E-P5a-06, P5a/AP6).
+ *
+ * Wer die Seite oeffnet, waehrend die Bremse laeuft, soll wissen, warum das
+ * Anmelden gleich lange dauert — sonst haelt er die Anwendung fuer kaputt und
+ * klickt noch einmal, was die Lage genau nicht verbessert.
+ *
+ * RUHIG UND OHNE DAS WORT ANGRIFF. Das Konzept sagt es ausdruecklich, und es
+ * hat recht: Auf dieser Seite steht jemand, der zum Dienst will. „Wird ganz
+ * normal geprueft" ist der Satz, auf den es ankommt.
+ *
+ * Steht schon ein Fehler an, tritt der Hinweis zurueck (ui_meldung unten) —
+ * die Fehlermeldung ist dann die naehere Auskunft.
+ *
+ * $sperreRest wird weiter unten im gesperrten Zweig gesetzt und steuert den
+ * Countdown; hier steht die Vorbelegung, damit die Ansicht ihn immer kennt. */
+$sperreRest = 0;
+$bremse = rate_verlangsamung();
+if ($hinweis === '' && $bremse['stufe'] > 0) {
+    $hinweis = 'Die Anmeldung antwortet derzeit verzögert, etwa '
+             . rtrim(rtrim(number_format($bremse['sekunden'], 1, ',', ''), '0'), ',')
+             . ' Sekunden. Das ist eine Schutzmaßnahme; dein Passwort wird '
+             . 'ganz normal geprüft.';
+}
+
 /* ---- Anmeldung ------------------------------------------------------------
  *
  * DIE BREMSE LAG FRUEHER IN DER SITZUNG DES AUFRUFERS. Fuenf Fehlversuche,
@@ -117,10 +141,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                . ($bis !== null ? ' — wieder ab ' . fmt_local($bis, 'H:i') . ' Uhr.' : '.')
                . ' Ein eigenes Konto ist davon nicht betroffen.';
         rate_gleiche_dauer($t0);
-    } elseif (!rate_erlaubt('login', $email)) {
-        $bis = rate_gesperrt_bis('login', $email);
-        $error = 'Zu viele Anmeldeversuche. Bitte später erneut versuchen'
-               . ($bis !== null ? ' — frühestens ab ' . fmt_local($bis, 'H:i') . ' Uhr.' : '.');
+    } elseif (!rate_erlaubt('login', $email) || !rate_erlaubt('login_ip', null)) {
+        /* ZWEI TOEPFE, EINE MELDUNG — aber die Meldung sagt, WELCHER greift
+         * (P5a/AP6). „Für diesen Namen gesperrt" waere schlicht falsch, wenn
+         * in Wahrheit die Adresssperre haelt, und wer den Unterschied nicht
+         * liest, wartet auf das Falsche.
+         *
+         * SIE ERSCHEINT FUER ERFUNDENE ADRESSEN GENAUSO WIE FUER ECHTE. Das
+         * Merkmal ist der EINGETIPPTE Name (`rate_merkmale()`), nicht die
+         * Kontozeile — deshalb gibt die Sperre keine Kontoauskunft, und
+         * deshalb darf sie ihn nennen. */
+        $sperre = rate_sperre('login', $email) ?? rate_sperre('login_ip', null);
+        $bis = $sperre['bis'] ?? null;
+        $error = ($sperre !== null && $sperre['art'] === 'adresse'
+                    ? 'Zu viele Anmeldeversuche von diesem Anschluss.'
+                    : 'Zu viele Anmeldeversuche für diesen Namen.')
+               . ($bis !== null
+                    ? ' Wieder ab ' . fmt_local($bis, 'H:i') . ' Uhr.'
+                    : ' Bitte später erneut versuchen.')
+               . ' „Passwort vergessen?" geht weiterhin.';
+        /* Der Countdown braucht SEKUNDEN, keinen Zeitstempel — siehe
+         * `rate_sperre()`. Er geht unten in ein data-Attribut. */
+        $sperreRest = $sperre['rest'] ?? 0;
+
+        /* KEINE VERLANGSAMUNG IM GESPERRTEN ZWEIG, und das ist Selbstschutz:
+         * Jede wartende Anfrage haelt einen PHP-Arbeitsprozess. Wer gesperrt
+         * ist, wird sofort abgewiesen — damit haengt die Zahl der Wartenden
+         * an der Sperrrate und nicht an der Flutrate (Kopf von
+         * ratelimit_lib.php). */
         rate_gleiche_dauer($t0);
     } else {
         // Der Browser sendet nie das Passwort, sondern das daraus
@@ -215,6 +263,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             // verbraucht dort einen Versuch, und wer sich erfolgreich
             // anmeldet, soll sich nicht selbst aussperren.
             rate_erfolg('salt', $email);
+            /* UND DEN ADRESSTOPF (P5a/AP6). `login_ip` zaehlt 50 Fehlversuche
+             * je Adresse — hinter einem Klinik-NAT teilen sich viele eine.
+             * Ohne diese Zeile liefe eine Praxis ueber den Tag in ihre 50
+             * hinein, ohne dass irgendjemand etwas falsch gemacht haette:
+             * Jede gelungene Anmeldung ist der Beweis, dass die Adresse kein
+             * Angreifer ist, und genau dafuer gibt es `rate_erfolg()` seit
+             * jeher auch fuer die IP. */
+            rate_erfolg('login_ip', null);
 
             /* ---- WARTUNGSMODUS: nur die Verwaltung kommt hinein (E-S5W-09) --
              *
@@ -288,9 +344,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             if ($istDemoAdresse) { rate_demo_zaehlen(); }
             header('Location: index.php'); exit;
         }
+        /* DREI ZAEHLUNGEN AN EINEM FEHLVERSUCH (P5a/AP6):
+         *   `login`     das eingetippte Konto — 10 je 15 min
+         *   `login_ip`  der Anschluss        — 50 je 15 min
+         *   `global`    die Installation     — Grundlage der Verlangsamung
+         *
+         * `rate_misserfolg('login', $email)` zaehlt seit jeher BEIDE Merkmale
+         * dieses Topfes (Konto und IP). Das bleibt so — der zweite Topf ist
+         * nicht sein Ersatz, sondern die ZWEITE SCHWELLE: 10 je Konto ist
+         * richtig, 10 je Adresse waere es nicht. */
         rate_misserfolg('login', $email);
+        rate_misserfolg('login_ip', null);
+        rate_global_misserfolg();
+
         $error = 'Anmeldung fehlgeschlagen. E-Mail oder Passwort prüfen.';
-        rate_gleiche_dauer($t0);
+
+        /* HIER GREIFT DIE VERLANGSAMUNG, und nur hier: Es ist der einzige
+         * Zweig, in dem tatsaechlich gerechnet wurde (PBKDF2 im Browser,
+         * bcrypt hier). */
+        $bremseStufe = rate_gleiche_dauer_gebremst($t0);
+        if ($bremseStufe > 0) {
+            sicherheit_melden_pruefen();
+        }
     }
 }
 require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
@@ -311,7 +386,8 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
            Hinweis zurueck. Die Reihenfolge in ui_meldung() ist deshalb
            ohne Wirkung. */ ?>
   <?php ui_meldung($error ? null : $hinweis, $error); ?>
-  <form method="post" autocomplete="on" id="loginform">
+  <form method="post" autocomplete="on" id="loginform"
+        data-sperre-rest="<?= (int)$sperreRest ?>">
     <?php /* Ein Token je Rundenzahl (M2-01). Das alte Feld 'token' entfaellt —
              der Server nimmt es weiterhin an, aber diese Seite fuellt es nicht
              mehr, weil sie nicht weiss, welche Rundenzahl fuer das Konto gilt. */ ?>
@@ -427,6 +503,64 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
     state.textContent = 'Dieser Browser unterstützt die nötige Verschlüsselung nicht.';
   }
 });
+</script>
+<?php /* DER COUNTDOWN DER SPERRE (E-P5a-06, P5a/AP6).
+ *
+ * EIGENER BLOCK UND NICHT `forms.js` — das ist eine benannte Abweichung vom
+ * Konzept (E-P5a-45). Das Konzept nennt „login.php, forms.js"; login.php
+ * LAEDT forms.js aber gar nicht, und forms.js ist Aenderungsverfolgung,
+ * Strg-Enter und Abbrechen-Rueckfrage. Es hier nachzutragen schaltete
+ * nebenbei eine beforeunload-Warnung auf einer Seite frei, auf der jemand
+ * ein Passwort tippt — und ein Zeitgeber steht darin ohnehin nicht.
+ *
+ * KEINE EIGENE DATEI: Die Seite hat schon einen genoncten Block, und zehn
+ * Zeilen rechtfertigen keine Auslieferung mehr.
+ *
+ * DIE SEKUNDEN KOMMEN ALS GANZE ZAHL aus `rate_sperre()`, nicht als
+ * Zeitstempel. Ein roher DATETIME steht in UTC (db.php setzt die Verbindung
+ * auf +00:00); der Browser laese ihn als Ortszeit, und der Countdown stuende
+ * je nach Zone ein bis zwei Stunden daneben.
+ *
+ * ER STEHT NICHT IN DER MELDUNG. Jene traegt `role="alert"`, und ein Text,
+ * der sich jede Sekunde aendert, wird von einem Screenreader jede Sekunde neu
+ * vorgelesen. Er steht in der Zustandszeile darunter — und auch dort erst,
+ * nachdem der Krypto-Block sie geleert hat. */ ?>
+<script<?= kopf_nonce_attr() ?>>
+(function () {
+  var f = document.getElementById('loginform');
+  if (!f) { return; }
+  var rest = parseInt(f.dataset.sperreRest || '0', 10);
+  if (!(rest > 0)) { return; }
+
+  var knopf = f.querySelector('button[type=submit], input[type=submit]');
+  var zeile = document.getElementById('loginstate');
+  var text  = knopf ? (knopf.textContent || 'Anmelden') : '';
+
+  // Das Formular bleibt gesperrt, solange die Sperre laeuft — ein Klick
+  // waere ein weiterer Fehlversuch und verlaengerte im ungluecklichen Fall
+  // die Stufe.
+  Array.prototype.forEach.call(f.elements, function (el) { el.disabled = true; });
+
+  function zeig() {
+    var m = Math.floor(rest / 60), sek = rest % 60;
+    var wie = m > 0 ? (m + ' Minute' + (m === 1 ? '' : 'n')) : (sek + ' Sekunden');
+    if (zeile) { zeile.textContent = 'Noch ' + wie + '.'; }
+    if (knopf) { knopf.textContent = text + ' (' + wie + ')'; }
+  }
+  zeig();
+
+  var uhr = setInterval(function () {
+    rest -= 1;
+    if (rest <= 0) {
+      clearInterval(uhr);
+      Array.prototype.forEach.call(f.elements, function (el) { el.disabled = false; });
+      if (knopf) { knopf.textContent = text; }
+      if (zeile) { zeile.textContent = 'Du kannst es wieder versuchen.'; }
+      return;
+    }
+    zeig();
+  }, 1000);
+})();
 </script>
 <?php /* Fusszeile auf JEDER Seite, auch vor der Anmeldung (R32, E-P3-14) —
          dunkel, weil sie hier auf der dunkelblauen Flaeche liegt. */ ?>

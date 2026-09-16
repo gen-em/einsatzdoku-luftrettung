@@ -109,7 +109,11 @@ $keinCookie = ($token === '' && $getauscht);
 
 $row = null;
 if (preg_match('/^[a-f0-9]{64}$/', $token)) {
-    $st = db()->prepare('SELECT r.id, r.user_id, u.pat_key_check, u.pat_wrap_rc
+    /* `u.email` seit Web 20.10.0 (P5a/AP6): Wer sein Passwort setzt, hat
+     * nachgewiesen, dass ihm das Postfach gehoert — und soll danach nicht an
+     * einer Anmeldesperre haengenbleiben. Die Adresse ist das Merkmal, unter
+     * dem der Ratenschutz zaehlt. */
+    $st = db()->prepare('SELECT r.id, r.user_id, u.email, u.pat_key_check, u.pat_wrap_rc
                          FROM password_resets r
                          JOIN users u ON u.id = r.user_id
                          WHERE r.token_hash = ? AND r.used_at IS NULL AND r.expires_at > NOW()');
@@ -221,6 +225,26 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([(int)$row['user_id']]);
             $pdo->commit();
             $done = true;
+
+            /* DIE ANMELDESPERRE DIESES KONTOS FAELLT (P5a/AP6, E-P5a-45).
+             *
+             * Bis Web 20.9.1 rief diese Datei keine einzige `rate_*`-Funktion.
+             * Wer sein Passwort ueber den Link zuruecksetzte — also gerade
+             * nachgewiesen hatte, dass ihm das Postfach gehoert —, blieb an
+             * der Anmeldung gesperrt: bis zu 15 Minuten. Mit der Sperrleiter
+             * waere daraus eine Stunde geworden, und die STUFE stuende danach
+             * noch 24 h, sodass die naechste Vertipperin sofort wieder eine
+             * Stunde draussen waere. Das Konzept sagt „der Passwort-Reset
+             * bleibt offen" — offen ist er nur, wenn er auch hilft.
+             *
+             * NUR DAS KONTO, NICHT DIE ADRESSE: Wer ein Postfach uebernommen
+             * hat, soll damit nicht die Sperre einer ganzen Klinik aufheben.
+             *
+             * NACH dem Commit und ausserhalb der Transaktion — ein Fehler
+             * beim Aufraeumen darf das gesetzte Passwort nicht mitreissen. */
+            require_once __DIR__ . '/ratelimit_lib.php';
+            rate_konto_freigeben((string)($row['email'] ?? ''));
+
             // Der Token hat seinen Zweck erfuellt — die Sitzung dieser Seite
             // wird nicht laenger gebraucht (M1-06).
             unset($_SESSION['pw_token']);

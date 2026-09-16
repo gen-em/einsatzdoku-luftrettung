@@ -3368,6 +3368,53 @@ Einspielen ist weiterhin die E-Mail-Adresse des Zielkontos abzutippen.
 unterscheidet, warum Konto-Backups nie von selbst entstehen, wie die Freigabe
 funktioniert und wohin die Pakete von hier aus gehen.
 
+### 11.4a Ratenschutz — was jemanden aufhält, der es von außen versucht
+
+Unter **Betrieb → Servereinstellungen**, Karte **„Ratenschutz"** (seit
+Web 20.10.0).
+
+**Eine Sperre dauert beim zweiten Mal länger.** Wer sich zu oft vertippt, ist
+eine Viertelstunde draußen; wer es am selben Tag noch einmal tut, länger:
+
+| Stufe | Sperre |
+|---|---|
+| 1 | 15 Minuten |
+| 2 | 20 Minuten |
+| 3 | 30 Minuten |
+| 4 | 60 Minuten |
+
+Nach **24 Stunden ohne Fehlversuch** fängt die Leiter wieder von vorn an. Alle
+vier Dauern lassen sich ändern — **aber nicht unter 15 setzen, ohne es zu
+wollen:** Bis Web 20.9.1 sperrte die Anmeldung fest 15 Minuten, eine kürzere
+erste Sprosse macht den ersten Verstoß milder als vorher.
+
+**Zwei Zahlen, und die zweite ist die größere.** Zehn Fehlversuche je *Konto*,
+fünfzig je *Anschluss*. Hinter einem Klinik-Anschluss teilen sich viele eine
+Adresse; läge die zweite Zahl auch auf zehn, sperrte die zehnte Vertipperin
+die übrigen neunzehn aus. Eine gelungene Anmeldung setzt beide Zähler zurück.
+
+**Verlangsamung statt globaler Sperre.** Zählt die ganze Installation zu viele
+Fehlversuche, antwortet **jede fehlgeschlagene** Anmeldung langsamer — 1, 2, 4
+oder 8 Sekunden. Wer das richtige Passwort hat, kommt ohne Verzögerung durch.
+Eine *globale Sperre* gibt es bewusst nicht: Sie wäre ein Schalter, den jeder
+von außen umlegt.
+
+> **Was die Anmeldeseite dabei sagt.** Läuft die Verlangsamung, steht dort
+> ruhig: „Die Anmeldung antwortet derzeit verzögert, etwa 2 Sekunden. Das ist
+> eine Schutzmaßnahme; dein Passwort wird ganz normal geprüft." Ist ein Name
+> oder ein Anschluss gesperrt, steht bis wann — und darunter läuft ein
+> Countdown. **„Passwort vergessen?" bleibt anklickbar**, und wer sein
+> Passwort neu setzt, ist danach nicht mehr gesperrt.
+
+**Meldung bei der höchsten Stufe.** Erreicht eine Sperre die letzte Sprosse
+oder die Verlangsamung ihre vierte Stufe, geht eine Sammelmeldung an die
+**Betreiberadresse** (11.5) — höchstens eine je Stunde. Sie sagt nicht, dass
+jemand hereingekommen ist, sondern dass es jemand *versucht*. Abschaltbar.
+
+**Auf Betrieb → Status** stehen dazu zwei Zeilen, sobald es etwas zu sagen
+gibt: „Verlangsamung" (orange) und „Gesperrt". Die vollständige Liste mit
+einem Knopf zum Aufheben kommt in einem späteren Paket.
+
 ### 11.5 Installation
 
 Unter **„Installation"** steht, wie diese Anlage nach außen auftritt: der

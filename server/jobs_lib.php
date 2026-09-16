@@ -223,9 +223,14 @@ function jobs_katalog(): array
         ],
         'aufraeumen' => [
             'titel'        => 'Aufräumen',
-            'beschreibung' => 'Papierkorb, Kopplungssitzungen, Ratenschutz, '
-                            . 'Passwort-Token, Erinnerung an die Verwaltung, '
-                            . 'Speichermessung und Warnschwellen',
+            /* DIESE ZEILE IST SICHTBARER TEXT (Betrieb -> Hintergrundjobs) und
+             * hinkte den Schritten drei Pakete hinterher: CSP-Berichte,
+             * Mail-Warteschlange und Job-Verlauf standen nicht darin. Wer
+             * einen Schritt ergaenzt, ergaenzt sie mit. */
+            'beschreibung' => 'Papierkorb, Kopplungssitzungen, Ratenschutz und '
+                            . 'Sperrereignisse, Passwort-Token, CSP-Berichte, '
+                            . 'Mail-Warteschlange, Job-Verlauf, Erinnerung an '
+                            . 'die Verwaltung, Speichermessung und Warnschwellen',
             'taeglich'     => true,
             'rueckstand'   => fn(PDO $pdo, array $z): ?int => null,
             'lauf'         => 'job_aufraeumen',
@@ -572,9 +577,40 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
                         WHERE deleted_at < DATE_SUB(NOW(), INTERVAL 90 DAY)');
         },
         'Ratenschutz-Zaehler' => function (PDO $pdo): void {
-            $pdo->exec('DELETE FROM rate_limits
-                        WHERE fenster_start < DATE_SUB(NOW(), INTERVAL 1 DAY)
-                          AND (gesperrt_bis IS NULL OR gesperrt_bis < NOW())');
+            /* DIE STUFE DARF NICHT MITGELOESCHT WERDEN, SOLANGE SIE GILT
+             * (P5a/AP6). Verschwindet die Zeile, ist die Stufe 0 — das ist
+             * der gewollte Verfall nach 24 h ohne Fehlversuch, und
+             * `fenster_start` ist dafuer ein brauchbarer Anhalt. Brauchbar
+             * ist aber nicht genau: `fenster_start` springt erst beim
+             * naechsten Fehlversuch NACH Fensterablauf, kann der letzten
+             * Eingabe also bis zu 15 Minuten vorauslaufen. `stufe_bis` ist
+             * der ausdrueckliche Wert; wo es ihn gibt, gilt er. */
+            try {
+                $pdo->exec('DELETE FROM rate_limits
+                            WHERE fenster_start < DATE_SUB(NOW(), INTERVAL 1 DAY)
+                              AND (gesperrt_bis IS NULL OR gesperrt_bis < NOW())
+                              AND (stufe_bis IS NULL OR stufe_bis < NOW())');
+            } catch (Throwable $ex) {
+                /* Die Spalte `stufe_bis` gibt es noch nicht (Migration steht
+                 * aus) — dann die Fassung von vor Web 20.10.0. */
+                $pdo->exec('DELETE FROM rate_limits
+                            WHERE fenster_start < DATE_SUB(NOW(), INTERVAL 1 DAY)
+                              AND (gesperrt_bis IS NULL OR gesperrt_bis < NOW())');
+            }
+        },
+        'Sperrereignisse' => function (PDO $pdo): void {
+            /* 30 Tage, fest (E-P5a-09). Die Tabelle fuehrt IP- und
+             * E-Mail-Adressen im Klartext — sie ist genau die Art
+             * Betriebsdatum, das nicht versehentlich Jahre liegen soll.
+             *
+             * Eigenes try/catch wie bei den drei Nachbarn: Zwischen Deploy
+             * und Migrationslauf gibt es die Tabelle nicht. */
+            try {
+                $pdo->exec('DELETE FROM sicherheit_ereignisse
+                            WHERE zeitpunkt < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)');
+            } catch (Throwable $ex) {
+                /* Tabelle fehlt (Migration noch nicht gelaufen). */
+            }
         },
         /* CSP-BERICHTE: 30 TAGE, FEST (E-P5a-09). Betriebsdaten ohne
          * Kontobezug verfallen nach 30 Tagen, und die Zahl ist KEINE

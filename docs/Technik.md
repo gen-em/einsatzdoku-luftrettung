@@ -489,6 +489,10 @@ Daten erst nach Server-Bestätigung.
 │   │                      statt ihn zu laden — und sagt in ihrer LIESMICH,
 │   │                      was sie damit NICHT sieht (DDL aus eingesetzten
 │   │                      Namen). Mit `--selbstprobe`
+│   ├── ratenprobe/        Sperrleiter, Verfall, zwei Schwellen, Verlangsamung,
+│   │                      Sammelmail und „Sperre aufheben" (P5a/AP6). Greift
+│   │                      die Bibliothek unmittelbar an und datiert stufe_bis
+│   │                      zurueck, statt 24 h zu warten (s. LIESMICH.md)
 │   ├── sitzungshaertung/  steht vor jedem session_start() die Haertung
 │   │                      `session.use_strict_mode`? (P5a/AP4a, Nr. 205).
 │   │                      Tokenizer statt grep; Selbstprobe 8 Faelle. Laeuft
@@ -718,12 +722,13 @@ Daten erst nach Server-Bestätigung.
 | `day_capabilities` | Eingefrorene Fähigkeiten des Diensttags. Wird der Windenhaken am Rettungsmittel später entfernt, verlieren alte Einsätze ihre Windenfelder nicht (A13e) |
 | `pair_sessions` | Kopplungssitzungen (seit Web 13.0.0, S5): Das **Gerät** holt sich mit `start` eine Sitzung und zeigt den Code, ein Mensch gibt ihn im Web ein (`user_id` wird gesetzt: beansprucht), das Gerät bestätigt mit Ja — erst dann entsteht die `devices`-Zeile; bis dahin sind Kennung und Schlüssel **schwebend**. Code **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **eine Frist von 10 Minuten ab `erstellt_am` für alles**; Schlüssel als SHA-256; die Datenbank ist der Schiedsrichter (Beanspruchen per `UPDATE … WHERE user_id IS NULL`, gültig bei `rowCount() = 1`); keine Endzustände — bestätigt und verworfen werden gelöscht, verfallen entsorgt der Job `aufraeumen`; Obergrenze `PAIR_SITZUNGEN_MAX` (1000) über unverfallene Zeilen. Löste `pair_codes` ab (Code im Web erzeugt, an der Uhr getippt); Ratenschutz über `rate_limits` mit drei Töpfen |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
-| `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand |
+| `rate_limits` | Ratenschutz: Versuche je `topf` und `merkmal` (`ip:…`, `id:…` oder `alle`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. **Die Töpfe stehen in `RATE_GRENZEN` und nirgends sonst**; es sind zwölf — hier stand bis Web 20.10.0 „alle vier“, und das war seit sechs Töpfen falsch. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand. Seit Web 20.10.0 dazu **`stufe`** (0 = nie gesperrt, 1–4 = Sprosse der Sperrleiter) und **`stufe_bis`** (letzter Fehlversuch + 24 h; danach gilt die Stufe als 0, auch wenn die Zeile noch dasteht) sowie ein Index auf `gesperrt_bis` |
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
 | `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e); seit Web 20.5.0 `speicher_db_grenze_gb` = Kontingent der Datenbank laut Hosting; seit Web 20.6.0 `migration_tor_hash` und `migration_tor_offen` = der Zwischenspeicher des Torwächters; seit Web 20.7.0 `csp_scharf` = Content-Security-Policy scharf statt Report-Only und `hsts_tage` = Bindungsdauer von HSTS in Tagen, 0/1/7/365, fehlend = **1** (siehe 5c); seit Web 20.8.0 `instanz_name` und `instanz_kurz` = der Name dieser Installation, fehlend = „Gen-EM Einsatzdokumentation Notarzt" bzw. „Gen-EM NAdoku" (siehe 5d)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 5c) |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
+| `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **Die Folge ist benannt:** `komp_tabellen()` zählt seine Tabellen über `SHOW FULL TABLES` und hat keine Ausnahmeliste — diese Tabelle liegt damit in **jeder** Komplettsicherung, und die 30-Tage-Frist gilt in der laufenden Datenbank, nicht im versiegelten Abzug. Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09) |
 | `mail_warteschlange` | Jede ausgehende Nachricht, eine Zeile (seit Web 20.8.0, P5a/AP5). `schluessel` = Eintrag aus `mail_katalog()`, `art` = `konto`/`geraet`/`betrieb` (das wird in P5c der Reiter im Protokoll), `zustand` = `offen` / `zugestellt` / `unzustellbar` / `zu_spaet` / `ueberholt`, `versuche`, `naechster_versuch`, `gueltig_bis` (ein Reset-Link gilt eine Stunde), `fehler` = Grund **samt Kennung**. **Was beim Endzustand geleert wird, hängt vom Zustand ab** (E-P5a-39): `zugestellt`, `zu_spaet` und `ueberholt` verlieren Adresse, Betreff und Rumpf — es bleibt „eine Nachricht dieser Art ging zu dieser Zeit hinaus". Bei `unzustellbar` **bleibt die Adresse stehen**, weil „die Einladung an X kam nie an" ohne X wertlos ist; der Rumpf fällt trotzdem, wegen des Tokens darin. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `job_laeufe` | Verlauf der Hintergrundjobs (seit Web 20.8.0), eine Zeile je Lauf, der etwas getan hat oder scheiterte — ein Leerlauf schreibt nichts, sonst füllte sich die Tabelle mit Nichts. `job`, `zeitpunkt`, `ausloeser`, `erledigt`, `fehler`. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
@@ -7123,6 +7128,117 @@ entfällt, weil ein Paketname keinen trägt — steht in
 `.github/workflows/integritaet.yml` ist die Adresse **dieser**
 Installation — Betriebskonfiguration der Auslieferungskette, keine Eigenschaft
 der Software.
+
+### 5e Der Ratenschutz — Leiter, zwei Schwellen, Verlangsamung (P5a/AP6)
+
+**Was bis Web 20.9.1 galt.** Eine Sperre dauerte fest 15 Minuten — die erste
+wie die hundertste. Wer geduldig ist, bekommt damit 10 Versuche je
+Viertelstunde, dauerhaft. Und alle Fehlversuche der Installation zusammen
+wurden nirgends gezählt: Ein Angriff über tausend Namen sah aus wie tausend
+einzelne Vertipperinnen.
+
+#### 5e.1 Die Leiter
+
+Je Merkmal eine **Stufe 1–4** (0 = nie gesperrt), Dauer aus `rate_leiter()`,
+Vorgabe **15 / 20 / 30 / 60 min**. Verfall: **24 h ohne Fehlversuch**
+(`stufe_bis`). Alles einstellbar unter Betrieb → Servereinstellungen.
+
+> **Die Stufenzählung ist 1-basiert**, obwohl das Konzept an einer Stelle
+> „Stufe 0–3" sagt. An der anderen sagt es „Sammelmail bei Stufe 4", und
+> beides zusammen geht nicht auf. Gewählt ist die Lesart, die jemand
+> ausspricht: Stufe 4 heißt wörtlich die 60-Minuten-Sperre.
+
+**Nicht jeder Topf bekommt eine Leiter** — nur `login`, `login_ip` und `salt`:
+
+| Topf | Leiter | warum |
+|---|---|---|
+| `reset` | **nein** | sperrt heute 3600 s; jede Sprosse unterhalb der vierten wäre *schwächer*. Und sein Scheitern ist absichtlich still — `reset_request.php` antwortet im gesperrten Fall wortgleich wie im erlaubten |
+| `pair`, `pair_start`, `pair_code` | nein | dahinter steht ein Gerät, das nicht lesen kann, was auf der Seite steht |
+| `demo`, `demog`, `testmail`, `csp` | nein | die zählen **Menge**, nicht Fehlversuche — es gibt dort niemanden, der eskaliert |
+
+#### 5e.2 Zwei Schwellen, zwei Töpfe
+
+10 Fehlversuche je **Konto**, 50 je **Anschluss** (`login_ip`). Bis Web 20.9.1
+galten für beide dieselben 10 — hinter einem Klinik-NAT sperrte damit die
+zehnte Vertipperin die übrigen neunzehn aus.
+
+**Warum zwei Töpfe und nicht zwei Zahlen in einem:** Diese Tabelle hängt am
+**Topf**, nicht am Merkmal, und `rate_misserfolg()` bindet für alle Merkmale
+eines Aufrufs dieselben Parameter. Zwei Grenzen in einem Topf hieße, die
+Schleife umzubauen — und damit die Bauart aufzugeben, die in
+`ratelimit_lib.php` zweimal ausgeschrieben begründet ist. Der hauseigene Weg
+ist ein zweiter Topf mit ausdrücklicher Merkmalsliste (Muster:
+`RATE_DEMO_GLOBAL`).
+
+> **`login.php` muss beide Töpfe leeren**, wenn eine Anmeldung gelingt. Sonst
+> läuft eine Praxis über den Tag in ihre 50 hinein, ohne dass irgendjemand
+> etwas falsch gemacht hätte.
+
+#### 5e.3 Die Verlangsamung — und wo sie ansetzt
+
+Topf `global`, Merkmal `alle`, `max = PHP_INT_MAX` (er sperrt **nie**).
+Gelesen wird nur `versuche`; ab 200 / 400 / 800 / 1600 je 15 min wartet jede
+**fehlgeschlagene** Anmeldung 1 / 2 / 4 / 8 s.
+
+**Zwei Stellen, an denen man sie falsch einbaut:**
+
+1. **Nicht als `usleep()` vor der Antwort**, sondern als erhöhte Mindestdauer
+   *durch* `rate_gleiche_dauer_gebremst()`. Jene stellt die Antwortzeit des
+   Fehlerzweigs auf einen festen Wert; ein zusätzliches Warten daneben
+   zerstörte genau die Gleichheit, die sie herstellt.
+2. **Wer schon gesperrt ist, wird nicht verlangsamt.** Jede wartende Anfrage
+   hält einen PHP-Arbeitsprozess. Bei 1600 Fehlversuchen je 15 Minuten und
+   8 s Wartezeit warteten dauerhaft **rund 14 Anfragen gleichzeitig** — auf
+   einem Webspace mit zehn Arbeitern wäre die Bremse die Überlastung, die sie
+   verhindern soll. Gesperrte Anfragen kosten nichts; damit hängt die Zahl der
+   Wartenden an der **Sperrrate** und nicht an der Flutrate. Verraten wird
+   nichts: Die Meldung sagt dem Aufrufer, dass er gesperrt ist.
+
+Der Zähler hat eine **Fensterprüfung** beim Lesen. Ohne sie bliebe eine
+Installation nach einem Angriff verlangsamt, bis zufällig wieder jemand ein
+Passwort falsch eintippt — im schlechtesten Fall wochenlang, und niemand fände
+den Grund.
+
+#### 5e.4 Zwei Fehler, die ohne Meldung durchgegangen wären
+
+**Der Gesperrte hätte sich durch Klopfen befreit.** `rate_misserfolg()` setzte
+`gesperrt_bis = NULL`, sobald das **Zählfenster** ablief. Folgenlos, solange
+bei allen Töpfen `sperre == fenster` galt — und das galt. Mit einer Leiter bis
+60 min bei 15 min Fenster hätte ein einziger Fehlversuch nach Fensterablauf
+die **laufende** Sperre gelöscht.
+
+**Die Stufe wäre nie zurückgefallen.** Der Verfall wurde nur dort
+aufgefrischt, wo *nicht* gesperrt wurde — also bei den ersten neun
+Fehlversuchen. Jeder schob die Frist um 24 h vor, sodass sie beim zehnten nie
+abgelaufen war. Gefunden von `tools/ratenprobe/`; im Betrieb wäre es niemandem
+aufgefallen.
+
+#### 5e.5 Der Weg zurück
+
+`pw_handling.php` rief bis Web 20.9.1 **keine einzige** `rate_*`-Funktion. Wer
+sein Passwort über den Link zurücksetzte, blieb an der Anmeldung gesperrt.
+`rate_konto_freigeben()` räumt jetzt `login` und `salt` dieses Kontos — **nur
+das Konto, nicht die Adresse**.
+
+Für die Betriebsseite gibt es `rate_sperre_aufheben($topf, $merkmal, $wer)`.
+**Nicht `rate_erfolg()`**: Jene bildet die Merkmale aus dem *Aufrufer* — auf
+der Betriebsseite wäre das die IP der Administratorin; der Knopf löschte ihre
+eigene Zeile, meldete Erfolg, und die Sperre bliebe stehen.
+
+#### 5e.6 Das Fenster zwischen Deploy und `update.php`
+
+Die Grundzählung in `rate_misserfolg()` nennt `stufe` und `stufe_bis` **mit
+keinem Wort** und läuft in diesem Fenster unverändert weiter. Die Leiter steht
+in einem **zweiten, eigen gefangenen** Statement und tut dort nichts; gesperrt
+wird dann mit der festen Dauer wie vor Web 20.10.0.
+
+Nähme man die neuen Spalten in das vorhandene `INSERT` auf, würde es dort
+werfen — und weil `rate_misserfolg()` alles in *einem* `try/catch` fängt und
+still zurückkehrt, zählte der Ratenschutz gar nicht mehr. Für **alle** Töpfe,
+nicht nur für die Leiter, und ohne dass irgendetwas rot würde.
+
+**Nachweis:** `php tools/ratenprobe/probe.php` — 49 Prüfungen, 0 Befunde.
+
 
 ## 6. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)
 

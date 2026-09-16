@@ -17,7 +17,7 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | Stand | 15.09.2026 — **Konzept freigegeben, Umsetzung läuft.** Die Grundsatzfragen sind am 15.09.2026 im Gespräch entschieden (E-P5a-01 bis -09); die übrigen Festlegungen (E-P5a-10 bis -21) stammen aus dem Nachmessen im Code und stehen mit der Freigabe. |
 > | Entschieden | E-P5a-01 bis E-P5a-21 (Abschnitt 2); E-PP-01 bis -09 übernommen; **F-P5a-1 entschieden** (2.4) |
 > | Offen | — |
-> | Umsetzung | **läuft.** AP1–AP5 und AP4a erledigt, **AP6 als Nächstes**; Abhängigkeiten in 3.0 |
+> | Umsetzung | **läuft.** AP1–AP6 und AP4a erledigt, **AP7 als Nächstes**; Abhängigkeiten in 3.0 |
 > | Fable-Schritte der Umsetzung | **keiner mehr** — M-P5a-01 ist nach Auftrag vom 15.09.2026 ohne Pause umgesetzt worden (2.5) |
 
 > **Stand der Umsetzung**
@@ -31,7 +31,8 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | **AP4 Kopfzeilen und HTTPS** | **erledigt** | **Web 20.7.0** | CSP-Probe **0 Befunde** (106 Dateien, 108 Skript-Stellen), Selbstprobe 8/8 · Browserprobe **33/33, 0 Seitenfehler** · Bilderlauf **392 Bilder, 0/0/0** und **0 CSP-Berichte** (dritter Lauf — die zwei davor fanden F6 und F7) · Wartungsprobe 67/0 · Integritätswache 30/30 und **kein Unterschied** · Wortliste 0/0/0 · Kontraste 22/0 · Vollständigkeit 365 gegen 351 (`style=` **13→10**, Unicode +17 — alle in Kommentaren) |
 > | **AP5 Mail-Warteschlange** | **erledigt** | **Web 20.8.0 · 20.9.0** | Teil 1 (Name der Installation, E-P5a-35): 38 Stellen auf zwei Werte, 6/6 Einschleusversuche abgewiesen · Teil 2 (Warteschlange): Katalog mit **10** Nachrichten, **alle zehn** Versandstellen umgezogen — `smtp_send()` hat ausserhalb von `mail_lib.php` **0** Aufrufer · `tools/mailprobe/` **41 Prüfungen, 0 Befunde** gegen eine eigene SMTPS-Gegenstelle · `tools/jobprobe/` **35/35** (Teil 10 neu) · Frist statt Dauer: schweigender Server **5,01 s** bei 5 s Budget, 12 Fortsetzungszeilen je 1 s **5,00 s** (ohne Frist wären es über 13 s) · Leiter 300 s gemessen, `unzustellbar` nach 5, `zu_spaet` nach **3** bei 1 h Frist · Job am Huckepack-Weg 4 Nachrichten in 0,37 s, hängender Server **3,01 s** bei 3,0 s Vorgabe · Adressen (E-P5a-40) 7 Fälle, **5 abgewiesen** · `grep gen-em.org server/` = **0**, `grep base_url server/` = nur Bibliothek und Quelle · Wortliste **0/0/0** (96 Ausnahmen, 96 gegriffen) · Vollständigkeit **367** (371 → 367, der Doppelbestand der Mailtexte ist weg; die im Commit genannten 366 waren **mitten im Paket gemessen** und um 1 zu niedrig — nachgezogen in AP4a) · Migrationsregister **0 Befunde**, 49/49 Kennungen · CSP-Probe **0** auf 108 Stellen · Browser: Status und Installation, **0 Konsolenfehler** |
 > | **AP4a Sicherheitszeilen** (Nachtrag 16.09.2026) | **erledigt** | **Web 20.9.1** | Nr. 205: `use_strict_mode` vor **7 von 7** `session_start()`-Aufrufen (vorher 2, und zwar die beiden ohne Anmeldesitzung) · Gegenprobe gemessen: **ohne** die Zeile kein `Set-Cookie` (Kennung übernommen), **mit** ihr eine neue — `php.ini` des Prüfstands steht auf `Off` · neu `tools/sitzungshaertung/` in Stufe 1, Selbstprobe **8/8**, Lauf **108 Dateien, 7 Aufrufe, 0 ohne Härtung** · Nr. 203: `json_kopf()` / `json_roh_out()` / `json_out()`, **7 Stellen** umgestellt (nicht 3 — `auth_salt.php`, `jobs.php`, `pair.php` hatten denselben Mangel) · gemessen im Browser: `export_data.php` **200, 68 820 Byte Spurpunkte** mit `no-store`+`nosniff`, `backup_data.php` **200, 19 603 Byte** · `grep Content-Type: application/json server/` = **2 Codezeilen** (`db.php`, `wartung_lib.php` — jene darf `db.php` nicht laden) · Wortliste **0/0/0** (erster Lauf: 2 Treffer, der eigene Satz über die verschwundene Domain) · Vollständigkeit **367 = unverändert** (AP4a fügt netto 0 hinzu; die Schwelle der Kette von 366 auf 367 richtiggestellt) · Kontraste 22/0 · CSP-Probe **0** · Migrationsregister **0** |
-> | AP6 bis AP12 | offen | — | — |
+> | **AP6 Ratenschutz neu** | **erledigt** | **Web 20.10.0** | `tools/ratenprobe/` neu: **49 Prüfungen, 0 Befunde** · Leiter 15/20/30/60 min gemessen, Stufe 1→2→3→4 und Deckel bei 4 · Verfall nach 24 h gemessen, Gegenprobe (laufende Frist wird verlängert) ebenso · **zwei Fehler gefunden, die ohne Meldung durchgegangen wären**: Klopfen hätte die laufende Sperre gelöscht, und die Stufe wäre nie zurückgefallen · zwei Schwellen 10/50 gemessen · Verlangsamung 200/400/800/1600 → 1/2/4/8 s, Stufe 1 **1,00 s**, Stufe 4 **8,0 s** (gedeckelt), abgelaufenes Fenster → 0 · gleiche Antwortzeit **0,3 ms Differenz über 100 Messungen** · Sammelmail 1 je Stunde gemessen, abschaltbar · Einstellungen 6 Fälle im Browser, 4 abgewiesen, **nichts halb gespeichert** (Gegenprobe) · Anmeldeseite: Sperrmeldung **wortgleich für echtes und erfundenes Konto**, Countdown tickt (43→38 s), Formular entsperrt sich nach Ablauf, 0 Konsolenfehler · Migrationsregister **51/51, 34 Tabellen, 0 Befunde** · kopplungsprobe **76/0** (ein Prüffall hing an einer festen Migrationszahl und war schon vorher rot), wartungsprobe **67/0**, mailprobe **41/0**, jobprobe **35/0** · Wortliste **0/0/0** · Vollständigkeit **372** (367 + 5 Pfeile in neuen sichtbaren Texten; 5 Auslassungszeichen wieder entfernt) · CSP **0**, Sitzungshärtung **0**, Kontraste **22/0** |
+> | AP7 bis AP12 | offen | — | — |
 
 ---
 
@@ -637,6 +638,92 @@ gelöscht wird und die Entscheidung sonst mit ihm verschwände — und weil P2
 dieselbe Frage schon einmal andersherum entschieden hatte (R29/R48). Ein
 Fund, der zweimal gemacht und zweimal anders entschieden wurde, braucht seine
 Begründung an einer bleibenden Stelle.
+
+**E-P5a-43 (neu, 16.09.2026) — die Sperrleiter zählt ab 1, und ihre erste
+Sprosse ist 15 Minuten.** Zwei Festlegungen, beide gegen den Wortlaut des
+Konzepts, beide aus demselben Grund: Er ist an dieser Stelle nicht
+widerspruchsfrei.
+
+1. **Die Zählung.** E-P5a-04 sagt „eine Stufe 0–3", E-P5a-07 sagt „Sammelmail
+   bei Stufe 4". Beides zusammen geht nicht auf. Gewählt ist die Lesart, die
+   jemand ausspricht: **0 = nie gesperrt, 1–4 = die vier Sprossen.** „Stufe 4"
+   heißt damit wörtlich die 60-Minuten-Sperre, und die Mail hängt an einer
+   Zahl, die man nachzählen kann.
+2. **Die erste Sprosse.** Das Konzept nennt 10/20/30/60. Der Topf `login`
+   sperrt heute fest **900 s = 15 min**. Mit 10 wäre der **erste** Verstoß
+   nach dem Update *milder* als davor — ein Sicherheitspaket, das eine
+   Schranke senkt, ohne es zu sagen, ist genau die Art Fehler, die niemandem
+   auffällt. Vorgabe deshalb **15/20/30/60**; die Leiter ist eine Einstellung,
+   wer 10 will, trägt 10 ein.
+
+**Nicht jeder Topf bekommt eine Leiter**, obwohl das Konzept `salt` und
+`reset` „nach demselben Muster" nennt. `reset` bekommt **keine**: Er sperrt
+heute 3600 s, jede Sprosse unterhalb der vierten wäre *schwächer*. Und sein
+Scheitern ist absichtlich still — `reset_request.php` antwortet im gesperrten
+Fall wortgleich wie im erlaubten; eine Leiter dort streckt ein Fenster, in dem
+jemand fünfmal klickt, fünfmal dieselbe Zusage liest und keine Mail bekommt.
+Die Kopplungstöpfe und die vier Mengenzähler ebenfalls nicht (Begründung je
+Topf in `ratelimit_lib.php`).
+
+**E-P5a-44 (neu, 16.09.2026) — zwei Schwellen brauchen zwei Töpfe.** E-P5a-04
+verlangt 10 je Konto und 50 je Adresse. `RATE_GRENZEN` hängt aber am **Topf**,
+nicht am Merkmal, und `rate_misserfolg()` bindet für alle Merkmale eines
+Aufrufs dieselben Parameter — zwei Grenzen in einem Topf hieße, die Schleife
+umzubauen und damit die Bauart aufzugeben, die in der Datei zweimal
+ausgeschrieben begründet ist. Der hauseigene Weg ist ein **zweiter Topf**
+(`login_ip`) mit ausdrücklicher Merkmalsliste; Muster ist `RATE_DEMO_GLOBAL`.
+
+> **Eine Folge, die man leicht übersieht** und die im Betrieb erst nach Wochen
+> auffiele: `login.php` muss bei einer gelungenen Anmeldung **beide** Töpfe
+> leeren. Sonst läuft eine Praxis über den Tag in ihre 50 hinein, ohne dass
+> irgendjemand etwas falsch gemacht hat.
+
+**E-P5a-45 (neu, 16.09.2026) — drei Stellen, an denen der Konzepttext nicht
+umsetzbar war.**
+
+1. **Der Countdown steht nicht in `forms.js`.** Das Konzept nennt
+   „login.php, forms.js". `login.php` **lädt forms.js gar nicht**, und jene
+   Datei ist Änderungsverfolgung, Strg-Enter und Abbrechen-Rückfrage. Sie dort
+   nachzutragen schaltete nebenbei eine `beforeunload`-Warnung auf einer Seite
+   frei, auf der jemand ein Passwort tippt. Der Countdown steht im vorhandenen
+   genonceten Block — zehn Zeilen rechtfertigen keine eigene Datei.
+2. **Die Sammelmail geht an `mail_betriebsziele()`**, nicht an eine eigene
+   Liste „alle Konten mit Rolle BetreiberIn". Seit E-P5a-40 ist das die *eine*
+   Stelle, an der der Empfängerkreis der Betriebspost steht (R83); eine zweite
+   Liste wäre der Rückfall in den Zustand, den R83 abgeschafft hat. Das
+   Konzept ist hier älter als die Entscheidung.
+3. **Ein gesetztes Passwort räumt die Anmeldesperre.** Das Konzept sagt „der
+   Passwort-Reset (eigener Topf, per Mail) bleibt offen". Offen ist er nur,
+   wenn er auch **hilft** — `pw_handling.php` rief bis dahin keine einzige
+   `rate_*`-Funktion. Wer sein Passwort über den Link setzt, hat gerade
+   nachgewiesen, dass ihm das Postfach gehört, und blieb trotzdem gesperrt:
+   bisher 15 Minuten, mit der Leiter eine Stunde, und die Stufe stünde danach
+   noch 24 h. Geräumt werden `login` und `salt` — **nur das Konto, nicht die
+   Adresse**: Wer ein Postfach übernommen hat, soll damit nicht die Sperre
+   einer ganzen Klinik aufheben.
+
+**E-P5a-46 (neu, 16.09.2026) — `sicherheit_ereignisse` führt Merkmale im
+Klartext, und das wandert in jede Komplettsicherung.**
+
+Die Tabelle hält, was **war** — `rate_limits` verliert seinen Inhalt, sobald
+die Sperre abläuft und der Aufräumjob die Zeile wegnimmt. Dieselbe Lücke, die
+`job_laeufe` für die Hintergrundjobs geschlossen hat.
+
+`merkmal` enthält IP-Adressen und — an der Anmeldung — E-Mail-Adressen. Ohne
+sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos;
+dieselbe Abwägung wie bei der Unzustellbar-Liste (E-P5a-39).
+
+**Die Folge wird benannt, nicht übergangen:** `komp_tabellen()` zählt seine
+Tabellen über `SHOW FULL TABLES` und hat **keine Ausnahmeliste** — diese
+Tabelle liegt damit in *jeder* Komplettsicherung, und die 30-Tage-Frist gilt
+in der laufenden Datenbank, nicht im versiegelten Abzug. Wer das ändern will,
+braucht eine Ausnahmeliste in `komplett_lib.php`, und die gehört nicht in ein
+Paket, das den Ratenschutz baut.
+
+**Ein Eintrag je Sperre, nicht je Fehlversuch.** `rate_misserfolg()` führt bei
+einer Anmeldung vier Statements aus; ein Ereignis je Merkmal machte sechs und
+schriebe jeden Tippfehler mit. Ein Protokoll, das jeden Tippfehler verbucht,
+wird nicht gelesen.
 
 ### 2.3 Ort je Funktion (K1, R74)
 

@@ -108,7 +108,15 @@ jobs:
         #
         # Gemessen am 16.09.2026 gegen den ausgecheckten Stand (eigener
         # Arbeitsbaum, nicht der Arbeitskopie): 50 + 10 + 299 + 8 = 367.
-        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 367
+        #
+        # 372 MIT AP6 (Web 20.10.0): +5 Pfeile „Betrieb -> Status" in den neuen
+        # sichtbaren Texten. Die Zahl zaehlt Unicode-Zeichen im Markup und kann
+        # Prosa nicht von einem Symbol unterscheiden (Backlog Nr. 184) — der
+        # Pfeil in „Verwaltung -> Installation" ist die Hausschreibweise und
+        # steht so an hundert Stellen. Was AP6 an ZIERDE mitgebracht hatte —
+        # fuenf Auslassungszeichen in Kommentaren und Probenbeschriftungen —
+        # ist wieder entfernt, statt die Zahl damit wachsen zu lassen.
+        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 372
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py

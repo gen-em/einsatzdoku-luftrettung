@@ -2554,6 +2554,116 @@ function migrationen_katalog(): array
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
         ],
     ],
+    [
+        'id'    => '2026_09_16_ratenschutz_stufen',
+        'web'   => '20.10',
+        'label' => 'Sperrleiter — eine Sperre, die beim naechsten Mal laenger dauert',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'rate_limits' AND column_name = 'stufe'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* ZWEI SPALTEN AUF EINER ZEILE, DIE ES SCHON GIBT. `rate_limits`
+             * fuehrt genau EINE Zeile je (topf, merkmal) — die Stufe gehoert
+             * deshalb dorthin und braucht keine eigene Tabelle.
+             *
+             * `stufe` ZAEHLT AB 1, NICHT AB 0 (E-P5a-43). Das Konzept sagt an
+             * einer Stelle „Stufe 0-3" und an der anderen „Sammelmail bei
+             * Stufe 4"; beides zusammen geht nicht auf. Gewaehlt ist die
+             * zweite Lesart, weil sie die ist, die jemand ausspricht:
+             *
+             *   0  nie gesperrt gewesen
+             *   1  10 min   2  20 min   3  30 min   4  60 min
+             *
+             * Damit heisst „Stufe 4" woertlich die 60-Minuten-Sperre, und die
+             * Sammelmail haengt an einer Zahl, die man nachzaehlen kann.
+             *
+             * `stufe_bis` IST DER VERFALL DER STUFE, nicht der Sperre. Es
+             * steht auf „letzter Fehlversuch + 24 h"; danach gilt die Stufe
+             * als 0, auch wenn die Zeile noch dasteht. Die Zeile selbst
+             * raeumt der Aufraeumjob weg — aber der laeuft hoechstens einmal
+             * je Kalendertag, und eine Leiter, die von der Laufzeit eines
+             * Jobs abhaengt, waere keine.
+             *
+             * WARUM TINYINT: Vier Stufen brauchen kein INT, und die Spalte
+             * steht auf einer Zeile, die bei jedem Fehlversuch geschrieben
+             * wird. */
+            /* OHNE `COMMENT` an der Spalte, und das ist kein Geschmack: Das
+             * Migrationsregister liest beide Fassungen mit demselben
+             * Tokenizer und haelt `COMMENT` fuer einen Spaltennamen — der
+             * erste Versuch meldete prompt „der Katalog legt
+             * `sicherheit_ereignisse.comment` an; schema.sql kennt die Spalte
+             * nicht". Die Erklaerung steht ohnehin besser hier und in
+             * `schema.sql` als in einem Feld, das man nur mit
+             * `SHOW CREATE TABLE` sieht. */
+            'ALTER TABLE rate_limits
+               ADD COLUMN stufe     TINYINT UNSIGNED NOT NULL DEFAULT 0,
+               ADD COLUMN stufe_bis DATETIME NULL',
+
+            /* EIN INDEX AUF `gesperrt_bis` FEHLTE BISHER, und mit AP8 faellt
+             * das auf: „alle aktiven Sperren zeigen" ist eine Abfrage ueber
+             * die ganze Tabelle. Sie ist heute klein; auf einer Installation
+             * unter Beschuss ist sie es nicht. */
+            'CREATE INDEX idx_gesperrt ON rate_limits (gesperrt_bis)',
+        ],
+    ],
+    [
+        'id'    => '2026_09_16_sicherheit_ereignisse',
+        'web'   => '20.10',
+        'label' => 'Sperrereignisse — damit man sieht, DASS etwas wiederkehrt',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'sicherheit_ereignisse'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* WOGEGEN. `rate_limits` haelt den ZUSTAND — wer ist gerade
+             * gesperrt. Sobald die Sperre ablaeuft und der Aufraeumjob die
+             * Zeile wegnimmt, ist nichts mehr da. Dieselbe Luecke wie bei
+             * `jobs.letzter_fehler` vor Web 20.8.0: Man sieht, was JETZT
+             * ansteht, nie, dass es wiederkehrt. Eine Betreiberin, die
+             * morgens nachsieht, ob in der Nacht jemand an der Tuer war,
+             * findet heute nichts.
+             *
+             * EIN EREIGNIS JE SPERRE, NICHT JE FEHLVERSUCH. `rate_misserfolg()`
+             * laeuft bei jeder Anmeldung ueber zwei Merkmale und fuehrt je
+             * Merkmal zwei Statements aus; ein Ereignis je Versuch machte
+             * daraus sechs und schriebe jeden Tippfehler mit. Dieselbe
+             * Ueberlegung wie bei `job_laeufe`: Geschrieben wird, was etwas
+             * AUSSAGT.
+             *
+             * `merkmal` STEHT IM KLARTEXT, und das ist eine Entscheidung
+             * (E-P5a-46). Es enthaelt IP-Adressen und — bei Merkmalen der
+             * Form `id:` an der Anmeldung — E-Mail-Adressen. Ohne sie waere
+             * die Liste „irgendwo war irgendwer gesperrt" und damit wertlos;
+             * genau dieselbe Abwaegung wie bei der Unzustellbar-Liste
+             * (E-P5a-39). Die Folge ist benannt: `komp_tabellen()` zaehlt
+             * seine Tabellen ueber SHOW FULL TABLES und hat keine
+             * Ausnahmeliste — diese Tabelle liegt damit in JEDER
+             * Komplettsicherung, und die 30-Tage-Frist gilt in der laufenden
+             * Datenbank, nicht im versiegelten Abzug.
+             *
+             * `art` STATT EINER ENUM: Die Liste waechst in P5c um
+             * Audit-Ereignisse, und eine ENUM zu erweitern ist eine
+             * Migration. VARCHAR(24) kostet hier nichts. */
+            'CREATE TABLE sicherheit_ereignisse (
+               id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               art       VARCHAR(24)  NOT NULL,
+               topf      VARCHAR(32)  NULL,
+               merkmal   VARCHAR(190) NULL,
+               stufe     TINYINT UNSIGNED NOT NULL DEFAULT 0,
+               versuche  INT UNSIGNED NULL,
+               zeitpunkt DATETIME     NOT NULL,
+               bis       DATETIME     NULL,
+               wer       VARCHAR(190) NULL,
+               INDEX idx_zeitpunkt (zeitpunkt),
+               INDEX idx_art_zeit (art, zeitpunkt)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

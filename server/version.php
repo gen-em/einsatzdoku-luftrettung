@@ -5039,5 +5039,99 @@ declare(strict_types=1);
  * (`:responseType => HTTP_RESPONSE_CONTENT_TYPE_JSON`).
  *
  * KEINE SCHEMAAENDERUNG.
+ *
+ * ------------------------------------------------------------------
+ *
+ * 20.10.0 ist AP6 von P5a: DER RATENSCHUTZ BEKOMMT EIN GEDAECHTNIS
+ * (E-P5a-04 bis -07, E-P5a-43 bis -46; R37 (8)).
+ *
+ * WAS BIS HIERHER GALT. Eine Sperre dauerte fest 15 Minuten — die erste wie
+ * die hundertste. Wer geduldig ist, bekommt damit 10 Versuche je
+ * Viertelstunde, dauerhaft, ohne dass irgendetwas eskaliert. Und alle
+ * Fehlversuche der Installation zusammen wurden nirgends gezaehlt: Ein
+ * Angriff ueber tausend Namen sah aus wie tausend einzelne Vertipperinnen.
+ *
+ * WAS GILT — VIER STUECKE:
+ *
+ * 1. EINE SPERRLEITER. Je Merkmal eine Stufe 1 bis 4, Dauer 15/20/30/60 min,
+ *    Verfall nach 24 h ohne Fehlversuch. Einstellbar unter Betrieb ->
+ *    Servereinstellungen.
+ * 2. ZWEI SCHWELLEN STATT EINER. 10 Fehlversuche je Konto, 50 je Anschluss
+ *    (neuer Topf `login_ip`). Hinter einem Klinik-NAT teilen sich viele eine
+ *    Adresse; bei 10 sperrte die zehnte Vertipperin die uebrigen neunzehn aus.
+ * 3. EINE VERLANGSAMUNG STATT EINER GLOBALEN SPERRE. Ab 200/400/800/1600
+ *    Fehlversuchen je 15 min wartet jede FEHLGESCHLAGENE Anmeldung 1/2/4/8 s.
+ *    Wer das richtige Passwort hat, kommt durch. Eine globale Sperre waere
+ *    ein Schalter, den jeder von aussen umlegt.
+ * 4. EINE SAMMELMAIL bei der hoechsten Stufe, hoechstens eine je Stunde,
+ *    ueber die Warteschlange aus AP5.
+ *
+ * DAZU `sicherheit_ereignisse` — was WAR, nicht was IST. `rate_limits` haelt
+ * den Zustand; laeuft die Sperre ab und raeumt der Job die Zeile weg, ist
+ * nichts mehr da. Dieselbe Luecke, die `job_laeufe` in 20.8.0 fuer die
+ * Hintergrundjobs geschlossen hat.
+ *
+ * ---------------------------------------------------------------------------
+ * VIER ABWEICHUNGEN VOM KONZEPT, ALLE BENANNT
+ * ---------------------------------------------------------------------------
+ *
+ * (a) DIE ERSTE SPROSSE IST 15 MINUTEN, NICHT 10 (E-P5a-43). Das Konzept sagt
+ *     10/20/30/60 — und `login` sperrt heute fest 900 s, also 15. Mit 10 waere
+ *     der ERSTE Verstoss nach dem Update MILDER als davor. Ein
+ *     Sicherheitspaket, das eine Schranke senkt, ohne es zu sagen, ist die
+ *     Art Fehler, die niemandem auffaellt. Die Leiter ist einstellbar.
+ *
+ * (b) `reset` BEKOMMT KEINE LEITER, obwohl das Konzept ihn nennt. Er sperrt
+ *     heute 3600 s; jede Sprosse unterhalb der vierten waere SCHWAECHER.
+ *     Dazu: `reset_request.php` antwortet im gesperrten Fall wortgleich wie
+ *     im erlaubten — eine Leiter dort streckt ein Fenster, in dem jemand
+ *     fuenfmal klickt, fuenfmal dieselbe Zusage liest und keine Mail bekommt.
+ *
+ * (c) DER COUNTDOWN STEHT NICHT IN `forms.js` (E-P5a-45). Das Konzept nennt
+ *     „login.php, forms.js"; login.php LAEDT forms.js gar nicht, und jene
+ *     Datei ist Aenderungsverfolgung, Strg-Enter und Abbrechen-Rueckfrage.
+ *     Sie hier nachzutragen schaltete nebenbei eine beforeunload-Warnung auf
+ *     einer Seite frei, auf der jemand ein Passwort tippt. Der Countdown
+ *     steht im vorhandenen genoncten Block.
+ *
+ * (d) DIE SAMMELMAIL GEHT AN `mail_betriebsziele()`, nicht an eine eigene
+ *     Liste „alle Konten mit Rolle BetreiberIn". Seit E-P5a-40 ist das die
+ *     EINE Stelle, an der der Empfaengerkreis der Betriebspost steht (R83);
+ *     eine zweite Liste waere der Rueckfall in den Zustand, den R83
+ *     abgeschafft hat.
+ *
+ * ---------------------------------------------------------------------------
+ * DREI FEHLER, DIE OHNE MELDUNG DURCHGEGANGEN WAEREN
+ * ---------------------------------------------------------------------------
+ *
+ * 1. DER GESPERRTE HAETTE SICH DURCH KLOPFEN BEFREIT. `rate_misserfolg()`
+ *    setzte `gesperrt_bis = NULL`, sobald das Zaehlfenster abgelaufen war.
+ *    Folgenlos, solange bei ALLEN zehn Toepfen `sperre == fenster` galt — und
+ *    das galt. Mit einer Leiter bis 60 min bei 15 min Fenster haette ein
+ *    einziger Fehlversuch nach Fensterablauf die LAUFENDE Sperre geloescht.
+ *    Die Bedingung heisst jetzt „und keine laufende Sperre".
+ *
+ * 2. DIE STUFE WAERE NIE ZURUECKGEFALLEN. Der Verfall (`stufe_bis`) wurde nur
+ *    dort aufgefrischt, wo NICHT gesperrt wurde — also bei den ersten neun
+ *    Fehlversuchen. Jeder schob die Frist um 24 h vor, sodass sie beim
+ *    zehnten nie abgelaufen war: Ein Konto, das vor einem halben Jahr einmal
+ *    die vierte Sprosse erreicht hatte, bekam beim naechsten Tippfehler
+ *    sofort wieder 60 Minuten. Gefunden von `tools/ratenprobe/`.
+ *
+ * 3. EIN VARIABLENNAME. Die neue Schleife auf der Statusseite hiess `$sp` —
+ *    so wie der Speicherstand, den `status_erhebung()` dreihundert Zeilen
+ *    weiter unten braucht. Ergebnis: HTTP 500 auf Betrieb -> Status, aber nur,
+ *    wenn gerade etwas gesperrt war.
+ *
+ * ZWEI MIGRATIONEN: `2026_09_16_ratenschutz_stufen` (zwei Spalten auf
+ * `rate_limits`, dazu ein Index auf `gesperrt_bis`) und
+ * `2026_09_16_sicherheit_ereignisse`. NACH DEM DEPLOY MUSS EINE
+ * ADMINISTRATORIN BETRIEB -> UPDATES AUFRUFEN.
+ *
+ * DAS FENSTER DAZWISCHEN IST MITGEDACHT: Die Grundzaehlung nennt die neuen
+ * Spalten mit keinem Wort und laeuft unveraendert weiter; die Leiter steht in
+ * einem zweiten, eigen gefangenen Statement und tut in diesem Fenster nichts.
+ * Gesperrt wird dann mit der festen Dauer wie vor 20.10.0 — der Ratenschutz
+ * faellt NICHT aus, er ist nur wieder so streng wie vorher.
  */
-const WEB_VERSION = '20.9.1';
+const WEB_VERSION = '20.10.0';

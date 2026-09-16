@@ -27,6 +27,9 @@ beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
 | N11 | **Der Weg über die Reporting-API (`report-to`)** | Aus demselben Grund: `kopf_melde_url()` liefert ohne HTTPS bewusst nichts, also steht `report-to` lokal gar nicht in der Richtlinie. Gemessen ist deshalb nur der Weg über `report-uri` — der, den heute ohnehin jeder Browser nimmt. | Prüfpunkt **P15** auf einer echten HTTPS-Installation. Dass der Endpunkt **beide** Formate versteht, ist einzeln geprüft: `report-uri`-Rumpf (`{"csp-report":{…}}`) und Reporting-API-Liste (`[{"type":"csp-violation",…}]`) — beide **204**, beide als Zeile gespeichert, und in beiden Fällen ist der **Abfrageteil der Adresse weg** (`suche.php?q=geheim` → `suche.php`). |
 | N12 | **Die zwei Wochen Report-Only** | Sie sind Betrieb, keine Abnahme — und sie messen genau das, was ein Prüflauf nicht sieht: was **Nutzerinnen** auf Wegen tun, die der Bilderlauf nicht geht. | Prüfpunkt **P16**; dort steht auch, woran man erkennt, dass man zu früh scharf geschaltet hat. |
 | N13 | **Die Anwendung hinter einem echten Reverse Proxy** | Der Container hat keinen. | `netz_in_bereich()` ist gegen **18 Fälle** geprüft, alle richtig: IPv4 und IPv6, Einzeladresse und CIDR, die Ränder eines /24, `0.0.0.0/0`, ein IPv4 gegen einen IPv6-Bereich, eine unlesbare Adresse und zwei unmögliche Präfixlängen (`/33`, `/-1`) — die letzten vier müssen **false** ergeben und tun es. Der Echtlauf ist Prüfpunkt **P17**. |
+| N19 | **Ein echter Angriff** | 200 Fehlversuche in einer Schleife sind keine 200 Anfragen aus 50 Netzen. Der Container hat keine Freigabe nach draußen und keinen zweiten Rechner. | Gemessen ist, was die Bibliothek bei gegebenen Zählerständen TUT. Ob 8 s Verlangsamung einen echten Angreifer aufhalten, sagt nur ein echter Angriff — die Rechnung dazu (14 gleichzeitig Wartende bei 1600/15 min) steht im Kopf von `ratelimit_lib.php` und ist der Grund, aus dem Gesperrte nicht verlangsamt werden. Prüfpunkt **P22**. |
+| N20 | **Gleichzeitigkeit in der Leiter** | Zwei Fehlversuche in derselben Millisekunde sind nicht nachgestellt. | Die Leiter ist deshalb als **ein** Statement gebaut (lesen-rechnen-schreiben würde bei zwei gleichzeitigen Klopfern dieselbe Stufe zweimal schreiben — die Leiter bliebe stehen, wo zwei Leute gleichzeitig klopfen, also genau im Angriffsfall). Belegt ist das hier nicht. |
+| N21 | **Die 24 Stunden in Echtzeit** | Die Probe datiert `stufe_bis` zurück. | Gemessen ist damit die REGEL, nicht die Uhr. Dass `stufe_bis` bei jedem Fehlversuch richtig fortgeschrieben wird, ist einzeln geprüft (Abschnitt 4 der Ratenprobe, beide Richtungen). |
 | N18 | **`api/adminbackup_freigabe.php` mit einem echten freigegebenen Backup** | Dafür müsste eine Administration ein Konto-Backup freigeben und eine zweite Person es abholen; der Prüfstand hat keine Freigabe liegen. | Der Fehlerzweig läuft über `json_out()` und ist damit mitgeprüft; der Rohausgabe-Zweig (`json_roh_out($klar)`) ist **gelesen, nicht gelaufen**. Prüfpunkt **P21**. |
 | N14 | **Ob eine Mail ANKOMMT** | Die Gegenstelle von `tools/mailprobe/` nimmt an und wirft weg; der Container hat keinen Mailserver und keine Freigabe nach draußen. | Gemessen ist der Weg BIS zum „250 angenommen" — Katalog, Rahmen, Warteschlange, Leiter, Frist, Endzustände (41 Prüfungen, 0 Befunde). Ob ein Empfänger die Nachricht im Postfach findet, sagt nur ein Postfach: Prüfpunkt **P18**. |
 | N15 | **Das Aussehen einer Mail in einem Mailprogramm** | Dasselbe. Der Rahmen ist auf seine **Bestandteile** geprüft (Anrede, Kern, Kontaktzeile, Grußformel mit `instanz_name()`), nicht auf seine Wirkung. | Prüfpunkt **P18** — eine echte Einladung und eine echte Reset-Mail ansehen. |
@@ -181,6 +184,42 @@ täte. Deshalb steht dort auch die `Off`-Zeile.
 
 ---
 
+### 1g. Nach AP6 (Web 20.10.0), im selben Container
+
+| Mittel | Aufruf | Ergebnis |
+|---|---|---|
+| **Ratenprobe** (neu) | `php tools/ratenprobe/probe.php` | **49 Prüfungen, 0 Befunde** über 11 Abschnitte |
+| Kopplungsprobe | `php tools/kopplungsprobe/probe.php` | **76 Erwartungen, 0 nicht erfüllt** |
+| Wartungsprobe | `php tools/wartungsprobe/probe.php` | **67 Erwartungen, 0 nicht erfüllt** |
+| Mailprobe | `php tools/mailprobe/probe.php` | **41 Prüfungen, 0 Befunde** |
+| Jobprobe | `php tools/jobprobe/probe.php` | **35 Erwartungen, 0 nicht erfüllt** |
+| Migrationsregister | `php tools/migrationsregister/pruefen.php` | **0 Befunde**; 51/51 Kennungen, 34 Tabellen, 217 Spalten |
+| Wortliste | `python3 tools/wortliste/wortliste.py` | **0/0/0** |
+| Vollständigkeit | `… --hoechstens 372` | **372 — auf der Schwelle.** 367 + 5 Pfeile „Betrieb → Status" in neuen sichtbaren Texten |
+| CSP-Probe, Sitzungshärtung, Installweiche | je eigener Lauf | **0 / 0 / 0** |
+| Kontraste | `python3 tools/screenshots/kontrast.py` | **22 Paare, 0 verfehlt** |
+| PHP-Syntax | `php -l` je Datei | **482 Dateien, 0 Fehler** |
+
+**Die Zahlen der Ratenprobe im Einzelnen** — sie sind die Abnahme von AP6:
+
+| Was | Gemessen |
+|---|---|
+| Leiter | 10 Fehlversuche → Stufe 1, **900 s**; weitere → 2 (1200 s), 3 (1800 s), 4 (3600 s); darüber bleibt es bei 4 |
+| Verfall | `stufe_bis` abgelaufen → nächste Sperre wieder **Stufe 1, 900 s**. Gegenprobe: laufende Frist wird von einem Fehlversuch auf volle 24 h verlängert, Stufe bleibt |
+| Zwei Schwellen | 49 je Adresse sperren nicht, der 50. sperrt; 9 je Konto sperren nicht, der 10. sperrt |
+| Verlangsamung | 200/400/800/1600 → Stufe 1/2/3/4; gemessen **1,00 s** und **8,0 s**; abgelaufenes Fenster → Stufe 0 |
+| Gleiche Antwortzeit | **20,5 ms gegen 20,2 ms, Differenz 0,3 ms** über 100 Messungen |
+| Sammelmail | erster Anlass → 1 Zeile; zwei weitere in derselben Stunde → **unverändert 1**; nach einer Stunde → 2; abgeschaltet → unverändert |
+| Aufheben | `rate_sperre_aufheben()` löscht und protokolliert; `rate_konto_freigeben()` räumt `login` **und** `salt`, auch bei abweichender Schreibweise |
+| Leiter je Topf | genau `login`, `login_ip`, `salt`; `reset` und die Kopplungstöpfe ausdrücklich nicht; `global` sperrt nie |
+
+**Was die Zahlen benennen:** Die 49 sind Aussagen über die **Bibliothek**,
+nicht über den Weg durch `login.php` — den misst der Browser (Abschnitt 2).
+Und die Uhr ist gestellt: „Nach 24 Stunden fällt die Stufe" ist gemessen,
+indem `stufe_bis` zurückdatiert wurde, nicht indem gewartet wurde.
+
+---
+
 ## 2. Was im Browser geprüft wurde
 
 **Nach AP1: nichts, und das ist richtig.** AP1 ändert an der Oberfläche keine
@@ -244,6 +283,28 @@ BetreiberIn):
 > **5 abgewiesen, 2 angenommen**, jede mit der zutreffenden Meldung.
 
 ---
+
+---
+
+**Nach AP6**, gegen die lokale Installation (Chromium 141):
+
+| Was | Ergebnis |
+|---|---|
+| Betrieb → Servereinstellungen, Karte **„Ratenschutz"** | da, mit Plakette „ruhig" bzw. „Verlangsamung Stufe N"; **0 Konsolenfehler** |
+| Sechs Speicherversuche über das Formular | gültig **angenommen**; Leiter rückwärts, drei statt vier Werte, Konto = 1, Buchstaben — **vier abgewiesen**, jede mit der zutreffenden Meldung |
+| Gegenprobe „nichts halb gespeichert" | gültige Leiter + ungültige Kontozahl → Leiter **unverändert** (25/30/40/80 vorher wie nachher) |
+| Betrieb → Status, Karte Server | Zeile **„Verlangsamung"** orange („Stufe 2 … 640 Fehlversuche in den letzten 15 Minuten") und **„Gesperrt"** orange („1 Anschluss und 1 Name — höchste Stufe 4") |
+| Anmeldeseite bei laufender Verlangsamung (GET) | „Die Anmeldung antwortet derzeit verzögert, etwa 2 Sekunden. Das ist eine Schutzmaßnahme; dein Passwort wird ganz normal geprüft." |
+| Anmeldung mit gesperrtem Namen | „Zu viele Anmeldeversuche für diesen Namen. Wieder ab 12:29 Uhr. „Passwort vergessen?" geht weiterhin." · Formular **gesperrt** · Knopf „Anmelden (37 Minuten)" · Zustandszeile „Noch 37 Minuten." |
+| **Gegenprobe: erfundene Adresse, ebenfalls gesperrt** | **wortgleiche** Meldung (nur die Uhrzeit unterscheidet sich) — keine Kontoauskunft |
+| Countdown über 5 s | „Noch 43 Sekunden." → „Noch 38 Sekunden." — **er tickt** |
+| Nach Ablauf der Sperre (52 s gewartet) | „Du kannst es wieder versuchen.", Formular **entsperrt** |
+| Konsolenfehler auf allen drei Seiten | **0** |
+
+> **Was der Browser hier NICHT belegt:** dass die Verlangsamung die Antwort
+> tatsächlich aufhält. Die Seite sagt es nur an. Gemessen ist es in der
+> Ratenprobe (1,00 s und 8,0 s) — und zwar in einem **eigenen Prozess**, weil
+> `rate_verlangsamung()` sich ihre Antwort je Anfrage merkt.
 
 ## 3. Die Prüfliste
 
@@ -584,6 +645,57 @@ entschlüsselten Inhalt eines fremden Kontos in einem Zwischenspeicher.
 
 ---
 
+### P22 — Der Ratenschutz auf einer Installation mit echtem Verkehr
+
+**Wofür:** N19 — die Rechnung zur Prozessbelegung ist gerechnet, nicht
+gemessen.
+
+**Weg:** Nach dem Ausrollen eine Woche laufen lassen. Dann Betrieb → Status
+ansehen und Betrieb → Servereinstellungen, Karte „Ratenschutz".
+
+**Erwartet:**
+
+- Die Zeile **„Gesperrt"** steht meistens gar nicht da. Eine Sperre ist ein
+  Ereignis, kein Zustand.
+- Steht sie da, ist die höchste Stufe **1**. Stufe 4 heißt: Jemand hat
+  viermal an einem Tag zehn Fehlversuche gemacht — das ist kein Vertippen.
+- Die Zeile **„Verlangsamung"** steht **nie** da. 200 Fehlversuche je 15
+  Minuten erreicht ein normaler Dienstbetrieb nicht.
+
+**Woran ein Scheitern zu erkennen ist:**
+
+- Steht „Verlangsamung" im Alltag da, ist die Schwelle für diese Installation
+  zu niedrig — **nicht** die Bremse abschalten, sondern die Schwelle
+  hochsetzen und *nachsehen, woher die Fehlversuche kommen*.
+- Melden sich Kolleginnen, die „nichts falsch gemacht" haben und trotzdem
+  gesperrt sind, greift die **Adress**-Schwelle (50 je 15 min). Das ist der
+  Klinik-NAT-Fall: Zahl erhöhen.
+- Hält eine Sperre **länger als 60 Minuten**, stimmt etwas nicht — die Leiter
+  endet bei der letzten Sprosse. Dann steht in `rate_limits` eine Zeile mit
+  einem `gesperrt_bis`, das niemand gesetzt hat.
+
+---
+
+### P23 — Die Sammelmail kommt einmal, nicht hundertmal
+
+**Wofür:** Die Stundenregel ist lokal gemessen; auf einer Installation unter
+echtem Beschuss läuft sie nebenläufig.
+
+**Weg:** Betriebsadresse eintragen (Verwaltung → Installation), dann von einem
+zweiten Gerät aus zehn Fehlversuche mit demselben Namen machen, viermal
+hintereinander (dazwischen die Sperre ablaufen lassen).
+
+**Erwartet:** Genau **eine** Mail, Betreff „Auffällige Anmeldeversuche".
+Weitere Anlässe in derselben Stunde erzeugen keine zweite.
+
+**Woran ein Scheitern zu erkennen ist:** Zwei oder mehr Mails in einer Stunde
+— dann greift die Marke nicht (sie steht in `app_state` unter
+`ratenschutz_mail_last`). Gar keine Mail: erst prüfen, ob unter Verwaltung →
+Installation eine Betreiberadresse steht und ob der Schalter „Bei der höchsten
+Stufe melden" an ist; danach Betrieb → Status, Zeile „Warteschlange".
+
+---
+
 ## 4. Zuarbeiten, ohne die Punkte offen bleiben
 
 Aus dem Rahmenplan, Abschnitt 6 — hier nur, was P1 bis P8 blockiert:
@@ -600,6 +712,22 @@ Aus dem Rahmenplan, Abschnitt 6 — hier nur, was P1 bis P8 blockiert:
 ---
 
 ## 5. Grenzen der benutzten Prüfmittel
+
+### 5c. `tools/ratenprobe/` (seit AP6)
+
+- **Sie misst die Bibliothek, nicht den Weg durch `login.php`.** Ob die drei
+  Zählungen an der richtigen Stelle stehen, sagt nur der Browser.
+- **Die Uhr ist gestellt.** `stufe_bis` wird zurückdatiert statt gewartet.
+  Gemessen ist damit die Regel, nicht der Zeitablauf.
+- **Sie leert den Topf `global` vollständig**, nicht nur eigene Zeilen — er
+  hat nur eine. Auf einer Installation unter Beobachtung geht damit der
+  laufende Zählerstand der Verlangsamung verloren.
+- **Keine Gleichzeitigkeit.** Siehe N20.
+- **Eine Falle, die sie sich selbst gestellt hat:** `rate_verlangsamung()`
+  merkt sich ihre Antwort je Anfrage — im Betrieb richtig. Der erste Lauf
+  meldete deshalb „8,00 s" für Stufe 1, weil der Merker noch die Stufe 4 aus
+  der Schleife darüber trug. Die Zeitmessung läuft seither in einem eigenen
+  PHP-Prozess.
 
 ### 5b. `tools/sitzungshaertung/` (seit AP4a)
 

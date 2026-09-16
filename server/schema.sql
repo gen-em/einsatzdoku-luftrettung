@@ -515,13 +515,50 @@ CREATE TABLE deleted_refs (
 -- Aufraeumjob entsorgt abgelaufene Zeilen.
 CREATE TABLE rate_limits (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  topf          VARCHAR(32)  NOT NULL,          -- login | salt | reset | pair
-  merkmal       VARCHAR(190) NOT NULL,          -- 'ip:<adresse>' oder 'id:<kennung>'
+  -- Die Toepfe stehen in RATE_GRENZEN (ratelimit_lib.php) und nirgends sonst.
+  -- Hier stand bis Web 20.10.0 eine Aufzaehlung von vieren; es waren laengst
+  -- zehn, und niemandem ist es aufgefallen. Eine Liste, die sich fuer
+  -- vollstaendig ausgibt und es nicht ist, ist schlechter als keine.
+  topf          VARCHAR(32)  NOT NULL,
+  merkmal       VARCHAR(190) NOT NULL,          -- 'ip:<adresse>', 'id:<kennung>' oder 'alle'
   versuche      INT UNSIGNED NOT NULL DEFAULT 0,
   fenster_start DATETIME     NOT NULL,
   gesperrt_bis  DATETIME     NULL,
+  -- Die Sperrleiter (Web 20.10.0, P5a/AP6, E-P5a-43). 0 = nie gesperrt,
+  -- 1..4 = 10/20/30/60 min. `stufe_bis` ist der Verfall der STUFE (letzter
+  -- Fehlversuch + 24 h), nicht der der Sperre — danach gilt die Stufe als 0,
+  -- auch wenn die Zeile noch dasteht.
+  stufe         TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  stufe_bis     DATETIME     NULL,
   UNIQUE KEY uq_topf_merkmal (topf, merkmal),
-  INDEX idx_fenster (fenster_start)
+  INDEX idx_fenster (fenster_start),
+  INDEX idx_gesperrt (gesperrt_bis)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- SPERREREIGNISSE: was war, nicht was IST (Web 20.10.0, P5a/AP6, E-P5a-46).
+--
+-- `rate_limits` haelt den Zustand; laeuft die Sperre ab und raeumt der Job die
+-- Zeile weg, ist nichts mehr da. Dieselbe Luecke, die `job_laeufe` fuer die
+-- Hintergrundjobs geschlossen hat: Man sieht, was jetzt ansteht, nie, dass es
+-- wiederkehrt.
+--
+-- EIN EINTRAG JE SPERRE, nicht je Fehlversuch. Und `merkmal` steht im
+-- KLARTEXT — mit IP- und E-Mail-Adressen. Ohne sie waere die Liste wertlos;
+-- die Folge ist, dass diese Tabelle in jeder Komplettsicherung mitfaehrt
+-- (`komp_tabellen()` hat keine Ausnahmeliste). Der Aufraeumjob loescht nach
+-- 30 Tagen, fest (E-P5a-09).
+CREATE TABLE sicherheit_ereignisse (
+  id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  art       VARCHAR(24)  NOT NULL,              -- sperre | verlangsamung | aufgehoben
+  topf      VARCHAR(32)  NULL,
+  merkmal   VARCHAR(190) NULL,
+  stufe     TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  versuche  INT UNSIGNED NULL,
+  zeitpunkt DATETIME     NOT NULL,
+  bis       DATETIME     NULL,
+  wer       VARCHAR(190) NULL,                  -- wer eine Sperre aufgehoben hat
+  INDEX idx_zeitpunkt (zeitpunkt),
+  INDEX idx_art_zeit (art, zeitpunkt)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- SICHERUNGSZIELE: wohin die Sicherungen geschoben werden (S2/AP7, E-S2-22).
@@ -821,4 +858,8 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- job_laeufe steht oben schon im Schema (Web 20.8.0, P5a/AP5).
   ('2026_09_16_job_laeufe', 'skipped'),
   -- mail_warteschlange steht oben schon im Schema (Web 20.8.0, P5a/AP5).
-  ('2026_09_16_mail_warteschlange', 'skipped');
+  ('2026_09_16_mail_warteschlange', 'skipped'),
+  -- rate_limits.stufe/stufe_bis stehen oben schon im Schema (Web 20.10.0, P5a/AP6).
+  ('2026_09_16_ratenschutz_stufen', 'skipped'),
+  -- sicherheit_ereignisse steht oben schon im Schema (Web 20.10.0, P5a/AP6).
+  ('2026_09_16_sicherheit_ereignisse', 'skipped');

@@ -298,6 +298,17 @@ function mail_katalog(): array
             'text' => fn(array $d): string => mail_rahmen('Hallo,', $d['kern']),
         ],
 
+        'sicherheit_sammel' => [
+            'art' => 'betrieb', 'frist' => 7200, 'pflicht' => ['kern'],
+            /* FRIST ZWEI STUNDEN. Eine Sicherheitsmeldung, die drei Tage
+             * spaeter ankommt, weil der Mailserver so lange stillstand, ist
+             * keine Meldung mehr, sondern eine Verwirrung — die Lage, ueber
+             * die sie berichtet, ist laengst vorbei. Zwei Stunden decken die
+             * ersten drei Sprossen der Wiederholungsleiter ab. */
+            'betreff' => fn(array $d): string => 'Auffällige Anmeldeversuche — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,', $d['kern']),
+        ],
+
         'testmail' => [
             'art' => 'betrieb', 'frist' => 3600, 'pflicht' => [],
             /* DIE TESTMAIL BEKOMMT DENSELBEN RAHMEN wie jede andere, und das

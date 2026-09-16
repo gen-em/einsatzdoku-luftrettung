@@ -339,6 +339,53 @@ function status_erhebung(): array
         . ' · gespeichert wird UTC',
         'neutral', PHP_SAPI);
 
+    /* ---- RATENSCHUTZ (P5a/AP6, E-P5a-05) --------------------------------
+     *
+     * ZWEI ZEILEN, NICHT EINE KARTE. Die vollstaendige Sicherheitssicht —
+     * alle Sperren mit Knopf „aufheben", die Ereignisse der letzten 30 Tage,
+     * die Verlangsamungsphasen — ist eine UNTERSEITE von Status und wartet
+     * auf Mockup M-P5a-01 (E-P5a-08, AP8). Wer sie jetzt hier baut, baut sie
+     * zweimal.
+     *
+     * Was NICHT warten kann, ist die Verlangsamung: Sie aendert das Verhalten
+     * der Anmeldung fuer alle, und eine Betreiberin, die nicht weiss, dass
+     * sie laeuft, sucht den Fehler am Server. E-P5a-05 nennt sie
+     * ausdruecklich „orange". */
+    require_once __DIR__ . '/ratelimit_lib.php';
+    $vBremse = rate_verlangsamung(true);
+    if ($vBremse['stufe'] > 0) {
+        $server[] = status_z('Verlangsamung',
+            'Stufe ' . $vBremse['stufe'] . ' — jede fehlgeschlagene Anmeldung '
+            . 'wartet ' . rtrim(rtrim(number_format($vBremse['sekunden'], 1, ',', ''), '0'), ',')
+            . ' Sekunden. Gezählt sind ' . $vBremse['versuche'] . ' Fehlversuche in den '
+            . 'letzten 15 Minuten. Wer das richtige Passwort hat, kommt durch',
+            'orange', 'aktiv', 'betrieb_server.php#k-ratenschutz');
+    }
+
+    $rsSperren = rate_sperren_aktiv(200);
+    if ($rsSperren !== []) {
+        /* `$rsZeile` und nicht `$sp` — jene Variable traegt in dieser Funktion
+         * seit S8 den SPEICHERSTAND, und die Schleife hat sie beim ersten
+         * Versuch ueberschrieben. Die Folge war kein Syntaxfehler, sondern
+         * ein 500er dreihundert Zeilen weiter unten
+         * (`speicher_ton(): Argument #2 must be of type array, null given`) —
+         * und zwar NUR, wenn gerade etwas gesperrt war. */
+        $konten = 0; $adressen = 0; $hoechste = 0;
+        foreach ($rsSperren as $rsZeile) {
+            if (str_starts_with($rsZeile['merkmal'], 'id:')) { $konten++; } else { $adressen++; }
+            $hoechste = max($hoechste, $rsZeile['stufe']);
+        }
+        $teile = [];
+        if ($adressen > 0) { $teile[] = $adressen . ' Anschluss' . ($adressen === 1 ? '' : 'e'); }
+        if ($konten > 0)   { $teile[] = $konten . ' Name' . ($konten === 1 ? '' : 'n'); }
+        $server[] = status_z('Gesperrt',
+            implode(' und ', $teile) . ' — höchste Stufe ' . $hoechste
+            . '. Eine Sperre ist ein Ereignis, kein Fehler: Sie läuft von selbst ab',
+            $hoechste >= rate_stufe_hoechste() ? 'orange' : 'blau',
+            count($rsSperren) . ($hoechste >= rate_stufe_hoechste() ? ' · Stufe ' . $hoechste : ''),
+            'betrieb_server.php#k-ratenschutz');
+    }
+
     /* ---- E-Mail --------------------------------------------------------- */
     $mail = [];
     $mail[] = status_z('SMTP',

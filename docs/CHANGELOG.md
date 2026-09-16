@@ -14,6 +14,162 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.10.0] — 2026-09-16
+
+**P5a/AP6 — der Ratenschutz bekommt ein Gedächtnis.**
+
+### Hinzugefügt — eine Sperre, die beim zweiten Mal länger dauert
+
+**Was galt.** Eine Sperre dauerte fest 15 Minuten — die erste wie die
+hundertste. Wer geduldig ist, bekommt damit **10 Versuche je Viertelstunde,
+dauerhaft**, ohne dass irgendetwas eskaliert.
+
+**Was gilt.** Je Merkmal eine Stufe von 1 bis 4:
+
+| Stufe | Sperre |
+|---|---|
+| 1 | 15 Minuten |
+| 2 | 20 Minuten |
+| 3 | 30 Minuten |
+| 4 | 60 Minuten |
+
+Nach **24 Stunden ohne Fehlversuch** fängt die Leiter wieder von vorn an. Alle
+vier Dauern sind unter **Betrieb → Servereinstellungen** einstellbar.
+
+> **Die erste Sprosse ist 15 Minuten und nicht 10**, obwohl das Konzept
+> 10/20/30/60 nennt. Die Anmeldung sperrt heute fest 900 s — mit 10 wäre der
+> **erste** Verstoß nach dem Update *milder* als davor. Ein Sicherheitspaket,
+> das eine Schranke senkt, ohne es zu sagen, ist genau die Art Fehler, die
+> niemandem auffällt. Wer 10 will, trägt 10 ein.
+
+### Hinzugefügt — zwei Schwellen statt einer
+
+| | bis zur Sperre | warum |
+|---|---|---|
+| je **Konto** | 10 je 15 min | Ein Mensch vertippt sich nicht zehnmal |
+| je **Anschluss** | 50 je 15 min | Hinter einem Klinik-NAT teilen sich zwanzig Leute eine Adresse |
+
+Bis Web 20.9.1 galten für beide dieselben 10 — die zehnte Vertipperin sperrte
+damit die übrigen neunzehn aus. Eine **gelungene Anmeldung leert beide
+Zähler**: Sie ist der Beweis, dass der Anschluss kein Angreifer ist.
+
+### Hinzugefügt — Verlangsamung statt globaler Sperre
+
+Alle Fehlversuche der Installation zusammen bilden ein Fenster. Ab
+**200 / 400 / 800 / 1600** je 15 Minuten wartet **jede fehlgeschlagene**
+Anmeldung 1 / 2 / 4 / 8 Sekunden. Wer das richtige Passwort hat, kommt ohne
+Verzögerung durch.
+
+**Eine globale Sperre wäre ein Schalter, den jeder von außen umlegt.** Eine
+Verlangsamung ist es nicht.
+
+**Zwei Stellen, an denen man sie falsch einbaut** — beide sind im Code
+ausgeschrieben:
+
+1. **Nicht als `usleep()` vor der Antwort**, sondern als erhöhte Mindestdauer
+   *durch* `rate_gleiche_dauer()`. Jene stellt die Antwortzeit des
+   Fehlerzweigs auf einen festen Wert; ein zusätzliches Warten daneben
+   zerstörte genau die Gleichheit, die sie herstellt.
+2. **Wer schon gesperrt ist, wird nicht verlangsamt.** Das ist Selbstschutz:
+   Jede wartende Anfrage hält einen PHP-Arbeitsprozess. Bei 1600 Fehlversuchen
+   je 15 Minuten und 8 s Wartezeit warteten dauerhaft **rund 14 Anfragen
+   gleichzeitig** — auf einem Webspace mit zehn Arbeitern wäre die Bremse die
+   Überlastung, die sie verhindern soll. Gesperrte Anfragen kosten nichts;
+   damit hängt die Zahl der Wartenden an der **Sperrrate** und nicht an der
+   Flutrate.
+
+Die Anmeldeseite sagt es an, ruhig und ohne das Wort Angriff: *„Die Anmeldung
+antwortet derzeit verzögert, etwa 2 Sekunden. Das ist eine Schutzmaßnahme;
+dein Passwort wird ganz normal geprüft."*
+
+### Hinzugefügt — Sperrhinweis mit Countdown
+
+Nach einer Sperre steht auf der Anmeldeseite, **welches** Merkmal greift
+(„für diesen Namen" oder „von diesem Anschluss"), bis wann, und darunter läuft
+ein Countdown. Das Formular bleibt gesperrt, **„Passwort vergessen?" bleibt
+anklickbar**.
+
+Der Wortlaut ist für eine erfundene Adresse **identisch** — gezählt wird am
+*eingetippten* Namen und nicht an der Kontozeile, deshalb gibt die Sperre
+keine Kontoauskunft. Nachgemessen.
+
+### Hinzugefügt — `sicherheit_ereignisse` und eine Sammelmail
+
+Die neue Tabelle hält, was **war**, nicht was **ist**: `rate_limits` verliert
+seinen Inhalt, sobald die Sperre abläuft und der Aufräumjob die Zeile
+wegnimmt. Dieselbe Lücke, die `job_laeufe` in Web 20.8.0 für die
+Hintergrundjobs geschlossen hat. **Ein Eintrag je Sperre**, nicht je
+Fehlversuch — ein Protokoll, das jeden Tippfehler verbucht, wird nicht
+gelesen. 30 Tage, fest (E-P5a-09).
+
+Erreicht eine Sperre die höchste Sprosse oder die Verlangsamung ihre vierte
+Stufe, geht eine **Sammelmeldung** an die Betriebsadresse — höchstens eine je
+Stunde, über die Warteschlange aus Web 20.9.0. Abschaltbar.
+
+> **Die Marke steht vor dem Versand**, anders als bei der
+> Sicherungserinnerung. Dort ist die doppelte Mail der teurere Fehler; hier
+> wäre es umgekehrt — und trotzdem steht sie vorn, **weil es die Warteschlange
+> gibt**: Ein gescheiterter Versuch ist nicht verloren, sondern eingereiht.
+> Damit gibt es keinen Grund mehr, unter Beschuss eine Mailflut zu riskieren.
+
+### Behoben — der Gesperrte hätte sich durch Klopfen befreit
+
+`rate_misserfolg()` setzte `gesperrt_bis = NULL`, sobald das **Zählfenster**
+abgelaufen war. Das war folgenlos, solange bei allen zehn Töpfen
+`sperre == fenster` galt — und das galt.
+
+**Mit einer Leiter bis 60 Minuten bei 15 Minuten Fenster gilt es nicht mehr.**
+Ein einziger Fehlversuch nach Fensterablauf hätte die **laufende** Sperre
+gelöscht: kein Fehler, keine Meldung, nichts wird rot. Die Bedingung heißt
+jetzt „und keine laufende Sperre". Nebenbei bekam auch das Sperren selbst
+diese Bedingung — sonst verlängerte jeder weitere Fehlversuch die Sperre, so
+lange jemand dagegen klopft.
+
+### Behoben — die Stufe wäre nie zurückgefallen
+
+Der Verfall (`stufe_bis`) wurde nur in dem Zweig aufgefrischt, in dem *nicht*
+gesperrt wurde — also bei den ersten neun Fehlversuchen. Jeder von ihnen schob
+die Frist um 24 Stunden vor, sodass sie beim zehnten **nie** abgelaufen war.
+Ein Konto, das vor einem halben Jahr einmal die vierte Sprosse erreicht hatte,
+bekam beim nächsten Tippfehler sofort wieder 60 Minuten.
+
+Gefunden von `tools/ratenprobe/`. **Im Betrieb wäre es niemandem
+aufgefallen** — nichts bricht, und die Sperre „funktioniert" ja.
+
+### Behoben — ein gesperrtes Konto kam durch den Passwort-Reset nicht zurück
+
+`pw_handling.php` rief bis Web 20.9.1 **keine einzige** `rate_*`-Funktion. Wer
+sein Passwort über den Link zurücksetzte — also gerade nachgewiesen hatte,
+dass ihm das Postfach gehört —, blieb an der Anmeldung gesperrt. Mit der
+Leiter wäre daraus eine Stunde geworden, und die **Stufe** stünde danach noch
+24 Stunden.
+
+Ein gesetztes Passwort räumt jetzt `login` und `salt` dieses Kontos — **nur
+das Konto, nicht die Adresse**: Wer ein Postfach übernommen hat, soll damit
+nicht die Sperre einer ganzen Klinik aufheben.
+
+### Hinzugefügt — `tools/ratenprobe/`
+
+**49 Prüfungen, 0 Befunde.** Sie greift die Bibliothek unmittelbar an und
+datiert `stufe_bis` zurück, statt 24 Stunden zu warten.
+
+Das Konzept nannte als Abnahme einen „Prüfkonten-Lauf (`tools/pruefkonten/`)".
+**Jenes Werkzeug kann das nicht** — es legt 300 Konten an und misst die
+NutzerInnen-Liste.
+
+### Nebenbei
+
+- **`tools/wartungsprobe/` hängt an einer Zeichenkette.** Sie sucht per
+  `strpos` nach `rate_erfolg('login'` in `login.php`. Der Aufruf steht
+  unverändert da; wer ihn je umbenennt oder in einen Helfer zieht, bricht die
+  Probe still. Nachgemessen: **67 Erwartungen, 0 nicht erfüllt.**
+- **Die Beschreibung des Aufräumjobs** (sichtbarer Text auf Betrieb →
+  Hintergrundjobs) hinkte drei Pakete hinterher — CSP-Berichte,
+  Mail-Warteschlange und Job-Verlauf standen nicht darin. Jetzt vollständig,
+  mit den Sperrereignissen als zwölftem Schritt.
+- **`rate_limits.topf`** trug im Schema den Kommentar
+  `-- login | salt | reset | pair`. Es waren längst zehn Töpfe.
+
 ## [Web 20.9.1] — 2026-09-16
 
 **P5a/AP4a — zwei Sicherheitszeilen, die an den falschen Stellen standen.**
