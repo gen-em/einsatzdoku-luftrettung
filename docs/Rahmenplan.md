@@ -1716,11 +1716,11 @@ Erst ab Schritt 5 synchronisiert die Kette.
 
 | # | Schritt | Wo | fertig? |
 |---|---|---|---|
-| 1 | Subdomain `staging.nadoku.gen-em.org` mit **eigenem Verzeichnis** anlegen; HTTPS über den Hoster (Let's Encrypt) | Hoster | ☐ |
+| 1 | Subdomain `staging.nadoku.gen-em.org` mit **eigenem Verzeichnis** anlegen; HTTPS über den Hoster (Let's Encrypt) | Hoster | ☑ *16.09.2026 — gemessen: HTTP 200, Plesk-Standardseite* |
 | 2 | **Leere** Datenbank samt eigenem DB-Nutzer anlegen. `install.php` spielt `schema.sql` selbst ein — die Datenbank legt es **nicht** an | Hoster | ☐ |
-| 3 | FTPS-Konto anlegen, das **nur** das Staging-Verzeichnis sieht | Hoster | ☐ |
-| 4 | Umgebung **`staging`** anlegen, darin die drei **Environment secrets** `FTP_SERVER` (bloßer Hostname — kein `ftps://`, kein Pfad, kein `:21`), `FTP_USERNAME`, `FTP_PASSWORD`; dazu die **Environment variable** `FTP_ZIELPFAD` (Verzeichnis der Subdomain; `/`, wenn das FTPS-Konto darauf eingesperrt ist — siehe Kasten unten) | GitHub | ☐ |
-| 5 | Push auf `main` — **ab hier synchronisiert die Kette** | — | ☐ |
+| 3 | FTPS-Konto anlegen, das **nur** das Staging-Verzeichnis sieht — das ist die Sicherung für `FTP_ZIELPFAD = /` | Hoster | ☑ *16.09.2026 — vom Auftraggeber bestätigt: eingesperrt* |
+| 4 | Umgebung **`staging`** anlegen, darin die drei **Environment secrets** `FTP_SERVER` (bloßer Hostname — kein `ftps://`, kein Pfad, kein `:21`), `FTP_USERNAME`, `FTP_PASSWORD`; dazu die **Environment variable** `FTP_ZIELPFAD` (Verzeichnis der Subdomain; `/`, wenn das FTPS-Konto darauf eingesperrt ist — siehe Kasten unten) | GitHub | ☑ *16.09.2026 — dazu `STAGING_URL`, `STAGING_KONTO`, `STAGING_PASS`; Umgebung `produktion` ebenfalls angelegt* |
+| 5 | Push auf `main` — **ab hier synchronisiert die Kette**. Voraussetzung ist der Merge von **PR #49** (`claude/kette-auf-main`): Solange `deploy.yml` auf `main` steht, geht ein Push dorthin nicht auf Staging, sondern auf **Produktiv** | — | ☐ |
 | 6 | `https://staging.nadoku.gen-em.org/install.php` im Browser: schreibt `config.php`, legt die BetreiberIn an, setzt `install.lock`. **Eigener Serverschlüssel und eigener Server-Anteil — nie die von Produktiv** | Browser | ☐ |
 | 7 | In `config.php` nachtragen: `smtp` auf `staging@gen-em.org`, dazu `'mail' => ['betreff_praefix' => '[Staging]']` (E-PP-09) | FTP | ☐ |
 | 8 | Demo-Konto, Referenzdatensatz und Messstand-Konto einspielen (`tools/referenzdatensatz/einspielen/`, Reihenfolge in der dortigen `LIESMICH.md` — `demo_kennzeichnen.php` läuft **vor** dem ersten Anmelden) | Werkzeuge | ☐ |
