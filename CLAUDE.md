@@ -60,19 +60,40 @@ Welches Dokument zu welcher Änderung gehört, steht in Abschnitt 9
 
 ## 3. Deployment — Vorsicht
 
-**Ein Push auf `main` mit Änderungen unter `server/` lädt sofort auf den
-Produktivserver hoch** (GitHub Action, FTPS). Es gibt keine Zwischenstufe und
-keine Testumgebung.
+**Seit dem 16.09.2026 gibt es zwei Wege** (P5a/AP1, R67; die Kette steht in
+`.github/workflows/auslieferung.yml`):
+
+- **Push auf `main`** → per FTPS auf **Staging**
+  (`staging.nadoku.gen-em.org`). Kein Produktivserver.
+- **Tag `web-vX.Y.Z`** → nach **Pflichtfreigabe durch die Betreiberin**
+  (GitHub-Umgebung `produktion`) und nach dem **Backup-Tor** auf Produktiv.
+
+**Bis dahin stand hier das Gegenteil**, und es stimmte: Ein Push auf `main`
+mit Änderungen unter `server/` lud sofort auf den Produktivserver, ohne
+Zwischenstufe und ohne Testumgebung. Wer eine alte Sitzung, ein altes
+Protokoll oder einen alten Kommentar liest, liest das noch.
+
+> **Eine Auslieferung ist derzeit NICHT möglich, und das ist Absicht.** Der
+> Produktionslauf verlangt einen grünen **Stufe-1-Lauf** auf demselben Commit
+> (`pruefung.yml`). Diese Datei kommt erst mit dem Merge der Phase P5a; bis
+> dahin bricht jeder Tag-Lauf an dieser Stelle ab. Das Tor fällt zu, statt
+> ungeprüft auszuliefern.
 
 - **Niemals ungefragt pushen.** Committen ja, wenn beauftragt; pushen nur auf
-  ausdrückliche Anweisung.
+  ausdrückliche Anweisung. Das gilt weiter — ein Push auf `main` löst zwar
+  keinen Produktiv-Deploy mehr aus, aber einen auf Staging.
+- **Ein Tag ist die Auslieferung.** Er wird nie nebenbei gesetzt.
 - Nach einem Deploy mit Schemaänderung muss eine Administratorin `update.php`
   aufrufen. Das steht sonst still und die Anwendung läuft ins Leere — beim
   Vorschlagen einer Migration ausdrücklich mit ansagen.
 - Ohne erhöhte `WEB_VERSION` sieht der Browser alte Dateien.
-- `server/config.php`, `install.lock` und `server/sicherungen/` liegen nur auf
-  dem Server. Sie stehen in `.gitignore` **und** in der Ausnahmeliste des
-  Deploys — beides muss so bleiben.
+- `server/config.php`, `install.lock`, `server/wartung.lock`,
+  `server/sicherungen/` und `server/apk/` liegen nur auf dem Server. Sie
+  stehen in `.gitignore` **und** in der Ausnahmeliste **beider** FTPS-Schritte
+  — beides muss so bleiben.
+- **`integritaet.yml` hängt am Anzeigenamen des Auslieferungslaufs.** Er heißt
+  jetzt „Auslieferung" und nicht mehr „Server per FTP hochladen". Wer ihn
+  umbenennt, hängt die Wache ab, und zwar still.
 
 ## 4. Feste Zusagen der Anwendung
 

@@ -23,13 +23,22 @@ on:
     - cron: '17 4 * * *'
   # Nach jedem Deploy: Genau dann aendert sich die Auslieferung, und genau
   # dann will man wissen, ob sie so ankam, wie sie losgeschickt wurde.
+  #
+  # DER NAME IST DIE KUPPLUNG, UND SIE IST ZERBRECHLICH (P5a/AP1, Fund F4).
+  # Bis Web 20.3.0 stand hier "Server per FTP hochladen" — der Anzeigename des
+  # alten `deploy.yml`. Wer einen Lauf umbenennt, haengt diese Wache ab, und
+  # zwar STILL: Kein Fehler, keine rote Zeile, nur ein Auslöser, der nie mehr
+  # feuert. Mit der Auslieferungskette (E-P5a-10) heisst der Lauf
+  # "Auslieferung"; steht der Name hier und dort nicht wortgleich, ist die
+  # Wache blind.
   workflow_run:
-    workflows: ["Server per FTP hochladen"]
+    workflows: ["Auslieferung"]
     types: [completed]
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   wache:
@@ -38,7 +47,37 @@ jobs:
       - name: Code auschecken
         uses: actions/checkout@v4
 
+      - name: Hat dieser Lauf ueberhaupt auf PRODUKTIV ausgeliefert?
+        # SEIT DER KETTE HAT DER AUSLIEFERUNGSLAUF ZWEI ZIELE (E-P5a-10): Ein
+        # Push auf `main` geht auf STAGING, nur ein Tag geht auf Produktiv. Die
+        # Wache misst aber Produktiv (`WACHE_BASIS`). Liefe sie nach jedem
+        # Staging-Deploy, verglaeche sie den Produktivserver mit einem Stand,
+        # der dort gar nicht liegt — und meldete eine Abweichung, die keine
+        # ist. Eine Wache, die regelmaessig falschen Alarm gibt, wird
+        # abgeschaltet; das ist der eigentliche Schaden.
+        #
+        # `workflow_run` kann nicht nach Job filtern. Also wird gefragt: Hat
+        # der Job `produktion` in diesem Lauf mit Erfolg geendet?
+        if: github.event_name == 'workflow_run'
+        id: ziel
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LAUF_ID:  ${{ github.event.workflow_run.id }}
+        run: |
+          stand=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$LAUF_ID/jobs" \
+                  --jq '[.jobs[] | select(.name == "produktion") | .conclusion] | join(",")' \
+                  2>/dev/null || echo '')
+          echo "Job 'produktion' in Lauf $LAUF_ID: ${stand:-nicht gelaufen}"
+          if [ "$stand" = success ]; then
+            echo "produktiv=ja" >> "$GITHUB_OUTPUT"
+          else
+            echo "produktiv=nein" >> "$GITHUB_OUTPUT"
+            echo "Dieser Lauf ging nicht auf Produktiv — die Wache haelt still." \
+                 >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Selbstprobe — erkennt die Wache eine Abweichung ueberhaupt?
+        if: github.event_name != 'workflow_run' || steps.ziel.outputs.produktiv == 'ja'
         # ZUERST, und das ist kein Formalismus: Ein gruener Lauf einer Wache,
         # die immer gruen meldet, sieht genauso aus wie einer, der nichts
         # gefunden hat. Die Selbstprobe rechnet ohne Netz und braucht eine
@@ -46,6 +85,7 @@ jobs:
         run: python3 tools/integritaetswache/wache.py --selbstprobe
 
       - name: Auslieferung gegen das Repositorium
+        if: github.event_name != 'workflow_run' || steps.ziel.outputs.produktiv == 'ja'
         env:
           # Ueber eine Repository-Variable umstellbar, damit ein Selbsthoster
           # die Datei nicht anfassen muss.
