@@ -1,0 +1,266 @@
+#!/usr/bin/env python3
+"""Die Tore der Auslieferungskette — Backup, Wartung, Zustand (P5a/AP1).
+
+WOZU ES DIESE DATEI GIBT UND NICHT DREI SHELL-ZEILEN IM ARBEITSLAUF.
+Das Backup-Tor (E-P5a-12) ist die eine Stelle der Kette, an der etwas
+Unwiderrufliches verhindert wird: ein Deploy auf Produktiv ohne frisches
+Komplett-Backup. Eine Bedingung, die das leisten soll, gehört nicht in ein
+YAML-Feld, in dem sie niemand liest und niemand probieren kann — sie gehört
+dorthin, wo eine `--selbstprobe` sie nachweisen kann. Genau das verlangt die
+Abnahme von AP1: „das Backup-Tor bricht **nachweislich** ab, wenn `komplett`
+nicht fertig meldet".
+
+DIE DREI UNTERBEFEHLE
+
+    backup        ruft `jobs.php?aktion=komplett` in einer Schleife, bis der
+                  Job `fertig` meldet UND der jüngste Stand jünger ist als der
+                  Laufbeginn. Sonst: Rückgabewert 1, kein Deploy.
+    wartung-an    schaltet den Wartungsmodus ein (`wartung_einschalten('kette')`)
+    wartung-aus   schaltet ihn aus
+    zustand       holt den Zustand und schreibt ihn als JSON nach stdout;
+                  mit `--frage migration` nur `ja` oder `nein`
+
+ZWEI BEDINGUNGEN, NICHT EINE. `fertig` allein genügt nicht: Ein Backup, das
+schon gestern fertig wurde, meldet ebenfalls `fertig` — und schützt diesen
+Deploy nicht. Der jüngste Stand muss deshalb **jünger sein als der
+Laufbeginn**. Das ist der Unterschied zwischen „es gibt ein Backup" und „es
+gibt ein Backup von diesem Stand".
+
+WARUM EINE SCHLEIFE UND NICHT EIN AUFRUF. Der Token-Einstieg hat 20 s Budget
+je Aufruf (`JOB_BUDGET_TOKEN`), ein Komplett-Backup von 10 GB braucht mehr.
+Ein Lauf arbeitet in Häppchen und meldet je Aufruf, ob er fertig ist. Wer
+einmal ruft und das `fertig` glaubt, hat bei kleinen Beständen recht und bei
+großen unrecht — und merkt den Unterschied erst, wenn er das Backup braucht.
+
+Aufruf:
+    python3 tools/kette/tor.py backup      --basis https://… --token …
+    python3 tools/kette/tor.py wartung-an  --basis https://… --token …
+    python3 tools/kette/tor.py wartung-aus --basis https://… --token …
+    python3 tools/kette/tor.py zustand     --basis https://… --token … [--frage migration]
+    python3 tools/kette/tor.py --selbstprobe
+
+Rückgabewert: 0 = Tor offen · 1 = Tor zu (und der Grund steht davor) ·
+2 = die Prüfung selbst kam nicht zustande (Angabe fehlt, Netz tot).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+from datetime import datetime, timezone
+
+VERSUCHE_VORGABE = 40
+PAUSE_VORGABE_S = 20
+ZEITGRENZE_S = 60
+
+
+def jetzt_utc() -> str:
+    """Der Laufbeginn, in derselben Schreibweise wie `komp_zeit_aus_name()`."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def rufen(basis: str, token: str, aktion: str, zeitgrenze: int = ZEITGRENZE_S) -> dict:
+    """Einen Aufruf an `jobs.php` — und das Ergebnis als Feld.
+
+    Ein nicht auswertbarer Körper ist KEIN Abbruch, sondern ein Feld mit
+    `_roh`: Die Schleife oben entscheidet, ob sie es noch einmal versucht.
+    Ein Abbruch hier machte aus einem Schluckauf des Servers ein Nein.
+    """
+    adresse = basis.rstrip("/") + "/jobs.php?" + urllib.parse.urlencode(
+        {"token": token, "aktion": aktion})
+    try:
+        with urllib.request.urlopen(adresse, timeout=zeitgrenze) as antwort:
+            roh = antwort.read().decode("utf-8", "replace")
+    except (urllib.error.URLError, OSError, TimeoutError) as ex:
+        return {"_fehler": str(ex)}
+    try:
+        d = json.loads(roh)
+        return d if isinstance(d, dict) else {"_roh": roh}
+    except json.JSONDecodeError:
+        return {"_roh": roh[:400]}
+
+
+def backup_tor(basis: str, token: str, versuche: int, pause: int,
+               ruf=rufen, schlafen=time.sleep) -> int:
+    """Das Tor. Rückgabewert 0 = Deploy erlaubt, 1 = nicht."""
+    beginn = jetzt_utc()
+    print(f"Laufbeginn (UTC): {beginn}")
+
+    fertig = False
+    for i in range(1, versuche + 1):
+        antwort = ruf(basis, token, "komplett")
+        kurz = json.dumps(antwort, ensure_ascii=False)[:200]
+        print(f"  Aufruf {i:>2}: {kurz}")
+        if antwort.get("fertig") is True:
+            fertig = True
+            break
+        # EIN NEIN DES SERVERS IST KEIN WARTEN. Ein falsches Token, eine
+        # unbekannte Aktion, ein Auftrag, der nicht zustande kommt (kein
+        # Serverschlüssel, Speichergrenze) — das wird beim vierzigsten Mal
+        # nicht anders. Vierzig Aufrufe mit 20 s Pause sind gut dreizehn
+        # Minuten, in denen niemand etwas erfährt, was nach dem ersten
+        # Aufruf schon feststand. Ein NETZFEHLER (`_fehler`) oder eine
+        # unlesbare Antwort (`_roh`) ist etwas anderes: Der wird
+        # wiederholt.
+        if "error" in antwort:
+            print(f"ABBRUCH: Die Installation antwortet mit '{antwort['error']}'"
+                  + (f" — {antwort['meldung']}" if antwort.get("meldung") else "")
+                  + ". Es wird nicht ausgeliefert.", file=sys.stderr)
+            return 1
+        if i < versuche:
+            schlafen(pause)
+
+    if not fertig:
+        print(f"ABBRUCH: Das Komplett-Backup meldete nach {versuche} Aufrufen kein "
+              f"'fertig'. Es wird nicht ausgeliefert.", file=sys.stderr)
+        return 1
+
+    zustand = ruf(basis, token, "zustand")
+    print("Zustand: " + json.dumps(zustand, ensure_ascii=False)[:400])
+    stand = zustand.get("komplett")
+    if not isinstance(stand, dict) or not stand.get("zeit"):
+        print("ABBRUCH: Es liegt kein Komplett-Stand vor. Es wird nicht ausgeliefert.",
+              file=sys.stderr)
+        return 1
+    if str(stand["zeit"]) < beginn:
+        print(f"ABBRUCH: Der jüngste Komplett-Stand ist von {stand['zeit']} und damit "
+              f"älter als der Laufbeginn {beginn} — er schützt diesen Deploy nicht. "
+              f"Es wird nicht ausgeliefert.", file=sys.stderr)
+        return 1
+
+    print(f"Tor offen: Komplett-Stand {stand['zeit']} "
+          f"({stand.get('groesse', 0)} Byte), jünger als der Laufbeginn.")
+    return 0
+
+
+# ---------------------------------------------------------------- Selbstprobe
+
+def selbstprobe() -> int:
+    """Bricht das Tor auch wirklich ab? Fünf Lagen, ohne Netz.
+
+    Der Aufruf an `jobs.php` wird durch eine Attrappe ersetzt, die
+    vorgeschriebene Antworten liefert. Das ist keine Bequemlichkeit: Die
+    interessanten Lagen — „meldet nie fertig", „Stand ist von gestern" — lassen
+    sich gegen eine echte Installation nicht herstellen, ohne sie zu
+    beschädigen.
+    """
+    erfuellt = 0
+    offen = 0
+
+    def pruefe(bedingung: bool, was: str) -> None:
+        nonlocal erfuellt, offen
+        if bedingung:
+            erfuellt += 1
+        else:
+            offen += 1
+        print(f"  [{'ok ' if bedingung else 'FEHL'}] {was}")
+
+    gestern = "2000-01-01T00:00:00Z"
+    morgen = "2999-01-01T00:00:00Z"
+
+    def attrappe(folge, zustand):
+        """Liefert der Reihe nach `folge`, danach immer den letzten Eintrag."""
+        zaehler = {"n": 0}
+
+        def ruf(_basis, _token, aktion):
+            if aktion == "zustand":
+                return zustand
+            i = min(zaehler["n"], len(folge) - 1)
+            zaehler["n"] += 1
+            return folge[i]
+        return ruf
+
+    print("Selbstprobe des Backup-Tors — fünf Lagen, ohne Netz\n")
+
+    # 1. Der Regelfall: zweites Häppchen meldet fertig, Stand ist frisch.
+    rc = backup_tor("http://attrappe", "t", 5, 0,
+                    ruf=attrappe([{"fertig": False}, {"fertig": True}],
+                                 {"komplett": {"zeit": morgen, "groesse": 42}}),
+                    schlafen=lambda _s: None)
+    pruefe(rc == 0, "Regelfall: fertig nach zwei Häppchen, frischer Stand → Tor offen")
+
+    # 2. Meldet nie fertig — die Lage, die die Abnahme von AP1 verlangt.
+    rc = backup_tor("http://attrappe", "t", 3, 0,
+                    ruf=attrappe([{"fertig": False}],
+                                 {"komplett": {"zeit": morgen}}),
+                    schlafen=lambda _s: None)
+    pruefe(rc == 1, "Meldet nie 'fertig' → Tor zu (KEIN DEPLOY)")
+
+    # 3. Falsches Token: der Endpunkt antwortet mit einem Fehler, nie mit fertig.
+    rc = backup_tor("http://attrappe", "t", 3, 0,
+                    ruf=attrappe([{"error": "token"}],
+                                 {"error": "token"}),
+                    schlafen=lambda _s: None)
+    pruefe(rc == 1, "Falsches Token → Tor zu, und zwar sofort (kein 40-maliges Fragen)")
+
+    # 4. Fertig, aber der Stand ist von gestern — genau der Fall, den ein
+    #    Tor mit nur einer Bedingung durchliesse.
+    rc = backup_tor("http://attrappe", "t", 3, 0,
+                    ruf=attrappe([{"fertig": True}],
+                                 {"komplett": {"zeit": gestern}}),
+                    schlafen=lambda _s: None)
+    pruefe(rc == 1, "Fertig, aber Stand älter als der Laufbeginn → Tor zu")
+
+    # 5. Fertig, aber es gibt gar keinen Stand.
+    rc = backup_tor("http://attrappe", "t", 3, 0,
+                    ruf=attrappe([{"fertig": True}], {"komplett": None}),
+                    schlafen=lambda _s: None)
+    pruefe(rc == 1, "Fertig, aber kein Komplett-Stand vorhanden → Tor zu")
+
+    print(f"\n  erfüllt: {erfuellt} · offen: {offen}")
+    return 0 if offen == 0 else 1
+
+
+# ------------------------------------------------------------------ Einstieg
+
+def main(argv: list[str]) -> int:
+    p = argparse.ArgumentParser(add_help=True, description=__doc__,
+                                formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("befehl", nargs="?",
+                   choices=["backup", "wartung-an", "wartung-aus", "zustand"])
+    p.add_argument("--basis", help="Adresse der Installation, z. B. https://nadoku.example")
+    p.add_argument("--token", help="Job-Token aus dem Wartungsbereich")
+    p.add_argument("--versuche", type=int, default=VERSUCHE_VORGABE)
+    p.add_argument("--pause", type=int, default=PAUSE_VORGABE_S)
+    p.add_argument("--frage", choices=["migration"],
+                   help="zustand: nur diese eine Auskunft, als 'ja' oder 'nein'")
+    p.add_argument("--selbstprobe", action="store_true",
+                   help="ohne Netz prüfen, ob das Tor überhaupt zugeht")
+    a = p.parse_args(argv)
+
+    if a.selbstprobe:
+        return selbstprobe()
+    if a.befehl is None:
+        p.print_help()
+        return 2
+    if not a.basis or not a.token:
+        print("--basis und --token sind Pflicht.", file=sys.stderr)
+        return 2
+
+    if a.befehl == "backup":
+        return backup_tor(a.basis, a.token, a.versuche, a.pause)
+
+    if a.befehl in ("wartung-an", "wartung-aus"):
+        aktion = "wartung_an" if a.befehl == "wartung-an" else "wartung_aus"
+        antwort = rufen(a.basis, a.token, aktion)
+        print(json.dumps(antwort, ensure_ascii=False))
+        return 0 if antwort.get("ok") else 1
+
+    antwort = rufen(a.basis, a.token, "zustand")
+    if a.frage == "migration":
+        if not antwort.get("ok"):
+            print("unbekannt")
+            return 1
+        print("ja" if antwort.get("migration_ausstehend") else "nein")
+        return 0
+    print(json.dumps(antwort, ensure_ascii=False, indent=2))
+    return 0 if antwort.get("ok") else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
