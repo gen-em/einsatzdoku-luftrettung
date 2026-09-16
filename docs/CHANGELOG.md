@@ -14,6 +14,41 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.15.2] — 2026-09-16
+
+**Die Anwendung ließ sich nicht mehr installieren** (Backlog Nr. 214).
+
+### Behoben
+
+`install.php` antwortete HTTP 500 mit leerem Rumpf. Kein Formular, keine
+Meldung — die Seite, mit der jede Installation beginnt, war tot.
+
+Die Kette ist kurz und jedes Glied für sich richtig: `install.php` lädt
+`ui.php`, damit ihr Formular aussieht wie die Anwendung. `ui_seite_start()`
+lädt seit P5a/AP4 `kopfzeilen_lib.php`, damit die Sicherheitskopfzeilen vor
+der ersten Ausgabezeile stehen. `kopfzeilen_lib.php` lud `db.php`, und `db.php`
+verlangt `config.php` hart. Vor der Einrichtung gibt es keine `config.php` —
+das ist der Zweck der Einrichtung.
+
+**Warum es kein Prüfmittel gesehen hat.** Der Fehler trifft ausschließlich die
+Installation, die noch nicht stattgefunden hat. Jede bestehende Anlage läuft
+weiter, und jedes Prüfmittel des Projekts setzt eine laufende Installation
+voraus, statt eine einzurichten. Sichtbar wurde er beim Aufbau des Prüfstands
+für P5b, als `lokal_einrichten.sh` den Weg einer Betreiberin ging.
+
+**Behoben wurde in `kopfzeilen_lib.php`, nicht in `db.php`.** Dort ist das
+harte `require` richtig: Jede reguläre Seite läuft nach der Einrichtung.
+`kopfzeilen_lib.php` dagegen sagt in ihrem eigenen Kopf, sie komme „ohne
+Datenbank aus: Jede Einstellung hat eine Vorgabe, und fällt die Abfrage aus,
+gilt die" — sie kam nur nicht ohne `config.php` aus, und das ist derselbe Fall
+eine Ebene tiefer. Sie zieht `db.php` jetzt per `is_file()` nur, wenn es etwas
+zu ziehen gibt; ihre vier `app_state`-Aufrufe stehen hinter `function_exists()`
+und fallen auf dieselben Vorgaben zurück, die auch bei fehlender Tabelle
+gelten: Report-Only und ein Tag HSTS. Nachgemessen — mehr als diese beiden
+Funktionen braucht sie aus `db.php` nicht.
+
+Keine Migration.
+
 ## [Web 20.15.1] — 2026-09-16
 
 **Die Zustandsdatei der Auslieferungskette lag im Webroot** (Backlog Nr. 213).

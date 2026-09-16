@@ -38,9 +38,11 @@ demselben Zweig vergeben** (206 Messstand-Schritt, 207 `gen-em.org` in `tools/`,
 208 Jobregister von Hand geführt, 209 Bausteintabelle in `Design.md`,
 210 Deadlocks in `ingest.php`, 211 `/api/`-Aufruf ohne Sitzung, 212 zwei
 Erwartungen der Wiederherstellungsprobe), **213 aus der Durchsicht vom
-16.09.2026** (Zustandsdatei der Kette im Webroot). Jeder weitere Zweig, der
-Nummern vergibt, beginnt bei **214** und trägt seine Spanne hier ein, bevor
-er pusht.
+16.09.2026** (Zustandsdatei der Kette im Webroot). **214 und aufwärts liegen
+auf dem P5b-Zweig `claude/magical-dirac-we2y1z`** (214 Anwendung nicht
+installierbar; die Einschübe des P5b-Konzepts folgen dort). Jeder weitere
+Zweig, der Nummern vergibt, beginnt hinter der dort zuletzt vergebenen und
+trägt seine Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
@@ -2271,6 +2273,40 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Dateien, die es nicht gibt) — und als Gegenprobe **404 und nicht 403** für
     `.well-known/acme-challenge/`, weil eine zu breite Sperre die
     Zertifikatserneuerung lautlos umbringt.
+
+214. **Die Anwendung ließ sich nicht mehr installieren.**
+    *Aufgenommen 16.09.2026 beim Aufbau des Prüfstands für P5b; behoben am
+    selben Tag in Web 20.15.2.*
+    `install.php` antwortete HTTP 500 mit leerem Rumpf — kein Formular, keine
+    Meldung. Die Kette ist kurz und jedes Glied für sich richtig:
+    `install.php` lädt `ui.php`, damit ihr Formular aussieht wie die
+    Anwendung; `ui_seite_start()` lädt seit P5a/AP4 `kopfzeilen_lib.php`,
+    damit die Kopfzeilen vor der ersten Ausgabezeile stehen;
+    `kopfzeilen_lib.php` lud `db.php`; `db.php` verlangt `config.php` hart.
+    Vor der Einrichtung gibt es keine `config.php`.
+
+    **Warum kein Prüfmittel ihn gesehen hat, und warum das die eigentliche
+    Lehre ist.** Der Fehler trifft ausschließlich die Installation, die noch
+    nicht stattgefunden hat. Jede bestehende Anlage läuft weiter. Und jedes
+    Prüfmittel des Projekts — `ingestprobe`, `spurprobe`, `komplettprobe`,
+    `jobprobe`, `screenshots`, `pruefkonten` — *setzt eine laufende
+    Installation voraus*, statt eine einzurichten. Der Weg, den eine
+    Betreiberin genau einmal geht, ist damit der einzige, den niemand geht.
+    Gesehen wurde er, weil `lokal_einrichten.sh` ihn geht.
+
+    **Behoben in `kopfzeilen_lib.php`, nicht in `db.php`.** Dort ist das harte
+    `require` richtig. `kopfzeilen_lib.php` dagegen sagt im eigenen Kopf, sie
+    komme „ohne Datenbank aus" — sie kam nur nicht ohne `config.php` aus.
+    Jetzt `is_file()` vor dem `require` und `function_exists()` vor den vier
+    `app_state`-Aufrufen, mit Rückfall auf dieselben Vorgaben wie bei
+    fehlender Tabelle.
+
+    **Zu tun bleibt die Wache:** ein Prüfschritt, der die Einrichtung selbst
+    fährt (`lokal_einrichten.sh` ist der fertige Weg, Stufe 1 könnte ihn gegen
+    eine Wegwerf-Datenbank laufen lassen). Ohne ihn fällt dieselbe Lücke beim
+    nächsten Umbau der Ladekette wieder auf. *Abnahme:* Ein Prüflauf, der auf
+    einem Stand ohne `server/config.php` HTTP 200 und ein Formular-Token von
+    `install.php` bekommt. Zuordnung: Backlog-Runde oder P5c.
 
 ## Erledigt
 

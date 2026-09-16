@@ -5503,4 +5503,39 @@ declare(strict_types=1);
  * KEINE MIGRATION. Kein Code der Anwendung ist angefasst — `.htaccess`,
  * die Kette und `.gitignore`.
  */
-const WEB_VERSION = '20.15.1';
+/* ---------------------------------------------------------------------------
+ * 20.15.2 — DIE ANWENDUNG LIESS SICH NICHT MEHR INSTALLIEREN (Backlog Nr. 214)
+ * ---------------------------------------------------------------------------
+ *
+ * Gefunden beim Aufbau des Pruefstands fuer P5b, am Zweigstand nach P5a.
+ * `install.php` antwortete HTTP 500 mit leerem Rumpf — kein Formular, keine
+ * Meldung, nichts.
+ *
+ * DIE KETTE: `install.php` laedt `ui.php`, damit ihr Formular aussieht wie die
+ * Anwendung. `ui_seite_start()` laedt seit P5a/AP4 `kopfzeilen_lib.php`, damit
+ * die Kopfzeilen vor der ersten Ausgabezeile stehen. `kopfzeilen_lib.php` lud
+ * `db.php`, und `db.php` verlangt `config.php` hart (`$CFG = require ...`).
+ * Vor der Einrichtung gibt es keine `config.php` — das ist der Zweck der
+ * Einrichtung. Fatal Error.
+ *
+ * WARUM ES NIEMAND GESEHEN HAT. Der Fehler trifft ausschliesslich die
+ * Installation, die noch nicht stattgefunden hat. Jede bestehende Anlage hat
+ * eine `config.php` und laeuft weiter; jedes Pruefmittel des Projekts setzt
+ * eine laufende Installation voraus und richtet keine ein. Sichtbar wurde er
+ * erst, als `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` den Weg
+ * einer Betreiberin ging — dieselbe Seite, dasselbe Formular.
+ *
+ * DIE BEHEBUNG steht in `kopfzeilen_lib.php` und nicht in `db.php`: Dort ist
+ * das harte `require` richtig, weil jede regulaere Seite nach der Einrichtung
+ * laeuft. `kopfzeilen_lib.php` dagegen sagt in ihrem eigenen Kopf, sie komme
+ * „ohne Datenbank aus: Jede Einstellung hat eine Vorgabe, und faellt die
+ * Abfrage aus, gilt die". Sie kam nur nicht ohne `config.php` aus. Jetzt zieht
+ * sie `db.php` per `is_file()` nur, wenn es etwas zu ziehen gibt, und ihre
+ * vier `app_state`-Aufrufe stehen hinter `function_exists()` mit Rueckfall auf
+ * dieselben Vorgaben — Report-Only und ein Tag HSTS, die vorsichtigen Werte.
+ * Nachgemessen: Mehr als diese beiden Funktionen braucht sie aus `db.php`
+ * nicht.
+ *
+ * KEINE MIGRATION.
+ */
+const WEB_VERSION = '20.15.2';

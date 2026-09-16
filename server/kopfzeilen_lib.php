@@ -144,7 +144,27 @@ declare(strict_types=1);
  * still wegfaellt. Die Datei laedt selbst nichts (dort ausgeschrieben).
  */
 
-require_once __DIR__ . '/db.php';
+/* `db.php` NUR, WENN ES SCHON EINE KONFIGURATION GIBT (Nr. 214).
+ *
+ * `db.php` verlangt `config.php` hart (`$CFG = require ...`), und das ist dort
+ * richtig: Jede regulaere Seite laeuft nach der Einrichtung. Genau eine laeuft
+ * davor — `install.php`, und sie zieht `ui.php`, damit ihr Formular aussieht
+ * wie die Anwendung. Ueber `ui_seite_start()` landete sie hier, hier in
+ * `db.php` und dort im Fatal Error: Nach P5a/AP4 war die Anwendung nicht mehr
+ * installierbar, und zwar genau so lange, wie noch niemand sie installiert
+ * hatte. Der Kopf oben sagt, diese Datei komme „ohne Datenbank aus"; sie kam
+ * nur nicht ohne `config.php` aus, und das ist derselbe Fall eine Ebene
+ * tiefer.
+ *
+ * `is_file()` statt eines abgefangenen `require`: Ein fehlgeschlagenes
+ * `require` waere ein Fatal Error und kein Ausnahmefall, den man fangen
+ * koennte. Die beiden Funktionen, um die es geht, sind unten mit
+ * `function_exists()` abgesichert — mehr braucht diese Datei aus `db.php`
+ * nicht (nachgemessen: `app_state_lesen()` und `app_state_setzen()`, sonst
+ * nichts). */
+if (is_file(__DIR__ . '/config.php')) {
+    require_once __DIR__ . '/db.php';
+}
 require_once __DIR__ . '/instanz_lib.php';
 
 /* ---- Einstellungen, je mit Vorgabe --------------------------------------- */
@@ -165,21 +185,30 @@ const KOPF_KACHELN = [
     'https://server.arcgisonline.com',
 ];
 
+/* DIE VIER GATTER (Nr. 214). Ohne `config.php` gibt es `app_state_lesen()`
+ * nicht — dann gilt die Vorgabe, dieselbe, die auch bei fehlender Tabelle
+ * gilt. Fuer den Einrichter ist das die richtige Antwort: Report-Only und
+ * ein Tag HSTS sind die vorsichtigen Werte, und geschrieben wird vor der
+ * Einrichtung ohnehin nichts (die beiden Setzer melden `false`). */
+
 /** Ist die CSP scharf geschaltet? Vorgabe: nein (Report-Only). */
 function kopf_csp_scharf(): bool
 {
+    if (!function_exists('app_state_lesen')) { return false; }
     return app_state_lesen(KOPF_K_CSP_SCHARF) === '1';
 }
 
 /** Die CSP scharf schalten oder wieder auf Report-Only stellen. */
 function kopf_csp_scharf_setzen(bool $an): bool
 {
+    if (!function_exists('app_state_setzen')) { return false; }
     return app_state_setzen(KOPF_K_CSP_SCHARF, $an ? '1' : '0');
 }
 
 /** HSTS-Dauer in Tagen. 0 heisst: keine Kopfzeile senden. */
 function kopf_hsts_tage(): int
 {
+    if (!function_exists('app_state_lesen')) { return KOPF_HSTS_VORGABE; }
     $v = app_state_lesen(KOPF_K_HSTS_TAGE);
     if ($v === null || $v === '') { return KOPF_HSTS_VORGABE; }
     $n = (int)$v;
@@ -190,6 +219,7 @@ function kopf_hsts_tage(): int
 function kopf_hsts_tage_setzen(int $tage): bool
 {
     if ($tage !== 0 && !in_array($tage, KOPF_HSTS_STUFEN, true)) { return false; }
+    if (!function_exists('app_state_setzen')) { return false; }
     return app_state_setzen(KOPF_K_HSTS_TAGE, (string)$tage);
 }
 
