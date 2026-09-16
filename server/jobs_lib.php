@@ -431,6 +431,34 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
         ->execute([json_encode($zustand), $rueckstand, $fehler, $fehler,
                    $erledigt, $name]);
 
+    /* DER VERLAUF — damit ein WIEDERKEHRENDER Fehler sichtbar wird
+     * (P5a/AP5, E-P5a-09).
+     *
+     * Die Zeile darueber setzt `letzter_fehler` beim naechsten Erfolg auf
+     * NULL. Das ist fuer die Ampel richtig — sie soll sagen, was JETZT
+     * ansteht — und fuer die Fehlersuche verheerend: Ein Job, der jede
+     * zweite Nacht scheitert und morgens durchlaeuft, ist um acht Uhr
+     * spurlos. Man sieht nie, DASS er wiederkehrt.
+     *
+     * NICHT JEDER LAUF KOMMT HINEIN. Am Huckepack-Weg laufen sieben Jobs
+     * alle fuenf Minuten; das waeren rund 2000 Zeilen am Tag, fast alle mit
+     * der Aussage „nichts zu tun". Geschrieben wird, was etwas AUSSAGT: ein
+     * Fehler, oder ein Lauf, der etwas erledigt hat.
+     *
+     * EIGENES try/catch, und zwar zwingend: Zwischen dem Deploy und dem
+     * Migrationslauf gibt es die Tabelle noch nicht. Ohne diesen Block
+     * risse das Schreiben des Verlaufs den ganzen Job mit — ein Protokoll,
+     * das seinen Gegenstand kaputtmacht, ist schlechter als keines. */
+    if ($fehler !== null || $erledigt > 0) {
+        try {
+            $pdo->prepare('INSERT INTO job_laeufe (job, zeitpunkt, ausloeser, erledigt, fehler)
+                           VALUES (?, UTC_TIMESTAMP(), ?, ?, ?)')
+                ->execute([$name, $ausloeser, $erledigt, $fehler]);
+        } catch (Throwable $ex) {
+            error_log('job_laeufe: ' . $ex->getMessage());
+        }
+    }
+
     return ['erledigt' => $erledigt, 'fertig' => $fertig,
             'rueckstand' => $rueckstand, 'fehler' => $fehler,
             'uebergangen' => $uebergangen];

@@ -2459,6 +2459,45 @@ function migrationen_katalog(): array
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
         ],
     ],
+    [
+        'id'    => '2026_09_16_job_laeufe',
+        'web'   => '20.8',
+        'label' => 'Verlauf der Hintergrundjobs — damit ein wiederkehrender Fehler sichtbar wird',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'job_laeufe'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* WARUM ES DIESE TABELLE GIBT. `jobs` haelt je Job EINE Zeile mit
+             * lauter `letzter_*`-Spalten, und `letzter_fehler` wird beim
+             * naechsten Erfolg auf NULL gesetzt (jobs_lib.php). Ein Job, der
+             * jede zweite Nacht scheitert und morgens durchlaeuft, ist damit
+             * um acht Uhr unsichtbar — man sieht nur, ob gerade etwas ansteht,
+             * nie, dass es wiederkehrt.
+             *
+             * NICHT JEDER LAUF KOMMT HINEIN. Am Huckepack-Weg laufen sieben
+             * Jobs alle fuenf Minuten; das waeren rund 2000 Zeilen am Tag,
+             * von denen die allermeisten „nichts zu tun" sagen. Geschrieben
+             * wird nur, was etwas AUSSAGT: ein Fehler, oder ein Lauf, der
+             * etwas erledigt hat. Ein Protokoll, das jeden Anstoss verbucht,
+             * wird nicht gelesen.
+             *
+             * DIE FRIST STAND SCHON FEST, bevor die Tabelle existierte:
+             * E-P5a-09 nennt „Job-Laeufe" unter dem, was der Aufraeumjob nach
+             * 30 Tagen loescht — keine Einstellung. */
+            'CREATE TABLE job_laeufe (
+               id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               job       VARCHAR(32)  NOT NULL,
+               zeitpunkt DATETIME     NOT NULL,
+               ausloeser VARCHAR(16)  NULL,
+               erledigt  INT UNSIGNED NOT NULL DEFAULT 0,
+               fehler    TEXT         NULL,
+               INDEX idx_job_zeit (job, zeitpunkt),
+               INDEX idx_zeitpunkt (zeitpunkt)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

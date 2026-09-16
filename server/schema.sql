@@ -687,6 +687,22 @@ CREATE TABLE csp_berichte (
   INDEX idx_zuletzt (zuletzt)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Verlauf der Hintergrundjobs (Web 20.8.0, P5a/AP5). `jobs` haelt je Job nur
+-- den LETZTEN Lauf, und `letzter_fehler` wird beim naechsten Erfolg auf NULL
+-- gesetzt — ein Job, der jede zweite Nacht scheitert, ist morgens unsichtbar.
+-- Geschrieben wird nur, was etwas aussagt: ein Fehler oder ein Lauf, der etwas
+-- erledigt hat. Frist 30 Tage (E-P5a-09), keine Einstellung.
+CREATE TABLE job_laeufe (
+  id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  job       VARCHAR(32)  NOT NULL,
+  zeitpunkt DATETIME     NOT NULL,
+  ausloeser VARCHAR(16)  NULL,
+  erledigt  INT UNSIGNED NOT NULL DEFAULT 0,
+  fehler    TEXT         NULL,
+  INDEX idx_job_zeit (job, zeitpunkt),
+  INDEX idx_zeitpunkt (zeitpunkt)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS schema_migrations (
   id         VARCHAR(120) NOT NULL PRIMARY KEY,
   applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -776,4 +792,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- rest_segments.created_at steht oben schon im Schema (Web 15.6.0).
   ('2026_09_07_rest_segments_created_at', 'skipped'),
   -- csp_berichte steht oben schon im Schema (Web 20.7.0, P5a/AP4).
-  ('2026_09_15_csp_berichte', 'skipped');
+  ('2026_09_15_csp_berichte', 'skipped'),
+  -- job_laeufe steht oben schon im Schema (Web 20.8.0, P5a/AP5).
+  ('2026_09_16_job_laeufe', 'skipped');

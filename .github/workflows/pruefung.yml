@@ -78,7 +78,18 @@ jobs:
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Vollständigkeit des Stylesheets
-        run: python3 tools/vollstaendigkeit/pruefen.py
+        # GEGEN EINE SCHWELLE, NICHT GEGEN NULL — und das war hier von Anfang
+        # an falsch (behoben mit Web 20.8.0). Dieses Werkzeug misst einen
+        # ALTBESTAND aus P3: Unicode-Zeichen im Markup, `style=`-Attribute in
+        # JavaScript, Emoji. „0 Befunde" ist ein Ziel, kein erreichbarer
+        # Zustand — der Stand lag schon bei der Einführung dieses Laufs bei
+        # 340. Der Schritt verlangte trotzdem `exit 0` und war damit bei JEDEM
+        # Push rot; ein Tor, das immer rot ist, sagt nichts mehr.
+        #
+        # Die Schwelle wirkt in BEIDE Richtungen: Wächst der Altbestand, ist
+        # das ein Befund. Schrumpft er, ebenfalls — dann ist die Zahl hier
+        # nachzuziehen, sonst bekommt er stillschweigend wieder Luft.
+        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 366
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py

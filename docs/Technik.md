@@ -6902,7 +6902,7 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 |---|---|
 | `php -l` über `server/` und `tools/` | 0 Fehler |
 | `tools/wortliste/wortliste.py` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen |
-| `tools/vollstaendigkeit/pruefen.py` | 0 Befunde |
+| `tools/vollstaendigkeit/pruefen.py --hoechstens N` | **genau N** — die Schwelle, nicht null (heute 366) |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | Backlog-Nummern (`grep … uniq -d`) | leer |
 | `tools/migrationsregister/pruefen.php` | 0 Befunde, Selbstprobe 4/4 |
@@ -6910,6 +6910,19 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 | `tools/cspprobe/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge |
 | Uhr Stufe I (`pruefstand.sh reihe`) | übersetzt für alle Zielgeräte |
+
+> **Warum dort eine Schwelle steht und keine Null.** Dieses Werkzeug misst
+> einen **Altbestand** aus P3 — Unicode-Zeichen im Markup, `style=`-Attribute
+> in JavaScript, Emoji —, der nicht in einem Zug verschwindet. „0 Befunde" ist
+> ein Ziel, kein erreichbarer Zustand; der Stand lag schon bei der Einführung
+> dieses Laufs bei 340.
+>
+> **Bis Web 20.8.0 verlangte der Schritt trotzdem `exit 0`** und war damit bei
+> **jedem** Push rot — ein Tor, das immer rot ist, sagt nichts mehr und wird
+> abgeschaltet. Die Schwelle wirkt seither in **beide** Richtungen: Wächst der
+> Altbestand, ist das ein Befund; **schrumpft** er, ebenfalls — dann ist die
+> Zahl im Arbeitslauf nachzuziehen, sonst bekommt er stillschweigend wieder
+> Luft.
 
 **Rot heißt kein Merge** — das entscheidet aber nicht die Datei, sondern der
 Zweigschutz auf `main` mit `pruefung` als Pflichtprüfung. Ohne ihn ist der
