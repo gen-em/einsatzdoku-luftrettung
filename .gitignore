@@ -18,6 +18,13 @@ server/install.lock
 # (.github/workflows/deploy.yml), sonst loeschte ihn der naechste Push --
 # und zwar mitten im Update, fuer das er da ist.
 server/wartung.lock
+# Der Zaehler der Verbindungsgrenze (P5a/AP9, E-P5a-50). Wie wartung.lock:
+# Er ist ein ZUSTAND DIESER EINEN INSTALLATION -- wie oft ihr Datenbankkonto
+# in welcher Stunde abgewiesen wurde. Er steht in einer DATEI und nicht in
+# app_state, weil er genau dann geschrieben werden muss, wenn die Datenbank
+# keine Verbindung mehr annimmt. Zusaetzlich in der Ausnahmeliste beider
+# FTPS-Schritte, sonst loeschte ihn der naechste Push.
+server/ueberlast.json
 server/install-nachweis-*.txt
 server/wiederher-nachweis-*.txt
 

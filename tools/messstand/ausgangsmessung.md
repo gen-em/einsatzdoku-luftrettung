@@ -196,6 +196,74 @@ liegen als Zeilen und wandern als JSON**. Genau das baut S2 um.
 
 ---
 
+## Nachmessung vom 16.09.2026 (Web 20.13.0, P5a/AP9)
+
+**Was gemessen wurde:** ein frischer Messstandlauf gegen `main` +
+Arbeitszweig, **5050 Einsätze**, 1000 Diensttage, **2 813 201 Spurpunkte**,
+17 `.edbak`-Dateien, CPU sechsfach gedrosselt, lokale Installation
+(PHP 8.4.19, MariaDB 10.11). Anlass waren die **drei offenen Messungen aus
+Backlog Nr. 37**; die Browserprobe hat dafür zwei neue Schritte bekommen
+(Zeitraumübersicht, Nachbearbeitung).
+
+**Zuerst, was nicht gemessen werden konnte:**
+
+- **`post_max_size` des Zielservers.** Die Zahl gehört der Anlage, nicht
+  dieser Maschine. Staging stand am 16.09.2026 noch nicht. Der Weg ist seit
+  P5a/AP2 die Plattformkarte auf Betrieb → Status, die `post_max_size` und
+  `upload_max_filesize` mit Soll- und Ist-Wert nennt — sobald Staging
+  antwortet, ist es ein Seitenaufruf und keine Messung mehr.
+- **Die Nachbearbeitung mit gefüllter Liste.** Der Messstandbestand kommt aus
+  einem Backup, in dem jeder Diensttag zugeordnet ist; gemessen ist die
+  Abfrage, nicht das Aufbauen der Liste. Steht dabei.
+- **Z2 und echte Hardware** — unverändert wie oben.
+
+| Messung | 16.09.2026 | Zielwert | |
+|---|---|---|---|
+| Anmelden | 2,09 s | — | |
+| Startseite (Tagesliste, 500 Verweise) | 1,20 s | — | |
+| Tagesansicht (Spur gezeichnet) | **1,11 s** | 3 s | ✔ |
+| Suche — erste Trefferanzeige (5050 Treffer, 200 angezeigt) | **3,18 s** | 5 s | ✔ |
+| **Zeitraumübersicht, Jahr 2026 (3983 Einsätze, 3983 `<tr>`)** | **42,61 s** | — | **Befund** |
+| **Nachbearbeitung („Zuordnung nachtragen", 0 offene)** | **2,83 s** | — | |
+| Backup erstellen | **49,84 s** | 300 s | ✔ |
+| Backup-Datei | **11,8 MB** | 25 MB | ✔ |
+| Wiederherstellung (17 Dateien, ohne Drossel) | **231,9 s** | 900 s | ✔ |
+| Spuren je 1000 Einsätze (nach Verdichtung, mit `OPTIMIZE`) | **3,66 MB** | 3 MB | ✘ knapp |
+| Speicherspitze `edbak_build()` in Fenstern | **12 MB** | 64 MB | ✔ |
+| Speicherspitze `edbak_build()` am Stück (Admin-Backup) | 1030,8 MB | 64 MB | **16×** |
+| Haldenspitze Browser (höchster Schritt) | **55 MB** | 100 MB | ✔ |
+| größte JSON-Zeichenkette | **2,2 MB** | 10 MB | ✔ |
+| Waisen-Vollscan | 0,033 s | — | 0 Waisen |
+| Konsolenfehler | **0** | 0 | ✔ |
+
+**Was sich gegenüber der Ausgangsmessung geändert hat.** Vier der fünf großen
+Faktoren sind weg: Die Speicherspitze des Backups liegt im Fensterweg bei
+12 statt 1784 MB, die größte JSON-Zeichenkette bei 2,2 statt 138 MB, die
+Haldenspitze bei 55 statt 508 MB, die Backup-Datei bei 11,8 statt 40,5 MB.
+Übrig sind zwei:
+
+- **Die Spuren je 1000 Einsätze — 3,66 MB gegen 3 MB.** Gemessen **nach**
+  Verdichtung und Ausdünnung und **mit** `OPTIMIZE TABLE`; ohne den kamen
+  19,30 MB heraus, weil dann freigegebene Seiten mitzählen. Der
+  Verdichtungsjob lässt **434 von 5050** Einsätzen liegen — ihr letzter Punkt
+  ist keine zwei Wochen alt, und er fasst nur abgeschlossene Aufzeichnungen
+  an. Das ist richtig so und heißt: 3,66 MB ist der Wert eines **frisch
+  eingespielten** Bestands, nicht der eines gewachsenen.
+- **Der Weg „am Stück" des Admin-Backups**, unverändert bei rund einem
+  Gigabyte. Er ist seit Web 11.1.0 nicht mehr der Weg der NutzerIn; die
+  Zeile steht hier, damit die 12 MB daneben nicht als Zahl für beide Wege
+  gelesen werden.
+
+**Und ein neuer Befund: die Zeitraumübersicht.** 42,61 s für ein Jahr mit
+3983 Einsätzen, gegen 3,18 s für die Suche über alle 5050. Der Unterschied
+ist keine Zufälligkeit, sondern eine Bauentscheidung: `zeitraum.php` ruft
+`EdMissionTable.erzeuge` **ohne `seite`** und baut deshalb so viele
+Tabellenzeilen, wie der Zeitraum Einsätze hat — sie ist die einzige Ansicht
+ohne Seitengrenze. Auch durch die sechsfache Drossel geteilt bleiben gut
+sieben Sekunden. Der Umbau ist ein eigenes Paket (Backlog Nr. 37).
+
+---
+
 ## Wiederholen
 
 ```

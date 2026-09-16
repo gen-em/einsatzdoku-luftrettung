@@ -40,6 +40,10 @@ beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
 | N24 | **Die Mengenbremse unter echtem Mobilfunk-NAT** | Der Container hat eine Adresse. Ob hinter einem Anbieter-NAT Geräte zusammenfallen, sagt nur der Betrieb. | Die Bauart nimmt das Risiko heraus: In den Adresstopf zählen **ausschließlich unbekannte** Kennungen, und ein gekoppeltes Gerät sendet nie eine unbekannte — gemessen als eigene Erwartung („Der Adresstopf ist leer — bekannte Kennungen zählen dort nicht"). Prüfpunkt **P24**. |
 | N25 | **Die Karte „Löschungen auf Sicherungszielen“** (E-P5a-08 nennt sechs Karten, gebaut sind fünf) | Es gibt dafür heute weder Tabelle noch Schreibweg noch `app_state`-Schlüssel — die Löschregel je Ziel entsteht erst in **AP10** (E-P5a-03). An fünf Stellen nachgesehen: `schema.sql` kennt keine Löschspalte in `backup_targets`, `Zielweg::loeschen()` hat genau einen Aufrufer (die Probedatei), `sz_loeschen()` löscht nur den DB-Eintrag, kein `app_state`-Schlüssel, kein Jobschritt. | Sie ist in den **Umfang von AP10** eingetragen (Abschnitt 3, AP10). Eine Karte, die sagt „hier steht noch nichts, weil es die Sache noch nicht gibt“, wäre kein Befund, sondern Lärm. |
 | N26 | **Ob ein Ereignis nach 30 Tagen wirklich verschwindet** — in Echtzeit | Der Aufräumjob läuft höchstens einmal je Kalendertag; 30 Tage lassen sich nicht abwarten. | Gemessen ist die **Regel**, nicht die Uhr: Das `DELETE` steht mit `INTERVAL 30 DAY` in `job_aufraeumen()` (Schritte `Sperrereignisse` und, neu, `Geraetevermerke`), und die Lesefunktion `sicherheit_ereignisse()` blickt auf **dieselbe** Frist zurück — eine Seite, die weiter zurückblickt als der Job aufhebt, zeigte eine Lücke, die wie ein ruhiger Monat aussieht. Der Echtlauf ist Prüfpunkt **P25**. |
+| N27 | **`post_max_size` der Zielanlage** (Backlog Nr. 37, eine der drei Messungen aus AP9) | Die Zahl gehört der Anlage, nicht dieser Maschine — und Staging stand am 16.09.2026 noch nicht (Zuarbeit, Rahmenplan 6a). Lokal kamen 32 MB durch, obwohl `post_max_size` auf 8M steht: Der eingebaute PHP-Server verhält sich bei `Content-Type: application/json` anders als ein Apache. Die lokale Zahl ist damit **keine** Auskunft. | **Es braucht keine Messung mehr, nur einen Seitenaufruf:** Die Plattformkarte auf Betrieb → Status nennt `post_max_size` und `upload_max_filesize` mit Soll- und Ist-Wert (seit AP2). Prüfpunkt **P29**. |
+| N28 | **Die Fehlernummern 1040 und 1203** | 1040 (`max_connections` des ganzen Servers) lässt sich auf einer Maschine, auf der noch etwas anderes läuft, nicht gefahrlos herstellen. Die Systemvariable hinter 1203 lässt sich in MariaDB **nicht zur Laufzeit setzen**, wenn der Server mit `--max-user-connections=0` gestartet ist (Fehler 1290, gemessen). | Die Verbindungsprobe stellt **1226** her — die GRANT-Grenze am Datenbankkonto, also den Fall, den ein Hoster setzt. Für 1040 und 1226 ist zusätzlich die **Ausnahme selbst** untersucht worden (16.09.2026): `getCode()` trägt die Treibernummer als Zahl, `errorInfo[1]` ist gesetzt, die Meldung trägt `[1040]` bzw. `[1226]` — alle drei Wege in `ueberlast_erkannt()` greifen. Für 1203 ist es die Liste `UEBERLAST_CODES`, gelesen, nicht gelaufen. Prüfpunkt **P27**. |
+| N29 | **Der Zweig „Zähler nicht schreibbar" über HTTP** | Der Prüfserver läuft als `root`, und für `root` ist jedes Verzeichnis schreibbar — `chmod a-w server/` ändert daran nichts. | Gemessen am **Funktionsaufruf** mit einem unprivilegierten Benutzer (`setpriv --reuid=65534 … php -r 'ueberlast_stand()'`): **`schreibbar=false`**, `gesamt=13`. Die Statuszeile wertet genau dieses Feld zuerst aus. Prüfpunkt **P27** (zweiter Spiegelstrich). |
+| N30 | **Die Verbindungsgrenze unter Z2-Last und hinter PHP-FPM** | „Gegen Z2-Last" (500 Konten à 600 Einsätze) sind 300 000 Einsätze und ein Tag Rechenzeit. Und gemessen ist der **eingebaute** PHP-Server; ein Apache mit PHP-FPM hält eigene Prozessgrenzen, die möglicherweise **vor** der Datenbankgrenze liegen — dann kommt gar keine Anfrage bis zu `db()`. | Gemessen ist das **Verhalten an der Grenze**, nicht das Verhalten unter Bestandsgröße: 20 gleichzeitige Uploads bei 8 Arbeitern und 2 freien Plätzen, **0 Antworten außerhalb von 200 und 503**, nach Wiederholung 20/20 Einsätze und 400/400 Punkte in der Datenbank. Prüfpunkt **P27**. |
 | N8 | **Die Kontingent-Warnmail auf einem echten Mailserver** | Der Container hat keinen. | Die Logik ist mit abgesenkten Schwellen (50/53 %) durchgespielt: Beide Schwellen schlagen an, der Versand scheitert erwartungsgemäß und wird **nicht** als gemeldet vermerkt — also am nächsten Tag erneut versucht. Prüfpunkt **P10**. |
 
 ---
@@ -319,6 +323,32 @@ Prüfstand und nicht die Anwendung.
 
 ---
 
+### 1j. Nach AP9 (Web 20.13.0), im selben Container
+
+| Mittel | Aufruf | Ergebnis |
+|---|---|---|
+| **Verbindungsprobe (neu)** | `php tools/verbindungsprobe/probe.php` | **24 von 24 Erwartungen erfüllt.** Teil 1: 10 Verbindungen belegt, dann `SQLSTATE[HY000] [1226]`; `login.php` **503** mit `Retry-After: 5`, `Cache-Control: no-store`, dem Satz aus E-P5a-18, **kein `<script>`** und **keinem von 7** Datenbank-Begriffen (`SQLSTATE`, `1040`, `1203`, `PDO`, Datenbankbenutzer, `max_user_connections`, `Stack trace`); `ingest.php` und `auth_salt.php` **503 JSON** `{"error":"ausgelastet"}`; `index.php` **302** (erreicht die Datenbank nie); Zähler **ges 3, n 3, sp 3** bei **3** Abweisungen. Teil 2 (8 Arbeiter, 2 freie Plätze, 20 gleichzeitige Pakete): **8 × 200, 12 × 503, 0 anderes**; davon **10** aus der Verbindungsgrenze (Zählerdifferenz) und **2** aus Gedrängel; nach Wiederholung **20 von 20** Einsätzen und **400 von 400** Spurpunkten in der Datenbank |
+| Messstand | `python3 messen.py --frisch` | **5050 Einsätze · 1000 Diensttage · 2 813 201 Spurpunkte**, Bestand in 32,2 s erzeugt, in **231,9 s** über den regulären Weg eingespielt, **0 Konsolenfehler**. Browserprobe: Suche **3,18 s**, Tagesansicht **1,11 s**, **Zeitraumübersicht 42,61 s** (Jahr 2026, 3983 Einsätze, 3983 `<tr>`, 2,2 MB JSON), **Nachbearbeitung 2,83 s** (0 offene Zuordnungen), Backup **49,84 s / 11,8 MB**. Serverprobe nach Verdichtung und `OPTIMIZE`: Spuren **3,66 MB je 1000 Einsätzen** (Ziel 3), Fensterweg des Backups **0,92 s / 12 MB Spitze**, Waisen-Vollscan **0,033 s / 0 Waisen** |
+| Wartungsprobe | `php tools/wartungsprobe/probe.php` | **67 Erwartungen, 0 nicht erfüllt** — AP9 fasst `wartung_lib.php` an (gemeinsames Gerüst, vierstellige JSON-Liste), und die Probe misst genau das nach |
+| Ratenprobe · Ingestprobe · Kopplungsprobe | je `probe.php` | **50/0 · 83/0 · 76/0** |
+| Mailprobe · Jobprobe · Spurprobe | je `probe.php` | **41/0 · 35/0 · 45/0** |
+| Bilderlauf | `--nur 45-,45b,01-` | **24 Bilder · 0 Überlauf · 0 Konsolenfehler · 0 Knöpfe falscher Höhe** (Zeiger, 44/36 px) |
+| Wortliste | `python3 wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen**; 98 Regeln, 98 gegriffen. Eine Regel (`maschine-als-rechner`) um den Zeilenkopf „Antwort, Maschinen" erweitert — der gleiche Kopf in Technik.md 4.99c lag zufällig im Uhr-Kapitel und war darüber erklärt, der neue in 5e nicht |
+| Vollständigkeit | `python3 pruefen.py` | **377 = unverändert.** Erster Lauf: 380; die drei zusätzlichen waren **Auslassungszeichen in neuen Kommentaren** und sind entfernt |
+| CSP-Probe | `php tools/cspprobe/pruefen.php` | **0 Befunde** auf **109** `<script>`-Stellen |
+| Sitzungshärtung · Installweiche · Migrationsregister | je `pruefen.php` | **0 · 0 · 0** (52 Kennungen, 34 Tabellen, 219 Spalten) |
+| Kontraste | `python3 tools/screenshots/kontrast.py` | **22 Paare gerechnet, 0 verfehlt** |
+| PHP-Syntax | `php -l` über `server/` und `tools/` | **484 Dateien, 0 Fehler** |
+
+**Ein Nebenbefund zur Messmethode.** Die Serverprobe meldete für die Spuren
+zuerst **19,30 MB je 1000 Einsätzen** und dann **3,66 MB** — derselbe Bestand,
+derselbe Lauf. Der Unterschied ist `--optimieren`: Ohne `OPTIMIZE TABLE` zählt
+der **belegte** Platz, und der enthält die von der Verdichtung freigegebenen
+Seiten. Das Werkzeug sagt es in seiner Ausgabe selbst dazu; wer die erste Zahl
+zitiert, zitiert eine Tabelle und keinen Bestand.
+
+---
+
 ---
 
 ## 2. Was im Browser geprüft wurde
@@ -406,6 +436,30 @@ BetreiberIn):
 > tatsächlich aufhält. Die Seite sagt es nur an. Gemessen ist es in der
 > Ratenprobe (1,00 s und 8,0 s) — und zwar in einem **eigenen Prozess**, weil
 > `rate_verlangsamung()` sich ihre Antwort je Anfrage merkt.
+
+**Nach AP9**, gegen die lokale Installation (Chromium 141):
+
+| Was | Ergebnis |
+|---|---|
+| Betrieb → Status, Karte Server, Zeile **„Verbindungen"** bei 13 Vorfällen | „13 in dieser Stunde · Spitze 13 je Stunde (16.09.2026 18 Uhr) · insgesamt 13 · zuletzt vor 25 Minuten — max_user_connections beim Hoster anheben lassen", Plakette **„zu eng"**, orange; **0 Konsolenfehler** |
+| Dieselbe Zeile ohne Zählerdatei | „Keine abgewiesene Verbindung seit Beginn der Zählung · persistente Verbindungen sind aus", Plakette „in Ordnung", blau |
+| Dieselbe Zeile bei nicht schreibbarer Datei | **nicht über HTTP messbar** — der Prüfserver läuft als `root`. Am Funktionsaufruf mit unprivilegiertem Benutzer: `schreibbar=false` (N29) |
+| **Ausgelastet-Seite** bei 360 px | HTTP **503**, `Retry-After: 5`, **0 px** waagerechter Überlauf; Logo **NEF** (Münzwurf), Stylesheet trägt, Text vollständig |
+| Dieselbe bei 768 px | HTTP **503**, `Retry-After: 5`, **0 px**; Logo **Hubschrauber** — der Münzwurf des gemeinsamen Gerüsts arbeitet |
+| Dieselbe bei 1280 px | HTTP **503**, `Retry-After: 5`, **0 px** |
+| Konsolenmeldungen der Ausgelastet-Seite | **3** — je Breite eine: „Failed to load resource: 503". Das ist der **Statuscode des Dokuments selbst**, den Chromium meldet, kein fehlendes Teil der Seite: Das Stylesheet trägt sichtbar (Schriften, Farben, Meldungsrahmen), und die Seite lädt sonst nichts |
+| Zeitraumübersicht mit 3983 Einsätzen | die Seite kommt und ist vollständig — sie braucht **42,61 s** dafür (Messstand, 6× Drossel). Das ist der Befund, kein Fehler |
+
+> **Was der Browser hier NICHT belegt:** dass die 503 aus der
+> Verbindungsgrenze kommt und nicht aus etwas anderem. Der Browser sieht nur
+> den Statuscode. Belegt ist es über den **Zähler**: Er zählt genau die
+> Abweisungen mit, die die Probe ausgelöst hat (3 von 3), und er zählt das
+> Gedrängel ausdrücklich **nicht** mit — daraus ergibt sich in Teil 2 die
+> Aufteilung 10 zu 2.
+
+---
+
+---
 
 ## 3. Die Prüfliste
 
@@ -904,6 +958,79 @@ deinem Namen**.
 
 ---
 
+### P27 — Die Verbindungsgrenze auf der echten Anlage (AP9)
+
+**Wofür:** `tools/verbindungsprobe/` stellt **1226** her — die GRANT-Grenze am
+Datenbankkonto. Auf der Zielanlage kann dieselbe Sache aus **1040** oder
+**1203** kommen, und davor steht bei einem Apache mit PHP-FPM zusätzlich eine
+**Prozessgrenze**, die die Anwendung gar nicht sieht. Gemessen ist der
+eingebaute PHP-Server, nicht der Webspace.
+
+**Weg:** Auf Staging (oder Produktiv, außerhalb der Dienstzeit) **Betrieb →
+Status → Plattform** öffnen und den Wert notieren, den der Hoster für
+gleichzeitige Datenbankverbindungen setzt; dann mehrere Uploads gleichzeitig
+auslösen — zwei Uhren und ein Handy gleichzeitig synchronisieren lassen, oder
+ein Backup ziehen, während jemand die Suche benutzt.
+
+**Erwartet:** Entweder passiert nichts (die Grenze ist weit genug), oder es
+kommt eine Seite **„Ausgelastet"** bzw. `{"error":"ausgelastet"}` — **nie**
+eine 500 und **nie** ein Ausnahmetext mit Hostnamen. Die Zeile
+**Verbindungen** auf der Statusseite zählt mit.
+
+**Woran ein Scheitern zu erkennen ist:**
+
+- Es kommt eine **500** mit `SQLSTATE[…]`: Dann trägt der Hoster eine vierte
+  Fehlernummer, die `UEBERLAST_CODES` nicht kennt. Die Nummer steht in der
+  Meldung — sie gehört in die Liste, und der Fund gehört ins Backlog.
+- Die Zeile **Verbindungen** sagt „**Nicht gezählt**": Dann ist
+  `server/ueberlast.json` nicht schreibbar. Das ist kein Schönheitsfehler —
+  ohne die Datei gibt es **keine** Zahl, und die Zeile sagt das deshalb
+  ausdrücklich, statt eine Null zu zeigen. Abhilfe: Schreibrechte auf
+  `server/` prüfen.
+- Die Uhr meldet einen Upload als **endgültig gescheitert**: Dann behandelt
+  sie das 503 nicht als 5xx. Das wäre neu — der JSON-Vertrag verlangt seit
+  jeher Backoff und unveränderte Wiederholung, und S4 hat es gemessen.
+
+### P28 — Der Deadlock unter echter Gleichzeitigkeit (AP9, Nr. 210)
+
+**Wofür:** Der Fund von AP9 stammt aus **zwanzig Uploads desselben Geräts auf
+denselben Diensttag**. Das ist im Betrieb selten; häufiger ist ein Handy und
+eine Uhr am selben Tag, oder eine Nachlieferung, die neben einem laufenden
+Upload landet. Wie oft es dann wirklich passiert, sagt nur der Betrieb.
+
+**Weg:** Über einige Dienste hinweg gelegentlich ins **Fehlerprotokoll des
+Webspace** sehen und nach der Zeichenfolge `Gedraengel` suchen.
+
+**Erwartet:** Einzelne Zeilen sind harmlos — das Gerät wiederholt und der
+Upload kommt an. Häufen sich **dieselbe Datei und Zeile**, ist dort ein
+Engpass, und Backlog Nr. 210 (Transaktion wiederholen) wird dringend.
+
+**Woran ein Scheitern zu erkennen ist:** Ein Einsatz **fehlt** im Web, obwohl
+die Uhr ihn als gesendet führt. Dann hat eine Wiederholung nicht
+stattgefunden — das wäre etwas anderes als das Gedrängel selbst und gehört
+sofort gemeldet.
+
+### P29 — `post_max_size` der Zielanlage (Backlog Nr. 37, offen)
+
+**Wofür:** Die einzige der drei Messungen aus Nr. 37, die AP9 **nicht**
+liefern konnte. Sie entscheidet, ab wie vielen Einsätzen eine
+Wiederherstellung scheitert — der Browser entsiegelt die `.edbak` und schickt
+rohes, unkomprimiertes JSON per POST.
+
+**Weg:** Sobald Staging steht: **Betrieb → Status → Plattform** öffnen. Die
+Karte nennt `post_max_size` und `upload_max_filesize` mit Sollwert (Z3: 2 MB)
+und Ist-Wert.
+
+**Erwartet:** Eine Zahl. Sie gehört in **Backlog Nr. 37** eingetragen, und
+zwar mit der Angabe, von welcher Anlage sie stammt.
+
+**Woran ein Scheitern zu erkennen ist:** Steht dort weniger als **8 MB**,
+passen rund 280 Einsätze in eine Datei (28 KB Nutzlast je Einsatz, gemessen) —
+dann braucht ein Bestand von 5000 Einsätzen mindestens 18 Dateien, und das
+gehört ins Handbuch, bevor es jemand im Ernstfall herausfindet.
+
+---
+
 ---
 
 ## 4. Zuarbeiten, ohne die Punkte offen bleiben
@@ -922,6 +1049,30 @@ Aus dem Rahmenplan, Abschnitt 6 — hier nur, was P1 bis P8 blockiert:
 ---
 
 ## 5. Grenzen der benutzten Prüfmittel
+
+### 5d. `tools/verbindungsprobe/` (seit AP9)
+
+- **Sie misst 1226, nicht 1040 und nicht 1203.** Die serverweite Grenze lässt
+  sich auf einer Maschine, auf der noch etwas anderes läuft, nicht gefahrlos
+  herstellen; die Systemvariable hinter 1203 lässt sich in MariaDB nicht zur
+  Laufzeit setzen, wenn der Server mit `--max-user-connections=0` gestartet
+  ist. Belegt ist für alle drei, dass `ueberlast_erkannt()` sie an `getCode()`,
+  `errorInfo[1]` **und** an der Meldung findet — 1040 und 1226 wurden am
+  16.09.2026 einzeln herbeigeführt und ihre Ausnahme untersucht.
+- **Sie misst den eingebauten PHP-Server.** Ein Apache mit PHP-FPM hält eigene
+  Prozessgrenzen, und die liegen möglicherweise **vor** der Datenbankgrenze.
+  Siehe P27.
+- **Sie misst nicht unter Z2-Last.** Das Konzept nennt „gegen Z2-Last" (500
+  Konten à 600 Einsätze). Das sind 300 000 Einsätze und ein Tag Rechenzeit;
+  diese Probe misst das **Verhalten an der Grenze**, nicht das Verhalten unter
+  Bestandsgröße.
+- **Der Zweig „nicht schreibbar" ist nicht über HTTP gemessen.** Der
+  Prüfserver läuft als `root`, und für `root` ist jedes Verzeichnis
+  schreibbar. Belegt ist der Zweig am **Funktionsaufruf** mit einem
+  unprivilegierten Benutzer (`schreibbar=false`).
+- **Sie ändert eine Berechtigung in der Datenbank.** Der Ausgangswert wird im
+  `finally` zurückgeschrieben; scheitert das, sagt sie es auf STDERR mit Konto
+  und Host. Auf einer Installation mit Betrieb hat sie nichts zu suchen.
 
 ### 5c. `tools/ratenprobe/` (seit AP6)
 

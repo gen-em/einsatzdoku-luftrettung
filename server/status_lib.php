@@ -334,6 +334,63 @@ function status_erhebung(): array
         $sp['stand'] !== null ? 'erreichbar' : 'ungemessen',
         'betrieb_server.php');
 
+    /* ---- DIE VERBINDUNGSGRENZE (P5a/AP9, E-P5a-18) ----------------------
+     *
+     * Die Zeile darueber sagt, dass die Datenbank erreichbar IST — das
+     * beweist diese Seite dadurch, dass es sie gibt. Sie sagt nicht, wie oft
+     * sie es NICHT war. Genau das ist die Zahl, an der man merkt, dass
+     * `max_user_connections` des Hosters fuer diesen Betrieb zu eng steht:
+     * Wer 1203 bekommt, sieht eine 503 und liefert spaeter nach — es faellt
+     * niemandem auf, bis es auffaellt.
+     *
+     * DER ZAEHLER STEHT IN EINER DATEI, nicht in der Datenbank. Warum, steht
+     * bei `ueberlast_vermerken()` in `wartung_lib.php` (E-P5a-50): In dem
+     * Moment, in dem gezaehlt werden muesste, gibt es keine Verbindung.
+     *
+     * WANN ORANGE — und warum nicht einfach „ab Spitze 10". Die Ampel soll
+     * sagen, wie es JETZT steht, und sie muss wieder gruen werden koennen.
+     * Eine Spitze von 41 aus dem letzten Herbst faerbte sie sonst fuer immer,
+     * und was sich nie aendert, liest bald niemand mehr. Sie faerbt deshalb
+     * bei zehn Vorfaellen in der LAUFENDEN Stunde — und zusaetzlich, wenn
+     * die Spitze diese Schwelle erreicht hat und der letzte Vorfall keine 24
+     * Stunden her ist. Damit geht eine Nacht, in der es dreissigmal eng war,
+     * nicht unter, nur weil gerade Ruhe ist; und nach einem ruhigen Tag ist
+     * die Zeile von selbst wieder blau. */
+    $ul = ueberlast_stand();
+    if (!$ul['schreibbar']) {
+        /* DIE NULL, DIE NICHTS BEDEUTET (CLAUDE.md 6). Ohne diesen Zweig
+         * saehe eine Installation, in der die Datei nicht angelegt werden
+         * kann, aus wie eine ohne einen einzigen Vorfall. */
+        $ulText = 'Nicht gezählt — die Zähldatei neben wartung.lock lässt sich '
+                . 'nicht schreiben. Eine Null bedeutet hier nichts';
+        $ulTon  = 'orange';
+        $ulPlak = 'ungezählt';
+    } elseif ($ul['gesamt'] === 0) {
+        $ulText = 'Keine abgewiesene Verbindung seit Beginn der Zählung · '
+                . 'persistente Verbindungen sind aus';
+        $ulTon  = 'blau';
+        $ulPlak = 'in Ordnung';
+    } else {
+        $ulAkut  = $ul['stunde'] === gmdate('Y-m-d H') ? $ul['n'] : 0;
+        $ulFrisch = $ul['letzt'] !== null
+                 && strtotime($ul['letzt'] . ' UTC') > time() - 86400;
+        $ulEng   = $ulAkut >= UEBERLAST_ORANGE
+                || ($ulFrisch && $ul['spitze'] >= UEBERLAST_ORANGE);
+        $ulText = ($ulAkut > 0
+                    ? $ulAkut . ' in dieser Stunde'
+                    : 'in dieser Stunde keine')
+                . ' · Spitze ' . $ul['spitze'] . ' je Stunde'
+                . ($ul['spitze_stunde'] !== null
+                    ? ' (' . fmt_local($ul['spitze_stunde'] . ':00:00', 'd.m.Y H') . ' Uhr)'
+                    : '')
+                . ' · insgesamt ' . $ul['gesamt']
+                . ' · zuletzt ' . status_alter($ul['letzt'])
+                . ($ulEng ? ' — max_user_connections beim Hoster anheben lassen' : '');
+        $ulTon  = $ulEng ? 'orange' : 'blau';
+        $ulPlak = $ulEng ? 'zu eng' : $ul['gesamt'] . ' gezählt';
+    }
+    $server[] = status_z('Verbindungen', $ulText, $ulTon, $ulPlak);
+
     $server[] = status_z('PHP und Zeitzone',
         PHP_VERSION . ' · Anzeige in ' . date_default_timezone_get()
         . ' · gespeichert wird UTC',

@@ -5322,5 +5322,61 @@ declare(strict_types=1);
  * die Sicherheitsseite haette die vierte Kopie gebraucht.
  *
  * KEINE MIGRATION. Alle Tabellen stehen seit AP6 und AP7.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.13.0 — DIE VERBINDUNGSGRENZE: „AUSGELASTET" IST NICHT „KAPUTT"
+ * ---------------------------------------------------------------------------
+ *
+ * AP9 von P5a (E-P5a-18). MySQL/MariaDB weist eine Verbindung ab, wenn eine
+ * von drei Grenzen erreicht ist: `max_connections` des Servers (1040), die
+ * Systemvariable `max_user_connections` (1203) oder die GRANT-Grenze dieses
+ * einen Datenbankkontos (1226). Auf einem geteilten Webspace ist die dritte
+ * die alltaegliche — der Hoster gibt jedem Kunden seine Zahl, und sie liegt
+ * regelmaessig bei 10 bis 30.
+ *
+ * Bis 20.12.0 kam dann eine **500** heraus, mit dem ungefilterten Text der
+ * PDO-Ausnahme. Darin stehen Hostname und Benutzername der Datenbank. Zwei
+ * Fehler in einem: Die Anfrage war nicht kaputt, sie war verfrueht — und was
+ * auf dem Bildschirm stand, ging niemanden etwas an.
+ *
+ * JETZT: 503 mit `Retry-After: 5`. Seiten bekommen eine Seite im Aufbau der
+ * Wartungsseite („Der Server ist gerade ausgelastet — bitte in einer Minute
+ * noch einmal"), JSON-Endpunkte `{"error":"ausgelastet"}`. Fuer die Geraete
+ * ist das dieselbe Zusage wie der Wartungsmodus; KEIN CLIENT WIRD DAFUER
+ * GEAENDERT.
+ *
+ * DIE DRITTE NUMMER STAND NICHT IM KONZEPT (E-P5a-51). Gemessen am
+ * 16.09.2026 gegen MariaDB 10.11: Eine GRANT-Grenze am Konto meldet 1226,
+ * nicht 1203. Ohne diese Zeile haette das Paket genau den Fall nicht
+ * abgedeckt, fuer den es gebaut ist — und zwar still.
+ *
+ * DER ZAEHLER STEHT IN EINER DATEI (E-P5a-50), nicht in `app_state` wie
+ * geplant. In dem Augenblick, in dem gezaehlt werden muesste, gibt es keine
+ * Verbindung zur Datenbank. Derselbe Satz wie bei `wartung.lock`.
+ * `server/ueberlast.json` liegt nur auf dem Server; die Statusseite zeigt die
+ * Zahlen in der Karte Server, Zeile „Verbindungen", und sagt ausdruecklich,
+ * wenn die Datei nicht schreibbar ist — „0 Vorfaelle" und „nicht gezaehlt"
+ * saehen sonst gleich aus.
+ *
+ * ZWEI FEHLER, DIE OHNE MELDUNG DURCHGEGANGEN WAEREN
+ *
+ * 1. ZWOELF VON ZWANZIG GLEICHZEITIGEN UPLOADS BEKAMEN 500 (E-P5a-52).
+ *    Deadlock 1213 auf der `days`-Zeile, die jeder Upload eines Diensttags
+ *    fortschreibt. Derselbe Fehler wie die Verbindungsgrenze, eine Ebene
+ *    hoeher — und nie gemessen, weil kein Pruefmittel bisher gleichzeitig
+ *    hochgeladen hat. 1213 und 1205 antworten jetzt ebenfalls 503; die
+ *    Abhilfe (Transaktion wiederholen) ist Backlog Nr. 210.
+ *
+ * 2. DER EINLADUNGSLINK WAR IN EINER SACKGASSE (E-P5a-54). AP5 las den
+ *    Zustand `wartet` als „geht gleich hinaus" und verbarg den Setz-Link.
+ *    `wartet` heisst aber, dass der ERSTE VERSUCH GESCHEITERT ist. Auf einer
+ *    Installation mit eingetragenem, aber unerreichbarem SMTP-Server war der
+ *    Link nirgends mehr zu bekommen, und das Konto blieb unbenutzbar.
+ *
+ * DAZU: `JSON_SKRIPTE_AUSSERHALB_API` waechst von zwei auf vier (E-P5a-55).
+ * Der Wartungsmodus kam mit zweien aus, weil `auth_salt.php` und `jobs.php`
+ * in seiner Ausnahmeliste stehen. DIE UEBERLAST KENNT KEINE AUSNAHMEN.
+ *
+ * KEINE MIGRATION.
  */
-const WEB_VERSION = '20.12.0';
+const WEB_VERSION = '20.13.0';

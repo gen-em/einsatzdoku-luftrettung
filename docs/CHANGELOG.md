@@ -14,6 +14,153 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.13.0] — 2026-09-16
+
+**P5a/AP9 — die Verbindungsgrenze: „ausgelastet" ist nicht „kaputt".**
+
+### Hinzugefügt — 503 statt 500, wenn die Datenbank keine Verbindung mehr annimmt
+
+**Was galt.** MySQL/MariaDB weist eine Verbindung ab, wenn eine von drei
+Grenzen erreicht ist: `max_connections` des Servers (Fehler 1040), die
+Systemvariable `max_user_connections` (1203) oder die GRANT-Grenze des
+einzelnen Datenbankkontos (1226). Auf einem geteilten Webspace ist die dritte
+die alltägliche — der Hoster gibt jedem Kunden seine Zahl, und sie liegt
+regelmäßig bei 10 bis 30. Sie wird erreicht, wenn eine Handvoll Uhren
+gleichzeitig nachliefert, während jemand eine Sicherung zieht.
+
+Bis hierher kam in diesem Fall eine **500** heraus, und zwar mit dem
+ungefilterten Text der PDO-Ausnahme. Darin stehen Hostname und Benutzername
+der Datenbank. Zwei Fehler in einem: Die Anfrage war nicht kaputt, sie war
+verfrüht — und was auf dem Bildschirm stand, ging niemanden etwas an.
+
+**Was gilt.** `db.php` fängt die drei Nummern beim Verbinden ab und antwortet
+mit **503**:
+
+- **Seiten** bekommen eine Seite im Aufbau der Wartungsseite, mit dem Satz
+  „Der Server ist gerade ausgelastet — bitte in einer Minute noch einmal",
+  ohne Skript und ohne ein Wort über die Datenbank.
+- **JSON-Endpunkte** bekommen `{"error":"ausgelastet"}`.
+- Beide tragen `Retry-After: 5`. Für die Geräte ist das dieselbe Zusage wie
+  der Wartungsmodus (JSON-Vertrag 5: 5xx heißt „später unverändert erneut"),
+  und sie halten sich schon heute daran — **kein Client wird dafür geändert**.
+
+Fünf Sekunden für die Maschine, „in einer Minute" für den Menschen: Eine
+Überlast dauert Sekunden, aber „in fünf Sekunden" läse sich auf einer Seite
+wie ein Versprechen, das niemand einlösen kann. Beide Zahlen beantworten
+verschiedene Fragen.
+
+**Die dritte Nummer stand nicht im Konzept.** E-P5a-18 nennt 1040 und 1203.
+Gemessen wurde am 16.09.2026 gegen MariaDB 10.11, dass eine GRANT-Grenze am
+Konto — also genau das, was ein Hoster setzt — **1226** meldet und nicht 1203.
+Ohne diese Zeile hätte das Paket den Fall nicht abgedeckt, für den es gebaut
+ist, und zwar still: Die Probe hätte dieselbe Annahme geteilt und grün
+gemeldet.
+
+### Hinzugefügt — ein Zähler, der auch dann schreibt, wenn die Datenbank schweigt
+
+Auf der Statusseite steht in der Karte **Server** eine neue Zeile
+**Verbindungen**: wie viele Abweisungen es in der laufenden Stunde gab, die
+größte je gemessene Stunde, die Gesamtzahl und wann es zuletzt eng war. Ab
+zehn Abweisungen in der laufenden Stunde wird sie orange — und ebenso, wenn
+die Spitze diese Schwelle erreicht hat und der letzte Vorfall keine 24 Stunden
+her ist. Damit geht eine Nacht, in der es dreißigmal eng war, nicht unter, nur
+weil gerade Ruhe ist; und nach einem ruhigen Tag ist die Zeile von selbst
+wieder blau. Eine Spitze aus dem letzten Herbst färbte sie sonst für immer,
+und was sich nie ändert, liest bald niemand mehr.
+
+**Der Zähler steht in einer Datei, nicht in `app_state`** — anders, als das
+Konzept es vorsah. Der Grund ist der, der den Zähler überhaupt erst
+interessant macht: In dem Augenblick, in dem gezählt werden müsste, gibt es
+keine Verbindung zur Datenbank. Es ist derselbe Satz, der über `wartung.lock`
+steht: Ein Schalter, der die Datenbank fragt, ob er schalten darf, ist im
+entscheidenden Moment stumm. Erwogen und verworfen wurde, den Vorfall in eine
+Datei zu schreiben und beim nächsten gelungenen Verbindungsaufbau nach
+`app_state` nachzutragen — das hätte den Buchstaben erfüllt und zwei Speicher
+für eine Zahl gebraucht. `server/ueberlast.json` steht in `.gitignore` und in
+der Ausnahmeliste beider FTPS-Schritte, wie `wartung.lock`. Lässt sie sich
+nicht schreiben, sagt die Statuszeile das: „0 Vorfälle" und „nicht gezählt"
+sehen sonst gleich aus.
+
+### Behoben — ein Deadlock ist auch kein Defekt
+
+Die neue `tools/verbindungsprobe/` hat nebenbei etwas gefunden, das teurer war
+als das, wonach sie suchte. Zwanzig Uploads desselben Geräts auf denselben
+Diensttag, gleichzeitig abgeschickt, ergaben **zwölfmal HTTP 500** —
+`SQLSTATE[40001] 1213 Deadlock found when trying to get lock; try restarting
+transaction`. Alle Uploads eines Diensttags fassen dieselbe `days`-Zeile an
+(`dt_zeitraum_fortschreiben()`), und InnoDB bricht dann eine der beteiligten
+Transaktionen ab, um den Kreis zu lösen.
+
+Das ist derselbe Fehler wie 1040/1203, nur eine Ebene höher: Die Anfrage ist
+nicht kaputt, sie ist zu früh — die Meldung von InnoDB sagt es wörtlich. 1213
+und 1205 (Lock wait timeout) antworten deshalb jetzt ebenfalls mit 503
+`ausgelastet`, in `json_fehler()` und in `ingest.php`, das seine 500 selbst
+ausgibt. Der Vorfall steht mit Datei und Zeile im Fehlerprotokoll, aber ohne
+Fehlerkennung: Ein Gedrängel ist nichts, wonach jemand am Telefon fragt — was
+zählt, ist die Stelle, und die findet man durch Zählen gleicher Zeilen.
+
+**Die eigentliche Abhilfe steht aus** und ist als Backlog Nr. 210
+aufgenommen: die Transaktion zu wiederholen, statt sie dem Aufrufer
+zurückzugeben. Bis dahin kostet ein Gedrängel einen zweiten Anlauf des
+Geräts, und der kommt von selbst.
+
+### Behoben — der Einladungslink war in einer Sackgasse
+
+AP5 hat die Mail-Warteschlange eingeführt und dabei `wartet` als „liegt in der
+Warteschlange und geht gleich hinaus" gelesen; der Setz-Link wurde deshalb
+nicht mehr angezeigt. Das ist die falsche Hälfte: `wartet` heißt, dass der
+**erste Versuch gescheitert ist** — genau das sagt die Statusseite seit AP5
+wortgleich.
+
+Die Folge war eine Sackgasse. Auf einer Installation mit eingetragenem, aber
+unerreichbarem SMTP-Server (falsches Passwort, gesperrter Port, abgelaufenes
+Zertifikat) kam die Einladung nie an, und der Link war nirgends mehr zu
+bekommen — auch „Setz-Link erneut schicken" verbarg ihn. Das Konto blieb
+unbenutzbar.
+
+Seit Web 20.13.0 zeigen `admin_users.php` und `admin_user.php` den Link auch
+bei `wartet`, mit dem Satz dazu, dass die Mail beim ersten Versuch nicht
+hinausging. Nur `zugestellt` heißt „die Mail ist raus". Gefunden hat es der
+Messstand: `kreislauf.py` liest den Link aus dieser Antwort, und die lokale
+Installation hat keinen erreichbaren Mailserver. Ein Werkzeug, das über den
+regulären Weg geht, misst eben auch den Weg.
+
+### Geändert — vier JSON-Wege statt zwei
+
+`wartung_json_gefragt()` kannte außerhalb von `/api/` zwei Skripte:
+`ingest.php` und `pair.php`. Für den Wartungsmodus genügte das, weil
+`auth_salt.php` und `jobs.php` in `WARTUNG_AUSNAHMEN` stehen und das Tor bei
+ihnen vorher umkehrt. **Die Überlast kennt keine Ausnahmen:** Wenn die
+Datenbank keine Verbindung mehr annimmt, ist jede Seite betroffen. Mit der
+alten Liste hätte `auth_salt.php` eine HTML-Seite an ein `fetch()` geliefert,
+das JSON erwartet, und die Anmeldeseite hätte daraus „Anmeldung derzeit nicht
+möglich" gemacht statt „ausgelastet" — der Fehler aus Backlog Nr. 171, einen
+Stock tiefer. `gpx.php` bleibt bewusst draußen: Es wird vom Browser
+angesteuert, nicht per `fetch()` geholt.
+
+### Behoben — ein Kettenschritt, der nie laufen konnte
+
+`auslieferung.yml` rief bei jedem Tag-Lauf
+`tools/messstand/serverprobe.py --basis "$STAGING_URL"` auf. Diese
+Kennzeichnung gibt es nicht; jeder Tag-Lauf wäre dort mit „unrecognized
+arguments" abgebrochen. Und sie fehlt nicht aus Versehen: Die Serverprobe
+misst Tabellengrößen, Speicherspitzen und den Waisen-Vollscan und braucht
+dafür die Datenbank selbst — über HTTP ist davon nichts zu sehen. Eine
+Adresse als Ziel war ein Denkfehler, kein Tippfehler. Der Schritt ist
+ersatzlos gestrichen; der Messstand ist ein manuelles Regressionsmittel (R35)
+und läuft lokal vor einer Auslieferung. Backlog Nr. 206.
+
+### Neu — `tools/verbindungsprobe/`
+
+Sie stellt die Lage her, statt sie abzuwarten: setzt `max_user_connections`
+des Anwendungskontos auf einen kleinen Wert, hält selbst so viele Verbindungen
+offen, dass nichts mehr frei ist, und misst über echtes HTTP, was herauskommt.
+Der Riegel schließt nach innen — nur gegen 127.0.0.1, nur mit Wurzelzugang
+über den Unix-Socket, und der Ausgangswert wird im `finally` zurückgeschrieben.
+Sie startet ihren eigenen PHP-Server mit `PHP_CLI_SERVER_WORKERS`, weil der
+eingebaute sonst eine Anfrage nach der anderen bedient und es keine
+Gleichzeitigkeit zu messen gäbe.
+
 ## [Web 20.12.0] — 2026-09-16
 
 **P5a/AP8 — der Ratenschutz bekommt ein Gesicht: Betrieb → Status →

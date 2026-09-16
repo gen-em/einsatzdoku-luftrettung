@@ -10,13 +10,63 @@ $CFG = require __DIR__ . '/config.php';
 
 function db(): PDO {
     static $pdo = null;
+    /* DER RIEGEL GEGEN DIE SCHLEIFE (P5a/AP9). Siehe den Block unten. */
+    static $inUeberlast = false;
     global $CFG;
     if ($pdo === null) {
-        $pdo = new PDO($CFG['db']['dsn'], $CFG['db']['user'], $CFG['db']['pass'], [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
-        ]);
+        try {
+            $pdo = new PDO($CFG['db']['dsn'], $CFG['db']['user'], $CFG['db']['pass'], [
+                /* KEINE PERSISTENTEN VERBINDUNGEN (E-P5a-18). Die Zeile
+                 * fehlt hier mit Absicht: `PDO::ATTR_PERSISTENT` haelt die
+                 * Verbindung ueber das Ende der Anfrage hinaus offen und
+                 * belegt damit genau den Platz, um den es im Block unten
+                 * geht. Auf einem Webspace mit `max_user_connections = 10`
+                 * genuegen zehn ruhende PHP-Prozesse, und die elfte Anfrage
+                 * bekommt 1203, obwohl niemand arbeitet. Gezaehlt am
+                 * 16.09.2026: 0 Treffer fuer `ATTR_PERSISTENT` unter
+                 * `server/` und `tools/` — es ist eine Zusage, keine
+                 * Feststellung. */
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES   => false,
+            ]);
+        } catch (PDOException $ex) {
+            /* ---- DIE VERBINDUNGSGRENZE (P5a/AP9, E-P5a-18) --------------
+             *
+             * 1040 und 1203 heissen nicht „kaputt", sondern „gerade kein
+             * Platz". Bis hierher kamen sie als 500 heraus, mit dem
+             * ungefilterten Ausnahmetext — in dem Hostname und Benutzername
+             * der Datenbank stehen. Beides ist falsch; die Begruendung
+             * steht bei `ueberlast_antwort()` in `wartung_lib.php`.
+             *
+             * DIE SCHLEIFE, DIE DER RIEGEL ABFAENGT: Alles, was unterhalb
+             * einer 503-Antwort noch eine Einstellung nachsehen will
+             * (`kopfzeilen_lib.php` liest zwei aus `app_state`), landet
+             * ueber `app_state_lesen()` wieder hier — und zwar mit `$pdo`
+             * weiterhin `null`, also mit einem zweiten Verbindungsversuch,
+             * der genauso scheitert. Ohne den Riegel waere das eine
+             * Endlosschleife bis zum Speicherende, und zwar ausgerechnet
+             * unter Last. Mit ihm fliegt die Ausnahme beim zweiten Mal
+             * einfach weiter; `app_state_lesen()` faengt sie und nimmt
+             * seine Vorgabe — genau das, wofuer sie gebaut ist.
+             *
+             * Der Riegel wird NICHT zurueckgesetzt: `ueberlast_antwort()`
+             * endet mit `exit`, und auf der Kommandozeile ist der zweite
+             * Versuch ohnehin derselbe Fehler.
+             *
+             * AUF DER KOMMANDOZEILE wird gezaehlt, aber nicht geantwortet.
+             * Ein Job, der eine HTML-Seite nach stdout schreibt und sich
+             * beendet, verschluckt seinen eigenen Fehler; der Aufrufer soll
+             * die Ausnahme sehen. Dieselbe Unterscheidung trifft
+             * `wartung_tor()` eine Ebene hoeher. */
+            if (!$inUeberlast && function_exists('ueberlast_erkannt')
+                && ueberlast_erkannt($ex)) {
+                $inUeberlast = true;
+                ueberlast_vermerken();
+                if (!wartung_cli()) { ueberlast_antwort(ueberlast_retry_s($ex)); }
+            }
+            throw $ex;
+        }
         /* ZEITZONE DER VERBINDUNG AUSDRUECKLICH SETZEN (M5-09).
          *
          * Ohne diese Zeile rechnet NOW() in der Zeitzone des Datenbank-
@@ -590,6 +640,14 @@ function fehler_kennung(Throwable $ex, string $bereich): string
  */
 function json_fehler(Throwable $ex, string $bereich): never
 {
+    /* GEDRAENGEL IST KEIN DEFEKT (P5a/AP9, E-P5a-52). Ein Deadlock oder ein
+     * abgelaufener Sperrzeitraum sagt „noch einmal versuchen", nicht
+     * „kaputt". Die Begruendung und der Fund stehen bei `gedraengel_erkannt()`
+     * in `wartung_lib.php`. */
+    if (gedraengel_erkannt($ex)) {
+        gedraengel_vermerken($ex, $bereich);
+        ueberlast_antwort();
+    }
     $kennung = fehler_kennung($ex, $bereich);
     json_out(['error'   => $bereich,
               'kennung' => $kennung,

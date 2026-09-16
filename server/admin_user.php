@@ -228,9 +228,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * hast…" — wer die Verwaltung darum gebeten hat, hat es
              * angefordert. Der Unterschied steht im Katalog. */
             $zustellung = mail_einreihen('passwort_neu', (string)$u['email'], ['link' => $link]);
-            $ok = $zustellung !== MAIL_ABGELEHNT;
-            if ($ok) {
+            /* `wartet` zeigt den Link MIT — die Begruendung steht in
+             * `admin_users.php` bei derselben Stelle (E-P5a-54). Hier waere
+             * sie sogar noch dringender: Dies ist die Seite, auf der jemand
+             * landet, WEIL die Einladung nicht angekommen ist. */
+            if ($zustellung === MAIL_ZUGESTELLT) {
                 $notice = 'Setz-Link an ' . $u['email'] . ' verschickt — eine Stunde gültig.';
+            } elseif ($zustellung === MAIL_WARTET) {
+                $notice = 'Der Setz-Link ist beim ersten Versuch NICHT hinausgegangen '
+                        . 'und steht in der Warteschlange. Er gilt eine Stunde — '
+                        . 'so lange nützt auch der Link unten.';
+                $setzLink = $link;
             } else {
                 $notice = 'Der Setz-Link konnte NICHT verschickt werden.';
                 $setzLink = $link;

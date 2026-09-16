@@ -205,7 +205,13 @@ Daten erst nach Server-Bestätigung.
 │   │                       Tor, Wartungsseite, 503-JSON, Balken,
 │   │                       Ausnahmeliste. Lädt NICHTS — der Zustand ist eine
 │   │                       Datei (`wartung.lock`), damit er auch bei
-│   │                       umgebauter Datenbank greift
+│   │                       umgebauter Datenbank greift. Seit Web 20.13.0
+│   │                       steht die ZWEITE Störung daneben (P5a/AP9,
+│   │                       Abschnitt 5e): „ausgelastet" — Erkennung der
+│   │                       Fehlernummern, Zähler `ueberlast.json`, 503-Weg
+│   │                       und das gemeinsame Gerüst beider Störungsseiten.
+│   │                       Aus demselben Grund am selben Ort: Beide müssen
+│   │                       ohne Datenbank antworten
 │   ├── betrieb_sicherheit.php
 │   │                       Betrieb → Status → **Sicherheit** (P5a/AP8,
 │   │                       E-P5a-08): fünf Karten — aktive Sperren mit
@@ -473,6 +479,15 @@ Daten erst nach Server-Bestätigung.
 │   │                      Teil 6 eine Zeile aus dem Migrationsregister;
 │   │                      räumt beides im finally ab. Nicht auf einer
 │   │                      Installation mit Betrieb fahren (s. LIESMICH.md)
+│   ├── verbindungsprobe/ prüft über ECHTES HTTP, was die Anwendung tut, wenn
+│   │                      die Datenbank keine Verbindung mehr annimmt
+│   │                      (P5a/AP9): 503 statt 500, `Retry-After: 5`, kein
+│   │                      Wort über die Datenbank, der Zähler zählt genau die
+│   │                      Abweisungen — und 0 verlorene Uploads bei
+│   │                      gleichzeitigen Paketen. 24 Erwartungen.
+│   │                      **Setzt `max_user_connections` der Datenbank** und
+│   │                      schreibt den Ausgangswert im finally zurück; nur
+│   │                      gegen 127.0.0.1 (s. LIESMICH.md)
 │   ├── klickprobe/        fährt Bedienwege im Browser und BEDIENT dabei
 │   │                      Elemente (S9, E-S9-16): Playwright wie der
 │   │                      Bilderlauf, aber `mouse.down()` — **300 ms halten** —
@@ -5566,7 +5581,7 @@ geändert** (E-S5W-08).
 | Zustand | Datei `server/wartung.lock`, JSON mit `seit` (ISO-UTC) und `von` (Anzeigename). **Keine Datenbank** — der Schalter wird gerade dann gebraucht, wenn sie umgebaut wird oder eine Migration auf halber Strecke steht |
 | Tor | `wartung_tor()` in `wartung_lib.php`, gerufen aus `db.php` **hinter `json_out()` und vor jeder Verbindung**. Nicht in `auth_guard.php`: Dort liefen nur die Seiten durch — `ingest.php` und `pair.php` laden `db.php` direkt, und das sind die beiden, die die Daten der Uhr bringen. Der **Torwächter** (unten) steht dagegen genau dort, und aus dem umgekehrten Grund: Er braucht eine Verbindung |
 | Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
-| Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript `ingest.php` oder `pair.php` heißt — die beiden liegen nicht unter `/api/`, und genau sie brauchen JSON |
+| Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript in `JSON_SKRIPTE_AUSSERHALB_API` steht — `ingest.php`, `pair.php`, `auth_salt.php`, `jobs.php`. Die vier liegen nicht unter `/api/` und brauchen trotzdem JSON. **Für den Wartungsmodus zählen nur die ersten beiden**, weil die anderen zwei in `WARTUNG_AUSNAHMEN` stehen und das Tor bei ihnen vorher umkehrt; die Liste ist in P5a/AP9 für die **Überlast** gewachsen, die keine Ausnahmen kennt (Abschnitt 5e) |
 | Kopfzeilen | `Retry-After: 300` (E-S5W-12), `Cache-Control: no-store`. Kein `Set-Cookie`: Das Tor greift vor `session_start()` |
 | Ausnahmen | **vierzehn** Skripte (`WARTUNG_AUSNAHMEN` in `wartung_lib.php` — dort steht zu jedem der Grund), verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_sicherheit.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `auth_salt.php`, `logout.php`, `install.php`. **Die Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). `betrieb_schluesselblatt.php` kam mit S10/AP3 dazu: Die Lage, in der man das Blatt braucht, ist genau eine Wartungslage. `betrieb_sicherheit.php` mit P5a/AP8, aus demselben Grund und schärfer: Dort steht der Knopf, mit dem sich eine Sperre aufheben lässt — wer im Wartungsmodus jemanden wieder hereinlassen muss, braucht genau diese Seite. **Die Zahl stand hier bis Web 20.1.0 auf „elf“ und die Aufzählung ließ `auth_salt.php` aus** — beide hinkten seit Web 19.1.2 (Nr. 171) hinterher; maßgeblich ist immer die Konstante, nicht dieser Satz. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
 | Schalten | `betrieb_updates.php`, Karte „Wartungsmodus", POST mit CSRF, nur BetreiberIn (S8/AP1). Idempotent: Ein zweites Einschalten überschreibt `seit` und `von` nicht. Scheitert das Schreiben oder Löschen, sagt die Seite es **mit Pfad** |
@@ -5585,7 +5600,7 @@ keine Installation öffnen, die jemand ausdrücklich geschlossen hat.
 `.github/workflows/auslieferung.yml` (bis Web 20.3.0: `deploy.yml`). Ohne den ersten schlösse ein Checkout jede
 Installation; ohne den zweiten löschte der Push die Datei — mitten im Update,
 für das sie da ist. Dasselbe Muster wie `config.php`, `install.lock`,
-`sicherungen/` und `apk/`.
+`sicherungen/`, `apk/` — und seit Web 20.13.0 `ueberlast.json` (Abschnitt 5e).
 
 #### Der Torwächter (ab Web 20.6.0, P5a/AP3, E-P5a-20; R40 (4), Nr. 54)
 
@@ -7448,6 +7463,93 @@ Ratenschutz gibt es in jeder Installation, und er lässt sich nicht abschalten.
 erfüllt, gemessen am DOM *und* an der Datenbank (Zeile 1 → 0, `rate_limits`
 1 → 0, Ereignis „aufgehoben" mit Kontokennung).
 
+
+## 5e. Die Verbindungsgrenze (ab Web 20.13.0, P5a/AP9, E-P5a-18)
+
+**„Ausgelastet" ist nicht „kaputt".** MySQL/MariaDB weist eine Verbindung ab,
+wenn eine von drei Grenzen erreicht ist. Die Nummern sind verschieden, und das
+ist der Punkt:
+
+| Nummer | Grenze | wer sie setzt |
+|---|---|---|
+| **1040** | `max_connections` — der ganze Datenbankserver | der Hoster, serverweit |
+| **1203** | Systemvariable `max_user_connections` | der Hoster, für alle Konten gleich |
+| **1226** | `ALTER USER … WITH MAX_USER_CONNECTIONS n` | der Hoster, **für dieses eine Datenbankkonto** |
+
+E-P5a-18 nannte die ersten beiden. **Gemessen am 16.09.2026 gegen MariaDB
+10.11 ist der Fall, den ein geteilter Webspace herstellt, die dritte Zeile** —
+eine GRANT-Grenze am Konto, also 1226. Alle drei stehen deshalb in
+`UEBERLAST_CODES` (`wartung_lib.php`).
+
+Bis Web 20.12.0 kam in diesen Fällen eine **500** heraus, mit dem
+ungefilterten Text der PDO-Ausnahme — darin stehen Hostname und Benutzername
+der Datenbank.
+
+| | |
+|---|---|
+| Abfangstelle | `db()` in `db.php`, um den `new PDO(...)` herum. Nur beim **Verbinden**; alles andere bleibt ein Fehler |
+| Antwort, Seiten | 503 mit einer Seite im Aufbau der Wartungsseite (gemeinsames Gerüst `stoerung_seite_html()`), Satz „Der Server ist gerade ausgelastet — bitte in einer Minute noch einmal", **kein** Skript, **kein** Knopf „Zur Verwaltung" (die Verwaltung antwortet ebenfalls nicht) |
+| Antwort, Maschinen | 503 `{"error":"ausgelastet","meldung":"…"}` |
+| Kopfzeilen | `Retry-After: 5`, `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`. **Ohne `kopfzeilen_seite()`** — jenes liest zwei Einstellungen aus `app_state`, also aus der Datenbank, die gerade nicht antwortet |
+| Wer bekommt JSON | `JSON_SKRIPTE_AUSSERHALB_API` — `ingest.php`, `pair.php`, `auth_salt.php`, `jobs.php` — plus alles unter `/api/`. **Vier statt zwei:** Für den Wartungsmodus genügten zwei, weil die beiden anderen in `WARTUNG_AUSNAHMEN` stehen und das Tor bei ihnen vorher umkehrt. Die Überlast kennt keine Ausnahmen. `gpx.php` bleibt draußen: Es wird vom Browser angesteuert, nicht per `fetch()` geholt |
+| Zähler | Datei `server/ueberlast.json` — laufende Stunde, Zahl darin, größte je gemessene Stunde, Gesamtzahl, Zeitpunkt des letzten Vorfalls. `flock`, weil eine Überlast viele Prozesse gleichzeitig trifft |
+| Anzeige | Statusseite, Karte **Server**, Zeile **Verbindungen**. Orange ab zehn Vorfällen in der laufenden Stunde — **oder** wenn die Spitze diese Schwelle erreicht hat und der letzte Vorfall keine 24 Stunden her ist. Ist die Datei nicht schreibbar, sagt die Zeile das: „0 Vorfälle" und „nicht gezählt" sähen sonst gleich aus |
+| Persistente Verbindungen | bleiben aus. `PDO::ATTR_PERSISTENT` steht nirgends (gezählt 16.09.2026: 0 Treffer unter `server/` und `tools/`) — eine persistente Verbindung belegt über das Ende der Anfrage hinaus genau den Platz, um den es hier geht |
+| Prüfmittel | `tools/verbindungsprobe/` — stellt 1226 her, misst über echtes HTTP. 24 Erwartungen |
+
+**Warum der Zähler in einer Datei steht und nicht in `app_state`** (E-P5a-50).
+Das Konzept sagt `app_state`. Das geht nicht, und zwar aus dem Grund, der den
+Zähler überhaupt erst interessant macht: In dem Augenblick, in dem gezählt
+werden müsste, gibt es keine Verbindung zur Datenbank. Es ist derselbe Satz,
+der über `wartung.lock` steht. Erwogen und verworfen wurde, den Vorfall in
+eine Datei zu schreiben und beim nächsten gelungenen Verbindungsaufbau nach
+`app_state` nachzutragen — das hätte den Buchstaben erfüllt und **zwei
+Speicher für eine Zahl** gebraucht. Die Datei steht in `.gitignore` **und** in
+der Ausnahmeliste beider FTPS-Schritte, wie `config.php`, `install.lock`,
+`wartung.lock`, `sicherungen/` und `apk/`.
+
+**Der Riegel gegen die Schleife.** Alles, was unterhalb der 503-Antwort noch
+eine Einstellung nachsehen will (`kopfzeilen_lib.php` liest zwei aus
+`app_state`), landet über `app_state_lesen()` wieder in `db()` — mit `$pdo`
+weiterhin `null`, also mit einem zweiten Verbindungsversuch, der genauso
+scheitert. Ohne den statischen Riegel `$inUeberlast` wäre das eine
+Endlosschleife bis zum Speicherende, ausgerechnet unter Last. Mit ihm fliegt
+die Ausnahme beim zweiten Mal weiter; `app_state_lesen()` fängt sie und nimmt
+ihre Vorgabe — genau das, wofür sie gebaut ist. Die Verbindungsprobe misst das
+nach: Der Zähler muss **genau so viele** Vorfälle tragen, wie es Abweisungen
+gab.
+
+**Auf der Kommandozeile wird gezählt, aber nicht geantwortet.** Ein Job, der
+eine HTML-Seite nach stdout schreibt und sich beendet, verschluckt seinen
+eigenen Fehler; der Aufrufer soll die Ausnahme sehen. Dieselbe Unterscheidung
+trifft `wartung_tor()` eine Ebene höher.
+
+### 5e.1 Gedrängel: 1213 und 1205 (E-P5a-52)
+
+Gefunden von der Verbindungsprobe, nebenbei, und teurer als das, wonach sie
+suchte: Zwanzig Uploads desselben Geräts auf denselben Diensttag, gleichzeitig
+abgeschickt, ergaben **zwölfmal HTTP 500** — `SQLSTATE[40001] 1213 Deadlock
+found when trying to get lock; try restarting transaction`. Alle Uploads eines
+Diensttags fassen dieselbe `days`-Zeile an (`dt_zeitraum_fortschreiben()` in
+`diensttag_lib.php`), und InnoDB bricht dann eine der beteiligten
+Transaktionen ab, um den Kreis zu lösen.
+
+Das ist derselbe Fehler wie 1040/1203/1226, eine Ebene höher: Die Anfrage ist
+nicht kaputt, sie ist zu früh — die Meldung von InnoDB sagt es wörtlich. Seit
+Web 20.13.0 antworten **1213** (Deadlock) und **1205** (Lock wait timeout)
+ebenfalls mit 503 `ausgelastet`, an zwei Stellen: `json_fehler()` in `db.php`
+und der eigene Fangblock von `ingest.php`, das seine 500 selbst ausgibt.
+
+Der Vorfall steht mit **Datei und Zeile** im Fehlerprotokoll, aber **ohne**
+Fehlerkennung (`gedraengel_vermerken()`): Ein Gedrängel ist nichts, wonach
+jemand am Telefon fragt — was zählt, ist die Stelle, und die findet man durch
+Zählen gleicher Zeilen, nicht durch Nachschlagen von Kennungen. Und er zählt
+**nicht** in `ueberlast.json`: Der Zähler beantwortet die Frage „steht
+`max_user_connections` zu eng?", und ein Gedrängel um eine Tabellenzeile
+beantwortet sie nicht.
+
+**Die eigentliche Abhilfe steht aus** — die Transaktion zu wiederholen, statt
+sie dem Aufrufer zurückzugeben. Backlog Nr. 210.
 
 ## 6. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)
 

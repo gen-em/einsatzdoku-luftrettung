@@ -1124,6 +1124,16 @@ try {
      * `kennung` im Fehlerprotokoll benannte den Rollback statt der Ursache —
      * also genau das Schweigen, das M3-10 abgestellt hat. */
     if ($pdo->inTransaction()) { $pdo->rollBack(); }
+    /* GEDRAENGEL ZUERST (P5a/AP9, E-P5a-52). `ingest.php` gibt seine 500
+     * selbst aus und geht nicht ueber `json_fehler()` — die Unterscheidung
+     * muss deshalb hier ein zweites Mal stehen. Sie steht NACH dem Rollback:
+     * Bei einem Deadlock hat InnoDB die Transaktion bereits abgebrochen, und
+     * die Fortsetzungsmarke der Spur soll da bleiben, wo sie war. Genau
+     * dieser Fall ist es, den die Verbindungsprobe zwoelfmal gemessen hat. */
+    if (gedraengel_erkannt($ex)) {
+        gedraengel_vermerken($ex, 'ingest');
+        ueberlast_antwort();
+    }
     /* Kennung statt Schweigen (M3-10/M4-06).
      *
      * Die Uhr zeigt nur, DASS der Upload scheiterte — mehr braucht sie auch

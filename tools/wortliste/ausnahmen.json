@@ -294,9 +294,9 @@
     },
     {
       "id": "maschine-als-rechner",
-      "zeile": "auf der Maschine|\\| Maschinen \\|",
+      "zeile": "auf der Maschine|\\| (Antwort, )?Maschinen \\|",
       "klasse": "Homonym",
-      "begruendung": "„Maschine\" meint hier den Rechner (Runbook) bzw. die maschinelle Zielgruppe eines Formats — nicht das Rettungsmittel. Ausdruecklich so in der Wortliste, Abschnitt 5.2."
+      "begruendung": "„Maschine\" meint hier den Rechner (Runbook) bzw. die maschinelle Zielgruppe eines Formats — nicht das Rettungsmittel. Ausdruecklich so in der Wortliste, Abschnitt 5.2. Die Zeilenkoepfe „Antwort, Maschinen\" in Technik.md 4.99c und 5e stellen JSON-Antworten den Seiten gegenueber; 4.99c lag bis P5a/AP9 zufaellig im Uhr-Kapitel und war darueber erklaert, 5e liegt es nicht — die Regel nennt den Fall seither selbst."
     },
     {
       "id": "flugmodus",

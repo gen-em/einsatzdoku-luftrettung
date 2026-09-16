@@ -286,6 +286,60 @@ messungen.push(await messen('Suche — erste Trefferanzeige', async () => {
   return { trefferzahl: zahl };
 }));
 
+/* ---- DIE BEIDEN OFFENEN MESSUNGEN AUS BACKLOG Nr. 37 (P5a/AP9) ----------
+ *
+ * Nr. 37 nennt sie seit S2 als „was hier offen bleibt": die
+ * Zeitraumuebersicht und die Nachbearbeitung bei 5000 Einsaetzen. Beide
+ * fehlten dieser Probe, und deshalb konnte S2 sie nicht beantworten — nicht
+ * weil der Bestand fehlte, sondern weil niemand hingesehen hat.
+ *
+ * WARUM SIE INTERESSANT SIND. Die Sondierung von P3 hat gemessen, dass
+ * `zeitraum.php` `EdMissionTable.erzeuge` OHNE `seite` aufruft: Es entstehen
+ * so viele `<tr>`, wie der Zeitraum Einsaetze hat — bei 3500 waren es 854 ms
+ * gegen 191 ms bei 82. Die Suche daneben ist bei 200 Zeilen gedeckelt und
+ * skaliert deshalb sublinear. Die Zeitraumuebersicht ist die eine Ansicht
+ * ohne diesen Deckel.
+ *
+ * DAS JAHR WIRD NICHT GERATEN. Der Messstandbestand liegt ueber mehrere
+ * Jahre verteilt (jede Runde schiebt drei Tage zurueck); ein festes Jahr
+ * traefe mal viel und mal nichts. Genommen wird das Jahr des NEUESTEN
+ * Diensttags — dort liegt der dichteste Teil —, und die gemessene
+ * Einsatzzahl steht mit im Protokoll. Eine Zeit ohne die Zahl daneben waere
+ * keine Auskunft (CLAUDE.md 6).
+ */
+messungen.push(await messen('Zeitraumübersicht (ganzes Jahr)', async () => {
+  await seite.goto(`${basis}/index.php`, { waitUntil: 'domcontentloaded', timeout: 180000 });
+  const ziel = await seite.locator('aside a[href*="?d="]').first()
+                          .getAttribute('href').catch(() => null);
+  const jahr = (ziel && /d=(\d{4})-/.exec(ziel)?.[1]) || String(new Date().getUTCFullYear());
+  await seite.goto(`${basis}/zeitraum.php?y=${jahr}`,
+                   { waitUntil: 'domcontentloaded', timeout: 300000 });
+  /* Gewartet wird auf die erste ENTSCHLUESSELTE Zeile, nicht auf das
+     Seitenladen: Die Tabelle entsteht im Browser aus `api/range.php`, und
+     genau dieser Weg ist der Prüfling. */
+  const zeileDa = seite.locator('#rangetable tbody tr, #rangekacheln > *').first()
+                       .waitFor({ state: 'attached', timeout: 300000 })
+                       .catch(() => { /* ein Jahr ohne Einsätze — dann zählt die Seite selbst */ });
+  if (await entsperren(zeileDa)) { await zeileDa; }
+  await zeileDa;
+  const zeilen = await seite.locator('#rangetable tbody tr').count();
+  const zahl = (await seite.locator('#einsatzzahl').textContent().catch(() => '') || '').trim();
+  return { jahr, tabellenzeilen: zeilen, einsatzzahl: zahl };
+}));
+
+/* Die Nachbearbeitung („Zuordnung nachtragen") ist das Gegenstueck: Sie
+ * entsteht vollstaendig auf dem SERVER und laedt kein JSON nach. Was hier
+ * waechst, ist die Abfrage ueber alle Diensttage ohne Zuordnung — und ihre
+ * Zahl haengt am Bestand, nicht an einer Seitengrenze. */
+messungen.push(await messen('Nachbearbeitung (Zuordnung nachtragen)', async () => {
+  await seite.goto(`${basis}/nachbearbeitung.php`,
+                   { waitUntil: 'domcontentloaded', timeout: 300000 });
+  await seite.locator('h1, .titelzeile').first().waitFor({ state: 'attached', timeout: 300000 });
+  const karten = await seite.locator('.karte').count();
+  const formulare = await seite.locator('.listen-form-titel').count();
+  return { karten, offene_zuordnungen: formulare };
+}));
+
 messungen.push(await messen('Backup erstellen', async () => {
   await seite.goto(`${basis}/einstellungen.php?t=backup`, { waitUntil: 'domcontentloaded', timeout: 180000 });
   await seite.waitForTimeout(800);

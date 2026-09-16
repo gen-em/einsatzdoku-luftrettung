@@ -15,9 +15,9 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | | |
 > |---|---|
 > | Stand | 15.09.2026 — **Konzept freigegeben, Umsetzung läuft.** Die Grundsatzfragen sind am 15.09.2026 im Gespräch entschieden (E-P5a-01 bis -09); die übrigen Festlegungen (E-P5a-10 bis -21) stammen aus dem Nachmessen im Code und stehen mit der Freigabe. |
-> | Entschieden | E-P5a-01 bis E-P5a-21 (Abschnitt 2), dazu die in der Umsetzung gefallenen E-P5a-22 bis **-49**; E-PP-01 bis -09 übernommen; **F-P5a-1 entschieden** (2.4) |
+> | Entschieden | E-P5a-01 bis E-P5a-21 (Abschnitt 2), dazu die in der Umsetzung gefallenen E-P5a-22 bis **-55**; E-PP-01 bis -09 übernommen; **F-P5a-1 entschieden** (2.4) |
 > | Offen | — |
-> | Umsetzung | **läuft.** AP1–AP8 und AP4a erledigt, **AP9 als Nächstes** (Verbindungsgrenze und Messungen); Abhängigkeiten in 3.0 |
+> | Umsetzung | **läuft.** AP1–AP9 und AP4a erledigt, **AP10 als Nächstes** (Sicherungsziele — samt der sechsten Sicherheitskarte aus AP8); Abhängigkeiten in 3.0 |
 > | Fable-Schritte der Umsetzung | **keiner mehr** — M-P5a-01 ist nach Auftrag vom 15.09.2026 ohne Pause umgesetzt worden (2.5) |
 
 > **Stand der Umsetzung**
@@ -34,7 +34,8 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | **AP6 Ratenschutz neu** | **erledigt** | **Web 20.10.0** | `tools/ratenprobe/` neu: **49 Prüfungen, 0 Befunde** · Leiter 15/20/30/60 min gemessen, Stufe 1→2→3→4 und Deckel bei 4 · Verfall nach 24 h gemessen, Gegenprobe (laufende Frist wird verlängert) ebenso · **zwei Fehler gefunden, die ohne Meldung durchgegangen wären**: Klopfen hätte die laufende Sperre gelöscht, und die Stufe wäre nie zurückgefallen · zwei Schwellen 10/50 gemessen · Verlangsamung 200/400/800/1600 → 1/2/4/8 s, Stufe 1 **1,00 s**, Stufe 4 **8,0 s** (gedeckelt), abgelaufenes Fenster → 0 · gleiche Antwortzeit **0,3 ms Differenz über 100 Messungen** · Sammelmail 1 je Stunde gemessen, abschaltbar · Einstellungen 6 Fälle im Browser, 4 abgewiesen, **nichts halb gespeichert** (Gegenprobe) · Anmeldeseite: Sperrmeldung **wortgleich für echtes und erfundenes Konto**, Countdown tickt (43→38 s), Formular entsperrt sich nach Ablauf, 0 Konsolenfehler · Migrationsregister **51/51, 34 Tabellen, 0 Befunde** · kopplungsprobe **76/0** (ein Prüffall hing an einer festen Migrationszahl und war schon vorher rot), wartungsprobe **67/0**, mailprobe **41/0**, jobprobe **35/0** · Wortliste **0/0/0** · Vollständigkeit **372** (367 + 5 Pfeile in neuen sichtbaren Texten; 5 Auslassungszeichen wieder entfernt) · CSP **0**, Sitzungshärtung **0**, Kontraste **22/0** |
 > | **AP7 Mengenbremse `ingest.php`** | **erledigt** | **Web 20.11.0** | Ingestprobe um Teil 10 erweitert: **83 Erwartungen, 0 nicht erfüllt** (21 davon neu) · gemessen: **14 Fehlversuche ohne Sperre**, Versuche 15–30 weiterhin `401`, **Versuch 31 = `429`** mit `Retry-After: 900` und Rumpf `zu_viele_versuche` · die Antwort nennt den Topf **nicht** · `403 device_disabled`, `400 payload`, `413 too_large` zählen **nicht** (drei Gegenproben) · zweites Gerät an derselben Adresse **`200`** — Adresstopf leer · gelungener Upload leert Topf und Vermerk (`anzahl 30 → 0`) · **30 erfundene Kennungen erreichen dieselbe Schwelle** wie eine bekannte (E-P5a-47) · genau **ein** Sperrereignis je Sperre · Laufzeit über den erzeugten Sendeplan (612 Anfragen, 64 478 Punkte, **je zwei Läufe**): Median **14,43 ms ohne / 15,14 ms mit** (+4,9 %), Mittel **19,67 / 20,33 ms** (+3,4 %), **0 Fehlversuche in allen vier Läufen** — bei 3 bis 4 % Streuung zwischen zwei *gleichen* Läufen · Ratenprobe **50/0** (zwei Prüfungen neu) · Migrationsregister **52/52, 219 Spalten, 0 Befunde** · Bilderlauf der zwei berührten Seiten **16 Bilder, 0 Überlauf / 0 Konsole / 0 Knopfhöhen**, mit gesetztem Vermerk aufgenommen · Wortliste **0/0/0** (98 Regeln, 98 gegriffen) · Vollständigkeit **372 = unverändert** |
 > | **AP8 Status → Sicherheit** | **erledigt** | **Web 20.12.0** | `betrieb_sicherheit.php` mit **fünf** Karten (nicht sechs — „Löschungen auf Sicherungszielen“ hat bis AP10 keine Datenquelle, geprüft an fünf Stellen) · Klickprobe **neuer Weg, 1 von 1 erfüllt**, gemessen am DOM UND an der Datenbank: Zeile mit Prüfmerkmal **1 → 0**, `rate_limits` **1 → 0**, Ereignis „aufgehoben“ durch **admin@gen-em.org**, dazwischen die Rückfrage aus `data-confirm` · Bilderlauf **24 Bilder, 0 Überlauf / 0 Konsole / 0 Knopfhöhen** mit hergestelltem Bestand aufgenommen · **drei Fehler behoben, die ohne Meldung durchgegangen wären**: das Protokoll hing am Mailschalter, der Gerätevermerk verfiel nie, `ui_knopf()` kennt kein `form` · drei Ableitungen (Konto/Adresse) wurden eine · Wartungsprobe **67/0** mit **14** statt 13 Ausnahmen · Ratenprobe 50/0, Ingestprobe 83/0, kopplungsprobe 76/0, mailprobe 41/0, jobprobe 35/0 · Migrationsregister **0 Befunde** (keine Migration) · Wortliste **0/0/0** · Vollständigkeit **377** (372 + 5 Pfeile in neuen sichtbaren Texten; 2 Auslassungszeichen aus Kommentaren wieder entfernt) · CSP **0**, Sitzungshärtung **0**, Kontraste **22/0** |
-> | AP9 bis AP12 | offen | — | — |
+> | **AP9 Verbindungsgrenze und Messungen** | **erledigt** | **Web 20.13.0** | `tools/verbindungsprobe/` neu: **24 Erwartungen, 0 nicht erfüllt** · **drei** Fehlernummern statt zwei — die GRANT-Grenze eines Hosters meldet **1226**, nicht 1203 (E-P5a-51), gemessen an MariaDB 10.11 · alles belegt: `login.php` **503** mit `Retry-After: 5`, `no-store`, dem Satz aus E-P5a-18, **kein Skript** und **keiner von 7** Datenbank-Begriffen im Rumpf; `ingest.php` und `auth_salt.php` **503 JSON** `error=ausgelastet`; `index.php` bleibt **302** (erreicht die Datenbank nie — ausdrücklich mitgemessen) · Zähler **genau 3 von 3** Abweisungen, nicht mehr (das ist der Nachweis für den Riegel gegen die Rückkopplung über `app_state_lesen()`) · Enge statt Sperre, 20 Pakete gleichzeitig bei 8 Arbeitern und 2 freien Plätzen: **8 × 200, 12 × 503, 0 anderes**, davon **10 aus der Verbindungsgrenze und 2 aus Gedrängel** — nach Wiederholung **20 von 20 Einsätzen und 400 von 400 Spurpunkten** in der Datenbank · **zwei Fehler gefunden, die ohne Meldung durchgegangen wären**: 12 × HTTP 500 durch Deadlock auf der `days`-Zeile (E-P5a-52, Nr. 210) und der verborgene Setz-Link bei `wartet` (E-P5a-54) · Ausgelastet-Seite im Browser bei 360/768/1280 px: **503 · Retry-After 5 · 0 px waagerechter Überlauf**, Stylesheet und Münzwurf des Logos tragen · Messstand **5050 Einsätze / 2 813 201 Punkte**: Suche **3,18 s** (≤ 5), Tagesansicht **1,11 s** (≤ 3), Backup **49,84 s** (≤ 300) und **11,8 MB** (≤ 25), Wiederherstellung **231,9 s** (≤ 900), Spuren **3,66 MB/1000** (Ziel 3, knapp verfehlt), **Zeitraumübersicht 42,61 s bei 3983 Einsätzen** (Befund), Nachbearbeitung **2,83 s** (leere Liste) · Wartungsprobe **67/0** · Ratenprobe 50/0 · Ingestprobe 83/0 · Kopplungsprobe 76/0 · Mailprobe 41/0 · Jobprobe 35/0 · Spurprobe 45/0 · Bilderlauf 3 Seiten **24 Bilder, 0/0/0** · Wortliste **0/0/0** (98 Regeln, 98 gegriffen) · Vollständigkeit **377 = unverändert** · CSP 0 (109 Stellen) · Sitzungshärtung 0 · Installweiche 0 · Migrationsregister 0 · Kontraste 22/0 · PHP-Syntax 484 Dateien, 0 Fehler |
+> | AP10 bis AP12 | offen | — | — |
 
 ---
 
@@ -797,6 +798,103 @@ erfüllbar.**
    Zahl, die es wirklich gibt: `dauer_ms` aus der `lauf.json` des
    Referenzlaufs, vorher gegen nachher.
 
+**E-P5a-50 (neu, 16.09.2026) — der Zähler `db_ueberlast` steht in einer
+Datei, nicht in `app_state`.** E-P5a-18 sagt `app_state`. Das geht nicht, und
+zwar aus dem Grund, der den Zähler überhaupt erst interessant macht: **In dem
+Augenblick, in dem gezählt werden müsste, gibt es keine Verbindung zur
+Datenbank** — `app_state_setzen()` braucht genau eine. Es ist derselbe Satz,
+der über `wartung.lock` steht: Ein Schalter, der die Datenbank fragt, ob er
+schalten darf, ist im entscheidenden Moment stumm.
+
+*Erwogen und verworfen:* den Vorfall in eine Datei schreiben und beim nächsten
+gelungenen Verbindungsaufbau nach `app_state` **nachtragen**. Das hätte den
+Buchstaben erfüllt und **zwei Speicher für eine Zahl** gebraucht — genau die
+Bauform, die `app_state_lesen()` in `db.php` gerade abgelöst hat („Fünf
+Fassungen derselben zwei Zeilen"). Eine Zahl, ein Ort.
+
+*Der Preis, benannt:* `server/ueberlast.json` liegt nur auf dem Server
+(`.gitignore` **und** Ausnahmeliste beider FTPS-Schritte), überlebt keinen
+Serverumzug und steht nicht in der Sicherung. Für eine Betriebszahl, die sagt
+„heute war es dreimal eng", ist das der richtige Preis. Lässt sie sich nicht
+schreiben, **sagt die Statuszeile das** (Feld `schreibbar`) — „0 Vorfälle" und
+„nicht gezählt" sähen sonst gleich aus.
+
+**E-P5a-51 (neu, 16.09.2026) — es sind DREI Fehlernummern, nicht zwei.**
+E-P5a-18 nennt 1040 (`max_connections` des Servers) und 1203 (Systemvariable
+`max_user_connections`). **Gemessen am 16.09.2026 gegen MariaDB 10.11:** Eine
+GRANT-Grenze am Datenbankkonto — `ALTER USER … WITH MAX_USER_CONNECTIONS n`,
+also genau das, was ein Hoster einem Kunden setzt — meldet **1226**
+(`ER_USER_LIMIT_REACHED`), nicht 1203. Ohne diese Zeile hätte AP9 den Fall
+nicht abgedeckt, für den es gebaut ist, und zwar **still**: Die Probe hätte
+dieselbe Annahme geteilt und grün gemeldet.
+
+`UEBERLAST_CODES` führt deshalb 1040, 1203 und 1226. Dazu eine
+Unterscheidung, die 1226 nötig macht: Dieselbe Nummer kommt auch, wenn ein
+Konto seine STUNDENGRENZEN reißt (`MAX_QUERIES_PER_HOUR` und Geschwister).
+Das löst sich nicht in fünf Sekunden — `ueberlast_retry_s()` liest den Namen
+der Ressource aus der Meldung und setzt dann 300 statt 5.
+
+**E-P5a-52 (neu, 16.09.2026) — Gedrängel ist auch kein Defekt: 1213 und 1205
+antworten 503 statt 500.** Fund der neuen Verbindungsprobe, nebenbei und
+teurer als das, wonach sie suchte: Zwanzig Uploads desselben Geräts auf
+denselben Diensttag, gleichzeitig abgeschickt, ergaben **zwölfmal HTTP 500** —
+`SQLSTATE[40001] 1213 Deadlock found when trying to get lock; try restarting
+transaction`. Alle Uploads eines Diensttags fassen dieselbe `days`-Zeile an
+(`dt_zeitraum_fortschreiben()`).
+
+Das ist derselbe Fehler wie 1040/1203/1226, eine Ebene höher: Die Anfrage ist
+nicht kaputt, sie ist zu früh — die Meldung von InnoDB sagt es wörtlich.
+Geändert wird deshalb die **Antwort** (503 `ausgelastet`, in `json_fehler()`
+und im eigenen Fangblock von `ingest.php`), **nicht** der Ablauf. Die
+eigentliche Abhilfe — die Transaktion wiederholen — ist ein Eingriff in
+`ingest.php` und steht als **Backlog Nr. 210**.
+
+Diese Vorfälle zählt `ueberlast.json` **nicht**: Der Zähler beantwortet die
+Frage „steht `max_user_connections` zu eng?", und ein Gedrängel um eine
+Tabellenzeile beantwortet sie nicht. Zwei Ursachen in einer Zahl wären eine
+Zahl, aus der sich keine der beiden mehr ablesen ließe.
+
+**E-P5a-53 (neu, 16.09.2026) — der Messstand-Schritt der Kette fällt ersatzlos
+weg (Backlog Nr. 206).** `auslieferung.yml` rief bei jedem Tag-Lauf
+`serverprobe.py --basis "$STAGING_URL"` — eine Kennzeichnung, die es nicht
+gibt. Der Fehler sitzt tiefer als ein fehlendes Argument: Die Serverprobe
+misst Tabellengrößen, Speicherspitzen und den Waisen-Vollscan und braucht
+dafür die **Datenbank selbst**. Ein „Weg über die Leitung" hätte einen
+Endpunkt gebraucht, der einer unangemeldeten Kette Innereien der Datenbank
+ausliefert; genau den soll es nicht geben. Der Messstand bleibt ein
+**manuelles** Regressionsmittel (R35). An der Stelle des Schrittes steht eine
+Zeile in der Laufzusammenfassung, die sagt, wo seine Zahlen stehen.
+
+**E-P5a-54 (neu, 16.09.2026) — `wartet` zeigt den Setz-Link, nicht
+`zugestellt`; Berichtigung von E-P5a-14.** AP5 hat den dritten
+Zustellungszustand als „liegt in der Warteschlange und geht gleich hinaus"
+gelesen und den Link deshalb verborgen. Das ist die falsche Hälfte: `wartet`
+heißt, dass der **erste Versuch gescheitert ist** —
+`mail_zeile_versuchen()` gibt nur dann `false` zurück, und die Statusseite
+sagt es seit AP5 wortgleich.
+
+Die Folge war eine **Sackgasse**: Auf einer Installation mit eingetragenem,
+aber unerreichbarem SMTP-Server kam die Einladung nie an, und der Link war
+nirgends mehr zu bekommen — auch „Setz-Link erneut schicken" verbarg ihn. Das
+Konto blieb unbenutzbar. `admin_users.php` und `admin_user.php` zeigen ihn
+seither auch bei `wartet`, mit dem Satz dazu. Nur `zugestellt` heißt „die Mail
+ist raus".
+
+*Gefunden hat es der Messstand:* `kreislauf.py` liest den Link aus dieser
+Antwort, und die lokale Installation hat keinen erreichbaren Mailserver. Ein
+Werkzeug, das über den regulären Weg geht, misst eben auch den Weg.
+
+**E-P5a-55 (neu, 16.09.2026) — `JSON_SKRIPTE_AUSSERHALB_API` wächst von zwei
+auf vier.** `wartung_json_gefragt()` kannte außerhalb von `/api/` nur
+`ingest.php` und `pair.php`. Für den Wartungsmodus genügte das, weil
+`auth_salt.php` und `jobs.php` in `WARTUNG_AUSNAHMEN` stehen und das Tor bei
+ihnen vorher umkehrt. **Die Überlast kennt keine Ausnahmen.** Mit der alten
+Liste hätte `auth_salt.php` eine HTML-Seite an ein `fetch()` geliefert, das
+JSON erwartet, und die Anmeldeseite hätte daraus „Anmeldung derzeit nicht
+möglich" gemacht statt „ausgelastet" — der Fehler aus Backlog Nr. 171, einen
+Stock tiefer. `gpx.php` bleibt draußen: Es wird vom Browser angesteuert, nicht
+per `fetch()` geholt.
+
 ### 2.3 Ort je Funktion (K1, R74)
 
 | Funktion | Ort |
@@ -970,6 +1068,11 @@ Zweigs, Statusblock, Prüfprotokoll (K5, K7).
   Staging im selben Tarif).
 - **Abnahme:** Messstand-Bericht mit Zahlen je Messung; 0 verlorene
   Uploads unter der Verbindungsgrenze; Backlog Nr. 37 trägt die Zahlen.
+  **Erfüllt am 16.09.2026** — mit drei Abweichungen, die im
+  Umsetzungsprotokoll (Abschnitt 9) begründet sind: Der Zähler steht in einer
+  Datei statt in `app_state` (E-P5a-50), es sind drei Fehlernummern statt
+  zwei (E-P5a-51), und `post_max_size` bleibt ungemessen, weil Staging noch
+  nicht steht (der Weg dorthin steht seit AP2 fest).
 
 ### AP10 — Sicherungsziele (E-P5a-03; Nr. 49, Nr. 195, PP-5)
 
@@ -1778,3 +1881,136 @@ und weil die nächste Instanz denselben Weg gehen wird.
 | Vollständigkeit | **377** (372 + 5 Pfeile in sichtbarem Text) |
 | CSP · Sitzungshärtung · Installweiche · Kontraste | **0 · 0 · 0 · 22/0** |
 | PHP-Syntax | 458 Dateien, 0 Fehler |
+
+### AP9 — Verbindungsgrenze und Messungen · Web 20.13.0 · 16.09.2026
+
+**Aufgabe.** E-P5a-18: `db.php` fängt die Verbindungsgrenze der Datenbank ab
+und antwortet mit 503 statt 500; ein Zähler, ein Status-Hinweis; dazu die drei
+Messungen, die Backlog Nr. 37 seit S2 als offen führt.
+
+#### Was gebaut wurde
+
+`server/wartung_lib.php` bekommt eine zweite Störung neben dem
+Wartungsmodus — aus demselben Grund am selben Ort: **Beide müssen ohne
+Datenbank antworten.** Das Markup beider Seiten entsteht jetzt in einem
+gemeinsamen Gerüst (`stoerung_seite_html()`); Rahmen, Lesespalte, Logo,
+Stylesheet und der Verzicht auf jedes Skript sind bei beiden dieselbe
+Überlegung, und zweimal geschrieben wären sie beim nächsten Mal zweierlei.
+
+`db()` fängt den fehlgeschlagenen Verbindungsaufbau ab und ruft
+`ueberlast_vermerken()` und `ueberlast_antwort()`. Auf der Kommandozeile wird
+gezählt, aber nicht geantwortet: Ein Job, der eine HTML-Seite nach stdout
+schreibt und sich beendet, verschluckt seinen eigenen Fehler.
+
+#### Der Riegel, der beim Schreiben entstand
+
+Alles, was unterhalb der 503-Antwort noch eine Einstellung nachsehen will,
+landet über `app_state_lesen()` wieder in `db()` — mit `$pdo` weiterhin
+`null`, also mit einem zweiten Verbindungsversuch, der genauso scheitert.
+`kopfzeilen_lib.php` tut genau das (zwei Einstellungen aus `app_state`). Ohne
+den statischen Riegel `$inUeberlast` wäre das eine **Endlosschleife bis zum
+Speicherende, ausgerechnet unter Last**. Mit ihm fliegt die Ausnahme beim
+zweiten Mal weiter, `app_state_lesen()` fängt sie und nimmt ihre Vorgabe —
+genau das, wofür sie gebaut ist.
+
+Die Verbindungsprobe misst das nach, und zwar an einer Zahl, die es sonst
+nicht gäbe: Der Zähler muss **genau so viele** Vorfälle tragen, wie es
+Abweisungen gab. Jede höhere Zahl wäre der Beleg, dass der Riegel nicht
+greift.
+
+#### Drei Abweichungen vom Konzept, jede benannt
+
+1. **Der Zähler steht in einer Datei** (E-P5a-50). In dem Augenblick, in dem
+   gezählt werden müsste, gibt es keine Verbindung zur Datenbank.
+2. **Es sind drei Fehlernummern, nicht zwei** (E-P5a-51). Die GRANT-Grenze
+   eines Hosters meldet **1226**, nicht 1203 — gemessen, nicht vermutet.
+3. **`post_max_size` bleibt ungemessen.** Die Zahl gehört der Zielanlage;
+   Staging stand am 16.09.2026 noch nicht. Der Weg dorthin steht seit AP2
+   fest: Die Plattformkarte nennt `post_max_size` mit Soll- und Ist-Wert.
+   Sobald Staging antwortet, ist es ein Seitenaufruf und keine Messung mehr.
+
+#### Zwei Fehler, die ohne Meldung durchgegangen wären
+
+**(1) Zwölf von zwanzig gleichzeitigen Uploads bekamen HTTP 500.** Ursache:
+`SQLSTATE[40001] 1213 Deadlock found when trying to get lock` — alle Uploads
+eines Diensttags fassen dieselbe `days`-Zeile an
+(`dt_zeitraum_fortschreiben()`). Das ist derselbe Fehler wie die
+Verbindungsgrenze, eine Ebene höher, und es war **nie gemessen worden**, weil
+kein Prüfmittel bisher gleichzeitig hochgeladen hat. Die Antwort ist jetzt
+503 `ausgelastet` (E-P5a-52); die eigentliche Abhilfe steht als Backlog
+Nr. 210 an.
+
+**(2) Der Einladungslink war in einer Sackgasse** (E-P5a-54). AP5 hat den
+Zustand `wartet` als „geht gleich hinaus" gelesen und den Setz-Link deshalb
+verborgen. `wartet` heißt aber, dass der **erste Versuch gescheitert ist**.
+Auf einer Installation mit eingetragenem, aber unerreichbarem SMTP-Server war
+der Link damit nirgends mehr zu bekommen — auch „Setz-Link erneut schicken"
+verbarg ihn. **Gefunden hat es der Messstand:** Er legt sein Konto über den
+regulären Einladungsweg an und blieb daran hängen. Ein Werkzeug, das über den
+regulären Weg geht, misst eben auch den Weg.
+
+#### Ein dritter Fund, kleiner: `auth_salt.php` hätte HTML bekommen
+
+`wartung_json_gefragt()` kannte außerhalb von `/api/` zwei Skripte. Für den
+Wartungsmodus genügte das, weil die beiden anderen in `WARTUNG_AUSNAHMEN`
+stehen. **Die Überlast kennt keine Ausnahmen** — die Liste ist auf vier
+gewachsen (E-P5a-55).
+
+#### Die drei Messungen aus Nr. 37
+
+Messstandlauf mit **5050 Einsätzen**, 1000 Diensttagen, **2 813 201
+Spurpunkten**, CPU sechsfach gedrosselt. Die Browserprobe hat dafür zwei neue
+Schritte bekommen — die beiden Messungen fehlten nicht, weil der Bestand
+fehlte, sondern weil niemand hingesehen hat.
+
+| Messung | Ergebnis | Zielwert | |
+|---|---|---|---|
+| Suche (5050 Treffer, 200 angezeigt) | **3,18 s** | 5 s | ✔ |
+| Tagesansicht | **1,11 s** | 3 s | ✔ |
+| Backup erstellen | **49,84 s** | 300 s | ✔ |
+| Backup-Datei | **11,8 MB** | 25 MB | ✔ |
+| Wiederherstellung (17 Dateien) | **231,9 s** | 900 s | ✔ |
+| Spuren je 1000 Einsätze | **3,66 MB** | 3 MB | ✘ knapp |
+| **Zeitraumübersicht, Jahr 2026 (3983 Einsätze)** | **42,61 s** | — | **Befund** |
+| **Nachbearbeitung** | **2,83 s** (leere Liste) | — | |
+
+**Die Zeitraumübersicht ist der Engpass.** 42,61 s gegen 3,18 s für die Suche
+über *mehr* Einsätze. Der Unterschied ist eine Bauentscheidung:
+`zeitraum.php` ruft `EdMissionTable.erzeuge` **ohne `seite`** und baut so
+viele Tabellenzeilen, wie der Zeitraum Einsätze hat — sie ist die einzige
+Ansicht ohne Seitengrenze. Auch durch die sechsfache Drossel geteilt bleiben
+gut sieben Sekunden. Der Umbau ist ein eigenes Paket; AP9 hat gemessen, nicht
+umgebaut.
+
+**Zwei Zahlen brauchen ihre Fußnote.** Die **3,66 MB** sind nach Verdichtung
+und Ausdünnung **und mit `OPTIMIZE TABLE`** gemessen (ohne ihn kamen 19,30 MB
+heraus, weil dann freigegebene Seiten mitzählen); der Verdichtungsjob lässt
+dabei **434 von 5050** Einsätzen liegen, deren letzter Punkt keine zwei Wochen
+alt ist. Und die **2,83 s** der Nachbearbeitung sind **mit null offenen
+Zuordnungen** gemessen — der Messstandbestand kommt aus einem Backup, in dem
+jeder Diensttag zugeordnet ist. Gemessen ist damit die Abfrage über 1000
+Diensttage, nicht das Aufbauen der Liste.
+
+#### Kettenschritt gestrichen (Nr. 206)
+
+`auslieferung.yml` rief bei jedem Tag-Lauf `serverprobe.py --basis
+"$STAGING_URL"` — eine Kennzeichnung, die es nicht gibt, und ein Ziel, das das
+Werkzeug nicht messen kann. Ersatzlos gestrichen (E-P5a-53).
+
+#### Zahlen
+
+| Mittel | Ergebnis |
+|---|---|
+| **Verbindungsprobe (neu)** | **24 von 24 Erwartungen**; Teil 1: 10 Verbindungen belegt → 1226, `login.php`/`ingest.php`/`auth_salt.php` je 503, `index.php` 302, Zähler 3 = 3 · Teil 2: **8 × 200, 12 × 503, 0 anderes**, davon 10 aus der Grenze und 2 aus Gedrängel, nach Wiederholung **20/20 Einsätze und 400/400 Punkte** |
+| Ausgelastet-Seite im Browser | 360/768/1280 px: **503 · `Retry-After: 5` · 0 px waagerechter Überlauf**; Stylesheet trägt, Münzwurf des Logos trägt (NEF bei 360, Hubschrauber bei 768) |
+| Statuszeile „Verbindungen" | drei Zustände gemessen: **13 Vorfälle → orange „zu eng"**, ohne Datei → blau „in Ordnung", nicht schreibbar → `schreibbar=false` (am Funktionsaufruf mit unprivilegiertem Benutzer, weil der Prüfserver als `root` läuft und für ihn jedes Verzeichnis schreibbar ist) |
+| Messstand | 5050 Einsätze · 1000 Diensttage · 2 813 201 Punkte · 0 Konsolenfehler; Zahlen oben und in `tools/messstand/ausgangsmessung.md` |
+| Wartungsprobe | **67/0** |
+| Ratenprobe · Ingestprobe · Kopplungsprobe | **50/0 · 83/0 · 76/0** |
+| Mailprobe · Jobprobe · Spurprobe | **41/0 · 35/0 · 45/0** |
+| Bilderlauf (3 Seiten, 8 Breiten) | **24 Bilder · 0 Überlauf · 0 Konsole · 0 Knopfhöhen** |
+| Wortliste | **0/0/0** (98 Regeln, 98 gegriffen — eine Regel um den Zeilenkopf „Antwort, Maschinen" erweitert) |
+| Vollständigkeit | **377 = unverändert** (drei Auslassungszeichen aus neuen Kommentaren wieder entfernt) |
+| CSP · Sitzungshärtung · Installweiche · Migrationsregister | **0 · 0 · 0 · 0** |
+| Kontraste | **22 Paare, 0 verfehlt** |
+| PHP-Syntax | **484 Dateien, 0 Fehler** |

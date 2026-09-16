@@ -3779,6 +3779,38 @@ Konto-Backups und die Ablage werden bei jedem Aufruf gelesen. Die Größe von
 Datenbank und Dateien kommt aus der täglichen Messung im Aufräumjob; die
 Zeile „Datenbank" sagt, wann sie entstanden ist.
 
+#### Die Zeile „Verbindungen" (seit Web 20.13.0)
+
+In der Karte **Server**, unter „Datenbank". Sie beantwortet eine Frage, die
+sonst niemand stellt: **Wie oft hat die Datenbank in der letzten Zeit keine
+Verbindung mehr angenommen?**
+
+Jeder Webspace begrenzt, wie viele Anfragen gleichzeitig mit der Datenbank
+sprechen dürfen — häufig zehn bis dreißig. Wird die Zahl erreicht, bekommt
+die nächste Anfrage eine Absage. Für den Menschen davor sieht das aus wie eine
+Seite, die nicht lädt; die Uhr und das Handy merken es gar nicht, sie liefern
+später von selbst nach. **Es fällt also niemandem auf — bis es auffällt.**
+
+Die Zeile zeigt, wie oft es in der laufenden Stunde eng war, die größte je
+gemessene Stunde, die Gesamtzahl und wann es zuletzt vorkam. Sie wird
+**orange**, wenn es in der laufenden Stunde zehnmal oder öfter eng war — oder
+wenn die Spitze diese Schwelle erreicht hat und der letzte Vorfall keine 24
+Stunden her ist. Dann steht auch dabei, was zu tun ist:
+`max_user_connections` beim Hoster anheben lassen.
+
+> **„Keine abgewiesene Verbindung" und „Nicht gezählt" sind zwei
+> verschiedene Auskünfte.** Der Zähler liegt in einer Datei neben der
+> Anwendung — er muss auch dann schreiben können, wenn die Datenbank gerade
+> nicht antwortet. Lässt sich diese Datei nicht anlegen, sagt die Zeile das
+> ausdrücklich, statt eine beruhigende Null zu zeigen.
+
+**Was die Anwendung selbst dabei tut:** Sie antwortet mit einer eigenen Seite
+— *„Der Server ist gerade ausgelastet — bitte in einer Minute noch einmal"* —
+statt mit einer Fehlermeldung. Wer gerade ein Formular abgeschickt hat, geht
+im Browser **zurück**, findet die Eingaben noch im Formular und schickt es
+gleich noch einmal ab. Uhr und Handy behalten ihre Daten und liefern von
+selbst nach.
+
 ### 12.2 Statistik
 
 **Was diese Installation trägt** — Konten, Geräte, Einsätze. Rein lesend,

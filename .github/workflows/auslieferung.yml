@@ -140,6 +140,9 @@ jobs:
           #   wartung.lock               der Schalter des Wartungsmodus
           #                              (E-S5W-02) — und der Deploy ist
           #                              genau das, was währenddessen läuft
+          #   ueberlast.json             der Zähler der Verbindungsgrenze
+          #                              (P5a/AP9, E-P5a-50) — ein Zustand
+          #                              dieser Installation, kein Quelltext
           #   apk/                       die Android-Pakete (E-S4-16)
           # sicherungen/ und apk/ stehen zweimal, weil die Aktion Datei- und
           # Verzeichnismuster getrennt prüft.
@@ -150,6 +153,7 @@ jobs:
             config.php
             install.lock
             wartung.lock
+            ueberlast.json
             sicherungen/**
             sicherungen/
             apk/**
@@ -247,14 +251,35 @@ jobs:
           node tools/screenshots/aufnehmen.mjs \
                --basis "$STAGING_URL" --konto "$STAGING_KONTO" --passwort "$STAGING_PASS"
 
-      - name: Messstand — nur bei Tag-Läufen
+      # DER MESSSTAND STAND HIER UND KONNTE NIE LAUFEN (Backlog Nr. 206,
+      # behoben in P5a/AP9, E-P5a-53).
+      #
+      # Der Schritt rief `serverprobe.py --basis "$STAGING_URL"` auf. Diese
+      # Kennzeichnung gibt es nicht — `serverprobe.py` kennt `--konto`,
+      # `--ausgabe`, `--wartung-fahren` und `--optimieren` —, also wäre jeder
+      # Tag-Lauf hier mit „unrecognized arguments" abgebrochen. Und die
+      # Kennzeichnung fehlt nicht aus Versehen: Die Serverprobe misst
+      # TABELLENGRÖSSEN, SPEICHERSPITZEN und den Waisen-Vollscan, und dafür
+      # braucht sie die Datenbank selbst. Über HTTP ist davon nichts zu
+      # sehen. Eine Adresse als Ziel war ein Denkfehler, kein Tippfehler.
+      #
+      # Ersatzlos gestrichen und nicht ersetzt: Der Messstand ist ein
+      # MANUELLES Regressionsmittel (R35) und läuft lokal vor einer
+      # Auslieferung, nicht in der Kette. Seine Zahlen stehen in
+      # `tools/messstand/ausgangsmessung.md`, und was von ihnen auf der
+      # Zielanlage gilt, steht dort auf der Plattformkarte
+      # (Betrieb → Status → Plattform, seit P5a/AP2) — einschließlich
+      # `post_max_size`, der Zahl, um die es in Backlog Nr. 37 geht.
+      - name: Messstand — wo seine Zahlen stehen
         if: startsWith(github.ref, 'refs/tags/web-v')
         run: |
-          if [ -z "${STAGING_URL:-}" ]; then
-            echo "::warning::STAGING_URL fehlt — Messstand ÜBERSPRUNGEN, nicht gemessen."
-            exit 0
-          fi
-          python3 tools/messstand/serverprobe.py --basis "$STAGING_URL"
+          {
+            echo '**Messstand: läuft nicht in der Kette** — er misst die Datenbank'
+            echo 'selbst (Tabellengrößen, Speicherspitzen) und ist über HTTP nicht'
+            echo 'zu haben. Er ist ein manuelles Regressionsmittel (R35); seine'
+            echo 'Zahlen stehen in `tools/messstand/ausgangsmessung.md`, die Grenzen'
+            echo 'der Zielanlage auf Betrieb → Status → Plattform.'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   produktion:
     name: produktion
@@ -372,6 +397,7 @@ jobs:
             config.php
             install.lock
             wartung.lock
+            ueberlast.json
             sicherungen/**
             sicherungen/
             apk/**

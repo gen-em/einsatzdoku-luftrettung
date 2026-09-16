@@ -88,6 +88,7 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   verweigert der Produktionslauf außerdem, wenn Tag und `WEB_VERSION`
   auseinandergehen.
 - `server/config.php`, `install.lock`, `server/wartung.lock`,
+  `server/ueberlast.json` (der Zähler der Verbindungsgrenze, P5a/AP9),
   `server/sicherungen/` und `server/apk/` liegen nur auf dem Server. Sie
   stehen in `.gitignore` **und** in der Ausnahmeliste beider FTPS-Schritte —
   beides muss so bleiben.

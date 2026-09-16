@@ -205,15 +205,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($angelegt) {
                     $link = app_url('/pw_handling.php?token=' . $token);
-                    /* DREI ZUSTAENDE, NICHT ZWEI (E-P5a-14). `wartet` heisst
-                     * „liegt in der Warteschlange und geht gleich hinaus" —
-                     * dann den Setz-Link NICHT im Klartext anzeigen, denn die
-                     * Mail kommt ja. Nur `abgelehnt` ist der Fall, in dem
-                     * jemand den Link von Hand weitergeben muss. */
+                    /* DREI ZUSTAENDE, UND `wartet` GEHOERT AUF DIE ANDERE SEITE
+                     * (E-P5a-14, berichtigt in AP9 als E-P5a-54).
+                     *
+                     * AP5 hat `wartet` als „liegt in der Warteschlange und
+                     * geht gleich hinaus" gelesen und den Link deshalb
+                     * verborgen. Das ist die falsche Haelfte: `wartet`
+                     * heisst, dass der ERSTE VERSUCH GESCHEITERT IST
+                     * (`mail_zeile_versuchen()` gibt nur dann false zurueck)
+                     * — genau das sagt die Statusseite auch, wortgleich,
+                     * seit AP5.
+                     *
+                     * Die Folge war eine Sackgasse: Auf einer Installation
+                     * mit eingetragenem, aber unerreichbarem SMTP-Server
+                     * (falsches Passwort, gesperrter Port, abgelaufenes
+                     * Zertifikat) kam die Einladung nie an, und der Link war
+                     * nirgends mehr zu bekommen — auch „Setz-Link erneut
+                     * schicken" verbarg ihn. Das Konto blieb unbenutzbar.
+                     *
+                     * GEFUNDEN AM 16.09.2026 in P5a/AP9, weil der Messstand
+                     * daran haengenblieb: `kreislauf.py` liest den Link aus
+                     * dieser Antwort, und die lokale Installation hat keinen
+                     * erreichbaren Mailserver. Ein Werkzeug, das ueber den
+                     * regulaeren Weg geht, misst eben auch den Weg.
+                     *
+                     * Nur `zugestellt` heisst „die Mail ist raus". */
                     $zustellung = mail_einreihen('einladung', $email, ['link' => $link]);
-                    $ok = $zustellung !== MAIL_ABGELEHNT;
-                    if ($ok) {
+                    if ($zustellung === MAIL_ZUGESTELLT) {
                         $notice = 'Konto angelegt — Setz-Link per E-Mail verschickt.';
+                    } elseif ($zustellung === MAIL_WARTET) {
+                        $notice = 'Konto angelegt — die E-Mail ist beim ersten Versuch '
+                                . 'NICHT hinausgegangen und steht in der Warteschlange. '
+                                . 'Sie wird erneut versucht; bis dahin ist der Link unten '
+                                . 'der sichere Weg.';
+                        $setzLink = $link;
                     } else {
                         // Das Konto steht, nur die Mail kam nicht weg. Den Link
                         // hier zeigen ist der einzige Weg, der die Person noch

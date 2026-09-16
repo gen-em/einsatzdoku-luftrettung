@@ -334,11 +334,68 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
       am Messstand 6 202 931 verwaiste Punkte aus zwei Konten (F-S2-B,
       behoben in AP1).
 
-    **Was hier offen bleibt,** bis die Phase durch ist — drei Messungen:
-    Zeitraumübersicht und Nachbearbeitung bei 5 000 Einsätzen, die Frage, ob
-    die Zielzahlen aus E-S2-24 (Suche ≤ 5 s, Tagesansicht ≤ 3 s, Backup
-    ≤ 5 min) gehalten werden, und `post_max_size` des Produktivservers
-    (siehe oben). Dieser Eintrag ist die **führende** Fassung; die Bemerkung
+    **Die drei Messungen sind am 16.09.2026 in P5a/AP9 gefahren worden**
+    (Messstand, 5050 Einsätze · 1000 Diensttage · 2 813 201 Spurpunkte, CPU
+    sechsfach gedrosselt, lokale Installation). Zwei davon sind beantwortet,
+    die dritte bleibt offen.
+
+    **(a) Die Zeitraumübersicht ist der Engpass, und zwar deutlich.** Jahr
+    2026 mit **3983 Einsätzen**: **42,61 s** bis zur ersten sichtbaren Zeile,
+    **3983 `<tr>`** im DOM, 2,2 MB JSON, Halde 55 MB. Zum Vergleich in
+    derselben Messreihe: die Suche über **alle 5050** Einsätze in **3,18 s**
+    (sie zeigt 200 Zeilen und zählt über alles). Die Vermutung der Sondierung
+    von P3 ist damit bestätigt und zugespitzt: `zeitraum.php` ruft
+    `EdMissionTable.erzeuge` ohne `seite`, und das ist die **einzige** Ansicht
+    ohne Seitengrenze. Die 854 ms der Sondierung waren ohne Drossel und ohne
+    Kartenmarker gemessen; auch durch sechs geteilt bleiben hier gut sieben
+    Sekunden. **Zu tun:** dieselbe Seitengrenze wie in der Suche, oder eine
+    Vorauswahl auf Monat statt Jahr. Das ist ein eigenes Paket und nicht
+    AP9 — AP9 hat gemessen, nicht umgebaut.
+
+    **(b) Die Nachbearbeitung ist unauffällig — mit einer Einschränkung, die
+    dazugehört.** „Zuordnung nachtragen" braucht **2,83 s**, und zwar
+    **mit null offenen Zuordnungen**: Der Messstandbestand kommt aus einem
+    Backup, in dem jeder Diensttag zugeordnet ist, die Seite hat also nichts
+    zu zeigen. Gemessen ist damit die **Abfrage** über 1000 Diensttage und
+    5050 Einsätze, nicht das Aufbauen der Liste. Das ist die interessantere
+    Hälfte (die Abfrage wächst mit dem Bestand, die Liste mit der Zahl der
+    Versäumnisse), aber es ist nicht die ganze. Eine Messung mit gefüllter
+    Liste steht aus und ist billig nachzuholen, sobald jemand einen Bestand
+    mit unzugeordneten Tagen hat.
+
+    **(c) Die Zielzahlen aus E-S2-24** — fünf von sechs gehalten:
+
+    | Zielzahl | Soll | Gemessen (5050 Einsätze, 6× Drossel) | |
+    |---|---|---|---|
+    | Suche | ≤ 5 s | **3,18 s** | ✔ |
+    | Tagesansicht | ≤ 3 s | **1,11 s** | ✔ |
+    | Backup erstellen | ≤ 5 min | **49,84 s** | ✔ |
+    | Backup-Datei | ≤ 25 MB | **11,8 MB** | ✔ |
+    | Wiederherstellung | ≤ 15 min | **231,9 s** (17 Dateien über den regulären Weg) | ✔ |
+    | Spuren je 1000 Einsätze | ≤ 3 MB | **3,66 MB** | ✘ knapp |
+
+    Zur letzten Zeile gehört die Zahl daneben: Sie ist **nach** Verdichtung
+    und Ausdünnung gemessen (`OPTIMIZE TABLE` davor, sonst zählt man
+    freigegebene Seiten mit — ohne ihn kamen 19,30 MB heraus). Der
+    Verdichtungsjob lässt dabei **434 von 5050** Einsätzen liegen: Ihr
+    letzter Punkt ist keine zwei Wochen alt, und er fasst nur abgeschlossene
+    Aufzeichnungen an. Das ist richtig so, aber es heißt, dass 3,66 MB nicht
+    der Endstand eines gewachsenen Bestands sind, sondern der eines frisch
+    eingespielten. **Die Zielzahl ist damit knapp verfehlt und nicht
+    widerlegt;** wer sie halten will, misst an einem Bestand nach, dessen
+    jüngster Einsatz älter ist als die Verdichtungsfrist.
+
+    **(d) `post_max_size` bleibt ungemessen — und das ist zu sagen, nicht
+    wegzulassen.** Die Zahl ist die des **Zielservers**, nicht die einer
+    Entwicklungsmaschine; sie zu messen setzt eine laufende Installation
+    voraus. Staging stand am 16.09.2026 noch nicht (die Auslieferungskette
+    ist gebaut, die Anlage selbst wird erst eingerichtet — Rahmenplan 6a).
+    **Der Weg dorthin steht aber seit P5a/AP2 fest und braucht keine
+    Messung mehr:** Die Plattformkarte auf Betrieb → Status nennt
+    `post_max_size` und `upload_max_filesize` mit Sollwert (Z3: 2 MB) und
+    Ist-Wert. Sobald Staging antwortet, ist die Antwort ein Seitenaufruf.
+
+    Dieser Eintrag ist die **führende** Fassung; die Bemerkung
     in Rahmenplan Abschnitt 5 verweist hierher.
 
 40. **Altklassen ohne Gegenstück — 53 (gemessen 13.09.2026), 55 bei Aufnahme.**
@@ -2138,29 +2195,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (0 unerklärt) und Messstand; nach jedem Paket `grep`-Zählungen der
     Muster gegen die Zahlen hier (Ziel 0 außerhalb der Bibliothek).
 
-206. **Der Messstand-Schritt der Auslieferungskette bricht bei JEDEM Tag-Lauf
-    ab.** `.github/workflows/auslieferung.yml` ruft in Zeile 144
-    `python3 tools/messstand/serverprobe.py --basis "$STAGING_URL"` — und
-    `serverprobe.py` kennt **kein** `--basis`. Sein `argparse` führt `--konto`,
-    `--ausgabe`, `--wartung-fahren` und `--optimieren`; ein unbekanntes
-    Argument beendet das Skript mit Code 2. Der Schritt steht unter
-    `if: startsWith(github.ref, 'refs/tags/web-v')` und läuft deshalb genau
-    dann, wenn ausgeliefert wird — und bisher wurde nach P5a/AP1 kein Tag
-    gesetzt, weshalb es niemandem aufgefallen ist.
-
-    **Der Fehler sitzt tiefer als ein fehlendes Argument:** `serverprobe.py`
-    misst gegen eine **lokale Datenbank** (PDO, `EXPLAIN`, `OPTIMIZE TABLE`),
-    nicht gegen eine Adresse. Gegen Staging über HTTP zu messen ist etwas
-    anderes als das, was das Skript tut — die Zeile ist also nicht falsch
-    geschrieben, sie ist falsch gedacht. Entweder fällt der Schritt weg, oder
-    der Messstand bekommt einen Weg, der über die Leitung geht.
-
-    *Aufgenommen 16.09.2026 in P5a/AP7, gefunden bei der Durchsicht der Kette.
-    **Zuständig ist P5a/AP9**, das den Messstand ohnehin anfasst
-    (Verbindungsgrenze, drei Messungen aus Nr. 37). Bewusst nicht nebenbei
-    geändert: Ein Paket über den Ratenschutz baut die Auslieferungskette nicht
-    um.*
-
 207. **`gen-em.org` steht 96× in `tools/` und `.github/`.** In `server/` ist
     die Adresse seit Web 20.9.0 auf **0** (Nr. 203, E-P5a-40): Kontaktadresse
     und Betreiberpost sind Einstellungen. Die Prüfmittel sind dabei
@@ -2224,11 +2258,105 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bausteine.*
 
 
+210. **`ingest.php` läuft bei gleichzeitigen Uploads auf denselben
+    Diensttag in einen Deadlock.** *Gemessen am 16.09.2026 in P5a/AP9 von
+    `tools/verbindungsprobe/`:* Zwanzig Pakete desselben Geräts, gleichzeitig
+    abgeschickt, ergaben **zwölf** `SQLSTATE[40001] 1213 Deadlock found when
+    trying to get lock`. Die Fundstellen sind zwei: der `UPDATE days` in
+    `dt_zeitraum_fortschreiben()` (`diensttag_lib.php`) und der
+    `INSERT … ON DUPLICATE KEY` auf `missions` in `ingest.php`.
+
+    **Die Ursache ist die gemeinsame Zeile.** Jeder Upload eines Diensttags
+    schreibt `days.started_at`/`ended_at` fort, und zwar in derselben
+    Transaktion, in der er seinen Einsatz anlegt. Zwei Uploads desselben Tages
+    halten damit Sperren in umgekehrter Reihenfolge, und InnoDB bricht eine
+    von beiden ab.
+
+    **Was AP9 getan hat, ist die halbe Miete:** Die Antwort ist nicht mehr
+    500, sondern 503 `ausgelastet` (E-P5a-52) — für die Uhr heißt das
+    „gleich noch einmal" statt „kaputt", und in der Probe kommen seither alle
+    zwanzig Pakete an. **Was fehlt, ist die Vermeidung:** Die Transaktion
+    gehört wiederholt, statt sie dem Aufrufer zurückzugeben. InnoDB sagt es
+    wörtlich — „try restarting transaction".
+
+    **Zu tun:** Den Transaktionsrumpf von `ingest.php` in eine Schleife mit
+    zwei bis drei Anläufen und kurzer Wartezeit fassen. Dabei ist zu klären,
+    was zwischen den Anläufen neu gelesen werden muss (der Umriss der
+    vorhandenen Spur, die Fortsetzungsmarke) — ein Wiederholen mit
+    veralteten Werten wäre schlimmer als der Deadlock. Zu prüfen ist
+    außerdem, ob die `days`-Fortschreibung überhaupt in dieselbe Transaktion
+    gehört: Sie ist idempotent (`WHERE … started_at > ?`) und könnte
+    **nach** dem Commit stehen, womit die Sperre auf der gemeinsamen Zeile
+    entfiele.
+    *Abnahme:* `php tools/verbindungsprobe/probe.php --frei 20` (also ohne
+    Verbindungsenge) meldet **0 × 503** und 0 Gedrängel im Fehlerprotokoll.
+    Zuordnung: offen, ein eigenes Paket.
+
+211. **Ein `/api/`-Aufruf ohne Sitzung bekommt eine Weiterleitung statt
+    einer JSON-Antwort.** `auth_guard.php` prüft in Zeile 33
+    `empty($_SESSION['user_id'])` und antwortet mit
+    `header('Location: login.php')` — **vor** jeder Unterscheidung, ob das
+    Gegenüber JSON erwartet. `ist_api_aufruf()` gibt es, aber es wird erst
+    weiter unten benutzt, für die Fälle „Sitzung abgelaufen" und „Rolle reicht
+    nicht" (dort korrekt: 401 bzw. 403 als JSON).
+
+    **Die Folge ist klein, aber sie ist eine Unwahrheit:** Ein Werkzeug oder
+    ein Skript, das einen Endpunkt kalt aufruft, bekommt HTTP 302 und danach
+    die HTML-Anmeldeseite — und wird daran hängenbleiben, statt „nicht
+    angemeldet" zu lesen. Im Betrieb tritt das selten auf: Die Aufrufe des
+    Browsers kommen aus einer angemeldeten Seite, und eine **ablaufende**
+    Sitzung fängt der richtige Zweig ab.
+
+    **Zu tun:** Die Weiterleitung in Zeile 33 an `ist_api_aufruf()` vorbei
+    nicht mehr unbedingt machen, sondern denselben JSON-Weg nehmen wie
+    `sitzung_beenden_passend()` — 401 mit einem lesbaren Grund.
+    *Abnahme:* `curl -s -o /dev/null -w '%{http_code}' <basis>/api/day.php?day=2026-01-01`
+    liefert **401** und `{"error":…}` statt 302.
+    *Aufgenommen 16.09.2026 in P5a/AP9, gefunden beim Bau der
+    Verbindungsprobe: Sie wollte einen `/api/`-Endpunkt unter Überlast messen
+    und bekam eine 302, weil die Anfrage die Datenbank nie erreichte.*
+
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+206. **Der Messstand-Schritt der Auslieferungskette bricht bei JEDEM Tag-Lauf
+    ab.** `.github/workflows/auslieferung.yml` ruft in Zeile 144
+    `python3 tools/messstand/serverprobe.py --basis "$STAGING_URL"` — und
+    `serverprobe.py` kennt **kein** `--basis`. Sein `argparse` führt `--konto`,
+    `--ausgabe`, `--wartung-fahren` und `--optimieren`; ein unbekanntes
+    Argument beendet das Skript mit Code 2. Der Schritt steht unter
+    `if: startsWith(github.ref, 'refs/tags/web-v')` und läuft deshalb genau
+    dann, wenn ausgeliefert wird — und bisher wurde nach P5a/AP1 kein Tag
+    gesetzt, weshalb es niemandem aufgefallen ist.
+
+    **Der Fehler sitzt tiefer als ein fehlendes Argument:** `serverprobe.py`
+    misst gegen eine **lokale Datenbank** (PDO, `EXPLAIN`, `OPTIMIZE TABLE`),
+    nicht gegen eine Adresse. Gegen Staging über HTTP zu messen ist etwas
+    anderes als das, was das Skript tut — die Zeile ist also nicht falsch
+    geschrieben, sie ist falsch gedacht. Entweder fällt der Schritt weg, oder
+    der Messstand bekommt einen Weg, der über die Leitung geht.
+
+    *Aufgenommen 16.09.2026 in P5a/AP7, gefunden bei der Durchsicht der Kette.
+    **Zuständig ist P5a/AP9**, das den Messstand ohnehin anfasst
+    (Verbindungsgrenze, drei Messungen aus Nr. 37). Bewusst nicht nebenbei
+    geändert: Ein Paket über den Ratenschutz baut die Auslieferungskette nicht
+    um.*
+
+    **Erledigt am 16.09.2026 in P5a/AP9 (E-P5a-53): der Schritt ist
+    ersatzlos gestrichen.** Von den beiden Möglichkeiten oben ist die erste
+    die richtige, und zwar nicht aus Bequemlichkeit: Was `serverprobe.py`
+    misst — Tabellengrößen, Speicherspitze von `edbak_build()`, den
+    Waisen-Vollscan — ist über HTTP grundsätzlich nicht zu sehen. Ein „Weg
+    über die Leitung" hätte einen Endpunkt gebraucht, der einer
+    unangemeldeten Kette Innereien der Datenbank ausliefert; genau den soll es
+    nicht geben. Der Messstand bleibt, was er ist: ein **manuelles**
+    Regressionsmittel (R35), das lokal vor einer Auslieferung läuft. An der
+    Stelle des Schrittes steht jetzt eine Zeile in der Laufzusammenfassung,
+    die sagt, wo seine Zahlen stehen (`tools/messstand/ausgangsmessung.md`)
+    und wo die Grenzen der Zielanlage stehen (Betrieb → Status → Plattform).
 
 17. **`ingest.php` hat als einziger anmeldungsfreier Endpunkt keine
     Mengenbremse.** `RATE_GRENZEN` (`ratelimit_lib.php`) kennt keinen Topf
