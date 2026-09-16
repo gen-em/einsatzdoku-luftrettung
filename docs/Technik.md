@@ -103,6 +103,10 @@ Daten erst nach Server-Bestätigung.
 │   │                      Handy-Form), und die Beschriftungen der Gerätelisten
 │   ├── geraetemodelle.php Teilenummer → Modellname und Geräteart. **ERZEUGT**
 │   │                      (`tools/geraetemodelle/`), nicht von Hand ändern
+│   ├── geraetemodelle_lib.php
+│   │                      Der Nachlöse-Kern (P5a/AP11, E-P5a-21): Fingerabdruck
+│   │                      der Tabelle, Stand in `app_state`, `gm_nachaufloesen()`
+│   │                      in Blöcken. Job UND Skript benutzen dieselbe Fassung
 │   ├── spur_lib.php       Spurpunkte lesen und schreiben — die EINZIGE Stelle,
 │   │                       die `track_points`/`track_blobs` anfasst (4.97)
 │   ├── gpx_lib.php        GPX 1.1 aus einer oder mehreren Spuren — die
@@ -433,8 +437,12 @@ Daten erst nach Server-Bestätigung.
 │   │                      nachträglich auf. Braucht eine Zuarbeit, die nicht
 │   │                      im Repositorium steht (s. LIESMICH.md)
 │   ├── geraeteprobe/      hält das Auslesen des Kopplungsblocks `geraet`
-│   │                      gegen beide Geräteformen und gegen Unsinn (R42, S6);
-│   │                      ohne Datenbank und ohne Gerät (s. LIESMICH.md)
+│   │                      gegen beide Geräteformen und gegen Unsinn (R42, S6).
+│   │                      Teil 2 (P5a/AP11) misst den Nachlöse-Job GEGEN DIE
+│   │                      DATENBANK: fünf Zeilen mit je einer Frage, zwei
+│   │                      Modelltabellen in einem Lauf. 59 Erwartungen; ohne
+│   │                      Datenbank läuft nur Teil 1 und sagt es
+│   │                      (s. LIESMICH.md)
 │   ├── gpxprobe/          prüft den GPX-Abruf (S2/AP4): gültig gegen das
 │   │                       vendorierte amtliche GPX-1.1-XSD, Punkt für Punkt
 │   │                       gegen die browsergebauten Referenzdateien,
@@ -2637,7 +2645,9 @@ keine Uhren**: 20 Edge, 8 Outdoor-Handgeräte.
 > vollständig, löst aber nichts auf — jede Teilenummer landet unverändert in
 > `geraet_teil`, und die Geräteliste zeigt „Uhr · 006-B4261-00" statt
 > „Uhr · Venu 3S". Verloren geht dabei nichts; genau dafür steht die Rohangabe
-> in einer eigenen Spalte, und `nachaufloesen.php` trägt später nach.
+> in einer eigenen Spalte, und der Job `nachaufloesen` trägt später nach —
+> von selbst, sobald eine gefüllte Tabelle da ist (seit Web 20.15.0;
+> `nachaufloesen.php` bleibt als Vorschau und Weg von Hand).
 
 **Der Modellname ist ein Sammelname.** Die Gerätedateien führen je Teilenummer
 die **Hardware**, und Garmin verkauft dieselbe Hardware unter mehreren Namen —
@@ -3224,7 +3234,17 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 | `aufraeumen` | ja, höchstens 1×/Kalendertag | **zwölf Schritte** — verfallene Kopplungssitzungen, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speichermessung und Warnschwellen. **Maßgeblich ist `job_aufraeumen()`, nicht diese Zeile** — sie nannte bis Web 20.12.0 sechs von zwölf, und die fehlenden sechs sind zwischen S10 und P5a/AP7 dazugekommen, ohne dass es jemandem auffiel. Die **sichtbare** Beschreibung steht im Job-Katalog (`jobs_lib.php`) und ist mitzuführen |
 | `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
 | `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
+| `adminbackup` | nein, nur mit Auftrag | Konto-Backups aus der Sammelaktion „Alle sichern" |
+| `versand` | nein | Pakete auf die aktiven Backup-Ziele — und seit Web 20.14.0 die **Aufbewahrung dort** (4.97c) |
+| `komplett` | nein, nach Plan | Komplett-Backup der Installation (4.97d) |
+| `nachaufloesen` | nein, nur nach einer neuen Modelltabelle | Teilenummern bestehender Geräte erneut auflösen, in Blöcken von 200 (P5a/AP11, unten) |
 | `waisen` | nein, läuft solange Rückstand da ist | Spurpunkte und Blobs ohne Eigentümer — **bereichsweise** über den Primärschlüssel |
+
+> **`mail` steht ganz oben und fehlte in dieser Tabelle**, zusammen mit
+> `adminbackup`, `versand` und `komplett` — vier von acht. Nachgetragen in
+> P5a/AP11, als der neunte dazukam. Die Ursache bleibt und steht als
+> **Backlog Nr. 208**: Diese Tabelle ist von Hand geführt, der Katalog in
+> `jobs_lib.php` ist die Quelle. Maßgeblich ist immer er.
 
 Jeder Aufräumschritt hat weiterhin seinen eigenen Fehlerblock: Einer, der
 scheitert, hält die anderen nicht auf (das war schon seit Web 4.5.1 so und
@@ -3235,6 +3255,39 @@ nicht nur im Fehlerprotokoll des Webspace.
 nach ab und überspringt, was ins Restbudget nicht mehr passt. `waisen` ist ein
 Sicherheitsnetz und kein Hauptweg — die eigentliche Arbeit gehört deshalb nach
 vorn, sonst bekäme sie am Huckepack-Weg (3 s) nur noch den Rest.
+
+#### Der Nachlöse-Job (ab Web 20.15.0, P5a/AP11, E-P5a-21; Backlog Nr. 80)
+
+**`pair.php` löst die Teilenummer einer Garmin-Uhr im Moment der Kopplung auf
+— und nur dann.** Trifft sie dabei auf eine leere oder ältere Modelltabelle,
+bleibt `geraet_modell` leer, und `geraet_art` steht auf der **ungeprüften
+Selbstauskunft** des Geräts: Die Uhr-App sendet dort fest `"uhr"`, ein
+Radcomputer wäre damit dauerhaft als Uhr gezählt.
+
+Nachtragen ließ sich das seit Web 12.9.1 mit
+`tools/geraetemodelle/nachaufloesen.php` — **über die Kommandozeile**. Auf
+einem Webspace ohne SSH gibt es diesen Weg nicht; dort holten die betroffenen
+Geräte ihre Angabe erst bei der nächsten Kopplung nach, also womöglich nie.
+Die Zahl, die Backlog Nr. 80 auswerten will, hing damit daran, ob jemand SSH
+hat.
+
+| | |
+|---|---|
+| Bibliothek | `server/geraetemodelle_lib.php` — `gm_nachaufloesen(PDO, int $block, bool $schreiben, int $abId, ?array $tabelle)`. Sie ist der Kern, den sich Skript **und** Job teilen; das Skript behält die Vorschau |
+| Auslöser | `sha256(serialize(GERAETE_MODELLE))` gegen den Wert in `app_state` (`geraetemodelle_stand`). **Ein Hash und kein Datum:** Ein Deploy fasst die Änderungszeit jeder Datei an, der Inhalt bleibt derselbe — ein Job, der nach jedem Deploy 300 Zeilen durchgeht, ist ein Job, der nichts tut und dafür Zeit verbraucht |
+| Blockgröße | **200** Zeilen, mit Zeitbudget und Fortsetzungsmarke (`ab_id` im Jobzustand). **Eine Transaktion je Block**, nicht eine über alle: Eine über mehrere hielte Sperren über Sekunden und würde beim Zeitablauf zurückgerollt — dann wäre die Arbeit des gerade geschafften Blocks weg |
+| Hash schreiben | **erst am Ende.** Bricht der Lauf mitten im Bestand ab, bleibt die Marke im Zustand und der alte Hash stehen. Wäre der Hash schon geschrieben, gälte der halb durchgegangene Bestand als erledigt — und zwar still |
+| Drei Regeln, unverändert | nur ändern, was die Tabelle **wirklich** kennt · die **Rohangabe** nie anfassen · **Handy-Zeilen** bleiben unberührt (ihre Rohangabe ist der Klarname, und die Tabelle führt keine Handys — dieselbe Regel wie für jede andere unbekannte Angabe, kein Sonderfall) |
+| Anzeige | Betrieb → Status, Karte **Server**, Zeile **Gerätemodelle**: „N Teilenummern · zuletzt nachgelöst … · X nachgezogen, Y unbekannt". **Orange „steht aus"**, wenn die Tabelle sich geändert hat und der Job noch nicht gelaufen ist — ohne diese Zeile wäre das ein Zustand, den niemand sieht |
+| Prüfmittel | `tools/geraeteprobe/` Teil 2, **gegen die Datenbank**: fünf Zeilen mit je einer Frage, zwei Tabellen in einem Lauf |
+
+**`geraet_modell_aufloesen()` und `gm_nachaufloesen()` nehmen die Tabelle als
+Parameter.** Das ist die Naht für die Probe: Sie misst gegen eine eigene,
+kleine Tabelle statt gegen den ausgelieferten Bestand (325 Teilenummern, die
+sich mit dem nächsten Lauf des Erzeugers ändern können) — und sie braucht
+**zwei** Tabellen in einem Lauf, um zu messen, dass eine gewachsene Tabelle
+genau die Zeilen ihrer neuen Teilenummer nachzieht. `null` heißt die
+ausgelieferte Tabelle; am Regelfall ändert der Parameter nichts.
 
 #### Verdichtung und Ausdünnung als Jobs (ab Web 10.2.0)
 
@@ -8097,10 +8150,19 @@ das Gerät neuer als die Tabelle, oder sie wurde nie gefüllt. Zwei Schritte:
    und ausrollen. Die Gerätedateien liefert nur der SDK-Manager; ihre
    Bereitstellungsadresse (`CIQ_GERAETE_URL`) steht nicht im Repositorium und
    **muss erfragt werden**.
-2. `php tools/geraetemodelle/nachaufloesen.php` — zeigt, welche bestehenden
-   Zeilen die neue Tabelle auflöst; `--schreiben` trägt es ein. **Braucht
-   Shell-Zugriff**; ohne ihn holen die Geräte ihre Angabe bei der nächsten
-   Kopplung nach.
+2. **Seit Web 20.15.0 geschieht der zweite Schritt von selbst** (P5a/AP11,
+   E-P5a-21): Der Job `nachaufloesen` merkt am Fingerabdruck der Tabelle,
+   dass sie sich geändert hat, und zieht die bestehenden Zeilen in Blöcken von
+   200 nach. Betrieb → Status, Zeile **Gerätemodelle** sagt, ob es ansteht
+   („steht aus", orange) oder erledigt ist („zuletzt nachgelöst …, N
+   nachgezogen, M unbekannt").
+
+   Wer zusehen will, kann weiterhin
+   `php tools/geraetemodelle/nachaufloesen.php` fahren — es zeigt Zeile für
+   Zeile, was es vorhat, und trägt mit `--schreiben` ein. **Das war bis
+   Web 20.14.0 der einzige Weg, und er braucht Shell-Zugriff**; auf einem
+   Webspace ohne SSH holten die Geräte ihre Angabe erst bei der nächsten
+   Kopplung nach — also womöglich nie. Genau das war der Grund für den Job.
 
 **Nichts geht verloren, solange das offen ist** — die Rohangabe steht in
 `devices.geraet_teil`. Zu beachten: Betroffen ist nicht nur der Modellname.

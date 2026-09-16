@@ -991,8 +991,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Die Modelltabelle steht** (Web 12.9.1): 325 Teilenummern auf 173
     Modelle, davon 28 keine Uhren. Eine Zählung nach `geraet_art` trägt damit
     — aber nur für Geräte, die **nach** dem Füllen gekoppelt haben. Ältere
-    Zeilen tragen die ungeprüfte Selbstauskunft; vor der ersten Auswertung
-    deshalb `php tools/geraetemodelle/nachaufloesen.php` fahren.
+    Zeilen tragen die ungeprüfte Selbstauskunft.
+
+    **Teil 1 dieses Eintrags ist mit P5a/AP11 erledigt** (Web 20.15.0,
+    E-P5a-21): Der Job `nachaufloesen` zieht bestehende Zeilen nach, sobald
+    sich die Modelltabelle geändert hat — erkannt am Hash, in Blöcken von 200,
+    mit Fortsetzungsmarke. Der Handgriff
+    `php tools/geraetemodelle/nachaufloesen.php` bleibt als Vorschau und Weg
+    von Hand, ist aber **keine Voraussetzung mehr**: Er brauchte Shell-Zugriff,
+    und auf einem Webspace ohne SSH holten die betroffenen Geräte ihre Angabe
+    erst bei der nächsten Kopplung nach — also womöglich nie. Die Zahl, die
+    dieser Eintrag auswerten will, hing damit daran, ob jemand SSH hat.
+    Betrieb → Status, Zeile **Gerätemodelle**, sagt den Stand.
+
+    **Offen bleibt der Rest dieses Eintrags**: die Auswertung selbst (Herkunft
+    je Einsatz, Betriebslage-Dashboard) samt ihrer Datenschutz-Vorbedingung.
 
     **Drei Befunde vom 14.09.2026 (Bestandsaufnahme zu R42), alle zu
     entscheiden, bevor der P5-Rest angefasst wird:**

@@ -14,6 +14,74 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.15.0] — 2026-09-16
+
+**P5a/AP11 — der Nachlöse-Job: die Modelltabelle holt die Geräte ein.**
+
+### Hinzugefügt — ein Job, der nachträgt, was beim Koppeln noch nicht bekannt war
+
+`pair.php` löst die Teilenummer einer Garmin-Uhr **im Moment der Kopplung**
+auf, und nur dann. Trifft sie dabei auf eine leere oder ältere Modelltabelle,
+bleibt `geraet_modell` leer — und, was schwerer wiegt, `geraet_art` steht auf
+der **ungeprüften Selbstauskunft** des Geräts: Die Uhr-App sendet dort fest
+`"uhr"`, weil eine Connect-IQ-App Uhr und Radcomputer nicht unterscheiden
+kann. Ein Edge wäre damit dauerhaft als Uhr gezählt.
+
+Nachtragen ließ sich das seit Web 12.9.1 mit
+`tools/geraetemodelle/nachaufloesen.php` — **über die Kommandozeile**. Auf
+einem Webspace ohne SSH gibt es diesen Weg nicht; dort holten die betroffenen
+Geräte ihre Angabe erst bei der nächsten Kopplung nach, also womöglich nie.
+Die Zahl, die Backlog Nr. 80 auswerten will, hing damit daran, ob jemand SSH
+hat.
+
+Seit Web 20.15.0 tut es der Job `nachaufloesen`:
+
+- **Er läuft nur nach einer neuen Tabelle.** Verglichen wird
+  `sha256(serialize(GERAETE_MODELLE))` gegen den Wert in `app_state` — ein
+  Hash und kein Datum: Ein Deploy fasst die Änderungszeit jeder Datei an, der
+  Inhalt bleibt derselbe. Ein Job, der nach jedem Deploy dreihundert Zeilen
+  durchgeht, ist ein Job, der nichts tut und dafür Zeit verbraucht.
+- **In Blöcken von 200**, mit Zeitbudget und Fortsetzungsmarke, **eine
+  Transaktion je Block**. Eine über mehrere Blöcke hielte Sperren über
+  Sekunden und würde beim Zeitablauf zurückgerollt.
+- **Den Hash schreibt er erst am Ende.** Bricht er mitten im Bestand ab,
+  bleibt die Marke stehen und der nächste Lauf macht weiter. Wäre der Hash
+  schon geschrieben, gälte der halb durchgegangene Bestand als erledigt — und
+  zwar still.
+- **Drei Regeln, unverändert aus dem Skript:** Er ändert nur, was die Tabelle
+  wirklich kennt. Die Rohangabe fasst er nie an. Handy-Zeilen bleiben
+  unberührt — ihre Rohangabe *ist* der Klarname, und die Tabelle führt keine
+  Handys; erkannt wird das daran, dass die Tabelle sie nicht führt, also
+  dieselbe Regel wie für jede andere unbekannte Angabe.
+
+Die Logik steckt jetzt in `server/geraetemodelle_lib.php` und wird von Job
+**und** Skript benutzt. Das Skript bleibt, was es war: die Vorschau mit Namen
+und Zeile, und der Weg für den, der lieber selbst zusieht.
+
+### Hinzugefügt — die Statuszeile „Gerätemodelle"
+
+In der Karte **Server**: „325 Teilenummern · zuletzt nachgelöst … · N
+nachgezogen, M unbekannt". **Orange „steht aus"**, wenn die Tabelle sich
+geändert hat und der Job noch nicht gelaufen ist. Ohne diese Zeile wäre das
+ein Zustand, den niemand sieht — er löst sich beim nächsten Jobdurchlauf von
+selbst, und wenn nicht, merkt es keiner.
+
+### Geändert — die Modelltabelle ist ein Parameter geworden
+
+`geraet_modell_aufloesen()` und `gm_nachaufloesen()` nehmen sie optional
+entgegen; `null` heißt die ausgelieferte. Das ist die Naht für die Probe: Sie
+misst gegen eine eigene, kleine Tabelle statt gegen 325 Teilenummern, die sich
+mit dem nächsten Lauf des Erzeugers ändern können — und sie braucht **zwei**
+Tabellen in einem Lauf, um zu messen, dass eine gewachsene Tabelle genau die
+Zeilen ihrer neuen Teilenummer nachzieht.
+
+### Behoben — vier von acht Jobs fehlten im Register der Technik-Dokumentation
+
+Die Tabelle in `docs/Technik.md` nannte `aufraeumen`, `verdichtung`,
+`ausduennen` und `waisen` — `mail`, `adminbackup`, `versand` und `komplett`
+fehlten. Aufgefallen beim Eintragen des neunten. Nachgetragen; die Ursache
+bleibt und steht als Backlog Nr. 208: Die Tabelle ist von Hand geführt.
+
 ## [Web 20.14.0] — 2026-09-16
 
 **P5a/AP10 — Aufbewahrung auf dem Sicherungsziel: erst sehen, dann löschen.**

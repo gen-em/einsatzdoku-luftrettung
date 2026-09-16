@@ -3811,6 +3811,28 @@ im Browser **zurück**, findet die Eingaben noch im Formular und schickt es
 gleich noch einmal ab. Uhr und Handy behalten ihre Daten und liefern von
 selbst nach.
 
+#### Die Zeile „Gerätemodelle" (seit Web 20.15.0)
+
+Ebenfalls in der Karte **Server**. Eine Garmin-Uhr kennt ihren Modellnamen
+nicht — sie sendet beim Koppeln eine **Teilenummer**, und eine Tabelle in der
+Anwendung macht daraus „Venu 3S". Kennt diese Tabelle die Nummer noch nicht
+(das Gerät ist neuer als die Tabelle), steht in der Geräteliste die
+Teilenummer, und die Geräteart ist nur das, was die Uhr-App über sich selbst
+behauptet.
+
+Die Zeile sagt, ob das nachgetragen ist:
+
+| Plakette | heißt |
+|---|---|
+| **aktuell** | Die Tabelle ist verarbeitet. Daneben steht, wann und wie viele Zeilen nachgezogen wurden. |
+| **steht aus** (orange) | Ein Update hat eine neue Tabelle mitgebracht. Der Hintergrundjob zieht beim nächsten Lauf nach — meist innerhalb weniger Minuten. Ist es nach einem Tag noch orange, laufen die Hintergrundjobs nicht (Karte *Hintergrundjobs*). |
+| **ungeprüft** | Es ist noch nie gelaufen. Auch das holt der nächste Jobdurchlauf. |
+
+**„M unbekannt" ist kein Fehler.** So viele Geräte tragen eine Angabe, die die
+Tabelle nicht kennt — Handys (die ihren Namen selbst mitbringen) und Modelle,
+die noch nicht in der Tabelle stehen. Sie werden **nicht** angefasst: Was ein
+Gerät über sich gesagt hat, bleibt stehen.
+
 ### 12.2 Statistik
 
 **Was diese Installation trägt** — Konten, Geräte, Einsätze. Rein lesend,

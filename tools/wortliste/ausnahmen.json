@@ -508,6 +508,13 @@
       "begruendung": "Die Beschriftung der Logo-Wahl in der App: „RTH“, mit „NEF“ als Gegenstück in derselben Datei. Sie benennt, WELCHES BILD gewählt ist; beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Dieselbe Lage wie logowahl-option in server/einstellungen.php, nur in der App. Der Ausdruck verlangt, dass die ganze Zeile aus „RTH“ besteht — ein RTH in einem Satz wäre etwas anderes und bliebe ein Treffer."
     },
     {
+      "id": "technik-nachloesejob",
+      "datei": "docs/Technik.md",
+      "abschnitt": "^#### Der Nachl\u00f6se-Job",
+      "klasse": "G",
+      "begruendung": "Derselbe Gegenstand wie `technik-geraetekennung`, nur eine Ebene weiter: Der Nachloese-Job (P5a/AP11) loest TEILENUMMERN auf, und die gibt es nur bei Garmin — eine Connect-IQ-App laeuft nirgendwo sonst. Der Absatz erklaert, warum die Selbstauskunft „uhr\" der Tabelle unterliegt, und das ist eine Aussage ueber die Garmin-Plattform, keine ueber Uhren im Allgemeinen. Plattformspezifisch wie Kapitel 5 (E-P2-15)."
+    },
+    {
       "id": "technik-geraetekennung",
       "datei": "docs/Technik.md",
       "abschnitt": "^### Was ein Gerät beim Koppeln über sich meldet",

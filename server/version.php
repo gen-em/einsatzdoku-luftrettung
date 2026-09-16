@@ -5421,5 +5421,46 @@ declare(strict_types=1);
  * `backup_targets` und die Tabelle `sicherungsziel_dateien` (Versand- UND
  * Loeschprotokoll). NACH DEM DEPLOY MUSS UPDATE.PHP LAUFEN — sonst bleibt
  * die Regel aus, und sie sagt es.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.15.0 — DER NACHLOESE-JOB: DIE MODELLTABELLE HOLT DIE GERAETE EIN
+ * ---------------------------------------------------------------------------
+ *
+ * AP11 von P5a (E-P5a-21, Backlog Nr. 80). `pair.php` loest die Teilenummer
+ * einer Garmin-Uhr IM MOMENT DER KOPPLUNG auf, und nur dann. Trifft sie dabei
+ * auf eine leere oder aeltere Tabelle, bleibt das Modell leer — und
+ * `geraet_art` steht auf der UNGEPRUEFTEN SELBSTAUSKUNFT: Die Uhr-App sendet
+ * dort fest „uhr", weil eine Connect-IQ-App Uhr und Radcomputer nicht
+ * unterscheiden kann.
+ *
+ * Nachtragen ging seit Web 12.9.1 nur ueber die KOMMANDOZEILE. Auf einem
+ * Webspace ohne SSH gibt es diesen Weg nicht; dort holten die betroffenen
+ * Geraete ihre Angabe erst bei der naechsten Kopplung nach, also womoeglich
+ * nie. Die Zahl, die Nr. 80 auswerten will, hing damit daran, ob jemand SSH
+ * hat.
+ *
+ * JETZT: der Job `nachaufloesen`. Er laeuft nur nach einer neuen Tabelle,
+ * erkannt am HASH und nicht an einem Datum — ein Deploy fasst die
+ * Aenderungszeit jeder Datei an, der Inhalt bleibt derselbe. In Bloecken von
+ * 200, eine Transaktion je Block, Fortsetzungsmarke im Jobzustand; der Hash
+ * wird ERST AM ENDE geschrieben, sonst gaelte ein halb durchgegangener
+ * Bestand als erledigt.
+ *
+ * DREI REGELN, UNVERAENDERT AUS DEM SKRIPT: nur aendern, was die Tabelle
+ * wirklich kennt; die Rohangabe nie anfassen; Handy-Zeilen bleiben unberuehrt.
+ *
+ * Die Logik steckt in `geraetemodelle_lib.php` und wird von Job UND Skript
+ * benutzt; das Skript behaelt die Vorschau. Die Modelltabelle ist dabei ein
+ * PARAMETER geworden — die Naht fuer die Probe, die zwei Tabellen in einem
+ * Lauf braucht.
+ *
+ * Statusseite, Karte Server, Zeile „Geraetemodelle": orange „steht aus", wenn
+ * die Tabelle sich geaendert hat und der Job noch nicht gelaufen ist.
+ *
+ * NEBENBEI: Vier von acht Jobs fehlten im Register der Technik-Dokumentation
+ * (`mail`, `adminbackup`, `versand`, `komplett`) — aufgefallen beim Eintragen
+ * des neunten. Nachgetragen; die Ursache bleibt Nr. 208.
+ *
+ * KEINE MIGRATION.
  */
-const WEB_VERSION = '20.14.0';
+const WEB_VERSION = '20.15.0';

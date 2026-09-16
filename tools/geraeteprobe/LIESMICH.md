@@ -5,6 +5,19 @@ php tools/geraeteprobe/probe.php
 ```
 
 Rückgabewert `0` = alle Erwartungen erfüllt, `1` = mindestens eine nicht.
+
+**Erwartet: 59 von 59** (gemessen 16.09.2026). Die Zahl stand bis P5a/AP11 auf
+39; **Teil 2** ist dazugekommen und braucht als einziger eine **Datenbank** —
+er misst den Nachlöse-Job (E-P5a-21). Ohne Datenbank sagt er das und fällt
+nicht still aus.
+
+Teil 2 legt ein eigenes Konto (`geraeteprobe@gen-em.org`) mit **fünf**
+Gerätezeilen an, von denen jede eine Frage stellt: eine bekannte Teilenummer
+ohne Modell, eine mit **falscher Geräteart** (dort schlägt die Tabelle die
+Selbstauskunft), ein Handy, eine unbekannte Teilenummer und eine, die erst die
+**erweiterte** Tabelle kennt. Er räumt Konto und `app_state` danach wieder auf
+— ohne das stünde auf der Statusseite der Installation hinterher der Hash
+einer Vier-Zeilen-Tabelle.
 Braucht **keine Datenbank**, keinen Webserver und kein Gerät.
 
 ## Wozu

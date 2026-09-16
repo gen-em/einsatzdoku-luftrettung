@@ -1,8 +1,8 @@
 # Prüfdokument P5a — Kette und Fundament
 
 **Konzept:** `Konzept-P5a-Kette-und-Fundament.md` (15.09.2026, E-P5a-01 bis
--33, AP1 bis AP12). **Gemessen auf:** Zweig `claude/butte-umsetzen-5opi9u`.
-**Stand dieses Dokuments:** 15.09.2026, nach AP4.
+-58, AP1 bis AP12). **Gemessen auf:** Zweig `claude/butte-umsetzen-5opi9u`.
+**Stand dieses Dokuments:** 16.09.2026, nach AP11 (Web 20.15.0).
 
 Das Prüfprotokoll im Konzept beantwortet „ist es belegt?". Dieses Dokument
 beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
@@ -47,6 +47,8 @@ beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
 | N31 | **Die Löschregel gegen ein echtes auswärtiges Ziel** | Der Container kommt nur auf Port 443 hinaus; 21, 22 und 990 laufen ins Leere (nachgemessen mit `github.com:22`). Gemessen wird gegen die Nachbauten pyftpdlib/paramiko auf Loopback. | `tools/versandprobe/` Teil 12 misst die **Regel** vollständig — 5 fremde Dateien, 5 eigene, N = 2, 3 Löschungen, 5 von 5 fremden bleiben. Was der Nachbau nicht hat: eine langsame oder abreißende Leitung während des Löschens, und ein Ziel, auf dem jemand anderes gleichzeitig arbeitet. Prüfpunkt **P30**. |
 | N32 | **Ein Altbestand, der hier schon weggeräumt ist** | Der Versand trägt eine Datei ins Protokoll ein, wenn er sie sendet **oder** sie drüben schon mit gleichem Namen und gleicher Größe vorfindet. Sicherungen, die drüben liegen und hier nicht mehr, kann er nicht belegen — und rührt sie deshalb nie an. Nachstellen ließe sich das, prüfen ließe sich daran aber nur, dass nichts geschieht. | Gemessen ist die **sichere Richtung**: In Teil 12 bleiben genau die Dateien liegen, die das Protokoll nicht kennt (fünf fremde, darunter eine mit gültigem Namensmuster). Die Folge steht im Handbuch und in `docs/Technik.md` 4.97c. |
 | N33 | **Die zwei roten Erwartungen der Wiederherstellungsprobe** (Teil 10) | Sie sind **nicht** von AP10 verursacht: am unveränderten Stand ebenso rot (nachgemessen 16.09.2026, `git stash`). Der Prüffall gibt dem Sammelvorgang „Alle sichern" ein enges Zeitbudget und erwartet, dass danach etwas offen bleibt; auf einer Installation mit zwei fast leeren Konten passen beide hinein. | Aufgenommen als **Backlog Nr. 212**. Bis dahin sind es zwei rote Zeilen, die als solche benannt sind — und das ist der Punkt: Eine unerklärte rote Zeile gewöhnt jeden daran, rote Zeilen zu übersehen. |
+| N34 | **Die 325 ausgelieferten Teilenummern gegen echte Geräte** | Die Geräteprobe setzt eine **eigene, kleine** Modelltabelle (fünf Geräte A bis E) und prüft damit das Verhalten des Nachlösens, nicht den Inhalt der ausgelieferten Tabelle. Ob die 325 Einträge in `GERAETE_MODELLE` **richtig** sind, sagt keine Probe — nur ein Gerät, das sich meldet. | Gemessen ist die **Mechanik**: dass eine erweiterte Tabelle genau die Zeilen der neuen Teilenummer nachzieht (1 von 5) und alle anderen unberührt lässt, und dass der Fingerabdruck sich mit dem Inhalt ändert. Ein falscher Eintrag in der Tabelle führt zu einem falschen Modellnamen an genau den Zeilen dieser Teilenummer — sichtbar in der Geräteliste, korrigierbar durch einen Tabelleneintrag und den nächsten Lauf. Prüfpunkt **P32**. |
+| N35 | **Der Nachlöse-Job über einen großen Altbestand** | Hier stehen fünf Gerätezeilen mit Rohangabe. Ob das Zeitbudget (3 s huckepack, 20 s im eigenen Lauf) über Tausende reicht und wie viele Läufe es dann braucht, sagt nur eine Installation mit Bestand. | Gemessen ist die **Fortsetzung**: mit Blockgröße 1 meldet der Lauf `geprueft 1`, `fertig false`, die Marke wandert, und der **Hash wird erst am Ende geschrieben** — ein abgebrochener Lauf gilt also nicht als erledigt. Damit ist ein Bestand jeder Größe in endlich vielen Läufen durch; offen ist nur, in wie vielen. Prüfpunkt **P32**. |
 | N8 | **Die Kontingent-Warnmail auf einem echten Mailserver** | Der Container hat keinen. | Die Logik ist mit abgesenkten Schwellen (50/53 %) durchgespielt: Beide Schwellen schlagen an, der Versand scheitert erwartungsgemäß und wird **nicht** als gemeldet vermerkt — also am nächsten Tag erneut versucht. Prüfpunkt **P10**. |
 
 ---
@@ -370,6 +372,28 @@ zitiert, zitiert eine Tabelle und keinen Bestand.
 
 ---
 
+### 1l. Nach AP11 (Web 20.15.0), im selben Container
+
+| Mittel | Aufruf | Ergebnis |
+|---|---|---|
+| **Geräteprobe, Teil 2 neu** | `php tools/geraeteprobe/probe.php` | **59 von 59** (39 vorher), davon **20 neue gegen die Datenbank**. Fünf Geräte A bis E: Vorschau nennt **genau A und B**, zählt C/D/E als unbekannt und **schreibt dabei nichts** (Gegenzählung in der Tabelle) · der Lauf schreibt **dieselbe Menge** · A bekommt „Venu 3S" · **B: die Tabelle schlägt die Selbstauskunft** (`geraet_art` „uhr" → „sonstiges") · C (Handy) und D (unbekannte Teilenummer) bleiben **Zeichen für Zeichen** gleich · die **Rohangabe** ist bei allen fünf unverändert · zweiter Lauf mit derselben Tabelle: **0 geschrieben** · **erweiterte Tabelle** (E kommt hinzu): anderer Fingerabdruck, **genau 1** Zeile nachgezogen, C und D weiter unberührt · Job bei stehendem Hash **0**, bei geändertem **1**, danach steht der Hash der ausgelieferten Tabelle · Blockgröße 1: `geprueft 1`, `fertig false`, Fortsetzungsmarke wandert |
+| Jobkatalog | `php server/jobs.php` (CLI) | `nachaufloesen` steht **zwischen `komplett` und `waisen`**, meldet „fertig · erledigt 0" auf einem Bestand, der nichts nachzuziehen hat |
+| Wartungsprobe · Jobprobe · Kopplungsprobe · Ingestprobe | je `probe.php` | **67/0 · 35/0 · 76/0 · 83/0** |
+| Bilderlauf | `--nur 45-` | **8 Bilder · 0 Überlauf · 0 Konsolenfehler · 0 Knöpfe falscher Höhe** (Zeiger, 44/36 px) — gemessen ist die **Statusseite**, die einzige Seite, die AP11 verändert |
+| Wortliste | `python3 wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen**; **99** Regeln, 99 gegriffen. Eine neu (`technik-nachloesejob`): Der neue Abschnitt in `docs/Technik.md` nennt **Garmin**, weil es dort die Sache **ist** — Teilenummern wie `006-B4127-00` gibt es nur dort, und ein neutraler Ersatz würde die Stelle unverständlich machen |
+| Vollständigkeit | `python3 pruefen.py` | **377 = unverändert** |
+| CSP · Sitzungshärtung · Installweiche · Migrationsregister | je `pruefen.php` | **0 · 0 · 0 · 0** |
+| Kontraste · PHP-Syntax | | **22 Paare, 0 verfehlt** · **485 Dateien, 0 Fehler** |
+
+> **Was diese Zahlen NICHT sagen.** Die Geräteprobe misst mit einer **eigenen,
+> fünfzeiligen** Modelltabelle, nicht mit den 325 ausgelieferten Teilenummern
+> (N34), und der Bestand, über den nachgelöst wird, ist ebenso fünf Zeilen lang
+> (N35). Gemessen ist damit das **Verhalten** des Nachlösens — wen es anfasst,
+> wen nicht, wann es wieder läuft —, nicht der Inhalt der Tabelle und nicht das
+> Zeitbudget über Tausende Zeilen.
+
+---
+
 ---
 
 ## 2. Was im Browser geprüft wurde
@@ -495,6 +519,23 @@ SFTP-Gegenstelle (paramiko):
 > Richtige löscht. Der Browser sieht nur, was die Seite sagt. Belegt ist es in
 > `tools/versandprobe/` Teil 12 — dort wird **am Ziel nachgezählt**, nicht in
 > der Anwendung: 7 Dateien übrig, 5 davon fremd, die zwei jüngsten eigenen.
+
+**Nach AP11**, gegen die lokale Installation (Chromium 141, angemeldet als
+BetreiberIn):
+
+| Was | Ergebnis |
+|---|---|
+| Betrieb → Status, Karte „Server", neue Zeile **„Gerätemodelle"** im Zustand *aktuell* | wörtlich: „325 Teilenummern · zuletzt nachgelöst 16.09.2026 19:39 Uhr · 0 nachgezogen, 0 unbekannt (Handys und fremde Modelle, sie bleiben unberührt)" — grün, **0 Konsolenfehler** |
+| Dieselbe Zeile nach einem **Eingriff in den Hash** (`app_state`-Schlüssel auf einen fremden Wert gesetzt) | orange: „325 Teilenummern · die Tabelle hat sich geändert, der Nachlöse-Job zieht beim nächsten Lauf nach" · Plakette **„steht aus"** |
+| Dieselbe Zeile **ohne** gespeicherten Stand (Schlüssel gelöscht) | „325 Teilenummern · noch nie nachgelöst" · Plakette **„ungeprüft"** — der Zustand einer frisch aktualisierten Installation |
+| Nach einem Joblauf zurück auf die Statusseite | Die Zeile steht wieder auf **aktuell**, mit neuem Zeitpunkt — belegt, dass Job und Anzeige denselben Schlüssel lesen und nicht zwei Wahrheiten führen |
+| Bilderlauf derselben Seite, acht Breiten von 360 bis 1920 px | **8 Bilder · 0 Überlauf · 0 Konsolenfehler · 0 Knöpfe falscher Höhe** |
+
+> **Was der Browser hier NICHT belegt:** dass der Job das Richtige nachzieht.
+> Die Statuszeile sagt nur, **ob** und **wann**. Dass er genau die Zeilen der
+> neuen Teilenummer anfasst und Handys und Fremdmodelle in Ruhe lässt, ist in
+> `tools/geraeteprobe/` Teil 2 gemessen — dort wird **in der Datenbank**
+> nachgezählt, vorher und nachher.
 
 ---
 
@@ -1122,6 +1163,41 @@ eigen. Dann steht sie in beiden Versandprotokollen — möglich nur, wenn eine
 Installation aus einer Sicherung der anderen entstanden ist. **Dann darf die
 Regel auf keiner von beiden an sein**, bis die Protokolle getrennt sind.
 
+### P32 — Der Nachlöse-Job auf der echten Installation (AP11)
+
+**Wofür:** N34 und N35 — gemessen ist die Mechanik an fünf erfundenen
+Gerätezeilen mit einer fünfzeiligen Modelltabelle. Auf der echten Installation
+stehen die 325 ausgelieferten Teilenummern und ein gewachsener Gerätebestand.
+
+**Weg:** Nach dem Update Betrieb → Status öffnen und die Zeile
+**„Gerätemodelle"** in der Karte „Server" ansehen. Sie steht zuerst auf
+**„ungeprüft"**. Den täglichen Lauf abwarten (oder `jobs.php?aktion=lauf` mit
+dem Token anstoßen), dann dieselbe Zeile noch einmal lesen und anschließend
+unter Geräte die Liste durchsehen.
+
+**Erwartet:** Die Zeile wechselt auf **grün** mit Zeitpunkt und zwei Zahlen
+(„N nachgezogen, M unbekannt"). In der Geräteliste tragen vorher namenlose
+Garmin-Geräte jetzt ihren Modellnamen; **Handys und fremde Geräte sind
+unverändert**. Steht dort ein zweistelliger oder größerer Bestand, läuft der
+Job möglicherweise über **mehrere Tage** — dann steht die Zeile so lange auf
+„steht aus", und das ist richtig so.
+
+**Woran ein Scheitern zu erkennen ist:**
+
+- **Ein falscher Modellname** an einer Teilenummer. Dann ist der Eintrag in
+  `GERAETE_MODELLE` falsch, nicht der Job (N34). Korrektur: Tabelleneintrag
+  richtigstellen — der geänderte Fingerabdruck sorgt von selbst dafür, dass
+  der nächste Lauf die Zeilen noch einmal anfasst.
+- **Ein Handy hat einen Garmin-Modellnamen bekommen** oder eine Rohangabe ist
+  verschwunden. Das wäre ein Fehler des Jobs und nicht der Tabelle; er ist in
+  der Probe ausdrücklich ausgeschlossen (C und D bleiben Zeichen für Zeichen
+  gleich), also melden.
+- **Die Zeile bleibt auf „steht aus", und die Zahl bewegt sich nicht.** Dann
+  kommt der Job nicht durch: entweder läuft der tägliche Lauf gar nicht (das
+  sähe man auch an den anderen Jobs) oder das Zeitbudget reicht je Lauf nur
+  für einen Block — dann `jobs.php?aktion=lauf` mehrmals anstoßen und
+  zusehen, ob die Zahl wächst (N35).
+
 ---
 
 ---
@@ -1166,6 +1242,24 @@ Aus dem Rahmenplan, Abschnitt 6 — hier nur, was P1 bis P8 blockiert:
 - **Sie ändert eine Berechtigung in der Datenbank.** Der Ausgangswert wird im
   `finally` zurückgeschrieben; scheitert das, sagt sie es auf STDERR mit Konto
   und Host. Auf einer Installation mit Betrieb hat sie nichts zu suchen.
+
+### 5e. `tools/geraeteprobe/` Teil 2 (seit AP11)
+
+- **Sie misst mit einer eigenen Modelltabelle**, nicht mit den 325
+  ausgelieferten Teilenummern. Das ist Absicht: Die Frage von AP11 lautet
+  „kommt eine **neue** Tabelle nur bei den Zeilen an, die sie neu kennt?",
+  und dafür braucht es zwei Tabellen in **einem** Lauf. Was sie damit nicht
+  sagt: ob die ausgelieferte Tabelle richtig ist (N34).
+- **Sie schreibt in die Datenbank** — fünf Geräte, ein Konto, ein Aufräumen
+  im `finally`. Auf einer Installation mit Betrieb hat sie nichts zu suchen;
+  sie läuft gegen die lokale Installation.
+- **Sie misst fünf Zeilen, kein Zeitbudget.** Die Fortsetzung ist mit
+  Blockgröße 1 belegt (`geprueft 1`, `fertig false`, Marke wandert), die
+  Dauer eines Blocks über Tausende Zeilen nicht (N35).
+- **Sie misst die Bibliothek, nicht den täglichen Lauf.** Dass der Job im
+  Katalog an der richtigen Stelle steht und vom Huckepack-Weg aufgerufen
+  wird, ist an `php server/jobs.php` abgelesen, nicht an einem Cron-Aufruf
+  der echten Anlage.
 
 ### 5c. `tools/ratenprobe/` (seit AP6)
 

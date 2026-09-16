@@ -305,6 +305,21 @@ function jobs_katalog(): array
             'rueckstand'   => 'job_komplett_rueckstand',
             'lauf'         => 'job_komplett',
         ],
+        /* NACHLOESEN STEHT VOR `waisen` UND HINTER ALLEM ANDEREN (P5a/AP11,
+         * E-P5a-21). Er laeuft nur, wenn sich die Modelltabelle geaendert hat
+         * — also nach einem Update, das eine neue `geraetemodelle.php`
+         * mitbringt, und sonst nie. Dann aber soll er durchkommen, und zwar
+         * bevor das Sicherheitsnetz `waisen` das Restbudget nimmt. */
+        'nachaufloesen' => [
+            'titel'        => 'Gerätemodelle nachlösen',
+            'beschreibung' => 'Nach einer neuen Modelltabelle die Teilenummern '
+                            . 'bestehender Geräte erneut auflösen — in Blöcken '
+                            . 'von 200, nur was die Tabelle kennt, die Rohangabe '
+                            . 'bleibt unberührt',
+            'taeglich'     => false,
+            'rueckstand'   => 'job_nachaufloesen_rueckstand',
+            'lauf'         => 'job_nachaufloesen',
+        ],
         'waisen' => [
             'titel'        => 'Verwaiste GPS-Daten',
             'beschreibung' => 'GPS-Punkte und Blobs ohne Eigentümer entfernen '
@@ -1374,6 +1389,78 @@ function job_versand(PDO $pdo, array $zustand, callable $zeitLinks): array
     return ['zustand' => [], 'erledigt' => $e['gesendet'], 'fertig' => $e['fertig'],
             'uebergangen' => (int)($e['uebersprungen'] ?? 0),
             'geloescht'   => (int)($e['geloescht'] ?? 0)];
+}
+
+/**
+ * Geraetemodelle nachloesen (P5a/AP11, E-P5a-21; Backlog Nr. 80).
+ *
+ * ER LAEUFT NUR NACH EINER NEUEN TABELLE. Verglichen wird der Hash der
+ * ausgelieferten `GERAETE_MODELLE` gegen den zuletzt verarbeiteten in
+ * `app_state`. Stimmen sie ueberein und steht keine Fortsetzungsmarke, kostet
+ * der Job eine Abfrage und ist fertig.
+ *
+ * WARUM EIN HASH UND KEIN DATUM: Ein Deploy fasst die Aenderungszeit jeder
+ * Datei an, der Inhalt bleibt derselbe. Ein Job, der nach jedem Deploy
+ * dreihundert Zeilen durchgeht, ist ein Job, der nichts tut und dafuer Zeit
+ * verbraucht — und auf dem Huckepack-Weg (3 s) nimmt er sie jemandem weg.
+ *
+ * DER HASH WIRD ERST AM ENDE GESCHRIEBEN. Bricht der Lauf mitten im Bestand
+ * ab (Zeitbudget), bleibt die Fortsetzungsmarke im Zustand und der alte Hash
+ * stehen; der naechste Lauf macht weiter. Waere der Hash schon geschrieben,
+ * gaelte der halb durchgegangene Bestand als erledigt — und zwar still.
+ */
+function job_nachaufloesen(PDO $pdo, array $zustand, callable $zeitLinks): array
+{
+    require_once __DIR__ . '/geraetemodelle_lib.php';
+
+    $soll = gm_tabellen_hash();
+    $ab   = (int)($zustand['ab_id'] ?? 0);
+    $stand = gm_stand_lesen();
+    if ($ab === 0 && $stand['hash'] === $soll) {
+        return ['zustand' => [], 'erledigt' => 0, 'fertig' => true];
+    }
+
+    /* Die Zaehlung laeuft ueber den GANZEN Lauf, nicht je Block — sonst
+     * stuende auf der Statusseite die Zahl des letzten Blocks. */
+    $nachgeloest = (int)($zustand['n'] ?? 0);
+    $unbekannt   = (int)($zustand['u'] ?? 0);
+    $fertig      = false;
+
+    while ($zeitLinks() > GM_RESERVE_S) {
+        $e = gm_nachaufloesen($pdo, GM_BLOCK, true, $ab);
+        $nachgeloest += $e['geschrieben'];
+        $unbekannt   += $e['unbekannt'];
+        $ab           = $e['letzte_id'];
+        if ($e['fertig']) { $fertig = true; break; }
+    }
+
+    if (!$fertig) {
+        return ['zustand' => ['ab_id' => $ab, 'n' => $nachgeloest, 'u' => $unbekannt],
+                'erledigt' => $nachgeloest, 'fertig' => false];
+    }
+    gm_stand_merken($soll, $nachgeloest, $unbekannt);
+    return ['zustand' => [], 'erledigt' => $nachgeloest, 'fertig' => true];
+}
+
+/**
+ * Wie viele Zeilen noch anzusehen sind.
+ *
+ * `null`, wenn der Hash steht — dann gibt es nichts zu tun, und eine 0 saehe
+ * aus wie „gerade fertig geworden". Sonst die Zahl der Geraetezeilen MIT
+ * Rohangabe ab der Fortsetzungsmarke: eine Obergrenze, keine Zahl der zu
+ * aendernden. Welche das sind, weiss man erst beim Ansehen.
+ */
+function job_nachaufloesen_rueckstand(PDO $pdo, array $zustand): ?int
+{
+    require_once __DIR__ . '/geraetemodelle_lib.php';
+    $ab = (int)($zustand['ab_id'] ?? 0);
+    if ($ab === 0 && gm_stand_lesen()['hash'] === gm_tabellen_hash()) { return null; }
+    try {
+        $st = $pdo->prepare('SELECT COUNT(*) FROM devices
+                              WHERE geraet_teil IS NOT NULL AND id > ?');
+        $st->execute([$ab]);
+        return (int)$st->fetchColumn();
+    } catch (Throwable $ex) { return null; }
 }
 
 /** Wie viele Dateien warten noch? Eine Schätzung — siehe sz_versand_rueckstand(). */

@@ -17,7 +17,7 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | Stand | 15.09.2026 — **Konzept freigegeben, Umsetzung läuft.** Die Grundsatzfragen sind am 15.09.2026 im Gespräch entschieden (E-P5a-01 bis -09); die übrigen Festlegungen (E-P5a-10 bis -21) stammen aus dem Nachmessen im Code und stehen mit der Freigabe. |
 > | Entschieden | E-P5a-01 bis E-P5a-21 (Abschnitt 2), dazu die in der Umsetzung gefallenen E-P5a-22 bis **-58**; E-PP-01 bis -09 übernommen; **F-P5a-1 entschieden** (2.4) |
 > | Offen | — |
-> | Umsetzung | **läuft.** AP1–AP10 und AP4a erledigt, **AP11 als Nächstes** (Nachlöse-Job); Abhängigkeiten in 3.0 |
+> | Umsetzung | **läuft.** AP1–AP11 und AP4a erledigt, **AP12 als Nächstes** (Abschluss); Abhängigkeiten in 3.0 |
 > | Fable-Schritte der Umsetzung | **keiner mehr** — M-P5a-01 ist nach Auftrag vom 15.09.2026 ohne Pause umgesetzt worden (2.5) |
 
 > **Stand der Umsetzung**
@@ -36,7 +36,8 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | **AP8 Status → Sicherheit** | **erledigt** | **Web 20.12.0** | `betrieb_sicherheit.php` mit **fünf** Karten (nicht sechs — „Löschungen auf Sicherungszielen“ hat bis AP10 keine Datenquelle, geprüft an fünf Stellen) · Klickprobe **neuer Weg, 1 von 1 erfüllt**, gemessen am DOM UND an der Datenbank: Zeile mit Prüfmerkmal **1 → 0**, `rate_limits` **1 → 0**, Ereignis „aufgehoben“ durch **admin@gen-em.org**, dazwischen die Rückfrage aus `data-confirm` · Bilderlauf **24 Bilder, 0 Überlauf / 0 Konsole / 0 Knopfhöhen** mit hergestelltem Bestand aufgenommen · **drei Fehler behoben, die ohne Meldung durchgegangen wären**: das Protokoll hing am Mailschalter, der Gerätevermerk verfiel nie, `ui_knopf()` kennt kein `form` · drei Ableitungen (Konto/Adresse) wurden eine · Wartungsprobe **67/0** mit **14** statt 13 Ausnahmen · Ratenprobe 50/0, Ingestprobe 83/0, kopplungsprobe 76/0, mailprobe 41/0, jobprobe 35/0 · Migrationsregister **0 Befunde** (keine Migration) · Wortliste **0/0/0** · Vollständigkeit **377** (372 + 5 Pfeile in neuen sichtbaren Texten; 2 Auslassungszeichen aus Kommentaren wieder entfernt) · CSP **0**, Sitzungshärtung **0**, Kontraste **22/0** |
 > | **AP9 Verbindungsgrenze und Messungen** | **erledigt** | **Web 20.13.0** | `tools/verbindungsprobe/` neu: **24 Erwartungen, 0 nicht erfüllt** · **drei** Fehlernummern statt zwei — die GRANT-Grenze eines Hosters meldet **1226**, nicht 1203 (E-P5a-51), gemessen an MariaDB 10.11 · alles belegt: `login.php` **503** mit `Retry-After: 5`, `no-store`, dem Satz aus E-P5a-18, **kein Skript** und **keiner von 7** Datenbank-Begriffen im Rumpf; `ingest.php` und `auth_salt.php` **503 JSON** `error=ausgelastet`; `index.php` bleibt **302** (erreicht die Datenbank nie — ausdrücklich mitgemessen) · Zähler **genau 3 von 3** Abweisungen, nicht mehr (das ist der Nachweis für den Riegel gegen die Rückkopplung über `app_state_lesen()`) · Enge statt Sperre, 20 Pakete gleichzeitig bei 8 Arbeitern und 2 freien Plätzen: **8 × 200, 12 × 503, 0 anderes**, davon **10 aus der Verbindungsgrenze und 2 aus Gedrängel** — nach Wiederholung **20 von 20 Einsätzen und 400 von 400 Spurpunkten** in der Datenbank · **zwei Fehler gefunden, die ohne Meldung durchgegangen wären**: 12 × HTTP 500 durch Deadlock auf der `days`-Zeile (E-P5a-52, Nr. 210) und der verborgene Setz-Link bei `wartet` (E-P5a-54) · Ausgelastet-Seite im Browser bei 360/768/1280 px: **503 · Retry-After 5 · 0 px waagerechter Überlauf**, Stylesheet und Münzwurf des Logos tragen · Messstand **5050 Einsätze / 2 813 201 Punkte**: Suche **3,18 s** (≤ 5), Tagesansicht **1,11 s** (≤ 3), Backup **49,84 s** (≤ 300) und **11,8 MB** (≤ 25), Wiederherstellung **231,9 s** (≤ 900), Spuren **3,66 MB/1000** (Ziel 3, knapp verfehlt), **Zeitraumübersicht 42,61 s bei 3983 Einsätzen** (Befund), Nachbearbeitung **2,83 s** (leere Liste) · Wartungsprobe **67/0** · Ratenprobe 50/0 · Ingestprobe 83/0 · Kopplungsprobe 76/0 · Mailprobe 41/0 · Jobprobe 35/0 · Spurprobe 45/0 · Bilderlauf 3 Seiten **24 Bilder, 0/0/0** · Wortliste **0/0/0** (98 Regeln, 98 gegriffen) · Vollständigkeit **377 = unverändert** · CSP 0 (109 Stellen) · Sitzungshärtung 0 · Installweiche 0 · Migrationsregister 0 · Kontraste 22/0 · PHP-Syntax 484 Dateien, 0 Fehler |
 > | **AP10 Sicherungsziele** | **erledigt** | **Web 20.14.0** | `tools/versandprobe/` um Teil 12 erweitert: **135 Erwartungen, 0 nicht erfüllt** (19 neu) · Regel AUS → **0 Löschungen**; Regel AN (N = 2) → **3 Löschungen**, **alle 5 fremden Dateien bleiben** — darunter eine mit gültigem Namensmuster, die nie von uns kam —, **7 statt 2** Dateien am Ziel, Protokollzeilen **3 = 3** Löschungen, jede mit Grund · **ein Kreislauf gefunden, der still gelaufen wäre**: dritter Lauf **3 gelöscht statt 0**, weil der Versand die eben entfernten wieder hinüberschickte (E-P5a-57); jetzt `nicht_wieder = 3`, `gesendet = 0` · `tools/wiederherstellungs-probe/` **110** (5 neu, Nr. 195): `geraet_art: "radcomputer"` → `NULL` mit Protokollzeile, `"HANDY"` → `handy` als Gegenprobe, dasselbe am Ruhesegment · sechste Sicherheitskarte gebaut (fehlte in AP8 mangels Tabelle) · Statuszeile „Aufbewahrung am Ziel" · Platzwarnung jetzt **zweischwellig** (rot < 1×, orange < 2× — vorher prüfte sie 1× und versprach 2×) · Migration `2026_09_16_sicherungsziel_aufbewahrung` **erfolgreich angewendet**, `ON DELETE CASCADE` gemessen (2 Ziele entfernt → 0 Protokollzeilen übrig) · Bilderlauf **fand +156 px Überlauf** und ist nach `blatt_immer` bei **24 Bildern, 0/0/0** · Browser: „Nachsehen" fährt gegen eine echte SFTP-Gegenstelle — **4 eigene Dateien (2,0 MB) in 2 Ordnern, 2 fremde (15 KB)**, 0 Konsolenfehler · Wartungsprobe 67/0 · Ratenprobe 50/0 · Ingestprobe 83/0 · Kopplungsprobe 76/0 · Mailprobe 41/0 · Jobprobe 35/0 · Spurprobe 45/0 · Verbindungsprobe 24/0 · Wortliste 0/0/0 · Vollständigkeit · CSP 0 · Sitzungshärtung 0 · Migrationsregister 0 · Kontraste 22/0 |
-> | AP11 und AP12 | offen | — | — |
+> | **AP11 Nachlöse-Job** | **erledigt** | **Web 20.15.0** | `server/geraetemodelle_lib.php` neu — Job **und** Skript benutzen dieselbe Fassung · Job `nachaufloesen` läuft **nur bei geändertem Fingerabdruck** der Tabelle (Hash statt Datum: ein Deploy ändert jede Änderungszeit, nicht den Inhalt), in Blöcken von **200**, eine Transaktion je Block, Hash **erst am Ende** · Statuszeile „Gerätemodelle" in drei Zuständen im Browser gemessen: **aktuell** („325 Teilenummern · zuletzt nachgelöst … · 0 nachgezogen, 0 unbekannt"), **steht aus** (orange, nach geändertem Hash) und **ungeprüft** · `tools/geraeteprobe/` von **39 auf 59** Erwartungen, Teil 2 **gegen die Datenbank**: fünf Zeilen mit je einer Frage — A wird nachgezogen, **B: die Tabelle schlägt die Selbstauskunft** („uhr" → „sonstiges"), C (Handy) und D (unbekannt) **unberührt**, E erst mit der **erweiterten** Tabelle · Vorschau und Schreiben liefern **dieselbe Menge** · zweiter Lauf mit derselben Tabelle schreibt **0** · Job bei stehendem Hash **0**, bei geändertem **1** · Fortsetzungsmarke mit Blockgröße 1 gemessen · die **Rohangabe** ist bei allen fünf unverändert · Konto und `app_state` danach wiederhergestellt · **vier von acht Jobs fehlten im Register der Technik-Dokumentation** (Nr. 208) — nachgetragen · Wartungsprobe 67/0 · Jobprobe 35/0 · Kopplungsprobe 76/0 · Ingestprobe 83/0 · Bilderlauf 8 Bilder 0/0/0 · Wortliste **0/0/0** (99 Regeln, 99 gegriffen) · Vollständigkeit **377 = unverändert** · CSP 0 · Sitzungshärtung 0 · Installweiche 0 · Migrationsregister 0 · Kontraste 22/0 · PHP-Syntax 485/0 |
+> | AP12 | offen | — | — |
 
 ---
 
@@ -2162,3 +2163,69 @@ rot unter dem Einfachen, orange unter dem Zweifachen. Dafür hat
 | Vollständigkeit | **377 = unverändert** (erster Lauf 388; die Differenz waren Auslassungszeichen, Pfeile und **Malzeichen** in neuen Kommentaren) |
 | CSP · Sitzungshärtung · Installweiche · Migrationsregister | **0 · 0 · 0 · 0** |
 | Kontraste · PHP-Syntax | **22/0** · **484 Dateien, 0 Fehler** |
+
+### AP11 — Nachlöse-Job · Web 20.15.0 · 16.09.2026
+
+**Aufgabe.** E-P5a-21 (Backlog Nr. 80, Teil 1): Die Logik aus dem Skript in
+eine Bibliothek, ein Job, der sie ausführt, wenn sich die Modelltabelle
+geändert hat, ein Hinweis auf der Statusseite — und das Skript behält die
+Vorschau.
+
+#### Warum es überhaupt einen Job braucht
+
+`pair.php` löst die Teilenummer einer Garmin-Uhr **im Moment der Kopplung**
+auf. Trifft sie dabei auf eine ältere Tabelle, bleibt das Modell leer und die
+Geräteart steht auf der **ungeprüften Selbstauskunft**: Die Uhr-App sendet
+dort fest `"uhr"`, weil eine Connect-IQ-App Uhr und Radcomputer nicht
+unterscheiden kann.
+
+Nachtragen ging seit Web 12.9.1 — **über die Kommandozeile**. Auf einem
+Webspace ohne SSH gibt es diesen Weg nicht. Die Zahl, die Backlog Nr. 80
+auswerten will, hing damit daran, ob jemand SSH hat; das ist keine
+Voraussetzung, die man an eine Betriebszahl hängt.
+
+#### Drei Entscheidungen im Kleinen
+
+1. **Ein Hash und kein Datum.** Ein Deploy fasst die Änderungszeit jeder
+   Datei an, der Inhalt bleibt derselbe. Ein Job, der nach jedem Deploy
+   dreihundert Zeilen durchgeht, ist ein Job, der nichts tut und dafür Zeit
+   verbraucht — auf dem Huckepack-Weg (3 s) nimmt er sie jemandem weg.
+2. **Der Hash wird erst am Ende geschrieben.** Bricht der Lauf mitten im
+   Bestand ab, bleibt die Fortsetzungsmarke stehen und der nächste macht
+   weiter. Wäre der Hash schon geschrieben, gälte der halb durchgegangene
+   Bestand als erledigt — und zwar still.
+3. **Eine Transaktion je Block, nicht eine über alle.** Eine über mehrere
+   hielte Sperren über Sekunden und würde beim Zeitablauf zurückgerollt; dann
+   wäre die Arbeit des gerade geschafften Blocks weg.
+
+#### Die Naht, die die Probe braucht
+
+`geraet_modell_aufloesen()` und `gm_nachaufloesen()` nehmen die Modelltabelle
+als **Parameter**. Die Probe setzt schon heute eine eigene, kleine Tabelle
+(sie definiert `GERAETE_MODELLE`, bevor `geraete_lib.php` lädt) — aber die
+eigentliche Frage von AP11 lautet: „Kommt eine **neue** Tabelle wirklich nur
+bei den Zeilen an, die sie neu kennt?" Dafür braucht es **zwei Tabellen in
+einem Lauf**, und mit einer Konstanten geht das nicht. `null` heißt die
+ausgelieferte; am Regelfall ändert der Parameter nichts.
+
+#### Ein Nebenbefund über die Dokumentation
+
+Beim Eintragen des neunten Jobs ins Register der Technik-Dokumentation fiel
+auf, dass **vier von acht** dort fehlten — `mail`, `adminbackup`, `versand`
+und `komplett`. Nachgetragen. Die Ursache bleibt und steht als Backlog
+Nr. 208: Die Tabelle ist von Hand geführt, der Katalog in `jobs_lib.php` ist
+die Quelle.
+
+#### Zahlen
+
+| Mittel | Ergebnis |
+|---|---|
+| **Geräteprobe** (Teil 2 neu, gegen die Datenbank) | **59 von 59** (vorher 39). Vorschau nennt **genau A und B**, zählt C/D/E als unbekannt und **schreibt dabei nichts** · der Lauf schreibt **dieselbe Menge**, die die Vorschau zeigte · A bekommt „Venu 3S" · **B: die Tabelle schlägt die Selbstauskunft** („uhr" → „sonstiges") · C (Handy) und D (unbekannte Teilenummer) **unberührt** · die **Rohangabe** ist bei allen fünf unverändert · zweiter Lauf mit derselben Tabelle: **0 geschrieben** · erweiterte Tabelle: anderer Fingerabdruck, **genau 1** Zeile nachgezogen (E), C und D weiter unberührt · Job bei stehendem Hash **0**, bei geändertem **1**, danach steht der Hash der ausgelieferten Tabelle · Blockgröße 1: `geprueft 1`, `fertig false`, Marke wandert |
+| Browser, drei Zustände | **aktuell**: „325 Teilenummern · zuletzt nachgelöst 16.09.2026 19:39 Uhr · 0 nachgezogen, 0 unbekannt" · **steht aus** (orange): „die Tabelle hat sich geändert, der Nachlöse-Job zieht beim nächsten Lauf nach" · **ungeprüft** (ohne Stand). 0 Konsolenfehler |
+| Jobkatalog | `php jobs.php` zeigt `nachaufloesen` zwischen `komplett` und `waisen`, „fertig · erledigt 0" |
+| Wartungsprobe · Jobprobe · Kopplungsprobe · Ingestprobe | **67/0 · 35/0 · 76/0 · 83/0** |
+| Bilderlauf (Statusseite) | **8 Bilder · 0 Überlauf · 0 Konsole · 0 Knopfhöhen** |
+| Wortliste | **0/0/0**, 99 Regeln, 99 gegriffen (eine neu: der Nachlöse-Abschnitt nennt Garmin, weil es dort die Sache **ist** — Teilenummern gibt es nur dort) |
+| Vollständigkeit | **377 = unverändert** |
+| CSP · Sitzungshärtung · Installweiche · Migrationsregister | **0 · 0 · 0 · 0** |
+| Kontraste · PHP-Syntax | **22/0** · **485 Dateien, 0 Fehler** |

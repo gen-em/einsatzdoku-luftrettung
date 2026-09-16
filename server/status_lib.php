@@ -391,6 +391,45 @@ function status_erhebung(): array
     }
     $server[] = status_z('Verbindungen', $ulText, $ulTon, $ulPlak);
 
+    /* ---- DIE MODELLTABELLE UND IHR NACHLOESE-JOB (P5a/AP11, E-P5a-21) ---
+     *
+     * WOGEGEN. `pair.php` löst die Teilenummer einer Uhr im Moment der
+     * Kopplung auf. Trifft sie dabei auf eine ältere Tabelle, bleibt das
+     * Modell leer und die Geräteart steht auf der ungeprüften Selbstauskunft
+     * des Geräts — die Uhr-App sendet dort fest „uhr". Der Job zieht das
+     * nach, sobald eine neue Tabelle da ist.
+     *
+     * DREI ZUSTÄNDE, und der mittlere ist der Grund für die Zeile: Ein Update
+     * hat eine neue Tabelle mitgebracht, der Job hat sie noch nicht
+     * verarbeitet. Ohne diesen Hinweis wäre das ein Zustand, den niemand
+     * sieht — er löst sich beim nächsten Jobdurchlauf von selbst, und wenn
+     * nicht, merkt es keiner. */
+    require_once __DIR__ . '/geraetemodelle_lib.php';
+    $gmStand = gm_stand_lesen();
+    $gmSoll  = gm_tabellen_hash();
+    $gmZahl  = count(GERAETE_MODELLE);
+    if ($gmStand['hash'] === null) {
+        $gmText = $gmZahl . ' Teilenummern · noch nie nachgelöst — der Job holt '
+                . 'es beim nächsten Lauf nach';
+        $gmTon  = 'neutral';
+        $gmPlak = 'ungeprüft';
+    } elseif ($gmStand['hash'] !== $gmSoll) {
+        $gmText = $gmZahl . ' Teilenummern · die Tabelle hat sich geändert, der '
+                . 'Nachlöse-Job zieht beim nächsten Lauf nach';
+        $gmTon  = 'orange';
+        $gmPlak = 'steht aus';
+    } else {
+        $gmText = $gmZahl . ' Teilenummern · zuletzt nachgelöst '
+                . fmt_local((string)$gmStand['am'], 'd.m.Y H:i') . ' Uhr · '
+                . $gmStand['nachgeloest'] . ' nachgezogen, '
+                . $gmStand['unbekannt'] . ' unbekannt (Handys und fremde Modelle, '
+                . 'sie bleiben unberührt)';
+        $gmTon  = 'blau';
+        $gmPlak = 'aktuell';
+    }
+    $server[] = status_z('Gerätemodelle', $gmText, $gmTon, $gmPlak,
+                         'betrieb_jobs.php');
+
     $server[] = status_z('PHP und Zeitzone',
         PHP_VERSION . ' · Anzeige in ' . date_default_timezone_get()
         . ' · gespeichert wird UTC',
