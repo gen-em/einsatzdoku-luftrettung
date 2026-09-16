@@ -1670,7 +1670,7 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | **Adresse der Uhr-App im Connect-IQ-Store**, falls sie dort veröffentlicht ist — dieselbe Karte, dieselbe Mechanik (Konstante `CONNECT_IQ_URL`) | Schritt 7 (S8 AP6) | wenn die Uhr-App im Store steht |
 | **Prüfliste des S8-Prüfdokuments abarbeiten** — Bedienwege, die keine Maschine fahren kann: die Migration auf dem Produktivserver (Rollen vorher/nachher), der Kopieren-Knopf in einem **zweiten Browser**, Mengen und Laufzeiten an echten Daten (Status, Statistik, Speichermessung), der Fall „Freigabe läuft, Zielkonto gelöscht" | Schritt 7 (S8) | nach dem Ausrollen; danach wird auch das Prüfdokument gelöscht (R62) |
 | ~~Hosting-Entscheidung (Cron/SSH, DB-Kontingent, `max_user_connections`, DDoS-Schutz, Verschlüsselung at rest)~~ | P5-Konzept | **entschieden 15.09.2026 (R81):** der Betrieb bleibt beim jetzigen Hoster; die fünf Punkte sind **hosterneutral** als Plattformprofil in zwei Stufen festgelegt (`docs/konzepte/Vorbereitung-P5-Plattformprofil.md`, PP-1 bis PP-9). **Offen:** Freigabe der Vorbereitung — darin vier Festlegungen zum Gegenlesen (F-PP-1 bis -4) |
-| GitHub im **jetzigen** Repositorium, vor P5a AP1: Umgebungen `staging` (drei FTP-Geheimnisse) und `produktion` (drei FTP-Geheimnisse plus `JOBS_TOKEN`, **Pflichtfreigabe** durch die Betreiberin), Zweigschutz `main` mit `pruefung` als Pflichtprüfung, ein Prüfkonto auf Staging als Umgebungsgeheimnis (Konzept P5a, E-P5a-10, -12, -13). **Schritt für Schritt: Abschnitt 6a.** *Stand 16.09.2026:* die drei Staging-Geheimnisse liegen als Environment secrets in `staging`; offen sind `FTP_ZIELPFAD`, `STAGING_URL`, `STAGING_KONTO`/`STAGING_PASS`, die ganze Umgebung `produktion` und der Zweigschutz | P5a AP1 | vor dem Merge von AP1 |
+| GitHub im **jetzigen** Repositorium, vor P5a AP1: Umgebungen `staging` (drei FTP-Geheimnisse) und `produktion` (drei FTP-Geheimnisse plus `JOBS_TOKEN`, **Pflichtfreigabe** durch die Betreiberin), Zweigschutz `main` mit `pruefung` als Pflichtprüfung (**Abschnitt 6b** — sie greift nur zusammen mit „Require a pull request“), ein Prüfkonto auf Staging als Umgebungsgeheimnis (Konzept P5a, E-P5a-10, -12, -13). **Schritt für Schritt: Abschnitt 6a.** *Stand 16.09.2026:* die drei Staging-Geheimnisse liegen als Environment secrets in `staging`; offen sind `FTP_ZIELPFAD`, `STAGING_URL`, `STAGING_KONTO`/`STAGING_PASS`, die ganze Umgebung `produktion` und der Zweigschutz | P5a AP1 | vor dem Merge von AP1 |
 | ~~V1 aus der P5c-Vorbereitung entscheiden~~ **entschieden 16.09.2026: gehalten** — Betriebsereignisse, keine Datenzugriffe; **V2** (IP nur bei Sperren und Angriffen — mit welcher Frist) und V3–V9 bleiben | 10c-Konzept (V2–V9); V1 wirkt schon ins 10b-Konzept (Schreibweg) | V1 erledigt; V2–V9 vor dem 10c-Konzept |
 | Nachträge an die P5a-Instanz übergeben: Doku-Paket (Fassungen 73–74, Backlog 200–205) auf den Zweig; Mailrahmen und `app_url()` in AP5; kein Empfänger im SMTP-Log (Nr. 204); AP4a mit `use_strict_mode` und `json_roh_out()` (Nr. 203, 205); R83 für AP8–AP10 | P5a | **übergeben 16.09.2026** (Anweisung `Prompt-P5a-Nachtraege-2026-09-16.md`) |
 | Staging-Installation samt FTP-Zugang; **samt Demo-Konto, Referenzdatensatz und Messstand-Konto — Staging ist die Prüfumgebung (R67)**. **Ziel festgelegt 15.09.2026:** `staging.nadoku.gen-em.org`, gleicher Hoster und Tarif, Absender `staging@gen-em.org` (Vorbereitung PP-9, E-PP-09). **Offen:** Subdomain mit Verzeichnis, eigene DB samt Nutzer, FTPS-Konto nur für das Staging-Verzeichnis, eigenes **SFTP-Backup-Ziel** für Staging (zugesagt 15.09.2026) — **die Reihenfolge steht als abhakbare Liste in Abschnitt 6a**; die drei FTP-Geheimnisse sind am 16.09.2026 angelegt worden | P5-Beginn | Einrichtung bis zum ersten Code-Paket von P5 (`deploy.yml`-Umstellung); die Prüfkonten danach |
@@ -1719,7 +1719,7 @@ Erst ab Schritt 5 synchronisiert die Kette.
 | 1 | Subdomain `staging.nadoku.gen-em.org` mit **eigenem Verzeichnis** anlegen; HTTPS über den Hoster (Let's Encrypt) | Hoster | ☐ |
 | 2 | **Leere** Datenbank samt eigenem DB-Nutzer anlegen. `install.php` spielt `schema.sql` selbst ein — die Datenbank legt es **nicht** an | Hoster | ☐ |
 | 3 | FTPS-Konto anlegen, das **nur** das Staging-Verzeichnis sieht | Hoster | ☐ |
-| 4 | Umgebung `staging`: die drei **Environment secrets** `NADOKU_STAGING_FTP_URL` (blosser Hostname, kein `ftps://`, kein Pfad, kein Port), `NADOKU_STAGING_FTP_USER`, `NADOKU_STAGING_FTP_PW`; dazu die **Variable** `FTP_ZIELPFAD` (Verzeichnis der Subdomain, Vorgabe `./staging/`) | GitHub | ☐ |
+| 4 | Umgebung **`staging`** anlegen, darin die drei **Environment secrets** `FTP_SERVER` (bloßer Hostname — kein `ftps://`, kein Pfad, kein `:21`), `FTP_USERNAME`, `FTP_PASSWORD`; dazu die **Environment variable** `FTP_ZIELPFAD` (Verzeichnis der Subdomain; `/`, wenn das FTPS-Konto darauf eingesperrt ist — siehe Kasten unten) | GitHub | ☐ |
 | 5 | Push auf `main` — **ab hier synchronisiert die Kette** | — | ☐ |
 | 6 | `https://staging.nadoku.gen-em.org/install.php` im Browser: schreibt `config.php`, legt die BetreiberIn an, setzt `install.lock`. **Eigener Serverschlüssel und eigener Server-Anteil — nie die von Produktiv** | Browser | ☐ |
 | 7 | In `config.php` nachtragen: `smtp` auf `staging@gen-em.org`, dazu `'mail' => ['betreff_praefix' => '[Staging]']` (E-PP-09) | FTP | ☐ |
@@ -1739,10 +1739,10 @@ Stufe 2 und sagt es.
 > von Schritt 4: **ein FTPS-Konto, das nur dieses eine Verzeichnis sieht.**
 > Ist es eingesperrt, ist `/` genau richtig.
 
-**Und für `produktion` spiegelbildlich:** dieselbe Umgebung mit
-**Pflichtfreigabe**, die drei `NADOKU_PRODUKTION_FTP_*` als Environment
-secrets, `JOBS_TOKEN` (Betrieb → Hintergrundjobs) und die Variable
-`PRODUKTION_URL`.
+**Und für `produktion` spiegelbildlich:** eine zweite Umgebung mit
+**Pflichtfreigabe** („required reviewers“), darin **dieselben drei Namen** mit
+den Produktiv-Werten, dazu `JOBS_TOKEN` (Betrieb → Hintergrundjobs) und die
+Variable `PRODUKTION_URL`.
 
 > **Warum beide Umgebungen dieselben drei Namen tragen.** Die **Umgebung**
 > entscheidet, welcher Wert ankommt — genau dafür gibt es sie. Damit kann ein
@@ -1782,6 +1782,63 @@ Seite mit `200`. Die letzte Lage ist der Grund für den Griff: Eine frische
 Subdomain liefert beim Hoster eine **„Domain Default page" mit HTTP 200** aus
 — gemessen am 16.09.2026 an `staging.nadoku.gen-em.org`. Wer nur den Code
 prüft, hält eine leere Subdomain für eine laufende Anwendung.
+
+### 6b. Zweigschutz für `main` — und was er wirklich leistet
+
+*Aufgenommen 16.09.2026. Gemessen am selben Tag: `main` trägt
+`protected: false`, es gibt also keinen.*
+
+**Warum überhaupt.** Ohne ihn ist Stufe 1 eine **Auskunft** und keine
+Schranke: Der Lauf färbt sich rot, und der Stand liegt trotzdem auf `main` —
+und damit, seit Web 20.4.0, auf Staging.
+
+> **Der Satz, an dem die meisten vorbeilesen: Eine Pflichtprüfung greift nur
+> bei Pull Requests.** Ein direkter Push auf `main` lässt sich nicht von einer
+> Prüfung aufhalten, die es zum Zeitpunkt des Pushes noch gar nicht gibt —
+> GitHub kann einen Commit erst prüfen, wenn er da ist. Wer „required status
+> checks" einschaltet und weiter direkt pusht, hat einen Schalter umgelegt und
+> nichts gewonnen.
+>
+> **Die Schranke ist deshalb die Kombination:** *Require a pull request* **und**
+> *Require status checks*. Erst dann heißt „rot" auch „kommt nicht rein".
+
+**Das ändert den Weg ans Ende einer Phase** (`CLAUDE.md` 8). Bisher: Push auf
+`main` nach ausdrücklicher Bestätigung. Danach: **Pull Request** vom
+Arbeitszweig, Stufe 1 grün abwarten, mergen. Für die umsetzende Instanz heißt
+das, sie pusht nie mehr nach `main`, sondern öffnet einen PR — der Merge
+bleibt bei der Betreiberin, wie bisher die Bestätigung.
+
+**Einrichtung** — *Settings → Rules → Rulesets → New ruleset → New branch
+ruleset*:
+
+| Feld | Wert |
+|---|---|
+| Name | `main geschützt` |
+| Enforcement status | **Active** (nicht „Evaluate" — das misst nur) |
+| Target branches | *Add target* → **Include default branch** |
+| Restrict deletions | ☑ |
+| Block force pushes | ☑ |
+| Require a pull request before merging | ☑ |
+| — Required approvals | **0** |
+| Require status checks to pass | ☑ → *Add checks* → **`Stufe 1`** |
+| Bypass list | **leer lassen** |
+
+Drei Fallen dabei:
+
+1. **Der Prüfname ist `Stufe 1`, nicht `Prüfung`.** GitHub listet den Namen
+   des **Jobs**, nicht den des Arbeitslaufs. Er taucht in der Auswahl erst
+   auf, nachdem er mindestens einmal gelaufen ist — das ist er, `pruefung.yml`
+   läuft bei jedem Push auf jeden Zweig.
+2. **Required approvals auf 0.** Bei 1 kann die Betreiberin ihren eigenen Pull
+   Request nicht mehr mergen und braucht eine zweite Person. In einem
+   Ein-Personen-Betrieb ist das keine Sicherung, sondern eine Sperre.
+3. **Die Bypass-Liste hebt alles auf.** Wer sich dort einträgt — auch als
+   „Organization admin" —, kann weiterhin direkt auf `main` pushen. Dann ist
+   der Zweigschutz eine Absichtserklärung.
+
+**Der klassische Weg** (*Settings → Branches → Add branch protection rule*)
+tut dasselbe und bleibt gültig; Rulesets sind das, was GitHub heute anbietet,
+und sie zeigen auf einer Seite, was gilt.
 
 ## 7. Programmentscheidungen — Register
 
