@@ -1205,6 +1205,29 @@ erwischen, weil es die anderen dort nicht gibt.
 liefert an keine der drei Zählungen etwas aus. Muster: `e9d59c4` vom
 16.09.2026, ebenfalls eine Korrektur an der Kette ohne Version.
 
+**Ein zweiter Riegel vor Stufe 2, aus demselben Anlass.** Die Geheimnisse
+`STAGING_KONTO`/`STAGING_PASS` werden eingetragen, **bevor** die Anlage steht
+— und damit greift der „ÜBERSPRUNGEN"-Zweig der beiden Prüfschritte nicht
+mehr. Die Kreisläufe liefen dann gegen eine Adresse, die noch nichts
+ausliefert, und scheiterten mit einem Rückverfolg über eine fehlende
+Anmeldeseite. Ein Griff auf `login.php` unterscheidet jetzt vier Lagen und
+nennt zu jeder den Schritt aus Rahmenplan 6a, der fehlt.
+
+**Er fragt `login.php` und nicht `/`, und das ist gemessen, nicht überlegt:**
+`staging.nadoku.gen-em.org` lieferte am 16.09.2026 eine **Plesk-„Domain
+Default page" mit HTTP 200** aus. Ein Griff auf `/` hätte eine leere Subdomain
+für eine laufende Anwendung gehalten. Derselbe Griff fängt außerdem den
+teuersten Einrichtungsfehler mit — einen falschen `FTP_ZIELPFAD`: Liegen die
+Dateien im falschen Verzeichnis, gibt es dort keine `login.php`.
+
+Nachgewiesen an **fünf Lagen** gegen die laufende Entwicklungsinstallation:
+URL leer (übersprungen, Exit 0) · Plesk-Standardseite (404, Exit 1, nennt
+`FTP_ZIELPFAD`) · fremder Host (Exit 1) · `config.php` beiseite geschoben, also
+noch nicht eingerichtet (Weiterleitung auf `install.php`, Exit 1, nennt die
+Schritte 6–8) · laufende Anwendung (Exit 0). Die vierte Lage ist mit einer
+echten, wieder zurückgelegten `config.php` hergestellt worden — nicht
+nachgestellt.
+
 Der Einrichtungsweg steht jetzt als abhakbare Liste in **Rahmenplan
 Abschnitt 6a** — angelegt, weil in der Umsetzung die Annahme aufkam, die Kette
 richte die Instanz selbst ein. Sie tut es nicht: Sie überträgt `server/` in ein

@@ -168,6 +168,58 @@ jobs:
       - name: Code auschecken
         uses: actions/checkout@v4
 
+      - name: Antwortet Staging wie eine eingerichtete Installation?
+        # SEIT DEM 16.09.2026, UND ZWAR AUS EINEM KONKRETEN ANLASS: Solange
+        # `STAGING_KONTO` leer war, uebersprangen die beiden Schritte unten
+        # und sagten es. Sobald das Geheimnis eingetragen ist — und es wird
+        # eingetragen, BEVOR die Anlage steht —, greift der Zweig nicht mehr,
+        # und die Kreislaeufe laufen gegen eine Adresse, die noch nichts
+        # ausliefert. Sie scheitern dann mit einem Python-Rueckverfolg ueber
+        # eine fehlende Anmeldeseite, und niemand liest daraus, dass schlicht
+        # `install.php` noch nicht gelaufen ist.
+        #
+        # ER UEBERSPRINGT NICHT, ER BRICHT AB. Ein Stand, der auf Staging
+        # nicht laeuft, ist nicht freigabefaehig — das ist die Aussage von
+        # Stufe 2, und sie soll rot sein. Neu ist nur, dass sie sagt, WARUM.
+        #
+        # ER FRAGT `login.php` UND NICHT `/`. Eine frische Subdomain liefert
+        # beim Hoster eine „Domain Default page" mit HTTP 200 aus — gemessen
+        # am 16.09.2026 an `staging.nadoku.gen-em.org`. Wer nur den Code
+        # prueft, haelt eine leere Subdomain fuer eine laufende Anwendung.
+        # Derselbe Griff faengt den teuersten Einrichtungsfehler mit:
+        # **ein falscher `FTP_ZIELPFAD`.** Liegen die Dateien im falschen
+        # Verzeichnis, gibt es dort keine `login.php`, und das faellt hier auf
+        # und nicht erst, wenn jemand die fremde Seite sucht.
+        run: |
+          if [ -z "${STAGING_URL:-}" ]; then
+            echo "::warning::STAGING_URL fehlt — Stufe 2 ÜBERSPRUNGEN, nicht gemessen."
+            echo '**Stufe 2: ÜBERSPRUNGEN** (keine STAGING_URL) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          antwort=$(curl -sS -o /tmp/staging-login.html -L --max-time 30 \
+                         -w '%{http_code} %{url_effective}' "$STAGING_URL/login.php" || echo '000 -')
+          code=${antwort%% *}
+          ziel=${antwort#* }
+          echo "login.php: HTTP $code · gelandet bei $ziel"
+          case "$ziel" in
+            *install.php*)
+              echo "::error::Die Dateien liegen oben, die Anlage ist aber noch nicht eingerichtet — der Aufruf landet auf install.php. Rahmenplan 6a, Schritte 6 bis 8."
+              exit 1 ;;
+          esac
+          if [ "$code" = "000" ]; then
+            echo "::error::$STAGING_URL antwortet nicht. Steht die Subdomain schon? (Rahmenplan 6a, Schritte 1 bis 3.)"
+            exit 1
+          fi
+          if [ "$code" != "200" ]; then
+            echo "::error::$STAGING_URL/login.php antwortet mit $code. Bei 404 liegen die Dateien im falschen Verzeichnis — FTP_ZIELPFAD prüfen (Rahmenplan 6a, Schritt 4)."
+            exit 1
+          fi
+          if ! grep -q 'AGPL-3.0' /tmp/staging-login.html; then
+            echo "::error::Unter $STAGING_URL/login.php antwortet etwas, das nicht nach dieser Anwendung aussieht (die Fusszeile fehlt). Eine leere Subdomain liefert beim Hoster eine Standardseite mit 200 aus."
+            exit 1
+          fi
+          echo "Staging liefert die Anmeldeseite der Anwendung aus."
+
       - name: Kreisläufe csv und edbak gegen Staging
         # BRAUCHT EIN PRÜFKONTO auf Staging (Umgebungsgeheimnis). Fehlt es,
         # wird der Schritt ÜBERSPRUNGEN UND GESAGT — ein Lauf, der ohne

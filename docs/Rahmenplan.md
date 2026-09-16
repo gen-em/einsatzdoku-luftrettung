@@ -1726,9 +1726,18 @@ Erst ab Schritt 5 synchronisiert die Kette.
 | 8 | Demo-Konto, Referenzdatensatz und Messstand-Konto einspielen (`tools/referenzdatensatz/einspielen/`, Reihenfolge in der dortigen `LIESMICH.md` — `demo_kennzeichnen.php` läuft **vor** dem ersten Anmelden) | Werkzeuge | ☐ |
 | 9 | Eigenes **SFTP-Backup-Ziel** für Staging eintragen (zugesagt 15.09.2026) — damit Staging-Stände nie neben Produktiv-Sicherungen liegen | Anwendung | ☐ |
 
-**Danach erst sind sinnvoll** (sonst misst Stufe 2 gegen eine leere Anlage):
-die Variable `STAGING_URL` und die Geheimnisse `STAGING_KONTO` /
-`STAGING_PASS` in derselben Umgebung.
+**`STAGING_URL`, `STAGING_KONTO` und `STAGING_PASS`** gehören in dieselbe
+Umgebung. Sie dürfen früh eingetragen werden — **aber dann ist Stufe 2 rot,
+bis Schritt 8 durch ist**, und das ist so gewollt: Ein Stand, der auf Staging
+nicht läuft, ist nicht freigabefähig. Solange sie leer sind, überspringt
+Stufe 2 und sagt es.
+
+> **Der teuerste Einrichtungsfehler ist `FTP_ZIELPFAD`.** Steht dort `/` und
+> ist das FTPS-Konto **nicht** auf das Staging-Verzeichnis eingesperrt, lädt
+> die Kette `server/` in die Wurzel des Webspace — neben oder über die
+> Produktivanlage. Schritt 3 ist deshalb kein Komfort, sondern die Sicherung
+> von Schritt 4: **ein FTPS-Konto, das nur dieses eine Verzeichnis sieht.**
+> Ist es eingesperrt, ist `/` genau richtig.
 
 **Und für `produktion` spiegelbildlich:** dieselbe Umgebung mit
 **Pflichtfreigabe**, die drei `NADOKU_PRODUKTION_FTP_*` als Environment
@@ -1754,15 +1763,25 @@ secrets, `JOBS_TOKEN` (Betrieb → Hintergrundjobs) und die Variable
 > `…_URL` lädt dazu ein, `ftps://…/staging` einzutragen; die Aktion setzt den
 > Wert unverändert als Server ein, und die Namensauflösung gelingt nie.
 
-**Ein Riegel prüft das seit dem 16.09.2026 selbst.** Beide Deploy-Jobs
-brechen ab, wenn eines der drei Geheimnisse fehlt oder der Host ein Schema,
-einen Pfad oder einen Port trägt. Grund: **GitHub setzt ein Geheimnis, das es
-nicht gibt, auf leer und bricht nicht ab** — die FTPS-Aktion lief damit mit
-leerem Benutzernamen los und scheiterte erst an der Gegenstelle, mit einer
-Meldung über die Anmeldung statt über den fehlenden Eintrag. Im
-Produktions-Job steht der Riegel **ganz oben**, vor dem Backup-Tor: weiter
-unten hätte der Lauf schon die Wartung eingeschaltet, und ein vertippter Name
-ließe die Anwendung zu.
+**Zwei Riegel prüfen das seit dem 16.09.2026 selbst.**
+
+**Vor dem Deploy:** Beide Deploy-Jobs brechen ab, wenn eines der drei
+Geheimnisse fehlt oder der Host ein Schema, einen Pfad oder einen Port trägt.
+Grund: **GitHub setzt ein Geheimnis, das es nicht gibt, auf leer und bricht
+nicht ab** — die FTPS-Aktion lief damit mit leerem Benutzernamen los und
+scheiterte erst an der Gegenstelle, mit einer Meldung über die Anmeldung statt
+über den fehlenden Eintrag. Im Produktions-Job steht der Riegel **ganz oben**,
+vor dem Backup-Tor: weiter unten hätte der Lauf schon die Wartung
+eingeschaltet, und ein vertippter Name ließe die Anwendung zu.
+
+**Vor Stufe 2:** Ein Griff auf `login.php`. Er unterscheidet vier Lagen und
+sagt zu jeder, was zu tun ist — Subdomain antwortet nicht (Schritte 1–3),
+`404` (die Dateien liegen im **falschen Verzeichnis** — `FTP_ZIELPFAD`,
+Schritt 4), Weiterleitung auf `install.php` (Schritte 6–8), oder eine fremde
+Seite mit `200`. Die letzte Lage ist der Grund für den Griff: Eine frische
+Subdomain liefert beim Hoster eine **„Domain Default page" mit HTTP 200** aus
+— gemessen am 16.09.2026 an `staging.nadoku.gen-em.org`. Wer nur den Code
+prüft, hält eine leere Subdomain für eine laufende Anwendung.
 
 ## 7. Programmentscheidungen — Register
 
