@@ -3782,8 +3782,9 @@ gekürzte Datei wurde beim nächsten Lauf **einzeln** erneut geschickt (1 von
 (34 + 30) und war danach vollständig.
 
 `tools/versandprobe/` deckt Adapter, Fingerabdruck-Riegel, Fehlerfälle und
-Versiegelung ab: **116 Erwartungen** (115 bis S10/AP4 — die 116. weist ein
-**leeres** Protokoll ab), gefahren gegen zwei Sätze Gegenstellen
+Versiegelung ab: **135 Erwartungen** (115 bis S10/AP4 — die 116. weist ein
+**leeres** Protokoll ab; Teil 12 mit der Aufbewahrungsregel kam in P5a/AP10
+dazu und bringt 19), gefahren gegen zwei Sätze Gegenstellen
 — pyftpdlib/paramiko und **vsftpd/OpenSSH**. Beide werden gebraucht: vsftpd
 kennt kein `MLSD` und fährt damit als einziges den Rückfall auf `NLST` +
 `SIZE`; pyftpdlib fährt den Hauptweg. Gegen die echten Server: FTP 0,35 s,
@@ -3797,6 +3798,48 @@ zeigt, und nicht in ein Heimverzeichnis.
 
 Was sie nicht prüfen kann — ein echtes Ziel im Internet —, steht an erster
 Stelle ihrer `LIESMICH.md`.
+
+#### Aufbewahrung auf dem Ziel (ab Web 20.14.0, P5a/AP10, E-P5a-03, Nr. 49)
+
+**Der Versand ergänzt nur** — das galt bis Web 20.13.0 ohne Ausnahme und ist
+seither die **Vorgabe**, nicht mehr die einzige Möglichkeit. Der Grund für die
+Vorgabe bleibt: Der Zweck eines auswärtigen Ziels ist, den Ausfall dieses
+Servers zu überleben, **samt eines Fehlers, der hier zu viel löscht**. Ein
+Versand, der drüben aufräumt, trägt genau diesen Fehler mit hinüber.
+
+| | |
+|---|---|
+| Anzeige | `sz_bestand(Zielweg $weg, int $zielId)` — liest je Ordner mit `liste()` und zählt: eigene Dateien und Bytes, ältester und jüngster Stand (aus dem Zeitstempel im Namen), **fremde** Dateien und Bytes. **Auf Knopfdruck**, nicht bei jedem Seitenaufruf: drei Ziele mal dreißig Konten sind neunzig Anfragen. Dieselbe Überlegung wie bei `sz_versand_rueckstand()` |
+| Welche Ordner | die Kontokennungen, die **hier** liegen, plus `komplett`, plus alles, was das Versandprotokoll für dieses Ziel kennt. Der dritte Teil ist der wichtige: Ein gelöschtes Konto hat hier keinen Ordner mehr, drüben aber noch Sicherungen |
+| Regel je Ziel | `backup_targets.behalten_konto` und `.behalten_komplett`. **`NULL` = aus**, nicht `0` — `0` hieße „nichts behalten" und räumte das Ziel leer |
+| Protokoll | Tabelle `sicherungsziel_dateien` (ziel_id, ordner, datei, bytes, gesendet_am, geloescht_am, grund). Sie ist **Versand- und Löschprotokoll in einem**; zwei Tabellen dafür wären zwei Fassungen derselben Zeile. `ON DELETE CASCADE` am Ziel |
+| Die drei Sicherungen | **Herkunft:** Namensmuster (`edbak_paketname_gueltig()` bzw. `komp_name_gueltig()`) **und** eine Zeile im Versandprotokoll. **Menge:** nie unter N/M, gezählt nur über die eigenen Dateien. **Lauf:** nur nach einem Versand ohne Fehler und ohne Zeitüberschreitung |
+| Anzeige der Löschungen | Betrieb → Status → **Sicherheit**, Karte „Löschungen auf Sicherungszielen" (30 Tage, mit Grund). Dazu die Zahl im Versandlauf und in der Jobzeile |
+| Statuszeile | Karte **Backups**, Zeile „Aufbewahrung am Ziel": orange, wenn ein Ziel **ohne** Regel seit über 30 Tagen beschickt wird und dort **nie** etwas entfernt wurde (`sz_waechst()`, liest das Protokoll — keine Verbindung) |
+| Prüfmittel | `tools/versandprobe/` Teil 12: fünf eigene Sicherungen, fünf fremde Dateien, Regel aus → 0 Löschungen; Regel an (N = 2) → 3 Löschungen, **alle fünf fremden bleiben**, sieben Dateien übrig, Protokollzeilen = Löschungen |
+
+**Warum das Protokoll eine Tabelle ist und nicht `app_state`** (E-P5a-56).
+Das Konzept sagt `app_state`. `app_state.v` ist `VARCHAR(190)`, und die Frage
+lautet „hat **diese** Installation die Datei X auf Ziel Y geschickt?" — eine
+Zeile je Datei und Ziel, bei einem gewachsenen Bestand tausende. In 190
+Zeichen passt das nicht einmal für ein Konto.
+
+**Was einmal entfernt wurde, geht nicht wieder hinüber** (E-P5a-57). Das ist
+beim Bauen der Probe herausgekommen, nicht beim Nachdenken: Ohne diese Regel
+räumt der zweite Lauf drei alte Sicherungen weg, der **dritte** schickt
+dieselben drei wieder hinüber (sie liegen hier ja noch), und der vierte räumt
+sie erneut weg. Ein Kreislauf, der bei jedem Job Bandbreite kostet und nie zur
+Ruhe kommt — still, denn beide Seiten tun genau das, wofür sie gebaut sind.
+Gemessen: dritter Lauf **3 gelöscht statt 0**. Der Preis, benannt: Wer die
+Zahl später **anhebt**, bekommt die alten Stände nicht zurück.
+
+**Ein Altbestand kommt trotzdem ins Protokoll.** Der Versand überspringt eine
+Datei, die drüben schon liegt (gleicher Name, gleiche Größe) — und schreibt
+seit AP10 trotzdem die Protokollzeile. Ohne das finge das Protokoll erst mit
+dem nächsten **neuen** Paket an, und alles, was heute schon dort liegt, gälte
+für immer als fremd. Was damit **nicht** erfasst wird: Sicherungen, die drüben
+liegen und hier schon weggeräumt sind. Die bleiben unbekannt und werden nie
+angefasst — die sichere Richtung.
 
 ---
 

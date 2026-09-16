@@ -599,8 +599,33 @@ CREATE TABLE backup_targets (
   letzter_lauf   DATETIME NULL,
   letzter_erfolg DATETIME NULL,
   letzter_fehler TEXT NULL,
+  -- Aufbewahrung DORT (P5a/AP10, E-P5a-03): NULL = Option aus. Nicht 0 --
+  -- das hiesse "nichts behalten". Zwei Zahlen, weil Kontopakete und
+  -- Komplett-Staende verschiedene Dinge sind.
+  behalten_konto    SMALLINT UNSIGNED NULL,
+  behalten_komplett SMALLINT UNSIGNED NULL,
   erstellt_am    DATETIME NOT NULL,
   UNIQUE KEY uq_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Was diese Installation auf welches Ziel geschickt hat -- und was sie dort
+-- wieder entfernt hat (P5a/AP10, E-P5a-03/-56). Zugleich Versandprotokoll
+-- (die zweite der drei Sicherungen der Loeschregel) und Loeschprotokoll.
+-- `geloescht_am IS NULL` heisst "liegt dort", soweit wir wissen.
+CREATE TABLE sicherungsziel_dateien (
+  id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  ziel_id      INT UNSIGNED NOT NULL,
+  ordner       VARCHAR(190) NOT NULL,
+  datei        VARCHAR(190) NOT NULL,
+  bytes        BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  gesendet_am  DATETIME NOT NULL,
+  geloescht_am DATETIME NULL,
+  grund        VARCHAR(190) NULL,
+  UNIQUE KEY uq_ziel_datei (ziel_id, ordner, datei),
+  KEY idx_ziel_geloescht (ziel_id, geloescht_am),
+  KEY idx_geloescht (geloescht_am),
+  CONSTRAINT fk_szd_ziel FOREIGN KEY (ziel_id)
+    REFERENCES backup_targets (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Kleiner Schluessel/Wert-Speicher fuer App-interne Zustaende (z. B. Wartung)
@@ -876,4 +901,7 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- sicherheit_ereignisse steht oben schon im Schema (Web 20.10.0, P5a/AP6).
   ('2026_09_16_sicherheit_ereignisse', 'skipped'),
   -- devices.abgewiesen_* stehen oben schon im Schema (Web 20.11.0, P5a/AP7).
-  ('2026_09_16_geraet_abgewiesen', 'skipped');
+  ('2026_09_16_geraet_abgewiesen', 'skipped'),
+  -- backup_targets.behalten_* und sicherungsziel_dateien stehen oben schon
+  -- im Schema (Web 20.14.0, P5a/AP10).
+  ('2026_09_16_sicherungsziel_aufbewahrung', 'skipped');

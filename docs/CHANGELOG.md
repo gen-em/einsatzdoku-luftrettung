@@ -14,6 +14,127 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.14.0] — 2026-09-16
+
+**P5a/AP10 — Aufbewahrung auf dem Sicherungsziel: erst sehen, dann löschen.**
+
+### Hinzugefügt — nachsehen, was auf dem Ziel liegt
+
+Der Versand **ergänzt nur**; auf der Gegenstelle hat diese Anwendung nie
+gelöscht. Das ist Absicht und keine Lücke: Der Zweck eines auswärtigen Ziels
+ist, den Ausfall dieses Servers zu überleben — **samt eines Fehlers, der hier
+zu viel löscht**. Ein Versand, der drüben aufräumt, trägt genau diesen Fehler
+mit hinüber.
+
+Bei zwei Sicherungen je Konto und Monat läuft ein Ziel trotzdem über kurz oder
+lang voll, und niemand merkt es hier (Backlog Nr. 49). Die Antwort darauf hat
+zwei Stufen, und die erste ist die Grundlage:
+
+**Anzeige.** Im Menü einer Zielzeile steht **„Nachsehen, was dort liegt"**.
+Es verbindet sich, liest mit `liste()` und sagt: wie viele Sicherungen dieser
+Installation dort liegen und wie groß sie sind, ältester und jüngster Stand —
+und **wie viele fremde Dateien** dort liegen. Es löscht nichts. Nur auf
+Knopfdruck und nicht bei jedem Seitenaufruf: Bei drei Zielen und dreißig
+Konten wären das neunzig Anfragen über eine Leitung, die auch mal langsam ist.
+
+### Hinzugefügt — die Löschregel je Ziel, mit drei Sicherungen
+
+Beim Bearbeiten eines Ziels steht jetzt der Haken **„Auf dem Ziel aufräumen"**
+und darunter zwei Zahlen: wie viele Konto-Sicherungen je Konto und wie viele
+Komplett-Stände dort bleiben sollen. **Aus ist die Vorgabe**, und die beiden
+Zahlen stehen dann auf `NULL` — nicht auf `0`, denn `0` hieße „nichts
+behalten" und räumte das Ziel leer.
+
+Ist sie an, gelten drei Sicherungen:
+
+1. **Herkunft.** Gelöscht wird nur, was dem strengen Namensmuster einer
+   Sicherung entspricht **und** im Versandprotokoll dieser Installation steht.
+   Eine fremde Datei besteht schon die erste Probe nicht — und eine, die
+   zufällig wie eine Sicherung heißt, die zweite. Genau das misst die Probe:
+   Eine Datei mit gültigem Muster, die nie von uns kam, überlebt.
+2. **Menge.** Nie unter N beziehungsweise M. Gezählt werden dabei nur die
+   eigenen Dateien; fremde sind nicht unsere, sie mitzuzählen hieße, sich an
+   ihnen gutzuschreiben.
+3. **Lauf.** Nie in einem Lauf, dessen eigener Versand fehlgeschlagen ist. Wer
+   nicht sicher weiß, dass der neue Stand drüben angekommen ist, räumt den
+   alten nicht weg.
+
+Jede Löschung steht mit Ziel, Datei, Größe und **Grund** in der neuen
+sechsten Karte **„Löschungen auf Sicherungszielen"** unter Betrieb → Status →
+Sicherheit. Sie hat in AP8 gefehlt, und zwar mit Ansage: Es gab damals weder
+Tabelle noch Schreibweg. Beides entsteht hier.
+
+### Hinzugefügt — die Statuszeile „Aufbewahrung am Ziel"
+
+In der Karte **Backups**: Ein Ziel, auf das seit über einem Monat geschickt
+wird und von dem **nie** etwas entfernt wurde, wächst — und das steht jetzt
+da, orange. Sie fragt die Ziele dafür nicht, sie liest das Versandprotokoll;
+drei FTP-Verbindungen bei jedem Aufruf der Statusseite wären eine Seite, die
+zehn Sekunden lädt. Was sie damit nicht sieht: eine Betreiberin, die dort von
+Hand aufgeräumt hat. Der Satz sagt deshalb „es ist nie etwas entfernt worden"
+und nicht „dort liegt zu viel".
+
+### Behoben — Versand und Aufbewahrung hätten sich im Kreis gedreht
+
+Beim Bauen der Probe herausgekommen, nicht beim Nachdenken: Der zweite Lauf
+räumte drei alte Sicherungen weg, der **dritte schickte dieselben drei wieder
+hinüber** (sie liegen hier ja noch), und der vierte räumte sie erneut weg.
+Ein Kreislauf, der bei jedem Job Bandbreite kostet, das Protokoll vollschreibt
+und nie zur Ruhe kommt — und zwar still, denn beide Seiten tun genau das,
+wofür sie gebaut sind. Gemessen: dritter Lauf **3 gelöscht statt 0**.
+
+Seither geht nicht wieder hinüber, was die Regel dort entfernt hat. Der Preis,
+benannt: Wer die Zahl später **anhebt**, bekommt die alten Stände nicht
+zurück; sie sind dort weg und bleiben es.
+
+### Behoben — die Geräteart kam auf dem Rückweg ungeprüft durch (Nr. 195)
+
+Beim Koppeln verengt `geraete_lib.php` die Geräteart auf die drei erlaubten
+Werte; was nicht dazugehört, wird `NULL`, und `docs/Technik.md` führt das
+ausdrücklich als Zusage. Auf dem Rückweg der Konto-Sicherung galt sie nicht:
+Geprüft wurde allein die **Länge** (16 Zeichen), also ging jede Zeichenkette
+durch. Beim Nachbarfeld `origin` war es anders — der wird gegen
+`HERKUNFT_WERTE` gehalten; die Asymmetrie stand ohne Begründung da.
+
+Heute fällt das nirgends auf, weil die Statistik `devices` liest und nicht
+`missions`. Genau diese Spalte soll aber der offene R42-Rest auswerten
+(„Herkunft je Einsatz", R64) — und eine Zählung, die man durch das Bearbeiten
+der **eigenen** Sicherung verunreinigen kann, taugt nicht als Betriebszahl.
+Seit Web 20.14.0 gilt dieselbe Verengung wie beim Koppeln, und sie sagt es:
+Der Vorgang steht im Prüfprotokoll der Wiederherstellung, statt still zu
+geschehen.
+
+### Behoben — die Platzwarnung prüfte eine andere Zahl, als sie versprach
+
+Die Plattformkarte nennt als Sollwert „≥ 2× größtes Komplett-Backup", prüfte
+aber gegen das **Einfache**: Ab einem freien Platz, der für genau ein weiteres
+Komplett-Backup reicht, stand sie auf blau. Eine Zeile, die eine Zahl nennt
+und eine andere prüft, ist schlimmer als keine. PP-5 verlangt zwei Schwellen,
+und die gibt es jetzt: **rot** unter dem Einfachen (das nächste Backup schlägt
+fehl), **orange** unter dem Zweifachen (das übernächste wird eng).
+
+### Geändert — die Zielzeile führt ihre Handlungen im Menü
+
+Mit „Nachsehen" wären es fünf Knöpfe in einer Reihe geworden, und das passt
+nicht: Der Bilderlauf maß **+156 px waagerechten Überlauf bei 768 px**. Den
+Text zu kürzen half nicht genug (+49). Die Zeile benutzt deshalb
+`blatt_immer` — dieselbe Form wie die Geräteliste, mit derselben Begründung:
+Im Menü liegt „Löschen" eine Ebene tiefer, abgesetzt und rot, statt in jeder
+Zeile unmittelbar neben „Bearbeiten".
+
+### Migration
+
+`2026_09_16_sicherungsziel_aufbewahrung` — zwei Spalten an `backup_targets`
+(`behalten_konto`, `behalten_komplett`, beide `NULL`) und die neue Tabelle
+`sicherungsziel_dateien`. **Nach dem Deploy muss eine Administratorin
+Betrieb → Updates aufrufen**, sonst bleibt die Aufbewahrungsregel aus — und
+sagt es: Ein Ziel mit eingeschalteter Regel, dem das Versandprotokoll fehlt,
+löscht nichts und nennt den Grund.
+
+Warum eine Tabelle und nicht `app_state`, wie das Konzept vorsah: `app_state.v`
+ist `VARCHAR(190)`, und die Frage lautet „hat **diese** Installation die Datei
+X auf Ziel Y geschickt?" — eine Zeile je Datei und Ziel.
+
 ## [Web 20.13.0] — 2026-09-16
 
 **P5a/AP9 — die Verbindungsgrenze: „ausgelastet" ist nicht „kaputt".**

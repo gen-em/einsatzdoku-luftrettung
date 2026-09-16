@@ -611,5 +611,216 @@ pruef('...und die Meldung sagt auf DEUTSCH, woran es liegt',
 $wegS->trennen();
 if ($sperre !== null) { @chmod($sperre, 0755); @rmdir($sperre); }
 @unlink($datei);
+
+/* ======================================================================
+ * Teil 12 — Die Aufbewahrung auf dem Ziel (P5a/AP10, E-P5a-03, Nr. 49)
+ *
+ * WOGEGEN. Der Versand ergaenzt nur; auf der Gegenstelle loescht diese
+ * Anwendung nie. Bei zwei Sicherungen je Konto und Monat laeuft ein Ziel
+ * damit ueber kurz oder lang voll. Seit Web 20.14.0 gibt es je Ziel eine
+ * Option dagegen — und drei Sicherungen, damit sie nicht zu viel mitnimmt.
+ *
+ * DIE FUENF FREMDEN DATEIEN SIND DER KERN DIESES TEILS. Ein auswaertiges
+ * Ziel gehoert oft nicht dieser Installation allein: Da liegen Sicherungen
+ * anderer Systeme, ein Archiv, das Urlaubsfoto von jemandem. Eine Regel, die
+ * „alles ausser den letzten N" loescht, nimmt sie mit. Gemessen wird deshalb
+ * nicht nur, DASS geloescht wird, sondern dass die fuenf ueberleben.
+ * ==================================================================== */
+kopf('Teil 12 — Aufbewahrung auf dem Ziel: was bleibt, was geht');
+
+$db12 = null;
+try {
+    require_once __DIR__ . '/../../server/db.php';
+    $db12 = (sz_tabelle_da() && sz_dateien_tabelle_da()) ? db() : null;
+} catch (Throwable $e) { $db12 = null; }
+
+if ($db12 === null) {
+    pruef('Teil 12 läuft (Tabellen backup_targets und sicherungsziel_dateien da)',
+          false, 'AUSGEFALLEN — Migration 2026_09_16_sicherungsziel_aufbewahrung fehlt');
+} else {
+    require_once __DIR__ . '/../../server/adminbackup_lib.php';
+    $kennung   = 'abcdef0123456789';           // 16 Hex — edbak_kennung_gueltig()
+    $kontoOrd  = edbak_ordner($kennung);
+    /* DERSELBE GRUNDPFAD WIE DIE UEBRIGEN TEILE. Ein eigener Unterordner
+     * waere sauberer und scheitert: `verbinden()` prueft den Grundpfad, und
+     * den legt niemand an. Die Kennung unten ist ohnehin einmalig. */
+    $zielPfad  = PFAD_SFTP;
+
+    /* Andere Ziele stilllegen: `sz_versand_schub()` geht ueber ALLE aktiven,
+     * und ein fremdes Ziel im Lauf machte die Zahlen unten unlesbar. Der
+     * Zustand wird gemerkt und am Ende zurueckgeschrieben. */
+    $vorherAktiv = [];
+    foreach (sz_alle(true) as $za) { $vorherAktiv[] = (int)$za['id']; }
+    if ($vorherAktiv !== []) {
+        $db12->exec('UPDATE backup_targets SET aktiv = 0 WHERE id IN ('
+                  . implode(',', $vorherAktiv) . ')');
+    }
+    $db12->exec("DELETE FROM backup_targets WHERE name LIKE 'Versandprobe%'");
+
+    /* Fuenf eigene Sicherungen, verschiedene Zeitpunkte, gueltiges Muster. */
+    @mkdir($kontoOrd, 0755, true);
+    $eigene = [];
+    for ($i = 1; $i <= 5; $i++) {
+        $dn = sprintf('2026-09-%02dT12-00-00Z_%08x.zip', 10 + $i, 0xa0000000 + $i);
+        file_put_contents($kontoOrd . '/' . $dn, str_repeat('E', 100 + $i));
+        $eigene[] = $dn;
+    }
+
+    [$okZ, $zid] = sz_speichern(null, [
+        'name' => 'Versandprobe Aufbewahrung', 'protokoll' => 'sftp', 'host' => HOST,
+        'port' => P_SFTP, 'nutzer' => NUTZER, 'pfad' => $zielPfad,
+        'passiv' => 1, 'aktiv' => 1, 'aufraeumen' => 0,
+    ], PASSWORT, null);
+    pruef('Ein Ziel OHNE Aufbewahrungsregel lässt sich anlegen', $okZ === true,
+          is_int($zid) ? "Kennung $zid" : implode(' ', (array)$zid));
+    $zid = (int)$zid;
+    $zeile = sz_lesen($zid);
+    /* `?? 'x'` TAUGT HIER NICHT: Der Null-Zusammenfuehrungsoperator macht
+     * aus einem NULL-Wert denselben Ersatz wie aus einem fehlenden Schluessel
+     * — genau der Unterschied, um den es geht. */
+    pruef('...und die beiden Zahlen stehen auf NULL, nicht auf 0',
+          array_key_exists('behalten_konto', (array)$zeile)
+          && $zeile['behalten_konto'] === null
+          && $zeile['behalten_komplett'] === null,
+          'behalten_konto=' . var_export($zeile['behalten_konto'] ?? 'FEHLT', true));
+
+    /* ---- Lauf 1: Option AUS ------------------------------------------- */
+    $budget = static fn(): float => 300.0;
+    $l1 = sz_versand_schub($budget, 1.0);
+    pruef('Der Versand schickt die fünf Sicherungen hinüber',
+          $l1['gesendet'] >= 5, $l1['gesendet'] . ' Dateien, Fehler: '
+          . (implode(' | ', $l1['fehler']) ?: 'keine'));
+    pruef('Ohne Regel wird NICHTS gelöscht — auch nicht beim zweiten Lauf',
+          (int)$l1['geloescht'] === 0, (int)$l1['geloescht'] . ' gelöscht');
+
+    $stVp = $db12->prepare('SELECT COUNT(*) FROM sicherungsziel_dateien
+                             WHERE ziel_id = ? AND ordner = ? AND geloescht_am IS NULL');
+    $stVp->execute([$zid, $kennung]);
+    pruef('Das Versandprotokoll trägt die fünf Dateien', (int)$stVp->fetchColumn() === 5);
+
+    /* ---- Fünf FREMDE Dateien dazulegen -------------------------------- */
+    $tmpF = sys_get_temp_dir() . '/vp-fremd.bin';
+    file_put_contents($tmpF, str_repeat('F', 40));
+    $wegF = new ZielSftp(HOST, P_SFTP, NUTZER, PASSWORT, null, $zielPfad, null);
+    $wegF->verbinden();
+    $fremde = ['jahresarchiv-2025.tar.gz', 'urlaub.jpg', 'notizen.txt',
+               '2026-09-11T12-00-00Z_deadbeef.txt',   // richtiger Zeitstempel, falsche Endung
+               '2026-09-30T12-00-00Z_b0000009.zip'];  // richtiges Muster, NIE von uns gesendet
+    foreach ($fremde as $fn) { $wegF->senden($tmpF, $kennung . '/' . $fn); }
+    $nachher = $wegF->liste($kennung);
+    $wegF->trennen();
+    pruef('Am Ziel liegen jetzt zehn Dateien (fünf eigene, fünf fremde)',
+          count($nachher) === 10, count($nachher) . ' Einträge');
+
+    /* ---- Lauf 2: Option AN, höchstens zwei je Konto -------------------- */
+    sz_speichern($zid, [
+        'name' => 'Versandprobe Aufbewahrung', 'protokoll' => 'sftp', 'host' => HOST,
+        'port' => P_SFTP, 'nutzer' => NUTZER, 'pfad' => $zielPfad,
+        'passiv' => 1, 'aktiv' => 1,
+        'aufraeumen' => 1, 'behalten_konto' => 2, 'behalten_komplett' => 2,
+    ], null, null);
+    $zeile2 = sz_lesen($zid);
+    pruef('Die Regel lässt sich einschalten',
+          (int)($zeile2['behalten_konto'] ?? 0) === 2
+          && (int)($zeile2['behalten_komplett'] ?? 0) === 2);
+
+    $l2 = sz_versand_schub($budget, 1.0);
+    pruef('Der zweite Lauf entfernt genau die drei ältesten eigenen',
+          (int)$l2['geloescht'] === 3,
+          (int)$l2['geloescht'] . ' gelöscht, Fehler: '
+          . (implode(' | ', $l2['fehler']) ?: 'keine'));
+
+    $wegP = new ZielSftp(HOST, P_SFTP, NUTZER, PASSWORT, null, $zielPfad, null);
+    $wegP->verbinden();
+    $rest = $wegP->liste($kennung);
+    $wegP->trennen();
+    $restNamen = array_keys($rest);
+    $fehlendeFremde = array_values(array_diff($fremde, $restNamen));
+    pruef('ALLE FÜNF FREMDEN DATEIEN LIEGEN NOCH DA', $fehlendeFremde === [],
+          $fehlendeFremde === [] ? '5 von 5' : 'weg: ' . implode(', ', $fehlendeFremde));
+    pruef('...und von den eigenen sind die zwei jüngsten übrig',
+          in_array($eigene[4], $restNamen, true) && in_array($eigene[3], $restNamen, true)
+          && !in_array($eigene[0], $restNamen, true)
+          && !in_array($eigene[1], $restNamen, true)
+          && !in_array($eigene[2], $restNamen, true),
+          count($rest) . ' Einträge am Ziel');
+    pruef('Am Ziel liegen damit sieben Dateien, nicht zwei',
+          count($rest) === 7, count($rest) . ' Einträge');
+
+    /* DIE DATEI MIT DEM RICHTIGEN MUSTER, DIE NIE VON UNS KAM, ist der
+     * eigentliche Prüfstein der zweiten Sicherung: Das Namensmuster allein
+     * hätte sie mitgenommen. */
+    pruef('Die fremde Datei MIT gültigem Namensmuster überlebt — das Muster '
+          . 'allein genügt nicht',
+          in_array('2026-09-30T12-00-00Z_b0000009.zip', $restNamen, true));
+
+    /* ---- Das Protokoll ------------------------------------------------ */
+    $stL = $db12->prepare('SELECT COUNT(*) FROM sicherungsziel_dateien
+                            WHERE ziel_id = ? AND geloescht_am IS NOT NULL');
+    $stL->execute([$zid]);
+    $protZahl = (int)$stL->fetchColumn();
+    pruef('Es gibt genau so viele Protokollzeilen wie Löschungen',
+          $protZahl === (int)$l2['geloescht'],
+          "$protZahl Zeilen gegen " . (int)$l2['geloescht'] . ' Löschungen');
+    $stG = $db12->prepare('SELECT grund FROM sicherungsziel_dateien
+                            WHERE ziel_id = ? AND geloescht_am IS NOT NULL LIMIT 1');
+    $stG->execute([$zid]);
+    $grund = (string)$stG->fetchColumn();
+    pruef('...und jede nennt den Grund', str_contains($grund, 'höchstens 2'), $grund);
+    $lo = sz_loeschungen();
+    pruef('Die Sicherheitsseite sieht dieselben Löschungen',
+          $lo['gesamt'] >= 3 && $lo['zeilen'] !== []
+          && (string)($lo['zeilen'][0]['ziel'] ?? '') === 'Versandprobe Aufbewahrung',
+          $lo['gesamt'] . ' in 30 Tagen');
+
+    /* ---- Dritter Lauf: nichts mehr zu tun ------------------------------ */
+    $l3 = sz_versand_schub($budget, 1.0);
+    pruef('Ein dritter Lauf löscht nichts mehr — die Regel ist erfüllt',
+          (int)$l3['geloescht'] === 0, (int)$l3['geloescht'] . ' gelöscht');
+    /* DIE ZAHL, DIE SAGT WARUM (E-P5a-57). Ohne sie wäre „0 gelöscht" auch
+     * dann grün, wenn der dritte Lauf gar nichts mehr zu senden HÄTTE — und
+     * der Kreislauf käme beim nächsten Paket zurück. Gemessen wird deshalb
+     * die WIRKUNG des Riegels: drei Dateien liegen hier, gehen aber nicht
+     * noch einmal hinüber. */
+    pruef('...weil die drei entfernten nicht wieder gesendet werden',
+          (int)($l3['nicht_wieder'] ?? 0) === 3 && (int)$l3['gesendet'] === 0,
+          (int)($l3['nicht_wieder'] ?? 0) . ' nicht wieder gesendet, '
+          . (int)$l3['gesendet'] . ' gesendet');
+
+    /* ---- Die Statuszeile „wächst" ------------------------------------- */
+    $db12->prepare('UPDATE sicherungsziel_dateien SET gesendet_am =
+                      DATE_SUB(UTC_TIMESTAMP(), INTERVAL 60 DAY) WHERE ziel_id = ?')
+         ->execute([$zid]);
+    pruef('Ein Ziel MIT Regel taucht nicht unter „wächst" auf',
+          !in_array('Versandprobe Aufbewahrung', array_column(sz_waechst(), 'name'), true));
+    $db12->prepare('UPDATE backup_targets SET behalten_konto = NULL,
+                      behalten_komplett = NULL WHERE id = ?')->execute([$zid]);
+    $db12->prepare('UPDATE sicherungsziel_dateien SET geloescht_am = NULL, grund = NULL
+                     WHERE ziel_id = ?')->execute([$zid]);
+    pruef('Ohne Regel und ohne je eine Löschung steht es dort',
+          in_array('Versandprobe Aufbewahrung', array_column(sz_waechst(), 'name'), true),
+          implode(', ', array_column(sz_waechst(), 'name')) ?: '(keines)');
+
+    /* ---- Aufräumen ----------------------------------------------------- */
+    $wegR = new ZielSftp(HOST, P_SFTP, NUTZER, PASSWORT, null, $zielPfad, null);
+    try {
+        $wegR->verbinden();
+        foreach (array_keys($wegR->liste($kennung)) as $fn) {
+            try { $wegR->loeschen($kennung . '/' . $fn); } catch (Throwable $x) {}
+        }
+        $wegR->trennen();
+    } catch (Throwable $x) {}
+    sz_loeschen($zid);
+    $db12->exec("DELETE FROM backup_targets WHERE name LIKE 'Versandprobe%'");
+    if ($vorherAktiv !== []) {
+        $db12->exec('UPDATE backup_targets SET aktiv = 1 WHERE id IN ('
+                  . implode(',', $vorherAktiv) . ')');
+    }
+    foreach (glob($kontoOrd . '/*') ?: [] as $f12) { @unlink($f12); }
+    @rmdir($kontoOrd);
+    @unlink($tmpF);
+    echo "  Ziel, Prüfordner und der Zustand der übrigen Ziele wiederhergestellt.\n";
+}
+
 printf("\n-> %d Erwartungen, %d nicht erfuellt\n", $n, $offen);
 exit($offen === 0 ? 0 : 1);

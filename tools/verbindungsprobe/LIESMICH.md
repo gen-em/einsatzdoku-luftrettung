@@ -112,6 +112,25 @@ lock`, weil alle Uploads eines Diensttags dieselbe `days`-Zeile anfassen
 `ausgelastet` statt mit 500; die eigentliche Abhilfe — die Transaktion
 wiederholen, statt sie zurückzugeben — steht als **Backlog Nr. 210** an.
 
+## Sie rechnet damit, die Einzige zu sein
+
+**Die Probe belegt Verbindungen, bis keine mehr frei ist, und rechnet die
+Zahlen von dort aus.** Hängt nebenher noch etwas anderes an demselben
+Datenbankkonto — ein Hintergrundjob, ein zweiter Webserver, eine andere Probe
+—, belegt das Plätze, die hier nicht mitgezählt werden. Dann bekommt der
+Webserver womöglich doch noch eine Verbindung, und aus „genau drei
+Abweisungen" wird vier oder zwei.
+
+**Gemessen am 16.09.2026:** Von dreizehn Läufen meldeten zwölf **24 von 24**
+und einer **23 von 24** — unmittelbar nach einer Reihe anderer Proben. Die
+Probe zählt seither vor dem Belegen nach, wie viele fremde Verbindungen
+dieses Kontos offen sind, und sagt es, wenn es welche gibt. Das macht den
+Lauf nicht zuverlässiger; es macht eine rote Zeile **erklärbar**, statt sie
+als Launenhaftigkeit stehen zu lassen.
+
+Wer sichere Zahlen braucht, fährt sie **allein**: Jobs pausieren
+(`php server/jobs.php --pause`), keine zweite Probe daneben.
+
 ## Was sie **nicht** misst
 
 - **Z2-Last.** Das Konzept nennt „gegen Z2-Last" (500 Konten à 600 Einsätze).

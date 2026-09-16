@@ -836,6 +836,40 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
  * sich eine Art nachschlagen liesse. Der Rueckfall ohne Praefix ist damit
  * `watch`, genau wie bisher.
  */
+/**
+ * Die Geraeteart auf dem Rueckweg — dieselbe Verengung wie beim Koppeln
+ * (P5a/AP10, Backlog Nr. 195).
+ *
+ * WAS FALSCH WAR. `geraete_lib.php` verengt beim Koppeln auf die drei Werte
+ * aus `GERAET_ARTEN`: Was nicht dazugehoert, wird `NULL`, und
+ * `docs/Technik.md` fuehrt das ausdruecklich als Zusage. Auf dem Rueckweg
+ * der Konto-Sicherung galt sie nicht: `pruef_text()` mit `GERAET_MAX_ART`
+ * prueft allein die LAENGE, und jede Zeichenkette bis 16 Zeichen ging
+ * durch. Beim Nachbarfeld `origin` war es anders (es wird gegen
+ * `HERKUNFT_WERTE` gehalten); die Asymmetrie stand ohne Begruendung da.
+ *
+ * WARUM DAS ZAEHLT, obwohl es heute nirgends auffaellt: Genau diese Spalte
+ * soll der offene R42-Rest auswerten („Herkunft je Einsatz", R64). Eine
+ * Zaehlung, die man durch das Bearbeiten der EIGENEN Sicherung verunreinigen
+ * kann, taugt nicht als Betriebszahl. Ein Sicherheitsproblem ist es nicht.
+ *
+ * ES WIRD GEMELDET, NICHT VERSCHWIEGEN. Die Pruefliste bekommt eine Zeile —
+ * wer eine Sicherung einspielt, in der eine Geraeteart steht, die es nicht
+ * gibt, soll erfahren, dass sie nicht uebernommen wurde. Ein stilles `NULL`
+ * saehe aus wie „stand nicht drin".
+ */
+function edbak_geraet_art($wert, string $feld, ?Pruefliste $pruef = null): ?string
+{
+    $art = pruef_text($wert, GERAET_MAX_ART, $feld, $pruef);
+    if ($art === null) { return null; }
+    $art = strtolower($art);
+    if (!in_array($art, GERAET_ARTEN, true)) {
+        $pruef?->melde($feld, 'keine bekannte Geräteart — als „unbekannt" übernommen');
+        return null;
+    }
+    return $art;
+}
+
 function edbak_origin_edited(array $m): array {
     $ref = (string)($m['client_ref'] ?? '');
 
@@ -1837,7 +1871,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
                      pruef_flag($m['final'] ?? 1),
                      pruef_zahl($m['distance_m'] ?? null, 0, 100000000, 'distance_m', $pruef),
                      pruef_zahl($m['ascent_m'] ?? null, 0, 100000, 'ascent_m', $pruef),
-                     pruef_text($m['geraet_art'] ?? null, GERAET_MAX_ART, 'geraet_art', $pruef),
+                     edbak_geraet_art($m['geraet_art'] ?? null, 'geraet_art', $pruef),
                      pruef_text($m['geraet_modell'] ?? null, GERAET_MAX_MODELL,
                                 'geraet_modell', $pruef),
                      $mGeloescht ? $loeschZeit : null, $mitTag];
@@ -2026,8 +2060,8 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
                 VALUES (?,?,?,?,?,?,?,?,?,?)')
                 ->execute([$userId, $rRef, $rDayId, $rStart, $rEnde,
                            pruef_flag($r['final'] ?? 1),
-                           pruef_text($r['geraet_art'] ?? null, GERAET_MAX_ART,
-                                      'rest.geraet_art', $pruef),
+                           edbak_geraet_art($r['geraet_art'] ?? null,
+                                            'rest.geraet_art', $pruef),
                            pruef_text($r['geraet_modell'] ?? null, GERAET_MAX_MODELL,
                                       'rest.geraet_modell', $pruef),
                            $rGeloescht ? $loeschZeit : null, $rMitTag]);

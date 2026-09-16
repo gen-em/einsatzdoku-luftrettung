@@ -738,6 +738,45 @@ function status_erhebung(): array
         $backups[] = status_z('Backup-Ziele', $klein, $ton, $pl, 'admin_sicherungsziele.php');
     }
 
+    /* ---- WÄCHST EIN ZIEL, OHNE DASS DORT JE ETWAS ENTFERNT WURDE?
+     *      (P5a/AP10, E-P5a-03) ------------------------------------------
+     *
+     * Der Versand ergänzt nur. Bei zwei Sicherungen je Konto und Monat läuft
+     * ein Ziel damit über kurz oder lang voll — und niemand merkt es hier,
+     * weil auf der Gegenstelle nichts von dieser Anwendung nachsieht. Genau
+     * das ist Backlog Nr. 49.
+     *
+     * DIE ZEILE FRAGT DIE ZIELE NICHT. Sie liest das Versandprotokoll: Ein
+     * Ziel, auf das seit über einem Monat geschickt wird und von dem nie
+     * etwas entfernt wurde, wächst. Drei FTP-Verbindungen bei jedem Aufruf
+     * der Statusseite wären eine Seite, die zehn Sekunden lädt — dieselbe
+     * Überlegung wie bei `sz_versand_rueckstand()`.
+     *
+     * WAS SIE DAMIT NICHT SIEHT: eine Betreiberin, die dort von Hand
+     * aufgeräumt hat. Der Satz sagt deshalb „es ist nie etwas entfernt
+     * worden" und nicht „dort liegt zu viel" — er beschreibt, was diese
+     * Installation weiß, nicht den Zustand der Gegenstelle.
+     *
+     * NUR FÜR ZIELE OHNE REGEL. Wo die Aufbewahrung eingeschaltet ist,
+     * räumt der Versand selbst auf; die Zeile wäre dort eine Mahnung an
+     * jemanden, der schon gehandelt hat (`sz_waechst()` filtert das). */
+    $waechst = sz_waechst();
+    if ($waechst !== []) {
+        $erstes = $waechst[0];
+        $backups[] = status_z('Aufbewahrung am Ziel',
+            count($waechst) === 1
+                ? 'Auf „' . $erstes['name'] . '" liegen ' . $erstes['dateien']
+                  . ' Sicherungen (' . edbak_groesse_text($erstes['bytes'])
+                  . '), und es ist dort nie etwas entfernt worden — seit '
+                  . fmt_local($erstes['seit'], 'd.m.Y')
+                : count($waechst) . ' Ziele wachsen seit über einem Monat, ohne dass '
+                  . 'dort je etwas entfernt wurde — das größte ist „'
+                  . $erstes['name'] . '" mit ' . edbak_groesse_text($erstes['bytes']),
+            'orange',
+            count($waechst) === 1 ? 'wächst' : count($waechst) . ' wachsen',
+            'admin_sicherungsziele.php');
+    }
+
     /* Speicher: derselbe Ton wie der Balken auf den Servereinstellungen —
        `speicher_ton()` ist die eine Regel dafür (S8/AP2). */
     $proz = (int)$sp['backups']['prozent'];
@@ -799,8 +838,14 @@ function status_erhebung(): array
                 'neutral', 'Hinweis');
             continue;
         }
-        $ton = $f['ok'] === true ? 'blau' : ($f['ok'] === null ? 'neutral' : 'rot');
-        $plakette = $f['ok'] === true ? $f['gemessen']
+        /* `knapp` IST ERFUELLT, ABER NICHT MEHR LANGE (P5a/AP10, PP-5).
+         * Heute trägt nur der freie Platz das Feld: rot unter dem Einfachen
+         * des größten Komplett-Backups, orange unter dem Zweifachen. Ein
+         * Befund ohne das Feld verhält sich wie vorher — `?? false`. */
+        $knapp = (bool)($f['knapp'] ?? false);
+        $ton = $f['ok'] === true ? ($knapp ? 'orange' : 'blau')
+             : ($f['ok'] === null ? 'neutral' : 'rot');
+        $plakette = $f['ok'] === true ? ($knapp ? 'knapp' : $f['gemessen'])
                   : ($f['ok'] === null ? 'nicht messbar' : 'fehlt');
         $plattform[] = status_z($f['name'],
             'Gebraucht: ' . $f['soll'] . ' · gemessen: ' . $f['gemessen']

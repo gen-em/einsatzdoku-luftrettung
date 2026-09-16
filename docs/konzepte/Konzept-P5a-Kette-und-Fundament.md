@@ -15,9 +15,9 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | | |
 > |---|---|
 > | Stand | 15.09.2026 — **Konzept freigegeben, Umsetzung läuft.** Die Grundsatzfragen sind am 15.09.2026 im Gespräch entschieden (E-P5a-01 bis -09); die übrigen Festlegungen (E-P5a-10 bis -21) stammen aus dem Nachmessen im Code und stehen mit der Freigabe. |
-> | Entschieden | E-P5a-01 bis E-P5a-21 (Abschnitt 2), dazu die in der Umsetzung gefallenen E-P5a-22 bis **-55**; E-PP-01 bis -09 übernommen; **F-P5a-1 entschieden** (2.4) |
+> | Entschieden | E-P5a-01 bis E-P5a-21 (Abschnitt 2), dazu die in der Umsetzung gefallenen E-P5a-22 bis **-58**; E-PP-01 bis -09 übernommen; **F-P5a-1 entschieden** (2.4) |
 > | Offen | — |
-> | Umsetzung | **läuft.** AP1–AP9 und AP4a erledigt, **AP10 als Nächstes** (Sicherungsziele — samt der sechsten Sicherheitskarte aus AP8); Abhängigkeiten in 3.0 |
+> | Umsetzung | **läuft.** AP1–AP10 und AP4a erledigt, **AP11 als Nächstes** (Nachlöse-Job); Abhängigkeiten in 3.0 |
 > | Fable-Schritte der Umsetzung | **keiner mehr** — M-P5a-01 ist nach Auftrag vom 15.09.2026 ohne Pause umgesetzt worden (2.5) |
 
 > **Stand der Umsetzung**
@@ -35,7 +35,8 @@ mit AP1), Mockups in `konzept-p5a/mockups/`.
 > | **AP7 Mengenbremse `ingest.php`** | **erledigt** | **Web 20.11.0** | Ingestprobe um Teil 10 erweitert: **83 Erwartungen, 0 nicht erfüllt** (21 davon neu) · gemessen: **14 Fehlversuche ohne Sperre**, Versuche 15–30 weiterhin `401`, **Versuch 31 = `429`** mit `Retry-After: 900` und Rumpf `zu_viele_versuche` · die Antwort nennt den Topf **nicht** · `403 device_disabled`, `400 payload`, `413 too_large` zählen **nicht** (drei Gegenproben) · zweites Gerät an derselben Adresse **`200`** — Adresstopf leer · gelungener Upload leert Topf und Vermerk (`anzahl 30 → 0`) · **30 erfundene Kennungen erreichen dieselbe Schwelle** wie eine bekannte (E-P5a-47) · genau **ein** Sperrereignis je Sperre · Laufzeit über den erzeugten Sendeplan (612 Anfragen, 64 478 Punkte, **je zwei Läufe**): Median **14,43 ms ohne / 15,14 ms mit** (+4,9 %), Mittel **19,67 / 20,33 ms** (+3,4 %), **0 Fehlversuche in allen vier Läufen** — bei 3 bis 4 % Streuung zwischen zwei *gleichen* Läufen · Ratenprobe **50/0** (zwei Prüfungen neu) · Migrationsregister **52/52, 219 Spalten, 0 Befunde** · Bilderlauf der zwei berührten Seiten **16 Bilder, 0 Überlauf / 0 Konsole / 0 Knopfhöhen**, mit gesetztem Vermerk aufgenommen · Wortliste **0/0/0** (98 Regeln, 98 gegriffen) · Vollständigkeit **372 = unverändert** |
 > | **AP8 Status → Sicherheit** | **erledigt** | **Web 20.12.0** | `betrieb_sicherheit.php` mit **fünf** Karten (nicht sechs — „Löschungen auf Sicherungszielen“ hat bis AP10 keine Datenquelle, geprüft an fünf Stellen) · Klickprobe **neuer Weg, 1 von 1 erfüllt**, gemessen am DOM UND an der Datenbank: Zeile mit Prüfmerkmal **1 → 0**, `rate_limits` **1 → 0**, Ereignis „aufgehoben“ durch **admin@gen-em.org**, dazwischen die Rückfrage aus `data-confirm` · Bilderlauf **24 Bilder, 0 Überlauf / 0 Konsole / 0 Knopfhöhen** mit hergestelltem Bestand aufgenommen · **drei Fehler behoben, die ohne Meldung durchgegangen wären**: das Protokoll hing am Mailschalter, der Gerätevermerk verfiel nie, `ui_knopf()` kennt kein `form` · drei Ableitungen (Konto/Adresse) wurden eine · Wartungsprobe **67/0** mit **14** statt 13 Ausnahmen · Ratenprobe 50/0, Ingestprobe 83/0, kopplungsprobe 76/0, mailprobe 41/0, jobprobe 35/0 · Migrationsregister **0 Befunde** (keine Migration) · Wortliste **0/0/0** · Vollständigkeit **377** (372 + 5 Pfeile in neuen sichtbaren Texten; 2 Auslassungszeichen aus Kommentaren wieder entfernt) · CSP **0**, Sitzungshärtung **0**, Kontraste **22/0** |
 > | **AP9 Verbindungsgrenze und Messungen** | **erledigt** | **Web 20.13.0** | `tools/verbindungsprobe/` neu: **24 Erwartungen, 0 nicht erfüllt** · **drei** Fehlernummern statt zwei — die GRANT-Grenze eines Hosters meldet **1226**, nicht 1203 (E-P5a-51), gemessen an MariaDB 10.11 · alles belegt: `login.php` **503** mit `Retry-After: 5`, `no-store`, dem Satz aus E-P5a-18, **kein Skript** und **keiner von 7** Datenbank-Begriffen im Rumpf; `ingest.php` und `auth_salt.php` **503 JSON** `error=ausgelastet`; `index.php` bleibt **302** (erreicht die Datenbank nie — ausdrücklich mitgemessen) · Zähler **genau 3 von 3** Abweisungen, nicht mehr (das ist der Nachweis für den Riegel gegen die Rückkopplung über `app_state_lesen()`) · Enge statt Sperre, 20 Pakete gleichzeitig bei 8 Arbeitern und 2 freien Plätzen: **8 × 200, 12 × 503, 0 anderes**, davon **10 aus der Verbindungsgrenze und 2 aus Gedrängel** — nach Wiederholung **20 von 20 Einsätzen und 400 von 400 Spurpunkten** in der Datenbank · **zwei Fehler gefunden, die ohne Meldung durchgegangen wären**: 12 × HTTP 500 durch Deadlock auf der `days`-Zeile (E-P5a-52, Nr. 210) und der verborgene Setz-Link bei `wartet` (E-P5a-54) · Ausgelastet-Seite im Browser bei 360/768/1280 px: **503 · Retry-After 5 · 0 px waagerechter Überlauf**, Stylesheet und Münzwurf des Logos tragen · Messstand **5050 Einsätze / 2 813 201 Punkte**: Suche **3,18 s** (≤ 5), Tagesansicht **1,11 s** (≤ 3), Backup **49,84 s** (≤ 300) und **11,8 MB** (≤ 25), Wiederherstellung **231,9 s** (≤ 900), Spuren **3,66 MB/1000** (Ziel 3, knapp verfehlt), **Zeitraumübersicht 42,61 s bei 3983 Einsätzen** (Befund), Nachbearbeitung **2,83 s** (leere Liste) · Wartungsprobe **67/0** · Ratenprobe 50/0 · Ingestprobe 83/0 · Kopplungsprobe 76/0 · Mailprobe 41/0 · Jobprobe 35/0 · Spurprobe 45/0 · Bilderlauf 3 Seiten **24 Bilder, 0/0/0** · Wortliste **0/0/0** (98 Regeln, 98 gegriffen) · Vollständigkeit **377 = unverändert** · CSP 0 (109 Stellen) · Sitzungshärtung 0 · Installweiche 0 · Migrationsregister 0 · Kontraste 22/0 · PHP-Syntax 484 Dateien, 0 Fehler |
-> | AP10 bis AP12 | offen | — | — |
+> | **AP10 Sicherungsziele** | **erledigt** | **Web 20.14.0** | `tools/versandprobe/` um Teil 12 erweitert: **135 Erwartungen, 0 nicht erfüllt** (19 neu) · Regel AUS → **0 Löschungen**; Regel AN (N = 2) → **3 Löschungen**, **alle 5 fremden Dateien bleiben** — darunter eine mit gültigem Namensmuster, die nie von uns kam —, **7 statt 2** Dateien am Ziel, Protokollzeilen **3 = 3** Löschungen, jede mit Grund · **ein Kreislauf gefunden, der still gelaufen wäre**: dritter Lauf **3 gelöscht statt 0**, weil der Versand die eben entfernten wieder hinüberschickte (E-P5a-57); jetzt `nicht_wieder = 3`, `gesendet = 0` · `tools/wiederherstellungs-probe/` **110** (5 neu, Nr. 195): `geraet_art: "radcomputer"` → `NULL` mit Protokollzeile, `"HANDY"` → `handy` als Gegenprobe, dasselbe am Ruhesegment · sechste Sicherheitskarte gebaut (fehlte in AP8 mangels Tabelle) · Statuszeile „Aufbewahrung am Ziel" · Platzwarnung jetzt **zweischwellig** (rot < 1×, orange < 2× — vorher prüfte sie 1× und versprach 2×) · Migration `2026_09_16_sicherungsziel_aufbewahrung` **erfolgreich angewendet**, `ON DELETE CASCADE` gemessen (2 Ziele entfernt → 0 Protokollzeilen übrig) · Bilderlauf **fand +156 px Überlauf** und ist nach `blatt_immer` bei **24 Bildern, 0/0/0** · Browser: „Nachsehen" fährt gegen eine echte SFTP-Gegenstelle — **4 eigene Dateien (2,0 MB) in 2 Ordnern, 2 fremde (15 KB)**, 0 Konsolenfehler · Wartungsprobe 67/0 · Ratenprobe 50/0 · Ingestprobe 83/0 · Kopplungsprobe 76/0 · Mailprobe 41/0 · Jobprobe 35/0 · Spurprobe 45/0 · Verbindungsprobe 24/0 · Wortliste 0/0/0 · Vollständigkeit · CSP 0 · Sitzungshärtung 0 · Migrationsregister 0 · Kontraste 22/0 |
+> | AP11 und AP12 | offen | — | — |
 
 ---
 
@@ -894,6 +895,53 @@ JSON erwartet, und die Anmeldeseite hätte daraus „Anmeldung derzeit nicht
 möglich" gemacht statt „ausgelastet" — der Fehler aus Backlog Nr. 171, einen
 Stock tiefer. `gpx.php` bleibt draußen: Es wird vom Browser angesteuert, nicht
 per `fetch()` geholt.
+
+**E-P5a-56 (neu, 16.09.2026) — das Versandprotokoll ist eine Tabelle, nicht
+`app_state`.** E-P5a-03 sagt „Versandprotokoll in `app_state`". Das geht
+nicht: `app_state.v` ist `VARCHAR(190)`, und die Frage, die die zweite
+Sicherung der Löschregel beantworten muss, lautet **„hat diese Installation
+die Datei X auf Ziel Y geschickt?"** — eine Zeile je Datei und Ziel, bei
+einem gewachsenen Bestand tausende. In 190 Zeichen passt das nicht einmal für
+ein Konto. Es ist derselbe Befund wie bei E-P5a-50, nur andersherum: Dort
+konnte `app_state` nicht schreiben, hier kann es nicht tragen.
+
+Die neue Tabelle `sicherungsziel_dateien` tut **zwei** Dinge, und das ist kein
+Zufall: Sie ist das Versandprotokoll (was haben wir dorthin geschickt?) **und**
+das Löschprotokoll (was haben wir dort entfernt, wann, warum? — E-P5a-03
+verlangt beides). Zwei Tabellen dafür wären zwei Fassungen derselben Zeile.
+
+**E-P5a-57 (neu, 16.09.2026) — was die Regel dort entfernt hat, geht nicht
+wieder hinüber.** Beim Bauen der Probe herausgekommen, nicht beim Nachdenken:
+Der zweite Lauf räumte drei alte Sicherungen weg, der **dritte** schickte
+dieselben drei wieder hinüber (sie liegen hier ja noch), und der vierte räumte
+sie erneut weg. Ein Kreislauf, der bei jedem Job Bandbreite kostet, das
+Protokoll vollschreibt und nie zur Ruhe kommt — **und zwar still**, denn beide
+Seiten tun genau das, wofür sie gebaut sind. Gemessen: dritter Lauf
+**3 gelöscht statt 0**.
+
+*Der Preis, benannt:* Wer die Zahl später **anhebt**, bekommt die alten Stände
+nicht zurück; sie sind dort weg und bleiben es. Das ist die richtige Richtung
+— der umgekehrte Preis wäre ein Versand, der jede Nacht dieselben Dateien hin-
+und herschiebt.
+
+*Nachgewiesen wird die Wirkung, nicht die Abwesenheit:* Die Probe misst, dass
+der dritte Lauf **drei Dateien nicht wieder sendet** (`nicht_wieder = 3`), und
+nicht nur, dass er nichts löscht. „0 gelöscht" wäre auch dann grün, wenn gar
+nichts mehr zu senden wäre.
+
+**E-P5a-58 (neu, 16.09.2026) — die Zielzeile führt ihre Handlungen im Menü.**
+Mit „Nachsehen, was dort liegt" wären es fünf Knöpfe in einer Reihe geworden.
+Gemessen vom Bilderlauf: **+156 px waagerechter Überlauf bei 768 px**, +120
+bei 1024 (Verursacher `div.zeile-aktionen`). Den Text zu kürzen half nicht
+genug (+49 / +13) — fünf Knöpfe passen dort nicht, egal wie sie heißen.
+
+Die Zeile benutzt deshalb `blatt_immer`, eine **vorhandene** Option desselben
+Bausteins (S8/AP6, Mockup 10, freigegeben), und die Begründung dort passt hier
+wörtlich: „Die Geräteliste trägt drei Handlungen, von denen eine unumkehrbar
+ist. Als Knopfreihe stünde ‚Entkoppeln' in Rot unmittelbar neben
+‚Deaktivieren'." Genau das war hier der Zustand — „Löschen" in Rot neben
+„Bearbeiten", in jeder Zeile. **Kein neuer Baustein und keine neue
+Darstellung**, sondern die zweite Form eines vorhandenen.
 
 ### 2.3 Ort je Funktion (K1, R74)
 
@@ -2014,3 +2062,103 @@ Werkzeug nicht messen kann. Ersatzlos gestrichen (E-P5a-53).
 | CSP · Sitzungshärtung · Installweiche · Migrationsregister | **0 · 0 · 0 · 0** |
 | Kontraste | **22 Paare, 0 verfehlt** |
 | PHP-Syntax | **484 Dateien, 0 Fehler** |
+
+### AP10 — Sicherungsziele · Web 20.14.0 · 16.09.2026
+
+**Aufgabe.** E-P5a-03 (Backlog Nr. 49): Anzeige je Ziel als Grundlage,
+Löschregel als Option je Ziel mit drei Sicherungen; dazu die sechste
+Sicherheitskarte aus AP8, der Status-Hinweis „wächst seit über einem Monat",
+die Platzwarnung aus PP-5 und Backlog Nr. 195.
+
+#### Zwei Stufen, und die erste löscht nichts
+
+Backlog Nr. 49 stellt die Frage genau: „nicht *ob* aufgeräumt wird, sondern
+wer haftet" — und nennt als zweiten Weg „eine blosse **Anzeige** des Belegten
+am Ziel, damit die Betreiberin es sieht und dort selbst entscheidet. Der
+zweite Weg löscht nichts und beantwortet die Frage vielleicht schon."
+
+Genau so ist es gebaut. **„Nachsehen, was dort liegt"** verbindet sich auf
+Knopfdruck, liest mit `liste()` und sagt: eigene Sicherungen mit Zahl und
+Größe, ältester und jüngster Stand, und **wie viele fremde Dateien** dort
+liegen. Gemessen im Browser gegen eine echte SFTP-Gegenstelle: 4 eigene
+Dateien (2,0 MB) in 2 Ordnern, ältester Stand 30.07.2026, jüngster
+03.08.2026, **2 fremde (15 KB)**.
+
+Erst darunter die **Löschregel je Ziel** — ausdrücklich einzuschalten, nie
+Vorgabe, mit den drei Sicherungen aus E-P5a-03.
+
+#### Ein Kreislauf, der still gelaufen wäre
+
+Der teuerste Fund des Pakets, und er kam aus dem **Bauen der Probe**, nicht
+aus dem Nachdenken: Der zweite Lauf räumte drei alte Sicherungen weg, der
+**dritte schickte dieselben drei wieder hinüber** (sie liegen hier ja noch),
+und der vierte räumte sie erneut weg. Bandbreite bei jedem Job, ein volles
+Protokoll, nie Ruhe — und beide Seiten taten genau das, wofür sie gebaut
+sind. Gemessen: **dritter Lauf 3 gelöscht statt 0.**
+
+Entschieden als E-P5a-57: Was die Regel dort entfernt hat, geht nicht wieder
+hinüber. Der Preis steht dabei — wer die Zahl später anhebt, bekommt die
+alten Stände nicht zurück.
+
+**Nachgewiesen wird die Wirkung, nicht die Abwesenheit.** Die Probe misst,
+dass der dritte Lauf **drei Dateien nicht wieder sendet** (`nicht_wieder = 3`,
+`gesendet = 0`) — „0 gelöscht" allein wäre auch dann grün, wenn gar nichts
+mehr zu senden wäre.
+
+#### Zwei Abweichungen vom Konzept
+
+1. **Das Versandprotokoll ist eine Tabelle, nicht `app_state`** (E-P5a-56).
+   `app_state.v` ist `VARCHAR(190)`; die Frage lautet „hat diese Installation
+   die Datei X auf Ziel Y geschickt?" — eine Zeile je Datei und Ziel.
+   Derselbe Befund wie bei E-P5a-50, nur andersherum: dort konnte `app_state`
+   nicht schreiben, hier nicht tragen.
+2. **Die Zielzeile führt ihre Handlungen im Menü** (E-P5a-58). Fünf Knöpfe
+   passen nicht in eine Reihe — gemessen +156 px Überlauf bei 768 px.
+   `blatt_immer` ist eine vorhandene Option desselben Bausteins, und ihre
+   Begründung (destruktive Handlung eine Ebene tiefer) passt hier wörtlich.
+
+#### Drei Sätze, die nicht mehr stimmten
+
+Die Löschregel nimmt einer Zusage ihre Unbedingtheit, und die stand an vier
+Stellen. Alle vier sind nachgezogen, keine gestrichen:
+
+- Der Schalter „Backups automatisch versenden" sagte „auf dem Ziel wird nie
+  etwas gelöscht" — jetzt „gelöscht wird dort nur, wo die Aufbewahrungsregel
+  des Ziels ausdrücklich eingeschaltet ist".
+- `admin_komplettsicherung.php` sagte dasselbe beim Löschen eines Stands.
+  Der Satz stimmt für **diese Handlung** weiter und sagt das jetzt auch.
+- Das Handbuch (12.x) hat den ganzen Absatz bekommen: Vorgabe, Option, die
+  drei Sicherungen, wo die Löschungen stehen.
+- **Nicht geändert**, weil weiter richtig: „Das Ziel entfernen? Was dort
+  liegt, bleibt liegen" — ein ausgetragenes Ziel löscht drüben nichts.
+
+#### Nr. 195 und PP-5, nebenbei
+
+**Nr. 195:** `geraet_art` kam auf dem Rückweg der Sicherung ungeprüft durch —
+geprüft wurde allein die Länge. Jetzt dieselbe Verengung wie beim Koppeln
+(`edbak_geraet_art()`), an beiden Stellen, **und sie meldet es**: Ein stilles
+`NULL` sähe aus wie „stand nicht drin".
+
+**PP-5:** Die Plattformkarte nannte als Sollwert das Zweifache des größten
+Komplett-Backups und prüfte gegen das Einfache. Eine Zeile, die eine Zahl
+nennt und eine andere prüft, ist schlimmer als keine. Jetzt zwei Schwellen —
+rot unter dem Einfachen, orange unter dem Zweifachen. Dafür hat
+`plattform_befund()` ein Feld `knapp` bekommen statt eines vierten
+`ok`-Wertes: Ein Feld ignoriert, wer es nicht kennt.
+
+#### Zahlen
+
+| Mittel | Ergebnis |
+|---|---|
+| **Versandprobe** (Teil 12 neu) | **135 von 135** (vorher 116). Regel AUS → **0 Löschungen**, Protokoll trägt 5 Dateien · 5 fremde dazugelegt → **10 am Ziel** · Regel AN (N = 2) → **3 Löschungen**, **5 von 5 fremden bleiben**, **7 statt 2** Dateien am Ziel, darunter die fremde **mit** gültigem Namensmuster · Protokollzeilen **3 = 3**, jede mit Grund · dritter Lauf **0 gelöscht, 3 nicht wieder gesendet, 0 gesendet** |
+| **Wiederherstellungsprobe** (5 neu, Nr. 195) | **110** (vorher gemessen 105, dokumentiert 106 — die Abweichung ist berichtigt). `"radcomputer"` → `NULL`, Modell bleibt stehen, `"HANDY"` → `handy`, dasselbe am Ruhesegment, beides im Prüfprotokoll. **2 Erwartungen in Teil 10 sind rot** — am unveränderten Stand ebenso, ein Mangel des Prüfmittels auf einer leeren Installation (Backlog Nr. 212) |
+| Migration | `2026_09_16_sicherungsziel_aufbewahrung` **erfolgreich angewendet**; `ON DELETE CASCADE` gemessen: 2 Ziele entfernt → **0** Protokollzeilen übrig |
+| Browser | Zielseite mit zwei Zielen (mit und ohne Regel), Bestandskarte gegen eine echte SFTP-Gegenstelle, Sicherheitskarte mit 3 Löschungen, Statuszeile „wächst" mit 24 Sicherungen / 206,0 MB — **0 Konsolenfehler** |
+| Bilderlauf | **fand +156 px Überlauf bei 768 px** (fünf Knöpfe); nach `blatt_immer`: **24 Bilder, 0 Überlauf / 0 Konsole / 0 Knopfhöhen** |
+| Verbindungsprobe | **24/24** — in 13 Läufen einmal 23/24; die Probe sagt seither, wenn fremde Verbindungen desselben Datenbankkontos offen sind |
+| Wartungsprobe · Ratenprobe · Ingestprobe | **67/0 · 50/0 · 83/0** |
+| Kopplungsprobe · Mailprobe · Jobprobe · Spurprobe | **76/0 · 41/0 · 35/0 · 45/0** |
+| Wortliste | **0/0/0** (98 Regeln, 98 gegriffen) |
+| Vollständigkeit | **377 = unverändert** (erster Lauf 388; die Differenz waren Auslassungszeichen, Pfeile und **Malzeichen** in neuen Kommentaren) |
+| CSP · Sitzungshärtung · Installweiche · Migrationsregister | **0 · 0 · 0 · 0** |
+| Kontraste · PHP-Syntax | **22/0** · **484 Dateien, 0 Fehler** |

@@ -228,11 +228,25 @@ function plattform_db_variable(PDO $pdo, string $name): ?string
 /** Ein Befund. `ok`: true erfuellt · false nicht · null nicht feststellbar. */
 function plattform_befund(string $schluessel, string $name, string $stufe,
                           string $gemessen, string $soll, ?bool $ok,
-                          string $klein = '', ?string $einstellung = null): array
+                          string $klein = '', ?string $einstellung = null,
+                          bool $knapp = false): array
 {
+    /* `knapp` IST DIE DRITTE LAGE (P5a/AP10, PP-5). `ok` kennt drei
+     * Zustaende — erfuellt, nicht erfuellt, nicht messbar —, und das genuegt
+     * fuer die meisten Befunde: Eine PHP-Fassung ist alt genug oder nicht.
+     * Beim freien Platz ist es anders. PP-5 verlangt dort ZWEI Schwellen:
+     * rot unter dem Einfachen des groessten Komplett-Backups (das naechste
+     * schlaegt fehl) und orange unter dem Zweifachen (das uebernaechste
+     * wird eng). `ok = true` mit `knapp = true` ist genau das: erfuellt,
+     * aber nicht mehr lange.
+     *
+     * KEIN VIERTER `ok`-WERT. Ein `ok`, das drei Wahrheiten und eine Warnung
+     * traegt, muesste an jeder Stelle mitgedacht werden, die es heute
+     * abfragt — `plattform_zaehlen()`, die Statusseite, der Einrichter. Ein
+     * eigenes Feld ignoriert, wer es nicht kennt. */
     return ['schluessel' => $schluessel, 'name' => $name, 'stufe' => $stufe,
             'gemessen' => $gemessen, 'soll' => $soll, 'ok' => $ok,
-            'klein' => $klein, 'einstellung' => $einstellung];
+            'klein' => $klein, 'einstellung' => $einstellung, 'knapp' => $knapp];
 }
 
 /* ---- Die Pruefung -------------------------------------------------------- */
@@ -355,18 +369,35 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
         if (function_exists('komp_staende')) {
             foreach (komp_staende() as $s) { $groesstes = max($groesstes, (int)$s['groesse']); }
         }
-        $ok = $groesstes === 0 ? null : ((int)$frei >= $groesstes);
+        /* ZWEI SCHWELLEN, NICHT EINE (P5a/AP10, PP-5). Bis Web 20.13.0
+         * stand hier nur die untere: `ok` war wahr, sobald der freie Platz
+         * das Einfache des groessten Komplett-Backups erreichte — waehrend
+         * die Sollzeile daneben das Zweifache versprach. Eine Zeile, die eine
+         * Zahl nennt und eine andere prueft, ist schlimmer als keine.
+         *
+         *   unter dem Einfachen   rot     — das naechste Backup schlaegt fehl
+         *   unter dem Zweifachen  orange  — das uebernaechste wird eng
+         *   darueber  blau */
+        $ok    = $groesstes === 0 ? null : ((int)$frei >= $groesstes);
+        $knapp = $ok === true && (int)$frei < 2 * $groesstes;
         $b[] = plattform_befund('platz', 'Freier Platz', 'muss',
             plattform_groesse((int)$frei),
             $groesstes > 0 ? '≥ 2× ' . plattform_groesse($groesstes) : 'nicht bestimmbar',
             $ok,
             $groesstes === 0
                 ? 'Es gibt noch kein Komplett-Backup, gegen das sich rechnen ließe.'
-                : 'Unter dem Einfachen des größten Komplett-Backups schlägt das '
-                . 'nächste fehl. ACHTUNG: Auf geteiltem Webspace meldet PHP den '
-                . 'Datenträger des HOSTS, nicht das Kontingent dieses Kontos — die '
-                . 'Zahl ist deshalb eine Untergrenze für schlechte Nachrichten und '
-                . 'keine Entwarnung.');
+                : ($knapp
+                    ? 'Es reicht für das nächste Komplett-Backup, aber nicht mehr für '
+                    . 'zwei. ACHTUNG: Auf geteiltem Webspace meldet PHP den '
+                    . 'Datenträger des HOSTS, nicht das Kontingent dieses Kontos — die '
+                    . 'Zahl ist deshalb eine Untergrenze für schlechte Nachrichten und '
+                    . 'keine Entwarnung.'
+                    : 'Unter dem Einfachen des größten Komplett-Backups schlägt das '
+                    . 'nächste fehl. ACHTUNG: Auf geteiltem Webspace meldet PHP den '
+                    . 'Datenträger des HOSTS, nicht das Kontingent dieses Kontos — die '
+                    . 'Zahl ist deshalb eine Untergrenze für schlechte Nachrichten und '
+                    . 'keine Entwarnung.'),
+            null, $knapp);
     }
 
     /* ---- 7 HTTPS ----------------------------------------------------------- */

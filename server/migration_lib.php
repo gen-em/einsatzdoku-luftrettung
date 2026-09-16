@@ -2698,6 +2698,84 @@ function migrationen_katalog(): array
                ADD COLUMN abgewiesen_anzahl INT UNSIGNED NOT NULL DEFAULT 0',
         ],
     ],
+    [
+        'id'    => '2026_09_16_sicherungsziel_aufbewahrung',
+        'web'   => '20.14',
+        'label' => 'Aufbewahrung auf dem Sicherungsziel — Regel je Ziel und ein Versandprotokoll',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'backup_targets'
+                                AND column_name = 'behalten_konto'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* WOGEGEN (E-P5a-03, Backlog Nr. 49). Der Versand ERGAENZT nur;
+             * auf der Gegenstelle loescht diese Anwendung nie. Das ist
+             * Absicht und keine Luecke — der Zweck eines auswaertigen Ziels
+             * ist, den Ausfall dieses Servers zu ueberleben, SAMT eines
+             * Fehlers, der HIER zu viel loescht. Ein Versand, der drueben
+             * aufraeumt, traegt genau diesen Fehler mit hinueber.
+             *
+             * Bei zwei Sicherungen je Konto und Monat laeuft ein Ziel
+             * trotzdem ueber kurz oder lang voll, und niemand merkt es hier.
+             * Deshalb: eine Zahl JE ZIEL, die AUSDRUECKLICH eingeschaltet
+             * werden muss und nie die Vorgabe ist. `NULL` heisst „Option
+             * aus" — nicht `0`, denn `0` hiesse „nichts behalten".
+             *
+             * ZWEI ZAHLEN, NICHT EINE. Die Kontopakete und die
+             * Komplett-Staende sind verschiedene Dinge: Von einem Konto
+             * genuegen wenige Staende, vom Komplett-Backup will man die
+             * laengere Reihe (aus ihm laesst sich jedes Konto
+             * wiederherstellen, umgekehrt nicht). Eine gemeinsame Zahl
+             * zwaenge beide auf denselben Wert. */
+            'ALTER TABLE backup_targets
+               ADD COLUMN behalten_konto    SMALLINT UNSIGNED NULL,
+               ADD COLUMN behalten_komplett SMALLINT UNSIGNED NULL',
+
+            /* DAS VERSANDPROTOKOLL — die zweite der drei Sicherungen.
+             *
+             * WARUM EINE TABELLE UND NICHT `app_state` (E-P5a-56). Das
+             * Konzept sagt „Versandprotokoll in `app_state`". Das geht
+             * nicht: `app_state.v` ist `VARCHAR(190)`, und die Frage, die
+             * beantwortet werden muss, ist „hat DIESE Installation die Datei
+             * X auf Ziel Y geschickt?" — eine Zeile je Datei und Ziel, bei
+             * einem gewachsenen Bestand tausende. In 190 Zeichen passt das
+             * nicht einmal fuer ein Konto.
+             *
+             * DIE TABELLE TUT ZWEI DINGE, und das ist kein Zufall: Sie ist
+             * das Versandprotokoll (was haben wir dorthin geschickt?) UND
+             * das Loeschprotokoll (was haben wir dort entfernt, wann, warum?
+             * — E-P5a-03 verlangt beides). Zwei Tabellen dafuer waeren zwei
+             * Fassungen derselben Zeile.
+             *
+             * `geloescht_am IS NULL` heisst „liegt dort" — soweit wir wissen.
+             * Wer die Datei am Ziel VON HAND wegnimmt, hinterlaesst hier eine
+             * Zeile, die luegt; genau deshalb ist das Namensmuster die ERSTE
+             * Sicherung und diese Tabelle die zweite. Geloescht wird nur,
+             * was BEIDE Proben besteht und dort auch wirklich liegt.
+             *
+             * ON DELETE CASCADE: Wer ein Ziel austraegt, traegt seine
+             * Buchfuehrung mit aus. Was dort liegt, bleibt liegen — das sagt
+             * die Seite beim Entfernen ausdruecklich —, aber diese
+             * Installation fuehrt darueber kein Buch mehr. */
+            'CREATE TABLE sicherungsziel_dateien (
+               id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               ziel_id      INT UNSIGNED NOT NULL,
+               ordner       VARCHAR(190) NOT NULL,
+               datei        VARCHAR(190) NOT NULL,
+               bytes        BIGINT UNSIGNED NOT NULL DEFAULT 0,
+               gesendet_am  DATETIME NOT NULL,
+               geloescht_am DATETIME NULL,
+               grund        VARCHAR(190) NULL,
+               UNIQUE KEY uq_ziel_datei (ziel_id, ordner, datei),
+               KEY idx_ziel_geloescht (ziel_id, geloescht_am),
+               KEY idx_geloescht (geloescht_am),
+               CONSTRAINT fk_szd_ziel FOREIGN KEY (ziel_id)
+                 REFERENCES backup_targets (id) ON DELETE CASCADE
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

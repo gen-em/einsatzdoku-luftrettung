@@ -105,10 +105,11 @@ if ($aufKommandozeile) {
         /* `uebergangen` hängt an die Zeile an, statt sie zu ersetzen —
          * anders als `uebersprungen` weiter oben, das „dieser Job lief gar
          * nicht" heisst (S10/AP4, E-S10-U-09). */
-        fwrite(STDOUT, sprintf("%-14s %s · erledigt %d%s%s%s\n", $name,
+        fwrite(STDOUT, sprintf("%-14s %s · erledigt %d%s%s%s%s\n", $name,
             $b['fertig'] ? 'fertig' : 'Rest offen',
             $b['erledigt'],
             !empty($b['uebergangen']) ? ' · ' . (int)$b['uebergangen'] . ' übergangen' : '',
+            !empty($b['geloescht']) ? ' · ' . (int)$b['geloescht'] . ' am Ziel entfernt' : '',
             $b['rueckstand'] !== null ? ' · Rückstand ' . $b['rueckstand'] : '',
             !empty($b['fehler']) ? ' · FEHLER: ' . $b['fehler'] : ''));
     }

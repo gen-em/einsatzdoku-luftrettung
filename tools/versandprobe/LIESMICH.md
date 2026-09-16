@@ -103,8 +103,21 @@ php tools/versandprobe/probe.php             /srv/versandprobe --echt
 sh  tools/versandprobe/echte_gegenstellen.sh --stop
 ```
 
-Erwartet in **beiden** Fällen: **116 Erwartungen, 0 nicht erfüllt** (gemessen
-14.09.2026). Der Rückgabewert ist 0, wenn alles hält, sonst 1.
+Erwartet in **beiden** Fällen: **135 Erwartungen, 0 nicht erfüllt** (gemessen
+16.09.2026). Der Rückgabewert ist 0, wenn alles hält, sonst 1.
+
+*Die Zahl stand bis P5a/AP10 auf 116.* **Teil 12** ist dazugekommen: die
+Aufbewahrungsregel auf dem Ziel (E-P5a-03). Er legt fünf eigene Sicherungen
+und **fünf fremde Dateien** an, fährt den Versand mit ausgeschalteter Regel
+(0 Löschungen), schaltet sie ein (N = 2, 3 Löschungen) und misst, dass **alle
+fünf fremden überleben** — darunter eine mit gültigem Namensmuster, die nie
+von dieser Installation kam. Sie ist der eigentliche Prüfstein: Das Muster
+allein genügt nicht, es braucht das Versandprotokoll daneben.
+
+Teil 12 braucht die Migration `2026_09_16_sicherungsziel_aufbewahrung`. Fehlt
+sie, sagt er es und fällt nicht still aus. Er legt andere Ziele für seine
+Dauer **still** (`aktiv = 0`) und stellt sie danach wieder her — sonst
+mischten sich fremde Zahlen in den Lauf.
 
 *Die Zahl stand bis S10/AP5 auf 115.* S10/AP4 hat `ftp` aus `SZ_PROTOKOLLE`
 genommen und die Prüfung von „nicht `ftp`" auf „steht im Katalog" umgestellt

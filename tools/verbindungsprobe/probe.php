@@ -268,6 +268,30 @@ echo "\n  Teil 1 — alles belegt: die Antwort\n";
 @unlink($zaehlDatei);
 /* Eine Verbindung haelt die Probe selbst (`$pdo`), die uebrigen werden
  * belegt. Zusammen sind es genau `$grenze` — der Webserver bekommt keine. */
+/* WER SONST NOCH AN DIESEM DATENBANKKONTO HAENGT (16.09.2026).
+ *
+ * Diese Probe rechnet damit, dass sie die einzige ist. Laeuft nebenher ein
+ * Job, ein zweiter Webserver oder eine andere Probe auf demselben
+ * Datenbankkonto, belegt der Plaetze, die hier nicht mitgezaehlt werden — und
+ * dann stimmen die Zahlen in Teil 1 nicht mehr: Der Webserver bekommt
+ * womoeglich doch noch eine Verbindung, und „genau drei Abweisungen" wird zu
+ * vier oder zwei.
+ *
+ * GENAU DAS IST EINMAL PASSIERT: einer von dreizehn Laeufen am 16.09.2026
+ * meldete 23 von 24, die uebrigen zwoelf 24 von 24. Statt die Probe
+ * unzuverlaessig zu nennen, sagt sie jetzt, WER sonst noch da ist. Eine Zahl
+ * ueber null ist kein Abbruch — sie ist die Erklaerung, die sonst fehlt. */
+$stFremd = $rootPdo->prepare('SELECT COUNT(*) FROM information_schema.processlist
+                               WHERE USER = ?');
+$stFremd->execute([(string)$cfg['db']['user']]);
+$fremdVorher = max(0, (int)$stFremd->fetchColumn() - 1);   // die eigene abziehen
+if ($fremdVorher > 0) {
+    echo "    ACHTUNG: $fremdVorher weitere Verbindung(en) dieses Datenbankkontos "
+       . "sind offen —
+             die Zahlen unten koennen dadurch abweichen.
+";
+}
+
 $b = belegen_bis_voll($gehalten, $cfg, $grenze * 3);
 pruefe($b['fehler'] !== '' && $b['belegt'] > 0,
        'Die Grenze laesst sich ausschoepfen',

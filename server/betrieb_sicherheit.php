@@ -122,6 +122,10 @@ $sperren   = rate_sperren_aktiv(200);
 $bremse    = rate_verlangsamung(true);
 $ereign    = sicherheit_ereignisse([], null, 200);
 $geraete   = sicherheit_bremse_geraete();
+/* Die sechste Karte (P5a/AP10). Sie hat in AP8 gefehlt, weil es weder
+ * Tabelle noch Schreibweg gab — beides entsteht mit der Aufbewahrungsregel. */
+require_once __DIR__ . '/sicherungsziel_lib.php';
+$loeschungen = sz_loeschungen();
 $mailregel = sicherheit_mailregel();
 
 $ingestEreignisse = array_values(array_filter($ereign['zeilen'],
@@ -352,7 +356,51 @@ ui_seite_start(['titel' => 'Sicherheit']);
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- 5. Mailregel ----------------------------------------------- */ ?>
+  <?php /* ---- 5. Löschungen auf Sicherungszielen (P5a/AP10, E-P5a-08) ----
+           SIE HAT IN AP8 GEFEHLT, und zwar mit Ansage: Es gab damals weder
+           Tabelle noch Schreibweg noch einen `app_state`-Schlüssel, aus dem
+           sich etwas hätte zeigen lassen. Eine Karte, die sagt „hier steht
+           noch nichts, weil es die Sache noch nicht gibt", wäre kein Befund
+           gewesen, sondern Lärm.
+
+           SIE STEHT AUF DIESER SEITE UND NICHT BEI DEN ZIELEN, weil sie
+           dieselbe Frage beantwortet wie ihre Nachbarn: Was hat diese
+           Installation getan, das jemand nachvollziehen können muss? Eine
+           Löschung auf einer fremden Maschine ist genau das. */ ?>
+  <?php ui_karte_start(['titel' => 'Löschungen auf Sicherungszielen',
+      'id' => 'k-ziele',
+      'zahl' => $loeschungen['gesamt'] > 0 ? (string)$loeschungen['gesamt'] : null]); ?>
+    <p class="feld-hinweis"><strong>Gelöscht wird dort nur, wo es ausdrücklich
+       eingeschaltet ist.</strong> Der Versand ergänzt sonst nur — der Zweck
+       eines auswärtigen Ziels ist, den Ausfall dieses Servers zu überleben,
+       samt eines Fehlers, der hier zu viel löscht. Wo die Aufbewahrungsregel
+       an ist, entfernt sie nur, was dem Namensmuster einer Sicherung
+       entspricht <em>und</em> im Versandprotokoll dieser Installation steht;
+       fremde Dateien bleiben.</p>
+    <?php if ($loeschungen['zeilen'] === []): ?>
+      <p class="feld-hinweis">In den letzten 30 Tagen ist auf keinem Ziel etwas
+         entfernt worden.</p>
+    <?php else: ?>
+      <?php foreach ($loeschungen['zeilen'] as $z): ?>
+        <?php ui_zeile([
+            'text'  => (string)($z['ziel'] ?? '—') . ' · ' . (string)$z['ordner'],
+            'klein' => (string)$z['datei'] . ' · '
+                     . edbak_groesse_text((int)$z['bytes']) . ' · '
+                     . fmt_local((string)$z['geloescht_am'], 'd.m.Y H:i') . ' Uhr'
+                     . ((string)($z['grund'] ?? '') !== ''
+                        ? ' · ' . (string)$z['grund'] : ''),
+            'plaketten' => ui_plakette('entfernt', ['ton' => 'neutral']),
+        ]); ?>
+      <?php endforeach; ?>
+      <?php if ($loeschungen['gesamt'] > count($loeschungen['zeilen'])): ?>
+        <p class="feld-klein">Gezeigt sind die jüngsten
+           <strong><?= count($loeschungen['zeilen']) ?></strong> von
+           <strong><?= $loeschungen['gesamt'] ?></strong> der letzten 30 Tage.</p>
+      <?php endif; ?>
+    <?php endif; ?>
+  <?php ui_karte_ende(); ?>
+
+  <?php /* ---- 6. Mailregel ----------------------------------------------- */ ?>
   <?php ui_karte_start(['titel' => 'Meldung per Mail', 'id' => 'k-mail',
       'plakette' => $mailregel['an']
           ? ui_plakette('an', ['ton' => 'blau'])

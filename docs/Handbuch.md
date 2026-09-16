@@ -4338,10 +4338,39 @@ Was dabei zu wissen ist:
 - Die Zugangsdaten liegen **verschlüsselt** in der Datenbank. Der Schlüssel
   dazu steht in einer Datei, die nicht mitgesichert wird — wer den
   Datenbankdump hat, hat die Passwörter nicht.
-- **Auf dem Ziel wird nie etwas gelöscht.** Die Regel „höchstens zwei je
-  Konto" gilt für die Ablage auf dem eigenen Server; drüben sammelt sich
-  alles an, bis dort jemand aufräumt. Was dort liegt, zählt deshalb auch
-  nicht in die Speichergrenze — der Server kennt die Größe nicht.
+- **Auf dem Ziel wird nur gelöscht, wo es ausdrücklich eingeschaltet ist**
+  (seit Web 20.14.0). Ohne diese Option ergänzt der Versand nur: Die Regel
+  „höchstens zwei je Konto" gilt für die Ablage auf dem eigenen Server,
+  drüben sammelt sich alles an, bis dort jemand aufräumt. Das ist die
+  Voreinstellung und der Grund dafür ist ernst — der Zweck eines auswärtigen
+  Ziels ist, den Ausfall dieses Servers zu überleben, **samt eines Fehlers,
+  der hier zu viel löscht**. Ein Versand, der drüben aufräumt, trägt diesen
+  Fehler mit hinüber.
+- **Wenn du es doch willst:** Beim Bearbeiten eines Ziels steht der Haken
+  *Auf dem Ziel aufräumen* und darunter zwei Zahlen — wie viele
+  Konto-Sicherungen je Konto und wie viele Komplett-Stände dort bleiben
+  sollen. Drei Dinge gelten dann immer:
+  1. **Fremde Dateien bleibt es fern.** Entfernt wird nur, was dem
+     Namensmuster einer Sicherung entspricht **und** im Versandprotokoll
+     dieser Installation steht. Ein Archiv, das jemand anderes dorthin gelegt
+     hat, wird nie angefasst — auch dann nicht, wenn es zufällig so heißt
+     wie eine Sicherung.
+  2. **Nie unter deine Zahl.** Und was einmal entfernt wurde, geht nicht
+     wieder hinüber; wer die Zahl später anhebt, bekommt die alten Stände
+     nicht zurück.
+  3. **Nie nach einem gescheiterten Versand.** Wer nicht sicher weiß, dass
+     der neue Stand drüben angekommen ist, räumt den alten nicht weg.
+
+  Was dabei entfernt wurde, steht unter **Betrieb → Status → Sicherheit** in
+  der Karte *Löschungen auf Sicherungszielen* — mit Ziel, Datei und Grund.
+- **Nachsehen, was dort liegt**, geht auf Knopfdruck: im Menü einer Zielzeile.
+  Es zählt, was von hier stammt, und was nicht — und es löscht nichts. Die
+  Zahlen kommen in dem Augenblick von der Gegenstelle und werden nicht
+  gespeichert.
+- Was am Ziel liegt, zählt **nicht** in die Speichergrenze — der Server kennt
+  die Größe nicht. Wächst ein Ziel seit über einem Monat, ohne dass dort je
+  etwas entfernt wurde, sagt es die Statusseite (Karte *Backups*, Zeile
+  *Aufbewahrung am Ziel*).
 
 Für dein Konto ändert sich dadurch nichts: Der Inhalt des Backups bleibt
 verschlüsselt, und ohne deinen Wiederherstellungsschlüssel ist er auch dort

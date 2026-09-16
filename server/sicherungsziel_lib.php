@@ -718,6 +718,34 @@ function sz_pruefen_eingabe(array $e): array
     if (mb_strlen($pfad) > 255 || str_contains($pfad, '..')) {
         $f[] = 'Der Pfad ist zu lang oder enthält „..".';
     }
+    /* ---- Die Loeschregel (P5a/AP10, E-P5a-03) ----------------------------
+     *
+     * SIE IST AUS, WENN DER HAKEN AUS IST — und dann stehen die beiden
+     * Zahlen auf `NULL`, nicht auf `0`. Der Unterschied ist der zwischen
+     * „hier wird nicht aufgeraeumt" und „hier wird alles weggeraeumt". Eine
+     * `0`, die als „Option aus" gemeint war und als „nichts behalten"
+     * gelesen wird, loescht das Ziel leer; das ist genau der Fehler, gegen
+     * den Backlog Nr. 49 die Option ueberhaupt erst zur Option macht.
+     *
+     * MINDESTENS 1. Wer aufraeumen laesst, behaelt mindestens einen Stand.
+     * Ein Ziel, auf dem nichts mehr liegt, ist kein Sicherungsziel. */
+    $auf = !empty($e['aufraeumen']);
+    $bk = $bm = null;
+    if ($auf) {
+        $bk = (int)($e['behalten_konto'] ?? 0);
+        $bm = (int)($e['behalten_komplett'] ?? 0);
+        if ($bk < 1 || $bk > 999) {
+            $f[] = 'Wie viele Konto-Sicherungen dort bleiben sollen, muss '
+                 . 'zwischen 1 und 999 liegen.';
+            $bk = null;
+        }
+        if ($bm < 1 || $bm > 999) {
+            $f[] = 'Wie viele Komplett-Stände dort bleiben sollen, muss '
+                 . 'zwischen 1 und 999 liegen.';
+            $bm = null;
+        }
+    }
+
     return [[
         'name'      => $name,
         'protokoll' => $prot,
@@ -727,6 +755,8 @@ function sz_pruefen_eingabe(array $e): array
         'pfad'      => $pfad,
         'passiv'    => !empty($e['passiv']) ? 1 : 0,
         'aktiv'     => !empty($e['aktiv']) ? 1 : 0,
+        'behalten_konto'    => $bk,
+        'behalten_komplett' => $bm,
     ], $f];
 }
 
@@ -763,17 +793,21 @@ function sz_speichern(?int $id, array $eingabe, ?string $geheim, ?string $schlue
      * Geheimnis danach nachgetragen. */
     if ($id === null) {
         $st = db()->prepare('INSERT INTO backup_targets
-              (name, protokoll, host, port, nutzer, pfad, passiv, aktiv, erstellt_am)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())');
+              (name, protokoll, host, port, nutzer, pfad, passiv, aktiv,
+               behalten_konto, behalten_komplett, erstellt_am)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())');
         $st->execute([$s['name'], $s['protokoll'], $s['host'], $s['port'],
-                      $s['nutzer'], $s['pfad'], $s['passiv'], $s['aktiv']]);
+                      $s['nutzer'], $s['pfad'], $s['passiv'], $s['aktiv'],
+                      $s['behalten_konto'], $s['behalten_komplett']]);
         $id = (int)db()->lastInsertId();
     } else {
         $st = db()->prepare('UPDATE backup_targets SET name = ?, protokoll = ?,
-              host = ?, port = ?, nutzer = ?, pfad = ?, passiv = ?, aktiv = ?
+              host = ?, port = ?, nutzer = ?, pfad = ?, passiv = ?, aktiv = ?,
+              behalten_konto = ?, behalten_komplett = ?
               WHERE id = ?');
         $st->execute([$s['name'], $s['protokoll'], $s['host'], $s['port'],
-                      $s['nutzer'], $s['pfad'], $s['passiv'], $s['aktiv'], $id]);
+                      $s['nutzer'], $s['pfad'], $s['passiv'], $s['aktiv'],
+                      $s['behalten_konto'], $s['behalten_komplett'], $id]);
     }
 
     if ($geheim !== null) {
@@ -1026,7 +1060,10 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
     $ziele = sz_alle(true);
     $raus = ['gesendet' => 0, 'bytes' => 0, 'ziele' => count($ziele),
              'fehler' => [], 'fertig' => true,
-             'uebersprungen' => 0, 'uebersprungen_namen' => []];
+             'uebersprungen' => 0, 'uebersprungen_namen' => [],
+             /* P5a/AP10: was die Aufbewahrungsregel dort entfernt hat — und
+              * was deshalb nicht noch einmal hinuebergeschickt wurde. */
+             'geloescht' => 0, 'geloescht_bytes' => 0, 'nicht_wieder' => 0];
     if ($ziele === []) { return $raus; }
 
     $wurzel = edbak_wurzel();
@@ -1089,6 +1126,11 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
 
         $fehlerHier = null;
         $gesendetHier = 0;
+        /* WAS DIE REGEL DORT ENTFERNT HAT, GEHT NICHT WIEDER HINUEBER
+         * (E-P5a-57). Ohne diese Zeile senden und loeschen sich Versand und
+         * Aufbewahrung gegenseitig im Kreis — die Begruendung steht bei
+         * `sz_dort_entfernt()`. Einmal je Ziel gelesen, nicht je Datei. */
+        $nichtWieder = sz_dort_entfernt((int)$z['id']);
         try {
             foreach ($ordner as $kennung) {
                 /* Die Zeit wird JE KONTO geprüft, nicht je Ziel: Ein Schub,
@@ -1107,16 +1149,48 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
                     if ($zeitLinks() < $reserve) { $raus['fertig'] = false; break 2; }
                     $name = (string)$p['datei'];
                     if (!sz_name_gueltig($name)) { continue; }
+                    if (isset($nichtWieder[$kennung . '/' . $name])) {
+                        $raus['nicht_wieder']++;
+                        continue;
+                    }
                     /* SCHON DA HEISST: gleicher Name UND gleiche Grösse. Nur
                      * der Name wäre zu wenig — eine abgebrochene Übertragung
                      * hinterlässt eine Datei mit dem richtigen Namen und der
                      * falschen Länge, und die gälte für immer als erledigt. */
                     $bytes = (int)$p['groesse'];
-                    if (isset($dort[$name]) && $dort[$name] === $bytes) { continue; }
+                    if (isset($dort[$name]) && $dort[$name] === $bytes) {
+                        /* SCHON DA — UND TROTZDEM EIN VERMERK (P5a/AP10).
+                         *
+                         * Ohne diese Zeile faenge das Versandprotokoll erst
+                         * mit dem naechsten NEUEN Paket an, und alles, was
+                         * heute schon drueben liegt, gaelte fuer immer als
+                         * fremd. Die Aufbewahrungsregel hiesse dann „raeumt
+                         * irgendwann in einem Jahr das erste Mal auf".
+                         *
+                         * Der Beleg ist gut genug: gleicher Name, gleiche
+                         * Groesse, und die Datei liegt HIER im eigenen
+                         * Sicherungsordner. Ein fremdes Paket muesste dafuer
+                         * Zeitstempel, Zufallskennung und Bytezahl einer
+                         * unserer Dateien treffen.
+                         *
+                         * WAS DAMIT NICHT ERFASST WIRD: Sicherungen, die
+                         * drueben liegen und hier schon weggeraeumt sind
+                         * (die oertliche Regel behaelt zwei je Konto). Die
+                         * bleiben unbekannt und werden nie angefasst — die
+                         * sichere Richtung, und sie steht so im Handbuch. */
+                        sz_versand_vermerken((int)$z['id'], $kennung, $name, $bytes);
+                        continue;
+                    }
                     $hier = $kennung === KOMP_ORDNER
                         ? komp_wurzel() . '/' . $name
                         : edbak_ordner($kennung) . '/' . $name;
                     $weg->senden($hier, $kennung . '/' . $name);
+                    /* DAS PROTOKOLL STEHT DIREKT HINTER DEM VERSAND
+                     * (P5a/AP10). Es ist die zweite der drei Sicherungen der
+                     * Loeschregel: Ohne diese Zeile gilt die Datei drueben
+                     * spaeter als fremd und wird nie angefasst — die sichere
+                     * Richtung, aber die falsche Auskunft. */
+                    sz_versand_vermerken((int)$z['id'], $kennung, $name, $bytes);
                     $raus['gesendet']++;
                     $raus['bytes'] += $bytes;
                     $gesendetHier++;
@@ -1126,6 +1200,26 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
             $fehlerHier = $e->getMessage();
             $raus['fehler'][] = (string)$z['name'] . ': ' . $fehlerHier;
             $raus['fertig'] = false;
+        }
+        /* ---- DIE DRITTE SICHERUNG DER LOESCHREGEL (P5a/AP10, E-P5a-03) ---
+         *
+         * Aufgeraeumt wird NUR in einem Lauf, dessen eigener Versand
+         * durchgelaufen ist. Wer nicht sicher weiss, dass der neue Stand
+         * drueben angekommen ist, raeumt den alten nicht weg — sonst
+         * entfernte ausgerechnet ein halb gescheiterter Lauf die
+         * Sicherungen, die er nicht ersetzen konnte.
+         *
+         * `fertig === false` heisst: Die Zeit des Schubes ist ausgegangen,
+         * es liegt also noch etwas an. Auch dann nicht — der naechste Schub
+         * sendet zuerst zu Ende und raeumt dann auf. */
+        if ($fehlerHier === null && $raus['fertig']) {
+            $auf = sz_aufraeumen($z, $weg, $zeitLinks, $reserve);
+            $raus['geloescht']       += $auf['geloescht'];
+            $raus['geloescht_bytes'] += $auf['bytes'];
+            if (!$auf['fertig']) { $raus['fertig'] = false; }
+            foreach ($auf['fehler'] as $f) {
+                $raus['fehler'][] = (string)$z['name'] . ' (Aufbewahrung): ' . $f;
+            }
         }
         try { $weg->trennen(); } catch (Throwable $x) {}
         sz_lauf_merken((int)$z['id'], $fehlerHier === null, $fehlerHier);
@@ -1182,4 +1276,453 @@ function sz_versand_rueckstand(): ?int
         if ((int)@filemtime(komp_wurzel() . '/' . $st['datei']) > $grenze) { $n++; }
     }
     return $n;
+}
+
+/* ==========================================================================
+ * AUFBEWAHRUNG AUF DEM ZIEL           P5a/AP10, E-P5a-03/-56, Backlog Nr. 49
+ * ==========================================================================
+ *
+ * WOGEGEN. Der Versand ERGAENZT nur; auf der Gegenstelle loescht diese
+ * Anwendung nie. Das ist Absicht und keine Luecke — der Zweck eines
+ * auswaertigen Ziels ist, den Ausfall dieses Servers zu ueberleben, SAMT
+ * eines Fehlers, der HIER zu viel loescht. Ein Versand, der drueben
+ * aufraeumt, traegt genau diesen Fehler mit hinueber.
+ *
+ * Bei zwei Sicherungen je Konto und Monat laeuft ein Ziel trotzdem ueber
+ * kurz oder lang voll, und niemand merkt es hier. Deshalb zwei Stufen:
+ *
+ *   ANZEIGE ist die Grundlage. Sie loescht nichts. Die Zielseite zeigt je
+ *   Ziel, was dort liegt — Anzahl, Groesse, aeltester und juengster Stand,
+ *   und wie viel davon NICHT von dieser Installation ist.
+ *
+ *   LOESCHREGEL ist die Option. Je Ziel, ausdruecklich einzuschalten, nie
+ *   Vorgabe, und mit DREI SICHERUNGEN:
+ *
+ *     1. HERKUNFT. Geloescht wird nur, was (a) dem strengen Namensmuster
+ *        einer Sicherung entspricht UND (b) in `sicherungsziel_dateien` als
+ *        von DIESER Installation dorthin geschickt verzeichnet ist. Eine
+ *        fremde Datei besteht schon die erste Probe nicht.
+ *     2. MENGE. Nie unter N je Konto beziehungsweise M Komplett-Staende.
+ *        Gezaehlt werden dabei nur die EIGENEN Dateien — fremde sind nicht
+ *        unsere, sie zu zaehlen hiesse, sich an ihnen gutzuschreiben.
+ *     3. LAUF. Nie in einem Lauf, dessen eigener Versand fehlgeschlagen ist.
+ *        Wer nicht sicher weiss, dass der neue Stand drueben angekommen ist,
+ *        raeumt den alten nicht weg.
+ *
+ * WARUM DAS PROTOKOLL EINE TABELLE IST UND NICHT `app_state` (E-P5a-56):
+ * siehe die Migration `2026_09_16_sicherungsziel_aufbewahrung`. Kurz:
+ * `app_state.v` ist `VARCHAR(190)`, und die Frage lautet „hat DIESE
+ * Installation die Datei X auf Ziel Y geschickt?" — eine Zeile je Datei und
+ * Ziel.
+ */
+
+/** Wie viele Tage die Loeschliste zurueckblickt (Statusseite, Sicherheit). */
+const SZ_PROTOKOLL_TAGE = 30;
+
+/** Ab wann ein Ziel als „waechst, ohne dass etwas entfernt wurde" gilt. */
+const SZ_WACHSTUM_TAGE = 30;
+
+/** Steht die Tabelle schon? (Migration noch nicht gelaufen: alles still.) */
+function sz_dateien_tabelle_da(): bool
+{
+    require_once __DIR__ . '/db.php';
+    try {
+        $q = db()->query("SELECT COUNT(*) FROM information_schema.tables
+                           WHERE table_schema = DATABASE()
+                             AND table_name = 'sicherungsziel_dateien'");
+        return (int)$q->fetchColumn() > 0;
+    } catch (Throwable $e) { return false; }
+}
+
+/**
+ * Einen gelungenen Versand verzeichnen.
+ *
+ * `ON DUPLICATE KEY`: Dieselbe Datei kann ein zweites Mal hinuebergehen —
+ * etwa, wenn die erste Uebertragung abgebrochen ist und die Groesse drueben
+ * nicht stimmte. Dann gilt der zweite Zeitpunkt, und `geloescht_am` faellt
+ * zurueck auf `NULL`: Die Datei liegt wieder dort.
+ *
+ * SIE WIRFT NIE. Ein Versand, der geglueckt ist, darf nicht daran scheitern,
+ * dass die Buchfuehrung darueber klemmt — dann steht die Datei drueben und
+ * die Anwendung meldete einen Fehler. Was klemmt, steht im Fehlerprotokoll.
+ */
+function sz_versand_vermerken(int $zielId, string $ordner, string $datei, int $bytes): void
+{
+    require_once __DIR__ . '/db.php';
+    try {
+        db()->prepare('INSERT INTO sicherungsziel_dateien
+                         (ziel_id, ordner, datei, bytes, gesendet_am)
+                       VALUES (?, ?, ?, ?, UTC_TIMESTAMP())
+                       ON DUPLICATE KEY UPDATE
+                         bytes = VALUES(bytes), gesendet_am = VALUES(gesendet_am),
+                         geloescht_am = NULL, grund = NULL')
+            ->execute([$zielId, $ordner, $datei, max(0, $bytes)]);
+    } catch (Throwable $e) {
+        error_log('Sicherungsziel: Versandvermerk fuer ' . $ordner . '/' . $datei
+                . ' misslang: ' . $e->getMessage());
+    }
+}
+
+/**
+ * Was diese Installation auf dieses Ziel geschickt hat und dort noch liegt.
+ *
+ * @return array<string,bool> Schluessel „ordner/datei"
+ */
+function sz_geschickt(int $zielId): array
+{
+    require_once __DIR__ . '/db.php';
+    try {
+        $st = db()->prepare('SELECT ordner, datei FROM sicherungsziel_dateien
+                              WHERE ziel_id = ? AND geloescht_am IS NULL');
+        $st->execute([$zielId]);
+        $raus = [];
+        foreach ($st as $z) { $raus[$z['ordner'] . '/' . $z['datei']] = true; }
+        return $raus;
+    } catch (Throwable $e) { return []; }
+}
+
+/**
+ * Was diese Installation auf diesem Ziel SELBST entfernt hat (P5a/AP10,
+ * E-P5a-57).
+ *
+ * WOGEGEN — und das ist beim Bauen der Probe herausgekommen, nicht beim
+ * Nachdenken: Ohne diese Liste raeumt die Regel im zweiten Lauf drei alte
+ * Sicherungen weg, der DRITTE Lauf schickt dieselben drei wieder hinueber
+ * (sie liegen hier ja noch), und der vierte raeumt sie erneut weg. Ein
+ * Kreislauf, der bei jedem Job Bandbreite kostet, das Protokoll vollschreibt
+ * und nie zur Ruhe kommt — und zwar still, denn beide Seiten tun genau das,
+ * wofuer sie gebaut sind.
+ *
+ * Gemessen: dritter Lauf **3 geloescht** statt 0 (Versandprobe Teil 12).
+ *
+ * DIE ENTSCHEIDUNG: Was die Regel dort entfernt hat, geht nicht wieder
+ * hinueber. Der Preis, benannt — wer die Zahl spaeter ANHEBT, bekommt die
+ * alten Staende nicht zurueck; sie sind dort weg und bleiben es. Das ist die
+ * richtige Richtung: Der umgekehrte Preis waere ein Versand, der jede Nacht
+ * dieselben Dateien hin- und herschiebt.
+ *
+ * @return array<string,bool> Schluessel „ordner/datei"
+ */
+function sz_dort_entfernt(int $zielId): array
+{
+    require_once __DIR__ . '/db.php';
+    try {
+        $st = db()->prepare('SELECT ordner, datei FROM sicherungsziel_dateien
+                              WHERE ziel_id = ? AND geloescht_am IS NOT NULL');
+        $st->execute([$zielId]);
+        $raus = [];
+        foreach ($st as $z) { $raus[$z['ordner'] . '/' . $z['datei']] = true; }
+        return $raus;
+    } catch (Throwable $e) { return []; }
+}
+
+/** Eine Loeschung verzeichnen. Wirft nie (siehe `sz_versand_vermerken()`). */
+function sz_loeschung_vermerken(int $zielId, string $ordner, string $datei,
+                                string $grund): void
+{
+    require_once __DIR__ . '/db.php';
+    try {
+        db()->prepare('UPDATE sicherungsziel_dateien
+                          SET geloescht_am = UTC_TIMESTAMP(), grund = ?
+                        WHERE ziel_id = ? AND ordner = ? AND datei = ?')
+            ->execute([mb_substr($grund, 0, 190), $zielId, $ordner, $datei]);
+    } catch (Throwable $e) {
+        error_log('Sicherungsziel: Loeschvermerk fuer ' . $ordner . '/' . $datei
+                . ' misslang: ' . $e->getMessage());
+    }
+}
+
+/**
+ * Der Zeitpunkt aus dem Namen einer Sicherung — beide Muster in einer Hand.
+ *
+ * Kontopakete heissen `<ISO>_<8 hex>.json|.zip`, Komplett-Staende
+ * `<ISO>_<8 hex>.edk`. Beide beginnen mit demselben Zeitstempel, und genau
+ * deshalb sortiert der NAME schon zeitlich — die Funktion gibt es trotzdem,
+ * weil „sortiert zufaellig richtig" eine Falle ist, sobald jemand das Muster
+ * aendert.
+ */
+function sz_zeit_aus_dateiname(string $name): ?string
+{
+    if (!preg_match('/^(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})Z_/', $name, $t)) {
+        return null;
+    }
+    return $t[1] . ' ' . $t[2] . ':' . $t[3] . ':' . $t[4];
+}
+
+/** Gehoert dieser Dateiname zu einer Sicherung dieser Anwendung? */
+function sz_ist_sicherungsname(string $ordner, string $name): bool
+{
+    require_once __DIR__ . '/komplett_lib.php';
+    require_once __DIR__ . '/adminbackup_lib.php';
+    return $ordner === KOMP_ORDNER
+        ? komp_name_gueltig($name)
+        : edbak_paketname_gueltig($name);
+}
+
+/**
+ * Was auf einem Ziel liegt — gelesen mit `liste()`, ueber alle Ordner.
+ *
+ * SIE BAUT DIE VERBINDUNG NICHT SELBST AUF. Der Aufrufer uebergibt einen
+ * verbundenen Weg; so laesst sich dieselbe Auskunft im Versandlauf (wo die
+ * Verbindung ohnehin steht) und auf Knopfdruck holen, ohne zwei Fassungen.
+ *
+ * **Sie laeuft NICHT bei jedem Seitenaufruf.** Drei FTP-Verbindungen je
+ * Aufruf der Zielseite waeren eine Seite, die zehn Sekunden laedt — dieselbe
+ * Ueberlegung wie bei `sz_versand_rueckstand()`.
+ *
+ * @return array{ordner:int,dateien:int,bytes:int,fremd:int,fremd_bytes:int,
+ *                aeltester:?string,juengster:?string}
+ */
+function sz_bestand(Zielweg $weg, int $zielId): array
+{
+    $raus = ['ordner' => 0, 'dateien' => 0, 'bytes' => 0,
+             'fremd' => 0, 'fremd_bytes' => 0,
+             'aeltester' => null, 'juengster' => null];
+    $wurzel = $weg->liste('');
+    /* `liste()` gibt Dateiname => Bytes. Unterordner erscheinen je nach
+     * Adapter gar nicht oder mit Groesse 0; deshalb wird NICHT aus der
+     * Wurzelliste geraten, welche Ordner es gibt, sondern gefragt, was diese
+     * Installation angelegt haben KANN: die Kontokennungen und `komplett`.
+     * Ein Ordner, den es drueben nicht gibt, liefert eine leere Liste. */
+    require_once __DIR__ . '/adminbackup_lib.php';
+    require_once __DIR__ . '/komplett_lib.php';
+    $ordner = [KOMP_ORDNER];
+    $wurzelPfad = edbak_wurzel();
+    if (is_dir($wurzelPfad)) {
+        foreach (scandir($wurzelPfad) ?: [] as $n) {
+            if ($n === '.' || $n === '..' || !edbak_kennung_gueltig($n)) { continue; }
+            if (is_dir($wurzelPfad . '/' . $n)) { $ordner[] = $n; }
+        }
+    }
+    /* Kennungen, die es HIER nicht mehr gibt, drueben aber noch: Sie stehen
+     * im Versandprotokoll. Ohne sie zaehlte die Anzeige ein geloeschtes Konto
+     * als „nichts dort" — und genau dessen Sicherungen sind die, auf die es
+     * ankommt. */
+    require_once __DIR__ . '/db.php';
+    try {
+        $st = db()->prepare('SELECT DISTINCT ordner FROM sicherungsziel_dateien
+                              WHERE ziel_id = ?');
+        $st->execute([$zielId]);
+        foreach ($st as $z) { $ordner[] = (string)$z['ordner']; }
+    } catch (Throwable $e) { /* Tabelle fehlt — dann eben ohne */ }
+    $ordner = array_values(array_unique($ordner));
+
+    foreach ($ordner as $o) {
+        $dort = $weg->liste($o);
+        if ($dort === []) { continue; }
+        $raus['ordner']++;
+        foreach ($dort as $name => $bytes) {
+            if (sz_ist_sicherungsname($o, (string)$name)) {
+                $raus['dateien']++;
+                $raus['bytes'] += (int)$bytes;
+                $zeit = sz_zeit_aus_dateiname((string)$name);
+                if ($zeit !== null) {
+                    if ($raus['aeltester'] === null || $zeit < $raus['aeltester']) {
+                        $raus['aeltester'] = $zeit;
+                    }
+                    if ($raus['juengster'] === null || $zeit > $raus['juengster']) {
+                        $raus['juengster'] = $zeit;
+                    }
+                }
+            } else {
+                $raus['fremd']++;
+                $raus['fremd_bytes'] += (int)$bytes;
+            }
+        }
+    }
+    /* WAS IN DER WURZEL LIEGT, ist nie eine Sicherung dieser Anwendung — sie
+     * legt alles in Ordner. Es zaehlt deshalb als fremd und wird nie
+     * angefasst.
+     *
+     * AUSSER: die Ordner selbst. Manche Adapter fuehren Unterordner in der
+     * Liste mit (Groesse 0), andere nicht. Wuerden sie als fremde Dateien
+     * gezaehlt, meldete dieselbe Gegenstelle ueber FTPS und ueber SFTP
+     * verschiedene Zahlen — und die Anzeige sagte „drei fremde Dateien", wo
+     * drei eigene Ordner stehen. */
+    $eigen = array_flip($ordner);
+    foreach ($wurzel as $name => $bytes) {
+        if (isset($eigen[(string)$name])) { continue; }
+        $raus['fremd']++;
+        $raus['fremd_bytes'] += (int)$bytes;
+    }
+    return $raus;
+}
+
+/**
+ * Aufraeumen auf einem Ziel — die Loeschregel, mit ihren drei Sicherungen.
+ *
+ * SIE BEKOMMT EINEN VERBUNDENEN WEG und baut keine zweite Verbindung auf:
+ * Sie laeuft am Ende desselben Schubes, in dem gesendet wurde. Das ist nicht
+ * nur billiger, es ist die dritte Sicherung — wer hier ankommt, hat gerade
+ * erfolgreich gesendet.
+ *
+ * @param callable():float $zeitLinks  wie viel Zeit der Schub noch hat
+ * @return array{geloescht:int,bytes:int,fertig:bool,fehler:list<string>}
+ */
+function sz_aufraeumen(array $ziel, Zielweg $weg, callable $zeitLinks,
+                       float $reserve = SZ_VERSAND_RESERVE_S): array
+{
+    require_once __DIR__ . '/adminbackup_lib.php';
+    require_once __DIR__ . '/komplett_lib.php';
+
+    $raus = ['geloescht' => 0, 'bytes' => 0, 'fertig' => true, 'fehler' => []];
+    $bk = $ziel['behalten_konto'] === null ? null : (int)$ziel['behalten_konto'];
+    $bm = $ziel['behalten_komplett'] === null ? null : (int)$ziel['behalten_komplett'];
+    /* OPTION AUS HEISST: gar nichts tun — auch nicht nachsehen. Ein Ziel ohne
+     * Regel soll keine einzige zusaetzliche Anfrage kosten. */
+    if ($bk === null && $bm === null) { return $raus; }
+    if (!sz_dateien_tabelle_da()) {
+        /* Ohne Versandprotokoll fehlt die zweite Sicherung. Dann wird NICHT
+         * geloescht — und es wird gesagt, warum. Der Fall tritt zwischen
+         * Deploy und Migration auf. */
+        $raus['fehler'][] = 'Die Aufbewahrungsregel ist eingeschaltet, aber das '
+                          . 'Versandprotokoll fehlt (Migration steht aus). Es '
+                          . 'wurde nichts gelöscht.';
+        return $raus;
+    }
+
+    $zielId    = (int)$ziel['id'];
+    $geschickt = sz_geschickt($zielId);
+
+    /* Welche Ordner infrage kommen: was HIER liegt plus, was das Protokoll
+     * fuer dieses Ziel kennt. Der zweite Teil ist der wichtige — ein geloeschtes
+     * Konto hat hier keinen Ordner mehr, drueben aber noch Sicherungen, und
+     * genau die wachsen sonst ewig weiter. */
+    $ordner = [KOMP_ORDNER];
+    $wurzelPfad = edbak_wurzel();
+    if (is_dir($wurzelPfad)) {
+        foreach (scandir($wurzelPfad) ?: [] as $n) {
+            if ($n === '.' || $n === '..' || !edbak_kennung_gueltig($n)) { continue; }
+            if (is_dir($wurzelPfad . '/' . $n)) { $ordner[] = $n; }
+        }
+    }
+    foreach (array_keys($geschickt) as $schluessel) {
+        $ordner[] = (string)substr($schluessel, 0, (int)strrpos($schluessel, '/'));
+    }
+    $ordner = array_values(array_unique(array_filter($ordner, static fn($o) => $o !== '')));
+    sort($ordner);
+
+    foreach ($ordner as $o) {
+        if ($zeitLinks() < $reserve) { $raus['fertig'] = false; break; }
+        $behalten = $o === KOMP_ORDNER ? $bm : $bk;
+        if ($behalten === null) { continue; }   // nur eine der beiden Zahlen gesetzt
+
+        try {
+            $dort = $weg->liste($o);
+        } catch (ZielFehler $e) {
+            $raus['fehler'][] = $o . ': ' . $e->getMessage();
+            continue;
+        }
+        if ($dort === []) { continue; }
+
+        /* ---- Sicherung 1: HERKUNFT ---------------------------------------
+         * Zwei Proben, und beide muessen bestehen. Das Namensmuster allein
+         * genuegte nicht: Eine zweite Installation, die dasselbe Ziel
+         * beschickt, schriebe Dateien mit demselben Muster — und die sind
+         * genauso fremd wie ein Urlaubsfoto. */
+        $eigene = [];
+        foreach ($dort as $name => $bytes) {
+            $name = (string)$name;
+            if (!sz_ist_sicherungsname($o, $name)) { continue; }
+            if (!isset($geschickt[$o . '/' . $name])) { continue; }
+            $eigene[$name] = (int)$bytes;
+        }
+        if ($eigene === []) { continue; }
+
+        /* Neueste zuerst. Der Name beginnt mit dem Zeitstempel, sortiert also
+         * zeitlich — `sz_zeit_aus_dateiname()` steht daneben und wuerde es
+         * merken, wenn das einmal nicht mehr stimmt. */
+        krsort($eigene, SORT_STRING);
+
+        /* ---- Sicherung 2: MENGE ----------------------------------------- */
+        $ueber = array_slice($eigene, $behalten, null, true);
+        if ($ueber === []) { continue; }
+
+        foreach ($ueber as $name => $bytes) {
+            if ($zeitLinks() < $reserve) { $raus['fertig'] = false; break 2; }
+            try {
+                $weg->loeschen($o . '/' . $name);
+            } catch (ZielFehler $e) {
+                $raus['fehler'][] = $o . '/' . $name . ': ' . $e->getMessage();
+                continue;
+            }
+            sz_loeschung_vermerken($zielId, $o, $name,
+                'Aufbewahrung dieses Ziels: höchstens ' . $behalten
+                . ($o === KOMP_ORDNER ? ' Komplett-Stände' : ' je Konto'));
+            $raus['geloescht']++;
+            $raus['bytes'] += $bytes;
+        }
+    }
+    return $raus;
+}
+
+/**
+ * Die Loeschungen der letzten Tage — fuer die Sicherheitsseite (E-P5a-08).
+ *
+ * @return array{zeilen:list<array>,gesamt:int}
+ */
+function sz_loeschungen(int $tage = SZ_PROTOKOLL_TAGE, int $hoechstens = 50): array
+{
+    require_once __DIR__ . '/db.php';
+    $leer = ['zeilen' => [], 'gesamt' => 0];
+    if (!sz_dateien_tabelle_da()) { return $leer; }
+    try {
+        $st = db()->prepare('SELECT COUNT(*) FROM sicherungsziel_dateien
+                              WHERE geloescht_am IS NOT NULL
+                                AND geloescht_am > DATE_SUB(UTC_TIMESTAMP(), INTERVAL ? DAY)');
+        $st->execute([$tage]);
+        $gesamt = (int)$st->fetchColumn();
+
+        $st = db()->prepare('SELECT d.ordner, d.datei, d.bytes, d.geloescht_am,
+                                    d.grund, t.name AS ziel
+                               FROM sicherungsziel_dateien d
+                               LEFT JOIN backup_targets t ON t.id = d.ziel_id
+                              WHERE d.geloescht_am IS NOT NULL
+                                AND d.geloescht_am > DATE_SUB(UTC_TIMESTAMP(), INTERVAL ? DAY)
+                              ORDER BY d.geloescht_am DESC
+                              LIMIT ' . max(1, $hoechstens));
+        $st->execute([$tage]);
+        return ['zeilen' => $st->fetchAll(), 'gesamt' => $gesamt];
+    } catch (Throwable $e) { return $leer; }
+}
+
+/**
+ * Ziele, die seit ueber einem Monat wachsen, ohne dass dort etwas entfernt
+ * wurde (E-P5a-03, Statusseite).
+ *
+ * SIE FRAGT DIE ZIELE NICHT — sie liest das Protokoll. Eine Statusseite, die
+ * drei FTP-Verbindungen aufbaut, laedt zehn Sekunden; dieselbe Ueberlegung
+ * wie bei `sz_versand_rueckstand()`. Was sie damit NICHT sieht: eine
+ * Betreiberin, die von Hand aufgeraeumt hat. Der Hinweis sagt deshalb
+ * „es ist nie etwas entfernt worden" und nicht „dort liegt zu viel".
+ *
+ * @return list<array{name:string,seit:string,dateien:int,bytes:int}>
+ */
+function sz_waechst(): array
+{
+    require_once __DIR__ . '/db.php';
+    if (!sz_dateien_tabelle_da()) { return []; }
+    try {
+        $st = db()->prepare(
+            'SELECT t.name,
+                    MIN(d.gesendet_am)                        AS seit,
+                    SUM(d.geloescht_am IS NULL)               AS dateien,
+                    SUM(CASE WHEN d.geloescht_am IS NULL THEN d.bytes ELSE 0 END) AS bytes,
+                    SUM(d.geloescht_am IS NOT NULL)           AS entfernt
+               FROM sicherungsziel_dateien d
+               JOIN backup_targets t ON t.id = d.ziel_id
+              WHERE t.behalten_konto IS NULL AND t.behalten_komplett IS NULL
+              GROUP BY t.id, t.name
+             HAVING entfernt = 0
+                AND seit < DATE_SUB(UTC_TIMESTAMP(), INTERVAL ? DAY)
+                AND dateien > 0
+              ORDER BY bytes DESC');
+        $st->execute([SZ_WACHSTUM_TAGE]);
+        $raus = [];
+        foreach ($st as $z) {
+            $raus[] = ['name' => (string)$z['name'], 'seit' => (string)$z['seit'],
+                       'dateien' => (int)$z['dateien'], 'bytes' => (int)$z['bytes']];
+        }
+        return $raus;
+    } catch (Throwable $e) { return []; }
 }

@@ -5378,5 +5378,48 @@ declare(strict_types=1);
  * in seiner Ausnahmeliste stehen. DIE UEBERLAST KENNT KEINE AUSNAHMEN.
  *
  * KEINE MIGRATION.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.14.0 — AUFBEWAHRUNG AUF DEM SICHERUNGSZIEL: ERST SEHEN, DANN LOESCHEN
+ * ---------------------------------------------------------------------------
+ *
+ * AP10 von P5a (E-P5a-03, Backlog Nr. 49 und Nr. 195). Der Versand ERGAENZT
+ * nur; auf der Gegenstelle hat diese Anwendung nie geloescht. Das ist Absicht
+ * und keine Luecke — der Zweck eines auswaertigen Ziels ist, den Ausfall
+ * dieses Servers zu ueberleben, SAMT eines Fehlers, der HIER zu viel loescht.
+ *
+ * Bei zwei Sicherungen je Konto und Monat laeuft ein Ziel trotzdem voll, und
+ * niemand merkt es hier. Zwei Stufen dagegen:
+ *
+ *   ANZEIGE ist die Grundlage und loescht nichts. Im Menue einer Zielzeile
+ *   steht „Nachsehen, was dort liegt": Anzahl, Groesse, aeltester und
+ *   juengster Stand — und wie viele FREMDE Dateien dort liegen. Auf
+ *   Knopfdruck, nicht bei jedem Seitenaufruf.
+ *
+ *   LOESCHREGEL ist die Option, je Ziel, ausdruecklich einzuschalten. Mit
+ *   drei Sicherungen: HERKUNFT (Namensmuster UND Versandprotokoll), MENGE
+ *   (nie unter N bzw. M, nur eigene Dateien gezaehlt) und LAUF (nie nach
+ *   einem gescheiterten Versand).
+ *
+ * DER KREISLAUF, DER BEIM BAUEN DER PROBE HERAUSKAM (E-P5a-57). Der zweite
+ * Lauf raeumte drei alte Sicherungen weg, der DRITTE schickte dieselben drei
+ * wieder hinueber — sie liegen hier ja noch —, und der vierte raeumte sie
+ * erneut weg. Bandbreite bei jedem Job, ein volles Protokoll, und beide
+ * Seiten taten genau das, wofuer sie gebaut sind. Gemessen: dritter Lauf
+ * 3 geloescht statt 0. Seither geht nicht wieder hinueber, was die Regel
+ * dort entfernt hat.
+ *
+ * NR. 195: Die Geraeteart kam auf dem Rueckweg der Sicherung ungeprueft
+ * durch — geprueft wurde allein die Laenge. Jetzt dieselbe Verengung wie
+ * beim Koppeln, und sie steht im Pruefprotokoll statt still zu geschehen.
+ *
+ * PP-5: Die Platzwarnung nannte das Zweifache des groessten Komplett-Backups
+ * als Sollwert und pruefte gegen das Einfache. Jetzt zwei Schwellen: rot
+ * unter dem Einfachen, orange unter dem Zweifachen.
+ *
+ * MIGRATION `2026_09_16_sicherungsziel_aufbewahrung`: zwei Spalten an
+ * `backup_targets` und die Tabelle `sicherungsziel_dateien` (Versand- UND
+ * Loeschprotokoll). NACH DEM DEPLOY MUSS UPDATE.PHP LAUFEN — sonst bleibt
+ * die Regel aus, und sie sagt es.
  */
-const WEB_VERSION = '20.13.0';
+const WEB_VERSION = '20.14.0';

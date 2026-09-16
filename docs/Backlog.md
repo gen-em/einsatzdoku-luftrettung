@@ -557,27 +557,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     „Jetzt sichern". `edbak_aufbewahrung()` bekäme dafür einen optionalen
     Parameter; `edbak_verdraengen()` liest ihn.
 
-49. **Aufbewahrung auch auf dem Backup-Ziel.**
-    Der Versand (Web 12.1.0, S2/AP7) **ergänzt nur**: Auf der Gegenstelle
-    löscht diese Anwendung nie, auch nicht im Sinne der Regel „höchstens zwei
-    je Konto", die für die Ablage auf dem eigenen Server gilt. Bei zwei
-    Backups je Konto und Monat läuft ein Ziel damit über kurz oder lang
-    voll, und niemand merkt es hier.
-
-    Das ist zunächst Absicht und keine Lücke: Der Zweck eines auswärtigen Ziels
-    ist, den Ausfall dieses Servers zu überleben — samt eines Fehlers, der
-    **hier** zu viel löscht. Ein Versand, der drüben aufräumt, trägt genau
-    diesen Fehler mit hinüber.
-
-    **Zu entscheiden** ist deshalb nicht *ob* aufgeräumt wird, sondern wer
-    haftet: eine eigene Zahl je Ziel („dort höchstens N je Konto"), die
-    ausdrücklich eingeschaltet werden muss und nie die Vorgabe ist — oder eine
-    blosse **Anzeige** des Belegten am Ziel, damit die Betreiberin es sieht und
-    dort selbst entscheidet. Der zweite Weg löscht nichts und beantwortet die
-    Frage vielleicht schon.
-
-    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP10 (E-P5a-03: Anzeige je Ziel als Grundlage, Löschregel als Option je Ziel mit drei Sicherungen).
-
 50. **Der Versand liest je Konto ein Verzeichnis.**
     `sz_versand_schub()` fragt für jeden Kontoordner die Verzeichnisliste des
     Ziels ab, um zu erkennen, was dort fehlt. Bei 33 Ordnern ist das
@@ -1840,34 +1819,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ist auf die Notizen des Diensttags eingegrenzt. Zuordnung: **vor 1.0** — es ist ein Rechtstext,
     kein Feinschliff; spätestens mit der Doku-Neufassung in P7 (R72).
 
-195. **`geraet_art` kommt auf dem Rückweg der Sicherung ungeprüft durch.**
-    *Aufgenommen 14.09.2026 als Nebenfund der Bestandsaufnahme zu R42.*
-    Beim Koppeln verengt `geraete_lib.php` die Geräteart auf die drei
-    erlaubten Werte — was nicht in `GERAET_ARTEN` steht, wird `NULL`, und
-    `docs/Technik.md` führt das ausdrücklich als Zusage („eine Geräteart
-    außerhalb der drei erlaubten Werte zu `NULL`"). Auf dem Rückweg der
-    Konto-Sicherung gilt sie nicht: `backup_lib.php` prüft
-    `missions.geraet_art` und `rest_segments.geraet_art` nur mit
-    `pruef_text(…, GERAET_MAX_ART, …)`, also allein auf die Länge von 16
-    Zeichen. Jede Zeichenkette bis dahin geht durch. Bei `origin` ist es
-    anders — der wird gegen `HERKUNFT_WERTE` gehalten; die Asymmetrie ist im
-    Code nicht begründet.
-
-    Heute fällt das nirgends auf, weil die Statistik `devices` liest und
-    nicht `missions`. Genau diese beiden Spalten sind aber das, was der
-    offene R42-Rest auswerten soll („Herkunft je Einsatz", R64) — eine
-    Zählung darüber würde eine eingespielte Sicherung ungefiltert
-    übernehmen. Kein Sicherheitsproblem: Der Weg setzt voraus, dass jemand
-    seine eigene Sicherung verändert. Aber eine Zählung, die man verunreinigen
-    kann, taugt nicht als Betriebszahl.
-
-    *Abnahme:* Ein Sicherungspaket mit `geraet_art: "radcomputer"` landet als
-    `NULL` in der Datenbank, nicht als `radcomputer`. Zuordnung: **P5**,
-    zusammen mit der Auswertung — vorher hat die Spalte keinen Leser.
-
-    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP10 (`backup_lib.php` prüft `geraet_art` gegen `GERAETE_ARTEN` wie beim Koppeln).
-
-
 196. **68 von 195 Backlog-Einträgen rendern auf GitHub als grauer Kasten.**
     *Aufgenommen 15.09.2026 beim Gegenlesen der Punkte 190–195.*
     Ab der Nummer **100** ist der Listenmarker ein Zeichen breiter
@@ -2316,11 +2267,108 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Verbindungsprobe: Sie wollte einen `/api/`-Endpunkt unter Überlast messen
     und bekam eine 302, weil die Anfrage die Datenbank nie erreichte.*
 
+212. **Zwei Erwartungen der Wiederherstellungsprobe sind auf einer leeren
+    Installation rot — ohne dass etwas kaputt ist.** *Aufgenommen 16.09.2026
+    in P5a/AP10, nachgemessen gegen den unveränderten Stand: dieselben zwei.*
+    Teil 10 („Der Auftrag Alle sichern") gibt dem Sammelvorgang ein enges
+    Zeitbudget und erwartet, dass er **wenigstens ein Konto sichert und dann
+    aufhört** — also dass danach etwas offen bleibt und der Zeiger auf dem
+    zuletzt gesicherten Konto steht. Auf einer Installation mit zwei fast
+    leeren Konten passen beide in das Budget: `2 erledigt, 0 von 2 offen`,
+    `cur=—`.
+
+    **Das ist ein Mangel des Prüfmittels, nicht der Anwendung** — und der
+    unangenehmere von beiden Sorten: Er meldet Rot, wo nichts ist, und
+    gewöhnt damit jeden, der die Probe fährt, an zwei rote Zeilen. Genau so
+    verschwindet später ein echter Befund darin.
+
+    **Zu tun:** Die Erwartung an einen Bestand binden, statt an eine Zeit —
+    etwa, indem der Prüffall zwei Konten mit genug Inhalt herstellt, oder
+    indem das Budget aus der gemessenen Dauer des ersten Backups abgeleitet
+    wird statt fest zu stehen. Ein drittes Konto anzulegen wäre die billigste
+    Fassung und verschöbe das Problem nur auf die nächste schnellere Maschine.
+    *Abnahme:* `php tools/wiederherstellungs-probe/probe.php` meldet **110 von
+    110** auf einer frisch aufgesetzten Installation. Zuordnung: Backlog-Runde.
+
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+49. **Aufbewahrung auch auf dem Backup-Ziel.**
+    Der Versand (Web 12.1.0, S2/AP7) **ergänzt nur**: Auf der Gegenstelle
+    löscht diese Anwendung nie, auch nicht im Sinne der Regel „höchstens zwei
+    je Konto", die für die Ablage auf dem eigenen Server gilt. Bei zwei
+    Backups je Konto und Monat läuft ein Ziel damit über kurz oder lang
+    voll, und niemand merkt es hier.
+
+    Das ist zunächst Absicht und keine Lücke: Der Zweck eines auswärtigen Ziels
+    ist, den Ausfall dieses Servers zu überleben — samt eines Fehlers, der
+    **hier** zu viel löscht. Ein Versand, der drüben aufräumt, trägt genau
+    diesen Fehler mit hinüber.
+
+    **Zu entscheiden** ist deshalb nicht *ob* aufgeräumt wird, sondern wer
+    haftet: eine eigene Zahl je Ziel („dort höchstens N je Konto"), die
+    ausdrücklich eingeschaltet werden muss und nie die Vorgabe ist — oder eine
+    blosse **Anzeige** des Belegten am Ziel, damit die Betreiberin es sieht und
+    dort selbst entscheidet. Der zweite Weg löscht nichts und beantwortet die
+    Frage vielleicht schon.
+
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP10 (E-P5a-03: Anzeige je Ziel als Grundlage, Löschregel als Option je Ziel mit drei Sicherungen).
+
+    **Erledigt am 16.09.2026 in P5a/AP10 (Web 20.14.0).** Beide Wege, und in
+    dieser Reihenfolge: **Anzeige zuerst** — „Nachsehen, was dort liegt" im
+    Menü einer Zielzeile nennt Anzahl, Größe, ältesten und jüngsten Stand und
+    **wie viele fremde Dateien** dort liegen; sie löscht nichts und
+    beantwortet die Frage in vielen Fällen schon. **Löschregel als Option je
+    Ziel**, ausdrücklich einzuschalten, nie Vorgabe, mit den drei Sicherungen
+    aus E-P5a-03: Herkunft (Namensmuster **und** Versandprotokoll), Menge (nie
+    unter N/M, nur eigene Dateien gezählt) und Lauf (nie nach einem
+    gescheiterten Versand). Dazu eine Statuszeile für Ziele **ohne** Regel,
+    auf die seit über einem Monat geschickt wird und von denen nie etwas
+    entfernt wurde. Belegt in `tools/versandprobe/` Teil 12: fünf fremde
+    Dateien, fünf eigene, N = 2 → **3 gelöscht, alle fünf fremden bleiben**.
+
+195. **`geraet_art` kommt auf dem Rückweg der Sicherung ungeprüft durch.**
+    *Aufgenommen 14.09.2026 als Nebenfund der Bestandsaufnahme zu R42.*
+    Beim Koppeln verengt `geraete_lib.php` die Geräteart auf die drei
+    erlaubten Werte — was nicht in `GERAET_ARTEN` steht, wird `NULL`, und
+    `docs/Technik.md` führt das ausdrücklich als Zusage („eine Geräteart
+    außerhalb der drei erlaubten Werte zu `NULL`"). Auf dem Rückweg der
+    Konto-Sicherung gilt sie nicht: `backup_lib.php` prüft
+    `missions.geraet_art` und `rest_segments.geraet_art` nur mit
+    `pruef_text(…, GERAET_MAX_ART, …)`, also allein auf die Länge von 16
+    Zeichen. Jede Zeichenkette bis dahin geht durch. Bei `origin` ist es
+    anders — der wird gegen `HERKUNFT_WERTE` gehalten; die Asymmetrie ist im
+    Code nicht begründet.
+
+    Heute fällt das nirgends auf, weil die Statistik `devices` liest und
+    nicht `missions`. Genau diese beiden Spalten sind aber das, was der
+    offene R42-Rest auswerten soll („Herkunft je Einsatz", R64) — eine
+    Zählung darüber würde eine eingespielte Sicherung ungefiltert
+    übernehmen. Kein Sicherheitsproblem: Der Weg setzt voraus, dass jemand
+    seine eigene Sicherung verändert. Aber eine Zählung, die man verunreinigen
+    kann, taugt nicht als Betriebszahl.
+
+    *Abnahme:* Ein Sicherungspaket mit `geraet_art: "radcomputer"` landet als
+    `NULL` in der Datenbank, nicht als `radcomputer`. Zuordnung: **P5**,
+    zusammen mit der Auswertung — vorher hat die Spalte keinen Leser.
+
+    *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP10 (`backup_lib.php` prüft `geraet_art` gegen `GERAETE_ARTEN` wie beim Koppeln).
+
+    **Erledigt am 16.09.2026 in P5a/AP10 (Web 20.14.0).** `backup_lib.php`
+    hält `geraet_art` jetzt über `edbak_geraet_art()` gegen `GERAET_ARTEN` —
+    dieselbe Verengung wie beim Koppeln, an beiden Stellen (Einsatz und
+    Ruhesegment). Und sie **meldet** es: Der Vorgang steht in der Prüfliste
+    der Wiederherstellung (`geraet_art: keine bekannte Geräteart — als
+    „unbekannt" übernommen`), statt still zu geschehen — ein stilles `NULL`
+    sähe aus wie „stand nicht drin". `geraet_modell` bleibt Freitext; ein
+    Katalog dafür wäre beim nächsten Modell veraltet.
+    *Abnahme erfüllt:* `tools/wiederherstellungs-probe/` Teil 11, fünf neue
+    Erwartungen — `geraet_art: "radcomputer"` landet als `NULL`, das Modell
+    daneben bleibt stehen, `"HANDY"` kommt als `handy` durch (Gegenprobe),
+    dasselbe am Ruhesegment, und beides steht im Prüfprotokoll.
 
 206. **Der Messstand-Schritt der Auslieferungskette bricht bei JEDEM Tag-Lauf
     ab.** `.github/workflows/auslieferung.yml` ruft in Zeile 144

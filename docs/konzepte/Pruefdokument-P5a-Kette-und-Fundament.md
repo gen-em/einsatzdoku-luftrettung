@@ -38,12 +38,15 @@ beantwortet „was muss **ich** noch tun?" (`CLAUDE.md` 7, K9).
 | N22 | **Der vollständige Einspiellauf des Referenzdatensatzes** (`tools/referenzdatensatz/einspielen/`) | Der Generator lief (21 Dienste, 612 Ingest-Anfragen, 64 478 Punkte). Die Stufe `geraet` bricht ab: Sie koppelt über die **Weboberfläche** und braucht eine angemeldete Sitzung des Demo-Kontos; dessen Einladungslink war in diesem Container nicht mehr zu haben (`Konto demo@gen-em.org besteht bereits`), und ohne ihn wirkt das Einlösen des Kopplungscodes nicht (`409 nicht_beansprucht`). | Gemessen wurde **der erzeugte Sendeplan selbst** — dieselben 612 Anfragen, dieselben Körper, über echtes HTTP, mit per SQL angelegten Geräten: **0 Fehlversuche**, Median 14,43 ms ohne und 15,14 ms mit Bremse (je zwei Läufe). Das prüft `ingest.php`, nicht die Geräteverwaltung — und das ist die Frage von AP7. Der Kopplungsweg und die beiden Kreisläufe gehören zu **AP12**. |
 | N23 | **Ob `Retry-After` einen Client erreicht** | Kein Client dieses Projekts liest die Kopfzeile, und die Garmin-Uhr **kann** es nicht: Der Rückruf von Connect IQ bekommt `(code, data)` und keine Kopfzeilen. | Gemessen ist, dass die Zeile **dasteht und den richtigen Wert trägt** (`Retry-After: 900`, Ingestprobe Teil 10). Dass beide Clients die `429` richtig behandeln, ist am **Quelltext** belegt (`Uploader.mc` fällt in „später erneut", `Sendeantwort.lese()` in `SpaeterErneut` bei `code != 200`, und `Sender.sendeAlles()` bricht den Lauf ab) — **nicht** an einem laufenden Gerät. Prüfpunkt **P24**. |
 | N24 | **Die Mengenbremse unter echtem Mobilfunk-NAT** | Der Container hat eine Adresse. Ob hinter einem Anbieter-NAT Geräte zusammenfallen, sagt nur der Betrieb. | Die Bauart nimmt das Risiko heraus: In den Adresstopf zählen **ausschließlich unbekannte** Kennungen, und ein gekoppeltes Gerät sendet nie eine unbekannte — gemessen als eigene Erwartung („Der Adresstopf ist leer — bekannte Kennungen zählen dort nicht"). Prüfpunkt **P24**. |
-| N25 | **Die Karte „Löschungen auf Sicherungszielen“** (E-P5a-08 nennt sechs Karten, gebaut sind fünf) | Es gibt dafür heute weder Tabelle noch Schreibweg noch `app_state`-Schlüssel — die Löschregel je Ziel entsteht erst in **AP10** (E-P5a-03). An fünf Stellen nachgesehen: `schema.sql` kennt keine Löschspalte in `backup_targets`, `Zielweg::loeschen()` hat genau einen Aufrufer (die Probedatei), `sz_loeschen()` löscht nur den DB-Eintrag, kein `app_state`-Schlüssel, kein Jobschritt. | Sie ist in den **Umfang von AP10** eingetragen (Abschnitt 3, AP10). Eine Karte, die sagt „hier steht noch nichts, weil es die Sache noch nicht gibt“, wäre kein Befund, sondern Lärm. |
+| N25 | **Die Karte „Löschungen auf Sicherungszielen“** (E-P5a-08 nennt sechs Karten, gebaut sind fünf) | Es gibt dafür heute weder Tabelle noch Schreibweg noch `app_state`-Schlüssel — die Löschregel je Ziel entsteht erst in **AP10** (E-P5a-03). An fünf Stellen nachgesehen: `schema.sql` kennt keine Löschspalte in `backup_targets`, `Zielweg::loeschen()` hat genau einen Aufrufer (die Probedatei), `sz_loeschen()` löscht nur den DB-Eintrag, kein `app_state`-Schlüssel, kein Jobschritt. | **Erledigt in AP10 (16.09.2026).** Mit `sicherungsziel_dateien` gibt es Tabelle und Schreibweg; die Karte steht als sechste auf der Sicherheitsseite und zeigt die Löschungen der letzten 30 Tage mit Ziel, Datei, Größe und Grund. Gemessen im Browser mit drei Zeilen. |
 | N26 | **Ob ein Ereignis nach 30 Tagen wirklich verschwindet** — in Echtzeit | Der Aufräumjob läuft höchstens einmal je Kalendertag; 30 Tage lassen sich nicht abwarten. | Gemessen ist die **Regel**, nicht die Uhr: Das `DELETE` steht mit `INTERVAL 30 DAY` in `job_aufraeumen()` (Schritte `Sperrereignisse` und, neu, `Geraetevermerke`), und die Lesefunktion `sicherheit_ereignisse()` blickt auf **dieselbe** Frist zurück — eine Seite, die weiter zurückblickt als der Job aufhebt, zeigte eine Lücke, die wie ein ruhiger Monat aussieht. Der Echtlauf ist Prüfpunkt **P25**. |
 | N27 | **`post_max_size` der Zielanlage** (Backlog Nr. 37, eine der drei Messungen aus AP9) | Die Zahl gehört der Anlage, nicht dieser Maschine — und Staging stand am 16.09.2026 noch nicht (Zuarbeit, Rahmenplan 6a). Lokal kamen 32 MB durch, obwohl `post_max_size` auf 8M steht: Der eingebaute PHP-Server verhält sich bei `Content-Type: application/json` anders als ein Apache. Die lokale Zahl ist damit **keine** Auskunft. | **Es braucht keine Messung mehr, nur einen Seitenaufruf:** Die Plattformkarte auf Betrieb → Status nennt `post_max_size` und `upload_max_filesize` mit Soll- und Ist-Wert (seit AP2). Prüfpunkt **P29**. |
 | N28 | **Die Fehlernummern 1040 und 1203** | 1040 (`max_connections` des ganzen Servers) lässt sich auf einer Maschine, auf der noch etwas anderes läuft, nicht gefahrlos herstellen. Die Systemvariable hinter 1203 lässt sich in MariaDB **nicht zur Laufzeit setzen**, wenn der Server mit `--max-user-connections=0` gestartet ist (Fehler 1290, gemessen). | Die Verbindungsprobe stellt **1226** her — die GRANT-Grenze am Datenbankkonto, also den Fall, den ein Hoster setzt. Für 1040 und 1226 ist zusätzlich die **Ausnahme selbst** untersucht worden (16.09.2026): `getCode()` trägt die Treibernummer als Zahl, `errorInfo[1]` ist gesetzt, die Meldung trägt `[1040]` bzw. `[1226]` — alle drei Wege in `ueberlast_erkannt()` greifen. Für 1203 ist es die Liste `UEBERLAST_CODES`, gelesen, nicht gelaufen. Prüfpunkt **P27**. |
 | N29 | **Der Zweig „Zähler nicht schreibbar" über HTTP** | Der Prüfserver läuft als `root`, und für `root` ist jedes Verzeichnis schreibbar — `chmod a-w server/` ändert daran nichts. | Gemessen am **Funktionsaufruf** mit einem unprivilegierten Benutzer (`setpriv --reuid=65534 … php -r 'ueberlast_stand()'`): **`schreibbar=false`**, `gesamt=13`. Die Statuszeile wertet genau dieses Feld zuerst aus. Prüfpunkt **P27** (zweiter Spiegelstrich). |
 | N30 | **Die Verbindungsgrenze unter Z2-Last und hinter PHP-FPM** | „Gegen Z2-Last" (500 Konten à 600 Einsätze) sind 300 000 Einsätze und ein Tag Rechenzeit. Und gemessen ist der **eingebaute** PHP-Server; ein Apache mit PHP-FPM hält eigene Prozessgrenzen, die möglicherweise **vor** der Datenbankgrenze liegen — dann kommt gar keine Anfrage bis zu `db()`. | Gemessen ist das **Verhalten an der Grenze**, nicht das Verhalten unter Bestandsgröße: 20 gleichzeitige Uploads bei 8 Arbeitern und 2 freien Plätzen, **0 Antworten außerhalb von 200 und 503**, nach Wiederholung 20/20 Einsätze und 400/400 Punkte in der Datenbank. Prüfpunkt **P27**. |
+| N31 | **Die Löschregel gegen ein echtes auswärtiges Ziel** | Der Container kommt nur auf Port 443 hinaus; 21, 22 und 990 laufen ins Leere (nachgemessen mit `github.com:22`). Gemessen wird gegen die Nachbauten pyftpdlib/paramiko auf Loopback. | `tools/versandprobe/` Teil 12 misst die **Regel** vollständig — 5 fremde Dateien, 5 eigene, N = 2, 3 Löschungen, 5 von 5 fremden bleiben. Was der Nachbau nicht hat: eine langsame oder abreißende Leitung während des Löschens, und ein Ziel, auf dem jemand anderes gleichzeitig arbeitet. Prüfpunkt **P30**. |
+| N32 | **Ein Altbestand, der hier schon weggeräumt ist** | Der Versand trägt eine Datei ins Protokoll ein, wenn er sie sendet **oder** sie drüben schon mit gleichem Namen und gleicher Größe vorfindet. Sicherungen, die drüben liegen und hier nicht mehr, kann er nicht belegen — und rührt sie deshalb nie an. Nachstellen ließe sich das, prüfen ließe sich daran aber nur, dass nichts geschieht. | Gemessen ist die **sichere Richtung**: In Teil 12 bleiben genau die Dateien liegen, die das Protokoll nicht kennt (fünf fremde, darunter eine mit gültigem Namensmuster). Die Folge steht im Handbuch und in `docs/Technik.md` 4.97c. |
+| N33 | **Die zwei roten Erwartungen der Wiederherstellungsprobe** (Teil 10) | Sie sind **nicht** von AP10 verursacht: am unveränderten Stand ebenso rot (nachgemessen 16.09.2026, `git stash`). Der Prüffall gibt dem Sammelvorgang „Alle sichern" ein enges Zeitbudget und erwartet, dass danach etwas offen bleibt; auf einer Installation mit zwei fast leeren Konten passen beide hinein. | Aufgenommen als **Backlog Nr. 212**. Bis dahin sind es zwei rote Zeilen, die als solche benannt sind — und das ist der Punkt: Eine unerklärte rote Zeile gewöhnt jeden daran, rote Zeilen zu übersehen. |
 | N8 | **Die Kontingent-Warnmail auf einem echten Mailserver** | Der Container hat keinen. | Die Logik ist mit abgesenkten Schwellen (50/53 %) durchgespielt: Beide Schwellen schlagen an, der Versand scheitert erwartungsgemäß und wird **nicht** als gemeldet vermerkt — also am nächsten Tag erneut versucht. Prüfpunkt **P10**. |
 
 ---
@@ -349,6 +352,24 @@ zitiert, zitiert eine Tabelle und keinen Bestand.
 
 ---
 
+### 1k. Nach AP10 (Web 20.14.0), im selben Container
+
+| Mittel | Aufruf | Ergebnis |
+|---|---|---|
+| **Versandprobe, Teil 12 neu** | `php tools/versandprobe/probe.php /tmp/versandprobe` | **135 von 135** (116 vorher). Regel AUS: 5 Sicherungen gesendet, **0 Löschungen**, Protokoll trägt 5 · 5 fremde Dateien dazugelegt → **10 am Ziel** · Regel AN (N = 2): **3 Löschungen**, **5 von 5 fremden bleiben** (darunter `2026-09-30T12-00-00Z_b0000009.zip` — gültiges Namensmuster, nie von uns gesendet), **7 statt 2** Dateien am Ziel, von den eigenen die **zwei jüngsten** übrig · Protokollzeilen **3 = 3** Löschungen, Grund „Aufbewahrung dieses Ziels: höchstens 2 je Konto" · `sz_loeschungen()` sieht dieselben 3 · dritter Lauf **0 gelöscht, 3 nicht wieder gesendet, 0 gesendet** · Statuszeile: Ziel **mit** Regel taucht nicht unter „wächst" auf, dasselbe Ziel ohne Regel und ohne Löschung schon |
+| **Wiederherstellungsprobe, 5 Erwartungen neu** | `php tools/wiederherstellungs-probe/probe.php` | **110**, davon **2 rot** — und die sind **nicht** von AP10 (N33). Neu: `geraet_art: "radcomputer"` → **`NULL`**, `geraet_modell` daneben bleibt stehen, `"HANDY"` → **`handy`** (Gegenprobe), dasselbe am Ruhesegment, und beides steht im Prüfprotokoll (`geraet_art: keine bekannte Geräteart — als „unbekannt" übernommen`) |
+| Migration | `php server/update.php` | `2026_09_16_sicherungsziel_aufbewahrung` **erfolgreich angewendet**. `ON DELETE CASCADE` gemessen: 2 Ziele entfernt → **0** Zeilen in `sicherungsziel_dateien` übrig |
+| Bilderlauf | `--nur 43b,45-,45b` | **erster Lauf: 2 von 24 mit Überlauf** — `div.zeile-aktionen` bei 768 px (+156) und 1024 px (+120), Ursache fünf Knöpfe in einer Reihe. Kürzerer Text half nicht genug (+49 / +13). Nach `blatt_immer`: **24 Bilder · 0 Überlauf · 0 Konsolenfehler · 0 Knöpfe falscher Höhe** |
+| Verbindungsprobe | `php tools/verbindungsprobe/probe.php` | **24/24** — in 13 Läufen einmal **23/24**, unmittelbar nach einer Reihe anderer Proben. Die Probe zählt seither vor dem Belegen die fremden Verbindungen desselben Datenbankkontos und sagt es |
+| Wartungsprobe · Ratenprobe · Ingestprobe | je `probe.php` | **67/0 · 50/0 · 83/0** |
+| Kopplungsprobe · Mailprobe · Jobprobe · Spurprobe | je `probe.php` | **76/0 · 41/0 · 35/0 · 45/0** |
+| Wortliste | `python3 wortliste.py` | **0/0/0**, 98 Regeln, 98 gegriffen |
+| Vollständigkeit | `python3 pruefen.py` | **377 = unverändert.** Erster Lauf **388**; die elf Zusätzlichen waren Auslassungszeichen, Pfeile und **Malzeichen** (`×`) in neuen Kommentaren und sind dort entfernt |
+| CSP · Sitzungshärtung · Installweiche · Migrationsregister | je `pruefen.php` | **0 · 0 · 0 · 0** |
+| Kontraste · PHP-Syntax | | **22 Paare, 0 verfehlt** · **484 Dateien, 0 Fehler** |
+
+---
+
 ---
 
 ## 2. Was im Browser geprüft wurde
@@ -456,6 +477,24 @@ BetreiberIn):
 > Abweisungen mit, die die Probe ausgelöst hat (3 von 3), und er zählt das
 > Gedrängel ausdrücklich **nicht** mit — daraus ergibt sich in Teil 2 die
 > Aufteilung 10 zu 2.
+
+**Nach AP10**, gegen die lokale Installation (Chromium 141) und eine echte
+SFTP-Gegenstelle (paramiko):
+
+| Was | Ergebnis |
+|---|---|
+| Zielseite mit zwei Zielen | „Bildprobe Ohne Regel" trägt „**räumt dort nicht auf**", „Bildprobe Ziel" die orange Plakette „**räumt dort auf**" und die Zeile „behält dort 6 je Konto und 12 Komplett-Stände"; **0 Konsolenfehler** |
+| Menü einer Zielzeile | fünf Handlungen im Blatt statt in der Reihe, „Löschen" abgesetzt und rot |
+| **„Nachsehen, was dort liegt"** gegen die leere Gegenstelle | „Dort liegt nichts von hier — entweder ist noch nichts gesendet worden, oder es liegt unter einem anderen Pfad", 0 Dateien, 0 fremde |
+| Dasselbe mit Inhalt | **4 Dateien · 2,0 MB in 2 Ordnern**, ältester Stand **30.07.2026**, jüngster **03.08.2026 · 11:00 Uhr**, **2 fremde (15 KB)** mit dem Satz „diese Anwendung fasst sie nie an, auch nicht mit eingeschalteter Aufbewahrungsregel" |
+| Betrieb → Status → Sicherheit, sechste Karte | „Löschungen auf Sicherungszielen · 3" mit Ziel, Ordner, Datei, Größe, Zeitpunkt und **Grund** je Zeile |
+| Betrieb → Status, Karte Backups | neue Zeile **„Aufbewahrung am Ziel"**, orange: „Auf ‚Bildprobe Ohne Regel' liegen 24 Sicherungen (206,0 MB), und es ist dort nie etwas entfernt worden — seit 19.06.2026" |
+| Gegenprobe | Ein Ziel **mit** Regel taucht dort **nicht** auf (in der Versandprobe gemessen, nicht nur im Browser) |
+
+> **Was der Browser hier NICHT belegt:** dass die Löschregel drüben das
+> Richtige löscht. Der Browser sieht nur, was die Seite sagt. Belegt ist es in
+> `tools/versandprobe/` Teil 12 — dort wird **am Ziel nachgezählt**, nicht in
+> der Anwendung: 7 Dateien übrig, 5 davon fremd, die zwei jüngsten eigenen.
 
 ---
 
@@ -1028,6 +1067,60 @@ zwar mit der Angabe, von welcher Anlage sie stammt.
 passen rund 280 Einsätze in eine Datei (28 KB Nutzlast je Einsatz, gemessen) —
 dann braucht ein Bestand von 5000 Einsätzen mindestens 18 Dateien, und das
 gehört ins Handbuch, bevor es jemand im Ernstfall herausfindet.
+
+---
+
+### P30 — Die Löschregel gegen das echte Ziel (AP10)
+
+**Wofür:** Gemessen ist sie gegen einen Nachbau auf Loopback (N31). Ein echtes
+Ziel hat eine langsame Leitung, eigene Rechteregeln und womöglich einen
+zweiten Benutzer. Und es ist der einzige Ort, an dem ein Fehler wehtut:
+**Hier wird auf einer fremden Maschine gelöscht.**
+
+**Weg:** Zuerst **nur nachsehen** — Menü einer Zielzeile, „Nachsehen, was dort
+liegt". Die Zahlen mit dem vergleichen, was dort wirklich liegt (per FTP-
+Programm oder SSH). **Erst wenn sie stimmen**, die Regel einschalten und
+großzügig setzen (etwa 12 je Konto, 24 Komplett-Stände), dann „Jetzt
+versenden".
+
+**Erwartet:** Der Erfolgssatz nennt, was entfernt wurde. Unter Betrieb →
+Status → Sicherheit steht jede Löschung mit Datei und Grund. Am Ziel liegen
+danach **genau** so viele eigene Sicherungen wie eingestellt — und **alles
+Fremde unverändert**.
+
+**Woran ein Scheitern zu erkennen ist:**
+
+- **Am Ziel fehlt etwas, das nicht von hier stammt.** Dann hat die
+  Herkunftsprobe versagt, und das ist der schwerste Fall des ganzen Pakets.
+  Sofort die Regel abschalten (Haken weg), und den Fund melden — die
+  Protokollkarte sagt, welche Dateien es traf.
+- **Es wird gar nichts entfernt, obwohl mehr dort liegt als eingestellt.**
+  Zwei harmlose Gründe: Die Migration ist nicht gelaufen (dann sagt es der
+  Lauf), oder die Dateien stammen aus der Zeit vor dem Versandprotokoll und
+  liegen hier nicht mehr — die werden nie angefasst (N32). Ein dritter wäre
+  ein Fehler: Der eigene Versand ist gescheitert; dann steht das am Ziel.
+- **Bei jedem Lauf werden dieselben Dateien gesendet und wieder entfernt.**
+  Dann greift E-P5a-57 nicht. Erkennbar an der Zeile „N Sicherungen gingen
+  nicht erneut hinaus", die dann fehlt, und an einer Löschliste, die jeden Tag
+  dieselben Namen zeigt.
+
+### P31 — Ein Ziel, das zwei Installationen benutzen (AP10)
+
+**Wofür:** Die zweite Sicherung (Versandprotokoll) ist genau dafür da: Eine
+**zweite** Installation schreibt Dateien mit demselben Namensmuster — und die
+sind für diese hier so fremd wie ein Urlaubsfoto. Der Nachbau misst das mit
+einer erfundenen Datei; zwei echte Installationen sind etwas anderes.
+
+**Weg:** Falls zutreffend: auf beiden Installationen „Nachsehen" fahren und
+die Zahlen vergleichen. Die Summe der „eigenen" beider Seiten plus die
+„fremden" muss aufgehen.
+
+**Erwartet:** Was die eine als eigen zählt, zählt die andere als fremd.
+
+**Woran ein Scheitern zu erkennen ist:** Beide zählen dieselbe Datei als
+eigen. Dann steht sie in beiden Versandprotokollen — möglich nur, wenn eine
+Installation aus einer Sicherung der anderen entstanden ist. **Dann darf die
+Regel auf keiner von beiden an sein**, bis die Protokolle getrennt sind.
 
 ---
 

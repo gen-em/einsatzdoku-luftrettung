@@ -420,6 +420,7 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
     if (!is_array($zustand)) { $zustand = []; }
 
     $erledigt = 0; $fertig = false; $fehler = null; $uebergangen = 0;
+    $geloescht = 0;
     try {
         $e = ($job['lauf'])($pdo, $zustand, $zeitLinks);
         $zustand  = $e['zustand'] ?? [];
@@ -430,6 +431,11 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
          * Versandjob entstanden und auf dem Weg zur Ausgabe verschwunden —
          * eine Zahl, die es gibt und die niemand sieht. */
         $uebergangen = (int)($e['uebergangen'] ?? 0);
+        /* Dieselbe Ueberlegung fuer `geloescht` (P5a/AP10): Was die
+         * Aufbewahrungsregel auf einem Ziel entfernt hat, ist eine Handlung
+         * auf einer FREMDEN Maschine. Sie gehoert in den Lauf, nicht nur in
+         * die Karte, die man dafuer aufrufen muss. */
+        $geloescht = (int)($e['geloescht'] ?? 0);
     } catch (Throwable $ex) {
         $fehler = get_class($ex) . ': ' . $ex->getMessage();
         // Still gegenueber der Anfrage — die Wartung darf keine Seite
@@ -491,7 +497,7 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
 
     return ['erledigt' => $erledigt, 'fertig' => $fertig,
             'rueckstand' => $rueckstand, 'fehler' => $fehler,
-            'uebergangen' => $uebergangen];
+            'uebergangen' => $uebergangen, 'geloescht' => $geloescht];
 }
 
 /** Zustand aller Jobs — fuer die Wartungsseite. */
@@ -1366,7 +1372,8 @@ function job_versand(PDO $pdo, array $zustand, callable $zeitLinks): array
      * nicht ergänzt, sondern ersetzt: „versand übersprungen (1)" statt
      * „versand fertig · erledigt 3 · 1 übergangen". */
     return ['zustand' => [], 'erledigt' => $e['gesendet'], 'fertig' => $e['fertig'],
-            'uebergangen' => (int)($e['uebersprungen'] ?? 0)];
+            'uebergangen' => (int)($e['uebersprungen'] ?? 0),
+            'geloescht'   => (int)($e['geloescht'] ?? 0)];
 }
 
 /** Wie viele Dateien warten noch? Eine Schätzung — siehe sz_versand_rueckstand(). */
