@@ -7863,8 +7863,15 @@ Knopfhöhen), und **nur bei Tag-Läufen** der Messstand. Alle drei brauchen ein
 `STAGING_PASS`, Variable `STAGING_URL`); fehlt es, wird der Schritt
 ausdrücklich übersprungen und gemeldet.
 
-**Die Kreisläufe brauchen seit Web 20.16.0 zusätzlich `JOBS_TOKEN`** in der
-Umgebung `staging` (Backlog Nr. 219). Sie halten die Hintergrundjobs an,
+**Die Kreisläufe UND der Bilderlauf brauchen seit Web 20.16.0 bzw. 20.16.2
+zusätzlich `JOBS_TOKEN`** in der Umgebung `staging` (Backlog Nr. 219 und
+Nr. 220). Beim Bilderlauf geht es um die beiden Seiten mit `"wartung": true`
+in `seiten.json` — `07-wartungsseite` und `46a-betrieb-updates-wartung`:
+`aufnehmen.mjs` schaltete den Wartungsmodus über die **lokale** Datei
+`server/wartung.lock`, was gegen ein fernes Staging wirkungslos ist. Fehlt
+das Token und liegt die Installation nicht auf demselben Rechner, **bricht
+der Lauf vorher ab** und nennt beide Seiten, statt Bilder der Anmeldeseite
+abzulegen. Sie halten die Hintergrundjobs an,
 bevor sie ein Backup in ein frisches Konto spielen — sonst dünnt der
 Verdichtungsjob die wiederhergestellten Spuren aus, und der Vergleich misst
 „hat der Job dazwischen zugeschlagen" statt „kommt zurück, was hineinging"
@@ -7880,6 +7887,12 @@ liegt es nicht am `FTP_ZIELPFAD`, sondern daran, dass `install.php` seither
 in der Ausnahmeliste steht und bewusst nicht ausgeliefert wird — die Meldung
 sagt dann, die Datei einmal von Hand hochzuladen. Ohne diese Unterscheidung
 suchte man den Fehler im falschen Ort.
+
+**Der Bericht des Bilderlaufs steht seit Web 20.16.2 in der Zusammenfassung
+des Laufs.** Er trägt je Seite die Spalte **`Verursacher`** — das Element, das
+überläuft. Bis dahin wurde er mit dem Arbeitsverzeichnis des Läufers
+weggeräumt, und ein „Überlauf bei 360" blieb ein Befund ohne Adresse: Örtlich
+ließ sich nur noch ausschließen, was es **nicht** ist (Backlog Nr. 221).
 
 **Dazu seit Web 20.15.1 ein vierter Schritt: „Punktdateien gesperrt,
 .well-known offen?"** (Nr. 213). Er braucht **kein** Prüfkonto — nur

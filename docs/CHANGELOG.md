@@ -14,6 +14,69 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.16.2] — 2026-09-17
+
+**Der Wartungsschalter des Bilderlaufs — dritter Fall derselben Annahme**
+(Backlog Nr. 220).
+
+### Behoben
+
+`aufnehmen.mjs` schaltete den Wartungsmodus durch Anlegen der Datei
+`server/wartung.lock` **im eigenen Arbeitsbaum**. Im Kopf der Stelle stand die
+Annahme wörtlich: *„Der Bilderlauf läuft auf derselben Maschine wie die
+Installation und legt sie deshalb selbst an."* Seit Stufe 2 der
+Auslieferungskette stimmt das nicht mehr.
+
+Gemessen am 17.09.2026 gegen Staging: **8 Aufnahmen ohne Bild, 8
+Konsolenfehler**, „Seite leitete auf die Anmeldung um". Nachgestellt:
+`index.php` antwortet ohne Wartung mit **302**, mit Wartung mit **503** — und
+`503` ist, was `seiten.json` für diesen Eintrag erwartet.
+
+**Es sind zwei Seiten, nicht eine**, und die zweite ist die unangenehmere:
+`07-wartungsseite` fällt auf, weil ihre Bilder ausbleiben. Bei
+`46a-betrieb-updates-wartung` entstehen acht Bilder, die den Wartungsbalken
+**nicht zeigen** — eine stille Fehlmessung, die „kein Überlauf" meldet.
+
+**Zwei Wege**, wie bei `kreislauf.py` seit 20.16.0: mit `--jobs-token` über
+`jobs.php?aktion=wartung_an` (gefahren von `tools/kette/tor.py`), ohne Token
+weiter über die Datei. Wer örtlich misst, merkt nichts.
+
+**Dazu ein Riegel.** Ist die Basis nicht diese Maschine und fehlt das Token,
+bricht der Lauf **vorher** ab und nennt beide betroffenen Seiten. Ohne ihn
+liefe er weiter und legte Bilder der Anmeldeseite ab — eine Zahl, die nicht
+misst, was sie zu messen vorgibt.
+
+### Der dritte Fall — deshalb steht er hier als Muster
+
+`kreislauf.py` hielt die Jobs über die lokale Kommandozeile an (Nr. 219),
+`demo_kennzeichnen.php` braucht `db()` auf dem Server (Rahmenplan 6a), und
+hier der Wartungsschalter. **Wer ein Werkzeug gegen `--basis` misst und dabei
+in `server/` schreibt oder liest, baut diese Annahme ein, ohne sie
+hinzuschreiben.**
+
+### Nr. 221 — nicht behoben, sondern messbar gemacht
+
+Der Bilderlauf meldete **„Überlauf bei 360"** auf `05-datenschutz`. Örtlich
+nicht nachstellbar. Ausgeschlossen wurde, mit Zahlen:
+
+| geprüft | Ergebnis |
+|---|---|
+| Markup der Seite | **byteidentisch**, 2104 B, gleiche Klassen, längstes Wort 20 Zeichen, keine Tabelle |
+| `assets/style.css` auf Staging | **byteidentisch** mit dem Repositorium, 200 452 B |
+| alle 10 Schriftdateien | **vorhanden und byteidentisch** |
+| Maßstab 1× und 2× örtlich | **kein Überlauf** |
+
+**Der Bericht mit der Spalte `Verursacher` wurde auf dem Läufer weggeräumt.**
+Genau die Spalte hätte gesagt, welches Element überläuft. Sie steht jetzt in
+der Zusammenfassung des Laufs — eine Zahl ohne Verursacher ist ein Befund, dem
+niemand nachgehen kann.
+
+**Warum die Nummer steigt, obwohl kein Servercode angefasst ist:** dieselbe
+Überlegung wie bei 20.15.2. Hier ändert sich, was die Kette über die Anwendung
+**aussagen** kann.
+
+**Keine Migration.**
+
 ## [Web 20.16.1] — 2026-09-17
 
 **Was eine unabhängige Durchsicht an 20.16.0 gefunden hat** (Backlog Nr. 219).

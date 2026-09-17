@@ -481,9 +481,42 @@ jobs:
           # Wartungsmodus ueber die LOKALE Datei `server/wartung.lock` — gegen
           # ein fernes Staging wirkungslos) und Nr. 221 (waagerechter Ueberlauf
           # auf `05-datenschutz` bei 360 px).
+          # `--jobs-token` FUER DIE WARTUNGSSEITE (Backlog Nr. 220). Zwei
+          # Eintraege in `seiten.json` tragen `"wartung": true` und brauchen
+          # die Installation im Wartungsmodus. `aufnehmen.mjs` schaltete ihn
+          # ueber die LOKALE Datei `server/wartung.lock` — auf einem Laeufer
+          # wirkungslos. Ohne Token bricht der Lauf jetzt VORHER ab, statt
+          # acht Bilder der Anmeldeseite abzulegen.
+          rc=0
           node tools/screenshots/aufnehmen.mjs \
                --basis "$STAGING_URL" \
-               --admin "$STAGING_KONTO" --admin-pw "$STAGING_PASS"
+               --admin "$STAGING_KONTO" --admin-pw "$STAGING_PASS" \
+               --jobs-token "$JOBS_TOKEN" || rc=$?
+
+          # DER BERICHT GEHOERT IN DIE ZUSAMMENFASSUNG, NICHT IN DEN MUELL.
+          #
+          # Der Lauf schreibt `ausgabe/bericht.md` mit einer Spalte
+          # VERURSACHER — dem Element, das ueberlaeuft. Auf dem Laeufer wird
+          # sie mit dem Arbeitsverzeichnis weggeraeumt. Am 17.09.2026 meldete
+          # der erste gruene Durchlauf „Ueberlauf bei 360" auf
+          # `05-datenschutz`, und weil der Bericht fort war, liess sich
+          # oertlich nur noch ausschliessen, was es NICHT ist: Markup und
+          # Stylesheet sind byteidentisch mit dem Repositorium, alle zehn
+          # Schriftdateien liegen und stimmen, und oertlich laeuft nichts
+          # ueber — weder bei Massstab 1 noch 2 (Backlog Nr. 221).
+          #
+          # Eine Zahl ohne den Verursacher ist ein Befund, den niemand
+          # nachgehen kann. Ab jetzt steht er im Lauf.
+          if [ -f tools/screenshots/ausgabe/bericht.md ]; then
+            {
+              echo '<details><summary>Bilderlauf — Bericht</summary>'
+              echo
+              cat tools/screenshots/ausgabe/bericht.md
+              echo
+              echo '</details>'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$rc"
 
       # DER MESSSTAND STAND HIER UND KONNTE NIE LAUFEN (Backlog Nr. 206,
       # behoben in P5a/AP9, E-P5a-53).

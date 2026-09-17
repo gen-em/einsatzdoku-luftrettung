@@ -49,6 +49,7 @@
  * sie als `vorher`-Schritte führt.
  */
 import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -87,6 +88,10 @@ const FINGER = flag('--finger');
 const FILTER = (wert('--nur', '') || '').split(',').filter(Boolean);
 const MOTOR  = motorWahl(argv);
 
+/* Fuer den Wartungsmodus einer FERNEN Installation — siehe den Block bei
+ * `wartungAn()`. Ohne Token bleibt es beim lokalen Weg. */
+const JOBS_TOKEN = wert('--jobs-token', '');
+
 /* UNBEKANNTE SCHALTER SIND EIN FEHLER, KEIN SCHWEIGEN (16.09.2026).
  *
  * `wert()` sucht sich seine Kennzeichnung aus argv und laesst alles andere
@@ -102,9 +107,9 @@ const MOTOR  = motorWahl(argv);
  * Liste, weil motorWahl() sie aus demselben argv liest. */
 const BEKANNT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
                          '--klein', '--finger', '--nur', '--risiko', '--selbstprobe',
-                         '--motor']);
+                         '--motor', '--jobs-token']);
 const MIT_WERT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
-                          '--nur', '--motor']);
+                          '--nur', '--motor', '--jobs-token']);
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
   if (!a.startsWith('--')) continue;
@@ -182,6 +187,29 @@ const liste = (() => {
   }
   return gewaehlt;
 })();
+
+/* DER RIEGEL GEGEN EIN STILLES DURCHLAUFEN (Backlog Nr. 220).
+ *
+ * Ein Eintrag mit `"wartung": true` braucht gegen eine FERNE Installation ein
+ * `--jobs-token` — die lokale Datei wirkt dort nicht. Ohne den Riegel liefe
+ * der Lauf weiter und legte acht Bilder der ANMELDESEITE ab, mit acht
+ * Konsolenfehlern; genau so ist es am 17.09.2026 passiert. Eine Zahl, die
+ * dabei entsteht, misst nicht die Wartungsseite, sondern das Misslingen.
+ *
+ * Geprueft wird die GEFILTERTE Liste: `--nur 05-datenschutz` gegen ein fernes
+ * Staging braucht kein Token, weil dort kein solcher Eintrag steht. */
+const OERTLICH = /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])([:/]|$)/i.test(BASIS);
+const WARTUNGSEITEN = liste.filter(s => s.wartung).map(s => s.name);
+if (WARTUNGSEITEN.length && !OERTLICH && !JOBS_TOKEN) {
+  console.error(`Diese Aufnahme braucht den Wartungsmodus auf einer fernen `
+    + `Installation: ${WARTUNGSEITEN.join(', ')}`);
+  console.error(`${BASIS} ist nicht diese Maschine, und die Datei `
+    + `server/wartung.lock wirkt dort nicht. Entweder --jobs-token <Token> `
+    + `mitgeben (Betrieb → Hintergrundjobs) oder die Seite mit --nur `
+    + `aussparen. Ohne beides waeren die Bilder die Anmeldeseite `
+    + `(Backlog Nr. 220).`);
+  process.exit(2);
+}
 
 /* WAS NICHT ALS KONSOLENFEHLER ZAEHLT — und warum die Unterscheidung noetig
  * ist: Ein Bericht, der jede rote Zeile meldet, wird nach zwei Laeufen
@@ -891,8 +919,31 @@ const ausgefallen = [];
  *
  * KEIN BEDIENSCHRITT IM BROWSER, deshalb nicht in vorher(): Die Wartungsseite
  * entsteht nicht dadurch, dass jemand etwas klickt, sondern dadurch, dass eine
- * DATEI auf dem Server liegt. Der Bilderlauf laeuft auf derselben Maschine
- * wie die Installation und legt sie deshalb selbst an.
+ * DATEI auf dem Server liegt.
+ *
+ * DER SATZ, DER HIER STAND, WAR EINE ANNAHME — UND SIE IST GEPLATZT.
+ * „Der Bilderlauf laeuft auf derselben Maschine wie die Installation und legt
+ * sie deshalb selbst an." Das stimmte, solange von Hand gemessen wurde. Seit
+ * Stufe 2 der Auslieferungskette laeuft der Lauf auf einem GitHub-Laeufer
+ * gegen ein fernes Staging: Die Datei entsteht dann im CHECKOUT, Staging
+ * bleibt offen, `index.php` leitet den nicht angemeldeten Aufruf zur Anmeldung
+ * um — acht Aufnahmen ohne Bild und acht Konsolenfehler, gemessen am
+ * 17.09.2026 (Backlog Nr. 220).
+ *
+ * ES IST DER DRITTE FALL DERSELBEN ANNAHME. `kreislauf.py` hielt die Jobs
+ * ueber die lokale Kommandozeile an (Nr. 219), `demo_kennzeichnen.php`
+ * braucht `db()` auf dem Server — und hier der Wartungsschalter. Wer ein
+ * Werkzeug gegen `--basis` misst und dabei in `server/` schreibt, baut diese
+ * Annahme ein, ohne sie hinzuschreiben.
+ *
+ * ZWEI WEGE, und welcher passt, haengt an `--jobs-token`:
+ *
+ *   MIT TOKEN ueber `jobs.php?aktion=wartung_an`, gefahren von
+ *   `tools/kette/tor.py` — dem einen Client dieser Schnittstelle. Derselbe
+ *   Weg, den `kreislauf.py` seit Web 20.16.0 fuer die Job-Pause geht.
+ *
+ *   OHNE TOKEN ueber die Datei, wie bisher. Wer auf seinem Rechner misst,
+ *   merkt von der Aenderung nichts.
  *
  * Ein Eintrag mit "wartung": true schaltet vor seinen acht Breiten ein und
  * danach wieder aus. Zusaetzlich haengt das Ausschalten am Prozessende:
@@ -906,8 +957,31 @@ const ausgefallen = [];
  * nicht — sonst oeffnete ein Bilderlauf eine Installation, die jemand
  * ausdruecklich geschlossen hat. */
 const WARTUNGSDATEI = join(WURZEL, 'server', 'wartung.lock');
+const TOR = join(WURZEL, 'tools', 'kette', 'tor.py');
 let wartungVonUns = false;
+
+/* Ein Aufruf an tor.py, synchron. SYNCHRON IST PFLICHT, nicht Geschmack:
+ * `wartungAus()` haengt an `process.on('exit')`, und dort laeuft nichts
+ * Asynchrones mehr. */
+function tor(befehl) {
+  const e = spawnSync('python3', [TOR, befehl, '--basis', BASIS,
+                                  '--token', JOBS_TOKEN], { encoding: 'utf8' });
+  if (e.status !== 0) {
+    const grund = (e.stderr || e.stdout || `Rückgabewert ${e.status}`).trim();
+    throw new Error(`tor.py ${befehl} gegen ${BASIS} fehlgeschlagen: ${grund}`);
+  }
+  try { return JSON.parse(e.stdout); } catch { return {}; }
+}
+
 function wartungAn() {
+  if (JOBS_TOKEN) {
+    /* Fremde Wartung nicht anfassen — dieselbe Regel wie unten, nur ueber die
+     * Leitung gefragt statt am Dateisystem. */
+    if (tor('zustand')?.wartung?.aktiv) { return; }
+    tor('wartung-an');
+    wartungVonUns = true;
+    return;
+  }
   if (existsSync(WARTUNGSDATEI)) { return; }   // fremde Wartung nicht anfassen
   writeFileSync(WARTUNGSDATEI, JSON.stringify({
     seit: new Date().toISOString().replace(/\.\d+Z$/, 'Z'), von: 'Bilderlauf' }) + '\n');
@@ -915,6 +989,19 @@ function wartungAn() {
 }
 function wartungAus() {
   if (!wartungVonUns) { return; }
+  if (JOBS_TOKEN) {
+    /* IM AUSSCHALTEN WIRD NICHT GEWORFEN. Diese Funktion haengt an
+     * `process.on('exit')`; eine Ausnahme dort verdeckt den eigentlichen
+     * Grund des Abbruchs. Sie wird gesagt und nicht verschwiegen — die
+     * Installation bliebe sonst still geschlossen, und das muss auffallen. */
+    try { tor('wartung-aus'); } catch (ex) {
+      console.error(`ACHTUNG: Der Wartungsmodus auf ${BASIS} liess sich NICHT `
+                    + `ausschalten (${ex.message}). Die Installation ist noch `
+                    + `geschlossen — von Hand nachsehen: Betrieb → Updates.`);
+    }
+    wartungVonUns = false;
+    return;
+  }
   if (existsSync(WARTUNGSDATEI)) { rmSync(WARTUNGSDATEI); }
   wartungVonUns = false;
 }

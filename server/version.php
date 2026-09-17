@@ -5623,5 +5623,46 @@ declare(strict_types=1);
  * Absatz zerrissen.
  *
  * KEINE MIGRATION.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.16.2 — DER WARTUNGSSCHALTER DES BILDERLAUFS, DRITTER FALL DERSELBEN
+ *           ANNAHME
+ * ---------------------------------------------------------------------------
+ *
+ * Backlog Nr. 220. `aufnehmen.mjs` schaltete den Wartungsmodus durch Anlegen
+ * der Datei `server/wartung.lock` IM EIGENEN ARBEITSBAUM. Im Kopf der Stelle
+ * stand die Annahme sogar wortwoertlich: „Der Bilderlauf laeuft auf derselben
+ * Maschine wie die Installation und legt sie deshalb selbst an."
+ *
+ * Seit Stufe 2 der Kette stimmt das nicht mehr. Gemessen am 17.09.2026 gegen
+ * Staging: acht Aufnahmen ohne Bild, acht Konsolenfehler, „Seite leitete auf
+ * die Anmeldung um" — `index.php` antwortet ohne Wartung mit 302 statt 503.
+ *
+ * ES SIND ZWEI SEITEN, NICHT EINE, und die zweite ist die unangenehmere:
+ * `07-wartungsseite` faellt auf, weil ihre Bilder ausbleiben. Bei
+ * `46a-betrieb-updates-wartung` entstehen acht Bilder, die den Wartungsbalken
+ * NICHT zeigen — eine stille Fehlmessung, die „kein Ueberlauf" meldet.
+ *
+ * ZWEI WEGE, wie bei `kreislauf.py`: mit `--jobs-token` ueber
+ * `jobs.php?aktion=wartung_an` (gefahren von `tools/kette/tor.py`), ohne
+ * Token weiter ueber die Datei. Dazu ein RIEGEL: Ist die Basis nicht diese
+ * Maschine und fehlt das Token, bricht der Lauf ab, statt Bilder der
+ * Anmeldeseite abzulegen.
+ *
+ * KEIN SERVERCODE ANGEFASST. Die Nummer steigt trotzdem, weil dieselbe
+ * Ueberlegung wie bei 20.15.2 gilt: Hier aendert sich, was die Kette ueber
+ * die Anwendung AUSSAGEN kann — und der Changelog braucht eine Ueberschrift,
+ * unter der eine Betreiberin es findet.
+ *
+ * DAZU Nr. 221, NICHT BEHOBEN, SONDERN MESSBAR GEMACHT. Der Bilderlauf meldete
+ * „Ueberlauf bei 360" auf `05-datenschutz`. Oertlich nicht nachstellbar;
+ * ausgeschlossen wurde: Markup (die Seite ist byteidentisch, 2104 B),
+ * Stylesheet (200 452 B, identisch), alle zehn Schriftdateien (vorhanden,
+ * identisch), der Massstab (weder 1 noch 2 laeuft ueber). Der Bericht mit der
+ * Spalte VERURSACHER wurde auf dem Laeufer weggeraeumt — er steht jetzt in der
+ * Zusammenfassung des Laufs. Eine Zahl ohne Verursacher ist ein Befund, dem
+ * niemand nachgehen kann.
+ *
+ * KEINE MIGRATION.
  */
-const WEB_VERSION = '20.16.1';
+const WEB_VERSION = '20.16.2';

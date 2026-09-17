@@ -85,6 +85,35 @@ Phase.
 > Schriften, Textrasterung, Systemintegration. Für „läuft das in Safari" ist
 > es ein starkes Indiz, kein Beweis.
 
+## Der Wartungsmodus — und wo er herkommt
+
+Zwei Einträge in `seiten.json` tragen `"wartung": true` und brauchen die
+Installation im Wartungsmodus: `07-wartungsseite` (erwartet **503**) und
+`46a-betrieb-updates-wartung` (der Balken im Adminbereich).
+
+| Lage | Weg |
+|---|---|
+| örtliche Installation | die Datei `server/wartung.lock`, wie seit jeher |
+| **ferne** Installation, mit `--jobs-token` | `jobs.php?aktion=wartung_an`, gefahren von `tools/kette/tor.py` |
+| ferne Installation, **ohne** Token | **Abbruch mit Rückgabewert 2**, beide Seiten namentlich |
+
+**Warum der Abbruch und kein Weiterlaufen.** Ohne Wartungsmodus antwortet
+`index.php` mit **302** zur Anmeldung statt mit 503. Der Lauf legte dann acht
+Bilder der Anmeldeseite ab — bei `07-wartungsseite` fiel das auf, weil die
+Bilder ausblieben, bei `46a` **nicht**: Dort entstehen acht Bilder ohne
+Wartungsbalken, und der Lauf meldet „kein Überlauf". Eine stille Fehlmessung
+ist schlimmer als eine laute (Backlog Nr. 220, gemessen am 17.09.2026).
+
+**Eine fremde Wartung wird auf beiden Wegen nicht angefasst** — liegt sie
+schon an, rührt der Lauf sie nicht an und schaltet sie am Ende auch nicht ab.
+Der ferne Weg fragt dafür `aktion=zustand`.
+
+**Ein Unterschied, den man im Bild sieht:** Der Wartungsbalken nennt den
+Urheber. Über die Datei steht dort `Bilderlauf`, über die Leitung `kette` —
+`wartung_einschalten('kette')` ist die eine Stelle, die der Token-Weg kennt.
+Für die gemessenen Größen (Überlauf, Konsole, Knopfhöhen) ist das folgenlos;
+wer zwei Abzüge nebeneinanderlegt, sieht ein Wort Unterschied.
+
 ## Warum es sie gibt
 
 Ein Redesign, das „voll mobiltauglich auf allen Seiten" verspricht, muss das
