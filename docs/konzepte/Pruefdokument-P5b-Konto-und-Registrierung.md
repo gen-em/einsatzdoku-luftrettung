@@ -143,6 +143,109 @@ Eindruck um und hat dafür eine fremde Nummer.
 
 ---
 
+### F6 — Die Profilseite brach aus ihrem Seitengerüst aus (Backlog Nr. 217)
+
+**Gefunden:** 17.09.2026, beim **Ansehen** des Bildes zu AP6 — nicht durch
+eine Zahl.
+**Entstanden:** 07.09.2026 (S9/AP4). **Behoben:** Web 20.21.1.
+
+**Was schiefging.** Auf `einstellungen.php?t=profil` stand ein
+`ui_karte_ende()` zu viel. Es schloss keine Karte, sondern gab ein
+`</div></section>` ohne Gegenstück aus. Für ein `</div>` ohne offenes `div`
+nimmt der Parser das nächste, das er findet — `div.rahmen`. Damit endeten
+`form`, `main.inhalt` und `rahmen` mitten auf der Seite; **Datenschutz,
+Passwort ändern, Was dein Konto hält** und **Konto löschen** hingen danach
+direkt am `body`.
+
+**Gemessen bei 1440 px:** `left` 0 statt 276, Breite 1440 statt 1148 — die
+Karten liefen unter der Seitenleiste hindurch über die volle Fensterbreite.
+Nach der Behebung stehen alle sechs Karten bei `left` 276 / Breite 1148.
+
+**Nicht funktional.** „Profil speichern" postete weiter: Ein Knopf behält
+seinen Formularbezug aus dem Parsen, auch wenn das `form`-Element implizit
+geschlossen wurde (`button.form` zeigte auf `pfform`, alle zehn Felder waren
+dabei).
+
+**Der eigentliche Befund ist das Prüfmittel.** Der Bilderlauf meldete für
+diese Seite in **allen drei Engines**: „kein Überlauf, 0 Konsolenfehler, 0
+falsche Knopfhöhen". `scrollWidth` blieb gleich `innerWidth` — es lief nichts
+über, es lag nur falsch. Drei Nullen neben einer kaputten Seite, zehn Tage
+lang. Genau der Fall, vor dem `CLAUDE.md` 6 warnt.
+
+**Was daraus gebaut wurde:** Der Bilderlauf zählt seither je Seite die Karten,
+die nicht in `main.inhalt` hängen, und nennt sie beim Titel. Die Zahl nennt
+beide Seiten — „n geprüft · m außerhalb" —, weil eine Seite ohne Karten sonst
+dieselbe Null meldete wie eine geprüfte.
+
+**Gegenprobe, dass die neue Zahl nicht selbst eine leere Null ist:** mit wieder
+eingebautem Fehler meldete derselbe Lauf unverändert „Überlauf 0 ·
+Konsolenfehler 0 · Knöpfe falscher Höhe 0" **und** „6 Karten geprüft · **4
+außerhalb** von main.inhalt". Ohne den Fehler: 6 geprüft, 0 außerhalb.
+
+### F7 — Ein Meldungskasten trug einen Ton, den es nicht gibt (Nr. 218)
+
+**Gefunden:** 17.09.2026 von `tools/vollstaendigkeit/` („im Markup ohne
+Regel"). **Behoben:** Web 20.21.1.
+
+In `betrieb_server.php` stand von Hand `class="meldung meldung-blau"`. Die
+Töne heißen `fehler`, `warn`, `ok`, `info`, `schutz`; `meldung-blau` hat keine
+Regel im Stylesheet — der Kasten stand weiß und ohne Symbol da, ohne jede
+Fehlermeldung. `ui_meldung_markup()` wirft bei einem unbekannten Ton; hier
+war von Hand gebaut, weil der Knopf in einem eigenen Formular steckt, und
+damit fiel der Schutz weg. Berichtigt zu `meldung-info` samt `role="status"`
+und Symbol.
+
+**Zahl:** „im Markup ohne Regel, Grund nicht eingetragen" **1 → 0**.
+
+**Im Browser nachgemessen**, indem der Zustand hergestellt wurde, der den
+Kasten überhaupt zeigt (Registrierung erst auf „offen", dann auf „nur auf
+Einladung", Demo-Anmeldung an): Klassen `meldung meldung-info`,
+`role="status"`, Hintergrund `rgb(217, 236, 253)` (das Token `--blau-hell`),
+Schrift `rgb(31, 78, 156)`, Symbol vorhanden, Knopf vorhanden, **0
+Konsolenfehler**.
+
+**Dabei ein zweiter Mangel derselben Stelle:** Der Kasten führte **zwei**
+`<p>`. `.meldung` ist eine Flexzeile — der zweite Absatz stellte sich
+**neben** den ersten und schob den Knopf in eine eigene Zeile darunter.
+`ui_meldung_markup()` gibt aus genau diesem Grund immer **einen** Absatz aus.
+Zusammengeführt; danach steht der Knopf neben dem Text, wie beim Baustein.
+
+### F8 — Zwei Seiten fehlten in der Gerüst-Ausnahmeliste
+
+`einwilligung.php` und `adresse_bestaetigen.php` lassen das Seitengerüst mit
+Absicht weg (das Tor, weil seine Bereichsnavigation auf gesperrte Seiten
+führte; die Bestätigungsseite, weil sie ohne Sitzung läuft) — standen aber
+nicht in `tools/vollstaendigkeit/zusagen.md`. Eine begründete Abweichung, die
+als Befund mitläuft, ist ein Befund weniger, der auffällt. Beide eingetragen.
+
+**Zahl:** „Seite ohne Gerüst" **2 → 0**, Ausnahmen 7 → 9, ungenutzte 0.
+
+### F9 — Die Schwelle der Vollständigkeitsprüfung stand an zwei Stellen verschieden
+
+`docs/Technik.md` nannte **366**, `pruefung.yml` lief mit **377**. Eine
+Schwelle an zwei Stellen läuft auseinander, und die dokumentierte war die
+falsche. Berichtigt, mit dem Hinweis, dass die Zahl in der Kette steht und
+nicht in der Dokumentation.
+
+**Dabei ausgezählt, was diese Prüfung misst** (Backlog Nr. 219): von 319
+Befunden sind **195 `…`** und **104 `→`** — zusammen 299 Satzzeichen in Prosa.
+Nur **20** sind Zeichen, die wirklich statt eines Symbols stehen. Solange die
+Zeichenliste beides in einen Topf wirft, kann die Schwelle nur steigen; sie tut
+es seit P3 mit jeder Phase.
+
+**Was P5b beigetragen hat: +18.** Zwölf davon waren **Zierde** in Kommentaren
+und in einem `error_log()` — entfernt (Pfeil zu `->`, Auslassung zu `...`).
+Die verbleibenden **zehn** stehen in sichtbarem Text und folgen dem Hausstil
+(„Unter Einstellungen → Konto"). Schwelle jetzt **387**.
+
+**Nebenbei behoben:** Scheitert die Anmeldung des Bilderlaufs, steht jetzt die
+Meldung der Seite dabei. Beim Einbauen der Gegenprobe kam zweimal „Anmeldung
+als demo@gen-em.org gescheitert" ohne Grund — es war der **Ratenschutz**
+(Demo-Topf, ausgelöst durch die wiederholten Läufe), also richtiges Verhalten
+der Anwendung. Ohne die Meldung rät die nächste Instanz.
+
+---
+
 ---
 
 ## 3. Was maschinell geprüft wurde — Mittel und Zahl
@@ -182,6 +285,12 @@ Eindruck um und hat dafür eine fremde Nummer.
 | **Verwaister Mengen-Cache** (Fehlerfund) | AP6 | Aufräumjob über den Altbestand: **3 verwaiste `mengen:`-Einträge gefunden, 0 danach**; `konto_loeschen()` räumt sie seither an der Wurzel | **bestanden** |
 | **Ingestprobe** (Regression) | AP6 | **83 Erwartungen, 0 nicht erfüllt** — die Mengengrenze hat den Ingest-Weg nicht verändert | **bestanden** |
 | **Bilderlauf, drei Engines** | AP6 | `einstellungen.php` und `admin_user.php` (Füllstandskarten) in **8 Breiten**: **Chromium** 24 Bilder 0/0/0 · **Firefox** 24 Bilder 0/0/0 · **WebKit** 24 Bilder 0/0/0 (Überlauf / Konsolenfehler / Knopfhöhe) | — |
+| **Bilderlauf, voller Lauf** (Nr. 217) | 20.21.1 | **53 Seiten, 424 Einzelbilder, 53 Kontaktbögen** (Chromium): Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0 · **149 Karten geprüft, 0 außerhalb von `main.inhalt`** | **bestanden** |
+| **Gegenprobe der neuen Zählung** | 20.21.1 | Fehler wieder eingebaut: dieselben drei Nullen **und** „6 Karten geprüft · **4 außerhalb**". Ohne Fehler: 6 geprüft, 0 außerhalb | die Zahl ist keine leere Null |
+| **Kartenbreiten im echten Fenster** (Nr. 217) | 20.21.1 | 1440 px, Profilseite: vorher `left` 0 / Breite 1440 bei vier Karten, nachher **alle sechs `left` 276 / Breite 1148** | **bestanden** |
+| **Formularbezug des Knopfs** (Nr. 217) | 20.21.1 | `button.form` → `pfform`, **10 Felder** im Formular — das Speichern war nie unterbrochen | kein Funktionsschaden |
+| **Bilderlauf, drei Engines** (berührte Seiten) | 20.21.1 | `einstellungen.php`, `admin_user.php`, `betrieb_server.php` in 8 Breiten: **Chromium** 24 Bilder · **Firefox** 24 · **WebKit** 24 — je 0 Überlauf, 0 Konsolenfehler, 0 falsche Knopfhöhen, **19 Karten geprüft, 0 außerhalb** | **bestanden** |
+| **Vollständigkeitsprüfung** | 20.21.1 | **387 Befunde** (main: 377). „im Markup ohne Regel" 1 → **0**, „Seite ohne Gerüst" 2 → **0**, Ausnahmen 9, **0 ungenutzt** | **bestanden** |
 | **Wortliste** | AP1, AP2, AP4, AP5, AP6, AP7 | **alle fünf Bereiche**: (a) 111 PHP-Dateien, (b) 36 JS, (c) 8 Dokumente, (d) 2 Android, (e) 35 Uhr — **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 99 Regeln | — |
 
 ---
@@ -245,7 +354,149 @@ stehen hier, weil sie beim nächsten Lesen sonst wieder Verwirrung stiften.
 Je Punkt: der Bedienweg, das erwartete Ergebnis und **woran ein Scheitern zu
 erkennen ist**.
 
-*(wird mit den Arbeitspaketen gefüllt)*
+**Vorab, einmal:** Nach dem Einspielen muss eine Administratorin `update.php`
+aufrufen. Die Phase bringt **vier** Migrationen mit
+(`protokoll_ereignisse`, `konto_lebenszyklus`, `konto_einwilligungen`,
+`konto_grenzen`). Bleibt der Aufruf aus, stehen die neuen Karten leer da oder
+melden „Tabelle fehlt" — kein Datenverlust, aber nichts von dem, was unten
+steht, ist dann zu sehen.
+
+**Die Liste deckt AP1, AP2, AP4, AP5, AP6, AP7 und Nr. 217 ab.** AP3, AP8 und
+AP9 stehen noch aus (Mockup-Freigabe); ihre Punkte kommen mit ihnen.
+
+### AP1 — Protokoll
+
+- [ ] **P1.1 — Die Zählkarte zählt.** *Betrieb → Status*, Karte
+  „Betriebsprotokoll". Erwartet: je Reiter eine Zahl für die letzten 24 h.
+  Danach ein Konto sperren und entsperren (*Verwaltung → NutzerInnen →
+  Aktionen*) und die Seite neu laden. **Erwartet:** die Zahl bei
+  *verwaltung* ist um mindestens 2 gestiegen.
+  **Scheitern:** Die Zahl bleibt stehen, oder die Karte fehlt ganz — dann ist
+  `update.php` nicht gelaufen.
+
+- [ ] **P1.2 — Die Aufbewahrung lässt sich einstellen.** *Betrieb →
+  Servereinstellungen*, Feld „Protokoll: Aufbewahrung Verwaltung".
+  **Erwartet:** Werte zwischen 90 und 1095 Tagen werden angenommen, alles
+  darunter oder darüber abgewiesen — mit einer Meldung, die die Spanne nennt.
+  **Scheitern:** 30 wird angenommen. Die Untergrenze ist Absicht: Ein
+  Nachweis, der nach einem Monat weg ist, ist kein Nachweis.
+
+### AP2 — Lebenszyklus
+
+- [ ] **P2.1 — Eine Sperre hält die Uhr nicht auf Dauer auf.** Ein Konto
+  sperren, mit dessen Uhr (oder Handy) eine Aufzeichnung senden, dann
+  entsperren und erneut senden lassen. **Erwartet:** Während der Sperre kommt
+  nichts an, das Gerät behält die Aufzeichnung; nach dem Entsperren ist sie
+  **vollständig** da — Einsätze und GPS-Punkte wie vorher.
+  **Scheitern:** Der Einsatz fehlt, oder er ist da und die GPS-Spur ist kürzer
+  als auf dem Gerät.
+
+- [ ] **P2.2 — Entsperren räumt auf.** Ein Konto sperren, dann entsperren,
+  dann die Kontoseite ansehen. **Erwartet:** Plakette „aktiv", kein
+  Sperrgrund, **kein Löschtermin**.
+  **Scheitern:** Irgendeine Spur der Sperre steht noch da — besonders ein
+  Löschtermin, denn der führte 30 Tage später zur Löschung eines Kontos, das
+  längst wieder aktiv ist.
+
+### AP4 — Einwilligungen
+
+- [ ] **P4.1 — Das Tor kommt, wenn die Texte in Kraft sind.** In *Verwaltung →
+  Installation* bei Nutzungsbedingungen und AVV ein **Standdatum** setzen.
+  Dann abmelden und mit einem anderen Konto anmelden. **Erwartet:** Es landet
+  auf der Seite „Bevor es weitergeht" mit drei Haken (zwei „annehmen", einer
+  „zur Kenntnis nehmen").
+  **Scheitern:** Es kommt direkt auf die Startseite — dann fehlt das
+  Standdatum, oder die Migration ist nicht gelaufen.
+
+- [ ] **P4.2 — Der Ausgang bleibt offen.** Am Tor, **ohne** zu haken, die drei
+  Wege unten anklicken. **Erwartet:** *Daten ausleiten* öffnet
+  `import.php`, *Abmelden* meldet ab, *Konto löschen* führt zu den
+  Einstellungen. Alle drei funktionieren.
+  **Scheitern:** Einer davon wirft zurück ans Tor. Das wäre Nötigung, nicht
+  eine Einwilligung — und der Grund, warum diese drei Seiten überhaupt in der
+  Ausnahmeliste stehen.
+
+- [ ] **P4.3 — Eine neue Fassung sperrt erneut.** Nach dem Durchgang das
+  Standdatum der Nutzungsbedingungen **auf denselben Tag, aber eine spätere
+  Uhrzeit** setzen. Neu anmelden. **Erwartet:** Das Tor kommt wieder, mit der
+  Plakette „neue Fassung" und der Zeile „du hast die Fassung vom … angenommen".
+  **Scheitern:** Es kommt nicht — dann zählt die Anwendung nur Tage, und zwei
+  Änderungen an einem Tag wären eine Fassung.
+
+### AP5 — Selbstlöschung und Adresswechsel
+
+- [ ] **P5.1 — Die Karenz hält.** Mit einem **Prüfkonto** (nicht dem eigenen)
+  unter *Einstellungen → Konto löschen* die Löschung beantragen.
+  **Erwartet:** Das Konto ist gesperrt, die Seite nennt einen Termin **30 Tage**
+  voraus, und eine Anmeldung in dieser Zeit **nimmt die Löschung zurück** —
+  danach ist der Bestand unverändert.
+  **Scheitern:** Der Bestand ist nach dem Rückzug kleiner, oder die Anmeldung
+  nimmt die Löschung nicht zurück.
+
+- [ ] **P5.2 — Die Adresse wechselt erst nach Bestätigung.** Unter
+  *Einstellungen → Profil* die E-Mail-Adresse ändern (mit Passwort).
+  **Erwartet:** Es kommt eine Nachricht an die **neue** Adresse; **bis zum
+  Klick gilt die alte** — eine Anmeldung mit der neuen schlägt fehl, mit der
+  alten klappt sie. Nach dem Klick umgekehrt. Ein **zweiter** Klick auf
+  denselben Link wird abgewiesen.
+  **Scheitern:** Die Anmeldung mit der alten Adresse schlägt sofort fehl. Wer
+  sich bei der neuen vertippt hat, wäre dann ausgesperrt — genau das soll die
+  Bestätigung verhindern.
+
+- [ ] **P5.3 — Im Protokoll steht keine Adresse.** *Betrieb → Status* nach
+  einem Adresswechsel. **Erwartet:** Der Eintrag `adresse_geaendert` nennt
+  **kein** `@`.
+  **Scheitern:** Die alte oder neue Adresse steht im Klartext im Protokoll.
+
+### AP6 — Mengengrenzen
+
+- [ ] **P6.1 — Leer heißt „die Vorgabe gilt".** *Verwaltung → NutzerInnen →
+  ein Konto*, Karte „Mengen und Grenzen". Die beiden Felder **leer** lassen.
+  Dann in *Betrieb → Servereinstellungen* die Vorgabe ändern.
+  **Erwartet:** Die Karte des Kontos zeigt sofort die **neue** Vorgabe.
+  **Scheitern:** Sie zeigt die alte Zahl — dann steht die Vorgabe im Konto
+  statt eines Leerfelds, und eine spätere Anhebung erreicht Bestandskonten nie.
+
+- [ ] **P6.2 — Die Grenze greift und verliert nichts.** Bei einem Prüfkonto
+  die Einsatzgrenze auf eine Zahl **unter** dem Bestand setzen. Mit der Uhr
+  senden lassen. **Erwartet:** Der Server lehnt ab (`507`), die Uhr **behält**
+  die Aufzeichnung. Grenze wieder anheben, erneut senden lassen: Die
+  Aufzeichnung kommt **vollständig** nach.
+  **Scheitern:** Die Uhr verwirft nach der Absage, oder die nachgelieferte
+  Aufzeichnung ist unvollständig.
+
+- [ ] **P6.3 — Aufräumen bleibt möglich.** Ein Konto an seiner Grenze:
+  Einsätze bearbeiten, in den Papierkorb legen, endgültig löschen.
+  **Erwartet:** Alles drei geht. Der Füllstand sinkt, sobald aus dem
+  Papierkorb gelöscht wird — was **im** Papierkorb liegt, zählt nicht mit.
+  **Scheitern:** Das Löschen wird ebenfalls abgewiesen. Dann ist die Grenze
+  eine Falle, aus der niemand herauskommt.
+
+- [ ] **P6.4 — Die Aufbewahrung je Konto (Nr. 48).** Bei einem Konto
+  „Konto-Backups aufheben" auf 7 setzen, bei einem zweiten leer lassen.
+  Mehrfach sichern. **Erwartet:** Beim ersten bleiben 7 Pakete stehen, beim
+  zweiten die Zahl der Installation (Vorgabe 2).
+  **Scheitern:** Beide verdrängen gleich — dann greift die eigene Zahl nicht.
+
+### AP7 — Demo-Anmeldung
+
+- [ ] **P7.1 — Abgeschaltet sieht man nichts.** *Betrieb →
+  Servereinstellungen*, Demo-Anmeldung aus. Dann auf der Anmeldeseite die
+  Demo-Adresse mit **richtigem** Passwort, mit **falschem** Passwort und eine
+  **erfundene** Adresse probieren. **Erwartet:** dreimal **dieselbe** Meldung,
+  und die Dauer liegt dicht beieinander.
+  **Scheitern:** Die Demo-Adresse antwortet anders als die erfundene — dann
+  verrät die Anmeldeseite, dass es dieses Konto gibt.
+
+### Nr. 217 — Die Profilseite
+
+- [ ] **P217.1 — Die Karten stehen in ihrer Spalte.** *Einstellungen → Profil*
+  an einem breiten Fenster (ab 1024 px). **Erwartet:** **Alle** Karten —
+  Angaben, Logo, Datenschutz, Passwort ändern, Was dein Konto hält, Konto
+  löschen — sind gleich breit und beginnen an derselben linken Kante, rechts
+  neben der Seitenleiste.
+  **Scheitern:** Ab „Datenschutz" laufen sie über die volle Fensterbreite und
+  unter der Seitenleiste hindurch. Genau so sah es zehn Tage lang aus.
 
 ---
 

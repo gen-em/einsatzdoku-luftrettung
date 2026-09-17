@@ -5825,5 +5825,29 @@ declare(strict_types=1);
  * 0 danach).
  *
  * MIGRATION: `2026_09_16_konto_grenzen`. `update.php` ist faellig.
+ *
+ * 20.21.1 — DIE PROFILSEITE BRACH AUS IHREM GERUEST AUS (Backlog Nr. 217).
+ *
+ * Ein `ui_karte_ende()` zu viel, seit dem 07.09.2026. Es schloss keine Karte,
+ * sondern gab ein `</div></section>` ohne Gegenstueck aus; der Parser nahm
+ * fuer das `</div>` das naechste offene, und das war `div.rahmen`. Damit
+ * endeten `form`, `main.inhalt` und `rahmen` mitten auf der Seite, und alles
+ * danach — Datenschutz, Passwort, Mengen, Loeschkarte — lag direkt am `body`
+ * und lief unter der Seitenleiste hindurch ueber die volle Fensterbreite.
+ *
+ * KEIN PRUEFMITTEL HAT ANGESCHLAGEN, und das ist der eigentliche Befund:
+ * `scrollWidth` blieb gleich `innerWidth` (es lief nichts ueber, es lag nur
+ * falsch), die Konsole blieb still, die Knopfhoehen stimmten. Gefunden beim
+ * ANSEHEN eines Bildes. Die Gegenprobe zaehlt seither Karten ausserhalb von
+ * `main.inhalt` — voller Lauf ueber 53 Seiten: 149 geprueft, 0 ausserhalb.
+ * Gegenprobe mit wieder eingebautem Fehler: dieselben drei Nullen und
+ * „6 geprueft, 4 ausserhalb".
+ *
+ * DAZU ZWEI KLEINERE FUNDE DESSELBEN ABENDS. Ein Meldungskasten in
+ * `betrieb_server.php` trug den Ton `meldung-blau`, den es nicht gibt — die
+ * Toene heissen `fehler, warn, ok, info, schutz` —, und stand deshalb
+ * ungestaltet da (Nr. 218). Und `einwilligung.php` und
+ * `adresse_bestaetigen.php` fehlten in der Geruest-Ausnahmeliste der
+ * Vollstaendigkeitspruefung; beide lassen das Geruest mit Absicht weg.
  */
-const WEB_VERSION = '20.21.0';
+const WEB_VERSION = '20.21.1';

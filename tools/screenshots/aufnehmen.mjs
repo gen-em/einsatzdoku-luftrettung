@@ -460,7 +460,17 @@ async function anmelden(rolle) {
   const seite = await kontext.newPage();
   if (!await anmeldenAuf(seite, rolle)) {
     const konto = rolle === 'admin' ? ADMIN : DEMO;
-    throw new Error(`Anmeldung als ${konto.email} gescheitert`);
+    /* DIE MELDUNG DER SEITE MITNEHMEN. „Anmeldung gescheitert" allein laesst
+     * raten; der haeufigste Grund ist kein falsches Passwort, sondern der
+     * Ratenschutz: Wer den Lauf mehrmals hintereinander startet, stolpert
+     * ueber den Demo-Topf („vorübergehend gesperrt — wieder ab HH:MM").
+     * Das ist richtiges Verhalten der Anwendung und kein Fehler des
+     * Pruefstands — man muss es nur lesen koennen. */
+    const grund = await seite.locator('.meldung, .hinweis, .warnung')
+      .allTextContents().then(t => t.join(' · ').replace(/\s+/g, ' ').trim())
+      .catch(() => '');
+    throw new Error(`Anmeldung als ${konto.email} gescheitert`
+      + (grund ? ` — die Seite sagt: ${grund.slice(0, 200)}` : ''));
   }
 
   /* Die Fehlersammlung haengt an der Seite und wird je Aufnahme geleert. */
@@ -1074,6 +1084,21 @@ for (const eintrag of liste) {
          Zusage nie gemessen. Genau so ist `.listenfilter` seit O6 ungemessen
          geblieben und der Export-Knopf vier Monate ungestaltet (F-P3-BA).
          Wer ein neues Bedienelement baut, traegt es hier ein. */
+      /* KARTEN, DIE AUS DEM SEITENGERUEST AUSGEBROCHEN SIND (Nr. 217).
+         Eine Karte gehoert in `main.inhalt`. Haengt sie daneben — weil ein
+         `ui_karte_ende()` zu viel `div.rahmen` mitgeschlossen hat —, liegt
+         sie ueber die volle Fensterbreite unter der Seitenleiste hindurch.
+
+         DIE DREI ANDEREN ZAHLEN SEHEN DAS NICHT, und das ist der Grund, warum
+         diese hier steht: `scrollWidth` bleibt gleich `innerWidth` (es laeuft
+         nichts ueber, es liegt nur falsch), die Konsole bleibt still, die
+         Knopfhoehen stimmen. Die Profilseite meldete zehn Tage lang drei
+         Nullen und war kaputt; gefunden wurde es beim ANSEHEN eines Bildes. */
+      ausbruch: Array.from(document.querySelectorAll('section.karte, details.karte'))
+        .filter(el => !el.closest('main.inhalt'))
+        .map(el => ((el.querySelector('h2, h3') || {}).textContent || '(ohne Titel)')
+                    .trim().replace(/\s+/g, ' ').slice(0, 40)),
+      karten: document.querySelectorAll('section.karte, details.karte').length,
       knoepfe: Array.from(document.querySelectorAll('.knopf, .sprungziel'))
         .filter(el => el.offsetParent !== null || el.getClientRects().length > 0)
         .map(el => ({
@@ -1087,7 +1112,8 @@ for (const eintrag of liste) {
            * dieser eine Fall benannt statt stillschweigend geduldet. */
           suchzwilling: !!el.closest('.suchzeile'),
         })),
-    })).catch(() => ({ scrollWidth: 0, innerWidth: b, knoepfe: [], taeter: null }));
+    })).catch(() => ({ scrollWidth: 0, innerWidth: b, knoepfe: [], taeter: null,
+                       ausbruch: [], karten: 0 }));
 
     const datei = join(AUSGABE, 'einzeln', `${eintrag.name}-${b}.png`);
     if (hin.abbruch) {
@@ -1105,6 +1131,8 @@ for (const eintrag of liste) {
       breite: b, status,
       ueberlauf: mass.scrollWidth > mass.innerWidth ? mass.scrollWidth - mass.innerWidth : 0,
       taeter: mass.taeter || null,
+      ausbruch: mass.ausbruch || [],
+      karten: mass.karten || 0,
       konsole: rolle.fehler.slice(),
     });
     for (const k of mass.knoepfe) {
@@ -1123,8 +1151,13 @@ for (const eintrag of liste) {
   bericht.seiten.push(zeile);
   const ueber = zeile.breiten.filter(x => x.ueberlauf).map(x => x.breite);
   const kons  = zeile.breiten.reduce((n, x) => n + x.konsole.length, 0);
+  /* Der Ausbruch haengt am Markup, nicht an der Breite — er steht bei allen
+     acht gleich. Einmal nennen, nicht achtmal. */
+  const raus  = (zeile.breiten.find(x => x.ausbruch.length) || {}).ausbruch || [];
   console.log(`${eintrag.name.padEnd(34)} ${ueber.length ? 'Überlauf bei ' + ueber.join(', ') : 'kein Überlauf'}` +
-              `${kons ? '  ·  ' + kons + ' Konsolenfehler' : ''}`);
+              `${kons ? '  ·  ' + kons + ' Konsolenfehler' : ''}` +
+              `${raus.length ? '  ·  ' + raus.length + ' Karte(n) außerhalb von main.inhalt: '
+                             + raus.join(', ') : ''}`);
 }
 
 /* ---- Kontaktbogen ---------------------------------------------------------
@@ -1218,6 +1251,15 @@ writeFileSync(join(AUSGABE, 'bericht.json'), JSON.stringify(bericht, null, 2) + 
 console.log(`\n${bilderZahl} Einzelbilder, ${bericht.seiten.length} Kontaktbögen.`);
 console.log(`Überlauf: ${gesamtUeberlauf} · Konsolenfehler: ${gesamtKonsole}`
   + ` · Knöpfe falscher Höhe: ${bericht.knopf.length}`  + ` (${FINGER ? 'Finger, 44 px' : 'Zeiger, 44/36 px'})`);
+/* DIE ZAHL NENNT, WAS SIE GEMESSEN HAT (CLAUDE.md 6): nicht „0 Ausbrüche",
+   sondern „n Karten geprüft, 0 außerhalb". Eine Seite ohne Karten meldete
+   sonst dieselbe Null wie eine geprüfte. */
+const gesamtKarten   = bericht.seiten.reduce((n, z) =>
+  n + ((z.breiten.find(x => x.karten) || {}).karten || 0), 0);
+const gesamtAusbruch = bericht.seiten.reduce((n, z) =>
+  n + ((z.breiten.find(x => x.ausbruch && x.ausbruch.length) || {}).ausbruch || []).length, 0);
+console.log(`Karten im Seitengerüst: ${gesamtKarten} geprüft · `
+  + `${gesamtAusbruch} außerhalb von main.inhalt (Nr. 217)`);
 if (verlorene.length)   { console.log(`Sitzung neu aufgebaut: ${verlorene.length}× (Demo-Reset, normal)`); }
 if (ausgefallen.length) {
   /* NACH GRUND GEZAEHLT, nicht in einen Topf: „8 ohne Bild" sagt nichts, „8

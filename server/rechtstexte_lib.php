@@ -65,7 +65,7 @@ const RT_SEITEN = [
  *
  * WARUM ALS KATALOG UND NICHT ALS TERNAERER AUSDRUCK. In
  * `rechtstext_seite.php` stand er als zweiwertiger Ausdruck
- * (`… === 'impressum' ? … : …`), und das war die eine Stelle, an der ein
+ * (`$k === 'impressum' ? A : B`), und das war die eine Stelle, an der ein
  * dritter Schlüssel **stillschweigend falsch** geantwortet hätte: Die
  * Nutzungsbedingungen hätten gemeldet, es sei „noch keine
  * Datenschutzerklärung hinterlegt". Kein Fehler, keine Meldung — nur ein

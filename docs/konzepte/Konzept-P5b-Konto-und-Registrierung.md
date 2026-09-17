@@ -45,6 +45,16 @@ Mockups in `konzept-p5b/mockups/`.
 > Rechtstext-Entwürfe (E-P5b-24); AP4 steht deshalb mit Platzhaltern, und
 > das ist der geplante Zustand, kein Rest.
 >
+> **Ein zweiter Fund, und der wiegt schwerer als sein Umfang:** F6 — auf
+> `einstellungen.php?t=profil` stand seit dem 07.09.2026 ein
+> `ui_karte_ende()` zu viel; vier Karten lagen dadurch **außerhalb des
+> Seitengerüsts**, über die volle Fensterbreite. Der Bilderlauf meldete für
+> diese Seite in allen drei Engines drei Nullen. Gefunden beim **Ansehen**
+> eines Bildes zu AP6, behoben in Web 20.21.1 (Nr. 217) — und der Lauf zählt
+> seither Karten außerhalb von `main.inhalt` als **vierte** Zahl. Gegenprobe
+> mit wieder eingebautem Fehler: dieselben drei Nullen, „6 geprüft · **4
+> außerhalb**".
+>
 > **Ein Fehlerfund unterwegs:** F4 — P5a/AP4 hatte die Anwendung
 > **uninstallierbar** gemacht (`install.php` lief in einen HTTP 500).
 > Behoben mit Web 20.15.3 (Backlog Nr. 215); dazu Nr. 216, weil

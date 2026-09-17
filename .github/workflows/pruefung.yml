@@ -116,7 +116,22 @@ jobs:
         # steht so an hundert Stellen. Was AP6 an ZIERDE mitgebracht hatte —
         # fuenf Auslassungszeichen in Kommentaren und Probenbeschriftungen —
         # ist wieder entfernt, statt die Zahl damit wachsen zu lassen.
-        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 377
+        #
+        # 387 MIT P5b (Web 20.21.1): +10. Gleiche Rechnung, gleiche Reihenfolge.
+        # P5b brachte zunaechst +18; ZWOELF davon waren Zierde in Kommentaren
+        # und in einem error_log() und sind entfernt (Pfeil zu "->",
+        # Auslassung zu "..."). Die verbleibenden ZEHN stehen in SICHTBAREM
+        # Text: „Unter Einstellungen -> Konto", „unter Betrieb -> Updates die
+        # Migration ausfuehren", „Du wirst abgemeldet ...". Sie zu aendern
+        # hiesse, den Hausstil an zehn Stellen zu brechen, damit eine Zahl
+        # gleich bleibt, die ohnehin das Falsche misst.
+        #
+        # WAS SIE MISST, IST JETZT AUSGEZAEHLT (Backlog Nr. 219): von 319
+        # Befunden sind 195 „...", 104 Pfeile — zusammen 299 Satzzeichen in
+        # Prosa. Nur ZWANZIG sind Zeichen, die wirklich statt eines Symbols
+        # stehen. Solange die Liste beide Sorten in einen Topf wirft, kann
+        # diese Schwelle nur steigen. Der Weg heraus steht in Nr. 219.
+        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 387
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py

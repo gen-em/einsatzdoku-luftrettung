@@ -667,7 +667,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      dem Abschluss von S5 gelöscht (s. LIESMICH.md)
 │   ├── screenshots/       nimmt alle Seiten in acht Breiten von 360 bis 1920 px
 │   │                      auf, je Seite ein Kontaktbogen; misst dabei
-│   │                      waagerechten Überlauf, Konsolenfehler und Knopfhöhen.
+│   │                      waagerechten Überlauf, Konsolenfehler, Knopfhöhen
+│   │                      und — seit Web 20.21.1 — Karten, die ausserhalb von
+│   │                      main.inhalt haengen (Nr. 217).
 │   │                      Seit Web 9.10.1 prueft er nach JEDEM Aufruf, ob er
 │   │                      die richtige Seite vor sich hat, und meldet sich bei
 │   │                      Bedarf neu an; ein nicht aufloesbarer Platzhalter
@@ -5210,6 +5212,27 @@ Richtungspfeile mit `getScreenCTM()`, das in WebKit die CSS-Transformation
 eines HTML-Vorfahren nicht enthält — ein Fehler im Prüfmittel, der wie einer
 der Anwendung aussah (Nr. 186).
 
+**Die vierte Zahl: Karten ausserhalb des Gerüsts** (seit Web 20.21.1,
+Backlog Nr. 217). Der Lauf zählt je Seite, wie viele `section.karte` bzw.
+`details.karte` **nicht** in `main.inhalt` hängen, und nennt sie beim Titel.
+
+Der Anlass war ein `ui_karte_ende()` zu viel auf der Profilseite: Es gab ein
+`</div></section>` ohne Gegenstück aus, der Parser nahm für das `</div>` das
+nächste offene — `div.rahmen` — und schloss damit `form`, `main.inhalt` und
+`rahmen` mitten auf der Seite. Vier Karten lagen danach direkt am `body`, über
+die volle Fensterbreite, unter der Seitenleiste hindurch. **Zehn Tage lang.**
+
+**Warum die drei älteren Zahlen das nicht sehen konnten:** `scrollWidth` blieb
+gleich `innerWidth` — es lief nichts über, es lag nur falsch. Die Konsole blieb
+still. Die Knopfhöhen stimmten. Der Lauf meldete in allen drei Engines drei
+Nullen neben einer kaputten Seite. Gemessene Gegenprobe mit wieder eingebautem
+Fehler: „Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0" **und**
+„6 Karten geprüft · 4 außerhalb von main.inhalt".
+
+Die Zahl nennt, was sie gemessen hat („n geprüft · m außerhalb") und nicht nur
+das Ergebnis — eine Seite ohne Karten meldete sonst dieselbe Null wie eine
+geprüfte.
+
 **Ein Satz von gestern ist zurückgenommen:** Firefox meldet die
 `latin-ext`-Schriftabrufe **nicht** als Konsolenfehler. Die Abbrüche
 (`NS_BINDING_ABORTED`) stammten von einem Messskript, das schneller
@@ -8224,7 +8247,7 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 |---|---|
 | `php -l` über `server/` und `tools/` | 0 Fehler |
 | `tools/wortliste/wortliste.py` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen |
-| `tools/vollstaendigkeit/pruefen.py --hoechstens N` | **genau N** — die Schwelle, nicht null (heute 366) |
+| `tools/vollstaendigkeit/pruefen.py --hoechstens N` | **genau N** — die Schwelle, nicht null (heute **387**; die Zahl steht in `pruefung.yml`, nicht hier — dieser Eintrag stand bis Web 20.21.1 auf 366, während die Kette längst mit 377 lief) |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | Backlog-Nummern (`grep … uniq -d`) | leer |
 | `tools/migrationsregister/pruefen.php` | 0 Befunde, Selbstprobe 4/4 |

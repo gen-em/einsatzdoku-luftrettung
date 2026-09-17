@@ -1065,14 +1065,31 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           ['ton' => konten_reg_art() === 'offen' ? 'orange' : 'blau'])]); ?>
     <?php if ($demoFrage): ?>
       <?php /* Kein neuer Baustein: `.meldung` mit einem Knopf darin, wie ihn
-               die Anwendung an mehreren Stellen fuehrt. */ ?>
-      <div class="meldung meldung-blau">
+               die Anwendung an mehreren Stellen fuehrt (`index.php`,
+               `betrieb_schluesselblatt.php`). Von Hand und nicht ueber
+               `ui_meldung_markup()`, weil der Knopf hier in einem eigenen
+               FORMULAR steckt; der Baustein nimmt nur fertiges Markup fuer
+               den Knopf, kein Formular darum.
+
+               DER TON HEISST `info` UND NICHT `blau` (Backlog Nr. 218).
+               Genau dieser Fehler stand hier: Die Toene sind
+               `fehler, warn, ok, info, schutz`, und `meldung-blau` hat keine
+               Regel im Stylesheet — der Kasten stand ungestaltet da, ohne
+               jede Fehlermeldung. `ui_meldung_markup()` wirft bei einem
+               unbekannten Ton; wer von Hand baut, hat diesen Schutz nicht.
+               Gefunden hat es `tools/vollstaendigkeit/`. */ ?>
+      <div class="meldung meldung-info" role="status">
+        <?= ui_symbol('hinweis', 'symbol-gross') ?>
+        <?php /* EIN ABSATZ, NICHT ZWEI. `.meldung` ist eine Flexzeile —
+                 ein zweiter `<p>` stellt sich NEBEN den ersten und schiebt
+                 den Knopf in die naechste Zeile. Gemessen am 17.09.2026;
+                 `ui_meldung_markup()` gibt aus demselben Grund immer genau
+                 einen Absatz aus. */ ?>
         <p><strong>Die Registrierung ist jetzt geschlossen.</strong> Die
            <strong>Demo-Anmeldung</strong> ist weiterhin zugelassen — wer die
            Adresse aus dem Handbuch kennt, kommt also weiter herein. Soll sie
-           mit abgeschaltet werden?</p>
-        <p class="feld-hinweis">Der Bestand des Demo-Kontos bleibt in jedem
-           Fall erhalten; abgeschaltet wird nur die Anmeldung daran.</p>
+           mit abgeschaltet werden? Der Bestand des Demo-Kontos bleibt in
+           jedem Fall erhalten; abgeschaltet wird nur die Anmeldung daran.</p>
         <form method="post" action="betrieb_server.php">
           <?= csrf_field() ?><input type="hidden" name="action" value="demo_aus">
           <?= ui_knopf(['text' => 'Demo-Anmeldung auch abschalten',

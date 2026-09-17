@@ -14,6 +14,70 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.21.1] — 2026-09-17
+
+**Die Profilseite brach auf halber Höhe aus ihrem Gerüst aus** (Backlog
+Nr. 217).
+
+### Behoben
+
+Auf `einstellungen.php?t=profil` stand seit dem 07.09.2026 ein
+`ui_karte_ende()` zu viel. Es schloss keine Karte — es gab ein
+`</div></section>` ohne Gegenstück aus. Für ein `</div>` ohne offenes `div`
+nimmt der Parser das nächste, das er findet, und das war `div.rahmen`: Damit
+endeten `form`, `main.inhalt` und `rahmen` mitten auf der Seite. Alles danach —
+**Datenschutz, Passwort ändern, Was dein Konto hält, Konto löschen** und der
+Knopf „Profil speichern" — hing direkt am `body` und lief über die **volle
+Fensterbreite**, unter der Seitenleiste hindurch. Gemessen bei 1440 px: `left`
+0 statt 276, Breite 1440 statt 1148.
+
+**Das Speichern ging weiter**, und zwar aus einem Grund, der nicht beruhigt:
+Der Knopf behält seinen Formularbezug aus dem Parsen, auch wenn das
+`form`-Element implizit geschlossen wurde. Der Schaden war also sichtbar, nicht
+funktional — aber er war zehn Tage lang auf einer der meistbesuchten Seiten.
+
+**Warum kein Prüfmittel angeschlagen hat.** Das ist der eigentliche Befund:
+`scrollWidth` blieb gleich `innerWidth` — es lief nichts über, es lag nur
+falsch. Die Konsole blieb still, die Knopfhöhen stimmten, der Bilderlauf meldete
+für diese Seite „kein Überlauf, 0 Konsolenfehler, 0 falsche Knopfhöhen". Drei
+Nullen neben einer kaputten Seite. Gefunden wurde es beim **Ansehen** eines
+Bildes zu Web 20.21.0, nicht durch eine Zahl.
+
+**Gegenprobe, die es künftig sieht:** Der Bilderlauf zählt seither je Seite die
+Karten, die nicht in `main.inhalt` hängen, und nennt sie beim Titel. Voller Lauf
+über 53 Seiten: **149 Karten geprüft, 0 außerhalb**. Mit wieder eingebautem
+Fehler meldet derselbe Lauf unverändert „Überlauf 0 · Konsolenfehler 0 · Knöpfe
+falscher Höhe 0" **und** „6 geprüft · **4 außerhalb**" — die neue Zahl ist also
+selbst keine leere Null.
+
+**Ein Meldungskasten stand ungestaltet da** (Backlog Nr. 218). In
+`betrieb_server.php` war von Hand `class="meldung meldung-blau"` geschrieben;
+die Töne heißen `fehler`, `warn`, `ok`, `info`, `schutz`, und `meldung-blau` hat
+keine Regel im Stylesheet. Weißer Kasten, kein Symbol, keine Fehlermeldung.
+`ui_meldung_markup()` wirft bei einem unbekannten Ton — wer von Hand baut, hat
+diesen Schutz nicht. Gefunden von `tools/vollstaendigkeit/`, berichtigt zu
+`meldung-info` samt `role="status"` und Symbol.
+
+**Zwei Seiten hatten keinen Eintrag in der Gerüst-Ausnahmeliste.**
+`einwilligung.php` und `adresse_bestaetigen.php` lassen das Seitengerüst mit
+Absicht weg — das Tor, weil seine Bereichsnavigation auf gesperrte Seiten
+führte; die Bestätigungsseite, weil sie ohne Sitzung läuft. Beide stehen jetzt
+mit Begründung in `tools/vollstaendigkeit/zusagen.md`, statt als Befund
+mitzulaufen.
+
+**Die Schwelle der Vollständigkeitsprüfung steht auf 387** (vorher 377).
+P5b brachte +18 Unicode-Befunde; **zwölf davon waren Zierde** in Kommentaren und
+in einem `error_log()` und sind entfernt, die übrigen zehn stehen in sichtbarem
+Text und folgen dem Hausstil („Unter Einstellungen → Konto"). Dabei ausgezählt,
+was diese Prüfung eigentlich misst: von 319 Befunden sind **195 `…` und 104
+`→`** — zusammen 299 Satzzeichen in Prosa; nur **20** sind Zeichen, die
+wirklich statt eines Symbols stehen. Solange die Liste beides in einen Topf
+wirft, kann die Schwelle nur steigen. Der Weg heraus steht als Backlog Nr. 219.
+**Nebenbei:** `docs/Technik.md` nannte die Schwelle mit 366, während die Kette
+mit 377 lief — berichtigt.
+
+---
+
 ## [Web 20.21.0] — 2026-09-17
 
 **Mengengrenze je Konto** (P5b/AP6, E-P5b-04, -18; Backlog Nr. 37 und 48).

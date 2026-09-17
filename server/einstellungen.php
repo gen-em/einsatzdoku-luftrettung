@@ -1340,7 +1340,20 @@ ui_seite_start(['titel' => 'Einstellungen',
         ]); ?>
       <?php ui_karte_ende(); ?>
 
-      <?php ui_karte_ende(); ?>
+      <?php /* HIER STAND EIN ZWEITES `ui_karte_ende()` (Backlog Nr. 217).
+               Es schloss keine Karte, sondern gab ein `</div></section>` zu
+               viel aus — und weil der Parser fuer ein `</div>` ohne offenes
+               `div` das naechste nimmt, das er findet, schloss es
+               `div.rahmen` samt `main.inhalt` und `form`. Alles danach
+               (Datenschutz, Passwort, Mengen, Loeschkarte und dieser
+               Knopf) lag direkt am `body` und lief ueber die volle
+               Fensterbreite, unter der Seitenleiste hindurch.
+
+               WARUM ES ZEHN TAGE UNBEMERKT BLIEB: Kein Prüfmittel schlug an.
+               `scrollWidth` blieb gleich `innerWidth` — es lief nichts ueber,
+               es lag nur falsch —, die Konsole blieb still, die Knopfhoehen
+               stimmten. Gefunden beim Ansehen des Bildes zu AP6, nicht durch
+               eine Zahl. */ ?>
 
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Profil speichern', 'art' => 'primaer']) ?>

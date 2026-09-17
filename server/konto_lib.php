@@ -96,7 +96,7 @@ const KONTO_STATUS = [
 ];
 
 /**
- * Erlaubte Uebergaenge: von => [nach, …].
+ * Erlaubte Uebergaenge: von => [nach, ...].
  *
  * WARUM EINE TABELLE UND NICHT EINE REIHE VON `if`. Ein Uebergang, der
  * nirgends steht, ist ein Uebergang, den niemand nachlesen kann. Und die
@@ -260,7 +260,7 @@ function konto_status_setzen(int $userId, string $neu, ?string $grund = null): b
     $alt = (string)$zeile['status'];
     if ($alt === $neu) { return true; }          // nichts zu tun, kein Fehler
     if (!in_array($neu, KONTO_UEBERGAENGE[$alt] ?? [], true)) {
-        error_log('konto_status_setzen: Übergang ' . $alt . ' → ' . $neu
+        error_log('konto_status_setzen: Übergang ' . $alt . ' -> ' . $neu
                 . ' ist nicht vorgesehen (Konto ' . $userId . ').');
         return false;
     }

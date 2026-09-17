@@ -64,7 +64,7 @@ const KONTEN_K_GRENZE_EINSAETZE = 'konten_grenze_einsaetze';
 const KONTEN_K_GRENZE_MB       = 'konten_grenze_mb';
 /* Backlog Nr. 48 wird NICHT als eigene Installationsvorgabe gefuehrt: Die
  * gibt es schon — `app_state.adminbackup_aufbewahrung`, gepflegt unter
- * Verwaltung → Konto-Backups. Eine zweite Zahl daneben waere genau die Art
+ * Verwaltung -> Konto-Backups. Eine zweite Zahl daneben waere genau die Art
  * Doppelung, die R83 verhindern soll. Was P5b/AP6 ergaenzt, ist die
  * UEBERSCHREIBUNG je Konto (`users.backup_pakete`). */
 const KONTEN_K_DEMO_ANMELDUNG  = 'konten_demo_anmeldung';

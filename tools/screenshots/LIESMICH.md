@@ -39,7 +39,37 @@ Phase.
 > WebKit in den Überlauf des Kastens rechnet (Nr. 185, behoben mit
 > `select.feld-eingabe{contain:paint}`).
 >
-> Vier Dinge, die man beim Messen über Engines wissen muss:
+> > **Die vierte Zahl: Karten außerhalb von `main.inhalt`** (Nr. 217, seit
+> Web 20.21.1). Der Lauf zählt je Seite, wie viele Karten nicht im
+> Seitengerüst hängen, und nennt sie beim Titel:
+>
+> ```
+> Karten im Seitengerüst: 254 geprüft · 0 außerhalb von main.inhalt (Nr. 217)
+> ```
+>
+> **Sie steht da, weil die drei anderen Zahlen einen echten Schaden zehn Tage
+> lang nicht gesehen haben.** Ein `ui_karte_ende()` zu viel schloss auf der
+> Profilseite `div.rahmen` mit; vier Karten lagen danach direkt am `body`, über
+> die volle Fensterbreite, unter der Seitenleiste hindurch. `scrollWidth` blieb
+> trotzdem gleich `innerWidth` — es lief nichts über, es lag nur falsch —, die
+> Konsole blieb still, die Knopfhöhen stimmten. **Drei Nullen neben einer
+> kaputten Seite**, in allen drei Engines.
+>
+> Gefunden wurde es beim **Ansehen** eines Bildes. Gegenprobe mit wieder
+> eingebautem Fehler: dieselben drei Nullen, und „6 Karten geprüft · **4
+> außerhalb** von main.inhalt".
+>
+> Die Zahl nennt beide Seiten — „n geprüft · m außerhalb". Eine Seite ohne
+> Karten meldete sonst dieselbe Null wie eine geprüfte.
+
+> **Scheitert die Anmeldung, steht die Meldung der Seite dabei.** Der
+> häufigste Grund ist nicht ein falsches Passwort, sondern der **Ratenschutz**:
+> Wer den Lauf mehrmals kurz hintereinander startet, stolpert über den
+> Demo-Topf („vorübergehend gesperrt — wieder ab HH:MM"). Das ist richtiges
+> Verhalten der Anwendung; auf dem Prüfstand räumt
+> `DELETE FROM rate_limits` den Topf.
+
+Vier Dinge, die man beim Messen über Engines wissen muss:
 >
 > - **Der Browser kommt über `PLAYWRIGHT_BROWSERS_PATH`** (Vorgabe
 >   `/opt/pw-browsers`) und heißt in Playwright `chromium`, `firefox` oder

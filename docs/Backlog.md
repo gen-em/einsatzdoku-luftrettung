@@ -47,7 +47,9 @@ Erwartungen der Wiederherstellungsprobe), **213 und 214 aus der
 Durchsicht vom 16.09.2026** (Zustandsdatei der Kette im Webroot;
 `install.php` in der Auslieferung). **215 und aufwärts liegen auf dem
 P5b-Zweig `claude/magical-dirac-we2y1z`** (215 Anwendung nicht installierbar,
-216 `frame-ancestors` in Report-Only; die Einschübe des P5b-Konzepts folgen
+216 `frame-ancestors` in Report-Only, 217 Profilseite aus dem Gerüst
+ausgebrochen, 218 Meldungston ohne Regel, 219 Symbolregel zählt Typografie;
+die Einschübe des P5b-Konzepts folgen
 dort). Jeder weitere Zweig, der Nummern
 vergibt, beginnt hinter der dort zuletzt vergebenen und trägt seine Spanne
 hier ein, bevor er pusht.
@@ -2396,6 +2398,103 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nur Chromium gelaufen. `tools/screenshots/LIESMICH.md` empfiehlt den
     dreifachen Lauf bei Gestaltungsrunden; die Empfehlung hat sich zum
     zweiten Mal bezahlt gemacht (das erste Mal war Nr. 185).
+
+217. **Die Profilseite brach auf halber Höhe aus ihrem Seitengerüst aus.**
+    *Entstanden 07.09.2026 (S9/AP4), gefunden 17.09.2026 beim Ansehen eines
+    Bildes zu P5b/AP6, behoben am selben Tag in Web 20.21.1.*
+    Auf `einstellungen.php?t=profil` stand ein `ui_karte_ende()` zu viel. Es
+    schloss keine Karte, sondern gab ein `</div></section>` ohne Gegenstück
+    aus; für ein `</div>` ohne offenes `div` nimmt der Parser das nächste, das
+    er findet, und das war `div.rahmen`. Damit endeten `form`, `main.inhalt`
+    und `rahmen` mitten auf der Seite, und alles danach — **Datenschutz,
+    Passwort ändern, Was dein Konto hält, Konto löschen** und der Knopf
+    „Profil speichern" — hing direkt am `body`. Gemessen bei 1440 px: `left` 0
+    statt 276, Breite 1440 statt 1148; die Karten liefen unter der
+    Seitenleiste hindurch über die volle Fensterbreite.
+
+    **Das Speichern ging weiter**, weil ein Knopf seinen Formularbezug aus dem
+    Parsen behält, auch wenn das `form`-Element implizit geschlossen wurde. Der
+    Schaden war sichtbar, nicht funktional.
+
+    **Der eigentliche Befund ist, dass kein Prüfmittel angeschlagen hat.**
+    `scrollWidth` blieb gleich `innerWidth` — es lief nichts über, es lag nur
+    falsch. Die Konsole blieb still, die Knopfhöhen stimmten. Der Bilderlauf
+    meldete für diese Seite in allen drei Engines „kein Überlauf, 0
+    Konsolenfehler, 0 falsche Knopfhöhen": **drei Nullen neben einer kaputten
+    Seite**. Genau der Fall, vor dem `CLAUDE.md` 6 warnt — eine grüne Zahl ist
+    erst dann ein Beleg, wenn sie das Gemessene benennt, und „kein Überlauf"
+    benennt nicht „liegt an der richtigen Stelle".
+
+    **Gegenprobe:** ein Lauf über 24 Seiten in beiden Rollen, der Karten
+    zählt, die nicht in `main.inhalt` hängen — **80 Karten geprüft, 0
+    außerhalb** (vorher vier auf der Profilseite).
+
+    **Zu tun:** diese Zählung in den Bilderlauf aufnehmen, damit sie nicht
+    beim nächsten Mal wieder von Hand entstehen muss. Sie kostet einen
+    `evaluate()`-Aufruf je Aufnahme und braucht keine zweite Sitzung.
+
+218. **Ein Meldungskasten trug einen Ton, den es nicht gibt.**
+    *Entstanden und gefunden 17.09.2026 (P5b/AP7 bzw. AP6), behoben am selben
+    Tag in Web 20.21.1.*
+    In `betrieb_server.php` stand von Hand `<div class="meldung
+    meldung-blau">`. Die Töne der Anwendung heißen `fehler`, `warn`, `ok`,
+    `info`, `schutz`; **`meldung-blau` hat keine Regel im Stylesheet**. Der
+    Kasten stand ungestaltet da — weißer Hintergrund, kein Symbol, keine
+    Fehlermeldung.
+
+    `ui_meldung_markup()` **wirft** bei einem unbekannten Ton, und ihr
+    Kopfkommentar beschreibt genau diesen Schaden („die Spurenseite trug so
+    zwei Jahre lang zwei weiße Meldungen"). Wer von Hand baut — hier nötig,
+    weil der Knopf in einem eigenen Formular steckt —, hat diesen Schutz
+    nicht.
+
+    Gefunden von `tools/vollstaendigkeit/` („im Markup ohne Regel"), behoben
+    zu `meldung-info` samt `role="status"` und Symbol, wie es die anderen
+    vier handgebauten Kästen der Anwendung führen.
+
+    **Zu tun:** Die Handbauten zählen — es sind fünf Stellen. Eine Variante
+    von `ui_meldung_markup()`, die ein Formular um den Knopf legt, machte alle
+    fünf überflüssig und nähme ihnen die Möglichkeit, einen Ton zu erfinden.
+
+219. **Die Symbolregel zählt Typografie und findet deshalb keine Symbole
+    mehr.**
+    *Gemessen 17.09.2026 auf dem P5b-Zweig; nicht behoben.*
+    `tools/vollstaendigkeit/` prüft „Unicode-Zeichen als Symbol im Markup" —
+    gemeint sind Zeichen, die **statt eines Symbols** stehen (`▸ ✓ ⚠ ★ ●`).
+    In der Zeichenliste stehen aber auch **`…` und `→`**, und die sind in
+    diesem Projekt keine Symbole, sondern Satzzeichen: „Betrieb →
+    Servereinstellungen", „Daten werden geladen…".
+
+    **Ausgezählt auf dem P5b-Zweig — 319 Befunde:**
+
+    | Zeichen | Zahl | was es ist |
+    |---|---|---|
+    | `…` | 195 | Auslassung in Prosa und Zustandszeilen |
+    | `→` | 104 | Pfad durch die Oberfläche in Prosa |
+    | `⋯ × ✕ ✓ ★ ⚠ ‹` | 20 | **tatsächlich Zeichen statt Symbol** |
+
+    **299 von 319 sind Hausstil.** Sie verschwinden nicht, weil sie richtig
+    sind — und sie machen die Zahl unbrauchbar: Die 20 echten stehen
+    zwischen ihnen und fallen niemandem auf. Genau deshalb steht in der
+    Prüfkette eine **Schwelle** statt einer Null, und genau deshalb wächst
+    sie mit jeder Phase (P5a: 377, P5b: 395), ohne dass etwas schlechter
+    geworden wäre.
+
+    **Vorschlag:** Die Zeichenliste in zwei teilen — **Ikonenzeichen** (0
+    geduldet, heute 20) und **Typografie** (`…`, `→`; nicht gezählt). Dann
+    misst die Prüfung wieder etwas, und die Schwelle kann fallen statt
+    steigen. Das ist eine Entscheidung über ein Prüfmittel, kein
+    Nebenbei-Umbau — deshalb steht sie hier und wurde nicht in P5b gemacht.
+
+    **Bis dahin:** Die Schwelle in `pruefung.yml` steht auf 387 (vorher 377).
+    P5b brachte zunächst +18; **zwölf davon waren Zierde** in Kommentaren und
+    in einem `error_log()` und sind entfernt. Die verbleibenden zehn stehen in
+    **sichtbarem** Text und folgen dem Hausstil.
+
+    **Nebenbefund:** `docs/Technik.md` nannte als Schwelle **366**, während
+    die Kette längst mit **377** lief. Eine Schwelle an zwei Stellen läuft
+    auseinander; berichtigt, mit dem Hinweis, dass die Zahl in
+    `pruefung.yml` steht und nicht in der Dokumentation.
 
 ## Erledigt
 
