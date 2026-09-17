@@ -283,6 +283,70 @@ der Anwendung. Ohne die Meldung rät die nächste Instanz.
 
 ---
 
+### F10 — Die Wortliste sah die Rechtstexte nie an (Web 20.22.2, E-P5b-25)
+
+Bereich **c** der Wortliste ist eine feste Liste von acht Dateien.
+`docs/rechtstexte/` stand nicht darin, weil die drei Entwürfe erst am
+16.09.2026 entstanden sind. Nach ihrer Überarbeitung am 17.09.2026 lief die
+Wortliste und meldete **0 Treffer** — und hatte **keine Zeile davon gelesen**.
+
+**Das ist derselbe Fehler wie B-S4-06 bei der Android-App**, und er wiegt hier
+schwerer: Die Rechtstexte sind Entwürfe in `docs/`, aber ihr Ziel ist die
+Tabelle `rechtstexte`, und von dort rendert die Anwendung sie als eigene
+Seiten. Es ist sichtbarer Text, der nur noch nicht eingespielt ist.
+
+**Nachgetragen, dann gemessen: 14 Treffer** in den drei Dateien — **11× „Spur"**
+(die Sperrliste sagt ausdrücklich: „Was eine NutzerIn LIEST, heisst
+GPS-Daten"), **2× „Pilotinnen und Piloten"** in der Kategorienliste der AVV,
+**1× „Station"** statt „Standort". **Alle umformuliert, keine Ausnahme
+eingetragen.** Voller Lauf danach 0 Treffer, 0 ungenutzte Ausnahmen, 0
+durchgerutschte Fallen über **11 Dateien statt 8**.
+
+**Die Lehre steht jetzt in `tools/wortliste/LIESMICH.md`:** Eine feste
+Dateiliste altert still und immer in dieselbe Richtung.
+
+---
+
+### F11 — Die Häkchen wurden verlangt und vergessen (Backlog Nr. 223)
+
+`registrieren.php` prüfte seit Web 20.22.0 alle drei Häkchen als Pflicht und
+legte danach das Konto an. Dazwischen fehlte eine Zeile: **Es entstand nie ein
+Eintrag in `konto_einwilligungen`.** Der einzige Schreibweg,
+`einwilligung_setzen()`, wurde im ganzen Server genau einmal aufgerufen — am
+Tor beim Login. E-P5b-05 verlangt „Gespeichert je Konto mit Fassungskennung und
+Zeit".
+
+**Der zweite Fund an derselben Stelle war der unangenehmere:** Die
+Registrierung prüfte `stand_am` nicht — der Begriff kam in der Datei kein
+einziges Mal vor. Solange die geprüften Texte fehlen (der geplante Zustand bis
+E-P5b-24), musste eine Registrierende den Haken „Ich nehme die Vereinbarung zur
+Auftragsverarbeitung (AVV) an" setzen, während `avv.php` daneben „noch keine
+Vereinbarung zur Auftragsverarbeitung hinterlegt." zeigte.
+
+**Entschieden (E-P5b-25):** Festgehalten wird **bei der Registrierung**, weil
+dort der Vertrag geschlossen wird; das Tor holt nur eine *neue* Fassung nach.
+Neu ist `einwilligung_in_kraft()`; Prüfung und Markup ziehen aus derselben
+Liste.
+
+**Gemessen am 17.09.2026** gegen die wiederhergestellte lokale Installation:
+
+| Fall | Erwartet | Gemessen |
+|---|---|---|
+| Drei Texte in Kraft, alle gehakt | 3 Zeilen mit geltender Fassung | **3 Zeilen**, `stand_am` je `2026-09-16 10:00:00`, vorher 0 |
+| Kein Text in Kraft | kein Haken, Konto entsteht, keine Zeile | **0 Häkchen** im Formular, Konto `unbestaetigt`, **0 Zeilen** |
+| Tor danach, Texte wieder in Kraft | erstes Konto in Ruhe, zweites vollständig gefasst | erstes `sperrt=[] hinweis=[]`, zweites `sperrt=[nutzungsbedingungen,avv] hinweis=[datenschutz]` |
+| Ein Text in Kraft, nicht gehakt | Absage, kein Konto | Meldung kam, **0 Konten** angelegt |
+| Ein Text in Kraft, gehakt | genau 1 Zeile mit *dieser* Fassung | **1 Zeile**, `stand_am` `2026-09-17 09:00:00` |
+
+**Dabei ein Folgefehler gefunden, von mir eingebaut:** Die Absage lautete fest
+„Ohne **alle drei** lässt sich kein Konto anlegen" — bei einem einzigen
+geltenden Text stand dort „Es fehlt noch: Nutzungsbedingungen. Ohne alle drei
+…". Die Meldung zählt jetzt mit; nachgemessen für eins („Es fehlt noch … Ohne
+diese Zustimmung"), zwei und drei („Es fehlen noch … Ohne diese
+Zustimmungen").
+
+---
+
 ---
 
 ## 3. Was maschinell geprüft wurde — Mittel und Zahl
@@ -456,6 +520,26 @@ AP9 stehen noch aus (Mockup-Freigabe); ihre Punkte kommen mit ihnen.
   längst wieder aktiv ist.
 
 ### AP4 — Einwilligungen
+
+- [ ] **P4.0 — Die Registrierung hält die Häkchen fest** (neu, Web 20.22.2,
+  Backlog Nr. 223). Voraussetzung: Die Rechtstexte tragen ein **Standdatum**,
+  und die Registrierung steht auf *offen*. Ein Konto über `registrieren.php`
+  anlegen, dabei alle Häkchen setzen. Dann in *Verwaltung → NutzerInnen* das
+  neue Konto öffnen. **Erwartet:** Es zeigt alle drei Dokumente als
+  angenommen, mit der geltenden Fassung und einem Zeitpunkt — **noch bevor
+  sich jemand angemeldet hat**.
+  **Scheitern:** Die Dokumente stehen dort als offen. Dann schreibt die
+  Registrierung wieder nicht, und die Annahme entsteht erst am Tor beim ersten
+  Login — der alte Zustand.
+
+- [ ] **P4.0b — Ohne Text kein Haken.** Bei **allen** Rechtstexten das
+  Standdatum leeren und `registrieren.php` aufrufen. **Erwartet:** Das Formular
+  zeigt **kein einziges Häkchen**, und eine Registrierung ohne Häkchen geht
+  durch. Danach das Standdatum wieder setzen und mit diesem Konto anmelden:
+  Jetzt kommt das Tor mit allen drei.
+  **Scheitern:** Das Formular verlangt Häkchen für Dokumente, die
+  `nutzungsbedingungen.php` und `avv.php` als leer anzeigen — dann prüft die
+  Registrierung `stand_am` nicht, und jemand nimmt ein leeres Dokument an.
 
 - [ ] **P4.1 — Das Tor kommt, wenn die Texte in Kraft sind.** In *Verwaltung →
   Installation* bei Nutzungsbedingungen und AVV ein **Standdatum** setzen.

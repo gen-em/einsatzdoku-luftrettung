@@ -553,9 +553,14 @@ führte sonst auf eine Seite, die absagt.
 
 **So läuft es ab:**
 
-1. **Adresse, Name und drei Häkchen** eintragen. Die Häkchen sind
+1. **Adresse, Name und die Häkchen** eintragen. Die Häkchen sind
    Nutzungsbedingungen, Vereinbarung zur Auftragsverarbeitung und
-   Datenschutzerklärung; alle drei sind Pflicht, jeder Text ist verlinkt.
+   Datenschutzerklärung; sie sind Pflicht, jeder Text ist verlinkt. **Es sind
+   nicht immer drei:** Gezeigt wird, was die Betreiberin hinterlegt hat. Fehlt
+   ein Text noch, kannst du ihn nicht annehmen — dann steht sein Häkchen auch
+   nicht da, und du wirst beim ersten Anmelden danach gefragt, sobald er
+   eingespielt ist. Deine Antworten werden mit der Fassung und dem Zeitpunkt
+   im Konto festgehalten; du siehst sie später unter *Einstellungen*.
 2. **Die Seite antwortet immer gleich** — „wenn die Adresse frei ist, ist eine
    Mail unterwegs". Das ist Absicht: Sonst könnte jeder durch Ausprobieren
    herausfinden, wer hier ein Konto hat.

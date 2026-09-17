@@ -48,9 +48,10 @@ Mockups in `konzept-p5b/mockups/`.
 > E-P5b-25 überarbeitet worden (private Zweckbestimmung, § 203 StGB,
 > Klartextliste ehrlich gestellt); **geprüft sind sie weiterhin nicht**.
 >
-> **Ein Rest ist dazugekommen:** Backlog **Nr. 223** — die drei Häkchen der
-> Registrierung werden nicht festgehalten und werden auch für Texte verlangt,
-> die nicht in Kraft sind. Eigenes Paket vor AP10.
+> **Nr. 223 ist erledigt** (Web 20.22.2, 17.09.2026): Die Registrierung hält
+> die Einwilligungen jetzt fest und verlangt nur, was in Kraft ist. Fünf
+> Prüffälle gegen die lokale Installation gemessen, dabei ein Folgefehler in
+> der Absage gefunden und behoben — Einzelheiten im Prüfdokument, F11.
 >
 > **Fünf Migrationen bisher** (AP3 bringt keine dazu) — `2026_09_16_protokoll_ereignisse`,
 > `_konto_lebenszyklus`, `_einwilligungen`, `_adresswechsel_bestaetigt` und
@@ -660,8 +661,19 @@ nach E-P5b-24. Der Auftraggeber führt diese Zuarbeit selbst; sie ist ab
 
 **Ein Mangel in AP3/AP4, dabei gefunden:** Die drei Häkchen bei der
 Registrierung werden nirgends festgehalten, und sie werden auch für Texte
-verlangt, die nicht in Kraft sind. Backlog **Nr. 223**; behoben in einem
-eigenen Paket vor AP10.
+verlangt, die nicht in Kraft sind. Backlog **Nr. 223**.
+
+**Erledigt am 17.09.2026 mit Web 20.22.2.** Die dort offene Frage ist
+entschieden: **Festgehalten wird bei der Registrierung**, nicht erst am Tor —
+dort wird der Vertrag geschlossen, das Tor holt nur eine *neue* Fassung nach.
+Dass das Konto in diesem Augenblick noch `unbestaetigt` ist, steht dem nicht
+entgegen; festgehalten wird, was an diesem Formular erklärt wurde, und der
+Verfallsjob räumt eine nie bestätigte Registrierung samt Zeilen weg
+(`ON DELETE CASCADE`). Neu ist `einwilligung_in_kraft()`; Prüfung und Markup
+der Registrierung ziehen aus derselben Liste, damit das Formular keinen Haken
+verlangen kann, den es nie gezeigt hat. Fünf Prüffälle gemessen (Prüfdokument
+F11), dabei ein Folgefehler gefunden: Die Absage sagte fest „Ohne alle drei"
+und zählt jetzt mit.
 
 ---
 

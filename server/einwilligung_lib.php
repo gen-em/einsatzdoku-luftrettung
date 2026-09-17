@@ -104,6 +104,56 @@ function einwilligung_offen(int $userId): array
 }
 
 /**
+ * Welche Einwilligungstexte sind IN KRAFT? Schluessel => `stand_am`.
+ *
+ * Gebraucht von `registrieren.php` (P5b, Backlog Nr. 223): Die Registrierung
+ * darf nur verlangen, was es gibt. `einwilligung_offen()` beantwortet
+ * dieselbe Frage fuer ein bestehendes Konto — hier gibt es noch keins, und
+ * deshalb ist das eine eigene Funktion und kein Sonderfall der anderen.
+ *
+ * WARUM DAS NOETIG WAR. Bis Web 20.22.1 verlangte `registrieren.php` alle
+ * Schluessel aus `RT_EINWILLIGUNG` als Pflichthaken, ohne `stand_am` auch nur
+ * anzusehen. Solange die geprueften Texte nicht eingespielt sind — der
+ * geplante Zustand bis E-P5b-24 —, musste eine Registrierende damit den Haken
+ * „Ich nehme die Vereinbarung zur Auftragsverarbeitung (AVV) an" setzen,
+ * waehrend `avv.php` „noch keine Vereinbarung zur Auftragsverarbeitung
+ * hinterlegt." anzeigte. Sie nahm ein leeres Dokument an.
+ *
+ * Das Tor macht es seit jeher richtig (`einwilligung_offen()`, Zeile mit
+ * „nicht in Kraft"); `docs/Technik.md` begruendet es: „Ein Text ohne
+ * Standdatum verlangt nichts." Die Registrierung folgt dieser Regel jetzt
+ * auch.
+ *
+ * FEHLT DIE TABELLE, ist nichts in Kraft — dieselbe Antwort wie bei
+ * `einwilligung_offen()` und aus demselben Grund: Eine Anwendung, die nach
+ * einem Deploy niemanden mehr registrieren laesst, WEIL die Migration noch
+ * aussteht, waere das Gegenteil von dem, was dieses Tor soll.
+ *
+ * @return array<string, string> nur Schluessel mit gesetztem Standdatum
+ */
+function einwilligung_in_kraft(): array
+{
+    try {
+        $stand = [];
+        foreach (db()->query('SELECT schluessel, stand_am FROM rechtstexte')
+                     ->fetchAll(PDO::FETCH_ASSOC) as $z) {
+            $stand[(string)$z['schluessel']] = $z['stand_am'];
+        }
+    } catch (Throwable $ex) {
+        return [];
+    }
+
+    $aus = [];
+    foreach (RT_EINWILLIGUNG as $schluessel => $art) {
+        $a = $stand[$schluessel] ?? null;
+        if ($a === null || $a === '') { continue; }
+        $aus[$schluessel] = (string)$a;
+    }
+
+    return $aus;
+}
+
+/**
  * Eine Einwilligung vermerken.
  *
  * Schreibt die Fassung, die GERADE gilt — nicht die, die die Seite beim

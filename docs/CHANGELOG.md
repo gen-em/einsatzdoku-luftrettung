@@ -14,6 +14,54 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.22.2] — 2026-09-17
+
+**Die Häkchen wurden verlangt und vergessen.**
+
+### Behoben
+
+**Die Registrierung hielt die Einwilligungen nicht fest.** `registrieren.php`
+verlangte seit Web 20.22.0 alle drei Häkchen als Pflicht und legte danach das
+Konto an — dazwischen fehlte eine Zeile: Es entstand nie ein Eintrag in
+`konto_einwilligungen`. Der einzige Schreibweg, `einwilligung_setzen()`, wurde
+im ganzen Server genau einmal aufgerufen, nämlich am Einwilligungstor beim
+Login. E-P5b-05 verlangt dagegen ausdrücklich „Gespeichert je Konto mit
+Fassungskennung und Zeit".
+
+**Die Wirkung war nicht, dass der Nachweis fehlte** — das Tor fasst jedes
+Konto beim ersten Login und schreibt dann; verloren ging nichts. Verloren ging
+die *Stelle*: Die Erklärung entstand nicht dort, wo der Vertrag geschlossen
+wird, und die Registrierende beantwortete dieselben drei Fragen zweimal, einmal
+im Formular und einmal beim ersten Anmelden.
+
+**Festgehalten wird jetzt bei der Registrierung**, und das ist eine
+Entscheidung und kein Versehen (E-P5b-25): Dort wird der Vertrag geschlossen;
+das Tor ist dafür da, eine *neue* Fassung nachzuholen, nicht die erste zu
+erheben. Dass das Konto in diesem Moment noch `unbestaetigt` ist, steht dem
+nicht entgegen — festgehalten wird, was an diesem Formular erklärt wurde, nicht,
+wem die Adresse gehört. Wird die Registrierung nie bestätigt, räumt der
+Verfallsjob das Konto weg und die Zeilen mit ihm (`ON DELETE CASCADE`).
+
+**Und sie verlangte die Annahme leerer Dokumente.** Der zweite Fund an
+derselben Stelle war der unangenehmere: Die Registrierung prüfte `stand_am`
+nicht — der Begriff kam in `registrieren.php` kein einziges Mal vor. Solange
+die geprüften Rechtstexte nicht eingespielt sind, und das ist der geplante
+Zustand bis zur anwaltlichen Prüfung, musste eine Registrierende damit den
+Haken „Ich nehme die Vereinbarung zur Auftragsverarbeitung (AVV) an" setzen,
+während `avv.php` daneben „noch keine Vereinbarung zur Auftragsverarbeitung
+hinterlegt." anzeigte.
+
+Das Tor macht es seit jeher richtig, und sein Grundsatz gilt hier genauso: Ein
+Text ohne Standdatum verlangt nichts. Neu ist `einwilligung_in_kraft()`; Prüfung
+und Markup der Registrierung ziehen aus derselben Liste, damit das Formular
+nicht einen Haken verlangen kann, den es nie gezeigt hat. **Solange kein Text
+hinterlegt ist, zeigt die Seite keinen Haken** — wer sich so registriert, wird
+beim ersten Login nach dem Einspielen am Tor gefasst.
+
+Gefunden beim Nachprüfen einer Rückfrage des Auftraggebers zur AVV, nicht durch
+ein Prüfmittel: Es gibt keines, das „verlangt, aber nie gespeichert" messen
+könnte. Backlog Nr. 223.
+
 ## [Web 20.22.1] — 2026-09-17
 
 **Das Häkchen sagte das Falsche.**

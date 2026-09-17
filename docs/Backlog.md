@@ -2713,6 +2713,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Aufgenommen 17.09.2026 beim Nachprüfen der Rückfrage zur AVV
     (E-P5b-25). Zwei Mängel an derselben Stelle, in AP3/AP4 entstanden.*
 
+    **Erledigt am 17.09.2026 mit Web 20.22.2.** Der Eintrag bleibt hier
+    stehen, bis er beim Abschluss von P5b nach *Erledigt* wandert — die
+    Beschreibung darunter ist der Befund, nicht der offene Stand.
+    Entschieden wurde die Frage aus (a): **Festgehalten wird bei der
+    Registrierung.** Fünf Prüffälle gemessen, Einzelheiten im Prüfdokument
+    unter F11.
+
     **(a) Kein Eintrag.** `server/registrieren.php` verlangt alle
     Schlüssel aus `RT_EINWILLIGUNG` als Pflichthaken und legt danach das
     Konto über `konto_anlegen()` an — eine Zeile in `konto_einwilligungen`

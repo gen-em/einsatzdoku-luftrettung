@@ -8,6 +8,7 @@ require_once __DIR__ . '/ratelimit_lib.php';
 require_once __DIR__ . '/konten_einstellungen_lib.php';
 require_once __DIR__ . '/konto_lib.php';
 require_once __DIR__ . '/rechtstexte_lib.php';
+require_once __DIR__ . '/einwilligung_lib.php';
 
 /**
  * SELBSTREGISTRIERUNG (P5b/AP3, E-P5b-01, -02, -03, -13).
@@ -129,6 +130,13 @@ $offen      = konten_reg_offen();
 $mitFrei    = konten_reg_freischaltung();
 $fristTage  = konten_reg_frist_tage();
 
+/* WELCHE TEXTE GELTEN GERADE (Backlog Nr. 223). Einmal gelesen und sowohl
+ * fuer die Pruefung als auch fuer das Markup benutzt: Wuerden beide Seiten
+ * getrennt fragen, koennte die Betreiberin zwischen Anzeige und Absenden
+ * einen Text in Kraft setzen, und das Formular verlangte einen Haken, den es
+ * nie gezeigt hat. */
+$ewInKraft = einwilligung_in_kraft();
+
 $t0 = microtime(true);
 $done = false;
 $error = null;
@@ -144,14 +152,24 @@ if ($offen && $_SERVER['REQUEST_METHOD'] === 'POST') {
      * Sie sind keine Sicherheitsvorkehrung, sondern eine Willenserklaerung:
      * Wer sie vergisst, hat sich vertippt und nicht angegriffen — und eine
      * stille Ablehnung liesse ihn raten, warum keine Mail kommt. */
+    /* NUR WAS IN KRAFT IST. Bis Web 20.22.1 lief die Schleife ueber
+     * `RT_EINWILLIGUNG` und verlangte damit auch die Annahme von Texten, die
+     * gar nicht hinterlegt sind — siehe `einwilligung_in_kraft()`. */
     $fehlt = [];
-    foreach (RT_EINWILLIGUNG as $schluessel => $einw) {
+    foreach (array_keys($ewInKraft) as $schluessel) {
         if (empty($_POST['ew'][$schluessel])) { $fehlt[] = RT_TEXTE[$schluessel]; }
     }
 
     if ($fehlt) {
+        /* DIE MELDUNG ZAEHLT MIT. Sie sagte bis Web 20.22.2 „Ohne alle drei",
+         * und das stimmte nur, solange es immer drei waren. Seit die Seite
+         * zeigt, was in Kraft ist, kann auch eines fehlen — dann stand dort
+         * „Es fehlt noch: Nutzungsbedingungen. Ohne alle drei". Gefunden im
+         * Prueffall mit einem einzigen geltenden Text. */
         $done  = false;
-        $error = 'Es fehlt noch: ' . implode(', ', $fehlt) . '. Ohne alle drei '
+        $error = (count($fehlt) === 1
+                    ? 'Es fehlt noch: ' . $fehlt[0] . '. Ohne diese Zustimmung '
+                    : 'Es fehlen noch: ' . implode(', ', $fehlt) . '. Ohne diese Zustimmungen ')
                . 'lässt sich kein Konto anlegen.';
     } elseif (!email_pruefen($email)) {
         $done  = false;
@@ -187,6 +205,40 @@ if ($offen && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $neu = konto_anlegen($email, $name, 'user', 'registrierung',
                                          'unbestaetigt', null, TOKEN_REGISTRIERUNG_S);
+
+                    /* DIE HAEKCHEN FESTHALTEN (Backlog Nr. 223, E-P5b-05:
+                     * „Gespeichert je Konto mit Fassungskennung und Zeit").
+                     * Bis Web 20.22.1 geschah das NICHT: Die Seite verlangte
+                     * die Haken und vergass sie im selben Atemzug — der
+                     * einzige Schreibweg lag am Tor beim Login.
+                     *
+                     * HIER UND NICHT ERST AM TOR, weil hier der Vertrag
+                     * geschlossen wird. Die Nutzerin erklaert mit dem Absenden
+                     * ihren Willen; das Tor ist dafuer da, eine NEUE Fassung
+                     * nachzuholen, nicht die erste zu erheben. Stuende hier
+                     * nichts, beantwortete sie dieselben Fragen zweimal.
+                     *
+                     * DASS DAS KONTO NOCH `unbestaetigt` IST, steht dem nicht
+                     * entgegen. Festgehalten wird, was an diesem Formular
+                     * erklaert wurde — nicht, dass die Adresse jemandem
+                     * gehoert. Wird die Registrierung nie bestaetigt, raeumt
+                     * `job_konto_verfall()` das Konto weg und die Zeilen mit
+                     * ihm; es bleibt kein Beleg fuer eine Erklaerung stehen,
+                     * die niemand abgegeben hat.
+                     *
+                     * `einwilligung_setzen()` liest die Fassung selbst und
+                     * gibt `false` zurueck, wenn der Text nicht in Kraft ist.
+                     * Der Rueckgabewert wird bewusst nicht geprueft: Die
+                     * Schleife laeuft ohnehin nur ueber das, was in Kraft
+                     * war, als das Formular gebaut wurde — und hat die
+                     * Betreiberin einen Text inzwischen zurueckgezogen, ist
+                     * das kein Fall fuer eine Fehlermeldung an die
+                     * Registrierende, sondern einer fuer das Tor beim ersten
+                     * Login. */
+                    foreach (array_keys($ewInKraft) as $schluessel) {
+                        einwilligung_setzen((int)$neu['id'], $schluessel);
+                    }
+
                     $link = app_url('/pw_handling.php?token=' . $neu['token']);
                     $mailAuftrag = ['registrierung', $email, ['link' => $link]];
                     $mailGeht = true;
@@ -281,11 +333,19 @@ $unterzeile = match ($art) {
                autocomplete="off"></label>
       <input type="hidden" name="zeit" value="<?= e(reg_stempel()) ?>">
 
-      <?php /* DIE DREI HAEKCHEN — Wortlaut aus dem Katalog und nicht aus dem
+      <?php /* DIE HAEKCHEN — Wortlaut aus dem Katalog und nicht aus dem
                Markup: „angenommen" und „zur Kenntnis genommen" tragen den
                rechtlichen Unterschied (E-P5b-05), und ein Text, der an zwei
-               Stellen steht, laeuft auseinander. */ ?>
-      <?php foreach (array_keys(RT_EINWILLIGUNG) as $schluessel): ?>
+               Stellen steht, laeuft auseinander.
+
+               ES SIND NICHT IMMER DREI. Gezeigt wird, was in Kraft ist
+               (Backlog Nr. 223) — solange die geprueften Texte fehlen, also
+               keines. Das ist kein Fehler, sondern dieselbe Regel, nach der
+               das Tor beim Login arbeitet: Ein Text ohne Standdatum verlangt
+               nichts. Wer sich in diesem Zustand registriert, wird beim
+               ersten Login nach dem Einspielen am Tor gefasst; die Annahme
+               geht also nicht verloren, sie faellt spaeter. */ ?>
+      <?php foreach (array_keys($ewInKraft) as $schluessel): ?>
         <label>
           <input type="checkbox" name="ew[<?= e($schluessel) ?>]" value="1"
                  <?= !empty($_POST['ew'][$schluessel]) ? 'checked' : '' ?>>

@@ -6827,6 +6827,38 @@ Vergleich der beiden ist die ganze Prüfung.
 angelegter Platzhalter alle Konten aus — genau der Zustand zwischen dem
 Einspielen der Mechanik (AP4) und dem Einspielen der geprüften Texte (R41).
 
+**Der Satz gilt für die Registrierung genauso — seit Web 20.22.2, vorher
+nicht.** `registrieren.php` verlangte alle Schlüssel aus `RT_EINWILLIGUNG`,
+ohne `stand_am` anzusehen; der Begriff kam in der Datei kein einziges Mal vor.
+Wer sich in dem Zustand registrierte, auf den dieser Abschnitt gerade
+hingewiesen hat, musste den Haken „Ich nehme die Vereinbarung zur
+Auftragsverarbeitung (AVV) an" setzen, während `avv.php` daneben den Leertext
+zeigte. `einwilligung_in_kraft()` beantwortet die Frage jetzt für beide
+Seiten; **Prüfung und Markup ziehen aus derselben Liste**, sonst könnte die
+Betreiberin zwischen Anzeige und Absenden einen Text in Kraft setzen und das
+Formular verlangte einen Haken, den es nie gezeigt hat. Backlog Nr. 223.
+
+#### Wo die Annahme entsteht
+
+**Bei der Registrierung, nicht erst am Tor** (E-P5b-25, seit Web 20.22.2).
+Dort wird der Vertrag geschlossen; das Tor ist dafür da, eine **neue** Fassung
+nachzuholen, nicht die erste zu erheben. Bis Web 20.22.1 war es andersherum,
+und zwar ungewollt: `registrieren.php` verlangte die Häkchen und schrieb sie
+nie — `einwilligung_setzen()` wurde im ganzen Server nur von
+`einwilligung.php` aufgerufen. Verloren ging dadurch nichts (das Tor fasst
+jedes Konto beim ersten Login), wohl aber die Stelle: Die Registrierende
+beantwortete dieselben Fragen zweimal.
+
+**Dass das Konto dabei noch `unbestaetigt` ist, ist kein Einwand.**
+Festgehalten wird, was an diesem Formular erklärt wurde — nicht, wem die
+Adresse gehört. Wird die Registrierung nie bestätigt, räumt
+`job_konto_verfall()` das Konto weg und die Zeilen mit ihm (`ON DELETE
+CASCADE` an `fk_kew_user`).
+
+**Das Tor bleibt das Auffangnetz**, und es wird gebraucht: Wer sich
+registriert, solange kein Text in Kraft ist, gibt keine Erklärung ab — die
+holt das Tor beim ersten Login nach dem Einspielen.
+
 #### Das Tor
 
 `auth_guard.php` leitet auf `einwilligung.php`, solange eine Annahme fehlt.
