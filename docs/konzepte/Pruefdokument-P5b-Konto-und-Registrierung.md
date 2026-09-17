@@ -12,20 +12,57 @@ abgehakt ist, und wird dann gelöscht (`CLAUDE.md` 7).
 | Vorarbeit | erledigt — P5a-Merge, Prüfstand, F4 | 20.15.3 |
 | **AP1** Protokoll-Schreibweg und Einstellungen | **erledigt** | **20.16.0** |
 | **AP2** Lebenszyklus-Bibliothek | **erledigt** | **20.17.0** |
-| AP3 Registrierung | **wartet auf M-P5b-02** | — |
+| AP3 Registrierung | offen — **nicht mehr blockiert** | — |
 | **AP4** Einwilligungen | **erledigt** | **20.19.0** |
 | **AP5** Selbstlöschung, E-Mail-Wechsel | **erledigt** | **20.20.0** |
-| AP6 Mengengrenze, SHA-256 | offen | — |
+| **AP6** Mengengrenze, Aufbewahrung je Konto | **erledigt** | **20.21.0** |
 | **AP7** Demo-Anmeldung | **erledigt** | **20.18.0** |
-| AP8 Handbuch-Seiten | **wartet auf M-P5b-01** | — |
-| AP9 Onboarding, Rückfragen | **wartet auf M-P5b-02** | — |
+| AP8 Handbuch-Seiten | offen — **nicht mehr blockiert** | — |
+| AP9 Onboarding, Rückfragen | offen — **nicht mehr blockiert** | — |
 | AP10 Abschluss | offen | — |
 
-**Die beiden Mockups werden dem Auftraggeber vor der Umsetzung vorgelegt**
-(Weisung vom 16.09.2026). Sie entstehen mit **Opus statt Fable** — das
-Konzept sieht Fable vor (Abschnitt 6), der Auftraggeber hat die Stopp-Punkte
-freigegeben. Das steht hier, damit später nachvollziehbar ist, dass die
-Gestaltung nicht aus dem vorgesehenen Modell kam.
+**Die Mockups sind seit dem 17.09.2026 freigegeben** — damit ist die einzige
+Abhängigkeit im Haus aufgelöst, und AP3, AP8 und AP9 brauchen keine Pause mehr.
+Dazu gehört eine Berichtigung: Diese Zeile sagte bis zum 17.09.2026, die
+Mockups entstünden **mit Opus statt Fable**, weil der Auftraggeber die
+Stopp-Punkte freigegeben hatte. Das galt für **zwei** Entwürfe, die auf diesem
+Zweig entstanden sind (`M-P5b-01-dokumentseite`,
+`M-P5b-02-registrierung-onboarding`). Der Auftraggeber hat daraufhin am
+17.09.2026 das vollständige Paket aus der Konzeptsitzung nachgereicht — **fünf
+Darstellungen, mit Fable gebaut** (M-P5b-01, -02a bis -02d), vier davon
+zusätzlich bei 376 px: **9 HTML, 9 PNG** und `LIESMICH.md`, gegen das echte
+`style.css` gerendert. Die beiden Opus-Entwürfe sind damit abgelöst
+und aus dem Repositorium entfernt; ihre Historie bleibt in Git. **Die
+Gestaltung kommt also doch aus dem vorgesehenen Modell** — der Umweg hat
+einen halben Abend gekostet und steht hier, damit die nächste Instanz bei einem
+Fable-Schritt zuerst fragt, ob das Ergebnis schon vorliegt, statt es zu bauen.
+
+**Was mit den beiden abgelösten Opus-Entwürfen verschwunden ist**, und was
+davon bleibt: Sie schlossen mit 27 offenen Punkten. Die meisten waren
+Gestaltungsfragen, die das Fable-Paket beantwortet. **Zwei waren Messungen am
+Bestand**, und die sind einzeln nachgegangen worden, statt sie mit den Dateien
+zu löschen:
+
+- **`.eintrag-text` mit `flex:1 0 auto`** — der Entwurf hielt das für einen
+  Fehler und maß 467 px seitlichen Lauf. **Es ist keiner:** Die Eigenschaft
+  steht so im Stylesheet (`style.css`, Zeile 1015) und ist im Kommentar bei
+  Zeile 2068 ausdrücklich begründet — samt der Messung, die dahinter steht
+  (dreizehn Datumsangaben bei 1024 und 1199 px, 48 bis 79 px für den
+  Nebentext). Der volle Bilderlauf misst **53 Seiten, 0 Überlauf**. Keine
+  Backlog-Nummer.
+- **Die Fußzeile der Anmeldeseite bei 360 px** — vier Verweise brauchen dort
+  331 von 336 px, also **fünf Pixel Luft**. AP4 bringt zwei weitere Verweise
+  (Nutzungsbedingungen, AVV) mit; die Zeile bricht dann um. Das ist **kein
+  Fehler von heute, sondern eine Abnahmebedingung für AP8**: Die neuen
+  Mockups sind bei **376 px** gerendert, nie bei 360 — der schmalsten Breite
+  des Bilderlaufs. **In der Prüfliste unten als eigener Punkt.**
+
+**Vier Gestaltungsvorgaben des Auftraggebers vom 17.09.2026** gelten für die
+Umsetzung und nicht nur für die Mockups (Konzept Abschnitt 6): Zeilenaktionen
+**und Plaketten** rechtsbündig in einer Spalte; Kartenfuß links das Häkchen,
+rechts „Später"; alles vertikal zentriert und an seinem Element ausgerichtet;
+die Bezeichnung „Vereinbarung zur Auftragsverarbeitung (AVV)" bleibt. Sie sind
+in AP3, AP8 und AP9 **Abnahmekriterium**, nicht Geschmackssache.
 
 ---
 
@@ -291,7 +328,9 @@ der Anwendung. Ohne die Meldung rät die nächste Instanz.
 | **Formularbezug des Knopfs** (Nr. 217) | 20.21.1 | `button.form` → `pfform`, **10 Felder** im Formular — das Speichern war nie unterbrochen | kein Funktionsschaden |
 | **Bilderlauf, drei Engines** (berührte Seiten) | 20.21.1 | `einstellungen.php`, `admin_user.php`, `betrieb_server.php` in 8 Breiten: **Chromium** 24 Bilder · **Firefox** 24 · **WebKit** 24 — je 0 Überlauf, 0 Konsolenfehler, 0 falsche Knopfhöhen, **19 Karten geprüft, 0 außerhalb** | **bestanden** |
 | **Vollständigkeitsprüfung** | 20.21.1 | **387 Befunde** (main: 377). „im Markup ohne Regel" 1 → **0**, „Seite ohne Gerüst" 2 → **0**, Ausnahmen 9, **0 ungenutzt** | **bestanden** |
-| **Wortliste** | AP1, AP2, AP4, AP5, AP6, AP7 | **alle fünf Bereiche**: (a) 111 PHP-Dateien, (b) 36 JS, (c) 8 Dokumente, (d) 2 Android, (e) 35 Uhr — **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 99 Regeln | — |
+| **Mockups gegen die Sperrliste** | Paketaufnahme | Die **zehn** Textdateien des Mockup-Ordners (neun HTML und `LIESMICH.md`) gegen alle **24 Muster** der Sperrliste, dazu die 9 Teilstring-Fallen: **0 Treffer** — kein `hubschrauber`, `heli`, `luftrettung`, `basis`, `station`, `pilot`, `christoph`, `garmin`, `flug`, kein großgeschriebenes `Spur`, kein Tastenname. Ihr Text wird in AP3, AP8 und AP9 zu Oberflächentext, deshalb jetzt geprüft und nicht erst dann | **bestanden** |
+| **Mockups in einem echten Browser** | Paketaufnahme | Die Bilder des Pakets stammen aus `wkhtmltoimage` (QtWebKit, kein `:has()`, kein woff2). Gegenprobe in **Chromium** über fünf Dateien: `--knopf` löst auf (also greift das echte `style.css`), Schrift **Open Sans**, `scrollWidth` **gleich** `innerWidth` bei 1440 bzw. 860 px, **0 Konsolenfehler, 0 Ladefehler**. Die drei relativen Verweise (`style.css`, zwei Logo-SVG) zeigen alle auf vorhandene Dateien | **bestanden** |
+| **Wortliste** | AP1, AP2, AP4, AP5, AP6, AP7 | **alle fünf Bereiche**: (a) **117** PHP-Dateien (hier stand 111 — am 17.09.2026 nachgemessen), (b) 36 JS, (c) 8 Dokumente, (d) 2 Android, (e) 35 Uhr — **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 99 Regeln | — |
 
 ---
 
@@ -340,14 +379,20 @@ und beim Demo-Konto steht statt dessen der Satz, warum es hier nicht geht.
 
 ## 4a. Was das Konzept anders beschrieb, als es ist
 
-Drei Stellen, an denen die Bestandsaufnahme das Konzept berichtigt hat. Sie
+Fünf Stellen, an denen die Bestandsaufnahme das Konzept berichtigt hat. Sie
 stehen hier, weil sie beim nächsten Lesen sonst wieder Verwirrung stiften.
+**Die letzten beiden sind mit dem Paket vom 17.09.2026 dazugekommen** und
+betreffen das freigegebene Konzept selbst — sein Wortlaut ist **nicht**
+geändert worden, weil er der freigegebene Stand ist; die Abweichung steht
+stattdessen hier.
 
 | Konzept sagt | Tatsächlich | Folge |
 |---|---|---|
 | 1.5: „Die Anmeldeseite hat keine Fußzeile mit Verweisen" | Sie **hat** eine — `ui_fuss_seite(['dunkel' => true])` mit Impressum und Datenschutz | AP8 **ergänzt** die Fußzeile um zwei Verweise, statt eine zu bauen |
 | 1.2 und E-P5b-15 nennen `admin_rechtstexte.php` als Editor | Die Datei ist seit S8/AP3 eine 19-zeilige Weiterleitung; der Editor steht in **`admin_installation.php`** | Der Protokolleintrag bei Textänderung sitzt dort |
 | E-P5b-11: „alle vier Token-Stellen ziehen um" | Stimmt — aber `install.php` läuft **ohne `config.php`** und mit eigener PDO-Verbindung | `konto_lib.php` lädt `db.php` bedingt und nimmt ein `?PDO`; ohne das wäre `install.php` als fünfte Fassung stehengeblieben |
+| Abschnitt 6: „Die Mockups M-P5b-02b sind mit **Punkt 1 und 2** als V1.1 neu gerendert" | Die `LIESMICH.md` des Mockup-Ordners nennt **drei**: „Aktionen und Plaketten rechtsbündig in einer Spalte, Häkchen links, „Später" rechts, **alles vertikal zentriert**" — das ist Punkt 1, 2 **und 3** | Am Bild nachgesehen (Chromium, 1440 px): Die Zeilen von M-P5b-02b sind vertikal zentriert. Wer die vier Vorgaben in AP9 abnimmt, nimmt **alle vier** ab und nicht zwei |
+| Abschnitt 6 führt „zwei Fable-Schritte" (M-P5b-01, M-P5b-02) | Geliefert sind **fünf Darstellungen** — M-P5b-02 ist in **-02a bis -02d** zerlegt (Registrierung, Erststart, Rückfrage, Notfallblatt), vier davon zusätzlich bei 376 px: 9 HTML, 9 PNG | Kein Widerspruch in der Sache, aber wer nach „M-P5b-02" sucht, findet keine Datei. Die `LIESMICH.md` im Mockup-Ordner ist die führende Liste |
 
 ## 5. Prüfliste für die Betreiberin
 
@@ -355,9 +400,11 @@ Je Punkt: der Bedienweg, das erwartete Ergebnis und **woran ein Scheitern zu
 erkennen ist**.
 
 **Vorab, einmal:** Nach dem Einspielen muss eine Administratorin `update.php`
-aufrufen. Die Phase bringt **vier** Migrationen mit
-(`protokoll_ereignisse`, `konto_lebenszyklus`, `konto_einwilligungen`,
-`konto_grenzen`). Bleibt der Aufruf aus, stehen die neuen Karten leer da oder
+aufrufen. Die Phase bringt **fünf** Migrationen mit
+(`2026_09_16_protokoll_ereignisse`, `…_konto_lebenszyklus`,
+`…_einwilligungen`, `…_adresswechsel_bestaetigt`, `…_konto_grenzen` —
+nachgezählt in `migration_lib.php`; hier stand zuerst vier, der
+Adresswechsel aus AP5 fehlte). Ein Aufruf verbucht alle fünf. Bleibt der Aufruf aus, stehen die neuen Karten leer da oder
 melden „Tabelle fehlt" — kein Datenverlust, aber nichts von dem, was unten
 steht, ist dann zu sehen.
 
@@ -487,6 +534,43 @@ AP9 stehen noch aus (Mockup-Freigabe); ihre Punkte kommen mit ihnen.
   und die Dauer liegt dicht beieinander.
   **Scheitern:** Die Demo-Adresse antwortet anders als die erfundene — dann
   verrät die Anmeldeseite, dass es dieses Konto gibt.
+
+### Mockups — was vor AP3, AP8 und AP9 zu prüfen ist
+
+- [ ] **PM.1 — Die Anmeldeseite bei 360 px, nach AP4/AP8.** Anmeldeseite an
+  einem 360 px schmalen Fenster öffnen (Geräteleiste des Browsers, nicht nur
+  das Fenster verkleinern). **Erwartet:** Die Fußzeile steht **einzeilig**.
+  **Scheitern:** Sie bricht um. Vier Verweise brauchen dort 331 von 336 px;
+  AP4 bringt Nutzungsbedingungen und AVV dazu, und die Mockups sind bei
+  376 px gerendert — diese Breite ist in ihnen **nicht** geprüft.
+
+- [ ] **PM.2 — Die vier Gestaltungsvorgaben, an jeder neuen Darstellung.**
+  Erststart, Registrierung, Rückfrage-Dialog und Dokumentseite im Browser.
+  **Erwartet:** Zeilenaktionen **und Plaketten** stehen rechtsbündig in
+  **einer** Spalte untereinander (die Plakette „erledigt" an derselben
+  Stelle, an der vorher der Knopf stand); im Kartenfuß steht das Häkchen
+  links und „Später" rechts; Nummernplakette, Text und Aktion einer Zeile
+  liegen auf einer Mittellinie.
+  **Scheitern:** Eine Plakette sitzt hinter dem Text statt am rechten Rand —
+  das war die Anmerkung, die M-P5b-02b zur Fassung V1.1 gemacht hat.
+
+- [ ] **PM.3 — Die beiden neuen Symbole.** „hilfe" (Tabler
+  „help-circle") und „drucker" (Tabler „printer") müssen mit AP8 bzw. AP9
+  nach `server/assets/images/symbole/` — **mit Quellvermerk** und dem Anker
+  `id="i"`. **Erwartet:** `python3 tools/vollstaendigkeit/pruefen.py` meldet
+  weiterhin 0 für „Verweis auf fehlende Symboldatei" und 0 für
+  „Symboldatei ohne Anker".
+  **Scheitern:** Das Hilfe-Symbol im Kopf bleibt leer — und es steht auf
+  **jeder** Seite.
+
+- [ ] **PM.4 — Die zehn vorgeschlagenen Klassen vor dem Einbau messen.**
+  `.fuss-anmeldung`, `.doku`, `.doku-nav`, `.doku-text`, `.doku-stand`,
+  `.doku-handy`, `.erststart` mit `.schritt-nr`, `.gruppen`, `.blatt-druck`.
+  **Erwartet:** Jede neue Farbe und jede neue Größe steht in `:root`, ist in
+  `docs/Design.md` nachgetragen und mit `python3 tools/screenshots/kontrast.py`
+  gegen die **tatsächliche** Fläche gerechnet (Schnee/Rauch, nicht Weiß).
+  **Scheitern:** Ein Hexwert steht unmittelbar in einer Regel — die
+  Vollständigkeitsprüfung meldet ihn unter „Hexfarben ausserhalb :root".
 
 ### Nr. 217 — Die Profilseite
 

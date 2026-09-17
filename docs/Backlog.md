@@ -35,7 +35,7 @@ Eintrag verschwunden; ihr Inhalt ist nicht mehr rekonstruierbar. Sie bleiben
 deshalb dauerhaft frei — weder werden sie neu vergeben noch nachgetragen. Diese
 Notiz steht hier, damit die Frage nicht bei jedem Durchsehen erneut aufkommt.
 
-**Nummernvergabe zwischen Zweigen (Stand 16.09.2026).** 200 und 201
+**Nummernvergabe zwischen Zweigen (Stand 17.09.2026).** 200 und 201
 (Rahmenplan Fassung 73) und 202–205 (Fassung 74) sind mit dem Doku-Paket der
 Konzeptinstanz vergeben und liegen auf dem P5a-Zweig
 `claude/butte-umsetzen-5opi9u`, der bis zu seinem Merge die
@@ -48,9 +48,10 @@ Durchsicht vom 16.09.2026** (Zustandsdatei der Kette im Webroot;
 `install.php` in der Auslieferung). **215 und aufwärts liegen auf dem
 P5b-Zweig `claude/magical-dirac-we2y1z`** (215 Anwendung nicht installierbar,
 216 `frame-ancestors` in Report-Only, 217 Profilseite aus dem Gerüst
-ausgebrochen, 218 Meldungston ohne Regel, 219 Symbolregel zählt Typografie;
-die Einschübe des P5b-Konzepts folgen
-dort). Jeder weitere Zweig, der Nummern
+ausgebrochen, 218 Meldungston ohne Regel, 219 Symbolregel zählt Typografie,
+220 Proof-of-Work gegen Registrierungs-Spam, 221 Uhr-Anzeige bei `403`,
+222 Wegwerfliste nachziehen — die drei letzten sind die Einschübe des
+P5b-Konzepts). Jeder weitere Zweig, der Nummern
 vergibt, beginnt hinter der dort zuletzt vergebenen und trägt seine Spanne
 hier ein, bevor er pusht.
 
@@ -416,6 +417,31 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Dieser Eintrag ist die **führende** Fassung; die Bemerkung
     in Rahmenplan Abschnitt 5 verweist hierher.
 
+    **Der Speichergrenzen-Teil ist am 17.09.2026 in P5b/AP6 erledigt**
+    (Web 20.21.0, R37.10, E-P5b-04) — und zwar als **Deckel**, nicht als
+    Antwort auf die Messungen oben. Zwei Grenzen je Konto, Einsätze und
+    Speicher: Vorgabe der Installation **5000** und **250 MB**, je Konto
+    überschreibbar in der Kontoverwaltung; **leer heißt „die Vorgabe gilt"**
+    und nicht „die Vorgabe als Zahl", weil eine spätere Anhebung sonst an
+    bestehenden Konten wirkungslos bliebe. Ab **80 %** eine Nachricht, bei
+    100 % antwortet `ingest.php` mit **`507`**; es zählt der **größere** der
+    beiden Anteile und nicht ihr Durchschnitt, und was im Papierkorb liegt,
+    zählt nicht mit — eine Grenze, die auch das Aufräumen sperrt, ist eine
+    Falle. Abnahme **6 von 6 bestanden**: Uploads `200, 200, 200, 507`, der
+    Ratenzähler bleibt bei **0 Zeilen** (die Absage ist kein Fehlversuch),
+    nach Anheben der Grenze kam die abgewiesene Aufzeichnung vollständig nach
+    (4 Einsätze). Ingestprobe **83 Erwartungen, 0 nicht erfüllt**.
+
+    **Was der Deckel nicht beantwortet, ist der ganze Rest dieses Eintrags.**
+    Die Zeitraumübersicht wächst weiter linear und ungedeckelt, der Suchindex
+    überträgt weiter den gesamten Bestand, die sechs stillen Kappungen sagen
+    weiter nichts, und **`post_max_size` der Zielanlage bleibt ungemessen**
+    (Prüfpunkt P29 in `docs/konzepte/Pruefdokument-P5a-Kette-und-Fundament.md`).
+    Eine Grenze bei 5000 Einsätzen verhindert nur, dass jemand in den
+    gemessenen Bereich hineinläuft, in dem die Zeitraumübersicht 42,61 s
+    braucht — sie macht ihn nicht schneller. **Dieser Eintrag bleibt deshalb
+    offen**, und die Zeile in Rahmenplan Abschnitt 5 sagt das auch so.
+
 40. **Altklassen ohne Gegenstück — 53 (gemessen 13.09.2026), 55 bei Aufnahme.**
     *Aufgenommen in P3/O11, war für O12 vorgesehen, in O12 bewusst
     zurückgestellt.* Die Vollständigkeitsprüfung verlangt für jede der 220
@@ -556,25 +582,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     mehr wählen kann, wäre Aufwand ohne Gegenwert). Der Wert kann
     alternativ mit dem P5-Schemarückbau (Nr. 168) fallen; wer zuerst kommt,
     nimmt ihn mit.
-48. **Aufbewahrung je Konto einstellbar, nicht nur je Installation.**
-    *Aufgenommen 01.09.2026 (S2/AP6).* E-S2-14 nennt „Standard 2 je Konto,
-    manuell mehr je Konto möglich". Umgesetzt ist die Zahl für die ganze
-    Installation (`app_state.adminbackup_aufbewahrung`); ein Wert je Konto
-    hätte einen Ablageort gebraucht, den es nicht gibt — weder in `konto.json`
-    noch als Spalte in `users`.
-
-    **Wofür es gebraucht wird:** ein Konto, dessen Bestand besonders wertvoll
-    oder besonders bewegt ist, und für das man mehr Stände vorhalten will, ohne
-    die Zahl für alle anzuheben. Heute geht das nur als Umweg — ein Paket, das
-    freigegeben ist, wird von der Verdrängung verschont. Das ist ein
-    Nebeneffekt und kein Ersatz: Die Freigabe ist für etwas anderes da, und sie
-    endet mit dem Einlösen.
-
-    Naheliegender Ort: ein Feld in `konto.json` (die Begleitdatei ist ohnehin
-    das Verzeichnis des Ordners) und ein Zahlenfeld auf der Kontoseite neben
-    „Jetzt sichern". `edbak_aufbewahrung()` bekäme dafür einen optionalen
-    Parameter; `edbak_verdraengen()` liest ihn.
-
 50. **Der Versand liest je Konto ein Verzeichnis.**
     `sz_versand_schub()` fragt für jeden Kontoordner die Verzeichnisliste des
     Ziels ab, um zu erkennen, was dort fehlt. Bei 33 Ordnern ist das
@@ -2496,11 +2503,250 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     auseinander; berichtigt, mit dem Hinweis, dass die Zahl in
     `pruefung.yml` steht und nicht in der Dokumentation.
 
+220. **Proof-of-Work im Browser als dritte Stufe gegen
+    Registrierungs-Spam.**
+    *Aufgenommen 17.09.2026 mit dem Konzept P5b (R37 (4) „notfalls"); nicht
+    gebaut, und vorerst mit Absicht nicht.*
+    R37 (4) schließt ein CAPTCHA aus — es wäre eine fremde Quelle zur
+    Laufzeit — und setzt an seine Stelle zwei billige Mittel: ein
+    Honeypot-Feld, das leer bleiben muss, und eine Mindestausfülldauer von
+    vier Sekunden. Daneben stehen drei Ratenschutz-Töpfe: `reg` je IP
+    (10/h), `regg` global (100/h, Verlangsamung statt Sperre) und `regz` je
+    **Zieladresse** (3/24 h, sonst ist die Registrierung eine
+    Mailbomben-Schleuder). Reicht das alles nicht, bliebe als Letztes eine
+    Rechenaufgabe im Browser.
+
+    **Den Auslöser gibt es heute nicht, und zwar buchstäblich.** Gemessen
+    am 17.09.2026 auf diesem Zweig: `server/registrieren.php` und
+    `server/bestaetigen.php` gibt es nicht (unmittelbar unter `server/`
+    liegen 100 PHP-Dateien), „Honeypot", „regz" und „Mindestausfülldauer"
+    kommen in `server/` und `tools/` **kein einziges Mal** vor, und
+    `ratelimit_lib.php` führt **14** Töpfe, von denen keiner der
+    Registrierung gehört. AP3 baut das alles erst. Wer diesen Eintrag liest
+    und nach Spam-Zahlen sucht, sucht nach Zahlen einer Seite, die es noch
+    nicht gibt.
+
+    **Warum er trotzdem niedrig steht.** Ein Proof-of-Work kostet genau
+    dort am meisten, wo am wenigsten Rechenleistung steht — auf dem alten
+    Diensthandy —, und er bremst jede ehrliche Registrierung mit. Die drei
+    billigen Mittel sind ungemessen; sie zuerst zu bauen und dann zu messen
+    ist die richtige Reihenfolge. Ein Fall, den man vorsorglich löst, ist
+    einer, dessen Wirksamkeit man nie erfährt.
+
+    **Ein übliches Gegenargument fällt hier weg.** Die Registrierungsseite
+    leitet den Schlüssel ohnehin im Browser ab (E-P5b-13) — ohne JavaScript
+    kommt an dieser Stelle niemand zu einem Konto. Eine Rechenaufgabe im
+    Browser schlösse also niemanden aus, der sonst hätte registrieren
+    können.
+
+    **Zu tun, bevor irgendetwas gebaut wird: die Zahl festlegen**, ab der
+    der Fall eintritt. Es bietet sich der Zähler an, den AP3 ohnehin
+    mitbringt — die je Woche über den Job `konto_verfall` verfallenen, nie
+    bestätigten Konten. Bleibt er nach der Einführung der drei Mittel klein,
+    ist dieser Eintrag erledigt, ohne dass etwas gebaut wurde; steigt er,
+    steht die Begründung schon da. *Abnahme:* eine Rechenaufgabe ohne
+    Fremdbestandteil (SHA-256 über WebCrypto in einem Worker), die die
+    Antwortzeit der Registrierung **nicht** verändert — sie darf nicht
+    davon abhängen, ob die Adresse frei, bekannt oder eine Wegwerfadresse
+    ist, sonst fällt der Enumerationsschutz aus E-P5b-13 mit ihr (die
+    Abnahme von AP3 verlangt dort Δ < 50 ms über 100 Messungen).
+
+221. **Die Uhr sagt „abgemeldet", wo „gesperrt" steht — und der Ausweg, den
+    sie nennt, ist versperrt.**
+    *Aufgenommen 17.09.2026 mit dem Konzept P5b (E-P5b-12); nicht behoben,
+    die Uhr-Stufe ist bewusst aufgeschoben.*
+    `ingest.php` antwortet heute an zwei Stellen mit `403`: bei einem
+    abgeschalteten Gerät mit `{"error":"device_disabled"}` und — seit
+    P5b/AP2 (Web 20.17.0) — bei einem Konto, das nicht `aktiv` ist, mit
+    `{"error":"konto","grund":"…"}`. Der Grund ist einer von dreien aus dem
+    ENUM `users.status`: `gesperrt`, `wartet`, `unbestaetigt`. Er steht im
+    Rumpf, er ist umsonst zu haben, und niemand liest ihn.
+
+    `Uploader.mc` behandelt `401` und `403` in **einem** Zweig
+    (`code == 401 || code == 403`): `abgemeldet` geht auf wahr, das Senden
+    hält an, die Warteschlange bleibt. `SyncView.mc` zeigt daraufhin „Gerät
+    nicht mehr angemeldet" in Rot und darunter „Neu koppeln: <Taste>".
+
+    **Bei drei der vier Gründe ist dieser Rat falsch — und er führt im
+    Kreis.** „Neu koppeln" geht über `Pair.start()`, und das verweigert das
+    Trennen, solange `Model.backlogCount()` größer als null ist („Erst N
+    Pakete senden", „Sonst ans neue Konto"). Das ist richtig so: Die Pakete
+    gehören dem bisherigen Konto. Senden kann die Uhr aber nicht —
+    `syncAll()` kehrt bei `abgemeldet` sofort um, und der Server antwortete
+    ohnehin wieder mit `403`. Wer einem gesperrten Konto folgt, steht also
+    vor „Erst 3 Pakete senden" und kommt dort nicht weiter.
+
+    **Und die Uhr zeigt dabei keinen zweiten Weg.** Die Zeile
+    „<Taste>: verwerfen" hängt in `SyncView.mc` im `else`-Zweig hinter
+    `Uploader.abgemeldet` — solange die Uhr sich für abgemeldet hält, wird
+    sie gar nicht erst gezeichnet. Angeboten wird genau ein Ausweg, und das
+    ist der versperrte.
+
+    **Nr. 159 hat das nicht geschlossen, und der Vertrag behauptet das
+    Gegenteil.** `backlogCount()` übergeht seit Uhr 3.1.0 **geparkte**
+    Pakete, und genau das war der Ausweg aus der alten Sackgasse. Geparkt
+    wird über die Marke `bad_<ref>`, und die setzt **genau eine** Stelle in
+    `Uploader.mc`: der Zweig `400` mit erkennbarer Fehlerantwort. Bei `401`
+    und `403` wird mit Bedacht **nichts** geparkt — mit den Paketen ist
+    nichts verkehrt. Also bleibt der Rückstand stehen, und mit ihm die
+    Sperre. In `docs/JSON-Vertrag.md` steht zu `401`/`403` trotzdem „das
+    Trennen ist dann **nicht** mehr gesperrt (Backlog Nr. 159)" — für den
+    einen Fall, den Nr. 159 behoben hat, stimmt das, für diesen nicht. Der
+    Satz gehört mit berichtigt, sonst schließt die nächste Instanz diesen
+    Eintrag als längst erledigt.
+
+    **Verloren geht dabei nichts**, und das ist der Grund, warum der Eintrag
+    trotzdem niedrig steht. Die Warteschlange bleibt vollständig, nach dem
+    Entsperren kommt der Rückstand idempotent an — dieselbe Zusage wie bei
+    `401` und `429` (E-P5a-02) —, und der Ausweg liegt ohnehin nicht auf der
+    Uhr, sondern am Konto. Der Schaden ist die Auskunft: Die Uhr nennt eine
+    Ursache, die nicht zutrifft, und eine Handlung, die nicht hilft.
+
+    **Zu tun ist wenig:** `grund` in demselben Zweig lesen, in dem die
+    Antwort ohnehin schon als Dictionary vorliegt, und drei Texte in
+    `SyncView.mc` danebenstellen — „Konto gesperrt", „Konto wartet auf
+    Freischaltung", „Adresse noch nicht bestätigt", jeweils **ohne** den
+    Hinweis auf das Neukoppeln. Die Uhr zählt getrennt
+    (`watch/source/Const.mc`, heute 3.1.0), und eine Uhr-Auslieferung für
+    drei Textzeilen lohnt für sich nicht: **zusammen mit Nr. 201**
+    (`Retry-After`) bei der nächsten Uhr-Stufe.
+
+    **Nebenbefund — das Handy behandelt `403` überhaupt nicht.**
+    `Sendeantwort.lese()` kennt `200`, `400`, `401` und `413`; alles übrige
+    wird zu `SpaeterErneut(code)`, und `403` kommt in **keiner** `.kt`-Datei
+    des Repositoriums vor. Ein gesperrtes Konto lässt die Handy-App damit
+    unbegrenzt weiterversuchen, ohne der NutzerIn etwas zu sagen. Und
+    Nr. 201 schreibt beiden Clients zu, sie behandelten „jeden Antwortcode
+    außer 200/400/401/403/413" als „später erneut" — für die Uhr stimmt das,
+    für das Handy nicht. Die Android-Zeile gehört in dasselbe Paket.
+
+    **Der Vertrag kennt zwei Antworten nicht, die es gibt.** Die
+    Fehlertabelle zu `ingest.php` in `docs/JSON-Vertrag.md` führt `400`,
+    `401`, `405`, `413`, `429`, `5xx` und zweimal `503`. `403` kommt im
+    ganzen Dokument **genau einmal** vor, und zwar in der Tabelle darüber,
+    die die Vertragserfüllung der Uhr festhält; `507` — die Mengengrenze je
+    Konto aus P5b/AP6 — kommt **kein einziges Mal** vor. Zwei Antworten, die
+    `ingest.php` heute gibt, fehlen damit in der Liste, gegen die ein Client
+    gebaut wird.
+
+222. **Die Wegwerfdomain-Liste altert still und muss mit jeder Auslieferung
+    nachgezogen werden.**
+    *Aufgenommen 17.09.2026 mit dem Konzept P5b (E-P5b-23). Eine
+    Pflegeaufgabe ohne Ende, kein Fehler mit einer Behebung.*
+    Mit AP3 kommt `server/wegwerfdomains.txt` in die Auslieferung:
+    `disposable-email-domains/disposable-email-domains`
+    (`disposable_email_blocklist.conf`), CC0 1.0, **8 870 Domains** in
+    126 KB, eine je Zeile, gelesen nur bei einer Registrierung. Gemessen
+    am 16.09.2026 bei der Auswahl: **8 von 8** bekannten Wegwerfanbietern
+    enthalten, **0 von 10** geprüften Provider- und Klinikdomains
+    fälschlich getroffen. Verworfen wurden `7c/fakefilter` (BSD-3, 10 686
+    Einträge, mit Kommentarzeilen und Doppelungen) und
+    `FGRibreau/mailchecker` (MIT, 56 355 — sechsmal so groß und damit
+    sechsmal so viel Risiko für echte Domains).
+
+    **Geholt wird die Liste nie zur Laufzeit** — das verbietet die Zusage
+    „keine fremde Quelle zur Laufzeit". Damit kann kein Automatismus sie
+    aktuell halten; sie altert genau so lange, wie niemand
+    `tools/wegwerfdomains/aktualisieren.py` von Hand fährt (holt die Datei,
+    zeigt den Unterschied, schreibt die Zieldatei).
+
+    **Und sie altert in eine Richtung.** Neue Wegwerfanbieter kommen dazu,
+    die Datei bleibt stehen — eine ein Jahr alte Liste lässt ausgerechnet
+    die Domains durch, die gerade benutzt werden. Auffallen kann das
+    niemandem: Eine durchgelassene Registrierung sieht aus wie eine
+    richtige, und die Seite antwortet in jedem Fall mit demselben Satz
+    (E-P5b-13).
+
+    **Nachziehen allein genügt nicht.** Die zweite Zahl ist die
+    gefährlichere: Landet eine Klinikdomain auf der Liste, bekommt die
+    Ärztin dahinter dieselbe neutrale Antwort wie alle anderen und erfährt
+    **nie**, woran es lag. Jede Aktualisierung muss deshalb beide Messungen
+    wiederholen und nicht nur den Unterschied anzeigen.
+
+    **Heute steht der Schalter schon da und die Liste noch nicht.** Betrieb
+    → Servereinstellungen führt seit P5b/AP6 (Web 20.21.0) „Wegwerfadressen
+    abweisen" samt eigener Domains; `konten_wegwerf_an()` und
+    `konten_wegwerf_eigene()` haben aber **keinen** Verbraucher, der damit
+    etwas entscheidet: Die **fünf** Fundstellen im Code sind zwei
+    Definitionen und eine gleichlautende Konstante in der Bibliothek und
+    zwei Anzeigen im Formular. Der Schalter steht in der Vorgabe auf „an"
+    (`KONTEN_K_WEGWERF => '1'`) und weist nichts ab, bis AP3 kommt.
+
+    **Zu tun:** eine Zeile im Auslieferungs-Runbook (`docs/Technik.md` 7),
+    damit der Lauf zur Auslieferung gehört und nicht zum guten Willen; dazu
+    der Stand der Liste — Datum und Zahl der Domains — in Betrieb → Status,
+    wie es dort die Zeile **Gerätemodelle** vormacht (`status_lib.php`).
+    Eine veraltete Liste ist damit sichtbar statt still. **Nicht**
+    vorgesehen ist ein Prüfschritt, der die Quelle selbst abruft: Er liefe
+    zwar in der Kette und nicht zur Laufzeit, machte aber jeden Prüflauf
+    von einem fremden Host abhängig.
+
+    **Das Vorbild steht im Haus.** `server/geraetemodelle.php` hat dieselbe
+    Bauart — erzeugte Datei aus fremdem Material, wird ausgeliefert, altert
+    unbemerkt (`docs/Lizenzen.md` 7a); dort hat es bis P5a/AP11
+    (Web 20.15.0) und einen eigenen Job gebraucht, bis der Altbestand
+    nachzog. Einen Nachzieher braucht die Wegwerfliste nicht — sie wirkt
+    nur im Augenblick der Registrierung —, wohl aber denselben festen
+    Handgriff.
+
+    **Nebenbei: Die Zahl steht schon jetzt doppelt.** Der Kommentar zu den
+    eigenen Domains in `betrieb_server.php` nennt „8870"; mit AP3 kommt die
+    Datei dazu, die sie selbst zählt. Zwei Stellen für dieselbe Zahl laufen
+    auseinander — dieselbe Falle wie bei der Schwelle in Nr. 219.
+
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+48. **Aufbewahrung je Konto einstellbar, nicht nur je Installation.**
+    *Aufgenommen 01.09.2026 (S2/AP6).* E-S2-14 nennt „Standard 2 je Konto,
+    manuell mehr je Konto möglich". Umgesetzt ist die Zahl für die ganze
+    Installation (`app_state.adminbackup_aufbewahrung`); ein Wert je Konto
+    hätte einen Ablageort gebraucht, den es nicht gibt — weder in `konto.json`
+    noch als Spalte in `users`.
+
+    **Wofür es gebraucht wird:** ein Konto, dessen Bestand besonders wertvoll
+    oder besonders bewegt ist, und für das man mehr Stände vorhalten will, ohne
+    die Zahl für alle anzuheben. Heute geht das nur als Umweg — ein Paket, das
+    freigegeben ist, wird von der Verdrängung verschont. Das ist ein
+    Nebeneffekt und kein Ersatz: Die Freigabe ist für etwas anderes da, und sie
+    endet mit dem Einlösen.
+
+    Naheliegender Ort: ein Feld in `konto.json` (die Begleitdatei ist ohnehin
+    das Verzeichnis des Ordners) und ein Zahlenfeld auf der Kontoseite neben
+    „Jetzt sichern". `edbak_aufbewahrung()` bekäme dafür einen optionalen
+    Parameter; `edbak_verdraengen()` liest ihn.
+
+    **Erledigt am 17.09.2026 in P5b/AP6 (Web 20.21.0).** Nicht wie oben
+    vorgeschlagen in `konto.json`, sondern als **Spalte `users.backup_pakete`**
+    (`NULL` heißt „die Vorgabe der Installation gilt"). Der Grund ist die
+    Reihenfolge des Lesens: `edbak_verdraengen()` läuft, während der neue Stand
+    geschrieben wird — die Begleitdatei desselben Ordners ist in diesem
+    Augenblick die unzuverlässigste Quelle, die zur Verfügung steht. Die
+    Datenbank kennt den Wert unabhängig davon, ob der Ordner schon existiert.
+    Eingebaut als `edbak_aufbewahrung_konto(string $kennung)`, benutzt von
+    `edbak_verdraengen()`; das Zahlenfeld steht in der **Kontoverwaltung**
+    (Karte „Mengen und Grenzen") und nicht auf der eigenen Kontoseite — wer
+    seine eigene Aufbewahrung hochsetzen kann, hat die Zahl der Installation
+    nicht mehr in der Hand.
+
+    **Abnahme: 4 Fälle, 4 bestanden.** Ohne eigene Zahl gilt die
+    Installationszahl (2); eigene Zahl 7 schlägt sie; ein Ordner ohne Konto
+    fällt auf 2 zurück; eine leere Kennung ebenso.
+
+    **Dieser Eintrag ist zuerst falsch gelesen worden, und das ist der
+    lehrreichere Teil.** AP6 trägt im Konzept die Überschrift „Aufbewahrung je
+    Konto (Nr. 48)" — dieselben vier Wörter wie hier. Daraus wurde eine
+    **Aufbewahrungsfrist für Einsätze**: ein Feld `users.aufbewahrung_tage`,
+    nach dessen Ablauf Einsätze verschwinden. Gemeint war die **Zahl der
+    Sicherungspakete**, wie der erste Absatz oben sagt. Berichtigt vor dem
+    Commit, also nie ausgeliefert (F5 im Prüfdokument P5b). Ein Feld zu viel
+    ist ein Fehler; ein Feld, das still löscht und falsch beschriftet ist, wäre
+    ein Schaden gewesen — und es hätte unter einer Nummer gestanden, die etwas
+    ganz anderes wollte. **Eine Backlog-Nummer im Konzept ist ein Verweis, kein
+    Titel:** Wer sie umsetzt, liest den Eintrag.
 
 54. **Der Migrationslauf nach einer Wiederherstellung ist ein zweiter Gang.**
     Aus S2/AP8. Das Konzept sieht in E-S2-20 vor, dass die Wiederherstellung

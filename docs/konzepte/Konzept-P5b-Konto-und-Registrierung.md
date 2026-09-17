@@ -18,53 +18,56 @@ Mockups in `konzept-p5b/mockups/`.
 >
 > | | |
 > |---|---|
-> | Stand | 16.09.2026 — **Konzept geschrieben, zur Freigabe.** E-P5b-01 bis -10 sind im Gespräch entschieden; E-P5b-11 bis -22 stammen aus dem Nachmessen und gelten mit der Freigabe; **F-P5b-1 und F-P5b-2 sind am 16.09.2026 erledigt** (E-P5b-23, -24). |
+> | Stand | 16.09.2026 — **Konzept freigegeben** (Auftraggeber, 16.09.2026, ohne Änderungen). E-P5b-01 bis -10 aus dem Gespräch, E-P5b-11 bis -22 aus dem Nachmessen, E-P5b-23 und -24 aus den erledigten Zuarbeiten. |
 > | Entschieden | E-P5b-01 bis E-P5b-24 (Abschnitt 2) |
 > | Offen | nichts im Konzept; **außerhalb:** anwaltliche Prüfung der drei Rechtstext-Entwürfe (E-P5b-24) vor dem Einspielen |
-> | Umsetzung | **läuft** auf `claude/magical-dirac-we2y1z` seit 16.09.2026, auf dem Stand von `main` nach dem Merge von P5a (PR #50). Reihenfolge AP1 → AP10, Abhängigkeiten in 3.0 — abweichend davon sind AP3, AP8 und AP9 zurückgestellt, weil ihre Mockups zur Freigabe stehen (unten) |
-> | Fable-Schritte der Umsetzung | **zwei**: M-P5b-01 (Dokumentseite) vor AP8, M-P5b-02 (Registrierung, Erststart, Rückfrage-Dialog) vor AP3. **Beide sind gebaut** und liegen in `konzept-p5b/mockups/`; sie **warten auf die Freigabe** — die Betreiberin will sie vor der Umsetzung sehen (16.09.2026). Jedes Mockup schließt mit einer Liste offener Punkte: 15 bei M-P5b-01, 12 bei M-P5b-02 |
-> | Nummern | Dieses Konzept vergibt **keine** Rahmenplan-Fassung und **keine** Backlog-Nummern — die Einschübe in Abschnitt 7 und 8 übernimmt die Instanz, die das Konzept auf den Zweig legt, mit der dort nächsten freien Nummer (Backlog-Kopfnotiz vom 16.09.2026) |
+> | Umsetzung | **läuft** auf `claude/magical-dirac-we2y1z` seit 16.09.2026 — begonnen auf dem Stand von `main` nach dem Merge von P5a (PR #50, `14f99ac`). **Sechs von zehn Paketen sind gebaut** (Tabelle unten), AP3, AP8, AP9 und AP10 stehen aus. **Abweichend vom Fahrplan läuft 10b vor Schritt 15**: Der Auftraggeber hat die Umsetzung am 16.09.2026 unmittelbar nach dem P5a-Merge beauftragt; **Schritt 15 ist unverändert offen**. Welche Folgen das für die Zentralisierung hat, ist hier nicht gemessen — sie fasst dieselben Dateien an und misst ohnehin nach dem Merge neu (Rahmenplan, Fahrplanzeile 15). Reihenfolge und Abhängigkeiten innerhalb von 10b sonst wie in 3.0 |
+> | Fable-Schritte der Umsetzung | **erledigt** — beide Mockups am 17.09.2026 geliefert und **freigegeben** (`konzept-p5b/mockups/`, M-P5b-01 V1, M-P5b-02 a–d V1/V1.1). Die Umsetzung von AP3, AP8 und AP9 braucht **keine Pause** mehr; die vier Gestaltungsvorgaben in Abschnitt 6 gelten |
+> | Nummern | **Vergeben am 17.09.2026** beim Einspielen dieses Pakets: Rahmenplan **Fassung 78**, Backlog **Nr. 220 bis 222** (Proof-of-Work, Uhr-Grund bei `403`, Pflege der Wegwerfliste). Die Nummern 215 bis 219 hatte derselbe Zweig zuvor für Funde während der Umsetzung vergeben; 220 war damit die nächste freie. **Die Einschübe aus Abschnitt 7 und 8 sind eingearbeitet** — Fahrplanzeile 10b, Schritt-10-Block, Abschnitt 5, 6 und das Register R9/R25/R37 im Rahmenplan; im Backlog die drei neuen Punkte **220 bis 222**, der Speichergrenzen-Absatz an **Nr. 37** und die Verschiebung von **Nr. 48** nach *Erledigt*; **Nr. 202** trug seine Statuszeile schon seit AP2, **Nr. 200** bleibt unverändert. **Nr. 37 bleibt offen** — von ihr ist nur der Speichergrenzen-Teil gefallen, der Rest (Zeitraumübersicht, Suchindex, die sechs stillen Kappungen, `post_max_size`) steht |
 
-> **Stand der Umsetzung** (Stand 17.09.2026)
+> **Stand der Umsetzung** (17.09.2026, Zweig `claude/magical-dirac-we2y1z`)
 >
 > | Paket | Stand | Version | Commit | Abnahmezahlen |
 > |---|---|---|---|---|
-> | AP1 — Protokoll-Schreibweg, Einstellungen | **erledigt** | Web 20.16.0 | `b9046ed` | 6 Reiter, zwei Aufbewahrungsfristen; Zählkarte in Betrieb → Status |
-> | AP2 — Lebenszyklus-Bibliothek | **erledigt** | Web 20.17.0 | `442dbcb` | Übergangstabelle statt Verzweigungen; Nr. 202 Paket 1 mit erledigt |
-> | AP3 — Registrierung | **zurückgestellt** | — | — | wartet auf die Freigabe von M-P5b-02 |
-> | AP4 — Einwilligungen | **erledigt** | Web 20.19.0 | `edc3040` | drei Dokumente, zwei Wirkungen; drei Wege bleiben am Tor offen |
-> | AP5 — Selbstlöschung, Adresswechsel | **erledigt** | Web 20.20.0 | `edc3040` | 30 Tage Karenz; Adresse erst nach Bestätigung aus dem neuen Postfach |
-> | AP6 — Mengengrenze, Aufbewahrung je Konto | **erledigt** | Web 20.21.0 | dieser | Uploads `200, 200, 200, 507`; Rumpf `{"error":"kontingent"}`; Ratenzähler 0; nach Anheben kam die abgewiesene Aufzeichnung nach (4 Einsätze). Nr. 48: 4 Fälle, 4 bestanden |
-> | AP7 — Demo-Anmeldung als Einstellung | **erledigt** | Web 20.18.0 | `ad93c9e` | — |
-> | AP8 — Handbuch, „Was ist NAdoku" | **zurückgestellt** | — | — | wartet auf die Freigabe von M-P5b-01 |
-> | AP9 — Onboarding und Rückfragen | **zurückgestellt** | — | — | wartet auf die Freigabe von M-P5b-02 |
+> | AP1 — Protokoll-Schreibweg, Einstellungen | **erledigt** | Web 20.16.0 | `b9046ed` | Bereinigung 3 von 3 Fristfällen richtig; Fehlfall V7 in allen drei Stufen belegt; Bilderlauf 16 Bilder 0/0/0. **Der `app_state`-Teil entfiel** — `app_state_lesen()`/`_setzen()` stehen seit Web 20.7.0 in `db.php` |
+> | AP2 — Lebenszyklus-Bibliothek | **erledigt** | Web 20.17.0 | `442dbcb` | Übergangstabelle statt Verzweigungen, 6 von 6 Übergängen wie festgelegt; `INSERT INTO password_resets` **4 Dateien → 2 Treffer in einer**; `ingest.php` 200/403 je Status; Ratenschutz zählt die Absage **0**mal. Backlog Nr. 202 Paket 1 mit erledigt |
+> | AP3 — Registrierung | offen | — | — | **nicht mehr blockiert** — M-P5b-02a ist seit 17.09.2026 freigegeben |
+> | AP4 — Einwilligungen | **erledigt** | Web 20.19.0 | `edc3040` | 6 von 6 Fällen, darunter **zweite Fassung am selben Tag sperrt erneut** (Fehlerfund F3 des Konzepts); drei Wege bleiben am Tor offen, im Browser durchgeklickt; Ingestprobe bei leerer `konto_einwilligungen` **83 Erwartungen, 0 nicht erfüllt** |
+> | AP5 — Selbstlöschung, Adresswechsel | **erledigt** | Web 20.20.0 | `edc3040` | Karenz **30,0 Tage**, Rückzug lässt den Bestand unverändert, Kaskade räumt alle Reste; Adresswechsel 6 von 6 Fällen — alte Adresse gilt bis zum Klick, zweiter Klick abgewiesen, belegte Adresse abgewiesen; Protokolleintrag enthält **kein `@`** |
+> | AP6 — Mengengrenze, Aufbewahrung je Konto | **erledigt** | Web 20.21.0 | `533850d` | Uploads `200, 200, 200, 507`; Rumpf `{"error":"kontingent"}`; Ratenzähler **0 Zeilen**; nach Anheben kam die abgewiesene Aufzeichnung nach (**4 Einsätze**). Backlog Nr. 48: 4 Fälle, 4 bestanden. **E-P5b-17 ist gegenstandslos** — SHA-256 für Geräteschlüssel seit Web 13.0.0 erledigt, am Code nachgemessen |
+> | AP7 — Demo-Anmeldung als Einstellung | **erledigt** | Web 20.18.0 | `ad93c9e` | Im Browser gemessen, nicht mit curl: drei Anmeldeversuche 1241 / 1270 / 1263 ms, **dieselbe Meldung**, Spanne **29 ms** (Soll < 50) |
+> | AP8 — Handbuch, „Was ist NAdoku" | offen | — | — | **nicht mehr blockiert** — M-P5b-01 ist seit 17.09.2026 freigegeben |
+> | AP9 — Onboarding und Rückfragen | offen | — | — | **nicht mehr blockiert** — M-P5b-02b/c/d sind seit 17.09.2026 freigegeben; die vier Gestaltungsvorgaben aus Abschnitt 6 gelten |
 > | AP10 — Abschluss | offen | — | — | — |
 >
-> **Wo es hakt:** an der Freigabe der beiden Mockups — sie ist die einzige
-> offene Abhängigkeit im Haus. Außerhalb: die anwaltliche Prüfung der drei
-> Rechtstext-Entwürfe (E-P5b-24); AP4 steht deshalb mit Platzhaltern, und
+> **Wo es hakt: nirgends mehr im Haus.** Die Mockup-Freigabe vom 17.09.2026 hat
+> die einzige offene Abhängigkeit aufgelöst; AP3, AP8 und AP9 sind ohne weitere
+> Pause umsetzbar. **Außerhalb** bleibt die anwaltliche Prüfung der drei
+> Rechtstext-Entwürfe (E-P5b-24) — AP4 steht deshalb mit Platzhaltern da, und
 > das ist der geplante Zustand, kein Rest.
 >
-> **Ein zweiter Fund, und der wiegt schwerer als sein Umfang:** F6 — auf
-> `einstellungen.php?t=profil` stand seit dem 07.09.2026 ein
-> `ui_karte_ende()` zu viel; vier Karten lagen dadurch **außerhalb des
-> Seitengerüsts**, über die volle Fensterbreite. Der Bilderlauf meldete für
-> diese Seite in allen drei Engines drei Nullen. Gefunden beim **Ansehen**
-> eines Bildes zu AP6, behoben in Web 20.21.1 (Nr. 217) — und der Lauf zählt
-> seither Karten außerhalb von `main.inhalt` als **vierte** Zahl. Gegenprobe
-> mit wieder eingebautem Fehler: dieselben drei Nullen, „6 geprüft · **4
-> außerhalb**".
+> **Fünf Migrationen bisher** — `2026_09_16_protokoll_ereignisse`,
+> `_konto_lebenszyklus`, `_einwilligungen`, `_adresswechsel_bestaetigt` und
+> `_konto_grenzen` (nachgezählt in `migration_lib.php`; die Zahl stand hier
+> zuerst auf vier, der Adresswechsel aus AP5 fehlte). **`update.php` ist
+> fällig**, sonst stehen die neuen Karten leer da.
 >
-> **Ein Fehlerfund unterwegs:** F4 — P5a/AP4 hatte die Anwendung
-> **uninstallierbar** gemacht (`install.php` lief in einen HTTP 500).
-> Behoben mit Web 20.15.3 (Backlog Nr. 215); dazu Nr. 216, weil
-> `frame-ancestors` in einer `report-only`-Kopfzeile stand und WebKit
-> deshalb bei jedem Bild einen Konsolenfehler meldete. Beides steht in
-> Abschnitt 2 des Prüfdokuments.
+> **Sechs Fehlerfunde während der Umsetzung**, alle im Prüfdokument als F4 bis
+> F9 belegt; vier davon haben eine Backlog-Nummer bekommen:
 >
-> **Dreimal geprüft, nicht einmal.** Seit der Rückfrage vom 16.09.2026
-> läuft der Bilderlauf über **drei** Maschinen (Chromium, Firefox, WebKit)
-> — Nr. 216 ist genau daran aufgefallen und wäre unter Chromium allein
+> | Fund | Was | Nummer | Behoben in |
+> |---|---|---|---|
+> | F4 | P5a/AP4 hatte die Anwendung **uninstallierbar** gemacht (`install.php` → HTTP 500) | Nr. 215 | Web 20.15.3 |
+> | — | `frame-ancestors` stand in einer Report-Only-Richtlinie und war dort wirkungslos — **16 Konsolenfehler bei 16 Bildern** in WebKit | Nr. 216 | Web 20.16.0 |
+> | F5 | **Backlog Nr. 48 falsch gelesen** — als Aufbewahrungsfrist für Einsätze statt als Zahl der Sicherungspakete; berichtigt, bevor es ausgeliefert wurde | — | vor Web 20.21.0 |
+> | F6 | Die Profilseite brach aus ihrem Seitengerüst aus — vier Karten über die volle Fensterbreite, **zehn Tage lang**, und der Bilderlauf meldete in allen drei Engines drei Nullen | Nr. 217 | Web 20.21.1 |
+> | F7 | Ein Meldungskasten trug den Ton `meldung-blau`, den es nicht gibt — weißer Kasten ohne Symbol | Nr. 218 | Web 20.21.1 |
+> | F8 | Zwei Seiten fehlten in der Gerüst-Ausnahmeliste — „Seite ohne Gerüst" **2 → 0**, Ausnahmen 7 → 9 | — | Web 20.21.1 |
+> | F9 | Die Symbolregel zählt Typografie — **299 von 319 Befunden sind `…` und `→`**; die Schwelle stand in zwei Dokumenten verschieden (366 gegen 377) | Nr. 219 | Web 20.21.1 |
+>
+> **Dreimal geprüft, nicht einmal.** Seit der Rückfrage des Auftraggebers vom
+> 16.09.2026 läuft der Bilderlauf über **drei** Maschinen (Chromium, Firefox,
+> WebKit). Nr. 216 ist genau daran aufgefallen und wäre unter Chromium allein
 > nie sichtbar geworden.
 
 ---
@@ -695,6 +698,42 @@ Gruppenpositionen); das **Notfallblatt** als Druckansicht.
 
 Vor jedem Mockup hinweisen und pausieren (K8). Alle übrigen Oberflächen
 (Karte „Konten", Kontoseite, Kontoverwaltung) folgen bestehenden Mustern.
+
+**Stand 17.09.2026: beide Mockups liegen als V1 vor** (Fable, auf Anforderung
+des Auftraggebers vor der Umsetzung), unter `konzept-p5b/mockups/` mit
+`LIESMICH.md`: `M-P5b-01-dokumentseite` (+ `-handy`), `M-P5b-02a-registrierung`,
+`M-P5b-02b-erststart`, `M-P5b-02c-rueckfrage` (je + `-handy`),
+`M-P5b-02d-notfallblatt` — je HTML mit dem echten `style.css` und PNG. Was sie
+zusätzlich festlegen: Hilfe-Symbol im Kopf links vom Zahnrad; drei Knöpfe der
+Konto-Rückfrage als Primär (breit) / Neutral / Leise; Betreiber-Rückfrage mit
+vier Gruppenfeldern zweispaltig; Erststart als Karte, nicht als Dialog; das
+Notfallblatt ohne Logo, mit Kennung von Konto und Installation. Nach Freigabe
+sind AP3, AP8 und AP9 ohne weitere Pause umsetzbar.
+
+**Gestaltungsvorgaben des Auftraggebers vom 17.09.2026 (gelten für die
+Umsetzung, nicht nur für die Mockups):**
+
+1. **Zeilenaktionen rechtsbündig in einer Spalte.** In Listen wie dem
+   Erststart stehen Knöpfe und Plaketten aller Zeilen am **rechten Rand**
+   untereinander, nicht hinter dem Text; die Plakette „erledigt" steht an
+   derselben Stelle wie vorher der Knopf. Das ist die Regel aus
+   `.zeile` / `.zeile-aktionen` (Baustein 9.2/9.3) — sie gilt hier
+   ausdrücklich auch für Plaketten.
+2. **Kartenfuß:** links das Häkchen „nicht mehr zeigen", rechts „Später".
+3. **Alles vertikal zentriert und an seinem Element ausgerichtet:**
+   Nummernplakette, Text und Aktion einer Zeile auf einer Mittellinie;
+   Häkchen mittig zum Text; Knöpfe im Dialogfuß auf einer Höhe. Wo ein
+   Baustein das schon leistet (`.zeile` hat `align-items:center`), wird es
+   benutzt, nicht nachgebaut; wo ein neuer Baustein entsteht, ist die
+   Zentrierung Abnahmekriterium (Bilderlauf, Knopfhöhen 0).
+4. Die Bezeichnung **„Vereinbarung zur Auftragsverarbeitung (AVV)"** bleibt —
+   das ist der Rechtsbegriff aus Art. 28 DSGVO; „Datenschutzvereinbarung"
+   wäre mit der Datenschutzerklärung verwechselbar. In der Oberfläche steht
+   der Begriff mit der Kurzform in Klammern, der Link führt zum Text.
+
+Die Mockups M-P5b-02b sind mit Punkt 1 und 2 als V1.1 neu gerendert; die
+übrigen Mockups waren davon nicht betroffen. **Alle Mockups sind am
+17.09.2026 freigegeben.**
 
 ---
 
