@@ -1,6 +1,11 @@
 # Datenschutzerklärung — Ergänzungsbausteine für P5
 
-> **Entwurf vom 16.09.2026, nicht anwaltlich geprüft.** Die geltende
+> **Entwurf vom 16.09.2026, ergänzt am 17.09.2026, weiterhin nicht
+> anwaltlich geprüft.** **Ergänzung nach E-P5b-25:** B12 (Verschlüsselung,
+> Klartext und Standortdaten — von R41 verlangt und bisher nur ein
+> Halbsatz in B8, während die Nutzungsbedingungen 4.1 für genau diese
+> Abgrenzung hierher verweisen) und B13 (private Zweckbestimmung); B11
+> nennt den Adressdienst. Die geltende
 > Datenschutzerklärung liegt in `rechtstexte` (Schlüssel `datenschutz`)
 > und ist nicht Teil des Repositoriums; diese Bausteine werden dort
 > **eingearbeitet**, nicht ersetzt. Jeder Baustein nennt, welche
@@ -82,7 +87,7 @@ Datenschlüssel.
 
 Zu jedem gekoppelten Gerät speichern wir eine Gerätekennung, den Typ und
 das Modell, den Zeitpunkt der letzten Verbindung und den Geräteschlüssel als
-Hash. Gerätedaten (Zeiten, Positionen, Spuren) werden deinem Konto
+Hash. Gerätedaten (Zeiten, Positionen, GPS-Daten) werden deinem Konto
 zugeordnet.
 
 ## B9 — Sicherheitsberichte des Browsers (E-P5a-15)
@@ -107,10 +112,70 @@ Hosting: dataforest [Firmierung, Ort]. Mailversand: lima-city
 [Firmierung, Ort]. Mit beiden bestehen Verträge zur Auftragsverarbeitung.
 Eine Übermittlung in Drittländer findet nicht statt.
 
+**Adresssuche.** Wenn du im Einsatzortfeld eine Adresse tippst, fragt
+**dein Browser** einen Photon-Adressdienst (Vorgabe: `photon.komoot.io`,
+betrieben von der komoot GmbH, Potsdam). Die Anfrage geht nicht über
+unseren Server — wir sehen sie nicht. Übermittelt werden die getippte
+Adresse bzw. die Koordinate, sonst nichts. **Du kannst die Adresssuche in
+deinen Einstellungen abschalten**; der Betreiber der Installation kann sie
+für alle abschalten oder einen anderen Dienst eintragen.
+
+## B12 — Verschlüsselung, Klartext und Standortdaten (R41, E-P5b-25)
+
+**Verschlüsselt** — nur du kannst sie lesen, wir nicht: Nachname,
+Vorname, Geburtsdatum, Alter, Diagnose, Einsatznummer, Adresse und
+Koordinate des Einsatzorts, dessen Beschreibung, ein von Hand gesetzter
+Abfahrtort und die Notizen des Einsatzes. Die Ver- und Entschlüsselung
+geschieht in deinem Browser; der Schlüssel entsteht aus deinem Passwort
+und verlässt ihn nicht. **Alle diese Angaben sind freiwillig.**
+
+**Im Klartext** — für uns lesbar, weil der Dienst damit rechnet: Zeiten
+und Phasen, die **Koordinate jeder Einsatzphase**, die **GPS-Aufzeichnung**
+deines Rettungsmittels, Rettungsmittel und Standort, Besatzungsnamen, das
+Transportziel samt Koordinate, die Höhe des Einsatzorts, der Verlauf einer
+Reanimation und die Notizen des Diensttags. Freitextfelder, die im
+Klartext liegen, sind in der Oberfläche als solche gekennzeichnet.
+
+**Das Wichtigste an diesem Abschnitt ist der nächste Satz.** Die Phasen 4
+und 5 sind Ankunft am Einsatzort und Ankunft bei der Patientin. **Aus der
+GPS-Daten und diesen Koordinaten lässt sich der Einsatzort
+rekonstruieren — auch wenn die Adresse verschlüsselt ist.** Wer Zugang zur Datenbank
+hätte, sähe Ort, Zeitpunkt, Zielklinik und Reanimationsverlauf als
+zusammenhängenden Vorgang, ohne Namen und ohne Diagnose. Die
+Verschlüsselung schützt die Identität, nicht das Geschehen.
+
+**Aufbewahrung.** GPS-Daten und Positionen bleiben, solange der
+zugehörige Einsatz besteht; sie werden mit ihm gelöscht. Ältere
+Aufzeichnungen werden verdichtet gespeichert, ohne dass sich der Inhalt
+ändert.
+Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Erfüllung des
+Nutzungsvertrags) — die Aufzeichnung ist die Leistung, die du nutzt.
+
+**Abschalten.** Du kannst Einsätze von Hand anlegen, ohne ein Gerät zu
+koppeln; dann entstehen keine GPS-Daten.
+
+## B13 — Wofür du den Dienst nutzen darfst (E-P5b-25)
+
+NAdoku ist für die **private** Dokumentation eigener Einsätze bestimmt —
+für Weiterbildung, Fortbildungsnachweise und den eigenen Überblick. Eine
+Nutzung im Auftrag oder auf Weisung eines Arbeitgebers oder Trägers ist
+nach den Nutzungsbedingungen (2.2) nicht gestattet. Für die Daten, die du
+einträgst, bist du datenschutzrechtlich **verantwortlich**; wir
+verarbeiten sie in deinem Auftrag. Was dabei gilt, steht in der
+Vereinbarung zur Auftragsverarbeitung, die du bei der Registrierung
+annimmst.
+
 ---
 
 *Prüfhinweise:* (a) B4 ist die Fortschreibung der Zusage aus `schema.sql`
 und `Technik.md` (V1, 16.09.2026). (b) B3 nennt die Sperrleiter aus P5a;
 Zahlen sind Vorgaben, bei anderer Einstellung des Betreibers anpassen.
 (c) Rechtsgrundlagen sind Vorschläge. (d) Mit S11 ändert sich die Liste
-der Klartextdaten — dann neue Fassung.
+der Klartextdaten — dann neue Fassung; **B12 ist der Baustein, der dann
+als erster anzufassen ist**. (e) B12 und B13 sind am 17.09.2026 nach
+E-P5b-25 ergänzt worden. B12 setzt um, was R41 verlangt („Die
+Datenschutzerklärung nennt ehrlich die Grenze der E2E"); zu prüfen ist,
+ob die Rechtsgrundlage für GPS-Daten und Positionen zutreffend gewählt ist.
+(f) Die Angaben zur Adresssuche in B11 beschreiben eine Abfrage, die
+unmittelbar aus dem Browser der Nutzerin geht; die datenschutzrechtliche
+Einordnung ist offen (siehe AVV, Anlage IV Nr. 4).

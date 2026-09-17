@@ -18,12 +18,12 @@ Mockups in `konzept-p5b/mockups/`.
 >
 > | | |
 > |---|---|
-> | Stand | 16.09.2026 — **Konzept freigegeben** (Auftraggeber, 16.09.2026, ohne Änderungen). E-P5b-01 bis -10 aus dem Gespräch, E-P5b-11 bis -22 aus dem Nachmessen, E-P5b-23 und -24 aus den erledigten Zuarbeiten. |
-> | Entschieden | E-P5b-01 bis E-P5b-24 (Abschnitt 2) |
-> | Offen | nichts im Konzept; **außerhalb:** anwaltliche Prüfung der drei Rechtstext-Entwürfe (E-P5b-24) vor dem Einspielen |
+> | Stand | 16.09.2026 — **Konzept freigegeben** (Auftraggeber, 16.09.2026, ohne Änderungen). E-P5b-01 bis -10 aus dem Gespräch, E-P5b-11 bis -22 aus dem Nachmessen, E-P5b-23 und -24 aus den erledigten Zuarbeiten. **Nachtrag 17.09.2026:** E-P5b-25 (Abschnitt 2.5) — private Zweckbestimmung, die AVV bleibt, Versuchsanwendung verworfen. |
+> | Entschieden | E-P5b-01 bis E-P5b-25 (Abschnitt 2) |
+> | Offen | nichts im Konzept; **außerhalb und nicht mehr in der Liste der Umsetzung:** die anwaltliche Prüfung der drei Rechtstext-Entwürfe samt Rechtsform der Betreiberin (E-P5b-24, E-P5b-25) — der Auftraggeber führt diese Zuarbeit ab 17.09.2026 selbst |
 > | Umsetzung | **läuft** auf `claude/magical-dirac-we2y1z` seit 16.09.2026 — begonnen auf dem Stand von `main` nach dem Merge von P5a (PR #50, `14f99ac`). **Sieben von zehn Paketen sind gebaut** (Tabelle unten), AP8, AP9 und AP10 stehen aus. **Abweichend vom Fahrplan läuft 10b vor Schritt 15**: Der Auftraggeber hat die Umsetzung am 16.09.2026 unmittelbar nach dem P5a-Merge beauftragt; **Schritt 15 ist unverändert offen**. Welche Folgen das für die Zentralisierung hat, ist hier nicht gemessen — sie fasst dieselben Dateien an und misst ohnehin nach dem Merge neu (Rahmenplan, Fahrplanzeile 15). Reihenfolge und Abhängigkeiten innerhalb von 10b sonst wie in 3.0 |
 > | Fable-Schritte der Umsetzung | **erledigt** — beide Mockups am 17.09.2026 geliefert und **freigegeben** (`konzept-p5b/mockups/`, M-P5b-01 V1, M-P5b-02 a–d V1/V1.1). Die Umsetzung von AP3, AP8 und AP9 braucht **keine Pause** mehr; die vier Gestaltungsvorgaben in Abschnitt 6 gelten |
-> | Nummern | **Vergeben am 17.09.2026** beim Einspielen dieses Pakets: Rahmenplan **Fassung 78**, Backlog **Nr. 220 bis 222** (Proof-of-Work, Uhr-Grund bei `403`, Pflege der Wegwerfliste). Die Nummern 215 bis 219 hatte derselbe Zweig zuvor für Funde während der Umsetzung vergeben; 220 war damit die nächste freie. **Die Einschübe aus Abschnitt 7 und 8 sind eingearbeitet** — Fahrplanzeile 10b, Schritt-10-Block, Abschnitt 5, 6 und das Register R9/R25/R37 im Rahmenplan; im Backlog die drei neuen Punkte **220 bis 222**, der Speichergrenzen-Absatz an **Nr. 37** und die Verschiebung von **Nr. 48** nach *Erledigt*; **Nr. 202** trug seine Statuszeile schon seit AP2, **Nr. 200** bleibt unverändert. **Nr. 37 bleibt offen** — von ihr ist nur der Speichergrenzen-Teil gefallen, der Rest (Zeitraumübersicht, Suchindex, die sechs stillen Kappungen, `post_max_size`) steht |
+> | Nummern | **Vergeben am 17.09.2026** beim Einspielen dieses Pakets: Rahmenplan **Fassung 78**, Backlog **Nr. 220 bis 222** (Proof-of-Work, Uhr-Grund bei `403`, Pflege der Wegwerfliste). Die Nummern 215 bis 219 hatte derselbe Zweig zuvor für Funde während der Umsetzung vergeben; 220 war damit die nächste freie. **Die Einschübe aus Abschnitt 7 und 8 sind eingearbeitet** — Fahrplanzeile 10b, Schritt-10-Block, Abschnitt 5, 6 und das Register R9/R25/R37 im Rahmenplan; im Backlog die drei neuen Punkte **220 bis 222**, der Speichergrenzen-Absatz an **Nr. 37** und die Verschiebung von **Nr. 48** nach *Erledigt*; **Nr. 202** trug seine Statuszeile schon seit AP2, **Nr. 200** bleibt unverändert. **Nr. 37 bleibt offen** — von ihr ist nur der Speichergrenzen-Teil gefallen, der Rest (Zeitraumübersicht, Suchindex, die sechs stillen Kappungen, `post_max_size`) steht. **Nachtrag 17.09.2026:** Backlog **Nr. 223** (Einwilligung bei der Registrierung nicht festgehalten) zu E-P5b-25 |
 
 > **Stand der Umsetzung** (17.09.2026, Zweig `claude/magical-dirac-we2y1z`)
 >
@@ -44,7 +44,13 @@ Mockups in `konzept-p5b/mockups/`.
 > die einzige offene Abhängigkeit aufgelöst; AP3 ist seither gebaut, AP8 und
 > AP9 sind ohne weitere Pause umsetzbar. **Außerhalb** bleibt die anwaltliche Prüfung der drei
 > Rechtstext-Entwürfe (E-P5b-24) — AP4 steht deshalb mit Platzhaltern da, und
-> das ist der geplante Zustand, kein Rest.
+> das ist der geplante Zustand, kein Rest. Die Entwürfe sind am 17.09.2026 nach
+> E-P5b-25 überarbeitet worden (private Zweckbestimmung, § 203 StGB,
+> Klartextliste ehrlich gestellt); **geprüft sind sie weiterhin nicht**.
+>
+> **Ein Rest ist dazugekommen:** Backlog **Nr. 223** — die drei Häkchen der
+> Registrierung werden nicht festgehalten und werden auch für Texte verlangt,
+> die nicht in Kraft sind. Eigenes Paket vor AP10.
 >
 > **Fünf Migrationen bisher** (AP3 bringt keine dazu) — `2026_09_16_protokoll_ereignisse`,
 > `_konto_lebenszyklus`, `_einwilligungen`, `_adresswechsel_bestaetigt` und
@@ -531,6 +537,134 @@ die über E-P5b-05 vorgelegt werden.
 
 ---
 
+### 2.5 Nachträgliche Entscheidung (17.09.2026)
+
+**E-P5b-25 — Private Nutzung als Zweckbestimmung; die AVV bleibt.**
+Anlass war eine Rückfrage des Auftraggebers während AP3: *„Warum
+Auftragsdatenvereinbarung? Braucht es das?"* Die Frage war berechtigt —
+E-P5b-05 setzt die AVV voraus, ohne sie herzuleiten, und E-P5b-24 nennt
+sie als Festlegung vom 16.09.2026, ebenfalls ohne Begründung.
+
+**Die Herleitung steht im Rahmenplan, R41** (Konzeptgespräch vom
+30.08.2026) und war beim Beantworten der Rückfrage zunächst übersehen
+worden: *„**AVV** als Bestandteil der Registrierung: Die NotärztInnen
+sind Verantwortliche ihrer Dokumentation, der Betreiber wird
+Auftragsverarbeiter für jede einzelne — bei 1 000 Konten ist das der
+eigentliche Brocken der Öffnung."* Die AVV ist damit keine Annahme,
+sondern eine Programmentscheidung mit Datum.
+
+**Festlegung des Auftraggebers vom 17.09.2026:** Mit NAdoku wird
+**ausschließlich privat dokumentiert, nie dienstlich**. Die Nutzung liegt
+allein in der Verantwortung der nutzenden Ärztin; welche Daten sie
+eingibt, ist ihre Entscheidung. Damit ist die Ärztin Verantwortliche im
+Sinne der DSGVO, Gen-EM ist ihr Auftragsverarbeiter, und die AVV bleibt
+Bestandteil der Registrierung.
+
+**Was das auflöst:** Prüfhinweis (b) der AVV (*„Für Nutzerinnen, die als
+Beschäftigte eines Trägers dokumentieren, ist der Träger
+Verantwortlicher"*) stellte die tragende Konstruktion des eigenen
+Vertragstextes in Frage — die Nutzerin nimmt bei der Registrierung eine
+Parteistellung an, die der Anhang desselben Dokuments bezweifelt. Die
+Festlegung räumt das ab. **Die Festlegung schafft die AVV nicht ab, sie
+macht sie erst richtig:** Art. 28 Abs. 3 DSGVO verlangt den Vertrag
+immer, wenn im Auftrag verarbeitet wird; dass die Verantwortliche eine
+Privatperson ist, ist kein Ausnahmetatbestand.
+
+**Formulierung: hart** (Entscheidung des Auftraggebers gegen die
+Empfehlung der Umsetzung, die zur weichen riet, weil die Anwendung den
+Unterschied nicht erkennen kann). Die Nutzungsbedingungen untersagen das
+**Dokumentieren im Auftrag** — nicht das **Weitergeben danach**. Beides
+wird getrennt formuliert, weil eine zu weit gefasste Klausel sonst
+nebenbei den Export an die eigene Station verbietet (siehe unten).
+
+**Verworfen: die Anwendung als Probe-/Versuchsanwendung mit ausschließlich
+fiktiven Daten zu deklarieren.** Vom Auftraggeber erwogen, mit dem Gedanken,
+die Verantwortung so vollständig auf die Nutzerin zu verlagern. Gegen die
+Konstruktion sprechen fünf Gründe, hier festgehalten, damit sie nicht
+wiederkehrt:
+
+1. Sie widerspricht dem Gebauten. Die Anwendung nimmt GPS-Spuren einer am
+   Handgelenk getragenen Uhr entgegen, protokolliert Reanimationsverläufe
+   und liefert ein Exportformat aus, dessen Spaltenfolge mit einer realen
+   Station vereinbart ist. **Und sie verschlüsselt Patientendaten
+   Ende-zu-Ende** — der aufwendigste Teil des Projekts. Eine Anwendung für
+   erfundene Daten braucht keine E2E-Verschlüsselung; die Verschlüsselung
+   ist das stärkste Eingeständnis, dass echte Daten erwartet werden.
+2. Die Rollen der DSGVO bestimmen sich nach Art. 4 danach, wer tatsächlich
+   über Zwecke und Mittel entscheidet — nicht nach der Erklärung im
+   Kleingedruckten. Der Betreiber ist nach dem eigenen Entwurf „eine Gruppe
+   von Notärzten", die den Dienst selbst benutzt; er weiß, was hineingeht.
+3. „Selbst schuld" löst nichts: Die Daten lägen danach auf dem Server des
+   Betreibers, und Art. 32 (Sicherheit) und Art. 82 Abs. 2 (Haftung)
+   treffen den Auftragsverarbeiter unmittelbar und sind nicht abbedingbar.
+   Es entstünde die Lage **echte Gesundheitsdaten ohne AVV, ohne
+   Verzeichnis, ohne dokumentierte TOMs** — genau die, die R41 vermeiden
+   will.
+4. Gegenüber einer Aufsichtsbehörde wirkt die Erklärung neben einer
+   Datenbank mit echten Spuren als Verschleierung und wird nach
+   Art. 83 Abs. 2 nicht neutral gewertet.
+5. Sie verhindert die Arbeit, die ohnehin ansteht: Wer „Versuchsanwendung"
+   schreibt, schreibt keine TOMs, kein Verarbeitungsverzeichnis und keinen
+   Breach-Prozess — bis echte Daten drin sind, und dann fehlt alles.
+
+**Was stattdessen dasselbe Ziel erreicht** und bereits gebaut oder geplant
+ist: die **Öffnung in Wellen** nach R41 (erst „nur auf Einladung", dann
+„offen mit Freischaltung", dann „offen" — die Vorgabe der Installation
+steht auf `einladung`); das **Demo-Konto** als Ort für erfundene Daten
+(AP7); die **Haftungsbegrenzung** auf Vorsatz und grobe Fahrlässigkeit
+(Nutzungsbedingungen 8.1, getragen von der Unentgeltlichkeit).
+
+**Das Exportprofil „Excel (GuteSeele)" bleibt** (Entscheidung des
+Auftraggebers). Es ist ausgeliefert, seine Zielgruppe ist laut
+`docs/Export-Format.md` „Dritte", und die Spaltenfolge ist „Teil des
+Vertrags mit dem Empfänger". Das widerspricht der privaten Zweckbestimmung
+**nicht** — die Ärztin exportiert selbst und entscheidet selbst, und genau
+das ist ihre Verantwortung. Es widerspricht aber dem Satz *„keine Werbung,
+keine Weitergabe, keine Auswertung deiner Daten durch Dritte"* im Entwurf
+der Seite „Was ist NAdoku": Gemeint ist der Betreiber, gelesen wird es
+weiter. **Der Satz wird in AP8 eindeutig auf den Betreiber bezogen.**
+
+**Folgen für die drei Rechtstext-Entwürfe** (mit dieser Entscheidung
+umgesetzt, Stand 17.09.2026):
+
+- Nutzungsbedingungen 2.1/2.2 — private Zweckbestimmung als Pflicht, hart
+  formuliert; die bisherige Zusicherung („Ob und in welchem Umfang du
+  Einsatzdaten außerhalb der Systeme deines Trägers festhalten darfst …")
+  entfällt, weil sie die dienstliche Einbindung zum Regelfall machte.
+- AVV A.1 — die private Zweckbestimmung wird als Grundlage der
+  Rollenverteilung genannt; Prüfhinweis (b) entfällt.
+- **AVV A.2 — der Satz „Patientenbezogene Angaben erreichen den Betreiber
+  ausschließlich verschlüsselt" fällt.** Er ist unrichtig und widerspricht
+  R41 (*„Die Datenschutzerklärung nennt ehrlich die Grenze der E2E … eine
+  Flugspur ist der Einsatzort"*) sowie Anlage II Nr. 2 und Anlage III
+  derselben Datei.
+- **§ 203 StGB wird aufgenommen** (Verpflichtung des Betreibers als
+  mitwirkende Person). R41 verlangt ihn ausdrücklich in den
+  Vertragstexten; er kam in keinem der drei Entwürfe vor. Das wiegt hier
+  besonders, weil Betreiber und Nutzerkreis derselbe Berufsstand sind.
+- Datenschutz-Ergänzung — eigener Baustein zu GPS-Spur und
+  Phasenkoordinaten; bisher stand dazu ein Halbsatz bei den gekoppelten
+  Geräten, während die Nutzungsbedingungen 4.1 für genau diese Abgrenzung
+  dorthin verweisen.
+- AVV Anlage IV — der Adressdienst (Vorgabe `photon.komoot.io`,
+  abschaltbar auf zwei Ebenen, `docs/Lizenzen.md` 6.2) wird genannt; er
+  fehlte in der Liste.
+
+**Nicht Gegenstand dieser Entscheidung, aber beim Prüfen aufgefallen und
+dem Auftraggeber gemeldet:** Die AVV nennt als Vertragspartner die
+**Gen-EM GbR** — bei einer GbR haften die Gesellschafter persönlich und
+unbeschränkt. R41 nennt „Recht **und Betreiberorganisation** vor der
+Öffnung" in einem Atemzug; die Rechtsform gehört damit in die Zuarbeit
+nach E-P5b-24. Der Auftraggeber führt diese Zuarbeit selbst; sie ist ab
+17.09.2026 **aus der Liste der Umsetzung genommen**.
+
+**Ein Mangel in AP3/AP4, dabei gefunden:** Die drei Häkchen bei der
+Registrierung werden nirgends festgehalten, und sie werden auch für Texte
+verlangt, die nicht in Kraft sind. Backlog **Nr. 223**; behoben in einem
+eigenen Paket vor AP10.
+
+---
+
 ## 3. Arbeitspakete
 
 ### 3.0 Reihenfolge und Abhängigkeiten
@@ -677,6 +811,8 @@ Wegwerfliste — mit einer Testdomain zusätzlich zur gelieferten Liste.
 | F1 | Die Einladungsmail nennt den Langnamen der Anwendung noch von Hand („Willkommen bei der …") | `admin_users.php` | AP2 über `mail_rahmen()` (P5a AP5) |
 | F2 | `403` aus `ingest.php` bedeutet der Uhr heute „abgemeldet"; mit Kontostatus bekommt derselbe Code einen zweiten Grund | `Uploader.mc`, `ingest.php` | E-P5b-12: Grund im Rumpf; Handbuch; Backlog-Eintrag für die Uhr-Anzeige (Abschnitt 8) |
 | F3 | `rechtstexte` hat keine Fassungskennung außer `stand_am`; zwei Änderungen am selben Tag wären eine Fassung | `rechtstexte_lib.php` | AP4: `stand_am` wird DATETIME |
+| F4 | **Die Wortliste sah die Rechtstexte nicht an.** Bereich (c) ist eine feste Liste von acht Dateien; `docs/rechtstexte/` stand nicht darin, weil die Entwürfe erst am 16.09.2026 entstanden. Der Lauf nach der Überarbeitung vom 17.09.2026 meldete **0 Treffer**, ohne eine Zeile davon gelesen zu haben — genau der Fall B-S4-06 | `tools/wortliste/wortliste.py` | **Erledigt 17.09.2026** mit E-P5b-25: die drei Dateien eingetragen, Lauf ergab **14 Treffer** (11× „Spur" statt „GPS-Daten", 2× „Piloten", 1× „Station"), alle umformuliert statt ausgenommen; danach 0 von 0. `LIESMICH.md` hält den Fall fest |
+| F5 | **Die drei Häkchen der Registrierung werden nicht festgehalten**, und sie werden auch für Texte verlangt, die nicht in Kraft sind — `registrieren.php` prüft `RT_EINWILLIGUNG`, schreibt aber nie nach `konto_einwilligungen`; der einzige Schreibweg liegt am Tor beim Login | `registrieren.php`, `einwilligung_lib.php` | Backlog **Nr. 223**; eigenes Paket vor AP10. Dabei zu entscheiden: Eintrag schon bei der Registrierung oder bewusst erst am Tor |
 
 ---
 

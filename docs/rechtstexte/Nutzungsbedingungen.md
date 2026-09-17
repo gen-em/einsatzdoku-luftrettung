@@ -1,7 +1,11 @@
 # Nutzungsbedingungen — NAdoku
 
-> **Entwurf vom 16.09.2026, nicht anwaltlich geprüft.** Erstellt für das
-> Konzept P5b (E-P5b-05, F-P5b-2) als Vorlage für die Zuarbeit nach R41.
+> **Entwurf vom 16.09.2026, überarbeitet am 17.09.2026, weiterhin nicht
+> anwaltlich geprüft.** Erstellt für das Konzept P5b (E-P5b-05, F-P5b-2)
+> als Vorlage für die Zuarbeit nach R41. **Überarbeitung nach E-P5b-25:**
+> Abschnitt 2 neu — die private Zweckbestimmung ist Pflicht, nicht mehr
+> Zusicherung; Dokumentieren und Weitergeben sind getrennt; 2.6 nennt die
+> Freiwilligkeit der Patientenangaben.
 > Vor dem Einspielen in `rechtstexte` (Schlüssel `nutzungsbedingungen`)
 > juristisch prüfen lassen. Stellen in eckigen Klammern sind auszufüllen.
 > Die Bedingungen werden bei der Registrierung mit dem Häkchen
@@ -28,21 +32,41 @@ nicht.
 1.3 Der Dienst ist **unentgeltlich**. Es besteht kein Anspruch auf
 Nutzung, Verfügbarkeit oder Fortführung (Abschnitt 7).
 
-## 2. Wer den Dienst nutzen darf
+## 2. Wer den Dienst nutzen darf — und wozu
 
 2.1 Der Dienst richtet sich an Personen, die **ärztlich im Rettungsdienst
-tätig** sind und ihre Einsätze für eigene Zwecke dokumentieren —
-Weiterbildung, Fortbildungsnachweise, eigener Überblick.
+tätig** sind und ihre Einsätze **für sich selbst** dokumentieren — für die
+Weiterbildung, die Fortbildungsnachweise, den eigenen Überblick.
 
-2.2 Mit der Registrierung sicherst du zu, dass du zu diesem Kreis gehörst
-und dass du die Angaben, die du im Dienst speicherst, **rechtmäßig
-dokumentieren darfst**. Ob und in welchem Umfang du Einsatzdaten außerhalb
-der Systeme deines Trägers festhalten darfst, richtet sich nach den für
-dich geltenden Vorgaben (Arbeitgeber, Träger, Berufsrecht). Der Betreiber
-prüft das nicht und kann es nicht prüfen.
+2.2 **Die Nutzung ist ausschließlich privat.** Du dokumentierst allein für
+eigene Zwecke und in eigener Verantwortung. **Eine Nutzung im Auftrag oder
+auf Weisung eines Arbeitgebers, Trägers, einer Wache oder einer sonstigen
+Organisation ist nicht gestattet** — auch dann nicht, wenn sie geduldet
+oder empfohlen wird. Wer im Auftrag dokumentiert, darf den Dienst nicht
+nutzen.
 
-2.3 Der Dienst ersetzt keine Dokumentation, die dein Träger oder das Gesetz
-von dir verlangt, und ist kein Einsatzprotokoll der Leitstelle.
+2.3 **Was du mit deinen eigenen Daten danach tust, bleibt deine
+Entscheidung.** 2.2 betrifft das Dokumentieren, nicht das Weitergeben: Du
+kannst deine Daten jederzeit exportieren und weitergeben, an wen du willst
+— etwa eine Jahresliste an deinen Standort. Ob du das darfst, richtet sich
+nach den für dich geltenden Vorgaben (Berufsrecht, Arbeitsvertrag,
+Schweigepflicht, Datenschutz). Der Betreiber prüft das nicht und kann es
+nicht prüfen.
+
+2.4 Mit der Registrierung sicherst du zu, dass du zu dem Kreis nach 2.1
+gehörst, dass du den Dienst nach 2.2 **privat** nutzt und dass du die
+Angaben, die du speicherst, **rechtmäßig dokumentieren darfst**.
+
+2.5 Der Dienst ersetzt keine Dokumentation, die dein Träger oder das Gesetz
+von dir verlangt, und ist kein Einsatzprotokoll der Leitstelle. Er tritt
+neben sie, nicht an ihre Stelle.
+
+2.6 **Du entscheidest, welche Angaben du einträgst.** Der Dienst verlangt
+keine Angabe, die eine Patientin oder einen Patienten identifizierbar
+macht: Name, Geburtsdatum, Alter, Diagnose, Einsatznummer, Einsatzort und
+seine Beschreibung sind sämtlich **freiwillig**. Ein Einsatz lässt sich
+allein aus Zeiten dokumentieren. Je weniger du einträgst, desto weniger
+musst du verantworten.
 
 ## 3. Konto
 
@@ -93,10 +117,26 @@ sein; für dieses Konto gilt die Verschlüsselungszusage ausdrücklich nicht
 (seine Schlüssel sind veröffentlicht). Es ist nicht für echte Daten
 bestimmt.
 
+4.4 **Die Verschlüsselung hat eine Grenze, und sie ist wichtiger als die
+Zusage.** Im Klartext liegen unter anderem die Zeiten, die **Koordinate
+jeder Einsatzphase**, die **GPS-Aufzeichnung** der Fahrt, das
+Transportziel samt Koordinate, die Besatzungsnamen und die Notizen des
+Diensttags. **Aus den GPS-Daten und den Phasenkoordinaten lässt sich der
+Einsatzort rekonstruieren** — die Verschlüsselung der Adresse verbirgt ihn
+nicht. Wer das nicht will, zeichnet keine GPS-Daten auf und trägt den
+Einsatz von Hand nach.
+
+4.5 **Schweigepflicht.** Soweit du dem Betreiber Angaben zugänglich
+machst, die deiner ärztlichen Schweigepflicht unterliegen, ist er
+mitwirkende Person im Sinne des § 203 Abs. 3 Satz 2 StGB. Die
+Verpflichtung dazu steht in der Vereinbarung zur Auftragsverarbeitung,
+die du bei der Registrierung annimmst (dort Abschnitt A.7).
+
 ## 5. Pflichten bei der Nutzung
 
-5.1 Du nutzt den Dienst nur für den in Abschnitt 1.1 und 2.1 beschriebenen
-Zweck und nur mit Daten, die du speichern darfst (Abschnitt 2.2).
+5.1 Du nutzt den Dienst nur für den in Abschnitt 1.1, 2.1 und 2.2
+beschriebenen Zweck und nur mit Daten, die du speichern darfst
+(Abschnitt 2.4).
 
 5.2 Unzulässig sind insbesondere: das Umgehen von Sicherheitsmaßnahmen
 (Ratenschutz, Sperren, Verschlüsselung), automatisierte Zugriffe außerhalb
@@ -156,7 +196,8 @@ Passwort **und** Wiederherstellungsschlüssel unzugänglich sind (Abschnitt
 
 8.4 Du stellst den Betreiber von Ansprüchen Dritter frei, die daraus
 entstehen, dass du Daten gespeichert hast, zu deren Speicherung du nicht
-berechtigt warst (Abschnitt 2.2), soweit du das zu vertreten hast.
+berechtigt warst (Abschnitt 2.4), oder dass du den Dienst entgegen
+Abschnitt 2.2 im Auftrag genutzt hast, soweit du das zu vertreten hast.
 
 ## 9. Beendigung
 
@@ -214,13 +255,19 @@ Auftragsverarbeitung, die du bei der Registrierung annimmst.
 
 ---
 
-*Hinweise für die Prüfung (nicht Teil des Textes):* (a) 2.2 verschiebt
-die Verantwortung für die Rechtmäßigkeit der Dokumentation zur Nutzerin —
-prüfen, ob eine Zusicherung genügt oder eine Belehrung nötig ist.
+*Hinweise für die Prüfung (nicht Teil des Textes):* (a) **Abschnitt 2 ist
+am 17.09.2026 nach E-P5b-25 neu gefasst worden.** Die private Nutzung ist
+jetzt Pflicht (2.2) und nicht mehr nur zugesichert; 2.4 verschiebt die
+Verantwortung für die Rechtmäßigkeit weiterhin zur Nutzerin — prüfen, ob
+eine Zusicherung genügt oder eine Belehrung nötig ist. **Zu prüfen ist
+außerdem, ob 2.2 durchsetzbar ist:** Der Dienst kann private von
+dienstlicher Nutzung technisch nicht unterscheiden; die Klausel wirkt nur
+im Vertragsverhältnis. Der Betreiber hat sie am 17.09.2026 in Kenntnis
+dessen als harte Fassung gewählt.
 (b) 8.1 stützt sich auf den Rechtsgedanken der §§ 521, 599 BGB für
 unentgeltliche Leistungen; 8.2 hält § 309 Nr. 7 BGB ein. (c) 7.3 drei Monate
 sind eine Setzung des Betreibers. (d) 4.1 verweist auf die
-Datenschutzerklärung; mit S11 (Verschlüsselung von Spuren, Koordinaten,
+Datenschutzerklärung; mit S11 (Verschlüsselung von GPS-Daten, Koordinaten,
 Reanimation, Zielklinik) ändert sich die Abgrenzung — dann neue Fassung
 beider Texte. (e) 12.2 nur, wenn die GbR selbst Kaufmann oder Unternehmer
 ist; sonst streichen.

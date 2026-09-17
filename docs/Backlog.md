@@ -2708,6 +2708,48 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Datei dazu, die sie selbst zählt. Zwei Stellen für dieselbe Zahl laufen
     auseinander — dieselbe Falle wie bei der Schwelle in Nr. 219.
 
+223. **Die drei Häkchen der Registrierung werden nicht festgehalten — und
+    für Texte verlangt, die nicht in Kraft sind.**
+    *Aufgenommen 17.09.2026 beim Nachprüfen der Rückfrage zur AVV
+    (E-P5b-25). Zwei Mängel an derselben Stelle, in AP3/AP4 entstanden.*
+
+    **(a) Kein Eintrag.** `server/registrieren.php` verlangt alle
+    Schlüssel aus `RT_EINWILLIGUNG` als Pflichthaken und legt danach das
+    Konto über `konto_anlegen()` an — eine Zeile in `konto_einwilligungen`
+    entsteht dabei nie. Der einzige Schreibweg ist `einwilligung_setzen()`
+    in `server/einwilligung_lib.php`, und diese Funktion wird im ganzen
+    Server genau einmal aufgerufen: in `server/einwilligung.php`, also am
+    **Tor beim Login**. E-P5b-05 verlangt dagegen „Gespeichert je Konto mit
+    Fassungskennung (`stand_am` des Textes) und Zeit".
+
+    **Die Wirkung ist nicht, dass der Nachweis fehlt** — das Tor fasst
+    jedes Konto beim ersten Login und schreibt dann. Sie ist, dass er an
+    einer anderen Stelle entsteht als gedacht, und dass die Registrierende
+    dieselben drei Fragen zweimal beantwortet: einmal im Formular, einmal
+    beim ersten Anmelden. Ob das Tor als Nachweispunkt sogar der bessere
+    ist — dort ist die Person authentifiziert, bei der Registrierung ist
+    die Adresse nur behauptet —, lässt sich vertreten. **Nur steht es
+    nirgends.** Solange es nicht entschieden ist, ist es kein Entwurf,
+    sondern eine Lücke.
+
+    **(b) Annahme eines leeren Dokuments.** Die Registrierung prüft
+    `stand_am` nicht; der Begriff kommt in `registrieren.php` kein einziges
+    Mal vor. Das Tor prüft ihn sehr wohl — `einwilligung_lib.php`
+    überspringt jeden Text ohne Standdatum, und `docs/Technik.md` begründet
+    das: „Ein Text ohne Standdatum verlangt nichts. Sonst sperrte ein leer
+    angelegter Platzhalter alle Konten aus." Solange die geprüften Texte
+    nicht eingespielt sind — und das ist der geplante Zustand bis
+    E-P5b-24 —, muss eine Registrierende also den Haken *„Ich nehme die
+    Vereinbarung zur Auftragsverarbeitung (AVV) an"* setzen, während
+    `avv.php` anzeigt: *„noch keine Vereinbarung zur Auftragsverarbeitung
+    hinterlegt."*
+
+    **Beide Mängel gehören in ein Paket**, weil sie dieselbe Stelle
+    anfassen und einander bedingen: Was festgehalten wird, kann nur sein,
+    was auch in Kraft ist. Zu klären ist dabei die Frage aus (a) — Eintrag
+    schon bei der Registrierung oder bewusst erst am Tor —, und die
+    Antwort gehört als Entscheidung ins Konzept, nicht in einen Kommentar.
+
 ## Erledigt
 
 

@@ -133,6 +133,22 @@ BEREICHE: dict[str, dict] = {
             "docs/JSON-Vertrag.md",
             "docs/Design.md",
             "docs/Lizenzen.md",
+            # DIE RECHTSTEXTE GEHOEREN HIERHER, seit 17.09.2026 (P5b, E-P5b-25).
+            # Sie sind Entwuerfe in `docs/`, aber ihr Ziel ist die Tabelle
+            # `rechtstexte`, und von dort rendern `nutzungsbedingungen.php`,
+            # `avv.php` und `datenschutz.php` sie als Seiten der Anwendung.
+            # Damit sind sie sichtbarer Text und fallen unter R28 — sie standen
+            # nur nicht in der Liste, weil sie nach ihr entstanden sind.
+            #
+            # DER LAUF MELDETE DESHALB EINE NULL, DIE NICHTS BEDEUTETE: Am
+            # 17.09.2026 wurden alle drei Texte ueberarbeitet, die Wortliste
+            # lief mit 0 Treffern und hatte keine Zeile davon angesehen. Das
+            # ist derselbe Fehler, den B-S4-06 fuer die Android-App
+            # festgehalten hat — ein Bereich fehlt nicht, weil er jung ist,
+            # sondern weil ihn niemand eingetragen hat.
+            "docs/rechtstexte/Nutzungsbedingungen.md",
+            "docs/rechtstexte/AVV.md",
+            "docs/rechtstexte/Datenschutz-Ergaenzung-P5.md",
         ],
     },
 }

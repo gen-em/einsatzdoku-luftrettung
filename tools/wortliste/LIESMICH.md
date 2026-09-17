@@ -59,11 +59,33 @@ echt waren es zwei.
 
 ## Die Bereiche
 
+> **Nachtrag vom 17.09.2026 — dieselbe Lücke, zweiter Fall.** Bereich **c**
+> war eine feste Liste von acht Dateien. Die drei Rechtstext-Entwürfe unter
+> `docs/rechtstexte/` standen nicht darin, weil sie erst am 16.09.2026
+> entstanden sind. Am 17.09.2026 wurden alle drei überarbeitet (P5b,
+> E-P5b-25), der Lauf meldete **0 Treffer** — und hatte keine Zeile davon
+> angesehen. Beim Nachtragen kamen **14 Treffer** heraus: elfmal „Spur"
+> statt „GPS-Daten", zweimal „Pilotinnen und Piloten", einmal „Station"
+> statt „Standort".
+>
+> Das ist derselbe Fehler wie bei Bereich **d** (B-S4-06) und bei
+> Bereich **e**, und er wiegt hier schwerer: Die Rechtstexte sind Entwürfe
+> in `docs/`, aber ihr Ziel ist die Tabelle `rechtstexte`, und von dort
+> rendert die Anwendung sie als eigene Seiten. Es ist **sichtbarer Text**,
+> der nur noch nicht eingespielt ist.
+>
+> **Die Lehre ist nicht „an die Liste denken".** Eine feste Dateiliste
+> altert still, und zwar immer in dieselbe Richtung: Neue Dokumente kommen
+> dazu, die Liste bleibt stehen, und der Bericht meldet weiter eine Null.
+> Wer eine normative Textdatei anlegt, trägt sie hier ein — im selben
+> Paket, in dem sie entsteht.
+
+
 | Bereich | Was |
 |---|---|
 | **a** | `server/*.php`, `server/api/*.php` — ohne Kommentare |
 | **b** | `server/assets/*.js` ohne `vendor/` — ohne Kommentare |
-| **c** | `README.md`, `docs/Handbuch.md`, `docs/Export-Format.md`, `docs/Technik.md`, `docs/Backup-Format.md`, `docs/JSON-Vertrag.md`, `docs/Design.md`, `docs/Lizenzen.md` |
+| **c** | `README.md`, `docs/Handbuch.md`, `docs/Export-Format.md`, `docs/Technik.md`, `docs/Backup-Format.md`, `docs/JSON-Vertrag.md`, `docs/Design.md`, `docs/Lizenzen.md` — und seit dem 17.09.2026 die drei Rechtstext-Entwürfe unter `docs/rechtstexte/` |
 | **d** | `android/*/src/main/res/values/strings.xml` — die sichtbaren Texte der Handy- und der Wear-OS-App (seit S4/D1) |
 | **e** | `watch/resources*/**/*.xml` **und** `watch/source*/*.mc` — die sichtbaren Texte der Garmin-App (seit S5/C) |
 
