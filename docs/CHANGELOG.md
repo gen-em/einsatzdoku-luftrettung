@@ -14,6 +14,141 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.24.0] — 2026-09-17
+
+**Onboarding und die beiden Rückfragen.**
+
+### Neu
+
+**Nach dem Anmelden kann viererlei anstehen — die Anwendung zeigt genau
+eines.** Bis hierher zeigte sie keines davon: Wer ein Konto bekam, landete auf
+einer leeren Tagesübersicht und musste selbst herausfinden, dass zuerst ein
+Rettungsmittel angelegt gehört; wer seinen Wiederherstellungsschlüssel verlor,
+merkte es, wenn er ihn brauchte. `server/einstieg_lib.php` entscheidet jetzt,
+was dran ist, und zwar in dieser Reihenfolge: Einwilligungstor (eine eigene
+Seite, seit Web 20.20.0), **Schlüsselblatt-Rückfrage**, **Konto-Rückfrage**,
+**Erststart**.
+
+**Der Erststart ist eine Karte, kein Dialog** — drei Schritte über der
+Tagesübersicht (Standort, Rettungsmittel, Uhr oder Handy koppeln), darunter
+die vollständige, bedienbare Seite. Das freigegebene Mockup sagt den Grund in
+einem Satz: *„Wer sie ignoriert, arbeitet trotzdem."* Die Rückfragen dürfen
+stören, sie haben eine Frist; eine Einladung darf es nicht. Zwei Auswege:
+„Später" (bis zur nächsten Anmeldung) und „nicht mehr zeigen" (dauerhaft) —
+das erste ist eine Vertagung, das zweite eine Entscheidung.
+
+Der Stand steht am Konto (`users.erststart_stand`) und nicht in den
+Stammdaten. Ein `SELECT COUNT(*) FROM bases` wäre einfacher und wäre falsch:
+„Ich brauche keinen Standort" ist eine Antwort, und wer den Schritt bewusst
+übergeht, soll ihn nicht bei jedem Anmelden wiedersehen.
+
+**Die Konto-Rückfrage** fragt nach 30 Tagen, nach 6 Monaten und dann jährlich:
+*„Hast du dein Notfallblatt noch?"* Auf „Nein" folgt die Erneuerung im selben
+Dialog — Passwort, neuer Schlüssel, Druckknopf. Kein zweiter Dialog dazwischen:
+Was in Abschnitt 3 auf dem Bildschirm steht, kann niemand wiederherstellen, und
+jeder Dialogwechsel ist eine Gelegenheit, es zu verlieren. Aus demselben Grund
+ist das die eine Stelle dieser Anwendung, an der ein Dialog jemanden festhält —
+kein Esc, kein Klick daneben, „Fertig" erst nach dem Haken.
+
+**Das Notfallblatt** (`notfallblatt.php`) bringt den Schlüssel aufs Papier:
+Schlüssel in Vierergruppen, Kontoadresse, Adresse der Installation, Datum, und
+die drei Sätze, die daraufgehören — wofür, was ohne ihn verloren ist, wo er
+hingehört. **Es speichert nichts und kann nichts speichern.** Der Schlüssel
+kommt per POST aus dem Browser und geht in dieselbe Antwort zurück; der Server
+kennt ihn nicht. Daraus folgt die Eigenschaft, die das Blatt ausmacht: Es lässt
+sich später nicht erneut drucken. Wer es verliert, erzeugt einen neuen
+Schlüssel — das alte Blatt wird damit ungültig, und genau das steht darauf.
+
+**Die Betreiber-Rückfrage** kommt alle drei Monate und wird **eingegeben,
+nicht bestätigt**: vier zufällig gewählte Vierergruppen vom Schlüsselblatt,
+Positionen je Anzeige neu gewürfelt. Ein Haken hätte einen Klick gekostet und
+nichts bewiesen; wer vier Gruppen abtippt, hat das Blatt vor sich gehabt. Der
+Server zeigt nie einen Wert, nur die achtstellige Kennung als Hinweis, welches
+Blatt gemeint ist. Verglichen wird mit `hash_equals()` und **ohne Abkürzung bei
+der ersten Abweichung** — ein Abbruch wäre an der Antwortzeit messbar und
+machte aus einem Rätsel zu sechzehn Zeichen vier Rätsel zu vier.
+
+Drei Fehlversuche, dann der neue Topf **`blatt`** (erste Sprosse **15 Minuten**, dann steigend). Drei
+und nicht zehn: Bei der Anmeldung wird ein Passwort getippt und Tippfehler
+gehören dazu, hier wird von Papier abgelesen. Gesperrt ist dieser eine Weg —
+Anmeldung, Anwendung und das Schlüsselblatt selbst bleiben offen, denn wer die
+Frage nicht beantworten kann, soll nachsehen können.
+
+**Die Schlüsselerneuerung ist eine Komponente mit zwei Verbrauchern** (R83):
+`assets/schluessel.js` rechnet, `api/schluessel_erneuern.php` schreibt,
+`schluessel_teile.php` zeigt. Der Dialog nach der Anmeldung und die neue Karte
+unter **Einstellungen → Profil** rufen dasselbe. Die Kontoseite gibt es, weil
+die Rückfrage erst nach 30 Tagen kommt und wer sein Blatt heute verliert, nicht
+so lange warten will.
+
+Geschrieben wird dabei **genau eine Spalte**: `pat_wrap_rc`. Der
+Inhaltsschlüssel bleibt derselbe — was sich ändert, ist allein das Schloss, das
+der Zettel öffnet. Deshalb bleibt jedes gespeicherte Datum lesbar, `pat_wrap_pw`
+unberührt und `session_epoch` stehen; es gibt keinen Grund, offene Sitzungen zu
+beenden.
+
+**Das Passwort wird trotzdem verlangt, obwohl die Sitzung steht.** Eine
+entsperrte Sitzung hätte den Inhaltsschlüssel bereits — der Browser bräuchte
+es nicht. Der Server verlangt es: Wer eine fremde Sitzung übernimmt, könnte
+sonst den Zettel des Opfers ungültig machen. Kein Datenklau, aber der lautlose
+Verlust des Rückwegs, und man merkt es erst, wenn man ihn braucht. Geprüft wird
+serverseitig; eine Prüfung im Browser wäre eine Bitte, keine Wache. Derselbe
+Endpunkt zählt in den Topf `login` — ein Ratespiel bleibt ein Ratespiel, gleich
+an welcher Tür.
+
+**Die Wache vor dem Neupacken steht im Browser, und sie muss dort stehen.** Vor
+dem Verpacken wird der entpackte Inhaltsschlüssel gegen `pat_key_check`
+gehalten. Öffnete der Schritt davor aus irgendeinem Grund einen *anderen*
+Schlüssel, würde dieser verpackt, der Server nähme ihn an, und der neue Zettel
+öffnete nichts — der alte wäre schon überschrieben. Es ist der einzige Weg, auf
+dem dieses Paket Daten hätte unzugänglich machen können, und deshalb bricht es
+dort ab, bevor irgendetwas gesendet wird. Konten ohne Prüfsumme (vor Web 10)
+bekommen die Funktion nicht, statt sie ungeprüft zu benutzen.
+
+### Geändert
+
+**`api/schluessel_erneuern.php` weist eine `edka1:`-Hülle ab.** Die
+Wiederherstellungs-Hülle hängt **nicht** am Server-Anteil (E-S10-04) — sie ist
+der Rückweg für den Fall, dass der Anteil verloren ist; hinge sie selbst daran,
+gäbe es keinen. Der Browser baut sie deshalb mit `encrypt()` und nicht mit
+`huelleBauen()`; der Server prüft es noch einmal, weil man einem Feld nicht
+ansieht, was darin steht, bis es zu spät ist.
+
+**Neu in `docs/Design.md`: das Symbol `drucken`** (Tabler „printer") und die
+Bausteine `.dialog-teil`, `.blatt-gruppen`, `.erststart-nr`.
+
+### Migration
+
+`2026_09_17_erststart_rueckfragen` legt vier Spalten an `users` an:
+`erststart_stand` (Bitfeld der drei Schritte, **`-1` = nicht mehr zeigen**,
+deshalb vorzeichenbehaftet), `rueckfrage_naechste`, `rueckfrage_runde`,
+`rueckfrage_verschoben`. Bestehende Konten mit Rettungsmitteln bekommen den
+Erststart als erledigt eingetragen — sie haben ihn hinter sich, nur ohne die
+Karte.
+
+**Nach dem Deploy muss eine Administratorin `update.php` aufrufen.**
+
+### Behoben
+
+**Der Zwischenspeicher von `einstieg_zustand()` ließ die Runde stehen.**
+`einstieg_faellig()` füllt ihn am Anfang der Anfrage, `rueckfrage_beantwortet()`
+schreibt danach und las die Runde — aus dem Speicher, also die alte. Die Folge:
+30 Tage, dann 6 Monate, dann wieder 6 Monate, für immer. Im Betrieb wäre das
+erst nach einem halben Jahr aufgefallen, und dann als „die Anwendung fragt zu
+oft" — ein Satz, aus dem niemand auf einen statischen Speicher schließt. Jede
+schreibende Funktion verwirft ihn jetzt.
+
+**Eine weggeklickte Frage verdeckte alle folgenden.** `einstieg_faellig()` gibt
+nur die erste heraus; wer die Schlüsselblatt-Frage vertagte, sah bis zur
+nächsten Anmeldung auch die fällige Konto-Rückfrage nicht. Sie bekommt jetzt
+mit, was die Sitzung schon gezeigt hat.
+
+**Vier Einträge in `tools/screenshots/seiten.json` waren fehlerhaft** — zwei
+ohne Gruppe (die Spalte im Bericht las „undefined"), zwei mit einem Namen, den
+es schon gab. Beides aus früheren Paketen dieser Phase.
+
+---
+
 ## [Web 20.23.0] — 2026-09-17
 
 **Das Handbuch ist jetzt eine Seite der Anwendung.**

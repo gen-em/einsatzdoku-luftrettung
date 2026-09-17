@@ -758,7 +758,8 @@ async function kopplungSitzung(seite, schluessel, fehlerSammler) {
 }
 
 async function vorher(seite, schritte, fehlerSammler) {
-  const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc'];
+  const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc',
+                   'notfallblatt'];
   for (const schritt of schritte || []) {
     if (!BEKANNT.includes(schritt)) {
       fehlerSammler.push(`Unbekannter Bedienschritt „${schritt}" — bekannt sind: `
@@ -807,6 +808,42 @@ async function vorher(seite, schritte, fehlerSammler) {
       if (await wahl.count()) {
         await wahl.selectOption('adhoc');
         await seite.waitForTimeout(450);
+      }
+      continue;
+    }
+    if (schritt === 'notfallblatt') {
+      /* DAS NOTFALLBLATT MIT SCHLUESSEL (P5b/AP9).
+         `notfallblatt.php` nimmt den Wiederherstellungsschluessel per POST
+         entgegen und speichert ihn nicht — es gibt also keine Adresse, unter
+         der die gefuellte Fassung per GET zu haben waere. Genau das ist ihr
+         Wesen, und der Bilderlauf muss es nachbauen statt umgehen: Er baut
+         dasselbe Formular, das `pw_handling.php` abschickt.
+
+         DER CODE IST ERFUNDEN und entspricht nur dem Format (20 Zeichen aus
+         dem Alphabet ohne 0/1/I/L/O/U, fuenf Vierergruppen). Er oeffnet
+         nichts — die Seite prueft ihn gegen das Muster, nicht gegen ein
+         Konto, und mehr braucht ein Bild nicht. */
+      await Promise.all([
+        seite.waitForNavigation({ timeout: 30000 }),
+        seite.evaluate(() => {
+          const f = document.createElement('form');
+          f.method = 'post';
+          f.action = 'notfallblatt.php';
+          for (const [n, w] of [['code', 'K7MQ-3RXP-9TWB-2FHZ-VNJ4'],
+                                ['konto', 'probe@example.org']]) {
+            const i = document.createElement('input');
+            i.type = 'hidden'; i.name = n; i.value = w;
+            f.appendChild(i);
+          }
+          document.body.appendChild(f);
+          f.submit();
+        }),
+      ]);
+      await seite.waitForLoadState('networkidle');
+      if (!(await seite.locator('.codeblock-wert').count())) {
+        fehlerSammler.push('Notfallblatt ohne Schlüsselblock — der Code wurde '
+                         + 'abgewiesen (Format?) oder die Seite hat den '
+                         + 'Ohne-Code-Zweig gezeigt.');
       }
       continue;
     }

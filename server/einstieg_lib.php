@@ -85,16 +85,35 @@ const BLATT_BESTAETIGT_K = 'schluesselblatt_bestaetigt_am';
 /**
  * Was ist fuer dieses Konto faellig? `null`, wenn nichts.
  *
+ * `$uebergehen` NENNT, WAS IN DIESER SITZUNG SCHON WEGGEKLICKT WURDE
+ * (P5b/AP9). Ohne diesen Parameter verdeckt eine weggeklickte Frage alle
+ * folgenden: Wer die Schluesselblatt-Frage vertagt, saehe bis zur naechsten
+ * Anmeldung auch die Konto-Rueckfrage nicht und den Erststart nicht — denn
+ * die Faelligkeit selbst ist unveraendert, und diese Funktion gibt nur die
+ * ERSTE heraus. Gemessen am 17.09.2026: Betreiberkonto, „Spaeter" auf die
+ * Blatt-Frage, danach stand die faellige Konto-Rueckfrage nicht mehr an.
+ *
+ * Die Reihenfolge bleibt dieselbe; uebergangen wird nur, was die Sitzung
+ * bereits gezeigt hat.
+ *
+ * @param list<string> $uebergehen
  * @return 'schluesselblatt'|'konto'|'erststart'|null
  */
-function einstieg_faellig(int $userId, bool $istBetreiberin): ?string
+function einstieg_faellig(int $userId, bool $istBetreiberin,
+                          array $uebergehen = []): ?string
 {
     $z = einstieg_zustand($userId);
     if ($z === null) { return null; }
 
-    if ($istBetreiberin && blatt_faellig()) { return 'schluesselblatt'; }
-    if (rueckfrage_faellig($z))             { return 'konto'; }
-    if (erststart_offen($z['erststart_stand']) !== []) { return 'erststart'; }
+    $nimm = static fn(string $was): bool => !in_array($was, $uebergehen, true);
+
+    if ($istBetreiberin && blatt_faellig() && $nimm('schluesselblatt')) {
+        return 'schluesselblatt';
+    }
+    if (rueckfrage_faellig($z) && $nimm('konto')) { return 'konto'; }
+    if (erststart_offen($z['erststart_stand']) !== [] && $nimm('erststart')) {
+        return 'erststart';
+    }
 
     return null;
 }
@@ -229,13 +248,21 @@ function rueckfrage_faellig(array $zustand): bool
  * des Kontos: Ein Konto, das nie benutzt wird, soll keine Frist mit sich
  * herumtragen — und die 30 Tage sollen ab dem Tag laufen, an dem jemand den
  * Schluessel tatsaechlich in der Hand hatte.
+ *
+ * UND NUR, WENN ES EINEN SCHLUESSEL GIBT (`pat_wrap_rc IS NOT NULL`). Ein
+ * eingeladenes Konto, dessen Passwort noch niemand gesetzt hat, hat kein
+ * Notfallblatt — es 30 Tage spaeter zu fragen, ob es seines noch habe, waere
+ * eine Frage ohne Gegenstand. Die Frist beginnt mit der ersten Anmeldung
+ * NACH der Erstvergabe, und genau dann hatte jemand den Schluessel in der
+ * Hand.
  */
 function rueckfrage_anstossen(int $userId): void
 {
     try {
         db()->prepare("UPDATE users
                           SET rueckfrage_naechste = DATE_ADD(UTC_DATE(), INTERVAL 30 DAY)
-                        WHERE id = ? AND rueckfrage_naechste IS NULL")
+                        WHERE id = ? AND rueckfrage_naechste IS NULL
+                          AND pat_wrap_rc IS NOT NULL")
             ->execute([$userId]);
         einstieg_vergessen($userId);
     } catch (Throwable $ex) {

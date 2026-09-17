@@ -428,6 +428,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * Fehlversuchsschutz des Kontos, dieser die Nutzungsmenge des
              * Demo-Kontos. */
             if ($istDemoAdresse) { rate_demo_zaehlen(); }
+            /* DIE UHR DER KONTO-RUECKFRAGE IN GANG SETZEN (P5b/AP9,
+             * E-P5b-09). Erste Frage in 30 Tagen.
+             *
+             * BEIM ANMELDEN UND NICHT BEIM ANLEGEN DES KONTOS: Ein Konto, das
+             * nie benutzt wird, soll keine Frist mit sich herumtragen. Und
+             * die 30 Tage sollen ab dem Tag laufen, an dem jemand den
+             * Schluessel tatsaechlich in der Hand hatte.
+             *
+             * DIE FUNKTION SCHREIBT NUR EINMAL — `WHERE rueckfrage_naechste
+             * IS NULL`. Jede weitere Anmeldung geht ins Leere; das ist
+             * billiger als eine Abfrage davor. */
+            require_once __DIR__ . '/einstieg_lib.php';
+            rueckfrage_anstossen((int)$u['id']);
             header('Location: index.php'); exit;
         }
         /* DREI ZAEHLUNGEN AN EINEM FEHLVERSUCH (P5a/AP6):

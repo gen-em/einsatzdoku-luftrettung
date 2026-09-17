@@ -40,32 +40,63 @@
     {
       "name": "02a-registrieren",
       "pfad": "registrieren.php",
-      "rolle": "aus"
+      "rolle": "aus",
+      "gruppe": "Öffentlich"
     },
     {
-      "name": "02b-was-ist-nadoku",
+      "name": "02c-was-ist-nadoku",
       "gruppe": "Öffentlich",
       "rolle": "aus",
       "pfad": "ueber.php"
     },
     {
-      "name": "02c-handbuch",
+      "name": "02d-handbuch",
       "gruppe": "Öffentlich",
       "rolle": "aus",
       "pfad": "hilfe.php",
       "ganzseitig": false
     },
     {
-      "name": "02d-handbuch-innen",
+      "name": "02e-handbuch-innen",
       "gruppe": "Angemeldet",
       "rolle": "demo",
       "pfad": "hilfe.php",
       "ganzseitig": false
     },
     {
+      "name": "02f-notfallblatt",
+      "gruppe": "Öffentlich",
+      "rolle": "aus",
+      "pfad": "notfallblatt.php",
+      "vorher": [
+        "notfallblatt"
+      ]
+    },
+    {
+      "name": "02g-notfallblatt-ohne",
+      "gruppe": "Öffentlich",
+      "rolle": "aus",
+      "pfad": "notfallblatt.php"
+    },
+    {
+      "name": "02h-rueckfrage-konto",
+      "gruppe": "Angemeldet",
+      "rolle": "demo",
+      "pfad": "index.php",
+      "ganzseitig": false
+    },
+    {
+      "name": "02i-rueckfrage-blatt",
+      "gruppe": "Betrieb",
+      "rolle": "admin",
+      "pfad": "index.php",
+      "ganzseitig": false
+    },
+    {
       "name": "02b-bestaetigen",
       "pfad": "bestaetigen.php?s=wartet",
-      "rolle": "aus"
+      "rolle": "aus",
+      "gruppe": "Öffentlich"
     },
     {
       "name": "05-datenschutz",

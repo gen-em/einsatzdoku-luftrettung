@@ -312,6 +312,21 @@ Daten erst nach Server-Bestätigung.
 │   │                      laedt nur server/ hoch
 │   ├── vendor/Parsedown.php  1.7.4, MIT — der Markdown-Parser fuer die
 │   │                      beiden Dokumentseiten (docs/Lizenzen.md 3a)
+│   ├── einstieg_lib.php  WAS NACH DER ANMELDUNG FAELLIG IST (P5b/AP9):
+│   │                      Einwilligungstor, Schluesselblatt-Rueckfrage,
+│   │                      Konto-Rueckfrage, Erststart — genau EINES, in
+│   │                      dieser Reihenfolge (siehe 4.99o)
+│   ├── erststart_karte.php   die drei Schritte ueber der Tagesuebersicht.
+│   │                      Eine KARTE, kein Dialog: „Wer sie ignoriert,
+│   │                      arbeitet trotzdem" (Mockup M-P5b-02b)
+│   ├── rueckfrage_dialog.php  „Hast du dein Notfallblatt noch?" — Abschnitt 1
+│   ├── schluessel_teile.php   Abschnitte 2 und 3 (Passwort, neuer Wert):
+│   │                      EIN Markup, zwei Dialoge — Rueckfrage und
+│   │                      Kontoseite (E-P5b-20, R83)
+│   ├── blatt_dialog.php  die Betreiber-Rueckfrage zum Schluesselblatt
+│   ├── notfallblatt.php  der Wiederherstellungsschluessel auf Papier.
+│   │                      SPEICHERT NICHTS und kann nichts speichern —
+│   │                      deshalb spaeter nicht erneut druckbar
 │   ├── admin_installation.php  Wie diese Installation nach aussen auftritt
 │   │                       (S8/AP3): Logo der Installation, Impressum,
 │   │                       Datenschutz. `admin_rechtstexte.php` leitet
@@ -6820,6 +6835,179 @@ Chromium an seiner Höchsthöhe. Der Eintrag trägt deshalb
 `"ganzseitig": false` in `seiten.json` — das Bild ist ein Ausschnitt, die
 **Messungen** (Überlauf, Konsolenfehler, Knopfhöhen) laufen weiter über das
 ganze Dokument.
+
+### 4.99o Einstiege nach der Anmeldung (ab Web 20.24.0, P5b/AP9)
+
+*E-P5b-09, -10, -19, -20, -21; Mockups M-P5b-02b/c/d. Code:
+`server/einstieg_lib.php`, `server/erststart_karte.php`,
+`server/rueckfrage_dialog.php`, `server/schluessel_teile.php`,
+`server/blatt_dialog.php`, `server/notfallblatt.php`,
+`server/assets/rueckfrage.js`, `server/assets/schluessel.js`,
+`server/assets/schluesselblatt.js`, `server/api/rueckfrage.php`,
+`server/api/schluessel_erneuern.php`,
+`server/api/schluesselblatt_pruefen.php`.*
+
+Nach dem Anmelden kann viererlei anstehen. Es erscheint **genau eines**, in
+dieser Reihenfolge:
+
+| # | Was | Form | Fällig |
+|--:|---|---|---|
+| 1 | Einwilligungstor | eigene **Seite** (`einwilligung.php`) | solange eine Annahme fehlt (4.99j) |
+| 2 | Schlüsselblatt-Rückfrage | Dialog, nur BetreiberIn | alle 3 Monate, installationsweit |
+| 3 | Konto-Rückfrage | Dialog | nach 30 Tagen, 6 Monaten, dann jährlich |
+| 4 | Erststart | **Karte** über der Tagesübersicht | solange ein Schritt offen ist |
+
+`einstieg_faellig($userId, $istBetreiberin, $uebergehen)` gibt den Schlüssel
+des ersten fälligen Einstiegs zurück oder `null`. Der dritte Parameter nennt,
+was die Sitzung schon gezeigt hat — ohne ihn verdeckt eine weggeklickte Frage
+alle folgenden, weil die Funktion nur die erste herausgibt.
+
+Das Einwilligungstor steht in der Liste, aber nicht im Code dieser
+Bibliothek: Es ist eine Umleitung in `auth_guard.php` und läuft, bevor eine
+Seite etwas ausgibt.
+
+#### Der vierte ist kein Dialog
+
+E-P5b-19 zählt alle vier in einer Reihe auf und schreibt „die Seite zeigt
+genau einen Dialog". Das freigegebene Mockup M-P5b-02b sagt es genauer:
+**„Die Karte steht über der Tagesübersicht, nicht als Dialog: Wer sie
+ignoriert, arbeitet trotzdem."**
+
+Der Unterschied ist keine Geschmacksfrage. Die Rückfragen sind
+Sicherheitsfragen mit einer Frist — sie dürfen stören. Der Erststart ist eine
+Einladung; wer ihn wegklicken muss, um an seine Diensttage zu kommen, lernt in
+der ersten Minute, dass diese Anwendung im Weg steht.
+
+#### Zustand am Konto, nicht in den Stammdaten
+
+| Spalte | Was |
+|---|---|
+| `users.erststart_stand` | Bitfeld der drei Schritte (1 Standort, 2 Rettungsmittel, 4 Gerät); **`-1` = nicht mehr zeigen**, deshalb `TINYINT` mit Vorzeichen |
+| `users.rueckfrage_naechste` | Datum der nächsten Konto-Rückfrage, `NULL` = Uhr läuft noch nicht |
+| `users.rueckfrage_runde` | 0 → 30 Tage, 1 → 6 Monate, 2+ → jährlich |
+| `users.rueckfrage_verschoben` | Zähler für „Später", höchstens 3 je Runde |
+| `app_state.schluesselblatt_bestaetigt_am` | installationsweit, für die Betreiber-Rückfrage |
+
+Ein `SELECT COUNT(*) FROM bases` wäre für den Erststart einfacher und wäre
+falsch: „Ich brauche keinen Standort" ist eine Antwort, und wer den Schritt
+bewusst übergeht, soll ihn nicht bei jedem Anmelden wiedersehen.
+
+Die Uhr der Konto-Rückfrage startet bei der **Anmeldung**
+(`rueckfrage_anstossen()` in `login.php`), nicht beim Anlegen des Kontos, und
+nur wenn `pat_wrap_rc` gesetzt ist: Ein eingeladenes Konto ohne gesetztes
+Passwort hat kein Notfallblatt, und es 30 Tage später danach zu fragen wäre
+eine Frage ohne Gegenstand.
+
+#### Das Notfallblatt speichert nichts — und kann nichts speichern
+
+`notfallblatt.php` bekommt den Wiederherstellungsschlüssel **per POST aus dem
+Browser** und gibt ihn in derselben Antwort zurück. Er wird nicht gelesen,
+nicht geschrieben, nicht protokolliert. Das ist keine Vorsicht, sondern die
+einzig mögliche Bauform: Der Server kennt diesen Schlüssel nicht.
+
+Daraus folgt die Eigenschaft, die das Blatt ausmacht: **Es lässt sich später
+nicht erneut drucken.** Wer es verliert, erzeugt einen neuen Schlüssel — das
+alte Blatt wird damit ungültig, und genau das steht darauf.
+
+**Kein `auth_guard.php`, und das ist kein Versehen.** Der Schlüssel wird an
+zwei Stellen gezeigt, und an einer davon gibt es noch keine Sitzung: beim
+ersten Setzen des Passworts (`pw_handling.php`). Was stattdessen schützt: Die
+Seite gibt nur wieder, was ihr gesendet wurde, und zwar **geprüfte Werte in
+festem Text** — der Code muss dem Format entsprechen (20 Zeichen aus dem
+Alphabet ohne 0/1/I/L/O/U, fünf Vierergruppen), die Adresse muss eine Adresse
+sein; alles andere wird ausgelassen. Kein freier Text, kein Verweis nach
+draußen, kein Markup aus der Eingabe.
+
+#### Die Schlüsselerneuerung: eine Komponente, zwei Verbraucher
+
+`assets/schluessel.js` rechnet, `api/schluessel_erneuern.php` schreibt,
+`schluessel_teile.php` zeigt. Aufrufer sind der Rückfrage-Dialog und die Karte
+unter **Einstellungen → Profil** (R83).
+
+Der Weg im Browser:
+
+1. Passwort → Datenschlüssel (`deriveKeys`, `datenschluessel`)
+2. damit `pat_wrap_pw` öffnen → der **Inhaltsschlüssel** (ck)
+3. **ck gegen `pat_key_check` halten** — die Wache
+4. neuen Code erzeugen (`newRecoveryCode`), ck damit neu verpacken
+5. `api/schluessel_erneuern.php` → schreibt **genau** `pat_wrap_rc`
+6. den Code anzeigen
+
+**Schritt 3 ist die Stelle, an der Daten verlorengehen könnten.** Öffnete
+Schritt 2 aus irgendeinem Grund einen *anderen* Schlüssel, verpackte Schritt 4
+diesen, der Server nähme ihn an, und der neue Zettel öffnete **nichts** — der
+alte wäre schon überschrieben. Konten ohne `pat_key_check` (vor Web 10)
+bekommen die Funktion nicht, statt sie ungeprüft zu benutzen.
+
+Drei Feinheiten, die je einen Betriebsfall entscheiden:
+
+- `datenschluessel()` und **nicht** `datenschluesselZu()`: Die erste liest die
+  Anteilskennung aus dem **Präfix der zu öffnenden Hülle**, die zweite erzwingt
+  eine genannte. Während einer Anteilsrotation trägt die alte Hülle noch den
+  alten Anteil — mit der zweiten wäre die Erneuerung für jedes Konto
+  gescheitert, das sich seither nicht angemeldet hat.
+- `encrypt()` und **nicht** `huelleBauen()`: `pat_wrap_rc` hängt **nicht** am
+  Server-Anteil (E-S10-04). Der Server weist eine `edka1:`-Hülle zusätzlich ab
+  (`huelle_rc_pruefen()`).
+- **Das Passwort wird verlangt, obwohl die Sitzung steht.** Nicht wegen der
+  Verschlüsselung — eine entsperrte Sitzung hätte den ck bereits —, sondern
+  weil sonst jemand mit einer übernommenen Sitzung den Zettel des Opfers
+  ungültig machen könnte: kein Datenklau, aber der lautlose Verlust des
+  Rückwegs. Geprüft wird serverseitig, und der Endpunkt zählt in den Topf
+  `login`.
+
+`session_epoch` bleibt unberührt: Am Schlüssel der offenen Sitzungen hat sich
+nichts geändert.
+
+#### Die Betreiber-Rückfrage wird eingegeben, nicht bestätigt
+
+`api/schluesselblatt_pruefen.php`, zwei Aufrufe:
+
+- `aktion=stellen` — der Server würfelt je Wert (Serverschlüssel,
+  Server-Anteil) **zwei verschiedene Gruppenpositionen** aus 1–16, legt sie in
+  **seine Sitzung** und nennt nur die Nummern. Ein verstecktes Feld wäre vom
+  Browser wählbar; wer die Positionen selbst bestimmt, sucht sich die zwei
+  aus, die er kennt.
+- `aktion=pruefen` — vier Antworten, Vergleich mit `hash_equals()` gegen die
+  Gruppen aus `config.php`, **alle vier ohne Abkürzung bei der ersten
+  Abweichung**. Ein Abbruch wäre an der Antwortzeit messbar und machte aus
+  einem Rätsel zu sechzehn Zeichen vier Rätsel zu vier.
+
+Gezeigt wird nie ein Wert, nur die achtstellige **Kennung** — die Regel des
+Hauses; `betrieb_schluesselblatt.php` ist ihre einzige Ausnahme. Drei
+Fehlversuche → Topf **`blatt`** (erste Sprosse 15 Minuten, dann steigend — die
+Leiter überholt den Wert in `sperre`), Eintrag in
+`sicherheit_ereignisse` ohne Werte. Erfolg setzt
+`app_state.schluesselblatt_bestaetigt_am` und schreibt ins Protokoll (Reiter
+Verwaltung).
+
+**Keine Schlüsselerneuerung an dieser Stelle.** Den Serverschlüssel zu wechseln
+hieße, jede versiegelte Sicherung neu zu umhüllen — ein S10-Vorgang, kein
+Knopf in einem Dialog. Wer sein Blatt verloren hat, druckt es neu; der
+Schlüssel bleibt derselbe.
+
+#### „Später" heißt zweierlei
+
+Bei der **Konto**-Rückfrage sieben Tage, höchstens dreimal je Runde
+(`rueckfrage_verschoben`). Bei der **Betreiber**-Rückfrage nur bis zur
+nächsten Anmeldung, über ein Merkmal in der Sitzung — und das weicht von
+E-P5b-10 ab. Der Grund: Der Schlüsselblatt-Stand ist **ein** Datum in
+`app_state`, und es heißt `schluesselblatt_bestaetigt_am`. Um sieben Tage zu
+schieben, müsste dort ein Datum stehen, an dem nichts bestätigt wurde — eine
+Unwahrheit in genau dem Feld, das die Frage beantwortet. Und es gälte für
+alle: Eine BetreiberIn, die schiebt, nähme die Frage auch der anderen weg.
+
+#### Grenzen
+
+- **Ohne JavaScript erscheinen die beiden Dialoge nicht.** Die Erneuerung
+  rechnet im Browser (PBKDF2, HKDF, AES-GCM) und kann keinen serverseitigen
+  Ersatzweg haben — der Server kennt den Inhaltsschlüssel nicht. Die
+  Erststart-**Karte** dagegen kommt ohne aus; ihre beiden Auswege sind ein
+  gewöhnliches Formular.
+- **Die Fristen sind im Betrieb nicht abgewartet, sondern gestellt worden.**
+  Geprüft wurde mit vorgestelltem `rueckfrage_naechste`; die Runden 0 → 1 → 2
+  → 2 sind in vier Durchgängen gemessen, ein tatsächlicher Halbjahresabstand
+  nicht.
 
 ### 4.99k Selbstlöschung und Adresswechsel (ab Web 20.20.0, P5b/AP5)
 

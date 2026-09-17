@@ -1776,6 +1776,79 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 .erststart-nie{display:flex;align-items:center;gap:var(--abstand-2);
                font-size:var(--groesse-2);color:var(--gedaempft)}
 
+/* ---- Konto-Rueckfrage: drei Abschnitte in einem Dialog --------------------
+ *
+ * P5b/AP9, Mockup M-P5b-02c (freigegeben 17.09.2026). Kein neuer Baustein:
+ * Kopf, Inhalt und Fuss sind die vorhandenen des Dialogs. Neu ist nur, dass
+ * es DREI davon gibt und je einer sichtbar ist.
+ *
+ * `.dialog-teil` MUSS DIE FLEX-KETTE FORTSETZEN. Sie laeuft von `.dialog`
+ * ueber `.dialog > form` zu Kopf/Inhalt/Fuss und haelt Kopf und Fuss fest,
+ * waehrend der Inhalt rollt (Abschnitt 15). Ein Zwischenkasten ohne diese
+ * drei Angaben unterbricht sie: Der Inhalt rollte dann nicht mehr, sondern
+ * schoebe den Fuss aus dem Glas — und im Fuss steht „Fertig".
+ */
+.dialog-teil{display:flex;flex-direction:column;min-height:0}
+
+/* DREI KNOEPFE UNTEREINANDER, NICHT NEBENEINANDER.
+ *
+ * Die Anmerkung des Mockups sagt „in einer Reihe … auf dem Handy
+ * untereinander"; die ZEICHNUNG daneben zeigt sie bei 512 px untereinander.
+ * Die Zeichnung hat recht, und zwar rechnerisch: `.dialog` ist hoechstens
+ * 32 rem breit, „Nein — neuen Schluessel erzeugen" ist allein ueber 260 px —
+ * drei nebeneinander gaebe es an keiner Fensterbreite, weil der Dialog nicht
+ * mitwaechst. Eine Reihe, die nie eine Reihe ist, waere eine Regel, die nur
+ * so aussieht.
+ */
+.dialog-fuss-lang{flex-direction:column;align-items:stretch}
+.dialog-fuss-lang .knopf{flex:0 0 auto}
+.dialog-fuss-lang .feld-hinweis{margin:0}
+
+/* Der Haken „notiert" — dieselbe Zeile wie in `pw_handling.php`, nur dass
+ * hier ein Knopf daran haengt. `align-items:flex-start`, weil der Text zwei
+ * Zeilen hat und das Kaestchen an die erste gehoert. */
+.rf-haken{
+  display:flex;align-items:flex-start;gap:var(--abstand-2);
+  margin-top:var(--abstand-3);font-size:var(--groesse-3);
+}
+
+/* Das Druckformular steht im Fuss und soll sich wie ein Knopf verhalten —
+ * sonst schrumpft es auf seine Inhaltsbreite, waehrend „Fertig" daneben den
+ * ganzen Rest nimmt. Im Codeblock von `pw_handling.php` steht dasselbe
+ * Formular unter dem Haken und braucht dort Luft nach oben. */
+.rf-druck{display:flex;flex:1 1 auto}
+.rf-druck .knopf{flex:1 1 auto}
+.codeblock > .rf-druck{margin-top:var(--abstand-3)}
+
+/* ---- Betreiber-Rueckfrage: vier Gruppen in zwei Spalten ------------------
+ *
+ * P5b/AP9, Mockup M-P5b-02c Teil 2. Vier Felder zu vier Zeichen, paarweise
+ * nebeneinander: Serverschluessel links und rechts, darunter der Anteil.
+ *
+ * ZWEI SPALTEN AUCH AM HANDY, und das ist hier die Ausnahme von der Regel.
+ * Ein Feld fuer vier Zeichen ist schmal; vier davon untereinander waeren eine
+ * Spalte aus Briefmarken mit viel Luft daneben. Die Beschriftung
+ * („Serverschlüssel · Gruppe 11") bricht dann um — das ist der Preis und er
+ * ist der richtige, weil die Zusammengehoerigkeit der Paare sonst verloren
+ * geht.
+ */
+.blatt-gruppen{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:var(--abstand-2) var(--abstand-3);
+  margin-bottom:var(--abstand-3);
+}
+/* `.blatt-gruppe` STATT `.blatt-gruppen .feld` — die Vollstaendigkeitspruefung
+ * sucht Klassen im Markup und fand `blatt-gruppe` ohne Regel
+ * (`schluesselblatt.js:106`). Eine Klasse zu vergeben und dann ueber den
+ * Elternselektor zu gestalten heisst, sie unbenutzt stehen zu lassen. */
+.blatt-gruppe{margin-bottom:0}
+/* FESTBREITENSCHRIFT UND GESPERRT — wie `.codeblock-wert`, aus demselben
+ * Grund: Hier wird von Papier abgetippt, und `1` gegen `l` entscheidet. */
+.blatt-gruppe-feld{
+  font-family:var(--schrift-fest);
+  letter-spacing:.12em;text-align:center;
+}
+
 /* ---- Dokumentseite: Handbuch und „Was ist NAdoku" ------------------------
  *
  * P5b/AP8, Mockup M-P5b-01 (freigegeben 17.09.2026). Zwei Seiten, ein

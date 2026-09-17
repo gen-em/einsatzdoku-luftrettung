@@ -5994,5 +5994,50 @@ declare(strict_types=1);
  *
  * KEIN CACHE, entgegen E-P5b-22: `app_state.v` ist VARCHAR(190), das
  * gerenderte Handbuch 303 KB — und 266 KB Markdown rendern in 11 bis 12 ms.
+ *
+ * 20.24.0 — ONBOARDING UND DIE BEIDEN RUECKFRAGEN
+ *   (P5b/AP9, E-P5b-09, -10, -19, -20, -21; Mockups M-P5b-02b/c/d).
+ *
+ *   Vier Dinge koennen nach dem Anmelden anstehen, und die Anwendung zeigte
+ *   bisher keines davon. Jetzt zeigt sie GENAU EINES, in dieser Reihenfolge:
+ *   Einwilligungstor (eine Seite, seit AP4), Schluesselblatt-Rueckfrage,
+ *   Konto-Rueckfrage, Erststart. `server/einstieg_lib.php` sagt, welches.
+ *
+ *   DER ERSTSTART IST EINE KARTE UND KEIN DIALOG. Das freigegebene Mockup
+ *   sagt es in einem Satz: „Wer sie ignoriert, arbeitet trotzdem." Drei
+ *   Schritte ueber der Tagesuebersicht, darunter die vollstaendige Seite.
+ *   Die Rueckfragen duerfen stoeren — sie haben eine Frist; eine Einladung
+ *   darf es nicht.
+ *
+ *   DIE KONTO-RUECKFRAGE fragt nach 30 Tagen, nach 6 Monaten, dann jaehrlich:
+ *   „Hast du dein Notfallblatt noch?" Auf „Nein" folgt die Erneuerung im
+ *   selben Dialog — Passwort, neuer Schluessel, Druckknopf.
+ *
+ *   DAS NOTFALLBLATT (`notfallblatt.php`) SPEICHERT NICHTS und kann nichts
+ *   speichern: Der Schluessel entsteht im Browser, der Server kennt ihn
+ *   nicht. Daraus folgt die Eigenschaft, die es ausmacht — es laesst sich
+ *   spaeter nicht erneut drucken, und genau das steht darauf.
+ *
+ *   DIE BETREIBER-RUECKFRAGE wird EINGEGEBEN, nicht bestaetigt: vier
+ *   zufaellig gewaehlte Vierergruppen vom Schluesselblatt, Positionen je
+ *   Anzeige neu gewuerfelt, Vergleich mit `hash_equals()` und ohne Abkuerzung
+ *   bei der ersten Abweichung. Ein Haken haette einen Klick gekostet und
+ *   nichts bewiesen. Drei Fehlversuche, dann der Topf `blatt`.
+ *
+ *   EINE KOMPONENTE, ZWEI VERBRAUCHER (R83): `assets/schluessel.js` rechnet,
+ *   `api/schluessel_erneuern.php` schreibt GENAU EINE Spalte (`pat_wrap_rc`),
+ *   `schluessel_teile.php` zeigt. Dialog und Kontoseite rufen dasselbe.
+ *
+ *   DIE WACHE STEHT IM BROWSER, UND SIE MUSS DORT STEHEN. Vor dem Neupacken
+ *   wird der entpackte Inhaltsschluessel gegen `pat_key_check` gehalten. Ohne
+ *   diese Zeile koennte ein falsch entpackter Schluessel neu verpackt werden,
+ *   der Server naehme ihn an, und der neue Zettel oeffnete nichts — der alte
+ *   waere schon ueberschrieben. Es ist der einzige Weg, auf dem dieses Paket
+ *   Daten haette unzugaenglich machen koennen.
+ *
+ *   NACHGEMESSEN statt behauptet: zweimal hintereinander erneuert, dann der
+ *   erste Code gegen die zweite Huelle (oeffnet nicht) und der zweite dagegen
+ *   (oeffnet) — und der erste gegen seine eigene alte Huelle, damit der
+ *   Fehlschlag die Ersetzung belegt und nicht einen kaputten Erzeuger.
  */
-const WEB_VERSION = '20.23.0';
+const WEB_VERSION = '20.24.0';

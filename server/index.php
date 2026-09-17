@@ -71,9 +71,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'ersts
  * Aufforderungen auf einmal sind eine zu viel. */
 $erststartStand = (einstieg_zustand($userId)['erststart_stand'] ?? 0);
 $erststartOffen = erststart_offen((int)$erststartStand);
-$erststartZeigen = $erststartOffen !== []
-                && empty($_SESSION['erststart_spaeter'])
-                && einstieg_faellig($userId, ist_betreiberin()) === 'erststart';
+/* WAS DIESE SITZUNG SCHON GEZEIGT HAT, wird uebergangen — sonst verdeckt
+ * eine weggeklickte Frage alle folgenden (siehe `einstieg_faellig()`). */
+$einstiegGezeigt = array_values(array_filter([
+    !empty($_SESSION['blatt_gezeigt'])      ? 'schluesselblatt' : null,
+    !empty($_SESSION['rueckfrage_gezeigt']) ? 'konto'           : null,
+    !empty($_SESSION['erststart_spaeter'])  ? 'erststart'       : null,
+]));
+$einstiegFaellig = einstieg_faellig($userId, ist_betreiberin(), $einstiegGezeigt);
+$erststartZeigen = $einstiegFaellig === 'erststart' && $erststartOffen !== [];
+
+/* ---- Konto-Rueckfrage (P5b/AP9, E-P5b-09, Mockup M-P5b-02c) --------------
+ *
+ * EINMAL JE SITZUNG, NICHT EINMAL JE SEITENAUFRUF. `einstieg_faellig()`
+ * haengt an einem DATUM, und das Datum aendert sich erst, wenn jemand
+ * geantwortet hat. Wer den Dialog wegklickt, ohne zu antworten — Esc in
+ * Abschnitt 1 —, bekaeme ihn sonst beim naechsten Klick auf einen Diensttag
+ * wieder. Das Merkmal in der Sitzung macht daraus „bis zur naechsten
+ * Anmeldung", genau wie beim „Spaeter" des Erststarts.
+ *
+ * DAS MERKMAL SETZT DER BROWSER, NICHT DIESE ZEILE. Ich hatte es zuerst beim
+ * AUSGEBEN gesetzt — „gezeigt ist gezeigt". Das war aus zwei Gruenden falsch:
+ *
+ *   Sachlich: Ein Seitenaufruf, der in einem Vorlade-Vorgang oder einem
+ *   abgebrochenen Laden endet, haette die Frage fuer die ganze Sitzung
+ *   verbraucht, ohne dass sie jemand gesehen haette.
+ *
+ *   Messbar: Der Bilderlauf oeffnet dieselbe Seite in acht Fensterbreiten.
+ *   Mit dem Merkmal am Ausgeben haette genau EIN Bild den Dialog gezeigt und
+ *   sieben nicht — und der Lauf haette „8 Bilder, 0 Ueberlauf" gemeldet.
+ *   Dieselbe Falle wie F-P3-AQ, nur andersherum.
+ *
+ * Gesetzt wird es jetzt von `api/rueckfrage.php`, und zwar bei JEDER Antwort
+ * — auch bei `weggeklickt`, das `rueckfrage.js` beim Schliessen ohne Antwort
+ * sendet.
+ *
+ * DAS IST KEINE LUECKE: Die Frist steht weiter auf faellig, die Frage kommt
+ * beim naechsten Anmelden wieder, und sie geht nur weg, wenn sie beantwortet
+ * oder dreimal geschoben wurde. */
+$rueckfrageZeigen = $einstiegFaellig === 'konto';
+$rueckfrageStand  = $rueckfrageZeigen ? einstieg_zustand($userId) : null;
+
+/* ---- Betreiber-Rueckfrage zum Schluesselblatt (P5b/AP9, E-P5b-10) -------
+ *
+ * Dieselbe Bauart, andere Frage: Sie haengt nicht am Konto, sondern an der
+ * INSTALLATION (`app_state schluesselblatt_bestaetigt_am`), und sie steht
+ * VOR der Konto-Rueckfrage — `einstieg_faellig()` gibt ohnehin nur eine
+ * heraus. */
+$blattZeigen = $einstiegFaellig === 'schluesselblatt';
 
 /* Zeitlich ueberschneidende Diensttage (R57, E-S4-76). Der Fall ist F-S4-D:
  * Garmin und Handy gleichzeitig im Dienst legen ZWEI Diensttage an, weil
@@ -568,8 +613,29 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
         <span>Abbrechen</span></button>
     </div>
 
+<?php if ($rueckfrageZeigen): require __DIR__ . '/rueckfrage_dialog.php'; endif; ?>
+<?php if ($blattZeigen):      require __DIR__ . '/blatt_dialog.php';      endif; ?>
+
 <?php ui_geruest_ende(); ?>
-<?php ui_krypto_bootstrap(['csrf' => true]); ?>
+<?php /* `keycheck` NUR FUER DEN DIALOG: `PAT_KEY_CHECK` ist die Wache der
+         Schluesselerneuerung (siehe `assets/schluessel.js`). Ohne sie
+         verweigert die Komponente den Dienst — das ist gewollt, aber auf
+         dieser Seite dann eine Verweigerung ohne Grund. Auf allen anderen
+         Aufrufen bleibt die Konstante weg; sie wird nicht gebraucht. */ ?>
+<?php ui_krypto_bootstrap(['csrf' => true, 'keycheck' => $rueckfrageZeigen]); ?>
+<?php if ($blattZeigen): ?>
+<?php /* Die Betreiber-Rueckfrage rechnet NICHT — sie holt Positionen und
+         schickt vier Gruppen. Deshalb kein `schluessel.js` daneben. */ ?>
+<script src="<?= asset('assets/schluesselblatt.js') ?>"></script>
+<?php endif; ?>
+<?php if ($rueckfrageZeigen): ?>
+<?php /* NACH ui_krypto_bootstrap(): `schluessel.js` benutzt `EdCrypto`, und
+         `rueckfrage.js` benutzt `EdSchluessel` — beide beim Laden noch nicht,
+         aber beim ersten Klick, und die Reihenfolge hier ist die
+         nachvollziehbare. */ ?>
+<script src="<?= asset('assets/schluessel.js') ?>"></script>
+<script src="<?= asset('assets/rueckfrage.js') ?>"></script>
+<?php endif; ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <?php /* Die eine Vorschlagsliste (E-S9-07). Sie loest an den
          Besatzungsfeldern des Diensttags die native <datalist> ab, die auf dem

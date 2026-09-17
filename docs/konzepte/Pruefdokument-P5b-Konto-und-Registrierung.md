@@ -17,8 +17,8 @@ abgehakt ist, und wird dann gelöscht (`CLAUDE.md` 7).
 | **AP5** Selbstlöschung, E-Mail-Wechsel | **erledigt** | **20.20.0** |
 | **AP6** Mengengrenze, Aufbewahrung je Konto | **erledigt** | **20.21.0** |
 | **AP7** Demo-Anmeldung | **erledigt** | **20.18.0** |
-| AP8 Handbuch-Seiten | offen — **nicht mehr blockiert** | — |
-| AP9 Onboarding, Rückfragen | offen — **nicht mehr blockiert** | — |
+| **AP8** Handbuch-Seiten | **erledigt** | **20.23.0** |
+| **AP9** Onboarding, Rückfragen | **erledigt** | **20.24.0** |
 | AP10 Abschluss | offen | — |
 
 **Die Mockups sind seit dem 17.09.2026 freigegeben** — damit ist die einzige
@@ -76,6 +76,10 @@ Dieser Abschnitt steht vorn, nicht in einer Fußnote (`CLAUDE.md` 7).
 | Das Protokoll unter **echter Last** | Es gibt auf diesem Prüfstand keine | Die drei Indizes sind nach den drei Fragen gelegt, die 10c stellen wird; gemessen wird, wenn 10c die Abfragen hat |
 | **`cmark-gfm`** (Markdown-Prüfung, Abnahme AP8) | Im Container nicht vorhanden | Wird in AP8 nachinstalliert |
 | **Der Uhr-Simulator** mit gesperrtem Konto (Abnahme AP2 nennt ihn) | Der Prüfstand braucht rund 500 MB SDK und einen Simulatorlauf je Fall; `CIQ_GERAETE_URL` ist gesetzt, der Aufbau war für diesen einen Fall nicht verhältnismäßig | **Gegen `ingest.php` selbst gemessen**, mit echten HTTP-Aufrufen und demselben Schlüsselverfahren (`geraet_schluessel_hash()`): Die Uhr sieht genau diese Antwort. Was der Simulator zusätzlich zeigte, wäre die **Anzeige** auf dem Gerät — und die ist ausdrücklich unverändert (die Uhr sagt „abgemeldet", der Grund im Rumpf ist für die nächste Uhr-Stufe) |
+| **Die Fristen sind nie abgelaufen** (Abnahme AP9 verlangt „Prüfkonten-Lauf mit gestellter Uhr") | Ein halbes Jahr abzuwarten geht nicht, und die Bibliothek holt ihre Zeit selbst (`UTC_DATE()`, `DateTimeImmutable('now')`) — sie lässt sich nicht auf einen anderen Tag stellen | **`rueckfrage_naechste` wurde gestellt**, nicht die Uhr: auf gestern, dann gemessen, was die Anwendung daraus rechnet. Die Runden 0 → 1 → 2 → 2 und das Datum 2027-03-17 sind belegt; ein Zeitzonenfehler von einem Tag fiele so **nicht** auf. Als **Backlog Nr. 224** eingetragen, mit dem Weg, wie es zu schließen wäre |
+| **Der Dialog in einer echten Sitzung über Tage** | Dieselbe Ursache | Ersatzweise vier Runden mit je **frischer Browsersitzung** gefahren, damit die Sitzungsmerkmale (`rueckfrage_gezeigt`, `blatt_gezeigt`) wirklich neu sind und nicht nur nicht gesetzt |
+| **Firefox und WebKit** für die neuen Dialoge | Der Bilderlauf lief nur auf Chromium; die drei Engines kosten die dreifache Zeit und AP9 hat keine neue CSS-Bauform, die sich zwischen ihnen unterscheiden könnte | Chromium in **8 Breiten**. Was ungeprüft bleibt: `<dialog>`-Verhalten in WebKit — `showModal()` und `cancel` sind dort seit Jahren vorhanden, aber nicht von mir gemessen |
+| **Der Dialog ohne JavaScript** | Er erscheint dann gar nicht, und das ist kein Mangel, sondern die Bauform: Die Erneuerung rechnet im Browser und kann keinen serverseitigen Ersatzweg haben | Die Erststart-**Karte** dagegen ist ohne JavaScript vollständig bedienbar (ein gewöhnliches Formular) — **nicht gemessen**, aber am Markup nachgelesen: kein `data-`-Haken, kein Skript beteiligt |
 
 ---
 
@@ -412,6 +416,68 @@ HERKUNFT.
 
 ---
 
+### F14 — Sieben Funde in AP9, alle in der eigenen Arbeit
+
+Sie stehen einzeln, weil jeder eine andere Lehre trägt.
+
+**(a) `blatt.js` gab es schon — ich habe es überschrieben.** Die neue Datei
+für die Betreiber-Rückfrage sollte `blatt.js` heißen; unter dem Namen liegt
+seit Web 19.6.0 das **Aktionsmenü**, das mobil von unten auffährt
+(`window.edBlatt`). Beide sind gültiges JavaScript, keine Seite lädt beide —
+**der Fehler hätte keinen Fehler erzeugt**, nur ein verschwundenes
+Aktionsmenü. Aufgefallen an `git status`, nicht an einem Bild und nicht an
+einer Meldung. Wiederhergestellt aus `HEAD`, umbenannt in
+`schluesselblatt.js`. *Lehre:* „Blatt" heißt in diesem Haus zweierlei; vor
+`Write` auf einen neuen Dateinamen gehört ein `ls`.
+
+**(b) Der Zwischenspeicher ließ die Runde stehen.** `einstieg_zustand()` hat
+einen statischen Merker. `einstieg_faellig()` füllt ihn am Anfang der Anfrage,
+`rueckfrage_beantwortet()` schreibt danach und liest dabei die Runde — aus dem
+Merker, also die alte. Gemessen in vier Durchgängen: 0 → 1 → 1 → 1. Im Betrieb
+wäre das erst nach einem halben Jahr aufgefallen, und dann als „die Anwendung
+fragt zu oft". `einstieg_vergessen()` in allen fünf Schreibfunktionen;
+nachgemessen 0 → 1 → 2 → 2.
+
+**(c) Eine weggeklickte Frage verdeckte alle folgenden.**
+`einstieg_faellig()` gibt nur die **erste** fällige heraus. Wer die
+Schlüsselblatt-Frage vertagte, sah bis zur nächsten Anmeldung auch die
+fällige Konto-Rückfrage nicht — die Fälligkeit selbst war ja unverändert.
+Die Funktion bekommt jetzt mit, was die Sitzung schon gezeigt hat.
+
+**(d) Das Sitzungsmerkmal stand beim Ausgeben, nicht beim Antworten.** Ich
+hatte `$_SESSION['rueckfrage_gezeigt']` gesetzt, während die Seite den Dialog
+ausgab — „gezeigt ist gezeigt". Zwei Gründe dagegen, und der zweite ist der,
+der es aufgedeckt hat: Ein abgebrochener Seitenaufruf hätte die Frage für die
+ganze Sitzung verbraucht; und **der Bilderlauf öffnet dieselbe Seite in acht
+Breiten** — genau ein Bild hätte den Dialog gezeigt, sieben nicht, und der
+Lauf hätte „8 Bilder, 0 Überlauf" gemeldet. Dieselbe Falle wie F-P3-AQ, nur
+andersherum. Gesetzt wird es jetzt von `api/rueckfrage.php`, bei jeder
+Antwort — auch bei `weggeklickt`, das der Browser beim Schließen sendet.
+
+**(e) Die Meldung nannte 10 Minuten, gesperrt wurde 15.** Ich hatte
+`'sperre' => 600` in den Topf `blatt` geschrieben und den Dialogtext daraus
+gerechnet. Gemessen in `rate_limits`: `gesperrt_bis` **+15 Minuten** — denn
+`rate_leiter_anwenden()` überholt `sperre` mit der ersten Sprosse der Leiter
+(900 s). Die Zahl steht jetzt auf 900, und der Text fragt
+`rate_stufe_dauer()` statt selbst zu rechnen. *Lehre:* Eine Zahl, die in
+einer Meldung steht, muss aus derselben Quelle kommen wie die Wirkung.
+
+**(f) Der dritte Fehlversuch meldete „gesperrt" und ließ die Felder stehen.**
+`schluesselblatt.js` behandelte nur den Status **429** („schon gesperrt"),
+nicht `rest === 0` („mit diesem Versuch gesperrt"). Wer dann weitertippt,
+verlängert die Sperre über die Leiter, ohne es zu wollen. Beide Fälle räumen
+jetzt die Felder weg.
+
+**(g) Die Aufschlüsselung der Vollständigkeitsschwelle war erfunden.** Ich
+habe die zehn neuen Befunde auf fünf Dateien verteilt und in den Kommentar
+der Prüfkette geschrieben — ohne nachzuzählen. Tatsächlich stammen sie aus
+**drei** Dateien, und `api/schluesselblatt_pruefen.php` allein liefert fünf
+davon; die drei Dateien, die ich genannt hatte, liefern **keinen**. Gemessen
+mit `--ausfuehrlich` gegen denselben Lauf auf `HEAD`. *Lehre:* Eine
+Aufschlüsselung, die nicht gemessen ist, ist schlimmer als keine — sie sieht
+aus wie ein Beleg.
+
+
 ## 3. Was maschinell geprüft wurde — Mittel und Zahl
 
 | Mittel | Wann | Zahl | Befund |
@@ -471,6 +537,23 @@ HERKUNFT.
 
 ---
 
+| **Schlüsselwechsel: öffnet der neue, und hört der alte auf?** (Abnahme AP9) | AP9 | Zweimal hintereinander über den Dialog erneuert, dann im Browser gerechnet: **Code B gegen die neue Hülle → OEFFNET**; **Code A gegen die neue Hülle → OEFFNET NICHT (`OperationError`)**; **Code A gegen seine eigene alte Hülle → OEFFNET**. Die dritte Zeile ist die wichtige: ohne sie belegte der Fehlschlag nur, dass der Erzeuger kaputt sein *könnte* | **bestanden** |
+| `pat_wrap_rc` trägt keinen Server-Anteil (E-S10-04) | AP9 | Nach der Erneuerung beginnt das Feld mit **`edk1:`**, nicht mit `edka1:`; Länge 129 | **bestanden** |
+| Rundenzählung der Konto-Rückfrage | AP9 | Nach der ersten Antwort: `rueckfrage_naechste` = **2027-03-17** (= 6 Monate ab 2026-09-17), `rueckfrage_runde` = **1**, `rueckfrage_verschoben` = **0**. Vier Durchgänge: Runde **0 → 1 → 2 → 2** | **bestanden** |
+| „Später" dreimal, dann nicht mehr | AP9 | Vier Runden mit je frischer Sitzung: verschoben **1 → 2 → 3 → 3**; in Runde 4 fehlt der Knopf und an seiner Stelle steht *„Dreimal verschoben — weiter geht es nicht."* | **bestanden** |
+| Kontoseite als zweiter Verbraucher | AP9 | Einstellungen → Profil, Karte *Wiederherstellungsschlüssel*: Dialog zu → auf → Passwortabschnitt sichtbar, Schlüsselabschnitt verborgen; Code **5 Gruppen**; Esc in Abschnitt 3 **schließt nicht**; nach „Fertig" zu; beim **zweiten** Öffnen wieder der Passwortabschnitt (kein alter Wert). **0 Konsolenfehler** | **bestanden** |
+| Falsches Passwort im Dialog | AP9 | Meldung *„Das Passwort ist nicht korrekt."*, Abschnitt bleibt stehen, nichts gesendet | **bestanden** |
+| Betreiber-Rückfrage: Positionen und Kennung | AP9 | Zwei Anzeigen nacheinander: Gruppen **15/3 und 14/5**, dann **7/4 und 4/7** — je Anzeige neu gewürfelt, zwei verschiedene je Wert. Angezeigt wird nur die Kennung (`ffe054fe`), nie ein Wert | **bestanden** |
+| Betreiber-Rückfrage: Fehlversuche und Leiter | AP9 | `zzzz` viermal: **„Noch 2 Versuche" → „Noch 1 Versuch" → gesperrt** (Felder weg, Knopf gesperrt) → vierter Aufruf **429**. In `rate_limits`: `versuche` **3**, `stufe` **1**, `gesperrt_bis` **+15 min**. Die Frage bleibt zwischen den Versuchen **unverändert** (Beschriftungen byteweise gleich) | **bestanden** |
+| Betreiber-Rückfrage: richtige Antwort | AP9 | Vier Gruppen **in Großschreibung** eingetippt → angenommen; Dialog zu; `app_state.schluesselblatt_bestaetigt_am` gesetzt; Protokoll (Verwaltung) *„Schlüsselblatt bestätigt, von admin@gen-em.org"*; `sicherheit_ereignisse` trägt `blatt_fehlversuch` **ohne Werte** | **bestanden** |
+| Notfallblatt: Formatprüfung | AP9 | `K7MQ-…-VNJ0` (Ziffer 0, nicht im Alphabet) → **abgewiesen**; `K7MQ-3RXP-9TWB` (zu kurz) → abgewiesen; **kleingeschrieben** → angenommen und normalisiert; `<script>…@x.org` als Kontoadresse → **nicht ausgegeben** | **bestanden** |
+| Bilderlauf (P5b/AP9) | AP9 | `notfallblatt.php` mit und ohne Schlüssel, Konto-Rückfrage, Betreiber-Rückfrage in **8 Breiten** (360–1920): **24 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knopfhöhen** außerhalb 44/36 px | — |
+| `tools/wortliste/` | AP9 | **5 Bereiche**: (a) 132 PHP-Dateien, (b) 40 JS, (c) 11 Dokumente, (d) 2 `strings.xml`, (e) 35 Uhr-Dateien. **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** | — |
+| `tools/vollstaendigkeit/` | AP9 | **398** Befunde gegen die neue Schwelle 398. Der Zuwachs von 388: **+10, alle Unicode-Typografie**, nachgezählt gegen denselben Lauf auf HEAD — `api/schluesselblatt_pruefen.php` 5, `notfallblatt.php` 4, `blatt_dialog.php` 1. Die drei anderen Gruppen unverändert (50 / 10 / 8) | — |
+| `tools/migrationsregister/` | AP9 | **0 Befunde, 0 ungenutzte Ausnahmen** | — |
+| `tools/screenshots/kontrast.py` | AP9 | **22 Paare gerechnet, 0 verfehlt** | — |
+| `php -l` / `node --check` über alle geänderten Dateien | AP9 | **0 Fehler** | — |
+
 ## 4. Was im Browser geprüft wurde
 
 **AP1 — Betrieb → Servereinstellungen (1440 px, Chromium).** Die Karte
@@ -516,12 +599,12 @@ und beim Demo-Konto steht statt dessen der Satz, warum es hier nicht geht.
 
 ## 4a. Was das Konzept anders beschrieb, als es ist
 
-Fünf Stellen, an denen die Bestandsaufnahme das Konzept berichtigt hat. Sie
+Neun Stellen, an denen die Bestandsaufnahme das Konzept berichtigt hat. Sie
 stehen hier, weil sie beim nächsten Lesen sonst wieder Verwirrung stiften.
-**Die letzten beiden sind mit dem Paket vom 17.09.2026 dazugekommen** und
-betreffen das freigegebene Konzept selbst — sein Wortlaut ist **nicht**
-geändert worden, weil er der freigegebene Stand ist; die Abweichung steht
-stattdessen hier.
+**Die letzten vier sind mit AP9 dazugekommen**, die zwei davor mit dem Paket
+vom 17.09.2026; diese sechs betreffen das freigegebene Konzept und die
+freigegebenen Mockups selbst. Ihr Wortlaut ist **nicht** geändert worden, weil
+er der freigegebene Stand ist; die Abweichung steht stattdessen hier.
 
 | Konzept sagt | Tatsächlich | Folge |
 |---|---|---|
@@ -531,17 +614,24 @@ stattdessen hier.
 | Abschnitt 6: „Die Mockups M-P5b-02b sind mit **Punkt 1 und 2** als V1.1 neu gerendert" | Die `LIESMICH.md` des Mockup-Ordners nennt **drei**: „Aktionen und Plaketten rechtsbündig in einer Spalte, Häkchen links, „Später" rechts, **alles vertikal zentriert**" — das ist Punkt 1, 2 **und 3** | Am Bild nachgesehen (Chromium, 1440 px): Die Zeilen von M-P5b-02b sind vertikal zentriert. Wer die vier Vorgaben in AP9 abnimmt, nimmt **alle vier** ab und nicht zwei |
 | Abschnitt 6 führt „zwei Fable-Schritte" (M-P5b-01, M-P5b-02) | Geliefert sind **fünf Darstellungen** — M-P5b-02 ist in **-02a bis -02d** zerlegt (Registrierung, Erststart, Rückfrage, Notfallblatt), vier davon zusätzlich bei 376 px: 9 HTML, 9 PNG | Kein Widerspruch in der Sache, aber wer nach „M-P5b-02" sucht, findet keine Datei. Die `LIESMICH.md` im Mockup-Ordner ist die führende Liste |
 
+| AP9-Abnahme: „ein `grep` auf die Komponente: **zwei Aufrufer**, eine Definition" | **Ein** Aufrufer. `assets/schluessel.js` definiert `EdSchluessel.erneuern` einmal, und `assets/rueckfrage.js` ruft es einmal — dasselbe Skript bedient **beide** Dialoge, weil es an `[data-rueckfrage]` oder `[data-schluessel]` erkennt, welcher vor ihm steht | Die Zwei-Verbraucher-Regel (R83) ist damit **erfüllt, aber eine Ebene höher**: Zwei Seiten binden dasselbe Markup (`schluessel_teile.php`) und dasselbe Skript ein — `einstellungen.php` und `rueckfrage_dialog.php`. Der `grep` der Abnahme misst also das Falsche; zwei Aufrufer wären hier zwei Kopien derselben zwanzig Zeilen gewesen. **Gemessen:** 1 Definition, 1 Aufruf, **2 Einbinder** |
+| E-P5b-10: „„später" wie oben" (= sieben Tage, dreimal) | Bei der **Betreiber**-Rückfrage nur bis zur nächsten Anmeldung | Der Schlüsselblatt-Stand ist **ein** Datum in `app_state` und heißt `schluesselblatt_bestaetigt_am`. Sieben Tage zu schieben hieße, dort ein Datum einzutragen, an dem nichts bestätigt wurde — und es gälte für **alle** BetreiberInnen. Die Begründung steht im Kopf von `blatt_dialog.php` und in `docs/Technik.md` 4.99o |
+| Mockup M-P5b-02c, Zustand 3, und M-P5b-02d zeigen **64 Zeichen in 16 Gruppen** | Der Wiederherstellungscode hat **20 Zeichen in fünf Vierergruppen** (`newRecoveryCode()`) | Die Mockups übernehmen das Format des **Schlüsselblatts** (S10), aus dem die Vorlage stammt. Umgesetzt ist das echte Format; die Anmerkung steht in `notfallblatt.php` |
+| Mockup M-P5b-02c: „Drei Knöpfe **in einer Reihe**" | Die **Zeichnung** daneben zeigt sie bei 512 px untereinander | Die Zeichnung hat recht, und zwar rechnerisch: `.dialog` ist höchstens 32 rem breit, „Nein — neuen Schlüssel erzeugen" allein über 260 px. Eine Reihe gäbe es an keiner Fensterbreite, weil der Dialog nicht mitwächst |
+
 ## 5. Prüfliste für die Betreiberin
 
 Je Punkt: der Bedienweg, das erwartete Ergebnis und **woran ein Scheitern zu
 erkennen ist**.
 
 **Vorab, einmal:** Nach dem Einspielen muss eine Administratorin `update.php`
-aufrufen. Die Phase bringt **fünf** Migrationen mit
+aufrufen. Die Phase bringt **sechs** Migrationen mit
 (`2026_09_16_protokoll_ereignisse`, `…_konto_lebenszyklus`,
-`…_einwilligungen`, `…_adresswechsel_bestaetigt`, `…_konto_grenzen` —
+`…_einwilligungen`, `…_adresswechsel_bestaetigt`, `…_konto_grenzen`,
+`2026_09_17_erststart_rueckfragen` —
 nachgezählt in `migration_lib.php`; hier stand zuerst vier, der
-Adresswechsel aus AP5 fehlte). Ein Aufruf verbucht alle fünf. Bleibt der Aufruf aus, stehen die neuen Karten leer da oder
+Adresswechsel aus AP5 fehlte, dann fünf bis AP9). Ein Aufruf verbucht alle
+sechs. Bleibt der Aufruf aus, stehen die neuen Karten leer da oder
 melden „Tabelle fehlt" — kein Datenverlust, aber nichts von dem, was unten
 steht, ist dann zu sehen.
 
@@ -691,6 +781,103 @@ AP9 stehen noch aus (Mockup-Freigabe); ihre Punkte kommen mit ihnen.
   und die Dauer liegt dicht beieinander.
   **Scheitern:** Die Demo-Adresse antwortet anders als die erfundene — dann
   verrät die Anmeldeseite, dass es dieses Konto gibt.
+
+### AP9 — Onboarding und Rückfragen
+
+- [ ] **P9.1 — Das Notfallblatt beim ersten Passwort.** Ein neues Konto
+  anlegen (oder einladen), über den Link das Passwort setzen. Wenn der
+  Wiederherstellungsschlüssel erscheint, auf **„Notfallblatt drucken"**
+  drücken. **Erwartet:** ein neues Fenster mit dem Blatt — Schlüssel in fünf
+  Vierergruppen, deine Kontoadresse, die Adresse dieser Installation, das
+  Datum. Der Schlüssel auf dem Blatt ist **derselbe** wie auf der Seite
+  darunter.
+  **Scheitern:** Das Fenster zeigt *„Dieses Blatt lässt sich nicht
+  nachträglich drucken"* — dann ist der Wert nicht mitgekommen, und das Blatt
+  ist leer. **Dann nicht weitermachen**, sondern den Schlüssel von der Seite
+  abschreiben, bevor du sie verlässt.
+
+- [ ] **P9.2 — Die drei ersten Schritte.** Mit dem neuen Konto anmelden.
+  **Erwartet:** über der Tagesübersicht die Karte *„Willkommen — drei
+  Schritte, dann geht es los"*, darunter die **vollständige** Tagesübersicht.
+  Ein Rettungsmittel anlegen, zurück zur Startseite. **Erwartet:** Schritt 2
+  trägt einen Haken und den Namen des Rettungsmittels statt der Erklärung.
+  **Scheitern:** Die Karte deckt die Seite zu, oder sie steht nach dem
+  Anlegen unverändert da — im zweiten Fall merkt sich das Konto den Stand
+  nicht.
+
+- [ ] **P9.3 — Die Karte lässt sich loswerden.** Auf *Später* drücken, Seite
+  neu laden. **Erwartet:** die Karte ist weg und bleibt weg, bis du dich
+  neu anmeldest. Dann abmelden, anmelden, **„nicht mehr zeigen"** ankreuzen
+  und *Später* drücken. **Erwartet:** Sie kommt auch nach erneutem Anmelden
+  nicht wieder.
+  **Scheitern:** Sie steht nach *Später* sofort wieder da — dann ist der
+  Weg über Post/Redirect/Get gebrochen.
+
+- [ ] **P9.4 — Einen neuen Schlüssel erzeugen (der wichtige Punkt).**
+  *Einstellungen → Profil*, Karte *Wiederherstellungsschlüssel*, **„Neuen
+  Schlüssel erzeugen"**, Passwort eingeben. **Erwartet:** ein neuer Code in
+  fünf Vierergruppen; *Fertig* ist gesperrt, bis du den Haken setzt; Esc
+  schließt den Dialog **nicht**. Notfallblatt drucken, Haken, *Fertig*.
+  **Danach — und das ist der eigentliche Prüfpunkt:** abmelden, *Passwort
+  vergessen*, den Link aus der Mail öffnen und den **neuen** Schlüssel
+  eintippen. **Erwartet:** Das Passwort lässt sich setzen, und danach sind
+  **alle Einsätze mit Patientendaten wieder lesbar**.
+  **Scheitern:** Der neue Schlüssel wird abgelehnt, oder die Patientenfelder
+  bleiben leer. Dann ist der Rückweg verloren — **mach diesen Punkt an einem
+  Prüfkonto, nicht am eigenen.**
+
+- [ ] **P9.5 — Der alte Zettel gilt nicht mehr.** Denselben Weg wie P9.4, aber
+  mit dem **alten** Schlüssel. **Erwartet:** *„Der Wiederherstellungsschlüssel
+  passt nicht. Es wurde nichts geändert."*
+  **Scheitern:** Der alte Schlüssel wird angenommen — dann hat die Erneuerung
+  die Hülle nicht ersetzt, und jedes alte Blatt öffnet weiter.
+
+- [ ] **P9.6 — Falsches Passwort.** Im selben Dialog ein falsches Passwort
+  eingeben. **Erwartet:** *„Das Passwort ist nicht korrekt."*, der Dialog
+  bleibt stehen, es entsteht **kein** neuer Schlüssel.
+  **Scheitern:** Es erscheint ein Code — dann wäre der Zettel gewechselt
+  worden, ohne dass jemand das Passwort kannte.
+
+- [ ] **P9.7 — Die Rückfrage kommt (braucht Geduld oder die Datenbank).**
+  30 Tage nach der ersten Anmeldung erscheint beim Anmelden *„Hast du dein
+  Notfallblatt noch?"*. Wer nicht warten will, setzt
+  `users.rueckfrage_naechste` auf gestern. **Erwartet:** drei Knöpfe — *Ja,
+  liegt sicher*, *Nein — neuen Schlüssel erzeugen*, *Später (7 Tage)*. Nach
+  *Ja* steht in `rueckfrage_naechste` ein Datum **6 Monate** später und in
+  `rueckfrage_runde` eine **1**.
+  **Scheitern:** Die Runde bleibt auf 0 oder 1 stehen — dann fragt die
+  Anwendung für immer im selben Abstand.
+
+- [ ] **P9.8 — Dreimal „Später", dann nicht mehr.** Dreimal *Später* drücken
+  (je mit neuer Anmeldung und zurückgesetzter Frist). **Erwartet:** Beim
+  vierten Mal fehlt der Knopf, und an seiner Stelle steht *„Dreimal
+  verschoben — weiter geht es nicht."*
+  **Scheitern:** Der Knopf bleibt — dann lässt sich die Frage dauerhaft
+  wegschieben, und sie ist wirkungslos.
+
+- [ ] **P9.9 — Das Schlüsselblatt bestätigen (nur BetreiberIn).** Als
+  BetreiberIn anmelden. **Erwartet:** *„Schlüsselblatt bestätigen"* mit vier
+  Feldern und genannten Gruppennummern, dazu die achtstellige Kennung.
+  Nachsehen: **Es steht nirgends ein Wert.** Die vier Gruppen vom Blatt
+  abtippen (Groß/Klein egal) → der Dialog schließt, und im Protokoll (Reiter
+  *Verwaltung*) steht *„Schlüsselblatt bestätigt, von …"*.
+  **Scheitern:** Der Dialog nennt einen Schlüsselwert, oder er kommt nach der
+  Bestätigung beim nächsten Anmelden sofort wieder.
+
+- [ ] **P9.10 — Dreimal falsch sperrt.** Als BetreiberIn dreimal Unsinn
+  eintragen. **Erwartet:** *„Noch 2 Versuche"* → *„Noch 1 Versuch"* →
+  gesperrt, Felder verschwinden, Knopf gesperrt. Die genannte Dauer (15
+  Minuten) muss zur tatsächlichen passen — nachsehen in *Betrieb → Status*
+  oder in `rate_limits`. Im Sicherheitsprotokoll steht ein Eintrag **ohne
+  Werte**.
+  **Scheitern:** Es lässt sich unbegrenzt weiterraten, oder der Eintrag im
+  Protokoll enthält eine Gruppe vom Blatt.
+
+- [ ] **P9.11 — Die Positionen sind nicht immer dieselben.** Abmelden,
+  anmelden, die Gruppennummern notieren; noch einmal. **Erwartet:** andere
+  Nummern.
+  **Scheitern:** Immer dieselben — dann genügt ein Zettel mit vier Gruppen,
+  und die Frage prüft nichts mehr.
 
 ### Mockups — was vor AP3, AP8 und AP9 zu prüfen ist
 

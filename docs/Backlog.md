@@ -2773,6 +2773,39 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     schon bei der Registrierung oder bewusst erst am Tor —, und die
     Antwort gehört als Entscheidung ins Konzept, nicht in einen Kommentar.
 
+224. **Die Fristen der Rückfragen sind nie im Betrieb abgelaufen.**
+    *Aufgenommen 17.09.2026 (P5b/AP9).* Die Konto-Rückfrage fragt nach 30
+    Tagen, 6 Monaten und dann jährlich; die Betreiber-Rückfrage alle drei
+    Monate. Geprüft wurde mit **gestelltem** `rueckfrage_naechste` — die
+    Runden 0 → 1 → 2 → 2 sind in vier Durchgängen gemessen, der tatsächliche
+    Halbjahresabstand nicht.
+
+    **Was das offen lässt:** Ein Rechenfehler in `RUECKFRAGE_ABSTAENDE` oder
+    in der Zeitzone (`UTC_DATE()` gegen `DateTimeImmutable('now', UTC)`)
+    fiele im Prüflauf nicht auf, sondern erst, wenn die Frage im Betrieb um
+    einen Tag daneben käme. Das ist ein kleiner Schaden, aber ein stiller.
+
+    **Wie es zu schließen wäre:** ein Prüfschritt, der die Funktionen mit
+    festgelegter „jetzt"-Zeit rechnen lässt, statt mit der Systemuhr — dafür
+    müsste `einstieg_lib.php` eine Zeit hereingereicht bekommen, statt sie zu
+    holen. Lohnt sich, wenn die nächste Frist dazukommt; für zwei Fristen ist
+    der Umbau teurer als der Fehler.
+
+225. **Die Betreiber-Rückfrage fragt nie nach dem bisherigen Server-Anteil.**
+    *Aufgenommen 17.09.2026 (P5b/AP9).* Während einer Anteilsrotation steht
+    `kdf_anteil_alt` mit auf dem Schlüsselblatt. Die Rückfrage fragt ihn
+    nicht ab — eine Frage, die je nach Betriebslage vier oder sechs Felder
+    hat, verwirrt mehr, als sie prüft.
+
+    **Was das offen lässt:** Wer sein Blatt nach einer Rotation neu druckt
+    und den alten Wert nicht mit abschreibt, merkt es nicht, solange die
+    Rückfrage schweigt. Der Wert wird aber gebraucht, bis das letzte Konto
+    sich angemeldet hat.
+
+    **Wie es zu schließen wäre:** Der Rotationsvorgang selbst sollte sagen,
+    dass das Blatt neu gedruckt gehört — er ist die Stelle, an der es auffällt,
+    und er weiß, ob ein alter Wert noch gebraucht wird. Das gehört zu S10c.
+
 ## Erledigt
 
 

@@ -390,6 +390,25 @@ ui_seite_start([
       <p class="codeblock-wert" id="rccode"></p>
       <label><input type="checkbox" id="rcok">
         Ich habe den Schlüssel sicher notiert.</label>
+      <?php /* NOTFALLBLATT DRUCKEN (P5b/AP9, E-P5b-09). Der Knopf steht
+               genau hier, weil der Schluessel genau hier zum EINZIGEN Mal
+               sichtbar ist: `notfallblatt.php` bekommt ihn per POST aus
+               diesem Formular und speichert nichts — der Server kennt ihn
+               nicht und kann das Blatt spaeter nicht nachreichen.
+
+               EIGENES FORMULAR, nicht `#pwform`. Das daneben setzt das
+               Passwort; dieses druckt. Zwei Ziele, zwei Formulare — ein
+               verschachteltes gaebe es in HTML ohnehin nicht.
+
+               `target="_blank"`, damit die Seite mit dem gesetzten Passwort
+               stehen bleibt. Wer das Blatt im selben Fenster oeffnete und
+               zurueckginge, kaeme auf eine abgelaufene Erstvergabe. */ ?>
+      <form method="post" action="notfallblatt.php" target="_blank"
+            rel="noopener" class="rf-druck" id="rcdruck">
+        <input type="hidden" name="code" id="rcdruckwert">
+        <?= ui_knopf(['text' => 'Notfallblatt drucken', 'art' => 'neutral',
+                      'symbol' => 'drucken']) ?>
+      </form>
     </div>
 
     <form method="post" id="pwform">
@@ -582,6 +601,8 @@ if (ERSTVERGABE) {
 
       document.getElementById('rccode').textContent = rc;
       document.getElementById('rcbox').hidden = false;
+      /* Derselbe Wert ins Druckformular (P5b/AP9). */
+      document.getElementById('rcdruckwert').value = rc;
       /* AUF DAS <span> ZIELEN, nicht auf den Knopf (O10). ui_knopf() legt
          den Text in ein <span> und stellt ihm ggf. ein Symbol voran;
          `textContent` am Knopf selbst wuerde beides ersetzen — der Text

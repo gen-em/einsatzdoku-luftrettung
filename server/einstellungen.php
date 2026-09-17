@@ -1452,13 +1452,52 @@ ui_seite_start(['titel' => 'Einstellungen',
       </div>
       <span class="feld-hinweis" id="pwstate"></span>
     </form>
+
+    <?php /* ---- Wiederherstellungsschluessel (P5b/AP9, E-P5b-20) ----------
+             DER ZWEITE VERBRAUCHER derselben Komponente, die auch die
+             Konto-Rueckfrage bedient (R83): `assets/schluessel.js` rechnet,
+             `api/schluessel_erneuern.php` schreibt, `schluessel_teile.php`
+             zeigt. Hier ohne Frage davor — wer freiwillig erneuert, ist
+             nicht gefragt worden.
+
+             WOZU DIESER WEG UEBERHAUPT. Die Rueckfrage kommt nach 30 Tagen;
+             wer sein Blatt heute verliert, will nicht bis dahin warten. Und
+             nach einem Umzug, einem geteilten Rechner oder einem verlorenen
+             Ordner ist „neu erzeugen" die einzige richtige Antwort — der
+             alte Zettel wird damit ungueltig, und genau das ist gewollt. */ ?>
+    <?php ui_karte_start(['titel' => 'Wiederherstellungsschlüssel']); ?>
+      <p>Er öffnet deine verschlüsselten Daten, wenn du dein Passwort
+         vergessen hast — der Betreiber kann das nicht. Du hast ihn einmal
+         bekommen, beim Einrichten deines Kontos, auf dem
+         <strong>Notfallblatt</strong>.</p>
+      <p class="feld-hinweis">Verloren? Dann erzeuge einen neuen. Das alte
+         Blatt wird damit ungültig; deine Daten bleiben unverändert und
+         lesbar. Nachträglich drucken lässt sich ein Blatt nicht — der Server
+         kennt den Schlüssel nicht.</p>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Neuen Schlüssel erzeugen', 'art' => 'neutral',
+                      'typ' => 'button', 'attr' => ' data-schluessel-auf']) ?>
+      </div>
+    <?php ui_karte_ende(); ?>
+
+    <dialog class="dialog" id="dlg-schluessel" data-schluessel>
+      <?php require __DIR__ . '/schluessel_teile.php'; ?>
+    </dialog>
+
     <?php /* Ruestzeug der Verschluesselung (Baustein ui_krypto_bootstrap()),
              dazu pwquality.js: Passwortguete nach derselben Regel wie bei
              Erstvergabe und Zuruecksetzen (B9, M2-02).
              OHNE keyguard.js/unlock.js — dieser Reiter entsperrt nichts, er
-             wechselt das Passwort. */ ?>
+             wechselt das Passwort.
+
+             `keycheck` SEIT P5b/AP9: `PAT_KEY_CHECK` ist die Wache der
+             Schluesselerneuerung — ohne sie verweigert `schluessel.js` den
+             Dienst (der Kopf dort sagt, warum). */ ?>
     <?php ui_krypto_bootstrap(['skripte' => ['assets/crypto.js'],
-                               'guete' => true, 'einzug' => '    ']); ?>
+                               'guete' => true, 'keycheck' => true,
+                               'einzug' => '    ']); ?>
+    <script src="<?= asset('assets/schluessel.js') ?>"></script>
+    <script src="<?= asset('assets/rueckfrage.js') ?>"></script>
     <script<?= kopf_nonce_attr() ?>>
     /* Zweiter Teil des Passwortwechsels (M2-07): Das Vormerkfach aus dem
      * vorigen Seitenaufruf aufloesen, bevor irgendetwas anderes geschieht. */

@@ -588,6 +588,33 @@ Tage**), verfällt die Registrierung, du bekommst eine letzte Nachricht — und
 kannst dich jederzeit neu registrieren. Wer den Link aus Schritt 3 nie
 anklickt, dessen Anfrage wird nach **48 Stunden** von selbst gelöscht.
 
+### 3.1e Die ersten drei Schritte (seit Web 20.24.0)
+
+Beim ersten Anmelden steht über der Tagesübersicht eine Karte **„Willkommen —
+drei Schritte, dann geht es los"**:
+
+1. **Standort anlegen** — *optional*: ein Ort, dem deine Rettungsmittel
+   zugeordnet sind (Wache, Klinik). Der Schritt ist neutral gezeichnet und
+   sandfarben nummeriert, weil ihn nicht jede Betriebsart braucht.
+2. **Rettungsmittel anlegen** — womit du fährst oder fliegst: Name, Typ,
+   Standort. Ein Rettungsmittel vom gewöhnlichen Typ **verlangt** einen
+   Standort; deshalb steht Schritt 1 davor, auch wenn er optional heißt.
+3. **Uhr oder Handy koppeln** — die App erfasst Einsätze unterwegs und gleicht
+   sie hier ab (Kapitel 2 und 3.3).
+
+**Die Karte hält dich nicht auf.** Darunter steht die vollständige, bedienbare
+Tagesübersicht — wer die Karte übergeht, arbeitet trotzdem. Zwei Auswege stehen
+unten:
+
+- **Später** blendet sie bis zur nächsten Anmeldung aus. Morgen steht sie
+  wieder da.
+- **nicht mehr zeigen** (das Häkchen daneben) blendet sie dauerhaft aus, auch
+  wenn noch Schritte offen sind.
+
+Erledigte Schritte bleiben mit einem Haken stehen und zeigen, was du angelegt
+hast — „Kempten — Wache Nord" statt der Erklärung, die du nicht mehr brauchst.
+Sind alle drei erledigt, verschwindet die Karte von selbst.
+
 ### 3.1c Was dein Konto hält (seit Web 20.21.0)
 
 Unter dem Zahnrad → **Profil** steht, wie voll dein Konto ist: Einsätze und
@@ -1898,6 +1925,19 @@ Mal** an — ausdrucken und sicher ablegen, dann per Haken bestätigen. Erst dan
 wird gespeichert. Eine getrennte Einrichtungsseite nach dem ersten Anmelden gibt
 es nicht mehr.
 
+**Das Notfallblatt (seit Web 20.24.0).** Neben dem Schlüssel steht ein Knopf
+**„Notfallblatt drucken"**. Er öffnet eine Druckseite mit deinem Schlüssel in
+Vierergruppen, deiner Kontoadresse, der Adresse dieser Installation und dem
+Datum — dazu die drei Sätze, die daraufgehören: wofür er da ist, was ohne ihn
+verloren ist, und wo er hingehört (nicht in die Schublade neben dem Rechner
+und nicht in dieselbe Tasche wie das Handy).
+
+**Dieses Blatt lässt sich später nicht erneut drucken.** Der Schlüssel entsteht
+in deinem Browser und wird nirgends gespeichert — auch nicht beim Betreiber.
+Es gibt ihn nur in dem Moment, in dem er angezeigt wird. Wer sein Blatt
+verliert, erzeugt einen **neuen** Schlüssel (siehe unten); das alte Blatt wird
+damit ungültig.
+
 **Unbedingt wissen:**
 
 - Normales Passwort-Ändern (mit altem Passwort) ist völlig unkritisch — die
@@ -1956,6 +1996,31 @@ es nicht mehr.
   eine Installation betreibt, behandelt den Datenbankzugang entsprechend.
 - Zeigt eine Seite „gesperrt“, lässt sich das direkt dort beheben — siehe
   **„Gesperrt: entsperren statt neu anmelden“** weiter unten.
+
+**„Hast du dein Notfallblatt noch?" (seit Web 20.24.0).** NAdoku fragt nach
+**30 Tagen**, nach **6 Monaten** und danach **jährlich** beim Anmelden nach.
+Drei Antworten:
+
+- **Ja, liegt sicher** — die Frage kommt zur nächsten Runde wieder.
+- **Nein — neuen Schlüssel erzeugen** — du gibst dein Passwort ein, der
+  Browser erzeugt einen neuen Wiederherstellungsschlüssel, zeigt ihn an und
+  bietet das Notfallblatt zum Drucken an. **Dein altes Blatt wird damit
+  ungültig; deine Daten bleiben unverändert und lesbar.** Der Dialog lässt
+  sich erst schließen, wenn du bestätigt hast, dass du den Schlüssel notiert
+  oder gedruckt hast — was dort steht, kann danach niemand wiederherstellen.
+- **Später** — sieben Tage, höchstens dreimal je Runde. Danach steht die Frage
+  bei jedem Anmelden wieder da, bis du sie beantwortest.
+
+**Einen neuen Schlüssel kannst du jederzeit erzeugen**, ohne auf die Frage zu
+warten: **Einstellungen → Profil**, Karte *Wiederherstellungsschlüssel*,
+Knopf *Neuen Schlüssel erzeugen*. Derselbe Ablauf, dasselbe Ergebnis. Nutze
+ihn, wenn du dein Blatt verlegt hast, nach einem Umzug oder wenn jemand anders
+es gesehen haben könnte.
+
+**Warum dabei das Passwort verlangt wird, obwohl du angemeldet bist:** damit
+niemand, der an deinen geöffneten Rechner kommt, dir den Rückweg nehmen kann.
+Er käme an keine Daten — aber dein Notfallblatt öffnete plötzlich nichts mehr,
+und du erführest es erst, wenn du es brauchst.
 
 **Gesperrt: entsperren statt neu anmelden.** Die Anmeldung und der Schlüssel
 für die geschützten Angaben haben unterschiedliche Lebensdauern. Der Schlüssel

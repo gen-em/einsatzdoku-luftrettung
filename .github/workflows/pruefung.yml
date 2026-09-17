@@ -137,7 +137,25 @@ jobs:
         # Hausschreibweise, dieselbe Form wie „Betrieb -> Status" zwei Dateien
         # weiter in ratelimit_lib.php. Nach derselben Regel behandelt wie die
         # zehn davor: Zierde raus, sichtbarer Text bleibt.
-        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 388
+        #
+        # 398 MIT P5b/AP9: +10, alle zehn in drei neuen Dateien. Nachgezaehlt
+        # mit `--ausfuehrlich` gegen denselben Lauf auf HEAD, nicht geschaetzt:
+        #   api/schluesselblatt_pruefen.php  5  (2 Pfeile, 3 Auslassungen)
+        #   notfallblatt.php                 4  (Pfeile in „Einstellungen ->
+        #                                       Konto" und im Bedienweg)
+        #   blatt_dialog.php                 1  („Betrieb -> Schluesselblatt")
+        # Sieben Pfeile und drei Auslassungspunkte, alle in sichtbarem Text,
+        # alle in der Hausschreibweise der elf davor.
+        #
+        # MEIN ERSTER EINTRAG HIER WAR FALSCH: Ich hatte die zehn auf fuenf
+        # Dateien verteilt, ohne nachzuzaehlen — `einstellungen.php`,
+        # `erststart_karte.php` und `rueckfrage_dialog.php` steuern in
+        # Wahrheit KEINEN Befund bei. Eine Aufschluesselung, die nicht
+        # gemessen ist, ist schlimmer als keine: Sie sieht aus wie ein Beleg.
+        #
+        # Die drei anderen Gruppen stehen unveraendert: 50 ohne Gegenstueck,
+        # 10 style="...", 8 Emoji — dieses Paket hat keine davon hinzugefuegt.
+        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 398
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py

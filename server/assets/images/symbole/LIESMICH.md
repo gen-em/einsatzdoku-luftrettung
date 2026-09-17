@@ -1,6 +1,6 @@
 # Symbolvorrat Gen-EM NAdoku (P3, E-P3-18)
 
-56 Zeichen, je eine Datei. Grundlage ist **Tabler Icons** (MIT-Lizenz,
+57 Zeichen, je eine Datei. Grundlage ist **Tabler Icons** (MIT-Lizenz,
 Paweł Kuna; Lizenztext in `LICENSE-tabler-icons.txt`): 24 × 24, Strich 2 px,
 runde Enden und Ecken, Farbe über `currentColor`. Ein Zeichen (Luftlinie)
 ist ein eigener Entwurf im selben Stil. Jede Datei trägt im Kommentar den
@@ -25,6 +25,7 @@ CSS-Drehung. Gefüllter Stern: per CSS `fill:currentColor`.
 | `punkte.svg` | dots | Aktionsmenü und Zeilenaktionen mobil |
 | `zahnrad.svg` | settings | Einstellungen (Kopfleiste) |
 | `hilfe.svg` | help-circle | Hilfe und Handbuch (Kopfleiste, links vom Zahnrad; P5b/AP8) |
+| `drucken.svg` | printer | Notfallblatt drucken (Rückfrage-Dialog, Kontoseite; P5b/AP9) |
 | `kalender.svg` | calendar | Startseite; Datum ändern |
 | `status.svg` | activity | Betrieb → Status (S8/AP5, Mockup 13) |
 | `aktualisieren.svg` | refresh | Betrieb → Updates (S8/AP5, Mockup 13) |

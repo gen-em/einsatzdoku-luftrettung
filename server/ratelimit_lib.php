@@ -224,6 +224,37 @@ const RATE_GRENZEN = [
     'ingest'    => ['max' => 30, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
     'ingest_ip' => ['max' => 30, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
 
+    /* DIE BETREIBER-RUECKFRAGE ZUM SCHLUESSELBLATT (P5b/AP9, E-P5b-10, -21).
+     *
+     * DREI VERSUCHE, NICHT ZEHN. Die Anmeldung laesst zehn zu, weil ein
+     * Passwort getippt wird und Tippfehler dazugehoeren. Hier wird von einem
+     * BLATT ABGELESEN, vier Gruppen zu vier Zeichen, Gross/Klein und
+     * Leerzeichen sind egal. Wer dreimal danebenliegt, hat das Blatt nicht
+     * vor sich — und genau das soll die Frage herausfinden.
+     *
+     * JE KONTO UND NICHT JE ADRESSE. Es gibt in einer Installation eine
+     * Handvoll BetreiberInnen; ein NAT-Problem wie bei `login_ip` kann hier
+     * nicht entstehen. Der Zaehler haengt an der Kontoadresse, damit eine
+     * gesperrte BetreiberIn die andere nicht mitsperrt — sie soll nachsehen
+     * koennen, wo das Blatt liegt.
+     *
+     * MIT LEITER, UND DIE LEITER BESTIMMT DIE DAUER — nicht die Zahl in
+     * `sperre`. Ich hatte hier zuerst 600 stehen und im Dialog „für 10
+     * Minuten" gemeldet; gemessen wurden **15**, denn die erste Sprosse von
+     * `RATE_LEITER_VORGABE` ist 900 s und `rate_leiter_anwenden()` ueberholt
+     * `sperre`. Die Zahl steht jetzt auf 900, damit Rueckfall und Sprosse
+     * dasselbe sagen — und der Dialogtext rechnet nicht mehr selbst, sondern
+     * fragt `rate_stufe_dauer()`.
+     *
+     * Wer nach einer Viertelstunde wiederkommt und wieder dreimal
+     * danebenliegt, raet; dann greift die naechste Sprosse.
+     *
+     * KEINE SPERRE DES ZUGANGS. Gesperrt ist dieser eine Weg; die
+     * Anmeldung, die Anwendung und das Schluesselblatt selbst bleiben offen.
+     * Wer die Frage nicht beantworten kann, soll sie nachsehen koennen — das
+     * ist der Sinn des Hinweises „Betrieb -> Schluesselblatt neu drucken". */
+    'blatt' => ['max' => 3, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
+
     /* DER GLOBALE ZAEHLER SPERRT NIE (E-P5a-05). `max` steht auf der
      * groesstmoeglichen Zahl, damit die Sperrbedingung in `rate_misserfolg()`
      * fuer diesen Topf niemals wahr wird — eine globale Sperre waere ein
@@ -904,6 +935,41 @@ function rate_zaehlen(string $topf, ?string $konto = null,
                       ?array $merkmale = null): void
 {
     rate_misserfolg($topf, $konto, $merkmale);
+}
+
+/**
+ * Wie viele Fehlversuche stehen im laufenden Fenster? (P5b/AP9)
+ *
+ * GEZAEHLT WIRD DAS KONTOMERKMAL, NICHT DIE ADRESSE. Die Zahl geht in eine
+ * MELDUNG — „noch 2 Versuche" —, und die soll dem Menschen vor dem Bildschirm
+ * gelten, nicht allen hinter derselben NAT. Wer die Adresse zaehlte, sagte
+ * einer BetreiberIn, sie habe noch einen Versuch, weil eine andere im selben
+ * Haus welche verbraucht hat.
+ *
+ * ABGELAUFENES FENSTER ZAEHLT NICHT MIT — dieselbe Bedingung wie in
+ * `rate_verlangsamung()`. Ohne sie stuende nach einer Stunde Ruhe noch die
+ * alte Zahl da, und die Meldung waere falsch, ohne falsch auszusehen.
+ *
+ * FUER ANZEIGE, NICHT FUER ENTSCHEIDUNGEN. Ob etwas erlaubt ist, sagt
+ * `rate_erlaubt()`; diese Zahl ist eine Auskunft. Bei einem Datenbankfehler
+ * kommt 0 zurueck — die Meldung ist dann ungenau, und das ist harmloser als
+ * eine Seite, die daran scheitert.
+ */
+function rate_versuche(string $topf, string $konto): int
+{
+    $g = rate_grenze($topf);
+    if ($g === null) { return 0; }
+    try {
+        $st = db()->prepare(
+            'SELECT versuche FROM rate_limits
+              WHERE topf = ? AND merkmal = ?
+                AND fenster_start >= DATE_SUB(NOW(), INTERVAL ? SECOND)');
+        $st->execute([$topf, rate_merkmal_kennung($konto), $g['fenster']]);
+        $n = $st->fetchColumn();
+        return $n === false ? 0 : (int)$n;
+    } catch (Throwable $ex) {
+        return 0;
+    }
 }
 
 /**
