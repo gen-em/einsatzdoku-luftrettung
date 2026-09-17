@@ -305,8 +305,28 @@ function spalten_aus_rumpf(string $rumpf): array
         $zeile = trim(preg_replace('/--.*$/', '', $zeile) ?? '');
         if ($zeile === '' || !preg_match('/^`?(\w+)`?\s+/', $zeile, $s)) { continue; }
         $wort = strtoupper($s[1]);
+        /* REFERENCES GEHOERT DAZU, und zwar wegen des Zeilenumbruchs.
+         *
+         * Diese Funktion liest ZEILENWEISE. Ein Fremdschluessel, der auf zwei
+         * Zeilen steht — und das tut er, sobald er laenger wird —, faengt in
+         * der zweiten mit `REFERENCES` an:
+         *
+         *     CONSTRAINT fk_kew_user FOREIGN KEY (user_id)
+         *       REFERENCES users (id) ON DELETE CASCADE
+         *
+         * Die erste Zeile faengt `CONSTRAINT` ab, die zweite wurde als Spalte
+         * `references` gelesen. Gefunden am 17.09.2026 an
+         * `konto_einwilligungen` (P5b/AP4): Der Schritt „Migrationsregister"
+         * in Stufe 1 war seit Web 20.19.0 rot, gemeldet wurde eine Spalte,
+         * die es nie gab.
+         *
+         * EINE SPALTE NAMENS `references` GAEBE ES NUR MIT RUECKSTRICHEN
+         * (`references` ist in SQL reserviert). Die wuerde hier ebenfalls
+         * uebersprungen — ein Preis, den dieses Projekt zahlen kann: Es hat
+         * keine solche Spalte, und eine anzulegen waere fuer sich genommen
+         * schon eine schlechte Entscheidung. */
         if (in_array($wort, ['PRIMARY', 'UNIQUE', 'KEY', 'INDEX', 'CONSTRAINT',
-                             'FOREIGN', 'FULLTEXT', 'CHECK'], true)) { continue; }
+                             'FOREIGN', 'FULLTEXT', 'CHECK', 'REFERENCES'], true)) { continue; }
         $raus[] = strtolower($s[1]);
     }
     return $raus;

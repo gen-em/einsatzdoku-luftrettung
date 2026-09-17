@@ -3032,6 +3032,73 @@ function migrationen_katalog(): array
                ADD COLUMN backup_pakete    SMALLINT UNSIGNED NULL',
         ],
     ],
+        [
+        'id'    => '2026_09_17_erststart_rueckfragen',
+        'web'   => '20.24',
+        'label' => 'Erststart und Besitz-Rueckfragen (P5b/AP9)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'users'
+                                AND column_name = 'erststart_stand'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* VIER SPALTEN, UND JEDE BEANTWORTET EINE FRAGE (E-P5b-09, -19).
+             *
+             * `erststart_stand` — WELCHE DER DREI SCHRITTE SIND ERLEDIGT.
+             * Ein Bitfeld und keine drei Spalten: Die drei Schritte
+             * (Standort, Rettungsmittel, Geraet) sind eine Einheit, sie
+             * werden zusammen gelesen und zusammen geschrieben. Bit 0/1/2;
+             * **`-1` heisst „nicht mehr zeigen"** und ist damit kein
+             * Zaehlwert, sondern ein Zustand — deshalb TINYINT und nicht
+             * UNSIGNED.
+             *
+             * WARUM UEBERHAUPT EIN STAND UND NICHT EINE ABFRAGE AUF DIE
+             * STAMMDATEN: Weil „ich will keinen Standort" eine Antwort ist.
+             * Wer den Schritt bewusst uebergeht, hat ihn erledigt; ein
+             * `SELECT COUNT(*) FROM bases` saehe das nie und fragte bei
+             * jedem Anmelden erneut.
+             *
+             * `rueckfrage_naechste` — WANN DAS NAECHSTE MAL GEFRAGT WIRD.
+             * Ein Datum und kein Intervall: Die Abstaende sind ungleich
+             * (30 Tage, 6 Monate, dann jaehrlich), und „spaeter" schiebt um
+             * 7 Tage. Wer daraus rechnen muesste, braeuchte Runde UND
+             * Verschiebungen — das Datum traegt beides schon.
+             *
+             * NULL heisst „noch nie gesetzt". Gesetzt wird es beim ersten
+             * Anmelden, nicht bei der Anlage: Ein Konto, das nie benutzt
+             * wird, soll keine Frist mit sich herumtragen.
+             *
+             * `rueckfrage_runde` — WELCHER ABSTAND ALS NAECHSTES GILT.
+             * 0 = 30 Tage, 1 = 6 Monate, 2 und hoeher = jaehrlich.
+             *
+             * `rueckfrage_verschoben` — WIE OFT SCHON „SPAETER". Bis 3
+             * (E-P5b-19); danach kommt die Frage wieder regulaer. Der
+             * Zaehler steht hier und nicht in der Sitzung, weil „spaeter"
+             * sonst durch Abmelden zurueckgesetzt waere — und damit
+             * unbegrenzt. */
+            'ALTER TABLE users
+               ADD COLUMN erststart_stand       TINYINT NOT NULL DEFAULT 0,
+               ADD COLUMN rueckfrage_naechste   DATE NULL,
+               ADD COLUMN rueckfrage_runde      TINYINT UNSIGNED NOT NULL DEFAULT 0,
+               ADD COLUMN rueckfrage_verschoben TINYINT UNSIGNED NOT NULL DEFAULT 0',
+
+            /* BESTANDSKONTEN HABEN IHREN ERSTSTART HINTER SICH.
+             *
+             * Ohne diese Zeile bekaeme jedes bestehende Konto beim naechsten
+             * Anmelden den Einstieg gezeigt — drei Schritte, die es alle
+             * laengst erledigt hat. Das ist keine Kleinigkeit: Es ist der
+             * Unterschied zwischen einer neuen Funktion und einer
+             * Belaestigung.
+             *
+             * DAS KRITERIUM IST EIN RETTUNGSMITTEL. Wer eines angelegt hat,
+             * hat die Anwendung in Betrieb genommen; Standort ist optional
+             * und ein Geraet hat nicht jede. `7` setzt alle drei Bits. */
+            'UPDATE users u SET u.erststart_stand = 7
+               WHERE EXISTS (SELECT 1 FROM vehicles v WHERE v.user_id = u.id)',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

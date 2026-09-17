@@ -52,6 +52,24 @@ CREATE TABLE users (
   -- Backlog Nr. 48: wie viele Konto-Backups dieses Kontos aufgehoben werden,
   -- statt der Zahl der Installation (`adminbackup_aufbewahrung`, Vorgabe 2).
   backup_pakete    SMALLINT UNSIGNED NULL,
+  -- Erststart und Besitz-Rueckfragen (P5b/AP9, E-P5b-09, -19).
+  -- Bitfeld der drei Erststart-Schritte (Standort, Rettungsmittel, Geraet);
+  -- **-1 heisst „nicht mehr zeigen"** und ist deshalb kein UNSIGNED. Warum
+  -- ein Stand und nicht eine Abfrage auf die Stammdaten: „ich will keinen
+  -- Standort" ist eine Antwort, und ein COUNT(*) saehe sie nie.
+  erststart_stand       TINYINT NOT NULL DEFAULT 0,
+  -- Wann das naechste Mal nach dem Notfallblatt gefragt wird. Ein DATUM und
+  -- kein Intervall: Die Abstaende sind ungleich (30 Tage, 6 Monate, dann
+  -- jaehrlich) und „spaeter" schiebt um 7 Tage — das Datum traegt beides.
+  -- NULL = noch nie gesetzt; gesetzt wird beim ersten Anmelden, nicht bei
+  -- der Anlage.
+  rueckfrage_naechste   DATE NULL,
+  -- 0 = 30 Tage, 1 = 6 Monate, 2 und hoeher = jaehrlich.
+  rueckfrage_runde      TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  -- Wie oft schon „spaeter" (bis 3). Steht hier und nicht in der Sitzung,
+  -- weil „spaeter" sonst durch Abmelden zurueckgesetzt und damit unbegrenzt
+  -- waere.
+  rueckfrage_verschoben TINYINT UNSIGNED NOT NULL DEFAULT 0,
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   -- Fuer die Verfalljobs, nicht fuer die Anzeige: „alle Konten in einem
   -- Zustand, deren Frist abgelaufen ist" waere sonst ein Vollscan je Joblauf.
@@ -999,4 +1017,8 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_09_16_adresswechsel_bestaetigt', 'skipped'),
   -- users.grenze_* und aufbewahrung_tage stehen oben schon im Schema
   -- (Web 20.21.0, P5b/AP6).
-  ('2026_09_16_konto_grenzen', 'skipped');
+  ('2026_09_16_konto_grenzen', 'skipped'),
+  -- users.erststart_stand und rueckfrage_* stehen oben schon im Schema
+  -- (Web 20.24.0, P5b/AP9). Der Nachzieher fuer Bestandskonten entfaellt in
+  -- einer frischen Anlage: Dort gibt es keine.
+  ('2026_09_17_erststart_rueckfragen', 'skipped');
