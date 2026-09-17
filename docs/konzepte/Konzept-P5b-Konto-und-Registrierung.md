@@ -36,7 +36,7 @@ Mockups in `konzept-p5b/mockups/`.
 > | AP5 — Selbstlöschung, Adresswechsel | **erledigt** | Web 20.20.0 | `edc3040` | Karenz **30,0 Tage**, Rückzug lässt den Bestand unverändert, Kaskade räumt alle Reste; Adresswechsel 6 von 6 Fällen — alte Adresse gilt bis zum Klick, zweiter Klick abgewiesen, belegte Adresse abgewiesen; Protokolleintrag enthält **kein `@`** |
 > | AP6 — Mengengrenze, Aufbewahrung je Konto | **erledigt** | Web 20.21.0 | `533850d` | Uploads `200, 200, 200, 507`; Rumpf `{"error":"kontingent"}`; Ratenzähler **0 Zeilen**; nach Anheben kam die abgewiesene Aufzeichnung nach (**4 Einsätze**). Backlog Nr. 48: 4 Fälle, 4 bestanden. **E-P5b-17 ist gegenstandslos** — SHA-256 für Geräteschlüssel seit Web 13.0.0 erledigt, am Code nachgemessen |
 > | AP7 — Demo-Anmeldung als Einstellung | **erledigt** | Web 20.18.0 | `ad93c9e` | Im Browser gemessen, nicht mit curl: drei Anmeldeversuche 1241 / 1270 / 1263 ms, **dieselbe Meldung**, Spanne **29 ms** (Soll < 50) |
-> | AP8 — Handbuch, „Was ist NAdoku" | offen | — | — | **nicht mehr blockiert** — M-P5b-01 ist seit 17.09.2026 freigegeben |
+> | AP8 — Handbuch, „Was ist NAdoku“ | **erledigt** | Web 20.23.0 | — | Handbuch 266 KB → 305 KB HTML in **11–12 ms**; **67** Verzeichniseinträge = 13 h2 + 54 h3 (Zählung der Datei); **79** Überschriften mit eindeutiger Sprungmarke; **11 von 11** Sicherheitsproben abgewehrt; Bilderlauf **32 Bilder, 0/0/0**. Drei Funde beim Prüfen, alle eigene — Bildpfade, 43 Tabellen, und ein Prüfmittel, das auf den Falschen zeigte |
 > | AP9 — Onboarding und Rückfragen | offen | — | — | **nicht mehr blockiert** — M-P5b-02b/c/d sind seit 17.09.2026 freigegeben; die vier Gestaltungsvorgaben aus Abschnitt 6 gelten |
 > | AP10 — Abschluss | offen | — | — | — |
 >
@@ -52,6 +52,15 @@ Mockups in `konzept-p5b/mockups/`.
 > die Einwilligungen jetzt fest und verlangt nur, was in Kraft ist. Fünf
 > Prüffälle gegen die lokale Installation gemessen, dabei ein Folgefehler in
 > der Absage gefunden und behoben — Einzelheiten im Prüfdokument, F11.
+>
+> **AP8 ist gebaut** (Web 20.23.0). Eine Abweichung vom Konzept ist dabei
+> gefallen und steht in E-P5b-22 nachgetragen: **der Cache entfällt.**
+>
+> **Und ein Fehler in meiner eigenen Arbeitsweise**, der hier stehen bleibt:
+> Commit `51a4930` ist gepusht worden, **ohne die Vollständigkeitsprüfung zu
+> fahren** — nur die Wortliste lief. Dieser Stand liegt bei **394** und
+> wäre im Prüftor Stufe 1 durchgefallen (Schwelle 388). Aufgefallen ist es
+> erst beim nächsten Paket. Prüfdokument F12.
 >
 > **Fünf Migrationen bisher** (AP3 bringt keine dazu) — `2026_09_16_protokoll_ereignisse`,
 > `_konto_lebenszyklus`, `_einwilligungen`, `_adresswechsel_bestaetigt` und

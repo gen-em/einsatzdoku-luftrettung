@@ -91,6 +91,7 @@ Pfaden gehört nicht ins Repositorium.
 |---|---|---|---|---|
 | **phpseclib** | 3.0.57 | MIT | `vendor/phpseclib3/` | Der SFTP-Adapter der Backup-Ziele (S2/AP7) |
 | **constant_time_encoding** | 2.7.0 | MIT | `vendor/ParagonIE/ConstantTime/` | Von phpseclib vorausgesetzt (genau eine Stelle: `Common/Functions/Strings.php`) |
+| **Parsedown** | 1.7.4 | MIT | `vendor/Parsedown.php` | Rendert `docs/Handbuch.md` und `docs/Was-ist-NAdoku.md` für `hilfe.php` und `ueber.php` (P5b/AP8) |
 
 Herkunft, Commit-Kennung und die Anleitung zum Austausch stehen in
 `server/vendor/HERKUNFT.md`; die Lizenztexte liegen daneben
@@ -119,6 +120,44 @@ keine SFTP-Verbindung aufbaut, lädt keine einzige dieser Dateien.
 
 FTP und FTPS brauchen keine Bibliothek: Sie laufen über die PHP-Erweiterung
 `ftp`, die zum Sprachumfang gehört.
+
+**Parsedown folgt der Regel aus Abschnitt 2 und nicht der Ausnahme oben:** Es
+ist **eine** Datei, also stehen Herkunft, Fassung und SHA-256
+(`af4a4b29f38b5a00b003a3b7a752282274c969e42dee88e55a427b2b61a2f38f`) in ihrem
+Kopfkommentar. Der eigene Kommentar steht **vor** dem Originalinhalt; an der
+Bibliothek selbst ist nichts geändert. Nachrechnen (der Befehl sucht die Länge
+des Kommentars, statt sie einzutippen — sonst stimmt er nur bis zur nächsten
+ergänzten Zeile):
+
+```sh
+N=$(grep -n '^ \*/$' server/vendor/Parsedown.php | head -1 | cut -d: -f1)
+{ echo '<?php'; tail -n +$((N+1)) server/vendor/Parsedown.php; } | sha256sum
+```
+
+**Es geht am Lader vorbei.** Die Klasse `Parsedown` trägt keinen Namensraum,
+der PSR-4-Lader hätte also nichts zu tun; `doku_lib.php` bindet die Datei
+direkt ein. Geladen wird sie nur, wenn `hilfe.php` oder `ueber.php` aufgerufen
+wird — jede andere Seite rührt sie nicht an.
+
+**Warum ein zweiter Markdown-Renderer neben `rt_html()`.** Das Projekt hat
+seit P3 einen eigenen, handgeschriebenen: Er kennt Überschriften, Listen und
+geprüfte Links, und das ist kein Mangel, sondern die Zusage (E-P3-38) — sein
+Text kommt aus der Datenbank und wird von einer Administratorin getippt, jede
+Erweiterung wäre dort eine Vertragsänderung. Das Handbuch braucht Tabellen,
+Codeblöcke, Zitate, Fettung und Bilder; keines davon kann `rt_html()`, und
+keines davon soll es können. Zwei Renderer sind zwei Angriffsflächen — der
+Preis ist bewusst gezahlt, weil die **Quellen** verschieden sind: der eine
+liest ein Formular, der andere das Repositorium. Aufgerufen wird Parsedown an
+genau einer Stelle und immer mit `setSafeMode(true)` **und**
+`setMarkupEscaped(true)`.
+
+**Eine Einschränkung setzt das Projekt selbst durch, nicht die Bibliothek:**
+`DokuMarkdown::inlineImage()` lässt nur relative Bildquellen zu.
+Nachgemessen am 17.09.2026 — Parsedown liefert mit SafeMode für
+`![B](https://fremd.example/b.png)` ein `<img src="https://fremd.example/…">`
+und lädt damit eine fremde Quelle zur Laufzeit. SafeMode prüft das **Schema**,
+nicht die **Herkunft**; die Zusage aus Abschnitt 1 hält an dieser Stelle allein
+der eigene Überschreiber.
 
 ---
 
@@ -154,7 +193,7 @@ Namen nicht weiterführen. Hier wird nichts verändert.
 `server/assets/images/symbole/LICENSE-tabler-icons.txt`
 (© 2020–2026 Paweł Kuna).
 
-53 Dateien unter `server/assets/images/symbole/`, je Zeichen eine Datei,
+56 Dateien unter `server/assets/images/symbole/`, je Zeichen eine Datei,
 24 × 24, Strich 2 px, Farbe über `currentColor`. Jede Datei trägt im Kommentar
 ihren Tabler-Namen; die Zuordnungstabelle steht in der `LIESMICH.md` daneben.
 Eine erzeugte Übersicht liefert `python3 tools/design/tabellen.py symbole`.

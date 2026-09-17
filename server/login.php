@@ -506,6 +506,23 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
            und ist mit der Uebergangsschicht in O11 gefallen. */ ?>
   <p class="zustandszeile" id="loginstate"></p>
  </div>
+
+ <?php /* DIE VIER WEGE UNTER DER KARTE (P5b/AP8, M-P5b-01, Bild 3).
+          Sie stehen AUSSERHALB von `.anmeldung-karte`, nicht darin: Auf dem
+          Mockup liegen sie auf dem Dunkelblau, nicht auf der weissen Karte —
+          und die Karte ist das Formular, nicht die Seite.
+
+          WARUM HIER UND NICHT IN `ui_fuss_seite()`: Die Fusszeile traegt
+          Lizenz und Version und sitzt ganz unten. Diese vier sind Wege, und
+          der erste ist der einzige, auf dem jemand OHNE Konto erfaehrt, was
+          diese Anwendung ueberhaupt ist. Sie gehoeren dorthin, wo man sie
+          sucht — direkt unter das Anmeldeformular. */ ?>
+ <nav class="fuss-anmeldung" aria-label="Über diese Anwendung">
+   <a href="ueber.php">Was ist NAdoku?</a>
+   <a href="hilfe.php">Handbuch</a>
+   <a href="impressum.php">Impressum</a>
+   <a href="datenschutz.php">Datenschutz</a>
+ </nav>
 </main>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>

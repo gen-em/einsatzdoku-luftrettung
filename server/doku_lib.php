@@ -67,12 +67,12 @@ declare(strict_types=1);
  *   `setSafeMode(true)`       dazu die Zielpruefung an Links und Bildern:
  *                             `javascript:`-Ziele und Attribute fallen weg.
  *
- * BEIDES, NICHT EINES. `setMarkupEscaped` allein liesse `[x](javascript:…)`
+ * BEIDES, NICHT EINES. `setMarkupEscaped` allein liesse `[x](javascript:...)`
  * durch, `setSafeMode` allein laesst rohe HTML-Bloecke stehen.
  *
  * DAZU DREI EIGENE REGELN (`DokuMarkdown` unten): Sprungmarken an h2 und h3,
  * `rel="noopener"` an fremden Zielen, und Bilder nur relativ. Die dritte ist
- * die wichtigste — ein `![](https://fremd/…)` im Handbuch holte eine fremde
+ * die wichtigste — ein `![](https://fremd/...)` im Handbuch holte eine fremde
  * Quelle zur Laufzeit und braeche damit eine feste Zusage (CLAUDE.md 4) auf
  * einer Seite, die jede Besucherin vor der Anmeldung sieht.
  */
@@ -182,6 +182,11 @@ final class DokuMarkdown extends Parsedown
     private array $vergeben = [];
 
     /**
+     * Wohin zeigen relative Bildpfade? Siehe `inlineImage()`.
+     */
+    public string $bildBasis = 'doku/';
+
+    /**
      * Ueberschriften bekommen eine Sprungmarke — und h2/h3 landen im
      * Inhaltsverzeichnis.
      *
@@ -246,7 +251,7 @@ final class DokuMarkdown extends Parsedown
      * Bilder nur relativ — alles andere wird zu Text.
      *
      * DAS IST DIE ZUSAGE „KEINE FREMDE QUELLE ZUR LAUFZEIT" (CLAUDE.md 4) an
-     * der Stelle, an der sie am leichtesten fiele: Ein `![Bild](https://…)`
+     * der Stelle, an der sie am leichtesten fiele: Ein `![Bild](https://...)`
      * im Handbuch sieht harmlos aus und laedt bei jeder Besucherin von einem
      * fremden Server — auf einer Seite, die man OHNE Anmeldung sieht, also
      * auch von jeder, die sich nur umsieht.
@@ -254,8 +259,8 @@ final class DokuMarkdown extends Parsedown
      * DASS SAFEMODE DAS NICHT TUT, IST NACHGEMESSEN und nicht vermutet.
      * Gegenprobe am 17.09.2026, `![B](https://fremd.example/b.png)`:
      *
-     *   Parsedown mit SafeMode:  <p><img src="https://fremd.example/b.png" …>
-     *   DokuMarkdown:            <p>!<a href="https://fremd.example/b.png" …>B</a>
+     *   Parsedown mit SafeMode:  <p><img src="https://fremd.example/b.png" ...>
+     *   DokuMarkdown:            <p>!<a href="https://fremd.example/b.png" ...>B</a>
      *
      * Die Bibliothek prueft in SafeMode das SCHEMA (kein `javascript:`), nicht
      * die HERKUNFT. Ein `https:`-Bild ist fuer sie sauber; fuer dieses Projekt
@@ -276,12 +281,38 @@ final class DokuMarkdown extends Parsedown
 
         $quelle = (string)($B['element']['attributes']['src'] ?? '');
         if ($quelle === ''
-            || preg_match('#^[a-z][a-z0-9+.-]*:#i', $quelle)   // Schema: http:, data:, …
+            || preg_match('#^[a-z][a-z0-9+.-]*:#i', $quelle)   // Schema: http:, data:, ...
             || str_starts_with($quelle, '//')                   // schemenrelativ
             || str_starts_with($quelle, '/')                    // absolut auf diesem Server
             || str_contains($quelle, '..')) {                   // aus dem Ordner heraus
             return null;
         }
+
+        /* UND JETZT DER PFAD — DIE STELLE, AN DER ZWEI WELTEN AUFEINANDER-
+         * TREFFEN, UND DIE MICH EINEN BILDERLAUF GEKOSTET HAT.
+         *
+         * `doku_pfad()` liest die Markdown-Datei mit PHP aus dem
+         * DATEISYSTEM, und dort ist `../docs/` ein voellig normaler Ort.
+         * Ein Bild holt aber nicht PHP, sondern DER BROWSER — und der sieht
+         * nur, was unterhalb des Dokumentenstamms liegt, also `server/`.
+         * `../docs/` ist fuer ihn unerreichbar, und das soll auch so
+         * bleiben: Ein Webserver, der eine Ebene ueber seinem Stamm
+         * ausliefert, ist ein Fehler und kein Merkmal.
+         *
+         * Ein `![](bilder/x.png)` im Handbuch loeste der Browser deshalb zu
+         * `/bilder/x.png` auf — also `server/bilder/`, wo nichts liegt. Der
+         * Bilderlauf meldete am 17.09.2026 dafuer **24 Konsolenfehler**
+         * (dreimal je Breite, achtmal), und auf dem Produktivserver waeren
+         * es drei kaputte Bilder gewesen, die niemandem auffallen, weil das
+         * Handbuch ohne sie noch lesbar ist.
+         *
+         * BILDER LIEGEN DESHALB IMMER UNTER `server/doku/`. Die
+         * Auslieferungskette kopiert `docs/bilder/` dorthin (beide
+         * Sync-Jobs). Wer selbst hostet und nur `docs/` neben `server/`
+         * legt, bekommt den TEXT (den liest PHP) und keine BILDER (die holt
+         * der Browser) — dann fehlt derselbe Kopierschritt, und das steht in
+         * `docs/Technik.md`. */
+        $B['element']['attributes']['src'] = $this->bildBasis . $quelle;
 
         return $B;
     }

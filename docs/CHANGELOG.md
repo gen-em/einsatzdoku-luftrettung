@@ -14,6 +14,77 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.23.0] — 2026-09-17
+
+**Das Handbuch ist jetzt eine Seite der Anwendung.**
+
+### Neu
+
+**`hilfe.php` zeigt das Handbuch, `ueber.php` zeigt „Was ist NAdoku" — beide
+ohne Anmeldung.** Die Quelle bleibt Markdown im Repositorium
+(`docs/Handbuch.md` und das neue `docs/Was-ist-NAdoku.md`): auf GitHub
+editierbar, die Wortliste läuft darüber, das Prüftor prüft die
+Rendertauglichkeit — und es gibt keine zweite Fassung in einer Datenbank, die
+auseinanderlaufen könnte. Ein Handbuch hinter der Anmeldung hilft genau denen
+nicht, die nicht hineinkommen.
+
+Dazu die **Fußzeile der Anmeldeseite** (Was ist NAdoku? · Handbuch · Impressum
+· Datenschutz) und ein **Fragezeichen links vom Zahnrad**, das auch auf dem
+Handy stehen bleibt. Das Inhaltsverzeichnis des Handbuchs filtert beim Tippen
+und hebt den Abschnitt hervor, den man gerade liest; ohne JavaScript bleibt es
+eine Liste echter Links auf echte Sprungmarken.
+
+**Neu vendoriert: Parsedown 1.7.4** (MIT, eine Datei, `server/vendor/`).
+`rt_html()` bleibt, was es ist — es kennt bewusst kein Fett, keine Tabellen,
+keine Codeblöcke und keine Bilder, weil sein Text aus der Datenbank kommt und
+jede Erweiterung dort eine Vertragsänderung wäre. Das Handbuch braucht alle
+vier. Zwei Renderer sind zwei Angriffsflächen; der Preis ist bewusst gezahlt,
+weil die Quellen verschieden sind — der eine liest ein Formular, der andere
+das Repositorium.
+
+### Behoben
+
+Drei Funde beim Prüfen, alle drei in dieser Arbeit entstanden:
+
+**Bilder im Handbuch wären kaputt gewesen.** `![](bilder/x.png)` löste zu
+`/bilder/x.png` auf — also `server/bilder/`, wo nichts liegt. Der Grund ist
+eine Asymmetrie, die man kennen muss: Den **Text** liest PHP aus dem
+Dateisystem, und `../docs/` ist dort ein normaler Ort; ein **Bild** holt der
+**Browser**, und der sieht nur, was unterhalb des Dokumentenstamms liegt. Der
+Bilderlauf meldete 24 Konsolenfehler. Relative Bildquellen zeigen jetzt auf
+`doku/`, und die Auslieferungskette kopiert `docs/bilder/` dorthin.
+
+**43 Tabellen schoben die Seite nach rechts.** Bei 360 px ist die schmalste
+368 px breit; gemessen wurden +124 px Überlauf. Sie scrollen jetzt waagerecht
+wie die Codeblöcke.
+
+**Der Bilderlauf zeigte auf den Falschen.** Er nannte `code (626 px)` als
+Verursacher — ein `<code>` in einem scrollenden `<pre>`, das die Seite gar
+nicht schiebt. Daraufhin wurde der Code umbrechen gelassen, und die Zahl blieb
+bei +124 px, weil sie nie von dort kam. Der Täter-Finder überspringt jetzt,
+was in einem scrollenden Kasten steckt. Außerdem meldet eine unbekannte Rolle
+in `seiten.json` sich selbst, statt drei Zeilen später an `undefined` zu
+scheitern, und ein misslungener Abzug nennt seinen Grund, statt still zu
+verschwinden und den Kontaktbogen abstürzen zu lassen.
+
+### Bemerkenswert
+
+**`setSafeMode(true)` schützt die Zusage „keine fremde Quelle zur Laufzeit"
+nicht.** Nachgemessen: Parsedown liefert *mit* SafeMode für
+`![B](https://fremd.example/b.png)` ein `<img src="https://fremd.example/…">`.
+SafeMode prüft das **Schema**, nicht die **Herkunft**. Auf einer Seite, die
+jede Besucherin vor der Anmeldung sieht, hält die Zusage allein der eigene
+Überschreiber, der Bilder nur relativ zulässt.
+
+**Kein Cache, entgegen dem Konzept.** E-P5b-22 verlangt einen in `app_state`.
+Er ist unmöglich (`app_state.v` ist `VARCHAR(190)`, das gerenderte Handbuch
+303 KB) und unnötig: 266 KB Markdown rendern in 11 bis 12 ms.
+
+**Der Bilderlauf kann `hilfe.php` nicht ganzseitig fotografieren** — 19 MB je
+Abzug, und ab 1024 px scheitert Chromium an seiner Höchsthöhe. Der Eintrag
+trägt deshalb `"ganzseitig": false`; die Messungen laufen weiter über das
+ganze Dokument, nur das Bild ist ein Ausschnitt.
+
 ## [Web 20.22.2] — 2026-09-17
 
 **Die Häkchen wurden verlangt und vergessen.**

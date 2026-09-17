@@ -419,6 +419,17 @@ function ui_kopf(array $o = []): void
            <?= $aktiv === 'suche' ? 'aria-current="page"' : '' ?>>
           <?= ui_symbol('lupe') ?><span>Suche</span>
         </a>
+        <?php /* HILFE LINKS VOM ZAHNRAD (P5b/AP8, M-P5b-01). Auf dem Handy
+                 bleibt er stehen — anders als „Startseite" und „Suche", die
+                 dort in die Schublade wandern: Ein Fragezeichen ist 24 px
+                 breit und der eine Knopf, den jemand sucht, der gerade nicht
+                 weiterweiss. Genau dann will man nicht erst ein Menue
+                 aufziehen. */ ?>
+        <a class="knopf knopf-symbol kopf-hilfe<?= $aktiv === 'hilfe' ? ' aktiv' : '' ?>"
+           href="hilfe.php" aria-label="Hilfe und Handbuch"
+           <?= $aktiv === 'hilfe' ? 'aria-current="page"' : '' ?>>
+          <?= ui_symbol('hilfe', 'symbol-gross') ?>
+        </a>
         <a class="knopf knopf-symbol kopf-zahnrad<?= $aktiv === 'einstellungen' ? ' aktiv' : '' ?>"
            href="einstellungen.php" aria-label="Einstellungen"
            <?= $aktiv === 'einstellungen' ? 'aria-current="page"' : '' ?>>

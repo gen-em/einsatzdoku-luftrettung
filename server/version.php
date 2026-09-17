@@ -5945,5 +5945,54 @@ declare(strict_types=1);
  * GEFUNDEN BEIM NACHPRUEFEN einer Rueckfrage des Auftraggebers zur AVV, nicht
  * durch ein Pruefmittel. Es gibt keines, das „verlangt, aber nie
  * gespeichert" messen koennte.
+ *
+ * 20.23.0 — DAS HANDBUCH IST JETZT EINE SEITE DER ANWENDUNG
+ * (P5b/AP8, E-P5b-08, -22, Mockup M-P5b-01).
+ *
+ * `hilfe.php` zeigt `docs/Handbuch.md`, `ueber.php` zeigt das neue
+ * `docs/Was-ist-NAdoku.md` — beide OHNE Anmeldung. Die Quelle bleibt
+ * Markdown im Repositorium: auf GitHub editierbar, die Wortliste laeuft
+ * darueber, das Prueftor prueft die Rendertauglichkeit, und es gibt keine
+ * zweite Fassung in einer Datenbank, die auseinanderliefe. Dazu die
+ * Fusszeile der Anmeldeseite (Was ist NAdoku? · Handbuch · Impressum ·
+ * Datenschutz) und ein Fragezeichen links vom Zahnrad.
+ *
+ * NEU VENDORIERT: Parsedown 1.7.4 (MIT, eine Datei). `rt_html()` bleibt, was
+ * es ist — es kennt bewusst kein Fett, keine Tabellen, keine Codebloecke und
+ * keine Bilder, weil sein Text aus der DATENBANK kommt und jede Erweiterung
+ * dort eine Vertragsaenderung waere (E-P3-38). Das Handbuch braucht alle
+ * vier. Zwei Renderer sind zwei Angriffsflaechen; der Preis ist bewusst
+ * gezahlt, weil die Quellen verschieden sind.
+ *
+ * DREI FUNDE BEIM PRUEFEN, und alle drei waren meine:
+ *
+ *   BILDER. `![](bilder/x.png)` im Handbuch loeste zu `/bilder/x.png` auf —
+ *   also `server/bilder/`, wo nichts liegt. PHP liest den TEXT aus
+ *   `../docs/`; ein BILD holt der Browser, und der sieht nur `server/`.
+ *   24 Konsolenfehler im Bilderlauf. `DokuMarkdown` schreibt relative
+ *   Bildquellen jetzt auf `doku/` um, die Kette kopiert `docs/bilder/`
+ *   dorthin.
+ *
+ *   TABELLEN. Das Handbuch hat 43; bei 360 px ist die schmalste 368 px breit
+ *   und schob die Seite um 124 px nach rechts. Sie scrollen jetzt waagerecht
+ *   wie die Codebloecke.
+ *
+ *   UND DER BILDERLAUF ZEIGTE AUF DEN FALSCHEN. Er nannte `code (626 px)`
+ *   als Verursacher — ein `<code>` in einem scrollenden `<pre>`, das seine
+ *   Seite gar nicht schiebt. Ich habe daraufhin den Code umbrechen lassen,
+ *   und die Zahl blieb bei +124 px, weil sie nie von dort kam. Der
+ *   Taeter-Finder ueberspringt jetzt, was in einem scrollenden Kasten
+ *   steckt.
+ *
+ * WAS SAFEMODE NICHT TUT, und das ist der Satz, der hier stehen muss:
+ * Parsedown liefert MIT `setSafeMode(true)` fuer
+ * `![B](https://fremd.example/b.png)` ein `<img src="https://fremd...">` und
+ * laedt damit eine fremde Quelle zur Laufzeit. SafeMode prueft das SCHEMA,
+ * nicht die HERKUNFT. Auf einer Seite, die jede Besucherin vor der Anmeldung
+ * sieht, haelt die Zusage aus CLAUDE.md 4 allein
+ * `DokuMarkdown::inlineImage()`.
+ *
+ * KEIN CACHE, entgegen E-P5b-22: `app_state.v` ist VARCHAR(190), das
+ * gerenderte Handbuch 303 KB — und 266 KB Markdown rendern in 11 bis 12 ms.
  */
-const WEB_VERSION = '20.22.2';
+const WEB_VERSION = '20.23.0';

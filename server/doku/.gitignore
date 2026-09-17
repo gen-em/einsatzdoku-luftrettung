@@ -1,0 +1,11 @@
+# Hierher kopiert die Auslieferungskette `docs/Handbuch.md`,
+# `docs/Was-ist-NAdoku.md` und `docs/bilder/` (P5b/AP8, auslieferung.yml).
+#
+# DIE DATEIEN GEHOEREN NICHT INS REPOSITORIUM: Sie stehen schon in `docs/`,
+# und zwei Fassungen desselben Handbuchs im selben Baum laufen auseinander —
+# gepflegt wird die eine, gelesen die andere.
+#
+# Der Ordner selbst muss es aber geben, sonst faende ihn niemand. Deshalb
+# diese Datei: Sie ist das Einzige hier, was eingecheckt ist.
+*
+!.gitignore

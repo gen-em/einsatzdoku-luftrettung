@@ -757,6 +757,10 @@ img,svg,video{max-width:100%;height:auto}
 .kopf-zurueck{display:inline-flex}
 .kopf-zahnrad{margin-right:calc(var(--abstand-2) * -1)}
 .kopf-zahnrad.aktiv{background:var(--auf-dunkel-flaeche);border-radius:var(--radius)}
+/* HILFE steht links vom Zahnrad und bleibt auf dem Handy stehen (P5b/AP8).
+ * Der negative Rand des Zahnrads zieht nur den letzten Knopf an die Kante;
+ * dieser hier braucht ihn nicht. */
+.kopf-hilfe.aktiv{background:var(--auf-dunkel-flaeche);border-radius:var(--radius)}
 
 /* ---- Rahmen: Leiste und Inhalt als Einheit, zentriert -------------------- */
 .rahmen{
@@ -1735,6 +1739,154 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 .text li{font-size:var(--groesse-4);line-height:var(--zeile-lesen);margin-bottom:var(--abstand-1)}
 .text a{text-decoration:underline}
 .text-stand{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-5)}
+
+/* ---- Dokumentseite: Handbuch und „Was ist NAdoku" ------------------------
+ *
+ * P5b/AP8, Mockup M-P5b-01 (freigegeben 17.09.2026). Zwei Seiten, ein
+ * Baukasten: `hilfe.php` mit Inhaltsverzeichnis, `ueber.php` ohne.
+ *
+ * WARUM NICHT `.text` WIEDERVERWENDET. `.text` ist fuer Rechtstexte gemacht,
+ * und `rt_html()` erzeugt dort nur h2/h3/p/ul/ol/li/a — mehr kennt es nicht.
+ * Das Handbuch bringt Tabellen, Codebloecke, Zitate, Fettung und Bilder mit;
+ * `.text` um fuenf Elemente zu erweitern hiesse, die Rechtstextseite um
+ * Regeln zu erweitern, die dort nie greifen koennen. Die gemeinsamen Teile
+ * (Groessen, Zeilenabstaende) stehen deshalb doppelt, und das ist hier die
+ * kleinere Doppelung.
+ *
+ * DAS VERZEICHNIS IST EINE SPALTE, KEINE LEISTE. `.leiste` ist die Schublade
+ * der Anwendung — sie klappt unter 1024 px von links herein und hat ihren
+ * eigenen Mechanismus. Hier liegt die Gliederung eines Dokuments; unter
+ * 1024 px gehoert sie ueber den Text und nicht in eine Schublade, die man
+ * aufziehen muss, um zu sehen, was auf der Seite steht.
+ */
+.doku{display:flex;flex-direction:column;gap:var(--abstand-4)}
+.doku-text{min-width:0;max-width:var(--lesespalte)}
+.doku-quelle{color:var(--gedaempft);font-size:var(--groesse-2);
+             margin:calc(var(--abstand-2) * -1) 0 var(--abstand-4)}
+
+/* Das Verzeichnis */
+.doku-nav{background:var(--schnee);border:var(--strich) solid var(--linie);
+          border-radius:var(--radius);padding:var(--abstand-3)}
+.doku-suche{display:block;margin-bottom:var(--abstand-2)}
+.doku-liste{list-style:none;margin:0;padding:0}
+.doku-e{margin:0}
+.doku-e a{display:block;padding:var(--abstand-1) var(--abstand-2);
+          border-radius:var(--radius-klein);color:var(--asphalt);
+          font-size:var(--groesse-2);line-height:var(--zeile-eng);
+          text-decoration:none}
+.doku-e a:hover{background:var(--rauch)}
+.doku-e3 a{padding-left:var(--abstand-4);color:var(--gedaempft)}
+/* AKTIV: Dunkelblau auf Blau-hell. Nachgemessen 4,9:1 (Mockup-Anmerkung). */
+.doku-e.aktiv a{background:var(--blau-hell);color:var(--dunkelblau);font-weight:600}
+.doku-leer{color:var(--gedaempft);font-size:var(--groesse-2);
+           padding:var(--abstand-2);margin:0}
+
+/* Der Fliesstext — dieselbe Skala wie `.text`, dazu die vier Elemente mehr */
+.doku-text h2{font-size:var(--groesse-5);margin:var(--abstand-5) 0 var(--abstand-2);
+              scroll-margin-top:calc(var(--kopf) + var(--abstand-3))}
+.doku-text h3{font-size:var(--groesse-4);margin:var(--abstand-4) 0 var(--abstand-2);
+              scroll-margin-top:calc(var(--kopf) + var(--abstand-3))}
+.doku-text h4{font-size:var(--groesse-3);margin:var(--abstand-3) 0 var(--abstand-1);
+              scroll-margin-top:calc(var(--kopf) + var(--abstand-3))}
+.doku-text p{font-size:var(--groesse-4);line-height:var(--zeile-lesen);
+             margin-bottom:var(--abstand-3)}
+.doku-text ul,.doku-text ol{margin:0 0 var(--abstand-3) var(--abstand-5);list-style:disc}
+.doku-text ol{list-style:decimal}
+.doku-text li{font-size:var(--groesse-4);line-height:var(--zeile-lesen);
+              margin-bottom:var(--abstand-1)}
+.doku-text a{text-decoration:underline}
+
+/* SCROLL-MARGIN AN JEDER UEBERSCHRIFT. Ohne sie landet ein Sprung auf
+ * `#abschnitt` so, dass die Kopfleiste (`position:sticky`) die Ueberschrift
+ * verdeckt — man springt richtig und sieht das Falsche. */
+
+/* Tabelle: Kopfzeile in Rauch, wie im Mockup */
+/* TABELLEN MUESSEN WAAGERECHT SCROLLEN DUERFEN, wie die Codebloecke.
+ * Das Handbuch hat 43 Tabellen, manche mit drei Spalten Fliesstext; bei
+ * 360 px ist die schmalste davon 368 px breit, und dann schiebt sie die
+ * ganze Seite nach rechts (gemessen 17.09.2026: scrollWidth 484 bei
+ * innerWidth 360). `display:block` macht aus der Tabelle einen Kasten mit
+ * eigenem Ueberlauf; `width:max-content` laesst sie ihre natuerliche Breite
+ * behalten, `max-width:100%` deckelt sie auf die Spalte. Der Inhalt bleibt
+ * erreichbar, die Seite steht still. */
+.doku-text table{display:block;width:max-content;max-width:100%;overflow-x:auto;
+                 border-collapse:collapse;margin-bottom:var(--abstand-3);
+                 font-size:var(--groesse-2)}
+.doku-text th,.doku-text td{border:var(--strich) solid var(--linie);
+                            padding:var(--abstand-1) var(--abstand-2);
+                            text-align:left;vertical-align:top}
+.doku-text th{background:var(--rauch);font-weight:600}
+
+/* Codeblock: Rauch mit Linie. `pre` scrollt waagerecht, statt die Seite zu
+ * sprengen — eine lange Zeile im Handbuch ist sonst ein Ueberlauf auf
+ * jedem Handy. */
+.doku-text pre{background:var(--rauch);border:var(--strich) solid var(--linie);
+               border-radius:var(--radius-klein);padding:var(--abstand-2);
+               margin-bottom:var(--abstand-3);overflow-x:auto}
+.doku-text pre code{font-family:var(--schrift-fest);font-size:var(--groesse-1);
+                    line-height:var(--zeile-eng);white-space:pre}
+/* INLINE-CODE MUSS UMBRECHEN DUERFEN. Ohne `overflow-wrap` schiebt ein
+ * langer Pfad oder eine Adresse in Schraegstrichen die ganze Seite nach
+ * rechts: Der Bilderlauf mass am 17.09.2026 +124 px bei 360 px Breite,
+ * Taeter ein `code` von 626 px. `anywhere` und nicht `break-word`, weil
+ * `break-word` an einer Zeichenkette ohne Leerzeichen nicht greift — und
+ * genau die stehen hier drin. */
+/* SCHRIFT UND GROESSE KOMMEN AUS DER BASISREGEL `code,kbd,pre` — hier stand
+ * `font-size:.92em` und `padding:1px 4px`, beides an der Skala vorbei und
+ * beides von der Vollstaendigkeitspruefung gefunden. Das Override war auch
+ * sachlich ueberfluessig: Die Basisregel setzt bereits `--schrift-fest` und
+ * `--groesse-2`. Bleibt, was wirklich neu ist — Flaeche, Radius und der
+ * Umbruch. */
+.doku-text code{background:var(--rauch);border-radius:var(--radius-klein);
+                padding:0 var(--abstand-1);overflow-wrap:anywhere}
+.doku-text pre code{background:none;padding:0}
+
+/* Blockzitat: der blaue Hinweisstreifen, wie `meldung-info` */
+.doku-text blockquote{border-left:var(--strich-stark) solid var(--blau);
+                      background:var(--blau-hell);border-radius:0 var(--radius-klein) var(--radius-klein) 0;
+                      padding:var(--abstand-2) var(--abstand-3);
+                      margin:0 0 var(--abstand-3)}
+.doku-text blockquote p:last-child{margin-bottom:0}
+
+/* Bilder: Linie und Radius, nie breiter als die Spalte */
+.doku-text img{max-width:100%;height:auto;border:var(--strich) solid var(--linie);
+               border-radius:var(--radius-klein)}
+
+.doku-text hr{border:0;border-top:var(--strich) solid var(--linie);
+              margin:var(--abstand-5) 0}
+
+/* Die Wege am Ende von „Was ist NAdoku" */
+.doku-wege{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-3);
+           margin-top:var(--abstand-5)}
+
+@media (min-width:1024px){
+  /* ZWEI SPALTEN, und das Verzeichnis bleibt stehen. `align-self:start` ist
+   * noetig, damit `position:sticky` greift: Ein Flex-Kind streckt sich sonst
+   * auf die volle Hoehe und hat nichts, woran es kleben koennte. */
+  .doku{flex-direction:row;align-items:flex-start;gap:var(--abstand-5)}
+  .doku-nav{flex:0 0 var(--leiste-schmal);align-self:start;
+            position:sticky;top:calc(var(--kopf) + var(--abstand-3));
+            max-height:calc(100vh - var(--kopf) - var(--abstand-5));
+            overflow-y:auto}
+  .doku-text{flex:1 1 auto}
+}
+@media (min-width:1200px){
+  .doku-nav{flex-basis:var(--leiste)}
+}
+
+/* ---- Fusszeile der Anmeldeseite ------------------------------------------
+ *
+ * Vier Wege unter der Karte, auf Dunkelblau (M-P5b-01, Bild 3). Sie steht
+ * NICHT in `.fuss-seite`: Die traegt Lizenz und Version und sitzt am
+ * Seitenende; diese hier gehoert zur Anmeldekarte und ist der einzige Weg,
+ * auf dem jemand ohne Konto zu „Was ist NAdoku" findet.
+ */
+.fuss-anmeldung{display:flex;flex-wrap:wrap;justify-content:center;
+                gap:var(--abstand-1) var(--abstand-3);
+                margin-top:var(--abstand-4);padding:0 var(--abstand-3)}
+.fuss-anmeldung a{color:var(--auf-dunkel-leise);font-size:var(--groesse-2);
+                  text-decoration:underline}
+.fuss-anmeldung a:hover{color:var(--auf-dunkel)}
 
 /* ---- Anmeldung ----------------------------------------------------------- */
 .anmeldung-body{

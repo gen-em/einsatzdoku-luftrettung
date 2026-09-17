@@ -293,8 +293,25 @@ Daten erst nach Server-Bestätigung.
 │   ├── rechtstext_seite.php  die gemeinsame Seite dahinter: liest die Sitzung,
 │   │                      ohne sie zu erzwingen (Leerzustand mit Admin-Weg)
 │   ├── rechtstexte_lib.php   Ablage, Pruefung und der eingeschraenkte
-│   │                      Markdown-Renderer rt_html() — die EINZIGE Stelle des
-│   │                      Projekts, an der aus einer Eingabe HTML wird
+│   │                      Markdown-Renderer rt_html() — fuer Text aus der
+│   │                      DATENBANK; die zweite Stelle, an der HTML entsteht,
+│   │                      ist doku_lib.php (Text aus dem REPOSITORIUM)
+│   ├── hilfe.php · ueber.php   Handbuch und „Was ist NAdoku" als Seiten der
+│   │                      Anwendung (P5b/AP8) — oeffentlich, ohne Anmeldung;
+│   │                      drei Zeilen je Datei, der Rest in doku_seite.php
+│   ├── doku_seite.php    die gemeinsame Seite dahinter (Muster wie
+│   │                      rechtstext_seite.php)
+│   ├── doku_lib.php      findet die Markdown-Datei (erst ../docs/, dann
+│   │                      doku/), rendert sie und baut das
+│   │                      Inhaltsverzeichnis; DokuMarkdown setzt drei
+│   │                      Hausregeln durch — Sprungmarken, rel="noopener",
+│   │                      und Bilder NUR relativ
+│   ├── doku/             leer im Repositorium (nur .gitignore). Hierher
+│   │                      kopiert die Auslieferungskette Handbuch.md,
+│   │                      Was-ist-NAdoku.md und bilder/ — der FTPS-Schritt
+│   │                      laedt nur server/ hoch
+│   ├── vendor/Parsedown.php  1.7.4, MIT — der Markdown-Parser fuer die
+│   │                      beiden Dokumentseiten (docs/Lizenzen.md 3a)
 │   ├── admin_installation.php  Wie diese Installation nach aussen auftritt
 │   │                       (S8/AP3): Logo der Installation, Impressum,
 │   │                       Datenschutz. `admin_rechtstexte.php` leitet
@@ -6722,6 +6739,87 @@ die Wartenden über den Filter **„Wartet auf Freischaltung"** in
 `admin_users.php`; die Liste liest `status` seit Web 20.22.0 mit und zeigt ihn
 als Plakette neben der Adresse (keine neunte Spalte — in 95 von 100 Zeilen wäre
 sie leer).
+
+### 4.99n Handbuch und „Was ist NAdoku" als Seiten (ab Web 20.23.0, P5b/AP8)
+
+*E-P5b-08, -22; Mockup M-P5b-01. Code: `server/doku_lib.php`,
+`server/doku_seite.php`, `server/hilfe.php`, `server/ueber.php`,
+`server/assets/doku.js`, `server/vendor/Parsedown.php`.*
+
+Die Quelle bleibt Markdown im Repositorium: `docs/Handbuch.md` und
+`docs/Was-ist-NAdoku.md`. Auf GitHub editierbar, die Wortliste läuft darüber,
+das Prüftor prüft die Rendertauglichkeit — und es gibt **keine zweite Fassung
+in einer Datenbank**, die auseinanderlaufen könnte.
+
+#### Zwei Orte, und eine Asymmetrie, die man kennen muss
+
+`doku_pfad()` sucht erst `../docs/` (Selbsthosterinnen laden das Repositorium
+hoch), dann `server/doku/` (dorthin kopiert die Kette). **Für den TEXT genügt
+das, für BILDER nicht** — und das ist der Punkt, an dem sich zwei Welten
+treffen:
+
+- Den **Text** liest PHP aus dem Dateisystem. `../docs/` ist dort ein ganz
+  normaler Ort.
+- Ein **Bild** holt der **Browser**. Der sieht nur, was unterhalb des
+  Dokumentenstamms liegt, also `server/`. `../docs/` ist für ihn unerreichbar,
+  und das soll so bleiben.
+
+Deshalb schreibt `DokuMarkdown::inlineImage()` jede relative Bildquelle auf
+`doku/…` um, und die Kette kopiert `docs/bilder/` mit. Wer selbst hostet und
+nur `docs/` neben `server/` legt, bekommt den Text und keine Bilder; dann
+fehlt derselbe Kopierschritt.
+
+**Der Fehler ist teuer, weil er leise ist:** Ohne die Umschreibung löste
+`![](bilder/x.png)` zu `/bilder/x.png` auf — `server/bilder/`, wo nichts
+liegt. Der Bilderlauf meldete dafür **24 Konsolenfehler**; auf dem Server
+wären es drei kaputte Bilder in einem Handbuch gewesen, das ohne sie noch
+lesbar ist.
+
+#### Was der Renderer darf
+
+`Parsedown` mit **beidem**: `setMarkupEscaped(true)` (rohes HTML wird Text)
+und `setSafeMode(true)` (Zielprüfung an Links). Dazu drei eigene Regeln in
+`DokuMarkdown`:
+
+| Regel | wofür |
+|---|---|
+| Sprungmarken an jeder Überschrift, h2/h3 zusätzlich ins Verzeichnis | `hilfe.php#abschnitt` als Ziel für Hilfe-Verweise |
+| `rel="noopener"` an fremden Zielen | E-P5b-22; ohne `target` streng genommen überflüssig, aber dann schon da |
+| **Bilder nur relativ** | die Zusage „keine fremde Quelle zur Laufzeit" |
+
+**Die dritte ist die einzige, die wirklich etwas trägt** — und sie ist
+nachgemessen, nicht vermutet. Parsedown liefert **mit** SafeMode für
+`![B](https://fremd.example/b.png)` ein `<img src="https://fremd.example/…">`.
+SafeMode prüft das **Schema**, nicht die **Herkunft**. Auf einer Seite, die
+jede Besucherin vor der Anmeldung sieht, steht zwischen dem Handbuch und einem
+fremden Server allein dieser Überschreiber.
+
+#### Kein Cache — entgegen dem Konzept
+
+E-P5b-22 verlangt einen Cache in `app_state`. Er ist **unmöglich**
+(`app_state.v` ist `VARCHAR(190)`, das gerenderte Handbuch 303 KB) und
+**unnötig**: 266 KB Markdown rendern in **11 bis 12 ms**. Die Begründung steht
+im Kopf von `doku_lib.php`. Wäre er je nötig, gehörte er in eine **Datei**
+neben der Quelle.
+
+#### Wo die Seiten auftauchen
+
+- **Fußzeile der Anmeldeseite** (`.fuss-anmeldung`): Was ist NAdoku? ·
+  Handbuch · Impressum · Datenschutz. Der erste Link ist der einzige Weg, auf
+  dem jemand **ohne Konto** erfährt, was diese Anwendung ist.
+- **Kopfleiste, angemeldet:** ein Fragezeichen links vom Zahnrad
+  (`.kopf-hilfe`), das auch auf dem Handy stehen bleibt.
+- `ueber.php` zeigt am Ende „Konto anlegen" **nur, wenn die Registrierung
+  offen ist** — sonst führte der Knopf auf eine Seite, die absagt.
+
+#### Grenzen der Prüfmittel an dieser Seite
+
+`hilfe.php` zeigt das ganze Handbuch auf einer Seite. Der Bilderlauf kann sie
+**nicht ganzseitig** fotografieren: 19 MB je Abzug, und ab 1024 px scheitert
+Chromium an seiner Höchsthöhe. Der Eintrag trägt deshalb
+`"ganzseitig": false` in `seiten.json` — das Bild ist ein Ausschnitt, die
+**Messungen** (Überlauf, Konsolenfehler, Knopfhöhen) laufen weiter über das
+ganze Dokument.
 
 ### 4.99k Selbstlöschung und Adresswechsel (ab Web 20.20.0, P5b/AP5)
 

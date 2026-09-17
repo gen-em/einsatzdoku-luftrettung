@@ -963,7 +963,16 @@ for (const eintrag of liste) {
      davon haengt ab, ob ein 404 heilbar ist (siehe unten). */
   const ausPlatzhalter = Object.prototype.hasOwnProperty.call(PLATZ, eintrag.pfad);
   let nachgeloest = false;
+  /* EINE UNBEKANNTE ROLLE SAGT ES, statt drei Zeilen weiter an `undefined`
+   * zu scheitern. Am 17.09.2026 stand `"rolle": "user"` in `seiten.json` —
+   * die gibt es nicht (`aus`, `demo`, `admin`), und der Lauf brach mit
+   * „Cannot read properties of undefined (reading 'seite')" ab: eine Meldung,
+   * die den Dateinamen nicht nennt und die Ursache erst recht nicht. */
   const rolle = rollen[eintrag.rolle || 'demo'];
+  if (!rolle) {
+    throw new Error(`Seite "${eintrag.name}": Rolle "${eintrag.rolle}" gibt es nicht. `
+                  + `Erlaubt sind: ${Object.keys(rollen).join(', ')}.`);
+  }
   const seite = rolle.seite;
   const zeile = { name: eintrag.name, gruppe: eintrag.gruppe, pfad, breiten: [] };
   const bilder = [];
@@ -1075,6 +1084,27 @@ for (const eintrag of liste) {
           if (r.width === 0 || r.right <= grenze + 1) { continue; }
           var pr = el.parentElement ? el.parentElement.getBoundingClientRect() : null;
           if (pr && pr.right > grenze + 1) { continue; }   // Elternteil laeuft auch ueber
+
+          /* WER IN EINEM SCROLLENDEN KASTEN STECKT, IST KEIN TAETER
+           * (P5b/AP8). Ein `<code>` in einem `<pre class="overflow-x:auto">`
+           * reicht weit ueber den Rand hinaus — und wird von seinem
+           * Elternteil abgeschnitten, also schiebt es die SEITE nicht. Beide
+           * Bedingungen oben treffen trotzdem zu: Es laeuft ueber, und sein
+           * Elternteil tut es nicht.
+           *
+           * Am 17.09.2026 nannte der Bericht deshalb `code (626 px)` als
+           * Verursacher des Ueberlaufs auf `hilfe.php`. Der wirkliche
+           * Verursacher waren die 43 TABELLEN des Handbuchs (368 px bei
+           * 360 px Breite). Ich habe zuerst den Code umbrechen lassen, was
+           * nichts aenderte — die Zahl blieb bei +124 px, weil sie nie von
+           * dort kam. Eine Messung, die auf den Falschen zeigt, kostet mehr
+           * als eine, die gar nichts sagt. */
+          var klemmt = false;
+          for (var a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+            var ox = getComputedStyle(a).overflowX;
+            if (ox === 'auto' || ox === 'scroll' || ox === 'hidden') { klemmt = true; break; }
+          }
+          if (klemmt) { continue; }
           if (r.right > weiteste) {
             weiteste = r.right;
             bester = el.tagName.toLowerCase()
@@ -1135,8 +1165,36 @@ for (const eintrag of liste) {
                          grund: 'Seite leitete auf die Anmeldung um' });
       rmSync(datei, { force: true });
     } else {
-      await seite.screenshot({ path: datei, fullPage: true }).catch(() => {});
-      bilder.push({ datei, b, art });
+      /* GANZSEITIG IST DIE REGEL UND NICHT DAS GESETZ (P5b/AP8).
+       *
+       * `hilfe.php` zeigt das ganze Handbuch auf einer Seite: 305 KB HTML,
+       * als Abzug 19 MB je Breite — und ab 1024 px scheiterte
+       * `fullPage:true` ganz, weil Chromium eine Hoechsthoehe hat. Eine
+       * Seite, die laenger ist als diese Grenze, kann man nicht in einem
+       * Bild fotografieren; das ist keine Einstellung, sondern Physik.
+       *
+       * Fuer solche Seiten steht `"ganzseitig": false` in `seiten.json`:
+       * Dann wird der SICHTBARE Ausschnitt abgezogen. Was dabei verloren
+       * geht, ist nur das Bild — die Messungen (Ueberlauf, Konsolenfehler,
+       * Knopfhoehen, Karten ausserhalb) laufen ueber das ganze Dokument und
+       * bleiben unveraendert.
+       *
+       * UND DAS SCHEITERN SPRICHT JETZT. Hier stand `.catch(() => {})`: Der
+       * Abzug misslang still, die Datei entstand nicht, und der
+       * Kontaktbogen stuerzte eine Funktion spaeter mit `ENOENT` ab — auf
+       * einen Dateinamen, der nie erklaerte, warum er fehlt. Eine
+       * verschluckte Ausnahme kostet immer genau so viel Zeit wie die
+       * Strecke zwischen ihr und dem Ort, an dem es auffaellt. */
+      const ganz = eintrag.ganzseitig !== false;
+      try {
+        await seite.screenshot({ path: datei, fullPage: ganz });
+        bilder.push({ datei, b, art });
+      } catch (e) {
+        ausgefallen.push({ was: `${eintrag.name} @ ${b}`,
+                           grund: `Abzug misslang (${ganz ? 'ganzseitig' : 'Ausschnitt'}): `
+                                + String(e && e.message || e).split('\n')[0] });
+        rmSync(datei, { force: true });
+      }
     }
 
     zeile.breiten.push({

@@ -152,6 +152,46 @@ jobs:
           fi
           echo "Doppelte Backlog-Nummern: 0"
 
+      - name: Handbuch und „Was ist NAdoku" — rendern sie überhaupt?
+        # P5b/AP8, E-P5b-22. Seit Web 20.23.0 rendert die ANWENDUNG diese
+        # beiden Dateien (`hilfe.php`, `ueber.php`). Damit ist ein
+        # Markdown-Fehler darin kein Schönheitsfehler mehr, sondern eine
+        # kaputte Seite — und zwar eine oeffentliche, die jemand VOR der
+        # Anmeldung sieht.
+        #
+        # `cmark-gfm --validate-utf8` ist hier der billigste ehrliche Test:
+        # Er faellt bei ungueltigem UTF-8 und bei Eingaben, die der Parser
+        # nicht verarbeiten kann. Er prueft NICHT, ob der Text stimmt — das
+        # tut die Wortliste einen Schritt weiter oben, und gegenlesen muss
+        # ihn ohnehin ein Mensch.
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq cmark-gfm
+          fehler=0
+          for f in docs/Handbuch.md docs/Was-ist-NAdoku.md; do
+            if [ ! -f "$f" ]; then
+              echo "::error::$f fehlt — hilfe.php bzw. ueber.php zeigen dann „Dieses Dokument fehlt”."
+              fehler=1; continue
+            fi
+            if cmark-gfm --validate-utf8 --to html "$f" > /dev/null; then
+              echo "  $f rendert ($(wc -c < "$f") Bytes)"
+            else
+              echo "::error::$f rendert nicht."
+              fehler=1
+            fi
+          done
+          # DIE ZWEITE PRUEFUNG IST DIE WICHTIGERE: ein Bild aus fremder
+          # Quelle. `DokuMarkdown::inlineImage()` weist es zur Laufzeit ab,
+          # aber dann steht im Handbuch eine Stelle, die nicht tut, was ihre
+          # Autorin wollte — besser, es faellt hier auf.
+          fremd=$(grep -nE '!\[[^]]*\]\((https?:)?//' docs/Handbuch.md docs/Was-ist-NAdoku.md || true)
+          if [ -n "$fremd" ]; then
+            echo "::error::Bild aus fremder Quelle im Handbuch — die Anwendung zeigt es nicht an (keine fremde Quelle zur Laufzeit, CLAUDE.md 4):"
+            echo "$fremd"
+            fehler=1
+          fi
+          exit $fehler
+
       - name: Die Weiche in install.php — traegt sie noch?
         # `install.php` beginnt mit einer Versionspruefung. Die nuetzt nur,
         # solange die Datei auf der alten Fassung ueberhaupt noch UEBERSETZT

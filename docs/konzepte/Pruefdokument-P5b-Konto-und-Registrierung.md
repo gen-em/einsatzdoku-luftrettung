@@ -347,6 +347,69 @@ Zustimmungen").
 
 ---
 
+
+---
+
+### F12 — Ich habe einen Stand gepusht, der im Prueftor durchgefallen waere
+
+Commit `51a4930` (AP8, Teil 1) ist committet und gepusht worden, **ohne dass
+die Vollstaendigkeitspruefung lief**. Gefahren wurde nur die Wortliste. Der
+neue `doku_lib.php` brachte sechs Auslassungszeichen in eigenen Kommentaren
+mit; damit steht dieser Stand bei **394 Befunden**, die Schwelle in
+`pruefung.yml` bei **388**. Ein Prueftor Stufe 1 auf diesem Commit waere rot.
+
+**Aufgefallen ist es erst einen Schritt spaeter**, und zwar zufaellig: Beim
+Messen des naechsten Pakets stimmte die Ausgangszahl nicht mit dem ueberein,
+was ich erwartet hatte. Erst ein `git stash` gegen HEAD zeigte, dass nicht mein
+Arbeitsstand zu hoch war, sondern der bereits gepushte.
+
+**Das ist kein Fehler des Werkzeugs, sondern meiner Reihenfolge.** CLAUDE.md 6
+sagt es wortwoertlich: „Die Pruefmittel laufen zuletzt, nicht zwischendurch."
+Ich habe bei einem Zwischen-Commit gedacht, ein halbes Paket brauche nur die
+halbe Pruefung. Behoben mit Web 20.23.0 (jetzt **388, auf der Schwelle**) —
+aber der Commit dazwischen bleibt in der Historie stehen.
+
+**Was daraus folgt:** Auch ein Zwischen-Commit laeuft durch alle Pruefmittel,
+oder er wird nicht gepusht. Ein halbes Paket ist kein halber Stand — auf dem
+Zweig liegt er ganz.
+
+---
+
+### F13 — Drei Funde in AP8, alle in derselben Arbeit entstanden
+
+**(a) Bilder im Handbuch waeren kaputt gewesen.** `![](bilder/x.png)` loeste zu
+`/bilder/x.png` auf, also `server/bilder/`. Die Ursache ist eine Asymmetrie:
+Den TEXT liest PHP aus dem Dateisystem, und `../docs/` ist dort normal; ein
+BILD holt der BROWSER, und der sieht nur `server/`. **24 Konsolenfehler** im
+Bilderlauf; auf dem Server waeren es drei kaputte Bilder in einem Handbuch
+gewesen, das ohne sie noch lesbar ist — also drei Fehler, die niemandem
+auffallen. Behoben: relative Bildquellen zeigen auf `doku/`, die Kette kopiert
+`docs/bilder/` dorthin.
+
+**(b) 43 Tabellen schoben die Seite nach rechts.** Bei 360 px ist die schmalste
+368 px breit; gemessen **+124 px** Ueberlauf. Sie scrollen jetzt waagerecht wie
+die Codebloecke.
+
+**(c) Und der Bilderlauf zeigte auf den Falschen.** Er nannte `code (626 px)`
+als Verursacher — ein `<code>` in einem scrollenden `<pre>`, das die Seite
+gar nicht schiebt. Ich habe daraufhin den Code umbrechen lassen, und die Zahl
+blieb bei **+124 px**, weil sie nie von dort kam. Erst eine eigene Messung im
+Browser nannte die Tabellen. Der Taeter-Finder ueberspringt jetzt, was in einem
+scrollenden Kasten steckt.
+
+**Zwei weitere Maengel am Bilderlauf, dabei behoben:** Ein misslungener Abzug
+wurde still verschluckt (`.catch(() => {})`) und stuerzte den Kontaktbogen eine
+Funktion spaeter mit `ENOENT` ab; jetzt nennt er seinen Grund. Und eine
+unbekannte Rolle in `seiten.json` (ich hatte `"user"` geschrieben, es gibt
+`aus`, `demo`, `admin`) scheiterte an `undefined`; jetzt sagt sie, welche
+Rollen es gibt.
+
+**Der Befund, der ueber dieses Paket hinausgeht:** `setSafeMode(true)` schuetzt
+die Zusage „keine fremde Quelle zur Laufzeit" NICHT. Nachgemessen — Parsedown
+liefert MIT SafeMode fuer `![B](https://fremd.example/b.png)` ein
+`<img src="https://fremd.example/...">`. SafeMode prueft das SCHEMA, nicht die
+HERKUNFT.
+
 ---
 
 ## 3. Was maschinell geprüft wurde — Mittel und Zahl
