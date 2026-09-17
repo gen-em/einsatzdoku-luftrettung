@@ -5537,5 +5537,91 @@ declare(strict_types=1);
  * findet.
  *
  * KEINE MIGRATION.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.16.0 — DIE JOB-PAUSE IST JETZT AUCH UEBER DIE ADRESSE ERREICHBAR
+ * ---------------------------------------------------------------------------
+ *
+ * Backlog Nr. 219. `jobs.php` nimmt eine fuenfte Aktion: `pause` mit
+ * `sekunden=N` (0 hebt auf). Dahinter steht derselbe `jobs_pause()` aus
+ * `jobs_lib.php` wie hinter `php jobs.php --pause` und hinter den beiden
+ * Knoepfen unter Betrieb -> Hintergrundjobs — kein vierter Mechanismus,
+ * nur ein vierter Aufrufer.
+ *
+ * WOFUER. Der Kreislauftest haelt die Hintergrundjobs an, bevor er ein
+ * Backup in ein frisches Konto spielt; sonst duennt der Verdichtungsjob die
+ * wiederhergestellten Spuren aus, und der Vergleich misst „hat der Job
+ * dazwischen zugeschlagen" statt „kommt zurueck, was hineinging"
+ * (nachgemessen: 125 verdichtete Spuren in einem Lauf ohne Pause).
+ * Angehalten wurde bisher NUR ueber die Kommandozeile — und die setzt
+ * voraus, dass das Pruefmittel auf demselben Rechner laeuft wie die
+ * Installation.
+ *
+ * Stufe 2 der Auslieferungskette tut das nicht: Sie laeuft auf einem
+ * GitHub-Laeufer gegen ein fernes Staging. Dort gibt es keine `config.php`,
+ * und der erste echte Lauf nach dem Merge von PR #51 brach ab mit
+ * „require_once(.../server/config.php): Failed to open stream". Der Aufruf
+ * war nicht falsch geschrieben — das WERKZEUG nahm an, `--basis` sei
+ * derselbe Rechner.
+ *
+ * WAS DAS AN MACHT GIBT, UND WAS NICHT. Wer das Job-Token hat, kann die
+ * Jobs bis `JOB_PAUSE_MAX_S` still stellen. Das ist weniger, als er ohnehin
+ * schon konnte: `wartung_an` schliesst die ganze Anwendung und haengt seit
+ * P5a am selben Token. Daten liest und schreibt die Aktion keine, und der
+ * Ratenschutz (`pair`) begrenzt die Versuche wie bei jedem Token-Aufruf.
+ *
+ * EIN FEHLENDES `sekunden` IST EIN FEHLER UND NICHT NULL — 400 statt
+ * Vorgabewert. Denn 0 HEBT die Pause auf: Ein vergessener Parameter gaebe
+ * sonst die Jobs frei und meldete dafuer `ok`, und der Aufrufer glaubte, sie
+ * stuenden still. Dieselbe Regel gilt in `tor.py` fuer `--sekunden`.
+ *
+ * DAZU AUF DER WERKZEUGSEITE: `tools/kette/tor.py` bekommt den vierten
+ * Unterbefehl `pause` (Selbstprobe 5 -> 10 Faelle), `kreislauf.py` den
+ * Schalter `--jobs-token`. Ohne Token bleibt dort alles beim lokalen Weg —
+ * wer auf seinem Rechner misst, merkt nichts.
+ *
+ * KEINE MIGRATION. `app_state` traegt den Schluessel `jobs_pause_bis` seit
+ * Web 10.2.0.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.16.1 — WAS EINE UNABHAENGIGE DURCHSICHT AN 20.16.0 GEFUNDEN HAT
+ * ---------------------------------------------------------------------------
+ *
+ * Neunzehn Befunde, jeder einzeln von einem zweiten Durchgang zu widerlegen
+ * versucht. Drei davon brechen Zusagen, die 20.16.0 selbst aufgestellt hat:
+ *
+ * DIE ZIFFERNPRUEFUNG WAR DIE FALSCHE. `!is_numeric($roh) || (int)$roh < 0`
+ * liess `sekunden=-0.5` durch: numerisch ja, `(int)"-0.5"` ist 0, und 0 ist
+ * nicht kleiner als 0. Der Aufruf hob damit eine laufende Pause auf und
+ * quittierte es mit `ok` — genau das, wogegen der Absatz darueber steht.
+ * Nachgemessen gegen eine echte Installation: HTTP 200, „Jobs laufen
+ * wieder", Pause weg. Jetzt `^\d+$`. Meine eigenen Proben (-5, abc) trafen
+ * die Luecke nicht, weil beide schon vorher scheitern; die Luecke lag
+ * zwischen ihnen.
+ *
+ * `rufen()` IN tor.py VERSCHLUCKTE JEDE FEHLERANTWORT. Eine HTTPError ist
+ * eine URLError und fiel in den Netzfehler-Zweig — aus einer 400 mit
+ * Begruendung wurde `{"_fehler": "HTTP Error 400"}`. Das ist AELTER als
+ * diese Aenderung und kostete mehr als eine haessliche Meldung: Der Kommentar
+ * in `backup_tor()` sagt „ein falsches Token ... wird beim vierzigsten Mal
+ * nicht anders" und bricht bei `error` ab — der Zweig war nie erreichbar,
+ * weil `error` nie ankam. Das Tor fragte vierzigmal, gut dreizehn Minuten,
+ * und meldete dann „kein fertig" statt „falsches Token".
+ *
+ * UND DER NEUE SELBSTPROBENFALL BEWIES NICHTS. Er rief `adresse_bauen()`
+ * unmittelbar mit einem von Hand geschriebenen Feld auf und mass damit
+ * `urlencode`, nicht den Aufrufweg. Streicht man `felder=` in `main()` oder
+ * reicht `rufen()` es nicht weiter, blieb die Probe gruen — beides
+ * nachgemessen. Jetzt faehrt der Fall den ganzen Weg, nur der Abruf ist
+ * ersetzt, und faellt bei beiden Mutationen um.
+ *
+ * Dazu die Kleinarbeit: der JOBS_TOKEN-Riegel steht jetzt VOR pip und dem
+ * Chromium-Download (sonst wird ein fehlendes Token als Playwright-Fehler
+ * sichtbar), `--jobs-token` hat keine stille Vorgabe aus der Umgebung mehr,
+ * die Selbstprobe meldet nicht laenger „fuenf Lagen" und faehrt elf, und die
+ * Geheimnis-Tabelle in `docs/Technik.md` war von einem eingeschobenen
+ * Absatz zerrissen.
+ *
+ * KEINE MIGRATION.
  */
-const WEB_VERSION = '20.15.2';
+const WEB_VERSION = '20.16.1';

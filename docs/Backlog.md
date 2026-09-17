@@ -47,9 +47,10 @@ Erwartungen der Wiederherstellungsprobe), **213 und 214 aus der
 Durchsicht vom 16.09.2026** (Zustandsdatei der Kette im Webroot;
 `install.php` in der Auslieferung), **215 und 216 aus der unabhängigen
 Durchsicht des P5a-Abschlusses** (16.09.2026, nach dem Merge), **217 und 218
-aus der Durchsicht der Werkzeugaufrufe** (17.09.2026). Jeder weitere Zweig,
-der Nummern vergibt, beginnt bei **219** und trägt seine Spanne hier ein,
-bevor er pusht.
+aus der Durchsicht der Werkzeugaufrufe** (17.09.2026), **219 aus dem ersten
+Auslieferungslauf nach dem Merge von PR #51** (17.09.2026). Jeder weitere
+Zweig, der Nummern vergibt, beginnt bei **220** und trägt seine Spanne hier
+ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
@@ -7207,3 +7208,120 @@ zutreffen.
     Muster über **gelieferte** Antworten (`tools/referenzdatensatz/`) sind
     nicht betroffen: Dort ist das PHP ausgeführt. Selbstprobe der
     Integritätswache danach: **32 von 32**.
+
+219. **Der Kreislauftest hielt die Jobs über die KOMMANDOZEILE an — gegen eine
+    ferne Installation geht das nicht.**
+    *Aufgenommen und behoben am 17.09.2026, gefunden vom ersten
+    Auslieferungslauf nach dem Merge von PR #51.*
+
+    Der Lauf kam bis `Kreislauf edbak — Zielkonto umlauf-edbak@gen-em.org` und
+    brach dann ab:
+
+    ```
+    RuntimeError: jobs.php --pause 1800 fehlgeschlagen:
+      require_once(.../server/config.php): Failed to open stream
+    ```
+
+    `kreislauf.py` fährt `php server/jobs.php --pause 1800`, also die
+    **lokale** Kommandozeile. Auf einem GitHub-Läufer gibt es dort keine
+    `config.php` und keine Datenbank. **Der Aufruf war nicht falsch
+    geschrieben** — das Werkzeug nahm an, `--basis` sei derselbe Rechner, auf
+    der es läuft. Diese Annahme stimmte, solange nur von Hand gemessen wurde.
+
+    **Die Pause ist nicht verzichtbar.** Ohne sie dünnt der Verdichtungsjob
+    die wiederhergestellten Spuren aus — die Einsätze sind alt, der Job hält
+    sie für reif —, und der Vergleich misst „hat der Job dazwischen
+    zugeschlagen" statt „kommt zurück, was hineinging". Nachgemessen steht es
+    seit S2/AP3 im Kopf von `kreislauf.py`: ein Lauf ohne Pause verdichtete
+    **125 Spuren** des Umlaufkontos. Der Schritt einfach ohne Pause laufen zu
+    lassen, hätte eine grüne Zahl ohne Aussage ergeben.
+
+    **Behoben mit Web 20.16.0**, auf drei Ebenen:
+
+    - `jobs.php` nimmt die Aktion `pause` (`sekunden=N`, 0 hebt auf) — hinter
+      demselben `jobs_pause()` wie die Kommandozeile und die beiden Knöpfe
+      unter Betrieb → Hintergrundjobs. Kein vierter Mechanismus, ein vierter
+      Aufrufer.
+    - `tools/kette/tor.py` bekommt den vierten Unterbefehl `pause`. Dort und
+      nicht im Kreislauftest, weil diese Datei **der eine Client** von
+      `jobs.php?aktion=…` ist; eine zweite `urllib`-Zeile wäre ein zweiter
+      Weg, den niemand pflegt.
+    - `kreislauf.py` bekommt `--jobs-token`. **Mit Token über HTTP, ohne Token
+      weiter über die Kommandozeile** — wer auf seinem Rechner misst, merkt
+      nichts. Scheitert der lokale Weg, nennt die Fehlermeldung jetzt den
+      Schalter und diese Nummer, statt nur „Failed to open stream" zu zeigen.
+
+    **Zuarbeit:** Die Umgebung `staging` trägt dafür `JOBS_TOKEN`, denselben
+    Namen wie `produktion`, aber den Wert **dieser** Installation. Fehlt er,
+    wird der Schritt übersprungen und gesagt — nicht still auf den lokalen Weg
+    zurückgefallen.
+
+    **Was daran für die Prüfmittel bleibt.** `tools/kettenaufrufe/` konnte das
+    nicht fangen, und das ist kein Versäumnis: Es prüft **Schnittstellen,
+    nicht Verhalten**, und sagt in seiner `LIESMICH.md` ausdrücklich, dass es
+    nicht weiß, ob ein Pfad auf dem Läufer existiert. Die Lehre ist
+    dieselbe wie bei Nr. 217, eine Stufe tiefer: Ein Aufruf mit lauter
+    gültigen Schaltern kann trotzdem eine Annahme über seine Umgebung
+    mitbringen, die dort nicht gilt. Dagegen hilft kein Muster über den
+    Quelltext, sondern nur der Lauf — und deshalb ist es richtig, dass Stufe 2
+    ihn fährt.
+
+    *Nachgemessen beim Beheben:* `tor.py --selbstprobe` **10 von 10** (vorher
+    5), und die Gegenprobe des neuen Prüfmittels zeigt, dass ein Tippfehler im
+    neuen Schalter auffällt: `--jobs-tokn` → **1 Befund**, mit der Liste der
+    bekannten Schalter.
+
+    ### Nachtrag vom 17.09.2026 — was eine unabhängige Durchsicht an der
+    ### Behebung gefunden hat
+
+    Fünf Blickwinkel über den Diff, jeder Befund danach von einem eigenen
+    Durchgang zu **widerlegen** versucht: **19 haben standgehalten**. Drei
+    davon brechen Zusagen, die Web 20.16.0 selbst aufgestellt hat. Behoben mit
+    **Web 20.16.1**.
+
+    **Die Ziffernprüfung war die falsche.** `!is_numeric($roh) || (int)$roh < 0`
+    ließ `sekunden=-0.5` durch — numerisch ja, `(int)"-0.5"` ist 0, 0 ist nicht
+    kleiner als 0. Der Aufruf hob eine laufende Pause auf und quittierte es mit
+    `ok`, also genau das, wogegen der Absatz darüber stand. Nachgemessen gegen
+    eine echte Installation: HTTP 200, Pause weg. Jetzt `^\d+$`.
+
+    *Warum die eigenen Proben es nicht fanden:* geprüft waren `-5` und `abc`.
+    **Beide scheitern schon an der vorherigen Bedingung** — die Lücke lag
+    zwischen ihnen. Zwei Proben an den Rändern sagen nichts über die Mitte.
+
+    **`rufen()` verschluckte jede Fehlerantwort, und das ist älter als diese
+    Änderung.** Eine `HTTPError` ist eine `URLError` und fiel in den
+    Netzfehler-Zweig; aus einer 400 mit Begründung wurde `_fehler`. Damit war
+    der Abbruchzweig in `backup_tor()` **nie erreichbar**: Der Kommentar dort
+    sagt „ein falsches Token … wird beim vierzigsten Mal nicht anders" und
+    bricht bei `error` ab — `error` kam nie an. Das Tor fragte vierzigmal, gut
+    dreizehn Minuten, und meldete „kein fertig" statt „falsches Token".
+
+    **Der neue Selbstprobenfall bewies nichts.** Er rief `adresse_bauen()`
+    unmittelbar mit einem von Hand geschriebenen Feld auf und maß `urlencode`,
+    nicht den Aufrufweg. Streicht man `felder=` in `main()` oder reicht
+    `rufen()` es nicht weiter, blieb die Probe grün — beides nachgemessen.
+    Jetzt fährt der Fall den ganzen Weg und fällt bei beiden Mutationen um
+    (11 → 10 erfüllt, 1 offen).
+
+    **Dazu:** Die Selbstprobe läuft jetzt in **Stufe 1** und nicht mehr nur im
+    Produktionslauf — ihre fünf neuen Fälle bewachen `pause`, und das läuft in
+    Stufe 2. Der `JOBS_TOKEN`-Riegel steht vor `pip` und dem
+    Chromium-Download. `--jobs-token` liest nicht mehr ersatzweise die
+    Umgebungsvariable (sonst ginge ein exportiertes Produktiv-Token gegen die
+    lokale Installation). Die Kopfzeile meldete „fünf Lagen" und fuhr elf. Die
+    Geheimnis-Tabelle in `docs/Technik.md` war von einem eingeschobenen Absatz
+    zerrissen. `tools/kette/LIESMICH.md`, `docs/Rahmenplan.md` 6a (Schritt 10)
+    und Prüfpunkt P6 sind nachgezogen.
+
+    **Und eine Grenze, benannt statt geschlossen:** `tools/kettenaufrufe/`
+    sieht nur Aufrufe in `run:`-Blöcken. Der neue Aufruf `kreislauf.py` →
+    `tor.py` steht in Python und liegt außerhalb seiner Reichweite; wer
+    `--sekunden` umbenennt und den Aufrufer vergisst, bekommt von ihm weiter
+    „0 Befunde". Gedeckt ist diese eine Stelle stattdessen von Fall 6 der
+    Selbstprobe. Das steht in beiden LIESMICH-Dateien.
+
+    **Die Lehre, und sie ist dieselbe wie bei Nr. 217 und 218, eine Stufe
+    tiefer:** Eine Probe, die ich selbst schreibe, prüfe ich mit einer
+    Mutation — sonst weiß ich nicht, ob sie misst oder nur grün ist. Alle
+    drei neuen Fälle sind jetzt so belegt.

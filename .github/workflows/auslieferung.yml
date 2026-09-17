@@ -228,6 +228,13 @@ jobs:
       STAGING_URL:   ${{ vars.STAGING_URL }}
       STAGING_KONTO: ${{ secrets.STAGING_KONTO }}
       STAGING_PASS:  ${{ secrets.STAGING_PASS }}
+      # DERSELBE NAME WIE IM JOB `produktion`, ANDERER WERT. Beide Jobs lesen
+      # ihn aus IHRER Umgebung (`environment:`) — `stufe2` aus `staging`,
+      # `produktion` aus `produktion`. Das Token gehoert der jeweiligen
+      # INSTALLATION (`app_state.jobs_token`, sichtbar unter Betrieb ->
+      # Hintergrundjobs), nicht dem Repositorium; zwei Installationen haben
+      # zwei Tokens. Gleicher Name, damit die beiden Zeilen sich lesen lassen.
+      JOBS_TOKEN:    ${{ secrets.JOBS_TOKEN }}
     steps:
       - name: Code auschecken
         uses: actions/checkout@v4
@@ -355,6 +362,17 @@ jobs:
             echo '**Kreisläufe: ÜBERSPRUNGEN** (kein Prüfkonto) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
+          # ALLE RIEGEL VOR DER ERSTEN INSTALLATION. Der JOBS_TOKEN-Riegel
+          # stand zuerst hinter pip, npm und dem Chromium-Download: Fehlte das
+          # Token UND brach der Download ab (Netz, Spiegel, Rate-Limit), wurde
+          # der Schritt ROT mit einer Playwright-Meldung, obwohl eine Zeile
+          # weiter „übersprungen, nicht gemessen" gestanden hätte. Man sucht
+          # dann am falschen Ort. Begründung zum Token selbst weiter unten.
+          if [ -z "${JOBS_TOKEN:-}" ]; then
+            echo "::warning::JOBS_TOKEN der Umgebung staging fehlt — Kreisläufe ÜBERSPRUNGEN, nicht gemessen."
+            echo '**Kreisläufe: ÜBERSPRUNGEN** (kein `JOBS_TOKEN`) — nicht gemessen. Der Wert steht auf Staging unter Betrieb → Hintergrundjobs.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           pip -q install cffi cryptography
           # PLAYWRIGHT LIEGT NICHT DA, WO DIE WERKZEUGE ES SUCHEN.
           # `aufnehmen.mjs` und `kreislauf.py` laden es ueber einen PFAD
@@ -388,6 +406,23 @@ jobs:
           # GEFUELLTES Konto misst nichts, weil die Dublettenerkennung alles
           # ueberspringt (steht so im Kopf von kreislauf.py). Der Schalter
           # loescht ein vorhandenes Umlaufkonto ueber den Adminbereich.
+          # DIE JOB-PAUSE BRAUCHT DAS TOKEN (17.09.2026, Backlog Nr. 219).
+          #
+          # `kreislauf.py` haelt die Hintergrundjobs an, bevor es ein Backup
+          # in ein frisches Konto spielt — sonst duennt der Verdichtungsjob
+          # die wiederhergestellten Spuren aus, und der Vergleich misst
+          # „hat der Job dazwischen zugeschlagen" statt „kommt zurueck, was
+          # hineinging". Nachgemessen: ein Lauf ohne Pause verdichtete 125
+          # Spuren des Umlaufkontos.
+          #
+          # Bis Web 20.16.0 ging das NUR ueber die Kommandozeile, also nur
+          # auf dem Rechner der Installation. Hier laeuft ein Laeufer gegen
+          # ein fernes Staging: keine `config.php`, kein Weg. Genau daran ist
+          # der erste echte Lauf dieses Schritts gescheitert.
+          #
+          # OHNE TOKEN WIRD NICHT GEMESSEN, statt still auf den lokalen Weg
+          # zurueckzufallen: Der schlaegt hier fehl, und ein Kreislauf ohne
+          # Pause waere eine gruene Zahl ohne Aussage (`CLAUDE.md` 6).
           for art in edbak csv; do
             echo "--- Kreislauf $art ---"
             python3 tools/referenzdatensatz/vergleich/kreislauf.py \
@@ -395,6 +430,7 @@ jobs:
                     --basis "$STAGING_URL" \
                     --admin-email "$STAGING_KONTO" \
                     --admin-passwort "$STAGING_PASS" \
+                    --jobs-token "$JOBS_TOKEN" \
               || { echo "::error::Kreislauf $art gegen Staging gescheitert."; exit 1; }
           done
 

@@ -730,7 +730,7 @@ FEHLER: apt-get fehlgeschlagen
 **Noch nicht grün:** Ob das SDK danach wirklich für alle Zielgeräte übersetzt,
 zeigt erst der nächste Lauf. Der Punkt bleibt offen.
 
-### P6 — Die vier Aktionen von `jobs.php` gegen eine echte Installation
+### P6 — Die fünf Aktionen von `jobs.php` gegen eine echte Installation
 
 **Weg:** Mit dem Job-Token aus Betrieb → Jobs:
 
@@ -738,6 +738,8 @@ zeigt erst der nächste Lauf. Der Punkt bleibt offen.
 python3 tools/kette/tor.py zustand     --basis https://… --token …
 python3 tools/kette/tor.py wartung-an  --basis https://… --token …
 python3 tools/kette/tor.py wartung-aus --basis https://… --token …
+python3 tools/kette/tor.py pause       --basis https://… --token … --sekunden 60
+python3 tools/kette/tor.py pause       --basis https://… --token … --sekunden 0
 python3 tools/kette/tor.py backup      --basis https://… --token … --versuche 3 --pause 5
 ```
 
@@ -745,8 +747,18 @@ python3 tools/kette/tor.py backup      --basis https://… --token … --versuch
 `migration_ausstehend`. `wartung-an` legt `server/wartung.lock` an, und die
 Startseite antwortet danach mit **503** — der Wartungsbalken auf
 Betrieb → Updates sagt „von kette". `wartung-aus` räumt sie weg.
+`pause --sekunden 60` antwortet mit `bis` = jetzt + 60 s, und **Betrieb →
+Hintergrundjobs zeigt den Balken „Jobs angehalten"**; `--sekunden 0` räumt
+ihn weg und antwortet `bis: null`.
 **Scheitern erkennbar an:** `{"ok": false}` mit Meldung — bei `wartung-an`
 heißt das fast immer: die Anwendungswurzel ist nicht beschreibbar.
+
+**Dazu die Gegenprobe, die im Browser nichts kostet und viel sagt:** Rufe
+`https://…/jobs.php?token=…&aktion=pause&sekunden=-0.5` auf, während eine
+Pause steht. **Erwartet: 400** und die Pause steht weiter. Kommt **200** mit
+„Jobs laufen wieder", ist die Ziffernprüfung aus Web 20.16.1 nicht auf dem
+Server — genau so hat die erste Fassung die Pause stillschweigend aufgehoben
+(Backlog Nr. 219).
 
 ### P7 — Die Integritätswache hält nach einem Staging-Deploy still
 

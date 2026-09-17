@@ -57,6 +57,17 @@ Und sie liest **kein YAML**: Die `run:`-Blöcke werden mit einem Zeilenleser
 herausgeholt, damit Stufe 1 ohne Zusatzpaket auskommt. `working-directory`
 kennt sie deshalb nicht — `./gradlew` ist als Sonderfall eingetragen.
 
+**Sie sieht nur Aufrufe in `run:`-Blöcken, nicht die zwischen zwei
+Werkzeugen.** Seit Web 20.16.0 ruft `kreislauf.py` seinerseits
+`tools/kette/tor.py pause`; dieser Aufruf steht in Python und nicht im
+Arbeitslauf, also außerhalb ihrer Reichweite. Wer `--sekunden` in `tor.py`
+umbenennt und den Aufrufer vergisst, bekommt von ihr weiter „0 Befunde".
+**Gedeckt ist diese eine Stelle stattdessen von der Selbstprobe in
+`tools/kette/tor.py`** (Fall 6), die den ganzen Weg `main()` → `rufen()` →
+`adresse_bauen()` fährt und die abgerufene Adresse prüft. Das ist kein Ersatz
+für eine allgemeine Lösung, sondern die Ansage, wo die Grenze liegt und wer
+dahinter wacht.
+
 ## Die Selbstprobe
 
 **Eine Prüfung, die nichts meldet, ist zweideutig:** Entweder ist alles gut,

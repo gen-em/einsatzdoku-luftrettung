@@ -14,6 +14,151 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.16.1] — 2026-09-17
+
+**Was eine unabhängige Durchsicht an 20.16.0 gefunden hat** (Backlog Nr. 219).
+
+Neunzehn Befunde aus fünf Blickwinkeln, jeder einzeln von einem zweiten
+Durchgang zu widerlegen versucht. Drei davon brechen Zusagen, die 20.16.0
+selbst aufgestellt hat — die stehen hier zuerst.
+
+### Behoben: die Ziffernprüfung war die falsche
+
+`aktion=pause` prüfte mit `!is_numeric($roh) || (int)$roh < 0`. Das ließ
+**`sekunden=-0.5`** durch: numerisch ja, `(int)"-0.5"` ist **0**, und 0 ist
+nicht kleiner als 0. Der Aufruf **hob damit eine laufende Pause auf** und
+quittierte es mit `ok`.
+
+Das ist genau der Fall, gegen den der Absatz darüber geschrieben war
+(*„ein fehlendes `sekunden` ist ein Fehler und nicht null"*). Nachgemessen
+gegen eine echte Installation: **HTTP 200**, „Jobs laufen wieder", Pause weg.
+Jetzt `^\d+$` — nur Ziffern, kein Vorzeichen, kein Punkt, kein `1e3`.
+
+**Warum meine eigenen Proben es nicht fanden:** Ich hatte `-5` und `abc`
+geprüft. Beide scheitern schon an der vorherigen Bedingung. Die Lücke lag
+**zwischen** ihnen, und zwei Proben an den Rändern sagen nichts über die
+Mitte.
+
+### Behoben: `rufen()` verschluckte jede Fehlerantwort — und das ist älter
+
+Eine `HTTPError` ist eine `URLError` und fiel deshalb in den
+Netzfehler-Zweig: Aus einer 400 mit Begründung wurde
+`{"_fehler": "HTTP Error 400"}`. Der Körper, in dem steht *warum*, ging
+verloren.
+
+**Der Schaden ist älter als diese Änderung und größer als eine hässliche
+Meldung.** Der Kommentar in `backup_tor()` sagt: *„Ein falsches Token, eine
+unbekannte Aktion … das wird beim vierzigsten Mal nicht anders"* — und bricht
+bei `error` sofort ab. Dieser Zweig war **nie erreichbar**, weil `error` nie
+ankam. Das Backup-Tor fragte bei falschem Token vierzigmal, gut dreizehn
+Minuten lang, und meldete dann „kein fertig" statt „falsches Token".
+
+### Behoben: der neue Selbstprobenfall bewies nichts
+
+Er rief `adresse_bauen()` **unmittelbar** mit einem von Hand geschriebenen
+`{"sekunden": 1800}` auf — und maß damit `urlencode`, nicht den Aufrufweg.
+Streicht man `felder=` in `main()` **oder** reicht `rufen()` es nicht weiter,
+blieb die Probe grün. Beides nachgemessen.
+
+Das war die Fehlerklasse, gegen die der Fall geschrieben wurde: ein Schalter,
+der still verworfen wird. Jetzt fährt er den ganzen Weg `main()` → `rufen()`
+→ `adresse_bauen()`, nur der Abruf ist ersetzt, und prüft die **abgerufene**
+Adresse. Gegenprobe: beide Mutationen ergeben **11 → 10 erfüllt, 1 offen**.
+
+### Geändert
+
+- **Die Selbstprobe von `tor.py` läuft jetzt in Stufe 1**, nicht mehr nur im
+  Produktionslauf. Für das Backup-Tor war der alte Ort richtig — unmittelbar
+  vor dem Tor. Aber die fünf neuen Fälle bewachen `pause`, und das läuft in
+  Stufe 2; wer es kaputt machte, bekam von Stufe 1 ein Grün.
+- **Der `JOBS_TOKEN`-Riegel steht vor `pip` und dem Chromium-Download.** Fehlte
+  das Token *und* brach der Download ab, wurde der Schritt rot mit einer
+  Playwright-Meldung, obwohl eine Zeile weiter „übersprungen, nicht gemessen"
+  gestanden hätte. Man sucht dann am falschen Ort.
+- **`--jobs-token` liest nicht mehr ersatzweise `JOBS_TOKEN` aus der
+  Umgebung.** Damit stimmte der Satz „ohne Token bleibt alles beim lokalen
+  Weg" nicht mehr: Wer für Handarbeit ein `export JOBS_TOKEN=…` gesetzt hatte,
+  schickte den nächsten Kreislauf gegen die **lokale** Installation über HTTP,
+  mit einem Token, das einer anderen gehört.
+- **Die Selbstprobe meldet nicht länger „fünf Lagen" und fährt elf.** Wer die
+  Kopfzeile abschrieb, trug eine falsche Zahl ins Prüfprotokoll.
+- **Die Geheimnis-Tabelle in `docs/Technik.md` war zerrissen** — ein
+  eingeschobener Absatz stand zwischen zwei Zeilen, die Zeile `Repositorium`
+  fiel aus der Tabelle heraus.
+- Nachgezogen: `tools/kette/LIESMICH.md` (kannte `pause` nicht),
+  `docs/Rahmenplan.md` 6a (Schritt 10: `JOBS_TOKEN`), Prüfpunkt **P6** (hieß
+  „die vier Aktionen" und prüfte die fünfte nicht), und die Grenze von
+  `tools/kettenaufrufe/` (der Aufruf `kreislauf.py` → `tor.py` steht in
+  Python, nicht in einem `run:`-Block, und liegt außerhalb seiner Reichweite).
+
+**Keine Migration.**
+
+## [Web 20.16.0] — 2026-09-17
+
+**Die Job-Pause ist jetzt auch über die Adresse erreichbar** (Backlog Nr. 219).
+
+### Hinzugefügt
+
+`jobs.php` nimmt eine fünfte Aktion: **`pause`** mit `sekunden=N` (0 hebt
+auf). Dahinter steht derselbe `jobs_pause()` aus `jobs_lib.php` wie hinter
+`php jobs.php --pause` und hinter den beiden Knöpfen unter **Betrieb →
+Hintergrundjobs** — kein vierter Mechanismus, nur ein vierter Aufrufer.
+
+Dazu auf der Werkzeugseite: `tools/kette/tor.py` bekommt den vierten
+Unterbefehl `pause`, `tools/referenzdatensatz/vergleich/kreislauf.py` den
+Schalter `--jobs-token`. **Ohne Token bleibt dort alles beim lokalen Weg** —
+wer auf seinem Rechner misst, merkt von der Änderung nichts.
+
+### Das Problem, das dahinter steckt
+
+Der Kreislauftest hält die Hintergrundjobs an, bevor er ein Backup in ein
+frisches Konto spielt. Ohne Pause dünnt der Verdichtungsjob die
+wiederhergestellten Spuren aus — die Einsätze sind alt, der Job hält sie für
+reif —, und der Vergleich misst dann nicht mehr *„kommt zurück, was
+hineinging"*, sondern *„hat der Job dazwischen zugeschlagen"*. Nachgemessen:
+ein Lauf ohne Pause verdichtete **125 Spuren** des Umlaufkontos.
+
+Angehalten wurde bisher **nur über die Kommandozeile**, und die setzt voraus,
+dass das Prüfmittel auf demselben Rechner läuft wie die Installation. Stufe 2
+der Auslieferungskette tut das nicht: Sie läuft auf einem GitHub-Läufer gegen
+ein fernes Staging. Der erste echte Lauf nach dem Merge von PR #51 brach ab
+mit `require_once(.../server/config.php): Failed to open stream`.
+
+**Der Aufruf war nicht falsch geschrieben.** Das Werkzeug nahm an, `--basis`
+sei derselbe Rechner — eine Annahme, die stimmte, solange nur von Hand
+gemessen wurde. Das ist auch der Grund, warum das neue `tools/kettenaufrufe/`
+sie nicht fangen konnte: Es prüft Schnittstellen, nicht Verhalten, und sagt
+das in seiner `LIESMICH.md` ausdrücklich.
+
+### Was das an Macht gibt, und was nicht
+
+Wer das Job-Token hat, kann die Jobs bis `JOB_PAUSE_MAX_S` (7200 s) still
+stellen. Das ist **weniger**, als er ohnehin schon konnte: `wartung_an`
+schließt die ganze Anwendung und hängt seit P5a am selben Token. Daten liest
+und schreibt die Aktion keine, und der Ratenschutz begrenzt die Versuche wie
+bei jedem Token-Aufruf.
+
+### Ein fehlendes `sekunden` ist ein Fehler und nicht null
+
+**400 statt Vorgabewert** — denn 0 *hebt die Pause auf*. Ein vergessener
+Parameter gäbe sonst die Jobs frei und meldete dafür `ok`; der Aufrufer
+glaubte, sie stünden still. Dieselbe Regel gilt in `tor.py` für `--sekunden`,
+und die Selbstprobe dort weist beides nach (**5 → 10 Fälle**): dass
+`sekunden` in der Adresse landet — gemessen an der Adresse, nicht an der
+Antwort, denn ein `ok` käme in beiden Fällen — und dass ein vergessenes
+`--sekunden` mit Rückgabewert 2 abbricht.
+
+### Zuarbeit
+
+Die Umgebung `staging` braucht dafür das Geheimnis **`JOBS_TOKEN`**, denselben
+Namen wie `produktion`, aber den Wert **dieser** Installation (Betrieb →
+Hintergrundjobs). Fehlt er, wird der Kreislauf-Schritt ausdrücklich
+übersprungen und gemeldet — er fällt **nicht** still auf den lokalen Weg
+zurück, der hier ohnehin fehlschlägt.
+
+**Keine Migration.** `app_state` trägt den Schlüssel `jobs_pause_bis` seit
+Web 10.2.0.
+
 ## [Web 20.15.2] — 2026-09-16
 
 **`install.php` gehört nicht mehr zur Auslieferung** (Backlog Nr. 214).
