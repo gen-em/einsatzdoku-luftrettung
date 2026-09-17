@@ -176,6 +176,23 @@ jobs:
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py
 
+      - name: Kettenaufrufe — passt jeder Aufruf zu seinem Werkzeug?
+        # WARUM DAS IN STUFE 1 GEHOERT (Nr. 217, 17.09.2026).
+        #
+        # Die Kette ruft Werkzeuge dieses Projekts auf. Ob ein Aufruf zur
+        # Schnittstelle passt, zeigte sich bisher erst, wenn der Schritt LIEF —
+        # und viele laufen selten: Stufe 2 erst mit eingerichtetem Staging, der
+        # Produktionslauf erst beim ersten Tag. Am 16./17.09.2026 sind drei
+        # Aufrufe beim jeweils ERSTEN echten Lauf gescheitert, alle drei mit
+        # gueltigem YAML und sauberer Shell-Syntax.
+        #
+        # Diese Pruefung liest den Quelltext der Werkzeuge und FUEHRT KEINES
+        # AUS. Sie kostet Sekunden und faengt genau die Klasse Fehler, die
+        # sonst erst der Ernstfall zeigt.
+        run: |
+          python3 tools/kettenaufrufe/pruefen.py --probe
+          python3 tools/kettenaufrufe/pruefen.py
+
       - name: Backlog — keine Nummer zweimal
         # Die Zeile stammt aus dem Kopf des Rahmenplans (Abschnitt 2.2).
         run: |
