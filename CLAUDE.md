@@ -358,6 +358,43 @@ die Anmeldeseite (F-P3-AQ). Bei jedem Prüfmittel dazusagen, **was** es
 gemessen hat, und im Zweifel eine unabhängige Gegenprobe fahren; für den
 Bilderlauf steht sie in seiner `LIESMICH.md`.
 
+**Wer Markup aus einer Quelldatei liest, liest den Tag-Rumpf so — und zwar in
+JEDEM Tag-Muster:**
+
+```
+(?:<\?(?:php\b|=).*?\?>|[^>])*
+```
+
+Ein `[^>]*` endet am ersten `>`, und in einer PHP-Quelle ist das oft das `>`
+eines `?>` mitten im Tag: `<script<?= kopf_nonce_attr() ?>>`,
+`<form data-sperre-rest="<?= (int)$rest ?>">`. Der Tag bricht dann mitten im
+PHP-Ausdruck ab. **Für HTML beendet `?>` kein Tag; für ein Muster über den
+Quelltext schon.** Was das anrichtet, hängt am Muster: Die Integritätswache
+wurde bei jedem Lauf grundlos rot (Fund 23), sie wurde für den Angriff blind,
+für den es sie gibt (Fund 27), und in `SRC_RE` wäre ein Fremdskript weder als
+Block noch als Verweis gezählt worden — unsichtbar (Nr. 218).
+
+**Drei Anläufe an derselben Stelle, und beim zweiten wurde das Nachbarmuster
+zwanzig Zeilen weiter übersehen.** Deshalb gilt die Regel nicht für `<script>`,
+sondern für jedes Tag, das ein Werkzeug aus dem Quelltext liest — geprüft sind
+`tools/integritaetswache/`, `tools/vollstaendigkeit/`, `tools/stilvergleich/`
+und `tools/wortliste/`. Wo die kurze Form richtig ist, weil die PHP-Inseln
+vorher ausgeräumt wurden, **steht das als Kommentar daneben** (so in
+`tools/wortliste/zerlegen.py`) — sonst wird sie beim nächsten Durchgang
+„mitkorrigiert".
+
+Muster über **gelieferte** Antworten (Serverausgabe, `tools/referenzdatensatz/`)
+sind davon nicht betroffen: Dort ist das PHP bereits ausgeführt.
+
+**Die Kette prüft sich selbst — `tools/kettenaufrufe/`.** Jeder Werkzeugaufruf
+in `.github/workflows/` wird gegen die tatsächliche Schnittstelle des
+aufgerufenen Werkzeugs gehalten, ohne es auszuführen. Der Lauf hängt in Stufe 1
+und kostet nichts. Grund: Am 16./17.09.2026 sind drei Kettenschritte beim
+jeweils **ersten** echten Lauf gescheitert, alle drei mit gültigem YAML und
+sauberer Shell-Syntax (Backlog Nr. 217). Wer einen Aufruf in der Kette ändert,
+fährt das Werkzeug davor; wer ein Werkzeug umbenennt oder seine Schalter
+ändert, ebenfalls.
+
 ## 7. Konzept und Umsetzung
 
 Konzeptarbeit findet in einer getrennten Sitzung statt und mündet in ein

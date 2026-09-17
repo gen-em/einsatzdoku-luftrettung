@@ -33,6 +33,11 @@ def entphp(t):
     return t
 
 
+# Der Tag-Rumpf einer QUELLDATEI kann PHP enthalten, und ein PHP-Schluss `?>`
+# endet das Tag nicht -- fuer HTML schon, fuer ein Muster ueber den Quelltext
+# nicht. CLAUDE.md 6 schreibt dafuer diese eine Form vor; sie gilt fuer JEDES
+# Tag-Muster, nicht nur fuer <script>.
+TAG_REST = r'(?:<\?(?:php\b|=).*?\?>|[^>])*'
 TAGS = (r'<(tr|td|th|li|div|span|button|a|p|dt|dd|details|summary|section|aside|'
         r'nav|main|header|footer|form|h1|h2|h3|h4|table|thead|tbody|label|input|'
         r'select|option|textarea|dialog|svg|use|fieldset|legend)\b')
@@ -88,7 +93,16 @@ def jsprobe():
             continue
         t = io.open(pfad, encoding='utf-8', errors='replace').read()
         if pfad.endswith('.php'):
-            t = '\n'.join(re.findall(r'<script\b[^>]*>(.*?)</script>', t, re.S | re.I))
+            # TAG_REST statt `[^>]*` (CLAUDE.md 6, Backlog Nr. 218): Hier laeuft
+            # das Muster ueber die ROHE PHP-Quelle, und seit Web 20.7.0 traegt
+            # jedes Inline-Skript `<script<?= kopf_nonce_attr() ?>>`. Die kurze
+            # Form endete am `>` des PHP-Schlusses: Von 110 Bloecken begannen 12
+            # Dateien mit einem ueberzaehligen `>`, und aus
+            # `<script src="<?= asset(…) ?>"></script>` wurde ein Scheinblock mit
+            # dem Inhalt `">` (gemessen 17.09.2026). Fuer die Zeichenketten-Ernte
+            # unten war das folgenlos -- es blieb es nur, weil niemand `>` am
+            # Blockanfang braucht.
+            t = '\n'.join(re.findall(r'<script\b' + TAG_REST + r'>(.*?)</script>', t, re.S | re.I))
         st = []
         for muster in (r'`([^`]*)`', r"'((?:[^'\\\n]|\\.)*)'", r'"((?:[^"\\\n]|\\.)*)"'):
             st += [m.group(1) for m in re.finditer(muster, t, re.S)]

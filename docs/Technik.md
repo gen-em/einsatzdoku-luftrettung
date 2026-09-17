@@ -573,6 +573,16 @@ Daten erst nach Server-Bestätigung.
 │   │                      `fertig` UND einen Stand, der jünger ist als der
 │   │                      Laufbeginn; `--selbstprobe` weist an fünf Lagen
 │   │                      nach, dass es auch zugeht
+│   ├── kettenaufrufe/     haelt JEDEN Werkzeugaufruf der drei Arbeitslaeufe
+│   │                      gegen die tatsaechliche Schnittstelle des
+│   │                      aufgerufenen Werkzeugs — `add_argument`, die
+│   │                      Handparser (`wert('--x'`, `flag('--x'`),
+│   │                      `BEKANNT`-Mengen, `case`-Zweige, `$argv`. FUEHRT
+│   │                      KEIN WERKZEUG AUS, deshalb Stufe 1 (Nr. 217).
+│   │                      Werkzeuge, deren Schnittstelle nicht aus dem
+│   │                      Quelltext lesbar ist, zaehlt es als UNGEPRUEFT und
+│   │                      nennt die Zahl. Mit `--probe` (10 Faelle, davon 5
+│   │                      die NICHT anschlagen duerfen)
 │   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit der des
 │   │                      Repositoriums: jede Datei unter `server/assets/`
 │   │                      über SHA-256, und auf `login.php` die GANZE Menge
@@ -7761,16 +7771,32 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 
 | Schritt | Sollwert |
 |---|---|
+| Fassungen nennen (Web, Uhr, Android) | drei Nummern in der Zusammenfassung — **kein** Sollwert, eine Auskunft |
 | `php -l` über `server/` und `tools/` | 0 Fehler |
 | `tools/wortliste/wortliste.py` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen |
-| `tools/vollstaendigkeit/pruefen.py --hoechstens N` | **genau N** — die Schwelle, nicht null (heute 366) |
+| `tools/vollstaendigkeit/pruefen.py --hoechstens N` | **genau N** — die Schwelle, nicht null (heute 377) |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
+| `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft, Selbstprobe 10/10 |
 | Backlog-Nummern (`grep … uniq -d`) | leer |
-| `tools/migrationsregister/pruefen.php` | 0 Befunde, Selbstprobe 4/4 |
 | `tools/installweiche/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
+| `tools/migrationsregister/pruefen.php` | 0 Befunde, Selbstprobe 4/4 |
 | `tools/cspprobe/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
+| `tools/sitzungshaertung/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge |
-| Uhr Stufe I (`pruefstand.sh reihe`) | übersetzt für alle Zielgeräte |
+| Uhr Stufe I (`pruefstand.sh aufbau-uebersetzen`) | übersetzt für alle Zielgeräte |
+
+> **Die Reihenfolge ist die des Arbeitslaufs**, und sie hat einen Grund: Was
+> ohne Netz und ohne SDK läuft, läuft zuerst. Ein Syntaxfehler soll nicht erst
+> nach dem Android-Build auffallen, der Minuten braucht.
+>
+> **`tools/kettenaufrufe/` ist das einzige Prüfmittel, das die KETTE prüft**
+> und nicht die Anwendung. Es liest jeden `run:`-Block der drei Arbeitsläufe,
+> findet die darin aufgerufenen Werkzeuge und hält jeden Schalter gegen die
+> Schnittstelle, die im Quelltext des Werkzeugs steht — ohne eines
+> auszuführen. Grund: Drei Kettenschritte sind am 16./17.09.2026 beim jeweils
+> **ersten** echten Lauf gescheitert, alle drei mit gültigem YAML (Nr. 217).
+> Seine Grenze steht in seiner `LIESMICH.md` und gehört dazu: Es prüft
+> Schnittstellen, nicht Verhalten.
 
 > **Warum dort eine Schwelle steht und keine Null.** Dieses Werkzeug misst
 > einen **Altbestand** aus P3 — Unicode-Zeichen im Markup, `style=`-Attribute

@@ -1528,6 +1528,14 @@ Aus dem Rahmenplan, Abschnitt 6 — hier nur, was P1 bis P8 blockiert:
   `(?:<\?(?:php\b|=).*?\?>|[^>])*`. Wer ein drittes Werkzeug schreibt, das
   Markup aus **Quelldateien** liest, braucht dasselbe.
 
+  *Nachtrag 17.09.2026:* Der letzte Satz stand hier als Rat und nirgends als
+  Regel — **auch nicht in `CLAUDE.md`**, obwohl dieses Dokument und Backlog
+  Nr. 218 das behaupteten (`git log -S 'Tag-Rumpf' -- CLAUDE.md` → leer).
+  Genau deshalb wurde beim zweiten Beheben das Nachbarmuster zwanzig Zeilen
+  weiter übersehen. Die Regel steht jetzt in `CLAUDE.md` 6, für **jedes**
+  Tag-Muster; alle Muster der vier Werkzeuge sind nachgezogen (Nr. 218), und
+  wo die kurze Form richtig bleibt, steht der Grund als Kommentar daneben.
+
 - **`tools/cspprobe/pruefen.php`** liest nur PHP. Markup, das zur Laufzeit in
   `assets/*.js` entsteht, sieht sie nicht — ein per `innerHTML` eingesetztes
   `<script>` führt der Browser allerdings ohnehin nicht aus. Und sie sieht
