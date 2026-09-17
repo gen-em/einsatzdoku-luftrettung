@@ -7805,6 +7805,7 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 | Schritt | Sollwert |
 |---|---|
 | Fassungen nennen (Web, Uhr, Android) | drei Nummern in der Zusammenfassung — **kein** Sollwert, eine Auskunft |
+| Welche Bereiche sind berührt? | `android=ja\|nein`, `uhr=ja\|nein` — eine Auskunft, kein Sollwert (siehe unten) |
 | `php -l` über `server/` und `tools/` | 0 Fehler |
 | `tools/wortliste/wortliste.py` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen |
 | `tools/vollstaendigkeit/pruefen.py --hoechstens N` | **genau N** — die Schwelle, nicht null (heute 377) |
@@ -7816,8 +7817,8 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 | `tools/migrationsregister/pruefen.php` | 0 Befunde, Selbstprobe 4/4 |
 | `tools/cspprobe/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `tools/sitzungshaertung/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
-| `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge |
-| Uhr Stufe I (`pruefstand.sh aufbau-uebersetzen`) | übersetzt für alle Zielgeräte |
+| `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge — **nur wenn `android/` berührt ist** |
+| Uhr Stufe I (`pruefstand.sh aufbau-uebersetzen`) | übersetzt für alle Zielgeräte — **nur wenn `watch/` oder `tools/uhr-pruefstand/` berührt ist** |
 
 > **Die Reihenfolge ist die des Arbeitslaufs**, und sie hat einen Grund: Was
 > ohne Netz und ohne SDK läuft, läuft zuerst. Ein Syntaxfehler soll nicht erst
@@ -7844,6 +7845,40 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 > Altbestand, ist das ein Befund; **schrumpft** er, ebenfalls — dann ist die
 > Zahl im Arbeitslauf nachzuziehen, sonst bekommt er stillschweigend wieder
 > Luft.
+
+#### Android und Uhr laufen nur mit, wenn sie berührt sind
+
+**Gemessen am 17.09.2026:** Der Lauf brauchte 42 min 28 s — davon 7:15 der
+Android-Bau und **34:46** das Übersetzen der Uhr-App für alle Zielgeräte. Die
+übrigen dreizehn Schritte zusammen: **23 Sekunden**. Und von den letzten 60
+Commits auf `main` fasst **keiner** `android/` an und **einer** `watch/`.
+59 von 60 Läufen messen also 42 Minuten lang Code, den niemand angefasst hat.
+
+Der Schritt „Welche Bereiche sind berührt?" setzt deshalb zwei Ausgaben, an
+denen die beiden teuren Schritte per `if:` hängen. **Drei Eigenschaften machen
+den Sprung unkritisch** — wer eine davon entfernt, macht aus einer
+Beschleunigung eine Lücke:
+
+| | |
+|---|---|
+| **`main` misst immer alles** | Der schlimmste Fehler des Filters wäre, fälschlich zu überspringen; auf `main` kann das nicht passieren. Und `main` ist der Stand, den ein Tag ausliefert — Tor 3 des Produktionslaufs verlangt einen grünen Stufe-1-Lauf auf genau diesem Commit (6.4). |
+| **Im Zweifel wird gemessen** | Neuer Zweig (`before` ist `0000…`), Force-Push (das Vorher ist unerreichbar), fehlende Historie, `workflow_dispatch` — jeder dieser Wege endet bei „alles". Getragen wird das von **zwei Schichten, jede für sich ausreichend**: der Erreichbarkeitsprüfung (`git cat-file`) und dem Fehlerzweig von `git diff`. Nachgemessen am 17.09.2026: Entwaffnet man eine der beiden, bleibt die Lage richtig; entwaffnet man **beide**, fällt sie um. |
+| **Die Auslassung nennt ihren Gegenstand** | Ein übersprungener Schritt läuft nicht und kann selbst nichts melden. Deshalb schreibt der **Erkennungsschritt** die Zeile: „**Uhr Stufe I: NICHT BERÜHRT** — 0 von 12 geänderten Dateien liegen unter `watch/` oder `tools/uhr-pruefstand/` (gegenüber `98a64f1`); nicht gemessen." Dieselbe Bauform wie beim fehlenden SDK oder fehlender `CIQ_GERAETE_URL`. |
+
+Dazu zwei Feinheiten: Der Uhr-Schritt hängt **auch an `tools/uhr-pruefstand/`**
+— wer den Prüfstand ändert, fährt ihn. Und eine Änderung an `pruefung.yml`
+selbst fährt **beides**, sonst prüft niemand den Prüfschritt.
+
+> **Die Grenze, die nicht verschoben wird: Der Filter gilt für Android und
+> Uhr.** Beide werden von der Kette **nicht ausgeliefert** — der FTPS-Schritt
+> lädt `server/` hoch, die Signatur der Apps liegt außerhalb der CI
+> (E-S4-16); eine ausgelassene Messung erreicht hier keinen Server. Für einen
+> `server/`-Schritt gilt das **nicht**: Der entscheidet über ausgelieferten
+> Code, und eine Bedingung, die darüber entscheidet, gehört in ein Werkzeug
+> mit `--selbstprobe` — das Backup-Tor ist das Muster (E-P5a-12). Wer diesen
+> Filter auf PHP-Syntax, CSP oder Sitzungshärtung ausdehnt, ändert seine
+> Natur. Und wenn die Kette eines Tages die Apps selbst ausliefert
+> (`server/apk/` ist der Verteilweg, 4.97g), ist er neu zu bewerten.
 
 **Rot heißt kein Merge** — das entscheidet aber nicht die Datei, sondern der
 Zweigschutz auf `main` mit `pruefung` als Pflichtprüfung. Ohne ihn ist der
