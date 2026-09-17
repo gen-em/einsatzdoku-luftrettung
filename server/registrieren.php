@@ -130,7 +130,7 @@ $offen      = konten_reg_offen();
 $mitFrei    = konten_reg_freischaltung();
 $fristTage  = konten_reg_frist_tage();
 
-/* WELCHE TEXTE GELTEN GERADE (Backlog Nr. 223). Einmal gelesen und sowohl
+/* WELCHE TEXTE GELTEN GERADE (Backlog Nr. 231). Einmal gelesen und sowohl
  * fuer die Pruefung als auch fuer das Markup benutzt: Wuerden beide Seiten
  * getrennt fragen, koennte die Betreiberin zwischen Anzeige und Absenden
  * einen Text in Kraft setzen, und das Formular verlangte einen Haken, den es
@@ -206,7 +206,7 @@ if ($offen && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     $neu = konto_anlegen($email, $name, 'user', 'registrierung',
                                          'unbestaetigt', null, TOKEN_REGISTRIERUNG_S);
 
-                    /* DIE HAEKCHEN FESTHALTEN (Backlog Nr. 223, E-P5b-05:
+                    /* DIE HAEKCHEN FESTHALTEN (Backlog Nr. 231, E-P5b-05:
                      * „Gespeichert je Konto mit Fassungskennung und Zeit").
                      * Bis Web 20.22.1 geschah das NICHT: Die Seite verlangte
                      * die Haken und vergass sie im selben Atemzug — der
@@ -339,7 +339,7 @@ $unterzeile = match ($art) {
                Stellen steht, laeuft auseinander.
 
                ES SIND NICHT IMMER DREI. Gezeigt wird, was in Kraft ist
-               (Backlog Nr. 223) — solange die geprueften Texte fehlen, also
+               (Backlog Nr. 231) — solange die geprueften Texte fehlen, also
                keines. Das ist kein Fehler, sondern dieselbe Regel, nach der
                das Tor beim Login arbeitet: Ein Text ohne Standdatum verlangt
                nichts. Wer sich in diesem Zustand registriert, wird beim

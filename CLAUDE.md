@@ -255,7 +255,7 @@ Stilvergleichs**, weil er dort die falsche Frage stellt (Begründung in
 - `tools/vollstaendigkeit/` — Ist etwas verlorengegangen (jede Klasse des
   alten Stylesheets hat eine Regel oder steht mit Begründung auf der
   Streichliste), und steht jeder Wert an der einen Stelle (`:root`)?
-- `tools/screenshots/` — 30 Seiten in acht Breiten von 360 bis 1920 px, mit
+- `tools/screenshots/` — **50** Seiten in acht Breiten von 360 bis 1920 px (Stand 16.09.2026, gemessen: 400 Bilder — die Zahl steht in `seiten.json` und wächst mit jeder neuen Seite), mit
   gemessenem waagerechtem Überlauf, Konsolenfehlern und Knopfhöhen; dazu
   `kontrast.py` für die Kontraste der Token.
 
@@ -357,6 +357,43 @@ Der Bilderlauf meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigte
 die Anmeldeseite (F-P3-AQ). Bei jedem Prüfmittel dazusagen, **was** es
 gemessen hat, und im Zweifel eine unabhängige Gegenprobe fahren; für den
 Bilderlauf steht sie in seiner `LIESMICH.md`.
+
+**Wer Markup aus einer Quelldatei liest, liest den Tag-Rumpf so — und zwar in
+JEDEM Tag-Muster:**
+
+```
+(?:<\?(?:php\b|=).*?\?>|[^>])*
+```
+
+Ein `[^>]*` endet am ersten `>`, und in einer PHP-Quelle ist das oft das `>`
+eines `?>` mitten im Tag: `<script<?= kopf_nonce_attr() ?>>`,
+`<form data-sperre-rest="<?= (int)$rest ?>">`. Der Tag bricht dann mitten im
+PHP-Ausdruck ab. **Für HTML beendet `?>` kein Tag; für ein Muster über den
+Quelltext schon.** Was das anrichtet, hängt am Muster: Die Integritätswache
+wurde bei jedem Lauf grundlos rot (Fund 23), sie wurde für den Angriff blind,
+für den es sie gibt (Fund 27), und in `SRC_RE` wäre ein Fremdskript weder als
+Block noch als Verweis gezählt worden — unsichtbar (Nr. 218).
+
+**Drei Anläufe an derselben Stelle, und beim zweiten wurde das Nachbarmuster
+zwanzig Zeilen weiter übersehen.** Deshalb gilt die Regel nicht für `<script>`,
+sondern für jedes Tag, das ein Werkzeug aus dem Quelltext liest — geprüft sind
+`tools/integritaetswache/`, `tools/vollstaendigkeit/`, `tools/stilvergleich/`
+und `tools/wortliste/`. Wo die kurze Form richtig ist, weil die PHP-Inseln
+vorher ausgeräumt wurden, **steht das als Kommentar daneben** (so in
+`tools/wortliste/zerlegen.py`) — sonst wird sie beim nächsten Durchgang
+„mitkorrigiert".
+
+Muster über **gelieferte** Antworten (Serverausgabe, `tools/referenzdatensatz/`)
+sind davon nicht betroffen: Dort ist das PHP bereits ausgeführt.
+
+**Die Kette prüft sich selbst — `tools/kettenaufrufe/`.** Jeder Werkzeugaufruf
+in `.github/workflows/` wird gegen die tatsächliche Schnittstelle des
+aufgerufenen Werkzeugs gehalten, ohne es auszuführen. Der Lauf hängt in Stufe 1
+und kostet nichts. Grund: Am 16./17.09.2026 sind drei Kettenschritte beim
+jeweils **ersten** echten Lauf gescheitert, alle drei mit gültigem YAML und
+sauberer Shell-Syntax (Backlog Nr. 217). Wer einen Aufruf in der Kette ändert,
+fährt das Werkzeug davor; wer ein Werkzeug umbenennt oder seine Schalter
+ändert, ebenfalls.
 
 ## 7. Konzept und Umsetzung
 

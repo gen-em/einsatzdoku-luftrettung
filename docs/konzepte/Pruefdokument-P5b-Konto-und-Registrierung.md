@@ -5,7 +5,7 @@ Dieses Dokument beantwortet **„was muss ich noch tun?"** — das Prüfprotokol
 im Konzept beantwortet „ist es belegt?". Es bleibt liegen, bis seine Prüfliste
 abgehakt ist, und wird dann gelöscht (`CLAUDE.md` 7).
 
-**Stand:** in Arbeit. Zweig `claude/magical-dirac-we2y1z`.
+**Stand:** **alle zehn Arbeitspakete gebaut**, gegen `origin/main` gemergt (17.09.2026). Zweig `claude/magical-dirac-we2y1z`.
 
 | Paket | Stand | Version |
 |---|---|---|
@@ -19,7 +19,7 @@ abgehakt ist, und wird dann gelöscht (`CLAUDE.md` 7).
 | **AP7** Demo-Anmeldung | **erledigt** | **20.18.0** |
 | **AP8** Handbuch-Seiten | **erledigt** | **20.23.0** |
 | **AP9** Onboarding, Rückfragen | **erledigt** | **20.24.0** |
-| AP10 Abschluss | offen | — |
+| **AP10** Abschluss (Merge, Prüfläufe, Rahmenplan) | **erledigt** | **20.24.0** |
 
 **Die Mockups sind seit dem 17.09.2026 freigegeben** — damit ist die einzige
 Abhängigkeit im Haus aufgelöst, und AP3, AP8 und AP9 brauchen keine Pause mehr.
@@ -76,7 +76,7 @@ Dieser Abschnitt steht vorn, nicht in einer Fußnote (`CLAUDE.md` 7).
 | Das Protokoll unter **echter Last** | Es gibt auf diesem Prüfstand keine | Die drei Indizes sind nach den drei Fragen gelegt, die 10c stellen wird; gemessen wird, wenn 10c die Abfragen hat |
 | **`cmark-gfm`** (Markdown-Prüfung, Abnahme AP8) | Im Container nicht vorhanden | Wird in AP8 nachinstalliert |
 | **Der Uhr-Simulator** mit gesperrtem Konto (Abnahme AP2 nennt ihn) | Der Prüfstand braucht rund 500 MB SDK und einen Simulatorlauf je Fall; `CIQ_GERAETE_URL` ist gesetzt, der Aufbau war für diesen einen Fall nicht verhältnismäßig | **Gegen `ingest.php` selbst gemessen**, mit echten HTTP-Aufrufen und demselben Schlüsselverfahren (`geraet_schluessel_hash()`): Die Uhr sieht genau diese Antwort. Was der Simulator zusätzlich zeigte, wäre die **Anzeige** auf dem Gerät — und die ist ausdrücklich unverändert (die Uhr sagt „abgemeldet", der Grund im Rumpf ist für die nächste Uhr-Stufe) |
-| **Die Fristen sind nie abgelaufen** (Abnahme AP9 verlangt „Prüfkonten-Lauf mit gestellter Uhr") | Ein halbes Jahr abzuwarten geht nicht, und die Bibliothek holt ihre Zeit selbst (`UTC_DATE()`, `DateTimeImmutable('now')`) — sie lässt sich nicht auf einen anderen Tag stellen | **`rueckfrage_naechste` wurde gestellt**, nicht die Uhr: auf gestern, dann gemessen, was die Anwendung daraus rechnet. Die Runden 0 → 1 → 2 → 2 und das Datum 2027-03-17 sind belegt; ein Zeitzonenfehler von einem Tag fiele so **nicht** auf. Als **Backlog Nr. 224** eingetragen, mit dem Weg, wie es zu schließen wäre |
+| **Die Fristen sind nie abgelaufen** (Abnahme AP9 verlangt „Prüfkonten-Lauf mit gestellter Uhr") | Ein halbes Jahr abzuwarten geht nicht, und die Bibliothek holt ihre Zeit selbst (`UTC_DATE()`, `DateTimeImmutable('now')`) — sie lässt sich nicht auf einen anderen Tag stellen | **`rueckfrage_naechste` wurde gestellt**, nicht die Uhr: auf gestern, dann gemessen, was die Anwendung daraus rechnet. Die Runden 0 → 1 → 2 → 2 und das Datum 2027-03-17 sind belegt; ein Zeitzonenfehler von einem Tag fiele so **nicht** auf. Als **Backlog Nr. 232** eingetragen, mit dem Weg, wie es zu schließen wäre |
 | **Der Dialog in einer echten Sitzung über Tage** | Dieselbe Ursache | Ersatzweise vier Runden mit je **frischer Browsersitzung** gefahren, damit die Sitzungsmerkmale (`rueckfrage_gezeigt`, `blatt_gezeigt`) wirklich neu sind und nicht nur nicht gesetzt |
 | **Firefox und WebKit** für die neuen Dialoge | Der Bilderlauf lief nur auf Chromium; die drei Engines kosten die dreifache Zeit und AP9 hat keine neue CSS-Bauform, die sich zwischen ihnen unterscheiden könnte | Chromium in **8 Breiten**. Was ungeprüft bleibt: `<dialog>`-Verhalten in WebKit — `showModal()` und `cancel` sind dort seit Jahren vorhanden, aber nicht von mir gemessen |
 | **Der Dialog ohne JavaScript** | Er erscheint dann gar nicht, und das ist kein Mangel, sondern die Bauform: Die Erneuerung rechnet im Browser und kann keinen serverseitigen Ersatzweg haben | Die Erststart-**Karte** dagegen ist ohne JavaScript vollständig bedienbar (ein gewöhnliches Formular) — **nicht gemessen**, aber am Markup nachgelesen: kein `data-`-Haken, kein Skript beteiligt |
@@ -107,7 +107,7 @@ Gemessen am 16.09.2026 im Wegwerf-Container der Sitzung.
 
 Zählung fortlaufend ab F4; F1 bis F3 stehen im Konzept, Abschnitt 5.
 
-### F4 — Die Anwendung ließ sich nicht mehr installieren (Backlog Nr. 215)
+### F4 — Die Anwendung ließ sich nicht mehr installieren (Backlog Nr. 223)
 
 **Gefunden:** 16.09.2026, beim Aufbau des Prüfstands, noch vor AP1.
 **Behoben:** Web 20.15.3.
@@ -184,7 +184,7 @@ Eindruck um und hat dafür eine fremde Nummer.
 
 ---
 
-### F6 — Die Profilseite brach aus ihrem Seitengerüst aus (Backlog Nr. 217)
+### F6 — Die Profilseite brach aus ihrem Seitengerüst aus (Backlog Nr. 225)
 
 **Gefunden:** 17.09.2026, beim **Ansehen** des Bildes zu AP6 — nicht durch
 eine Zahl.
@@ -223,7 +223,7 @@ eingebautem Fehler meldete derselbe Lauf unverändert „Überlauf 0 ·
 Konsolenfehler 0 · Knöpfe falscher Höhe 0" **und** „6 Karten geprüft · **4
 außerhalb** von main.inhalt". Ohne den Fehler: 6 geprüft, 0 außerhalb.
 
-### F7 — Ein Meldungskasten trug einen Ton, den es nicht gibt (Nr. 218)
+### F7 — Ein Meldungskasten trug einen Ton, den es nicht gibt (Nr. 226)
 
 **Gefunden:** 17.09.2026 von `tools/vollstaendigkeit/` („im Markup ohne
 Regel"). **Behoben:** Web 20.21.1.
@@ -268,7 +268,7 @@ Schwelle an zwei Stellen läuft auseinander, und die dokumentierte war die
 falsche. Berichtigt, mit dem Hinweis, dass die Zahl in der Kette steht und
 nicht in der Dokumentation.
 
-**Dabei ausgezählt, was diese Prüfung misst** (Backlog Nr. 219): von 319
+**Dabei ausgezählt, was diese Prüfung misst** (Backlog Nr. 227): von 319
 Befunden sind **195 `…`** und **104 `→`** — zusammen 299 Satzzeichen in Prosa.
 Nur **20** sind Zeichen, die wirklich statt eines Symbols stehen. Solange die
 Zeichenliste beides in einen Topf wirft, kann die Schwelle nur steigen; sie tut
@@ -311,7 +311,7 @@ Dateiliste altert still und immer in dieselbe Richtung.
 
 ---
 
-### F11 — Die Häkchen wurden verlangt und vergessen (Backlog Nr. 223)
+### F11 — Die Häkchen wurden verlangt und vergessen (Backlog Nr. 231)
 
 `registrieren.php` prüfte seit Web 20.22.0 alle drei Häkchen als Pflicht und
 legte danach das Konto an. Dazwischen fehlte eine Zeile: **Es entstand nie ein
@@ -478,6 +478,56 @@ Aufschlüsselung, die nicht gemessen ist, ist schlimmer als keine — sie sieht
 aus wie ein Beleg.
 
 
+### F15 — Der Merge: drei Nummernkollisionen und zwei eigene Fehler dabei
+
+`main` war seit dem P5a-Abschluss um **Web 20.16.0 bis 20.16.4** weitergelaufen
+(Nachlese des P5a-Abschlusses, Durchsicht der Werkzeugaufrufe, Bilderlauf gegen
+Staging). Dabei hat es dreimal dieselben Zahlen vergeben wie dieser Zweig.
+
+**Aufgelöst nach einer Regel:** `main` ist vorgelagert, also weicht der Zweig.
+
+| Was | Zweig hatte | `main` hatte | Zweig heißt jetzt |
+|---|---|---|---|
+| Web-Version AP1 | 20.16.0 | 20.16.0 (Job-Pause, Nr. 219) | **20.16.5** |
+| Backlog, elf Punkte | 215–225 | 215–222 | **223–233** |
+| Rahmenplan-Fassung | 77, 78 | 77 | **78, 79** (Merge = 80) |
+
+**Die Versionsverschiebung ist die kleine von zwei Möglichkeiten** und der
+Auftraggeber hat sie gewählt: nur AP1 rutscht (21 Nennungen in 9 Dateien),
+statt die ganze Kette um eine Nebennummer hochzusetzen (rund 267 Nennungen).
+**Preis:** `20.16.5` ist nach der Zählweise eine Korrekturnummer und trägt eine
+neue Funktion. Das steht ausdrücklich im Kopfkommentar von `server/version.php`,
+damit es niemand für einen Flüchtigkeitsfehler hält.
+
+**Die Backlog-Umnummerierung durfte nicht global laufen**, weil `main`s Text
+dieselben Nummern nennt — für andere Punkte. Attribuiert wurde **zeilenweise**:
+Was wortgleich in `origin/main` steht, ist `main`s Verweis und blieb unberührt.
+**Gemessen: 68 Zeilen umnummeriert, 51 Zeilen als `main`s erkannt und stehen
+gelassen.** Stichprobe an den gemischten Dateien nachgesehen — in
+`.github/workflows/pruefung.yml` etwa blieb `Nr. 217` im Kettenaufruf-Schritt
+richtig stehen (das ist `main`s Punkt), während `Nr. 219 → 227` im
+Vollständigkeits-Kommentar richtig wanderte (das ist meiner).
+
+**Zwei eigene Fehler hat die Gegenprobe danach gefunden**, beide durch dieselbe
+Lücke:
+
+**(a) Das Muster `Nr. NNN` erfasste keine Tabellenzellen.** Abschnitt 5 des
+Rahmenplans führt die offenen Punkte als `| 220 | …`, nicht als `Nr. 220`.
+Drei Zeilen standen danach unter der alten Nummer, während der Text darüber
+schon die neue nannte.
+
+**(b) Halbe Bereiche.** `Nr. 215 bis 219` wurde zu **`Nr. 223 bis 219`** — das
+Muster greift eine Zahl je Treffer, und ein Bereich hat zwei. Dreimal
+passiert (Rahmenplan zweimal, Konzept einmal). Gefunden mit einer Gegenprobe,
+die gezielt nach `neue Zahl bis alte Zahl` sucht; danach **0 Treffer**.
+
+*Lehre:* Eine Umnummerierung ist kein Suchen-und-Ersetzen. Sie braucht
+mindestens drei Durchgänge — das Muster selbst, eine Gegenprobe auf die
+Schreibweisen, die das Muster nicht kennt (Tabellenzellen, Bereiche,
+Aufzählungen), und eine inhaltliche Stichprobe, ob die Nummer noch zu dem
+Eintrag passt, auf den sie zeigt.
+
+
 ## 3. Was maschinell geprüft wurde — Mittel und Zahl
 
 | Mittel | Wann | Zahl | Befund |
@@ -515,10 +565,10 @@ aus wie ein Beleg.
 | **Verwaister Mengen-Cache** (Fehlerfund) | AP6 | Aufräumjob über den Altbestand: **3 verwaiste `mengen:`-Einträge gefunden, 0 danach**; `konto_loeschen()` räumt sie seither an der Wurzel | **bestanden** |
 | **Ingestprobe** (Regression) | AP6 | **83 Erwartungen, 0 nicht erfüllt** — die Mengengrenze hat den Ingest-Weg nicht verändert | **bestanden** |
 | **Bilderlauf, drei Engines** | AP6 | `einstellungen.php` und `admin_user.php` (Füllstandskarten) in **8 Breiten**: **Chromium** 24 Bilder 0/0/0 · **Firefox** 24 Bilder 0/0/0 · **WebKit** 24 Bilder 0/0/0 (Überlauf / Konsolenfehler / Knopfhöhe) | — |
-| **Bilderlauf, voller Lauf** (Nr. 217) | 20.21.1 | **53 Seiten, 424 Einzelbilder, 53 Kontaktbögen** (Chromium): Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0 · **149 Karten geprüft, 0 außerhalb von `main.inhalt`** | **bestanden** |
+| **Bilderlauf, voller Lauf** (Nr. 225) | 20.21.1 | **53 Seiten, 424 Einzelbilder, 53 Kontaktbögen** (Chromium): Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0 · **149 Karten geprüft, 0 außerhalb von `main.inhalt`** | **bestanden** |
 | **Gegenprobe der neuen Zählung** | 20.21.1 | Fehler wieder eingebaut: dieselben drei Nullen **und** „6 Karten geprüft · **4 außerhalb**". Ohne Fehler: 6 geprüft, 0 außerhalb | die Zahl ist keine leere Null |
-| **Kartenbreiten im echten Fenster** (Nr. 217) | 20.21.1 | 1440 px, Profilseite: vorher `left` 0 / Breite 1440 bei vier Karten, nachher **alle sechs `left` 276 / Breite 1148** | **bestanden** |
-| **Formularbezug des Knopfs** (Nr. 217) | 20.21.1 | `button.form` → `pfform`, **10 Felder** im Formular — das Speichern war nie unterbrochen | kein Funktionsschaden |
+| **Kartenbreiten im echten Fenster** (Nr. 225) | 20.21.1 | 1440 px, Profilseite: vorher `left` 0 / Breite 1440 bei vier Karten, nachher **alle sechs `left` 276 / Breite 1148** | **bestanden** |
+| **Formularbezug des Knopfs** (Nr. 225) | 20.21.1 | `button.form` → `pfform`, **10 Felder** im Formular — das Speichern war nie unterbrochen | kein Funktionsschaden |
 | **Bilderlauf, drei Engines** (berührte Seiten) | 20.21.1 | `einstellungen.php`, `admin_user.php`, `betrieb_server.php` in 8 Breiten: **Chromium** 24 Bilder · **Firefox** 24 · **WebKit** 24 — je 0 Überlauf, 0 Konsolenfehler, 0 falsche Knopfhöhen, **19 Karten geprüft, 0 außerhalb** | **bestanden** |
 | **Vollständigkeitsprüfung** | 20.21.1 | **387 Befunde** (main: 377). „im Markup ohne Regel" 1 → **0**, „Seite ohne Gerüst" 2 → **0**, Ausnahmen 9, **0 ungenutzt** | **bestanden** |
 | **Mockups gegen die Sperrliste** | Paketaufnahme | Die **zehn** Textdateien des Mockup-Ordners (neun HTML und `LIESMICH.md`) gegen alle **24 Muster** der Sperrliste, dazu die 9 Teilstring-Fallen: **0 Treffer** — kein `hubschrauber`, `heli`, `luftrettung`, `basis`, `station`, `pilot`, `christoph`, `garmin`, `flug`, kein großgeschriebenes `Spur`, kein Tastenname. Ihr Text wird in AP3, AP8 und AP9 zu Oberflächentext, deshalb jetzt geprüft und nicht erst dann | **bestanden** |
@@ -635,7 +685,7 @@ sechs. Bleibt der Aufruf aus, stehen die neuen Karten leer da oder
 melden „Tabelle fehlt" — kein Datenverlust, aber nichts von dem, was unten
 steht, ist dann zu sehen.
 
-**Die Liste deckt AP1, AP2, AP4, AP5, AP6, AP7 und Nr. 217 ab.** AP3, AP8 und
+**Die Liste deckt AP1, AP2, AP4, AP5, AP6, AP7 und Nr. 225 ab.** AP3, AP8 und
 AP9 stehen noch aus (Mockup-Freigabe); ihre Punkte kommen mit ihnen.
 
 ### AP1 — Protokoll
@@ -675,7 +725,7 @@ AP9 stehen noch aus (Mockup-Freigabe); ihre Punkte kommen mit ihnen.
 ### AP4 — Einwilligungen
 
 - [ ] **P4.0 — Die Registrierung hält die Häkchen fest** (neu, Web 20.22.2,
-  Backlog Nr. 223). Voraussetzung: Die Rechtstexte tragen ein **Standdatum**,
+  Backlog Nr. 231). Voraussetzung: Die Rechtstexte tragen ein **Standdatum**,
   und die Registrierung steht auf *offen*. Ein Konto über `registrieren.php`
   anlegen, dabei alle Häkchen setzen. Dann in *Verwaltung → NutzerInnen* das
   neue Konto öffnen. **Erwartet:** Es zeigt alle drei Dokumente als
@@ -916,7 +966,7 @@ AP9 stehen noch aus (Mockup-Freigabe); ihre Punkte kommen mit ihnen.
   **Scheitern:** Ein Hexwert steht unmittelbar in einer Regel — die
   Vollständigkeitsprüfung meldet ihn unter „Hexfarben ausserhalb :root".
 
-### Nr. 217 — Die Profilseite
+### Nr. 225 — Die Profilseite
 
 - [ ] **P217.1 — Die Karten stehen in ihrer Spalte.** *Einstellungen → Profil*
   an einem breiten Fenster (ab 1024 px). **Erwartet:** **Alle** Karten —
@@ -939,7 +989,7 @@ AP9 stehen noch aus (Mockup-Freigabe); ihre Punkte kommen mit ihnen.
   keine Aussage über Kommentare.
 - **Kein Prüfmittel des Projekts richtet eine Installation ein.** Genau daran
   ist F4 dreizehn Auslieferungen lang vorbeigelaufen. Die Lücke bleibt
-  bestehen (Backlog Nr. 215, Teil „Zu tun").
+  bestehen (Backlog Nr. 223, Teil „Zu tun").
 - **Die Fristen des Protokolls sind mit gestellten Zeitstempeln geprüft**, nicht
   über echte 365 Tage. Das ist die einzig mögliche Prüfung und gleichzeitig
   ihre Grenze: Sie belegt die SQL-Bedingung, nicht das Verhalten einer

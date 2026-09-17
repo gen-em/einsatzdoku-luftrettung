@@ -36,6 +36,29 @@ concurrency:
   group: pruefung-${{ github.ref }}
   cancel-in-progress: true
 
+# ALLE run-BLOECKE MIT `pipefail` (16.09.2026, gemessen).
+#
+# GitHub faehrt run-Bloecke mit `bash -e {0}` — OHNE pipefail. Der
+# Rueckgabewert einer Pipe ist damit der des LETZTEN Glieds, und ein
+# gescheitertes erstes Glied faellt lautlos durch. Im Schritt "Wortliste"
+# stand `python3 wortliste.py | tee /tmp/wortliste.txt`: `tee` gibt immer 0,
+# also konnte dieser Schritt NIE ROT WERDEN. Nachgemessen:
+# `bash -e -c 'python3 -c "import sys;sys.exit(1)" | tee /dev/null; echo $?'`
+# ergibt 0.
+#
+# Ein Pruefmittel, das nicht scheitern kann, ist kein Pruefmittel — es ist
+# eine gruene Zahl ohne Aussage. Deshalb hier, an EINER Stelle je Lauf, und
+# nicht als Flicken an der einen Pipe: Die naechste Pipe kommt bestimmt.
+#
+# GEMESSEN, WAS DADURCH ROT WIRD: von zehn Pipes in den drei Laeufen trifft
+# es genau eine — `grep -oE "WEB_VERSION..." | head -1` im Schritt
+# "Fassungen nennen". Die war ohnehin kaputt (das Muster verlangte ein Komma
+# hinter dem Namen, `version.php` schreibt `const WEB_VERSION = '…'`) und ist
+# im selben Zug berichtigt.
+defaults:
+  run:
+    shell: bash -eo pipefail {0}
+
 jobs:
   pruefung:
     name: Stufe 1
@@ -43,6 +66,12 @@ jobs:
     steps:
       - name: Code auschecken
         uses: actions/checkout@v4
+        with:
+          # VORAUSSETZUNG DER BEREICHSERKENNUNG (Schritt danach). Die Vorgabe
+          # holt EINEN Commit; ohne Historie gibt es nichts zu vergleichen,
+          # und die Erkennung fiele bei jedem Lauf auf „alles messen" zurueck
+          # — richtig, aber wirkungslos. Kostet wenige Sekunden.
+          fetch-depth: 0
 
       - name: Fassungen nennen — was misst hier eigentlich?
         # ZUERST UND IMMER. Eine Zahl ohne die Fassung, die sie erzeugt hat,
@@ -52,7 +81,151 @@ jobs:
           echo "Python: $(python3 -V)"
           echo "Node:   $(node -v)"
           echo "Java:   $(java -version 2>&1 | head -1)"
-          echo "Web:    $(grep -oE "WEB_VERSION'?,\s*'[0-9.]+'" server/version.php | head -1)"
+          # DREI ZAEHLUNGEN, DREI AUSLIEFERUNGEN (CLAUDE.md 2) — der
+          # Schrittname sagt "Fassungen", also muessen alle drei dastehen.
+          #
+          # Bis zum 16.09.2026 stand hier ein grep-Muster, das ein KOMMA hinter
+          # dem Namen verlangte (`WEB_VERSION', '…'`) — die Schreibweise von
+          # `define()`. `server/version.php` schreibt aber
+          # `const WEB_VERSION = '20.15.2';`. Das Muster traf nichts, `echo`
+          # gibt trotzdem 0 zurueck, und der Schritt lief gruen, ohne die
+          # Fassung je genannt zu haben. Jetzt fragt PHP die Konstante selbst:
+          # Das haengt nicht an der Schreibweise und scheitert hoerbar, wenn es
+          # sie nicht gibt.
+          echo "Web:     $(php -r "require 'server/version.php'; echo WEB_VERSION;")"
+          echo "Uhr:     $(grep -oE 'APP_VERSION *= *"[0-9.]+"' watch/source/Const.mc | grep -oE '[0-9.]+')"
+          echo "Android: $(grep -oE '^version=[0-9.]+' android/version.properties | cut -d= -f2)"
+
+      - name: Welche Bereiche sind berührt?
+        # WARUM ES DIESEN SCHRITT GIBT (gemessen 17.09.2026). Der Lauf braucht
+        # 42 min 28 s; davon sind 7:15 der Android-Bau und 34:46 das
+        # Uebersetzen der Uhr-App fuer alle Zielgeraete. Die uebrigen 13
+        # Schritte zusammen brauchen 23 Sekunden. Von den letzten 60 Commits
+        # auf `main` fasst KEINER `android/` an und EINER `watch/` — 59 von 60
+        # Laeufen messen also 42 Minuten lang Code, den niemand angefasst hat.
+        #
+        # DREI EIGENSCHAFTEN MACHEN DEN SPRUNG UNKRITISCH:
+        #
+        # (1) AUF `main` WIRD IMMER ALLES GEMESSEN. Der schlimmste Fehler
+        #     dieses Schritts waere, faelschlich zu ueberspringen; auf `main`
+        #     kann das nicht passieren. Und `main` ist der Stand, den ein Tag
+        #     ausliefert — Tor 3 des Produktionslaufs verlangt einen gruenen
+        #     Stufe-1-Lauf auf genau diesem Commit.
+        # (2) IM ZWEIFEL WIRD GEMESSEN. Jeder Weg, auf dem der
+        #     Vergleichsstand nicht zu ermitteln ist — neuer Zweig,
+        #     Force-Push, fehlende Historie, `workflow_dispatch` —, endet bei
+        #     „alles". Ein Filter, der bei Unklarheit ueberspringt, ist genau
+        #     die Luecke, gegen die es ihn nicht gibt.
+        # (3) EINE AUSLASSUNG NENNT IHREN GEGENSTAND. Ein uebersprungener
+        #     Schritt laeuft nicht und kann daher selbst nichts melden —
+        #     deshalb schreibt DIESER Schritt die Zeile in die
+        #     Zusammenfassung, mit Bereich und Vergleichsstand. „Kein stilles
+        #     Ueberspringen" (`CLAUDE.md` 6) gilt hier wie beim fehlenden SDK.
+        #
+        # UND DIE GRENZE, DIE NICHT VERSCHOBEN WIRD: Dieser Filter gilt fuer
+        # ANDROID UND UHR. Beide werden von der Kette nicht ausgeliefert — der
+        # FTPS-Schritt laedt `server/` hoch, die Signatur der Apps liegt
+        # ausserhalb der CI (E-S4-16); eine ausgelassene Messung erreicht hier
+        # keinen Server. Fuer einen `server/`-Schritt gilt das NICHT: Der
+        # entscheidet ueber ausgelieferten Code, und eine Bedingung, die
+        # darueber entscheidet, gehoert in ein Werkzeug mit `--selbstprobe`
+        # (E-P5a-12, das Backup-Tor ist das Muster). Wer diesen Filter auf
+        # PHP-Syntax, CSP oder Sitzungshaertung ausdehnt, aendert seine Natur.
+        id: bereiche
+        env:
+          VORHER_SHA: ${{ github.event.before }}
+        run: |
+          alles() {
+            echo "android=ja" >> "$GITHUB_OUTPUT"
+            echo "uhr=ja"     >> "$GITHUB_OUTPUT"
+            echo "Bereichserkennung: ALLES messen — $1"
+            echo "**Bereiche:** alles gemessen ($1)." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          }
+
+          # (1) main misst immer alles.
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            alles "Push auf main"
+          fi
+
+          # Vergleichsstand je Anlass.
+          vorher=""
+          case "$GITHUB_EVENT_NAME" in
+            pull_request)
+              # Bei einem PR checkt die Aktion den MERGE-Commit aus. Dessen
+              # merge-base mit dem Zielzweig ist der Zielzweig selbst, der
+              # Diff dagegen also genau die Aenderung des PR.
+              git fetch --no-tags --quiet origin                   "+refs/heads/$GITHUB_BASE_REF:refs/remotes/origin/$GITHUB_BASE_REF"                   2>/dev/null || true
+              vorher=$(git merge-base "origin/$GITHUB_BASE_REF" HEAD 2>/dev/null || echo '')
+              ;;
+            push)
+              kandidat="${VORHER_SHA:-}"
+              case "$kandidat" in
+                ''|0000000000000000000000000000000000000000) kandidat="" ;;
+              esac
+              # Nach einem Force-Push kann das Vorher unerreichbar sein.
+              #
+              # ZWEI SCHICHTEN, JEDE FUER SICH AUSREICHEND — nachgemessen
+              # am 17.09.2026 mit drei Mutationen:
+              #
+              #   nur `cat-file` entwaffnet     -> Lage bleibt richtig
+              #                                    (der `__FEHLER__`-Zweig
+              #                                    unten faengt sie)
+              #   nur `__FEHLER__` entwaffnet   -> Lage bleibt richtig
+              #                                    (diese Zeile faengt sie)
+              #   BEIDE entwaffnet              -> Lage faellt um: nein/nein
+              #
+              # Im unmutierten Lauf faengt DIESE Zeile: Das Protokoll sagt
+              # „Vergleichsstand nicht ermittelbar", nicht „git diff
+              # gescheitert". Keine der beiden ist ueberfluessig, und keine
+              # einzelne Mutation kann die Luecke oeffnen — wer die Zeile
+              # streicht, weil „die andere es ja auch faengt", nimmt der
+              # Bauform genau diese Eigenschaft.
+              if [ -n "$kandidat" ] && git cat-file -e "${kandidat}^{commit}" 2>/dev/null; then
+                vorher="$kandidat"
+              fi
+              ;;
+          esac
+
+          # (2) Im Zweifel messen.
+          if [ -z "$vorher" ]; then
+            alles "Vergleichsstand nicht ermittelbar (Anlass $GITHUB_EVENT_NAME)"
+          fi
+
+          dateien=$(git diff --name-only "$vorher" HEAD 2>/dev/null || echo '__FEHLER__')
+          if [ "$dateien" = "__FEHLER__" ]; then
+            alles "git diff gegen $vorher gescheitert"
+          fi
+
+          anzahl=$(printf '%s\n' "$dateien" | grep -c . || true)
+          echo "Vergleichsstand: $vorher · geänderte Dateien: $anzahl"
+
+          hat() { printf '%s\n' "$dateien" | grep -qE "$1"; }
+
+          # Wer den Prüflauf selbst ändert, fährt beides.
+          if hat '^\.github/workflows/pruefung\.yml$'; then
+            alles "der Prüflauf selbst ist geändert"
+          fi
+
+          android=nein
+          uhr=nein
+          if hat '^android/'; then android=ja; fi
+          if hat '^(watch/|tools/uhr-pruefstand/)'; then uhr=ja; fi
+
+          echo "android=$android" >> "$GITHUB_OUTPUT"
+          echo "uhr=$uhr"         >> "$GITHUB_OUTPUT"
+          echo "android=$android · uhr=$uhr"
+
+          # (3) Die Auslassung nennt ihren Gegenstand.
+          kurz=$(git rev-parse --short "$vorher")
+          {
+            if [ "$android" = nein ]; then
+              echo "**Android: NICHT BERÜHRT** — 0 von $anzahl geänderten Dateien liegen unter \`android/\` (gegenüber \`$kurz\`); nicht gemessen."
+            fi
+            if [ "$uhr" = nein ]; then
+              echo "**Uhr Stufe I: NICHT BERÜHRT** — 0 von $anzahl geänderten Dateien liegen unter \`watch/\` oder \`tools/uhr-pruefstand/\` (gegenüber \`$kurz\`); nicht gemessen."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: PHP-Syntax über server/
         # `php -l` je Datei. Ein Syntaxfehler in einer Datei, die nur auf einem
@@ -72,10 +245,29 @@ jobs:
         # Erwartet werden null Treffer ausserhalb der Ausnahmeliste UND null
         # ungenutzte Ausnahmen; beides steckt im Rückgabewert.
         run: |
-          python3 tools/wortliste/wortliste.py | tee /tmp/wortliste.txt
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          tail -20 /tmp/wortliste.txt >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          # DER RUECKGABEWERT WIRD AUFGEFANGEN, NICHT VERSCHLUCKT.
+          #
+          # Bis zum 16.09.2026 stand hier `wortliste.py | tee …`. Ohne
+          # `pipefail` ist der Wert einer Pipe der des LETZTEN Glieds, und
+          # `tee` gibt immer 0 — dieser Schritt konnte NIE ROT WERDEN.
+          #
+          # `pipefail` steht jetzt oben, und damit wuerde die Pipe richtig rot.
+          # Nur: Bei `bash -e` bricht der Block dann an DIESER Zeile ab, und
+          # die Zusammenfassung unten bliebe leer — ausgerechnet in dem Lauf,
+          # in dem man sie lesen will. Deshalb der Umweg ueber `$rc`: erst
+          # schreiben, dann scheitern.
+          rc=0
+          python3 tools/wortliste/wortliste.py > /tmp/wortliste.txt 2>&1 || rc=$?
+          cat /tmp/wortliste.txt
+          {
+            echo '```'
+            tail -20 /tmp/wortliste.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::Wortliste: Treffer außerhalb der Ausnahmen, ungenutzte Ausnahmen oder durchgerutschte Fallen (Rückgabewert $rc)."
+            exit "$rc"
+          fi
 
       - name: Vollständigkeit des Stylesheets
         # GEGEN EINE SCHWELLE, NICHT GEGEN NULL — und das war hier von Anfang
@@ -126,11 +318,11 @@ jobs:
         # hiesse, den Hausstil an zehn Stellen zu brechen, damit eine Zahl
         # gleich bleibt, die ohnehin das Falsche misst.
         #
-        # WAS SIE MISST, IST JETZT AUSGEZAEHLT (Backlog Nr. 219): von 319
+        # WAS SIE MISST, IST JETZT AUSGEZAEHLT (Backlog Nr. 227): von 319
         # Befunden sind 195 „...", 104 Pfeile — zusammen 299 Satzzeichen in
         # Prosa. Nur ZWANZIG sind Zeichen, die wirklich statt eines Symbols
         # stehen. Solange die Liste beide Sorten in einen Topf wirft, kann
-        # diese Schwelle nur steigen. Der Weg heraus steht in Nr. 219.
+        # diese Schwelle nur steigen. Der Weg heraus steht in Nr. 227.
         #
         # 388 MIT P5b/AP3: +1. Der Pfeil in „Verwaltung -> NutzerInnen" im Text
         # der Sammelmail an die Verwaltung (konto_lib.php) — sichtbarer Text,
@@ -159,6 +351,39 @@ jobs:
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py
+
+      - name: Kettenaufrufe — passt jeder Aufruf zu seinem Werkzeug?
+        # WARUM DAS IN STUFE 1 GEHOERT (Nr. 217, 17.09.2026).
+        #
+        # Die Kette ruft Werkzeuge dieses Projekts auf. Ob ein Aufruf zur
+        # Schnittstelle passt, zeigte sich bisher erst, wenn der Schritt LIEF —
+        # und viele laufen selten: Stufe 2 erst mit eingerichtetem Staging, der
+        # Produktionslauf erst beim ersten Tag. Am 16./17.09.2026 sind drei
+        # Aufrufe beim jeweils ERSTEN echten Lauf gescheitert, alle drei mit
+        # gueltigem YAML und sauberer Shell-Syntax.
+        #
+        # Diese Pruefung liest den Quelltext der Werkzeuge und FUEHRT KEINES
+        # AUS. Sie kostet Sekunden und faengt genau die Klasse Fehler, die
+        # sonst erst der Ernstfall zeigt.
+        run: |
+          python3 tools/kettenaufrufe/pruefen.py --probe
+          python3 tools/kettenaufrufe/pruefen.py
+
+      - name: Tore der Kette — geht das Backup-Tor auch zu?
+        # WARUM DIESE SELBSTPROBE IN STUFE 1 GEHOERT (17.09.2026).
+        #
+        # Sie lief bisher NUR im Job `produktion` von `auslieferung.yml`, also
+        # erst beim Tag — unmittelbar vor dem Backup-Tor, das sie nachweisen
+        # soll. Fuer das Tor selbst ist das der richtige Ort und bleibt es.
+        # Aber seit Web 20.16.0 haengen dort auch die fuenf Faelle des
+        # Unterbefehls `pause`, und der laeuft in STUFE 2. Wer ihn kaputt
+        # macht, bekam von Stufe 1 ein Gruen, von Stufe 2 je nach Staging
+        # irgendetwas — und die Probe, die es gemerkt haette, lief erst bei
+        # der Auslieferung.
+        #
+        # Sie braucht kein Netz und keine Installation (Attrappen statt
+        # Abrufe) und kostet Sekunden. Erwartet: 11 von 11.
+        run: python3 tools/kette/tor.py --selbstprobe
 
       - name: Backlog — keine Nummer zweimal
         # Die Zeile stammt aus dem Kopf des Rahmenplans (Abschnitt 2.2).
@@ -253,6 +478,7 @@ jobs:
           php tools/sitzungshaertung/pruefen.php
 
       - name: Android — bauen, prüfen, linten
+        if: steps.bereiche.outputs.android == 'ja'
         # 0 Lint-Fehler und 0 Fehlschläge; der Rückgabewert von Gradle trägt
         # beides. Das Android-SDK bringt der Läufer mit (ANDROID_HOME ist
         # gesetzt); ist es das ausnahmsweise nicht, wird der Schritt
@@ -268,6 +494,7 @@ jobs:
           ./gradlew --no-daemon build
 
       - name: Uhr Stufe I — für alle Zielgeräte übersetzen
+        if: steps.bereiche.outputs.uhr == 'ja'
         # BRAUCHT `CIQ_GERAETE_URL`. Die Adresse steht bewusst nicht im
         # Repositorium (`tools/uhr-pruefstand/LIESMICH.md`, Abschnitt
         # „Quelle"): Es ist öffentlich, die Dateien gehören Garmin. Sie kommt
@@ -281,7 +508,14 @@ jobs:
             echo '**Uhr Stufe I: ÜBERSPRUNGEN** (kein `CIQ_GERAETE_URL`) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          CIQ_ZIELE=alle tools/uhr-pruefstand/pruefstand.sh aufbau
+          # `aufbau-uebersetzen` UND NICHT `aufbau` (16.09.2026): Stufe I
+          # uebersetzt nur. `aufbau` holt zusaetzlich die
+          # Simulator-Bibliotheken (webkit2gtk, xvfb, xdotool) per
+          # apt-get — das braucht auf einem Laeufer `sudo`, laedt .deb-
+          # Pakete nach und kostet Minuten fuer etwas, das hier nie
+          # startet. Der erste echte Lauf ist genau daran gescheitert:
+          # "FEHLER: apt-get fehlgeschlagen".
+          CIQ_ZIELE=alle tools/uhr-pruefstand/pruefstand.sh aufbau-uebersetzen
           python3 tools/uhr-pruefstand/geraeteklassen.py "$HOME/.Garmin/ConnectIQ/Devices" \
                   --vertreter 5 --liste /tmp/vertreter.txt --alle-liste /tmp/auswahl.txt
           tools/uhr-pruefstand/pruefstand.sh reihe /tmp/auswahl.txt

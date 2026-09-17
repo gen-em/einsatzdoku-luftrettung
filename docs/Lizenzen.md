@@ -499,7 +499,7 @@ sechsmal so viel Risiko, eine echte Domain zu treffen).
 **Zur Laufzeit wird nichts geholt** (R36). Der Preis dafür ist, dass die Datei
 altert, und zwar unbemerkt: Eine durchgelassene Registrierung sieht aus wie
 eine richtige. Der Handgriff steht im Runbook (`docs/Technik.md` 7) und als
-Backlog Nr. 222.
+Backlog Nr. 230.
 
 ---
 

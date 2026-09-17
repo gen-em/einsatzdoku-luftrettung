@@ -106,7 +106,7 @@ function einwilligung_offen(int $userId): array
 /**
  * Welche Einwilligungstexte sind IN KRAFT? Schluessel => `stand_am`.
  *
- * Gebraucht von `registrieren.php` (P5b, Backlog Nr. 223): Die Registrierung
+ * Gebraucht von `registrieren.php` (P5b, Backlog Nr. 231): Die Registrierung
  * darf nur verlangen, was es gibt. `einwilligung_offen()` beantwortet
  * dieselbe Frage fuer ein bestehendes Konto — hier gibt es noch keins, und
  * deshalb ist das eine eigene Funktion und kein Sonderfall der anderen.

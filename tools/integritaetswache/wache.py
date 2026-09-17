@@ -24,7 +24,7 @@ wird; von ihm faengt sie genau den Teil, der Passwoerter beruehrt (den
 Inline-Block der Anmeldeseite, siehe unten).
 
 WARUM SIE OHNE EINGECHECKTE ERWARTUNGSSUMME AUSKOMMT
-Der Deploy (`.github/workflows/deploy.yml`) synchronisiert `server/` byteweise
+Der Deploy (`.github/workflows/auslieferung.yml`) synchronisiert `server/` byteweise
 per FTPS. Was unter `assets/` liegt, ist auf dem Server also dieselbe Datei wie
 im Repositorium -- der Vergleich braucht keine gepflegte Liste von
 Pruefsummen, die nach der dritten Aenderung nicht mehr stimmt. Er rechnet beide
@@ -137,12 +137,45 @@ SKRIPT_RE = re.compile(r'<script\b(?!' + TAG_REST + r'(?<![\w-])src\s*=)'
 # Und der Wert darf OHNE Anfuehrungszeichen stehen (`src=x.js`): HTML erlaubt
 # das, und die zweite Gegenpruefung fand, dass ein solcher Verweis weder als
 # Fremdskript noch als Inline-Block zaehlte -- er war unsichtbar.
-SRC_RE    = re.compile(r'<script\b[^>]*?(?<![\w-])src\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))', re.I | re.S)
-FORM_RE   = re.compile(r'<form\b[^>]*>', re.I)
+# UND DER TAG-RUMPF VOR `src=` DARF PHP ENTHALTEN. Heute tut er es nirgends
+# (gemessen 17.09.2026: 117 <script>-Tags, 82 davon mit src, 0 davon mit PHP
+# VOR dem src) -- aber `<script<?= kopf_nonce_attr() ?> src="a.js">` waere
+# eine Zeile, die jederzeit jemand schreibt, und mit `[^>]*?` haette SRC_RE
+# sie NICHT gefunden. SKRIPT_RE haette sie (ueber TAG_REST) richtig als
+# Fremdskript erkannt und uebersprungen -- der Verweis waere damit weder als
+# Block noch als Fremdskript gezaehlt worden: unsichtbar. Das ist derselbe
+# Fehler wie Fund 23 und Fund 27, nur noch nicht passiert. Deshalb hier
+# vorher (Backlog Nr. 218). Die lazy Form, damit der ERSTE src gilt.
+TAG_REST_KURZ = r'(?:<\?(?:php\b|=).*?\?>|[^>])*?'
+SRC_RE    = re.compile(r'<script\b' + TAG_REST_KURZ + r'(?<![\w-])src\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))', re.I | re.S)
+# FORM_RE HAT DIESELBE SCHWAECHE GEHABT WIE SKRIPT_RE — und sie wurde beim
+# Beheben von Fund 23 uebersehen (Fund 27, 16.09.2026). `<form\b[^>]*>` endet
+# am ersten `>`, und seit Web 20.10.0 (P5a/AP6) traegt das Anmeldeformular
+# `data-sperre-rest="<?= (int)$sperreRest ?>"`. Der Tag brach also mitten im
+# PHP-Ausdruck ab.
+#
+# DER SCHADEN WAR NICHT NUR EIN ZERSCHNITTENER TAG. Was uebrigblieb, enthielt
+# `<?=`, galt damit als UNBESTIMMT — und fuer jedes unbestimmte Stueck der
+# Quelle darf die Auslieferung eines haben, das die Quelle nicht kennt. Genau
+# in diesen Freiraum passte ein `action="https://boese.example/"` am
+# Anmeldeformular. **Die Wache hat den Fall, fuer den es sie gibt, nicht mehr
+# gesehen**; ihre eigene Selbstprobe meldete ihn als nicht erkannt.
+#
+# Die Umlenk-Pruefung weiter unten faengt ihn NICHT mit ab: Sie sieht
+# `formaction|formmethod|formtarget|formenctype`, nicht das `action` am
+# `<form>` selbst.
+FORM_RE   = re.compile(r'<form\b' + TAG_REST + r'>', re.I | re.S)
+# Ein Attributwert, der ein PHP-Stueck enthaelt, ist zur Pruefzeit unbekannt --
+# der Rest des Tags ist es aber NICHT. `form_paare()` unten setzt deshalb nur
+# diese einen Werte auf einen Platzhalter, auf BEIDEN Seiten, statt den ganzen
+# Tag abzuschreiben. Danach ist `action` wieder vergleichbar.
+ATTR_WERT   = r'(?:<\?(?:php\b|=).*?\?>|[^"])*'
+ATTR_RE     = re.compile(r'([\w-]+)\s*=\s*"(' + ATTR_WERT + r')"', re.I | re.S)
+PLATZHALTER = '\u00a7php\u00a7'
 # <base> lenkt jeden relativen Verweis der Seite um, die vier form*-Attribute
 # den Absendeweg des Formulars -- siehe Kopf der Datei. Das Umlenk-Attribut
 # wird samt Wert verglichen, gleich an welchem Tag es steht.
-BASE_RE   = re.compile(r'<base\b[^>]*>', re.I)
+BASE_RE   = re.compile(r'<base\b' + TAG_REST + r'>', re.I)
 UMLENK_RE = re.compile(r'(?<![\w-])form(?:action|method|target|enctype)\s*=\s*'
                        r'(?:"[^"]*"|\'[^\']*\'|[^\s>]*)', re.I)
 # Vier weitere Stellen, die den Weg des Passworts bestimmen, ohne <script>-Tag
@@ -153,8 +186,25 @@ UMLENK_RE = re.compile(r'(?<![\w-])form(?:action|method|target|enctype)\s*=\s*'
 # Attribut. Die Attributmuster laufen ueber den Text OHNE Skriptinhalte
 # (`ohne_skriptinhalt()`): `x.onclick = …` in einem Skript ist Code, kein
 # Attribut, und der Skriptinhalt wird ohnehin als Block verglichen.
-META_RE    = re.compile(r'<meta\b[^>]*(?<![\w-])http-equiv\s*=[^>]*>', re.I)
-EINBETT_RE = re.compile(r'<(?:iframe|frame|object|embed)\b[^>]*>', re.I)
+# Auch diese drei lesen den Tag-Rumpf mit TAG_REST, nicht mit `[^>]*` --
+# und hier steht dazu, was das WERT ist, damit niemand die Zeile fuer mehr
+# haelt, als sie ist: Bei diesen drei ist es Gleichform, keine Fehlerbehebung.
+#
+# Nachgemessen am 17.09.2026: In der Quelle steht KEIN <base>, KEIN
+# <iframe|frame|object|embed>, und keines der 12 <meta>-Tags traegt PHP im
+# Rumpf. Und selbst wenn: Ein `[^>]*` endet am `>` des PHP-SCHLUSSES, also
+# NACH dem `<?=` -- das abgeschnittene Stueck traegt den PHP-Anfang mit sich
+# und gilt damit weiterhin als unbestimmt. Der Mengenvergleich laesst es
+# durch, statt einen Fehlalarm zu bauen. Anders als bei SRC_RE, wo `[^>]`
+# am `?>` haengenbleibt und der Treffer ganz AUSFAELLT, richtet die kurze
+# Form hier also keinen Schaden an.
+#
+# Warum trotzdem umgestellt: Weil die naechste Person nicht nachmessen soll,
+# welches der acht Tag-Muster dieser Datei die kurze Form vertraegt und
+# welches nicht. Drei Anlaeufe (Fund 23, Fund 27, Nr. 218) sind genug; ab
+# hier liest jedes Tag-Muster den Rumpf gleich (CLAUDE.md 6).
+META_RE    = re.compile(r'<meta\b' + TAG_REST + r'(?<![\w-])http-equiv\s*=' + TAG_REST + r'>', re.I | re.S)
+EINBETT_RE = re.compile(r'<(?:iframe|frame|object|embed)\b' + TAG_REST + r'>', re.I | re.S)
 HANDLER_RE = re.compile(r'(?<![\w-])on[a-z]+\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^\s>]*)', re.I)
 # Fuer javascript:-Adressen reicht kein Muster ueber den rohen Text: Der
 # Browser dekodiert Entitaeten im Attributwert (`&#106;avascript:`) und
@@ -263,6 +313,33 @@ def tags(muster: re.Pattern, text: str) -> list[str]:
     return [re.sub(r'\s+', ' ', m.group(0)).strip() for m in muster.finditer(text)]
 
 
+def form_paare(quelle: str, geliefert: str) -> tuple[list[str], list[str]]:
+    """Formular-Tags beider Seiten, PHP-Attributwerte auf einen Platzhalter.
+
+    Ein `<form>`-Tag mit einem PHP-Ausdruck in EINEM Attribut ist nicht
+    insgesamt unbestimmt. Wer ihn so behandelt, oeffnet genau den Freiraum,
+    durch den ein fremdes `action=` kommt (Fund 27). Hier werden deshalb nur
+    die Attribute maskiert, deren Wert in der QUELLE PHP traegt -- und
+    dieselben Namen in der Auslieferung. Alles andere bleibt Wort fuer Wort
+    vergleichbar.
+    """
+    q = tags(FORM_RE, quelle)
+    g = tags(FORM_RE, geliefert)
+    namen = set()
+    for t in q:
+        for m in ATTR_RE.finditer(t):
+            if ist_php(m.group(2)):
+                namen.add(m.group(1).lower())
+
+    def maske(t: str) -> str:
+        for n in namen:
+            t = re.sub(r'(?<![\w-])' + re.escape(n) + r'\s*=\s*("' + ATTR_WERT + r'"|\'[^\']*\'|[^\s>]+)',
+                       n + '="' + PLATZHALTER + '"', t, flags=re.I | re.S)
+        return t
+
+    return [maske(t) for t in q], [maske(t) for t in g]
+
+
 def menge_vergleichen(seite: str, was: str, soll: list[str], ist: list[str]) -> tuple[list[str], int, int]:
     """Vergleicht eine Menge von Tags oder Attributen in beide Richtungen.
 
@@ -340,8 +417,8 @@ def seite_vergleichen(seite: str, quelle: str, geliefert: str) -> tuple[list[str
 
     # -- Formulare: die Tags selbst, samt Attributen. Ein fremdes `action`
     #    schickte das Passwort woandershin, ohne dass ein Skript sich aendert.
-    a, z['form_gleich'], _ = menge_vergleichen(seite, 'Formular',
-                                               tags(FORM_RE, quelle), tags(FORM_RE, geliefert))
+    f_soll, f_ist = form_paare(quelle, geliefert)
+    a, z['form_gleich'], _ = menge_vergleichen(seite, 'Formular', f_soll, f_ist)
     ab.extend(a)
 
     # -- <base> und Umlenk-Attribute: In der Quelle gibt es heute keines von
@@ -638,6 +715,31 @@ def selbstprobe() -> int:
            and SRC_RE.search('<script src="x"></script>') is not None,
            'Ein <script data-src=…> ist ein Inline-Block, kein Fremdskript',
            f'{bloecke(probe)}, src-Treffer: {SRC_RE.search(probe) is not None}')
+    # PHP VOR dem `src=` -- Backlog Nr. 218, vorbeugend statt nach dem Schaden.
+    # Mit `[^>]*?` fand SRC_RE diesen Verweis NICHT (`[^>]` kommt am `?>` nicht
+    # vorbei), und SKRIPT_RE ueberging ihn ueber TAG_REST als Fremdskript. Er
+    # war damit weder Block noch Fremdskript: unsichtbar. Heute steht so eine
+    # Zeile nirgends (117 <script>-Tags, 0 davon) -- die Probe haelt sie offen.
+    q7a = '<script<?= kopf_nonce_attr() ?> src="assets/a.js"></script>'
+    m7a = SRC_RE.search(q7a)
+    pruefe(m7a is not None and src_wert(m7a) == 'assets/a.js' and bloecke(q7a) == [],
+           'Ein <script<?= … ?> src=…> zaehlt als Fremdskript, nicht als nichts',
+           f"src: {src_wert(m7a) if m7a else 'KEIN TREFFER'}, Bloecke: {bloecke(q7a)}")
+    # Und <base> als Gegenstueck -- MIT der Ansage, was diese Zeile beweist
+    # und was nicht: Sie faellt mit dem alten `[^>]*>` NICHT um (nachgemessen
+    # 17.09.2026), denn der abgeschnittene Tag traegt das `<?=` mit sich und
+    # gilt so oder so als unbestimmt. Was sie festhaelt, ist die Toleranz in
+    # beide Richtungen: ein PHP-tragendes <base> ist kein Fehlalarm, ein
+    # ZWEITES <base> in der Auslieferung faellt trotzdem auf. Wer das Muster
+    # eines Tages strenger macht, merkt es hier.
+    q7b = '<base href="<?= e($basis) ?>">'
+    g7b = '<base href="/nadoku/">'
+    ab7b, _ = seite_vergleichen('probe', q7b, g7b)
+    ab7c, _ = seite_vergleichen('probe', q7b, g7b + '<base href="https://boese.example/">')
+    pruefe(not any('<base>' in a for a in ab7b) and any('<base>' in a for a in ab7c),
+           'Ein <base> mit PHP im Rumpf ist kein Fehlalarm -- ein zweites schon',
+           f"unveraendert: {len([a for a in ab7b if '<base>' in a])}, "
+           f"zusaetzlich: {len([a for a in ab7c if '<base>' in a])}")
     pruefe(not ist_php('if (a<?0) { b(); }') and ist_php("<?= asset('x') ?>")
            and ist_php('<?php echo 1; ?>'),
            '`<?` als JavaScript zaehlt nicht als PHP, <?php und <?= schon',

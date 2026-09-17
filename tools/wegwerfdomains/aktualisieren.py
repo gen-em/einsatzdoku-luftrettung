@@ -11,7 +11,7 @@ UND SIE ALTERT IN EINE RICHTUNG. Neue Wegwerfanbieter kommen dazu, die Datei
 bleibt stehen. Auffallen kann das niemandem — eine durchgelassene
 Registrierung sieht aus wie eine richtige, und die Seite antwortet ohnehin auf
 jede gleich (E-P5b-13). Deshalb steht der Lauf im Auslieferungs-Runbook
-(`docs/Technik.md`, Abschnitt 7) und nicht im guten Willen. Backlog Nr. 222.
+(`docs/Technik.md`, Abschnitt 7) und nicht im guten Willen. Backlog Nr. 230.
 
     python3 tools/wegwerfdomains/aktualisieren.py            # holen und pruefen
     python3 tools/wegwerfdomains/aktualisieren.py --schreiben  # auch schreiben

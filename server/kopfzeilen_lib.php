@@ -322,7 +322,7 @@ function kopf_csp(bool $mitNonce = true): string
         "form-action 'self'",
         "object-src 'none'",
     ];
-    /* `frame-ancestors` NUR IN DER SCHARFEN FASSUNG (Backlog Nr. 216).
+    /* `frame-ancestors` NUR IN DER SCHARFEN FASSUNG (Backlog Nr. 224).
      *
      * In einer Report-Only-Richtlinie wird die Direktive vom Browser
      * IGNORIERT — so steht es in CSP Level 3, und WebKit sagt es laut:

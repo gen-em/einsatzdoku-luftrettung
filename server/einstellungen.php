@@ -1350,7 +1350,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         ]); ?>
       <?php ui_karte_ende(); ?>
 
-      <?php /* HIER STAND EIN ZWEITES `ui_karte_ende()` (Backlog Nr. 217).
+      <?php /* HIER STAND EIN ZWEITES `ui_karte_ende()` (Backlog Nr. 225).
                Es schloss keine Karte, sondern gab ein `</div></section>` zu
                viel aus — und weil der Parser fuer ein `</div>` ohne offenes
                `div` das naechste nimmt, das er findet, schloss es

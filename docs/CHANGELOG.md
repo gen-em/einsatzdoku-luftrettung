@@ -266,7 +266,7 @@ beim ersten Login nach dem Einspielen am Tor gefasst.
 
 Gefunden beim Nachprüfen einer Rückfrage des Auftraggebers zur AVV, nicht durch
 ein Prüfmittel: Es gibt keines, das „verlangt, aber nie gespeichert" messen
-könnte. Backlog Nr. 223.
+könnte. Backlog Nr. 231.
 
 ## [Web 20.22.1] — 2026-09-17
 
@@ -350,7 +350,7 @@ Domain träfe, wäre mit einem Punkt zu umgehen. Gepflegt wird sie mit
 `tools/wegwerfdomains/aktualisieren.py`; das Werkzeug **schreibt nicht**, wenn
 eine echte Domain auf der Liste steht oder die Form nicht stimmt (beides
 gegengeprüft). Herkunft in `docs/Lizenzen.md` 7b, Pflegeaufgabe als Backlog
-Nr. 222.
+Nr. 230.
 
 **Freischaltung und Verfall.** Wer sich bei *mit Freischaltung* registriert,
 steht auf `wartet`; die Verwaltung bekommt eine **Sammelmail, höchstens eine
@@ -388,7 +388,7 @@ von dort auf `bestaetigen.php`. Mit dem Auftraggeber geklärt am 17.09.2026:
 lieber zwei Felder weniger als ein zweiter Weg, auf dem ein Anteil das Haus
 verlässt.
 
-**Kein Proof-of-Work** (R37 (4) „notfalls"): Backlog Nr. 220, mit Auslöser.
+**Kein Proof-of-Work** (R37 (4) „notfalls"): Backlog Nr. 228, mit Auslöser.
 
 **Keine Migration.** `users.status` kennt `unbestaetigt` und `wartet` seit AP2.
 
@@ -397,7 +397,7 @@ verlässt.
 ## [Web 20.21.1] — 2026-09-17
 
 **Die Profilseite brach auf halber Höhe aus ihrem Gerüst aus** (Backlog
-Nr. 217).
+Nr. 225).
 
 ### Behoben
 
@@ -430,7 +430,7 @@ Fehler meldet derselbe Lauf unverändert „Überlauf 0 · Konsolenfehler 0 · K
 falscher Höhe 0" **und** „6 geprüft · **4 außerhalb**" — die neue Zahl ist also
 selbst keine leere Null.
 
-**Ein Meldungskasten stand ungestaltet da** (Backlog Nr. 218). In
+**Ein Meldungskasten stand ungestaltet da** (Backlog Nr. 226). In
 `betrieb_server.php` war von Hand `class="meldung meldung-blau"` geschrieben;
 die Töne heißen `fehler`, `warn`, `ok`, `info`, `schutz`, und `meldung-blau` hat
 keine Regel im Stylesheet. Weißer Kasten, kein Symbol, keine Fehlermeldung.
@@ -452,7 +452,7 @@ Text und folgen dem Hausstil („Unter Einstellungen → Konto"). Dabei ausgezä
 was diese Prüfung eigentlich misst: von 319 Befunden sind **195 `…` und 104
 `→`** — zusammen 299 Satzzeichen in Prosa; nur **20** sind Zeichen, die
 wirklich statt eines Symbols stehen. Solange die Liste beides in einen Topf
-wirft, kann die Schwelle nur steigen. Der Weg heraus steht als Backlog Nr. 219.
+wirft, kann die Schwelle nur steigen. Der Weg heraus steht als Backlog Nr. 227.
 **Nebenbei:** `docs/Technik.md` nannte die Schwelle mit 366, während die Kette
 mit 377 lief — berichtigt.
 
@@ -746,7 +746,7 @@ mit, sperrte der Ratenschutz nach kurzer Zeit eine Kennung, die nichts falsch
 macht — und nach dem Entsperren käme der Rückstand dann nicht durch.
 
 **Die Bibliothek läuft ohne `config.php`**, weil `install.php` sie braucht,
-bevor es eine gibt. Dieselbe Falle wie Backlog Nr. 215 — hier von vornherein
+bevor es eine gibt. Dieselbe Falle wie Backlog Nr. 223 — hier von vornherein
 vermieden statt hinterher behoben.
 
 **Migration** `2026_09_16_konto_lebenszyklus`. **`update.php` ist fällig.**
@@ -821,7 +821,7 @@ richtig da.
 ### Nebenbei behoben
 
 **`frame-ancestors` stand in einer Report-Only-Richtlinie** und war dort
-wirkungslos (Backlog Nr. 216). CSP Level 3 sagt, dass die Direktive in einer
+wirkungslos (Backlog Nr. 224). CSP Level 3 sagt, dass die Direktive in einer
 Report-Only-Richtlinie ignoriert wird; WebKit sagt es laut — ein
 Konsolenfehler je Seitenaufruf, auf jeder Seite.
 
@@ -834,9 +834,336 @@ Fassung, wo sie auch wirkt.
 
 **Migration** `2026_09_16_protokoll_ereignisse`. **`update.php` ist fällig.**
 
+## [Web 20.16.4] — 2026-09-17
+
+**Vier Stellen, an denen die Dokumentation eine andere Kette beschrieb als die
+gebaute** (Backlog Nr. 215, dazu drei neue Funde).
+
+Aufgefallen beim Schreiben einer Übersicht über die Automatisierung: Wer die
+drei Arbeitsläufe erklären will, hält sie gegen `docs/Technik.md` 6 — und dabei
+kommt heraus, wo beide auseinandergehen. Kein Verhalten geändert, keine
+Migration.
+
+### Berichtigt: der Messstand-Satz behauptete zwei Dinge, die beide nicht zutreffen
+
+`Technik.md` 6.3 nannte als Bestandteil von Stufe 2 „und **nur bei Tag-Läufen**
+der Messstand". Der Schritt führt seit P5a/AP9 nichts mehr aus — er ist
+ersatzlos gestrichen (Nr. 206), geblieben ist ein Schritt gleichen Namens, der
+nur sagt, wo die Zahlen des Messstands stehen. Und Stufe 2 läuft bei einem
+Tag-Lauf **überhaupt nicht**: `staging` ist für Tags abgeschaltet, `stufe2`
+hängt mit `needs` daran; ein Tag lässt allein `produktion` laufen. Dass der
+ausgelieferte Stand Stufe 2 trotzdem gesehen hat, sichert das Tor „Grüner
+Staging- und Stufe-1-Lauf auf diesem Stand?" — der Absatz sagt das jetzt.
+
+### Berichtigt: die Tabelle der Stufe 1 führte 13 Schritte, der Lauf hat 14
+
+Es fehlte die Zeile für `tools/kette/tor.py --selbstprobe` (11 erfüllt,
+0 offen), die mit Web 20.16.1 aus dem Produktionslauf nach Stufe 1 gezogen
+wurde. Eine Tabelle, die einen Prüfschritt nicht führt, ist genau dort
+gefährlich, wo jemand sie zum Nachzählen benutzt.
+
+### Behoben: eine handgepflegte Zahl, zum zweiten Mal veraltet
+
+Die Kopfzeile der Selbstprobe von `tor.py` meldete bis Web 20.16.1 „fünf
+Lagen" und fuhr zehn; danach stand „fünf und fünf" da, und mit dem elften Fall
+stimmte auch das nicht mehr. Behoben ist deshalb **nicht die Zahl, sondern
+ihre Bauart**: Die Kopfzeile nennt nur noch die Gruppen — Backup-Tor,
+Unterbefehl `pause`, Fehlerantwort —, und die einzige ausgegebene Zahl ist die
+**gezählte** am Ende des Laufs. Eine Zahl, die niemand pflegen muss, kann nicht
+veralten. `Technik.md` 6.4 und der Kopf von `auslieferung.yml` sagen jetzt
+dazu, worauf sich ihre „fünf Lagen" beziehen: auf das Backup-Tor allein.
+
+### Berichtigt: sechs Werkzeuge begründeten ihre Arbeitsweise mit `deploy.yml`
+
+Backlog Nr. 215, dort mit fünf Stellen aufgenommen — beim Nachzählen wurden es
+sechs. `deploy.yml` ist mit Web 20.4.0 gelöscht; die Kette heißt seither
+`auslieferung.yml` und hat **zwei** FTPS-Schritte statt einem. Der Preis war
+nicht kosmetisch: `adminbackup_lib.php` erklärt mit diesem Satz, warum
+`sicherungen/` in der Ausnahmeliste stehen **muss** — wer ihm folgte, suchte
+die Liste, die alle Backups schützt, in einer Datei, die es nicht mehr gibt.
+Jede Stelle nennt jetzt `auslieferung.yml` und, wo es darauf ankommt, die
+Zweiwegigkeit; die Herkunft bleibt als „bis Web 20.3.0: `deploy.yml`" daneben.
+
+**Bewusst nicht angefasst:** die Erwähnungen in `docs/konzepte/`, im Backlog
+und in diesem Changelog. Das sind Protokolle eines Standes — wer sie
+umschreibt, fälscht die Geschichte, statt sie zu berichtigen.
+
+### Warum die Nummer überhaupt steigt
+
+Fünf der sechs Stellen liegen unter `tools/`, der Rest unter `docs/` — das
+allein stufte nichts hoch. Die sechste ist der Kommentar in
+`server/adminbackup_lib.php`, und damit ist es keine Änderung mehr, die nur
+`tools/` und `docs/` anfasst (`CLAUDE.md` 2).
+
+## [Web 20.16.3] — 2026-09-17
+
+**Die Durchsicht fand einen schlimmeren Fehler als den behobenen**
+(Backlog Nr. 220).
+
+Zehn Befunde aus vier Blickwinkeln, jeder von einem zweiten Durchgang zu
+widerlegen versucht. Der erste wiegt schwerer als die Behebung, für die er
+geschrieben wurde.
+
+### Behoben: ein misslungenes Ausschalten hätte Staging geschlossen — und der Lauf grün gemeldet
+
+Der `catch` in `wartungAus()` setzte `wartungVonUns` auf falsch und
+**entwaffnete damit jeden weiteren Versuch**: Die Funktion läuft nach jeder
+Seite und noch einmal am Prozessende; beide kehrten danach sofort um. Der
+Rückgabewert kannte den Fehlschlag nicht, der Bericht auch nicht — der einzige
+Hinweis wäre eine `console.error`-Zeile in einem Protokoll mit hunderten
+gewesen.
+
+Der Kommentar darüber versprach das Gegenteil: *„die Installation bliebe sonst
+still geschlossen, und das muss auffallen."*
+
+Jetzt bleibt die Merkung stehen, der nächste Versuch kommt von selbst — ein
+einmaliger Schluckauf heilt sich —, und ein hängender Wartungsmodus **färbt
+den Lauf rot**, auch bei sonst sauberem Ergebnis.
+
+### Behoben: die Merkung stand hinter dem Einschalten
+
+Über eine Datei ist das gleichgültig: `writeFileSync` schreibt oder wirft.
+**Über HTTP gibt es einen dritten Ausgang** — ausgeführt, aber nicht
+bestätigt. Eine verlorene Antwort hätte die Anlage geschlossen
+zurückgelassen, ohne dass jemand ausschaltet. Die Merkung steht jetzt **vor**
+dem Aufruf.
+
+### Geändert: ein Schluckauf wirft nicht mehr den ganzen Lauf weg
+
+Der Wartungsschalter wirft nicht mehr. Ein Fehlschlag lässt die betroffene
+Seite **ausfallen**, mit dem Grund daneben, und das geht in Bericht und
+Rückgabewert. Aus demselben Grund bricht der Lauf bei fehlendem Token nicht
+mehr mit Rückgabewert 2 ab, sondern misst die übrigen und endet rot: **Zwei
+von fünfzig Seiten sind kein Grund, achtundvierzig wegzuwerfen.**
+
+*Gegengeprüft, gegen eine echte Installation:* mit gültigem Token 8 Bilder,
+RC 0, Wartung danach aus; mit **falschem** Token 0 Bilder, RC 1, „8×
+Zustand nicht abfragbar: … `error: token`" — und die Installation
+**unangetastet**.
+
+### Dokumentation
+
+- `docs/Technik.md` 6.3 sagte für dasselbe fehlende Token **zweierlei**, und
+  ein eingeschobener Absatz hatte den Satz über die Kreisläufe zerrissen —
+  *zum zweiten Mal dieselbe Art Fehler.* Jetzt zwei getrennte Absätze, mit dem
+  Unterschied als Absicht benannt: Kreisläufe werden übersprungen, beim
+  Bilderlauf fallen zwei Seiten aus.
+- Die Wegtabelle in `tools/screenshots/LIESMICH.md` war nach dem **Ort**
+  geschlüsselt; der Code entscheidet nach dem **Token**.
+- Ein Kettenkommentar nannte einen roten Lauf „den ersten grünen Durchlauf".
+
+**Keine Migration.**
+
+## [Web 20.16.2] — 2026-09-17
+
+**Der Wartungsschalter des Bilderlaufs — dritter Fall derselben Annahme**
+(Backlog Nr. 220).
+
+### Behoben
+
+`aufnehmen.mjs` schaltete den Wartungsmodus durch Anlegen der Datei
+`server/wartung.lock` **im eigenen Arbeitsbaum**. Im Kopf der Stelle stand die
+Annahme wörtlich: *„Der Bilderlauf läuft auf derselben Maschine wie die
+Installation und legt sie deshalb selbst an."* Seit Stufe 2 der
+Auslieferungskette stimmt das nicht mehr.
+
+Gemessen am 17.09.2026 gegen Staging: **8 Aufnahmen ohne Bild, 8
+Konsolenfehler**, „Seite leitete auf die Anmeldung um". Nachgestellt:
+`index.php` antwortet ohne Wartung mit **302**, mit Wartung mit **503** — und
+`503` ist, was `seiten.json` für diesen Eintrag erwartet.
+
+**Es sind zwei Seiten, nicht eine**, und die zweite ist die unangenehmere:
+`07-wartungsseite` fällt auf, weil ihre Bilder ausbleiben. Bei
+`46a-betrieb-updates-wartung` entstehen acht Bilder, die den Wartungsbalken
+**nicht zeigen** — eine stille Fehlmessung, die „kein Überlauf" meldet.
+
+**Zwei Wege**, wie bei `kreislauf.py` seit 20.16.0: mit `--jobs-token` über
+`jobs.php?aktion=wartung_an` (gefahren von `tools/kette/tor.py`), ohne Token
+weiter über die Datei. Wer örtlich misst, merkt nichts.
+
+**Dazu ein Riegel.** Ist die Basis nicht diese Maschine und fehlt das Token,
+bricht der Lauf **vorher** ab und nennt beide betroffenen Seiten. Ohne ihn
+liefe er weiter und legte Bilder der Anmeldeseite ab — eine Zahl, die nicht
+misst, was sie zu messen vorgibt.
+
+### Der dritte Fall — deshalb steht er hier als Muster
+
+`kreislauf.py` hielt die Jobs über die lokale Kommandozeile an (Nr. 219),
+`demo_kennzeichnen.php` braucht `db()` auf dem Server (Rahmenplan 6a), und
+hier der Wartungsschalter. **Wer ein Werkzeug gegen `--basis` misst und dabei
+in `server/` schreibt oder liest, baut diese Annahme ein, ohne sie
+hinzuschreiben.**
+
+### Nr. 221 — nicht behoben, sondern messbar gemacht
+
+Der Bilderlauf meldete **„Überlauf bei 360"** auf `05-datenschutz`. Örtlich
+nicht nachstellbar. Ausgeschlossen wurde, mit Zahlen:
+
+| geprüft | Ergebnis |
+|---|---|
+| Markup der Seite | **byteidentisch**, 2104 B, gleiche Klassen, längstes Wort 20 Zeichen, keine Tabelle |
+| `assets/style.css` auf Staging | **byteidentisch** mit dem Repositorium, 200 452 B |
+| alle 10 Schriftdateien | **vorhanden und byteidentisch** |
+| Maßstab 1× und 2× örtlich | **kein Überlauf** |
+
+**Der Bericht mit der Spalte `Verursacher` wurde auf dem Läufer weggeräumt.**
+Genau die Spalte hätte gesagt, welches Element überläuft. Sie steht jetzt in
+der Zusammenfassung des Laufs — eine Zahl ohne Verursacher ist ein Befund, dem
+niemand nachgehen kann.
+
+**Warum die Nummer steigt, obwohl kein Servercode angefasst ist:** dieselbe
+Überlegung wie bei 20.15.2. Hier ändert sich, was die Kette über die Anwendung
+**aussagen** kann.
+
+**Keine Migration.**
+
+## [Web 20.16.1] — 2026-09-17
+
+**Was eine unabhängige Durchsicht an 20.16.0 gefunden hat** (Backlog Nr. 219).
+
+Neunzehn Befunde aus fünf Blickwinkeln, jeder einzeln von einem zweiten
+Durchgang zu widerlegen versucht. Drei davon brechen Zusagen, die 20.16.0
+selbst aufgestellt hat — die stehen hier zuerst.
+
+### Behoben: die Ziffernprüfung war die falsche
+
+`aktion=pause` prüfte mit `!is_numeric($roh) || (int)$roh < 0`. Das ließ
+**`sekunden=-0.5`** durch: numerisch ja, `(int)"-0.5"` ist **0**, und 0 ist
+nicht kleiner als 0. Der Aufruf **hob damit eine laufende Pause auf** und
+quittierte es mit `ok`.
+
+Das ist genau der Fall, gegen den der Absatz darüber geschrieben war
+(*„ein fehlendes `sekunden` ist ein Fehler und nicht null"*). Nachgemessen
+gegen eine echte Installation: **HTTP 200**, „Jobs laufen wieder", Pause weg.
+Jetzt `^\d+$` — nur Ziffern, kein Vorzeichen, kein Punkt, kein `1e3`.
+
+**Warum meine eigenen Proben es nicht fanden:** Ich hatte `-5` und `abc`
+geprüft. Beide scheitern schon an der vorherigen Bedingung. Die Lücke lag
+**zwischen** ihnen, und zwei Proben an den Rändern sagen nichts über die
+Mitte.
+
+### Behoben: `rufen()` verschluckte jede Fehlerantwort — und das ist älter
+
+Eine `HTTPError` ist eine `URLError` und fiel deshalb in den
+Netzfehler-Zweig: Aus einer 400 mit Begründung wurde
+`{"_fehler": "HTTP Error 400"}`. Der Körper, in dem steht *warum*, ging
+verloren.
+
+**Der Schaden ist älter als diese Änderung und größer als eine hässliche
+Meldung.** Der Kommentar in `backup_tor()` sagt: *„Ein falsches Token, eine
+unbekannte Aktion … das wird beim vierzigsten Mal nicht anders"* — und bricht
+bei `error` sofort ab. Dieser Zweig war **nie erreichbar**, weil `error` nie
+ankam. Das Backup-Tor fragte bei falschem Token vierzigmal, gut dreizehn
+Minuten lang, und meldete dann „kein fertig" statt „falsches Token".
+
+### Behoben: der neue Selbstprobenfall bewies nichts
+
+Er rief `adresse_bauen()` **unmittelbar** mit einem von Hand geschriebenen
+`{"sekunden": 1800}` auf — und maß damit `urlencode`, nicht den Aufrufweg.
+Streicht man `felder=` in `main()` **oder** reicht `rufen()` es nicht weiter,
+blieb die Probe grün. Beides nachgemessen.
+
+Das war die Fehlerklasse, gegen die der Fall geschrieben wurde: ein Schalter,
+der still verworfen wird. Jetzt fährt er den ganzen Weg `main()` → `rufen()`
+→ `adresse_bauen()`, nur der Abruf ist ersetzt, und prüft die **abgerufene**
+Adresse. Gegenprobe: beide Mutationen ergeben **11 → 10 erfüllt, 1 offen**.
+
+### Geändert
+
+- **Die Selbstprobe von `tor.py` läuft jetzt in Stufe 1**, nicht mehr nur im
+  Produktionslauf. Für das Backup-Tor war der alte Ort richtig — unmittelbar
+  vor dem Tor. Aber die fünf neuen Fälle bewachen `pause`, und das läuft in
+  Stufe 2; wer es kaputt machte, bekam von Stufe 1 ein Grün.
+- **Der `JOBS_TOKEN`-Riegel steht vor `pip` und dem Chromium-Download.** Fehlte
+  das Token *und* brach der Download ab, wurde der Schritt rot mit einer
+  Playwright-Meldung, obwohl eine Zeile weiter „übersprungen, nicht gemessen"
+  gestanden hätte. Man sucht dann am falschen Ort.
+- **`--jobs-token` liest nicht mehr ersatzweise `JOBS_TOKEN` aus der
+  Umgebung.** Damit stimmte der Satz „ohne Token bleibt alles beim lokalen
+  Weg" nicht mehr: Wer für Handarbeit ein `export JOBS_TOKEN=…` gesetzt hatte,
+  schickte den nächsten Kreislauf gegen die **lokale** Installation über HTTP,
+  mit einem Token, das einer anderen gehört.
+- **Die Selbstprobe meldet nicht länger „fünf Lagen" und fährt elf.** Wer die
+  Kopfzeile abschrieb, trug eine falsche Zahl ins Prüfprotokoll.
+- **Die Geheimnis-Tabelle in `docs/Technik.md` war zerrissen** — ein
+  eingeschobener Absatz stand zwischen zwei Zeilen, die Zeile `Repositorium`
+  fiel aus der Tabelle heraus.
+- Nachgezogen: `tools/kette/LIESMICH.md` (kannte `pause` nicht),
+  `docs/Rahmenplan.md` 6a (Schritt 10: `JOBS_TOKEN`), Prüfpunkt **P6** (hieß
+  „die vier Aktionen" und prüfte die fünfte nicht), und die Grenze von
+  `tools/kettenaufrufe/` (der Aufruf `kreislauf.py` → `tor.py` steht in
+  Python, nicht in einem `run:`-Block, und liegt außerhalb seiner Reichweite).
+
+**Keine Migration.**
+
+## [Web 20.16.0] — 2026-09-17
+
+**Die Job-Pause ist jetzt auch über die Adresse erreichbar** (Backlog Nr. 219).
+
+### Hinzugefügt
+
+`jobs.php` nimmt eine fünfte Aktion: **`pause`** mit `sekunden=N` (0 hebt
+auf). Dahinter steht derselbe `jobs_pause()` aus `jobs_lib.php` wie hinter
+`php jobs.php --pause` und hinter den beiden Knöpfen unter **Betrieb →
+Hintergrundjobs** — kein vierter Mechanismus, nur ein vierter Aufrufer.
+
+Dazu auf der Werkzeugseite: `tools/kette/tor.py` bekommt den vierten
+Unterbefehl `pause`, `tools/referenzdatensatz/vergleich/kreislauf.py` den
+Schalter `--jobs-token`. **Ohne Token bleibt dort alles beim lokalen Weg** —
+wer auf seinem Rechner misst, merkt von der Änderung nichts.
+
+### Das Problem, das dahinter steckt
+
+Der Kreislauftest hält die Hintergrundjobs an, bevor er ein Backup in ein
+frisches Konto spielt. Ohne Pause dünnt der Verdichtungsjob die
+wiederhergestellten Spuren aus — die Einsätze sind alt, der Job hält sie für
+reif —, und der Vergleich misst dann nicht mehr *„kommt zurück, was
+hineinging"*, sondern *„hat der Job dazwischen zugeschlagen"*. Nachgemessen:
+ein Lauf ohne Pause verdichtete **125 Spuren** des Umlaufkontos.
+
+Angehalten wurde bisher **nur über die Kommandozeile**, und die setzt voraus,
+dass das Prüfmittel auf demselben Rechner läuft wie die Installation. Stufe 2
+der Auslieferungskette tut das nicht: Sie läuft auf einem GitHub-Läufer gegen
+ein fernes Staging. Der erste echte Lauf nach dem Merge von PR #51 brach ab
+mit `require_once(.../server/config.php): Failed to open stream`.
+
+**Der Aufruf war nicht falsch geschrieben.** Das Werkzeug nahm an, `--basis`
+sei derselbe Rechner — eine Annahme, die stimmte, solange nur von Hand
+gemessen wurde. Das ist auch der Grund, warum das neue `tools/kettenaufrufe/`
+sie nicht fangen konnte: Es prüft Schnittstellen, nicht Verhalten, und sagt
+das in seiner `LIESMICH.md` ausdrücklich.
+
+### Was das an Macht gibt, und was nicht
+
+Wer das Job-Token hat, kann die Jobs bis `JOB_PAUSE_MAX_S` (7200 s) still
+stellen. Das ist **weniger**, als er ohnehin schon konnte: `wartung_an`
+schließt die ganze Anwendung und hängt seit P5a am selben Token. Daten liest
+und schreibt die Aktion keine, und der Ratenschutz begrenzt die Versuche wie
+bei jedem Token-Aufruf.
+
+### Ein fehlendes `sekunden` ist ein Fehler und nicht null
+
+**400 statt Vorgabewert** — denn 0 *hebt die Pause auf*. Ein vergessener
+Parameter gäbe sonst die Jobs frei und meldete dafür `ok`; der Aufrufer
+glaubte, sie stünden still. Dieselbe Regel gilt in `tor.py` für `--sekunden`,
+und die Selbstprobe dort weist beides nach (**5 → 10 Fälle**): dass
+`sekunden` in der Adresse landet — gemessen an der Adresse, nicht an der
+Antwort, denn ein `ok` käme in beiden Fällen — und dass ein vergessenes
+`--sekunden` mit Rückgabewert 2 abbricht.
+
+### Zuarbeit
+
+Die Umgebung `staging` braucht dafür das Geheimnis **`JOBS_TOKEN`**, denselben
+Namen wie `produktion`, aber den Wert **dieser** Installation (Betrieb →
+Hintergrundjobs). Fehlt er, wird der Kreislauf-Schritt ausdrücklich
+übersprungen und gemeldet — er fällt **nicht** still auf den lokalen Weg
+zurück, der hier ohnehin fehlschlägt.
+
+**Keine Migration.** `app_state` trägt den Schlüssel `jobs_pause_bis` seit
+Web 10.2.0.
 ## [Web 20.15.3] — 2026-09-16
 
-**Die Anwendung ließ sich nicht mehr installieren** (Backlog Nr. 215).
+**Die Anwendung ließ sich nicht mehr installieren** (Backlog Nr. 223).
 
 ### Behoben
 

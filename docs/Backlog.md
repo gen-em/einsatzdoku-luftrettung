@@ -45,15 +45,27 @@ demselben Zweig vergeben** (206 Messstand-Schritt, 207 `gen-em.org` in `tools/`,
 210 Deadlocks in `ingest.php`, 211 `/api/`-Aufruf ohne Sitzung, 212 zwei
 Erwartungen der Wiederherstellungsprobe), **213 und 214 aus der
 Durchsicht vom 16.09.2026** (Zustandsdatei der Kette im Webroot;
-`install.php` in der Auslieferung). **215 und aufwärts liegen auf dem
-P5b-Zweig `claude/magical-dirac-we2y1z`** (215 Anwendung nicht installierbar,
-216 `frame-ancestors` in Report-Only, 217 Profilseite aus dem Gerüst
-ausgebrochen, 218 Meldungston ohne Regel, 219 Symbolregel zählt Typografie,
-220 Proof-of-Work gegen Registrierungs-Spam, 221 Uhr-Anzeige bei `403`,
-222 Wegwerfliste nachziehen — die drei letzten sind die Einschübe des
-P5b-Konzepts). Jeder weitere Zweig, der Nummern
-vergibt, beginnt hinter der dort zuletzt vergebenen und trägt seine Spanne
-hier ein, bevor er pusht.
+`install.php` in der Auslieferung), **215 und 216 aus der unabhängigen
+Durchsicht des P5a-Abschlusses** (16.09.2026, nach dem Merge), **217 und 218
+aus der Durchsicht der Werkzeugaufrufe** (17.09.2026), **219 aus dem ersten
+Auslieferungslauf nach dem Merge von PR #51** und **220 und 221 aus dem
+ersten Bilderlauf gegen Staging mit Demo-Konto** (beide 17.09.2026), **222
+aus dem Aufbau des Uhr-Prüfstands**. **223 bis 233 liegen auf dem
+P5b-Zweig** `claude/magical-dirac-we2y1z` (223 Anwendung nicht
+installierbar, 224 `frame-ancestors` in Report-Only, 225 Profilseite aus dem
+Gerüst ausgebrochen, 226 Meldungston ohne Regel, 227 Symbolregel zählt
+Typografie, 228 Proof-of-Work gegen Registrierungs-Spam, 229 Uhr-Anzeige bei
+`403`, 230 Wegwerfliste nachziehen, 231 Einwilligung bei der Registrierung,
+232 Fristen der Rückfragen nie abgelaufen, 233 bisheriger Server-Anteil).
+
+> **Diese elf trugen auf ihrem Zweig die Nummern 215 bis 225** und sind beim
+> Merge am 17.09.2026 verschoben worden: `main` hatte 215 bis 222 parallel
+> für anderes vergeben. `main` ist vorgelagert, also weicht der Zweig — wie
+> schon bei Nr. 214 und bei Web 20.16.0. Wer in einem Commit vor dem Merge
+> eine dieser Nummern liest, liest die alte Zählung.
+
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **234** und trägt seine
+Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
@@ -2352,134 +2364,115 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     gelöschte Datei nur zurückkommt, wenn man die State-Datei mitlöscht. Noch
     nicht geschrieben.
 
-215. **Die Anwendung ließ sich nicht mehr installieren.**
-    *Aufgenommen 16.09.2026 beim Aufbau des Prüfstands für P5b; behoben am
-    selben Tag in Web 20.15.3.*
-    `install.php` antwortete HTTP 500 mit leerem Rumpf — kein Formular, keine
-    Meldung. Die Kette ist kurz und jedes Glied für sich richtig:
-    `install.php` lädt `ui.php`, damit ihr Formular aussieht wie die
-    Anwendung; `ui_seite_start()` lädt seit P5a/AP4 `kopfzeilen_lib.php`,
-    damit die Kopfzeilen vor der ersten Ausgabezeile stehen;
-    `kopfzeilen_lib.php` lud `db.php`; `db.php` verlangt `config.php` hart.
-    Vor der Einrichtung gibt es keine `config.php`.
+216. **Zwei Trennlinien hintereinander an vier Stellen des P5a-Prüfdokuments.**
+    *Aufgenommen 16.09.2026, gleiche Durchsicht.*
+    Rein kosmetisch: `---` gefolgt von `---` erzeugt in manchen
+    Markdown-Darstellungen eine doppelte Linie, in anderen eine Überschrift.
+    Beim Abhaken der Prüfliste mit wegräumen, nicht dafür eigens anfassen — das
+    Dokument verschwindet ohnehin, sobald seine 33 Punkte abgehakt sind.
 
-    **Warum kein Prüfmittel ihn gesehen hat, und warum das die eigentliche
-    Lehre ist.** Der Fehler trifft ausschließlich die Installation, die noch
-    nicht stattgefunden hat. Jede bestehende Anlage läuft weiter. Und jedes
-    Prüfmittel des Projekts — `ingestprobe`, `spurprobe`, `komplettprobe`,
-    `jobprobe`, `screenshots`, `pruefkonten` — *setzt eine laufende
-    Installation voraus*, statt eine einzurichten. Der Weg, den eine
-    Betreiberin genau einmal geht, ist damit der einzige, den niemand geht.
-    Gesehen wurde er, weil `lokal_einrichten.sh` ihn geht.
 
-    **Behoben in `kopfzeilen_lib.php`, nicht in `db.php`.** Dort ist das harte
-    `require` richtig. `kopfzeilen_lib.php` dagegen sagt im eigenen Kopf, sie
-    komme „ohne Datenbank aus" — sie kam nur nicht ohne `config.php` aus.
-    Jetzt `is_file()` vor dem `require` und `function_exists()` vor den vier
-    `app_state`-Aufrufen, mit Rückfall auf dieselben Vorgaben wie bei
-    fehlender Tabelle.
+221. **Waagerechter Überlauf auf der Datenschutzseite bei 360 px.**
+    *Aufgenommen 17.09.2026 aus demselben Lauf.*
 
-    **Nicht zu verwechseln mit Nr. 214**, obwohl beide am selben Tag
-    entstanden sind und dieselbe Datei betreffen: 214 nimmt `install.php` aus
-    der **Auslieferung**, weil das Runbook sie löschen heißt. Dieser Eintrag
-    macht sie überhaupt erst wieder **lauffähig**. Die beiden greifen
-    ineinander — seit 214 muss die Datei von Hand hinauf, und eine Datei, die
-    man von Hand hinauflädt, um genau einmal eine Anlage einzurichten, muss
-    beim ersten Aufruf funktionieren. Ohne 215 wäre 214 der Weg in eine
-    Sackgasse.
+    ```
+    05-datenschutz    Überlauf bei 360
+    ```
 
-    **Zu tun bleibt die Wache:** ein Prüfschritt, der die Einrichtung selbst
-    fährt (`lokal_einrichten.sh` ist der fertige Weg, Stufe 1 könnte ihn gegen
-    eine Wegwerf-Datenbank laufen lassen). Ohne ihn fällt dieselbe Lücke beim
-    nächsten Umbau der Ladekette wieder auf. *Abnahme:* Ein Prüflauf, der auf
-    einem Stand ohne `server/config.php` HTTP 200 und ein Formular-Token von
-    `install.php` bekommt. Zuordnung: Backlog-Runde oder P5c.
+    Eine Seite, eine Breite, in einem Lauf über 50 Seiten und acht Breiten —
+    die übrigen 49 sind ohne Befund. 360 px ist die schmalste gemessene
+    Breite und damit das kleine Telefon.
 
-216. **`frame-ancestors` stand in einer Report-Only-Richtlinie und war dort wirkungslos.**
-    *Gefunden 16.09.2026 beim Bilderlauf mit drei Engines (P5b/AP1, auf Rückfrage
-    des Auftraggebers); behoben am selben Tag in Web 20.16.5.*
-    CSP Level 3 sagt, dass `frame-ancestors` in einer Report-Only-Richtlinie
-    **ignoriert** wird. WebKit sagt es laut: „The Content Security Policy
-    directive 'frame-ancestors' is ignored when delivered in a report-only
-    policy." — **ein Konsolenfehler je Seitenaufruf**, auf jeder Seite der
-    Anwendung. Gemessen: **16 Konsolenfehler bei 16 Bildern**; Chromium und
-    Firefox melden nichts.
+    **Noch nicht eingegrenzt:** Welches Element überläuft, steht nicht im
+    Protokoll, sondern im Bericht des Laufs
+    (`tools/screenshots/ausgabe/bericht.md`), und der liegt auf dem Läufer.
+    Nachstellen lässt es sich örtlich mit
+    `node tools/screenshots/aufnehmen.mjs --nur 05-datenschutz` gegen eine
+    lokale Installation. Verdacht ohne Beleg: ein langer Rechtstext ohne
+    Umbruchmöglichkeit (Adresse, E-Mail, URL) oder eine Tabelle.
 
-    **Was das gekostet hat, ist nicht der Schutz, sondern das Prüfmittel.**
-    Clickjacking wehrt `X-Frame-Options: DENY` ab, und die Zeile steht
-    unabhängig davon in beiden Fällen — es gab **kein** Loch. Die
-    CSP-Direktive schützte in Report-Only nichts und meldete nichts; was sie
-    tat, war, den Bilderlauf mit WebKit auf **jeder** Seite rauschen zu
-    lassen. Ein Prüfmittel, das überall meldet, findet nichts mehr: Der echte
-    Fehler stünde daneben und fiele nicht auf.
+    ### Nachtrag vom 17.09.2026 — was es NICHT ist
 
-    Behoben: Die Direktive steht jetzt nur in der **scharfen** Fassung, wo sie
-    auch wirkt.
+    Örtlich nicht nachstellbar: `aufnehmen.mjs --nur 05-datenschutz` gegen
+    eine lokale Installation meldet **kein Überlauf**, bei Maßstab 1× wie 2×.
+    Ausgeschlossen, jeweils gemessen:
 
-    **Die Lehre ist die Engine-Wahl.** Der Fund kam zustande, weil der
-    Auftraggeber nachfragte, ob auf drei Browsern geprüft wird — es war
-    nur Chromium gelaufen. `tools/screenshots/LIESMICH.md` empfiehlt den
-    dreifachen Lauf bei Gestaltungsrunden; die Empfehlung hat sich zum
-    zweiten Mal bezahlt gemacht (das erste Mal war Nr. 185).
+    | geprüft | Ergebnis |
+    |---|---|
+    | Markup, das Staging ausliefert | **byteidentisch** mit dem örtlichen: 2104 B, dieselben 17 Klassen, Titel 36 Zeichen, längstes Wort 20 Zeichen, keine Tabelle, kein `<pre>` |
+    | `assets/style.css` auf Staging | **byteidentisch** mit dem Repositorium, 200 452 B |
+    | die 10 `.woff2` des Stylesheets | **alle vorhanden, alle byteidentisch** |
+    | Maßstab | weder 1× noch 2× läuft örtlich über |
 
-217. **Die Profilseite brach auf halber Höhe aus ihrem Seitengerüst aus.**
-    *Entstanden 07.09.2026 (S9/AP4), gefunden 17.09.2026 beim Ansehen eines
-    Bildes zu P5b/AP6, behoben am selben Tag in Web 20.21.1.*
-    Auf `einstellungen.php?t=profil` stand ein `ui_karte_ende()` zu viel. Es
-    schloss keine Karte, sondern gab ein `</div></section>` ohne Gegenstück
-    aus; für ein `</div>` ohne offenes `div` nimmt der Parser das nächste, das
-    er findet, und das war `div.rahmen`. Damit endeten `form`, `main.inhalt`
-    und `rahmen` mitten auf der Seite, und alles danach — **Datenschutz,
-    Passwort ändern, Was dein Konto hält, Konto löschen** und der Knopf
-    „Profil speichern" — hing direkt am `body`. Gemessen bei 1440 px: `left` 0
-    statt 276, Breite 1440 statt 1148; die Karten liefen unter der
-    Seitenleiste hindurch über die volle Fensterbreite.
+    Es liegt also **nicht** am Rechtstext (die Seite trägt auf beiden Seiten
+    nur 230 Textzeichen — den leeren Zustand), nicht am Markup, nicht an der
+    Gestaltung und nicht an den Schriften.
 
-    **Das Speichern ging weiter**, weil ein Knopf seinen Formularbezug aus dem
-    Parsen behält, auch wenn das `form`-Element implizit geschlossen wurde. Der
-    Schaden war sichtbar, nicht funktional.
+    **Warum es hier endet:** `aufnehmen.mjs` meldet alle drei Rollen an, bevor
+    es das erste Bild macht — auch bei `--nur` auf einer Seite mit
+    `"rolle": "aus"`. Ohne die Staging-Zugangsdaten lässt sich der Lauf von
+    hier aus nicht gegen Staging fahren. *(Das ist nebenbei eine eigene
+    Ungeschicklichkeit des Werkzeugs, aber keine, die dieser Eintrag
+    mitbehebt.)*
 
-    **Der eigentliche Befund ist, dass kein Prüfmittel angeschlagen hat.**
-    `scrollWidth` blieb gleich `innerWidth` — es lief nichts über, es lag nur
-    falsch. Die Konsole blieb still, die Knopfhöhen stimmten. Der Bilderlauf
-    meldete für diese Seite in allen drei Engines „kein Überlauf, 0
-    Konsolenfehler, 0 falsche Knopfhöhen": **drei Nullen neben einer kaputten
-    Seite**. Genau der Fall, vor dem `CLAUDE.md` 6 warnt — eine grüne Zahl ist
-    erst dann ein Beleg, wenn sie das Gemessene benennt, und „kein Überlauf"
-    benennt nicht „liegt an der richtigen Stelle".
+    **Was stattdessen geändert wurde:** Der Bericht des Laufs trägt eine
+    Spalte **`Verursacher`** — das Element, das überläuft. Sie wurde auf dem
+    Läufer mit dem Arbeitsverzeichnis weggeräumt. Ab Web 20.16.2 schreibt der
+    Kettenschritt `ausgabe/bericht.md` in die Zusammenfassung des Laufs. **Der
+    nächste rote Lauf beantwortet diesen Eintrag selbst.**
 
-    **Gegenprobe:** ein Lauf über 24 Seiten in beiden Rollen, der Karten
-    zählt, die nicht in `main.inhalt` hängen — **80 Karten geprüft, 0
-    außerhalb** (vorher vier auf der Profilseite).
+    *Verbleibender Verdacht, ohne Beleg:* die Chromium-Fassung. Die Kette holt
+    `playwright@1.56` (Chromium 141), örtlich steht eine andere.
 
-    **Zu tun:** diese Zählung in den Bilderlauf aufnehmen, damit sie nicht
-    beim nächsten Mal wieder von Hand entstehen muss. Sie kostet einen
-    `evaluate()`-Aufruf je Aufnahme und braucht keine zweite Sitzung.
+    ### Nachtrag vom 17.09.2026 — der nächste Lauf war GRÜN
 
-218. **Ein Meldungskasten trug einen Ton, den es nicht gibt.**
-    *Entstanden und gefunden 17.09.2026 (P5b/AP7 bzw. AP6), behoben am selben
-    Tag in Web 20.21.1.*
-    In `betrieb_server.php` stand von Hand `<div class="meldung
-    meldung-blau">`. Die Töne der Anwendung heißen `fehler`, `warn`, `ok`,
-    `info`, `schutz`; **`meldung-blau` hat keine Regel im Stylesheet**. Der
-    Kasten stand ungestaltet da — weißer Hintergrund, kein Symbol, keine
-    Fehlermeldung.
+    Der Auslieferungslauf auf `main` (`e5844c4`, 13:38–13:50) meldete
+    `05-datenschutz` mit **kein Überlauf**, und den ganzen Bilderlauf mit
+    **0 Überlauf** über 400 Bilder. Der Befund hat sich **nicht wiederholt**.
 
-    `ui_meldung_markup()` **wirft** bei einem unbekannten Ton, und ihr
-    Kopfkommentar beschreibt genau diesen Schaden („die Spurenseite trug so
-    zwei Jahre lang zwei weiße Meldungen"). Wer von Hand baut — hier nötig,
-    weil der Knopf in einem eigenen Formular steckt —, hat diesen Schutz
-    nicht.
+    **Damit ist er nicht erklärt, sondern einmalig geblieben** — und das ist
+    ein Unterschied, den dieser Eintrag stehen lässt, statt ihn wegzuräumen:
+    Zwischen den beiden Läufen hat niemand etwas an der Seite, am Stylesheet
+    oder an den Schriften geändert (alle drei waren schon beim ersten Mal
+    byteidentisch mit dem Repositorium). Was bleibt, ist eine Messung, die
+    einmal anschlug und beim zweiten Mal nicht.
 
-    Gefunden von `tools/vollstaendigkeit/` („im Markup ohne Regel"), behoben
-    zu `meldung-info` samt `role="status"` und Symbol, wie es die anderen
-    vier handgebauten Kästen der Anwendung führen.
+    **Der Eintrag bleibt deshalb offen, aber ohne Arbeitsauftrag.** Schlägt
+    er wieder an, steht der Bericht seit Web 20.16.2 in der Zusammenfassung
+    des Laufs und nennt den **Verursacher** — dann ist es in fünf Minuten
+    erledigt statt in einer Stunde Ausschlussverfahren. Bleibt er drei
+    weitere Läufe still, gehört er nach *Erledigt* mit dem Vermerk „einmalig,
+    nicht reproduzierbar".
 
-    **Zu tun:** Die Handbauten zählen — es sind fünf Stellen. Eine Variante
-    von `ui_meldung_markup()`, die ein Formular um den Knopf legt, machte alle
-    fünf überflüssig und nähme ihnen die Möglichkeit, einen Ton zu erfinden.
+    *Was dabei offen zutage kam und nicht zu diesem Eintrag gehört:*
+    `aufnehmen.mjs` meldet alle drei Rollen an, bevor es das erste Bild
+    macht — auch bei `--nur` auf einer Seite mit `"rolle": "aus"`. Genau das
+    hat die örtliche Nachstellung gegen Staging verhindert.
 
-219. **Die Symbolregel zählt Typografie und findet deshalb keine Symbole
+222. **Der Aufbau des Uhr-Prüfstands wird bei jedem Lauf neu geholt.**
+    *Aufgenommen 17.09.2026 bei der Selektion der Stufe-1-Schritte.*
+    Der Schritt „Uhr Stufe I" brauchte im gemessenen Lauf **34 min 46 s** und
+    ist damit mit Abstand der teuerste der ganzen Kette — der Android-Bau
+    daneben 7:15, die übrigen dreizehn Schritte zusammen 23 Sekunden. Seit
+    derselben Fassung läuft er nur noch, wenn `watch/` oder
+    `tools/uhr-pruefstand/` berührt ist. Wer an der Uhr arbeitet, wartet
+    allerdings weiterhin jedes Mal die volle Zeit ab.
+
+    **Vermutung, ausdrücklich keine Messung:** Der größere Teil davon dürfte
+    der Aufbau sein — `pruefstand.sh aufbau-uebersetzen` holt SDK und
+    Gerätedateien bei jedem Lauf neu —, nicht das Übersetzen selbst. Träfe
+    das zu, spräche ein `actions/cache` auf `~/.Garmin/ConnectIQ` den größten
+    Teil der Zeit an, und zwar auch dann, wenn tatsächlich an der Uhr
+    gearbeitet wird.
+
+    *Zu tun, in dieser Reihenfolge:* zuerst die Verteilung zwischen Holen und
+    Übersetzen im Protokoll eines Laufs **nachmessen** — ohne diese Zahl ist
+    alles Weitere Spekulation, und genau davor warnt die Hausregel; erst wenn
+    der Aufbau überwiegt, einen Cache-Schritt einziehen, dessen Schlüssel an
+    der SDK-Fassung und an `CIQ_ZIELE` hängt. **Kein eigenes Paket** —
+    Beifang, sobald jemand den Prüfstand ohnehin anfasst (R83-Muster).
+
+227. **Die Symbolregel zählt Typografie und findet deshalb keine Symbole
     mehr.**
     *Gemessen 17.09.2026 auf dem P5b-Zweig; nicht behoben.*
     `tools/vollstaendigkeit/` prüft „Unicode-Zeichen als Symbol im Markup" —
@@ -2519,7 +2512,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     auseinander; berichtigt, mit dem Hinweis, dass die Zahl in
     `pruefung.yml` steht und nicht in der Dokumentation.
 
-220. **Proof-of-Work im Browser als dritte Stufe gegen
+228. **Proof-of-Work im Browser als dritte Stufe gegen
     Registrierungs-Spam.**
     *Aufgenommen 17.09.2026 mit dem Konzept P5b (R37 (4) „notfalls"); nicht
     gebaut, und vorerst mit Absicht nicht.*
@@ -2567,7 +2560,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ist, sonst fällt der Enumerationsschutz aus E-P5b-13 mit ihr (die
     Abnahme von AP3 verlangt dort Δ < 50 ms über 100 Messungen).
 
-221. **Die Uhr sagt „abgemeldet", wo „gesperrt" steht — und der Ausweg, den
+229. **Die Uhr sagt „abgemeldet", wo „gesperrt" steht — und der Ausweg, den
     sie nennt, ist versperrt.**
     *Aufgenommen 17.09.2026 mit dem Konzept P5b (E-P5b-12); nicht behoben,
     die Uhr-Stufe ist bewusst aufgeschoben.*
@@ -2645,7 +2638,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `ingest.php` heute gibt, fehlen damit in der Liste, gegen die ein Client
     gebaut wird.
 
-222. **Die Wegwerfdomain-Liste altert still und muss mit jeder Auslieferung
+230. **Die Wegwerfdomain-Liste altert still und muss mit jeder Auslieferung
     nachgezogen werden.**
     *Aufgenommen 17.09.2026 mit dem Konzept P5b (E-P5b-23). Eine
     Pflegeaufgabe ohne Ende, kein Fehler mit einer Behebung.*
@@ -2722,10 +2715,179 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Nebenbei: Die Zahl steht schon jetzt doppelt.** Der Kommentar zu den
     eigenen Domains in `betrieb_server.php` nennt „8870"; mit AP3 kommt die
     Datei dazu, die sie selbst zählt. Zwei Stellen für dieselbe Zahl laufen
-    auseinander — dieselbe Falle wie bei der Schwelle in Nr. 219.
+    auseinander — dieselbe Falle wie bei der Schwelle in Nr. 227.
 
-223. **Die drei Häkchen der Registrierung werden nicht festgehalten — und
+232. **Die Fristen der Rückfragen sind nie im Betrieb abgelaufen.**
+    *Aufgenommen 17.09.2026 (P5b/AP9).* Die Konto-Rückfrage fragt nach 30
+    Tagen, 6 Monaten und dann jährlich; die Betreiber-Rückfrage alle drei
+    Monate. Geprüft wurde mit **gestelltem** `rueckfrage_naechste` — die
+    Runden 0 → 1 → 2 → 2 sind in vier Durchgängen gemessen, der tatsächliche
+    Halbjahresabstand nicht.
+
+    **Was das offen lässt:** Ein Rechenfehler in `RUECKFRAGE_ABSTAENDE` oder
+    in der Zeitzone (`UTC_DATE()` gegen `DateTimeImmutable('now', UTC)`)
+    fiele im Prüflauf nicht auf, sondern erst, wenn die Frage im Betrieb um
+    einen Tag daneben käme. Das ist ein kleiner Schaden, aber ein stiller.
+
+    **Wie es zu schließen wäre:** ein Prüfschritt, der die Funktionen mit
+    festgelegter „jetzt"-Zeit rechnen lässt, statt mit der Systemuhr — dafür
+    müsste `einstieg_lib.php` eine Zeit hereingereicht bekommen, statt sie zu
+    holen. Lohnt sich, wenn die nächste Frist dazukommt; für zwei Fristen ist
+    der Umbau teurer als der Fehler.
+
+233. **Die Betreiber-Rückfrage fragt nie nach dem bisherigen Server-Anteil.**
+    *Aufgenommen 17.09.2026 (P5b/AP9).* Während einer Anteilsrotation steht
+    `kdf_anteil_alt` mit auf dem Schlüsselblatt. Die Rückfrage fragt ihn
+    nicht ab — eine Frage, die je nach Betriebslage vier oder sechs Felder
+    hat, verwirrt mehr, als sie prüft.
+
+    **Was das offen lässt:** Wer sein Blatt nach einer Rotation neu druckt
+    und den alten Wert nicht mit abschreibt, merkt es nicht, solange die
+    Rückfrage schweigt. Der Wert wird aber gebraucht, bis das letzte Konto
+    sich angemeldet hat.
+
+    **Wie es zu schließen wäre:** Der Rotationsvorgang selbst sollte sagen,
+    dass das Blatt neu gedruckt gehört — er ist die Stelle, an der es auffällt,
+    und er weiß, ob ein alter Wert noch gebraucht wird. Das gehört zu S10c.
+
+## Erledigt
+
+
+Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
+zutreffen.
+
+223. **Die Anwendung ließ sich nicht mehr installieren.**
+    *Aufgenommen 16.09.2026 beim Aufbau des Prüfstands für P5b; behoben am
+    selben Tag in Web 20.15.3.*
+    `install.php` antwortete HTTP 500 mit leerem Rumpf — kein Formular, keine
+    Meldung. Die Kette ist kurz und jedes Glied für sich richtig:
+    `install.php` lädt `ui.php`, damit ihr Formular aussieht wie die
+    Anwendung; `ui_seite_start()` lädt seit P5a/AP4 `kopfzeilen_lib.php`,
+    damit die Kopfzeilen vor der ersten Ausgabezeile stehen;
+    `kopfzeilen_lib.php` lud `db.php`; `db.php` verlangt `config.php` hart.
+    Vor der Einrichtung gibt es keine `config.php`.
+
+    **Warum kein Prüfmittel ihn gesehen hat, und warum das die eigentliche
+    Lehre ist.** Der Fehler trifft ausschließlich die Installation, die noch
+    nicht stattgefunden hat. Jede bestehende Anlage läuft weiter. Und jedes
+    Prüfmittel des Projekts — `ingestprobe`, `spurprobe`, `komplettprobe`,
+    `jobprobe`, `screenshots`, `pruefkonten` — *setzt eine laufende
+    Installation voraus*, statt eine einzurichten. Der Weg, den eine
+    Betreiberin genau einmal geht, ist damit der einzige, den niemand geht.
+    Gesehen wurde er, weil `lokal_einrichten.sh` ihn geht.
+
+    **Behoben in `kopfzeilen_lib.php`, nicht in `db.php`.** Dort ist das harte
+    `require` richtig. `kopfzeilen_lib.php` dagegen sagt im eigenen Kopf, sie
+    komme „ohne Datenbank aus" — sie kam nur nicht ohne `config.php` aus.
+    Jetzt `is_file()` vor dem `require` und `function_exists()` vor den vier
+    `app_state`-Aufrufen, mit Rückfall auf dieselben Vorgaben wie bei
+    fehlender Tabelle.
+
+    **Nicht zu verwechseln mit Nr. 214**, obwohl beide am selben Tag
+    entstanden sind und dieselbe Datei betreffen: 214 nimmt `install.php` aus
+    der **Auslieferung**, weil das Runbook sie löschen heißt. Dieser Eintrag
+    macht sie überhaupt erst wieder **lauffähig**. Die beiden greifen
+    ineinander — seit 214 muss die Datei von Hand hinauf, und eine Datei, die
+    man von Hand hinauflädt, um genau einmal eine Anlage einzurichten, muss
+    beim ersten Aufruf funktionieren. Ohne 215 wäre 214 der Weg in eine
+    Sackgasse.
+
+    **Zu tun bleibt die Wache:** ein Prüfschritt, der die Einrichtung selbst
+    fährt (`lokal_einrichten.sh` ist der fertige Weg, Stufe 1 könnte ihn gegen
+    eine Wegwerf-Datenbank laufen lassen). Ohne ihn fällt dieselbe Lücke beim
+    nächsten Umbau der Ladekette wieder auf. *Abnahme:* Ein Prüflauf, der auf
+    einem Stand ohne `server/config.php` HTTP 200 und ein Formular-Token von
+    `install.php` bekommt. Zuordnung: Backlog-Runde oder P5c.
+
+224. **`frame-ancestors` stand in einer Report-Only-Richtlinie und war dort wirkungslos.**
+    *Gefunden 16.09.2026 beim Bilderlauf mit drei Engines (P5b/AP1, auf Rückfrage
+    des Auftraggebers); behoben am selben Tag in Web 20.16.5.*
+    CSP Level 3 sagt, dass `frame-ancestors` in einer Report-Only-Richtlinie
+    **ignoriert** wird. WebKit sagt es laut: „The Content Security Policy
+    directive 'frame-ancestors' is ignored when delivered in a report-only
+    policy." — **ein Konsolenfehler je Seitenaufruf**, auf jeder Seite der
+    Anwendung. Gemessen: **16 Konsolenfehler bei 16 Bildern**; Chromium und
+    Firefox melden nichts.
+
+    **Was das gekostet hat, ist nicht der Schutz, sondern das Prüfmittel.**
+    Clickjacking wehrt `X-Frame-Options: DENY` ab, und die Zeile steht
+    unabhängig davon in beiden Fällen — es gab **kein** Loch. Die
+    CSP-Direktive schützte in Report-Only nichts und meldete nichts; was sie
+    tat, war, den Bilderlauf mit WebKit auf **jeder** Seite rauschen zu
+    lassen. Ein Prüfmittel, das überall meldet, findet nichts mehr: Der echte
+    Fehler stünde daneben und fiele nicht auf.
+
+    Behoben: Die Direktive steht jetzt nur in der **scharfen** Fassung, wo sie
+    auch wirkt.
+
+    **Die Lehre ist die Engine-Wahl.** Der Fund kam zustande, weil der
+    Auftraggeber nachfragte, ob auf drei Browsern geprüft wird — es war
+    nur Chromium gelaufen. `tools/screenshots/LIESMICH.md` empfiehlt den
+    dreifachen Lauf bei Gestaltungsrunden; die Empfehlung hat sich zum
+    zweiten Mal bezahlt gemacht (das erste Mal war Nr. 185).
+
+225. **Die Profilseite brach auf halber Höhe aus ihrem Seitengerüst aus.**
+    *Entstanden 07.09.2026 (S9/AP4), gefunden 17.09.2026 beim Ansehen eines
+    Bildes zu P5b/AP6, behoben am selben Tag in Web 20.21.1.*
+    Auf `einstellungen.php?t=profil` stand ein `ui_karte_ende()` zu viel. Es
+    schloss keine Karte, sondern gab ein `</div></section>` ohne Gegenstück
+    aus; für ein `</div>` ohne offenes `div` nimmt der Parser das nächste, das
+    er findet, und das war `div.rahmen`. Damit endeten `form`, `main.inhalt`
+    und `rahmen` mitten auf der Seite, und alles danach — **Datenschutz,
+    Passwort ändern, Was dein Konto hält, Konto löschen** und der Knopf
+    „Profil speichern" — hing direkt am `body`. Gemessen bei 1440 px: `left` 0
+    statt 276, Breite 1440 statt 1148; die Karten liefen unter der
+    Seitenleiste hindurch über die volle Fensterbreite.
+
+    **Das Speichern ging weiter**, weil ein Knopf seinen Formularbezug aus dem
+    Parsen behält, auch wenn das `form`-Element implizit geschlossen wurde. Der
+    Schaden war sichtbar, nicht funktional.
+
+    **Der eigentliche Befund ist, dass kein Prüfmittel angeschlagen hat.**
+    `scrollWidth` blieb gleich `innerWidth` — es lief nichts über, es lag nur
+    falsch. Die Konsole blieb still, die Knopfhöhen stimmten. Der Bilderlauf
+    meldete für diese Seite in allen drei Engines „kein Überlauf, 0
+    Konsolenfehler, 0 falsche Knopfhöhen": **drei Nullen neben einer kaputten
+    Seite**. Genau der Fall, vor dem `CLAUDE.md` 6 warnt — eine grüne Zahl ist
+    erst dann ein Beleg, wenn sie das Gemessene benennt, und „kein Überlauf"
+    benennt nicht „liegt an der richtigen Stelle".
+
+    **Gegenprobe:** ein Lauf über 24 Seiten in beiden Rollen, der Karten
+    zählt, die nicht in `main.inhalt` hängen — **80 Karten geprüft, 0
+    außerhalb** (vorher vier auf der Profilseite).
+
+    **Zu tun:** diese Zählung in den Bilderlauf aufnehmen, damit sie nicht
+    beim nächsten Mal wieder von Hand entstehen muss. Sie kostet einen
+    `evaluate()`-Aufruf je Aufnahme und braucht keine zweite Sitzung.
+
+226. **Ein Meldungskasten trug einen Ton, den es nicht gibt.**
+    *Entstanden und gefunden 17.09.2026 (P5b/AP7 bzw. AP6), behoben am selben
+    Tag in Web 20.21.1.*
+    In `betrieb_server.php` stand von Hand `<div class="meldung
+    meldung-blau">`. Die Töne der Anwendung heißen `fehler`, `warn`, `ok`,
+    `info`, `schutz`; **`meldung-blau` hat keine Regel im Stylesheet**. Der
+    Kasten stand ungestaltet da — weißer Hintergrund, kein Symbol, keine
+    Fehlermeldung.
+
+    `ui_meldung_markup()` **wirft** bei einem unbekannten Ton, und ihr
+    Kopfkommentar beschreibt genau diesen Schaden („die Spurenseite trug so
+    zwei Jahre lang zwei weiße Meldungen"). Wer von Hand baut — hier nötig,
+    weil der Knopf in einem eigenen Formular steckt —, hat diesen Schutz
+    nicht.
+
+    Gefunden von `tools/vollstaendigkeit/` („im Markup ohne Regel"), behoben
+    zu `meldung-info` samt `role="status"` und Symbol, wie es die anderen
+    vier handgebauten Kästen der Anwendung führen.
+
+    **Zu tun:** Die Handbauten zählen — es sind fünf Stellen. Eine Variante
+    von `ui_meldung_markup()`, die ein Formular um den Knopf legt, machte alle
+    fünf überflüssig und nähme ihnen die Möglichkeit, einen Ton zu erfinden.
+
+231. **Die drei Häkchen der Registrierung werden nicht festgehalten — und
     für Texte verlangt, die nicht in Kraft sind.**
+    *Erledigt am 17.09.2026 in Web 20.22.2 (P5b): Die Registrierung hält
+    die Einwilligungen jetzt fest und verlangt nur, was in Kraft ist.*
+
     *Aufgenommen 17.09.2026 beim Nachprüfen der Rückfrage zur AVV
     (E-P5b-25). Zwei Mängel an derselben Stelle, in AP3/AP4 entstanden.*
 
@@ -2772,45 +2934,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     was auch in Kraft ist. Zu klären ist dabei die Frage aus (a) — Eintrag
     schon bei der Registrierung oder bewusst erst am Tor —, und die
     Antwort gehört als Entscheidung ins Konzept, nicht in einen Kommentar.
-
-224. **Die Fristen der Rückfragen sind nie im Betrieb abgelaufen.**
-    *Aufgenommen 17.09.2026 (P5b/AP9).* Die Konto-Rückfrage fragt nach 30
-    Tagen, 6 Monaten und dann jährlich; die Betreiber-Rückfrage alle drei
-    Monate. Geprüft wurde mit **gestelltem** `rueckfrage_naechste` — die
-    Runden 0 → 1 → 2 → 2 sind in vier Durchgängen gemessen, der tatsächliche
-    Halbjahresabstand nicht.
-
-    **Was das offen lässt:** Ein Rechenfehler in `RUECKFRAGE_ABSTAENDE` oder
-    in der Zeitzone (`UTC_DATE()` gegen `DateTimeImmutable('now', UTC)`)
-    fiele im Prüflauf nicht auf, sondern erst, wenn die Frage im Betrieb um
-    einen Tag daneben käme. Das ist ein kleiner Schaden, aber ein stiller.
-
-    **Wie es zu schließen wäre:** ein Prüfschritt, der die Funktionen mit
-    festgelegter „jetzt"-Zeit rechnen lässt, statt mit der Systemuhr — dafür
-    müsste `einstieg_lib.php` eine Zeit hereingereicht bekommen, statt sie zu
-    holen. Lohnt sich, wenn die nächste Frist dazukommt; für zwei Fristen ist
-    der Umbau teurer als der Fehler.
-
-225. **Die Betreiber-Rückfrage fragt nie nach dem bisherigen Server-Anteil.**
-    *Aufgenommen 17.09.2026 (P5b/AP9).* Während einer Anteilsrotation steht
-    `kdf_anteil_alt` mit auf dem Schlüsselblatt. Die Rückfrage fragt ihn
-    nicht ab — eine Frage, die je nach Betriebslage vier oder sechs Felder
-    hat, verwirrt mehr, als sie prüft.
-
-    **Was das offen lässt:** Wer sein Blatt nach einer Rotation neu druckt
-    und den alten Wert nicht mit abschreibt, merkt es nicht, solange die
-    Rückfrage schweigt. Der Wert wird aber gebraucht, bis das letzte Konto
-    sich angemeldet hat.
-
-    **Wie es zu schließen wäre:** Der Rotationsvorgang selbst sollte sagen,
-    dass das Blatt neu gedruckt gehört — er ist die Stelle, an der es auffällt,
-    und er weiß, ob ein alter Wert noch gebraucht wird. Das gehört zu S10c.
-
-## Erledigt
-
-
-Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
-zutreffen.
 
 48. **Aufbewahrung je Konto einstellbar, nicht nur je Installation.**
     *Aufgenommen 01.09.2026 (S2/AP6).* E-S2-14 nennt „Standard 2 je Konto,
@@ -7603,3 +7726,396 @@ zutreffen.
     Befunde, und beide waren Kommentarzeilen über das Werkzeug selbst.
     **Selbstprobe 8/8; im Lauf 108 Dateien, 7 echte Aufrufe, 0 ohne
     Härtung.**
+
+217. **Ein Schritt der Kette, der nie gelaufen ist, ist ungeprüfter Code.**
+    *Aufgenommen 17.09.2026 aus einer unabhängigen Durchsicht aller
+    Werkzeugaufrufe der drei Arbeitsläufe (25 Befunde geprüft, 14 bestätigt);
+    erledigt am selben Tag.*
+    Am 16./17.09.2026 sind **drei** Aufrufe beim jeweils ERSTEN echten Lauf
+    gescheitert — und alle drei hatten gültiges YAML und saubere
+    Shell-Syntax:
+
+    - `kreislauf.py` ohne das Pflichtargument `--art`, mit einem `--passwort`,
+      das es nicht gibt, und als **ein** Aufruf, obwohl der Schrittname zwei
+      verspricht.
+    - `pruefstand.sh aufbau` ruft `apt-get` **ohne `sudo`** — im Container ist
+      man root, auf einem Läufer nicht.
+    - `aufnehmen.mjs` mit `--konto`/`--passwort`, die es dort nie gab; das
+      Werkzeug verwarf sie **still** und meldete sich mit den eingebauten
+      Vorgaben an.
+
+    **Alle drei behoben**, zwei davon an der Wurzel: `aufnehmen.mjs` bricht
+    jetzt mit Rückgabewert 2 ab, wenn ein Schalter unbekannt ist, und
+    `pruefstand.sh` hat mit `aufbau-uebersetzen` einen Weg ohne `sudo`.
+
+    **Dazu das Prüfmittel, das der Eintrag vorgeschlagen hat:
+    `tools/kettenaufrufe/`.** Es liest jeden `run:`-Block der drei
+    Arbeitsläufe, findet darin die aufgerufenen Werkzeuge, liest deren
+    Schnittstelle aus dem Quelltext (`add_argument`, die Handparser über
+    `wert('--x'`/`flag('--x'`, `BEKANNT`-Mengen, `case`-Zweige, `$argv`) und
+    hält Aufruf gegen Schnittstelle. **Es führt kein Werkzeug aus** — deshalb
+    hängt es in Stufe 1 und kostet nichts.
+
+    *Gemessen beim Einbau:* **3 Arbeitsläufe, 25 Aufrufe geprüft, 0 Befunde,
+    0 ungeprüft**; Selbstprobe **10 von 10** (fünf Fälle, die anschlagen
+    müssen, fünf, die es nicht dürfen). Gegen den Stand von **vor** den
+    Behebungen oben hätte es alle drei Fehler genannt — das ist die
+    Gegenprobe, ohne die die Null nichts sagt.
+
+    **Was offen bleibt, steht in der `LIESMICH.md` des Werkzeugs und ist
+    keine Nachlässigkeit, sondern seine Grenze:** Es prüft Schnittstellen,
+    nicht Verhalten. Ein Aufruf mit lauter gültigen Schaltern, der das
+    Falsche tut, kommt durch. Und was im Quelltext nicht steht — ein Schalter,
+    den ein Werkzeug erst zur Laufzeit aus einer Datei liest —, kann es nicht
+    wissen; solche Werkzeuge zählt es als **ungeprüft** und sagt die Zahl
+    dazu, statt sie als Null auszuweisen.
+
+218. **Die Integritätswache war für den Fall blind, für den es sie gibt.**
+    *Aufgenommen und behoben am 17.09.2026 (Fund 27); gefunden von ihrer
+    eigenen Selbstprobe, die „30 Erwartungen, 2 nicht erfuellt" meldete.*
+    `FORM_RE` las den Tag-Rumpf als `[^>]*` und endete am ersten `>`. Seit
+    Web 20.10.0 (P5a/AP6) trägt das Anmeldeformular
+    `data-sperre-rest="<?= (int)$sperreRest ?>"` — der Tag brach mitten im
+    PHP-Ausdruck ab.
+
+    **Der Schaden war nicht der zerschnittene Tag.** Was übrigblieb, enthielt
+    `<?=`, galt damit als **unbestimmt**, und für jedes unbestimmte Stück der
+    Quelle darf die Auslieferung eines haben, das die Quelle nicht kennt. In
+    genau diesen Freiraum passte ein `action="https://boese.example/"` am
+    **Anmeldeformular** — der Fall „jemand leitet die Passwörter um", für den
+    diese Wache gebaut wurde. Die Umlenk-Prüfung fängt ihn nicht mit ab: Sie
+    sieht `formaction|formmethod|formtarget|formenctype`, nicht das `action`
+    am `<form>` selbst.
+
+    **Behoben:** `FORM_RE` nutzt jetzt `TAG_REST` (wie `SKRIPT_RE` seit
+    Fund 23), und `form_paare()` maskiert nur die Attributwerte, die in der
+    Quelle wirklich aus PHP kommen — auf beiden Seiten. Der Rest des Tags
+    bleibt Wort für Wort vergleichbar. Selbstprobe danach: **30 von 30**.
+
+    ### Nachtrag vom 17.09.2026 — und eine Berichtigung an diesem Eintrag
+
+    **Dieser Eintrag hat sich selbst auf eine Regel berufen, die es nicht
+    gab.** Er schrieb: *„`CLAUDE.md` 6 nennt bereits zwei und schreibt vor,
+    dass ein Werkzeug, das Markup aus Quelldateien liest, den Tag-Rumpf als
+    `(?:<\?(?:php\b|=).*?\?>|[^>])*` lesen muss."* Nachgesehen am 17.09.2026:
+    In `CLAUDE.md` stand davon **kein Wort**, und in der Git-Historie der
+    Datei auch nie (`git log -S 'Tag-Rumpf' -- CLAUDE.md` → leer). Die Regel
+    existierte nur im Kopf dessen, der sie zweimal angewandt hatte. Genau
+    deshalb wurde sie beim dritten Muster übersehen — sie stand nirgends, wo
+    man sie liest, bevor man ein Muster schreibt. **Jetzt steht sie in
+    `CLAUDE.md` 6**, ausdrücklich für *jedes* Tag-Muster.
+
+    Die übrigen Muster sind nachgezogen, und zwar mit der Angabe, was die
+    Umstellung jeweils wert war — das ist bei den vieren nicht dasselbe:
+
+    - **`SRC_RE` war eine echte Zeitbombe.** `[^>]*?` kommt am `?>` nicht
+      vorbei; `<script<?= kopf_nonce_attr() ?> src="a.js">` hätte **keinen**
+      Treffer gegeben, und `SKRIPT_RE` hätte den Tag über `TAG_REST` richtig
+      als Fremdskript erkannt und übersprungen — der Verweis wäre weder Block
+      noch Fremdskript gewesen: **unsichtbar**. Gemessen: 117 `<script>`-Tags,
+      82 davon mit `src`, **0** davon mit PHP vor dem `src` — die Zeile gibt
+      es heute nicht, sie ist nur jederzeit schreibbar. Neue Selbstprobe dazu,
+      und die Gegenprobe zeigt: Mit dem alten Muster fällt sie um.
+    - **`BASE_RE`, `META_RE`, `EINBETT_RE` waren es nicht.** Ein `[^>]*` endet
+      am `>` des PHP-Schlusses, also **nach** dem `<?=` — das abgeschnittene
+      Stück trägt den PHP-Anfang mit sich, gilt weiter als unbestimmt und wird
+      durchgelassen. Nachgemessen, mit beiden Mustern, an `<base>` mit PHP im
+      Rumpf: gleiches Ergebnis. Umgestellt wurden sie trotzdem, damit niemand
+      nachmessen muss, welches der acht Muster dieser Datei die kurze Form
+      verträgt.
+    - **`tools/stilvergleich/proben.py`** las `<script>` aus der rohen
+      PHP-Quelle. Von 110 Blöcken begannen die aus 12 Dateien mit einem
+      überzähligen `>`, und aus `<script src="<?= asset(…) ?>"></script>`
+      wurde ein **Scheinblock mit dem Inhalt `">`**. Für die
+      Zeichenketten-Ernte war das folgenlos — aber nur, weil dort niemand ein
+      `>` am Blockanfang braucht.
+    - **`tools/vollstaendigkeit/pruefen.py`** (`<svg`): 2 Treffer, mit beiden
+      Mustern dieselben. Vorsorge, kein Fund.
+    - **`tools/wortliste/zerlegen.py`** bleibt bei `[^>]*` — **und das ist
+      richtig**: `_BLOCK` läuft über `nur_html`, den Text, aus dem
+      `_html_bereiche()` die PHP-Inseln vorher durch Leerzeichen ersetzt hat.
+      Dort gibt es kein `?>`. Der Grund steht jetzt als Kommentar daneben,
+      damit die Zeile beim nächsten Durchgang nicht „mitkorrigiert" wird.
+
+    Muster über **gelieferte** Antworten (`tools/referenzdatensatz/`) sind
+    nicht betroffen: Dort ist das PHP ausgeführt. Selbstprobe der
+    Integritätswache danach: **32 von 32**.
+
+219. **Der Kreislauftest hielt die Jobs über die KOMMANDOZEILE an — gegen eine
+    ferne Installation geht das nicht.**
+    *Aufgenommen und behoben am 17.09.2026, gefunden vom ersten
+    Auslieferungslauf nach dem Merge von PR #51.*
+
+    Der Lauf kam bis `Kreislauf edbak — Zielkonto umlauf-edbak@gen-em.org` und
+    brach dann ab:
+
+    ```
+    RuntimeError: jobs.php --pause 1800 fehlgeschlagen:
+      require_once(.../server/config.php): Failed to open stream
+    ```
+
+    `kreislauf.py` fährt `php server/jobs.php --pause 1800`, also die
+    **lokale** Kommandozeile. Auf einem GitHub-Läufer gibt es dort keine
+    `config.php` und keine Datenbank. **Der Aufruf war nicht falsch
+    geschrieben** — das Werkzeug nahm an, `--basis` sei derselbe Rechner, auf
+    der es läuft. Diese Annahme stimmte, solange nur von Hand gemessen wurde.
+
+    **Die Pause ist nicht verzichtbar.** Ohne sie dünnt der Verdichtungsjob
+    die wiederhergestellten Spuren aus — die Einsätze sind alt, der Job hält
+    sie für reif —, und der Vergleich misst „hat der Job dazwischen
+    zugeschlagen" statt „kommt zurück, was hineinging". Nachgemessen steht es
+    seit S2/AP3 im Kopf von `kreislauf.py`: ein Lauf ohne Pause verdichtete
+    **125 Spuren** des Umlaufkontos. Der Schritt einfach ohne Pause laufen zu
+    lassen, hätte eine grüne Zahl ohne Aussage ergeben.
+
+    **Behoben mit Web 20.16.0**, auf drei Ebenen:
+
+    - `jobs.php` nimmt die Aktion `pause` (`sekunden=N`, 0 hebt auf) — hinter
+      demselben `jobs_pause()` wie die Kommandozeile und die beiden Knöpfe
+      unter Betrieb → Hintergrundjobs. Kein vierter Mechanismus, ein vierter
+      Aufrufer.
+    - `tools/kette/tor.py` bekommt den vierten Unterbefehl `pause`. Dort und
+      nicht im Kreislauftest, weil diese Datei **der eine Client** von
+      `jobs.php?aktion=…` ist; eine zweite `urllib`-Zeile wäre ein zweiter
+      Weg, den niemand pflegt.
+    - `kreislauf.py` bekommt `--jobs-token`. **Mit Token über HTTP, ohne Token
+      weiter über die Kommandozeile** — wer auf seinem Rechner misst, merkt
+      nichts. Scheitert der lokale Weg, nennt die Fehlermeldung jetzt den
+      Schalter und diese Nummer, statt nur „Failed to open stream" zu zeigen.
+
+    **Zuarbeit:** Die Umgebung `staging` trägt dafür `JOBS_TOKEN`, denselben
+    Namen wie `produktion`, aber den Wert **dieser** Installation. Fehlt er,
+    wird der Schritt übersprungen und gesagt — nicht still auf den lokalen Weg
+    zurückgefallen.
+
+    **Was daran für die Prüfmittel bleibt.** `tools/kettenaufrufe/` konnte das
+    nicht fangen, und das ist kein Versäumnis: Es prüft **Schnittstellen,
+    nicht Verhalten**, und sagt in seiner `LIESMICH.md` ausdrücklich, dass es
+    nicht weiß, ob ein Pfad auf dem Läufer existiert. Die Lehre ist
+    dieselbe wie bei Nr. 217, eine Stufe tiefer: Ein Aufruf mit lauter
+    gültigen Schaltern kann trotzdem eine Annahme über seine Umgebung
+    mitbringen, die dort nicht gilt. Dagegen hilft kein Muster über den
+    Quelltext, sondern nur der Lauf — und deshalb ist es richtig, dass Stufe 2
+    ihn fährt.
+
+    *Nachgemessen beim Beheben:* `tor.py --selbstprobe` **10 von 10** (vorher
+    5), und die Gegenprobe des neuen Prüfmittels zeigt, dass ein Tippfehler im
+    neuen Schalter auffällt: `--jobs-tokn` → **1 Befund**, mit der Liste der
+    bekannten Schalter.
+
+    ### Nachtrag vom 17.09.2026 — was eine unabhängige Durchsicht an der
+    ### Behebung gefunden hat
+
+    Fünf Blickwinkel über den Diff, jeder Befund danach von einem eigenen
+    Durchgang zu **widerlegen** versucht: **19 haben standgehalten**. Drei
+    davon brechen Zusagen, die Web 20.16.0 selbst aufgestellt hat. Behoben mit
+    **Web 20.16.1**.
+
+    **Die Ziffernprüfung war die falsche.** `!is_numeric($roh) || (int)$roh < 0`
+    ließ `sekunden=-0.5` durch — numerisch ja, `(int)"-0.5"` ist 0, 0 ist nicht
+    kleiner als 0. Der Aufruf hob eine laufende Pause auf und quittierte es mit
+    `ok`, also genau das, wogegen der Absatz darüber stand. Nachgemessen gegen
+    eine echte Installation: HTTP 200, Pause weg. Jetzt `^\d+$`.
+
+    *Warum die eigenen Proben es nicht fanden:* geprüft waren `-5` und `abc`.
+    **Beide scheitern schon an der vorherigen Bedingung** — die Lücke lag
+    zwischen ihnen. Zwei Proben an den Rändern sagen nichts über die Mitte.
+
+    **`rufen()` verschluckte jede Fehlerantwort, und das ist älter als diese
+    Änderung.** Eine `HTTPError` ist eine `URLError` und fiel in den
+    Netzfehler-Zweig; aus einer 400 mit Begründung wurde `_fehler`. Damit war
+    der Abbruchzweig in `backup_tor()` **nie erreichbar**: Der Kommentar dort
+    sagt „ein falsches Token … wird beim vierzigsten Mal nicht anders" und
+    bricht bei `error` ab — `error` kam nie an. Das Tor fragte vierzigmal, gut
+    dreizehn Minuten, und meldete „kein fertig" statt „falsches Token".
+
+    **Der neue Selbstprobenfall bewies nichts.** Er rief `adresse_bauen()`
+    unmittelbar mit einem von Hand geschriebenen Feld auf und maß `urlencode`,
+    nicht den Aufrufweg. Streicht man `felder=` in `main()` oder reicht
+    `rufen()` es nicht weiter, blieb die Probe grün — beides nachgemessen.
+    Jetzt fährt der Fall den ganzen Weg und fällt bei beiden Mutationen um
+    (11 → 10 erfüllt, 1 offen).
+
+    **Dazu:** Die Selbstprobe läuft jetzt in **Stufe 1** und nicht mehr nur im
+    Produktionslauf — ihre fünf neuen Fälle bewachen `pause`, und das läuft in
+    Stufe 2. Der `JOBS_TOKEN`-Riegel steht vor `pip` und dem
+    Chromium-Download. `--jobs-token` liest nicht mehr ersatzweise die
+    Umgebungsvariable (sonst ginge ein exportiertes Produktiv-Token gegen die
+    lokale Installation). Die Kopfzeile meldete „fünf Lagen" und fuhr elf. Die
+    Geheimnis-Tabelle in `docs/Technik.md` war von einem eingeschobenen Absatz
+    zerrissen. `tools/kette/LIESMICH.md`, `docs/Rahmenplan.md` 6a (Schritt 10)
+    und Prüfpunkt P6 sind nachgezogen.
+
+    **Und eine Grenze, benannt statt geschlossen:** `tools/kettenaufrufe/`
+    sieht nur Aufrufe in `run:`-Blöcken. Der neue Aufruf `kreislauf.py` →
+    `tor.py` steht in Python und liegt außerhalb seiner Reichweite; wer
+    `--sekunden` umbenennt und den Aufrufer vergisst, bekommt von ihm weiter
+    „0 Befunde". Gedeckt ist diese eine Stelle stattdessen von Fall 6 der
+    Selbstprobe. Das steht in beiden LIESMICH-Dateien.
+
+    **Die Lehre, und sie ist dieselbe wie bei Nr. 217 und 218, eine Stufe
+    tiefer:** Eine Probe, die ich selbst schreibe, prüfe ich mit einer
+    Mutation — sonst weiß ich nicht, ob sie misst oder nur grün ist. Alle
+    drei neuen Fälle sind jetzt so belegt.
+
+220. **`aufnehmen.mjs` schaltet den Wartungsmodus über eine LOKALE Datei — und
+    das ist der dritte Fall derselben Annahme.**
+    *Aufgenommen 17.09.2026 aus dem ersten Bilderlauf gegen Staging, der ein
+    Demo-Konto hatte.*
+
+    Der Lauf hat alle 50 Seiten fotografiert — 400 Einzelbilder, 50
+    Kontaktbögen, alle drei Rollen trugen. Rot wurde er unter anderem hier:
+
+    ```
+    07-wartungsseite    kein Überlauf  ·  8 Konsolenfehler
+    OHNE BILD: 8 Aufnahmen — 8× Seite leitete auf die Anmeldung um
+    ```
+
+    `seiten.json` führt diesen Eintrag mit `"wartung": true` und
+    `"status": 503`: Das Werkzeug soll den Wartungsmodus einschalten,
+    `index.php` in acht Breiten aufnehmen und ihn wieder ausschalten.
+    Eingeschaltet wird er in `aufnehmen.mjs:908` so:
+
+    ```js
+    const WARTUNGSDATEI = join(WURZEL, 'server', 'wartung.lock');
+    ```
+
+    Also durch **Anlegen einer Datei im eigenen Arbeitsbaum**. Auf einem
+    GitHub-Läufer entsteht damit eine Datei im Checkout; Staging bleibt
+    offen, `index.php` leitet den nicht angemeldeten Aufruf zur Anmeldung um,
+    und acht Aufnahmen bleiben ohne Bild.
+
+    **Das ist dieselbe Annahme wie in Nr. 219**, nur an einer anderen Stelle:
+    Ein Werkzeug nimmt an, `--basis` sei der Rechner, auf dem es läuft. Bei
+    `kreislauf.py` war es die Job-Pause, hier ist es der Wartungsschalter.
+    Beim dritten Mal ist es keine Einzelheit mehr, sondern ein Muster.
+
+    *Zu tun, und der Weg liegt schon da:* `tools/kette/tor.py` kann
+    `wartung-an` und `wartung-aus` über `jobs.php?aktion=…`, und seit Web
+    20.16.0 steht `JOBS_TOKEN` auch in der Umgebung `staging`. `aufnehmen.mjs`
+    bräuchte also nur ein `--jobs-token` und denselben Zweig wie
+    `kreislauf.py`: mit Token über HTTP, ohne Token weiter über die lokale
+    Datei. **Und einen Riegel:** Ist `--basis` nicht local und kein Token da,
+    darf der Eintrag nicht still als „umgeleitet" durchlaufen, sondern muss
+    sagen, dass er nicht gemessen werden konnte.
+
+    *Zu prüfen wäre dabei auch, ob es weitere solche Stellen gibt* — ein
+    Werkzeug, das gegen `--basis` misst und dabei in `server/` schreibt oder
+    liest, ist immer verdächtig.
+
+    ### Behoben am 17.09.2026 mit Web 20.16.2
+
+    **Zwei Wege, wie bei `kreislauf.py`:** mit `--jobs-token` über
+    `jobs.php?aktion=wartung_an`, gefahren von `tools/kette/tor.py`; ohne
+    Token weiter über die Datei. Wer örtlich misst, merkt nichts.
+
+    **Dazu ein Riegel:** Ist die Basis nicht diese Maschine und fehlt das
+    Token, bricht der Lauf **vorher** ab und nennt beide betroffenen Seiten.
+    Ohne ihn liefe er weiter und legte Bilder der Anmeldeseite ab.
+
+    **Es sind zwei Seiten, nicht eine** — das kam erst beim Beheben heraus,
+    weil der Riegel sie aufzählt: `07-wartungsseite` **und**
+    `46a-betrieb-updates-wartung`. Die zweite ist die unangenehmere: Ihre acht
+    Bilder entstehen, zeigen aber den Wartungsbalken nicht, und der Lauf
+    meldet dafür „kein Überlauf". Eine stille Fehlmessung fällt nicht auf;
+    acht fehlende Bilder schon.
+
+    *Gemessen, vorher und nachher:*
+
+    | | vorher (Kette, 17.09.) | nachher (örtlich, mit Token) |
+    |---|---|---|
+    | `07-wartungsseite` | **0 Bilder**, 8 Konsolenfehler, „leitete auf die Anmeldung um" | **8 Bilder**, 0 Konsolenfehler, RC 0 |
+
+    Dazu der Beleg auf HTTP-Ebene: `index.php` antwortet **ohne** Wartung mit
+    **302**, **mit** Wartung mit **503** — und 503 ist, was `seiten.json` für
+    diesen Eintrag erwartet.
+
+    **In der Kette belegt am 17.09.2026**, Auslieferungslauf auf `main`
+    (`e5844c4`, Stufe 2 vollständig grün): **400 Einzelbilder, 50
+    Kontaktbögen, 0 Überlauf, 0 Konsolenfehler, 0 falsche Knopfhöhen** — und
+    **kein „OHNE BILD"** mehr. Beide Wartungsseiten stehen mit „kein
+    Überlauf" im Protokoll (`46a-betrieb-updates-wartung` 13:49:29,
+    `07-wartungsseite` 13:50:17). Der Wartungsmodus ist danach wieder aus;
+    ein hängender Schalter hätte den Lauf seit Web 20.16.3 selbst rot
+    gefärbt. Der Rückfallweg ohne Token ist gegengeprüft (8
+    Bilder, `wartung.lock` sauber aufgeräumt), und nach dem Lauf steht die
+    Installation wieder offen (`zustand.wartung.aktiv = false`).
+
+    ### Nachtrag vom 17.09.2026 — was die Durchsicht an der Behebung fand
+
+    Zehn Befunde, jeder von einem zweiten Durchgang zu widerlegen versucht.
+    **Der erste wiegt schwerer als der Fehler, für den die Behebung
+    geschrieben war.**
+
+    **Ein misslungenes Ausschalten hätte Staging geschlossen — und der Lauf
+    hätte grün gemeldet.** Der `catch` setzte `wartungVonUns` auf falsch und
+    entwaffnete damit jeden weiteren Versuch: `wartungAus()` läuft nach jeder
+    Seite und noch einmal am Prozessende, beide kehrten danach sofort um. Der
+    Rückgabewert kannte den Fehlschlag nicht, der Bericht auch nicht. Der
+    Kommentar darüber versprach das Gegenteil („das muss auffallen"). Behoben:
+    Die Merkung bleibt stehen, und ein hängender Wartungsmodus färbt den Lauf
+    rot.
+
+    **Die Merkung stand hinter dem Einschalten.** Über eine Datei ist das
+    gleichgültig — `writeFileSync` schreibt oder wirft. Über HTTP gibt es
+    einen dritten Ausgang: ausgeführt, aber nicht bestätigt. Sie steht jetzt
+    davor.
+
+    **Der Abbruch bei fehlendem Token war die bequemere und schlechtere
+    Zeile.** Zwei von fünfzig Seiten hängen am Wartungsmodus; ein Abbruch
+    würfe achtundvierzig messbare weg. Jetzt fallen die zwei aus, mit Grund,
+    und der Lauf endet rot.
+
+    *Gegengeprüft gegen eine echte Installation:* mit gültigem Token 8 Bilder,
+    RC 0, Wartung danach aus; mit falschem Token 0 Bilder, RC 1, Grund bei der
+    Seite („Zustand nicht abfragbar … `error: token`"), Installation
+    unangetastet.
+
+    **Und zum zweiten Mal habe ich in `docs/Technik.md` einen Absatz
+    zerrissen**, indem ich neuen Text mitten hineinschob — diesmal las sich
+    „Sie halten die Hintergrundjobs an" als Aussage über den Bilderlauf. Beim
+    ersten Mal war es die Geheimnis-Tabelle (Nr. 219). *Merkposten für die
+    nächste Einfügung: erst den Absatz zu Ende lesen, dann einfügen.*
+
+215. **Fünf Werkzeuge begründen ihre Arbeitsweise mit der gelöschten
+    `deploy.yml`.**
+    *Aufgenommen 16.09.2026 aus einer unabhängigen Durchsicht des
+    P5a-Abschlusses.*
+    `deploy.yml` ist mit Web 20.4.0 gelöscht worden; die Kette heißt seither
+    `auslieferung.yml` und hat **zwei** FTPS-Schritte statt einem. In
+    `docs/Technik.md` sind die Erwähnungen berichtigt — in den Werkzeugen nicht:
+    `tools/integritaetswache/wache.py` erklärt ihren Zweck mit „Der Deploy
+    (`.github/workflows/deploy.yml`) synchronisiert `server/` byteweise per
+    FTPS", und vier weitere Stellen ähnlich.
+
+    **Folgenlos für den Lauf** — es sind Kommentare, kein Code. Aber sie sind
+    die Erklärung, warum es das Werkzeug gibt, und wer sie liest, sucht eine
+    Datei, die es nicht mehr gibt. Dazu stimmt die **Einzahl** nicht mehr: Wer
+    „der Deploy" liest, denkt an einen Weg, und es sind zwei mit
+    unterschiedlichen Toren.
+
+    *Zu tun:* Die fünf Stellen auf `auslieferung.yml` umschreiben und dabei die
+    Zweiwegigkeit nennen. **Kein eigenes Paket** — Beifang, sobald jemand das
+    jeweilige Werkzeug ohnehin anfasst (R83-Muster).
+
+    **Erledigt am 17.09.2026 mit Web 20.16.4.** Es waren **sechs** Stellen und
+    nicht fünf — beim Nachzählen kam `tools/wartungsprobe/LIESMICH.md` dazu:
+    `server/adminbackup_lib.php`, `tools/wortliste/LIESMICH.md`,
+    `tools/integritaetswache/wache.py`, `tools/integritaetswache/LIESMICH.md`,
+    `tools/wartungsprobe/probe.php` und dessen `LIESMICH.md`. Jede nennt jetzt
+    `auslieferung.yml`, und wo es auf die **Zweiwegigkeit** ankommt, steht sie
+    dabei — in `adminbackup_lib.php` ausdrücklich: „beider FTPS-Schritte …
+    Seit der Kette gilt das zweimal: für Staging und für Produktiv." Die
+    Herkunft bleibt als „bis Web 20.3.0: `deploy.yml`" daneben stehen, in
+    derselben Schreibweise wie in `docs/Technik.md`.
+
+    Die Stelle in `adminbackup_lib.php` ist der Grund für die Versionsstufe:
+    Sie liegt unter `server/`, und damit ist die Änderung nicht mehr eine, die
+    nur `tools/` und `docs/` anfasst (`CLAUDE.md` 2).
+
+    *Nicht angefasst, mit Absicht:* die Erwähnungen in `docs/konzepte/`, in
+    diesem Backlog und in `docs/CHANGELOG.md` — das sind Protokolle eines
+    Standes, und wer sie umschreibt, fälscht die Geschichte, statt sie zu
+    berichtigen. Ebenso bleiben die drei Stellen in den Arbeitsläufen selbst,
+    die den alten Namen als Historie nennen („Bis zu dieser Fassung hiess
+    diese Datei `deploy.yml`").

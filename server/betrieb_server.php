@@ -1071,7 +1071,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                FORMULAR steckt; der Baustein nimmt nur fertiges Markup fuer
                den Knopf, kein Formular darum.
 
-               DER TON HEISST `info` UND NICHT `blau` (Backlog Nr. 218).
+               DER TON HEISST `info` UND NICHT `blau` (Backlog Nr. 226).
                Genau dieser Fehler stand hier: Die Toene sind
                `fehler, warn, ok, info, schutz`, und `meldung-blau` hat keine
                Regel im Stylesheet — der Kasten stand ungestaltet da, ohne

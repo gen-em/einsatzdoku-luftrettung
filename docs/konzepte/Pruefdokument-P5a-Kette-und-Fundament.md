@@ -129,7 +129,7 @@ Alles unten auf dem Stand nach AP1 (Web 20.4.0), im Wegwerf-Container
 > ist kaputt" unterscheiden. Sie muss bei jedem Lauf einen Verstoß auslösen
 > und ihn wiederfinden. In `browserprobe.mjs` steht das als fester Punkt.
 
-**Was die Zahlen benennen** (`CLAUDE.md` 6): Die Wortliste hat sechs Bereiche
+**Was die Zahlen benennen** (`CLAUDE.md` 6): Die Wortliste hat **fünf** Bereiche
 gemessen (Server-PHP, Skripte, Dokumentation, Android, `watch/`), nicht einen;
 die Vollständigkeitszahl ist ein **Vergleich gegen den Ausgangsstand**, keine
 absolute Güte — 340 ist der Altbestand aus P3, den AP4 und spätere Pakete
@@ -144,7 +144,7 @@ AP4 auflöst).
 |---|---|---|
 | **Mailprobe** (neu) | `php tools/mailprobe/probe.php` | **41 Prüfungen, 0 Befunde** über 13 Abschnitte, gegen eine eigene SMTPS-Gegenstelle in fünf Betriebsarten |
 | **Jobprobe** | `php tools/jobprobe/probe.php` | **35 Erwartungen, 0 nicht erfüllt** (Teil 10 neu: 7 Erwartungen zum Job `mail`) |
-| Wortliste | `python3 tools/wortliste/wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen**; 96 Regeln, 96 gegriffen; sechs Bereiche (Server-PHP, Skripte, Doku, Android, `watch/`) |
+| Wortliste | `python3 tools/wortliste/wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen**; 96 Regeln, 96 gegriffen; **fünf** Bereiche (Server-PHP, Skripte, Doku, Android, `watch/`) |
 | Vollständigkeit | `python3 tools/vollstaendigkeit/pruefen.py --hoechstens 367` | **367** (50 + 10 + 299 + 8). Die Kette stand während des Umzugs auf 371 (Doppelbestand: dieselben Texte im Katalog *und* in den alten Aufrufern) und ist zurückgezogen. **Im AP5-Commit standen 366, und das war um 1 zu niedrig** — siehe den Kasten unten |
 | Migrationsregister | `php tools/migrationsregister/pruefen.php` | **0 Befunde**; 206 Katalogspalten, 29 Löschungen, 4 erklärte Ausnahmen, 0 ungenutzt |
 | CSP-Probe | `php tools/cspprobe/pruefen.php` | **0 Befunde** über 108 PHP-Dateien und 108 `<script>`-Stellen |
@@ -309,7 +309,7 @@ Zählschritte dazu, und der Fehlerzweig ist der, den niemand schnell braucht.
 | Wortliste | `python3 tools/wortliste/wortliste.py` | **0/0/0** |
 | Vollständigkeit | `… --hoechstens 377` | **377** — 372 + 5 Pfeile in neuen sichtbaren Texten |
 | CSP · Sitzungshärtung · Installweiche · Kontraste | je eigener Lauf | **0 · 0 · 0 · 22/0** |
-| PHP-Syntax | `php -l` je Datei | **458 Dateien, 0 Fehler** |
+| PHP-Syntax | `php -l` je Datei | **458 Dateien, 0 Fehler** — gemessen über **`server/` allein**. Die Nachbarzeilen (482, 484, 485) messen `server/` **und** `tools/`; die Zahlen sind deshalb nicht vergleichbar, und keine von beiden ist falsch. Genau dafür steht die Regel „eine grüne Zahl ist erst dann ein Beleg, wenn sie das Gemessene benennt" |
 
 **Die Zahlen der Klickprobe im Einzelnen** — sie sind die Abnahme von AP8,
 und sie sind der Grund, warum der Weg überhaupt entstanden ist: Der Bilderlauf
@@ -657,7 +657,7 @@ läuft er los.
 **Scheitern erkennbar an:** einem Job, der ohne Rückfrage durchläuft — dann ist
 in der Umgebung `produktion` kein Reviewer eingetragen.
 
-### P4 — Stufe 2 misst gegen Staging
+### P4 — Stufe 2 misst gegen Staging — **GRÖSSTENTEILS GEFAHREN am 17.09.2026**
 
 **Weg:** Nach der Einrichtung von Staging (Zuarbeit) einen Push auf `main`.
 **Erwartet:** Job `stufe2` grün; Kreisläufe **0 unerklärt**, Bilderlauf
@@ -666,7 +666,94 @@ in der Umgebung `produktion` kein Reviewer eingetragen.
 Zusammenfassung — dann fehlen `STAGING_KONTO`/`STAGING_PASS`, und **gemessen
 wurde nichts**.
 
-### P5 — Uhr Stufe I im Lauf
+**Erster Lauf gegen die eingerichtete Anlage** (Lauf #4, `14f99ac`):
+
+| Schritt | Ergebnis |
+|---|---|
+| Antwortet Staging wie eine eingerichtete Installation? | **grün** — zum ersten Mal; bis dahin scheiterte er daran, dass `install.php` noch nicht gelaufen war |
+| **Punktdateien gesperrt, .well-known offen?** | **grün beim allerersten Lauf** — vier Punktpfade **403**, `.well-known/acme-challenge/` **404 und nicht 403**. Damit ist **P33 auf der echten Anlage belegt**: Die Sperre greift, und die Zertifikatserneuerung ist **nicht** kaputtgegangen |
+| Kreisläufe csv und edbak | **rot** — und der Fehler war der Aufruf, nicht die Anwendung (siehe unten) |
+| Bilderlauf, Messstand | nie erreicht (der Lauf brach davor ab) |
+
+**Dritter Lauf, mit `JOBS_TOKEN` und Demo-Konto** (Lauf #6, `f0d31b6`,
+17.09.2026) — und hier stehen zum ersten Mal Zahlen aus einer echten,
+**fernen** Installation:
+
+| Schritt | Ergebnis |
+|---|---|
+| `staging` (FTPS-Sync) | **grün**, 8 s |
+| Antwortet Staging wie eine eingerichtete Installation? | **grün** |
+| Punktdateien gesperrt, `.well-known` offen? | **grün** |
+| **Kreisläufe csv und edbak** | **GRÜN**, beide, 1:55 min |
+| Bilderlauf | **rot** — aber aus zwei neuen Gründen, nicht mehr am Konto |
+
+**Die Kreisläufe, mit ihren Zahlen:**
+
+| | edbak | csv |
+|---|---|---|
+| Einzelvergleiche | **328 771** | **10 922** |
+| unerklärte Abweichungen | **0** | **0** |
+| erwartete Abweichungen | 21 | 1 271 |
+
+Und dazwischen, im Protokoll, die neue Aktion bei der Arbeit:
+
+```
+{"ok": true, "aktion": "pause", "sekunden": 1800, "grenze": 7200,
+ "bis": "2026-09-17 10:46:20", "meldung": "Jobs angehalten bis … UTC."}
+…
+{"ok": true, "aktion": "pause", "sekunden": 0, "grenze": 7200,
+ "bis": null, "meldung": "Jobs laufen wieder."}
+```
+
+**Der Bilderlauf lief zum ersten Mal ganz durch: 400 Einzelbilder, 50
+Kontaktbögen**, alle drei Rollen. Rot blieb er an zwei Stellen, und beide
+sind als Befund aufgenommen:
+
+- **`07-wartungsseite`** — 8 Aufnahmen ohne Bild, „Seite leitete auf die
+  Anmeldung um", dazu 8 Konsolenfehler. `aufnehmen.mjs` schaltet den
+  Wartungsmodus über die **lokale** Datei `server/wartung.lock`; gegen ein
+  fernes Staging ist das wirkungslos. **Dieselbe Annahme wie in Nr. 219, das
+  dritte Mal** (Backlog **Nr. 220**).
+- **`05-datenschutz`** — waagerechter Überlauf bei **360 px**, eine Seite von
+  fünfzig (Backlog **Nr. 221**).
+
+**Nachtrag 17.09.2026 — P4 IST BELEGT.** Der Lauf nach dem Merge von PR #53
+(`e5844c4`, 13:36–13:50) ist in Stufe 2 **vollständig grün**:
+
+| Schritt | Ergebnis |
+|---|---|
+| `staging` (FTPS-Sync) | grün, 6 s |
+| Staging antwortet wie eingerichtet · Punktdateien | grün |
+| Kreisläufe csv und edbak | **grün**, 1:43 min |
+| **Bilderlauf** | **grün** — 400 Einzelbilder, 50 Kontaktbögen, **0 Überlauf, 0 Konsolenfehler, 0 falsche Knopfhöhen** |
+
+Kein „OHNE BILD" mehr: Beide Wartungsseiten liefern Bilder (Nr. 220). Und
+`05-datenschutz` meldete „kein Überlauf" — der Befund aus Nr. 221 hat sich
+**nicht wiederholt**; er bleibt als einmalige Beobachtung stehen, mit dem
+Bericht jetzt in der Zusammenfassung des Laufs, falls er wiederkommt.
+
+> **Der rote Schritt war ein Aufruffehler aus AP1, der nie gelaufen war.**
+> ```
+> kreislauf.py: error: the following arguments are required: --art
+> ```
+> Drei Fehler in einer Zeile: `--art` fehlte (Pflichtargument) · `--passwort`
+> **gibt es nicht** (das Werkzeug kennt `--konto-passwort`,
+> `--backup-passwort`, `--admin-email`, `--admin-passwort`; das Prüfkonto der
+> Umgebung ist das **Admin**-Konto) · und es war **ein** Aufruf, obwohl der
+> Schrittname „csv **und** edbak" verspricht — selbst mit `--art` hätte er nur
+> die Hälfte gemessen und grün gemeldet.
+>
+> **Das ist die Lehre dieses Prüfpunkts, und sie gilt für die ganze Kette:**
+> Ein Schritt, der in einer Sitzung geschrieben und nie gelaufen ist, ist
+> **ungeprüfter Code** — auch wenn das YAML gültig ist und die Shell-Syntax
+> stimmt. Beides war hier der Fall. Berichtigt am 16.09.2026; **Bilderlauf,
+> Messstand, das Backup-Tor und der gesamte Job `produktion` sind weiterhin
+> nie gelaufen** und stehen unter demselben Vorbehalt.
+
+**Offen bleibt P4**, bis der Job **ganz** grün ist — mit Kreisläufen und
+Bilderlauf.
+
+### P5 — Uhr Stufe I im Lauf — **ANGELAUFEN am 16.09.2026, noch nicht grün**
 
 **Weg:** `CIQ_GERAETE_URL` als Repositoriums-Secret hinterlegen, Push.
 **Erwartet:** Der Schritt übersetzt die App für alle Zielgeräte und endet
@@ -674,7 +761,33 @@ grün.
 **Scheitern erkennbar an:** der Warnung „CIQ_GERAETE_URL nicht gesetzt — Uhr
 Stufe I ÜBERSPRUNGEN, nicht bestanden".
 
-### P6 — Die vier Aktionen von `jobs.php` gegen eine echte Installation
+**Das Secret ist eingetragen** (gemessen: der Lauf zeigt `CIQ_GERAETE_URL: ***`
+statt leer), der Schritt läuft also wirklich — und scheiterte sofort:
+
+```
+== SDK 9.2.0 beschaffen
+== Systembibliotheken aufloesen
+FEHLER: apt-get fehlgeschlagen
+```
+
+**Zwei Ursachen, beide behoben:**
+
+1. `bibliotheken()` rief `apt-get` **ohne `sudo`**. Im Wegwerf-Container läuft
+   alles als `root`, auf einem GitHub-Läufer heißt der Benutzer `runner`.
+   Die Funktion setzt jetzt `sudo` davor, wo sie es braucht, und ihre
+   Fehlermeldung nennt den Benutzer — vorher stand nur „fehlgeschlagen", weil
+   die Ausgabe nach `/dev/null` ging.
+2. **Der Schritt brauchte die Bibliotheken gar nicht.** `aufbau` holt
+   webkit2gtk 4.0, xvfb, xdotool und imagemagick — alles für den
+   **Simulator**, also Stufe II. Stufe I **übersetzt nur**. Die Kette ruft
+   jetzt `aufbau-uebersetzen` (SDK, Schlüssel, Gerätedateien) und spart sich
+   `sudo`, mehrere `.deb`-Pakete von `archive.ubuntu.com` und einige Minuten
+   für etwas, das dort nie startet.
+
+**Noch nicht grün:** Ob das SDK danach wirklich für alle Zielgeräte übersetzt,
+zeigt erst der nächste Lauf. Der Punkt bleibt offen.
+
+### P6 — Die fünf Aktionen von `jobs.php` gegen eine echte Installation
 
 **Weg:** Mit dem Job-Token aus Betrieb → Jobs:
 
@@ -682,6 +795,8 @@ Stufe I ÜBERSPRUNGEN, nicht bestanden".
 python3 tools/kette/tor.py zustand     --basis https://… --token …
 python3 tools/kette/tor.py wartung-an  --basis https://… --token …
 python3 tools/kette/tor.py wartung-aus --basis https://… --token …
+python3 tools/kette/tor.py pause       --basis https://… --token … --sekunden 60
+python3 tools/kette/tor.py pause       --basis https://… --token … --sekunden 0
 python3 tools/kette/tor.py backup      --basis https://… --token … --versuche 3 --pause 5
 ```
 
@@ -689,8 +804,18 @@ python3 tools/kette/tor.py backup      --basis https://… --token … --versuch
 `migration_ausstehend`. `wartung-an` legt `server/wartung.lock` an, und die
 Startseite antwortet danach mit **503** — der Wartungsbalken auf
 Betrieb → Updates sagt „von kette". `wartung-aus` räumt sie weg.
+`pause --sekunden 60` antwortet mit `bis` = jetzt + 60 s, und **Betrieb →
+Hintergrundjobs zeigt den Balken „Jobs angehalten"**; `--sekunden 0` räumt
+ihn weg und antwortet `bis: null`.
 **Scheitern erkennbar an:** `{"ok": false}` mit Meldung — bei `wartung-an`
 heißt das fast immer: die Anwendungswurzel ist nicht beschreibbar.
+
+**Dazu die Gegenprobe, die im Browser nichts kostet und viel sagt:** Rufe
+`https://…/jobs.php?token=…&aktion=pause&sekunden=-0.5` auf, während eine
+Pause steht. **Erwartet: 400** und die Pause steht weiter. Kommt **200** mit
+„Jobs laufen wieder", ist die Ziffernprüfung aus Web 20.16.1 nicht auf dem
+Server — genau so hat die erste Fassung die Pause stillschweigend aufgehoben
+(Backlog Nr. 219).
 
 ### P7 — Die Integritätswache hält nach einem Staging-Deploy still
 
@@ -1278,7 +1403,12 @@ Job möglicherweise über **mehrere Tage** — dann steht die Zeile so lange auf
   für einen Block — dann `jobs.php?aktion=lauf` mehrmals anstoßen und
   zusehen, ob die Zahl wächst (N35).
 
-### P33 — Die Punktdatei-Sperre auf der echten Anlage (Nr. 213, Web 20.15.1)
+### P33 — Die Punktdatei-Sperre auf der echten Anlage (Nr. 213, Web 20.15.1) — **AUF STAGING BELEGT am 16.09.2026**
+
+> **Gemessen von der Kette selbst**, Stufe 2, Lauf #4 gegen `staging.nadoku.gen-em.org`: vier Punktpfade **403**, `.well-known/acme-challenge/` **404 und nicht 403**. Die Sperre greift auf einer echten Apache-Installation, **und die Zertifikatserneuerung ist nicht kaputtgegangen** — das war der gefährliche Teil der Änderung.
+>
+> **Offen bleibt der Punkt für PRODUKTIV**: Dort ist er nicht gemessen (diese Umgebung erreicht `nadoku.gen-em.org` nicht, N38), und dort liegt die alte `.ftp-deploy-sync-state.json` noch im Webroot — gesperrt, aber vorhanden. Schritt 5 unten (von Hand löschen) steht weiter aus.
+
 
 **Wofür:** N38 — von hier aus ist weder `.htaccess` noch der FTP-Käfig
 messbar. Und dies ist der einzige Prüfpunkt der Liste, bei dem ein Fehler
@@ -1466,6 +1596,14 @@ Aus dem Rahmenplan, Abschnitt 6 — hier nur, was P1 bis P8 blockiert:
   (Integritätswache, Wartungsprobe 12a); beide lesen den Tag-Rumpf jetzt als
   `(?:<\?(?:php\b|=).*?\?>|[^>])*`. Wer ein drittes Werkzeug schreibt, das
   Markup aus **Quelldateien** liest, braucht dasselbe.
+
+  *Nachtrag 17.09.2026:* Der letzte Satz stand hier als Rat und nirgends als
+  Regel — **auch nicht in `CLAUDE.md`**, obwohl dieses Dokument und Backlog
+  Nr. 218 das behaupteten (`git log -S 'Tag-Rumpf' -- CLAUDE.md` → leer).
+  Genau deshalb wurde beim zweiten Beheben das Nachbarmuster zwanzig Zeilen
+  weiter übersehen. Die Regel steht jetzt in `CLAUDE.md` 6, für **jedes**
+  Tag-Muster; alle Muster der vier Werkzeuge sind nachgezogen (Nr. 218), und
+  wo die kurze Form richtig bleibt, steht der Grund als Kommentar daneben.
 
 - **`tools/cspprobe/pruefen.php`** liest nur PHP. Markup, das zur Laufzeit in
   `assets/*.js` entsteht, sieht sie nicht — ein per `innerHTML` eingesetztes

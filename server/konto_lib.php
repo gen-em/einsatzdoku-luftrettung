@@ -66,7 +66,7 @@ declare(strict_types=1);
  */
 
 /* `db.php` UND `protokoll_lib.php` NUR MIT KONFIGURATION — wegen des
- * Einrichters (dieselbe Falle wie in Nr. 215).
+ * Einrichters (dieselbe Falle wie in Nr. 223).
  *
  * `install.php` ist der vierte Aufrufer dieser Bibliothek und der einzige,
  * der laeuft, BEVOR es eine `config.php` gibt: Er schreibt sie erst, nachdem

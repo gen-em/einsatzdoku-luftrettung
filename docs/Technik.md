@@ -186,6 +186,11 @@ Daten erst nach Server-Bestätigung.
 │   │                       .htaccess, geladen über vendor/laden.php;
 │   │                       Herkunft und Prüfsummen in HERKUNFT.md
 │   ├── validate_lib.php   Gemeinsame Prüfschicht für Einsatzdaten (alle vier Schreibwege)
+│   ├── php_mindest.php    die Weiche: PHP zu alt → lesbare Seite statt
+│   │                      Parse-Fehler (P5a/AP2). Lädt NICHTS
+│   ├── plattform_lib.php  Plattformprüfung — was die Anlage kann und was
+│   │                      sie können muss (P5a/AP2, R81); Status und
+│   │                      install.php lesen dieselbe Funktion
 │   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
 │   ├── instanz_lib.php    Der Name dieser Installation (P5a/AP5, Web 20.8.0):
 │   │                       instanz_name() lang (Mailbetreff, Grussformel),
@@ -244,6 +249,16 @@ Daten erst nach Server-Bestätigung.
 │   │                       der Elternseite aktiv, wie `admin_user.php`.
 │   │                       Die einzige Seite des Betriebsbereichs mit
 │   │                       Sperrrecht — und die einzige, die etwas ändert
+│   ├── betrieb_status.php  Betrieb → Status: die Karten aus status_lib.php
+│   ├── logout.php         Abmelden (die Räumung steht in session_lib.php)
+│   ├── betrieb_statistik.php
+│   │                       Betrieb → Statistik: Gerätemodelle und Nutzung
+│   │                       (S8/AP4, Backlog Nr. 80)
+│   ├── status_lib.php     die Karten der Statusseite an einer Stelle —
+│   │                      Server, Backups, Plattform, Sicherheit. In P5a
+│   │                      viermal erweitert (AP2, AP9, AP10, AP11)
+│   ├── site_elevation_lib.php
+│   │                       Höhe über dem Einsatzort (`site_ele_m`)
 │   ├── betrieb_updates.php  Betrieb → Updates (S8/AP2): Wartungsmodus,
 │   │                       ausstehende Migrationen mit Vorschau und Lauf,
 │   │                       ausgeführte Migrationen, Fassung
@@ -603,11 +618,29 @@ Daten erst nach Server-Bestätigung.
 │   │                      zerfaellt. Ohne Installation; mit `--selbstprobe`
 │   │                      (8 Faelle, davon 4 die NICHT anschlagen duerfen)
 │   ├── kette/             die Tore der Auslieferungskette (P5a/AP1):
-│   │                      Backup-Tor, Wartung an/aus, Zustand — gegen
-│   │                      `jobs.php?aktion=…`. Das Backup-Tor verlangt
+│   │                      Backup-Tor, Wartung an/aus, Zustand und seit
+│   │                      Web 20.16.0 die Job-Pause — gegen
+│   │                      `jobs.php?aktion=…`. DER EINE CLIENT dieser
+│   │                      Schnittstelle: Er kennt Adresse, Token,
+│   │                      Zeitgrenze und den Umgang mit einer unlesbaren
+│   │                      Antwort; wer daran vorbei eine eigene
+│   │                      urllib-Zeile schreibt, baut einen zweiten Weg,
+│   │                      den niemand pflegt. Das Backup-Tor verlangt
 │   │                      `fertig` UND einen Stand, der jünger ist als der
-│   │                      Laufbeginn; `--selbstprobe` weist an fünf Lagen
-│   │                      nach, dass es auch zugeht
+│   │                      Laufbeginn; `--selbstprobe` weist an ELF Lagen
+│   │                      nach, dass es auch zugeht — fuenf fuer das Tor,
+│   │                      sechs fuer `pause` und die Fehlerantwort. Sie
+│   │                      laeuft in Stufe 1 UND vor dem Tor
+│   ├── kettenaufrufe/     haelt JEDEN Werkzeugaufruf der drei Arbeitslaeufe
+│   │                      gegen die tatsaechliche Schnittstelle des
+│   │                      aufgerufenen Werkzeugs — `add_argument`, die
+│   │                      Handparser (`wert('--x'`, `flag('--x'`),
+│   │                      `BEKANNT`-Mengen, `case`-Zweige, `$argv`. FUEHRT
+│   │                      KEIN WERKZEUG AUS, deshalb Stufe 1 (Nr. 217).
+│   │                      Werkzeuge, deren Schnittstelle nicht aus dem
+│   │                      Quelltext lesbar ist, zaehlt es als UNGEPRUEFT und
+│   │                      nennt die Zahl. Mit `--probe` (10 Faelle, davon 5
+│   │                      die NICHT anschlagen duerfen)
 │   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit der des
 │   │                      Repositoriums: jede Datei unter `server/assets/`
 │   │                      über SHA-256, und auf `login.php` die GANZE Menge
@@ -701,7 +734,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      auf, je Seite ein Kontaktbogen; misst dabei
 │   │                      waagerechten Überlauf, Konsolenfehler, Knopfhöhen
 │   │                      und — seit Web 20.21.1 — Karten, die ausserhalb von
-│   │                      main.inhalt haengen (Nr. 217).
+│   │                      main.inhalt haengen (Nr. 225).
 │   │                      Seit Web 9.10.1 prueft er nach JEDEM Aufruf, ob er
 │   │                      die richtige Seite vor sich hat, und meldet sich bei
 │   │                      Bedarf neu an; ein nicht aufloesbarer Platzhalter
@@ -787,7 +820,12 @@ Daten erst nach Server-Bestätigung.
 │                          MariaDB, ImageMagick, rsvg-convert, Python-
 │                          jsonschema. STARTET nichts — das macht
 │                          tools/referenzdatensatz/einspielen/lokal_starten.sh
-└── .github/workflows/deploy.yml   FTPS-Deploy (nur server/, exkl. config)
+└── .github/workflows/     die Auslieferungskette (P5a/AP1, Abschnitt 6)
+    ├── pruefung.yml       Stufe 1: jeder Push, ohne Installation
+    ├── auslieferung.yml   Staging (Push auf main), Stufe 2, Produktion
+    │                      (Tag, Pflichtfreigabe, Backup-Tor)
+    └── integritaet.yml    die Wache — hängt am Anzeigenamen „Auslieferung"
+                          (`deploy.yml` ist mit Web 20.4.0 gelöscht worden)
 ```
 
 ## 3. Datenmodell (MySQL)
@@ -3231,6 +3269,31 @@ wartet und meist keine Laufzeitgrenze gilt; 20 s, weil das unter der
 zwanzig Sekunden braucht, weil sie nebenbei aufräumt, kaputt ist — auch wenn
 kein Zeitlimit greift.
 
+**Der Token-Weg nimmt seit P5a zusätzlich einen Parameter `aktion`** — er ist
+damit auch der Einstieg der Auslieferungskette (E-P5a-12). Fünf Aktionen, alle
+über dasselbe Token, alle unter demselben Ratenschutz:
+
+| `aktion` | tut | Antwort |
+|---|---|---|
+| *(keine)* | alle fälligen Jobs, ein Häppchen | `{ok, jobs}` |
+| `komplett` | **nur** das Komplett-Backup — und legt einen Auftrag an, wenn keiner steht | `{ok, fertig, bericht, komplett}` |
+| `wartung_an` / `wartung_aus` | Wartungsmodus, Urheber `kette` | `{ok, wartung}` |
+| `zustand` | Auskunft **ohne Nebenwirkung**: Version, Wartung, jüngster Komplett-Stand, Migration ausstehend | `{ok, version, wartung, komplett, migration_ausstehend}` |
+| `pause` | Jobs anhalten (`sekunden=N`) oder freigeben (`sekunden=0`); seit Web 20.16.0 | `{ok, sekunden, grenze, bis, meldung}` |
+
+**`pause` ist kein zweiter Mechanismus**, sondern ein vierter Aufrufer von
+`jobs_pause()` — neben der Kommandozeile und den beiden Knöpfen unter Betrieb
+→ Hintergrundjobs. Es gibt ihn, weil ein Prüfmittel, das gegen eine **ferne**
+Installation misst, die Jobs sonst nicht stillstellen kann: `php jobs.php
+--pause` braucht eine `config.php` auf demselben Rechner (Backlog Nr. 219).
+`bis` ist dabei die Antwort auf die Frage und nicht die Wiederholung des
+Wunsches — `jobs_pause()` deckelt auf `JOB_PAUSE_MAX_S`, wer 9999 schickt,
+sieht dort 7200.
+
+**Ein fehlendes `sekunden` ist ein Fehler (400), kein Vorgabewert.** `0` hebt
+die Pause auf; ein vergessener Parameter gäbe sonst die Jobs frei und meldete
+dafür `ok`.
+
 Am Huckepack-Weg gilt zusätzlich ein **Mindestabstand** von
 `JOB_ANFRAGE_PAUSE_S` = 5 Minuten je Job. Ohne ihn liefe ein nicht-täglicher
 Job bei *jeder* angemeldeten Anfrage, und jede Seite trüge bis zu drei
@@ -4565,7 +4628,7 @@ Trägt der Name keine, steht keine da.
 | Ort | Eintrag | ohne ihn |
 |---|---|---|
 | `.gitignore` | `server/apk/` | Ein signiertes APK läge im Verlauf — ein Erzeugnis, kein Quelltext, bei jeder Fassung ein zweistelliges MB |
-| `.github/workflows/deploy.yml` | `apk/**` und `apk/` | **Der nächste Push löschte die Dateien.** Die Action synchronisiert `server/` und entfernt, was nicht ausgenommen ist |
+| `.github/workflows/deploy.yml` (bis Web 20.3.0; seither `auslieferung.yml`, beide FTPS-Schritte) | `apk/**` und `apk/` | **Der nächste Push löschte die Dateien.** Die Action synchronisiert `server/` und entfernt, was nicht ausgenommen ist |
 
 Der zweite ist der, den man vergisst. Dasselbe Muster wie `config.php` und
 `sicherungen/`, inklusive der doppelten Schreibweise: Die Action prüft
@@ -5245,7 +5308,7 @@ eines HTML-Vorfahren nicht enthält — ein Fehler im Prüfmittel, der wie einer
 der Anwendung aussah (Nr. 186).
 
 **Die vierte Zahl: Karten ausserhalb des Gerüsts** (seit Web 20.21.1,
-Backlog Nr. 217). Der Lauf zählt je Seite, wie viele `section.karte` bzw.
+Backlog Nr. 225). Der Lauf zählt je Seite, wie viele `section.karte` bzw.
 `details.karte` **nicht** in `main.inhalt` hängen, und nennt sie beim Titel.
 
 Der Anlass war ein `ui_karte_ende()` zu viel auf der Profilseite: Es gab ein
@@ -6736,7 +6799,7 @@ denn eine Liste, die `com` sperrte, sperrte das halbe Netz. Fehlt die Datei,
 trifft nichts: Eine Installation, die alle Registrierungen abweist, *weil* eine
 Datei fehlt, wäre das Gegenteil des Schalters. Pflege:
 `tools/wegwerfdomains/aktualisieren.py` (Runbook, Abschnitt 7; Backlog
-Nr. 222), Herkunft in `docs/Lizenzen.md` 7b.
+Nr. 230), Herkunft in `docs/Lizenzen.md` 7b.
 
 **Zwei Fristen, zwei Zustände, ein Job.** `konto_verfall` löscht
 unbestätigte Konten nach **48 h** (`KONTEN_UNBESTAETIGT_H`, fest — eine
@@ -7122,7 +7185,7 @@ Auftragsverarbeitung (AVV) an" setzen, während `avv.php` daneben den Leertext
 zeigte. `einwilligung_in_kraft()` beantwortet die Frage jetzt für beide
 Seiten; **Prüfung und Markup ziehen aus derselben Liste**, sonst könnte die
 Betreiberin zwischen Anzeige und Absenden einen Text in Kraft setzen und das
-Formular verlangte einen Haken, den es nie gezeigt hat. Backlog Nr. 223.
+Formular verlangte einen Haken, den es nie gezeigt hat. Backlog Nr. 231.
 
 #### Wo die Annahme entsteht
 
@@ -7214,7 +7277,7 @@ die von außen erreichbar ist.
 eine `config.php` gibt: Er schreibt sie erst, nachdem er das erste Konto
 angelegt hat, und bringt deshalb seine eigene PDO-Verbindung mit. `konto_lib.php`
 lädt `db.php` und `protokoll_lib.php` deshalb nur mit `is_file()`, und jede
-Funktion nimmt ein `?PDO` entgegen. Dieselbe Falle wie Backlog Nr. 215 — und
+Funktion nimmt ein `?PDO` entgegen. Dieselbe Falle wie Backlog Nr. 223 — und
 hier von vornherein vermieden statt hinterher behoben.
 
 Der Protokolleintrag „erstes Konto angelegt" fällt im Einrichter aus
@@ -8649,16 +8712,34 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 
 | Schritt | Sollwert |
 |---|---|
+| Fassungen nennen (Web, Uhr, Android) | drei Nummern in der Zusammenfassung — **kein** Sollwert, eine Auskunft |
+| Welche Bereiche sind berührt? | `android=ja\|nein`, `uhr=ja\|nein` — eine Auskunft, kein Sollwert (siehe unten) |
 | `php -l` über `server/` und `tools/` | 0 Fehler |
 | `tools/wortliste/wortliste.py` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen |
-| `tools/vollstaendigkeit/pruefen.py --hoechstens N` | **genau N** — die Schwelle, nicht null (heute **388**; die Zahl steht in `pruefung.yml`, nicht hier — dieser Eintrag stand bis Web 20.21.1 auf 366, während die Kette längst mit 377 lief) |
+| `tools/vollstaendigkeit/pruefen.py --hoechstens N` | **genau N** — die Schwelle, nicht null (heute **398**; die Zahl steht in `pruefung.yml`, nicht hier — dieser Eintrag stand bis Web 20.21.1 auf 366, während die Kette längst mit 377 lief) |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
+| `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft, Selbstprobe 10/10 |
+| `tools/kette/tor.py --selbstprobe` | 11 erfüllt, 0 offen |
 | Backlog-Nummern (`grep … uniq -d`) | leer |
-| `tools/migrationsregister/pruefen.php` | 0 Befunde, Selbstprobe 4/4 |
 | `tools/installweiche/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
+| `tools/migrationsregister/pruefen.php` | 0 Befunde, Selbstprobe 4/4 |
 | `tools/cspprobe/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
-| `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge |
-| Uhr Stufe I (`pruefstand.sh reihe`) | übersetzt für alle Zielgeräte |
+| `tools/sitzungshaertung/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
+| `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge — **nur wenn `android/` berührt ist** |
+| Uhr Stufe I (`pruefstand.sh aufbau-uebersetzen`) | übersetzt für alle Zielgeräte — **nur wenn `watch/` oder `tools/uhr-pruefstand/` berührt ist** |
+
+> **Die Reihenfolge ist die des Arbeitslaufs**, und sie hat einen Grund: Was
+> ohne Netz und ohne SDK läuft, läuft zuerst. Ein Syntaxfehler soll nicht erst
+> nach dem Android-Build auffallen, der Minuten braucht.
+>
+> **`tools/kettenaufrufe/` ist das einzige Prüfmittel, das die KETTE prüft**
+> und nicht die Anwendung. Es liest jeden `run:`-Block der drei Arbeitsläufe,
+> findet die darin aufgerufenen Werkzeuge und hält jeden Schalter gegen die
+> Schnittstelle, die im Quelltext des Werkzeugs steht — ohne eines
+> auszuführen. Grund: Drei Kettenschritte sind am 16./17.09.2026 beim jeweils
+> **ersten** echten Lauf gescheitert, alle drei mit gültigem YAML (Nr. 217).
+> Seine Grenze steht in seiner `LIESMICH.md` und gehört dazu: Es prüft
+> Schnittstellen, nicht Verhalten.
 
 > **Warum dort eine Schwelle steht und keine Null.** Dieses Werkzeug misst
 > einen **Altbestand** aus P3 — Unicode-Zeichen im Markup, `style=`-Attribute
@@ -8673,6 +8754,40 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 > Zahl im Arbeitslauf nachzuziehen, sonst bekommt er stillschweigend wieder
 > Luft.
 
+#### Android und Uhr laufen nur mit, wenn sie berührt sind
+
+**Gemessen am 17.09.2026:** Der Lauf brauchte 42 min 28 s — davon 7:15 der
+Android-Bau und **34:46** das Übersetzen der Uhr-App für alle Zielgeräte. Die
+übrigen dreizehn Schritte zusammen: **23 Sekunden**. Und von den letzten 60
+Commits auf `main` fasst **keiner** `android/` an und **einer** `watch/`.
+59 von 60 Läufen messen also 42 Minuten lang Code, den niemand angefasst hat.
+
+Der Schritt „Welche Bereiche sind berührt?" setzt deshalb zwei Ausgaben, an
+denen die beiden teuren Schritte per `if:` hängen. **Drei Eigenschaften machen
+den Sprung unkritisch** — wer eine davon entfernt, macht aus einer
+Beschleunigung eine Lücke:
+
+| | |
+|---|---|
+| **`main` misst immer alles** | Der schlimmste Fehler des Filters wäre, fälschlich zu überspringen; auf `main` kann das nicht passieren. Und `main` ist der Stand, den ein Tag ausliefert — Tor 3 des Produktionslaufs verlangt einen grünen Stufe-1-Lauf auf genau diesem Commit (6.4). |
+| **Im Zweifel wird gemessen** | Neuer Zweig (`before` ist `0000…`), Force-Push (das Vorher ist unerreichbar), fehlende Historie, `workflow_dispatch` — jeder dieser Wege endet bei „alles". Getragen wird das von **zwei Schichten, jede für sich ausreichend**: der Erreichbarkeitsprüfung (`git cat-file`) und dem Fehlerzweig von `git diff`. Nachgemessen am 17.09.2026: Entwaffnet man eine der beiden, bleibt die Lage richtig; entwaffnet man **beide**, fällt sie um. |
+| **Die Auslassung nennt ihren Gegenstand** | Ein übersprungener Schritt läuft nicht und kann selbst nichts melden. Deshalb schreibt der **Erkennungsschritt** die Zeile: „**Uhr Stufe I: NICHT BERÜHRT** — 0 von 12 geänderten Dateien liegen unter `watch/` oder `tools/uhr-pruefstand/` (gegenüber `98a64f1`); nicht gemessen." Dieselbe Bauform wie beim fehlenden SDK oder fehlender `CIQ_GERAETE_URL`. |
+
+Dazu zwei Feinheiten: Der Uhr-Schritt hängt **auch an `tools/uhr-pruefstand/`**
+— wer den Prüfstand ändert, fährt ihn. Und eine Änderung an `pruefung.yml`
+selbst fährt **beides**, sonst prüft niemand den Prüfschritt.
+
+> **Die Grenze, die nicht verschoben wird: Der Filter gilt für Android und
+> Uhr.** Beide werden von der Kette **nicht ausgeliefert** — der FTPS-Schritt
+> lädt `server/` hoch, die Signatur der Apps liegt außerhalb der CI
+> (E-S4-16); eine ausgelassene Messung erreicht hier keinen Server. Für einen
+> `server/`-Schritt gilt das **nicht**: Der entscheidet über ausgelieferten
+> Code, und eine Bedingung, die darüber entscheidet, gehört in ein Werkzeug
+> mit `--selbstprobe` — das Backup-Tor ist das Muster (E-P5a-12). Wer diesen
+> Filter auf PHP-Syntax, CSP oder Sitzungshärtung ausdehnt, ändert seine
+> Natur. Und wenn die Kette eines Tages die Apps selbst ausliefert
+> (`server/apk/` ist der Verteilweg, 4.97g), ist er neu zu bewerten.
+
 **Rot heißt kein Merge** — das entscheidet aber nicht die Datei, sondern der
 Zweigschutz auf `main` mit `pruefung` als Pflichtprüfung. Ohne ihn ist der
 Lauf eine Auskunft und keine Schranke.
@@ -8685,12 +8800,57 @@ aus wie eine Prüfung.
 
 ### 6.3 Stufe 2 — was eine Installation braucht
 
-Job `stufe2` in `auslieferung.yml`, nach dem Staging-Sync: Kreisläufe csv und
-edbak (0 unerklärt), Bilderlauf (0 Überlauf, 0 Konsolenfehler, 0 falsche
-Knopfhöhen), und **nur bei Tag-Läufen** der Messstand. Alle drei brauchen ein
-**Prüfkonto auf Staging** (Umgebungsgeheimnisse `STAGING_KONTO`,
-`STAGING_PASS`, Variable `STAGING_URL`); fehlt es, wird der Schritt
-ausdrücklich übersprungen und gemeldet.
+Job `stufe2` in `auslieferung.yml`, nach dem Staging-Sync: der Griff auf
+`login.php`, die Punktdatei-Sperre, die Kreisläufe csv und edbak
+(0 unerklärt) und der Bilderlauf (0 Überlauf, 0 Konsolenfehler, 0 falsche
+Knopfhöhen). **Kreisläufe und Bilderlauf** brauchen ein **Prüfkonto auf
+Staging** (Umgebungsgeheimnisse `STAGING_KONTO`, `STAGING_PASS`, Variable
+`STAGING_URL`); fehlt es, wird der Schritt ausdrücklich übersprungen und
+gemeldet.
+
+**Der Messstand läuft hier nicht, und bei einem Tag-Lauf läuft Stufe 2
+überhaupt nicht.** Bis Web 20.16.4 stand an dieser Stelle „und **nur bei
+Tag-Läufen** der Messstand" — ein Satz, der zwei Dinge zugleich behauptete,
+die beide nicht zutreffen. Der Messstand-Schritt ist in P5a/AP9 **ersatzlos
+aus der Kette gestrichen** (Nr. 206); geblieben ist ein Schritt gleichen
+Namens, der nur noch sagt, wo seine Zahlen stehen. Und `staging` ist für
+Tag-Läufe abgeschaltet (`if: !startsWith(github.ref, 'refs/tags/')`),
+`stufe2` hängt mit `needs: staging` daran — ein Tag lässt **allein**
+`produktion` laufen. Der Stand, den ein Tag ausliefert, hat Stufe 2 deshalb
+schon vorher gesehen, und genau das prüft das Tor „Grüner Staging- und
+Stufe-1-Lauf auf diesem Stand?" nach.
+
+**Die Kreisläufe brauchen seit Web 20.16.0 zusätzlich `JOBS_TOKEN`** in der
+Umgebung `staging` (Backlog Nr. 219). Sie halten die Hintergrundjobs an, bevor
+sie ein Backup in ein frisches Konto spielen — sonst dünnt der
+Verdichtungsjob die wiederhergestellten Spuren aus, und der Vergleich misst
+„hat der Job dazwischen zugeschlagen" statt „kommt zurück, was hineinging"
+(gemessen: 125 verdichtete Spuren in einem Lauf ohne Pause). Das ging bis
+dahin nur über die Kommandozeile und damit nur auf dem Rechner der
+Installation; hier läuft ein Läufer gegen ein fernes Staging. **Fehlt das
+Token, wird übersprungen und gesagt** — nicht still auf den lokalen Weg
+zurückgefallen, der hier ohnehin an der fehlenden `config.php` scheitert.
+
+**Der Bilderlauf braucht es seit Web 20.16.2 ebenfalls** (Backlog Nr. 220),
+aber für etwas anderes und mit einem anderen Verhalten. Zwei der fünfzig
+Seiten tragen `"wartung": true` in `seiten.json` — `07-wartungsseite` und
+`46a-betrieb-updates-wartung` —, und `aufnehmen.mjs` schaltete den
+Wartungsmodus über die **lokale** Datei `server/wartung.lock`, was gegen ein
+fernes Staging wirkungslos ist.
+
+**Hier wird NICHT übersprungen, sondern ausgefallen**, und der Unterschied ist
+Absicht: Bei den Kreisläufen hängt die ganze Messung am Token, beim
+Bilderlauf nur **zwei von fünfzig** Seiten. Der Lauf misst deshalb die
+übrigen achtundvierzig, lässt die zwei ausfallen, nennt sie beim Namen — und
+endet **rot**, weil eine ausgefallene Aufnahme in den Rückgabewert geht.
+Gesagt wird es zusätzlich **vor** den zwölf Minuten Laufzeit. Dasselbe gilt,
+wenn das Token falsch ist oder die Leitung im Lauf abreißt: Der Grund steht
+dann bei der Seite, und der Rest des Laufs bleibt erhalten.
+
+**Und wenn das Ausschalten misslingt, ist der Lauf rot** — auch dann, wenn
+sonst nichts zu beanstanden war. Eine Installation, die nach einem Bilderlauf
+im Wartungsmodus stehenbliebe, wäre ein stiller Ausfall; der Lauf versucht es
+nach jeder folgenden Seite erneut und sagt es am Ende ausdrücklich.
 
 **Der erste Schritt unterscheidet seit Nr. 214 zwei Fälle.** Landet der
 Aufruf auf `install.php`, fragt er diese Datei zusätzlich ab: Kommt **404**,
@@ -8698,6 +8858,12 @@ liegt es nicht am `FTP_ZIELPFAD`, sondern daran, dass `install.php` seither
 in der Ausnahmeliste steht und bewusst nicht ausgeliefert wird — die Meldung
 sagt dann, die Datei einmal von Hand hochzuladen. Ohne diese Unterscheidung
 suchte man den Fehler im falschen Ort.
+
+**Der Bericht des Bilderlaufs steht seit Web 20.16.2 in der Zusammenfassung
+des Laufs.** Er trägt je Seite die Spalte **`Verursacher`** — das Element, das
+überläuft. Bis dahin wurde er mit dem Arbeitsverzeichnis des Läufers
+weggeräumt, und ein „Überlauf bei 360" blieb ein Befund ohne Adresse: Örtlich
+ließ sich nur noch ausschließen, was es **nicht** ist (Backlog Nr. 221).
 
 **Dazu seit Web 20.15.1 ein vierter Schritt: „Punktdateien gesperrt,
 .well-known offen?"** (Nr. 213). Er braucht **kein** Prüfkonto — nur
@@ -8726,7 +8892,12 @@ zuerst falsch entlastet.
 Vor dem Schreiben auf Produktiv läuft das Komplett-Backup **nachweislich zu
 Ende**. Die Logik steht in `tools/kette/tor.py` und nicht im Arbeitslauf: Eine
 Bedingung, die einen Deploy verhindern soll, gehört dorthin, wo eine
-Selbstprobe sie nachweisen kann (5 Lagen, ohne Netz).
+Selbstprobe sie nachweisen kann — **fünf Lagen** für das Backup-Tor selbst,
+**elf** für die ganze Datei (die übrigen gehören zum Unterbefehl `pause` und
+zur Fehlerantwort), alle ohne Netz. Seit Web 20.16.1 läuft sie in **Stufe 1**
+und nicht mehr nur hier: Für das Backup-Tor war der Platz unmittelbar vor dem
+Tor richtig, aber die `pause`-Lagen bewachen einen Schritt aus Stufe 2 — wer
+ihn beschädigte, bekam von Stufe 1 ein Grün.
 
 Der Ablauf des Produktionslaufs:
 
@@ -8762,11 +8933,19 @@ sondern an den **Umgebungen**:
 
 | Umgebung | Geheimnisse | Variablen |
 |---|---|---|
-| `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS` | `FTP_ZIELPFAD`, `STAGING_URL` |
+| `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `JOBS_TOKEN` | `FTP_ZIELPFAD`, `STAGING_URL` |
 | `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN` | `FTP_ZIELPFAD`, `PRODUKTION_URL` |
+
 | Repositorium | `CIQ_GERAETE_URL` (Stufe 1) | `WACHE_BASIS` |
 
 `FTP_SERVER` ist der **nackte Hostname**, ohne Protokoll und ohne Pfad.
+
+**`JOBS_TOKEN` steht in beiden Umgebungen unter demselben Namen und trägt
+verschiedene Werte.** Das Token gehört der **Installation**
+(`app_state.jobs_token`, sichtbar unter Betrieb → Hintergrundjobs), nicht dem
+Repositorium; Staging und Produktiv sind zwei Installationen. Jeder Job liest
+es aus seiner eigenen Umgebung, deshalb kollidiert der gleiche Name nicht —
+und die beiden Zeilen in `auslieferung.yml` lassen sich nebeneinander lesen.
 
 ### 6.6 Die Integritätswache hängt am Namen
 
@@ -8792,7 +8971,7 @@ Hand sind gleichwertig. Was sie weiß, ist ihre eigene Fassung
 ## 7. Betrieb (Runbook)
 
 **Vor jeder Auslieferung: die Wegwerfliste nachziehen** (seit Web 20.22.0,
-Backlog Nr. 222).
+Backlog Nr. 230).
 
     python3 tools/wegwerfdomains/aktualisieren.py              # holen, messen, Diff zeigen
     python3 tools/wegwerfdomains/aktualisieren.py --schreiben  # und schreiben
@@ -9653,7 +9832,7 @@ Verzeichnis. Ohne eingerichtetes SMTP (`smtp_eingerichtet()`) steht statt der
 Mail ein dauerhafter Hinweis im Adminbereich. Einzelheiten:
 `docs/Backup-Format.md` 5b.
 
-**`sicherungen/` steht in der `exclude`-Liste von `.github/workflows/deploy.yml`.**
+**`sicherungen/` steht in der `exclude`-Liste beider FTPS-Schritte von `.github/workflows/auslieferung.yml`** (bis Web 20.3.0: `deploy.yml`).**
 Das ist keine Feinheit: Der FTP-Deploy synchronisiert `server/` und löscht alles,
 was nicht ausgenommen ist. Deshalb wird die `.htaccess` auch zur Laufzeit
 erzeugt und nicht mitgeliefert — eine mitgelieferte käme im ausgenommenen Ordner

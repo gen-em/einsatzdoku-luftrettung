@@ -23,7 +23,7 @@ Mockups in `konzept-p5b/mockups/`.
 > | Offen | nichts im Konzept; **außerhalb und nicht mehr in der Liste der Umsetzung:** die anwaltliche Prüfung der drei Rechtstext-Entwürfe samt Rechtsform der Betreiberin (E-P5b-24, E-P5b-25) — der Auftraggeber führt diese Zuarbeit ab 17.09.2026 selbst |
 > | Umsetzung | **läuft** auf `claude/magical-dirac-we2y1z` seit 16.09.2026 — begonnen auf dem Stand von `main` nach dem Merge von P5a (PR #50, `14f99ac`). **Sieben von zehn Paketen sind gebaut** (Tabelle unten), AP8, AP9 und AP10 stehen aus. **Abweichend vom Fahrplan läuft 10b vor Schritt 15**: Der Auftraggeber hat die Umsetzung am 16.09.2026 unmittelbar nach dem P5a-Merge beauftragt; **Schritt 15 ist unverändert offen**. Welche Folgen das für die Zentralisierung hat, ist hier nicht gemessen — sie fasst dieselben Dateien an und misst ohnehin nach dem Merge neu (Rahmenplan, Fahrplanzeile 15). Reihenfolge und Abhängigkeiten innerhalb von 10b sonst wie in 3.0 |
 > | Fable-Schritte der Umsetzung | **erledigt** — beide Mockups am 17.09.2026 geliefert und **freigegeben** (`konzept-p5b/mockups/`, M-P5b-01 V1, M-P5b-02 a–d V1/V1.1). Die Umsetzung von AP3, AP8 und AP9 braucht **keine Pause** mehr; die vier Gestaltungsvorgaben in Abschnitt 6 gelten |
-> | Nummern | **Vergeben am 17.09.2026** beim Einspielen dieses Pakets: Rahmenplan **Fassung 78**, Backlog **Nr. 220 bis 222** (Proof-of-Work, Uhr-Grund bei `403`, Pflege der Wegwerfliste). Die Nummern 215 bis 219 hatte derselbe Zweig zuvor für Funde während der Umsetzung vergeben; 220 war damit die nächste freie. **Die Einschübe aus Abschnitt 7 und 8 sind eingearbeitet** — Fahrplanzeile 10b, Schritt-10-Block, Abschnitt 5, 6 und das Register R9/R25/R37 im Rahmenplan; im Backlog die drei neuen Punkte **220 bis 222**, der Speichergrenzen-Absatz an **Nr. 37** und die Verschiebung von **Nr. 48** nach *Erledigt*; **Nr. 202** trug seine Statuszeile schon seit AP2, **Nr. 200** bleibt unverändert. **Nr. 37 bleibt offen** — von ihr ist nur der Speichergrenzen-Teil gefallen, der Rest (Zeitraumübersicht, Suchindex, die sechs stillen Kappungen, `post_max_size`) steht. **Nachtrag 17.09.2026:** Backlog **Nr. 223** (Einwilligung bei der Registrierung nicht festgehalten) zu E-P5b-25 |
+> | Nummern | **Vergeben am 17.09.2026** beim Einspielen dieses Pakets: Rahmenplan **Fassung 79**, Backlog **Nr. 228 bis 230** (Proof-of-Work, Uhr-Grund bei `403`, Pflege der Wegwerfliste). Die Nummern 223 bis 227 hatte derselbe Zweig zuvor für Funde während der Umsetzung vergeben; 228 war damit die nächste freie. **Alle diese Zahlen sind beim Merge am 17.09.2026 um acht verschoben worden** — auf dem Zweig hießen sie 215 bis 219 bzw. 220, und `main` hatte dieselben Nummern parallel vergeben. **Die Einschübe aus Abschnitt 7 und 8 sind eingearbeitet** — Fahrplanzeile 10b, Schritt-10-Block, Abschnitt 5, 6 und das Register R9/R25/R37 im Rahmenplan; im Backlog die drei neuen Punkte **220 bis 222**, der Speichergrenzen-Absatz an **Nr. 37** und die Verschiebung von **Nr. 48** nach *Erledigt*; **Nr. 202** trug seine Statuszeile schon seit AP2, **Nr. 200** bleibt unverändert. **Nr. 37 bleibt offen** — von ihr ist nur der Speichergrenzen-Teil gefallen, der Rest (Zeitraumübersicht, Suchindex, die sechs stillen Kappungen, `post_max_size`) steht. **Nachtrag 17.09.2026:** Backlog **Nr. 231** (Einwilligung bei der Registrierung nicht festgehalten) zu E-P5b-25 |
 
 > **Stand der Umsetzung** (17.09.2026, Zweig `claude/magical-dirac-we2y1z`)
 >
@@ -31,7 +31,7 @@ Mockups in `konzept-p5b/mockups/`.
 > |---|---|---|---|---|
 > | AP1 — Protokoll-Schreibweg, Einstellungen | **erledigt** | Web 20.16.5 | `b9046ed` | Bereinigung 3 von 3 Fristfällen richtig; Fehlfall V7 in allen drei Stufen belegt; Bilderlauf 16 Bilder 0/0/0. **Der `app_state`-Teil entfiel** — `app_state_lesen()`/`_setzen()` stehen seit Web 20.7.0 in `db.php` |
 > | AP2 — Lebenszyklus-Bibliothek | **erledigt** | Web 20.17.0 | `442dbcb` | Übergangstabelle statt Verzweigungen, 6 von 6 Übergängen wie festgelegt; `INSERT INTO password_resets` **4 Dateien → 2 Treffer in einer**; `ingest.php` 200/403 je Status; Ratenschutz zählt die Absage **0**mal. Backlog Nr. 202 Paket 1 mit erledigt |
-> | AP3 — Registrierung | **erledigt** | Web 20.22.0 | `93f0d6f` | Honeypot, Mindestausfülldauer 4 s, drei Rätsel-Töpfe; Wegwerfliste **8 von 8** Anbietern, **0 von 10** echten Domains; immer dieselbe Antwort. **20.22.1** berichtigte den Wortlaut der Häkchen, **20.22.2** hält sie fest (Nr. 223) |
+> | AP3 — Registrierung | **erledigt** | Web 20.22.0 | `93f0d6f` | Honeypot, Mindestausfülldauer 4 s, drei Rätsel-Töpfe; Wegwerfliste **8 von 8** Anbietern, **0 von 10** echten Domains; immer dieselbe Antwort. **20.22.1** berichtigte den Wortlaut der Häkchen, **20.22.2** hält sie fest (Nr. 231) |
 > | AP4 — Einwilligungen | **erledigt** | Web 20.19.0 | `edc3040` | 6 von 6 Fällen, darunter **zweite Fassung am selben Tag sperrt erneut** (Fehlerfund F3 des Konzepts); drei Wege bleiben am Tor offen, im Browser durchgeklickt; Ingestprobe bei leerer `konto_einwilligungen` **83 Erwartungen, 0 nicht erfüllt** |
 > | AP5 — Selbstlöschung, Adresswechsel | **erledigt** | Web 20.20.0 | `edc3040` | Karenz **30,0 Tage**, Rückzug lässt den Bestand unverändert, Kaskade räumt alle Reste; Adresswechsel 6 von 6 Fällen — alte Adresse gilt bis zum Klick, zweiter Klick abgewiesen, belegte Adresse abgewiesen; Protokolleintrag enthält **kein `@`** |
 > | AP6 — Mengengrenze, Aufbewahrung je Konto | **erledigt** | Web 20.21.0 | `533850d` | Uploads `200, 200, 200, 507`; Rumpf `{"error":"kontingent"}`; Ratenzähler **0 Zeilen**; nach Anheben kam die abgewiesene Aufzeichnung nach (**4 Einsätze**). Backlog Nr. 48: 4 Fälle, 4 bestanden. **E-P5b-17 ist gegenstandslos** — SHA-256 für Geräteschlüssel seit Web 13.0.0 erledigt, am Code nachgemessen |
@@ -48,7 +48,7 @@ Mockups in `konzept-p5b/mockups/`.
 > E-P5b-25 überarbeitet worden (private Zweckbestimmung, § 203 StGB,
 > Klartextliste ehrlich gestellt); **geprüft sind sie weiterhin nicht**.
 >
-> **Nr. 223 ist erledigt** (Web 20.22.2, 17.09.2026): Die Registrierung hält
+> **Nr. 231 ist erledigt** (Web 20.22.2, 17.09.2026): Die Registrierung hält
 > die Einwilligungen jetzt fest und verlangt nur, was in Kraft ist. Fünf
 > Prüffälle gegen die lokale Installation gemessen, dabei ein Folgefehler in
 > der Absage gefunden und behoben — Einzelheiten im Prüfdokument, F11.
@@ -73,17 +73,17 @@ Mockups in `konzept-p5b/mockups/`.
 >
 > | Fund | Was | Nummer | Behoben in |
 > |---|---|---|---|
-> | F4 | P5a/AP4 hatte die Anwendung **uninstallierbar** gemacht (`install.php` → HTTP 500) | Nr. 215 | Web 20.15.3 |
-> | — | `frame-ancestors` stand in einer Report-Only-Richtlinie und war dort wirkungslos — **16 Konsolenfehler bei 16 Bildern** in WebKit | Nr. 216 | Web 20.16.5 |
+> | F4 | P5a/AP4 hatte die Anwendung **uninstallierbar** gemacht (`install.php` → HTTP 500) | Nr. 223 | Web 20.15.3 |
+> | — | `frame-ancestors` stand in einer Report-Only-Richtlinie und war dort wirkungslos — **16 Konsolenfehler bei 16 Bildern** in WebKit | Nr. 224 | Web 20.16.5 |
 > | F5 | **Backlog Nr. 48 falsch gelesen** — als Aufbewahrungsfrist für Einsätze statt als Zahl der Sicherungspakete; berichtigt, bevor es ausgeliefert wurde | — | vor Web 20.21.0 |
-> | F6 | Die Profilseite brach aus ihrem Seitengerüst aus — vier Karten über die volle Fensterbreite, **zehn Tage lang**, und der Bilderlauf meldete in allen drei Engines drei Nullen | Nr. 217 | Web 20.21.1 |
-> | F7 | Ein Meldungskasten trug den Ton `meldung-blau`, den es nicht gibt — weißer Kasten ohne Symbol | Nr. 218 | Web 20.21.1 |
+> | F6 | Die Profilseite brach aus ihrem Seitengerüst aus — vier Karten über die volle Fensterbreite, **zehn Tage lang**, und der Bilderlauf meldete in allen drei Engines drei Nullen | Nr. 225 | Web 20.21.1 |
+> | F7 | Ein Meldungskasten trug den Ton `meldung-blau`, den es nicht gibt — weißer Kasten ohne Symbol | Nr. 226 | Web 20.21.1 |
 > | F8 | Zwei Seiten fehlten in der Gerüst-Ausnahmeliste — „Seite ohne Gerüst" **2 → 0**, Ausnahmen 7 → 9 | — | Web 20.21.1 |
-> | F9 | Die Symbolregel zählt Typografie — **299 von 319 Befunden sind `…` und `→`**; die Schwelle stand in zwei Dokumenten verschieden (366 gegen 377) | Nr. 219 | Web 20.21.1 |
+> | F9 | Die Symbolregel zählt Typografie — **299 von 319 Befunden sind `…` und `→`**; die Schwelle stand in zwei Dokumenten verschieden (366 gegen 377) | Nr. 227 | Web 20.21.1 |
 >
 > **Dreimal geprüft, nicht einmal.** Seit der Rückfrage des Auftraggebers vom
 > 16.09.2026 läuft der Bilderlauf über **drei** Maschinen (Chromium, Firefox,
-> WebKit). Nr. 216 ist genau daran aufgefallen und wäre unter Chromium allein
+> WebKit). Nr. 224 ist genau daran aufgefallen und wäre unter Chromium allein
 > nie sichtbar geworden.
 
 ---
@@ -670,7 +670,7 @@ nach E-P5b-24. Der Auftraggeber führt diese Zuarbeit selbst; sie ist ab
 
 **Ein Mangel in AP3/AP4, dabei gefunden:** Die drei Häkchen bei der
 Registrierung werden nirgends festgehalten, und sie werden auch für Texte
-verlangt, die nicht in Kraft sind. Backlog **Nr. 223**.
+verlangt, die nicht in Kraft sind. Backlog **Nr. 231**.
 
 **Erledigt am 17.09.2026 mit Web 20.22.2.** Die dort offene Frage ist
 entschieden: **Festgehalten wird bei der Registrierung**, nicht erst am Tor —
@@ -833,7 +833,7 @@ Wegwerfliste — mit einer Testdomain zusätzlich zur gelieferten Liste.
 | F2 | `403` aus `ingest.php` bedeutet der Uhr heute „abgemeldet"; mit Kontostatus bekommt derselbe Code einen zweiten Grund | `Uploader.mc`, `ingest.php` | E-P5b-12: Grund im Rumpf; Handbuch; Backlog-Eintrag für die Uhr-Anzeige (Abschnitt 8) |
 | F3 | `rechtstexte` hat keine Fassungskennung außer `stand_am`; zwei Änderungen am selben Tag wären eine Fassung | `rechtstexte_lib.php` | AP4: `stand_am` wird DATETIME |
 | F4 | **Die Wortliste sah die Rechtstexte nicht an.** Bereich (c) ist eine feste Liste von acht Dateien; `docs/rechtstexte/` stand nicht darin, weil die Entwürfe erst am 16.09.2026 entstanden. Der Lauf nach der Überarbeitung vom 17.09.2026 meldete **0 Treffer**, ohne eine Zeile davon gelesen zu haben — genau der Fall B-S4-06 | `tools/wortliste/wortliste.py` | **Erledigt 17.09.2026** mit E-P5b-25: die drei Dateien eingetragen, Lauf ergab **14 Treffer** (11× „Spur" statt „GPS-Daten", 2× „Piloten", 1× „Station"), alle umformuliert statt ausgenommen; danach 0 von 0. `LIESMICH.md` hält den Fall fest |
-| F5 | **Die drei Häkchen der Registrierung werden nicht festgehalten**, und sie werden auch für Texte verlangt, die nicht in Kraft sind — `registrieren.php` prüft `RT_EINWILLIGUNG`, schreibt aber nie nach `konto_einwilligungen`; der einzige Schreibweg liegt am Tor beim Login | `registrieren.php`, `einwilligung_lib.php` | Backlog **Nr. 223**; eigenes Paket vor AP10. Dabei zu entscheiden: Eintrag schon bei der Registrierung oder bewusst erst am Tor |
+| F5 | **Die drei Häkchen der Registrierung werden nicht festgehalten**, und sie werden auch für Texte verlangt, die nicht in Kraft sind — `registrieren.php` prüft `RT_EINWILLIGUNG`, schreibt aber nie nach `konto_einwilligungen`; der einzige Schreibweg liegt am Tor beim Login | `registrieren.php`, `einwilligung_lib.php` | Backlog **Nr. 231**; eigenes Paket vor AP10. Dabei zu entscheiden: Eintrag schon bei der Registrierung oder bewusst erst am Tor |
 
 ---
 

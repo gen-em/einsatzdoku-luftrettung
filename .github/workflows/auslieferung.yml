@@ -29,8 +29,10 @@ name: Auslieferung
 # DAS BACKUP-TOR STEHT IN `tools/kette/tor.py` und nicht hier (E-P5a-12).
 # Eine Bedingung, die einen Deploy verhindern soll, gehört dorthin, wo eine
 # `--selbstprobe` sie nachweisen kann — genau das verlangt die Abnahme von
-# AP1. Fünf Lagen prüft sie, darunter „meldet nie fertig" und „Stand ist von
-# gestern".
+# AP1. Fünf Lagen prüft sie für das Backup-Tor selbst, darunter „meldet nie
+# fertig" und „Stand ist von gestern"; die ganze Selbstprobe fährt elf — die
+# übrigen gehören zum Unterbefehl `pause` und zur Fehlerantwort. Sie läuft
+# seit Web 20.16.1 in Stufe 1 und hier noch einmal, unmittelbar vor dem Tor.
 #
 # ROLLBACK ist ein Lauf mit dem vorigen Tag (E-PV-3 (d)). Deshalb trägt der
 # Tag die Fassung und nicht die Uhrzeit.
@@ -77,6 +79,29 @@ on:
 permissions:
   contents: read
   actions: read
+
+# ALLE run-BLOECKE MIT `pipefail` (16.09.2026, gemessen).
+#
+# GitHub faehrt run-Bloecke mit `bash -e {0}` — OHNE pipefail. Der
+# Rueckgabewert einer Pipe ist damit der des LETZTEN Glieds, und ein
+# gescheitertes erstes Glied faellt lautlos durch. Im Schritt "Wortliste"
+# stand `python3 wortliste.py | tee /tmp/wortliste.txt`: `tee` gibt immer 0,
+# also konnte dieser Schritt NIE ROT WERDEN. Nachgemessen:
+# `bash -e -c 'python3 -c "import sys;sys.exit(1)" | tee /dev/null; echo $?'`
+# ergibt 0.
+#
+# Ein Pruefmittel, das nicht scheitern kann, ist kein Pruefmittel — es ist
+# eine gruene Zahl ohne Aussage. Deshalb hier, an EINER Stelle je Lauf, und
+# nicht als Flicken an der einen Pipe: Die naechste Pipe kommt bestimmt.
+#
+# GEMESSEN, WAS DADURCH ROT WIRD: von zehn Pipes in den drei Laeufen trifft
+# es genau eine — `grep -oE "WEB_VERSION..." | head -1` im Schritt
+# "Fassungen nennen". Die war ohnehin kaputt (das Muster verlangte ein Komma
+# hinter dem Namen, `version.php` schreibt `const WEB_VERSION = '…'`) und ist
+# im selben Zug berichtigt.
+defaults:
+  run:
+    shell: bash -eo pipefail {0}
 
 jobs:
   staging:
@@ -223,6 +248,13 @@ jobs:
       STAGING_URL:   ${{ vars.STAGING_URL }}
       STAGING_KONTO: ${{ secrets.STAGING_KONTO }}
       STAGING_PASS:  ${{ secrets.STAGING_PASS }}
+      # DERSELBE NAME WIE IM JOB `produktion`, ANDERER WERT. Beide Jobs lesen
+      # ihn aus IHRER Umgebung (`environment:`) — `stufe2` aus `staging`,
+      # `produktion` aus `produktion`. Das Token gehoert der jeweiligen
+      # INSTALLATION (`app_state.jobs_token`, sichtbar unter Betrieb ->
+      # Hintergrundjobs), nicht dem Repositorium; zwei Installationen haben
+      # zwei Tokens. Gleicher Name, damit die beiden Zeilen sich lesen lassen.
+      JOBS_TOKEN:    ${{ secrets.JOBS_TOKEN }}
     steps:
       - name: Code auschecken
         uses: actions/checkout@v4
@@ -350,9 +382,77 @@ jobs:
             echo '**Kreisläufe: ÜBERSPRUNGEN** (kein Prüfkonto) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
+          # ALLE RIEGEL VOR DER ERSTEN INSTALLATION. Der JOBS_TOKEN-Riegel
+          # stand zuerst hinter pip, npm und dem Chromium-Download: Fehlte das
+          # Token UND brach der Download ab (Netz, Spiegel, Rate-Limit), wurde
+          # der Schritt ROT mit einer Playwright-Meldung, obwohl eine Zeile
+          # weiter „übersprungen, nicht gemessen" gestanden hätte. Man sucht
+          # dann am falschen Ort. Begründung zum Token selbst weiter unten.
+          if [ -z "${JOBS_TOKEN:-}" ]; then
+            echo "::warning::JOBS_TOKEN der Umgebung staging fehlt — Kreisläufe ÜBERSPRUNGEN, nicht gemessen."
+            echo '**Kreisläufe: ÜBERSPRUNGEN** (kein `JOBS_TOKEN`) — nicht gemessen. Der Wert steht auf Staging unter Betrieb → Hintergrundjobs.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           pip -q install cffi cryptography
-          python3 tools/referenzdatensatz/vergleich/kreislauf.py \
-                  --basis "$STAGING_URL" --konto "$STAGING_KONTO" --passwort "$STAGING_PASS"
+          # PLAYWRIGHT LIEGT NICHT DA, WO DIE WERKZEUGE ES SUCHEN.
+          # `aufnehmen.mjs` und `kreislauf.py` laden es ueber einen PFAD
+          # (`PLAYWRIGHT_MODUL`, Vorgabe /opt/node22/... — der Pfad der
+          # Arbeitsumgebung dieses Projekts). Auf einem Laeufer gibt es den
+          # nicht. `npx playwright install` holt nur die BROWSER, nicht das
+          # Modul an diesen Pfad. Also lokal installieren und den Pfad sagen.
+          npm install --no-save --silent playwright@1.56
+          export PLAYWRIGHT_MODUL="$PWD/node_modules/playwright/index.mjs"
+          [ -f "$PLAYWRIGHT_MODUL" ] \
+            || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
+          npx --yes playwright@1.56 install chromium
+          # DREI FEHLER IN EINER ZEILE, gefunden beim ERSTEN Lauf dieses
+          # Schritts am 16.09.2026 (er war in AP1 geschrieben und nie
+          # gelaufen):
+          #
+          #   `--art` FEHLTE, und es ist ein Pflichtargument. Der Lauf brach
+          #   mit "the following arguments are required: --art" ab.
+          #
+          #   `--passwort` GIBT ES NICHT. Das Werkzeug kennt
+          #   `--konto-passwort` (das Umlaufkonto, das es selbst anlegt),
+          #   `--backup-passwort` und `--admin-passwort` (der Zugang, mit dem
+          #   es das Umlaufkonto anlegt und wieder loescht). Das Pruefkonto
+          #   der Umgebung ist das ADMIN-Konto — also `--admin-email` und
+          #   `--admin-passwort`, nicht `--konto`/`--passwort`.
+          #
+          #   EIN Aufruf, obwohl der Schrittname "csv UND edbak" verspricht.
+          #   Jetzt zwei, und beide muessen gruen sein.
+          #
+          # `--frisch` ist Pflicht und keine Bequemlichkeit: Ein Umlauf in ein
+          # GEFUELLTES Konto misst nichts, weil die Dublettenerkennung alles
+          # ueberspringt (steht so im Kopf von kreislauf.py). Der Schalter
+          # loescht ein vorhandenes Umlaufkonto ueber den Adminbereich.
+          # DIE JOB-PAUSE BRAUCHT DAS TOKEN (17.09.2026, Backlog Nr. 219).
+          #
+          # `kreislauf.py` haelt die Hintergrundjobs an, bevor es ein Backup
+          # in ein frisches Konto spielt — sonst duennt der Verdichtungsjob
+          # die wiederhergestellten Spuren aus, und der Vergleich misst
+          # „hat der Job dazwischen zugeschlagen" statt „kommt zurueck, was
+          # hineinging". Nachgemessen: ein Lauf ohne Pause verdichtete 125
+          # Spuren des Umlaufkontos.
+          #
+          # Bis Web 20.16.0 ging das NUR ueber die Kommandozeile, also nur
+          # auf dem Rechner der Installation. Hier laeuft ein Laeufer gegen
+          # ein fernes Staging: keine `config.php`, kein Weg. Genau daran ist
+          # der erste echte Lauf dieses Schritts gescheitert.
+          #
+          # OHNE TOKEN WIRD NICHT GEMESSEN, statt still auf den lokalen Weg
+          # zurueckzufallen: Der schlaegt hier fehl, und ein Kreislauf ohne
+          # Pause waere eine gruene Zahl ohne Aussage (`CLAUDE.md` 6).
+          for art in edbak csv; do
+            echo "--- Kreislauf $art ---"
+            python3 tools/referenzdatensatz/vergleich/kreislauf.py \
+                    --art "$art" --frisch \
+                    --basis "$STAGING_URL" \
+                    --admin-email "$STAGING_KONTO" \
+                    --admin-passwort "$STAGING_PASS" \
+                    --jobs-token "$JOBS_TOKEN" \
+              || { echo "::error::Kreislauf $art gegen Staging gescheitert."; exit 1; }
+          done
 
       - name: Bilderlauf gegen Staging
         env:
@@ -363,9 +463,81 @@ jobs:
             echo '**Bilderlauf: ÜBERSPRUNGEN** (kein Prüfkonto) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
+          # PLAYWRIGHT LIEGT NICHT DA, WO DIE WERKZEUGE ES SUCHEN.
+          # `aufnehmen.mjs` und `kreislauf.py` laden es ueber einen PFAD
+          # (`PLAYWRIGHT_MODUL`, Vorgabe /opt/node22/... — der Pfad der
+          # Arbeitsumgebung dieses Projekts). Auf einem Laeufer gibt es den
+          # nicht. `npx playwright install` holt nur die BROWSER, nicht das
+          # Modul an diesen Pfad. Also lokal installieren und den Pfad sagen.
+          npm install --no-save --silent playwright@1.56
+          export PLAYWRIGHT_MODUL="$PWD/node_modules/playwright/index.mjs"
+          [ -f "$PLAYWRIGHT_MODUL" ] \
+            || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
           npx --yes playwright@1.56 install chromium
+          # `--admin`/`--admin-pw` UND NICHT `--konto`/`--passwort`.
+          # Die beiden letzten gibt es in diesem Werkzeug nicht; es kannte bis
+          # zum 16.09.2026 keine Pruefung auf Unbekanntes und hat sie STILL
+          # verworfen — der Lauf meldete sich dann mit den eingebauten
+          # Vorgaben an und scheiterte mit "Anmeldung gescheitert", einer
+          # Meldung, die den Grund nicht nennt. `aufnehmen.mjs` bricht jetzt
+          # mit Rueckgabewert 2 ab, wenn ein Schalter unbekannt ist.
+          #
+          # `STAGING_KONTO` IST das Admin-Konto — derselbe Wert geht im
+          # Kreislauf-Schritt als `--admin-email` hinein, und `--frisch`
+          # braucht dort Adminrechte.
+          #
+          # DIE 29 DEMO-SEITEN laufen ueber die eingebauten Vorgaben
+          # (`demo@gen-em.org` / `nadokudemo0815`). Das Konto kommt NICHT aus
+          # dem Einspiellauf, sondern aus der Fixture: Adminbereich ->
+          # Demo-Konto -> „Demo-Konto anlegen" (Rahmenplan 6a Schritt 8, seit
+          # 17.09.2026 erledigt). `seiten.json` fuehrt 29 Demo-, 15 Admin- und
+          # 6 anmeldungsfreie Seiten; `aufnehmen.mjs` baut alle drei Rollen
+          # auf, bevor es das erste Bild macht.
+          #
+          # ERSTE MESSUNG MIT DEMO-KONTO (17.09.2026): 400 Einzelbilder, 50
+          # Kontaktboegen — alle drei Rollen trugen. Rot blieb der Schritt aus
+          # zwei anderen Gruenden, und beide stehen im Backlog:
+          # Nr. 220 (`07-wartungsseite`: `aufnehmen.mjs` schaltet den
+          # Wartungsmodus ueber die LOKALE Datei `server/wartung.lock` — gegen
+          # ein fernes Staging wirkungslos) und Nr. 221 (waagerechter Ueberlauf
+          # auf `05-datenschutz` bei 360 px).
+          # `--jobs-token` FUER DIE WARTUNGSSEITE (Backlog Nr. 220). Zwei
+          # Eintraege in `seiten.json` tragen `"wartung": true` und brauchen
+          # die Installation im Wartungsmodus. `aufnehmen.mjs` schaltete ihn
+          # ueber die LOKALE Datei `server/wartung.lock` — auf einem Laeufer
+          # wirkungslos. Ohne Token bricht der Lauf jetzt VORHER ab, statt
+          # acht Bilder der Anmeldeseite abzulegen.
+          rc=0
           node tools/screenshots/aufnehmen.mjs \
-               --basis "$STAGING_URL" --konto "$STAGING_KONTO" --passwort "$STAGING_PASS"
+               --basis "$STAGING_URL" \
+               --admin "$STAGING_KONTO" --admin-pw "$STAGING_PASS" \
+               --jobs-token "$JOBS_TOKEN" || rc=$?
+
+          # DER BERICHT GEHOERT IN DIE ZUSAMMENFASSUNG, NICHT IN DEN MUELL.
+          #
+          # Der Lauf schreibt `ausgabe/bericht.md` mit einer Spalte
+          # VERURSACHER — dem Element, das ueberlaeuft. Auf dem Laeufer wird
+          # sie mit dem Arbeitsverzeichnis weggeraeumt. Am 17.09.2026 meldete
+          # der erste Durchlauf, der ALLE 50 Seiten erreichte — rot, aber
+          # vollstaendig — „Ueberlauf bei 360" auf
+          # `05-datenschutz`, und weil der Bericht fort war, liess sich
+          # oertlich nur noch ausschliessen, was es NICHT ist: Markup und
+          # Stylesheet sind byteidentisch mit dem Repositorium, alle zehn
+          # Schriftdateien liegen und stimmen, und oertlich laeuft nichts
+          # ueber — weder bei Massstab 1 noch 2 (Backlog Nr. 221).
+          #
+          # Eine Zahl ohne den Verursacher ist ein Befund, den niemand
+          # nachgehen kann. Ab jetzt steht er im Lauf.
+          if [ -f tools/screenshots/ausgabe/bericht.md ]; then
+            {
+              echo '<details><summary>Bilderlauf — Bericht</summary>'
+              echo
+              cat tools/screenshots/ausgabe/bericht.md
+              echo
+              echo '</details>'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$rc"
 
       # DER MESSSTAND STAND HIER UND KONNTE NIE LAUFEN (Backlog Nr. 206,
       # behoben in P5a/AP9, E-P5a-53).
@@ -387,7 +559,18 @@ jobs:
       # (Betrieb → Status → Plattform, seit P5a/AP2) — einschließlich
       # `post_max_size`, der Zahl, um die es in Backlog Nr. 37 geht.
       - name: Messstand — wo seine Zahlen stehen
-        if: startsWith(github.ref, 'refs/tags/web-v')
+        # OHNE BEDINGUNG, und das ist die Berichtigung (16.09.2026).
+        #
+        # Hier stand `if: startsWith(github.ref, 'refs/tags/web-v')`. Damit
+        # konnte der Schritt in KEINEM Lauf laufen: Bei einem Tag wird
+        # `staging` uebersprungen (sein `if` schliesst Tags aus), `stufe2`
+        # haengt per `needs` daran und wird mit uebersprungen — die Bedingung
+        # waere zwar erfuellt, der Job laeuft aber nicht. Auf `main` laeuft
+        # `stufe2`, dort ist die Bedingung falsch. Zwei Wege, kein Treffer.
+        #
+        # Der Satz gehoert ohnehin in JEDEN Stufe-2-Lauf: Wer die
+        # Zusammenfassung liest, sucht den Messstand und soll erfahren, warum
+        # er nicht dabei ist — nicht nur an Tagen.
         run: |
           {
             echo '**Messstand: läuft nicht in der Kette** — er misst die Datenbank'

@@ -13,8 +13,8 @@ Phase.
 > `tools/motor.mjs`, einmal für alle drei Prüfmittel.
 >
 > **Die Empfehlung ist gestaffelt, und zwar aus einer Zahl heraus:** Der volle
-> Lauf misst 49 Seiten in acht Breiten und braucht je Motor rund zehn Minuten
-> (gemessen: 392 Bilder). Dreimal voll sind eine gute halbe
+> Lauf misst **50** Seiten in acht Breiten und braucht je Motor rund zehn Minuten
+> (gemessen 16.09.2026: **400** Bilder; bis AP8 waren es 49 und 392). Dreimal voll sind eine gute halbe
 > Stunde nach **jedem** Arbeitspaket, und das Meiste davon ist Wiederholung.
 > Deshalb:
 >
@@ -39,12 +39,12 @@ Phase.
 > WebKit in den Überlauf des Kastens rechnet (Nr. 185, behoben mit
 > `select.feld-eingabe{contain:paint}`).
 >
-> > **Die vierte Zahl: Karten außerhalb von `main.inhalt`** (Nr. 217, seit
+> > **Die vierte Zahl: Karten außerhalb von `main.inhalt`** (Nr. 225, seit
 > Web 20.21.1). Der Lauf zählt je Seite, wie viele Karten nicht im
 > Seitengerüst hängen, und nennt sie beim Titel:
 >
 > ```
-> Karten im Seitengerüst: 254 geprüft · 0 außerhalb von main.inhalt (Nr. 217)
+> Karten im Seitengerüst: 254 geprüft · 0 außerhalb von main.inhalt (Nr. 225)
 > ```
 >
 > **Sie steht da, weil die drei anderen Zahlen einen echten Schaden zehn Tage
@@ -115,11 +115,58 @@ Vier Dinge, die man beim Messen über Engines wissen muss:
 > Schriften, Textrasterung, Systemintegration. Für „läuft das in Safari" ist
 > es ein starkes Indiz, kein Beweis.
 
+## Der Wartungsmodus — und wo er herkommt
+
+Zwei Einträge in `seiten.json` tragen `"wartung": true` und brauchen die
+Installation im Wartungsmodus: `07-wartungsseite` (erwartet **503**) und
+`46a-betrieb-updates-wartung` (der Balken im Adminbereich).
+
+**Den Weg entscheidet das Token, nicht der Ort** — der Ort entscheidet nur,
+ob das Fehlen des Tokens ein Problem ist:
+
+| `--jobs-token` | Weg |
+|---|---|
+| **gesetzt** | `jobs.php?aktion=wartung_an`, gefahren von `tools/kette/tor.py` — gleich, wo die Installation steht |
+| **nicht gesetzt** | die Datei `server/wartung.lock`, wie seit jeher |
+
+Liegt die Installation **nicht auf diesem Rechner** und fehlt das Token, wirkt
+die Datei dort nicht. Dann fallen diese beiden Seiten **aus**: Der Lauf sagt
+es vorweg, misst die übrigen achtundvierzig, nennt die zwei beim Namen und
+endet **rot** — eine ausgefallene Aufnahme geht in den Rückgabewert.
+
+**Warum Ausfallen und kein Abbruch.** Zwei von fünfzig Seiten hängen am
+Wartungsmodus; die anderen achtundvierzig sind messbar, und ein Abbruch würfe
+sie weg. Dasselbe gilt, wenn das Token falsch ist oder die Leitung im Lauf
+abreißt — der Grund steht dann bei der Seite.
+
+**Was ohne Wartungsmodus passiert wäre.** `index.php` antwortet dann mit
+**302** zur Anmeldung statt mit 503, und der Lauf legte acht Bilder der
+Anmeldeseite ab. Bei `07-wartungsseite` fiel das auf, weil die Bilder
+ausblieben; bei `46a` **nicht** — dort entstehen acht Bilder ohne
+Wartungsbalken, und der Lauf meldet „kein Überlauf". Eine stille Fehlmessung
+ist schlimmer als eine laute (Backlog Nr. 220, gemessen am 17.09.2026).
+
+**Und wenn das Ausschalten misslingt, ist der Lauf rot** — auch bei sonst
+sauberem Ergebnis. Die Merkung bleibt dabei stehen, damit es nach jeder
+folgenden Seite und am Prozessende noch einmal versucht wird; ein einmaliger
+Schluckauf heilt sich so von selbst. Eine Installation, die nach einem
+Bilderlauf geschlossen bleibt, darf nicht in einem grünen Lauf untergehen.
+
+**Eine fremde Wartung wird auf beiden Wegen nicht angefasst** — liegt sie
+schon an, rührt der Lauf sie nicht an und schaltet sie am Ende auch nicht ab.
+Der ferne Weg fragt dafür `aktion=zustand`.
+
+**Ein Unterschied, den man im Bild sieht:** Der Wartungsbalken nennt den
+Urheber. Über die Datei steht dort `Bilderlauf`, über die Leitung `kette` —
+`wartung_einschalten('kette')` ist die eine Stelle, die der Token-Weg kennt.
+Für die gemessenen Größen (Überlauf, Konsole, Knopfhöhen) ist das folgenlos;
+wer zwei Abzüge nebeneinanderlegt, sieht ein Wort Unterschied.
+
 ## Warum es sie gibt
 
 Ein Redesign, das „voll mobiltauglich auf allen Seiten" verspricht, muss das
 auf allen Seiten belegen — und zwar bei jeder Breite, nicht bei der einen,
-die gerade offen war. 49 Seiten mal acht Breiten sind 392 Bilder; von Hand
+die gerade offen war. **50** Seiten mal acht Breiten sind **400** Bilder (Stand 16.09.2026; die 50. kam mit P5a/AP8 dazu — `betrieb_sicherheit.php`); von Hand
 macht das niemand zweimal. (Die Zahl stand hier lange bei „30 Seiten … 240
 Bilder" und war schon vor S9/AP5b falsch — `seiten.json` führte 46 Seiten,
 ein voller Lauf machte 368 Bilder. Sie ist seither zweimal nachgezogen
