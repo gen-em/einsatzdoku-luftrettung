@@ -489,7 +489,17 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
       <?= ui_knopf(['text' => 'Anmelden', 'art' => 'primaer', 'breit' => true]) ?>
     </div>
   </form>
-  <p class="anmeldung-neben"><a href="reset_request.php">Passwort vergessen?</a></p>
+  <p class="anmeldung-neben"><a href="reset_request.php">Passwort vergessen?</a>
+     <?php /* DER WEG ZUR REGISTRIERUNG STEHT NUR DA, WENN ES IHN GIBT
+              (P5b/AP3, E-P5b-01). Bei `nur auf Einladung` fuehrte er auf eine
+              Seite, die absagt — eine Einladung ins Leere. Die Betriebsart
+              kommt aus `app_state` und ist damit auch der Grund, warum diese
+              Zeile eine Abfrage kostet; sie steht im selben Aufruf wie die
+              Demo-Einstellung, die diese Seite ohnehin liest. */ ?>
+     <?php require_once __DIR__ . '/konten_einstellungen_lib.php';
+           if (konten_reg_offen()): ?>
+       · <a href="registrieren.php">Neu hier? Konto anlegen</a>
+     <?php endif; ?></p>
   <?php /* Zustandszeile der Anmeldung (Schluesselableitung laeuft …).
            `.zustandszeile` haelt ihre Hoehe frei, damit die Karte beim
            Erscheinen der Meldung nicht springt — `.muted` tat das nicht

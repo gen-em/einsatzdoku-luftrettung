@@ -21,7 +21,7 @@ Mockups in `konzept-p5b/mockups/`.
 > | Stand | 16.09.2026 — **Konzept freigegeben** (Auftraggeber, 16.09.2026, ohne Änderungen). E-P5b-01 bis -10 aus dem Gespräch, E-P5b-11 bis -22 aus dem Nachmessen, E-P5b-23 und -24 aus den erledigten Zuarbeiten. |
 > | Entschieden | E-P5b-01 bis E-P5b-24 (Abschnitt 2) |
 > | Offen | nichts im Konzept; **außerhalb:** anwaltliche Prüfung der drei Rechtstext-Entwürfe (E-P5b-24) vor dem Einspielen |
-> | Umsetzung | **läuft** auf `claude/magical-dirac-we2y1z` seit 16.09.2026 — begonnen auf dem Stand von `main` nach dem Merge von P5a (PR #50, `14f99ac`). **Sechs von zehn Paketen sind gebaut** (Tabelle unten), AP3, AP8, AP9 und AP10 stehen aus. **Abweichend vom Fahrplan läuft 10b vor Schritt 15**: Der Auftraggeber hat die Umsetzung am 16.09.2026 unmittelbar nach dem P5a-Merge beauftragt; **Schritt 15 ist unverändert offen**. Welche Folgen das für die Zentralisierung hat, ist hier nicht gemessen — sie fasst dieselben Dateien an und misst ohnehin nach dem Merge neu (Rahmenplan, Fahrplanzeile 15). Reihenfolge und Abhängigkeiten innerhalb von 10b sonst wie in 3.0 |
+> | Umsetzung | **läuft** auf `claude/magical-dirac-we2y1z` seit 16.09.2026 — begonnen auf dem Stand von `main` nach dem Merge von P5a (PR #50, `14f99ac`). **Sieben von zehn Paketen sind gebaut** (Tabelle unten), AP8, AP9 und AP10 stehen aus. **Abweichend vom Fahrplan läuft 10b vor Schritt 15**: Der Auftraggeber hat die Umsetzung am 16.09.2026 unmittelbar nach dem P5a-Merge beauftragt; **Schritt 15 ist unverändert offen**. Welche Folgen das für die Zentralisierung hat, ist hier nicht gemessen — sie fasst dieselben Dateien an und misst ohnehin nach dem Merge neu (Rahmenplan, Fahrplanzeile 15). Reihenfolge und Abhängigkeiten innerhalb von 10b sonst wie in 3.0 |
 > | Fable-Schritte der Umsetzung | **erledigt** — beide Mockups am 17.09.2026 geliefert und **freigegeben** (`konzept-p5b/mockups/`, M-P5b-01 V1, M-P5b-02 a–d V1/V1.1). Die Umsetzung von AP3, AP8 und AP9 braucht **keine Pause** mehr; die vier Gestaltungsvorgaben in Abschnitt 6 gelten |
 > | Nummern | **Vergeben am 17.09.2026** beim Einspielen dieses Pakets: Rahmenplan **Fassung 78**, Backlog **Nr. 220 bis 222** (Proof-of-Work, Uhr-Grund bei `403`, Pflege der Wegwerfliste). Die Nummern 215 bis 219 hatte derselbe Zweig zuvor für Funde während der Umsetzung vergeben; 220 war damit die nächste freie. **Die Einschübe aus Abschnitt 7 und 8 sind eingearbeitet** — Fahrplanzeile 10b, Schritt-10-Block, Abschnitt 5, 6 und das Register R9/R25/R37 im Rahmenplan; im Backlog die drei neuen Punkte **220 bis 222**, der Speichergrenzen-Absatz an **Nr. 37** und die Verschiebung von **Nr. 48** nach *Erledigt*; **Nr. 202** trug seine Statuszeile schon seit AP2, **Nr. 200** bleibt unverändert. **Nr. 37 bleibt offen** — von ihr ist nur der Speichergrenzen-Teil gefallen, der Rest (Zeitraumübersicht, Suchindex, die sechs stillen Kappungen, `post_max_size`) steht |
 
@@ -41,12 +41,12 @@ Mockups in `konzept-p5b/mockups/`.
 > | AP10 — Abschluss | offen | — | — | — |
 >
 > **Wo es hakt: nirgends mehr im Haus.** Die Mockup-Freigabe vom 17.09.2026 hat
-> die einzige offene Abhängigkeit aufgelöst; AP3, AP8 und AP9 sind ohne weitere
-> Pause umsetzbar. **Außerhalb** bleibt die anwaltliche Prüfung der drei
+> die einzige offene Abhängigkeit aufgelöst; AP3 ist seither gebaut, AP8 und
+> AP9 sind ohne weitere Pause umsetzbar. **Außerhalb** bleibt die anwaltliche Prüfung der drei
 > Rechtstext-Entwürfe (E-P5b-24) — AP4 steht deshalb mit Platzhaltern da, und
 > das ist der geplante Zustand, kein Rest.
 >
-> **Fünf Migrationen bisher** — `2026_09_16_protokoll_ereignisse`,
+> **Fünf Migrationen bisher** (AP3 bringt keine dazu) — `2026_09_16_protokoll_ereignisse`,
 > `_konto_lebenszyklus`, `_einwilligungen`, `_adresswechsel_bestaetigt` und
 > `_konto_grenzen` (nachgezählt in `migration_lib.php`; die Zahl stand hier
 > zuerst auf vier, der Adresswechsel aus AP5 fehlte). **`update.php` ist

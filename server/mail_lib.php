@@ -361,6 +361,89 @@ function mail_katalog(): array
             'text' => fn(array $d): string => mail_rahmen('Hallo,', $d['kern']),
         ],
 
+        /* ---- Selbstregistrierung (P5b/AP3, E-P5b-02, -13) ------------
+         *
+         * VIER EINTRAEGE, UND ZWEI DAVON GEHEN AN JEMANDEN, DER VIELLEICHT
+         * GAR KEIN KONTO WILL. Die Registrierungsseite antwortet jedem
+         * gleich; welche der beiden Mails geht, ist die einzige Stelle, an
+         * der sich freie und belegte Adresse unterscheiden — und sie liegt
+         * im Postfach des Besitzers, nicht auf dem Bildschirm des
+         * Absenders. Beide muessen deshalb auch dann verstaendlich sein,
+         * wenn der Empfaenger die Registrierung NICHT ausgeloest hat.
+         */
+        'registrierung' => [
+            'art' => 'konto', 'frist' => 172800, 'pflicht' => ['link'],
+            'betreff' => fn(array $d): string => 'Adresse bestätigen — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "mit dieser Adresse wurde ein Zugang zur " . $n . " angefordert.\n"
+                . "Über den folgenden Link bestätigst du die Adresse und legst dein Passwort fest —\n"
+                . "der Link ist 48 Stunden gültig:\n\n"
+                . $d['link'],
+                "Dabei wird auch dein Wiederherstellungsschlüssel angezeigt. Bitte notiere ihn dir\n"
+                . "sicher — ohne ihn lassen sich die verschlüsselten Angaben nach einem späteren\n"
+                . "Passwort-Reset von niemandem mehr öffnen.\n\n"
+                . "Falls du das nicht warst, ignoriere diese E-Mail einfach. Ohne den Link passiert\n"
+                . "nichts, und nach 48 Stunden wird die Anfrage von selbst gelöscht."),
+        ],
+
+        /* DIESE MAIL IST DER PREIS DER NEUTRALEN ANTWORT (E-P5b-13). Die
+         * Seite darf nicht sagen „diese Adresse hat schon ein Konto" — das
+         * waere eine Kontoauskunft an jeden, der Adressen durchprobiert.
+         * Also sagt sie nichts, und die Auskunft geht an den, den sie
+         * angeht. Muster ist `reset_request.php`. */
+        'registrierung_bekannt' => [
+            'art' => 'konto', 'frist' => 172800, 'pflicht' => [],
+            'betreff' => fn(array $d): string => 'Du hast hier schon ein Konto — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "mit dieser Adresse wurde gerade ein Zugang zur " . $n . "\n"
+                . "angefordert — es gibt hier aber schon ein Konto dafür.\n\n"
+                . "Es wurde deshalb nichts angelegt und nichts geändert. Melde dich wie gewohnt an;\n"
+                . "wenn du dein Passwort nicht mehr weißt, nimm auf der Anmeldeseite\n"
+                . "„Passwort vergessen“.",
+                "Falls du das nicht warst, kannst du diese E-Mail ignorieren. Jemand hat deine\n"
+                . "Adresse eingetippt; Zugang zu deinem Konto bekommt er dadurch nicht."),
+        ],
+
+        'freigeschaltet' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => [],
+            'betreff' => fn(array $d): string => 'Dein Zugang ist frei — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "dein Zugang zur " . $n . " ist jetzt freigeschaltet.\n"
+                . "Du kannst dich ab sofort anmelden:\n\n"
+                . $d['link']),
+        ],
+
+        /* EINE LETZTE MAIL BEIM VERFALL, und sie ist ausdruecklich
+         * gewuenscht (E-P5b-02). Ohne sie waere der Verfall das, was jede
+         * Warteschlange schlecht macht: Man wartet, und irgendwann merkt
+         * man, dass nichts mehr kommt. Der Satz „du kannst sie neu stellen"
+         * ist der Zweck der Mail — nicht die Absage. */
+        'registrierung_verfallen' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
+            'betreff' => fn(array $d): string => 'Registrierung verfallen — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "deine Registrierung bei der " . $n . " ist verfallen —\n"
+                . "sie wurde nicht innerhalb der Frist freigeschaltet und deshalb gelöscht.\n\n"
+                . "Es liegt nicht an dir, und es ist nichts verloren: Du kannst dich jederzeit\n"
+                . "neu registrieren.\n\n"
+                . $d['link']),
+        ],
+
+        /* DIE SAMMELMAIL AN DIE VERWALTUNG. Muster ist
+         * `sicherheit_sammel` (E-P5a-07): EIN Eintrag mit fertigem Kern,
+         * nicht eine Mail je Registrierung. Ohne diese Bauform bekaeme die
+         * Verwaltung bei einer Anmeldewelle hundert Einzelmails und laese
+         * keine davon. Die Drossel auf eine Mail je Stunde sitzt beim
+         * Aufrufer, nicht hier — der Katalog kennt keine Zeit. */
+        'registrierungen_warten' => [
+            'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['kern', 'link'],
+            'betreff' => fn(array $d): string => 'Registrierungen warten — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                $d['kern'] . "\n\n" . $d['link'],
+                "Diese Nachricht kommt höchstens einmal je Stunde, auch wenn in der Zwischenzeit\n"
+                . "mehrere Registrierungen eingehen."),
+        ],
+
         'testmail' => [
             'art' => 'betrieb', 'frist' => 3600, 'pflicht' => [],
             /* DIE TESTMAIL BEKOMMT DENSELBEN RAHMEN wie jede andere, und das

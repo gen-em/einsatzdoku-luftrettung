@@ -189,6 +189,81 @@ function konten_wegwerf_eigene(): array
     return array_values(array_filter(array_map('trim', explode(',', $roh))));
 }
 
+/* ---- Wegwerfadressen (E-P5b-03, E-P5b-23) -------------------------------- */
+
+/** Die mitgelieferte Liste; sie wird NIE zur Laufzeit geholt (R36). */
+const WEGWERF_DATEI = __DIR__ . '/wegwerfdomains.txt';
+
+/**
+ * Ist das eine Wegwerfadresse?
+ *
+ * DIE DATEI WIRD JE AUFRUF EINMAL GELESEN und in einer `static` gehalten —
+ * 126 KB und rund 8 900 Zeilen. Gelesen wird sie nur bei einer
+ * Registrierung, also selten; ein Zwischenspeicher in `app_state` waere
+ * teurer als die Datei.
+ *
+ * KEINE NORMALISIERUNG AUSSER KLEINSCHREIBUNG. Die Liste ist durchgehend
+ * klein, ohne Kommentar-, Leer- und Doppelzeilen — `tools/wegwerfdomains/`
+ * prueft das bei jedem Nachziehen und schreibt nicht, wenn es nicht
+ * stimmt. Was hier zusaetzlich abgefangen wuerde, verdeckte dort einen
+ * Fehler.
+ *
+ * DIE SUBDOMAIN ZAEHLT MIT: `x.mailinator.com` trifft, wenn
+ * `mailinator.com` auf der Liste steht. Wegwerfanbieter vergeben
+ * Unterdomains freihaendig; eine Liste, die nur die genaue Domain traefe,
+ * waere mit einem Punkt zu umgehen.
+ *
+ * FEHLT DIE DATEI, TRIFFT NICHTS. Eine Installation, die alle
+ * Registrierungen abweist, WEIL eine Datei fehlt, waere das Gegenteil von
+ * dem, was dieser Schalter soll — dieselbe Ueberlegung wie beim
+ * Einwilligungstor ohne Tabelle.
+ */
+function wegwerf_trifft(string $email): bool
+{
+    if (!konten_wegwerf_an()) { return false; }
+
+    $at = strrpos($email, '@');
+    if ($at === false) { return false; }
+    $domain = mb_strtolower(substr($email, $at + 1));
+    if ($domain === '') { return false; }
+
+    static $liste = null;
+    if ($liste === null) {
+        $liste = [];
+        if (is_readable(WEGWERF_DATEI)) {
+            foreach (file(WEGWERF_DATEI, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $z) {
+                $liste[$z] = true;
+            }
+        } else {
+            error_log('wegwerf_trifft: ' . WEGWERF_DATEI . ' fehlt oder ist nicht lesbar');
+        }
+    }
+
+    /* Eigene Domains der Betreiberin kommen dazu — sie stehen in
+     * `app_state` und nicht in der Datei, weil die Datei mit jeder
+     * Auslieferung ersetzt wird. */
+    $eigene = [];
+    foreach (konten_wegwerf_eigene() as $d) { $eigene[mb_strtolower($d)] = true; }
+
+    /* Von der vollen Domain nach oben: `a.b.example.com`, `b.example.com`,
+     * `example.com`. Bei drei Punkten sind das vier Nachschlagevorgaenge in
+     * einem Array — billiger als jede Schleife ueber die Liste. */
+    $teil = $domain;
+    while (true) {
+        if (isset($liste[$teil]) || isset($eigene[$teil])) { return true; }
+        $punkt = strpos($teil, '.');
+        if ($punkt === false) { return false; }
+        $teil = substr($teil, $punkt + 1);
+        if ($teil === '' || strpos($teil, '.') === false) {
+            /* Bei der letzten Stufe (`com`) wird nicht mehr nachgesehen: Eine
+             * Liste, die eine ganze Endung sperrt, waere ein Fehler in der
+             * Liste, und ihn hier wirksam werden zu lassen sperrte das halbe
+             * Netz aus. */
+            return false;
+        }
+    }
+}
+
 /** Mengengrenze je Konto: Einsätze. */
 function konten_grenze_einsaetze(): int
 {

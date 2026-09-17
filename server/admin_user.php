@@ -274,6 +274,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         require_once __DIR__ . '/konto_lib.php';
         $ziel  = (string)($_POST['status'] ?? '');
         $grund = trim((string)($_POST['grund'] ?? ''));
+        /* VOR dem Wechsel merken: Danach steht in der Tabelle der neue Wert,
+         * und ob dies eine Freischaltung war (`wartet` -> `aktiv`) oder ein
+         * Entsperren (`gesperrt` -> `aktiv`), liesse sich nicht mehr
+         * unterscheiden. Die Mail geht nur im ersten Fall. */
+        $statusVorher = (string)($u['status'] ?? '');
 
         if ($uid === $userId) {
             $error = 'Das eigene Konto lässt sich hier nicht sperren.';
@@ -295,6 +300,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             . 'beim nächsten Versuch an.',
                 default    => 'Der Kontostatus wurde geändert.',
             };
+
+            /* ---- FREISCHALTUNG: die Nutzerin erfaehrt es (P5b/AP3, E-P5b-02)
+             *
+             * NUR `wartet` -> `aktiv`. Beim Entsperren (`gesperrt` -> `aktiv`)
+             * geht keine Mail: Wer gesperrt war, weiss in aller Regel warum,
+             * und eine automatische Nachricht „dein Zugang ist frei" waere
+             * dort das falsche Wort. Beim Wartenden ist sie das einzige
+             * Zeichen — er hat sich registriert und seither nichts gehoert.
+             *
+             * OHNE `$notice` ZU AENDERN: Die Verwaltung sieht, dass
+             * freigeschaltet ist; ob die Mail durchkommt, entscheidet die
+             * Warteschlange und nicht dieser Seitenaufruf. */
+            if ($ziel === 'aktiv' && $statusVorher === 'wartet') {
+                require_once __DIR__ . '/mail_lib.php';
+                mail_einreihen('freigeschaltet', (string)($u['email'] ?? ''),
+                               ['link' => app_url('/login.php')]);
+                $notice = 'Das Konto ist freigeschaltet. Die Nutzerin bekommt eine '
+                        . 'Mail und kann sich ab sofort anmelden.';
+            }
             /* Die Zeile neu lesen — die Karte darunter zeigt sonst den
              * Stand von vor dem Klick. */
             $st = db()->prepare('SELECT * FROM users WHERE id = ?');

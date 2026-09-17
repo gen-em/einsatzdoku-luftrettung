@@ -82,6 +82,10 @@ declare(strict_types=1);
 if (is_file(__DIR__ . '/config.php')) {
     require_once __DIR__ . '/db.php';
     require_once __DIR__ . '/protokoll_lib.php';
+    /* Fuer KONTEN_UNBESTAETIGT_H (P5b/AP3). Ebenfalls bedingt, aus demselben
+     * Grund wie die beiden darueber: Die Bibliothek liest `app_state` und
+     * braucht dafuer eine Datenbank. */
+    require_once __DIR__ . '/konten_einstellungen_lib.php';
 }
 require_once __DIR__ . '/email_lib.php';
 
@@ -124,6 +128,14 @@ const TOKEN_EINLADUNG_S = 86400;
 /** Passwort zuruecksetzen: eine Stunde. */
 const TOKEN_RESET_S = 3600;
 
+/* DER BESTAETIGUNGSLINK DER REGISTRIERUNG GILT 48 STUNDEN (E-P5b-13) —
+ * genauso lange, wie ein unbestaetigtes Konto ueberhaupt stehen bleibt
+ * (KONTEN_UNBESTAETIGT_H). Zwei verschiedene Zahlen waeren eine Falle: Ein
+ * Link, der die Loeschung des Kontos ueberlebt, fuehrt auf eine Seite, die
+ * nichts mehr findet; ein Konto, das den Link ueberlebt, steht ohne Weg
+ * hinein herum. */
+const TOKEN_REGISTRIERUNG_S = 172800;
+
 /* ---- Konto anlegen ------------------------------------------------------- */
 
 /**
@@ -136,6 +148,9 @@ const TOKEN_RESET_S = 3600;
  * @param string $quelle  `einladung` | `registrierung` | `einrichtung`
  * @param string $status  Anfangszustand; `einladung` und `einrichtung` legen
  *                        `aktiv` an, die Registrierung `unbestaetigt`
+ * @param int    $tokenLaufzeitS Laufzeit des mitgelieferten Tokens —
+ *                        `TOKEN_EINLADUNG_S` (24 h) oder, bei der
+ *                        Selbstregistrierung, `TOKEN_REGISTRIERUNG_S` (48 h)
  *
  * @return array{id:int, token:string} Die Kontonummer und der KLARTEXT-Token
  *         (der Hash steht in der Datenbank; den Klartext gibt es genau
@@ -153,7 +168,8 @@ const TOKEN_RESET_S = 3600;
  */
 function konto_anlegen(string $email, string $name, string $rolle,
                        string $quelle, string $status = 'aktiv',
-                       ?PDO $pdo = null): array
+                       ?PDO $pdo = null,
+                       int $tokenLaufzeitS = TOKEN_EINLADUNG_S): array
 {
     if (!isset(KONTO_STATUS[$status])) {
         throw new InvalidArgumentException('Unbekannter Kontostatus: ' . $status);
@@ -176,7 +192,7 @@ function konto_anlegen(string $email, string $name, string $rolle,
 
         $pdo->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at)
                        VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? SECOND))')
-            ->execute([$uid, hash('sha256', $token), TOKEN_EINLADUNG_S]);
+            ->execute([$uid, hash('sha256', $token), $tokenLaufzeitS]);
 
         $pdo->commit();
     } catch (Throwable $ex) {
@@ -277,6 +293,20 @@ function konto_status_setzen(int $userId, string $neu, ?string $grund = null): b
          * sondern ein Datenverlustfehler. */
         $pdo->prepare('UPDATE users SET status = ?, gesperrt_seit = NULL,
                               gesperrt_grund = NULL, loeschung_am = NULL,
+                              bestaetigt_am = COALESCE(bestaetigt_am, NOW())
+                        WHERE id = ?')->execute([$neu, $userId]);
+    } elseif ($neu === 'wartet') {
+        /* `wartet` HEISST: die Adresse ist bestaetigt, das Konto wartet auf
+         * die Freischaltung (E-P5b-02). Deshalb wird `bestaetigt_am` hier
+         * mitgeschrieben und nicht erst beim Freischalten.
+         *
+         * DARAN HAENGT EINE FRIST, und das ist der Grund: Die Verfallfrist
+         * der Wartenden (Vorgabe 30 Tage) laeuft ab der BESTAETIGUNG. Ohne
+         * diese Zeile bliebe nur `created_at` — der Zeitpunkt, an dem das
+         * Formular abgeschickt wurde. Wer die Mail erst nach 40 Tagen
+         * anklickt, verfiele dann sofort, und wer sie nach einer Stunde
+         * anklickt, bekaeme 29 statt 30 Tage. */
+        $pdo->prepare('UPDATE users SET status = ?,
                               bestaetigt_am = COALESCE(bestaetigt_am, NOW())
                         WHERE id = ?')->execute([$neu, $userId]);
     } else {
@@ -473,6 +503,116 @@ function konto_loeschung_faellig(int $grenze = 50): array
                           LIMIT ' . (int)$grenze);
     $st->execute([KONTO_SPERRGRUND_SELBSTLOESCHUNG]);
     return $st->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/* ---- Verfall von Registrierungen (P5b/AP3, E-P5b-02) --------------------- */
+
+/**
+ * Unbestaetigte Registrierungen, deren 48 Stunden um sind.
+ *
+ * ZWEI FRISTEN, ZWEI ZUSTAENDE, EIN JOB. Diese hier ist fest und kurz: Ein
+ * unbestaetigtes Konto ist eine Adresse, die jemand eingetippt hat —
+ * moeglicherweise nicht die eigene. Gemessen wird ab `created_at`, dem
+ * Zeitpunkt des Formulars; einen anderen gibt es in diesem Zustand nicht.
+ *
+ * NUR SELBSTREGISTRIERTE. Die Bedingung `bestaetigt_am IS NULL` allein
+ * genuegte nicht — sie trifft auch eingeladene Konten. Der Status
+ * `unbestaetigt` entsteht ausschliesslich bei der Registrierung
+ * (`konto_anlegen()` legt sonst `aktiv` an), und deshalb ist er hier das
+ * Merkmal.
+ */
+function konto_verfall_unbestaetigt(int $grenze = 50): array
+{
+    $st = db()->prepare('SELECT id, email FROM users
+                          WHERE status = "unbestaetigt"
+                            AND created_at <= DATE_SUB(NOW(), INTERVAL ? HOUR)
+                          ORDER BY created_at
+                          LIMIT ' . (int)$grenze);
+    $st->execute([KONTEN_UNBESTAETIGT_H]);
+    return $st->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/**
+ * Wartende Registrierungen, deren Frist um ist (Vorgabe 30 Tage, einstellbar).
+ *
+ * Gemessen ab `bestaetigt_am` — siehe die Begruendung bei
+ * `konto_status_setzen()`. Faellt das Feld wider Erwarten leer aus, zaehlt
+ * `created_at`; ein Konto ohne beide Zeitpunkte gibt es nicht, weil
+ * `created_at` ein `TIMESTAMP` mit Vorgabe ist.
+ */
+function konto_verfall_wartend(int $tage, int $grenze = 50): array
+{
+    $st = db()->prepare('SELECT id, email FROM users
+                          WHERE status = "wartet"
+                            AND COALESCE(bestaetigt_am, created_at)
+                                <= DATE_SUB(NOW(), INTERVAL ? DAY)
+                          ORDER BY COALESCE(bestaetigt_am, created_at)
+                          LIMIT ' . (int)$grenze);
+    $st->execute([$tage]);
+    return $st->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/** Wie viele Registrierungen warten gerade auf die Freischaltung? */
+function konto_wartende_zahl(): int
+{
+    return (int)db()->query('SELECT COUNT(*) FROM users WHERE status = "wartet"')
+                    ->fetchColumn();
+}
+
+/** Marke der letzten Sammelmail an die Verwaltung. */
+const KONTO_K_WARTEN_MARK = 'konten_warten_mail';
+
+/**
+ * Die Verwaltung darueber unterrichten, dass Registrierungen warten
+ * (E-P5b-02, Muster E-P5a-07).
+ *
+ * EINE SAMMELMAIL, HOECHSTENS EINE JE STUNDE — und das ist der ganze Zweck
+ * dieser Funktion. Eine Mail je Registrierung waere bei einer Anmeldewelle
+ * ein Postfach voll gleicher Nachrichten, und gelesen wuerde keine davon.
+ * Die Drossel sitzt hier und nicht im Katalog: Der Katalog kennt keine Zeit.
+ *
+ * SIE MELDET DEN STAND, NICHT DAS EREIGNIS. Im Text steht, wie viele
+ * insgesamt warten — nicht, dass gerade eine dazugekommen ist. Wer die
+ * Mail nach einer Stunde bekommt, will wissen, was zu tun ist, und nicht,
+ * was vor einer Stunde passiert ist.
+ *
+ * STILL, WENN ETWAS FEHLT. Eine Meldung, die nicht hinausgeht, darf die
+ * Registrierung nicht mitreissen — sie ist ein Hinweis, nicht der Vorgang
+ * (dieselbe Ueberlegung wie bei V7 und beim Protokoll).
+ */
+function konto_warten_melden(): void
+{
+    try {
+        $letzte = app_state_lesen(KONTO_K_WARTEN_MARK);
+        if ($letzte !== null && strtotime($letzte . ' UTC') > time() - 3600) {
+            return;
+        }
+
+        $zahl = konto_wartende_zahl();
+        if ($zahl === 0) { return; }
+
+        app_state_setzen(KONTO_K_WARTEN_MARK, gmdate('Y-m-d H:i:s'));
+
+        $kern = $zahl === 1
+            ? "eine Registrierung wartet auf die Freischaltung."
+            : "es warten " . $zahl . " Registrierungen auf die Freischaltung.";
+        $kern = ucfirst($kern) . "\n\n"
+              . "Freigeschaltet wird je Konto unter Verwaltung → NutzerInnen; die "
+              . "Wartenden\n"
+              . "stehen dort im Filter „Wartet auf Freischaltung“. Wer nicht "
+              . "freigeschaltet wird,\n"
+              . "verfällt nach der eingestellten Frist von selbst — dazu ist nichts "
+              . "zu tun.";
+
+        require_once __DIR__ . '/mail_lib.php';
+        foreach (mail_betriebsziele() as $ziel) {
+            mail_einreihen('registrierungen_warten', $ziel,
+                           ['kern' => $kern,
+                            'link' => app_url('/admin_users.php?f=wartet')]);
+        }
+    } catch (Throwable $ex) {
+        error_log('Wartemeldung nicht moeglich: ' . $ex->getMessage());
+    }
 }
 
 /* ---- Loeschen ------------------------------------------------------------ */

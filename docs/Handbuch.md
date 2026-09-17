@@ -537,6 +537,52 @@ darüber. Hat die **Installation** die Adresssuche abgeschaltet, steht der
 Schalter ausgegraut da und sagt es — dann ändert er nichts, und wer ihn
 braucht, wendet sich an die BetreiberIn.
 
+### 3.1d Selbst ein Konto anlegen (seit Web 20.22.0)
+
+**Ob das geht, entscheidet die Betreiberin.** Drei Betriebsarten:
+
+| Einstellung | Was passiert |
+|---|---|
+| **nur auf Einladung** (Vorgabe) | Es gibt keine Registrierungsseite zum Ausfüllen. Die Verwaltung legt Konten an; du bekommst eine Einladungsmail. |
+| **offen** | Du legst dir selbst ein Konto an und kannst sofort loslegen. |
+| **offen mit Freischaltung** | Du legst dir selbst ein Konto an; die Betreiberin schaltet es frei, bevor du hereinkommst. |
+
+Steht die Registrierung offen, führt auf der Anmeldeseite ein Verweis
+**„Neu hier? Konto anlegen"** dorthin. Steht sie nicht offen, fehlt er — er
+führte sonst auf eine Seite, die absagt.
+
+**So läuft es ab:**
+
+1. **Adresse, Name und drei Häkchen** eintragen. Die Häkchen sind
+   Nutzungsbedingungen, Vereinbarung zur Auftragsverarbeitung und
+   Datenschutzerklärung; alle drei sind Pflicht, jeder Text ist verlinkt.
+2. **Die Seite antwortet immer gleich** — „wenn die Adresse frei ist, ist eine
+   Mail unterwegs". Das ist Absicht: Sonst könnte jeder durch Ausprobieren
+   herausfinden, wer hier ein Konto hat.
+3. **Den Link aus der Mail anklicken.** Er gilt **48 Stunden**. Dort legst du
+   dein Passwort fest; dabei entsteht dein **Wiederherstellungsschlüssel** und
+   wird einmalig angezeigt — notiere ihn, ohne ihn kommt nach einem
+   Passwort-Reset niemand mehr an deine verschlüsselten Angaben.
+4. Danach steht da, wie es weitergeht: sofort anmelden, oder warten.
+
+**Wenn nichts ankommt:** Sieh im Spam-Ordner nach und prüfe die Schreibweise.
+An **dieselbe Adresse** gehen höchstens **drei** Mails in 24 Stunden — sonst
+wäre die Seite ein Werkzeug, um fremde Postfächer zuzuschütten.
+
+**Wegwerfadressen werden nicht angenommen.** Der Hinweis steht vorher auf der
+Seite, nicht hinterher als Fehler. Mit einer Adresse von einem
+Wegwerfanbieter passiert schlicht nichts — auch keine Mail.
+
+**Hast du hier schon ein Konto**, bekommst du eine Mail, die das sagt. Es wird
+nichts angelegt und nichts geändert; melde dich wie gewohnt an oder nimm
+„Passwort vergessen".
+
+**Wartest du auf die Freischaltung**, kommt eine Mail, sobald das Konto frei
+ist. Passiert das nicht innerhalb der eingestellten Frist (Vorgabe **30
+Tage**), verfällt die Registrierung, du bekommst eine letzte Nachricht — und
+kannst dich jederzeit neu registrieren. Wer den Link aus Schritt 3 nie
+anklickt, dessen Anfrage wird nach **48 Stunden** von selbst gelöscht.
+
 ### 3.1c Was dein Konto hält (seit Web 20.21.0)
 
 Unter dem Zahnrad → **Profil** steht, wie voll dein Konto ist: Einsätze und

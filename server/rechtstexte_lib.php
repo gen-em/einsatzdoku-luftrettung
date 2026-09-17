@@ -49,7 +49,15 @@ const RT_TEXTE = [
     'impressum'           => 'Impressum',
     'datenschutz'         => 'Datenschutzerklärung',
     'nutzungsbedingungen' => 'Nutzungsbedingungen',
-    'avv'                 => 'Auftragsverarbeitung',
+    /* DER RECHTSBEGRIFF, NICHT DIE KURZFORM (Gestaltungsvorgabe des
+     * Auftraggebers vom 17.09.2026, Konzept P5b Abschnitt 6, Punkt 4).
+     * „Vereinbarung zur Auftragsverarbeitung" ist der Ausdruck aus
+     * Art. 28 DSGVO; „Datenschutzvereinbarung" waere mit der
+     * Datenschutzerklaerung verwechselbar, und „Auftragsverarbeitung"
+     * allein benennt den Vorgang, nicht das Dokument, das angenommen wird.
+     * Die Kurzform steht in Klammern dahinter — sie ist gelaeufig, und der
+     * Link fuehrt ohnehin zum Text. */
+    'avv'                 => 'Vereinbarung zur Auftragsverarbeitung (AVV)',
 ];
 
 /** Die zugehörige Seite je Schlüssel — für Verweise und den Editor. */

@@ -311,6 +311,44 @@ const RATE_GRENZEN = [
      * die ZUSAMMENFASSUNG in der Tabelle: Tausend gleiche Meldungen werden
      * eine Zeile mit einem Zaehler. */
     'csp' => ['max' => 200, 'fenster' => 3600, 'sperre' => 3600],
+
+    /* DIE REGISTRIERUNG HAT DREI TOEPFE, UND JEDER SCHUETZT ETWAS ANDERES
+     * (P5b/AP3, E-P5b-13, R37 (4)).
+     *
+     * `reg` JE IP, 10 je Stunde. Wer sich registriert, tut das einmal. Zehn
+     * Versuche decken Vertipper, Abbrueche und ein zweites Konto fuer die
+     * Kollegin ab; darueber laeuft ein Skript. Merkmal ist die IP und nicht
+     * die Zieladresse — die waere bei jedem Versuch eine andere und zaehlte
+     * nie hoch.
+     *
+     * `regg` GLOBAL, 100 je Stunde. Dieselbe Ueberlegung wie bei `demog`:
+     * Kommen die Versuche aus vielen Netzen, ist der Server gemeint und
+     * nicht eine Person. Das Merkmal wird ausdruecklich uebergeben
+     * (RATE_REG_GLOBAL), damit nicht je IP eine nutzlose Zeile entsteht.
+     *
+     * `regz` JE ZIELADRESSE, 3 in 24 Stunden — und das ist der wichtigste
+     * der drei. OHNE IHN IST DIE REGISTRIERUNG EINE MAILBOMBEN-SCHLEUDER:
+     * Die Seite verschickt an JEDE eingegebene Adresse eine Mail, ohne dass
+     * der Absender sie besitzen muss. Ein Skript mit wechselnden IPs schickt
+     * damit beliebig viele Nachrichten an ein fremdes Postfach, und zwar
+     * mit dem guten Namen dieser Installation im Absender. Drei in 24 h
+     * reichen fuer den ehrlichen Fall (Mail nicht angekommen, zweiter
+     * Versuch, dritter); alles darueber ist keine Registrierung mehr.
+     *
+     * DAS MERKMAL IST EIN HASH DER ADRESSE, NIE DIE ADRESSE SELBST
+     * (rate_reg_ziel()). Die Tabelle `rate_limits` ist sonst ein Verzeichnis
+     * fremder Postfaecher — und sie liegt in derselben Datenbank, die auch
+     * ein Angreifer abzieht. Dasselbe Verfahren, aus demselben Grund, wie
+     * bei den Kontomerkmalen: die Kennung, nicht der Klartext.
+     *
+     * KEINE LEITER bei allen dreien. Der Grund ist derselbe wie bei `reset`:
+     * Das Scheitern ist absichtlich still (die Seite antwortet IMMER
+     * gleich), und eine steigende Sperre, die niemand sieht, ist keine
+     * Abschreckung, sondern nur eine laengere Stoerung fuer den, der sich
+     * vertippt hat. */
+    'reg'  => ['max' =>  10, 'fenster' => 3600,  'sperre' => 3600],
+    'regg' => ['max' => 100, 'fenster' => 3600,  'sperre' => 3600],
+    'regz' => ['max' =>   3, 'fenster' => 86400, 'sperre' => 86400],
 ];
 
 /**
@@ -1420,6 +1458,59 @@ function rate_demo_zaehlen(): void
 {
     rate_zaehlen('demo');
     rate_zaehlen('demog', null, RATE_DEMO_GLOBAL);
+}
+
+
+/* ---- Registrierung (P5b/AP3) --------------------------------------------- */
+
+/* Wie RATE_DEMO_GLOBAL, und aus demselben Grund ausdruecklich uebergeben. */
+const RATE_REG_GLOBAL = ['alle'];
+
+/**
+ * Das Merkmal fuer den Topf je Zieladresse.
+ *
+ * NIE DIE ADRESSE IM KLARTEXT. `rate_limits` steht in derselben Datenbank
+ * wie alles andere; eine Spalte mit fremden Postfaechern waere ein
+ * Verzeichnis, das es ohne diesen Topf nicht gaebe. Der Hash reicht
+ * vollstaendig aus — gezaehlt wird Gleichheit, nicht Inhalt.
+ *
+ * Kleingeschrieben und getrimmt, damit `Name@Klinik.de` und `name@klinik.de`
+ * denselben Zaehler treffen; sonst waere der Topf mit einem Grossbuchstaben
+ * zu umgehen.
+ */
+function rate_reg_ziel(string $email): array
+{
+    return ['ziel:' . hash('sha256', mb_strtolower(trim($email)))];
+}
+
+/** Darf jetzt ueberhaupt jemand registrieren — unabhaengig von der Adresse? */
+function rate_reg_erlaubt(): bool
+{
+    return rate_erlaubt('reg') && rate_erlaubt('regg', null, RATE_REG_GLOBAL);
+}
+
+/** Darf an DIESE Adresse noch eine Registrierungsmail gehen? */
+function rate_reg_ziel_erlaubt(string $email): bool
+{
+    return rate_erlaubt('regz', null, rate_reg_ziel($email));
+}
+
+/**
+ * Einen Registrierungsversuch verbuchen.
+ *
+ * NACH dem Versuch, wie bei der Demo-Anmeldung und anders als bei den
+ * Fehlversuchstoepfen: Gezaehlt wird die MENGE, nicht das Scheitern. Der
+ * Zieltopf zaehlt nur, wenn tatsaechlich eine Mail hinausgeht — sonst
+ * koennte man ein fremdes Postfach sperren, indem man es dreimal eintippt,
+ * und der Besitzer kaeme selbst nicht mehr durch.
+ */
+function rate_reg_zaehlen(string $email, bool $mailGeht): void
+{
+    rate_zaehlen('reg');
+    rate_zaehlen('regg', null, RATE_REG_GLOBAL);
+    if ($mailGeht) {
+        rate_zaehlen('regz', null, rate_reg_ziel($email));
+    }
 }
 
 /** Bis wann ist gesperrt? Fuer die Meldung an der Anmeldeseite. */

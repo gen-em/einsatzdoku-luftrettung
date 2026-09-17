@@ -12,7 +12,7 @@ abgehakt ist, und wird dann gelöscht (`CLAUDE.md` 7).
 | Vorarbeit | erledigt — P5a-Merge, Prüfstand, F4 | 20.15.3 |
 | **AP1** Protokoll-Schreibweg und Einstellungen | **erledigt** | **20.16.0** |
 | **AP2** Lebenszyklus-Bibliothek | **erledigt** | **20.17.0** |
-| AP3 Registrierung | offen — **nicht mehr blockiert** | — |
+| **AP3** Registrierung | **erledigt** | **20.22.0** |
 | **AP4** Einwilligungen | **erledigt** | **20.19.0** |
 | **AP5** Selbstlöschung, E-Mail-Wechsel | **erledigt** | **20.20.0** |
 | **AP6** Mengengrenze, Aufbewahrung je Konto | **erledigt** | **20.21.0** |
@@ -330,7 +330,17 @@ der Anwendung. Ohne die Meldung rät die nächste Instanz.
 | **Vollständigkeitsprüfung** | 20.21.1 | **387 Befunde** (main: 377). „im Markup ohne Regel" 1 → **0**, „Seite ohne Gerüst" 2 → **0**, Ausnahmen 9, **0 ungenutzt** | **bestanden** |
 | **Mockups gegen die Sperrliste** | Paketaufnahme | Die **zehn** Textdateien des Mockup-Ordners (neun HTML und `LIESMICH.md`) gegen alle **24 Muster** der Sperrliste, dazu die 9 Teilstring-Fallen: **0 Treffer** — kein `hubschrauber`, `heli`, `luftrettung`, `basis`, `station`, `pilot`, `christoph`, `garmin`, `flug`, kein großgeschriebenes `Spur`, kein Tastenname. Ihr Text wird in AP3, AP8 und AP9 zu Oberflächentext, deshalb jetzt geprüft und nicht erst dann | **bestanden** |
 | **Mockups in einem echten Browser** | Paketaufnahme | Die Bilder des Pakets stammen aus `wkhtmltoimage` (QtWebKit, kein `:has()`, kein woff2). Gegenprobe in **Chromium** über fünf Dateien: `--knopf` löst auf (also greift das echte `style.css`), Schrift **Open Sans**, `scrollWidth` **gleich** `innerWidth` bei 1440 bzw. 860 px, **0 Konsolenfehler, 0 Ladefehler**. Die drei relativen Verweise (`style.css`, zwei Logo-SVG) zeigen alle auf vorhandene Dateien | **bestanden** |
-| **Wortliste** | AP1, AP2, AP4, AP5, AP6, AP7 | **alle fünf Bereiche**: (a) **117** PHP-Dateien (hier stand 111 — am 17.09.2026 nachgemessen), (b) 36 JS, (c) 8 Dokumente, (d) 2 Android, (e) 35 Uhr — **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 99 Regeln | — |
+| **Neutrale Antwort** (Abnahme AP3) | AP3 | **120 Aufrufe**, je 40 für freie / bekannte / Wegwerfadresse: Mediane **507,5 / 507,7 / 507,6 ms**, **Spanne 0,2 ms** (Soll < 50). Gesperrter Topf: 508,1 ms, Abweichung **0,6 ms** — auch er antwortet mit derselben Karte | **bestanden** |
+| **Fünf Ausgänge, eine Antwort** (Abnahme AP3) | AP3 | frei → Konto `unbestaetigt` + Mail `registrierung`; belegt → **kein** zweites Konto, Mail `registrierung_bekannt`; Wegwerf → 0 Konten, **0 Mails**; zu schnell abgeschickt → 0 Konten; Honeypot gefüllt → 0 Konten. **Alle fünf mit derselben Karte „Danke"** | **5 von 5 bestanden** |
+| **Topf je Zieladresse** (Abnahme AP3) | AP3 | Zähler nach vier Versuchen **3** (Grenze 3/24 h), vierter Versuch `rate_reg_ziel_erlaubt()` = **false**; Merkmal `ziel:ade8cf84a27…` — **kein `@`** in der Tabelle | **bestanden** |
+| **Der ganze Weg im Browser** (Abnahme AP3) | AP3 | Registrieren → Mail → `pw_handling.php` → Wiederherstellungsschlüssel (24 Zeichen) → Weiterleitung auf `bestaetigen.php?s=wartet`; `pat_wrap_pw` und `pat_wrap_rc` gesetzt, `bestaetigt_am` gesetzt, Sammelmail eingereiht. Anmeldung währenddessen abgewiesen mit „wartet auf Freischaltung". **0 Konsolenfehler** über den ganzen Weg | **bestanden** |
+| **Freischaltung** (Abnahme AP3) | AP3 | Filter „Wartet auf Freischaltung" findet 1 von 1, Plakette in der Liste; Knopf → Status **`aktiv`**, Mail **`freigeschaltet`** eingereiht; danach kommt das Konto herein (landet am Einwilligungstor) | **bestanden** |
+| **Betriebsart `offen`** (Abnahme AP3) | AP3 | Derselbe Weg endet auf `bestaetigen.php?s=aktiv`, Status **`aktiv`**, **0** Sammelmails (es wartet niemand) | **bestanden** |
+| **Betriebsart `einladung`** (Abnahme AP3) | AP3 | `registrieren.php` zeigt kein Formular, sondern „nimmt Registrierungen nur auf Einladung an"; die Anmeldeseite führt **keinen** Verweis dorthin | **bestanden** |
+| **Verfall mit gestellter Uhr** (Abnahme AP3) | AP3 | Vier Konten zurückdatiert: unbestätigt 47 h **bleibt**, 49 h **weg**; wartend 29 Tage **bleibt**, 31 Tage **weg**. Job meldet Rückstand 2, löscht 2. Verfallmail **nur** an den Wartenden (1 Mail) | **4 von 4 bestanden** |
+| **Die Wegwerfliste selbst** | AP3 | 8 883 Domains, 126 389 Byte: **0** Großbuchstaben, **0** Kommentar-/Leerzeilen, **0** Doppelte; **8 von 8** Wegwerfanbietern enthalten, **0 von 10** echten Provider- und Klinikdomains getroffen. Gegenprobe: eingeschleuste `charite.de` → Rückgabewert **1**, nicht geschrieben; Großbuchstabe + Doppelung → nicht geschrieben | **bestanden** |
+| **Bilderlauf, drei Engines** | AP3 | `registrieren.php` und `bestaetigen.php` in 8 Breiten: **Chromium / Firefox / WebKit** je 0 Überlauf, 0 Konsolenfehler, 0 falsche Knopfhöhen | **bestanden** |
+| **Wortliste** | AP1 bis AP7 | **alle fünf Bereiche**: (a) **117** PHP-Dateien (hier stand 111 — am 17.09.2026 nachgemessen), (b) 36 JS, (c) 8 Dokumente, (d) 2 Android, (e) 35 Uhr — **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 99 Regeln | — |
 
 ---
 

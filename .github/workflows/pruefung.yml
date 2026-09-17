@@ -131,7 +131,13 @@ jobs:
         # Prosa. Nur ZWANZIG sind Zeichen, die wirklich statt eines Symbols
         # stehen. Solange die Liste beide Sorten in einen Topf wirft, kann
         # diese Schwelle nur steigen. Der Weg heraus steht in Nr. 219.
-        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 387
+        #
+        # 388 MIT P5b/AP3: +1. Der Pfeil in „Verwaltung -> NutzerInnen" im Text
+        # der Sammelmail an die Verwaltung (konto_lib.php) — sichtbarer Text,
+        # Hausschreibweise, dieselbe Form wie „Betrieb -> Status" zwei Dateien
+        # weiter in ratelimit_lib.php. Nach derselben Regel behandelt wie die
+        # zehn davor: Zierde raus, sichtbarer Text bleibt.
+        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 388
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py

@@ -255,6 +255,22 @@ function jobs_katalog(): array
             'rueckstand'   => 'job_konto_loeschung_rueckstand',
             'lauf'         => 'job_konto_loeschung',
         ],
+        /* ZWEI FRISTEN, ZWEI ZUSTAENDE, EIN JOB (E-P5b-02). Sie in zwei
+         * Jobs zu trennen waere naheliegend und falsch: Beide raeumen
+         * dieselbe Sache auf — eine Registrierung, aus der nichts geworden
+         * ist —, beide gehen ueber `konto_loeschen()`, und beide sind
+         * einzeln so selten, dass zwei Zeilen in der Jobliste mehr
+         * Aufmerksamkeit kosteten, als sie wert sind. */
+        'konto_verfall' => [
+            'titel'        => 'Verfallene Registrierungen löschen',
+            'beschreibung' => 'Unbestätigte Registrierungen nach 48 Stunden und '
+                            . 'wartende nach Ablauf der Freischaltfrist (Vorgabe '
+                            . '30 Tage) löschen. Die Wartenden bekommen vorher '
+                            . 'eine letzte Mail',
+            'taeglich'     => false,
+            'rueckstand'   => 'job_konto_verfall_rueckstand',
+            'lauf'         => 'job_konto_verfall',
+        ],
         'verdichtung' => [
             'titel'        => 'GPS-Daten verdichten',
             'beschreibung' => 'Abgeschlossene GPS-Daten von Zeilen in den '
@@ -959,6 +975,89 @@ function job_konto_loeschung_rueckstand(PDO $pdo, array $zustand): ?int
                               WHERE status = "gesperrt" AND gesperrt_grund = ?
                                 AND loeschung_am IS NOT NULL AND loeschung_am <= NOW()');
         $st->execute([KONTO_SPERRGRUND_SELBSTLOESCHUNG]);
+        return (int)$st->fetchColumn();
+    } catch (Throwable $ex) {
+        return null;   // Spalten fehlen (Migration steht aus)
+    }
+}
+
+const JOB_KONTO_VERFALL_BLOCK = 5;
+
+/**
+ * Verfallene Registrierungen loeschen (P5b/AP3, E-P5b-02).
+ *
+ * UEBER `konto_loeschen()` UND NICHT PER `DELETE`: Die Kaskade erreicht die
+ * GPS-Spuren nicht (sie haengen polymorph an `owner_type`/`owner_id`) und die
+ * `app_state`-Zeilen `mengen:<id>` erst recht nicht. Ein unbestaetigtes Konto
+ * hat zwar weder das eine noch das andere — aber ein wartendes kann es
+ * haben, wenn es vor dem Warten schon Daten geschickt hat, und die
+ * Unterscheidung gehoert nicht in einen Verfalljob.
+ *
+ * DIE MAIL GEHT NUR AN DIE WARTENDEN. Wer nie bestaetigt hat, hat die
+ * Adresse moeglicherweise gar nicht — eine zweite Mail dorthin waere eine
+ * zweite Belaestigung. Wer bestaetigt hat, hat gewartet und erfaehrt, dass
+ * das Warten vorbei ist und er es neu versuchen kann.
+ *
+ * EINGEREIHT WIRD VOR DEM LOESCHEN. `mail_einreihen()` schreibt in die
+ * Warteschlange, der Versand laeuft spaeter; danach gibt es das Konto nicht
+ * mehr, und die Adresse waere nicht mehr zu ermitteln.
+ */
+function job_konto_verfall(PDO $pdo, array $zustand, callable $zeitLinks): array
+{
+    require_once __DIR__ . '/konto_lib.php';
+    require_once __DIR__ . '/konten_einstellungen_lib.php';
+    require_once __DIR__ . '/mail_lib.php';
+
+    $erledigt = 0;
+
+    /* Erst die unbestaetigten: kurze Frist, keine Mail. */
+    $unbest = konto_verfall_unbestaetigt(JOB_KONTO_VERFALL_BLOCK);
+    foreach ($unbest as $k) {
+        if ($zeitLinks() <= 0.0) { break; }
+        $r = konto_loeschen((int)$k['id'], true);
+        if ($r['ok']) {
+            $erledigt++;
+        } else {
+            error_log('konto_verfall: unbestätigtes Konto ' . $k['id']
+                    . ' nicht gelöscht — ' . $r['grund']);
+        }
+    }
+
+    /* Dann die wartenden: lange Frist, mit letzter Mail. */
+    $wartend = konto_verfall_wartend(konten_reg_frist_tage(), JOB_KONTO_VERFALL_BLOCK);
+    foreach ($wartend as $k) {
+        if ($zeitLinks() <= 0.0) { break; }
+        mail_einreihen('registrierung_verfallen', (string)$k['email'],
+                       ['link' => app_url('/registrieren.php')]);
+        $r = konto_loeschen((int)$k['id'], true);
+        if ($r['ok']) {
+            $erledigt++;
+        } else {
+            error_log('konto_verfall: wartendes Konto ' . $k['id']
+                    . ' nicht gelöscht — ' . $r['grund']);
+        }
+    }
+
+    return ['zustand' => [], 'erledigt' => $erledigt,
+            'fertig'  => count($unbest) < JOB_KONTO_VERFALL_BLOCK
+                      && count($wartend) < JOB_KONTO_VERFALL_BLOCK];
+}
+
+/** Wie viele Registrierungen faellig sind — fuer die Statusseite. */
+function job_konto_verfall_rueckstand(PDO $pdo, array $zustand): ?int
+{
+    try {
+        require_once __DIR__ . '/konto_lib.php';
+        require_once __DIR__ . '/konten_einstellungen_lib.php';
+        $st = $pdo->prepare('SELECT
+              (SELECT COUNT(*) FROM users
+                WHERE status = "unbestaetigt"
+                  AND created_at <= DATE_SUB(NOW(), INTERVAL ? HOUR))
+            + (SELECT COUNT(*) FROM users
+                WHERE status = "wartet"
+                  AND COALESCE(bestaetigt_am, created_at)
+                      <= DATE_SUB(NOW(), INTERVAL ? DAY))');
+        $st->execute([KONTEN_UNBESTAETIGT_H, konten_reg_frist_tage()]);
         return (int)$st->fetchColumn();
     } catch (Throwable $ex) {
         return null;   // Spalten fehlen (Migration steht aus)

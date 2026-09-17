@@ -425,6 +425,45 @@ Laufzeit wird nichts nachgeladen, die Zusage aus Abschnitt 2 bleibt unberührt.
 
 ---
 
+## 7b. Die Wegwerfdomain-Liste (seit P5b/AP3)
+
+**Wie 7a, und aus demselben Grund ein eigener Abschnitt:** Die Datei **wird
+ausgeliefert**, sie gehört zur Anwendung und nicht zum Werkzeug, und sie
+stammt vollständig aus fremdem Material. Anders als 7a ist sie keine
+Zusammenstellung von Sachangaben, sondern die **Quelldatei selbst** — deshalb
+zählt hier die Lizenz und nicht die Überlegung zum Verzeichnis von Tatsachen.
+
+| | |
+|---|---|
+| Datei | `server/wegwerfdomains.txt` (übernommen) |
+| Werkzeug | `tools/wegwerfdomains/aktualisieren.py` |
+| Quelle | `disposable-email-domains/disposable-email-domains`, Datei `disposable_email_blocklist.conf` |
+| Lizenz | **CC0 1.0 Universal** (Public Domain Dedication) |
+| Stand | 17.09.2026 — **8 883 Domains**, 126 389 Byte, SHA-256 `87bf7187…` |
+| Übernommen | die Datei unverändert, eine Domain je Zeile |
+| Nicht übernommen | nichts — es gibt nichts anderes in ihr |
+
+**CC0 verlangt keine Namensnennung**, und der Eintrag steht trotzdem hier. Wer
+in fünf Jahren wissen will, woher 8 883 Domainnamen in einem Repositorium
+kommen, findet es sonst nicht mehr heraus; die Lizenzfrage ist nur der Anlass
+für den Eintrag, nicht sein Zweck.
+
+**Die Lizenzdatei des Projekts heißt `LICENSE.txt`**, nicht `LICENSE` — ein
+Abruf auf `LICENSE` gibt 404 und ist kein Befund. Nachgesehen am 17.09.2026.
+
+**Verworfen wurden zwei Alternativen** (E-P5b-23): `7c/fakefilter` (BSD-3,
+10 686 Einträge, mit Kommentarzeilen und Doppelungen — die Leseseite müsste
+normalisieren, und sie läuft bei jeder Registrierung) und
+`FGRibreau/mailchecker` (MIT, 56 355 Einträge — sechsmal so groß und damit
+sechsmal so viel Risiko, eine echte Domain zu treffen).
+
+**Zur Laufzeit wird nichts geholt** (R36). Der Preis dafür ist, dass die Datei
+altert, und zwar unbemerkt: Eine durchgelassene Registrierung sieht aus wie
+eine richtige. Der Handgriff steht im Runbook (`docs/Technik.md` 7) und als
+Backlog Nr. 222.
+
+---
+
 ## 8. Was hier NICHT steht
 
 - **Der Referenzdatensatz** (`tools/referenzdatensatz/`) ist erfunden. Namen,

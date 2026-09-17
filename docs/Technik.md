@@ -6637,6 +6637,92 @@ passiert.
 die sie ausgelöst hat: bcrypt kostete 228 ms je Upload „für eine Bremse, die
 nichts bremst". Das Konzept beschreibt in 1.3 einen Stand von vor Web 13.0.0.
 
+### 4.99m Die Selbstregistrierung (ab Web 20.22.0, P5b/AP3)
+
+*E-P5b-01, -02, -03, -13, -23. Code: `server/registrieren.php`,
+`server/bestaetigen.php`, `server/konten_einstellungen_lib.php`
+(`wegwerf_trifft()`), `server/ratelimit_lib.php` (drei Töpfe),
+`server/konto_lib.php` (Verfall, Sammelmeldung), `server/jobs_lib.php`
+(`konto_verfall`), `server/wegwerfdomains.txt`.*
+
+**Der Weg in fünf Schritten.**
+
+1. `registrieren.php` nimmt **Adresse, Name und drei Häkchen** — kein
+   Passwort (Begründung unten). Antwort ist für jeden Ausgang dieselbe Karte.
+2. Bei freier Adresse entsteht ein Konto im Zustand **`unbestaetigt`**
+   (`konto_anlegen(…, 'registrierung', 'unbestaetigt', …, TOKEN_REGISTRIERUNG_S)`),
+   dazu ein **48 Stunden** gültiger Token. Die Mail `registrierung` trägt den
+   Link.
+3. Der Link führt auf **`pw_handling.php`** — dieselbe Seite wie beim
+   Einladungsweg. Dort entstehen im Browser Passwort, Datenschlüssel und
+   Wiederherstellungsschlüssel.
+4. Nach dem Speichern wechselt der Status: bei *offen* auf **`aktiv`**, bei
+   *mit Freischaltung* auf **`wartet`**; im zweiten Fall geht eine Sammelmail
+   an die Verwaltung.
+5. Weiterleitung auf **`bestaetigen.php?s=…`**, das sagt, wie es weitergeht.
+
+**Warum das Passwort nicht auf der Registrierungsseite steht.** Der
+Datenschlüssel hängt seit S10 am Server-Anteil, und der wird per
+`HMAC(kdf_anteil, 'konto:<id>')` aus der **Kontonummer** abgeleitet (4.98,
+E-S10-17). Eine Registrierungsseite hat sie nicht — das Konto entsteht ja erst
+mit ihr. Der Browser kann `pat_wrap_pw` also nicht bilden, und eine Hülle ohne
+Anteil weist `huelle_pw_pruefen()` ab, sobald die Installation einen
+ausliefert. **Konto zuerst, Schlüssel danach** ist damit keine Vorliebe,
+sondern die einzige Reihenfolge, die geht. Das freigegebene Mockup M-P5b-02a
+zeichnet die Felder dort; die Abweichung ist am 17.09.2026 mit dem
+Auftraggeber geklärt.
+
+**Keine Kontoauskunft.** Fünf Ausgänge, eine Antwort: frei, belegt,
+Wegwerfadresse, Demo-Adresse, gesperrter Ratenschutz. Unterschieden wird in
+der **Mail** — `registrierung` an die freie, `registrierung_bekannt` an die
+belegte, keine an die übrigen. Die Dauer ist angeglichen
+(`rate_gleiche_dauer($t0, REG_MINDESTDAUER)`, 0,5 s Boden) und der Versand
+läuft **nach** `antwort_abschliessen()`; ohne beides wäre die Dauer die
+Auskunft, die der gleiche Text verhindert (M1-07). Gemessen über 120 Aufrufe:
+Spanne der Mediane **0,2 ms**.
+
+**Die drei Bremsen.**
+
+| | was | warum still |
+|---|---|---|
+| Honeypot | Feld `website` in `.nur-vorlesen`, mit `aria-hidden` und `tabindex="-1"` | `display:none` füllt kein Bot; ohne `aria-hidden` wäre es eine Falle für Bildschirmleser |
+| Mindestdauer | signierter Zeitstempel, 4 s bis 2 h gültig (`reg_stempel()`) | ohne Signatur bestimmt der Absender die Zahl selbst |
+| Töpfe | `reg` 10/h je IP · `regg` 100/h global · `regz` **3/24 h je Zieladresse** | eine Meldung „Honeypot gefüllt" wäre eine Bauanleitung |
+
+`regz` ist der wichtigste: Ohne ihn verschickt die Seite an **jede**
+eingetippte Adresse eine Mail, ohne dass der Absender sie besitzen muss. Sein
+Merkmal ist ein **Hash** der Adresse (`rate_reg_ziel()`) — `rate_limits` wäre
+sonst ein Verzeichnis fremder Postfächer in derselben Datenbank, die auch ein
+Angreifer abzieht.
+
+**Die Wegwerfliste.** `server/wegwerfdomains.txt`, 8 883 Domains, CC0 1.0,
+eine je Zeile, durchgehend klein. **Nie zur Laufzeit geholt** (R36);
+`wegwerf_trifft()` liest sie je Anfrage einmal in eine `static`. Die Prüfung
+geht von der vollen Domain nach oben (`a.b.example.com` → `b.example.com` →
+`example.com`), damit Unterdomains mitzählen — sie hört **vor** der Endung auf,
+denn eine Liste, die `com` sperrte, sperrte das halbe Netz. Fehlt die Datei,
+trifft nichts: Eine Installation, die alle Registrierungen abweist, *weil* eine
+Datei fehlt, wäre das Gegenteil des Schalters. Pflege:
+`tools/wegwerfdomains/aktualisieren.py` (Runbook, Abschnitt 7; Backlog
+Nr. 222), Herkunft in `docs/Lizenzen.md` 7b.
+
+**Zwei Fristen, zwei Zustände, ein Job.** `konto_verfall` löscht
+unbestätigte Konten nach **48 h** (`KONTEN_UNBESTAETIGT_H`, fest — eine
+Sicherheitsfrist) und wartende nach der eingestellten Frist (Vorgabe 30 Tage,
+1–365). Gemessen ab `created_at` bzw. `bestaetigt_am`; **deshalb** schreibt
+`konto_status_setzen()` beim Übergang nach `wartet` jetzt `bestaetigt_am` mit.
+Gelöscht wird über **`konto_loeschen()`** und nicht per `DELETE` — die Kaskade
+erreicht die GPS-Spuren nicht und die `app_state`-Zeilen `mengen:<id>` erst
+recht nicht (4.99l). Die letzte Mail geht **nur an die Wartenden**.
+
+**Die Freischaltung** ist der vorhandene Knopf in der Statuskarte der
+Kontoseite; neu ist die Mail `freigeschaltet` beim Übergang **`wartet` →
+`aktiv`** — beim Entsperren (`gesperrt` → `aktiv`) geht keine. Gefunden werden
+die Wartenden über den Filter **„Wartet auf Freischaltung"** in
+`admin_users.php`; die Liste liest `status` seit Web 20.22.0 mit und zeigt ihn
+als Plakette neben der Adresse (keine neunte Spalte — in 95 von 100 Zeilen wäre
+sie leer).
+
 ### 4.99k Selbstlöschung und Adresswechsel (ab Web 20.20.0, P5b/AP5)
 
 *E-P5b-16. Code: `server/konto_lib.php`, `server/adresse_bestaetigen.php`,
@@ -8247,7 +8333,7 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 |---|---|
 | `php -l` über `server/` und `tools/` | 0 Fehler |
 | `tools/wortliste/wortliste.py` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen |
-| `tools/vollstaendigkeit/pruefen.py --hoechstens N` | **genau N** — die Schwelle, nicht null (heute **387**; die Zahl steht in `pruefung.yml`, nicht hier — dieser Eintrag stand bis Web 20.21.1 auf 366, während die Kette längst mit 377 lief) |
+| `tools/vollstaendigkeit/pruefen.py --hoechstens N` | **genau N** — die Schwelle, nicht null (heute **388**; die Zahl steht in `pruefung.yml`, nicht hier — dieser Eintrag stand bis Web 20.21.1 auf 366, während die Kette längst mit 377 lief) |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | Backlog-Nummern (`grep … uniq -d`) | leer |
 | `tools/migrationsregister/pruefen.php` | 0 Befunde, Selbstprobe 4/4 |
@@ -8386,6 +8472,27 @@ Hand sind gleichwertig. Was sie weiß, ist ihre eigene Fassung
 (`version.php`) und ob eine Migration aussteht.
 
 ## 7. Betrieb (Runbook)
+
+**Vor jeder Auslieferung: die Wegwerfliste nachziehen** (seit Web 20.22.0,
+Backlog Nr. 222).
+
+    python3 tools/wegwerfdomains/aktualisieren.py              # holen, messen, Diff zeigen
+    python3 tools/wegwerfdomains/aktualisieren.py --schreiben  # und schreiben
+
+**Ein Handgriff, kein Automatismus** — die Zusage „keine fremde Quelle zur
+Laufzeit" (R36) kennt keine Ausnahme, auch nicht für eine Textdatei. Der Preis
+ist, dass `server/wegwerfdomains.txt` genau so lange altert, wie niemand den
+Lauf macht, **und dass es niemandem auffällt**: Eine durchgelassene
+Registrierung sieht aus wie eine richtige.
+
+**Das Werkzeug schreibt nicht, wenn etwas nicht stimmt** — weder bei
+Großbuchstaben, Kommentarzeilen oder Doppelungen noch, wenn eine der zehn
+geprüften echten Provider- und Klinikdomains auf der Liste steht. Die zweite
+Prüfung ist die wichtigere: Eine getroffene Klinikdomain sperrt die Ärztin
+dahinter aus, und sie erfährt **nie**, woran es lag (die Seite antwortet auf
+jede Adresse gleich). Ein Treffer ist deshalb kein Grund, die Liste zu kürzen,
+sondern einer, die Quelle zu wechseln. Nach dem Schreiben: Zahl und Datum in
+`docs/Lizenzen.md` 7b nachziehen.
 
 **Update mit Wartungsmodus (seit Web 13.2.0 der Regelweg, S5 Paket W):**
 Zwischen dem ersten und dem letzten per FTPS hochgeladenen File stehen alte

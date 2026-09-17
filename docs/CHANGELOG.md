@@ -14,6 +14,94 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.22.0] — 2026-09-17
+
+**Die Selbstregistrierung** (P5b/AP3, E-P5b-01, -02, -03, -13, -23).
+
+### Neu
+
+**`registrieren.php` und `bestaetigen.php`.** Drei Betriebsarten, einstellbar
+unter Betrieb → Servereinstellungen: *offen*, *offen mit Freischaltung*, *nur
+auf Einladung*. **Vorgabe bleibt „nur auf Einladung"** — das ist die sicherste
+Grundstellung für eine Selbsthosterin, die diese Seite nie aufschlägt, und
+nicht die, die nadoku fahren wird. Bei *nur auf Einladung* bleibt die Seite
+erreichbar und sagt, woran es liegt; ein 404 wäre unhöflich und nicht einmal
+geheimer. Die Anmeldeseite zeigt den Weg dorthin **nur, wenn es ihn gibt**.
+
+**Die Seite gibt keine Kontoauskunft.** Freie Adresse, belegte Adresse,
+Wegwerfadresse, Demo-Adresse und gesperrter Ratenschutz bekommen dieselbe
+Karte — unterschieden wird ausschließlich in der Mail, und die landet im
+Postfach des Besitzers. **Gemessen über 120 Aufrufe:** Mediane 507,5 / 507,7 /
+507,6 ms, **Spanne 0,2 ms** (Soll < 50 ms); auch der gesperrte Topf liegt mit
+0,6 ms Abweichung darin. Das Muster ist `reset_request.php`: Antwort
+abschließen, **dann** versenden.
+
+**Drei Bremsen, keine davon sichtbar.** Ein Honeypot-Feld `website` außerhalb
+des Sichtbereichs — **nicht `display:none`**, denn ein Feld, das der Browser
+nicht darstellt, füllt auch kein Bot; dazu `aria-hidden` und `tabindex="-1"`,
+weil eine Falle, die Blinde aussperrt, keine ist. Eine **Mindestausfülldauer
+von 4 s** über einen **signierten** Zeitstempel — ohne Signatur wäre er eine
+Zahl, die der Absender selbst bestimmt. Und drei Ratenschutz-Töpfe: `reg` je
+IP (10/h), `regg` global (100/h), **`regz` je Zieladresse (3/24 h)**. Der
+letzte ist der wichtigste: Ohne ihn verschickt die Seite an jede eingetippte
+Adresse eine Mail, ohne dass der Absender sie besitzen muss — eine
+Mailbomben-Schleuder mit dem guten Namen der Installation im Absender. **Sein
+Merkmal ist ein Hash der Adresse**, nie die Adresse selbst; `rate_limits` wäre
+sonst ein Verzeichnis fremder Postfächer in derselben Datenbank.
+
+**Die Wegwerfliste liegt als Datei bei** (`server/wegwerfdomains.txt`,
+**8 883 Domains**, 126 KB, CC0 1.0) und wird **nie zur Laufzeit geholt** (R36).
+Gemessen: 8 von 8 bekannten Wegwerfanbietern enthalten, **0 von 10** geprüften
+Provider- und Klinikdomains fälschlich getroffen. Unterdomains zählen mit —
+Wegwerfanbieter vergeben sie freihändig, und eine Liste, die nur die genaue
+Domain träfe, wäre mit einem Punkt zu umgehen. Gepflegt wird sie mit
+`tools/wegwerfdomains/aktualisieren.py`; das Werkzeug **schreibt nicht**, wenn
+eine echte Domain auf der Liste steht oder die Form nicht stimmt (beides
+gegengeprüft). Herkunft in `docs/Lizenzen.md` 7b, Pflegeaufgabe als Backlog
+Nr. 222.
+
+**Freischaltung und Verfall.** Wer sich bei *mit Freischaltung* registriert,
+steht auf `wartet`; die Verwaltung bekommt eine **Sammelmail, höchstens eine
+je Stunde** (Muster E-P5a-07) und findet die Wartenden über den neuen Filter
+„Wartet auf Freischaltung" — vorher las die Liste die Spalte `status` nicht
+einmal mit. Der Job **`konto_verfall`** räumt beide Fristen ab: unbestätigt
+nach **48 h** (fest), wartend nach der eingestellten Frist (Vorgabe 30 Tage).
+**Nur die Wartenden bekommen eine letzte Mail** — wer nie bestätigt hat, hat
+die Adresse möglicherweise gar nicht, und eine zweite Mail dorthin wäre eine
+zweite Belästigung.
+
+### Geändert
+
+**Der Übergang nach `wartet` schreibt `bestaetigt_am` mit.** Daran hängt die
+30-Tage-Frist. Ohne diese Zeile zählte sie ab `created_at`, also ab dem
+Absenden des Formulars: Wer die Mail erst nach 40 Tagen anklickt, wäre sofort
+verfallen; wer sie nach einer Stunde anklickt, bekäme 29 statt 30 Tage.
+
+**Die Vereinbarung zur Auftragsverarbeitung heißt wieder so.** Im Katalog stand
+„Auftragsverarbeitung" — das benennt den Vorgang, nicht das Dokument, das
+angenommen wird. Jetzt „Vereinbarung zur Auftragsverarbeitung (AVV)", der
+Rechtsbegriff aus Art. 28 DSGVO (Gestaltungsvorgabe des Auftraggebers vom
+17.09.2026).
+
+### Nicht gebaut, und warum
+
+**Das Passwort wird nicht auf der Registrierungsseite gesetzt** — die eine
+Abweichung vom freigegebenen Mockup M-P5b-02a. Der Datenschlüssel hängt am
+Server-Anteil, und der wird per `HMAC(kdf_anteil, 'konto:<id>')` aus der
+**Kontonummer** abgeleitet (E-S10-17); die gibt es bei der Registrierung noch
+nicht, und eine Hülle ohne Anteil weist `huelle_pw_pruefen()` ab. Der Link aus
+der Mail führt deshalb auf **`pw_handling.php`** — den einen geprüften Weg, auf
+dem Passwort, Datenschlüssel und Wiederherstellungsschlüssel entstehen — und
+von dort auf `bestaetigen.php`. Mit dem Auftraggeber geklärt am 17.09.2026:
+lieber zwei Felder weniger als ein zweiter Weg, auf dem ein Anteil das Haus
+verlässt.
+
+**Kein Proof-of-Work** (R37 (4) „notfalls"): Backlog Nr. 220, mit Auslöser.
+
+**Keine Migration.** `users.status` kennt `unbestaetigt` und `wartet` seit AP2.
+
+---
+
 ## [Web 20.21.1] — 2026-09-17
 
 **Die Profilseite brach auf halber Höhe aus ihrem Gerüst aus** (Backlog

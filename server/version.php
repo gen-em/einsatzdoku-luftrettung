@@ -5849,5 +5849,34 @@ declare(strict_types=1);
  * ungestaltet da (Nr. 218). Und `einwilligung.php` und
  * `adresse_bestaetigen.php` fehlten in der Geruest-Ausnahmeliste der
  * Vollstaendigkeitspruefung; beide lassen das Geruest mit Absicht weg.
+ * 20.22.0 — DIE SELBSTREGISTRIERUNG (P5b/AP3, E-P5b-01, -02, -03, -13, -23).
+ *
+ * `registrieren.php` und `bestaetigen.php`, drei Betriebsarten (offen / offen
+ * mit Freischaltung / nur auf Einladung, Vorgabe die letzte), Double-Opt-In
+ * mit 48-Stunden-Link, Wegwerfliste (8 883 Domains, CC0), drei Ratenschutz-
+ * Toepfe, Honeypot mit signiertem Zeitstempel, Freischaltung mit Sammelmail
+ * und der Job `konto_verfall` fuer beide Fristen.
+ *
+ * DIE SEITE GIBT KEINE KONTOAUSKUNFT. Freie, belegte, Wegwerf- und
+ * Demo-Adresse bekommen dieselbe Karte und — gemessen ueber 120 Aufrufe —
+ * dieselbe Antwortzeit: Mediane 507,5 / 507,7 / 507,6 ms, Spanne **0,2 ms**
+ * (Soll < 50). Unterschieden wird nur in der Mail.
+ *
+ * DAS PASSWORT WIRD NICHT AUF DER REGISTRIERUNGSSEITE GESETZT, und das ist
+ * die eine Abweichung vom freigegebenen Mockup M-P5b-02a. Der Grund ist
+ * zwingend: Der Datenschluessel haengt am Server-Anteil, und der wird per
+ * `HMAC(kdf_anteil, 'konto:<id>')` aus der KONTONUMMER abgeleitet (E-S10-17)
+ * — die es bei der Registrierung noch nicht gibt. Der Link aus der Mail
+ * fuehrt deshalb auf `pw_handling.php`, den einen geprueften Weg, auf dem
+ * Passwort, Datenschluessel und Wiederherstellungsschluessel entstehen;
+ * danach leitet er auf `bestaetigen.php`. Mit dem Auftraggeber geklaert am
+ * 17.09.2026: lieber zwei Felder weniger als ein zweiter Weg, auf dem ein
+ * Anteil das Haus verlaesst.
+ *
+ * KEINE MIGRATION. `users.status` kennt `unbestaetigt` und `wartet` seit AP2,
+ * und `konto_status_setzen()` schreibt beim Uebergang nach `wartet` jetzt
+ * `bestaetigt_am` mit — daran haengt die 30-Tage-Frist der Wartenden. Ohne
+ * das zaehlte sie ab dem Absenden des Formulars: Wer die Mail erst nach 40
+ * Tagen anklickt, waere sofort verfallen.
  */
-const WEB_VERSION = '20.21.1';
+const WEB_VERSION = '20.22.0';

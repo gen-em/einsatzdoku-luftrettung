@@ -38,6 +38,16 @@
       "pfad": "adresse_bestaetigen.php"
     },
     {
+      "name": "02a-registrieren",
+      "pfad": "registrieren.php",
+      "rolle": "aus"
+    },
+    {
+      "name": "02b-bestaetigen",
+      "pfad": "bestaetigen.php?s=wartet",
+      "rolle": "aus"
+    },
+    {
       "name": "05-datenschutz",
       "gruppe": "Öffentlich",
       "rolle": "aus",

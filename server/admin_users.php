@@ -88,6 +88,11 @@ const KONTEN_FILTER = [
     'ueberfaellig'=> 'Konto-Backup überfällig',
     'nie'         => 'nie Konto-Backup',
     'ohne-geraet' => 'Ohne Gerät',
+    /* SEIT P5b/AP3. Ohne diesen Filter fuehrt die Sammelmail
+     * „Registrierungen warten“ auf eine Liste, in der die Wartenden zwischen
+     * allen anderen stehen und an nichts zu erkennen sind — die Spalte
+     * `status` wurde bis dahin nicht einmal mitgelesen. */
+    'wartet'      => 'Wartet auf Freischaltung',
 ];
 
 /** Die sortierbaren Spalten — Schluessel und Beschriftung des Kopfes. */
@@ -316,10 +321,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
  */
 $alle = db()->query(
     'SELECT u.id, u.email, u.name, u.role, u.created_at, u.last_login, u.account_key,
+            u.status, u.bestaetigt_am,
             COUNT(d.id) AS geraete
        FROM users u
        LEFT JOIN devices d ON d.user_id = u.id AND d.device_id NOT LIKE \'manual-%\'
-      GROUP BY u.id, u.email, u.name, u.role, u.created_at, u.last_login, u.account_key'
+      GROUP BY u.id, u.email, u.name, u.role, u.created_at, u.last_login, u.account_key,
+               u.status, u.bestaetigt_am'
 )->fetchAll();
 
 $staende = edbak_staende();
@@ -380,6 +387,28 @@ if ($q !== '') {
 }
 
 /** Trifft ein Konto den Filter? Die eine Stelle, an der die Regeln stehen. */
+/**
+ * Die Statusplakette eines Kontos — oder ein leerer Text bei `aktiv`.
+ *
+ * KEINE NEUNTE SPALTE. Die Tabelle hat acht, und der Status betrifft in
+ * einer gewachsenen Installation eine Handvoll Zeilen; eine eigene Spalte
+ * waere in 95 von 100 Zeilen leer und naehme den uebrigen Platz weg. Die
+ * Plakette steht deshalb bei der Adresse — dort, wo man hinsieht, wenn man
+ * wissen will, was mit diesem Konto ist.
+ *
+ * `aktiv` bekommt nichts: Der Normalfall braucht kein Etikett, und eine
+ * Plakette an jeder Zeile traegt keine Auskunft mehr.
+ */
+function konto_status_plakette(?string $status): string
+{
+    return match ($status) {
+        'wartet'       => ui_plakette('wartet', ['ton' => 'orange']),
+        'unbestaetigt' => ui_plakette('unbestätigt', ['ton' => 'neutral']),
+        'gesperrt'     => ui_plakette('gesperrt', ['ton' => 'rot']),
+        default        => '',
+    };
+}
+
 function konten_trifft(array $k, string $f): bool
 {
     return match ($f) {
@@ -387,6 +416,7 @@ function konten_trifft(array $k, string $f): bool
         'ueberfaellig' => $k['stand']['stand'] === 'ueberfaellig',
         'nie'          => $k['stand']['stand'] === 'nie',
         'ohne-geraet'  => $k['geraete'] === 0,
+        'wartet'        => ($k['status'] ?? '') === 'wartet',
         default        => true,
     };
 }
@@ -634,7 +664,8 @@ ui_seite_start(['titel' => 'NutzerInnen']);
                 aria-label="<?= e((string)($k['name'] ?: $k['email'])) ?> auswählen"></td>
             <td>
               <span class="konto-name"><?= e((string)($k['name'] ?: '—')) ?></span>
-              <span class="konto-mail"><?= e((string)$k['email']) ?></span>
+              <span class="konto-mail"><?= e((string)$k['email']) ?>
+                <?= konto_status_plakette($k['status'] ?? null) ?></span>
             </td>
             <?php /* FUENF SPALTEN MITTIG (S3/AP5, Block B). Rolle, Seit,
                      Zuletzt angemeldet, Geraete und Backup standen links,
@@ -673,7 +704,8 @@ ui_seite_start(['titel' => 'NutzerInnen']);
           'text'  => (string)($k['name'] ?: $k['email']),
           'klein' => ($k['name'] ? $k['email'] . ' · ' : '') . implode(' · ', $klein),
           'href'  => 'admin_user.php?id=' . (int)$k['id'],
-          'plaketten' => ui_plakette($standText, ['ton' => $standTon]),
+          'plaketten' => konto_status_plakette($k['status'] ?? null)
+                       . ui_plakette($standText, ['ton' => $standTon]),
         ]);
       endforeach; ?>
     </div>

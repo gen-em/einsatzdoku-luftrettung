@@ -2663,6 +2663,20 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **nie**, woran es lag. Jede Aktualisierung muss deshalb beide Messungen
     wiederholen und nicht nur den Unterschied anzeigen.
 
+    **Nachtrag vom 17.09.2026 (Web 20.22.0):** Werkzeug und Liste sind mit
+    AP3 gebaut. `server/wegwerfdomains.txt` enthält **8 883 Domains** (126 389
+    Byte, SHA-256 `87bf7187…`), `wegwerf_trifft()` liest sie, und das Werkzeug
+    misst bei jedem Lauf beide Richtungen und **schreibt nicht**, wenn eine
+    echte Domain getroffen wird oder die Form nicht stimmt (beides
+    gegengeprüft). Die Zeile im Auslieferungs-Runbook steht in
+    `docs/Technik.md` 7. **Offen bleibt der zweite Teil dieses Eintrags:** der
+    Stand der Liste — Datum und Zahl — in Betrieb → Status, damit eine
+    veraltete Liste sichtbar ist statt still. Und die Zahl steht weiterhin an
+    zwei Stellen (Datei und Kommentar in `betrieb_server.php`).
+
+    *Der folgende Absatz beschreibt den Stand vom 17.09.2026 vor AP3 und ist
+    insoweit überholt; er bleibt, weil die Beobachtung dahinter gilt.*
+
     **Heute steht der Schalter schon da und die Liste noch nicht.** Betrieb
     → Servereinstellungen führt seit P5b/AP6 (Web 20.21.0) „Wegwerfadressen
     abweisen" samt eigener Domains; `konten_wegwerf_an()` und
