@@ -362,6 +362,17 @@ jobs:
             echo '**Kreisläufe: ÜBERSPRUNGEN** (kein Prüfkonto) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
+          # ALLE RIEGEL VOR DER ERSTEN INSTALLATION. Der JOBS_TOKEN-Riegel
+          # stand zuerst hinter pip, npm und dem Chromium-Download: Fehlte das
+          # Token UND brach der Download ab (Netz, Spiegel, Rate-Limit), wurde
+          # der Schritt ROT mit einer Playwright-Meldung, obwohl eine Zeile
+          # weiter „übersprungen, nicht gemessen" gestanden hätte. Man sucht
+          # dann am falschen Ort. Begründung zum Token selbst weiter unten.
+          if [ -z "${JOBS_TOKEN:-}" ]; then
+            echo "::warning::JOBS_TOKEN der Umgebung staging fehlt — Kreisläufe ÜBERSPRUNGEN, nicht gemessen."
+            echo '**Kreisläufe: ÜBERSPRUNGEN** (kein `JOBS_TOKEN`) — nicht gemessen. Der Wert steht auf Staging unter Betrieb → Hintergrundjobs.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           pip -q install cffi cryptography
           # PLAYWRIGHT LIEGT NICHT DA, WO DIE WERKZEUGE ES SUCHEN.
           # `aufnehmen.mjs` und `kreislauf.py` laden es ueber einen PFAD
@@ -412,11 +423,6 @@ jobs:
           # OHNE TOKEN WIRD NICHT GEMESSEN, statt still auf den lokalen Weg
           # zurueckzufallen: Der schlaegt hier fehl, und ein Kreislauf ohne
           # Pause waere eine gruene Zahl ohne Aussage (`CLAUDE.md` 6).
-          if [ -z "${JOBS_TOKEN:-}" ]; then
-            echo "::warning::JOBS_TOKEN der Umgebung staging fehlt — Kreisläufe ÜBERSPRUNGEN, nicht gemessen."
-            echo '**Kreisläufe: ÜBERSPRUNGEN** (kein `JOBS_TOKEN`) — nicht gemessen. Der Wert steht auf Staging unter Betrieb → Hintergrundjobs.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
           for art in edbak csv; do
             echo "--- Kreislauf $art ---"
             python3 tools/referenzdatensatz/vergleich/kreislauf.py \

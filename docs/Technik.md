@@ -577,8 +577,10 @@ Daten erst nach Server-Bestätigung.
 │   │                      urllib-Zeile schreibt, baut einen zweiten Weg,
 │   │                      den niemand pflegt. Das Backup-Tor verlangt
 │   │                      `fertig` UND einen Stand, der jünger ist als der
-│   │                      Laufbeginn; `--selbstprobe` weist an fünf Lagen
-│   │                      nach, dass es auch zugeht
+│   │                      Laufbeginn; `--selbstprobe` weist an ELF Lagen
+│   │                      nach, dass es auch zugeht — fuenf fuer das Tor,
+│   │                      sechs fuer `pause` und die Fehlerantwort. Sie
+│   │                      laeuft in Stufe 1 UND vor dem Tor
 │   ├── kettenaufrufe/     haelt JEDEN Werkzeugaufruf der drei Arbeitslaeufe
 │   │                      gegen die tatsaechliche Schnittstelle des
 │   │                      aufgerufenen Werkzeugs — `add_argument`, die
@@ -7945,15 +7947,16 @@ sondern an den **Umgebungen**:
 | `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `JOBS_TOKEN` | `FTP_ZIELPFAD`, `STAGING_URL` |
 | `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN` | `FTP_ZIELPFAD`, `PRODUKTION_URL` |
 
+| Repositorium | `CIQ_GERAETE_URL` (Stufe 1) | `WACHE_BASIS` |
+
+`FTP_SERVER` ist der **nackte Hostname**, ohne Protokoll und ohne Pfad.
+
 **`JOBS_TOKEN` steht in beiden Umgebungen unter demselben Namen und trägt
 verschiedene Werte.** Das Token gehört der **Installation**
 (`app_state.jobs_token`, sichtbar unter Betrieb → Hintergrundjobs), nicht dem
 Repositorium; Staging und Produktiv sind zwei Installationen. Jeder Job liest
 es aus seiner eigenen Umgebung, deshalb kollidiert der gleiche Name nicht —
 und die beiden Zeilen in `auslieferung.yml` lassen sich nebeneinander lesen.
-| Repositorium | `CIQ_GERAETE_URL` (Stufe 1) | `WACHE_BASIS` |
-
-`FTP_SERVER` ist der **nackte Hostname**, ohne Protokoll und ohne Pfad.
 
 ### 6.6 Die Integritätswache hängt am Namen
 

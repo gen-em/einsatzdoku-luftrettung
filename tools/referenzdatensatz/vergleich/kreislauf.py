@@ -302,10 +302,17 @@ def main() -> int:
     p.add_argument("--ausnahmen", default=None)
     p.add_argument("--frisch", action="store_true",
                    help="vorhandenes Umlaufkonto vorher löschen")
-    p.add_argument("--jobs-token", default=os.environ.get("JOBS_TOKEN") or "",
+    # KEINE VORGABE AUS DER UMGEBUNG, und das ist eine Berichtigung: Die
+    # erste Fassung las ersatzweise `JOBS_TOKEN` aus der Umgebung. Damit
+    # stimmte der Satz „ohne Token bleibt alles beim lokalen Weg" nicht mehr —
+    # wer für Handarbeit an der Kette ein `export JOBS_TOKEN=…` gesetzt hatte,
+    # schickte den nächsten Kreislauf gegen die LOKALE Installation über HTTP,
+    # mit einem Token, das einer anderen gehört. Der Schalter wird jetzt
+    # ausdrücklich gegeben oder gar nicht; die Kette gibt ihn (17.09.2026).
+    p.add_argument("--jobs-token", default="",
                    help="Job-Token der Installation; nötig, wenn --basis NICHT "
                         "auf diesem Rechner liegt (sonst läuft die Job-Pause "
-                        "über die Kommandozeile). Auch aus JOBS_TOKEN.")
+                        "über die Kommandozeile).")
     a = p.parse_args()
     a.konto = a.konto or f"umlauf-{a.art}@gen-em.org"
     a.ausnahmen = a.ausnahmen or str(HIER / "ausnahmen" / f"{a.art}_umlauf.json")

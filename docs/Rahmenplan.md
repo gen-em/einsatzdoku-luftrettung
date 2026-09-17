@@ -1737,12 +1737,20 @@ Erst ab Schritt 5 synchronisiert die Kette.
 | 7 | In `config.php` nachtragen: `smtp` auf `staging@gen-em.org`, dazu `'mail' => ['betreff_praefix' => '[Staging]']` (E-PP-09) | FTP | ☐ |
 | 8 | Demo-Konto, Referenzdatensatz und Messstand-Konto einspielen (`tools/referenzdatensatz/einspielen/`, Reihenfolge in der dortigen `LIESMICH.md` — `demo_kennzeichnen.php` läuft **vor** dem ersten Anmelden) | Werkzeuge | ☐ |
 | 9 | Eigenes **SFTP-Backup-Ziel** für Staging eintragen (zugesagt 15.09.2026) — damit Staging-Stände nie neben Produktiv-Sicherungen liegen | Anwendung | ☐ |
+| 10 | **`JOBS_TOKEN`** als Environment secret der Umgebung `staging` eintragen — der Wert steht auf Staging unter **Betrieb → Hintergrundjobs** hinter `jobs.php?token=` (Web 20.16.0, Backlog Nr. 219). **Derselbe Name wie in `produktion`, anderer Wert:** Das Token gehört der Installation, nicht dem Repositorium | GitHub | ☑ *17.09.2026 — von der Betreiberin eingetragen* |
 
 **`STAGING_URL`, `STAGING_KONTO` und `STAGING_PASS`** gehören in dieselbe
 Umgebung. Sie dürfen früh eingetragen werden — **aber dann ist Stufe 2 rot,
 bis Schritt 8 durch ist**, und das ist so gewollt: Ein Stand, der auf Staging
 nicht läuft, ist nicht freigabefähig. Solange sie leer sind, überspringt
 Stufe 2 und sagt es.
+
+**Dasselbe gilt für `JOBS_TOKEN` aus Schritt 10** (Web 20.16.0): Ohne ihn
+können die Kreisläufe die Hintergrundjobs auf Staging nicht anhalten, und ein
+Kreislauf ohne Pause misst „hat der Verdichtungsjob dazwischen zugeschlagen"
+statt „kommt zurück, was hineinging". Der Schritt wird deshalb **übersprungen
+und gesagt**, statt still auf den lokalen Weg zurückzufallen — der scheitert
+auf einem Läufer ohnehin an der fehlenden `config.php`.
 
 > **Der teuerste Einrichtungsfehler ist `FTP_ZIELPFAD`.** Steht dort `/` und
 > ist das FTPS-Konto **nicht** auf das Staging-Verzeichnis eingesperrt, lädt

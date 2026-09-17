@@ -284,9 +284,22 @@ if ($aktion === 'pause') {
                        'meldung' => 'Parameter `sekunden` fehlt. '
                                   . '0 hebt die Pause auf, N haelt N Sekunden an.'], 400);
     }
-    if (!is_numeric($roh) || (int)$roh < 0) {
+    /* GANZE ZAHL, NICHT „irgendwie numerisch". Die erste Fassung schrieb
+     * `!is_numeric($roh) || (int)$roh < 0` — und liess damit genau das durch,
+     * wogegen der Absatz darueber steht: `sekunden=-0.5` ist numerisch,
+     * `(int)"-0.5"` ist 0, 0 ist nicht kleiner als 0. Der Aufruf hob die
+     * laufende Pause auf und quittierte es mit `ok`. Nachgemessen am
+     * 17.09.2026 gegen eine echte Installation, gefunden von einer
+     * unabhaengigen Durchsicht — meine eigenen Proben (-5, abc) trafen die
+     * Luecke nicht, weil beide schon vorher scheitern.
+     *
+     * `^\d+$` laesst nur Ziffern zu: kein Vorzeichen, kein Punkt, kein `1e3`,
+     * kein fuehrendes Leerzeichen. Danach ist `(int)` verlustfrei. */
+    if (!preg_match('/^\d+$/', (string)$roh)) {
         kette_antwort(['ok' => false, 'aktion' => 'pause', 'error' => 'sekunden',
-                       'meldung' => 'Parameter `sekunden` ist keine Zahl >= 0.'], 400);
+                       'meldung' => 'Parameter `sekunden` ist keine ganze Zahl >= 0. '
+                                  . 'Erlaubt sind nur Ziffern — `-0.5` oder `1e3` '
+                                  . 'wuerden zu 0 und HOEBEN die Pause auf.'], 400);
     }
 
     $sek = (int)$roh;

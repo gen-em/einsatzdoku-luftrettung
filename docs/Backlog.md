@@ -7270,3 +7270,58 @@ zutreffen.
     5), und die Gegenprobe des neuen Prüfmittels zeigt, dass ein Tippfehler im
     neuen Schalter auffällt: `--jobs-tokn` → **1 Befund**, mit der Liste der
     bekannten Schalter.
+
+    ### Nachtrag vom 17.09.2026 — was eine unabhängige Durchsicht an der
+    ### Behebung gefunden hat
+
+    Fünf Blickwinkel über den Diff, jeder Befund danach von einem eigenen
+    Durchgang zu **widerlegen** versucht: **19 haben standgehalten**. Drei
+    davon brechen Zusagen, die Web 20.16.0 selbst aufgestellt hat. Behoben mit
+    **Web 20.16.1**.
+
+    **Die Ziffernprüfung war die falsche.** `!is_numeric($roh) || (int)$roh < 0`
+    ließ `sekunden=-0.5` durch — numerisch ja, `(int)"-0.5"` ist 0, 0 ist nicht
+    kleiner als 0. Der Aufruf hob eine laufende Pause auf und quittierte es mit
+    `ok`, also genau das, wogegen der Absatz darüber stand. Nachgemessen gegen
+    eine echte Installation: HTTP 200, Pause weg. Jetzt `^\d+$`.
+
+    *Warum die eigenen Proben es nicht fanden:* geprüft waren `-5` und `abc`.
+    **Beide scheitern schon an der vorherigen Bedingung** — die Lücke lag
+    zwischen ihnen. Zwei Proben an den Rändern sagen nichts über die Mitte.
+
+    **`rufen()` verschluckte jede Fehlerantwort, und das ist älter als diese
+    Änderung.** Eine `HTTPError` ist eine `URLError` und fiel in den
+    Netzfehler-Zweig; aus einer 400 mit Begründung wurde `_fehler`. Damit war
+    der Abbruchzweig in `backup_tor()` **nie erreichbar**: Der Kommentar dort
+    sagt „ein falsches Token … wird beim vierzigsten Mal nicht anders" und
+    bricht bei `error` ab — `error` kam nie an. Das Tor fragte vierzigmal, gut
+    dreizehn Minuten, und meldete „kein fertig" statt „falsches Token".
+
+    **Der neue Selbstprobenfall bewies nichts.** Er rief `adresse_bauen()`
+    unmittelbar mit einem von Hand geschriebenen Feld auf und maß `urlencode`,
+    nicht den Aufrufweg. Streicht man `felder=` in `main()` oder reicht
+    `rufen()` es nicht weiter, blieb die Probe grün — beides nachgemessen.
+    Jetzt fährt der Fall den ganzen Weg und fällt bei beiden Mutationen um
+    (11 → 10 erfüllt, 1 offen).
+
+    **Dazu:** Die Selbstprobe läuft jetzt in **Stufe 1** und nicht mehr nur im
+    Produktionslauf — ihre fünf neuen Fälle bewachen `pause`, und das läuft in
+    Stufe 2. Der `JOBS_TOKEN`-Riegel steht vor `pip` und dem
+    Chromium-Download. `--jobs-token` liest nicht mehr ersatzweise die
+    Umgebungsvariable (sonst ginge ein exportiertes Produktiv-Token gegen die
+    lokale Installation). Die Kopfzeile meldete „fünf Lagen" und fuhr elf. Die
+    Geheimnis-Tabelle in `docs/Technik.md` war von einem eingeschobenen Absatz
+    zerrissen. `tools/kette/LIESMICH.md`, `docs/Rahmenplan.md` 6a (Schritt 10)
+    und Prüfpunkt P6 sind nachgezogen.
+
+    **Und eine Grenze, benannt statt geschlossen:** `tools/kettenaufrufe/`
+    sieht nur Aufrufe in `run:`-Blöcken. Der neue Aufruf `kreislauf.py` →
+    `tor.py` steht in Python und liegt außerhalb seiner Reichweite; wer
+    `--sekunden` umbenennt und den Aufrufer vergisst, bekommt von ihm weiter
+    „0 Befunde". Gedeckt ist diese eine Stelle stattdessen von Fall 6 der
+    Selbstprobe. Das steht in beiden LIESMICH-Dateien.
+
+    **Die Lehre, und sie ist dieselbe wie bei Nr. 217 und 218, eine Stufe
+    tiefer:** Eine Probe, die ich selbst schreibe, prüfe ich mit einer
+    Mutation — sonst weiß ich nicht, ob sie misst oder nur grün ist. Alle
+    drei neuen Fälle sind jetzt so belegt.

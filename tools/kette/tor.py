@@ -104,6 +104,24 @@ def rufen(basis: str, token: str, aktion: str, zeitgrenze: int = ZEITGRENZE_S,
     try:
         with urllib.request.urlopen(adresse, timeout=zeitgrenze) as antwort:
             roh = antwort.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as ex:
+        # EINE 4xx-ANTWORT IST EIN NEIN DES SERVERS, KEIN NETZFEHLER — und sie
+        # hat einen KOERPER, in dem steht, warum. `urlopen` wirft dafuer eine
+        # HTTPError, und die ist eine URLError: Ohne diesen Zweig fiel sie in
+        # den naechsten und wurde zu `{"_fehler": "HTTP Error 400: ..."}`.
+        #
+        # Was das gekostet hat, war mehr als eine unschoene Meldung. Der
+        # Kommentar in `backup_tor()` sagt ausdruecklich: „Ein falsches Token,
+        # eine unbekannte Aktion ... das wird beim vierzigsten Mal nicht
+        # anders", und bricht bei `error` sofort ab. Der Zweig war aber nie
+        # erreichbar, weil `error` nie ankam — das Tor fragte vierzigmal, gut
+        # dreizehn Minuten lang, und meldete dann „kein fertig" statt „falsches
+        # Token". Gefunden am 17.09.2026 von einer unabhaengigen Durchsicht,
+        # angestossen durch die neue 400-Antwort von `aktion=pause`.
+        try:
+            roh = ex.read().decode("utf-8", "replace")
+        except Exception:                          # noqa: BLE001 — Koerper weg
+            return {"_fehler": f"HTTP {ex.code}"}
     except (urllib.error.URLError, OSError, TimeoutError) as ex:
         return {"_fehler": str(ex)}
     try:
@@ -169,7 +187,11 @@ def backup_tor(basis: str, token: str, versuche: int, pause: int,
 # ---------------------------------------------------------------- Selbstprobe
 
 def selbstprobe() -> int:
-    """Bricht das Tor auch wirklich ab? Fünf Lagen, ohne Netz.
+    """Bricht das Tor auch wirklich ab, und landet `sekunden` in der Adresse?
+
+    Zehn Lagen, ohne Netz — fünf für das Backup-Tor, fünf für `pause`.
+    Die Kopfzeile hat bis Web 20.16.1 „fünf Lagen" gemeldet und zehn gefahren;
+    wer sie abschrieb, trug eine falsche Zahl ins Prüfprotokoll.
 
     Der Aufruf an `jobs.php` wird durch eine Attrappe ersetzt, die
     vorgeschriebene Antworten liefert. Das ist keine Bequemlichkeit: Die
@@ -203,7 +225,8 @@ def selbstprobe() -> int:
             return folge[i]
         return ruf
 
-    print("Selbstprobe des Backup-Tors — fünf Lagen, ohne Netz\n")
+    print("Selbstprobe von tor.py — fünf Lagen des Backup-Tors und fünf des "
+          "Unterbefehls `pause`, ohne Netz\n")
 
     # 1. Der Regelfall: zweites Häppchen meldet fertig, Stand ist frisch.
     rc = backup_tor("http://attrappe", "t", 5, 0,
@@ -249,9 +272,38 @@ def selbstprobe() -> int:
     # Sorte Fehler hat am 16./17.09.2026 drei Kettenschritte gekostet: ein
     # Schalter, der still verworfen wurde.
     print()
-    a = adresse_bauen("https://x/", "geheim", "pause", {"sekunden": 1800})
-    pruefe("aktion=pause" in a and "sekunden=1800" in a,
-           f"pause: `sekunden` steht in der Adresse ({a.split('?', 1)[1]})")
+
+    # DIESER FALL HAT IN SEINER ERSTEN FASSUNG NICHTS BEWIESEN. Er rief
+    # `adresse_bauen()` UNMITTELBAR mit einem von Hand geschriebenen
+    # `{"sekunden": 1800}` auf und prüfte, ob `urlencode` es wieder ausgibt.
+    # Die beiden Glieder, die im Betrieb entscheiden — `main()` reicht
+    # `felder=` an `rufen()`, `rufen()` an `adresse_bauen()` —, kamen darin
+    # nicht vor. Nachgemessen (17.09.2026, unabhängige Durchsicht): Streicht
+    # man `felder=` in `main()` ODER reicht `rufen()` es nicht weiter, meldet
+    # die Selbstprobe weiter „erfüllt: 10 · offen: 0".
+    #
+    # Das war genau die Fehlerklasse, gegen die dieser Fall geschrieben
+    # wurde: ein Schalter, der still verworfen wird. Jetzt läuft der GANZE
+    # Weg, nur der Abruf selbst ist ersetzt.
+    gemerkt: dict = {}
+
+    class _Antwort:
+        def __enter__(self): return self
+        def __exit__(self, *_): return False
+        def read(self): return b'{"ok": true}'
+
+    _echt = urllib.request.urlopen
+    urllib.request.urlopen = lambda adresse, timeout=None: (
+        gemerkt.__setitem__("adresse", adresse), _Antwort())[1]
+    try:
+        rc = main(["pause", "--basis", "https://x/", "--token", "geheim",
+                   "--sekunden", "1800"])
+    finally:
+        urllib.request.urlopen = _echt
+    a = gemerkt.get("adresse", "")
+    pruefe(rc == 0 and "aktion=pause" in a and "sekunden=1800" in a,
+           f"pause: `sekunden` steht in der ABGERUFENEN Adresse "
+           f"({a.split('?', 1)[1] if '?' in a else '— gar kein Abruf —'})")
 
     a0 = adresse_bauen("https://x", "geheim", "pause", {"sekunden": 0})
     pruefe("sekunden=0" in a0,
@@ -269,6 +321,30 @@ def selbstprobe() -> int:
     # aufheben, sondern muss abbrechen. Rückgabewert 2 = „kam nicht zustande".
     rc = main(["pause", "--basis", "https://x", "--token", "g"])
     pruefe(rc == 2, "pause ohne --sekunden → Rückgabewert 2, KEIN stilles Freigeben")
+
+    # 11. EINE 4xx-ANTWORT MUSS MIT IHRER BEGRÜNDUNG ANKOMMEN. Bis Web 20.16.1
+    # fing `rufen()` die HTTPError im URLError-Zweig und machte daraus
+    # `{"_fehler": "HTTP Error 400: ..."}` — der Körper mit `error` und
+    # `meldung` ging verloren, und `backup_tor()` hielt ein falsches Token für
+    # einen Netzschluckauf und fragte vierzigmal.
+    class _HTTPFehler(urllib.error.HTTPError):
+        def __init__(self):
+            super().__init__("https://x/jobs.php", 400, "Bad Request", {}, None)
+
+        def read(self):
+            return b'{"ok": false, "error": "sekunden", "meldung": "Parameter fehlt."}'
+
+    def _wirft(_adresse, timeout=None):
+        raise _HTTPFehler()
+
+    urllib.request.urlopen = _wirft
+    try:
+        antwort = rufen("https://x", "g", "pause", felder={"sekunden": 1})
+    finally:
+        urllib.request.urlopen = _echt
+    pruefe(antwort.get("error") == "sekunden" and "_fehler" not in antwort,
+           f"Eine 400-Antwort kommt mit ihrer Begründung an, nicht als Netzfehler "
+           f"({list(antwort)})")
 
     print(f"\n  erfüllt: {erfuellt} · offen: {offen}")
     return 0 if offen == 0 else 1

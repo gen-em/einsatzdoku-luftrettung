@@ -193,6 +193,22 @@ jobs:
           python3 tools/kettenaufrufe/pruefen.py --probe
           python3 tools/kettenaufrufe/pruefen.py
 
+      - name: Tore der Kette — geht das Backup-Tor auch zu?
+        # WARUM DIESE SELBSTPROBE IN STUFE 1 GEHOERT (17.09.2026).
+        #
+        # Sie lief bisher NUR im Job `produktion` von `auslieferung.yml`, also
+        # erst beim Tag — unmittelbar vor dem Backup-Tor, das sie nachweisen
+        # soll. Fuer das Tor selbst ist das der richtige Ort und bleibt es.
+        # Aber seit Web 20.16.0 haengen dort auch die fuenf Faelle des
+        # Unterbefehls `pause`, und der laeuft in STUFE 2. Wer ihn kaputt
+        # macht, bekam von Stufe 1 ein Gruen, von Stufe 2 je nach Staging
+        # irgendetwas — und die Probe, die es gemerkt haette, lief erst bei
+        # der Auslieferung.
+        #
+        # Sie braucht kein Netz und keine Installation (Attrappen statt
+        # Abrufe) und kostet Sekunden. Erwartet: 11 von 11.
+        run: python3 tools/kette/tor.py --selbstprobe
+
       - name: Backlog — keine Nummer zweimal
         # Die Zeile stammt aus dem Kopf des Rahmenplans (Abschnitt 2.2).
         run: |
