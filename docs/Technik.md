@@ -7863,16 +7863,9 @@ Knopfhöhen), und **nur bei Tag-Läufen** der Messstand. Alle drei brauchen ein
 `STAGING_PASS`, Variable `STAGING_URL`); fehlt es, wird der Schritt
 ausdrücklich übersprungen und gemeldet.
 
-**Die Kreisläufe UND der Bilderlauf brauchen seit Web 20.16.0 bzw. 20.16.2
-zusätzlich `JOBS_TOKEN`** in der Umgebung `staging` (Backlog Nr. 219 und
-Nr. 220). Beim Bilderlauf geht es um die beiden Seiten mit `"wartung": true`
-in `seiten.json` — `07-wartungsseite` und `46a-betrieb-updates-wartung`:
-`aufnehmen.mjs` schaltete den Wartungsmodus über die **lokale** Datei
-`server/wartung.lock`, was gegen ein fernes Staging wirkungslos ist. Fehlt
-das Token und liegt die Installation nicht auf demselben Rechner, **bricht
-der Lauf vorher ab** und nennt beide Seiten, statt Bilder der Anmeldeseite
-abzulegen. Sie halten die Hintergrundjobs an,
-bevor sie ein Backup in ein frisches Konto spielen — sonst dünnt der
+**Die Kreisläufe brauchen seit Web 20.16.0 zusätzlich `JOBS_TOKEN`** in der
+Umgebung `staging` (Backlog Nr. 219). Sie halten die Hintergrundjobs an, bevor
+sie ein Backup in ein frisches Konto spielen — sonst dünnt der
 Verdichtungsjob die wiederhergestellten Spuren aus, und der Vergleich misst
 „hat der Job dazwischen zugeschlagen" statt „kommt zurück, was hineinging"
 (gemessen: 125 verdichtete Spuren in einem Lauf ohne Pause). Das ging bis
@@ -7880,6 +7873,27 @@ dahin nur über die Kommandozeile und damit nur auf dem Rechner der
 Installation; hier läuft ein Läufer gegen ein fernes Staging. **Fehlt das
 Token, wird übersprungen und gesagt** — nicht still auf den lokalen Weg
 zurückgefallen, der hier ohnehin an der fehlenden `config.php` scheitert.
+
+**Der Bilderlauf braucht es seit Web 20.16.2 ebenfalls** (Backlog Nr. 220),
+aber für etwas anderes und mit einem anderen Verhalten. Zwei der fünfzig
+Seiten tragen `"wartung": true` in `seiten.json` — `07-wartungsseite` und
+`46a-betrieb-updates-wartung` —, und `aufnehmen.mjs` schaltete den
+Wartungsmodus über die **lokale** Datei `server/wartung.lock`, was gegen ein
+fernes Staging wirkungslos ist.
+
+**Hier wird NICHT übersprungen, sondern ausgefallen**, und der Unterschied ist
+Absicht: Bei den Kreisläufen hängt die ganze Messung am Token, beim
+Bilderlauf nur **zwei von fünfzig** Seiten. Der Lauf misst deshalb die
+übrigen achtundvierzig, lässt die zwei ausfallen, nennt sie beim Namen — und
+endet **rot**, weil eine ausgefallene Aufnahme in den Rückgabewert geht.
+Gesagt wird es zusätzlich **vor** den zwölf Minuten Laufzeit. Dasselbe gilt,
+wenn das Token falsch ist oder die Leitung im Lauf abreißt: Der Grund steht
+dann bei der Seite, und der Rest des Laufs bleibt erhalten.
+
+**Und wenn das Ausschalten misslingt, ist der Lauf rot** — auch dann, wenn
+sonst nichts zu beanstanden war. Eine Installation, die nach einem Bilderlauf
+im Wartungsmodus stehenbliebe, wäre ein stiller Ausfall; der Lauf versucht es
+nach jeder folgenden Seite erneut und sagt es am Ende ausdrücklich.
 
 **Der erste Schritt unterscheidet seit Nr. 214 zwei Fälle.** Landet der
 Aufruf auf `install.php`, fragt er diese Datei zusätzlich ab: Kommt **404**,

@@ -14,6 +14,65 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.16.3] — 2026-09-17
+
+**Die Durchsicht fand einen schlimmeren Fehler als den behobenen**
+(Backlog Nr. 220).
+
+Zehn Befunde aus vier Blickwinkeln, jeder von einem zweiten Durchgang zu
+widerlegen versucht. Der erste wiegt schwerer als die Behebung, für die er
+geschrieben wurde.
+
+### Behoben: ein misslungenes Ausschalten hätte Staging geschlossen — und der Lauf grün gemeldet
+
+Der `catch` in `wartungAus()` setzte `wartungVonUns` auf falsch und
+**entwaffnete damit jeden weiteren Versuch**: Die Funktion läuft nach jeder
+Seite und noch einmal am Prozessende; beide kehrten danach sofort um. Der
+Rückgabewert kannte den Fehlschlag nicht, der Bericht auch nicht — der einzige
+Hinweis wäre eine `console.error`-Zeile in einem Protokoll mit hunderten
+gewesen.
+
+Der Kommentar darüber versprach das Gegenteil: *„die Installation bliebe sonst
+still geschlossen, und das muss auffallen."*
+
+Jetzt bleibt die Merkung stehen, der nächste Versuch kommt von selbst — ein
+einmaliger Schluckauf heilt sich —, und ein hängender Wartungsmodus **färbt
+den Lauf rot**, auch bei sonst sauberem Ergebnis.
+
+### Behoben: die Merkung stand hinter dem Einschalten
+
+Über eine Datei ist das gleichgültig: `writeFileSync` schreibt oder wirft.
+**Über HTTP gibt es einen dritten Ausgang** — ausgeführt, aber nicht
+bestätigt. Eine verlorene Antwort hätte die Anlage geschlossen
+zurückgelassen, ohne dass jemand ausschaltet. Die Merkung steht jetzt **vor**
+dem Aufruf.
+
+### Geändert: ein Schluckauf wirft nicht mehr den ganzen Lauf weg
+
+Der Wartungsschalter wirft nicht mehr. Ein Fehlschlag lässt die betroffene
+Seite **ausfallen**, mit dem Grund daneben, und das geht in Bericht und
+Rückgabewert. Aus demselben Grund bricht der Lauf bei fehlendem Token nicht
+mehr mit Rückgabewert 2 ab, sondern misst die übrigen und endet rot: **Zwei
+von fünfzig Seiten sind kein Grund, achtundvierzig wegzuwerfen.**
+
+*Gegengeprüft, gegen eine echte Installation:* mit gültigem Token 8 Bilder,
+RC 0, Wartung danach aus; mit **falschem** Token 0 Bilder, RC 1, „8×
+Zustand nicht abfragbar: … `error: token`" — und die Installation
+**unangetastet**.
+
+### Dokumentation
+
+- `docs/Technik.md` 6.3 sagte für dasselbe fehlende Token **zweierlei**, und
+  ein eingeschobener Absatz hatte den Satz über die Kreisläufe zerrissen —
+  *zum zweiten Mal dieselbe Art Fehler.* Jetzt zwei getrennte Absätze, mit dem
+  Unterschied als Absicht benannt: Kreisläufe werden übersprungen, beim
+  Bilderlauf fallen zwei Seiten aus.
+- Die Wegtabelle in `tools/screenshots/LIESMICH.md` war nach dem **Ort**
+  geschlüsselt; der Code entscheidet nach dem **Token**.
+- Ein Kettenkommentar nannte einen roten Lauf „den ersten grünen Durchlauf".
+
+**Keine Migration.**
+
 ## [Web 20.16.2] — 2026-09-17
 
 **Der Wartungsschalter des Bilderlaufs — dritter Fall derselben Annahme**

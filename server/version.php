@@ -5664,5 +5664,45 @@ declare(strict_types=1);
  * niemand nachgehen kann.
  *
  * KEINE MIGRATION.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.16.3 — DIE DURCHSICHT FAND EINEN SCHLIMMEREN FEHLER ALS DEN BEHOBENEN
+ * ---------------------------------------------------------------------------
+ *
+ * Zehn Befunde, jeder von einem zweiten Durchgang zu widerlegen versucht.
+ * Der erste wiegt schwerer als Nr. 220 selbst:
+ *
+ * EIN MISSLUNGENES AUSSCHALTEN HAETTE STAGING GESCHLOSSEN — UND DER LAUF
+ * HAETTE GRUEN GEMELDET. Der `catch` in `wartungAus()` setzte `wartungVonUns`
+ * auf falsch und entwaffnete damit JEDEN weiteren Versuch: Die Funktion
+ * laeuft nach jeder Seite und noch einmal am Prozessende, beide kehrten
+ * danach sofort um. Der Rueckgabewert kannte den Fehlschlag nicht, der
+ * Bericht auch nicht — der einzige Hinweis waere eine Zeile in einem
+ * Protokoll mit hunderten gewesen. Der Kommentar darueber versprach genau das
+ * Gegenteil („das muss auffallen"). Jetzt bleibt die Merkung stehen, der
+ * naechste Versuch kommt, und ein haengender Wartungsmodus faerbt den Lauf
+ * rot.
+ *
+ * UND DIE MERKUNG STAND HINTER DEM EINSCHALTEN. Ueber eine Datei ist das
+ * gleichgueltig — `writeFileSync` schreibt oder wirft. Ueber HTTP gibt es
+ * einen DRITTEN Ausgang: ausgefuehrt, aber nicht bestaetigt. Eine verlorene
+ * Antwort haette die Anlage geschlossen zurueckgelassen, ohne dass jemand
+ * ausschaltet. Sie steht jetzt VOR dem Aufruf.
+ *
+ * DAZU: Ein Schluckauf der Leitung warf den ganzen Lauf weg, samt Bericht
+ * ueber die 48 gelungenen Seiten. Der Wartungsschalter wirft nicht mehr; ein
+ * Fehlschlag laesst die betroffene Seite AUSFALLEN, und das geht in Bericht
+ * und Rueckgabewert. Aus demselben Grund bricht der Lauf bei fehlendem Token
+ * nicht mehr ab (Rueckgabewert 2), sondern misst die uebrigen und endet rot.
+ * Zwei von fuenfzig Seiten sind kein Grund, achtundvierzig wegzuwerfen.
+ *
+ * Dokumentation: `docs/Technik.md` 6.3 sagte fuer dasselbe fehlende Token
+ * zweierlei, und ein eingeschobener Absatz hatte den Satz ueber die
+ * Kreislaeufe zerrissen — zum zweiten Mal dieselbe Art Fehler. Die Wegtabelle
+ * in der LIESMICH war nach dem ORT geschluesselt, der Code entscheidet nach
+ * dem TOKEN. Und ein Kettenkommentar nannte einen roten Lauf „den ersten
+ * gruenen Durchlauf".
+ *
+ * KEINE MIGRATION.
  */
-const WEB_VERSION = '20.16.2';
+const WEB_VERSION = '20.16.3';

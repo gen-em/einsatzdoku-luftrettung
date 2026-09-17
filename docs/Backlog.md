@@ -7454,3 +7454,38 @@ zutreffen.
     Bilder, `wartung.lock` sauber aufgeräumt), und nach dem Lauf steht die
     Installation wieder offen (`zustand.wartung.aktiv = false`).
 
+    ### Nachtrag vom 17.09.2026 — was die Durchsicht an der Behebung fand
+
+    Zehn Befunde, jeder von einem zweiten Durchgang zu widerlegen versucht.
+    **Der erste wiegt schwerer als der Fehler, für den die Behebung
+    geschrieben war.**
+
+    **Ein misslungenes Ausschalten hätte Staging geschlossen — und der Lauf
+    hätte grün gemeldet.** Der `catch` setzte `wartungVonUns` auf falsch und
+    entwaffnete damit jeden weiteren Versuch: `wartungAus()` läuft nach jeder
+    Seite und noch einmal am Prozessende, beide kehrten danach sofort um. Der
+    Rückgabewert kannte den Fehlschlag nicht, der Bericht auch nicht. Der
+    Kommentar darüber versprach das Gegenteil („das muss auffallen"). Behoben:
+    Die Merkung bleibt stehen, und ein hängender Wartungsmodus färbt den Lauf
+    rot.
+
+    **Die Merkung stand hinter dem Einschalten.** Über eine Datei ist das
+    gleichgültig — `writeFileSync` schreibt oder wirft. Über HTTP gibt es
+    einen dritten Ausgang: ausgeführt, aber nicht bestätigt. Sie steht jetzt
+    davor.
+
+    **Der Abbruch bei fehlendem Token war die bequemere und schlechtere
+    Zeile.** Zwei von fünfzig Seiten hängen am Wartungsmodus; ein Abbruch
+    würfe achtundvierzig messbare weg. Jetzt fallen die zwei aus, mit Grund,
+    und der Lauf endet rot.
+
+    *Gegengeprüft gegen eine echte Installation:* mit gültigem Token 8 Bilder,
+    RC 0, Wartung danach aus; mit falschem Token 0 Bilder, RC 1, Grund bei der
+    Seite („Zustand nicht abfragbar … `error: token`"), Installation
+    unangetastet.
+
+    **Und zum zweiten Mal habe ich in `docs/Technik.md` einen Absatz
+    zerrissen**, indem ich neuen Text mitten hineinschob — diesmal las sich
+    „Sie halten die Hintergrundjobs an" als Aussage über den Bilderlauf. Beim
+    ersten Mal war es die Geheimnis-Tabelle (Nr. 219). *Merkposten für die
+    nächste Einfügung: erst den Absatz zu Ende lesen, dann einfügen.*

@@ -498,7 +498,8 @@ jobs:
           # Der Lauf schreibt `ausgabe/bericht.md` mit einer Spalte
           # VERURSACHER — dem Element, das ueberlaeuft. Auf dem Laeufer wird
           # sie mit dem Arbeitsverzeichnis weggeraeumt. Am 17.09.2026 meldete
-          # der erste gruene Durchlauf „Ueberlauf bei 360" auf
+          # der erste Durchlauf, der ALLE 50 Seiten erreichte — rot, aber
+          # vollstaendig — „Ueberlauf bei 360" auf
           # `05-datenschutz`, und weil der Bericht fort war, liess sich
           # oertlich nur noch ausschliessen, was es NICHT ist: Markup und
           # Stylesheet sind byteidentisch mit dem Repositorium, alle zehn
