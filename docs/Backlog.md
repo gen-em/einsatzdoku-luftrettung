@@ -2397,7 +2397,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 216. **`frame-ancestors` stand in einer Report-Only-Richtlinie und war dort wirkungslos.**
     *Gefunden 16.09.2026 beim Bilderlauf mit drei Engines (P5b/AP1, auf Rückfrage
-    des Auftraggebers); behoben am selben Tag in Web 20.16.0.*
+    des Auftraggebers); behoben am selben Tag in Web 20.16.5.*
     CSP Level 3 sagt, dass `frame-ancestors` in einer Report-Only-Richtlinie
     **ignoriert** wird. WebKit sagt es laut: „The Content Security Policy
     directive 'frame-ancestors' is ignored when delivered in a report-only

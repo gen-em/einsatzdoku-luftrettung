@@ -4115,7 +4115,7 @@ Tabelle nicht kennt — Handys (die ihren Namen selbst mitbringen) und Modelle,
 die noch nicht in der Tabelle stehen. Sie werden **nicht** angefasst: Was ein
 Gerät über sich gesagt hat, bleibt stehen.
 
-#### Karte „Betriebsprotokoll" (seit Web 20.16.0)
+#### Karte „Betriebsprotokoll" (seit Web 20.16.5)
 
 **Die Anwendung führt Buch über den Betrieb** — Konten angelegt,
 freigeschaltet, gesperrt, gelöscht; Rollen und Adressen geändert; Sicherungen
@@ -4573,7 +4573,7 @@ hat. Das ist kein Versehen: Die Dauer wird jetzt von der Anwendung bestimmt,
 damit sie an *einer* Stelle steht und die Anzeige nicht lügt. **Wer produktiv
 läuft, stellt hier wieder auf 1 Jahr.**
 
-#### Karte „Konten" (seit Web 20.16.0)
+#### Karte „Konten" (seit Web 20.16.5)
 
 Was diese Installation mit Konten tut: wer eines bekommt, was es halten darf,
 wie lange das Protokoll sie behält.

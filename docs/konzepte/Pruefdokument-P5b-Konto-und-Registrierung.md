@@ -10,7 +10,7 @@ abgehakt ist, und wird dann gelöscht (`CLAUDE.md` 7).
 | Paket | Stand | Version |
 |---|---|---|
 | Vorarbeit | erledigt — P5a-Merge, Prüfstand, F4 | 20.15.3 |
-| **AP1** Protokoll-Schreibweg und Einstellungen | **erledigt** | **20.16.0** |
+| **AP1** Protokoll-Schreibweg und Einstellungen | **erledigt** | **20.16.5** |
 | **AP2** Lebenszyklus-Bibliothek | **erledigt** | **20.17.0** |
 | **AP3** Registrierung | **erledigt** | **20.22.0** |
 | **AP4** Einwilligungen | **erledigt** | **20.19.0** |

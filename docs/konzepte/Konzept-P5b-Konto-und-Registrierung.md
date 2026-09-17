@@ -29,7 +29,7 @@ Mockups in `konzept-p5b/mockups/`.
 >
 > | Paket | Stand | Version | Commit | Abnahmezahlen |
 > |---|---|---|---|---|
-> | AP1 — Protokoll-Schreibweg, Einstellungen | **erledigt** | Web 20.16.0 | `b9046ed` | Bereinigung 3 von 3 Fristfällen richtig; Fehlfall V7 in allen drei Stufen belegt; Bilderlauf 16 Bilder 0/0/0. **Der `app_state`-Teil entfiel** — `app_state_lesen()`/`_setzen()` stehen seit Web 20.7.0 in `db.php` |
+> | AP1 — Protokoll-Schreibweg, Einstellungen | **erledigt** | Web 20.16.5 | `b9046ed` | Bereinigung 3 von 3 Fristfällen richtig; Fehlfall V7 in allen drei Stufen belegt; Bilderlauf 16 Bilder 0/0/0. **Der `app_state`-Teil entfiel** — `app_state_lesen()`/`_setzen()` stehen seit Web 20.7.0 in `db.php` |
 > | AP2 — Lebenszyklus-Bibliothek | **erledigt** | Web 20.17.0 | `442dbcb` | Übergangstabelle statt Verzweigungen, 6 von 6 Übergängen wie festgelegt; `INSERT INTO password_resets` **4 Dateien → 2 Treffer in einer**; `ingest.php` 200/403 je Status; Ratenschutz zählt die Absage **0**mal. Backlog Nr. 202 Paket 1 mit erledigt |
 > | AP3 — Registrierung | **erledigt** | Web 20.22.0 | `93f0d6f` | Honeypot, Mindestausfülldauer 4 s, drei Rätsel-Töpfe; Wegwerfliste **8 von 8** Anbietern, **0 von 10** echten Domains; immer dieselbe Antwort. **20.22.1** berichtigte den Wortlaut der Häkchen, **20.22.2** hält sie fest (Nr. 223) |
 > | AP4 — Einwilligungen | **erledigt** | Web 20.19.0 | `edc3040` | 6 von 6 Fällen, darunter **zweite Fassung am selben Tag sperrt erneut** (Fehlerfund F3 des Konzepts); drei Wege bleiben am Tor offen, im Browser durchgeklickt; Ingestprobe bei leerer `konto_einwilligungen` **83 Erwartungen, 0 nicht erfüllt** |
@@ -74,7 +74,7 @@ Mockups in `konzept-p5b/mockups/`.
 > | Fund | Was | Nummer | Behoben in |
 > |---|---|---|---|
 > | F4 | P5a/AP4 hatte die Anwendung **uninstallierbar** gemacht (`install.php` → HTTP 500) | Nr. 215 | Web 20.15.3 |
-> | — | `frame-ancestors` stand in einer Report-Only-Richtlinie und war dort wirkungslos — **16 Konsolenfehler bei 16 Bildern** in WebKit | Nr. 216 | Web 20.16.0 |
+> | — | `frame-ancestors` stand in einer Report-Only-Richtlinie und war dort wirkungslos — **16 Konsolenfehler bei 16 Bildern** in WebKit | Nr. 216 | Web 20.16.5 |
 > | F5 | **Backlog Nr. 48 falsch gelesen** — als Aufbewahrungsfrist für Einsätze statt als Zahl der Sicherungspakete; berichtigt, bevor es ausgeliefert wurde | — | vor Web 20.21.0 |
 > | F6 | Die Profilseite brach aus ihrem Seitengerüst aus — vier Karten über die volle Fensterbreite, **zehn Tage lang**, und der Bilderlauf meldete in allen drei Engines drei Nullen | Nr. 217 | Web 20.21.1 |
 > | F7 | Ein Meldungskasten trug den Ton `meldung-blau`, den es nicht gibt — weißer Kasten ohne Symbol | Nr. 218 | Web 20.21.1 |

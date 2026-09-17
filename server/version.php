@@ -5583,8 +5583,31 @@ declare(strict_types=1);
  * KEINE MIGRATION.
  */
 /* ---------------------------------------------------------------------------
- * 20.16.0 — DAS BETRIEBSPROTOKOLL BEKOMMT EINEN SCHREIBWEG (P5b/AP1)
+ * 20.16.5 — DAS BETRIEBSPROTOKOLL BEKOMMT EINEN SCHREIBWEG (P5b/AP1)
  * ---------------------------------------------------------------------------
+ *
+ * EINE KORREKTURNUMMER FUER EINE NEUE FUNKTION, und das ist eine Abweichung
+ * von der Zaehlweise, die begruendet gehoert.
+ *
+ * Dieses Paket hiess auf seinem Zweig **20.16.0** — geschrieben am
+ * 16.09.2026. Am 17.09.2026 vergab `main` dieselbe Nummer fuer etwas
+ * anderes: die Job-Pause ueber die Adresse (Backlog Nr. 219), und darauf
+ * folgten dort 20.16.1 bis 20.16.4. Zwei Erzaehlungen unter derselben
+ * Nummer gibt es nicht; `main` ist vorgelagert, also weicht der Zweig.
+ *
+ * GEWAEHLT WURDE DIE KLEINE VERSCHIEBUNG: nur dieses Paket rutscht, von
+ * 20.16.0 auf 20.16.5 — 21 Nennungen in 9 Dateien. Die Alternative waere
+ * gewesen, die ganze Kette P5b um eine Nebennummer hochzusetzen (AP1 auf
+ * 20.17.0 bis AP9 auf 20.25.0); das waere nach der Zaehlweise sauberer und
+ * haette rund 267 Nennungen angefasst, quer durch Changelog, Technik,
+ * Handbuch, Konzept, Pruefdokument und Rahmenplan. Der Auftraggeber hat am
+ * 17.09.2026 die kleine Verschiebung gewaehlt.
+ *
+ * WAS DAS KOSTET, steht hier, damit es niemand fuer einen Fluechtigkeitsfehler
+ * haelt: Die dritte Stelle heisst sonst „Fehlerbehebung und Feinschliff".
+ * Dieses Paket legt eine Tabelle an und baut einen Schreibweg — es ist eine
+ * Nebenversion, die eine Korrekturnummer traegt. Wer die Erzaehlung dieser
+ * Datei liest, findet unter 20.16.5 mehr, als die Nummer verspricht.
  *
  * Erstes Paket der Phase P5b (Konto und Registrierung). Es baut nichts, was
  * eine Nutzerin sieht — es baut das, worauf die neun folgenden Pakete
@@ -5696,7 +5719,7 @@ declare(strict_types=1);
  * waere ein NEUER Baustein und braeuchte eine Freigabe mit Mockup
  * (Design.md 9).
  *
- * KEINE MIGRATION — die Einstellung steht seit 20.16.0 in `app_state`.
+ * KEINE MIGRATION — die Einstellung steht seit 20.16.5 in `app_state`.
  */
 /* ---------------------------------------------------------------------------
  * 20.19.0 — EINWILLIGUNGEN (P5b/AP4, E-P5b-05, -15)

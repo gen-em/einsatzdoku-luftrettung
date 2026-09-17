@@ -8,7 +8,7 @@ declare(strict_types=1);
  * ---------------------------------------------------------------------------
  *
  * Ein Konto entsteht an vier Stellen und ein Token an vier Stellen, und bis
- * Web 20.16.0 brachte jede ihren eigenen Code mit:
+ * Web 20.16.5 brachte jede ihren eigenen Code mit:
  *
  *   admin_users.php    Konto + Kontokennung + 24-h-Setz-Token, in EINER
  *                      Transaktion (seit E17, mit dem Kommentar zum „halben

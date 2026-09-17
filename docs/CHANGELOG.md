@@ -647,7 +647,7 @@ auf, ein falscher Zweig nicht.
 
 ### Neu
 
-Die Einstellung stand seit Web 20.16.0 in der Karte „Konten"; jetzt wirkt sie.
+Die Einstellung stand seit Web 20.16.5 in der Karte „Konten"; jetzt wirkt sie.
 Ist sie aus, wird die Demo-Adresse bei der Anmeldung **wie eine unbekannte
 Adresse** behandelt — dieselbe Meldung, dieselbe Antwortdauer, auch beim
 richtigen Passwort.
@@ -751,7 +751,7 @@ vermieden statt hinterher behoben.
 
 **Migration** `2026_09_16_konto_lebenszyklus`. **`update.php` ist fällig.**
 
-## [Web 20.16.0] — 2026-09-16
+## [Web 20.16.5] — 2026-09-16
 
 **Das Betriebsprotokoll bekommt einen Schreibweg** (P5b/AP1, V1, E-P5b-06,
 -12, -14).
