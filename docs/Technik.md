@@ -7864,8 +7864,8 @@ Knopfhöhen), und **nur bei Tag-Läufen** der Messstand. Alle drei brauchen ein
 ausdrücklich übersprungen und gemeldet.
 
 **Die Kreisläufe brauchen seit Web 20.16.0 zusätzlich `JOBS_TOKEN`** in der
-Umgebung `staging` (Backlog Nr. 219). Sie halten die Hintergrundjobs an,
-bevor sie ein Backup in ein frisches Konto spielen — sonst dünnt der
+Umgebung `staging` (Backlog Nr. 219). Sie halten die Hintergrundjobs an, bevor
+sie ein Backup in ein frisches Konto spielen — sonst dünnt der
 Verdichtungsjob die wiederhergestellten Spuren aus, und der Vergleich misst
 „hat der Job dazwischen zugeschlagen" statt „kommt zurück, was hineinging"
 (gemessen: 125 verdichtete Spuren in einem Lauf ohne Pause). Das ging bis
@@ -7874,12 +7874,39 @@ Installation; hier läuft ein Läufer gegen ein fernes Staging. **Fehlt das
 Token, wird übersprungen und gesagt** — nicht still auf den lokalen Weg
 zurückgefallen, der hier ohnehin an der fehlenden `config.php` scheitert.
 
+**Der Bilderlauf braucht es seit Web 20.16.2 ebenfalls** (Backlog Nr. 220),
+aber für etwas anderes und mit einem anderen Verhalten. Zwei der fünfzig
+Seiten tragen `"wartung": true` in `seiten.json` — `07-wartungsseite` und
+`46a-betrieb-updates-wartung` —, und `aufnehmen.mjs` schaltete den
+Wartungsmodus über die **lokale** Datei `server/wartung.lock`, was gegen ein
+fernes Staging wirkungslos ist.
+
+**Hier wird NICHT übersprungen, sondern ausgefallen**, und der Unterschied ist
+Absicht: Bei den Kreisläufen hängt die ganze Messung am Token, beim
+Bilderlauf nur **zwei von fünfzig** Seiten. Der Lauf misst deshalb die
+übrigen achtundvierzig, lässt die zwei ausfallen, nennt sie beim Namen — und
+endet **rot**, weil eine ausgefallene Aufnahme in den Rückgabewert geht.
+Gesagt wird es zusätzlich **vor** den zwölf Minuten Laufzeit. Dasselbe gilt,
+wenn das Token falsch ist oder die Leitung im Lauf abreißt: Der Grund steht
+dann bei der Seite, und der Rest des Laufs bleibt erhalten.
+
+**Und wenn das Ausschalten misslingt, ist der Lauf rot** — auch dann, wenn
+sonst nichts zu beanstanden war. Eine Installation, die nach einem Bilderlauf
+im Wartungsmodus stehenbliebe, wäre ein stiller Ausfall; der Lauf versucht es
+nach jeder folgenden Seite erneut und sagt es am Ende ausdrücklich.
+
 **Der erste Schritt unterscheidet seit Nr. 214 zwei Fälle.** Landet der
 Aufruf auf `install.php`, fragt er diese Datei zusätzlich ab: Kommt **404**,
 liegt es nicht am `FTP_ZIELPFAD`, sondern daran, dass `install.php` seither
 in der Ausnahmeliste steht und bewusst nicht ausgeliefert wird — die Meldung
 sagt dann, die Datei einmal von Hand hochzuladen. Ohne diese Unterscheidung
 suchte man den Fehler im falschen Ort.
+
+**Der Bericht des Bilderlaufs steht seit Web 20.16.2 in der Zusammenfassung
+des Laufs.** Er trägt je Seite die Spalte **`Verursacher`** — das Element, das
+überläuft. Bis dahin wurde er mit dem Arbeitsverzeichnis des Läufers
+weggeräumt, und ein „Überlauf bei 360" blieb ein Befund ohne Adresse: Örtlich
+ließ sich nur noch ausschließen, was es **nicht** ist (Backlog Nr. 221).
 
 **Dazu seit Web 20.15.1 ein vierter Schritt: „Punktdateien gesperrt,
 .well-known offen?"** (Nr. 213). Er braucht **kein** Prüfkonto — nur

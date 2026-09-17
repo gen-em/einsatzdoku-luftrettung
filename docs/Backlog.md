@@ -48,9 +48,10 @@ Durchsicht vom 16.09.2026** (Zustandsdatei der Kette im Webroot;
 `install.php` in der Auslieferung), **215 und 216 aus der unabhängigen
 Durchsicht des P5a-Abschlusses** (16.09.2026, nach dem Merge), **217 und 218
 aus der Durchsicht der Werkzeugaufrufe** (17.09.2026), **219 aus dem ersten
-Auslieferungslauf nach dem Merge von PR #51** (17.09.2026). Jeder weitere
-Zweig, der Nummern vergibt, beginnt bei **220** und trägt seine Spanne hier
-ein, bevor er pusht.
+Auslieferungslauf nach dem Merge von PR #51** und **220 und 221 aus dem
+ersten Bilderlauf gegen Staging mit Demo-Konto** (beide 17.09.2026). Jeder
+weitere Zweig, der Nummern vergibt, beginnt bei **222** und trägt seine
+Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
@@ -2344,6 +2345,59 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Markdown-Darstellungen eine doppelte Linie, in anderen eine Überschrift.
     Beim Abhaken der Prüfliste mit wegräumen, nicht dafür eigens anfassen — das
     Dokument verschwindet ohnehin, sobald seine 33 Punkte abgehakt sind.
+
+
+221. **Waagerechter Überlauf auf der Datenschutzseite bei 360 px.**
+    *Aufgenommen 17.09.2026 aus demselben Lauf.*
+
+    ```
+    05-datenschutz    Überlauf bei 360
+    ```
+
+    Eine Seite, eine Breite, in einem Lauf über 50 Seiten und acht Breiten —
+    die übrigen 49 sind ohne Befund. 360 px ist die schmalste gemessene
+    Breite und damit das kleine Telefon.
+
+    **Noch nicht eingegrenzt:** Welches Element überläuft, steht nicht im
+    Protokoll, sondern im Bericht des Laufs
+    (`tools/screenshots/ausgabe/bericht.md`), und der liegt auf dem Läufer.
+    Nachstellen lässt es sich örtlich mit
+    `node tools/screenshots/aufnehmen.mjs --nur 05-datenschutz` gegen eine
+    lokale Installation. Verdacht ohne Beleg: ein langer Rechtstext ohne
+    Umbruchmöglichkeit (Adresse, E-Mail, URL) oder eine Tabelle.
+
+    ### Nachtrag vom 17.09.2026 — was es NICHT ist
+
+    Örtlich nicht nachstellbar: `aufnehmen.mjs --nur 05-datenschutz` gegen
+    eine lokale Installation meldet **kein Überlauf**, bei Maßstab 1× wie 2×.
+    Ausgeschlossen, jeweils gemessen:
+
+    | geprüft | Ergebnis |
+    |---|---|
+    | Markup, das Staging ausliefert | **byteidentisch** mit dem örtlichen: 2104 B, dieselben 17 Klassen, Titel 36 Zeichen, längstes Wort 20 Zeichen, keine Tabelle, kein `<pre>` |
+    | `assets/style.css` auf Staging | **byteidentisch** mit dem Repositorium, 200 452 B |
+    | die 10 `.woff2` des Stylesheets | **alle vorhanden, alle byteidentisch** |
+    | Maßstab | weder 1× noch 2× läuft örtlich über |
+
+    Es liegt also **nicht** am Rechtstext (die Seite trägt auf beiden Seiten
+    nur 230 Textzeichen — den leeren Zustand), nicht am Markup, nicht an der
+    Gestaltung und nicht an den Schriften.
+
+    **Warum es hier endet:** `aufnehmen.mjs` meldet alle drei Rollen an, bevor
+    es das erste Bild macht — auch bei `--nur` auf einer Seite mit
+    `"rolle": "aus"`. Ohne die Staging-Zugangsdaten lässt sich der Lauf von
+    hier aus nicht gegen Staging fahren. *(Das ist nebenbei eine eigene
+    Ungeschicklichkeit des Werkzeugs, aber keine, die dieser Eintrag
+    mitbehebt.)*
+
+    **Was stattdessen geändert wurde:** Der Bericht des Laufs trägt eine
+    Spalte **`Verursacher`** — das Element, das überläuft. Sie wurde auf dem
+    Läufer mit dem Arbeitsverzeichnis weggeräumt. Ab Web 20.16.2 schreibt der
+    Kettenschritt `ausgabe/bericht.md` in die Zusammenfassung des Laufs. **Der
+    nächste rote Lauf beantwortet diesen Eintrag selbst.**
+
+    *Verbleibender Verdacht, ohne Beleg:* die Chromium-Fassung. Die Kette holt
+    `playwright@1.56` (Chromium 141), örtlich steht eine andere.
 
 ## Erledigt
 
@@ -7325,3 +7379,113 @@ zutreffen.
     tiefer:** Eine Probe, die ich selbst schreibe, prüfe ich mit einer
     Mutation — sonst weiß ich nicht, ob sie misst oder nur grün ist. Alle
     drei neuen Fälle sind jetzt so belegt.
+
+220. **`aufnehmen.mjs` schaltet den Wartungsmodus über eine LOKALE Datei — und
+    das ist der dritte Fall derselben Annahme.**
+    *Aufgenommen 17.09.2026 aus dem ersten Bilderlauf gegen Staging, der ein
+    Demo-Konto hatte.*
+
+    Der Lauf hat alle 50 Seiten fotografiert — 400 Einzelbilder, 50
+    Kontaktbögen, alle drei Rollen trugen. Rot wurde er unter anderem hier:
+
+    ```
+    07-wartungsseite    kein Überlauf  ·  8 Konsolenfehler
+    OHNE BILD: 8 Aufnahmen — 8× Seite leitete auf die Anmeldung um
+    ```
+
+    `seiten.json` führt diesen Eintrag mit `"wartung": true` und
+    `"status": 503`: Das Werkzeug soll den Wartungsmodus einschalten,
+    `index.php` in acht Breiten aufnehmen und ihn wieder ausschalten.
+    Eingeschaltet wird er in `aufnehmen.mjs:908` so:
+
+    ```js
+    const WARTUNGSDATEI = join(WURZEL, 'server', 'wartung.lock');
+    ```
+
+    Also durch **Anlegen einer Datei im eigenen Arbeitsbaum**. Auf einem
+    GitHub-Läufer entsteht damit eine Datei im Checkout; Staging bleibt
+    offen, `index.php` leitet den nicht angemeldeten Aufruf zur Anmeldung um,
+    und acht Aufnahmen bleiben ohne Bild.
+
+    **Das ist dieselbe Annahme wie in Nr. 219**, nur an einer anderen Stelle:
+    Ein Werkzeug nimmt an, `--basis` sei der Rechner, auf dem es läuft. Bei
+    `kreislauf.py` war es die Job-Pause, hier ist es der Wartungsschalter.
+    Beim dritten Mal ist es keine Einzelheit mehr, sondern ein Muster.
+
+    *Zu tun, und der Weg liegt schon da:* `tools/kette/tor.py` kann
+    `wartung-an` und `wartung-aus` über `jobs.php?aktion=…`, und seit Web
+    20.16.0 steht `JOBS_TOKEN` auch in der Umgebung `staging`. `aufnehmen.mjs`
+    bräuchte also nur ein `--jobs-token` und denselben Zweig wie
+    `kreislauf.py`: mit Token über HTTP, ohne Token weiter über die lokale
+    Datei. **Und einen Riegel:** Ist `--basis` nicht local und kein Token da,
+    darf der Eintrag nicht still als „umgeleitet" durchlaufen, sondern muss
+    sagen, dass er nicht gemessen werden konnte.
+
+    *Zu prüfen wäre dabei auch, ob es weitere solche Stellen gibt* — ein
+    Werkzeug, das gegen `--basis` misst und dabei in `server/` schreibt oder
+    liest, ist immer verdächtig.
+
+    ### Behoben am 17.09.2026 mit Web 20.16.2
+
+    **Zwei Wege, wie bei `kreislauf.py`:** mit `--jobs-token` über
+    `jobs.php?aktion=wartung_an`, gefahren von `tools/kette/tor.py`; ohne
+    Token weiter über die Datei. Wer örtlich misst, merkt nichts.
+
+    **Dazu ein Riegel:** Ist die Basis nicht diese Maschine und fehlt das
+    Token, bricht der Lauf **vorher** ab und nennt beide betroffenen Seiten.
+    Ohne ihn liefe er weiter und legte Bilder der Anmeldeseite ab.
+
+    **Es sind zwei Seiten, nicht eine** — das kam erst beim Beheben heraus,
+    weil der Riegel sie aufzählt: `07-wartungsseite` **und**
+    `46a-betrieb-updates-wartung`. Die zweite ist die unangenehmere: Ihre acht
+    Bilder entstehen, zeigen aber den Wartungsbalken nicht, und der Lauf
+    meldet dafür „kein Überlauf". Eine stille Fehlmessung fällt nicht auf;
+    acht fehlende Bilder schon.
+
+    *Gemessen, vorher und nachher:*
+
+    | | vorher (Kette, 17.09.) | nachher (örtlich, mit Token) |
+    |---|---|---|
+    | `07-wartungsseite` | **0 Bilder**, 8 Konsolenfehler, „leitete auf die Anmeldung um" | **8 Bilder**, 0 Konsolenfehler, RC 0 |
+
+    Dazu der Beleg auf HTTP-Ebene: `index.php` antwortet **ohne** Wartung mit
+    **302**, **mit** Wartung mit **503** — und 503 ist, was `seiten.json` für
+    diesen Eintrag erwartet. Der Rückfallweg ohne Token ist gegengeprüft (8
+    Bilder, `wartung.lock` sauber aufgeräumt), und nach dem Lauf steht die
+    Installation wieder offen (`zustand.wartung.aktiv = false`).
+
+    ### Nachtrag vom 17.09.2026 — was die Durchsicht an der Behebung fand
+
+    Zehn Befunde, jeder von einem zweiten Durchgang zu widerlegen versucht.
+    **Der erste wiegt schwerer als der Fehler, für den die Behebung
+    geschrieben war.**
+
+    **Ein misslungenes Ausschalten hätte Staging geschlossen — und der Lauf
+    hätte grün gemeldet.** Der `catch` setzte `wartungVonUns` auf falsch und
+    entwaffnete damit jeden weiteren Versuch: `wartungAus()` läuft nach jeder
+    Seite und noch einmal am Prozessende, beide kehrten danach sofort um. Der
+    Rückgabewert kannte den Fehlschlag nicht, der Bericht auch nicht. Der
+    Kommentar darüber versprach das Gegenteil („das muss auffallen"). Behoben:
+    Die Merkung bleibt stehen, und ein hängender Wartungsmodus färbt den Lauf
+    rot.
+
+    **Die Merkung stand hinter dem Einschalten.** Über eine Datei ist das
+    gleichgültig — `writeFileSync` schreibt oder wirft. Über HTTP gibt es
+    einen dritten Ausgang: ausgeführt, aber nicht bestätigt. Sie steht jetzt
+    davor.
+
+    **Der Abbruch bei fehlendem Token war die bequemere und schlechtere
+    Zeile.** Zwei von fünfzig Seiten hängen am Wartungsmodus; ein Abbruch
+    würfe achtundvierzig messbare weg. Jetzt fallen die zwei aus, mit Grund,
+    und der Lauf endet rot.
+
+    *Gegengeprüft gegen eine echte Installation:* mit gültigem Token 8 Bilder,
+    RC 0, Wartung danach aus; mit falschem Token 0 Bilder, RC 1, Grund bei der
+    Seite („Zustand nicht abfragbar … `error: token`"), Installation
+    unangetastet.
+
+    **Und zum zweiten Mal habe ich in `docs/Technik.md` einen Absatz
+    zerrissen**, indem ich neuen Text mitten hineinschob — diesmal las sich
+    „Sie halten die Hintergrundjobs an" als Aussage über den Bilderlauf. Beim
+    ersten Mal war es die Geheimnis-Tabelle (Nr. 219). *Merkposten für die
+    nächste Einfügung: erst den Absatz zu Ende lesen, dann einfügen.*

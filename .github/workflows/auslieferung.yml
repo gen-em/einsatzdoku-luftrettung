@@ -467,15 +467,57 @@ jobs:
           # braucht dort Adminrechte.
           #
           # DIE 29 DEMO-SEITEN laufen ueber die eingebauten Vorgaben
-          # (`demo@gen-em.org` / `nadokudemo0815`), die der Referenzdatensatz
-          # anlegt — Rahmenplan 6a **Schritt 8, und der steht noch offen**.
-          # Solange er offen ist, ist dieser Schritt rot, und zwar zu Recht:
-          # `seiten.json` fuehrt 29 Demo-, 15 Admin- und 6 anmeldungsfreie
-          # Seiten, und `aufnehmen.mjs` baut alle drei Rollen auf, bevor es
-          # das erste Bild macht.
+          # (`demo@gen-em.org` / `nadokudemo0815`). Das Konto kommt NICHT aus
+          # dem Einspiellauf, sondern aus der Fixture: Adminbereich ->
+          # Demo-Konto -> „Demo-Konto anlegen" (Rahmenplan 6a Schritt 8, seit
+          # 17.09.2026 erledigt). `seiten.json` fuehrt 29 Demo-, 15 Admin- und
+          # 6 anmeldungsfreie Seiten; `aufnehmen.mjs` baut alle drei Rollen
+          # auf, bevor es das erste Bild macht.
+          #
+          # ERSTE MESSUNG MIT DEMO-KONTO (17.09.2026): 400 Einzelbilder, 50
+          # Kontaktboegen — alle drei Rollen trugen. Rot blieb der Schritt aus
+          # zwei anderen Gruenden, und beide stehen im Backlog:
+          # Nr. 220 (`07-wartungsseite`: `aufnehmen.mjs` schaltet den
+          # Wartungsmodus ueber die LOKALE Datei `server/wartung.lock` — gegen
+          # ein fernes Staging wirkungslos) und Nr. 221 (waagerechter Ueberlauf
+          # auf `05-datenschutz` bei 360 px).
+          # `--jobs-token` FUER DIE WARTUNGSSEITE (Backlog Nr. 220). Zwei
+          # Eintraege in `seiten.json` tragen `"wartung": true` und brauchen
+          # die Installation im Wartungsmodus. `aufnehmen.mjs` schaltete ihn
+          # ueber die LOKALE Datei `server/wartung.lock` — auf einem Laeufer
+          # wirkungslos. Ohne Token bricht der Lauf jetzt VORHER ab, statt
+          # acht Bilder der Anmeldeseite abzulegen.
+          rc=0
           node tools/screenshots/aufnehmen.mjs \
                --basis "$STAGING_URL" \
-               --admin "$STAGING_KONTO" --admin-pw "$STAGING_PASS"
+               --admin "$STAGING_KONTO" --admin-pw "$STAGING_PASS" \
+               --jobs-token "$JOBS_TOKEN" || rc=$?
+
+          # DER BERICHT GEHOERT IN DIE ZUSAMMENFASSUNG, NICHT IN DEN MUELL.
+          #
+          # Der Lauf schreibt `ausgabe/bericht.md` mit einer Spalte
+          # VERURSACHER — dem Element, das ueberlaeuft. Auf dem Laeufer wird
+          # sie mit dem Arbeitsverzeichnis weggeraeumt. Am 17.09.2026 meldete
+          # der erste Durchlauf, der ALLE 50 Seiten erreichte — rot, aber
+          # vollstaendig — „Ueberlauf bei 360" auf
+          # `05-datenschutz`, und weil der Bericht fort war, liess sich
+          # oertlich nur noch ausschliessen, was es NICHT ist: Markup und
+          # Stylesheet sind byteidentisch mit dem Repositorium, alle zehn
+          # Schriftdateien liegen und stimmen, und oertlich laeuft nichts
+          # ueber — weder bei Massstab 1 noch 2 (Backlog Nr. 221).
+          #
+          # Eine Zahl ohne den Verursacher ist ein Befund, den niemand
+          # nachgehen kann. Ab jetzt steht er im Lauf.
+          if [ -f tools/screenshots/ausgabe/bericht.md ]; then
+            {
+              echo '<details><summary>Bilderlauf — Bericht</summary>'
+              echo
+              cat tools/screenshots/ausgabe/bericht.md
+              echo
+              echo '</details>'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$rc"
 
       # DER MESSSTAND STAND HIER UND KONNTE NIE LAUFEN (Backlog Nr. 206,
       # behoben in P5a/AP9, E-P5a-53).

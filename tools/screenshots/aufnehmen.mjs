@@ -49,6 +49,7 @@
  * sie als `vorher`-Schritte führt.
  */
 import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -87,6 +88,10 @@ const FINGER = flag('--finger');
 const FILTER = (wert('--nur', '') || '').split(',').filter(Boolean);
 const MOTOR  = motorWahl(argv);
 
+/* Fuer den Wartungsmodus einer FERNEN Installation — siehe den Block bei
+ * `wartungAn()`. Ohne Token bleibt es beim lokalen Weg. */
+const JOBS_TOKEN = wert('--jobs-token', '');
+
 /* UNBEKANNTE SCHALTER SIND EIN FEHLER, KEIN SCHWEIGEN (16.09.2026).
  *
  * `wert()` sucht sich seine Kennzeichnung aus argv und laesst alles andere
@@ -102,9 +107,9 @@ const MOTOR  = motorWahl(argv);
  * Liste, weil motorWahl() sie aus demselben argv liest. */
 const BEKANNT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
                          '--klein', '--finger', '--nur', '--risiko', '--selbstprobe',
-                         '--motor']);
+                         '--motor', '--jobs-token']);
 const MIT_WERT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
-                          '--nur', '--motor']);
+                          '--nur', '--motor', '--jobs-token']);
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
   if (!a.startsWith('--')) continue;
@@ -182,6 +187,35 @@ const liste = (() => {
   }
   return gewaehlt;
 })();
+
+/* DER RIEGEL GEGEN EIN STILLES DURCHLAUFEN (Backlog Nr. 220).
+ *
+ * Ein Eintrag mit `"wartung": true` braucht gegen eine FERNE Installation ein
+ * `--jobs-token` — die lokale Datei wirkt dort nicht. Ohne den Riegel liefe
+ * der Lauf weiter und legte acht Bilder der ANMELDESEITE ab, mit acht
+ * Konsolenfehlern; genau so ist es am 17.09.2026 passiert. Eine Zahl, die
+ * dabei entsteht, misst nicht die Wartungsseite, sondern das Misslingen.
+ *
+ * Geprueft wird die GEFILTERTE Liste: `--nur 05-datenschutz` gegen ein fernes
+ * Staging braucht kein Token, weil dort kein solcher Eintrag steht. */
+const OERTLICH = /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])([:/]|$)/i.test(BASIS);
+const WARTUNGSEITEN = liste.filter(s => s.wartung).map(s => s.name);
+/* NICHT ABBRECHEN, SONDERN DIESE SEITEN AUSFALLEN LASSEN. Ein Abbruch waere
+ * die bequemere Zeile und die schlechtere: Von fuenfzig Seiten haengen zwei am
+ * Wartungsmodus, und die anderen achtundvierzig sind messbar. Der Lauf misst
+ * also, was er messen kann, nennt die zwei beim Namen und wird am Ende
+ * trotzdem ROT — `ausgefallen` geht in den Rueckgabewert. Gesagt wird es
+ * ausserdem hier, VOR den zwoelf Minuten Laufzeit. */
+const OHNE_WARTUNGSWEG = (WARTUNGSEITEN.length && !OERTLICH && !JOBS_TOKEN)
+  ? `kein Weg zum Wartungsmodus auf ${BASIS} — --jobs-token fehlt (Nr. 220)`
+  : null;
+if (OHNE_WARTUNGSWEG) {
+  console.error(`WARNUNG: ${WARTUNGSEITEN.join(', ')} brauchen den `
+    + `Wartungsmodus, und ${BASIS} liegt nicht auf diesem Rechner — die Datei `
+    + `server/wartung.lock wirkt dort nicht. Diese Seiten FALLEN AUS; der `
+    + `Lauf misst die uebrigen und endet rot. Mit --jobs-token <Token> `
+    + `(Betrieb → Hintergrundjobs) werden sie gemessen.`);
+}
 
 /* WAS NICHT ALS KONSOLENFEHLER ZAEHLT — und warum die Unterscheidung noetig
  * ist: Ein Bericht, der jede rote Zeile meldet, wird nach zwei Laeufen
@@ -891,8 +925,31 @@ const ausgefallen = [];
  *
  * KEIN BEDIENSCHRITT IM BROWSER, deshalb nicht in vorher(): Die Wartungsseite
  * entsteht nicht dadurch, dass jemand etwas klickt, sondern dadurch, dass eine
- * DATEI auf dem Server liegt. Der Bilderlauf laeuft auf derselben Maschine
- * wie die Installation und legt sie deshalb selbst an.
+ * DATEI auf dem Server liegt.
+ *
+ * DER SATZ, DER HIER STAND, WAR EINE ANNAHME — UND SIE IST GEPLATZT.
+ * „Der Bilderlauf laeuft auf derselben Maschine wie die Installation und legt
+ * sie deshalb selbst an." Das stimmte, solange von Hand gemessen wurde. Seit
+ * Stufe 2 der Auslieferungskette laeuft der Lauf auf einem GitHub-Laeufer
+ * gegen ein fernes Staging: Die Datei entsteht dann im CHECKOUT, Staging
+ * bleibt offen, `index.php` leitet den nicht angemeldeten Aufruf zur Anmeldung
+ * um — acht Aufnahmen ohne Bild und acht Konsolenfehler, gemessen am
+ * 17.09.2026 (Backlog Nr. 220).
+ *
+ * ES IST DER DRITTE FALL DERSELBEN ANNAHME. `kreislauf.py` hielt die Jobs
+ * ueber die lokale Kommandozeile an (Nr. 219), `demo_kennzeichnen.php`
+ * braucht `db()` auf dem Server — und hier der Wartungsschalter. Wer ein
+ * Werkzeug gegen `--basis` misst und dabei in `server/` schreibt, baut diese
+ * Annahme ein, ohne sie hinzuschreiben.
+ *
+ * ZWEI WEGE, und welcher passt, haengt an `--jobs-token`:
+ *
+ *   MIT TOKEN ueber `jobs.php?aktion=wartung_an`, gefahren von
+ *   `tools/kette/tor.py` — dem einen Client dieser Schnittstelle. Derselbe
+ *   Weg, den `kreislauf.py` seit Web 20.16.0 fuer die Job-Pause geht.
+ *
+ *   OHNE TOKEN ueber die Datei, wie bisher. Wer auf seinem Rechner misst,
+ *   merkt von der Aenderung nichts.
  *
  * Ein Eintrag mit "wartung": true schaltet vor seinen acht Breiten ein und
  * danach wieder aus. Zusaetzlich haengt das Ausschalten am Prozessende:
@@ -906,15 +963,80 @@ const ausgefallen = [];
  * nicht — sonst oeffnete ein Bilderlauf eine Installation, die jemand
  * ausdruecklich geschlossen hat. */
 const WARTUNGSDATEI = join(WURZEL, 'server', 'wartung.lock');
+const TOR = join(WURZEL, 'tools', 'kette', 'tor.py');
 let wartungVonUns = false;
+
+/* Ein Aufruf an tor.py, synchron. SYNCHRON IST PFLICHT, nicht Geschmack:
+ * `wartungAus()` haengt an `process.on('exit')`, und dort laeuft nichts
+ * Asynchrones mehr. */
+function tor(befehl) {
+  const e = spawnSync('python3', [TOR, befehl, '--basis', BASIS,
+                                  '--token', JOBS_TOKEN], { encoding: 'utf8' });
+  if (e.status !== 0) {
+    const grund = (e.stderr || e.stdout || `Rückgabewert ${e.status}`).trim();
+    throw new Error(`tor.py ${befehl} gegen ${BASIS} fehlgeschlagen: ${grund}`);
+  }
+  try { return JSON.parse(e.stdout); } catch { return {}; }
+}
+
+/* Das Ausschalten ist MISSLUNGEN und die Anlage steht noch zu. Geht in den
+ * Rueckgabewert und in den Bericht — siehe den Block darueber. */
+let wartungHaengt = false;
+
+/* Gibt bei Erfolg null zurueck, sonst den GRUND als Text. Wirft NICHT:
+ * Ein Schluckauf der Leitung darf nicht den ganzen Lauf wegwerfen, samt
+ * Bericht ueber die 48 Seiten, die gelungen sind. Die Aufnahme, die daran
+ * haengt, faellt aus — und das ist etwas, das gezaehlt wird. */
 function wartungAn() {
-  if (existsSync(WARTUNGSDATEI)) { return; }   // fremde Wartung nicht anfassen
-  writeFileSync(WARTUNGSDATEI, JSON.stringify({
-    seit: new Date().toISOString().replace(/\.\d+Z$/, 'Z'), von: 'Bilderlauf' }) + '\n');
+  if (JOBS_TOKEN) {
+    let zustand;
+    try { zustand = tor('zustand'); }
+    catch (ex) { return `Zustand nicht abfragbar: ${ex.message}`; }
+    /* Fremde Wartung nicht anfassen — dieselbe Regel wie unten, nur ueber die
+     * Leitung gefragt statt am Dateisystem. */
+    if (zustand?.wartung?.aktiv) { return null; }
+
+    /* DIE FLAGGE STEHT VOR DEM AUFRUF, und das ist der Unterschied zwischen
+     * einer Datei und einer Leitung: `writeFileSync` schreibt oder wirft.
+     * Ein HTTP-Aufruf hat einen DRITTEN Ausgang — ausgefuehrt, aber nicht
+     * bestaetigt. Bliebe die Flagge dann falsch, schaltete niemand mehr aus,
+     * und die Anlage stuende zu, weil eine Antwort verlorenging. */
+    wartungVonUns = true;
+    try { tor('wartung-an'); }
+    catch (ex) { return `Wartungsmodus nicht einschaltbar: ${ex.message}`; }
+    return null;
+  }
+  if (existsSync(WARTUNGSDATEI)) { return null; }   // fremde Wartung nicht anfassen
   wartungVonUns = true;
+  try {
+    writeFileSync(WARTUNGSDATEI, JSON.stringify({
+      seit: new Date().toISOString().replace(/\.\d+Z$/, 'Z'), von: 'Bilderlauf' }) + '\n');
+  } catch (ex) { return `wartung.lock nicht schreibbar: ${ex.message}`; }
+  return null;
 }
 function wartungAus() {
   if (!wartungVonUns) { return; }
+  if (JOBS_TOKEN) {
+    /* IM AUSSCHALTEN WIRD NICHT GEWORFEN. Diese Funktion haengt an
+     * `process.on('exit')`; eine Ausnahme dort verdeckt den eigentlichen
+     * Grund des Abbruchs.
+     *
+     * UND DIE FLAGGE BLEIBT STEHEN. Sie hier zurueckzusetzen hiesse, jeden
+     * weiteren Versuch zu entwaffnen: `wartungAus()` laeuft nach JEDEM
+     * Eintrag und noch einmal am Prozessende. Ein einmaliger Schluckauf des
+     * Servers heilt sich so von selbst; ohne das Stehenbleiben bliebe die
+     * Anlage zu, und der Lauf meldete trotzdem gruen. */
+    try { tor('wartung-aus'); } catch (ex) {
+      wartungHaengt = true;
+      console.error(`ACHTUNG: Der Wartungsmodus auf ${BASIS} liess sich NICHT `
+                    + `ausschalten (${ex.message}). Die Installation ist noch `
+                    + `geschlossen — von Hand nachsehen: Betrieb → Updates.`);
+      return;                      // Flagge bleibt: der naechste Versuch kommt
+    }
+    wartungHaengt = false;
+    wartungVonUns = false;
+    return;
+  }
   if (existsSync(WARTUNGSDATEI)) { rmSync(WARTUNGSDATEI); }
   wartungVonUns = false;
 }
@@ -946,7 +1068,19 @@ for (const eintrag of liste) {
   const zeile = { name: eintrag.name, gruppe: eintrag.gruppe, pfad, breiten: [] };
   const bilder = [];
 
-  if (eintrag.wartung) { wartungAn(); }
+  if (eintrag.wartung) {
+    /* Ein Fehlschlag hier ist eine NICHT GEMESSENE Seite, kein Abbruch des
+     * Laufs: Die uebrigen 48 sind gemessen, und der Bericht soll sie nennen.
+     * `ausgefallen` geht in den Bericht UND in den Rueckgabewert. */
+    const grund = OHNE_WARTUNGSWEG || wartungAn();
+    if (grund) {
+      for (const { b } of BREITEN) {
+        ausgefallen.push({ was: `${eintrag.name} @ ${b}`, grund });
+      }
+      console.log(`${eintrag.name.padEnd(34)} OHNE BILD — ${grund}`);
+      continue;
+    }
+  }
 
   for (const { b, h, art } of BREITEN) {
     let adresse = `${BASIS}/${pfad}`;
@@ -1232,5 +1366,10 @@ console.log(`Bericht: ${join(AUSGABE, 'bericht.md')}`);
 await browser.close();
 /* Eine ausgefallene Aufnahme ist ein Fehlschlag: Der Lauf hat seine Frage
    nicht beantwortet. */
+if (wartungHaengt) {
+  console.error(`ACHTUNG: ${BASIS} steht noch im Wartungsmodus — das `
+    + `Ausschalten ist misslungen. Von Hand: Betrieb → Updates.`);
+}
 process.exit(gesamtUeberlauf === 0 && gesamtKonsole === 0
-             && bericht.knopf.length === 0 && ausgefallen.length === 0 ? 0 : 1);
+             && bericht.knopf.length === 0 && ausgefallen.length === 0
+             && !wartungHaengt ? 0 : 1);

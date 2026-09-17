@@ -85,6 +85,53 @@ Phase.
 > Schriften, Textrasterung, Systemintegration. Für „läuft das in Safari" ist
 > es ein starkes Indiz, kein Beweis.
 
+## Der Wartungsmodus — und wo er herkommt
+
+Zwei Einträge in `seiten.json` tragen `"wartung": true` und brauchen die
+Installation im Wartungsmodus: `07-wartungsseite` (erwartet **503**) und
+`46a-betrieb-updates-wartung` (der Balken im Adminbereich).
+
+**Den Weg entscheidet das Token, nicht der Ort** — der Ort entscheidet nur,
+ob das Fehlen des Tokens ein Problem ist:
+
+| `--jobs-token` | Weg |
+|---|---|
+| **gesetzt** | `jobs.php?aktion=wartung_an`, gefahren von `tools/kette/tor.py` — gleich, wo die Installation steht |
+| **nicht gesetzt** | die Datei `server/wartung.lock`, wie seit jeher |
+
+Liegt die Installation **nicht auf diesem Rechner** und fehlt das Token, wirkt
+die Datei dort nicht. Dann fallen diese beiden Seiten **aus**: Der Lauf sagt
+es vorweg, misst die übrigen achtundvierzig, nennt die zwei beim Namen und
+endet **rot** — eine ausgefallene Aufnahme geht in den Rückgabewert.
+
+**Warum Ausfallen und kein Abbruch.** Zwei von fünfzig Seiten hängen am
+Wartungsmodus; die anderen achtundvierzig sind messbar, und ein Abbruch würfe
+sie weg. Dasselbe gilt, wenn das Token falsch ist oder die Leitung im Lauf
+abreißt — der Grund steht dann bei der Seite.
+
+**Was ohne Wartungsmodus passiert wäre.** `index.php` antwortet dann mit
+**302** zur Anmeldung statt mit 503, und der Lauf legte acht Bilder der
+Anmeldeseite ab. Bei `07-wartungsseite` fiel das auf, weil die Bilder
+ausblieben; bei `46a` **nicht** — dort entstehen acht Bilder ohne
+Wartungsbalken, und der Lauf meldet „kein Überlauf". Eine stille Fehlmessung
+ist schlimmer als eine laute (Backlog Nr. 220, gemessen am 17.09.2026).
+
+**Und wenn das Ausschalten misslingt, ist der Lauf rot** — auch bei sonst
+sauberem Ergebnis. Die Merkung bleibt dabei stehen, damit es nach jeder
+folgenden Seite und am Prozessende noch einmal versucht wird; ein einmaliger
+Schluckauf heilt sich so von selbst. Eine Installation, die nach einem
+Bilderlauf geschlossen bleibt, darf nicht in einem grünen Lauf untergehen.
+
+**Eine fremde Wartung wird auf beiden Wegen nicht angefasst** — liegt sie
+schon an, rührt der Lauf sie nicht an und schaltet sie am Ende auch nicht ab.
+Der ferne Weg fragt dafür `aktion=zustand`.
+
+**Ein Unterschied, den man im Bild sieht:** Der Wartungsbalken nennt den
+Urheber. Über die Datei steht dort `Bilderlauf`, über die Leitung `kette` —
+`wartung_einschalten('kette')` ist die eine Stelle, die der Token-Weg kennt.
+Für die gemessenen Größen (Überlauf, Konsole, Knopfhöhen) ist das folgenlos;
+wer zwei Abzüge nebeneinanderlegt, sieht ein Wort Unterschied.
+
 ## Warum es sie gibt
 
 Ein Redesign, das „voll mobiltauglich auf allen Seiten" verspricht, muss das

@@ -5623,5 +5623,86 @@ declare(strict_types=1);
  * Absatz zerrissen.
  *
  * KEINE MIGRATION.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.16.2 — DER WARTUNGSSCHALTER DES BILDERLAUFS, DRITTER FALL DERSELBEN
+ *           ANNAHME
+ * ---------------------------------------------------------------------------
+ *
+ * Backlog Nr. 220. `aufnehmen.mjs` schaltete den Wartungsmodus durch Anlegen
+ * der Datei `server/wartung.lock` IM EIGENEN ARBEITSBAUM. Im Kopf der Stelle
+ * stand die Annahme sogar wortwoertlich: „Der Bilderlauf laeuft auf derselben
+ * Maschine wie die Installation und legt sie deshalb selbst an."
+ *
+ * Seit Stufe 2 der Kette stimmt das nicht mehr. Gemessen am 17.09.2026 gegen
+ * Staging: acht Aufnahmen ohne Bild, acht Konsolenfehler, „Seite leitete auf
+ * die Anmeldung um" — `index.php` antwortet ohne Wartung mit 302 statt 503.
+ *
+ * ES SIND ZWEI SEITEN, NICHT EINE, und die zweite ist die unangenehmere:
+ * `07-wartungsseite` faellt auf, weil ihre Bilder ausbleiben. Bei
+ * `46a-betrieb-updates-wartung` entstehen acht Bilder, die den Wartungsbalken
+ * NICHT zeigen — eine stille Fehlmessung, die „kein Ueberlauf" meldet.
+ *
+ * ZWEI WEGE, wie bei `kreislauf.py`: mit `--jobs-token` ueber
+ * `jobs.php?aktion=wartung_an` (gefahren von `tools/kette/tor.py`), ohne
+ * Token weiter ueber die Datei. Dazu ein RIEGEL: Ist die Basis nicht diese
+ * Maschine und fehlt das Token, bricht der Lauf ab, statt Bilder der
+ * Anmeldeseite abzulegen.
+ *
+ * KEIN SERVERCODE ANGEFASST. Die Nummer steigt trotzdem, weil dieselbe
+ * Ueberlegung wie bei 20.15.2 gilt: Hier aendert sich, was die Kette ueber
+ * die Anwendung AUSSAGEN kann — und der Changelog braucht eine Ueberschrift,
+ * unter der eine Betreiberin es findet.
+ *
+ * DAZU Nr. 221, NICHT BEHOBEN, SONDERN MESSBAR GEMACHT. Der Bilderlauf meldete
+ * „Ueberlauf bei 360" auf `05-datenschutz`. Oertlich nicht nachstellbar;
+ * ausgeschlossen wurde: Markup (die Seite ist byteidentisch, 2104 B),
+ * Stylesheet (200 452 B, identisch), alle zehn Schriftdateien (vorhanden,
+ * identisch), der Massstab (weder 1 noch 2 laeuft ueber). Der Bericht mit der
+ * Spalte VERURSACHER wurde auf dem Laeufer weggeraeumt — er steht jetzt in der
+ * Zusammenfassung des Laufs. Eine Zahl ohne Verursacher ist ein Befund, dem
+ * niemand nachgehen kann.
+ *
+ * KEINE MIGRATION.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.16.3 — DIE DURCHSICHT FAND EINEN SCHLIMMEREN FEHLER ALS DEN BEHOBENEN
+ * ---------------------------------------------------------------------------
+ *
+ * Zehn Befunde, jeder von einem zweiten Durchgang zu widerlegen versucht.
+ * Der erste wiegt schwerer als Nr. 220 selbst:
+ *
+ * EIN MISSLUNGENES AUSSCHALTEN HAETTE STAGING GESCHLOSSEN — UND DER LAUF
+ * HAETTE GRUEN GEMELDET. Der `catch` in `wartungAus()` setzte `wartungVonUns`
+ * auf falsch und entwaffnete damit JEDEN weiteren Versuch: Die Funktion
+ * laeuft nach jeder Seite und noch einmal am Prozessende, beide kehrten
+ * danach sofort um. Der Rueckgabewert kannte den Fehlschlag nicht, der
+ * Bericht auch nicht — der einzige Hinweis waere eine Zeile in einem
+ * Protokoll mit hunderten gewesen. Der Kommentar darueber versprach genau das
+ * Gegenteil („das muss auffallen"). Jetzt bleibt die Merkung stehen, der
+ * naechste Versuch kommt, und ein haengender Wartungsmodus faerbt den Lauf
+ * rot.
+ *
+ * UND DIE MERKUNG STAND HINTER DEM EINSCHALTEN. Ueber eine Datei ist das
+ * gleichgueltig — `writeFileSync` schreibt oder wirft. Ueber HTTP gibt es
+ * einen DRITTEN Ausgang: ausgefuehrt, aber nicht bestaetigt. Eine verlorene
+ * Antwort haette die Anlage geschlossen zurueckgelassen, ohne dass jemand
+ * ausschaltet. Sie steht jetzt VOR dem Aufruf.
+ *
+ * DAZU: Ein Schluckauf der Leitung warf den ganzen Lauf weg, samt Bericht
+ * ueber die 48 gelungenen Seiten. Der Wartungsschalter wirft nicht mehr; ein
+ * Fehlschlag laesst die betroffene Seite AUSFALLEN, und das geht in Bericht
+ * und Rueckgabewert. Aus demselben Grund bricht der Lauf bei fehlendem Token
+ * nicht mehr ab (Rueckgabewert 2), sondern misst die uebrigen und endet rot.
+ * Zwei von fuenfzig Seiten sind kein Grund, achtundvierzig wegzuwerfen.
+ *
+ * Dokumentation: `docs/Technik.md` 6.3 sagte fuer dasselbe fehlende Token
+ * zweierlei, und ein eingeschobener Absatz hatte den Satz ueber die
+ * Kreislaeufe zerrissen — zum zweiten Mal dieselbe Art Fehler. Die Wegtabelle
+ * in der LIESMICH war nach dem ORT geschluesselt, der Code entscheidet nach
+ * dem TOKEN. Und ein Kettenkommentar nannte einen roten Lauf „den ersten
+ * gruenen Durchlauf".
+ *
+ * KEINE MIGRATION.
  */
-const WEB_VERSION = '20.16.1';
+const WEB_VERSION = '20.16.3';
