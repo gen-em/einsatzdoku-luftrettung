@@ -78,6 +78,29 @@ permissions:
   contents: read
   actions: read
 
+# ALLE run-BLOECKE MIT `pipefail` (16.09.2026, gemessen).
+#
+# GitHub faehrt run-Bloecke mit `bash -e {0}` — OHNE pipefail. Der
+# Rueckgabewert einer Pipe ist damit der des LETZTEN Glieds, und ein
+# gescheitertes erstes Glied faellt lautlos durch. Im Schritt "Wortliste"
+# stand `python3 wortliste.py | tee /tmp/wortliste.txt`: `tee` gibt immer 0,
+# also konnte dieser Schritt NIE ROT WERDEN. Nachgemessen:
+# `bash -e -c 'python3 -c "import sys;sys.exit(1)" | tee /dev/null; echo $?'`
+# ergibt 0.
+#
+# Ein Pruefmittel, das nicht scheitern kann, ist kein Pruefmittel — es ist
+# eine gruene Zahl ohne Aussage. Deshalb hier, an EINER Stelle je Lauf, und
+# nicht als Flicken an der einen Pipe: Die naechste Pipe kommt bestimmt.
+#
+# GEMESSEN, WAS DADURCH ROT WIRD: von zehn Pipes in den drei Laeufen trifft
+# es genau eine — `grep -oE "WEB_VERSION..." | head -1` im Schritt
+# "Fassungen nennen". Die war ohnehin kaputt (das Muster verlangte ein Komma
+# hinter dem Namen, `version.php` schreibt `const WEB_VERSION = '…'`) und ist
+# im selben Zug berichtigt.
+defaults:
+  run:
+    shell: bash -eo pipefail {0}
+
 jobs:
   staging:
     name: staging
@@ -333,6 +356,17 @@ jobs:
             exit 0
           fi
           pip -q install cffi cryptography
+          # PLAYWRIGHT LIEGT NICHT DA, WO DIE WERKZEUGE ES SUCHEN.
+          # `aufnehmen.mjs` und `kreislauf.py` laden es ueber einen PFAD
+          # (`PLAYWRIGHT_MODUL`, Vorgabe /opt/node22/... — der Pfad der
+          # Arbeitsumgebung dieses Projekts). Auf einem Laeufer gibt es den
+          # nicht. `npx playwright install` holt nur die BROWSER, nicht das
+          # Modul an diesen Pfad. Also lokal installieren und den Pfad sagen.
+          npm install --no-save --silent playwright@1.56
+          export PLAYWRIGHT_MODUL="$PWD/node_modules/playwright/index.mjs"
+          [ -f "$PLAYWRIGHT_MODUL" ] \
+            || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
+          npx --yes playwright@1.56 install chromium
           # DREI FEHLER IN EINER ZEILE, gefunden beim ERSTEN Lauf dieses
           # Schritts am 16.09.2026 (er war in AP1 geschrieben und nie
           # gelaufen):
@@ -373,9 +407,39 @@ jobs:
             echo '**Bilderlauf: ÜBERSPRUNGEN** (kein Prüfkonto) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
+          # PLAYWRIGHT LIEGT NICHT DA, WO DIE WERKZEUGE ES SUCHEN.
+          # `aufnehmen.mjs` und `kreislauf.py` laden es ueber einen PFAD
+          # (`PLAYWRIGHT_MODUL`, Vorgabe /opt/node22/... — der Pfad der
+          # Arbeitsumgebung dieses Projekts). Auf einem Laeufer gibt es den
+          # nicht. `npx playwright install` holt nur die BROWSER, nicht das
+          # Modul an diesen Pfad. Also lokal installieren und den Pfad sagen.
+          npm install --no-save --silent playwright@1.56
+          export PLAYWRIGHT_MODUL="$PWD/node_modules/playwright/index.mjs"
+          [ -f "$PLAYWRIGHT_MODUL" ] \
+            || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
           npx --yes playwright@1.56 install chromium
+          # `--admin`/`--admin-pw` UND NICHT `--konto`/`--passwort`.
+          # Die beiden letzten gibt es in diesem Werkzeug nicht; es kannte bis
+          # zum 16.09.2026 keine Pruefung auf Unbekanntes und hat sie STILL
+          # verworfen — der Lauf meldete sich dann mit den eingebauten
+          # Vorgaben an und scheiterte mit "Anmeldung gescheitert", einer
+          # Meldung, die den Grund nicht nennt. `aufnehmen.mjs` bricht jetzt
+          # mit Rueckgabewert 2 ab, wenn ein Schalter unbekannt ist.
+          #
+          # `STAGING_KONTO` IST das Admin-Konto — derselbe Wert geht im
+          # Kreislauf-Schritt als `--admin-email` hinein, und `--frisch`
+          # braucht dort Adminrechte.
+          #
+          # DIE 29 DEMO-SEITEN laufen ueber die eingebauten Vorgaben
+          # (`demo@gen-em.org` / `nadokudemo0815`), die der Referenzdatensatz
+          # anlegt — Rahmenplan 6a **Schritt 8, und der steht noch offen**.
+          # Solange er offen ist, ist dieser Schritt rot, und zwar zu Recht:
+          # `seiten.json` fuehrt 29 Demo-, 15 Admin- und 6 anmeldungsfreie
+          # Seiten, und `aufnehmen.mjs` baut alle drei Rollen auf, bevor es
+          # das erste Bild macht.
           node tools/screenshots/aufnehmen.mjs \
-               --basis "$STAGING_URL" --konto "$STAGING_KONTO" --passwort "$STAGING_PASS"
+               --basis "$STAGING_URL" \
+               --admin "$STAGING_KONTO" --admin-pw "$STAGING_PASS"
 
       # DER MESSSTAND STAND HIER UND KONNTE NIE LAUFEN (Backlog Nr. 206,
       # behoben in P5a/AP9, E-P5a-53).
@@ -397,7 +461,18 @@ jobs:
       # (Betrieb → Status → Plattform, seit P5a/AP2) — einschließlich
       # `post_max_size`, der Zahl, um die es in Backlog Nr. 37 geht.
       - name: Messstand — wo seine Zahlen stehen
-        if: startsWith(github.ref, 'refs/tags/web-v')
+        # OHNE BEDINGUNG, und das ist die Berichtigung (16.09.2026).
+        #
+        # Hier stand `if: startsWith(github.ref, 'refs/tags/web-v')`. Damit
+        # konnte der Schritt in KEINEM Lauf laufen: Bei einem Tag wird
+        # `staging` uebersprungen (sein `if` schliesst Tags aus), `stufe2`
+        # haengt per `needs` daran und wird mit uebersprungen — die Bedingung
+        # waere zwar erfuellt, der Job laeuft aber nicht. Auf `main` laeuft
+        # `stufe2`, dort ist die Bedingung falsch. Zwei Wege, kein Treffer.
+        #
+        # Der Satz gehoert ohnehin in JEDEN Stufe-2-Lauf: Wer die
+        # Zusammenfassung liest, sucht den Messstand und soll erfahren, warum
+        # er nicht dabei ist — nicht nur an Tagen.
         run: |
           {
             echo '**Messstand: läuft nicht in der Kette** — er misst die Datenbank'

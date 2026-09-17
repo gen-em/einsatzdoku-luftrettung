@@ -138,7 +138,30 @@ SKRIPT_RE = re.compile(r'<script\b(?!' + TAG_REST + r'(?<![\w-])src\s*=)'
 # das, und die zweite Gegenpruefung fand, dass ein solcher Verweis weder als
 # Fremdskript noch als Inline-Block zaehlte -- er war unsichtbar.
 SRC_RE    = re.compile(r'<script\b[^>]*?(?<![\w-])src\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))', re.I | re.S)
-FORM_RE   = re.compile(r'<form\b[^>]*>', re.I)
+# FORM_RE HAT DIESELBE SCHWAECHE GEHABT WIE SKRIPT_RE — und sie wurde beim
+# Beheben von Fund 23 uebersehen (Fund 27, 16.09.2026). `<form\b[^>]*>` endet
+# am ersten `>`, und seit Web 20.10.0 (P5a/AP6) traegt das Anmeldeformular
+# `data-sperre-rest="<?= (int)$sperreRest ?>"`. Der Tag brach also mitten im
+# PHP-Ausdruck ab.
+#
+# DER SCHADEN WAR NICHT NUR EIN ZERSCHNITTENER TAG. Was uebrigblieb, enthielt
+# `<?=`, galt damit als UNBESTIMMT — und fuer jedes unbestimmte Stueck der
+# Quelle darf die Auslieferung eines haben, das die Quelle nicht kennt. Genau
+# in diesen Freiraum passte ein `action="https://boese.example/"` am
+# Anmeldeformular. **Die Wache hat den Fall, fuer den es sie gibt, nicht mehr
+# gesehen**; ihre eigene Selbstprobe meldete ihn als nicht erkannt.
+#
+# Die Umlenk-Pruefung weiter unten faengt ihn NICHT mit ab: Sie sieht
+# `formaction|formmethod|formtarget|formenctype`, nicht das `action` am
+# `<form>` selbst.
+FORM_RE   = re.compile(r'<form\b' + TAG_REST + r'>', re.I | re.S)
+# Ein Attributwert, der ein PHP-Stueck enthaelt, ist zur Pruefzeit unbekannt --
+# der Rest des Tags ist es aber NICHT. `form_paare()` unten setzt deshalb nur
+# diese einen Werte auf einen Platzhalter, auf BEIDEN Seiten, statt den ganzen
+# Tag abzuschreiben. Danach ist `action` wieder vergleichbar.
+ATTR_WERT   = r'(?:<\?(?:php\b|=).*?\?>|[^"])*'
+ATTR_RE     = re.compile(r'([\w-]+)\s*=\s*"(' + ATTR_WERT + r')"', re.I | re.S)
+PLATZHALTER = '\u00a7php\u00a7'
 # <base> lenkt jeden relativen Verweis der Seite um, die vier form*-Attribute
 # den Absendeweg des Formulars -- siehe Kopf der Datei. Das Umlenk-Attribut
 # wird samt Wert verglichen, gleich an welchem Tag es steht.
@@ -263,6 +286,33 @@ def tags(muster: re.Pattern, text: str) -> list[str]:
     return [re.sub(r'\s+', ' ', m.group(0)).strip() for m in muster.finditer(text)]
 
 
+def form_paare(quelle: str, geliefert: str) -> tuple[list[str], list[str]]:
+    """Formular-Tags beider Seiten, PHP-Attributwerte auf einen Platzhalter.
+
+    Ein `<form>`-Tag mit einem PHP-Ausdruck in EINEM Attribut ist nicht
+    insgesamt unbestimmt. Wer ihn so behandelt, oeffnet genau den Freiraum,
+    durch den ein fremdes `action=` kommt (Fund 27). Hier werden deshalb nur
+    die Attribute maskiert, deren Wert in der QUELLE PHP traegt -- und
+    dieselben Namen in der Auslieferung. Alles andere bleibt Wort fuer Wort
+    vergleichbar.
+    """
+    q = tags(FORM_RE, quelle)
+    g = tags(FORM_RE, geliefert)
+    namen = set()
+    for t in q:
+        for m in ATTR_RE.finditer(t):
+            if ist_php(m.group(2)):
+                namen.add(m.group(1).lower())
+
+    def maske(t: str) -> str:
+        for n in namen:
+            t = re.sub(r'(?<![\w-])' + re.escape(n) + r'\s*=\s*("' + ATTR_WERT + r'"|\'[^\']*\'|[^\s>]+)',
+                       n + '="' + PLATZHALTER + '"', t, flags=re.I | re.S)
+        return t
+
+    return [maske(t) for t in q], [maske(t) for t in g]
+
+
 def menge_vergleichen(seite: str, was: str, soll: list[str], ist: list[str]) -> tuple[list[str], int, int]:
     """Vergleicht eine Menge von Tags oder Attributen in beide Richtungen.
 
@@ -340,8 +390,8 @@ def seite_vergleichen(seite: str, quelle: str, geliefert: str) -> tuple[list[str
 
     # -- Formulare: die Tags selbst, samt Attributen. Ein fremdes `action`
     #    schickte das Passwort woandershin, ohne dass ein Skript sich aendert.
-    a, z['form_gleich'], _ = menge_vergleichen(seite, 'Formular',
-                                               tags(FORM_RE, quelle), tags(FORM_RE, geliefert))
+    f_soll, f_ist = form_paare(quelle, geliefert)
+    a, z['form_gleich'], _ = menge_vergleichen(seite, 'Formular', f_soll, f_ist)
     ab.extend(a)
 
     # -- <base> und Umlenk-Attribute: In der Quelle gibt es heute keines von

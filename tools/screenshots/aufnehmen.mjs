@@ -87,6 +87,35 @@ const FINGER = flag('--finger');
 const FILTER = (wert('--nur', '') || '').split(',').filter(Boolean);
 const MOTOR  = motorWahl(argv);
 
+/* UNBEKANNTE SCHALTER SIND EIN FEHLER, KEIN SCHWEIGEN (16.09.2026).
+ *
+ * `wert()` sucht sich seine Kennzeichnung aus argv und laesst alles andere
+ * liegen. Das ist bequem und war jahrelang folgenlos — bis die
+ * Auslieferungskette diesen Lauf mit `--konto`/`--passwort` aufrief, die es
+ * hier nie gab. Beide wurden STILL verworfen; der Lauf nahm die eingebauten
+ * Vorgaben, meldete sich mit `demo@gen-em.org` bei STAGING an und scheiterte
+ * eine Ebene spaeter mit "Anmeldung gescheitert" — einer Meldung, die den
+ * wahren Grund nicht nennt und an der falschen Stelle suchen laesst.
+ *
+ * Die Pruefung kostet zehn Zeilen und faengt jeden kuenftigen Tippfehler an
+ * der Stelle, an der er entsteht. `--motor` und sein Wert stehen in der
+ * Liste, weil motorWahl() sie aus demselben argv liest. */
+const BEKANNT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
+                         '--klein', '--finger', '--nur', '--risiko', '--selbstprobe',
+                         '--motor']);
+const MIT_WERT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
+                          '--nur', '--motor']);
+for (let i = 0; i < argv.length; i++) {
+  const a = argv[i];
+  if (!a.startsWith('--')) continue;
+  if (!BEKANNT.has(a)) {
+    console.error(`Unbekannter Schalter: ${a}`);
+    console.error(`Bekannt sind: ${[...BEKANNT].join(' ')}`);
+    process.exit(2);
+  }
+  if (MIT_WERT.has(a)) i++;          // den Wert ueberspringen
+}
+
 /* Acht Breiten, je mit einer realistischen Höhe. Die Höhe entscheidet nur
  * darüber, wie viel ohne Scrollen sichtbar ist — aufgenommen wird die ganze
  * Seite; sie steuert aber, was `position:sticky` und `100vh` tun. */

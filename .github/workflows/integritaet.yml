@@ -40,6 +40,29 @@ permissions:
   contents: read
   actions: read
 
+# ALLE run-BLOECKE MIT `pipefail` (16.09.2026, gemessen).
+#
+# GitHub faehrt run-Bloecke mit `bash -e {0}` — OHNE pipefail. Der
+# Rueckgabewert einer Pipe ist damit der des LETZTEN Glieds, und ein
+# gescheitertes erstes Glied faellt lautlos durch. Im Schritt "Wortliste"
+# stand `python3 wortliste.py | tee /tmp/wortliste.txt`: `tee` gibt immer 0,
+# also konnte dieser Schritt NIE ROT WERDEN. Nachgemessen:
+# `bash -e -c 'python3 -c "import sys;sys.exit(1)" | tee /dev/null; echo $?'`
+# ergibt 0.
+#
+# Ein Pruefmittel, das nicht scheitern kann, ist kein Pruefmittel — es ist
+# eine gruene Zahl ohne Aussage. Deshalb hier, an EINER Stelle je Lauf, und
+# nicht als Flicken an der einen Pipe: Die naechste Pipe kommt bestimmt.
+#
+# GEMESSEN, WAS DADURCH ROT WIRD: von zehn Pipes in den drei Laeufen trifft
+# es genau eine — `grep -oE "WEB_VERSION..." | head -1` im Schritt
+# "Fassungen nennen". Die war ohnehin kaputt (das Muster verlangte ein Komma
+# hinter dem Namen, `version.php` schreibt `const WEB_VERSION = '…'`) und ist
+# im selben Zug berichtigt.
+defaults:
+  run:
+    shell: bash -eo pipefail {0}
+
 jobs:
   wache:
     runs-on: ubuntu-latest
