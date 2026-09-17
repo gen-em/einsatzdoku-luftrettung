@@ -2318,27 +2318,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     gelöschte Datei nur zurückkommt, wenn man die State-Datei mitlöscht. Noch
     nicht geschrieben.
 
-215. **Fünf Werkzeuge begründen ihre Arbeitsweise mit der gelöschten
-    `deploy.yml`.**
-    *Aufgenommen 16.09.2026 aus einer unabhängigen Durchsicht des
-    P5a-Abschlusses.*
-    `deploy.yml` ist mit Web 20.4.0 gelöscht worden; die Kette heißt seither
-    `auslieferung.yml` und hat **zwei** FTPS-Schritte statt einem. In
-    `docs/Technik.md` sind die Erwähnungen berichtigt — in den Werkzeugen nicht:
-    `tools/integritaetswache/wache.py` erklärt ihren Zweck mit „Der Deploy
-    (`.github/workflows/deploy.yml`) synchronisiert `server/` byteweise per
-    FTPS", und vier weitere Stellen ähnlich.
-
-    **Folgenlos für den Lauf** — es sind Kommentare, kein Code. Aber sie sind
-    die Erklärung, warum es das Werkzeug gibt, und wer sie liest, sucht eine
-    Datei, die es nicht mehr gibt. Dazu stimmt die **Einzahl** nicht mehr: Wer
-    „der Deploy" liest, denkt an einen Weg, und es sind zwei mit
-    unterschiedlichen Toren.
-
-    *Zu tun:* Die fünf Stellen auf `auslieferung.yml` umschreiben und dabei die
-    Zweiwegigkeit nennen. **Kein eigenes Paket** — Beifang, sobald jemand das
-    jeweilige Werkzeug ohnehin anfasst (R83-Muster).
-
 216. **Zwei Trennlinien hintereinander an vier Stellen des P5a-Prüfdokuments.**
     *Aufgenommen 16.09.2026, gleiche Durchsicht.*
     Rein kosmetisch: `---` gefolgt von `---` erzeugt in manchen
@@ -7523,3 +7502,46 @@ zutreffen.
     „Sie halten die Hintergrundjobs an" als Aussage über den Bilderlauf. Beim
     ersten Mal war es die Geheimnis-Tabelle (Nr. 219). *Merkposten für die
     nächste Einfügung: erst den Absatz zu Ende lesen, dann einfügen.*
+
+215. **Fünf Werkzeuge begründen ihre Arbeitsweise mit der gelöschten
+    `deploy.yml`.**
+    *Aufgenommen 16.09.2026 aus einer unabhängigen Durchsicht des
+    P5a-Abschlusses.*
+    `deploy.yml` ist mit Web 20.4.0 gelöscht worden; die Kette heißt seither
+    `auslieferung.yml` und hat **zwei** FTPS-Schritte statt einem. In
+    `docs/Technik.md` sind die Erwähnungen berichtigt — in den Werkzeugen nicht:
+    `tools/integritaetswache/wache.py` erklärt ihren Zweck mit „Der Deploy
+    (`.github/workflows/deploy.yml`) synchronisiert `server/` byteweise per
+    FTPS", und vier weitere Stellen ähnlich.
+
+    **Folgenlos für den Lauf** — es sind Kommentare, kein Code. Aber sie sind
+    die Erklärung, warum es das Werkzeug gibt, und wer sie liest, sucht eine
+    Datei, die es nicht mehr gibt. Dazu stimmt die **Einzahl** nicht mehr: Wer
+    „der Deploy" liest, denkt an einen Weg, und es sind zwei mit
+    unterschiedlichen Toren.
+
+    *Zu tun:* Die fünf Stellen auf `auslieferung.yml` umschreiben und dabei die
+    Zweiwegigkeit nennen. **Kein eigenes Paket** — Beifang, sobald jemand das
+    jeweilige Werkzeug ohnehin anfasst (R83-Muster).
+
+    **Erledigt am 17.09.2026 mit Web 20.16.4.** Es waren **sechs** Stellen und
+    nicht fünf — beim Nachzählen kam `tools/wartungsprobe/LIESMICH.md` dazu:
+    `server/adminbackup_lib.php`, `tools/wortliste/LIESMICH.md`,
+    `tools/integritaetswache/wache.py`, `tools/integritaetswache/LIESMICH.md`,
+    `tools/wartungsprobe/probe.php` und dessen `LIESMICH.md`. Jede nennt jetzt
+    `auslieferung.yml`, und wo es auf die **Zweiwegigkeit** ankommt, steht sie
+    dabei — in `adminbackup_lib.php` ausdrücklich: „beider FTPS-Schritte …
+    Seit der Kette gilt das zweimal: für Staging und für Produktiv." Die
+    Herkunft bleibt als „bis Web 20.3.0: `deploy.yml`" daneben stehen, in
+    derselben Schreibweise wie in `docs/Technik.md`.
+
+    Die Stelle in `adminbackup_lib.php` ist der Grund für die Versionsstufe:
+    Sie liegt unter `server/`, und damit ist die Änderung nicht mehr eine, die
+    nur `tools/` und `docs/` anfasst (`CLAUDE.md` 2).
+
+    *Nicht angefasst, mit Absicht:* die Erwähnungen in `docs/konzepte/`, in
+    diesem Backlog und in `docs/CHANGELOG.md` — das sind Protokolle eines
+    Standes, und wer sie umschreibt, fälscht die Geschichte, statt sie zu
+    berichtigen. Ebenso bleiben die drei Stellen in den Arbeitsläufen selbst,
+    die den alten Namen als Historie nennen („Bis zu dieser Fassung hiess
+    diese Datei `deploy.yml`").

@@ -39,7 +39,7 @@ declare(strict_types=1);
  *
  * WAS SIE NICHT PRUEFT, und warum:
  *   - Das VERHALTEN DES DEPLOYS gegenueber `wartung.lock` (Konzept 6.3).
- *     Die Ausnahme in `deploy.yml` ist eine Zusage; bewiesen wird sie beim
+ *     Die Ausnahme in `auslieferung.yml` ist eine Zusage; bewiesen wird sie beim
  *     ersten Deploy im Wartungsmodus. Steht im Pruefdokument.
  *   - Wie die WARTUNGSSEITE AUSSIEHT. Sie misst, dass sie kommt und was
  *     drinsteht; ob sie bei 360 px ueberlaeuft, misst der Bilderlauf.

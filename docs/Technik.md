@@ -7810,6 +7810,7 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 | `tools/vollstaendigkeit/pruefen.py --hoechstens N` | **genau N** — die Schwelle, nicht null (heute 377) |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft, Selbstprobe 10/10 |
+| `tools/kette/tor.py --selbstprobe` | 11 erfüllt, 0 offen |
 | Backlog-Nummern (`grep … uniq -d`) | leer |
 | `tools/installweiche/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `tools/migrationsregister/pruefen.php` | 0 Befunde, Selbstprobe 4/4 |
@@ -7856,12 +7857,25 @@ aus wie eine Prüfung.
 
 ### 6.3 Stufe 2 — was eine Installation braucht
 
-Job `stufe2` in `auslieferung.yml`, nach dem Staging-Sync: Kreisläufe csv und
-edbak (0 unerklärt), Bilderlauf (0 Überlauf, 0 Konsolenfehler, 0 falsche
-Knopfhöhen), und **nur bei Tag-Läufen** der Messstand. Alle drei brauchen ein
-**Prüfkonto auf Staging** (Umgebungsgeheimnisse `STAGING_KONTO`,
-`STAGING_PASS`, Variable `STAGING_URL`); fehlt es, wird der Schritt
-ausdrücklich übersprungen und gemeldet.
+Job `stufe2` in `auslieferung.yml`, nach dem Staging-Sync: der Griff auf
+`login.php`, die Punktdatei-Sperre, die Kreisläufe csv und edbak
+(0 unerklärt) und der Bilderlauf (0 Überlauf, 0 Konsolenfehler, 0 falsche
+Knopfhöhen). **Kreisläufe und Bilderlauf** brauchen ein **Prüfkonto auf
+Staging** (Umgebungsgeheimnisse `STAGING_KONTO`, `STAGING_PASS`, Variable
+`STAGING_URL`); fehlt es, wird der Schritt ausdrücklich übersprungen und
+gemeldet.
+
+**Der Messstand läuft hier nicht, und bei einem Tag-Lauf läuft Stufe 2
+überhaupt nicht.** Bis Web 20.16.4 stand an dieser Stelle „und **nur bei
+Tag-Läufen** der Messstand" — ein Satz, der zwei Dinge zugleich behauptete,
+die beide nicht zutreffen. Der Messstand-Schritt ist in P5a/AP9 **ersatzlos
+aus der Kette gestrichen** (Nr. 206); geblieben ist ein Schritt gleichen
+Namens, der nur noch sagt, wo seine Zahlen stehen. Und `staging` ist für
+Tag-Läufe abgeschaltet (`if: !startsWith(github.ref, 'refs/tags/')`),
+`stufe2` hängt mit `needs: staging` daran — ein Tag lässt **allein**
+`produktion` laufen. Der Stand, den ein Tag ausliefert, hat Stufe 2 deshalb
+schon vorher gesehen, und genau das prüft das Tor „Grüner Staging- und
+Stufe-1-Lauf auf diesem Stand?" nach.
 
 **Die Kreisläufe brauchen seit Web 20.16.0 zusätzlich `JOBS_TOKEN`** in der
 Umgebung `staging` (Backlog Nr. 219). Sie halten die Hintergrundjobs an, bevor
@@ -7935,7 +7949,12 @@ zuerst falsch entlastet.
 Vor dem Schreiben auf Produktiv läuft das Komplett-Backup **nachweislich zu
 Ende**. Die Logik steht in `tools/kette/tor.py` und nicht im Arbeitslauf: Eine
 Bedingung, die einen Deploy verhindern soll, gehört dorthin, wo eine
-Selbstprobe sie nachweisen kann (5 Lagen, ohne Netz).
+Selbstprobe sie nachweisen kann — **fünf Lagen** für das Backup-Tor selbst,
+**elf** für die ganze Datei (die übrigen gehören zum Unterbefehl `pause` und
+zur Fehlerantwort), alle ohne Netz. Seit Web 20.16.1 läuft sie in **Stufe 1**
+und nicht mehr nur hier: Für das Backup-Tor war der Platz unmittelbar vor dem
+Tor richtig, aber die `pause`-Lagen bewachen einen Schritt aus Stufe 2 — wer
+ihn beschädigte, bekam von Stufe 1 ein Grün.
 
 Der Ablauf des Produktionslaufs:
 

@@ -29,8 +29,10 @@ name: Auslieferung
 # DAS BACKUP-TOR STEHT IN `tools/kette/tor.py` und nicht hier (E-P5a-12).
 # Eine Bedingung, die einen Deploy verhindern soll, gehört dorthin, wo eine
 # `--selbstprobe` sie nachweisen kann — genau das verlangt die Abnahme von
-# AP1. Fünf Lagen prüft sie, darunter „meldet nie fertig" und „Stand ist von
-# gestern".
+# AP1. Fünf Lagen prüft sie für das Backup-Tor selbst, darunter „meldet nie
+# fertig" und „Stand ist von gestern"; die ganze Selbstprobe fährt elf — die
+# übrigen gehören zum Unterbefehl `pause` und zur Fehlerantwort. Sie läuft
+# seit Web 20.16.1 in Stufe 1 und hier noch einmal, unmittelbar vor dem Tor.
 #
 # ROLLBACK ist ein Lauf mit dem vorigen Tag (E-PV-3 (d)). Deshalb trägt der
 # Tag die Fassung und nicht die Uhrzeit.

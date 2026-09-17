@@ -5704,5 +5704,43 @@ declare(strict_types=1);
  * gruenen Durchlauf".
  *
  * KEINE MIGRATION.
+ *
+ * ---------------------------------------------------------------------------
+ * 20.16.4 — VIER STELLEN, AN DENEN DIE DOKUMENTATION EINE ANDERE KETTE
+ *           BESCHRIEB ALS DIE GEBAUTE
+ * ---------------------------------------------------------------------------
+ *
+ * Kein Verhalten geaendert, kein Servercode ausser einem Kommentar. Die
+ * Nummer steigt trotzdem, und zwar aus genau diesem einen Kommentar:
+ * `adminbackup_lib.php` liegt unter `server/`, damit ist es keine Aenderung
+ * mehr, die nur `tools/` und `docs/` anfasst (`CLAUDE.md` 2).
+ *
+ * DER MESSSTAND-SATZ BEHAUPTETE ZWEI DINGE, DIE BEIDE NICHT ZUTREFFEN.
+ * `docs/Technik.md` 6.3 nannte als Teil von Stufe 2 „und NUR BEI TAG-LAEUFEN
+ * der Messstand". Der Schritt fuehrt seit P5a/AP9 nichts mehr aus (Nr. 206,
+ * ersatzlos gestrichen) — und Stufe 2 laeuft bei einem Tag-Lauf ueberhaupt
+ * nicht, weil `staging` fuer Tags abgeschaltet ist und `stufe2` mit `needs`
+ * daran haengt. Ein Tag laesst allein `produktion` laufen.
+ *
+ * DIE TABELLE DER STUFE 1 FUEHRTE 13 SCHRITTE, DER LAUF HAT 14. Es fehlte
+ * die Zeile fuer `tools/kette/tor.py --selbstprobe`, die mit 20.16.1 aus dem
+ * Produktionslauf nach Stufe 1 gezogen wurde.
+ *
+ * EINE HANDGEPFLEGTE ZAHL, ZUM ZWEITEN MAL VERALTET. Die Kopfzeile der
+ * Selbstprobe von `tor.py` meldete bis 20.16.1 „fuenf Lagen" und fuhr zehn;
+ * danach stand „fuenf und fuenf" da, und mit dem elften Fall stimmte auch das
+ * nicht mehr. Behoben wurde nicht die Zahl, sondern ihre Bauart: Die
+ * Kopfzeile nennt jetzt nur noch die GRUPPEN, gezaehlt wird am Ende des
+ * Laufs. Eine Zahl, die niemand pflegen muss, kann nicht veralten.
+ *
+ * SECHS WERKZEUGE BEGRUENDETEN IHRE ARBEITSWEISE MIT `deploy.yml` (Nr. 215).
+ * Die Datei ist mit 20.4.0 geloescht; die Kette heisst seither
+ * `auslieferung.yml` und hat ZWEI FTPS-Schritte statt einem. Wer den alten
+ * Namen las, suchte die Ausnahmeliste, die seine Sicherungen schuetzt, an
+ * einer Datei, die es nicht gibt. Nicht angefasst sind die Protokolle
+ * (`docs/konzepte/`, Backlog, CHANGELOG) und die Stellen, die den alten Namen
+ * ausdruecklich als Historie nennen.
+ *
+ * KEINE MIGRATION.
  */
-const WEB_VERSION = '20.16.3';
+const WEB_VERSION = '20.16.4';

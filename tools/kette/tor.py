@@ -189,9 +189,15 @@ def backup_tor(basis: str, token: str, versuche: int, pause: int,
 def selbstprobe() -> int:
     """Bricht das Tor auch wirklich ab, und landet `sekunden` in der Adresse?
 
-    Zehn Lagen, ohne Netz — fünf für das Backup-Tor, fünf für `pause`.
-    Die Kopfzeile hat bis Web 20.16.1 „fünf Lagen" gemeldet und zehn gefahren;
-    wer sie abschrieb, trug eine falsche Zahl ins Prüfprotokoll.
+    Elf Lagen, ohne Netz — fünf für das Backup-Tor, fünf für `pause`, eine
+    für die Fehlerantwort von `rufen()`.
+
+    DIESE ZAHL IST ZUM ZWEITEN MAL FALSCH GEWESEN, und daraus folgt die Form
+    der Kopfzeile unten. Bis Web 20.16.1 meldete sie „fünf Lagen" und fuhr
+    zehn; danach stand „fünf und fünf" da, und mit dem elften Fall stimmte
+    auch das nicht mehr. Wer eine handgepflegte Zahl abschreibt, trägt sie
+    ins Prüfprotokoll. **Die Kopfzeile nennt deshalb nur noch die Gruppen;
+    die einzige Zahl, die hier ausgegeben wird, ist die GEZÄHLTE am Ende.**
 
     Der Aufruf an `jobs.php` wird durch eine Attrappe ersetzt, die
     vorgeschriebene Antworten liefert. Das ist keine Bequemlichkeit: Die
@@ -225,8 +231,10 @@ def selbstprobe() -> int:
             return folge[i]
         return ruf
 
-    print("Selbstprobe von tor.py — fünf Lagen des Backup-Tors und fünf des "
-          "Unterbefehls `pause`, ohne Netz\n")
+    # KEINE GESAMTZAHL IN DIESER ZEILE (Web 20.16.4). Sie ist zweimal
+    # veraltet, ohne dass ein Lauf es gemerkt hätte — gezählt wird unten.
+    print("Selbstprobe von tor.py — Backup-Tor, Unterbefehl `pause` und die "
+          "Fehlerantwort, ohne Netz\n")
 
     # 1. Der Regelfall: zweites Häppchen meldet fertig, Stand ist frisch.
     rc = backup_tor("http://attrappe", "t", 5, 0,
