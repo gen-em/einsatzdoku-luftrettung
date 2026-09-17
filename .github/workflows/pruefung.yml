@@ -66,6 +66,12 @@ jobs:
     steps:
       - name: Code auschecken
         uses: actions/checkout@v4
+        with:
+          # VORAUSSETZUNG DER BEREICHSERKENNUNG (Schritt danach). Die Vorgabe
+          # holt EINEN Commit; ohne Historie gibt es nichts zu vergleichen,
+          # und die Erkennung fiele bei jedem Lauf auf „alles messen" zurueck
+          # — richtig, aber wirkungslos. Kostet wenige Sekunden.
+          fetch-depth: 0
 
       - name: Fassungen nennen — was misst hier eigentlich?
         # ZUERST UND IMMER. Eine Zahl ohne die Fassung, die sie erzeugt hat,
@@ -89,6 +95,137 @@ jobs:
           echo "Web:     $(php -r "require 'server/version.php'; echo WEB_VERSION;")"
           echo "Uhr:     $(grep -oE 'APP_VERSION *= *"[0-9.]+"' watch/source/Const.mc | grep -oE '[0-9.]+')"
           echo "Android: $(grep -oE '^version=[0-9.]+' android/version.properties | cut -d= -f2)"
+
+      - name: Welche Bereiche sind berührt?
+        # WARUM ES DIESEN SCHRITT GIBT (gemessen 17.09.2026). Der Lauf braucht
+        # 42 min 28 s; davon sind 7:15 der Android-Bau und 34:46 das
+        # Uebersetzen der Uhr-App fuer alle Zielgeraete. Die uebrigen 13
+        # Schritte zusammen brauchen 23 Sekunden. Von den letzten 60 Commits
+        # auf `main` fasst KEINER `android/` an und EINER `watch/` — 59 von 60
+        # Laeufen messen also 42 Minuten lang Code, den niemand angefasst hat.
+        #
+        # DREI EIGENSCHAFTEN MACHEN DEN SPRUNG UNKRITISCH:
+        #
+        # (1) AUF `main` WIRD IMMER ALLES GEMESSEN. Der schlimmste Fehler
+        #     dieses Schritts waere, faelschlich zu ueberspringen; auf `main`
+        #     kann das nicht passieren. Und `main` ist der Stand, den ein Tag
+        #     ausliefert — Tor 3 des Produktionslaufs verlangt einen gruenen
+        #     Stufe-1-Lauf auf genau diesem Commit.
+        # (2) IM ZWEIFEL WIRD GEMESSEN. Jeder Weg, auf dem der
+        #     Vergleichsstand nicht zu ermitteln ist — neuer Zweig,
+        #     Force-Push, fehlende Historie, `workflow_dispatch` —, endet bei
+        #     „alles". Ein Filter, der bei Unklarheit ueberspringt, ist genau
+        #     die Luecke, gegen die es ihn nicht gibt.
+        # (3) EINE AUSLASSUNG NENNT IHREN GEGENSTAND. Ein uebersprungener
+        #     Schritt laeuft nicht und kann daher selbst nichts melden —
+        #     deshalb schreibt DIESER Schritt die Zeile in die
+        #     Zusammenfassung, mit Bereich und Vergleichsstand. „Kein stilles
+        #     Ueberspringen" (`CLAUDE.md` 6) gilt hier wie beim fehlenden SDK.
+        #
+        # UND DIE GRENZE, DIE NICHT VERSCHOBEN WIRD: Dieser Filter gilt fuer
+        # ANDROID UND UHR. Beide werden von der Kette nicht ausgeliefert — der
+        # FTPS-Schritt laedt `server/` hoch, die Signatur der Apps liegt
+        # ausserhalb der CI (E-S4-16); eine ausgelassene Messung erreicht hier
+        # keinen Server. Fuer einen `server/`-Schritt gilt das NICHT: Der
+        # entscheidet ueber ausgelieferten Code, und eine Bedingung, die
+        # darueber entscheidet, gehoert in ein Werkzeug mit `--selbstprobe`
+        # (E-P5a-12, das Backup-Tor ist das Muster). Wer diesen Filter auf
+        # PHP-Syntax, CSP oder Sitzungshaertung ausdehnt, aendert seine Natur.
+        id: bereiche
+        env:
+          VORHER_SHA: ${{ github.event.before }}
+        run: |
+          alles() {
+            echo "android=ja" >> "$GITHUB_OUTPUT"
+            echo "uhr=ja"     >> "$GITHUB_OUTPUT"
+            echo "Bereichserkennung: ALLES messen — $1"
+            echo "**Bereiche:** alles gemessen ($1)." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          }
+
+          # (1) main misst immer alles.
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            alles "Push auf main"
+          fi
+
+          # Vergleichsstand je Anlass.
+          vorher=""
+          case "$GITHUB_EVENT_NAME" in
+            pull_request)
+              # Bei einem PR checkt die Aktion den MERGE-Commit aus. Dessen
+              # merge-base mit dem Zielzweig ist der Zielzweig selbst, der
+              # Diff dagegen also genau die Aenderung des PR.
+              git fetch --no-tags --quiet origin                   "+refs/heads/$GITHUB_BASE_REF:refs/remotes/origin/$GITHUB_BASE_REF"                   2>/dev/null || true
+              vorher=$(git merge-base "origin/$GITHUB_BASE_REF" HEAD 2>/dev/null || echo '')
+              ;;
+            push)
+              kandidat="${VORHER_SHA:-}"
+              case "$kandidat" in
+                ''|0000000000000000000000000000000000000000) kandidat="" ;;
+              esac
+              # Nach einem Force-Push kann das Vorher unerreichbar sein.
+              #
+              # ZWEI SCHICHTEN, JEDE FUER SICH AUSREICHEND — nachgemessen
+              # am 17.09.2026 mit drei Mutationen:
+              #
+              #   nur `cat-file` entwaffnet     -> Lage bleibt richtig
+              #                                    (der `__FEHLER__`-Zweig
+              #                                    unten faengt sie)
+              #   nur `__FEHLER__` entwaffnet   -> Lage bleibt richtig
+              #                                    (diese Zeile faengt sie)
+              #   BEIDE entwaffnet              -> Lage faellt um: nein/nein
+              #
+              # Im unmutierten Lauf faengt DIESE Zeile: Das Protokoll sagt
+              # „Vergleichsstand nicht ermittelbar", nicht „git diff
+              # gescheitert". Keine der beiden ist ueberfluessig, und keine
+              # einzelne Mutation kann die Luecke oeffnen — wer die Zeile
+              # streicht, weil „die andere es ja auch faengt", nimmt der
+              # Bauform genau diese Eigenschaft.
+              if [ -n "$kandidat" ] && git cat-file -e "${kandidat}^{commit}" 2>/dev/null; then
+                vorher="$kandidat"
+              fi
+              ;;
+          esac
+
+          # (2) Im Zweifel messen.
+          if [ -z "$vorher" ]; then
+            alles "Vergleichsstand nicht ermittelbar (Anlass $GITHUB_EVENT_NAME)"
+          fi
+
+          dateien=$(git diff --name-only "$vorher" HEAD 2>/dev/null || echo '__FEHLER__')
+          if [ "$dateien" = "__FEHLER__" ]; then
+            alles "git diff gegen $vorher gescheitert"
+          fi
+
+          anzahl=$(printf '%s\n' "$dateien" | grep -c . || true)
+          echo "Vergleichsstand: $vorher · geänderte Dateien: $anzahl"
+
+          hat() { printf '%s\n' "$dateien" | grep -qE "$1"; }
+
+          # Wer den Prüflauf selbst ändert, fährt beides.
+          if hat '^\.github/workflows/pruefung\.yml$'; then
+            alles "der Prüflauf selbst ist geändert"
+          fi
+
+          android=nein
+          uhr=nein
+          if hat '^android/'; then android=ja; fi
+          if hat '^(watch/|tools/uhr-pruefstand/)'; then uhr=ja; fi
+
+          echo "android=$android" >> "$GITHUB_OUTPUT"
+          echo "uhr=$uhr"         >> "$GITHUB_OUTPUT"
+          echo "android=$android · uhr=$uhr"
+
+          # (3) Die Auslassung nennt ihren Gegenstand.
+          kurz=$(git rev-parse --short "$vorher")
+          {
+            if [ "$android" = nein ]; then
+              echo "**Android: NICHT BERÜHRT** — 0 von $anzahl geänderten Dateien liegen unter \`android/\` (gegenüber \`$kurz\`); nicht gemessen."
+            fi
+            if [ "$uhr" = nein ]; then
+              echo "**Uhr Stufe I: NICHT BERÜHRT** — 0 von $anzahl geänderten Dateien liegen unter \`watch/\` oder \`tools/uhr-pruefstand/\` (gegenüber \`$kurz\`); nicht gemessen."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: PHP-Syntax über server/
         # `php -l` je Datei. Ein Syntaxfehler in einer Datei, die nur auf einem
@@ -262,6 +399,7 @@ jobs:
           php tools/sitzungshaertung/pruefen.php
 
       - name: Android — bauen, prüfen, linten
+        if: steps.bereiche.outputs.android == 'ja'
         # 0 Lint-Fehler und 0 Fehlschläge; der Rückgabewert von Gradle trägt
         # beides. Das Android-SDK bringt der Läufer mit (ANDROID_HOME ist
         # gesetzt); ist es das ausnahmsweise nicht, wird der Schritt
@@ -277,6 +415,7 @@ jobs:
           ./gradlew --no-daemon build
 
       - name: Uhr Stufe I — für alle Zielgeräte übersetzen
+        if: steps.bereiche.outputs.uhr == 'ja'
         # BRAUCHT `CIQ_GERAETE_URL`. Die Adresse steht bewusst nicht im
         # Repositorium (`tools/uhr-pruefstand/LIESMICH.md`, Abschnitt
         # „Quelle"): Es ist öffentlich, die Dateien gehören Garmin. Sie kommt

@@ -2403,6 +2403,29 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     macht — auch bei `--nur` auf einer Seite mit `"rolle": "aus"`. Genau das
     hat die örtliche Nachstellung gegen Staging verhindert.
 
+222. **Der Aufbau des Uhr-Prüfstands wird bei jedem Lauf neu geholt.**
+    *Aufgenommen 17.09.2026 bei der Selektion der Stufe-1-Schritte.*
+    Der Schritt „Uhr Stufe I" brauchte im gemessenen Lauf **34 min 46 s** und
+    ist damit mit Abstand der teuerste der ganzen Kette — der Android-Bau
+    daneben 7:15, die übrigen dreizehn Schritte zusammen 23 Sekunden. Seit
+    derselben Fassung läuft er nur noch, wenn `watch/` oder
+    `tools/uhr-pruefstand/` berührt ist. Wer an der Uhr arbeitet, wartet
+    allerdings weiterhin jedes Mal die volle Zeit ab.
+
+    **Vermutung, ausdrücklich keine Messung:** Der größere Teil davon dürfte
+    der Aufbau sein — `pruefstand.sh aufbau-uebersetzen` holt SDK und
+    Gerätedateien bei jedem Lauf neu —, nicht das Übersetzen selbst. Träfe
+    das zu, spräche ein `actions/cache` auf `~/.Garmin/ConnectIQ` den größten
+    Teil der Zeit an, und zwar auch dann, wenn tatsächlich an der Uhr
+    gearbeitet wird.
+
+    *Zu tun, in dieser Reihenfolge:* zuerst die Verteilung zwischen Holen und
+    Übersetzen im Protokoll eines Laufs **nachmessen** — ohne diese Zahl ist
+    alles Weitere Spekulation, und genau davor warnt die Hausregel; erst wenn
+    der Aufbau überwiegt, einen Cache-Schritt einziehen, dessen Schlüssel an
+    der SDK-Fassung und an `CIQ_ZIELE` hängt. **Kein eigenes Paket** —
+    Beifang, sobald jemand den Prüfstand ohnehin anfasst (R83-Muster).
+
 ## Erledigt
 
 
