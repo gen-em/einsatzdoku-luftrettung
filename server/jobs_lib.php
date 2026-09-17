@@ -554,8 +554,15 @@ function jobs_zustand(): array
  * saehe, warum der zeitgesteuerte Abruf nicht geht.
  *
  * Das Token ist ein Geheimnis wie ein Passwort — 32 Byte Zufall, hex. Wer es
- * hat, kann die Wartung anstossen; mehr nicht. Er kann damit weder Daten
- * lesen noch schreiben, und der Ratenschutz begrenzt die Versuche.
+ * hat, kann die Wartung anstossen: Jobs laufen lassen, ein Komplett-Backup
+ * anstossen, den Wartungsmodus ein- und ausschalten, den Zustand abfragen und
+ * — seit Web 20.16.0 — die Jobs anhalten (`aktion=pause`). Mehr nicht. Er kann
+ * damit weder Daten lesen noch schreiben, und der Ratenschutz begrenzt die
+ * Versuche.
+ *
+ * Wer diese Aufzaehlung fortschreibt, schreibt sie in `jobs.php` mit: Dort
+ * steht dieselbe Liste noch einmal, einmal im Kopf und einmal in der Meldung
+ * zu einer unbekannten Aktion.
  */
 function jobs_token(bool $neu = false): string
 {

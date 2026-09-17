@@ -14,6 +14,72 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.16.0] — 2026-09-17
+
+**Die Job-Pause ist jetzt auch über die Adresse erreichbar** (Backlog Nr. 219).
+
+### Hinzugefügt
+
+`jobs.php` nimmt eine fünfte Aktion: **`pause`** mit `sekunden=N` (0 hebt
+auf). Dahinter steht derselbe `jobs_pause()` aus `jobs_lib.php` wie hinter
+`php jobs.php --pause` und hinter den beiden Knöpfen unter **Betrieb →
+Hintergrundjobs** — kein vierter Mechanismus, nur ein vierter Aufrufer.
+
+Dazu auf der Werkzeugseite: `tools/kette/tor.py` bekommt den vierten
+Unterbefehl `pause`, `tools/referenzdatensatz/vergleich/kreislauf.py` den
+Schalter `--jobs-token`. **Ohne Token bleibt dort alles beim lokalen Weg** —
+wer auf seinem Rechner misst, merkt von der Änderung nichts.
+
+### Das Problem, das dahinter steckt
+
+Der Kreislauftest hält die Hintergrundjobs an, bevor er ein Backup in ein
+frisches Konto spielt. Ohne Pause dünnt der Verdichtungsjob die
+wiederhergestellten Spuren aus — die Einsätze sind alt, der Job hält sie für
+reif —, und der Vergleich misst dann nicht mehr *„kommt zurück, was
+hineinging"*, sondern *„hat der Job dazwischen zugeschlagen"*. Nachgemessen:
+ein Lauf ohne Pause verdichtete **125 Spuren** des Umlaufkontos.
+
+Angehalten wurde bisher **nur über die Kommandozeile**, und die setzt voraus,
+dass das Prüfmittel auf demselben Rechner läuft wie die Installation. Stufe 2
+der Auslieferungskette tut das nicht: Sie läuft auf einem GitHub-Läufer gegen
+ein fernes Staging. Der erste echte Lauf nach dem Merge von PR #51 brach ab
+mit `require_once(.../server/config.php): Failed to open stream`.
+
+**Der Aufruf war nicht falsch geschrieben.** Das Werkzeug nahm an, `--basis`
+sei derselbe Rechner — eine Annahme, die stimmte, solange nur von Hand
+gemessen wurde. Das ist auch der Grund, warum das neue `tools/kettenaufrufe/`
+sie nicht fangen konnte: Es prüft Schnittstellen, nicht Verhalten, und sagt
+das in seiner `LIESMICH.md` ausdrücklich.
+
+### Was das an Macht gibt, und was nicht
+
+Wer das Job-Token hat, kann die Jobs bis `JOB_PAUSE_MAX_S` (7200 s) still
+stellen. Das ist **weniger**, als er ohnehin schon konnte: `wartung_an`
+schließt die ganze Anwendung und hängt seit P5a am selben Token. Daten liest
+und schreibt die Aktion keine, und der Ratenschutz begrenzt die Versuche wie
+bei jedem Token-Aufruf.
+
+### Ein fehlendes `sekunden` ist ein Fehler und nicht null
+
+**400 statt Vorgabewert** — denn 0 *hebt die Pause auf*. Ein vergessener
+Parameter gäbe sonst die Jobs frei und meldete dafür `ok`; der Aufrufer
+glaubte, sie stünden still. Dieselbe Regel gilt in `tor.py` für `--sekunden`,
+und die Selbstprobe dort weist beides nach (**5 → 10 Fälle**): dass
+`sekunden` in der Adresse landet — gemessen an der Adresse, nicht an der
+Antwort, denn ein `ok` käme in beiden Fällen — und dass ein vergessenes
+`--sekunden` mit Rückgabewert 2 abbricht.
+
+### Zuarbeit
+
+Die Umgebung `staging` braucht dafür das Geheimnis **`JOBS_TOKEN`**, denselben
+Namen wie `produktion`, aber den Wert **dieser** Installation (Betrieb →
+Hintergrundjobs). Fehlt er, wird der Kreislauf-Schritt ausdrücklich
+übersprungen und gemeldet — er fällt **nicht** still auf den lokalen Weg
+zurück, der hier ohnehin fehlschlägt.
+
+**Keine Migration.** `app_state` trägt den Schlüssel `jobs_pause_bis` seit
+Web 10.2.0.
+
 ## [Web 20.15.2] — 2026-09-16
 
 **`install.php` gehört nicht mehr zur Auslieferung** (Backlog Nr. 214).

@@ -41,9 +41,38 @@ declare(strict_types=1);
  *                 wäre.
  *   wartung_an    Wartungsmodus einschalten, Urheber `kette`
  *   wartung_aus   ausschalten
+ *   pause         Die Hintergrundjobs anhalten (`sekunden=N`) oder wieder
+ *                 freigeben (`sekunden=0`). Dieselbe Wirkung wie
+ *                 `php jobs.php --pause N` und wie die beiden Knoepfe unter
+ *                 Betrieb -> Hintergrundjobs; derselbe `jobs_pause()` aus
+ *                 `jobs_lib.php` dahinter.
  *   zustand       Auskunft ohne Nebenwirkung: jüngster Komplett-Stand mit
  *                 Zeit, Wartung an/aus, Migration ausstehend ja/nein,
  *                 `WEB_VERSION`
+ *
+ * WARUM `pause` UEBER DIE ADRESSE ERREICHBAR SEIN MUSS (Web 20.16.0).
+ * Der Kreislauftest haelt die Jobs an, bevor er ein Backup in ein frisches
+ * Konto spielt — sonst verdichtet und duennt der Verdichtungsjob die
+ * wiederhergestellten Spuren aus, und der Vergleich misst nicht mehr „kommt
+ * zurueck, was hineinging", sondern „hat der Job dazwischen zugeschlagen".
+ * Nachgemessen: ein Lauf ohne Pause verdichtete 125 Spuren des Umlaufkontos.
+ *
+ * Bis dahin gab es dafuer nur den Weg ueber die Kommandozeile, und der
+ * verlangt, dass das Pruefmittel AUF DEMSELBEN RECHNER laeuft wie die
+ * Installation. Stufe 2 der Kette laeuft aber auf einem GitHub-Laeufer gegen
+ * ein fernes Staging: Dort gibt es keine `config.php`, keine Datenbank, und
+ * `php server/jobs.php --pause` bricht mit „Failed to open stream" ab. Genau
+ * so ist der erste echte Lauf gescheitert (17.09.2026, Backlog Nr. 219).
+ *
+ * WAS DIE AKTION DAMIT AN MACHT GIBT: Sie kann die Hintergrundjobs bis zu
+ * `JOB_PAUSE_MAX_S` still stellen — weniger als `wartung_an`, das die ganze
+ * Anwendung schliesst und laengst ueber denselben Token erreichbar ist.
+ * Daten liest und schreibt sie keine.
+ *
+ * WARUM EIN FEHLENDES `sekunden` EIN FEHLER IST UND NICHT NULL. `jobs_pause(0)`
+ * HEBT die Pause auf. Wuerde ein vergessener Parameter als 0 gelesen, gaebe
+ * ein `?aktion=pause` ohne Zahl die Jobs frei — der Aufrufer bekaeme ein
+ * `ok` und glaubte, sie stuenden still. Deshalb 400 statt Vorgabewert.
  *
  * WARUM DIE KETTE WIEDERHOLT RUFEN MUSS. Ein Aufruf hat 20 s Budget
  * (`JOB_BUDGET_TOKEN`); ein Komplett-Backup von 10 GB braucht mehr. Der Lauf
@@ -241,6 +270,44 @@ if ($aktion === 'wartung_an' || $aktion === 'wartung_aus') {
     ], $ok ? 200 : 500);
 }
 
+if ($aktion === 'pause') {
+    /* Siehe Kopf der Datei. `jobs_pause()` ist derselbe Weg wie auf der
+     * Kommandozeile und in `betrieb_jobs.php` — hier kommt kein vierter
+     * Mechanismus dazu, nur ein vierter Aufrufer. */
+    $roh = $_GET['sekunden'] ?? $_POST['sekunden'] ?? null;
+
+    /* KEIN VORGABEWERT. Ein fehlendes `sekunden` als 0 zu lesen hiesse, die
+     * Pause bei einem vergessenen Parameter AUFZUHEBEN und dafuer `ok` zu
+     * melden. */
+    if (!is_string($roh) && !is_int($roh)) {
+        kette_antwort(['ok' => false, 'aktion' => 'pause', 'error' => 'sekunden',
+                       'meldung' => 'Parameter `sekunden` fehlt. '
+                                  . '0 hebt die Pause auf, N haelt N Sekunden an.'], 400);
+    }
+    if (!is_numeric($roh) || (int)$roh < 0) {
+        kette_antwort(['ok' => false, 'aktion' => 'pause', 'error' => 'sekunden',
+                       'meldung' => 'Parameter `sekunden` ist keine Zahl >= 0.'], 400);
+    }
+
+    $sek = (int)$roh;
+    jobs_pause($sek);
+    $bis = jobs_pause_bis();
+
+    /* `bis` ist die ANTWORT AUF DIE FRAGE, nicht die Wiederholung des
+     * Wunsches: `jobs_pause()` deckelt auf JOB_PAUSE_MAX_S, und bei 0 steht
+     * hier null. Wer 9999 schickt, sieht an `bis`, dass er 7200 bekommen
+     * hat. */
+    kette_antwort([
+        'ok'       => true,
+        'aktion'   => 'pause',
+        'sekunden' => $sek,
+        'grenze'   => JOB_PAUSE_MAX_S,
+        'bis'      => $bis,
+        'meldung'  => $bis === null ? 'Jobs laufen wieder.'
+                                    : "Jobs angehalten bis $bis UTC.",
+    ]);
+}
+
 if ($aktion === 'komplett') {
     require_once __DIR__ . '/komplett_lib.php';
 
@@ -274,7 +341,7 @@ if ($aktion === 'komplett') {
 
 if ($aktion !== '') {
     kette_antwort(['ok' => false, 'error' => 'aktion',
-                   'meldung' => 'Unbekannte Aktion. Bekannt: komplett, '
+                   'meldung' => 'Unbekannte Aktion. Bekannt: komplett, pause, '
                               . 'wartung_an, wartung_aus, zustand.'], 400);
 }
 

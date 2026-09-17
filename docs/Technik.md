@@ -568,8 +568,14 @@ Daten erst nach Server-Bestätigung.
 │   │                      zerfaellt. Ohne Installation; mit `--selbstprobe`
 │   │                      (8 Faelle, davon 4 die NICHT anschlagen duerfen)
 │   ├── kette/             die Tore der Auslieferungskette (P5a/AP1):
-│   │                      Backup-Tor, Wartung an/aus, Zustand — gegen
-│   │                      `jobs.php?aktion=…`. Das Backup-Tor verlangt
+│   │                      Backup-Tor, Wartung an/aus, Zustand und seit
+│   │                      Web 20.16.0 die Job-Pause — gegen
+│   │                      `jobs.php?aktion=…`. DER EINE CLIENT dieser
+│   │                      Schnittstelle: Er kennt Adresse, Token,
+│   │                      Zeitgrenze und den Umgang mit einer unlesbaren
+│   │                      Antwort; wer daran vorbei eine eigene
+│   │                      urllib-Zeile schreibt, baut einen zweiten Weg,
+│   │                      den niemand pflegt. Das Backup-Tor verlangt
 │   │                      `fertig` UND einen Stand, der jünger ist als der
 │   │                      Laufbeginn; `--selbstprobe` weist an fünf Lagen
 │   │                      nach, dass es auch zugeht
@@ -3206,6 +3212,31 @@ wartet und meist keine Laufzeitgrenze gilt; 20 s, weil das unter der
 (dieselbe Überlegung wie bei „Alle sichern"); 3 s, weil eine Seite, die
 zwanzig Sekunden braucht, weil sie nebenbei aufräumt, kaputt ist — auch wenn
 kein Zeitlimit greift.
+
+**Der Token-Weg nimmt seit P5a zusätzlich einen Parameter `aktion`** — er ist
+damit auch der Einstieg der Auslieferungskette (E-P5a-12). Fünf Aktionen, alle
+über dasselbe Token, alle unter demselben Ratenschutz:
+
+| `aktion` | tut | Antwort |
+|---|---|---|
+| *(keine)* | alle fälligen Jobs, ein Häppchen | `{ok, jobs}` |
+| `komplett` | **nur** das Komplett-Backup — und legt einen Auftrag an, wenn keiner steht | `{ok, fertig, bericht, komplett}` |
+| `wartung_an` / `wartung_aus` | Wartungsmodus, Urheber `kette` | `{ok, wartung}` |
+| `zustand` | Auskunft **ohne Nebenwirkung**: Version, Wartung, jüngster Komplett-Stand, Migration ausstehend | `{ok, version, wartung, komplett, migration_ausstehend}` |
+| `pause` | Jobs anhalten (`sekunden=N`) oder freigeben (`sekunden=0`); seit Web 20.16.0 | `{ok, sekunden, grenze, bis, meldung}` |
+
+**`pause` ist kein zweiter Mechanismus**, sondern ein vierter Aufrufer von
+`jobs_pause()` — neben der Kommandozeile und den beiden Knöpfen unter Betrieb
+→ Hintergrundjobs. Es gibt ihn, weil ein Prüfmittel, das gegen eine **ferne**
+Installation misst, die Jobs sonst nicht stillstellen kann: `php jobs.php
+--pause` braucht eine `config.php` auf demselben Rechner (Backlog Nr. 219).
+`bis` ist dabei die Antwort auf die Frage und nicht die Wiederholung des
+Wunsches — `jobs_pause()` deckelt auf `JOB_PAUSE_MAX_S`, wer 9999 schickt,
+sieht dort 7200.
+
+**Ein fehlendes `sekunden` ist ein Fehler (400), kein Vorgabewert.** `0` hebt
+die Pause auf; ein vergessener Parameter gäbe sonst die Jobs frei und meldete
+dafür `ok`.
 
 Am Huckepack-Weg gilt zusätzlich ein **Mindestabstand** von
 `JOB_ANFRAGE_PAUSE_S` = 5 Minuten je Job. Ohne ihn liefe ein nicht-täglicher
@@ -7830,6 +7861,17 @@ Knopfhöhen), und **nur bei Tag-Läufen** der Messstand. Alle drei brauchen ein
 `STAGING_PASS`, Variable `STAGING_URL`); fehlt es, wird der Schritt
 ausdrücklich übersprungen und gemeldet.
 
+**Die Kreisläufe brauchen seit Web 20.16.0 zusätzlich `JOBS_TOKEN`** in der
+Umgebung `staging` (Backlog Nr. 219). Sie halten die Hintergrundjobs an,
+bevor sie ein Backup in ein frisches Konto spielen — sonst dünnt der
+Verdichtungsjob die wiederhergestellten Spuren aus, und der Vergleich misst
+„hat der Job dazwischen zugeschlagen" statt „kommt zurück, was hineinging"
+(gemessen: 125 verdichtete Spuren in einem Lauf ohne Pause). Das ging bis
+dahin nur über die Kommandozeile und damit nur auf dem Rechner der
+Installation; hier läuft ein Läufer gegen ein fernes Staging. **Fehlt das
+Token, wird übersprungen und gesagt** — nicht still auf den lokalen Weg
+zurückgefallen, der hier ohnehin an der fehlenden `config.php` scheitert.
+
 **Der erste Schritt unterscheidet seit Nr. 214 zwei Fälle.** Landet der
 Aufruf auf `install.php`, fragt er diese Datei zusätzlich ab: Kommt **404**,
 liegt es nicht am `FTP_ZIELPFAD`, sondern daran, dass `install.php` seither
@@ -7900,8 +7942,15 @@ sondern an den **Umgebungen**:
 
 | Umgebung | Geheimnisse | Variablen |
 |---|---|---|
-| `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS` | `FTP_ZIELPFAD`, `STAGING_URL` |
+| `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `JOBS_TOKEN` | `FTP_ZIELPFAD`, `STAGING_URL` |
 | `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN` | `FTP_ZIELPFAD`, `PRODUKTION_URL` |
+
+**`JOBS_TOKEN` steht in beiden Umgebungen unter demselben Namen und trägt
+verschiedene Werte.** Das Token gehört der **Installation**
+(`app_state.jobs_token`, sichtbar unter Betrieb → Hintergrundjobs), nicht dem
+Repositorium; Staging und Produktiv sind zwei Installationen. Jeder Job liest
+es aus seiner eigenen Umgebung, deshalb kollidiert der gleiche Name nicht —
+und die beiden Zeilen in `auslieferung.yml` lassen sich nebeneinander lesen.
 | Repositorium | `CIQ_GERAETE_URL` (Stufe 1) | `WACHE_BASIS` |
 
 `FTP_SERVER` ist der **nackte Hostname**, ohne Protokoll und ohne Pfad.
