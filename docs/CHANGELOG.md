@@ -14,6 +14,67 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.16.4] — 2026-09-17
+
+**Vier Stellen, an denen die Dokumentation eine andere Kette beschrieb als die
+gebaute** (Backlog Nr. 215, dazu drei neue Funde).
+
+Aufgefallen beim Schreiben einer Übersicht über die Automatisierung: Wer die
+drei Arbeitsläufe erklären will, hält sie gegen `docs/Technik.md` 6 — und dabei
+kommt heraus, wo beide auseinandergehen. Kein Verhalten geändert, keine
+Migration.
+
+### Berichtigt: der Messstand-Satz behauptete zwei Dinge, die beide nicht zutreffen
+
+`Technik.md` 6.3 nannte als Bestandteil von Stufe 2 „und **nur bei Tag-Läufen**
+der Messstand". Der Schritt führt seit P5a/AP9 nichts mehr aus — er ist
+ersatzlos gestrichen (Nr. 206), geblieben ist ein Schritt gleichen Namens, der
+nur sagt, wo die Zahlen des Messstands stehen. Und Stufe 2 läuft bei einem
+Tag-Lauf **überhaupt nicht**: `staging` ist für Tags abgeschaltet, `stufe2`
+hängt mit `needs` daran; ein Tag lässt allein `produktion` laufen. Dass der
+ausgelieferte Stand Stufe 2 trotzdem gesehen hat, sichert das Tor „Grüner
+Staging- und Stufe-1-Lauf auf diesem Stand?" — der Absatz sagt das jetzt.
+
+### Berichtigt: die Tabelle der Stufe 1 führte 13 Schritte, der Lauf hat 14
+
+Es fehlte die Zeile für `tools/kette/tor.py --selbstprobe` (11 erfüllt,
+0 offen), die mit Web 20.16.1 aus dem Produktionslauf nach Stufe 1 gezogen
+wurde. Eine Tabelle, die einen Prüfschritt nicht führt, ist genau dort
+gefährlich, wo jemand sie zum Nachzählen benutzt.
+
+### Behoben: eine handgepflegte Zahl, zum zweiten Mal veraltet
+
+Die Kopfzeile der Selbstprobe von `tor.py` meldete bis Web 20.16.1 „fünf
+Lagen" und fuhr zehn; danach stand „fünf und fünf" da, und mit dem elften Fall
+stimmte auch das nicht mehr. Behoben ist deshalb **nicht die Zahl, sondern
+ihre Bauart**: Die Kopfzeile nennt nur noch die Gruppen — Backup-Tor,
+Unterbefehl `pause`, Fehlerantwort —, und die einzige ausgegebene Zahl ist die
+**gezählte** am Ende des Laufs. Eine Zahl, die niemand pflegen muss, kann nicht
+veralten. `Technik.md` 6.4 und der Kopf von `auslieferung.yml` sagen jetzt
+dazu, worauf sich ihre „fünf Lagen" beziehen: auf das Backup-Tor allein.
+
+### Berichtigt: sechs Werkzeuge begründeten ihre Arbeitsweise mit `deploy.yml`
+
+Backlog Nr. 215, dort mit fünf Stellen aufgenommen — beim Nachzählen wurden es
+sechs. `deploy.yml` ist mit Web 20.4.0 gelöscht; die Kette heißt seither
+`auslieferung.yml` und hat **zwei** FTPS-Schritte statt einem. Der Preis war
+nicht kosmetisch: `adminbackup_lib.php` erklärt mit diesem Satz, warum
+`sicherungen/` in der Ausnahmeliste stehen **muss** — wer ihm folgte, suchte
+die Liste, die alle Backups schützt, in einer Datei, die es nicht mehr gibt.
+Jede Stelle nennt jetzt `auslieferung.yml` und, wo es darauf ankommt, die
+Zweiwegigkeit; die Herkunft bleibt als „bis Web 20.3.0: `deploy.yml`" daneben.
+
+**Bewusst nicht angefasst:** die Erwähnungen in `docs/konzepte/`, im Backlog
+und in diesem Changelog. Das sind Protokolle eines Standes — wer sie
+umschreibt, fälscht die Geschichte, statt sie zu berichtigen.
+
+### Warum die Nummer überhaupt steigt
+
+Fünf der sechs Stellen liegen unter `tools/`, der Rest unter `docs/` — das
+allein stufte nichts hoch. Die sechste ist der Kommentar in
+`server/adminbackup_lib.php`, und damit ist es keine Änderung mehr, die nur
+`tools/` und `docs/` anfasst (`CLAUDE.md` 2).
+
 ## [Web 20.16.3] — 2026-09-17
 
 **Die Durchsicht fand einen schlimmeren Fehler als den behobenen**

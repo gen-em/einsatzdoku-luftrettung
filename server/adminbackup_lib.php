@@ -21,10 +21,12 @@ declare(strict_types=1);
  *      .htaccess abgeschaltet. Dasselbe Muster wie bei der Nachweisdatei der
  *      Ersteinrichtung (`server/.htaccess`, M1-11).
  *
- * ZWINGEND: `sicherungen/` steht in der `exclude`-Liste von
- * `.github/workflows/deploy.yml`. Der FTP-Deploy synchronisiert `server/` und
+ * ZWINGEND: `sicherungen/` steht in der `exclude`-Liste **beider**
+ * FTPS-Schritte von `.github/workflows/auslieferung.yml` (bis Web 20.3.0:
+ * `deploy.yml`, seither gelöscht). Der Deploy synchronisiert `server/` und
  * löscht alles, was nicht ausgenommen ist — ohne den Eintrag wäre die erste
- * Auslieferung nach dieser Fassung zugleich das letzte aller Backups.
+ * Auslieferung nach dieser Fassung zugleich das letzte aller Backups. Seit
+ * der Kette gilt das zweimal: für Staging und für Produktiv.
  *
  * Aufbau der Ablage:
  *

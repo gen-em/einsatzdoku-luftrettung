@@ -115,7 +115,7 @@ vorfindet: `user_id`, `epoch`, `last_seen`, `csrf`.
 ## Was sie NICHT prüft — und wo es steht
 
 - **Das Verhalten des Deploys gegenüber `wartung.lock`** (Konzept 6.3). Die
-  Ausnahme in `.github/workflows/deploy.yml` ist eine **Zusage**; bewiesen
+  Ausnahme in `.github/workflows/auslieferung.yml` ist eine **Zusage**; bewiesen
   wird sie beim ersten Deploy im Wartungsmodus. Steht im Prüfdokument S5.
 - **Wie die Wartungsseite aussieht.** Die Probe misst, dass sie kommt und was
   drinsteht. Ob sie bei 360 px überläuft, misst

@@ -30,7 +30,7 @@ Zugangsschutz (Branch-Schutz, 2FA-Zwang, später das Freigabetor aus R67).
 ## Warum sie ohne eingecheckte Prüfsummen auskommt
 
 Der Deploy synchronisiert `server/` **byteweise** per FTPS
-(`.github/workflows/deploy.yml`). Was unter `assets/` liegt, ist auf dem Server
+(`.github/workflows/auslieferung.yml`). Was unter `assets/` liegt, ist auf dem Server
 also dieselbe Datei wie im Repositorium — die Wache rechnet **beide Seiten
 frisch** aus. Eine gepflegte Liste von Prüfsummen stimmt nach der dritten
 Änderung nicht mehr; diese hier kann nicht veralten.
@@ -47,7 +47,7 @@ statt ihn stillschweigend zu übergehen.
 
 | Teil | Frage |
 |---|---|
-| Selbstprobe | Erkennt sie eine Abweichung überhaupt? 30 Erwartungen, ohne Netz — darunter achtzehn ausdrücklich „Abweichung erkannt" |
+| Selbstprobe | Erkennt sie eine Abweichung überhaupt? 32 Erwartungen, ohne Netz — darunter achtzehn ausdrücklich „Abweichung erkannt" |
 | 1 | Jede Datei unter `server/assets/` (ohne `.md`) — SHA-256 der Auslieferung gegen die des Repositoriums |
 | 2 | Die **ganze Menge** dessen, was auf der Anmeldeseite (`login.php`) den Weg des Passworts bestimmt: jeder `<script src>` (zitiert oder nicht), jeder Inline-Block, jedes `<form>`-Tag, jedes `<base>`-Tag, jedes Umlenk-Attribut (`formaction`, `formmethod`, `formtarget`, `formenctype`), jede Kopfanweisung (`<meta http-equiv>`), jede Einbettung (`<iframe>`, `<frame>`, `<object>`, `<embed>`), jedes Ereignisattribut (`on…=`) und jede `javascript:`-Adresse — nichts darf fehlen, verändert sein **oder dazukommen** |
 

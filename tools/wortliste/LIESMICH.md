@@ -223,5 +223,5 @@ Das Werkzeug bleibt im Repositorium und läuft weiter mit (E-P2-12):
 - **P6** (Umbenennung) räumt die Klassen D und E auf. Dann fallen
   Ausnahmen weg — und die dritte Zahl („ungenutzt") sagt, welche.
 
-`tools/` wird nicht ausgeliefert (`deploy.yml` lädt nur `server/` hoch); das
+`tools/` wird nicht ausgeliefert (`auslieferung.yml` lädt nur `server/` hoch); das
 Werkzeug kommt dem Produktivserver nicht nahe.

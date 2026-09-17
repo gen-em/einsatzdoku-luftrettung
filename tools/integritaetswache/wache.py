@@ -24,7 +24,7 @@ wird; von ihm faengt sie genau den Teil, der Passwoerter beruehrt (den
 Inline-Block der Anmeldeseite, siehe unten).
 
 WARUM SIE OHNE EINGECHECKTE ERWARTUNGSSUMME AUSKOMMT
-Der Deploy (`.github/workflows/deploy.yml`) synchronisiert `server/` byteweise
+Der Deploy (`.github/workflows/auslieferung.yml`) synchronisiert `server/` byteweise
 per FTPS. Was unter `assets/` liegt, ist auf dem Server also dieselbe Datei wie
 im Repositorium -- der Vergleich braucht keine gepflegte Liste von
 Pruefsummen, die nach der dritten Aenderung nicht mehr stimmt. Er rechnet beide
