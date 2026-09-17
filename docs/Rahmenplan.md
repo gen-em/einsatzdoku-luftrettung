@@ -1735,7 +1735,7 @@ Erst ab Schritt 5 synchronisiert die Kette.
 | 5 | Push auf `main` — **ab hier synchronisiert die Kette**. Voraussetzung ist der Merge von **PR #49** (`claude/kette-auf-main`): Solange `deploy.yml` auf `main` steht, geht ein Push dorthin nicht auf Staging, sondern auf **Produktiv** | — | ☑ *16.09.2026 — PR #49 gemergt (`ee6d0b2`), Lauf #2 hat 647 Einträge synchronisiert* |
 | 6 | `https://staging.nadoku.gen-em.org/install.php` im Browser: schreibt `config.php`, legt die BetreiberIn an, setzt `install.lock`. **Eigener Serverschlüssel und eigener Server-Anteil — nie die von Produktiv** | Browser | ☑ *16.09.2026 — gemessen: `login.php` HTTP 200, Titel „Anmelden — Gen-EM NAdoku"* |
 | 7 | In `config.php` nachtragen: `smtp` auf `staging@gen-em.org`, dazu `'mail' => ['betreff_praefix' => '[Staging]']` (E-PP-09) | FTP | ☐ |
-| 8 | Demo-Konto, Referenzdatensatz und Messstand-Konto einspielen (`tools/referenzdatensatz/einspielen/`, Reihenfolge in der dortigen `LIESMICH.md` — `demo_kennzeichnen.php` läuft **vor** dem ersten Anmelden) | Werkzeuge | ☐ |
+| 8 | **Demo-Konto aus der Fixture anlegen:** auf Staging als Administratorin anmelden → **Verwaltung → Demo-Konto** → Knopf „Demo-Konto anlegen". Mehr ist es nicht — `server/demo/fixture.json.gz` liegt dort schon, die Kette liefert sie mit | Browser | ☑ *17.09.2026 — von der Betreiberin angelegt; gemessen: der Bilderlauf hat danach alle 29 Demo-Seiten fotografiert* |
 | 9 | Eigenes **SFTP-Backup-Ziel** für Staging eintragen (zugesagt 15.09.2026) — damit Staging-Stände nie neben Produktiv-Sicherungen liegen | Anwendung | ☐ |
 | 10 | **`JOBS_TOKEN`** als Environment secret der Umgebung `staging` eintragen — der Wert steht auf Staging unter **Betrieb → Hintergrundjobs** hinter `jobs.php?token=` (Web 20.16.0, Backlog Nr. 219). **Derselbe Name wie in `produktion`, anderer Wert:** Das Token gehört der Installation, nicht dem Repositorium | GitHub | ☑ *17.09.2026 — von der Betreiberin eingetragen* |
 
@@ -1744,6 +1744,31 @@ Umgebung. Sie dürfen früh eingetragen werden — **aber dann ist Stufe 2 rot,
 bis Schritt 8 durch ist**, und das ist so gewollt: Ein Stand, der auf Staging
 nicht läuft, ist nicht freigabefähig. Solange sie leer sind, überspringt
 Stufe 2 und sagt es.
+
+> **Warum Schritt 8 NICHT der Einspiellauf ist, und warum das hier steht.**
+> Bis zum 17.09.2026 verwies dieser Schritt auf
+> `tools/referenzdatensatz/einspielen/`. Das ist der Weg, auf dem die Fixture
+> **erzeugt** wird — zehn Stufen, rund vier Minuten Ingest, ein Browserschritt
+> fürs Passwort, dazu `demo_kennzeichnen.php`, das `db()` benutzt und deshalb
+> **auf dem Rechner der Installation** laufen muss. Für eine ZWEITE
+> Installation ist das der falsche Weg.
+>
+> Der richtige steht im Runbook (`docs/Technik.md`, Abschnitt 7, „Demo-Konto
+> einrichten (einmalig)"): Fixture erzeugen, mit ausrollen, im Adminbereich
+> anlegen. `demo_anlegen()` nimmt das Konto **vollständig** aus der Fixture —
+> Adresse, Passwort-Hash, `kdf_salt`, beide Schlüsselhüllen, `account_key` —
+> und spielt den Bestand in einer Transaktion ein.
+>
+> **Das geht auf einer fremden Installation nur deshalb auf**, weil die Hülle
+> in der Fixture `edk1:` ist, also ohne Server-Anteil, und weil
+> `demo_anlegen()` die Kennzeichnung in derselben Transaktion setzt —
+> `api/kdf_upgrade.php` überspringt das Konto damit beim ersten Anmelden
+> (`demo_ist_demo()`). Ohne beides käme das Demo-Konto herein und sähe nichts.
+>
+> **Das Messstand-Konto aus der alten Fassung dieses Schrittes braucht Stufe 2
+> nicht:** Der Messstand-Schritt ist in P5a/AP9 ersatzlos aus der Kette
+> gestrichen worden (Backlog Nr. 206) — er ist ein manuelles
+> Regressionsmittel und läuft lokal vor einer Auslieferung.
 
 **Dasselbe gilt für `JOBS_TOKEN` aus Schritt 10** (Web 20.16.0): Ohne ihn
 können die Kreisläufe die Hintergrundjobs auf Staging nicht anhalten, und ein

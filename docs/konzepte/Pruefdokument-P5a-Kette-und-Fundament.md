@@ -657,7 +657,7 @@ läuft er los.
 **Scheitern erkennbar an:** einem Job, der ohne Rückfrage durchläuft — dann ist
 in der Umgebung `produktion` kein Reviewer eingetragen.
 
-### P4 — Stufe 2 misst gegen Staging — **TEILS GEFAHREN am 16.09.2026**
+### P4 — Stufe 2 misst gegen Staging — **GRÖSSTENTEILS GEFAHREN am 17.09.2026**
 
 **Weg:** Nach der Einrichtung von Staging (Zuarbeit) einen Push auf `main`.
 **Erwartet:** Job `stufe2` grün; Kreisläufe **0 unerklärt**, Bilderlauf
@@ -674,6 +674,51 @@ wurde nichts**.
 | **Punktdateien gesperrt, .well-known offen?** | **grün beim allerersten Lauf** — vier Punktpfade **403**, `.well-known/acme-challenge/` **404 und nicht 403**. Damit ist **P33 auf der echten Anlage belegt**: Die Sperre greift, und die Zertifikatserneuerung ist **nicht** kaputtgegangen |
 | Kreisläufe csv und edbak | **rot** — und der Fehler war der Aufruf, nicht die Anwendung (siehe unten) |
 | Bilderlauf, Messstand | nie erreicht (der Lauf brach davor ab) |
+
+**Dritter Lauf, mit `JOBS_TOKEN` und Demo-Konto** (Lauf #6, `f0d31b6`,
+17.09.2026) — und hier stehen zum ersten Mal Zahlen aus einer echten,
+**fernen** Installation:
+
+| Schritt | Ergebnis |
+|---|---|
+| `staging` (FTPS-Sync) | **grün**, 8 s |
+| Antwortet Staging wie eine eingerichtete Installation? | **grün** |
+| Punktdateien gesperrt, `.well-known` offen? | **grün** |
+| **Kreisläufe csv und edbak** | **GRÜN**, beide, 1:55 min |
+| Bilderlauf | **rot** — aber aus zwei neuen Gründen, nicht mehr am Konto |
+
+**Die Kreisläufe, mit ihren Zahlen:**
+
+| | edbak | csv |
+|---|---|---|
+| Einzelvergleiche | **328 771** | **10 922** |
+| unerklärte Abweichungen | **0** | **0** |
+| erwartete Abweichungen | 21 | 1 271 |
+
+Und dazwischen, im Protokoll, die neue Aktion bei der Arbeit:
+
+```
+{"ok": true, "aktion": "pause", "sekunden": 1800, "grenze": 7200,
+ "bis": "2026-09-17 10:46:20", "meldung": "Jobs angehalten bis … UTC."}
+…
+{"ok": true, "aktion": "pause", "sekunden": 0, "grenze": 7200,
+ "bis": null, "meldung": "Jobs laufen wieder."}
+```
+
+**Der Bilderlauf lief zum ersten Mal ganz durch: 400 Einzelbilder, 50
+Kontaktbögen**, alle drei Rollen. Rot blieb er an zwei Stellen, und beide
+sind als Befund aufgenommen:
+
+- **`07-wartungsseite`** — 8 Aufnahmen ohne Bild, „Seite leitete auf die
+  Anmeldung um", dazu 8 Konsolenfehler. `aufnehmen.mjs` schaltet den
+  Wartungsmodus über die **lokale** Datei `server/wartung.lock`; gegen ein
+  fernes Staging ist das wirkungslos. **Dieselbe Annahme wie in Nr. 219, das
+  dritte Mal** (Backlog **Nr. 220**).
+- **`05-datenschutz`** — waagerechter Überlauf bei **360 px**, eine Seite von
+  fünfzig (Backlog **Nr. 221**).
+
+**Damit ist P4 bis auf den Bilderlauf belegt.** Er bleibt offen, bis Nr. 220
+behoben und der Überlauf aus Nr. 221 weg ist.
 
 > **Der rote Schritt war ein Aufruffehler aus AP1, der nie gelaufen war.**
 > ```

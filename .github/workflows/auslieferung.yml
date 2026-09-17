@@ -467,12 +467,20 @@ jobs:
           # braucht dort Adminrechte.
           #
           # DIE 29 DEMO-SEITEN laufen ueber die eingebauten Vorgaben
-          # (`demo@gen-em.org` / `nadokudemo0815`), die der Referenzdatensatz
-          # anlegt — Rahmenplan 6a **Schritt 8, und der steht noch offen**.
-          # Solange er offen ist, ist dieser Schritt rot, und zwar zu Recht:
-          # `seiten.json` fuehrt 29 Demo-, 15 Admin- und 6 anmeldungsfreie
-          # Seiten, und `aufnehmen.mjs` baut alle drei Rollen auf, bevor es
-          # das erste Bild macht.
+          # (`demo@gen-em.org` / `nadokudemo0815`). Das Konto kommt NICHT aus
+          # dem Einspiellauf, sondern aus der Fixture: Adminbereich ->
+          # Demo-Konto -> „Demo-Konto anlegen" (Rahmenplan 6a Schritt 8, seit
+          # 17.09.2026 erledigt). `seiten.json` fuehrt 29 Demo-, 15 Admin- und
+          # 6 anmeldungsfreie Seiten; `aufnehmen.mjs` baut alle drei Rollen
+          # auf, bevor es das erste Bild macht.
+          #
+          # ERSTE MESSUNG MIT DEMO-KONTO (17.09.2026): 400 Einzelbilder, 50
+          # Kontaktboegen — alle drei Rollen trugen. Rot blieb der Schritt aus
+          # zwei anderen Gruenden, und beide stehen im Backlog:
+          # Nr. 220 (`07-wartungsseite`: `aufnehmen.mjs` schaltet den
+          # Wartungsmodus ueber die LOKALE Datei `server/wartung.lock` — gegen
+          # ein fernes Staging wirkungslos) und Nr. 221 (waagerechter Ueberlauf
+          # auf `05-datenschutz` bei 360 px).
           node tools/screenshots/aufnehmen.mjs \
                --basis "$STAGING_URL" \
                --admin "$STAGING_KONTO" --admin-pw "$STAGING_PASS"

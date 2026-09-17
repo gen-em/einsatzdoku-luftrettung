@@ -48,9 +48,10 @@ Durchsicht vom 16.09.2026** (Zustandsdatei der Kette im Webroot;
 `install.php` in der Auslieferung), **215 und 216 aus der unabhängigen
 Durchsicht des P5a-Abschlusses** (16.09.2026, nach dem Merge), **217 und 218
 aus der Durchsicht der Werkzeugaufrufe** (17.09.2026), **219 aus dem ersten
-Auslieferungslauf nach dem Merge von PR #51** (17.09.2026). Jeder weitere
-Zweig, der Nummern vergibt, beginnt bei **220** und trägt seine Spanne hier
-ein, bevor er pusht.
+Auslieferungslauf nach dem Merge von PR #51** und **220 und 221 aus dem
+ersten Bilderlauf gegen Staging mit Demo-Konto** (beide 17.09.2026). Jeder
+weitere Zweig, der Nummern vergibt, beginnt bei **222** und trägt seine
+Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
@@ -2344,6 +2345,70 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Markdown-Darstellungen eine doppelte Linie, in anderen eine Überschrift.
     Beim Abhaken der Prüfliste mit wegräumen, nicht dafür eigens anfassen — das
     Dokument verschwindet ohnehin, sobald seine 33 Punkte abgehakt sind.
+
+220. **`aufnehmen.mjs` schaltet den Wartungsmodus über eine LOKALE Datei — und
+    das ist der dritte Fall derselben Annahme.**
+    *Aufgenommen 17.09.2026 aus dem ersten Bilderlauf gegen Staging, der ein
+    Demo-Konto hatte.*
+
+    Der Lauf hat alle 50 Seiten fotografiert — 400 Einzelbilder, 50
+    Kontaktbögen, alle drei Rollen trugen. Rot wurde er unter anderem hier:
+
+    ```
+    07-wartungsseite    kein Überlauf  ·  8 Konsolenfehler
+    OHNE BILD: 8 Aufnahmen — 8× Seite leitete auf die Anmeldung um
+    ```
+
+    `seiten.json` führt diesen Eintrag mit `"wartung": true` und
+    `"status": 503`: Das Werkzeug soll den Wartungsmodus einschalten,
+    `index.php` in acht Breiten aufnehmen und ihn wieder ausschalten.
+    Eingeschaltet wird er in `aufnehmen.mjs:908` so:
+
+    ```js
+    const WARTUNGSDATEI = join(WURZEL, 'server', 'wartung.lock');
+    ```
+
+    Also durch **Anlegen einer Datei im eigenen Arbeitsbaum**. Auf einem
+    GitHub-Läufer entsteht damit eine Datei im Checkout; Staging bleibt
+    offen, `index.php` leitet den nicht angemeldeten Aufruf zur Anmeldung um,
+    und acht Aufnahmen bleiben ohne Bild.
+
+    **Das ist dieselbe Annahme wie in Nr. 219**, nur an einer anderen Stelle:
+    Ein Werkzeug nimmt an, `--basis` sei der Rechner, auf dem es läuft. Bei
+    `kreislauf.py` war es die Job-Pause, hier ist es der Wartungsschalter.
+    Beim dritten Mal ist es keine Einzelheit mehr, sondern ein Muster.
+
+    *Zu tun, und der Weg liegt schon da:* `tools/kette/tor.py` kann
+    `wartung-an` und `wartung-aus` über `jobs.php?aktion=…`, und seit Web
+    20.16.0 steht `JOBS_TOKEN` auch in der Umgebung `staging`. `aufnehmen.mjs`
+    bräuchte also nur ein `--jobs-token` und denselben Zweig wie
+    `kreislauf.py`: mit Token über HTTP, ohne Token weiter über die lokale
+    Datei. **Und einen Riegel:** Ist `--basis` nicht local und kein Token da,
+    darf der Eintrag nicht still als „umgeleitet" durchlaufen, sondern muss
+    sagen, dass er nicht gemessen werden konnte.
+
+    *Zu prüfen wäre dabei auch, ob es weitere solche Stellen gibt* — ein
+    Werkzeug, das gegen `--basis` misst und dabei in `server/` schreibt oder
+    liest, ist immer verdächtig.
+
+221. **Waagerechter Überlauf auf der Datenschutzseite bei 360 px.**
+    *Aufgenommen 17.09.2026 aus demselben Lauf.*
+
+    ```
+    05-datenschutz    Überlauf bei 360
+    ```
+
+    Eine Seite, eine Breite, in einem Lauf über 50 Seiten und acht Breiten —
+    die übrigen 49 sind ohne Befund. 360 px ist die schmalste gemessene
+    Breite und damit das kleine Telefon.
+
+    **Noch nicht eingegrenzt:** Welches Element überläuft, steht nicht im
+    Protokoll, sondern im Bericht des Laufs
+    (`tools/screenshots/ausgabe/bericht.md`), und der liegt auf dem Läufer.
+    Nachstellen lässt es sich örtlich mit
+    `node tools/screenshots/aufnehmen.mjs --nur 05-datenschutz` gegen eine
+    lokale Installation. Verdacht ohne Beleg: ein langer Rechtstext ohne
+    Umbruchmöglichkeit (Adresse, E-Mail, URL) oder eine Tabelle.
 
 ## Erledigt
 
