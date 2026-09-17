@@ -265,6 +265,26 @@ function mail_katalog(): array
                 "WOLLTEST DU DAS NICHT, melde dich an. Das genügt.")
         ],
 
+        'konto_menge' => [
+            'art' => 'konto', 'frist' => null,
+            'pflicht' => ['prozent', 'einsaetze', 'speicher'],
+            'betreff' => fn(array $d): string => 'Dein Konto ist zu ' . $d['prozent']
+                                               . ' % voll — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "dein Zugang zur " . $n . " nähert sich seiner Grenze:\n\n"
+                . "  Einsätze: " . $d['einsaetze'] . "\n"
+                . "  Speicher: " . $d['speicher'] . "\n\n"
+                . "Ist eine der beiden Grenzen erreicht, nimmt der Server keine\n"
+                . "Gerätedaten mehr an — Uhr und Handy behalten sie dann und senden\n"
+                . "später, es geht nichts verloren. **Bearbeiten und Löschen bleiben\n"
+                . "in jedem Fall möglich.**\n\n"
+                . "Was hilft: alte Diensttage löschen, oder die Verwaltung um eine\n"
+                . "höhere Grenze bitten. Vorher ausleiten kannst du alles unter\n"
+                . "Import / Export.",
+                "Diese Nachricht kommt einmal, wenn die Marke überschritten wird — nicht\n"
+                . "täglich.")
+        ],
+
         'geraet_gekoppelt' => [
             'art' => 'geraet', 'frist' => null,
             'pflicht' => ['geraet', 'geraet_id', 'zeitpunkt'],

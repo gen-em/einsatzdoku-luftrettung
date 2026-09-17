@@ -378,22 +378,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
         }
     }
 
-    /* ---- Aufbewahrung je Konto (Vorgabe, Backlog Nr. 48) ---------------- */
-    if ($error === null) {
-        $roh = trim((string)($_POST['aufbewahrung'] ?? ''));
-        /* LEER HEISST „unbegrenzt" UND NICHT „0". Eine 0 hiesse „nichts
-         * aufbewahren", und das ist bei Einsatzdaten die eine Antwort, die
-         * niemand aus Versehen geben soll. */
-        if ($roh === '') {
-            $neu[KONTEN_K_AUFBEWAHRUNG] = '';
-        } elseif (!ctype_digit($roh) || (int)$roh < 30 || (int)$roh > 36500) {
-            $error = 'Aufbewahrung je Konto: leer lassen für „unbegrenzt", sonst '
-                   . 'eine ganze Zahl zwischen 30 und 36500 Tagen.';
-        } else {
-            $neu[KONTEN_K_AUFBEWAHRUNG] = $roh;
-        }
-    }
-
     /* ---- Demo-Anmeldung (der einzige Wert mit Verbraucher in AP1) ------- */
     if ($error === null) {
         $neu[KONTEN_K_DEMO_ANMELDUNG] = empty($_POST['demo_anmeldung']) ? '0' : '1';
@@ -1148,14 +1132,11 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           'wert' => (string)konten_grenze_mb(),
           'klein' => 'Einsätze samt GPS-Daten und Ruhesegmenten, gemessen wie die '
                    . 'Statistik zählt.']); ?>
-      <?php ui_feld(['name' => 'aufbewahrung', 'label' => 'Einsätze aufbewahren',
-          'art' => 'number', 'label_zusatz' => 'Tage — leer heißt unbegrenzt',
-          'wert' => konten_aufbewahrung_tage() === null
-                    ? '' : (string)konten_aufbewahrung_tage(),
-          'klein' => 'Leer lassen, wenn nichts von selbst verschwinden soll. Eine 0 '
-                   . 'gibt es hier nicht — sie hieße „nichts aufbewahren", und das '
-                   . 'ist bei Einsatzdaten die eine Antwort, die niemand aus '
-                   . 'Versehen geben soll.']); ?>
+      <p class="feld-hinweis"><strong>Wie viele Konto-Backups aufgehoben
+         werden</strong>, steht weiterhin unter Verwaltung → Konto-Backups —
+         eine zweite Zahl daneben wäre eine Doppelung. Was hier dazukommt, ist
+         die <strong>Überschreibung je Konto</strong>: Sie steht auf der
+         Kontoseite (Backlog Nr. 48).</p>
 
       <h3 class="listen-form-titel">Demo und Protokoll</h3>
       <?php ui_schalter(['name' => 'demo_anmeldung', 'label' => 'Demo-Anmeldung zulassen',

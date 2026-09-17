@@ -43,6 +43,15 @@ CREATE TABLE users (
   email_neu            VARCHAR(190) NULL,
   email_neu_token_hash CHAR(64) NULL,
   email_neu_bis        DATETIME NULL,
+  -- GRENZEN JE KONTO (P5b/AP6, E-P5b-18; Backlog Nr. 37 und 48). NULL heisst
+  -- „die Vorgabe der Installation gilt" — nicht 0 und nicht die Vorgabe als
+  -- Zahl: Traegt die Spalte den Wert, aendert eine spaetere Anhebung der
+  -- Vorgabe an bestehenden Konten nichts, und niemand saehe, warum.
+  grenze_einsaetze INT UNSIGNED NULL,
+  grenze_mb        INT UNSIGNED NULL,
+  -- Backlog Nr. 48: wie viele Konto-Backups dieses Kontos aufgehoben werden,
+  -- statt der Zahl der Installation (`adminbackup_aufbewahrung`, Vorgabe 2).
+  backup_pakete    SMALLINT UNSIGNED NULL,
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   -- Fuer die Verfalljobs, nicht fuer die Anzeige: „alle Konten in einem
   -- Zustand, deren Frist abgelaufen ist" waere sonst ein Vollscan je Joblauf.
@@ -987,4 +996,7 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- oben schon im Schema (Web 20.19.0, P5b/AP4).
   ('2026_09_16_einwilligungen', 'skipped'),
   -- users.email_neu* stehen oben schon im Schema (Web 20.20.0, P5b/AP5).
-  ('2026_09_16_adresswechsel_bestaetigt', 'skipped');
+  ('2026_09_16_adresswechsel_bestaetigt', 'skipped'),
+  -- users.grenze_* und aufbewahrung_tage stehen oben schon im Schema
+  -- (Web 20.21.0, P5b/AP6).
+  ('2026_09_16_konto_grenzen', 'skipped');

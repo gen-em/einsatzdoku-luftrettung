@@ -108,6 +108,41 @@ bis „fertig" durch.
 der die Einrichtung selbst fährt. Ohne ihn fällt dieselbe Lücke beim nächsten
 Umbau der Ladekette wieder auf.
 
+### F5 — Backlog Nr. 48 falsch gelesen (Aufbewahrung je Konto)
+
+**Gefunden:** 17.09.2026, beim Abnehmen von AP6 — durch erneutes Lesen des
+Backlog-Eintrags, nicht durch ein Werkzeug.
+**Behoben:** vor dem Commit von Web 20.21.0, also ohne dass die falsche
+Deutung je ausgeliefert wurde.
+
+**Was schiefging.** AP6 nennt „Aufbewahrung je Konto (Nr. 48)". Ich hatte das
+als **Aufbewahrungsfrist für Einsätze** gelesen und ein Feld
+`users.aufbewahrung_tage` gebaut — eine Frist, nach der Einsätze verschwinden.
+Nr. 48 meint aber die **Zahl der Sicherungspakete je Konto**: Die Installation
+hält eine Vorgabe (`adminbackup_aufbewahrung`, Standard 2), und ein einzelnes
+Konto soll davon abweichen dürfen.
+
+**Warum das mehr ist als ein falscher Name.** Die falsche Deutung hätte eine
+**stillschweigend löschende** Einstellung in die Kontoverwaltung gestellt, an
+einer Stelle, an der niemand mit Datenverlust rechnet — und sie hätte unter
+einer Backlog-Nummer gestanden, die etwas ganz anderes wollte. Ein Feld mehr
+ist ein Fehler; ein Feld, das löscht und falsch beschriftet ist, ist ein
+Schaden.
+
+**Behebung.** Feld zu `users.backup_pakete` berichtigt, Migration neu
+gefahren, `edbak_aufbewahrung_konto()` in `adminbackup_lib.php` ergänzt und
+`edbak_verdraengen()` darauf umgestellt; das falsche Feld aus der
+Servereinstellungs-Karte entfernt; `docs/Technik.md` und `docs/Handbuch.md`
+berichtigt.
+
+**Gegenprobe:** 4 Fälle, 4 bestanden (Abschnitt 3).
+
+**Was daraus folgt:** Eine Backlog-Nummer im Konzept ist ein **Verweis**, kein
+Titel. Wer sie umsetzt, liest den Eintrag — sonst setzt er den eigenen
+Eindruck um und hat dafür eine fremde Nummer.
+
+---
+
 ---
 
 ## 3. Was maschinell geprüft wurde — Mittel und Zahl
@@ -141,7 +176,13 @@ Umbau der Ladekette wieder auf.
 | **Karenz und Löschung** (Abnahme AP5) | AP5 | Antrag → `gesperrt`/`selbstloeschung`, Termin **30,0 Tage**; noch nicht fällig → 0 Konten; **Rückzug → Bestand unverändert** (bases 1, days 1 vorher wie nachher); Uhr vorgestellt → Job löscht 1, **Kaskade räumt alle Reste** | **bestanden** |
 | **Adresswechsel** (Abnahme AP5) | AP5 | Vormerken → **alte Adresse gilt weiter**, Frist 24,0 h; falscher Token ändert nichts; richtiger Token wechselt und räumt die Vormerkung; **zweiter Klick auf denselben Token** wird abgewiesen; **belegte Adresse** wird beim Klick abgewiesen, alte bleibt | **6 von 6 bestanden** |
 | **Protokoll ohne Adressen** (E-P5b-16) | AP5 | Der Eintrag `adresse_geaendert` enthält **kein `@`** | **bestanden** |
-| **Wortliste** | AP1, AP2, AP4, AP5, AP7 | **alle fünf Bereiche**: (a) 111 PHP-Dateien, (b) 36 JS, (c) 8 Dokumente, (d) 2 Android, (e) 35 Uhr — **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 99 Regeln | — |
+| **Mengengrenze greift** (Abnahme AP6) | AP6 | Grenze 3 Einsätze: Uploads **`200, 200, 200, 507`**; Rumpf der Absage `{"error":"kontingent","grund":"einsaetze"}`; **Ratenzähler 0 Zeilen** (die Absage ist kein Fehlversuch); nach Anheben auf 10 kam die abgewiesene Aufzeichnung nach — **4 Einsätze** im Konto | **6 von 6 bestanden** |
+| **Leer heißt „die Vorgabe gilt"** (Abnahme AP6) | AP6 | Ohne eigene Zahl gilt die Installationsvorgabe; eigene Zahl 3 schlägt die Vorgabe 5000; Anheben der Vorgabe wirkt auf Konten **ohne** eigene Zahl sofort | **bestanden** |
+| **Backlog Nr. 48 — Aufbewahrung je Konto** | AP6 | 4 Fälle, **4 bestanden**: ohne eigene Zahl gilt die Installationszahl (2); eigene Zahl 7 schlägt sie; ein Ordner ohne Konto fällt auf 2 zurück; leere Kennung ebenso. Dabei **eine Fehldeutung berichtigt** (Abschnitt 2, F5) | **bestanden** |
+| **Verwaister Mengen-Cache** (Fehlerfund) | AP6 | Aufräumjob über den Altbestand: **3 verwaiste `mengen:`-Einträge gefunden, 0 danach**; `konto_loeschen()` räumt sie seither an der Wurzel | **bestanden** |
+| **Ingestprobe** (Regression) | AP6 | **83 Erwartungen, 0 nicht erfüllt** — die Mengengrenze hat den Ingest-Weg nicht verändert | **bestanden** |
+| **Bilderlauf, drei Engines** | AP6 | `einstellungen.php` und `admin_user.php` (Füllstandskarten) in **8 Breiten**: **Chromium** 24 Bilder 0/0/0 · **Firefox** 24 Bilder 0/0/0 · **WebKit** 24 Bilder 0/0/0 (Überlauf / Konsolenfehler / Knopfhöhe) | — |
+| **Wortliste** | AP1, AP2, AP4, AP5, AP6, AP7 | **alle fünf Bereiche**: (a) 111 PHP-Dateien, (b) 36 JS, (c) 8 Dokumente, (d) 2 Android, (e) 35 Uhr — **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 99 Regeln | — |
 
 ---
 

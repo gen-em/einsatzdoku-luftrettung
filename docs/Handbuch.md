@@ -537,6 +537,36 @@ darüber. Hat die **Installation** die Adresssuche abgeschaltet, steht der
 Schalter ausgegraut da und sagt es — dann ändert er nichts, und wer ihn
 braucht, wendet sich an die BetreiberIn.
 
+### 3.1c Was dein Konto hält (seit Web 20.21.0)
+
+Unter dem Zahnrad → **Profil** steht, wie voll dein Konto ist: Einsätze und
+Speicher, jeweils mit der Grenze daneben.
+
+**Zwei Grenzen, und es zählt die, die zuerst erreicht ist.** Wer viele
+Einsätze mit wenig GPS-Daten hat, läuft in die eine; wer wenige mit langen
+Aufzeichnungen hat, in die andere.
+
+| Anteil | Was passiert |
+|---|---|
+| unter 80 % | nichts |
+| **ab 80 %** | einmalig eine Nachricht, dazu ein Hinweis auf dieser Seite |
+| **100 %** | Der Server nimmt keine Gerätedaten mehr an |
+
+**Bei 100 % geht nichts verloren.** Uhr und Handy bekommen eine Absage,
+behalten ihre Aufzeichnungen und senden sie, sobald wieder Platz ist.
+**Bearbeiten und Löschen bleiben möglich** — sonst säßest du in deiner eigenen
+Grenze fest.
+
+**Was im Papierkorb liegt, zählt nicht mit.** Löschen hilft also sofort, ohne
+90 Tage zu warten.
+
+**Die Speicherzahl ist geschätzt**, nicht auf das Byte genau — sie zählt die
+GPS-Daten, und die liegen je nach Alter in zwei verschiedenen Formen. Für eine
+Grenze bei 250 MB reicht das; eine Abrechnung ist es nicht.
+
+**Was hilft, wenn es eng wird:** alte Diensttage löschen — oder die Verwaltung
+um eine höhere Grenze bitten. Sie kann sie **je Konto** setzen (11.1).
+
 ### 3.1b Konto löschen (seit Web 20.20.0)
 
 Unter dem Zahnrad → **Profil**, ganz unten. **Du brauchst niemanden zu fragen.**
@@ -3194,6 +3224,30 @@ Konto-Backups geschieht: Werden sie mitgelöscht (Vorgabe), bleibt nichts
 zurück. Bleiben sie erhalten, überleben sie die Löschung und erscheinen unter
 **Konto-Backups** als „Backup ohne Konto". Zur Bestätigung ist die
 E-Mail-Adresse abzutippen.
+
+#### Mengen und Grenzen je Konto (seit Web 20.21.0)
+
+Die Karte zeigt, wie voll das Konto ist, und lässt beide Grenzen **für dieses
+eine Konto** setzen — dazu, **wie viele Konto-Backups** von ihm aufgehoben
+werden.
+
+**Leer heißt: die Vorgabe der Installation gilt** (Betrieb →
+Servereinstellungen → Konten). Trägt hier eine Zahl, gilt sie *statt* der
+Vorgabe — **auch wenn du die Vorgabe später anhebst**. Das ist der Grund, warum
+leer nicht dasselbe ist wie „dieselbe Zahl noch einmal eintragen".
+
+**Änderst du eine Grenze, wird die 80-%-Meldung zurückgesetzt.** Eine höhere
+Grenze macht aus denselben Daten einen anderen Prozentsatz; was bei der alten
+gemeldet war, ist bei der neuen eine andere Aussage.
+
+**Die Backup-Zahl ist für den Fall gedacht**, dass ein Konto besonders
+wertvoll oder besonders bewegt ist und mehr Stände vorgehalten werden sollen,
+ohne die Zahl für alle anzuheben. Sie kennt keine 0 — die hieße „kein Backup
+aufheben", und die Verdrängung ließe beim nächsten Lauf nichts übrig.
+
+**Einsätze verschwinden nicht von selbst.** Es gibt keine Aufbewahrungsfrist
+für Einsatzdaten, und das ist Absicht: Was jemand dokumentiert hat, löscht er
+selbst oder niemand.
 
 #### Status: sperren, entsperren, freischalten (seit Web 20.17.0)
 

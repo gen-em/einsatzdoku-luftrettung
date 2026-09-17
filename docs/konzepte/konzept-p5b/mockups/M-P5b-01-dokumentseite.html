@@ -74,8 +74,8 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
       da, gezeichnet ist der Ruhezustand.</li>
     <li><strong>Das Dokument ist 1500 px breit</strong> (1440 Rahmen plus Rand); ein
       1400-px-Fenster rollt um 100 px waagerecht. Das ist der Mockup-Rahmen, nicht die
-      Anwendung: <em>in</em> den Rahmen ist der waagerechte Überlauf in allen dreizehn
-      Darstellungen <strong>0 px</strong> (gemessen), ebenso die Zahl der
+      Anwendung: <em>in</em> den Rahmen ist der waagerechte Überlauf in allen
+      <strong>dreizehn Rahmen 0 px</strong> (gemessen), ebenso die Zahl der
       Konsolenfehler.</li>
   </ul>
 </div>
@@ -209,7 +209,7 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
 </div>
 <footer class="fuss-seite">
   <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-    <span class="fuss-version">v20.19.0</span></p>
+    <span class="fuss-version">v20.20.0</span></p>
   <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
 </footer>
 </template>
@@ -255,13 +255,13 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
         Lesespalte" — <em>ohne</em> Leiste. Mit dieser Seite bekommt der Typenkatalog
         einen siebten Eintrag. Das ist einzutragen, nicht nebenbei zu tun.</li>
       <li><strong>Das Suchfeld ist ein <code>.kartenfilter</code></strong>, kein
-        <code>.suchfeld</code> (48 px, die eine benannte Ausnahme von der 44/36-Regel). Es filtert die 25 Überschriften im Browser —
-        ohne Anfrage, ohne Adressänderung, CSP-konform. Ein <code>.suchfeld</code> wäre
+        <code>.suchfeld</code> (48 px, die eine benannte Ausnahme von der 44/36-Regel).
+        Es filtert die 25 Überschriften im Browser — ohne Anfrage, ohne Adressänderung, CSP-konform. Ein <code>.suchfeld</code> wäre
         das zweite der Anwendung und verspricht Volltextsuche im ganzen Handbuch; die
         bräuchte ein Skript, das den gerenderten Text durchgeht und Treffer markiert.
         <em>Das ist Entscheidung 1.</em>
         <br>Nebenbefund am Bestand: Design.md 9.32 sagt für den Kartenfilter 44 / 36 px;
-        gemessen sind es <strong>44 px am Handy und 41 px am Zeigergerät</strong>. Sein
+        gemessen sind es <strong>44,0 px am Handy und 41,3 px am Zeigergerät</strong>. Sein
         Eingabefeld trägt kein <code>.feld-eingabe</code> (das setzt
         <code>height:var(--knopf)</code>) und kommt nur über <code>padding</code> plus
         <code>min-height</code> auf seine Höhe. Dieselbe Ursache an der zweiten Stelle:
@@ -389,7 +389,7 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
 </div>
 <footer class="fuss-seite">
   <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-    <span class="fuss-version">v20.19.0</span></p>
+    <span class="fuss-version">v20.20.0</span></p>
   <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
 </footer>
 </template>
@@ -492,7 +492,12 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
       <li>Die Kopfzeile und die Fußzeile sind dieselben wie am Schreibtisch; die vier
         Fußzeilen-Verweise stehen bei 360 px noch in einer Zeile — siehe Darstellung 5.
         Der rechte Rahmen zeigt nur den Ausschnitt mit dem Verzeichnis, damit die
-        26 Zeilen nicht noch einmal einen ganzen Seitenkopf mitschleppen.</li>
+        26 Zeilen nicht noch einmal einen ganzen Seitenkopf mitschleppen.
+        <br>Der Kopf bleibt bei 360 px <strong>56 px</strong> hoch und läuft nicht über:
+        „Zur Anmeldung" bricht innerhalb seiner 44 px auf zwei Zeilen, der Name kürzt
+        sich mit Ellipse („Gen-EM NAd…", gemessen 127 px Text in 115 px Platz). Das ist
+        das heutige Verhalten des öffentlichen Kopfs — <code>impressum.php</code> sieht
+        am Handy genauso aus — und kein Fehler dieser Seite.</li>
       <li><strong>Befund am Bestand: die erste und die letzte Zeile sind zu flach.</strong>
         <code>.zeile</code> holt ihre Höhe aus <code>padding</code>, nicht aus
         <code>--knopf</code>; <code>.zeile:first-child</code> nimmt den oberen,
@@ -605,7 +610,7 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
 </div>
 <footer class="fuss-seite">
   <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-    <span class="fuss-version">v20.19.0</span></p>
+    <span class="fuss-version">v20.20.0</span></p>
   <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
 </footer>
 </template>
@@ -737,7 +742,7 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
 </div>
 <footer class="fuss-seite">
   <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-    <span class="fuss-version">v20.19.0</span></p>
+    <span class="fuss-version">v20.20.0</span></p>
   <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
 </footer>
 </template>
@@ -796,7 +801,7 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
 </div>
 <footer class="fuss-seite">
   <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-    <span class="fuss-version">v20.19.0</span></p>
+    <span class="fuss-version">v20.20.0</span></p>
   <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
 </footer>
 </template>
@@ -829,7 +834,7 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
      <code>&lt;p class="fuss-zeile fuss-rechts"&gt;</code> hinzu — keine neue Klasse,
      keine neue Regel.</p>
   <div class="frames">
-    <div class="frame"><div class="frame-kopf">1440 px · IST (heute, v20.19.0)</div>
+    <div class="frame"><div class="frame-kopf">1440 px · IST (heute, v20.20.0)</div>
 <template data-breite="1440">
 <div class="anmeldung-body">
   <main class="anmeldung">
@@ -849,7 +854,7 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
   </main>
   <footer class="fuss-seite fuss-dunkel">
     <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-      <span class="fuss-version">v20.19.0</span></p>
+      <span class="fuss-version">v20.20.0</span></p>
     <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
   </footer>
 </div>
@@ -878,7 +883,7 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
   </main>
   <footer class="fuss-seite fuss-dunkel">
     <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-      <span class="fuss-version">v20.19.0</span></p>
+      <span class="fuss-version">v20.20.0</span></p>
     <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
   </footer>
 </div>
@@ -907,7 +912,7 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
   </main>
   <footer class="fuss-seite fuss-dunkel">
     <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-      <span class="fuss-version">v20.19.0</span></p>
+      <span class="fuss-version">v20.20.0</span></p>
     <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
   </footer>
 </div>
@@ -934,7 +939,7 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
   </main>
   <footer class="fuss-seite fuss-dunkel">
     <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-      <span class="fuss-version">v20.19.0</span></p>
+      <span class="fuss-version">v20.20.0</span></p>
     <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
   </footer>
 </div>
@@ -1048,7 +1053,7 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
 </div>
 <footer class="fuss-seite">
   <p class="fuss-zeile">© Gen-EM · Open Source <a href="#">AGPL-3.0</a>
-    <span class="fuss-version">v20.19.0</span></p>
+    <span class="fuss-version">v20.20.0</span></p>
   <p class="fuss-zeile fuss-rechts"><a href="ueber.php">Was ist NAdoku</a> <a href="hilfe.php">Handbuch</a> <a href="impressum.php">Impressum</a> <a href="datenschutz.php">Datenschutz</a></p>
 </footer>
 </template>
@@ -1133,7 +1138,7 @@ body{margin:0;background:#EDE9DF;width:1500px;font-family:var(--schrift-text)}
   <h2>Was hier zu entscheiden ist</h2>
   <ol>
     <li><strong>Suchfeld: Filter über dem Inhaltsverzeichnis oder Volltextsuche?</strong>
-      Der Entwurf zeigt einen <code>.kartenfilter</code> (44 px am Finger, gemessen 41 px am
+      Der Entwurf zeigt einen <code>.kartenfilter</code> (44,0 px am Finger, gemessen 41,3 px am
       Zeigergerät), der die 25 Überschriften im Browser filtert — kein Skript auf dem Server, keine
       Adressänderung, CSP-konform. Die Alternative ist ein <code>.suchfeld</code>
       (48 px) mit Volltextsuche im gerenderten Handbuch; das wäre das zweite
@@ -1281,7 +1286,13 @@ document.querySelectorAll('template[data-breite]').forEach(function (t) {
    * Anwendung ist sie `calc(100vh - --kopf)` hoch und klebt; in einem
    * <iframe> waere 100vh genau die Hoehe, die diese Funktion gerade setzt —
    * das schaukelte sich auf (gemessen: 8585 statt 1339 px). Ein Standbild
-   * zeigt ohnehin die ganze Seite auf einmal. */
+   * zeigt ohnehin die ganze Seite auf einmal.
+   *
+   * WAS DIESE ZEILE KOSTET, STEHT OBEN unter „Was dieses Bild NICHT zeigt":
+   * Die Leiste ist im Bild so hoch wie ihre Liste, in der Anwendung 844 px
+   * (900-px-Fenster) — 11 der 26 Zeilen ohne Rollen. Ein Mockup, das eine
+   * Abweichung vom Laufzeitverhalten nur im Skriptkommentar erklaert, hat sie
+   * nicht erklaert. */
   var messen = function () {
     try {
       rahmen.style.height = Math.ceil(Math.max(

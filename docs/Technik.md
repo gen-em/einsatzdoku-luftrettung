@@ -3260,7 +3260,7 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 | Job | täglich? | was er tut |
 |---|---|---|
 | `konto_loeschung` | nein | Konten, deren 30-Tage-Karenz abgelaufen ist, endgültig löschen (P5b/AP5, E-P5b-16) — **höchstens fünf je Lauf**, weil eine Löschung die Spuren von Hand räumt, einen Ordner im Dateisystem löscht und über vierzehn Tabellen kaskadiert. Steht weit vorn: im Regelfall eine Abfrage über einen Index, und wenn er etwas zu tun hat, ist es das, worauf jemand ein Recht hat |
-| `aufraeumen` | ja, höchstens 1×/Kalendertag | **dreizehn Schritte** — verfallene Kopplungssitzungen, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speichermessung und Warnschwellen. **Maßgeblich ist `job_aufraeumen()`, nicht diese Zeile** — sie nannte bis Web 20.12.0 sechs von zwölf, und die fehlenden sechs sind zwischen S10 und P5a/AP7 dazugekommen, ohne dass es jemandem auffiel. Die **sichtbare** Beschreibung steht im Job-Katalog (`jobs_lib.php`) und ist mitzuführen |
+| `aufraeumen` | ja, höchstens 1×/Kalendertag | **dreizehn Schritte** — verfallene Kopplungssitzungen, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), **Mengen je Konto** und **verwaiste Kontomarken** (P5b/AP6), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speichermessung und Warnschwellen. **Maßgeblich ist `job_aufraeumen()`, nicht diese Zeile** — sie nannte bis Web 20.12.0 sechs von zwölf, und die fehlenden sechs sind zwischen S10 und P5a/AP7 dazugekommen, ohne dass es jemandem auffiel. Die **sichtbare** Beschreibung steht im Job-Katalog (`jobs_lib.php`) und ist mitzuführen |
 | `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
 | `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
 | `adminbackup` | nein, nur mit Auftrag | Konto-Backups aus der Sammelaktion „Alle sichern" |
@@ -6505,6 +6505,114 @@ jemand die Einträge auch lesen kann.
 Zählkarte (Einträge je Reiter, heute und gesamt) — mehr nicht. Die Reiter mit
 Filter, Archiv und Download hängen an Entscheidungen (V4, V5, V8, V9), die
 noch nicht gefallen sind.
+
+### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
+
+*E-P5b-04, -18; Backlog Nr. 37 und 48. Code: `konten_einstellungen_lib.php`
+(`konto_mengen()`, `konto_grenzen()`, `konto_fuellstand()`), `spur_bytes()` in
+`spur_lib.php`.*
+
+#### Zwei Grenzen, der größere Anteil zählt
+
+| | Vorgabe | je Konto |
+|---|---|---|
+| Einsätze | `konten_grenze_einsaetze` (5000) | `users.grenze_einsaetze` |
+| Speicher | `konten_grenze_mb` (250) | `users.grenze_mb` |
+| Konto-Backups | `adminbackup_aufbewahrung` (2) | `users.backup_pakete` |
+
+**`NULL` heißt „die Vorgabe gilt"** — nicht 0 und nicht die Vorgabe als Zahl.
+Trüge die Spalte den Wert, änderte eine spätere Anhebung der Vorgabe an
+bestehenden Konten nichts, und niemand sähe, warum.
+
+**Der größere der beiden Anteile zählt**, nicht der Durchschnitt: Wer 5000
+Einsätze mit wenigen GPS-Daten hat, ist genauso am Ende wie jemand mit 250 MB
+in dreihundert Aufzeichnungen. Eine gemittelte Zahl ließe beide weiterladen,
+bis eine Grenze weit überschritten ist.
+
+#### `507`, und warum nicht `403` oder `429`
+
+`507 Insufficient Storage` sagt „der Server hat keinen Platz mehr". `403`
+hieße „du darfst nicht", `429` hieße „nicht so schnell" — beides wäre falsch
+und ließe die Uhr das Falsche tun. Bei `507` wie bei `429` behält sie ihre
+Warteschlange und sendet später.
+
+**Bearbeiten und Löschen bleiben frei.** Die Grenze steht in `ingest.php` und
+im Import, nirgends sonst. Wer sie erreicht, muss aufräumen können. Aus
+demselben Grund zählt, was im **Papierkorb** liegt, nicht mit — sonst ließe
+sich die Grenze durch Löschen nicht unterschreiten, und genau das schlägt die
+Meldung vor.
+
+**Der Ratenschutz zählt die Absage nicht.** Ein volles Konto ist kein Angriff.
+
+#### Gemessen wird gecacht, fortgeschrieben wird geschätzt
+
+Die Byte-Messung liest die Blob-Längen **aller** GPS-Daten eines Kontos. Bei
+jedem Upload wäre das genau an dem Weg teuer, der schnell sein muss.
+
+| Wann | Wie |
+|---|---|
+| nach jedem Upload-Schub | **geschätzt** fortgeschrieben (`SPUR_ZEILE_BYTE` je Punkt) |
+| Aufräumjob, einmal am Tag | **gemessen**, Cache ersetzt |
+
+Format in `app_state` unter `mengen:<id>`: `<einsaetze>\|<bytes>\|<zeitstempel>`
+— drei Zahlen mit Trennstrich, weil `app_state.v` 190 Zeichen fasst und JSON
+dort keinen Platz hätte.
+
+**Ohne die Fortschreibung griffe die Grenze erst einen Tag später**, und ein
+Konto könnte an einem Tag beliebig weit darüber hinauswachsen.
+
+#### `spur_bytes()` steht in `spur_lib.php`
+
+Nicht beim Aufrufer, und das ist die Regel aus `CLAUDE.md` 4: Die Punkte
+liegen je nach Alter als Zeilen in `track_points` **oder** als Blob in
+`track_blobs` — und während einer Nachlieferung als beides. Wer nur eine der
+beiden Tabellen zählt, misst je nach Bestand die Hälfte, ohne Fehlermeldung.
+
+**Geschätzt und nicht gewogen**: Für `track_points` steht ein fester Wert je
+Zeile (`SPUR_ZEILE_BYTE`, 48), weil `information_schema` nur Tabellensummen
+kennt; für `track_blobs` wird `LENGTH()` gezählt — dort steckt die Masse. Die
+Grenze ist damit eine **Schätzung mit bekanntem Fehler, keine Abrechnung**,
+und das ist ehrlicher, als eine Zahl auf das Byte genau auszuweisen, die es
+nicht ist.
+
+#### Backlog Nr. 48 ist die Zahl der Backup-Pakete, nicht eine Frist
+
+**Und das ist beim Bauen zuerst falsch verstanden worden**, deshalb steht es
+hier: Nr. 48 („Aufbewahrung je Konto einstellbar, nicht nur je Installation")
+meint `adminbackup_aufbewahrung` — **wie viele Konto-Backups aufgehoben
+werden**, bevor der älteste verdrängt wird. Es meint **keine
+Aufbewahrungsfrist für Einsätze**; die gibt es nicht, und sie soll es auch
+nicht geben: Einsatzdaten von selbst verschwinden zu lassen wäre eine Zusage,
+die dieses Projekt nicht macht.
+
+Umgesetzt als `users.backup_pakete` und `edbak_aufbewahrung_konto($kennung)`,
+gelesen in `edbak_verdraengen()`. **Keine zweite Installationsvorgabe** — die
+gibt es schon unter Verwaltung → Konto-Backups; eine zweite Zahl daneben wäre
+genau die Doppelung, die R83 verhindern soll.
+
+`edbak_aufbewahrung_konto()` geht **über die Kontokennung**, nicht über die
+Id: `edbak_verdraengen()` arbeitet auf dem Ordner, und der heißt nach der
+Kennung. Ein Ordner ohne Konto („Backup ohne Konto") fällt auf die
+Installationszahl zurück — es gibt niemanden mehr, der etwas anderes bestimmen
+könnte.
+
+#### Die Marken sterben mit dem Konto
+
+`mengen:<id>` und `mengen_gemeldet:<id>` hängen an keinem Fremdschlüssel;
+`konto_loeschen()` räumt sie deshalb ausdrücklich mit, und der Aufräumjob holt
+verwaiste aus der Zeit davor. **`users.id` ist AUTO_INCREMENT, aber ein
+Wiederanlauf aus einer Sicherung kann eine Id erneut vergeben** — das neue
+Konto fände dann den Mengenstand des alten vor und stünde womöglich sofort an
+seiner Grenze, ohne einen einzigen Einsatz. Genau das ist beim Prüfen
+passiert.
+
+#### Was hier NICHT gebaut wurde
+
+**Die Umstellung der Geräteschlüssel auf SHA-256** (E-P5b-17). Sie ist seit
+**Web 13.0.0** erledigt — `geraet_schluessel_gueltig()` rechnet
+`hash_equals(hash('sha256', …))`, und der Kommentar daneben trägt die Messung,
+die sie ausgelöst hat: bcrypt kostete 228 ms je Upload „für eine Bremse, die
+nichts bremst". Das Konzept beschreibt in 1.3 einen Stand von vor Web 13.0.0.
 
 ### 4.99k Selbstlöschung und Adresswechsel (ab Web 20.20.0, P5b/AP5)
 

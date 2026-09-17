@@ -230,8 +230,9 @@ function jobs_katalog(): array
             'beschreibung' => 'Papierkorb, Kopplungssitzungen, Ratenschutz und '
                             . 'Sperrereignisse, Gerätevermerke, Passwort-Token, '
                             . 'CSP-Berichte, Mail-Warteschlange, Betriebsprotokoll, '
-                            . 'Job-Verlauf, Erinnerung an die Verwaltung, '
-                            . 'Speichermessung und Warnschwellen',
+                            . 'Mengen je Konto, verwaiste Kontomarken, Job-Verlauf, '
+                            . 'Erinnerung an die Verwaltung, Speichermessung und '
+                            . 'Warnschwellen',
             'taeglich'     => true,
             'rueckstand'   => fn(PDO $pdo, array $z): ?int => null,
             'lauf'         => 'job_aufraeumen',
@@ -721,6 +722,68 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
                 protokoll_bereinigen($pdo);
             } catch (Throwable $ex) {
                 /* Tabelle fehlt (Migration noch nicht gelaufen). */
+            }
+        },
+        'Mengen je Konto' => function (PDO $pdo): void {
+            /* DIE ECHTE ZAHL, EINMAL AM TAG (P5b/AP6, E-P5b-18).
+             *
+             * `ingest.php` schreibt den Zaehler nach jedem Schub GESCHAETZT
+             * fort — hier wird er gemessen. Die Schaetzung darf danebenliegen;
+             * sie wird spaetestens hier ersetzt, und eine Grenze bei 250 MB
+             * nimmt einen Schaetzfehler von ein paar Kilobyte nicht uebel.
+             *
+             * UND DIE WARNUNG BEI 80 % — einmalig je Konto und Schwelle.
+             * `mengen_gemeldet:<id>` merkt sich, dass sie draussen ist;
+             * faellt das Konto wieder darunter, wird die Marke geleert und
+             * die Warnung kaeme beim naechsten Ueberschreiten erneut. Ohne
+             * dieses Leeren bekaeme ein Konto, das dauerhaft um die Schwelle
+             * pendelt, nie wieder eine — oder jeden Tag eine. */
+            try {
+                require_once __DIR__ . '/konten_einstellungen_lib.php';
+                require_once __DIR__ . '/mail_lib.php';
+                foreach ($pdo->query('SELECT id, email FROM users')
+                              ->fetchAll(PDO::FETCH_ASSOC) as $u) {
+                    $uid = (int)$u['id'];
+                    konto_mengen($uid, true);           // frisch messen
+                    $f = konto_fuellstand($uid);
+                    $marke = 'mengen_gemeldet:' . $uid;
+
+                    if (!$f['warnung']) { app_state_setzen($marke, ''); continue; }
+                    if (app_state_lesen($marke) === '1') { continue; }
+
+                    mail_einreihen('konto_menge', (string)$u['email'], [
+                        'prozent'   => (string)(int)round($f['anteil'] * 100),
+                        'einsaetze' => $f['einsaetze'] . ' von ' . $f['grenze_einsaetze'],
+                        'speicher'  => (int)round($f['bytes'] / 1048576) . ' von '
+                                     . (int)round($f['grenze_bytes'] / 1048576) . ' MB',
+                    ]);
+                    app_state_setzen($marke, '1');
+                }
+            } catch (Throwable $ex) {
+                error_log('Mengenmessung je Konto: ' . $ex->getMessage());
+            }
+        },
+        'Verwaiste Kontomarken' => function (PDO $pdo): void {
+            /* `mengen:<id>` UND `mengen_gemeldet:<id>` OHNE KONTO (P5b/AP6).
+             *
+             * `konto_loeschen()` raeumt sie seit Web 20.21.0 mit — dieser
+             * Schritt holt, was aus der Zeit davor liegt, und was eine
+             * Loeschung an der Bibliothek vorbei hinterlassen hat (ein
+             * `DELETE FROM users` von Hand in der Datenbank etwa).
+             *
+             * WARUM ES NICHT EGAL IST: `users.id` ist AUTO_INCREMENT, aber
+             * ein Wiederanlauf aus einer Sicherung kann eine Id erneut
+             * vergeben. Das neue Konto faende dann den Mengenstand des alten
+             * vor — und stuende womoeglich sofort an seiner Grenze, ohne
+             * einen einzigen Einsatz. */
+            try {
+                $pdo->exec("DELETE a FROM app_state a
+                             LEFT JOIN users u
+                               ON u.id = CAST(SUBSTRING_INDEX(a.k, ':', -1) AS UNSIGNED)
+                            WHERE (a.k LIKE 'mengen:%' OR a.k LIKE 'mengen_gemeldet:%')
+                              AND u.id IS NULL");
+            } catch (Throwable $ex) {
+                error_log('Verwaiste Kontomarken: ' . $ex->getMessage());
             }
         },
         'Job-Verlauf' => function (PDO $pdo): void {

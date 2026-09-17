@@ -547,5 +547,31 @@ function konto_loeschen(int $userId, bool $mitSicherungen = true): array
     /* 4. Die Kaskade */
     $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$userId]);
 
+    /* 5. WAS AN KEINEM FREMDSCHLUESSEL HAENGT: die `app_state`-Eintraege
+     *    dieses Kontos (P5b/AP6).
+     *
+     * `mengen:<id>` und `mengen_gemeldet:<id>` sind Schluessel/Wert-Zeilen,
+     * keine Tabelle mit `user_id` — die Kaskade erreicht sie nicht. Sie
+     * blieben sonst liegen, und das ist nicht nur unordentlich: `users.id`
+     * ist AUTO_INCREMENT, aber ein Wiederanlauf aus einer Sicherung kann
+     * eine Id erneut vergeben. Das neue Konto faende dann den Mengenstand
+     * des alten vor — und stuende womoeglich sofort an seiner Grenze,
+     * ohne einen einzigen Einsatz.
+     *
+     * Gefunden am 16.09.2026 beim Pruefen der Mengengrenze: Ein Pruefkonto
+     * bekam beim ersten Upload einen Cache-Wert aus einem frueheren Lauf
+     * und wurde mit 507 abgewiesen, obwohl es leer war. */
+    /* GELOESCHT, nicht auf Leerstring gesetzt. Das Hausmuster für „Marke
+     * zurücksetzen" ist `app_state_setzen($k, '')` — hier geht es aber
+     * nicht um eine Marke, die wieder gebraucht wird, sondern um ein Konto,
+     * das es nicht mehr gibt. Eine Zeile, die nie wieder gelesen wird, ist
+     * Ballast. */
+    try {
+        $pdo->prepare('DELETE FROM app_state WHERE k IN (?, ?)')
+            ->execute(['mengen:' . $userId, 'mengen_gemeldet:' . $userId]);
+    } catch (Throwable $ex) {
+        error_log('app_state-Reste von Konto ' . $userId . ': ' . $ex->getMessage());
+    }
+
     return ['ok' => true, 'grund' => ''];
 }

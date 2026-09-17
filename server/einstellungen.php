@@ -1581,6 +1581,45 @@ ui_seite_start(['titel' => 'Einstellungen',
     });
     </script>
 
+    <?php /* ---- Was das Konto hält (P5b/AP6, E-P5b-04) ------------------
+       *
+       * VOR der Löschkarte und nach dem Passwort: Wer wissen will, wie voll
+       * sein Konto ist, sucht es bei den Angaben zum Konto — und nicht
+       * neben dem roten Kasten, in dem es gelöscht wird.
+       * ------------------------------------------------------------------ */ ?>
+    <?php require_once __DIR__ . '/konten_einstellungen_lib.php';
+          $fuell = konto_fuellstand($userId);
+          $prozent = (int)round($fuell['anteil'] * 100); ?>
+    <?php ui_karte_start(['titel' => 'Was dein Konto hält', 'id' => 'k-mengen',
+        'plakette' => ui_plakette($prozent . ' %', ['ton' => $fuell['voll'] ? 'rot'
+                                : ($fuell['warnung'] ? 'orange' : 'blau')])]); ?>
+      <?php ui_zeile(['text' => 'Einsätze',
+          'klein' => 'ohne die im Papierkorb — was dort liegt, zählt nicht gegen '
+                   . 'die Grenze',
+          'plaketten' => ui_plakette($fuell['einsaetze'] . ' von '
+                       . $fuell['grenze_einsaetze'], ['ton' => 'neutral'])]); ?>
+      <?php ui_zeile(['text' => 'Speicher',
+          'klein' => 'Einsätze samt GPS-Daten und Ruhesegmenten, geschätzt',
+          'plaketten' => ui_plakette((int)round($fuell['bytes'] / 1048576) . ' von '
+                       . (int)round($fuell['grenze_bytes'] / 1048576) . ' MB',
+                       ['ton' => 'neutral'])]); ?>
+      <?php if ($fuell['voll']): ?>
+        <?= ui_meldung_markup('warn', 'Die Grenze ist erreicht. Der Server nimmt '
+            . 'keine Gerätedaten mehr an — Uhr und Handy behalten sie und senden '
+            . 'später, es geht nichts verloren. Bearbeiten und Löschen bleiben '
+            . 'möglich.') ?>
+      <?php elseif ($fuell['warnung']): ?>
+        <?= ui_meldung_markup('info', 'Dein Konto ist zu ' . $prozent . ' % voll. '
+            . 'Wird eine der beiden Grenzen erreicht, nimmt der Server keine '
+            . 'Gerätedaten mehr an.') ?>
+      <?php endif; ?>
+      <p class="feld-hinweis"><strong>Was hilft:</strong> alte Diensttage löschen —
+         was im Papierkorb liegt, zählt nicht mit, Löschen wirkt also sofort. Oder
+         die Verwaltung um eine höhere Grenze bitten; sie kann sie je Konto setzen.
+         Vorher ausleiten kannst du alles unter
+         <a href="import.php">Import / Export</a>.</p>
+    <?php ui_karte_ende(); ?>
+
     <?php /* ---- Konto löschen (P5b/AP5, E-P5b-16) ------------------------
        *
        * WARUM ES DIESEN WEG GIBT: Bis Web 20.19.0 konnte eine Nutzerin ihr

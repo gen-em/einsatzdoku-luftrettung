@@ -21,15 +21,41 @@ Mockups in `konzept-p5b/mockups/`.
 > | Stand | 16.09.2026 — **Konzept geschrieben, zur Freigabe.** E-P5b-01 bis -10 sind im Gespräch entschieden; E-P5b-11 bis -22 stammen aus dem Nachmessen und gelten mit der Freigabe; **F-P5b-1 und F-P5b-2 sind am 16.09.2026 erledigt** (E-P5b-23, -24). |
 > | Entschieden | E-P5b-01 bis E-P5b-24 (Abschnitt 2) |
 > | Offen | nichts im Konzept; **außerhalb:** anwaltliche Prüfung der drei Rechtstext-Entwürfe (E-P5b-24) vor dem Einspielen |
-> | Umsetzung | nicht begonnen; **nach dem Merge von 10a und der Umsetzung von Schritt 15** (Rahmenplan Fassung 74). Reihenfolge AP1 → AP10, Abhängigkeiten in 3.0 |
-> | Fable-Schritte der Umsetzung | **zwei**: M-P5b-01 (Dokumentseite) vor AP8, M-P5b-02 (Registrierung, Erststart, Rückfrage-Dialog) vor AP3 |
+> | Umsetzung | **läuft** auf `claude/magical-dirac-we2y1z` seit 16.09.2026, auf dem Stand von `main` nach dem Merge von P5a (PR #50). Reihenfolge AP1 → AP10, Abhängigkeiten in 3.0 — abweichend davon sind AP3, AP8 und AP9 zurückgestellt, weil ihre Mockups zur Freigabe stehen (unten) |
+> | Fable-Schritte der Umsetzung | **zwei**: M-P5b-01 (Dokumentseite) vor AP8, M-P5b-02 (Registrierung, Erststart, Rückfrage-Dialog) vor AP3. **Beide sind gebaut** und liegen in `konzept-p5b/mockups/`; sie **warten auf die Freigabe** — die Betreiberin will sie vor der Umsetzung sehen (16.09.2026). Jedes Mockup schließt mit einer Liste offener Punkte: 15 bei M-P5b-01, 12 bei M-P5b-02 |
 > | Nummern | Dieses Konzept vergibt **keine** Rahmenplan-Fassung und **keine** Backlog-Nummern — die Einschübe in Abschnitt 7 und 8 übernimmt die Instanz, die das Konzept auf den Zweig legt, mit der dort nächsten freien Nummer (Backlog-Kopfnotiz vom 16.09.2026) |
 
-> **Stand der Umsetzung**
+> **Stand der Umsetzung** (Stand 17.09.2026)
 >
-> | Paket | Stand | Stufe | Abnahmezahlen |
-> |---|---|---|---|
-> | AP1 bis AP10 | offen | — | — |
+> | Paket | Stand | Version | Commit | Abnahmezahlen |
+> |---|---|---|---|---|
+> | AP1 — Protokoll-Schreibweg, Einstellungen | **erledigt** | Web 20.16.0 | `b9046ed` | 6 Reiter, zwei Aufbewahrungsfristen; Zählkarte in Betrieb → Status |
+> | AP2 — Lebenszyklus-Bibliothek | **erledigt** | Web 20.17.0 | `442dbcb` | Übergangstabelle statt Verzweigungen; Nr. 202 Paket 1 mit erledigt |
+> | AP3 — Registrierung | **zurückgestellt** | — | — | wartet auf die Freigabe von M-P5b-02 |
+> | AP4 — Einwilligungen | **erledigt** | Web 20.19.0 | `edc3040` | drei Dokumente, zwei Wirkungen; drei Wege bleiben am Tor offen |
+> | AP5 — Selbstlöschung, Adresswechsel | **erledigt** | Web 20.20.0 | `edc3040` | 30 Tage Karenz; Adresse erst nach Bestätigung aus dem neuen Postfach |
+> | AP6 — Mengengrenze, Aufbewahrung je Konto | **erledigt** | Web 20.21.0 | dieser | Uploads `200, 200, 200, 507`; Rumpf `{"error":"kontingent"}`; Ratenzähler 0; nach Anheben kam die abgewiesene Aufzeichnung nach (4 Einsätze). Nr. 48: 4 Fälle, 4 bestanden |
+> | AP7 — Demo-Anmeldung als Einstellung | **erledigt** | Web 20.18.0 | `ad93c9e` | — |
+> | AP8 — Handbuch, „Was ist NAdoku" | **zurückgestellt** | — | — | wartet auf die Freigabe von M-P5b-01 |
+> | AP9 — Onboarding und Rückfragen | **zurückgestellt** | — | — | wartet auf die Freigabe von M-P5b-02 |
+> | AP10 — Abschluss | offen | — | — | — |
+>
+> **Wo es hakt:** an der Freigabe der beiden Mockups — sie ist die einzige
+> offene Abhängigkeit im Haus. Außerhalb: die anwaltliche Prüfung der drei
+> Rechtstext-Entwürfe (E-P5b-24); AP4 steht deshalb mit Platzhaltern, und
+> das ist der geplante Zustand, kein Rest.
+>
+> **Ein Fehlerfund unterwegs:** F4 — P5a/AP4 hatte die Anwendung
+> **uninstallierbar** gemacht (`install.php` lief in einen HTTP 500).
+> Behoben mit Web 20.15.3 (Backlog Nr. 215); dazu Nr. 216, weil
+> `frame-ancestors` in einer `report-only`-Kopfzeile stand und WebKit
+> deshalb bei jedem Bild einen Konsolenfehler meldete. Beides steht in
+> Abschnitt 2 des Prüfdokuments.
+>
+> **Dreimal geprüft, nicht einmal.** Seit der Rückfrage vom 16.09.2026
+> läuft der Bilderlauf über **drei** Maschinen (Chromium, Firefox, WebKit)
+> — Nr. 216 ist genau daran aufgefallen und wäre unter Chromium allein
+> nie sichtbar geworden.
 
 ---
 

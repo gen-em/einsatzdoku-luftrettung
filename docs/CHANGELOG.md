@@ -14,6 +14,62 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.21.0] — 2026-09-17
+
+**Mengengrenze je Konto** (P5b/AP6, E-P5b-04, -18; Backlog Nr. 37 und 48).
+
+### Neu
+
+**Zwei Grenzen je Konto** — Einsätze und Speicher —, als Vorgabe der
+Installation (5000 / 250 MB) und **je Konto überschreibbar** in der
+Kontoverwaltung. Dort steht auch die **Aufbewahrung je Konto** (Nr. 48).
+**Leer heißt „die Vorgabe gilt"**, nicht 0 und nicht die Vorgabe als Zahl:
+Trüge die Spalte den Wert, änderte eine spätere Anhebung der Vorgabe an
+bestehenden Konten nichts, und niemand sähe, warum.
+
+**Ab 80 % eine Nachricht, bei 100 % `507`.** Der Code ist mit Bedacht
+gewählt: `507 Insufficient Storage` sagt „der Server hat keinen Platz mehr",
+und genau das ist der Fall. `403` hieße „du darfst nicht", `429` hieße „nicht
+so schnell" — beides wäre falsch und ließe die Uhr das Falsche tun. Bei `507`
+wie bei `429` behält sie ihre Warteschlange. Gemessen: Nach Anheben der
+Grenze kam die abgewiesene Aufzeichnung vollständig nach.
+
+**Bearbeiten und Löschen bleiben frei.** Die Grenze steht in `ingest.php` und
+im Import — nirgends sonst. Wer sie erreicht, muss aufräumen können; eine
+Grenze, die auch das Löschen sperrt, ist eine Falle. Aus demselben Grund
+zählt, was im Papierkorb liegt, **nicht** gegen die Grenze.
+
+**Der größere der beiden Anteile zählt**, nicht der Durchschnitt: Wer 5000
+Einsätze mit wenigen GPS-Daten hat, ist genauso am Ende wie jemand mit 250 MB
+in dreihundert Aufzeichnungen.
+
+**Kontoseite und Kontoverwaltung zeigen den Füllstand** mit beiden Zahlen und
+einer Plakette (blau / orange ab 80 % / rot bei 100 %).
+
+### Behoben
+
+**`konto_loeschen()` ließ den Mengen-Cache stehen.** `mengen:<id>` und
+`mengen_gemeldet:<id>` sind Schlüssel/Wert-Zeilen in `app_state`, keine
+Tabelle mit `user_id` — die Kaskade erreicht sie nicht. `users.id` ist
+AUTO_INCREMENT, aber ein Wiederanlauf aus einer Sicherung kann eine Id erneut
+vergeben: Das neue Konto fände dann den Mengenstand des alten vor und stünde
+womöglich sofort an seiner Grenze, ohne einen einzigen Einsatz.
+
+**Genau das ist beim Prüfen passiert** — ein leeres Prüfkonto wurde beim
+ersten Upload mit `507` abgewiesen. Behoben an der Wurzel; dazu ein Schritt im
+Aufräumjob für den Altbestand (gemessen: 3 verwaiste Einträge gefunden, 0
+danach).
+
+### Nicht gebaut, weil es schon da ist
+
+**E-P5b-17 ist gegenstandslos.** Das Konzept sieht die Umstellung der
+Geräteschlüssel von bcrypt auf SHA-256 vor — sie ist seit **Web 13.0.0**
+erledigt, samt der Messung, die sie ausgelöst hat: bcrypt kostete an diesem
+Pfad **228 ms je Upload** „für eine Bremse, die nichts bremst"
+(`db.php`). Am Code nachgemessen, nicht angenommen.
+
+**Migration** `2026_09_16_konto_grenzen`. **`update.php` ist fällig.**
+
 ## [Web 20.20.0] — 2026-09-16
 
 **Selbstlöschung mit Karenz, Adresswechsel mit Bestätigung** (P5b/AP5,

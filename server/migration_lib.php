@@ -2994,6 +2994,44 @@ function migrationen_katalog(): array
             'ALTER TABLE users ADD INDEX idx_email_neu_token (email_neu_token_hash)',
         ],
     ],
+    [
+        'id'    => '2026_09_16_konto_grenzen',
+        'web'   => '20.21',
+        'label' => 'Mengengrenzen und Aufbewahrung je Konto (P5b/AP6, Nr. 37, 48)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'users'
+                                AND column_name = 'grenze_einsaetze'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* `NULL` HEISST „die Vorgabe der Installation gilt" (E-P5b-18).
+             *
+             * Nicht `0` und nicht die Vorgabe als Wert: Beides waere eine
+             * Aussage ueber dieses eine Konto, wo keine getroffen wurde.
+             * Traegt die Spalte die Vorgabe als Zahl, aendert eine spaetere
+             * Anhebung der Installationsvorgabe an den bestehenden Konten
+             * nichts — und niemand saehe, warum.
+             *
+             * `backup_pakete` ist Backlog Nr. 48: Wie viele Konto-Backups
+             * dieses Kontos aufgehoben werden, statt der Zahl der
+             * Installation (`adminbackup_aufbewahrung`, Vorgabe 2). NICHT
+             * eine Aufbewahrungsfrist fuer Einsaetze — die gibt es nicht und
+             * soll es hier auch nicht geben: Einsatzdaten von selbst
+             * verschwinden zu lassen waere eine Zusage, die dieses Projekt
+             * nicht macht.
+             *
+             * Eine `0` gibt es auch hier nicht: Sie hiesse „kein Backup
+             * aufheben", und die Verdraengung liesse dann beim naechsten
+             * Lauf nichts uebrig. `edbak_aufbewahrung()` behandelt 0 seit
+             * jeher als „nie gesetzt". */
+            'ALTER TABLE users
+               ADD COLUMN grenze_einsaetze INT UNSIGNED NULL,
+               ADD COLUMN grenze_mb        INT UNSIGNED NULL,
+               ADD COLUMN backup_pakete    SMALLINT UNSIGNED NULL',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

@@ -225,6 +225,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * UND NICHT DIE LETZTE BETREIBERIN: Eine Installation ohne zugaengliches
      * Betreiberinnenkonto hat keinen Weg mehr zu Serverschluessel,
      * Migrationen und Wartungsmodus. Derselbe Grund wie beim Loeschen. */
+    /* ---- Grenzen und Aufbewahrung je Konto (P5b/AP6, Nr. 37, 48) -------
+     *
+     * LEER HEISST „die Vorgabe der Installation gilt" — an allen drei
+     * Feldern. Nicht 0 und nicht die Vorgabe als Zahl: Traegt die Spalte den
+     * Wert, aendert eine spaetere Anhebung der Installationsvorgabe an
+     * diesem Konto nichts, und niemand saehe, warum. */
+    if ($action === 'konto_grenzen') {
+        require_once __DIR__ . '/konten_einstellungen_lib.php';
+        $werte = [];
+        foreach ([['grenze_einsaetze', 'Einsätze', 1, 1000000],
+                  ['grenze_mb',        'Speicher (MB)', 1, 1000000],
+                  ['backup_pakete',    'Konto-Backups aufheben', 1, 99]] as [$f, $name, $min, $max]) {
+            $roh = trim((string)($_POST[$f] ?? ''));
+            if ($roh === '') { $werte[$f] = null; continue; }
+            if (!ctype_digit($roh) || (int)$roh < $min || (int)$roh > $max) {
+                $error = $name . ': leer lassen für die Vorgabe der Installation, '
+                       . 'sonst eine ganze Zahl zwischen ' . $min . ' und ' . $max . '.';
+                break;
+            }
+            $werte[$f] = (int)$roh;
+        }
+        if ($error === null) {
+            db()->prepare('UPDATE users SET grenze_einsaetze = ?, grenze_mb = ?,
+                                  backup_pakete = ? WHERE id = ?')
+                ->execute([$werte['grenze_einsaetze'], $werte['grenze_mb'],
+                           $werte['backup_pakete'], $uid]);
+            /* DIE MARKE DER WARNUNG LEEREN. Eine hoehere Grenze macht aus
+             * denselben Daten einen anderen Prozentsatz — was bei der alten
+             * gemeldet war, ist bei der neuen eine andere Aussage. Dieselbe
+             * Ueberlegung wie bei den Speicherschwellen in
+             * `betrieb_server.php`. */
+            app_state_setzen('mengen_gemeldet:' . $uid, '');
+            protokoll('verwaltung', 'konto_grenzen',
+                      'Grenzen geändert für ' . (string)$u['email'] . ': '
+                    . ($werte['grenze_einsaetze'] ?? 'Vorgabe') . ' Einsätze, '
+                    . ($werte['grenze_mb'] ?? 'Vorgabe') . ' MB, Konto-Backups '
+                    . ($werte['backup_pakete'] ?? 'Vorgabe'),
+                      $werte, $uid);
+            $notice = 'Grenzen gespeichert.';
+            $st = db()->prepare('SELECT * FROM users WHERE id = ?');
+            $st->execute([$uid]);
+            $u = $st->fetch() ?: $u;
+        }
+    }
+
     if ($action === 'konto_status') {
         require_once __DIR__ . '/konto_lib.php';
         $ziel  = (string)($_POST['status'] ?? '');
@@ -855,6 +900,55 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
           </form>
         <?php endif; ?>
       <?php endif; ?>
+    <?php ui_karte_ende(); ?>
+
+    <?php /* ---- Was das Konto halten darf (P5b/AP6, Nr. 37, 48) ---------- */ ?>
+    <?php require_once __DIR__ . '/konten_einstellungen_lib.php';
+          $fuell = konto_fuellstand($uid);
+          $gr    = konto_grenzen($uid);
+          $proz  = (int)round($fuell['anteil'] * 100); ?>
+    <?php ui_karte_start(['titel' => 'Mengen und Grenzen', 'id' => 'karte-mengen',
+        'plakette' => ui_plakette($proz . ' %', ['ton' => $fuell['voll'] ? 'rot'
+                                : ($fuell['warnung'] ? 'orange' : 'blau')])]); ?>
+      <?php ui_zeile(['text' => 'Einsätze',
+          'klein' => 'ohne die im Papierkorb',
+          'plaketten' => ui_plakette($fuell['einsaetze'] . ' von '
+                       . $fuell['grenze_einsaetze'], ['ton' => 'neutral'])]); ?>
+      <?php ui_zeile(['text' => 'Speicher',
+          'klein' => 'Einsätze samt GPS-Daten und Ruhesegmenten, geschätzt',
+          'plaketten' => ui_plakette((int)round($fuell['bytes'] / 1048576) . ' von '
+                       . (int)round($fuell['grenze_bytes'] / 1048576) . ' MB',
+                       ['ton' => 'neutral'])]); ?>
+      <form method="post">
+        <?= csrf_field() ?><input type="hidden" name="action" value="konto_grenzen">
+        <input type="hidden" name="id" value="<?= $uid ?>">
+        <p class="feld-hinweis"><strong>Leer heißt: die Vorgabe der Installation
+           gilt</strong> (<?= (int)konten_grenze_einsaetze() ?> Einsätze,
+           <?= (int)konten_grenze_mb() ?> MB). Trägt hier eine Zahl, gilt sie
+           <em>statt</em> der Vorgabe — auch wenn die Vorgabe später steigt.</p>
+        <div class="fld-reihe">
+          <?php ui_feld(['name' => 'grenze_einsaetze', 'label' => 'Einsätze',
+              'art' => 'number',
+              'wert' => $u['grenze_einsaetze'] !== null ? (string)$u['grenze_einsaetze'] : '',
+              'platzhalter' => 'Vorgabe: ' . (int)konten_grenze_einsaetze()]); ?>
+          <?php ui_feld(['name' => 'grenze_mb', 'label' => 'Speicher',
+              'art' => 'number', 'label_zusatz' => 'MB',
+              'wert' => $u['grenze_mb'] !== null ? (string)$u['grenze_mb'] : '',
+              'platzhalter' => 'Vorgabe: ' . (int)konten_grenze_mb()]); ?>
+        </div>
+        <?php require_once __DIR__ . '/adminbackup_lib.php'; ?>
+        <?php ui_feld(['name' => 'backup_pakete', 'label' => 'Konto-Backups aufheben',
+            'art' => 'number', 'label_zusatz' => 'Pakete',
+            'wert' => $u['backup_pakete'] !== null ? (string)$u['backup_pakete'] : '',
+            'platzhalter' => 'Vorgabe: ' . edbak_aufbewahrung(),
+            'klein' => 'Wie viele Sicherungsstände dieses Kontos aufgehoben werden, '
+                     . 'bevor der älteste verdrängt wird. Leer lassen für die Zahl der '
+                     . 'Installation. Für ein Konto, dessen Bestand besonders wertvoll '
+                     . 'ist, ohne die Zahl für alle anzuheben.']); ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+        </div>
+      </form>
     <?php ui_karte_ende(); ?>
 
     <?php /* ---- Geräte ---------------------------------------------------- */ ?>

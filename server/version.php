@@ -5781,4 +5781,49 @@ declare(strict_types=1);
  *
  * MIGRATION: `2026_09_16_adresswechsel_bestaetigt`. `update.php` ist faellig.
  */
-const WEB_VERSION = '20.20.0';
+/* ---------------------------------------------------------------------------
+ * 20.21.0 — MENGENGRENZE JE KONTO (P5b/AP6, E-P5b-04, -18; Nr. 37, 48)
+ * ---------------------------------------------------------------------------
+ *
+ * `507 Insufficient Storage`, und der Code ist mit Bedacht gewaehlt: Er sagt
+ * „der Server hat keinen Platz mehr", und genau das ist der Fall. `403`
+ * hiesse „du darfst nicht", `429` hiesse „nicht so schnell" — beides waere
+ * falsch und liesse die Uhr das Falsche tun. Bei `507` wie bei `429` behaelt
+ * sie ihre Warteschlange; gemessen: Nach Anheben der Grenze kam die
+ * abgewiesene Aufzeichnung vollstaendig nach.
+ *
+ * BEARBEITEN UND LOESCHEN BLEIBEN FREI. Die Grenze steht in `ingest.php` und
+ * im Import — nirgends sonst. Wer sie erreicht, muss aufraeumen koennen;
+ * eine Grenze, die auch das Loeschen sperrt, ist eine Falle.
+ *
+ * DER GROESSERE DER BEIDEN ANTEILE ZAEHLT, nicht der Durchschnitt: Wer 5000
+ * Einsaetze mit wenigen GPS-Daten hat, ist genauso am Ende wie jemand mit
+ * 250 MB in dreihundert Aufzeichnungen.
+ *
+ * GECACHT, WEIL DIE MESSUNG TEUER IST. Sie liest die Blob-Laengen aller
+ * GPS-Daten eines Kontos; bei jedem Upload waere das genau an dem Weg teuer,
+ * der schnell sein muss. `ingest.php` schreibt den Zaehler nach dem Schub
+ * GESCHAETZT fort, der Aufraeumjob misst einmal am Tag nach.
+ *
+ * `spur_bytes()` STEHT IN `spur_lib.php` UND NICHT BEIM AUFRUFER
+ * (CLAUDE.md 4). Die Punkte liegen je nach Alter als Zeilen ODER als Blob —
+ * wer nur eine der beiden Tabellen zaehlt, misst je nach Bestand die
+ * Haelfte, und zwar ohne Fehlermeldung.
+ *
+ * E-P5b-17 IST GEGENSTANDSLOS. Das Konzept sieht die Umstellung der
+ * Geraeteschluessel von bcrypt auf SHA-256 vor — sie ist seit Web 13.0.0
+ * erledigt (`db.php`, mit der Messung: bcrypt kostete 228 ms JE UPLOAD).
+ * Nachgemessen am Code, nicht angenommen.
+ *
+ * UND EIN BEFUND AUS DEM PRUEFEN: `konto_loeschen()` liess `mengen:<id>` und
+ * `mengen_gemeldet:<id>` in `app_state` stehen. `users.id` ist
+ * AUTO_INCREMENT, aber ein Wiederanlauf aus einer Sicherung kann eine Id
+ * erneut vergeben — das neue Konto faende dann den Mengenstand des alten vor
+ * und stuende womoeglich sofort an seiner Grenze, ohne einen einzigen
+ * Einsatz. Genau das ist beim Pruefen passiert. Behoben an der Wurzel, dazu
+ * ein Aufraeumschritt fuer den Altbestand (3 verwaiste Eintraege gefunden,
+ * 0 danach).
+ *
+ * MIGRATION: `2026_09_16_konto_grenzen`. `update.php` ist faellig.
+ */
+const WEB_VERSION = '20.21.0';

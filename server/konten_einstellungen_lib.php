@@ -62,7 +62,11 @@ const KONTEN_K_WEGWERF         = 'konten_wegwerf';
 const KONTEN_K_WEGWERF_EIGENE  = 'konten_wegwerf_eigene';
 const KONTEN_K_GRENZE_EINSAETZE = 'konten_grenze_einsaetze';
 const KONTEN_K_GRENZE_MB       = 'konten_grenze_mb';
-const KONTEN_K_AUFBEWAHRUNG    = 'konten_aufbewahrung';
+/* Backlog Nr. 48 wird NICHT als eigene Installationsvorgabe gefuehrt: Die
+ * gibt es schon — `app_state.adminbackup_aufbewahrung`, gepflegt unter
+ * Verwaltung → Konto-Backups. Eine zweite Zahl daneben waere genau die Art
+ * Doppelung, die R83 verhindern soll. Was P5b/AP6 ergaenzt, ist die
+ * UEBERSCHREIBUNG je Konto (`users.backup_pakete`). */
 const KONTEN_K_DEMO_ANMELDUNG  = 'konten_demo_anmeldung';
 
 /* ---- Vorgaben und Grenzen ------------------------------------------------ */
@@ -115,7 +119,6 @@ function konten_einstellungen(bool $neuLesen = false): array
         KONTEN_K_WEGWERF_EIGENE   => '',
         KONTEN_K_GRENZE_EINSAETZE => (string)KONTEN_GRENZE_EINSAETZE_VORGABE,
         KONTEN_K_GRENZE_MB        => (string)KONTEN_GRENZE_MB_VORGABE,
-        KONTEN_K_AUFBEWAHRUNG     => '',
         KONTEN_K_DEMO_ANMELDUNG   => '1',
     ];
 
@@ -200,18 +203,167 @@ function konten_grenze_mb(): int
     return $n > 0 ? $n : KONTEN_GRENZE_MB_VORGABE;
 }
 
-/** Aufbewahrung je Konto in Tagen, `null` = unbegrenzt (Backlog Nr. 48). */
-function konten_aufbewahrung_tage(): ?int
-{
-    $roh = konten_einstellungen()[KONTEN_K_AUFBEWAHRUNG];
-    if ($roh === '' || !ctype_digit($roh)) { return null; }
-    return (int)$roh;
-}
-
 /** Ist die Anmeldung am Demo-Konto zugelassen? (E-P5b-07) */
 function konten_demo_anmeldung_an(): bool
 {
     return konten_einstellungen()[KONTEN_K_DEMO_ANMELDUNG] === '1';
+}
+
+/* ---- Mengen je Konto (P5b/AP6, E-P5b-04, -18) ---------------------------- */
+
+/**
+ * Wie viel dieses Konto belegt — Einsaetze und Byte.
+ *
+ * ---------------------------------------------------------------------------
+ * GECACHT, UND ZWAR AUS EINEM GEMESSENEN GRUND
+ * ---------------------------------------------------------------------------
+ *
+ * Die Byte-Messung liest die Blob-Laengen aller GPS-Daten eines Kontos. Beim
+ * Demo-Bestand (106 Einsaetze, 63 752 Punkte) sind das Millisekunden; bei der
+ * Zielmenge aus E-S2-24 ist es das nicht mehr. Sie liefe sonst bei JEDEM
+ * Upload, und `ingest.php` ist genau der Weg, der schnell sein muss.
+ *
+ * Deshalb: gecacht in `app_state` unter `mengen:<id>`, erneuert im Job
+ * `aufraeumen` und nach jedem Upload-Schub FORTGESCHRIEBEN (geschaetzt, nicht
+ * gemessen). Die Schaetzung darf danebenliegen — sie wird beim naechsten
+ * Joblauf durch die echte Zahl ersetzt, und eine Grenze bei 250 MB nimmt
+ * einen Schaetzfehler von ein paar Kilobyte nicht uebel.
+ *
+ * DIE 190-ZEICHEN-GRENZE VON `app_state` IST DER GRUND FUER DAS FORMAT:
+ * `<einsaetze>|<bytes>|<zeitstempel>`, drei Zahlen mit Trennstrich. JSON
+ * waere lesbarer und haette hier keinen Platz.
+ *
+ * @param bool $frisch `true` misst neu, statt den Cache zu nehmen
+ * @return array{einsaetze:int, bytes:int, gemessen:?int}
+ */
+function konto_mengen(int $userId, bool $frisch = false): array
+{
+    $schluessel = 'mengen:' . $userId;
+
+    if (!$frisch) {
+        $roh = app_state_lesen($schluessel);
+        if ($roh !== null && $roh !== '') {
+            $t = explode('|', $roh);
+            if (count($t) === 3) {
+                return ['einsaetze' => (int)$t[0], 'bytes' => (int)$t[1],
+                        'gemessen'  => (int)$t[2]];
+            }
+        }
+    }
+
+    $pdo = db();
+    $einsaetze = 0; $bytes = 0;
+
+    try {
+        /* GEZAEHLT WIRD, WAS IM PAPIERKORB NICHT LIEGT. Ein geloeschter
+         * Einsatz belegt zwar noch Platz (der Papierkorb raeumt nach 90
+         * Tagen), aber er zaehlt nicht gegen die Grenze: Sonst koennte
+         * jemand seine Grenze nicht durch Loeschen unterschreiten, und
+         * genau das ist der Weg, den die Meldung bei 100 % vorschlaegt. */
+        $st = $pdo->prepare('SELECT COUNT(*) FROM missions
+                              WHERE user_id = ? AND deleted_at IS NULL');
+        $st->execute([$userId]);
+        $einsaetze = (int)$st->fetchColumn();
+
+        /* Die Zeilenlaengen der Konto-Tabellen. `pat_blob` ist der grosse
+         * Posten je Einsatz, die GPS-Daten sind der grosse Posten
+         * ueberhaupt. */
+        $st = $pdo->prepare('SELECT COALESCE(SUM(
+                   LENGTH(COALESCE(pat_blob, "")) + 200), 0)
+                 FROM missions WHERE user_id = ?');
+        $st->execute([$userId]);
+        $bytes += (int)$st->fetchColumn();
+
+        /* DIE GPS-DATEN UEBER `spur_lib.php`, NICHT PER SQL (CLAUDE.md 4).
+         * Sie liegen je nach Alter als Zeilen ODER als Blob — wer nur eine
+         * der beiden Tabellen zaehlt, misst je nach Bestand die Haelfte,
+         * und zwar ohne Fehlermeldung. */
+        require_once __DIR__ . '/spur_lib.php';
+        foreach ([['mission', 'missions'], ['rest', 'rest_segments']] as [$typ, $tab]) {
+            $ids = $pdo->prepare("SELECT id FROM `$tab` WHERE user_id = ?");
+            $ids->execute([$userId]);
+            $liste = array_map('intval', $ids->fetchAll(PDO::FETCH_COLUMN));
+            if ($liste) { $bytes += spur_bytes($pdo, $typ, $liste); }
+        }
+    } catch (Throwable $ex) {
+        error_log('konto_mengen: ' . $ex->getMessage());
+    }
+
+    $jetzt = time();
+    app_state_setzen($schluessel, $einsaetze . '|' . $bytes . '|' . $jetzt);
+
+    return ['einsaetze' => $einsaetze, 'bytes' => $bytes, 'gemessen' => $jetzt];
+}
+
+/**
+ * Den Zaehler nach einem Upload fortschreiben — geschaetzt, nicht gemessen.
+ *
+ * `ingest.php` ruft das nach jedem Schub. Die echte Zahl kommt beim naechsten
+ * Joblauf; bis dahin genuegt eine Schaetzung, damit die Grenze nicht erst
+ * einen Tag spaeter greift.
+ */
+function konto_mengen_fortschreiben(int $userId, int $einsaetzePlus, int $bytesPlus): void
+{
+    $roh = app_state_lesen('mengen:' . $userId);
+    if ($roh === null || $roh === '') { return; }   // noch nie gemessen — der Job holt es
+    $t = explode('|', $roh);
+    if (count($t) !== 3) { return; }
+    app_state_setzen('mengen:' . $userId,
+        ((int)$t[0] + $einsaetzePlus) . '|' . ((int)$t[1] + $bytesPlus) . '|' . $t[2]);
+}
+
+/** Die Grenzen dieses Kontos — die eigene, sonst die Vorgabe der Installation. */
+function konto_grenzen(int $userId): array
+{
+    $st = db()->prepare('SELECT grenze_einsaetze, grenze_mb, backup_pakete
+                           FROM users WHERE id = ?');
+    $st->execute([$userId]);
+    $z = $st->fetch(PDO::FETCH_ASSOC) ?: [];
+
+    return [
+        'einsaetze'    => $z['grenze_einsaetze'] !== null
+                        ? (int)$z['grenze_einsaetze'] : konten_grenze_einsaetze(),
+        'mb'           => $z['grenze_mb'] !== null
+                        ? (int)$z['grenze_mb'] : konten_grenze_mb(),
+        /* Backlog Nr. 48: die Zahl der Konto-Backups. `null` heisst „die
+         * Zahl der Installation gilt" (`edbak_aufbewahrung()`). */
+        'backup_pakete' => $z['backup_pakete'] !== null
+                        ? (int)$z['backup_pakete'] : null,
+        'eigen'        => $z['grenze_einsaetze'] !== null || $z['grenze_mb'] !== null
+                        || $z['backup_pakete'] !== null,
+    ];
+}
+
+/**
+ * Wie voll ist dieses Konto? Der groessere der beiden Anteile zaehlt.
+ *
+ * @return array{anteil:float, einsaetze:int, bytes:int, grenze_einsaetze:int,
+ *               grenze_bytes:int, voll:bool, warnung:bool}
+ *
+ * DER GROESSERE ZAEHLT, nicht der Durchschnitt: Wer 5000 Einsaetze mit
+ * wenigen GPS-Daten hat, ist genauso am Ende wie jemand mit 250 MB in
+ * dreihundert Aufzeichnungen. Eine gemittelte Zahl liesse beide weiterladen,
+ * bis eine der beiden Grenzen weit ueberschritten ist.
+ */
+function konto_fuellstand(int $userId): array
+{
+    $m = konto_mengen($userId);
+    $g = konto_grenzen($userId);
+    $grenzeBytes = $g['mb'] * 1024 * 1024;
+
+    $aE = $g['einsaetze'] > 0 ? $m['einsaetze'] / $g['einsaetze'] : 0.0;
+    $aB = $grenzeBytes > 0 ? $m['bytes'] / $grenzeBytes : 0.0;
+    $anteil = max($aE, $aB);
+
+    return [
+        'anteil'           => $anteil,
+        'einsaetze'        => $m['einsaetze'],
+        'bytes'            => $m['bytes'],
+        'grenze_einsaetze' => $g['einsaetze'],
+        'grenze_bytes'     => $grenzeBytes,
+        'voll'             => $anteil >= 1.0,
+        'warnung'          => $anteil >= KONTEN_WARNSCHWELLE,
+    ];
 }
 
 /**
