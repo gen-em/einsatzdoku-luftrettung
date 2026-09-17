@@ -717,8 +717,20 @@ sind als Befund aufgenommen:
 - **`05-datenschutz`** — waagerechter Überlauf bei **360 px**, eine Seite von
   fünfzig (Backlog **Nr. 221**).
 
-**Damit ist P4 bis auf den Bilderlauf belegt.** Er bleibt offen, bis Nr. 220
-behoben und der Überlauf aus Nr. 221 weg ist.
+**Nachtrag 17.09.2026 — P4 IST BELEGT.** Der Lauf nach dem Merge von PR #53
+(`e5844c4`, 13:36–13:50) ist in Stufe 2 **vollständig grün**:
+
+| Schritt | Ergebnis |
+|---|---|
+| `staging` (FTPS-Sync) | grün, 6 s |
+| Staging antwortet wie eingerichtet · Punktdateien | grün |
+| Kreisläufe csv und edbak | **grün**, 1:43 min |
+| **Bilderlauf** | **grün** — 400 Einzelbilder, 50 Kontaktbögen, **0 Überlauf, 0 Konsolenfehler, 0 falsche Knopfhöhen** |
+
+Kein „OHNE BILD" mehr: Beide Wartungsseiten liefern Bilder (Nr. 220). Und
+`05-datenschutz` meldete „kein Überlauf" — der Befund aus Nr. 221 hat sich
+**nicht wiederholt**; er bleibt als einmalige Beobachtung stehen, mit dem
+Bericht jetzt in der Zusammenfassung des Laufs, falls er wiederkommt.
 
 > **Der rote Schritt war ein Aufruffehler aus AP1, der nie gelaufen war.**
 > ```

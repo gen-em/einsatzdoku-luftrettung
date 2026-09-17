@@ -2399,6 +2399,31 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Verbleibender Verdacht, ohne Beleg:* die Chromium-Fassung. Die Kette holt
     `playwright@1.56` (Chromium 141), örtlich steht eine andere.
 
+    ### Nachtrag vom 17.09.2026 — der nächste Lauf war GRÜN
+
+    Der Auslieferungslauf auf `main` (`e5844c4`, 13:38–13:50) meldete
+    `05-datenschutz` mit **kein Überlauf**, und den ganzen Bilderlauf mit
+    **0 Überlauf** über 400 Bilder. Der Befund hat sich **nicht wiederholt**.
+
+    **Damit ist er nicht erklärt, sondern einmalig geblieben** — und das ist
+    ein Unterschied, den dieser Eintrag stehen lässt, statt ihn wegzuräumen:
+    Zwischen den beiden Läufen hat niemand etwas an der Seite, am Stylesheet
+    oder an den Schriften geändert (alle drei waren schon beim ersten Mal
+    byteidentisch mit dem Repositorium). Was bleibt, ist eine Messung, die
+    einmal anschlug und beim zweiten Mal nicht.
+
+    **Der Eintrag bleibt deshalb offen, aber ohne Arbeitsauftrag.** Schlägt
+    er wieder an, steht der Bericht seit Web 20.16.2 in der Zusammenfassung
+    des Laufs und nennt den **Verursacher** — dann ist es in fünf Minuten
+    erledigt statt in einer Stunde Ausschlussverfahren. Bleibt er drei
+    weitere Läufe still, gehört er nach *Erledigt* mit dem Vermerk „einmalig,
+    nicht reproduzierbar".
+
+    *Was dabei offen zutage kam und nicht zu diesem Eintrag gehört:*
+    `aufnehmen.mjs` meldet alle drei Rollen an, bevor es das erste Bild
+    macht — auch bei `--nur` auf einer Seite mit `"rolle": "aus"`. Genau das
+    hat die örtliche Nachstellung gegen Staging verhindert.
+
 ## Erledigt
 
 
@@ -7450,7 +7475,16 @@ zutreffen.
 
     Dazu der Beleg auf HTTP-Ebene: `index.php` antwortet **ohne** Wartung mit
     **302**, **mit** Wartung mit **503** — und 503 ist, was `seiten.json` für
-    diesen Eintrag erwartet. Der Rückfallweg ohne Token ist gegengeprüft (8
+    diesen Eintrag erwartet.
+
+    **In der Kette belegt am 17.09.2026**, Auslieferungslauf auf `main`
+    (`e5844c4`, Stufe 2 vollständig grün): **400 Einzelbilder, 50
+    Kontaktbögen, 0 Überlauf, 0 Konsolenfehler, 0 falsche Knopfhöhen** — und
+    **kein „OHNE BILD"** mehr. Beide Wartungsseiten stehen mit „kein
+    Überlauf" im Protokoll (`46a-betrieb-updates-wartung` 13:49:29,
+    `07-wartungsseite` 13:50:17). Der Wartungsmodus ist danach wieder aus;
+    ein hängender Schalter hätte den Lauf seit Web 20.16.3 selbst rot
+    gefärbt. Der Rückfallweg ohne Token ist gegengeprüft (8
     Bilder, `wartung.lock` sauber aufgeräumt), und nach dem Lauf steht die
     Installation wieder offen (`zustand.wartung.aktiv = false`).
 
