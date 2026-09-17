@@ -112,12 +112,16 @@ ui_seite_start(['titel' => 'Zustimmung nötig']);
             'plakette' => $alt !== null
                 ? ui_plakette('neue Fassung', ['ton' => 'orange'])
                 : ui_plakette('neu', ['ton' => 'blau'])]); ?>
+          <?php /* DER STAND DER NEUEN FASSUNG STEHT NICHT MEHR HIER, sondern
+                   im Satz am Haekchen (`rt_haken_satz()`). Er stand bis Web
+                   20.22.1 an beiden Stellen — zwei Zeilen auseinander
+                   dieselbe Zahl, einmal als Auskunft und einmal als Teil der
+                   Erklaerung. Geblieben ist, was NUR hier steht: welche
+                   Fassung bisher angenommen war. */ ?>
           <p class="feld-hinweis">
-            <?php if ($s !== null): ?>
-              Stand <?= e(fmt_local((string)$s, 'd.m.Y')) ?><?php
-              if ($alt !== null): ?> · du hast die Fassung vom
-              <?= e(fmt_local((string)$alt, 'd.m.Y')) ?> angenommen<?php
-              endif; ?>.
+            <?php if ($alt !== null): ?>
+              Bisher angenommen: Fassung vom
+              <?= e(fmt_local((string)$alt, 'd.m.Y')) ?>.
             <?php endif; ?>
             <a href="<?= e(RT_SEITEN[$schluessel]) ?>" target="_blank" rel="noopener">Text
                lesen</a> — er öffnet sich in einem neuen Fenster, damit du
@@ -127,15 +131,23 @@ ui_seite_start(['titel' => 'Zustimmung nötig']);
                    Markup: „angenommen" und „zur Kenntnis genommen" tragen
                    den rechtlichen Unterschied (E-P5b-05), und ein Text, der
                    an zwei Stellen steht, laeuft auseinander. */ ?>
-          <?php ui_schalter([
-              'name'  => 'ew[' . $schluessel . ']',
-              'id'    => 'ew-' . $schluessel,
-              'label' => RT_TEXTE[$schluessel] . ' ' . $art['wort'],
-              'an'    => !empty($_POST['ew'][$schluessel]),
-              'klein' => $art['art'] === 'annahme'
-                       ? 'Ohne diese Annahme geht es nicht weiter.'
-                       : 'Eine Kenntnisnahme ist keine Zustimmung — sie hält nur '
-                       . 'fest, dass du die Fassung gesehen hast.']); ?>
+          <?php /* EIN HAEKCHEN UND KEIN SCHALTER (Mockup M-P5b-02a, Tor).
+                   Ein Schiebeschalter steht fuer eine Einstellung, die man
+                   an- und ausmacht; hier wird eine Erklaerung abgegeben, und
+                   die kennt nur eine Richtung. Der Satz kommt aus dem
+                   Katalog — dieselbe Quelle wie auf der
+                   Registrierungsseite, damit die beiden nicht
+                   auseinanderlaufen (`rt_haken_satz()`). */ ?>
+          <label>
+            <input type="checkbox" name="ew[<?= e($schluessel) ?>]" value="1"
+                   <?= !empty($_POST['ew'][$schluessel]) ? 'checked' : '' ?>>
+            <span><?= rt_haken_satz($schluessel,
+                      $s !== null ? fmt_local((string)$s, 'd.m.Y') : null) ?></span>
+          </label>
+          <p class="feld-hinweis"><?= $art['art'] === 'annahme'
+              ? 'Ohne diese Annahme geht es nicht weiter.'
+              : 'Eine Kenntnisnahme ist keine Zustimmung — sie hält nur fest, '
+              . 'dass du die Fassung gesehen hast.' ?></p>
         <?php ui_karte_ende(); ?>
       <?php endforeach; ?>
 

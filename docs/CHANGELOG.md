@@ -14,6 +14,44 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.22.1] — 2026-09-17
+
+**Das Häkchen sagte das Falsche.**
+
+### Behoben
+
+**„Ich habe die Nutzungsbedingungen angenommen."** Das ist eine Aussage über
+eine Vergangenheit, die es nicht gibt — angenommen wird in dem Augenblick, in
+dem der Haken gesetzt und das Formular abgeschickt wird. Eine Erklärung, die
+sich auf einen früheren Zeitpunkt beruft, erklärt nichts. Jetzt steht dort:
+
+- „Ich habe die **Nutzungsbedingungen** gelesen und **nehme sie an**."
+- „Ich **nehme** die **Vereinbarung zur Auftragsverarbeitung (AVV)** **an**."
+- „Ich habe die **Datenschutzerklärung** **zur Kenntnis genommen**."
+
+So hatte es das Mockup M-P5b-02a von Anfang an; beim Bauen ist daraus ein aus
+`RT_TEXTE` und einem Partizip zusammengesetzter Satz geworden. Angemerkt vom
+Auftraggeber.
+
+**Der Satz steht jetzt im Katalog** (`rt_haken_satz()` in
+`rechtstexte_lib.php`), nicht im Markup. Er wird an **zwei** Stellen gebraucht
+— Registrierungsseite und Einwilligungstor —, und zwei Fassungen desselben
+rechtlich erheblichen Satzes laufen auseinander, ohne dass es auffiele: Beide
+sehen für sich richtig aus. Am Tor kommt der Stand dazu („in der Fassung vom
+17.09.2026"), ausgeschrieben und nicht in Klammern — der AVV-Titel endet
+selbst auf eine, und „(AVV) (Fassung …)" liest sich wie ein Tippfehler.
+
+**Das Tor führte Schiebeschalter statt Häkchen.** Ein Schalter steht für eine
+Einstellung, die man an- und ausmacht; eine Willenserklärung kennt nur eine
+Richtung. Das Mockup zeichnet Häkchen, die Umsetzung hatte
+`ui_schalter()` genommen.
+
+**Und es nannte das Standdatum zweimal** — als „Stand 17.09.2026" und zwei
+Zeilen darunter im Satz selbst. Geblieben ist, was nur an dieser Stelle steht:
+welche Fassung bisher angenommen war.
+
+---
+
 ## [Web 20.22.0] — 2026-09-17
 
 **Die Selbstregistrierung** (P5b/AP3, E-P5b-01, -02, -03, -13, -23).

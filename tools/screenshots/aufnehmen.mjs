@@ -437,9 +437,21 @@ async function anmeldenAuf(seite, rolle) {
    * Anwendung, kein Hindernis des Prüfstands. Ein Bilderlauf, der es
    * aushebelte, misste eine Anwendung, die es so nicht gibt. */
   if (seite.url().includes('einwilligung.php')) {
-    const boxen = await seite.locator('.schalter-box').count();
+    /* HAEKCHEN, NICHT SCHALTER (seit Web 20.22.1). Bis dahin stand hier
+     * `.schalter-box`; das Tor fuehrte Schiebeschalter, und die sind durch
+     * gewoehnliche Kontrollkaestchen ersetzt worden — eine
+     * Willenserklaerung kennt nur eine Richtung.
+     *
+     * DER AUSWAHLPFAD IST ABSICHTLICH ALLGEMEIN (`input[type=checkbox]`
+     * innerhalb des Formulars) und nicht an einer Klasse aufgehaengt: Diese
+     * Stelle ist beim Umbau umgefallen, weil sie eine Klasse kannte, die
+     * die Anwendung geaendert hat. Der Fehler war gut zu sehen, weil die
+     * Anmeldung seit Web 20.21.1 die Meldung der Seite mitgibt — ohne sie
+     * stuende hier nur „Anmeldung gescheitert". */
+    const boxen = await seite.locator('form input[type=checkbox]').count();
     for (let i = 0; i < boxen; i++) {
-      await seite.locator('.schalter-box').nth(i).evaluate(el => { el.checked = true; });
+      await seite.locator('form input[type=checkbox]').nth(i)
+                 .evaluate(el => { el.checked = true; });
     }
     await Promise.all([
       seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {}),

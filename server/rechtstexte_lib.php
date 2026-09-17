@@ -100,10 +100,76 @@ const RT_LEERTEXT = [
  * seinen Text nicht aus dem Markup beziehen.
  */
 const RT_EINWILLIGUNG = [
-    'nutzungsbedingungen' => ['art' => 'annahme',  'wort' => 'angenommen'],
-    'avv'                 => ['art' => 'annahme',  'wort' => 'angenommen'],
-    'datenschutz'         => ['art' => 'kenntnis', 'wort' => 'zur Kenntnis genommen'],
+    /* DREI SCHLUESSEL JE EINTRAG, UND JEDER HAT SEINEN EIGENEN ZWECK:
+     *
+     *   `art`   entscheidet die WIRKUNG — `annahme` sperrt den naechsten
+     *           Login, `kenntnis` zeigt nur einen Hinweis (E-P5b-05).
+     *   `wort`  ist die Kurzform fuer das PROTOKOLL und fuer die
+     *           Kontoseite: „angenommen" gegen „zur Kenntnis genommen".
+     *   `vorn`/`hinten` sind der SATZ AM HAEKCHEN, mit dem verlinkten
+     *           Titel dazwischen.
+     *
+     * WARUM DER SATZ IM PRAESENS STEHT. Bis Web 20.22.1 baute das Markup
+     * ihn selbst zusammen: „Ich habe die Nutzungsbedingungen angenommen."
+     * Das ist die Aussage ueber eine Vergangenheit, die es nicht gibt —
+     * angenommen wird in dem Augenblick, in dem der Haken gesetzt und das
+     * Formular abgeschickt wird. Eine Erklaerung, die sich auf einen
+     * frueheren Zeitpunkt beruft, erklaert nichts; der Auftraggeber hat es
+     * am 17.09.2026 angemerkt, und das Mockup M-P5b-02a hatte es von
+     * Anfang an richtig.
+     *
+     * UND WARUM ER HIER STEHT UND NICHT IM MARKUP: Er steht an ZWEI
+     * Stellen — auf der Registrierungsseite und am Einwilligungstor. Zwei
+     * Fassungen desselben rechtlich erheblichen Satzes laufen auseinander,
+     * und zwar unbemerkt, weil beide fuer sich richtig aussehen.
+     *
+     * `hinten` traegt Markup (`<strong>`) und wird deshalb NICHT
+     * maskiert — es ist eine Konstante dieser Datei und kommt nicht von
+     * aussen. Der Titel dazwischen wird maskiert. */
+    'nutzungsbedingungen' => [
+        'art' => 'annahme', 'wort' => 'angenommen',
+        'vorn' => 'Ich habe die ', 'hinten' => ' gelesen und <strong>nehme sie an</strong>.',
+    ],
+    'avv' => [
+        'art' => 'annahme', 'wort' => 'angenommen',
+        'vorn' => 'Ich <strong>nehme</strong> die ', 'hinten' => ' <strong>an</strong>.',
+    ],
+    'datenschutz' => [
+        'art' => 'kenntnis', 'wort' => 'zur Kenntnis genommen',
+        'vorn' => 'Ich habe die ', 'hinten' => ' <strong>zur Kenntnis genommen</strong>.',
+    ],
 ];
+
+/**
+ * Der fertige Satz am Haekchen, mit verlinktem Titel.
+ *
+ * @param ?string $fassung Standdatum, das am Tor mitgenannt wird
+ *                („in der Fassung vom 01.10.2026 an.") — auf der
+ *                Registrierungsseite gibt es noch keine angenommene
+ *                Fassung, dort bleibt es weg.
+ */
+function rt_haken_satz(string $schluessel, ?string $fassung = null): string
+{
+    $e = RT_EINWILLIGUNG[$schluessel] ?? null;
+    if ($e === null) { return ''; }
+
+    /* `htmlspecialchars` unmittelbar und nicht `ui_e()`: Diese Datei laedt
+     * `ui.php` nicht, und die Funktion wird auch aus `admin_installation.php`
+     * heraus erreichbar sein. Eine Abhaengigkeit, die nur zufaellig erfuellt
+     * ist, faellt beim ersten neuen Aufrufer um. */
+    $m = static fn(string $x): string => htmlspecialchars($x, ENT_QUOTES, 'UTF-8');
+
+    $titel = '<a href="' . $m(RT_SEITEN[$schluessel]) . '" target="_blank"'
+           . ' rel="noopener">' . $m(RT_TEXTE[$schluessel]) . '</a>';
+    if ($fassung !== null && $fassung !== '') {
+        /* „in der Fassung vom" und NICHT die Klammerform. Der AVV-Titel endet
+         * selbst auf eine Klammer — „(AVV) (Fassung 17.09.2026)" liest sich
+         * wie ein Tippfehler. Der ausgeschriebene Einschub passt in alle
+         * drei Saetze, weil er vor dem Verb steht und nicht dahinter. */
+        $titel .= ' in der Fassung vom ' . $m($fassung);
+    }
+    return $e['vorn'] . $titel . $e['hinten'];
+}
 
 /**
  * Obergrenze der Eingabe.

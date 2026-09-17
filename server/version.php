@@ -5878,5 +5878,28 @@ declare(strict_types=1);
  * `bestaetigt_am` mit — daran haengt die 30-Tage-Frist der Wartenden. Ohne
  * das zaehlte sie ab dem Absenden des Formulars: Wer die Mail erst nach 40
  * Tagen anklickt, waere sofort verfallen.
+ *
+ * 20.22.1 — DAS HAEKCHEN SAGTE DAS FALSCHE.
+ *
+ * „Ich habe die Nutzungsbedingungen angenommen." Das ist eine Aussage ueber
+ * eine Vergangenheit, die es nicht gibt — angenommen wird in dem Augenblick,
+ * in dem der Haken gesetzt und das Formular abgeschickt wird. Jetzt: „Ich
+ * habe die Nutzungsbedingungen gelesen und NEHME SIE AN.", „Ich NEHME die
+ * Vereinbarung zur Auftragsverarbeitung (AVV) AN.", „Ich habe die
+ * Datenschutzerklaerung ZUR KENNTNIS GENOMMEN." — so, wie es das Mockup
+ * M-P5b-02a von Anfang an hatte. Angemerkt vom Auftraggeber.
+ *
+ * DER SATZ STEHT JETZT IM KATALOG (`rt_haken_satz()`), nicht im Markup. Er
+ * wird an ZWEI Stellen gebraucht — Registrierungsseite und
+ * Einwilligungstor —, und zwei Fassungen desselben rechtlich erheblichen
+ * Satzes laufen auseinander, ohne dass es auffiele: Beide sehen fuer sich
+ * richtig aus.
+ *
+ * DAZU ZWEI FUNDE AM TOR. Es fuehrte SCHIEBESCHALTER statt Haekchen — ein
+ * Schalter steht fuer eine Einstellung, die man an- und ausmacht, eine
+ * Willenserklaerung kennt aber nur eine Richtung (das Mockup zeichnet
+ * Haekchen). Und es nannte das Standdatum ZWEIMAL: einmal als „Stand
+ * 17.09.2026" und zwei Zeilen darunter im Satz. Geblieben ist, was nur dort
+ * steht — welche Fassung bisher angenommen war.
  */
-const WEB_VERSION = '20.22.0';
+const WEB_VERSION = '20.22.1';

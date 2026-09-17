@@ -285,13 +285,11 @@ $unterzeile = match ($art) {
                Markup: „angenommen" und „zur Kenntnis genommen" tragen den
                rechtlichen Unterschied (E-P5b-05), und ein Text, der an zwei
                Stellen steht, laeuft auseinander. */ ?>
-      <?php foreach (RT_EINWILLIGUNG as $schluessel => $einw): ?>
+      <?php foreach (array_keys(RT_EINWILLIGUNG) as $schluessel): ?>
         <label>
           <input type="checkbox" name="ew[<?= e($schluessel) ?>]" value="1"
                  <?= !empty($_POST['ew'][$schluessel]) ? 'checked' : '' ?>>
-          <span>Ich habe die <a href="<?= e(RT_SEITEN[$schluessel]) ?>"
-               target="_blank" rel="noopener"><?= e(RT_TEXTE[$schluessel]) ?></a>
-            <strong><?= e($einw['wort']) ?></strong>.</span>
+          <span><?= rt_haken_satz($schluessel) ?></span>
         </label>
       <?php endforeach; ?>
 
