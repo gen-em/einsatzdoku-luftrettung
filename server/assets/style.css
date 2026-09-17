@@ -1740,6 +1740,42 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 .text a{text-decoration:underline}
 .text-stand{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-5)}
 
+/* ---- Erststart: die Willkommenskarte -------------------------------------
+ *
+ * P5b/AP9, Mockup M-P5b-02b (freigegeben 17.09.2026). Drei Zeilen aus dem
+ * Baustein `.zeile`; neu ist nur die Nummernplakette davor.
+ *
+ * SIE IST RUND UND TRAEGT EINE ZIFFER, und damit ist sie etwas anderes als
+ * `.plakette` (die traegt Text und hat einen weichen Radius). Ein eigener
+ * Baustein also — gedeckt durch das Mockup, das ihn ausdruecklich nennt.
+ */
+.erststart-nr{
+  display:inline-flex;align-items:center;justify-content:center;
+  /* 24 px — die groesste vorhandene Symbolstufe. Eine Ziffer in einem
+   * 20-px-Kreis (`--symbol`) sitzt zu eng; eine neue Groesse dafuer
+   * aufzumachen waere der Anfang vom Ende der geschlossenen Skala. */
+  width:var(--symbol-gross);height:var(--symbol-gross);flex:0 0 var(--symbol-gross);
+  border-radius:var(--radius-rund);
+  background:var(--dunkelblau);color:var(--auf-dunkel);
+  font-size:var(--groesse-2);font-weight:600;line-height:1;
+}
+/* OPTIONAL: Sand statt Dunkelblau. Der Schritt bleibt sichtbar und tritt
+ * zurueck — dieselbe Aussage wie der neutrale Knopf daneben. */
+.erststart-nr-kann{background:var(--sand);color:var(--asphalt)}
+.erststart-nr-fertig{background:var(--blau)}
+
+/* Die Nummer steht oben, nicht mittig: Bei zwei Zeilen Text saehe sie sonst
+ * aus, als gehoere sie zur zweiten. Ohne Feinabstand — 2 px stuenden
+ * ausserhalb der Skala, und die Zeile traegt ihren Abstand schon. */
+.erststart-zeile .zeile-vorn{align-self:flex-start}
+
+.erststart-fuss{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:var(--abstand-3);padding-top:var(--abstand-2);
+}
+.erststart-nie{display:flex;align-items:center;gap:var(--abstand-2);
+               font-size:var(--groesse-2);color:var(--gedaempft)}
+
 /* ---- Dokumentseite: Handbuch und „Was ist NAdoku" ------------------------
  *
  * P5b/AP8, Mockup M-P5b-01 (freigegeben 17.09.2026). Zwei Seiten, ein

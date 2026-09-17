@@ -1274,7 +1274,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
            daneben steht im Profil und kann nur noch einschraenken. */ ?>
   <?php ui_karte_start(['titel' => 'Adresssuche', 'id' => 'k-adresssuche',
       'plakette' => geocoder_installation_an()
-          ? ui_plakette('an', ['ton' => 'ok'])
+          ? ui_plakette('an', ['ton' => 'blau'])
           : ui_plakette('aus', ['ton' => 'neutral'])]); ?>
     <p class="feld-hinweis">Beim Tippen in einem Ortsfeld und nach jeder Wahl auf
        der Karte fragt die Anwendung einen <strong>Adressdienst</strong> —

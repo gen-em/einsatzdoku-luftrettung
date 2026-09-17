@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/stammdaten_ui.php';   // sd_zeile(), sd_form()
+require_once __DIR__ . '/einstieg_lib.php';     // erststart_erledigt() (P5b/AP9)
 require_once __DIR__ . '/demo_lib.php';
 require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung, pruef_rettungsmittel()
 require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), Rollenkatalog
@@ -509,6 +510,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $key   = bin2hex(random_bytes(24));
             db()->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label) VALUES (?,?,?,?)')
                 ->execute([$userId, $devId, geraet_schluessel_hash($key), $label ?: null]);
+            erststart_erledigt($userId, ERSTSTART_GERAET);   // Schritt 3 (P5b/AP9)
             $newKey = ['device_id' => $devId, 'api_key' => $key];
             $notice = 'Gerät angelegt. Schlüssel unten JETZT notieren — er wird nur einmal angezeigt.';
         }
@@ -725,6 +727,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$n, $lat, $lon, $bid, $userId]);
             $notice = 'Standort gespeichert. Bereits dokumentierte Diensttage bleiben unverändert.';
         } else {
+            /* ERSTSTART-SCHRITT 1 (P5b/AP9). Vermerkt wird HIER und nicht
+             * in der Karte: Nur diese Stelle weiss, dass tatsaechlich etwas
+             * entstanden ist. */
+            erststart_erledigt($userId, ERSTSTART_STANDORT);
             db()->prepare('INSERT IGNORE INTO bases (user_id, name, lat, lon) VALUES (?,?,?,?)')
                 ->execute([$userId, $n, $lat, $lon]);
             /* „STANDORT ANLEGEN" LANDET AUF DER NEUEN SEITE (E-S9-19). Sie ist
@@ -914,6 +920,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    VALUES (?,?,?,?,?,?)')
                         ->execute([$userId, $rm['base_id'], $rm['name'], $rm['kurz'], $rm['kind'], $rm['typ']]);
                     $vid = (int)$pdo->lastInsertId();
+                    /* ERSTSTART-SCHRITT 2 (P5b/AP9). Nur beim ANLEGEN, nicht
+                     * beim Bearbeiten — wer ein vorhandenes Rettungsmittel
+                     * umbenennt, hat den Einstieg nicht gerade erledigt. */
+                    erststart_erledigt($userId, ERSTSTART_RETTUNGSMITTEL);
                 }
                 /* Rollen und Faehigkeiten vollstaendig ersetzen. Auf BEREITS
                  * DOKUMENTIERTE Diensttage wirkt das nicht: Ihr Rollensatz steht
@@ -1376,7 +1386,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             $geoKonto = geocoder_konto_an($userId); ?>
       <?php ui_karte_start(['titel' => 'Datenschutz', 'id' => 'k-datenschutz',
           'plakette' => ($geoInst && $geoKonto)
-              ? ui_plakette('Adresssuche an', ['ton' => 'ok'])
+              ? ui_plakette('Adresssuche an', ['ton' => 'blau'])
               : ui_plakette('Adresssuche aus', ['ton' => 'neutral'])]); ?>
         <p class="feld-hinweis">Beim Tippen in einem Ortsfeld schickt der Browser
           den getippten Text an <strong><?= e(geocoder_host()) ?></strong> und

@@ -231,6 +231,22 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     hätte beide Fälle am Tag ihrer Entstehung gemeldet. Wer Nr. 36 angeht,
     fängt damit an und räumt die zwei Stellen gleich mit.
 
+    **Teilweise erledigt in P5b/AP9 (17.09.2026), Web 20.24.0.** Der Fall trat
+    ein VIERTES Mal ein — `'ton' => 'info'` an der Erststart-Karte, eingebaut
+    und beim Ansehen des Bildes gefunden, weil die Plakette ohne Fläche
+    dastand. Damit war es genug: Der billige Sonderweg, den dieser Punkt oben
+    beschreibt, ist jetzt gebaut. `tools/vollstaendigkeit/` prüft
+    `ui_plakette`, `ui_knopf`, `ui_kennzahl` und `ui_meldung_markup` gegen die
+    Klassen, die es im Stylesheet tatsächlich gibt. Die drei stehenden Fälle
+    (`ok` zweimal, `info` einmal) sind auf `blau` berichtigt.
+
+    **Gegenprobe gefahren:** Beide Fehler absichtlich wieder eingebaut, das
+    Mittel meldet sie mit Datei, Zeile und dem fehlenden Klassennamen.
+
+    **Offen bleibt die andere Hälfte** — Klassennamen, die JavaScript sucht,
+    und Töne, die als VARIABLE übergeben werden (`'ton' => $ton`). Was darin
+    steht, weiß nur die Laufzeit; dieses Mittel überspringt sie.
+
 37. **Wie verhält sich die Anwendung, wenn ein Konto über Jahre wächst?**
     Aufgeworfen während P3, dort bewusst **nicht** weiterverfolgt — die Frage
     gehört nicht ins Oberflächen-Redesign. Der Bestand ist ausgelegt auf

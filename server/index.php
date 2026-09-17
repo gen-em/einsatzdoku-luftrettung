@@ -44,6 +44,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'gerae
 }
 $neueGeraete = geraete_neu(db(), $userId);
 
+/* ---- Erststart (P5b/AP9, E-P5b-09, Mockup M-P5b-02b) ---------------------
+ *
+ * ZWEI AUSWEGE IN EINEM FORMULAR. „Spaeter" ist der Knopf, „nicht mehr
+ * zeigen" das Haekchen daneben — wer beides setzt, meint das Haekchen. Post/
+ * Redirect/Get wie beim Geraetehinweis darueber: Ein Neuladen soll die
+ * Entscheidung nicht wiederholen.
+ *
+ * „SPAETER" SCHREIBT NICHTS IN DIE DATENBANK. Es haelt die Karte bis zur
+ * naechsten ANMELDUNG zurueck, und das ist eine Eigenschaft der Sitzung, kein
+ * Zustand des Kontos. Wer sich morgen anmeldet, sieht sie wieder — genau so
+ * steht es im Mockup. */
+require_once __DIR__ . '/einstieg_lib.php';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'erststart') {
+    csrf_check();
+    if (!empty($_POST['nie'])) {
+        erststart_nie_mehr($userId);
+    } else {
+        $_SESSION['erststart_spaeter'] = true;
+    }
+    header('Location: index.php' . ($selDay !== null ? '?d=' . (int)$selDay : ''));
+    exit;
+}
+
+/* Die Karte steht nur, wenn kein Dialog faellig ist (E-P5b-19): Zwei
+ * Aufforderungen auf einmal sind eine zu viel. */
+$erststartStand = (einstieg_zustand($userId)['erststart_stand'] ?? 0);
+$erststartOffen = erststart_offen((int)$erststartStand);
+$erststartZeigen = $erststartOffen !== []
+                && empty($_SESSION['erststart_spaeter'])
+                && einstieg_faellig($userId, ist_betreiberin()) === 'erststart';
+
 /* Zeitlich ueberschneidende Diensttage (R57, E-S4-76). Der Fall ist F-S4-D:
  * Garmin und Handy gleichzeitig im Dienst legen ZWEI Diensttage an, weil
  * `day_refs` je Geraet geschluesselt ist. Es geht nichts verloren — es ist
@@ -60,6 +91,11 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
 ?>
 
 <?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $selDay]); ?>
+    <?php /* DER ERSTSTART STEHT GANZ OBEN — vor dem Geraetehinweis und vor
+             der Tagesuebersicht. Wer gerade erst ein Konto hat, hat noch
+             keine neuen Geraete und keine Diensttage; die Karte steht dann
+             allein da, und das ist die Absicht. */ ?>
+    <?php if ($erststartZeigen): require __DIR__ . '/erststart_karte.php'; endif; ?>
     <?php if ($neueGeraete): ?>
       <?php /* Warnmeldung nach E-P3-16: Symbol, Text, Ausweg als Knopf IM
                Rahmen. Der Hinweis bleibt bestaetigbar (M4-10) — eine Warnung,

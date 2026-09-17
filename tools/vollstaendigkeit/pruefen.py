@@ -15,6 +15,8 @@ Fuenf Pruefungen:
   3  Symbole -- Inline-SVG mit Pfaden, Unicode-Symbolzeichen, Emoji im Markup;
      Verweise auf fehlende Symboldateien; Dateien ohne Verweis (Hinweis).
   4  Knopfregel -- jede Hoehenangabe an einer .knopf-Regel kommt aus --knopf.
+     Dazu die TOENE: jeder Wert, den ui_plakette, ui_knopf, ui_kennzahl oder
+     ui_meldung_markup bekommt, hat eine Regel im Stylesheet (Backlog Nr. 36).
   5  Zusagen -- Regeln, die bisher nur im Kopf standen: kein natives
      confirm()/alert()/prompt() ausser den begruendeten Rueckfaellen
      (Backlog Nr. 47), und jede Seite mit eigener Huelle hat ihr Geruest
@@ -528,6 +530,88 @@ def pruefung_knopf(bericht):
     bericht.befund('4 Knopf', 'Knopfhoehe nicht aus --knopf', verstoss)
 
 
+# ---- Toene gegen den Wertevorrat (Backlog Nr. 36) --------------------------
+#
+# DERSELBE FEHLER ZUM DRITTEN MAL, und deshalb steht hier jetzt ein Mittel.
+#
+#   `plakette-warn`  drei Stellen, behoben mit Web 10.3.0
+#   `plakette-ok`    zwei Stellen, gefunden 14.09.2026 (S10/AP3, F-15),
+#                    stehengelassen -- behoben mit P5b/AP9
+#   `plakette-info`  eine Stelle, 17.09.2026, von mir selbst eingebaut
+#
+# Jedes Mal dasselbe Bild: eine Plakette ohne Hintergrund, als blosser Text,
+# ohne jede Fehlermeldung. Und jedes Mal unsichtbar fuer die Klassenpruefung
+# oben -- `plakette-ok` taucht als Literal WEDER im Markup NOCH im Stylesheet
+# auf, weil `ui_plakette()` den Namen erst zur Laufzeit zusammensetzt
+# (`'plakette-' . $ton`).
+#
+# DER BILLIGE SONDERWEG, den Nr. 36 beschreibt: Die Bausteine mit
+# GESCHLOSSENEM Wertevorrat kennen ihre erlaubten Werte selbst -- sie stehen
+# als Klassen im Stylesheet. Statt Klassennamen aufzuloesen, wird also jeder
+# uebergebene Wert gegen die vorhandenen Klassen gehalten.
+#
+# NUR LITERALE. Ein `'ton' => $ton` mit einer Variablen wird uebersprungen:
+# Was darin steht, weiss nur die Laufzeit. Das ist die Grenze dieses Mittels
+# und der Grund, warum es Nr. 36 nicht ganz schliesst.
+
+# Baustein => (Schluessel im Optionsfeld, Klassenpraefix)
+TON_BAUSTEINE = [
+    ('ui_plakette',        'ton', 'plakette'),
+    ('ui_knopf',           'art', 'knopf'),
+    ('ui_kennzahl',        'ton', 'kennzahl'),
+]
+
+
+def _ruf_spanne(text, start):
+    """Von `name(` bis zur zugehoerigen schliessenden Klammer."""
+    i = text.find('(', start)
+    if i < 0:
+        return ''
+    tiefe, j = 0, i
+    while j < len(text):
+        if text[j] == '(':
+            tiefe += 1
+        elif text[j] == ')':
+            tiefe -= 1
+            if tiefe == 0:
+                return text[i:j + 1]
+        j += 1
+    return text[i:]
+
+
+def pruefung_toene(bericht):
+    if not os.path.exists(CSS):
+        return
+    css = ohne_kommentare(lies(CSS))
+    verstoss = []
+
+    for datei in quelldateien():
+        if not datei.endswith('.php'):
+            continue
+        text = ohne_php_js_kommentare(lies(datei), True)
+
+        for name, schluessel, praefix in TON_BAUSTEINE:
+            for m in re.finditer(r'\b' + name + r'\s*\(', text):
+                spanne = _ruf_spanne(text, m.start())
+                for w in re.finditer(r"'" + schluessel + r"'\s*=>\s*'([a-z]+)'", spanne):
+                    wert = w.group(1)
+                    if ('.%s-%s{' % (praefix, wert)) in css.replace(' {', '{') \
+                       or re.search(r'\.%s-%s\b' % (praefix, wert), css):
+                        continue
+                    verstoss.append('%s:%d  %s(%s => %s) -> .%s-%s gibt es nicht' % (
+                        kurz(datei), zeile_von(text, m.start()), name,
+                        schluessel, wert, praefix, wert))
+
+        # `ui_meldung_markup('ton', ...)` -- der Ton ist das ERSTE Argument
+        for m in re.finditer(r"\bui_meldung_markup\s*\(\s*'([a-z]+)'", text):
+            wert = m.group(1)
+            if not re.search(r'\.meldung-%s\b' % wert, css):
+                verstoss.append('%s:%d  ui_meldung_markup(%s) -> .meldung-%s gibt es nicht' % (
+                    kurz(datei), zeile_von(text, m.start()), wert, wert))
+
+    bericht.befund('4 Knopf', 'Ton ohne Regel im Stylesheet', verstoss)
+
+
 # ============================================================== Bericht
 # =========================================================== 5. Zusagen
 NATIVE_DIALOGE = re.compile(r'(?<![\w$.])(?:window\s*\.\s*)?(confirm|alert|prompt)\s*\(')
@@ -792,6 +876,7 @@ def main():
     pruefung_werte(b)
     pruefung_symbole(b)
     pruefung_knopf(b)
+    pruefung_toene(b)
     pruefung_zusagen(b)
     return b.drucken()
 
