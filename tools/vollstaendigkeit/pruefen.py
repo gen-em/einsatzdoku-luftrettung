@@ -32,6 +32,10 @@ import os
 import re
 import sys
 
+# Tag-Rumpf einer Quelldatei: ein PHP-Stueck am Stueck ODER ein Zeichen, das
+# kein `>` ist. Ein `?>` beendet das Tag nicht (CLAUDE.md 6).
+TAG_REST = r'(?:<\?(?:php\b|=).*?\?>|[^>])*'
+
 HIER   = os.path.dirname(os.path.abspath(__file__))
 WURZEL = os.path.dirname(os.path.dirname(HIER))
 SERVER = os.path.join(WURZEL, 'server')
@@ -464,7 +468,11 @@ def pruefung_symbole(bericht):
         markup = escapes_aufloesen(t)
         istr_ui = pfad.endswith('ui.php')
         istr_js = pfad.endswith(os.sep + 'symbol.js')
-        for m in re.finditer(r'<svg\b[^>]*>(.*?)</svg>', t, re.S):
+        # TAG_REST statt `[^>]*` (CLAUDE.md 6, Backlog Nr. 218): `t` ist die
+        # rohe PHP-Quelle. Heute traegt keines der 3 <svg>-Tags PHP im Rumpf
+        # (gemessen 17.09.2026) -- das erste, das es tut, waere mit der kurzen
+        # Form am `?>` abgeschnitten und der Inline-Svg damit ungezaehlt.
+        for m in re.finditer(r'<svg\b' + TAG_REST + r'>(.*?)</svg>', t, re.S):
             if '<path' in m.group(1) or '<circle' in m.group(1) or '<polyline' in m.group(1):
                 inline.append('%s:%d' % (kurz(pfad), zeile_von(t, m.start())))
         for m in re.finditer(r'symbole/([a-z0-9-]+)\.svg', t):

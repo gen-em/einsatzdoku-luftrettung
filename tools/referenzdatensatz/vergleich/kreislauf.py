@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import pathlib
 import re
 import shutil
@@ -40,7 +41,20 @@ sys.path.insert(0, str(HIER))
 import sitzung as sitzungsmodul      # noqa: E402
 import vergleichen                    # noqa: E402
 
-PLAYWRIGHT = "/opt/node22/lib/node_modules/playwright/index.mjs"
+# DIE UMGEBUNG DARF DEN PFAD SETZEN (16.09.2026).
+#
+# Bis dahin stand hier eine KONSTANTE, die unten in drei Kindprozesse
+# fest durchgereicht wurde (env=…, "PLAYWRIGHT_MODUL": PLAYWRIGHT). Sie
+# ueberschrieb damit ein von aussen gesetztes PLAYWRIGHT_MODUL — der Pfad
+# war nicht einmal ueber die Umgebung zu heilen. Der Vorgabewert ist der
+# der Arbeitsumgebung dieses Projekts; auf einem GitHub-Laeufer gibt es
+# ihn nicht, und die Kette konnte den Lauf deshalb nirgends hinbiegen.
+#
+# `or` und nicht `.get(k, default)`: Damit faengt es auch ein LEER
+# gesetztes PLAYWRIGHT_MODUL= ab. Dieselbe Form wie in
+# tools/messstand/messen.py und den zehn .mjs-Bausteinen.
+PLAYWRIGHT = (os.environ.get("PLAYWRIGHT_MODUL")
+              or "/opt/node22/lib/node_modules/playwright/index.mjs")
 
 
 def melde(t: str) -> None:
@@ -158,7 +172,7 @@ def konto_anlegen(basis: str, admin: tuple[str, str], konto: str,
     link = f"{basis}/pw_handling.php?token={m.group(1)}"
     melde(f"  Konto {konto} angelegt.")
     lauf(["node", str(WURZEL / "einspielen" / "passwort_setzen.mjs"), link, passwort],
-         env={**__import__("os").environ, "PLAYWRIGHT_MODUL": PLAYWRIGHT})
+         env={**os.environ, "PLAYWRIGHT_MODUL": PLAYWRIGHT})
     melde("  Passwort im Browser gesetzt (dort entsteht das Schlüsselmaterial).")
 
 
@@ -189,7 +203,7 @@ def umlauf_edbak(a) -> tuple[str, str]:
     ordner.mkdir(parents=True, exist_ok=True)
     e = lauf(["node", str(WURZEL / "browser" / "kreislauf_edbak.mjs"),
               a.basis, str(quelle), a.backup_passwort, str(ordner)],
-             env={**__import__("os").environ, "PLAYWRIGHT_MODUL": PLAYWRIGHT,
+             env={**os.environ, "PLAYWRIGHT_MODUL": PLAYWRIGHT,
                   "UMLAUF_KONTO": a.konto, "UMLAUF_PASSWORT": a.konto_passwort})
     melde(e.stdout.rstrip())
     ergebnis = json.loads((ordner / "lauf.json").read_text("utf-8"))
@@ -209,7 +223,7 @@ def umlauf_csv(a) -> tuple[str, str]:
           "--zustand", str(ordner / "einspiellauf.json")])
     e = lauf(["node", str(WURZEL / "browser" / "kreislauf_csv.mjs"),
               a.basis, str(quelle), str(ordner)],
-             env={**__import__("os").environ, "PLAYWRIGHT_MODUL": PLAYWRIGHT,
+             env={**os.environ, "PLAYWRIGHT_MODUL": PLAYWRIGHT,
                   "UMLAUF_KONTO": a.konto, "UMLAUF_PASSWORT": a.konto_passwort})
     melde(e.stdout.rstrip())
     ergebnis = json.loads((ordner / "lauf.json").read_text("utf-8"))

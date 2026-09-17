@@ -167,6 +167,11 @@ def css_bereiche(text: str, von: int = 0, bis: int | None = None) -> list[tuple[
     return bereiche
 
 
+# HIER ist die kurze Form `[^>]*` richtig, und das steht da, damit sie beim
+# naechsten Durchgang durch CLAUDE.md 6 nicht "mitkorrigiert" wird: _BLOCK
+# laeuft NICHT ueber den Quelltext, sondern ueber `nur_html` -- den Text,
+# aus dem `_html_bereiche()` die PHP-Inseln vorher durch Leerzeichen ersetzt
+# hat. Dort gibt es kein `?>` mehr, an dem ein Tag zu frueh enden koennte.
 _BLOCK = re.compile(r"<(script|style)\b[^>]*>", re.IGNORECASE)
 
 

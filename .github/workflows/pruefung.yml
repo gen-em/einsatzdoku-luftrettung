@@ -36,6 +36,29 @@ concurrency:
   group: pruefung-${{ github.ref }}
   cancel-in-progress: true
 
+# ALLE run-BLOECKE MIT `pipefail` (16.09.2026, gemessen).
+#
+# GitHub faehrt run-Bloecke mit `bash -e {0}` — OHNE pipefail. Der
+# Rueckgabewert einer Pipe ist damit der des LETZTEN Glieds, und ein
+# gescheitertes erstes Glied faellt lautlos durch. Im Schritt "Wortliste"
+# stand `python3 wortliste.py | tee /tmp/wortliste.txt`: `tee` gibt immer 0,
+# also konnte dieser Schritt NIE ROT WERDEN. Nachgemessen:
+# `bash -e -c 'python3 -c "import sys;sys.exit(1)" | tee /dev/null; echo $?'`
+# ergibt 0.
+#
+# Ein Pruefmittel, das nicht scheitern kann, ist kein Pruefmittel — es ist
+# eine gruene Zahl ohne Aussage. Deshalb hier, an EINER Stelle je Lauf, und
+# nicht als Flicken an der einen Pipe: Die naechste Pipe kommt bestimmt.
+#
+# GEMESSEN, WAS DADURCH ROT WIRD: von zehn Pipes in den drei Laeufen trifft
+# es genau eine — `grep -oE "WEB_VERSION..." | head -1` im Schritt
+# "Fassungen nennen". Die war ohnehin kaputt (das Muster verlangte ein Komma
+# hinter dem Namen, `version.php` schreibt `const WEB_VERSION = '…'`) und ist
+# im selben Zug berichtigt.
+defaults:
+  run:
+    shell: bash -eo pipefail {0}
+
 jobs:
   pruefung:
     name: Stufe 1
@@ -52,7 +75,20 @@ jobs:
           echo "Python: $(python3 -V)"
           echo "Node:   $(node -v)"
           echo "Java:   $(java -version 2>&1 | head -1)"
-          echo "Web:    $(grep -oE "WEB_VERSION'?,\s*'[0-9.]+'" server/version.php | head -1)"
+          # DREI ZAEHLUNGEN, DREI AUSLIEFERUNGEN (CLAUDE.md 2) — der
+          # Schrittname sagt "Fassungen", also muessen alle drei dastehen.
+          #
+          # Bis zum 16.09.2026 stand hier ein grep-Muster, das ein KOMMA hinter
+          # dem Namen verlangte (`WEB_VERSION', '…'`) — die Schreibweise von
+          # `define()`. `server/version.php` schreibt aber
+          # `const WEB_VERSION = '20.15.2';`. Das Muster traf nichts, `echo`
+          # gibt trotzdem 0 zurueck, und der Schritt lief gruen, ohne die
+          # Fassung je genannt zu haben. Jetzt fragt PHP die Konstante selbst:
+          # Das haengt nicht an der Schreibweise und scheitert hoerbar, wenn es
+          # sie nicht gibt.
+          echo "Web:     $(php -r "require 'server/version.php'; echo WEB_VERSION;")"
+          echo "Uhr:     $(grep -oE 'APP_VERSION *= *"[0-9.]+"' watch/source/Const.mc | grep -oE '[0-9.]+')"
+          echo "Android: $(grep -oE '^version=[0-9.]+' android/version.properties | cut -d= -f2)"
 
       - name: PHP-Syntax über server/
         # `php -l` je Datei. Ein Syntaxfehler in einer Datei, die nur auf einem
@@ -72,10 +108,29 @@ jobs:
         # Erwartet werden null Treffer ausserhalb der Ausnahmeliste UND null
         # ungenutzte Ausnahmen; beides steckt im Rückgabewert.
         run: |
-          python3 tools/wortliste/wortliste.py | tee /tmp/wortliste.txt
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          tail -20 /tmp/wortliste.txt >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          # DER RUECKGABEWERT WIRD AUFGEFANGEN, NICHT VERSCHLUCKT.
+          #
+          # Bis zum 16.09.2026 stand hier `wortliste.py | tee …`. Ohne
+          # `pipefail` ist der Wert einer Pipe der des LETZTEN Glieds, und
+          # `tee` gibt immer 0 — dieser Schritt konnte NIE ROT WERDEN.
+          #
+          # `pipefail` steht jetzt oben, und damit wuerde die Pipe richtig rot.
+          # Nur: Bei `bash -e` bricht der Block dann an DIESER Zeile ab, und
+          # die Zusammenfassung unten bliebe leer — ausgerechnet in dem Lauf,
+          # in dem man sie lesen will. Deshalb der Umweg ueber `$rc`: erst
+          # schreiben, dann scheitern.
+          rc=0
+          python3 tools/wortliste/wortliste.py > /tmp/wortliste.txt 2>&1 || rc=$?
+          cat /tmp/wortliste.txt
+          {
+            echo '```'
+            tail -20 /tmp/wortliste.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::Wortliste: Treffer außerhalb der Ausnahmen, ungenutzte Ausnahmen oder durchgerutschte Fallen (Rückgabewert $rc)."
+            exit "$rc"
+          fi
 
       - name: Vollständigkeit des Stylesheets
         # GEGEN EINE SCHWELLE, NICHT GEGEN NULL — und das war hier von Anfang
@@ -120,6 +175,23 @@ jobs:
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py
+
+      - name: Kettenaufrufe — passt jeder Aufruf zu seinem Werkzeug?
+        # WARUM DAS IN STUFE 1 GEHOERT (Nr. 217, 17.09.2026).
+        #
+        # Die Kette ruft Werkzeuge dieses Projekts auf. Ob ein Aufruf zur
+        # Schnittstelle passt, zeigte sich bisher erst, wenn der Schritt LIEF —
+        # und viele laufen selten: Stufe 2 erst mit eingerichtetem Staging, der
+        # Produktionslauf erst beim ersten Tag. Am 16./17.09.2026 sind drei
+        # Aufrufe beim jeweils ERSTEN echten Lauf gescheitert, alle drei mit
+        # gueltigem YAML und sauberer Shell-Syntax.
+        #
+        # Diese Pruefung liest den Quelltext der Werkzeuge und FUEHRT KEINES
+        # AUS. Sie kostet Sekunden und faengt genau die Klasse Fehler, die
+        # sonst erst der Ernstfall zeigt.
+        run: |
+          python3 tools/kettenaufrufe/pruefen.py --probe
+          python3 tools/kettenaufrufe/pruefen.py
 
       - name: Backlog — keine Nummer zweimal
         # Die Zeile stammt aus dem Kopf des Rahmenplans (Abschnitt 2.2).
@@ -202,7 +274,14 @@ jobs:
             echo '**Uhr Stufe I: ÜBERSPRUNGEN** (kein `CIQ_GERAETE_URL`) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          CIQ_ZIELE=alle tools/uhr-pruefstand/pruefstand.sh aufbau
+          # `aufbau-uebersetzen` UND NICHT `aufbau` (16.09.2026): Stufe I
+          # uebersetzt nur. `aufbau` holt zusaetzlich die
+          # Simulator-Bibliotheken (webkit2gtk, xvfb, xdotool) per
+          # apt-get — das braucht auf einem Laeufer `sudo`, laedt .deb-
+          # Pakete nach und kostet Minuten fuer etwas, das hier nie
+          # startet. Der erste echte Lauf ist genau daran gescheitert:
+          # "FEHLER: apt-get fehlgeschlagen".
+          CIQ_ZIELE=alle tools/uhr-pruefstand/pruefstand.sh aufbau-uebersetzen
           python3 tools/uhr-pruefstand/geraeteklassen.py "$HOME/.Garmin/ConnectIQ/Devices" \
                   --vertreter 5 --liste /tmp/vertreter.txt --alle-liste /tmp/auswahl.txt
           tools/uhr-pruefstand/pruefstand.sh reihe /tmp/auswahl.txt

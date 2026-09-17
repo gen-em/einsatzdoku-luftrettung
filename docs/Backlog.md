@@ -45,8 +45,11 @@ demselben Zweig vergeben** (206 Messstand-Schritt, 207 `gen-em.org` in `tools/`,
 210 Deadlocks in `ingest.php`, 211 `/api/`-Aufruf ohne Sitzung, 212 zwei
 Erwartungen der Wiederherstellungsprobe), **213 und 214 aus der
 Durchsicht vom 16.09.2026** (Zustandsdatei der Kette im Webroot;
-`install.php` in der Auslieferung). Jeder weitere Zweig, der Nummern vergibt, beginnt bei **215**
-und trägt seine Spanne hier ein, bevor er pusht.
+`install.php` in der Auslieferung), **215 und 216 aus der unabhängigen
+Durchsicht des P5a-Abschlusses** (16.09.2026, nach dem Merge), **217 und 218
+aus der Durchsicht der Werkzeugaufrufe** (17.09.2026). Jeder weitere Zweig,
+der Nummern vergibt, beginnt bei **219** und trägt seine Spanne hier ein,
+bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
@@ -2312,6 +2315,34 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Offen daraus:* Ein Hinweis im Runbook, dass eine von Hand auf dem Server
     gelöschte Datei nur zurückkommt, wenn man die State-Datei mitlöscht. Noch
     nicht geschrieben.
+
+215. **Fünf Werkzeuge begründen ihre Arbeitsweise mit der gelöschten
+    `deploy.yml`.**
+    *Aufgenommen 16.09.2026 aus einer unabhängigen Durchsicht des
+    P5a-Abschlusses.*
+    `deploy.yml` ist mit Web 20.4.0 gelöscht worden; die Kette heißt seither
+    `auslieferung.yml` und hat **zwei** FTPS-Schritte statt einem. In
+    `docs/Technik.md` sind die Erwähnungen berichtigt — in den Werkzeugen nicht:
+    `tools/integritaetswache/wache.py` erklärt ihren Zweck mit „Der Deploy
+    (`.github/workflows/deploy.yml`) synchronisiert `server/` byteweise per
+    FTPS", und vier weitere Stellen ähnlich.
+
+    **Folgenlos für den Lauf** — es sind Kommentare, kein Code. Aber sie sind
+    die Erklärung, warum es das Werkzeug gibt, und wer sie liest, sucht eine
+    Datei, die es nicht mehr gibt. Dazu stimmt die **Einzahl** nicht mehr: Wer
+    „der Deploy" liest, denkt an einen Weg, und es sind zwei mit
+    unterschiedlichen Toren.
+
+    *Zu tun:* Die fünf Stellen auf `auslieferung.yml` umschreiben und dabei die
+    Zweiwegigkeit nennen. **Kein eigenes Paket** — Beifang, sobald jemand das
+    jeweilige Werkzeug ohnehin anfasst (R83-Muster).
+
+216. **Zwei Trennlinien hintereinander an vier Stellen des P5a-Prüfdokuments.**
+    *Aufgenommen 16.09.2026, gleiche Durchsicht.*
+    Rein kosmetisch: `---` gefolgt von `---` erzeugt in manchen
+    Markdown-Darstellungen eine doppelte Linie, in anderen eine Überschrift.
+    Beim Abhaken der Prüfliste mit wegräumen, nicht dafür eigens anfassen — das
+    Dokument verschwindet ohnehin, sobald seine 33 Punkte abgehakt sind.
 
 ## Erledigt
 
@@ -7062,3 +7093,117 @@ zutreffen.
     Befunde, und beide waren Kommentarzeilen über das Werkzeug selbst.
     **Selbstprobe 8/8; im Lauf 108 Dateien, 7 echte Aufrufe, 0 ohne
     Härtung.**
+
+217. **Ein Schritt der Kette, der nie gelaufen ist, ist ungeprüfter Code.**
+    *Aufgenommen 17.09.2026 aus einer unabhängigen Durchsicht aller
+    Werkzeugaufrufe der drei Arbeitsläufe (25 Befunde geprüft, 14 bestätigt);
+    erledigt am selben Tag.*
+    Am 16./17.09.2026 sind **drei** Aufrufe beim jeweils ERSTEN echten Lauf
+    gescheitert — und alle drei hatten gültiges YAML und saubere
+    Shell-Syntax:
+
+    - `kreislauf.py` ohne das Pflichtargument `--art`, mit einem `--passwort`,
+      das es nicht gibt, und als **ein** Aufruf, obwohl der Schrittname zwei
+      verspricht.
+    - `pruefstand.sh aufbau` ruft `apt-get` **ohne `sudo`** — im Container ist
+      man root, auf einem Läufer nicht.
+    - `aufnehmen.mjs` mit `--konto`/`--passwort`, die es dort nie gab; das
+      Werkzeug verwarf sie **still** und meldete sich mit den eingebauten
+      Vorgaben an.
+
+    **Alle drei behoben**, zwei davon an der Wurzel: `aufnehmen.mjs` bricht
+    jetzt mit Rückgabewert 2 ab, wenn ein Schalter unbekannt ist, und
+    `pruefstand.sh` hat mit `aufbau-uebersetzen` einen Weg ohne `sudo`.
+
+    **Dazu das Prüfmittel, das der Eintrag vorgeschlagen hat:
+    `tools/kettenaufrufe/`.** Es liest jeden `run:`-Block der drei
+    Arbeitsläufe, findet darin die aufgerufenen Werkzeuge, liest deren
+    Schnittstelle aus dem Quelltext (`add_argument`, die Handparser über
+    `wert('--x'`/`flag('--x'`, `BEKANNT`-Mengen, `case`-Zweige, `$argv`) und
+    hält Aufruf gegen Schnittstelle. **Es führt kein Werkzeug aus** — deshalb
+    hängt es in Stufe 1 und kostet nichts.
+
+    *Gemessen beim Einbau:* **3 Arbeitsläufe, 25 Aufrufe geprüft, 0 Befunde,
+    0 ungeprüft**; Selbstprobe **10 von 10** (fünf Fälle, die anschlagen
+    müssen, fünf, die es nicht dürfen). Gegen den Stand von **vor** den
+    Behebungen oben hätte es alle drei Fehler genannt — das ist die
+    Gegenprobe, ohne die die Null nichts sagt.
+
+    **Was offen bleibt, steht in der `LIESMICH.md` des Werkzeugs und ist
+    keine Nachlässigkeit, sondern seine Grenze:** Es prüft Schnittstellen,
+    nicht Verhalten. Ein Aufruf mit lauter gültigen Schaltern, der das
+    Falsche tut, kommt durch. Und was im Quelltext nicht steht — ein Schalter,
+    den ein Werkzeug erst zur Laufzeit aus einer Datei liest —, kann es nicht
+    wissen; solche Werkzeuge zählt es als **ungeprüft** und sagt die Zahl
+    dazu, statt sie als Null auszuweisen.
+
+218. **Die Integritätswache war für den Fall blind, für den es sie gibt.**
+    *Aufgenommen und behoben am 17.09.2026 (Fund 27); gefunden von ihrer
+    eigenen Selbstprobe, die „30 Erwartungen, 2 nicht erfuellt" meldete.*
+    `FORM_RE` las den Tag-Rumpf als `[^>]*` und endete am ersten `>`. Seit
+    Web 20.10.0 (P5a/AP6) trägt das Anmeldeformular
+    `data-sperre-rest="<?= (int)$sperreRest ?>"` — der Tag brach mitten im
+    PHP-Ausdruck ab.
+
+    **Der Schaden war nicht der zerschnittene Tag.** Was übrigblieb, enthielt
+    `<?=`, galt damit als **unbestimmt**, und für jedes unbestimmte Stück der
+    Quelle darf die Auslieferung eines haben, das die Quelle nicht kennt. In
+    genau diesen Freiraum passte ein `action="https://boese.example/"` am
+    **Anmeldeformular** — der Fall „jemand leitet die Passwörter um", für den
+    diese Wache gebaut wurde. Die Umlenk-Prüfung fängt ihn nicht mit ab: Sie
+    sieht `formaction|formmethod|formtarget|formenctype`, nicht das `action`
+    am `<form>` selbst.
+
+    **Behoben:** `FORM_RE` nutzt jetzt `TAG_REST` (wie `SKRIPT_RE` seit
+    Fund 23), und `form_paare()` maskiert nur die Attributwerte, die in der
+    Quelle wirklich aus PHP kommen — auf beiden Seiten. Der Rest des Tags
+    bleibt Wort für Wort vergleichbar. Selbstprobe danach: **30 von 30**.
+
+    ### Nachtrag vom 17.09.2026 — und eine Berichtigung an diesem Eintrag
+
+    **Dieser Eintrag hat sich selbst auf eine Regel berufen, die es nicht
+    gab.** Er schrieb: *„`CLAUDE.md` 6 nennt bereits zwei und schreibt vor,
+    dass ein Werkzeug, das Markup aus Quelldateien liest, den Tag-Rumpf als
+    `(?:<\?(?:php\b|=).*?\?>|[^>])*` lesen muss."* Nachgesehen am 17.09.2026:
+    In `CLAUDE.md` stand davon **kein Wort**, und in der Git-Historie der
+    Datei auch nie (`git log -S 'Tag-Rumpf' -- CLAUDE.md` → leer). Die Regel
+    existierte nur im Kopf dessen, der sie zweimal angewandt hatte. Genau
+    deshalb wurde sie beim dritten Muster übersehen — sie stand nirgends, wo
+    man sie liest, bevor man ein Muster schreibt. **Jetzt steht sie in
+    `CLAUDE.md` 6**, ausdrücklich für *jedes* Tag-Muster.
+
+    Die übrigen Muster sind nachgezogen, und zwar mit der Angabe, was die
+    Umstellung jeweils wert war — das ist bei den vieren nicht dasselbe:
+
+    - **`SRC_RE` war eine echte Zeitbombe.** `[^>]*?` kommt am `?>` nicht
+      vorbei; `<script<?= kopf_nonce_attr() ?> src="a.js">` hätte **keinen**
+      Treffer gegeben, und `SKRIPT_RE` hätte den Tag über `TAG_REST` richtig
+      als Fremdskript erkannt und übersprungen — der Verweis wäre weder Block
+      noch Fremdskript gewesen: **unsichtbar**. Gemessen: 117 `<script>`-Tags,
+      82 davon mit `src`, **0** davon mit PHP vor dem `src` — die Zeile gibt
+      es heute nicht, sie ist nur jederzeit schreibbar. Neue Selbstprobe dazu,
+      und die Gegenprobe zeigt: Mit dem alten Muster fällt sie um.
+    - **`BASE_RE`, `META_RE`, `EINBETT_RE` waren es nicht.** Ein `[^>]*` endet
+      am `>` des PHP-Schlusses, also **nach** dem `<?=` — das abgeschnittene
+      Stück trägt den PHP-Anfang mit sich, gilt weiter als unbestimmt und wird
+      durchgelassen. Nachgemessen, mit beiden Mustern, an `<base>` mit PHP im
+      Rumpf: gleiches Ergebnis. Umgestellt wurden sie trotzdem, damit niemand
+      nachmessen muss, welches der acht Muster dieser Datei die kurze Form
+      verträgt.
+    - **`tools/stilvergleich/proben.py`** las `<script>` aus der rohen
+      PHP-Quelle. Von 110 Blöcken begannen die aus 12 Dateien mit einem
+      überzähligen `>`, und aus `<script src="<?= asset(…) ?>"></script>`
+      wurde ein **Scheinblock mit dem Inhalt `">`**. Für die
+      Zeichenketten-Ernte war das folgenlos — aber nur, weil dort niemand ein
+      `>` am Blockanfang braucht.
+    - **`tools/vollstaendigkeit/pruefen.py`** (`<svg`): 2 Treffer, mit beiden
+      Mustern dieselben. Vorsorge, kein Fund.
+    - **`tools/wortliste/zerlegen.py`** bleibt bei `[^>]*` — **und das ist
+      richtig**: `_BLOCK` läuft über `nur_html`, den Text, aus dem
+      `_html_bereiche()` die PHP-Inseln vorher durch Leerzeichen ersetzt hat.
+      Dort gibt es kein `?>`. Der Grund steht jetzt als Kommentar daneben,
+      damit die Zeile beim nächsten Durchgang nicht „mitkorrigiert" wird.
+
+    Muster über **gelieferte** Antworten (`tools/referenzdatensatz/`) sind
+    nicht betroffen: Dort ist das PHP ausgeführt. Selbstprobe der
+    Integritätswache danach: **32 von 32**.
