@@ -145,6 +145,24 @@ jobs:
           esac
           echo "Drei Geheimnisse vorhanden; der Host sieht wie ein Hostname aus."
 
+      - name: Handbuch und „Was ist NAdoku" nach server/doku kopieren
+        run: |
+          # DER FTPS-SCHRITT LAEDT NUR `server/` HOCH. `docs/` liegt daneben
+          # und kaeme nie auf den Server -- `hilfe.php` und `ueber.php`
+          # zeigten dort dauerhaft "Dieses Dokument fehlt" (P5b/AP8,
+          # E-P5b-08, -22). Deshalb wandern beide Dateien VOR dem Sync nach
+          # `server/doku/`; `doku_pfad()` sucht erst `../docs/` (fuer
+          # Selbsthosterinnen, die das Repositorium hochladen) und dann dort.
+          #
+          # `server/doku/` steht NICHT in .gitignore und ist trotzdem leer im
+          # Repositorium: Der Ordner entsteht hier. Wer ihn eincheckte,
+          # haette zwei Fassungen desselben Handbuchs im Baum.
+          set -euo pipefail
+          mkdir -p server/doku
+          cp docs/Handbuch.md docs/Was-ist-NAdoku.md server/doku/
+          if [ -d docs/bilder ]; then cp -r docs/bilder server/doku/; fi
+          echo "Kopiert:"; ls -l server/doku/
+
       - name: server/ per FTPS auf Staging synchronisieren
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
@@ -659,6 +677,18 @@ jobs:
 
       - name: Wartung einschalten
         run: python3 tools/kette/tor.py wartung-an --basis "$BASIS" --token "$JOBS_TOKEN"
+
+      - name: Handbuch und „Was ist NAdoku" nach server/doku kopieren
+        run: |
+          # Dieselbe Begruendung wie beim Staging-Schritt oben (P5b/AP8). Er
+          # steht ZWEIMAL da und nicht einmal: Die beiden Laeufe sind
+          # verschiedene Jobs auf verschiedenen Laeufern, jeder mit eigenem
+          # Auschecken -- was der eine kopiert, sieht der andere nicht.
+          set -euo pipefail
+          mkdir -p server/doku
+          cp docs/Handbuch.md docs/Was-ist-NAdoku.md server/doku/
+          if [ -d docs/bilder ]; then cp -r docs/bilder server/doku/; fi
+          echo "Kopiert:"; ls -l server/doku/
 
       - name: server/ per FTPS auf Produktiv synchronisieren
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0

@@ -342,15 +342,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * Installation ohne Zugang zu ihrem eigenen Betriebsbereich da:
              * Serverschluessel, Wartungsmodus, Migrationen, Speichergrenze.
              * Der Weg zurueck fuehrte ueber die Datenbank. */
-            $pdo->prepare('INSERT INTO users (email, role, account_key)
-                           VALUES (?, "betreiberin", ?)')
-                ->execute([$adminEmail, bin2hex(random_bytes(8))]);
-            $adminId = (int)$pdo->lastInsertId();
-            $setupToken = bin2hex(random_bytes(32));
-            $pdo->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at)
-                           VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))')
-                ->execute([$adminId, hash('sha256', $setupToken)]);
-            $setupLink = $baseUrl . '/pw_handling.php?token=' . $setupToken;
+            /* JETZT MIT TRANSAKTIONSKLAMMER (P5b/AP2, E-P5b-11).
+             *
+             * Hier standen zwei `INSERT` ohne Klammer, und das war die
+             * gefaehrlichste der vier Token-Stellen: Ein Abbruch zwischen
+             * beiden hinterliess ein Konto ohne Weg hinein — anmelden ging
+             * nicht (kein Passwort gesetzt), und der Einrichter lief nicht
+             * mehr, weil `install.lock` steht. Eine Installation, aus der
+             * man sich beim Einrichten selbst ausgesperrt hat; der Weg
+             * zurueck fuehrte ueber die Datenbank.
+             *
+             * DIE EIGENE VERBINDUNG WIRD UEBERGEBEN. `konto_lib.php` faellt
+             * ohne `$pdo` auf `db()` zurueck, und `db()` verlangt
+             * `config.php` — die es hier noch nicht gibt, weil sie erst
+             * unten geschrieben wird. Deshalb der sechste Parameter. */
+            require_once __DIR__ . '/konto_lib.php';
+            $angelegt = konto_anlegen($adminEmail, '', 'betreiberin',
+                                      'einrichtung', 'aktiv', $pdo);
+            $adminId    = $angelegt['id'];
+            $setupLink  = $baseUrl . '/pw_handling.php?token=' . $angelegt['token'];
         } catch (Throwable $ex) {
             $errors[] = 'Beim Anlegen der Tabellen/des ersten Kontos ist ein Fehler aufgetreten: '
                       . $ex->getMessage()

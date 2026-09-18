@@ -2776,6 +2776,329 @@ function migrationen_katalog(): array
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
         ],
     ],
+    [
+        'id'    => '2026_09_16_protokoll_ereignisse',
+        'web'   => '20.16',
+        'label' => 'Betriebsprotokoll — der Schreibweg (P5b/AP1)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'protokoll_ereignisse'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* EINE TABELLE FUER SECHS REITER, UND EINE SIEBTE DANEBEN
+             * (E-P5b-12, V1, V2, V6).
+             *
+             * `sicherheit_ereignisse` (P5a/AP6) bleibt, wo sie ist, und wird
+             * NICHT hierher gezogen. Der Grund ist keine Bequemlichkeit,
+             * sondern die Frist: Dort stehen IP- und E-Mail-Adressen und
+             * verfallen nach 30 Tagen, fest (E-P5a-09). Hier steht das Audit
+             * und bleibt bis zu drei Jahre. Zwei Fristen in einer Tabelle
+             * sind eine Einladung, die kuerzere zu vergessen. Ob die beiden
+             * spaeter zusammenrueckten, entscheidet 10c (V6).
+             *
+             * `urheber_user_id` IST `0` UND NICHT `NULL`, wenn kein Mensch
+             * gehandelt hat. `NULL` liesse offen, ob niemand handelte oder ob
+             * jemand vergessen wurde; `urheber_art` sagt dann, welche Art von
+             * Niemand es war (`cli` an der Konsole, `job` im Huckepack).
+             *
+             * KEIN FREMDSCHLUESSEL AUF `users`, weder fuer den Urheber noch
+             * fuer den Betroffenen — und das ist der wichtigste Satz dieser
+             * Migration: Der haeufigste Verwaltungseintrag ueberhaupt ist
+             * „Konto geloescht". Mit `ON DELETE CASCADE` loeschte die
+             * Kontoloeschung ihren eigenen Protokolleintrag; mit `RESTRICT`
+             * verhinderte der Eintrag die Loeschung. Beides ist falsch. Die
+             * Id bleibt als Zahl stehen, auch wenn es das Konto nicht mehr
+             * gibt — genau dafuer ist ein Audit da.
+             *
+             * `text` IST `TEXT` UND NICHT `VARCHAR`: Ein Eintrag wie
+             * „Rolle von … auf … geaendert" mit zwei Kontoadressen sprengt
+             * 255 Zeichen schneller, als man denkt. Gekuerzt wird beim
+             * Schreiben auf 500 Zeichen (`protokoll_lib.php`), damit die
+             * Datenbank nicht traegt, was niemand liest.
+             *
+             * DIE DREI INDIZES sind die drei Fragen, die 10c stellen wird:
+             * „was ist in diesem Reiter zuletzt passiert" (idx_reiter_zeit,
+             * zugleich der Index der Bereinigung), „was ist mit diesem Konto
+             * passiert" (idx_betroffen) und „was hat diese Person getan"
+             * (idx_urheber). */
+            'CREATE TABLE protokoll_ereignisse (
+               id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               zeit              DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+               reiter            ENUM(\'verwaltung\',\'email\',\'jobs\',
+                                      \'sicherung\',\'ziele\',\'system\') NOT NULL,
+               art               VARCHAR(64) NOT NULL,
+               urheber_user_id   INT UNSIGNED NOT NULL DEFAULT 0,
+               urheber_art       ENUM(\'mensch\',\'job\',\'cli\') NOT NULL DEFAULT \'mensch\',
+               betroffen_user_id INT UNSIGNED NULL,
+               text              TEXT NOT NULL,
+               daten             JSON NULL,
+               KEY idx_reiter_zeit (reiter, zeit),
+               KEY idx_betroffen (betroffen_user_id, zeit),
+               KEY idx_urheber (urheber_user_id, zeit)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
+    [
+        'id'    => '2026_09_16_konto_lebenszyklus',
+        'web'   => '20.17',
+        'label' => 'Kontostatus und Lebenszyklus (P5b/AP2)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'users'
+                                AND column_name = 'status'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* DER BESTAND WIRD `aktiv`, UND ZWAR OHNE AUSNAHME (E-P5b-12).
+             *
+             * Das ist die einzige richtige Vorgabe, und sie ist es aus einem
+             * Grund, der nicht auf der Hand liegt: Jeder andere Wert waere
+             * eine AUSSAGE ueber Konten, die es zum Zeitpunkt dieser
+             * Migration schon gab. `unbestaetigt` behauptete, ihre Adresse
+             * sei nie geprueft worden — sie ist es nie worden, weil es die
+             * Pruefung nicht gab, und das ist etwas anderes. Und praktisch:
+             * Jedes Bestandskonto koennte sich am Tag nach dem Update nicht
+             * mehr anmelden.
+             *
+             * `DEFAULT 'aktiv'` gilt auch fuer die Spalte selbst und nicht
+             * nur fuer das Nachfuellen — eine Einfuegung, die `status`
+             * vergisst, soll ein brauchbares Konto ergeben und keinen
+             * Zombie. `konto_anlegen()` setzt ihn trotzdem ausdruecklich.
+             *
+             * `bestaetigt_am` BEKOMMT DEN BESTAND NICHT NACHTRAEGLICH: NULL
+             * heisst hier „die Frage stellte sich nicht", und ein erfundenes
+             * Datum waere schlimmer als eine Leerstelle — dieselbe
+             * Entscheidung wie bei `last_login` in Web 9.8.0. */
+            "ALTER TABLE users
+               ADD COLUMN status ENUM('unbestaetigt','wartet','aktiv','gesperrt')
+                   NOT NULL DEFAULT 'aktiv',
+               ADD COLUMN bestaetigt_am  DATETIME NULL,
+               ADD COLUMN gesperrt_seit  DATETIME NULL,
+               ADD COLUMN gesperrt_grund VARCHAR(64) NULL,
+               ADD COLUMN loeschung_am   DATETIME NULL",
+
+            /* DER INDEX IST FUER DEN VERFALLJOB, nicht fuer die Anzeige.
+             * `konto_verfall` (AP3) und `konto_loeschung` (AP5) suchen
+             * beide „alle Konten in einem Zustand, deren Frist abgelaufen
+             * ist" — ohne Index ein Vollscan ueber `users` bei jedem
+             * Joblauf. Bei dreihundert Konten ist das nichts; die
+             * Zielmenge ist eine andere. */
+            'ALTER TABLE users ADD INDEX idx_status_loeschung (status, loeschung_am)',
+        ],
+    ],
+    [
+        'id'    => '2026_09_16_einwilligungen',
+        'web'   => '20.19',
+        'label' => 'Einwilligungen je Konto, Fassungskennung auf die Sekunde (P5b/AP4)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'konto_einwilligungen'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* `stand_am` WIRD DATETIME (Fehlerfund F3 des Konzepts).
+             *
+             * Es war `DATE`. Damit waeren zwei Aenderungen am selben Tag
+             * EINE Fassung — und die Nutzerin, die die erste angenommen hat,
+             * gaelte als Annehmerin der zweiten. Genau das darf eine
+             * Fassungskennung nicht.
+             *
+             * DER BESTAND VERLIERT NICHTS: `DATE` -> `DATETIME` fuellt die
+             * Uhrzeit mit `00:00:00`. Das ist richtig — das Standdatum wurde
+             * im Editor VON HAND gesetzt und hatte nie eine Uhrzeit; sie
+             * jetzt zu erfinden waere schlechter.
+             *
+             * DER EDITOR BLEIBT EIN DATUMSFELD. Wer ein Standdatum setzt,
+             * denkt in Tagen, nicht in Sekunden; die Uhrzeit entsteht nur,
+             * wenn zwei Fassungen am selben Tag auseinandergehalten werden
+             * muessen — und dann setzt sie der Speicherweg, nicht die
+             * Betreiberin. */
+            'ALTER TABLE rechtstexte MODIFY stand_am DATETIME NULL',
+
+            /* DIE EINWILLIGUNGEN JE KONTO (E-P5b-15).
+             *
+             * EINE ZEILE JE KONTO UND SCHLUESSEL, nicht je Annahme: Der
+             * Primaerschluessel ist `(user_id, schluessel)`, und eine neue
+             * Annahme ueberschreibt die alte. Ein Verlauf „wer hat wann
+             * welche Fassung angenommen" waere etwas anderes — er gehoert
+             * ins Protokoll (Reiter Verwaltung) und nicht hierher, wo bei
+             * jedem Seitenaufbau gefragt wird „ist die aktuelle Fassung
+             * angenommen?".
+             *
+             * `stand_am` IST DIE FASSUNG, DIE ANGENOMMEN WURDE, und nicht
+             * die aktuelle. Der Vergleich gegen `rechtstexte.stand_am` ist
+             * die ganze Pruefung — deshalb steht der Wert hier und nicht
+             * ein Verweis auf die Zeile.
+             *
+             * ON DELETE CASCADE: Anders als beim Protokoll ist das hier
+             * richtig. Eine Einwilligung ist eine Aussage UEBER das Konto;
+             * ohne Konto hat sie keinen Gegenstand. Der Nachweis, DASS
+             * jemand angenommen hat, steht im Protokoll und ueberlebt. */
+            'CREATE TABLE konto_einwilligungen (
+               user_id    INT UNSIGNED NOT NULL,
+               schluessel VARCHAR(32) NOT NULL,
+               stand_am   DATETIME NULL,
+               zeit       DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+               PRIMARY KEY (user_id, schluessel),
+               CONSTRAINT fk_kew_user FOREIGN KEY (user_id)
+                 REFERENCES users (id) ON DELETE CASCADE
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
+    [
+        'id'    => '2026_09_16_adresswechsel_bestaetigt',
+        'web'   => '20.20',
+        'label' => 'E-Mail-Wechsel mit Bestätigung der neuen Adresse (P5b/AP5)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'users'
+                                AND column_name = 'email_neu'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* BEIDE ADRESSEN BIS ZUM KLICK (E-P5b-16).
+             *
+             * Bis Web 20.19.0 schrieb `einstellungen.php` die neue Adresse
+             * SOFORT — mit Passwortnachweis und einer Hinweismail an die
+             * alte, aber ohne jede Pruefung, ob die neue ueberhaupt
+             * erreichbar ist. Ein Tippfehler sperrte damit aus: Die
+             * Anmeldung laeuft ueber die Adresse, und „Passwort vergessen"
+             * schickt an eine Adresse, die es nicht gibt.
+             *
+             * DIE ALTE BLEIBT DIE GUELTIGE, bis der Klick kommt. Deshalb
+             * `email_neu` NEBEN `email` und nicht statt ihrer — und deshalb
+             * kein UNIQUE darauf: Zwei Konten duerfen dieselbe Adresse
+             * vormerken; erst der Klick entscheidet, und der laeuft gegen
+             * das UNIQUE auf `email`. Ein UNIQUE hier liesse den Zweiten
+             * nicht einmal den Versuch machen und verriete ihm dabei, dass
+             * jemand anders sie vorgemerkt hat.
+             *
+             * `_bis` UND NICHT `password_resets`: Der Token gehoert zu einer
+             * Adresse, nicht zu einem Passwort. In `password_resets` waere
+             * er ein zweiter Tokentyp in einer Tabelle, deren Regel
+             * „hoechstens ein gueltiger je Konto" lautet — ein
+             * Adresswechsel wuerde dann einen offenen Einladungslink
+             * entwerten. */
+            "ALTER TABLE users
+               ADD COLUMN email_neu            VARCHAR(190) NULL,
+               ADD COLUMN email_neu_token_hash CHAR(64) NULL,
+               ADD COLUMN email_neu_bis        DATETIME NULL",
+
+            /* Der Index ist fuer den Klick auf den Link: Er sucht ueber den
+             * Hash, nicht ueber das Konto. */
+            'ALTER TABLE users ADD INDEX idx_email_neu_token (email_neu_token_hash)',
+        ],
+    ],
+    [
+        'id'    => '2026_09_16_konto_grenzen',
+        'web'   => '20.21',
+        'label' => 'Mengengrenzen und Aufbewahrung je Konto (P5b/AP6, Nr. 37, 48)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'users'
+                                AND column_name = 'grenze_einsaetze'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* `NULL` HEISST „die Vorgabe der Installation gilt" (E-P5b-18).
+             *
+             * Nicht `0` und nicht die Vorgabe als Wert: Beides waere eine
+             * Aussage ueber dieses eine Konto, wo keine getroffen wurde.
+             * Traegt die Spalte die Vorgabe als Zahl, aendert eine spaetere
+             * Anhebung der Installationsvorgabe an den bestehenden Konten
+             * nichts — und niemand saehe, warum.
+             *
+             * `backup_pakete` ist Backlog Nr. 48: Wie viele Konto-Backups
+             * dieses Kontos aufgehoben werden, statt der Zahl der
+             * Installation (`adminbackup_aufbewahrung`, Vorgabe 2). NICHT
+             * eine Aufbewahrungsfrist fuer Einsaetze — die gibt es nicht und
+             * soll es hier auch nicht geben: Einsatzdaten von selbst
+             * verschwinden zu lassen waere eine Zusage, die dieses Projekt
+             * nicht macht.
+             *
+             * Eine `0` gibt es auch hier nicht: Sie hiesse „kein Backup
+             * aufheben", und die Verdraengung liesse dann beim naechsten
+             * Lauf nichts uebrig. `edbak_aufbewahrung()` behandelt 0 seit
+             * jeher als „nie gesetzt". */
+            'ALTER TABLE users
+               ADD COLUMN grenze_einsaetze INT UNSIGNED NULL,
+               ADD COLUMN grenze_mb        INT UNSIGNED NULL,
+               ADD COLUMN backup_pakete    SMALLINT UNSIGNED NULL',
+        ],
+    ],
+        [
+        'id'    => '2026_09_17_erststart_rueckfragen',
+        'web'   => '20.24',
+        'label' => 'Erststart und Besitz-Rueckfragen (P5b/AP9)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'users'
+                                AND column_name = 'erststart_stand'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* VIER SPALTEN, UND JEDE BEANTWORTET EINE FRAGE (E-P5b-09, -19).
+             *
+             * `erststart_stand` — WELCHE DER DREI SCHRITTE SIND ERLEDIGT.
+             * Ein Bitfeld und keine drei Spalten: Die drei Schritte
+             * (Standort, Rettungsmittel, Geraet) sind eine Einheit, sie
+             * werden zusammen gelesen und zusammen geschrieben. Bit 0/1/2;
+             * **`-1` heisst „nicht mehr zeigen"** und ist damit kein
+             * Zaehlwert, sondern ein Zustand — deshalb TINYINT und nicht
+             * UNSIGNED.
+             *
+             * WARUM UEBERHAUPT EIN STAND UND NICHT EINE ABFRAGE AUF DIE
+             * STAMMDATEN: Weil „ich will keinen Standort" eine Antwort ist.
+             * Wer den Schritt bewusst uebergeht, hat ihn erledigt; ein
+             * `SELECT COUNT(*) FROM bases` saehe das nie und fragte bei
+             * jedem Anmelden erneut.
+             *
+             * `rueckfrage_naechste` — WANN DAS NAECHSTE MAL GEFRAGT WIRD.
+             * Ein Datum und kein Intervall: Die Abstaende sind ungleich
+             * (30 Tage, 6 Monate, dann jaehrlich), und „spaeter" schiebt um
+             * 7 Tage. Wer daraus rechnen muesste, braeuchte Runde UND
+             * Verschiebungen — das Datum traegt beides schon.
+             *
+             * NULL heisst „noch nie gesetzt". Gesetzt wird es beim ersten
+             * Anmelden, nicht bei der Anlage: Ein Konto, das nie benutzt
+             * wird, soll keine Frist mit sich herumtragen.
+             *
+             * `rueckfrage_runde` — WELCHER ABSTAND ALS NAECHSTES GILT.
+             * 0 = 30 Tage, 1 = 6 Monate, 2 und hoeher = jaehrlich.
+             *
+             * `rueckfrage_verschoben` — WIE OFT SCHON „SPAETER". Bis 3
+             * (E-P5b-19); danach kommt die Frage wieder regulaer. Der
+             * Zaehler steht hier und nicht in der Sitzung, weil „spaeter"
+             * sonst durch Abmelden zurueckgesetzt waere — und damit
+             * unbegrenzt. */
+            'ALTER TABLE users
+               ADD COLUMN erststart_stand       TINYINT NOT NULL DEFAULT 0,
+               ADD COLUMN rueckfrage_naechste   DATE NULL,
+               ADD COLUMN rueckfrage_runde      TINYINT UNSIGNED NOT NULL DEFAULT 0,
+               ADD COLUMN rueckfrage_verschoben TINYINT UNSIGNED NOT NULL DEFAULT 0',
+
+            /* BESTANDSKONTEN HABEN IHREN ERSTSTART HINTER SICH.
+             *
+             * Ohne diese Zeile bekaeme jedes bestehende Konto beim naechsten
+             * Anmelden den Einstieg gezeigt — drei Schritte, die es alle
+             * laengst erledigt hat. Das ist keine Kleinigkeit: Es ist der
+             * Unterschied zwischen einer neuen Funktion und einer
+             * Belaestigung.
+             *
+             * DAS KRITERIUM IST EIN RETTUNGSMITTEL. Wer eines angelegt hat,
+             * hat die Anwendung in Betrieb genommen; Standort ist optional
+             * und ein Geraet hat nicht jede. `7` setzt alle drei Bits. */
+            'UPDATE users u SET u.erststart_stand = 7
+               WHERE EXISTS (SELECT 1 FROM vehicles v WHERE v.user_id = u.id)',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

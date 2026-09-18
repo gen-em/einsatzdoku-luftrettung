@@ -31,7 +31,13 @@ require_once __DIR__ . '/db.php';
 
 /** Erlaubte Gruende. Andere Werte werden auf 'ende' abgebildet — der Grund
  *  landet in der Adresszeile und darf nicht frei setzbar sein. */
-const SESSION_ENDE_GRUENDE = ['abgemeldet', 'abgelaufen', 'passwort', 'konto', 'ende'];
+const SESSION_ENDE_GRUENDE = ['abgemeldet', 'abgelaufen', 'passwort', 'konto',
+                              'gesperrt', 'ende'];
+/* `gesperrt` kam mit P5b/AP2 dazu, und dabei gilt der Satz aus dem Kopf
+ * dieser Datei: Zu JEDEM Grund gehoeren ZWEI Texte — die Zwischenseite in
+ * `session_beenden()` und die Meldung in `session_ende_text()`. Wer einen
+ * Grund ergaenzt und nur einen Text schreibt, hinterlaesst an der anderen
+ * Stelle ein „Du wirst abgemeldet …" ohne jede Auskunft. */
 
 /**
  * Sitzung beenden OHNE Ausgabe.
@@ -95,6 +101,7 @@ function session_beenden(string $grund = 'abgemeldet'): never
         'abgelaufen' => 'Die Sitzung ist abgelaufen — du wirst abgemeldet …',
         'passwort'   => 'Das Passwort wurde geändert — du wirst abgemeldet …',
         'konto'      => 'Das Konto steht nicht mehr zur Verfügung …',
+        'gesperrt'   => 'Dieses Konto ist gesperrt — du wirst abgemeldet …',
         default      => 'Du wirst abgemeldet …',
     };
 
@@ -144,6 +151,13 @@ function session_ende_text(?string $grund): string
         'passwort'   => 'Das Passwort dieses Kontos wurde geändert. Diese Sitzung ist '
                       . 'damit beendet — bitte mit dem neuen Passwort anmelden.',
         'konto'      => 'Das Konto steht nicht mehr zur Verfügung.',
+        /* DER TEXT SAGT NICHT, WARUM. Der Grund einer Sperre steht in
+         * `users.gesperrt_grund` und geht niemanden etwas an, der diese
+         * Seite ohne Anmeldung sieht — sie ist oeffentlich. Wer gesperrt
+         * ist, erfaehrt den Grund von der Verwaltung; wer fremde Adressen
+         * durchprobiert, erfaehrt hier nichts, was er nicht schon weiss. */
+        'gesperrt'   => 'Dieses Konto ist gesperrt. Wende dich an die Verwaltung '
+                      . 'dieser Installation.',
         default      => '',
     };
 }

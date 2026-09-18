@@ -80,17 +80,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($u && demo_ist_demo((int)$u['id'])) { $u = false; }
 
         if ($u) {
-            // Hoechstens EIN gueltiger Token je Konto: Der neue entwertet
-            // alle offenen. Sonst sammelten sich mit jeder Anfrage weitere
-            // gueltige Links an, und jeder einzelne davon reicht aus.
-            db()->prepare('UPDATE password_resets SET used_at = NOW()
-                           WHERE user_id = ? AND used_at IS NULL')
-                ->execute([(int)$u['id']]);
-
-            $token = bin2hex(random_bytes(32));
-            db()->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at)
-                           VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))')
-                ->execute([(int)$u['id'], hash('sha256', $token)]);
+            /* Hoechstens EIN gueltiger Token je Konto: Der neue entwertet
+             * alle offenen. Sonst sammelten sich mit jeder Anfrage weitere
+             * gueltige Links an, und jeder einzelne davon reicht aus.
+             *
+             * Seit P5b/AP2 tut das `reset_token_ausstellen()` — dieselbe
+             * Funktion, die auch die Verwaltung und der Einrichter rufen
+             * (Backlog Nr. 202 Paket 1). */
+            require_once __DIR__ . '/konto_lib.php';
+            $token = reset_token_ausstellen((int)$u['id'], TOKEN_RESET_S);
             $link = app_url('/pw_handling.php?token=' . $token);
             $mailAuftrag = ['passwort_reset', $email, ['link' => $link]];
         }

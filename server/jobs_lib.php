@@ -229,12 +229,47 @@ function jobs_katalog(): array
              * einen Schritt ergaenzt, ergaenzt sie mit. */
             'beschreibung' => 'Papierkorb, Kopplungssitzungen, Ratenschutz und '
                             . 'Sperrereignisse, Gerätevermerke, Passwort-Token, '
-                            . 'CSP-Berichte, Mail-Warteschlange, Job-Verlauf, '
-                            . 'Erinnerung an die Verwaltung, Speichermessung '
-                            . 'und Warnschwellen',
+                            . 'CSP-Berichte, Mail-Warteschlange, Betriebsprotokoll, '
+                            . 'Mengen je Konto, verwaiste Kontomarken, Job-Verlauf, '
+                            . 'Erinnerung an die Verwaltung, Speichermessung und '
+                            . 'Warnschwellen',
             'taeglich'     => true,
             'rueckstand'   => fn(PDO $pdo, array $z): ?int => null,
             'lauf'         => 'job_aufraeumen',
+        ],
+        /* DER LOESCHJOB STEHT WEIT VORN, gleich hinter dem Aufraeumen.
+         *
+         * Er hat im Regelfall NICHTS zu tun — eine Abfrage ueber einen Index
+         * — und darf deshalb vor der Spurarbeit stehen, ohne ihr Budget zu
+         * nehmen. Wenn er doch etwas zu tun hat, ist es das, worauf jemand
+         * ein Recht hat: Eine beantragte Loeschung, die nach Ablauf der
+         * Karenz noch Tage wartet, weil die Verdichtung das Budget
+         * verbraucht, ist eine nicht eingehaltene Zusage. */
+        'konto_loeschung' => [
+            'titel'        => 'Beantragte Löschungen ausführen',
+            'beschreibung' => 'Konten, deren 30-tägige Karenz abgelaufen ist, '
+                            . 'endgültig löschen — mitsamt GPS-Daten, Stammdaten und '
+                            . 'Konto-Backups. Eine Anmeldung in der Karenz nimmt '
+                            . 'den Antrag zurück',
+            'taeglich'     => false,
+            'rueckstand'   => 'job_konto_loeschung_rueckstand',
+            'lauf'         => 'job_konto_loeschung',
+        ],
+        /* ZWEI FRISTEN, ZWEI ZUSTAENDE, EIN JOB (E-P5b-02). Sie in zwei
+         * Jobs zu trennen waere naheliegend und falsch: Beide raeumen
+         * dieselbe Sache auf — eine Registrierung, aus der nichts geworden
+         * ist —, beide gehen ueber `konto_loeschen()`, und beide sind
+         * einzeln so selten, dass zwei Zeilen in der Jobliste mehr
+         * Aufmerksamkeit kosteten, als sie wert sind. */
+        'konto_verfall' => [
+            'titel'        => 'Verfallene Registrierungen löschen',
+            'beschreibung' => 'Unbestätigte Registrierungen nach 48 Stunden und '
+                            . 'wartende nach Ablauf der Freischaltfrist (Vorgabe '
+                            . '30 Tage) löschen. Die Wartenden bekommen vorher '
+                            . 'eine letzte Mail',
+            'taeglich'     => false,
+            'rueckstand'   => 'job_konto_verfall_rueckstand',
+            'lauf'         => 'job_konto_verfall',
         ],
         'verdichtung' => [
             'titel'        => 'GPS-Daten verdichten',
@@ -691,6 +726,89 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
                 /* Tabelle fehlt (Migration noch nicht gelaufen). */
             }
         },
+        'Betriebsprotokoll' => function (PDO $pdo): void {
+            /* ZWEI FRISTEN, EIN SCHRITT (P5b/AP1, E-P5b-06). Der Reiter
+             * *Verwaltung* ist das Audit und bleibt 365 Tage, einstellbar
+             * zwischen 90 und 1095; alle uebrigen verfallen nach 30 Tagen,
+             * fest — dieselbe Zahl und derselbe Grund wie bei den Nachbarn
+             * darueber (E-P5a-09).
+             *
+             * Die Fristen stehen NICHT hier, sondern in
+             * `protokoll_bereinigen()`: Sie gehoeren zu der Bibliothek, die
+             * sie auch beim Schreiben kennt. Eine Frist, die an zwei Stellen
+             * steht, laeuft auseinander, sobald jemand nur eine aendert.
+             *
+             * Eigenes try/catch wie bei den Nachbarn: Zwischen Deploy und
+             * Migrationslauf gibt es die Tabelle noch nicht. */
+            try {
+                require_once __DIR__ . '/protokoll_lib.php';
+                protokoll_bereinigen($pdo);
+            } catch (Throwable $ex) {
+                /* Tabelle fehlt (Migration noch nicht gelaufen). */
+            }
+        },
+        'Mengen je Konto' => function (PDO $pdo): void {
+            /* DIE ECHTE ZAHL, EINMAL AM TAG (P5b/AP6, E-P5b-18).
+             *
+             * `ingest.php` schreibt den Zaehler nach jedem Schub GESCHAETZT
+             * fort — hier wird er gemessen. Die Schaetzung darf danebenliegen;
+             * sie wird spaetestens hier ersetzt, und eine Grenze bei 250 MB
+             * nimmt einen Schaetzfehler von ein paar Kilobyte nicht uebel.
+             *
+             * UND DIE WARNUNG BEI 80 % — einmalig je Konto und Schwelle.
+             * `mengen_gemeldet:<id>` merkt sich, dass sie draussen ist;
+             * faellt das Konto wieder darunter, wird die Marke geleert und
+             * die Warnung kaeme beim naechsten Ueberschreiten erneut. Ohne
+             * dieses Leeren bekaeme ein Konto, das dauerhaft um die Schwelle
+             * pendelt, nie wieder eine — oder jeden Tag eine. */
+            try {
+                require_once __DIR__ . '/konten_einstellungen_lib.php';
+                require_once __DIR__ . '/mail_lib.php';
+                foreach ($pdo->query('SELECT id, email FROM users')
+                              ->fetchAll(PDO::FETCH_ASSOC) as $u) {
+                    $uid = (int)$u['id'];
+                    konto_mengen($uid, true);           // frisch messen
+                    $f = konto_fuellstand($uid);
+                    $marke = 'mengen_gemeldet:' . $uid;
+
+                    if (!$f['warnung']) { app_state_setzen($marke, ''); continue; }
+                    if (app_state_lesen($marke) === '1') { continue; }
+
+                    mail_einreihen('konto_menge', (string)$u['email'], [
+                        'prozent'   => (string)(int)round($f['anteil'] * 100),
+                        'einsaetze' => $f['einsaetze'] . ' von ' . $f['grenze_einsaetze'],
+                        'speicher'  => (int)round($f['bytes'] / 1048576) . ' von '
+                                     . (int)round($f['grenze_bytes'] / 1048576) . ' MB',
+                    ]);
+                    app_state_setzen($marke, '1');
+                }
+            } catch (Throwable $ex) {
+                error_log('Mengenmessung je Konto: ' . $ex->getMessage());
+            }
+        },
+        'Verwaiste Kontomarken' => function (PDO $pdo): void {
+            /* `mengen:<id>` UND `mengen_gemeldet:<id>` OHNE KONTO (P5b/AP6).
+             *
+             * `konto_loeschen()` raeumt sie seit Web 20.21.0 mit — dieser
+             * Schritt holt, was aus der Zeit davor liegt, und was eine
+             * Loeschung an der Bibliothek vorbei hinterlassen hat (ein
+             * `DELETE FROM users` von Hand in der Datenbank etwa).
+             *
+             * WARUM ES NICHT EGAL IST: `users.id` ist AUTO_INCREMENT, aber
+             * ein Wiederanlauf aus einer Sicherung kann eine Id erneut
+             * vergeben. Das neue Konto faende dann den Mengenstand des alten
+             * vor — und stuende womoeglich sofort an seiner Grenze, ohne
+             * einen einzigen Einsatz. */
+            try {
+                $pdo->exec("DELETE a FROM app_state a
+                             LEFT JOIN users u
+                               ON u.id = CAST(SUBSTRING_INDEX(a.k, ':', -1) AS UNSIGNED)
+                            WHERE (a.k LIKE 'mengen:%' OR a.k LIKE 'mengen_gemeldet:%')
+                              AND u.id IS NULL");
+            } catch (Throwable $ex) {
+                error_log('Verwaiste Kontomarken: ' . $ex->getMessage());
+            }
+        },
         'Job-Verlauf' => function (PDO $pdo): void {
             /* 30 Tage, keine Einstellung (E-P5a-09). Steht NEBEN den
              * CSP-Berichten und nicht hinter „Speicher messen" /
@@ -806,6 +924,153 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
  * Sicherheitsnetz, kein Hauptweg: Seit AP1 raeumen die Loeschwege selbst ab
  * (F-S2-B).
  */
+/**
+ * BEANTRAGTE LOESCHUNGEN AUSFUEHREN (P5b/AP5, E-P5b-16).
+ *
+ * WARUM HOECHSTENS FUENF JE LAUF. Eine Kontoloeschung ist teuer: Sie raeumt
+ * die Spuren von Hand (die Kaskade erreicht sie nicht), loescht den
+ * Backup-Ordner im Dateisystem und kaskadiert ueber vierzehn Tabellen. Bei
+ * einem grossen Konto sind das Sekunden — am Huckepack-Weg steht dafuer ein
+ * Budget von drei Sekunden fuer ALLE Jobs.
+ *
+ * Fuenf ist die Zahl, bei der der Job im Regelfall (null bis eine Loeschung
+ * am Tag) nie an die Grenze kommt und im Ausnahmefall (jemand raeumt eine
+ * Installation ab) nicht die ganze Anfrage blockiert. Der Rest kommt beim
+ * naechsten Lauf; einen Tag spaeter zu loeschen ist kein Zusagenbruch, eine
+ * haengende Anfrage schon.
+ *
+ * DIE BACKUPS GEHEN MIT. `konto_loeschen()` bekommt `true` — die Nutzerin
+ * hat ihre Loeschung beantragt, und die Zusage „danach ist nichts mehr
+ * lesbar" ist der Grund, aus dem jemand das tut. Die Admin-Loeschung fragt
+ * an dieser Stelle (E25); hier gibt es niemanden zu fragen, und die Antwort
+ * stuende ohnehin fest.
+ */
+const JOB_KONTO_LOESCHUNG_BLOCK = 5;
+
+function job_konto_loeschung(PDO $pdo, array $zustand, callable $zeitLinks): array
+{
+    require_once __DIR__ . '/konto_lib.php';
+    $faellig = konto_loeschung_faellig(JOB_KONTO_LOESCHUNG_BLOCK);
+    $erledigt = 0;
+
+    foreach ($faellig as $k) {
+        if ($zeitLinks() <= 0.0) { break; }
+        $r = konto_loeschen((int)$k['id'], true);
+        if ($r['ok']) {
+            $erledigt++;
+        } else {
+            /* NICHT ABBRECHEN, ABER MERKEN. Ein Konto, dessen Backups sich
+             * nicht entfernen lassen, bleibt stehen — `konto_loeschen()`
+             * loescht dann ausdruecklich NICHTS. Der naechste Lauf versucht
+             * es wieder; bleibt es dabei, faellt es in der Statusliste auf,
+             * weil der Rueckstand nicht sinkt. */
+            error_log('konto_loeschung: Konto ' . $k['id'] . ' nicht gelöscht — '
+                    . $r['grund']);
+        }
+    }
+
+    return ['zustand' => [], 'erledigt' => $erledigt,
+            'fertig'  => count($faellig) < JOB_KONTO_LOESCHUNG_BLOCK];
+}
+
+/** Wie viele Loeschungen faellig sind — fuer die Statusseite. */
+function job_konto_loeschung_rueckstand(PDO $pdo, array $zustand): ?int
+{
+    try {
+        require_once __DIR__ . '/konto_lib.php';
+        $st = $pdo->prepare('SELECT COUNT(*) FROM users
+                              WHERE status = "gesperrt" AND gesperrt_grund = ?
+                                AND loeschung_am IS NOT NULL AND loeschung_am <= NOW()');
+        $st->execute([KONTO_SPERRGRUND_SELBSTLOESCHUNG]);
+        return (int)$st->fetchColumn();
+    } catch (Throwable $ex) {
+        return null;   // Spalten fehlen (Migration steht aus)
+    }
+}
+
+const JOB_KONTO_VERFALL_BLOCK = 5;
+
+/**
+ * Verfallene Registrierungen loeschen (P5b/AP3, E-P5b-02).
+ *
+ * UEBER `konto_loeschen()` UND NICHT PER `DELETE`: Die Kaskade erreicht die
+ * GPS-Spuren nicht (sie haengen polymorph an `owner_type`/`owner_id`) und die
+ * `app_state`-Zeilen `mengen:<id>` erst recht nicht. Ein unbestaetigtes Konto
+ * hat zwar weder das eine noch das andere — aber ein wartendes kann es
+ * haben, wenn es vor dem Warten schon Daten geschickt hat, und die
+ * Unterscheidung gehoert nicht in einen Verfalljob.
+ *
+ * DIE MAIL GEHT NUR AN DIE WARTENDEN. Wer nie bestaetigt hat, hat die
+ * Adresse moeglicherweise gar nicht — eine zweite Mail dorthin waere eine
+ * zweite Belaestigung. Wer bestaetigt hat, hat gewartet und erfaehrt, dass
+ * das Warten vorbei ist und er es neu versuchen kann.
+ *
+ * EINGEREIHT WIRD VOR DEM LOESCHEN. `mail_einreihen()` schreibt in die
+ * Warteschlange, der Versand laeuft spaeter; danach gibt es das Konto nicht
+ * mehr, und die Adresse waere nicht mehr zu ermitteln.
+ */
+function job_konto_verfall(PDO $pdo, array $zustand, callable $zeitLinks): array
+{
+    require_once __DIR__ . '/konto_lib.php';
+    require_once __DIR__ . '/konten_einstellungen_lib.php';
+    require_once __DIR__ . '/mail_lib.php';
+
+    $erledigt = 0;
+
+    /* Erst die unbestaetigten: kurze Frist, keine Mail. */
+    $unbest = konto_verfall_unbestaetigt(JOB_KONTO_VERFALL_BLOCK);
+    foreach ($unbest as $k) {
+        if ($zeitLinks() <= 0.0) { break; }
+        $r = konto_loeschen((int)$k['id'], true);
+        if ($r['ok']) {
+            $erledigt++;
+        } else {
+            error_log('konto_verfall: unbestätigtes Konto ' . $k['id']
+                    . ' nicht gelöscht — ' . $r['grund']);
+        }
+    }
+
+    /* Dann die wartenden: lange Frist, mit letzter Mail. */
+    $wartend = konto_verfall_wartend(konten_reg_frist_tage(), JOB_KONTO_VERFALL_BLOCK);
+    foreach ($wartend as $k) {
+        if ($zeitLinks() <= 0.0) { break; }
+        mail_einreihen('registrierung_verfallen', (string)$k['email'],
+                       ['link' => app_url('/registrieren.php')]);
+        $r = konto_loeschen((int)$k['id'], true);
+        if ($r['ok']) {
+            $erledigt++;
+        } else {
+            error_log('konto_verfall: wartendes Konto ' . $k['id']
+                    . ' nicht gelöscht — ' . $r['grund']);
+        }
+    }
+
+    return ['zustand' => [], 'erledigt' => $erledigt,
+            'fertig'  => count($unbest) < JOB_KONTO_VERFALL_BLOCK
+                      && count($wartend) < JOB_KONTO_VERFALL_BLOCK];
+}
+
+/** Wie viele Registrierungen faellig sind — fuer die Statusseite. */
+function job_konto_verfall_rueckstand(PDO $pdo, array $zustand): ?int
+{
+    try {
+        require_once __DIR__ . '/konto_lib.php';
+        require_once __DIR__ . '/konten_einstellungen_lib.php';
+        $st = $pdo->prepare('SELECT
+              (SELECT COUNT(*) FROM users
+                WHERE status = "unbestaetigt"
+                  AND created_at <= DATE_SUB(NOW(), INTERVAL ? HOUR))
+            + (SELECT COUNT(*) FROM users
+                WHERE status = "wartet"
+                  AND COALESCE(bestaetigt_am, created_at)
+                      <= DATE_SUB(NOW(), INTERVAL ? DAY))');
+        $st->execute([KONTEN_UNBESTAETIGT_H, konten_reg_frist_tage()]);
+        return (int)$st->fetchColumn();
+    } catch (Throwable $ex) {
+        return null;   // Spalten fehlen (Migration steht aus)
+    }
+}
+
 const JOB_WAISEN_BLOCK = 2000;
 
 function job_waisen(PDO $pdo, array $zustand, callable $zeitLinks): array

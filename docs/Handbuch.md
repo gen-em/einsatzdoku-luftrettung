@@ -464,12 +464,24 @@ lässt, ändert, wem das Konto gehört. Deshalb steht unter der Adresse ein Feld
 für das Passwort. Für **Name und Logo** brauchst du es nicht; leer lassen
 genügt, solange die Adresse stehen bleibt.
 
-**An die alte Adresse geht eine Nachricht.** Sie sagt, welche Adresse jetzt
-gilt und dass du dich melden sollst, falls du es nicht warst. Sie geht bewusst
-an die **alte** Adresse — sie ist die einzige, die im Missbrauchsfall noch dir
-gehört. Dasselbe gilt, wenn die Verwaltung die Adresse eines Kontos ändert
-(11.1). Eine **Bestätigung der neuen** Adresse gibt es noch nicht; die neue
-gilt sofort.
+**Seit Web 20.20.0 gilt die neue Adresse erst nach einem Klick.** Du bekommst
+an die **neue** Adresse eine Nachricht mit einem Link, der 24 Stunden gilt;
+erst dieser Klick schreibt sie um. Bis dahin meldest du dich weiter mit der
+alten an — **nichts ist kaputt, wenn du dich vertippt hast**.
+
+Genau darum geht es: Bis Web 20.19.0 galt die neue Adresse sofort, ohne dass
+irgendjemand geprüft hätte, ob sie überhaupt erreichbar ist. Ein Tippfehler
+sperrte damit aus — die Anmeldung läuft über die Adresse, und „Passwort
+vergessen" schickt an eine Adresse, die es nicht gibt.
+
+**An die alte Adresse geht zusätzlich eine Warnung.** Sie sagt, was gerade
+beantragt wurde und dass du dich melden sollst, falls du es nicht warst. Sie
+geht bewusst an die **alte** Adresse — sie ist die einzige, die im
+Missbrauchsfall noch dir gehört. Dasselbe gilt, wenn die Verwaltung die
+Adresse eines Kontos ändert (11.1).
+
+**Ist die neue Adresse inzwischen von einem anderen Konto belegt**, sagt die
+Seite das beim Klick, und deine bisherige Adresse bleibt unverändert.
 
 Seit Web 15.0.0 steht dort auch deine **Rolle** — NutzerIn, Admin oder
 BetreiberIn — als reine Anzeige. Sie erklärt, warum zwei Konten unter dem
@@ -524,6 +536,142 @@ Die Karte hat einen **eigenen** Speichern-Knopf; sie hängt nicht am Knopf
 darüber. Hat die **Installation** die Adresssuche abgeschaltet, steht der
 Schalter ausgegraut da und sagt es — dann ändert er nichts, und wer ihn
 braucht, wendet sich an die BetreiberIn.
+
+### 3.1d Selbst ein Konto anlegen (seit Web 20.22.0)
+
+**Ob das geht, entscheidet die Betreiberin.** Drei Betriebsarten:
+
+| Einstellung | Was passiert |
+|---|---|
+| **nur auf Einladung** (Vorgabe) | Es gibt keine Registrierungsseite zum Ausfüllen. Die Verwaltung legt Konten an; du bekommst eine Einladungsmail. |
+| **offen** | Du legst dir selbst ein Konto an und kannst sofort loslegen. |
+| **offen mit Freischaltung** | Du legst dir selbst ein Konto an; die Betreiberin schaltet es frei, bevor du hereinkommst. |
+
+Steht die Registrierung offen, führt auf der Anmeldeseite ein Verweis
+**„Neu hier? Konto anlegen"** dorthin. Steht sie nicht offen, fehlt er — er
+führte sonst auf eine Seite, die absagt.
+
+**So läuft es ab:**
+
+1. **Adresse, Name und die Häkchen** eintragen. Die Häkchen sind
+   Nutzungsbedingungen, Vereinbarung zur Auftragsverarbeitung und
+   Datenschutzerklärung; sie sind Pflicht, jeder Text ist verlinkt. **Es sind
+   nicht immer drei:** Gezeigt wird, was die Betreiberin hinterlegt hat. Fehlt
+   ein Text noch, kannst du ihn nicht annehmen — dann steht sein Häkchen auch
+   nicht da, und du wirst beim ersten Anmelden danach gefragt, sobald er
+   eingespielt ist. Deine Antworten werden mit der Fassung und dem Zeitpunkt
+   im Konto festgehalten; du siehst sie später unter *Einstellungen*.
+2. **Die Seite antwortet immer gleich** — „wenn die Adresse frei ist, ist eine
+   Mail unterwegs". Das ist Absicht: Sonst könnte jeder durch Ausprobieren
+   herausfinden, wer hier ein Konto hat.
+3. **Den Link aus der Mail anklicken.** Er gilt **48 Stunden**. Dort legst du
+   dein Passwort fest; dabei entsteht dein **Wiederherstellungsschlüssel** und
+   wird einmalig angezeigt — notiere ihn, ohne ihn kommt nach einem
+   Passwort-Reset niemand mehr an deine verschlüsselten Angaben.
+4. Danach steht da, wie es weitergeht: sofort anmelden, oder warten.
+
+**Wenn nichts ankommt:** Sieh im Spam-Ordner nach und prüfe die Schreibweise.
+An **dieselbe Adresse** gehen höchstens **drei** Mails in 24 Stunden — sonst
+wäre die Seite ein Werkzeug, um fremde Postfächer zuzuschütten.
+
+**Wegwerfadressen werden nicht angenommen.** Der Hinweis steht vorher auf der
+Seite, nicht hinterher als Fehler. Mit einer Adresse von einem
+Wegwerfanbieter passiert schlicht nichts — auch keine Mail.
+
+**Hast du hier schon ein Konto**, bekommst du eine Mail, die das sagt. Es wird
+nichts angelegt und nichts geändert; melde dich wie gewohnt an oder nimm
+„Passwort vergessen".
+
+**Wartest du auf die Freischaltung**, kommt eine Mail, sobald das Konto frei
+ist. Passiert das nicht innerhalb der eingestellten Frist (Vorgabe **30
+Tage**), verfällt die Registrierung, du bekommst eine letzte Nachricht — und
+kannst dich jederzeit neu registrieren. Wer den Link aus Schritt 3 nie
+anklickt, dessen Anfrage wird nach **48 Stunden** von selbst gelöscht.
+
+### 3.1e Die ersten drei Schritte (seit Web 20.24.0)
+
+Beim ersten Anmelden steht über der Tagesübersicht eine Karte **„Willkommen —
+drei Schritte, dann geht es los"**:
+
+1. **Standort anlegen** — *optional*: ein Ort, dem deine Rettungsmittel
+   zugeordnet sind (Wache, Klinik). Der Schritt ist neutral gezeichnet und
+   sandfarben nummeriert, weil ihn nicht jede Betriebsart braucht.
+2. **Rettungsmittel anlegen** — womit du fährst oder fliegst: Name, Typ,
+   Standort. Ein Rettungsmittel vom gewöhnlichen Typ **verlangt** einen
+   Standort; deshalb steht Schritt 1 davor, auch wenn er optional heißt.
+3. **Uhr oder Handy koppeln** — die App erfasst Einsätze unterwegs und gleicht
+   sie hier ab (Kapitel 2 und 3.3).
+
+**Die Karte hält dich nicht auf.** Darunter steht die vollständige, bedienbare
+Tagesübersicht — wer die Karte übergeht, arbeitet trotzdem. Zwei Auswege stehen
+unten:
+
+- **Später** blendet sie bis zur nächsten Anmeldung aus. Morgen steht sie
+  wieder da.
+- **nicht mehr zeigen** (das Häkchen daneben) blendet sie dauerhaft aus, auch
+  wenn noch Schritte offen sind.
+
+Erledigte Schritte bleiben mit einem Haken stehen und zeigen, was du angelegt
+hast — „Kempten — Wache Nord" statt der Erklärung, die du nicht mehr brauchst.
+Sind alle drei erledigt, verschwindet die Karte von selbst.
+
+### 3.1c Was dein Konto hält (seit Web 20.21.0)
+
+Unter dem Zahnrad → **Profil** steht, wie voll dein Konto ist: Einsätze und
+Speicher, jeweils mit der Grenze daneben.
+
+**Zwei Grenzen, und es zählt die, die zuerst erreicht ist.** Wer viele
+Einsätze mit wenig GPS-Daten hat, läuft in die eine; wer wenige mit langen
+Aufzeichnungen hat, in die andere.
+
+| Anteil | Was passiert |
+|---|---|
+| unter 80 % | nichts |
+| **ab 80 %** | einmalig eine Nachricht, dazu ein Hinweis auf dieser Seite |
+| **100 %** | Der Server nimmt keine Gerätedaten mehr an |
+
+**Bei 100 % geht nichts verloren.** Uhr und Handy bekommen eine Absage,
+behalten ihre Aufzeichnungen und senden sie, sobald wieder Platz ist.
+**Bearbeiten und Löschen bleiben möglich** — sonst säßest du in deiner eigenen
+Grenze fest.
+
+**Was im Papierkorb liegt, zählt nicht mit.** Löschen hilft also sofort, ohne
+90 Tage zu warten.
+
+**Die Speicherzahl ist geschätzt**, nicht auf das Byte genau — sie zählt die
+GPS-Daten, und die liegen je nach Alter in zwei verschiedenen Formen. Für eine
+Grenze bei 250 MB reicht das; eine Abrechnung ist es nicht.
+
+**Was hilft, wenn es eng wird:** alte Diensttage löschen — oder die Verwaltung
+um eine höhere Grenze bitten. Sie kann sie **je Konto** setzen (11.1).
+
+### 3.1b Konto löschen (seit Web 20.20.0)
+
+Unter dem Zahnrad → **Profil**, ganz unten. **Du brauchst niemanden zu fragen.**
+
+**Was passiert:** Dein Konto wird sofort gesperrt und nach **30 Tagen**
+endgültig gelöscht. In dieser Zeit genügt eine **Anmeldung**, und die Löschung
+ist zurückgenommen — einen Knopf dafür brauchst du nicht. Eine Nachricht mit
+dem Termin geht an deine Adresse.
+
+**Warum die Anmeldung und kein Link:** Ein Link, der ohne Passwort wirkt, wäre
+genau das, was jemand bräuchte, der deine Löschung verhindern will, um weiter
+mitzulesen.
+
+**Nach dem Termin ist es endgültig.** Einsätze, GPS-Daten, Stammdaten und
+Konto-Backups sind fort. Es gibt danach **keinen Weg zurück, auch nicht über
+die Verwaltung** — deine Daten sind mit deinem Passwort verschlüsselt, und
+niemand sonst kann sie öffnen.
+
+**Willst du sie behalten, leite sie vorher aus** (Import / Export). Danach ist
+es zu spät.
+
+**Was in der Karenz mit deinen Geräten passiert:** Uhr und Handy bekommen eine
+Absage und behalten ihre Warteschlange. Nimmst du die Löschung zurück, kommt
+alles nach. Lässt du es laufen, ist es mit dem Konto fort.
+
+**Das Demo-Konto lässt sich nicht löschen** — es setzt sich ohnehin alle 30
+Minuten selbst zurück.
 
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
@@ -1777,6 +1925,19 @@ Mal** an — ausdrucken und sicher ablegen, dann per Haken bestätigen. Erst dan
 wird gespeichert. Eine getrennte Einrichtungsseite nach dem ersten Anmelden gibt
 es nicht mehr.
 
+**Das Notfallblatt (seit Web 20.24.0).** Neben dem Schlüssel steht ein Knopf
+**„Notfallblatt drucken"**. Er öffnet eine Druckseite mit deinem Schlüssel in
+Vierergruppen, deiner Kontoadresse, der Adresse dieser Installation und dem
+Datum — dazu die drei Sätze, die daraufgehören: wofür er da ist, was ohne ihn
+verloren ist, und wo er hingehört (nicht in die Schublade neben dem Rechner
+und nicht in dieselbe Tasche wie das Handy).
+
+**Dieses Blatt lässt sich später nicht erneut drucken.** Der Schlüssel entsteht
+in deinem Browser und wird nirgends gespeichert — auch nicht beim Betreiber.
+Es gibt ihn nur in dem Moment, in dem er angezeigt wird. Wer sein Blatt
+verliert, erzeugt einen **neuen** Schlüssel (siehe unten); das alte Blatt wird
+damit ungültig.
+
 **Unbedingt wissen:**
 
 - Normales Passwort-Ändern (mit altem Passwort) ist völlig unkritisch — die
@@ -1835,6 +1996,31 @@ es nicht mehr.
   eine Installation betreibt, behandelt den Datenbankzugang entsprechend.
 - Zeigt eine Seite „gesperrt“, lässt sich das direkt dort beheben — siehe
   **„Gesperrt: entsperren statt neu anmelden“** weiter unten.
+
+**„Hast du dein Notfallblatt noch?" (seit Web 20.24.0).** NAdoku fragt nach
+**30 Tagen**, nach **6 Monaten** und danach **jährlich** beim Anmelden nach.
+Drei Antworten:
+
+- **Ja, liegt sicher** — die Frage kommt zur nächsten Runde wieder.
+- **Nein — neuen Schlüssel erzeugen** — du gibst dein Passwort ein, der
+  Browser erzeugt einen neuen Wiederherstellungsschlüssel, zeigt ihn an und
+  bietet das Notfallblatt zum Drucken an. **Dein altes Blatt wird damit
+  ungültig; deine Daten bleiben unverändert und lesbar.** Der Dialog lässt
+  sich erst schließen, wenn du bestätigt hast, dass du den Schlüssel notiert
+  oder gedruckt hast — was dort steht, kann danach niemand wiederherstellen.
+- **Später** — sieben Tage, höchstens dreimal je Runde. Danach steht die Frage
+  bei jedem Anmelden wieder da, bis du sie beantwortest.
+
+**Einen neuen Schlüssel kannst du jederzeit erzeugen**, ohne auf die Frage zu
+warten: **Einstellungen → Profil**, Karte *Wiederherstellungsschlüssel*,
+Knopf *Neuen Schlüssel erzeugen*. Derselbe Ablauf, dasselbe Ergebnis. Nutze
+ihn, wenn du dein Blatt verlegt hast, nach einem Umzug oder wenn jemand anders
+es gesehen haben könnte.
+
+**Warum dabei das Passwort verlangt wird, obwohl du angemeldet bist:** damit
+niemand, der an deinen geöffneten Rechner kommt, dir den Rückweg nehmen kann.
+Er käme an keine Daten — aber dein Notfallblatt öffnete plötzlich nichts mehr,
+und du erführest es erst, wenn du es brauchst.
 
 **Gesperrt: entsperren statt neu anmelden.** Die Anmeldung und der Schlüssel
 für die geschützten Angaben haben unterschiedliche Lebensdauern. Der Schlüssel
@@ -3155,6 +3341,64 @@ zurück. Bleiben sie erhalten, überleben sie die Löschung und erscheinen unter
 **Konto-Backups** als „Backup ohne Konto". Zur Bestätigung ist die
 E-Mail-Adresse abzutippen.
 
+#### Mengen und Grenzen je Konto (seit Web 20.21.0)
+
+Die Karte zeigt, wie voll das Konto ist, und lässt beide Grenzen **für dieses
+eine Konto** setzen — dazu, **wie viele Konto-Backups** von ihm aufgehoben
+werden.
+
+**Leer heißt: die Vorgabe der Installation gilt** (Betrieb →
+Servereinstellungen → Konten). Trägt hier eine Zahl, gilt sie *statt* der
+Vorgabe — **auch wenn du die Vorgabe später anhebst**. Das ist der Grund, warum
+leer nicht dasselbe ist wie „dieselbe Zahl noch einmal eintragen".
+
+**Änderst du eine Grenze, wird die 80-%-Meldung zurückgesetzt.** Eine höhere
+Grenze macht aus denselben Daten einen anderen Prozentsatz; was bei der alten
+gemeldet war, ist bei der neuen eine andere Aussage.
+
+**Die Backup-Zahl ist für den Fall gedacht**, dass ein Konto besonders
+wertvoll oder besonders bewegt ist und mehr Stände vorgehalten werden sollen,
+ohne die Zahl für alle anzuheben. Sie kennt keine 0 — die hieße „kein Backup
+aufheben", und die Verdrängung ließe beim nächsten Lauf nichts übrig.
+
+**Einsätze verschwinden nicht von selbst.** Es gibt keine Aufbewahrungsfrist
+für Einsatzdaten, und das ist Absicht: Was jemand dokumentiert hat, löscht er
+selbst oder niemand.
+
+#### Status: sperren, entsperren, freischalten (seit Web 20.17.0)
+
+Ein Konto hat vier Zustände, und die Karte „Status" auf der Kontoseite zeigt
+und ändert sie.
+
+| Zustand | heißt |
+|---|---|
+| **aktiv** | Der Normalfall. Alle Konten, die es vor Web 20.17.0 gab, sind das |
+| **unbestätigt** | Registriert, Adresse noch nicht bestätigt. Verfällt nach 48 Stunden |
+| **wartet auf Freischaltung** | Adresse bestätigt, wartet auf dich. Hier steht dann ein Knopf „Freischalten" |
+| **gesperrt** | Von dir gesperrt — oder die Person hat ihr Konto selbst zur Löschung angemeldet |
+
+**Was eine Sperre bewirkt, und was sie nicht bewirkt.** Laufende Sitzungen
+enden beim nächsten Seitenaufruf. Die Person kann sich nicht mehr anmelden und
+bekommt den Hinweis, sich an die Verwaltung zu wenden — **den Grund, den du
+einträgst, sieht sie nicht**; der steht im Protokoll.
+
+**Geräte verlieren nichts.** Uhr und Handy bekommen eine Absage, behalten ihre
+Warteschlange und senden nach dem Entsperren **alles nach**. Auf der Uhr steht
+in dieser Zeit „abgemeldet" — das ist ungenau, aber harmlos, und es ändert
+sich mit der nächsten Uhr-Fassung.
+
+**Der Bestand bleibt unberührt.** Eine Sperre löscht nichts. Wer ein Konto
+loswerden will, löscht es — das ist die Karte ganz unten und etwas anderes.
+
+**Zwei Konten lassen sich nicht sperren:** das eigene (die Sperre ließe sich
+danach nur von einem anderen Konto aus lösen) und das letzte mit der Rolle
+BetreiberIn (die Installation stünde ohne Zugang zu ihrem eigenen
+Betriebsbereich da). Dieselben Schranken wie beim Löschen.
+
+**Beim Entsperren verschwindet auch ein beantragter Löschtermin.** Hat jemand
+sein Konto zur Löschung angemeldet und du entsperrst es, bleibt es bestehen —
+der Termin ist damit vom Tisch.
+
 ### 11.2 Die Liste der NutzerInnen
 
 Oben stehen vier Zahlen: **Konten**, **Admins**, **Konto-Backup überfällig**,
@@ -3482,8 +3726,9 @@ genau sie.
 ### 11.5 Installation
 
 Unter **„Installation"** steht, wie diese Anlage nach außen auftritt: der
-**Name**, die **Adressen**, das **Logo**, das **Impressum** und die
-**Datenschutzerklärung**. Bis Web 15.1.0
+**Name**, die **Adressen**, das **Logo** und die **vier Rechtstexte** —
+Impressum, Datenschutzerklärung, Nutzungsbedingungen und die Vereinbarung zur
+Auftragsverarbeitung. Bis Web 15.1.0
 hieß die Seite „Rechtstexte", und das Logo lag auf der alten Seite „Wartung"; die alte
 Adresse führt weiterhin hierher.
 
@@ -3618,6 +3863,43 @@ nicht. Einfügen und an die eigene Erklärung anpassen musst du ihn selbst.
 Der Baustein erscheint nur, solange die Adresssuche eingeschaltet ist. Wer sie
 abschaltet, braucht den Absatz nicht — und ein Absatz über eine Übertragung,
 die nicht stattfindet, wäre falsch.
+
+#### Nutzungsbedingungen und Auftragsverarbeitung (seit Web 20.19.0)
+
+**Zwei Texte, die deine Nutzerinnen annehmen müssen** — anders als Impressum
+und Datenschutzerklärung.
+
+**Der Unterschied ist kein Rang, sondern die Rechtsnatur.** Ein Vertrag kommt
+durch Annahme zustande; ohne sie darf er nicht weiterlaufen. Deshalb:
+
+| Dokument | Häkchen | Was eine neue Fassung bewirkt |
+|---|---|---|
+| Nutzungsbedingungen | „angenommen" | **Sperrt den nächsten Login**, bis angenommen |
+| Auftragsverarbeitung | „angenommen" | **Sperrt den nächsten Login**, bis angenommen |
+| Datenschutzerklärung | „zur Kenntnis genommen" | Hinweis auf jeder Seite, sperrt nichts |
+| Impressum | keines | — |
+
+**Was du wissen musst, bevor du ein Standdatum setzt:** Ein neues Standdatum
+bei Nutzungsbedingungen oder AVV stellt **alle Konten** beim nächsten Anmelden
+vor das Häkchen. Das ist gewollt und steht so im Protokoll (Verwaltung → das
+Betriebsprotokoll zählt es mit).
+
+**Solange kein Standdatum gesetzt ist, verlangt der Text nichts.** Du kannst
+also in Ruhe einen Entwurf hinterlegen, ihn ansehen, ihn ändern — erst das
+Datum setzt ihn in Kraft.
+
+**Wer nicht zustimmt, kommt trotzdem an seine Daten.** Am Tor bleiben drei
+Wege offen: abmelden, Daten ausleiten, Konto löschen. Ein Tor, das auch den
+Ausgang versperrt, wäre Nötigung — und das soll diese Anwendung nicht sein.
+
+**Uhr und Handy sind nicht betroffen.** Sie laden weiter hoch; ein Gerät hat
+keinen Bildschirm für ein Häkchen, und eine laufende Aufzeichnung soll nicht
+ins Leere laufen.
+
+**Die Anwendung liefert keinen Text mit** (wie beim Impressum). Entwürfe für
+beide Dokumente liegen im Repositorium unter `docs/rechtstexte/` — sie sind
+ausdrücklich **nicht anwaltlich geprüft** und als Vorlage gedacht, nicht als
+fertiger Text.
 
 ### 11.6 Demo-Konto
 
@@ -3832,6 +4114,38 @@ Die Zeile sagt, ob das nachgetragen ist:
 Tabelle nicht kennt — Handys (die ihren Namen selbst mitbringen) und Modelle,
 die noch nicht in der Tabelle stehen. Sie werden **nicht** angefasst: Was ein
 Gerät über sich gesagt hat, bleibt stehen.
+
+#### Karte „Betriebsprotokoll" (seit Web 20.16.5)
+
+**Die Anwendung führt Buch über den Betrieb** — Konten angelegt,
+freigeschaltet, gesperrt, gelöscht; Rollen und Adressen geändert; Sicherungen
+eingespielt; Wartung gefahren; Post versandt.
+
+**Sie führt kein Buch darüber, wer welchen Einsatz angesehen hat.** Das steht
+nicht darin und soll nicht darin stehen. Wenn dich jemand fragt, ob du
+nachsehen kannst, wer einen bestimmten Einsatz geöffnet hat: Du kannst es
+nicht, und zwar mit Absicht.
+
+**Sechs Reiter, zwei Fristen.** *Verwaltung* ist das Audit — wer wann was
+getan hat — und bleibt **365 Tage**; die Zahl stellst du unter
+Servereinstellungen → Konten ein (zwischen 90 und 1095). E-Mail, Jobs,
+Sicherung, Ziele und System verfallen nach **30 Tagen**, und das ist keine
+Einstellung.
+
+*Sperren und Angriffsversuche* stehen **nicht** hier, sondern unter
+Status → Sicherheit. Sie führen IP-Adressen und verfallen deshalb nach 30
+Tagen, ohne Ausnahme.
+
+**Lesen lässt sich das Protokoll noch nicht.** Die Karte zählt nur — Einträge
+je Reiter, heute und insgesamt. Die Ansicht mit Filter, Archiv und Download
+kommt mit dem nächsten Schritt.
+
+**Steht dort eine rote Plakette „n nicht geschrieben", sieh hin.** Die
+Handlungen selbst sind gelungen — das Protokoll lässt nie eine Handlung
+scheitern, nur weil es selbst nicht schreiben kann. Aber es hat sie nicht
+festgehalten, und der Grund steht im Serverprotokoll deines Hosters unter der
+Kennung `protokoll:`. Der häufigste Grund: Ein Update ist eingespielt, aber
+`update.php` ist noch nicht gelaufen.
 
 ### 12.2 Statistik
 
@@ -4258,6 +4572,71 @@ wenn deine Installation vorher über die Serverkonfiguration ein Jahr gebunden
 hat. Das ist kein Versehen: Die Dauer wird jetzt von der Anwendung bestimmt,
 damit sie an *einer* Stelle steht und die Anzeige nicht lügt. **Wer produktiv
 läuft, stellt hier wieder auf 1 Jahr.**
+
+#### Karte „Konten" (seit Web 20.16.5)
+
+Was diese Installation mit Konten tut: wer eines bekommt, was es halten darf,
+wie lange das Protokoll sie behält.
+
+**Registrierung — drei Betriebsarten.**
+
+| | |
+|---|---|
+| **offen** | Wer die Seite findet, kann sich registrieren. Nach der Bestätigung per Mail ist das Konto sofort nutzbar |
+| **offen mit Freischaltung** | Dasselbe, aber danach wartet das Konto auf dich. Du bekommst eine Sammelmail, freigeschaltet wird mit einem Knopf in der Kontoverwaltung |
+| **nur auf Einladung** | Es gibt keine Registrierungsseite. Konten legst du selbst an |
+
+**Die Vorgabe ist „nur auf Einladung", und das ist Absicht.** Wer diese Seite
+nie aufschlägt, bekommt keine offene Registrierung durch Untätigkeit. Ein
+Umschalten wirkt sofort; Registrierungen, die schon laufen, laufen zu Ende.
+
+**Zwei Fristen, zwei verschiedene Dinge.** *Wartende Registrierungen* — also
+bestätigte, die auf deine Freischaltung warten — verfallen nach der Zahl, die
+du hier einträgst (Vorgabe 30 Tage). Davon getrennt: Wer seine Adresse gar
+nicht erst bestätigt, verfällt nach **48 Stunden**, und das ist keine
+Einstellung. Ein unbestätigtes Konto ist eine Adresse, die jemand eingetippt
+hat — möglicherweise nicht die eigene.
+
+**Wegwerfadressen.** Die Liste bekannter Anbieter kommt mit jeder
+Auslieferung mit und liegt in der Anwendung; **es wird nichts bei Dritten
+abgefragt**. Abgewiesen wird mit *derselben* Antwort wie jede andere
+Registrierung — die Seite verrät nicht, welche Adressen sie kennt. Eigene
+Domains trägst du darunter ein. Ohne Wirkung bei „nur auf Einladung".
+
+**Was ein Konto halten darf.** Zwei Grenzen, beide je Konto in der
+Kontoverwaltung überschreibbar: Zahl der Einsätze und Speicher in Megabyte
+(Einsätze samt GPS-Daten und Ruhesegmenten).
+
+- Ab **80 %** geht einmalig eine Nachricht heraus, und die Kontoseite trägt
+  einen Hinweis.
+- Bei **100 %** nimmt der Server keine Gerätedaten mehr an, und der Import
+  bricht mit einer Erklärung ab. **Bearbeiten und Löschen bleiben frei** —
+  sonst säße jemand in der eigenen Grenze fest und käme nicht heraus.
+
+**Einsätze aufbewahren** ist leer, solange nichts von selbst verschwinden
+soll. Eine **0 gibt es hier nicht**: Sie hieße „nichts aufbewahren", und das
+ist bei Einsatzdaten die eine Antwort, die niemand aus Versehen geben soll.
+
+**Demo-Anmeldung zulassen.** Ist sie aus, wird die Demo-Adresse bei der
+Anmeldung **wie eine unbekannte Adresse** behandelt — dieselbe Meldung,
+dieselbe Antwortdauer, auch beim richtigen Passwort. Die Seite verrät damit
+nicht, ob diese Installation ein Demo-Konto hat.
+
+**Der Bestand bleibt liegen.** Abgeschaltet ist die Anmeldung, nicht das
+Konto: Seine Einsätze, sein Selbst-Reset und sein Platz in der
+Kontoverwaltung sind unberührt, und ein Umlegen des Schalters macht es sofort
+wieder zugänglich.
+
+**Schaltest du die Registrierung auf „nur auf Einladung", fragt die Seite
+einmal nach**, ob die Demo-Anmeldung mit abgeschaltet werden soll — wer die
+Tür schließt, hat meist auch das Demo-Konto im Sinn. Ein Angebot, keine
+Bedingung: Eine geschlossene Installation kann gute Gründe für ein
+Demo-Konto zum Vorzeigen haben.
+
+**Einen Demo-Knopf auf der Anmeldeseite gibt es bewusst nicht;** die
+Zugangsdaten stehen in diesem Handbuch und im README.
+
+**Verwaltungseinträge im Protokoll aufbewahren** — siehe 12.1.
 
 ### 12.6 Komplett-Backup
 

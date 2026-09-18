@@ -113,7 +113,11 @@ if (preg_match('/^[a-f0-9]{64}$/', $token)) {
      * nachgewiesen, dass ihm das Postfach gehoert — und soll danach nicht an
      * einer Anmeldesperre haengenbleiben. Die Adresse ist das Merkmal, unter
      * dem der Ratenschutz zaehlt. */
-    $st = db()->prepare('SELECT r.id, r.user_id, u.email, u.pat_key_check, u.pat_wrap_rc
+    /* `u.status` seit P5b/AP3: Ein Konto im Zustand `unbestaetigt` stammt
+     * aus der Selbstregistrierung — nur sie legt diesen Zustand an. Wer
+     * hier sein Passwort setzt, bestaetigt damit zugleich die Adresse. */
+    $st = db()->prepare('SELECT r.id, r.user_id, u.email, u.pat_key_check, u.pat_wrap_rc,
+                                u.status
                          FROM password_resets r
                          JOIN users u ON u.id = r.user_id
                          WHERE r.token_hash = ? AND r.used_at IS NULL AND r.expires_at > NOW()');
@@ -226,6 +230,37 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->commit();
             $done = true;
 
+            /* ---- DIE REGISTRIERUNG IST HIER ZU ENDE (P5b/AP3) ----------
+             *
+             * Ein Konto im Zustand `unbestaetigt` ist selbst registriert
+             * worden — Einladung und Einrichtung legen `aktiv` an. Wer bis
+             * hierher gekommen ist, hat den Link aus seinem Postfach
+             * geoeffnet und ein Passwort gesetzt: Damit ist die Adresse
+             * bestaetigt, und der Double-Opt-In ist vollzogen.
+             *
+             * WOHIN VON HIER haengt an der Betriebsart (E-P5b-01): bei
+             * `offen` sofort `aktiv`, bei `freischaltung` erst `wartet`.
+             *
+             * NACH DEM COMMIT UND AUSSERHALB DER TRANSAKTION, aus demselben
+             * Grund wie die Ratenfreigabe darunter: Ein Fehler beim
+             * Statuswechsel darf das gesetzte Passwort nicht mitreissen —
+             * dann stuende ein Konto da, das sich anmelden kann und dessen
+             * Daten unlesbar waeren. Scheitert der Wechsel, bleibt das
+             * Konto `unbestaetigt` und verfaellt nach 48 Stunden; die
+             * Nutzerin kann sich neu registrieren. */
+            if (($row['status'] ?? '') === 'unbestaetigt') {
+                require_once __DIR__ . '/konten_einstellungen_lib.php';
+                require_once __DIR__ . '/konto_lib.php';
+                $ziel = konten_reg_freischaltung() ? 'wartet' : 'aktiv';
+                if (konto_status_setzen((int)$row['user_id'], $ziel)) {
+                    $regFertig = $ziel;
+                    /* Die Verwaltung unterrichten — gedrosselt auf eine Mail
+                     * je Stunde, Muster E-P5a-07. Nur bei `wartet`: Ein
+                     * sofort aktives Konto hat niemand freizuschalten. */
+                    if ($ziel === 'wartet') { konto_warten_melden(); }
+                }
+            }
+
             /* DIE ANMELDESPERRE DIESES KONTOS FAELLT (P5a/AP6, E-P5a-45).
              *
              * Bis Web 20.9.1 rief diese Datei keine einzige `rate_*`-Funktion.
@@ -248,6 +283,17 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
             // Der Token hat seinen Zweck erfuellt — die Sitzung dieser Seite
             // wird nicht laenger gebraucht (M1-06).
             unset($_SESSION['pw_token']);
+
+            /* Die Registrierung bekommt ihre eigene Schlusskarte
+             * (`bestaetigen.php`) und nicht die allgemeine „Fertig“ dieser
+             * Seite: Sie muss sagen, ob es sofort weitergeht oder ob auf die
+             * Freischaltung gewartet wird, und mit welcher Frist. Beides
+             * gehoert nicht in eine Seite, die auch jeden Passwort-Reset
+             * bedient. */
+            if (isset($regFertig)) {
+                header('Location: bestaetigen.php?s=' . rawurlencode($regFertig), true, 302);
+                exit;
+            }
         } catch (Throwable $ex) {
             $pdo->rollBack();
             $error = 'Speichern fehlgeschlagen. Bitte erneut versuchen.';
@@ -344,6 +390,25 @@ ui_seite_start([
       <p class="codeblock-wert" id="rccode"></p>
       <label><input type="checkbox" id="rcok">
         Ich habe den Schlüssel sicher notiert.</label>
+      <?php /* NOTFALLBLATT DRUCKEN (P5b/AP9, E-P5b-09). Der Knopf steht
+               genau hier, weil der Schluessel genau hier zum EINZIGEN Mal
+               sichtbar ist: `notfallblatt.php` bekommt ihn per POST aus
+               diesem Formular und speichert nichts — der Server kennt ihn
+               nicht und kann das Blatt spaeter nicht nachreichen.
+
+               EIGENES FORMULAR, nicht `#pwform`. Das daneben setzt das
+               Passwort; dieses druckt. Zwei Ziele, zwei Formulare — ein
+               verschachteltes gaebe es in HTML ohnehin nicht.
+
+               `target="_blank"`, damit die Seite mit dem gesetzten Passwort
+               stehen bleibt. Wer das Blatt im selben Fenster oeffnete und
+               zurueckginge, kaeme auf eine abgelaufene Erstvergabe. */ ?>
+      <form method="post" action="notfallblatt.php" target="_blank"
+            rel="noopener" class="rf-druck" id="rcdruck">
+        <input type="hidden" name="code" id="rcdruckwert">
+        <?= ui_knopf(['text' => 'Notfallblatt drucken', 'art' => 'neutral',
+                      'symbol' => 'drucken']) ?>
+      </form>
     </div>
 
     <form method="post" id="pwform">
@@ -536,6 +601,8 @@ if (ERSTVERGABE) {
 
       document.getElementById('rccode').textContent = rc;
       document.getElementById('rcbox').hidden = false;
+      /* Derselbe Wert ins Druckformular (P5b/AP9). */
+      document.getElementById('rcdruckwert').value = rc;
       /* AUF DAS <span> ZIELEN, nicht auf den Knopf (O10). ui_knopf() legt
          den Text in ein <span> und stellt ihm ggf. ein Symbol voran;
          `textContent` am Knopf selbst wuerde beides ersetzen — der Text

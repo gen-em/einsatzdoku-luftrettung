@@ -224,6 +224,37 @@ const RATE_GRENZEN = [
     'ingest'    => ['max' => 30, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
     'ingest_ip' => ['max' => 30, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
 
+    /* DIE BETREIBER-RUECKFRAGE ZUM SCHLUESSELBLATT (P5b/AP9, E-P5b-10, -21).
+     *
+     * DREI VERSUCHE, NICHT ZEHN. Die Anmeldung laesst zehn zu, weil ein
+     * Passwort getippt wird und Tippfehler dazugehoeren. Hier wird von einem
+     * BLATT ABGELESEN, vier Gruppen zu vier Zeichen, Gross/Klein und
+     * Leerzeichen sind egal. Wer dreimal danebenliegt, hat das Blatt nicht
+     * vor sich — und genau das soll die Frage herausfinden.
+     *
+     * JE KONTO UND NICHT JE ADRESSE. Es gibt in einer Installation eine
+     * Handvoll BetreiberInnen; ein NAT-Problem wie bei `login_ip` kann hier
+     * nicht entstehen. Der Zaehler haengt an der Kontoadresse, damit eine
+     * gesperrte BetreiberIn die andere nicht mitsperrt — sie soll nachsehen
+     * koennen, wo das Blatt liegt.
+     *
+     * MIT LEITER, UND DIE LEITER BESTIMMT DIE DAUER — nicht die Zahl in
+     * `sperre`. Ich hatte hier zuerst 600 stehen und im Dialog „für 10
+     * Minuten" gemeldet; gemessen wurden **15**, denn die erste Sprosse von
+     * `RATE_LEITER_VORGABE` ist 900 s und `rate_leiter_anwenden()` ueberholt
+     * `sperre`. Die Zahl steht jetzt auf 900, damit Rueckfall und Sprosse
+     * dasselbe sagen — und der Dialogtext rechnet nicht mehr selbst, sondern
+     * fragt `rate_stufe_dauer()`.
+     *
+     * Wer nach einer Viertelstunde wiederkommt und wieder dreimal
+     * danebenliegt, raet; dann greift die naechste Sprosse.
+     *
+     * KEINE SPERRE DES ZUGANGS. Gesperrt ist dieser eine Weg; die
+     * Anmeldung, die Anwendung und das Schluesselblatt selbst bleiben offen.
+     * Wer die Frage nicht beantworten kann, soll sie nachsehen koennen — das
+     * ist der Sinn des Hinweises „Betrieb -> Schluesselblatt neu drucken". */
+    'blatt' => ['max' => 3, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
+
     /* DER GLOBALE ZAEHLER SPERRT NIE (E-P5a-05). `max` steht auf der
      * groesstmoeglichen Zahl, damit die Sperrbedingung in `rate_misserfolg()`
      * fuer diesen Topf niemals wahr wird — eine globale Sperre waere ein
@@ -311,6 +342,44 @@ const RATE_GRENZEN = [
      * die ZUSAMMENFASSUNG in der Tabelle: Tausend gleiche Meldungen werden
      * eine Zeile mit einem Zaehler. */
     'csp' => ['max' => 200, 'fenster' => 3600, 'sperre' => 3600],
+
+    /* DIE REGISTRIERUNG HAT DREI TOEPFE, UND JEDER SCHUETZT ETWAS ANDERES
+     * (P5b/AP3, E-P5b-13, R37 (4)).
+     *
+     * `reg` JE IP, 10 je Stunde. Wer sich registriert, tut das einmal. Zehn
+     * Versuche decken Vertipper, Abbrueche und ein zweites Konto fuer die
+     * Kollegin ab; darueber laeuft ein Skript. Merkmal ist die IP und nicht
+     * die Zieladresse — die waere bei jedem Versuch eine andere und zaehlte
+     * nie hoch.
+     *
+     * `regg` GLOBAL, 100 je Stunde. Dieselbe Ueberlegung wie bei `demog`:
+     * Kommen die Versuche aus vielen Netzen, ist der Server gemeint und
+     * nicht eine Person. Das Merkmal wird ausdruecklich uebergeben
+     * (RATE_REG_GLOBAL), damit nicht je IP eine nutzlose Zeile entsteht.
+     *
+     * `regz` JE ZIELADRESSE, 3 in 24 Stunden — und das ist der wichtigste
+     * der drei. OHNE IHN IST DIE REGISTRIERUNG EINE MAILBOMBEN-SCHLEUDER:
+     * Die Seite verschickt an JEDE eingegebene Adresse eine Mail, ohne dass
+     * der Absender sie besitzen muss. Ein Skript mit wechselnden IPs schickt
+     * damit beliebig viele Nachrichten an ein fremdes Postfach, und zwar
+     * mit dem guten Namen dieser Installation im Absender. Drei in 24 h
+     * reichen fuer den ehrlichen Fall (Mail nicht angekommen, zweiter
+     * Versuch, dritter); alles darueber ist keine Registrierung mehr.
+     *
+     * DAS MERKMAL IST EIN HASH DER ADRESSE, NIE DIE ADRESSE SELBST
+     * (rate_reg_ziel()). Die Tabelle `rate_limits` ist sonst ein Verzeichnis
+     * fremder Postfaecher — und sie liegt in derselben Datenbank, die auch
+     * ein Angreifer abzieht. Dasselbe Verfahren, aus demselben Grund, wie
+     * bei den Kontomerkmalen: die Kennung, nicht der Klartext.
+     *
+     * KEINE LEITER bei allen dreien. Der Grund ist derselbe wie bei `reset`:
+     * Das Scheitern ist absichtlich still (die Seite antwortet IMMER
+     * gleich), und eine steigende Sperre, die niemand sieht, ist keine
+     * Abschreckung, sondern nur eine laengere Stoerung fuer den, der sich
+     * vertippt hat. */
+    'reg'  => ['max' =>  10, 'fenster' => 3600,  'sperre' => 3600],
+    'regg' => ['max' => 100, 'fenster' => 3600,  'sperre' => 3600],
+    'regz' => ['max' =>   3, 'fenster' => 86400, 'sperre' => 86400],
 ];
 
 /**
@@ -869,6 +938,41 @@ function rate_zaehlen(string $topf, ?string $konto = null,
 }
 
 /**
+ * Wie viele Fehlversuche stehen im laufenden Fenster? (P5b/AP9)
+ *
+ * GEZAEHLT WIRD DAS KONTOMERKMAL, NICHT DIE ADRESSE. Die Zahl geht in eine
+ * MELDUNG — „noch 2 Versuche" —, und die soll dem Menschen vor dem Bildschirm
+ * gelten, nicht allen hinter derselben NAT. Wer die Adresse zaehlte, sagte
+ * einer BetreiberIn, sie habe noch einen Versuch, weil eine andere im selben
+ * Haus welche verbraucht hat.
+ *
+ * ABGELAUFENES FENSTER ZAEHLT NICHT MIT — dieselbe Bedingung wie in
+ * `rate_verlangsamung()`. Ohne sie stuende nach einer Stunde Ruhe noch die
+ * alte Zahl da, und die Meldung waere falsch, ohne falsch auszusehen.
+ *
+ * FUER ANZEIGE, NICHT FUER ENTSCHEIDUNGEN. Ob etwas erlaubt ist, sagt
+ * `rate_erlaubt()`; diese Zahl ist eine Auskunft. Bei einem Datenbankfehler
+ * kommt 0 zurueck — die Meldung ist dann ungenau, und das ist harmloser als
+ * eine Seite, die daran scheitert.
+ */
+function rate_versuche(string $topf, string $konto): int
+{
+    $g = rate_grenze($topf);
+    if ($g === null) { return 0; }
+    try {
+        $st = db()->prepare(
+            'SELECT versuche FROM rate_limits
+              WHERE topf = ? AND merkmal = ?
+                AND fenster_start >= DATE_SUB(NOW(), INTERVAL ? SECOND)');
+        $st->execute([$topf, rate_merkmal_kennung($konto), $g['fenster']]);
+        $n = $st->fetchColumn();
+        return $n === false ? 0 : (int)$n;
+    } catch (Throwable $ex) {
+        return 0;
+    }
+}
+
+/**
  * Nach einem Erfolg die Zaehler der beteiligten Merkmale leeren.
  *
  * Bewusst auch fuer die IP-Adresse: Wer sich erfolgreich anmeldet, ist mit
@@ -1420,6 +1524,59 @@ function rate_demo_zaehlen(): void
 {
     rate_zaehlen('demo');
     rate_zaehlen('demog', null, RATE_DEMO_GLOBAL);
+}
+
+
+/* ---- Registrierung (P5b/AP3) --------------------------------------------- */
+
+/* Wie RATE_DEMO_GLOBAL, und aus demselben Grund ausdruecklich uebergeben. */
+const RATE_REG_GLOBAL = ['alle'];
+
+/**
+ * Das Merkmal fuer den Topf je Zieladresse.
+ *
+ * NIE DIE ADRESSE IM KLARTEXT. `rate_limits` steht in derselben Datenbank
+ * wie alles andere; eine Spalte mit fremden Postfaechern waere ein
+ * Verzeichnis, das es ohne diesen Topf nicht gaebe. Der Hash reicht
+ * vollstaendig aus — gezaehlt wird Gleichheit, nicht Inhalt.
+ *
+ * Kleingeschrieben und getrimmt, damit `Name@Klinik.de` und `name@klinik.de`
+ * denselben Zaehler treffen; sonst waere der Topf mit einem Grossbuchstaben
+ * zu umgehen.
+ */
+function rate_reg_ziel(string $email): array
+{
+    return ['ziel:' . hash('sha256', mb_strtolower(trim($email)))];
+}
+
+/** Darf jetzt ueberhaupt jemand registrieren — unabhaengig von der Adresse? */
+function rate_reg_erlaubt(): bool
+{
+    return rate_erlaubt('reg') && rate_erlaubt('regg', null, RATE_REG_GLOBAL);
+}
+
+/** Darf an DIESE Adresse noch eine Registrierungsmail gehen? */
+function rate_reg_ziel_erlaubt(string $email): bool
+{
+    return rate_erlaubt('regz', null, rate_reg_ziel($email));
+}
+
+/**
+ * Einen Registrierungsversuch verbuchen.
+ *
+ * NACH dem Versuch, wie bei der Demo-Anmeldung und anders als bei den
+ * Fehlversuchstoepfen: Gezaehlt wird die MENGE, nicht das Scheitern. Der
+ * Zieltopf zaehlt nur, wenn tatsaechlich eine Mail hinausgeht — sonst
+ * koennte man ein fremdes Postfach sperren, indem man es dreimal eintippt,
+ * und der Besitzer kaeme selbst nicht mehr durch.
+ */
+function rate_reg_zaehlen(string $email, bool $mailGeht): void
+{
+    rate_zaehlen('reg');
+    rate_zaehlen('regg', null, RATE_REG_GLOBAL);
+    if ($mailGeht) {
+        rate_zaehlen('regz', null, rate_reg_ziel($email));
+    }
 }
 
 /** Bis wann ist gesperrt? Fuer die Meldung an der Anmeldeseite. */

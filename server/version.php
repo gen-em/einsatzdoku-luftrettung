@@ -5539,6 +5539,49 @@ declare(strict_types=1);
  * KEINE MIGRATION.
  *
  * ---------------------------------------------------------------------------
+ * 20.15.3 — DIE ANWENDUNG LIESS SICH NICHT MEHR INSTALLIEREN (Backlog Nr. 223)
+ * ---------------------------------------------------------------------------
+ *
+ * Gefunden beim Aufbau des Pruefstands fuer P5b, am Zweigstand nach P5a.
+ * `install.php` antwortete HTTP 500 mit leerem Rumpf — kein Formular, keine
+ * Meldung, nichts.
+ *
+ * DIE KETTE: `install.php` laedt `ui.php`, damit ihr Formular aussieht wie die
+ * Anwendung. `ui_seite_start()` laedt seit P5a/AP4 `kopfzeilen_lib.php`, damit
+ * die Kopfzeilen vor der ersten Ausgabezeile stehen. `kopfzeilen_lib.php` lud
+ * `db.php`, und `db.php` verlangt `config.php` hart (`$CFG = require ...`).
+ * Vor der Einrichtung gibt es keine `config.php` — das ist der Zweck der
+ * Einrichtung. Fatal Error.
+ *
+ * WARUM ES NIEMAND GESEHEN HAT. Der Fehler trifft ausschliesslich die
+ * Installation, die noch nicht stattgefunden hat. Jede bestehende Anlage hat
+ * eine `config.php` und laeuft weiter; jedes Pruefmittel des Projekts setzt
+ * eine laufende Installation voraus und richtet keine ein. Sichtbar wurde er
+ * erst, als `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` den Weg
+ * einer Betreiberin ging — dieselbe Seite, dasselbe Formular.
+ *
+ * DIE BEHEBUNG steht in `kopfzeilen_lib.php` und nicht in `db.php`: Dort ist
+ * das harte `require` richtig, weil jede regulaere Seite nach der Einrichtung
+ * laeuft. `kopfzeilen_lib.php` dagegen sagt in ihrem eigenen Kopf, sie komme
+ * „ohne Datenbank aus: Jede Einstellung hat eine Vorgabe, und faellt die
+ * Abfrage aus, gilt die". Sie kam nur nicht ohne `config.php` aus. Jetzt zieht
+ * sie `db.php` per `is_file()` nur, wenn es etwas zu ziehen gibt, und ihre
+ * vier `app_state`-Aufrufe stehen hinter `function_exists()` mit Rueckfall auf
+ * dieselben Vorgaben — Report-Only und ein Tag HSTS, die vorsichtigen Werte.
+ * Nachgemessen: Mehr als diese beiden Funktionen braucht sie aus `db.php`
+ * nicht.
+ *
+ * ZUM VERHAELTNIS ZU 20.15.2. Die beiden Befunde sind am selben Tag
+ * entstanden, betreffen dieselbe Datei und sind trotzdem verschiedene Dinge:
+ * 20.15.2 nimmt `install.php` aus der AUSLIEFERUNG, weil das Runbook sie
+ * loeschen heisst. Dieser Eintrag macht sie ueberhaupt erst wieder
+ * LAUFFAEHIG. Seit 20.15.2 muss sie von Hand hinauf — und eine Datei, die
+ * man von Hand hinauflaedt, um genau einmal eine Anlage einzurichten, MUSS
+ * beim ersten Aufruf funktionieren. Die beiden Fassungen greifen ineinander;
+ * ohne diese hier waere die andere der Weg in eine Sackgasse.
+ *
+ * KEINE MIGRATION.
+ * ---------------------------------------------------------------------------
  * 20.16.0 — DIE JOB-PAUSE IST JETZT AUCH UEBER DIE ADRESSE ERREICHBAR
  * ---------------------------------------------------------------------------
  *
@@ -5743,4 +5786,485 @@ declare(strict_types=1);
  *
  * KEINE MIGRATION.
  */
-const WEB_VERSION = '20.16.4';
+/* ---------------------------------------------------------------------------
+ * 20.16.5 — DAS BETRIEBSPROTOKOLL BEKOMMT EINEN SCHREIBWEG (P5b/AP1)
+ * ---------------------------------------------------------------------------
+ *
+ * EINE KORREKTURNUMMER FUER EINE NEUE FUNKTION, und das ist eine Abweichung
+ * von der Zaehlweise, die begruendet gehoert.
+ *
+ * Dieses Paket hiess auf seinem Zweig **20.16.0** — geschrieben am
+ * 16.09.2026. Am 17.09.2026 vergab `main` dieselbe Nummer fuer etwas
+ * anderes: die Job-Pause ueber die Adresse (Backlog Nr. 219), und darauf
+ * folgten dort 20.16.1 bis 20.16.4. Zwei Erzaehlungen unter derselben
+ * Nummer gibt es nicht; `main` ist vorgelagert, also weicht der Zweig.
+ *
+ * GEWAEHLT WURDE DIE KLEINE VERSCHIEBUNG: nur dieses Paket rutscht, von
+ * 20.16.0 auf 20.16.5 — 21 Nennungen in 9 Dateien. Die Alternative waere
+ * gewesen, die ganze Kette P5b um eine Nebennummer hochzusetzen (AP1 auf
+ * 20.17.0 bis AP9 auf 20.25.0); das waere nach der Zaehlweise sauberer und
+ * haette rund 267 Nennungen angefasst, quer durch Changelog, Technik,
+ * Handbuch, Konzept, Pruefdokument und Rahmenplan. Der Auftraggeber hat am
+ * 17.09.2026 die kleine Verschiebung gewaehlt.
+ *
+ * WAS DAS KOSTET, steht hier, damit es niemand fuer einen Fluechtigkeitsfehler
+ * haelt: Die dritte Stelle heisst sonst „Fehlerbehebung und Feinschliff".
+ * Dieses Paket legt eine Tabelle an und baut einen Schreibweg — es ist eine
+ * Nebenversion, die eine Korrekturnummer traegt. Wer die Erzaehlung dieser
+ * Datei liest, findet unter 20.16.5 mehr, als die Nummer verspricht.
+ *
+ * Erstes Paket der Phase P5b (Konto und Registrierung). Es baut nichts, was
+ * eine Nutzerin sieht — es baut das, worauf die neun folgenden Pakete
+ * schreiben.
+ *
+ * DREI STUECKE:
+ *
+ * 1. `protokoll_lib.php` und die Tabelle `protokoll_ereignisse`. Sechs
+ *    Reiter, zwei Fristen (Verwaltung 365 Tage einstellbar, alle uebrigen 30
+ *    fest). Der siebte Reiter — Sicherheit — bleibt in seiner eigenen Tabelle
+ *    aus P5a; zwei Fristen in einer Tabelle sind eine Einladung, die kuerzere
+ *    zu vergessen.
+ *
+ * 2. `konten_einstellungen_lib.php` und die Karte „Konten" in den
+ *    Servereinstellungen. Acht Werte, von denen in diesem Paket nur einer
+ *    einen Verbraucher hat (Demo-Anmeldung). Die uebrigen stehen trotzdem
+ *    schon da, weil die Reihenfolge es verlangt: Eine Einstellung, die es
+ *    beim Bauen ihres Verbrauchers noch nicht gibt, wird dort erfunden — an
+ *    einer zweiten Stelle, mit einer zweiten Vorgabe.
+ *
+ * 3. Die Zaehlkarte auf Betrieb -> Status. Lesbar wird das Protokoll erst mit
+ *    10c; bis dahin belegt die Karte, DASS geschrieben wird — und meldet
+ *    rot, wenn es nicht geht.
+ *
+ * WAS HIER NICHT HINEINGESCHRIEBEN WIRD, ist die eigentliche Aussage: kein
+ * Zugriffsprotokoll. Dass jemand einen Einsatz geoeffnet, gelesen oder
+ * exportiert hat, steht nicht darin und soll nicht darin stehen (V1,
+ * 16.09.2026). Wer das aendert, aendert eine Programmentscheidung.
+ *
+ * SCHEITERT DAS SCHREIBEN, SCHEITERT DIE HANDLUNG NICHT (V7) — aber es faellt
+ * auf: `error_log()`, ein Zaehler in `app_state`, eine rote Plakette auf der
+ * Statusseite. Alle drei, weil still scheitern schlechter ist als laut und
+ * laut abbrechen schlechter als still.
+ *
+ * MIGRATION: `2026_09_16_protokoll_ereignisse`. `update.php` ist faellig.
+ */
+/* ---------------------------------------------------------------------------
+ * 20.17.0 — DER LEBENSZYKLUS EINES KONTOS (P5b/AP2)
+ * ---------------------------------------------------------------------------
+ *
+ * `konto_lib.php`, und damit ist Backlog Nr. 202 Paket 1 (Token) erledigt.
+ *
+ * VIER FASSUNGEN DERSELBEN SACHE gab es vorher, und sie waren nicht gleich:
+ * `admin_users.php` legte Konto und Token in einer Transaktion an,
+ * `install.php` ohne; zwei Stellen entwerteten die Vorgaengertoken, zwei
+ * nicht; die Laufzeiten standen als SQL-Literale an vier Stellen.
+ *
+ * `install.php` WAR DIE GEFAEHRLICHE. Ein Abbruch zwischen den beiden
+ * `INSERT` hinterliess ein Konto ohne Weg hinein — anmelden ging nicht (kein
+ * Passwort), und der Einrichter lief nicht mehr, weil `install.lock` stand.
+ * Eine Installation, aus der man sich beim Einrichten selbst ausgesperrt hat.
+ *
+ * AUFGELOEST WURDE ES HIER UND NICHT IN SCHRITT 15, weil die
+ * Selbstregistrierung aus AP3 sonst die fuenfte Fassung geworden waere — und
+ * sie ist die einzige, die von aussen erreichbar ist.
+ *
+ * DIE BIBLIOTHEK LAEUFT OHNE `config.php`. `install.php` schreibt sie erst,
+ * nachdem es das erste Konto angelegt hat, und bringt seine eigene
+ * PDO-Verbindung mit. Dieselbe Falle wie Nr. 223, hier von vornherein
+ * vermieden statt hinterher behoben.
+ *
+ * VIER ZUSTAENDE, und die Uebergaenge stehen als TABELLE statt als
+ * `if`-Zweige. Die Rueckwege sind die interessanten: aus `gesperrt` nach
+ * `aktiv` ja, aus `aktiv` nach `unbestaetigt` nein.
+ *
+ * ENTSPERREN RAEUMT `loeschung_am` MIT WEG. Ohne das faende der Loeschjob
+ * einen Termin in der Vergangenheit und loeschte ein Konto, dessen
+ * Besitzerin die Loeschung gerade zurueckgenommen hat — kein Schoenheits-,
+ * sondern ein Datenverlustfehler.
+ *
+ * DIE SELBSTLOESCHUNG IST DER SONDERFALL: Waehrend der Karenz ist das Konto
+ * `gesperrt`, aber DIE ANMELDUNG IST DER RUECKZUG (E-P5b-16). `login.php`
+ * nimmt sie zurueck, statt abzuweisen.
+ *
+ * `ingest.php` ANTWORTET `403` MIT GRUND IM RUMPF. Die Uhr puffert dann und
+ * schickt nach dem Entsperren alles nach — gemessen: zwei Einsaetze, einer
+ * davon waehrend der Sperre abgewiesen, beide angekommen. Der Ratenschutz
+ * zaehlt die Absage NICHT mit; sonst sperrte er eine Kennung, die nichts
+ * falsch macht, und der Rueckstand kaeme nicht durch.
+ *
+ * MIGRATION: `2026_09_16_konto_lebenszyklus`. `update.php` ist faellig.
+ */
+/* ---------------------------------------------------------------------------
+ * 20.18.0 — DIE DEMO-ANMELDUNG LAESST SICH ABSCHALTEN (P5b/AP7, E-P5b-07)
+ * ---------------------------------------------------------------------------
+ *
+ * EINE ZEILE IN `login.php`, und die Stelle ist die ganze Ueberlegung: Bei
+ * abgeschalteter Demo-Anmeldung wird `$u` auf `false` gesetzt, unmittelbar
+ * nach dem `SELECT`. Ab da laeuft die Anfrage durch GENAU DENSELBEN Weg wie
+ * eine erfundene Adresse — Blindvergleich gegen `AUTH_VERGLEICHSWERT`,
+ * Fehlversuch im Topf, `rate_gleiche_dauer()` am Ende.
+ *
+ * WARUM NICHT WEITER UNTEN, MIT EIGENER MELDUNG: Jede eigene Meldung und
+ * jeder eigene Zweig macht die beiden Faelle wieder unterscheidbar — an der
+ * Antwort oder an der Dauer. Eine Auskunft „das Demo-Konto ist abgeschaltet"
+ * waere freundlicher und genau deshalb falsch.
+ *
+ * GEMESSEN IM BROWSER (nicht mit curl — ohne die im Browser abgeleiteten
+ * Token scheitert JEDE Anmeldung, und eine Messung davon belegte nichts):
+ * Demo mit RICHTIGEM Passwort 1241 ms, Demo mit falschem 1270 ms, erfundene
+ * Adresse 1263 ms — dieselbe Meldung, Spanne 29 ms. Das Adminkonto meldet
+ * sich in derselben Lage normal an.
+ *
+ * DER BESTAND BLEIBT (R25). Abgeschaltet ist die ANMELDUNG, nicht das Konto.
+ *
+ * DIE RUECKFRAGE BEIM UMSCHALTEN steht als Meldung mit Knopf und nicht als
+ * Bestaetigungsdialog: `data-confirm` kann nur ja/nein ZUM ABSENDEN, nicht
+ * „und schalte dabei noch etwas anderes ab". Ein Dialog, der das koennte,
+ * waere ein NEUER Baustein und braeuchte eine Freigabe mit Mockup
+ * (Design.md 9).
+ *
+ * KEINE MIGRATION — die Einstellung steht seit 20.16.5 in `app_state`.
+ */
+/* ---------------------------------------------------------------------------
+ * 20.19.0 — EINWILLIGUNGEN (P5b/AP4, E-P5b-05, -15)
+ * ---------------------------------------------------------------------------
+ *
+ * VIER RECHTSTEXTE STATT ZWEI. Nutzungsbedingungen und die Vereinbarung zur
+ * Auftragsverarbeitung kommen dazu; `nutzungsbedingungen.php` und `avv.php`
+ * sind zwei Zeilen nach dem Muster von `impressum.php`.
+ *
+ * DREI HAEKCHEN, ZWEI WIRKUNGEN, und der Unterschied ist kein Rang, sondern
+ * die Rechtsnatur: Ein Vertrag kommt durch ANNAHME zustande und darf ohne sie
+ * nicht weiterlaufen — deshalb sperren Nutzungsbedingungen und AVV den
+ * naechsten Login. Eine Datenschutzerklaerung informiert; Widerspruch dagegen
+ * ist kein Vertragsschluss, sondern ein Recht — deshalb zeigt sie nur einen
+ * Hinweis. Der Wortlaut traegt das („angenommen" gegen „zur Kenntnis
+ * genommen") und steht im Katalog `RT_EINWILLIGUNG`, nicht im Markup.
+ *
+ * DREI WEGE BLEIBEN AM TOR OFFEN: Abmelden, Export, Konto loeschen. Wer nicht
+ * zustimmen will, muss an seine Daten kommen und gehen koennen; ein Tor, das
+ * auch den Ausgang versperrt, waere Noetigung.
+ *
+ * `stand_am` WIRD DATETIME (Fehlerfund F3 des Konzepts). Es war `DATE` —
+ * zwei Aenderungen am selben Tag waeren EINE Fassung gewesen, und wer die
+ * erste angenommen hat, gaelte als Annehmer der zweiten. Nachgemessen: Nach
+ * der Umstellung sperrt eine zweite Fassung am selben Tag erneut.
+ *
+ * EIN TEXT OHNE STANDDATUM VERLANGT NICHTS. Sonst sperrte ein leer
+ * angelegter Platzhalter alle Konten aus — genau der Zustand zwischen dem
+ * Einspielen der Mechanik und dem Einspielen der geprueften Texte (R41).
+ *
+ * `ingest.php` UND DIE API BLEIBEN UNBERUEHRT. Die Uhr fragt niemanden um
+ * Zustimmung; ein Tor davor liesse eine laufende Aufzeichnung ins Leere
+ * laufen, ohne dass irgendwo jemand einen Haken setzen koennte. Gemessen:
+ * Ingestprobe 83 Erwartungen, 0 Fehlschlaege, bei leerer
+ * `konto_einwilligungen`.
+ *
+ * NEBENBEI BEHOBEN: In `rechtstext_seite.php` stand der Leerzustandstext als
+ * ZWEIWERTIGER ternaerer Ausdruck — ein dritter Schluessel haette gemeldet,
+ * es sei „noch keine Datenschutzerklaerung hinterlegt". Kein Fehler, keine
+ * Meldung, nur ein falscher Satz. Jetzt ein Katalog (`RT_LEERTEXT`).
+ *
+ * MIGRATION: `2026_09_16_einwilligungen`. `update.php` ist faellig.
+ */
+/* ---------------------------------------------------------------------------
+ * 20.20.0 — SELBSTLOESCHUNG MIT KARENZ, ADRESSWECHSEL MIT BESTAETIGUNG
+ * ---------------------------------------------------------------------------
+ *
+ * P5b/AP5, E-P5b-16.
+ *
+ * DIE ADRESSE WIRD NICHT MEHR SOFORT GESCHRIEBEN. Bis Web 20.19.0 stand sie
+ * unmittelbar in der Zeile — mit Passwortnachweis und einer Hinweismail an
+ * die alte, aber OHNE jede Pruefung, ob die neue ueberhaupt erreichbar ist.
+ * **Ein Tippfehler sperrte damit aus**: Die Anmeldung laeuft ueber die
+ * Adresse, und „Passwort vergessen" schickt an eine Adresse, die es nicht
+ * gibt. Jetzt geht ein Link an die NEUE Adresse (24 h), eine Warnung an die
+ * ALTE, und **die alte bleibt die gueltige, bis der Klick kommt**.
+ *
+ * KEIN UNIQUE AUF `email_neu`. Zwei Konten duerfen dieselbe Adresse
+ * vormerken; erst der Klick entscheidet, und dort faengt das UNIQUE auf
+ * `email`. Eine Sperre schon beim Vormerken verriete, dass jemand anders
+ * dieselbe Adresse vorgemerkt hat.
+ *
+ * SELBSTLOESCHUNG MIT DREISSIG TAGEN KARENZ, und **die Ruecknahme ist die
+ * ANMELDUNG** — kein Knopf, kein zweiter Link, kein zweites Token. Ein
+ * Ruecknahmeweg ohne Passwort waere genau das, was ein Angreifer wollte, der
+ * die Loeschung verhindern will, um weiter mitzulesen.
+ *
+ * ENTSPERREN RAEUMT DEN TERMIN MIT WEG (schon seit 20.17.0) — ohne das faende
+ * der Job einen Termin in der Vergangenheit und loeschte ein Konto, dessen
+ * Besitzerin die Loeschung gerade zurueckgenommen hat.
+ *
+ * DER JOB LOESCHT HOECHSTENS FUENF JE LAUF. Eine Kontoloeschung raeumt die
+ * Spuren von Hand, loescht einen Ordner im Dateisystem und kaskadiert ueber
+ * vierzehn Tabellen; das Huckepack-Budget sind drei Sekunden fuer ALLE Jobs.
+ * Einen Tag spaeter zu loeschen ist kein Zusagenbruch, eine haengende
+ * Anfrage schon.
+ *
+ * DAS PROTOKOLL NENNT KEINE ADRESSEN beim Wechsel — nur die Kontonummer und
+ * dass gewechselt wurde. Ein Audit, in dem jede je benutzte Adresse eines
+ * Kontos steht, ist ein Verzeichnis von Adressen und nicht eines von
+ * Handlungen. Gemessen: der Eintrag enthaelt kein `@`.
+ *
+ * MIGRATION: `2026_09_16_adresswechsel_bestaetigt`. `update.php` ist faellig.
+ */
+/* ---------------------------------------------------------------------------
+ * 20.21.0 — MENGENGRENZE JE KONTO (P5b/AP6, E-P5b-04, -18; Nr. 37, 48)
+ * ---------------------------------------------------------------------------
+ *
+ * `507 Insufficient Storage`, und der Code ist mit Bedacht gewaehlt: Er sagt
+ * „der Server hat keinen Platz mehr", und genau das ist der Fall. `403`
+ * hiesse „du darfst nicht", `429` hiesse „nicht so schnell" — beides waere
+ * falsch und liesse die Uhr das Falsche tun. Bei `507` wie bei `429` behaelt
+ * sie ihre Warteschlange; gemessen: Nach Anheben der Grenze kam die
+ * abgewiesene Aufzeichnung vollstaendig nach.
+ *
+ * BEARBEITEN UND LOESCHEN BLEIBEN FREI. Die Grenze steht in `ingest.php` und
+ * im Import — nirgends sonst. Wer sie erreicht, muss aufraeumen koennen;
+ * eine Grenze, die auch das Loeschen sperrt, ist eine Falle.
+ *
+ * DER GROESSERE DER BEIDEN ANTEILE ZAEHLT, nicht der Durchschnitt: Wer 5000
+ * Einsaetze mit wenigen GPS-Daten hat, ist genauso am Ende wie jemand mit
+ * 250 MB in dreihundert Aufzeichnungen.
+ *
+ * GECACHT, WEIL DIE MESSUNG TEUER IST. Sie liest die Blob-Laengen aller
+ * GPS-Daten eines Kontos; bei jedem Upload waere das genau an dem Weg teuer,
+ * der schnell sein muss. `ingest.php` schreibt den Zaehler nach dem Schub
+ * GESCHAETZT fort, der Aufraeumjob misst einmal am Tag nach.
+ *
+ * `spur_bytes()` STEHT IN `spur_lib.php` UND NICHT BEIM AUFRUFER
+ * (CLAUDE.md 4). Die Punkte liegen je nach Alter als Zeilen ODER als Blob —
+ * wer nur eine der beiden Tabellen zaehlt, misst je nach Bestand die
+ * Haelfte, und zwar ohne Fehlermeldung.
+ *
+ * E-P5b-17 IST GEGENSTANDSLOS. Das Konzept sieht die Umstellung der
+ * Geraeteschluessel von bcrypt auf SHA-256 vor — sie ist seit Web 13.0.0
+ * erledigt (`db.php`, mit der Messung: bcrypt kostete 228 ms JE UPLOAD).
+ * Nachgemessen am Code, nicht angenommen.
+ *
+ * UND EIN BEFUND AUS DEM PRUEFEN: `konto_loeschen()` liess `mengen:<id>` und
+ * `mengen_gemeldet:<id>` in `app_state` stehen. `users.id` ist
+ * AUTO_INCREMENT, aber ein Wiederanlauf aus einer Sicherung kann eine Id
+ * erneut vergeben — das neue Konto faende dann den Mengenstand des alten vor
+ * und stuende womoeglich sofort an seiner Grenze, ohne einen einzigen
+ * Einsatz. Genau das ist beim Pruefen passiert. Behoben an der Wurzel, dazu
+ * ein Aufraeumschritt fuer den Altbestand (3 verwaiste Eintraege gefunden,
+ * 0 danach).
+ *
+ * MIGRATION: `2026_09_16_konto_grenzen`. `update.php` ist faellig.
+ *
+ * 20.21.1 — DIE PROFILSEITE BRACH AUS IHREM GERUEST AUS (Backlog Nr. 225).
+ *
+ * Ein `ui_karte_ende()` zu viel, seit dem 07.09.2026. Es schloss keine Karte,
+ * sondern gab ein `</div></section>` ohne Gegenstueck aus; der Parser nahm
+ * fuer das `</div>` das naechste offene, und das war `div.rahmen`. Damit
+ * endeten `form`, `main.inhalt` und `rahmen` mitten auf der Seite, und alles
+ * danach — Datenschutz, Passwort, Mengen, Loeschkarte — lag direkt am `body`
+ * und lief unter der Seitenleiste hindurch ueber die volle Fensterbreite.
+ *
+ * KEIN PRUEFMITTEL HAT ANGESCHLAGEN, und das ist der eigentliche Befund:
+ * `scrollWidth` blieb gleich `innerWidth` (es lief nichts ueber, es lag nur
+ * falsch), die Konsole blieb still, die Knopfhoehen stimmten. Gefunden beim
+ * ANSEHEN eines Bildes. Die Gegenprobe zaehlt seither Karten ausserhalb von
+ * `main.inhalt` — voller Lauf ueber 53 Seiten: 149 geprueft, 0 ausserhalb.
+ * Gegenprobe mit wieder eingebautem Fehler: dieselben drei Nullen und
+ * „6 geprueft, 4 ausserhalb".
+ *
+ * DAZU ZWEI KLEINERE FUNDE DESSELBEN ABENDS. Ein Meldungskasten in
+ * `betrieb_server.php` trug den Ton `meldung-blau`, den es nicht gibt — die
+ * Toene heissen `fehler, warn, ok, info, schutz` —, und stand deshalb
+ * ungestaltet da (Nr. 226). Und `einwilligung.php` und
+ * `adresse_bestaetigen.php` fehlten in der Geruest-Ausnahmeliste der
+ * Vollstaendigkeitspruefung; beide lassen das Geruest mit Absicht weg.
+ * 20.22.0 — DIE SELBSTREGISTRIERUNG (P5b/AP3, E-P5b-01, -02, -03, -13, -23).
+ *
+ * `registrieren.php` und `bestaetigen.php`, drei Betriebsarten (offen / offen
+ * mit Freischaltung / nur auf Einladung, Vorgabe die letzte), Double-Opt-In
+ * mit 48-Stunden-Link, Wegwerfliste (8 883 Domains, CC0), drei Ratenschutz-
+ * Toepfe, Honeypot mit signiertem Zeitstempel, Freischaltung mit Sammelmail
+ * und der Job `konto_verfall` fuer beide Fristen.
+ *
+ * DIE SEITE GIBT KEINE KONTOAUSKUNFT. Freie, belegte, Wegwerf- und
+ * Demo-Adresse bekommen dieselbe Karte und — gemessen ueber 120 Aufrufe —
+ * dieselbe Antwortzeit: Mediane 507,5 / 507,7 / 507,6 ms, Spanne **0,2 ms**
+ * (Soll < 50). Unterschieden wird nur in der Mail.
+ *
+ * DAS PASSWORT WIRD NICHT AUF DER REGISTRIERUNGSSEITE GESETZT, und das ist
+ * die eine Abweichung vom freigegebenen Mockup M-P5b-02a. Der Grund ist
+ * zwingend: Der Datenschluessel haengt am Server-Anteil, und der wird per
+ * `HMAC(kdf_anteil, 'konto:<id>')` aus der KONTONUMMER abgeleitet (E-S10-17)
+ * — die es bei der Registrierung noch nicht gibt. Der Link aus der Mail
+ * fuehrt deshalb auf `pw_handling.php`, den einen geprueften Weg, auf dem
+ * Passwort, Datenschluessel und Wiederherstellungsschluessel entstehen;
+ * danach leitet er auf `bestaetigen.php`. Mit dem Auftraggeber geklaert am
+ * 17.09.2026: lieber zwei Felder weniger als ein zweiter Weg, auf dem ein
+ * Anteil das Haus verlaesst.
+ *
+ * KEINE MIGRATION. `users.status` kennt `unbestaetigt` und `wartet` seit AP2,
+ * und `konto_status_setzen()` schreibt beim Uebergang nach `wartet` jetzt
+ * `bestaetigt_am` mit — daran haengt die 30-Tage-Frist der Wartenden. Ohne
+ * das zaehlte sie ab dem Absenden des Formulars: Wer die Mail erst nach 40
+ * Tagen anklickt, waere sofort verfallen.
+ *
+ * 20.22.1 — DAS HAEKCHEN SAGTE DAS FALSCHE.
+ *
+ * „Ich habe die Nutzungsbedingungen angenommen." Das ist eine Aussage ueber
+ * eine Vergangenheit, die es nicht gibt — angenommen wird in dem Augenblick,
+ * in dem der Haken gesetzt und das Formular abgeschickt wird. Jetzt: „Ich
+ * habe die Nutzungsbedingungen gelesen und NEHME SIE AN.", „Ich NEHME die
+ * Vereinbarung zur Auftragsverarbeitung (AVV) AN.", „Ich habe die
+ * Datenschutzerklaerung ZUR KENNTNIS GENOMMEN." — so, wie es das Mockup
+ * M-P5b-02a von Anfang an hatte. Angemerkt vom Auftraggeber.
+ *
+ * DER SATZ STEHT JETZT IM KATALOG (`rt_haken_satz()`), nicht im Markup. Er
+ * wird an ZWEI Stellen gebraucht — Registrierungsseite und
+ * Einwilligungstor —, und zwei Fassungen desselben rechtlich erheblichen
+ * Satzes laufen auseinander, ohne dass es auffiele: Beide sehen fuer sich
+ * richtig aus.
+ *
+ * DAZU ZWEI FUNDE AM TOR. Es fuehrte SCHIEBESCHALTER statt Haekchen — ein
+ * Schalter steht fuer eine Einstellung, die man an- und ausmacht, eine
+ * Willenserklaerung kennt aber nur eine Richtung (das Mockup zeichnet
+ * Haekchen). Und es nannte das Standdatum ZWEIMAL: einmal als „Stand
+ * 17.09.2026" und zwei Zeilen darunter im Satz. Geblieben ist, was nur dort
+ * steht — welche Fassung bisher angenommen war.
+ *
+ * 20.22.2 — DIE HAEKCHEN WURDEN VERLANGT UND VERGESSEN (Backlog Nr. 231).
+ *
+ * `registrieren.php` prueft seit 20.22.0 alle Schluessel aus
+ * `RT_EINWILLIGUNG` als Pflichthaken und legt danach das Konto an. Dazwischen
+ * fehlte eine Zeile: Es entstand nie ein Eintrag in `konto_einwilligungen`.
+ * Der einzige Schreibweg, `einwilligung_setzen()`, wurde im ganzen Server
+ * genau einmal aufgerufen — am TOR beim Login, nicht bei der Registrierung.
+ * E-P5b-05 verlangt dagegen „Gespeichert je Konto mit Fassungskennung und
+ * Zeit".
+ *
+ * DIE WIRKUNG WAR NICHT, DASS DER NACHWEIS FEHLTE. Das Tor fasst jedes Konto
+ * beim ersten Login und schreibt dann; verloren ging nichts. Verloren ging
+ * die STELLE: Die Erklaerung entstand nicht dort, wo der Vertrag geschlossen
+ * wird, und die Registrierende beantwortete dieselben drei Fragen zweimal —
+ * einmal im Formular, einmal beim ersten Anmelden.
+ *
+ * ENTSCHIEDEN (E-P5b-25): Festgehalten wird BEI DER REGISTRIERUNG. Dort wird
+ * der Vertrag geschlossen; das Tor ist dafuer da, eine NEUE Fassung
+ * nachzuholen, nicht die erste zu erheben. Dass das Konto in diesem Moment
+ * noch `unbestaetigt` ist, steht dem nicht entgegen — festgehalten wird, was
+ * an diesem Formular erklaert wurde, nicht, wem die Adresse gehoert. Wird die
+ * Registrierung nie bestaetigt, raeumt `job_konto_verfall()` das Konto weg
+ * und die Zeilen mit ihm (`ON DELETE CASCADE` an `fk_kew_user`).
+ *
+ * DER ZWEITE FUND AN DERSELBEN STELLE, und er war der unangenehmere: Die
+ * Registrierung prueft `stand_am` nicht — der Begriff kam in
+ * `registrieren.php` kein einziges Mal vor. Solange die geprueften Texte
+ * nicht eingespielt sind (der geplante Zustand bis E-P5b-24), musste eine
+ * Registrierende also den Haken „Ich nehme die Vereinbarung zur
+ * Auftragsverarbeitung (AVV) an" setzen, waehrend `avv.php` daneben „noch
+ * keine Vereinbarung zur Auftragsverarbeitung hinterlegt." anzeigte. Sie nahm
+ * ein leeres Dokument an.
+ *
+ * Das Tor macht es seit jeher richtig; `docs/Technik.md` begruendet es mit
+ * einem Satz, der auch hier gilt: „Ein Text ohne Standdatum verlangt nichts."
+ * Neu ist `einwilligung_in_kraft()`, und beide Seiten der Registrierung —
+ * Pruefung und Markup — ziehen aus derselben Liste. Solange kein Text
+ * hinterlegt ist, zeigt das Formular KEINEN Haken; wer sich so registriert,
+ * wird beim ersten Login nach dem Einspielen am Tor gefasst.
+ *
+ * GEFUNDEN BEIM NACHPRUEFEN einer Rueckfrage des Auftraggebers zur AVV, nicht
+ * durch ein Pruefmittel. Es gibt keines, das „verlangt, aber nie
+ * gespeichert" messen koennte.
+ *
+ * 20.23.0 — DAS HANDBUCH IST JETZT EINE SEITE DER ANWENDUNG
+ * (P5b/AP8, E-P5b-08, -22, Mockup M-P5b-01).
+ *
+ * `hilfe.php` zeigt `docs/Handbuch.md`, `ueber.php` zeigt das neue
+ * `docs/Was-ist-NAdoku.md` — beide OHNE Anmeldung. Die Quelle bleibt
+ * Markdown im Repositorium: auf GitHub editierbar, die Wortliste laeuft
+ * darueber, das Prueftor prueft die Rendertauglichkeit, und es gibt keine
+ * zweite Fassung in einer Datenbank, die auseinanderliefe. Dazu die
+ * Fusszeile der Anmeldeseite (Was ist NAdoku? · Handbuch · Impressum ·
+ * Datenschutz) und ein Fragezeichen links vom Zahnrad.
+ *
+ * NEU VENDORIERT: Parsedown 1.7.4 (MIT, eine Datei). `rt_html()` bleibt, was
+ * es ist — es kennt bewusst kein Fett, keine Tabellen, keine Codebloecke und
+ * keine Bilder, weil sein Text aus der DATENBANK kommt und jede Erweiterung
+ * dort eine Vertragsaenderung waere (E-P3-38). Das Handbuch braucht alle
+ * vier. Zwei Renderer sind zwei Angriffsflaechen; der Preis ist bewusst
+ * gezahlt, weil die Quellen verschieden sind.
+ *
+ * DREI FUNDE BEIM PRUEFEN, und alle drei waren meine:
+ *
+ *   BILDER. `![](bilder/x.png)` im Handbuch loeste zu `/bilder/x.png` auf —
+ *   also `server/bilder/`, wo nichts liegt. PHP liest den TEXT aus
+ *   `../docs/`; ein BILD holt der Browser, und der sieht nur `server/`.
+ *   24 Konsolenfehler im Bilderlauf. `DokuMarkdown` schreibt relative
+ *   Bildquellen jetzt auf `doku/` um, die Kette kopiert `docs/bilder/`
+ *   dorthin.
+ *
+ *   TABELLEN. Das Handbuch hat 43; bei 360 px ist die schmalste 368 px breit
+ *   und schob die Seite um 124 px nach rechts. Sie scrollen jetzt waagerecht
+ *   wie die Codebloecke.
+ *
+ *   UND DER BILDERLAUF ZEIGTE AUF DEN FALSCHEN. Er nannte `code (626 px)`
+ *   als Verursacher — ein `<code>` in einem scrollenden `<pre>`, das seine
+ *   Seite gar nicht schiebt. Ich habe daraufhin den Code umbrechen lassen,
+ *   und die Zahl blieb bei +124 px, weil sie nie von dort kam. Der
+ *   Taeter-Finder ueberspringt jetzt, was in einem scrollenden Kasten
+ *   steckt.
+ *
+ * WAS SAFEMODE NICHT TUT, und das ist der Satz, der hier stehen muss:
+ * Parsedown liefert MIT `setSafeMode(true)` fuer
+ * `![B](https://fremd.example/b.png)` ein `<img src="https://fremd...">` und
+ * laedt damit eine fremde Quelle zur Laufzeit. SafeMode prueft das SCHEMA,
+ * nicht die HERKUNFT. Auf einer Seite, die jede Besucherin vor der Anmeldung
+ * sieht, haelt die Zusage aus CLAUDE.md 4 allein
+ * `DokuMarkdown::inlineImage()`.
+ *
+ * KEIN CACHE, entgegen E-P5b-22: `app_state.v` ist VARCHAR(190), das
+ * gerenderte Handbuch 303 KB — und 266 KB Markdown rendern in 11 bis 12 ms.
+ *
+ * 20.24.0 — ONBOARDING UND DIE BEIDEN RUECKFRAGEN
+ *   (P5b/AP9, E-P5b-09, -10, -19, -20, -21; Mockups M-P5b-02b/c/d).
+ *
+ *   Vier Dinge koennen nach dem Anmelden anstehen, und die Anwendung zeigte
+ *   bisher keines davon. Jetzt zeigt sie GENAU EINES, in dieser Reihenfolge:
+ *   Einwilligungstor (eine Seite, seit AP4), Schluesselblatt-Rueckfrage,
+ *   Konto-Rueckfrage, Erststart. `server/einstieg_lib.php` sagt, welches.
+ *
+ *   DER ERSTSTART IST EINE KARTE UND KEIN DIALOG. Das freigegebene Mockup
+ *   sagt es in einem Satz: „Wer sie ignoriert, arbeitet trotzdem." Drei
+ *   Schritte ueber der Tagesuebersicht, darunter die vollstaendige Seite.
+ *   Die Rueckfragen duerfen stoeren — sie haben eine Frist; eine Einladung
+ *   darf es nicht.
+ *
+ *   DIE KONTO-RUECKFRAGE fragt nach 30 Tagen, nach 6 Monaten, dann jaehrlich:
+ *   „Hast du dein Notfallblatt noch?" Auf „Nein" folgt die Erneuerung im
+ *   selben Dialog — Passwort, neuer Schluessel, Druckknopf.
+ *
+ *   DAS NOTFALLBLATT (`notfallblatt.php`) SPEICHERT NICHTS und kann nichts
+ *   speichern: Der Schluessel entsteht im Browser, der Server kennt ihn
+ *   nicht. Daraus folgt die Eigenschaft, die es ausmacht — es laesst sich
+ *   spaeter nicht erneut drucken, und genau das steht darauf.
+ *
+ *   DIE BETREIBER-RUECKFRAGE wird EINGEGEBEN, nicht bestaetigt: vier
+ *   zufaellig gewaehlte Vierergruppen vom Schluesselblatt, Positionen je
+ *   Anzeige neu gewuerfelt, Vergleich mit `hash_equals()` und ohne Abkuerzung
+ *   bei der ersten Abweichung. Ein Haken haette einen Klick gekostet und
+ *   nichts bewiesen. Drei Fehlversuche, dann der Topf `blatt`.
+ *
+ *   EINE KOMPONENTE, ZWEI VERBRAUCHER (R83): `assets/schluessel.js` rechnet,
+ *   `api/schluessel_erneuern.php` schreibt GENAU EINE Spalte (`pat_wrap_rc`),
+ *   `schluessel_teile.php` zeigt. Dialog und Kontoseite rufen dasselbe.
+ *
+ *   DIE WACHE STEHT IM BROWSER, UND SIE MUSS DORT STEHEN. Vor dem Neupacken
+ *   wird der entpackte Inhaltsschluessel gegen `pat_key_check` gehalten. Ohne
+ *   diese Zeile koennte ein falsch entpackter Schluessel neu verpackt werden,
+ *   der Server naehme ihn an, und der neue Zettel oeffnete nichts — der alte
+ *   waere schon ueberschrieben. Es ist der einzige Weg, auf dem dieses Paket
+ *   Daten haette unzugaenglich machen koennen.
+ *
+ *   NACHGEMESSEN statt behauptet: zweimal hintereinander erneuert, dann der
+ *   erste Code gegen die zweite Huelle (oeffnet nicht) und der zweite dagegen
+ *   (oeffnet) — und der erste gegen seine eigene alte Huelle, damit der
+ *   Fehlschlag die Ersetzung belegt und nicht einen kaputten Erzeuger.
+ */
+const WEB_VERSION = '20.24.0';

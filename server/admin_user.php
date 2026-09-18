@@ -211,17 +211,134 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * gueltiger Token in der Datenbank, von dem niemand weiss, ist die
      * schlechteste aller Lagen.
      */
+    /* ---- Status: sperren, entsperren, freischalten (P5b/AP2, E-P5b-12) --
+     *
+     * DREI HANDGRIFFE, EIN ZWEIG. Sie sind dasselbe — ein Statuswechsel —,
+     * und `konto_status_setzen()` entscheidet, ob er erlaubt ist; ein
+     * Freischalten aus `aktiv` heraus laeuft dort ins Leere statt hier in
+     * einen vergessenen `if`-Zweig.
+     *
+     * DAS EIGENE KONTO NICHT. Wer sich selbst sperrt, sperrt sich aus, und
+     * die Sperre laesst sich nur von innen wieder loesen. Dieselbe Schranke
+     * wie beim Loeschen eine Karte tiefer.
+     *
+     * UND NICHT DIE LETZTE BETREIBERIN: Eine Installation ohne zugaengliches
+     * Betreiberinnenkonto hat keinen Weg mehr zu Serverschluessel,
+     * Migrationen und Wartungsmodus. Derselbe Grund wie beim Loeschen. */
+    /* ---- Grenzen und Aufbewahrung je Konto (P5b/AP6, Nr. 37, 48) -------
+     *
+     * LEER HEISST „die Vorgabe der Installation gilt" — an allen drei
+     * Feldern. Nicht 0 und nicht die Vorgabe als Zahl: Traegt die Spalte den
+     * Wert, aendert eine spaetere Anhebung der Installationsvorgabe an
+     * diesem Konto nichts, und niemand saehe, warum. */
+    if ($action === 'konto_grenzen') {
+        require_once __DIR__ . '/konten_einstellungen_lib.php';
+        $werte = [];
+        foreach ([['grenze_einsaetze', 'Einsätze', 1, 1000000],
+                  ['grenze_mb',        'Speicher (MB)', 1, 1000000],
+                  ['backup_pakete',    'Konto-Backups aufheben', 1, 99]] as [$f, $name, $min, $max]) {
+            $roh = trim((string)($_POST[$f] ?? ''));
+            if ($roh === '') { $werte[$f] = null; continue; }
+            if (!ctype_digit($roh) || (int)$roh < $min || (int)$roh > $max) {
+                $error = $name . ': leer lassen für die Vorgabe der Installation, '
+                       . 'sonst eine ganze Zahl zwischen ' . $min . ' und ' . $max . '.';
+                break;
+            }
+            $werte[$f] = (int)$roh;
+        }
+        if ($error === null) {
+            db()->prepare('UPDATE users SET grenze_einsaetze = ?, grenze_mb = ?,
+                                  backup_pakete = ? WHERE id = ?')
+                ->execute([$werte['grenze_einsaetze'], $werte['grenze_mb'],
+                           $werte['backup_pakete'], $uid]);
+            /* DIE MARKE DER WARNUNG LEEREN. Eine hoehere Grenze macht aus
+             * denselben Daten einen anderen Prozentsatz — was bei der alten
+             * gemeldet war, ist bei der neuen eine andere Aussage. Dieselbe
+             * Ueberlegung wie bei den Speicherschwellen in
+             * `betrieb_server.php`. */
+            app_state_setzen('mengen_gemeldet:' . $uid, '');
+            protokoll('verwaltung', 'konto_grenzen',
+                      'Grenzen geändert für ' . (string)$u['email'] . ': '
+                    . ($werte['grenze_einsaetze'] ?? 'Vorgabe') . ' Einsätze, '
+                    . ($werte['grenze_mb'] ?? 'Vorgabe') . ' MB, Konto-Backups '
+                    . ($werte['backup_pakete'] ?? 'Vorgabe'),
+                      $werte, $uid);
+            $notice = 'Grenzen gespeichert.';
+            $st = db()->prepare('SELECT * FROM users WHERE id = ?');
+            $st->execute([$uid]);
+            $u = $st->fetch() ?: $u;
+        }
+    }
+
+    if ($action === 'konto_status') {
+        require_once __DIR__ . '/konto_lib.php';
+        $ziel  = (string)($_POST['status'] ?? '');
+        $grund = trim((string)($_POST['grund'] ?? ''));
+        /* VOR dem Wechsel merken: Danach steht in der Tabelle der neue Wert,
+         * und ob dies eine Freischaltung war (`wartet` -> `aktiv`) oder ein
+         * Entsperren (`gesperrt` -> `aktiv`), liesse sich nicht mehr
+         * unterscheiden. Die Mail geht nur im ersten Fall. */
+        $statusVorher = (string)($u['status'] ?? '');
+
+        if ($uid === $userId) {
+            $error = 'Das eigene Konto lässt sich hier nicht sperren.';
+        } elseif ($ziel === 'gesperrt'
+                  && ist_letzte_betreiberin(db(), $uid, $u['role'] ?? null)) {
+            $error = 'Das ist das letzte Konto mit der Rolle „BetreiberIn" — es lässt '
+                   . 'sich nicht sperren. Lege zuerst eine zweite BetreiberIn an.';
+        } elseif (!konto_status_setzen($uid, $ziel, $ziel === 'gesperrt'
+                                       ? ($grund !== '' ? $grund : 'von der Verwaltung')
+                                       : null)) {
+            $error = 'Dieser Wechsel des Kontostatus ist nicht vorgesehen — es wurde '
+                   . 'nichts geändert.';
+        } else {
+            $notice = match ($ziel) {
+                'gesperrt' => 'Das Konto ist gesperrt. Laufende Sitzungen enden beim '
+                            . 'nächsten Seitenaufruf; Geräte bekommen ab sofort eine '
+                            . 'Absage und puffern.',
+                'aktiv'    => 'Das Konto ist wieder offen. Gepufferte Gerätedaten kommen '
+                            . 'beim nächsten Versuch an.',
+                default    => 'Der Kontostatus wurde geändert.',
+            };
+
+            /* ---- FREISCHALTUNG: die Nutzerin erfaehrt es (P5b/AP3, E-P5b-02)
+             *
+             * NUR `wartet` -> `aktiv`. Beim Entsperren (`gesperrt` -> `aktiv`)
+             * geht keine Mail: Wer gesperrt war, weiss in aller Regel warum,
+             * und eine automatische Nachricht „dein Zugang ist frei" waere
+             * dort das falsche Wort. Beim Wartenden ist sie das einzige
+             * Zeichen — er hat sich registriert und seither nichts gehoert.
+             *
+             * OHNE `$notice` ZU AENDERN: Die Verwaltung sieht, dass
+             * freigeschaltet ist; ob die Mail durchkommt, entscheidet die
+             * Warteschlange und nicht dieser Seitenaufruf. */
+            if ($ziel === 'aktiv' && $statusVorher === 'wartet') {
+                require_once __DIR__ . '/mail_lib.php';
+                mail_einreihen('freigeschaltet', (string)($u['email'] ?? ''),
+                               ['link' => app_url('/login.php')]);
+                $notice = 'Das Konto ist freigeschaltet. Die Nutzerin bekommt eine '
+                        . 'Mail und kann sich ab sofort anmelden.';
+            }
+            /* Die Zeile neu lesen — die Karte darunter zeigt sonst den
+             * Stand von vor dem Klick. */
+            $st = db()->prepare('SELECT * FROM users WHERE id = ?');
+            $st->execute([$uid]);
+            $u = $st->fetch() ?: $u;
+        }
+    }
+
     if ($action === 'pw_reset') {
         if (demo_ist_demo($uid)) {
             $error = 'Das Demo-Konto bekommt keinen Setz-Link: Sein Passwort ist '
                    . 'öffentlich und steht im Handbuch (E-P1-19).';
         } else {
-            db()->prepare('UPDATE password_resets SET used_at = NOW()
-                           WHERE user_id = ? AND used_at IS NULL')->execute([$uid]);
-            $token = bin2hex(random_bytes(32));
-            db()->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at)
-                           VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))')
-                ->execute([$uid, hash('sha256', $token)]);
+            /* Entwerten und Ausstellen in einer Funktion (P5b/AP2,
+             * Backlog Nr. 202 Paket 1). Die Regel „hoechstens ein gueltiger
+             * Token je Konto" galt hier schon; jetzt gilt sie an allen vier
+             * Stellen, und die Stunde steht als `TOKEN_RESET_S` statt als
+             * SQL-Literal. */
+            require_once __DIR__ . '/konto_lib.php';
+            $token = reset_token_ausstellen($uid, TOKEN_RESET_S);
             $link = app_url('/pw_handling.php?token=' . $token);
             /* `passwort_neu`, nicht `passwort_reset`: Der Text der
              * Selbstbedienung endet mit „Falls du das nicht angefordert
@@ -722,6 +839,140 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
          im Aktionsmenü verschickt denselben Link wie „Passwort vergessen" auf der
          Anmeldeseite; entsperrt wird danach mit dem Wiederherstellungsschlüssel
          der Person.</p>
+    <?php ui_karte_ende(); ?>
+
+    <?php /* ---- Status (P5b/AP2, E-P5b-12) ---------------------------------
+       *
+       * EIGENE KARTE UND NICHT EIN FELD IM FORMULAR DARUEBER. Name, Rolle
+       * und Adresse sind Angaben ueber ein Konto; der Status ist eine
+       * Handlung an ihm, und sie wirkt sofort auf laufende Sitzungen und auf
+       * die Geraete. Ein Auswahlfeld neben „Name" liesse sich versehentlich
+       * mitspeichern.
+       * ------------------------------------------------------------------ */ ?>
+    <?php require_once __DIR__ . '/konto_lib.php';
+          $kStatus = (string)($u['status'] ?? 'aktiv'); ?>
+    <?php ui_karte_start(['titel' => 'Status', 'id' => 'karte-status',
+        'plakette' => ui_plakette(KONTO_STATUS[$kStatus] ?? $kStatus,
+            ['ton' => match ($kStatus) {
+                'aktiv'    => 'blau',
+                'gesperrt' => 'rot',
+                default    => 'orange',
+            }])]); ?>
+      <?php if ($kStatus === 'gesperrt' && ($u['gesperrt_grund'] ?? '') !== ''): ?>
+        <?php ui_zeile([
+            'text'  => ($u['gesperrt_grund'] === 'selbstloeschung')
+                     ? 'Löschung beantragt'
+                     : 'Gesperrt: ' . (string)$u['gesperrt_grund'],
+            'klein' => ($u['gesperrt_seit'] ?? null)
+                     ? 'seit ' . fmt_local((string)$u['gesperrt_seit'], 'd.m.Y · H:i') . ' Uhr'
+                     : '',
+            'plaketten' => ($u['loeschung_am'] ?? null)
+                ? ui_plakette('löscht sich am '
+                    . fmt_local((string)$u['loeschung_am'], 'd.m.Y'), ['ton' => 'rot'])
+                : '']); ?>
+      <?php endif; ?>
+
+      <?php if ($istDemo): ?>
+        <p class="feld-hinweis">Das Demo-Konto lässt sich hier nicht sperren. Ob die
+           Anmeldung daran zugelassen ist, steht unter Betrieb →
+           Servereinstellungen → Konten.</p>
+      <?php elseif ($uid === $userId): ?>
+        <p class="feld-hinweis">Das eigene Konto lässt sich hier nicht sperren — die
+           Sperre ließe sich danach nur von einem anderen Konto aus lösen.</p>
+      <?php else: ?>
+        <?php if ($kStatus === 'wartet' || $kStatus === 'unbestaetigt'): ?>
+          <p class="feld-hinweis"><?= e(konto_status_text($kStatus)) ?></p>
+          <form method="post">
+            <?= csrf_field() ?><input type="hidden" name="action" value="konto_status">
+            <input type="hidden" name="id" value="<?= $uid ?>">
+            <input type="hidden" name="status" value="aktiv">
+            <div class="listen-form-fuss">
+              <?= ui_knopf(['text' => 'Freischalten', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+            </div>
+          </form>
+        <?php elseif ($kStatus === 'gesperrt'): ?>
+          <p class="feld-hinweis">Beim Entsperren verschwindet auch ein
+             <strong>beantragter Löschtermin</strong> — das Konto bleibt dann
+             bestehen. Gepufferte Gerätedaten kommen beim nächsten Versuch
+             vollständig an; es ist nichts verlorengegangen.</p>
+          <form method="post">
+            <?= csrf_field() ?><input type="hidden" name="action" value="konto_status">
+            <input type="hidden" name="id" value="<?= $uid ?>">
+            <input type="hidden" name="status" value="aktiv">
+            <div class="listen-form-fuss">
+              <?= ui_knopf(['text' => 'Entsperren', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+            </div>
+          </form>
+        <?php else: ?>
+          <p class="feld-hinweis">Eine Sperre beendet laufende Sitzungen beim nächsten
+             Seitenaufruf. <strong>Geräte verlieren nichts:</strong> Sie bekommen eine
+             Absage, behalten ihre Warteschlange und senden nach dem Entsperren
+             alles nach. Der Bestand bleibt unberührt — gelöscht wird nichts.</p>
+          <form method="post">
+            <?= csrf_field() ?><input type="hidden" name="action" value="konto_status">
+            <input type="hidden" name="id" value="<?= $uid ?>">
+            <input type="hidden" name="status" value="gesperrt">
+            <?php ui_feld(['name' => 'grund', 'label' => 'Grund',
+                'label_zusatz' => 'erscheint im Protokoll, nicht bei der Nutzerin',
+                'attr' => 'maxlength="64" placeholder="z. B. auf eigenen Wunsch"',
+                'klein' => 'Die Nutzerin sieht nur, dass das Konto gesperrt ist, und den '
+                         . 'Hinweis, sich an die Verwaltung zu wenden. Den Grund '
+                         . 'hier liest die Verwaltung.']); ?>
+            <div class="listen-form-fuss">
+              <?= ui_knopf(['text' => 'Sperren', 'symbol' => 'schloss', 'art' => 'neutral']) ?>
+            </div>
+          </form>
+        <?php endif; ?>
+      <?php endif; ?>
+    <?php ui_karte_ende(); ?>
+
+    <?php /* ---- Was das Konto halten darf (P5b/AP6, Nr. 37, 48) ---------- */ ?>
+    <?php require_once __DIR__ . '/konten_einstellungen_lib.php';
+          $fuell = konto_fuellstand($uid);
+          $gr    = konto_grenzen($uid);
+          $proz  = (int)round($fuell['anteil'] * 100); ?>
+    <?php ui_karte_start(['titel' => 'Mengen und Grenzen', 'id' => 'karte-mengen',
+        'plakette' => ui_plakette($proz . ' %', ['ton' => $fuell['voll'] ? 'rot'
+                                : ($fuell['warnung'] ? 'orange' : 'blau')])]); ?>
+      <?php ui_zeile(['text' => 'Einsätze',
+          'klein' => 'ohne die im Papierkorb',
+          'plaketten' => ui_plakette($fuell['einsaetze'] . ' von '
+                       . $fuell['grenze_einsaetze'], ['ton' => 'neutral'])]); ?>
+      <?php ui_zeile(['text' => 'Speicher',
+          'klein' => 'Einsätze samt GPS-Daten und Ruhesegmenten, geschätzt',
+          'plaketten' => ui_plakette((int)round($fuell['bytes'] / 1048576) . ' von '
+                       . (int)round($fuell['grenze_bytes'] / 1048576) . ' MB',
+                       ['ton' => 'neutral'])]); ?>
+      <form method="post">
+        <?= csrf_field() ?><input type="hidden" name="action" value="konto_grenzen">
+        <input type="hidden" name="id" value="<?= $uid ?>">
+        <p class="feld-hinweis"><strong>Leer heißt: die Vorgabe der Installation
+           gilt</strong> (<?= (int)konten_grenze_einsaetze() ?> Einsätze,
+           <?= (int)konten_grenze_mb() ?> MB). Trägt hier eine Zahl, gilt sie
+           <em>statt</em> der Vorgabe — auch wenn die Vorgabe später steigt.</p>
+        <div class="fld-reihe">
+          <?php ui_feld(['name' => 'grenze_einsaetze', 'label' => 'Einsätze',
+              'art' => 'number',
+              'wert' => $u['grenze_einsaetze'] !== null ? (string)$u['grenze_einsaetze'] : '',
+              'platzhalter' => 'Vorgabe: ' . (int)konten_grenze_einsaetze()]); ?>
+          <?php ui_feld(['name' => 'grenze_mb', 'label' => 'Speicher',
+              'art' => 'number', 'label_zusatz' => 'MB',
+              'wert' => $u['grenze_mb'] !== null ? (string)$u['grenze_mb'] : '',
+              'platzhalter' => 'Vorgabe: ' . (int)konten_grenze_mb()]); ?>
+        </div>
+        <?php require_once __DIR__ . '/adminbackup_lib.php'; ?>
+        <?php ui_feld(['name' => 'backup_pakete', 'label' => 'Konto-Backups aufheben',
+            'art' => 'number', 'label_zusatz' => 'Pakete',
+            'wert' => $u['backup_pakete'] !== null ? (string)$u['backup_pakete'] : '',
+            'platzhalter' => 'Vorgabe: ' . edbak_aufbewahrung(),
+            'klein' => 'Wie viele Sicherungsstände dieses Kontos aufgehoben werden, '
+                     . 'bevor der älteste verdrängt wird. Leer lassen für die Zahl der '
+                     . 'Installation. Für ein Konto, dessen Bestand besonders wertvoll '
+                     . 'ist, ohne die Zahl für alle anzuheben.']); ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+        </div>
+      </form>
     <?php ui_karte_ende(); ?>
 
     <?php /* ---- Geräte ---------------------------------------------------- */ ?>

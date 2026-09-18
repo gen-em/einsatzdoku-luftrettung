@@ -162,7 +162,8 @@ $_SESSION['last_seen'] = time();
  * (name existiert seit der Migration von Web 2.x; wer die nicht gefahren hat,
  * kann sich schon heute nicht anmelden — die Spalte wird in ui.php gelesen.) */
 $u = db()->prepare('SELECT id, email, name, role, session_epoch,
-                           pat_wrap_pw, pat_key_check, kdf_salt, kdf_iter
+                           pat_wrap_pw, pat_key_check, kdf_salt, kdf_iter,
+                           status, gesperrt_grund
                     FROM users WHERE id = ?');
 $u->execute([$userId]);
 $row = $u->fetch();
@@ -199,6 +200,80 @@ if (!isset($_SESSION['epoch'])) {
     $_SESSION['epoch'] = $epocheDb;
 } elseif ((int)$_SESSION['epoch'] !== $epocheDb) {
     sitzung_beenden_passend('passwort');
+}
+
+/* ---- Kontostatus (P5b/AP2, E-P5b-12) -------------------------------------
+ *
+ * HIER UND NICHT IN `login.php`: Dort faellt die Entscheidung frueher und
+ * verhindert, dass ein gesperrtes Konto ueberhaupt eine Sitzung bekommt.
+ * Diese Pruefung hier gilt einer Sitzung, die ALTER ist als die
+ * Statusaenderung — jemand ist angemeldet, und waehrenddessen wird das Konto
+ * gesperrt oder die Loeschung beantragt. Ohne sie klickte er sich weiter
+ * durch eine Anwendung, die ihm nicht mehr offensteht, bis die halbe Stunde
+ * Untaetigkeit abgelaufen ist.
+ *
+ * DIE SELBSTLOESCHUNG IST DIE AUSNAHME (E-P5b-16): Waehrend der Karenz ist
+ * das Konto `gesperrt`, aber die Anmeldung IST der Rueckzug. Wer sich
+ * anmeldet, nimmt die Loeschung zurueck — deshalb darf diese Pruefung ihn
+ * nicht hinauswerfen. `login.php` erledigt die Ruecknahme; bis dahin laesst
+ * dieser Zweig ihn durch.
+ *
+ * WARUM `status` UND NICHT `gesperrt_seit IS NOT NULL`: Der Status ist die
+ * eine Wahrheit. Eine zweite Bedingung neben ihm waere eine zweite Stelle,
+ * an der „gesperrt" definiert ist. */
+$kontoStatus = (string)($row['status'] ?? 'aktiv');
+$kontoGrund  = $row['gesperrt_grund'] ?? null;
+if ($kontoStatus === 'gesperrt'
+    && $kontoGrund !== 'selbstloeschung') {
+    sitzung_beenden_passend('gesperrt');
+}
+if ($kontoStatus === 'unbestaetigt' || $kontoStatus === 'wartet') {
+    /* Diese beiden kommen ueber `login.php` gar nicht erst herein. Erreicht
+     * die Anfrage sie trotzdem, ist die Sitzung aelter als der Status — dann
+     * ist Abmelden die richtige Antwort und nicht eine Seite, die erklaert,
+     * warum man hier ist. */
+    sitzung_beenden_passend('gesperrt');
+}
+
+/* ---- Das Einwilligungstor (P5b/AP4, E-P5b-05, -15) -----------------------
+ *
+ * WAS ES SPERRT UND WAS NICHT. Fehlt die Annahme der aktuellen Fassung von
+ * Nutzungsbedingungen oder Auftragsverarbeitung, fuehrt jeder Weg auf
+ * `einwilligung.php`. Fehlt nur die Kenntnisnahme der Datenschutzerklaerung,
+ * steht ein Hinweis oben auf jeder Seite und sonst nichts — der Unterschied
+ * ist kein Rang, sondern die Rechtsnatur (siehe `einwilligung_lib.php`).
+ *
+ * DREI WEGE BLEIBEN OFFEN, und das ist Teil der Entscheidung (E-P5b-05):
+ * Abmelden, Export, Konto loeschen. Wer nicht zustimmen will, muss an seine
+ * Daten kommen und gehen koennen; ein Tor, das auch den Ausgang versperrt,
+ * waere Noetigung.
+ *
+ * API UND `ingest.php` BLEIBEN UNBERUEHRT. Die Uhr fragt niemanden um
+ * Zustimmung — sie hat keinen Bildschirm dafuer, und ihre Besitzerin hat der
+ * Nutzung zugestimmt, als sie das Geraet gekoppelt hat. Ein Tor vor
+ * `api/day.php` liesse eine laufende Aufzeichnung ins Leere laufen, ohne
+ * dass irgendwo jemand einen Haken setzen koennte.
+ *
+ * DIE STELLE: nach dem Kontostatus (ein gesperrtes Konto ist schon draussen)
+ * und vor der Rolle (das Tor gilt fuer alle, auch fuer die Verwaltung —
+ * gerade sie soll die Texte gelesen haben, die sie hinterlegt).
+ */
+$einwilligungOffen = ['sperrt' => [], 'hinweis' => []];
+if (!ist_api_aufruf()) {
+    require_once __DIR__ . '/einwilligung_lib.php';
+    $einwilligungOffen = einwilligung_offen($userId);
+
+    if ($einwilligungOffen['sperrt']) {
+        $hier = basename((string)($_SERVER['SCRIPT_NAME'] ?? ''));
+        /* Die Ausnahmeliste ist kurz und steht hier, nicht in einer
+         * Konstante: Sie gehoert zum Tor und wird mit ihm gelesen. */
+        $offen = ['einwilligung.php', 'logout.php', 'import.php',
+                  'export.php', 'einstellungen.php'];
+        if (!in_array($hier, $offen, true)) {
+            header('Location: einwilligung.php');
+            exit;
+        }
+    }
 }
 
 /* ---- Rolle: aus der Zeile, nicht aus der Sitzung -------------------------- */

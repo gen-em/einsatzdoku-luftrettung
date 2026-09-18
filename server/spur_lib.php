@@ -1051,6 +1051,59 @@ function spur_blob_schreiben(PDO $pdo, string $ownerType, int $ownerId,
  * @param list<int> $ids
  * @return array{zeilen:int,blobs:int}
  */
+/**
+ * WIE VIELE BYTE DIE GPS-DATEN DIESER AUFZEICHNUNGEN BELEGEN (P5b/AP6,
+ * E-P5b-18).
+ *
+ * HIER UND NICHT BEIM AUFRUFER, und zwar aus dem Grund, der im Kopf dieser
+ * Datei steht: Die Punkte liegen je nach Alter als ZEILEN in `track_points`
+ * **oder** als Blob in `track_blobs` — und waehrend einer Nachlieferung als
+ * beides. Wer nur eine der beiden Tabellen zaehlt, misst je nach Alter des
+ * Bestands die Haelfte, und zwar ohne Fehlermeldung.
+ *
+ * GESCHAETZT UND NICHT GEWOGEN. Fuer `track_points` steht hier ein fester
+ * Wert je Zeile statt einer Messung: Die Zeile hat feste Breiten (zwei
+ * DOUBLE, ein DATETIME, drei SMALLINT, zwei INT), und `information_schema`
+ * kennt nur Tabellensummen, keine Zeilensummen je Konto. 48 Byte sind die
+ * Spaltenbreiten plus Zeilenkopf; der Index kommt mit demselben Faktor
+ * dazu, den `speicher_datenbank_bytes()` fuer die ganze Installation
+ * benutzt (data + index).
+ *
+ * Fuer `track_blobs` wird die tatsaechliche Blob-Laenge gezaehlt — dort
+ * steckt die Masse, und `LENGTH()` ist genau.
+ *
+ * WAS DAS FUER DIE MENGENGRENZE HEISST: Sie ist eine Schaetzung mit
+ * bekanntem Fehler, keine Abrechnung. Das genuegt fuer eine Schranke, die
+ * bei 250 MB greift — und es ist ehrlicher, als eine Zahl auf das Byte genau
+ * auszuweisen, die es nicht ist.
+ *
+ * @return int Byte, geschaetzt.
+ */
+const SPUR_ZEILE_BYTE = 48;
+
+function spur_bytes(PDO $pdo, string $ownerType, array $ids): int
+{
+    $ids = array_values(array_unique(array_map('intval', $ids)));
+    if (!$ids) { return 0; }
+    require_once __DIR__ . '/db.php';
+
+    $summe = 0;
+
+    foreach (sql_in_bloecken($pdo,
+        'SELECT COALESCE(SUM(LENGTH(blob_daten)), 0) AS b FROM track_blobs
+          WHERE owner_type = ? AND owner_id IN ({IDS})', $ids, [$ownerType]) as $r) {
+        $summe += (int)$r['b'];
+    }
+
+    foreach (sql_in_bloecken($pdo,
+        'SELECT COUNT(*) AS n FROM track_points
+          WHERE owner_type = ? AND owner_id IN ({IDS})', $ids, [$ownerType]) as $r) {
+        $summe += (int)$r['n'] * SPUR_ZEILE_BYTE;
+    }
+
+    return $summe;
+}
+
 function spur_loeschen(PDO $pdo, string $ownerType, array $ids): array
 {
     $ids = array_values(array_unique(array_map('intval', $ids)));

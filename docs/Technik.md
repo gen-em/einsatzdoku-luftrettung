@@ -1,6 +1,6 @@
 # Gen-EM NAdoku — Technische Dokumentation
 
-*Stand: 05.09.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
+*Stand: 17.09.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
 Historie: `CHANGELOG.md`.*
 
 ## 1. Architekturüberblick
@@ -119,6 +119,24 @@ Daten erst nach Server-Bestätigung.
 │   │                       Liste, Einsätze UND Ruhesegmente (4.97b)
 │   ├── jobs.php           Einstieg der Hintergrundjobs: Kommandozeile, Adresse
 │   │                       mit Token, huckepack auf einer Anfrage (4.97a)
+│   ├── einwilligung_lib.php
+│   │                      Welche Rechtstexte dieses Konto noch annehmen oder
+│   │                      zur Kenntnis nehmen muss (P5b/AP4). Zwei sperren
+│   │                      den Login, eine weist nur hin — der Unterschied ist
+│   │                      die Rechtsnatur, nicht der Rang
+│   ├── konto_lib.php      Lebenszyklus eines Kontos: anlegen, Token ausstellen,
+│   │                      Status wechseln, loeschen (P5b/AP2). Die EINE Stelle
+│   │                      fuer vier — Backlog Nr. 202 Paket 1. Laeuft auch
+│   │                      ohne config.php, weil install.php sie braucht
+│   ├── konten_einstellungen_lib.php
+│   │                      Betriebsart der Registrierung, Fristen, Mengengrenzen,
+│   │                      Demo-Anmeldung — die Werte der Karte „Konten"
+│   │                      (P5b/AP1). Bibliothek und nicht Seite, weil die
+│   │                      Verbraucher woanders sitzen: registrieren.php,
+│   │                      login.php, ingest.php, der Verfalljob (R83)
+│   ├── protokoll_lib.php  Das Betriebsprotokoll — Schreibweg, sechs Reiter,
+│   │                      zwei Fristen, Bereinigung (P5b/AP1). KEIN
+│   │                      Zugriffsprotokoll: siehe 4.99g
 │   ├── jobs_lib.php       Katalog und Ausführung der Jobs (Häppchen, Zustand,
 │   │                       Sperre)
 │   ├── backup_lib.php     Backup-Serialisierung (Kern mit oder ohne Spuren)
@@ -290,8 +308,40 @@ Daten erst nach Server-Bestätigung.
 │   ├── rechtstext_seite.php  die gemeinsame Seite dahinter: liest die Sitzung,
 │   │                      ohne sie zu erzwingen (Leerzustand mit Admin-Weg)
 │   ├── rechtstexte_lib.php   Ablage, Pruefung und der eingeschraenkte
-│   │                      Markdown-Renderer rt_html() — die EINZIGE Stelle des
-│   │                      Projekts, an der aus einer Eingabe HTML wird
+│   │                      Markdown-Renderer rt_html() — fuer Text aus der
+│   │                      DATENBANK; die zweite Stelle, an der HTML entsteht,
+│   │                      ist doku_lib.php (Text aus dem REPOSITORIUM)
+│   ├── hilfe.php · ueber.php   Handbuch und „Was ist NAdoku" als Seiten der
+│   │                      Anwendung (P5b/AP8) — oeffentlich, ohne Anmeldung;
+│   │                      drei Zeilen je Datei, der Rest in doku_seite.php
+│   ├── doku_seite.php    die gemeinsame Seite dahinter (Muster wie
+│   │                      rechtstext_seite.php)
+│   ├── doku_lib.php      findet die Markdown-Datei (erst ../docs/, dann
+│   │                      doku/), rendert sie und baut das
+│   │                      Inhaltsverzeichnis; DokuMarkdown setzt drei
+│   │                      Hausregeln durch — Sprungmarken, rel="noopener",
+│   │                      und Bilder NUR relativ
+│   ├── doku/             leer im Repositorium (nur .gitignore). Hierher
+│   │                      kopiert die Auslieferungskette Handbuch.md,
+│   │                      Was-ist-NAdoku.md und bilder/ — der FTPS-Schritt
+│   │                      laedt nur server/ hoch
+│   ├── vendor/Parsedown.php  1.7.4, MIT — der Markdown-Parser fuer die
+│   │                      beiden Dokumentseiten (docs/Lizenzen.md 3a)
+│   ├── einstieg_lib.php  WAS NACH DER ANMELDUNG FAELLIG IST (P5b/AP9):
+│   │                      Einwilligungstor, Schluesselblatt-Rueckfrage,
+│   │                      Konto-Rueckfrage, Erststart — genau EINES, in
+│   │                      dieser Reihenfolge (siehe 4.99o)
+│   ├── erststart_karte.php   die drei Schritte ueber der Tagesuebersicht.
+│   │                      Eine KARTE, kein Dialog: „Wer sie ignoriert,
+│   │                      arbeitet trotzdem" (Mockup M-P5b-02b)
+│   ├── rueckfrage_dialog.php  „Hast du dein Notfallblatt noch?" — Abschnitt 1
+│   ├── schluessel_teile.php   Abschnitte 2 und 3 (Passwort, neuer Wert):
+│   │                      EIN Markup, zwei Dialoge — Rueckfrage und
+│   │                      Kontoseite (E-P5b-20, R83)
+│   ├── blatt_dialog.php  die Betreiber-Rueckfrage zum Schluesselblatt
+│   ├── notfallblatt.php  der Wiederherstellungsschluessel auf Papier.
+│   │                      SPEICHERT NICHTS und kann nichts speichern —
+│   │                      deshalb spaeter nicht erneut druckbar
 │   ├── admin_installation.php  Wie diese Installation nach aussen auftritt
 │   │                       (S8/AP3): Logo der Installation, Impressum,
 │   │                       Datenschutz. `admin_rechtstexte.php` leitet
@@ -682,7 +732,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      dem Abschluss von S5 gelöscht (s. LIESMICH.md)
 │   ├── screenshots/       nimmt alle Seiten in acht Breiten von 360 bis 1920 px
 │   │                      auf, je Seite ein Kontaktbogen; misst dabei
-│   │                      waagerechten Überlauf, Konsolenfehler und Knopfhöhen.
+│   │                      waagerechten Überlauf, Konsolenfehler, Knopfhöhen
+│   │                      und — seit Web 20.21.1 — Karten, die ausserhalb von
+│   │                      main.inhalt haengen (Nr. 225).
 │   │                      Seit Web 9.10.1 prueft er nach JEDEM Aufruf, ob er
 │   │                      die richtige Seite vor sich hat, und meldet sich bei
 │   │                      Bedarf neu an; ein nicht aufloesbarer Platzhalter
@@ -780,9 +832,9 @@ Daten erst nach Server-Bestätigung.
 
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
-| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“ |
+| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige |
 | Backup | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist im Backup, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
-| `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
+| `password_resets` | **Seit Web 20.17.0 schreibt nur noch `konto_lib.php` hierher** (P5b/AP2, Backlog Nr. 202 Paket 1) — nachweisbar mit `grep -rn "INSERT INTO password_resets" server/`. Die Laufzeiten stehen als `TOKEN_EINLADUNG_S` / `TOKEN_RESET_S` statt als SQL-Literale, und „höchstens ein gültiger Token je Konto" gilt damit an **allen vier** Stellen statt an zweien. Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname, **VARCHAR(191)** — die Gerätedateien liefern Sammelnamen bis 153 Zeichen; die zunächst gewählten 64 waren geraten und sind mit Web 12.9.1 nachgezogen) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Seit Web 20.11.0 dazu **`abgewiesen_seit`** (der **erste** Fehlversuch einer Serie, nicht der letzte) und **`abgewiesen_anzahl`** — der Vermerk der Mengenbremse aus P5a/AP7 (Abschnitt 5e.7). Beide werden beim nächsten gelungenen Upload geleert; ein Vermerk, der stehenbleibt, nachdem neu gekoppelt wurde, ist eine Falschmeldung. **Und seit Web 20.12.0 nach 30 Tagen auch ohne Upload** (Schritt `Geraetevermerke` im Aufräumjob): Den gelungenen Upload gibt es nicht mehr, wenn das Gerät ausgemustert ist — ohne den Schritt trüge ein verlorenes Gerät seine orange Plakette für immer. Siehe Abschnitt 5 |
 | `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
@@ -810,6 +862,8 @@ Daten erst nach Server-Bestätigung.
 | `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 5c) |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
+| `protokoll_ereignisse` | Das **Betriebsprotokoll** (seit Web 20.16.5, P5b/AP1, V1). `reiter` = `verwaltung` / `email` / `jobs` / `sicherung` / `ziele` / `system`, dazu `art` (die maschinelle Kennung, nach der 10c filtert), `urheber_user_id` / `urheber_art`, `betroffen_user_id`, `text` und `daten` (JSON). **Betriebsereignisse, keine Datenzugriffe** — dass jemand einen Einsatz geöffnet, gelesen oder exportiert hat, steht hier nicht und soll hier nicht stehen. **Kein Fremdschlüssel auf `users`**, und das ist der wichtigste Satz dieser Zeile: Der häufigste Verwaltungseintrag ist „Konto gelöscht"; mit CASCADE löschte die Kontolöschung ihren eigenen Eintrag, mit RESTRICT verhinderte der Eintrag die Löschung. `urheber_user_id` ist **`0` und nicht NULL**, wenn kein Mensch gehandelt hat — `urheber_art` sagt, welche Art von Niemand (`cli` / `job`). **Zwei Fristen:** `verwaltung` 365 Tage (einstellbar 90–1095), alle übrigen 30 Tage fest; der Job `aufraeumen` räumt beide in einem Schritt. Siehe 4.99g |
+| `konto_einwilligungen` | Welche Fassung eines Rechtstextes dieses Konto angenommen hat (seit Web 20.19.0, P5b/AP4). `(user_id, schluessel)` als Primärschlüssel — **eine Zeile je Konto und Dokument, nicht je Annahme**; eine neue überschreibt die alte. `stand_am` ist die **angenommene** Fassung, der Vergleich gegen `rechtstexte.stand_am` ist die ganze Prüfung. Der Verlauf steht im Protokoll und überlebt dort die Kontolöschung; `ON DELETE CASCADE` ist hier richtig, weil eine Einwilligung ohne Konto keinen Gegenstand hat. Siehe 4.99j |
 | `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **Die Folge ist benannt:** `komp_tabellen()` zählt seine Tabellen über `SHOW FULL TABLES` und hat keine Ausnahmeliste — diese Tabelle liegt damit in **jeder** Komplettsicherung, und die 30-Tage-Frist gilt in der laufenden Datenbank, nicht im versiegelten Abzug. Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09). **Gelesen wird sie seit Web 20.12.0 über `sicherheit_ereignisse()`** und gezeigt auf Betrieb → Status → Sicherheit (5e.8); geschrieben wird nur an den **fünf Töpfen mit Leiter** — die übrigen neun sperren ohne Protokollzeile |
 | `mail_warteschlange` | Jede ausgehende Nachricht, eine Zeile (seit Web 20.8.0, P5a/AP5). `schluessel` = Eintrag aus `mail_katalog()`, `art` = `konto`/`geraet`/`betrieb` (das wird in P5c der Reiter im Protokoll), `zustand` = `offen` / `zugestellt` / `unzustellbar` / `zu_spaet` / `ueberholt`, `versuche`, `naechster_versuch`, `gueltig_bis` (ein Reset-Link gilt eine Stunde), `fehler` = Grund **samt Kennung**. **Was beim Endzustand geleert wird, hängt vom Zustand ab** (E-P5a-39): `zugestellt`, `zu_spaet` und `ueberholt` verlieren Adresse, Betreff und Rumpf — es bleibt „eine Nachricht dieser Art ging zu dieser Zeit hinaus". Bei `unzustellbar` **bleibt die Adresse stehen**, weil „die Einladung an X kam nie an" ohne X wertlos ist; der Rumpf fällt trotzdem, wegen des Tokens darin. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `job_laeufe` | Verlauf der Hintergrundjobs (seit Web 20.8.0), eine Zeile je Lauf, der etwas getan hat oder scheiterte — ein Leerlauf schreibt nichts, sonst füllte sich die Tabelle mit Nichts. `job`, `zeitpunkt`, `ausloeser`, `erledigt`, `fehler`. Der Job `aufraeumen` löscht nach 30 Tagen |
@@ -3302,7 +3356,8 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 
 | Job | täglich? | was er tut |
 |---|---|---|
-| `aufraeumen` | ja, höchstens 1×/Kalendertag | **zwölf Schritte** — verfallene Kopplungssitzungen, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speichermessung und Warnschwellen. **Maßgeblich ist `job_aufraeumen()`, nicht diese Zeile** — sie nannte bis Web 20.12.0 sechs von zwölf, und die fehlenden sechs sind zwischen S10 und P5a/AP7 dazugekommen, ohne dass es jemandem auffiel. Die **sichtbare** Beschreibung steht im Job-Katalog (`jobs_lib.php`) und ist mitzuführen |
+| `konto_loeschung` | nein | Konten, deren 30-Tage-Karenz abgelaufen ist, endgültig löschen (P5b/AP5, E-P5b-16) — **höchstens fünf je Lauf**, weil eine Löschung die Spuren von Hand räumt, einen Ordner im Dateisystem löscht und über vierzehn Tabellen kaskadiert. Steht weit vorn: im Regelfall eine Abfrage über einen Index, und wenn er etwas zu tun hat, ist es das, worauf jemand ein Recht hat |
+| `aufraeumen` | ja, höchstens 1×/Kalendertag | **dreizehn Schritte** — verfallene Kopplungssitzungen, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), **Mengen je Konto** und **verwaiste Kontomarken** (P5b/AP6), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speichermessung und Warnschwellen. **Maßgeblich ist `job_aufraeumen()`, nicht diese Zeile** — sie nannte bis Web 20.12.0 sechs von zwölf, und die fehlenden sechs sind zwischen S10 und P5a/AP7 dazugekommen, ohne dass es jemandem auffiel. Die **sichtbare** Beschreibung steht im Job-Katalog (`jobs_lib.php`) und ist mitzuführen |
 | `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
 | `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
 | `adminbackup` | nein, nur mit Auftrag | Konto-Backups aus der Sammelaktion „Alle sichern" |
@@ -5252,6 +5307,27 @@ Richtungspfeile mit `getScreenCTM()`, das in WebKit die CSS-Transformation
 eines HTML-Vorfahren nicht enthält — ein Fehler im Prüfmittel, der wie einer
 der Anwendung aussah (Nr. 186).
 
+**Die vierte Zahl: Karten ausserhalb des Gerüsts** (seit Web 20.21.1,
+Backlog Nr. 225). Der Lauf zählt je Seite, wie viele `section.karte` bzw.
+`details.karte` **nicht** in `main.inhalt` hängen, und nennt sie beim Titel.
+
+Der Anlass war ein `ui_karte_ende()` zu viel auf der Profilseite: Es gab ein
+`</div></section>` ohne Gegenstück aus, der Parser nahm für das `</div>` das
+nächste offene — `div.rahmen` — und schloss damit `form`, `main.inhalt` und
+`rahmen` mitten auf der Seite. Vier Karten lagen danach direkt am `body`, über
+die volle Fensterbreite, unter der Seitenleiste hindurch. **Zehn Tage lang.**
+
+**Warum die drei älteren Zahlen das nicht sehen konnten:** `scrollWidth` blieb
+gleich `innerWidth` — es lief nichts über, es lag nur falsch. Die Konsole blieb
+still. Die Knopfhöhen stimmten. Der Lauf meldete in allen drei Engines drei
+Nullen neben einer kaputten Seite. Gemessene Gegenprobe mit wieder eingebautem
+Fehler: „Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0" **und**
+„6 Karten geprüft · 4 außerhalb von main.inhalt".
+
+Die Zahl nennt, was sie gemessen hat („n geprüft · m außerhalb") und nicht nur
+das Ergebnis — eine Seite ohne Karten meldete sonst dieselbe Null wie eine
+geprüfte.
+
 **Ein Satz von gestern ist zurückgenommen:** Firefox meldet die
 `latin-ext`-Schriftabrufe **nicht** als Konsolenfehler. Die Abbrüche
 (`NS_BINDING_ABORTED`) stammten von einem Messskript, das schneller
@@ -6465,6 +6541,838 @@ abzieht. Drei Regeln, die alle aus einer Messung stammen:
 seit Langem `scroll-padding-top: calc(var(--kopf) + var(--abstand-4))`, und
 beides addiert sich — gemessen landete die angesprungene Karte 68 px zu tief.
 Mit `scroll-padding-top` allein sitzt der Sprung bei 72 px.
+
+### 4.99g Das Betriebsprotokoll: der Schreibweg (ab Web 20.16.5, P5b/AP1)
+
+*Entscheidungen: V1 (16.09.2026), V2, E-P5b-06, E-P5b-12. Code:
+`server/protokoll_lib.php`, Tabelle `protokoll_ereignisse`.*
+
+#### Was hineingeschrieben wird — und was ausdrücklich nicht
+
+**Betriebsereignisse.** Konto angelegt, freigeschaltet, gesperrt, gelöscht;
+Rolle oder Adresse geändert; Sicherung eingespielt; Wartung gefahren;
+Schlüsselblatt bestätigt; Mail versandt; Job gelaufen.
+
+**Kein Zugriffsprotokoll.** Wer wann welchen Einsatz geöffnet, gelesen oder
+exportiert hat, steht hier nicht. Das ist V1, entschieden am 16.09.2026, und
+es ist eine Zusage und keine Lücke: Wer hier einen Eintrag „Einsatz 417
+angesehen" ergänzt, ändert eine Programmentscheidung und nicht eine Funktion.
+
+**Keine IP-Adressen** (V2, E-P5b-06). Sie stehen ausschließlich im Reiter
+*Sicherheit*, und der liegt in einer **anderen Tabelle**.
+
+#### Sieben Reiter, zwei Tabellen — und warum das so bleibt
+
+| Reiter | Tabelle | Frist | einstellbar |
+|---|---|---|---|
+| **Verwaltung** (das Audit) | `protokoll_ereignisse` | **365 Tage** | ja, 90–1095 |
+| E-Mail, Jobs, Sicherung, Ziele, System | `protokoll_ereignisse` | 30 Tage | **nein** |
+| **Sicherheit** (Sperren, Angriffe) | `sicherheit_ereignisse` (P5a/AP6) | 30 Tage | **nein** |
+
+Die Trennung ist kein Übergangszustand, sondern die Frist: In
+`sicherheit_ereignisse` stehen IP- und E-Mail-Adressen im Klartext und
+verfallen nach 30 Tagen (E-P5a-09), hier steht das Audit und bleibt bis zu
+drei Jahre. **Zwei Fristen in einer Tabelle sind eine Einladung, die kürzere
+zu vergessen.** Ob die beiden später zusammenrücken, entscheidet 10c (V6).
+
+#### Kein Fremdschlüssel auf `users`, und das ist der wichtigste Satz
+
+Weder für `urheber_user_id` noch für `betroffen_user_id`. Der häufigste
+Verwaltungseintrag überhaupt ist **„Konto gelöscht"**:
+
+- mit `ON DELETE CASCADE` löschte die Kontolöschung ihren eigenen
+  Protokolleintrag,
+- mit `RESTRICT` verhinderte der Eintrag die Löschung.
+
+Beides ist falsch. Die Id bleibt als Zahl stehen, auch wenn es das Konto
+nicht mehr gibt — genau dafür ist ein Audit da.
+
+`urheber_user_id` ist **`0` und nicht `NULL`**, wenn kein Mensch gehandelt
+hat; `urheber_art` sagt dann, welche Art von Niemand es war (`cli` an der
+Konsole, `job` im Huckepack). Ein `NULL` ließe offen, ob niemand handelte
+oder ob jemand vergessen wurde.
+
+#### Wenn das Schreiben scheitert (V7)
+
+**Still scheitern ist schlechter als laut, laut abbrechen ist schlechter als
+still.** Ein Protokoll, das eine Kontolöschung verhindert, weil seine Tabelle
+fehlt, hält den Betrieb an, um über den Betrieb zu berichten. Eines, das
+unbemerkt nichts schreibt, ist keines.
+
+Der Mittelweg hat **drei Stufen, und alle drei müssen da sein**:
+
+1. `error_log()` mit der Kennung `protokoll:` — für die Betreiberin, die ins
+   Serverprotokoll sieht.
+2. Der Zähler `protokoll_fehler` in `app_state` — er überlebt die Anfrage.
+3. Der Hinweis auf **Betrieb → Status** — er fällt jemandem auf, der nicht
+   sucht. Die Karte trägt dann eine rote Plakette „*n* nicht geschrieben".
+
+`protokoll()` gibt `false` zurück. **Der Rückgabewert ist ein Hinweis und kein
+Grund abzubrechen** — kein Aufrufer prüft ihn.
+
+#### Was `error_log()` nicht ersetzt
+
+Die 42 `error_log()`-Aufrufe in 21 Dateien bleiben, wo sie sind. Sie
+flächendeckend umzustellen wäre Backlog Nr. 202 Paket 3 in anderem Gewand,
+und der richtige Zeitpunkt dafür ist, wenn der Reiter „System" steht und
+jemand die Einträge auch lesen kann.
+
+#### Lesen kommt mit 10c
+
+10b baut den Schreibweg und schreibt hinein. **Betrieb → Status** zeigt eine
+Zählkarte (Einträge je Reiter, heute und gesamt) — mehr nicht. Die Reiter mit
+Filter, Archiv und Download hängen an Entscheidungen (V4, V5, V8, V9), die
+noch nicht gefallen sind.
+
+### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
+
+*E-P5b-04, -18; Backlog Nr. 37 und 48. Code: `konten_einstellungen_lib.php`
+(`konto_mengen()`, `konto_grenzen()`, `konto_fuellstand()`), `spur_bytes()` in
+`spur_lib.php`.*
+
+#### Zwei Grenzen, der größere Anteil zählt
+
+| | Vorgabe | je Konto |
+|---|---|---|
+| Einsätze | `konten_grenze_einsaetze` (5000) | `users.grenze_einsaetze` |
+| Speicher | `konten_grenze_mb` (250) | `users.grenze_mb` |
+| Konto-Backups | `adminbackup_aufbewahrung` (2) | `users.backup_pakete` |
+
+**`NULL` heißt „die Vorgabe gilt"** — nicht 0 und nicht die Vorgabe als Zahl.
+Trüge die Spalte den Wert, änderte eine spätere Anhebung der Vorgabe an
+bestehenden Konten nichts, und niemand sähe, warum.
+
+**Der größere der beiden Anteile zählt**, nicht der Durchschnitt: Wer 5000
+Einsätze mit wenigen GPS-Daten hat, ist genauso am Ende wie jemand mit 250 MB
+in dreihundert Aufzeichnungen. Eine gemittelte Zahl ließe beide weiterladen,
+bis eine Grenze weit überschritten ist.
+
+#### `507`, und warum nicht `403` oder `429`
+
+`507 Insufficient Storage` sagt „der Server hat keinen Platz mehr". `403`
+hieße „du darfst nicht", `429` hieße „nicht so schnell" — beides wäre falsch
+und ließe die Uhr das Falsche tun. Bei `507` wie bei `429` behält sie ihre
+Warteschlange und sendet später.
+
+**Bearbeiten und Löschen bleiben frei.** Die Grenze steht in `ingest.php` und
+im Import, nirgends sonst. Wer sie erreicht, muss aufräumen können. Aus
+demselben Grund zählt, was im **Papierkorb** liegt, nicht mit — sonst ließe
+sich die Grenze durch Löschen nicht unterschreiten, und genau das schlägt die
+Meldung vor.
+
+**Der Ratenschutz zählt die Absage nicht.** Ein volles Konto ist kein Angriff.
+
+#### Gemessen wird gecacht, fortgeschrieben wird geschätzt
+
+Die Byte-Messung liest die Blob-Längen **aller** GPS-Daten eines Kontos. Bei
+jedem Upload wäre das genau an dem Weg teuer, der schnell sein muss.
+
+| Wann | Wie |
+|---|---|
+| nach jedem Upload-Schub | **geschätzt** fortgeschrieben (`SPUR_ZEILE_BYTE` je Punkt) |
+| Aufräumjob, einmal am Tag | **gemessen**, Cache ersetzt |
+
+Format in `app_state` unter `mengen:<id>`: `<einsaetze>\|<bytes>\|<zeitstempel>`
+— drei Zahlen mit Trennstrich, weil `app_state.v` 190 Zeichen fasst und JSON
+dort keinen Platz hätte.
+
+**Ohne die Fortschreibung griffe die Grenze erst einen Tag später**, und ein
+Konto könnte an einem Tag beliebig weit darüber hinauswachsen.
+
+#### `spur_bytes()` steht in `spur_lib.php`
+
+Nicht beim Aufrufer, und das ist die Regel aus `CLAUDE.md` 4: Die Punkte
+liegen je nach Alter als Zeilen in `track_points` **oder** als Blob in
+`track_blobs` — und während einer Nachlieferung als beides. Wer nur eine der
+beiden Tabellen zählt, misst je nach Bestand die Hälfte, ohne Fehlermeldung.
+
+**Geschätzt und nicht gewogen**: Für `track_points` steht ein fester Wert je
+Zeile (`SPUR_ZEILE_BYTE`, 48), weil `information_schema` nur Tabellensummen
+kennt; für `track_blobs` wird `LENGTH()` gezählt — dort steckt die Masse. Die
+Grenze ist damit eine **Schätzung mit bekanntem Fehler, keine Abrechnung**,
+und das ist ehrlicher, als eine Zahl auf das Byte genau auszuweisen, die es
+nicht ist.
+
+#### Backlog Nr. 48 ist die Zahl der Backup-Pakete, nicht eine Frist
+
+**Und das ist beim Bauen zuerst falsch verstanden worden**, deshalb steht es
+hier: Nr. 48 („Aufbewahrung je Konto einstellbar, nicht nur je Installation")
+meint `adminbackup_aufbewahrung` — **wie viele Konto-Backups aufgehoben
+werden**, bevor der älteste verdrängt wird. Es meint **keine
+Aufbewahrungsfrist für Einsätze**; die gibt es nicht, und sie soll es auch
+nicht geben: Einsatzdaten von selbst verschwinden zu lassen wäre eine Zusage,
+die dieses Projekt nicht macht.
+
+Umgesetzt als `users.backup_pakete` und `edbak_aufbewahrung_konto($kennung)`,
+gelesen in `edbak_verdraengen()`. **Keine zweite Installationsvorgabe** — die
+gibt es schon unter Verwaltung → Konto-Backups; eine zweite Zahl daneben wäre
+genau die Doppelung, die R83 verhindern soll.
+
+`edbak_aufbewahrung_konto()` geht **über die Kontokennung**, nicht über die
+Id: `edbak_verdraengen()` arbeitet auf dem Ordner, und der heißt nach der
+Kennung. Ein Ordner ohne Konto („Backup ohne Konto") fällt auf die
+Installationszahl zurück — es gibt niemanden mehr, der etwas anderes bestimmen
+könnte.
+
+#### Die Marken sterben mit dem Konto
+
+`mengen:<id>` und `mengen_gemeldet:<id>` hängen an keinem Fremdschlüssel;
+`konto_loeschen()` räumt sie deshalb ausdrücklich mit, und der Aufräumjob holt
+verwaiste aus der Zeit davor. **`users.id` ist AUTO_INCREMENT, aber ein
+Wiederanlauf aus einer Sicherung kann eine Id erneut vergeben** — das neue
+Konto fände dann den Mengenstand des alten vor und stünde womöglich sofort an
+seiner Grenze, ohne einen einzigen Einsatz. Genau das ist beim Prüfen
+passiert.
+
+#### Was hier NICHT gebaut wurde
+
+**Die Umstellung der Geräteschlüssel auf SHA-256** (E-P5b-17). Sie ist seit
+**Web 13.0.0** erledigt — `geraet_schluessel_gueltig()` rechnet
+`hash_equals(hash('sha256', …))`, und der Kommentar daneben trägt die Messung,
+die sie ausgelöst hat: bcrypt kostete 228 ms je Upload „für eine Bremse, die
+nichts bremst". Das Konzept beschreibt in 1.3 einen Stand von vor Web 13.0.0.
+
+### 4.99m Die Selbstregistrierung (ab Web 20.22.0, P5b/AP3)
+
+*E-P5b-01, -02, -03, -13, -23. Code: `server/registrieren.php`,
+`server/bestaetigen.php`, `server/konten_einstellungen_lib.php`
+(`wegwerf_trifft()`), `server/ratelimit_lib.php` (drei Töpfe),
+`server/konto_lib.php` (Verfall, Sammelmeldung), `server/jobs_lib.php`
+(`konto_verfall`), `server/wegwerfdomains.txt`.*
+
+**Der Weg in fünf Schritten.**
+
+1. `registrieren.php` nimmt **Adresse, Name und drei Häkchen** — kein
+   Passwort (Begründung unten). Antwort ist für jeden Ausgang dieselbe Karte.
+2. Bei freier Adresse entsteht ein Konto im Zustand **`unbestaetigt`**
+   (`konto_anlegen(…, 'registrierung', 'unbestaetigt', …, TOKEN_REGISTRIERUNG_S)`),
+   dazu ein **48 Stunden** gültiger Token. Die Mail `registrierung` trägt den
+   Link.
+3. Der Link führt auf **`pw_handling.php`** — dieselbe Seite wie beim
+   Einladungsweg. Dort entstehen im Browser Passwort, Datenschlüssel und
+   Wiederherstellungsschlüssel.
+4. Nach dem Speichern wechselt der Status: bei *offen* auf **`aktiv`**, bei
+   *mit Freischaltung* auf **`wartet`**; im zweiten Fall geht eine Sammelmail
+   an die Verwaltung.
+5. Weiterleitung auf **`bestaetigen.php?s=…`**, das sagt, wie es weitergeht.
+
+**Warum das Passwort nicht auf der Registrierungsseite steht.** Der
+Datenschlüssel hängt seit S10 am Server-Anteil, und der wird per
+`HMAC(kdf_anteil, 'konto:<id>')` aus der **Kontonummer** abgeleitet (4.98,
+E-S10-17). Eine Registrierungsseite hat sie nicht — das Konto entsteht ja erst
+mit ihr. Der Browser kann `pat_wrap_pw` also nicht bilden, und eine Hülle ohne
+Anteil weist `huelle_pw_pruefen()` ab, sobald die Installation einen
+ausliefert. **Konto zuerst, Schlüssel danach** ist damit keine Vorliebe,
+sondern die einzige Reihenfolge, die geht. Das freigegebene Mockup M-P5b-02a
+zeichnet die Felder dort; die Abweichung ist am 17.09.2026 mit dem
+Auftraggeber geklärt.
+
+**Keine Kontoauskunft.** Fünf Ausgänge, eine Antwort: frei, belegt,
+Wegwerfadresse, Demo-Adresse, gesperrter Ratenschutz. Unterschieden wird in
+der **Mail** — `registrierung` an die freie, `registrierung_bekannt` an die
+belegte, keine an die übrigen. Die Dauer ist angeglichen
+(`rate_gleiche_dauer($t0, REG_MINDESTDAUER)`, 0,5 s Boden) und der Versand
+läuft **nach** `antwort_abschliessen()`; ohne beides wäre die Dauer die
+Auskunft, die der gleiche Text verhindert (M1-07). Gemessen über 120 Aufrufe:
+Spanne der Mediane **0,2 ms**.
+
+**Die drei Bremsen.**
+
+| | was | warum still |
+|---|---|---|
+| Honeypot | Feld `website` in `.nur-vorlesen`, mit `aria-hidden` und `tabindex="-1"` | `display:none` füllt kein Bot; ohne `aria-hidden` wäre es eine Falle für Bildschirmleser |
+| Mindestdauer | signierter Zeitstempel, 4 s bis 2 h gültig (`reg_stempel()`) | ohne Signatur bestimmt der Absender die Zahl selbst |
+| Töpfe | `reg` 10/h je IP · `regg` 100/h global · `regz` **3/24 h je Zieladresse** | eine Meldung „Honeypot gefüllt" wäre eine Bauanleitung |
+
+`regz` ist der wichtigste: Ohne ihn verschickt die Seite an **jede**
+eingetippte Adresse eine Mail, ohne dass der Absender sie besitzen muss. Sein
+Merkmal ist ein **Hash** der Adresse (`rate_reg_ziel()`) — `rate_limits` wäre
+sonst ein Verzeichnis fremder Postfächer in derselben Datenbank, die auch ein
+Angreifer abzieht.
+
+**Die Wegwerfliste.** `server/wegwerfdomains.txt`, 8 883 Domains, CC0 1.0,
+eine je Zeile, durchgehend klein. **Nie zur Laufzeit geholt** (R36);
+`wegwerf_trifft()` liest sie je Anfrage einmal in eine `static`. Die Prüfung
+geht von der vollen Domain nach oben (`a.b.example.com` → `b.example.com` →
+`example.com`), damit Unterdomains mitzählen — sie hört **vor** der Endung auf,
+denn eine Liste, die `com` sperrte, sperrte das halbe Netz. Fehlt die Datei,
+trifft nichts: Eine Installation, die alle Registrierungen abweist, *weil* eine
+Datei fehlt, wäre das Gegenteil des Schalters. Pflege:
+`tools/wegwerfdomains/aktualisieren.py` (Runbook, Abschnitt 7; Backlog
+Nr. 230), Herkunft in `docs/Lizenzen.md` 7b.
+
+**Zwei Fristen, zwei Zustände, ein Job.** `konto_verfall` löscht
+unbestätigte Konten nach **48 h** (`KONTEN_UNBESTAETIGT_H`, fest — eine
+Sicherheitsfrist) und wartende nach der eingestellten Frist (Vorgabe 30 Tage,
+1–365). Gemessen ab `created_at` bzw. `bestaetigt_am`; **deshalb** schreibt
+`konto_status_setzen()` beim Übergang nach `wartet` jetzt `bestaetigt_am` mit.
+Gelöscht wird über **`konto_loeschen()`** und nicht per `DELETE` — die Kaskade
+erreicht die GPS-Spuren nicht und die `app_state`-Zeilen `mengen:<id>` erst
+recht nicht (4.99l). Die letzte Mail geht **nur an die Wartenden**.
+
+**Die Freischaltung** ist der vorhandene Knopf in der Statuskarte der
+Kontoseite; neu ist die Mail `freigeschaltet` beim Übergang **`wartet` →
+`aktiv`** — beim Entsperren (`gesperrt` → `aktiv`) geht keine. Gefunden werden
+die Wartenden über den Filter **„Wartet auf Freischaltung"** in
+`admin_users.php`; die Liste liest `status` seit Web 20.22.0 mit und zeigt ihn
+als Plakette neben der Adresse (keine neunte Spalte — in 95 von 100 Zeilen wäre
+sie leer).
+
+### 4.99n Handbuch und „Was ist NAdoku" als Seiten (ab Web 20.23.0, P5b/AP8)
+
+*E-P5b-08, -22; Mockup M-P5b-01. Code: `server/doku_lib.php`,
+`server/doku_seite.php`, `server/hilfe.php`, `server/ueber.php`,
+`server/assets/doku.js`, `server/vendor/Parsedown.php`.*
+
+Die Quelle bleibt Markdown im Repositorium: `docs/Handbuch.md` und
+`docs/Was-ist-NAdoku.md`. Auf GitHub editierbar, die Wortliste läuft darüber,
+das Prüftor prüft die Rendertauglichkeit — und es gibt **keine zweite Fassung
+in einer Datenbank**, die auseinanderlaufen könnte.
+
+#### Zwei Orte, und eine Asymmetrie, die man kennen muss
+
+`doku_pfad()` sucht erst `../docs/` (Selbsthosterinnen laden das Repositorium
+hoch), dann `server/doku/` (dorthin kopiert die Kette). **Für den TEXT genügt
+das, für BILDER nicht** — und das ist der Punkt, an dem sich zwei Welten
+treffen:
+
+- Den **Text** liest PHP aus dem Dateisystem. `../docs/` ist dort ein ganz
+  normaler Ort.
+- Ein **Bild** holt der **Browser**. Der sieht nur, was unterhalb des
+  Dokumentenstamms liegt, also `server/`. `../docs/` ist für ihn unerreichbar,
+  und das soll so bleiben.
+
+Deshalb schreibt `DokuMarkdown::inlineImage()` jede relative Bildquelle auf
+`doku/…` um, und die Kette kopiert `docs/bilder/` mit. Wer selbst hostet und
+nur `docs/` neben `server/` legt, bekommt den Text und keine Bilder; dann
+fehlt derselbe Kopierschritt.
+
+**Der Fehler ist teuer, weil er leise ist:** Ohne die Umschreibung löste
+`![](bilder/x.png)` zu `/bilder/x.png` auf — `server/bilder/`, wo nichts
+liegt. Der Bilderlauf meldete dafür **24 Konsolenfehler**; auf dem Server
+wären es drei kaputte Bilder in einem Handbuch gewesen, das ohne sie noch
+lesbar ist.
+
+#### Was der Renderer darf
+
+`Parsedown` mit **beidem**: `setMarkupEscaped(true)` (rohes HTML wird Text)
+und `setSafeMode(true)` (Zielprüfung an Links). Dazu drei eigene Regeln in
+`DokuMarkdown`:
+
+| Regel | wofür |
+|---|---|
+| Sprungmarken an jeder Überschrift, h2/h3 zusätzlich ins Verzeichnis | `hilfe.php#abschnitt` als Ziel für Hilfe-Verweise |
+| `rel="noopener"` an fremden Zielen | E-P5b-22; ohne `target` streng genommen überflüssig, aber dann schon da |
+| **Bilder nur relativ** | die Zusage „keine fremde Quelle zur Laufzeit" |
+
+**Die dritte ist die einzige, die wirklich etwas trägt** — und sie ist
+nachgemessen, nicht vermutet. Parsedown liefert **mit** SafeMode für
+`![B](https://fremd.example/b.png)` ein `<img src="https://fremd.example/…">`.
+SafeMode prüft das **Schema**, nicht die **Herkunft**. Auf einer Seite, die
+jede Besucherin vor der Anmeldung sieht, steht zwischen dem Handbuch und einem
+fremden Server allein dieser Überschreiber.
+
+#### Kein Cache — entgegen dem Konzept
+
+E-P5b-22 verlangt einen Cache in `app_state`. Er ist **unmöglich**
+(`app_state.v` ist `VARCHAR(190)`, das gerenderte Handbuch 303 KB) und
+**unnötig**: 266 KB Markdown rendern in **11 bis 12 ms**. Die Begründung steht
+im Kopf von `doku_lib.php`. Wäre er je nötig, gehörte er in eine **Datei**
+neben der Quelle.
+
+#### Wo die Seiten auftauchen
+
+- **Fußzeile der Anmeldeseite** (`.fuss-anmeldung`): Was ist NAdoku? ·
+  Handbuch · Impressum · Datenschutz. Der erste Link ist der einzige Weg, auf
+  dem jemand **ohne Konto** erfährt, was diese Anwendung ist.
+- **Kopfleiste, angemeldet:** ein Fragezeichen links vom Zahnrad
+  (`.kopf-hilfe`), das auch auf dem Handy stehen bleibt.
+- `ueber.php` zeigt am Ende „Konto anlegen" **nur, wenn die Registrierung
+  offen ist** — sonst führte der Knopf auf eine Seite, die absagt.
+
+#### Grenzen der Prüfmittel an dieser Seite
+
+`hilfe.php` zeigt das ganze Handbuch auf einer Seite. Der Bilderlauf kann sie
+**nicht ganzseitig** fotografieren: 19 MB je Abzug, und ab 1024 px scheitert
+Chromium an seiner Höchsthöhe. Der Eintrag trägt deshalb
+`"ganzseitig": false` in `seiten.json` — das Bild ist ein Ausschnitt, die
+**Messungen** (Überlauf, Konsolenfehler, Knopfhöhen) laufen weiter über das
+ganze Dokument.
+
+### 4.99o Einstiege nach der Anmeldung (ab Web 20.24.0, P5b/AP9)
+
+*E-P5b-09, -10, -19, -20, -21; Mockups M-P5b-02b/c/d. Code:
+`server/einstieg_lib.php`, `server/erststart_karte.php`,
+`server/rueckfrage_dialog.php`, `server/schluessel_teile.php`,
+`server/blatt_dialog.php`, `server/notfallblatt.php`,
+`server/assets/rueckfrage.js`, `server/assets/schluessel.js`,
+`server/assets/schluesselblatt.js`, `server/api/rueckfrage.php`,
+`server/api/schluessel_erneuern.php`,
+`server/api/schluesselblatt_pruefen.php`.*
+
+Nach dem Anmelden kann viererlei anstehen. Es erscheint **genau eines**, in
+dieser Reihenfolge:
+
+| # | Was | Form | Fällig |
+|--:|---|---|---|
+| 1 | Einwilligungstor | eigene **Seite** (`einwilligung.php`) | solange eine Annahme fehlt (4.99j) |
+| 2 | Schlüsselblatt-Rückfrage | Dialog, nur BetreiberIn | alle 3 Monate, installationsweit |
+| 3 | Konto-Rückfrage | Dialog | nach 30 Tagen, 6 Monaten, dann jährlich |
+| 4 | Erststart | **Karte** über der Tagesübersicht | solange ein Schritt offen ist |
+
+`einstieg_faellig($userId, $istBetreiberin, $uebergehen)` gibt den Schlüssel
+des ersten fälligen Einstiegs zurück oder `null`. Der dritte Parameter nennt,
+was die Sitzung schon gezeigt hat — ohne ihn verdeckt eine weggeklickte Frage
+alle folgenden, weil die Funktion nur die erste herausgibt.
+
+Das Einwilligungstor steht in der Liste, aber nicht im Code dieser
+Bibliothek: Es ist eine Umleitung in `auth_guard.php` und läuft, bevor eine
+Seite etwas ausgibt.
+
+#### Der vierte ist kein Dialog
+
+E-P5b-19 zählt alle vier in einer Reihe auf und schreibt „die Seite zeigt
+genau einen Dialog". Das freigegebene Mockup M-P5b-02b sagt es genauer:
+**„Die Karte steht über der Tagesübersicht, nicht als Dialog: Wer sie
+ignoriert, arbeitet trotzdem."**
+
+Der Unterschied ist keine Geschmacksfrage. Die Rückfragen sind
+Sicherheitsfragen mit einer Frist — sie dürfen stören. Der Erststart ist eine
+Einladung; wer ihn wegklicken muss, um an seine Diensttage zu kommen, lernt in
+der ersten Minute, dass diese Anwendung im Weg steht.
+
+#### Zustand am Konto, nicht in den Stammdaten
+
+| Spalte | Was |
+|---|---|
+| `users.erststart_stand` | Bitfeld der drei Schritte (1 Standort, 2 Rettungsmittel, 4 Gerät); **`-1` = nicht mehr zeigen**, deshalb `TINYINT` mit Vorzeichen |
+| `users.rueckfrage_naechste` | Datum der nächsten Konto-Rückfrage, `NULL` = Uhr läuft noch nicht |
+| `users.rueckfrage_runde` | 0 → 30 Tage, 1 → 6 Monate, 2+ → jährlich |
+| `users.rueckfrage_verschoben` | Zähler für „Später", höchstens 3 je Runde |
+| `app_state.schluesselblatt_bestaetigt_am` | installationsweit, für die Betreiber-Rückfrage |
+
+Ein `SELECT COUNT(*) FROM bases` wäre für den Erststart einfacher und wäre
+falsch: „Ich brauche keinen Standort" ist eine Antwort, und wer den Schritt
+bewusst übergeht, soll ihn nicht bei jedem Anmelden wiedersehen.
+
+Die Uhr der Konto-Rückfrage startet bei der **Anmeldung**
+(`rueckfrage_anstossen()` in `login.php`), nicht beim Anlegen des Kontos, und
+nur wenn `pat_wrap_rc` gesetzt ist: Ein eingeladenes Konto ohne gesetztes
+Passwort hat kein Notfallblatt, und es 30 Tage später danach zu fragen wäre
+eine Frage ohne Gegenstand.
+
+#### Das Notfallblatt speichert nichts — und kann nichts speichern
+
+`notfallblatt.php` bekommt den Wiederherstellungsschlüssel **per POST aus dem
+Browser** und gibt ihn in derselben Antwort zurück. Er wird nicht gelesen,
+nicht geschrieben, nicht protokolliert. Das ist keine Vorsicht, sondern die
+einzig mögliche Bauform: Der Server kennt diesen Schlüssel nicht.
+
+Daraus folgt die Eigenschaft, die das Blatt ausmacht: **Es lässt sich später
+nicht erneut drucken.** Wer es verliert, erzeugt einen neuen Schlüssel — das
+alte Blatt wird damit ungültig, und genau das steht darauf.
+
+**Kein `auth_guard.php`, und das ist kein Versehen.** Der Schlüssel wird an
+zwei Stellen gezeigt, und an einer davon gibt es noch keine Sitzung: beim
+ersten Setzen des Passworts (`pw_handling.php`). Was stattdessen schützt: Die
+Seite gibt nur wieder, was ihr gesendet wurde, und zwar **geprüfte Werte in
+festem Text** — der Code muss dem Format entsprechen (20 Zeichen aus dem
+Alphabet ohne 0/1/I/L/O/U, fünf Vierergruppen), die Adresse muss eine Adresse
+sein; alles andere wird ausgelassen. Kein freier Text, kein Verweis nach
+draußen, kein Markup aus der Eingabe.
+
+#### Die Schlüsselerneuerung: eine Komponente, zwei Verbraucher
+
+`assets/schluessel.js` rechnet, `api/schluessel_erneuern.php` schreibt,
+`schluessel_teile.php` zeigt. Aufrufer sind der Rückfrage-Dialog und die Karte
+unter **Einstellungen → Profil** (R83).
+
+Der Weg im Browser:
+
+1. Passwort → Datenschlüssel (`deriveKeys`, `datenschluessel`)
+2. damit `pat_wrap_pw` öffnen → der **Inhaltsschlüssel** (ck)
+3. **ck gegen `pat_key_check` halten** — die Wache
+4. neuen Code erzeugen (`newRecoveryCode`), ck damit neu verpacken
+5. `api/schluessel_erneuern.php` → schreibt **genau** `pat_wrap_rc`
+6. den Code anzeigen
+
+**Schritt 3 ist die Stelle, an der Daten verlorengehen könnten.** Öffnete
+Schritt 2 aus irgendeinem Grund einen *anderen* Schlüssel, verpackte Schritt 4
+diesen, der Server nähme ihn an, und der neue Zettel öffnete **nichts** — der
+alte wäre schon überschrieben. Konten ohne `pat_key_check` (vor Web 10)
+bekommen die Funktion nicht, statt sie ungeprüft zu benutzen.
+
+Drei Feinheiten, die je einen Betriebsfall entscheiden:
+
+- `datenschluessel()` und **nicht** `datenschluesselZu()`: Die erste liest die
+  Anteilskennung aus dem **Präfix der zu öffnenden Hülle**, die zweite erzwingt
+  eine genannte. Während einer Anteilsrotation trägt die alte Hülle noch den
+  alten Anteil — mit der zweiten wäre die Erneuerung für jedes Konto
+  gescheitert, das sich seither nicht angemeldet hat.
+- `encrypt()` und **nicht** `huelleBauen()`: `pat_wrap_rc` hängt **nicht** am
+  Server-Anteil (E-S10-04). Der Server weist eine `edka1:`-Hülle zusätzlich ab
+  (`huelle_rc_pruefen()`).
+- **Das Passwort wird verlangt, obwohl die Sitzung steht.** Nicht wegen der
+  Verschlüsselung — eine entsperrte Sitzung hätte den ck bereits —, sondern
+  weil sonst jemand mit einer übernommenen Sitzung den Zettel des Opfers
+  ungültig machen könnte: kein Datenklau, aber der lautlose Verlust des
+  Rückwegs. Geprüft wird serverseitig, und der Endpunkt zählt in den Topf
+  `login`.
+
+`session_epoch` bleibt unberührt: Am Schlüssel der offenen Sitzungen hat sich
+nichts geändert.
+
+#### Die Betreiber-Rückfrage wird eingegeben, nicht bestätigt
+
+`api/schluesselblatt_pruefen.php`, zwei Aufrufe:
+
+- `aktion=stellen` — der Server würfelt je Wert (Serverschlüssel,
+  Server-Anteil) **zwei verschiedene Gruppenpositionen** aus 1–16, legt sie in
+  **seine Sitzung** und nennt nur die Nummern. Ein verstecktes Feld wäre vom
+  Browser wählbar; wer die Positionen selbst bestimmt, sucht sich die zwei
+  aus, die er kennt.
+- `aktion=pruefen` — vier Antworten, Vergleich mit `hash_equals()` gegen die
+  Gruppen aus `config.php`, **alle vier ohne Abkürzung bei der ersten
+  Abweichung**. Ein Abbruch wäre an der Antwortzeit messbar und machte aus
+  einem Rätsel zu sechzehn Zeichen vier Rätsel zu vier.
+
+Gezeigt wird nie ein Wert, nur die achtstellige **Kennung** — die Regel des
+Hauses; `betrieb_schluesselblatt.php` ist ihre einzige Ausnahme. Drei
+Fehlversuche → Topf **`blatt`** (erste Sprosse 15 Minuten, dann steigend — die
+Leiter überholt den Wert in `sperre`), Eintrag in
+`sicherheit_ereignisse` ohne Werte. Erfolg setzt
+`app_state.schluesselblatt_bestaetigt_am` und schreibt ins Protokoll (Reiter
+Verwaltung).
+
+**Keine Schlüsselerneuerung an dieser Stelle.** Den Serverschlüssel zu wechseln
+hieße, jede versiegelte Sicherung neu zu umhüllen — ein S10-Vorgang, kein
+Knopf in einem Dialog. Wer sein Blatt verloren hat, druckt es neu; der
+Schlüssel bleibt derselbe.
+
+#### „Später" heißt zweierlei
+
+Bei der **Konto**-Rückfrage sieben Tage, höchstens dreimal je Runde
+(`rueckfrage_verschoben`). Bei der **Betreiber**-Rückfrage nur bis zur
+nächsten Anmeldung, über ein Merkmal in der Sitzung — und das weicht von
+E-P5b-10 ab. Der Grund: Der Schlüsselblatt-Stand ist **ein** Datum in
+`app_state`, und es heißt `schluesselblatt_bestaetigt_am`. Um sieben Tage zu
+schieben, müsste dort ein Datum stehen, an dem nichts bestätigt wurde — eine
+Unwahrheit in genau dem Feld, das die Frage beantwortet. Und es gälte für
+alle: Eine BetreiberIn, die schiebt, nähme die Frage auch der anderen weg.
+
+#### Grenzen
+
+- **Ohne JavaScript erscheinen die beiden Dialoge nicht.** Die Erneuerung
+  rechnet im Browser (PBKDF2, HKDF, AES-GCM) und kann keinen serverseitigen
+  Ersatzweg haben — der Server kennt den Inhaltsschlüssel nicht. Die
+  Erststart-**Karte** dagegen kommt ohne aus; ihre beiden Auswege sind ein
+  gewöhnliches Formular.
+- **Die Fristen sind im Betrieb nicht abgewartet, sondern gestellt worden.**
+  Geprüft wurde mit vorgestelltem `rueckfrage_naechste`; die Runden 0 → 1 → 2
+  → 2 sind in vier Durchgängen gemessen, ein tatsächlicher Halbjahresabstand
+  nicht.
+
+### 4.99k Selbstlöschung und Adresswechsel (ab Web 20.20.0, P5b/AP5)
+
+*E-P5b-16. Code: `server/konto_lib.php`, `server/adresse_bestaetigen.php`,
+Job `konto_loeschung`.*
+
+#### Der Adresswechsel geht über die neue Adresse
+
+| | bis Web 20.19.0 | seit 20.20.0 |
+|---|---|---|
+| Schreiben | **sofort** | erst beim Klick |
+| Prüfung der neuen Adresse | **keine** | Link, 24 h |
+| Nachricht an die alte | Hinweis | Hinweis (unverändert) |
+| Nachweis | Passwort-Token | Passwort-Token (unverändert) |
+
+**Ein Tippfehler sperrte aus.** Die Anmeldung läuft über die Adresse, und
+„Passwort vergessen" schickt an eine Adresse, die es nicht gibt — der Weg
+zurück führte über die Verwaltung oder, auf einer Einzelinstallation, über die
+Datenbank.
+
+**Kein `UNIQUE` auf `email_neu`.** Zwei Konten dürfen dieselbe Adresse
+vormerken; erst der Klick entscheidet, und dort fängt das `UNIQUE` auf `email`.
+Eine Sperre schon beim Vormerken verriete, dass jemand anders dieselbe Adresse
+vorgemerkt hat.
+
+**Der Token steht nicht in `password_resets`.** Er gehört zu einer Adresse,
+nicht zu einem Passwort; dort wäre er ein zweiter Tokentyp in einer Tabelle,
+deren Regel „höchstens ein gültiger je Konto" lautet — ein Adresswechsel würde
+dann einen offenen Einladungslink entwerten.
+
+**`adresse_bestaetigen.php` läuft ohne Anmeldung**, und das ist der Zweck: Wer
+den Link hat, hat Zugang zum Postfach der neuen Adresse — genau das ist der
+Nachweis. Eine Anmeldung wäre gerade dann unmöglich, wenn sie am meisten hülfe.
+
+#### Die Selbstlöschung
+
+`gesperrt` mit dem Grund `selbstloeschung`, `loeschung_am` = jetzt + **30
+Tage**. **Die Rücknahme ist die Anmeldung** — `login.php` setzt den Status
+zurück, ohne dass es einen Knopf braucht.
+
+**Warum kein eigener Rücknahmeweg:** Ein Link in der Mail, der etwas anderes
+tut als anmelden, wäre ein zweiter Weg mit eigenem Token und eigener Frist —
+und er müsste ohne Passwort wirken, sonst braucht man ohnehin die Anmeldung.
+Ein Rückzug ohne Passwort ist aber genau das, was ein Angreifer wollte, der
+die Löschung verhindern will, um weiter mitzulesen.
+
+**Der Job löscht höchstens fünf je Lauf.** Eine Kontolöschung räumt die Spuren
+von Hand (die Kaskade erreicht sie nicht), löscht den Backup-Ordner im
+Dateisystem und kaskadiert über vierzehn Tabellen. Das Huckepack-Budget sind
+drei Sekunden für **alle** Jobs zusammen; einen Tag später zu löschen ist kein
+Zusagenbruch, eine hängende Anfrage schon.
+
+**Er steht weit vorn im Katalog**, gleich hinter dem Aufräumen: Im Regelfall
+hat er nichts zu tun (eine Abfrage über einen Index), und wenn doch, ist es
+das, worauf jemand ein Recht hat.
+
+#### Das Protokoll nennt beim Wechsel keine Adressen
+
+Nur die Kontonummer und dass gewechselt wurde. Ein Audit, in dem jede je
+benutzte Adresse eines Kontos steht, ist ein Verzeichnis von Adressen und
+nicht eines von Handlungen. Nachgemessen: Der Eintrag enthält kein `@`.
+
+Beim **Löschen** stehen Adresse und Termin dagegen im Eintrag — dort ist die
+Adresse der einzige Anhalt, der die Löschung überhaupt noch nachvollziehbar
+macht, und die Zeile überlebt das Konto.
+
+### 4.99j Einwilligungen (ab Web 20.19.0, P5b/AP4)
+
+*E-P5b-05, -15. Code: `server/einwilligung_lib.php`, `server/einwilligung.php`,
+Tabelle `konto_einwilligungen`.*
+
+#### Vier Rechtstexte, drei mit Einwilligung
+
+| Schlüssel | Seite | Einwilligung | Wirkung bei neuer Fassung |
+|---|---|---|---|
+| `impressum` | `impressum.php` | **keine** | — |
+| `datenschutz` | `datenschutz.php` | „zur Kenntnis genommen" | Hinweis auf jeder Seite |
+| `nutzungsbedingungen` | `nutzungsbedingungen.php` | „angenommen" | **sperrt den Login** |
+| `avv` | `avv.php` | „angenommen" | **sperrt den Login** |
+
+**Der Unterschied ist die Rechtsnatur, nicht der Rang.** Ein Vertrag kommt
+durch Annahme zustande und darf ohne sie nicht weiterlaufen. Eine
+Datenschutzerklärung informiert; Widerspruch dagegen ist kein
+Vertragsschluss, sondern ein Recht. Sie darf den Zugang nicht sperren — muss
+aber auffallen, sonst ist die Kenntnisnahme eine Behauptung.
+
+**Das Impressum steht bewusst nicht in der Reihe.** Es wird weder angenommen
+noch zur Kenntnis genommen; es ist eine Pflichtangabe. `RT_EINWILLIGUNG` sagt,
+welche der vier eine Einwilligung verlangen.
+
+#### Was „aktuelle Fassung" heißt
+
+`rechtstexte.stand_am`, und seit AP4 ist das ein **`DATETIME`** und kein
+`DATE` mehr — der Fehlerfund F3 des Konzepts: Zwei Änderungen am selben Tag
+wären sonst *eine* Fassung, und wer die erste angenommen hat, gälte als
+Annehmer der zweiten. Der Editor bleibt ein Datumsfeld; die Uhrzeit setzt der
+Speicherweg.
+
+`konto_einwilligungen.stand_am` hält, **welche** Fassung angenommen wurde. Der
+Vergleich der beiden ist die ganze Prüfung.
+
+**Ein Text ohne Standdatum verlangt nichts.** Sonst sperrte ein leer
+angelegter Platzhalter alle Konten aus — genau der Zustand zwischen dem
+Einspielen der Mechanik (AP4) und dem Einspielen der geprüften Texte (R41).
+
+**Der Satz gilt für die Registrierung genauso — seit Web 20.22.2, vorher
+nicht.** `registrieren.php` verlangte alle Schlüssel aus `RT_EINWILLIGUNG`,
+ohne `stand_am` anzusehen; der Begriff kam in der Datei kein einziges Mal vor.
+Wer sich in dem Zustand registrierte, auf den dieser Abschnitt gerade
+hingewiesen hat, musste den Haken „Ich nehme die Vereinbarung zur
+Auftragsverarbeitung (AVV) an" setzen, während `avv.php` daneben den Leertext
+zeigte. `einwilligung_in_kraft()` beantwortet die Frage jetzt für beide
+Seiten; **Prüfung und Markup ziehen aus derselben Liste**, sonst könnte die
+Betreiberin zwischen Anzeige und Absenden einen Text in Kraft setzen und das
+Formular verlangte einen Haken, den es nie gezeigt hat. Backlog Nr. 231.
+
+#### Wo die Annahme entsteht
+
+**Bei der Registrierung, nicht erst am Tor** (E-P5b-25, seit Web 20.22.2).
+Dort wird der Vertrag geschlossen; das Tor ist dafür da, eine **neue** Fassung
+nachzuholen, nicht die erste zu erheben. Bis Web 20.22.1 war es andersherum,
+und zwar ungewollt: `registrieren.php` verlangte die Häkchen und schrieb sie
+nie — `einwilligung_setzen()` wurde im ganzen Server nur von
+`einwilligung.php` aufgerufen. Verloren ging dadurch nichts (das Tor fasst
+jedes Konto beim ersten Login), wohl aber die Stelle: Die Registrierende
+beantwortete dieselben Fragen zweimal.
+
+**Dass das Konto dabei noch `unbestaetigt` ist, ist kein Einwand.**
+Festgehalten wird, was an diesem Formular erklärt wurde — nicht, wem die
+Adresse gehört. Wird die Registrierung nie bestätigt, räumt
+`job_konto_verfall()` das Konto weg und die Zeilen mit ihm (`ON DELETE
+CASCADE` an `fk_kew_user`).
+
+**Das Tor bleibt das Auffangnetz**, und es wird gebraucht: Wer sich
+registriert, solange kein Text in Kraft ist, gibt keine Erklärung ab — die
+holt das Tor beim ersten Login nach dem Einspielen.
+
+#### Das Tor
+
+`auth_guard.php` leitet auf `einwilligung.php`, solange eine Annahme fehlt.
+**Drei Wege bleiben offen — Abmelden, Export, Konto löschen.** Wer nicht
+zustimmen will, muss an seine Daten kommen und gehen können; ein Tor, das auch
+den Ausgang versperrt, wäre Nötigung. Die Ausnahmeliste steht in
+`auth_guard.php` neben dem Tor, nicht in einer Konstante: Sie gehört dazu und
+wird mit ihm gelesen.
+
+**API und `ingest.php` bleiben unberührt.** Die Uhr fragt niemanden um
+Zustimmung — sie hat keinen Bildschirm dafür, und ihre Besitzerin hat der
+Nutzung zugestimmt, als sie das Gerät gekoppelt hat. Ein Tor vor `api/day.php`
+ließe eine laufende Aufzeichnung ins Leere laufen.
+
+#### Eine Zeile je Konto und Schlüssel, nicht je Annahme
+
+Der Primärschlüssel ist `(user_id, schluessel)`; eine neue Annahme
+überschreibt die alte. Der Verlauf — wer wann welche Fassung angenommen hat —
+steht im **Protokoll** (Reiter Verwaltung) und überlebt dort auch die
+Kontolöschung. Die Tabelle beantwortet nur die eine Frage, die bei jedem
+Seitenaufbau gestellt wird: *Liegt die aktuelle Fassung vor?*
+
+`ON DELETE CASCADE` ist hier — anders als beim Protokoll — richtig: Eine
+Einwilligung ist eine Aussage **über** das Konto; ohne Konto hat sie keinen
+Gegenstand.
+
+#### Der Leerzustand kommt aus einem Katalog
+
+In `rechtstext_seite.php` stand er als *zweiwertiger* ternärer Ausdruck. Das
+war die eine Stelle, an der ein dritter Schlüssel **stillschweigend falsch**
+geantwortet hätte: Die Nutzungsbedingungen hätten gemeldet, es sei „noch keine
+Datenschutzerklärung hinterlegt". Kein Fehler, keine Meldung — nur ein
+falscher Satz. `RT_LEERTEXT` kann das nicht: Ein fehlender Eintrag fällt beim
+Nachsehen auf, ein falscher Zweig nicht.
+
+### 4.99i Der Lebenszyklus eines Kontos (ab Web 20.17.0, P5b/AP2)
+
+*E-P5b-11, -12; R37 (1); Backlog Nr. 202 Paket 1. Code: `server/konto_lib.php`.*
+
+#### Vier Fassungen derselben Sache — und warum das aufgelöst wurde
+
+Ein Konto entstand an zwei Stellen, ein Token an vier, und keine glich der
+anderen:
+
+| Stelle | legte an | Transaktion | entwertete Vorgänger | Laufzeit |
+|---|---|---|---|---|
+| `admin_users.php` | Konto + Token | **ja** (E17) | nein | `INTERVAL 24 HOUR` |
+| `install.php` | Konto + Token | **nein** | nein | `INTERVAL 24 HOUR` |
+| `admin_user.php` | nur Token | — | ja | `INTERVAL 1 HOUR` |
+| `reset_request.php` | nur Token | — | ja | `INTERVAL 1 HOUR` |
+
+**`install.php` war die gefährliche**: Ein Abbruch zwischen den beiden
+`INSERT` hinterließ ein Konto ohne Weg hinein — anmelden ging nicht (kein
+Passwort), und der Einrichter lief nicht mehr, weil `install.lock` stand. Eine
+Installation, aus der man sich beim Einrichten selbst ausgesperrt hat.
+
+Aufgelöst wurde es hier und nicht in Schritt 15, weil die Selbstregistrierung
+aus AP3 sonst die **fünfte** Fassung geworden wäre — und sie ist die einzige,
+die von außen erreichbar ist.
+
+**Nachweis:** `grep -rn "INSERT INTO password_resets" server/` zeigt nur noch
+`konto_lib.php`.
+
+#### Die Bibliothek läuft ohne `config.php`
+
+`install.php` ist der vierte Aufrufer und der einzige, der läuft, **bevor** es
+eine `config.php` gibt: Er schreibt sie erst, nachdem er das erste Konto
+angelegt hat, und bringt deshalb seine eigene PDO-Verbindung mit. `konto_lib.php`
+lädt `db.php` und `protokoll_lib.php` deshalb nur mit `is_file()`, und jede
+Funktion nimmt ein `?PDO` entgegen. Dieselbe Falle wie Backlog Nr. 223 — und
+hier von vornherein vermieden statt hinterher behoben.
+
+Der Protokolleintrag „erstes Konto angelegt" fällt im Einrichter aus
+(`function_exists('protokoll')`). Das ist richtig: Er trüge ohnehin keinen
+Urheber, weil es zu diesem Zeitpunkt noch niemanden gibt, der handeln könnte.
+
+#### Die vier Zustände und ihre Übergänge
+
+| von → nach | `unbestaetigt` | `wartet` | `aktiv` | `gesperrt` |
+|---|---|---|---|---|
+| **`unbestaetigt`** | — | ja | ja | ja |
+| **`wartet`** | nein | — | ja | ja |
+| **`aktiv`** | **nein** | **nein** | — | ja |
+| **`gesperrt`** | nein | nein | ja | — |
+
+**Die Übergänge stehen als Tabelle und nicht als `if`-Zweige** (`KONTO_UEBERGAENGE`).
+Die Rückwege sind die interessanten: Aus `gesperrt` geht es nach `aktiv`
+zurück (Entsperren, Rücknahme der Selbstlöschung), aus `aktiv` aber **nicht**
+nach `unbestaetigt` — ein Konto, dessen Besitzerin sich plötzlich nicht mehr
+anmelden kann, ohne dass jemand es angeordnet hat, wäre ein Fehler mit Ansage.
+
+**Entsperren räumt auf**: `gesperrt_seit`, `gesperrt_grund` und
+**`loeschung_am`** werden geleert. Ohne das Letzte fände der Löschjob ein
+`loeschung_am` in der Vergangenheit und löschte ein Konto, dessen Besitzerin
+die Löschung gerade zurückgenommen hat — kein Schönheits-, sondern ein
+Datenverlustfehler.
+
+#### Wo der Status geprüft wird
+
+| Ort | Verhalten |
+|---|---|
+| `login.php` | **vor** der Sitzung, im Erfolgszweig der Passwortprüfung. Eigene Seite über `stoerung_seite_html()` (dritter Aufrufer, kein neuer Baustein), Antwortdauer angeglichen |
+| `auth_guard.php` | jede angemeldete Anfrage. Endegrund **`gesperrt`** — neu in `SESSION_ENDE_GRUENDE`, **mit beiden Texten** |
+| `ingest.php` | **`403`** mit `{"error":"konto","grund":"<status>"}`, **nach** der Schlüsselprüfung |
+
+**Die Selbstlöschung ist der Sonderfall, und zwar der wichtige** (E-P5b-16):
+Während der Karenz steht das Konto auf `gesperrt`, aber **die Anmeldung IST
+der Rückzug**. `login.php` nimmt die Löschung zurück, statt abzuweisen; hier
+abzuweisen hieße, den einen Weg zu versperren, der aus der Löschung
+herausführt — und danach löscht der Job. `auth_guard.php` lässt eine laufende
+Sitzung mit diesem Grund deshalb ebenfalls durch.
+
+**`ingest.php`: `403` und nicht `401`.** Die Uhr behandelt `403` heute als
+„abgemeldet" und puffert — genau das soll sie tun. Der Unterschied steht im
+JSON-Rumpf, nicht im Code; **eine Uhr-Stufe ist dafür nicht nötig**. Dass die
+Uhr „abgemeldet" statt „gesperrt" anzeigt, ist ein Backlog-Eintrag für die
+nächste Auslieferung.
+
+**Der Ratenschutz zählt das nicht mit.** Ein gesperrtes Konto ist kein
+Angriff; sein Gerät sendet weiter, weil niemand es abgeschaltet hat. Zählte es
+als Fehlversuch, sperrte der Ratenschutz nach kurzer Zeit eine Kennung, die
+nichts falsch macht — und nach dem Entsperren käme der Rückstand dann **nicht**
+durch. Gemessen: fünf Uploads mit gesperrtem Konto, **null** Zeilen in
+`rate_limits`.
+
+### 4.99h Die Einstellungen rund um Konten (ab Web 20.16.5, P5b/AP1)
+
+*E-P5b-14. Code: `server/konten_einstellungen_lib.php`, Oberfläche
+Betrieb → Servereinstellungen, Karte „Konten".*
+
+**Bibliothek und nicht Seite** (R83): Die zweiten Verbraucher stehen
+namentlich im Konzept — `registrieren.php` liest die Betriebsart,
+`login.php` die Demo-Anmeldung, `ingest.php` die Mengengrenzen, der Job
+`konto_verfall` die Freischaltfrist. Sie in die Seite zu schreiben und später
+herauszuziehen wäre derselbe Umbau, nur mit vier Aufrufern mehr.
+
+| Schlüssel in `app_state` | Vorgabe | wirkt ab |
+|---|---|---|
+| `konten_reg_art` | **`einladung`** | AP3 |
+| `konten_reg_frist` | 30 Tage | AP3 |
+| `konten_wegwerf` / `…_eigene` | an / leer | AP3 |
+| `konten_grenze_einsaetze` | 5000 | AP6 |
+| `konten_grenze_mb` | 250 | AP6 |
+| `konten_aufbewahrung` | leer = unbegrenzt | AP6 |
+| `konten_demo_anmeldung` | an | **AP1** |
+| `protokoll_frist_verwaltung` | 365 | **AP1** |
+
+**Die Vorgabe der Betriebsart ist `einladung`**, und das ist nicht die, die
+nadoku selbst fährt. Sie ist die sicherste Grundstellung für eine
+Selbsthosterin, die die Seite nie aufschlägt — heutiges Verhalten, keine
+offene Tür durch Untätigkeit (E-P5b-01).
+
+**Zwei Fallen, beide im Code vermerkt:**
+
+- **Leer ist ein Wert.** Die Aufbewahrung „unbegrenzt" ist der leere String;
+  sie darf nicht auf die Vorgabe zurückfallen, sonst ließe sie sich nie
+  einschalten. Eine `0` gibt es nicht — sie hieße „nichts aufbewahren".
+- **Eine unbekannte Betriebsart fällt auf die Vorgabe zurück**, statt zu
+  gelten. `offen` durch einen Tippfehler wäre die teuerste aller stillen
+  Änderungen.
+
+`konten_einstellungen()` holt **alle acht Schlüssel in einer Abfrage** und
+hält sie je Anfrage. `app_state_lesen()` hat keinen Zwischenspeicher und
+fragt bei jedem Aufruf neu; acht Einzelaufrufe wären acht Abfragen je
+Seitenaufbau.
 
 ## 5a. Android-Apps (Kotlin/Compose) — Handy und Wear OS
 
@@ -7808,7 +8716,7 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 | Welche Bereiche sind berührt? | `android=ja\|nein`, `uhr=ja\|nein` — eine Auskunft, kein Sollwert (siehe unten) |
 | `php -l` über `server/` und `tools/` | 0 Fehler |
 | `tools/wortliste/wortliste.py` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen |
-| `tools/vollstaendigkeit/pruefen.py --hoechstens N` | **genau N** — die Schwelle, nicht null (heute 377) |
+| `tools/vollstaendigkeit/pruefen.py --hoechstens N` | **genau N** — die Schwelle, nicht null (heute **398**; die Zahl steht in `pruefung.yml`, nicht hier — dieser Eintrag stand bis Web 20.21.1 auf 366, während die Kette längst mit 377 lief) |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft, Selbstprobe 10/10 |
 | `tools/kette/tor.py --selbstprobe` | 11 erfüllt, 0 offen |
@@ -8061,6 +8969,27 @@ Hand sind gleichwertig. Was sie weiß, ist ihre eigene Fassung
 (`version.php`) und ob eine Migration aussteht.
 
 ## 7. Betrieb (Runbook)
+
+**Vor jeder Auslieferung: die Wegwerfliste nachziehen** (seit Web 20.22.0,
+Backlog Nr. 230).
+
+    python3 tools/wegwerfdomains/aktualisieren.py              # holen, messen, Diff zeigen
+    python3 tools/wegwerfdomains/aktualisieren.py --schreiben  # und schreiben
+
+**Ein Handgriff, kein Automatismus** — die Zusage „keine fremde Quelle zur
+Laufzeit" (R36) kennt keine Ausnahme, auch nicht für eine Textdatei. Der Preis
+ist, dass `server/wegwerfdomains.txt` genau so lange altert, wie niemand den
+Lauf macht, **und dass es niemandem auffällt**: Eine durchgelassene
+Registrierung sieht aus wie eine richtige.
+
+**Das Werkzeug schreibt nicht, wenn etwas nicht stimmt** — weder bei
+Großbuchstaben, Kommentarzeilen oder Doppelungen noch, wenn eine der zehn
+geprüften echten Provider- und Klinikdomains auf der Liste steht. Die zweite
+Prüfung ist die wichtigere: Eine getroffene Klinikdomain sperrt die Ärztin
+dahinter aus, und sie erfährt **nie**, woran es lag (die Seite antwortet auf
+jede Adresse gleich). Ein Treffer ist deshalb kein Grund, die Liste zu kürzen,
+sondern einer, die Quelle zu wechseln. Nach dem Schreiben: Zahl und Datum in
+`docs/Lizenzen.md` 7b nachziehen.
 
 **Update mit Wartungsmodus (seit Web 13.2.0 der Regelweg, S5 Paket W):**
 Zwischen dem ersten und dem letzten per FTPS hochgeladenen File stehen alte

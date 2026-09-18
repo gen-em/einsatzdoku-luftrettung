@@ -481,7 +481,48 @@ async function anmeldenAuf(seite, rolle) {
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
     seite.click('button[type="submit"]'),
   ]);
-  return !seite.url().includes('login.php');
+  if (seite.url().includes('login.php')) { return false; }
+
+  /* DAS EINWILLIGUNGSTOR DURCHKLICKEN (P5b/AP4, Web 20.19.0).
+   *
+   * Hat die Installation Nutzungsbedingungen oder eine Vereinbarung zur
+   * Auftragsverarbeitung in Kraft, landet JEDES angemeldete Konto auf
+   * `einwilligung.php`, bis es angenommen hat. Für den Bilderlauf heißt
+   * das: Jede Aufnahme zeigt das Tor statt der Seite, die gemessen werden
+   * soll.
+   *
+   * Gefunden am 16.09.2026, und der Lauf hat es selbst gemeldet — „OHNE
+   * BILD: 32 Aufnahmen — 32× Seite leitete auf die Anmeldung um". Ohne
+   * diesen Block stünde die nächste Instanz vor 52 Konsolenfehlern und
+   * einer Zahl, die nichts misst.
+   *
+   * ES WIRD GEKLICKT UND NICHT ÜBERGANGEN: Das Tor ist echtes Verhalten der
+   * Anwendung, kein Hindernis des Prüfstands. Ein Bilderlauf, der es
+   * aushebelte, misste eine Anwendung, die es so nicht gibt. */
+  if (seite.url().includes('einwilligung.php')) {
+    /* HAEKCHEN, NICHT SCHALTER (seit Web 20.22.1). Bis dahin stand hier
+     * `.schalter-box`; das Tor fuehrte Schiebeschalter, und die sind durch
+     * gewoehnliche Kontrollkaestchen ersetzt worden — eine
+     * Willenserklaerung kennt nur eine Richtung.
+     *
+     * DER AUSWAHLPFAD IST ABSICHTLICH ALLGEMEIN (`input[type=checkbox]`
+     * innerhalb des Formulars) und nicht an einer Klasse aufgehaengt: Diese
+     * Stelle ist beim Umbau umgefallen, weil sie eine Klasse kannte, die
+     * die Anwendung geaendert hat. Der Fehler war gut zu sehen, weil die
+     * Anmeldung seit Web 20.21.1 die Meldung der Seite mitgibt — ohne sie
+     * stuende hier nur „Anmeldung gescheitert". */
+    const boxen = await seite.locator('form input[type=checkbox]').count();
+    for (let i = 0; i < boxen; i++) {
+      await seite.locator('form input[type=checkbox]').nth(i)
+                 .evaluate(el => { el.checked = true; });
+    }
+    await Promise.all([
+      seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {}),
+      seite.click('button[type="submit"]'),
+    ]);
+    if (seite.url().includes('einwilligung.php')) { return false; }
+  }
+  return true;
 }
 
 async function anmelden(rolle) {
@@ -494,7 +535,17 @@ async function anmelden(rolle) {
   const seite = await kontext.newPage();
   if (!await anmeldenAuf(seite, rolle)) {
     const konto = rolle === 'admin' ? ADMIN : DEMO;
-    throw new Error(`Anmeldung als ${konto.email} gescheitert`);
+    /* DIE MELDUNG DER SEITE MITNEHMEN. „Anmeldung gescheitert" allein laesst
+     * raten; der haeufigste Grund ist kein falsches Passwort, sondern der
+     * Ratenschutz: Wer den Lauf mehrmals hintereinander startet, stolpert
+     * ueber den Demo-Topf („vorübergehend gesperrt — wieder ab HH:MM").
+     * Das ist richtiges Verhalten der Anwendung und kein Fehler des
+     * Pruefstands — man muss es nur lesen koennen. */
+    const grund = await seite.locator('.meldung, .hinweis, .warnung')
+      .allTextContents().then(t => t.join(' · ').replace(/\s+/g, ' ').trim())
+      .catch(() => '');
+    throw new Error(`Anmeldung als ${konto.email} gescheitert`
+      + (grund ? ` — die Seite sagt: ${grund.slice(0, 200)}` : ''));
   }
 
   /* Die Fehlersammlung haengt an der Seite und wird je Aufnahme geleert. */
@@ -770,7 +821,8 @@ async function kopplungSitzung(seite, schluessel, fehlerSammler) {
 }
 
 async function vorher(seite, schritte, fehlerSammler) {
-  const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc'];
+  const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc',
+                   'notfallblatt'];
   for (const schritt of schritte || []) {
     if (!BEKANNT.includes(schritt)) {
       fehlerSammler.push(`Unbekannter Bedienschritt „${schritt}" — bekannt sind: `
@@ -819,6 +871,42 @@ async function vorher(seite, schritte, fehlerSammler) {
       if (await wahl.count()) {
         await wahl.selectOption('adhoc');
         await seite.waitForTimeout(450);
+      }
+      continue;
+    }
+    if (schritt === 'notfallblatt') {
+      /* DAS NOTFALLBLATT MIT SCHLUESSEL (P5b/AP9).
+         `notfallblatt.php` nimmt den Wiederherstellungsschluessel per POST
+         entgegen und speichert ihn nicht — es gibt also keine Adresse, unter
+         der die gefuellte Fassung per GET zu haben waere. Genau das ist ihr
+         Wesen, und der Bilderlauf muss es nachbauen statt umgehen: Er baut
+         dasselbe Formular, das `pw_handling.php` abschickt.
+
+         DER CODE IST ERFUNDEN und entspricht nur dem Format (20 Zeichen aus
+         dem Alphabet ohne 0/1/I/L/O/U, fuenf Vierergruppen). Er oeffnet
+         nichts — die Seite prueft ihn gegen das Muster, nicht gegen ein
+         Konto, und mehr braucht ein Bild nicht. */
+      await Promise.all([
+        seite.waitForNavigation({ timeout: 30000 }),
+        seite.evaluate(() => {
+          const f = document.createElement('form');
+          f.method = 'post';
+          f.action = 'notfallblatt.php';
+          for (const [n, w] of [['code', 'K7MQ-3RXP-9TWB-2FHZ-VNJ4'],
+                                ['konto', 'probe@example.org']]) {
+            const i = document.createElement('input');
+            i.type = 'hidden'; i.name = n; i.value = w;
+            f.appendChild(i);
+          }
+          document.body.appendChild(f);
+          f.submit();
+        }),
+      ]);
+      await seite.waitForLoadState('networkidle');
+      if (!(await seite.locator('.codeblock-wert').count())) {
+        fehlerSammler.push('Notfallblatt ohne Schlüsselblock — der Code wurde '
+                         + 'abgewiesen (Format?) oder die Seite hat den '
+                         + 'Ohne-Code-Zweig gezeigt.');
       }
       continue;
     }
@@ -1063,7 +1151,16 @@ for (const eintrag of liste) {
      davon haengt ab, ob ein 404 heilbar ist (siehe unten). */
   const ausPlatzhalter = Object.prototype.hasOwnProperty.call(PLATZ, eintrag.pfad);
   let nachgeloest = false;
+  /* EINE UNBEKANNTE ROLLE SAGT ES, statt drei Zeilen weiter an `undefined`
+   * zu scheitern. Am 17.09.2026 stand `"rolle": "user"` in `seiten.json` —
+   * die gibt es nicht (`aus`, `demo`, `admin`), und der Lauf brach mit
+   * „Cannot read properties of undefined (reading 'seite')" ab: eine Meldung,
+   * die den Dateinamen nicht nennt und die Ursache erst recht nicht. */
   const rolle = rollen[eintrag.rolle || 'demo'];
+  if (!rolle) {
+    throw new Error(`Seite "${eintrag.name}": Rolle "${eintrag.rolle}" gibt es nicht. `
+                  + `Erlaubt sind: ${Object.keys(rollen).join(', ')}.`);
+  }
   const seite = rolle.seite;
   const zeile = { name: eintrag.name, gruppe: eintrag.gruppe, pfad, breiten: [] };
   const bilder = [];
@@ -1187,6 +1284,27 @@ for (const eintrag of liste) {
           if (r.width === 0 || r.right <= grenze + 1) { continue; }
           var pr = el.parentElement ? el.parentElement.getBoundingClientRect() : null;
           if (pr && pr.right > grenze + 1) { continue; }   // Elternteil laeuft auch ueber
+
+          /* WER IN EINEM SCROLLENDEN KASTEN STECKT, IST KEIN TAETER
+           * (P5b/AP8). Ein `<code>` in einem `<pre class="overflow-x:auto">`
+           * reicht weit ueber den Rand hinaus — und wird von seinem
+           * Elternteil abgeschnitten, also schiebt es die SEITE nicht. Beide
+           * Bedingungen oben treffen trotzdem zu: Es laeuft ueber, und sein
+           * Elternteil tut es nicht.
+           *
+           * Am 17.09.2026 nannte der Bericht deshalb `code (626 px)` als
+           * Verursacher des Ueberlaufs auf `hilfe.php`. Der wirkliche
+           * Verursacher waren die 43 TABELLEN des Handbuchs (368 px bei
+           * 360 px Breite). Ich habe zuerst den Code umbrechen lassen, was
+           * nichts aenderte — die Zahl blieb bei +124 px, weil sie nie von
+           * dort kam. Eine Messung, die auf den Falschen zeigt, kostet mehr
+           * als eine, die gar nichts sagt. */
+          var klemmt = false;
+          for (var a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+            var ox = getComputedStyle(a).overflowX;
+            if (ox === 'auto' || ox === 'scroll' || ox === 'hidden') { klemmt = true; break; }
+          }
+          if (klemmt) { continue; }
           if (r.right > weiteste) {
             weiteste = r.right;
             bester = el.tagName.toLowerCase()
@@ -1208,6 +1326,21 @@ for (const eintrag of liste) {
          Zusage nie gemessen. Genau so ist `.listenfilter` seit O6 ungemessen
          geblieben und der Export-Knopf vier Monate ungestaltet (F-P3-BA).
          Wer ein neues Bedienelement baut, traegt es hier ein. */
+      /* KARTEN, DIE AUS DEM SEITENGERUEST AUSGEBROCHEN SIND (Nr. 225).
+         Eine Karte gehoert in `main.inhalt`. Haengt sie daneben — weil ein
+         `ui_karte_ende()` zu viel `div.rahmen` mitgeschlossen hat —, liegt
+         sie ueber die volle Fensterbreite unter der Seitenleiste hindurch.
+
+         DIE DREI ANDEREN ZAHLEN SEHEN DAS NICHT, und das ist der Grund, warum
+         diese hier steht: `scrollWidth` bleibt gleich `innerWidth` (es laeuft
+         nichts ueber, es liegt nur falsch), die Konsole bleibt still, die
+         Knopfhoehen stimmen. Die Profilseite meldete zehn Tage lang drei
+         Nullen und war kaputt; gefunden wurde es beim ANSEHEN eines Bildes. */
+      ausbruch: Array.from(document.querySelectorAll('section.karte, details.karte'))
+        .filter(el => !el.closest('main.inhalt'))
+        .map(el => ((el.querySelector('h2, h3') || {}).textContent || '(ohne Titel)')
+                    .trim().replace(/\s+/g, ' ').slice(0, 40)),
+      karten: document.querySelectorAll('section.karte, details.karte').length,
       knoepfe: Array.from(document.querySelectorAll('.knopf, .sprungziel'))
         .filter(el => el.offsetParent !== null || el.getClientRects().length > 0)
         .map(el => ({
@@ -1221,7 +1354,8 @@ for (const eintrag of liste) {
            * dieser eine Fall benannt statt stillschweigend geduldet. */
           suchzwilling: !!el.closest('.suchzeile'),
         })),
-    })).catch(() => ({ scrollWidth: 0, innerWidth: b, knoepfe: [], taeter: null }));
+    })).catch(() => ({ scrollWidth: 0, innerWidth: b, knoepfe: [], taeter: null,
+                       ausbruch: [], karten: 0 }));
 
     const datei = join(AUSGABE, 'einzeln', `${eintrag.name}-${b}.png`);
     if (hin.abbruch) {
@@ -1231,14 +1365,44 @@ for (const eintrag of liste) {
                          grund: 'Seite leitete auf die Anmeldung um' });
       rmSync(datei, { force: true });
     } else {
-      await seite.screenshot({ path: datei, fullPage: true }).catch(() => {});
-      bilder.push({ datei, b, art });
+      /* GANZSEITIG IST DIE REGEL UND NICHT DAS GESETZ (P5b/AP8).
+       *
+       * `hilfe.php` zeigt das ganze Handbuch auf einer Seite: 305 KB HTML,
+       * als Abzug 19 MB je Breite — und ab 1024 px scheiterte
+       * `fullPage:true` ganz, weil Chromium eine Hoechsthoehe hat. Eine
+       * Seite, die laenger ist als diese Grenze, kann man nicht in einem
+       * Bild fotografieren; das ist keine Einstellung, sondern Physik.
+       *
+       * Fuer solche Seiten steht `"ganzseitig": false` in `seiten.json`:
+       * Dann wird der SICHTBARE Ausschnitt abgezogen. Was dabei verloren
+       * geht, ist nur das Bild — die Messungen (Ueberlauf, Konsolenfehler,
+       * Knopfhoehen, Karten ausserhalb) laufen ueber das ganze Dokument und
+       * bleiben unveraendert.
+       *
+       * UND DAS SCHEITERN SPRICHT JETZT. Hier stand `.catch(() => {})`: Der
+       * Abzug misslang still, die Datei entstand nicht, und der
+       * Kontaktbogen stuerzte eine Funktion spaeter mit `ENOENT` ab — auf
+       * einen Dateinamen, der nie erklaerte, warum er fehlt. Eine
+       * verschluckte Ausnahme kostet immer genau so viel Zeit wie die
+       * Strecke zwischen ihr und dem Ort, an dem es auffaellt. */
+      const ganz = eintrag.ganzseitig !== false;
+      try {
+        await seite.screenshot({ path: datei, fullPage: ganz });
+        bilder.push({ datei, b, art });
+      } catch (e) {
+        ausgefallen.push({ was: `${eintrag.name} @ ${b}`,
+                           grund: `Abzug misslang (${ganz ? 'ganzseitig' : 'Ausschnitt'}): `
+                                + String(e && e.message || e).split('\n')[0] });
+        rmSync(datei, { force: true });
+      }
     }
 
     zeile.breiten.push({
       breite: b, status,
       ueberlauf: mass.scrollWidth > mass.innerWidth ? mass.scrollWidth - mass.innerWidth : 0,
       taeter: mass.taeter || null,
+      ausbruch: mass.ausbruch || [],
+      karten: mass.karten || 0,
       konsole: rolle.fehler.slice(),
     });
     for (const k of mass.knoepfe) {
@@ -1257,8 +1421,13 @@ for (const eintrag of liste) {
   bericht.seiten.push(zeile);
   const ueber = zeile.breiten.filter(x => x.ueberlauf).map(x => x.breite);
   const kons  = zeile.breiten.reduce((n, x) => n + x.konsole.length, 0);
+  /* Der Ausbruch haengt am Markup, nicht an der Breite — er steht bei allen
+     acht gleich. Einmal nennen, nicht achtmal. */
+  const raus  = (zeile.breiten.find(x => x.ausbruch.length) || {}).ausbruch || [];
   console.log(`${eintrag.name.padEnd(34)} ${ueber.length ? 'Überlauf bei ' + ueber.join(', ') : 'kein Überlauf'}` +
-              `${kons ? '  ·  ' + kons + ' Konsolenfehler' : ''}`);
+              `${kons ? '  ·  ' + kons + ' Konsolenfehler' : ''}` +
+              `${raus.length ? '  ·  ' + raus.length + ' Karte(n) außerhalb von main.inhalt: '
+                             + raus.join(', ') : ''}`);
 }
 
 /* ---- Kontaktbogen ---------------------------------------------------------
@@ -1352,6 +1521,15 @@ writeFileSync(join(AUSGABE, 'bericht.json'), JSON.stringify(bericht, null, 2) + 
 console.log(`\n${bilderZahl} Einzelbilder, ${bericht.seiten.length} Kontaktbögen.`);
 console.log(`Überlauf: ${gesamtUeberlauf} · Konsolenfehler: ${gesamtKonsole}`
   + ` · Knöpfe falscher Höhe: ${bericht.knopf.length}`  + ` (${FINGER ? 'Finger, 44 px' : 'Zeiger, 44/36 px'})`);
+/* DIE ZAHL NENNT, WAS SIE GEMESSEN HAT (CLAUDE.md 6): nicht „0 Ausbrüche",
+   sondern „n Karten geprüft, 0 außerhalb". Eine Seite ohne Karten meldete
+   sonst dieselbe Null wie eine geprüfte. */
+const gesamtKarten   = bericht.seiten.reduce((n, z) =>
+  n + ((z.breiten.find(x => x.karten) || {}).karten || 0), 0);
+const gesamtAusbruch = bericht.seiten.reduce((n, z) =>
+  n + ((z.breiten.find(x => x.ausbruch && x.ausbruch.length) || {}).ausbruch || []).length, 0);
+console.log(`Karten im Seitengerüst: ${gesamtKarten} geprüft · `
+  + `${gesamtAusbruch} außerhalb von main.inhalt (Nr. 225)`);
 if (verlorene.length)   { console.log(`Sitzung neu aufgebaut: ${verlorene.length}× (Demo-Reset, normal)`); }
 if (ausgefallen.length) {
   /* NACH GRUND GEZAEHLT, nicht in einen Topf: „8 ohne Bild" sagt nichts, „8

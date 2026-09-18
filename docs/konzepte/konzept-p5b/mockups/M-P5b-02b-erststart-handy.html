@@ -1,0 +1,80 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=400">
+<title>P5b · Mockup M-P5b-02 (b, Handy) — Erststart bei 400 px</title>
+<link rel="stylesheet" href="../../../../server/assets/style.css">
+<style>
+/* ---- Mockup-Rahmen (nicht Teil der Anwendung) ---------------------------- */
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.5}
+.mock-kopf{padding:20px 24px 4px}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p{margin:0;color:var(--gedaempft);font-size:var(--groesse-2)}
+.reihe{padding:14px 24px 6px}
+.reihe h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0 0 2px;color:var(--dunkelblau)}
+.reihe .unter{margin:0 0 10px;color:var(--gedaempft);font-size:var(--groesse-2)}
+.frames{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+.frame{position:relative;overflow:hidden;border-radius:var(--radius);background:var(--rauch);box-shadow:0 8px 24px rgba(26,46,77,.10);flex:0 0 auto}
+.frame-titel{position:absolute;left:0;top:0;background:rgba(26,46,77,.85);color:#fff;font-size:11px;padding:2px 8px;border-radius:0 0 8px 0;z-index:5}
+.notiz{padding:6px 24px 26px;max-width:1180px}
+.notiz h3{font-family:var(--schrift-kopf);font-size:var(--groesse-4);margin:12px 0 4px;color:var(--dunkelblau)}
+.notiz ul{margin:0 0 8px 20px;padding:0}
+.notiz li{margin:0 0 4px;font-size:var(--groesse-2);line-height:1.45}
+.notiz code{font-family:var(--schrift-fest);font-size:12px;background:var(--schnee);padding:0 4px;border-radius:4px}
+.kopf{position:static}
+.anmeldung-body-frame{background:var(--dunkelblau);padding:24px 12px}
+.anmeldung-body-frame .anmeldung{padding:0}
+.stub{color:var(--gedaempft);font-size:var(--groesse-2);border:1px dashed var(--linie-stark);border-radius:var(--radius);padding:8px 12px;margin:0 0 12px}
+label.haken{display:flex;align-items:flex-start;gap:8px;min-height:auto;margin-bottom:10px;font-size:var(--groesse-2);line-height:1.45}
+label.haken input{margin-top:3px;flex:0 0 auto}
+.honig{border:1px dashed var(--rot);border-radius:6px;padding:6px 10px;font-size:11px;color:var(--rot);margin:0 0 12px}
+
+/* ---- Vorschlag für style.css (neu mit P5b) ------------------------------- */
+.fuss-anmeldung{text-align:center;color:var(--auf-dunkel);font-size:var(--groesse-2);margin:var(--abstand-4) 0 0;opacity:.85}
+.fuss-anmeldung a{color:var(--auf-dunkel);text-decoration:underline;margin:0 var(--abstand-2)}
+.doku{display:flex;align-items:flex-start;gap:var(--abstand-5);max-width:1120px;margin:0 auto;padding:var(--abstand-5) var(--abstand-3)}
+.doku-nav{flex:0 0 260px;width:260px}
+.kopf-nutzer{margin-left:var(--abstand-2)}
+.doku-nav{position:sticky;top:calc(var(--kopf) + var(--abstand-3));align-self:start;background:var(--schnee);border:1px solid var(--linie);border-radius:var(--radius);padding:var(--abstand-3)}
+.doku-nav .feld{margin-bottom:var(--abstand-2)}
+.doku-nav ol{list-style:none;margin:0;padding:0}
+.doku-nav li{margin:0}
+.doku-nav a{display:block;padding:4px 6px;border-radius:6px;color:var(--asphalt);text-decoration:none;font-size:var(--groesse-2);line-height:1.4}
+.doku-nav li li a{padding-left:18px;color:var(--gedaempft)}
+.doku-nav a.aktiv{background:var(--blau-hell);color:var(--dunkelblau);font-weight:600}
+.doku-text{min-width:0;flex:1 1 auto}
+.doku-text h2{scroll-margin-top:calc(var(--kopf) + 12px)}
+.doku-text h2 .anker{opacity:.35;font-weight:400;text-decoration:none;margin-left:6px;font-size:var(--groesse-3)}
+.doku-text table{border-collapse:collapse;width:100%;margin:0 0 var(--abstand-3);font-size:var(--groesse-2)}
+.doku-text th,.doku-text td{border-bottom:1px solid var(--linie);padding:6px 8px;text-align:left;vertical-align:top}
+.doku-text th{font-weight:600;background:var(--rauch)}
+.doku-text pre{background:var(--rauch);border:1px solid var(--linie);border-radius:var(--radius-klein);padding:var(--abstand-3);overflow-x:auto;margin:0 0 var(--abstand-3)}
+.doku-text blockquote{margin:0 0 var(--abstand-3);padding:var(--abstand-2) var(--abstand-3);border-left:3px solid var(--blau);background:var(--blau-hell);border-radius:0 var(--radius-klein) var(--radius-klein) 0}
+.doku-text blockquote p{margin:0}
+.doku-text img{max-width:100%;height:auto;border:1px solid var(--linie);border-radius:var(--radius-klein)}
+.doku-stand{color:var(--gedaempft);font-size:var(--groesse-2);margin:0 0 var(--abstand-4)}
+.doku-handy details{background:var(--schnee);border:1px solid var(--linie);border-radius:var(--radius);padding:var(--abstand-2) var(--abstand-3);margin:0 0 var(--abstand-4)}
+.doku-handy summary{font-weight:600;color:var(--dunkelblau);font-family:var(--schrift-kopf);font-size:var(--groesse-4)}
+.erststart .zeile{align-items:center}
+.erststart .zeile-haupt{flex:1 1 auto;min-width:0}
+.erststart .zeile-aktionen{margin-left:auto;flex:0 0 auto;display:flex;align-items:center;justify-content:flex-end;min-width:140px}
+.erststart .karte-fuss{display:flex;align-items:center;justify-content:space-between;margin-top:var(--abstand-4)}
+.erststart .schritt-nr{margin-right:var(--abstand-3)}
+.erststart .schritt-nr{width:28px;height:28px;border-radius:999px;background:var(--dunkelblau);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;flex:0 0 auto}
+.erststart .schritt-nr.erledigt{background:var(--blau)}
+.erststart .schritt-nr.optional{background:var(--sand);color:var(--asphalt)}
+.gruppen{display:flex;flex-wrap:wrap;gap:var(--abstand-2) var(--abstand-3)}
+.gruppen .feld{flex:1 1 42%;min-width:120px}
+.dialog-fuss{flex-wrap:wrap}
+.dialog-fuss .knopf-breit{flex:1 1 100%}
+.gruppen .feld{margin-bottom:0}
+.gruppen .feld-eingabe{font-family:var(--schrift-fest);letter-spacing:.12em;text-transform:lowercase;text-align:center}
+.blatt-druck{background:#fff;color:#000;padding:56px 64px;width:794px;box-sizing:border-box;font-size:14px}
+.blatt-druck h1{font-family:var(--schrift-kopf);font-size:28px;margin:0 0 4px;color:var(--dunkelblau)}
+.blatt-druck h2{font-family:var(--schrift-kopf);font-size:18px;margin:22px 0 6px;color:var(--dunkelblau)}
+.blatt-druck p{margin:0 0 8px;line-height:1.5}
+.blatt-druck .blatt-wert{font-family:var(--schrift-fest);font-size:17px;line-height:1.9;letter-spacing:.06em;border:2px solid var(--dunkelblau);border-radius:8px;padding:12px 16px;margin:8px 0 12px;background:#FFFCFA}
+.blatt-druck .meldung{margin:12px 0}
+.blatt-druck ol{margin:0 0 8px 22px;padding:0}
+.blatt-druck li{margin:0 0 4px}
+.blatt-druck .klein{font-size:12px;color:var(--gedaempft)}
+</style></head><body><svg style="display:none" aria-hidden="true"><symbol id="s-zahnrad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" /> <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></symbol><symbol id="s-lupe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /> <path d="M21 21l-6 -6" /></symbol><symbol id="s-kalender" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12" /> <path d="M16 3v4" /> <path d="M8 3v4" /> <path d="M4 11h16" /> <path d="M11 15h1" /> <path d="M12 15v3" /></symbol><symbol id="s-zurueck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l14 0" /> <path d="M5 12l6 6" /> <path d="M5 12l6 -6" /></symbol><symbol id="s-haken" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10" /></symbol><symbol id="s-hinweis" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /> <path d="M12 9h.01" /> <path d="M11 12h1v4h1" /></symbol><symbol id="s-warnung" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4" /> <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0" /> <path d="M12 16h.01" /></symbol><symbol id="s-schloss" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6" /> <path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" /> <path d="M8 11v-4a4 4 0 1 1 8 0v4" /></symbol><symbol id="s-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l16 0" /> <path d="M4 12l16 0" /> <path d="M4 18l16 0" /></symbol><symbol id="s-uhr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a3 3 0 0 1 3 -3h6a3 3 0 0 1 3 3v6a3 3 0 0 1 -3 3h-6a3 3 0 0 1 -3 -3v-6" /> <path d="M9 18v3h6v-3" /> <path d="M9 6v-3h6v3" /></symbol><symbol id="s-standort" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /> <path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></symbol><symbol id="s-fahrzeug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /> <path d="M15 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /> <path d="M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5" /> <path d="M6 10h4m-2 -2v4" /></symbol><symbol id="s-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z" /> <path d="M3 7l9 6l9 -6" /></symbol><symbol id="s-profil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /> <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></symbol><symbol id="s-sicherung" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2" /> <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" /> <path d="M10 12l4 0" /></symbol><symbol id="s-schliessen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-12 12" /> <path d="M6 6l12 12" /></symbol><symbol id="s-hilfe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M12 16v.01"/><path d="M12 13a2 2 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483"/></symbol><symbol id="s-drucker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z"/></symbol><symbol id="s-rechtstexte" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4" /> <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" /> <path d="M9 9l1 0" /> <path d="M9 13l6 0" /> <path d="M9 17l6 0" /></symbol></svg>
+<div class="mock-kopf"><h1>M-P5b-02 (b, Handy) — Erststart bei 400 px</h1><p></p></div>
+<div class="reihe"><h2>offen</h2><p class="unter"></p><div class="frames"><div class="frame " style="width:376px"><span class="frame-titel">376 px</span><header class="kopf"><div class="kopf-innen"><a class="kopf-marke" href="#"><img src="../../../../server/assets/images/gen-em_logo_nef_weiss.svg" alt="" width="52" height="34"><span class="kopf-name">NAdoku</span><span class="kopf-nutzer"></span></a><nav class="kopf-punkte" aria-label="Hauptbereiche"><a class="kopf-punkt aktiv" href="#"><svg class="symbol" viewBox="0 0 24 24" aria-hidden="true"><use href="#s-kalender" xlink:href="#s-kalender"></use></svg><span>Startseite</span></a><a class="kopf-punkt" href="#"><svg class="symbol" viewBox="0 0 24 24" aria-hidden="true"><use href="#s-lupe" xlink:href="#s-lupe"></use></svg><span>Suche</span></a><a class="knopf knopf-symbol" href="#" aria-label="Hilfe" title="Handbuch"><svg class="symbol symbol-gross" viewBox="0 0 24 24" aria-hidden="true"><use href="#s-hilfe" xlink:href="#s-hilfe"></use></svg></a><a class="knopf knopf-symbol kopf-zahnrad" href="#" aria-label="Einstellungen"><svg class="symbol symbol-gross" viewBox="0 0 24 24" aria-hidden="true"><use href="#s-zahnrad" xlink:href="#s-zahnrad"></use></svg></a></nav></div></header><div class="rahmen"><main class="inhalt" style="padding:12px"><section class="karte erststart"><div class="karte-kopf"><h2 class="karte-titel">Willkommen — drei Schritte, dann geht es los</h2></div><div class="karte-inhalt"><div class="zeile"><span class="schritt-nr optional">1</span><div class="zeile-haupt"><div class="zeile-text"><strong>Standort anlegen</strong><span class="zeile-klein">Optional — ein Ort, dem deine Rettungsmittel zugeordnet sind (Wache, Klinik).</span></div></div><div class="zeile-aktionen"><button type="button" class="knopf knopf-neutral">Anlegen</button></div></div><div class="zeile"><span class="schritt-nr ">2</span><div class="zeile-haupt"><div class="zeile-text"><strong>Rettungsmittel anlegen</strong><span class="zeile-klein">Womit du fährst oder fliegst: Name, Typ, Standort.</span></div></div><div class="zeile-aktionen"><button type="button" class="knopf knopf-primaer">Anlegen</button></div></div><div class="zeile"><span class="schritt-nr ">3</span><div class="zeile-haupt"><div class="zeile-text"><strong>Uhr oder Handy koppeln</strong><span class="zeile-klein">Die App erfasst Einsätze unterwegs und gleicht sie hier ab. <a href="#">Anleitung im Handbuch</a></span></div></div><div class="zeile-aktionen"><button type="button" class="knopf knopf-primaer">Koppeln</button></div></div><div class="karte-fuss"><label class="haken" style="margin:0"><input type="checkbox" style="margin-top:0"><span>nicht mehr zeigen</span></label><button type="button" class="knopf knopf-leise">Später</button></div></div></section><div class="stub">Tagesübersicht wie heute (Diensttage, Einsatzkacheln) — hier nur angedeutet. Der Erststart steht als erste Karte darüber, solange Schritte offen sind.</div></main></div></div></div></div><div class="notiz"><ul><li>Die Zeilenaktionen rutschen unter den Text (Regel aus <code>style.css</code> unter 480 px); die Nummernplakette bleibt vorn.</li></ul></div></body></html>

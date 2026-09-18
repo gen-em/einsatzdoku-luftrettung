@@ -308,7 +308,46 @@ jobs:
         # steht so an hundert Stellen. Was AP6 an ZIERDE mitgebracht hatte —
         # fuenf Auslassungszeichen in Kommentaren und Probenbeschriftungen —
         # ist wieder entfernt, statt die Zahl damit wachsen zu lassen.
-        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 377
+        #
+        # 387 MIT P5b (Web 20.21.1): +10. Gleiche Rechnung, gleiche Reihenfolge.
+        # P5b brachte zunaechst +18; ZWOELF davon waren Zierde in Kommentaren
+        # und in einem error_log() und sind entfernt (Pfeil zu "->",
+        # Auslassung zu "..."). Die verbleibenden ZEHN stehen in SICHTBAREM
+        # Text: „Unter Einstellungen -> Konto", „unter Betrieb -> Updates die
+        # Migration ausfuehren", „Du wirst abgemeldet ...". Sie zu aendern
+        # hiesse, den Hausstil an zehn Stellen zu brechen, damit eine Zahl
+        # gleich bleibt, die ohnehin das Falsche misst.
+        #
+        # WAS SIE MISST, IST JETZT AUSGEZAEHLT (Backlog Nr. 227): von 319
+        # Befunden sind 195 „...", 104 Pfeile — zusammen 299 Satzzeichen in
+        # Prosa. Nur ZWANZIG sind Zeichen, die wirklich statt eines Symbols
+        # stehen. Solange die Liste beide Sorten in einen Topf wirft, kann
+        # diese Schwelle nur steigen. Der Weg heraus steht in Nr. 227.
+        #
+        # 388 MIT P5b/AP3: +1. Der Pfeil in „Verwaltung -> NutzerInnen" im Text
+        # der Sammelmail an die Verwaltung (konto_lib.php) — sichtbarer Text,
+        # Hausschreibweise, dieselbe Form wie „Betrieb -> Status" zwei Dateien
+        # weiter in ratelimit_lib.php. Nach derselben Regel behandelt wie die
+        # zehn davor: Zierde raus, sichtbarer Text bleibt.
+        #
+        # 398 MIT P5b/AP9: +10, alle zehn in drei neuen Dateien. Nachgezaehlt
+        # mit `--ausfuehrlich` gegen denselben Lauf auf HEAD, nicht geschaetzt:
+        #   api/schluesselblatt_pruefen.php  5  (2 Pfeile, 3 Auslassungen)
+        #   notfallblatt.php                 4  (Pfeile in „Einstellungen ->
+        #                                       Konto" und im Bedienweg)
+        #   blatt_dialog.php                 1  („Betrieb -> Schluesselblatt")
+        # Sieben Pfeile und drei Auslassungspunkte, alle in sichtbarem Text,
+        # alle in der Hausschreibweise der elf davor.
+        #
+        # MEIN ERSTER EINTRAG HIER WAR FALSCH: Ich hatte die zehn auf fuenf
+        # Dateien verteilt, ohne nachzuzaehlen — `einstellungen.php`,
+        # `erststart_karte.php` und `rueckfrage_dialog.php` steuern in
+        # Wahrheit KEINEN Befund bei. Eine Aufschluesselung, die nicht
+        # gemessen ist, ist schlimmer als keine: Sie sieht aus wie ein Beleg.
+        #
+        # Die drei anderen Gruppen stehen unveraendert: 50 ohne Gegenstueck,
+        # 10 style="...", 8 Emoji — dieses Paket hat keine davon hinzugefuegt.
+        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 398
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py
@@ -355,6 +394,46 @@ jobs:
             exit 1
           fi
           echo "Doppelte Backlog-Nummern: 0"
+
+      - name: Handbuch und „Was ist NAdoku" — rendern sie überhaupt?
+        # P5b/AP8, E-P5b-22. Seit Web 20.23.0 rendert die ANWENDUNG diese
+        # beiden Dateien (`hilfe.php`, `ueber.php`). Damit ist ein
+        # Markdown-Fehler darin kein Schönheitsfehler mehr, sondern eine
+        # kaputte Seite — und zwar eine oeffentliche, die jemand VOR der
+        # Anmeldung sieht.
+        #
+        # `cmark-gfm --validate-utf8` ist hier der billigste ehrliche Test:
+        # Er faellt bei ungueltigem UTF-8 und bei Eingaben, die der Parser
+        # nicht verarbeiten kann. Er prueft NICHT, ob der Text stimmt — das
+        # tut die Wortliste einen Schritt weiter oben, und gegenlesen muss
+        # ihn ohnehin ein Mensch.
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq cmark-gfm
+          fehler=0
+          for f in docs/Handbuch.md docs/Was-ist-NAdoku.md; do
+            if [ ! -f "$f" ]; then
+              echo "::error::$f fehlt — hilfe.php bzw. ueber.php zeigen dann „Dieses Dokument fehlt”."
+              fehler=1; continue
+            fi
+            if cmark-gfm --validate-utf8 --to html "$f" > /dev/null; then
+              echo "  $f rendert ($(wc -c < "$f") Bytes)"
+            else
+              echo "::error::$f rendert nicht."
+              fehler=1
+            fi
+          done
+          # DIE ZWEITE PRUEFUNG IST DIE WICHTIGERE: ein Bild aus fremder
+          # Quelle. `DokuMarkdown::inlineImage()` weist es zur Laufzeit ab,
+          # aber dann steht im Handbuch eine Stelle, die nicht tut, was ihre
+          # Autorin wollte — besser, es faellt hier auf.
+          fremd=$(grep -nE '!\[[^]]*\]\((https?:)?//' docs/Handbuch.md docs/Was-ist-NAdoku.md || true)
+          if [ -n "$fremd" ]; then
+            echo "::error::Bild aus fremder Quelle im Handbuch — die Anwendung zeigt es nicht an (keine fremde Quelle zur Laufzeit, CLAUDE.md 4):"
+            echo "$fremd"
+            fehler=1
+          fi
+          exit $fehler
 
       - name: Die Weiche in install.php — traegt sie noch?
         # `install.php` beginnt mit einer Versionspruefung. Die nuetzt nur,

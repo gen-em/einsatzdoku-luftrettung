@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/stammdaten_ui.php';   // sd_zeile(), sd_form()
+require_once __DIR__ . '/einstieg_lib.php';     // erststart_erledigt() (P5b/AP9)
 require_once __DIR__ . '/demo_lib.php';
 require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung, pruef_rettungsmittel()
 require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), Rollenkatalog
@@ -9,6 +10,11 @@ require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), 
  * ueber demo_lib.php ohnehin mit — aber eine Frist, die auf der Seite steht,
  * darf nicht an einem zufaelligen Umweg haengen. */
 require_once __DIR__ . '/trash_lib.php';
+/* Zwei Nachrichten dieses Reiters (P5b/AP5): die Bestaetigung der neuen
+ * Anmeldeadresse und der Termin der beantragten Loeschung. Ohne diese Zeile
+ * liefe `mail_einreihen()` in einen Fatal Error — und zwar genau in dem
+ * Augenblick, in dem jemand sein Konto loeschen will. */
+require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/apk_lib.php';    // APK-Karte des Geraete-Reiters (S4/A1)
 require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste (S6)
 require_once __DIR__ . '/kopplung_lib.php';  // Kopplungssitzungen: Code suchen, beanspruchen (S5)
@@ -217,18 +223,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $altAdresse = (string)$userEmail;
             try {
-                db()->prepare('UPDATE users SET name = ?, email = ?, logo_wahl = ? WHERE id = ?')
-                    ->execute([$name !== '' ? $name : null, $email, $logo, $userId]);
+                /* DIE ADRESSE WIRD NICHT MEHR SOFORT GESCHRIEBEN (P5b/AP5,
+                 * E-P5b-16).
+                 *
+                 * Bis Web 20.19.0 stand sie unmittelbar in der Zeile — mit
+                 * Passwortnachweis und einer Hinweismail an die alte, aber
+                 * OHNE jede Pruefung, ob die neue ueberhaupt erreichbar ist.
+                 * Ein Tippfehler sperrte damit aus: Die Anmeldung laeuft
+                 * ueber die Adresse, und „Passwort vergessen" schickt an
+                 * eine Adresse, die es nicht gibt. Der Weg zurueck fuehrte
+                 * ueber die Verwaltung — oder, auf einer
+                 * Einzelinstallation, ueber die Datenbank.
+                 *
+                 * NAME UND LOGO GEHEN WEITER SOFORT. Sie sind harmlos, und
+                 * sie an eine Bestaetigung zu haengen waere eine Huerde ohne
+                 * Zweck. */
+                db()->prepare('UPDATE users SET name = ?, logo_wahl = ? WHERE id = ?')
+                    ->execute([$name !== '' ? $name : null, $logo, $userId]);
                 $userName = $name !== '' ? $name : null;
-                $userEmail = $email;
                 $logoWahl  = $logo;
-                if ($adressWechsel) { profil_adresswechsel_melden($altAdresse, $email); }
+
+                if ($adressWechsel) {
+                    require_once __DIR__ . '/konto_lib.php';
+                    $tok  = adresse_vormerken($userId, $email);
+                    $link = app_url('/adresse_bestaetigen.php?token=' . $tok);
+
+                    /* ZWEI NACHRICHTEN, UND BEIDE SIND NOETIG. Die eine
+                     * fragt (an die NEUE Adresse — nur wer sie liest, kann
+                     * bestaetigen), die andere warnt (an die ALTE — sie ist
+                     * die einzige, die im Missbrauchsfall noch der Nutzerin
+                     * gehoert). */
+                    mail_einreihen('adresse_bestaetigen', $email,
+                                   ['link' => $link, 'alt' => $altAdresse]);
+                    profil_adresswechsel_melden($altAdresse, $email);
+
+                    $adresseVorgemerkt = $email;
+                }
                 /* Sofort wirksam, ohne Neuanmeldung: Wer die Wahl ändert,
                    soll das Ergebnis auf derselben Seite sehen. Bei
                    „wechselnd" fällt hier ein neuer Würfel — das ist richtig,
                    denn eine Wahl IST eine Gelegenheit zu würfeln. */
                 logo_sitzung_setzen($logo);
-                $notice = 'Profil gespeichert.';
+                /* DIE MELDUNG SAGT, DASS DIE ADRESSE NOCH NICHT GILT
+                 * (P5b/AP5). Ein blosses „Profil gespeichert." waere hier
+                 * die gefaehrlichste aller Auskuenfte: Die Nutzerin
+                 * schlösse daraus, sie könne sich ab jetzt mit der neuen
+                 * Adresse anmelden — und stünde beim nächsten Mal vor einer
+                 * Anmeldung, die sie nicht kennt. */
+                $notice = isset($adresseVorgemerkt)
+                    ? 'Profil gespeichert. An ' . $adresseVorgemerkt . ' ist eine '
+                    . 'Nachricht unterwegs — erst der Klick darin ändert die '
+                    . 'Anmeldeadresse. Bis dahin meldest du dich weiter mit '
+                    . $altAdresse . ' an.'
+                    : 'Profil gespeichert.';
             } catch (PDOException $ex) {
                 /* NUR der Schluesselkonflikt heisst "bereits verwendet" (M1-16).
                  * Jeder andere Datenbankfehler bekommt eine ehrliche Meldung —
@@ -246,6 +293,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     /* ---- Profil: Passwort (nur mit korrektem alten Passwort) ----------- */
+    /* ---- Konto zur Loeschung anmelden (P5b/AP5, E-P5b-16) --------------
+     *
+     * DER PASSWORTNACHWEIS IST SERVERSEITIG, und er ist hier wichtiger als
+     * beim Adresswechsel: Dort schuetzt die Bestaetigungsmail, hier gibt es
+     * keine zweite Schranke. Der Fall, um den es geht, ist ein offener
+     * Rechner in einer Wache.
+     *
+     * ANDERS ALS BEIM ADRESSWECHSEL wird hier das PASSWORT selbst geprueft
+     * und nicht das abgeleitete Token: Diese Karte laedt kein `crypto.js`
+     * (sie entsperrt nichts), und ein Feld, das ein Token erwartet, braeuchte
+     * genau das. `password_verify()` gegen den Hash tut dasselbe — der
+     * Server sieht das Passwort in dieser einen Anfrage, und das ist
+     * derselbe Weg, den `login.php` ohnehin geht.
+     *
+     * DEMO-KONTO NICHT. Es setzt sich alle 30 Minuten selbst zurueck; eine
+     * Loeschung mit 30 Tagen Karenz waere dort sinnlos und wuerde den
+     * Pruefstand abraeumen. */
+    if ($action === 'konto_loeschen') {
+        require_once __DIR__ . '/konto_lib.php';
+        if (demo_ist_demo($userId)) {
+            $error = 'Das Demo-Konto lässt sich nicht löschen.';
+        } else {
+            $stp = db()->prepare('SELECT password_hash, email FROM users WHERE id = ?');
+            $stp->execute([$userId]);
+            $z = $stp->fetch(PDO::FETCH_ASSOC) ?: [];
+            $hash = (string)($z['password_hash'] ?? '');
+            if ($hash === '' || !password_verify((string)($_POST['pw_loesch'] ?? ''), $hash)) {
+                $error = 'Das Passwort war leer oder falsch — es wurde nichts geändert.';
+            } else {
+                $termin = konto_loeschung_beantragen($userId);
+                mail_einreihen('loeschung_beantragt', (string)$z['email'],
+                               ['termin' => fmt_local($termin, 'd.m.Y') . ' um '
+                                          . fmt_local($termin, 'H:i') . ' Uhr',
+                                'link'   => app_url('/login.php')]);
+                /* SOFORT ABMELDEN. Das Konto ist ab jetzt gesperrt; die
+                 * Sitzung stehen zu lassen hiesse, dass die naechste Seite
+                 * sie beendet — mit einer Meldung, die nach einem Fehler
+                 * aussieht statt nach der Folge des eigenen Klicks. */
+                session_beenden('gesperrt');
+            }
+        }
+    }
+
     if ($action === 'password') {
         // Browser-Krypto: alt wird per Token (oder Alt-Passwort) belegt,
         // neu kommt als Token+Salt; bei aktivem Modul zusaetzlich der neu
@@ -420,6 +510,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $key   = bin2hex(random_bytes(24));
             db()->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label) VALUES (?,?,?,?)')
                 ->execute([$userId, $devId, geraet_schluessel_hash($key), $label ?: null]);
+            erststart_erledigt($userId, ERSTSTART_GERAET);   // Schritt 3 (P5b/AP9)
             $newKey = ['device_id' => $devId, 'api_key' => $key];
             $notice = 'Gerät angelegt. Schlüssel unten JETZT notieren — er wird nur einmal angezeigt.';
         }
@@ -636,6 +727,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$n, $lat, $lon, $bid, $userId]);
             $notice = 'Standort gespeichert. Bereits dokumentierte Diensttage bleiben unverändert.';
         } else {
+            /* ERSTSTART-SCHRITT 1 (P5b/AP9). Vermerkt wird HIER und nicht
+             * in der Karte: Nur diese Stelle weiss, dass tatsaechlich etwas
+             * entstanden ist. */
+            erststart_erledigt($userId, ERSTSTART_STANDORT);
             db()->prepare('INSERT IGNORE INTO bases (user_id, name, lat, lon) VALUES (?,?,?,?)')
                 ->execute([$userId, $n, $lat, $lon]);
             /* „STANDORT ANLEGEN" LANDET AUF DER NEUEN SEITE (E-S9-19). Sie ist
@@ -825,6 +920,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    VALUES (?,?,?,?,?,?)')
                         ->execute([$userId, $rm['base_id'], $rm['name'], $rm['kurz'], $rm['kind'], $rm['typ']]);
                     $vid = (int)$pdo->lastInsertId();
+                    /* ERSTSTART-SCHRITT 2 (P5b/AP9). Nur beim ANLEGEN, nicht
+                     * beim Bearbeiten — wer ein vorhandenes Rettungsmittel
+                     * umbenennt, hat den Einstieg nicht gerade erledigt. */
+                    erststart_erledigt($userId, ERSTSTART_RETTUNGSMITTEL);
                 }
                 /* Rollen und Faehigkeiten vollstaendig ersetzen. Auf BEREITS
                  * DOKUMENTIERTE Diensttage wirkt das nicht: Ihr Rollensatz steht
@@ -1251,7 +1350,20 @@ ui_seite_start(['titel' => 'Einstellungen',
         ]); ?>
       <?php ui_karte_ende(); ?>
 
-      <?php ui_karte_ende(); ?>
+      <?php /* HIER STAND EIN ZWEITES `ui_karte_ende()` (Backlog Nr. 225).
+               Es schloss keine Karte, sondern gab ein `</div></section>` zu
+               viel aus — und weil der Parser fuer ein `</div>` ohne offenes
+               `div` das naechste nimmt, das er findet, schloss es
+               `div.rahmen` samt `main.inhalt` und `form`. Alles danach
+               (Datenschutz, Passwort, Mengen, Loeschkarte und dieser
+               Knopf) lag direkt am `body` und lief ueber die volle
+               Fensterbreite, unter der Seitenleiste hindurch.
+
+               WARUM ES ZEHN TAGE UNBEMERKT BLIEB: Kein Prüfmittel schlug an.
+               `scrollWidth` blieb gleich `innerWidth` — es lief nichts ueber,
+               es lag nur falsch —, die Konsole blieb still, die Knopfhoehen
+               stimmten. Gefunden beim Ansehen des Bildes zu AP6, nicht durch
+               eine Zahl. */ ?>
 
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Profil speichern', 'art' => 'primaer']) ?>
@@ -1274,7 +1386,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             $geoKonto = geocoder_konto_an($userId); ?>
       <?php ui_karte_start(['titel' => 'Datenschutz', 'id' => 'k-datenschutz',
           'plakette' => ($geoInst && $geoKonto)
-              ? ui_plakette('Adresssuche an', ['ton' => 'ok'])
+              ? ui_plakette('Adresssuche an', ['ton' => 'blau'])
               : ui_plakette('Adresssuche aus', ['ton' => 'neutral'])]); ?>
         <p class="feld-hinweis">Beim Tippen in einem Ortsfeld schickt der Browser
           den getippten Text an <strong><?= e(geocoder_host()) ?></strong> und
@@ -1340,13 +1452,52 @@ ui_seite_start(['titel' => 'Einstellungen',
       </div>
       <span class="feld-hinweis" id="pwstate"></span>
     </form>
+
+    <?php /* ---- Wiederherstellungsschluessel (P5b/AP9, E-P5b-20) ----------
+             DER ZWEITE VERBRAUCHER derselben Komponente, die auch die
+             Konto-Rueckfrage bedient (R83): `assets/schluessel.js` rechnet,
+             `api/schluessel_erneuern.php` schreibt, `schluessel_teile.php`
+             zeigt. Hier ohne Frage davor — wer freiwillig erneuert, ist
+             nicht gefragt worden.
+
+             WOZU DIESER WEG UEBERHAUPT. Die Rueckfrage kommt nach 30 Tagen;
+             wer sein Blatt heute verliert, will nicht bis dahin warten. Und
+             nach einem Umzug, einem geteilten Rechner oder einem verlorenen
+             Ordner ist „neu erzeugen" die einzige richtige Antwort — der
+             alte Zettel wird damit ungueltig, und genau das ist gewollt. */ ?>
+    <?php ui_karte_start(['titel' => 'Wiederherstellungsschlüssel']); ?>
+      <p>Er öffnet deine verschlüsselten Daten, wenn du dein Passwort
+         vergessen hast — der Betreiber kann das nicht. Du hast ihn einmal
+         bekommen, beim Einrichten deines Kontos, auf dem
+         <strong>Notfallblatt</strong>.</p>
+      <p class="feld-hinweis">Verloren? Dann erzeuge einen neuen. Das alte
+         Blatt wird damit ungültig; deine Daten bleiben unverändert und
+         lesbar. Nachträglich drucken lässt sich ein Blatt nicht — der Server
+         kennt den Schlüssel nicht.</p>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Neuen Schlüssel erzeugen', 'art' => 'neutral',
+                      'typ' => 'button', 'attr' => ' data-schluessel-auf']) ?>
+      </div>
+    <?php ui_karte_ende(); ?>
+
+    <dialog class="dialog" id="dlg-schluessel" data-schluessel>
+      <?php require __DIR__ . '/schluessel_teile.php'; ?>
+    </dialog>
+
     <?php /* Ruestzeug der Verschluesselung (Baustein ui_krypto_bootstrap()),
              dazu pwquality.js: Passwortguete nach derselben Regel wie bei
              Erstvergabe und Zuruecksetzen (B9, M2-02).
              OHNE keyguard.js/unlock.js — dieser Reiter entsperrt nichts, er
-             wechselt das Passwort. */ ?>
+             wechselt das Passwort.
+
+             `keycheck` SEIT P5b/AP9: `PAT_KEY_CHECK` ist die Wache der
+             Schluesselerneuerung — ohne sie verweigert `schluessel.js` den
+             Dienst (der Kopf dort sagt, warum). */ ?>
     <?php ui_krypto_bootstrap(['skripte' => ['assets/crypto.js'],
-                               'guete' => true, 'einzug' => '    ']); ?>
+                               'guete' => true, 'keycheck' => true,
+                               'einzug' => '    ']); ?>
+    <script src="<?= asset('assets/schluessel.js') ?>"></script>
+    <script src="<?= asset('assets/rueckfrage.js') ?>"></script>
     <script<?= kopf_nonce_attr() ?>>
     /* Zweiter Teil des Passwortwechsels (M2-07): Das Vormerkfach aus dem
      * vorigen Seitenaufruf aufloesen, bevor irgendetwas anderes geschieht. */
@@ -1491,6 +1642,93 @@ ui_seite_start(['titel' => 'Einstellungen',
       } catch (e) { st.textContent = 'Fehler bei der Schlüsselableitung.'; }
     });
     </script>
+
+    <?php /* ---- Was das Konto hält (P5b/AP6, E-P5b-04) ------------------
+       *
+       * VOR der Löschkarte und nach dem Passwort: Wer wissen will, wie voll
+       * sein Konto ist, sucht es bei den Angaben zum Konto — und nicht
+       * neben dem roten Kasten, in dem es gelöscht wird.
+       * ------------------------------------------------------------------ */ ?>
+    <?php require_once __DIR__ . '/konten_einstellungen_lib.php';
+          $fuell = konto_fuellstand($userId);
+          $prozent = (int)round($fuell['anteil'] * 100); ?>
+    <?php ui_karte_start(['titel' => 'Was dein Konto hält', 'id' => 'k-mengen',
+        'plakette' => ui_plakette($prozent . ' %', ['ton' => $fuell['voll'] ? 'rot'
+                                : ($fuell['warnung'] ? 'orange' : 'blau')])]); ?>
+      <?php ui_zeile(['text' => 'Einsätze',
+          'klein' => 'ohne die im Papierkorb — was dort liegt, zählt nicht gegen '
+                   . 'die Grenze',
+          'plaketten' => ui_plakette($fuell['einsaetze'] . ' von '
+                       . $fuell['grenze_einsaetze'], ['ton' => 'neutral'])]); ?>
+      <?php ui_zeile(['text' => 'Speicher',
+          'klein' => 'Einsätze samt GPS-Daten und Ruhesegmenten, geschätzt',
+          'plaketten' => ui_plakette((int)round($fuell['bytes'] / 1048576) . ' von '
+                       . (int)round($fuell['grenze_bytes'] / 1048576) . ' MB',
+                       ['ton' => 'neutral'])]); ?>
+      <?php if ($fuell['voll']): ?>
+        <?= ui_meldung_markup('warn', 'Die Grenze ist erreicht. Der Server nimmt '
+            . 'keine Gerätedaten mehr an — Uhr und Handy behalten sie und senden '
+            . 'später, es geht nichts verloren. Bearbeiten und Löschen bleiben '
+            . 'möglich.') ?>
+      <?php elseif ($fuell['warnung']): ?>
+        <?= ui_meldung_markup('info', 'Dein Konto ist zu ' . $prozent . ' % voll. '
+            . 'Wird eine der beiden Grenzen erreicht, nimmt der Server keine '
+            . 'Gerätedaten mehr an.') ?>
+      <?php endif; ?>
+      <p class="feld-hinweis"><strong>Was hilft:</strong> alte Diensttage löschen —
+         was im Papierkorb liegt, zählt nicht mit, Löschen wirkt also sofort. Oder
+         die Verwaltung um eine höhere Grenze bitten; sie kann sie je Konto setzen.
+         Vorher ausleiten kannst du alles unter
+         <a href="import.php">Import / Export</a>.</p>
+    <?php ui_karte_ende(); ?>
+
+    <?php /* ---- Konto löschen (P5b/AP5, E-P5b-16) ------------------------
+       *
+       * WARUM ES DIESEN WEG GIBT: Bis Web 20.19.0 konnte eine Nutzerin ihr
+       * Konto nicht selbst loeschen — sie musste die Verwaltung bitten, und
+       * die loeschte sofort und unwiderruflich. Beides ist falsch herum:
+       * Ueber die eigenen Daten entscheidet, wem sie gehoeren, und eine
+       * Loeschung ohne Frist ist ein Klick, der nicht zurueckzunehmen ist.
+       *
+       * DIE KARENZ IST DREISSIG TAGE, und die Ruecknahme ist die ANMELDUNG
+       * selbst — kein Knopf, kein zweiter Link, kein zweites Token. Ein
+       * Ruecknahmeweg ohne Passwort waere genau das, was ein Angreifer
+       * wollte, der die Loeschung verhindern will, um weiter mitzulesen.
+       * ------------------------------------------------------------------ */ ?>
+    <?php require_once __DIR__ . '/konto_lib.php'; ?>
+    <?php ui_karte_start(['titel' => 'Konto löschen', 'klasse' => 'karte-gefahr',
+                          'id' => 'k-konto-loeschen']); ?>
+      <?php if (demo_ist_demo($userId)): ?>
+        <p class="feld-hinweis">Das Demo-Konto lässt sich nicht löschen — es setzt
+           sich ohnehin alle 30 Minuten selbst zurück.</p>
+      <?php else: ?>
+        <p class="feld-hinweis"><strong>Dein Konto wird sofort gesperrt und nach
+           <?= KONTO_KARENZ_TAGE ?> Tagen endgültig gelöscht.</strong> In dieser Zeit
+           genügt eine Anmeldung, und die Löschung ist zurückgenommen — einen Knopf
+           dafür brauchst du nicht.</p>
+        <p class="feld-hinweis">Nach dem Termin sind Einsätze, GPS-Daten, Stammdaten
+           und Konto-Backups <strong>endgültig fort</strong>. Es gibt danach keinen
+           Weg zurück, auch nicht über die Verwaltung: Deine Daten sind mit deinem
+           Passwort verschlüsselt, und niemand sonst kann sie öffnen.</p>
+        <p class="feld-hinweis"><strong>Willst du sie behalten, leite sie vorher
+           aus</strong> — unter <a href="import.php">Import / Export</a>. Danach ist
+           es zu spät.</p>
+        <form method="post"
+              data-confirm="Konto wirklich zur Löschung anmelden? Es wird sofort gesperrt und nach <?= KONTO_KARENZ_TAGE ?> Tagen endgültig gelöscht. Eine Anmeldung in dieser Zeit nimmt die Löschung zurück."
+              data-confirm-ok="Zur Löschung anmelden">
+          <?= csrf_field() ?><input type="hidden" name="action" value="konto_loeschen">
+          <?php /* DAS PASSWORT ALS NACHWEIS, wie beim Adresswechsel — und
+                   zwar SERVERSEITIG geprueft. Ein offener Rechner in einer
+                   Wache ist der Fall, um den es geht. */ ?>
+          <?php ui_feld(['label' => 'Aktuelles Passwort', 'name' => 'pw_loesch',
+                         'art' => 'password', 'pflicht' => true,
+                         'attr' => ' autocomplete="current-password"']); ?>
+          <div class="listen-form-fuss">
+            <?= ui_knopf(['text' => 'Konto zur Löschung anmelden', 'art' => 'gefahr']) ?>
+          </div>
+        </form>
+      <?php endif; ?>
+    <?php ui_karte_ende(); ?>
 
   <?php elseif ($tab === 'standorte' || $tab === 'standort'): ?>
     <?php

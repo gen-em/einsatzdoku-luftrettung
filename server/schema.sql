@@ -23,7 +23,58 @@ CREATE TABLE users (
   logo_wahl     VARCHAR(20) NOT NULL DEFAULT '',     -- '' = Standard der Installation, sonst 'hubschrauber' | 'fahrzeug' | 'wechselnd' (E-P3-20)
   adresssuche   TINYINT(1) NOT NULL DEFAULT 1,       -- Adressvorschlaege aus dem Internet; die Installation ist die Obergrenze (app_state.adresssuche, E-S9-05/R79)
   last_login    DATETIME NULL,                       -- UTC, letzte erfolgreiche Anmeldung; NULL = noch nie (Kontoseite, NutzerInnen-Liste)
-  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  -- LEBENSZYKLUS (P5b/AP2, E-P5b-12). Der Bestand wird bei der Migration
+  -- `aktiv`: Jeder andere Wert waere eine Aussage ueber Konten, die es vor
+  -- der Pruefung schon gab. `bestaetigt_am` bleibt dort NULL — „die Frage
+  -- stellte sich nicht", und ein erfundenes Datum waere schlimmer als eine
+  -- Leerstelle (dieselbe Entscheidung wie bei `last_login`).
+  status        ENUM('unbestaetigt','wartet','aktiv','gesperrt') NOT NULL DEFAULT 'aktiv',
+  bestaetigt_am  DATETIME NULL,                      -- wann die Adresse bestaetigt wurde; NULL = nicht noetig (Einladung, Einrichtung)
+  gesperrt_seit  DATETIME NULL,
+  gesperrt_grund VARCHAR(64) NULL,                   -- 'selbstloeschung' ist die Karenz (E-P5b-16), sonst freier Grund der Verwaltung
+  loeschung_am   DATETIME NULL,                      -- Ende der Loeschkarenz; der Job raeumt danach endgueltig ab
+  -- ADRESSWECHSEL MIT BESTAETIGUNG (P5b/AP5, E-P5b-16). Die ALTE Adresse
+  -- bleibt die gueltige, bis der Klick kommt: Ein Tippfehler in der neuen
+  -- sperrte sonst aus, weil die Anmeldung ueber die Adresse laeuft.
+  -- KEIN UNIQUE auf email_neu — zwei Konten duerfen dieselbe Adresse
+  -- vormerken; erst der Klick entscheidet, und dort faengt das UNIQUE auf
+  -- `email`. Eine Sperre schon beim Vormerken verriete, dass jemand anders
+  -- dieselbe Adresse vorgemerkt hat.
+  email_neu            VARCHAR(190) NULL,
+  email_neu_token_hash CHAR(64) NULL,
+  email_neu_bis        DATETIME NULL,
+  -- GRENZEN JE KONTO (P5b/AP6, E-P5b-18; Backlog Nr. 37 und 48). NULL heisst
+  -- „die Vorgabe der Installation gilt" — nicht 0 und nicht die Vorgabe als
+  -- Zahl: Traegt die Spalte den Wert, aendert eine spaetere Anhebung der
+  -- Vorgabe an bestehenden Konten nichts, und niemand saehe, warum.
+  grenze_einsaetze INT UNSIGNED NULL,
+  grenze_mb        INT UNSIGNED NULL,
+  -- Backlog Nr. 48: wie viele Konto-Backups dieses Kontos aufgehoben werden,
+  -- statt der Zahl der Installation (`adminbackup_aufbewahrung`, Vorgabe 2).
+  backup_pakete    SMALLINT UNSIGNED NULL,
+  -- Erststart und Besitz-Rueckfragen (P5b/AP9, E-P5b-09, -19).
+  -- Bitfeld der drei Erststart-Schritte (Standort, Rettungsmittel, Geraet);
+  -- **-1 heisst „nicht mehr zeigen"** und ist deshalb kein UNSIGNED. Warum
+  -- ein Stand und nicht eine Abfrage auf die Stammdaten: „ich will keinen
+  -- Standort" ist eine Antwort, und ein COUNT(*) saehe sie nie.
+  erststart_stand       TINYINT NOT NULL DEFAULT 0,
+  -- Wann das naechste Mal nach dem Notfallblatt gefragt wird. Ein DATUM und
+  -- kein Intervall: Die Abstaende sind ungleich (30 Tage, 6 Monate, dann
+  -- jaehrlich) und „spaeter" schiebt um 7 Tage — das Datum traegt beides.
+  -- NULL = noch nie gesetzt; gesetzt wird beim ersten Anmelden, nicht bei
+  -- der Anlage.
+  rueckfrage_naechste   DATE NULL,
+  -- 0 = 30 Tage, 1 = 6 Monate, 2 und hoeher = jaehrlich.
+  rueckfrage_runde      TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  -- Wie oft schon „spaeter" (bis 3). Steht hier und nicht in der Sitzung,
+  -- weil „spaeter" sonst durch Abmelden zurueckgesetzt und damit unbegrenzt
+  -- waere.
+  rueckfrage_verschoben TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  -- Fuer die Verfalljobs, nicht fuer die Anzeige: „alle Konten in einem
+  -- Zustand, deren Frist abgelaufen ist" waere sonst ein Vollscan je Joblauf.
+  INDEX idx_status_loeschung (status, loeschung_am),
+  INDEX idx_email_neu_token (email_neu_token_hash)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE password_resets (
@@ -573,6 +624,33 @@ CREATE TABLE sicherheit_ereignisse (
   INDEX idx_art_zeit (art, zeitpunkt)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- BETRIEBSPROTOKOLL: Betriebsereignisse, KEINE Datenzugriffe (P5b/AP1, V1).
+--
+-- Die Nachbartabelle darueber (`sicherheit_ereignisse`) ist der siebte
+-- Reiter und bleibt ausdruecklich getrennt: Dort stehen IP-Adressen mit einer
+-- festen Frist von 30 Tagen, hier steht das Audit mit bis zu drei Jahren.
+-- Zwei Fristen in einer Tabelle sind eine Einladung, die kuerzere zu
+-- vergessen. Begruendung in protokoll_lib.php und E-P5b-12.
+--
+-- KEIN FREMDSCHLUESSEL AUF `users`: Der haeufigste Eintrag ist „Konto
+-- geloescht". Mit CASCADE loeschte die Kontoloeschung ihren eigenen
+-- Protokolleintrag, mit RESTRICT verhinderte der Eintrag die Loeschung.
+CREATE TABLE protokoll_ereignisse (
+  id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  zeit              DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+  reiter            ENUM('verwaltung','email','jobs',
+                         'sicherung','ziele','system') NOT NULL,
+  art               VARCHAR(64) NOT NULL,
+  urheber_user_id   INT UNSIGNED NOT NULL DEFAULT 0,   -- 0 = kein Mensch
+  urheber_art       ENUM('mensch','job','cli') NOT NULL DEFAULT 'mensch',
+  betroffen_user_id INT UNSIGNED NULL,
+  text              TEXT NOT NULL,
+  daten             JSON NULL,
+  KEY idx_reiter_zeit (reiter, zeit),
+  KEY idx_betroffen (betroffen_user_id, zeit),
+  KEY idx_urheber (urheber_user_id, zeit)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- SICHERUNGSZIELE: wohin die Sicherungen geschoben werden (S2/AP7, E-S2-22).
 --
 -- Der Name ist nicht `transport_dests` -- das sind die Zielkliniken. Hier geht
@@ -740,7 +818,29 @@ CREATE TABLE jobs (
 CREATE TABLE rechtstexte (
   schluessel VARCHAR(32) NOT NULL PRIMARY KEY,  -- 'impressum' | 'datenschutz'
   inhalt     MEDIUMTEXT NULL,                   -- Markdown-Quelle; NULL/leer = nichts hinterlegt
-  stand_am   DATE NULL                          -- im Editor von Hand gesetzt; NULL = keine Standzeile
+  -- DATETIME und nicht DATE (P5b/AP4, Fehlerfund F3): Zwei Aenderungen am
+  -- selben Tag waeren sonst EINE Fassung — und wer die erste angenommen hat,
+  -- gaelte als Annehmer der zweiten. Der Editor bleibt ein Datumsfeld; die
+  -- Uhrzeit setzt der Speicherweg, nicht die Betreiberin.
+  stand_am   DATETIME NULL                      -- im Editor von Hand gesetzt; NULL = keine Standzeile
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- EINWILLIGUNGEN JE KONTO (P5b/AP4, E-P5b-05, -15).
+--
+-- Eine Zeile je Konto UND Schluessel, nicht je Annahme: Eine neue Annahme
+-- ueberschreibt die alte. Der Verlauf „wer hat wann welche Fassung
+-- angenommen" gehoert ins Protokoll (Reiter Verwaltung) und ueberlebt dort
+-- auch die Kontoloeschung.
+--
+-- `stand_am` ist die Fassung, die ANGENOMMEN wurde; der Vergleich gegen
+-- `rechtstexte.stand_am` ist die ganze Pruefung.
+CREATE TABLE konto_einwilligungen (
+  user_id    INT UNSIGNED NOT NULL,
+  schluessel VARCHAR(32) NOT NULL,
+  stand_am   DATETIME NULL,
+  zeit       DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+  PRIMARY KEY (user_id, schluessel),
+  CONSTRAINT fk_kew_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Berichte der Content-Security-Policy (P5a/AP4, Web 20.7.0). Zusammengefasst
@@ -904,4 +1004,21 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_09_16_geraet_abgewiesen', 'skipped'),
   -- backup_targets.behalten_* und sicherungsziel_dateien stehen oben schon
   -- im Schema (Web 20.14.0, P5a/AP10).
-  ('2026_09_16_sicherungsziel_aufbewahrung', 'skipped');
+  ('2026_09_16_sicherungsziel_aufbewahrung', 'skipped'),
+  -- protokoll_ereignisse steht oben schon im Schema (Web 20.16.5, P5b/AP1).
+  ('2026_09_16_protokoll_ereignisse', 'skipped'),
+  -- users.status und die Lebenszyklus-Spalten stehen oben schon im Schema
+  -- (Web 20.17.0, P5b/AP2).
+  ('2026_09_16_konto_lebenszyklus', 'skipped'),
+  -- rechtstexte.stand_am ist oben schon DATETIME, konto_einwilligungen steht
+  -- oben schon im Schema (Web 20.19.0, P5b/AP4).
+  ('2026_09_16_einwilligungen', 'skipped'),
+  -- users.email_neu* stehen oben schon im Schema (Web 20.20.0, P5b/AP5).
+  ('2026_09_16_adresswechsel_bestaetigt', 'skipped'),
+  -- users.grenze_* und aufbewahrung_tage stehen oben schon im Schema
+  -- (Web 20.21.0, P5b/AP6).
+  ('2026_09_16_konto_grenzen', 'skipped'),
+  -- users.erststart_stand und rueckfrage_* stehen oben schon im Schema
+  -- (Web 20.24.0, P5b/AP9). Der Nachzieher fuer Bestandskonten entfaellt in
+  -- einer frischen Anlage: Dort gibt es keine.
+  ('2026_09_17_erststart_rueckfragen', 'skipped');

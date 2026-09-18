@@ -3,6 +3,10 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_admin();
 require_once __DIR__ . '/rechtstexte_lib.php';
+/* VOR dem POST-Zweig und nicht danach: Der Protokolleintrag entsteht beim
+ * Speichern, und `function_exists('protokoll')` waere weiter unten `false`
+ * gewesen — der Eintrag waere still ausgefallen (P5b/AP4). */
+require_once __DIR__ . '/protokoll_lib.php';
 
 /**
  * INSTALLATION — wie diese Anlage nach aussen auftritt (S8/AP3, E-S8-05/-12).
@@ -137,6 +141,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($neu !== $vorher['inhalt'] || $standNeu !== $vorher['stand']) {
                     rt_speichern($k, $neu, $standNeu);
                     $geaendert[] = $name;
+
+                    /* INS PROTOKOLL, UND ZWAR MIT DEM STAND (P5b/AP4,
+                     * E-P5b-15). Bei Nutzungsbedingungen und
+                     * Auftragsverarbeitung ist das keine Buchhaltung: Ein
+                     * neuer Stand **sperrt beim naechsten Login jedes
+                     * Konto**, bis es angenommen hat. Wer das ausloest,
+                     * soll es nachlesen koennen — und wer sich wundert,
+                     * warum alle am Tor stehen, findet hier den Grund und
+                     * den Zeitpunkt.
+                     *
+                     * DER TEXT SELBST STEHT NICHT DARIN. Ein Rechtstext hat
+                     * bis zu 60 000 Zeichen; das Protokoll haelt, DASS und
+                     * WANN geaendert wurde, nicht WAS. Die Fassungen
+                     * nachzuhalten waere eine Versionierung und etwas
+                     * anderes. */
+                    if (function_exists('protokoll')) {
+                        $folge = isset(RT_EINWILLIGUNG[$k])
+                               && RT_EINWILLIGUNG[$k]['art'] === 'annahme'
+                            ? ' — mit neuem Stand sperrt das den nächsten Login, '
+                            . 'bis alle Konten angenommen haben'
+                            : '';
+                        protokoll('verwaltung', 'rechtstext_geaendert',
+                                  $name . ' geändert (Stand '
+                                . ($standNeu ?? 'ohne Datum') . ')' . $folge,
+                                  ['schluessel' => $k, 'stand' => $standNeu]);
+                    }
                 }
             }
             $notice = $geaendert

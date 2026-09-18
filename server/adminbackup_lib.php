@@ -908,7 +908,9 @@ function edbak_sicherung_erzeugen(int $userId): array
 function edbak_verdraengen(string $kennung): array
 {
     $pakete = edbak_pakete($kennung);          // neueste zuerst
-    $grenze = max(1, edbak_aufbewahrung());
+    /* DIE ZAHL JE KONTO (P5b/AP6, Backlog Nr. 48) — sie faellt auf die der
+     * Installation zurueck, wenn keine eigene gesetzt ist. */
+    $grenze = max(1, edbak_aufbewahrung_konto($kennung));
     $weg = array_slice($pakete, $grenze);
 
     /* DIE EINTEILIGEN PAKETE GEHEN MIT (S2/AP6, Entscheidung vom 31.08.2026).
@@ -1434,7 +1436,7 @@ function edbak_intervall(): int
 }
 
 /**
- * Aufbewahrung je Konto in Paketen (E-P3-41, Web 9.8.0).
+ * Aufbewahrung in Paketen — die Zahl der INSTALLATION (E-P3-41, Web 9.8.0).
  *
  * Dieselbe Ablage wie das Erinnerungsintervall — app_state, kein neues
  * Schema. Der Wert 0 heisst „nie gesetzt"; dann gilt die Vorbelegung.
@@ -1443,6 +1445,35 @@ function edbak_aufbewahrung(): int
 {
     $v = (int)(edbak_marke_lesen('adminbackup_aufbewahrung') ?? 0);
     return $v > 0 ? $v : EDBAK_AUFBEWAHRUNG_VORGABE;
+}
+
+/**
+ * Aufbewahrung JE KONTO (P5b/AP6, Backlog Nr. 48).
+ *
+ * `users.backup_pakete` schlaegt die Zahl der Installation. `NULL` heisst
+ * „die Zahl der Installation gilt" — nicht 0 und nicht dieselbe Zahl noch
+ * einmal: Traegt die Spalte den Wert, aendert eine spaetere Anhebung der
+ * Installationszahl an diesem Konto nichts, und niemand saehe, warum.
+ *
+ * ZUR KENNUNG UND NICHT ZUR ID: `edbak_verdraengen()` arbeitet auf dem
+ * Ordner, und der heisst nach der Kontokennung. Ein Ordner ohne Konto (die
+ * Uebersicht nennt sie „Backup ohne Konto") faellt auf die
+ * Installationszahl zurueck — es gibt niemanden mehr, der etwas anderes
+ * bestimmen koennte.
+ */
+function edbak_aufbewahrung_konto(string $kennung): int
+{
+    if ($kennung === '') { return edbak_aufbewahrung(); }
+    try {
+        $st = db()->prepare('SELECT backup_pakete FROM users WHERE account_key = ?');
+        $st->execute([$kennung]);
+        $v = $st->fetchColumn();
+        if ($v !== false && $v !== null && (int)$v > 0) { return (int)$v; }
+    } catch (Throwable $ex) {
+        /* Spalte fehlt (Migration steht aus) — dann gilt die Zahl der
+         * Installation, und das ist das bisherige Verhalten. */
+    }
+    return edbak_aufbewahrung();
 }
 
 /** Wöchentliche Erinnerungsmail an Admins — aus, solange nichts gesetzt ist. */

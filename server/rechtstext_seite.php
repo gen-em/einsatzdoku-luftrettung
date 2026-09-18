@@ -96,11 +96,15 @@ ui_kopf(['menue' => false, 'zurueck' => $zurueck]);
                  Anwendung liefert keinen Rechtstext mit. Deshalb der Ton
                  „info" und nicht „warn": Für eine Besucherin ist das eine
                  Auskunft über den Betreiber, keine Störung. */ ?>
+        <?php /* AUS DEM KATALOG (P5b/AP4). Hier stand ein ZWEIWERTIGER
+                 ternaerer Ausdruck, und das war die eine Stelle, an der ein
+                 dritter Schluessel stillschweigend falsch geantwortet
+                 haette: Die Nutzungsbedingungen haetten gemeldet, es sei
+                 „noch keine Datenschutzerklaerung hinterlegt". Kein Fehler,
+                 keine Meldung — nur ein falscher Satz. */ ?>
         <?= ui_meldung_markup('info',
-            'Der Betreiber dieser Installation hat ' .
-            ($rtSchluessel === 'impressum'
-                ? 'noch kein Impressum hinterlegt.'
-                : 'noch keine Datenschutzerklärung hinterlegt.')) ?>
+            'Der Betreiber dieser Installation hat '
+            . (RT_LEERTEXT[$rtSchluessel] ?? 'diesen Text noch nicht hinterlegt.')) ?>
         <?php if ($istAdmin): ?>
           <p class="feld-hinweis">Du bist mit Verwaltungsrechten angemeldet und
              kannst den Text unter <a href="admin_installation.php">Verwaltung →

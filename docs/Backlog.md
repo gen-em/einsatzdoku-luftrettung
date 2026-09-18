@@ -35,7 +35,7 @@ Eintrag verschwunden; ihr Inhalt ist nicht mehr rekonstruierbar. Sie bleiben
 deshalb dauerhaft frei — weder werden sie neu vergeben noch nachgetragen. Diese
 Notiz steht hier, damit die Frage nicht bei jedem Durchsehen erneut aufkommt.
 
-**Nummernvergabe zwischen Zweigen (Stand 16.09.2026).** 200 und 201
+**Nummernvergabe zwischen Zweigen (Stand 17.09.2026).** 200 und 201
 (Rahmenplan Fassung 73) und 202–205 (Fassung 74) sind mit dem Doku-Paket der
 Konzeptinstanz vergeben und liegen auf dem P5a-Zweig
 `claude/butte-umsetzen-5opi9u`, der bis zu seinem Merge die
@@ -49,8 +49,22 @@ Durchsicht vom 16.09.2026** (Zustandsdatei der Kette im Webroot;
 Durchsicht des P5a-Abschlusses** (16.09.2026, nach dem Merge), **217 und 218
 aus der Durchsicht der Werkzeugaufrufe** (17.09.2026), **219 aus dem ersten
 Auslieferungslauf nach dem Merge von PR #51** und **220 und 221 aus dem
-ersten Bilderlauf gegen Staging mit Demo-Konto** (beide 17.09.2026). Jeder
-weitere Zweig, der Nummern vergibt, beginnt bei **222** und trägt seine
+ersten Bilderlauf gegen Staging mit Demo-Konto** (beide 17.09.2026), **222
+aus dem Aufbau des Uhr-Prüfstands**. **223 bis 233 liegen auf dem
+P5b-Zweig** `claude/magical-dirac-we2y1z` (223 Anwendung nicht
+installierbar, 224 `frame-ancestors` in Report-Only, 225 Profilseite aus dem
+Gerüst ausgebrochen, 226 Meldungston ohne Regel, 227 Symbolregel zählt
+Typografie, 228 Proof-of-Work gegen Registrierungs-Spam, 229 Uhr-Anzeige bei
+`403`, 230 Wegwerfliste nachziehen, 231 Einwilligung bei der Registrierung,
+232 Fristen der Rückfragen nie abgelaufen, 233 bisheriger Server-Anteil).
+
+> **Diese elf trugen auf ihrem Zweig die Nummern 215 bis 225** und sind beim
+> Merge am 17.09.2026 verschoben worden: `main` hatte 215 bis 222 parallel
+> für anderes vergeben. `main` ist vorgelagert, also weicht der Zweig — wie
+> schon bei Nr. 214 und bei Web 20.16.0. Wer in einem Commit vor dem Merge
+> eine dieser Nummern liest, liest die alte Zählung.
+
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **234** und trägt seine
 Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
@@ -228,6 +242,22 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     billige Sonderweg oben (Werte gegen den Vorrat des Bausteins halten)
     hätte beide Fälle am Tag ihrer Entstehung gemeldet. Wer Nr. 36 angeht,
     fängt damit an und räumt die zwei Stellen gleich mit.
+
+    **Teilweise erledigt in P5b/AP9 (17.09.2026), Web 20.24.0.** Der Fall trat
+    ein VIERTES Mal ein — `'ton' => 'info'` an der Erststart-Karte, eingebaut
+    und beim Ansehen des Bildes gefunden, weil die Plakette ohne Fläche
+    dastand. Damit war es genug: Der billige Sonderweg, den dieser Punkt oben
+    beschreibt, ist jetzt gebaut. `tools/vollstaendigkeit/` prüft
+    `ui_plakette`, `ui_knopf`, `ui_kennzahl` und `ui_meldung_markup` gegen die
+    Klassen, die es im Stylesheet tatsächlich gibt. Die drei stehenden Fälle
+    (`ok` zweimal, `info` einmal) sind auf `blau` berichtigt.
+
+    **Gegenprobe gefahren:** Beide Fehler absichtlich wieder eingebaut, das
+    Mittel meldet sie mit Datei, Zeile und dem fehlenden Klassennamen.
+
+    **Offen bleibt die andere Hälfte** — Klassennamen, die JavaScript sucht,
+    und Töne, die als VARIABLE übergeben werden (`'ton' => $ton`). Was darin
+    steht, weiß nur die Laufzeit; dieses Mittel überspringt sie.
 
 37. **Wie verhält sich die Anwendung, wenn ein Konto über Jahre wächst?**
     Aufgeworfen während P3, dort bewusst **nicht** weiterverfolgt — die Frage
@@ -415,6 +445,31 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Dieser Eintrag ist die **führende** Fassung; die Bemerkung
     in Rahmenplan Abschnitt 5 verweist hierher.
 
+    **Der Speichergrenzen-Teil ist am 17.09.2026 in P5b/AP6 erledigt**
+    (Web 20.21.0, R37.10, E-P5b-04) — und zwar als **Deckel**, nicht als
+    Antwort auf die Messungen oben. Zwei Grenzen je Konto, Einsätze und
+    Speicher: Vorgabe der Installation **5000** und **250 MB**, je Konto
+    überschreibbar in der Kontoverwaltung; **leer heißt „die Vorgabe gilt"**
+    und nicht „die Vorgabe als Zahl", weil eine spätere Anhebung sonst an
+    bestehenden Konten wirkungslos bliebe. Ab **80 %** eine Nachricht, bei
+    100 % antwortet `ingest.php` mit **`507`**; es zählt der **größere** der
+    beiden Anteile und nicht ihr Durchschnitt, und was im Papierkorb liegt,
+    zählt nicht mit — eine Grenze, die auch das Aufräumen sperrt, ist eine
+    Falle. Abnahme **6 von 6 bestanden**: Uploads `200, 200, 200, 507`, der
+    Ratenzähler bleibt bei **0 Zeilen** (die Absage ist kein Fehlversuch),
+    nach Anheben der Grenze kam die abgewiesene Aufzeichnung vollständig nach
+    (4 Einsätze). Ingestprobe **83 Erwartungen, 0 nicht erfüllt**.
+
+    **Was der Deckel nicht beantwortet, ist der ganze Rest dieses Eintrags.**
+    Die Zeitraumübersicht wächst weiter linear und ungedeckelt, der Suchindex
+    überträgt weiter den gesamten Bestand, die sechs stillen Kappungen sagen
+    weiter nichts, und **`post_max_size` der Zielanlage bleibt ungemessen**
+    (Prüfpunkt P29 in `docs/konzepte/Pruefdokument-P5a-Kette-und-Fundament.md`).
+    Eine Grenze bei 5000 Einsätzen verhindert nur, dass jemand in den
+    gemessenen Bereich hineinläuft, in dem die Zeitraumübersicht 42,61 s
+    braucht — sie macht ihn nicht schneller. **Dieser Eintrag bleibt deshalb
+    offen**, und die Zeile in Rahmenplan Abschnitt 5 sagt das auch so.
+
 40. **Altklassen ohne Gegenstück — 53 (gemessen 13.09.2026), 55 bei Aufnahme.**
     *Aufgenommen in P3/O11, war für O12 vorgesehen, in O12 bewusst
     zurückgestellt.* Die Vollständigkeitsprüfung verlangt für jede der 220
@@ -555,25 +610,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     mehr wählen kann, wäre Aufwand ohne Gegenwert). Der Wert kann
     alternativ mit dem P5-Schemarückbau (Nr. 168) fallen; wer zuerst kommt,
     nimmt ihn mit.
-48. **Aufbewahrung je Konto einstellbar, nicht nur je Installation.**
-    *Aufgenommen 01.09.2026 (S2/AP6).* E-S2-14 nennt „Standard 2 je Konto,
-    manuell mehr je Konto möglich". Umgesetzt ist die Zahl für die ganze
-    Installation (`app_state.adminbackup_aufbewahrung`); ein Wert je Konto
-    hätte einen Ablageort gebraucht, den es nicht gibt — weder in `konto.json`
-    noch als Spalte in `users`.
-
-    **Wofür es gebraucht wird:** ein Konto, dessen Bestand besonders wertvoll
-    oder besonders bewegt ist, und für das man mehr Stände vorhalten will, ohne
-    die Zahl für alle anzuheben. Heute geht das nur als Umweg — ein Paket, das
-    freigegeben ist, wird von der Verdrängung verschont. Das ist ein
-    Nebeneffekt und kein Ersatz: Die Freigabe ist für etwas anderes da, und sie
-    endet mit dem Einlösen.
-
-    Naheliegender Ort: ein Feld in `konto.json` (die Begleitdatei ist ohnehin
-    das Verzeichnis des Ordners) und ein Zahlenfeld auf der Kontoseite neben
-    „Jetzt sichern". `edbak_aufbewahrung()` bekäme dafür einen optionalen
-    Parameter; `edbak_verdraengen()` liest ihn.
-
 50. **Der Versand liest je Konto ein Verzeichnis.**
     `sz_versand_schub()` fragt für jeden Kontoordner die Verzeichnisliste des
     Ziels ab, um zu erkennen, was dort fehlt. Bei 33 Ordnern ist das
@@ -1948,8 +1984,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
       Mailtext) in `reset_request.php`, `admin_user.php`, `admin_users.php`,
       `install.php`; „höchstens ein gültiger Token je Konto" nur in zwei
       der vier; Laufzeit als vier SQL-Literale (1 h, 1 h, 24 h, 24 h). →
-      `reset_token_ausstellen()` plus Mailtext in `email_lib.php`. Bleibt
-      Schritt 15.
+      `reset_token_ausstellen()` plus Mailtext in `email_lib.php`.
+      **Erledigt in P5b/AP2** (Web 20.17.0, E-P5b-11): `konto_lib.php` mit
+      `konto_anlegen()` und `reset_token_ausstellen()`, Laufzeiten als
+      `TOKEN_EINLADUNG_S` / `TOKEN_RESET_S`. Alle vier Stellen ziehen um;
+      `grep -rn "INSERT INTO password_resets" server/` zeigt nur noch die
+      Bibliothek. **Nicht in Schritt 15, sondern hier** — die
+      Selbstregistrierung aus AP3 wäre sonst die fünfte Fassung geworden,
+      und sie ist die einzige, die von außen erreichbar ist. Dabei
+      aufgefallen und mitbehoben: `install.php` hatte als einzige **keine
+      Transaktionsklammer**; ein Abbruch zwischen den beiden `INSERT`
+      hinterließ eine Installation, aus der man sich beim Einrichten selbst
+      ausgesperrt hatte.
 
     **Paket 2 — Datenzugriff.**
     - `app_state` lesen/schreiben: 24 Stellen in 11 Dateien, fünf
@@ -2426,11 +2472,516 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     der SDK-Fassung und an `CIQ_ZIELE` hängt. **Kein eigenes Paket** —
     Beifang, sobald jemand den Prüfstand ohnehin anfasst (R83-Muster).
 
+227. **Die Symbolregel zählt Typografie und findet deshalb keine Symbole
+    mehr.**
+    *Gemessen 17.09.2026 auf dem P5b-Zweig; nicht behoben.*
+    `tools/vollstaendigkeit/` prüft „Unicode-Zeichen als Symbol im Markup" —
+    gemeint sind Zeichen, die **statt eines Symbols** stehen (`▸ ✓ ⚠ ★ ●`).
+    In der Zeichenliste stehen aber auch **`…` und `→`**, und die sind in
+    diesem Projekt keine Symbole, sondern Satzzeichen: „Betrieb →
+    Servereinstellungen", „Daten werden geladen…".
+
+    **Ausgezählt auf dem P5b-Zweig — 319 Befunde:**
+
+    | Zeichen | Zahl | was es ist |
+    |---|---|---|
+    | `…` | 195 | Auslassung in Prosa und Zustandszeilen |
+    | `→` | 104 | Pfad durch die Oberfläche in Prosa |
+    | `⋯ × ✕ ✓ ★ ⚠ ‹` | 20 | **tatsächlich Zeichen statt Symbol** |
+
+    **299 von 319 sind Hausstil.** Sie verschwinden nicht, weil sie richtig
+    sind — und sie machen die Zahl unbrauchbar: Die 20 echten stehen
+    zwischen ihnen und fallen niemandem auf. Genau deshalb steht in der
+    Prüfkette eine **Schwelle** statt einer Null, und genau deshalb wächst
+    sie mit jeder Phase (P5a: 377, P5b: 395), ohne dass etwas schlechter
+    geworden wäre.
+
+    **Vorschlag:** Die Zeichenliste in zwei teilen — **Ikonenzeichen** (0
+    geduldet, heute 20) und **Typografie** (`…`, `→`; nicht gezählt). Dann
+    misst die Prüfung wieder etwas, und die Schwelle kann fallen statt
+    steigen. Das ist eine Entscheidung über ein Prüfmittel, kein
+    Nebenbei-Umbau — deshalb steht sie hier und wurde nicht in P5b gemacht.
+
+    **Bis dahin:** Die Schwelle in `pruefung.yml` steht auf 387 (vorher 377).
+    P5b brachte zunächst +18; **zwölf davon waren Zierde** in Kommentaren und
+    in einem `error_log()` und sind entfernt. Die verbleibenden zehn stehen in
+    **sichtbarem** Text und folgen dem Hausstil.
+
+    **Nebenbefund:** `docs/Technik.md` nannte als Schwelle **366**, während
+    die Kette längst mit **377** lief. Eine Schwelle an zwei Stellen läuft
+    auseinander; berichtigt, mit dem Hinweis, dass die Zahl in
+    `pruefung.yml` steht und nicht in der Dokumentation.
+
+228. **Proof-of-Work im Browser als dritte Stufe gegen
+    Registrierungs-Spam.**
+    *Aufgenommen 17.09.2026 mit dem Konzept P5b (R37 (4) „notfalls"); nicht
+    gebaut, und vorerst mit Absicht nicht.*
+    R37 (4) schließt ein CAPTCHA aus — es wäre eine fremde Quelle zur
+    Laufzeit — und setzt an seine Stelle zwei billige Mittel: ein
+    Honeypot-Feld, das leer bleiben muss, und eine Mindestausfülldauer von
+    vier Sekunden. Daneben stehen drei Ratenschutz-Töpfe: `reg` je IP
+    (10/h), `regg` global (100/h, Verlangsamung statt Sperre) und `regz` je
+    **Zieladresse** (3/24 h, sonst ist die Registrierung eine
+    Mailbomben-Schleuder). Reicht das alles nicht, bliebe als Letztes eine
+    Rechenaufgabe im Browser.
+
+    **Den Auslöser gibt es heute nicht, und zwar buchstäblich.** Gemessen
+    am 17.09.2026 auf diesem Zweig: `server/registrieren.php` und
+    `server/bestaetigen.php` gibt es nicht (unmittelbar unter `server/`
+    liegen 100 PHP-Dateien), „Honeypot", „regz" und „Mindestausfülldauer"
+    kommen in `server/` und `tools/` **kein einziges Mal** vor, und
+    `ratelimit_lib.php` führt **14** Töpfe, von denen keiner der
+    Registrierung gehört. AP3 baut das alles erst. Wer diesen Eintrag liest
+    und nach Spam-Zahlen sucht, sucht nach Zahlen einer Seite, die es noch
+    nicht gibt.
+
+    **Warum er trotzdem niedrig steht.** Ein Proof-of-Work kostet genau
+    dort am meisten, wo am wenigsten Rechenleistung steht — auf dem alten
+    Diensthandy —, und er bremst jede ehrliche Registrierung mit. Die drei
+    billigen Mittel sind ungemessen; sie zuerst zu bauen und dann zu messen
+    ist die richtige Reihenfolge. Ein Fall, den man vorsorglich löst, ist
+    einer, dessen Wirksamkeit man nie erfährt.
+
+    **Ein übliches Gegenargument fällt hier weg.** Die Registrierungsseite
+    leitet den Schlüssel ohnehin im Browser ab (E-P5b-13) — ohne JavaScript
+    kommt an dieser Stelle niemand zu einem Konto. Eine Rechenaufgabe im
+    Browser schlösse also niemanden aus, der sonst hätte registrieren
+    können.
+
+    **Zu tun, bevor irgendetwas gebaut wird: die Zahl festlegen**, ab der
+    der Fall eintritt. Es bietet sich der Zähler an, den AP3 ohnehin
+    mitbringt — die je Woche über den Job `konto_verfall` verfallenen, nie
+    bestätigten Konten. Bleibt er nach der Einführung der drei Mittel klein,
+    ist dieser Eintrag erledigt, ohne dass etwas gebaut wurde; steigt er,
+    steht die Begründung schon da. *Abnahme:* eine Rechenaufgabe ohne
+    Fremdbestandteil (SHA-256 über WebCrypto in einem Worker), die die
+    Antwortzeit der Registrierung **nicht** verändert — sie darf nicht
+    davon abhängen, ob die Adresse frei, bekannt oder eine Wegwerfadresse
+    ist, sonst fällt der Enumerationsschutz aus E-P5b-13 mit ihr (die
+    Abnahme von AP3 verlangt dort Δ < 50 ms über 100 Messungen).
+
+229. **Die Uhr sagt „abgemeldet", wo „gesperrt" steht — und der Ausweg, den
+    sie nennt, ist versperrt.**
+    *Aufgenommen 17.09.2026 mit dem Konzept P5b (E-P5b-12); nicht behoben,
+    die Uhr-Stufe ist bewusst aufgeschoben.*
+    `ingest.php` antwortet heute an zwei Stellen mit `403`: bei einem
+    abgeschalteten Gerät mit `{"error":"device_disabled"}` und — seit
+    P5b/AP2 (Web 20.17.0) — bei einem Konto, das nicht `aktiv` ist, mit
+    `{"error":"konto","grund":"…"}`. Der Grund ist einer von dreien aus dem
+    ENUM `users.status`: `gesperrt`, `wartet`, `unbestaetigt`. Er steht im
+    Rumpf, er ist umsonst zu haben, und niemand liest ihn.
+
+    `Uploader.mc` behandelt `401` und `403` in **einem** Zweig
+    (`code == 401 || code == 403`): `abgemeldet` geht auf wahr, das Senden
+    hält an, die Warteschlange bleibt. `SyncView.mc` zeigt daraufhin „Gerät
+    nicht mehr angemeldet" in Rot und darunter „Neu koppeln: <Taste>".
+
+    **Bei drei der vier Gründe ist dieser Rat falsch — und er führt im
+    Kreis.** „Neu koppeln" geht über `Pair.start()`, und das verweigert das
+    Trennen, solange `Model.backlogCount()` größer als null ist („Erst N
+    Pakete senden", „Sonst ans neue Konto"). Das ist richtig so: Die Pakete
+    gehören dem bisherigen Konto. Senden kann die Uhr aber nicht —
+    `syncAll()` kehrt bei `abgemeldet` sofort um, und der Server antwortete
+    ohnehin wieder mit `403`. Wer einem gesperrten Konto folgt, steht also
+    vor „Erst 3 Pakete senden" und kommt dort nicht weiter.
+
+    **Und die Uhr zeigt dabei keinen zweiten Weg.** Die Zeile
+    „<Taste>: verwerfen" hängt in `SyncView.mc` im `else`-Zweig hinter
+    `Uploader.abgemeldet` — solange die Uhr sich für abgemeldet hält, wird
+    sie gar nicht erst gezeichnet. Angeboten wird genau ein Ausweg, und das
+    ist der versperrte.
+
+    **Nr. 159 hat das nicht geschlossen, und der Vertrag behauptet das
+    Gegenteil.** `backlogCount()` übergeht seit Uhr 3.1.0 **geparkte**
+    Pakete, und genau das war der Ausweg aus der alten Sackgasse. Geparkt
+    wird über die Marke `bad_<ref>`, und die setzt **genau eine** Stelle in
+    `Uploader.mc`: der Zweig `400` mit erkennbarer Fehlerantwort. Bei `401`
+    und `403` wird mit Bedacht **nichts** geparkt — mit den Paketen ist
+    nichts verkehrt. Also bleibt der Rückstand stehen, und mit ihm die
+    Sperre. In `docs/JSON-Vertrag.md` steht zu `401`/`403` trotzdem „das
+    Trennen ist dann **nicht** mehr gesperrt (Backlog Nr. 159)" — für den
+    einen Fall, den Nr. 159 behoben hat, stimmt das, für diesen nicht. Der
+    Satz gehört mit berichtigt, sonst schließt die nächste Instanz diesen
+    Eintrag als längst erledigt.
+
+    **Verloren geht dabei nichts**, und das ist der Grund, warum der Eintrag
+    trotzdem niedrig steht. Die Warteschlange bleibt vollständig, nach dem
+    Entsperren kommt der Rückstand idempotent an — dieselbe Zusage wie bei
+    `401` und `429` (E-P5a-02) —, und der Ausweg liegt ohnehin nicht auf der
+    Uhr, sondern am Konto. Der Schaden ist die Auskunft: Die Uhr nennt eine
+    Ursache, die nicht zutrifft, und eine Handlung, die nicht hilft.
+
+    **Zu tun ist wenig:** `grund` in demselben Zweig lesen, in dem die
+    Antwort ohnehin schon als Dictionary vorliegt, und drei Texte in
+    `SyncView.mc` danebenstellen — „Konto gesperrt", „Konto wartet auf
+    Freischaltung", „Adresse noch nicht bestätigt", jeweils **ohne** den
+    Hinweis auf das Neukoppeln. Die Uhr zählt getrennt
+    (`watch/source/Const.mc`, heute 3.1.0), und eine Uhr-Auslieferung für
+    drei Textzeilen lohnt für sich nicht: **zusammen mit Nr. 201**
+    (`Retry-After`) bei der nächsten Uhr-Stufe.
+
+    **Nebenbefund — das Handy behandelt `403` überhaupt nicht.**
+    `Sendeantwort.lese()` kennt `200`, `400`, `401` und `413`; alles übrige
+    wird zu `SpaeterErneut(code)`, und `403` kommt in **keiner** `.kt`-Datei
+    des Repositoriums vor. Ein gesperrtes Konto lässt die Handy-App damit
+    unbegrenzt weiterversuchen, ohne der NutzerIn etwas zu sagen. Und
+    Nr. 201 schreibt beiden Clients zu, sie behandelten „jeden Antwortcode
+    außer 200/400/401/403/413" als „später erneut" — für die Uhr stimmt das,
+    für das Handy nicht. Die Android-Zeile gehört in dasselbe Paket.
+
+    **Der Vertrag kennt zwei Antworten nicht, die es gibt.** Die
+    Fehlertabelle zu `ingest.php` in `docs/JSON-Vertrag.md` führt `400`,
+    `401`, `405`, `413`, `429`, `5xx` und zweimal `503`. `403` kommt im
+    ganzen Dokument **genau einmal** vor, und zwar in der Tabelle darüber,
+    die die Vertragserfüllung der Uhr festhält; `507` — die Mengengrenze je
+    Konto aus P5b/AP6 — kommt **kein einziges Mal** vor. Zwei Antworten, die
+    `ingest.php` heute gibt, fehlen damit in der Liste, gegen die ein Client
+    gebaut wird.
+
+230. **Die Wegwerfdomain-Liste altert still und muss mit jeder Auslieferung
+    nachgezogen werden.**
+    *Aufgenommen 17.09.2026 mit dem Konzept P5b (E-P5b-23). Eine
+    Pflegeaufgabe ohne Ende, kein Fehler mit einer Behebung.*
+    Mit AP3 kommt `server/wegwerfdomains.txt` in die Auslieferung:
+    `disposable-email-domains/disposable-email-domains`
+    (`disposable_email_blocklist.conf`), CC0 1.0, **8 870 Domains** in
+    126 KB, eine je Zeile, gelesen nur bei einer Registrierung. Gemessen
+    am 16.09.2026 bei der Auswahl: **8 von 8** bekannten Wegwerfanbietern
+    enthalten, **0 von 10** geprüften Provider- und Klinikdomains
+    fälschlich getroffen. Verworfen wurden `7c/fakefilter` (BSD-3, 10 686
+    Einträge, mit Kommentarzeilen und Doppelungen) und
+    `FGRibreau/mailchecker` (MIT, 56 355 — sechsmal so groß und damit
+    sechsmal so viel Risiko für echte Domains).
+
+    **Geholt wird die Liste nie zur Laufzeit** — das verbietet die Zusage
+    „keine fremde Quelle zur Laufzeit". Damit kann kein Automatismus sie
+    aktuell halten; sie altert genau so lange, wie niemand
+    `tools/wegwerfdomains/aktualisieren.py` von Hand fährt (holt die Datei,
+    zeigt den Unterschied, schreibt die Zieldatei).
+
+    **Und sie altert in eine Richtung.** Neue Wegwerfanbieter kommen dazu,
+    die Datei bleibt stehen — eine ein Jahr alte Liste lässt ausgerechnet
+    die Domains durch, die gerade benutzt werden. Auffallen kann das
+    niemandem: Eine durchgelassene Registrierung sieht aus wie eine
+    richtige, und die Seite antwortet in jedem Fall mit demselben Satz
+    (E-P5b-13).
+
+    **Nachziehen allein genügt nicht.** Die zweite Zahl ist die
+    gefährlichere: Landet eine Klinikdomain auf der Liste, bekommt die
+    Ärztin dahinter dieselbe neutrale Antwort wie alle anderen und erfährt
+    **nie**, woran es lag. Jede Aktualisierung muss deshalb beide Messungen
+    wiederholen und nicht nur den Unterschied anzeigen.
+
+    **Nachtrag vom 17.09.2026 (Web 20.22.0):** Werkzeug und Liste sind mit
+    AP3 gebaut. `server/wegwerfdomains.txt` enthält **8 883 Domains** (126 389
+    Byte, SHA-256 `87bf7187…`), `wegwerf_trifft()` liest sie, und das Werkzeug
+    misst bei jedem Lauf beide Richtungen und **schreibt nicht**, wenn eine
+    echte Domain getroffen wird oder die Form nicht stimmt (beides
+    gegengeprüft). Die Zeile im Auslieferungs-Runbook steht in
+    `docs/Technik.md` 7. **Offen bleibt der zweite Teil dieses Eintrags:** der
+    Stand der Liste — Datum und Zahl — in Betrieb → Status, damit eine
+    veraltete Liste sichtbar ist statt still. Und die Zahl steht weiterhin an
+    zwei Stellen (Datei und Kommentar in `betrieb_server.php`).
+
+    *Der folgende Absatz beschreibt den Stand vom 17.09.2026 vor AP3 und ist
+    insoweit überholt; er bleibt, weil die Beobachtung dahinter gilt.*
+
+    **Heute steht der Schalter schon da und die Liste noch nicht.** Betrieb
+    → Servereinstellungen führt seit P5b/AP6 (Web 20.21.0) „Wegwerfadressen
+    abweisen" samt eigener Domains; `konten_wegwerf_an()` und
+    `konten_wegwerf_eigene()` haben aber **keinen** Verbraucher, der damit
+    etwas entscheidet: Die **fünf** Fundstellen im Code sind zwei
+    Definitionen und eine gleichlautende Konstante in der Bibliothek und
+    zwei Anzeigen im Formular. Der Schalter steht in der Vorgabe auf „an"
+    (`KONTEN_K_WEGWERF => '1'`) und weist nichts ab, bis AP3 kommt.
+
+    **Zu tun:** eine Zeile im Auslieferungs-Runbook (`docs/Technik.md` 7),
+    damit der Lauf zur Auslieferung gehört und nicht zum guten Willen; dazu
+    der Stand der Liste — Datum und Zahl der Domains — in Betrieb → Status,
+    wie es dort die Zeile **Gerätemodelle** vormacht (`status_lib.php`).
+    Eine veraltete Liste ist damit sichtbar statt still. **Nicht**
+    vorgesehen ist ein Prüfschritt, der die Quelle selbst abruft: Er liefe
+    zwar in der Kette und nicht zur Laufzeit, machte aber jeden Prüflauf
+    von einem fremden Host abhängig.
+
+    **Das Vorbild steht im Haus.** `server/geraetemodelle.php` hat dieselbe
+    Bauart — erzeugte Datei aus fremdem Material, wird ausgeliefert, altert
+    unbemerkt (`docs/Lizenzen.md` 7a); dort hat es bis P5a/AP11
+    (Web 20.15.0) und einen eigenen Job gebraucht, bis der Altbestand
+    nachzog. Einen Nachzieher braucht die Wegwerfliste nicht — sie wirkt
+    nur im Augenblick der Registrierung —, wohl aber denselben festen
+    Handgriff.
+
+    **Nebenbei: Die Zahl steht schon jetzt doppelt.** Der Kommentar zu den
+    eigenen Domains in `betrieb_server.php` nennt „8870"; mit AP3 kommt die
+    Datei dazu, die sie selbst zählt. Zwei Stellen für dieselbe Zahl laufen
+    auseinander — dieselbe Falle wie bei der Schwelle in Nr. 227.
+
+232. **Die Fristen der Rückfragen sind nie im Betrieb abgelaufen.**
+    *Aufgenommen 17.09.2026 (P5b/AP9).* Die Konto-Rückfrage fragt nach 30
+    Tagen, 6 Monaten und dann jährlich; die Betreiber-Rückfrage alle drei
+    Monate. Geprüft wurde mit **gestelltem** `rueckfrage_naechste` — die
+    Runden 0 → 1 → 2 → 2 sind in vier Durchgängen gemessen, der tatsächliche
+    Halbjahresabstand nicht.
+
+    **Was das offen lässt:** Ein Rechenfehler in `RUECKFRAGE_ABSTAENDE` oder
+    in der Zeitzone (`UTC_DATE()` gegen `DateTimeImmutable('now', UTC)`)
+    fiele im Prüflauf nicht auf, sondern erst, wenn die Frage im Betrieb um
+    einen Tag daneben käme. Das ist ein kleiner Schaden, aber ein stiller.
+
+    **Wie es zu schließen wäre:** ein Prüfschritt, der die Funktionen mit
+    festgelegter „jetzt"-Zeit rechnen lässt, statt mit der Systemuhr — dafür
+    müsste `einstieg_lib.php` eine Zeit hereingereicht bekommen, statt sie zu
+    holen. Lohnt sich, wenn die nächste Frist dazukommt; für zwei Fristen ist
+    der Umbau teurer als der Fehler.
+
+233. **Die Betreiber-Rückfrage fragt nie nach dem bisherigen Server-Anteil.**
+    *Aufgenommen 17.09.2026 (P5b/AP9).* Während einer Anteilsrotation steht
+    `kdf_anteil_alt` mit auf dem Schlüsselblatt. Die Rückfrage fragt ihn
+    nicht ab — eine Frage, die je nach Betriebslage vier oder sechs Felder
+    hat, verwirrt mehr, als sie prüft.
+
+    **Was das offen lässt:** Wer sein Blatt nach einer Rotation neu druckt
+    und den alten Wert nicht mit abschreibt, merkt es nicht, solange die
+    Rückfrage schweigt. Der Wert wird aber gebraucht, bis das letzte Konto
+    sich angemeldet hat.
+
+    **Wie es zu schließen wäre:** Der Rotationsvorgang selbst sollte sagen,
+    dass das Blatt neu gedruckt gehört — er ist die Stelle, an der es auffällt,
+    und er weiß, ob ein alter Wert noch gebraucht wird. Das gehört zu S10c.
+
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+223. **Die Anwendung ließ sich nicht mehr installieren.**
+    *Aufgenommen 16.09.2026 beim Aufbau des Prüfstands für P5b; behoben am
+    selben Tag in Web 20.15.3.*
+    `install.php` antwortete HTTP 500 mit leerem Rumpf — kein Formular, keine
+    Meldung. Die Kette ist kurz und jedes Glied für sich richtig:
+    `install.php` lädt `ui.php`, damit ihr Formular aussieht wie die
+    Anwendung; `ui_seite_start()` lädt seit P5a/AP4 `kopfzeilen_lib.php`,
+    damit die Kopfzeilen vor der ersten Ausgabezeile stehen;
+    `kopfzeilen_lib.php` lud `db.php`; `db.php` verlangt `config.php` hart.
+    Vor der Einrichtung gibt es keine `config.php`.
+
+    **Warum kein Prüfmittel ihn gesehen hat, und warum das die eigentliche
+    Lehre ist.** Der Fehler trifft ausschließlich die Installation, die noch
+    nicht stattgefunden hat. Jede bestehende Anlage läuft weiter. Und jedes
+    Prüfmittel des Projekts — `ingestprobe`, `spurprobe`, `komplettprobe`,
+    `jobprobe`, `screenshots`, `pruefkonten` — *setzt eine laufende
+    Installation voraus*, statt eine einzurichten. Der Weg, den eine
+    Betreiberin genau einmal geht, ist damit der einzige, den niemand geht.
+    Gesehen wurde er, weil `lokal_einrichten.sh` ihn geht.
+
+    **Behoben in `kopfzeilen_lib.php`, nicht in `db.php`.** Dort ist das harte
+    `require` richtig. `kopfzeilen_lib.php` dagegen sagt im eigenen Kopf, sie
+    komme „ohne Datenbank aus" — sie kam nur nicht ohne `config.php` aus.
+    Jetzt `is_file()` vor dem `require` und `function_exists()` vor den vier
+    `app_state`-Aufrufen, mit Rückfall auf dieselben Vorgaben wie bei
+    fehlender Tabelle.
+
+    **Nicht zu verwechseln mit Nr. 214**, obwohl beide am selben Tag
+    entstanden sind und dieselbe Datei betreffen: 214 nimmt `install.php` aus
+    der **Auslieferung**, weil das Runbook sie löschen heißt. Dieser Eintrag
+    macht sie überhaupt erst wieder **lauffähig**. Die beiden greifen
+    ineinander — seit 214 muss die Datei von Hand hinauf, und eine Datei, die
+    man von Hand hinauflädt, um genau einmal eine Anlage einzurichten, muss
+    beim ersten Aufruf funktionieren. Ohne 215 wäre 214 der Weg in eine
+    Sackgasse.
+
+    **Zu tun bleibt die Wache:** ein Prüfschritt, der die Einrichtung selbst
+    fährt (`lokal_einrichten.sh` ist der fertige Weg, Stufe 1 könnte ihn gegen
+    eine Wegwerf-Datenbank laufen lassen). Ohne ihn fällt dieselbe Lücke beim
+    nächsten Umbau der Ladekette wieder auf. *Abnahme:* Ein Prüflauf, der auf
+    einem Stand ohne `server/config.php` HTTP 200 und ein Formular-Token von
+    `install.php` bekommt. Zuordnung: Backlog-Runde oder P5c.
+
+224. **`frame-ancestors` stand in einer Report-Only-Richtlinie und war dort wirkungslos.**
+    *Gefunden 16.09.2026 beim Bilderlauf mit drei Engines (P5b/AP1, auf Rückfrage
+    des Auftraggebers); behoben am selben Tag in Web 20.16.5.*
+    CSP Level 3 sagt, dass `frame-ancestors` in einer Report-Only-Richtlinie
+    **ignoriert** wird. WebKit sagt es laut: „The Content Security Policy
+    directive 'frame-ancestors' is ignored when delivered in a report-only
+    policy." — **ein Konsolenfehler je Seitenaufruf**, auf jeder Seite der
+    Anwendung. Gemessen: **16 Konsolenfehler bei 16 Bildern**; Chromium und
+    Firefox melden nichts.
+
+    **Was das gekostet hat, ist nicht der Schutz, sondern das Prüfmittel.**
+    Clickjacking wehrt `X-Frame-Options: DENY` ab, und die Zeile steht
+    unabhängig davon in beiden Fällen — es gab **kein** Loch. Die
+    CSP-Direktive schützte in Report-Only nichts und meldete nichts; was sie
+    tat, war, den Bilderlauf mit WebKit auf **jeder** Seite rauschen zu
+    lassen. Ein Prüfmittel, das überall meldet, findet nichts mehr: Der echte
+    Fehler stünde daneben und fiele nicht auf.
+
+    Behoben: Die Direktive steht jetzt nur in der **scharfen** Fassung, wo sie
+    auch wirkt.
+
+    **Die Lehre ist die Engine-Wahl.** Der Fund kam zustande, weil der
+    Auftraggeber nachfragte, ob auf drei Browsern geprüft wird — es war
+    nur Chromium gelaufen. `tools/screenshots/LIESMICH.md` empfiehlt den
+    dreifachen Lauf bei Gestaltungsrunden; die Empfehlung hat sich zum
+    zweiten Mal bezahlt gemacht (das erste Mal war Nr. 185).
+
+225. **Die Profilseite brach auf halber Höhe aus ihrem Seitengerüst aus.**
+    *Entstanden 07.09.2026 (S9/AP4), gefunden 17.09.2026 beim Ansehen eines
+    Bildes zu P5b/AP6, behoben am selben Tag in Web 20.21.1.*
+    Auf `einstellungen.php?t=profil` stand ein `ui_karte_ende()` zu viel. Es
+    schloss keine Karte, sondern gab ein `</div></section>` ohne Gegenstück
+    aus; für ein `</div>` ohne offenes `div` nimmt der Parser das nächste, das
+    er findet, und das war `div.rahmen`. Damit endeten `form`, `main.inhalt`
+    und `rahmen` mitten auf der Seite, und alles danach — **Datenschutz,
+    Passwort ändern, Was dein Konto hält, Konto löschen** und der Knopf
+    „Profil speichern" — hing direkt am `body`. Gemessen bei 1440 px: `left` 0
+    statt 276, Breite 1440 statt 1148; die Karten liefen unter der
+    Seitenleiste hindurch über die volle Fensterbreite.
+
+    **Das Speichern ging weiter**, weil ein Knopf seinen Formularbezug aus dem
+    Parsen behält, auch wenn das `form`-Element implizit geschlossen wurde. Der
+    Schaden war sichtbar, nicht funktional.
+
+    **Der eigentliche Befund ist, dass kein Prüfmittel angeschlagen hat.**
+    `scrollWidth` blieb gleich `innerWidth` — es lief nichts über, es lag nur
+    falsch. Die Konsole blieb still, die Knopfhöhen stimmten. Der Bilderlauf
+    meldete für diese Seite in allen drei Engines „kein Überlauf, 0
+    Konsolenfehler, 0 falsche Knopfhöhen": **drei Nullen neben einer kaputten
+    Seite**. Genau der Fall, vor dem `CLAUDE.md` 6 warnt — eine grüne Zahl ist
+    erst dann ein Beleg, wenn sie das Gemessene benennt, und „kein Überlauf"
+    benennt nicht „liegt an der richtigen Stelle".
+
+    **Gegenprobe:** ein Lauf über 24 Seiten in beiden Rollen, der Karten
+    zählt, die nicht in `main.inhalt` hängen — **80 Karten geprüft, 0
+    außerhalb** (vorher vier auf der Profilseite).
+
+    **Zu tun:** diese Zählung in den Bilderlauf aufnehmen, damit sie nicht
+    beim nächsten Mal wieder von Hand entstehen muss. Sie kostet einen
+    `evaluate()`-Aufruf je Aufnahme und braucht keine zweite Sitzung.
+
+226. **Ein Meldungskasten trug einen Ton, den es nicht gibt.**
+    *Entstanden und gefunden 17.09.2026 (P5b/AP7 bzw. AP6), behoben am selben
+    Tag in Web 20.21.1.*
+    In `betrieb_server.php` stand von Hand `<div class="meldung
+    meldung-blau">`. Die Töne der Anwendung heißen `fehler`, `warn`, `ok`,
+    `info`, `schutz`; **`meldung-blau` hat keine Regel im Stylesheet**. Der
+    Kasten stand ungestaltet da — weißer Hintergrund, kein Symbol, keine
+    Fehlermeldung.
+
+    `ui_meldung_markup()` **wirft** bei einem unbekannten Ton, und ihr
+    Kopfkommentar beschreibt genau diesen Schaden („die Spurenseite trug so
+    zwei Jahre lang zwei weiße Meldungen"). Wer von Hand baut — hier nötig,
+    weil der Knopf in einem eigenen Formular steckt —, hat diesen Schutz
+    nicht.
+
+    Gefunden von `tools/vollstaendigkeit/` („im Markup ohne Regel"), behoben
+    zu `meldung-info` samt `role="status"` und Symbol, wie es die anderen
+    vier handgebauten Kästen der Anwendung führen.
+
+    **Zu tun:** Die Handbauten zählen — es sind fünf Stellen. Eine Variante
+    von `ui_meldung_markup()`, die ein Formular um den Knopf legt, machte alle
+    fünf überflüssig und nähme ihnen die Möglichkeit, einen Ton zu erfinden.
+
+231. **Die drei Häkchen der Registrierung werden nicht festgehalten — und
+    für Texte verlangt, die nicht in Kraft sind.**
+    *Erledigt am 17.09.2026 in Web 20.22.2 (P5b): Die Registrierung hält
+    die Einwilligungen jetzt fest und verlangt nur, was in Kraft ist.*
+
+    *Aufgenommen 17.09.2026 beim Nachprüfen der Rückfrage zur AVV
+    (E-P5b-25). Zwei Mängel an derselben Stelle, in AP3/AP4 entstanden.*
+
+    **Erledigt am 17.09.2026 mit Web 20.22.2.** Der Eintrag bleibt hier
+    stehen, bis er beim Abschluss von P5b nach *Erledigt* wandert — die
+    Beschreibung darunter ist der Befund, nicht der offene Stand.
+    Entschieden wurde die Frage aus (a): **Festgehalten wird bei der
+    Registrierung.** Fünf Prüffälle gemessen, Einzelheiten im Prüfdokument
+    unter F11.
+
+    **(a) Kein Eintrag.** `server/registrieren.php` verlangt alle
+    Schlüssel aus `RT_EINWILLIGUNG` als Pflichthaken und legt danach das
+    Konto über `konto_anlegen()` an — eine Zeile in `konto_einwilligungen`
+    entsteht dabei nie. Der einzige Schreibweg ist `einwilligung_setzen()`
+    in `server/einwilligung_lib.php`, und diese Funktion wird im ganzen
+    Server genau einmal aufgerufen: in `server/einwilligung.php`, also am
+    **Tor beim Login**. E-P5b-05 verlangt dagegen „Gespeichert je Konto mit
+    Fassungskennung (`stand_am` des Textes) und Zeit".
+
+    **Die Wirkung ist nicht, dass der Nachweis fehlt** — das Tor fasst
+    jedes Konto beim ersten Login und schreibt dann. Sie ist, dass er an
+    einer anderen Stelle entsteht als gedacht, und dass die Registrierende
+    dieselben drei Fragen zweimal beantwortet: einmal im Formular, einmal
+    beim ersten Anmelden. Ob das Tor als Nachweispunkt sogar der bessere
+    ist — dort ist die Person authentifiziert, bei der Registrierung ist
+    die Adresse nur behauptet —, lässt sich vertreten. **Nur steht es
+    nirgends.** Solange es nicht entschieden ist, ist es kein Entwurf,
+    sondern eine Lücke.
+
+    **(b) Annahme eines leeren Dokuments.** Die Registrierung prüft
+    `stand_am` nicht; der Begriff kommt in `registrieren.php` kein einziges
+    Mal vor. Das Tor prüft ihn sehr wohl — `einwilligung_lib.php`
+    überspringt jeden Text ohne Standdatum, und `docs/Technik.md` begründet
+    das: „Ein Text ohne Standdatum verlangt nichts. Sonst sperrte ein leer
+    angelegter Platzhalter alle Konten aus." Solange die geprüften Texte
+    nicht eingespielt sind — und das ist der geplante Zustand bis
+    E-P5b-24 —, muss eine Registrierende also den Haken *„Ich nehme die
+    Vereinbarung zur Auftragsverarbeitung (AVV) an"* setzen, während
+    `avv.php` anzeigt: *„noch keine Vereinbarung zur Auftragsverarbeitung
+    hinterlegt."*
+
+    **Beide Mängel gehören in ein Paket**, weil sie dieselbe Stelle
+    anfassen und einander bedingen: Was festgehalten wird, kann nur sein,
+    was auch in Kraft ist. Zu klären ist dabei die Frage aus (a) — Eintrag
+    schon bei der Registrierung oder bewusst erst am Tor —, und die
+    Antwort gehört als Entscheidung ins Konzept, nicht in einen Kommentar.
+
+48. **Aufbewahrung je Konto einstellbar, nicht nur je Installation.**
+    *Aufgenommen 01.09.2026 (S2/AP6).* E-S2-14 nennt „Standard 2 je Konto,
+    manuell mehr je Konto möglich". Umgesetzt ist die Zahl für die ganze
+    Installation (`app_state.adminbackup_aufbewahrung`); ein Wert je Konto
+    hätte einen Ablageort gebraucht, den es nicht gibt — weder in `konto.json`
+    noch als Spalte in `users`.
+
+    **Wofür es gebraucht wird:** ein Konto, dessen Bestand besonders wertvoll
+    oder besonders bewegt ist, und für das man mehr Stände vorhalten will, ohne
+    die Zahl für alle anzuheben. Heute geht das nur als Umweg — ein Paket, das
+    freigegeben ist, wird von der Verdrängung verschont. Das ist ein
+    Nebeneffekt und kein Ersatz: Die Freigabe ist für etwas anderes da, und sie
+    endet mit dem Einlösen.
+
+    Naheliegender Ort: ein Feld in `konto.json` (die Begleitdatei ist ohnehin
+    das Verzeichnis des Ordners) und ein Zahlenfeld auf der Kontoseite neben
+    „Jetzt sichern". `edbak_aufbewahrung()` bekäme dafür einen optionalen
+    Parameter; `edbak_verdraengen()` liest ihn.
+
+    **Erledigt am 17.09.2026 in P5b/AP6 (Web 20.21.0).** Nicht wie oben
+    vorgeschlagen in `konto.json`, sondern als **Spalte `users.backup_pakete`**
+    (`NULL` heißt „die Vorgabe der Installation gilt"). Der Grund ist die
+    Reihenfolge des Lesens: `edbak_verdraengen()` läuft, während der neue Stand
+    geschrieben wird — die Begleitdatei desselben Ordners ist in diesem
+    Augenblick die unzuverlässigste Quelle, die zur Verfügung steht. Die
+    Datenbank kennt den Wert unabhängig davon, ob der Ordner schon existiert.
+    Eingebaut als `edbak_aufbewahrung_konto(string $kennung)`, benutzt von
+    `edbak_verdraengen()`; das Zahlenfeld steht in der **Kontoverwaltung**
+    (Karte „Mengen und Grenzen") und nicht auf der eigenen Kontoseite — wer
+    seine eigene Aufbewahrung hochsetzen kann, hat die Zahl der Installation
+    nicht mehr in der Hand.
+
+    **Abnahme: 4 Fälle, 4 bestanden.** Ohne eigene Zahl gilt die
+    Installationszahl (2); eigene Zahl 7 schlägt sie; ein Ordner ohne Konto
+    fällt auf 2 zurück; eine leere Kennung ebenso.
+
+    **Dieser Eintrag ist zuerst falsch gelesen worden, und das ist der
+    lehrreichere Teil.** AP6 trägt im Konzept die Überschrift „Aufbewahrung je
+    Konto (Nr. 48)" — dieselben vier Wörter wie hier. Daraus wurde eine
+    **Aufbewahrungsfrist für Einsätze**: ein Feld `users.aufbewahrung_tage`,
+    nach dessen Ablauf Einsätze verschwinden. Gemeint war die **Zahl der
+    Sicherungspakete**, wie der erste Absatz oben sagt. Berichtigt vor dem
+    Commit, also nie ausgeliefert (F5 im Prüfdokument P5b). Ein Feld zu viel
+    ist ein Fehler; ein Feld, das still löscht und falsch beschriftet ist, wäre
+    ein Schaden gewesen — und es hätte unter einer Nummer gestanden, die etwas
+    ganz anderes wollte. **Eine Backlog-Nummer im Konzept ist ein Verweis, kein
+    Titel:** Wer sie umsetzt, liest den Eintrag.
 
 54. **Der Migrationslauf nach einer Wiederherstellung ist ein zweiter Gang.**
     Aus S2/AP8. Das Konzept sieht in E-S2-20 vor, dass die Wiederherstellung

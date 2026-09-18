@@ -31,17 +31,145 @@ declare(strict_types=1);
  * sagt es ausdrücklich.
  */
 
-/** Die beiden Dokumente: Schlüssel => Überschrift der Seite. */
+/**
+ * Die Dokumente: Schlüssel => Überschrift der Seite.
+ *
+ * SEIT P5b/AP4 SIND ES VIER. Nutzungsbedingungen und die Vereinbarung zur
+ * Auftragsverarbeitung kommen mit den Einwilligungen dazu (E-P5b-05, -15):
+ * Beide werden bei der Registrierung **angenommen**, beide sperren bei einer
+ * neuen Fassung den nächsten Login. Die Datenschutzerklärung wird dagegen
+ * nur **zur Kenntnis genommen** — der Wortlaut trägt den rechtlichen
+ * Unterschied, die Form ist dieselbe.
+ *
+ * DAS IMPRESSUM STEHT BEWUSST NICHT IN DIESER REIHE. Es wird weder
+ * angenommen noch zur Kenntnis genommen; es ist eine Pflichtangabe und keine
+ * Vereinbarung. `RT_EINWILLIGUNG` unten sagt, welche der vier eine sind.
+ */
 const RT_TEXTE = [
-    'impressum'   => 'Impressum',
-    'datenschutz' => 'Datenschutzerklärung',
+    'impressum'           => 'Impressum',
+    'datenschutz'         => 'Datenschutzerklärung',
+    'nutzungsbedingungen' => 'Nutzungsbedingungen',
+    /* DER RECHTSBEGRIFF, NICHT DIE KURZFORM (Gestaltungsvorgabe des
+     * Auftraggebers vom 17.09.2026, Konzept P5b Abschnitt 6, Punkt 4).
+     * „Vereinbarung zur Auftragsverarbeitung" ist der Ausdruck aus
+     * Art. 28 DSGVO; „Datenschutzvereinbarung" waere mit der
+     * Datenschutzerklaerung verwechselbar, und „Auftragsverarbeitung"
+     * allein benennt den Vorgang, nicht das Dokument, das angenommen wird.
+     * Die Kurzform steht in Klammern dahinter — sie ist gelaeufig, und der
+     * Link fuehrt ohnehin zum Text. */
+    'avv'                 => 'Vereinbarung zur Auftragsverarbeitung (AVV)',
 ];
 
 /** Die zugehörige Seite je Schlüssel — für Verweise und den Editor. */
 const RT_SEITEN = [
-    'impressum'   => 'impressum.php',
-    'datenschutz' => 'datenschutz.php',
+    'impressum'           => 'impressum.php',
+    'datenschutz'         => 'datenschutz.php',
+    'nutzungsbedingungen' => 'nutzungsbedingungen.php',
+    'avv'                 => 'avv.php',
 ];
+
+/**
+ * Der Leerzustandstext je Schlüssel.
+ *
+ * WARUM ALS KATALOG UND NICHT ALS TERNAERER AUSDRUCK. In
+ * `rechtstext_seite.php` stand er als zweiwertiger Ausdruck
+ * (`$k === 'impressum' ? A : B`), und das war die eine Stelle, an der ein
+ * dritter Schlüssel **stillschweigend falsch** geantwortet hätte: Die
+ * Nutzungsbedingungen hätten gemeldet, es sei „noch keine
+ * Datenschutzerklärung hinterlegt". Kein Fehler, keine Meldung — nur ein
+ * falscher Satz. Ein Katalog kann das nicht: Ein fehlender Eintrag fällt
+ * beim Nachsehen auf, ein falscher Zweig nicht.
+ */
+const RT_LEERTEXT = [
+    'impressum'           => 'noch kein Impressum hinterlegt.',
+    'datenschutz'         => 'noch keine Datenschutzerklärung hinterlegt.',
+    'nutzungsbedingungen' => 'noch keine Nutzungsbedingungen hinterlegt.',
+    'avv'                 => 'noch keine Vereinbarung zur Auftragsverarbeitung hinterlegt.',
+];
+
+/**
+ * Welche Dokumente eine Einwilligung verlangen — und welcher Art (E-P5b-05).
+ *
+ * `annahme` sperrt den nächsten Login, bis die aktuelle Fassung angenommen
+ * ist. `kenntnis` zeigt einen Hinweis, der mit demselben Häkchen quittiert
+ * wird, und lässt durch.
+ *
+ * **Der Wortlaut trägt den rechtlichen Unterschied, die Form ist gleich** —
+ * deshalb steht er hier und nicht in der Seite: Ein Häkchen, das an einer
+ * Stelle „angenommen" und an der anderen „zur Kenntnis genommen" heißt, darf
+ * seinen Text nicht aus dem Markup beziehen.
+ */
+const RT_EINWILLIGUNG = [
+    /* DREI SCHLUESSEL JE EINTRAG, UND JEDER HAT SEINEN EIGENEN ZWECK:
+     *
+     *   `art`   entscheidet die WIRKUNG — `annahme` sperrt den naechsten
+     *           Login, `kenntnis` zeigt nur einen Hinweis (E-P5b-05).
+     *   `wort`  ist die Kurzform fuer das PROTOKOLL und fuer die
+     *           Kontoseite: „angenommen" gegen „zur Kenntnis genommen".
+     *   `vorn`/`hinten` sind der SATZ AM HAEKCHEN, mit dem verlinkten
+     *           Titel dazwischen.
+     *
+     * WARUM DER SATZ IM PRAESENS STEHT. Bis Web 20.22.1 baute das Markup
+     * ihn selbst zusammen: „Ich habe die Nutzungsbedingungen angenommen."
+     * Das ist die Aussage ueber eine Vergangenheit, die es nicht gibt —
+     * angenommen wird in dem Augenblick, in dem der Haken gesetzt und das
+     * Formular abgeschickt wird. Eine Erklaerung, die sich auf einen
+     * frueheren Zeitpunkt beruft, erklaert nichts; der Auftraggeber hat es
+     * am 17.09.2026 angemerkt, und das Mockup M-P5b-02a hatte es von
+     * Anfang an richtig.
+     *
+     * UND WARUM ER HIER STEHT UND NICHT IM MARKUP: Er steht an ZWEI
+     * Stellen — auf der Registrierungsseite und am Einwilligungstor. Zwei
+     * Fassungen desselben rechtlich erheblichen Satzes laufen auseinander,
+     * und zwar unbemerkt, weil beide fuer sich richtig aussehen.
+     *
+     * `hinten` traegt Markup (`<strong>`) und wird deshalb NICHT
+     * maskiert — es ist eine Konstante dieser Datei und kommt nicht von
+     * aussen. Der Titel dazwischen wird maskiert. */
+    'nutzungsbedingungen' => [
+        'art' => 'annahme', 'wort' => 'angenommen',
+        'vorn' => 'Ich habe die ', 'hinten' => ' gelesen und <strong>nehme sie an</strong>.',
+    ],
+    'avv' => [
+        'art' => 'annahme', 'wort' => 'angenommen',
+        'vorn' => 'Ich <strong>nehme</strong> die ', 'hinten' => ' <strong>an</strong>.',
+    ],
+    'datenschutz' => [
+        'art' => 'kenntnis', 'wort' => 'zur Kenntnis genommen',
+        'vorn' => 'Ich habe die ', 'hinten' => ' <strong>zur Kenntnis genommen</strong>.',
+    ],
+];
+
+/**
+ * Der fertige Satz am Haekchen, mit verlinktem Titel.
+ *
+ * @param ?string $fassung Standdatum, das am Tor mitgenannt wird
+ *                („in der Fassung vom 01.10.2026 an.") — auf der
+ *                Registrierungsseite gibt es noch keine angenommene
+ *                Fassung, dort bleibt es weg.
+ */
+function rt_haken_satz(string $schluessel, ?string $fassung = null): string
+{
+    $e = RT_EINWILLIGUNG[$schluessel] ?? null;
+    if ($e === null) { return ''; }
+
+    /* `htmlspecialchars` unmittelbar und nicht `ui_e()`: Diese Datei laedt
+     * `ui.php` nicht, und die Funktion wird auch aus `admin_installation.php`
+     * heraus erreichbar sein. Eine Abhaengigkeit, die nur zufaellig erfuellt
+     * ist, faellt beim ersten neuen Aufrufer um. */
+    $m = static fn(string $x): string => htmlspecialchars($x, ENT_QUOTES, 'UTF-8');
+
+    $titel = '<a href="' . $m(RT_SEITEN[$schluessel]) . '" target="_blank"'
+           . ' rel="noopener">' . $m(RT_TEXTE[$schluessel]) . '</a>';
+    if ($fassung !== null && $fassung !== '') {
+        /* „in der Fassung vom" und NICHT die Klammerform. Der AVV-Titel endet
+         * selbst auf eine Klammer — „(AVV) (Fassung 17.09.2026)" liest sich
+         * wie ein Tippfehler. Der ausgeschriebene Einschub passt in alle
+         * drei Saetze, weil er vor dem Verb steht und nicht dahinter. */
+        $titel .= ' in der Fassung vom ' . $m($fassung);
+    }
+    return $e['vorn'] . $titel . $e['hinten'];
+}
 
 /**
  * Obergrenze der Eingabe.

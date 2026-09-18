@@ -178,10 +178,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
          * Sitzung — das war M1-05, und daran aendert sich nichts; sie wird
          * hier einmal gelesen und danach vergessen. auth_guard.php liest sie
          * weiterhin bei jeder Anfrage neu. */
-        $st = db()->prepare('SELECT id, password_hash, session_epoch, kdf_iter, logo_wahl, role
+        $st = db()->prepare('SELECT id, password_hash, session_epoch, kdf_iter, logo_wahl, role,
+                                    status, gesperrt_grund
                              FROM users WHERE email = ?');
         $st->execute([$email]);
         $u = $st->fetch();
+
+        /* ---- DEMO-ANMELDUNG ABGESCHALTET (P5b/AP7, E-P5b-07) --------------
+         *
+         * DIE ZEILE IST DIE GANZE UMSETZUNG, und sie steht hier und nicht
+         * weiter unten, weil das der einzige Ort ist, an dem sie NICHTS
+         * verraet: Ein Konto, das nicht gefunden wurde, laeuft ab hier durch
+         * denselben Weg wie eine erfundene Adresse — Blindvergleich gegen
+         * `AUTH_VERGLEICHSWERT`, Fehlversuch im Topf, `rate_gleiche_dauer()`
+         * am Ende. **Gleiche Antwort, gleiche Dauer**, ohne dass irgendwo ein
+         * zweiter Zweig entstuende, der die beiden wieder unterscheidbar
+         * macht.
+         *
+         * WARUM NICHT EINE EIGENE MELDUNG: Eine Auskunft „das Demo-Konto ist
+         * abgeschaltet" waere freundlicher und genau deshalb falsch. Die
+         * Demo-Adresse steht im Handbuch; wer sie probiert, soll nicht
+         * erfahren, ob diese Installation sie kennt. Und die Betreiberin, die
+         * abschaltet, will nicht, dass die Seite ueber ihre Einstellung
+         * Auskunft gibt.
+         *
+         * DER BESTAND BLEIBT. Abgeschaltet ist die ANMELDUNG, nicht das
+         * Konto: Seine Einsaetze, sein Reset und sein Platz in der
+         * Kontoverwaltung sind unberuehrt, und ein Umlegen des Schalters
+         * macht es sofort wieder zugaenglich (R25). */
+        if ($u && $istDemoAdresse) {
+            require_once __DIR__ . '/konten_einstellungen_lib.php';
+            if (!konten_demo_anmeldung_an()) { $u = false; }
+        }
 
         /* ---- Ein Token je Rundenzahl (M2-01, Schritt 3) -------------------
          *
@@ -292,6 +320,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * „Passwort falsch" und tippte weiter — bis der Ratenschutz
              * zuschlaegt. Es ist die Wartungsseite, und die sagt, was los
              * ist. */
+            /* ---- KONTOSTATUS (P5b/AP2, E-P5b-12, E-P5b-16) ----------------
+             *
+             * DIE STELLE IST DIESELBE ABWAEGUNG WIE BEIM WARTUNGSMODUS
+             * darunter: Der Zweig haengt am ERFOLG des Passwortvergleichs
+             * und nicht am Vergleich selbst. Die Antwortgleichheit des
+             * Fehlerzweigs bleibt damit unberuehrt, und ein Angreifer
+             * erfaehrt hier nichts, was er nicht schon wuesste — er hat das
+             * Passwort.
+             *
+             * DIE SELBSTLOESCHUNG IST DER SONDERFALL, UND ZWAR DER WICHTIGE:
+             * Waehrend der Karenz steht das Konto auf `gesperrt`, aber
+             * **die Anmeldung IST der Rueckzug** (E-P5b-16). Wer sich
+             * anmeldet, will sein Konto behalten. Es hier abzuweisen hiesse,
+             * den einen Weg zu versperren, der aus der Loeschung
+             * herausfuehrt — und danach loescht der Job.
+             *
+             * `konto_status_setzen()` schreibt den Protokolleintrag und
+             * raeumt `loeschung_am` mit weg; beides steht dort, damit es
+             * nicht an zwei Stellen steht. */
+            $kStatus = (string)($u['status'] ?? 'aktiv');
+            if ($kStatus === 'gesperrt'
+                && ($u['gesperrt_grund'] ?? null) === 'selbstloeschung') {
+                require_once __DIR__ . '/konto_lib.php';
+                konto_status_setzen((int)$u['id'], 'aktiv');
+                $kStatus = 'aktiv';
+                $rueckzug = true;
+            }
+            if ($kStatus !== 'aktiv') {
+                require_once __DIR__ . '/konto_lib.php';
+                session_verwerfen();
+                /* KEINE SITZUNG, und eine eigene Seite statt des Formulars —
+                 * derselbe Weg, den der Wartungsmodus eine Zeile darunter
+                 * geht, und aus demselben Grund (Backlog Nr. 126): Wer hier
+                 * landete und wieder die Anmeldemaske saehe, laese das als
+                 * „Passwort falsch" und tippte weiter, bis der Ratenschutz
+                 * zuschlaegt. Das Passwort war richtig.
+                 *
+                 * `stoerung_seite_html()` ist dasselbe Geruest, das Wartung
+                 * und Ausgelastet benutzen (P5a/AP9) — kein neuer Baustein
+                 * (Design.md 9), nur ein dritter Aufrufer.
+                 *
+                 * DIE ANTWORTDAUER WIRD TROTZDEM ANGEGLICHEN. Sonst waere
+                 * ein gesperrtes Konto an der Antwortzeit zu erkennen — und
+                 * zwar von jemandem, der das Passwort hat, also genau von
+                 * dem, vor dem die Sperre schuetzen soll. */
+                rate_gleiche_dauer($t0);
+                require_once __DIR__ . '/wartung_lib.php';
+                header('Content-Type: text/html; charset=utf-8');
+                echo stoerung_seite_html(
+                    'Kein Zugang — ' . instanz_kurz(),
+                    '<h1>' . htmlspecialchars(KONTO_STATUS[$kStatus], ENT_QUOTES)
+                  . '</h1><p class="text">'
+                  . htmlspecialchars(konto_status_text($kStatus,
+                        $u['gesperrt_grund'] ?? null), ENT_QUOTES)
+                  . '</p><p class="text"><a href="login.php">Zurück zur Anmeldung</a></p>');
+                exit;
+            }
+
             if (wartung_aktiv() && !rolle_darf_verwalten($u['role'] ?? null)) {
                 session_verwerfen();
                 /* OHNE RUECKWEG (Backlog Nr. 126). Das ist die einzige Stelle,
@@ -342,6 +428,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * Fehlversuchsschutz des Kontos, dieser die Nutzungsmenge des
              * Demo-Kontos. */
             if ($istDemoAdresse) { rate_demo_zaehlen(); }
+            /* DIE UHR DER KONTO-RUECKFRAGE IN GANG SETZEN (P5b/AP9,
+             * E-P5b-09). Erste Frage in 30 Tagen.
+             *
+             * BEIM ANMELDEN UND NICHT BEIM ANLEGEN DES KONTOS: Ein Konto, das
+             * nie benutzt wird, soll keine Frist mit sich herumtragen. Und
+             * die 30 Tage sollen ab dem Tag laufen, an dem jemand den
+             * Schluessel tatsaechlich in der Hand hatte.
+             *
+             * DIE FUNKTION SCHREIBT NUR EINMAL — `WHERE rueckfrage_naechste
+             * IS NULL`. Jede weitere Anmeldung geht ins Leere; das ist
+             * billiger als eine Abfrage davor. */
+            require_once __DIR__ . '/einstieg_lib.php';
+            rueckfrage_anstossen((int)$u['id']);
             header('Location: index.php'); exit;
         }
         /* DREI ZAEHLUNGEN AN EINEM FEHLVERSUCH (P5a/AP6):
@@ -403,13 +502,40 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
       <?= ui_knopf(['text' => 'Anmelden', 'art' => 'primaer', 'breit' => true]) ?>
     </div>
   </form>
-  <p class="anmeldung-neben"><a href="reset_request.php">Passwort vergessen?</a></p>
+  <p class="anmeldung-neben"><a href="reset_request.php">Passwort vergessen?</a>
+     <?php /* DER WEG ZUR REGISTRIERUNG STEHT NUR DA, WENN ES IHN GIBT
+              (P5b/AP3, E-P5b-01). Bei `nur auf Einladung` fuehrte er auf eine
+              Seite, die absagt — eine Einladung ins Leere. Die Betriebsart
+              kommt aus `app_state` und ist damit auch der Grund, warum diese
+              Zeile eine Abfrage kostet; sie steht im selben Aufruf wie die
+              Demo-Einstellung, die diese Seite ohnehin liest. */ ?>
+     <?php require_once __DIR__ . '/konten_einstellungen_lib.php';
+           if (konten_reg_offen()): ?>
+       · <a href="registrieren.php">Neu hier? Konto anlegen</a>
+     <?php endif; ?></p>
   <?php /* Zustandszeile der Anmeldung (Schluesselableitung laeuft …).
            `.zustandszeile` haelt ihre Hoehe frei, damit die Karte beim
            Erscheinen der Meldung nicht springt — `.muted` tat das nicht
            und ist mit der Uebergangsschicht in O11 gefallen. */ ?>
   <p class="zustandszeile" id="loginstate"></p>
  </div>
+
+ <?php /* DIE VIER WEGE UNTER DER KARTE (P5b/AP8, M-P5b-01, Bild 3).
+          Sie stehen AUSSERHALB von `.anmeldung-karte`, nicht darin: Auf dem
+          Mockup liegen sie auf dem Dunkelblau, nicht auf der weissen Karte —
+          und die Karte ist das Formular, nicht die Seite.
+
+          WARUM HIER UND NICHT IN `ui_fuss_seite()`: Die Fusszeile traegt
+          Lizenz und Version und sitzt ganz unten. Diese vier sind Wege, und
+          der erste ist der einzige, auf dem jemand OHNE Konto erfaehrt, was
+          diese Anwendung ueberhaupt ist. Sie gehoeren dorthin, wo man sie
+          sucht — direkt unter das Anmeldeformular. */ ?>
+ <nav class="fuss-anmeldung" aria-label="Über diese Anwendung">
+   <a href="ueber.php">Was ist NAdoku?</a>
+   <a href="hilfe.php">Handbuch</a>
+   <a href="impressum.php">Impressum</a>
+   <a href="datenschutz.php">Datenschutz</a>
+ </nav>
 </main>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>

@@ -268,6 +268,72 @@ if (!geraet_schluessel_gueltig($apiKey, (string)$dev['api_key_hash'])) {
 }
 if (!(int)$dev['active']) json_out(['error' => 'device_disabled'], 403);
 
+/* ---- KONTOSTATUS (P5b/AP2, E-P5b-12) -------------------------------------
+ *
+ * NACH der Schluesselpruefung und nicht davor. Ein Angreifer mit einer
+ * erfundenen Kennung soll nicht erfahren, in welchem Zustand ein Konto ist,
+ * das er nicht kennt — und ein falscher Schluessel soll weiterhin `401`
+ * bekommen und nicht `403`. Erst wer sich ausgewiesen hat, bekommt eine
+ * Auskunft ueber sein eigenes Konto.
+ *
+ * `403` UND NICHT `401`: Die Uhr behandelt `403` heute als „abgemeldet" und
+ * puffert — genau das soll sie tun. Der Unterschied steht im JSON-Rumpf
+ * (`grund`), nicht im Code. **Damit braucht es keine Uhr-Stufe**: Die
+ * bestehende Fassung tut schon das Richtige, sie sagt nur „abgemeldet", wo
+ * „gesperrt" genauer waere. Das ist ein Backlog-Eintrag fuer die naechste
+ * Uhr-Auslieferung und kein Fehler.
+ *
+ * WAS NICHT PASSIERT: Es geht nichts verloren. Die Warteschlange der Uhr
+ * bleibt, und nach dem Entsperren kommt der Rueckstand vollstaendig an —
+ * dieselbe Zusage wie bei `401` und `429` (E-P5a-02).
+ *
+ * DER TOPF BLEIBT UNBERUEHRT. Ein gesperrtes Konto ist kein Angriff; sein
+ * Geraet sendet weiter, weil niemand es abgeschaltet hat. Zaehlte das hier
+ * als Fehlversuch, sperrte der Ratenschutz nach kurzer Zeit eine Kennung,
+ * die nichts falsch macht — und nach dem Entsperren des Kontos kaeme der
+ * Rueckstand dann NICHT durch. */
+$kontoStatus = 'aktiv';
+try {
+    $stK = db()->prepare('SELECT status FROM users WHERE id = ?');
+    $stK->execute([(int)$dev['user_id']]);
+    $kontoStatus = (string)($stK->fetchColumn() ?: 'aktiv');
+} catch (PDOException $ex) {
+    /* Die Spalte gibt es noch nicht (Migration aus P5b/AP2 steht aus).
+     * Dann gilt `aktiv` — die Uhr soll nicht dadurch stehenbleiben, dass
+     * ein Update eingespielt, aber `update.php` noch nicht gefahren
+     * wurde. */
+}
+if ($kontoStatus !== 'aktiv') {
+    json_out(['error' => 'konto', 'grund' => $kontoStatus], 403);
+}
+
+/* ---- DIE MENGENGRENZE JE KONTO (P5b/AP6, E-P5b-04) -----------------------
+ *
+ * `507 Insufficient Storage` — und der Code ist mit Bedacht gewaehlt: Er
+ * sagt „der Server hat keinen Platz mehr", und genau das ist der Fall. `403`
+ * hiesse „du darfst nicht", `429` hiesse „nicht so schnell"; beides waere
+ * falsch und wuerde die Uhr das Falsche tun lassen. Bei `507` wie bei `429`
+ * behaelt sie ihre Warteschlange und sendet spaeter — das Konzept nennt es
+ * ausdruecklich (E-P5b-04: „die Uhr behaelt ihre Warteschlange").
+ *
+ * DER GEMESSENE WERT KOMMT AUS DEM CACHE. Die Byte-Messung liest die
+ * Blob-Laengen aller GPS-Daten eines Kontos; sie bei jedem Upload zu fahren
+ * waere genau an dem Weg teuer, der schnell sein muss. Der Cache wird nach
+ * dem Schub fortgeschrieben (unten) und im Job neu gemessen.
+ *
+ * BEARBEITEN UND LOESCHEN BLEIBEN FREI (E-P5b-04) — diese Grenze steht
+ * ausschliesslich hier und im Import. Wer sie erreicht, muss aufraeumen
+ * koennen; eine Grenze, die auch das Loeschen sperrt, ist eine Falle. */
+require_once __DIR__ . '/konten_einstellungen_lib.php';
+$fuell = konto_fuellstand((int)$dev['user_id']);
+if ($fuell['voll']) {
+    json_out(['error' => 'kontingent',
+              'grund' => 'Das Konto ist voll — ' . $fuell['einsaetze'] . ' von '
+                       . $fuell['grenze_einsaetze'] . ' Einsätzen, '
+                       . (int)round($fuell['bytes'] / 1048576) . ' von '
+                       . (int)round($fuell['grenze_bytes'] / 1048576) . ' MB.'], 507);
+}
+
 /* Geglueckt: den Kennungstopf und den Vermerk raeumen.
  *
  * NUR DEN KENNUNGSTOPF, NICHT DIE ADRESSE. Im Topf `ingest_ip` stehen
@@ -661,6 +727,11 @@ try {
                        $dev['geraet_art'], $dev['geraet_modell']]);
         $ownerId = (int)$pdo->lastInsertId();
         $ownerType = 'mission';
+        /* FUER DEN MENGENZAEHLER (P5b/AP6): nur die NEUANLAGE zaehlt gegen
+         * die Einsatzgrenze. Ein Nachtrag zu einem bestehenden Einsatz —
+         * und das ist der haeufige Fall, die Uhr schickt in Schueben —
+         * bringt Punkte, aber keinen Einsatz. */
+        $einsatzNeu = true;
         ingest_tag_nachziehen($pdo, 'missions', $ownerId, $existing, $vorhandenerDayId, $dayId);
 
         /* ---- Phasenliste ersetzen — aber nur, wenn dabei nichts verlorengeht
@@ -1082,6 +1153,26 @@ try {
      * etwas zu berichten gibt (JSON-Vertrag, Abschnitt 5). */
     $antwort = ['ok' => true, 'id' => $ownerId,
                 'stored_points' => $stored, 'next_seq' => $nextSeq];
+
+    /* DEN MENGENZAEHLER FORTSCHREIBEN (P5b/AP6, E-P5b-18).
+     *
+     * GESCHAETZT UND NICHT GEMESSEN: `SPUR_ZEILE_BYTE` je Punkt, dazu der
+     * Rumpf. Eine echte Messung hier wuerde alle Blob-Laengen des Kontos
+     * lesen, und zwar bei jedem Upload — genau an dem Weg, der schnell sein
+     * muss. Die echte Zahl kommt beim naechsten Joblauf.
+     *
+     * OHNE DIESE ZEILE griffe die Grenze erst einen Tag spaeter: Der Cache
+     * bliebe auf dem Stand des letzten Jobs stehen, und ein Konto koennte
+     * an einem Tag beliebig weit darueber hinauswachsen. */
+    try {
+        require_once __DIR__ . '/konten_einstellungen_lib.php';
+        konto_mengen_fortschreiben((int)$dev['user_id'],
+            ($einsatzNeu ?? false) ? 1 : 0, $stored * SPUR_ZEILE_BYTE);
+    } catch (Throwable $ex) {
+        /* Der Zaehler ist eine Schaetzung; ihn nicht fortzuschreiben kostet
+         * Genauigkeit bis zum naechsten Job, aber keinen Upload. */
+        error_log('Mengenzaehler nicht fortgeschrieben: ' . $ex->getMessage());
+    }
     /* Verworfene Punkte NENNEN, aber nicht in 'rejected' (S2/AP3, E-S2-08).
      *
      * 'rejected' haengt an $pruef->sauber() und bedeutet laut Vertrag
