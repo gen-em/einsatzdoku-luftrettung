@@ -637,6 +637,35 @@ Redesign zurückzunehmen.
 > braucht `input[type=checkbox].meine-klasse` — `.meine-klasse` allein
 > verliert, und das Kästchen bleibt 20 × 20 px groß und fängt Klicks ab.
 
+### Text, den niemand im Repositorium kontrolliert, bricht selbst um
+
+**Regel:** Ein Baustein, dessen Inhalt aus der **Datenbank** oder aus einer
+**Markdown-Datei** kommt, bringt seinen Umbruch selbst mit. Wer ihn baut,
+darf nicht voraussetzen, dass der Text umbruchfreundlich ist.
+
+| Baustein | Inhalt kommt aus | Regel |
+|---|---|---|
+| `.text` | `rechtstexte` (Datenbank) | `overflow-wrap:break-word` |
+| `.doku-text code` | `docs/*.md` (Repositorium) | `overflow-wrap:anywhere` |
+| `.doku-text table` | dieselbe | rollt waagerecht in sich |
+
+**Warum zwei verschiedene Härten.** Beide brechen ein Wort, das sonst
+überliefe. `anywhere` senkt zusätzlich die **intrinsische Mindestbreite** —
+in einer Karte mit `max-width` fängt der Absatz dann an, auch dort zu
+brechen, wo er es nicht müsste. Für Fließtext ist das falsch, für eine
+Festbreitenschrift, die ohnehin nicht schön umbricht, ist es richtig.
+
+> **Woher die Regel kommt** (Backlog Nr. 221, Web 20.24.2): Die
+> Datenschutzerklärung und die Nutzungsbedingungen schoben sich bei 360 px um
+> **127 px** nach rechts. Verursacher waren eine Mailadresse und zwei
+> Adressen im Fließtext — gemessen als `<p>` mit `scrollWidth` 350 gegen
+> `clientWidth` 302.
+>
+> Der Text stammt von der **Betreiberin**, nicht aus dem Repositorium. Sie
+> soll eine Adresse hinschreiben dürfen, ohne zu wissen, wie breit ein Handy
+> ist. Die Regel gehört deshalb an den Baustein und nicht in eine Anleitung
+> für das Schreiben von Rechtstexten.
+
 ### Der vertikale Rhythmus
 
 **Die Skala allein genügt nicht.** `--abstand-1` bis `--abstand-5` stehen

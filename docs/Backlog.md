@@ -64,7 +64,7 @@ Typografie, 228 Proof-of-Work gegen Registrierungs-Spam, 229 Uhr-Anzeige bei
 > schon bei Nr. 214 und bei Web 20.16.0. Wer in einem Commit vor dem Merge
 > eine dieser Nummern liest, liest die alte Zählung.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **235** und trägt seine
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **238** und trägt seine
 Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
@@ -2372,83 +2372,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Dokument verschwindet ohnehin, sobald seine 33 Punkte abgehakt sind.
 
 
-221. **Waagerechter Überlauf auf der Datenschutzseite bei 360 px.**
-    *Aufgenommen 17.09.2026 aus demselben Lauf.*
-
-    ```
-    05-datenschutz    Überlauf bei 360
-    ```
-
-    Eine Seite, eine Breite, in einem Lauf über 50 Seiten und acht Breiten —
-    die übrigen 49 sind ohne Befund. 360 px ist die schmalste gemessene
-    Breite und damit das kleine Telefon.
-
-    **Noch nicht eingegrenzt:** Welches Element überläuft, steht nicht im
-    Protokoll, sondern im Bericht des Laufs
-    (`tools/screenshots/ausgabe/bericht.md`), und der liegt auf dem Läufer.
-    Nachstellen lässt es sich örtlich mit
-    `node tools/screenshots/aufnehmen.mjs --nur 05-datenschutz` gegen eine
-    lokale Installation. Verdacht ohne Beleg: ein langer Rechtstext ohne
-    Umbruchmöglichkeit (Adresse, E-Mail, URL) oder eine Tabelle.
-
-    ### Nachtrag vom 17.09.2026 — was es NICHT ist
-
-    Örtlich nicht nachstellbar: `aufnehmen.mjs --nur 05-datenschutz` gegen
-    eine lokale Installation meldet **kein Überlauf**, bei Maßstab 1× wie 2×.
-    Ausgeschlossen, jeweils gemessen:
-
-    | geprüft | Ergebnis |
-    |---|---|
-    | Markup, das Staging ausliefert | **byteidentisch** mit dem örtlichen: 2104 B, dieselben 17 Klassen, Titel 36 Zeichen, längstes Wort 20 Zeichen, keine Tabelle, kein `<pre>` |
-    | `assets/style.css` auf Staging | **byteidentisch** mit dem Repositorium, 200 452 B |
-    | die 10 `.woff2` des Stylesheets | **alle vorhanden, alle byteidentisch** |
-    | Maßstab | weder 1× noch 2× läuft örtlich über |
-
-    Es liegt also **nicht** am Rechtstext (die Seite trägt auf beiden Seiten
-    nur 230 Textzeichen — den leeren Zustand), nicht am Markup, nicht an der
-    Gestaltung und nicht an den Schriften.
-
-    **Warum es hier endet:** `aufnehmen.mjs` meldet alle drei Rollen an, bevor
-    es das erste Bild macht — auch bei `--nur` auf einer Seite mit
-    `"rolle": "aus"`. Ohne die Staging-Zugangsdaten lässt sich der Lauf von
-    hier aus nicht gegen Staging fahren. *(Das ist nebenbei eine eigene
-    Ungeschicklichkeit des Werkzeugs, aber keine, die dieser Eintrag
-    mitbehebt.)*
-
-    **Was stattdessen geändert wurde:** Der Bericht des Laufs trägt eine
-    Spalte **`Verursacher`** — das Element, das überläuft. Sie wurde auf dem
-    Läufer mit dem Arbeitsverzeichnis weggeräumt. Ab Web 20.16.2 schreibt der
-    Kettenschritt `ausgabe/bericht.md` in die Zusammenfassung des Laufs. **Der
-    nächste rote Lauf beantwortet diesen Eintrag selbst.**
-
-    *Verbleibender Verdacht, ohne Beleg:* die Chromium-Fassung. Die Kette holt
-    `playwright@1.56` (Chromium 141), örtlich steht eine andere.
-
-    ### Nachtrag vom 17.09.2026 — der nächste Lauf war GRÜN
-
-    Der Auslieferungslauf auf `main` (`e5844c4`, 13:38–13:50) meldete
-    `05-datenschutz` mit **kein Überlauf**, und den ganzen Bilderlauf mit
-    **0 Überlauf** über 400 Bilder. Der Befund hat sich **nicht wiederholt**.
-
-    **Damit ist er nicht erklärt, sondern einmalig geblieben** — und das ist
-    ein Unterschied, den dieser Eintrag stehen lässt, statt ihn wegzuräumen:
-    Zwischen den beiden Läufen hat niemand etwas an der Seite, am Stylesheet
-    oder an den Schriften geändert (alle drei waren schon beim ersten Mal
-    byteidentisch mit dem Repositorium). Was bleibt, ist eine Messung, die
-    einmal anschlug und beim zweiten Mal nicht.
-
-    **Der Eintrag bleibt deshalb offen, aber ohne Arbeitsauftrag.** Schlägt
-    er wieder an, steht der Bericht seit Web 20.16.2 in der Zusammenfassung
-    des Laufs und nennt den **Verursacher** — dann ist es in fünf Minuten
-    erledigt statt in einer Stunde Ausschlussverfahren. Bleibt er drei
-    weitere Läufe still, gehört er nach *Erledigt* mit dem Vermerk „einmalig,
-    nicht reproduzierbar".
-
-    *Was dabei offen zutage kam und nicht zu diesem Eintrag gehört:*
-    `aufnehmen.mjs` meldet alle drei Rollen an, bevor es das erste Bild
-    macht — auch bei `--nur` auf einer Seite mit `"rolle": "aus"`. Genau das
-    hat die örtliche Nachstellung gegen Staging verhindert.
-
 222. **Der Aufbau des Uhr-Prüfstands wird bei jedem Lauf neu geholt.**
     *Aufgenommen 17.09.2026 bei der Selektion der Stufe-1-Schritte.*
     Der Schritt „Uhr Stufe I" brauchte im gemessenen Lauf **34 min 46 s** und
@@ -2783,11 +2706,231 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     muss auch dann durchkommen, sonst ist nichts gewonnen.
 
 
+236. **`ubuntu-latest` wandert am 19.10.2026 auf Ubuntu 26.**
+    *Aufgenommen 18.09.2026, Merkposten mit Datum.*
+
+    GitHub meldet als Hinweis: *„The `ubuntu-latest` label will migrate to
+    Ubuntu 26 beginning October 19, 2026."* Betrifft **alle fünf Jobs**.
+
+    An der Läufer-Umgebung hängen die **PHP-Fassung** (das Plattformprofil
+    verlangt ≥ 8.2), das **vorinstallierte Android-SDK** und die
+    **Bibliotheken, die der Uhr-Prüfstand nachlädt**. Der Wechsel passiert
+    **still**, an einem Tag, an dem niemand etwas geändert hat — und dann
+    sucht man den Fehler im eigenen Code.
+
+    Zu tun: **vor dem Datum** einmal gegen ein `ubuntu-26`-Label gegenprüfen,
+    solange es beide gibt.
+
+237. **Der Täter-Finder des Bilderlaufs findet den Täter nicht.**
+    *Aufgenommen 18.09.2026 beim Beheben von Nr. 221.*
+
+    Der Bericht trägt seit Web 20.16.2 eine Spalte **`Verursacher`**, und
+    Nr. 221 hat sich ausdrücklich darauf verlassen: *„dann ist es in fünf
+    Minuten erledigt statt in einer Stunde Ausschlussverfahren."* Beim ersten
+    Fall, der sie gebraucht hätte, stand dort **`—`**.
+
+    **Gemessen** (örtlich, `05-datenschutz` bei 360 px, Überlauf 127 px): Der
+    Verursacher ist ein `<p>` in `.text` mit `scrollWidth` 350 gegen
+    `clientWidth` 302. Ein Skript von zwanzig Zeilen findet ihn; der eingebaute
+    Finder nicht.
+
+    **Verdacht, nicht belegt:** In P5b/AP8 ist der Finder so geändert worden,
+    dass er Elemente in **scrollenden Vorfahren** überspringt — damals richtig
+    (ein `<code>` in einem scrollenden `<pre>` war fälschlich als Verursacher
+    gemeldet worden). Möglich, dass er seither zu viel überspringt: `.karte`
+    und `.karte-inhalt` melden hier ebenfalls `scrollWidth > clientWidth`, und
+    wenn sie als „scrollend" gelten, fällt alles darunter mit heraus.
+
+    **Warum das mehr ist als ein Schönheitsfehler:** Ein Prüfmittel, das einen
+    Befund meldet und den Grund verschweigt, kostet genau die Stunde, die es
+    sparen sollte — und es hat versprochen, sie zu sparen. Wer es beheben
+    will, nimmt den Fall aus Nr. 221 als Prüffall: Eine Mailadresse in einem
+    Rechtstext, 360 px, der Finder muss das `<p>` nennen.
+
+
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+235. **`actions/checkout@v4` hängt an einer abgekündigten Laufzeit.**
+    *Aufgenommen 18.09.2026 aus den Annotations des Auslieferungslaufs.*
+
+    GitHub meldet bei jedem Lauf: *„Node.js 20 is deprecated. The following
+    actions target Node.js 20 but are being forced to run on Node.js 24:
+    `actions/checkout@v4`."* Die Zwangsumleitung auf Node 24 ist eine
+    Übergangslösung; fällt sie weg, bricht der Schritt **„Code auschecken"** —
+    und der ist der **erste jedes Jobs**. Dann brechen Stufe 1, beide
+    Deploy-Wege und die Integritätswache **gleichzeitig**. Der Produktionslauf
+    ist der, bei dem es am spätesten auffällt, weil er am seltensten läuft.
+
+    **Fünf Fundstellen**, gemessen am 18.09.2026 gegen `7675f9b`: je einmal im
+    Schritt „Code auschecken" von `pruefung.yml` und `integritaet.yml`,
+    dreimal in `auslieferung.yml` (Jobs `staging`, `Prüfung Stufe 2` und
+    `produktion`). `SamKirkland/FTP-Deploy-Action@v4.4.0` (zweimal in
+    `auslieferung.yml`) ist **nicht** betroffen — sie taucht in der Warnung
+    nicht auf.
+
+    Zu tun: alle fünf Stellen **auf einmal** heben, sonst bleibt eine zurück;
+    die zu setzende Fassung nachschlagen statt aus dem Gedächtnis eintragen.
+    Danach `tools/kettenaufrufe/pruefen.py --probe` und `pruefen.py`. Keine
+    Versionsstufe, kein Changelog — die Änderung fasst nur `.github/` an
+    (`CLAUDE.md` 2, Präzedenz `27c7673`).
+
+    ### Erledigt am 18.09.2026 — auf `v7`, und was dabei mitkommt
+
+    Alle **fünf** Fundstellen auf einmal gehoben, `v4` → `v7`. Nachgeschlagen
+    statt aus dem Gedächtnis gesetzt:
+
+    | Fassung | `runs.using` in `action.yml` |
+    |---|---|
+    | `v4` | `node20` — die abgekündigte |
+    | `v5`, `v6`, `v7` | `node24` |
+
+    `v7.0.1` ist die neueste; gesetzt ist der wandernde Major-Tag `v7`, wie
+    zuvor `v4` (die Linie des Hauses; `SamKirkland/FTP-Deploy-Action@v4.4.0`
+    ist die Ausnahme und bleibt festgenagelt).
+
+    **Zwei Brüche kommen mit, und beide berühren Bauformen dieser Anlage.**
+    Der Sprung überspringt zwei Hauptversionen; das ist eine bewusste
+    Entscheidung des Auftraggebers vom 18.09.2026 gegen die vorsichtigere
+    Empfehlung, auf `v5` zu gehen (dort: **null** dokumentierte Brüche).
+    Was zu beobachten ist:
+
+    - **v6.0.0 — „Persist creds to a separate file".** Die Zugangsdaten
+      liegen nach dem Auschecken anders. Betroffen wäre ein Schritt, der
+      nach dem Checkout selbst mit Git spricht; die Kette tut das heute
+      nicht. **Wenn ein Schritt mit `git push` oder einem Token aus der
+      Git-Konfiguration dazukommt, gehört das hier nachgesehen.**
+    - **v7.0.0 — „Block checking out fork PR for `pull_request_target` and
+      `workflow_run`".** `integritaet.yml` läuft auf `workflow_run` (und auf
+      `schedule`). Sie checkt den **eigenen** Stand aus, keinen Fork-PR —
+      die Sperre sollte sie nicht treffen. **Belegt ist das nicht**, es ist
+      gelesen, nicht gemessen: Der erste Lauf der Wache nach diesem Paket
+      ist die Probe. Bleibt sie still oder wird sie rot, steht die Ursache
+      hier.
+
+    **Geprüft:** `tools/kettenaufrufe/pruefen.py --probe` → **10 von 10**;
+    `pruefen.py` → **28 Aufrufe, 0 Befunde, 0 ungeprüft**; YAML aller drei
+    Läufe weiterhin gültig. Keine Versionsstufe, kein Changelog — die
+    Änderung fasst nur `.github/` an (`CLAUDE.md` 2, Präzedenz `27c7673`).
+
+221. **Waagerechter Überlauf auf der Datenschutzseite bei 360 px.**
+    *Aufgenommen 17.09.2026 aus demselben Lauf.*
+
+    ```
+    05-datenschutz    Überlauf bei 360
+    ```
+
+    Eine Seite, eine Breite, in einem Lauf über 50 Seiten und acht Breiten —
+    die übrigen 49 sind ohne Befund. 360 px ist die schmalste gemessene
+    Breite und damit das kleine Telefon.
+
+    **Noch nicht eingegrenzt:** Welches Element überläuft, steht nicht im
+    Protokoll, sondern im Bericht des Laufs
+    (`tools/screenshots/ausgabe/bericht.md`), und der liegt auf dem Läufer.
+    Nachstellen lässt es sich örtlich mit
+    `node tools/screenshots/aufnehmen.mjs --nur 05-datenschutz` gegen eine
+    lokale Installation. Verdacht ohne Beleg: ein langer Rechtstext ohne
+    Umbruchmöglichkeit (Adresse, E-Mail, URL) oder eine Tabelle.
+
+    ### Nachtrag vom 17.09.2026 — was es NICHT ist
+
+    Örtlich nicht nachstellbar: `aufnehmen.mjs --nur 05-datenschutz` gegen
+    eine lokale Installation meldet **kein Überlauf**, bei Maßstab 1× wie 2×.
+    Ausgeschlossen, jeweils gemessen:
+
+    | geprüft | Ergebnis |
+    |---|---|
+    | Markup, das Staging ausliefert | **byteidentisch** mit dem örtlichen: 2104 B, dieselben 17 Klassen, Titel 36 Zeichen, längstes Wort 20 Zeichen, keine Tabelle, kein `<pre>` |
+    | `assets/style.css` auf Staging | **byteidentisch** mit dem Repositorium, 200 452 B |
+    | die 10 `.woff2` des Stylesheets | **alle vorhanden, alle byteidentisch** |
+    | Maßstab | weder 1× noch 2× läuft örtlich über |
+
+    Es liegt also **nicht** am Rechtstext (die Seite trägt auf beiden Seiten
+    nur 230 Textzeichen — den leeren Zustand), nicht am Markup, nicht an der
+    Gestaltung und nicht an den Schriften.
+
+    **Warum es hier endet:** `aufnehmen.mjs` meldet alle drei Rollen an, bevor
+    es das erste Bild macht — auch bei `--nur` auf einer Seite mit
+    `"rolle": "aus"`. Ohne die Staging-Zugangsdaten lässt sich der Lauf von
+    hier aus nicht gegen Staging fahren. *(Das ist nebenbei eine eigene
+    Ungeschicklichkeit des Werkzeugs, aber keine, die dieser Eintrag
+    mitbehebt.)*
+
+    **Was stattdessen geändert wurde:** Der Bericht des Laufs trägt eine
+    Spalte **`Verursacher`** — das Element, das überläuft. Sie wurde auf dem
+    Läufer mit dem Arbeitsverzeichnis weggeräumt. Ab Web 20.16.2 schreibt der
+    Kettenschritt `ausgabe/bericht.md` in die Zusammenfassung des Laufs. **Der
+    nächste rote Lauf beantwortet diesen Eintrag selbst.**
+
+    *Verbleibender Verdacht, ohne Beleg:* die Chromium-Fassung. Die Kette holt
+    `playwright@1.56` (Chromium 141), örtlich steht eine andere.
+
+    ### Nachtrag vom 17.09.2026 — der nächste Lauf war GRÜN
+
+    Der Auslieferungslauf auf `main` (`e5844c4`, 13:38–13:50) meldete
+    `05-datenschutz` mit **kein Überlauf**, und den ganzen Bilderlauf mit
+    **0 Überlauf** über 400 Bilder. Der Befund hat sich **nicht wiederholt**.
+
+    **Damit ist er nicht erklärt, sondern einmalig geblieben** — und das ist
+    ein Unterschied, den dieser Eintrag stehen lässt, statt ihn wegzuräumen:
+    Zwischen den beiden Läufen hat niemand etwas an der Seite, am Stylesheet
+    oder an den Schriften geändert (alle drei waren schon beim ersten Mal
+    byteidentisch mit dem Repositorium). Was bleibt, ist eine Messung, die
+    einmal anschlug und beim zweiten Mal nicht.
+
+    **Der Eintrag bleibt deshalb offen, aber ohne Arbeitsauftrag.** Schlägt
+    er wieder an, steht der Bericht seit Web 20.16.2 in der Zusammenfassung
+    des Laufs und nennt den **Verursacher** — dann ist es in fünf Minuten
+    erledigt statt in einer Stunde Ausschlussverfahren. Bleibt er drei
+    weitere Läufe still, gehört er nach *Erledigt* mit dem Vermerk „einmalig,
+    nicht reproduzierbar".
+
+    *Was dabei offen zutage kam und nicht zu diesem Eintrag gehört:*
+    `aufnehmen.mjs` meldet alle drei Rollen an, bevor es das erste Bild
+    macht — auch bei `--nur` auf einer Seite mit `"rolle": "aus"`. Genau das
+    hat die örtliche Nachstellung gegen Staging verhindert.
+
+    ### Abschluss vom 18.09.2026 — reproduziert, gemessen, behoben
+
+    Der Auslieferungslauf nach dem P5b-Deploy (35314203760, `7675f9b`,
+    Web 20.24.1) meldete **zwei** Überläufe bei 360 px: `05-datenschutz`
+    **und** `04b-nutzungsbedingungen` — beide Rechtstextseiten, beide
+    dieselbe Bauform.
+
+    **Der Verursacher stand NICHT im Bericht.** Die Spalte trug `—`; das
+    versprochene „in fünf Minuten erledigt" hat der Lauf nicht eingelöst. Der
+    Täter-Finder findet den Täter hier nicht (eigener Befund, siehe unten).
+
+    **Stattdessen von Hand gemessen**, örtlich, mit einem Absatz je
+    Verdachtsart in der Datenbank:
+
+    ```
+    Fensterbreite 360 · Dokumentbreite 487 · Überlauf 127 px
+      <p> in .text   scrollWidth 350 / clientWidth 302
+         „A3 Eine Mailadresse: datenschutzbeauftragte@staging.nadoku.g…"
+    ```
+
+    Es sind **lange Zeichenketten ohne Umbruchstelle** — eine Mailadresse und
+    zwei Adressen im Fließtext. Der `.text`-Baustein hatte kein
+    `overflow-wrap`, und sein Inhalt kommt aus der **Datenbank**: Die
+    BetreiberIn schreibt ihn und soll eine Adresse hinschreiben dürfen, ohne
+    zu wissen, wie breit ein Handy ist.
+
+    **Behoben** mit `overflow-wrap:break-word` an `.text`
+    (`server/assets/style.css`). `break-word` und nicht `anywhere` — die
+    Begründung steht im Kommentar daneben. Nachgemessen: **127 px → 0 px**,
+    Bilderlauf über alle drei Rechtstextseiten **0 Überlauf**.
+
+    **Was damit NICHT erklärt ist, und das bleibt hier ausdrücklich stehen:**
+    Der Einzelfall vom 17.09.2026 hatte eine **andere** Lage — die Seite trug
+    damals nur den leeren Zustand (230 Textzeichen, oben nachgemessen und
+    festgehalten). Ein Rechtstext, der überläuft, kann es damals also nicht
+    gewesen sein. Der Eintrag geht trotzdem nach *Erledigt*, weil der
+    reproduzierbare Befund behoben ist; der damalige Einzelfall bleibt
+    unerklärt und ist seither in keinem Lauf wiedergekehrt.
 
 223. **Die Anwendung ließ sich nicht mehr installieren.**
     *Aufgenommen 16.09.2026 beim Aufbau des Prüfstands für P5b; behoben am
