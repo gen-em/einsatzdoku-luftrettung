@@ -14,6 +14,47 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.24.2] — 2026-09-18
+
+**Der Rechtstext-Baustein brach lange Zeichenketten nicht um.**
+
+### Behoben
+
+**Zwei Rechtstextseiten liefen bei 360 px waagerecht über** —
+Datenschutzerklärung und Nutzungsbedingungen, gemeldet vom Bilderlauf nach dem
+P5b-Deploy (Backlog Nr. 221). Gemessen: Dokumentbreite **487** gegen
+Fensterbreite **360**, die Seite schob sich also um **127 px** nach rechts.
+
+Verursacher ist ein `<p>` in `.text` mit `scrollWidth` 350 gegen `clientWidth`
+302 — eine Mailadresse und zwei Adressen im Fließtext. Keine davon hat eine
+Stelle, an der ein Browser von sich aus umbricht.
+
+**`.text` bekommt `overflow-wrap:break-word`.** Die Regel gehört an den
+Baustein und nicht in den Text, weil der Inhalt aus der **Datenbank** kommt:
+Die Betreiberin schreibt ihn, und sie soll eine Adresse hinschreiben dürfen,
+ohne zu wissen, wie breit ein Handy ist. Ein Baustein, dessen Inhalt niemand
+im Repositorium kontrolliert, muss den Umbruch selbst mitbringen.
+
+`break-word` und nicht `anywhere`: Beide brechen das lange Wort, aber
+`anywhere` senkt zusätzlich die intrinsische Mindestbreite — in einer Karte
+mit `max-width` fängt der Absatz dann an, auch dort zu brechen, wo er es nicht
+müsste. Die Festbreitenschrift der Dokumentseiten hat aus demselben Grund die
+andere Härte (`.doku-text code`, P5b/AP8).
+
+**Der Bericht hat den Verursacher nicht genannt**, obwohl Nr. 221 sich
+ausdrücklich darauf verlassen hatte („dann ist es in fünf Minuten erledigt
+statt in einer Stunde Ausschlussverfahren"). Die Spalte trug `—`. Gefunden
+wurde er mit zwanzig Zeilen von Hand; der eingebaute Täter-Finder steht jetzt
+als **Nr. 237** im Backlog.
+
+**Was damit nicht erklärt ist:** Der Einzelfall vom 17.09.2026 hatte eine
+andere Lage — die Seite trug damals nur den leeren Zustand (230 Textzeichen,
+seinerzeit nachgemessen). Ein überlaufender Rechtstext kann es damals nicht
+gewesen sein. Der reproduzierbare Befund ist behoben, der damalige Einzelfall
+bleibt unerklärt und ist seither in keinem Lauf wiedergekehrt.
+
+---
+
 ## [Web 20.24.1] — 2026-09-18
 
 **Die Anmeldung vertrug das Fenster nicht, in dem sie gebraucht wird.**

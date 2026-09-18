@@ -1729,7 +1729,31 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * Fließtext in der Lesespalte — Erklärtexte, Abbruchseite, Impressum und
  * Datenschutz (E-P3-12, E-P3-38).
  */
-.text{max-width:var(--lesespalte)}
+/* `overflow-wrap` FUER DEN RECHTSTEXT-BAUSTEIN (Backlog Nr. 221, 18.09.2026).
+ *
+ * WAS UEBERLIEF, gemessen auf der Datenschutzseite bei 360 px: ein `<p>` mit
+ * `scrollWidth` 350 gegen `clientWidth` 302 — die Seite schob sich um
+ * **127 px** nach rechts. Verursacher waren eine Mailadresse und zwei
+ * Adressen im Fliesstext; keines davon hat eine Stelle, an der ein Browser
+ * von sich aus umbricht.
+ *
+ * WARUM DAS HIER STEHT UND NICHT IM TEXT: Der Inhalt kommt aus der
+ * DATENBANK. Die BetreiberIn schreibt ihn, und sie soll eine Adresse
+ * hinschreiben duerfen, ohne zu wissen, wie breit ein Handy ist. Ein
+ * Baustein, dessen Inhalt niemand im Repositorium kontrolliert, muss den
+ * Umbruch selbst mitbringen.
+ *
+ * `break-word` UND NICHT `anywhere`: Beide brechen das lange Wort, aber
+ * `anywhere` senkt zusaetzlich die intrinsische Mindestbreite — in einer
+ * Karte mit `max-width` faengt der Absatz dann an, auch dort zu brechen, wo
+ * er es nicht muesste. `break-word` greift nur, wenn das Wort sonst
+ * ueberliefe. Fuer Fliesstext ist das die richtige Haerte; die
+ * Festbreitenschrift der Dokumentseiten hat aus demselben Grund die andere
+ * (`.doku-text code`, P5b/AP8).
+ *
+ * VERERBT SICH auf p, li, a und td — deshalb genuegt die eine Zeile am
+ * Baustein statt vier an seinen Kindern. */
+.text{max-width:var(--lesespalte);overflow-wrap:break-word}
 .text h1{margin-bottom:var(--abstand-2)}
 .text h2{font-size:var(--groesse-5);margin:var(--abstand-5) 0 var(--abstand-2)}
 .text h3{font-size:var(--groesse-4);margin:var(--abstand-4) 0 var(--abstand-2)}

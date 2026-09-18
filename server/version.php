@@ -6305,5 +6305,37 @@ declare(strict_types=1);
  *   seit P5a eine eigene Spaltenfrage —, aber **genau der Weg zu `update.php`
  *   war nicht geprueft**. Das Pruefdokument nennt das jetzt unter F17, und
  *   die Pruefliste hat einen Punkt dafuer bekommen.
+ *
+ * 20.24.2 — DER RECHTSTEXT-BAUSTEIN BRACH LANGE ZEICHENKETTEN NICHT UM
+ *   (Backlog Nr. 221, 18.09.2026).
+ *
+ *   Der Auslieferungslauf nach dem P5b-Deploy meldete zwei Ueberlaeufe bei
+ *   360 px: `05-datenschutz` und `04b-nutzungsbedingungen`, beide
+ *   Rechtstextseiten. Gemessen: Dokumentbreite 487 gegen Fensterbreite 360,
+ *   also **127 px** nach rechts geschoben. Verursacher ist ein `<p>` in
+ *   `.text` mit `scrollWidth` 350 gegen `clientWidth` 302 — eine Mailadresse
+ *   und zwei Adressen im Fliesstext, keine davon mit einer Stelle, an der
+ *   ein Browser von sich aus umbricht.
+ *
+ *   `.text` BEKOMMT `overflow-wrap:break-word`. Die Regel gehoert an den
+ *   Baustein und nicht in den Text, weil der Inhalt aus der DATENBANK kommt:
+ *   Die BetreiberIn schreibt ihn, und sie soll eine Adresse hinschreiben
+ *   duerfen, ohne zu wissen, wie breit ein Handy ist.
+ *
+ *   `break-word` UND NICHT `anywhere`: Beide brechen das lange Wort, aber
+ *   `anywhere` senkt zusaetzlich die intrinsische Mindestbreite — in einer
+ *   Karte mit `max-width` faengt der Absatz dann an, auch dort zu brechen,
+ *   wo er es nicht muesste.
+ *
+ *   DER BERICHT HAT DEN VERURSACHER NICHT GENANNT, obwohl Nr. 221 sich
+ *   ausdruecklich darauf verlassen hatte („dann ist es in fuenf Minuten
+ *   erledigt"). Die Spalte trug `—`. Gefunden wurde er mit zwanzig Zeilen
+ *   von Hand; der eingebaute Finder steht jetzt als **Nr. 237** im Backlog.
+ *
+ *   WAS DAMIT NICHT ERKLAERT IST: Der Einzelfall vom 17.09.2026 hatte eine
+ *   andere Lage — die Seite trug damals nur den leeren Zustand
+ *   (230 Textzeichen, seinerzeit nachgemessen). Ein ueberlaufender
+ *   Rechtstext kann es damals nicht gewesen sein. Der reproduzierbare
+ *   Befund ist behoben, der damalige Einzelfall bleibt unerklaert.
  */
-const WEB_VERSION = '20.24.1';
+const WEB_VERSION = '20.24.2';
