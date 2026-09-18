@@ -580,6 +580,67 @@ Absatz stand schon im Prüfdokument, während der Fehler zwölf Zeilen weiter
 unbemerkt im Baum lag.
 
 
+### F17 — Der Deploy hat Staging verriegelt, und kein Prüfmittel hat es gesehen
+
+**Gefunden von der Betreiberin, 18.09.2026, unmittelbar nach dem Merge von
+PR #57.** Die Anmeldeseite auf `staging.nadoku.gen-em.org` antwortete nach dem
+Absenden mit **HTTP 500**.
+
+**Die Ursache in einem Satz:** `login.php` und `auth_guard.php` forderten
+`users.status` und `users.gesperrt_grund` hart an — Spalten, die erst
+`2026_09_16_konto_lebenszyklus` anlegt.
+
+**Warum das ein Riegel war und kein Schönheitsfehler:** Ohne Anmeldung kein
+*Betrieb → Updates*, ohne das keine Migration, ohne die keine Anmeldung. Die
+Anlage ließ sich aus dem Browser nicht mehr aufschließen. Behoben in
+**Web 20.24.1** durch einen Rückfall auf die Spaltenliste ohne die neuen
+Felder.
+
+**Nachgebaut, nicht erschlossen** (auf der Prüfinstallation die beiden Spalten
+entfernt, dann den Anmeldeweg im Browser gefahren):
+
+| | Endadresse | 5xx-Antworten | Seite |
+|---|---|--:|---|
+| ohne Hotfix (= Stand auf Staging) | `login.php` | **1** | leer |
+| mit Hotfix | `index.php` | **0** | Startseite lädt |
+| mit Hotfix, als BetreiberIn bis `update.php` | `betrieb_updates.php` | **0** | „Ausstehende Updates" |
+
+**Das Unangenehme ist nicht der Fehler, sondern dass ich ihn nicht sehen
+konnte.** Das Fenster zwischen Deploy und `update.php` ist in P5b an
+mehreren Stellen ausdrücklich bedacht worden:
+
+- `einstieg_lib.php` fängt es ab und **begründet das im Kopfkommentar**
+  („Eine Anwendung, die nach einem Deploy alle mit einer Fehlermeldung
+  begrüßt, WEIL die Migration noch aussteht, ist das Gegenteil von dem, was
+  diese Einstiege sollen.")
+- `ingest.php` hat seit P5a eine eigene Spaltenfrage für denselben Zweck.
+- `protokoll()` fängt die fehlende Tabelle.
+
+**Nur der Weg zu `update.php` selbst war nicht bedacht** — und das ist der
+eine, der im Fenster funktionieren *muss*. Ich habe die Regel an drei Stellen
+angewandt und an der wichtigsten vergessen, dieselbe Frage zu stellen.
+
+**Und kein Prüfmittel konnte es melden:** Alle setzen eine eingerichtete
+Installation voraus; `lokal_einrichten.sh` fährt die Migrationen als ersten
+Schritt. Der Zustand „Code neu, Schema alt" kommt im Prüfstand nicht vor,
+obwohl er bei **jeder** Auslieferung mit Schemaänderung eintritt. Dieselbe
+Blindheit wie bei Nr. 223 (die Anwendung ließ sich nicht mehr installieren).
+Als **Backlog Nr. 234** aufgenommen, mit dem Weg, wie es zu schließen wäre.
+
+**Was die Kette dazu gesagt hat, und was nicht.** Der Auslieferungslauf ist
+**fehlgeschlagen** — aber in „Prüfung Stufe 2", mit der Meldung
+`RuntimeError: Anmeldung gescheitert: unbekannt`. Das war derselbe Fehler aus
+Sicht des Kreislauftests; die Meldung nennt aber nicht das Schema, und der
+Staging-Upload davor war grün. Wer nur auf „rot/grün" sieht, liest daraus
+„Prüfung wackelt", nicht „die Anlage ist verriegelt".
+
+*Lehre:* **Wer eine Migration ausliefert, prüft den Weg zur Migration.** Die
+Frage „verträgt das die Anwendung, bevor `update.php` gelaufen ist?" ist an
+jeder Stelle gestellt worden, die *nach* der Anmeldung liegt — die Anmeldung
+selbst ist übersprungen worden, weil sie nicht wie ein Verbraucher der neuen
+Spalten aussieht. Sie ist aber einer.
+
+
 ## 3. Was maschinell geprüft wurde — Mittel und Zahl
 
 | Mittel | Wann | Zahl | Befund |
@@ -885,6 +946,16 @@ AP9 stehen noch aus (Mockup-Freigabe); ihre Punkte kommen mit ihnen.
   verrät die Anmeldeseite, dass es dieses Konto gibt.
 
 ### AP9 — Onboarding und Rückfragen
+
+- [ ] **P9.0 — ZUERST: Kommst du überhaupt herein?** (Nach jedem Deploy mit
+  Migration, bevor irgendetwas anderes geprüft wird.) Anmeldeseite öffnen,
+  anmelden. **Erwartet:** die Startseite. **Scheitern:** HTTP 500 nach dem
+  Absenden — dann fordert etwas auf dem Anmeldeweg eine Spalte an, die erst
+  die Migration anlegt, und die Anlage ist verriegelt (F17, Web 20.24.1).
+  **Der Ausweg in dem Fall:** `php update.php` auf der Kommandozeile — der
+  Notausgang läuft ohne Sitzung, ausdrücklich für diesen Fall. Ohne
+  Shell-Zugang bleibt nur, die fehlenden Spalten per Datenbankwerkzeug
+  anzulegen oder den vorigen Stand zurückzuspielen.
 
 - [ ] **P9.1 — Das Notfallblatt beim ersten Passwort.** Ein neues Konto
   anlegen (oder einladen), über den Link das Passwort setzen. Wenn der

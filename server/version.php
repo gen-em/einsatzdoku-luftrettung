@@ -6266,5 +6266,44 @@ declare(strict_types=1);
  *   erste Code gegen die zweite Huelle (oeffnet nicht) und der zweite dagegen
  *   (oeffnet) — und der erste gegen seine eigene alte Huelle, damit der
  *   Fehlschlag die Ersetzung belegt und nicht einen kaputten Erzeuger.
+ *
+ * 20.24.1 — DIE ANMELDUNG VERTRUG DAS FENSTER NICHT, IN DEM SIE GEBRAUCHT WIRD
+ *   (Hotfix nach dem P5b-Merge, 18.09.2026, Backlog Nr. 234).
+ *
+ *   DER FEHLER WAR EIN RIEGEL. Zwischen dem Deploy und dem Aufruf von
+ *   `update.php` gibt es die Spalten `users.status` und
+ *   `users.gesperrt_grund` nicht — sie kommen aus
+ *   `2026_09_16_konto_lebenszyklus`. Zwei SELECTs forderten sie trotzdem
+ *   hart an, und zwar ausgerechnet die beiden auf dem Anmeldeweg:
+ *   `login.php` beim Nachschlagen des Kontos und `auth_guard.php` bei jeder
+ *   angemeldeten Anfrage.
+ *
+ *   Was daraus folgte: **HTTP 500 nach dem Absenden der Anmeldung.** Ohne
+ *   Anmeldung kein `betrieb_updates.php`, ohne das keine Migration, ohne die
+ *   keine Anmeldung. Die Anlage liess sich aus dem Browser nicht mehr
+ *   aufschliessen.
+ *
+ *   NACHGEBAUT, NICHT ERSCHLOSSEN: Auf der Pruefinstallation die beiden
+ *   Spalten entfernt, dann den Anmeldeweg im Browser gefahren. Ohne den
+ *   Hotfix bleibt der Weg auf `login.php` stehen, **eine 5xx-Antwort**, die
+ *   Seite leer. Mit ihm geht er auf `index.php`, **null** 5xx-Antworten, und
+ *   die BetreiberIn kommt weiter bis `betrieb_updates.php`, wo die
+ *   ausstehenden Migrationen stehen.
+ *
+ *   DER RUECKFALL UND NICHT EINE VORABFRAGE. Beide Stellen versuchen das
+ *   SELECT mit den neuen Spalten und fallen bei einem Fehler auf die
+ *   Spaltenliste ohne sie zurueck, mit einer Zeile im Fehlerprotokoll.
+ *   `information_schema` bei jedem Seitenaufbau zu fragen kostete einen
+ *   Roundtrip fuer einen Zustand, der nach dem ersten `update.php` nie
+ *   wieder eintritt. Ohne die Spalten gilt, was die Migration selbst als
+ *   Vorgabe setzt: jedes Konto `aktiv`, kein Sperrgrund.
+ *
+ *   WARUM ES NICHT AUFFIEL, und das ist der unangenehme Teil: Die
+ *   Pruefinstallation hatte die Migrationen IMMER schon gelaufen. Das Fenster
+ *   zwischen Deploy und `update.php` ist in P5b an mehreren Stellen bedacht
+ *   worden — `einstieg_lib.php` faengt es ausdruecklich ab, `ingest.php` hat
+ *   seit P5a eine eigene Spaltenfrage —, aber **genau der Weg zu `update.php`
+ *   war nicht geprueft**. Das Pruefdokument nennt das jetzt unter F17, und
+ *   die Pruefliste hat einen Punkt dafuer bekommen.
  */
-const WEB_VERSION = '20.24.0';
+const WEB_VERSION = '20.24.1';

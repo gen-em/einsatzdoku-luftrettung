@@ -14,6 +14,53 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.24.1] — 2026-09-18
+
+**Die Anmeldung vertrug das Fenster nicht, in dem sie gebraucht wird.**
+
+### Behoben
+
+**Nach dem Deploy von P5b war die Anmeldung mit HTTP 500 blockiert, solange
+`update.php` nicht gelaufen war** — und `update.php` ist ohne Anmeldung nicht
+erreichbar. Ein Riegel, kein Schönheitsfehler: Ohne Anmeldung kein
+*Betrieb → Updates*, ohne das keine Migration, ohne die keine Anmeldung. Die
+Anlage ließ sich aus dem Browser nicht mehr aufschließen.
+
+Die Ursache sind zwei SELECTs, die `users.status` und `users.gesperrt_grund`
+hart anfordern — Spalten aus `2026_09_16_konto_lebenszyklus`, die es zwischen
+Deploy und Migration noch nicht gibt. Ausgerechnet die beiden auf dem
+Anmeldeweg: `login.php` beim Nachschlagen des Kontos und `auth_guard.php` bei
+jeder angemeldeten Anfrage. Beide versuchen das SELECT jetzt mit den neuen
+Spalten und fallen bei einem Fehler auf die Liste ohne sie zurück, mit einer
+Zeile im Fehlerprotokoll.
+
+**Der Rückfall statt einer Vorabfrage:** `information_schema` bei jedem
+Seitenaufbau zu fragen kostete einen Roundtrip für einen Zustand, der nach dem
+ersten `update.php` nie wieder eintritt. Ohne die Spalten gilt, was die
+Migration selbst als Vorgabe setzt — jedes Konto `aktiv`, kein Sperrgrund. Die
+Anwendung läuft also genau so weiter wie vor P5b, bis die Migration durch ist.
+
+**Nachgebaut, nicht erschlossen:** Auf der Prüfinstallation die beiden Spalten
+entfernt, dann den Anmeldeweg im Browser gefahren. Ohne den Hotfix bleibt der
+Weg auf `login.php` stehen, **eine 5xx-Antwort**, die Seite leer — dasselbe
+Bild wie auf Staging. Mit ihm geht er auf `index.php`, **null** 5xx-Antworten,
+und die BetreiberIn kommt weiter bis `betrieb_updates.php`, wo die ausstehenden
+Migrationen stehen.
+
+**Warum es nicht auffiel**, und das gehört hierher: Die Prüfinstallation hatte
+die Migrationen immer schon gelaufen. Das Fenster ist in P5b an mehreren
+Stellen bedacht worden — `einstieg_lib.php` fängt es ausdrücklich ab,
+`ingest.php` hat seit P5a eine eigene Spaltenfrage —, aber **genau der Weg zu
+`update.php` war nie geprüft**. Als Backlog **Nr. 234** aufgenommen; die
+Prüfliste im P5b-Prüfdokument hat einen Punkt dafür bekommen.
+
+**Der Notausgang war die ganze Zeit da:** `php update.php` auf der
+Kommandozeile läuft ohne Sitzung, ausdrücklich „für den Fall, dass der Login
+selbst von einer Migration abhängt" (so steht es seit S8/AP3 im Kopf der
+Datei). Wer Shell-Zugang hat, kommt damit auch ohne diesen Hotfix weiter.
+
+---
+
 ## [Web 20.24.0] — 2026-09-17
 
 **Onboarding und die beiden Rückfragen.**

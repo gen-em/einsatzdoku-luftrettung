@@ -178,10 +178,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
          * Sitzung — das war M1-05, und daran aendert sich nichts; sie wird
          * hier einmal gelesen und danach vergessen. auth_guard.php liest sie
          * weiterhin bei jeder Anfrage neu. */
-        $st = db()->prepare('SELECT id, password_hash, session_epoch, kdf_iter, logo_wahl, role,
-                                    status, gesperrt_grund
-                             FROM users WHERE email = ?');
-        $st->execute([$email]);
+        /* WARUM DAS SELECT ZWEIMAL DASTEHT (Hotfix nach dem P5b-Merge, 18.09.2026).
+         *
+         * `status` und `gesperrt_grund` kommen aus der Migration
+         * `2026_09_16_konto_lebenszyklus`. Zwischen dem Deploy und dem Aufruf von
+         * `update.php` gibt es die beiden Spalten NICHT — und dieses SELECT warf
+         * dann, ungefangen, mitten im Anmeldeweg.
+         *
+         * DAS WAR EIN RIEGEL, KEIN SCHOENHEITSFEHLER: Ohne Anmeldung kein
+         * `betrieb_updates.php`, ohne das keine Migration, ohne die keine Anmeldung.
+         * Die Anlage stand mit HTTP 500 auf der Anmeldeseite und liess sich aus dem
+         * Browser nicht mehr aufschliessen. Gemessen auf Staging am 18.09.2026,
+         * unmittelbar nach dem Merge von PR #57.
+         *
+         * DER RUECKFALL UND NICHT EINE VORABFRAGE: `information_schema` bei JEDEM
+         * Seitenaufbau zu fragen kostet einen Roundtrip fuer einen Zustand, der nach
+         * dem ersten `update.php` nie wieder eintritt. Der zweite Versuch kostet nur
+         * dort etwas, wo es die Spalten wirklich nicht gibt.
+         *
+         * WAS DANACH GILT: Ohne die Spalten ist jedes Konto `aktiv` und ohne
+         * Sperrgrund — die Vorgabewerte, die die Migration selbst setzt. Die
+         * Anwendung laeuft also genau so weiter wie vor P5b, bis die Migration
+         * durch ist. */
+        $LOGIN_SPALTEN = 'id, password_hash, session_epoch, kdf_iter, logo_wahl, role';
+        try {
+            $st = db()->prepare('SELECT ' . $LOGIN_SPALTEN . ', status, gesperrt_grund
+                                 FROM users WHERE email = ?');
+            $st->execute([$email]);
+        } catch (Throwable $ex) {
+            error_log('login.php: Lebenszyklus-Spalten fehlen — Migration '
+                    . '2026_09_16_konto_lebenszyklus steht aus. Anmeldung laeuft '
+                    . 'ohne sie weiter. (' . $ex->getMessage() . ')');
+            $st = db()->prepare('SELECT ' . $LOGIN_SPALTEN . ' FROM users WHERE email = ?');
+            $st->execute([$email]);
+        }
         $u = $st->fetch();
 
         /* ---- DEMO-ANMELDUNG ABGESCHALTET (P5b/AP7, E-P5b-07) --------------
