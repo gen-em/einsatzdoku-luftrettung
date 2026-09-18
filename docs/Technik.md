@@ -1,6 +1,6 @@
 # Gen-EM NAdoku — Technische Dokumentation
 
-*Stand: 05.09.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
+*Stand: 17.09.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
 Historie: `CHANGELOG.md`.*
 
 ## 1. Architekturüberblick

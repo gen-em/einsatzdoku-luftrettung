@@ -1005,7 +1005,7 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- backup_targets.behalten_* und sicherungsziel_dateien stehen oben schon
   -- im Schema (Web 20.14.0, P5a/AP10).
   ('2026_09_16_sicherungsziel_aufbewahrung', 'skipped'),
-  -- protokoll_ereignisse steht oben schon im Schema (Web 20.16.0, P5b/AP1).
+  -- protokoll_ereignisse steht oben schon im Schema (Web 20.16.5, P5b/AP1).
   ('2026_09_16_protokoll_ereignisse', 'skipped'),
   -- users.status und die Lebenszyklus-Spalten stehen oben schon im Schema
   -- (Web 20.17.0, P5b/AP2).

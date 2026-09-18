@@ -751,7 +751,7 @@ vermieden statt hinterher behoben.
 
 **Migration** `2026_09_16_konto_lebenszyklus`. **`update.php` ist fällig.**
 
-## [Web 20.16.5] — 2026-09-16
+## [Web 20.16.5] — 2026-09-16 (Nummer vergeben am 17.09.2026)
 
 **Das Betriebsprotokoll bekommt einen Schreibweg** (P5b/AP1, V1, E-P5b-06,
 -12, -14).

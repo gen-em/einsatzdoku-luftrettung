@@ -528,6 +528,58 @@ Aufzählungen), und eine inhaltliche Stichprobe, ob die Nummer noch zu dem
 Eintrag passt, auf den sie zeigt.
 
 
+### F16 — Die unabhängige Durchsicht des Merges: 18 Befunde, 0 verworfen
+
+Nach dem Merge ist eine **unabhängige Durchsicht** über den Stand gelaufen —
+drei Prüfrichtungen (Nummernkollisionen, verlorene `main`-Inhalte,
+Dokumentationskonsistenz), jeder Befund danach von einem zweiten Durchgang
+**gegengeprüft, der ihn widerlegen sollte**. Ergebnis: **18 bestätigt, 0
+widerlegt**, 393 Werkzeugaufrufe.
+
+**Verlorene `main`-Inhalte: keine.** Die Prüfrichtung, die am meisten auf dem
+Spiel hatte, meldete eine leere Liste — `main`s fünf CHANGELOG-Einträge, fünf
+`version.php`-Blöcke, acht Backlog-Punkte und die Fassung 77 sind vollständig.
+
+**Der schwerste Befund war einer, vor dem ich selbst gewarnt hatte.** F15
+schließt mit dem Satz, eine Umnummerierung brauche „eine inhaltliche
+Stichprobe, ob die Nummer noch zu dem Eintrag passt, auf den sie zeigt". Genau
+das hatte ich nicht getan, und genau dort lag der Fehler:
+
+> `server/version.php` erklärte die Versionskollision mit den Worten
+> *„Am 17.09.2026 vergab `main` dieselbe Nummer für etwas anderes: die
+> Job-Pause über die Adresse (Backlog **Nr. 227**)"*.
+>
+> **Nr. 227 ist ein Punkt dieses Zweigs** (die Symbolregel der
+> Vollständigkeitsprüfung). `main`s Job-Pause ist **Nr. 219**. Mein
+> zeilenweiser Lauf hatte die Zeile als „meine" eingestuft — zu Recht, denn
+> ich hatte sie selbst geschrieben —, aber die Nummer **darin** war `main`s.
+
+Die Attribution nach Zeilenherkunft ist also nicht hinreichend: Eine Zeile
+kann von mir stammen und trotzdem eine fremde Nummer nennen. Richtig wäre ein
+Abgleich je Verweis gegen den Eintrag, auf den er zeigt.
+
+**Die übrigen siebzehn** verteilen sich auf vier Ursachen:
+
+| Ursache | Anzahl | Beispiel |
+|---|--:|---|
+| Halb umnummerierte Aufzählungen | 3 | „(Nr. 225, 218, 219)" — nur die erste gewandert |
+| Veraltete Statusangaben nach dem Merge | 7 | „Sechs der zehn Pakete sind gebaut", „Offen sind AP3, AP8, AP9" |
+| Falsch gezählte Mengen | 4 | „fünf Migrationen" (sechs), „zwei Nummernkollisionen" (drei), „50 Seiten" (62) |
+| Eine Commit-Kennung, die es nicht gibt | 2 | `93f0d6f` statt `3f28e22` — an zwei Stellen abgeschrieben |
+| Behauptet, das Konzept sei gelöscht | 1 | es liegt noch, und das ist richtig — die Freigabe steht aus |
+
+**Alle achtzehn sind behoben**, die Gegenproben laufen auf null: keine halben
+Bereiche mehr, keine `93f0d6f`, kein Verweis auf `main`s Themen unter einer
+Zweignummer, `php -l` 0, Wortliste 0, Vollständigkeit 398 auf der Schwelle,
+Migrationsregister 0, Kontraste 22/0, Kettenaufrufe 0/0.
+
+*Lehre, und sie ist schärfer als die aus F15:* **Eine Prüfliste, die ich
+selbst aufschreibe, arbeite ich nicht ab, indem ich sie aufschreibe.** F15
+nannte die inhaltliche Stichprobe als dritten nötigen Durchgang — und der
+Absatz stand schon im Prüfdokument, während der Fehler zwölf Zeilen weiter
+unbemerkt im Baum lag.
+
+
 ## 3. Was maschinell geprüft wurde — Mittel und Zahl
 
 | Mittel | Wann | Zahl | Befund |

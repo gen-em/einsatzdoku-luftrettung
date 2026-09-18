@@ -13,8 +13,8 @@ Phase.
 > `tools/motor.mjs`, einmal für alle drei Prüfmittel.
 >
 > **Die Empfehlung ist gestaffelt, und zwar aus einer Zahl heraus:** Der volle
-> Lauf misst **50** Seiten in acht Breiten und braucht je Motor rund zehn Minuten
-> (gemessen 16.09.2026: **400** Bilder; bis AP8 waren es 49 und 392). Dreimal voll sind eine gute halbe
+> Lauf misst **62** Seiten in acht Breiten und braucht je Motor rund zehn Minuten
+> (gemessen 17.09.2026: **496** Bilder; vor P5b waren es 50 und 400). Dreimal voll sind eine gute halbe
 > Stunde nach **jedem** Arbeitspaket, und das Meiste davon ist Wiederholung.
 > Deshalb:
 >
