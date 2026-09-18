@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Code auschecken
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Hat dieser Lauf ueberhaupt auf PRODUKTIV ausgeliefert?
         # SEIT DER KETTE HAT DER AUSLIEFERUNGSLAUF ZWEI ZIELE (E-P5a-10): Ein

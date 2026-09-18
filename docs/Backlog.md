@@ -2706,30 +2706,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     muss auch dann durchkommen, sonst ist nichts gewonnen.
 
 
-235. **`actions/checkout@v4` hängt an einer abgekündigten Laufzeit.**
-    *Aufgenommen 18.09.2026 aus den Annotations des Auslieferungslaufs.*
-
-    GitHub meldet bei jedem Lauf: *„Node.js 20 is deprecated. The following
-    actions target Node.js 20 but are being forced to run on Node.js 24:
-    `actions/checkout@v4`."* Die Zwangsumleitung auf Node 24 ist eine
-    Übergangslösung; fällt sie weg, bricht der Schritt **„Code auschecken"** —
-    und der ist der **erste jedes Jobs**. Dann brechen Stufe 1, beide
-    Deploy-Wege und die Integritätswache **gleichzeitig**. Der Produktionslauf
-    ist der, bei dem es am spätesten auffällt, weil er am seltensten läuft.
-
-    **Fünf Fundstellen**, gemessen am 18.09.2026 gegen `7675f9b`: je einmal im
-    Schritt „Code auschecken" von `pruefung.yml` und `integritaet.yml`,
-    dreimal in `auslieferung.yml` (Jobs `staging`, `Prüfung Stufe 2` und
-    `produktion`). `SamKirkland/FTP-Deploy-Action@v4.4.0` (zweimal in
-    `auslieferung.yml`) ist **nicht** betroffen — sie taucht in der Warnung
-    nicht auf.
-
-    Zu tun: alle fünf Stellen **auf einmal** heben, sonst bleibt eine zurück;
-    die zu setzende Fassung nachschlagen statt aus dem Gedächtnis eintragen.
-    Danach `tools/kettenaufrufe/pruefen.py --probe` und `pruefen.py`. Keine
-    Versionsstufe, kein Changelog — die Änderung fasst nur `.github/` an
-    (`CLAUDE.md` 2, Präzedenz `27c7673`).
-
 236. **`ubuntu-latest` wandert am 19.10.2026 auf Ubuntu 26.**
     *Aufgenommen 18.09.2026, Merkposten mit Datum.*
 
@@ -2777,6 +2753,68 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+235. **`actions/checkout@v4` hängt an einer abgekündigten Laufzeit.**
+    *Aufgenommen 18.09.2026 aus den Annotations des Auslieferungslaufs.*
+
+    GitHub meldet bei jedem Lauf: *„Node.js 20 is deprecated. The following
+    actions target Node.js 20 but are being forced to run on Node.js 24:
+    `actions/checkout@v4`."* Die Zwangsumleitung auf Node 24 ist eine
+    Übergangslösung; fällt sie weg, bricht der Schritt **„Code auschecken"** —
+    und der ist der **erste jedes Jobs**. Dann brechen Stufe 1, beide
+    Deploy-Wege und die Integritätswache **gleichzeitig**. Der Produktionslauf
+    ist der, bei dem es am spätesten auffällt, weil er am seltensten läuft.
+
+    **Fünf Fundstellen**, gemessen am 18.09.2026 gegen `7675f9b`: je einmal im
+    Schritt „Code auschecken" von `pruefung.yml` und `integritaet.yml`,
+    dreimal in `auslieferung.yml` (Jobs `staging`, `Prüfung Stufe 2` und
+    `produktion`). `SamKirkland/FTP-Deploy-Action@v4.4.0` (zweimal in
+    `auslieferung.yml`) ist **nicht** betroffen — sie taucht in der Warnung
+    nicht auf.
+
+    Zu tun: alle fünf Stellen **auf einmal** heben, sonst bleibt eine zurück;
+    die zu setzende Fassung nachschlagen statt aus dem Gedächtnis eintragen.
+    Danach `tools/kettenaufrufe/pruefen.py --probe` und `pruefen.py`. Keine
+    Versionsstufe, kein Changelog — die Änderung fasst nur `.github/` an
+    (`CLAUDE.md` 2, Präzedenz `27c7673`).
+
+    ### Erledigt am 18.09.2026 — auf `v7`, und was dabei mitkommt
+
+    Alle **fünf** Fundstellen auf einmal gehoben, `v4` → `v7`. Nachgeschlagen
+    statt aus dem Gedächtnis gesetzt:
+
+    | Fassung | `runs.using` in `action.yml` |
+    |---|---|
+    | `v4` | `node20` — die abgekündigte |
+    | `v5`, `v6`, `v7` | `node24` |
+
+    `v7.0.1` ist die neueste; gesetzt ist der wandernde Major-Tag `v7`, wie
+    zuvor `v4` (die Linie des Hauses; `SamKirkland/FTP-Deploy-Action@v4.4.0`
+    ist die Ausnahme und bleibt festgenagelt).
+
+    **Zwei Brüche kommen mit, und beide berühren Bauformen dieser Anlage.**
+    Der Sprung überspringt zwei Hauptversionen; das ist eine bewusste
+    Entscheidung des Auftraggebers vom 18.09.2026 gegen die vorsichtigere
+    Empfehlung, auf `v5` zu gehen (dort: **null** dokumentierte Brüche).
+    Was zu beobachten ist:
+
+    - **v6.0.0 — „Persist creds to a separate file".** Die Zugangsdaten
+      liegen nach dem Auschecken anders. Betroffen wäre ein Schritt, der
+      nach dem Checkout selbst mit Git spricht; die Kette tut das heute
+      nicht. **Wenn ein Schritt mit `git push` oder einem Token aus der
+      Git-Konfiguration dazukommt, gehört das hier nachgesehen.**
+    - **v7.0.0 — „Block checking out fork PR for `pull_request_target` and
+      `workflow_run`".** `integritaet.yml` läuft auf `workflow_run` (und auf
+      `schedule`). Sie checkt den **eigenen** Stand aus, keinen Fork-PR —
+      die Sperre sollte sie nicht treffen. **Belegt ist das nicht**, es ist
+      gelesen, nicht gemessen: Der erste Lauf der Wache nach diesem Paket
+      ist die Probe. Bleibt sie still oder wird sie rot, steht die Ursache
+      hier.
+
+    **Geprüft:** `tools/kettenaufrufe/pruefen.py --probe` → **10 von 10**;
+    `pruefen.py` → **28 Aufrufe, 0 Befunde, 0 ungeprüft**; YAML aller drei
+    Läufe weiterhin gültig. Keine Versionsstufe, kein Changelog — die
+    Änderung fasst nur `.github/` an (`CLAUDE.md` 2, Präzedenz `27c7673`).
 
 221. **Waagerechter Überlauf auf der Datenschutzseite bei 360 px.**
     *Aufgenommen 17.09.2026 aus demselben Lauf.*

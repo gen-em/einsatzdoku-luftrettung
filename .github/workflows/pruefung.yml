@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Code auschecken
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # VORAUSSETZUNG DER BEREICHSERKENNUNG (Schritt danach). Die Vorgabe
           # holt EINEN Commit; ohne Historie gibt es nichts zu vergleichen,
