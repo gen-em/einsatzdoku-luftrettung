@@ -64,7 +64,7 @@ Typografie, 228 Proof-of-Work gegen Registrierungs-Spam, 229 Uhr-Anzeige bei
 > schon bei Nr. 214 und bei Web 20.16.0. Wer in einem Commit vor dem Merge
 > eine dieser Nummern liest, liest die alte Zählung.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **234** und trägt seine
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **235** und trägt seine
 Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
@@ -2749,6 +2749,39 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Wie es zu schließen wäre:** Der Rotationsvorgang selbst sollte sagen,
     dass das Blatt neu gedruckt gehört — er ist die Stelle, an der es auffällt,
     und er weiß, ob ein alter Wert noch gebraucht wird. Das gehört zu S10c.
+
+234. **Kein Prüfmittel fährt den Weg, den eine frisch ausgelieferte Anlage
+    geht — Deploy, dann Anmeldung, dann `update.php`.**
+    *Aufgenommen 18.09.2026 nach dem P5b-Deploy auf Staging; der Anlass ist
+    in Web 20.24.1 behoben, die Lücke im Prüfen nicht.*
+
+    Der P5b-Deploy hat Staging mit HTTP 500 auf der Anmeldeseite
+    stehenlassen: Zwei SELECTs auf dem Anmeldeweg forderten Spalten an, die
+    erst die Migration anlegt. Behoben ist das; **gefunden wurde es von der
+    Betreiberin, nicht von einem Prüfmittel**, und das ist der eigentliche
+    Punkt dieses Eintrags.
+
+    **Warum keines es sehen konnte.** Alle Prüfmittel setzen eine
+    eingerichtete Installation voraus, auf der die Migrationen gelaufen sind
+    — `lokal_einrichten.sh` fährt sie als ersten Schritt. Der Zustand
+    „Code neu, Schema alt" kommt im Prüfstand nicht vor, obwohl er bei
+    **jeder** Auslieferung mit Schemaänderung eintritt und genau so lange
+    dauert, bis jemand `update.php` drückt. Dieselbe Blindheit hatte
+    Nr. 223 (die Anwendung ließ sich nicht mehr installieren): Auch dort
+    setzten alle Mittel voraus, was zu prüfen war.
+
+    **Wie es zu schließen wäre.** Ein Schritt in Stufe 2, der gegen Staging
+    das tut, was die Betreiberin tut: Migrationen zurücksetzen oder eine
+    zweite Anlage ohne sie aufsetzen, dann anmelden, dann `update.php`
+    aufrufen, dann noch einmal anmelden. Er müsste **vor** dem Kreislauftest
+    laufen — der scheiterte hier zwar auch (`Anmeldung gescheitert:
+    unbekannt`), aber seine Meldung sagt nicht, dass das Schema schuld ist.
+
+    **Zu klären ist dabei eine Grundsatzfrage:** Soll die Kette den
+    Wartungsmodus erzwingen, bis die Migration durch ist? Dann wäre der
+    Riegel unsichtbar statt tödlich — aber die Anmeldung der BetreiberIn
+    muss auch dann durchkommen, sonst ist nichts gewonnen.
+
 
 ## Erledigt
 

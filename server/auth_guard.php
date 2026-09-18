@@ -161,11 +161,41 @@ $_SESSION['last_seen'] = time();
  *
  * (name existiert seit der Migration von Web 2.x; wer die nicht gefahren hat,
  * kann sich schon heute nicht anmelden — die Spalte wird in ui.php gelesen.) */
-$u = db()->prepare('SELECT id, email, name, role, session_epoch,
-                           pat_wrap_pw, pat_key_check, kdf_salt, kdf_iter,
-                           status, gesperrt_grund
-                    FROM users WHERE id = ?');
-$u->execute([$userId]);
+/* WARUM DAS SELECT ZWEIMAL DASTEHT (Hotfix nach dem P5b-Merge, 18.09.2026).
+ *
+ * `status` und `gesperrt_grund` kommen aus der Migration
+ * `2026_09_16_konto_lebenszyklus`. Zwischen dem Deploy und dem Aufruf von
+ * `update.php` gibt es die beiden Spalten NICHT — und dieses SELECT warf
+ * dann, ungefangen, mitten im Anmeldeweg.
+ *
+ * DAS WAR EIN RIEGEL, KEIN SCHOENHEITSFEHLER: Ohne Anmeldung kein
+ * `betrieb_updates.php`, ohne das keine Migration, ohne die keine Anmeldung.
+ * Die Anlage stand mit HTTP 500 auf der Anmeldeseite und liess sich aus dem
+ * Browser nicht mehr aufschliessen. Gemessen auf Staging am 18.09.2026,
+ * unmittelbar nach dem Merge von PR #57.
+ *
+ * DER RUECKFALL UND NICHT EINE VORABFRAGE: `information_schema` bei JEDEM
+ * Seitenaufbau zu fragen kostet einen Roundtrip fuer einen Zustand, der nach
+ * dem ersten `update.php` nie wieder eintritt. Der zweite Versuch kostet nur
+ * dort etwas, wo es die Spalten wirklich nicht gibt.
+ *
+ * WAS DANACH GILT: Ohne die Spalten ist jedes Konto `aktiv` und ohne
+ * Sperrgrund — die Vorgabewerte, die die Migration selbst setzt. Die
+ * Anwendung laeuft also genau so weiter wie vor P5b, bis die Migration
+ * durch ist. */
+$WACHE_SPALTEN = 'id, email, name, role, session_epoch,
+                  pat_wrap_pw, pat_key_check, kdf_salt, kdf_iter';
+try {
+    $u = db()->prepare('SELECT ' . $WACHE_SPALTEN . ', status, gesperrt_grund
+                        FROM users WHERE id = ?');
+    $u->execute([$userId]);
+} catch (Throwable $ex) {
+    error_log('auth_guard.php: Lebenszyklus-Spalten fehlen — Migration '
+            . '2026_09_16_konto_lebenszyklus steht aus. Die Wache laeuft '
+            . 'ohne sie weiter. (' . $ex->getMessage() . ')');
+    $u = db()->prepare('SELECT ' . $WACHE_SPALTEN . ' FROM users WHERE id = ?');
+    $u->execute([$userId]);
+}
 $row = $u->fetch();
 
 if (!$row) {
