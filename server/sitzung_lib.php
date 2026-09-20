@@ -121,15 +121,60 @@ function sitzung_cli(): bool
  * Muster wie `db()`: ein `static` in der Funktion statt einer globalen
  * Variablen, die jeder anfassen kann.
  *
- * @return array{eigen: bool, grund: ?string, gelaufen: bool}
+ * DIE LAGE IST BENANNT, NICHT ERRECHNET (Berichtigung 20.09.2026). Bis Web
+ * 20.26.0 trug der Stand nur `eigen` und `grund`, und die Statusseite hat die
+ * URSACHE daraus geraten: Sie druckte „konnte kein eigenes Verzeichnis
+ * einrichten", sobald der gemessene Pfad nicht der eigene war. Auf der
+ * Staging-Anlage war das nachweislich falsch — das Verzeichnis war angelegt
+ * und beschreibbar, nur hat der Hoster den gesetzten Pfad nicht uebernommen.
+ * Fuer diesen Fall gab es keinen Zustand, also gab es auch keinen wahren
+ * Satz. Jetzt sagt `lage`, was war, und der Text haengt daran.
+ *
+ * `gelaufen` ist ersatzlos entfallen: Es wurde im ganzen Repositorium von
+ * niemandem gelesen — und es war ausgerechnet der Wert, der zwei Ursachen
+ * voneinander getrennt haette.
+ *
+ * @return array{eigen: bool, lage: string, grund: ?string}
  */
-function sitzung_ablage_stand(?bool $eigen = null, ?string $grund = null): array
+function sitzung_ablage_stand(?string $lage = null, bool $eigen = false,
+                              ?string $grund = null): array
 {
-    static $stand = ['eigen' => false, 'grund' => null, 'gelaufen' => false];
-    if ($eigen !== null) {
-        $stand = ['eigen' => $eigen, 'grund' => $grund, 'gelaufen' => true];
+    static $stand = ['eigen' => false, 'lage' => 'nicht_gelaufen', 'grund' => null];
+    if ($lage !== null) {
+        $stand = ['eigen' => $eigen, 'lage' => $lage, 'grund' => $grund];
     }
     return $stand;
+}
+
+/**
+ * Was auf der Statusseite steht — je Lage EIN Satz, und zwar ein wahrer.
+ *
+ * Steht hier und nicht in `plattform_lib.php`, weil nur diese Datei weiss,
+ * was tatsaechlich geschehen ist. Wer einen Zustand ergaenzt, ergaenzt den
+ * Satz hier mit; eine unbekannte Lage bekommt bewusst keinen erfundenen.
+ */
+function sitzung_ablage_satz(array $stand): string
+{
+    $saetze = [
+        'eigen' => 'Die Anwendung legt ihre Sitzungen selbst ab.',
+        'nicht_gelaufen' => 'RUECKFALL: Die Einrichtung der Ablage ist nicht gelaufen. '
+            . 'Das sollte nicht vorkommen - `db.php` ruft sie bei jeder Anfrage.',
+        'kommandozeile' => 'Auf der Kommandozeile richtet die Anwendung die Ablage '
+            . 'absichtlich nicht ein.',
+        'sitzung_lief' => 'RUECKFALL: Beim Laden von `db.php` lief bereits eine Sitzung, '
+            . 'deshalb liess sich der Ort nicht mehr setzen. Das deutet auf '
+            . '`session.auto_start` oder ein `auto_prepend_file` der Anlage - dann '
+            . 'greifen auch `secure`, `SameSite` und `use_strict_mode` des '
+            . 'Sitzungscookies nicht.',
+        'nicht_anlegbar' => 'RUECKFALL: Das eigene Verzeichnis liess sich nicht anlegen.',
+        'nicht_beschreibbar' => 'RUECKFALL: Das eigene Verzeichnis ist nicht beschreibbar.',
+        'nicht_uebernommen' => 'RUECKFALL: Das eigene Verzeichnis ist angelegt und '
+            . 'beschreibbar - die Anlage uebernimmt den gesetzten Pfad aber nicht. '
+            . 'Das heisst in aller Regel, dass der Hoster `session.save_path` '
+            . 'festgeschrieben hat; die Anwendung kann daran nichts aendern.',
+    ];
+    $satz = $saetze[$stand['lage']] ?? 'RUECKFALL: Grund nicht festgehalten.';
+    return $stand['grund'] !== null ? $satz . ' ' . $stand['grund'] : $satz;
 }
 
 /**
@@ -159,8 +204,18 @@ function sitzung_ablage(): void
     if ($gelaufen) { return; }
     $gelaufen = true;
 
-    if (sitzung_cli()) { return; }
-    if (session_status() !== PHP_SESSION_NONE) { return; }
+    /* JEDER AUSGANG VERMERKT SEINE LAGE. Bis Web 20.26.0 kehrten diese
+     * beiden stumm zurueck; die Statusseite stand dann auf dem Vorgabewert
+     * des `static` und nannte keinen Grund — nachgewiesen auf der
+     * Staging-Anlage. Drei von sechs Ausgaengen waren sichtbar, drei nicht. */
+    if (sitzung_cli()) {
+        sitzung_ablage_stand('kommandozeile', false, null);
+        return;
+    }
+    if (session_status() !== PHP_SESSION_NONE) {
+        sitzung_ablage_stand('sitzung_lief', false, null);
+        return;
+    }
 
     $pfad   = sitzung_ablage_pfad();
     $marker = $pfad . '/.geprueft';
@@ -190,7 +245,7 @@ function sitzung_ablage(): void
      * mit `0770` an. Hier ist die Gruppe zu viel: Auf geteiltem Webspace
      * steht in ihr, wer gerade zufaellig danebenwohnt. */
     if (!is_dir($pfad) && !@mkdir($pfad, 0700, true) && !is_dir($pfad)) {
-        sitzung_ablage_merken(false, 'Das Verzeichnis ließ sich nicht anlegen: ' . $pfad);
+        sitzung_ablage_stand('nicht_anlegbar', false, 'Betroffen ist `' . $pfad . '`.');
         return;
     }
     @chmod($pfad, 0700);
@@ -219,7 +274,7 @@ function sitzung_ablage(): void
     require_once __DIR__ . '/plattform_lib.php';
     $p = plattform_schreibprobe($pfad);
     if (!$p['ok']) {
-        sitzung_ablage_merken(false, (string)$p['grund']);
+        sitzung_ablage_stand('nicht_beschreibbar', false, (string)$p['grund']);
         return;
     }
 
@@ -242,13 +297,36 @@ function sitzung_ablage_setzen(string $pfad): void
 {
     session_save_path($pfad);
     ini_set('session.gc_probability', '0');
-    sitzung_ablage_merken(true, null);
-}
 
-/** Ergebnis vermerken — eine Zeile, damit die drei Ausgaenge gleich aussehen. */
-function sitzung_ablage_merken(bool $eigen, ?string $grund): void
-{
-    sitzung_ablage_stand($eigen, $grund);
+    /* ZURUECKLESEN UND NICHT DEM RUECKGABEWERT GLAUBEN (Berichtigung
+     * 20.09.2026). Bis Web 20.26.0 stand hier `sitzung_ablage_merken(true,
+     * null)` — eine Behauptung ohne Messung, und damit genau das, was
+     * `docs/Technik.md` 5b.1 verbietet: „Wer nichts gemessen hat, darf nichts
+     * behaupten."
+     *
+     * DER RUECKGABEWERT TAUGT DAFUER NICHT. Gemessen am 20.09.2026 unter PHP
+     * 8.4.19:
+     *
+     *   Sitzung schon aktiv       `false`, dazu eine Warnung
+     *   Kopfzeilen schon gesendet `false`, dazu eine Warnung
+     *   `open_basedir` sperrt     DEN ALTEN PFAD ALS ZEICHENKETTE — also
+     *                             dasselbe wie bei Erfolg —, dazu eine Warnung
+     *
+     * Ein `=== false` haette den dritten Fall durchgelassen. Belastbar ist
+     * allein der Vergleich des WIRKSAMEN Pfads mit dem gewuenschten, und den
+     * macht die Zeile darunter. */
+    $wirk  = sitzung_wirksamer_pfad();
+    $rZiel = realpath($pfad);
+    $rWirk = realpath($wirk);
+    $griff = ($rZiel !== false && $rWirk !== false)
+        ? ($rZiel === $rWirk) : ($pfad === $wirk);
+
+    if ($griff) {
+        sitzung_ablage_stand('eigen', true, null);
+        return;
+    }
+    sitzung_ablage_stand('nicht_uebernommen', false,
+        'Gesetzt wurde `' . $pfad . '`, wirksam ist `' . $wirk . '`.');
 }
 
 /**

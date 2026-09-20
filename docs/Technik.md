@@ -7875,6 +7875,53 @@ E-SA-04) · vertrauenswürdige Proxys eingetragen (reine Auskunft).
 > einzeln, sondern nur in der Schlusszeile. Das ist gewollt — wo die
 > Sitzungen liegen und wie viele es sind, sagt Punkt 11, und der steht
 > immer da.
+>
+> **Und Punkt 11 sagt seit Web 20.26.1 auch, ob das Verzeichnis existiert.**
+> Der Grund ist ein Befund vom Ausrollen: Auf Staging meldete die Seite
+> „konnte kein eigenes Verzeichnis einrichten", obwohl es angelegt und
+> beschreibbar war — und ausgerechnet die Zeile, die das gezeigt hätte, war
+> als erfüllte Empfehlung unsichtbar. Eine Muss-Zeile, die immer dasteht,
+> trägt diese Auskunft jetzt mit.
+
+### 5b.2a Der Rückfall nennt seine Lage, er rät sie nicht (ab Web 20.26.1)
+
+**Bis Web 20.26.0 stand auf der Statusseite eine Ursache, die niemand
+gemessen hatte.** Sobald der wirksame Pfad nicht der eigene war, druckte sie
+„Die Anwendung konnte kein eigenes Verzeichnis einrichten" — ein Literal, kein
+Messergebnis. Auf der Staging-Anlage war der Satz falsch: Das Verzeichnis war
+angelegt und beschreibbar, nur hat die Anlage den gesetzten Pfad nicht
+übernommen. Für diesen Fall gab es keinen Zustand, also auch keinen wahren
+Satz.
+
+`sitzung_ablage_stand()` trägt deshalb eine **benannte Lage**, und
+`sitzung_ablage_satz()` hält je Lage genau einen Satz bereit:
+
+| Lage | wann |
+|---|---|
+| `eigen` | Pfad gesetzt **und zurückgelesen** |
+| `kommandozeile` | CLI — richtet absichtlich nichts ein |
+| `sitzung_lief` | beim Laden von `db.php` lief schon eine Sitzung |
+| `nicht_anlegbar` | `mkdir` gescheitert |
+| `nicht_beschreibbar` | Schreibprobe gescheitert |
+| `nicht_uebernommen` | angelegt und beschreibbar, aber der Pfad greift nicht |
+
+**Die Farbe kommt weiter aus der Messung, der Satz aus der Lage.** Wer einen
+Ausgang ergänzt, ergänzt den Satz mit; eine unbekannte Lage bekommt bewusst
+keinen erfundenen.
+
+**Der Rückgabewert von `session_save_path()` taugt zur Erfolgsprüfung
+nicht** — das ist der teuerste Einzelbefund dieses Pakets. Gemessen unter
+PHP 8.4.19:
+
+| Ablehnungsgrund | Rückgabe | Pfad danach |
+|---|---|---|
+| Sitzung schon aktiv | `false` | alt |
+| Kopfzeilen schon gesendet | `false` | alt |
+| **`open_basedir` sperrt den Pfad aus** | **der alte Pfad als Zeichenkette** | alt |
+
+Der dritte Fall sieht aus wie Erfolg. Ein `=== false` lässt ihn durch.
+**Belastbar ist allein das Zurücklesen** — der wirksame Pfad gegen den
+gewünschten, und genau so prüft `sitzung_ablage_setzen()` es.
 
 **Die Regel ist dauerhaft, die Zahl ist ein Stand** (E-PP-03): Für Versionen
 gilt „vom Hersteller noch mit Sicherheitskorrekturen versorgt". Die Zahlen
