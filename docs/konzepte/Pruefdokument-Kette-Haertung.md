@@ -24,9 +24,9 @@ abgehakt ist (R62).
 > | Stand | 20.09.2026 — **AP1 gebaut (Abnahme offen), AP2 gebaut, AP3 gebaut.** AP4 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **die Mengenprobe gegen Produktiv** (Prüfpunkt 17) — sie ist gebaut und selbstgeprüft, aber nie gegen einen echten Server gelaufen. Abschnitt 0 |
-> | Funde | **19** (Abschnitt 2): F-KH-U-01 bis F-KH-U-20 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-20: Auch der Weg zum Datenkanal ist ausgeschlossen; übrig bleibt die Sitzung selbst** |
-> | F3 | **eingegrenzt, nicht benannt.** Sechs Vermutungen sind mit je einer Messung ausgeschlossen (Tabelle bei F-KH-U-20). **E-KH-09 (Pflichtstopp) steht** |
-> | Prüfliste | 21 Punkte: **6 abgehakt**, 5 teilweise, **10 offen** |
+> | Funde | **20** (Abschnitt 2): F-KH-U-01 bis F-KH-U-21 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-21: Die erste Mengenprobe gegen Produktiv — 21 Verzeichnisse in EINER Sitzung gingen durch, dann hat die Probe ihr eigenes Messgerät erschlagen.** Vier Fehler der Probe behoben, keiner im Server |
+> | F3 | **eingegrenzt, nicht benannt.** Sechs Vermutungen sind mit je einer Messung ausgeschlossen (Tabelle bei F-KH-U-20); die siebte — eine Sitzungsgrenze — ist in ihrer naheliegenden Form widerlegt: **21 Verzeichnisse in EINER Sitzung gingen durch** (F-KH-U-21). Eine Grenze bei 30 oder 50 bleibt möglich. **E-KH-09 (Pflichtstopp) steht** |
+> | Prüfliste | 21 Punkte: **6 abgehakt**, 6 teilweise, **9 offen** |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
 
 ---
@@ -410,7 +410,7 @@ beglaubigte einen Vergleich, den es so nicht gab.
 | Mittel | Soll | Ist |
 |---|---|---|
 | `tor.py --selbstprobe` | mindestens 16 Lagen, 0 offen | **19 Lagen, 0 offen** (11 → 17 → 19; die zwei letzten zur zweiten Runde und zur Serverzeit) |
-| `zielprobe.py --selbstprobe` | eigene Selbstprobe, 0 offen | **67 Lagen, 0 offen** (26 → 29 → 33 → 37 → 45 → 50 → 67; jede Stufe ist ein Fund, den sie selbst gefunden hat) |
+| `zielprobe.py --selbstprobe` | eigene Selbstprobe, 0 offen | **81 Lagen, 0 offen** (26 → 29 → 33 → 37 → 45 → 50 → 67 → 81; jede Stufe ist ein Fund, den sie selbst gefunden hat) |
 | `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft | **34 Aufrufe, 0, 0**; Selbstprobe 10/10 |
 | YAML der drei Arbeitsläufe | laden | **3 von 3** |
 | `wache.py --selbstprobe` | 0 offen | **38 Erwartungen, 0 offen** (AP2: 32 → 38) |
@@ -473,6 +473,81 @@ die die Zielprobe in ihren zwei Betriebsarten trennt.
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-21 — Die erste Mengenprobe gegen Produktiv: 21 Verzeichnisse in
+EINER Sitzung gingen durch. Abgebrochen hat nicht der Server, sondern die
+Probe sich selbst.** *Lauf 35539722380, 20.09.2026, 21:47–21:50 UTC,
+`--mengenprobe 80`.*
+
+```
+Mengenprobe gegen https://nadoku.gen-em.org — 80 Verzeichnisse in EINER Sitzung
+  Reste weggeräumt: 0                                     21:47:16
+  … Command '[...80 Adressen...]' timed out after 60 seconds
+  WARNUNG: 59 Verzeichnisse konnten nicht entfernt werden  21:50:14
+  Aufgeräumt: 21 Verzeichnisse entfernt.
+```
+
+**Was der Lauf beantwortet hat — und es ist nicht nichts:** In **einer**
+FTP-Sitzung sind **21 Verzeichnisse angelegt und 21 Dateien hochgeladen**
+worden, jede mit eigener Datenverbindung, ohne eine einzige Abweisung. Das
+schwächt die Sitzungsvermutung erheblich: Ein Server, der die zweite oder
+dritte Datenverbindung einer Sitzung abweist, hätte bei 2 oder 3 Schluss
+gemacht. **Ausgeschlossen ist sie damit nicht** — die Grenze könnte bei 30
+oder 50 liegen —, aber die naheliegende Form ist widerlegt.
+
+**Was der Lauf NICHT beantwortet hat, und warum:** `FTP_ZEITGRENZE_S = 60`
+gilt je `curl`-Aufruf. Die Mengenprobe macht **einen** Aufruf für alle Ziele
+— und der lief nach 60 Sekunden in genau diese Grenze. **Die Probe hat ihr
+eigenes Messgerät erschlagen.** Gerechnet: 21 Ziele in 60 s sind rund 2,9 s
+je Stück (MKD, CWD, eigene Datenverbindung), 80 hätten also rund vier
+Minuten gebraucht.
+
+**Drei Fehler in einem Lauf, alle in der Probe, keiner im Server:**
+
+1. **Die feste Minute.** Behoben: Die Grenze wächst mit der Zahl der Ziele
+   (`MENGE_GRUNDZEIT_S + MENGE_JE_ZIEL_S × N`, 30 + 8·N — gemessene 2,9 s je
+   Ziel plus Luft). `curl` bekommt zusätzlich ein eigenes `--max-time` fünf
+   Sekunden darunter, damit er sich **selbst** beendet und seine Schlusszeile
+   schreibt, statt mitten im Satz erschlagen zu werden.
+2. **Der Abbruch war ein Absturz, kein Befund.** `subprocess.TimeoutExpired`
+   flog bis nach oben und druckte dort **die Befehlszeile mit achtzig
+   Adressen** — alles, nur nicht die Antwort des Servers. Dabei trägt die
+   Ausnahme die bereits gelesene Ausgabe mit sich. Behoben: `curl_ftp()`
+   fängt sie und gibt `CURL_ZEITGRENZE` (−1, ein Wert, den `curl` nie
+   zurückgibt) samt der Teilausgabe zurück. **Die Zahl der abgeschlossenen
+   Übertragungen steht jetzt auch beim Abbruch da** — sie ist das Wertvollste
+   daran.
+3. **Die Meldung sah aus wie ein Abbruch DURCH den Server.** Das ist die eine
+   Falschdiagnose, die diese Probe nie stellen darf: Sie schickt jemanden mit
+   einem falschen Befund zum Hoster. Behoben: Eine Zeitgrenze meldet
+   **„ABGEBROCHEN VON DER PROBE SELBST … NICHT vom Server"**, rechnet die
+   gemessene Zeit je Ziel vor und sagt, welche Stellschraube zu drehen ist.
+   Der Satz „Einzeln geht jede dieser Operationen durch" — der Satz, der die
+   Sitzung beschuldigt — steht dort ausdrücklich **nicht**; eine Lage der
+   Selbstprobe hält das fest.
+
+**Und ein vierter, der nichts mit der Zeit zu tun hat:**
+
+4. **„59 Verzeichnisse konnten nicht entfernt werden" war falsch.** 59 davon
+   hat es nie gegeben — der Satz rechnete *gewollt minus weggeräumt* statt
+   nachzusehen. Eine Warnung, die auf dem Server nichts findet, schickt
+   jemanden suchen. Behoben: Es wird **nachgemessen**, nicht gerechnet.
+
+**Dazu die Ursache der drei Minuten Laufzeit:** Das Aufräumen schickte
+**einen `curl`-Aufruf je Befehl** — bei 21 Verzeichnissen 42 TLS-Aufbauten,
+bei 500 wären es tausend und der Job liefe in seine Zeitgrenze, genau mit dem
+Müll im Webroot, den er wegräumen soll. Behoben: **alle Löschbefehle in einem
+Aufruf** (`-Q` mehrfach), danach wird neu aufgelistet und zurückgegeben, was
+**tatsächlich** verschwunden ist — der Rückgabewert sagt wenig, weil `curl`
+die Befehlskette beim ersten Fehler abbricht. Höchstens vier Runden, und ohne
+Fortschritt ist nach einer Schluss.
+
+Selbstprobe **67 → 81 Lagen**. Drei davon halten die Attrappe selbst fest:
+Sie führt seit heute **Buch über das Zielverzeichnis** — vorher gab sie immer
+dieselbe Dateiliste zurück, und gegen eine solche Attrappe sah ein Aufräumen,
+das nichts tut, genauso aus wie eines, das alles wegräumt.
+
+**E-KH-09 bleibt stehen.** Prüfpunkt 17 ist **zu wiederholen**.
 
 **F-KH-U-20 — Der Datenkanal ist sauber; übrig bleibt die Sitzung selbst.**
 *Lauf 35538191205, 20.09.2026.*
@@ -1419,8 +1494,17 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   *Woran man sieht, dass die Zeile überhaupt neu ist:* Sie steht seit dem
   20.09.2026 in **jedem** Lauf, nicht mehr nur im Fehlerfall.
 
-- [ ] **17 — Die Mengenprobe gegen Produktiv** (die F3-Messung, die noch
-  aussteht). **Das ist der Punkt, an dem AP3 hängt.**
+- [~] **17 — Die Mengenprobe gegen Produktiv** — **einmal gefahren am
+  20.09.2026 (Lauf 35539722380), und sie hat sich selbst abgewürgt**
+  (F-KH-U-21). **21 Verzeichnisse in EINER Sitzung gingen durch**, dann lief
+  der eine `curl`-Aufruf in die feste Minute der Probe. Vier Fehler der Probe
+  sind daraufhin behoben (wachsende Zeitgrenze, Abbruch als Befund statt als
+  Absturz, keine Falschdiagnose „der Server hat abgewiesen", nachgemessene
+  statt gerechneter Restwarnung) und das Aufräumen gebündelt. **Zu
+  wiederholen. Das ist weiter der Punkt, an dem AP3 hängt.**
+  *Was beim nächsten Mal anders ist:* Die Zeitgrenze wächst mit der Zahl
+  (30 s + 8 s je Ziel). Bei 80 sind das rund **11 Minuten** für den Schritt —
+  das ist normal und kein Hängen.
   *Weg:* GitHub → Actions → „Auslieferung" → **Run workflow** → Zweig
   `claude/fervent-dirac-xirsqw` → Häkchen **`probelauf`** setzen → in das
   Feld **`probelauf_mengenprobe`** die Zahl **`80`** eintragen → starten →

@@ -78,6 +78,20 @@ import urllib.request
 FTP_ZEITGRENZE_S = 60
 WEB_ZEITGRENZE_S = 30
 
+# WIE VIEL ZEIT EIN ZIEL DER MENGENPROBE BEKOMMT (20.09.2026, gemessen).
+# Der erste echte Lauf hat 21 Verzeichnisse in 60 Sekunden angelegt -- rund
+# 2,9 s je Stueck, weil jedes ein MKD, ein CWD und eine eigene Datenverbindung
+# braucht. Mit der festen Minute wurde `curl` mitten im Lauf abgewuergt, und
+# die Probe meldete einen Abbruch, den NICHT der Server verursacht hatte.
+# Eine Zeitgrenze, die das Messgeraet toetet, misst das Messgeraet.
+MENGE_JE_ZIEL_S = 8
+MENGE_GRUNDZEIT_S = 30
+
+# EIGENER RUECKGABEWERT FUER "ZEITGRENZE". `curl` gibt ihn nie zurueck; er
+# sagt, dass WIR abgebrochen haben und nicht der Server. Der Unterschied ist
+# der ganze Zweck der Probe.
+CURL_ZEITGRENZE = -1
+
 # `curl`-Rueckgabewert 60 = "peer certificate cannot be authenticated".
 # Er bekommt eine eigene Behandlung, weil er etwas anderes bedeutet als jeder
 # andere Fehlschlag: Der Transport ist in Ordnung, die IDENTITAET nicht.
@@ -232,7 +246,8 @@ def ftp_adresse(server: str, pfad: str, name: str = "") -> str:
 
 
 def curl_ftp(argumente: list[str], konto: str, passwort: str,
-             lauf=subprocess.run) -> tuple[int, str, str]:
+             lauf=subprocess.run,
+             zeitgrenze: int = FTP_ZEITGRENZE_S) -> tuple[int, str, str]:
     """Ein `curl`-Aufruf gegen FTPS. Gibt (Rückgabewert, stdout, stderr) zurück.
 
     DAS PASSWORT GEHT UEBER `--config -` UND NICHT UEBER DIE BEFEHLSZEILE.
@@ -241,8 +256,18 @@ def curl_ftp(argumente: list[str], konto: str, passwort: str,
     mitliest, ist kein Argument — es ist eine Zusage, die nichts kostet.
     """
     befehl = [curl_da() or "curl", "--config", "-", *argumente]
-    e = lauf(befehl, input=f'user = "{konto}:{passwort}"\n',
-             capture_output=True, text=True, timeout=FTP_ZEITGRENZE_S)
+    try:
+        e = lauf(befehl, input=f'user = "{konto}:{passwort}"\n',
+                 capture_output=True, text=True, timeout=zeitgrenze)
+    except subprocess.TimeoutExpired as ex:
+        # DIE ANGEFANGENE AUSGABE IST DAS WERTVOLLSTE AM ABBRUCH, und sie ging
+        # bis zum 20.09.2026 verloren: Die Ausnahme flog bis nach oben und
+        # druckte dort die Befehlszeile mit achtzig Adressen -- alles, nur
+        # nicht die Antwort des Servers. `TimeoutExpired` traegt das bereits
+        # Gelesene mit sich; hier wird es herausgeholt.
+        def text(x):
+            return x.decode("utf-8", "replace") if isinstance(x, bytes) else (x or "")
+        return CURL_ZEITGRENZE, text(ex.stdout), text(ex.stderr)
     # ROH ZURUECK, NICHT MASKIERT. Maskiert wird am RAND — dort, wo etwas
     # ausgegeben wird (`sag()`), nicht in der Mitte.
     #
@@ -351,43 +376,74 @@ def web_adresse(basis: str, name: str) -> str:
     return basis.rstrip("/") + "/" + name
 
 
-def aufraeumen(server: str, pfad: str, konto: str, passwort: str,
-               lauf=subprocess.run) -> list[str]:
-    """Reste früherer Proben wegräumen. Gibt die gelöschten Namen zurück.
+# WIE VIELE RUNDEN DAS AUFRAEUMEN HOECHSTENS DREHT. Eine Runde raeumt alles,
+# was in einem Rutsch geht; scheitert ein Befehl, bricht `curl` die Kette ab
+# und der Rest bleibt fuer die naechste Runde liegen. Ohne Obergrenze liefe
+# das gegen einen Server, der gar nichts loescht, endlos.
+AUFRAEUM_RUNDEN = 4
 
-    WARUM ES DAS GIBT: Ein Lauf, der zwischen Upload und Loeschen abbricht
-    (Zeitgrenze des Jobs, Abbruch von Hand), laesst seine Datei liegen. Ohne
-    diesen Schritt sammeln sich die Reste im Webroot — und ein abgebrochener
-    Lauf ist genau die Lage, in der niemand nachsieht.
-    """
+
+def _reste(server: str, pfad: str, konto: str, passwort: str,
+           lauf=subprocess.run) -> list[str]:
+    """Was liegt im Zielverzeichnis, das von einer Probe stammt?"""
     rc, aus, _ = curl_ftp(["--ssl-reqd", "--list-only",
                            ftp_adresse(server, pfad)],
                           konto, passwort, lauf)
     if rc != 0:
         return []
-    reste = [z.strip().rsplit("/", 1)[-1] for z in aus.splitlines()
-             if z.strip().rsplit("/", 1)[-1].startswith((PRAEFIX, PRAEFIX_ALT))]
-    weg = []
-    for name in reste:
-        if name.endswith(".txt"):
-            befehle = [f"-DELE {pfad.rstrip('/')}/{name}"]
-        else:
-            # EIN REST OHNE `.txt` IST EIN PROBEVERZEICHNIS. Erst die Datei
-            # darin, dann das Verzeichnis — `RMD` auf ein volles Verzeichnis
-            # weist jeder Server ab. Der innere Name ist fest (`ORDNERDATEI`),
-            # genau damit dieses Aufräumen ihn kennt, ohne zu suchen.
-            befehle = [f"-DELE {pfad.rstrip('/')}/{name}/{ORDNERDATEI}",
-                       f"-RMD {pfad.rstrip('/')}/{name}"]
-        r = 0
-        for b in befehle:
-            rc_, _, _ = curl_ftp(["--ssl-reqd", "-Q", b,
-                                  ftp_adresse(server, pfad)],
-                                 konto, passwort, lauf)
-            r = rc_          # der LETZTE zaehlt: die Datei darf fehlen
-        if r == 0:
-            weg.append(name)
-    return weg
+    return [z.strip().rsplit("/", 1)[-1] for z in aus.splitlines()
+            if z.strip().rsplit("/", 1)[-1].startswith((PRAEFIX, PRAEFIX_ALT))]
 
+
+def aufraeumen(server: str, pfad: str, konto: str, passwort: str,
+               lauf=subprocess.run) -> list[str]:
+    """Reste früherer Proben wegräumen. Gibt die verschwundenen Namen zurück.
+
+    WARUM ES DAS GIBT: Ein Lauf, der zwischen Upload und Loeschen abbricht
+    (Zeitgrenze des Jobs, Abbruch von Hand), laesst seine Datei liegen. Ohne
+    diesen Schritt sammeln sich die Reste im Webroot — und ein abgebrochener
+    Lauf ist genau die Lage, in der niemand nachsieht.
+
+    ALLE LOESCHBEFEHLE GEHEN IN EINEN EINZIGEN `curl`-AUFRUF, und das ist
+    eine Behebung vom 20.09.2026. Vorher war es einer je Befehl: bei der
+    Mengenprobe mit 80 Verzeichnissen also 160 Aufrufe, jeder mit eigenem
+    TLS-Aufbau. Der erste echte Lauf hat dafuer Minuten gebraucht — bei 500
+    Verzeichnissen waere er in die Zeitgrenze des Jobs gelaufen und haette
+    genau das liegengelassen, was er wegraeumen soll.
+
+    GEMESSEN WIRD NACH, NICHT GEGLAUBT. Der Rueckgabewert des Loeschaufrufs
+    sagt wenig: `curl` bricht die Befehlskette beim ersten Fehler ab (eine
+    fehlende Datei genuegt), der Rest bleibt ungetan. Deshalb wird danach
+    neu aufgelistet, und zurueckgegeben wird, was tatsaechlich verschwunden
+    ist. Solange jede Runde etwas wegbekommt, wird weitergedreht — hoechstens
+    `AUFRAEUM_RUNDEN` mal.
+    """
+    anfangs = _reste(server, pfad, konto, passwort, lauf)
+    offen = list(anfangs)
+    for _ in range(AUFRAEUM_RUNDEN):
+        if not offen:
+            break
+        argumente = ["--ssl-reqd", "--list-only"]
+        for name in offen:
+            if name.endswith(".txt"):
+                argumente += ["-Q", f"-DELE {pfad.rstrip('/')}/{name}"]
+            else:
+                # EIN REST OHNE `.txt` IST EIN PROBEVERZEICHNIS. Erst die
+                # Datei darin, dann das Verzeichnis — `RMD` auf ein volles
+                # Verzeichnis weist jeder Server ab. Der innere Name ist fest
+                # (`ORDNERDATEI`), genau damit dieses Aufraeumen ihn kennt,
+                # ohne zu suchen.
+                argumente += ["-Q", f"-DELE {pfad.rstrip('/')}/{name}/{ORDNERDATEI}",
+                              "-Q", f"-RMD {pfad.rstrip('/')}/{name}"]
+        argumente.append(ftp_adresse(server, pfad))
+        curl_ftp(argumente, konto, passwort, lauf)
+        vorher = len(offen)
+        offen = [n for n in _reste(server, pfad, konto, passwort, lauf)
+                 if n in anfangs]
+        if len(offen) >= vorher:
+            # KEIN FORTSCHRITT — weitere Runden aendern daran nichts.
+            break
+    return [n for n in anfangs if n not in offen]
 
 def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
           sitzung_wiederverwenden: bool = True,
@@ -645,16 +701,38 @@ def mengenprobe(basis: str, server: str, pfad: str, konto: str, passwort: str,
 
         # EIN AUFRUF, VIELE ZIELE. `curl` haelt die Steuerverbindung offen und
         # fuehrt sie der Reihe nach ab -- genau wie die Auslieferungsaktion.
-        argumente = [SCHALTER_TLS_PFLICHT, "--verbose", "--ftp-create-dirs"]
+        # DIE ZEITGRENZE WAECHST MIT DER ZAHL DER ZIELE. Mit der festen
+        # Minute hat der erste echte Lauf sein eigenes `curl` nach 21 von 80
+        # Verzeichnissen erschlagen und das als Abbruch gemeldet -- ein
+        # Befund ueber die Probe, nicht ueber den Server.
+        grenze = MENGE_GRUNDZEIT_S + MENGE_JE_ZIEL_S * anzahl
+        a(f"  Zeitgrenze:     {grenze} s ({MENGE_GRUNDZEIT_S} + "
+          f"{MENGE_JE_ZIEL_S} je Ziel)")
+        argumente = [SCHALTER_TLS_PFLICHT, "--verbose", "--ftp-create-dirs",
+                     # `curl` BEENDET SICH SELBST, kurz bevor wir ihn toeten
+                     # wuerden. Dann schreibt er seine eigene Schlusszeile,
+                     # statt mitten im Satz zu verstummen.
+                     "--max-time", str(grenze - 5)]
         for o in ordner:
             argumente += ["--upload-file", quelle,
                           ftp_adresse(server, pfad, f"{o}/{ORDNERDATEI}")]
-        rc, _, err = curl_ftp(argumente, konto, passwort, lauf)
+        rc, _, err = curl_ftp(argumente, konto, passwort, lauf,
+                              zeitgrenze=grenze)
 
         fertig = len(re.findall(r"226 ", err or ""))
         a(f"  Datenkanal:     {datenkanal(err)}")
         a(f"  Übertragungen abgeschlossen (226): {fertig} von {anzahl}")
-        if rc != 0:
+        if rc == CURL_ZEITGRENZE:
+            # DAS IST KEIN BEFUND UEBER DEN SERVER, und es wird auch nicht so
+            # gemeldet. Wer hier "der Server hat abgewiesen" liest, sucht am
+            # falschen Ende.
+            f(f"ABGEBROCHEN VON DER PROBE SELBST nach {grenze} s — NICHT vom "
+              f"Server. {fertig} von {anzahl} Übertragungen waren fertig.")
+            f("  Der Server hat nichts abgewiesen; die Zeit war zu knapp. "
+              "Entweder mit einer kleineren Zahl wiederholen, oder "
+              f"`MENGE_JE_ZIEL_S` erhöhen (steht auf {MENGE_JE_ZIEL_S} s; "
+              f"gemessen wurden rund {grenze / max(fertig, 1):.1f} s je Ziel).")
+        elif rc != 0:
             f(f"FEHLGESCHLAGEN (curl {rc}) nach {fertig} von {anzahl} "
               f"Übertragungen.")
             f("  DAS IST DAS ERGEBNIS, AUF DAS ES ANKOMMT: Einzeln geht jede "
@@ -675,10 +753,17 @@ def mengenprobe(basis: str, server: str, pfad: str, konto: str, passwort: str,
         # `anzahl` Verzeichnisse auf einem echten Server.
         rest = aufraeumen(server, pfad, konto, passwort, lauf)
         a(f"  Aufgeräumt: {len(rest)} Verzeichnisse entfernt.")
-        uebrig = [o for o in ordner if o not in rest]
+        # NACHGEMESSEN, NICHT GERECHNET. Bis zum 20.09.2026 stand hier
+        # `[o for o in ordner if o not in rest]` — die Zahl der GEWOLLTEN
+        # minus der weggeraeumten. Nach dem Abbruch bei 21 von 80 meldete
+        # sie „59 Verzeichnisse konnten nicht entfernt werden", und 59 davon
+        # hatte es nie gegeben. Eine Warnung, die auf dem Server nichts
+        # findet, schickt jemanden suchen.
+        uebrig = [n for n in _reste(server, pfad, konto, passwort, lauf)
+                  if n.startswith(f"{PRAEFIX}{marke}")]
         if uebrig:
-            f(f"WARNUNG: {len(uebrig)} Verzeichnisse konnten nicht entfernt "
-              f"werden. Erstes: {uebrig[0]}. Der nächste Lauf nimmt sie mit.")
+            f(f"WARNUNG: {len(uebrig)} Probeverzeichnisse liegen noch auf dem "
+              f"Server. Erstes: {uebrig[0]}. Der nächste Lauf nimmt sie mit.")
     return 0 if rc == 0 else 1
 
 
@@ -750,13 +835,27 @@ def selbstprobe() -> int:
 
     # ---- Der Rundlauf, gegen Attrappen ----
     class Lauf:
-        """Stellt `subprocess.run` nach. `dele` zählt die Löschversuche."""
+        """Stellt `subprocess.run` nach. `dele` zählt die Löschbefehle.
+
+        SIE FUEHRT SEIT DEM 20.09.2026 BUCH UEBER DAS ZIELVERZEICHNIS. Vorher
+        gab sie immer dieselbe Dateiliste zurueck, egal was geloescht worden
+        war — gegen eine solche Attrappe sah ein Aufraeumen, das NICHTS tut,
+        genauso aus wie eines, das alles wegraeumt. Jetzt verschwinden die
+        geloeschten Namen aus der Liste, und das Werkzeug misst nach, statt
+        dem Rueckgabewert zu glauben.
+        """
 
         def __init__(self, rc_upload=0, rc_dele=0, liste="", verbose=""):
             self.rc_upload, self.rc_dele = rc_upload, rc_dele
             self.liste, self.verbose = liste, verbose
             self.dele = 0
+            self.loeschaufrufe = 0
             self.befehle: list[list[str]] = []
+
+        def _weg(self, namen: list[str]) -> None:
+            drin = [z for z in self.liste.splitlines() if z.strip()]
+            self.liste = "\n".join(z for z in drin
+                                   if z.strip().rsplit("/", 1)[-1] not in namen)
 
         def __call__(self, befehl, **kw):
             self.befehle.append(befehl)
@@ -764,11 +863,24 @@ def selbstprobe() -> int:
             class E:
                 pass
             e = E()
-            if "--list-only" in befehl:
+            loeschen = [str(x) for x in befehl
+                        if str(x).startswith(("-DELE ", "-RMD "))]
+            if loeschen:
+                # EIN AUFRUF, VIELE BEFEHLE — so schickt das Werkzeug sie seit
+                # der Buendelung. `dele` zaehlt die BEFEHLE, `loeschaufrufe`
+                # die Aufrufe; erst beide zusammen zeigen, ob gebuendelt wurde.
+                self.dele += len(loeschen)
+                self.loeschaufrufe += 1
+                if self.rc_dele == 0:
+                    self._weg([b.split(" ", 1)[1].rsplit("/", 1)[-1]
+                               if b.startswith("-RMD ")
+                               else b.split(" ", 1)[1].rsplit("/", 2)[-2]
+                               if b.endswith("/" + ORDNERDATEI)
+                               else b.split(" ", 1)[1].rsplit("/", 1)[-1]
+                               for b in loeschen])
+                e.returncode, e.stdout, e.stderr = self.rc_dele, self.liste, "550 nope"
+            elif "--list-only" in befehl:
                 e.returncode, e.stdout, e.stderr = 0, self.liste, ""
-            elif any(str(x).startswith("-DELE") for x in befehl):
-                self.dele += 1
-                e.returncode, e.stdout, e.stderr = self.rc_dele, "", "550 nope"
             else:
                 e.returncode, e.stdout, e.stderr = self.rc_upload, "", self.verbose
             return e
@@ -891,6 +1003,44 @@ def selbstprobe() -> int:
            "unsichtbar liegen")
     pruefe(not PRAEFIX.startswith("."),
            "Der Probedateiname beginnt NICHT mit einem Punkt", PRAEFIX)
+
+    # DIE BUENDELUNG DES AUFRAEUMENS (20.09.2026). Der erste echte Lauf der
+    # Mengenprobe hat Minuten im Aufraeumen verbracht: ein `curl`-Aufruf je
+    # Befehl, bei 80 Verzeichnissen 160 TLS-Aufbauten. Bei 500 waere er in
+    # die Zeitgrenze des Jobs gelaufen -- und haette liegengelassen, was er
+    # wegraeumen soll.
+    lb = Lauf(liste="\n".join(f"{PRAEFIX}x-{i:03d}" for i in range(1, 21)))
+    weg = aufraeumen("h", "/", "k", "passwort", lb)
+    pruefe(len(weg) == 20, "Aufräumen: 20 Probeverzeichnisse verschwinden",
+           f"{len(weg)}")
+    pruefe(lb.loeschaufrufe == 1,
+           "…in EINEM Löschaufruf, nicht in 40 — sonst kostet die Mengenprobe "
+           "mehr Zeit im Aufräumen als in der Messung",
+           f"{lb.loeschaufrufe} Aufruf(e) für {lb.dele} Befehle")
+    pruefe(lb.dele == 40,
+           "…und es sind trotzdem 40 Befehle (je Datei und Verzeichnis einer)",
+           f"{lb.dele}")
+
+    # GEMESSEN WIRD NACH, NICHT GEGLAUBT. Loescht der Server nichts, darf das
+    # Aufraeumen nicht melden, es habe geraeumt -- sonst sucht niemand nach
+    # den Resten, die im Webroot liegen.
+    lz = Lauf(rc_dele=9, liste=f"{PRAEFIX}y-001\n{PRAEFIX}y-002\n")
+    weg_z = aufraeumen("h", "/", "k", "passwort", lz)
+    pruefe(weg_z == [],
+           "Löscht der Server nichts, meldet das Aufräumen auch nichts",
+           str(weg_z))
+    pruefe(lz.loeschaufrufe <= AUFRAEUM_RUNDEN,
+           "…und es dreht nicht endlos: ohne Fortschritt ist nach einer Runde "
+           "Schluss", f"{lz.loeschaufrufe} Runde(n), Grenze {AUFRAEUM_RUNDEN}")
+
+    # Und die Gegenprobe zur Buchfuehrung der Attrappe selbst: Ohne sie waere
+    # die Lage oben wertlos -- eine Liste, die sich nie aendert, laesst jedes
+    # Aufraeumen gleich aussehen.
+    lp = Lauf(liste=f"{PRAEFIX}z-001\nindex.php\n")
+    aufraeumen("h", "/", "k", "passwort", lp)
+    pruefe("index.php" in lp.liste and f"{PRAEFIX}z-001" not in lp.liste,
+           "Die Attrappe führt wirklich Buch: die Probe ist weg, `index.php` "
+           "steht noch da", repr(lp.liste))
 
     # 403 auf dem Rückweg ist „gesperrt", nicht „falsches Ziel".
     merker.clear()
@@ -1024,6 +1174,55 @@ def selbstprobe() -> int:
     pruefe(lr.dele >= 2,
            "…und räumt das bereits Angelegte trotzdem weg",
            f"{lr.dele} Löschbefehl(e)")
+
+    # DIE ZEITGRENZE ALS BEFUND (20.09.2026). Der erste echte Lauf der
+    # Mengenprobe wurde von der eigenen festen Minute erschlagen. Die Ausnahme
+    # flog bis nach oben und druckte dort achtzig Adressen -- alles ausser der
+    # Antwort des Servers. Und die Meldung sah aus wie ein Abbruch DURCH den
+    # Server; das ist die eine Falschdiagnose, die diese Probe nie stellen darf.
+    class LaufZeit(Lauf):
+        """Stellt eine Zeitgrenze nach -- mit bereits gelesener Ausgabe."""
+
+        def __call__(self, befehl, **kw):
+            self.befehle.append(befehl)
+            if "--upload-file" in befehl:
+                raise subprocess.TimeoutExpired(
+                    befehl, kw.get("timeout", 0),
+                    output="",
+                    stderr="> EPSV\n< 229 Entering Extended Passive Mode (|||5|)\n"
+                           + "226 Transfer complete\n" * 21)
+            return super().__call__(befehl, **kw)
+
+    rc_z, aus_z, err_z = curl_ftp(["--ssl-reqd", "--upload-file", "x",
+                                   "ftp://h/a"], "k", "p", LaufZeit())
+    pruefe(rc_z == CURL_ZEITGRENZE,
+           "Zeitgrenze: eigener Rückgabewert statt einer Ausnahme", str(rc_z))
+    pruefe(err_z.count("226 ") == 21,
+           "…und die bereits gelesene Ausgabe bleibt erhalten — sie ist das "
+           "Wertvollste am Abbruch", f"{err_z.count('226 ')} Übertragungen")
+
+    lzp = LaufZeit()
+    pz_ = _io.StringIO()
+    pzf = _io.StringIO()
+    with contextlib.redirect_stdout(pz_), contextlib.redirect_stderr(pzf):
+        rcz = mengenprobe("https://a.example", "h", "/", "k", "p", 80, lzp)
+    tz = pz_.getvalue() + pzf.getvalue()
+    pruefe(rcz == 1, "Mengenprobe: Zeitgrenze → rot")
+    pruefe("226): 21 von 80" in tz,
+           "…und sagt, wie weit sie gekommen war", "21 von 80")
+    pruefe("NICHT vom Server" in tz,
+           "…und sagt AUSDRÜCKLICH, dass NICHT der Server abgebrochen hat — "
+           "das ist die Falschdiagnose, die sie nie stellen darf")
+    pruefe("Einzeln geht jede" not in tz,
+           "…und behauptet gerade NICHT, die Sitzung sei die Ursache")
+    hoch = [b for b in lzp.befehle if "--upload-file" in b]
+    pruefe(hoch and "--max-time" in hoch[0],
+           "…`curl` bekommt eine eigene Zeitgrenze, damit er sich selbst "
+           "beendet, statt mitten im Satz zu verstummen")
+    i = hoch[0].index("--max-time")
+    pruefe(int(hoch[0][i + 1]) < MENGE_GRUNDZEIT_S + MENGE_JE_ZIEL_S * 80,
+           "…und sie liegt UNTER unserer — sonst käme sie nie zum Zuge",
+           f"{hoch[0][i + 1]} s")
 
     # Und die Grenzen der Zahl -- sie sind nicht Zierde: 500 Verzeichnisse auf
     # einem echten Server anzulegen ist nichts, was ein Vertipper auslösen darf.

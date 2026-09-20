@@ -268,6 +268,23 @@ ja jedes Mal neu gefragt.
 Ergebnis, auf das es ankommt** —, und bei Abbruch die letzten 40 Zeilen der
 Servermeldung wörtlich.
 
+**Die Zeitgrenze wächst mit der Zahl der Ziele** (`MENGE_GRUNDZEIT_S +
+MENGE_JE_ZIEL_S × N`, heute 30 + 8·N). Grund: Die Mengenprobe macht **einen**
+`curl`-Aufruf für alle Ziele, und der feste Wert von 60 s je Aufruf hat beim
+ersten echten Lauf das eigene Messgerät erschlagen — 21 von 80 Verzeichnissen
+waren fertig, gemessene 2,9 s je Stück. Bei 80 dauert der Schritt deshalb
+rund **11 Minuten**; das ist normal und kein Hängen. `curl` bekommt zusätzlich
+ein eigenes `--max-time` fünf Sekunden darunter, damit er sich selbst beendet
+und seine Schlusszeile schreibt.
+
+**Eine Zeitgrenze ist kein Befund über den Server, und sie wird auch nicht so
+gemeldet.** Sie sagt **„ABGEBROCHEN VON DER PROBE SELBST … NICHT vom
+Server"**, rechnet die gemessene Zeit je Ziel vor und nennt die Stellschraube.
+Der Satz „Einzeln geht jede dieser Operationen durch" — der Satz, der die
+Sitzung beschuldigt — steht dort ausdrücklich nicht. Das ist die eine
+Falschdiagnose, die diese Probe nie stellen darf: Sie schickte sonst jemanden
+mit einem falschen Befund zum Hoster.
+
 **Sie läuft nie von selbst**, und zwar hinter zwei Riegeln. Der Arbeitslauf
 „Auslieferung" hat dafür das Feld **`probelauf_mengenprobe`**: Es wirkt nur
 zusammen mit dem Häkchen `probelauf` (sonst bricht der Schritt mit einer
@@ -280,7 +297,20 @@ liegen dort und sonst nirgends. Eine Prüfliste, deren Punkt niemand ausführen
 kann, ist keine Prüfliste.
 
 Aufgeräumt wird in einem `finally`, auch nach Abbruch, und was übrigbleibt,
-wird gezählt und benannt — der nächste Lauf der Zielprobe nimmt es mit.
+wird **nachgemessen** und benannt — der nächste Lauf der Zielprobe nimmt es
+mit. Nachgemessen, nicht gerechnet: Der erste Lauf meldete „59 Verzeichnisse
+konnten nicht entfernt werden", und 59 davon hatte es nie gegeben, weil der
+Satz *gewollt minus weggeräumt* rechnete. Eine Warnung, die auf dem Server
+nichts findet, schickt jemanden suchen.
+
+**Alle Löschbefehle gehen in EINEN `curl`-Aufruf** (`-Q` mehrfach). Vorher
+war es einer je Befehl: bei 21 Verzeichnissen 42 TLS-Aufbauten und drei
+Minuten, bei 500 wären es tausend und der Job liefe in seine Zeitgrenze —
+mit genau dem Müll im Webroot, den er wegräumen soll. Weil `curl` die
+Befehlskette beim ersten Fehler abbricht, sagt der Rückgabewert wenig;
+deshalb wird danach **neu aufgelistet** und zurückgegeben, was tatsächlich
+verschwunden ist. Höchstens vier Runden, und ohne Fortschritt ist nach einer
+Schluss.
 
 ## Geheimnisse
 
@@ -297,7 +327,7 @@ mehr (gefunden von der Selbstprobe am 20.09.2026). Maskiert wird seither am
 
 ## Selbstprobe
 
-`--selbstprobe` fährt **67 Lagen ohne Netz**: Maskierung (4), Adressen (3),
+`--selbstprobe` fährt **81 Lagen ohne Netz**: Maskierung (4), Adressen (3),
 der Weg zum Datenkanal (5), die Dreiwertigkeit der Sitzungsmessung (4), der
 flache Rundlauf gegen Attrappen (13 — darunter „liegt im FTP, ist über HTTPS
 404", „Inhalt weicht ab", „nach dem Löschen weiter abrufbar", „Hochladen
@@ -305,7 +335,8 @@ scheitert" und jedes Mal die Gegenprobe, dass **trotzdem gelöscht wird**),
 die Betriebsarten und die Frage an `curl` selbst, ob er den Schalter kennt
 (6), das Aufräumen (4), 403 als Sperre statt als falsches Ziel (2), das
 Passwort außerhalb der Befehlszeile (1), der Rundlauf durch ein neues
-Verzeichnis samt Gegenprobe am Auflisten (8) und die Mengenprobe (17).
+Verzeichnis samt Gegenprobe am Auflisten (8), die Mengenprobe (17), die
+Bündelung des Aufräumens (6) und die Zeitgrenze als Befund (8).
 
 Die Lage, die dort am wichtigsten ist: **alle Ziele stehen in EINEM
 `curl`-Aufruf.** Zerfiele die Mengenprobe in viele Aufrufe, wäre sie eine
