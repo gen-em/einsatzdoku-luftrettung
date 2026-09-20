@@ -470,6 +470,50 @@ die die Zielprobe in ihren zwei Betriebsarten trennt.
 
 ## 2. Funde aus der Umsetzung
 
+**F-KH-U-10 — Die Botprüfung von lima-city ist jetzt IN DER KETTE gemessen,
+nicht mehr nur von Hand.** *Lauf 35532390449, 20.09.2026, 19:28 UTC.*
+
+Der Lauf kam vom Arbeitszweig und fuhr damit erstmals die erweiterte
+`sitzung.py` (`seitenkennung()`, Web-Werkzeugeintrag vom 20.09.). Statt des
+nackten „Anmeldung gescheitert: unbekannt" steht jetzt im Protokoll:
+
+```
+Anmeldung gescheitert: kein Meldungstext auf der Seite
+ — HTTP 403
+ · Adresse https://staging-nadoku.gen-em.org/login.php
+ · Titel Dein Browser wird geprüft · lima-city
+ · Ueberschrift Dein Browser wird geprüft
+ · Cookies der Antwort: keine
+```
+
+**Damit ist die Ursache belegt und nicht mehr vermutet.** `403`, eine
+Abfangseite des Hosters, kein Sitzungscookie — die Anwendung hat die Anfrage
+nie gesehen. Weder Zugangsdaten noch Kontostatus noch Wartungsmodus sind
+daran beteiligt; die drei Ausgänge aus `login.php`, die derselbe Fehler hätte
+sein können, sind ausgeschlossen.
+
+**Das war der Zweck der Erweiterung, und er ist eingetreten:** Zwei Läufe
+hatten zuvor „unbekannt" gemeldet — ein Wort, aus dem niemand etwas
+schließen konnte. Der erste Lauf mit dem neuen Werkzeug nennt Status, Titel
+und Cookie-Lage in einer Zeile.
+
+**Offen bleibt die Abhilfe**, und sie liegt beim Hoster: Prüfpunkt 5.
+**Dieser Befund macht die Anfrage an lima-city zum Engpass für AP1 UND AP3**
+— beide brauchen einen HTTPS-Abruf gegen Staging, der durchkommt.
+
+**F-KH-U-11 — Und ein Beleg nebenbei: Die Serveruhr geht durch.** Im selben
+Lauf steht `{"ok": true, "aktion": "pause", …, "_serverzeit":
+"2026-09-20T19:28:45Z"}`. Der `Date`-Kopf der echten Anlage wird gelesen und
+geparst — die Grundlage der F1-Behebung (E-KH-05 (1)) steht damit nicht nur
+gegen Attrappen, sondern gegen den Server.
+
+*Dabei fiel ein kleiner Mangel auf und ist behoben:* `_serverzeit` ist **unser**
+Feld, nicht das des Servers, und es stand in einer Ausgabe, die als „die
+Antwort der Installation" dokumentiert ist. Wer es dort liest, sucht es in
+`jobs.php`. `ohne_eigenes()` nimmt es vor jeder Ausgabe heraus; zwei Lagen der
+Selbstprobe halten das fest (**17 → 19 Lagen**).
+
+
 **F-KH-U-08 — Das FTPS-Zertifikat von Produktiv passt nicht zum Hostnamen,
 und die Auslieferungsaktion merkt es nicht.** *Gemessen am 20.09.2026 im
 ersten Probelauf (Lauf 35531806339).*
@@ -930,13 +974,34 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   subject name matches target host name`). Die Verbindung ist verschlüsselt,
   aber **nicht beglaubigt** — und über sie gehen die Zugangsdaten und der
   ganze Inhalt von `server/`.
-  *Zwei Wege, in dieser Reihenfolge:*
-  **(a)** `FTP_SERVER` auf den Namen setzen, den das Zertifikat trägt. Der
-  Name steht im Protokoll des Laufs unter „Server certificate: subject".
-  Danach diesen Probelauf wiederholen — er muss über den Zertifikatsfehler
-  hinauskommen.
-  **(b)** Geht (a) nicht, weil der Name nicht auf dich zeigt: beim Hoster ein
-  Zertifikat für den Namen verlangen, den du benutzt.
+  **NICHT VERWECHSELN — das ist PRODUKTIV, nicht das umgezogene Staging.**
+  Die Zielprobe steht im Job `produktion` und benutzt dessen Geheimnisse. Der
+  Knotenname aus dem Zertifikat gehört zum Produktiv-Hoster. Dass er einem
+  auch vom alten Staging bekannt vorkommt, hat einen Grund: **Das alte
+  Staging lag im selben Webspace wie Produktiv** — genau deshalb gab es
+  E-KH-04. Umgezogen ist nur Staging.
+
+  **Erneuern hilft nicht.** Das Zertifikat ist gültig (im gemessenen Lauf:
+  23.07. bis 21.10.2026). Eine Erneuerung brächte denselben Namen. **Das
+  Problem ist der Name, nicht das Alter.**
+
+  *Zuerst nachsehen, welche Namen das Zertifikat überhaupt abdeckt:*
+
+  ```
+  openssl s_client -connect <FTP_SERVER>:21 -starttls ftp 2>/dev/null \
+    | openssl x509 -noout -subject -ext subjectAltName
+  ```
+
+  *Drei Wege, in dieser Reihenfolge:*
+  **(a)** Beim Hoster fragen, **welchen FTPS-Hostnamen er vorsieht** — viele
+  dokumentieren genau einen, unter dem das Zertifikat passt, und der ist
+  stabiler als eine Knotennummer. **Das ist der beste Weg, wenn es ihn gibt.**
+  **(b)** `FTP_SERVER` auf den Namen aus dem Zertifikat setzen (im Protokoll
+  unter „Server certificate: subject"). Wirkt sofort. **Der Preis:** Zieht der
+  Hoster den Account auf einen anderen Knoten, bricht der Deploy — aber
+  *laut*, mit genau dieser Meldung, und nicht still.
+  **(c)** Den Hoster bitten, die eigene Domain ins Zertifikat aufzunehmen
+  (SAN). Auf Shared Hosting meist abschlägig; die Frage kostet nichts.
   *Was KEINE Abhilfe ist:* die Prüfung abschalten. Die Zielprobe bietet dafür
   keinen Schalter, und das bleibt so.
   *Scheitern erkennt man daran:* Der nächste Probelauf meldet wieder

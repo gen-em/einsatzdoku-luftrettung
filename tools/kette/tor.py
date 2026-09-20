@@ -179,6 +179,20 @@ def rufen(basis: str, token: str, aktion: str, zeitgrenze: int = ZEITGRENZE_S,
     return d
 
 
+def ohne_eigenes(d: dict) -> dict:
+    """Die Antwort des Servers — ohne die Felder, die wir selbst angehaengt haben.
+
+    `rufen()` haengt seit dem 20.09.2026 `_serverzeit` an jede Antwort (die
+    Uhr aus dem `Date`-Kopf, E-KH-05). Das ist fuer das Tor noetig und fuer
+    den Leser des Protokolls irrefuehrend: Die Ausgabe von `zustand` und
+    `pause` ist als "die Antwort der Installation" dokumentiert, und wer dort
+    ein Feld sieht, das der Server nie geschickt hat, sucht es in `jobs.php`.
+    Gemessen am 20.09.2026 im Kettenlauf 35532390449, wo es zum ersten Mal
+    sichtbar wurde.
+    """
+    return {k: v for k, v in d.items() if not k.startswith("_serverzeit")}
+
+
 def backup_tor(basis: str, token: str, versuche: int, pause: int,
                ruf=rufen, schlafen=time.sleep, runden: int = RUNDEN) -> int:
     """Das Tor. Rückgabewert 0 = Deploy erlaubt, 1 = nicht.
@@ -215,8 +229,7 @@ def backup_tor(basis: str, token: str, versuche: int, pause: int,
         fremd = 0                      # Antworten, die die Frage nicht kennen
         for i in range(1, versuche + 1):
             antwort = ruf(basis, token, "komplett")
-            kurz = json.dumps({k: v for k, v in antwort.items()
-                               if k != "_serverzeit"}, ensure_ascii=False)[:200]
+            kurz = json.dumps(ohne_eigenes(antwort), ensure_ascii=False)[:200]
             print(f"  Aufruf {i:>2}: {kurz}")
 
             if beginn is None:
@@ -275,8 +288,7 @@ def backup_tor(basis: str, token: str, versuche: int, pause: int,
             return 1
 
         zustand = ruf(basis, token, "zustand")
-        print("Zustand: " + json.dumps({k: v for k, v in zustand.items()
-                                        if k != "_serverzeit"},
+        print("Zustand: " + json.dumps(ohne_eigenes(zustand),
                                        ensure_ascii=False)[:400])
         stand = zustand.get("komplett")
         if not isinstance(stand, dict) or not stand.get("zeit"):
@@ -550,6 +562,12 @@ def selbstprobe() -> int:
            f"Eine 400-Antwort kommt mit ihrer Begründung an, nicht als Netzfehler "
            f"({list(antwort)})")
 
+    # Die Antwort der Installation bleibt die Antwort der Installation.
+    pruefe(ohne_eigenes({"ok": True, "_serverzeit": "x"}) == {"ok": True},
+           "`_serverzeit` steht nicht in der ausgegebenen Serverantwort")
+    pruefe(ohne_eigenes({"ok": True}) == {"ok": True},
+           "…und eine Antwort ohne das Feld bleibt unveraendert")
+
     print(f"\n  erfüllt: {erfuellt} · offen: {offen}")
     return 0 if offen == 0 else 1
 
@@ -599,13 +617,13 @@ def main(argv: list[str]) -> int:
             return 2
         antwort = rufen(a.basis, a.token, "pause",
                         felder={"sekunden": a.sekunden})
-        print(json.dumps(antwort, ensure_ascii=False))
+        print(json.dumps(ohne_eigenes(antwort), ensure_ascii=False))
         return 0 if antwort.get("ok") else 1
 
     if a.befehl in ("wartung-an", "wartung-aus"):
         aktion = "wartung_an" if a.befehl == "wartung-an" else "wartung_aus"
         antwort = rufen(a.basis, a.token, aktion)
-        print(json.dumps(antwort, ensure_ascii=False))
+        print(json.dumps(ohne_eigenes(antwort), ensure_ascii=False))
         return 0 if antwort.get("ok") else 1
 
     antwort = rufen(a.basis, a.token, "zustand")
@@ -615,7 +633,7 @@ def main(argv: list[str]) -> int:
             return 1
         print("ja" if antwort.get("migration_ausstehend") else "nein")
         return 0
-    print(json.dumps(antwort, ensure_ascii=False, indent=2))
+    print(json.dumps(ohne_eigenes(antwort), ensure_ascii=False, indent=2))
     return 0 if antwort.get("ok") else 1
 
 
