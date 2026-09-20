@@ -541,6 +541,17 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   nicht mit R81 („die Anwendung ist nicht auf einen Hoster zugeschnitten").
   Eine Sitzungsdatei trägt zwar **kein Schlüsselmaterial**, aber ihr
   **Dateiname ist die Sitzungs-ID**; wer sie auflisten kann, ist angemeldet.
+  **Entschieden am 20.09.2026: Stufe 2** (Auftraggeber). Stufe 3 ist geprüft
+  und **verworfen** — sie koppelte die Anmeldung an die Datenbank, obwohl
+  `update.php` für die Migration eine Sitzung braucht (`require_admin()`,
+  Z. 35) und `session_start()` in `auth_guard.php`:31 **vor** dem Torwächter
+  (Z. 72–74) steht; dazu nähme `komp_tabellen()` die Sitzungstabelle in jeden
+  Komplett-Stand (`SHOW FULL TABLES`, keine Ausnahmeliste), und eine
+  Wiederherstellung beliebte alte Sitzungen wieder. Ihr einziger echter
+  Vorteil — mehrere Anwendungsserver — steht auf keinem Fahrplan. **Stufe 1
+  bleibt als Empfehlung daneben.** Der ausführliche Auftrag ist an die
+  Fable-Instanz übergeben, die als Nächstes den Rahmenplan anfasst
+  (`Prompt-Sitzungsablage-2026-09-20.md`, außerhalb des Repositoriums).
   Drei Stufen, aufsteigend nach Aufwand:
   1. **Messen und sagen.** `plattform_pruefen()` bekommt einen Prüfpunkt in
      der Bauform der bestehenden Schreibrechte-Probe: *Ist die Sitzungsablage
