@@ -2,6 +2,7 @@
 
 ```
 python3 tools/integritaetswache/wache.py [basisadresse]
+python3 tools/integritaetswache/wache.py [basisadresse] --stand PFAD
 python3 tools/integritaetswache/wache.py --selbstprobe
 python3 tools/integritaetswache/wache.py https://127.0.0.1:8443 --unsicher
 ```
@@ -9,6 +10,15 @@ python3 tools/integritaetswache/wache.py https://127.0.0.1:8443 --unsicher
 Vorgabe der Adresse: `$WACHE_BASIS`, sonst `https://nadoku.gen-em.org`.
 `--unsicher` schaltet die Zertifikatsprüfung ab — **nur** für eine lokale
 Installation mit selbst ausgestelltem Zertifikat.
+
+`--stand PFAD` sagt, **wogegen** verglichen wird: ein Verzeichnis, in dem ein
+`server/` liegt. In der Kette ist das die Arbeitskopie des Zeigerzweigs
+`produktion`, also der zuletzt ausgelieferte Stand. Ohne den Schalter ist es
+das Repositorium neben dem Werkzeug — der Weg für den Handlauf auf dem
+eigenen Rechner.
+
+**Warum das überhaupt zwei Dinge sind:** siehe „Wogegen verglichen wird"
+weiter unten. Kurz: Auf Produktiv liegt nicht `main`.
 
 Rückgabewert 0 = kein Unterschied, 1 = mindestens einer oder etwas war nicht
 erreichbar, 2 = die Wache selbst ist kaputt.
@@ -47,8 +57,8 @@ statt ihn stillschweigend zu übergehen.
 
 | Teil | Frage |
 |---|---|
-| Selbstprobe | Erkennt sie eine Abweichung überhaupt? 32 Erwartungen, ohne Netz — darunter achtzehn ausdrücklich „Abweichung erkannt" |
-| 1 | Jede Datei unter `server/assets/` (ohne `.md`) — SHA-256 der Auslieferung gegen die des Repositoriums |
+| Selbstprobe | Erkennt sie eine Abweichung überhaupt? **38** Erwartungen, ohne Netz — darunter achtzehn ausdrücklich „Abweichung erkannt" und sechs zum Vergleichsstand (`--stand`) |
+| 1 | Jede Datei unter `server/assets/` (ohne `.md`) — SHA-256 der Auslieferung gegen die des **Vergleichsstands** |
 | 2 | Die **ganze Menge** dessen, was auf der Anmeldeseite (`login.php`) den Weg des Passworts bestimmt: jeder `<script src>` (zitiert oder nicht), jeder Inline-Block, jedes `<form>`-Tag, jedes `<base>`-Tag, jedes Umlenk-Attribut (`formaction`, `formmethod`, `formtarget`, `formenctype`), jede Kopfanweisung (`<meta http-equiv>`), jede Einbettung (`<iframe>`, `<frame>`, `<object>`, `<embed>`), jedes Ereignisattribut (`on…=`) und jede `javascript:`-Adresse — nichts darf fehlen, verändert sein **oder dazukommen** |
 
 **Warum Teil 2 die ganze Menge vergleicht und nicht nur das Bekannte.** Auf
@@ -186,11 +196,52 @@ jede einzeln gegen die alte und die jetzige Fassung:
 | `<iframe srcdoc="…">`, `<iframe src>`, `<object data>`, `<embed src>` | **„Kein Unterschied"** | je 1 zusätzliche Einbettung |
 | `<a href="javascript:x()">`, mit Tabulator im Schema, als `&#106;avascript:` | **„Kein Unterschied"** | je 1 zusätzliche `javascript:`-Adresse |
 
+## Wogegen verglichen wird — der Zeiger `produktion`
+
+**Bis zum 20.09.2026 verglich die Wache gegen `main`, und das war falsch**
+(Befund B6 der Kettenhärtung, Entscheidung E-KH-13). Auf Produktiv liegt
+nicht `main`, sondern der zuletzt **ausgelieferte** Stand. Sobald `main`
+einen Schritt weiter ist — der Normalfall — meldete sie eine Abweichung, die
+keine ist. Sie war deshalb seit dem 17.09.2026 **täglich rot**, und eine
+Wache, die regelmäßig grundlos rot wird, ist nach dem dritten Mal
+abgeschaltet. Dann ist der Angriff, gegen den es sie gibt, unbeobachtet — das
+ist der eigentliche Schaden.
+
+**Nachgerechnet aus den Ständen selbst** (20.09.2026, ohne Netz): Am
+18.09.2026 lag auf Produktiv `14f99ac`, auf `main` stand `eec41e1`.
+
+| | Dateien | gleich | abweichend | 404 |
+|---|---|---|---|---|
+| alt (Vergleichsstand `main`) | 128 | 121 | **1** (`assets/style.css`) | **6** |
+| neu (Vergleichsstand Zeiger) | 122 | **122** | 0 | 0 |
+
+Die sechs waren `doku.js`, `rueckfrage.js`, `schluessel.js`,
+`schluesselblatt.js` und zwei Symbole — allesamt Dateien aus P5b, die schlicht
+noch nicht ausgeliefert waren. Dazu kam in Teil 2 `login.php`, zwischen beiden
+Ständen um 128 Zeilen gewachsen.
+
+**Der Zeiger ist der Zweig `produktion`.** Bewegt wird er vom Job `zeiger` in
+`auslieferung.yml`, nur nach einem erfolgreichen `produktion`-Job, und
+erzwungen — denn ein Zurücksetzen legt einen **älteren** Stand oben auf, und
+der Zeiger muss dorthin folgen können. **Fehlt der Zweig, ist die Wache rot**
+und sagt, wie man ihn anlegt; einen stillen Rückfall auf das Repositorium gibt
+es nicht, denn genau dieser Rückfall wäre der alte Fehler.
+
+Auf `produktion` wird nicht entwickelt, es gibt keinen PR dorthin, und von
+Hand bewegt wird er nicht (`CLAUDE.md` 3).
+
 ## Wann sie läuft
 
 `.github/workflows/integritaet.yml`: **täglich** um 04:17 UTC (krumme Minute mit
 Absicht — zur vollen Stunde stehen bei GitHub Millionen Jobs an), **nach jedem
 Deploy** (`workflow_run`) und von Hand über den Actions-Tab.
+
+**Bei jedem Auslöser wird verglichen** (seit AP2). Bis dahin fragte ein Riegel
+nach einem `workflow_run` erst über die API, ob der Job `produktion`
+erfolgreich war, und hielt sonst still — nötig, solange gegen `main`
+verglichen wurde. Jetzt ändert sich der Vergleichsstand nur bei einer
+Produktiv-Auslieferung; der Riegel wäre ab jetzt schädlich, weil er die Wache
+nach einem Staging-Deploy schweigen ließe, obwohl der Vergleich gültig ist.
 
 **Keine eigene Mailadresse.** Ein fehlgeschlagener Lauf löst die gewöhnliche
 GitHub-Benachrichtigung aus (Einstellung „Actions"). Wer die Meldung woanders

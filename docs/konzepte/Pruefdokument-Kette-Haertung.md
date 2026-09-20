@@ -45,6 +45,32 @@ vollständige Bedienweg steht als **Prüfpunkt 1** unten — er ist der
 wichtigste Punkt dieses Dokuments, weil er zugleich der **erste Kettenlauf
 gegen lima-city überhaupt** ist.
 
+**1a — Der Handlauf der Wache gegen Produktiv läuft aus der Umsetzung
+heraus nicht.** `https://nadoku.gen-em.org` antwortet dem Egress-Proxy des
+Containers mit `403 Tunnel connection failed` — **gemessen an 128 von 128
+Dateien**. Die Wache hat das korrekt gemeldet („128 nicht erreichbar",
+Rückgabewert **1**) und nicht still grün. Die Abnahme von AP2 verlangt diesen
+Handlauf; er steht als **Prüfpunkt 8**.
+
+**1b — Und selbst wenn er liefe, belegte er heute nichts.** Die Abnahme von
+AP2 will ihn *„während `main` dem Zeiger voraus ist — damit ist der tägliche
+Falschalarm belegt beseitigt."* `main` **ist** voraus (12 Commits,
+`7150793` → `862ca7f`), aber **in nichts, was die Wache misst**: Sie misst
+`server/assets/` und `login.php`;
+`git diff --name-only origin/produktion origin/main -- server/assets/` liefert
+**0**, und `login.php` ist unverändert. Ein grüner Lauf wäre heute auch ohne
+die Änderung grün. **An seine Stelle tritt die Nachrechnung aus den Ständen**
+(Abschnitt 1.5) — sie misst genau den Fall, der B6 war, und braucht kein Netz.
+Der Handlauf bleibt als Prüfpunkt stehen, fällig beim nächsten Stand mit einer
+Änderung unter `assets/`.
+
+**1c — Der Job `zeiger` ist gebaut und nicht gelaufen.** Er feuert nur nach
+einem erfolgreichen `produktion`-Job, und den gab es noch nie (Abschnitt 1.2
+des Konzepts). So steht es auch in der Abnahme von AP2: *„Der Zeiger-Job ist
+gebaut, nicht gelaufen — gemessen wird er mit M1."* Was ohne ihn geprüft ist:
+YAML-Gültigkeit, Abhängigkeit, Bedingung und Berechtigungen (Abschnitt 1.5).
+Was nicht: dass der Push tatsächlich durchgeht.
+
 **Und er kann derzeit gar nicht grün werden.** Die Einrichtung der neuen
 Staging-Anlage **scheitert** (Rahmenplan 6a, Schritt 6; Stand 20.09.2026, eine
 andere Instanz arbeitet daran). Solange `install.php` dort nicht durch ist,
@@ -294,6 +320,71 @@ mit `STAGING_KONTO` / `STAGING_PASS`.
 > die nicht hält, als auf ein vertipptes Passwort — **belegt ist keines
 > davon.** Prüfpunkt 5 nennt den Bedienweg, der es in einer Minute
 > entscheidet.
+
+### 1.5 AP2 — Zeiger und Wache
+
+**Maschinell, ohne Netz:**
+
+| Mittel | Soll | Ist |
+|---|---|---|
+| `wache.py --selbstprobe` | 0 nicht erfüllt | **38 Erwartungen, 0 nicht erfüllt** (vorher 32; sechs neue zum Vergleichsstand) |
+| YAML der drei Arbeitsläufe | laden | **3 von 3**, Jobs `staging`/`stufe2`/`produktion`/**`zeiger`** |
+| `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft | **30 Aufrufe, 0, 0**; Selbstprobe **10/10** |
+| `tools/wortliste/wortliste.py` | 0/0/0 | **0 Treffer außerhalb, 0 ungenutzte Ausnahmen, 0 Fallen** |
+| `python3 -c ast.parse` auf `wache.py` | lädt | lädt |
+
+**Die sechs neuen Fälle der Selbstprobe** (sie sind die Gegenprobe zur Zusage,
+nicht ihre Wiederholung):
+
+1. Ein Pfad, den es nicht gibt → `VergleichsstandFehlt`
+2. Ein Verzeichnis ohne `server/` → `VergleichsstandFehlt`
+3. Nach `stand_setzen()` zeigt `SERVER` tatsächlich dorthin
+4. Und `assets()` liest dort — **1 Datei** statt der 128 des Repositoriums
+5. Ein gekipptes Byte im Vergleichsstand ergibt eine andere SHA-256
+6. Zurückgestellt misst sie wieder das Repositorium — **128 Dateien**
+
+**Der Befund B6, aus den Ständen nachgerechnet** (ohne Netz; Produktiv am
+18.09.2026 `14f99ac`, `main` `eec41e1`):
+
+| | Dateien | gleich | abweichend | 404 |
+|---|---|---|---|---|
+| alt (Vergleichsstand `main`) | 128 | 121 | **1** (`assets/style.css`) | **6** |
+| neu (Vergleichsstand Zeiger) | 122 | **122** | 0 | 0 |
+
+Die sechs: `doku.js`, `rueckfrage.js`, `schluessel.js`, `schluesselblatt.js`
+und zwei Symbole — Dateien aus P5b, damals noch nicht ausgeliefert.
+
+> **Die protokollierte Zahl war „2 abweichend", die Nachrechnung ergibt 1.**
+> Kein Widerspruch: Die zweite lag in **Teil 2**. `login.php` ist zwischen
+> `14f99ac` und `eec41e1` um **128 Zeilen** gewachsen
+> (`git diff --stat`), und Teil 2 vergleicht dessen Skript- und
+> Formularmenge. Die Konzeptzahl fasste beide Teile zusammen.
+
+**Der Kopf der Wache nennt jetzt den Stand.** Gemessen am ausgelegten Zeiger:
+
+```
+Integritaetswache gegen https://nadoku.gen-em.org
+Vergleichsstand:  /tmp/…/zeiger — 7150793 (web-v20.24.2)
+  Teil 1  128 Dateien unter assets/ — …
+```
+
+Commit, Tag und Dateizahl, wie E-KH-13 es verlangt. Die Kennung kommt aus
+`git -C <stand>` und **nicht** aus einer Beschriftung des Aufrufers: Eine
+Beschriftung wäre eine zweite Stelle, die veralten kann, und eine falsche
+beglaubigte einen Vergleich, den es so nicht gab.
+
+**Durch Lesen belegt** (nicht gelaufen):
+
+- Der Job `zeiger` hängt an `needs: produktion` **und**
+  `if: needs.produktion.result == 'success'`. Die zweite Zeile ist nicht
+  überflüssig: Ein übersprungener Job gilt GitHub als erfüllte Abhängigkeit,
+  und ohne sie bewegte **jeder Push auf `main`** den Zeiger.
+- `contents: write` steht **nur** in diesem Job; `staging`, `stufe2` und
+  `produktion` erben `read` aus dem Kopf der Datei. Nachgezählt: eine
+  `permissions`-Angabe auf Jobebene im ganzen Lauf.
+- `actions: read` ist in `integritaet.yml` ausgetragen, weil der einzige
+  Verbraucher (der `gh api`-Aufruf des Riegels) weg ist.
+- Im Job `zeiger` steht außer `actions/checkout` keine Fremd-Aktion.
 
 ---
 
@@ -649,6 +740,35 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   sie an — die Anlage ist dann für alle zu, und der Lauf sagt es nicht.
 
 ---
+
+- [ ] **8 — Die Abnahme von AP2: die Wache gegen den Zeiger, an einem Stand,
+  der es beweist.** *Fällig, sobald sich unter `server/assets/` etwas geändert
+  hat, das noch nicht ausgeliefert ist* — heute ist der Unterschied zwischen
+  Zeiger und `main` dort **0 Dateien**, ein grüner Lauf belegte also nichts.
+  *Weg:* GitHub → Actions → **Integritaetswache** → *Run workflow*.
+  *Erwartet:* grün, und in der Zusammenfassung stehen drei Dinge — der
+  verglichene Commit **mit Tag** (`7150793 (web-v20.24.2)` oder neuer), die
+  **Dateizahl** von Teil 1, und „Kein Unterschied".
+  *Scheitern erkennt man daran:* Steht dort eine Abweichung, die genau die
+  Dateien nennt, die seit der letzten Auslieferung dazugekommen sind, zeigt
+  der Zeiger noch auf den falschen Stand — dann ist der Job `zeiger` nicht
+  gelaufen. Steht „Der Zeigerzweig 'produktion' fehlt", ist der Zweig gelöscht
+  worden; der Lauf sagt dann selbst, wie man ihn anlegt.
+
+- [ ] **9 — Den Zweig `produktion` gegen Pushes von Hand schützen.**
+  *Warum:* Er ist ab jetzt die Wahrheit darüber, was auf dem Server liegt. Wer
+  ihn von Hand bewegt, macht die Wache nicht blind, sondern zu einer Quelle
+  von Falschmeldungen — und das ist schlimmer, weil eine Wache mit
+  Falschmeldungen abgeschaltet wird.
+  *Weg:* GitHub → Settings → Branches → Add rule für `produktion`: Pushes nur
+  für GitHub Actions zulassen, PRs sperren, Löschen sperren.
+  *Wichtig:* Der Job `zeiger` schiebt **erzwungen** (ein Zurücksetzen legt
+  einen älteren Stand oben auf). Eine Regel, die force-push generell verbietet,
+  bricht ihn — die Ausnahme für Actions muss stehen.
+  *Scheitern erkennt man daran:* Der nächste Produktivlauf wird im Job
+  `zeiger` rot mit `protected branch hook declined`.
+  *Warum es nicht gebaut ist:* Das sind Repositoriumseinstellungen, keine
+  Datei — aus der Umsetzung heraus nicht setzbar.
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 

@@ -745,3 +745,73 @@ jobs:
           fi
           python3 tools/kette/tor.py wartung-aus --basis "$BASIS" --token "$JOBS_TOKEN"
           echo 'Keine Migration ausstehend — Wartung wieder aus.' >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
+  zeiger:
+    name: zeiger
+    # DER ZEIGER SAGT, WAS AUF PRODUKTIV LIEGT (AP2/E-KH-13).
+    #
+    # WOGEGEN. Die Integritaetswache vergleicht den Produktivserver mit einem
+    # Stand aus dem Repositorium. Bis zum 20.09.2026 nahm sie dafuer `main` --
+    # und `main` ist fast immer weiter als das, was ausgeliefert wurde. Sie
+    # wurde deshalb seit dem 17.09. taeglich rot, zuletzt mit 2 abweichenden
+    # und 6 nicht erreichbaren Dateien, allesamt aus P5a und P5b (Befund B6).
+    # Eine Wache, die regelmaessig grundlos rot wird, wird abgeschaltet; dann
+    # ist der Angriff, gegen den es sie gibt, unbeobachtet.
+    #
+    # WARUM NICHT DAS JUENGSTE `web-v*`-TAG. Es ist nicht der ausgelieferte
+    # Stand: Ein Tag kann gesetzt und die Freigabe nie erteilt worden sein,
+    # das Backup-Tor kann zugegangen sein, und nach einem Ruecksetzen liegt
+    # ein AELTERER Stand oben als der juengste Tag. Der Zeiger bewegt sich
+    # ausschliesslich, wenn tatsaechlich ausgeliefert wurde -- rueckwaerts
+    # eingeschlossen, denn ein Ruecksetzen ist eine Auslieferung.
+    needs: produktion
+    # `needs` ALLEIN REICHT NICHT: Ein uebersprungener Job gilt GitHub als
+    # erfuellte Abhaengigkeit. Ohne diese Zeile bewegte ein Lauf ohne Tag den
+    # Zeiger auf einen Stand, der nie auf Produktiv war -- und die Wache
+    # verglaeche danach gegen eine Luege.
+    if: needs.produktion.result == 'success'
+    runs-on: ubuntu-latest
+    # HIER UND NUR HIER `contents: write`. Der Job mit den FTPS-Geheimnissen
+    # (`produktion`) bleibt bei `read`: Er darf ausliefern, aber nichts ins
+    # Repositorium schreiben. Dieser hier darf schreiben, kennt aber weder
+    # Zugangsdaten noch Umgebung -- es gibt kein `environment:`, weil die
+    # Freigabe schon vor `produktion` eingeholt wurde und ein zweites Tor
+    # nach getaner Auslieferung den Zeiger nur hinter dem Stand zurueckliesse.
+    #
+    # KEINE FREMD-AKTION in diesem Job ausser `checkout`. Ein Schreibrecht
+    # auf das Repositorium ist das Einzige, was diese Kette zu vergeben hat.
+    permissions:
+      contents: write
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v7
+        with:
+          # Volle Historie: Ohne sie kennt der Laeufer den bisherigen Zeiger
+          # nicht und koennte nicht sagen, wohin er sich bewegt.
+          fetch-depth: 0
+
+      - name: Zeiger `produktion` auf diesen Stand setzen
+        env:
+          ZIEL: ${{ github.sha }}
+        run: |
+          vorher=$(git rev-parse --verify --quiet origin/produktion || echo 'keiner')
+          echo "Zeiger vorher:  $vorher"
+          echo "Zeiger nachher: $ZIEL  (Tag: ${GITHUB_REF_NAME})"
+          # ERZWUNGEN IST HIER RICHTIG UND SONST NIRGENDS. Ein Ruecksetzen
+          # legt einen AELTEREN Commit auf den Server; ein Push ohne Zwang
+          # lehnte das als Rueckschritt ab, und der Zeiger bliebe auf einem
+          # Stand stehen, der nicht mehr oben liegt. Genau dann waere die
+          # Wache blind fuer den Unterschied. Auf diesem Zweig entwickelt
+          # niemand -- es gibt nichts zu ueberschreiben als den Zeiger selbst.
+          git push --force origin "$ZIEL:refs/heads/produktion"
+          {
+            echo '## Zeiger `produktion` bewegt'
+            echo
+            echo '| | Commit |'
+            echo '|---|---|'
+            echo "| vorher | \`$vorher\` |"
+            echo "| nachher | \`$ZIEL\` (\`${GITHUB_REF_NAME}\`) |"
+            echo
+            echo 'Die Integritaetswache vergleicht ab jetzt gegen diesen Stand.'
+          } >> "$GITHUB_STEP_SUMMARY"

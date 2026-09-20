@@ -24,13 +24,14 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 > | Entschieden | **E-KH-01 bis -08 und -10 bis -20** — die Vorschläge aus Abschnitt 2.2 gelten seit der Freigabe. Dazu **E-KH-21 bis -24** aus der Umsetzung (Abschnitt 2.4; -24 vom 20.09.2026, außerhalb der Pakete) — **von der Umsetzung entschieden, zur Kenntnis und zum Widerspruch** |
 > | Zuarbeiten erledigt | **Z1** (alte Staging-Anlage stillgelegt — B2 damit geschlossen), **Z2** (Zeiger `produktion` auf `7150793`) und **Z3** — alle 20.09.2026. Z3 **beide Anlagen**, aber auf zwei Wegen: Produktiv aus *Betrieb → Status*, Staging aus einer `phpinfo()`, weil die Anwendung dort noch nicht läuft. Fünf Zeilen der Staging-Spalte bleiben leer |
 > | Offen | **E-KH-09 (Ursache und Abhilfe F3)** — fällt nach der Messung am Ende von AP3; der Nachtrag in Abschnitt 1.4 hat eine der drei Erklärungen verschmälert. **Z3-Rest**: die fünf Zeilen, die nur die Anwendung weiß — sie hängen an Rahmenplan 6a, Schritt 6 |
-> | In Arbeit | — (AP1 fertig bis auf seine Abnahme, AP2 als nächstes) |
+> | In Arbeit | **AP2 — Zeiger und Wache: gebaut.** Abnahme teilweise: Die Gegenprobe im Werkzeug ist grün (Selbstprobe **38/38**, sechs davon neu zum Vergleichsstand), der Befund B6 ist **ohne Netz aus den Ständen nachgerechnet** — aber der Handlauf gegen Produktiv **konnte nicht laufen** (der Container-Proxy weist `nadoku.gen-em.org` mit `403` ab), und der Zeiger-Job ist **gebaut, nicht gelaufen** (er misst sich erst mit M1). Einzelheiten im Prüfdokument 1.5 |
 > | Hakt | **Es gibt bis heute keinen erfolgreichen Produktivlauf der Kette** (Abschnitt 1.2). **AP1 ist gebaut, aber nicht abgenommen:** Der erste Kettenlauf gegen lima-city (Lauf 21, 20.09.2026, Handlauf vom Arbeitszweig) brachte `staging` **grün** und in Stufe 2 **zwei von fünf** Messschritten gemessen grün — der dritte ist rot, weil `STAGING_KONTO`/`STAGING_PASS` sich auf der neuen Anlage nicht anmelden. **Ein Push auf `main` ist dafür nicht nötig** (`workflow_dispatch` fährt dieselben Jobs). Einzelheiten im Prüfdokument, Abschnitt 1.4 |
 >
 > **Stand der Umsetzung**
 >
 > | Paket | Stand | Version | Commit | Abnahmezahlen |
 > |---|---|---|---|---|
+> | AP2 — Zeiger und Wache | **gebaut; Abnahme teilweise** | keine (nur `.github/`, `tools/`, `docs/`, `CLAUDE.md` — E-KH-23); gezählt hat der Rahmenplan: **Fassung 84** | siehe Zweig `claude/fervent-dirac-xirsqw` | Selbstprobe der Wache **38 Erwartungen / 0 offen** (vorher 32) · B6 nachgerechnet: alt **128 Dateien, 121 gleich, 1 abweichend, 6 × 404**; neu **122 / 122 / 0 / 0** · Kettenaufrufe **30 Aufrufe / 0 Befunde** · YAML 3 von 3 · Wortliste 0/0/0. **NICHT gemessen:** Handlauf gegen Produktiv (Proxy 403), Zeiger-Job (läuft erst mit M1) |
 > | AP1 — Staging-Umzug nachziehen | **gebaut; Abnahme offen** | keine (nur `docs/`, `CLAUDE.md`, ein Kommentar in `.github/`) | `499e96c` ff. (Zweig `claude/fervent-dirac-xirsqw`) | Wortliste **0/0/0** (11 Dateien Bereich c, 444 Treffer, alle erklärt) · Kettenaufrufe **3 Läufe / 28 Aufrufe / 0 Befunde / 0 ungeprüft** · Selbstproben **21/21** und **10/10** · YAML **3 von 3** gültig · alte Adresse: **13 Fundstellen, alle Historie oder als „damals" gekennzeichnet** (vorher 12, davon 5 aktuelle Aussagen). **Lauf 21 gegen lima-city:** `staging` grün (12 Dateien, 1,13 MB, 12 s), Stufe 2 **2 von 5** gemessen grün, 1 rot, 2 nicht gelaufen. **Z3 eingetragen** — Produktiv vollständig, Staging vorläufig (5 Zeilen offen) |
 > | AP2 — Zeiger und Wache | offen | | | |
 > | AP3 — Tor, Zielprobe, Probelauf; F3-Messung | offen | | | |
@@ -714,6 +715,75 @@ geändert und durfte es nicht.
   tägliche Falschalarm belegt beseitigt. Gegenprobe im Werkzeug ohne Netz:
   ein verändertes Byte im Vergleichsstand → rot. **Der Zeiger-Job ist gebaut,
   nicht gelaufen — gemessen wird er mit M1;** so steht es im Prüfdokument.
+
+#### Umsetzung AP2 (20.09.2026) — was gebaut wurde, was haftet
+
+**Kein Web-Code.** `git diff --name-only -- server/ watch/ android/` gegen den
+Stand vor dem Paket liefert **0 Zeilen**; damit keine Versionsstufe und kein
+Changelog-Eintrag (E-KH-23). Gezählt hat der Rahmenplan: **Fassung 84**.
+
+**Fünf Dateien:**
+
+| Datei | Was |
+|---|---|
+| `tools/integritaetswache/wache.py` | `--stand PFAD`, `stand_setzen()`, `stand_kennung()`; Kopfzeile nennt Commit und Tag; sechs neue Fälle in der Selbstprobe |
+| `.github/workflows/integritaet.yml` | Riegel gestrichen, Zeiger ausgechecked, `--stand zeiger`, Zusammenfassung mit Commit/Tag/Dateizahl; `actions: read` ausgetragen |
+| `.github/workflows/auslieferung.yml` | neuer Job **`zeiger`** mit `contents: write` |
+| `CLAUDE.md` | Abschnitt 3: die Regel zum Zweig `produktion` |
+| `docs/Technik.md`, `tools/integritaetswache/LIESMICH.md` | neuer Abschnitt **6.6a** bzw. „Wogegen verglichen wird" |
+
+**B6 ist ohne Netz nachgerechnet, und die Zahl weicht von der protokollierten
+ab.** Das Konzept nennt für den 18.09.2026 „2 abweichend, 6 × 404". Aus den
+Ständen selbst gerechnet (Produktiv `14f99ac`, `main` `eec41e1`) ergibt Teil 1
+**1 abweichend** (`assets/style.css`) und **6 × 404**. Die zweite Abweichung
+lag in **Teil 2**: `login.php` ist zwischen beiden Ständen um 128 Zeilen
+gewachsen. Damit stimmen Protokoll und Nachrechnung überein — die Zahl im
+Konzept fasste beide Teile zusammen.
+
+| | Dateien | gleich | abweichend | 404 |
+|---|---|---|---|---|
+| alt (Vergleichsstand `main`) | 128 | 121 | 1 | 6 |
+| neu (Vergleichsstand Zeiger) | 122 | 122 | 0 | 0 |
+
+**Problem 1 — die Abnahme, wie sie im Konzept steht, ist heute nicht
+erfüllbar.** Gefordert war: *„Handlauf der Wache gegen den Zeiger grün mit
+Dateizahl, während `main` dem Zeiger voraus ist — damit ist der tägliche
+Falschalarm belegt beseitigt."* `main` **ist** dem Zeiger voraus (12 Commits,
+`7150793` → `862ca7f`), aber **in nichts, was die Wache misst**: Gemessen sind
+`server/assets/` und `login.php`; verändert sind zwölf PHP-Dateien, darunter
+keine davon. `git diff --name-only origin/produktion origin/main -- server/assets/`
+liefert **0**. Ein grüner Handlauf würde heute also nichts über B6 belegen —
+er wäre grün, auch ohne die Änderung.
+*Gelöst:* Die Nachrechnung oben tritt an seine Stelle. Sie misst genau den
+Fall, der B6 war, und braucht kein Netz. **Der Handlauf bleibt trotzdem im
+Prüfdokument stehen** — als Punkt für die Betreiberin, zu erledigen beim
+nächsten Stand, in dem sich unter `assets/` etwas geändert hat.
+
+**Problem 2 — der Handlauf gegen Produktiv läuft aus diesem Container nicht.**
+`https://nadoku.gen-em.org` antwortet dem Egress-Proxy mit
+`403 Tunnel connection failed`; gemessen an **128 von 128** Dateien. Die Wache
+meldete dabei korrekt „128 nicht erreichbar" und **Rückgabewert 1** — sie hat
+also nicht still grün gemeldet, was das Richtige ist.
+*Nicht gelöst, sondern festgehalten:* Diese Messung gehört an die Betreiberin
+oder an einen Kettenlauf.
+
+**Problem 3 — `needs` allein hätte den Zeiger falsch bewegt.** Ein
+übersprungener Job gilt GitHub als erfüllte Abhängigkeit. Ohne
+`if: needs.produktion.result == 'success'` hätte **jeder Push auf `main`** —
+der `produktion` überspringt — den Zeiger auf einen Stand gesetzt, der nie
+ausgeliefert wurde. Die Wache verglänge danach gegen eine Unwahrheit, und zwar
+grün. *Gelöst:* die `if`-Zeile, mit dem Grund daneben.
+
+**Problem 4 — ein Rückfall auf das Repositorium wäre der alte Fehler durch die
+Hintertür.** `stand_setzen()` war zuerst so gebaut, dass ein fehlender Pfad
+eine Warnung gibt und auf `WURZEL/server` zurückfällt. Das ist bequem und
+falsch: Nach einem misslungenen Auschecken verglänge die Wache wieder gegen
+`main`, ohne dass es jemand merkt. *Gelöst:* Sie wirft, der Aufrufer meldet
+rot, und zwei Fälle der Selbstprobe halten das fest.
+
+**Was bewusst NICHT gebaut ist:** ein Schutz des Zweigs `produktion` gegen
+Pushes von Hand. Er wäre richtig, gehört aber zu den Repositoriumseinstellungen
+und nicht in eine Datei — er steht als Punkt im Prüfdokument.
 
 ### AP3 — Tor, Zielprobe, Probelauf; danach F3-Messung (F1, F4; E-KH-05, -07, -08, -19)
 

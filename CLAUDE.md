@@ -115,6 +115,22 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
 - **`integritaet.yml` hängt am Anzeigenamen des Auslieferungslaufs.** Er heißt
   jetzt „Auslieferung" und nicht mehr „Server per FTP hochladen". Wer ihn
   umbenennt, hängt die Wache ab, und zwar still.
+- **Der Zweig `produktion` ist ein Zeiger, kein Arbeitszweig** (seit AP2 der
+  Kettenhärtung, E-KH-13). Er zeigt auf den Commit, der auf dem
+  Produktivserver liegt, und die Integritätswache vergleicht **gegen ihn**.
+  Bewegt wird er **ausschließlich vom Job `zeiger`** in
+  `.github/workflows/auslieferung.yml`, und nur nach einem erfolgreichen
+  `produktion`-Job. Daraus folgt dreierlei: **Niemand entwickelt dort**, es
+  gibt **keinen PR dorthin**, und er wird **nicht von Hand bewegt** — ein
+  Zeiger, der auf etwas anderes zeigt als auf das Ausgelieferte, macht die
+  Wache nicht blind, sondern zu einer Quelle von Falschmeldungen, und das ist
+  schlimmer.
+  **Rückwärts ist erlaubt und ausdrücklich vorgesehen:** Ein Zurücksetzen legt
+  einen älteren Stand oben auf, und der Zeiger folgt dorthin. Deshalb schiebt
+  der Job erzwungen.
+  **Fehlt der Zweig, ist die Wache rot** und sagt, wie man ihn anlegt — sie
+  läuft nie still grün weiter. Wer den Zweig löscht, schaltet damit keine
+  Prüfung ab, sondern löst sie aus.
 
 ## 4. Feste Zusagen der Anwendung
 

@@ -652,8 +652,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      Quelltext lesbar ist, zaehlt es als UNGEPRUEFT und
 │   │                      nennt die Zahl. Mit `--probe` (10 Faelle, davon 5
 │   │                      die NICHT anschlagen duerfen)
-│   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit der des
-│   │                      Repositoriums: jede Datei unter `server/assets/`
+│   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit dem
+│   │                      ZEIGER `produktion` (`--stand`, 6.6a): jede Datei
+│   │                      unter `server/assets/`
 │   │                      über SHA-256, und auf `login.php` die GANZE Menge
 │   │                      dessen, was den Weg des Passworts bestimmt —
 │   │                      Skripte (zitiert oder nicht), Inline-Blöcke,
@@ -9142,10 +9143,63 @@ Fehlermeldung.** Genau das stand bis Web 20.3.0 im Raum: Dort hieß die
 Kupplung „Server per FTP hochladen" (Fund F4 des P5a-Konzepts).
 
 Seit der Kette hat der Auslieferungslauf **zwei Ziele**, die Wache misst aber
-Produktiv. Sie fragt deshalb zuerst über die API, ob der Job `produktion` in
-diesem Lauf mit Erfolg geendet hat, und hält sonst still — eine Wache, die
-nach jedem Staging-Deploy falschen Alarm gibt, wird abgeschaltet, und das ist
-der eigentliche Schaden.
+Produktiv. **Bis zum 20.09.2026** fragte sie deshalb zuerst über die API, ob
+der Job `produktion` in diesem Lauf mit Erfolg geendet hat, und hielt sonst
+still. Dieser Riegel ist mit AP2 entfallen — warum, steht im nächsten
+Abschnitt.
+
+### 6.6a Der Zeiger `produktion` — wogegen die Wache vergleicht
+
+**Der Fehler war nicht der Auslöser, sondern der Vergleichsstand** (Befund B6
+der Kettenhärtung, E-KH-13). Die Wache verglich den Produktivserver gegen
+`server/` **neben sich** — also gegen den Zweig, auf dem sie lief, und das
+ist `main`. Auf Produktiv liegt aber nicht `main`, sondern der zuletzt
+**ausgelieferte** Stand. Sobald `main` einen Schritt weiter ist, und das ist
+der Normalfall, meldete sie eine Abweichung, die keine ist. Sie war deshalb
+seit dem 17.09.2026 **täglich rot**.
+
+**Nachgerechnet** (20.09.2026, aus den Ständen selbst, ohne Netz): Am
+18.09.2026 lag auf Produktiv `14f99ac` (P5a) und auf `main` stand `eec41e1`
+(P5b). Die alte Anordnung meldete damit **128 Dateien, 121 gleich, 1
+abweichend** (`assets/style.css`) **und 6 × 404** (`doku.js`,
+`rueckfrage.js`, `schluessel.js`, `schluesselblatt.js`, zwei Symbole) — dazu
+in Teil 2 `login.php`, das zwischen beiden Ständen um 128 Zeilen gewachsen
+war. Die neue Anordnung, gegen den Zeiger gerechnet: **122 Dateien, 122
+gleich, 0 abweichend, 0 × 404.**
+
+**Der Zeiger ist der Zweig `produktion`.** Er zeigt auf den Commit, der
+ausgeliefert wurde. Bewegt wird er vom Job **`zeiger`** in
+`auslieferung.yml`, und zwar nur nach einem erfolgreichen `produktion`-Job
+(`if: needs.produktion.result == 'success'` — `needs` allein genügt nicht,
+ein übersprungener Job gilt GitHub als erfüllte Abhängigkeit).
+
+| | |
+|---|---|
+| Werkzeug | von `main` — eine Verbesserung an der Wache soll sofort greifen, nicht erst nach dem nächsten Deploy |
+| Vergleichsstand | vom Zeiger — `actions/checkout` mit `ref: produktion`, `path: zeiger`, `fetch-tags: true` |
+| Aufruf | `wache.py "$BASIS" --stand zeiger` |
+| Zusammenfassung | nennt verglichenen Commit, Tag und Dateizahl |
+| Fehlender Zeiger | **rot mit Ansage**, nie still grün — samt dem Befehl, ihn anzulegen |
+| Auslöser | **jeder** — der `workflow_run`-Riegel ist entfallen |
+| Berechtigungen | `contents: write` **nur** im Job `zeiger`; der Job mit den FTPS-Geheimnissen bleibt bei `read`. `actions: read` ist mit dem Riegel entfallen |
+
+**Warum nicht das jüngste `web-v*`-Tag:** Es ist nicht der ausgelieferte
+Stand. Ein Tag kann gesetzt und die Freigabe nie erteilt worden sein, das
+Backup-Tor kann zugegangen sein — und nach einem Zurücksetzen liegt ein
+**älterer** Stand oben als der jüngste Tag. Deshalb schiebt der Job erzwungen:
+Ein Zurücksetzen ist eine Auslieferung, und der Zeiger folgt dorthin.
+
+**Dass der Riegel entfallen kann, ist eine Folge davon und kein Nebenbei.**
+Er war nötig, solange gegen `main` verglichen wurde: Nach einem
+Staging-Deploy hätte die Wache Produktiv gegen einen Stand gehalten, der dort
+gar nicht liegt. Jetzt ändert sich der Vergleichsstand **nur** bei einer
+Produktiv-Auslieferung — der Riegel wäre ab jetzt schädlich, weil er die
+Wache nach einem Staging-Deploy schweigen ließe, obwohl der Vergleich gültig
+wäre.
+
+**Die Regel für Menschen** steht in `CLAUDE.md` 3: Auf `produktion` wird
+nicht entwickelt, es gibt keinen PR dorthin, und von Hand bewegt wird er
+nicht.
 
 ### 6.7 Selbst hosten — der Weg ohne GitHub bleibt vollständig
 
