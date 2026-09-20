@@ -14,6 +14,160 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.26.0] — 2026-09-20
+
+**Die Anwendung legt ihre Sitzungsdateien selbst ab.**
+
+### Hinzugefügt
+
+**Bis hierher lag keine Zeile Code an `session.save_path`** (Backlog Nr. 241).
+Wo PHP die Sitzungsdateien hinlegt, entschied allein der Hoster. Auf der neuen
+Staging-Anlage ist das ein **geteiltes** Verzeichnis: `0773`, Eigentümer root,
+`gc_probability = 0`. Es ist gutgegangen, weil der Hoster das Auflisten über
+das Web sperrt — **die Anwendung hätte es nicht gemerkt.** Für den
+Produktivserver ist derselbe Wert nie erhoben worden, für jede Selbsthosterin
+ist er offen.
+
+Nüchtern, was auf dem Spiel stand: Eine Sitzungsdatei trägt **kein**
+Schlüsselmaterial, die Zusage der Ende-zu-Ende-Verschlüsselung ist nicht
+berührt. Sie trägt aber die Sitzung selbst, und **ihr Dateiname ist die
+Sitzungskennung**. Wer sie liest, ist angemeldet und sieht die Klartextliste;
+bei einem Verwaltungskonto die Verwaltung.
+
+Neu ist `server/sitzung_lib.php` — eine Datei, die **nichts lädt**. Sie legt
+`server/.sitzungen/` mit `0700` an, prüft mit einer Probedatei und richtet
+`session.save_path` darauf. Dass sie ohne Abhängigkeiten auskommen muss, ist
+keine Eleganz, sondern Bedingung: `db.php` ruft sie **während des eigenen
+Ladens**, und `install.php` hat zu diesem Zeitpunkt keine `config.php`.
+
+**Zwei Aufrufstellen und nicht neun** — das ist die eigentliche Entscheidung.
+Es gibt **neun** `session_start()` in neun Dateien, nicht drei, wie der erste
+Entwurf des Konzepts annahm. Acht davon laden `db.php` vorher; die neunte ist
+`install.php`. Mit drei Aufrufstellen hätte `login.php` die Sitzung beim
+Hoster abgelegt und `auth_guard.php` sie in `.sitzungen/` gesucht: **Niemand
+hätte sich anmelden können.** Nachgemessen mit dem Tokenizer, zweimal
+unabhängig — und ein künftiger zehnter Sitzungsstart ist von der zentralen
+Stelle in `db.php` von selbst gedeckt.
+
+**Der Cache ist eine Datei und keine Tabelle.** `app_state` wäre der
+naheliegende Ort und der falsche: Vor dem Sitzungsstart ist die Datenbank
+nicht verbunden, in `install.php` gibt es sie gar nicht, und fiele sie aus,
+sträubte sich jede Anfrage schon vor der Fehlerseite. Stattdessen die
+Markerdatei `.sitzungen/.geprueft` — ist ihr `mtime` jünger als eine Stunde,
+genügt ein `is_dir()`. Gemessen: zweiter Aufruf innerhalb der Stunde **0**
+Probedateien, mit gealtertem Marker **1**.
+
+**`session.gc_probability = 0` ist notwendig, kein Feinschliff.** Der Hoster
+stellt `gc_maxlifetime` — auf lima-city **1440 s**, also 24 Minuten. Die
+Anwendung sagt **30** zu (`SESSION_TIMEOUT_S`). Liefe PHPs Zufallsräumung mit,
+meldete sie Leute sechs Minuten **vor** Ablauf der eigenen Frist ab, und die
+Betroffene sähe eine Abmeldung ohne Grund. Geräumt wird deshalb vom
+Aufräumjob: neuer Teil **„Sitzungsdateien"**, nach `SESSION_TIMEOUT_S` plus
+einer Stunde Karenz und **nur `sess_*`** — die Markerdatei bleibt, und im
+Rückfall wird im Hosterpfad **nichts** angefasst; dort liegen die Sitzungen
+fremder Konten.
+
+**Zwei neue Zeilen auf der Statusseite** (Karte „Plattform"): der vierte
+Schreibort (Stufe *Empfohlen*, im guten Fall unsichtbar) und der Punkt
+**„Sitzungsablage"** (Stufe *Muss*, dreiwertig). Der zweite misst den
+**wirksamen** Pfad — Rechte, Eigentümer, Auflistbarkeit, Dateizahl — und
+bleibt deshalb auch nach einem Rückfall scharf. Rot wird er bei jedem Recht
+für „andere" und dann, wenn das Verzeichnis uns nicht gehört und sich trotzdem
+auflisten lässt: **Dann sind wir selbst der Fremde, der es lesen konnte.**
+
+### Geändert
+
+**Nach dem Ausrollen sind alle einmal abgemeldet.** Die Anwendung sucht im
+neuen Verzeichnis, und dort liegt noch nichts. Es geht nichts verloren — keine
+Eingabe, kein Schlüssel, kein Einsatz; die Betroffene sieht die Anmeldeseite
+statt der Seite, die sie erwartet hat. Das ist der Gegensatz zu dem, was das
+Runbook über Geräte sagt: **Uhr und Handy puffern, die Browsersitzungen
+nicht.**
+
+**Und es ist eine Nebennummer, keine Hauptnummer** (E-SA-08). Kein
+Datenmodell, keine Migration, dieselben Wege durch die Anwendung. Die
+Abmeldung ist eine Betriebsfolge, keine Wegänderung — sie verlangt aber eine
+Ansage, und die steht in `docs/Technik.md` 7 und im Kopfkommentar von
+`version.php`.
+
+**Der Rückfall ist keine Verschlechterung, seine Sichtbarkeit ist die
+Verbesserung** (E-SA-03). Scheitert das Anlegen oder die Probe, gilt der
+Hosterpfad wie bisher; die Anwendung läuft vollständig weiter. Verworfen wurde
+ein Ausweichen nach `sys_get_temp_dir()` — dort ist dasselbe Problem, nur
+woanders.
+
+`SESSION_TIMEOUT_S` ist von `auth_guard.php` nach `sitzung_lib.php` gewandert.
+Der Aufräumjob läuft über `jobs.php`, das `db.php` lädt, aber **nie**
+`auth_guard.php`: Der neue Räumteil wäre auf der Kommandozeile an `Undefined
+constant` gestorben und am Huckepack-Weg durchgelaufen — ein Fehler auf einem
+von drei Wegen, also der Sorte, die erst im Betrieb auffällt. Verschoben und
+**nicht verdoppelt**: Eine zweite `const` desselben Namens ist in PHP 8 kein
+Fatal, sondern eine Warnung bei jeder angemeldeten Anfrage.
+
+### Behoben
+
+**Ein latenter Fehler in der eigenen neuen Datei, gefunden im Prüfstand.**
+Ohne `clearstatcache()` nach dem `mkdir` konnte die Schreibprobe noch die
+Auskunft von vorher bekommen — der realpath-Cache gilt **prozessweit** und
+120 Sekunden. Gemessen: `sitzung_ablage()` meldete einen Rückfall, während
+`plattform_schreibprobe()` zwei Zeilen später auf demselben Pfad gelang. Ein
+Rückfall, den es nicht gab — und auf der Statusseite ein rotes Muss. Nach der
+Berichtigung **fünf von fünf** Läufen sauber.
+
+**`tools/wartungsprobe/` wäre still gebrochen.** Sie legt ihre
+Sitzungsdateien selbst an — auf der **Kommandozeile**, während der Server sie
+über HTTP liest. Da `sitzung_ablage()` im CLI bewusst nichts tut (ein
+Cron-Nutzer legte das Verzeichnis sonst mit fremdem Eigentümer an), hätte die
+Probe in den Hosterpfad geschrieben und der Server in `.sitzungen/` gesucht.
+Alle Sitzungsfälle wären mit **„nicht angemeldet"** umgefallen — aussehend wie
+ein Fehler der *Anwendung* statt wie einer der *Probe*. Sie nimmt den Ort
+jetzt über `sitzung_ort()`.
+
+**Das Jobregister ist an der Ursache gefasst** (Backlog Nr. 208, damit
+erledigt). Gemessen am 20.09.2026: **11 Jobs** im Code gegen **9** in
+`docs/Technik.md` (`mail` und `konto_verfall` fehlten), **16 Aufräumschritte**
+gegen „dreizehn", und die *sichtbare* Beschreibung unter Betrieb →
+Hintergrundjobs nannte **15 von 16**. Zweimal waren die Zahlen schon von Hand
+berichtigt worden (P5a/AP5, P5a/AP8), zweimal wuchs der Abstand wieder.
+
+Deshalb zweierlei: Die sichtbare Beschreibung wird aus
+`array_keys(job_aufraeumen_schritte())` **erzeugt** und kann nicht mehr
+altern. Und `tools/jobregister/pruefen.php` **zählt das Register nach** — mit
+dem Tokenizer und ohne Installation, damit es in Stufe 1 laufen kann. Beim
+ersten Lauf: **7 Befunde**, danach 0. Der Eintrag in `pruefung.yml` gehört zu
+Kette II und ist dort angemeldet; bis dahin ist der Punkt nur halb wirksam,
+und das steht so in `docs/Technik.md` 6.2.
+
+Beim Gegenlesen fielen zwei Listen derselben Art auf: Der **Werkzeugbaum**
+führte 46 Ordner, auf der Platte lagen 48 — `tools/wegwerfdomains/` fehlte
+seit Web 20.22.0. Und die Ausnahmeliste des Transports in 6.5 nannte fünf
+Einträge, die Kette führte sieben (`ueberlast.json`, `install.php`). Beides
+nachgetragen.
+
+### Offen
+
+**`.sitzungen/` steht noch nicht in der Ausnahmeliste des Transports.** Der
+Eintrag ist der achte Schutzlistenpfad und gehört zu Kette II (E-KH-20);
+Schritt 16 fasst `.github/` nicht an.
+
+**Die naheliegende Begründung dafür stimmt nicht, und das ist nachgemessen.**
+Der heutige Transport löscht `.sitzungen/` **nicht**: `getServerFiles()`
+listet das Fernverzeichnis nie, sondern liest ausschließlich die eigene
+Zustandsdatei, und ein zur Laufzeit auf dem Server entstandener Ordner stand
+dort nie. Gelesen in `@samkirkland/ftp-deploy` **1.2.3, 1.2.4 und 1.2.5** —
+`HashDiff.js` und `deploy.js` in allen drei Fassungen zeichengleich. Die
+einmalige Abmeldung wiederholt sich also **nicht** bei jedem Deploy.
+
+Der Eintrag gehört trotzdem dorthin, gegen einen anderen Weg: Läge
+`.sitzungen/` einmal im Auscheckstand des Läufers, würde er hochgeladen,
+stünde ab da in der Zustandsdatei, und ab da löschte ihn jeder Deploy, bei dem
+er lokal fehlt. Gegen `dangerous-clean-slate` hilft er nicht — das löscht laut
+Anleitung auch Ausgenommenes. Der Abnahmepunkt „zwei Deploys hintereinander,
+die Sitzung überlebt beide" bleibt bis dahin offen und belegt dann die Zusage
+des Eintrags, nicht die Abwehr einer akuten Gefahr.
+
+---
+
 ## [Web 20.25.0] — 2026-09-20
 
 **Die Spalte `manual` heißt jetzt `uhr_gesperrt`.**

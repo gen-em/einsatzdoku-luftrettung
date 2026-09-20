@@ -103,9 +103,19 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   auseinandergehen.
 - `server/config.php`, `install.lock`, `server/wartung.lock`,
   `server/ueberlast.json` (der Zähler der Verbindungsgrenze, P5a/AP9),
-  `server/sicherungen/` und `server/apk/` liegen nur auf dem Server. Sie
-  stehen in `.gitignore` **und** in der Ausnahmeliste **beider** FTPS-Schritte
-  — beides muss so bleiben.
+  `server/sicherungen/`, `server/apk/` und — seit Web 20.26.0 —
+  `server/.sitzungen/` (die PHP-Sitzungsdateien, Schritt 16, E-SA-05) liegen
+  nur auf dem Server. Sie stehen in `.gitignore` **und** in der
+  Ausnahmeliste **beider** FTPS-Schritte — beides muss so bleiben.
+  **Acht Pfade sind es, und die Zahl ist der Prüfwert.** Jeder steht dort
+  zweimal, als Datei- und als Verzeichnismuster (`sicherungen/**` und
+  `sicherungen/`), weil die Aktion beides getrennt prüft.
+  **Was passiert, wenn `.sitzungen/` fehlt:** beim heutigen Transport nichts —
+  die Fremd-Aktion listet das Fernverzeichnis nie, sondern liest nur ihre
+  eigene Zustandsdatei (nachgemessen im Quelltext von
+  `@samkirkland/ftp-deploy` 1.2.3 bis 1.2.5). Bei einem Spiegel mit
+  Löschabgleich **löscht jeder Deploy alle Sitzungen**, und alle Angemeldeten
+  fliegen raus.
 - **`server/install.php` steht seit Web 20.15.2 ebenfalls in der
   Ausnahmeliste** (Nr. 214) — anders als die Zeile darüber aber **nicht** in
   `.gitignore`: Sie liegt im Repositorium, wird nur nicht ausgeliefert, weil

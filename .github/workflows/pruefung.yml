@@ -485,6 +485,24 @@ jobs:
           php tools/sitzungshaertung/pruefen.php --selbstprobe
           php tools/sitzungshaertung/pruefen.php
 
+      - name: Jobregister — steht in Technik.md noch, was in jobs_lib.php steht?
+        # ZUARBEIT AUS SCHRITT 16 (Backlog Nr. 208). Das Werkzeug liegt seit
+        # Web 20.26.0 vor und hing nicht — Schritt 16 fasst `.github/` nicht
+        # an, deshalb hängt es hier.
+        #
+        # WOGEGEN: Die Tabelle „Der Katalog" in `docs/Technik.md` 4.97a wurde
+        # VON HAND gegen `server/jobs_lib.php` gepflegt, und sie lief
+        # auseinander — gemessen vor der Behebung: 11 Jobs im Code gegen 9 im
+        # Register, 16 Räumschritte gegen „dreizehn". Eine Dokumentation, die
+        # in der Zahl irrt, ist schlimmer als keine: Sie wird geglaubt.
+        #
+        # OHNE BEDINGUNG UND OHNE INSTALLATION. Es liest beide Seiten mit dem
+        # PHP-Tokenizer und rechnet in Millisekunden — es gibt keinen Grund,
+        # es an eine Bereichserkennung zu hängen.
+        run: |
+          php tools/jobregister/pruefen.php --selbstprobe
+          php tools/jobregister/pruefen.php
+
       - name: Java 21 für die Android-Module
         if: steps.bereiche.outputs.android == 'ja'
         # WARUM AUSDRÜCKLICH. Bis hierher lief der Android-Bau auf dem JDK, das

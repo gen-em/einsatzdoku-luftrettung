@@ -560,6 +560,31 @@ require_once __DIR__ . '/instanz_lib.php';   // Name dieser Installation (P5a/AP
 require_once __DIR__ . '/wartung_lib.php';
 wartung_tor();
 
+/* DIE SITZUNGSABLAGE — EINE VON ZWEI AUFRUFSTELLEN (Schritt 16, E-SA-02,
+ * Backlog Nr. 241). Die andere ist `install.php`.
+ *
+ * WARUM HIER UND NICHT AN DEN NEUN `session_start()`. Es gibt neun
+ * Sitzungsstarts in neun Dateien; ACHT davon laden diese Datei vorher, die
+ * neunte ist `install.php`, wo es noch keine `config.php` gibt. Eine Stelle
+ * je Sitzungsstart waere neunmal dieselbe Zeile — und der zehnte Sitzungsstart
+ * vergaesse sie. Vergessen heisst hier nicht „ungeschuetzt": Die Anmeldung
+ * legte die Sitzung dann beim Hoster ab und das Tor suchte sie in
+ * `.sitzungen/`. NIEMAND KOENNTE SICH ANMELDEN.
+ *
+ * WARUM HINTER `wartung_tor()`. Dessen Sperrpfade enden mit `exit` und
+ * brauchen keine Sitzung; die Wartungsseite fuehrt keine. Ein Aufruf davor
+ * kostete auf jeder gesperrten Anfrage Dateisystemarbeit — ausgerechnet
+ * waehrend des Schemaumbaus, fuer den es den Wartungsmodus gibt. Die Seiten,
+ * die im Wartungsmodus doch eine Sitzung brauchen (`login.php`, die sieben
+ * `betrieb_*.php`, `update.php`), stehen in `WARTUNG_AUSNAHMEN` und kehren
+ * aus `wartung_tor()` mit `return` zurueck — sie kommen hier vorbei.
+ *
+ * UND HIER UND NICHT WEITER OBEN, aus demselben Grund wie die Zeile darueber:
+ * Bis zu dieser Stelle ist keine Kopfzeile gesendet und keine Verbindung
+ * geoeffnet. `sitzung_lib.php` laedt ihrerseits nichts. */
+require_once __DIR__ . '/sitzung_lib.php';
+sitzung_ablage();
+
 function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
 
 /**

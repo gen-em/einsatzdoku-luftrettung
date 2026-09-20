@@ -59,6 +59,13 @@ require_once __DIR__ . '/email_lib.php';
  * (E-PP-03: eine Stelle, nicht drei Meldungstexte). */
 require_once __DIR__ . '/php_mindest.php';
 
+/* DIE SITZUNGSABLAGE (Schritt 16, E-SA-04 und E-SA-07, Backlog Nr. 241).
+ * Sie liefert den Pfad, die Dateizahl und das Ergebnis des Einrichtungslaufs
+ * fuer die beiden Befunde weiter unten. Kein Zyklus: `sitzung_lib.php` laedt
+ * auf oberster Ebene NICHTS und holt diese Datei erst im Rumpf von
+ * `sitzung_ablage()` — und dort hoechstens einmal je Stunde. */
+require_once __DIR__ . '/sitzung_lib.php';
+
 /** Empfohlene PHP-Fassung: aktive Pflege, nicht nur Sicherheitskorrekturen. */
 const PLATTFORM_PHP_EMPFOHLEN = '8.3';
 
@@ -266,6 +273,15 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
 {
     $b = [];
 
+    /* OB WIR AUF DER KOMMANDOZEILE STEHEN, WIRD EINMAL GEFRAGT und von drei
+     * Befunden benutzt (HTTPS, die beiden zur Sitzungsablage). Die Zeile
+     * stand bis Web 20.25.0 mitten in der Funktion beim HTTPS-Befund; der
+     * vierte Schreibort braucht sie aber 170 Zeilen frueher, und eine zweite
+     * Zuweisung desselben Namens ist genau die Art Doppelung, die
+     * auseinanderlaeuft. `sitzung_cli()` ist die eine Fassung — dieselbe, die
+     * `wartung_cli()` benutzt, `phpdbg` eingeschlossen. */
+    $cli = sitzung_cli();
+
     /* ---- 1 PHP-Version ---------------------------------------------------- */
     $phpOk = version_compare(PHP_VERSION, PLATTFORM_PHP_MIN, '>=');
     $b[] = plattform_befund('php', 'PHP-Version', 'muss',
@@ -345,6 +361,119 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
                      : (string)$p['grund']);
     }
 
+    /* ---- 5a Der vierte Schreibort: die Sitzungsablage (E-SA-04, Nr. 241) ---
+     *
+     * EMPFOHLEN UND NICHT MUSS, anders als die drei darueber. Die drei sind
+     * Muss, weil es ohne sie NICHT GEHT — ohne beschreibbare Wurzel keine
+     * `config.php`, ohne Ablage kein Backup. Dieser hier hat einen Rueckfall
+     * (E-SA-03): Scheitert er, legt PHP die Sitzungen weiter dort ab, wo der
+     * Hoster hinzeigt, und die Anwendung laeuft vollstaendig. Muss waere
+     * ausserdem scharf fuer eine Eigenschaft, die heute keine Installation
+     * erfuellt — und haette den Einrichter gesperrt, statt ihn zu warnen.
+     *
+     * DASS IM GUTEN FALL KEINE ZEILE ERSCHEINT, IST GEWOLLT: Die Statusseite
+     * zeigt erfuellte Empfehlungen nicht einzeln, sondern nur in der
+     * Schlusszeile. Wo die Sitzungen liegen und wie viele es sind, sagt der
+     * Befund darunter — der ist Muss und steht immer da. */
+    $sPfad  = sitzung_ablage_pfad();
+    $sStand = sitzung_ablage_stand();
+    if ($cli) {
+        /* Auf der Kommandozeile richtet `sitzung_ablage()` bewusst nichts ein
+         * (ein Cron-Nutzer legte das Verzeichnis sonst mit fremdem Eigentuemer
+         * an). Eine Schreibprobe meldete hier „Das Verzeichnis gibt es nicht"
+         * und waere ein Befund ueber das Werkzeug statt ueber die Anlage. */
+        $b[] = plattform_befund('schreib_sitzungen', 'Ablage der Sitzungen', 'empfohlen',
+            'nicht messbar (Kommandozeile)', 'beschreibbar', null,
+            'Die Ablage wird beim ersten Web-Aufruf angelegt; auf der '
+          . 'Kommandozeile richtet die Anwendung sie absichtlich nicht ein.');
+    } elseif (!is_dir($sPfad)) {
+        $b[] = plattform_befund('schreib_sitzungen', 'Ablage der Sitzungen', 'empfohlen',
+            'nicht anlegbar', 'beschreibbar', false,
+            ($sStand['grund'] !== null ? $sStand['grund'] . ' ' : '')
+          . 'Die Sitzungen liegen deshalb dort, wo der Hoster hinzeigt. Die '
+          . 'Anwendung laeuft vollstaendig weiter; was das bedeutet, sagt die '
+          . 'Zeile „Sitzungsablage" darunter.');
+    } else {
+        $sProbe = plattform_schreibprobe($sPfad);
+        $b[] = plattform_befund('schreib_sitzungen', 'Ablage der Sitzungen', 'empfohlen',
+            $sProbe['ok'] ? 'beschreibbar' : 'nicht beschreibbar', 'beschreibbar',
+            $sProbe['ok'],
+            $sProbe['ok'] ? 'Die PHP-Sitzungsdateien dieser Installation - '
+                          . $sPfad
+                          : (string)$sProbe['grund']);
+    }
+
+    /* ---- 5b Ist die Sitzungsablage fuer Fremde auflistbar? (E-SA-07) -------
+     *
+     * DIESER BEFUND MISST DEN WIRKSAMEN ORT, nicht den gewuenschten — und
+     * genau darin liegt sein Wert. Richtet die Anwendung ihre eigene Ablage
+     * ein, prueft er sie; faellt sie auf den Hosterpfad zurueck, prueft er
+     * JENEN. Der Punkt bleibt also nach einem Rueckfall scharf, und das ist
+     * der Fall, fuer den es ihn gibt.
+     *
+     * MUSS UND NICHT EMPFOHLEN. Nur Muss wird auf der Statusseite rot; eine
+     * Empfehlung faerbt nichts. Eine Sitzungsdatei traegt kein
+     * Schluesselmaterial, aber ihr DATEINAME IST DIE SITZUNGSKENNUNG: Wer sie
+     * liest, ist angemeldet. Das ist keine Empfehlung wert.
+     *
+     * DASS DAMIT DIE EINRICHTUNG SPERREN KANN, ist bedacht und faellt
+     * praktisch aus: `install.php` haelt bei Muss und `false` an — aber es
+     * ruft `sitzung_ablage()` lange vorher, und wer die Wurzel beschreiben
+     * darf (selbst ein Muss), kann `.sitzungen/` anlegen. Ist die Wurzel
+     * nicht beschreibbar, scheitert die Einrichtung ohnehin eine Zeile
+     * frueher.
+     *
+     * WIR SIND SELBST DER FREMDE. `scandir()` aus dem eigenen Prozess sagt
+     * nichts darueber, was ein anderer Kunde darf — AUSSER das Verzeichnis
+     * gehoert uns nicht. Dann ist die gelungene Auflistung der Beweis: Ein
+     * Nicht-Eigentuemer konnte es lesen, und der naechste kann es auch. */
+    $wirk = sitzung_wirksamer_pfad();
+    $rPfad = realpath($sPfad);
+    $rWirk = realpath($wirk);
+    $eigen = ($rPfad !== false && $rWirk !== false)
+        ? ($rPfad === $rWirk) : ($sPfad === $wirk);
+
+    $roh    = @fileperms($wirk);
+    $modus  = $roh === false ? null : ($roh & 0777);
+    $uid    = function_exists('posix_geteuid') ? posix_geteuid() : null;
+    $eigner = @fileowner($wirk);
+    $fremd  = ($uid !== null && $eigner !== false) ? ($eigner !== $uid) : null;
+    $anzahl = sitzung_dateien_zahlen($wirk);
+
+    if ($cli) {
+        $sOk = null;
+        $sIst = 'nicht messbar (Kommandozeile)';
+    } elseif ($modus === null) {
+        $sOk = null;
+        $sIst = 'Rechte nicht lesbar';
+    } elseif (($modus & 0007) !== 0) {
+        $sOk = false;
+        $sIst = sprintf('%04o', $modus) . ' - fuer andere zugaenglich';
+    } elseif ($fremd === true && @scandir($wirk) !== false) {
+        $sOk = false;
+        $sIst = sprintf('%04o', $modus) . ' - fremder Eigentuemer, auflistbar';
+    } elseif ($fremd === null && ($modus & 0070) !== 0) {
+        $sOk = null;
+        $sIst = sprintf('%04o', $modus) . ' - Gruppe hat Rechte, Eigentuemer nicht feststellbar';
+    } else {
+        $sOk = true;
+        $sIst = sprintf('%04o', $modus);
+    }
+    if ($sOk !== null) {
+        $sIst = ($eigen ? 'eigenes Verzeichnis, ' : 'Hosterpfad, ') . $sIst
+              . ($anzahl === null ? '' : ', ' . $anzahl
+                 . ($anzahl === 1 ? ' Datei' : ' Dateien'));
+    }
+    $b[] = plattform_befund('sitzung_ablage', 'Sitzungsablage', 'muss',
+        $sIst, 'eigenes Verzeichnis, fuer andere gesperrt', $sOk,
+        ($eigen
+            ? 'Die Anwendung legt ihre Sitzungen selbst ab. '
+            : 'RUECKFALL: Die Anwendung konnte kein eigenes Verzeichnis '
+            . 'einrichten und benutzt den Pfad des Hosters. '
+            . ($sStand['grund'] !== null ? $sStand['grund'] . ' ' : ''))
+      . 'Der Dateiname einer Sitzungsdatei IST die Sitzungskennung - wer sie '
+      . 'liest, ist angemeldet. ' . $wirk);
+
     /* `config.php` beschreibbar ist EMPFOHLEN, nicht Muss (PP-5): Die
      * Backup-Ziele, der Serverschluessel und der Server-Anteil bieten dann
      * einen Knopf; sonst die eine Zeile zum Eintragen von Hand. */
@@ -401,7 +530,6 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
     }
 
     /* ---- 7 HTTPS ----------------------------------------------------------- */
-    $cli   = PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg';
     $https = !empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off';
     if (!$https && (string)($_SERVER['REQUEST_SCHEME'] ?? '') === 'https') { $https = true; }
     $lokal = in_array((string)($_SERVER['SERVER_NAME'] ?? ''), ['localhost', '127.0.0.1', '::1'], true);

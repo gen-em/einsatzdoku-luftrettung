@@ -84,6 +84,14 @@ on:
           der Abgleich läuft als Trockenlauf.
         type: boolean
         default: false
+      probelauf_ohne_sitzung:
+        description: >-
+          Nur zusammen mit PROBELAUF: die Zielprobe OHNE Wiederverwendung der
+          TLS-Sitzung auf dem Datenkanal fahren. Das ist der Trennversuch zu
+          F3 — gelingt der Lauf MIT und scheitert er OHNE, verlangt der Server
+          die Wiederverwendung. Im Normalbetrieb bleibt dies aus.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -247,6 +255,8 @@ jobs:
             sicherungen/
             apk/**
             apk/
+            .sitzungen/**
+            .sitzungen/
 
   stufe2:
     name: Prüfung Stufe 2
@@ -738,13 +748,39 @@ jobs:
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
+          # DER TRENNVERSUCH IST EIN SCHALTER UND KEIN ZWEITER SCHRITT
+          # (E-KH-07). Zwei Schritte hiessen zwei Wege durch die Kette, und
+          # der eine waere nie gefahren worden. So misst der Probelauf beide
+          # Betriebsarten ueber DENSELBEN Weg — nur der Datenkanal aendert
+          # sich.
+          #
+          # UND ER GILT NUR IM PROBELAUF. Eine Auslieferung faehrt immer MIT
+          # Wiederverwendung; ein Tag-Lauf hat den Schalter gar nicht.
+          OHNE=""
+          if [ "${{ inputs.probelauf }}" = "true" ] \
+             && [ "${{ inputs.probelauf_ohne_sitzung }}" = "true" ]; then
+            OHNE="--ohne-sitzungswiederverwendung"
+            echo "::notice::TRENNVERSUCH — die Zielprobe läuft OHNE Wiederverwendung der TLS-Sitzung."
+            {
+              echo '### Trennversuch (F3)'
+              echo
+              echo 'Die Zielprobe läuft in dieser Runde **ohne** Wiederverwendung der'
+              echo 'TLS-Sitzung auf dem Datenkanal. Scheitert sie hier und gelingt sie'
+              echo 'mit Wiederverwendung, verlangt der Server sie — und das ist die'
+              echo 'Erklärung für den `ECONNRESET` der Auslieferungsaktion.'
+              echo
+              echo 'Die Zeile **„TLS-Sitzung wiederverwendet"** im Protokoll ist der'
+              echo 'Beleg. Steht dort `NICHT FESTSTELLBAR`, misst dieser Lauf nichts.'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
           python3 tools/kette/zielprobe.py --selbstprobe
           python3 tools/kette/zielprobe.py \
             --basis "$BASIS" \
             --ftp-server "$FTP_SERVER" \
             --ftp-konto "$FTP_USERNAME" \
             --ftp-pass "$FTP_PASSWORD" \
-            --ftp-pfad "${{ vars.FTP_ZIELPFAD || './httpdocs/' }}"
+            --ftp-pfad "${{ vars.FTP_ZIELPFAD || './httpdocs/' }}" \
+            $OHNE
 
       - name: Backup-Tor — Komplett-Backup zu Ende laufen lassen
         # Der Probelauf verändert den Server nicht und braucht deshalb kein
@@ -808,6 +844,8 @@ jobs:
             sicherungen/
             apk/**
             apk/
+            .sitzungen/**
+            .sitzungen/
 
       - name: Zustand — Migration ausstehend?
         if: ${{ !inputs.probelauf }}
