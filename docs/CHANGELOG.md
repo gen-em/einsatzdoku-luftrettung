@@ -14,6 +14,73 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.25.0] — 2026-09-20
+
+**Die Spalte `manual` heißt jetzt `uhr_gesperrt`.**
+
+### Behoben
+
+**Die Einrichtung auf dem neuen Staging-Webspace scheiterte an einem
+reservierten Wort** (Backlog Nr. 238). Die Meldung: `SQLSTATE[42000] … 1064 …
+near 'manual TINYINT(1) NOT NULL DEFAULT 0` — Zeile 23 des Schemas. MySQL führt
+**MANUAL von 8.4.0 bis 8.4.10 als reserviertes Wort**; ab 8.4.11 ist es wieder
+frei. `server/schema.sql` legte die Spalte ungequotet an, und die
+Staging-Datenbank ist 8.4.x. Der Produktivserver war nicht betroffen — bei
+einem Hoster-Update wäre er es gewesen.
+
+Nachgemessen, was sonst noch gebrochen wäre: **788 Bezeichner-Vorkommen** in elf
+DDL-führenden Dateien gegen **284 reservierte Wörter**, dazu die Schreibwege der
+Anwendung. Ergebnis sind **zehn Stellen**, nicht eine — neben der Einrichtung
+der Uhr-Eingang (`ingest.php`), GPX- und Datei-Import, der Schnitt, beide Zweige
+des Einsatzformulars und **beide Richtungen der Sicherung**. Eine Sicherung
+hätte sich auf 8.4 weder erstellen noch einspielen lassen. `PARALLEL`, `QUALIFY`
+und `TABLESAMPLE`, in 8.4 ebenfalls neu reserviert, kommen im Repositorium nicht
+vor.
+
+### Geändert
+
+**Umbenannt statt gequotet** — das ist die eigentliche Entscheidung. Überall
+Backticks zu setzen hätte den Fehler ebenso behoben, aber eine dabei übersehene
+Stelle wäre nur auf genau diesen elf Fassungen aufgefallen: im Betrieb, bei
+jemand anderem. Mit dem neuen Namen scheitert sie auf **jeder** Fassung sofort
+und fällt schon beim ersten Klick der Prüfung auf. Verworfen wurde auch „auf
+8.4.11 warten" — das wäre ein Zuschnitt auf den Hoster und widerspricht der
+Hosting-Entscheidung vom 15.09.2026.
+
+Nebeneffekt, und kein kleiner: **der Name hört auf zu lügen.** `manual` las sich
+wie „von Hand angelegt" — so sehr, dass in `schema.sql` seit jeher ein Dementi
+danebenstand. Die Spalte sagt etwas anderes, nämlich dass die Uhr Metadaten,
+Phasen und Reanimation dieses Einsatzes nicht mehr überschreibt. Genau das heißt
+sie jetzt.
+
+**`CHANGE` und nicht `RENAME COLUMN`**, aus zwei praktischen Gründen: Der
+Migrationskatalog kennt `CHANGE` bereits dreimal und `RENAME COLUMN` kein
+einziges Mal, und `tools/migrationsregister/pruefen.php` rechnet den Katalog
+durch, um ihn gegen `schema.sql` zu halten — seine DDL-Simulation versteht ADD,
+DROP, CHANGE und RENAME TABLE. Ein `RENAME COLUMN` wäre durch sie
+hindurchgelaufen, ohne die Spalte umzubenennen, und hätte Stufe 1 der Kette
+grundlos rot gemacht. `CHANGE` ist außerdem verlustfrei: Die Werte des Bestands
+bleiben Zeile für Zeile stehen.
+
+**Die alte Skip-Prüfung wäre zur Falle geworden.**
+`2026_07_18_manuelle_einsaetze` fragte „gibt es `missions.manual`?" — nach der
+Umbenennung lautet die Antwort nein, und auf einer Datenbank ohne Registereintrag
+hätte sie die Spalte ein zweites Mal angelegt: leer, neben der vollen.
+Aufgefallen wäre es nicht, denn `1060` steht in der Schluckliste des
+Migrationslaufs. Die Prüfung fragt jetzt nach **beiden** Namen.
+
+**In Sicherungs- und Exportdatei heißt das Feld weiter `manual`.** Das ist
+Absicht: Alte Sicherungen und alte Exporte müssen sich unverändert einspielen
+lassen, und der ausgelieferte Demo-Bestand ist selbst eine solche Datei
+(`server/demo/fixture.json.gz`, 106 Einsätze, 104 davon mit dem Schutzflag). Die
+Spalte wird beim Lesen per Alias auf den Dateinamen abgebildet und beim
+Schreiben zurück. `docs/Backup-Format.md`, `docs/Export-Format.md` und
+`docs/JSON-Vertrag.md` bleiben damit inhaltlich gleich.
+
+**Nach dem Deploy muss eine Administratorin `update.php` aufrufen.** Ohne den
+Migrationslauf heißt die Spalte in der Datenbank weiter `manual`, und die
+Anwendung sucht `uhr_gesperrt`.
+
 ## [Web 20.24.2] — 2026-09-18
 
 **Der Rechtstext-Baustein brach lange Zeichenketten nicht um.**
