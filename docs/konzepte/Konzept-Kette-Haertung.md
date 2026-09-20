@@ -25,7 +25,7 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 > | Von außen | **Einschub vom 20.09.2026 eingespielt** (Auftrag der Konzeptinstanz): Backlog 241–249 reserviert und angelegt, drei Konzeptdateien eingecheckt, Rahmenplan **Fassung 85**. Dabei angemeldet: `.sitzungen/` als **achter Schutzlistenpfad** (E-KH-20, einzutragen in AP4 oder AP5). **Der Einschub nannte Fassung 84 — die hatte AP2 schon vergeben und gepusht; er ist auf 85 gerückt** |
 > | Zuarbeiten erledigt | **Z1** (alte Staging-Anlage stillgelegt — B2 damit geschlossen), **Z2** (Zeiger `produktion` auf `7150793`) und **Z3** — alle 20.09.2026. Z3 **beide Anlagen**, aber auf zwei Wegen: Produktiv aus *Betrieb → Status*, Staging aus einer `phpinfo()`, weil die Anwendung dort noch nicht läuft. Fünf Zeilen der Staging-Spalte bleiben leer |
 > | Offen | **E-KH-09 (Ursache und Abhilfe F3)** — fällt nach der Messung am Ende von AP3; der Nachtrag in Abschnitt 1.4 hat eine der drei Erklärungen verschmälert. **Z3-Rest**: die fünf Zeilen, die nur die Anwendung weiß — sie hängen an Rahmenplan 6a, Schritt 6 |
-> | In Arbeit | **AP3 abgeschlossen — F3 IST GEFUNDEN** (F-KH-U-25, Lauf 35543081419, Gesprächslauf gegen ein Probeverzeichnis). **Der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei:** Die Datenverbindung steht per `EPSV` schon, der Server schließt sie, `basic-ftp` liest `ECONNRESET` auf dem Datensocket. Die Aktion fängt das in `getServerFiles` ab, deutet es als „first publish" und arbeitet mit einem **toten Client** weiter; beim ersten `MKD api` fällt es auf. **Der Fehler liegt drei Schritte vor der Stelle, die er meldet** — deshalb stand `ensureDir` seit dem 19.09.2026 im Verdacht. **Die Aktion kennt das Problem selbst:** `deploy.js` Z. 50–51 („basic-ftp doesn't seam to close the connection … dependent on the ftp server"), `utilities.js` Z. 67 („does not currently handle reconnects"). **Warum acht Trennversuche danebenlagen, und das ist kein Pech:** `curl` hat in jedem nur Dateien abgerufen, die es selbst hochgeladen hatte — **keiner hat je eine FEHLENDE Datei abgerufen**, und genau das ist die Operation. **Warum jeder Probelauf grün war:** `getServerFiles` läuft auch im Trockenlauf, aber danach kommt kein Steuerbefehl mehr; der tote Client fällt nicht auf. **Warum lima-city grün läuft:** Dort liegt eine Zustandsdatei. **Der Zustand ist selbsterhaltend** — solange keine da ist, stirbt jeder Lauf daran, und weil er stirbt, wird nie eine geschrieben. **Abhilfe (AP4, vorgeschlagen, nicht erprobt):** einmal von Hand eine gültige Zustandsdatei hinlegen (Format im Prüfdokument bei F-KH-U-25). **E-KH-09 zur Hälfte erfüllt:** Ursache benannt und belegt, Abhilfe offen. **Prüfpunkt 18 ist gegenstandslos** — der volle Auslieferungslauf wird nicht mehr gebraucht. Offen: **Prüfpunkt 20** (das leere `.zielprobe-gespraech/` auf Produktiv entfernen). Selbstproben: Zielprobe **93 Lagen**, Tor **19**, Wache **38**, alle 0 offen |
+> | In Arbeit | **AP4 gebaut, Abhilfe noch nicht bewiesen — Prüfpunkt 21.** F3 ist gefunden (F-KH-U-25): Der Abbruch passiert beim **`RETR` auf die nicht vorhandene Zustandsdatei**; die Datenverbindung steht per `EPSV` schon, der Server schließt sie, `basic-ftp` liest `ECONNRESET` auf dem Datensocket. Die Aktion fängt das ab, deutet es als „first publish" und arbeitet mit einem **toten Client** weiter — gemeldet wird erst das `MKD api` drei Schritte später, und genau diese Zeile stand acht Trennversuche lang im Verdacht. **Der Befund passt auf keine der vier Richtungen, die das Konzept für AP4 vorsah:** (a) `lftp` zielte auf die Sitzungswiederverwendung (seit F-KH-U-16 ausgeschlossen), (b) entfällt, (c) verworfen, (d) Konto/Pfad trifft nicht zu. **Gebaut ist Richtung (e): `tools/kette/zustand.py`** legt die Zustandsdatei an, wenn sie fehlt — der kleinste Eingriff, den es gibt: Transport, Aktion und Löschverhalten bleiben unverändert. Drei Vorsichten: eine **vorhandene** Datei wird nie angefasst (sie trägt den Bestand; überschreiben hieße „der Server ist leer" und wären 688 Dateien), geprüft wird durch **Auflisten** statt durch Abrufen (ein `RETR` auf eine fehlende Datei ist ja die Operation, die tötet), und „nicht feststellbar" heißt nicht feststellbar — dann wird nichts angelegt. Nach dem Hochladen wird **nachgemessen**, nicht geglaubt. **Der Schritt läuft vorerst NUR im Gesprächslauf**, gegen das Probeverzeichnis: Die Abhilfe ist gefunden, aber nicht bewiesen, und der Beweis fällt ohne einen Finger an der laufenden Anlage. **Die Abnahme des Konzepts wird ersetzt** — die Köderprobe prüft die Schutzliste von `lftp` und ist bei (e) gegenstandslos; es bleiben der zweimalige Probelauf mit 0 geplanten Löschungen und die Freigabe. Selbstproben: zustand **20**, Zielprobe **93**, Tor **19**, Wache **38**, alle 0 offen; Kettenaufrufe **36**/0/0. Offen: **Prüfpunkt 21** (Beweislauf) und **Prüfpunkt 20** (Probeverzeichnis entfernen) |
 > | Hakt | **Es gibt bis heute keinen erfolgreichen Produktivlauf der Kette** (Abschnitt 1.2). **AP1 ist gebaut, aber nicht abgenommen:** Der erste Kettenlauf gegen lima-city (Lauf 21, 20.09.2026, Handlauf vom Arbeitszweig) brachte `staging` **grün** und in Stufe 2 **zwei von fünf** Messschritten gemessen grün — der dritte ist rot, weil `STAGING_KONTO`/`STAGING_PASS` sich auf der neuen Anlage nicht anmelden. **Ein Push auf `main` ist dafür nicht nötig** (`workflow_dispatch` fährt dieselben Jobs). Einzelheiten im Prüfdokument, Abschnitt 1.4 |
 >
 > **Stand der Umsetzung**
@@ -1054,6 +1054,53 @@ des Trennversuchs. Sie steht im Prüfdokument als Prüfpunkte 10 bis 13.
   Zielprobe **und** Trockenlauf des (neuen) Transports grün, geplante
   Löschungen 0, **zweimal hintereinander**. **Vor dem ersten echten Lauf gegen
   Produktiv: Ergebnis an die Betreiberin, Freigabe.**
+
+### AP4 — Umsetzung (20.09.2026): Richtung (e), die das Konzept nicht kannte
+
+**Der Befund passt auf keine der vier vorgesehenen Richtungen.** (a) `lftp`
+war für die geforderte Sitzungswiederverwendung gedacht — die ist seit
+F-KH-U-16 ausgeschlossen. (b) entfällt ohnehin, (c) ist verworfen, (d)
+Konto/Pfad zielt auf einen Zugriffsfehler, den es nicht gibt. Die Messung
+zeigt auf etwas anderes: **eine fehlende Datei** (F-KH-U-25).
+
+**Richtung (e) — die Zustandsdatei bereitstellen.** `tools/kette/zustand.py`
+prüft, ob sie auf dem Server liegt, und legt sie an, wenn nicht. Nach der
+Wahlregel des Konzepts („Zeigt die Messung auf (d), ist (d) vorzuziehen —
+kleinster Eingriff") geht (e) vor: **Der Transport bleibt, die Aktion bleibt,
+das Löschverhalten bleibt.** Es ändert sich nichts außer einer Datei, die
+vorher fehlte.
+
+**Drei Vorsichten, jede mit Grund:**
+
+1. **Eine vorhandene Datei wird nie angefasst.** Sie trägt den Bestand des
+   Servers; sie zu überschreiben hieße, der Aktion zu sagen, der Server sei
+   leer — beim nächsten Lauf wären das 688 Dateien.
+2. **Geprüft wird durch Auflisten, nicht durch Abrufen.** Ein `RETR` auf eine
+   fehlende Datei ist genau die Operation, die den Fehler auslöst.
+3. **Nicht feststellbar heißt nicht feststellbar.** Lässt sich das
+   Verzeichnis nicht auflisten, wird nichts angelegt und der Lauf ist rot.
+
+**Nachgemessen, nicht geglaubt:** Nach dem Hochladen wird erneut aufgelistet.
+Ein `curl` mit Rückgabe 0 sagt, dass es gesendet hat — nicht, dass die Datei
+liegt.
+
+**Wo der Schritt heute läuft: NUR im Gesprächslauf.** Das ist Absicht. Die
+Abhilfe ist gefunden, aber **nicht bewiesen**; der Gesprächslauf gegen
+`.zielprobe-gespraech/` ist der Beweis und fällt ohne einen Finger an der
+laufenden Anlage. Erst wenn er durchläuft, wird der Schritt für die echte
+Auslieferung scharf gestellt — vorher wäre es ein Eingriff auf Verdacht.
+
+**Die Abnahme des Konzepts passt nicht mehr und wird ersetzt.** Sie verlangt
+„Köderprobe auf Staging 7 von 7" — die prüft die Schutzliste von `lftp` und
+ist bei (e) **gegenstandslos**, weil der Transport unverändert bleibt. Was
+bleibt: **Probelauf gegen Produktiv, zweimal hintereinander, geplante
+Löschungen 0**, und die Freigabe der Betreiberin vor dem ersten echten Lauf.
+Dazu neu: **Prüfpunkt 21** (der Beweislauf).
+
+Selbstprobe `zustand.py`: **20 Lagen, 0 offen**. Kettenaufrufe **34 → 36**,
+0 Befunde — die beiden neuen Aufrufe sind gegen die Schnittstelle des
+Werkzeugs gehalten.
+
 
 ### AP5 — Gemeinsame Schrittfolge (E-KH-14, -17)
 

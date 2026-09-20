@@ -960,6 +960,43 @@ jobs:
             echo 'soll es nicht geben.'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Zustandsdatei der Aktion bereitstellen (AP4, F-KH-U-25)
+        # VORERST NUR IM GESPRAECHSLAUF, UND DAS IST ABSICHT. Die Abhilfe ist
+        # gefunden, aber noch nicht bewiesen: Der Gespraechslauf gegen das
+        # Probeverzeichnis ist der Beweis, und er faellt ohne einen Finger an
+        # der laufenden Anlage. Erst wenn er durchlaeuft, wird dieser Schritt
+        # fuer die echte Auslieferung scharf gestellt -- vorher waere es ein
+        # Eingriff auf Verdacht.
+        if: ${{ inputs.probelauf_gespraech }}
+        env:
+          FTP_SERVER:   ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          python3 tools/kette/zustand.py --selbstprobe
+          python3 tools/kette/zustand.py \
+            --ftp-server "$FTP_SERVER" \
+            --ftp-konto "$FTP_USERNAME" \
+            --ftp-pass "$FTP_PASSWORD" \
+            --ftp-pfad ".zielprobe-gespraech/" \
+            --zustandspfad ".deploy-state-gespraech.json"
+          {
+            echo '### Zustandsdatei bereitgestellt (AP4)'
+            echo
+            echo 'Der Schritt davor legt die Zustandsdatei an, falls sie fehlt. Ohne'
+            echo 'sie sendet die Aktion `RETR` auf einen Namen, den es nicht gibt —'
+            echo 'der Datenkanal steht dann schon, der Server schließt ihn, und'
+            echo '`basic-ftp` liest `ECONNRESET` auf dem Datensocket (F-KH-U-25).'
+            echo
+            echo '**Läuft der Abgleich jetzt durch, ist die Abhilfe bewiesen** — und'
+            echo 'zwar ohne einen Finger an der laufenden Anlage: Es geht in'
+            echo '`.zielprobe-gespraech/`, nicht in den Webroot.'
+            echo
+            echo 'Danach liegen dort rund **9,7 MB in 62 Verzeichnissen**, die von Hand'
+            echo 'zu entfernen sind (Prüfpunkt 20).'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: server/ per FTPS auf Produktiv synchronisieren
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:

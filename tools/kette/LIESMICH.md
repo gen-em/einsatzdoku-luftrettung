@@ -152,16 +152,24 @@ Weg vom FTP-Konto bis zur öffentlichen Adresse.
 | **2 — durch ein neues Verzeichnis** | Verzeichnis **anlegen** (`--ftp-create-dirs`), hineinschreiben, **auflisten**, HTTPS zurück, Datei und Verzeichnis entfernen |
 
 **Warum es den zweiten gibt** (gemessen 20.09.2026): Die Auslieferungsaktion
-stirbt an dieser Stelle —
+meldet ihren Abbruch an dieser Stelle —
 
 ```
 creating folder "api/"
   at Client._openDir → Client.ensureDir → ECONNRESET (data socket)
 ```
 
-— also beim **Auflisten eines eben angelegten Verzeichnisses** über den
-Datenkanal. Der flache Rundlauf berührt diese Folge nie: Er schreibt in ein
-Verzeichnis, das schon da ist.
+> **BERICHTIGT am 20.09.2026 (F-KH-U-23/-25).** Hier stand: „also beim
+> **Auflisten** eines eben angelegten Verzeichnisses über den Datenkanal".
+> **Beides ist falsch.** `_openDir` sendet `MKD` und `CWD` und listet nie
+> (`basic-ftp` 6.2.1, Z. 686–689), und die gemeldete Stelle ist **nicht die
+> Ursache**: „Client **is closed** *because*…" ist eine Zustandsmeldung. Der
+> Client war beim `MKD` schon tot; gestorben ist er drei Schritte vorher, am
+> `RETR` auf die fehlende Zustandsdatei (F-KH-U-25, gefunden am 20.09.2026).
+>
+> Der zweite Rundlauf bleibt trotzdem: Er misst `MKD`, `CWD` und ein
+> Auflisten in einer frischen Sitzung, und das ist für sich genommen eine
+> Auskunft. Er misst nur **nicht**, was hier stand.
 
 **Das hat vier Läufe gekostet.** Der Trennversuch zur TLS-Sitzung war viermal
 grün, während der echte Upload viermal rot war — die Probe hatte die kranke
@@ -402,3 +410,77 @@ Anwendung antwortet, ob `.htaccess` greift — davon sagt sie nichts. Und sie
 misst das Verzeichnis, auf das `--ftp-pfad` zeigt, samt **einem** darunter
 neu angelegten; ein tiefer Baum wie der der Auslieferung entsteht nur in der
 Mengenprobe, und auch dort flach.
+
+---
+
+# Zustandsdatei — der kleinste Eingriff gegen F3
+
+`tools/kette/zustand.py` prüft, ob die Zustandsdatei der Auslieferungsaktion
+auf dem Server liegt, und legt sie an, wenn sie fehlt.
+
+## Warum es sie gibt (AP4, F-KH-U-25)
+
+Die Aktion holt vor jeder Übertragung ihre Zustandsdatei
+(`getServerFiles` → `downloadFileList`). Fehlt sie, sendet sie `RETR` auf
+einen Namen, den es nicht gibt — und der Datenkanal steht zu diesem Zeitpunkt
+schon (`EPSV`, Antwort 229). Der Server schließt ihn; `basic-ftp` liest
+`ECONNRESET` auf dem **Datensocket** statt der `550` auf dem Steuerkanal.
+
+**Die Aktion merkt es nicht.** Sie fängt den Fehler ab, deutet ihn als
+„first publish" und rechnet mit einem toten Client weiter; sie stirbt erst
+beim nächsten `MKD`. Gemeldet wird also eine Stelle **drei Schritte hinter
+der Ursache** — deshalb stand `ensureDir` acht Trennversuche lang im Verdacht.
+
+**Und der Zustand erhält sich selbst:** Solange keine Zustandsdatei da ist,
+stirbt jeder Lauf daran, und weil er stirbt, wird nie eine geschrieben.
+
+## Warum gerade dieser Eingriff
+
+Er ist der kleinste, den es gibt: **Der Transport bleibt, die Aktion bleibt,
+das Löschverhalten bleibt.** Das Konzept nennt für AP4 vier Richtungen —
+`lftp` (a), neuere Fassung (b, entfällt), serverseitig (c, verworfen),
+Konto/Pfad (d). **Keine davon passt auf den Befund**, denn keine war für
+diesen Fehler gedacht; (a) zielte auf die Sitzungswiederverwendung, die
+inzwischen ausgeschlossen ist. Das hier ist Richtung **(e)**, und nach der
+Regel des Konzepts („kleinster Eingriff ist vorzuziehen") geht sie vor.
+
+## Drei Vorsichten, jede mit Grund
+
+- **Eine vorhandene Datei wird nie angefasst.** Sie trägt den Bestand des
+  Servers; sie zu überschreiben hieße, der Aktion zu sagen, der Server sei
+  leer — und das wäre beim nächsten Lauf eine Voll-Übertragung von 688
+  Dateien.
+- **Geprüft wird durch Auflisten, nicht durch Abrufen.** Ein `RETR` auf eine
+  fehlende Datei ist genau die Operation, die den Fehler auslöst. Eine
+  Prüfung, die ihn auslöst, um ihn zu vermeiden, wäre ein Witz.
+- **Nicht feststellbar heißt nicht feststellbar.** Lässt sich das
+  Verzeichnis nicht auflisten, wird **nichts** angelegt und der Lauf ist rot.
+
+## Was angelegt wird
+
+`data: []` — „auf dem Server liegt nichts". Beim ersten echten Lauf ist das
+richtig: Die Aktion überträgt dann alles und schreibt die Datei danach selbst
+fort. Eine erfundene Dateiliste wäre schlimmer als keine; sie ließe die
+Aktion Dateien überspringen, die es nicht gibt. Der Warnkopf steht wortgleich
+wie in `types.js` der Aktion darin, damit ein Mensch, der sie auf dem Server
+findet, dieselbe Warnung liest wie bei einer, die die Aktion selbst schrieb.
+
+**Nachgemessen, nicht geglaubt:** Nach dem Hochladen wird erneut aufgelistet.
+Ein `curl`, das 0 zurückgibt, sagt, dass es gesendet hat — nicht, dass die
+Datei liegt.
+
+## Wo sie heute läuft
+
+**Nur im Gesprächslauf** (`probelauf_gespraech`), gegen das Probeverzeichnis.
+Das ist Absicht: Die Abhilfe ist gefunden, aber **noch nicht bewiesen**. Der
+Gesprächslauf ist der Beweis, und er fällt ohne einen Finger an der laufenden
+Anlage. Erst wenn er durchläuft, wird der Schritt für die echte Auslieferung
+scharf gestellt — vorher wäre es ein Eingriff auf Verdacht.
+
+## Selbstprobe
+
+`--selbstprobe` fährt **20 Lagen ohne Netz**: das Format der Datei (5), die
+Zerlegung des Pfades mit `../` (2), „vorhanden → nichts anfassen" (3),
+„fehlt → anlegen und nachmessen" (3), „Auflisten scheitert → nichts tun und
+NICHT FESTSTELLBAR sagen" (3), „Hochladen scheitert → rot mit Servermeldung"
+(2), Trockenlauf (1) und das Passwort außerhalb der Befehlszeile (1).

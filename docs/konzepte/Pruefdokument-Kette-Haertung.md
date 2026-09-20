@@ -21,12 +21,12 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 20.09.2026 — **AP1 gebaut (Abnahme offen), AP2 gebaut, AP3 gebaut.** AP4 bis AP8 nicht begonnen |
+> | Stand | 20.09.2026 — **AP1 gebaut (Abnahme offen), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut (Abhilfe nicht bewiesen — Prüfpunkt 21).** AP5 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
 > | Funde | **24** (Abschnitt 2): F-KH-U-01 bis F-KH-U-25 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach |
 > | F3 | **GEFUNDEN am 20.09.2026** (F-KH-U-25). Der Abbruch passiert beim **`RETR` auf die nicht vorhandene Zustandsdatei** — die Datenverbindung steht per `EPSV` schon, der Server schließt sie, `basic-ftp` liest `ECONNRESET` auf dem Datensocket. Die Aktion deutet das als „first publish" und arbeitet mit einem **toten Client** weiter; beim ersten `MKD` fällt es auf. **Der Fehler liegt drei Schritte vor der Stelle, die er meldet.** Acht Trennversuche liefen daran vorbei, weil `curl` jedes Mal nur Dateien abrief, die es selbst hochgeladen hatte — **keiner hat je eine FEHLENDE Datei abgerufen**. **E-KH-09 zur Hälfte erfüllt:** Ursache benannt und belegt, Abhilfe vorgeschlagen und noch nicht gefahren (AP4) |
-> | Prüfliste | 25 Punkte: **9 abgehakt**, 5 teilweise, **11 offen** (Prüfpunkt 18 ist gegenstandslos geworden) |
+> | Prüfliste | 26 Punkte: **9 abgehakt**, 5 teilweise, **12 offen** (Prüfpunkt 18 ist gegenstandslos geworden) |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
 
 ---
@@ -411,10 +411,11 @@ beglaubigte einen Vergleich, den es so nicht gab.
 |---|---|---|
 | `tor.py --selbstprobe` | mindestens 16 Lagen, 0 offen | **19 Lagen, 0 offen** (11 → 17 → 19; die zwei letzten zur zweiten Runde und zur Serverzeit) |
 | `zielprobe.py --selbstprobe` | eigene Selbstprobe, 0 offen | **93 Lagen, 0 offen** (26 → 29 → 33 → 37 → 45 → 50 → 67 → 81 → 93; jede Stufe ist ein Fund, den sie selbst gefunden hat). **Gegen einen echten Server nachgemessen** im Lauf 35540252565: 80 von 80 |
-| `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft | **34 Aufrufe, 0, 0**; Selbstprobe 10/10 |
+| `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft | **36 Aufrufe, 0, 0**; Selbstprobe 10/10 (34 → 36 mit AP4) |
 | YAML der drei Arbeitsläufe | laden | **3 von 3** |
 | `wache.py --selbstprobe` | 0 offen | **38 Erwartungen, 0 offen** (AP2: 32 → 38) |
 | `jobregister/pruefen.php` | 0 Befunde | **0 Befunde**; Selbstprobe **9 von 9** |
+| `zustand.py --selbstprobe` | 0 offen | **20 Lagen, 0 offen** (AP4, neu) |
 | `tools/wortliste/wortliste.py` | 0/0/0 | **0/0/0** (99 Ausnahmen, 99 gegriffen, 0 ungenutzt) |
 
 **Die sechs neuen Lagen des Tors** (F1, E-KH-05/-19):
@@ -1994,6 +1995,37 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   *Dringlichkeit:* gering. Ein leeres, gesperrtes Verzeichnis richtet nichts
   an — aber es steht da, und was dasteht, ohne dass jemand weiß warum, wird
   irgendwann zur Frage.
+
+- [ ] **21 — Der Beweislauf der Abhilfe** (AP4, Richtung (e)). **Er kostet
+  einen Probelauf und fasst die Anwendung nicht an.**
+  *Weg:* GitHub → Actions → „Auslieferung" → **Run workflow** → Zweig
+  `claude/fervent-dirac-xirsqw` → Häkchen **`probelauf`** ✓ → Häkchen
+  **`probelauf_gespraech`** ✓ → starten → **Freigabe erteilen**.
+  Also derselbe Lauf wie Prüfpunkt 18a — nur liegt jetzt ein Schritt davor,
+  der die Zustandsdatei anlegt.
+  *Erwartet:* Im Protokoll steht erst
+  `Angelegt und nachgemessen (… Byte, data: [])`, danach **`> RETR …` mit
+  einer Serverantwort** statt mit `QUIT` — und **der Abgleich läuft durch**:
+  688 Dateien, 62 Verzeichnisse, kein `ECONNRESET`.
+  *Woran man sieht, dass die Abhilfe trägt:* Der Schritt „server/ per FTPS
+  auf Produktiv synchronisieren" wird **grün**. Das ist der erste grüne
+  Abgleich gegen diesen Server überhaupt.
+  *Woran man ein Scheitern erkennt:* Derselbe `ECONNRESET` wie bisher. Dann
+  ist die fehlende Zustandsdatei **nicht** die ganze Ursache, und der nächste
+  Verdacht ist die Tiefe (das Probeverzeichnis liegt eine Ebene unter dem
+  Webroot).
+  *Woran man sieht, dass der Lauf gar nichts belegt:* Die Meldung
+  `NICHT FESTSTELLBAR: Das Verzeichnis liess sich nicht auflisten`. Dann ist
+  der Lauf rot, ohne dass die Abhilfe je gefahren wurde.
+  *Der Preis, und er ist diesmal nicht null:* Läuft der Abgleich durch,
+  liegen danach rund **9,7 MB in 62 Verzeichnissen** unter
+  `.zielprobe-gespraech/`. Das Verzeichnis ist gesperrt (403), aber es muss
+  weg — **Prüfpunkt 20 wird dadurch größer**: rekursiv löschen, nicht nur ein
+  leeres Verzeichnis entfernen.
+  *Danach, und erst danach:* der Schritt wird für die echte Auslieferung
+  scharf gestellt (die Bedingung `if: inputs.probelauf_gespraech` fällt), und
+  die Abnahme von AP4 läuft — Probelauf gegen Produktiv zweimal
+  hintereinander mit 0 geplanten Löschungen, dann die Freigabe.
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 
