@@ -2833,7 +2833,7 @@ function migrationen_katalog(): array
              * (idx_urheber). */
             'CREATE TABLE protokoll_ereignisse (
                id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-               zeit              DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+               zeit              DATETIME NOT NULL DEFAULT (UTC_TIMESTAMP()),
                reiter            ENUM(\'verwaltung\',\'email\',\'jobs\',
                                       \'sicherung\',\'ziele\',\'system\') NOT NULL,
                art               VARCHAR(64) NOT NULL,
@@ -2950,7 +2950,7 @@ function migrationen_katalog(): array
                user_id    INT UNSIGNED NOT NULL,
                schluessel VARCHAR(32) NOT NULL,
                stand_am   DATETIME NULL,
-               zeit       DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+               zeit       DATETIME NOT NULL DEFAULT (UTC_TIMESTAMP()),
                PRIMARY KEY (user_id, schluessel),
                CONSTRAINT fk_kew_user FOREIGN KEY (user_id)
                  REFERENCES users (id) ON DELETE CASCADE

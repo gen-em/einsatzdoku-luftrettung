@@ -81,6 +81,44 @@ Schreiben zurück. `docs/Backup-Format.md`, `docs/Export-Format.md` und
 Migrationslauf heißt die Spalte in der Datenbank weiter `manual`, und die
 Anwendung sucht `uhr_gesperrt`.
 
+**Hinter dem reservierten Wort stand ein zweiter Blocker, und er war der
+größere.** Nach dem Umbenennen lief `schema.sql` gegen MySQL 8.4.0 bis Zeile
+650 und brach dort wieder ab: `zeit DATETIME NOT NULL DEFAULT UTC_TIMESTAMP()`.
+MySQL lässt einen Funktionsaufruf als Spaltenvorgabe nur **geklammert** zu —
+`DEFAULT (UTC_TIMESTAMP())`, seit 8.0.13. MariaDB nimmt beide Schreibweisen,
+und genau deshalb ist es nie aufgefallen: Entwickelt und geprüft wird gegen
+MariaDB.
+
+Das ist **kein 8.4-Problem, sondern eines jeder MySQL-Fassung.** Vier Stellen —
+zwei in `schema.sql` (`protokoll_ereignisse`, `konto_einwilligungen`), zwei in
+den Migrationen, die dieselben Tabellen anlegen. Die Folge: **Seit Web 20.16.5
+ließ sich die Anwendung auf MySQL überhaupt nicht einrichten.** Die Zusage
+„MySQL ≥ 8.0" in `docs/Technik.md` 7 und `plattform_lib.php` war seither nicht
+eingelöst; gemerkt hat es niemand, weil der Fehler am reservierten Wort schon
+vorher kam. Beide Stellen sind jetzt geklammert.
+
+Die Kopfzeile von `schema.sql` nannte „MySQL ≥ 5.7 / MariaDB ≥ 10.2". Das
+widersprach `plattform_lib.php` und `docs/Technik.md` und war zudem für sich
+genommen falsch. Sie nennt jetzt **8.0.13 / 10.6**.
+
+### Geprüft
+
+Gegen zwei laufende Datenbanken, nicht auf Papier:
+
+- **Das alte `schema.sql` gegen MySQL 8.4.0** bricht bei Zeile 386 mit `1064`
+  ab — wortgleich mit der Meldung vom Staging-Webspace. **Das neue** legt
+  **42 Tabellen** fehlerfrei an.
+- Ein Migrationsprüflauf über vier Installationsfälle (frische Anlage,
+  bestehende Datenbank mit Bestand, Datenbank ohne Registereintrag,
+  Datenbank ohne beide Spalten) meldet **18 Prüfungen, 0 Fehlschläge** —
+  **gegen MySQL 8.4.0 und gegen MariaDB 10.11**.
+- **Kein Datenverlust:** Sieben Einsätze, vier davon gesperrt, stehen nach der
+  Migration Zeile für Zeile unverändert unter dem neuen Namen; die
+  Spaltendefinition ist auf beiden Fassungen `tinyint(1) / NOT NULL /
+  DEFAULT 0`.
+- `tools/migrationsregister/pruefen.php`: **60/60 Kennungen, 257 Spalten,
+  30 Löschungen, 0 Befunde** (vorher 59/59, 29, 0).
+
 ## [Web 20.24.2] — 2026-09-18
 
 **Der Rechtstext-Baustein brach lange Zeichenketten nicht um.**

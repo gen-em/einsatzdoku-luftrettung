@@ -1,4 +1,11 @@
--- Einsatzdokumentation Notarzt — Schema v2.0 (MySQL >= 5.7 / MariaDB >= 10.2)
+-- Einsatzdokumentation Notarzt — Schema v2.0 (MySQL >= 8.0.13 / MariaDB >= 10.6)
+--
+-- DIE UNTERGRENZE STAND HIER BIS WEB 20.24.2 AUF "MySQL >= 5.7 / MariaDB >=
+-- 10.2" und war damit doppelt falsch: Sie widersprach `plattform_lib.php`
+-- (PLATTFORM_MYSQL_MIN = '8.0', PLATTFORM_MARIADB_MIN = '10.6') und
+-- `docs/Technik.md` 7, und sie stimmte auch fuer sich genommen nicht --
+-- `DEFAULT (UTC_TIMESTAMP())` weiter unten braucht MySQL 8.0.13. Erzwungen
+-- wird die Grenze nicht; sie beschreibt, wogegen geprueft wird.
 --
 -- REIHENFOLGE DER TABELLEN. Seit dem Umbau auf Diensttage (Web 6.0.0) ist
 -- `days` der Anker des Datenmodells: `missions` und `rest_segments` verweisen
@@ -647,7 +654,7 @@ CREATE TABLE sicherheit_ereignisse (
 -- Protokolleintrag, mit RESTRICT verhinderte der Eintrag die Loeschung.
 CREATE TABLE protokoll_ereignisse (
   id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  zeit              DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+  zeit              DATETIME NOT NULL DEFAULT (UTC_TIMESTAMP()),
   reiter            ENUM('verwaltung','email','jobs',
                          'sicherung','ziele','system') NOT NULL,
   art               VARCHAR(64) NOT NULL,
@@ -848,7 +855,7 @@ CREATE TABLE konto_einwilligungen (
   user_id    INT UNSIGNED NOT NULL,
   schluessel VARCHAR(32) NOT NULL,
   stand_am   DATETIME NULL,
-  zeit       DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+  zeit       DATETIME NOT NULL DEFAULT (UTC_TIMESTAMP()),
   PRIMARY KEY (user_id, schluessel),
   CONSTRAINT fk_kew_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

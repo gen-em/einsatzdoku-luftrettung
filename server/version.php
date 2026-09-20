@@ -6402,5 +6402,33 @@ declare(strict_types=1);
  *   Einsaetze, 104 davon mit dem Schutzflag) ist selbst eine solche Datei.
  *   Die Spalte wird beim Lesen per Alias auf den Dateinamen abgebildet und
  *   beim Schreiben zurueck.
+ *
+ *   HINTER DEM RESERVIERTEN WORT STAND EIN ZWEITER BLOCKER, und er war der
+ *   groessere. Nach dem Umbenennen lief `schema.sql` gegen MySQL 8.4.0 bis
+ *   Zeile 650 und brach dort wieder ab:
+ *   `zeit DATETIME NOT NULL DEFAULT UTC_TIMESTAMP()`. MySQL laesst einen
+ *   Funktionsaufruf als Spaltenvorgabe nur GEKLAMMERT zu --
+ *   `DEFAULT (UTC_TIMESTAMP())`, seit 8.0.13. MariaDB nimmt beide
+ *   Schreibweisen, und deshalb ist es nie aufgefallen: Entwickelt und
+ *   geprueft wurde gegen MariaDB.
+ *
+ *   DAS IST KEIN 8.4-PROBLEM. Es betrifft JEDE MySQL-Fassung. Vier Stellen,
+ *   zwei in `schema.sql` (`protokoll_ereignisse`, `konto_einwilligungen`),
+ *   zwei in den Migrationen, die dieselben Tabellen anlegen. Folge: Seit
+ *   Web 20.16.5 liess sich die Anwendung auf MySQL UEBERHAUPT NICHT
+ *   einrichten -- die Zusage „MySQL >= 8.0" in `docs/Technik.md` 7 und
+ *   `plattform_lib.php` war seither nicht eingeloest. Gemerkt hat es
+ *   niemand, weil der Fehler am reservierten Wort schon vorher kam.
+ *
+ *   GEMESSEN, statt behauptet: Das alte `schema.sql` gegen MySQL 8.4.0
+ *   bricht bei Zeile 386 (1064, wortgleich mit der Meldung vom Staging),
+ *   das neue legt **42 Tabellen** fehlerfrei an. Der Migrationsprueflauf
+ *   ueber vier Installationsfaelle meldet **18 Pruefungen, 0 Fehlschlaege**
+ *   -- gegen MySQL 8.4.0 UND gegen MariaDB 10.11.
+ *
+ *   DIE KOPFZEILE VON `schema.sql` NANNTE „MySQL >= 5.7 / MariaDB >= 10.2".
+ *   Das widersprach `plattform_lib.php` und `docs/Technik.md` und war
+ *   ausserdem fuer sich genommen falsch, seit die geklammerte Vorgabe
+ *   drinsteht. Sie nennt jetzt 8.0.13 / 10.6.
  */
 const WEB_VERSION = '20.25.0';
