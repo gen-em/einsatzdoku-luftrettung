@@ -836,7 +836,7 @@ Daten erst nach Server-Bestätigung.
 | Backup | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist im Backup, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | **Seit Web 20.17.0 schreibt nur noch `konto_lib.php` hierher** (P5b/AP2, Backlog Nr. 202 Paket 1) — nachweisbar mit `grep -rn "INSERT INTO password_resets" server/`. Die Laufzeiten stehen als `TOKEN_EINLADUNG_S` / `TOKEN_RESET_S` statt als SQL-Literale, und „höchstens ein gültiger Token je Konto" gilt damit an **allen vier** Stellen statt an zweien. Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname, **VARCHAR(191)** — die Gerätedateien liefern Sammelnamen bis 153 Zeichen; die zunächst gewählten 64 waren geraten und sind mit Web 12.9.1 nachgezogen) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Seit Web 20.11.0 dazu **`abgewiesen_seit`** (der **erste** Fehlversuch einer Serie, nicht der letzte) und **`abgewiesen_anzahl`** — der Vermerk der Mengenbremse aus P5a/AP7 (Abschnitt 5e.7). Beide werden beim nächsten gelungenen Upload geleert; ein Vermerk, der stehenbleibt, nachdem neu gekoppelt wurde, ist eine Falschmeldung. **Und seit Web 20.12.0 nach 30 Tagen auch ohne Upload** (Schritt `Geraetevermerke` im Aufräumjob): Den gelungenen Upload gibt es nicht mehr, wenn das Gerät ausgemustert ist — ohne den Schritt trüge ein verlorenes Gerät seine orange Plakette für immer. Siehe Abschnitt 5 |
-| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
+| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`uhr_gesperrt`** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; hieß bis Web 20.24.2 `manual` und brach damit die Einrichtung auf MySQL 8.4.0–8.4.10 (reserviertes Wort, Backlog Nr. 238) — **in Sicherungs- und Exportdatei heißt das Feld weiter `manual`**, abgebildet per Alias; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
@@ -2345,7 +2345,7 @@ die Referenz nach `deleted_refs`. Schwere Löschungen laufen über serverseitige
 Zwischenseiten mit Umfangsanzeige statt über Browser-Dialoge.
 
 **Schutz bearbeiteter Einsätze:** Beim Ingest wird vor dem Upsert der
-`manual`-Marker geprüft. Ist er gesetzt, werden Metadaten/Phasen/Rea **nicht**
+`uhr_gesperrt` geprüft. Ist es gesetzt, werden Metadaten/Phasen/Rea **nicht**
 angefasst; Trackpunkte laufen weiter ein (append-only). Gesetzt wird der
 Marker beim Speichern im Bearbeitungsformular, bei Handanlage und beim
 Import. Die **Herkunft** eines Einsatzes (`origin`: `watch`/`manual`/`import`)
@@ -2418,7 +2418,7 @@ Zwei Fallstricke, die dort bewusst gelöst sind:
   sich ein importierter Einsatz nicht mehr bearbeiten.
 
 Importierte Einsätze hängen am selben virtuellen Gerät `manual-<userId>` wie
-von Hand angelegte (`final=1, manual=1, origin='import'`) — dadurch
+von Hand angelegte (`final=1, uhr_gesperrt=1, origin='import'`) — dadurch
 überschreibt die Uhr sie nie, und in der Geräteliste tauchen sie nicht auf.
 Ein erneuter Import auf einen bereits bestehenden Einsatz ändert `origin`
 nicht (Herkunft bleibt unveränderlich), setzt aber `edited=1`.
@@ -2438,11 +2438,11 @@ Quelle. Obergrenze 5000 Einsätze je Anfrage.
 
 **Herkunft und Bearbeitungsstatus** stammen ausschliesslich aus
 `missions.origin` und `missions.edited`. Bis Web 3.3.2 berechnete
-`api/export_data.php` die Spalte `herkunft` bei jedem Export neu aus `manual`
+`api/export_data.php` die Spalte `herkunft` bei jedem Export neu aus `uhr_gesperrt`
 und dem Präfix von `client_ref` — eine Regel aus der Zeit vor der Migration
 `2026_07_30_herkunft_bearbeitungsstatus`. Sie lieferte für genau einen Fall
 etwas Falsches: Ein von der Uhr aufgezeichneter und danach im Formular
-bearbeiteter Einsatz bekommt `manual = 1` und erschien deshalb als „manuell",
+bearbeiteter Einsatz bekommt `uhr_gesperrt = 1` und erschien deshalb als „manuell",
 obwohl `origin` korrekt auf `watch` stand. Die Ableitung ist ersatzlos
 entfallen, `client_ref` wird im Export nicht mehr gelesen. Die Abbildung auf die
 deutschen Ausgabewerte steht in `EXPORT_ORIGIN_LABEL`.
@@ -4404,7 +4404,7 @@ Schneide-Bereich auf: Zeitleiste, Beginn und Ende (Pflicht), drei Phasenzeiten
 | `rueckgaengig` | `mission_id` | gibt die Punkte zurück, löscht Vermerk und Einsatz |
 
 Der Einsatz entsteht auf dem **Bestandsweg** — virtuelles Gerät
-`manual-<userId>`, `origin = 'manual'`, `manual = 1`, `client_ref` mit Präfix
+`manual-<userId>`, `origin = 'manual'`, `uhr_gesperrt = 1`, `client_ref` mit Präfix
 `cut-`, wörtlich wie in `einsatz_form.php`. Daran hängt, ob er durch
 Backup, Export und Papierkorb kommt (R24), und ob `ingest.php` seine Phasen
 später noch anfasst. Alles läuft in **einer** Transaktion; `spur_teilen()`
@@ -4470,7 +4470,7 @@ importieren"** in der Tagesansicht, als Dialog (`Design.md` 9.11).
 Beide entstehen auf dem Bestandsweg: virtuelles Gerät `manual-<userId>`,
 `client_ref` mit Präfix **`imp-`** wie beim CSV-Import (daran hängt die
 Sperrliste `deleted_refs`), beim Einsatz zusätzlich `origin = 'import'` und
-`manual = 1`. Die Spur wird **gleich als Blob** abgelegt (Stufe 2,
+`uhr_gesperrt = 1`. Die Spur wird **gleich als Blob** abgelegt (Stufe 2,
 `n_original` = volle Punktzahl): Eine importierte Spur ist fertig — es kommt
 nichts mehr nach, denn ihr „Gerät" ist eine Datei.
 
@@ -5112,8 +5112,9 @@ Vier Regeln, jede aus einem konkreten Schaden hergeleitet:
   noch genau der sein, den dieser Browser gelesen hat. `<=>` statt `=`, weil
   der Blob `NULL` sein darf. Sonst überschriebe ein zweites Fenster eine
   inzwischen geänderte Diagnose, lautlos.
-- **Kein `manual = 1`, kein `edited = 1`.** Das Einsatzformular setzt beides bei
-  jedem Speichern, und `ingest.php` hört bei `manual = 1` auf, Daten der Uhr zu
+- **Kein `uhr_gesperrt = 1`, kein `edited = 1`.** Das Einsatzformular setzt beides
+  bei jedem Speichern, und `ingest.php` hört bei `uhr_gesperrt = 1` auf, Daten der
+  Uhr zu
   übernehmen. Ein Anhebelauf, der den Formularweg nachbaute, fröre den
   gesamten Altbestand eines Kontos still gegen die Uhr ein. Geschrieben werden
   genau zwei Spalten.
@@ -5649,7 +5650,7 @@ nichts, `ingest.php` ist POST-only. Er kann aber **hochladen**, und damit bis
 Web 15.5.2 die Phasen bestehender Einsätze ersetzen — so lange, bis das Gerät
 im Web getrennt ist.
 
-**Was schon geschützt war:** Ein Einsatz mit `manual = 1` — jemand hat ihn im
+**Was schon geschützt war:** Ein Einsatz mit `uhr_gesperrt = 1` — jemand hat ihn im
 Web bearbeitet — wird ganz übergangen, und Phasen werden nur ersetzt, wenn der
 Upload mindestens so viele bringt wie gespeichert sind. Offen blieb der
 **unbearbeitete** Einsatz von vor drei Wochen.
@@ -5695,7 +5696,7 @@ das Feld sah ein spätes Abschlusspaket wie ein Erfolg aus, und der Einsatz
 blieb für immer „läuft noch", Fund 3). Kein Fehler — die Uhr wiederholte sonst
 endlos —, und `next_seq` wandert weiter, damit sie aufhört zu senden.
 
-**Warum die Punkte anders behandelt werden als bei `manual`.** Dort wird
+**Warum die Punkte anders behandelt werden als bei `uhr_gesperrt`.** Dort wird
 weiter angehängt: Der Inhalt ist bearbeitet, die Spur nicht, und Anhängen ist
 unkritisch. Hier ist der **Absender** der Unsichere — ein Finder schriebe
 sonst seine eigene Fahrt in die Spur eines drei Wochen alten Einsatzes.

@@ -405,6 +405,13 @@ Drei Spalten, die nach einer Angabe aussehen und drei verschiedene Dinge sagen:
 | `edited` | Wurde er danach verändert? | ja, sobald jemand ihn bearbeitet |
 | `manual` | Darf die Uhr ihn noch überschreiben? | ja, als Nebenwirkung einer Bearbeitung |
 
+> **Das Feld der Exportdatei heißt `manual`, die Datenbankspalte dahinter
+> `uhr_gesperrt`** (seit Web 20.25.0, Backlog Nr. 238 — `MANUAL` ist in
+> MySQL 8.4.0–8.4.10 ein reserviertes Wort). `api/export_data.php` bildet
+> die Spalte per Alias auf den Dateinamen ab. **Am Format ändert sich
+> nichts**: Bestehende Auswertungen und der Rückimport laufen unverändert
+> weiter, und alte Exportdateien bleiben gültig.
+
 **Der Wertevorrat von `herkunft`** — sechs Werte seit Web 14.0.0, **einer je
 Client-App**:
 
@@ -435,7 +442,8 @@ auswertet, muss damit rechnen. Ein Wert, den diese Fassung nicht kennt, wird
 
 Der Fall, an dem der Unterschied hängt: Ein von der Uhr aufgezeichneter Einsatz,
 den jemand im Formular korrigiert, behält `herkunft = uhr` und bekommt
-`edited = 1`. Er bekommt zusätzlich `manual = 1` — nicht, weil er von Hand
+`edited = 1`. In der Datenbank bekommt er zusätzlich `uhr_gesperrt = 1` — in
+der Exportdatei ist das die Spalte `manual` — nicht, weil er von Hand
 angelegt worden wäre, sondern damit ein späterer Upload derselben Uhr die
 Korrektur nicht wieder überschreibt. Wer die Herkunft auswerten will, nimmt
 `herkunft`; `manual` ist ein Schutzschalter und taugt dafür nicht.
@@ -544,7 +552,7 @@ Besatzungsspalten sind personenbezogen.
 | `uhrzeit_ortszeit` | time | — | nein | Alarmzeit HH:MM, für Tabellenprogramme — **ohne Phase 2 der Einsatzbeginn** (seit Web 14.2.1; ein geschnittener Einsatz hat keine Alarmierung, und der eigene Import verlangt diese Spalte) |
 | `herkunft` | text | — | nein | wie der Einsatz entstanden ist (missions.origin): uhr = Garmin-Uhr-App \| handy = Android-App \| wear = an der Wear-OS-Uhr begonnen, vom Handy gesendet \| manuell \| import \| schnitt = aus einem Ruhesegment geschnitten |
 | `final` | 0/1 | — | nein | abgeschlossen |
-| `manual` | 0/1 | — | nein | Schutz: Uhr überschreibt Metadaten/Phasen/Rea nicht mehr (Herkunft siehe Spalte herkunft) |
+| `manual` | 0/1 | — | nein | Schutz: Uhr überschreibt Metadaten/Phasen/Rea nicht mehr (Herkunft siehe Spalte herkunft). Datenbankspalte: `missions.uhr_gesperrt` |
 | `edited` | 0/1 | — | nein | nach dem Anlegen verändert (missions.edited) — unabhängig von der Herkunft, nicht zu verwechseln mit manual |
 | `rettungsmittel` | text | — | nein | Bezeichnung des Rettungsmittels (Diensttag, eingefroren) |
 | `art` | text | — | nein | Art des Diensttags: luft \| boden \| (leer = ohne Zuordnung) |

@@ -265,7 +265,7 @@ function import_commit(array $b, int $userId): never
          * abgeschlossen zurueck, obwohl die Exportdatei die Spalte fuehrt. */
         $insE = $pdo->prepare(
             'INSERT INTO missions (user_id, device_id, client_ref, day_id, started_at, ended_at,
-                                   final, manual, origin, transport_dest, winch,
+                                   final, uhr_gesperrt, origin, transport_dest, winch,
                                    crew_override, pat_blob,
                                    site_ele_m, distance_m, ascent_m,
                                    schockraum, secondary, winch_cycles, winch_cycles_pat,
@@ -317,7 +317,7 @@ function import_commit(array $b, int $userId): never
                                  other_ema   = COALESCE(?, other_ema),
                                  transport_mode = ?, na_escort = ?, false_alarm = ?,
                                  dest_lat = ?, dest_lon = ?, start_src = ?,
-                                 manual = 1, edited = 1
+                                 uhr_gesperrt = 1, edited = 1
              WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
         $insPhase = $pdo->prepare(
             'INSERT INTO mission_phases (mission_id, phase, occurred_at, lat, lon)

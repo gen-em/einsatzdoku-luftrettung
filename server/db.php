@@ -859,10 +859,10 @@ const PAIR_RE      = '/^[' . PAIR_CHARS . ']{' . PAIR_LEN . '}$/';
  * hochladen und die Phasen BESTEHENDER Einsaetze ersetzen, bis das Geraet im
  * Web getrennt ist.
  *
- * WAS SCHON GESCHUETZT WAR: Einsaetze mit `manual = 1` uebergeht `ingest.php`
- * ganz (jemand hat sie im Web bearbeitet), und Phasen werden nur ersetzt, wenn
- * der Upload mindestens so viele bringt wie gespeichert sind. Offen blieb der
- * UNBEARBEITETE Einsatz von vor drei Wochen.
+ * WAS SCHON GESCHUETZT WAR: Einsaetze mit `uhr_gesperrt = 1` uebergeht
+ * `ingest.php` ganz (jemand hat sie im Web bearbeitet), und Phasen werden
+ * nur ersetzt, wenn der Upload mindestens so viele bringt wie gespeichert
+ * sind. Offen blieb der UNBEARBEITETE Einsatz von vor drei Wochen.
  *
  * DIE ZAHL. 72 Stunden ab dem gespeicherten `started_at` des Datensatzes --
  * nicht ab dem gesendeten, den bestimmt der Absender. 48 h waeren knapper,

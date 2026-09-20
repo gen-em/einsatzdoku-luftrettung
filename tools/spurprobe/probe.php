@@ -473,7 +473,10 @@ if ($hatSchnitte) {
                        VALUES (?, ?, ?, FROM_UNIXTIME(?))')
             ->execute([$uid, 'probe-rest', $dayId, $t0]);
         $segId = (int)$pdo->lastInsertId();
-        $pdo->prepare('INSERT INTO missions (user_id, client_ref, day_id, started_at, origin, manual)
+        /* `origin` bekommt den WERT 'manual' (Herkunft), `uhr_gesperrt` die 1
+           (Uhr-Sperre). Zwei verschiedene Dinge, seit Nr. 238 auch zwei
+           verschiedene Woerter. */
+        $pdo->prepare('INSERT INTO missions (user_id, client_ref, day_id, started_at, origin, uhr_gesperrt)
                        VALUES (?, ?, ?, FROM_UNIXTIME(?), ?, 1)')
             ->execute([$uid, 'probe-mission', $dayId, $t0 + 300, 'manual']);
         $misId = (int)$pdo->lastInsertId();
