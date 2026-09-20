@@ -14,6 +14,79 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.26.1] — 2026-09-20
+
+**Die Statusseite nannte eine Ursache, die sie nicht gemessen hatte.**
+
+### Behoben
+
+**Gefunden auf Staging, beim ersten Aufruf der Statusseite nach dem Ausrollen.**
+Die Karte „Plattform" zeigte: *„Sitzungsablage — fehlt — Hosterpfad, 0773 …
+RUECKFALL: Die Anwendung konnte kein eigenes Verzeichnis einrichten."*
+
+**Der Satz war falsch.** Das Verzeichnis war angelegt und beschreibbar — die
+Zeile „Ablage der Sitzungen" fehlte auf der Seite, und weil sie nur bei
+Abweichung erscheint, heißt ihr Fehlen genau das. Was nicht gegriffen hatte,
+war `session_save_path()`.
+
+**Zwei Fehler ergaben ein Bild.**
+
+`sitzung_ablage_setzen()` rief `session_save_path()` und vermerkte danach
+`eigen = true`, **ohne den Erfolg zu prüfen** — also genau das, was
+`docs/Technik.md` 5b.1 verbietet: „Wer nichts gemessen hat, darf nichts
+behaupten."
+
+Und der Rückgabewert hätte es nicht gerettet; das ist der lehrreiche Teil.
+Gemessen unter PHP 8.4.19:
+
+| Ablehnungsgrund | Rückgabe | Pfad danach |
+|---|---|---|
+| Sitzung schon aktiv | `false` | alt |
+| Kopfzeilen schon gesendet | `false` | alt |
+| **`open_basedir` sperrt** | **der alte Pfad als Zeichenkette** | alt |
+
+Der dritte Fall sieht aus wie Erfolg. Ein `=== false` hätte ihn
+durchgelassen. **Belastbar ist allein das Zurücklesen** — der wirksame Pfad
+gegen den gewünschten, und genau das tut die Funktion jetzt.
+
+Der zweite Fehler: **Drei von sechs Ausgängen kehrten stumm zurück.** „Auf der
+Kommandozeile" und „es lief schon eine Sitzung" vermerkten gar nichts, der
+Stand blieb auf seinem Vorgabewert, und die Seite hatte keinen Grund zu
+nennen. Sie nahm für das **Urteil** die Messung und für die **Begründung** die
+Buchführung — zwei Quellen, die auseinanderliefen.
+
+### Geändert
+
+**Der Stand trägt jetzt eine benannte Lage** — `eigen`, `kommandozeile`,
+`sitzung_lief`, `nicht_anlegbar`, `nicht_beschreibbar`, `nicht_uebernommen` —
+und je Lage steht **ein** Satz in `sitzung_ablage_satz()`. Die Statusseite
+druckt ihn, statt eine Ursache zu erfinden; die Farbe kommt weiter aus der
+Messung. Das Feld `gelaufen` ist ersatzlos entfallen: Es wurde im ganzen
+Repositorium von niemandem gelesen — und war ausgerechnet der Wert, der zwei
+mögliche Ursachen voneinander getrennt hätte.
+
+**Die Muss-Zeile sagt jetzt auch, ob das Verzeichnis da ist.** Der vierte
+Schreibort ist Stufe *Empfohlen* und im guten Fall unsichtbar — ausgerechnet
+die Zeile, die den Widerspruch sofort gezeigt hätte, war nicht da. Die
+Muss-Zeile steht immer und trägt es mit.
+
+### Offen
+
+**Warum die Anlage den Pfad nicht übernimmt, ist von hier aus nicht messbar.**
+Die führende Erklärung ist ein festgeschriebenes `session.save_path` —
+dasselbe Muster wie `gc_maxlifetime` 1440 s und `gc_probability` 0, die dort
+ebenfalls vorgegeben sind. Die zweite, nicht ausgeschlossene, ist
+`session.auto_start`; die hätte eine **stille Folge**, denn dann greifen auch
+`session_set_cookie_params()` und `use_strict_mode` in `auth_guard.php` nicht,
+und das Sitzungscookie trüge weder `secure` noch `SameSite`. Der Weg, beide zu
+trennen, steht im Prüfdokument — er kostet einen Handgriff und keinen Upload.
+
+**Bis dahin bleibt der Rückfall real:** Die Sitzungen dieser Anlage liegen in
+einem fremden, für andere beschreibbaren Verzeichnis, und ihr Dateiname ist
+die Sitzungskennung. Der Prüfpunkt steht deshalb zu Recht auf **rot**.
+
+---
+
 ## [Web 20.26.0] — 2026-09-20
 
 **Die Anwendung legt ihre Sitzungsdateien selbst ab.**
