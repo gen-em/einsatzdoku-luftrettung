@@ -2749,7 +2749,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 238. **`missions.manual` bricht die Einrichtung auf MySQL 8.4.0–8.4.10.**
     *Aufgenommen 20.09.2026 aus dem Fehlversuch auf dem neuen
-    Staging-Webspace.* **In Arbeit** — Umsetzung läuft, Version Web 20.25.0.
+    Staging-Webspace.* **Umgesetzt in Web 20.25.0**, Zweig
+    `claude/festive-fermi-el0avv`. Offen ist allein die Prüfung durch die
+    Betreiberin — Liste in `docs/konzepte/Pruefdokument-uhr_gesperrt.md`;
+    im Browser ist noch nichts bedient worden.
 
     `SQLSTATE[42000] … 1064 … near 'manual TINYINT(1) NOT NULL DEFAULT 0` —
     MySQL führt **MANUAL von 8.4.0 bis 8.4.10 als reserviertes Wort**, ab
@@ -2767,6 +2770,16 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     quoten.** Eine übersehene Stelle scheitert dann auf jeder Version sofort
     statt nur auf elf im Betrieb. Der Dateischlüssel in Sicherung und Export
     bleibt `manual`.
+
+    **Dahinter lag ein zweiter Blocker, und er war der größere:**
+    `DEFAULT UTC_TIMESTAMP()` ohne Klammern wird von MySQL auf **jeder**
+    Fassung abgewiesen (vier Stellen). Die Anwendung ließ sich damit **seit
+    Web 20.16.5 auf MySQL überhaupt nicht einrichten**; gemerkt hat es
+    niemand, weil der Fehler am reservierten Wort schon vorher kam. Beides
+    hatte dieselbe Ursache — entwickelt und geprüft wird gegen MariaDB,
+    ausgeliefert wird gegen MySQL. Dagegen steht jetzt
+    `tools/schemaprobe/` in Stufe 1, mit einer **Matrix** über MySQL 8.4.0
+    und MariaDB 10.6.
 
 239. **`backup_lib.php` baut sein `INSERT` ohne Backticks, `komplett_lib.php`
     mit.**
