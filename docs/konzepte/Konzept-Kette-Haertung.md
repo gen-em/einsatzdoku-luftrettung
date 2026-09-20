@@ -22,6 +22,7 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 > |---|---|
 > | Stand | 20.09.2026 — **AP1 umgesetzt** (Dokumentation; kein Web-Code, keine Versionsstufe). Konzept freigegeben (Auftraggeber, 20.09.2026, ohne Änderungen; Fassung nach der ersten Fortschreibung vom selben Tag: F3 neu gefasst, E-KH-20, AP3/AP4 angepasst, Z1 und Z2 erledigt) |
 > | Entschieden | **E-KH-01 bis -08 und -10 bis -20** — die Vorschläge aus Abschnitt 2.2 gelten seit der Freigabe. Dazu **E-KH-21 bis -24** aus der Umsetzung (Abschnitt 2.4; -24 vom 20.09.2026, außerhalb der Pakete) — **von der Umsetzung entschieden, zur Kenntnis und zum Widerspruch** |
+> | Von außen | **Einschub vom 20.09.2026 eingespielt** (Auftrag der Konzeptinstanz): Backlog 241–249 reserviert und angelegt, drei Konzeptdateien eingecheckt, Rahmenplan **Fassung 85**. Dabei angemeldet: `.sitzungen/` als **achter Schutzlistenpfad** (E-KH-20, einzutragen in AP4 oder AP5). **Der Einschub nannte Fassung 84 — die hatte AP2 schon vergeben und gepusht; er ist auf 85 gerückt** |
 > | Zuarbeiten erledigt | **Z1** (alte Staging-Anlage stillgelegt — B2 damit geschlossen), **Z2** (Zeiger `produktion` auf `7150793`) und **Z3** — alle 20.09.2026. Z3 **beide Anlagen**, aber auf zwei Wegen: Produktiv aus *Betrieb → Status*, Staging aus einer `phpinfo()`, weil die Anwendung dort noch nicht läuft. Fünf Zeilen der Staging-Spalte bleiben leer |
 > | Offen | **E-KH-09 (Ursache und Abhilfe F3)** — fällt nach der Messung am Ende von AP3; der Nachtrag in Abschnitt 1.4 hat eine der drei Erklärungen verschmälert. **Z3-Rest**: die fünf Zeilen, die nur die Anwendung weiß — sie hängen an Rahmenplan 6a, Schritt 6 |
 > | In Arbeit | **AP2 — Zeiger und Wache: gebaut.** Abnahme teilweise: Die Gegenprobe im Werkzeug ist grün (Selbstprobe **38/38**, sechs davon neu zum Vergleichsstand), der Befund B6 ist **ohne Netz aus den Ständen nachgerechnet** — aber der Handlauf gegen Produktiv **konnte nicht laufen** (der Container-Proxy weist `nadoku.gen-em.org` mit `403` ab), und der Zeiger-Job ist **gebaut, nicht gelaufen** (er misst sich erst mit M1). Einzelheiten im Prüfdokument 1.5 |
@@ -416,7 +417,21 @@ Transportwechsel ist sie der gefährlichste Teil** (Warnung des Auftraggebers,
 20.09.). Sie nennt, was es **nur auf dem Server** gibt — `config.php`,
 `install.lock`, `wartung.lock`, `ueberlast.json`, `sicherungen/`, `apk/` —
 und dazu `install.php`, das im Repositorium steht, aber nie hochgeladen
-werden soll. Heute heißt sie nur „nicht hochladen": Die
+werden soll.
+
+> **ACHTER PFAD ANGEMELDET: `.sitzungen/`** (Schritt 16, Konzept
+> Sitzungsablage E-SA-05; angemeldet 20.09.2026). Dort legt die Anwendung
+> künftig ihre PHP-Sitzungsdateien ab, mit `0700`. **Eingetragen wird der
+> Pfad von dieser Umsetzung, in dem Paket, das den Transport anfasst — AP4
+> oder AP5 —, nicht von Schritt 16:** solange es zwei `exclude`-Blöcke gibt,
+> in beide; danach in die eine Datei unter `tools/kette/`. Dazu in
+> `CLAUDE.md` 3.
+>
+> **Was passiert, wenn er fehlt:** Beim heutigen Transport nichts — die
+> Fremd-Aktion löscht keine Server-eigenen Dateien. Bei einem Spiegel mit
+> Löschabgleich **löscht jeder Deploy alle Sitzungen**, und alle
+> Angemeldeten fliegen raus. Kein Datenverlust, aber ein Ausfall bei jeder
+> Auslieferung — und die Ursache stünde nirgends. Heute heißt sie nur „nicht hochladen": Die
 Fremd-Aktion löscht auf dem Server allein, was sie selbst früher hochgeladen
 hat (Zustandsdatei) — Server-eigene Dateien kennt sie nicht und fasst sie nie
 an (`Deleting: 0 B`). Ein Spiegelwerkzeug mit Löschabgleich (`lftp mirror -R
@@ -861,6 +876,10 @@ und nicht in eine Datei — er steht als Punkt im Prüfdokument.
   Pflichtfreigabe bleiben erhalten, die Freigabe steht **vor** dem ersten
   Zugriff auf ein Geheimnis. Die Schutzliste steht spätestens jetzt
   **einmal** (E-KH-20 (1); heute zweimal im Workflow).
+- **Dabei kommt `.sitzungen/` als achter Pfad hinzu** (Schritt 16, E-SA-05 —
+  angemeldet 20.09.2026, siehe E-KH-20). Liegt AP4 vor Schritt 16, trägt AP4
+  ihn ein; sonst AP5. Wer die Liste zusammenführt, zählt danach **acht**
+  Pfade und nicht sieben — die Zahl ist der Prüfwert.
 - Staging fährt damit Zielprobe, Backup-Tor, Wartung an/aus, Versions- und
   Migrationsprüfung. Verhalten bei ausstehender Migration nach E-KH-14.
 - Voraussetzung auf Staging (Z7): Komplett-Backup funktioniert
