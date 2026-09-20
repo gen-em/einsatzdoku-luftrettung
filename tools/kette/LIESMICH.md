@@ -450,9 +450,19 @@ Regel des Konzepts („kleinster Eingriff ist vorzuziehen") geht sie vor.
   Servers; sie zu überschreiben hieße, der Aktion zu sagen, der Server sei
   leer — und das wäre beim nächsten Lauf eine Voll-Übertragung von 688
   Dateien.
-- **Geprüft wird durch Auflisten, nicht durch Abrufen.** Ein `RETR` auf eine
-  fehlende Datei ist genau die Operation, die den Fehler auslöst. Eine
-  Prüfung, die ihn auslöst, um ihn zu vermeiden, wäre ein Witz.
+- **Gefragt wird mit `--head`** (`SIZE`/`MDTM` auf dem Steuerkanal), nicht
+  mit `RETR` und nicht per Auflisten. Kein `RETR`, weil das genau die
+  Operation ist, die den Fehler auslöst — eine Prüfung, die ihn auslöst, um
+  ihn zu vermeiden, wäre ein Witz. Und keine Datenverbindung, also auch kein
+  Datenkanal, der sterben könnte.
+
+  **Aufgelistet wurde es einen Lauf lang, und das war ein Fehler.** `NLST`
+  zeigt **Punktdateien nicht**, und die Zustandsdatei fängt mit einem Punkt
+  an. Das Werkzeug hätte auf dem Produktivserver **immer** „fehlt" gemeldet,
+  auch wenn die Datei liegt — und sie dann überschrieben. Genau der Schaden,
+  vor dem die erste Vorsicht schützen soll. **Gefunden hat es die
+  Nachmessung** (Lauf 35544269232): Sie meldete „nach dem Hochladen ist sie
+  NICHT in der Liste", statt „angelegt" zu behaupten.
 - **Nicht feststellbar heißt nicht feststellbar.** Lässt sich das
   Verzeichnis nicht auflisten, wird **nichts** angelegt und der Lauf ist rot.
 
@@ -479,8 +489,12 @@ scharf gestellt — vorher wäre es ein Eingriff auf Verdacht.
 
 ## Selbstprobe
 
-`--selbstprobe` fährt **20 Lagen ohne Netz**: das Format der Datei (5), die
-Zerlegung des Pfades mit `../` (2), „vorhanden → nichts anfassen" (3),
-„fehlt → anlegen und nachmessen" (3), „Auflisten scheitert → nichts tun und
-NICHT FESTSTELLBAR sagen" (3), „Hochladen scheitert → rot mit Servermeldung"
-(2), Trockenlauf (1) und das Passwort außerhalb der Befehlszeile (1).
+`--selbstprobe` fährt **28 Lagen ohne Netz**: das Format der Datei (5), die
+Zerlegung des Pfades mit `../` (2), „vorhanden → nichts anfassen" (3), die
+**Punktdatei-Falle** (4 — es wird nicht aufgelistet, mit `--head` gefragt, nie
+mit `RETR`, und nach der Datei statt nach dem Verzeichnis), „fehlt → anlegen
+und nachmessen" (3), „Upload meldet 0, Datei liegt nicht → rot" (2),
+Dreiwertigkeit (5 — unbekannter Rückgabewert heißt NICHT FESTSTELLBAR, und
+`curl 19`/`curl 78` heißen FEHLT), „Hochladen scheitert → rot mit
+Servermeldung" (2), Trockenlauf (1) und das Passwort außerhalb der
+Befehlszeile (1).

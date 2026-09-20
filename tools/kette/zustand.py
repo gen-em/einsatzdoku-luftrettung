@@ -51,6 +51,13 @@ FASSUNG = "1.0.0"
 FTP_ZEITGRENZE_S = 60
 MASKE = "***"
 
+# `curl`-RUECKGABEWERTE, DIE „DIE DATEI GIBT ES NICHT" HEISSEN -- und nur die.
+# 78 = CURLE_REMOTE_FILE_NOT_FOUND, 19 = CURLE_FTP_COULDNT_RETR_FILE.
+# Jeder andere Wert heisst NICHT „fehlt", sondern „nicht feststellbar": Ein
+# Netzfehler, der als „fehlt" durchginge, liesse das Werkzeug eine vorhandene
+# Zustandsdatei ueberschreiben.
+CURL_NICHT_DA = (19, 78)
+
 
 def zustand_json(zeitstempel_ms: int | None = None) -> str:
     """Eine gültige, leere Zustandsdatei.
@@ -117,22 +124,33 @@ def vorhanden(server: str, zielpfad: str, zustandspfad: str,
               lauf=subprocess.run) -> bool | None:
     """Liegt die Zustandsdatei auf dem Server? Dreiwertig.
 
-    GEPRUEFT WIRD DURCH AUFLISTEN, NICHT DURCH ABRUFEN. Ein `RETR` auf eine
-    fehlende Datei ist genau die Operation, die den Fehler ausloest -- eine
-    Pruefung, die ihn ausloest, um ihn zu vermeiden, waere ein Witz.
+    GEFRAGT WIRD MIT `--head`, ALSO `SIZE`/`MDTM` AUF DEM STEUERKANAL.
+    Kein `RETR` -- das ist genau die Operation, die den Fehler ausloest, und
+    eine Pruefung, die ihn ausloest, um ihn zu vermeiden, waere ein Witz.
+    Und **keine Datenverbindung**, also auch kein Datenkanal, der sterben
+    koennte.
 
-    `None` heisst: nicht feststellbar. Das Verzeichnis liess sich nicht
-    auflisten; dann wird NICHT angelegt, denn eine vorhandene Datei zu
-    ueberschreiben waere schlimmer als gar nichts zu tun.
+    AUFGELISTET WIRD NICHT MEHR, UND DAS IST EINE BEHEBUNG (20.09.2026).
+    Die erste Fassung fragte per `--list-only`, also `NLST` -- und **`NLST`
+    zeigt Punktdateien nicht**. Die Zustandsdatei heisst
+    `.deploy-state-…json` und faengt mit einem Punkt an. Die Folge waere
+    nicht bloss ein Fehlalarm gewesen: Das Werkzeug haette auf dem
+    Produktivserver **immer** „fehlt" gemeldet, auch wenn die Datei liegt --
+    und sie dann ueberschrieben. Genau der Schaden, vor dem Vorsicht 1
+    schuetzen soll. Gefunden hat es die Nachmessung, im Lauf 35544269232.
+
+    `None` heisst: nicht feststellbar. Dann wird NICHT angelegt, denn eine
+    vorhandene Datei zu ueberschreiben waere schlimmer als gar nichts zu tun.
     """
     verzeichnis, name = zerlegen(zustandspfad)
-    voll = (zielpfad.rstrip("/") + "/" + verzeichnis).rstrip("/") + "/"
-    rc, aus, _ = curl_ftp(["--ssl-reqd", "--list-only", ftp_adresse(server, voll)],
-                          konto, passwort, lauf)
-    if rc != 0:
-        return None
-    namen = [z.strip().rsplit("/", 1)[-1] for z in aus.splitlines() if z.strip()]
-    return name in namen
+    voll = (zielpfad.rstrip("/") + "/" + verzeichnis).rstrip("/") + "/" + name
+    rc, _, _ = curl_ftp(["--ssl-reqd", "--head", ftp_adresse(server, voll)],
+                        konto, passwort, lauf)
+    if rc == 0:
+        return True
+    if rc in CURL_NICHT_DA:
+        return False
+    return None
 
 
 def anlegen(server: str, zielpfad: str, zustandspfad: str,
@@ -149,9 +167,9 @@ def anlegen(server: str, zielpfad: str, zustandspfad: str,
 
     da = vorhanden(server, zielpfad, zustandspfad, konto, passwort, lauf)
     if da is None:
-        f("NICHT FESTSTELLBAR: Das Verzeichnis liess sich nicht auflisten. "
-          "Es wird NICHTS angelegt — eine vorhandene Zustandsdatei zu "
-          "überschreiben wäre schlimmer, als nichts zu tun.")
+        f("NICHT FESTSTELLBAR: Die Abfrage hat weder „da" noch „nicht da" "
+          "ergeben. Es wird NICHTS angelegt — eine vorhandene Zustandsdatei "
+          "zu überschreiben wäre schlimmer, als nichts zu tun.")
         return 1
     if da:
         a("  Vorhanden. Es wird nichts angelegt und nichts angefasst — sie "
@@ -228,10 +246,25 @@ def selbstprobe() -> int:
            "…und einer ohne Verzeichnis auch")
 
     class Lauf:
-        def __init__(self, liste="", rc_liste=0, rc_upload=0):
-            self.liste, self.rc_liste, self.rc_upload = liste, rc_liste, rc_upload
+        """Attrappe eines Servers, der eine Dateiliste führt.
+
+        `da` ist die Menge der Dateien, die er hat. `--head` antwortet
+        danach; ein gelungener Upload legt die Datei hinein. So sieht ein
+        Aufraeumen, das nichts tut, NICHT aus wie eines, das etwas tut.
+        """
+
+        def __init__(self, da=(), rc_head=None, rc_upload=0):
+            self.da = set(da)
+            self.rc_head, self.rc_upload = rc_head, rc_upload
             self.befehle: list[list[str]] = []
-            self.uploads = 0
+            self.uploads = self.heads = 0
+
+        def _name(self, befehl):
+            for x in befehl:
+                t = str(x)
+                if t.startswith("ftp://"):
+                    return t.rsplit("/", 1)[-1]
+            return ""
 
         def __call__(self, befehl, **kw):
             self.befehle.append(befehl)
@@ -239,23 +272,24 @@ def selbstprobe() -> int:
             class E:
                 pass
             e = E()
-            if "--list-only" in befehl:
-                e.returncode, e.stdout, e.stderr = self.rc_liste, self.liste, ""
+            if "--head" in befehl:
+                self.heads += 1
+                if self.rc_head is not None:
+                    e.returncode = self.rc_head
+                else:
+                    e.returncode = 0 if self._name(befehl) in self.da else 78
+                e.stdout, e.stderr = "", ""
             else:
                 self.uploads += 1
                 e.returncode, e.stdout, e.stderr = self.rc_upload, "", "550 nope"
                 if self.rc_upload == 0:
-                    for x in befehl:
-                        t = str(x)
-                        if t.startswith("ftp://"):
-                            drin = [y for y in self.liste.splitlines() if y.strip()]
-                            self.liste = "\n".join(drin + [t.rsplit("/", 1)[-1]])
+                    self.da.add(self._name(befehl))
             return e
 
     # Vorhanden -> NICHTS anfassen. Die wichtigste Lage von allen: Eine
     # ueberschriebene Zustandsdatei hiesse „der Server ist leer" und loeste
-    # eine Voll-Uebertragung aus.
-    l = Lauf(liste=".deploy-state-produktion.json\nindex.php\n")
+    # eine Voll-Uebertragung von 688 Dateien aus.
+    l = Lauf(da={".deploy-state-produktion.json", "index.php"})
     p = _io.StringIO()
     with contextlib.redirect_stdout(p):
         rc = anlegen("h", "/", "../.deploy-state-produktion.json", "k", "passwort", l)
@@ -263,33 +297,78 @@ def selbstprobe() -> int:
     pruefe(l.uploads == 0, "…und sie wird NICHT überschrieben", f"{l.uploads} Upload(s)")
     pruefe("nichts angefasst" in p.getvalue(), "…und das wird gesagt")
 
+    # DIE LAGE, DIE AM 20.09.2026 GEFEHLT HAT (Lauf 35544269232).
+    # Die erste Fassung fragte per `--list-only`, also `NLST` -- und `NLST`
+    # zeigt PUNKTDATEIEN NICHT. Die Zustandsdatei faengt mit einem Punkt an.
+    # Das Werkzeug haette auf dem Produktivserver IMMER „fehlt" gemeldet,
+    # auch wenn die Datei liegt, und sie dann ueberschrieben. Diese Lage
+    # haelt fest, dass nicht mehr aufgelistet wird.
+    pruefe(not any("--list-only" in b for b in l.befehle),
+           "Punktdateien-Falle: es wird NICHT mehr aufgelistet (`NLST` zeigt "
+           "sie nicht)")
+    pruefe(all("--head" in b for b in l.befehle),
+           "…gefragt wird mit `--head`, also `SIZE`/`MDTM` auf dem Steuerkanal")
+    pruefe(not any("RETR" in str(x) for b in l.befehle for x in b),
+           "…und nie mit `RETR` — das ist die Operation, die den Fehler "
+           "auslöst")
+    pruefe(any(str(x).endswith("/.deploy-state-produktion.json")
+               for b in l.befehle for x in b),
+           "…und gefragt wird nach der DATEI, nicht nach dem Verzeichnis")
+
     # Fehlt -> anlegen, und danach nachmessen.
-    l2 = Lauf(liste="index.php\n")
+    l2 = Lauf(da={"index.php"})
     p2 = _io.StringIO()
     with contextlib.redirect_stdout(p2):
         rc2 = anlegen("h", "/", "../.deploy-state-produktion.json", "k", "passwort", l2)
     pruefe(rc2 == 0, "Fehlende Datei: wird angelegt")
     pruefe(l2.uploads == 1, "…mit genau einem Upload", f"{l2.uploads}")
-    pruefe(l2.befehle.count([b for b in l2.befehle if "--list-only" in b][0]) >= 1
-           and len([b for b in l2.befehle if "--list-only" in b]) == 2,
-           "…und es wird VORHER und NACHHER aufgelistet — nachgemessen, "
-           "nicht geglaubt",
-           f"{len([b for b in l2.befehle if '--list-only' in b])} Auflistungen")
+    pruefe(l2.heads == 2,
+           "…und VORHER und NACHHER gefragt — nachgemessen, nicht geglaubt",
+           f"{l2.heads} Abfragen")
 
-    # Auflisten scheitert -> NICHTS tun. Dreiwertig.
-    l3 = Lauf(rc_liste=9)
+    # DIE GEGENPROBE ZUR NACHMESSUNG: Der Upload meldet 0, die Datei liegt
+    # aber nicht. Genau das ist im Lauf 35544269232 passiert (aus dem
+    # falschen Grund) -- und die Nachmessung hat es gemeldet, statt
+    # „angelegt" zu behaupten.
+    class LaufStiller(Lauf):
+        def __call__(self, befehl, **kw):
+            e = super().__call__(befehl, **kw)
+            if "--head" not in befehl:
+                self.da.discard(self._name(befehl))   # der Upload verpufft
+            return e
+
+    l2b = LaufStiller(da={"index.php"})
+    pb = _io.StringIO()
+    with contextlib.redirect_stdout(_io.StringIO()), contextlib.redirect_stderr(pb):
+        rcb = anlegen("h", "/", "../x.json", "k", "passwort", l2b)
+    pruefe(rcb == 1,
+           'Upload meldet 0, Datei liegt nicht → rot statt „angelegt"')
+    pruefe("Nachgemessen, nicht geglaubt" in pb.getvalue(),
+           "…und die Meldung sagt, woran es gemerkt wurde")
+
+    # Nicht feststellbar -> NICHTS tun. Dreiwertig, und die Unterscheidung
+    # ist der ganze Schutz: Ein Netzfehler, der als „fehlt" durchginge,
+    # ueberschriebe eine vorhandene Datei.
+    l3 = Lauf(rc_head=9)
     p3 = _io.StringIO()
     with contextlib.redirect_stderr(p3):
         rc3 = anlegen("h", "/", "../x.json", "k", "passwort", l3)
-    pruefe(rc3 == 1, "Auflisten scheitert → rot")
+    pruefe(rc3 == 1, "Abfrage scheitert mit unbekanntem Wert → rot")
     pruefe(l3.uploads == 0,
            "…und es wird NICHTS angelegt (eine vorhandene zu überschreiben "
            "wäre schlimmer)", f"{l3.uploads} Upload(s)")
     pruefe("NICHT FESTSTELLBAR" in p3.getvalue(),
            "…und es heißt NICHT FESTSTELLBAR, nicht FEHLT")
+    for wert in CURL_NICHT_DA:
+        lx = Lauf(rc_head=wert)
+        with contextlib.redirect_stdout(_io.StringIO()):
+            anlegen("h", "/", "../x.json", "k", "passwort", lx)
+        pruefe(lx.uploads == 1,
+               f"…`curl {wert}` heißt FEHLT und löst das Anlegen aus",
+               f"{lx.uploads} Upload(s)")
 
     # Hochladen scheitert -> rot, mit Servermeldung.
-    l4 = Lauf(liste="index.php\n", rc_upload=7)
+    l4 = Lauf(da={"index.php"}, rc_upload=7)
     p4 = _io.StringIO()
     with contextlib.redirect_stdout(_io.StringIO()), contextlib.redirect_stderr(p4):
         rc4 = anlegen("h", "/", "../x.json", "k", "passwort", l4)
@@ -297,7 +376,7 @@ def selbstprobe() -> int:
     pruefe("550" in p4.getvalue(), "…und die Servermeldung steht da")
 
     # Trockenlauf schreibt nichts.
-    l5 = Lauf(liste="index.php\n")
+    l5 = Lauf(da={"index.php"})
     with contextlib.redirect_stdout(_io.StringIO()):
         rc5 = anlegen("h", "/", "../x.json", "k", "passwort", l5, trocken=True)
     pruefe(rc5 == 0 and l5.uploads == 0,
@@ -308,7 +387,6 @@ def selbstprobe() -> int:
     curl_ftp(["--ssl-reqd", "ftp://h/"], "k", "streng-geheim", l6)
     pruefe(not any("streng-geheim" in str(x) for b in l6.befehle for x in b),
            "Das Passwort steht in keinem Befehlszeilenargument")
-
     print(f"\n  -> {erfuellt + offen} Lagen, {offen} nicht erfüllt")
     return 0 if offen == 0 else 1
 

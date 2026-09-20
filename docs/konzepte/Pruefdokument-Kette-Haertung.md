@@ -24,7 +24,7 @@ abgehakt ist (R62).
 > | Stand | 20.09.2026 — **AP1 gebaut (Abnahme offen), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut (Abhilfe nicht bewiesen — Prüfpunkt 21).** AP5 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **24** (Abschnitt 2): F-KH-U-01 bis F-KH-U-25 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach |
+> | Funde | **25** (Abschnitt 2): F-KH-U-01 bis F-KH-U-26 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach |
 > | F3 | **GEFUNDEN am 20.09.2026** (F-KH-U-25). Der Abbruch passiert beim **`RETR` auf die nicht vorhandene Zustandsdatei** — die Datenverbindung steht per `EPSV` schon, der Server schließt sie, `basic-ftp` liest `ECONNRESET` auf dem Datensocket. Die Aktion deutet das als „first publish" und arbeitet mit einem **toten Client** weiter; beim ersten `MKD` fällt es auf. **Der Fehler liegt drei Schritte vor der Stelle, die er meldet.** Acht Trennversuche liefen daran vorbei, weil `curl` jedes Mal nur Dateien abrief, die es selbst hochgeladen hatte — **keiner hat je eine FEHLENDE Datei abgerufen**. **E-KH-09 zur Hälfte erfüllt:** Ursache benannt und belegt, Abhilfe vorgeschlagen und noch nicht gefahren (AP4) |
 > | Prüfliste | 26 Punkte: **9 abgehakt**, 5 teilweise, **12 offen** (Prüfpunkt 18 ist gegenstandslos geworden) |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
@@ -415,7 +415,7 @@ beglaubigte einen Vergleich, den es so nicht gab.
 | YAML der drei Arbeitsläufe | laden | **3 von 3** |
 | `wache.py --selbstprobe` | 0 offen | **38 Erwartungen, 0 offen** (AP2: 32 → 38) |
 | `jobregister/pruefen.php` | 0 Befunde | **0 Befunde**; Selbstprobe **9 von 9** |
-| `zustand.py --selbstprobe` | 0 offen | **20 Lagen, 0 offen** (AP4, neu) |
+| `zustand.py --selbstprobe` | 0 offen | **28 Lagen, 0 offen** (AP4; 20 → 28 nach F-KH-U-26) |
 | `tools/wortliste/wortliste.py` | 0/0/0 | **0/0/0** (99 Ausnahmen, 99 gegriffen, 0 ungenutzt) |
 
 **Die sechs neuen Lagen des Tors** (F1, E-KH-05/-19):
@@ -483,6 +483,45 @@ Error: Client is closed because read ECONNRESET (data socket)
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-26 — Der Beweislauf ist rot, und zwar an meinem Werkzeug: `NLST`
+zeigt Punktdateien nicht.** *Lauf 35544269232, 20.09.2026, 23:19 UTC.*
+
+```
+Zustandsdatei der Auslieferungsaktion: .deploy-state-gespraech.json
+  Zielverzeichnis: .zielprobe-gespraech/
+  FEHLT. …
+FEHLGESCHLAGEN: Nach dem Hochladen ist sie NICHT in der Liste.
+Nachgemessen, nicht geglaubt — Ergebnis: False.
+```
+
+`zustand.py` fragte in seiner ersten Fassung per `--list-only`, also `NLST`.
+**`NLST` zeigt Punktdateien nicht** — und die Zustandsdatei heißt
+`.deploy-state-…json`. Der Upload war vermutlich erfolgreich; die Nachmessung
+konnte ihn nur nicht sehen.
+
+**Der Fehlalarm ist dabei das kleinere Übel.** Das größere: Auf dem
+Produktivserver hätte das Werkzeug **immer** „fehlt" gemeldet, auch wenn die
+Datei liegt — und sie dann **überschrieben**. Das ist genau der Schaden, vor
+dem Vorsicht 1 schützen soll („eine vorhandene Datei wird nie angefasst").
+Die Vorsicht war richtig formuliert und durch die Prüfart ausgehebelt.
+
+**Gefunden hat es die Nachmessung.** Ohne sie hätte das Werkzeug „angelegt"
+gemeldet und der Lauf wäre weitergelaufen. Der Satz „nachgemessen, nicht
+geglaubt" hat sich zum zweiten Mal an einem Tag bezahlt gemacht.
+
+*Behoben:* Gefragt wird mit **`--head`** (`SIZE`/`MDTM` auf dem Steuerkanal) —
+kein `RETR` (das ist die Operation, die F3 auslöst) und **keine
+Datenverbindung**. Dreiwertig: `curl 0` heißt da, `curl 19`/`curl 78` heißen
+fehlt, **jeder andere Wert heißt nicht feststellbar** — ein Netzfehler, der
+als „fehlt" durchginge, überschriebe eine vorhandene Datei.
+
+Selbstprobe **20 → 28 Lagen**, darunter vier, die die Punktdatei-Falle
+festhalten: Es wird nicht mehr aufgelistet, gefragt wird mit `--head`, nie
+mit `RETR`, und nach der **Datei** statt nach dem Verzeichnis.
+
+**Prüfpunkt 21 ist zu wiederholen.** Ob die Abhilfe trägt, ist weiter offen —
+der Lauf hat sie nie erreicht.
 
 **F-KH-U-25 — F3 IST GEFUNDEN. Der Abbruch passiert beim `RETR` auf die
 nicht vorhandene Zustandsdatei; gemeldet wird er erst beim `MKD` danach.**
@@ -1996,8 +2035,13 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   an — aber es steht da, und was dasteht, ohne dass jemand weiß warum, wird
   irgendwann zur Frage.
 
-- [ ] **21 — Der Beweislauf der Abhilfe** (AP4, Richtung (e)). **Er kostet
-  einen Probelauf und fasst die Anwendung nicht an.**
+- [~] **21 — Der Beweislauf der Abhilfe** (AP4, Richtung (e)) — **einmal
+  gefahren am 20.09.2026 (Lauf 35544269232), rot am WERKZEUG und nicht an
+  der Abhilfe** (F-KH-U-26): `NLST` zeigt Punktdateien nicht, die
+  Nachmessung sah die eben hochgeladene Datei deshalb nicht. Behoben —
+  gefragt wird jetzt mit `--head`. **Zu wiederholen; die Abhilfe ist
+  weiter unbewiesen.** Er kostet einen Probelauf und fasst die Anwendung
+  nicht an.
   *Weg:* GitHub → Actions → „Auslieferung" → **Run workflow** → Zweig
   `claude/fervent-dirac-xirsqw` → Häkchen **`probelauf`** ✓ → Häkchen
   **`probelauf_gespraech`** ✓ → starten → **Freigabe erteilen**.
