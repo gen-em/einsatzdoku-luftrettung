@@ -1791,6 +1791,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     **Zuordnung (20.09.2026): 10c, AP7** — die Zählung heißt dort sichtbar „Bestand" (E-P5c-18).
 
+
+    **Zuordnung (20.09.2026): erledigt sich mit 10c AP7.** Dort entsteht
+    eine **Zählung ab Beginn des Einsatzes** (E-P5c-18) — damit ist die
+    Zählgröße entschieden, und die beiden Zählweisen stehen nicht mehr
+    nebeneinander.
 193. **Register und Doku führen die R42-Auswertung als offen, obwohl sie
     seit Web 15.3.0 läuft.**
     *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
@@ -1966,6 +1971,19 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     **Zuordnung (20.09.2026): 10c, AP9** — Kacheln nach Typ, Mockup mit der 10c-Runde (E-P5c-20).
 
+
+    **Wird NICHT umgesetzt — entschieden am 20.09.2026 (E-P5c-27, in der
+    Mockup-Runde M-P5c-01).** Damit ist dieser Punkt geschlossen; er wandert
+    aber nicht nach *Erledigt*, weil nichts erledigt wurde.
+
+    **Die Folge, damit sie niemanden überrascht:** Die **Winden-Cycles
+    bodengebundener Bergwacht-Diensttage erscheinen in keiner Ansicht der
+    Zeitraumübersicht.** Wer sie sucht, findet sie dort nicht — weder in der
+    Fähigkeitenauswahl noch in den Zahlen. Das Einsatzformular zeigt die
+    Windenfelder weiterhin (`cap_gate` fragt den Diensttag ohne Artfilter),
+    die Daten werden also erfasst und nur nicht ausgewertet.
+
+    Wer das später ändern will, findet die beiden Stellen oben benannt.
 199. **Die Nummer 5 fehlt im Backlog, obwohl der Changelog sie unter
     *Erledigt* verortet.**
     *Aufgenommen 15.09.2026 (Gegenlesen des Merges von PR #47 in den
@@ -2938,6 +2956,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bereichsnamen Einstellungen / Verwaltung / Betrieb als oberste Ebene
     unter.
 
+    **Berichtigt am 20.09.2026 (M-P5c-01, E-P5c-29):** Gemeint war vor allem
+    das **linke Menü** (`ui_leiste_einstellungen()`), nicht die Übersicht —
+    dort fällt die fehlende Gliederung zuerst auf, weil man es auf jeder
+    Seite sieht. **Entschieden und freigegeben:** Die **Leiste** bekommt
+    Bereichsüberschriften nach **Option 1 „Linie"**; die **Übersicht**
+    bekommt je Bereich eine **eigene Karte** mit Bereichszeichen und mittigem
+    Kopf. **Der Fable-Schritt ist damit erledigt** — es braucht kein weiteres
+    Mockup.
+
     **Entschieden:** zuerst ein Mockup mit einer klaren
     **Überschriftenzeile je Bereich** (Bricolage, Abstand davor, Linie);
     trägt das nicht, bekommt jeder Bereich eine **eigene Karte** mit seiner
@@ -2984,6 +3011,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     bekommen denselben Baustein (`.blatt-druck`); 10b AP9 ist gebaut, das
     Notfallblatt wird dort nachgezogen.
 
+
+    **Berichtigt am 20.09.2026 (M-P5c-01f, E-P5c-08/-30):** Oben steht
+    **nicht** „Marke + NAdoku", sondern **Bildmarke + Kurzname der
+    Installation** (`instanz_kurz()`, Vorgabe „Gen-EM NAdoku"). Ein fest
+    eingebautes „NAdoku" wäre auf einer umbenannten Installation schlicht
+    falsch. Die **Webversion steht in der Fußzeile** des Blattes.
+    **Freigegeben am Bild M-P5c-01f** (`docs/konzepte/konzept-p5c/mockups/`),
+    beide Blätter mit demselben Baustein `.blatt-druck`.
 247. **Serverschlüssel wechseln — als Vorgang, nicht von Hand.**
     *Aufgenommen 20.09.2026 (aus V4 der P5c-Vorbereitung).* Zugeordnet:
     **Schritt 18**.
