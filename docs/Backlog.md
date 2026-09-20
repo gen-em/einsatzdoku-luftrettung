@@ -2150,37 +2150,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     tools/ .github/ | wc -l` → 96; `server/` → 0.*
 
 
-208. **Der Job-Katalog und das Jobregister in `docs/Technik.md` beschreiben
-    den Aufräumjob nicht mehr.** Berichtigt am 16.09.2026 in P5a/AP8 — der
-    Eintrag steht hier trotzdem, weil die **Ursache** bleibt: `job_aufraeumen()`
-    hat inzwischen **zwölf** Schritte, und jede der beiden Beschreibungen ist
-    eine von Hand gepflegte Aufzählung, die bei jedem neuen Schritt
-    mitgeschrieben werden muss. Sie hinkte in AP5 schon einmal drei Pakete
-    hinterher (der Kommentar im Katalog sagt es selbst), und jetzt wieder: Das
-    Register in `docs/Technik.md` nannte **sechs von zwölf**.
-
-    **Vorschlag:** Die sichtbare Beschreibung aus den Schlüsseln des
-    Schrittarrays erzeugen, statt sie danebenzuschreiben — `job_aufraeumen()`
-    kennt seine Schritte, sie heißen dort bereits „Kopplungssitzungen",
-    „Sperrereignisse", „Geraetevermerke". Dann kann sie nicht mehr altern.
-    Betrifft `jobs_lib.php` (Katalog) und `docs/Technik.md` (Jobregister);
-    für das Dokument wäre ein Prüfmittel nötig, das die Zahl nachzählt — sonst
-    wandert das Problem nur eine Ebene weiter.
-
-    *Aufgenommen 16.09.2026 in P5a/AP8. Gezählt: zwölf Schritte in
-    `job_aufraeumen()`, sechs in der Registerzeile, zehn in der Beschreibung
-    des Katalogs (beide inzwischen berichtigt).*
-
-    **Nachtrag 16.09.2026 (P5a/AP12): dieselbe Ursache, dritte Stelle.** Der
-    **Werkzeugbaum** in `docs/Technik.md` ist ebenso eine von Hand geführte
-    Aufzählung, und beim Abschluss von P5a fiel auf, dass `tools/containerprobe/`
-    darin fehlte — seit **Web 12.0.0** (S2/AP6), also fünf Monate lang.
-    Nachgetragen. Gezählt mit einem Fünfzeiler, der die Ordner unter `tools/`
-    gegen die Einträge im Baum hält: **44 auf der Platte, 43 im Baum**, danach
-    44 zu 44. Genau so ein Fünfzeiler ist das Prüfmittel, das dieser Punkt
-    oben verlangt — er gehört in Stufe 1 der Kette, nicht in eine Sitzung, die
-    zufällig hinsieht.
-
 209. **`docs/Design.md` führt die erzeugte Bausteintabelle mit falschen
     Zeilennummern.** Die Tabelle trägt den Vermerk „ERZEUGT von
     `tools/design/tabellen.py` — nicht von Hand ändern", und ihre Spalte
@@ -8351,3 +8320,71 @@ zutreffen.
     berichtigen. Ebenso bleiben die drei Stellen in den Arbeitsläufen selbst,
     die den alten Namen als Historie nennen („Bis zu dieser Fassung hiess
     diese Datei `deploy.yml`").
+
+208. **Der Job-Katalog und das Jobregister in `docs/Technik.md` beschreiben
+    den Aufräumjob nicht mehr.** Berichtigt am 16.09.2026 in P5a/AP8 — der
+    Eintrag steht hier trotzdem, weil die **Ursache** bleibt: `job_aufraeumen()`
+    hat inzwischen **zwölf** Schritte, und jede der beiden Beschreibungen ist
+    eine von Hand gepflegte Aufzählung, die bei jedem neuen Schritt
+    mitgeschrieben werden muss. Sie hinkte in AP5 schon einmal drei Pakete
+    hinterher (der Kommentar im Katalog sagt es selbst), und jetzt wieder: Das
+    Register in `docs/Technik.md` nannte **sechs von zwölf**.
+
+    *Erledigt am 20.09.2026 in Web 20.26.0 (Schritt 16, Sitzungsablage): Die
+    sichtbare Beschreibung im Katalog wird aus den Schlüsseln der Schritte
+    erzeugt, und `tools/jobregister/pruefen.php` zählt das Register in
+    `docs/Technik.md` nach — beides genau das, was der Vorschlag unten
+    verlangt. Der Befundtext darunter bleibt stehen; er ist der Befund, nicht
+    der offene Stand.*
+
+    **Was beim Beheben gemessen wurde** (20.09.2026, gegen `862ca7f`): **11
+    Jobs** im Katalog gegen **9** im Register — `mail` und `konto_verfall`
+    fehlten, und die Fußnote an jener Stelle behauptete seit P5a/AP11, `mail`
+    sei nachgetragen. **16 Aufräumschritte** im Code gegen „dreizehn" im
+    Register, und die **sichtbare** Beschreibung nannte **15 von 16**
+    („Sperrliste gelöschter Kennungen" fehlte). Damit war der Punkt beim
+    dritten Anlauf, und zweimal davor waren nur die Zahlen berichtigt worden.
+
+    **Zwei Hälften, und die zweite ist die, auf die es ankommt.** Erzeugt wird
+    die sichtbare Beschreibung aus `array_keys(job_aufraeumen_schritte())` —
+    sie kann nicht mehr altern. Die Registerzeile in `docs/Technik.md` bleibt
+    Prosa, weil sie mehr sagt als eine Liste; sie wird nachgezählt, mit dem
+    Tokenizer und ohne Installation, damit der Lauf in Stufe 1 hängen kann.
+    Erster Lauf: **7 Befunde**, danach **0**; Selbstprobe **9 von 9**.
+
+    **Eine Handbreit bleibt offen, und sie wird hier genannt statt verschwiegen:**
+    Der Eintrag in `.github/workflows/pruefung.yml` gehört zu Kette II —
+    Schritt 16 fasst `.github/` nicht an. Bis der Lauf dort hängt, zählt das
+    Werkzeug nur, wenn es jemand fährt. Die zwei Zeilen dafür stehen in
+    `docs/Technik.md` 6.2, zusammen mit diesem Vorbehalt.
+
+    **Beim Gegenlesen fielen zwei Listen derselben Art auf.** Der
+    **Werkzeugbaum** führte 46 Ordner, auf der Platte lagen 48 —
+    `tools/wegwerfdomains/` fehlte seit Web 20.22.0, also genau der Fall, den
+    der Nachtrag unten für `tools/containerprobe/` beschreibt. Und die
+    Ausnahmeliste des Transports in `docs/Technik.md` 6.5 nannte fünf
+    Einträge, während die Kette sieben führte (`ueberlast.json`,
+    `install.php`). Beides nachgetragen; für beide Listen gibt es weiterhin
+    kein Prüfmittel.
+
+    **Vorschlag:** Die sichtbare Beschreibung aus den Schlüsseln des
+    Schrittarrays erzeugen, statt sie danebenzuschreiben — `job_aufraeumen()`
+    kennt seine Schritte, sie heißen dort bereits „Kopplungssitzungen",
+    „Sperrereignisse", „Geraetevermerke". Dann kann sie nicht mehr altern.
+    Betrifft `jobs_lib.php` (Katalog) und `docs/Technik.md` (Jobregister);
+    für das Dokument wäre ein Prüfmittel nötig, das die Zahl nachzählt — sonst
+    wandert das Problem nur eine Ebene weiter.
+
+    *Aufgenommen 16.09.2026 in P5a/AP8. Gezählt: zwölf Schritte in
+    `job_aufraeumen()`, sechs in der Registerzeile, zehn in der Beschreibung
+    des Katalogs (beide inzwischen berichtigt).*
+
+    **Nachtrag 16.09.2026 (P5a/AP12): dieselbe Ursache, dritte Stelle.** Der
+    **Werkzeugbaum** in `docs/Technik.md` ist ebenso eine von Hand geführte
+    Aufzählung, und beim Abschluss von P5a fiel auf, dass `tools/containerprobe/`
+    darin fehlte — seit **Web 12.0.0** (S2/AP6), also fünf Monate lang.
+    Nachgetragen. Gezählt mit einem Fünfzeiler, der die Ordner unter `tools/`
+    gegen die Einträge im Baum hält: **44 auf der Platte, 43 im Baum**, danach
+    44 zu 44. Genau so ein Fünfzeiler ist das Prüfmittel, das dieser Punkt
+    oben verlangt — er gehört in Stufe 1 der Kette, nicht in eine Sitzung, die
+    zufällig hinsieht.

@@ -33,9 +33,20 @@ declare(strict_types=1);
  * leitet das Token im BROWSER per PBKDF2 ab (assets/crypto.js) — mit `curl`
  * ist sie nicht nachzubilden, ohne die Ableitung ein zweites Mal zu
  * schreiben. Stattdessen schreibt die Probe die PHP-Sitzungsdatei direkt
- * (dieselbe `session.save_path`, dieselbe Maschine) und schickt deren
- * Kennung als Cookie. Das ist genau das, was der Server nach einer
- * gelungenen Anmeldung vorfindet.
+ * (dasselbe Verzeichnis, dieselbe Maschine) und schickt deren Kennung als
+ * Cookie. Das ist genau das, was der Server nach einer gelungenen Anmeldung
+ * vorfindet.
+ *
+ * SEIT WEB 20.26.0 REICHT DAFUER `session_save_path()` NICHT MEHR
+ * (Schritt 16, E-SA-02). Die Anwendung legt ihre Sitzungen selbst in
+ * `server/.sitzungen/` ab — aber nur im Web-Lauf; auf der Kommandozeile
+ * richtet `sitzung_ablage()` bewusst nichts ein, damit ein Cron-Nutzer das
+ * Verzeichnis nicht mit fremdem Eigentuemer anlegt. Diese Probe LAEUFT auf
+ * der Kommandozeile und spricht einen Server ueber HTTP an: Ohne den Griff
+ * in `sitzung_ort()` schriebe sie in den Hosterpfad, waehrend der Server in
+ * `.sitzungen/` sucht. Alle Sitzungsfaelle fielen dann um — mit „nicht
+ * angemeldet", also aussehend wie ein Fehler der ANWENDUNG statt wie einer
+ * der Probe.
  *
  * WAS SIE NICHT PRUEFT, und warum:
  *   - Das VERHALTEN DES DEPLOYS gegenueber `wartung.lock` (Konzept 6.3).
@@ -127,6 +138,21 @@ function kopfzeile(array $a, string $name): ?string {
 /* ---- Sitzungen --------------------------------------------------------- */
 
 /**
+ * Wohin der SERVER seine Sitzungen legt — nicht, wohin dieser CLI-Lauf sie
+ * legen wuerde.
+ *
+ * Gibt es `server/.sitzungen/`, ist das der Ort: Das Verzeichnis entsteht
+ * beim ersten Web-Aufruf und wird von `sitzung_ablage()` gesetzt. Gibt es
+ * es nicht, laeuft die Anwendung im Rueckfall auf dem Hosterpfad (E-SA-03),
+ * und dann gilt wieder, was `session_save_path()` sagt.
+ */
+function sitzung_ort(): string {
+    $eigen = sitzung_ablage_pfad();
+    if (is_dir($eigen)) { return $eigen; }
+    return (string)(session_save_path() ?: sys_get_temp_dir());
+}
+
+/**
  * Eine PHP-Sitzung anlegen, wie login.php sie hinterlaesst.
  *
  * `user_id`, `epoch` und `csrf` sind das, was auth_guard.php erwartet;
@@ -139,6 +165,9 @@ function sitzung_anlegen(int $uid, int $epoch): array {
     $sid  = 'wartungsprobe' . bin2hex(random_bytes(10));
     $csrf = bin2hex(random_bytes(16));
     if (session_status() === PHP_SESSION_ACTIVE) { session_write_close(); }
+    /* VOR `session_start()`, sonst schreibt die Probe woanders hin als der
+     * Server liest. Siehe den Kopf der Datei. */
+    session_save_path(sitzung_ort());
     session_id($sid);
     session_start();
     $_SESSION = ['user_id' => $uid, 'epoch' => $epoch,
@@ -160,7 +189,7 @@ function sitzung_anlegen(int $uid, int $epoch): array {
  * Sitzungsdatei loeschen statt eine Sitzung zu oeffnen.
  */
 function sitzung_weg(string $sid): void {
-    $pfad = (session_save_path() ?: sys_get_temp_dir()) . '/sess_' . $sid;
+    $pfad = sitzung_ort() . '/sess_' . $sid;
     if (is_file($pfad)) { @unlink($pfad); }
 }
 

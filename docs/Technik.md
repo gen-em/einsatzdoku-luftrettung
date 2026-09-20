@@ -294,6 +294,20 @@ Daten erst nach Server-Bestätigung.
 │   │                       JavaScript bleibt der Wert lesbar und markierbar
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
 │   │                       gelöschtes Konto, Passwortwechsel)
+│   ├── sitzung_lib.php    WO die Sitzungen liegen — nicht, wie sie enden
+│   │                       (Schritt 16, E-SA-01 bis -07; Backlog Nr. 241).
+│   │                       Legt `.sitzungen/` mit 0700 an, richtet
+│   │                       `session.save_path` darauf und stellt PHPs
+│   │                       Zufallsräumung ab; trägt `SESSION_TIMEOUT_S` und
+│   │                       den Räumteil des Aufräumjobs. LÄDT NICHTS —
+│   │                       `db.php` ruft sie ohne Datenbankverbindung,
+│   │                       `install.php` vor seinem `session_start()`.
+│   │                       Nicht zu verwechseln mit der Zeile darüber
+│   │                       · .sitzungen/ die Sitzungsdateien selbst
+│   │                       (entstehen nur auf dem Server, im Deploy
+│   │                       auszunehmen — Eintrag bei Kette II angemeldet).
+│   │                       Gegen Abruf über die Adresszeile deckt sie die
+│   │                       Punktregel in `.htaccess`, auf nginx allein 0700
 │   ├── email_lib.php      E-Mail: Normalisierung, Prüfung, Dublettenerkennung
 │   │                       (ohne Abhängigkeiten — auch für install.php)
 │   ├── mail_lib.php       Nachrichtenkatalog, Warteschlange, Job `mail`
@@ -540,6 +554,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      verfällt, und dass der Huckepack-Weg wenig und
 │   │                      selten trägt. Legt eigene Waisen an und räumt hinter
 │   │                      sich auf — ändert am Bestand nichts (s. LIESMICH.md)
+│   ├── jobregister/       hält die Tabelle „Der Katalog" in 4.97a gegen
+│   │                      `jobs_lib.php`: Jobnamen, Zahl der Aufräumschritte
+│   │                      und deren Namen. Mit dem Tokenizer und OHNE
+│   │                      Installation, deshalb in Stufe 1 (Backlog Nr. 208,
+│   │                      Schritt 16; s. LIESMICH.md)
 │   ├── kopplungsprobe/    zwei Proben. `probe.php` prüft `pair.php` über
 │   │                      ECHTES HTTP (S5, Web 13.0.0): Zustände, Frist,
 │   │                      Gerätelimit, Antwortgleichheit, drei Töpfe,
@@ -822,6 +841,12 @@ Daten erst nach Server-Bestätigung.
 │   │                      der Auftrag „Alle sichern" und der Rückweg bei
 │   │                      verlorenem Server-Anteil (E-S1-04/19, S2/AP6, S10;
 │   │                      Backlog Nr. 31/35; s. LIESMICH.md)
+│   ├── wegwerfdomains/    holt die Liste der Wegwerf-Mailanbieter, misst den
+│   │                      Unterschied und schreibt sie erst auf Zuruf
+│   │                      (Backlog Nr. 230, Web 20.22.0; Runbook, Abschnitt 7).
+│   │                      Ein Handgriff und kein Automatismus — die Zusage
+│   │                      „keine fremde Quelle zur Laufzeit" kennt keine
+│   │                      Ausnahme (s. LIESMICH.md)
 │   └── wortliste/         zählt nach, ob sichtbare Texte und normative
 │                          Dokumentation neutral von Land und Luft sprechen:
 │                          Sperrliste, Ausnahmeliste mit Begründungen, drei
@@ -3367,8 +3392,10 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 
 | Job | täglich? | was er tut |
 |---|---|---|
+| `mail` | nein | Nachrichten, deren erster Versuch scheiterte — fünf Versuche über 24 Stunden, danach steht die Nachricht als unzustellbar auf der Statusseite (4.99). Steht **ganz vorn** im Katalog: `jobs_lauf()` arbeitet ihn der Reihe nach ab, und am Huckepack-Weg sind 3 s für alle Jobs zusammen — ein Job dahinter bekäme dort regelmäßig nichts |
 | `konto_loeschung` | nein | Konten, deren 30-Tage-Karenz abgelaufen ist, endgültig löschen (P5b/AP5, E-P5b-16) — **höchstens fünf je Lauf**, weil eine Löschung die Spuren von Hand räumt, einen Ordner im Dateisystem löscht und über vierzehn Tabellen kaskadiert. Steht weit vorn: im Regelfall eine Abfrage über einen Index, und wenn er etwas zu tun hat, ist es das, worauf jemand ein Recht hat |
-| `aufraeumen` | ja, höchstens 1×/Kalendertag | **dreizehn Schritte** — verfallene Kopplungssitzungen, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), **Mengen je Konto** und **verwaiste Kontomarken** (P5b/AP6), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speichermessung und Warnschwellen. **Maßgeblich ist `job_aufraeumen()`, nicht diese Zeile** — sie nannte bis Web 20.12.0 sechs von zwölf, und die fehlenden sechs sind zwischen S10 und P5a/AP7 dazugekommen, ohne dass es jemandem auffiel. Die **sichtbare** Beschreibung steht im Job-Katalog (`jobs_lib.php`) und ist mitzuführen |
+| `aufraeumen` | ja, höchstens 1×/Kalendertag | **siebzehn Schritte** — Kopplungssitzungen, **Sitzungsdateien** (Schritt 16, E-SA-06 — der einzige Schritt, der das Dateisystem anfasst; er räumt `server/.sitzungen/` und nur `sess_*`), Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), Mengen je Konto, Verwaiste Kontomarken (P5b/AP6), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speicher messen, Warnschwellen melden. **Maßgeblich ist `job_aufraeumen_schritte()`, nicht diese Zeile** — und seit Web 20.26.0 wird das nachgezählt statt zugesagt (`tools/jobregister/`, Stufe 1). Die Namen hier sind deshalb die Schlüssel aus dem Code, Zeichen für Zeichen |
+| `konto_verfall` | nein | Registrierungen, die nicht bestätigt wurden, und Freischaltfristen, die abgelaufen sind (P5b) — **höchstens fünf je Lauf**, aus demselben Grund wie beim Löschjob darüber |
 | `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
 | `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
 | `adminbackup` | nein, nur mit Auftrag | Konto-Backups aus der Sammelaktion „Alle sichern" |
@@ -3377,11 +3404,26 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 | `nachaufloesen` | nein, nur nach einer neuen Modelltabelle | Teilenummern bestehender Geräte erneut auflösen, in Blöcken von 200 (P5a/AP11, unten) |
 | `waisen` | nein, läuft solange Rückstand da ist | Spurpunkte und Blobs ohne Eigentümer — **bereichsweise** über den Primärschlüssel |
 
-> **`mail` steht ganz oben und fehlte in dieser Tabelle**, zusammen mit
-> `adminbackup`, `versand` und `komplett` — vier von acht. Nachgetragen in
-> P5a/AP11, als der neunte dazukam. Die Ursache bleibt und steht als
-> **Backlog Nr. 208**: Diese Tabelle ist von Hand geführt, der Katalog in
-> `jobs_lib.php` ist die Quelle. Maßgeblich ist immer er.
+> **Diese Tabelle hat dreimal gehinkt, und beim dritten Mal ist die Ursache
+> behoben worden** (Backlog Nr. 208, Schritt 16, Web 20.26.0).
+>
+> Der Werdegang, weil er die Regel erklärt: In P5a/AP5 nannte sie sechs von
+> zwölf Aufräumschritten. In P5a/AP11 fehlten **vier von acht Jobs**
+> (`mail`, `adminbackup`, `versand`, `komplett`); die Fußnote an dieser
+> Stelle behauptete danach, `mail` sei nachgetragen — **es stand trotzdem
+> nicht da**. Gemessen am 20.09.2026 gegen `862ca7f`: **11 Jobs im Code
+> gegen 9 hier** (`mail` und `konto_verfall` fehlten), **16 Aufräumschritte
+> gegen „dreizehn"**, und die sichtbare Beschreibung im Katalog nannte
+> **15 von 16**.
+>
+> Zweimal sind die Zahlen von Hand berichtigt worden, zweimal wuchs der
+> Abstand wieder. Deshalb jetzt zweierlei: Die **sichtbare** Beschreibung
+> unter Betrieb → Hintergrundjobs wird aus `array_keys(job_aufraeumen_schritte())`
+> **erzeugt** und kann nicht mehr altern. Und diese Tabelle wird
+> **nachgezählt** — `tools/jobregister/pruefen.php` hält Jobnamen, Schrittzahl
+> und Schrittnamen gegen den Quelltext, mit dem Tokenizer und ohne
+> Installation. Maßgeblich ist weiterhin der Code; neu ist, dass ein
+> Auseinanderlaufen auffällt, statt bemerkt werden zu müssen.
 
 Jeder Aufräumschritt hat weiterhin seinen eigenen Fehlerblock: Einer, der
 scheitert, hält die anderen nicht auf (das war schon seit Web 4.5.1 so und
@@ -4845,7 +4887,7 @@ Aufzählung ist die einzige Form von Schutz, die man ihnen geben kann.
 | Was | Wo | seit Web 15.6.0 |
 |---|---|---|
 | `dump.sql.gz` — eine **unverschlüsselte Abschrift jeder Tabelle** während des Komplettbackup-Baus | `sicherungen/komplett/.bau-<8 Hex>/` | **wird geräumt**: bei einem Fehlschlag sofort (`komp_schub()` fängt, räumt, setzt den Zustand auf `abgebrochen`), und bei einem Absturz ohne `catch` spätestens im nächsten Aufräumlauf — auch dem, bei dem nichts fällig ist |
-| **Reset-Token** bis zur Einlösung | PHP-Sitzungsdatei und Zugriffslog des ersten GET | bleibt (in M1-06 anerkannt): Der Token steht eine Stunde und wird beim ersten Gebrauch entwertet; ihn aus dem Zugriffslog zu halten hieße, den Link nicht mehr per Adresszeile anzunehmen |
+| **Reset-Token** bis zur Einlösung | PHP-Sitzungsdatei und Zugriffslog des ersten GET | bleibt (in M1-06 anerkannt): Der Token steht eine Stunde und wird beim ersten Gebrauch entwertet; ihn aus dem Zugriffslog zu halten hieße, den Link nicht mehr per Adresszeile anzunehmen. **Seit Web 20.26.0 liegt die Sitzungsdatei wenigstens nicht mehr irgendwo:** Sie steht in `server/.sitzungen/` mit `0700` statt in dem Verzeichnis, auf das der Hoster zeigt (Schritt 16, 5b.2 Punkt 11) — das verkleinert genau diesen Rest, hebt ihn aber nicht auf |
 | **Setz-Link**, wenn die Mail nicht wegging | auf der Kontoseite der Verwaltung | bleibt (`admin_user.php`): Ein gültiger Token in der Datenbank, von dem niemand weiß, ist die schlechtere Lage |
 
 **Was das Räumen kostet:** „Fortsetzen" nimmt einen **gescheiterten** Lauf
@@ -7784,7 +7826,7 @@ Jahr noch erfüllen.
 feststellbar**. Nur `false` auf der Muss-Stufe hält die Einrichtung auf. Wer
 nichts gemessen hat, darf nichts behaupten.
 
-### 5b.2 Die Prüfpunkte (Stand 15.09.2026)
+### 5b.2 Die Prüfpunkte (Stand 20.09.2026)
 
 **Muss**
 
@@ -7793,17 +7835,46 @@ nichts gemessen hat, darf nichts behaupten.
 | 1 | PHP-Version | ≥ 8.2 |
 | 2 | Erweiterungen | `pdo_mysql`, `openssl`, `mbstring`, `zip`, `zlib` |
 | 3 | Weblimits | `memory_limit` ≥ 64 MB, `max_execution_time` ≥ 30 s, `post_max_size` und `upload_max_filesize` ≥ 2 MB |
-| 4 | Schreibrechte | Anwendungswurzel, `sicherungen/`, `sys_get_temp_dir()` — je **mit Probedatei** |
+| 4 | Schreibrechte | Anwendungswurzel, `sicherungen/`, `sys_get_temp_dir()` — je **mit Probedatei**. `.sitzungen/` kommt als **vierter** hinzu, aber auf der Stufe Empfohlen (unten) |
 | 5 | Freier Platz | ≥ 1× größtes Komplett-Backup — oder ehrlich „unbekannt" |
 | 6 | HTTPS | die Anfrage kam über TLS (Ausnahme `localhost`) |
 | 7 | Datenbank | MySQL ≥ 8.0 oder MariaDB ≥ 10.6, InnoDB, `utf8mb4` |
 | 8 | Verbindungsgrenze | `max_user_connections` ≥ 10 (sonst `max_connections`) |
 | 9 | Kontingent der Datenbank | unter der obersten Warnschwelle (Vorgabe 10 GB, Z2) |
 | 10 | SMTP | eingerichtet; `install.php` wählt zusätzlich einmal an |
+| 11 | **Sitzungsablage** | der **wirksame** `session.save_path` gehört uns und ist für andere gesperrt (Schritt 16, E-SA-07) |
 
 **Empfohlen:** PHP ≥ 8.3 · OPcache aktiv · Datenbank in Herstellerpflege
 (MySQL 8.4, MariaDB 10.11/11.4) · `max_user_connections` ≥ 50 · `config.php`
-beschreibbar · vertrauenswürdige Proxys eingetragen (reine Auskunft).
+beschreibbar · **Ablage der Sitzungen beschreibbar** (der vierte Schreibort,
+E-SA-04) · vertrauenswürdige Proxys eingetragen (reine Auskunft).
+
+> **Punkt 11 misst den wirksamen Ort, nicht den gewünschten** — und darin
+> liegt sein Wert. Richtet die Anwendung ihre eigene Ablage ein
+> (`server/.sitzungen/`, 0700), prüft er sie; fällt sie auf den Pfad des
+> Hosters zurück (E-SA-03), prüft er **jenen**. Der Punkt bleibt nach einem
+> Rückfall also scharf, und das ist der Fall, für den es ihn gibt.
+>
+> **Rot wird er bei jedem Recht für „andere"** (`fileperms & 0007`) und
+> dann, wenn das Verzeichnis uns nicht gehört und sich trotzdem auflisten
+> lässt: **Dann sind wir selbst der Fremde, der es lesen konnte.** Wo sich
+> Rechte oder Eigentümer nicht ermitteln lassen — `open_basedir`, kein
+> `ext-posix` —, steht `null`, nicht `true`.
+>
+> **Muss und nicht Empfohlen**, obwohl es einen Rückfall gibt: Nur Muss wird
+> auf der Statusseite rot. Eine Sitzungsdatei trägt kein Schlüsselmaterial,
+> aber ihr **Dateiname ist die Sitzungskennung** — wer sie liest, ist
+> angemeldet und sieht die Klartextliste. Dass Muss die Einrichtung sperren
+> kann, ist bedacht und fällt praktisch aus: `install.php` ruft
+> `sitzung_ablage()` lange vor der Prüfung, und wer die Wurzel beschreiben
+> darf (selbst ein Muss), kann `.sitzungen/` anlegen. Ist die Wurzel nicht
+> beschreibbar, scheitert die Einrichtung ohnehin eine Zeile früher.
+>
+> **Der vierte Schreibort dagegen ist Empfohlen** (E-SA-04) und im guten
+> Fall **unsichtbar**: Die Statusseite zeigt erfüllte Empfehlungen nicht
+> einzeln, sondern nur in der Schlusszeile. Das ist gewollt — wo die
+> Sitzungen liegen und wie viele es sind, sagt Punkt 11, und der steht
+> immer da.
 
 **Die Regel ist dauerhaft, die Zahl ist ein Stand** (E-PP-03): Für Versionen
 gilt „vom Hersteller noch mit Sicherheitskorrekturen versorgt". Die Zahlen
@@ -7859,6 +7930,22 @@ Spiel sind. Auf geteiltem Webspace ist genau das der Regelfall.
 liest sie zurück und räumt sie weg. Der zufällige Name ist kein Schmuck: Eine
 feste Probedatei wäre über die Adresszeile abrufbar, wenn das Verzeichnis im
 Web-Wurzelverzeichnis liegt.
+
+**Seit Schritt 16 hat die Funktion einen zweiten Aufrufer**, und der ist der
+häufigere: `sitzung_ablage()` prüft mit ihr, ob sich in `server/.sitzungen/`
+schreiben lässt. Sie lädt `plattform_lib.php` dafür **nach**, und zwar nur im
+Zweig mit altem Marker — also höchstens einmal je Stunde, nicht bei jeder
+Anfrage. Eine zweite Schreibprobe im Repositorium wäre die Art Verdopplung,
+die auseinanderläuft.
+
+> **Die Stelle, an der das still brechen kann, steht in `email_lib.php`.**
+> Deren beide `require_once` liegen im Rumpf einer Funktion — eines davon
+> stand bis Web 20.25.0 auf Spalte 0 eingerückt und sah damit aus wie ein
+> Aufruf auf oberster Ebene. Auf oberster Ebene zöge es über `mail_lib.php`
+> **`db.php` nach**, und weil `db.php` `sitzung_ablage()` während des eigenen
+> Ladens ruft, liefe die Funktion dann in einer halb geladenen `db.php`.
+> `require_once` meldete den Zyklus nicht, sondern kehrte still zurück. Die
+> Einrückung ist berichtigt und trägt jetzt einen Kommentar, der das sagt.
 
 ### 5b.6 Die zwei Kontingente und ihre Warnung
 
@@ -8738,8 +8825,24 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 | `tools/schemaprobe/probe.php` (eigener Auftrag, Matrix) | **19 Erwartungen, 0 Fehlschläge** je Fassung — MySQL 8.4.0 und MariaDB 10.6; Selbstprobe 4/4 |
 | `tools/cspprobe/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `tools/sitzungshaertung/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
+| `tools/jobregister/pruefen.php` | 0 Befunde, Selbstprobe 9/9 — **noch nicht eingehängt**, siehe unten |
 | `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge — **nur wenn `android/` berührt ist** |
 | Uhr Stufe I (`pruefstand.sh aufbau-uebersetzen`) | übersetzt für alle Zielgeräte — **nur wenn `watch/` oder `tools/uhr-pruefstand/` berührt ist** |
+
+> **`tools/jobregister/` liegt vor und hängt noch nicht in `pruefung.yml`**
+> (Schritt 16, Backlog Nr. 208). Schritt 16 fasst `.github/` nicht an — die
+> Änderung ist bei Kette II angemeldet, zusammen mit dem achten
+> Schutzlistenpfad. Einzuhängen ist sie neben `sitzungshaertung`, mit zwei
+> Zeilen und ohne Bedingung:
+>
+>     php tools/jobregister/pruefen.php --selbstprobe
+>     php tools/jobregister/pruefen.php
+>
+> **Bis dahin ist der Punkt nur halb erledigt**: Die erzeugte Beschreibung im
+> Katalog kann nicht mehr altern, das Register in diesem Dokument schon —
+> es wird nur eben nachgezählt, sobald es jemand fährt. Genau das ist die
+> Lage, vor der Nr. 208 warnt („sonst wandert das Problem nur eine Ebene
+> weiter"), und deshalb steht sie hier und nicht in einer Fußnote.
 
 > **Die Reihenfolge ist die des Arbeitslaufs**, und sie hat einen Grund: Was
 > ohne Netz und ohne SDK läuft, läuft zuerst. Ein Syntaxfehler soll nicht erst
@@ -8936,10 +9039,32 @@ der Aufruf bei Plan „Nur von Hand" nichts und meldete sofort `fertig`.
 
 **Auf dem Server liegt 1:1 der Repositoriumsstand von `server/`**; ausgenommen
 sind `config.php` und `install.lock` (bei der Einrichtung erzeugt),
-`wartung.lock` (der Schalter des Wartungsmodus), `sicherungen/` und `apk/`.
+`wartung.lock` (der Schalter des Wartungsmodus), `ueberlast.json` (der Zähler
+der Verbindungsgrenze, P5a/AP9), `install.php` (liegt im Repositorium, wird
+aber nicht ausgeliefert — Nr. 214), `sicherungen/` und `apk/`.
 Diese Ausnahmeliste steht in beiden FTPS-Schritten wortgleich und ist tragend
 — ohne sie löscht der nächste Deploy, was nur dort entsteht. Sie steht
-**zusätzlich** in `.gitignore`; beides muss so bleiben.
+**zusätzlich** in `.gitignore` (außer `install.php`); beides muss so bleiben.
+
+> **Dieser Absatz nannte bis Web 20.25.0 fünf Einträge und die Listen führten
+> sieben** — `ueberlast.json` und `install.php` fehlten hier, seit Web 20.15.2
+> beziehungsweise P5a/AP9. Nachgetragen in Schritt 16 beim Gegenlesen, nicht
+> weil es jemandem aufgefallen wäre. Dieselbe Klasse wie Backlog Nr. 208, nur
+> an einer Liste, für die es noch kein Prüfmittel gibt.
+
+> **`.sitzungen/` wird der achte Pfad — und steht noch nicht darin**
+> (Schritt 16, E-SA-05). Der Eintrag gehört zu Kette II (E-KH-20, AP5 dort)
+> und ist dort angemeldet; Schritt 16 fasst `.github/` nicht an. **Solange er
+> fehlt, löscht ein Transport mit Löschabgleich bei jedem Deploy alle
+> Sitzungen** — die Folge ist eine Abmeldung aller, nicht ein Datenverlust,
+> und sie tritt ohnehin einmal beim Ausrollen von Web 20.26.0 ein (Abschnitt
+> 7). Der Abnahmepunkt „zwei Deploys hintereinander, die Sitzung überlebt
+> beide" ist deshalb bis zum Merge von Kette II **offen** und steht so im
+> Prüfdokument.
+>
+> Die Aktion prüft Datei- und Verzeichnismuster getrennt; jeder Ordner steht
+> deshalb **zweimal** (`sicherungen/**` und `sicherungen/`). Für `.sitzungen/`
+> gilt dasselbe — zwei Zeilen, in **beiden** Schritten.
 
 Geheimnisse liegen seit Web 20.4.0 nicht mehr als Repositoriums-Secrets herum,
 sondern an den **Umgebungen**:
@@ -9010,7 +9135,7 @@ und neue Dateien nebeneinander, und zwischen dem Hochladen und der Migration
 erwartet neuer Code Tabellen, die es noch nicht gibt. Wer in dieses Fenster
 gerät, bekommt **500**. Für eine Uhr ist das etwas anderes als ein 503: Der
 JSON-Vertrag sagt zu 5xx „später unverändert erneut versuchen" — sie puffert
-und liefert nach. Die sieben Schritte:
+und liefert nach. Die acht Schritte:
 
 > **Und seit Web 20.6.0 nimmt der Torwächter Schritt 2 auch ohne Kette ab**
 > (P5a/AP3): Steht nach dem Hochladen eine Migration aus, schaltet die
@@ -9053,6 +9178,26 @@ und liefert nach. Die sieben Schritte:
    dorthin, wo sich etwas ändern lässt. Blau heißt in Ordnung, orange
    „arbeitet, braucht Aufmerksamkeit", rot „arbeitet nicht". Steht dort eine
    Zahl, ist der Deploy noch nicht fertig.
+
+**Nach dem Ausrollen sind alle abgemeldet — einmal, und mit Ansage**
+(seit Web 20.26.0, Schritt 16, E-SA-08). Die Anwendung legt ihre
+Sitzungsdateien seither selbst ab (`server/.sitzungen/` statt des Pfads, auf
+den der Hoster zeigt). Beim ersten Aufruf nach dem Ausrollen sucht sie im
+neuen Verzeichnis, und dort liegt noch nichts: **Jede offene Sitzung endet,
+jede Angemeldete meldet sich einmal neu an.** Es geht dabei nichts verloren —
+keine Eingabe, kein Schlüssel, kein Einsatz; die Betroffene sieht die
+Anmeldeseite statt der Seite, die sie erwartet hat.
+
+Das ist der Gegensatz zu Schritt 7: **Uhr und Handy puffern, die
+Browsersitzungen nicht.** Dasselbe passiert ein zweites Mal, falls sich der
+Ort noch einmal ändert — etwa wenn die Probe nach einer Stunde ein anderes
+Ergebnis liefert (E-SA-02). Ein Mischbetrieb zweier Ablagen wäre das
+Schlimmere; ein sauberer Schnitt ist deshalb gewollt.
+
+**Und bis `.sitzungen/` in der Ausnahmeliste des Transports steht** (Kette II,
+E-KH-20 — siehe 6.5), wiederholt sich die Abmeldung bei **jedem** Deploy mit
+Löschabgleich. Das ist kein Schaden, aber es ist der Grund, warum der Eintrag
+kein Feinschliff ist.
 
 **Was währenddessen erreichbar bleibt** (E-S5W-04): die **sechs**
 Betriebsseiten `betrieb_status.php`, `betrieb_statistik.php`,
