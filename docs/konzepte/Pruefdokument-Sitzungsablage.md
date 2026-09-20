@@ -18,7 +18,7 @@ steht in Abschnitt 2 und 3; was **nicht** geprüft werden konnte, steht zuerst.
 | N-2 | **`https://<basis>/.sitzungen/` → 403** | Braucht Apache und eine erreichbare Anlage. Die Regel selbst ist gelesen (`server/.htaccess`: `RewriteRule "(^\|/)\.(?!well-known/)" - [F,L]`) und deckt jeden Pfad mit führendem Punkt ab — **gelesen ist nicht gemessen** | Punkt B-7 |
 | N-3 | **Stufe 2 der Kette** (vier Pfade 403, `.well-known/` 404) | Läuft gegen Staging. Der Auftrag untersagt Merge und Push auf `main` ohne Ansage; Stufe 2 ist auf der neuen Staging-Anlage derzeit ohnehin nicht grün | Punkt B-8 |
 | N-4 | **Prüfpunkt E-SA-07 auf einer echten Anlage** | Der hier gemessene Rückfall lief gegen `/var/lib/php/sessions` dieses Containers (`0733`), nicht gegen lima-city (`0773`, Eigentümer root). Die Logik ist damit belegt, **die Anlage nicht** | Punkt B-9 |
-| N-5 | **„Zwei Deploys hintereinander, die Sitzung überlebt beide"** | `.sitzungen/` steht **noch nicht** in der Ausnahmeliste des Transports. Der Eintrag ist der achte Schutzlistenpfad und gehört zu Kette II (E-KH-20, AP5 dort); Schritt 16 fasst `.github/` nicht an | Punkt K-1 — **erst nach Kette II prüfbar** |
+| N-5 | **„Zwei Deploys hintereinander, die Sitzung überlebt beide"** | `.sitzungen/` steht **noch nicht** in der Ausnahmeliste des Transports (Kette II, E-KH-20, AP5 dort). **Nachgetragen 20.09.2026:** Der heutige Transport löscht den Ordner nachweislich nicht (K-1) — der Punkt belegt damit die Zusage des Eintrags, nicht die Abwehr einer akuten Gefahr | Punkt K-1 — **erst nach Kette II prüfbar** |
 | N-6 | **`tools/jobregister/` in Stufe 1** | Derselbe Grund: `.github/workflows/pruefung.yml` gehört zu Kette II. Das Werkzeug liegt vor und läuft; es hängt nur noch nicht | Punkt K-2 |
 | N-7 | **nginx** | Es gibt keine Anlage dieses Projekts mit nginx. Dort greift die `.htaccess`-Regel nicht, und `0700` ist die **einzige** Sicherung | bleibt dauerhaft ungeprüft; steht so in `docs/Technik.md` 5b.2 |
 | N-8 | **„Verzeichnis nicht anlegbar" auf einer echten Anlage** | Nachgestellt, indem `.sitzungen` als **Datei** statt als Verzeichnis existierte — `mkdir` scheitert dann wie bei fehlendem Schreibrecht. Ein entzogenes Schreibrecht ließ sich nicht nachstellen: Der Prüfstand läuft als `root`, und root ignoriert die Rechtebits | Der Rückfallzweig selbst ist belegt (Abschnitt 2.4) |
@@ -259,9 +259,17 @@ erkennen ist**.
       überlebt beide.**
       **Scheitern:** Nach dem zweiten Deploy ist man abgemeldet — dann löscht
       der Transport das Verzeichnis weiterhin.
-      **Bis dahin:** Die einmalige Abmeldung wiederholt sich bei **jedem**
-      Deploy mit Löschabgleich. Kein Datenverlust, aber der Grund, warum der
-      Eintrag kein Feinschliff ist.
+      **Bis dahin — nachgemessen, nicht angenommen:** Der heutige Transport
+      löscht `.sitzungen/` **nicht**. `getServerFiles()` listet das
+      Fernverzeichnis nie, sondern liest ausschließlich die eigene
+      Zustandsdatei; `HashDiff.getDiffs()` kann deshalb nur löschen, was dort
+      steht, und ein zur Laufzeit entstandener Ordner stand dort nie. Gelesen
+      in `@samkirkland/ftp-deploy` **1.2.3, 1.2.4, 1.2.5** — `HashDiff.js` und
+      `deploy.js` zeichengleich (SHA-256 nach Normierung der Zeilenenden).
+      Die einmalige Abmeldung wiederholt sich also **nicht** bei jedem Deploy.
+      Der Eintrag schützt gegen den anderen Weg: `.sitzungen/` im
+      Auscheckstand → hochgeladen → in der Zustandsdatei → ab da löschbar.
+      Gegen `dangerous-clean-slate` schützt er nicht.
 - [ ] **K-2 `tools/jobregister/` in Stufe 1 einhängen**
       (`.github/workflows/pruefung.yml`, neben `sitzungshaertung`):
 

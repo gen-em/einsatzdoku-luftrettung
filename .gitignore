@@ -31,10 +31,24 @@ server/ueberlast.json
 # Sitzungskennung, wer sie liest, ist angemeldet. Ein eingecheckter Ordner
 # waere eine Sitzung im Repositorium.
 #
-# Der Ordner steht zusaetzlich in der Ausnahmeliste beider FTPS-Schritte,
-# sonst loeschte ihn der naechste Push -- und meldete damit bei jedem Deploy
-# alle an. ACHTUNG, STAND 20.09.2026: Dort ist er NOCH NICHT eingetragen; der
-# Eintrag gehoert zu Kette II (E-KH-20, AP5 dort) und ist dort angemeldet.
+# Der Ordner gehoert zusaetzlich in die Ausnahmeliste beider FTPS-Schritte.
+# ACHTUNG, STAND 20.09.2026: Dort ist er NOCH NICHT eingetragen; der Eintrag
+# gehoert zu Kette II (E-KH-20, AP5 dort) und ist dort angemeldet.
+#
+# WOGEGEN GENAU -- nachgemessen am 20.09.2026, weil die naheliegende
+# Begruendung NICHT stimmt: Der heutige Transport loescht ihn nicht. Die
+# Aktion listet das Fernverzeichnis nie; ihre Loeschliste entsteht
+# ausschliesslich aus der eigenen Zustandsdatei, und ein zur Laufzeit auf dem
+# Server entstandener Ordner stand dort nie. Gelesen in
+# `@samkirkland/ftp-deploy` 1.2.3 bis 1.2.5, in allen drei Fassungen
+# zeichengleich.
+#
+# Der Eintrag schuetzt gegen etwas anderes: Sobald `.sitzungen/` einmal im
+# Auscheckstand des Laeufers laege, wuerde er hochgeladen, stuende ab da in
+# der Zustandsdatei -- und ab da loeschte ihn jeder Deploy, bei dem er lokal
+# fehlt. Genau diesen Weg macht der Eintrag zu. Gegen
+# `dangerous-clean-slate` hilft er NICHT: Das loescht laut Anleitung auch
+# Ausgenommenes.
 #
 # Als einziger dieser Eintraege liegt er im Web-Wurzelverzeichnis. Was ihn
 # dort deckt, ist die Punktregel in server/.htaccess (jeder Pfad mit
