@@ -325,8 +325,11 @@ function sitzung_ablage_setzen(string $pfad): void
         sitzung_ablage_stand('eigen', true, null);
         return;
     }
+    /* NUR DER GESETZTE PFAD. Der wirksame steht ohnehin am Ende derselben
+     * Zeile („Wirksam: <Pfad>"); ihn hier zu wiederholen hat ihn auf der
+     * Statusseite zweimal gedruckt. */
     sitzung_ablage_stand('nicht_uebernommen', false,
-        'Gesetzt wurde `' . $pfad . '`, wirksam ist `' . $wirk . '`.');
+        'Gesetzt wurde `' . $pfad . '`.');
 }
 
 /**

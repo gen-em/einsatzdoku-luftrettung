@@ -188,6 +188,7 @@ deshalb ist das eine Auslassungszeichen aufgefallen (Abschnitt 0).
 | F-3 | **Ein U+2026 in einem neuen Kommentar in `db.php`** schob die Vollständigkeit auf 399 | `tools/vollstaendigkeit/` |
 | F-4 | **`tools/wegwerfdomains/` fehlte seit Web 20.22.0 im Werkzeugbaum** (46 gegen 48) | Zählung beim Eintragen von `tools/jobregister/` |
 | F-5 | **`docs/Technik.md` 6.5 nannte fünf Ausnahmen, die Kette führt sieben** (`ueberlast.json`, `install.php` fehlten) | Gegenlesen für den achten Pfad |
+| **F-7** | **Der Hoster gibt `session.save_path` vor.** Auf Staging blieb der wirksame Pfad `/home/webpages/tmp` (0773), obwohl die Anwendung ihr eigenes Verzeichnis angelegt und gesetzt hatte. **Behoben mit einer `.user.ini`** — der Wert war gesetzt, nicht gesperrt. Kein Codefehler, eine Anlageneigenschaft; dokumentiert in Technik.md 5b.2a und im Runbook | Durch den Satz, den 20.26.1 druckt (`nicht_uebernommen`) |
 | **F-6** | **AUSGELIEFERT UND ERST AUF STAGING GEFUNDEN** (Web 20.26.1). Die Statusseite nannte eine Ursache, die sie nicht gemessen hatte: „konnte kein eigenes Verzeichnis einrichten", obwohl es angelegt und beschreibbar war. `sitzung_ablage_setzen()` behauptete `eigen = true`, ohne den Erfolg von `session_save_path()` zu prüfen, und drei von sechs Ausgängen vermerkten gar nichts | Beim ersten Aufruf der Statusseite nach dem Ausrollen — also durch **Punkt B-5 dieser Liste**. Der Prüfstand konnte es nicht finden (N-8a) |
 
 ---
@@ -236,11 +237,24 @@ erkennen ist**.
       | „die Anlage uebernimmt den gesetzten Pfad aber nicht" | Hoster schreibt `session.save_path` fest — siehe **B-11** |
       | „lief bereits eine Sitzung" | `session.auto_start` oder `auto_prepend_file` — siehe **B-11**, und dann trägt das Sitzungscookie auch **kein** `secure`/`SameSite` |
 
-      **Stand 20.09.2026: Dieser Punkt ist auf Staging gescheitert** und hat
-      F-6 gefunden. Nach dem Ausrollen von 20.26.1 ist er erneut zu fahren —
-      er wird weiter rot sein, aber jetzt mit einem wahren Satz daneben.
+      **Stand 20.09.2026, abends: BESTANDEN.** Der erste Lauf ist gescheitert
+      und hat F-6 gefunden (rot, „konnte kein eigenes Verzeichnis
+      einrichten" — falsch). Mit 20.26.1 nannte die Zeile die wahre Lage
+      (`nicht_uebernommen`), nach dem Handgriff `.user.ini` steht sie
+      **blau**: *eigenes Verzeichnis, 0700, 11 Dateien*, wirksam
+      `…/nadoku-staging/.sitzungen`. Damit ist **B-2 mitgeprüft** — die
+      Dateizahl ist wieder ablesbar, weil das Verzeichnis uns gehört.
 
-- [ ] **B-11 Welche der beiden Ursachen ist es?** (neu mit 20.26.1)
+- [x] **B-11 Welche der beiden Ursachen ist es?** — **beantwortet am
+      20.09.2026, ohne den Handgriff unten.** Die Zeile stand auf
+      `nicht_uebernommen`; das schließt `session.auto_start` aus (dann hieße
+      die Lage `sitzung_lief`). **Die Cookie-Härtung in `auth_guard.php`
+      wirkt also** — die Sorge um `secure`/`SameSite` ist gegenstandslos.
+      Die Ursache war ein vom Hoster gesetztes `session.save_path`; behoben
+      mit `.user.ini` (Technik.md 5b.2a und Runbook). Der Bedienweg unten
+      bleibt stehen, falls der Fall an einer anderen Anlage wiederkommt.
+
+      *Ursprünglicher Bedienweg:*
       **Bedienweg, ohne Upload:** `server/.sitzungen/.geprueft` per FTPS
       **löschen** — es ist Cache, kein Bestand —, dann die Statusseite laden,
       dann im FTPS-Listing nachsehen.
