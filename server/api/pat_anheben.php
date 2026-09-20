@@ -45,8 +45,8 @@ require_once __DIR__ . '/../validate_lib.php';    // pruef_pat_blob()
  *
  * ---- WAS DIESER ENDPUNKT AUSDRUECKLICH NICHT TUT -------------------------
  *
- * Er setzt NICHT `manual = 1` und NICHT `edited = 1`. Das Einsatzformular tut
- * das bei jedem Speichern, und `ingest.php` hoert bei `manual = 1` auf,
+ * Er setzt NICHT `uhr_gesperrt = 1` und NICHT `edited = 1`. Das Einsatzformular
+ * tut das bei jedem Speichern, und `ingest.php` hoert bei `uhr_gesperrt = 1` auf,
  * Metadaten, Phasen und Reanimationen der Uhr zu uebernehmen. Ein Anhebelauf,
  * der den Formularweg nachbaute, wuerde den GESAMTEN Altbestand eines Kontos
  * still gegen die Uhr einfrieren — beim naechsten Entsperren, ungefragt, ohne

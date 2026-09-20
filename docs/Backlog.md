@@ -2747,6 +2747,62 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     will, nimmt den Fall aus Nr. 221 als Prüffall: Eine Mailadresse in einem
     Rechtstext, 360 px, der Finder muss das `<p>` nennen.
 
+238. **`missions.manual` bricht die Einrichtung auf MySQL 8.4.0–8.4.10.**
+    *Aufgenommen 20.09.2026 aus dem Fehlversuch auf dem neuen
+    Staging-Webspace.* **Umgesetzt in Web 20.25.0**, Zweig
+    `claude/festive-fermi-el0avv`. Offen ist allein die Prüfung durch die
+    Betreiberin — Liste in `docs/konzepte/Pruefdokument-uhr_gesperrt.md`;
+    im Browser ist noch nichts bedient worden.
+
+    `SQLSTATE[42000] … 1064 … near 'manual TINYINT(1) NOT NULL DEFAULT 0` —
+    MySQL führt **MANUAL von 8.4.0 bis 8.4.10 als reserviertes Wort**, ab
+    8.4.11 wieder nicht. `schema.sql` legte die Spalte ungequotet an; die
+    Staging-Datenbank ist 8.4.x.
+
+    **Gemessen:** 788 Bezeichner-Vorkommen in elf DDL-führenden Dateien gegen
+    284 reservierte Wörter → **zehn betroffene Stellen**, nicht eine. Neben
+    der Einrichtung der Uhr-Eingang, GPX- und Datei-Import, der Schnitt,
+    beide Zweige des Einsatzformulars und beide Richtungen der Sicherung.
+    `PARALLEL`, `QUALIFY`, `TABLESAMPLE` (in 8.4 ebenfalls neu reserviert)
+    kommen nicht vor.
+
+    **Entscheidung (Philipp, 20.09.2026): umbenennen in `uhr_gesperrt`, nicht
+    quoten.** Eine übersehene Stelle scheitert dann auf jeder Version sofort
+    statt nur auf elf im Betrieb. Der Dateischlüssel in Sicherung und Export
+    bleibt `manual`.
+
+    **Dahinter lag ein zweiter Blocker, und er war der größere:**
+    `DEFAULT UTC_TIMESTAMP()` ohne Klammern wird von MySQL auf **jeder**
+    Fassung abgewiesen (vier Stellen). Die Anwendung ließ sich damit **seit
+    Web 20.16.5 auf MySQL überhaupt nicht einrichten**; gemerkt hat es
+    niemand, weil der Fehler am reservierten Wort schon vorher kam. Beides
+    hatte dieselbe Ursache — entwickelt und geprüft wird gegen MariaDB,
+    ausgeliefert wird gegen MySQL. Dagegen steht jetzt
+    `tools/schemaprobe/` in Stufe 1, mit einer **Matrix** über MySQL 8.4.0
+    und MariaDB 10.6.
+
+239. **`backup_lib.php` baut sein `INSERT` ohne Backticks, `komplett_lib.php`
+    mit.**
+    *Aufgenommen 20.09.2026 beim Beheben von Nr. 238.*
+
+    Dieselbe Aufgabe, zwei Umsetzungen. `komplett_lib.php:722` schickt jeden
+    Tabellen- und Spaltennamen durch `$q()`
+    (`'`' . str_replace('`', '``', $s) . '`'`); `backup_lib.php:1899` setzt
+    die Spaltenliste mit `implode(',', $cols)` zusammen, ungequotet — und in
+    `$cols` fließen über `$extraCols` die Namen aus dem **Feldkatalog**
+    (`mission_fields.php`), also Namen, die künftig noch dazukommen.
+
+    **Heute ungefährlich**, weil nach Nr. 238 kein Name der Liste mehr
+    reserviert ist. Der Punkt ist die Bauform, nicht der aktuelle Stand: Genau
+    diese Stelle hätte auf MySQL 8.4.0–8.4.10 das **Einspielen** einer
+    Sicherung unmöglich gemacht, und beim nächsten Katalogfeld, das zufällig
+    ein reserviertes Wort trifft, wäre sie wieder die Bruchstelle.
+
+    **Was zu tun ist:** dieselbe Quotierungsfunktion wie in
+    `komplett_lib.php`, an beiden Stellen der Sicherung. Dazu die Frage, ob
+    eine gemeinsame Helferfunktion sinnvoller ist als zwei Kopien — sie wäre
+    der naheliegende Ort, an dem der nächste Schreibweg sie auch findet.
+
 
 ## Erledigt
 

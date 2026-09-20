@@ -537,7 +537,7 @@
       "rea": [],
       "felder": null,
       "geschuetzt": null,
-      "$warum": "OHNE Nachtrag und ohne jede geschützte Angabe. Der Einsatz bleibt damit ein reiner Uhr-Einsatz: origin=watch, edited=0, manual=0. Er ist die Gegenprobe zu allen anderen — wäre auch er bearbeitet, gäbe es im Datensatz keinen einzigen unberührten Uhr-Einsatz mehr und die Herkunftsspalten wären nicht mehr unterscheidbar. Der Zielort im Track ergibt sich aus den Phasen 7/8; eine Zielklinik ist NICHT gesetzt, weil sie ohne Nachtrag nicht erfasst würde.",
+      "$warum": "OHNE Nachtrag und ohne jede geschützte Angabe. Der Einsatz bleibt damit ein reiner Uhr-Einsatz: origin=watch, edited=0, uhr_gesperrt=0. Er ist die Gegenprobe zu allen anderen — wäre auch er bearbeitet, gäbe es im Datensatz keinen einzigen unberührten Uhr-Einsatz mehr und die Herkunftsspalten wären nicht mehr unterscheidbar. Der Zielort im Track ergibt sich aus den Phasen 7/8; eine Zielklinik ist NICHT gesetzt, weil sie ohne Nachtrag nicht erfasst würde.",
       "abdeckung": [
         "herkunft-watch",
         "uhr-unbearbeitet",

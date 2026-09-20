@@ -6337,5 +6337,104 @@ declare(strict_types=1);
  *   (230 Textzeichen, seinerzeit nachgemessen). Ein ueberlaufender
  *   Rechtstext kann es damals nicht gewesen sein. Der reproduzierbare
  *   Befund ist behoben, der damalige Einzelfall bleibt unerklaert.
+ *
+ * 20.25.0 — DIE SPALTE `manual` HEISST JETZT `uhr_gesperrt`
+ *   (Backlog Nr. 238, 20.09.2026).
+ *
+ *   Die Einrichtung auf dem neuen Staging-Webspace scheiterte, und zwar
+ *   nicht am Webspace: `SQLSTATE[42000] ... 1064 ... near 'manual TINYINT(1)
+ *   NOT NULL DEFAULT 0` — Zeile 23 des Schemas. MySQL fuehrt **MANUAL von
+ *   8.4.0 bis 8.4.10 als reserviertes Wort** (ab 8.4.11 wieder nicht);
+ *   `schema.sql` legte die Spalte ungequotet an, und die Staging-Datenbank
+ *   ist 8.4.x. Der Produktivserver war nicht betroffen — bei einem
+ *   Hoster-Update waere er es gewesen.
+ *
+ *   NACHGEMESSEN, WAS SONST NOCH GEBROCHEN WAERE: 788 Bezeichner-Vorkommen
+ *   in elf DDL-fuehrenden Dateien gegen 284 reservierte Woerter, dazu die
+ *   Schreibwege. Ergebnis: **ZEHN Stellen**, nicht eine. Neben der
+ *   Einrichtung der Uhr-Eingang (`ingest.php`), GPX- und Datei-Import, der
+ *   Schnitt, beide Zweige des Einsatzformulars und **beide Richtungen der
+ *   Sicherung** — eine Sicherung haette sich auf 8.4 weder erstellen noch
+ *   einspielen lassen. `PARALLEL`, `QUALIFY` und `TABLESAMPLE`, die in 8.4
+ *   ebenfalls neu reserviert sind, kommen im Repositorium nicht vor.
+ *
+ *   UMBENANNT UND NICHT GEQUOTET — die eigentliche Entscheidung
+ *   (Philipp, 20.09.2026). Ueberall Backticks zu setzen haette den Fehler
+ *   ebenso behoben. Aber eine dabei uebersehene Stelle waere nur auf genau
+ *   diesen elf Fassungen aufgefallen, im Betrieb, bei jemand anderem. Mit
+ *   dem neuen Namen scheitert sie auf JEDER Fassung sofort. Verworfen
+ *   wurde auch „auf 8.4.11 warten": Das waere ein Zuschnitt auf den Hoster,
+ *   und der widerspricht der Hosting-Entscheidung vom 15.09.2026.
+ *
+ *   DER NAME HOERT AUSSERDEM AUF ZU LUEGEN. `manual` las sich wie „von Hand
+ *   angelegt" — so sehr, dass in `schema.sql` seit jeher ein Dementi
+ *   danebenstand („NICHT von Hand angelegt — dafuer siehe origin"). Die
+ *   Spalte sagt etwas anderes: Die Uhr ueberschreibt Metadaten, Phasen und
+ *   Reanimation dieses Einsatzes nicht mehr. Genau das heisst sie jetzt.
+ *
+ *   `CHANGE` UND NICHT `RENAME COLUMN`, aus zwei praktischen Gruenden. Der
+ *   Katalog kennt `CHANGE` schon dreimal und `RENAME COLUMN` kein einziges
+ *   Mal. Und `tools/migrationsregister/pruefen.php` rechnet den Katalog
+ *   durch, um ihn gegen `schema.sql` zu halten: Seine DDL-Simulation
+ *   versteht ADD, DROP, CHANGE und RENAME TABLE — ein `RENAME COLUMN` liefe
+ *   durch sie hindurch, ohne die Spalte umzubenennen, und Stufe 1 der Kette
+ *   waere grundlos rot geworden. `CHANGE` ist ausserdem verlustfrei: Die
+ *   Werte des Bestands bleiben Zeile fuer Zeile stehen.
+ *
+ *   DIE ALTE SKIP-PRUEFUNG WAERE ZUR FALLE GEWORDEN.
+ *   `2026_07_18_manuelle_einsaetze` fragte „gibt es `missions.manual`?" —
+ *   nach der Umbenennung: nein. Auf einer Datenbank ohne Registereintrag
+ *   haette sie die Spalte ein zweites Mal angelegt, leer, neben der vollen.
+ *   Und aufgefallen waere es nicht: `1060` steht in der Schluckliste, der
+ *   Lauf ginge weiter, gelesen wuerde ab da die leere Spalte. Die Pruefung
+ *   fragt jetzt nach BEIDEN Namen.
+ *
+ *   DIE NEUE MIGRATION HAT SELBST EINE ZWEITEILIGE BEDINGUNG, und die
+ *   zweite ist die wichtige: Fehlt `manual`, darf das SQL nicht laufen.
+ *   MySQL antwortete sonst mit `1054 Unknown column`, und 1054 steht NICHT
+ *   in der Schluckliste — der ganze Migrationslauf braeche ab, an einer
+ *   Migration, die nichts zu tun hat.
+ *
+ *   IN DER SICHERUNGS- UND EXPORTDATEI HEISST DAS FELD WEITER `manual`.
+ *   Das ist Absicht und keine Nachlaessigkeit: Alte Sicherungen und alte
+ *   Exporte muessen sich unveraendert einspielen lassen, und der
+ *   ausgelieferte Demo-Bestand (`server/demo/fixture.json.gz`, 106
+ *   Einsaetze, 104 davon mit dem Schutzflag) ist selbst eine solche Datei.
+ *   Die Spalte wird beim Lesen per Alias auf den Dateinamen abgebildet und
+ *   beim Schreiben zurueck.
+ *
+ *   HINTER DEM RESERVIERTEN WORT STAND EIN ZWEITER BLOCKER, und er war der
+ *   groessere. Nach dem Umbenennen lief `schema.sql` gegen MySQL 8.4.0 bis
+ *   Zeile 650 und brach dort wieder ab:
+ *   `zeit DATETIME NOT NULL DEFAULT UTC_TIMESTAMP()`. MySQL laesst einen
+ *   Funktionsaufruf als Spaltenvorgabe nur GEKLAMMERT zu --
+ *   `DEFAULT (UTC_TIMESTAMP())`, seit 8.0.13. MariaDB nimmt beide
+ *   Schreibweisen, und deshalb ist es nie aufgefallen: Entwickelt und
+ *   geprueft wurde gegen MariaDB.
+ *
+ *   DAS IST KEIN 8.4-PROBLEM. Es betrifft JEDE MySQL-Fassung. Vier Stellen,
+ *   zwei in `schema.sql` (`protokoll_ereignisse`, `konto_einwilligungen`),
+ *   zwei in den Migrationen, die dieselben Tabellen anlegen. Folge: Seit
+ *   Web 20.16.5 liess sich die Anwendung auf MySQL UEBERHAUPT NICHT
+ *   einrichten -- die Zusage „MySQL >= 8.0" in `docs/Technik.md` 7 und
+ *   `plattform_lib.php` war seither nicht eingeloest. Gemerkt hat es
+ *   niemand, weil der Fehler am reservierten Wort schon vorher kam.
+ *
+ *   GEMESSEN, statt behauptet: Das alte `schema.sql` gegen MySQL 8.4.0
+ *   bricht bei Zeile 386 (1064, wortgleich mit der Meldung vom Staging),
+ *   das neue legt **42 Tabellen** fehlerfrei an. Der Migrationsprueflauf
+ *   ueber vier Installationsfaelle meldet **18 Pruefungen, 0 Fehlschlaege**
+ *   -- gegen MySQL 8.4.0 UND gegen MariaDB 10.11.
+ *
+ *   DIE AUSLASSUNGEN OBEN STEHEN ALS ASCII, nicht als U+2026. Das
+ *   Auslassungszeichen zaehlt `tools/vollstaendigkeit/` als
+ *   „Unicode-Zeichen als Symbol im Markup", und die zwei in jener einen
+ *   Zeile haben Stufe 1 der Kette ueber ihre Schwelle geschoben --
+ *   400 statt hoechstens 398, gemessen am 20.09.2026.
+ *
+ *   DIE KOPFZEILE VON `schema.sql` NANNTE „MySQL >= 5.7 / MariaDB >= 10.2".
+ *   Das widersprach `plattform_lib.php` und `docs/Technik.md` und war
+ *   ausserdem fuer sich genommen falsch, seit die geklammerte Vorgabe
+ *   drinsteht. Sie nennt jetzt 8.0.13 / 10.6.
  */
-const WEB_VERSION = '20.24.2';
+const WEB_VERSION = '20.25.0';

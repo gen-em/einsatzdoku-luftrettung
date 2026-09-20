@@ -1,4 +1,11 @@
--- Einsatzdokumentation Notarzt — Schema v2.0 (MySQL >= 5.7 / MariaDB >= 10.2)
+-- Einsatzdokumentation Notarzt — Schema v2.0 (MySQL >= 8.0.13 / MariaDB >= 10.6)
+--
+-- DIE UNTERGRENZE STAND HIER BIS WEB 20.24.2 AUF "MySQL >= 5.7 / MariaDB >=
+-- 10.2" und war damit doppelt falsch: Sie widersprach `plattform_lib.php`
+-- (PLATTFORM_MYSQL_MIN = '8.0', PLATTFORM_MARIADB_MIN = '10.6') und
+-- `docs/Technik.md` 7, und sie stimmte auch fuer sich genommen nicht --
+-- `DEFAULT (UTC_TIMESTAMP())` weiter unten braucht MySQL 8.0.13. Erzwungen
+-- wird die Grenze nicht; sie beschreibt, wogegen geprueft wird.
 --
 -- REIHENFOLGE DER TABELLEN. Seit dem Umbau auf Diensttage (Web 6.0.0) ist
 -- `days` der Anker des Datenmodells: `missions` und `rest_segments` verweisen
@@ -383,7 +390,17 @@ CREATE TABLE missions (
   -- Teilstueck, ein spaet hochgeladener Puffer waere sonst im Moment
   -- des Eintreffens schon 14 Tage still. NULL = noch nie gemessen.
   letzter_punkt_am DATETIME NULL,
-  manual     TINYINT(1) NOT NULL DEFAULT 0,           -- ausschliesslich: Uhr ueberschreibt Metadaten/Phasen/Rea nicht mehr (NICHT "von Hand angelegt" -- dafuer siehe origin)
+  -- UHR-SPERRE. 1 heisst: Die Uhr ueberschreibt Metadaten, Phasen und
+  -- Reanimation dieses Einsatzes nicht mehr (ingest.php). Sie sagt NICHTS
+  -- darueber, wer den Einsatz angelegt hat -- dafuer ist `origin` da.
+  --
+  -- HIESS BIS WEB 20.24.2 `manual`, und der Name war doppelt falsch: Er las
+  -- sich wie "von Hand angelegt" (deshalb stand hier immer ein Dementi), und
+  -- MANUAL ist in MySQL 8.4.0 bis 8.4.10 ein RESERVIERTES WORT -- ungequotet
+  -- brach an dieser Zeile die ganze Einrichtung mit Fehler 1064. Umbenannt
+  -- statt gequotet, damit eine uebersehene Stelle auf JEDER Fassung sofort
+  -- scheitert und nicht nur auf diesen elf (Backlog Nr. 238).
+  uhr_gesperrt TINYINT(1) NOT NULL DEFAULT 0,
   -- Herkunft: wird beim Anlegen gesetzt und nie wieder geaendert (R64).
   -- VARCHAR und kein ENUM, seit Web 14.0.0: Ein ENUM braucht fuer jeden neuen
   -- Client eine Migration. Der Wertevorrat steht in geraete_lib.php
@@ -637,7 +654,7 @@ CREATE TABLE sicherheit_ereignisse (
 -- Protokolleintrag, mit RESTRICT verhinderte der Eintrag die Loeschung.
 CREATE TABLE protokoll_ereignisse (
   id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  zeit              DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+  zeit              DATETIME NOT NULL DEFAULT (UTC_TIMESTAMP()),
   reiter            ENUM('verwaltung','email','jobs',
                          'sicherung','ziele','system') NOT NULL,
   art               VARCHAR(64) NOT NULL,
@@ -838,7 +855,7 @@ CREATE TABLE konto_einwilligungen (
   user_id    INT UNSIGNED NOT NULL,
   schluessel VARCHAR(32) NOT NULL,
   stand_am   DATETIME NULL,
-  zeit       DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+  zeit       DATETIME NOT NULL DEFAULT (UTC_TIMESTAMP()),
   PRIMARY KEY (user_id, schluessel),
   CONSTRAINT fk_kew_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -1021,4 +1038,8 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- users.erststart_stand und rueckfrage_* stehen oben schon im Schema
   -- (Web 20.24.0, P5b/AP9). Der Nachzieher fuer Bestandskonten entfaellt in
   -- einer frischen Anlage: Dort gibt es keine.
-  ('2026_09_17_erststart_rueckfragen', 'skipped');
+  ('2026_09_17_erststart_rueckfragen', 'skipped'),
+  -- missions.uhr_gesperrt heisst oben schon so (Web 20.25.0, Nr. 238). Eine
+  -- frische Anlage hat nichts umzubenennen; die Migration ist ausschliesslich
+  -- fuer Bestandsdatenbanken da, die die Spalte noch als `manual` fuehren.
+  ('2026_09_20_uhr_gesperrt', 'skipped');
