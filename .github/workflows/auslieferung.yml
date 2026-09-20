@@ -275,8 +275,12 @@ jobs:
         #
         # ER FRAGT `login.php` UND NICHT `/`. Eine frische Subdomain liefert
         # beim Hoster eine „Domain Default page" mit HTTP 200 aus — gemessen
-        # am 16.09.2026 an `staging.nadoku.gen-em.org`. Wer nur den Code
-        # prueft, haelt eine leere Subdomain fuer eine laufende Anwendung.
+        # am 16.09.2026 an `staging.nadoku.gen-em.org`, der DAMALIGEN
+        # Staging-Anlage im Produktiv-Webspace. Seit dem 20.09.2026 liegt
+        # Staging bei einem anderen Hoster (`staging-nadoku.gen-em.org`,
+        # lima-city, E-KH-04); die Messung ist Geschichte, der Befund nicht.
+        # Wer nur den Code prueft, haelt eine leere Subdomain fuer eine
+        # laufende Anwendung.
         # Derselbe Griff faengt den teuersten Einrichtungsfehler mit:
         # **ein falscher `FTP_ZIELPFAD`.** Liegen die Dateien im falschen
         # Verzeichnis, gibt es dort keine `login.php`, und das faellt hier auf

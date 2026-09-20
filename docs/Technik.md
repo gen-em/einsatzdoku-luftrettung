@@ -7749,6 +7749,11 @@ greift — das ist Gerätetest und steht aus.
 zwei Stufen.** Beschlossen am 15.09.2026 als R81; Volltext der Herleitung in
 `docs/konzepte/Vorbereitung-P5-Plattformprofil.md` (PP-1 bis PP-9).
 
+**Zwei Installationen lesen diese Liste, und sie stehen auf zwei
+Plattformen.** Seit dem 20.09.2026 liegt Staging bei einem anderen Hoster als
+Produktiv; was das für die Übertragbarkeit einer Messung bedeutet — und der
+Vergleich beider Auskünfte nebeneinander — steht in **Abschnitt 6.3a**.
+
 | Stufe | Bedeutung | Was die Anwendung daraus macht |
 |---|---|---|
 | **Muss** | Fehlt es, läuft die Anwendung nicht — und sagt es. | `install.php` prüft es **vor** der Einrichtung und lässt sie nicht zu; die Statusseite prüft es im Betrieb und zeigt **rot**. |
@@ -8887,6 +8892,75 @@ Datei da ist oder nicht**: mod_rewrite läuft vor der Dateisuche. Ein 404
 käme auch von einer leeren Adresse — genau so wurde der auslösende Befund
 zuerst falsch entlastet.
 
+### 6.3a Staging und Produktiv sind zwei Plattformen (ab 20.09.2026, E-KH-04)
+
+**Bis zum 19.09.2026 lagen sie im selben Webspace.** `staging.nadoku.gen-em.org`
+war eine Subdomain desselben Plesk-Abonnements wie Produktiv, mit eigener
+Datenbank und eigenem FTPS-Konto — aber **unter demselben Systemnutzer**. Das
+war der Fehler: Staging-PHP konnte Produktivs `config.php` lesen, und damit
+reichten die Staging-Zugangsdaten faktisch bis Produktiv — an der
+Pflichtfreigabe und am Backup-Tor vorbei. Wer Staging kompromittiert, hätte
+den Serverschlüssel, den Server-Anteil am Datenschlüssel und den DB-Zugang
+von Produktiv gehabt. Eine Prüfumgebung, deren Zugangsdaten die
+Produktionsumgebung öffnen, ist keine.
+
+**Seit dem 20.09.2026 liegt Staging bei lima-city**
+(`staging-nadoku.gen-em.org`), also bei einem **anderen Hoster**; die alte
+Anlage ist am selben Tag stillgelegt worden. Die Einrichtung steht in
+`docs/Rahmenplan.md`, Abschnitt 6a.
+
+**Der Preis ist eine Zusage, die es nicht mehr gibt.** E-PP-09 hatte Staging
+ausdrücklich „beim selben Hoster im selben Tarif" festgelegt, und zwar mit
+dieser Begründung: *Nur dann misst der Messstand die Grenzen, die Produktiv
+wirklich hat.* Diese Eigenschaft ist fort. **Was Stufe 2 auf Staging misst,
+gilt für Staging.** Zeitgrenzen, Speichergrenzen, `max_user_connections`,
+Plattenplatz, die Antwortzeiten des Messstands — keine dieser Zahlen ist auf
+Produktiv übertragbar, und keine darf so zitiert werden. Wer aus einem grünen
+Stufe-2-Lauf liest, dass eine Abfrage auf Produktiv innerhalb der Zeitgrenze
+bleibt, liest etwas, das dort nicht steht.
+
+**Was an die Stelle tritt** (Konzept Kette II): der **Probelauf gegen
+Produktiv** (E-KH-08) — eine Handauslösung mit Pflichtfreigabe, die
+Geheimnisse, Adressvergleich, Zielprobe und einen Trockenlauf des Transports
+fährt und **nichts ausliefert**; und dieser Abschnitt. Der Leitsatz dahinter
+ist E-KH-17: **Die Logik probt Staging bei jedem Push, die Plattform probt
+der Probelauf.**
+
+**Und ein Gewinn, den die alte Anordnung nicht hatte.** R81 sagt, die
+Anwendung sei nicht auf einen Hoster zugeschnitten. Solange Staging und
+Produktiv derselbe Hoster waren, war das eine Behauptung, die nichts prüfte.
+Seither läuft die Anwendung mit **jedem Push auf `main`** auf einer zweiten,
+anders konfigurierten Plattform los — und ein Zuschnitt, der sich
+eingeschlichen hat, fällt dort auf, bevor ein Selbsthoster ihn findet.
+
+#### Der Plattformvergleich
+
+Beide Anlagen melden ihre Plattform selbst: **Betrieb → Status**, gespeist aus
+`plattform_pruefen()` (Abschnitt 5b). Die Auskunft gehört hierher
+nebeneinander, damit ein Unterschied sichtbar ist, bevor er eine Messung
+erklärt.
+
+| Prüfpunkt (5b.2) | Produktiv (Plesk) | Staging (lima-city) |
+|---|---|---|
+| PHP-Fassung | ⬚ Z3 | ⬚ Z3 |
+| `memory_limit` | ⬚ Z3 | ⬚ Z3 |
+| `max_execution_time` | ⬚ Z3 | ⬚ Z3 |
+| `post_max_size` / `upload_max_filesize` | ⬚ Z3 | ⬚ Z3 |
+| OPcache | ⬚ Z3 | ⬚ Z3 |
+| Datenbank (Fassung) | ⬚ Z3 | ⬚ Z3 |
+| `max_user_connections` | ⬚ Z3 | ⬚ Z3 |
+| Freier Platz | ⬚ Z3 | ⬚ Z3 |
+| Cron | ⬚ Z3 | ⬚ Z3 |
+| FTPS | ⬚ Z3 | ⬚ Z3 |
+| HTTPS (Herkunft des Zertifikats) | ⬚ Z3 | ⬚ Z3 |
+
+> **Die Tabelle ist leer, und das ist der ehrliche Zustand.** Die Auskunft
+> beider Anlagen ist die Zuarbeit **Z3** (Konzept Kette II, Abschnitt 6) und
+> lag bei der Umsetzung von AP1 nicht vor. Sie wird nachgetragen, sobald die
+> Betreiberin sie nennt — **abgelesen, nicht geschätzt.** Geratene Zahlen
+> wären hier schlimmer als gar keine: Der ganze Zweck des Vergleichs ist, dass
+> man sich auf ihn berufen kann.
+
 ### 6.4 Das Backup-Tor
 
 Vor dem Schreiben auf Produktiv läuft das Komplett-Backup **nachweislich zu
@@ -8933,12 +9007,20 @@ sondern an den **Umgebungen**:
 
 | Umgebung | Geheimnisse | Variablen |
 |---|---|---|
-| `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `JOBS_TOKEN` | `FTP_ZIELPFAD`, `STAGING_URL` |
-| `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN` | `FTP_ZIELPFAD`, `PRODUKTION_URL` |
+| `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `STAGING_URL` |
+| `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `PRODUKTION_URL` |
 
 | Repositorium | `CIQ_GERAETE_URL` (Stufe 1) | `WACHE_BASIS` |
 
 `FTP_SERVER` ist der **nackte Hostname**, ohne Protokoll und ohne Pfad.
+
+**`FTP_ZIELPFAD` und `FTP_STATE_PFAD` tragen heute noch Vorgabewerte**
+(`./staging/` bzw. `./httpdocs/`, `../.deploy-state-staging.json` bzw.
+`../.deploy-state-produktion.json`) — eine fehlende Variable führt damit
+still in ein fremdes Verzeichnis, statt den Lauf anzuhalten. Beide verlieren
+ihre Vorgabe mit Konzept Kette II (E-KH-07, AP6); bis dahin gehören sie in
+**beiden** Umgebungen ausdrücklich gesetzt (Zuarbeit Z4). Welche Werte die
+beiden Anlagen tragen, steht in `docs/Rahmenplan.md` 6a.
 
 **`JOBS_TOKEN` steht in beiden Umgebungen unter demselben Namen und trägt
 verschiedene Werte.** Das Token gehört der **Installation**

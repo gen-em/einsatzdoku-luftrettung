@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 80 (17.09.2026)** — dieses Dokument steuert das Programm:
+**Fassung 81 (20.09.2026)** — dieses Dokument steuert das Programm:
 Reihenfolge, Status, programmweite Entscheidungen. Es hält nur, was für die
 nächsten Schritte gebraucht wird. Der eingefrorene Altbestand — die
 Fassungsvermerke, die Phasentexte mit ihren Umsetzungsblöcken und die 50
@@ -9,25 +9,33 @@ Programmentscheidungen im Volltext — liegt **wörtlich und unverändert** in
 Abschnitt 5" oder „Fassung 13" meinen das Archiv; sein Kopf sagt, welcher
 alte Abschnitt wo weiterlebt.
 
-**Stand am 17.09.2026, gemessen an `origin/main` (`676780d`):** **Web
-20.16.4**, **Uhr 3.1.0**, **Android 0.15.0**. **Schritt 10a (P5a) ist
-gemergt** (PR #50, `14f99ac`, 16.09.2026 — zwölf Arbeitspakete, Uhr und
-Android unberührt); darauf folgten auf `main` noch **Web 20.16.0 bis
-20.16.4** (Nachlese des P5a-Abschlusses, Prüfung der Werkzeugaufrufe,
-Bilderlauf gegen Staging). Zuvor war PR #49 (`ee6d0b2`) gemergt worden, der
-die Auslieferungskette aus AP1 vorgezogen hat — seither geht ein Push auf
-`main` auf **Staging** und nicht mehr auf Produktiv. Davor: **Schritt 9d
+**Stand am 20.09.2026, gemessen an `origin/main` (`7150793`):** **Web
+20.24.2**, **Uhr 3.1.0**, **Android 0.15.0**. **Schritt 10b (P5b) ist
+gemergt** (PR #57, `eec41e1`, 18.09.2026 — alle zehn Arbeitspakete, Web
+20.15.3 bis 20.24.0); darauf folgten auf `main` noch **Web 20.24.1** (PR #58,
+Anmeldung im Migrationsfenster) und **Web 20.24.2** (PR #59, zwei
+Rechtstext-Überläufe und die Kettenwartung an `actions/checkout`).
+**Schritt 10a (P5a) war am 16.09.2026 gemergt** (PR #50, `14f99ac` — zwölf
+Arbeitspakete, Uhr und Android unberührt); zuvor PR #49 (`ee6d0b2`), der die
+Auslieferungskette aus AP1 vorgezogen hat — seither geht ein Push auf `main`
+auf **Staging** und nicht mehr auf Produktiv. Davor: **Schritt 9d
 (Demo-Ausbau)** gemergt (PR #48, `7f334cb`, 15.09.2026 — Web 20.3.0, keine
 Migration).
 
-**Schritt 10b (P5b) ist fertig gebaut und liegt zum Merge bereit:**
-Zweig `claude/magical-dirac-we2y1z`, **Web 20.15.3 bis 20.24.0**, **alle
-zehn** Arbeitspakete. Wer die Zahlen oben für den Stand des Programms hält,
-unterzählt um **dreizehn** Auslieferungen (20.15.3, 20.16.5, 20.17.0,
-20.18.0, 20.19.0, 20.20.0, 20.21.0, 20.21.1, 20.22.0, 20.22.1, 20.22.2,
-20.23.0, 20.24.0 — nachgezählt an `server/version.php`) — sie messen `main`,
-und das ist Absicht (Regel aus Fassung 42). Einzelheiten in Fahrplanzeile
-10b und in Abschnitt 8.
+> **Dieser Absatz stand bis Fassung 80 auf „Schritt 10b liegt zum Merge
+> bereit" — zwei Tage nach dem Merge.** Aufgefallen ist es beim Nachmessen
+> für Fassung 81 (Abschnitt 9: *„Der Stand von `main` wird GEMESSEN, nicht
+> fortgeschrieben"*); es ist derselbe Fall wie in den Fassungen 39, 41 und
+> 42, den die Regel dort beschreibt. **Gemessen ist nur der Stand.** Nicht
+> geschrieben sind die **Erledigt-Zeile für P5b in Abschnitt 8** und die
+> Nachzüge in den Abschnitten 3, 5 und 6 — die gehören zum Abschluss von
+> P5b, nicht zu dem Arbeitspaket, das diesen Stand gemessen hat (Fassung 81
+> ist der Staging-Umzug, Kette II/AP1). **Wer P5b abschließt, fängt hier an.**
+
+**Produktiv läuft seit dem 20.09.2026 auf Web 20.24.2** — von Hand
+hochgeladen, nicht über die Kette (E-KH-03). Einen erfolgreichen Lauf des
+Jobs `produktion` gibt es bis heute nicht; was dem im Weg steht, arbeitet
+**Konzept Kette II** ab (`docs/konzepte/Konzept-Kette-Haertung.md`).
 
 **`update.php` ist nach dem Merge fällig** — P5a bringt sieben Migrationen
 mit (`csp_berichte`, `job_laeufe`, `mail_warteschlange`,
@@ -163,10 +171,14 @@ Zuarbeiten gehören davor** (Abschnitt 6, „vor Schritt 10"): Die
 bleibt beim jetzigen Hoster, die Anforderungen werden aber **hosterneutral**
 als Plattformprofil in zwei Stufen festgelegt
 (`docs/konzepte/Vorbereitung-P5-Plattformprofil.md`). Das **Staging-Ziel**
-(R67) ist am selben Tag festgelegt — `staging.nadoku.gen-em.org`, gleicher
-Hoster und Tarif, Absender `staging@gen-em.org` (Vorbereitung PP-9,
-E-PP-09, eigenes SFTP-Backup-Ziel); offen ist nur noch seine
-**Einrichtung**. Damit steht dem P5-Konzept keine Zuarbeit mehr im Weg. Die
+(R67) ist am selben Tag festgelegt worden — damals
+`staging.nadoku.gen-em.org`, gleicher Hoster und Tarif, Absender
+`staging@gen-em.org` (Vorbereitung PP-9, E-PP-09, eigenes SFTP-Backup-Ziel).
+**Seit dem 20.09.2026 gilt E-KH-04:** Staging liegt unter
+`staging-nadoku.gen-em.org` bei **lima-city**, also bei einem **anderen**
+Hoster als Produktiv — E-PP-09 ist damit in Adresse und Hoster ersetzt, die
+alte Anlage stillgelegt. Die Einrichtung steht in **Abschnitt 6a**. Damit
+steht dem P5-Konzept keine Zuarbeit mehr im Weg. Die
 Festlegungen für v1.0 sind entschieden (R65 bis R73; der Schnitt ist in
 die drei Phasen P6, P7 und P8 geteilt, R71). Von den Zuarbeiten hat die
 **D-U-N-S-Nummer** für das Play-Console-Organisationskonto die längste
@@ -1207,7 +1219,10 @@ festgelegt** (E-PP-09): `staging.nadoku.gen-em.org` im selben Tarif,
 Absender `staging@gen-em.org` mit Betreff-Präfix „[Staging]" als
 Einstellung; die Umstellung von `deploy.yml` ist das erste Code-Paket von
 P5; Staging bekommt ein eigenes SFTP-Backup-Ziel. Offen: die Einrichtung
-(Abschnitt 6).
+(Abschnitt 6). — **Nachtrag 20.09.2026: Adresse und Hoster sind durch
+E-KH-04 ersetzt** (`staging-nadoku.gen-em.org` bei lima-city). Der Satz oben
+bleibt als Stand vom 15.09.2026 stehen; was heute gilt, steht in
+Abschnitt 6a.
 
 **Vorbereitung zu 10c — Protokollierung (16.09.2026).** Auf Anweisung des
 Auftraggebers ist während P5a/AP5
@@ -1806,7 +1821,7 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | ~~V1 und V2 aus der P5c-Vorbereitung entscheiden~~ **V1 entschieden 16.09.2026: gehalten** — Betriebsereignisse, keine Datenzugriffe. **V2 beantwortet mit dem P5b-Konzept (E-P5b-06):** IP-Adressen nur im Reiter *Sicherheit* (Sperren, Angriffe), Frist **30 Tage fest** (= E-P5a-09); der Reiter *Verwaltung* hält **365 Tage, einstellbar 90–1 095**, die übrigen fünf Reiter 30 Tage fest. Gebaut in 10b/AP1 (Web 20.16.5), nachgemessen an drei Fristfällen: 31 d E-Mail weg, 31 d Verwaltung bleibt, 366 d Verwaltung weg. **Damit ist V3** (Aufbewahrung je Reiter) **der Sache nach mit beantwortet** — alle sieben Reiter haben ihre Frist; offen bleibt sie für das versiegelte Archiv, das an V4 und V6 hängt. **Die Fristlänge selbst braucht nach der Vorbereitung eine juristische, keine technische Bestätigung** — sie gehört in dieselbe Vorlage wie die drei Rechtstext-Entwürfe (Zeile weiter unten). **V4–V9 bleiben** | 10c-Konzept (V3-Rest, V4–V9); V1 und V2 wirken schon im Schreibweg aus 10b | V1 und V2 erledigt, V3 bis auf das Archiv; der Rest vor dem 10c-Konzept |
 | Nachträge an die P5a-Instanz übergeben: Doku-Paket (Fassungen 73–74, Backlog 200–205) auf den Zweig; Mailrahmen und `app_url()` in AP5; kein Empfänger im SMTP-Log (Nr. 204); AP4a mit `use_strict_mode` und `json_roh_out()` (Nr. 203, 205); R83 für AP8–AP10 | P5a | **übergeben 16.09.2026** (Anweisung `Prompt-P5a-Nachtraege-2026-09-16.md`) |
 | **P5a-Reste nach dem Merge:** die zwölf in Abschnitt 5 als erledigt gekennzeichneten Nummern aus der Tabelle nehmen (wie Fassung 32 für dreizehn); die **33 Punkte der Prüfliste** abarbeiten — zehn davon (P1–P8, P12, P33) gehen erst, wenn Umgebungen, Pflichtfreigabe und Zweigschutz stehen (6a) | P5a | nach dem Merge |
-| Staging-Installation samt FTP-Zugang; **samt Demo-Konto, Referenzdatensatz und Messstand-Konto — Staging ist die Prüfumgebung (R67)**. **Ziel festgelegt 15.09.2026:** `staging.nadoku.gen-em.org`, gleicher Hoster und Tarif, Absender `staging@gen-em.org` (Vorbereitung PP-9, E-PP-09). **Offen:** Subdomain mit Verzeichnis, eigene DB samt Nutzer, FTPS-Konto nur für das Staging-Verzeichnis, eigenes **SFTP-Backup-Ziel** für Staging (zugesagt 15.09.2026) — **die Reihenfolge steht als abhakbare Liste in Abschnitt 6a**; die drei FTP-Geheimnisse sind am 16.09.2026 angelegt worden | P5-Beginn | Einrichtung bis zum ersten Code-Paket von P5 (`deploy.yml`-Umstellung); die Prüfkonten danach |
+| Staging-Installation samt FTP-Zugang; **samt Demo-Konto, Referenzdatensatz und Messstand-Konto — Staging ist die Prüfumgebung (R67)**. **Ziel seit 20.09.2026 (E-KH-04): `staging-nadoku.gen-em.org` bei lima-city** — einem **anderen** Hoster als Produktiv, weil beide Anlagen zuvor unter demselben Systemnutzer liefen und Staging-PHP Produktivs `config.php` lesen konnte. Damit ist E-PP-09 in Adresse und Hoster ersetzt; Absender `staging@gen-em.org`, Betreff-Präfix „[Staging]", eigener Serverschlüssel und Server-Anteil sowie ein eigenes **SFTP-Sicherungsziel** gelten unverändert. **Die alte Anlage ist am 20.09.2026 stillgelegt** (Zuarbeit Z1 des Konzepts Kette II). **Offen:** die Einrichtung der neuen Anlage — **die abhakbare Liste steht in Abschnitt 6a**, der Stand dort und nicht hier | P5-Beginn | Einrichtung bis zum ersten Code-Paket von P5 (`deploy.yml`-Umstellung); die Prüfkonten danach. **Neu seit dem Umzug:** vor Kette II/AP5 (Zuarbeit Z7) |
 | GitHub-Umgebung „produktion" mit Pflichtfreigabe (Betreiberin) und den FTPS-Zugangsdaten der Produktion als Umgebungsgeheimnisse; GitHub-App auf dem Handy mit Push-Nachrichten; prüfen, ob `CIQ_GERAETE_URL` als CI-Secret taugt (Stufe 1) | R67, Freigabe-Tor | mit dem Aufbau der Kette in P5 |
 | SPF/DKIM/DMARC der Versanddomain, Bounce-Postfach | P5 | vor der P5-Abnahme |
 | **Anwaltliche Prüfung der drei Rechtstext-Entwürfe** (E-P5b-24) — `docs/rechtstexte/Nutzungsbedingungen.md`, `AVV.md` (übernimmt die EU-Standardvertragsklauseln nach Durchführungsbeschluss (EU) 2021/915 unverändert durch Verweis und füllt die Anlagen I–IV aus) und `Datenschutz-Ergaenzung-P5.md` (elf Bausteine B1–B11 zum Einarbeiten in die bestehende Erklärung). Darin stecken die Festlegungen vom 16.09.2026: Gen-EM GbR als Vertragspartner, unentgeltlich ohne Verfügbarkeitszusage, Haftung nur für Vorsatz und grobe Fahrlässigkeit mit den gesetzlichen Ausnahmen, Nutzerkreis ärztlich im Rettungsdienst mit Zusicherung der Berechtigung, deutsches Recht, Subauftragsverarbeiter dataforest (Hosting) und lima-city (Mail). **Mitprüfen lassen: die 30-Tage-Frist für IP-Adressen** (E-P5b-06) — die P5c-Vorbereitung verlangt dafür eine juristische, keine technische Bestätigung. **Geschrieben sind die Texte, geprüft nicht** — deshalb hat AP4 (Web 20.19.0) die Mechanik gebaut und die Texte weggelassen: Ein Text ohne `stand_am` gilt als „nicht in Kraft" (`einwilligung_lib.php`, Zeile 98), das Tor in `auth_guard.php` steht still. **Das Einspielen ist der Schalter:** Mit der ersten Fassung landet jedes bestehende Konto beim nächsten Login am Tor — Nutzungsbedingungen und AVV sperren, die Datenschutzerklärung zeigt nur einen Hinweis (E-P5b-05) **Stand 17.09.2026:** Die Entwürfe sind nach E-P5b-25 auf die **private Zweckbestimmung** umgestellt (Nutzung nur für sich selbst, nicht im Auftrag eines Trägers), § 203 StGB ist in der AVV ergänzt (A.7) und die Klartextliste ehrlich gestellt — **geprüft sind sie damit nicht**. Mitzuklären: die Rechtsform der Betreiberin (GbR-Haftung). | Schritt 10b (AP4), R41 | **vor dem Einspielen in `rechtstexte`** — spätestens mit dem Umschalten der Registrierung auf *offen* (E-P5b-01), vor Welle 1. Mit **S11** eine zweite Runde: Dort verschiebt sich die Grenze der Verschlüsselung, und alle drei Texte ändern sich |
@@ -1838,7 +1853,9 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 ### 6a. Staging einrichten — die Reihenfolge, in der es geht
 
 *Aufgenommen 16.09.2026, nachdem in der Umsetzung von P5a die Annahme
-aufkam, die Auslieferungskette richte die Instanz selbst ein.*
+aufkam, die Auslieferungskette richte die Instanz selbst ein. **Neu
+geschrieben am 20.09.2026** (Konzept Kette II, AP1), nachdem Staging den
+Hoster gewechselt hat.*
 
 **Sie tut es nicht.** `auslieferung.yml` überträgt `server/` per FTPS in ein
 Verzeichnis, **das es schon geben muss**. Sie legt weder Subdomain noch
@@ -1848,27 +1865,76 @@ Lücke, sondern die Zusage: `config.php` trägt den DB-Zugang, das
 SMTP-Passwort, den Serverschlüssel und seit S10 den **Server-Anteil am
 Datenschlüssel**. Sie darf nie aus dem Repositorium kommen.
 
+> **Staging ist am 20.09.2026 umgezogen — und alle Haken dieser Liste sind
+> damit verfallen.** Bis zum 19.09.2026 lag Staging als
+> `staging.nadoku.gen-em.org` im **selben Plesk-Abonnement** wie Produktiv,
+> mit eigener Datenbank und eigenem FTPS-Konto, aber unter **demselben
+> Systemnutzer**: Staging-PHP konnte Produktivs `config.php` lesen, und damit
+> reichten die Staging-Zugangsdaten an Pflichtfreigabe und Backup-Tor vorbei
+> bis Produktiv (Befund B2 der Kettendurchsicht vom 20.09.2026). Seither liegt
+> Staging unter **`staging-nadoku.gen-em.org` bei lima-city**, also bei einem
+> **anderen Hoster**; die alte Anlage ist am selben Tag stillgelegt worden
+> (Zuarbeit Z1). Die Entscheidung ist **E-KH-04** und ersetzt **E-PP-09** in
+> Adresse und Hoster.
+>
+> **Die Schritte 1 bis 10 waren am 16./17.09.2026 bis auf 7 und 9 abgehakt —
+> für die alte Anlage.** Kein Haken davon sagt etwas über lima-city. Sie
+> stehen unten deshalb wieder offen, mit dem Grund je Zeile. Wer sie
+> zurückholen will, findet den alten Stand in der Git-Historie dieses
+> Dokuments (Fassung 80).
+>
+> **Was der Umzug kostet**, steht in `docs/Technik.md` 6.3a: Staging belegt
+> kein Plattformverhalten von Produktiv mehr. **Was er bringt**, steht
+> daneben: Die Portabilitätszusage aus R81 wird seither mit jedem Push
+> geprobt.
+
 Die ersten vier Schritte und die letzten drei sind **einmalig von Hand**.
-Erst ab Schritt 5 synchronisiert die Kette.
+Erst ab Schritt 5 synchronisiert die Kette. **Die Nummern bleiben, wie sie
+sind** — `auslieferung.yml` nennt sie in seinen Fehlermeldungen („Steht die
+Subdomain schon? Rahmenplan 6a, Schritte 1 bis 3", „`FTP_ZIELPFAD` prüfen,
+Schritt 4"); wer hier umnummeriert, macht aus einer Fehlermeldung einen
+Irrweg.
 
 | # | Schritt | Wo | fertig? |
 |---|---|---|---|
-| 1 | Subdomain `staging.nadoku.gen-em.org` mit **eigenem Verzeichnis** anlegen; HTTPS über den Hoster (Let's Encrypt) | Hoster | ☑ *16.09.2026 — gemessen: HTTP 200, Plesk-Standardseite* |
-| 2 | **Leere** Datenbank samt eigenem DB-Nutzer anlegen. `install.php` spielt `schema.sql` selbst ein — die Datenbank legt es **nicht** an | Hoster | ☑ *16.09.2026 — belegt: `install.php` ist durchgelaufen, `login.php` liefert die Anmeldeseite (HTTP 200)* |
-| 3 | FTPS-Konto anlegen, das **nur** das Staging-Verzeichnis sieht — das ist die Sicherung für `FTP_ZIELPFAD = /` | Hoster | ☑ *16.09.2026 — vom Auftraggeber bestätigt: eingesperrt* |
-| 4 | Umgebung **`staging`** anlegen, darin die drei **Environment secrets** `FTP_SERVER` (bloßer Hostname — kein `ftps://`, kein Pfad, kein `:21`), `FTP_USERNAME`, `FTP_PASSWORD`; dazu die **Environment variable** `FTP_ZIELPFAD` (Verzeichnis der Subdomain; `/`, wenn das FTPS-Konto darauf eingesperrt ist — siehe Kasten unten) | GitHub | ☑ *16.09.2026 — dazu `STAGING_URL`, `STAGING_KONTO`, `STAGING_PASS`; Umgebung `produktion` ebenfalls angelegt* |
-| 5 | Push auf `main` — **ab hier synchronisiert die Kette**. Voraussetzung ist der Merge von **PR #49** (`claude/kette-auf-main`): Solange `deploy.yml` auf `main` steht, geht ein Push dorthin nicht auf Staging, sondern auf **Produktiv** | — | ☑ *16.09.2026 — PR #49 gemergt (`ee6d0b2`), Lauf #2 hat 647 Einträge synchronisiert* |
-| 6 | `https://staging.nadoku.gen-em.org/install.php` im Browser: schreibt `config.php`, legt die BetreiberIn an, setzt `install.lock`. **Eigener Serverschlüssel und eigener Server-Anteil — nie die von Produktiv** | Browser | ☑ *16.09.2026 — gemessen: `login.php` HTTP 200, Titel „Anmelden — Gen-EM NAdoku"* |
-| 7 | In `config.php` nachtragen: `smtp` auf `staging@gen-em.org`, dazu `'mail' => ['betreff_praefix' => '[Staging]']` (E-PP-09) | FTP | ☐ |
-| 8 | **Demo-Konto aus der Fixture anlegen:** auf Staging als Administratorin anmelden → **Verwaltung → Demo-Konto** → Knopf „Demo-Konto anlegen". Mehr ist es nicht — `server/demo/fixture.json.gz` liegt dort schon, die Kette liefert sie mit | Browser | ☑ *17.09.2026 — von der Betreiberin angelegt; gemessen: der Bilderlauf hat danach alle 29 Demo-Seiten fotografiert* |
-| 9 | Eigenes **SFTP-Backup-Ziel** für Staging eintragen (zugesagt 15.09.2026) — damit Staging-Stände nie neben Produktiv-Sicherungen liegen | Anwendung | ☐ |
-| 10 | **`JOBS_TOKEN`** als Environment secret der Umgebung `staging` eintragen — der Wert steht auf Staging unter **Betrieb → Hintergrundjobs** hinter `jobs.php?token=` (Web 20.16.0, Backlog Nr. 219). **Derselbe Name wie in `produktion`, anderer Wert:** Das Token gehört der Installation, nicht dem Repositorium | GitHub | ☑ *17.09.2026 — von der Betreiberin eingetragen* |
+| 1 | Subdomain `staging-nadoku.gen-em.org` mit **eigenem Verzeichnis** anlegen; HTTPS über den Hoster | Hoster | ☐ *Stand nicht gemeldet (Z3). Die Adresse ist genannt, gemessen hat sie niemand — der letzte Staging-Lauf der Kette war am 18.09.2026 und galt der alten Anlage* |
+| 2 | **Leere** Datenbank samt eigenem DB-Nutzer anlegen. `install.php` spielt `schema.sql` selbst ein — die Datenbank legt es **nicht** an | Hoster | ☐ *Stand nicht gemeldet (Z3)* |
+| 3 | FTPS-Konto anlegen, das **nur** das Staging-Verzeichnis sieht — das ist die Sicherung für `FTP_ZIELPFAD` (siehe Kasten unten) | Hoster | ☐ *Stand nicht gemeldet (Z3). Ob lima-city ein Einsperren anbietet und wie es heißt, ist Teil der Auskunft* |
+| 4 | Umgebung **`staging`** anlegen, darin die drei **Environment secrets** `FTP_SERVER` (bloßer Hostname — kein `ftps://`, kein Pfad, kein `:21`), `FTP_USERNAME`, `FTP_PASSWORD`; dazu die **Environment variables** `FTP_ZIELPFAD` und `FTP_STATE_PFAD` (Werte in der Tabelle darunter) sowie `STAGING_URL` | GitHub | ☐ *Die Umgebung ist laut Auskunft des Auftraggebers am 20.09.2026 **umgestellt** — **nicht gemessen**, und die beiden Pfadvariablen sind ausdrücklich zu setzen (Z4), weil sie heute noch Vorgabewerte tragen* |
+| 5 | Push auf `main` — **ab hier synchronisiert die Kette** | — | ☐ **Das ist die Abnahme von Kette II/AP1.** Gegen lima-city ist noch kein Kettenlauf gefahren |
+| 6 | `https://staging-nadoku.gen-em.org/install.php` im Browser: schreibt `config.php`, legt die BetreiberIn an, setzt `install.lock`. **Eigener Serverschlüssel und eigener Server-Anteil — nie die von Produktiv** | Browser | ☐ *Stand nicht gemeldet (Z3)* |
+| 7 | In `config.php` nachtragen: `smtp` auf `staging@gen-em.org`, dazu `'mail' => ['betreff_praefix' => '[Staging]']` (E-PP-09, gilt weiter) | FTP | ☐ *Zuarbeit Z7 — vor Kette II/AP5* |
+| 8 | **Demo-Konto aus der Fixture anlegen:** auf Staging als Administratorin anmelden → **Verwaltung → Demo-Konto** → Knopf „Demo-Konto anlegen". Mehr ist es nicht — `server/demo/fixture.json.gz` liegt dort schon, die Kette liefert sie mit | Browser | ☐ *Zuarbeit Z7 — vor Kette II/AP5* |
+| 9 | Eigenes **SFTP-Sicherungsziel** für Staging eintragen — damit Staging-Stände nie neben Produktiv-Sicherungen liegen | Anwendung | ☐ *Zuarbeit Z7 — vor Kette II/AP5. **Mit dem Hosterwechsel ist das kein Komfort mehr:** Kette II/AP5 fährt das Backup-Tor auch auf Staging, und ohne Ziel gibt es kein Komplett-Backup, das es prüfen könnte* |
+| 10 | **`JOBS_TOKEN`** als Environment secret der Umgebung `staging` eintragen — der Wert steht auf Staging unter **Betrieb → Hintergrundjobs** hinter `jobs.php?token=` (Web 20.16.0, Backlog Nr. 219). **Derselbe Name wie in `produktion`, anderer Wert:** Das Token gehört der Installation, nicht dem Repositorium | GitHub | ☐ *Zuarbeit Z7 — vor Kette II/AP5. Der alte Wert gehört der alten Anlage und ist wertlos* |
+
+**Die Werte der Variablen — nicht die Geheimnisse.** Sie stehen hier, weil
+sie kein Geheimnis sind und weil ein falscher Pfad der teuerste
+Einrichtungsfehler dieser Kette ist (Kasten unten). `FTP_SERVER`,
+`FTP_USERNAME` und `FTP_PASSWORD` stehen **nirgends im Repositorium**.
+
+| Variable | Staging (lima-city) | Produktiv (Plesk) |
+|---|---|---|
+| FTP-Wurzel, die das Konto sieht | ⬚ Z3 | ⬚ Z3 |
+| `FTP_ZIELPFAD` | ⬚ Z3 | ⬚ Z3 |
+| `FTP_STATE_PFAD` (Ort der Zustandsdatei) | ⬚ Z3 | ⬚ Z3 |
+| `STAGING_URL` / `PRODUKTION_URL` | `https://staging-nadoku.gen-em.org` | ⬚ Z3 (`WACHE_BASIS` muss denselben Wert tragen) |
+
+> **Die Tabelle ist leer, und das ist der ehrliche Zustand.** Die Werte sind
+> die Zuarbeit **Z3** und lagen bei der Umsetzung von AP1 nicht vor. Sie
+> werden nachgetragen, sobald die Betreiberin sie nennt — **abgelesen, nicht
+> geraten.** Solange `FTP_ZIELPFAD` und `FTP_STATE_PFAD` nicht ausdrücklich
+> gesetzt sind, greifen die **Vorgabewerte** aus `auslieferung.yml`
+> (`./staging/` bzw. `../.deploy-state-staging.json`) — und eine fehlende
+> Variable führt damit still in ein fremdes Verzeichnis, statt den Lauf
+> anzuhalten. Die Vorgaben fallen mit Kette II/AP6 (E-KH-07) weg.
 
 **`STAGING_URL`, `STAGING_KONTO` und `STAGING_PASS`** gehören in dieselbe
 Umgebung. Sie dürfen früh eingetragen werden — **aber dann ist Stufe 2 rot,
 bis Schritt 8 durch ist**, und das ist so gewollt: Ein Stand, der auf Staging
 nicht läuft, ist nicht freigabefähig. Solange sie leer sind, überspringt
-Stufe 2 und sagt es.
+Stufe 2 und sagt es. *(Mit Kette II/AP6 ist „übersprungen" auf `main` rot,
+E-KH-12 — ein Konfigurationsfehler ist kein hinnehmbarer Zustand.)*
 
 > **Warum Schritt 8 NICHT der Einspiellauf ist, und warum das hier steht.**
 > Bis zum 17.09.2026 verwies dieser Schritt auf
@@ -1893,7 +1959,9 @@ Stufe 2 und sagt es.
 > **Das Messstand-Konto aus der alten Fassung dieses Schrittes braucht Stufe 2
 > nicht:** Der Messstand-Schritt ist in P5a/AP9 ersatzlos aus der Kette
 > gestrichen worden (Backlog Nr. 206) — er ist ein manuelles
-> Regressionsmittel und läuft lokal vor einer Auslieferung.
+> Regressionsmittel und läuft lokal vor einer Auslieferung. **Seit E-KH-04
+> misst er ohnehin eine andere Plattform als Produktiv** (`docs/Technik.md`
+> 6.3a).
 
 **Dasselbe gilt für `JOBS_TOKEN` aus Schritt 10** (Web 20.16.0): Ohne ihn
 können die Kreisläufe die Hintergrundjobs auf Staging nicht anhalten, und ein
@@ -1904,10 +1972,18 @@ auf einem Läufer ohnehin an der fehlenden `config.php`.
 
 > **Der teuerste Einrichtungsfehler ist `FTP_ZIELPFAD`.** Steht dort `/` und
 > ist das FTPS-Konto **nicht** auf das Staging-Verzeichnis eingesperrt, lädt
-> die Kette `server/` in die Wurzel des Webspace — neben oder über die
-> Produktivanlage. Schritt 3 ist deshalb kein Komfort, sondern die Sicherung
-> von Schritt 4: **ein FTPS-Konto, das nur dieses eine Verzeichnis sieht.**
-> Ist es eingesperrt, ist `/` genau richtig.
+> die Kette `server/` in die Wurzel des Webspace — neben oder über alles
+> andere, was dort liegt. Schritt 3 ist deshalb kein Komfort, sondern die
+> Sicherung von Schritt 4: **ein FTPS-Konto, das nur dieses eine Verzeichnis
+> sieht.** Ist es eingesperrt, ist `/` genau richtig.
+>
+> *Bis zum 19.09.2026 stand hier „neben oder über die Produktivanlage" — und
+> das war wörtlich gemeint: Beide lagen im selben Webspace. Seit E-KH-04
+> können die beiden Anlagen einander nicht mehr überschreiben, weil sie auf
+> verschiedenen Rechnern liegen. **Der Satz bleibt trotzdem stehen**, denn
+> ein falscher Zielpfad überschreibt dann eben, was bei lima-city daneben
+> liegt — und die Zusage, die Schritt 3 gibt, ist nicht „Produktiv ist
+> sicher", sondern „die Kette kann nur dieses eine Verzeichnis anfassen".*
 
 **Und für `produktion` spiegelbildlich:** eine zweite Umgebung mit
 **Pflichtfreigabe** („required reviewers“), darin **dieselben drei Namen** mit
@@ -1950,8 +2026,20 @@ sagt zu jeder, was zu tun ist — Subdomain antwortet nicht (Schritte 1–3),
 Schritt 4), Weiterleitung auf `install.php` (Schritte 6–8), oder eine fremde
 Seite mit `200`. Die letzte Lage ist der Grund für den Griff: Eine frische
 Subdomain liefert beim Hoster eine **„Domain Default page" mit HTTP 200** aus
-— gemessen am 16.09.2026 an `staging.nadoku.gen-em.org`. Wer nur den Code
-prüft, hält eine leere Subdomain für eine laufende Anwendung.
+— gemessen am 16.09.2026 an `staging.nadoku.gen-em.org`, der damaligen
+Anlage. Wer nur den Code prüft, hält eine leere Subdomain für eine laufende
+Anwendung. **Der Befund überlebt den Hosterwechsel**, die Messung nicht: Ob
+lima-city dieselbe Standardseite mit 200 ausliefert, ist **ungemessen** — der
+Griff fängt sie ohnehin ab, weil er nicht auf den Statuscode, sondern auf die
+Fußzeile dieser Anwendung sieht.
+
+**Ein dritter Riegel kommt mit Kette II** (E-KH-07, AP3): eine **Zielprobe**
+als Rundlauf — eine Datei mit Zufallsnamen per FTPS hinein, über die
+HTTPS-Adresse wieder heraus, vergleichen, löschen, das Löschen prüfen. Sie
+beweist, dass FTP-Konto, Zielpfad und Webadresse **dieselbe Anlage** meinen.
+Heute prüft das niemand: `tor.py` spricht mit `PRODUKTION_URL`, der Abgleich
+mit `FTP_SERVER` + `FTP_ZIELPFAD`, die Wache mit `WACHE_BASIS` — drei Zeiger
+auf drei Namen, und keiner vergleicht sie (Befund F4).
 
 ### 6b. Zweigschutz für `main` — und was er wirklich leistet
 
@@ -3170,6 +3258,7 @@ P5c.
 
 | Fassung | Datum | Was |
 |---|---|---|
+| **81** | **20.09.2026** | **Staging ist umgezogen — Kette II/AP1 zieht es in der Dokumentation nach (E-KH-04).** Staging lag bis zum 19.09.2026 als `staging.nadoku.gen-em.org` im **selben Plesk-Abonnement** wie Produktiv und unter **demselben Systemnutzer**: Staging-PHP konnte Produktivs `config.php` lesen, und damit reichten die Staging-Zugangsdaten an Pflichtfreigabe und Backup-Tor vorbei bis Produktiv (Befund B2 der Kettendurchsicht vom 20.09.2026). Seit dem 20.09.2026 liegt es als **`staging-nadoku.gen-em.org` bei lima-city**, also bei einem **anderen Hoster**; die alte Anlage ist am selben Tag stillgelegt (Zuarbeit Z1). **E-PP-09 ist damit in Adresse und Hoster ersetzt** — in `docs/konzepte/Vorbereitung-P5-Plattformprofil.md` vermerkt, der Wortlaut bleibt als Herkunft stehen. **Abschnitt 6a ist neu geschrieben:** Alle Haken galten der alten Anlage und stehen wieder offen, mit dem Grund je Zeile; die Schrittnummern bleiben, weil `auslieferung.yml` sie in seinen Fehlermeldungen nennt („Rahmenplan 6a, Schritte 1 bis 3"); dazu eine Tabelle der nicht-geheimen Variablenwerte (FTP-Wurzel, `FTP_ZIELPFAD`, `FTP_STATE_PFAD`) — **noch leer, Zuarbeit Z3**. **Der Preis des Umzugs steht in `docs/Technik.md` 6.3a** (neuer Abschnitt): Staging belegt kein Plattformverhalten von Produktiv mehr, die Zahlen des Messstands sind nicht mehr übertragbar; dafür wird die Portabilität nach R81 seither mit **jedem Push** geprobt statt nur behauptet. Der Plattformvergleich beider Anlagen steht dort als Tabelle, **ebenfalls noch leer (Z3)** — geratene Zahlen wären schlimmer als keine. Dazu `CLAUDE.md` 3 und der Kommentar in `auslieferung.yml`, der die Messung vom 16.09. als Messung an der **damaligen** Anlage kennzeichnet. **Beim Nachmessen für diese Fassung aufgefallen:** Der Kopf führte P5b noch als „liegt zum Merge bereit", zwei Tage nach PR #57 — derselbe Fall wie in den Fassungen 39, 41 und 42. Der Stand ist berichtigt (`origin/main` `7150793`, Web 20.24.2, Uhr 3.1.0, Android 0.15.0); die **Erledigt-Zeile für P5b fehlt weiterhin** und gehört dem Abschluss von P5b, nicht diesem Paket. **Kein Code** — nur `docs/`, `CLAUDE.md` und ein Kommentar in `.github/`, keine Versionsstufe (Präzedenz `0f2333e`) |
 | **80** | **17.09.2026** | **P5b abgeschlossen — AP8, AP9 und AP10, und der Merge von `main` (Web 20.23.0 und 20.24.0, Zweig `claude/magical-dirac-we2y1z`).** **AP8:** Handbuch und „Was ist NAdoku" sind Seiten der Anwendung, gerendert aus dem Repositorium und **ohne Anmeldung** erreichbar; Parsedown 1.7.4 vendoriert, `DokuMarkdown` setzt drei Hausregeln durch (Sprungmarken, `rel="noopener"`, Bilder nur relativ). **AP9:** Erststart als **Karte** über der Tagesübersicht (kein Dialog — „wer sie ignoriert, arbeitet trotzdem"), Konto-Rückfrage nach 30 Tagen/6 Monaten/jährlich, Betreiber-Rückfrage mit vier zufällig gewählten Vierergruppen vom Schlüsselblatt, Notfallblatt, Schlüsselerneuerung als **eine** Komponente mit zwei Verbrauchern (R83). **Damit sind alle zehn Arbeitspakete gebaut.** **AP10** ist der Merge: `main` war seit dem P5a-Abschluss um Web 20.16.0 bis 20.16.4 weitergelaufen. **Drei Nummernkollisionen aufgelöst**, jede nach derselben Regel — `main` ist vorgelagert, also weicht der Zweig: Web **20.16.0 → 20.16.5** (AP1), Backlog **215–225 → 223–233** (die elf Punkte des Zweigs; `main` behält 215–222), Rahmenplan-Fassung **77 → 78 und 79**. **Prüfzahlen:** Wortliste 0 in fünf Bereichen, Vollständigkeit 398 auf der Schwelle, Migrationsregister 0, Kontraste 22/0, Kettenaufrufe 0/0, Tore 11/0, CSP 0, Sitzungshärtung 0, `php -l` 0. **Zwei neue Reste:** Nr. 232 (Fristen nie im Betrieb abgelaufen) und Nr. 233 (bisheriger Server-Anteil wird nie abgefragt). Das Konzept **liegt noch** und wird erst nach der Freigabe gelöscht (K9); das **Prüfdokument bleibt** ohnehin, bis seine Prüfliste abgehakt ist |
 | **79** | **17.09.2026** | **P5b-Paket eingespielt; AP2, AP4, AP5, AP6 und AP7 gebaut (Web 20.17.0 bis 20.21.1, Zweig `claude/magical-dirac-we2y1z`).** Der Auftraggeber hat das vollständige Paket aus der Konzeptsitzung nachgereicht: das **freigegebene** Konzept (16.09.2026, ohne Änderungen), den **Mockup-Ordner** und die drei Rechtstext-Entwürfe. Die Mockups sind am **17.09.2026 freigegeben** — fünf Darstellungen (Dokumentseite, Registrierung, Erststart, Rückfrage, Notfallblatt), vier davon zusätzlich bei 376 px, **9 HTML und 9 PNG** mit `LIESMICH.md`, gegen das echte `style.css` gebaut. **Damit fällt die Pause vor AP3, AP8 und AP9** (K8); dieser Zweig hatte zuvor zwei eigene Entwürfe mit **Opus statt Fable** gebaut (Weisung vom 16.09.2026) — sie sind abgelöst und entfernt, die Gestaltung kommt also doch aus dem vorgesehenen Modell. **Vier Gestaltungsvorgaben** vom 17.09.2026 gelten für die **Umsetzung** und nicht nur für die Mockups (Konzept Abschnitt 6): Zeilenaktionen **und Plaketten** rechtsbündig in einer Spalte, Kartenfuß mit Häkchen links und „Später" rechts, vertikale Zentrierung als Abnahmekriterium, und „Vereinbarung zur Auftragsverarbeitung (AVV)" bleibt. **Die Einschübe aus Konzept Abschnitt 7 und 8 sind hier eingearbeitet:** Fahrplanzeile 10b, Schritt-10-Block (mit **V2, V3 und V7** als beantwortet — V2 betrieblich entschieden und **rechtlich offen**, V6 nur noch halb), Abschnitt 5 (Nr. 37 **Speichergrenzen-Teil** und Nr. 48 erledigt, Nr. 202 Paket 1 ganz durch), Abschnitt 6 (zwei Zuarbeiten neu: `update.php` nach dem Merge mit **fünf** Migrationen, anwaltliche Prüfung der drei Entwürfe), Register **R9, R25, R37**. Backlog **228 bis 230** vergeben (Proof-of-Work, Uhr-Grund bei `403`, Pflege der Wegwerfliste); **Nr. 48 nach *Erledigt* verschoben**. **Gebaut in diesem Abschnitt:** AP2 Lebenszyklus (20.17.0), AP7 Demo-Anmeldung abschaltbar (20.18.0), AP4 Einwilligungen (20.19.0), AP5 Selbstlöschung mit 30 Tagen Karenz und Adresswechsel mit Bestätigung (20.20.0), AP6 Mengengrenze je Konto mit `507` (20.21.0). Dazu **Web 20.21.1** mit drei Funden, die **kein Prüfmittel gemeldet hat** (Nr. 225, 226, 227): Die Profilseite lag **zehn Tage** außerhalb ihres Seitengerüsts, während der Bilderlauf für sie in allen drei Engines drei Nullen meldete — gefunden beim **Ansehen** eines Bildes. Der Lauf zählt seither Karten außerhalb von `main.inhalt`: **53 Seiten, 149 Karten, 0 außerhalb**, mit wieder eingebautem Fehler **6 geprüft, 4 außerhalb**. **Prüfzahlen:** Vollständigkeit **387** (auf der Schwelle, von 377 angehoben und begründet — Nr. 227), Wortliste **0/0/0** über fünf Bereiche, Kontraste **22 Paare, 0 verfehlt**, Mockups gegen die Sperrliste **0 Treffer** und in Chromium **0 Konsolenfehler, 0 Ladefehler**. **Offen bleiben AP3, AP8, AP9 und AP10**; außerhalb die anwaltliche Prüfung der Rechtstexte. **Selbstprüfzahl Abschnitt 5 nachgerechnet** (Einzeiler aus dem Kasten dort): **70 gegen 72** — vorher 67 gegen 70, die Lücke ist also von drei auf zwei geschrumpft und nicht neu. Sie hat zwei bekannte Ursachen: Elf Zeilen des Rahmenplans führen Nummern, die der Backlog längst unter *Erledigt* hat und die nach dem Merge herausfallen (Fassung 76), und die Punkte **207 bis 227** aus den Zweigen P5a und P5b haben in Abschnitt 5 noch gar keine Zeile. Beides gehört ins nächste Doku-Paket, nicht hierher. **Code auf dem Zweig, nicht auf `main`** |
 | **78** | **16.09.2026** | **P5b begonnen — AP1: der Schreibweg des Protokolls (Web 20.16.5, Zweig `claude/magical-dirac-we2y1z`).** Konzept und die drei Rechtstext-Entwürfe aufgenommen (`docs/konzepte/Konzept-P5b-Konto-und-Registrierung.md`, `docs/rechtstexte/`), Prüfdokument angelegt. **AP1** legt `protokoll_ereignisse` an (sechs Reiter, zwei Fristen — Verwaltung 365 Tage einstellbar, übrige 30 fest; der siebte Reiter *Sicherheit* bleibt in seiner P5a-Tabelle, V6 entscheidet später), dazu `protokoll_lib.php`, `konten_einstellungen_lib.php`, die Karte „Konten“ in den Servereinstellungen und die Zählkarte auf Status. **V1 gilt: kein Zugriffsprotokoll.** **Der `app_state`-Teil von AP1 entfiel** — `app_state_lesen()`/`_setzen()` stehen seit Web 20.7.0 in `db.php` (das Konzept sah beides vor, Abschnitt 3.0). **Zwei Befunde vor dem ersten Paket:** **Nr. 223** — nach P5a/AP4 ließ sich die Anwendung **nicht mehr installieren** (`install.php` → HTTP 500, weil `ui_seite_start()` über `kopfzeilen_lib.php` das harte `require config.php` in `db.php` zog); behoben in Web 20.15.3. Kein Prüfmittel konnte ihn sehen: alle setzen eine laufende Installation voraus, statt eine einzurichten. Und **der Kopf dieses Dokuments** stand auf Fassung 74, während Abschnitt 10 bis 76 reichte, und maß `main` bei `7f334cb` / Web 20.3.0 — zwölf Auslieferungen zurück; berichtigt (Regel aus Fassung 42). **Nummernkollision aufgelöst:** `main` hatte Web 20.15.2 und Nr. 214 parallel vergeben; dieser Zweig führte damals **215 und aufwärts** — seit dem Merge vom 17.09.2026 sind daraus **223 und aufwärts** geworden, weil `main` 215 bis 222 parallel belegt hatte. **Prüfzahlen AP1:** Bereinigung 3 von 3 Fristfällen richtig (31 d E-Mail weg, 31 d Verwaltung bleibt, 366 d weg), Fehlfall V7 belegt (Handlung läuft, Zähler +1, rote Plakette), Bilderlauf 16 Bilder in 8 Breiten 0/0/0. **Code auf dem Zweig, nicht auf `main`** |

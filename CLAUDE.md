@@ -65,9 +65,19 @@ Welches Dokument zu welcher Änderung gehört, steht in Abschnitt 9
 `.github/workflows/auslieferung.yml`):
 
 - **Push auf `main`** → per FTPS auf **Staging**
-  (`staging.nadoku.gen-em.org`). Kein Produktivserver.
+  (`staging-nadoku.gen-em.org`). Kein Produktivserver.
 - **Tag `web-vX.Y.Z`** → nach **Pflichtfreigabe durch die Betreiberin**
   (GitHub-Umgebung `produktion`) und nach dem **Backup-Tor** auf Produktiv.
+
+**Staging liegt seit dem 20.09.2026 bei einem anderen Hoster als Produktiv**
+(lima-city, `staging-nadoku.gen-em.org`; E-KH-04). Vorher lag es im selben
+Webspace wie Produktiv, und das war der Fehler: Staging-PHP konnte Produktivs
+`config.php` lesen. Der Preis des Umzugs steht in `docs/Technik.md` 6.3a —
+**Staging belegt kein Plattformverhalten von Produktiv mehr.** Eine Zahl, die
+Stufe 2 auf Staging misst (Zeitgrenzen, Speicher, `max_user_connections`),
+gilt für Staging und sonst nirgends. Wer eine ältere Quelle liest, findet
+dort `staging.nadoku.gen-em.org` im selben Tarif — das ist der Stand bis zum
+19.09.2026.
 
 Davor stehen zwei Prüftore: Stufe 1 (`pruefung.yml`, jeder Push, ohne
 Installation) und Stufe 2 (gegen Staging). **Der Produktionslauf verlangt einen
