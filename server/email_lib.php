@@ -124,8 +124,22 @@ function ist_dublettenfehler(PDOException $ex): bool
 function profil_adresswechsel_melden(string $alt, string $neu,
                                      string $wer = 'profil'): bool
 {
+    /* DIESE BEIDEN `require_once` STEHEN IM RUMPF DER FUNKTION, und das ist
+     * keine Schlamperei, sondern tragend — auch wenn die zweite Zeile auf
+     * Spalte 0 steht und deshalb wie ein Aufruf auf oberster Ebene aussieht.
+     *
+     * WER SIE HINAUSSCHIEBT, BRICHT DIE SITZUNGSABLAGE (Schritt 16,
+     * E-SA-02). `mail_lib.php` laedt `db.php`. Auf oberster Ebene zoege diese
+     * Zeile damit `db.php` in `email_lib.php`, von dort in `plattform_lib.php`
+     * — und `sitzung_lib.php` laedt `plattform_lib.php` fuer die Schreibprobe,
+     * gerufen aus `db.php`, WAEHREND `db.php` noch geladen wird.
+     * `require_once` meldete den Zyklus nicht, sondern kehrte still zurueck:
+     * `sitzung_ablage()` liefe in einer halb geladenen `db.php`.
+     *
+     * Die Einrueckung ist trotzdem falsch und bleibt es hier absichtlich
+     * nicht — sie ist mit diesem Kommentar berichtigt. */
     require_once __DIR__ . '/smtp.php';
-require_once __DIR__ . '/mail_lib.php';
+    require_once __DIR__ . '/mail_lib.php';
     if ($alt === '' || $alt === $neu) { return false; }
 
     $durch = $wer === 'verwaltung'

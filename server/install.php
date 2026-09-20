@@ -122,6 +122,27 @@ $schemaPath = __DIR__ . '/schema.sql';
  * SameSite=Lax statt Strict: Der Einrichter wird typischerweise ueber einen
  * Link aus einer Anleitung oder dem Kundenmenue des Hosters geoeffnet.
  */
+/* DIE SITZUNGSABLAGE — DIE ZWEITE UND LETZTE AUFRUFSTELLE (Schritt 16,
+ * E-SA-02, Backlog Nr. 241). Die erste steht in `db.php`.
+ *
+ * Diese Datei ist die einzige der neun mit einem Sitzungsstart, die `db.php`
+ * NICHT laedt — zum Zeitpunkt des Einrichtens gibt es keine `config.php`.
+ * Der Aufruf muss deshalb hier eigens stehen, sonst legte ausgerechnet der
+ * Einrichter seine Sitzung beim Hoster ab: die eine, die das
+ * Datenbank-Passwort im Formular fuehrt.
+ *
+ * `sitzung_lib.php` laedt nichts und ist damit hier ladbar. Sie ist
+ * PHP-8-Code und steht deshalb HINTER der Weiche oben — wie `ui.php` und
+ * `plattform_lib.php` auch (5b.4).
+ *
+ * UND VOR `session_set_cookie_params()`, nicht dazwischen: `tools/sitzungshaertung/`
+ * misst, dass `use_strict_mode` hoechstens zwoelf Zeilen vor dem
+ * Sitzungsstart steht. Ein Kommentarblock zwischen jenen beiden Zeilen
+ * schoebe die Haertung aus dem Fenster und machte Stufe 1 der Kette rot —
+ * mit einem Befund, der sachlich falsch waere. */
+require_once __DIR__ . '/sitzung_lib.php';
+sitzung_ablage();
+
 session_set_cookie_params([
     'httponly' => true, 'secure' => !empty($_SERVER['HTTPS']),
     'samesite' => 'Lax', 'path' => '/',

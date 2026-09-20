@@ -26,7 +26,20 @@ mit dem Paket).
 >
 > | Paket | Stand | Stufe | Abnahmezahlen |
 > |---|---|---|---|
-> | AP1 | offen | — | — |
+> | AP1 | **erledigt** 20.09.2026, Web **20.26.0**, Zweig `claude/new-session-cbq57h` | Code, Doku und Prüfmittel gelaufen; Browserprüfung auf Staging offen | 9 Sitzungsstarts (Tokenizer, zweimal unabhängig) · 2 Aufrufstellen · 8 von 9 laden `db.php` davor · Dateizählung 1/0/1 · Marker 0/1 Probedateien · Aufräumjob „1 gelöscht" · CLI legt nichts an · 17 Befunde in `plattform_pruefen(null)` (vorher 15) · Jobregister 11/11 Jobs, 17/17 Schritte, 0 Befunde |
+>
+> **Wo es hakte, und wie es gelöst wurde** — die Langfassung steht in
+> Abschnitt 5, die Prüfliste in `Pruefdokument-Sitzungsablage.md`:
+>
+> | # | Was das Konzept nicht wusste | Entscheidung |
+> |---|---|---|
+> | U-1 | E-SA-07 verlangt **rot**, rot gibt es nur auf Stufe `muss`, und `muss` + `false` sperrt `install.php` | `muss`, wie im Konzept — die Sperre ist unerreichbar, solange `schreib_wurzel` gilt (Auftraggeber, 20.09.2026) |
+> | U-2 | `tools/wartungsprobe/` legt Sitzungsdateien **im CLI** an und wäre still gebrochen | im selben Paket mitgezogen (`sitzung_ort()`) |
+> | U-3 | `SESSION_TIMEOUT_S` steht in `auth_guard.php`, das der Aufräumjob nie lädt | Konstante nach `sitzung_lib.php` verschoben |
+> | U-4 | Nr. 208 wäre durch einen bloßen Nachzug **nicht** erledigt | Ursache behoben: erzeugte Beschreibung + `tools/jobregister/` (Auftraggeber, 20.09.2026) |
+> | U-5 | Ohne `clearstatcache()` nach `mkdir` meldet die Probe einen Rückfall, den es nicht gibt | behoben, 5/5 Läufe sauber |
+> | U-6 | Konzept nennt `PHP_SAPI === 'cli'`, das Haus benutzt `cli \|\| phpdbg` | `sitzung_cli()`, dieselbe Fassung wie `wartung_cli()` |
+> | U-7 | Der vierte Schreibort ist auf Stufe `empfohlen` im guten Fall **unsichtbar** | gewollt; Ort und Dateizahl trägt der Muss-Punkt daneben |
 
 ---
 
@@ -239,3 +252,77 @@ Im Einschub vom 20.09.2026 (`Rahmenplan-Einschub-2026-09-20.md`): Schritt 16
 mit diesem Konzept; Backlog **241** (Sitzungsablage, Befund mit Zahlen,
 Verweis hierher) und **242** (Sitzungsbindung per Cookie-Token,
 Sicherheitsrunde II). Keine neue R-Nummer: R81 trägt die Begründung.
+
+---
+
+## 5. Umsetzung (Claude Code, 20.09.2026, Web 20.26.0)
+
+**Zweig** `claude/new-session-cbq57h`, von `origin/main` `862ca7f` (Web
+20.25.0, gemessen und nicht abgeschrieben). Ein Arbeitspaket, ein Commit.
+
+### 5.1 Was gebaut wurde
+
+| Datei | Was |
+|---|---|
+| `server/sitzung_lib.php` (neu) | `sitzung_ablage()` mit Markerdatei, `sitzung_aufraeumen()`, `sitzung_dateien_zahlen()`, `sitzung_wirksamer_pfad()`, `sitzung_cli()`; trägt `SESSION_TIMEOUT_S`, `SITZUNG_KARENZ_S`, `SITZUNG_MARKER_S`. **Lädt nichts** |
+| `server/db.php` | Aufruf hinter `wartung_tor()` |
+| `server/install.php` | Aufruf **vor** `session_set_cookie_params()` |
+| `server/auth_guard.php` | `SESSION_TIMEOUT_S` entfällt hier (U-3) |
+| `server/email_lib.php` | Einrückung von Zeile 128 berichtigt, Warnkommentar |
+| `server/plattform_lib.php` | vierter Schreibort (Empfohlen) und Punkt „Sitzungsablage" (Muss, dreiwertig); `$cli` einmal statt zweimal |
+| `server/jobs_lib.php` | Räumteil „Sitzungsdateien"; `job_aufraeumen_schritte()` ausgelagert; Beschreibung erzeugt; drei Schlüssel mit ASCII-Umschrift berichtigt |
+| `server/jobs.php` | `· N gelöscht` in der Laufzeile |
+| `tools/wartungsprobe/` | `sitzung_ort()` (U-2), `LIESMICH.md` nachgezogen |
+| `tools/jobregister/` (neu) | Register gegen Code, Tokenizer, ohne Installation (U-4) |
+| `.gitignore` | `server/.sitzungen/` |
+| Doku | `version.php`, `CHANGELOG.md`, `Technik.md` (2, 4.97a, 4.98-Bedrohungsmodell, 5b, 6.2, 6.5, 7), `Backlog.md` (208 nach Erledigt) |
+
+### 5.2 Abweichungen vom Konzept, jede mit Grund
+
+1. **`sitzung_cli()` statt `PHP_SAPI === 'cli'`** (U-6). Das Konzept nennt die
+   engere Form. Eine Zeile unter dem neuen Aufruf steht `wartung_tor()`, und
+   `wartung_cli()` nimmt `phpdbg` mit. Zwei Tore nebeneinander in derselben
+   Datei mit verschiedener Vorstellung davon, was „Kommandozeile" heißt, sind
+   ein Widerspruch, der beim ersten `phpdbg`-Lauf auffällt.
+2. **`SESSION_TIMEOUT_S` ist mitgewandert** (U-3). Das Konzept sagt dazu
+   nichts; ohne den Umzug wäre der Räumteil auf der Kommandozeile an
+   `Undefined constant` gestorben und am Huckepack-Weg durchgelaufen.
+3. **`tools/wartungsprobe/` wurde mitgezogen** (U-2). Ohne das liefert dieses
+   Paket ein Prüfmittel aus, das mit „nicht angemeldet" scheitert und dabei
+   aussieht wie ein Fehler der Anwendung.
+4. **Nr. 208 ist an der Ursache behoben, nicht durch einen Nachzug** (U-4).
+   Das Konzept nimmt an, ein Nachziehen von Katalog und Register erledige den
+   Punkt. Es tut es nicht: Genau das ist zweimal geschehen, und zweimal wuchs
+   der Abstand wieder. Entschieden vom Auftraggeber am 20.09.2026.
+5. **Der Räumteil heißt „Sitzungsdateien"** und meldet über den neuen
+   Berichtsschlüssel `geloescht_dateien`. Das Konzept sagt „wie die übrigen
+   Räumteile" — die melden aber gar keine Zahl; `geloescht` gibt es bereits
+   und heißt „auf einem fremden Ziel entfernt".
+6. **Der vierte Schreibort ist im guten Fall unsichtbar** (U-7). Das Konzept
+   fordert in der Abnahme „Statusseite zeigt den vierten Schreibort mit Pfad,
+   beschreibbar"; `status_lib.php` zeigt erfüllte Empfehlungen nicht einzeln.
+   Ort, Rechte und Dateizahl trägt deshalb der Muss-Punkt daneben — er steht
+   immer da, auch im Rückfall, und das ist die Lage, auf die es ankommt.
+
+### 5.3 Was dabei aufgefallen ist und nicht im Auftrag stand
+
+- **Der realpath-Cache** (U-5): Ein Rückfall, den es nicht gab. Gefunden nur,
+  weil der Prüfstand den Übergang „keine Ablage → Ablage" wirklich gefahren
+  ist statt ihn anzunehmen.
+- **`tools/wegwerfdomains/` fehlte im Werkzeugbaum** seit Web 20.22.0 (46 im
+  Baum, 48 auf der Platte) — derselbe Fehler, den Nr. 208 für
+  `tools/containerprobe/` beschreibt.
+- **Die Ausnahmeliste in `Technik.md` 6.5** nannte fünf Einträge, die Kette
+  führt sieben (`ueberlast.json`, `install.php`).
+- **Zwei echte `session_start()` in `server/vendor/`**
+  (`phpseclib3/Crypt/Random.php`). Toter Rückfallpfad auf PHP ≥ 8.2. Die Zahl
+  **neun** gilt für „`server/` ohne `vendor/`" — wer sie ohne diesen Zusatz
+  zitiert, zitiert eine Zahl mit stillschweigender Bedingung.
+
+### 5.4 Was offen bleibt
+
+Vollständig mit Bedienweg im Prüfdokument. Kurz: alles, was **Staging oder
+einen Browser** braucht (`/.sitzungen/` → 403, Stufe 2, Prüfpunkt E-SA-07 auf
+einer echten Anlage, die Anmeldewege), und alles, was **an Kette II hängt**
+(achter Schutzlistenpfad, der Eintrag von `tools/jobregister/` in Stufe 1,
+und damit der Abnahmepunkt „zwei Deploys hintereinander").

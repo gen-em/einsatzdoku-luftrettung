@@ -6436,5 +6436,99 @@ declare(strict_types=1);
  *   Das widersprach `plattform_lib.php` und `docs/Technik.md` und war
  *   ausserdem fuer sich genommen falsch, seit die geklammerte Vorgabe
  *   drinsteht. Sie nennt jetzt 8.0.13 / 10.6.
+ *
+ * 20.26.0 — DIE ANWENDUNG LEGT IHRE SITZUNGEN SELBST AB
+ *   (Schritt 16, E-SA-01 bis -09; Backlog Nr. 241, 20.09.2026).
+ *
+ *   Bis hierher lag KEINE ZEILE CODE an `session.save_path` — wo PHP die
+ *   Sitzungsdateien hinlegt, entschied allein der Hoster. Auf der neuen
+ *   Staging-Anlage ist das ein GETEILTES Verzeichnis: `0773`, Eigentuemer
+ *   root, `gc_probability = 0`. Es ist gutgegangen, weil der Hoster das
+ *   Auflisten ueber das Web sperrt — die Anwendung haette es nicht gemerkt.
+ *   Fuer Produktiv ist derselbe Wert nie erhoben worden, fuer jede
+ *   Selbsthosterin ist er offen.
+ *
+ *   WAS AUF DEM SPIEL STAND, NUECHTERN: Eine Sitzungsdatei traegt KEIN
+ *   Schluesselmaterial; die Zusage der Ende-zu-Ende-Verschluesselung ist
+ *   nicht beruehrt. Sie traegt aber die Sitzung selbst, und ihr DATEINAME
+ *   IST DIE SITZUNGSKENNUNG. Wer sie liest, ist angemeldet.
+ *
+ *   NEU IST `sitzung_lib.php` — eine Datei, die NICHTS laedt, weil
+ *   `db.php` sie waehrend des eigenen Ladens ruft und `install.php` zu
+ *   diesem Zeitpunkt keine `config.php` hat. Sie legt `.sitzungen/` mit
+ *   `0700` an, prueft mit einer Probedatei und setzt `session_save_path()`.
+ *
+ *   ZWEI AUFRUFSTELLEN UND NICHT NEUN, und das ist die eigentliche
+ *   Entscheidung. Es gibt NEUN `session_start()` in neun Dateien — nicht
+ *   drei, wie der erste Entwurf des Konzepts annahm. Acht davon laden
+ *   `db.php` vorher, die neunte ist `install.php`. Mit drei Aufrufstellen
+ *   haette `login.php` die Sitzung beim Hoster abgelegt und
+ *   `auth_guard.php` sie in `.sitzungen/` gesucht: NIEMAND HAETTE SICH
+ *   ANMELDEN KOENNEN. Nachgemessen mit dem Tokenizer, zweimal unabhaengig.
+ *
+ *   DER CACHE IST EINE DATEI UND KEINE TABELLE. `app_state` waere der
+ *   naheliegende Ort und der falsche: Vor dem Sitzungsstart ist die
+ *   Datenbank nicht verbunden, in `install.php` gibt es sie gar nicht, und
+ *   faellt sie aus, straeubte sich jede Anfrage schon vor der Fehlerseite.
+ *   Stattdessen `.sitzungen/.geprueft` — ist ihr `mtime` juenger als eine
+ *   Stunde, genuegt ein `is_dir()`. Gemessen im Pruefstand: zweiter Aufruf
+ *   innerhalb der Stunde 0 Probedateien, mit gealtertem Marker 1.
+ *
+ *   `gc_probability = 0` IST NOTWENDIG UND KEIN FEINSCHLIFF. Der Hoster
+ *   stellt `gc_maxlifetime` — auf lima-city 1440 s, also 24 Minuten. Die
+ *   Anwendung sagt 30 zu. Liefe PHPs Zufallsraeumung mit, meldete sie
+ *   Leute sechs Minuten VOR Ablauf der eigenen Frist ab. Geraeumt wird
+ *   deshalb vom Aufraeumjob, Teil „Sitzungsdateien", nach
+ *   `SESSION_TIMEOUT_S` plus einer Stunde Karenz und nur `sess_*`.
+ *
+ *   DIE KONSTANTE `SESSION_TIMEOUT_S` IST MITGEWANDERT, von
+ *   `auth_guard.php` nach `sitzung_lib.php`. Der Aufraeumjob laeuft ueber
+ *   `jobs.php`, das `db.php` laedt, aber NIE `auth_guard.php`: Der neue
+ *   Raeumteil waere auf der Kommandozeile an `Undefined constant`
+ *   gestorben und am Huckepack-Weg durchgelaufen — ein Fehler auf einem
+ *   von drei Wegen. Dasselbe Argument hat `PAIR_TTL_MIN` nach `db.php`
+ *   gebracht.
+ *
+ *   DER RUECKFALL IST KEINE VERSCHLECHTERUNG, seine SICHTBARKEIT ist die
+ *   Verbesserung. Scheitert das Anlegen, gilt der Hosterpfad wie bisher.
+ *   Neu sind zwei Zeilen auf der Statusseite: der vierte Schreibort
+ *   (Empfohlen) und der Punkt „Sitzungsablage" (Muss, dreiwertig), der den
+ *   WIRKSAMEN Pfad misst — Rechte, Eigentuemer, Auflistbarkeit, Dateizahl.
+ *   Er wird rot bei jedem Recht fuer „andere" und dann, wenn das
+ *   Verzeichnis uns nicht gehoert und sich trotzdem auflisten laesst: Dann
+ *   sind WIR SELBST DER FREMDE, der es lesen konnte.
+ *
+ *   NACH DEM AUSROLLEN SIND ALLE EINMAL ABGEMELDET. Das ist eine
+ *   Betriebsfolge und keine Wegaenderung — die Wege durch die Anwendung
+ *   sind dieselben, es gibt kein Datenmodell und keine Migration. Deshalb
+ *   die NEBENNUMMER und nicht die Hauptnummer. Es geht dabei nichts
+ *   verloren; die Betroffene sieht die Anmeldeseite statt der erwarteten
+ *   Seite. Der Satz steht im Runbook (Technik.md 7) und im Changelog.
+ *
+ *   EIN LATENTER FEHLER IST DABEI AUFGEFALLEN UND BEHOBEN: Ohne
+ *   `clearstatcache()` nach dem `mkdir` konnte die Schreibprobe noch die
+ *   Auskunft von vorher bekommen — der realpath-Cache gilt PROZESSWEIT und
+ *   120 s. Gemessen im Pruefstand: `sitzung_ablage()` meldete einen
+ *   Rueckfall, waehrend `plattform_schreibprobe()` zwei Zeilen spaeter auf
+ *   demselben Pfad gelang. Nach der Berichtigung fuenf von fuenf Laeufen
+ *   sauber.
+ *
+ *   MITGEZOGEN, WEIL ES SONST STILL GEBROCHEN WAERE:
+ *   `tools/wartungsprobe/` legt ihre Sitzungsdateien selbst an — auf der
+ *   KOMMANDOZEILE, waehrend der Server sie ueber HTTP liest. Da
+ *   `sitzung_ablage()` im CLI bewusst nichts tut, haette die Probe in den
+ *   Hosterpfad geschrieben und der Server in `.sitzungen/` gesucht: alle
+ *   Sitzungsfaelle „nicht angemeldet", aussehend wie ein Fehler der
+ *   ANWENDUNG statt der Probe.
+ *
+ *   UND DAS JOBREGISTER (Backlog Nr. 208) IST AN DER URSACHE GEFASST.
+ *   Gemessen am 20.09.2026: 11 Jobs im Code gegen 9 in `docs/Technik.md`,
+ *   16 Raeumschritte gegen „dreizehn", 15 von 16 in der sichtbaren
+ *   Beschreibung. Zweimal waren die Zahlen schon von Hand berichtigt
+ *   worden, zweimal wuchs der Abstand wieder. Jetzt wird die sichtbare
+ *   Beschreibung aus `array_keys(job_aufraeumen_schritte())` ERZEUGT, und
+ *   `tools/jobregister/pruefen.php` zaehlt das Register nach — mit dem
+ *   Tokenizer und ohne Installation. Der Ketteneintrag dafuer gehoert zu
+ *   Kette II und ist dort angemeldet.
  */
-const WEB_VERSION = '20.25.0';
+const WEB_VERSION = '20.26.0';

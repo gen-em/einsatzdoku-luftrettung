@@ -25,6 +25,22 @@ server/wartung.lock
 # keine Verbindung mehr annimmt. Zusaetzlich in der Ausnahmeliste beider
 # FTPS-Schritte, sonst loeschte ihn der naechste Push.
 server/ueberlast.json
+# Die Sitzungsablage (Schritt 16, E-SA-05, Backlog Nr. 241). Wie wartung.lock
+# und ueberlast.json ein ZUSTAND DIESER EINEN INSTALLATION -- und der
+# heikelste davon: Der Dateiname einer Sitzungsdatei IST die
+# Sitzungskennung, wer sie liest, ist angemeldet. Ein eingecheckter Ordner
+# waere eine Sitzung im Repositorium.
+#
+# Der Ordner steht zusaetzlich in der Ausnahmeliste beider FTPS-Schritte,
+# sonst loeschte ihn der naechste Push -- und meldete damit bei jedem Deploy
+# alle an. ACHTUNG, STAND 20.09.2026: Dort ist er NOCH NICHT eingetragen; der
+# Eintrag gehoert zu Kette II (E-KH-20, AP5 dort) und ist dort angemeldet.
+#
+# Als einziger dieser Eintraege liegt er im Web-Wurzelverzeichnis. Was ihn
+# dort deckt, ist die Punktregel in server/.htaccess (jeder Pfad mit
+# fuehrendem Punkt -> 403, ausser .well-known/) und auf nginx, wo sie nicht
+# gilt, allein der Modus 0700.
+server/.sitzungen/
 server/install-nachweis-*.txt
 server/wiederher-nachweis-*.txt
 

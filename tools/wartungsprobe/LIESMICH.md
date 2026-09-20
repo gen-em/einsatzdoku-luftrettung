@@ -101,10 +101,21 @@ PBKDF2 ab (`assets/crypto.js`); mit `curl` wäre sie nur nachzubilden, indem
 man die Ableitung ein zweites Mal schreibt — und zwei Kopien einer
 Schlüsselableitung sind genau die Art Duplikat, die dieses Projekt vermeidet.
 
-Stattdessen schreibt die Probe die **PHP-Sitzungsdatei** direkt (dieselbe
-`session.save_path`, dieselbe Maschine) und schickt deren Kennung als Cookie.
-Was darin steht, ist das, was `auth_guard.php` nach einer gelungenen Anmeldung
-vorfindet: `user_id`, `epoch`, `last_seen`, `csrf`.
+Stattdessen schreibt die Probe die **PHP-Sitzungsdatei** direkt (dasselbe
+Verzeichnis, dieselbe Maschine) und schickt deren Kennung als Cookie. Was darin
+steht, ist das, was `auth_guard.php` nach einer gelungenen Anmeldung vorfindet:
+`user_id`, `epoch`, `last_seen`, `csrf`.
+
+> **Seit Web 20.26.0 ist „dasselbe Verzeichnis" eine Rechnung, keine
+> Selbstverständlichkeit.** Die Anwendung legt ihre Sitzungen selbst in
+> `server/.sitzungen/` ab (Schritt 16, E-SA-02) — aber nur im Web-Lauf; auf der
+> Kommandozeile richtet `sitzung_ablage()` absichtlich nichts ein. Diese Probe
+> läuft auf der Kommandozeile und spricht einen Server über HTTP an. `sitzung_ort()`
+> nimmt deshalb `server/.sitzungen/`, sobald es das Verzeichnis gibt, und fällt
+> sonst auf `session_save_path()` zurück. Ohne diesen Griff schriebe die Probe in
+> den Hosterpfad, während der Server in `.sitzungen/` sucht — **alle Sitzungsfälle
+> fielen um, und zwar mit „nicht angemeldet"**, also aussehend wie ein Fehler der
+> Anwendung statt wie einer der Probe.
 
 > **Alle Sitzungen entstehen VOR der ersten gedruckten Zeile.** `session_id()`
 > und `session_start()` scheitern, sobald PHP etwas ausgegeben hat. Der erste

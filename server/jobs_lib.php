@@ -194,6 +194,20 @@ function jobs_pause_bis(): ?string
  *                tun. `$zeitLinks()` liefert die verbleibenden Sekunden — wer
  *                laenger arbeitet, als er hat, bringt die Anfrage um.
  */
+/**
+ * Eine Liste als deutscher Satzteil: „a, b und c".
+ *
+ * Steht hier und nicht in `ui.php`, weil `jobs_lib.php` im CLI-Lauf ohne
+ * Oberflaeche geladen wird. Vier Zeilen sind der kleinere Preis als eine
+ * Abhaengigkeit auf die Seitenhuelle.
+ */
+function jobs_aufzaehlung(array $teile): string
+{
+    if (count($teile) < 2) { return implode('', $teile); }
+    $letztes = array_pop($teile);
+    return implode(', ', $teile) . ' und ' . $letztes;
+}
+
 function jobs_katalog(): array
 {
     require_once __DIR__ . '/mail_lib.php';
@@ -223,16 +237,15 @@ function jobs_katalog(): array
         ],
         'aufraeumen' => [
             'titel'        => 'Aufräumen',
-            /* DIESE ZEILE IST SICHTBARER TEXT (Betrieb -> Hintergrundjobs) und
-             * hinkte den Schritten drei Pakete hinterher: CSP-Berichte,
-             * Mail-Warteschlange und Job-Verlauf standen nicht darin. Wer
-             * einen Schritt ergaenzt, ergaenzt sie mit. */
-            'beschreibung' => 'Papierkorb, Kopplungssitzungen, Ratenschutz und '
-                            . 'Sperrereignisse, Gerätevermerke, Passwort-Token, '
-                            . 'CSP-Berichte, Mail-Warteschlange, Betriebsprotokoll, '
-                            . 'Mengen je Konto, verwaiste Kontomarken, Job-Verlauf, '
-                            . 'Erinnerung an die Verwaltung, Speichermessung und '
-                            . 'Warnschwellen',
+            /* DIESE ZEILE IST SICHTBARER TEXT (Betrieb -> Hintergrundjobs)
+             * und wurde bis Web 20.25.0 VON HAND gefuehrt. Sie hinkte den
+             * Schritten dreimal hinterher — zuletzt um einen (15 von 16).
+             * Jetzt wird sie erzeugt: `job_aufraeumen_schritte()` kennt seine
+             * Schritte, sie heissen dort bereits „Kopplungssitzungen",
+             * „Sperrereignisse", „Gerätevermerke". Das ist der Vorschlag aus
+             * Backlog Nr. 208, wortwoertlich. */
+            'beschreibung' => jobs_aufzaehlung(
+                array_keys(job_aufraeumen_schritte())),
             'taeglich'     => true,
             'rueckstand'   => fn(PDO $pdo, array $z): ?int => null,
             'lauf'         => 'job_aufraeumen',
@@ -470,7 +483,7 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
     if (!is_array($zustand)) { $zustand = []; }
 
     $erledigt = 0; $fertig = false; $fehler = null; $uebergangen = 0;
-    $geloescht = 0;
+    $geloescht = 0; $geloeschtDateien = 0;
     try {
         $e = ($job['lauf'])($pdo, $zustand, $zeitLinks);
         $zustand  = $e['zustand'] ?? [];
@@ -486,6 +499,10 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
          * auf einer FREMDEN Maschine. Sie gehoert in den Lauf, nicht nur in
          * die Karte, die man dafuer aufrufen muss. */
         $geloescht = (int)($e['geloescht'] ?? 0);
+        /* UND DIE DATEIEN (Schritt 16, E-SA-06). Derselbe Grund wie bei den
+         * beiden Zeilen darueber: Was hier nicht abgeholt wird, entsteht im
+         * Job und verschwindet auf dem Weg zur Ausgabe. */
+        $geloeschtDateien = (int)($e['geloescht_dateien'] ?? 0);
     } catch (Throwable $ex) {
         $fehler = get_class($ex) . ': ' . $ex->getMessage();
         // Still gegenueber der Anfrage — die Wartung darf keine Seite
@@ -547,7 +564,8 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
 
     return ['erledigt' => $erledigt, 'fertig' => $fertig,
             'rueckstand' => $rueckstand, 'fehler' => $fehler,
-            'uebergangen' => $uebergangen, 'geloescht' => $geloescht];
+            'uebergangen' => $uebergangen, 'geloescht' => $geloescht,
+            'geloescht_dateien' => $geloeschtDateien];
 }
 
 /** Zustand aller Jobs — fuer die Wartungsseite. */
@@ -618,16 +636,41 @@ function jobs_token(bool $neu = false): string
 /* ---- Die Jobs selbst ----------------------------------------------------- */
 
 /**
- * Aufraeumen — die taeglichen Schritte, die bisher in `run_cleanup_if_due()`
- * standen.
+ * DIE SCHRITTE DES AUFRAEUMJOBS — EINE LISTE, DREI LESER (Backlog Nr. 208).
  *
- * Jeder Schritt hat weiterhin seinen eigenen Fehlerblock: Einer, der
- * scheitert, haelt die anderen nicht auf. Der Unterschied zu vorher ist, dass
- * das Ergebnis in `jobs` landet statt nur im Fehlerprotokoll.
+ * WOGEGEN. Bis Web 20.25.0 stand diese Liste im Rumpf von `job_aufraeumen()`,
+ * und daneben standen ZWEI von Hand gefuehrte Aufzaehlungen derselben
+ * Schritte: die sichtbare `beschreibung` im Katalog und die Registerzeile in
+ * `docs/Technik.md` 4.97a. Beide hinkten. Gemessen am 20.09.2026: 16 Schritte
+ * im Code, 15 in der sichtbaren Beschreibung („Sperrliste geloeschter
+ * Kennungen" fehlte), „dreizehn" in der Registerzeile; der Jobkatalog selbst
+ * fuehrt 11 Jobs, das Register nannte 9 (`mail` und `konto_verfall` fehlten).
+ * Das war der dritte Anlauf an derselben Stelle: P5a/AP5 und P5a/AP8 haben
+ * die Zahlen schon zweimal berichtigt, und beide Male wuchs der Abstand
+ * wieder.
+ *
+ * DIE BESCHREIBUNG WIRD JETZT ERZEUGT (`jobs_katalog()`), nicht
+ * danebengeschrieben — sie kann nicht mehr altern. Die Registerzeile in
+ * `docs/Technik.md` bleibt Prosa, weil sie mehr sagt als eine Liste; sie
+ * wird aber nachgezaehlt, und zwar in Stufe 1 der Kette
+ * (`tools/jobregister/pruefen.php`). Damit wandert das Problem nicht nur eine
+ * Ebene weiter, wie Nr. 208 es befuerchtet.
+ *
+ * DIE SCHLUESSEL SIND SICHTBARER TEXT, und das war nicht immer so: Sie
+ * stehen in der Fehlermeldung eines gescheiterten Schritts („Name: Meldung"),
+ * die als `letzter_fehler` unter Betrieb -> Hintergrundjobs erscheint — und
+ * seit dieser Fassung auch in der erzeugten Beschreibung. Drei von ihnen
+ * trugen deshalb ASCII-Umschrift mitten in der Oberflaeche („Ratenschutz-
+ * Zaehler"); sie sind berichtigt.
+ *
+ * @param array $zahlen Nimmt auf, was ein Schritt gezaehlt hat. Per Referenz
+ *                      und mit Vorgabe, damit der Leser, der nur die NAMEN
+ *                      braucht, ohne Argument rufen kann.
+ * @return array<string, callable> Name des Schritts => was er tut
  */
-function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
+function job_aufraeumen_schritte(array &$zahlen = []): array
 {
-    $schritte = [
+    return [
         'Kopplungssitzungen' => function (PDO $pdo): void {
             /* Nur die VERFALLENEN: Bestaetigte und verworfene Sitzungen
              * loescht pair.php sofort (E-S5-11). Die Obergrenze zaehlt
@@ -636,11 +679,40 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
             $pdo->exec('DELETE FROM pair_sessions
                         WHERE erstellt_am < DATE_SUB(NOW(), INTERVAL ' . PAIR_TTL_MIN . ' MINUTE)');
         },
-        'Sperrliste geloeschter Kennungen' => function (PDO $pdo): void {
+        /* SITZUNGSDATEIEN (Schritt 16, E-SA-06, Backlog Nr. 241).
+         *
+         * DER ERSTE RAEUMTEIL, DER DAS DATEISYSTEM ANFASST — die fuenfzehn
+         * anderen loeschen Zeilen. Deshalb steht die Arbeit selbst nicht
+         * hier, sondern in `sitzung_lib.php`: Dort liegt auch der Pfad, und
+         * der Raeumteil kann so nicht versehentlich anderswo raeumen.
+         *
+         * `SESSION_TIMEOUT_S` PLUS EINE STUNDE, und zwar die Frist der
+         * ANWENDUNG (30 min Inaktivitaet), nicht `gc_maxlifetime` des
+         * Hosters. Auf lima-city steht die bei 1440 s — sechs Minuten KUERZER
+         * als die Zusage der Anwendung. Wer danach raeumte, meldete jemanden
+         * ab, der noch angemeldet sein darf.
+         *
+         * DER JOB LAEUFT HOECHSTENS EINMAL JE KALENDERTAG (`taeglich`), und
+         * `session.gc_probability` steht auf 0. Eine abgelaufene Datei kann
+         * also bis zu einen Tag ueber die Frist hinaus liegen. Das ist
+         * Hygiene, kein Loch: Abgelaufen ist sie fuer `auth_guard.php` in dem
+         * Moment, in dem `last_seen` zu alt ist — die Datei oeffnet nichts
+         * mehr.
+         *
+         * KEIN EIGENER JOB. Ein eigener braechte eine Zeile in der Liste,
+         * einen eigenen Rueckstand und eine eigene Fehlerplakette fuer einen
+         * Verzeichnislauf ueber ein paar Dutzend Dateien. Der Aufraeumjob ist
+         * der taegliche, und genau das ist der Takt. */
+        'Sitzungsdateien' => function (PDO $pdo) use (&$zahlen): void {
+            require_once __DIR__ . '/sitzung_lib.php';
+            $zahlen['sitzungen'] = sitzung_aufraeumen(
+                SESSION_TIMEOUT_S + SITZUNG_KARENZ_S);
+        },
+        'Sperrliste gelöschter Kennungen' => function (PDO $pdo): void {
             $pdo->exec('DELETE FROM deleted_refs
                         WHERE deleted_at < DATE_SUB(NOW(), INTERVAL 90 DAY)');
         },
-        'Ratenschutz-Zaehler' => function (PDO $pdo): void {
+        'Ratenschutz-Zähler' => function (PDO $pdo): void {
             /* DIE STUFE DARF NICHT MITGELOESCHT WERDEN, SOLANGE SIE GILT
              * (P5a/AP6). Verschwindet die Zeile, ist die Stufe 0 — das ist
              * der gewollte Verfall nach 24 h ohne Fehlversuch, und
@@ -681,7 +753,7 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
          * Einstellung — Sicherheitsdaten sollen nicht versehentlich Jahre
          * liegen. Geloescht wird nach `zuletzt`: Eine Meldung, die noch
          * gestern kam, ist frisch, auch wenn ihre Zeile drei Monate alt ist. */
-        'Geraetevermerke' => function (PDO $pdo): void {
+        'Gerätevermerke' => function (PDO $pdo): void {
             /* 30 TAGE, FEST (E-P5a-09 nennt die „Bremse-Treffer"). Der Vermerk
              * `devices.abgewiesen_seit` / `abgewiesen_anzahl` (P5a/AP7) wird
              * sonst NUR beim naechsten gelungenen Upload geleert — und genau
@@ -887,6 +959,20 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
             edbak_schwellen_melden();
         },
     ];
+}
+
+/**
+ * Aufraeumen — die taeglichen Schritte, die bisher in `run_cleanup_if_due()`
+ * standen.
+ *
+ * Jeder Schritt hat weiterhin seinen eigenen Fehlerblock: Einer, der
+ * scheitert, haelt die anderen nicht auf. Der Unterschied zu vorher ist, dass
+ * das Ergebnis in `jobs` landet statt nur im Fehlerprotokoll.
+ */
+function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
+{
+    $zahlen   = [];
+    $schritte = job_aufraeumen_schritte($zahlen);
 
     $fehler = [];
     foreach ($schritte as $name => $schritt) {
@@ -900,7 +986,13 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
     if ($fehler) {
         throw new RuntimeException(implode(' · ', $fehler));
     }
-    return ['zustand' => [], 'erledigt' => count($schritte), 'fertig' => true];
+    /* `geloescht_dateien` UND NICHT `geloescht`. Den Schluessel `geloescht`
+     * gibt es schon, und er heisst „auf einem FREMDEN Ziel entfernt"
+     * (Versandjob, P5a/AP10) — `jobs.php` druckt ihn als „am Ziel entfernt".
+     * Zwei Bedeutungen unter einem Namen waeren genau die Doppeldeutigkeit,
+     * an der eine Zahl im Betrieb wertlos wird. */
+    return ['zustand' => [], 'erledigt' => count($schritte), 'fertig' => true,
+            'geloescht_dateien' => (int)($zahlen['sitzungen'] ?? 0)];
 }
 
 /**

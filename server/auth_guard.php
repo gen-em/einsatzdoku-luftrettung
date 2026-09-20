@@ -111,8 +111,15 @@ function sitzung_beenden_passend(string $grund): never {
     session_beenden($grund);
 }
 
-// Inaktivitaets-Timeout: nach 30 Minuten ohne Anfrage neu anmelden
-const SESSION_TIMEOUT_S = 1800;
+/* INAKTIVITAETS-TIMEOUT: nach 30 Minuten ohne Anfrage neu anmelden.
+ *
+ * `SESSION_TIMEOUT_S` STAND BIS WEB 20.25.0 HIER und ist mit Schritt 16 nach
+ * `sitzung_lib.php` gewandert (ueber `db.php` Zeile 3 geladen). Der Grund
+ * steht dort: Der Aufraeumteil „Sitzungsdateien" braucht dieselbe Frist, und
+ * der Aufraeumjob laeuft ueber `jobs.php`, das `db.php` laedt, aber NIE diese
+ * Datei. Hier haette die Konstante auf der Kommandozeile gefehlt und am
+ * Huckepack-Weg gegolten — ein Fehler auf einem von drei Wegen. Dasselbe
+ * Argument hat `PAIR_TTL_MIN` nach `db.php` gebracht. */
 if (isset($_SESSION['last_seen']) && (time() - (int)$_SESSION['last_seen']) > SESSION_TIMEOUT_S) {
     /* ABGELAUFENE SITZUNG: ueber den gemeinsamen Weg beenden.
      *
