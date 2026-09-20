@@ -847,10 +847,20 @@ Daten erst nach Server-Bestätigung.
 │   │                      Ein Handgriff und kein Automatismus — die Zusage
 │   │                      „keine fremde Quelle zur Laufzeit" kennt keine
 │   │                      Ausnahme (s. LIESMICH.md)
-│   └── wortliste/         zählt nach, ob sichtbare Texte und normative
+│   ├── wortliste/         zählt nach, ob sichtbare Texte und normative
 │                          Dokumentation neutral von Land und Luft sprechen:
 │                          Sperrliste, Ausnahmeliste mit Begründungen, drei
 │                          Zahlen je Bereich (s. LIESMICH.md)
+│   └── zaehlung/          hält fest, dass jede Sache ihre EINE Stelle behält
+│                          (Schritt 15, R83, E-ZE-24): je Muster eine
+│                          Registerzeile mit einer Decke, gemessen mit dem
+│                          PHP-Tokenizer in drei Sichten — Code ohne
+│                          Kommentare, dasselbe ohne Zeichenketteninhalt, und
+│                          das JavaScript (`.js` ganz, aus `.php` die
+│                          <script>-Blöcke). Liegt ein Ist-Wert über der
+│                          Decke, schlägt der Lauf an. Eine Decke wird nicht
+│                          angehoben, ohne dass es im Konzept steht
+│                          (s. LIESMICH.md)
 ├── .claude/hooks/session-start.sh  beschafft beim Containerstart, was der
 │                          Pruefstand braucht und das Abbild nicht mitbringt:
 │                          MariaDB, ImageMagick, rsvg-convert, Python-
@@ -8904,6 +8914,7 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 | `tools/cspprobe/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `tools/sitzungshaertung/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `tools/jobregister/pruefen.php` | 0 Befunde, Selbstprobe 9/9 — **noch nicht eingehängt**, siehe unten |
+| `tools/zaehlung/zaehlen.php` | 38 Registerzeilen, **0 über der Decke**; Selbstprobe 33/33 — **noch nicht eingehängt**, siehe unten |
 | `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge — **nur wenn `android/` berührt ist** |
 | Uhr Stufe I (`pruefstand.sh aufbau-uebersetzen`) | übersetzt für alle Zielgeräte — **nur wenn `watch/` oder `tools/uhr-pruefstand/` berührt ist** |
 
@@ -8921,6 +8932,19 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 > es wird nur eben nachgezählt, sobald es jemand fährt. Genau das ist die
 > Lage, vor der Nr. 208 warnt („sonst wandert das Problem nur eine Ebene
 > weiter"), und deshalb steht sie hier und nicht in einer Fußnote.
+
+> **`tools/zaehlung/` liegt seit Schritt 15 AP1 vor und hängt noch nicht in
+> `pruefung.yml`** — eingehängt wird es in **AP10** desselben Schritts,
+> zusammen mit dem Eintrag in `tools/kettenaufrufe`. Zwei Zeilen, neben
+> `sitzungshaertung`, ohne Bedingung:
+>
+>     php tools/zaehlung/zaehlen.php --selbstprobe
+>     php tools/zaehlung/zaehlen.php
+>
+> **Bis dahin misst es nur, wer es fährt.** Genau das ist die Lage, gegen die
+> es gebaut wurde: `edbak_groesse_text()` ist auf 43 Aufrufe in zehn Dateien
+> gewachsen, ohne dass es jemandem auffiel (R83). Ein Register, das niemand
+> fährt, wiederholt den Fehler eine Ebene höher.
 
 > **Die Reihenfolge ist die des Arbeitslaufs**, und sie hat einen Grund: Was
 > ohne Netz und ohne SDK läuft, läuft zuerst. Ein Syntaxfehler soll nicht erst
