@@ -155,10 +155,22 @@ Werkzeug, das denselben Client benutzt, könnte diese Frage nicht beantworten.
 
 ## Die zwei Betriebsarten
 
-| Schalter | Datenkanal | wofür |
+| Schalter | `curl`-Option | wofür |
 |---|---|---|
-| (Vorgabe) | `--ssl-reqd` — TLS-Sitzung des Steuerkanals wiederverwenden | Normalbetrieb |
-| `--ohne-sitzungswiederverwendung` | `--no-ssl-session-reuse` | der Trennversuch (F3) |
+| (Vorgabe) | — (Wiederverwendung ist `curl`s Verhalten ohne Zutun) | Normalbetrieb |
+| `--ohne-sitzungswiederverwendung` | `--no-sessionid` | der Trennversuch (F3) |
+
+`--ssl-reqd` steht in **beiden** Betriebsarten: Es verlangt TLS und hat mit
+der Wiederverwendung nichts zu tun. Bis zum 20.09.2026 stand es hier so, als
+wäre es der Schalter für „mit" — das war falsch beschriftet.
+
+> **Hier stand `--no-ssl-session-reuse`, und den gibt es nicht.** Gemessen im
+> ersten Trennversuch (Lauf 35534784406): `curl: option
+> --no-ssl-session-reuse: is unknown`. Der ganze Lauf hat damit **nichts**
+> gemessen. Die Selbstprobe hatte geprüft, dass die Zeichenkette im
+> ausgeführten Befehl **landet** — nicht, dass `curl` sie **kennt**. Seither
+> fragt `curl_kennt()` das Werkzeug selbst (`curl --help all`), in der
+> Selbstprobe **und** vor jedem echten Lauf in dieser Betriebsart.
 
 Viele FTPS-Server verlangen die Wiederverwendung; wer sie nicht bietet,
 bekommt die Datenverbindung abgeschnitten — **das sieht aus wie ein
@@ -195,7 +207,7 @@ mehr (gefunden von der Selbstprobe am 20.09.2026). Maskiert wird seither am
 
 ## Selbstprobe
 
-`--selbstprobe` fährt **26 Lagen ohne Netz**: Maskierung (4), Adressen (3),
+`--selbstprobe` fährt **37 Lagen ohne Netz**: Maskierung (4), Adressen (3),
 die Dreiwertigkeit der Sitzungsmessung (4), der Rundlauf gegen Attrappen
 (11 — darunter „liegt im FTP, ist über HTTPS 404", „Inhalt weicht ab", „nach
 dem Löschen weiter abrufbar", „Hochladen scheitert" und jedes Mal die

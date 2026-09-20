@@ -470,6 +470,73 @@ die die Zielprobe in ihren zwei Betriebsarten trennt.
 
 ## 2. Funde aus der Umsetzung
 
+**F-KH-U-14 — Der Zeiger ist auf einen Stand gewandert, der nie ausgeliefert
+wurde. Das ist ein Fehler der Umsetzung, und zwar derselbe zum zweiten Mal.**
+*Lauf 35534695781, 20.09.2026, 20:11 UTC.*
+
+Der Job `zeiger` hing an `if: needs.produktion.result == 'success'`. **Ein
+Probelauf ist erfolgreich — er soll ja gelingen.** Also wanderte der Zeiger
+auf `9f62d55`, einen Commit, der nie auf dem Server lag.
+
+**Das Bittere steht im Kommentar daneben.** Er sagt wörtlich, wogegen die
+Bedingung gebaut ist: *„Ohne diese Zeile bewegte ein Lauf ohne Tag den Zeiger
+auf einen Stand, der nie auf Produktiv war — und die Wache verglänge danach
+gegen eine Lüge."* Gebaut war sie in AP2 gegen den **übersprungenen** Job; der
+Probelauf kam in AP3 und ging durch die Tür daneben. **AP2 und AP3
+widersprachen sich, und beim Bauen von AP3 ist es niemandem aufgefallen —
+mir am wenigsten.**
+
+**Die Folge, wäre es geblieben:** Die Integritätswache hätte ab 04:17 UTC
+Produktiv gegen Web 20.26.0 gehalten, während dort 20.24.2 liegt. Täglicher
+Falschalarm — genau der Zustand, den AP2 beseitigt hat.
+
+*Behoben, zweifach:*
+1. `if: needs.produktion.result == 'success' && !inputs.probelauf`.
+2. **Ein zweiter Riegel an der Stelle, wo der Schaden entsteht:** Der Schritt
+   selbst bricht rot ab, wenn er im Probelauf überhaupt anläuft. Wer die
+   Bedingung künftig erweitert und die Zeile vergisst, bekommt einen roten
+   Lauf statt eines falschen Zeigers.
+
+*Nicht behoben aus der Umsetzung heraus:* **Der Zeiger steht noch falsch.**
+Das Zurücksetzen ist ein erzwungener Push auf `produktion`; der Sandkasten
+dieser Sitzung lässt ihn nicht zu. **Prüfpunkt 14.**
+
+**F-KH-U-15 — Der Trennversuch hat nichts gemessen: Den Schalter, den ich
+benutzt habe, gibt es nicht.** *Lauf 35534784406, 20:12 UTC.*
+
+```
+curl: option --no-ssl-session-reuse: is unknown
+```
+
+**Frei erfunden.** `curl` kennt `--no-sessionid` („Disable SSL session-ID
+reusing"); `--no-ssl-session-reuse` gibt es in keiner Fassung. Alle Läufe in
+der Betriebsart „ohne" haben damit **nichts** gemessen.
+
+**Warum die Selbstprobe es nicht gefunden hat — und das ist die Lehre:** Sie
+prüfte, dass die Zeichenkette im **ausgeführten Befehl landet**. Das tat sie
+brav. Ob `curl` sie **kennt**, hat niemand gefragt. Das ist genau die
+Fehlerklasse, die `CLAUDE.md` 6 für die Kette beschreibt — „ein Schalter, der
+still verworfen wird" —, nur war er hier wenigstens laut.
+
+*Behoben, dreifach:*
+1. `--no-sessionid` statt der Erfindung.
+2. **`--ssl-reqd` steht jetzt in BEIDEN Betriebsarten** und ist richtig
+   beschriftet: Es verlangt TLS und hat mit der Wiederverwendung nichts zu
+   tun. Bis hierher stand es da, als wäre es der Schalter für „mit"; „mit"
+   ist schlicht `curl`s Verhalten ohne Zutun.
+3. **`curl_kennt()` fragt das Werkzeug selbst** (`curl --help all`) — in der
+   Selbstprobe für beide Schalter, mit der Gegenprobe auf den erfundenen,
+   **und vor jedem echten Lauf** in dieser Betriebsart. Kennt dieses `curl`
+   den Schalter nicht, bricht die Probe ab, statt in der Vorgabe-Betriebsart
+   zu laufen und ein Ergebnis zu melden, das keines ist.
+
+Selbstprobe **33 → 37 Lagen**.
+
+**Was damit für F3 steht:** Die Betriebsart *mit* ist gemessen und gelingt
+(F-KH-U-12). Die Betriebsart *ohne* ist **ungemessen** — Prüfpunkt 12 ist
+offen und diesmal wirklich fahrbar.
+
+
 **F-KH-U-12 — Der Zertifikatsfehler ist behoben, und damit fällt F-KH-U-09.**
 *Lauf 35532390449, Probelauf um 19:30 UTC, nach Umstellung von `FTP_SERVER`.*
 
@@ -1078,6 +1145,21 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   *Wichtig für die Reihenfolge:* **Prüfpunkt 12 (der Trennversuch) braucht
   das zuerst.** Solange `curl` am Zertifikat abbricht, kommt er nie bis zum
   Datenkanal, und F3 lässt sich nicht messen.
+
+- [ ] **14 — Den Zeiger `produktion` zurücksetzen** (F-KH-U-14).
+  *Er steht auf `9f62d55`, einem Stand, der nie ausgeliefert wurde; richtig
+  ist `7150793` (Tag `web-v20.24.2`).* Solange er falsch steht, wird die
+  Integritätswache täglich um 04:17 UTC grundlos rot.
+  *Vorbereitet ist alles:* Der Zweig **`zeiger-wiederherstellung`** zeigt
+  bereits auf `7150793`.
+  *Weg (ein Klick, kein Git nötig):* GitHub → **Branches** →
+  bei `produktion` das **Papierkorbsymbol**. Danach lege ich ihn aus
+  `zeiger-wiederherstellung` neu an und räume den Hilfszweig weg.
+  *Solange er fehlt, ist die Wache rot mit Ansage* — das ist gewollt und
+  dauert Sekunden.
+  *Scheitern erkennt man daran:* `git ls-remote --heads origin produktion`
+  zeigt weiter `9f62d55`. Oder im Browser: Branches → `produktion` →
+  der jüngste Commit ist nicht „Merge pull request #59".
 
 - [ ] **11 — Vor dem Trennversuch: keine zweite FTP-Sitzung offen.**
   *Weg:* WinSCP schließen, den Dateimanager im Plesk-Panel schließen, jeden

@@ -34,9 +34,10 @@ Viele FTPS-Server verlangen, dass der Datenkanal die TLS-Sitzung des
 Steuerkanals **wiederverwendet**; wer es nicht tut, bekommt die
 Datenverbindung abgeschnitten -- das sieht aus wie ein `ECONNRESET`. Genau
 danach sucht der Trennversuch. Im Normalbetrieb laeuft die Probe deshalb
-**mit** Wiederverwendung (`--ssl-reqd`, Vorgabe); mit
-`--ohne-sitzungswiederverwendung` laeuft sie ohne
-(`--no-ssl-session-reuse`).
+**mit** Wiederverwendung (das ist `curl`s Verhalten ohne Zutun); mit
+`--ohne-sitzungswiederverwendung` laeuft sie ohne (`--no-sessionid`).
+`--ssl-reqd` steht in BEIDEN Betriebsarten -- es verlangt TLS und hat
+mit der Wiederverwendung nichts zu tun.
 
 **Ob `curl` die Sitzung in der Fassung dieses Laeufers tatsaechlich
 wiederverwendet, wird GEMESSEN und nicht angenommen.** Der Schalter kann in
@@ -81,6 +82,33 @@ WEB_ZEITGRENZE_S = 30
 # Er bekommt eine eigene Behandlung, weil er etwas anderes bedeutet als jeder
 # andere Fehlschlag: Der Transport ist in Ordnung, die IDENTITAET nicht.
 CURL_ZERTIFIKAT = 60
+
+# `curl`-Rueckgabewert 2 = "failed to initialize" -- das meldet er unter
+# anderem bei einem Schalter, den er nicht kennt.
+CURL_BEDIENFEHLER = 2
+
+# DIE BEIDEN SCHALTER, UND WARUM SIE SO HEISSEN.
+#
+# `--ssl-reqd` steht IMMER dabei: Es verlangt TLS und bricht ab, wenn der
+# Server keines anbietet. Es hat mit der Wiederverwendung NICHTS zu tun --
+# bis zum 20.09.2026 stand es hier so, als waere es der Schalter fuer die
+# Betriebsart "mit". Das war falsch beschriftet: "Mit Wiederverwendung" ist
+# schlicht das Verhalten von `curl` ohne Zutun.
+#
+# `--no-sessionid` schaltet sie ab ("Disable SSL session-ID reusing").
+#
+# HIER STAND `--no-ssl-session-reuse`, UND DEN GIBT ES NICHT. Gemessen im
+# ersten Trennversuch (Lauf 35534784406, 20.09.2026):
+#
+#     curl: option --no-ssl-session-reuse: is unknown
+#
+# Der ganze Lauf hat damit NICHTS gemessen. Die Selbstprobe hatte geprueft,
+# dass die Zeichenkette im ausgefuehrten Befehl LANDET -- nicht, dass `curl`
+# sie kennt. Genau diese Fehlerklasse beschreibt `CLAUDE.md` 6 fuer die
+# Kette ("ein Schalter, der still verworfen wird"); hier war er wenigstens
+# laut. Deshalb gibt es jetzt `curl_kennt()`.
+SCHALTER_TLS_PFLICHT = "--ssl-reqd"
+SCHALTER_OHNE_SITZUNG = "--no-sessionid"
 
 # DER PRAEFIX HAT KEINEN FUEHRENDEN PUNKT -- UND DAS IST EINE BEHEBUNG.
 #
@@ -153,6 +181,27 @@ def sag(text: str, geheimnisse: list[str], nach_stderr: bool = False) -> None:
 
 def curl_da() -> str | None:
     return shutil.which("curl")
+
+
+def curl_kennt(option: str, lauf=subprocess.run) -> bool:
+    """Kennt dieses `curl` den Schalter überhaupt?
+
+    DIE LEHRE AUS DEM 20.09.2026. Ein Schalter in einer Befehlszeile ist
+    keine Zusage, sondern eine Behauptung — und `--no-ssl-session-reuse` war
+    frei erfunden. Die Selbstprobe hatte nachgesehen, ob die Zeichenkette im
+    ausgeführten Befehl landet; `curl` hat sie dann abgelehnt, und der
+    Trennversuch maß nichts.
+
+    `curl --help all` listet jede Option dieser Fassung. Das ist eine Frage
+    an das Werkzeug selbst statt an unsere Erinnerung, kostet Millisekunden
+    und braucht kein Netz.
+    """
+    try:
+        e = lauf([curl_da() or "curl", "--help", "all"],
+                 capture_output=True, text=True, timeout=10)
+    except Exception:                                # noqa: BLE001
+        return False
+    return option in ((e.stdout or "") + (e.stderr or ""))
 
 
 def ftp_adresse(server: str, pfad: str, name: str = "") -> str:
@@ -275,7 +324,9 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
 
     name = PRAEFIX + secrets.token_hex(8) + ".txt"
     inhalt = secrets.token_hex(24).encode("ascii")
-    reuse = "--ssl-reqd" if sitzung_wiederverwenden else "--no-ssl-session-reuse"
+    reuse = SCHALTER_TLS_PFLICHT
+    if not sitzung_wiederverwenden:
+        reuse += " " + SCHALTER_OHNE_SITZUNG
 
     a(f"Zielprobe gegen {basis.rstrip('/')}")
     a(f"  FTPS-Ziel:      {ftp_adresse(server, pfad)}")
@@ -294,7 +345,7 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
             fh.write(inhalt)
 
         # ---- 1. hochladen --------------------------------------------------
-        rc, _, err = curl_ftp([reuse, "--verbose", "--upload-file", quelle,
+        rc, _, err = curl_ftp([*reuse.split(), "--verbose", "--upload-file", quelle,
                                ftp_adresse(server, pfad, name)],
                               konto, passwort, lauf)
         wieder = sitzung_wiederverwendet(err)
@@ -375,7 +426,8 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
             # die Probe warnte trotzdem vor einem Rest.
             a("  Nichts zu löschen — es ist nie eine Datei entstanden.")
         else:
-            rc, _, err = curl_ftp([reuse, "-Q", f"-DELE {pfad.rstrip('/')}/{name}",
+            rc, _, err = curl_ftp([*reuse.split(), "-Q",
+                                   f"-DELE {pfad.rstrip('/')}/{name}",
                                    ftp_adresse(server, pfad)],
                                   konto, passwort, lauf)
             if rc != 0:
@@ -569,14 +621,26 @@ def selbstprobe() -> int:
     merker.clear()
     l = LaufMitInhalt()
     probe("https://a.example", "h", "/", "k", "p", False, l, hol_ok)
-    ohne = any("--no-ssl-session-reuse" in b for b in l.befehle)
+    ohne = any(SCHALTER_OHNE_SITZUNG in b for b in l.befehle)
     pruefe(ohne, "`--ohne-sitzungswiederverwendung` steht im AUSGEFÜHRTEN Befehl")
+    pruefe(all(SCHALTER_TLS_PFLICHT in b for b in l.befehle if "--help" not in b),
+           "…und `--ssl-reqd` steht TROTZDEM dabei — TLS bleibt Pflicht")
     merker.clear()
     l = LaufMitInhalt()
     probe("https://a.example", "h", "/", "k", "p", True, l, hol_ok)
-    mit = any("--ssl-reqd" in b for b in l.befehle)
-    pruefe(mit and not any("--no-ssl-session-reuse" in b for b in l.befehle),
-           "…und im Normalbetrieb steht `--ssl-reqd` da, nicht der Gegenschalter")
+    pruefe(not any(SCHALTER_OHNE_SITZUNG in b for b in l.befehle),
+           "…und im Normalbetrieb steht der Gegenschalter NICHT da")
+
+    # DIE LAGE, DIE AM 20.09.2026 GEFEHLT HAT. Dass ein Schalter im Befehl
+    # landet, sagt nichts darüber, ob `curl` ihn kennt — `--no-ssl-session-reuse`
+    # landete brav und wurde abgelehnt. Diese Frage geht an `curl` selbst.
+    if curl_da():
+        for opt in (SCHALTER_TLS_PFLICHT, SCHALTER_OHNE_SITZUNG):
+            pruefe(curl_kennt(opt), f"`curl` dieser Fassung KENNT `{opt}`")
+        pruefe(not curl_kennt("--no-ssl-session-reuse"),
+               "…und die Gegenprobe: den erfundenen Schalter kennt er nicht")
+    else:
+        pruefe(True, "`curl` nicht vorhanden — Schalterprobe übersprungen und GESAGT")
 
     # ---- Aufräumen ----
     l = Lauf(liste="zielprobe-neu.txt\nindex.php\n.zielprobe-alt.txt\n")
@@ -635,6 +699,16 @@ def main(argv: list[str]) -> int:
              if not v]
     if fehlt:
         print("Pflicht: " + ", ".join(fehlt), file=sys.stderr)
+        return 2
+    if a.ohne_sitzungswiederverwendung and not curl_kennt(SCHALTER_OHNE_SITZUNG):
+        # LIEBER GAR NICHT MESSEN ALS FALSCH. Kennt dieses `curl` den
+        # Schalter nicht, liefe die Probe in der VORGABE-Betriebsart und
+        # meldete am Ende ein Ergebnis, das über den Trennversuch nichts
+        # sagt — schlimmer: eines, das wie ein Ergebnis aussieht.
+        print(f"ABBRUCH: Dieses `curl` kennt `{SCHALTER_OHNE_SITZUNG}` nicht. Der "
+              f"Trennversuch ließe sich damit nicht fahren, und ein Lauf in der "
+              f"Vorgabe-Betriebsart sähe aus wie ein Ergebnis. Fassung: "
+              f"`curl --version | head -1`.", file=sys.stderr)
         return 2
     if not curl_da():
         print("ABBRUCH: `curl` ist auf diesem Läufer nicht vorhanden. Die Probe "

@@ -892,11 +892,27 @@ jobs:
     # ausschliesslich, wenn tatsaechlich ausgeliefert wurde -- rueckwaerts
     # eingeschlossen, denn ein Ruecksetzen ist eine Auslieferung.
     needs: produktion
-    # `needs` ALLEIN REICHT NICHT: Ein uebersprungener Job gilt GitHub als
-    # erfuellte Abhaengigkeit. Ohne diese Zeile bewegte ein Lauf ohne Tag den
-    # Zeiger auf einen Stand, der nie auf Produktiv war -- und die Wache
-    # verglaeche danach gegen eine Luege.
-    if: needs.produktion.result == 'success'
+    # ZWEI BEDINGUNGEN, UND DIE ZWEITE IST TEUER BEZAHLT.
+    #
+    # (1) `needs` ALLEIN REICHT NICHT: Ein uebersprungener Job gilt GitHub als
+    # erfuellte Abhaengigkeit. Ohne `result == 'success'` bewegte ein Lauf
+    # ohne Tag den Zeiger auf einen Stand, der nie auf Produktiv war.
+    #
+    # (2) EIN PROBELAUF IST AUCH ERFOLGREICH -- UND LIEFERT NICHTS AUS.
+    # Genau das ist am 20.09.2026 passiert (Lauf 35534695781): Der Probelauf
+    # lief durch, `produktion` meldete `success`, und der Zeiger wanderte auf
+    # `9f62d55` -- einen Commit, der nie auf dem Server lag. Die
+    # Integritaetswache haette am naechsten Morgen Produktiv gegen 20.26.0
+    # gehalten, waehrend dort 20.24.2 liegt: taeglicher Falschalarm, also
+    # genau der Zustand, den AP2 beseitigt hat.
+    #
+    # DER KOMMENTAR UEBER (1) STAND SCHON DA, ALS (2) GEBAUT WURDE. Die
+    # Bedingung war gegen den uebersprungenen Job gerichtet; der Probelauf kam
+    # ein Paket spaeter und ging durch die Tuer daneben. Wer hier etwas
+    # hinzufuegt, das `produktion` erfolgreich beenden laesst, ohne
+    # auszuliefern, ergaenzt diese Zeile -- sonst wiederholt sich derselbe
+    # Fehler ein drittes Mal.
+    if: needs.produktion.result == 'success' && !inputs.probelauf
     runs-on: ubuntu-latest
     # HIER UND NUR HIER `contents: write`. Der Job mit den FTPS-Geheimnissen
     # (`produktion`) bleibt bei `read`: Er darf ausliefern, aber nichts ins
@@ -921,6 +937,16 @@ jobs:
         env:
           ZIEL: ${{ github.sha }}
         run: |
+          # ZWEITER RIEGEL AN DER STELLE, WO DER SCHADEN ENTSTEHT.
+          # Die `if`-Zeile des Jobs sollte das schon verhindern — sie hat es
+          # am 20.09.2026 nicht getan, weil sie den Probelauf nicht kannte.
+          # Ein Riegel an der Bedingung UND einer an der Tat: Wer die
+          # Bedingung kuenftig erweitert und diese Zeile vergisst, bekommt
+          # einen roten Lauf statt eines falschen Zeigers.
+          if [ "${{ inputs.probelauf }}" = "true" ]; then
+            echo "::error::Der Zeiger wird im PROBELAUF NICHT bewegt — es ist nichts ausgeliefert worden. Dass dieser Schritt überhaupt läuft, heißt: die Bedingung des Jobs ist kaputt."
+            exit 1
+          fi
           vorher=$(git rev-parse --verify --quiet origin/produktion || echo 'keiner')
           echo "Zeiger vorher:  $vorher"
           echo "Zeiger nachher: $ZIEL  (Tag: ${GITHUB_REF_NAME})"
