@@ -470,6 +470,44 @@ die die Zielprobe in ihren zwei Betriebsarten trennt.
 
 ## 2. Funde aus der Umsetzung
 
+**F-KH-U-18 — Auch `ensureDir` ist es nicht: Beide Rundläufe gelingen.**
+*Lauf 35537674485, 20.09.2026, 21:07 UTC.*
+
+```
+Rundlauf 1: flach        → gelungen (TLS-Sitzung wiederverwendet: JA)
+Rundlauf 2: DURCH EIN NEUES VERZEICHNIS (`ensureDir`-Nachstellung)
+  Probedatei: zielprobe-31d74c4f9832abe0/probe.txt
+  Neues Verzeichnis aufgelistet (die `_openDir`-Stelle).
+  HTTPS-Abruf … → 200 · Inhalt stimmt überein · gelöscht · Verzeichnis entfernt · 404
+BEIDE Rundläufe gelungen — flach UND durch ein neues Verzeichnis.
+```
+
+**Anlegen, Hineinschreiben und Auflisten eines neuen Verzeichnisses
+funktionieren** — genau die Folge, an der die Auslieferungsaktion mit
+`ECONNRESET` abbricht. Damit fällt auch diese Erklärung.
+
+**F-KH-U-19 — Und die interessanteste Zeile stand nie im Protokoll.**
+`curl --verbose` schreibt, **wie** die Datenverbindung zustande kam — `EPSV`,
+`PASV`, oder `PASV` erst **nach** einem EPSV-Fehlschlag. Die Zielprobe gab
+diese Ausgabe aber nur **im Fehlerfall** aus. Vier grüne Läufe haben die
+Auskunft verschluckt, auf die es jetzt ankommt.
+
+**Warum sie jetzt ankommt:** Ausgeschlossen sind Läuferabbild, Node-Fassung,
+Zertifikat, TLS-Sitzungswiederverwendung und die Verzeichnisanlage. Was
+zwischen `curl` und der Auslieferungsaktion noch verschieden sein **kann**,
+ist der Weg zum Datenkanal. **`curl` versucht `EPSV` und fällt bei
+Fehlschlag selbsttätig auf `PASV` zurück.** Eine Bibliothek, die das nicht
+tut, bliebe an derselben Stelle hängen — und das sähe von außen aus wie ein
+`ECONNRESET` auf der ersten Datenverbindung.
+
+*Behoben:* `datenkanal()` liest die Auskunft aus der ausführlichen Ausgabe
+und steht jetzt in **jedem** Lauf neben der Sitzungszeile — dreiwertig wie
+diese, mit „nicht feststellbar" statt einer Vermutung. Fünf Lagen der
+Selbstprobe halten die Fälle fest, darunter der Rückfall als eigener Fall.
+
+Selbstprobe **45 → 50 Lagen**.
+
+
 **F-KH-U-16 — Der Trennversuch ist gefahren: Die TLS-Sitzungswiederverwendung
 ist NICHT die Ursache von F3.** *Vier Läufe am 20.09.2026, je zweimal.*
 
@@ -1262,7 +1300,10 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   ausgeschlossen (Abschnitt 1.5 … 1.6), und der Abbruch steht bei der
   **ersten Datenverbindung** des Laufs.
 
-- [ ] **15 — Der Probelauf mit dem VERZEICHNIS-Rundlauf** (die eigentliche
+- [~] **15 — Der Probelauf mit dem VERZEICHNIS-Rundlauf** — **GEFAHREN am
+  20.09.2026: BEIDE Rundläufe gelingen** (F-KH-U-18). Auch `ensureDir` ist
+  nicht die Ursache. **Offen und neu: Prüfpunkt 16.**
+  *Der ursprüngliche Text:* (die eigentliche
   F3-Messung; danach fällt **E-KH-09**).
   *Weg:* wie Prüfpunkt 10 — Branch `claude/fervent-dirac-xirsqw`, Häkchen
   `probelauf`. **Kein drittes Häkchen nötig:** Die Zielprobe fährt beide
@@ -1281,6 +1322,22 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   *Wichtig:* Die Probe räumt hinter sich auf — Datei **und** Verzeichnis.
   Bleibt nach einem Abbruch ein `zielprobe-…`-Verzeichnis liegen, nimmt es
   der nächste Lauf mit.
+
+- [ ] **16 — Ein Probelauf, der den Weg zum Datenkanal nennt** (die nächste
+  F3-Messung).
+  *Weg:* wie Prüfpunkt 15, einmal genügt zunächst.
+  *Neu im Protokoll:* eine Zeile **`Datenkanal:`** neben
+  „TLS-Sitzung wiederverwendet", in **jedem** Rundlauf.
+  *Was welche Antwort bedeutet:*
+
+  | Zeile | Schluss |
+  |---|---|
+  | `PASV — NACH einem EPSV-Fehlschlag` | **Das ist die Erklärung.** `curl` fällt zurück, die Auslieferungsaktion tut es nicht — und bleibt hängen. AP4 stellt dann `EPSV` ab oder tauscht den Client. |
+  | `EPSV, Antwort 229, Port …` | EPSV geht; dann ist es auch das nicht, und es bleibt die **Menge** (688 Dateien, 62 Verzeichnisse in einer Sitzung) oder eine Zeit-/Mengengrenze des Servers. Befund an den Hoster. |
+  | `nicht feststellbar` | Die Probe hat es nicht gesehen — kein Ergebnis, und das sagt sie so. |
+
+  *Woran man sieht, dass die Zeile überhaupt neu ist:* Sie steht seit dem
+  20.09.2026 in **jedem** Lauf, nicht mehr nur im Fehlerfall.
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 

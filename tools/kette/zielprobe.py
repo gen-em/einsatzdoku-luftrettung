@@ -278,6 +278,53 @@ def sitzung_wiederverwendet(ausfuehrlich: str) -> bool | None:
     return None
 
 
+def datenkanal(ausfuehrlich: str) -> str:
+    """WIE kam die Datenverbindung zustande? EPSV, PASV — oder erst nach einem
+    Fehlschlag?
+
+    WARUM DAS GEMESSEN WIRD (20.09.2026, nach dem dritten ergebnislosen
+    Trennversuch). Ausgeschlossen sind inzwischen Laeuferabbild, Node-Fassung,
+    Zertifikat, TLS-Sitzungswiederverwendung und das Anlegen eines
+    Verzeichnisses. Was zwischen `curl` und der Auslieferungsaktion noch
+    verschieden sein KANN, ist der Weg zum Datenkanal:
+
+    `curl` versucht `EPSV` und faellt bei Fehlschlag selbsttaetig auf `PASV`
+    zurueck. Eine Bibliothek, die das nicht tut, bleibt an derselben Stelle
+    haengen -- und das saehe von aussen aus wie ein `ECONNRESET` auf der
+    ersten Datenverbindung. Gelingt die Probe hier ERST NACH einem
+    EPSV-Fehlschlag, ist das die Erklaerung.
+
+    Die Auskunft steht nur in `--verbose`, und die gab es bisher nur im
+    Fehlerfall zu sehen. Ein gelungener Lauf hat damit die interessanteste
+    Zeile verschluckt.
+    """
+    if not ausfuehrlich:
+        return "nicht feststellbar (keine ausführliche Ausgabe)"
+    epsv_weg = bool(re.search(r"(EPSV.*(fail|not|refus)|disabling EPSV|"
+                              r"Failed EPSV)", ausfuehrlich, re.I))
+    # `229` und "Extended Passive" SIND EPSV, auch wenn das Wort nicht fällt:
+    # `curl` schreibt den Befehl als `> EPSV`, die Antwort aber als
+    # `< 229 Entering Extended Passive Mode`. Wer nur auf "EPSV" prüft,
+    # übersieht die Antwort — und meldet "nicht feststellbar", obwohl es
+    # dasteht.
+    hat_epsv = ("EPSV" in ausfuehrlich.upper()
+                or "EXTENDED PASSIVE" in ausfuehrlich.upper())
+    hat_pasv = re.search(r"(^|[^D])PASV|227 ", ausfuehrlich, re.M | re.I) is not None
+    m229 = re.search(r"229 .*\(\|+(\d+)\|\)", ausfuehrlich)
+    m227 = re.search(r"227 .*?(\d+,\d+,\d+,\d+,\d+,\d+)", ausfuehrlich)
+    if epsv_weg and hat_pasv:
+        return "PASV — NACH einem EPSV-Fehlschlag (curl ist zurückgefallen)"
+    if hat_epsv and not epsv_weg and m229:
+        return f"EPSV, Antwort 229, Port {m229.group(1)}"
+    if hat_epsv and not epsv_weg:
+        return "EPSV (Antwort 229)"
+    if hat_pasv and m227:
+        return f"PASV, Antwort 227 ({m227.group(1)})"
+    if hat_pasv:
+        return "PASV (Antwort 227)"
+    return "nicht feststellbar (weder EPSV noch PASV in der Ausgabe)"
+
+
 def holen(adresse: str, zeitgrenze: int = WEB_ZEITGRENZE_S) -> tuple[int, bytes, str]:
     """HTTPS-Abruf. Gibt (Status, Körper, Fehlertext) zurück — wirft nicht.
 
@@ -394,6 +441,7 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
                                ftp_adresse(server, pfad, name)],
                               konto, passwort, lauf)
         wieder = sitzung_wiederverwendet(err)
+        a(f"  Datenkanal:     {datenkanal(err)}")
         a("  TLS-Sitzung wiederverwendet: "
           + {True: "JA (gemessen)", False: "NEIN (gemessen)",
              None: "NICHT FESTSTELLBAR — diese `curl`-Fassung sagt nichts darüber; "
@@ -580,6 +628,22 @@ def selbstprobe() -> int:
            "FTP-Adresse mit Unterverzeichnis", ftp_adresse("h", "/web", "x.txt"))
     pruefe(web_adresse("https://a.example/", "x") == "https://a.example/x",
            "Ein Schrägstrich am Ende der Basis verdoppelt sich nicht")
+
+    # ---- Wie kam die Datenverbindung zustande? ----
+    for text, soll, was in (
+        ("> EPSV\n< 229 Entering Extended Passive Mode (|||51234|)",
+         "EPSV, Antwort 229, Port 51234", "EPSV sauber, mit Port"),
+        ("< 229 Entering Extended Passive Mode (|||51234|)",
+         "EPSV, Antwort 229, Port 51234", "nur die 229-Antwort — zählt trotzdem als EPSV"),
+        ("* Failed EPSV, disabling EPSV\n> PASV\n< 227 Entering Passive Mode (1,2,3,4,200,1)",
+         "PASV — NACH einem EPSV-Fehlschlag (curl ist zurückgefallen)",
+         "der RÜCKFALL wird als solcher benannt"),
+        ("> PASV\n< 227 Entering Passive Mode (1,2,3,4,200,1)",
+         "PASV, Antwort 227 (1,2,3,4,200,1)", "PASV ohne EPSV-Versuch"),
+        ("", "nicht feststellbar (keine ausführliche Ausgabe)",
+         "leere Ausgabe → nicht feststellbar, nicht geraten"),
+    ):
+        pruefe(datenkanal(text) == soll, f"Datenkanal: {was}", datenkanal(text))
 
     # ---- Dreiwertigkeit der Sitzungsmessung ----
     pruefe(sitzung_wiederverwendet("* SSL re-using session ID") is True,

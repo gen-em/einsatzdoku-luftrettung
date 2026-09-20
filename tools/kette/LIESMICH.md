@@ -212,6 +212,20 @@ nichts. Die Ausgabe ist **dreiwertig**, wie `plattform_pruefen()`
 (`Technik.md` 5b.1): `JA (gemessen)`, `NEIN (gemessen)` oder **`NICHT
 FESTSTELLBAR`**. Das dritte ist kein Nein.
 
+## Was sie über den Datenkanal sagt
+
+Neben „TLS-Sitzung wiederverwendet" steht in **jedem** Rundlauf eine Zeile
+**`Datenkanal:`** — `EPSV`, `PASV`, oder **`PASV — NACH einem
+EPSV-Fehlschlag`**. Dreiwertig wie die Sitzungszeile: Was nicht zu sehen
+war, heißt „nicht feststellbar" und nicht „nein".
+
+**Warum das zählt:** `curl` versucht `EPSV` und fällt bei Fehlschlag
+selbsttätig auf `PASV` zurück. Eine Bibliothek, die das nicht tut, bliebe an
+derselben Stelle hängen — und das sähe aus wie ein `ECONNRESET` auf der
+ersten Datenverbindung. Bis zum 20.09.2026 gab die Probe die ausführliche
+Ausgabe nur **im Fehlerfall** aus; vier grüne Läufe haben die Auskunft
+verschluckt, auf die es ankam.
+
 ## Was sie hinterlässt: nichts
 
 Sie räumt Reste früherer Proben weg (alles mit dem Präfix `.zielprobe-` im
@@ -235,7 +249,7 @@ mehr (gefunden von der Selbstprobe am 20.09.2026). Maskiert wird seither am
 
 ## Selbstprobe
 
-`--selbstprobe` fährt **45 Lagen ohne Netz**: Maskierung (4), Adressen (3),
+`--selbstprobe` fährt **50 Lagen ohne Netz**: Maskierung (4), Adressen (3),
 die Dreiwertigkeit der Sitzungsmessung (4), der Rundlauf gegen Attrappen
 (11 — darunter „liegt im FTP, ist über HTTPS 404", „Inhalt weicht ab", „nach
 dem Löschen weiter abrufbar", „Hochladen scheitert" und jedes Mal die
