@@ -23,10 +23,10 @@ abgehakt ist (R62).
 > |---|---|
 > | Stand | 20.09.2026 — **AP1 gebaut (Abnahme offen), AP2 gebaut, AP3 gebaut.** AP4 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
-> | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **die Mengenprobe gegen Produktiv** (Prüfpunkt 17) — sie ist gebaut und selbstgeprüft, aber nie gegen einen echten Server gelaufen. Abschnitt 0 |
-> | Funde | **20** (Abschnitt 2): F-KH-U-01 bis F-KH-U-21 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-21: Die erste Mengenprobe gegen Produktiv — 21 Verzeichnisse in EINER Sitzung gingen durch, dann hat die Probe ihr eigenes Messgerät erschlagen.** Vier Fehler der Probe behoben, keiner im Server |
-> | F3 | **eingegrenzt, nicht benannt.** Sechs Vermutungen sind mit je einer Messung ausgeschlossen (Tabelle bei F-KH-U-20); die siebte — eine Sitzungsgrenze — ist in ihrer naheliegenden Form widerlegt: **21 Verzeichnisse in EINER Sitzung gingen durch** (F-KH-U-21). Eine Grenze bei 30 oder 50 bleibt möglich. **E-KH-09 (Pflichtstopp) steht** |
-> | Prüfliste | 21 Punkte: **6 abgehakt**, 6 teilweise, **9 offen** |
+> | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
+> | Funde | **21** (Abschnitt 2): F-KH-U-01 bis F-KH-U-22 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-22: 80 von 80 Verzeichnissen in EINER Sitzung — auch die Menge ist es nicht**, und damit ist der Vorrat an Vermutungen erschöpft, den ein zweiter Client prüfen kann |
+> | F3 | **so weit eingegrenzt, wie es von außen geht — und weiter nicht benannt. SIEBEN** Vermutungen sind mit je einer Messung ausgeschlossen, zuletzt die Menge (**80 von 80 in einer Sitzung**, F-KH-U-22). Tabelle dort. **Damit ist der Vorrat erschöpft, den ein zweiter Client prüfen kann:** `curl` kann jedes Mal, woran die Aktion stirbt. Der nächste Schritt geht an die Aktion selbst (**Prüfpunkt 18**, kostet einen echten Auslieferungslauf) oder an den Hoster — die Frage ist jetzt beantwortbar gestellt. **E-KH-09 (Pflichtstopp) steht** |
+> | Prüfliste | 22 Punkte: **7 abgehakt**, 5 teilweise, **10 offen** |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
 
 ---
@@ -410,7 +410,7 @@ beglaubigte einen Vergleich, den es so nicht gab.
 | Mittel | Soll | Ist |
 |---|---|---|
 | `tor.py --selbstprobe` | mindestens 16 Lagen, 0 offen | **19 Lagen, 0 offen** (11 → 17 → 19; die zwei letzten zur zweiten Runde und zur Serverzeit) |
-| `zielprobe.py --selbstprobe` | eigene Selbstprobe, 0 offen | **81 Lagen, 0 offen** (26 → 29 → 33 → 37 → 45 → 50 → 67 → 81; jede Stufe ist ein Fund, den sie selbst gefunden hat) |
+| `zielprobe.py --selbstprobe` | eigene Selbstprobe, 0 offen | **81 Lagen, 0 offen** (26 → 29 → 33 → 37 → 45 → 50 → 67 → 81; jede Stufe ist ein Fund, den sie selbst gefunden hat). **Gegen einen echten Server nachgemessen** im Lauf 35540252565: 80 von 80 |
 | `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft | **34 Aufrufe, 0, 0**; Selbstprobe 10/10 |
 | YAML der drei Arbeitsläufe | laden | **3 von 3** |
 | `wache.py --selbstprobe` | 0 offen | **38 Erwartungen, 0 offen** (AP2: 32 → 38) |
@@ -473,6 +473,65 @@ die die Zielprobe in ihren zwei Betriebsarten trennt.
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-22 — 80 Verzeichnisse in EINER Sitzung. Auch die Menge ist es
+nicht.** *Lauf 35540252565, 20.09.2026, 21:59–22:02 UTC, `--mengenprobe 80`.*
+
+```
+Mengenprobe gegen https://nadoku.gen-em.org — 80 Verzeichnisse in EINER Sitzung
+  Namensmarke:    zielprobe-5ad1133d9fdb-NN
+  Reste weggeräumt: 0
+  Zeitgrenze:     670 s (30 + 8 je Ziel)
+  Datenkanal:     EPSV, Antwort 229, Port 55595
+  Übertragungen abgeschlossen (226): 80 von 80
+  Alle 80 Verzeichnisse in einer Sitzung angelegt und beschrieben.
+  Aufgeräumt: 80 Verzeichnisse entfernt.
+```
+
+**80 Verzeichnisse angelegt, 80 Dateien hochgeladen, 80 eigene
+Datenverbindungen — alles in EINER FTP-Sitzung, ohne eine einzige
+Abweisung.** Die Auslieferung legt 62 Verzeichnisse an. Damit ist die
+Sitzungs- und Mengenvermutung **widerlegt**, nicht nur verschmälert.
+
+**Die Behebungen aus F-KH-U-21 sind im selben Lauf nachgemessen:**
+
+| | gemessen |
+|---|---|
+| Zeitgrenze wächst mit der Zahl | `670 s (30 + 8 je Ziel)` steht im Protokoll — beim Vorlauf gab es die Zeile nicht, und die feste Minute hat bei 21 von 80 abgeschnitten |
+| Aufräumen gebündelt | **80** Verzeichnisse weggeräumt; der ganze Schritt lief **2:49**. Der Vorlauf brauchte allein fürs Wegräumen von **21** Stück rund **drei Minuten** |
+| Restwarnung nachgemessen | keine Warnung — und diesmal zu Recht, denn es lag nichts mehr da |
+
+**Damit ist die Liste der ausgeschlossenen Ursachen bei sieben**, jede mit
+einer Messung:
+
+| Vermutung | ausgeschlossen durch |
+|---|---|
+| Läuferabbild, Node-Fassung | Z5 Teil 1 — beide Läufe 2.337.0 / ubuntu-24.04 20260907.300.1 |
+| FTPS-Zertifikat | F-KH-U-08, von der Betreiberin behoben |
+| die Bibliothek als solche | lima-city läuft mit derselben Aktion grün |
+| TLS-Sitzungswiederverwendung | F-KH-U-16 — vier Läufe, beide Betriebsarten |
+| `ensureDir` / `_openDir` | F-KH-U-18 — beide Rundläufe gelingen |
+| Weg zum Datenkanal | F-KH-U-20 — dreimal sauberes `EPSV` mit Port |
+| **Menge und Sitzungslänge** | **dieser Fund — 80 von 80 in einer Sitzung** |
+
+**Und damit ist der Vorrat an Vermutungen erschöpft, den ein zweiter Client
+prüfen kann.** Das ist der eigentliche Ertrag dieses Fundes, und er ist
+unbequem: Fünf Trennversuche haben versucht, den Unterschied zwischen `curl`
+und der Auslieferungsaktion einzukreisen — und jeder hat gezeigt, dass `curl`
+kann, woran die Aktion stirbt. Was übrig bleibt, ist nicht mehr durch
+Nachstellen zu finden, sondern nur noch **an der Aktion selbst**.
+
+**Was bisher niemand getan hat: die Aktion reden lassen.**
+`SamKirkland/FTP-Deploy-Action` kennt `log-level: verbose` und schreibt dann
+ihren FTP-Dialog mit. Fünf Läufe lang ist versucht worden, diesen Dialog mit
+einem zweiten Client zu **erraten**, während der erste ihn auf Zuruf
+ausgibt. **Der Preis:** Im Probelauf ist er nicht zu bekommen — dort läuft
+die Aktion als Trockenlauf und legt kein Verzeichnis an, also erreicht sie
+`ensureDir` nie. Es bräuchte einen **echten** Auslieferungslauf. Das ist
+eine Entscheidung der Betreiberin und steht als **Prüfpunkt 18** zur Wahl.
+
+**E-KH-09 bleibt stehen.** F3 ist nach sieben Messungen so weit eingegrenzt,
+wie es von außen geht, und weiter nicht benannt.
 
 **F-KH-U-21 — Die erste Mengenprobe gegen Produktiv: 21 Verzeichnisse in
 EINER Sitzung gingen durch. Abgebrochen hat nicht der Server, sondern die
@@ -1494,17 +1553,13 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   *Woran man sieht, dass die Zeile überhaupt neu ist:* Sie steht seit dem
   20.09.2026 in **jedem** Lauf, nicht mehr nur im Fehlerfall.
 
-- [~] **17 — Die Mengenprobe gegen Produktiv** — **einmal gefahren am
-  20.09.2026 (Lauf 35539722380), und sie hat sich selbst abgewürgt**
-  (F-KH-U-21). **21 Verzeichnisse in EINER Sitzung gingen durch**, dann lief
-  der eine `curl`-Aufruf in die feste Minute der Probe. Vier Fehler der Probe
-  sind daraufhin behoben (wachsende Zeitgrenze, Abbruch als Befund statt als
-  Absturz, keine Falschdiagnose „der Server hat abgewiesen", nachgemessene
-  statt gerechneter Restwarnung) und das Aufräumen gebündelt. **Zu
-  wiederholen. Das ist weiter der Punkt, an dem AP3 hängt.**
-  *Was beim nächsten Mal anders ist:* Die Zeitgrenze wächst mit der Zahl
-  (30 s + 8 s je Ziel). Bei 80 sind das rund **11 Minuten** für den Schritt —
-  das ist normal und kein Hängen.
+- [x] **17 — Die Mengenprobe gegen Produktiv** — **ERLEDIGT am 20.09.2026**
+  (Lauf 35540252565): **80 von 80 Verzeichnissen in EINER Sitzung**,
+  `Datenkanal: EPSV, Antwort 229, Port 55595`, 80 wieder weggeräumt, keine
+  Warnung, Schritt 2:49 (F-KH-U-22). **Auch die Menge ist nicht die Ursache
+  von F3.** Der Vorlauf (35539722380) hatte sich bei 21 von 80 selbst
+  abgewürgt — vier Fehler der Probe und die Bündelung des Aufräumens sind im
+  selben Lauf nachgemessen (F-KH-U-21).
   *Weg:* GitHub → Actions → „Auslieferung" → **Run workflow** → Zweig
   `claude/fervent-dirac-xirsqw` → Häkchen **`probelauf`** setzen → in das
   Feld **`probelauf_mengenprobe`** die Zahl **`80`** eintragen → starten →
@@ -1542,6 +1597,35 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   bricht der Schritt mit einer Fehlermeldung ab, und eine Zahl außerhalb von
   1 bis 500 ebenso. Ein Tag-Lauf hat das Feld gar nicht.
 
+
+- [ ] **18 — Die Auslieferungsaktion selbst reden lassen** (`log-level:
+  verbose`). **Zur Entscheidung, nicht zur Ausführung — sie kostet einen
+  echten Auslieferungslauf.**
+  *Warum:* Nach sieben Messungen ist der Vorrat an Vermutungen erschöpft, den
+  ein zweiter Client prüfen kann (Tabelle bei F-KH-U-22). `curl` kann jedes
+  Mal, woran die Aktion stirbt. Was übrig bleibt, ist nur noch an der Aktion
+  selbst zu finden — und sie schreibt ihren FTP-Dialog auf Zuruf mit.
+  *Warum es der Probelauf NICHT kann:* Dort läuft die Aktion als
+  Trockenlauf. Sie legt kein Verzeichnis an, erreicht `ensureDir` nie und
+  kann dort folglich auch nicht daran sterben. Ein Trockenlauf mit
+  `verbose` gäbe ein Protokoll ohne die Stelle, um die es geht.
+  *Was es braucht:* einen **echten** Lauf des Jobs `produktion` mit
+  `log-level: verbose` — also Backup-Tor, Wartungsmodus, Freigabe und
+  tatsächliches Schreiben auf den Produktivserver. Er wird mit hoher
+  Wahrscheinlichkeit wieder mit `ECONNRESET` abbrechen; **dann steht im
+  Protokoll, bei welchem FTP-Befehl und mit welcher Serverantwort.**
+  *Der Preis, offen gesagt:* Der Lauf schaltet die Wartung ein und bricht
+  mitten im Abgleich ab. Die Anwendung steht danach im Wartungsmodus, bis
+  jemand ihn abschaltet, und auf dem Server liegt ein halb ausgelieferter
+  Stand. Beides ist bekannt und behebbar — aber es ist kein Probelauf, und
+  es gehört vorher gesagt und nicht hinterher.
+  *Die Alternative, die nichts kostet:* die Frage an den Hoster stellen, mit
+  den sieben Messungen als Anlage. Die Frage lautet dann nicht mehr „warum
+  geht unser Deploy nicht", sondern: **„Ein `curl` legt 80 Verzeichnisse in
+  einer FTPS-Sitzung an, sauberes EPSV, ohne Abweisung. Ein Node-Client
+  (`basic-ftp`) bekommt bei `ensureDir` auf das erste Verzeichnis einen
+  `ECONNRESET` auf dem Datenkanal. Was unterscheidet die beiden auf Ihrer
+  Seite?"** Das ist eine beantwortbare Frage geworden.
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 

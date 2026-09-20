@@ -9328,8 +9328,8 @@ Dateien und 62 Verzeichnisse offen. Ein Server, der die zweite oder dritte
 Datenverbindung **einer** Sitzung abweist, ist für die Zielprobe unsichtbar.
 Gemeldet wird die Zahl der abgeschlossenen Übertragungen gegen die verlangte
 („2 von 5") und bei Abbruch der Servertext wörtlich. **Die Zeitgrenze wächst
-mit der Zahl der Ziele** (30 s + 8 s je Ziel); bei 80 dauert der Schritt rund
-elf Minuten. Läuft sie ab, meldet die Probe ausdrücklich, dass **sie selbst**
+mit der Zahl der Ziele** (30 s + 8 s je Ziel); gemessen gegen Produktiv sind
+80 Ziele ein Schritt von 2:49, Aufräumen eingeschlossen. Läuft sie ab, meldet die Probe ausdrücklich, dass **sie selbst**
 abgebrochen hat und nicht der Server — die Falschdiagnose wäre ein falscher
 Befund an den Hoster. Sie legt Dateien auf
 einem echten Server an — deshalb hinter zwei Riegeln: Sie läuft nur über die

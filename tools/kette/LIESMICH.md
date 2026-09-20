@@ -272,8 +272,9 @@ Servermeldung wörtlich.
 MENGE_JE_ZIEL_S × N`, heute 30 + 8·N). Grund: Die Mengenprobe macht **einen**
 `curl`-Aufruf für alle Ziele, und der feste Wert von 60 s je Aufruf hat beim
 ersten echten Lauf das eigene Messgerät erschlagen — 21 von 80 Verzeichnissen
-waren fertig, gemessene 2,9 s je Stück. Bei 80 dauert der Schritt deshalb
-rund **11 Minuten**; das ist normal und kein Hängen. `curl` bekommt zusätzlich
+waren fertig, gemessene 2,9 s je Stück. **Gemessen gegen Produktiv: 80 Ziele
+in einem Schritt von 2:49**, Aufräumen eingeschlossen — die Grenze von 670 s
+ist Luft, kein Sollwert. `curl` bekommt zusätzlich
 ein eigenes `--max-time` fünf Sekunden darunter, damit er sich selbst beendet
 und seine Schlusszeile schreibt.
 
