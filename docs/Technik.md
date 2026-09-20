@@ -8942,24 +8942,89 @@ erklärt.
 
 | Prüfpunkt (5b.2) | Produktiv (Plesk) | Staging (lima-city) |
 |---|---|---|
-| PHP-Fassung | ⬚ Z3 | ⬚ Z3 |
-| `memory_limit` | ⬚ Z3 | ⬚ Z3 |
-| `max_execution_time` | ⬚ Z3 | ⬚ Z3 |
-| `post_max_size` / `upload_max_filesize` | ⬚ Z3 | ⬚ Z3 |
-| OPcache | ⬚ Z3 | ⬚ Z3 |
-| Datenbank (Fassung) | ⬚ Z3 | ⬚ Z3 |
-| `max_user_connections` | ⬚ Z3 | ⬚ Z3 |
-| Freier Platz | ⬚ Z3 | ⬚ Z3 |
-| Cron | ⬚ Z3 | ⬚ Z3 |
-| FTPS | ⬚ Z3 | ⬚ Z3 |
-| HTTPS (Herkunft des Zertifikats) | ⬚ Z3 | ⬚ Z3 |
+| PHP-Fassung | **8.3.33** | **8.3.33** — dieselbe |
+| Server-API | ⬚ Z3 | **FPM/FastCGI**, Apache 2.4 davor |
+| PHP-Erweiterungen | alle fünf vorhanden | alle fünf vorhanden |
+| `memory_limit` | **512 MB** | **512 MB** — gleich |
+| `max_execution_time` | **240 s** | **300 s** |
+| `post_max_size` / `upload_max_filesize` | **256 MB / 256 MB** | **500 MB / 500 MB** |
+| OPcache | **aus** | **an** — aber nur **Dateicache** (`file_cache_only`), SHM und JIT aus. **Die Statusseite wird ihn trotzdem als „aus" melden** — siehe Kasten |
+| Datenbank | **MariaDB 10.11.14** | ⬚ — die phpinfo nennt nur den Client (`mysqlnd 8.3.33`); die Serverfassung sagt erst die Anwendung |
+| `max_user_connections` | **nicht gesetzt**; es gilt `max_connections` = **151** | ⬚ |
+| Kontingent der Datenbank | Angabe 10 GB, belegt 9,8 MB (0 %) | ⬚ |
+| Freier Platz | **861,7 GB gemeldet** — Datenträger des Hosts, nicht das Kontingent | ⬚ |
+| Cron | **nein** — alle elf Jobs laufen **huckepack** („anfrage") | ⬚ |
+| FTPS | **ja**, belegt mit WinSCP | **ja**; Konto auf `/` eingesperrt |
+| HTTPS | **ja** | **ja** — Apache 2.4, Port 443 |
+| Herkunft des Zertifikats | **Let's Encrypt**, automatisch erneuert | ⬚ |
+| Anwendungswurzel | eigenes Verzeichnis unter einem Plesk-Vhost (`…/nadoku-produktion`) | eigenes Verzeichnis im lima-city-Webspace (`…/nadoku-staging`) |
+| Zeitzone | ⬚ Z3 | `Europe/Berlin` |
 
-> **Die Tabelle ist leer, und das ist der ehrliche Zustand.** Die Auskunft
-> beider Anlagen ist die Zuarbeit **Z3** (Konzept Kette II, Abschnitt 6) und
-> lag bei der Umsetzung von AP1 nicht vor. Sie wird nachgetragen, sobald die
-> Betreiberin sie nennt — **abgelesen, nicht geschätzt.** Geratene Zahlen
-> wären hier schlimmer als gar keine: Der ganze Zweck des Vergleichs ist, dass
-> man sich auf ihn berufen kann.
+**Die beiden Spalten sind auf verschiedenen Wegen erhoben, und das ändert,
+was sie belegen.** Produktiv ist am 20.09.2026 aus **Betrieb → Status** und
+**Betrieb → Hintergrundjobs** abgelesen — also aus `plattform_pruefen()`.
+Staging ist am selben Tag aus einer **`phpinfo()`-Ausgabe** erhoben, weil die
+Anwendung dort noch nicht installiert ist (Rahmenplan 6a, Schritt 6 steht
+aus). **`phpinfo()` zeigt die PHP-Einstellung, die Statusseite zeigt, was die
+Anwendung daraus macht** — und der OPcache unten beweist, dass das nicht
+dasselbe ist. Die Staging-Spalte ist deshalb **vorläufig** und wird ersetzt,
+sobald die Statusseite dort antwortet. Alles, was nur die Anwendung weiß
+(Datenbank, Platz, Kontingent, Jobwege), steht bis dahin auf `⬚`.
+
+> **Der OPcache meldet auf lima-city das Gegenteil dessen, was läuft.**
+> `plattform_pruefen()` fragt zuerst `function_exists('opcache_get_status')`
+> und dann die Funktion selbst. Auf Staging steht
+> **`disable_functions = dl, syslog, opcache_get_status`** — und
+> `function_exists()` antwortet für eine so abgeschaltete Funktion **`false`**.
+> Die Statusseite wird dort also **„OPcache: aus"** zeigen, während die
+> phpinfo **„Opcode Caching: Up and Running"** meldet.
+>
+> **Der Schaden ist klein, der Fehler ist grundsätzlich.** Klein, weil OPcache
+> nur *Empfohlen* ist und keine Ampel färbt, und weil
+> `opcache_invalidate()` — das die Anwendung nach jedem Schreiben in
+> `config.php` ruft (`serverkrypto_lib.php`) — **nicht** abgeschaltet ist und
+> weiter wirkt. Grundsätzlich, weil Abschnitt 5b.1 genau das verbietet:
+> *„`ok` ist dreiwertig … **`null` nicht feststellbar**. Wer nichts gemessen
+> hat, darf nichts behaupten."* Hier hat die Anwendung nichts gemessen und
+> behauptet „aus".
+>
+> **Und es ist der erste Ertrag des Hosterwechsels.** E-KH-04 versprach, die
+> Portabilitätszusage aus R81 werde von nun an wirklich geprobt statt nur
+> behauptet. Das hier ist der Beleg: ein Zuschnitt auf den einen Hoster, der
+> sechs Tage lang niemandem auffiel, weil beide Anlagen derselbe Hoster
+> waren. **Behoben wird er nicht hier** — das wäre Servercode und gehört
+> nicht in ein Dokumentationspaket; der Vorschlag steht im Prüfdokument.
+
+> **Zwei Zahlen der Produktiv-Spalte sind keine Messung, und das muss
+> dabeistehen.** **Freier Platz** meldet auf geteiltem Webspace den
+> Datenträger des **Hosts**, nicht das Kontingent dieses Kontos — 861,7 GB ist
+> eine Untergrenze für schlechte Nachrichten und keine Entwarnung. **Das
+> Kontingent der Datenbank** ist überhaupt keine Messung, sondern eine
+> **Angabe** (Vorgabe 10 GB, Z2, einstellbar unter *Betrieb →
+> Servereinstellungen*); kein Hoster macht sie abfragbar. Wer eine dieser
+> beiden Zahlen zitiert, zitiert diesen Kasten mit.
+
+> **Der auffälligste Wert ist eine Nicht-Zahl: Produktiv hat keinen Cron.**
+> Alle elf Hintergrundjobs tragen als Weg **„anfrage"** — sie laufen huckepack
+> auf einer Seitenanfrage (Abschnitt 4.97a). Das ist ein zulässiger der drei
+> Wege und kein Mangel, aber es heißt: **Ohne Besucher läuft nichts.** Der
+> Job „GPS-Daten verdichten" stand am 20.09.2026 auf **Rückstand 69**. Für
+> die Kette ist das die Zeile, die zählt, sobald AP5 das Backup-Tor auch auf
+> Staging fährt: Ein Komplett-Backup, das huckepack abgearbeitet wird,
+> braucht Anfragen — und ein Läufer, der auf `tor.py` wartet, erzeugt sie
+> nicht von selbst.
+
+> **Drei Staging-Einstellungen, die keine Tabellenzeile sind, aber in AP5
+> zählen werden.** **(1) `default_socket_timeout = 5`** statt der üblichen 60:
+> Jede Netzverbindung, die PHP über einen Stream aufbaut — SMTP-Probe,
+> Backup-Ziel per SFTP, ein HTTP-Abruf — bricht dort nach fünf Sekunden ab.
+> **(2) `session.save_path = /home/webpages/tmp`** liegt **über** dem eigenen
+> Verzeichnis. Ob lima-city es je Konto trennt, sagt die Auskunft nicht —
+> und das ist genau die Frage, deren Antwort bei der alten Anlage **B2** war.
+> Sie gehört beantwortet, bevor Staging echte Sitzungen führt.
+> **(3) `open_basedir` ist leer** und `allow_url_fopen` an. Beides ist die
+> Voreinstellung vieler Hoster und kein Mangel der Anwendung; es steht hier,
+> damit der Vergleich später nicht bei null anfängt.
 
 ### 6.4 Das Backup-Tor
 

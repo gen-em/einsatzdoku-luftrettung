@@ -23,8 +23,8 @@ abgehakt ist (R62).
 > |---|---|
 > | Stand | 20.09.2026 — **AP1 gebaut, Abnahme offen.** AP2 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt beider Selbstproben, YAML-Gültigkeit, Zählung der Fundstellen, Zählung der Ausnahmeliste. Zahlen in Abschnitt 1 |
-> | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1. Dazu die beiden Tabellen, die auf **Z3** warten, und die Erreichbarkeit der neuen Anlage. Abschnitt 0 |
-> | Funde | **vier** (Abschnitt 2): drei aus der Umsetzung, einer aus einer unabhängigen Gegenlesung durch sieben getrennte Leser. Alle behandelt — einer davon nur halb, und das ist gesagt; zwei Befunde der Gegenlesung bleiben bewusst liegen |
+> | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1. Dazu alles, was **nur die Anwendung** weiß (Datenbank, Platz, Kontingent, Jobwege auf Staging): Die Einrichtung dort **scheitert gerade**, also hat die Statusseite nie geantwortet. Abschnitt 0 |
+> | Funde | **fünf** (Abschnitt 2): drei aus der Umsetzung, einer aus einer unabhängigen Gegenlesung durch sieben getrennte Leser, einer aus den Z3-Angaben — **F-KH-U-05, ein Fehlbefund der Statusseite auf lima-city**, und damit der erste Ertrag des Hosterwechsels. Alle behandelt; zwei Befunde der Gegenlesung und F-KH-U-05 bleiben bewusst liegen (Servercode, nicht AP1) |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil AP1 keinen Web-Code anfasst |
 
 ---
@@ -45,14 +45,43 @@ vollständige Bedienweg steht als **Prüfpunkt 1** unten — er ist der
 wichtigste Punkt dieses Dokuments, weil er zugleich der **erste Kettenlauf
 gegen lima-city überhaupt** ist.
 
-**2 — Zwei Tabellen stehen leer: es fehlt Z3.** Der Plattformvergleich
-(`docs/Technik.md` 6.3a) und die Variablenwerte (`docs/Rahmenplan.md` 6a)
-sind gebaut, aber ohne Zahlen. Die Auskunft beider Anlagen (Betrieb → Status)
-und die nicht-geheimen Einrichtungswerte der neuen Anlage (FTP-Wurzel,
-`FTP_ZIELPFAD`, `FTP_STATE_PFAD`) sind die Zuarbeit **Z3** und lagen nicht
-vor. **Sie sind nicht geschätzt worden**, und das ist eine Entscheidung: Der
-Zweck des Vergleichs ist, dass man sich auf ihn berufen kann. Die Zellen
-tragen `⬚ Z3`; **Prüfpunkt 2** holt sie ein.
+**Und er kann derzeit gar nicht grün werden.** Die Einrichtung der neuen
+Staging-Anlage **scheitert** (Rahmenplan 6a, Schritt 6; Stand 20.09.2026, eine
+andere Instanz arbeitet daran). Solange `install.php` dort nicht durch ist,
+leitet `login.php` auf `install.php` um — und **Stufe 2 ist rot, und zwar zu
+Recht**: Ein Stand, der auf Staging nicht läuft, ist nicht freigabefähig.
+**Die Abnahme von AP1 hängt damit an einer fremden Aufgabe**, nicht an diesem
+Paket. Der Job `staging` (der FTPS-Abgleich) kann vorher grün werden; das
+wäre schon eine Auskunft — siehe Prüfpunkt 1, Fehlerbild (c).
+
+**2 — Z3 ist geliefert, aber die beiden Spalten sind nicht dasselbe wert.**
+Die Betreiberin hat am 20.09.2026 beide Anlagen genannt, und beide Tabellen
+(`docs/Technik.md` 6.3a, `docs/Rahmenplan.md` 6a) tragen sie. **Die Quellen
+sind aber verschieden, und das begrenzt, was die Staging-Spalte belegt:**
+Produktiv ist aus *Betrieb → Status* und *Betrieb → Hintergrundjobs*
+abgelesen, also aus `plattform_pruefen()`. **Staging ist aus einer
+`phpinfo()`-Ausgabe erhoben**, weil die Anwendung dort **noch nicht
+installiert ist** — Rahmenplan 6a, Schritt 6 **scheitert gerade**.
+
+**Fünf Zeilen der Staging-Spalte bleiben deshalb leer**, und zwar genau die,
+die nur die Anwendung selbst wüsste: Datenbankfassung,
+`max_user_connections`, Kontingent der Datenbank, freier Platz, Cron-Weg.
+Dazu die Herkunft des Zertifikats, die keine der beiden Quellen nennt.
+**Geschätzt wurde nichts.**
+
+**Und `phpinfo()` ist nicht die Statusseite** — das ist keine Formalie,
+sondern in diesem Paket nachgewiesen: Beim **OPcache** sagen die beiden
+Quellen für dieselbe Anlage das Gegenteil (F-KH-U-05). Die Staging-Spalte ist
+deshalb als **vorläufig** gekennzeichnet und wird ersetzt, sobald die
+Statusseite dort antwortet. **Prüfpunkt 2b** holt das ein.
+
+*Und ein Vergleich, dessen eine Hälfte anders gemessen ist als die andere,
+trägt weniger als er aussieht.* Die Aussage aus 6.3a — *„die Zahlen des
+Messstands sind nicht übertragbar"* — stützt sich weiterhin vor allem darauf,
+dass zwei verschiedene Hoster zwei verschiedene Grenzen setzen. **Belegt ist
+sie inzwischen auch:** `max_execution_time` 240 s gegen 300 s,
+`post_max_size` 256 MB gegen 500 MB — drei Weblimits weichen ab, und damit
+misst Stufe 2 auf Staging nachweislich andere Grenzen als Produktiv hat.
 
 **3 — Ob `staging-nadoku.gen-em.org` antwortet, ist von hier aus nicht
 messbar.** Versucht, zweimal, um 09:41:59 UTC: `curl` auf `/login.php` und
@@ -61,10 +90,16 @@ auf `/`. Beide Male **`curl: (56) CONNECT tunnel failed, response 403`**,
 der Netzpolitik dieser Arbeitsumgebung — der Statusbericht des Vermittlers
 nennt beide Versuche wörtlich als `connect_rejected`, *„gateway answered 403
 to CONNECT (policy denial or upstream failure)"* für
-`staging-nadoku.gen-em.org:443`. **Daraus folgt nichts über den Server:**
-weder dass er steht, noch dass er fehlt. Die Schritte 1, 2 und 6 in
-Rahmenplan 6a stehen deshalb offen mit dem Vermerk „Stand nicht gemeldet",
-und nicht etwa rot.
+`staging-nadoku.gen-em.org:443`. **Daraus folgte nichts über den Server:**
+weder dass er steht, noch dass er fehlt.
+
+**Beantwortet hat es dann die Betreiberin, nicht die Messung:** Eine
+`phpinfo()`-Ausgabe vom selben Tag belegt, dass die Anlage über **HTTPS**
+antwortet (Apache 2.4, Port 443), dass `SERVER_NAME`
+`staging-nadoku.gen-em.org` lautet und dass das Dokumentenwurzelverzeichnis
+ein eigenes ist. **Schritt 1 in Rahmenplan 6a ist damit abgehakt** — mit
+diesem Beleg und nicht mit einem Kettenlauf. Schritt 2 bleibt ungemeldet,
+Schritt 6 **scheitert**.
 
 **4 — Die Fehlermeldungen der Kette sind gelesen, nicht ausgelöst.** Dass
 `auslieferung.yml` auf „Rahmenplan 6a, Schritte 1 bis 3" und „Schritt 4"
@@ -248,6 +283,42 @@ Die Begründung gilt weiterhin für den allgemeinen Fall — ein Selbsthoster
 kann beides auf einen Webspace legen, und dann trennt allein der Name die
 beiden Zustandsdateien.
 
+**F-KH-U-05 — Die Statusseite meldet auf lima-city das Gegenteil dessen, was
+läuft, und der Hosterwechsel hat es aufgedeckt.** `plattform_pruefen()` prüft
+den OPcache so:
+
+```php
+$opAn = function_exists('opcache_get_status');
+if ($opAn) { $st = @opcache_get_status(false); $opAn = is_array($st) && !empty($st['opcache_enabled']); }
+```
+
+Auf Staging steht **`disable_functions = dl, syslog, opcache_get_status`**.
+Für eine so abgeschaltete Funktion antwortet `function_exists()` **`false`** —
+die Statusseite wird dort **„OPcache: aus"** zeigen, während die `phpinfo()`
+derselben Anlage **„Opcode Caching: Up and Running"** meldet (Dateicache,
+`file_cache_only = On`, SHM und JIT aus).
+
+**Der Schaden ist klein, der Fehler ist grundsätzlich.** Klein, weil OPcache
+nur *Empfohlen* ist, keine Ampel färbt und die Einrichtung nicht aufhält —
+und weil `opcache_invalidate()`, das die Anwendung nach jedem Schreiben in
+`config.php` ruft (`serverkrypto_lib.php`:825), **nicht** abgeschaltet ist und
+weiter wirkt. Grundsätzlich, weil `docs/Technik.md` 5b.1 genau das verbietet:
+*„`ok` ist dreiwertig … **`null` nicht feststellbar**. Wer nichts gemessen
+hat, darf nichts behaupten."* Hier hat die Anwendung nichts messen **können**
+und behauptet trotzdem „aus". Die Zeile gehört auf `null`.
+
+**Nicht behoben, und das ist die richtige Entscheidung für dieses Paket.**
+Die Behebung liegt in `server/plattform_lib.php`, wäre also Web-Code, eine
+Versionsstufe und ein Changelog-Eintrag — AP1 ist ein Dokumentationspaket
+(E-KH-23). **Der Vorschlag steht in Abschnitt 4.**
+
+**Der Fund selbst ist der erste Ertrag von E-KH-04.** Die Entscheidung
+versprach, die Portabilitätszusage aus R81 werde von nun an *geprobt* statt
+behauptet. Sechs Tage lang liefen beide Anlagen beim selben Hoster, und
+dieser Zuschnitt fiel niemandem auf. Er fiel auf, sobald die zweite Plattform
+danebenstand — **bevor** ein Selbsthoster ihn gefunden hat, und bevor die
+Kette einmal gegen sie gelaufen ist.
+
 ---
 
 ## 3. Prüfliste für die Betreiberin
@@ -283,22 +354,35 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   zeigen die Anmeldeseite → das Demo-Konto fehlt (6a, Schritt 8). Die Zahl
   ist dann grün und wertlos (Fund F-P3-AQ).
 
-- [ ] **2 — Z3: die zwei leeren Tabellen füllen.**
-  *Weg:* **(i)** Auf **beiden** Anlagen *Betrieb → Status* öffnen und die
-  Plattformauskunft ablesen: PHP-Fassung, `memory_limit`,
-  `max_execution_time`, `post_max_size`/`upload_max_filesize`, OPcache,
-  Datenbankfassung, `max_user_connections`, freier Platz, Cron, FTPS, Herkunft
-  des Zertifikats. **(ii)** Für Staging (lima-city) und Produktiv je nennen:
-  welche Wurzel das FTP-Konto sieht, welchen Wert `FTP_ZIELPFAD` trägt und
-  welchen `FTP_STATE_PFAD`.
-  *Erwartet:* Zwei ausgefüllte Tabellen — `docs/Technik.md` 6.3a und
-  `docs/Rahmenplan.md` 6a. **Keine Zugangsdaten**, nur Variablenwerte.
-  *Scheitern erkennbar an:* Eine Zelle, die niemand ablesen kann. Dann gehört
-  **„unbekannt" hinein und nicht ein Schätzwert** — `plattform_pruefen()`
-  kennt dafür ausdrücklich den dritten Wert *nicht feststellbar* (Technik 5b.1).
+- [x] **2a — Z3, Produktiv.** *Erledigt am 20.09.2026 von der Betreiberin*:
+  Plattformauskunft aus *Betrieb → Status*, Jobwege aus *Betrieb →
+  Hintergrundjobs*, Einrichtungswerte aus der GitHub-Umgebung `produktion`.
+
+- [x] **2b — Z3, Staging, vorläufig.** *Erledigt am 20.09.2026*: PHP-Werte aus
+  einer `phpinfo()`-Ausgabe, FTPS und Zielpfad aus der Auskunft der
+  Betreiberin, `STAGING_URL` aus der GitHub-Umgebung `staging`.
+
+- [ ] **2c — Z3, Staging, aus der Anwendung.** Erst möglich, wenn die
+  Einrichtung durch ist (Rahmenplan 6a, Schritt 6 — **scheitert gerade**).
+  *Weg:* Auf Staging *Betrieb → Status* öffnen, die Karte **„Plattform"**
+  aufklappen und den Text abnehmen; dazu *Betrieb → Hintergrundjobs* für den
+  **Cron-Weg**; aus dem Panel des Hosters die **Herkunft des Zertifikats**.
+  *Erwartet:* Die fünf heute leeren Zeilen der Staging-Spalte in
+  `docs/Technik.md` 6.3a füllen sich — Datenbankfassung,
+  `max_user_connections`, Kontingent der Datenbank, freier Platz, Cron —
+  und die **vorläufigen** PHP-Zeilen werden gegen die Statusseite
+  gegengelesen.
+  *Scheitern erkennbar an:* **Die Zeile „OPcache" wird „aus" sagen, und das
+  ist falsch** — F-KH-U-05. Wer sie ungeprüft in die Tabelle übernimmt,
+  schreibt den Fehlbefund fest. Ebenso: Eine Zelle, die niemand ablesen kann,
+  bekommt **„unbekannt" und keinen Schätzwert** (5b.1). Und: **Erfüllte
+  „Empfohlen"-Zeilen zeigt die Karte gar nicht an** — fehlt eine, heißt das
+  *erfüllt*; die Schlusszeile „x von y erfüllt" löst es auf.
 
 - [ ] **3 — `FTP_ZIELPFAD` und `FTP_STATE_PFAD` in beiden Umgebungen
   ausdrücklich setzen** (Zuarbeit Z4, vorgezogen — der Grund ist AP1).
+  *Stand 20.09.2026, nachgesehen:* `FTP_ZIELPFAD` steht in **beiden**
+  Umgebungen auf `/`; **`FTP_STATE_PFAD` fehlt in beiden**.
   *Weg:* GitHub → Settings → Environments → `staging` bzw. `produktion` →
   *Environment variables*.
   *Erwartet:* Beide Namen stehen in **beiden** Umgebungen mit einem Wert.
@@ -308,26 +392,71 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   eine Meldung**. Erst AP6 nimmt die Vorgaben weg (E-KH-07); bis dahin ist
   dieser Punkt die einzige Sicherung.
 
-- [ ] **4 — Ist `staging-nadoku.gen-em.org` von außen erreichbar?**
-  Aus der Arbeitsumgebung heraus nicht messbar (Abschnitt 0, Punkt 3).
-  *Weg:* Im Browser `https://staging-nadoku.gen-em.org/login.php` öffnen.
-  *Erwartet:* Die Anmeldeseite dieser Anwendung, mit gültigem Zertifikat.
-  *Scheitern erkennbar an:* Eine Standardseite des Hosters mit **HTTP 200**
-  ist der gefährliche Fall — sie sieht nach „läuft" aus und ist leer.
-  Kennzeichen: **die Fußzeile mit der Versionsnummer fehlt**. Zertifikatsfehler
-  heißt, HTTPS beim neuen Hoster ist nicht eingerichtet (6a, Schritt 1).
+  > **Wichtig: „ausdrücklich" heißt hier nicht „anders".** Einzutragen ist
+  > genau der Wert, den die Vorgabe heute erzeugt —
+  > **`../.deploy-state-staging.json`** bzw.
+  > **`../.deploy-state-produktion.json`**. Der Punkt macht den Wert sichtbar,
+  > er ändert ihn nicht.
+  >
+  > **Nicht** vorab auf einen Pfad *innerhalb* des Webroots umstellen, so
+  > naheliegend das bei zwei eingesperrten Konten aussieht. Ob die Server das
+  > `../` vertragen, ist die offene Frage aus Rahmenplan 6a, und **der erste
+  > Kettenlauf gegen lima-city (Punkt 1) beantwortet sie für Staging, AP3 mit
+  > der Zielprobe für Produktiv.** Wer sie vorher „löst", verschiebt sie — und
+  > legt die Zustandsdatei ohne Not in den Webroot, wo nur noch die
+  > `.htaccess` zwischen ihr und der Öffentlichkeit steht.
 
-- [ ] **5 — Der alte `JOBS_TOKEN` in der Umgebung `staging` gehört der alten
+- [x] **4 — Ist `staging-nadoku.gen-em.org` von außen erreichbar?**
+  *Beantwortet am 20.09.2026:* **ja** — die Anlage antwortet über HTTPS
+  (Apache 2.4, Port 443), `SERVER_NAME` stimmt, das Dokumentenwurzelverzeichnis
+  ist ein eigenes. Belegt durch eine `phpinfo()`-Ausgabe, **nicht** von der
+  Kette und **nicht** aus der Arbeitsumgebung heraus (Abschnitt 0, Punkt 3).
+  Die Anwendung läuft dort noch nicht — das ist Schritt 6 in Rahmenplan 6a.
+
+- [ ] **4a — `info.php` vom Staging-Server löschen. Sofort.**
+  *Weg:* Per FTPS die Datei `info.php` aus dem Staging-Webroot entfernen,
+  danach `https://staging-nadoku.gen-em.org/info.php` im Browser aufrufen.
+  *Erwartet:* **404.**
+  *Scheitern erkennbar an:* Die Seite kommt weiter. Eine `phpinfo()`-Ausgabe
+  im Netz nennt jedem Besucher PHP-Fassung, geladene Erweiterungen, alle
+  Pfade, `disable_functions`, die Sitzungsablage und die Kopfzeilen des
+  Hosters — es ist die vollständige Bauanleitung der Anlage. **Sie war für
+  diese Zuarbeit nützlich und ist danach nur noch ein Geschenk.**
+  *Dazu:* Die für Z3 geteilte Ausgabe enthielt eine gültige `PHPSESSID` und
+  die lima-city-Kennungen. Sie stehen **nicht** im Repositorium; die Sitzung
+  gehört trotzdem verworfen (abmelden genügt).
+
+- [ ] **5 — Drei Geheimnisse der Umgebung `staging` gehören noch der alten
   Anlage.**
-  *Weg:* Auf der **neuen** Staging-Anlage *Betrieb → Hintergrundjobs* öffnen,
-  den Wert hinter `jobs.php?token=` ablesen und in der GitHub-Umgebung
-  `staging` als `JOBS_TOKEN` eintragen.
-  *Erwartet:* Der Wert ist ein **anderer** als der bisher eingetragene.
-  *Scheitern erkennbar an:* Ist er gleich, ist etwas falsch — das Token gehört
-  der Installation. Bleibt der alte stehen, laufen die Kreisläufe **ohne
+  *Stand 20.09.2026, nachgesehen:* Die drei FTP-Angaben und `STAGING_URL`
+  sind umgestellt (vor einer Stunde). **`JOBS_TOKEN` ist drei Tage alt**,
+  **`STAGING_KONTO` und `STAGING_PASS` sind vier Tage alt** — alle drei
+  stammen von der stillgelegten Anlage.
+  *Weg:* Nach Schritt 6 der Einrichtung: `JOBS_TOKEN` auf der **neuen**
+  Staging-Anlage unter *Betrieb → Hintergrundjobs* hinter `jobs.php?token=`
+  ablesen und eintragen; Prüfkonto neu anlegen und `STAGING_KONTO` /
+  `STAGING_PASS` darauf setzen.
+  *Erwartet:* Alle drei Werte sind **andere** als die bisherigen.
+  *Scheitern erkennbar an:* Der Lauf wird trotzdem grün — und das ist das
+  Gefährliche. Mit altem `JOBS_TOKEN` laufen die Kreisläufe **ohne
   Job-Pause** und messen „hat der Verdichtungsjob dazwischen zugeschlagen"
   statt „kommt zurück, was hineinging" (gemessen: 125 verdichtete Spuren in
-  einem Lauf ohne Pause).
+  einem Lauf ohne Pause). Mit altem Prüfkonto melden Kreisläufe und
+  Bilderlauf **„ÜBERSPRUNGEN"** oder scheitern an der Anmeldung.
+
+- [ ] **5a — Trennt lima-city die Sitzungsablage je Konto?**
+  Die `phpinfo()` nennt `session.save_path = /home/webpages/tmp` — **über**
+  dem eigenen Verzeichnis der Anlage.
+  *Weg:* Beim Hoster erfragen, ob dieses Verzeichnis je Kunde getrennt ist
+  (eigener Pfad, eigene Rechte) oder allen Konten desselben Systems offensteht.
+  *Erwartet:* getrennt.
+  *Scheitern erkennbar an:* Es ist geteilt. Dann läge dort für jede fremde
+  PHP-Installation auf demselben System lesbar, wer auf Staging angemeldet
+  ist — **und das ist derselbe Fehler, dessentwegen Staging gerade umgezogen
+  ist** (B2: Staging-PHP konnte Produktivs `config.php` lesen). Es wäre
+  weniger schlimm als B2, weil Staging keine echten Patientendaten führt und
+  der Datenschlüssel ohnehin im Browser bleibt — aber es gehört gewusst,
+  bevor dort Sitzungen laufen, und nicht danach.
 
 - [ ] **6 — Fremdaufgabe, hier nur gemeldet: P5b hat keine Erledigt-Zeile.**
   Gemessen am 20.09.2026: PR #57 ist seit dem 18.09.2026 auf `main`
@@ -366,6 +495,19 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   Bilderlauf wächst mit jeder neuen Seite und steht in
   `tools/screenshots/seiten.json` — eine Zahl im Fließtext veraltet dort
   planmäßig. Niedrig; zusammen mit der nächsten Pflege des Bilderlaufs.
+
+- **`plattform_pruefen()` behauptet „aus", wo es „nicht feststellbar" heißen
+  muss.** Anlass: F-KH-U-05. Steht eine geprüfte Funktion in
+  `disable_functions`, antwortet `function_exists()` mit `false`, und der
+  Befund wird zu einem Mangel statt zu einer Nichtmessung. Betroffen ist heute
+  der **OPcache** (`opcache_get_status`, auf lima-city abgeschaltet); dieselbe
+  Bauform steckt in jeder weiteren Prüfung, die über `function_exists()`
+  geht. Abhilfe: Den Fall von „nicht vorhanden" trennen — `ini_get()` und
+  `extension_loaded('Zend OPcache')` sagen, **dass** es ihn gibt, auch wenn
+  der Zustand nicht abfragbar ist — und die Zeile dann auf **`null`** setzen
+  (5b.1). Niedrig, aber **vor** der nächsten Plattformaussage: Solange sie
+  steht, misst die Statusseite auf fremden Hostern falsch, und genau dort
+  wird sie gebraucht.
 
 *(Die Vorschläge aus Konzept Abschnitt 8 — atomare Auslieferung, die Grenze
 der Wache, die Ablösung der Fremd-Aktion, der Vermerk an Nr. 234 — gehören

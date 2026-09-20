@@ -22,16 +22,16 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 > |---|---|
 > | Stand | 20.09.2026 — **AP1 umgesetzt** (Dokumentation; kein Web-Code, keine Versionsstufe). Konzept freigegeben (Auftraggeber, 20.09.2026, ohne Änderungen; Fassung nach der ersten Fortschreibung vom selben Tag: F3 neu gefasst, E-KH-20, AP3/AP4 angepasst, Z1 und Z2 erledigt) |
 > | Entschieden | **E-KH-01 bis -08 und -10 bis -20** — die Vorschläge aus Abschnitt 2.2 gelten seit der Freigabe. Dazu **E-KH-21 bis -23** aus der Umsetzung von AP1 (Abschnitt 2.4) — **von der Umsetzung entschieden, zur Kenntnis und zum Widerspruch** |
-> | Zuarbeiten erledigt | **Z1** (alte Staging-Anlage stillgelegt — B2 damit geschlossen) und **Z2** (Zeiger `produktion` auf `7150793`, nachgemessen) — beide 20.09.2026 |
-> | Offen | **E-KH-09 (Ursache und Abhilfe F3)** — fällt nach der Messung am Ende von AP3. **Z3 (Einrichtungswerte und Plattformauskunft)** — AP1 hat die beiden Tabellen gebaut, sie stehen **leer**; ohne Z3 bleiben sie es |
+> | Zuarbeiten erledigt | **Z1** (alte Staging-Anlage stillgelegt — B2 damit geschlossen), **Z2** (Zeiger `produktion` auf `7150793`) und **Z3** — alle 20.09.2026. Z3 **beide Anlagen**, aber auf zwei Wegen: Produktiv aus *Betrieb → Status*, Staging aus einer `phpinfo()`, weil die Anwendung dort noch nicht läuft. Fünf Zeilen der Staging-Spalte bleiben leer |
+> | Offen | **E-KH-09 (Ursache und Abhilfe F3)** — fällt nach der Messung am Ende von AP3; der Nachtrag in Abschnitt 1.4 hat eine der drei Erklärungen verschmälert. **Z3-Rest**: die fünf Zeilen, die nur die Anwendung weiß — sie hängen an Rahmenplan 6a, Schritt 6 |
 > | In Arbeit | — (AP1 fertig bis auf seine Abnahme, AP2 als nächstes) |
-> | Hakt | **Es gibt bis heute keinen erfolgreichen Produktivlauf der Kette** (Abschnitt 1.2). **Und: Die Abnahme von AP1 ist aus der Umsetzung heraus nicht fahrbar** — sie verlangt einen Push auf `main`, und der ist der Betreiberin vorbehalten (`CLAUDE.md` 3, 8). Siehe Prüfdokument, Abschnitt 0 |
+> | Hakt | **Es gibt bis heute keinen erfolgreichen Produktivlauf der Kette** (Abschnitt 1.2). **Die Abnahme von AP1 ist aus der Umsetzung heraus nicht fahrbar** — sie verlangt einen Push auf `main` (`CLAUDE.md` 3, 8). **Und sie könnte derzeit auch nicht grün werden:** Die Einrichtung der neuen Staging-Anlage **scheitert** (Rahmenplan 6a, Schritt 6; eine andere Instanz arbeitet daran), also ist Stufe 2 dort zu Recht rot. Siehe Prüfdokument, Abschnitt 0 |
 >
 > **Stand der Umsetzung**
 >
 > | Paket | Stand | Version | Commit | Abnahmezahlen |
 > |---|---|---|---|---|
-> | AP1 — Staging-Umzug nachziehen | **gebaut; Abnahme offen** | keine (nur `docs/`, `CLAUDE.md`, ein Kommentar in `.github/`) | `499e96c` (Zweig `claude/fervent-dirac-xirsqw`) | Wortliste **0/0/0** (11 Dateien Bereich c, 444 Treffer, alle erklärt) · Kettenaufrufe **3 Läufe / 28 Aufrufe / 0 Befunde / 0 ungeprüft** · Selbstproben **21/21** und **10/10** · YAML **3 von 3** gültig · alte Adresse: **13 Fundstellen, alle Historie oder als „damals" gekennzeichnet** (vorher 12, davon 5 aktuelle Aussagen). **Nicht gemessen: der Staging-Lauf gegen lima-city** |
+> | AP1 — Staging-Umzug nachziehen | **gebaut; Abnahme offen** | keine (nur `docs/`, `CLAUDE.md`, ein Kommentar in `.github/`) | `499e96c` ff. (Zweig `claude/fervent-dirac-xirsqw`) | Wortliste **0/0/0** (11 Dateien Bereich c, 444 Treffer, alle erklärt) · Kettenaufrufe **3 Läufe / 28 Aufrufe / 0 Befunde / 0 ungeprüft** · Selbstproben **21/21** und **10/10** · YAML **3 von 3** gültig · alte Adresse: **13 Fundstellen, alle Historie oder als „damals" gekennzeichnet** (vorher 12, davon 5 aktuelle Aussagen). **Nicht gemessen: der Staging-Lauf gegen lima-city**. **Z3 eingetragen** — Produktiv vollständig, Staging vorläufig (5 Zeilen offen) |
 > | AP2 — Zeiger und Wache | offen | | | |
 > | AP3 — Tor, Zielprobe, Probelauf; F3-Messung | offen | | | |
 > | AP4 — F3 beheben | offen (wartet auf E-KH-09) | | | |
@@ -191,6 +191,34 @@ eingesperrtem Zusatzkonto) oder am Pfad samt Zustandsdatei oberhalb des
 Webroots; (3) ein Fehlerpfad der Bibliothek, den nur diese Anordnung trifft.
 Die Vermutung „Erstauslieferung = mehr Verbindungsarbeit" ist vom Tisch (es
 wurde nichts übertragen). **Ursache offen (E-KH-09); Trennversuch in AP3.**
+
+> **Nachtrag aus AP1 (20.09.2026) — eine der drei Erklärungen ist schmaler
+> geworden, gemessen und nicht geschlossen.** Mit Zuarbeit Z3 hat die
+> Betreiberin die Einrichtung von Produktiv genannt: Das FTP-Konto ist
+> **auf den Webroot eingesperrt**, `FTP_ZIELPFAD` steht auf **`/`**, die
+> Wurzel ist `/var/www/vhosts/luftrettung.net/nadoku-produktion`, und
+> **`FTP_STATE_PFAD` ist nicht gesetzt** — es greift also die Vorgabe
+> `../.deploy-state-produktion.json`, eine Ebene **über** dem Käfig.
+>
+> Damit fällt die erste Hälfte von Erklärung (2) weg: **„Hauptkonto statt
+> eingesperrtem Zusatzkonto" trifft nicht zu** — Produktiv fährt dieselbe
+> Bauform wie die alte Staging-Anlage, die am 17./18.09. mit derselben Aktion
+> ausgeliefert hat. Die zweite Hälfte bleibt und ist schärfer als vorher:
+> **der Pfad samt Zustandsdatei oberhalb des Webroots.** Auf der alten
+> Staging-Anlage wurde dasselbe `../` vertragen; ob der Produktiv-Server es
+> ebenso hält, ist ungemessen — eine `.deploy-state-produktion.json` gibt es
+> dort bis heute nicht.
+>
+> **Zwei Folgen für AP3, die dort zu entscheiden sind und hier nur stehen:**
+> Schritt 4 des Trennversuchs will „die Anordnung nachstellen, die am
+> 17./18.09. lief — FTP-Zusatzkonto, eingesperrt auf den Webroot (Z5)". Diese
+> Anordnung **besteht auf Produktiv bereits**; der Schritt hätte in seiner
+> jetzigen Fassung nichts zu trennen, und die bedingte Zuarbeit in Z5 („nur
+> falls der Trennversuch es verlangt: FTP-Zusatzkonto für Produktiv anlegen")
+> geht ins Leere. Was an seine Stelle gehört, ist ein Trennversuch über den
+> **Pfad**, nicht über das Konto: derselbe Probelauf einmal mit der Vorgabe
+> und einmal mit einem `FTP_STATE_PFAD`, der nach innen zeigt. **Das ist ein
+> Vorschlag von AP1 an AP3, keine Änderung an AP3.**
 
 **F4 — Die Kette spricht mit mehreren Zielen und prüft nie, ob es dasselbe
 ist.** `tor.py` nutzt `vars.PRODUKTION_URL`, der Abgleich
@@ -564,6 +592,63 @@ im Kopf vermerkt; die **Erledigt-Zeile für P5b in Abschnitt 8** und die
 Nachzüge in den Abschnitten 3, 5 und 6 sind **nicht** geschrieben — sie
 gehören dem Abschluss von P5b, nicht diesem Paket. Das ist eine Fremdaufgabe,
 die hier nur benannt wird.
+
+
+**Nachtrag 20.09.2026 — Z3 kam zur Hälfte, und eine Angabe darin war mehr
+wert als die Tabelle.** Die Betreiberin hat die Plattformauskunft und die
+Einrichtungswerte von **Produktiv** geliefert; beide Tabellen tragen diese
+Spalte jetzt abgelesen, die Staging-Spalte bleibt `⬚ Z3`. Drei Dinge daraus
+gehören nicht in eine Tabellenzelle:
+
+1. **Produktiv hat keinen Cron.** Alle elf Hintergrundjobs tragen als Weg
+   „anfrage", laufen also huckepack auf einer Seitenanfrage. Zulässig (einer
+   der drei Wege aus `Technik.md` 4.97a) und kein Mangel — aber **ohne
+   Besucher läuft nichts**, und das trifft **AP5**: Sobald das Backup-Tor
+   auch auf Staging fährt, wartet ein Läufer auf einen Job, den nur eine
+   Anfrage weiterbringt. Der Job „GPS-Daten verdichten" stand dabei auf
+   **Rückstand 69**.
+2. **Das Produktiv-FTP-Konto ist auf den Webroot eingesperrt**, `FTP_ZIELPFAD`
+   steht auf `/`, `FTP_STATE_PFAD` ist **nicht gesetzt**. Das schmälert eine
+   der drei F3-Erklärungen — Einzelheiten als Nachtrag in **Abschnitt 1.4**,
+   samt zwei Folgen für AP3 und Z5, die dort zu entscheiden sind.
+3. **Zwei Zahlen der Produktiv-Spalte sind keine Messung** — der freie Platz
+   (861,7 GB; auf geteiltem Webspace meldet PHP den Datenträger des Hosts)
+   und das DB-Kontingent (eine Angabe, 10 GB). Beide tragen den Vorbehalt in
+   `Technik.md` 6.3a als eigenen Kasten, damit sich niemand später darauf
+   beruft.
+
+
+**Nachtrag 2 vom 20.09.2026 — die Staging-Hälfte kam nach, und mit ihr der
+erste Ertrag von E-KH-04.** Weil die Anwendung auf Staging **noch nicht
+installiert ist** (Schritt 6 scheitert, eine andere Instanz arbeitet daran),
+kam die Auskunft aus einer **`phpinfo()`-Ausgabe** statt von der Statusseite.
+Drei Dinge daraus:
+
+4. **Ein Fehlbefund der eigenen Statusseite — F-KH-U-05.** Auf lima-city
+   steht `opcache_get_status` in `disable_functions`; `function_exists()`
+   antwortet dafür `false`, und `plattform_pruefen()` meldet **„OPcache: aus"**,
+   während der OPcache läuft. Das verletzt 5b.1 („`null` nicht feststellbar —
+   wer nichts gemessen hat, darf nichts behaupten"). **Nicht behoben**: Das
+   wäre Web-Code und damit nicht AP1 (E-KH-23); der Vorschlag steht im
+   Prüfdokument, Abschnitt 4. **Der Fund ist der Beleg für das Versprechen
+   von E-KH-04** — sechs Tage lang liefen beide Anlagen beim selben Hoster,
+   und dieser Zuschnitt fiel niemandem auf.
+5. **Die Nicht-Übertragbarkeit ist jetzt belegt, nicht nur begründet.** Drei
+   Weblimits weichen ab: `max_execution_time` 240 s gegen 300 s,
+   `post_max_size` und `upload_max_filesize` je 256 MB gegen 500 MB. Damit
+   misst Stufe 2 auf Staging nachweislich andere Grenzen, als Produktiv hat.
+6. **Beide FTP-Konten sind auf `/` eingesperrt, und in beiden Umgebungen
+   fehlt `FTP_STATE_PFAD`.** Die `../`-Frage aus Rahmenplan 6a gilt damit für
+   **beide** Anlagen — und **der erste Kettenlauf gegen lima-city beantwortet
+   sie für Staging, ohne Produktiv anzufassen.** Genau die Arbeitsteilung,
+   die E-KH-17 meint.
+
+**Dazu drei Punkte, die nicht in dieses Konzept gehören, aber gesagt werden
+mussten** und in der Prüfliste stehen: `info.php` liegt öffentlich im
+Staging-Webroot (4a), drei Geheimnisse der Umgebung `staging` gehören noch
+der stillgelegten Anlage (5), und `session.save_path` zeigt bei lima-city
+**über** das eigene Verzeichnis hinaus — dieselbe Frage, deren Antwort bei
+der alten Anlage **B2** war (5a).
 
 **Problem 4 — was die eigene Durchsicht nicht sah.** Nach dem Bau sind die
 geänderten Dokumente von **sieben getrennten Lesern** gegengelesen worden,
