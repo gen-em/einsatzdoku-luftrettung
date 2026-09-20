@@ -77,18 +77,36 @@ import urllib.request
 FTP_ZEITGRENZE_S = 60
 WEB_ZEITGRENZE_S = 30
 
-# DER PRAEFIX IST TEIL DER AUFRAEUMREGEL. Er beginnt mit einem Punkt, damit
-# `.htaccess` (Z. 64, jeder Pfad mit fuehrendem Punkt -> 403) eine
-# liegengebliebene Datei nicht ausliefert -- ein zweiter Riegel neben dem
-# Loeschen. Der HTTPS-Abruf umgeht ihn nicht: Er holt die Datei ueber ihren
-# vollen Namen, und wenn `.htaccess` sie sperrt, MELDET die Probe das, statt
-# es fuer einen fehlenden Upload zu halten.
 # `curl`-Rueckgabewert 60 = "peer certificate cannot be authenticated".
 # Er bekommt eine eigene Behandlung, weil er etwas anderes bedeutet als jeder
 # andere Fehlschlag: Der Transport ist in Ordnung, die IDENTITAET nicht.
 CURL_ZERTIFIKAT = 60
 
-PRAEFIX = ".zielprobe-"
+# DER PRAEFIX HAT KEINEN FUEHRENDEN PUNKT -- UND DAS IST EINE BEHEBUNG.
+#
+# Bis zum 20.09.2026 hiess er `.zielprobe-`. Die Begruendung stand hier und
+# klang gut: `.htaccess` (Z. 64) antwortet auf jeden Pfad mit fuehrendem Punkt
+# mit 403, also laege eine vergessene Probedatei hinter einem zweiten Riegel.
+#
+# GEMESSEN (Lauf 35532390449, 19:30 UTC) WAR ES EIN DENKFEHLER: Der Riegel
+# sperrt nicht nur Fremde aus, sondern die Probe selbst. Der Rundlauf geht
+# FTPS hinauf und HTTPS zurueck -- und der Rueckweg lief in genau dieses 403.
+# Schlimmer als der Fehlschlag war die Diagnose: Die Probe meldete "Das
+# FTP-Verzeichnis und die oeffentliche Adresse zeigen nicht auf dasselbe", und
+# das war FALSCH. Sie zeigten sehr wohl auf dasselbe; die Datei war nur
+# gesperrt. Ein Pruefmittel, das eine richtige Anlage fuer falsch erklaert,
+# ist schlimmer als keines.
+#
+# WAS DER PUNKT SCHUETZEN SOLLTE, WIEGT NICHTS: Der Inhalt sind 48 Zeichen
+# Zufall ohne Bedeutung, die Datei wird im selben Schritt geloescht, und jeder
+# Lauf raeumt Reste des vorigen weg. Eine liegengebliebene Probedatei ist eine
+# oeffentlich lesbare Zufallszahl.
+PRAEFIX = "zielprobe-"
+
+# Der alte Praefix wird beim Aufraeumen MITGENOMMEN, sonst bliebe liegen, was
+# die alte Fassung hinterlassen hat -- und zwar unsichtbar, weil der Punkt sie
+# vor dem Abruf ueber HTTP verbirgt.
+PRAEFIX_ALT = ".zielprobe-"
 
 # Was in einer Ausgabe nie stehen darf. Wird vor JEDER Ausgabe ersetzt.
 MASKE = "***"
@@ -232,7 +250,7 @@ def aufraeumen(server: str, pfad: str, konto: str, passwort: str,
     if rc != 0:
         return []
     reste = [z.strip().rsplit("/", 1)[-1] for z in aus.splitlines()
-             if z.strip().rsplit("/", 1)[-1].startswith(PRAEFIX)]
+             if z.strip().rsplit("/", 1)[-1].startswith((PRAEFIX, PRAEFIX_ALT))]
     weg = []
     for name in reste:
         r, _, _ = curl_ftp(["--ssl-reqd", "-Q", f"-DELE {pfad.rstrip('/')}/{name}",
@@ -317,7 +335,20 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
             status, koerper, netzfehler = hol(adresse)
             a(f"  HTTPS-Abruf {adresse} → {status or 'kein Status'}"
               + (f" ({netzfehler})" if netzfehler else ""))
-            if status != 200:
+            if status == 403:
+                # 403 IST NICHT "FALSCHES ZIEL", SONDERN "GESPERRT". Die Datei
+                # ist da — der Server gibt sie nur nicht heraus. Wer das als
+                # falschen Zielpfad meldet, schickt jemanden auf die Suche nach
+                # einem Fehler, den es nicht gibt (gemessen 20.09.2026).
+                f(f"FEHLGESCHLAGEN: Die Datei liegt im FTP-Ziel und ist unter "
+                  f"{adresse} GESPERRT (403) — nicht unauffindbar. Das ist etwas "
+                  f"anderes als ein falscher Zielpfad: Hochladen hat funktioniert, "
+                  f"nur der Rückweg ist zu.")
+                f("  Wahrscheinlich eine Regel des Servers (`.htaccess`, eine "
+                  "Sperre des Hosters, ein Botschutz). Der Rundlauf ist damit "
+                  "NICHT belegt — aber auch nicht widerlegt.")
+                fehler = 1
+            elif status != 200:
                 f(f"FEHLGESCHLAGEN: Die Datei liegt im FTP-Ziel, ist aber unter "
                   f"{adresse} nicht abrufbar (Status {status or netzfehler}). Das "
                   f"FTP-Verzeichnis und die öffentliche Adresse zeigen nicht auf "
@@ -388,6 +419,8 @@ def selbstprobe() -> int:
     herstellen, ohne sie zu beschädigen.
     """
     erfuellt = offen = 0
+    import contextlib
+    import io as _io
 
     def pruefe(b: bool, was: str, wert: str = "") -> None:
         nonlocal erfuellt, offen
@@ -516,7 +549,6 @@ def selbstprobe() -> int:
            f"{l.dele} Löschversuch(e)")
 
     # Und der Zertifikatsfehler wird benannt, nicht bloß gezählt.
-    import io as _io, contextlib
     merker.clear()
     puffer = _io.StringIO()
     with contextlib.redirect_stderr(puffer):
@@ -547,11 +579,27 @@ def selbstprobe() -> int:
            "…und im Normalbetrieb steht `--ssl-reqd` da, nicht der Gegenschalter")
 
     # ---- Aufräumen ----
-    l = Lauf(liste=".zielprobe-alt.txt\nindex.php\n.zielprobe-zwei.txt\n")
+    l = Lauf(liste="zielprobe-neu.txt\nindex.php\n.zielprobe-alt.txt\n")
     weg = aufraeumen("h", "/", "k", "passwort", l)
-    pruefe(weg == [".zielprobe-alt.txt", ".zielprobe-zwei.txt"],
+    pruefe(weg == ["zielprobe-neu.txt", ".zielprobe-alt.txt"],
            "Reste früherer Proben werden erkannt — und nur die", str(weg))
     pruefe("index.php" not in weg, "…`index.php` fasst sie nicht an")
+    pruefe(".zielprobe-alt.txt" in weg,
+           "…auch die Reste der alten Fassung MIT Punkt — sonst bleiben sie "
+           "unsichtbar liegen")
+    pruefe(not PRAEFIX.startswith("."),
+           "Der Probedateiname beginnt NICHT mit einem Punkt", PRAEFIX)
+
+    # 403 auf dem Rückweg ist „gesperrt", nicht „falsches Ziel".
+    merker.clear()
+    p403 = _io.StringIO()
+    with contextlib.redirect_stderr(p403):
+        probe("https://a.example", "h", "/", "k", "p", True, LaufMitInhalt(),
+              lambda a, zeitgrenze=0: (403, b"", ""))
+    t403 = p403.getvalue()
+    pruefe("GESPERRT (403)" in t403, "403 wird als Sperre gemeldet")
+    pruefe("zeigen nicht auf" not in t403,
+           "…und NICHT als falscher Zielpfad — das wäre eine Falschdiagnose")
 
     # ---- Das Passwort steht NICHT in der Befehlszeile ----
     l = Lauf()

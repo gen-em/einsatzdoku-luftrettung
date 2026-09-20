@@ -470,6 +470,72 @@ die die Zielprobe in ihren zwei Betriebsarten trennt.
 
 ## 2. Funde aus der Umsetzung
 
+**F-KH-U-12 — Der Zertifikatsfehler ist behoben, und damit fällt F-KH-U-09.**
+*Lauf 35532390449, Probelauf um 19:30 UTC, nach Umstellung von `FTP_SERVER`.*
+
+```
+Zielprobe gegen https://nadoku.gen-em.org
+  Betriebsart:    MIT Wiederverwendung der TLS-Sitzung (--ssl-reqd)
+  Reste weggeräumt: 0
+  TLS-Sitzung wiederverwendet: JA (gemessen)
+  … Probedatei gelöscht.
+```
+
+**Zwei Dinge auf einmal.** Erstens: Die FTPS-Verbindung kommt jetzt zustande,
+die Probedatei ging hinauf und wurde wieder gelöscht — **Prüfpunkt 13 ist
+damit erledigt.** Zweitens, und wichtiger:
+
+**F-KH-U-09 war falsch, und zwar aus einem lehrreichen Grund.** Es hieß dort,
+die `curl`-Fassung des Läufers sage nichts über die Wiederverwendung der
+TLS-Sitzung. Jetzt sagt dieselbe Fassung **„JA (gemessen)"**. Der Unterschied:
+Vorher brach `curl` am Zertifikat ab, **bevor je ein Datenkanal aufgebaut
+wurde** — es gab nichts zu berichten. „Nicht feststellbar" war die richtige
+Auskunft über einen Lauf, der die Frage nie erreicht hat, und wäre als
+„NEIN" eine Lüge gewesen. **Die Dreiwertigkeit hat sich bezahlt gemacht:
+Hätte die Probe hier `False` gemeldet, stünde jetzt eine falsche Messung im
+Prüfdokument.**
+
+**Folge: Der Trennversuch (Prüfpunkt 12) ist fahrbar.** Und er hat bereits
+seine Hälfte: **MIT Wiederverwendung gelingt der Upload** — auf demselben
+Server, auf dem die Auslieferungsaktion bei der **ersten** Datenverbindung
+mit `ECONNRESET` abbricht (F-KH-U-08-Umfeld, Abschnitt 1.6). Fehlt noch der
+Lauf **ohne** Wiederverwendung. Scheitert er, ist die Forderung des Servers
+belegt — und damit die wahrscheinlichste Erklärung für F3.
+
+**F-KH-U-13 — Die Zielprobe hat sich mit ihrem eigenen Dateinamen
+ausgesperrt.** *Derselbe Lauf.*
+
+```
+FEHLGESCHLAGEN: Die Datei liegt im FTP-Ziel, ist aber unter
+  https://nadoku.gen-em.org/.zielprobe-….txt nicht abrufbar (Status 403).
+  Das FTP-Verzeichnis und die öffentliche Adresse zeigen nicht auf dasselbe.
+```
+
+**Die Diagnose war falsch.** FTP-Verzeichnis und öffentliche Adresse zeigen
+sehr wohl auf dasselbe — die Datei war nur **gesperrt**. Ursache ist der
+Präfix, den ich selbst gewählt habe: `.zielprobe-` beginnt mit einem Punkt,
+und `.htaccess` (Z. 64) antwortet auf jeden Pfad mit führendem Punkt mit 403.
+
+**Der Kommentar im Werkzeug hatte es vorhergesagt und trotzdem falsch
+gebaut:** Dort stand, der Punkt sei „ein zweiter Riegel neben dem Löschen"
+und ein 403 werde ja gemeldet, „statt es für einen fehlenden Upload zu
+halten". Gemeldet wurde es — aber als **falscher Zielpfad**, also als Fehler
+der Anlage statt als Regel des Servers. **Ein Prüfmittel, das eine richtige
+Anlage für falsch erklärt, ist schlimmer als keines.**
+
+*Behoben, zweifach:*
+1. Der Präfix ist jetzt **`zielprobe-`** ohne Punkt. Was der Punkt schützen
+   sollte, wiegt nichts: 48 Zeichen Zufall, im selben Schritt gelöscht, und
+   jeder Lauf räumt Reste des vorigen weg. `PRAEFIX_ALT` nimmt die alten,
+   punktierten Reste beim Aufräumen mit — sonst blieben sie unsichtbar
+   liegen.
+2. **403 wird als Sperre benannt, nicht als falsches Ziel**, samt dem Satz
+   „Der Rundlauf ist damit NICHT belegt — aber auch nicht widerlegt".
+
+Selbstprobe **29 → 33 Lagen**, darunter die Gegenprobe, dass bei 403 der Satz
+„zeigen nicht auf dasselbe" **nicht** mehr fällt.
+
+
 **F-KH-U-10 — Die Botprüfung von lima-city ist jetzt IN DER KETTE gemessen,
 nicht mehr nur von Hand.** *Lauf 35532390449, 20.09.2026, 19:28 UTC.*
 
@@ -967,7 +1033,8 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   `403` ab; ob sie auch eine statische Datei abweist, weiß niemand. **Dieser
   Punkt hängt damit am selben Nagel wie Prüfpunkt 1.**
 
-- [ ] **13 — Das FTPS-Zertifikat von Produktiv in Ordnung bringen** (F-KH-U-08,
+- [x] **13 — Das FTPS-Zertifikat von Produktiv in Ordnung bringen** — **ERLEDIGT am 20.09.2026:** `FTP_SERVER` umgestellt, die Verbindung kommt zustande, die Probedatei ging hinauf und wurde gelöscht (F-KH-U-12). Der Text unten bleibt als Beschreibung des Wegs stehen.
+  **Ursprünglich:** (F-KH-U-08,
   gemessen im ersten Probelauf am 20.09.2026, Lauf 35531806339).
   *Befund:* Der FTPS-Server weist sich mit einem **anderen Namen** aus als
   dem, der in `FTP_SERVER` steht (`curl: (60) SSL: no alternative certificate
