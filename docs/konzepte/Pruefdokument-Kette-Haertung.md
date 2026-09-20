@@ -24,9 +24,9 @@ abgehakt ist (R62).
 > | Stand | 20.09.2026 — **AP1 gebaut (Abnahme offen), AP2 gebaut, AP3 gebaut.** AP4 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **22** (Abschnitt 2): F-KH-U-01 bis F-KH-U-23 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-23: `_openDir` listet nicht — die Stelle war in beiden Dokumenten falsch beschrieben**, nachgelesen im Quelltext. Daraus folgt eine Lage, die noch nie gemessen wurde (Prüfpunkt 19) |
+> | Funde | **23** (Abschnitt 2): F-KH-U-01 bis F-KH-U-24 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-24: Abruf und anschließender Steuerbefehl gehen in einer Sitzung durch** — acht Vermutungen, acht Messungen, und achtmal kann `curl`, woran die Aktion stirbt |
 > | F3 | **so weit eingegrenzt, wie es von außen geht — und weiter nicht benannt. SIEBEN** Vermutungen sind mit je einer Messung ausgeschlossen, zuletzt die Menge (**80 von 80 in einer Sitzung**, F-KH-U-22). Tabelle dort. **Damit ist der Vorrat erschöpft, den ein zweiter Client prüfen kann:** `curl` kann jedes Mal, woran die Aktion stirbt. Der nächste Schritt geht an die Aktion selbst (**Prüfpunkt 18**, kostet einen echten Auslieferungslauf) oder an den Hoster — die Frage ist jetzt beantwortbar gestellt. **E-KH-09 (Pflichtstopp) steht** |
-> | Prüfliste | 23 Punkte: **7 abgehakt**, 5 teilweise, **11 offen** |
+> | Prüfliste | 24 Punkte: **8 abgehakt**, 5 teilweise, **11 offen** |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
 
 ---
@@ -482,6 +482,67 @@ Error: Client is closed because read ECONNRESET (data socket)
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-24 — Abruf und anschließender Steuerbefehl gehen in einer Sitzung
+durch. Acht Vermutungen, acht Messungen, F3 weiter nicht benannt.**
+*Lauf 35541947020, 20.09.2026, 22:32 UTC, `probelauf_sitzungsprobe`.*
+
+```
+Sitzungsprobe gegen ftp://***/
+  Frage:          Bleibt der Steuerkanal nach einem Abruf ansprechbar?
+  Probedatei:     zielprobe-82968e618099bdc1.txt (32 Byte)
+  Reste weggeräumt: 0
+  Hochgeladen.
+  Datenkanal:     EPSV, Antwort 229, Port 59242
+  `PWD` NACH dem Abruf, dieselbe Sitzung: beantwortet (257)
+
+Abruf und anschließender Steuerbefehl gehen in EINER Sitzung durch.
+  Aufgeräumt: 1 Datei(en) entfernt.
+```
+
+Zehn Sekunden, `257` beantwortet, die Probedatei weggeräumt. Damit ist auch
+die Lage erledigt, die aus F-KH-U-23 folgte.
+
+**Und damit steht das Ergebnis von acht Trennversuchen fest, und es ist
+eindeutig:**
+
+| Vermutung | ausgeschlossen durch |
+|---|---|
+| Läuferabbild, Node-Fassung | Z5 Teil 1 |
+| FTPS-Zertifikat | F-KH-U-08, behoben |
+| die Bibliothek *als solche* | lima-city läuft mit derselben Aktion grün |
+| TLS-Sitzungswiederverwendung | F-KH-U-16 — vier Läufe, beide Betriebsarten |
+| `MKD`/`CWD` eines neuen Verzeichnisses | F-KH-U-18 |
+| Weg zum Datenkanal | F-KH-U-20 — viermal sauberes `EPSV` |
+| Menge und Sitzungslänge | F-KH-U-22 — 80 von 80 in einer Sitzung |
+| **Abruf, dann Steuerbefehl in einer Sitzung** | **dieser Fund** |
+
+**Acht Messungen sagen achtmal dasselbe: `curl` kann jedes Mal, woran die
+Auslieferungsaktion stirbt.** Kein Server-Verhalten, das von außen sichtbar
+wäre, erklärt den Abbruch.
+
+**Was daraus folgt, und es ist unbequem:** Der Unterschied liegt nicht in
+etwas, das der Server *tut*, sondern in etwas, das die beiden Clients
+**verschieden** tun. Die Zeile „die Bibliothek als solche" in der Tabelle
+oben trägt weniger, als sie aussieht: Dass `basic-ftp` gegen lima-city grün
+läuft, schließt aus, dass sie generell kaputt ist — **nicht**, dass sie mit
+**diesem** Server in einer bestimmten Konstellation nicht zurechtkommt. Genau
+das ist jetzt der einzige verbliebene Raum.
+
+**Und er ist mit einem zweiten Client nicht mehr auszuleuchten.** Acht
+Versuche haben es probiert. Was fehlt, ist der FTP-Dialog der Aktion selbst
+— **Prüfpunkt 18**.
+
+**Dazu eine Variante, die bisher nicht vorgelegt war und den Preis fast
+aufhebt: Prüfpunkt 18a.** Die Aktion muss nicht in den Webroot schreiben,
+um `ensureDir` zu erreichen — sie muss nur **irgendwohin** echt schreiben.
+Zeigt `server-dir` auf ein Probeverzeichnis, läuft alles Entscheidende
+unverändert (derselbe Client, derselbe Server, dieselbe Sitzung, echtes
+`ensureDir`, 688 Dateien in 62 Verzeichnissen), **ohne** Wartungsmodus,
+**ohne** halb ausgelieferten Stand über der Anwendung und **ohne** den
+Rückweg, den Prüfpunkt 18 nötig macht. Was dabei nicht gemessen wird: ob es
+an der **Tiefe** hängt — das Probeverzeichnis liegt eine Ebene unter dem
+Webroot, der echte Baum beginnt eine Ebene höher.
 
 **F-KH-U-23 — `_openDir` listet nicht. Die Stelle, die seit dem 19.09.2026 in
 beiden Dokumenten steht, ist falsch beschrieben.** *Nachgelesen am 20.09.2026
@@ -1713,8 +1774,11 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   `ECONNRESET` auf dem Datenkanal. Was unterscheidet die beiden auf Ihrer
   Seite?"** Das ist eine beantwortbare Frage geworden.
 
-- [ ] **19 — Die Sitzungsprobe gegen Produktiv** (folgt aus F-KH-U-23; kostet
-  **einen Probelauf**, keinen echten Lauf). **Diesen zuerst, vor Prüfpunkt 18.**
+- [x] **19 — Die Sitzungsprobe gegen Produktiv** — **ERLEDIGT am 20.09.2026**
+  (Lauf 35541947020): `Datenkanal: EPSV, Antwort 229, Port 59242`, **`PWD`
+  NACH dem Abruf, dieselbe Sitzung: beantwortet (257)**, zehn Sekunden, die
+  Probedatei weggeräumt (F-KH-U-24). **Auch diese Erklärung für F3 ist
+  erledigt.** Der ursprüngliche Text steht darunter als Protokoll.
   *Was sie misst:* Abruf (Datenkanal), **danach** ein Steuerbefehl `PWD` — in
   **derselben** FTP-Sitzung. Genau diese Reihenfolge stirbt in der
   Auslieferungsaktion, und genau sie hat die Zielprobe nie gemessen, weil sie
@@ -1740,6 +1804,35 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   gescheitert, belegt die Frage aber auch nicht.
   *Gelingt sie mit 257:* Auch diese Erklärung ist erledigt, und Prüfpunkt 18
   bleibt der Weg.
+
+- [ ] **18a — Die Aktion reden lassen, aber gegen ein PROBEVERZEICHNIS.**
+  **Vorzuziehen gegenüber Prüfpunkt 18 — sie misst dasselbe und kostet fast
+  nichts.**
+  *Der Gedanke:* Die Aktion muss nicht in den Webroot schreiben, um
+  `ensureDir` zu erreichen — sie muss nur **irgendwohin** echt schreiben.
+  Zeigt `server-dir` auf `…/gespraech-probe/` statt auf das Zielverzeichnis,
+  läuft alles Entscheidende unverändert: **derselbe Client, derselbe Server,
+  dieselbe Sitzung, echtes `ensureDir`, 688 Dateien in 62 Verzeichnissen,
+  `log-level: verbose`.**
+  *Was dadurch entfällt:* der Wartungsmodus, der halb ausgelieferte Stand
+  über der laufenden Anwendung und der ganze Rückweg von Prüfpunkt 18. Die
+  Anwendung merkt nichts davon.
+  *Erwartet:* derselbe `ECONNRESET` — und **diesmal steht im Protokoll, bei
+  welchem FTP-Befehl und mit welcher Serverantwort.**
+  *Was es NICHT misst:* ob es an der **Tiefe** hängt. Das Probeverzeichnis
+  liegt eine Ebene unter dem Webroot, der echte Baum beginnt eine Ebene
+  höher. Kommt der Lauf sauber durch, ist die Tiefe der nächste Verdacht —
+  und dann bleibt Prüfpunkt 18.
+  *Was zu bauen ist:* eine Eingabe `probelauf_gespraech`, die (a) `dry-run`
+  ausschaltet, (b) `log-level: verbose` setzt und (c) `server-dir` auf das
+  Probeverzeichnis umbiegt. **Noch nicht gebaut** — sie schreibt echt und
+  fällt damit unter denselben Wächter, der Prüfpunkt 18 abgewiesen hat
+  („Production Deploy"). Sie braucht das ausdrückliche Wort der Betreiberin.
+  *Aufräumen danach:* Das Probeverzeichnis bleibt stehen (die Aktion räumt
+  nur nach ihrem eigenen Zustand auf). Es wird von Hand entfernt oder mit
+  einem `--mengenprobe`-Lauf, dessen Aufräumen alles mit dem Probe-Präfix
+  wegnimmt — **der Name des Probeverzeichnisses muss deshalb mit
+  `zielprobe-` beginnen.**
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 
