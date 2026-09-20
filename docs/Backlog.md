@@ -64,7 +64,35 @@ Typografie, 228 Proof-of-Work gegen Registrierungs-Spam, 229 Uhr-Anzeige bei
 > schon bei Nr. 214 und bei Web 20.16.0. Wer in einem Commit vor dem Merge
 > eine dieser Nummern liest, liest die alte Zählung.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **238** und trägt seine
+**238 und 239 sind auf `main`** (PR #60, 20.09.2026: reserviertes Wort
+`MANUAL` in MySQL 8.4.0–8.4.10; `backup_lib.php` ohne Backticks). **240 liegt
+auf dem Zweig `claude/fervent-dirac-xirsqw`** (Kette II, 20.09.2026: der
+Rundlauf-Prüffall des Handy-Moduls läuft in der Kette nie).
+
+**241 bis 249 sind für den Einschub vom 20.09.2026 reserviert** — das
+Doku-Paket der Konzeptinstanz (P5c, Sitzungsablage, Nachtrag vom 18.09.).
+Feste Zuordnung, damit die Instanzen, die auf eigenen Zweigen daran
+arbeiten, nicht erneut kollidieren:
+
+| Nr. | Sache | gehört zu |
+|---|---|---|
+| 241 | Sitzungsablage — PHP-Sitzungen im geteilten Hosterverzeichnis | Schritt 16 |
+| 242 | Sitzungsbindung per Cookie-Token | Schritt 18 |
+| 243 | Staging-Umgebungsbanner | 10c AP1 |
+| 244 | Einstellungen-Übersicht: Bereiche als Gliederung erkennbar | 10c AP9 |
+| 245 | Erklärtext-Regel und Überarbeitung aller Texte in Verwaltung und Betrieb | 10c AP9 |
+| 246 | Schlüsselblatt und Notfallblatt: Druckseite | 10c AP9 |
+| 247 | Serverschlüssel wechseln — als Vorgang | Schritt 18 |
+| 248 | Prüftor Stufe 1 zählt die `error_log(`-Aufrufe | 10c AP3 |
+| 249 | TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes verliert | Schritt 18 |
+
+> **Warum die Spanne bei 241 beginnt und nicht bei 240.** Das Paket sah 240
+> für die Sitzungsablage vor; am selben Tag hat Kette II 240 für den
+> Rundlauf-Prüffall vergeben und **gepusht**. Nach der Regel oben weicht,
+> wer noch nicht gepusht hat — das war das Paket. Entschieden vom
+> Auftraggeber am 20.09.2026.
+
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **250** und trägt seine
 Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
