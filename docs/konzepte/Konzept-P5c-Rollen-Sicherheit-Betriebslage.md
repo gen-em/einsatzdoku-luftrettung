@@ -407,8 +407,11 @@ Archiv nach 366 Tagen (gestellt) gelöscht; Kreislauf edbak unverändert.
 Behandler in `db.php`; 77 Aufrufe umgestellt; Fehlerseite mit Meldeweg;
 Kennungssuche (nur BetreiberIn, F-P5c-6). **Abnahme:** `error_log(`-
 **Aufrufe** in `server/` → **≤ 2** (Behandler-Rückfall) — gezählt **ohne
-Kommentare und Zeichenketten**; das Zählmittel entsteht hier und geht in
-Stufe 1 (Nr. 248). Ein blankes `grep -c` zählt Kommentarzeilen mit und
+Kommentare und Zeichenketten**; das Zählmittel **besteht seit Schritt 15**
+(`tools/zaehlung/`, Zeile **Z38**) — **AP3 setzt dessen Decke auf 2**
+(Nr. 248) und baut keins. Berichtigt am 20.09.2026 (E-ZE-03): Hier stand, es
+entstehe hier; zwei Pakete, die dasselbe Werkzeug bauen, hätten es zweimal
+gebaut. Ein blankes `grep -c` zählt Kommentarzeilen mit und
 bliebe nach der Umstellung über 2, sobald ein Kommentar die Herkunft nennt; eine provozierte Ausnahme erscheint im Reiter System
 mit Kennung, die Fehlerseite zeigt dieselbe Kennung; Sitzungs-, Anfrage-
 und IP-Daten fehlen im Eintrag (grep im Dump).

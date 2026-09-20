@@ -92,7 +92,28 @@ arbeiten, nicht erneut kollidieren:
 > wer noch nicht gepusht hat — das war das Paket. Entschieden vom
 > Auftraggeber am 20.09.2026.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **250** und trägt seine
+**250 bis 259 sind für Schritt 15 reserviert** (Zentralisierung,
+`docs/konzepte/Konzept-Zentralisierung.md`, eingespielt am 20.09.2026). Vier
+Nummern sind vergeben, **sechs bleiben frei für Funde der Umsetzung** — nach
+derselben Überlegung wie bei 241–249: Ein Paket, das erst beim Bauen neue
+Punkte findet, soll sie anhängen können, ohne mit dem nächsten Zweig zu
+kollidieren.
+
+| Nr. | Sache | gehört zu |
+|---|---|---|
+| 250 | Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten | Schritt 17 |
+| 251 | Cookie-Attribut `secure` der Sitzung — zwei Arten HTTPS-abhängig, zwei fest | Schritt 18 |
+| 252 | Gelaufene Migrationen fragen das Schema 57× von Hand | P8 (R66) |
+| 253 | Datum-Zeit-Trenner vereinheitlichen | 10c AP9 |
+| 254–259 | frei — Reserve für Funde der Umsetzung von Schritt 15 | Schritt 15 |
+
+> **Keiner der vier gehört in Schritt 15 selbst**, und das ist kein Versehen:
+> 250 ändert Wege durch die Anwendung, 251 und 252 hängen an späteren
+> Schritten, 253 ist Gestaltung. Schritt 15 verschiebt Code an eine Stelle;
+> was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
+> mitgemacht.
+
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **260** und trägt seine
 Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
@@ -823,6 +844,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     > stehen — und dann sieht es aus wie ein neuer Fehler, nicht wie ein
     > verlorener Vertrag.
 
+
+    **Zuordnung (20.09.2026): Schritt 15 AP9** — mit dem Konzept
+    Zentralisierung. Dort kommen zwei Dinge dazu, die hier fehlten:
+    **E-ZE-01** (die Gleichstände — was passiert, wenn zwei Einsätze
+    dieselbe Sortiergröße haben; `sortable` entscheidet das heute
+    stillschweigend anders als der Aufbau in `index.php`) und **F-ZE-6**
+    (der **Spaltensatz je Seite** ist nicht derselbe — die drei Tabellen
+    zeigen verschiedene Spalten, und das muss eine Vereinheitlichung
+    abbilden, statt es einzuebnen).
 62. **Logodateien tragen teilweise wieder die alten Farbwerte.**
     *Bis zum 02.09.2026 trug dieser Punkt die Nummer 49. Sie war durch die
     Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
@@ -2001,6 +2031,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     R83: zentralisiert wird beim zweiten echten Verbraucher; ein Helfer mit
     einem Verbraucher liegt in einer `_lib.php`, nicht in einer Seite.
 
+    **Die Zahlen von 16.09.2026 gelten nicht mehr** (FF-6). Nachgemessen am
+    20.09.2026 an `origin/main` `862ca7f`; **maßgeblich ist Abschnitt 1 von
+    `docs/konzepte/Konzept-Zentralisierung.md`**, nicht die Zahlen hier.
+    Die Zuordnung je Paket:
+
+    | Paket | Sache | gehört zu |
+    |---|---|---|
+    | 1 | Marke, Mail, Link, Token | **durch** — Gegenprobe in Schritt 15 AP1 |
+    | 2 | Datenzugriff | Schritt 15 AP4 und AP5 |
+    | 3 | API-Eingang, Sitzung, Flash | Schritt 15 AP2 und AP3 |
+    | 3 | *davon* Log-Helfer — **77 Aufrufe in 32 Dateien** | **10c AP3** |
+    | 4 | JavaScript | Schritt 15 AP8 |
+    | 5 | Zeit, Zahl, Migration | Schritt 15 AP7 |
+    | 6 | Beifang | kein Arbeitspaket — nur mit Arbeit an der Datei |
+
     **Paket 1 — Marke, Mail, Link, Token.**
     - Mailrahmen (Anrede, Produktname, Kontaktadresse, Grußformel) an sieben
       Versandstellen von Hand: `email_lib.php`, `admin_user.php`,
@@ -2251,6 +2296,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Verbindungsenge) meldet **0 × 503** und 0 Gedrängel im Fehlerprotokoll.
     Zuordnung: offen, ein eigenes Paket.
 
+
+    **Vermerk vom 20.09.2026 (Konzept Zentralisierung, E-ZE-20):**
+    `db_transaktion()` aus **Schritt 15 AP5** fasst `ingest.php`
+    **nicht** an. Die Wiederholung bei Deadlock gehört hierher und nicht
+    dorthin: Schritt 15 vereinheitlicht, wie Transaktionen geschrieben
+    werden — er ändert nicht, was bei einem Deadlock geschieht. Wer beides
+    in einem Paket macht, kann hinterher nicht sagen, welche der beiden
+    Änderungen die Probe grün gemacht hat.
 211. **Ein `/api/`-Aufruf ohne Sitzung bekommt eine Weiterleitung statt
     einer JSON-Antwort.** `auth_guard.php` prüft in Zeile 33
     `empty($_SESSION['user_id'])` und antwortet mit
@@ -2960,6 +3013,12 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     sonst zählt das Prüfmittel seine eigene Dokumentation mit.
     Mitgeprüft wird der `set_exception_handler()`-Behandler.
 
+    **Berichtigt am 20.09.2026 (E-ZE-03):** Hier stand, das Zählmittel
+    entstehe mit 10c AP3. Es **besteht seit Schritt 15 AP1**
+    (`tools/zaehlung/`); 10c AP3 setzt nur die Registerzeile **Z38** auf
+    **Decke 2**. Zwei Pakete, die dasselbe Werkzeug bauen, hätten es zweimal
+    gebaut.
+
     **Die Ausgangszahl ist gemessen:** 42 am 16.09.2026, nachgemessen am
     20.09.2026 an `862ca7f` **77 Aufrufe in 32 Dateien**. Die Zahl ist in
     vier Tagen um 35 gestiegen — genau deshalb braucht es einen Zähler und
@@ -2977,6 +3036,52 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     10c: Er wird nicht über die Oberfläche gelöst, sondern über das
     Wiederanlaufpaket. Hier nur benannt, damit er nicht erst auffällt, wenn
     er eintritt.
+
+250. **Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten.**
+    *Aufgenommen 20.09.2026 (Konzept Zentralisierung, F-ZE-4, aus Nr. 202 —
+    `post_ende()`).* Zugeordnet: **Schritt 17**.
+
+    Ein POST, der seine Seite selbst ausgibt statt umzuleiten, hinterlässt
+    im Browser ein Formular, das sich beim Neuladen wiederholt. Ein Teil der
+    Admin-Seiten macht es richtig, ein Teil nicht.
+
+    **Nicht in Schritt 15**, obwohl der Befund dort entstanden ist: Schritt
+    15 verschiebt Code an eine Stelle und ändert keine Wege durch die
+    Anwendung. Umleiten nach POST ist ein geänderter Weg — er gehört in eine
+    Runde, die Wege ändern darf.
+
+251. **Cookie-Attribut `secure` der Sitzung ist in zwei Arten
+    HTTPS-abhängig, in zwei fest.** *Aufgenommen 20.09.2026 (Konzept
+    Zentralisierung, E-ZE-12).* Zugeordnet: **Schritt 18**, zusammen mit der
+    Sitzungsbindung (Nr. 242).
+
+    Vier Stellen setzen das Attribut, und sie setzen es verschieden: zweimal
+    abhängig davon, ob die Anfrage über HTTPS kam, zweimal fest. Nach
+    Schritt 15 AP2 stehen sie alle in `sitzung_lib.php` — dann ist es eine
+    Tabelle und keine Suche, und dann lässt sich entscheiden, welche der
+    vier Arten die richtige ist.
+
+252. **Gelaufene Migrationen fragen das Schema 57× von Hand.**
+    *Aufgenommen 20.09.2026 (Konzept Zentralisierung, E-ZE-04).* Zugeordnet:
+    **P8** (R66, neues Migrationsregister).
+
+    Jede Migration prüft selbst, ob ihre Spalte schon da ist. Das ist 57 Mal
+    dieselbe Abfrage, und sie ist der Grund, warum eine gelaufene Migration
+    nicht einfach umgeschrieben werden kann.
+
+    **Schritt 15 fasst sie ausdrücklich nicht an** (E-ZE-04 ist die eine
+    Ausnahme von „alles wird angegangen"): Eine gelaufene Migration
+    umzuschreiben heißt, eine Anlage anders zu behandeln als die, auf der
+    sie schon lief. Das Register in P8 löst es an der Wurzel; bis dahin
+    steht im Zählmittel eine **Decke von 57** — sie darf nicht wachsen.
+
+253. **Datum-Zeit-Trenner vereinheitlichen.** *Aufgenommen 20.09.2026
+    (Konzept Zentralisierung, F-ZE-3/FF-5).* Zugeordnet: **10c AP9**.
+
+    Zwischen Datum und Uhrzeit steht mal ein Komma, mal ein Gedankenstrich,
+    mal nur ein Leerzeichen. Nach Schritt 15 AP7 steht die Formatierung an
+    einer Stelle (`format_lib.php`) — dann ist es eine Zeile statt einer
+    Suche, und deshalb wartet es bis dahin.
 
 ## Erledigt
 
