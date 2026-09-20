@@ -404,6 +404,44 @@ dieser Zuschnitt fiel niemandem auf. Er fiel auf, sobald die zweite Plattform
 danebenstand — **bevor** ein Selbsthoster ihn gefunden hat, und bevor die
 Kette einmal gegen sie gelaufen ist.
 
+**F-KH-U-06 — `sitzung.py` kann drei verschiedene Abweisungen nicht
+auseinanderhalten, und deshalb heißt jede von ihnen „unbekannt".**
+Gefunden beim Suchen nach der Ursache des roten Kreislaufs (Läufe 21 und 22,
+20.09.2026).
+
+`sitzung.py`:130 wirft `Anmeldung gescheitert: <fehlertext() oder
+"unbekannt">`, wenn nach dem POST die Adresse noch `login.php` enthält und
+die Seite kein „Abmelden" trägt. `fehlertext()` sucht die Klasse
+**`meldung-fehler`** (und ersatzweise das alte `alert-danger`).
+
+**`login.php` hat drei Ausgänge, die genau dieses Bild erzeugen — und
+keiner davon trägt `meldung-fehler`:**
+
+| Zeile | Fall | Was ausgegeben wird |
+|---|---|---|
+| 401 | **Kontostatus nicht aktiv** (gesperrt, in Karenz, wartend …) | `stoerung_seite_html('Kein Zugang — …')` |
+| 417 | **Wartung an und die Rolle darf nicht verwalten** | `wartung_antwort_seite(false)` |
+| — | dazu die Verlangsamung des Ratenschutzes, sofern sie dieselbe Bauform nutzt | `stoerung_seite_html()` |
+
+**Gemessen:** `grep -c meldung-fehler server/wartung_lib.php` → **0**. Die
+Störungs- und die Wartungsseite bauen auf `<h1>` und `<p class="text">`;
+die Meldungsklasse gibt es dort nicht. Beide Seiten antworten außerdem
+**auf `login.php` selbst**, ohne Umleitung — die zweite Bedingung des Checks
+ist damit ebenfalls erfüllt.
+
+**Das ist genau die Fehlerklasse, vor der `fehlertext()` im eigenen
+Kopfkommentar warnt:** *„weil ein nicht gefundener Fehler wie ‚kein Fehler'
+aussieht, liefen abgelehnte Formulare als Erfolg durch … die stille
+Variante des Fundes F-S2-A, und sie ist die gefährlichere."* Hier läuft
+nichts als Erfolg durch — aber das Werkzeug sagt „unbekannt", wo die Seite
+im Klartext dasteht, was los ist.
+
+**Nicht behoben in diesem Paket.** Die Behebung liegt in
+`tools/referenzdatensatz/einspielen/sitzung.py`, stuft also keine Version
+(E-KH-23) — sie gehört aber nicht zu AP1, und sie ist auch nicht die
+Ursache des roten Laufs, sondern der Grund, warum wir sie nicht sehen.
+**Vorschlag in Abschnitt 4.**
+
 ---
 
 ## 3. Prüfliste für die Betreiberin
@@ -509,35 +547,40 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   die lima-city-Kennungen. Sie stehen **nicht** im Repositorium; die Sitzung
   gehört trotzdem verworfen (abmelden genügt).
 
-- [ ] **5 — `STAGING_KONTO` und `STAGING_PASS` melden sich auf der neuen
-  Anlage nicht an. `JOBS_TOKEN` dagegen stimmt.**
-  *Gemessen im Lauf 21:* Die Job-Pause hat zweimal mit `{"ok": true, …}`
-  geantwortet — das Token gehört der **neuen** Anlage. Die Anmeldung des
-  Kreislaufs scheitert mit `Anmeldung gescheitert: unbekannt`, und
-  „unbekannt" heißt: **Die Anmeldeseite kam ohne Fehlermeldung zurück**
-  (`sitzung.py`:130). Bei falschen Zugangsdaten stünde dort eine.
-  *Weg — das entscheidet es in einer Minute:* Im Browser
-  `https://staging-nadoku.gen-em.org/login.php` öffnen und sich **von Hand**
-  mit genau den Werten anmelden, die in `STAGING_KONTO` und `STAGING_PASS`
-  stehen. Drei Ausgänge, drei verschiedene Ursachen:
-  1. **Es klappt und die Tagesübersicht erscheint** → Die Zugangsdaten
-     stimmen; das Werkzeug stolpert über etwas anderes. Dann bitte melden,
-     **was nach der Anmeldung als Erstes zu sehen ist** — eine Erststart-Karte,
-     das Einwilligungstor oder die Betreiber-Rückfrage (alles P5b) wären
-     Kandidaten, die `sitzung.py` nicht kennt.
-  2. **Eine Fehlermeldung erscheint** („E-Mail oder Passwort falsch",
-     gesperrt, zu viele Versuche) → Die Zugangsdaten oder das Konto sind das
-     Problem: Konto auf der neuen Anlage anlegen bzw. Passwort setzen, danach
-     **beide** Geheimnisse neu eintragen.
-  3. **Die Anmeldeseite kommt stumm zurück, ohne Meldung** → Dasselbe wie im
-     Lauf, und dann liegt es **nicht** an den Zugangsdaten, sondern daran,
-     dass die Sitzung oder das Formular-Token nicht hält. Das wäre der
-     interessanteste Befund — bitte unbedingt melden.
-  *Erwartet danach:* Alle drei Werte gehören der neuen Anlage; der nächste
-  Lauf kommt an den Kreisläufen vorbei.
-  *Scheitern erkennbar an:* Der Lauf wird grün **und die Kreisläufe melden
-  „ÜBERSPRUNGEN"** — dann ist ein Geheimnis leer statt falsch, und es ist
-  wieder nichts gemessen.
+- [ ] **5 — Warum weist `login.php` das Prüfkonto ab? Drei Kandidaten, eine
+  Antwort.**
+  *Gemessen:* Lauf 21 **und** Lauf 22 (nach Aktualisierung beider
+  Geheimnisse) scheitern gleich — `Anmeldung gescheitert: unbekannt`. **Von
+  Hand im Browser geht die Anmeldung mit denselben Daten problemlos**
+  (Betreiberin, 20.09.2026). **Damit ist belegt: Es liegt nicht an den
+  Zugangsdaten.** `JOBS_TOKEN` stimmt ebenfalls (die Job-Pause antwortet).
+  *Warum die Meldung nichts sagt:* **F-KH-U-06** — `login.php` hat drei
+  Ausgänge, die alle auf `login.php` selbst antworten und **keine**
+  `meldung-fehler`-Klasse tragen. Das Werkzeug kann sie nicht unterscheiden.
+  *Weg — drei Blicke auf Staging, jeder schließt einen Kandidaten aus:*
+  1. **Steht eine Migration aus / ist die Wartung an?** *Betrieb → Updates*.
+     **Das ist mein stärkster Verdacht:** Der Deploy hat unter anderem
+     `schema.sql` und `migration_lib.php` ersetzt (Lauf 21, 12 Dateien), und
+     der Torwächter schaltet bei ausstehender Migration `wartung.lock`.
+     `login.php`:417 weist dann jedes Konto ab, **dessen Rolle nicht
+     verwalten darf** — stumm, über die Wartungsseite.
+     → Falls ja: `update.php` aufrufen, danach den Lauf wiederholen.
+  2. **Welche Rolle trägt das Konto aus `STAGING_KONTO`?**
+     *Einstellungen → NutzerInnen*. Kandidat 1 greift nur, wenn es **nicht**
+     BetreiberIn oder Administratorin ist. Das würde auch erklären, warum
+     Sie selbst hineinkommen und das Werkzeug nicht — **falls Sie sich mit
+     einem anderen Konto anmelden als dem hinterlegten.**
+  3. **Ist das Konto gesperrt oder in Karenz?** *Einstellungen →
+     NutzerInnen*, Status. `login.php`:401 weist jeden Status außer „aktiv"
+     mit der Störungsseite ab — ebenfalls stumm.
+  *Und eine Bitte zur Gegenprobe:* Die Handanmeldung bitte einmal in einem
+  **privaten Fenster** wiederholen. `login.php`:34 leitet eine bestehende
+  Sitzung sofort auf `index.php` weiter — wer schon angemeldet ist, prüft
+  die Anmeldung nicht.
+  *Erwartet:* Einer der drei Blicke zeigt die Ursache.
+  *Scheitern erkennbar an:* Alle drei sind unauffällig — dann ist es keiner
+  der bekannten Ausgänge, und der nächste Schritt ist, `sitzung.py` die
+  Überschrift der Seite ausgeben zu lassen (Abschnitt 4).
 
 - [x] **5a — Liegt die Sitzungsablage von Staging in einem Verzeichnis, das
   andere lima-city-Kunden lesen können? — Gemessen am 20.09.2026: nein.**
@@ -673,6 +716,18 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   **Gehört nicht zu Kette II** (das ist die Auslieferungskette, nicht die
   Anwendungssicherheit); Stufe 1 passt in die Nähe von R81, die übrigen in
   eine Sicherheitsrunde.
+
+- **`sitzung.py` liest die Störungs- und die Wartungsseite nicht.** Anlass:
+  F-KH-U-06. `fehlertext()` sucht `meldung-fehler`; `stoerung_seite_html()`
+  und `wartung_antwort_seite()` tragen die Klasse nicht (gemessen: 0 Treffer
+  in `server/wartung_lib.php`). Drei verschiedene Abweisungen der Anmeldung
+  sehen für jedes Prüfwerkzeug gleich aus und heißen „unbekannt". Abhilfe:
+  `fehlertext()` liest zusätzlich die **Überschrift** der Störungsseite
+  (`<h1>` samt folgendem `<p class="text">`) und den `<title>`; dann sagt der
+  nächste Lauf selbst „Kein Zugang — …" oder „Wartung". Betrifft nur
+  `tools/`, also keine Versionsstufe. **Mittel statt niedrig:** Solange das
+  so ist, kostet jede Abweisung eine Runde Rätselraten — und genau darauf
+  ist am 20.09.2026 die Abnahme von AP1 aufgelaufen.
 
 *(Die Vorschläge aus Konzept Abschnitt 8 — atomare Auslieferung, die Grenze
 der Wache, die Ablösung der Fremd-Aktion, der Vermerk an Nr. 234 — gehören
