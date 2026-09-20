@@ -602,7 +602,14 @@ jobs:
         # Zuerst, aus demselben Grund wie beim Migrationsregister: Ein grüner
         # Lauf einer Prüfung, die immer grün meldet, sieht genauso aus wie
         # einer, der nichts gefunden hat.
-        run: php tools/schemaprobe/probe.php --selbstprobe
+        #
+        # `--klient` MUSS MIT, obwohl die Selbstprobe keine Datenbank braucht:
+        # Sie prüft unter anderem, ob der Klient aufrufbar ist, und ohne den
+        # Schalter prüft sie den VORGABEWERT `mariadb` statt den, mit dem der
+        # Lauf darunter arbeitet. Im ersten Kettenlauf ist genau das passiert
+        # — der MySQL-Auftrag wurde rot gemeldet, weil auf dem Läufer kein
+        # `mariadb` liegt, während der eigentliche Lauf grün gewesen wäre.
+        run: php tools/schemaprobe/probe.php --selbstprobe --klient ${{ matrix.db.klient }}
 
       - name: Schemaprobe — schema.sql und die Migrationen
         run: |

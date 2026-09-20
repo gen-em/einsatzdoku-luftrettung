@@ -6342,7 +6342,7 @@ declare(strict_types=1);
  *   (Backlog Nr. 238, 20.09.2026).
  *
  *   Die Einrichtung auf dem neuen Staging-Webspace scheiterte, und zwar
- *   nicht am Webspace: `SQLSTATE[42000] … 1064 … near 'manual TINYINT(1)
+ *   nicht am Webspace: `SQLSTATE[42000] ... 1064 ... near 'manual TINYINT(1)
  *   NOT NULL DEFAULT 0` — Zeile 23 des Schemas. MySQL fuehrt **MANUAL von
  *   8.4.0 bis 8.4.10 als reserviertes Wort** (ab 8.4.11 wieder nicht);
  *   `schema.sql` legte die Spalte ungequotet an, und die Staging-Datenbank
@@ -6425,6 +6425,12 @@ declare(strict_types=1);
  *   das neue legt **42 Tabellen** fehlerfrei an. Der Migrationsprueflauf
  *   ueber vier Installationsfaelle meldet **18 Pruefungen, 0 Fehlschlaege**
  *   -- gegen MySQL 8.4.0 UND gegen MariaDB 10.11.
+ *
+ *   DIE AUSLASSUNGEN OBEN STEHEN ALS ASCII, nicht als U+2026. Das
+ *   Auslassungszeichen zaehlt `tools/vollstaendigkeit/` als
+ *   „Unicode-Zeichen als Symbol im Markup", und die zwei in jener einen
+ *   Zeile haben Stufe 1 der Kette ueber ihre Schwelle geschoben --
+ *   400 statt hoechstens 398, gemessen am 20.09.2026.
  *
  *   DIE KOPFZEILE VON `schema.sql` NANNTE „MySQL >= 5.7 / MariaDB >= 10.2".
  *   Das widersprach `plattform_lib.php` und `docs/Technik.md` und war
