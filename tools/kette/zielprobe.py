@@ -27,7 +27,7 @@ Scheitert der Upload dort und die Zielprobe hier gelingt, liegt es an der
 Bibliothek; scheitern beide an derselben Stelle, liegt es an der Plattform.
 **Das ist der Trennschnitt, den F3 braucht** -- der `ECONNRESET` bei
 `ensureDir('api/')`, den bis heute niemand erklaeren kann. Ein Werkzeug, das
-denselben Client benutzt, koennte diese Frage nicht beantworten.
+denselben Client benutzt, könnte diese Frage nicht beantworten.
 
 DIE ZWEI BETRIEBSARTEN, UND WARUM SIE GEMESSEN WERDEN
 Viele FTPS-Server verlangen, dass der Datenkanal die TLS-Sitzung des
@@ -48,10 +48,10 @@ maskierten Geheimnissen** ausgegeben. Was nicht messbar war, sagt die Probe,
 statt es zu behaupten.
 
 WAS SIE HINTERLAESST: NICHTS
-Sie raeumt Reste frueherer Proben weg (`NLST` auf das Zielverzeichnis, alles
+Sie räumt Reste frueherer Proben weg (`NLST` auf das Zielverzeichnis, alles
 mit dem Praefix `.zielprobe-`), und sie loescht ihre eigene Datei **auch im
 Fehlerfall** -- sonst liegt nach dem dritten roten Lauf Muell im Webroot, den
-jeder abrufen kann. Servermeldungen gibt sie **woertlich** aus: Eine
+jeder abrufen kann. Servermeldungen gibt sie **wörtlich** aus: Eine
 umformulierte FTP-Antwort ist bei einer Fehlersuche wertlos.
 
 WAS SIE NICHT KANN
@@ -127,7 +127,7 @@ SCHALTER_OHNE_SITZUNG = "--no-sessionid"
 #
 # WAS DER PUNKT SCHUETZEN SOLLTE, WIEGT NICHTS: Der Inhalt sind 48 Zeichen
 # Zufall ohne Bedeutung, die Datei wird im selben Schritt geloescht, und jeder
-# Lauf raeumt Reste des vorigen weg. Eine liegengebliebene Probedatei ist eine
+# Lauf räumt Reste des vorigen weg. Eine liegengebliebene Probedatei ist eine
 # oeffentlich lesbare Zufallszahl.
 PRAEFIX = "zielprobe-"
 
@@ -588,6 +588,97 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
     return 0
 
 
+def mengenprobe(basis: str, server: str, pfad: str, konto: str, passwort: str,
+                anzahl: int, lauf=subprocess.run) -> int:
+    """Viele Verzeichnisse und Dateien in EINER FTP-Sitzung. 0 = gelungen.
+
+    WARUM ES DAS GIBT (20.09.2026, nach fünf ergebnislosen Trennversuchen).
+    Ausgeschlossen sind Läuferabbild, Node-Fassung, Zertifikat, die
+    TLS-Sitzungswiederverwendung, das Anlegen eines Verzeichnisses und der
+    Weg zum Datenkanal (gemessen: sauberes EPSV, kein Rückfall).
+
+    **Der Unterschied, der übrig bleibt, ist die Sitzung selbst.** Die
+    Zielprobe ruft `curl` je Operation einmal auf — jede Operation bekommt
+    eine EIGENE Steuerverbindung, eine eigene Anmeldung, einen eigenen
+    TLS-Aufbau. Die Auslieferungsaktion hält EINE Verbindung offen und fährt
+    688 Dateien und 62 Verzeichnisse darüber.
+
+    Das ist keine Kleinigkeit: Ein Server, der die zweite oder dritte
+    Datenverbindung EINER Sitzung abweist (Zeitgrenze, Portbereich,
+    `MaxConnectionsPerHost`, ein Ratenschutz), sieht in der Zielprobe wie ein
+    gesunder Server aus — sie fragt ihn ja jedes Mal neu.
+
+    Diese Probe stellt es nach: EIN `curl`-Aufruf, `anzahl` Verzeichnisse,
+    je eine Datei, über eine einzige Verbindung.
+
+    SIE LÄUFT NICHT VON SELBST. Sie legt Dateien auf einem echten Server an
+    und ist deshalb ein Werkzeug für die Fehlersuche, kein Schritt der
+    Auslieferung — `--mengenprobe N` schaltet sie ein.
+    """
+    geheim = [passwort, konto]
+    def a(text): sag(text, geheim)
+    def f(text): sag(text, geheim, True)
+
+    marke = secrets.token_hex(6)
+    inhalt = secrets.token_hex(8).encode("ascii")
+    a(f"Mengenprobe gegen {basis.rstrip('/')}  —  {anzahl} Verzeichnisse in EINER Sitzung")
+    a(f"  FTPS-Ziel:      {ftp_adresse(server, pfad)}")
+    a(f"  Namensmarke:    {PRAEFIX}{marke}-NN")
+
+    weg = aufraeumen(server, pfad, konto, passwort, lauf)
+    a(f"  Reste weggeräumt: {len(weg)}")
+
+    quelle = os.path.join(os.environ.get("RUNNER_TEMP", "/tmp"),
+                          f"{PRAEFIX}{marke}.bin")
+    ordner = [f"{PRAEFIX}{marke}-{i:03d}" for i in range(1, anzahl + 1)]
+    # VORBELEGT, WEIL DAS `finally` IMMER LAEUFT: Scheitert schon das Schreiben
+    # der Quelldatei, gaebe ein unbelegtes `rc` hinter dem `finally` einen
+    # NameError statt eines Befunds -- und ein Werkzeug, das beim Scheitern
+    # abstuerzt, misst nichts.
+    rc = 1
+    try:
+        with open(quelle, "wb") as fh:
+            fh.write(inhalt)
+
+        # EIN AUFRUF, VIELE ZIELE. `curl` haelt die Steuerverbindung offen und
+        # fuehrt sie der Reihe nach ab -- genau wie die Auslieferungsaktion.
+        argumente = [SCHALTER_TLS_PFLICHT, "--verbose", "--ftp-create-dirs"]
+        for o in ordner:
+            argumente += ["--upload-file", quelle,
+                          ftp_adresse(server, pfad, f"{o}/{ORDNERDATEI}")]
+        rc, _, err = curl_ftp(argumente, konto, passwort, lauf)
+
+        fertig = len(re.findall(r"226 ", err or ""))
+        a(f"  Datenkanal:     {datenkanal(err)}")
+        a(f"  Übertragungen abgeschlossen (226): {fertig} von {anzahl}")
+        if rc != 0:
+            f(f"FEHLGESCHLAGEN (curl {rc}) nach {fertig} von {anzahl} "
+              f"Übertragungen.")
+            f("  DAS IST DAS ERGEBNIS, AUF DAS ES ANKOMMT: Einzeln geht jede "
+              "dieser Operationen durch — in EINER Sitzung nicht. Die Zahl "
+              "oben sagt, bei der wievielten Schluss war.")
+            f("  Servermeldung, wörtlich (letzte 40 Zeilen):")
+            for z in (err or "(keine)").splitlines()[-40:]:
+                f(f"    {z}")
+        else:
+            a(f"  Alle {anzahl} Verzeichnisse in einer Sitzung angelegt und "
+              f"beschrieben.")
+    finally:
+        try:
+            os.unlink(quelle)
+        except OSError:
+            pass
+        # AUFRAEUMEN IST HIER PFLICHT UND NICHT KUER: Es liegen sonst bis zu
+        # `anzahl` Verzeichnisse auf einem echten Server.
+        rest = aufraeumen(server, pfad, konto, passwort, lauf)
+        a(f"  Aufgeräumt: {len(rest)} Verzeichnisse entfernt.")
+        uebrig = [o for o in ordner if o not in rest]
+        if uebrig:
+            f(f"WARNUNG: {len(uebrig)} Verzeichnisse konnten nicht entfernt "
+              f"werden. Erstes: {uebrig[0]}. Der nächste Lauf nimmt sie mit.")
+    return 0 if rc == 0 else 1
+
+
 # ---------------------------------------------------------------- Selbstprobe
 
 def selbstprobe() -> int:
@@ -858,6 +949,89 @@ def selbstprobe() -> int:
            "…und die Meldung nennt die Stelle der Auslieferungsaktion")
     pruefe("425" in tl, "…und gibt die Servermeldung wörtlich aus", "425 …")
 
+    # ---- Die Mengenprobe: EINE Sitzung, viele Verzeichnisse ----
+    #
+    # WARUM SIE HIER MITGEPRUEFT WIRD: Sie ist das Mittel, mit dem der
+    # verbliebene Unterschied zwischen Zielprobe und Auslieferungsaktion
+    # gemessen wird -- eine lange Sitzung gegen viele kurze. Fände sie in
+    # Wahrheit mehrere Sitzungen auf, mäße sie dasselbe wie der Rundlauf und
+    # könnte den Unterschied nie zeigen. Genau das prueft die erste Lage.
+    class LaufMenge(Lauf):
+        """Merkt sich die angelegten Verzeichnisse und listet sie danach auf."""
+
+        def __init__(self, rc_upload=0, verbose=""):
+            super().__init__(rc_upload=rc_upload, verbose=verbose)
+            self.angelegt: list[str] = []
+            self.hochladebefehle: list[list[str]] = []
+
+        def __call__(self, befehl, **kw):
+            if "--upload-file" in befehl:
+                self.hochladebefehle.append(befehl)
+                for x in befehl:
+                    t = str(x)
+                    if t.startswith("ftp://") and t.endswith("/" + ORDNERDATEI):
+                        self.angelegt.append(t.rsplit("/", 2)[-2])
+                self.liste = "\n".join(self.angelegt)
+            return super().__call__(befehl, **kw)
+
+    lm = LaufMenge(verbose=("> EPSV\n< 229 Entering Extended Passive Mode "
+                            "(|||51234|)\n" + "226 Transfer complete\n" * 5))
+    pm = _io.StringIO()
+    with contextlib.redirect_stdout(pm):
+        rcm = mengenprobe("https://a.example", "h", "/", "k", "p", 5, lm)
+    tm = pm.getvalue()
+    pruefe(rcm == 0, "Mengenprobe: Regelfall gelingt gegen die Attrappe")
+    pruefe(len(lm.hochladebefehle) == 1,
+           "…und alle Ziele stehen in EINEM curl-Aufruf — sonst misst sie "
+           "wieder viele kurze Sitzungen", f"{len(lm.hochladebefehle)} Aufruf(e)")
+    pruefe(lm.hochladebefehle[0].count("--upload-file") == 5,
+           "…mit genau so vielen Zielen, wie verlangt waren",
+           f"{lm.hochladebefehle[0].count('--upload-file')}")
+    pruefe("--ftp-create-dirs" in lm.hochladebefehle[0],
+           "…und `--ftp-create-dirs` steht dabei (das `ensureDir`-Gegenstück)")
+    pruefe(SCHALTER_TLS_PFLICHT in lm.hochladebefehle[0],
+           "…und `--ssl-reqd` ebenfalls — TLS bleibt auch hier Pflicht")
+    pruefe("226): 5 von 5" in tm,
+           "…die Zahl der abgeschlossenen Übertragungen wird GENANNT", "5 von 5")
+    pruefe("EPSV" in tm, "…und der Weg zum Datenkanal steht in JEDEM Lauf da")
+    pruefe(lm.dele >= 5,
+           "…und am Ende wird jedes Verzeichnis wieder weggeräumt",
+           f"{lm.dele} Löschbefehl(e)")
+    pruefe("WARNUNG" not in tm, "…ohne Warnung ueber liegengebliebene Reste")
+
+    # DIE GEGENPROBE, UM DIE ES GEHT: Die Sitzung bricht mittendrin ab. Dann
+    # muss die Probe rot sein, sagen, bei der wievielten Schluss war, den
+    # Servertext wörtlich zeigen -- und TROTZDEM aufraeumen.
+    lr = LaufMenge(rc_upload=18,
+                   verbose=("> EPSV\n< 229 Entering Extended Passive Mode "
+                            "(|||51234|)\n" + "226 Transfer complete\n" * 2
+                            + "425 Unable to build data connection\n"))
+    pr_ = _io.StringIO()
+    pf_ = _io.StringIO()
+    with contextlib.redirect_stdout(pr_), contextlib.redirect_stderr(pf_):
+        rcr = mengenprobe("https://a.example", "h", "/", "k", "p", 5, lr)
+    tr = pr_.getvalue() + pf_.getvalue()
+    pruefe(rcr == 1, "Mengenprobe: bricht die Sitzung ab → rot")
+    pruefe("226): 2 von 5" in tr,
+           "…und sagt, bei der wievielten Übertragung Schluss war", "2 von 5")
+    pruefe("425 Unable to build data connection" in tr,
+           "…und gibt die Servermeldung wörtlich aus")
+    pruefe("Einzeln geht jede" in tr,
+           "…und benennt, WORAUF es ankommt: einzeln ginge es durch")
+    pruefe(lr.dele >= 2,
+           "…und räumt das bereits Angelegte trotzdem weg",
+           f"{lr.dele} Löschbefehl(e)")
+
+    # Und die Grenzen der Zahl -- sie sind nicht Zierde: 500 Verzeichnisse auf
+    # einem echten Server anzulegen ist nichts, was ein Vertipper auslösen darf.
+    for zahl, soll in ((0, 2), (501, 2), (-1, 2)):
+        stumm = _io.StringIO()
+        with contextlib.redirect_stdout(stumm), contextlib.redirect_stderr(stumm):
+            r = main(["--mengenprobe", str(zahl), "--basis", "https://a.example",
+                      "--ftp-server", "h", "--ftp-konto", "k", "--ftp-pass", "p"])
+        pruefe(r == soll, f"`--mengenprobe {zahl}` wird abgewiesen, nicht gefahren",
+               f"rc {r}")
+
     print(f"\n  -> {erfuellt + offen} Lagen, {offen} nicht erfüllt")
     return 0 if offen == 0 else 1
 
@@ -874,6 +1048,15 @@ def main(argv: list[str]) -> int:
     p.add_argument("--ohne-sitzungswiederverwendung", action="store_true",
                    help="Datenkanal ohne Wiederverwendung der TLS-Sitzung — "
                         "für den Trennversuch (F3), nicht für den Normalbetrieb")
+    # `default=None`, NICHT `0`: Sonst ist `--mengenprobe 0` von "gar nicht
+    # angegeben" nicht zu unterscheiden, und ein Vertipper fährt still den
+    # Rundlauf statt der Mengenprobe -- ein Lauf, der etwas anderes misst,
+    # als daransteht.
+    p.add_argument("--mengenprobe", type=int, default=None, metavar="N",
+                   help="STATT des Rundlaufs: N Verzeichnisse in EINER "
+                        "FTP-Sitzung anlegen und beschreiben — die "
+                        "Nachstellung der Auslieferung (F3). Legt Dateien auf "
+                        "dem Server an und räumt sie wieder weg.")
     p.add_argument("--selbstprobe", action="store_true",
                    help="ohne Netz prüfen, ob die Probe überhaupt anschlägt")
     a = p.parse_args(argv)
@@ -903,6 +1086,14 @@ def main(argv: list[str]) -> int:
               "beantwortete die Frage nicht, für die es sie gibt.",
               file=sys.stderr)
         return 2
+    if a.mengenprobe is not None:
+        if a.mengenprobe < 1 or a.mengenprobe > 500:
+            print("--mengenprobe braucht eine Zahl zwischen 1 und 500.",
+                  file=sys.stderr)
+            return 2
+        return mengenprobe(a.basis, a.ftp_server, a.ftp_pfad, a.ftp_konto,
+                           a.ftp_pass, a.mengenprobe)
+
     # BEIDE RUNDLAEUFE, IMMER. Der flache zuerst, weil er billig ist und die
     # Grundlagen klaert; der durch ein Verzeichnis danach, weil er die Stelle
     # misst, an der die Auslieferung stirbt. Ein Fehlschlag im ersten macht

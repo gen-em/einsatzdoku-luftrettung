@@ -9318,6 +9318,19 @@ der Plattform. Das ist der Trennschnitt, den F3 braucht. Zwei Betriebsarten
 (`JA` / `NEIN` / **`NICHT FESTSTELLBAR`**). Einzelheiten:
 `tools/kette/LIESMICH.md`.
 
+**Die Mengenprobe** (`--mengenprobe N`, 1–500) gehört zur selben Datei und
+läuft **in keinem Kettenschritt**. Sie fährt einen einzigen `curl`-Aufruf,
+der `N` Verzeichnisse anlegt und beschreibt — über **eine** Steuerverbindung.
+Sie ist die Antwort auf die Lücke, die nach fünf Trennversuchen übrigblieb:
+Die Zielprobe ruft `curl` je Operation einmal auf und bekommt jedes Mal eine
+frische Sitzung, die Auslieferungsaktion hält **eine** Verbindung für 688
+Dateien und 62 Verzeichnisse offen. Ein Server, der die zweite oder dritte
+Datenverbindung **einer** Sitzung abweist, ist für die Zielprobe unsichtbar.
+Gemeldet wird die Zahl der abgeschlossenen Übertragungen gegen die verlangte
+(„2 von 5") und bei Abbruch der Servertext wörtlich. Sie legt Dateien auf
+einem echten Server an — deshalb von Hand, deshalb mit Aufräumen im
+`finally`, deshalb nicht in der Kette.
+
 **Der Probelauf** (E-KH-08) ist eine Handauslösung mit der Eingabe
 `probelauf`. Er fährt denselben Job `produktion` mit derselben
 Pflichtfreigabe — und läuft deshalb auch von `main`, wo kein Tag steht:

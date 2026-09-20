@@ -21,11 +21,13 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 20.09.2026 — **AP1 gebaut, Abnahme offen.** AP2 bis AP8 nicht begonnen |
-> | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt beider Selbstproben, YAML-Gültigkeit, Zählung der Fundstellen, Zählung der Ausnahmeliste. Zahlen in Abschnitt 1 |
-> | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1. Dazu alles, was **nur die Anwendung** weiß (Datenbank, Platz, Kontingent, Jobwege auf Staging): Die Einrichtung dort **scheitert gerade**, also hat die Statusseite nie geantwortet. Abschnitt 0 |
-> | Funde | **fünf** (Abschnitt 2): drei aus der Umsetzung, einer aus einer unabhängigen Gegenlesung durch sieben getrennte Leser, einer aus den Z3-Angaben — **F-KH-U-05, ein Fehlbefund der Statusseite auf lima-city**, und damit der erste Ertrag des Hosterwechsels. Alle behandelt; zwei Befunde der Gegenlesung und F-KH-U-05 bleiben bewusst liegen (Servercode, nicht AP1) |
-> | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil AP1 keinen Web-Code anfasst |
+> | Stand | 20.09.2026 — **AP1 gebaut (Abnahme offen), AP2 gebaut, AP3 gebaut.** AP4 bis AP8 nicht begonnen |
+> | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
+> | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **die Mengenprobe gegen Produktiv** (Prüfpunkt 17) — sie ist gebaut und selbstgeprüft, aber nie gegen einen echten Server gelaufen. Abschnitt 0 |
+> | Funde | **19** (Abschnitt 2): F-KH-U-01 bis F-KH-U-20 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-20: Auch der Weg zum Datenkanal ist ausgeschlossen; übrig bleibt die Sitzung selbst** |
+> | F3 | **eingegrenzt, nicht benannt.** Sechs Vermutungen sind mit je einer Messung ausgeschlossen (Tabelle bei F-KH-U-20). **E-KH-09 (Pflichtstopp) steht** |
+> | Prüfliste | 21 Punkte: **6 abgehakt**, 5 teilweise, **10 offen** |
+> | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
 
 ---
 
@@ -407,11 +409,13 @@ beglaubigte einen Vergleich, den es so nicht gab.
 
 | Mittel | Soll | Ist |
 |---|---|---|
-| `tor.py --selbstprobe` | mindestens 16 Lagen, 0 offen | **17 Lagen, 0 offen** (vorher 11) |
-| `zielprobe.py --selbstprobe` | eigene Selbstprobe, 0 offen | **26 Lagen, 0 offen** (neu) |
-| `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft | **32 Aufrufe, 0, 0**; Selbstprobe 10/10 |
+| `tor.py --selbstprobe` | mindestens 16 Lagen, 0 offen | **19 Lagen, 0 offen** (11 → 17 → 19; die zwei letzten zur zweiten Runde und zur Serverzeit) |
+| `zielprobe.py --selbstprobe` | eigene Selbstprobe, 0 offen | **67 Lagen, 0 offen** (26 → 29 → 33 → 37 → 45 → 50 → 67; jede Stufe ist ein Fund, den sie selbst gefunden hat) |
+| `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft | **34 Aufrufe, 0, 0**; Selbstprobe 10/10 |
 | YAML der drei Arbeitsläufe | laden | **3 von 3** |
-| `tools/wortliste/wortliste.py` | 0/0/0 | **0/0/0** |
+| `wache.py --selbstprobe` | 0 offen | **38 Erwartungen, 0 offen** (AP2: 32 → 38) |
+| `jobregister/pruefen.php` | 0 Befunde | **0 Befunde**; Selbstprobe **9 von 9** |
+| `tools/wortliste/wortliste.py` | 0/0/0 | **0/0/0** (99 Ausnahmen, 99 gegriffen, 0 ungenutzt) |
 
 **Die sechs neuen Lagen des Tors** (F1, E-KH-05/-19):
 
@@ -469,6 +473,74 @@ die die Zielprobe in ihren zwei Betriebsarten trennt.
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-20 — Der Datenkanal ist sauber; übrig bleibt die Sitzung selbst.**
+*Lauf 35538191205, 20.09.2026.*
+
+```
+Rundlauf 1: flach                        → Datenkanal: EPSV, Antwort 229, Port 50465 · gelungen
+Rundlauf 2: DURCH EIN NEUES VERZEICHNIS  → Datenkanal: EPSV, Antwort 229, Port 63930 · gelungen
+```
+
+**Kein Rückfall auf `PASV`, keine gescheiterte `EPSV`-Aushandlung, zweimal
+eine saubere 229 mit Port.** Damit fällt auch F-KH-U-19 als Erklärung: Der
+Weg zum Datenkanal ist es nicht.
+
+**Die Liste der ausgeschlossenen Ursachen ist jetzt vollständig genug, um
+den Rest zu benennen.** Ausgeschlossen — jedes mit einer Messung, nicht mit
+einem Argument:
+
+| Vermutung | ausgeschlossen durch |
+|---|---|
+| Läuferabbild, Node-Fassung | Z5 Teil 1 — beide Läufe 2.337.0 / ubuntu-24.04 20260907.300.1 |
+| FTPS-Zertifikat | F-KH-U-08, von der Betreiberin behoben; Verbindung kommt zustande |
+| die Bibliothek als solche | lima-city läuft mit derselben Aktion grün |
+| TLS-Sitzungswiederverwendung | F-KH-U-16 — vier Läufe, beide Betriebsarten gelingen |
+| Anlegen und Auflisten eines Verzeichnisses (`ensureDir`/`_openDir`) | F-KH-U-18 — beide Rundläufe gelingen |
+| Weg zum Datenkanal (`EPSV`/`PASV`) | dieser Fund — zweimal sauberes `EPSV` |
+
+**Was übrig bleibt, ist die Bauform der Probe selbst.** Die Zielprobe ruft
+`curl` **je Operation einmal** auf: jede Operation eine eigene
+Steuerverbindung, eine eigene Anmeldung, ein eigener TLS-Aufbau. Die
+Auslieferungsaktion hält **eine** Verbindung offen und fährt 688 Dateien und
+62 Verzeichnisse darüber.
+
+Das ist keine Feinheit. Ein Server, der die zweite oder dritte
+Datenverbindung **einer** Sitzung abweist — eine Zeitgrenze, ein erschöpfter
+Portbereich, `MaxConnectionsPerHost`, ein Ratenschutz —, **sieht in der
+Zielprobe wie ein gesunder Server aus**. Sie fragt ihn ja jedes Mal neu. Ein
+grüner Rundlauf hat über diese Klasse von Ursachen nie etwas gesagt, und das
+war bisher nirgends aufgeschrieben.
+
+*Gebaut:* `--mengenprobe N` (1–500) in derselben Datei. **Ein** `curl`-Aufruf
+mit `N` Zielen, `--ftp-create-dirs`, eine Sitzung. Gemeldet werden der Weg
+zum Datenkanal, die Zahl der abgeschlossenen Übertragungen gegen die
+verlangte (**„2 von 5" ist das Ergebnis, auf das es ankommt**) und bei
+Abbruch die letzten 40 Zeilen der Servermeldung wörtlich. Aufgeräumt wird im
+`finally`; was übrigbleibt, wird gezählt und benannt.
+
+*Warum sie in keinem Kettenschritt steht:* Sie legt bis zu 500 Verzeichnisse
+auf einem echten Server an. Das ist ein Werkzeug der Fehlersuche, kein
+Schritt der Auslieferung — es wird von Hand ausgelöst und nicht nebenbei.
+
+*Zwei Lagen der Selbstprobe tragen sie:* dass **alle Ziele in EINEM
+`curl`-Aufruf** stehen (zerfiele sie in viele, wäre sie eine teurere Fassung
+des Rundlaufs und könnte den Unterschied nie zeigen), und dass ein Abbruch
+mittendrin rot ist, die Zahl nennt, den Servertext zeigt **und trotzdem
+aufräumt**. Dazu die Grenzprobe: `--mengenprobe 0`, `501` und `-1` werden
+abgewiesen, nicht gefahren.
+
+*Nebenbei behoben, von der Selbstprobe gefunden:* `--mengenprobe 0` hätte
+still die Rundläufe gefahren statt abzuweisen (`default=0` ist von „nicht
+angegeben" nicht zu unterscheiden — jetzt `default=None`), und ein Abbruch
+schon beim Schreiben der Quelldatei hätte hinter dem `finally` einen
+`NameError` gegeben statt eines Befunds.
+
+Selbstprobe **50 → 67 Lagen**.
+
+**E-KH-09 bleibt stehen.** F3 ist eingegrenzt, nicht benannt. Was die
+Mengenprobe messen kann, muss sie erst gegen Produktiv gemessen haben —
+**Prüfpunkt 17**.
 
 **F-KH-U-18 — Auch `ensureDir` ist es nicht: Beide Rundläufe gelingen.**
 *Lauf 35537674485, 20.09.2026, 21:07 UTC.*
@@ -1323,8 +1395,10 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   Bleibt nach einem Abbruch ein `zielprobe-…`-Verzeichnis liegen, nimmt es
   der nächste Lauf mit.
 
-- [ ] **16 — Ein Probelauf, der den Weg zum Datenkanal nennt** (die nächste
-  F3-Messung).
+- [~] **16 — Ein Probelauf, der den Weg zum Datenkanal nennt** — **GEFAHREN am
+  20.09.2026: zweimal sauberes `EPSV` mit Port** (F-KH-U-20). Auch der Weg
+  zum Datenkanal ist nicht die Ursache. **Offen und neu: Prüfpunkt 17.**
+  *Der ursprüngliche Text:* (die nächste F3-Messung).
   *Weg:* wie Prüfpunkt 15, einmal genügt zunächst.
   *Neu im Protokoll:* eine Zeile **`Datenkanal:`** neben
   „TLS-Sitzung wiederverwendet", in **jedem** Rundlauf.
@@ -1338,6 +1412,47 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
 
   *Woran man sieht, dass die Zeile überhaupt neu ist:* Sie steht seit dem
   20.09.2026 in **jedem** Lauf, nicht mehr nur im Fehlerfall.
+
+- [ ] **17 — Die Mengenprobe gegen Produktiv** (die F3-Messung, die noch
+  aussteht). **Das ist der Punkt, an dem AP3 hängt.**
+  *Warum von Hand und nicht in der Kette:* Sie legt bis zu 500 Verzeichnisse
+  auf dem Produktivserver an. Kein Kettenschritt ruft sie.
+  *Weg:* In der Umgebung, in der die Kette läuft, oder auf einem Rechner mit
+  `curl` und Zugang zu den drei Geheimnissen:
+
+  ```
+  python3 tools/kette/zielprobe.py \
+      --basis "$PRODUKTION_URL" --ftp-server "$FTP_SERVER" \
+      --ftp-konto "$FTP_USERNAME" --ftp-pass "$FTP_PASSWORD" \
+      --ftp-pfad / --mengenprobe 80
+  ```
+
+  **Mit 80 anfangen** (die Auslieferung legt 62 Verzeichnisse an — 80 liegt
+  knapp darüber). Gelingt das, mit 200 wiederholen; gelingt auch das, ist
+  auch die Menge ausgeschlossen.
+  *Erwartet — und das ist der interessante Fall:* **Abbruch mittendrin.** Die
+  Zeile `Übertragungen abgeschlossen (226): N von 80` sagt dann, bei der
+  wievielten Schluss war, und die letzten 40 Zeilen der Servermeldung stehen
+  wörtlich darunter.
+  *Woran man den Erfolg der Messung erkennt (nicht des Laufs!):* Die Zahl vor
+  „von" ist **kleiner** als 80 und **größer** als 0. Dann geht einzeln jede
+  dieser Operationen durch, in **einer** Sitzung nicht — und F3 hat einen
+  Namen: eine Sitzungs- oder Mengengrenze des Servers. Das ist ein Befund für
+  den Hoster, kein Codefehler, und AP4 baut dagegen (Wiederaufnahme, kleinere
+  Bündel, oder ein Client, der die Sitzung erneuert).
+  *Woran man sieht, dass die Messung nichts belegt:* `N von 80` mit N = 80 —
+  dann ist auch die Menge nicht die Ursache. Oder `0 von 80`: Dann ist schon
+  die **erste** Übertragung gescheitert, und das wäre etwas anderes als das,
+  wonach hier gesucht wird (dann zuerst Prüfpunkt 16 wiederholen).
+  *Was sie hinterlässt:* nichts. Aufgeräumt wird im `finally`, auch nach
+  Abbruch. **Bleibt etwas liegen, sagt sie es mit Zahl** („WARNUNG: N
+  Verzeichnisse konnten nicht entfernt werden") — dann liegen
+  `zielprobe-…`-Verzeichnisse im Webroot, und der nächste Lauf der Zielprobe
+  nimmt sie mit.
+  *Grenze:* Sie legt die Verzeichnisse **flach** nebeneinander an, die
+  Auslieferung einen **Baum**. Bleibt die Mengenprobe grün, ist die Tiefe das
+  Letzte, was nicht gemessen wurde.
+
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 

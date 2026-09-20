@@ -228,11 +228,50 @@ verschluckt, auf die es ankam.
 
 ## Was sie hinterlässt: nichts
 
-Sie räumt Reste früherer Proben weg (alles mit dem Präfix `.zielprobe-` im
-Zielverzeichnis) und löscht ihre eigene Datei **auch im Fehlerfall** — sonst
-liegt nach dem dritten roten Lauf Müll im Webroot, den jeder abrufen kann.
-Der Präfix beginnt mit einem Punkt: `.htaccess` (Z. 64) antwortet auf jeden
-Pfad mit führendem Punkt mit 403, ein zweiter Riegel neben dem Löschen.
+Sie räumt Reste früherer Proben weg (alles mit dem Präfix `zielprobe-` im
+Zielverzeichnis, **und** alles mit dem alten Präfix `.zielprobe-`) und löscht
+ihre eigene Datei **auch im Fehlerfall** — sonst liegt nach dem dritten roten
+Lauf Müll im Webroot, den jeder abrufen kann. Beim zweiten Rundlauf gehört
+das Probeverzeichnis dazu: erst die Datei darin, dann `RMD`.
+
+**Der Präfix beginnt ausdrücklich NICHT mit einem Punkt**, und das ist eine
+Behebung vom 20.09.2026. Er tat es einmal, als zweiter Riegel neben dem
+Löschen: `.htaccess` (Z. 64) antwortet auf jeden Pfad mit führendem Punkt mit
+403. Genau das hat die Probe ausgesperrt — sie ruft ihre Datei ja selbst über
+HTTPS ab und bekam 403 statt 200. Schlimmer als der Fehlschlag war die
+Diagnose: Sie meldete „FTPS-Ziel und HTTPS-Basis zeigen nicht auf dasselbe
+Verzeichnis", und das stimmte nicht. Seither ist 403 eine eigene Meldung
+(**GESPERRT**) und nie ein falsches Ziel.
+
+## Mengenprobe — EINE Sitzung, viele Verzeichnisse
+
+`--mengenprobe N` (1–500) fährt **statt** der beiden Rundläufe einen einzigen
+`curl`-Aufruf, der `N` Verzeichnisse anlegt und in jedes eine Datei schreibt
+— über **eine** Steuerverbindung, eine Anmeldung, einen TLS-Aufbau.
+
+**Warum es sie gibt.** Nach fünf Trennversuchen zum `ECONNRESET` auf
+Produktiv (F3) waren Läuferabbild, Node-Fassung, Zertifikat, die
+TLS-Sitzungswiederverwendung, das Anlegen eines Verzeichnisses und der Weg
+zum Datenkanal ausgeschlossen — alle gemessen, alle grün. Übrig blieb ein
+Unterschied, den die Zielprobe **bauartbedingt nicht messen kann**: Sie ruft
+`curl` je Operation einmal auf und bekommt jedes Mal eine frische Sitzung.
+Die Auslieferungsaktion hält **eine** Verbindung offen und fährt 688 Dateien
+und 62 Verzeichnisse darüber.
+
+Ein Server, der die zweite oder dritte Datenverbindung **einer** Sitzung
+abweist — Zeitgrenze, erschöpfter Portbereich, `MaxConnectionsPerHost`, ein
+Ratenschutz —, sieht in der Zielprobe wie ein gesunder Server aus. Er wird
+ja jedes Mal neu gefragt.
+
+**Was sie ausgibt.** Den Weg zum Datenkanal, die Zahl der abgeschlossenen
+Übertragungen (`226`) gegen die Zahl der verlangten — **„2 von 5" ist das
+Ergebnis, auf das es ankommt** —, und bei Abbruch die letzten 40 Zeilen der
+Servermeldung wörtlich.
+
+**Sie läuft nicht von selbst.** Sie legt Dateien auf einem echten Server an
+und ist deshalb ein Werkzeug der Fehlersuche, kein Schritt der Auslieferung;
+kein Kettenlauf ruft sie. Aufgeräumt wird in einem `finally`, und was
+übrigbleibt, wird gezählt und benannt — der nächste Lauf nimmt es mit.
 
 ## Geheimnisse
 
@@ -249,16 +288,27 @@ mehr (gefunden von der Selbstprobe am 20.09.2026). Maskiert wird seither am
 
 ## Selbstprobe
 
-`--selbstprobe` fährt **50 Lagen ohne Netz**: Maskierung (4), Adressen (3),
-die Dreiwertigkeit der Sitzungsmessung (4), der Rundlauf gegen Attrappen
-(11 — darunter „liegt im FTP, ist über HTTPS 404", „Inhalt weicht ab", „nach
-dem Löschen weiter abrufbar", „Hochladen scheitert" und jedes Mal die
-Gegenprobe, dass **trotzdem gelöscht wird**), das Aufräumen (2) und das
-Passwort außerhalb der Befehlszeile (1). Sie läuft in der Kette **vor** jedem
-echten Lauf.
+`--selbstprobe` fährt **67 Lagen ohne Netz**: Maskierung (4), Adressen (3),
+der Weg zum Datenkanal (5), die Dreiwertigkeit der Sitzungsmessung (4), der
+flache Rundlauf gegen Attrappen (13 — darunter „liegt im FTP, ist über HTTPS
+404", „Inhalt weicht ab", „nach dem Löschen weiter abrufbar", „Hochladen
+scheitert" und jedes Mal die Gegenprobe, dass **trotzdem gelöscht wird**),
+die Betriebsarten und die Frage an `curl` selbst, ob er den Schalter kennt
+(6), das Aufräumen (4), 403 als Sperre statt als falsches Ziel (2), das
+Passwort außerhalb der Befehlszeile (1), der Rundlauf durch ein neues
+Verzeichnis samt Gegenprobe am Auflisten (8) und die Mengenprobe (17).
+
+Die Lage, die dort am wichtigsten ist: **alle Ziele stehen in EINEM
+`curl`-Aufruf.** Zerfiele die Mengenprobe in viele Aufrufe, wäre sie eine
+teurere Fassung des Rundlaufs und könnte den Unterschied, für den es sie
+gibt, nie zeigen.
+
+Die Selbstprobe läuft in der Kette **vor** jedem echten Lauf.
 
 ## Was sie nicht kann
 
 Sie misst den Weg für eine **statische** Datei. Ob PHP läuft, ob die
 Anwendung antwortet, ob `.htaccess` greift — davon sagt sie nichts. Und sie
-misst **ein** Verzeichnis: das, auf das `--ftp-pfad` zeigt.
+misst das Verzeichnis, auf das `--ftp-pfad` zeigt, samt **einem** darunter
+neu angelegten; ein tiefer Baum wie der der Auslieferung entsteht nur in der
+Mengenprobe, und auch dort flach.
