@@ -911,6 +911,13 @@ in Abschnitt 3.
   Wertevorrat steht an einer Stelle im Code (`HERKUNFT_WERTE` in
   `server/geraete_lib.php`), die Ableitung daneben (`herkunft_ableiten()`).
 
+  **`manual`** — **der Schlüssel der DATEI heißt so, die Datenbankspalte
+  dahinter heißt seit Web 20.25.0 `uhr_gesperrt`** (Backlog Nr. 238; `MANUAL`
+  ist in MySQL 8.4.0–8.4.10 ein reserviertes Wort). `backup_lib.php` bildet
+  beim Sichern per Alias ab und beim Einspielen zurück. **Am Format ändert
+  sich nichts** — alte Sicherungen bleiben unverändert einspielbar, und der
+  ausgelieferte Demo-Bestand ist selbst eine solche Datei.
+
   **`edited`** (seit Version 4): wurde der Einsatz nach dem Anlegen verändert.
   Ältere Backups bleiben lesbar — fehlen die Felder (Version ≤ 3), werden sie
   beim Import aus `client_ref` abgeleitet: Präfix `man-` → `origin=manual`,

@@ -522,7 +522,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo = db(); $pdo->beginTransaction();
         try {
             if ($editing) {
-                $set = 'started_at = ?, ended_at = ?, manual = 1, edited = 1';
+                $set = 'started_at = ?, ended_at = ?, uhr_gesperrt = 1, edited = 1';
                 foreach ($fieldCols as $c) { $set .= ", `$c` = ?"; }
                 $pdo->prepare("UPDATE missions SET $set WHERE id = ? AND user_id = ?")
                     ->execute(array_merge([$startedAt, $endedAt], $fieldVals, [$id, $userId]));
@@ -554,7 +554,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    'Manuelle Einträge']);
                     $devId = (int)$pdo->lastInsertId();
                 }
-                $cols = 'user_id, device_id, client_ref, day_id, started_at, ended_at, final, manual, origin';
+                $cols = 'user_id, device_id, client_ref, day_id, started_at, ended_at, final, uhr_gesperrt, origin';
                 $qms  = "?,?,?,?,?,?,1,1,'manual'";
                 foreach ($fieldCols as $c) { $cols .= ", `$c`"; $qms .= ',?'; }
                 $pdo->prepare("INSERT INTO missions ($cols) VALUES ($qms)")
@@ -602,7 +602,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * beim naechsten Umbau vergessen wuerde.
              *
              * Ein ueber dieses Formular gespeicherter Einsatz traegt danach
-             * manual = 1; ingest.php ruehrt seine Reanimationen dann nicht mehr
+             * uhr_gesperrt = 1; ingest.php ruehrt seine Reanimationen dann nicht
              * an. Eine nachliefernde Uhr kann die hier eingetragenen Zeiten
              * also nicht ueberschreiben. */
             $pdo->prepare('DELETE FROM resus_sessions WHERE mission_id = ?')->execute([$id]);
@@ -779,7 +779,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
         'unter' => $unter,
     ]);
   ?>
-  <?php if ($editing && !(int)$mission['manual']):
+  <?php if ($editing && !(int)$mission['uhr_gesperrt']):
           ui_meldung('Dieser Einsatz stammt von der Uhr. Nach dem Speichern gilt er als '
               . 'manuell bearbeitet — spätere Uhr-Uploads überschreiben ihn dann nicht '
               . 'mehr (GPS-Track wird weiterhin ergänzt).', null, 'info');

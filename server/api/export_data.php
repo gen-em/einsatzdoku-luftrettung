@@ -85,14 +85,16 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
  * die deutschen Werte, und jede darauf aufbauende Auswertung bliebe sonst
  * stehen.
  *
- * Bis Web 3.3.2 wurde der Wert stattdessen bei jedem Export aus 'manual' und
- * dem Praefix von 'client_ref' neu berechnet. Diese Regel stammt aus der Zeit
- * vor der Spalte 'origin' und lieferte fuer genau einen Fall etwas Falsches:
- * Ein von der Uhr aufgezeichneter und danach im Formular bearbeiteter Einsatz
- * bekommt 'manual = 1' (einsatz_form.php) und erschien deshalb als 'manuell',
- * obwohl 'origin' korrekt auf 'watch' stand. NICHT wieder einfuehren —
- * 'manual' bedeutet ausschliesslich "die Uhr ueberschreibt Metadaten, Phasen
- * und Reanimation nicht mehr" (schema.sql:50).
+ * Bis Web 3.3.2 wurde der Wert stattdessen bei jedem Export aus der Uhr-Sperre
+ * und dem Praefix von 'client_ref' neu berechnet. Diese Regel stammt aus der
+ * Zeit vor der Spalte 'origin' und lieferte fuer genau einen Fall etwas
+ * Falsches: Ein von der Uhr aufgezeichneter und danach im Formular
+ * bearbeiteter Einsatz bekommt 'uhr_gesperrt = 1' (einsatz_form.php) und
+ * erschien deshalb als 'manuell', obwohl 'origin' korrekt auf 'watch' stand.
+ * NICHT wieder einfuehren — die Spalte bedeutet ausschliesslich "die Uhr
+ * ueberschreibt Metadaten, Phasen und Reanimation nicht mehr". Sie hiess bis
+ * Web 20.24.2 'manual', und genau diese Verwechslung war der Grund fuer die
+ * Umbenennung (Nr. 238); in der EXPORTDATEI heisst das Feld weiter 'manual'.
  *
  * DIE ABLEITUNGSREGEL STEHT SEIT WEB 14.0.0 AN EINER STELLE (R64):
  * `herkunft_ableiten()` in geraete_lib.php. Bis dahin stand sie dreimal — in
@@ -288,7 +290,7 @@ function export_meta(array $b, int $userId): never
     $st = $pdo->prepare(
         "SELECT x.id, x.day_id, d.day, x.started_at, x.ended_at,
                 x.distance_m, x.ascent_m,
-                x.final, x.manual, x.origin, x.edited,
+                x.final, x.uhr_gesperrt AS manual, x.origin, x.edited,
                 x.geraet_art, x.geraet_modell,
                 x.transport_dest, x.winch,
                 x.transport_mode, x.na_escort, x.false_alarm,

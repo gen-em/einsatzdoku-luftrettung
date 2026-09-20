@@ -48,7 +48,7 @@
       "art": "wert",
       "von": "0",
       "nach": "1",
-      "begruendung": "GEMESSEN 2x. api/import_commit.php setzt manual=1 — ein importierter Einsatz ist keiner, den eine Uhr aufgezeichnet hat. Nur zwei Einsaetze weichen ab, weil die uebrigen beim Nachtragen ohnehin schon manual=1 tragen."
+      "begruendung": "GEMESSEN 2x. api/import_commit.php setzt uhr_gesperrt=1 — ein importierter Einsatz ist keiner, den eine Uhr aufgezeichnet hat. Nur zwei Einsaetze weichen ab, weil die uebrigen beim Nachtragen ohnehin schon uhr_gesperrt=1 tragen. Das Feld der CSV-Datei heisst weiter manual (Nr. 238)."
     },
     {
       "bereich": "einsaetze",

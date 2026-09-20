@@ -239,15 +239,23 @@ function migrationen_katalog(): array
         'id'    => '2026_07_18_manuelle_einsaetze',
         'web'   => '1.2',
         'label' => 'Manuelle Einsätze: Schutzmarker + Zusatzfelder (Einsatznummer, Notizen)',
+        /* ZWEI NAMEN, EINE SPALTE (Nr. 238). Die Uhr-Sperre hiess bis
+         * Web 20.24.2 `manual` und heisst seit Web 20.25.0 `uhr_gesperrt`.
+         * Diese Pruefung muss BEIDE Namen kennen, sonst legt sie auf einer
+         * bereits umbenannten Datenbank ohne Registereintrag die Spalte ein
+         * zweites Mal an -- leer, neben der vollen. Ein Fehler waere das
+         * nicht: `1060` steht in der Schluckliste weiter unten, der Lauf
+         * ginge weiter, und gelesen wuerde ab da die leere Spalte. */
         'skip'  => function (PDO $pdo): bool {
             $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
                               WHERE table_schema = DATABASE()
-                                AND table_name = 'missions' AND column_name = 'manual'");
+                                AND table_name = 'missions'
+                                AND column_name IN ('uhr_gesperrt', 'manual')");
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            "ALTER TABLE missions ADD COLUMN manual TINYINT(1) NOT NULL DEFAULT 0 AFTER final",
-            "ALTER TABLE missions ADD COLUMN mission_no VARCHAR(64) NULL AFTER manual",
+            "ALTER TABLE missions ADD COLUMN uhr_gesperrt TINYINT(1) NOT NULL DEFAULT 0 AFTER final",
+            "ALTER TABLE missions ADD COLUMN mission_no VARCHAR(64) NULL AFTER uhr_gesperrt",
             "ALTER TABLE missions ADD COLUMN notes TEXT NULL AFTER mission_no",
         ],
     ],
@@ -689,7 +697,7 @@ function migrationen_katalog(): array
     [
         'id'    => '2026_07_30_herkunft_bearbeitungsstatus',
         'web'   => '2.11.0',
-        'label' => 'Herkunft (origin) und Bearbeitungsstatus (edited) getrennt von manual',
+        'label' => 'Herkunft (origin) und Bearbeitungsstatus (edited) getrennt von der Uhr-Sperre',
         'skip'  => function (PDO $pdo): bool {
             $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
                               WHERE table_schema = DATABASE()
@@ -698,7 +706,7 @@ function migrationen_katalog(): array
         },
         'sql'   => [
             "ALTER TABLE missions
-               ADD COLUMN origin ENUM('watch','manual','import') NOT NULL DEFAULT 'watch' AFTER manual,
+               ADD COLUMN origin ENUM('watch','manual','import') NOT NULL DEFAULT 'watch' AFTER uhr_gesperrt,
                ADD COLUMN edited TINYINT(1) NOT NULL DEFAULT 0 AFTER origin",
             // Herkunft laesst sich fuer Bestandsdaten zuverlaessig aus client_ref
             // rekonstruieren, weil jede anlegende Stelle ein eigenes Praefix
@@ -706,7 +714,7 @@ function migrationen_katalog(): array
             // 'imp-'. Uhr-Uploads liefern das client_ref der Uhr (kein Praefix).
             "UPDATE missions SET origin = 'manual' WHERE client_ref LIKE 'man-%'",
             "UPDATE missions SET origin = 'import' WHERE client_ref LIKE 'imp-%'",
-            // Ein Einsatz mit manual = 1, der weder von Hand angelegt noch
+            // Ein Einsatz mit uhr_gesperrt = 1, der weder von Hand angelegt noch
             // importiert wurde, kann diesen Marker nur durch eine Bearbeitung
             // bekommen haben. Fuer Hand- und Importeintraege laesst sich eine
             // spaetere Bearbeitung rueckwirkend nicht mehr feststellen; sie
@@ -715,7 +723,7 @@ function migrationen_katalog(): array
             // und dem Betreiber bekannt. Diese Begruendung bleibt hier stehen,
             // damit sie spaeter nicht versehentlich als Fehler "korrigiert" wird).
             "UPDATE missions SET edited = 1
-               WHERE manual = 1 AND client_ref NOT LIKE 'man-%' AND client_ref NOT LIKE 'imp-%'",
+               WHERE uhr_gesperrt = 1 AND client_ref NOT LIKE 'man-%' AND client_ref NOT LIKE 'imp-%'",
         ],
     ],
     [
@@ -2825,7 +2833,7 @@ function migrationen_katalog(): array
              * (idx_urheber). */
             'CREATE TABLE protokoll_ereignisse (
                id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-               zeit              DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+               zeit              DATETIME NOT NULL DEFAULT (UTC_TIMESTAMP()),
                reiter            ENUM(\'verwaltung\',\'email\',\'jobs\',
                                       \'sicherung\',\'ziele\',\'system\') NOT NULL,
                art               VARCHAR(64) NOT NULL,
@@ -2942,7 +2950,7 @@ function migrationen_katalog(): array
                user_id    INT UNSIGNED NOT NULL,
                schluessel VARCHAR(32) NOT NULL,
                stand_am   DATETIME NULL,
-               zeit       DATETIME NOT NULL DEFAULT UTC_TIMESTAMP(),
+               zeit       DATETIME NOT NULL DEFAULT (UTC_TIMESTAMP()),
                PRIMARY KEY (user_id, schluessel),
                CONSTRAINT fk_kew_user FOREIGN KEY (user_id)
                  REFERENCES users (id) ON DELETE CASCADE
@@ -3097,6 +3105,61 @@ function migrationen_katalog(): array
              * und ein Geraet hat nicht jede. `7` setzt alle drei Bits. */
             'UPDATE users u SET u.erststart_stand = 7
                WHERE EXISTS (SELECT 1 FROM vehicles v WHERE v.user_id = u.id)',
+        ],
+    ],
+    [
+        'id'    => '2026_09_20_uhr_gesperrt',
+        'web'   => '20.25',
+        'label' => 'Uhr-Sperre: Spalte missions.manual heisst jetzt uhr_gesperrt',
+        /* WARUM UEBERHAUPT (Backlog Nr. 238). MySQL fuehrt MANUAL von 8.4.0
+         * bis 8.4.10 als RESERVIERTES WORT (ab 8.4.11 wieder nicht). Jede
+         * ungequotete Nennung der Spalte brach dort mit Fehler 1064 -- und
+         * das war nicht eine Stelle, sondern zehn: die Einrichtung selbst
+         * (schema.sql), der Uhr-Eingang, GPX- und Datei-Import, der Schnitt,
+         * das Einsatzformular und beide Richtungen der Sicherung. Gemeldet
+         * hat es sich auf dem Staging-Webspace, dessen Datenbank 8.4.x ist.
+         *
+         * UMBENANNT UND NICHT GEQUOTET, und das ist die eigentliche
+         * Entscheidung (20.09.2026). Ueberall Backticks zu setzen haette den
+         * Fehler ebenso behoben -- aber eine uebersehene Stelle waere dann
+         * nur auf genau diesen elf Fassungen aufgefallen, im Betrieb, bei
+         * jemand anderem. Mit dem neuen Namen scheitert sie auf JEDER
+         * Fassung sofort, also schon im ersten Klick der Pruefung. Nebenbei
+         * hoert der Name auf zu luegen: `manual` las sich wie "von Hand
+         * angelegt", das steht aber in `origin`.
+         *
+         * `CHANGE` UND NICHT `RENAME COLUMN`. Zwei Gruende, beide praktisch:
+         * Der Katalog kennt `CHANGE` schon dreimal (vehicles.registration,
+         * days.aircraft_id, crew_presets.role) und `RENAME COLUMN` kein
+         * einziges Mal -- und `tools/migrationsregister/pruefen.php` rechnet
+         * den Katalog durch, um ihn gegen schema.sql zu halten. Seine
+         * DDL-Simulation versteht ADD, DROP, CHANGE und RENAME TABLE; ein
+         * `RENAME COLUMN` liefe durch sie hindurch, ohne die Spalte
+         * umzubenennen, und Stufe 1 der Kette wuerde grundlos rot.
+         *
+         * DIE TYPANGABE IST PFLICHT, nicht Zierrat: `CHANGE` schreibt die
+         * Spaltendefinition neu und nicht nur ihren Namen. Sie steht hier
+         * Zeichen fuer Zeichen wie in schema.sql. */
+        'skip'  => function (PDO $pdo): bool {
+            /* ZWEI BEDINGUNGEN, UND DIE ZWEITE IST DIE WICHTIGE.
+             *
+             * Erste: Ist `uhr_gesperrt` schon da, ist nichts zu tun -- der
+             * Normalfall auf jeder frischen Anlage und beim zweiten Lauf.
+             *
+             * Zweite: Fehlt `manual`, darf das SQL NICHT laufen. MySQL
+             * antwortete sonst mit `1054 Unknown column`, und 1054 steht
+             * NICHT in der Schluckliste [1050, 1060, 1061, 1091] weiter
+             * unten -- der GANZE Migrationslauf braeche ab, an einer
+             * Migration, die nichts zu tun hat. Der Fall ist nicht
+             * theoretisch: Eine aus Teilen wiederhergestellte Datenbank
+             * oder eine Gesamtsicherung mit fremdem Registerstand bringt
+             * ihn mit. */
+            $hatNeu = _hat_spalte($pdo, 'missions', 'uhr_gesperrt');
+            $hatAlt = _hat_spalte($pdo, 'missions', 'manual');
+            return $hatNeu || !$hatAlt;
+        },
+        'sql'   => [
+            'ALTER TABLE missions CHANGE `manual` uhr_gesperrt TINYINT(1) NOT NULL DEFAULT 0',
         ],
     ],
     // Naechste Migration hier anhaengen.

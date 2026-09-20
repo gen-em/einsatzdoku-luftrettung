@@ -14,6 +14,140 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.25.0] — 2026-09-20
+
+**Die Spalte `manual` heißt jetzt `uhr_gesperrt`.**
+
+### Behoben
+
+**Die Einrichtung auf dem neuen Staging-Webspace scheiterte an einem
+reservierten Wort** (Backlog Nr. 238). Die Meldung: `SQLSTATE[42000] … 1064 …
+near 'manual TINYINT(1) NOT NULL DEFAULT 0` — Zeile 23 des Schemas. MySQL führt
+**MANUAL von 8.4.0 bis 8.4.10 als reserviertes Wort**; ab 8.4.11 ist es wieder
+frei. `server/schema.sql` legte die Spalte ungequotet an, und die
+Staging-Datenbank ist 8.4.x. Der Produktivserver war nicht betroffen — bei
+einem Hoster-Update wäre er es gewesen.
+
+Nachgemessen, was sonst noch gebrochen wäre: **788 Bezeichner-Vorkommen** in elf
+DDL-führenden Dateien gegen **284 reservierte Wörter**, dazu die Schreibwege der
+Anwendung. Ergebnis sind **zehn Stellen**, nicht eine — neben der Einrichtung
+der Uhr-Eingang (`ingest.php`), GPX- und Datei-Import, der Schnitt, beide Zweige
+des Einsatzformulars und **beide Richtungen der Sicherung**. Eine Sicherung
+hätte sich auf 8.4 weder erstellen noch einspielen lassen. `PARALLEL`, `QUALIFY`
+und `TABLESAMPLE`, in 8.4 ebenfalls neu reserviert, kommen im Repositorium nicht
+vor.
+
+### Geändert
+
+**Umbenannt statt gequotet** — das ist die eigentliche Entscheidung. Überall
+Backticks zu setzen hätte den Fehler ebenso behoben, aber eine dabei übersehene
+Stelle wäre nur auf genau diesen elf Fassungen aufgefallen: im Betrieb, bei
+jemand anderem. Mit dem neuen Namen scheitert sie auf **jeder** Fassung sofort
+und fällt schon beim ersten Klick der Prüfung auf. Verworfen wurde auch „auf
+8.4.11 warten" — das wäre ein Zuschnitt auf den Hoster und widerspricht der
+Hosting-Entscheidung vom 15.09.2026.
+
+Nebeneffekt, und kein kleiner: **der Name hört auf zu lügen.** `manual` las sich
+wie „von Hand angelegt" — so sehr, dass in `schema.sql` seit jeher ein Dementi
+danebenstand. Die Spalte sagt etwas anderes, nämlich dass die Uhr Metadaten,
+Phasen und Reanimation dieses Einsatzes nicht mehr überschreibt. Genau das heißt
+sie jetzt.
+
+**`CHANGE` und nicht `RENAME COLUMN`**, aus zwei praktischen Gründen: Der
+Migrationskatalog kennt `CHANGE` bereits dreimal und `RENAME COLUMN` kein
+einziges Mal, und `tools/migrationsregister/pruefen.php` rechnet den Katalog
+durch, um ihn gegen `schema.sql` zu halten — seine DDL-Simulation versteht ADD,
+DROP, CHANGE und RENAME TABLE. Ein `RENAME COLUMN` wäre durch sie
+hindurchgelaufen, ohne die Spalte umzubenennen, und hätte Stufe 1 der Kette
+grundlos rot gemacht. `CHANGE` ist außerdem verlustfrei: Die Werte des Bestands
+bleiben Zeile für Zeile stehen.
+
+**Die alte Skip-Prüfung wäre zur Falle geworden.**
+`2026_07_18_manuelle_einsaetze` fragte „gibt es `missions.manual`?" — nach der
+Umbenennung lautet die Antwort nein, und auf einer Datenbank ohne Registereintrag
+hätte sie die Spalte ein zweites Mal angelegt: leer, neben der vollen.
+Aufgefallen wäre es nicht, denn `1060` steht in der Schluckliste des
+Migrationslaufs. Die Prüfung fragt jetzt nach **beiden** Namen.
+
+**In Sicherungs- und Exportdatei heißt das Feld weiter `manual`.** Das ist
+Absicht: Alte Sicherungen und alte Exporte müssen sich unverändert einspielen
+lassen, und der ausgelieferte Demo-Bestand ist selbst eine solche Datei
+(`server/demo/fixture.json.gz`, 106 Einsätze, 104 davon mit dem Schutzflag). Die
+Spalte wird beim Lesen per Alias auf den Dateinamen abgebildet und beim
+Schreiben zurück. `docs/Backup-Format.md`, `docs/Export-Format.md` und
+`docs/JSON-Vertrag.md` bleiben damit inhaltlich gleich.
+
+**Nach dem Deploy muss eine Administratorin `update.php` aufrufen.** Ohne den
+Migrationslauf heißt die Spalte in der Datenbank weiter `manual`, und die
+Anwendung sucht `uhr_gesperrt`.
+
+**Hinter dem reservierten Wort stand ein zweiter Blocker, und er war der
+größere.** Nach dem Umbenennen lief `schema.sql` gegen MySQL 8.4.0 bis Zeile
+650 und brach dort wieder ab: `zeit DATETIME NOT NULL DEFAULT UTC_TIMESTAMP()`.
+MySQL lässt einen Funktionsaufruf als Spaltenvorgabe nur **geklammert** zu —
+`DEFAULT (UTC_TIMESTAMP())`, seit 8.0.13. MariaDB nimmt beide Schreibweisen,
+und genau deshalb ist es nie aufgefallen: Entwickelt und geprüft wird gegen
+MariaDB.
+
+Das ist **kein 8.4-Problem, sondern eines jeder MySQL-Fassung.** Vier Stellen —
+zwei in `schema.sql` (`protokoll_ereignisse`, `konto_einwilligungen`), zwei in
+den Migrationen, die dieselben Tabellen anlegen. Die Folge: **Seit Web 20.16.5
+ließ sich die Anwendung auf MySQL überhaupt nicht einrichten.** Die Zusage
+„MySQL ≥ 8.0" in `docs/Technik.md` 7 und `plattform_lib.php` war seither nicht
+eingelöst; gemerkt hat es niemand, weil der Fehler am reservierten Wort schon
+vorher kam. Beide Stellen sind jetzt geklammert.
+
+Die Kopfzeile von `schema.sql` nannte „MySQL ≥ 5.7 / MariaDB ≥ 10.2". Das
+widersprach `plattform_lib.php` und `docs/Technik.md` und war zudem für sich
+genommen falsch. Sie nennt jetzt **8.0.13 / 10.6**.
+
+### Geprüft
+
+Gegen zwei laufende Datenbanken, nicht auf Papier:
+
+- **Das alte `schema.sql` gegen MySQL 8.4.0** bricht bei Zeile 386 mit `1064`
+  ab — wortgleich mit der Meldung vom Staging-Webspace. **Das neue** legt
+  **42 Tabellen** fehlerfrei an.
+- Ein Migrationsprüflauf über vier Installationsfälle (frische Anlage,
+  bestehende Datenbank mit Bestand, Datenbank ohne Registereintrag,
+  Datenbank ohne beide Spalten) meldet **18 Prüfungen, 0 Fehlschläge** —
+  **gegen MySQL 8.4.0 und gegen MariaDB 10.11**.
+- **Kein Datenverlust:** Sieben Einsätze, vier davon gesperrt, stehen nach der
+  Migration Zeile für Zeile unverändert unter dem neuen Namen; die
+  Spaltendefinition ist auf beiden Fassungen `tinyint(1) / NOT NULL /
+  DEFAULT 0`.
+- `tools/migrationsregister/pruefen.php`: **60/60 Kennungen, 257 Spalten,
+  30 Löschungen, 0 Befunde** (vorher 59/59, 29, 0).
+
+### Hinzugefügt
+
+**`tools/schemaprobe/` — damit dieselbe Lücke nicht zweimal aufgeht.** Ein
+Prüfstand, der `schema.sql` und den Migrationskatalog gegen eine **laufende**
+Datenbank fährt: vier Installationsfälle, 19 Erwartungen. Fall 2 ist der
+Kern — er legt sieben Einsätze an, vier davon mit gesetzter Uhr-Sperre,
+migriert und vergleicht hinterher **Wert für Wert**. Eine Migration, die Daten
+verliert, fällt dort auf und sonst nirgends.
+
+Er hängt als eigener Auftrag in Stufe 1 (`pruefung.yml`), mit einer **Matrix
+über zwei Fassungen**: `mysql:8.4.0` — die Fassung, an der es gescheitert ist
+— und `mariadb:10.6`, die dokumentierte Untergrenze. Die Matrix ist der
+eigentliche Punkt: **Der Altstand legt auf MariaDB 10.6 klaglos 42 Tabellen an
+und scheitert auf MySQL 8.4.0 mit `1064`** (beides gegengemessen). Ein Lauf
+gegen eine Fassung hätte den Fehler nicht gefunden — genau das war jahrelang
+der Zustand.
+
+Gegengeprüft, dass der Prüfstand auch rot werden kann: gegen den Stand vor
+diesem Hotfix meldet er auf MySQL 8.4.0 **1 Prüfung, 1 Fehlschlag** mit der
+Original-Fehlermeldung und Rückgabe 1, auf MariaDB 10.6 **6 Prüfungen,
+4 Fehlschläge**. Gegen den neuen Stand: **19 Prüfungen, 0 Fehlschläge** auf
+MySQL 8.4.0, MariaDB 10.6 und MariaDB 10.11.
+
+`tools/kettenaufrufe/pruefen.py` hat den neuen Aufruf beim ersten Versuch mit
+**sechs Befunden** abgewiesen — die Schalter standen als `'datenbank'` im
+Quelltext, und die Kettenprüfung liest `'--…'`-Zeichenketten. Behoben, indem
+die Schalter mit ihren zwei Strichen dastehen; **30 Aufrufe geprüft,
+0 Befunde**.
+
 ## [Android 0.15.1] — 2026-09-20
 
 **Stufe 1 meldete „264 tests completed, 1 failed" und verschwieg, welcher.**
@@ -133,6 +267,7 @@ sagt nicht, ob die Antwort über eine Umleitung kam — und das unterscheidet
 **Keine Geheimnisse.** Ausgegeben werden die **Namen** der Cookies, nie ihre
 Werte: Der Name des Sitzungscookies ist eine Auskunft, sein Wert ist die
 Sitzung selbst.
+
 
 ## [Web 20.24.2] — 2026-09-18
 

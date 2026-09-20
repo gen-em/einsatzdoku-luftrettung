@@ -586,3 +586,109 @@ jobs:
           python3 tools/uhr-pruefstand/geraeteklassen.py "$HOME/.Garmin/ConnectIQ/Devices" \
                   --vertreter 5 --liste /tmp/vertreter.txt --alle-liste /tmp/auswahl.txt
           tools/uhr-pruefstand/pruefstand.sh reihe /tmp/auswahl.txt
+
+  # ---------------------------------------------------------------------------
+  # EIGENER AUFTRAG, WEIL DIENSTBEHÄLTER JOB-WEIT SIND. GitHub bindet
+  # `services:` an den Auftrag, nicht an den Schritt; eine Matrix über zwei
+  # Datenbankfassungen geht deshalb nur als eigener Auftrag. Er kostet nichts,
+  # was Stufe 1 verlangsamt: Beide Läufe starten parallel zur `pruefung`.
+  #
+  # WOGEGEN (Backlog Nr. 238). Am 20.09.2026 scheiterte die Einrichtung auf
+  # dem neuen Staging-Webspace an `1064 … near 'manual TINYINT(1) …'` — MySQL
+  # führt MANUAL von 8.4.0 bis 8.4.10 als reserviertes Wort. Dahinter lag ein
+  # zweiter Fehler, den erst das Beheben des ersten sichtbar machte:
+  # `DEFAULT UTC_TIMESTAMP()` ohne Klammern, von MySQL auf JEDER Fassung
+  # abgewiesen. Die Anwendung ließ sich seit Web 20.16.5 auf MySQL überhaupt
+  # nicht einrichten.
+  #
+  # BEIDE HATTEN DIESELBE URSACHE, und sie ist nicht SQL: Entwickelt und
+  # geprüft wurde gegen MariaDB, ausgeliefert wird gegen MySQL. Deshalb steht
+  # hier eine MATRIX und kein einzelner Lauf — eine Fassung belegt nichts über
+  # die andere, und genau diese Verwechslung war der Fehler.
+  #
+  # DIE BEIDEN FASSUNGEN SIND NICHT BELIEBIG GEWÄHLT:
+  #   mysql:8.4.0    die Fassung, an der es gescheitert ist (und die letzte,
+  #                  die MANUAL noch reserviert — ab 8.4.11 ist es wieder frei)
+  #   mariadb:10.6   die dokumentierte Untergrenze (`docs/Technik.md` 7,
+  #                  `plattform_lib.php` PLATTFORM_MARIADB_MIN)
+  schema:
+    name: Schema gegen ${{ matrix.db.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      # KEIN `fail-fast`. Scheitert eine Fassung, will man wissen, ob die
+      # andere auch scheitert — das ist der Unterschied zwischen „unser
+      # Schema ist kaputt" und „unser Schema passt zu einer Fassung nicht".
+      fail-fast: false
+      matrix:
+        db:
+          - name: MySQL 8.4.0
+            image: mysql:8.4.0
+            klient: mysql
+            pass_env: MYSQL_ROOT_PASSWORD
+            gesund: mysqladmin ping -uroot -pschemaprobe
+          - name: MariaDB 10.6
+            image: mariadb:10.6
+            klient: mariadb
+            pass_env: MARIADB_ROOT_PASSWORD
+            gesund: healthcheck.sh --connect --innodb_initialized
+    services:
+      db:
+        image: ${{ matrix.db.image }}
+        env:
+          # Der Name der Variablen unterscheidet sich zwischen den Abbildern;
+          # das jeweils andere wird schlicht ignoriert.
+          MYSQL_ROOT_PASSWORD: schemaprobe
+          MARIADB_ROOT_PASSWORD: schemaprobe
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="${{ matrix.db.gesund }}"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v7
+
+      - name: Datenbank-Klient bereitstellen
+        # Der Läufer bringt den `mysql`-Klienten mit, den `mariadb`-Klienten
+        # nicht immer. Er wird nur nachgeladen, wenn er fehlt — und wenn das
+        # scheitert, scheitert der Schritt, statt still auf den anderen
+        # Klienten auszuweichen (ein Lauf mit dem falschen Klienten misst
+        # etwas anderes, als er behauptet).
+        run: |
+          if command -v ${{ matrix.db.klient }} >/dev/null 2>&1; then
+            echo "${{ matrix.db.klient }} ist da: $(${{ matrix.db.klient }} --version)"
+          else
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq mariadb-client
+            echo "nachgeladen: $(${{ matrix.db.klient }} --version)"
+          fi
+
+      - name: Selbstprobe — zählt die Probe einen Fehlschlag überhaupt?
+        # Zuerst, aus demselben Grund wie beim Migrationsregister: Ein grüner
+        # Lauf einer Prüfung, die immer grün meldet, sieht genauso aus wie
+        # einer, der nichts gefunden hat.
+        #
+        # `--klient` MUSS MIT, obwohl die Selbstprobe keine Datenbank braucht:
+        # Sie prüft unter anderem, ob der Klient aufrufbar ist, und ohne den
+        # Schalter prüft sie den VORGABEWERT `mariadb` statt den, mit dem der
+        # Lauf darunter arbeitet. Im ersten Kettenlauf ist genau das passiert
+        # — der MySQL-Auftrag wurde rot gemeldet, weil auf dem Läufer kein
+        # `mariadb` liegt, während der eigentliche Lauf grün gewesen wäre.
+        run: php tools/schemaprobe/probe.php --selbstprobe --klient ${{ matrix.db.klient }}
+
+      - name: Schemaprobe — schema.sql und die Migrationen
+        run: |
+          php tools/schemaprobe/probe.php \
+              --datenbank nadoku_schemaprobe \
+              --host 127.0.0.1 --port 3306 \
+              --benutzer root --passwort schemaprobe \
+              --klient ${{ matrix.db.klient }} \
+            | tee /tmp/schemaprobe.txt
+          {
+            echo "### Schemaprobe — ${{ matrix.db.name }}"
+            echo '```'
+            tail -1 /tmp/schemaprobe.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

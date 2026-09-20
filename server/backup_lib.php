@@ -221,8 +221,16 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * Kommt kuenftig eine Spalte hinzu, die mitgesichert werden soll, ist sie
      * hier einzutragen — und genau das ist der Punkt: Es ist eine
      * Entscheidung, keine Nebenwirkung. */
+    /* `uhr_gesperrt AS manual` — DER ALIAS IST PFLICHT, NICHT KOSMETIK
+     * (Nr. 238). Die Spalte heisst seit Web 20.25.0 `uhr_gesperrt`, der
+     * SCHLUESSEL IN DER DATEI bleibt `manual`: Jede bisher ausgelieferte
+     * Sicherung traegt ihn, der Demo-Bestand ist selbst eine solche Datei,
+     * und `edbak_restore()` weiter unten liest ihn unter diesem Namen.
+     * Ohne den Alias hiesse der Schluessel in jeder NEUEN Datei still
+     * `uhr_gesperrt` — und das Einspielen faende das Feld nicht mehr, ohne
+     * eine einzige Fehlermeldung. */
     $missionSpalten = 'client_ref, day_id, started_at, ended_at, distance_m, ascent_m,
-                       site_ele_m, final, manual, origin, edited,
+                       site_ele_m, final, uhr_gesperrt AS manual, origin, edited,
                        geraet_art, geraet_modell, transport_dest,
                        transport_mode, na_escort, false_alarm, start_src,
                        dest_lat, dest_lon,
@@ -819,7 +827,8 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
  * wiederherzustellenden Einsatz ab. Enthaelt der Datensatz gueltige Werte,
  * werden diese uebernommen (Formatversion 4). Fehlen sie (Version <= 3),
  * gilt die Ableitung aus dem `client_ref`-Praefix; `edited` = 1 nur, wenn
- * manual = 1 und kein solches Praefix vorliegt.
+ * der Dateischluessel `manual` (Spalte `uhr_gesperrt`) 1 ist und kein
+ * solches Praefix vorliegt.
  *
  * DIE REGEL STAND HIER BIS WEB 13.3.0 EIN ZWEITES MAL (R64). Der Kommentar
  * verlangte ausdruecklich, dass "Migration und Restore die Regel nicht
@@ -883,7 +892,7 @@ function edbak_origin_edited(array $m): array {
         $edited = (int)$m['edited'];
     } else {
         /* `cut-` FEHLT HIER MIT ABSICHT. Ein geschnittener Einsatz traegt
-         * manual = 1 und wuerde nach dieser Regel als "bearbeitet" gelten,
+         * die Uhr-Sperre und wuerde nach dieser Regel als "bearbeitet" gelten,
          * obwohl ihn niemand angefasst hat. Der Zweig greift aber nur fuer
          * Dateien der Formatversion <= 3, und die sind aelter als der Schnitt
          * (Web 12.5.0) — es kann keine solche Datei geben. Die Zeile
@@ -1855,8 +1864,13 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
              *
              * FEHLEN SIE IN DER DATEI (Nutzlast <= 8), wird NULL geschrieben —
              * und das ist richtig: „unbekannt" ist genau die Aussage. */
+            /* HIER WIRD AUS DEM DATEISCHLUESSEL WIEDER DIE SPALTE (Nr. 238).
+             * `$cols` sind SPALTENNAMEN (`uhr_gesperrt`), `$vals` darunter
+             * liest den DATEISCHLUESSEL (`$m['manual']`). Die beiden Listen
+             * sind positionsgebunden — wer hier einfuegt oder umsortiert,
+             * verschiebt stumm alle Werte dahinter. */
             $cols = ['user_id', 'client_ref', 'day_id', 'started_at', 'ended_at',
-                     'manual', 'origin', 'edited', 'final', 'distance_m', 'ascent_m',
+                     'uhr_gesperrt', 'origin', 'edited', 'final', 'distance_m', 'ascent_m',
                      'geraet_art', 'geraet_modell',
                      'deleted_at', 'deleted_with_day'];
             $vals = [$userId,

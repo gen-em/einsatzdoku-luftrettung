@@ -133,7 +133,7 @@ try {
         if ($ziel === 'einsatz') {
             $pdo->prepare("INSERT INTO missions
                              (user_id, device_id, client_ref, day_id, started_at,
-                              ended_at, final, manual, origin)
+                              ended_at, final, uhr_gesperrt, origin)
                            VALUES (?,?,?,?,?,?,1,1,'import')")
                 ->execute([$userId, $devId, $ref, $dayId, $von, $bis]);
             $id  = (int)$pdo->lastInsertId();

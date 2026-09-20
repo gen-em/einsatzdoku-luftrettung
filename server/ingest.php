@@ -502,7 +502,7 @@ try {
      * Deploy, der kein Paket verliert. */
     $hatCreated = $kind === 'mission' || ingest_hat_spalte($pdo, 'rest_segments', 'created_at');
     $chk = $pdo->prepare("SELECT id, day_id, deleted_at, started_at" . ($hatCreated ? ', created_at' : '')
-                       . ($kind === 'mission' ? ', manual' : '')
+                       . ($kind === 'mission' ? ', uhr_gesperrt' : '')
                        . " FROM `$tabelle` WHERE device_id = ? AND client_ref = ?");
     $chk->execute([$dev['id'], $clientRef]);
     $existing = $chk->fetch();
@@ -633,14 +633,14 @@ try {
         // Manuell bearbeitete Einsaetze schuetzen: Uhr-Uploads duerfen
         // Metadaten/Phasen/Rea nicht mehr ueberschreiben; Trackpunkte werden
         // weiterhin ergaenzt (Append-only, unkritisch).
-        if ($existing && ((int)$existing['manual'] === 1 || $fensterZu)) {
+        if ($existing && ((int)$existing['uhr_gesperrt'] === 1 || $fensterZu)) {
             /* Zwei Gruende, derselbe Weg: Der Einsatz ist im Web bearbeitet
-               worden (`manual`), oder das Ersetzfenster ist zu (Nr. 134). In
-               beiden Faellen bleiben Metadaten, Phasen und Reanimation stehen.
-               Der Unterschied steht weiter unten: Bei `manual` werden Punkte
-               weiterhin ANGEHAENGT (append-only, unkritisch), bei
-               geschlossenem Fenster nicht -- dort ist der Absender der
-               Unsichere, nicht der Inhalt. */
+               worden (`uhr_gesperrt`), oder das Ersetzfenster ist zu
+               (Nr. 134). In beiden Faellen bleiben Metadaten, Phasen und
+               Reanimation stehen. Der Unterschied steht weiter unten: Bei
+               `uhr_gesperrt` werden Punkte weiterhin ANGEHAENGT
+               (append-only, unkritisch), bei geschlossenem Fenster nicht --
+               dort ist der Absender der Unsichere, nicht der Inhalt. */
             $ownerId = (int)$existing['id'];
             $ownerType = 'mission';
             /* Was uebergangen wurde, NENNEN (Nr. 134, JSON-Vertrag 5). Der
@@ -663,7 +663,7 @@ try {
              * Ende, `final`, Strecke und Anstieg -- ohne dieses Feld saehe es
              * bei geschlossenem Fenster wie ein Erfolg aus, und der Einsatz
              * bliebe fuer immer "laeuft noch", ohne dass jemand es erfuehre.
-             * `manual` nennt es nicht: Dort ist der Inhalt bewusst im Web
+             * `uhr_gesperrt` nennt es nicht: Dort ist der Inhalt bewusst im Web
              * gesetzt, und das Geraet soll ihn nicht fuer verloren halten. */
             if ($fensterZu && ($endedAt !== null || $final || $distanceM !== null || $ascentM !== null)) {
                 $behalten['kept_meta'] = 1;
@@ -947,11 +947,11 @@ try {
     $gesperrt = 0;
     /* ---- Ersetzfenster: auch keine Punkte mehr (Backlog Nr. 134) ---------
      *
-     * ANDERS ALS BEI `manual`. Dort werden Punkte weiter angehaengt, weil das
-     * Anhaengen unkritisch ist -- der Inhalt ist bearbeitet, die Spur nicht.
-     * Hier ist der ABSENDER der Unsichere: Ein Finder mit der Uhr in der Hand
-     * schriebe sonst seine eigene Fahrt in die Spur eines drei Wochen alten
-     * Einsatzes. Angehaengt wird deshalb nichts mehr.
+     * ANDERS ALS BEI `uhr_gesperrt`. Dort werden Punkte weiter angehaengt,
+     * weil das Anhaengen unkritisch ist -- der Inhalt ist bearbeitet, die
+     * Spur nicht. Hier ist der ABSENDER der Unsichere: Ein Finder mit der
+     * Uhr in der Hand schriebe sonst seine eigene Fahrt in die Spur eines
+     * drei Wochen alten Einsatzes. Angehaengt wird deshalb nichts mehr.
      *
      * `next_seq` wandert trotzdem weiter (unten): Die Uhr soll aufhoeren zu
      * senden, nicht in einer Schleife haengen bleiben. Was uebergangen wurde,
@@ -1049,7 +1049,7 @@ try {
      * wiederholt, ihre Einsaetze dauerhaft aus der Verdichtung heraus.
      *
      * Eine eigene Anweisung statt eines Feldes im Upsert: Der missions-Upsert
-     * wird bei manual = 1 komplett uebersprungen, Punkte werden aber weiter
+     * wird bei uhr_gesperrt = 1 komplett uebersprungen, Punkte werden aber weiter
      * angenommen. Hier hinter der Schleife sind alle Wege abgedeckt. */
     if ($stored > 0) {
         $tabelle = $ownerType === 'mission' ? 'missions' : 'rest_segments';
