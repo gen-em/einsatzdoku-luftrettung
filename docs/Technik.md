@@ -7923,6 +7923,37 @@ Der dritte Fall sieht aus wie Erfolg. Ein `=== false` lässt ihn durch.
 **Belastbar ist allein das Zurücklesen** — der wirksame Pfad gegen den
 gewünschten, und genau so prüft `sitzung_ablage_setzen()` es.
 
+#### Wenn der Hoster den Pfad vorgibt: `.user.ini` (gemessen am 20.09.2026)
+
+**Genau das ist auf Staging eingetreten.** Die Zeile stand auf
+`nicht_uebernommen`: Verzeichnis angelegt, `0700`, Schreibprobe bestanden —
+und `session.save_path` blieb auf `/home/webpages/tmp`.
+
+**Die Abhilfe kostete eine Datei und keinen Support.** Eine `.user.ini` neben
+`index.php` mit einer Zeile:
+
+    session.save_path = "/pfad/zur/anwendung/.sitzungen"
+
+Danach stand die Zeile blau: *eigenes Verzeichnis, 0700*. Der Hoster hatte den
+Wert also nur **gesetzt**, nicht per `php_admin_value` **gesperrt**.
+
+**Sie gehört nicht ins Repositorium.** Der Pfad ist anlagenabhängig, und
+E-PP-04 sagt: Ein Hosterwechsel ändert `config.php`, keine Codezeile. Sie ist
+ein **Handgriff der Betreiberin**, und er steht als solcher im Runbook
+(Abschnitt 7). Zwei Bedingungen: `.user.ini` wirkt nur bei CGI/FastCGI, und
+sie greift erst nach `user_ini.cache_ttl` (Vorgabe 300 s). Gegen Abruf über
+die Adresszeile deckt sie dieselbe Punktregel wie `.sitzungen/` selbst.
+
+**Hilft sie nicht**, steht der Wert als `php_admin_value` fest. Dann bleibt
+der Weg über den Hoster — oder, wenn der nicht mitspielt, ein eigener
+Sitzungs-Handler (`session_set_save_handler`), den keine `php.ini`
+überstimmen kann. Das wäre ein eigener Umbau und der Punkt, an dem die in
+E-SA-00 vertagte Stufe 3 (Sitzungen in der Datenbank) wieder zur Frage steht.
+
+**Produktiv ist ungeprüft.** Dort ist `session.save_path` nie erhoben worden.
+Beim ersten Ausrollen dorthin zeigt dieselbe Zeile, ob derselbe Handgriff
+fällig ist — **das ist der Prüfpunkt, nicht eine Vermutung**.
+
 **Die Regel ist dauerhaft, die Zahl ist ein Stand** (E-PP-03): Für Versionen
 gilt „vom Hersteller noch mit Sicherheitskorrekturen versorgt". Die Zahlen
 oben sind der Stand vom 15.09.2026 und stehen im Code an **einer** Stelle, als
@@ -9255,6 +9286,36 @@ Browsersitzungen nicht.** Dasselbe passiert ein zweites Mal, falls sich der
 Ort noch einmal ändert — etwa wenn die Probe nach einer Stunde ein anderes
 Ergebnis liefert (E-SA-02). Ein Mischbetrieb zweier Ablagen wäre das
 Schlimmere; ein sauberer Schnitt ist deshalb gewollt.
+
+**Danach: Betrieb → Status, Zeile „Sitzungsablage" ansehen** (seit Web
+20.26.1). Steht sie **blau**, liegt alles richtig. Steht sie **rot**, sagt der
+Satz daneben, was zu tun ist — er rät nicht mehr:
+
+| Satz in der Kleinzeile | Handgriff |
+|---|---|
+| „Das eigene Verzeichnis liess sich nicht anlegen" | Schreibrecht der Anwendungswurzel prüfen |
+| „Das eigene Verzeichnis ist nicht beschreibbar" | Rechte von `server/.sitzungen/` prüfen |
+| **„die Anlage uebernimmt den gesetzten Pfad aber nicht"** | **`.user.ini` anlegen, siehe unten** |
+| „lief bereits eine Sitzung" | `session.auto_start` oder `auto_prepend_file` der Anlage; dann tragen die Sitzungscookies auch **kein** `secure`/`SameSite` — beim Hoster abstellen lassen |
+
+**Der Handgriff `.user.ini`** (gemessen auf Staging am 20.09.2026, 5b.2a).
+Eine Datei neben `index.php`, eine Zeile, der absolute Pfad der Anlage:
+
+    session.save_path = "/home/webpages/…/nadoku-staging/.sitzungen"
+
+Dann rund fünf Minuten warten (`user_ini.cache_ttl`, Vorgabe 300 s) und die
+Statusseite neu laden. **Auf Staging hat das gereicht** — der Hoster hatte
+`session.save_path` nur gesetzt, nicht gesperrt.
+
+Sie liegt **nur auf dem Server** und gehört nicht ins Repositorium: Der Pfad
+ist anlagenabhängig (E-PP-04). Sie beginnt mit einem Punkt und fällt damit
+unter dieselbe `.htaccess`-Sperre wie `.sitzungen/`. **Sie steht allerdings
+NICHT in der Ausnahmeliste des Transports** — sie muss dort nicht stehen,
+solange der Transport nur löscht, was er selbst hochgeladen hat (6.5), aber
+wer den Transport wechselt, denkt an sie.
+
+**Produktiv ist ungeprüft.** Dort ist `session.save_path` nie erhoben worden;
+ob der Handgriff auch dort fällig ist, sagt die Zeile beim ersten Ausrollen.
 
 **Sie wiederholt sich nicht bei jedem Deploy** — das ist nachgemessen und
 nicht angenommen (6.5): Der heutige Transport löscht `.sitzungen/` nicht, weil

@@ -6595,5 +6595,36 @@ declare(strict_types=1);
  *   `use_strict_mode` in `auth_guard.php` nicht, das Sitzungscookie truege
  *   weder `secure` noch `SameSite`. Der Weg, beide zu trennen, steht im
  *   Pruefdokument.
+ *
+ * 20.26.2 — DER HANDGRIFF STEHT IM RUNBOOK, UND DER PFAD NUR NOCH EINMAL
+ *   (Nachzug zu Schritt 16, 20.09.2026).
+ *
+ *   AUF STAGING HAT SICH DIE FRAGE VON 20.26.1 BEANTWORTET. Die Zeile stand
+ *   auf `nicht_uebernommen` — Verzeichnis angelegt, 0700, Schreibprobe
+ *   bestanden, und `session.save_path` blieb auf `/home/webpages/tmp`. Eine
+ *   `.user.ini` neben `index.php` mit einer Zeile hat es behoben; die Zeile
+ *   steht seither blau. Der Hoster hatte den Wert also nur GESETZT, nicht
+ *   per `php_admin_value` GESPERRT.
+ *
+ *   DAMIT IST AUCH `session.auto_start` AUSGESCHLOSSEN: Dann hiesse die Lage
+ *   `sitzung_lief`. Die Sorge aus 20.26.1, das Sitzungscookie truege weder
+ *   `secure` noch `SameSite`, ist gegenstandslos — die Haertung in
+ *   `auth_guard.php` wirkt.
+ *
+ *   DIE `.user.ini` GEHOERT NICHT INS REPOSITORIUM. Der Pfad ist
+ *   anlagenabhaengig, und E-PP-04 sagt: Ein Hosterwechsel aendert
+ *   `config.php`, keine Codezeile. Sie steht deshalb als HANDGRIFF im
+ *   Runbook, mit den zwei Bedingungen (nur CGI/FastCGI; greift erst nach
+ *   `user_ini.cache_ttl`) und mit dem Satz, an dem man erkennt, dass man sie
+ *   braucht. Das Runbook traegt dazu eine Tabelle „welcher Satz heisst
+ *   welchen Handgriff" fuer alle vier Rueckfall-Lagen.
+ *
+ *   DIE EINE CODEAENDERUNG: Der wirksame Pfad stand zweimal in derselben
+ *   Zeile. Der Grund nennt jetzt nur den GESETZTEN; der wirksame steht
+ *   ohnehin am Ende.
+ *
+ *   PRODUKTIV IST UNGEPRUEFT. Dort ist `session.save_path` nie erhoben
+ *   worden. Ob derselbe Handgriff faellig ist, sagt dieselbe Zeile beim
+ *   ersten Ausrollen — das ist der Pruefpunkt, keine Vermutung.
  */
-const WEB_VERSION = '20.26.1';
+const WEB_VERSION = '20.26.2';

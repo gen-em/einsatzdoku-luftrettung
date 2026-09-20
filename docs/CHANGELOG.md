@@ -14,6 +14,53 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.26.2] — 2026-09-20
+
+**Der Handgriff, der den Rückfall auf Staging behoben hat, steht jetzt im Runbook.**
+
+### Behoben
+
+**Der wirksame Pfad stand zweimal in derselben Zeile.** Im Fall
+„nicht übernommen" nannte ihn der Grund („wirksam ist `…`") und die Zeile
+schloss noch einmal mit „Wirksam: `…`". Der Grund nennt jetzt nur noch den
+**gesetzten** Pfad; der wirksame steht ohnehin am Ende.
+
+### Hinzugefügt
+
+**`.user.ini` als benannter Handgriff** (`docs/Technik.md` 5b.2a und Runbook,
+Abschnitt 7). Auf Staging stand die Zeile „Sitzungsablage" auf
+`nicht_uebernommen` — Verzeichnis angelegt, `0700`, Schreibprobe bestanden,
+und `session.save_path` blieb trotzdem auf `/home/webpages/tmp`. Eine
+`.user.ini` neben `index.php` mit einer Zeile hat es behoben; die Zeile steht
+seither **blau**: *eigenes Verzeichnis, 0700, 11 Dateien*.
+
+Damit ist auch die Ursache belegt: Der Hoster hatte `session.save_path` nur
+**gesetzt**, nicht per `php_admin_value` **gesperrt**. Kein Support nötig.
+
+**Sie gehört nicht ins Repositorium** — der Pfad ist anlagenabhängig, und
+E-PP-04 sagt: Ein Hosterwechsel ändert `config.php`, keine Codezeile. Deshalb
+steht sie als **Handgriff** im Runbook, mit den beiden Bedingungen (nur bei
+CGI/FastCGI; greift erst nach `user_ini.cache_ttl`, Vorgabe 300 s) und mit dem
+Satz, woran man erkennt, dass man sie braucht.
+
+**Das Runbook trägt jetzt eine Tabelle** „welcher Satz auf der Statusseite
+heißt welchen Handgriff" — für alle vier Rückfall-Lagen, nicht nur für diese.
+
+### Geprüft
+
+Die Zeile „Sitzungsablage" auf Staging ist **blau**: *eigenes Verzeichnis,
+0700, 11 Dateien*. Damit sind **B-5 und B-2** des Prüfdokuments bestanden, und
+**B-11 ist beantwortet** — die Lage war `nicht_uebernommen`, also **nicht**
+`session.auto_start`; die Cookie-Härtung in `auth_guard.php` wirkt.
+
+### Offen
+
+**Produktiv ist ungeprüft.** Dort ist `session.save_path` nie erhoben worden.
+Ob derselbe Handgriff fällig ist, sagt dieselbe Zeile beim ersten Ausrollen
+dorthin — das ist der Prüfpunkt, keine Vermutung.
+
+---
+
 ## [Web 20.26.1] — 2026-09-20
 
 **Die Statusseite nannte eine Ursache, die sie nicht gemessen hatte.**
