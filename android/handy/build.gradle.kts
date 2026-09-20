@@ -169,13 +169,39 @@ android {
              * Sichtbar bleibt er trotzdem: Der Fall meldet sich als
              * "übersprungen", nicht als "bestanden". */
             all {
-                it.systemProperty(
-                    "nadoku.rundlauf",
-                    (project.findProperty("nadoku.rundlauf") as String?) ?: "",
-                )
+                val rundlauf = (project.findProperty("nadoku.rundlauf") as String?) ?: ""
+                it.systemProperty("nadoku.rundlauf", rundlauf)
                 it.testLogging {
                     events("skipped", "failed")
-                    showStandardStreams = true
+
+                    /* DER FEHLSCHLAG BRINGT SEINEN GRUND MIT. `events(…)`
+                     * nennt den Fall, nicht die Ursache; ohne die drei
+                     * Zeilen hier steht im Protokoll ein Name und sonst
+                     * nichts. Am 20.09.2026 hat genau das eine Stunde
+                     * gekostet (Backlog Nr. 240). */
+                    exceptionFormat =
+                        org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+                    showExceptions = true
+                    showCauses = true
+                    showStackTraces = true
+
+                    /* DIE STANDARDAUSGABE NUR, WENN DER RUNDLAUF LÄUFT.
+                     *
+                     * Sie stand bis zum 20.09.2026 auf `true` — für **eine**
+                     * Zeile: `KopplungRundlaufTest` gibt am Ende
+                     * "Rundlauf: N Geräte gekoppelt …" aus. Der Fall
+                     * überspringt sich aber selbst, wenn `nadoku.rundlauf`
+                     * leer ist, also im Prüftor IMMER.
+                     *
+                     * Bezahlt wurde die eine Zeile mit rund 9000 Zeilen
+                     * CloseGuard-Stapelabzügen aus Robolectric, die elf
+                     * Sekunden abdecken und das Protokoll unlesbar machen —
+                     * die Fehlschlagzeile lag davor und war über die
+                     * Log-Schnittstelle nicht mehr erreichbar.
+                     *
+                     * ABGESCHALTET WIRD NICHTS: Wer den Rundlauf anschaltet,
+                     * bekommt seine Ausgabe wie bisher. */
+                    showStandardStreams = rundlauf.isNotBlank()
                 }
             }
         }
@@ -186,6 +212,60 @@ kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
+}
+
+/* DAS ROBOLECTRIC-ABBILD KOMMT ÜBER GRADLE, NICHT ÜBER ROBOLECTRIC
+ * (Backlog Nr. 240, 20.09.2026).
+ *
+ * WAS VORHER GESCHAH. Robolectric holt sein Android-Archiv (`android-all-
+ * instrumented`, 145 MB) von sich aus **während des Testlaufs** von Maven —
+ * über seinen eigenen `MavenArtifactFetcher`, an Gradle vorbei: ohne
+ * Wiederholung, ohne Prüfsumme über den Abhängigkeitsauflöser, und ohne den
+ * Zwischenspeicher, den ein Läufer aufbauen könnte. Der Ablageort ist
+ * `~/.m2`, nicht der Gradle-Cache.
+ *
+ * Am 20.09.2026 brach dieser Download auf einem Läufer ab
+ * (`SocketException: Connection reset by peer`) und färbte Stufe 1 rot:
+ *
+ *     HandyBildTest > classMethod FAILED
+ *       java.lang.AssertionError at MavenArtifactFetcher.java:129
+ *
+ * `classMethod` ist der Klassenaufbau und kein Prüffall — es war also nie
+ * ein Testfehler. Örtlich blieb es unsichtbar, weil das Archiv dort längst
+ * im Zwischenspeicher lag; ein Läufer ist jedes Mal kalt.
+ *
+ * WARUM NICHT EINFACH DEN CACHE DES LÄUFERS AUFHEBEN. Das macht den Abbruch
+ * seltener, nicht unmöglich: Beim ersten Lauf und nach jedem Ablauf des
+ * Zwischenspeichers lädt Robolectric wieder. „Seltener" ist genau die Sorte
+ * Lösung, die `CLAUDE.md` als Flake-Behandlung zurückweist.
+ *
+ * WIE ES JETZT LÄUFT. Das Archiv ist eine gewöhnliche Abhängigkeit in einer
+ * eigenen Konfiguration; Gradle löst sie auf wie jede andere. `Sync` legt
+ * genau diese eine Datei in einen Ordner, und Robolectric läuft **offline**
+ * und nimmt sie von dort. Zur Testlaufzeit wird nichts mehr geholt.
+ *
+ * DER PREIS steht im Versionskatalog: Die Abbildkennung ist fest verdrahtet
+ * und gehört bei einer Änderung von `sdk=` oder einem Robolectric-Update
+ * mitgezogen. Vergisst man es, bricht der Lauf mit einer klaren Meldung —
+ * das ist der bessere Tausch gegen einen stillen Download. */
+val robolectricAbbild: Configuration by configurations.creating
+
+val robolectricAbbildOrdner = layout.buildDirectory.dir("robolectric-abbild")
+
+val robolectricAbbildBereitstellen = tasks.register<Sync>("robolectricAbbildBereitstellen") {
+    from(robolectricAbbild)
+    into(robolectricAbbildOrdner)
+}
+
+tasks.withType<Test>().configureEach {
+    dependsOn(robolectricAbbildBereitstellen)
+    /* `offline` OHNE `dependency.dir` wäre ein Abbruch mit einer Meldung
+     * über einen fehlenden Ordner — beides gehört zusammen. */
+    systemProperty("robolectric.offline", "true")
+    systemProperty(
+        "robolectric.dependency.dir",
+        robolectricAbbildOrdner.get().asFile.absolutePath,
+    )
 }
 
 dependencies {
@@ -219,6 +299,7 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
+    robolectricAbbild(libs.robolectric.abbild)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.androidx.test.ext.junit)
 

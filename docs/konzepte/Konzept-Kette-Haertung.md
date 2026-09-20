@@ -21,7 +21,7 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 > | | |
 > |---|---|
 > | Stand | 20.09.2026 — **AP1 umgesetzt** (Dokumentation; kein Web-Code, keine Versionsstufe). Konzept freigegeben (Auftraggeber, 20.09.2026, ohne Änderungen; Fassung nach der ersten Fortschreibung vom selben Tag: F3 neu gefasst, E-KH-20, AP3/AP4 angepasst, Z1 und Z2 erledigt) |
-> | Entschieden | **E-KH-01 bis -08 und -10 bis -20** — die Vorschläge aus Abschnitt 2.2 gelten seit der Freigabe. Dazu **E-KH-21 bis -23** aus der Umsetzung von AP1 (Abschnitt 2.4) — **von der Umsetzung entschieden, zur Kenntnis und zum Widerspruch** |
+> | Entschieden | **E-KH-01 bis -08 und -10 bis -20** — die Vorschläge aus Abschnitt 2.2 gelten seit der Freigabe. Dazu **E-KH-21 bis -24** aus der Umsetzung (Abschnitt 2.4; -24 vom 20.09.2026, außerhalb der Pakete) — **von der Umsetzung entschieden, zur Kenntnis und zum Widerspruch** |
 > | Zuarbeiten erledigt | **Z1** (alte Staging-Anlage stillgelegt — B2 damit geschlossen), **Z2** (Zeiger `produktion` auf `7150793`) und **Z3** — alle 20.09.2026. Z3 **beide Anlagen**, aber auf zwei Wegen: Produktiv aus *Betrieb → Status*, Staging aus einer `phpinfo()`, weil die Anwendung dort noch nicht läuft. Fünf Zeilen der Staging-Spalte bleiben leer |
 > | Offen | **E-KH-09 (Ursache und Abhilfe F3)** — fällt nach der Messung am Ende von AP3; der Nachtrag in Abschnitt 1.4 hat eine der drei Erklärungen verschmälert. **Z3-Rest**: die fünf Zeilen, die nur die Anwendung weiß — sie hängen an Rahmenplan 6a, Schritt 6 |
 > | In Arbeit | — (AP1 fertig bis auf seine Abnahme, AP2 als nächstes) |
@@ -489,6 +489,35 @@ an"), und es steht hier, weil es in diesem Konzept **wiederkehrt**: AP1
 ist so ein Paket, AP2 und AP6 werden es sein. Sobald ein Paket `tools/kette/`
 oder `tools/integritaetswache/` anfasst, bleibt es dabei — `tools/` stuft
 ebenfalls nicht hoch; erst eine Änderung unter `server/` tut es.
+
+**E-KH-24 — `setup-java` im Prüflauf wirkt global; der Uhr-Schritt wird
+ausdrücklich zurückgesetzt.** *Gefallen am 20.09.2026, außerhalb der
+Arbeitspakete — beim Beheben des Android-Fehlschlags (Android 0.15.1,
+Backlog Nr. 240), der `pruefung.yml` anfasst und damit dieses Konzept
+berührt.*
+
+`actions/setup-java` schreibt `JAVA_HOME` und `PATH` über `GITHUB_ENV` bzw.
+`GITHUB_PATH` und gilt damit für **alle folgenden Schritte** — nicht nur für
+den, neben dem es steht. Der Android-Schritt braucht Java 21; der
+Uhr-Schritt steht danach, übersetzt rund **35 Minuten** für alle Zielgeräte
+und nimmt `java` über `monkeyc` vom PATH. Er liefe damit ungefragt auf einem
+JDK, das niemand für ihn geprüft hat.
+
+*Entschieden:* Der Schritt „Fassungen nennen" hält den Standard-JDK des
+Läufers in `JAVA_HOME_LAEUFER` fest, **bevor** irgendetwas ihn umstellt; der
+Uhr-Schritt setzt `JAVA_HOME` und `PATH` daraus zurück und sagt in einer
+Zeile, womit er übersetzt.
+
+*Verworfen:* (a) `setup-java` global ohne Rückstellung — spart zwei Zeilen
+und stellt einen 35-Minuten-Schritt blind um; (b) den Android-Block hinter
+den Uhr-Schritt schieben — wirkt, hängt aber an der Reihenfolge und geht beim
+nächsten eingefügten Schritt still verloren; (c) `JAVA_HOME_21_X64` des
+Läuferabbilds statt `setup-java` — kommt ohne Action aus, hängt aber an einer
+Variablen, die GitHub ohne Zusage setzt.
+
+*Was daran zu prüfen ist:* Dass die Uhr weiterhin übersetzt. Ein Lauf mit
+`android=ja` **und** `uhr=ja` hat das noch nicht gezeigt; bis dahin ist es
+eine begründete Vorsichtsmaßnahme, keine Messung.
 
 ---
 

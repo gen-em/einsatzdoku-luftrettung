@@ -14,6 +14,84 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.15.1] — 2026-09-20
+
+**Stufe 1 meldete „264 tests completed, 1 failed" und verschwieg, welcher.**
+Es war keiner. Der Fehlschlag hieß `classMethod` — das ist der Klassenaufbau,
+kein Prüffall.
+
+### Behoben — Robolectric lädt sein Android-Abbild nicht mehr zur Laufzeit
+
+Robolectric holt das Abbild `org.robolectric:android-all-instrumented`
+(rund 145 MB) über seinen **eigenen** `MavenArtifactFetcher`, sobald der erste
+Prüffall anläuft. Das geht an Gradle vorbei: keine Wiederholung, keine
+Prüfsumme über den Abhängigkeitsauflöser, kein Zwischenspeicher, den ein
+Läufer aufbauen könnte — und abgelegt wird es in `~/.m2`, nicht im
+Gradle-Cache. Am 20.09.2026 brach der Download auf einem Läufer ab:
+
+```
+ERROR: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i7
+java.net.SocketException: Connection reset by peer
+	at org.robolectric.internal.dependency.MavenArtifactFetcher…(MavenArtifactFetcher.java:129)
+```
+
+**Warum es örtlich nie auffiel:** Dort liegt das Abbild seit dem ersten Lauf
+im Zwischenspeicher. Ein Läufer ist bei jedem Lauf neu — er lädt jedes Mal,
+und jedes Mal kann es schiefgehen. Das erklärt zugleich, warum es kein
+wackeliger Prüffall war, obwohl es wie einer aussah: Der Fehlschlag hing am
+Netz, nicht am Code.
+
+Das Abbild ist jetzt eine **erklärte** Test-Abhängigkeit in einer eigenen
+Konfiguration (`robolectricAbbild`), die Gradle wie jede andere auflöst —
+mit Wiederholung, Prüfsumme und Cache. Ein `Sync`-Schritt legt sie unter
+`build/robolectric-abbild/` ab, und Robolectric läuft mit
+`robolectric.offline=true` dagegen. **Gegengemessen:** `~/.m2` geleert, beide
+Module mit `--rerun-tasks` gefahren → `BUILD SUCCESSFUL`, und das Abbild
+taucht in `~/.m2` **nicht** wieder auf. Vorher tauchte es auf.
+
+**Der Preis, und er ist bewusst:** Die Fassung des Abbilds steht nun im
+Repositorium (`android/gradle/libs.versions.toml`) und muss zu
+`robolectric.properties` (`sdk=34`) passen. Was Robolectric bislang selbst
+wählte, wählen wir — dafür sichtbar, und ein Läufer ohne Netz kann die
+Prüffälle trotzdem fahren.
+
+### Geändert — die beiden Module reden endlich gleich über ihre Prüffälle
+
+Das Uhr-Modul hatte **gar kein** `testLogging`; das Handy-Modul hatte es, aber
+mit `showStandardStreams = true` fest an. Letzteres ist kein Versehen — der
+Rundlauf-Prüffall gegen eine echte `ingest.php` lebt von seiner Ausgabe. In
+dieser Form machte es das Protokoll aber unlesbar: **9000 Zeilen für elf
+Sekunden**, durchgehend CloseGuard-Stapelabzüge, und die Fehlschlag-Zeile lag
+davor. Über die Log-API, die nur vom Ende liest, war sie nicht erreichbar.
+
+`showStandardStreams` hängt jetzt an der Bedingung, die es begründet
+(`rundlauf.isNotBlank()`) — ist der Rundlauf nicht bestellt, bleibt die
+Ausgabe still. Abgeschaltet wird nichts. Dazu bei beiden Modulen die
+vollständige Ausnahme (`TestExceptionFormat.FULL`, Ursachen und Stapel), und
+das Uhr-Modul bekommt denselben Block.
+
+### Geändert — Stufe 1 nennt den Gegenstand ihres Fehlschlags
+
+`pruefung.yml` lädt bei einem roten Android-Schritt die Berichte als Artefakt
+hoch (`if: failure()`): `android/*/build/reports/**` — die HTML-Berichte der
+Prüffälle und die Lint-Ergebnisse, die daneben liegen — sowie
+`android/*/build/test-results/**` für die JUnit-XML. Bei Grün nichts, weil es
+dann nichts zu lesen gibt.
+
+Das Repositorium hält demselben Muster an anderer Stelle einen Vorwurf
+(Backlog Nr. 237, Bilderlauf): *„Ein Prüfmittel, das einen Befund meldet und
+den Grund verschweigt, kostet genau die Stunde, die es sparen sollte."* Hier
+kostete es einen ganzen zweiten Lauf, nur um den Namen zu erfahren — und der
+Name war dann `classMethod`.
+
+Außerdem steht das JDK des Android-Schritts jetzt fest (`setup-java`,
+Temurin 21) statt an dem, was das Läuferabbild gerade mitbringt. Die Module
+zielen unverändert auf `JavaVersion.VERSION_17` — das ist das Ziel des
+Bytecodes, nicht das JDK, das Gradle ausführt. Der Uhr-Schritt wird
+ausdrücklich auf das JDK des Läufers zurückgesetzt (E-KH-24): `setup-java`
+wirkt global auf alle folgenden Schritte, und die Uhr übersetzt danach rund
+35 Minuten lang — das wird nicht nebenbei umgestellt.
+
 ## [Werkzeug: Eine Abweisung ohne Meldung sagt jetzt, was sie ist] — 2026-09-20
 
 **Zwei Kettenläufe gegen die neue Staging-Anlage scheiterten an

@@ -2747,6 +2747,31 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     will, nimmt den Fall aus Nr. 221 als Prüffall: Eine Mailadresse in einem
     Rechtstext, 360 px, der Finder muss das `<p>` nennen.
 
+240. **Der Rundlauf-Prüffall des Handy-Moduls läuft in der Kette nie.**
+    *Aufgenommen 20.09.2026 beim Beheben des Robolectric-Downloads.*
+
+    `showStandardStreams` hängt jetzt an `rundlauf.isNotBlank()` — der
+    Bedingung, die es begründet. Damit steht schwarz auf weiß, was vorher nur
+    unausgesprochen galt: **In Stufe 1 ist `rundlauf` leer** — `.github/`
+    setzt `-Pnadoku.rundlauf` nirgends (gemessen: `grep -rn` → 0 Treffer).
+    Die Rundlauffälle überspringen sich dort also selbst; die 15 „skipped"
+    des Laufs vom 20.09.2026 enthalten sie.
+
+    **Das ist heute richtig** — die Kette hat keine PHP-Anlage, gegen die sie
+    laufen könnten, und eine gegen `staging-nadoku.gen-em.org` wäre eine
+    Schreibprobe gegen eine Anlage, die nicht dafür da ist. Es ist trotzdem
+    eine Lücke mit Ansage: Die drei Rundlaufklassen sind die einzigen
+    Prüffälle, die Handy und Server **zusammen** messen — und die einzigen,
+    die die Kette nie fährt. Was sie fänden, findet niemand automatisch.
+
+    **Zwei Wege stehen offen**, beide ungemessen: ein PHP-Dienst im
+    Prüfschritt selbst (`php -S` über `server/`, plus die Datenbank — das ist
+    der Aufwand), oder ein Vertragsprüfstand, der die erwarteten Anfragen als
+    Attrappe beantwortet und nur das Nachrichtenformat prüft (billig, misst
+    aber den Server nicht mit). Wer das angeht, entscheidet zuerst, welche
+    der beiden Fragen er beantworten will — sie sind nicht dieselbe.
+
+
 
 ## Erledigt
 

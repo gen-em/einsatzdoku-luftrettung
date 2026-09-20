@@ -81,6 +81,14 @@ jobs:
           echo "Python: $(python3 -V)"
           echo "Node:   $(node -v)"
           echo "Java:   $(java -version 2>&1 | head -1)"
+          # DEN STANDARD-JDK DES LAEUFERS FESTHALTEN. Weiter unten stellt
+          # `setup-java` fuer den Android-Schritt auf Java 21 um — und zwar
+          # global, fuer ALLE folgenden Schritte. Die Uhr uebersetzt danach;
+          # sie laeuft seit jeher auf dem JDK des Laeufers, und das ist ein
+          # 35-Minuten-Schritt, den hier niemand nebenbei umstellt. Also wird
+          # der Wert gemerkt und der Uhr-Schritt ausdruecklich darauf
+          # zurueckgesetzt (E-KH-24).
+          echo "JAVA_HOME_LAEUFER=${JAVA_HOME:-}" >> "$GITHUB_ENV"
           # DREI ZAEHLUNGEN, DREI AUSLIEFERUNGEN (CLAUDE.md 2) — der
           # Schrittname sagt "Fassungen", also muessen alle drei dastehen.
           #
@@ -477,7 +485,25 @@ jobs:
           php tools/sitzungshaertung/pruefen.php --selbstprobe
           php tools/sitzungshaertung/pruefen.php
 
+      - name: Java 21 für die Android-Module
+        if: steps.bereiche.outputs.android == 'ja'
+        # WARUM AUSDRÜCKLICH. Bis hierher lief der Android-Bau auf dem JDK, das
+        # das Läuferabbild gerade mitbringt — eine Zahl, die sich ohne unser
+        # Zutun ändert. Ein Gradle-Lauf, der auf dem Entwicklungsrechner (Java
+        # 21) grün ist und in der Kette auf einem anderen JDK rot wird, ist ein
+        # Fehlschlag ohne Aussage. `setup-java` schreibt die Zahl fest.
+        #
+        # DIE MODULE ZIELEN AUF 17 (`JavaVersion.VERSION_17` in beiden
+        # `build.gradle.kts`) — das bleibt so. 17 ist das Ziel des erzeugten
+        # Bytecodes, 21 ist das JDK, das Gradle selbst ausführt; das eine sagt
+        # nichts über das andere.
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Android — bauen, prüfen, linten
+        id: androidbau
         if: steps.bereiche.outputs.android == 'ja'
         # 0 Lint-Fehler und 0 Fehlschläge; der Rückgabewert von Gradle trägt
         # beides. Das Android-SDK bringt der Läufer mit (ANDROID_HOME ist
@@ -493,6 +519,35 @@ jobs:
           chmod +x ./gradlew
           ./gradlew --no-daemon build
 
+      - name: Android — Berichte des Fehlschlags mitnehmen
+        # WARUM ES DIESEN SCHRITT GIBT (gemessen 20.09.2026, Lauf #98). Der
+        # Android-Schritt meldete „Execution failed for task
+        # ':handy:testDebugUnitTest'" und danach nur noch den Rat, es mit
+        # `--info` zu versuchen. WELCHER Prüffall gefallen war, stand nirgends
+        # — die Kette weiß es, schreibt es in `build/reports/tests/` und wirft
+        # den Läufer danach weg. Ein roter Lauf, der seinen Gegenstand nicht
+        # nennt, kostet einen zweiten Lauf, nur um ihn zu erfahren.
+        #
+        # `if: failure()` UND NICHT `always()`: Bei Grün gibt es nichts zu
+        # lesen, und jedes Artefakt kostet Speicherplatz und Zeit.
+        # `reports/**` trägt beides — die HTML-Berichte der Prüffälle UND die
+        # Lint-Ergebnisse (`lint-results-*.html`), die daneben liegen;
+        # `test-results/**` die JUnit-XML für maschinelles Lesen.
+        #
+        # AN DEN ANDROID-SCHRITT GEBUNDEN, nicht an `failure()` allein: Ein
+        # Fehlschlag weiter oben (Wortliste, `php -l`) überspringt den
+        # Android-Bau, und dann gibt es keinen Ordner `build/` — das Artefakt
+        # wäre leer und die Warnung darüber verwirrend.
+        if: failure() && steps.androidbau.outcome == 'failure'
+        uses: actions/upload-artifact@v5
+        with:
+          name: android-berichte
+          path: |
+            android/*/build/reports/**
+            android/*/build/test-results/**
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Uhr Stufe I — für alle Zielgeräte übersetzen
         if: steps.bereiche.outputs.uhr == 'ja'
         # BRAUCHT `CIQ_GERAETE_URL`. Die Adresse steht bewusst nicht im
@@ -503,6 +558,18 @@ jobs:
         env:
           CIQ_GERAETE_URL: ${{ secrets.CIQ_GERAETE_URL }}
         run: |
+          # ZURÜCK AUF DAS JDK DES LÄUFERS (E-KH-24). Lief der Android-Schritt
+          # vorher, hat `setup-java` JAVA_HOME und PATH global auf Java 21
+          # umgestellt. `monkeyc` ist ein Shell-Vorspann, der `java` vom PATH
+          # nimmt — er bekäme die 21 ungefragt mit. Dieser Schritt übersetzt
+          # für alle Zielgeräte und dauert rund 35 Minuten; ein Fehlschlag
+          # darin, verursacht von einer Änderung am Android-Bau, wäre teuer und
+          # schwer zuzuordnen. Also ausdrücklich zurück, und gesagt, worauf.
+          if [ -n "${JAVA_HOME_LAEUFER:-}" ]; then
+            export JAVA_HOME="$JAVA_HOME_LAEUFER"
+            export PATH="$JAVA_HOME/bin:$PATH"
+          fi
+          echo "Uhr übersetzt mit: $(java -version 2>&1 | head -1)"
           if [ -z "${CIQ_GERAETE_URL:-}" ]; then
             echo "::warning::CIQ_GERAETE_URL nicht gesetzt — Uhr Stufe I ÜBERSPRUNGEN, nicht bestanden."
             echo '**Uhr Stufe I: ÜBERSPRUNGEN** (kein `CIQ_GERAETE_URL`) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"

@@ -7707,7 +7707,10 @@ Es gibt keine Uhr und kein Telefon. Was trotzdem geht, steht in
 `android/LIESMICH.md`; die Kurzform:
 
 - **Prüffälle** über JUnit und Robolectric — auch gegen ein *echtes* SQLite
-  und, wo eine lokale Installation läuft, gegen `ingest.php` selbst.
+  und, wo eine lokale Installation läuft, gegen `ingest.php` selbst. Das
+  Android-Abbild, das Robolectric dafür braucht, kommt seit Android 0.15.1
+  über **Gradle** statt über Robolectrics eigenen Downloader; die Läufe sind
+  damit netzunabhängig (`android/LIESMICH.md` 2.3).
 - **Bilder** über Robolectric im NATIVE-Grafikmodus. `captureToImage()` ist
   unter Robolectric strukturell unbrauchbar (Deadlock in
   `WindowCapture.forceRedraw`); der Weg darüber ist der einzige, der ohne
@@ -8730,12 +8733,30 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 | `tools/migrationsregister/pruefen.php` | 0 Befunde, Selbstprobe 4/4 |
 | `tools/cspprobe/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `tools/sitzungshaertung/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
+| Java 21 (`actions/setup-java`) | Temurin 21 für den Android-Schritt — **nur wenn `android/` berührt ist**; eine Festlegung, kein Sollwert |
 | `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge — **nur wenn `android/` berührt ist** |
+| Berichte des Android-Fehlschlags (`actions/upload-artifact`) | Artefakt `android-berichte` — **nur bei `failure()`**; bei Grün nichts |
 | Uhr Stufe I (`pruefstand.sh aufbau-uebersetzen`) | übersetzt für alle Zielgeräte — **nur wenn `watch/` oder `tools/uhr-pruefstand/` berührt ist** |
 
 > **Die Reihenfolge ist die des Arbeitslaufs**, und sie hat einen Grund: Was
 > ohne Netz und ohne SDK läuft, läuft zuerst. Ein Syntaxfehler soll nicht erst
 > nach dem Android-Build auffallen, der Minuten braucht.
+>
+> **Der Android-Schritt lädt seine Berichte nur bei Rot hoch** (seit Android
+> 0.15.1). Grund: Am 20.09.2026 meldete er „264 tests completed, 1 failed"
+> und nannte den Fehlschlag nirgends erreichbar — die Log-API liest vom Ende,
+> und dort standen 9000 Zeilen CloseGuard-Ausgabe für elf Sekunden. Der
+> Name stand im HTML-Bericht unter
+> `android/handy/build/reports/tests/…/index.html`, und der starb mit dem
+> Läufer. Das Artefakt trägt jetzt `reports/**` (Prüffälle **und** Lint) und
+> `test-results/**` (JUnit-XML). Bei Grün gibt es nichts zu lesen.
+>
+> **`setup-java` wirkt global auf alle folgenden Schritte** — auch auf den
+> Uhr-Schritt, der danach rund 35 Minuten übersetzt und `java` vom PATH
+> nimmt. Der Uhr-Schritt setzt deshalb ausdrücklich auf das JDK des Läufers
+> zurück, dessen Wert der Schritt „Fassungen nennen" vorher in
+> `JAVA_HOME_LAEUFER` festhält (E-KH-24). Wer die Reihenfolge der Schritte
+> ändert, prüft diese Kopplung mit.
 >
 > **`tools/kettenaufrufe/` ist das einzige Prüfmittel, das die KETTE prüft**
 > und nicht die Anwendung. Es liest jeden `run:`-Block der drei Arbeitsläufe,
