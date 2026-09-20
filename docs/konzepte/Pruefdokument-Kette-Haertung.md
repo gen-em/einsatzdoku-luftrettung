@@ -444,63 +444,43 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   einem Lauf ohne Pause). Mit altem Prüfkonto melden Kreisläufe und
   Bilderlauf **„ÜBERSPRUNGEN"** oder scheitern an der Anmeldung.
 
-- [ ] **5a — Liegt die Sitzungsablage von Staging in einem Verzeichnis, das
-  andere lima-city-Kunden sehen?**
-  Die `phpinfo()` nennt `session.save_path = /home/webpages/tmp`. Die eigenen
-  Pfade der Anlage lauten dagegen `/home/webpages/lima-city/<konto>/…` — die
-  Sitzungsablage liegt also **zwei Ebenen darüber**, auf einer Ebene, die dem
-  Namensschema nach mehreren gehört. **Gemeint ist kundenübergreifend auf
-  demselben System, nicht innerhalb des eigenen Webspace.**
+- [x] **5a — Liegt die Sitzungsablage von Staging in einem Verzeichnis, das
+  andere lima-city-Kunden lesen können? — Gemessen am 20.09.2026: nein.**
 
-  > **Die Anzeichen sprechen eher dagegen, und das gehört dazu.** Der
-  > Systemname der Anlage ist `c4f6c87681b3` — zwölf Hexstellen, die Bauform
-  > eines **Container-Hostnamens** —, die Serveradresse ist `172.19.0.2` aus
-  > einem Container-Netz, und die Kopfzeilen tragen kundenbezogene Kennungen
-  > eines vorgelagerten Vermittlers. Läuft PHP je Kunde in einem **eigenen
-  > Container**, ist `/home/webpages/tmp` **darin** nur das eigene, wie immer
-  > der Pfad heißt. **Das ist ein Indiz und keine Messung** — und die
-  > Hausregel lautet, dass man ohne Messung nichts behauptet.
+  | | |
+  |---|---|
+  | Pfad | `/home/webpages/tmp` |
+  | Auflistbar | **nein** (`scandir()` scheitert) |
+  | Rechte | **0773** — `rwx` Eigentümer, `rwx` Gruppe, **`-wx` für alle anderen** |
+  | Eigentümer | **UID 0** (root) · die Anlage läuft unter einer eigenen UID |
 
-  > **Und die Verschlüsselungszusage hängt nicht daran.** Nachgesehen am
-  > 20.09.2026: Eine Sitzung dieser Anwendung führt `user_id`, `role`,
-  > `csrf`, `epoch`, `last_seen`, `login_fails`, `pw_token` und etwas
-  > Oberflächenzustand — **kein Schlüsselmaterial**. Der Datenschlüssel
-  > entsteht im Browser, der Server-Anteil steht in `config.php` und wird je
-  > Anfrage berechnet (`HMAC(kdf_anteil, 'konto:<id>')`), nicht in der
-  > Sitzungsdatei abgelegt. **Was eine lesbare Sitzungsdatei trotzdem
-  > hergäbe, ist die Sitzung selbst** — der Dateiname ist die Sitzungs-ID.
-  > Damit ist man angemeldet: Die gesamte Klartextliste aus `CLAUDE.md` 4
-  > (GPS-Spur, Phasenkoordinaten, Zeiten, Transportziel, Besatzungsnamen,
-  > Diensttagsnotizen) läge offen, bei `role = admin` dazu die Verwaltung.
-  > Die **verschlüsselten** Felder blieben zu, weil das Passwort fehlt.
+  **Die Zahl „0 Einträge" ist keine Aussage über das Verzeichnis**, sondern
+  die Folge davon, dass `scandir()` gescheitert ist — genau der Fall, vor dem
+  `CLAUDE.md` 6 warnt („eine grüne Zahl ist erst dann ein Beleg, wenn sie das
+  Gemessene benennt"). Was zählt, sind die Rechte.
 
-  *Weg (selbst messen, besser als fragen):* Eine PHP-Datei mit **Zufallsnamen**
-  in den Staging-Webroot legen, **einmal** aufrufen, **sofort löschen** — das
-  Muster der Zielprobe aus E-KH-07:
-  ```php
-  <?php
-  $p = session_save_path() ?: sys_get_temp_dir();
-  $n = @scandir($p);
-  printf("Pfad: %s\nLesbar: %s\nEintraege gesamt: %d\nDavon sess_*: %d\nRechte: %o\nEigentuemer-UID: %s\nMeine UID: %s\n",
-      $p, $n === false ? 'nein' : 'ja', $n ? count($n) : 0,
-      $n ? count(preg_grep('/^sess_/', $n)) : 0,
-      @fileperms($p) & 0777, @fileowner($p), function_exists('posix_geteuid') ? posix_geteuid() : '?');
-  ```
-  *Erwartet:* **„Lesbar: nein"** — oder „ja" mit einer Zahl von `sess_*`, die
-  zu den eigenen Sitzungen passt (bei einer frischen Anlage: **0 oder 1**).
-  *Scheitern erkennbar an:* Eine dreistellige oder größere Zahl von `sess_*`.
-  Dann ist das Verzeichnis geteilt, und **es ist derselbe Fehler, dessentwegen
-  Staging gerade umgezogen ist** — B2 war, dass Staging-PHP Produktivs
-  `config.php` lesen konnte. Auf Staging wiegt es leichter (keine echten
-  Patientendaten), aber es gehört gewusst, **bevor** dort Sitzungen laufen.
-  *Das Skript gibt bewusst keine Dateinamen aus:* Ist das Verzeichnis geteilt,
-  sind das fremde Sitzungs-IDs.
-  *Abhilfe, falls nötig:* `session.save_path` ist `PHP_INI_ALL` und lässt sich
-  mit einer **`.user.ini`** im Webroot auf ein eigenes Verzeichnis legen —
-  ohne Codeänderung (`user_ini.filename = .user.ini` ist auf der Anlage
-  aktiv). **Dann gehört diese Datei in die Schutzliste** (E-KH-20): Sie liegt
-  nur auf dem Server, steht nicht im Repositorium, und ein Transport mit
-  Löschabgleich nähme sie mit.
+  **Es ist geteilt, aber gegen das Auflisten gesperrt — und das ist Absicht.**
+  Ein root-eigenes `0773` ohne Leserecht für Fremde ist kein Zufall, sondern
+  ein bewusster Zuschnitt des Hosters: *hineinschreiben ja, die eigene Datei
+  bei Namen öffnen ja, fremde sehen nein.* Die Container-Anzeichen aus der
+  `phpinfo()` (Hex-Hostname, Container-Netz) trugen also **nicht** — die
+  Anlagen teilen sich das Verzeichnis sehr wohl. **Die Frage war richtig
+  gestellt und die Antwort ist trotzdem beruhigend.**
+
+  **Drei Nachsätze, damit sich niemand zu weit darauf beruft:**
+  **(1)** Ohne Leserecht ist eine Sitzungsübernahme durch Auflisten
+  ausgeschlossen; Sitzungs-IDs sind 128 Bit und nicht zu raten.
+  **(2) Es fehlt das Sticky-Bit** (`0773`, nicht `1773`). Wer dort schreiben
+  darf, darf auch Dateien **anlegen** — theoretisch eine untergeschobene
+  Sitzungsdatei. **Und `session.use_strict_mode` schützt davor NICHT**: Es
+  weist eine Sitzungs-ID ab, die es *nicht gibt* — eine untergeschobene gibt
+  es. Praktisch ist der Weg zu, weil `session.use_only_cookies` an ist und
+  ein fremder Kunde unter fremder Adresse **kein Cookie für diese Domain
+  setzen** kann. Wer sich auf strict mode beruft, beruft sich auf das
+  Falsche.
+  **(3) Für Produktiv ist dieselbe Frage nicht erhoben**, und für
+  Selbsthoster ist sie offen. Die Abhilfe, die das grundsätzlich löst, steht
+  als Vorschlag in Abschnitt 4.
 
 - [ ] **6 — Fremdaufgabe, hier nur gemeldet: P5b hat keine Erledigt-Zeile.**
   Gemessen am 20.09.2026: PR #57 ist seit dem 18.09.2026 auf `main`
@@ -552,6 +532,41 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   (5b.1). Niedrig, aber **vor** der nächsten Plattformaussage: Solange sie
   steht, misst die Statusseite auf fremden Hostern falsch, und genau dort
   wird sie gebraucht.
+
+- **Die Anwendung überlässt ihre Sitzungsablage dem Hoster und prüft sie
+  nicht.** Anlass: Prüfpunkt 5a. Auf lima-city liegt sie in einem **geteilten**
+  Verzeichnis (`/home/webpages/tmp`, root, `0773`); dort fehlt Fremden das
+  Leserecht, und damit ist es gutgegangen. **Auf Produktiv ist der Wert nicht
+  erhoben, und für Selbsthoster ist er völlig offen** — das verträgt sich
+  nicht mit R81 („die Anwendung ist nicht auf einen Hoster zugeschnitten").
+  Eine Sitzungsdatei trägt zwar **kein Schlüsselmaterial**, aber ihr
+  **Dateiname ist die Sitzungs-ID**; wer sie auflisten kann, ist angemeldet.
+  Drei Stufen, aufsteigend nach Aufwand:
+  1. **Messen und sagen.** `plattform_pruefen()` bekommt einen Prüfpunkt in
+     der Bauform der bestehenden Schreibrechte-Probe: *Ist die Sitzungsablage
+     für Fremde auflistbar?* Antwort `false` = rot, `null` wo nicht
+     feststellbar. Das beantwortet die Frage auf **jeder** Installation, ohne
+     dass jemand den Hoster fragt. **Kleinster Eingriff, größter Ertrag.**
+  2. **Selbst in die Hand nehmen.** `session_save_path()` auf ein eigenes
+     Verzeichnis unter der Anwendungswurzel setzen, `0700`, Name mit
+     führendem Punkt — dann greift die **bestehende** Punktdatei-Sperre der
+     `.htaccess` (Zeile 64), und **Stufe 2 misst sie bereits**. Zu bedenken:
+     **`session.gc_probability = 0`** auf lima-city, PHP räumt dort also nie
+     selbst auf; ein eigenes Verzeichnis muss der **Aufräum-Job** (4.97a)
+     mitnehmen, sonst wächst es unbegrenzt. Dazu ein Eintrag in der
+     **Schutzliste** (E-KH-20) — ein achter nur-auf-dem-Server-Pfad. Auf
+     nginx greift `.htaccess` nicht; dort zählt allein `0700`.
+  3. **Grundsätzlich: Sitzungen in die Datenbank** (`session_set_save_handler`).
+     Löst es für jeden Hoster und jedes Dateisystem, räumt über den
+     bestehenden Job auf — kostet Schema, Migration und Sorgfalt beim Sperren.
+  **Quer dazu, und unabhängig vom Speicherort: Sitzungsbindung.** Ein
+  Zufallstoken, das **nur** im Cookie steht und dessen Hash in der Sitzung
+  liegt, macht eine gelesene Sitzungsdatei wertlos — auch eine aus einem
+  gefundenen Backup. Das wirkt gegen jeden Store-Leak und ändert den
+  Speicherort nicht.
+  **Gehört nicht zu Kette II** (das ist die Auslieferungskette, nicht die
+  Anwendungssicherheit); Stufe 1 passt in die Nähe von R81, die übrigen in
+  eine Sicherheitsrunde.
 
 *(Die Vorschläge aus Konzept Abschnitt 8 — atomare Auslieferung, die Grenze
 der Wache, die Ablösung der Fremd-Aktion, der Vermerk an Nr. 234 — gehören

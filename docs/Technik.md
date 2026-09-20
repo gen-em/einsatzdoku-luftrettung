@@ -9019,9 +9019,16 @@ sobald die Statusseite dort antwortet. Alles, was nur die Anwendung weiß
 > Jede Netzverbindung, die PHP über einen Stream aufbaut — SMTP-Probe,
 > Backup-Ziel per SFTP, ein HTTP-Abruf — bricht dort nach fünf Sekunden ab.
 > **(2) `session.save_path = /home/webpages/tmp`** liegt **über** dem eigenen
-> Verzeichnis. Ob lima-city es je Konto trennt, sagt die Auskunft nicht —
-> und das ist genau die Frage, deren Antwort bei der alten Anlage **B2** war.
-> Sie gehört beantwortet, bevor Staging echte Sitzungen führt.
+> Verzeichnis — es ist also **geteilt**. **Gemessen am 20.09.2026:** root als
+> Eigentümer, Rechte **0773**, für Fremde also `-wx` **ohne Leserecht**; ein
+> `scandir()` aus der Anlage heraus scheitert. Andere Kunden können die
+> Sitzungsdateien damit **nicht auflisten**, und Sitzungs-IDs sind 128 Bit.
+> Der Zuschnitt ist Absicht des Hosters, und er trägt. **Dass die Anwendung
+> sich darauf verlässt, ohne es zu prüfen, trägt nicht:** Auf Produktiv ist
+> derselbe Wert nicht erhoben, und für Selbsthoster ist er offen. Eine
+> Sitzungsdatei führt zwar kein Schlüsselmaterial — ihr **Dateiname ist die
+> Sitzungs-ID**, und wer sie auflisten kann, ist angemeldet. Vorschlag im
+> Prüfdokument, Abschnitt 4.
 > **(3) `open_basedir` ist leer** und `allow_url_fopen` an. Beides ist die
 > Voreinstellung vieler Hoster und kein Mangel der Anwendung; es steht hier,
 > damit der Vergleich später nicht bei null anfängt.
