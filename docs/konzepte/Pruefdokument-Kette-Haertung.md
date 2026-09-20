@@ -24,9 +24,9 @@ abgehakt ist (R62).
 > | Stand | 20.09.2026 — **AP1 gebaut (Abnahme offen), AP2 gebaut, AP3 gebaut.** AP4 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **23** (Abschnitt 2): F-KH-U-01 bis F-KH-U-24 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-24: Abruf und anschließender Steuerbefehl gehen in einer Sitzung durch** — acht Vermutungen, acht Messungen, und achtmal kann `curl`, woran die Aktion stirbt |
-> | F3 | **so weit eingegrenzt, wie es von außen geht — und weiter nicht benannt. SIEBEN** Vermutungen sind mit je einer Messung ausgeschlossen, zuletzt die Menge (**80 von 80 in einer Sitzung**, F-KH-U-22). Tabelle dort. **Damit ist der Vorrat erschöpft, den ein zweiter Client prüfen kann:** `curl` kann jedes Mal, woran die Aktion stirbt. Der nächste Schritt geht an die Aktion selbst (**Prüfpunkt 18**, kostet einen echten Auslieferungslauf) oder an den Hoster — die Frage ist jetzt beantwortbar gestellt. **E-KH-09 (Pflichtstopp) steht** |
-> | Prüfliste | 24 Punkte: **8 abgehakt**, 5 teilweise, **11 offen** |
+> | Funde | **24** (Abschnitt 2): F-KH-U-01 bis F-KH-U-25 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach |
+> | F3 | **GEFUNDEN am 20.09.2026** (F-KH-U-25). Der Abbruch passiert beim **`RETR` auf die nicht vorhandene Zustandsdatei** — die Datenverbindung steht per `EPSV` schon, der Server schließt sie, `basic-ftp` liest `ECONNRESET` auf dem Datensocket. Die Aktion deutet das als „first publish" und arbeitet mit einem **toten Client** weiter; beim ersten `MKD` fällt es auf. **Der Fehler liegt drei Schritte vor der Stelle, die er meldet.** Acht Trennversuche liefen daran vorbei, weil `curl` jedes Mal nur Dateien abrief, die es selbst hochgeladen hatte — **keiner hat je eine FEHLENDE Datei abgerufen**. **E-KH-09 zur Hälfte erfüllt:** Ursache benannt und belegt, Abhilfe vorgeschlagen und noch nicht gefahren (AP4) |
+> | Prüfliste | 25 Punkte: **9 abgehakt**, 5 teilweise, **11 offen** (Prüfpunkt 18 ist gegenstandslos geworden) |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
 
 ---
@@ -483,6 +483,124 @@ Error: Client is closed because read ECONNRESET (data socket)
 
 ## 2. Funde aus der Umsetzung
 
+**F-KH-U-25 — F3 IST GEFUNDEN. Der Abbruch passiert beim `RETR` auf die
+nicht vorhandene Zustandsdatei; gemeldet wird er erst beim `MKD` danach.**
+*Lauf 35543081419, 20.09.2026, 22:55 UTC, Gesprächslauf gegen
+`.zielprobe-gespraech/`.*
+
+Der FTP-Dialog, wörtlich aus dem Protokoll:
+
+```
+> PBSZ 0
+< 200 PBSZ 0 successful
+> PROT P
+< 200 Protection set to Private
+  changing dir to .zielprobe-gespraech/
+> MKD .zielprobe-gespraech
+< 257 "/.zielprobe-gespraech" - Directory successfully created
+> CWD .zielprobe-gespraech
+< 250 CWD command successful
+  dir changed
+Trying to find optimal transfer strategy...
+> EPSV
+< 229 Entering Extended Passive Mode (|||63029|)
+Optimal transfer strategy found.
+> RETR .deploy-state-gespraech.json
+> QUIT
+```
+
+**`> RETR` — und keine Serverantwort. Direkt `> QUIT`.** Jede andere Zeile
+des Dialogs hat ihr `<`; diese nicht. Danach:
+
+```
+No file exists on the server "…" - this must be your first publish! 🎉
+…
+📁 Create: api
+creating folder "api/"
+  changing dir to api
+Error: Client is closed because read ECONNRESET (data socket)
+```
+
+**Die Kette, Glied für Glied:**
+
+| # | was geschieht | Zustand |
+|---|---|---|
+| 1 | `MKD` + `CWD` ins Zielverzeichnis | gelingt (257, 250) |
+| 2 | `EPSV` | gelingt (229, Port 63029) |
+| 3 | **`RETR` auf die Zustandsdatei** | **keine Antwort, Datenverbindung stirbt, `QUIT`** |
+| 4 | `getServerFiles` fängt den Fehler ab | deutet ihn als **„first publish"** |
+| 5 | rechnet 688 Dateien aus, arbeitet weiter | **mit einem toten Client** |
+| 6 | erster echter Befehl: `MKD api` | „Client is closed because read ECONNRESET" |
+
+**Der Fehler liegt bei Schritt 3. Gemeldet wird Schritt 6.** Deshalb stand
+seit dem 19.09.2026 `ensureDir` im Verdacht — und deshalb hat kein
+Trennversuch ihn je getroffen.
+
+**Warum `RETR` stirbt:** Die Datenverbindung ist per `EPSV` bereits geöffnet,
+als der Server merkt, dass die Datei nicht existiert. Er schließt sie;
+`basic-ftp` liest darauf ein `ECONNRESET` **auf dem Datensocket**, statt die
+`550`-Antwort auf dem Steuerkanal zu bekommen.
+
+**Die Aktion kennt dieses Problem — es steht in ihrem eigenen Quelltext.**
+`deploy.js`, Z. 50–51, als Kommentar über `downloadFileList`:
+
+> „basic-ftp doesn't seam to close the connection when using steams over some
+> ftps connections. This appears to be dependent on the ftp server"
+
+Der Autor hat es mit einer Pufferdatei umgangen; der Kern blieb. Und
+`utilities.js` Z. 67 sagt, warum keine Wiederholung hilft:
+
+> „Connection closed. This library does not currently handle reconnects"
+
+**Warum acht Trennversuche daran vorbeigelaufen sind — und das ist mein
+Fehler, nicht ein Pech:** `curl` hat in jedem einzelnen Versuch nur Dateien
+abgerufen, **die es selbst zuvor hochgeladen hatte**. Die Zielprobe tut das,
+die Mengenprobe tut das, und die Sitzungsprobe — die den Abruf ausdrücklich
+messen sollte — lud erst hoch und dann ab. **Kein einziger Versuch hat je
+eine FEHLENDE Datei abgerufen.** Genau das ist die Operation, an der es
+stirbt.
+
+**Warum jeder Probelauf grün war:** `getServerFiles` läuft auch im
+Trockenlauf, also stirbt die Verbindung dort genauso — aber danach kommt
+kein Steuerbefehl mehr, nur noch „Sync complete". Der tote Client fällt
+nicht auf. Das ist Wort für Wort, was F-KH-U-23 aus dem Quelltext
+vorhergesagt hat.
+
+**Warum lima-city grün läuft:** Dort liegt eine Zustandsdatei. `RETR` findet
+sie, und der Fall tritt nie ein. **Die Zeile „die Bibliothek als solche"
+war also die ganze Zeit die richtige Spur** — sie stand nur mit der falschen
+Begründung als „ausgeschlossen" in der Tabelle.
+
+**Und daraus folgt das Bittere:** Der Zustand ist selbsterhaltend. Solange
+keine Zustandsdatei auf dem Server liegt, stirbt jeder Lauf an Schritt 3 —
+und weil er stirbt, wird nie eine geschrieben. **Jeder Lauf ist der erste.**
+
+**Abhilfe (AP4, vorgeschlagen, NICHT erprobt):** Einmal von Hand eine
+gültige Zustandsdatei an die Stelle legen, auf die `state-name` zeigt. Dann
+findet `RETR` sie, der Reset bleibt aus, und der Lauf geht durch. Format
+(aus `types.js` der Aktion):
+
+```json
+{
+  "description": "DO NOT DELETE THIS FILE. This file is used to keep track of which files have been synced in the most recent deployment. If you delete this file a resync will need to be done (which can take a while) - read more: https://github.com/SamKirkland/FTP-Deploy-Action",
+  "version": "1.0.0",
+  "generatedTime": 1758400000000,
+  "data": []
+}
+```
+
+`"data": []` heißt „der Server ist leer" — beim ersten echten Lauf ist das
+richtig, die Aktion lädt dann alles hoch und schreibt die Datei danach
+selbst fort.
+
+**E-KH-09 ist damit zur Hälfte erfüllt:** Die Ursache ist **benannt und
+belegt**. Die Abhilfe ist vorgeschlagen und **noch nicht gefahren** — das
+ist AP4.
+
+**Was der Lauf hinterlassen hat:** das Verzeichnis `.zielprobe-gespraech/`
+auf Produktiv, **leer** (er starb vor der ersten Datei). Es ist von Hand zu
+entfernen. Die Anwendung ist unberührt geblieben, wie vorgesehen.
+
 **F-KH-U-24 — Abruf und anschließender Steuerbefehl gehen in einer Sitzung
 durch. Acht Vermutungen, acht Messungen, F3 weiter nicht benannt.**
 *Lauf 35541947020, 20.09.2026, 22:32 UTC, `probelauf_sitzungsprobe`.*
@@ -510,7 +628,7 @@ eindeutig:**
 |---|---|
 | Läuferabbild, Node-Fassung | Z5 Teil 1 |
 | FTPS-Zertifikat | F-KH-U-08, behoben |
-| die Bibliothek *als solche* | lima-city läuft mit derselben Aktion grün |
+| die Bibliothek *als solche* | lima-city läuft mit derselben Aktion grün — **diese Zeile war falsch begründet, siehe F-KH-U-25**: Auf lima-city liegt eine Zustandsdatei, deshalb tritt der Fall dort nie ein |
 | TLS-Sitzungswiederverwendung | F-KH-U-16 — vier Läufe, beide Betriebsarten |
 | `MKD`/`CWD` eines neuen Verzeichnisses | F-KH-U-18 |
 | Weg zum Datenkanal | F-KH-U-20 — viermal sauberes `EPSV` |
@@ -1805,9 +1923,16 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   *Gelingt sie mit 257:* Auch diese Erklärung ist erledigt, und Prüfpunkt 18
   bleibt der Weg.
 
-- [ ] **18a — Die Aktion reden lassen, aber gegen ein PROBEVERZEICHNIS.**
-  **Vorzuziehen gegenüber Prüfpunkt 18 — sie misst dasselbe und kostet fast
-  nichts.**
+- [x] **18a — Die Aktion reden lassen, aber gegen ein PROBEVERZEICHNIS.**
+  **ERLEDIGT am 20.09.2026 (Lauf 35543081419) — und sie hat F3 gefunden**
+  (F-KH-U-25). Der Abbruch passiert beim `RETR` auf die nicht vorhandene
+  Zustandsdatei; gemeldet wird er erst beim `MKD` danach. Die Anwendung ist
+  unberührt geblieben, wie vorgesehen; zurück blieb nur das **leere**
+  Verzeichnis `.zielprobe-gespraech/`.
+  **Offen daraus: Prüfpunkt 20** (Verzeichnis entfernen) und **AP4** (die
+  Abhilfe fahren). **Prüfpunkt 18 ist damit gegenstandslos** — der volle
+  Auslieferungslauf wird nicht mehr gebraucht.
+  *Der ursprüngliche Text steht darunter als Protokoll.*
   *Der Gedanke:* Die Aktion muss nicht in den Webroot schreiben, um
   `ensureDir` zu erreichen — sie muss nur **irgendwohin** echt schreiben.
   Zeigt `server-dir` auf `…/gespraech-probe/` statt auf das Zielverzeichnis,
@@ -1855,6 +1980,20 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   keine Bäume. Ein Werkzeug, das Verzeichnisbäume auf dem Produktivserver
   löscht, soll es nicht geben. Bricht der Lauf wie erwartet früh ab, liegen
   dort ohnehin nur wenige Dateien.
+
+- [ ] **20 — Das Probeverzeichnis entfernen** (Rest aus Prüfpunkt 18a).
+  *Was liegt da:* `.zielprobe-gespraech/` im Webroot von Produktiv, **leer** —
+  der Lauf starb vor der ersten Datei, angelegt wurde nur das Verzeichnis
+  (`257 "/.zielprobe-gespraech" - Directory successfully created`).
+  *Weg:* Dateimanager des Hosters oder ein FTP-Client, `RMD` auf das
+  Verzeichnis. Von Hand, weil das Werkzeug keine Bäume löscht.
+  *Nebenbei zu prüfen, einmal:* `https://nadoku.gen-em.org/.zielprobe-gespraech/`
+  im Browser aufrufen — **erwartet 403**. Kommt etwas anderes, greift die
+  Punktpfad-Sperre für Verzeichnisse nicht; das wäre ein eigener Befund und
+  gehört gemeldet, auch nachdem das Verzeichnis weg ist.
+  *Dringlichkeit:* gering. Ein leeres, gesperrtes Verzeichnis richtet nichts
+  an — aber es steht da, und was dasteht, ohne dass jemand weiß warum, wird
+  irgendwann zur Frage.
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 

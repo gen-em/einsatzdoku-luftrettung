@@ -336,6 +336,20 @@ Probelauf grün, echter Lauf rot.
 Die Zielprobe konnte das nie sehen, weil sie je Operation eine neue
 Verbindung öffnet. Diese Probe macht beides in einer.
 
+> **Und sie hat F3 trotzdem nicht gefunden — weil sie die falsche Datei
+> abruft.** Sie lädt erst hoch und ruft **ihre eigene** Datei ab. Die
+> Auslieferungsaktion ruft eine Datei ab, **die es nicht gibt** (ihre
+> Zustandsdatei beim ersten Lauf), und genau daran stirbt sie: Die
+> Datenverbindung steht per `EPSV` schon, der Server schließt sie, und
+> `basic-ftp` liest `ECONNRESET` auf dem Datensocket statt der `550` auf dem
+> Steuerkanal (F-KH-U-25, gefunden am 20.09.2026 durch den Gesprächslauf).
+>
+> **Das ist die Lehre dieser acht Trennversuche, und sie steht hier und
+> nicht in einer Fußnote:** Alle acht haben nur Dateien abgerufen, die
+> `curl` zuvor selbst hochgeladen hatte. **Eine Probe, die nur den
+> Erfolgsfall nachstellt, misst den Erfolgsfall.** Wer die nächste baut,
+> fragt zuerst: Welche Operation der Gegenseite kommt darin **nicht** vor?
+
 **Dreiwertig wie alles hier:** Sieht `curl` keine `257`-Antwort, heißt das
 **NICHT FESTSTELLBAR** und nicht „belegt". Und scheitert schon das
 Hochladen, sagt sie, dass die Frage **gar nicht gestellt** wurde — statt ein
