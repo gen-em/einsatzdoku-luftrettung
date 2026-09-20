@@ -75,6 +75,15 @@ on:
     branches: [ main ]
     tags: [ 'web-v*' ]
   workflow_dispatch:
+    inputs:
+      probelauf:
+        description: >-
+          PROBELAUF — nichts ausliefern, nur den Weg messen (E-KH-08).
+          Fährt `produktion` mit Pflichtfreigabe, aber ohne Tag-Vergleich,
+          ohne Backup, ohne Wartung und ohne Schreiben außer der Probedatei;
+          der Abgleich läuft als Trockenlauf.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -586,7 +595,18 @@ jobs:
 
   produktion:
     name: produktion
-    if: startsWith(github.ref, 'refs/tags/web-v')
+    # NEBEN DEM TAG JETZT AUCH DER PROBELAUF (E-KH-08). Er fährt denselben Job
+    # mit derselben Pflichtfreigabe — und damit auch von `main`, wo kein Tag
+    # steht. Was er NICHT tut, steht an jedem einzelnen Schritt: kein
+    # Tag-Vergleich, kein Backup, keine Wartung, kein Schreiben außer der
+    # Probedatei, und der Abgleich als Trockenlauf.
+    #
+    # Ein zweiter Job wäre der bequeme Weg und der falsche: Dann prüfte der
+    # Probelauf eine Schrittfolge, die es so nicht gibt, und genau die Frage
+    # „stimmen Geheimnisse, Adresse und Ziel?" bliebe unbeantwortet.
+    if: >-
+      startsWith(github.ref, 'refs/tags/web-v')
+      || inputs.probelauf
     runs-on: ubuntu-latest
     # DIE UMGEBUNG IST DAS TOR. Pflichtfreigabe durch die Betreiberin (T1 aus
     # E-PV-3); die FTPS-Zugangsdaten und JOBS_TOKEN sind ihre Geheimnisse und
@@ -596,6 +616,23 @@ jobs:
       BASIS:      ${{ vars.PRODUKTION_URL }}
       JOBS_TOKEN: ${{ secrets.JOBS_TOKEN }}
     steps:
+      - name: PROBELAUF — was dieser Lauf NICHT tut
+        if: ${{ inputs.probelauf }}
+        run: |
+          echo "::notice::PROBELAUF — es wird nichts ausgeliefert."
+          {
+            echo '## PROBELAUF — nichts ausgeliefert'
+            echo
+            echo 'Gemessen werden: die drei Geheimnisse, der Adressvergleich, die'
+            echo '**Zielprobe** (Rundlauf FTPS → HTTPS → löschen) und der Abgleich'
+            echo 'als **Trockenlauf**.'
+            echo
+            echo 'NICHT gefahren werden: Tag-Vergleich, Tor der grünen Läufe,'
+            echo 'Backup-Tor, Wartungsmodus, `doku`-Kopie und die Migrationsabfrage.'
+            echo 'Geschrieben wird nichts außer der Probedatei — und die wird im'
+            echo 'selben Schritt wieder gelöscht.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Code auschecken
         uses: actions/checkout@v7
 
@@ -636,6 +673,8 @@ jobs:
           echo "Drei Geheimnisse vorhanden; der Host sieht wie ein Hostname aus."
 
       - name: Tag gegen WEB_VERSION halten
+        # KEIN TAG IM PROBELAUF (E-KH-08) — er läuft von `main`.
+        if: ${{ !inputs.probelauf }}
         # F-P5a-1: Der Tag heisst `web-vX.Y.Z` und ist gleich `WEB_VERSION`.
         # Eine Auslieferung, deren Tag etwas anderes sagt als die Fusszeile
         # der ausgelieferten Anwendung, ist beim nächsten Rollback ein Rätsel.
@@ -649,6 +688,12 @@ jobs:
           fi
 
       - name: Grüner Staging- und Stufe-1-Lauf auf diesem Stand?
+        # IM PROBELAUF NICHT (E-KH-08 nennt ihn nicht). Dieses Tor schützt
+        # Produktiv davor, ungeprobten Code zu bekommen — der Probelauf
+        # liefert keinen Code aus, es gibt also nichts zu schützen. Und es
+        # wäre der falsche Riegel am falschen Tag: Ausgerechnet wenn die
+        # Kette klemmt, braucht man den Probelauf, um zu messen WARUM.
+        if: ${{ !inputs.probelauf }}
         # Ein Tag darf nur ausliefern, was auf Staging schon stand und dort
         # grün war (E-P5a-13). Gefragt wird nach dem COMMIT, nicht nach dem
         # Zweig: Ein Tag kann auf einem Stand sitzen, der nie auf `main` war.
@@ -672,7 +717,40 @@ jobs:
             exit 1
           fi
 
+      - name: Zielprobe — liegt eine hochgeladene Datei wirklich unter PRODUKTION_URL?
+        # WARUM VOR DEM BACKUP-TOR (E-KH-07, F4). Bis hierher hat noch nichts
+        # den Server verändert. Zeigt das FTP-Konto auf ein anderes
+        # Verzeichnis als `PRODUKTION_URL`, fällt das JETZT auf — und nicht
+        # erst, nachdem ein Komplett-Backup gelaufen ist und die Wartung an
+        # ist. Die Probe schreibt genau eine Datei mit Zufallsnamen, holt sie
+        # über HTTPS zurück, vergleicht sie, löscht sie und prüft das Löschen.
+        #
+        # `curl` UND NICHT DIE AUSLIEFERUNGSAKTION, und das ist Absicht: ein
+        # ZWEITER FTPS-Client. Scheitert der Upload unten und die Probe hier
+        # gelingt, liegt es an der Bibliothek; scheitern beide an derselben
+        # Stelle, an der Plattform. Das ist der Trennschnitt, den F3 braucht.
+        #
+        # DIE SELBSTPROBE LÄUFT DAVOR, jedes Mal: Ein Prüfmittel, das immer
+        # grün meldet, sieht genauso aus wie eines, das nichts gefunden hat.
+        # Sie rechnet ohne Netz und kostet eine Sekunde.
+        env:
+          FTP_SERVER:   ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          python3 tools/kette/zielprobe.py --selbstprobe
+          python3 tools/kette/zielprobe.py \
+            --basis "$BASIS" \
+            --ftp-server "$FTP_SERVER" \
+            --ftp-konto "$FTP_USERNAME" \
+            --ftp-pass "$FTP_PASSWORD" \
+            --ftp-pfad "${{ vars.FTP_ZIELPFAD || './httpdocs/' }}"
+
       - name: Backup-Tor — Komplett-Backup zu Ende laufen lassen
+        # Der Probelauf verändert den Server nicht und braucht deshalb kein
+        # Backup — ein Komplett-Backup je Probelauf wäre teuer und sagte
+        # über den gemessenen Weg nichts.
+        if: ${{ !inputs.probelauf }}
         # Erst die Selbstprobe, dann das Tor: Ein Tor, das immer aufgeht,
         # sieht von aussen aus wie eines, das geprüft hat.
         run: |
@@ -680,9 +758,13 @@ jobs:
           python3 tools/kette/tor.py backup --basis "$BASIS" --token "$JOBS_TOKEN"
 
       - name: Wartung einschalten
+        # KEINE WARTUNG IM PROBELAUF: Sie ist der einzige Schritt, der
+        # Nutzerinnen aussperrt — für eine Messung, die nichts schreibt.
+        if: ${{ !inputs.probelauf }}
         run: python3 tools/kette/tor.py wartung-an --basis "$BASIS" --token "$JOBS_TOKEN"
 
       - name: Handbuch und „Was ist NAdoku" nach server/doku kopieren
+        if: ${{ !inputs.probelauf }}
         run: |
           # Dieselbe Begruendung wie beim Staging-Schritt oben (P5b/AP8). Er
           # steht ZWEIMAL da und nicht einmal: Die beiden Laeufe sind
@@ -704,6 +786,11 @@ jobs:
           port:       21
           local-dir:  ./server/
           server-dir: ${{ vars.FTP_ZIELPFAD || './httpdocs/' }}
+          # TROCKENLAUF IM PROBELAUF (E-KH-08). Die Aktion verbindet sich,
+          # vergleicht und sagt, was sie täte — sie schreibt nichts. Damit
+          # misst der Probelauf genau den Weg, an dem F3 hängt, ohne eine
+          # einzige Datei zu bewegen.
+          dry-run: ${{ inputs.probelauf == true }}
           # Wie im Staging-Job (Nr. 213) — Begründung steht dort. Der
           # Dateiname ist ein anderer, und genau darauf kommt es an.
           state-name: ${{ vars.FTP_STATE_PFAD || '../.deploy-state-produktion.json' }}
@@ -723,6 +810,7 @@ jobs:
             apk/
 
       - name: Zustand — Migration ausstehend?
+        if: ${{ !inputs.probelauf }}
         # R66 SAGT: KEIN SELBST-UPDATE. Die Installation ändert ihren Code nie
         # selbst, und sie fährt auch keine Migration von selbst. Steht eine
         # aus, BLEIBT DIE WARTUNG AN und der Lauf endet GRÜN mit dem Hinweis —

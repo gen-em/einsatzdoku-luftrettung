@@ -71,6 +71,21 @@ gebaut, nicht gelaufen — gemessen wird er mit M1."* Was ohne ihn geprüft ist:
 YAML-Gültigkeit, Abhängigkeit, Bedingung und Berechtigungen (Abschnitt 1.5).
 Was nicht: dass der Push tatsächlich durchgeht.
 
+**1d — Der Probelauf und der Trennversuch sind nicht gefahren.** Beide
+brauchen die Umgebung `produktion` und damit die Pflichtfreigabe der
+Betreiberin; der Trennversuch braucht zusätzlich, dass keine zweite
+FTP-Sitzung offen ist. **Die Abnahme von AP3 steht damit aus** — Prüfpunkte
+10 bis 12. Was aus der Umsetzung heraus messbar war, ist gemessen: die
+Selbstproben (17 und 26 Lagen) und **Z5 Teil 1**, das Läuferabbild und
+Node-Fassung als F3-Ursache ausschließt (Abschnitt 1.6).
+
+**1e — Und der Probelauf gegen Staging hängt am selben Nagel wie AP1.** Die
+Zielprobe liest ihre Probedatei über **HTTPS** zurück, und genau den Weg
+weist lima-citys Botprüfung mit `403` ab. Ob sie auch eine statische Datei
+abweist oder nur PHP-Seiten, **ist nicht gemessen** — das entscheidet der
+erste Lauf. Trifft es zu, ist die Anfrage an lima-city nicht nur AP1s
+Blocker, sondern auch AP3s.
+
 **Und er kann derzeit gar nicht grün werden.** Die Einrichtung der neuen
 Staging-Anlage **scheitert** (Rahmenplan 6a, Schritt 6; Stand 20.09.2026, eine
 andere Instanz arbeitet daran). Solange `install.php` dort nicht durch ist,
@@ -385,6 +400,71 @@ beglaubigte einen Vergleich, den es so nicht gab.
 - `actions: read` ist in `integritaet.yml` ausgetragen, weil der einzige
   Verbraucher (der `gh api`-Aufruf des Riegels) weg ist.
 - Im Job `zeiger` steht außer `actions/checkout` keine Fremd-Aktion.
+
+### 1.6 AP3 — Tor, Zielprobe, Probelauf
+
+**Maschinell, ohne Netz:**
+
+| Mittel | Soll | Ist |
+|---|---|---|
+| `tor.py --selbstprobe` | mindestens 16 Lagen, 0 offen | **17 Lagen, 0 offen** (vorher 11) |
+| `zielprobe.py --selbstprobe` | eigene Selbstprobe, 0 offen | **26 Lagen, 0 offen** (neu) |
+| `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft | **32 Aufrufe, 0, 0**; Selbstprobe 10/10 |
+| YAML der drei Arbeitsläufe | laden | **3 von 3** |
+| `tools/wortliste/wortliste.py` | 0/0/0 | **0/0/0** |
+
+**Die sechs neuen Lagen des Tors** (F1, E-KH-05/-19):
+
+1. Fremder Auftrag offen → **zweite Runde** → Tor offen
+2. Nach zwei Runden kein frischer Stand → Tor zu
+3. Serveruhr 120 s **nach** → Tor offen
+4. Serveruhr 120 s **vor** → Tor offen
+5. Antwort ohne `Date`-Kopf → Abbruch (kein Rückfall auf die Läuferuhr)
+6. Antwort ohne `fertig` und ohne `error` → definierter Abbruch —
+   **und die Gegenprobe:** *eine* solche Antwort ist ein Schluckauf und
+   tötet den Lauf nicht
+
+3 und 4 sind der Kern von E-KH-05 (1): Beide Zeiten kommen jetzt aus
+**derselben** Uhr, deshalb ändert ein Versatz nichts. Vorher wies Fall 3
+einen gültigen Stand ab — mit zwei Zahlen, die beide richtig aussahen.
+
+**Z5 Teil 1 — erledigt, und es ist ein Ausschluss.** Die Zuarbeit sah die
+Betreiberin vor; die Angaben stehen im Kopf jedes Jobprotokolls und sind über
+die API erreichbar.
+
+| | grün, 18.09. (`35341712345`) | rot, 20.09. (`35499422433`) |
+|---|---|---|
+| Läuferfassung | 2.337.0 | **2.337.0** |
+| Abbild | ubuntu-24.04 / 20260907.300.1 | **ubuntu-24.04 / 20260907.300.1** |
+| Provisioner | 20260828.587 | **20260828.587** |
+
+**Identisch — Läuferabbild und Node scheiden als F3-Ursache aus.**
+
+**Dazu ein Befund, der die Frage verengt** (aus demselben Protokoll, wörtlich):
+
+```
+Making changes to 708 files/folders to sync server state
+Uploading: 11.7 MB -- Deleting: 0 B -- Replacing: 0 B
+creating folder "api/"
+Error: Client is closed because read ECONNRESET (data socket)
+    at Client.sendIgnoringError (…/index.js:4236:25)
+    at Client._openDir (…/index.js:4763:20)
+```
+
+`_openDir` listet **auf dem Datenkanal**. Alles davor läuft über den
+Steuerkanal und gelingt. **Der Steuerkanal steht; die erste Datenverbindung
+wird abgeschnitten.** Das ist die Signatur von gesperrten Passiv-Ports oder
+einer Forderung nach Wiederverwendung der TLS-Sitzung — genau die zwei Dinge,
+die die Zielprobe in ihren zwei Betriebsarten trennt.
+
+**Durch Lesen belegt** (nicht gelaufen):
+
+- Im Probelauf sind **sechs** Schritte gesperrt (Tag, Tor der grünen Läufe,
+  Backup-Tor, Wartung, `doku`-Kopie, Migrationsabfrage) und der Abgleich läuft
+  als `dry-run`. Nachgezählt an der YAML-Struktur, nicht am Text.
+- Die Zielprobe steht **vor** dem Backup-Tor und **ohne** `if` — sie läuft in
+  beiden Fällen, Probelauf wie Auslieferung.
+- Ihre Selbstprobe läuft im selben Schritt davor, jedes Mal.
 
 ---
 
@@ -769,6 +849,50 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   `zeiger` rot mit `protected branch hook declined`.
   *Warum es nicht gebaut ist:* Das sind Repositoriumseinstellungen, keine
   Datei — aus der Umsetzung heraus nicht setzbar.
+
+- [ ] **10 — Probelauf gegen Staging** (Abnahme von AP3, erster Teil).
+  *Weg:* GitHub → Actions → „Auslieferung" → **Run workflow** → Zweig wählen
+  → **Häkchen bei `probelauf`** → starten. Die Umgebung `produktion` fragt
+  nach deiner Freigabe; das ist richtig so.
+  *Erwartet:* Die Zusammenfassung beginnt mit **„PROBELAUF — nichts
+  ausgeliefert"**; die Zielprobe meldet „Rundlauf gelungen: geschrieben,
+  abgerufen, verglichen, gelöscht, danach 404"; der Abgleich sagt, was er
+  täte, und überträgt nichts.
+  *Scheitern erkennt man daran:* Meldet die Zielprobe „Die Datei liegt im
+  FTP-Ziel, ist aber unter … nicht abrufbar", zeigen FTP-Verzeichnis und
+  öffentliche Adresse **nicht auf dasselbe** — das ist der Fund, für den es
+  sie gibt. Ein `403` statt `404` beim Abruf ist etwas anderes: dann greift
+  eine Sperre (bei Staging die Botprüfung von lima-city), und die Probe
+  belegt nichts.
+  **Warnung:** Genau das ist wahrscheinlich. Die Botprüfung weist HTTPS mit
+  `403` ab; ob sie auch eine statische Datei abweist, weiß niemand. **Dieser
+  Punkt hängt damit am selben Nagel wie Prüfpunkt 1.**
+
+- [ ] **11 — Vor dem Trennversuch: keine zweite FTP-Sitzung offen.**
+  *Weg:* WinSCP schließen, den Dateimanager im Plesk-Panel schließen, jeden
+  anderen FTP-Zugang beenden.
+  *Warum:* Manche Server begrenzen gleichzeitige Sitzungen je Konto und
+  schneiden die zweite ab — das sähe aus wie F3 und wäre keines.
+
+- [ ] **12 — Der Trennversuch gegen Produktiv** (Abnahme von AP3, zweiter
+  Teil; danach fällt **E-KH-09**).
+  *Weg:* Probelauf gegen Produktiv, die Zielprobe in **beiden**
+  Betriebsarten. Jedes Ergebnis **zweimal** — zweimal gleich ist belastbar.
+  *Was welches Ergebnis bedeutet:*
+
+  | mit Wiederverwendung | ohne | Schluss |
+  |---|---|---|
+  | gelingt | scheitert | **Der Server verlangt die Wiederverwendung** — Ursache belegt |
+  | gelingt | gelingt | Die Forderung ist es nicht; weiter mit dem Trockenlauf der Aktion |
+  | scheitert | scheitert | Konto, Passiv-Ports oder Verbindungsgrenze |
+
+  *Woran man sieht, dass die Messung gar nichts belegt:* Die Probe meldet
+  **„TLS-Sitzung wiederverwendet: NICHT FESTSTELLBAR"**. Dann sagt diese
+  `curl`-Fassung nichts darüber, und beide Läufe messen dasselbe. Der Befund
+  ist dann „nicht feststellbar", nicht „kein Unterschied".
+  *Eingabe für die Deutung:* Läuferabbild und Node sind als Ursache
+  ausgeschlossen (Abschnitt 1.5 … 1.6), und der Abbruch steht bei der
+  **ersten Datenverbindung** des Laufs.
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 

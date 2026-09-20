@@ -60,6 +60,7 @@ Rückgabewert: 0 = Tor offen · 1 = Tor zu (und der Grund steht davor) ·
 from __future__ import annotations
 
 import argparse
+import email.utils
 import json
 import sys
 import time
@@ -71,6 +72,16 @@ from datetime import datetime, timezone
 VERSUCHE_VORGABE = 40
 PAUSE_VORGABE_S = 20
 ZEITGRENZE_S = 60
+
+# ZWEI RUNDEN, NICHT MEHR (E-KH-05 (2)). Eine zweite faengt den fremden
+# Auftrag ab, der beim Aufruf schon lief. Eine dritte faenge nichts mehr ab,
+# was die zweite nicht schon hat -- sie verdoppelte nur die Wartezeit.
+RUNDEN = 2
+
+# DREI FREMDE ANTWORTEN, DANN SCHLUSS (E-KH-19). Eine waere zu wenig: Eine
+# einzelne Fehlerseite des Hosters ist ein Schluckauf, kein alter Server.
+# Vierzig waren zu viel -- genau das war der Fall vom 20.09.2026.
+FREMDE_ANTWORTEN = 3
 
 
 def jetzt_utc() -> str:
@@ -92,6 +103,37 @@ def adresse_bauen(basis: str, token: str, aktion: str,
     return basis.rstrip("/") + "/jobs.php?" + urllib.parse.urlencode(d)
 
 
+def kopfzeit(antwort) -> str | None:
+    """Die Uhr des SERVERS aus dem `Date`-Kopf, als `YYYY-MM-DDTHH:MM:SSZ`.
+
+    WARUM NICHT DIE UHR DES LAEUFERS (F1, E-KH-05 (1)). Das Tor vergleicht
+    zwei Zeiten: den Laufbeginn und den Zeitstempel des Komplett-Stands. Der
+    Stand kommt vom Server; der Laufbeginn kam bis zum 20.09.2026 von
+    `datetime.now(UTC)` auf dem GitHub-Laeufer. **Das sind zwei Uhren.**
+    Geht die des Servers auch nur eine Sekunde nach, ist ein Backup, das
+    NACH dem Laufbeginn fertig wurde, mit seinem Zeitstempel davor -- und
+    das Tor weist einen gueltigen Stand ab, mit einer Meldung, die niemand
+    versteht, weil beide Zahlen richtig aussehen.
+
+    Jetzt kommt auch der Laufbeginn aus dem `Date`-Kopf der ersten Antwort:
+    **eine Uhr, ein Vergleich.** Fehlt der Kopf, wird das gesagt und
+    abgebrochen -- ein Rueckfall auf die Laeuferuhr waere genau der Fehler,
+    nur wieder still.
+
+    `Date` ist nach RFC 9110 in jeder Antwort Pflicht und steht immer in GMT.
+    """
+    roh = antwort.headers.get("Date") if getattr(antwort, "headers", None) else None
+    if not roh:
+        return None
+    try:
+        t = email.utils.parsedate_to_datetime(roh)
+    except (TypeError, ValueError):
+        return None
+    if t.tzinfo is None:
+        t = t.replace(tzinfo=timezone.utc)
+    return t.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def rufen(basis: str, token: str, aktion: str, zeitgrenze: int = ZEITGRENZE_S,
           felder: dict | None = None) -> dict:
     """Einen Aufruf an `jobs.php` — und das Ergebnis als Feld.
@@ -101,9 +143,11 @@ def rufen(basis: str, token: str, aktion: str, zeitgrenze: int = ZEITGRENZE_S,
     Ein Abbruch hier machte aus einem Schluckauf des Servers ein Nein.
     """
     adresse = adresse_bauen(basis, token, aktion, felder)
+    serverzeit = None
     try:
         with urllib.request.urlopen(adresse, timeout=zeitgrenze) as antwort:
             roh = antwort.read().decode("utf-8", "replace")
+            serverzeit = kopfzeit(antwort)
     except urllib.error.HTTPError as ex:
         # EINE 4xx-ANTWORT IST EIN NEIN DES SERVERS, KEIN NETZFEHLER — und sie
         # hat einen KOERPER, in dem steht, warum. `urlopen` wirft dafuer eine
@@ -126,62 +170,139 @@ def rufen(basis: str, token: str, aktion: str, zeitgrenze: int = ZEITGRENZE_S,
         return {"_fehler": str(ex)}
     try:
         d = json.loads(roh)
-        return d if isinstance(d, dict) else {"_roh": roh}
+        if not isinstance(d, dict):
+            d = {"_roh": roh}
     except json.JSONDecodeError:
-        return {"_roh": roh[:400]}
+        d = {"_roh": roh[:400]}
+    if serverzeit:
+        d["_serverzeit"] = serverzeit
+    return d
 
 
 def backup_tor(basis: str, token: str, versuche: int, pause: int,
-               ruf=rufen, schlafen=time.sleep) -> int:
-    """Das Tor. Rückgabewert 0 = Deploy erlaubt, 1 = nicht."""
-    beginn = jetzt_utc()
-    print(f"Laufbeginn (UTC): {beginn}")
+               ruf=rufen, schlafen=time.sleep, runden: int = RUNDEN) -> int:
+    """Das Tor. Rückgabewert 0 = Deploy erlaubt, 1 = nicht.
 
-    fertig = False
-    for i in range(1, versuche + 1):
-        antwort = ruf(basis, token, "komplett")
-        kurz = json.dumps(antwort, ensure_ascii=False)[:200]
-        print(f"  Aufruf {i:>2}: {kurz}")
-        if antwort.get("fertig") is True:
-            fertig = True
-            break
-        # EIN NEIN DES SERVERS IST KEIN WARTEN. Ein falsches Token, eine
-        # unbekannte Aktion, ein Auftrag, der nicht zustande kommt (kein
-        # Serverschlüssel, Speichergrenze) — das wird beim vierzigsten Mal
-        # nicht anders. Vierzig Aufrufe mit 20 s Pause sind gut dreizehn
-        # Minuten, in denen niemand etwas erfährt, was nach dem ersten
-        # Aufruf schon feststand. Ein NETZFEHLER (`_fehler`) oder eine
-        # unlesbare Antwort (`_roh`) ist etwas anderes: Der wird
-        # wiederholt.
-        if "error" in antwort:
-            print(f"ABBRUCH: Die Installation antwortet mit '{antwort['error']}'"
-                  + (f" — {antwort['meldung']}" if antwort.get("meldung") else "")
-                  + ". Es wird nicht ausgeliefert.", file=sys.stderr)
+    DREI DINGE HABEN SICH AM 20.09.2026 GEÄNDERT (F1, E-KH-05 und -19):
+
+    (1) **Der Laufbeginn ist die Uhr des Servers**, gelesen aus dem
+        `Date`-Kopf der ersten Antwort. Vorher kam er von der Uhr des
+        Läufers — zwei Uhren für einen Vergleich. Siehe `kopfzeit()`.
+
+    (2) **Ein Stand, der älter ist als der Laufbeginn, bricht nicht mehr
+        ab, sondern dreht eine weitere Runde.** Der Grund ist der Fall,
+        der F1 ausgelöst hat: Läuft beim Aufruf bereits ein FREMDER
+        Komplett-Auftrag, meldet `fertig` dessen Abschluss — und sein
+        Zeitstempel liegt vor unserem Laufbeginn. Die erste Runde fährt
+        ihn damit zu Ende; der nächste Aufruf legt einen frischen an. Die
+        Regel „jünger als der Torbeginn" bleibt streng, sie bekommt nur
+        einen zweiten Anlauf. Begrenzt auf zwei Runden — danach Abbruch
+        wie bisher, denn dann ist es kein fremder Auftrag mehr.
+
+    (3) **Ein Server, der die Aktion nicht kennt, führt zu einem
+        definierten Abbruch** statt zu vierzig Runden Warten. Eine Antwort
+        ohne `fertig` und ohne `error` ist keine Antwort auf diese Frage
+        (E-KH-19, der Fall vom 20.09.). Drei solche hintereinander und der
+        Lauf endet mit einer Meldung, die sagt, was stattdessen kam. Drei
+        und nicht eine: Ein einzelner Schluckauf soll kein Nein werden —
+        dieselbe Linie, die `rufen()` im Kopfkommentar zieht.
+    """
+    beginn = None
+    for runde in range(1, runden + 1):
+        if runde > 1:
+            print(f"\n— Runde {runde} von {runden} —")
+        fertig = False
+        fremd = 0                      # Antworten, die die Frage nicht kennen
+        for i in range(1, versuche + 1):
+            antwort = ruf(basis, token, "komplett")
+            kurz = json.dumps({k: v for k, v in antwort.items()
+                               if k != "_serverzeit"}, ensure_ascii=False)[:200]
+            print(f"  Aufruf {i:>2}: {kurz}")
+
+            if beginn is None:
+                beginn = antwort.get("_serverzeit")
+                if beginn:
+                    print(f"Laufbeginn (Uhr des Servers, `Date`): {beginn}")
+                elif "_fehler" not in antwort:
+                    # Eine Antwort OHNE Netzfehler und OHNE `Date` gibt es
+                    # nach RFC 9110 nicht. Ein Rückfall auf die Läuferuhr
+                    # wäre genau der Fehler, den (1) behebt — nur wieder
+                    # still. Also: sagen und abbrechen.
+                    print("ABBRUCH: Die Antwort trägt keinen `Date`-Kopf. Ohne die Uhr "
+                          "des Servers lässt sich nicht entscheiden, ob ein Stand jünger "
+                          "ist als dieser Lauf. Es wird nicht ausgeliefert.",
+                          file=sys.stderr)
+                    return 1
+
+            if antwort.get("fertig") is True:
+                fertig = True
+                break
+            # EIN NEIN DES SERVERS IST KEIN WARTEN. Ein falsches Token, eine
+            # unbekannte Aktion, ein Auftrag, der nicht zustande kommt (kein
+            # Serverschlüssel, Speichergrenze) — das wird beim vierzigsten Mal
+            # nicht anders. Vierzig Aufrufe mit 20 s Pause sind gut dreizehn
+            # Minuten, in denen niemand etwas erfährt, was nach dem ersten
+            # Aufruf schon feststand. Ein NETZFEHLER (`_fehler`) ist etwas
+            # anderes: Der wird wiederholt.
+            if "error" in antwort:
+                print(f"ABBRUCH: Die Installation antwortet mit '{antwort['error']}'"
+                      + (f" — {antwort['meldung']}" if antwort.get("meldung") else "")
+                      + ". Es wird nicht ausgeliefert.", file=sys.stderr)
+                return 1
+
+            # (3) KENNT DIESER SERVER DIE FRAGE ÜBERHAUPT? `fertig` fehlt,
+            # `error` fehlt — dann ist das keine Antwort auf `aktion=komplett`,
+            # sondern die einer älteren Installation (oder eine Fehlerseite des
+            # Hosters, die als `_roh` hereinkommt).
+            if "fertig" not in antwort:
+                fremd += 1
+                if fremd >= FREMDE_ANTWORTEN:
+                    print(f"ABBRUCH: {fremd} Antworten hintereinander ohne `fertig` und "
+                          f"ohne `error` — diese Installation beantwortet "
+                          f"`aktion=komplett` nicht. Zuletzt kam: {kurz}. Wahrscheinlich "
+                          f"ist sie älter als diese Kette. Es wird nicht ausgeliefert.",
+                          file=sys.stderr)
+                    return 1
+            else:
+                fremd = 0
+
+            if i < versuche:
+                schlafen(pause)
+
+        if not fertig:
+            print(f"ABBRUCH: Das Komplett-Backup meldete nach {versuche} Aufrufen kein "
+                  f"'fertig'. Es wird nicht ausgeliefert.", file=sys.stderr)
             return 1
-        if i < versuche:
-            schlafen(pause)
 
-    if not fertig:
-        print(f"ABBRUCH: Das Komplett-Backup meldete nach {versuche} Aufrufen kein "
-              f"'fertig'. Es wird nicht ausgeliefert.", file=sys.stderr)
-        return 1
+        zustand = ruf(basis, token, "zustand")
+        print("Zustand: " + json.dumps({k: v for k, v in zustand.items()
+                                        if k != "_serverzeit"},
+                                       ensure_ascii=False)[:400])
+        stand = zustand.get("komplett")
+        if not isinstance(stand, dict) or not stand.get("zeit"):
+            print("ABBRUCH: Es liegt kein Komplett-Stand vor. Es wird nicht ausgeliefert.",
+                  file=sys.stderr)
+            return 1
 
-    zustand = ruf(basis, token, "zustand")
-    print("Zustand: " + json.dumps(zustand, ensure_ascii=False)[:400])
-    stand = zustand.get("komplett")
-    if not isinstance(stand, dict) or not stand.get("zeit"):
-        print("ABBRUCH: Es liegt kein Komplett-Stand vor. Es wird nicht ausgeliefert.",
+        if str(stand["zeit"]) >= beginn:
+            print(f"Tor offen: Komplett-Stand {stand['zeit']} "
+                  f"({stand.get('groesse', 0)} Byte), jünger als der Laufbeginn.")
+            return 0
+
+        # (2) ZU ALT — aber nicht zwangsläufig falsch. Noch eine Runde?
+        if runde < runden:
+            print(f"Der jüngste Komplett-Stand ist von {stand['zeit']} und damit älter "
+                  f"als der Laufbeginn {beginn}. Das ist das Bild eines FREMDEN "
+                  f"Auftrags, der beim Aufruf schon lief — er ist jetzt zu Ende "
+                  f"gefahren. Noch eine Runde.")
+            continue
+        print(f"ABBRUCH: Der jüngste Komplett-Stand ist von {stand['zeit']} und damit "
+              f"älter als der Laufbeginn {beginn} — auch nach {runden} Runden. Er "
+              f"schützt diesen Deploy nicht. Es wird nicht ausgeliefert.",
               file=sys.stderr)
         return 1
-    if str(stand["zeit"]) < beginn:
-        print(f"ABBRUCH: Der jüngste Komplett-Stand ist von {stand['zeit']} und damit "
-              f"älter als der Laufbeginn {beginn} — er schützt diesen Deploy nicht. "
-              f"Es wird nicht ausgeliefert.", file=sys.stderr)
-        return 1
 
-    print(f"Tor offen: Komplett-Stand {stand['zeit']} "
-          f"({stand.get('groesse', 0)} Byte), jünger als der Laufbeginn.")
-    return 0
+    return 1                                   # unerreichbar, aber kein `None`
 
 
 # ---------------------------------------------------------------- Selbstprobe
@@ -218,17 +339,36 @@ def selbstprobe() -> int:
 
     gestern = "2000-01-01T00:00:00Z"
     morgen = "2999-01-01T00:00:00Z"
+    # NUN ist die Uhr des Servers in diesen Faellen; `gleich_danach` ein Stand,
+    # der eine Sekunde spaeter fertig wurde. Beide kommen aus DERSELBEN Uhr —
+    # genau das ist der Punkt von E-KH-05 (1).
+    NUN = "2026-09-20T12:00:00Z"
 
-    def attrappe(folge, zustand):
-        """Liefert der Reihe nach `folge`, danach immer den letzten Eintrag."""
-        zaehler = {"n": 0}
+    def attrappe(folge, zustand, serverzeit=NUN):
+        """Liefert der Reihe nach `folge`, danach immer den letzten Eintrag.
+
+        `zustand` darf eine LISTE sein — dann liefert der n-te Abruf den
+        n-ten Eintrag. Das braucht die zweite Runde (E-KH-05 (2)): Runde 1
+        sieht den fremden, alten Stand, Runde 2 den frischen.
+
+        `serverzeit` hängt an jeder Antwort, wie es `rufen()` aus dem
+        `Date`-Kopf tut. `None` stellt eine Antwort OHNE `Date` nach.
+        """
+        zaehler = {"n": 0, "z": 0}
+        zust = zustand if isinstance(zustand, list) else [zustand]
 
         def ruf(_basis, _token, aktion):
             if aktion == "zustand":
-                return zustand
-            i = min(zaehler["n"], len(folge) - 1)
-            zaehler["n"] += 1
-            return folge[i]
+                i = min(zaehler["z"], len(zust) - 1)
+                zaehler["z"] += 1
+                d = dict(zust[i]) if isinstance(zust[i], dict) else {"komplett": zust[i]}
+            else:
+                i = min(zaehler["n"], len(folge) - 1)
+                zaehler["n"] += 1
+                d = dict(folge[i])
+            if serverzeit is not None:
+                d["_serverzeit"] = serverzeit
+            return d
         return ruf
 
     # KEINE GESAMTZAHL IN DIESER ZEILE (Web 20.16.4). Sie ist zweimal
@@ -257,19 +397,75 @@ def selbstprobe() -> int:
                     schlafen=lambda _s: None)
     pruefe(rc == 1, "Falsches Token → Tor zu, und zwar sofort (kein 40-maliges Fragen)")
 
-    # 4. Fertig, aber der Stand ist von gestern — genau der Fall, den ein
-    #    Tor mit nur einer Bedingung durchliesse.
-    rc = backup_tor("http://attrappe", "t", 3, 0,
-                    ruf=attrappe([{"fertig": True}],
-                                 {"komplett": {"zeit": gestern}}),
-                    schlafen=lambda _s: None)
-    pruefe(rc == 1, "Fertig, aber Stand älter als der Laufbeginn → Tor zu")
-
-    # 5. Fertig, aber es gibt gar keinen Stand.
+    # 4. Fertig, aber es gibt gar keinen Stand.
     rc = backup_tor("http://attrappe", "t", 3, 0,
                     ruf=attrappe([{"fertig": True}], {"komplett": None}),
                     schlafen=lambda _s: None)
     pruefe(rc == 1, "Fertig, aber kein Komplett-Stand vorhanden → Tor zu")
+
+    # ------------------------------------------------------------------
+    # 5. bis 11.: F1 — die Uhr des Servers und die zweite Runde
+    #    (E-KH-05, E-KH-19; alle neu am 20.09.2026).
+    print()
+
+    # 5. DER FALL, DER F1 AUSGELÖST HAT. Beim Aufruf lief bereits ein FREMDER
+    #    Komplett-Auftrag; `fertig` meldet dessen Abschluss, und sein
+    #    Zeitstempel liegt VOR unserem Laufbeginn. Runde 1 fährt ihn zu Ende,
+    #    Runde 2 legt einen frischen an.
+    rc = backup_tor("http://attrappe", "t", 3, 0,
+                    ruf=attrappe([{"fertig": True}],
+                                 [{"komplett": {"zeit": gestern}},
+                                  {"komplett": {"zeit": morgen, "groesse": 7}}]),
+                    schlafen=lambda _s: None)
+    pruefe(rc == 0, "Fremder Auftrag offen → zweite Runde → Tor offen")
+
+    # 6. Die Gegenprobe dazu: Bleibt der Stand auch nach der zweiten Runde
+    #    alt, ist es KEIN fremder Auftrag mehr — dann bricht es ab wie eh.
+    rc = backup_tor("http://attrappe", "t", 3, 0,
+                    ruf=attrappe([{"fertig": True}], {"komplett": {"zeit": gestern}}),
+                    schlafen=lambda _s: None)
+    pruefe(rc == 1, "Nach zwei Runden kein frischer Stand → Tor zu")
+
+    # 7./8. EINE UHR, EIN VERGLEICH. Geht die Serveruhr zwei Minuten nach oder
+    #    vor, ändert das nichts: Laufbeginn UND Stand kommen aus ihr. Vorher
+    #    kam der Laufbeginn vom Läufer — dann wies Fall 7 einen gültigen Stand
+    #    ab, mit zwei Zahlen, die beide richtig aussahen.
+    for versatz, wie in (("2026-09-20T11:58:00Z", "nach"),
+                         ("2026-09-20T12:02:00Z", "vor")):
+        danach = versatz.replace(":00Z", ":01Z")
+        rc = backup_tor("http://attrappe", "t", 3, 0,
+                        ruf=attrappe([{"fertig": True}],
+                                     {"komplett": {"zeit": danach}},
+                                     serverzeit=versatz),
+                        schlafen=lambda _s: None)
+        pruefe(rc == 0, f"Serveruhr geht 120 s {wie} → Tor offen (beide Zeiten "
+                        f"aus derselben Uhr)")
+
+    # 9. KEIN `Date`-KOPF → ABBRUCH MIT ANSAGE. Ein Rückfall auf die Läuferuhr
+    #    wäre genau der Fehler, den F1 beschreibt — nur wieder still.
+    rc = backup_tor("http://attrappe", "t", 3, 0,
+                    ruf=attrappe([{"fertig": True}],
+                                 {"komplett": {"zeit": morgen}},
+                                 serverzeit=None),
+                    schlafen=lambda _s: None)
+    pruefe(rc == 1, "Antwort ohne `Date`-Kopf → Abbruch, kein Rückfall auf die Läuferuhr")
+
+    # 10. ALTER SERVER (E-KH-19, der Fall vom 20.09.). Die Installation
+    #     antwortet — aber weder mit `fertig` noch mit `error`. Vorher waren
+    #     das vierzig Runden Warten auf etwas, das nie kommt.
+    rc = backup_tor("http://attrappe", "t", 40, 0,
+                    ruf=attrappe([{"ok": True}], {"komplett": {"zeit": morgen}}),
+                    schlafen=lambda _s: None)
+    pruefe(rc == 1, "Antwort ohne `fertig` und ohne `error` → definierter Abbruch")
+
+    # 11. UND DIE GEGENPROBE: EINE solche Antwort ist ein Schluckauf, kein
+    #     alter Server. Sie darf den Lauf nicht töten.
+    rc = backup_tor("http://attrappe", "t", 5, 0,
+                    ruf=attrappe([{"_roh": "<html>502</html>"}, {"fertig": True}],
+                                 {"komplett": {"zeit": morgen}}),
+                    schlafen=lambda _s: None)
+    pruefe(rc == 0, "EINE fremde Antwort, dann fertig → Tor offen (kein Nein aus "
+                    "einem Schluckauf)")
 
     # ------------------------------------------------------------------
     # 6. bis 10.: der Unterbefehl `pause` (Web 20.16.0).

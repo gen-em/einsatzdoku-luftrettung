@@ -21,17 +21,18 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 > | | |
 > |---|---|
 > | Stand | 20.09.2026 — **AP1 umgesetzt** (Dokumentation; kein Web-Code, keine Versionsstufe). Konzept freigegeben (Auftraggeber, 20.09.2026, ohne Änderungen; Fassung nach der ersten Fortschreibung vom selben Tag: F3 neu gefasst, E-KH-20, AP3/AP4 angepasst, Z1 und Z2 erledigt) |
-> | Entschieden | **E-KH-01 bis -08 und -10 bis -20** — die Vorschläge aus Abschnitt 2.2 gelten seit der Freigabe. Dazu **E-KH-21 bis -24** aus der Umsetzung (Abschnitt 2.4; -24 vom 20.09.2026, außerhalb der Pakete) — **von der Umsetzung entschieden, zur Kenntnis und zum Widerspruch** |
+> | Entschieden | **E-KH-01 bis -08 und -10 bis -20** — die Vorschläge aus Abschnitt 2.2 gelten seit der Freigabe. Dazu **E-KH-21 bis -25** aus der Umsetzung (Abschnitt 2.4; -24 außerhalb der Pakete, -25 aus AP3) — **von der Umsetzung entschieden, zur Kenntnis und zum Widerspruch** |
 > | Von außen | **Einschub vom 20.09.2026 eingespielt** (Auftrag der Konzeptinstanz): Backlog 241–249 reserviert und angelegt, drei Konzeptdateien eingecheckt, Rahmenplan **Fassung 85**. Dabei angemeldet: `.sitzungen/` als **achter Schutzlistenpfad** (E-KH-20, einzutragen in AP4 oder AP5). **Der Einschub nannte Fassung 84 — die hatte AP2 schon vergeben und gepusht; er ist auf 85 gerückt** |
 > | Zuarbeiten erledigt | **Z1** (alte Staging-Anlage stillgelegt — B2 damit geschlossen), **Z2** (Zeiger `produktion` auf `7150793`) und **Z3** — alle 20.09.2026. Z3 **beide Anlagen**, aber auf zwei Wegen: Produktiv aus *Betrieb → Status*, Staging aus einer `phpinfo()`, weil die Anwendung dort noch nicht läuft. Fünf Zeilen der Staging-Spalte bleiben leer |
 > | Offen | **E-KH-09 (Ursache und Abhilfe F3)** — fällt nach der Messung am Ende von AP3; der Nachtrag in Abschnitt 1.4 hat eine der drei Erklärungen verschmälert. **Z3-Rest**: die fünf Zeilen, die nur die Anwendung weiß — sie hängen an Rahmenplan 6a, Schritt 6 |
-> | In Arbeit | **AP2 — Zeiger und Wache: gebaut.** Abnahme teilweise: Die Gegenprobe im Werkzeug ist grün (Selbstprobe **38/38**, sechs davon neu zum Vergleichsstand), der Befund B6 ist **ohne Netz aus den Ständen nachgerechnet** — aber der Handlauf gegen Produktiv **konnte nicht laufen** (der Container-Proxy weist `nadoku.gen-em.org` mit `403` ab), und der Zeiger-Job ist **gebaut, nicht gelaufen** (er misst sich erst mit M1). Einzelheiten im Prüfdokument 1.5 |
+> | In Arbeit | **AP3 — Tor, Zielprobe, Probelauf: gebaut. PFLICHTSTOPP erreicht.** Die Selbstproben sind grün mit Lagenzahl (Tor **17**, Zielprobe **26**); **Z5 Teil 1 ist erledigt und schließt Läuferabbild und Node als F3-Ursache aus** (beide Läufe: 2.337.0 / ubuntu-24.04 20260907.300.1). Der Probelauf gegen Staging und der Trennversuch gegen Produktiv **stehen aus** — sie brauchen die Betreiberin (Prüfpunkte 10 bis 12). Vorher: **AP2 — Zeiger und Wache: gebaut.** Abnahme teilweise: Die Gegenprobe im Werkzeug ist grün (Selbstprobe **38/38**, sechs davon neu zum Vergleichsstand), der Befund B6 ist **ohne Netz aus den Ständen nachgerechnet** — aber der Handlauf gegen Produktiv **konnte nicht laufen** (der Container-Proxy weist `nadoku.gen-em.org` mit `403` ab), und der Zeiger-Job ist **gebaut, nicht gelaufen** (er misst sich erst mit M1). Einzelheiten im Prüfdokument 1.5 |
 > | Hakt | **Es gibt bis heute keinen erfolgreichen Produktivlauf der Kette** (Abschnitt 1.2). **AP1 ist gebaut, aber nicht abgenommen:** Der erste Kettenlauf gegen lima-city (Lauf 21, 20.09.2026, Handlauf vom Arbeitszweig) brachte `staging` **grün** und in Stufe 2 **zwei von fünf** Messschritten gemessen grün — der dritte ist rot, weil `STAGING_KONTO`/`STAGING_PASS` sich auf der neuen Anlage nicht anmelden. **Ein Push auf `main` ist dafür nicht nötig** (`workflow_dispatch` fährt dieselben Jobs). Einzelheiten im Prüfdokument, Abschnitt 1.4 |
 >
 > **Stand der Umsetzung**
 >
 > | Paket | Stand | Version | Commit | Abnahmezahlen |
 > |---|---|---|---|---|
+> | AP3 — Tor, Zielprobe, Probelauf | **gebaut; PFLICHTSTOPP** | keine (nur `tools/`, `.github/`, `docs/`); Rahmenplan **Fassung 86** | siehe Zweig | Selbstprobe `tor.py` **17 Lagen / 0 offen** (vorher 11) · Selbstprobe `zielprobe.py` **26 Lagen / 0 offen** (neu) · Kettenaufrufe **32 Aufrufe / 0 Befunde** · YAML 3 von 3 · Wortliste 0/0/0. **Z5 Teil 1 gemessen:** Läuferabbild und Node in grünem und rotem Lauf **identisch** → als F3-Ursache ausgeschlossen. **NICHT gemessen:** Probelauf gegen Staging, Trennversuch gegen Produktiv (beide an der Anlage) |
 > | AP2 — Zeiger und Wache | **gebaut; Abnahme teilweise** | keine (nur `.github/`, `tools/`, `docs/`, `CLAUDE.md` — E-KH-23); gezählt hat der Rahmenplan: **Fassung 84** | siehe Zweig `claude/fervent-dirac-xirsqw` | Selbstprobe der Wache **38 Erwartungen / 0 offen** (vorher 32) · B6 nachgerechnet: alt **128 Dateien, 121 gleich, 1 abweichend, 6 × 404**; neu **122 / 122 / 0 / 0** · Kettenaufrufe **30 Aufrufe / 0 Befunde** · YAML 3 von 3 · Wortliste 0/0/0. **NICHT gemessen:** Handlauf gegen Produktiv (Proxy 403), Zeiger-Job (läuft erst mit M1) |
 > | AP1 — Staging-Umzug nachziehen | **gebaut; Abnahme offen** | keine (nur `docs/`, `CLAUDE.md`, ein Kommentar in `.github/`) | `499e96c` ff. (Zweig `claude/fervent-dirac-xirsqw`) | Wortliste **0/0/0** (11 Dateien Bereich c, 444 Treffer, alle erklärt) · Kettenaufrufe **3 Läufe / 28 Aufrufe / 0 Befunde / 0 ungeprüft** · Selbstproben **21/21** und **10/10** · YAML **3 von 3** gültig · alte Adresse: **13 Fundstellen, alle Historie oder als „damals" gekennzeichnet** (vorher 12, davon 5 aktuelle Aussagen). **Lauf 21 gegen lima-city:** `staging` grün (12 Dateien, 1,13 MB, 12 s), Stufe 2 **2 von 5** gemessen grün, 1 rot, 2 nicht gelaufen. **Z3 eingetragen** — Produktiv vollständig, Staging vorläufig (5 Zeilen offen) |
 > | AP2 — Zeiger und Wache | offen | | | |
@@ -535,6 +536,24 @@ Variablen, die GitHub ohne Zusage setzt.
 `android=ja` **und** `uhr=ja` hat das noch nicht gezeigt; bis dahin ist es
 eine begründete Vorsichtsmaßnahme, keine Messung.
 
+**E-KH-25 — Die Zielprobe ist eine eigene Datei, kein Unterbefehl von
+`tor.py`.** *Gefallen in AP3, 20.09.2026.* Das Konzept sagt „Zielprobe als
+Unterbefehl in `tools/kette/`"; sie liegt jetzt als
+`tools/kette/zielprobe.py` daneben.
+
+*Grund:* `tor.py` spricht mit `jobs.php` über HTTPS und kennt genau ein
+Geheimnis, das **Job-Token**. Die Zielprobe braucht die **FTPS-Zugangsdaten**.
+Beides in einer Datei hieße, dass das Werkzeug, das an jedem Tor steht, die
+Zugangsdaten zum Dateisystem des Servers kennt — ohne dass es sie braucht.
+Zwei Dateien, zwei Geheimnismengen, zwei Selbstproben.
+
+*Was dafür spricht, es trotzdem zusammenzulegen:* ein Aufruf weniger zu
+merken. Das wiegt die Vermischung nicht auf.
+
+*Folge für `CLAUDE.md` und `Technik.md`:* keine — beide nennen die Werkzeuge
+einzeln. `tools/kettenaufrufe/` prüft die neuen Aufrufe von selbst mit
+(gemessen: 32 Aufrufe, 0 Befunde).
+
 ---
 
 ## 3. Arbeitspakete
@@ -837,6 +856,92 @@ und nicht in eine Datei — er steht als Punkt im Prüfdokument.
      und den Probelauf damit wiederholen. Trennt „Konto/Pfad" von „Bibliothek".
   5. Jedes Ergebnis zweimal (zweimal gleich = belastbar).
 - **STOPP.** Befund und Empfehlung an die Betreiberin → **E-KH-09**.
+
+#### Umsetzung AP3 (20.09.2026) — was gebaut wurde, was haftet
+
+**Kein Web-Code.** Nur `tools/kette/`, `.github/`, `docs/`. Keine
+Versionsstufe (E-KH-23); gezählt hat der Rahmenplan: **Fassung 86**.
+
+| Datei | Was |
+|---|---|
+| `tools/kette/tor.py` | F1 nach E-KH-05: Laufbeginn aus dem `Date`-Kopf (`kopfzeit()`), zweite Runde statt Abbruch, definierter Abbruch beim alten Server (E-KH-19). Selbstprobe **11 → 17 Lagen** |
+| `tools/kette/zielprobe.py` | **neu** — Rundlauf FTPS → HTTPS → vergleichen → löschen → 404, zwei Betriebsarten, Selbstprobe **26 Lagen** |
+| `.github/workflows/auslieferung.yml` | Zielprobe vor dem Backup-Tor; Probelauf (E-KH-08) als Eingabe `probelauf` am Handauslöser, mit sechs gesperrten Schritten und Trockenlauf |
+| `docs/Technik.md`, `tools/kette/LIESMICH.md` | neuer Abschnitt **6.5a** bzw. das zweite Kapitel |
+
+**Die Selbstprobe des Tors, 17 Lagen:** Regelfall · meldet nie fertig ·
+falsches Token · kein Stand · **fremder Auftrag → zweite Runde → offen** ·
+**nach zwei Runden kein frischer Stand → zu** · **Serveruhr 120 s nach →
+offen** · **Serveruhr 120 s vor → offen** · **kein `Date`-Kopf → Abbruch** ·
+**Antwort ohne `fertig`/`error` → definierter Abbruch** · **eine solche
+Antwort ist ein Schluckauf, kein Nein** · fünf für `pause` · eine für die
+400-Antwort.
+
+**Problem 1 — die Selbstprobe hat die eigene Änderung sofort gefangen.**
+Nach dem Umbau auf die Serveruhr fiel Fall 1 durch: „Antwort trägt keinen
+`Date`-Kopf". Die Attrappe lieferte keine Serverzeit. *Gelöst:* Die Attrappe
+hängt jetzt eine an jede Antwort, wie `rufen()` es aus dem Kopf tut — und
+`serverzeit=None` stellt ausdrücklich den Fall „ohne `Date`" nach. **Das ist
+kein Ärgernis, sondern der Beleg, dass die Probe misst.**
+
+**Problem 2 — die Maskierung der Zielprobe zerschnitt ihre eigene
+Auswertung.** `curl_ftp()` gab die Ausgabe maskiert zurück; `aufraeumen()`
+liest daraus die Dateiliste. Mit einem kurzen Passwort wurde aus
+`.zielprobe-alt.txt` ein `.zielpro***e-alt.txt`, und das Aufräumen fand seine
+eigenen Reste nicht mehr. *Gelöst:* Maskiert wird am **Rand** (`sag()`), nicht
+in der Mitte; dazu eine Untergrenze von vier Zeichen, mit Gegenprobe. Gefunden
+von der Selbstprobe, nicht beim Lesen.
+
+**Problem 3 — zwei Jobs tragen wortgleiche Schrittnamen.** „Handbuch und
+‚Was ist NAdoku' nach server/doku kopieren" steht in `staging` **und** in
+`produktion`. Ein Ersetzen über die ganze Datei traf beide. *Gelöst:* Alle
+Eingriffe laufen auf einem Ausschnitt zwischen `produktion:` und `zeiger:`.
+**Das ist eine Warnung für AP5:** Beim Zusammenführen der Schrittfolge ist
+die Namensgleichheit gewollt — dann darf kein Werkzeug mehr über den Namen
+gehen.
+
+**Z5 Teil 1 ist erledigt, und zwar aus der Umsetzung heraus** (die Zuarbeit
+sah die Betreiberin vor; die Läuferangaben stehen im Kopf jedes Jobprotokolls
+und sind über die API erreichbar):
+
+| | grün, 18.09., Staging (`35341712345`) | rot, 20.09., Produktiv (`35499422433`) |
+|---|---|---|
+| Läuferfassung | 2.337.0 | **2.337.0** |
+| Abbild | ubuntu-24.04 / 20260907.300.1 | **ubuntu-24.04 / 20260907.300.1** |
+| Provisioner | 20260828.587 | **20260828.587** |
+
+**Identisch. Läuferabbild und Node-Fassung scheiden als Erklärung für F3
+aus.** Dieselbe Aktionsfassung (v4.4.0), derselbe Läufer, dasselbe Abbild —
+der Unterschied liegt auf der Serverseite.
+
+**Und ein Befund dazu, der die Frage weiter verengt.** Das Protokoll des
+roten Laufs zeigt die Stelle genauer, als sie bisher beschrieben war:
+
+```
+Making changes to 708 files/folders to sync server state
+Uploading: 11.7 MB -- Deleting: 0 B -- Replacing: 0 B
+creating folder "api/"
+Error: Client is closed because read ECONNRESET (data socket)
+    at Client.sendIgnoringError (…/index.js:4236:25)
+    at Client._openDir (…/index.js:4763:20)
+    at Client.ensureDir (…/index.js:4754:24)
+```
+
+`_openDir` ist ein **Listen-Befehl auf dem Datenkanal**. Alles davor —
+Anmeldung, `PWD`, `CWD`, die ganze Dateiaufzählung aus dem Zustandsvergleich
+— läuft über den **Steuerkanal** und gelingt. **Der Steuerkanal steht; die
+ERSTE Datenverbindung des Laufs wird abgeschnitten.** Dazu passt
+`Deleting: 0 B — Replacing: 0 B`: Die Zustandsdatei war leer, der Lauf wollte
+alle 708 Dateien neu hochladen.
+
+Das ist die Signatur von genau zwei Dingen: gesperrte Passiv-Ports oder ein
+Server, der die Wiederverwendung der TLS-Sitzung auf dem Datenkanal
+**verlangt**. Beides trennt die Zielprobe in ihren zwei Betriebsarten — und
+gegen lima-city lief derselbe Client mit Datenkanal durch, was die
+Bibliothek weiter entlastet.
+
+**STOPP.** Was jetzt fehlt, ist eine Messung an der Anlage — Schritte 2 bis 5
+des Trennversuchs. Sie steht im Prüfdokument als Prüfpunkte 10 bis 12.
 
 ### AP4 — F3 beheben (Inhalt nach E-KH-09; E-KH-20 gilt in jedem Fall)
 

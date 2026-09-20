@@ -116,3 +116,95 @@ Ob die Gegenstelle wirklich der Produktivserver ist, ob das Backup lesbar ist
 und ob der Serverschlüssel der richtige ist. Das erste ist Sache der Umgebung
 (`PRODUKTION_URL`), das zweite und dritte Sache der
 Wiederherstellungsprobe (`tools/wiederherstellungs-probe/`).
+
+---
+
+# Zielprobe — liegt eine hochgeladene Datei hinterher wirklich im Web?
+
+```
+python3 tools/kette/zielprobe.py --basis https://nadoku.example \
+        --ftp-server HOST --ftp-konto NAME --ftp-pass … [--ftp-pfad /]
+python3 tools/kette/zielprobe.py … --ohne-sitzungswiederverwendung
+python3 tools/kette/zielprobe.py --selbstprobe
+```
+
+Rückgabewert 0 = Rundlauf gelungen, 1 = nicht, 2 = Bedienfehler.
+
+## Warum es sie gibt (F4, E-KH-07)
+
+Die Kette hat bis zum 20.09.2026 geglaubt, was ihr die FTP-Aktion sagte. Ein
+grüner Upload-Schritt heißt aber nur: **Die Bibliothek hat keinen Fehler
+gemeldet.** Er heißt nicht, dass die Dateien unter der Adresse liegen, die
+`PRODUKTION_URL` nennt. Ein falscher Zielpfad, ein zweiter Webspace, ein
+Konto, das woandershin eingesperrt ist — von innen sehen alle drei aus wie
+Erfolg.
+
+Die Probe schreibt eine Datei mit Zufallsnamen und Zufallsinhalt ins
+Zielverzeichnis, holt sie über **HTTPS** zurück, vergleicht Byte für Byte,
+löscht sie und prüft das Löschen (danach 404). Das belegt den **lebenden**
+Weg vom FTP-Konto bis zur öffentlichen Adresse.
+
+## Warum `curl` und nicht die Auslieferungsaktion
+
+Nicht weil er da ist, sondern weil er ein **zweiter** FTPS-Client ist.
+
+Scheitert der Upload in `SamKirkland/FTP-Deploy-Action` und die Zielprobe
+gelingt → es liegt an der Bibliothek. Scheitern beide an derselben Stelle →
+es liegt an der Plattform. **Das ist der Trennschnitt, den F3 braucht.** Ein
+Werkzeug, das denselben Client benutzt, könnte diese Frage nicht beantworten.
+
+## Die zwei Betriebsarten
+
+| Schalter | Datenkanal | wofür |
+|---|---|---|
+| (Vorgabe) | `--ssl-reqd` — TLS-Sitzung des Steuerkanals wiederverwenden | Normalbetrieb |
+| `--ohne-sitzungswiederverwendung` | `--no-ssl-session-reuse` | der Trennversuch (F3) |
+
+Viele FTPS-Server verlangen die Wiederverwendung; wer sie nicht bietet,
+bekommt die Datenverbindung abgeschnitten — **das sieht aus wie ein
+`ECONNRESET`**. Gelingt die Probe *mit* und scheitert *ohne*, ist die
+Forderung des Servers belegt.
+
+**Ob `curl` die Sitzung in der Fassung dieses Läufers tatsächlich
+wiederverwendet, wird gemessen und nicht angenommen.** Der Schalter kann
+fehlen oder still ignoriert werden — dann belegte ein gelungener Lauf gar
+nichts. Die Ausgabe ist **dreiwertig**, wie `plattform_pruefen()`
+(`Technik.md` 5b.1): `JA (gemessen)`, `NEIN (gemessen)` oder **`NICHT
+FESTSTELLBAR`**. Das dritte ist kein Nein.
+
+## Was sie hinterlässt: nichts
+
+Sie räumt Reste früherer Proben weg (alles mit dem Präfix `.zielprobe-` im
+Zielverzeichnis) und löscht ihre eigene Datei **auch im Fehlerfall** — sonst
+liegt nach dem dritten roten Lauf Müll im Webroot, den jeder abrufen kann.
+Der Präfix beginnt mit einem Punkt: `.htaccess` (Z. 64) antwortet auf jeden
+Pfad mit führendem Punkt mit 403, ein zweiter Riegel neben dem Löschen.
+
+## Geheimnisse
+
+Das Passwort geht über `--config -` und **nicht** über die Befehlszeile —
+`/proc/<pid>/cmdline` ist lesbar. Jede Ausgabe läuft durch `sag()`, das
+maskiert; `curl --verbose` schreibt die Adresse samt Passwort mit.
+
+**Unter vier Zeichen wird nicht maskiert**, und das ist eine Behebung: Mit
+einem einzeichigen „Geheimnis" zerschnitt die Maskierung die Dateiliste, die
+`aufraeumen()` danach auswerten muss — aus `.zielprobe-alt.txt` wurde
+`.zielpro***e-alt.txt`, und das Aufräumen fand seine eigenen Reste nicht
+mehr (gefunden von der Selbstprobe am 20.09.2026). Maskiert wird seither am
+**Rand**, nicht in der Mitte.
+
+## Selbstprobe
+
+`--selbstprobe` fährt **26 Lagen ohne Netz**: Maskierung (4), Adressen (3),
+die Dreiwertigkeit der Sitzungsmessung (4), der Rundlauf gegen Attrappen
+(11 — darunter „liegt im FTP, ist über HTTPS 404", „Inhalt weicht ab", „nach
+dem Löschen weiter abrufbar", „Hochladen scheitert" und jedes Mal die
+Gegenprobe, dass **trotzdem gelöscht wird**), das Aufräumen (2) und das
+Passwort außerhalb der Befehlszeile (1). Sie läuft in der Kette **vor** jedem
+echten Lauf.
+
+## Was sie nicht kann
+
+Sie misst den Weg für eine **statische** Datei. Ob PHP läuft, ob die
+Anwendung antwortet, ob `.htaccess` greift — davon sagt sie nichts. Und sie
+misst **ein** Verzeichnis: das, auf das `--ftp-pfad` zeigt.

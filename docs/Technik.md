@@ -9148,6 +9148,47 @@ der Job `produktion` in diesem Lauf mit Erfolg geendet hat, und hielt sonst
 still. Dieser Riegel ist mit AP2 entfallen — warum, steht im nächsten
 Abschnitt.
 
+### 6.5a Zielprobe und Probelauf — die Kette misst, statt zu glauben
+
+**Die Zielprobe** (`tools/kette/zielprobe.py`, seit AP3 der Kettenhärtung,
+E-KH-07) steht im Job `produktion` **vor dem Backup-Tor**. Sie schreibt per
+FTPS eine Datei mit Zufallsnamen und Zufallsinhalt ins Zielverzeichnis, holt
+sie über HTTPS unter `PRODUKTION_URL` zurück, vergleicht sie, löscht sie und
+prüft das Löschen (danach 404).
+
+**Warum vor dem Backup-Tor:** Bis dahin hat noch nichts den Server verändert.
+Zeigt das FTP-Konto auf ein anderes Verzeichnis als die öffentliche Adresse,
+fällt das dort auf — und nicht erst, nachdem ein Komplett-Backup gelaufen und
+die Wartung an ist.
+
+**Warum `curl` und nicht die Auslieferungsaktion:** Er ist bewusst ein
+**zweiter** FTPS-Client. Scheitert der Upload in der Aktion und die Probe
+gelingt, liegt es an der Bibliothek; scheitern beide an derselben Stelle, an
+der Plattform. Das ist der Trennschnitt, den F3 braucht. Zwei Betriebsarten
+— mit und ohne Wiederverwendung der TLS-Sitzung auf dem Datenkanal —, und ob
+`curl` sie tatsächlich wiederverwendet, meldet die Probe **dreiwertig**
+(`JA` / `NEIN` / **`NICHT FESTSTELLBAR`**). Einzelheiten:
+`tools/kette/LIESMICH.md`.
+
+**Der Probelauf** (E-KH-08) ist eine Handauslösung mit der Eingabe
+`probelauf`. Er fährt denselben Job `produktion` mit derselben
+Pflichtfreigabe — und läuft deshalb auch von `main`, wo kein Tag steht:
+
+| gefahren | nicht gefahren |
+|---|---|
+| die drei Geheimnisse | Tag gegen `WEB_VERSION` |
+| Zielprobe (samt Selbstprobe) | Tor der grünen Läufe |
+| Abgleich als **Trockenlauf** (`dry-run`) | Backup-Tor, Wartungsmodus, `doku`-Kopie, Migrationsabfrage |
+
+Geschrieben wird nichts außer der Probedatei, und die wird im selben Schritt
+gelöscht. Die Zusammenfassung beginnt mit **„PROBELAUF — nichts
+ausgeliefert"**.
+
+**Das Tor der grünen Läufe entfällt im Probelauf mit Absicht:** Es schützt
+Produktiv davor, ungeprobten Code zu bekommen — der Probelauf liefert keinen
+Code aus. Und es wäre der falsche Riegel am falschen Tag: Ausgerechnet wenn
+die Kette klemmt, braucht man den Probelauf, um zu messen **warum**.
+
 ### 6.6a Der Zeiger `produktion` — wogegen die Wache vergleicht
 
 **Der Fehler war nicht der Auslöser, sondern der Vergleichsstand** (Befund B6
