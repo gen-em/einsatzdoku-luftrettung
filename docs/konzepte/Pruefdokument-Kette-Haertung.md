@@ -24,7 +24,7 @@ abgehakt ist (R62).
 > | Stand | 20.09.2026 — **AP1 gebaut, Abnahme offen.** AP2 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt beider Selbstproben, YAML-Gültigkeit, Zählung der Fundstellen, Zählung der Ausnahmeliste. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1. Dazu die beiden Tabellen, die auf **Z3** warten, und die Erreichbarkeit der neuen Anlage. Abschnitt 0 |
-> | Funde | **drei** aus der Umsetzung von AP1 (Abschnitt 2), alle behandelt — einer davon nur halb, und das ist gesagt |
+> | Funde | **vier** (Abschnitt 2): drei aus der Umsetzung, einer aus einer unabhängigen Gegenlesung durch sieben getrennte Leser. Alle behandelt — einer davon nur halb, und das ist gesagt; zwei Befunde der Gegenlesung bleiben bewusst liegen |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil AP1 keinen Web-Code anfasst |
 
 ---
@@ -214,6 +214,40 @@ und der Fund im Kopf vermerkt. **Nicht geschrieben** sind die
 Abschnitten 3, 5 und 6 — die gehören dem Abschluss von P5b, nicht diesem
 Paket. **Prüfpunkt 6** trägt es der Betreiberin vor.
 
+**F-KH-U-04 — Vier Stellen, die erst eine unabhängige Gegenlesung fand.**
+Nach dem Bau sind die geänderten Dokumente von sieben getrennten Lesern
+gegengelesen worden, jeder mit einem Dokument. Vier Befunde waren berechtigt
+und sind behoben:
+**(a)** `docs/Technik.md` trug im Kopf noch *Stand: 17.09.2026*, obwohl AP1
+die Datei ändert — auf **20.09.2026** berichtigt.
+**(b)** In derselben Datei stand die Zeile `| Repositorium | CIQ_GERAETE_URL |
+WACHE_BASIS |` **hinter einer Leerzeile** und damit ohne Kopf: eine
+Tabellenzeile, die als Text rendert. Sie ist in die Tabelle darüber
+zurückgeholt, deren erste Spalte jetzt *Ort* heißt statt *Umgebung*, weil
+das Repositorium keine Umgebung ist. **Der Schaden ist älter als AP1** — er
+steht in der Tabelle, die AP1 um `FTP_STATE_PFAD` ergänzt hat, und wurde beim
+Gegenlesen dieser Ergänzung sichtbar.
+**(c)** In `Vorbereitung-P5-Plattformprofil.md` stand unkommentiert *„bis
+dahin deployt `main` weiter auf Produktiv"* — seit Web 20.4.0 falsch, und
+**genau der Satz, vor dem `CLAUDE.md` 3 warnt**. Vermerk gesetzt.
+**(d)** Die Herkunftszeile in Abschnitt 5 (Nachweis) derselben Datei nannte
+E-PP-09 ohne den Ersetzungsvermerk. Ergänzt.
+
+*Nicht übernommen wurde ein fünfter Hinweis* — der Vermerk an E-PP-09 zähle
+Festlegungen auf, die dort nicht stünden. Nachgesehen: Sie stehen dort
+(Serverschlüssel und Server-Anteil im Einrichtungspunkt, Absender und
+Betreff-Präfix im zweiten, SFTP-Ziel im dritten). Der Hinweis war falsch.
+
+**Zwei weitere Befunde der Gegenlesung sind echt und bleiben liegen**, weil
+sie nicht zu AP1 gehören: `docs/Technik.md` 6.3 spricht von **„zwei der
+fünfzig Seiten"** des Bilderlaufs, während `CLAUDE.md` 6 **62** nennt; und
+die Begründung für zwei Namen der Zustandsdatei (Abschnitt 4.97g: *„weil sich
+Staging und Produktion einen FTP-Zugang teilen könnten"*) beschreibt seit
+E-KH-04 nicht mehr diese Anlage. **Der zweite ist bewusst stehen geblieben:**
+Die Begründung gilt weiterhin für den allgemeinen Fall — ein Selbsthoster
+kann beides auf einen Webspace legen, und dann trennt allein der Name die
+beiden Zustandsdateien.
+
 ---
 
 ## 3. Prüfliste für die Betreiberin
@@ -326,6 +360,13 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   schlägt nicht an — es prüft Werkzeugschnittstellen, keine Textverweise.
   Niedrig; Auslöser wäre eine weitere Neufassung von 6a.
 
+- **`docs/Technik.md` 6.3 nennt „zwei der fünfzig Seiten" des Bilderlaufs,
+  `CLAUDE.md` 6 nennt 62.** Gefunden bei der Gegenlesung zu AP1 (F-KH-U-04),
+  nicht behoben, weil es weder Staging noch die Kette betrifft. Die Zahl im
+  Bilderlauf wächst mit jeder neuen Seite und steht in
+  `tools/screenshots/seiten.json` — eine Zahl im Fließtext veraltet dort
+  planmäßig. Niedrig; zusammen mit der nächsten Pflege des Bilderlaufs.
+
 *(Die Vorschläge aus Konzept Abschnitt 8 — atomare Auslieferung, die Grenze
 der Wache, die Ablösung der Fremd-Aktion, der Vermerk an Nr. 234 — gehören
 zu AP8 und stehen dort.)*
@@ -352,6 +393,12 @@ zu AP8 und stehen dort.)*
 - **`grep` zählt Zeichenketten, nicht Bedeutungen.** Dass alle 13
   Fundstellen der alten Adresse Historie sind, ist **von Hand eingeordnet**
   (Tabelle in 1.1) und nicht gemessen.
+- **Und `grep` zählt nur, was vollständig dasteht.** Eine **vierzehnte**
+  Stelle hat das Muster nicht getroffen: `docs/Backlog.md`:2913 zitiert einen
+  gemessenen Bildschirmtext, in dem die Adresse **abgeschnitten** ist
+  (`datenschutzbeauftragte@staging.nadoku.g…`). Sie ist Protokoll einer
+  Überlaufmessung und bleibt, wie sie ist — sie steht hier, weil eine Zahl,
+  die ein Muster liefert, immer nur so weit reicht wie das Muster.
 - **Kein Prüfmittel dieses Projekts fährt einen Arbeitslauf.** Was ein Job
   auf einem Läufer gegen eine echte Anlage tut, zeigt allein der Lauf. Das
   ist der Grund, warum Prüfpunkt 1 oben steht und nicht unten.

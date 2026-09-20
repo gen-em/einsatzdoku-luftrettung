@@ -565,6 +565,19 @@ Nachzüge in den Abschnitten 3, 5 und 6 sind **nicht** geschrieben — sie
 gehören dem Abschluss von P5b, nicht diesem Paket. Das ist eine Fremdaufgabe,
 die hier nur benannt wird.
 
+**Problem 4 — was die eigene Durchsicht nicht sah.** Nach dem Bau sind die
+geänderten Dokumente von **sieben getrennten Lesern** gegengelesen worden,
+je einer pro Dokument. Vier Befunde waren berechtigt und sind behoben:
+`docs/Technik.md` trug im Kopf noch *Stand: 17.09.2026*; eine Tabellenzeile
+derselben Datei (`| Repositorium | … |`) stand hinter einer Leerzeile und
+damit ohne Kopf — **älter als AP1**, aber in der Tabelle, die AP1 ergänzt;
+in `Vorbereitung-P5-Plattformprofil.md` stand unkommentiert *„bis dahin
+deployt `main` weiter auf Produktiv"* (seit Web 20.4.0 falsch — genau der
+Satz, vor dem `CLAUDE.md` 3 warnt); und die Herkunftszeile in Abschnitt 5
+derselben Datei nannte E-PP-09 ohne Ersetzungsvermerk. Einzelheiten und die
+zwei Befunde, die bewusst liegen bleiben, stehen als **F-KH-U-04** im
+Prüfdokument.
+
 **Was E-KH-20 angeht: AP1 fasst den Transport nicht an.** Die Ausnahmeliste
 ist unberührt — gemessen: **zwei** `exclude`-Blöcke in `auslieferung.yml`,
 je **12 Zeilen**, **wortgleich**, darin die sieben geschützten Pfade. Damit

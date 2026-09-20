@@ -449,6 +449,14 @@ kein Selbst-Update, die Installation ändert ihren Code nie selbst.
   Freigabe) ist das **erste Code-Paket von P5**; bis dahin deployt `main`
   weiter auf Produktiv.
 
+  > **Der letzte Halbsatz gilt seit Web 20.4.0 nicht mehr** (P5a/AP1, PR #49
+  > vom 16.09.2026): Ein Push auf `main` geht seither auf **Staging**, und
+  > `deploy.yml` gibt es nicht mehr. Der Vermerk steht hier, weil `CLAUDE.md` 3
+  > genau vor diesem Satz warnt — *„Wer eine alte Sitzung, ein altes Protokoll
+  > oder einen alten Kommentar liest, liest das noch."* Er ist einer davon.
+  > **Und die Einrichtungsanleitung dieses Punktes meint die alte Anlage**
+  > (E-PP-09); die geltende steht in `docs/Rahmenplan.md` 6a.
+
 **Empfohlen**
 - **Staging beim selben Hoster im selben Tarif** wie Produktiv: Nur dann
   misst der Messstand die Grenzen, die Produktiv wirklich hat
@@ -564,7 +572,9 @@ Rückfrage entschieden worden** (15.09.2026), anders als zuerst gesetzt.
   der Konzeptsitzung, **nicht** gegen die Herstellerseiten nachgemessen —
   vor der Umsetzung prüfen (E-PP-03).
 - Staging-Ziel, Absender und Tarif: Angaben des Auftraggebers vom
-  15.09.2026 (E-PP-09).
+  15.09.2026 (E-PP-09). **Adresse und Hoster sind am 20.09.2026 durch
+  E-KH-04 ersetzt** — `staging-nadoku.gen-em.org` bei lima-city; Absender und
+  Betreff-Präfix gelten unverändert.
 - Zwei Zahlen dieses Dokuments waren beim ersten Schreiben falsch und sind
   mit dem P5a-Konzept berichtigt (E-P5a-11): die Warnschwelle des
   DB-Kontingents (PP-2) und die Vorgabe der Komplett-Aufbewahrung (PP-5). `nachaufloesen.php`: Kopfkommentar und

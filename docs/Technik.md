@@ -1,6 +1,6 @@
 # Gen-EM NAdoku — Technische Dokumentation
 
-*Stand: 17.09.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
+*Stand: 20.09.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
 Historie: `CHANGELOG.md`.*
 
 ## 1. Architekturüberblick
@@ -9005,11 +9005,10 @@ Diese Ausnahmeliste steht in beiden FTPS-Schritten wortgleich und ist tragend
 Geheimnisse liegen seit Web 20.4.0 nicht mehr als Repositoriums-Secrets herum,
 sondern an den **Umgebungen**:
 
-| Umgebung | Geheimnisse | Variablen |
+| Ort | Geheimnisse | Variablen |
 |---|---|---|
-| `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `STAGING_URL` |
-| `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `PRODUKTION_URL` |
-
+| Umgebung `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `STAGING_URL` |
+| Umgebung `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `PRODUKTION_URL` |
 | Repositorium | `CIQ_GERAETE_URL` (Stufe 1) | `WACHE_BASIS` |
 
 `FTP_SERVER` ist der **nackte Hostname**, ohne Protokoll und ohne Pfad.
