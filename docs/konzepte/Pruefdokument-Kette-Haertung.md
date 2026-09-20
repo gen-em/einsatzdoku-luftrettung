@@ -24,9 +24,9 @@ abgehakt ist (R62).
 > | Stand | 20.09.2026 — **AP1 gebaut (Abnahme offen), AP2 gebaut, AP3 gebaut.** AP4 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **21** (Abschnitt 2): F-KH-U-01 bis F-KH-U-22 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-22: 80 von 80 Verzeichnissen in EINER Sitzung — auch die Menge ist es nicht**, und damit ist der Vorrat an Vermutungen erschöpft, den ein zweiter Client prüfen kann |
+> | Funde | **22** (Abschnitt 2): F-KH-U-01 bis F-KH-U-23 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-23: `_openDir` listet nicht — die Stelle war in beiden Dokumenten falsch beschrieben**, nachgelesen im Quelltext. Daraus folgt eine Lage, die noch nie gemessen wurde (Prüfpunkt 19) |
 > | F3 | **so weit eingegrenzt, wie es von außen geht — und weiter nicht benannt. SIEBEN** Vermutungen sind mit je einer Messung ausgeschlossen, zuletzt die Menge (**80 von 80 in einer Sitzung**, F-KH-U-22). Tabelle dort. **Damit ist der Vorrat erschöpft, den ein zweiter Client prüfen kann:** `curl` kann jedes Mal, woran die Aktion stirbt. Der nächste Schritt geht an die Aktion selbst (**Prüfpunkt 18**, kostet einen echten Auslieferungslauf) oder an den Hoster — die Frage ist jetzt beantwortbar gestellt. **E-KH-09 (Pflichtstopp) steht** |
-> | Prüfliste | 22 Punkte: **7 abgehakt**, 5 teilweise, **10 offen** |
+> | Prüfliste | 23 Punkte: **7 abgehakt**, 5 teilweise, **11 offen** |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
 
 ---
@@ -410,7 +410,7 @@ beglaubigte einen Vergleich, den es so nicht gab.
 | Mittel | Soll | Ist |
 |---|---|---|
 | `tor.py --selbstprobe` | mindestens 16 Lagen, 0 offen | **19 Lagen, 0 offen** (11 → 17 → 19; die zwei letzten zur zweiten Runde und zur Serverzeit) |
-| `zielprobe.py --selbstprobe` | eigene Selbstprobe, 0 offen | **81 Lagen, 0 offen** (26 → 29 → 33 → 37 → 45 → 50 → 67 → 81; jede Stufe ist ein Fund, den sie selbst gefunden hat). **Gegen einen echten Server nachgemessen** im Lauf 35540252565: 80 von 80 |
+| `zielprobe.py --selbstprobe` | eigene Selbstprobe, 0 offen | **92 Lagen, 0 offen** (26 → 29 → 33 → 37 → 45 → 50 → 67 → 81 → 92; jede Stufe ist ein Fund, den sie selbst gefunden hat). **Gegen einen echten Server nachgemessen** im Lauf 35540252565: 80 von 80 |
 | `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft | **34 Aufrufe, 0, 0**; Selbstprobe 10/10 |
 | YAML der drei Arbeitsläufe | laden | **3 von 3** |
 | `wache.py --selbstprobe` | 0 offen | **38 Erwartungen, 0 offen** (AP2: 32 → 38) |
@@ -455,11 +455,20 @@ Error: Client is closed because read ECONNRESET (data socket)
     at Client._openDir (…/index.js:4763:20)
 ```
 
-`_openDir` listet **auf dem Datenkanal**. Alles davor läuft über den
-Steuerkanal und gelingt. **Der Steuerkanal steht; die erste Datenverbindung
-wird abgeschnitten.** Das ist die Signatur von gesperrten Passiv-Ports oder
-einer Forderung nach Wiederverwendung der TLS-Sitzung — genau die zwei Dinge,
-die die Zielprobe in ihren zwei Betriebsarten trennt.
+> **BERICHTIGT am 20.09.2026 — F-KH-U-23.** Hier stand: „`_openDir` listet
+> auf dem Datenkanal … die erste Datenverbindung wird abgeschnitten." **Das
+> ist falsch.** `_openDir` sendet `MKD` und `CWD`, beides Steuerkanal, und
+> listet nie (Quelltext `basic-ftp` 6.2.1, Z. 686–689). Der Satz „Client
+> **is closed** *because* read ECONNRESET" ist eine **Zustandsmeldung**:
+> Der Client war schon tot, als `MKD api` abgesetzt wurde. `sendIgnoringError`
+> ist die Stelle, die es **bemerkt**, nicht die, die es verursacht. Der
+> Reset kam auf der Datenverbindung **davor** und wurde erst beim nächsten
+> Steuerbefehl zugestellt.
+>
+> Richtig bleibt: **Der Steuerkanal steht.** Alles Weitere in diesem Absatz
+> war eine Folgerung aus der falschen Prämisse und hat die Suche zwei Läufe
+> lang in eine Richtung gelenkt, die es nicht gibt. Die Einzelheiten und was
+> daraus zu prüfen ist, stehen bei F-KH-U-23.
 
 **Durch Lesen belegt** (nicht gelaufen):
 
@@ -473,6 +482,83 @@ die die Zielprobe in ihren zwei Betriebsarten trennt.
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-23 — `_openDir` listet nicht. Die Stelle, die seit dem 19.09.2026 in
+beiden Dokumenten steht, ist falsch beschrieben.** *Nachgelesen am 20.09.2026
+im Quelltext von `basic-ftp` 6.2.1 und `@samkirkland/ftp-deploy` 1.2.5,
+beide per `npm pack` geholt.*
+
+In `Konzept-Kette-Haertung.md` und in Abschnitt 1.4 dieses Dokuments steht:
+
+> „`_openDir` ist ein **Listen-Befehl auf dem Datenkanal**."
+
+**Das stimmt nicht.** `basic-ftp/dist/Client.js`, Zeilen 686–689:
+
+```js
+async _openDir(dirName) {
+    await this.sendIgnoringError("MKD " + dirName);
+    await this.cd(dirName);
+}
+```
+
+**`MKD` und `CWD`. Beides Steuerkanal. Keine Datenverbindung, kein `LIST`.**
+
+**Was der Stacktrace dann wirklich sagt.** Er lautet wörtlich:
+
+```
+creating folder "api/"
+Error: Client is closed because read ECONNRESET (data socket)
+    at Client.sendIgnoringError (…)
+    at Client._openDir (…)
+    at Client.ensureDir (…)
+```
+
+Zu lesen ist er **rückwärts**: „Client **is closed** *because* read
+ECONNRESET (data socket)". Das ist eine **Zustandsmeldung**, keine
+Ortsangabe. Der Client war schon tot, als `MKD api` abgesetzt wurde;
+`sendIgnoringError` ist die Stelle, die es **bemerkt**, nicht die, die es
+**verursacht**. Der Reset ist vorher passiert, auf der letzten
+Datenverbindung — und wurde erst beim nächsten Steuerbefehl zugestellt.
+
+**Was das für die bisherigen Messungen bedeutet.** Rundlauf 2 der Zielprobe
+wurde gebaut, um „die `_openDir`-Stelle" nachzustellen, und listet dafür
+ausdrücklich das neu angelegte Verzeichnis auf (F-KH-U-17/-18). **Diese
+Auflistung tut `_openDir` nie.** Die Messung ist nicht falsch — sie hat
+gemessen, was sie gemessen hat, und `MKD`+`CWD` sind darin enthalten —,
+aber sie war **an der falschen Stelle beschriftet**, und die Beschriftung
+hat die Suche zwei Läufe lang in eine Richtung gelenkt, die es nicht gibt.
+Dasselbe gilt für den Satz „Der Steuerkanal steht; die erste Datenverbindung
+wird abgeschnitten": Der erste Teil stimmt, der zweite war eine Folgerung
+aus der falschen Prämisse.
+
+**Und eine Beobachtung, die daraus folgt und noch nicht geprüft ist.** Vor
+dem ersten `creating folder` holt die Aktion die Zustandsdatei vom Server
+(`getServerFiles` → `downloadFileList`) — **das ist eine Datenverbindung**,
+und zwar auf `../.deploy-state-produktion.json`: eine Ebene **über** dem
+Zielverzeichnis, mit **führendem Punkt** im Namen. Der Probelauf kommt dort
+durch; er macht danach aber keinen Steuerbefehl mehr, sondern nur noch
+„Sync complete". **Ein Reset auf genau dieser Verbindung fiele im Trockenlauf
+also gar nicht auf** — er fiele erst beim nächsten `MKD` auf, und das ist
+exakt die beobachtete Signatur.
+
+Zu prüfen wäre: **Download, dann noch ein Steuerbefehl in DERSELBEN
+Sitzung.** Das hat die Zielprobe nie getan — sie öffnet je Operation eine
+neue Verbindung. Kosten: ein weiterer Probelauf, kein echter Lauf.
+
+**Zwei Dinge sind dabei nebenbei belegt** (beide vorher behauptet, jetzt
+nachgelesen):
+
+- **`log-level: verbose` gibt es wirklich**, und es schaltet den Dialog von
+  `basic-ftp` ein: `client.ftp.verbose = args["log-level"] === "verbose"`
+  (`deploy.js` Z. 74). Nach der Lehre aus F-KH-U-15 — dem erfundenen
+  `curl`-Schalter — nicht geraten, sondern im Paket nachgesehen.
+- **Das Passwort steht nicht im Protokoll.** `FtpContext.js` Z. 191/192:
+  `const containsPassword = command.startsWith("PASS"); const message =
+  containsPassword ? "> PASS ###" : …`. Das gilt unabhängig davon, dass
+  GitHub Geheimnisse ohnehin maskiert — zwei Riegel, nicht einer.
+- **Der Trockenlauf erreicht `ensureDir` beim Anlegen nie**, und damit war
+  die Begründung von Prüfpunkt 18 richtig: `syncProvider.js`, `createFolder`
+  beginnt mit `if (this.dryRun === true) { return; }`.
 
 **F-KH-U-22 — 80 Verzeichnisse in EINER Sitzung. Auch die Menge ist es
 nicht.** *Lauf 35540252565, 20.09.2026, 21:59–22:02 UTC, `--mengenprobe 80`.*
@@ -1626,6 +1712,28 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   (`basic-ftp`) bekommt bei `ensureDir` auf das erste Verzeichnis einen
   `ECONNRESET` auf dem Datenkanal. Was unterscheidet die beiden auf Ihrer
   Seite?"** Das ist eine beantwortbare Frage geworden.
+
+- [ ] **19 — Die Sitzungsprobe gegen Produktiv** (folgt aus F-KH-U-23; kostet
+  **einen Probelauf**, keinen echten Lauf). **Diesen zuerst, vor Prüfpunkt 18.**
+  *Was sie misst:* Abruf (Datenkanal), **danach** ein Steuerbefehl `PWD` — in
+  **derselben** FTP-Sitzung. Genau diese Reihenfolge stirbt in der
+  Auslieferungsaktion, und genau sie hat die Zielprobe nie gemessen, weil sie
+  je Operation eine neue Verbindung öffnet.
+  *Weg:* Sie braucht eine Eingabe am Arbeitslauf, die noch **nicht gebaut**
+  ist — die Änderung an `auslieferung.yml` ist am 20.09.2026 vom Wächter der
+  Arbeitsumgebung abgewiesen worden („Production Deploy"). Bis dahin von
+  Hand, wo `curl` und die drei Geheimnisse zusammenkommen:
+  `python3 tools/kette/zielprobe.py --basis … --ftp-server … --ftp-konto …
+  --ftp-pass … --ftp-pfad / --sitzungsprobe`
+  *Erwartet — und das wäre der Treffer:* **FEHLGESCHLAGEN.** Dann gehen Abruf
+  und anschließender Steuerbefehl in einer Sitzung nicht durch, und F3 hat
+  seine Erklärung: Die Aktion holt ihre Zustandsdatei und setzt danach `MKD`
+  ab; stirbt die Verbindung dazwischen, meldet sie genau das, was sie meldet.
+  *Woran man sieht, dass die Messung nichts belegt:* Die Zeile „`PWD` NACH
+  dem Abruf … **KEINE 257-Antwort gesehen**". Dann ist der Lauf nicht
+  gescheitert, belegt die Frage aber auch nicht.
+  *Gelingt sie mit 257:* Auch diese Erklärung ist erledigt, und Prüfpunkt 18
+  bleibt der Weg.
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 

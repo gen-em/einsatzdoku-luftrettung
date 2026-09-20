@@ -313,6 +313,34 @@ deshalb wird danach **neu aufgelistet** und zurückgegeben, was tatsächlich
 verschwunden ist. Höchstens vier Runden, und ohne Fortschritt ist nach einer
 Schluss.
 
+## Sitzungsprobe — Abruf, DANN ein Steuerbefehl
+
+`--sitzungsprobe` lädt eine Datei hoch, ruft sie ab und setzt **in derselben
+`curl`-Sitzung** danach ein `PWD` ab (`-Q "-PWD"`; der führende Strich heißt
+„nach der Übertragung").
+
+**Warum es sie gibt (F-KH-U-23).** Der Stacktrace von F3 lautet „Client **is
+closed** *because* read ECONNRESET (data socket)" und steht an
+`sendIgnoringError("MKD api")`. `_openDir` sendet aber nur `MKD` und `CWD` —
+beides Steuerkanal, keine Datenverbindung (nachgelesen in `basic-ftp` 6.2.1,
+Z. 686–689). **Der Client war also schon tot, als das `MKD` kam;** die Zeile
+ist die Stelle, die es *bemerkt*, nicht die, die es verursacht.
+
+Daraus folgt eine Lage, die bis heute niemand gemessen hat: Vor dem ersten
+`MKD` holt die Aktion ihre Zustandsdatei — **eine Datenverbindung**. Wird die
+zurückgesetzt, fällt es erst beim nächsten Steuerbefehl auf. **Im Probelauf
+kommt danach keiner mehr**, nur noch „Sync complete". Ein Reset genau dort
+wäre im Trockenlauf unsichtbar — und das ist die beobachtete Lage:
+Probelauf grün, echter Lauf rot.
+
+Die Zielprobe konnte das nie sehen, weil sie je Operation eine neue
+Verbindung öffnet. Diese Probe macht beides in einer.
+
+**Dreiwertig wie alles hier:** Sieht `curl` keine `257`-Antwort, heißt das
+**NICHT FESTSTELLBAR** und nicht „belegt". Und scheitert schon das
+Hochladen, sagt sie, dass die Frage **gar nicht gestellt** wurde — statt ein
+Ergebnis vorzutäuschen.
+
 ## Geheimnisse
 
 Das Passwort geht über `--config -` und **nicht** über die Befehlszeile —
@@ -328,7 +356,7 @@ mehr (gefunden von der Selbstprobe am 20.09.2026). Maskiert wird seither am
 
 ## Selbstprobe
 
-`--selbstprobe` fährt **81 Lagen ohne Netz**: Maskierung (4), Adressen (3),
+`--selbstprobe` fährt **92 Lagen ohne Netz**: Maskierung (4), Adressen (3),
 der Weg zum Datenkanal (5), die Dreiwertigkeit der Sitzungsmessung (4), der
 flache Rundlauf gegen Attrappen (13 — darunter „liegt im FTP, ist über HTTPS
 404", „Inhalt weicht ab", „nach dem Löschen weiter abrufbar", „Hochladen
@@ -337,7 +365,8 @@ die Betriebsarten und die Frage an `curl` selbst, ob er den Schalter kennt
 (6), das Aufräumen (4), 403 als Sperre statt als falsches Ziel (2), das
 Passwort außerhalb der Befehlszeile (1), der Rundlauf durch ein neues
 Verzeichnis samt Gegenprobe am Auflisten (8), die Mengenprobe (17), die
-Bündelung des Aufräumens (6) und die Zeitgrenze als Befund (8).
+Bündelung des Aufräumens (6), die Zeitgrenze als Befund (8) und die
+Sitzungsprobe (11).
 
 Die Lage, die dort am wichtigsten ist: **alle Ziele stehen in EINEM
 `curl`-Aufruf.** Zerfiele die Mengenprobe in viele Aufrufe, wäre sie eine

@@ -767,6 +767,106 @@ def mengenprobe(basis: str, server: str, pfad: str, konto: str, passwort: str,
     return 0 if rc == 0 else 1
 
 
+def sitzungsprobe(basis: str, server: str, pfad: str, konto: str, passwort: str,
+                  lauf=subprocess.run) -> int:
+    """Abruf, DANN ein Steuerbefehl — in DERSELBEN Sitzung. 0 = gelungen.
+
+    WARUM ES DAS GIBT (20.09.2026, F-KH-U-23). Der Stacktrace von F3 lautet
+    „Client **is closed** *because* read ECONNRESET (data socket)", und er
+    steht an `sendIgnoringError("MKD api")`. `_openDir` sendet nur `MKD` und
+    `CWD` — beides Steuerkanal, keine Datenverbindung (nachgelesen in
+    `basic-ftp` 6.2.1, Z. 686-689). Der Client war also schon tot, als das
+    `MKD` abgesetzt wurde; die Zeile ist die Stelle, die es BEMERKT, nicht
+    die, die es verursacht.
+
+    DARAUS FOLGT EINE LAGE, DIE BISHER NIEMAND GEMESSEN HAT. Vor dem ersten
+    `MKD` holt die Aktion ihre Zustandsdatei vom Server -- eine
+    Datenverbindung. Wird die zurueckgesetzt, faellt es erst beim naechsten
+    Steuerbefehl auf. Im Probelauf kommt danach kein Steuerbefehl mehr, nur
+    noch „Sync complete" -- **ein Reset auf dieser Verbindung waere dort
+    unsichtbar**, und das ist genau die beobachtete Lage: Probelauf gruen,
+    echter Lauf rot.
+
+    Die Zielprobe konnte das nie sehen, weil sie je Operation eine neue
+    Verbindung oeffnet. Diese Probe macht beides in EINER: erst den Abruf
+    (Datenkanal), dann `PWD` (Steuerkanal). Bleibt der Steuerkanal danach
+    ansprechbar, ist auch diese Erklaerung erledigt.
+    """
+    geheim = [passwort, konto]
+    def a(text): sag(text, geheim)
+    def f(text): sag(text, geheim, True)
+
+    marke = secrets.token_hex(8)
+    inhalt = secrets.token_hex(16).encode("ascii")
+    name = f"{PRAEFIX}{marke}.txt"
+    a(f"Sitzungsprobe gegen {ftp_adresse(server, pfad)}")
+    a("  Frage:          Bleibt der Steuerkanal nach einem Abruf ansprechbar?")
+    a(f"  Probedatei:     {name} ({len(inhalt)} Byte)")
+
+    weg = aufraeumen(server, pfad, konto, passwort, lauf)
+    a(f"  Reste weggeräumt: {len(weg)}")
+
+    quelle = os.path.join(os.environ.get("RUNNER_TEMP", "/tmp"), name)
+    hochgeladen = False
+    try:
+        with open(quelle, "wb") as fh:
+            fh.write(inhalt)
+        rc, _, err = curl_ftp([SCHALTER_TLS_PFLICHT, "--verbose",
+                               "--upload-file", quelle,
+                               ftp_adresse(server, pfad, name)],
+                              konto, passwort, lauf)
+        if rc != 0:
+            f(f"FEHLGESCHLAGEN schon beim Hochladen (curl {rc}) — die "
+              f"Sitzungsfrage ist damit gar nicht gestellt worden.")
+            return 1
+        hochgeladen = True
+        a("  Hochgeladen.")
+
+        # DER KERN: EIN AUFRUF, ZWEI KANAELE, DIESELBE SITZUNG.
+        # `-Q -PWD` laeuft NACH der Uebertragung -- der fuehrende Strich sagt
+        # genau das. Kaeme der Reset auf dem Datenkanal, stuerbe der Client
+        # hier, und `curl` meldete es. Genau diese Reihenfolge stirbt in der
+        # Auslieferungsaktion.
+        rc2, _, err2 = curl_ftp([SCHALTER_TLS_PFLICHT, "--verbose",
+                                 "--output", os.devnull,
+                                 "-Q", "-PWD",
+                                 ftp_adresse(server, pfad, name)],
+                                konto, passwort, lauf)
+        a(f"  Datenkanal:     {datenkanal(err2)}")
+        antwort = "257 " in (err2 or "")
+        a(f"  `PWD` NACH dem Abruf, dieselbe Sitzung: "
+          f"{'beantwortet (257)' if antwort else 'KEINE 257-Antwort gesehen'}")
+        if rc2 != 0:
+            f(f"FEHLGESCHLAGEN (curl {rc2}) — Abruf und anschließender "
+              f"Steuerbefehl in EINER Sitzung gehen NICHT durch.")
+            f("  DAS WÄRE DIE ERKLÄRUNG FÜR F3: Die Auslieferungsaktion holt "
+              "ihre Zustandsdatei und setzt danach `MKD` ab. Stirbt die "
+              "Verbindung dazwischen, meldet sie genau das, was sie meldet — "
+              "einen Reset auf dem Datenkanal, bemerkt beim nächsten "
+              "Steuerbefehl.")
+            f("  Servermeldung, wörtlich (letzte 40 Zeilen):")
+            for z in (err2 or "(keine)").splitlines()[-40:]:
+                f(f"    {z}")
+            return 1
+        if not antwort:
+            # KEIN FEHLER, ABER AUCH KEIN BELEG -- und das wird gesagt.
+            a("  Ergebnis: NICHT FESTSTELLBAR — `curl` hat keine 257-Antwort "
+              "ausgegeben. Der Lauf ist nicht gescheitert, belegt die Frage "
+              "aber auch nicht.")
+            return 0
+        a("\nAbruf und anschließender Steuerbefehl gehen in EINER Sitzung "
+          "durch — auch diese Erklärung für F3 ist erledigt.")
+        return 0
+    finally:
+        try:
+            os.unlink(quelle)
+        except OSError:
+            pass
+        if hochgeladen:
+            rest = aufraeumen(server, pfad, konto, passwort, lauf)
+            a(f"  Aufgeräumt: {len(rest)} Datei(en) entfernt.")
+
+
 # ---------------------------------------------------------------- Selbstprobe
 
 def selbstprobe() -> int:
@@ -1224,6 +1324,97 @@ def selbstprobe() -> int:
            "…und sie liegt UNTER unserer — sonst käme sie nie zum Zuge",
            f"{hoch[0][i + 1]} s")
 
+    # DIE SITZUNGSPROBE (F-KH-U-23). Sie misst die Reihenfolge, in der die
+    # Auslieferungsaktion stirbt: erst Datenkanal, dann Steuerkanal, EINE
+    # Sitzung. Ginge sie in zwei Aufrufe auseinander, maesse sie wieder zwei
+    # Sitzungen und koennte die Frage nicht stellen.
+    class LaufSitzung(Lauf):
+        def __init__(self, rc_zweit=0, verbose_zweit="", **kw):
+            super().__init__(**kw)
+            self.rc_zweit, self.verbose_zweit = rc_zweit, verbose_zweit
+
+        def __call__(self, befehl, **kw):
+            if any(str(x) == "-PWD" for x in befehl):
+                self.befehle.append(befehl)
+
+                class E:
+                    pass
+                e = E()
+                e.returncode, e.stdout, e.stderr = (self.rc_zweit, "",
+                                                    self.verbose_zweit)
+                return e
+            # DIE HOCHGELADENE DATEI KOMMT IN DIE LISTE, und das ist keine
+            # Bequemlichkeit: Ohne sie fand `aufraeumen()` nichts, und die
+            # Lage „die Probedatei wird weggeraeumt" war gruen zu haben,
+            # ohne dass je etwas weggeraeumt wurde. Die Selbstprobe hat
+            # genau das gemeldet (20.09.2026) -- ein zu schwacher Pruefstand,
+            # kein Fehler im Werkzeug.
+            if "--upload-file" in befehl and self.rc_upload == 0:
+                for x in befehl:
+                    t = str(x)
+                    if t.startswith("ftp://") and t.endswith(".txt"):
+                        drin = [z for z in self.liste.splitlines() if z.strip()]
+                        self.liste = "\n".join(drin + [t.rsplit("/", 1)[-1]])
+            return super().__call__(befehl, **kw)
+
+    guter_zweiter = ("> EPSV\n< 229 Entering Extended Passive Mode (|||7|)\n"
+                     "226 Transfer complete\n> PWD\n< 257 \"/\" is cwd\n")
+    ls_ = LaufSitzung(verbose_zweit=guter_zweiter)
+    ps_ = _io.StringIO()
+    with contextlib.redirect_stdout(ps_):
+        rcs = sitzungsprobe("https://a.example", "h", "/", "k", "p", ls_)
+    ts_ = ps_.getvalue()
+    pruefe(rcs == 0, "Sitzungsprobe: Regelfall gelingt gegen die Attrappe")
+    zweit = [b for b in ls_.befehle if any(str(x) == "-PWD" for x in b)]
+    pruefe(len(zweit) == 1,
+           "…Abruf und Steuerbefehl stehen in EINEM curl-Aufruf — sonst misst "
+           "sie wieder zwei Sitzungen", f"{len(zweit)} Aufruf(e)")
+    pruefe(any(str(x) == "-PWD" for x in zweit[0]),
+           "…und der Steuerbefehl läuft NACH der Übertragung (führender "
+           "Strich)", "-PWD")
+    pruefe("beantwortet (257)" in ts_,
+           "…die 257-Antwort wird als Beleg GENANNT")
+    pruefe(ls_.dele >= 1, "…und die Probedatei wird weggeräumt",
+           f"{ls_.dele} Löschbefehl(e)")
+
+    # DIE LAGE, UM DIE ES GEHT: Der Steuerkanal ist nach dem Abruf tot.
+    lst = LaufSitzung(rc_zweit=56,
+                      verbose_zweit="* Recv failure: Connection reset by peer\n")
+    pt_ = _io.StringIO()
+    ptf = _io.StringIO()
+    with contextlib.redirect_stdout(pt_), contextlib.redirect_stderr(ptf):
+        rct = sitzungsprobe("https://a.example", "h", "/", "k", "p", lst)
+    tt_ = pt_.getvalue() + ptf.getvalue()
+    pruefe(rct == 1, "Stirbt die Sitzung zwischen Abruf und Steuerbefehl → rot")
+    pruefe("DAS WÄRE DIE ERKLÄRUNG FÜR F3" in tt_,
+           "…und die Meldung sagt, WARUM das die gesuchte Erklärung wäre")
+    pruefe("Connection reset by peer" in tt_,
+           "…und gibt die Servermeldung wörtlich aus")
+
+    # DREIWERTIG AUCH HIER: keine 257 gesehen heisst NICHT FESTSTELLBAR und
+    # nicht "gelungen". Ein gruener Lauf ohne Beleg ist eine Zahl ohne Aussage.
+    lsn = LaufSitzung(verbose_zweit="226 Transfer complete\n")
+    pn_ = _io.StringIO()
+    with contextlib.redirect_stdout(pn_):
+        rcn = sitzungsprobe("https://a.example", "h", "/", "k", "p", lsn)
+    pruefe(rcn == 0 and "NICHT FESTSTELLBAR" in pn_.getvalue(),
+           'Keine 257-Antwort → NICHT FESTSTELLBAR, nicht „belegt"',
+           "dreiwertig")
+
+    # Und die Gegenprobe am Anfang: Scheitert schon das Hochladen, ist die
+    # Sitzungsfrage GAR NICHT GESTELLT -- und das wird so gesagt.
+    lsu = LaufSitzung(rc_upload=7)
+    pu_ = _io.StringIO()
+    puf = _io.StringIO()
+    with contextlib.redirect_stdout(pu_), contextlib.redirect_stderr(puf):
+        rcu = sitzungsprobe("https://a.example", "h", "/", "k", "p", lsu)
+    pruefe(rcu == 1 and "gar nicht gestellt" in (pu_.getvalue() + puf.getvalue()),
+           "Scheitert schon das Hochladen, sagt sie, dass die Frage nicht "
+           "gestellt wurde — statt ein Ergebnis vorzutäuschen")
+    pruefe(lsu.dele == 0,
+           "…und räumt nichts weg, weil nichts entstanden ist",
+           f"{lsu.dele} Löschbefehl(e)")
+
     # Und die Grenzen der Zahl -- sie sind nicht Zierde: 500 Verzeichnisse auf
     # einem echten Server anzulegen ist nichts, was ein Vertipper auslösen darf.
     for zahl, soll in ((0, 2), (501, 2), (-1, 2)):
@@ -1259,6 +1450,11 @@ def main(argv: list[str]) -> int:
                         "FTP-Sitzung anlegen und beschreiben — die "
                         "Nachstellung der Auslieferung (F3). Legt Dateien auf "
                         "dem Server an und räumt sie wieder weg.")
+    p.add_argument("--sitzungsprobe", action="store_true",
+                   help="STATT des Rundlaufs: abrufen und DANACH einen "
+                        "Steuerbefehl absetzen, in DERSELBEN Sitzung — die "
+                        "Lage, in der die Auslieferungsaktion stirbt "
+                        "(F-KH-U-23). Legt eine Datei an und räumt sie weg.")
     p.add_argument("--selbstprobe", action="store_true",
                    help="ohne Netz prüfen, ob die Probe überhaupt anschlägt")
     a = p.parse_args(argv)
@@ -1295,6 +1491,10 @@ def main(argv: list[str]) -> int:
             return 2
         return mengenprobe(a.basis, a.ftp_server, a.ftp_pfad, a.ftp_konto,
                            a.ftp_pass, a.mengenprobe)
+
+    if a.sitzungsprobe:
+        return sitzungsprobe(a.basis, a.ftp_server, a.ftp_pfad, a.ftp_konto,
+                             a.ftp_pass)
 
     # BEIDE RUNDLAEUFE, IMMER. Der flache zuerst, weil er billig ist und die
     # Grundlagen klaert; der durch ein Verzeichnis danach, weil er die Stelle
