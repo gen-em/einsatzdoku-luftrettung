@@ -588,6 +588,17 @@ Daten erst nach Server-Bestätigung.
 │   │                      alt" einen Parse Error. Nennt bei jedem Lauf ihre
 │   │                      eigenen Grenzen; mit `--selbstprobe` (8 Faelle,
 │   │                      davon 4 die NICHT anschlagen duerfen)
+│   ├── schemaprobe/       läuft `schema.sql` und der Migrationskatalog auf
+│   │                      der Datenbank, gegen die sie laufen sollen? Vier
+│   │                      Installationsfälle, 19 Erwartungen, gegen eine
+│   │                      LAUFENDE Datenbank. Fall 2 ist der Kern: Bestand
+│   │                      anlegen, migrieren, hinterher Wert für Wert
+│   │                      vergleichen — eine Migration, die Daten verliert,
+│   │                      fällt dort auf und sonst nirgends. In Stufe 1 als
+│   │                      eigener Auftrag mit einer MATRIX über MySQL 8.4.0
+│   │                      und MariaDB 10.6: Der Stand vor Web 20.25.0 legt
+│   │                      auf MariaDB 42 Tabellen an und scheitert auf MySQL
+│   │                      mit 1064 (Nr. 238). Mit `--selbstprobe`
 │   ├── migrationsregister/ steht in `schema.sql` und `migration_lib.php`
 │   │                      dasselbe? Sieben Prüfungen über zwei Dateien —
 │   │                      Kennungen beidseits, Reihenfolge nach Datum, was
@@ -8724,6 +8735,7 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 | Backlog-Nummern (`grep … uniq -d`) | leer |
 | `tools/installweiche/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `tools/migrationsregister/pruefen.php` | 0 Befunde, Selbstprobe 4/4 |
+| `tools/schemaprobe/probe.php` (eigener Auftrag, Matrix) | **19 Erwartungen, 0 Fehlschläge** je Fassung — MySQL 8.4.0 und MariaDB 10.6; Selbstprobe 4/4 |
 | `tools/cspprobe/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `tools/sitzungshaertung/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge — **nur wenn `android/` berührt ist** |

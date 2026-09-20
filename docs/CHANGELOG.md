@@ -119,6 +119,35 @@ Gegen zwei laufende Datenbanken, nicht auf Papier:
 - `tools/migrationsregister/pruefen.php`: **60/60 Kennungen, 257 Spalten,
   30 Löschungen, 0 Befunde** (vorher 59/59, 29, 0).
 
+### Hinzugefügt
+
+**`tools/schemaprobe/` — damit dieselbe Lücke nicht zweimal aufgeht.** Ein
+Prüfstand, der `schema.sql` und den Migrationskatalog gegen eine **laufende**
+Datenbank fährt: vier Installationsfälle, 19 Erwartungen. Fall 2 ist der
+Kern — er legt sieben Einsätze an, vier davon mit gesetzter Uhr-Sperre,
+migriert und vergleicht hinterher **Wert für Wert**. Eine Migration, die Daten
+verliert, fällt dort auf und sonst nirgends.
+
+Er hängt als eigener Auftrag in Stufe 1 (`pruefung.yml`), mit einer **Matrix
+über zwei Fassungen**: `mysql:8.4.0` — die Fassung, an der es gescheitert ist
+— und `mariadb:10.6`, die dokumentierte Untergrenze. Die Matrix ist der
+eigentliche Punkt: **Der Altstand legt auf MariaDB 10.6 klaglos 42 Tabellen an
+und scheitert auf MySQL 8.4.0 mit `1064`** (beides gegengemessen). Ein Lauf
+gegen eine Fassung hätte den Fehler nicht gefunden — genau das war jahrelang
+der Zustand.
+
+Gegengeprüft, dass der Prüfstand auch rot werden kann: gegen den Stand vor
+diesem Hotfix meldet er auf MySQL 8.4.0 **1 Prüfung, 1 Fehlschlag** mit der
+Original-Fehlermeldung und Rückgabe 1, auf MariaDB 10.6 **6 Prüfungen,
+4 Fehlschläge**. Gegen den neuen Stand: **19 Prüfungen, 0 Fehlschläge** auf
+MySQL 8.4.0, MariaDB 10.6 und MariaDB 10.11.
+
+`tools/kettenaufrufe/pruefen.py` hat den neuen Aufruf beim ersten Versuch mit
+**sechs Befunden** abgewiesen — die Schalter standen als `'datenbank'` im
+Quelltext, und die Kettenprüfung liest `'--…'`-Zeichenketten. Behoben, indem
+die Schalter mit ihren zwei Strichen dastehen; **30 Aufrufe geprüft,
+0 Befunde**.
+
 ## [Web 20.24.2] — 2026-09-18
 
 **Der Rechtstext-Baustein brach lange Zeichenketten nicht um.**
