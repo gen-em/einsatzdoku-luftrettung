@@ -444,19 +444,63 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   einem Lauf ohne Pause). Mit altem Prüfkonto melden Kreisläufe und
   Bilderlauf **„ÜBERSPRUNGEN"** oder scheitern an der Anmeldung.
 
-- [ ] **5a — Trennt lima-city die Sitzungsablage je Konto?**
-  Die `phpinfo()` nennt `session.save_path = /home/webpages/tmp` — **über**
-  dem eigenen Verzeichnis der Anlage.
-  *Weg:* Beim Hoster erfragen, ob dieses Verzeichnis je Kunde getrennt ist
-  (eigener Pfad, eigene Rechte) oder allen Konten desselben Systems offensteht.
-  *Erwartet:* getrennt.
-  *Scheitern erkennbar an:* Es ist geteilt. Dann läge dort für jede fremde
-  PHP-Installation auf demselben System lesbar, wer auf Staging angemeldet
-  ist — **und das ist derselbe Fehler, dessentwegen Staging gerade umgezogen
-  ist** (B2: Staging-PHP konnte Produktivs `config.php` lesen). Es wäre
-  weniger schlimm als B2, weil Staging keine echten Patientendaten führt und
-  der Datenschlüssel ohnehin im Browser bleibt — aber es gehört gewusst,
-  bevor dort Sitzungen laufen, und nicht danach.
+- [ ] **5a — Liegt die Sitzungsablage von Staging in einem Verzeichnis, das
+  andere lima-city-Kunden sehen?**
+  Die `phpinfo()` nennt `session.save_path = /home/webpages/tmp`. Die eigenen
+  Pfade der Anlage lauten dagegen `/home/webpages/lima-city/<konto>/…` — die
+  Sitzungsablage liegt also **zwei Ebenen darüber**, auf einer Ebene, die dem
+  Namensschema nach mehreren gehört. **Gemeint ist kundenübergreifend auf
+  demselben System, nicht innerhalb des eigenen Webspace.**
+
+  > **Die Anzeichen sprechen eher dagegen, und das gehört dazu.** Der
+  > Systemname der Anlage ist `c4f6c87681b3` — zwölf Hexstellen, die Bauform
+  > eines **Container-Hostnamens** —, die Serveradresse ist `172.19.0.2` aus
+  > einem Container-Netz, und die Kopfzeilen tragen kundenbezogene Kennungen
+  > eines vorgelagerten Vermittlers. Läuft PHP je Kunde in einem **eigenen
+  > Container**, ist `/home/webpages/tmp` **darin** nur das eigene, wie immer
+  > der Pfad heißt. **Das ist ein Indiz und keine Messung** — und die
+  > Hausregel lautet, dass man ohne Messung nichts behauptet.
+
+  > **Und die Verschlüsselungszusage hängt nicht daran.** Nachgesehen am
+  > 20.09.2026: Eine Sitzung dieser Anwendung führt `user_id`, `role`,
+  > `csrf`, `epoch`, `last_seen`, `login_fails`, `pw_token` und etwas
+  > Oberflächenzustand — **kein Schlüsselmaterial**. Der Datenschlüssel
+  > entsteht im Browser, der Server-Anteil steht in `config.php` und wird je
+  > Anfrage berechnet (`HMAC(kdf_anteil, 'konto:<id>')`), nicht in der
+  > Sitzungsdatei abgelegt. **Was eine lesbare Sitzungsdatei trotzdem
+  > hergäbe, ist die Sitzung selbst** — der Dateiname ist die Sitzungs-ID.
+  > Damit ist man angemeldet: Die gesamte Klartextliste aus `CLAUDE.md` 4
+  > (GPS-Spur, Phasenkoordinaten, Zeiten, Transportziel, Besatzungsnamen,
+  > Diensttagsnotizen) läge offen, bei `role = admin` dazu die Verwaltung.
+  > Die **verschlüsselten** Felder blieben zu, weil das Passwort fehlt.
+
+  *Weg (selbst messen, besser als fragen):* Eine PHP-Datei mit **Zufallsnamen**
+  in den Staging-Webroot legen, **einmal** aufrufen, **sofort löschen** — das
+  Muster der Zielprobe aus E-KH-07:
+  ```php
+  <?php
+  $p = session_save_path() ?: sys_get_temp_dir();
+  $n = @scandir($p);
+  printf("Pfad: %s\nLesbar: %s\nEintraege gesamt: %d\nDavon sess_*: %d\nRechte: %o\nEigentuemer-UID: %s\nMeine UID: %s\n",
+      $p, $n === false ? 'nein' : 'ja', $n ? count($n) : 0,
+      $n ? count(preg_grep('/^sess_/', $n)) : 0,
+      @fileperms($p) & 0777, @fileowner($p), function_exists('posix_geteuid') ? posix_geteuid() : '?');
+  ```
+  *Erwartet:* **„Lesbar: nein"** — oder „ja" mit einer Zahl von `sess_*`, die
+  zu den eigenen Sitzungen passt (bei einer frischen Anlage: **0 oder 1**).
+  *Scheitern erkennbar an:* Eine dreistellige oder größere Zahl von `sess_*`.
+  Dann ist das Verzeichnis geteilt, und **es ist derselbe Fehler, dessentwegen
+  Staging gerade umgezogen ist** — B2 war, dass Staging-PHP Produktivs
+  `config.php` lesen konnte. Auf Staging wiegt es leichter (keine echten
+  Patientendaten), aber es gehört gewusst, **bevor** dort Sitzungen laufen.
+  *Das Skript gibt bewusst keine Dateinamen aus:* Ist das Verzeichnis geteilt,
+  sind das fremde Sitzungs-IDs.
+  *Abhilfe, falls nötig:* `session.save_path` ist `PHP_INI_ALL` und lässt sich
+  mit einer **`.user.ini`** im Webroot auf ein eigenes Verzeichnis legen —
+  ohne Codeänderung (`user_ini.filename = .user.ini` ist auf der Anlage
+  aktiv). **Dann gehört diese Datei in die Schutzliste** (E-KH-20): Sie liegt
+  nur auf dem Server, steht nicht im Repositorium, und ein Transport mit
+  Löschabgleich nähme sie mit.
 
 - [ ] **6 — Fremdaufgabe, hier nur gemeldet: P5b hat keine Erledigt-Zeile.**
   Gemessen am 20.09.2026: PR #57 ist seit dem 18.09.2026 auf `main`
