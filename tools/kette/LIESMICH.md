@@ -341,6 +341,12 @@ Verbindung öffnet. Diese Probe macht beides in einer.
 Hochladen, sagt sie, dass die Frage **gar nicht gestellt** wurde — statt ein
 Ergebnis vorzutäuschen.
 
+**In der Kette:** die Eingabe `probelauf_sitzungsprobe` des Arbeitslaufs
+„Auslieferung", nur zusammen mit dem Häkchen `probelauf`. Sie tritt **an die
+Stelle** der beiden Rundläufe und schließt `probelauf_mengenprobe` aus — beide
+zugleich wäre ein Lauf, der etwas anderes misst, als daransteht; das Werkzeug
+weist die Kombination auch bei einem Handaufruf ab.
+
 ## Geheimnisse
 
 Das Passwort geht über `--config -` und **nicht** über die Befehlszeile —
@@ -356,7 +362,7 @@ mehr (gefunden von der Selbstprobe am 20.09.2026). Maskiert wird seither am
 
 ## Selbstprobe
 
-`--selbstprobe` fährt **92 Lagen ohne Netz**: Maskierung (4), Adressen (3),
+`--selbstprobe` fährt **93 Lagen ohne Netz**: Maskierung (4), Adressen (3),
 der Weg zum Datenkanal (5), die Dreiwertigkeit der Sitzungsmessung (4), der
 flache Rundlauf gegen Attrappen (13 — darunter „liegt im FTP, ist über HTTPS
 404", „Inhalt weicht ab", „nach dem Löschen weiter abrufbar", „Hochladen
@@ -366,7 +372,7 @@ die Betriebsarten und die Frage an `curl` selbst, ob er den Schalter kennt
 Passwort außerhalb der Befehlszeile (1), der Rundlauf durch ein neues
 Verzeichnis samt Gegenprobe am Auflisten (8), die Mengenprobe (17), die
 Bündelung des Aufräumens (6), die Zeitgrenze als Befund (8) und die
-Sitzungsprobe (11).
+Sitzungsprobe (12).
 
 Die Lage, die dort am wichtigsten ist: **alle Ziele stehen in EINEM
 `curl`-Aufruf.** Zerfiele die Mengenprobe in viele Aufrufe, wäre sie eine

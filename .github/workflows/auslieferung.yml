@@ -103,6 +103,17 @@ on:
           Versuch: 80.
         type: string
         default: ""
+      probelauf_sitzungsprobe:
+        description: >-
+          Nur zusammen mit PROBELAUF: statt der beiden Rundläufe eine
+          SITZUNGSPROBE — abrufen und DANACH einen Steuerbefehl absetzen, in
+          DERSELBEN FTP-Sitzung. Das ist die Reihenfolge, in der die
+          Auslieferungsaktion stirbt (F-KH-U-23): Sie holt ihre Zustandsdatei
+          über den Datenkanal und setzt danach `MKD` ab. Ein Reset dazwischen
+          ist im Trockenlauf unsichtbar, weil danach kein Steuerbefehl mehr
+          kommt. Schreibt nur die Probedatei und räumt sie wieder weg.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -821,6 +832,41 @@ jobs:
               echo 'eine Sitzungs- oder Mengengrenze des Servers — ein Befund für den Hoster.'
             } >> "$GITHUB_STEP_SUMMARY"
           fi
+          # DIE SITZUNGSPROBE TRITT EBENSO AN DIE STELLE DER RUNDLAEUFE
+          # (F-KH-U-23). Sie schreibt nur EINE Probedatei und raeumt sie weg;
+          # der Riegel "nur im Probelauf" steht hier trotzdem, weil sie die
+          # Rundlaeufe verdraengt -- eine Auslieferung, die statt der
+          # Zielprobe eine Messung faehrt, hat ihr Tor nicht durchlaufen.
+          SITZUNG=""
+          if [ "${{ inputs.probelauf_sitzungsprobe }}" = "true" ]; then
+            if [ "${{ inputs.probelauf }}" != "true" ]; then
+              echo "::error::Die Sitzungsprobe laeuft NUR im Probelauf. Sie tritt an die Stelle der Rundlaeufe; eine echte Auslieferung braucht die Zielprobe, nicht eine Messung."
+              exit 1
+            fi
+            if [ -n "$MENGE" ]; then
+              echo "::error::Mengenprobe UND Sitzungsprobe zugleich geht nicht -- beide treten an die Stelle der Rundlaeufe. Eine von beiden, sonst misst der Lauf etwas anderes, als daransteht."
+              exit 1
+            fi
+            SITZUNG="--sitzungsprobe"
+            echo "::notice::SITZUNGSPROBE — Abruf, DANN ein Steuerbefehl, in EINER Sitzung. Die Rundlaeufe entfallen in dieser Runde."
+            {
+              echo '### Sitzungsprobe (F3)'
+              echo
+              echo 'Dieser Lauf misst die Reihenfolge, in der die Auslieferungsaktion'
+              echo 'stirbt: **Abruf über den Datenkanal, DANACH ein Steuerbefehl — in'
+              echo 'derselben Sitzung.** Die Aktion holt ihre Zustandsdatei und setzt'
+              echo 'danach `MKD` ab; `_openDir` selbst öffnet gar keine Datenverbindung'
+              echo '(`basic-ftp` 6.2.1, Z. 686–689), der Reset kommt also von davor.'
+              echo
+              echo '**Ein Reset an dieser Stelle ist im Trockenlauf unsichtbar**, weil'
+              echo 'danach kein Steuerbefehl mehr kommt — genau die beobachtete Lage:'
+              echo 'Probelauf grün, echter Lauf rot.'
+              echo
+              echo 'Die Zeile **„`PWD` NACH dem Abruf, dieselbe Sitzung"** ist das'
+              echo 'Ergebnis. **FEHLGESCHLAGEN wäre der Treffer.** Steht dort'
+              echo '`KEINE 257-Antwort gesehen`, misst dieser Lauf nichts.'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
           python3 tools/kette/zielprobe.py --selbstprobe
           python3 tools/kette/zielprobe.py \
             --basis "$BASIS" \
@@ -828,7 +874,7 @@ jobs:
             --ftp-konto "$FTP_USERNAME" \
             --ftp-pass "$FTP_PASSWORD" \
             --ftp-pfad "${{ vars.FTP_ZIELPFAD || './httpdocs/' }}" \
-            $OHNE $MENGE
+            $OHNE $MENGE $SITZUNG
 
       - name: Backup-Tor — Komplett-Backup zu Ende laufen lassen
         # Der Probelauf verändert den Server nicht und braucht deshalb kein

@@ -9346,7 +9346,7 @@ Pflichtfreigabe — und läuft deshalb auch von `main`, wo kein Tag steht:
 | gefahren | nicht gefahren |
 |---|---|
 | die drei Geheimnisse | Tag gegen `WEB_VERSION` |
-| Zielprobe (samt Selbstprobe) — **oder, mit `probelauf_mengenprobe`, die Mengenprobe an ihrer Stelle** | Tor der grünen Läufe |
+| Zielprobe (samt Selbstprobe) — **oder, mit `probelauf_mengenprobe` bzw. `probelauf_sitzungsprobe`, die Mengen- oder die Sitzungsprobe an ihrer Stelle** | Tor der grünen Läufe |
 | Abgleich als **Trockenlauf** (`dry-run`) | Backup-Tor, Wartungsmodus, `doku`-Kopie, Migrationsabfrage |
 
 Geschrieben wird nichts außer der Probedatei, und die wird im selben Schritt

@@ -1415,6 +1415,16 @@ def selbstprobe() -> int:
            "…und räumt nichts weg, weil nichts entstanden ist",
            f"{lsu.dele} Löschbefehl(e)")
 
+    stumm = _io.StringIO()
+    with contextlib.redirect_stdout(stumm), contextlib.redirect_stderr(stumm):
+        r_beide = main(["--mengenprobe", "5", "--sitzungsprobe",
+                        "--basis", "https://a.example", "--ftp-server", "h",
+                        "--ftp-konto", "k", "--ftp-pass", "p"])
+    pruefe(r_beide == 2,
+           "Mengenprobe UND Sitzungsprobe zugleich wird abgewiesen — sonst "
+           "hätte eine still Vorrang und der Lauf misst etwas anderes, als "
+           "daransteht", f"rc {r_beide}")
+
     # Und die Grenzen der Zahl -- sie sind nicht Zierde: 500 Verzeichnisse auf
     # einem echten Server anzulegen ist nichts, was ein Vertipper auslösen darf.
     for zahl, soll in ((0, 2), (501, 2), (-1, 2)):
@@ -1484,6 +1494,16 @@ def main(argv: list[str]) -> int:
               "beantwortete die Frage nicht, für die es sie gibt.",
               file=sys.stderr)
         return 2
+    # BEIDE ZUGLEICH IST KEIN LAUF, SONDERN EIN VERTIPPER. Ohne diesen Riegel
+    # haette `--mengenprobe` still Vorrang, weil es weiter oben steht -- und
+    # der Lauf maesse etwas anderes, als daransteht. Genau die Falle, die
+    # `--mengenprobe 0` schon einmal gestellt hat.
+    if a.mengenprobe is not None and a.sitzungsprobe:
+        print("--mengenprobe und --sitzungsprobe schliessen einander aus: Beide "
+              "treten an die Stelle der Rundlaeufe. Eine von beiden.",
+              file=sys.stderr)
+        return 2
+
     if a.mengenprobe is not None:
         if a.mengenprobe < 1 or a.mengenprobe > 500:
             print("--mengenprobe braucht eine Zahl zwischen 1 und 500.",

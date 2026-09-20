@@ -410,7 +410,7 @@ beglaubigte einen Vergleich, den es so nicht gab.
 | Mittel | Soll | Ist |
 |---|---|---|
 | `tor.py --selbstprobe` | mindestens 16 Lagen, 0 offen | **19 Lagen, 0 offen** (11 → 17 → 19; die zwei letzten zur zweiten Runde und zur Serverzeit) |
-| `zielprobe.py --selbstprobe` | eigene Selbstprobe, 0 offen | **92 Lagen, 0 offen** (26 → 29 → 33 → 37 → 45 → 50 → 67 → 81 → 92; jede Stufe ist ein Fund, den sie selbst gefunden hat). **Gegen einen echten Server nachgemessen** im Lauf 35540252565: 80 von 80 |
+| `zielprobe.py --selbstprobe` | eigene Selbstprobe, 0 offen | **93 Lagen, 0 offen** (26 → 29 → 33 → 37 → 45 → 50 → 67 → 81 → 93; jede Stufe ist ein Fund, den sie selbst gefunden hat). **Gegen einen echten Server nachgemessen** im Lauf 35540252565: 80 von 80 |
 | `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft | **34 Aufrufe, 0, 0**; Selbstprobe 10/10 |
 | YAML der drei Arbeitsläufe | laden | **3 von 3** |
 | `wache.py --selbstprobe` | 0 offen | **38 Erwartungen, 0 offen** (AP2: 32 → 38) |
@@ -1719,12 +1719,18 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   **derselben** FTP-Sitzung. Genau diese Reihenfolge stirbt in der
   Auslieferungsaktion, und genau sie hat die Zielprobe nie gemessen, weil sie
   je Operation eine neue Verbindung öffnet.
-  *Weg:* Sie braucht eine Eingabe am Arbeitslauf, die noch **nicht gebaut**
-  ist — die Änderung an `auslieferung.yml` ist am 20.09.2026 vom Wächter der
-  Arbeitsumgebung abgewiesen worden („Production Deploy"). Bis dahin von
-  Hand, wo `curl` und die drei Geheimnisse zusammenkommen:
-  `python3 tools/kette/zielprobe.py --basis … --ftp-server … --ftp-konto …
-  --ftp-pass … --ftp-pfad / --sitzungsprobe`
+  *Weg:* GitHub → Actions → „Auslieferung" → **Run workflow** → Zweig
+  `claude/fervent-dirac-xirsqw` → Häkchen **`probelauf`** setzen → Häkchen
+  **`probelauf_sitzungsprobe`** setzen → `probelauf_mengenprobe` **leer
+  lassen** → starten → **Freigabe erteilen**.
+  *Was dabei NICHT läuft:* die beiden Rundläufe (die Sitzungsprobe tritt an
+  ihre Stelle), das Backup-Tor, der Wartungsmodus; der Abgleich läuft als
+  Trockenlauf, der Zeiger bewegt sich nicht. Geschrieben wird **eine**
+  Probedatei, und die wird im selben Schritt gelöscht.
+  *Drei Riegel:* ohne `probelauf` bricht der Schritt ab; zusammen mit
+  `probelauf_mengenprobe` ebenfalls (beide träten an die Stelle der
+  Rundläufe, und dann misst der Lauf etwas anderes, als daransteht); und das
+  Werkzeug selbst weist die Kombination auch bei einem Handaufruf ab.
   *Erwartet — und das wäre der Treffer:* **FEHLGESCHLAGEN.** Dann gehen Abruf
   und anschließender Steuerbefehl in einer Sitzung nicht durch, und F3 hat
   seine Erklärung: Die Aktion holt ihre Zustandsdatei und setzt danach `MKD`
