@@ -144,6 +144,34 @@ Zielverzeichnis, holt sie über **HTTPS** zurück, vergleicht Byte für Byte,
 löscht sie und prüft das Löschen (danach 404). Das belegt den **lebenden**
 Weg vom FTP-Konto bis zur öffentlichen Adresse.
 
+## Zwei Rundläufe, und der zweite ist der wichtige
+
+| | was er misst |
+|---|---|
+| **1 — flach** | Datei in das **bestehende** Zielverzeichnis, HTTPS zurück, löschen |
+| **2 — durch ein neues Verzeichnis** | Verzeichnis **anlegen** (`--ftp-create-dirs`), hineinschreiben, **auflisten**, HTTPS zurück, Datei und Verzeichnis entfernen |
+
+**Warum es den zweiten gibt** (gemessen 20.09.2026): Die Auslieferungsaktion
+stirbt an dieser Stelle —
+
+```
+creating folder "api/"
+  at Client._openDir → Client.ensureDir → ECONNRESET (data socket)
+```
+
+— also beim **Auflisten eines eben angelegten Verzeichnisses** über den
+Datenkanal. Der flache Rundlauf berührt diese Folge nie: Er schreibt in ein
+Verzeichnis, das schon da ist.
+
+**Das hat vier Läufe gekostet.** Der Trennversuch zur TLS-Sitzung war viermal
+grün, während der echte Upload viermal rot war — die Probe hatte die kranke
+Stelle gar nicht angefasst. Ein Prüfmittel, das den Weg misst, den die
+Auslieferung **nicht** geht, ist eine grüne Zahl ohne Aussage.
+
+**Beide laufen immer**, auch wenn der erste scheitert. Gelingt Rundlauf 1 und
+scheitert Rundlauf 2, sagt die Probe genau das — und nennt `_openDir` beim
+Namen.
+
 ## Warum `curl` und nicht die Auslieferungsaktion
 
 Nicht weil er da ist, sondern weil er ein **zweiter** FTPS-Client ist.
@@ -207,7 +235,7 @@ mehr (gefunden von der Selbstprobe am 20.09.2026). Maskiert wird seither am
 
 ## Selbstprobe
 
-`--selbstprobe` fährt **37 Lagen ohne Netz**: Maskierung (4), Adressen (3),
+`--selbstprobe` fährt **45 Lagen ohne Netz**: Maskierung (4), Adressen (3),
 die Dreiwertigkeit der Sitzungsmessung (4), der Rundlauf gegen Attrappen
 (11 — darunter „liegt im FTP, ist über HTTPS 404", „Inhalt weicht ab", „nach
 dem Löschen weiter abrufbar", „Hochladen scheitert" und jedes Mal die

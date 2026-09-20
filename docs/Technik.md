@@ -9301,6 +9301,14 @@ Zeigt das FTP-Konto auf ein anderes Verzeichnis als die öffentliche Adresse,
 fällt das dort auf — und nicht erst, nachdem ein Komplett-Backup gelaufen und
 die Wartung an ist.
 
+**Sie fährt zwei Rundläufe** (seit 20.09.2026): einen **flachen** in das
+bestehende Zielverzeichnis, und einen **durch ein neu angelegtes
+Verzeichnis** — Anlegen, Hineinschreiben, **Auflisten**, HTTPS, aufräumen.
+Der zweite stellt `ensureDir` nach, die Stelle, an der die
+Auslieferungsaktion mit `ECONNRESET` abbricht. Der flache berührt sie nie,
+und genau deshalb war der Trennversuch zur TLS-Sitzung viermal grün, während
+der echte Upload viermal rot war.
+
 **Warum `curl` und nicht die Auslieferungsaktion:** Er ist bewusst ein
 **zweiter** FTPS-Client. Scheitert der Upload in der Aktion und die Probe
 gelingt, liegt es an der Bibliothek; scheitern beide an derselben Stelle, an

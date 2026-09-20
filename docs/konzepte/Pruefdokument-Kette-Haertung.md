@@ -470,6 +470,61 @@ die die Zielprobe in ihren zwei Betriebsarten trennt.
 
 ## 2. Funde aus der Umsetzung
 
+**F-KH-U-16 — Der Trennversuch ist gefahren: Die TLS-Sitzungswiederverwendung
+ist NICHT die Ursache von F3.** *Vier Läufe am 20.09.2026, je zweimal.*
+
+| Lauf | Betriebsart | Sitzung gemessen | Rundlauf |
+|---|---|---|---|
+| 35536468961 | MIT | **JA** | gelungen |
+| 35536496276 | MIT | **JA** | gelungen |
+| 35536520348 | OHNE (`--no-sessionid`) | nicht feststellbar | **gelungen** |
+| 35536542649 | OHNE (`--no-sessionid`) | nicht feststellbar | **gelungen** |
+
+Nach der Deutungstabelle von Prüfpunkt 12: *beide gelingen → die Forderung
+des Servers ist es nicht.* **Die wahrscheinlichste Erklärung für F3 ist damit
+ausgeschlossen.**
+
+**Dass der Schalter gewirkt hat, zeigt der Vergleich, nicht die
+Einzelmessung.** Bei MIT schreibt dasselbe `curl` gegen denselben Server
+`SSL re-using session ID`; bei OHNE schweigt es. Deshalb dort „nicht
+feststellbar" — es gibt nichts zu melden, wenn nichts wiederverwendet wird.
+**Der Unterschied ist belastbar; „OHNE" für sich genommen belegt nichts.**
+
+**F-KH-U-17 — Und die Erklärung, warum vier grüne Läufe nichts über F3 sagen:
+Die Probe hat die kranke Stelle nie angefasst.**
+
+Gemessen hat sie: `LIST` auf das **bestehende** Zielverzeichnis, `STOR` einer
+48-Byte-Datei, `DELE`. Alles über den Datenkanal, alles grün, in beiden
+Betriebsarten.
+
+Die Auslieferungsaktion stirbt aber hier:
+
+```
+creating folder "api/"
+  at Client._openDir → Client.ensureDir → ECONNRESET (data socket)
+```
+
+`ensureDir` legt ein Verzeichnis an, **das es noch nicht gibt**, und listet
+es danach. Der flache Rundlauf schreibt in eines, das schon da ist. **Zwei
+verschiedene Operationsfolgen — und die Probe maß die gesunde.**
+
+*Behoben im selben Paket (auf Weisung des Auftraggebers vorgezogen):* Die
+Zielprobe fährt jetzt **zwei** Rundläufe, immer beide. Der zweite legt ein
+Verzeichnis an (`--ftp-create-dirs`), schreibt hinein, **listet es auf** —
+das ist die `_openDir`-Stelle —, holt über HTTPS zurück und räumt Datei und
+Verzeichnis weg. Scheitert das Auflisten, nennt die Meldung `_openDir` beim
+Namen und sagt, dass der Befund damit auf diese eine Operation eingegrenzt
+ist.
+
+Dazu räumt der Anfangs-Aufräumlauf jetzt auch liegengebliebene
+Probe**verzeichnisse** weg (erst die Datei darin, dann `RMD` — ein volles
+Verzeichnis weist jeder Server ab). Der innere Dateiname ist fest
+(`probe.txt`), genau damit das Aufräumen ihn kennt, ohne zu suchen.
+
+Selbstprobe **37 → 45 Lagen**, darunter die Gegenprobe: Scheitert das
+Auflisten, ist der Lauf rot **und** die Meldung nennt die Stelle.
+
+
 **F-KH-U-14 — Der Zeiger ist auf einen Stand gewandert, der nie ausgeliefert
 wurde. Das ist ein Fehler der Umsetzung, und zwar derselbe zum zweiten Mal.**
 *Lauf 35534695781, 20.09.2026, 20:11 UTC.*
@@ -1180,7 +1235,14 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   *Warum:* Manche Server begrenzen gleichzeitige Sitzungen je Konto und
   schneiden die zweite ab — das sähe aus wie F3 und wäre keines.
 
-- [ ] **12 — Der Trennversuch gegen Produktiv** (Abnahme von AP3, zweiter
+- [~] **12 — Der Trennversuch gegen Produktiv** — **GEFAHREN am 20.09.2026,
+  vier Läufe, je zweimal. Ergebnis: die TLS-Sitzungswiederverwendung ist es
+  NICHT** (F-KH-U-16). Beide Betriebsarten gelingen.
+  **Aber er hat die falsche Stelle gemessen** (F-KH-U-17): Die Probe schrieb
+  in ein bestehendes Verzeichnis, die Auslieferung stirbt beim Anlegen eines
+  neuen. **Die Probe kann das jetzt** — Rundlauf 2.
+  **Offen und neu: Prüfpunkt 15.**
+  *Der ursprüngliche Weg, als Beschreibung:* (Abnahme von AP3, zweiter
   Teil; danach fällt **E-KH-09**).
   *Weg:* Probelauf gegen Produktiv, die Zielprobe in **beiden**
   Betriebsarten. Jedes Ergebnis **zweimal** — zweimal gleich ist belastbar.
@@ -1199,6 +1261,26 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   *Eingabe für die Deutung:* Läuferabbild und Node sind als Ursache
   ausgeschlossen (Abschnitt 1.5 … 1.6), und der Abbruch steht bei der
   **ersten Datenverbindung** des Laufs.
+
+- [ ] **15 — Der Probelauf mit dem VERZEICHNIS-Rundlauf** (die eigentliche
+  F3-Messung; danach fällt **E-KH-09**).
+  *Weg:* wie Prüfpunkt 10 — Branch `claude/fervent-dirac-xirsqw`, Häkchen
+  `probelauf`. **Kein drittes Häkchen nötig:** Die Zielprobe fährt beide
+  Rundläufe von selbst. Einmal ohne und einmal mit `probelauf_ohne_sitzung`
+  genügt; **je zweimal**.
+  *Erwartet — und das ist der interessante Fall:* Rundlauf 1 (flach) gelingt
+  wie bisher, **Rundlauf 2 (durch ein neues Verzeichnis) scheitert**. Dann
+  ist F3 auf `ensureDir` eingegrenzt, und AP4 weiß, was zu beheben ist.
+  *Woran man es erkennt:* Die Meldung sagt entweder „FEHLGESCHLAGEN beim
+  Hochladen" (dann scheitert schon das Anlegen) oder „FEHLGESCHLAGEN beim
+  AUFLISTEN des neuen Verzeichnisses" — und nennt dann `_openDir` beim Namen.
+  *Gelingen beide Rundläufe:* Dann ist auch das nicht die Ursache, und es
+  bleiben Passiv-Ports unter bestimmten Bedingungen oder eine Mengengrenze
+  des Servers (688 Dateien, 62 Verzeichnisse in einem Lauf). Das wäre ein
+  Befund für die Betreiberin an den Hoster.
+  *Wichtig:* Die Probe räumt hinter sich auf — Datei **und** Verzeichnis.
+  Bleibt nach einem Abbruch ein `zielprobe-…`-Verzeichnis liegen, nimmt es
+  der nächste Lauf mit.
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 

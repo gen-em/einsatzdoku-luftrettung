@@ -136,6 +136,26 @@ PRAEFIX = "zielprobe-"
 # vor dem Abruf ueber HTTP verbirgt.
 PRAEFIX_ALT = ".zielprobe-"
 
+# DER ZWEITE RUNDLAUF GEHT DURCH EIN UNTERVERZEICHNIS -- und das ist keine
+# Verfeinerung, sondern der Kern (gemessen 20.09.2026).
+#
+# Die Auslieferungsaktion stirbt an dieser Stelle:
+#
+#     creating folder "api/"
+#       at Client._openDir -> Client.ensureDir -> ECONNRESET (data socket)
+#
+# `ensureDir` legt ein Verzeichnis an, das es NOCH NICHT GIBT, und listet es
+# danach ueber den Datenkanal. Der flache Rundlauf beruehrt diese Folge nie:
+# Er schreibt eine Datei in ein BESTEHENDES Verzeichnis. Genau deshalb war
+# der Trennversuch am 20.09.2026 viermal gruen, waehrend der echte Upload
+# viermal rot war -- die Probe hat die kranke Stelle gar nicht angefasst.
+#
+# Der zweite Rundlauf stellt sie nach: Verzeichnis anlegen (`--ftp-create-dirs`),
+# hineinschreiben, es AUFLISTEN (das ist `_openDir`), ueber HTTPS holen,
+# aufraeumen. Er laeuft immer mit -- ein Pruefmittel, das den Weg misst, den
+# die Auslieferung NICHT geht, ist eine gruene Zahl ohne Aussage.
+ORDNERDATEI = "probe.txt"
+
 # Was in einer Ausgabe nie stehen darf. Wird vor JEDER Ausgabe ersetzt.
 MASKE = "***"
 
@@ -302,9 +322,21 @@ def aufraeumen(server: str, pfad: str, konto: str, passwort: str,
              if z.strip().rsplit("/", 1)[-1].startswith((PRAEFIX, PRAEFIX_ALT))]
     weg = []
     for name in reste:
-        r, _, _ = curl_ftp(["--ssl-reqd", "-Q", f"-DELE {pfad.rstrip('/')}/{name}",
-                            ftp_adresse(server, pfad)],
-                           konto, passwort, lauf)
+        if name.endswith(".txt"):
+            befehle = [f"-DELE {pfad.rstrip('/')}/{name}"]
+        else:
+            # EIN REST OHNE `.txt` IST EIN PROBEVERZEICHNIS. Erst die Datei
+            # darin, dann das Verzeichnis — `RMD` auf ein volles Verzeichnis
+            # weist jeder Server ab. Der innere Name ist fest (`ORDNERDATEI`),
+            # genau damit dieses Aufräumen ihn kennt, ohne zu suchen.
+            befehle = [f"-DELE {pfad.rstrip('/')}/{name}/{ORDNERDATEI}",
+                       f"-RMD {pfad.rstrip('/')}/{name}"]
+        r = 0
+        for b in befehle:
+            rc_, _, _ = curl_ftp(["--ssl-reqd", "-Q", b,
+                                  ftp_adresse(server, pfad)],
+                                 konto, passwort, lauf)
+            r = rc_          # der LETZTE zaehlt: die Datei darf fehlen
         if r == 0:
             weg.append(name)
     return weg
@@ -312,8 +344,12 @@ def aufraeumen(server: str, pfad: str, konto: str, passwort: str,
 
 def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
           sitzung_wiederverwenden: bool = True,
-          lauf=subprocess.run, hol=holen) -> int:
-    """Der Rundlauf. 0 = gelungen.
+          lauf=subprocess.run, hol=holen, im_ordner: bool = False) -> int:
+    """Ein Rundlauf. 0 = gelungen.
+
+    `im_ordner` legt die Probedatei in ein VERZEICHNIS, das es noch nicht
+    gibt, und listet es danach auf — die Nachstellung von `ensureDir`.
+    Siehe den Kommentar bei `ORDNERDATEI`.
 
     JEDE Ausgabe geht durch `sag()` und ist damit maskiert — auch die
     wörtlichen Servermeldungen, gerade die.
@@ -322,13 +358,16 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
     def a(text): sag(text, geheim)
     def f(text): sag(text, geheim, True)
 
-    name = PRAEFIX + secrets.token_hex(8) + ".txt"
+    ordner = PRAEFIX + secrets.token_hex(8) if im_ordner else ""
+    name = f"{ordner}/{ORDNERDATEI}" if im_ordner else PRAEFIX + secrets.token_hex(8) + ".txt"
     inhalt = secrets.token_hex(24).encode("ascii")
     reuse = SCHALTER_TLS_PFLICHT
     if not sitzung_wiederverwenden:
         reuse += " " + SCHALTER_OHNE_SITZUNG
 
-    a(f"Zielprobe gegen {basis.rstrip('/')}")
+    a(f"Zielprobe gegen {basis.rstrip('/')}"
+      + ("  —  Rundlauf 2: DURCH EIN NEUES VERZEICHNIS (`ensureDir`-Nachstellung)"
+         if im_ordner else "  —  Rundlauf 1: flach"))
     a(f"  FTPS-Ziel:      {ftp_adresse(server, pfad)}")
     a(f"  Betriebsart:    {'MIT' if sitzung_wiederverwenden else 'OHNE'} "
       f"Wiederverwendung der TLS-Sitzung ({reuse})")
@@ -337,7 +376,8 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
     weg = aufraeumen(server, pfad, konto, passwort, lauf)
     a(f"  Reste weggeräumt: {len(weg)}" + (f" ({', '.join(weg)})" if weg else ""))
 
-    quelle = os.path.join(os.environ.get("RUNNER_TEMP", "/tmp"), name)
+    quelle = os.path.join(os.environ.get("RUNNER_TEMP", "/tmp"),
+                          name.replace("/", "_"))
     fehler = 0
     hochgeladen = False
     try:
@@ -345,7 +385,12 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
             fh.write(inhalt)
 
         # ---- 1. hochladen --------------------------------------------------
-        rc, _, err = curl_ftp([*reuse.split(), "--verbose", "--upload-file", quelle,
+        hoch = [*reuse.split(), "--verbose"]
+        if im_ordner:
+            # `--ftp-create-dirs` IST DAS GEGENSTUECK ZU `ensureDir`: `curl`
+            # wechselt ins Verzeichnis und legt es an, wenn das misslingt.
+            hoch.append("--ftp-create-dirs")
+        rc, _, err = curl_ftp([*hoch, "--upload-file", quelle,
                                ftp_adresse(server, pfad, name)],
                               konto, passwort, lauf)
         wieder = sitzung_wiederverwendet(err)
@@ -381,6 +426,27 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
             fehler = 1
         else:
             hochgeladen = True
+            if im_ordner:
+                # DAS IST DIE STELLE, AN DER DIE AUSLIEFERUNGSAKTION STIRBT.
+                # `_openDir` listet ein eben angelegtes Verzeichnis über den
+                # Datenkanal. Gelingt der Upload und scheitert DAS hier, ist
+                # F3 auf diese eine Operation eingegrenzt.
+                rl, _, rerr = curl_ftp(
+                    [*reuse.split(), "--list-only",
+                     ftp_adresse(server, pfad.rstrip("/") + "/" + ordner) + "/"],
+                    konto, passwort, lauf)
+                if rl != 0:
+                    f(f"FEHLGESCHLAGEN beim AUFLISTEN des neuen Verzeichnisses "
+                      f"(curl {rl}).")
+                    f("  Hochladen und Anlegen haben funktioniert, das Auflisten "
+                      "nicht. Das ist genau die Operation, an der die "
+                      "Auslieferungsaktion abbricht (`_openDir` in `ensureDir`) — "
+                      "der Befund ist damit auf sie eingegrenzt.")
+                    for z in (rerr or "(keine Meldung)").splitlines():
+                        f(f"    {z}")
+                    fehler = 1
+                else:
+                    a("  Neues Verzeichnis aufgelistet (die `_openDir`-Stelle).")
             # ---- 2. über HTTPS zurückholen und vergleichen ------------------
             adresse = web_adresse(basis, name)
             status, koerper, netzfehler = hol(adresse)
@@ -438,6 +504,20 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
                 fehler = 1
             else:
                 a("  Probedatei gelöscht.")
+            if im_ordner:
+                ro, _, oerr = curl_ftp(
+                    [*reuse.split(), "-Q",
+                     f"-RMD {pfad.rstrip('/')}/{ordner}",
+                     ftp_adresse(server, pfad)],
+                    konto, passwort, lauf)
+                if ro != 0:
+                    f(f"WARNUNG: Das Probeverzeichnis {ordner} ließ sich nicht "
+                      f"entfernen (curl {ro}). Es liegt jetzt im Zielverzeichnis.")
+                    for z in (oerr or "(keine Meldung)").splitlines():
+                        f(f"    {z}")
+                    fehler = 1
+                else:
+                    a("  Probeverzeichnis entfernt.")
 
     if fehler:
         return 1
@@ -672,6 +752,48 @@ def selbstprobe() -> int:
     pruefe(not inzeile, "Das Passwort steht in keinem Befehlszeilenargument "
                         "(/proc/<pid>/cmdline ist lesbar)")
 
+    # ---- Der Rundlauf DURCH EIN NEUES VERZEICHNIS (`ensureDir`) ----
+    #
+    # OHNE DIESE LAGEN WAERE DER ZWEITE RUNDLAUF UNGEPRUEFT -- und genau das
+    # war am 20.09.2026 der Fehler beim ersten Trennversuch: Ein Schalter, den
+    # niemand gegengeprueft hat, maass vier Laeufe lang nichts.
+    merker.clear()
+    l = LaufMitInhalt()
+    rc = probe("https://a.example", "h", "/", "k", "p", True, l, hol_ok,
+               im_ordner=True)
+    pruefe(rc == 0, "Rundlauf durch ein neues Verzeichnis: gelingt gegen die Attrappe")
+    pruefe(any("--ftp-create-dirs" in b for b in l.befehle),
+           "…`--ftp-create-dirs` steht im AUSGEFÜHRTEN Befehl (das `ensureDir`-Gegenstück)")
+    pruefe(any("--list-only" in b and any(str(x).count("/") >= 3 for x in b)
+               for b in l.befehle),
+           "…und das neue Verzeichnis wird AUFGELISTET (die `_openDir`-Stelle)")
+    pruefe(any(any(str(x).startswith("-RMD") for x in b) for b in l.befehle),
+           "…und am Ende wieder entfernt")
+    pruefe(curl_kennt("--ftp-create-dirs") if curl_da() else True,
+           "`curl` dieser Fassung KENNT `--ftp-create-dirs`")
+
+    # Die Gegenprobe: Scheitert das AUFLISTEN, ist der Lauf rot — und sagt,
+    # dass genau diese Operation die der Auslieferungsaktion ist.
+    class LaufListeRot(LaufMitInhalt):
+        def __call__(self, befehl, **kw):
+            e = super().__call__(befehl, **kw)
+            if "--list-only" in befehl and any("zielprobe-" in str(x)
+                                               and str(x).count("/") >= 3
+                                               for x in befehl):
+                e.returncode, e.stderr = 5, "425 Unable to build data connection"
+            return e
+
+    merker.clear()
+    pl = _io.StringIO()
+    with contextlib.redirect_stderr(pl):
+        rcl = probe("https://a.example", "h", "/", "k", "p", True,
+                    LaufListeRot(), hol_ok, im_ordner=True)
+    tl = pl.getvalue()
+    pruefe(rcl == 1, "Scheitert das Auflisten des neuen Verzeichnisses → rot")
+    pruefe("_openDir" in tl,
+           "…und die Meldung nennt die Stelle der Auslieferungsaktion")
+    pruefe("425" in tl, "…und gibt die Servermeldung wörtlich aus", "425 …")
+
     print(f"\n  -> {erfuellt + offen} Lagen, {offen} nicht erfüllt")
     return 0 if offen == 0 else 1
 
@@ -717,8 +839,22 @@ def main(argv: list[str]) -> int:
               "beantwortete die Frage nicht, für die es sie gibt.",
               file=sys.stderr)
         return 2
-    return probe(a.basis, a.ftp_server, a.ftp_pfad, a.ftp_konto, a.ftp_pass,
-                 not a.ohne_sitzungswiederverwendung)
+    # BEIDE RUNDLAEUFE, IMMER. Der flache zuerst, weil er billig ist und die
+    # Grundlagen klaert; der durch ein Verzeichnis danach, weil er die Stelle
+    # misst, an der die Auslieferung stirbt. Ein Fehlschlag im ersten macht
+    # den zweiten nicht ueberfluessig -- beide laufen, beide melden.
+    rc1 = probe(a.basis, a.ftp_server, a.ftp_pfad, a.ftp_konto, a.ftp_pass,
+                not a.ohne_sitzungswiederverwendung)
+    rc2 = probe(a.basis, a.ftp_server, a.ftp_pfad, a.ftp_konto, a.ftp_pass,
+                not a.ohne_sitzungswiederverwendung, im_ordner=True)
+    if rc1 == 0 and rc2 == 0:
+        sag("\nBEIDE Rundläufe gelungen — flach UND durch ein neues Verzeichnis.",
+            [a.ftp_pass, a.ftp_konto])
+    elif rc1 == 0:
+        sag("\nDer flache Rundlauf gelingt, der durch ein NEUES VERZEICHNIS "
+            "nicht. Das ist der Unterschied, auf den es ankommt: Die "
+            "Auslieferung legt Verzeichnisse an.", [a.ftp_pass, a.ftp_konto], True)
+    return max(rc1, rc2)
 
 
 if __name__ == "__main__":
