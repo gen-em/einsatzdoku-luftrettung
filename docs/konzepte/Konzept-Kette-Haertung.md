@@ -25,7 +25,7 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 > | Von außen | **Einschub vom 20.09.2026 eingespielt** (Auftrag der Konzeptinstanz): Backlog 241–249 reserviert und angelegt, drei Konzeptdateien eingecheckt, Rahmenplan **Fassung 85**. Dabei angemeldet: `.sitzungen/` als **achter Schutzlistenpfad** (E-KH-20, einzutragen in AP4 oder AP5). **Der Einschub nannte Fassung 84 — die hatte AP2 schon vergeben und gepusht; er ist auf 85 gerückt** |
 > | Zuarbeiten erledigt | **Z1** (alte Staging-Anlage stillgelegt — B2 damit geschlossen), **Z2** (Zeiger `produktion` auf `7150793`) und **Z3** — alle 20.09.2026. Z3 **beide Anlagen**, aber auf zwei Wegen: Produktiv aus *Betrieb → Status*, Staging aus einer `phpinfo()`, weil die Anwendung dort noch nicht läuft. Fünf Zeilen der Staging-Spalte bleiben leer |
 > | Offen | **E-KH-09 (Ursache und Abhilfe F3)** — fällt nach der Messung am Ende von AP3; der Nachtrag in Abschnitt 1.4 hat eine der drei Erklärungen verschmälert. **Z3-Rest**: die fünf Zeilen, die nur die Anwendung weiß — sie hängen an Rahmenplan 6a, Schritt 6 |
-> | In Arbeit | **AP3 — Tor, Zielprobe, Probelauf: gebaut. PFLICHTSTOPP erreicht.** Die Selbstproben sind grün mit Lagenzahl (Tor **17**, Zielprobe **26**); **Z5 Teil 1 ist erledigt und schließt Läuferabbild und Node als F3-Ursache aus** (beide Läufe: 2.337.0 / ubuntu-24.04 20260907.300.1). Der Probelauf gegen Staging und der Trennversuch gegen Produktiv **stehen aus** — sie brauchen die Betreiberin (Prüfpunkte 10 bis 12). Vorher: **AP2 — Zeiger und Wache: gebaut.** Abnahme teilweise: Die Gegenprobe im Werkzeug ist grün (Selbstprobe **38/38**, sechs davon neu zum Vergleichsstand), der Befund B6 ist **ohne Netz aus den Ständen nachgerechnet** — aber der Handlauf gegen Produktiv **konnte nicht laufen** (der Container-Proxy weist `nadoku.gen-em.org` mit `403` ab), und der Zeiger-Job ist **gebaut, nicht gelaufen** (er misst sich erst mit M1). Einzelheiten im Prüfdokument 1.5 |
+> | In Arbeit | **AP3 — Tor, Zielprobe, Probelauf: gebaut, und der erste Probelauf gegen Produktiv ist gefahren** (Lauf 35531806339, 20.09.2026). Die Mechanik hält: sechs Schritte übersprungen, der Zeiger blieb stehen, kein Byte auf Produktiv. **Die Zielprobe hat sofort einen Befund geliefert — F-KH-U-08: Das FTPS-Zertifikat von Produktiv passt nicht zum Hostnamen**, und die Auslieferungsaktion prüft das nicht. **F3 ist damit NICHT beantwortet** (curl kam nicht bis zum Datenkanal). **PFLICHTSTOPP.** Die Selbstproben sind grün mit Lagenzahl (Tor **17**, Zielprobe **26**); **Z5 Teil 1 ist erledigt und schließt Läuferabbild und Node als F3-Ursache aus** (beide Läufe: 2.337.0 / ubuntu-24.04 20260907.300.1). Der Probelauf gegen Staging und der Trennversuch gegen Produktiv **stehen aus** — sie brauchen die Betreiberin (Prüfpunkte 10 bis 12). Vorher: **AP2 — Zeiger und Wache: gebaut.** Abnahme teilweise: Die Gegenprobe im Werkzeug ist grün (Selbstprobe **38/38**, sechs davon neu zum Vergleichsstand), der Befund B6 ist **ohne Netz aus den Ständen nachgerechnet** — aber der Handlauf gegen Produktiv **konnte nicht laufen** (der Container-Proxy weist `nadoku.gen-em.org` mit `403` ab), und der Zeiger-Job ist **gebaut, nicht gelaufen** (er misst sich erst mit M1). Einzelheiten im Prüfdokument 1.5 |
 > | Hakt | **Es gibt bis heute keinen erfolgreichen Produktivlauf der Kette** (Abschnitt 1.2). **AP1 ist gebaut, aber nicht abgenommen:** Der erste Kettenlauf gegen lima-city (Lauf 21, 20.09.2026, Handlauf vom Arbeitszweig) brachte `staging` **grün** und in Stufe 2 **zwei von fünf** Messschritten gemessen grün — der dritte ist rot, weil `STAGING_KONTO`/`STAGING_PASS` sich auf der neuen Anlage nicht anmelden. **Ein Push auf `main` ist dafür nicht nötig** (`workflow_dispatch` fährt dieselben Jobs). Einzelheiten im Prüfdokument, Abschnitt 1.4 |
 >
 > **Stand der Umsetzung**
@@ -940,8 +940,82 @@ Server, der die Wiederverwendung der TLS-Sitzung auf dem Datenkanal
 gegen lima-city lief derselbe Client mit Datenkanal durch, was die
 Bibliothek weiter entlastet.
 
+#### Der erste Probelauf gegen Produktiv (20.09.2026, Lauf 35531806339)
+
+**Die Betreiberin hat ihn gefahren, und er hat sofort etwas gefunden — nur
+nicht das, wonach gesucht wurde.**
+
+**Erst das Erfreuliche: Die Mechanik stimmt.** Gemessen an der Schrittliste
+des Laufs:
+
+| Schritt | Ergebnis |
+|---|---|
+| „PROBELAUF — was dieser Lauf NICHT tut" | gelaufen |
+| Tag gegen `WEB_VERSION` | **übersprungen** |
+| Tor der grünen Läufe | **übersprungen** |
+| Zielprobe (Selbstprobe **26 Lagen, 0 offen**, dann der Lauf) | **rot** |
+| Backup-Tor, Wartung, `doku`-Kopie, FTPS-Abgleich, Migrationsabfrage | **übersprungen** |
+| Job `zeiger` | **übersprungen** |
+
+Der Zeiger bewegte sich nicht, weil `produktion` rot war — die `if`-Zeile aus
+AP2 hat gehalten. **Kein Byte ist auf den Produktivserver gegangen.**
+
+**Der Befund — F-KH-U-08: Das FTPS-Zertifikat von Produktiv passt nicht zum
+Hostnamen.** `curl` bricht ab, bevor eine Datei bewegt wird:
+
+```
+< 220 ProFTPD Server (ProFTPD)
+> AUTH SSL
+< 234 AUTH SSL successful
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384
+* Server certificate:
+*  subject: CN=<interner Knotenname des Hosters>
+*  subjectAltName does not match <FTP_SERVER>
+curl: (60) SSL: no alternative certificate subject name matches target host name
+```
+
+**Was das heißt.** Die Verbindung ist verschlüsselt, aber **nicht
+beglaubigt**: Der Gegenüber weist sich mit einem anderen Namen aus, als
+angesprochen wurde. Über genau diese Verbindung gehen die FTPS-Zugangsdaten
+und der vollständige Inhalt von `server/`. Wer sich dazwischensetzt, fiele
+nicht auf.
+
+**Und es heißt zweitens: Die Auslieferungsaktion prüft das Zertifikat
+nicht.** Sie kam bei denselben Zugangsdaten bis `ensureDir('api/')` — also
+weit hinter den Punkt, an dem `curl` abbricht. Das ist der erste Ertrag des
+zweiten Clients (E-KH-07), und er kommt aus einer Richtung, die niemand
+erwartet hat: Nicht die Bibliothek ist auffällig, sondern **das, was sie
+nicht prüft**.
+
+**Was der Lauf NICHT beantwortet: F3.** `curl` kam gar nicht bis zum
+Datenkanal; der `ECONNRESET` der Aktion sitzt dort. Der Trennversuch steht
+also weiter aus — er braucht erst eine Verbindung, die zustande kommt.
+
+**Und eine Grenze, die der Lauf gemessen hat:** Die Zielprobe meldete
+„TLS-Sitzung wiederverwendet: **NICHT FESTSTELLBAR**". Die `curl`-Fassung
+dieses Läufers sagt nichts darüber. **Damit lassen sich die zwei
+Betriebsarten auf diesem Läufer nicht unterscheiden** — ein Lauf *ohne*
+Wiederverwendung belegte nicht, dass sie unterblieb. Die Dreiwertigkeit hat
+das gesagt, statt es zu behaupten; ein `False` an dieser Stelle hätte den
+ganzen Trennversuch auf eine Annahme gestellt.
+
+**Zwei Mängel der Zielprobe, die der Lauf gezeigt hat — beide behoben:**
+
+1. Sie warnte, die Probedatei „liege jetzt im Zielverzeichnis", obwohl nie
+   eine entstanden war — der Verbindungsaufbau war ja gescheitert. Sie
+   schickte damit jemanden auf die Suche nach nichts. Jetzt löscht sie nur,
+   wenn hochgeladen wurde, und sagt sonst „nichts zu löschen".
+2. Im Protokoll stand der Fehlschlag **vor** dem Kopf, zu dem er gehört:
+   `stdout` ist in einer Kette gepuffert, `stderr` nicht. `sag()` leert den
+   Strom jetzt nach jeder Zeile.
+
+Dazu ein dritter Fall in der Selbstprobe: `curl 60` wird als **Namensfehler**
+benannt und nicht als Transportfehler, samt der Abhilfe — und ausdrücklich
+ohne einen Schalter, der die Prüfung abschaltet. Selbstprobe **26 → 29
+Lagen**.
+
 **STOPP.** Was jetzt fehlt, ist eine Messung an der Anlage — Schritte 2 bis 5
-des Trennversuchs. Sie steht im Prüfdokument als Prüfpunkte 10 bis 12.
+des Trennversuchs. Sie steht im Prüfdokument als Prüfpunkte 10 bis 13.
 
 ### AP4 — F3 beheben (Inhalt nach E-KH-09; E-KH-20 gilt in jedem Fall)
 

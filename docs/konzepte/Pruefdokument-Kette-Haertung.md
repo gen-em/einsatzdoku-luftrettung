@@ -470,6 +470,50 @@ die die Zielprobe in ihren zwei Betriebsarten trennt.
 
 ## 2. Funde aus der Umsetzung
 
+**F-KH-U-08 — Das FTPS-Zertifikat von Produktiv passt nicht zum Hostnamen,
+und die Auslieferungsaktion merkt es nicht.** *Gemessen am 20.09.2026 im
+ersten Probelauf (Lauf 35531806339).*
+
+`curl` bricht beim Verbindungsaufbau ab:
+
+```
+< 220 ProFTPD Server (ProFTPD)
+> AUTH SSL
+< 234 AUTH SSL successful
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384
+*  subject: CN=<interner Knotenname des Hosters>
+*  subjectAltName does not match <FTP_SERVER>
+curl: (60) SSL: no alternative certificate subject name matches target host name
+```
+
+**Die Verbindung ist verschlüsselt, aber nicht beglaubigt.** Über sie gehen
+die FTPS-Zugangsdaten und der vollständige Inhalt von `server/`.
+
+**Die Auslieferungsaktion prüft das nicht** — sie kam mit denselben
+Zugangsdaten bis `ensureDir('api/')`, also weit hinter den Punkt, an dem
+`curl` abbricht. Das ist der erste Ertrag des **zweiten Clients** (E-KH-07),
+und er kommt aus einer unerwarteten Richtung: Nicht die Bibliothek ist
+auffällig, sondern das, was sie **nicht** prüft.
+
+*Nicht behoben*, weil die Abhilfe an der Anlage liegt: **Prüfpunkt 13.**
+
+*Was der Befund NICHT ist:* die Antwort auf F3. `curl` kam nicht bis zum
+Datenkanal, wo der `ECONNRESET` sitzt. Der Trennversuch braucht erst eine
+Verbindung, die zustande kommt — deshalb geht Prüfpunkt 13 dem Prüfpunkt 12
+voraus.
+
+**F-KH-U-09 — Auf diesem Läufer lässt sich die Wiederverwendung der
+TLS-Sitzung nicht messen.** *Gemessen im selben Lauf.* Die Zielprobe meldete
+**„NICHT FESTSTELLBAR"**: Die `curl`-Fassung des Läufers sagt in ihrer
+ausführlichen Ausgabe nichts darüber.
+
+**Folge für den Trennversuch:** Die zwei Betriebsarten lassen sich auf diesem
+Läufer **nicht unterscheiden** — ein Lauf *ohne* Wiederverwendung belegt
+nicht, dass sie unterblieb. Die Dreiwertigkeit hat das gesagt, statt es zu
+behaupten; ein `False` hätte den ganzen Trennversuch auf eine Annahme
+gestellt. Wer Prüfpunkt 12 fährt, liest diese Zeile zuerst.
+
+
 **F-KH-U-01 — Alle Haken in Rahmenplan 6a galten der alten Anlage.**
 Schritte 1 bis 6, 8 und 10 waren am 16./17.09.2026 abgehakt, für
 `staging.nadoku.gen-em.org` im Produktiv-Webspace. Nach dem Hosterwechsel
@@ -850,7 +894,18 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   *Warum es nicht gebaut ist:* Das sind Repositoriumseinstellungen, keine
   Datei — aus der Umsetzung heraus nicht setzbar.
 
-- [ ] **10 — Probelauf gegen Staging** (Abnahme von AP3, erster Teil).
+- [~] **10 — Probelauf** (Abnahme von AP3, erster Teil). **Gefahren am
+  20.09.2026 gegen PRODUKTIV** (Lauf 35531806339, von der Betreiberin) —
+  **die Mechanik hält, die Zielprobe ist rot mit Befund.**
+  *Gemessen:* „PROBELAUF — was dieser Lauf NICHT tut" gelaufen; Tag, Tor der
+  grünen Läufe, Backup-Tor, Wartung, `doku`-Kopie, FTPS-Abgleich und
+  Migrationsabfrage **übersprungen**; Job `zeiger` **übersprungen**, weil
+  `produktion` rot war. **Kein Byte auf Produktiv.** Selbstprobe der
+  Zielprobe im Lauf: **26 Lagen, 0 offen**.
+  *Offen bleibt:* ein Probelauf, bei dem die Zielprobe **grün** wird — das
+  hängt an Prüfpunkt 13. Und einer gegen **Staging**, der die Botprüfung von
+  lima-city trifft (siehe unten).
+  *Alter Text zum Weg:*
   *Weg:* GitHub → Actions → „Auslieferung" → **Run workflow** → Zweig wählen
   → **Häkchen bei `probelauf`** → starten. Die Umgebung `produktion` fragt
   nach deiner Freigabe; das ist richtig so.
@@ -867,6 +922,30 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   **Warnung:** Genau das ist wahrscheinlich. Die Botprüfung weist HTTPS mit
   `403` ab; ob sie auch eine statische Datei abweist, weiß niemand. **Dieser
   Punkt hängt damit am selben Nagel wie Prüfpunkt 1.**
+
+- [ ] **13 — Das FTPS-Zertifikat von Produktiv in Ordnung bringen** (F-KH-U-08,
+  gemessen im ersten Probelauf am 20.09.2026, Lauf 35531806339).
+  *Befund:* Der FTPS-Server weist sich mit einem **anderen Namen** aus als
+  dem, der in `FTP_SERVER` steht (`curl: (60) SSL: no alternative certificate
+  subject name matches target host name`). Die Verbindung ist verschlüsselt,
+  aber **nicht beglaubigt** — und über sie gehen die Zugangsdaten und der
+  ganze Inhalt von `server/`.
+  *Zwei Wege, in dieser Reihenfolge:*
+  **(a)** `FTP_SERVER` auf den Namen setzen, den das Zertifikat trägt. Der
+  Name steht im Protokoll des Laufs unter „Server certificate: subject".
+  Danach diesen Probelauf wiederholen — er muss über den Zertifikatsfehler
+  hinauskommen.
+  **(b)** Geht (a) nicht, weil der Name nicht auf dich zeigt: beim Hoster ein
+  Zertifikat für den Namen verlangen, den du benutzt.
+  *Was KEINE Abhilfe ist:* die Prüfung abschalten. Die Zielprobe bietet dafür
+  keinen Schalter, und das bleibt so.
+  *Scheitern erkennt man daran:* Der nächste Probelauf meldet wieder
+  `curl 60`. Kommt stattdessen ein anderer Fehler, ist das ein **Fortschritt**
+  — dann ist die Verbindung beglaubigt und die Probe misst erstmals den Weg
+  dahinter.
+  *Wichtig für die Reihenfolge:* **Prüfpunkt 12 (der Trennversuch) braucht
+  das zuerst.** Solange `curl` am Zertifikat abbricht, kommt er nie bis zum
+  Datenkanal, und F3 lässt sich nicht messen.
 
 - [ ] **11 — Vor dem Trennversuch: keine zweite FTP-Sitzung offen.**
   *Weg:* WinSCP schließen, den Dateimanager im Plesk-Panel schließen, jeden

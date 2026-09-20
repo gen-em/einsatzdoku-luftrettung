@@ -83,6 +83,11 @@ WEB_ZEITGRENZE_S = 30
 # Loeschen. Der HTTPS-Abruf umgeht ihn nicht: Er holt die Datei ueber ihren
 # vollen Namen, und wenn `.htaccess` sie sperrt, MELDET die Probe das, statt
 # es fuer einen fehlenden Upload zu halten.
+# `curl`-Rueckgabewert 60 = "peer certificate cannot be authenticated".
+# Er bekommt eine eigene Behandlung, weil er etwas anderes bedeutet als jeder
+# andere Fehlschlag: Der Transport ist in Ordnung, die IDENTITAET nicht.
+CURL_ZERTIFIKAT = 60
+
 PRAEFIX = ".zielprobe-"
 
 # Was in einer Ausgabe nie stehen darf. Wird vor JEDER Ausgabe ersetzt.
@@ -118,7 +123,14 @@ def sag(text: str, geheimnisse: list[str], nach_stderr: bool = False) -> None:
     Sie maskiert. Wer daran vorbei `print()` schreibt, umgeht den Schutz —
     deshalb gibt es sie, und deshalb steht sie hier oben.
     """
-    print(maskieren(text, geheimnisse), file=sys.stderr if nach_stderr else sys.stdout)
+    strom = sys.stderr if nach_stderr else sys.stdout
+    print(maskieren(text, geheimnisse), file=strom)
+    # SOFORT SCHREIBEN. `stdout` ist in einer Kette kein Bildschirm, sondern
+    # eine Datei — und damit gepuffert, `stderr` nicht. Ohne diesen Aufruf
+    # erscheint im Protokoll die Fehlermeldung VOR dem Kopf, zu dem sie
+    # gehoert. Gemessen am 20.09.2026 im ersten Probelauf: Der Block
+    # "Zielprobe gegen …" stand hinter seinem eigenen Fehlschlag.
+    strom.flush()
 
 
 def curl_da() -> str | None:
@@ -258,6 +270,7 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
 
     quelle = os.path.join(os.environ.get("RUNNER_TEMP", "/tmp"), name)
     fehler = 0
+    hochgeladen = False
     try:
         with open(quelle, "wb") as fh:
             fh.write(inhalt)
@@ -273,11 +286,32 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
                    "der Lauf belegt die Betriebsart NICHT"}[wieder])
         if rc != 0:
             f(f"FEHLGESCHLAGEN beim Hochladen (curl {rc}).")
+            if rc == CURL_ZERTIFIKAT:
+                # DAS IST KEIN TRANSPORTFEHLER, UND DIE UNTERSCHEIDUNG ZÄHLT.
+                # `curl` prüft das Zertifikat gegen den Hostnamen; passt es
+                # nicht, bricht er ab, BEVOR eine einzige Datei bewegt wird.
+                # Eine Auslieferungsbibliothek, die dasselbe Ziel ohne Murren
+                # beschreibt, prüft es NICHT — und dann ist die Verbindung
+                # zwar verschlüsselt, aber der Gegenüber ist ungeprüft.
+                f("")
+                f("  DAS IST EIN NAMENSFEHLER IM ZERTIFIKAT, KEIN TRANSPORTFEHLER.")
+                f("  Der FTPS-Server weist sich mit einem Namen aus, der nicht der")
+                f("  ist, den `--ftp-server` nennt. Die Verbindung ist damit zwar")
+                f("  verschlüsselt, aber NICHT beglaubigt: Wer sich dazwischen")
+                f("  setzt, fiele nicht auf. Über genau diese Verbindung gehen die")
+                f("  FTPS-Zugangsdaten und der ganze Inhalt von `server/`.")
+                f("")
+                f("  Abhilfe (in dieser Reihenfolge): (1) `--ftp-server` auf den")
+                f("  Namen setzen, den das Zertifikat trägt — dann stimmt beides;")
+                f("  (2) beim Hoster ein Zertifikat für den benutzten Namen")
+                f("  verlangen. Die Prüfung abzuschalten ist KEINE Abhilfe, und")
+                f("  dieses Werkzeug bietet dafür keinen Schalter.")
             f("  Servermeldung, wörtlich:")
             for z in (err or "(keine)").splitlines():
                 f(f"    {z}")
             fehler = 1
         else:
+            hochgeladen = True
             # ---- 2. über HTTPS zurückholen und vergleichen ------------------
             adresse = web_adresse(basis, name)
             status, koerper, netzfehler = hol(adresse)
@@ -301,17 +335,26 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
             os.unlink(quelle)
         except OSError:
             pass
-        rc, _, err = curl_ftp([reuse, "-Q", f"-DELE {pfad.rstrip('/')}/{name}",
-                               ftp_adresse(server, pfad)],
-                              konto, passwort, lauf)
-        if rc != 0:
-            f(f"WARNUNG: Die Probedatei {name} ließ sich nicht löschen (curl {rc}). "
-              f"Sie liegt jetzt im Zielverzeichnis.")
-            for z in (err or "(keine Meldung)").splitlines():
-                f(f"    {z}")
-            fehler = 1
+        if not hochgeladen:
+            # NICHT ÜBER EINEN REST WARNEN, DEN ES NICHT GIBT. Scheitert schon
+            # der Verbindungsaufbau, ist nie eine Datei entstanden — eine
+            # Warnung „sie liegt jetzt im Zielverzeichnis" schickte dann
+            # jemanden auf die Suche nach nichts. Gemessen am 20.09.2026: Der
+            # erste Probelauf gegen Produktiv scheiterte am Zertifikat, und
+            # die Probe warnte trotzdem vor einem Rest.
+            a("  Nichts zu löschen — es ist nie eine Datei entstanden.")
         else:
-            a("  Probedatei gelöscht.")
+            rc, _, err = curl_ftp([reuse, "-Q", f"-DELE {pfad.rstrip('/')}/{name}",
+                                   ftp_adresse(server, pfad)],
+                                  konto, passwort, lauf)
+            if rc != 0:
+                f(f"WARNUNG: Die Probedatei {name} ließ sich nicht löschen "
+                  f"(curl {rc}). Sie liegt jetzt im Zielverzeichnis.")
+                for z in (err or "(keine Meldung)").splitlines():
+                    f(f"    {z}")
+                fehler = 1
+            else:
+                a("  Probedatei gelöscht.")
 
     if fehler:
         return 1
@@ -455,7 +498,35 @@ def selbstprobe() -> int:
     l = LaufMitInhalt(rc_upload=7)
     rc = probe("https://a.example", "h", "/", "k", "p", True, l, hol_ok)
     pruefe(rc == 1, "Hochladen scheitert → rot")
-    pruefe(l.dele == 1, "…und es wird trotzdem aufgeräumt", f"{l.dele} Löschversuch(e)")
+    # KEIN LÖSCHVERSUCH, UND DAS IST DIE BEHEBUNG (20.09.2026). Scheitert
+    # schon der Verbindungsaufbau, ist nie eine Datei entstanden. Vorher
+    # löschte die Probe trotzdem und warnte dann, die Datei „liege jetzt im
+    # Zielverzeichnis" — sie schickte jemanden auf die Suche nach nichts.
+    # Der erste echte Probelauf gegen Produktiv hat genau das getan.
+    pruefe(l.dele == 0, "…und es wird NICHTS gelöscht, weil nichts entstanden ist",
+           f"{l.dele} Löschversuch(e)")
+
+    # Die Gegenprobe dazu bleibt: Ist die Datei OBEN und der Rundlauf
+    # scheitert danach, MUSS gelöscht werden — sonst bleibt sie liegen.
+    merker.clear()
+    l = LaufMitInhalt()
+    probe("https://a.example", "h", "/", "k", "p", True, l,
+          lambda a, zeitgrenze=0: (404, b"", ""))
+    pruefe(l.dele == 1, "Hochladen gelungen, Abruf rot → es WIRD gelöscht",
+           f"{l.dele} Löschversuch(e)")
+
+    # Und der Zertifikatsfehler wird benannt, nicht bloß gezählt.
+    import io as _io, contextlib
+    merker.clear()
+    puffer = _io.StringIO()
+    with contextlib.redirect_stderr(puffer):
+        probe("https://a.example", "h", "/", "k", "p", True,
+              LaufMitInhalt(rc_upload=CURL_ZERTIFIKAT), hol_ok)
+    txt = puffer.getvalue()
+    pruefe("NAMENSFEHLER IM ZERTIFIKAT" in txt,
+           "curl 60 wird als Namensfehler benannt, nicht als Transportfehler")
+    pruefe("keinen Schalter" in txt,
+           "…und es wird kein Weg angeboten, die Prüfung abzuschalten")
 
     merker.clear()
     l = LaufMitInhalt(rc_dele=9)
