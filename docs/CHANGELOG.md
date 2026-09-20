@@ -148,11 +148,23 @@ nachgetragen.
 
 **`.sitzungen/` steht noch nicht in der Ausnahmeliste des Transports.** Der
 Eintrag ist der achte Schutzlistenpfad und gehört zu Kette II (E-KH-20);
-Schritt 16 fasst `.github/` nicht an. Solange er fehlt, wiederholt sich die
-einmalige Abmeldung bei **jedem** Deploy mit Löschabgleich. Das ist kein
-Datenverlust, aber es ist der Grund, warum der Eintrag kein Feinschliff ist.
-Der Abnahmepunkt „zwei Deploys hintereinander, die Sitzung überlebt beide"
-bleibt bis dahin offen und steht so im Prüfdokument.
+Schritt 16 fasst `.github/` nicht an.
+
+**Die naheliegende Begründung dafür stimmt nicht, und das ist nachgemessen.**
+Der heutige Transport löscht `.sitzungen/` **nicht**: `getServerFiles()`
+listet das Fernverzeichnis nie, sondern liest ausschließlich die eigene
+Zustandsdatei, und ein zur Laufzeit auf dem Server entstandener Ordner stand
+dort nie. Gelesen in `@samkirkland/ftp-deploy` **1.2.3, 1.2.4 und 1.2.5** —
+`HashDiff.js` und `deploy.js` in allen drei Fassungen zeichengleich. Die
+einmalige Abmeldung wiederholt sich also **nicht** bei jedem Deploy.
+
+Der Eintrag gehört trotzdem dorthin, gegen einen anderen Weg: Läge
+`.sitzungen/` einmal im Auscheckstand des Läufers, würde er hochgeladen,
+stünde ab da in der Zustandsdatei, und ab da löschte ihn jeder Deploy, bei dem
+er lokal fehlt. Gegen `dangerous-clean-slate` hilft er nicht — das löscht laut
+Anleitung auch Ausgenommenes. Der Abnahmepunkt „zwei Deploys hintereinander,
+die Sitzung überlebt beide" bleibt bis dahin offen und belegt dann die Zusage
+des Eintrags, nicht die Abwehr einer akuten Gefahr.
 
 ---
 

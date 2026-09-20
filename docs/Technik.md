@@ -9054,13 +9054,28 @@ Diese Ausnahmeliste steht in beiden FTPS-Schritten wortgleich und ist tragend
 
 > **`.sitzungen/` wird der achte Pfad — und steht noch nicht darin**
 > (Schritt 16, E-SA-05). Der Eintrag gehört zu Kette II (E-KH-20, AP5 dort)
-> und ist dort angemeldet; Schritt 16 fasst `.github/` nicht an. **Solange er
-> fehlt, löscht ein Transport mit Löschabgleich bei jedem Deploy alle
-> Sitzungen** — die Folge ist eine Abmeldung aller, nicht ein Datenverlust,
-> und sie tritt ohnehin einmal beim Ausrollen von Web 20.26.0 ein (Abschnitt
-> 7). Der Abnahmepunkt „zwei Deploys hintereinander, die Sitzung überlebt
-> beide" ist deshalb bis zum Merge von Kette II **offen** und steht so im
-> Prüfdokument.
+> und ist dort angemeldet; Schritt 16 fasst `.github/` nicht an.
+>
+> **Wogegen er schützt — nachgemessen, weil die naheliegende Begründung
+> nicht stimmt.** Der heutige Transport löscht `.sitzungen/` **nicht**:
+> `getServerFiles()` listet das Fernverzeichnis nie, sondern liest
+> ausschließlich die eigene Zustandsdatei; `HashDiff.getDiffs()` kann
+> deshalb nur löschen, was dort steht, und ein zur Laufzeit auf dem Server
+> entstandener Ordner stand dort nie. Gelesen in `@samkirkland/ftp-deploy`
+> **1.2.3, 1.2.4 und 1.2.5**, in allen drei Fassungen zeichengleich
+> (`HashDiff.js` und `deploy.js`, SHA-256 identisch nach Normierung der
+> Zeilenenden).
+>
+> Der Eintrag schützt gegen einen anderen Weg: Sobald `.sitzungen/` **einmal
+> im Auscheckstand des Läufers** läge — eine gelöschte `.gitignore`-Zeile
+> genügt —, würde er hochgeladen, stünde ab da in der Zustandsdatei, und ab
+> da löschte ihn jeder Deploy, bei dem er lokal fehlt. Gegen
+> `dangerous-clean-slate` hilft er **nicht**: Das löscht laut Anleitung
+> ausdrücklich auch Ausgenommenes.
+>
+> Der Abnahmepunkt „zwei Deploys hintereinander, die Sitzung überlebt beide"
+> bleibt bis zum Merge von Kette II **offen** — er belegt dann die Zusage
+> des Eintrags, nicht mehr die Abwehr einer akuten Gefahr.
 >
 > Die Aktion prüft Datei- und Verzeichnismuster getrennt; jeder Ordner steht
 > deshalb **zweimal** (`sicherungen/**` und `sicherungen/`). Für `.sitzungen/`
@@ -9194,10 +9209,11 @@ Ort noch einmal ändert — etwa wenn die Probe nach einer Stunde ein anderes
 Ergebnis liefert (E-SA-02). Ein Mischbetrieb zweier Ablagen wäre das
 Schlimmere; ein sauberer Schnitt ist deshalb gewollt.
 
-**Und bis `.sitzungen/` in der Ausnahmeliste des Transports steht** (Kette II,
-E-KH-20 — siehe 6.5), wiederholt sich die Abmeldung bei **jedem** Deploy mit
-Löschabgleich. Das ist kein Schaden, aber es ist der Grund, warum der Eintrag
-kein Feinschliff ist.
+**Sie wiederholt sich nicht bei jedem Deploy** — das ist nachgemessen und
+nicht angenommen (6.5): Der heutige Transport löscht `.sitzungen/` nicht, weil
+seine Löschliste nur aus der eigenen Zustandsdatei entsteht und der Ordner dort
+nie stand. Dass `.sitzungen/` trotzdem in die Ausnahmeliste gehört (Kette II,
+E-KH-20), hat einen anderen Grund; er steht in 6.5.
 
 **Was währenddessen erreichbar bleibt** (E-S5W-04): die **sechs**
 Betriebsseiten `betrieb_status.php`, `betrieb_statistik.php`,

@@ -314,6 +314,21 @@ Sicherheitsrunde II). Keine neue R-Nummer: R81 trägt die Begründung.
   `tools/containerprobe/` beschreibt.
 - **Die Ausnahmeliste in `Technik.md` 6.5** nannte fünf Einträge, die Kette
   führt sieben (`ueberlast.json`, `install.php`).
+- **Der Transport löscht `.sitzungen/` heute gar nicht** — nachgemessen am
+  20.09.2026, nachdem die Frage im Prüfdokument zunächst als „nicht messbar
+  bis Kette II" geführt war. Sie war messbar, nur nicht an der Anlage:
+  `getServerFiles()` in `@samkirkland/ftp-deploy` listet das Fernverzeichnis
+  nie, sondern liest ausschließlich die eigene Zustandsdatei, und
+  `HashDiff.getDiffs()` kann deshalb nur löschen, was dort steht. Ein zur
+  Laufzeit auf dem Server entstandener Ordner stand dort nie. Gelesen in
+  1.2.3, 1.2.4 und 1.2.5 — `HashDiff.js` und `deploy.js` in allen drei
+  Fassungen zeichengleich. **Folge:** Fünf Sätze in `.gitignore`,
+  `Technik.md` 6.5 und 7, `CHANGELOG.md` und dem Prüfdokument behaupteten
+  mehr, als belegt war („löscht bei jedem Deploy alle Sitzungen"); sie sind
+  berichtigt. Der achte Schutzlistenpfad bleibt richtig, aber aus einem
+  anderen Grund: Läge `.sitzungen/` einmal im Auscheckstand, wäre er ab da
+  in der Zustandsdatei und damit löschbar. Gegen `dangerous-clean-slate`
+  schützt er ohnehin nicht.
 - **Zwei echte `session_start()` in `server/vendor/`**
   (`phpseclib3/Crypt/Random.php`). Toter Rückfallpfad auf PHP ≥ 8.2. Die Zahl
   **neun** gilt für „`server/` ohne `vendor/`" — wer sie ohne diesen Zusatz
