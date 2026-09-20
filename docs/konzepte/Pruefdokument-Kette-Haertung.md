@@ -497,9 +497,11 @@ Falschalarm — genau der Zustand, den AP2 beseitigt hat.
    Bedingung künftig erweitert und die Zeile vergisst, bekommt einen roten
    Lauf statt eines falschen Zeigers.
 
-*Nicht behoben aus der Umsetzung heraus:* **Der Zeiger steht noch falsch.**
-Das Zurücksetzen ist ein erzwungener Push auf `produktion`; der Sandkasten
-dieser Sitzung lässt ihn nicht zu. **Prüfpunkt 14.**
+*Behoben am selben Abend:* Der erzwungene Push auf `produktion` ist dem
+Sandkasten dieser Sitzung gesperrt. Die Betreiberin hat den Zweig deshalb
+über die Branches-Seite **gelöscht**, und die Umsetzung hat ihn aus einem
+Hilfszweig neu angelegt — **nachgemessen auf `7150793`**. Prüfpunkt 14 ist
+abgehakt.
 
 **F-KH-U-15 — Der Trennversuch hat nichts gemessen: Den Schalter, den ich
 benutzt habe, gibt es nicht.** *Lauf 35534784406, 20:12 UTC.*
@@ -1146,7 +1148,18 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   das zuerst.** Solange `curl` am Zertifikat abbricht, kommt er nie bis zum
   Datenkanal, und F3 lässt sich nicht messen.
 
-- [ ] **14 — Den Zeiger `produktion` zurücksetzen** (F-KH-U-14).
+- [x] **14 — Den Zeiger `produktion` zurücksetzen** (F-KH-U-14) —
+  **ERLEDIGT am 20.09.2026, 20:4x UTC.** Die Betreiberin hat den Zweig über
+  die Branches-Seite gelöscht, die Umsetzung hat ihn aus dem Hilfszweig neu
+  angelegt. **Nachgemessen:** `git ls-remote --heads origin produktion` →
+  `71507932006d1431abe3823b97cf877b18ccb055`, und das ist der Commit des Tags
+  `web-v20.24.2`. Der drohende tägliche Falschalarm der Wache ist damit
+  abgewendet.
+  **Rest:** Der Hilfszweig `zeiger-wiederherstellung` steht noch — sein
+  Löschen ist dem Sandkasten der Umsetzung ebenso gesperrt wie der
+  erzwungene Push. Er zeigt auf denselben Commit wie `produktion` und
+  schadet nichts; ein Papierkorb-Klick räumt ihn weg.
+  **Der ursprüngliche Weg, als Beschreibung:**
   *Er steht auf `9f62d55`, einem Stand, der nie ausgeliefert wurde; richtig
   ist `7150793` (Tag `web-v20.24.2`).* Solange er falsch steht, wird die
   Integritätswache täglich um 04:17 UTC grundlos rot.
