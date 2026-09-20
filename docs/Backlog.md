@@ -1037,6 +1037,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP11 nur für den Nachlöse-Job (E-P5a-21, E-PP-06); Herkunft je Einsatz und Dashboard bleiben 10c.
 
+    **Zuordnung (20.09.2026): 10c, AP7** — die Auswertung wird Teil der Betriebslage (Konzept P5c, E-P5c-18).
+
 90. **Der Simulator kann keinen Verbindungsabriss herstellen.**
     *Aufgenommen 03.09.2026 aus S5 Paket C.*
     Der Rundlauf der Uhr-Kopplung sollte sechs Fälle belegen; der sechste —
@@ -1164,6 +1166,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     bliebe ein Abruf gegen den Server beim Innehalten. **Neue Funktion.**
     Zuordnung: Backlog-Runde.
 
+    **Zuordnung (20.09.2026): 10c, AP9** — die Rechtstextseiten werden dort ohnehin angefasst (E-P5c-20).
+
 122. **Freie Zeiträume und Diagramme in der Statistik.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 04).* Die Seite
     Betrieb → Statistik (S8 AP4) rechnet feste Zeiträume — 7 Tage, 30 Tage,
@@ -1175,6 +1179,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (`CLAUDE.md` 5); die Diagrammfrage berührt außerdem die Zusage „keine
     fremde Quelle zur Laufzeit" — eine Diagrammbibliothek müsste vendoriert
     werden. Zuordnung: Backlog-Runde oder P5 (Dashboard, R38).
+
+    **Zuordnung (20.09.2026): Schritt 17** (Backlog-Runde 4) — nicht 10c. Entschieden mit der Freigabe des P5c-Konzepts (E-P5c-23, F-P5c-4).
 
 140. **Push auf `main` ist Deploy — Zugang zum Repositorium ist Zugang zum Schlüssel.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-16).* Die
@@ -1231,6 +1237,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Ersatzcodes gehasht, „Gerät 30 Tage merken". Schützt die Anmeldung,
     nicht den Offline-Angriff (dafür S10). Zuordnung: **P5** (erweitert
     R38).
+
+    **Zuordnung (20.09.2026): 10c, AP5** — dort wird der Zweitfaktor konkretisiert: Pflicht für Admin, BetreiberIn und Support, Angebot für alle übrigen (E-P5c-15, F-P5c-1).
 
 146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.**
     *Aufgenommen 06.09.2026 (R78).* Drei Fragen, keine Fehler: **Argon2id
@@ -1398,6 +1406,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `edbak`, `edbak-alt` und `csv` laufen mit **0 unerklärten** Abweichungen;
     eine Sicherung im alten Format spielt weiterhin ein.
 
+    **Zuordnung (20.09.2026): 10c, AP8** (R39-Rest, E-P5c-19).
+
 169. **Ein Diensttag mit „Anderem Rettungsmittel" kann keine Besatzung
     festhalten.** *Aufgenommen 09.09.2026 beim Beantworten von Frage 11
     (S9/AP6, Web 18.1.1).* Ein Rettungsmittel nur für den Tag führt keine
@@ -1431,6 +1441,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Abnahme:* Ein Diensttag mit „Anderem Rettungsmittel" erlaubt einen
     Besatzungsnamen — oder der Text sagt weiterhin richtig, dass er es nicht
     tut. Kein dritter Zustand.
+
+    **Zuordnung (20.09.2026): 10c, AP8** (R39-Rest, E-P5c-19).
 
 170. **Kein Prüfmittel misst, ob die Kennzeichnung vollständig ist.**
     *Aufgenommen 10.09.2026 nach zwei Rückmeldungen zu Web 19.1.0 (behoben
@@ -1714,6 +1726,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `EXPLAIN` zeigt den Index an einer kontenübergreifenden Zeitraumzählung.
     Zuordnung: **P5**, mit dem Dashboard.
 
+    **Zuordnung (20.09.2026): 10c, AP7** — der Index wird mit der Betriebslage gelegt (E-P5c-18).
+
 192. **R38 und die Statistikseite aus S8 zählen Verschiedenes — „aktiv", die
     Fenster und die Zählgröße.**
     *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
@@ -1744,6 +1758,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     stehen zu lassen nicht. *Abnahme:* Die Entscheidung steht im Rahmenplan,
     und R38 und die Seite beschreiben dieselbe Zählung. Zuordnung:
     **Entscheidung in einer Backlog-Runde, Umsetzung P5** — wie bei Nr. 122.
+
+    **Zuordnung (20.09.2026): 10c, AP7** — die Zählung heißt dort sichtbar „Bestand" (E-P5c-18).
 
 193. **Register und Doku führen die R42-Auswertung als offen, obwohl sie
     seit Web 15.3.0 läuft.**
@@ -1918,6 +1934,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zeigen 0. Zuordnung: **P6** (Review der Oberfläche) oder ein eigenes
     kleines Paket mit Mockup.
 
+    **Zuordnung (20.09.2026): 10c, AP9** — Kacheln nach Typ, Mockup mit der 10c-Runde (E-P5c-20).
+
 199. **Die Nummer 5 fehlt im Backlog, obwohl der Changelog sie unter
     *Erledigt* verortet.**
     *Aufgenommen 15.09.2026 (Gegenlesen des Merges von PR #47 in den
@@ -1960,6 +1978,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Konto als „unzustellbar" vermerkt und die Nutzerin beim nächsten
     Anmelden gefragt wird. Ohne Postfach bleibt der Vermerk aus. Zuordnung:
     nach P5a, mit dem Konto-Lebenszyklus (10b) oder als Backlog-Runde.
+
+    **Zuordnung (20.09.2026): 10c, AP10** (Bounce-Postfach, E-P5c-21, F-P5c-3).
 
 201. **`Retry-After` in Uhr und Handy auswerten.**
     *Aufgenommen 15.09.2026 (Konzept P5a, Befund 1.7).* Beide Clients
@@ -2855,6 +2875,169 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     aber den Server nicht mit). Wer das angeht, entscheidet zuerst, welche
     der beiden Fragen er beantworten will — sie sind nicht dieselbe.
 
+
+241. **Die Anwendung überlässt ihre Sitzungen dem Hoster.**
+    *Aufgenommen 20.09.2026 aus dem Befund der Kettenhärtung (AP1).*
+    Zugeordnet: **Schritt 16**, Konzept
+    `docs/konzepte/Konzept-Sitzungsablage.md` (freigegeben 20.09.2026).
+
+    `session.save_path` zeigt dorthin, wohin der Hoster ihn zeigen lässt. Auf
+    der Staging-Anlage bei lima-city ist das ein **geteiltes** Verzeichnis:
+    `/home/webpages/tmp`, Rechte **0773**, Eigentümer **root**,
+    `gc_probability` **0**. Es ist gutgegangen, weil der Hoster das Auflisten
+    sperrt — **die Anwendung hätte es nicht gemerkt.** Für Produktiv ist
+    derselbe Wert nicht erhoben, für Selbsthoster ist er offen.
+
+    **Was auf dem Spiel steht, nüchtern:** Eine Sitzungsdatei trägt kein
+    Schlüsselmaterial, die E2E-Zusage ist nicht berührt. Sie trägt aber die
+    Sitzung selbst — der Dateiname *ist* die Sitzungs-ID. Wer sie liest, ist
+    angemeldet und sieht die Klartextliste aus `CLAUDE.md` 4; bei
+    `role = admin` die Verwaltung.
+
+    **Die Anwendung legt ihre Sitzungen künftig selbst ab** — eigenes,
+    nicht auflistbares Verzeichnis `.sitzungen/` mit `0700` (Stufe 2).
+    Stufe 3 (Sitzungen in der Datenbank) ist mit vier Gründen verworfen, mit
+    Verfallsdatum: Sie wird alternativlos, sobald mehrere Anwendungsserver
+    eine Ablage teilen sollen — das steht auf keinem Fahrplan.
+
+    **Gemessen, und es hat das Konzept umgeworfen:** Es gibt **neun**
+    `session_start()`-Aufrufe in neun Dateien, nicht drei. Mit der Annahme
+    „drei" hätte `login.php` die Sitzung beim Hoster abgelegt und
+    `auth_guard.php` sie in `.sitzungen/` gesucht — **niemand hätte sich
+    anmelden können.**
+
+242. **Sitzungsbindung per Cookie-Token — benannt, nicht mitgenommen.**
+    *Aufgenommen 20.09.2026 (E-SA-09 des Konzepts Sitzungsablage).*
+    Zugeordnet: **Schritt 18** (Sicherheitsrunde II).
+
+    Ein Zufallstoken nur im Cookie, dessen Hash in der Sitzung liegt, macht
+    eine gelesene Sitzungsdatei wertlos — auch eine aus einem gefundenen
+    Backup. Das ist der Schutz, den Nr. 241 **nicht** leistet: 241 verlegt
+    den Ort, 242 entwertet die Datei.
+
+    **Warum getrennt:** Das ist ein Sicherheitsumbau mit eigener Prüfung
+    (Cookie-Handling — Uhr und Handy sind nicht betroffen, nur der Browser;
+    Reset-Fluss; Wechselwirkung mit `users.session_epoch`) und gehört nicht
+    in einen Verzeichniswechsel.
+
+243. **Ein Umgebungsbanner, damit Staging nicht für Produktiv gehalten wird.**
+    *Aufgenommen 20.09.2026 (E-P5c-05).* Zugeordnet: **10c, AP1**.
+
+    `config.php` bekommt `app.umgebung = ['name' => 'Staging',
+    'farbe' => 'rot']`, Vorgabe leer. Ist es gesetzt: Kopfleiste in
+    **Newroz-Rot** statt Dunkelblau, darunter die Zeile „Staging —
+    Testdaten, kein Echtbetrieb", Seitentitel mit Präfix „[Staging]".
+
+    **Nie abgeleitet** — nicht aus Domain, Zweig oder Kette. Eine Ableitung
+    wäre bequem und falsch: Sie stimmte genau so lange, bis jemand eine
+    zweite Anlage unter derselben Domain aufsetzt. Die Statusseite warnt,
+    wenn `mail.betreff_praefix` gesetzt ist und `app.umgebung` nicht — das
+    ist der Fall, in dem die Mails schon „Staging" sagen und die Oberfläche
+    noch nicht.
+
+    **Derselbe Baustein** trägt das Ankündigungsbanner (E-P5c-13); zwei
+    Banner wären zwei Stellen, die auseinanderlaufen.
+
+244. **Einstellungen-Übersicht: die drei Bereiche sind als Gliederung nicht
+    erkennbar.** *Aufgenommen 18.09.2026, präzisiert 20.09.2026
+    (Auftraggeber).* Zugeordnet: **10c, AP9**.
+
+    In der Übersicht (`ui_einstellungen_uebersicht()`) gehen die
+    Bereichsnamen Einstellungen / Verwaltung / Betrieb als oberste Ebene
+    unter.
+
+    **Entschieden:** zuerst ein Mockup mit einer klaren
+    **Überschriftenzeile je Bereich** (Bricolage, Abstand davor, Linie);
+    trägt das nicht, bekommt jeder Bereich eine **eigene Karte** mit seiner
+    Liste. Fable-Schritt (Mockup), Umsetzung klein; das Mockup läuft mit den
+    übrigen 10c-Mockups in einer Runde.
+
+245. **Erklärtext-Regel — und danach alle Texte in Verwaltung und Betrieb.**
+    *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
+    **10c, AP9**.
+
+    Gemeint ist der **gesamte** Bereich Verwaltung und Betrieb unter
+    Einstellungen: viel Erklärtext, viele neue Funktionen seit S8–S10 und
+    P5a.
+
+    **Entschieden als Grundregel für `docs/Design.md`:** In der Oberfläche
+    steht je Karte **höchstens ein Satz**, der sagt, was hier passiert;
+    alles Erklärende steht im **Handbuch**, die Karte trägt den Verweis auf
+    die Sprungmarke (`hilfe.php#abschnitt`, E-P5b-08). Warnungen bleiben als
+    Meldung, Feldhinweise bleiben eine Zeile.
+
+    **Folge:** Alle Texte des Bereichs werden nach der Regel überarbeitet;
+    der ausgelagerte Text **wandert ins Handbuch und wird nicht gelöscht**.
+    Voraussetzung: 10b AP8 (Handbuch aus der Anwendung erreichbar).
+    Abnahme: ein Textpaket mit Wortliste und Bilderlauf; gezählt werden
+    Sätze je Karte (Ziel ≤ 1) und Handbuch-Verweise (Ziel ≥ 1 je Karte mit
+    ausgelagertem Text).
+
+246. **Schlüsselblatt und Notfallblatt: eine Druckseite, die eine ist.**
+    *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
+    **10c, AP9**.
+
+    Drei Vorgaben für `betrieb_schluesselblatt.php` (S10) und das
+    Notfallblatt (P5b AP9):
+
+    (a) Der Schlüssel steht **abgesetzt in einer Kachel** — Rahmen, Rauch,
+    Vierergruppen, Feste Schrift.
+    (b) Der Druck passt **genau auf eine A4-Seite** (`@page A4`, Ränder,
+    kein Umbruch). Abnahme: PDF-Druck aus Chromium **und** Firefox hat je
+    eine Seite.
+    (c) Oben stehen **Marke und „NAdoku"** (das Wort-Bild-Logo) und die
+    Überschrift, damit sofort klar ist, worum es geht.
+
+    **Das ändert E-P5b-09** („ohne Logo" → mit Logo). Beide Blätter
+    bekommen denselben Baustein (`.blatt-druck`); 10b AP9 ist gebaut, das
+    Notfallblatt wird dort nachgezogen.
+
+247. **Serverschlüssel wechseln — als Vorgang, nicht von Hand.**
+    *Aufgenommen 20.09.2026 (aus V4 der P5c-Vorbereitung).* Zugeordnet:
+    **Schritt 18**.
+
+    Heute gibt es keinen Wechsel. Wer `server_key` von Hand ändert, macht
+    **alles Versiegelte stumm** — und merkt es erst, wenn er es braucht.
+
+    Gesucht ist ein Vorgang unter Betrieb: neuen Schlüssel erzeugen, alles
+    Versiegelte **umhüllen** (Adminpakete, Zugänge der Sicherungsziele,
+    Protokoll-Archive, Wiederanlaufpaket), neues Schlüsselblatt, Eintrag im
+    Protokoll, und **der Nachweis der Öffenbarkeit vor dem Verwerfen des
+    alten Schlüssels** — das ist der Schritt, dessen Fehlen den Vorgang
+    gefährlich macht. Auslöser: Verdacht, dass das Blatt in falsche Hände
+    kam.
+
+    Eigenes Paket mit eigener Prüfung; **nicht P5**. Bis dahin steht im
+    Betreiberhandbuch: Der Schlüssel wird nicht gewechselt, das Blatt wird
+    gehütet (Quartalsrückfrage E-P5b-10).
+
+248. **Das Prüftor Stufe 1 zählt die `error_log(`-Aufrufe.**
+    *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).* Zugeordnet:
+    **10c, AP3** — dort erledigt, hier als Prüfmittel-Vermerk.
+
+    Mit 10c wandern die `error_log()`-Aufrufe auf den Protokollreiter
+    System. Damit sie nicht nach und nach zurückkehren, zählt Stufe 1 sie
+    nach: **Soll ≤ 2**, und zwar ohne Kommentare und ohne Zeichenketten —
+    sonst zählt das Prüfmittel seine eigene Dokumentation mit.
+    Mitgeprüft wird der `set_exception_handler()`-Behandler.
+
+    **Die Ausgangszahl ist gemessen:** 42 am 16.09.2026, nachgemessen am
+    20.09.2026 an `862ca7f` **77 Aufrufe in 32 Dateien**. Die Zahl ist in
+    vier Tagen um 35 gestiegen — genau deshalb braucht es einen Zähler und
+    keine Vorsatzerklärung.
+
+249. **TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes
+    verliert.** *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).*
+    Zugeordnet: **Schritt 18** (Sicherheitsrunde II).
+
+    10c macht den Zweitfaktor für Admin, BetreiberIn und Support zur
+    Pflicht. Der Reset durch eine **zweite** BetreiberIn ist damit gelöst —
+    der Fall „es gibt nur eine, und sie hat beides verloren" ist es nicht.
+
+    Das ist ein **Wiederanlauf-Fall** und gehört zum S10-Runbook, nicht in
+    10c: Er wird nicht über die Oberfläche gelöst, sondern über das
+    Wiederanlaufpaket. Hier nur benannt, damit er nicht erst auffällt, wenn
+    er eintritt.
 
 
 ## Erledigt
@@ -6534,7 +6717,6 @@ zutreffen.
     Datenschutzerklärung in Handbuch 11.5 — die Anwendung liefert weiterhin
     keinen Rechtstext mit, aber die technische Tatsache dahinter kann nur sie
     kennen.
-
 
 142. **Android: HTTP-Ausnahme gilt auch im Release-Build.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-1).*
