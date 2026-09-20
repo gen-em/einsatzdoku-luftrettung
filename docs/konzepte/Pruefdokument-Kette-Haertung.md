@@ -1823,16 +1823,38 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   liegt eine Ebene unter dem Webroot, der echte Baum beginnt eine Ebene
   höher. Kommt der Lauf sauber durch, ist die Tiefe der nächste Verdacht —
   und dann bleibt Prüfpunkt 18.
-  *Was zu bauen ist:* eine Eingabe `probelauf_gespraech`, die (a) `dry-run`
-  ausschaltet, (b) `log-level: verbose` setzt und (c) `server-dir` auf das
-  Probeverzeichnis umbiegt. **Noch nicht gebaut** — sie schreibt echt und
-  fällt damit unter denselben Wächter, der Prüfpunkt 18 abgewiesen hat
-  („Production Deploy"). Sie braucht das ausdrückliche Wort der Betreiberin.
-  *Aufräumen danach:* Das Probeverzeichnis bleibt stehen (die Aktion räumt
-  nur nach ihrem eigenen Zustand auf). Es wird von Hand entfernt oder mit
-  einem `--mengenprobe`-Lauf, dessen Aufräumen alles mit dem Probe-Präfix
-  wegnimmt — **der Name des Probeverzeichnisses muss deshalb mit
-  `zielprobe-` beginnen.**
+  *Gebaut am 20.09.2026:* die Eingabe **`probelauf_gespraech`**.
+  *Weg:* GitHub → Actions → „Auslieferung" → **Run workflow** → Zweig
+  `claude/fervent-dirac-xirsqw` → Häkchen **`probelauf`** ✓ → Häkchen
+  **`probelauf_gespraech`** ✓ → alle anderen Felder leer/aus → starten →
+  **Freigabe erteilen**.
+  *Drei Riegel:*
+  **(a)** Ohne `probelauf` bricht ein eigener Schritt ab — er läuft **ohne
+  `if`**, weil ein Riegel, der nur greift, wenn die Lage schon stimmt, keiner
+  ist. **(b)** `server-dir` zeigt auf **`.zielprobe-gespraech/`**; der
+  **führende Punkt** ist Absicht — `.htaccess` antwortet auf jeden Pfad mit
+  führendem Punkt mit 403 (gemessen in F-KH-U-13), sonst läge dort eine
+  zweite, öffentlich abrufbare Kopie der Anwendung. **(c)** `state-name`
+  zeigt auf eine **eigene** Zustandsdatei *innerhalb* des Probeverzeichnisses;
+  ohne das zeigte `../` von dort in den Webroot, und der Gesprächslauf legte
+  eine Zustandsdatei mitten in die laufende Anlage.
+  *Nachgerechnet, nicht im Kopf geprüft:* Die vier bedingten Ausdrücke
+  (`dry-run`, `log-level`, `server-dir`, `state-name`) sind gegen **vier
+  Fälle** ausgewertet worden — Tag-Lauf ohne `inputs`, Probelauf,
+  Probelauf+Gespräch, Gespräch ohne Probelauf: **0 Abweichungen**. `dry-run`
+  ist dabei die gefährlichste Zeile der Datei; ein Fehler dort wäre eine
+  Auslieferung ohne Tag.
+  *Zusätzlich zu prüfen, wenn der Lauf durch ist:*
+  `https://nadoku.gen-em.org/.zielprobe-gespraech/` im Browser aufrufen —
+  **erwartet wird 403.** Kommt dort etwas anderes, greift die
+  Punktpfad-Sperre für Verzeichnisse nicht, und das Probeverzeichnis muss
+  **sofort** weg.
+  *Aufräumen danach — von Hand:* `.zielprobe-gespraech/` über den
+  Dateimanager des Hosters oder einen FTP-Client entfernen. **Das Werkzeug
+  kann das nicht**, und das ist Absicht: Es räumt einzelne Probedateien weg,
+  keine Bäume. Ein Werkzeug, das Verzeichnisbäume auf dem Produktivserver
+  löscht, soll es nicht geben. Bricht der Lauf wie erwartet früh ab, liegen
+  dort ohnehin nur wenige Dateien.
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 

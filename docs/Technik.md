@@ -9347,11 +9347,35 @@ Pflichtfreigabe — und läuft deshalb auch von `main`, wo kein Tag steht:
 |---|---|
 | die drei Geheimnisse | Tag gegen `WEB_VERSION` |
 | Zielprobe (samt Selbstprobe) — **oder, mit `probelauf_mengenprobe` bzw. `probelauf_sitzungsprobe`, die Mengen- oder die Sitzungsprobe an ihrer Stelle** | Tor der grünen Läufe |
-| Abgleich als **Trockenlauf** (`dry-run`) | Backup-Tor, Wartungsmodus, `doku`-Kopie, Migrationsabfrage |
+| Abgleich als **Trockenlauf** (`dry-run`) — **außer im Gesprächslauf, siehe unten** | Backup-Tor, Wartungsmodus, `doku`-Kopie, Migrationsabfrage |
 
 Geschrieben wird nichts außer der Probedatei, und die wird im selben Schritt
 gelöscht. Die Zusammenfassung beginnt mit **„PROBELAUF — nichts
 ausgeliefert"**.
+
+**Eine Ausnahme, und sie steht hier und nicht im Kleingedruckten: der
+Gesprächslauf** (`probelauf_gespraech`, Prüfpunkt 18a der Kettenhärtung). Er
+schaltet den Trockenlauf **ab** — die Aktion schreibt echt. Sie muss es,
+denn im Trockenlauf erreicht sie `ensureDir` nie (`syncProvider.js` beginnt
+`createFolder` mit `if (this.dryRun === true) return;`), und genau deshalb
+hat kein Probelauf F3 je ausgelöst. Dazu `log-level: verbose`, womit
+`basic-ftp` seinen FTP-Dialog mitschreibt.
+
+**Drei Riegel halten den Preis klein:**
+
+1. Ohne `probelauf` bricht ein eigener Schritt ab. Er läuft **ohne `if`** —
+   ein Riegel, der nur greift, wenn die Lage schon stimmt, ist keiner.
+2. `server-dir` zeigt auf **`.zielprobe-gespraech/`** statt auf den Webroot.
+   Die Anwendung bleibt unberührt: kein Wartungsmodus, kein halber Stand. Der
+   **führende Punkt** ist Absicht — `.htaccess` weist jeden Pfad mit
+   führendem Punkt mit 403 ab (Z. 64), sonst läge dort eine zweite,
+   öffentlich abrufbare Kopie der Anwendung.
+3. `state-name` zeigt auf eine **eigene** Zustandsdatei *innerhalb* des
+   Probeverzeichnisses. Ohne das zeigte `../` von dort in den Webroot.
+
+**Was er hinterlässt:** das Probeverzeichnis. Es wird **von Hand** entfernt.
+Das Werkzeug räumt einzelne Probedateien weg, keine Bäume — ein Werkzeug,
+das Verzeichnisbäume auf dem Produktivserver löscht, soll es nicht geben.
 
 **Das Tor der grünen Läufe entfällt im Probelauf mit Absicht:** Es schützt
 Produktiv davor, ungeprobten Code zu bekommen — der Probelauf liefert keinen

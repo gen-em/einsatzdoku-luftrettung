@@ -114,6 +114,19 @@ on:
           kommt. Schreibt nur die Probedatei und räumt sie wieder weg.
         type: boolean
         default: false
+      probelauf_gespraech:
+        description: >-
+          Nur zusammen mit PROBELAUF: GESPRÄCHSLAUF. Die Auslieferungsaktion
+          läuft ECHT (kein Trockenlauf) und schreibt ihren FTP-Dialog mit
+          (log-level verbose) — aber in ein gesperrtes Probeverzeichnis
+          `.zielprobe-gespraech/` und NICHT in den Webroot. Sie erreicht damit
+          `ensureDir` und stirbt voraussichtlich dort; diesmal steht im
+          Protokoll, bei welchem Befehl und mit welcher Serverantwort. Die
+          Anwendung bleibt unberührt — kein Wartungsmodus, kein halber Stand.
+          ACHTUNG: Das Probeverzeichnis bleibt danach stehen und wird VON HAND
+          entfernt (Prüfdokument, Prüfpunkt 18a).
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -906,6 +919,47 @@ jobs:
           if [ -d docs/bilder ]; then cp -r docs/bilder server/doku/; fi
           echo "Kopiert:"; ls -l server/doku/
 
+      - name: Gesprächslauf — Riegel und Ansage
+        # OHNE `if`, UND DAS IST DER PUNKT. Ein Riegel, der nur laeuft, wenn
+        # die Lage schon stimmt, ist keiner. Dieser Schritt prueft immer.
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.probelauf_gespraech }}" != "true" ]; then
+            exit 0
+          fi
+          if [ "${{ inputs.probelauf }}" != "true" ]; then
+            echo "::error::Der Gespraechslauf laeuft NUR im Probelauf. Er schaltet den Trockenlauf ab; ohne das Haekchen `probelauf` waere das eine echte Auslieferung ohne Tag."
+            exit 1
+          fi
+          echo "::warning::GESPRAECHSLAUF — die Auslieferungsaktion schreibt ECHT, aber in .zielprobe-gespraech/ und NICHT in den Webroot."
+          {
+            echo '### Gesprächslauf (F3, Prüfpunkt 18a)'
+            echo
+            echo 'Die Auslieferungsaktion läuft in dieser Runde **echt** — kein'
+            echo 'Trockenlauf — und schreibt ihren FTP-Dialog mit (`log-level: verbose`).'
+            echo 'Nach acht Trennversuchen ist das die einzige verbliebene Messung: Jede'
+            echo 'hat gezeigt, dass `curl` kann, woran die Aktion stirbt.'
+            echo
+            echo '**Zwei Riegel halten den Preis klein:**'
+            echo
+            echo '1. `server-dir` zeigt auf **`.zielprobe-gespraech/`** und nicht auf den'
+            echo '   Webroot. Die Anwendung bleibt unberührt: kein Wartungsmodus, kein'
+            echo '   halb ausgelieferter Stand. Der **führende Punkt** ist Absicht —'
+            echo '   `.htaccess` antwortet auf jeden Pfad mit führendem Punkt mit 403,'
+            echo '   also liegt dort keine zweite, abrufbare Kopie der Anwendung.'
+            echo '2. `state-name` zeigt auf eine **eigene** Zustandsdatei INNERHALB des'
+            echo '   Probeverzeichnisses. Der Gesprächslauf kann die der echten'
+            echo '   Auslieferung damit nicht anfassen.'
+            echo
+            echo '**Erwartet:** derselbe `ECONNRESET` wie im echten Lauf — und diesmal'
+            echo 'steht davor, bei welchem FTP-Befehl und mit welcher Serverantwort.'
+            echo
+            echo '**Danach von Hand:** `.zielprobe-gespraech/` entfernen. Das Werkzeug'
+            echo 'kann das nicht — es räumt einzelne Probedateien weg, keine Bäume, und'
+            echo 'ein Werkzeug, das Verzeichnisbäume auf dem Produktivserver löscht,'
+            echo 'soll es nicht geben.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: server/ per FTPS auf Produktiv synchronisieren
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
@@ -915,15 +969,50 @@ jobs:
           protocol:   ftps
           port:       21
           local-dir:  ./server/
-          server-dir: ${{ vars.FTP_ZIELPFAD || './httpdocs/' }}
+          # IM GESPRAECHSLAUF IN EIN PROBEVERZEICHNIS (Pruefpunkt 18a). Die
+          # Aktion muss nicht in den Webroot schreiben, um `ensureDir` zu
+          # erreichen -- sie muss nur IRGENDWOHIN echt schreiben. Alles
+          # Entscheidende bleibt gleich: derselbe Client, derselbe Server,
+          # dieselbe Sitzung, echtes `ensureDir`, 688 Dateien in 62
+          # Verzeichnissen. Was entfaellt: Wartungsmodus, halber Stand ueber
+          # der laufenden Anwendung, Rueckweg.
+          #
+          # DER FUEHRENDE PUNKT IST ABSICHT: `.htaccess` antwortet auf jeden
+          # Pfad mit fuehrendem Punkt mit 403 (gemessen in F-KH-U-13, als die
+          # Zielprobe sich damit selbst ausgesperrt hat). Ohne ihn laege hier
+          # eine zweite, oeffentlich abrufbare Kopie der Anwendung.
+          server-dir: ${{ inputs.probelauf_gespraech && '.zielprobe-gespraech/' || vars.FTP_ZIELPFAD || './httpdocs/' }}
           # TROCKENLAUF IM PROBELAUF (E-KH-08). Die Aktion verbindet sich,
           # vergleicht und sagt, was sie täte — sie schreibt nichts. Damit
           # misst der Probelauf genau den Weg, an dem F3 hängt, ohne eine
           # einzige Datei zu bewegen.
-          dry-run: ${{ inputs.probelauf == true }}
+          #
+          # DER GESPRAECHSLAUF SCHALTET IHN AB (Pruefpunkt 18a) -- er MUSS echt
+          # schreiben, sonst erreicht die Aktion `ensureDir` nie:
+          # `syncProvider.js` beginnt `createFolder` mit
+          # `if (this.dryRun === true) { return; }`. Genau deshalb hat kein
+          # Probelauf F3 je ausgeloest, und genau deshalb braucht es ihn.
+          dry-run: ${{ inputs.probelauf == true && inputs.probelauf_gespraech != true }}
+          # DER MITSCHNITT (Pruefpunkt 18a). `verbose` setzt
+          # `client.ftp.verbose = true` und schreibt damit den FTP-Dialog von
+          # `basic-ftp` mit -- jeden Befehl, jede Serverantwort. Nachgelesen
+          # in `deploy.js` Z. 74, nicht geraten (die Lehre aus F-KH-U-15).
+          #
+          # DAS PASSWORT STEHT NICHT DARIN: `FtpContext.js` Z. 191/192 ersetzt
+          # `PASS …` durch `> PASS ###`, bevor irgendetwas geschrieben wird.
+          # Dass GitHub Geheimnisse ohnehin maskiert, ist der zweite Riegel
+          # und nicht der einzige.
+          log-level: ${{ inputs.probelauf_gespraech && 'verbose' || 'standard' }}
           # Wie im Staging-Job (Nr. 213) — Begründung steht dort. Der
           # Dateiname ist ein anderer, und genau darauf kommt es an.
-          state-name: ${{ vars.FTP_STATE_PFAD || '../.deploy-state-produktion.json' }}
+          #
+          # UND DER GESPRAECHSLAUF BEKOMMT EINE EIGENE, INNERHALB DES
+          # PROBEVERZEICHNISSES. Ohne das zeigte `../` von dort aus in den
+          # Webroot -- der Gespraechslauf legte also eine Zustandsdatei mitten
+          # in die laufende Anlage. So kann er die der echten Auslieferung
+          # nicht einmal sehen, und seine eigene verschwindet mit dem
+          # Probeverzeichnis.
+          state-name: ${{ inputs.probelauf_gespraech && '.deploy-state-gespraech.json' || vars.FTP_STATE_PFAD || '../.deploy-state-produktion.json' }}
           # Wortgleich wie im Staging-Job — Begründung steht dort.
           exclude: |
             **/.git*
