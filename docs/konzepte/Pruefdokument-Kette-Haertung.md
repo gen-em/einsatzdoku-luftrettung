@@ -210,6 +210,91 @@ Fassung 81 im Änderungsverlauf, der historische Kasten in 6a, `Technik.md`
 `CLAUDE.md` 6 warnt („eine grüne Zahl ist erst dann ein Beleg, wenn sie das
 Gemessene benennt").
 
+### 1.4 Der erste Kettenlauf gegen lima-city (Lauf 21, 20.09.2026)
+
+Handlauf (`workflow_dispatch`) auf `claude/fervent-dirac-xirsqw` (`c97c1cf`),
+14:34:28–14:35:22 UTC. **Kein Push auf `main`** — die Kette lässt sich von
+jedem Zweig auslösen, `produktion` kann dabei nicht anspringen
+(`if: startsWith(github.ref, 'refs/tags/web-v')`, **gemessen: übersprungen**).
+
+| Job / Schritt | Ergebnis |
+|---|---|
+| `staging` — Geheimnisse da? | **grün** |
+| `staging` — `doku`-Kopie | **grün** |
+| `staging` — **FTPS-Abgleich** | **grün**, 12 s |
+| `stufe2` — `login.php` | **grün, gemessen** |
+| `stufe2` — Punktdateien | **grün, gemessen** |
+| `stufe2` — Kreisläufe csv/edbak | **ROT** |
+| `stufe2` — Bilderlauf | nicht gelaufen (Vorgänger rot) |
+| `stufe2` — Messstand | nicht gelaufen |
+| `produktion` | **übersprungen**, wie vorgesehen |
+
+**Die Zahlen des Abgleichs:** `Making changes to 12 files/folders` ·
+**`Uploading: 0 B — Deleting: 0 B — Replacing: 1.13 MB`** · Verbindung 1,9 s ·
+Übertragung 8,9 s (127 kB/s) · gesamt 12 s. Ersetzt wurden
+`api/export_data.php`, `api/gpx_import.php`, `api/import_commit.php`,
+`api/pat_anheben.php`, `api/schneiden.php`, `backup_lib.php`, `db.php`,
+`einsatz_form.php`, `ingest.php`, `migration_lib.php`, `schema.sql`,
+`version.php`.
+
+**Drei Fragen sind damit beantwortet, die vorher offen standen:**
+
+**(1) lima-city verträgt das `../` der Zustandsdatei.** Der Abgleich meldet
+wörtlich `Saving current server state to "/../.deploy-state-staging.json"` und
+endet grün. Die Frage aus Rahmenplan 6a ist für **Staging** erledigt.
+**Für Produktiv bleibt sie offen** — dort hat noch kein Lauf so weit
+gereicht. *Was dieser Lauf NICHT sagt:* ob die Datei wirklich über dem
+Webroot liegt oder ob der Server `/..` auf `/` zurückfaltet. Der
+Punktdatei-Schritt entscheidet das nicht, weil `RewriteRule [F]` **403
+antwortet, ob die Datei da ist oder nicht**.
+
+**(2) F3 ist eingegrenzt — und es liegt nicht an der Aktion.** Dieselbe
+Fremd-Aktion, derselbe Tag-Commit, dasselbe Muster (Konto auf `/`
+eingesperrt, `FTP_ZIELPFAD = /`, Zustandsdatei über die Vorgabe mit `../`)
+läuft gegen lima-city **ohne `ECONNRESET`** durch. Der Abbruch bei
+`ensureDir('api/')` am 20.09. gegen Produktiv ist damit **kein allgemeiner
+Fehler der Bibliothek und keine Eigenschaft dieser Anordnung**, sondern
+hängt am Produktiv-Server oder an dessen Konto. Das schärft den
+Trennversuch in AP3 und ist eine Eingabe für **E-KH-09**.
+
+**(3) „Übersprungen zählt als grün" (B5) ist für die zwei gelaufenen
+Prüfschritte ausgeschlossen** — beide haben gemessen, mit Ausgabe:
+`login.php: HTTP 200 · gelandet bei https://staging-nadoku.gen-em.org/login.php`
+und `Staging liefert die Anmeldeseite der Anwendung aus.` (die Prüfung sucht
+`AGPL-3.0` in der Fußzeile, eine Hoster-Standardseite fällt also auf);
+`.ftp-deploy-sync-state.json` **403**, `.deploy-state-staging.json` **403**,
+`.env` **403**, `.git/config` **403**,
+`.well-known/acme-challenge/kettenpruefung` **404**.
+
+**(4) Nebenbefund zu E-KH-20:** `Deleting: 0 B`. Die Fremd-Aktion hat
+nichts gelöscht — der Satz aus E-KH-20 („sie löscht allein, was sie selbst
+früher hochgeladen hat") ist damit am laufenden Lauf belegt und nicht nur
+gelesen.
+
+**Der rote Schritt:** Kreislauf `edbak` bricht ab mit
+
+```
+RuntimeError: Anmeldung gescheitert: unbekannt
+  kreislauf.py:113  konto_loeschen  →  Sitzung(basis).anmelden(*admin)
+```
+
+**`JOBS_TOKEN` stimmt** — die Job-Pause hat zweimal geantwortet
+(`{"ok": true, "aktion": "pause", "sekunden": 1800, … "Jobs angehalten bis
+2026-09-20 15:05:18 UTC."}` und `{"ok": true, … "Jobs laufen wieder."}`).
+Der Wert gehört also der **neuen** Anlage. Es scheitert allein die Anmeldung
+mit `STAGING_KONTO` / `STAGING_PASS`.
+
+> **„unbekannt" ist hier eine Auskunft und keine Lücke.**
+> `sitzung.py`:130 wirft den Fehler, wenn nach dem POST die Adresse noch
+> `login.php` enthält **und** die Seite kein „Abmelden" trägt; das Wort
+> `unbekannt` steht dort, weil `fehlertext()` **keine Fehlermeldung** auf der
+> Seite gefunden hat. **Wären die Zugangsdaten schlicht falsch, stünde dort
+> eine Meldung.** Die Anmeldeseite kam also *stumm* zurück. Das deutet eher
+> auf eine Zwischenseite, ein verworfenes Formular-Token oder eine Sitzung,
+> die nicht hält, als auf ein vertipptes Passwort — **belegt ist keines
+> davon.** Prüfpunkt 5 nennt den Bedienweg, der es in einer Minute
+> entscheidet.
+
 ---
 
 ## 2. Funde aus der Umsetzung
@@ -326,33 +411,31 @@ Kette einmal gegen sie gelaufen ist.
 Was nur an der laufenden Anlage geht. Je Punkt: der Bedienweg, das erwartete
 Ergebnis, und **woran ein Scheitern zu erkennen ist**.
 
-- [ ] **1 — Die Abnahme von AP1: der erste Kettenlauf gegen lima-city.**
-  Das ist der einzige Punkt, der AP1 abnimmt, und zugleich der erste Lauf der
-  Kette gegen die neue Anlage überhaupt.
-  *Weg:* Diesen Zweig nach `main` bringen (PR) und den Lauf **Auslieferung**
-  unter *Actions* öffnen.
-  *Erwartet:* Job `staging` grün (FTPS-Abgleich mit einer Zahl
-  synchronisierter Einträge), danach Job `stufe2` grün — und dort **alle
-  fünf Messschritte gemessen, keiner „ÜBERSPRUNGEN"**: Griff auf
-  `login.php`, Punktdateien (vier × 403, `.well-known/` **404 und nicht
-  403**), Kreislauf csv, Kreislauf edbak (je **0 unerklärt**), Bilderlauf
-  (**0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen**).
+- [~] **1 — Die Abnahme von AP1: der erste Kettenlauf gegen lima-city.**
+  **Gefahren am 20.09.2026 als Handlauf** (Lauf 21, Abschnitt 1.4) — **nicht
+  bestanden, aber weit gekommen.** `staging` **grün** (12 Dateien, 1,13 MB,
+  12 s); in `stufe2` sind **zwei von fünf** Messschritten gelaufen und
+  **gemessen grün** (`login.php`, Punktdateien), der dritte ist **rot**
+  (Kreisläufe, siehe Punkt 5), die letzten zwei sind deshalb nicht gelaufen.
+  **Offen bleibt: alle fünf grün.**
+  *Weg für den nächsten Versuch:* GitHub → Actions → „Auslieferung" → **Run
+  workflow** → Zweig `claude/fervent-dirac-xirsqw`. Ein Push auf `main` ist
+  **nicht nötig** und wäre nach `CLAUDE.md` 8 verfrüht — der Handlauf fährt
+  dieselben Jobs in derselben Umgebung; nur der Auslöser ist ein anderer, und
+  dass ein `push` auf `main` sie auslöst, ist seit dem 18.09.2026 belegt.
+  *Erwartet:* `staging` grün, danach **alle fünf** Messschritte gemessen —
+  `login.php`, Punktdateien (4× 403, `.well-known/` 404), Kreislauf csv,
+  Kreislauf edbak (je **0 unerklärt**), Bilderlauf (**0/0/0**).
   *Scheitern erkennbar an:*
-  **(a)** „ÜBERSPRUNGEN" an einem der fünf Schritte — dann fehlt eine
-  Zuarbeit in der Umgebung `staging` (`STAGING_URL`, `STAGING_KONTO`,
-  `STAGING_PASS`, `JOBS_TOKEN`); der Lauf ist **grün und hat nichts
-  gemessen**, genau der Befund B5.
-  **(b)** `login.php` antwortet nicht → Subdomain steht nicht (6a,
-  Schritte 1–3). **404** → die Dateien liegen im falschen Verzeichnis
-  (`FTP_ZIELPFAD`, Schritt 4). Weiterleitung auf `install.php` → Schritt 6
-  fehlt. **200 ohne die Fußzeile dieser Anwendung** → eine fremde Seite, also
-  eine leere Subdomain.
-  **(c)** Der FTPS-Abgleich scheitert mit `ECONNRESET` an `ensureDir` →
-  **das wäre F3 auch bei lima-city**, und es wäre ein wichtiger Befund für
-  AP3: Dann liegt es nicht am Produktiv-Konto. **Sofort melden.**
-  **(d)** Der Bilderlauf meldet viele Bilder und 0 Überlauf, aber alle Bilder
-  zeigen die Anmeldeseite → das Demo-Konto fehlt (6a, Schritt 8). Die Zahl
-  ist dann grün und wertlos (Fund F-P3-AQ).
+  **(a)** „ÜBERSPRUNGEN" an einem Schritt — eine Zuarbeit fehlt; der Lauf
+  wäre grün und hätte nichts gemessen (Befund B5). **Für die zwei gelaufenen
+  Schritte ist das ausgeschlossen**, sie haben Zahlen ausgegeben.
+  **(b)** Der Bilderlauf meldet viele Bilder und 0 Überlauf, aber alles zeigt
+  die Anmeldeseite → das **Demo-Konto fehlt** (6a, Schritt 8). Grüne Zahl,
+  wertlos.
+  **(c)** Der FTPS-Abgleich bricht mit `ECONNRESET` bei `ensureDir` ab → das
+  wäre F3 auch hier. **Am 20.09. ist er durchgelaufen** — der Fall ist damit
+  unwahrscheinlich geworden, aber nicht ausgeschlossen.
 
 - [x] **2a — Z3, Produktiv.** *Erledigt am 20.09.2026 von der Betreiberin*:
   Plattformauskunft aus *Betrieb → Status*, Jobwege aus *Betrieb →
@@ -426,23 +509,35 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   die lima-city-Kennungen. Sie stehen **nicht** im Repositorium; die Sitzung
   gehört trotzdem verworfen (abmelden genügt).
 
-- [ ] **5 — Drei Geheimnisse der Umgebung `staging` gehören noch der alten
-  Anlage.**
-  *Stand 20.09.2026, nachgesehen:* Die drei FTP-Angaben und `STAGING_URL`
-  sind umgestellt (vor einer Stunde). **`JOBS_TOKEN` ist drei Tage alt**,
-  **`STAGING_KONTO` und `STAGING_PASS` sind vier Tage alt** — alle drei
-  stammen von der stillgelegten Anlage.
-  *Weg:* Nach Schritt 6 der Einrichtung: `JOBS_TOKEN` auf der **neuen**
-  Staging-Anlage unter *Betrieb → Hintergrundjobs* hinter `jobs.php?token=`
-  ablesen und eintragen; Prüfkonto neu anlegen und `STAGING_KONTO` /
-  `STAGING_PASS` darauf setzen.
-  *Erwartet:* Alle drei Werte sind **andere** als die bisherigen.
-  *Scheitern erkennbar an:* Der Lauf wird trotzdem grün — und das ist das
-  Gefährliche. Mit altem `JOBS_TOKEN` laufen die Kreisläufe **ohne
-  Job-Pause** und messen „hat der Verdichtungsjob dazwischen zugeschlagen"
-  statt „kommt zurück, was hineinging" (gemessen: 125 verdichtete Spuren in
-  einem Lauf ohne Pause). Mit altem Prüfkonto melden Kreisläufe und
-  Bilderlauf **„ÜBERSPRUNGEN"** oder scheitern an der Anmeldung.
+- [ ] **5 — `STAGING_KONTO` und `STAGING_PASS` melden sich auf der neuen
+  Anlage nicht an. `JOBS_TOKEN` dagegen stimmt.**
+  *Gemessen im Lauf 21:* Die Job-Pause hat zweimal mit `{"ok": true, …}`
+  geantwortet — das Token gehört der **neuen** Anlage. Die Anmeldung des
+  Kreislaufs scheitert mit `Anmeldung gescheitert: unbekannt`, und
+  „unbekannt" heißt: **Die Anmeldeseite kam ohne Fehlermeldung zurück**
+  (`sitzung.py`:130). Bei falschen Zugangsdaten stünde dort eine.
+  *Weg — das entscheidet es in einer Minute:* Im Browser
+  `https://staging-nadoku.gen-em.org/login.php` öffnen und sich **von Hand**
+  mit genau den Werten anmelden, die in `STAGING_KONTO` und `STAGING_PASS`
+  stehen. Drei Ausgänge, drei verschiedene Ursachen:
+  1. **Es klappt und die Tagesübersicht erscheint** → Die Zugangsdaten
+     stimmen; das Werkzeug stolpert über etwas anderes. Dann bitte melden,
+     **was nach der Anmeldung als Erstes zu sehen ist** — eine Erststart-Karte,
+     das Einwilligungstor oder die Betreiber-Rückfrage (alles P5b) wären
+     Kandidaten, die `sitzung.py` nicht kennt.
+  2. **Eine Fehlermeldung erscheint** („E-Mail oder Passwort falsch",
+     gesperrt, zu viele Versuche) → Die Zugangsdaten oder das Konto sind das
+     Problem: Konto auf der neuen Anlage anlegen bzw. Passwort setzen, danach
+     **beide** Geheimnisse neu eintragen.
+  3. **Die Anmeldeseite kommt stumm zurück, ohne Meldung** → Dasselbe wie im
+     Lauf, und dann liegt es **nicht** an den Zugangsdaten, sondern daran,
+     dass die Sitzung oder das Formular-Token nicht hält. Das wäre der
+     interessanteste Befund — bitte unbedingt melden.
+  *Erwartet danach:* Alle drei Werte gehören der neuen Anlage; der nächste
+  Lauf kommt an den Kreisläufen vorbei.
+  *Scheitern erkennbar an:* Der Lauf wird grün **und die Kreisläufe melden
+  „ÜBERSPRUNGEN"** — dann ist ein Geheimnis leer statt falsch, und es ist
+  wieder nichts gemessen.
 
 - [x] **5a — Liegt die Sitzungsablage von Staging in einem Verzeichnis, das
   andere lima-city-Kunden lesen können? — Gemessen am 20.09.2026: nein.**
