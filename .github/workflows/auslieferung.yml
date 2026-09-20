@@ -92,6 +92,17 @@ on:
           die Wiederverwendung. Im Normalbetrieb bleibt dies aus.
         type: boolean
         default: false
+      probelauf_mengenprobe:
+        description: >-
+          Nur zusammen mit PROBELAUF: statt der beiden Rundläufe eine
+          MENGENPROBE mit dieser Zahl Verzeichnissen (1–500, leer = aus).
+          Sie legt sie in EINER FTP-Sitzung an — die Nachstellung dessen, was
+          die Auslieferungsaktion tut (688 Dateien, 62 Verzeichnisse in einer
+          Sitzung). Die Zielprobe kann das bauartbedingt nicht messen: Sie
+          ruft `curl` je Operation einmal auf. Empfehlung für den ersten
+          Versuch: 80.
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -773,6 +784,43 @@ jobs:
               echo 'Beleg. Steht dort `NICHT FESTSTELLBAR`, misst dieser Lauf nichts.'
             } >> "$GITHUB_STEP_SUMMARY"
           fi
+          # DIE MENGENPROBE TRITT AN DIE STELLE DER RUNDLAEUFE (F-KH-U-20).
+          # Sie legt bis zu 500 Verzeichnisse auf dem Zielserver an -- deshalb
+          # NUR im Probelauf, nur auf ausdrueckliche Eingabe, und niemals
+          # nebenbei. Ohne diesen Riegel liefe sie eines Tages waehrend einer
+          # echten Auslieferung.
+          MENGE=""
+          ZAHL="${{ inputs.probelauf_mengenprobe }}"
+          if [ -n "$ZAHL" ]; then
+            if [ "${{ inputs.probelauf }}" != "true" ]; then
+              echo "::error::Die Mengenprobe laeuft NUR im Probelauf. Sie legt Verzeichnisse auf dem Zielserver an; in einer echten Auslieferung hat sie nichts zu suchen."
+              exit 1
+            fi
+            case "$ZAHL" in
+              ''|*[!0-9]*)
+                echo "::error::Die Eingabe probelauf_mengenprobe braucht eine Zahl, nicht '$ZAHL'."
+                exit 1 ;;
+            esac
+            if [ "$ZAHL" -lt 1 ] || [ "$ZAHL" -gt 500 ]; then
+              echo "::error::Die Eingabe probelauf_mengenprobe liegt ausserhalb von 1 bis 500: $ZAHL."
+              exit 1
+            fi
+            MENGE="--mengenprobe $ZAHL"
+            echo "::notice::MENGENPROBE — $ZAHL Verzeichnisse in EINER FTP-Sitzung. Die Rundlaeufe entfallen in dieser Runde."
+            {
+              echo '### Mengenprobe (F3)'
+              echo
+              echo "Statt der beiden Rundläufe legt dieser Lauf **$ZAHL Verzeichnisse in"
+              echo 'EINER FTP-Sitzung** an. Das ist der letzte Unterschied zwischen der'
+              echo 'Zielprobe und der Auslieferungsaktion: Die Probe ruft `curl` je'
+              echo 'Operation einmal auf und bekommt jedes Mal eine frische Sitzung, die'
+              echo 'Aktion hält **eine** Verbindung für 688 Dateien und 62 Verzeichnisse.'
+              echo
+              echo 'Die Zeile **„Übertragungen abgeschlossen (226): N von '"$ZAHL"'"** ist das'
+              echo 'Ergebnis. Ist N kleiner als '"$ZAHL"' und größer als 0, hat F3 einen Namen:'
+              echo 'eine Sitzungs- oder Mengengrenze des Servers — ein Befund für den Hoster.'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
           python3 tools/kette/zielprobe.py --selbstprobe
           python3 tools/kette/zielprobe.py \
             --basis "$BASIS" \
@@ -780,7 +828,7 @@ jobs:
             --ftp-konto "$FTP_USERNAME" \
             --ftp-pass "$FTP_PASSWORD" \
             --ftp-pfad "${{ vars.FTP_ZIELPFAD || './httpdocs/' }}" \
-            $OHNE
+            $OHNE $MENGE
 
       - name: Backup-Tor — Komplett-Backup zu Ende laufen lassen
         # Der Probelauf verändert den Server nicht und braucht deshalb kein

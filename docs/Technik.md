@@ -9328,8 +9328,12 @@ Dateien und 62 Verzeichnisse offen. Ein Server, der die zweite oder dritte
 Datenverbindung **einer** Sitzung abweist, ist für die Zielprobe unsichtbar.
 Gemeldet wird die Zahl der abgeschlossenen Übertragungen gegen die verlangte
 („2 von 5") und bei Abbruch der Servertext wörtlich. Sie legt Dateien auf
-einem echten Server an — deshalb von Hand, deshalb mit Aufräumen im
-`finally`, deshalb nicht in der Kette.
+einem echten Server an — deshalb hinter zwei Riegeln: Sie läuft nur über die
+Eingabe **`probelauf_mengenprobe`** (1–500) des Arbeitslaufs „Auslieferung",
+und nur zusammen mit dem Häkchen `probelauf`; ohne dieses bricht der Schritt
+ab. Ein Tag-Lauf und ein Push haben das Feld nicht. Dann tritt sie **an die
+Stelle** der beiden Rundläufe. Aufgeräumt wird im `finally`, auch nach
+Abbruch.
 
 **Der Probelauf** (E-KH-08) ist eine Handauslösung mit der Eingabe
 `probelauf`. Er fährt denselben Job `produktion` mit derselben
@@ -9338,7 +9342,7 @@ Pflichtfreigabe — und läuft deshalb auch von `main`, wo kein Tag steht:
 | gefahren | nicht gefahren |
 |---|---|
 | die drei Geheimnisse | Tag gegen `WEB_VERSION` |
-| Zielprobe (samt Selbstprobe) | Tor der grünen Läufe |
+| Zielprobe (samt Selbstprobe) — **oder, mit `probelauf_mengenprobe`, die Mengenprobe an ihrer Stelle** | Tor der grünen Läufe |
 | Abgleich als **Trockenlauf** (`dry-run`) | Backup-Tor, Wartungsmodus, `doku`-Kopie, Migrationsabfrage |
 
 Geschrieben wird nichts außer der Probedatei, und die wird im selben Schritt

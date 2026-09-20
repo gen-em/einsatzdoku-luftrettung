@@ -519,9 +519,15 @@ verlangte (**„2 von 5" ist das Ergebnis, auf das es ankommt**) und bei
 Abbruch die letzten 40 Zeilen der Servermeldung wörtlich. Aufgeräumt wird im
 `finally`; was übrigbleibt, wird gezählt und benannt.
 
-*Warum sie in keinem Kettenschritt steht:* Sie legt bis zu 500 Verzeichnisse
-auf einem echten Server an. Das ist ein Werkzeug der Fehlersuche, kein
-Schritt der Auslieferung — es wird von Hand ausgelöst und nicht nebenbei.
+*Warum sie hinter zwei Riegeln steht:* Sie legt bis zu 500 Verzeichnisse auf
+einem echten Server an. Ausgelöst wird sie über die Eingabe
+`probelauf_mengenprobe` des Arbeitslaufs „Auslieferung" — sie wirkt nur
+zusammen mit dem Häkchen `probelauf` (sonst bricht der Schritt mit einer
+Fehlermeldung ab) und nur mit einer Zahl von 1 bis 500. Ein Tag-Lauf und ein
+Push haben das Feld nicht.
+
+*Warum über die Kette und nicht von Hand:* Die drei Geheimnisse liegen dort
+und sonst nirgends. Ein Prüfpunkt, den niemand ausführen kann, ist keiner.
 
 *Zwei Lagen der Selbstprobe tragen sie:* dass **alle Ziele in EINEM
 `curl`-Aufruf** stehen (zerfiele sie in viele, wäre sie eine teurere Fassung
@@ -1415,43 +1421,42 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
 
 - [ ] **17 — Die Mengenprobe gegen Produktiv** (die F3-Messung, die noch
   aussteht). **Das ist der Punkt, an dem AP3 hängt.**
-  *Warum von Hand und nicht in der Kette:* Sie legt bis zu 500 Verzeichnisse
-  auf dem Produktivserver an. Kein Kettenschritt ruft sie.
-  *Weg:* In der Umgebung, in der die Kette läuft, oder auf einem Rechner mit
-  `curl` und Zugang zu den drei Geheimnissen:
-
-  ```
-  python3 tools/kette/zielprobe.py \
-      --basis "$PRODUKTION_URL" --ftp-server "$FTP_SERVER" \
-      --ftp-konto "$FTP_USERNAME" --ftp-pass "$FTP_PASSWORD" \
-      --ftp-pfad / --mengenprobe 80
-  ```
-
-  **Mit 80 anfangen** (die Auslieferung legt 62 Verzeichnisse an — 80 liegt
-  knapp darüber). Gelingt das, mit 200 wiederholen; gelingt auch das, ist
-  auch die Menge ausgeschlossen.
+  *Weg:* GitHub → Actions → „Auslieferung" → **Run workflow** → Zweig
+  `claude/fervent-dirac-xirsqw` → Häkchen **`probelauf`** setzen → in das
+  Feld **`probelauf_mengenprobe`** die Zahl **`80`** eintragen → starten →
+  **Freigabe erteilen** (Umgebung `produktion`).
+  *Warum 80:* Die Auslieferung legt 62 Verzeichnisse an. 80 liegt knapp
+  darüber. Gelingt das, mit **200** wiederholen; gelingt auch das, ist auch
+  die Menge ausgeschlossen.
+  *Was dabei NICHT läuft:* die beiden Rundläufe (die Mengenprobe tritt an
+  ihre Stelle), das Backup-Tor, der Wartungsmodus, der Abgleich schreibt als
+  Trockenlauf, der Zeiger bewegt sich nicht. Es wird kein Byte
+  ausgeliefert — nur die Probeverzeichnisse entstehen, und die werden im
+  selben Schritt wieder entfernt.
   *Erwartet — und das ist der interessante Fall:* **Abbruch mittendrin.** Die
   Zeile `Übertragungen abgeschlossen (226): N von 80` sagt dann, bei der
   wievielten Schluss war, und die letzten 40 Zeilen der Servermeldung stehen
   wörtlich darunter.
-  *Woran man den Erfolg der Messung erkennt (nicht des Laufs!):* Die Zahl vor
-  „von" ist **kleiner** als 80 und **größer** als 0. Dann geht einzeln jede
+  *Woran man den Erfolg der MESSUNG erkennt (nicht den des Laufs!):* Die Zahl
+  vor „von" ist **kleiner als 80 und größer als 0**. Dann geht einzeln jede
   dieser Operationen durch, in **einer** Sitzung nicht — und F3 hat einen
   Namen: eine Sitzungs- oder Mengengrenze des Servers. Das ist ein Befund für
-  den Hoster, kein Codefehler, und AP4 baut dagegen (Wiederaufnahme, kleinere
+  **den Hoster**, kein Codefehler; AP4 baut dagegen (Wiederaufnahme, kleinere
   Bündel, oder ein Client, der die Sitzung erneuert).
-  *Woran man sieht, dass die Messung nichts belegt:* `N von 80` mit N = 80 —
-  dann ist auch die Menge nicht die Ursache. Oder `0 von 80`: Dann ist schon
-  die **erste** Übertragung gescheitert, und das wäre etwas anderes als das,
-  wonach hier gesucht wird (dann zuerst Prüfpunkt 16 wiederholen).
+  *Woran man sieht, dass die Messung nichts belegt:* `80 von 80` — dann ist
+  auch die Menge nicht die Ursache, und es bleibt die **Tiefe** (die
+  Mengenprobe legt flach nebeneinander an, die Auslieferung einen Baum).
+  Oder `0 von 80`: Dann ist schon die **erste** Übertragung gescheitert, und
+  das ist etwas anderes als das, wonach hier gesucht wird — dann zuerst
+  Prüfpunkt 16 wiederholen.
   *Was sie hinterlässt:* nichts. Aufgeräumt wird im `finally`, auch nach
   Abbruch. **Bleibt etwas liegen, sagt sie es mit Zahl** („WARNUNG: N
   Verzeichnisse konnten nicht entfernt werden") — dann liegen
   `zielprobe-…`-Verzeichnisse im Webroot, und der nächste Lauf der Zielprobe
   nimmt sie mit.
-  *Grenze:* Sie legt die Verzeichnisse **flach** nebeneinander an, die
-  Auslieferung einen **Baum**. Bleibt die Mengenprobe grün, ist die Tiefe das
-  Letzte, was nicht gemessen wurde.
+  *Zwei Riegel, damit sie nicht nebenbei läuft:* Ohne Häkchen `probelauf`
+  bricht der Schritt mit einer Fehlermeldung ab, und eine Zahl außerhalb von
+  1 bis 500 ebenso. Ein Tag-Lauf hat das Feld gar nicht.
 
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)

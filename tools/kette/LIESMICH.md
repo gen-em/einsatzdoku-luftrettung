@@ -268,10 +268,19 @@ ja jedes Mal neu gefragt.
 Ergebnis, auf das es ankommt** —, und bei Abbruch die letzten 40 Zeilen der
 Servermeldung wörtlich.
 
-**Sie läuft nicht von selbst.** Sie legt Dateien auf einem echten Server an
-und ist deshalb ein Werkzeug der Fehlersuche, kein Schritt der Auslieferung;
-kein Kettenlauf ruft sie. Aufgeräumt wird in einem `finally`, und was
-übrigbleibt, wird gezählt und benannt — der nächste Lauf nimmt es mit.
+**Sie läuft nie von selbst**, und zwar hinter zwei Riegeln. Der Arbeitslauf
+„Auslieferung" hat dafür das Feld **`probelauf_mengenprobe`**: Es wirkt nur
+zusammen mit dem Häkchen `probelauf` (sonst bricht der Schritt mit einer
+Fehlermeldung ab) und nur mit einer Zahl von 1 bis 500. Dann tritt die
+Mengenprobe **an die Stelle** der beiden Rundläufe. Ein Tag-Lauf hat das Feld
+gar nicht; ein Push hat es gar nicht.
+
+**Warum überhaupt über die Kette und nicht von Hand:** Die drei Geheimnisse
+liegen dort und sonst nirgends. Eine Prüfliste, deren Punkt niemand ausführen
+kann, ist keine Prüfliste.
+
+Aufgeräumt wird in einem `finally`, auch nach Abbruch, und was übrigbleibt,
+wird gezählt und benannt — der nächste Lauf der Zielprobe nimmt es mit.
 
 ## Geheimnisse
 

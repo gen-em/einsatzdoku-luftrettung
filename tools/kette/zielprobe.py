@@ -611,9 +611,12 @@ def mengenprobe(basis: str, server: str, pfad: str, konto: str, passwort: str,
     Diese Probe stellt es nach: EIN `curl`-Aufruf, `anzahl` Verzeichnisse,
     je eine Datei, über eine einzige Verbindung.
 
-    SIE LÄUFT NICHT VON SELBST. Sie legt Dateien auf einem echten Server an
-    und ist deshalb ein Werkzeug für die Fehlersuche, kein Schritt der
-    Auslieferung — `--mengenprobe N` schaltet sie ein.
+    SIE LÄUFT NIE VON SELBST. Sie legt bis zu 500 Verzeichnisse auf einem
+    echten Server an. In der Kette steht sie hinter zwei Riegeln: der Eingabe
+    `probelauf_mengenprobe` des Arbeitslaufs „Auslieferung", die nur zusammen
+    mit dem Häkchen `probelauf` wirkt. Ein Tag-Lauf und ein Push haben das
+    Feld nicht. Hier schaltet sie `--mengenprobe N` ein, und sie tritt dann
+    AN DIE STELLE der beiden Rundläufe.
     """
     geheim = [passwort, konto]
     def a(text): sag(text, geheim)
