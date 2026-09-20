@@ -14,6 +14,48 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Eine Abweisung ohne Meldung sagt jetzt, was sie ist] — 2026-09-20
+
+**Zwei Kettenläufe gegen die neue Staging-Anlage scheiterten an
+`Anmeldung gescheitert: unbekannt`, und das Wort war alles, was dastand.**
+Keine der drei Auslieferungen ist geändert, deshalb keine Versionsnummer.
+
+### Werkzeug — `fehlertext()` liest auch die Störungs- und die Wartungsseite
+
+`sitzung.py` erkennt eine gescheiterte Anmeldung daran, dass die Adresse nach
+dem POST noch `login.php` enthält und die Seite kein „Abmelden" trägt. Den
+**Grund** holt `fehlertext()`, und die sucht die Klasse `meldung-fehler`.
+
+`login.php` hat drei Ausgänge, die genau dieses Bild erzeugen — und **keiner
+trägt die Klasse**: Kontostatus nicht aktiv (Z. 401), Wartung an und die Rolle
+darf nicht verwalten (Z. 417), dazu die Verlangsamung des Ratenschutzes. Alle
+drei antworten über `stoerung_seite_html()` bzw. `wartung_antwort_seite()`,
+und die bauen auf `<h1>` und `<p class="text">`. **Gemessen:**
+`grep -c meldung-fehler server/wartung_lib.php` → **0**.
+
+Damit waren drei verschiedene Abweisungen voneinander **und** von einem
+falschen Passwort ununterscheidbar. Genau davor warnt der Kopfkommentar von
+`fehlertext()` seit Web 9.14.0 („weil ein nicht gefundener Fehler wie ‚kein
+Fehler' aussieht"); die Funktion hatte die Lücke, die sie beschreibt.
+`fehlertext()` liest jetzt als zweiten Versuch `<h1>` samt folgendem
+`<p class="text">`. Die fünf anderen Aufrufer erben das, ohne etwas zu
+verlieren — nachgemessen: Eine Seite mit `meldung-fehler` liefert
+unverändert denselben Text, eine Seite ohne beides unverändert `None`.
+
+### Werkzeug — und eine Kennung der Seite, die man bekommen hat
+
+`fehlertext()` beantwortet „was ist schiefgegangen?". Die neue
+`seitenkennung()` beantwortet die Frage davor: **„was habe ich überhaupt
+bekommen?"** — HTTP-Status, Adresse, Umleitungskette, `<title>`, `<h1>` und
+ob ein Cookie zurückkam. Sie hängt seither an **jeder** Abweisung der
+Anmeldung, nicht nur an der ohne Meldungstext: Auch eine gefundene Meldung
+sagt nicht, ob die Antwort über eine Umleitung kam — und das unterscheidet
+„Passwort falsch" von „die Sitzung hält nicht".
+
+**Keine Geheimnisse.** Ausgegeben werden die **Namen** der Cookies, nie ihre
+Werte: Der Name des Sitzungscookies ist eine Auskunft, sein Wert ist die
+Sitzung selbst.
+
 ## [Web 20.24.2] — 2026-09-18
 
 **Der Rechtstext-Baustein brach lange Zeichenketten nicht um.**

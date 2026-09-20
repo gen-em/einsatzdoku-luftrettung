@@ -436,11 +436,19 @@ Variante des Fundes F-S2-A, und sie ist die gefährlichere."* Hier läuft
 nichts als Erfolg durch — aber das Werkzeug sagt „unbekannt", wo die Seite
 im Klartext dasteht, was los ist.
 
-**Nicht behoben in diesem Paket.** Die Behebung liegt in
-`tools/referenzdatensatz/einspielen/sitzung.py`, stuft also keine Version
-(E-KH-23) — sie gehört aber nicht zu AP1, und sie ist auch nicht die
-Ursache des roten Laufs, sondern der Grund, warum wir sie nicht sehen.
-**Vorschlag in Abschnitt 4.**
+**Behoben am 20.09.2026**, nachdem die drei naheliegenden Ursachen von Hand
+ausgeschlossen waren (keine Migration ausstehend, Wartung aus, das Konto ist
+**BetreiberIn** und aktiv) und damit feststand, dass Raten nicht weiterführt.
+`fehlertext()` liest jetzt als zweiten Versuch `<h1>` samt folgendem
+`<p class="text"`>; dazu die neue `seitenkennung()` mit Status, Adresse,
+Umleitungskette, Titel, Überschrift und den **Namen** der Cookies — nie ihren
+Werten. **Gegenproben, ohne Netz:** Störungsseite jetzt lesbar (vorher
+`None`), `meldung-fehler` unverändert, Seite ohne beides unverändert `None`,
+Kennung vollständig. Nur `tools/`, also keine Versionsstufe (E-KH-23);
+Changelog als `Werkzeug:`-Eintrag nach der Hausform.
+
+**Es ist nicht die Ursache des roten Laufs, sondern der Grund, warum wir sie
+nicht sehen.** Der nächste Kettenlauf sagt sie.
 
 ---
 
@@ -717,8 +725,9 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   Anwendungssicherheit); Stufe 1 passt in die Nähe von R81, die übrigen in
   eine Sicherheitsrunde.
 
-- **`sitzung.py` liest die Störungs- und die Wartungsseite nicht.** Anlass:
-  F-KH-U-06. `fehlertext()` sucht `meldung-fehler`; `stoerung_seite_html()`
+- ~~**`sitzung.py` liest die Störungs- und die Wartungsseite nicht.**~~
+  **Erledigt am 20.09.2026** — die Abhilfe unten ist gebaut; der Eintrag
+  bleibt als Herkunft stehen. Anlass: F-KH-U-06. `fehlertext()` sucht `meldung-fehler`; `stoerung_seite_html()`
   und `wartung_antwort_seite()` tragen die Klasse nicht (gemessen: 0 Treffer
   in `server/wartung_lib.php`). Drei verschiedene Abweisungen der Anmeldung
   sehen für jedes Prüfwerkzeug gleich aus und heißen „unbekannt". Abhilfe:
