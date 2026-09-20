@@ -31,7 +31,7 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 >
 > | Paket | Stand | Version | Commit | Abnahmezahlen |
 > |---|---|---|---|---|
-> | AP1 — Staging-Umzug nachziehen | **gebaut; Abnahme offen** | keine (nur `docs/`, `CLAUDE.md`, ein Kommentar in `.github/`) | *wird beim Commit eingetragen* | Wortliste **0/0/0** (11 Dateien Bereich c, 444 Treffer, alle erklärt) · Kettenaufrufe **3 Läufe / 28 Aufrufe / 0 Befunde / 0 ungeprüft** · Selbstproben **21/21** und **10/10** · YAML **3 von 3** gültig · alte Adresse: **13 Fundstellen, alle Historie oder als „damals" gekennzeichnet** (vorher 12, davon 5 aktuelle Aussagen). **Nicht gemessen: der Staging-Lauf gegen lima-city** |
+> | AP1 — Staging-Umzug nachziehen | **gebaut; Abnahme offen** | keine (nur `docs/`, `CLAUDE.md`, ein Kommentar in `.github/`) | `499e96c` (Zweig `claude/fervent-dirac-xirsqw`) | Wortliste **0/0/0** (11 Dateien Bereich c, 444 Treffer, alle erklärt) · Kettenaufrufe **3 Läufe / 28 Aufrufe / 0 Befunde / 0 ungeprüft** · Selbstproben **21/21** und **10/10** · YAML **3 von 3** gültig · alte Adresse: **13 Fundstellen, alle Historie oder als „damals" gekennzeichnet** (vorher 12, davon 5 aktuelle Aussagen). **Nicht gemessen: der Staging-Lauf gegen lima-city** |
 > | AP2 — Zeiger und Wache | offen | | | |
 > | AP3 — Tor, Zielprobe, Probelauf; F3-Messung | offen | | | |
 > | AP4 — F3 beheben | offen (wartet auf E-KH-09) | | | |
