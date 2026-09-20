@@ -167,9 +167,9 @@ def anlegen(server: str, zielpfad: str, zustandspfad: str,
 
     da = vorhanden(server, zielpfad, zustandspfad, konto, passwort, lauf)
     if da is None:
-        f("NICHT FESTSTELLBAR: Die Abfrage hat weder „da" noch „nicht da" "
-          "ergeben. Es wird NICHTS angelegt — eine vorhandene Zustandsdatei "
-          "zu überschreiben wäre schlimmer, als nichts zu tun.")
+        f('NICHT FESTSTELLBAR: Die Abfrage hat weder „da" noch „nicht da" '
+          'ergeben. Es wird NICHTS angelegt — eine vorhandene Zustandsdatei '
+          'zu überschreiben wäre schlimmer, als nichts zu tun.')
         return 1
     if da:
         a("  Vorhanden. Es wird nichts angelegt und nichts angefasst — sie "

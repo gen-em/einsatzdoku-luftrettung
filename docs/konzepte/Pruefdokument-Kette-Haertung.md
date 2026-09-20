@@ -24,7 +24,7 @@ abgehakt ist (R62).
 > | Stand | 20.09.2026 — **AP1 gebaut (Abnahme offen), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut (Abhilfe nicht bewiesen — Prüfpunkt 21).** AP5 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **25** (Abschnitt 2): F-KH-U-01 bis F-KH-U-26 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach |
+> | Funde | **26** (Abschnitt 2): F-KH-U-01 bis F-KH-U-27 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach |
 > | F3 | **GEFUNDEN am 20.09.2026** (F-KH-U-25). Der Abbruch passiert beim **`RETR` auf die nicht vorhandene Zustandsdatei** — die Datenverbindung steht per `EPSV` schon, der Server schließt sie, `basic-ftp` liest `ECONNRESET` auf dem Datensocket. Die Aktion deutet das als „first publish" und arbeitet mit einem **toten Client** weiter; beim ersten `MKD` fällt es auf. **Der Fehler liegt drei Schritte vor der Stelle, die er meldet.** Acht Trennversuche liefen daran vorbei, weil `curl` jedes Mal nur Dateien abrief, die es selbst hochgeladen hatte — **keiner hat je eine FEHLENDE Datei abgerufen**. **E-KH-09 zur Hälfte erfüllt:** Ursache benannt und belegt, Abhilfe vorgeschlagen und noch nicht gefahren (AP4) |
 > | Prüfliste | 26 Punkte: **9 abgehakt**, 5 teilweise, **12 offen** (Prüfpunkt 18 ist gegenstandslos geworden) |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
@@ -416,6 +416,7 @@ beglaubigte einen Vergleich, den es so nicht gab.
 | `wache.py --selbstprobe` | 0 offen | **38 Erwartungen, 0 offen** (AP2: 32 → 38) |
 | `jobregister/pruefen.php` | 0 Befunde | **0 Befunde**; Selbstprobe **9 von 9** |
 | `zustand.py --selbstprobe` | 0 offen | **28 Lagen, 0 offen** (AP4; 20 → 28 nach F-KH-U-26) |
+| Syntax aller Python-Werkzeuge | 0 Fehler | **48 Werkzeuge, 0 Syntaxfehler** (neuer Schritt in Stufe 1, F-KH-U-27) |
 | `tools/wortliste/wortliste.py` | 0/0/0 | **0/0/0** (99 Ausnahmen, 99 gegriffen, 0 ungenutzt) |
 
 **Die sechs neuen Lagen des Tors** (F1, E-KH-05/-19):
@@ -483,6 +484,47 @@ Error: Client is closed because read ECONNRESET (data socket)
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-27 — Ein Produktivlauf für ein deutsches Anführungszeichen, und der
+Grund steht in `CLAUDE.md` 6.** *Lauf 35545461603, 20.09.2026, 23:43 UTC.*
+
+```
+File ".../tools/kette/zustand.py", line 170
+  f("NICHT FESTSTELLBAR: Die Abfrage hat weder „da" noch „nicht da" "
+                                                         ^
+SyntaxError: invalid character '„' (U+201E)
+```
+
+Das deutsche Schlusszeichen `"` beendet die Python-Zeichenkette; der Rest der
+Zeile ist Unsinn. Der Schritt starb, bevor er den Server auch nur fragte —
+der Abgleich lief gar nicht erst.
+
+**Wie es passiert ist, und das ist der eigentliche Fund:** Die Selbstprobe
+lief **vor** dieser Änderung. Danach habe ich die Meldung umformuliert, die
+LIESMICH nachgezogen, committet und gepusht — ohne sie noch einmal zu fahren.
+`CLAUDE.md` 6 sagt genau das:
+
+> **Die Prüfmittel laufen zuletzt, nicht zwischendurch.** Ein Werkzeug, das
+> vor der letzten Änderung lief, misst einen Stand, den es nicht mehr gibt.
+
+Die Regel gibt es seit O9c, wo die Wortliste dadurch auf fünf Treffern stand
+und null gemeldet worden waren. Hier hat dieselbe Regel einen Lauf gegen
+Produktiv gekostet.
+
+*Behoben:* einfache Anführungszeichen außen (`f('… „da" …')`) — die Form, die
+im Projekt ohnehin die richtige ist, wenn deutsche Zeichen im Text stehen.
+
+**Dazu ein Riegel, der nicht auf Disziplin baut.** Stufe 1 übersetzt seit
+heute **jedes** Python-Werkzeug (`ast.parse` über `tools/**/*.py`):
+**48 Werkzeuge, 0 Syntaxfehler**. Er kostet eine Sekunde und fängt auch die
+Werkzeuge, die keine Selbstprobe haben und die niemand mehr von Hand fährt —
+davon gibt es mehr als die mit. Eine Regel, die man einhalten muss, ist
+schwächer als eine Prüfung, die es nachrechnet.
+
+**Prüfpunkt 21 ist zum zweiten Mal zu wiederholen.** Die Abhilfe ist weiter
+unbewiesen; sie wurde in beiden Läufen nie erreicht — einmal wegen der
+Punktdatei-Falle, einmal wegen dieser Zeile. **Beide Male lag es an meinem
+Werkzeug und nicht am Befund.**
 
 **F-KH-U-26 — Der Beweislauf ist rot, und zwar an meinem Werkzeug: `NLST`
 zeigt Punktdateien nicht.** *Lauf 35544269232, 20.09.2026, 23:19 UTC.*

@@ -393,6 +393,35 @@ jobs:
         # Abrufe) und kostet Sekunden. Erwartet: 11 von 11.
         run: python3 tools/kette/tor.py --selbstprobe
 
+      - name: Python-Werkzeuge — lassen sie sich überhaupt übersetzen?
+        # ANLASS, 20.09.2026: Ein deutsches Schlusszeichen in einer
+        # doppelt gequoteten Zeichenkette hat `tools/kette/zustand.py`
+        # unuebersetzbar gemacht -- gemerkt hat es erst der Produktivlauf,
+        # und der war damit umsonst. Die Aenderung war eine Meldung, und
+        # die Selbstprobe war VORHER gelaufen; genau davor warnt
+        # `CLAUDE.md` 6 ("Die Pruefmittel laufen zuletzt").
+        #
+        # DIESER SCHRITT IST DER RIEGEL DAZU. Er kostet eine Sekunde und
+        # faengt jeden Syntaxfehler in JEDEM Werkzeug, auch in denen, die
+        # keine Selbstprobe haben und die niemand mehr faehrt.
+        #
+        # `ast.parse` statt `py_compile`: Es schreibt nichts und braucht
+        # kein Ausgabeziel.
+        run: |
+          python3 - <<'PY'
+          import ast, pathlib, sys
+          fehler = n = 0
+          for p in sorted(pathlib.Path('tools').rglob('*.py')):
+              n += 1
+              try:
+                  ast.parse(p.read_text(encoding='utf-8'), filename=str(p))
+              except SyntaxError as e:
+                  fehler += 1
+                  print(f"::error file={p},line={e.lineno}::{e.msg}")
+          print(f"{n} Python-Werkzeuge geprüft, {fehler} mit Syntaxfehler")
+          sys.exit(1 if fehler else 0)
+          PY
+
       - name: Backlog — keine Nummer zweimal
         # Die Zeile stammt aus dem Kopf des Rahmenplans (Abschnitt 2.2).
         run: |
