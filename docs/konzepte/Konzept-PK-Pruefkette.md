@@ -36,7 +36,7 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 >
 > | Paket | Stand | Version | Commit | Abnahmezahlen |
 > |---|---|---|---|---|
-> | PK-M1 Zweigschutz und Merge-Recht | in Arbeit (Betreiberin, vor der Freigabe) | — | — | — |
+> | PK-M1 Zweigschutz und Merge-Recht | **gesetzt und gemessen 21.09.2026** (zwei Rulesets); Befund F-PK-01 | — | PR #67 (Messung), PR #70 (Nachmessung) | (b) abgewiesen; (a) durchgegangen unter der Identität der Betreiberin; (c) mit PR #70 |
 > | PK-01 Regeldokumente | offen | | | |
 > | PK-02 Sandbox-Setup | offen | | | |
 > | PK-03 Prüfstand-Befehl | offen | | | |
@@ -420,7 +420,14 @@ Git-Historie behält, was war.
 Pushes sind Pushes.** Kein Riegel vor dem Push, kein Hook. Der Merge nach
 `main` ist ausschließlich Sache der Betreiberin: Zweigschutz mit
 PR-Pflicht, Pflichtprüfung `Stufe 1` und Push- und Merge-Recht nur für sie
-(PK-M1).
+(PK-M1). **Gemessen am 21.09.2026 (F-PK-01):** Das Ruleset hält gegen das
+Konto `claude` (Push abgewiesen), aber die GitHub-Werkzeuge von Claude Code
+handeln unter der Identität der Betreiberin — ein Merge über
+`merge_pull_request` ging durch. Deshalb drei Lagen: das Ruleset (Riegel
+gegen Git und Apps), die **Deny-Liste in `.claude/settings.json`** für
+`mcp__github__merge_pull_request` und `mcp__github__enable_pr_auto_merge`
+(Riegel im Harness, PK-01, P-PK-03), und der Satz in `CLAUDE.md` 8, dass eine
+Instanz nie mergt.
 
 **E-PK-05 — Der Prüfbericht in der Commit-Nachricht reicht als Nachweis.**
 Erzeugt vom Befehl, gebunden an den Baum-Hash, vom Tor gegengelesen (2.4).
@@ -696,6 +703,15 @@ Hausform und der Adressen sichtbare Texte anfasst.
 
 ### PK-M1 — Zweigschutz und Merge-Recht (Betreiberin)
 
+**Gesetzt am 21.09.2026 als zwei Rulesets:** „Main Protect" (PR-Pflicht,
+Pflichtprüfung `Stufe 1`, kein Force-Push, kein Löschen, Bypass leer) und
+„Main Merge-Recht" (Restrict updates, Bypass nur die Betreiberin, „pull
+requests only"). **Gemessen (P-PK-01):** (b) `git push` als `claude` →
+`GH013 Cannot update this protected ref`; (a) Merge über die API → **durch**,
+`merged_by: chodid` — Befund F-PK-01, Folge in E-PK-04; (c) belegt die
+Betreiberin mit PR #70. Der ursprüngliche Vorschlag steht darunter, weil der
+klassische Weg dasselbe leistet und dieselbe Lücke hat.
+
 Klassischer Weg (Settings → Branches → Rule für `main`): *Require a pull
 request before merging* · *Require status checks to pass* mit `Stufe 1` ·
 *Restrict who can push to matching branches* → nur die Betreiberin (das
@@ -722,7 +738,10 @@ Konzepts eine Auskunft (1.2); deshalb vor der Freigabe.
   Docker Hub, Debian über HTTPS; gesperrt: PPA, MySQL-Quellen, php.net; nur
   Port 443).
 - `CLAUDE.md` 6 auf Grundsätze und Verweis kürzen; `CLAUDE.md` 7 um E-PK-09
-  ergänzen. Was in 6 an Werkzeugerzählung steht, wandert einmal nach
+  ergänzen; `CLAUDE.md` 8 um den Satz „eine Instanz mergt nie" (F-PK-01).
+- `.claude/settings.json`: Deny-Liste für `mcp__github__merge_pull_request`
+  und `mcp__github__enable_pr_auto_merge` (P-PK-03); Abnahme: ein Aufruf
+  wird vom Harness verweigert. Was in 6 an Werkzeugerzählung steht, wandert einmal nach
   `Pruefablauf.md` oder in die LIESMICH des Werkzeugs.
 - Prüfdokument anlegen.
 - **Abnahme:** beide Dokumente liegen; `CLAUDE.md` 6 unter 60 Zeilen (heute
@@ -868,7 +887,7 @@ aufwirft, trägt sie als F-PK-07 ff. hier ein.
 
 | Nr. | Was | Wann | Stand |
 |---|---|---|---|
-| Z1 | PK-M1: Zweigschutz und Merge-Recht setzen; danach die drei Messungen aus P-PK-01 durch eine Claude-Instanz | **vor dem Push dieses Konzepts** | offen |
+| Z1 | PK-M1: Zweigschutz und Merge-Recht setzen; danach die drei Messungen aus P-PK-01 durch eine Claude-Instanz | **vor dem Push dieses Konzepts** | **erledigt 21.09.2026** — (c) mit dem Merge von PR #70 |
 | Z2 | Den Kette-II-Zweig per PR mergen (PR #68, mit Übergabevermerk), damit PK-06 nicht kollidiert | vor der Freigabe | PR #68 offen, wartet auf Stufe 1 |
 | Z2a | **PR #69 (Web 20.26.3) mergen** — der edbak-Fix; danach Stufe 2 auf `main` beobachten, dann Tag `web-v20.26.3` und Freigabe = **M1 der Kette II** | nach Stufe 1 grün | offen |
 | Z3 | Umgebungswerte der Cloud-Umgebung: die sieben Namen aus 1.4 vollständig und in Anführungszeichen; Netzregel mit Docker Hub und `deb.debian.org` | — | **erledigt 21.09.2026** |
