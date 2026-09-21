@@ -19,7 +19,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > | Offen | nichts im Konzept. **F-ZE-1 bis F-ZE-6** (Abschnitt 2.3) sind mit der Freigabe vom 20.09.2026 entschieden. Außerhalb des Konzepts: die Einschübe (Abschnitt 8, 9) sind noch nicht eingespielt |
 > | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2 wartet auf Kette II**. **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
 > | Nummern | Dieses Konzept vergibt **keine** Rahmenplan-Fassung, **keine** Backlog-Nummer und **keine** Version. Einschübe in Abschnitt 8 und 9 übernimmt die einspielende Instanz |
-> | Steuerungsdokumente | liegen bis zum Merge von Kette II auf `claude/fervent-dirac-xirsqw` (Stand `af866c1`, 20.09.2026: Rahmenplan **Fassung 96**, Backlog 241–249 reserviert, nächste freie 250, **keine Spanne für Schritt 15 eingetragen**); `main` trägt Fassung 80. **Dieses Konzept liegt seit AP1 auf dem Umsetzungszweig** (`docs/konzepte/Konzept-Zentralisierung.md`) — Abschnitt 8.0. **Schritt 15 rührt `docs/Rahmenplan.md` und `docs/Backlog.md` nicht an und vergibt keine Backlog-Nummer** (AP1-f, Auftraggeber 21.09.2026) |
+> | Steuerungsdokumente | **Seit 21.09.2026 auf `main`** (Kette II gemergt, PR #65/#68): Rahmenplan **Fassung 102**, Backlog mit der **Spanne 250–259 für Schritt 15** — 250–253 sind die vier Einträge aus Abschnitt 9 dieses Konzepts, **254–259 sind frei als Reserve für Funde der Umsetzung**. Das Konzept selbst ist mit Fassung 97 auf `main` eingespielt worden (unverändert; die fortgeschriebene Fassung liegt auf dem Umsetzungszweig). **Damit ist die Grundlage von AP1-f entfallen** — siehe dort; zur Neubewertung vorgelegt |
 
 > **Stand der Umsetzung**
 >
@@ -525,7 +525,26 @@ Zählungen hoch; vom Auftraggeber am 20.09.2026 so bestätigt).
   Abschnitt 1.0a, letzter Absatz.
 - **AP1-f — `docs/Rahmenplan.md` und `docs/Backlog.md` bleiben in ganz Schritt 15
   unberührt, und der Schritt vergibt keine Backlog-Nummer** (Auftraggeber,
-  21.09.2026). **Warum:** Der Umsetzungszweig kommt von `main` und trägt
+  21.09.2026).
+  > **NACHTRAG VOM 21.09.2026, wenige Stunden später: Die Grundlage ist
+  > entfallen.** Kette II ist nach `main` gemergt (PR #65/#68), und die
+  > einspielende Instanz hat den Einschub gefahren: `main` trägt jetzt
+  > Rahmenplan **Fassung 102** und einen Backlog mit der **Spanne 250–259 für
+  > Schritt 15** — 250–253 sind die vier Einträge aus Abschnitt 9,
+  > **254–259 ausdrücklich „Reserve für Funde der Umsetzung von Schritt 15"**.
+  > Der Umsetzungszweig hat `main` geholt; es gibt keine zwei
+  > auseinandergelaufenen Fassungen mehr, und die Spanne, deren Fehlen der
+  > zweite Grund war, ist da.
+  >
+  > **Was davon bleibt:** Schritt 15 vergibt weiterhin **keine
+  > Rahmenplan-Fassung** — daran arbeiten parallel andere Zweige (`pk-m1-*`),
+  > und E-ZE-03 weist die Einschübe ohnehin der einspielenden Instanz zu.
+  > **Was neu zu entscheiden ist:** ob ein Fund der Umsetzung seine Nummer
+  > unmittelbar aus 254–259 nimmt und im Backlog einträgt (so verlangt es
+  > CLAUDE.md 2.4 im Normalfall) oder weiter ohne Nummer in Abschnitt 9
+  > gesammelt wird. **Vorgelegt am 21.09.2026.**
+
+  **Warum AP1-f am 21.09.2026 entschieden wurde:** Der Umsetzungszweig kommt von `main` und trägt
   Rahmenplan **Fassung 80** und einen Backlog **ohne 241–249** (nachgemessen:
   0 Treffer); die gültigen Fassungen liegen bis zum Merge von Kette II auf
   `claude/fervent-dirac-xirsqw` (Fassung 96, 241–249 vergeben). Würde hier
