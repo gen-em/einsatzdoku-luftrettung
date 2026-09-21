@@ -961,17 +961,33 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Zustandsdatei der Aktion bereitstellen (AP4, F-KH-U-25)
-        # VORERST NUR IM GESPRAECHSLAUF, UND DAS IST ABSICHT. Die Abhilfe ist
-        # gefunden, aber noch nicht bewiesen: Der Gespraechslauf gegen das
-        # Probeverzeichnis ist der Beweis, und er faellt ohne einen Finger an
-        # der laufenden Anlage. Erst wenn er durchlaeuft, wird dieser Schritt
-        # fuer die echte Auslieferung scharf gestellt -- vorher waere es ein
-        # Eingriff auf Verdacht.
-        if: ${{ inputs.probelauf_gespraech }}
+        # SCHARF SEIT DEM 20.09.2026 -- und zwar NACH dem Beweis, nicht davor
+        # (F-KH-U-28). Der Gespraechslauf gegen `.zielprobe-gespraech/` hat
+        # mit diesem Schritt davor den ersten vollstaendigen Abgleich gegen
+        # diesen Server geliefert, den es je gab: 688 Dateien, 62
+        # Verzeichnisse, 7:47, kein `ECONNRESET`. Bis dahin lief der Schritt
+        # nur im Gespraechslauf -- ein Eingriff auf Verdacht waere genau das
+        # gewesen, was acht Trennversuche lang schiefging.
+        #
+        # ER LAEUFT JETZT VOR JEDEM ABGLEICH, auch vor dem echten, und das
+        # ist ungefaehrlich: Eine VORHANDENE Zustandsdatei fasst er nie an
+        # (sie traegt den Bestand des Servers). Er legt nur an, was fehlt.
+        #
+        # WARUM ER NICHT WIEDER VERSCHWINDET, sobald die Datei einmal liegt:
+        # Sie kann verlorengehen -- eine Wiederherstellung aus dem Backup,
+        # ein aufgeraeumtes Verzeichnis, ein neuer Webspace. Dann faengt
+        # dieser Schritt es ab, statt dass F3 wiederkommt und niemand weiss,
+        # warum.
         env:
           FTP_SERVER:   ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          # DIESELBEN WERTE WIE DER FTPS-SCHRITT, aus denselben Ausdruecken.
+          # Wer sie hier anders setzt als dort, legt die Datei an eine Stelle,
+          # an der die Aktion sie nicht sucht -- und der Schritt meldet
+          # trotzdem Erfolg.
+          ZIEL:   ${{ inputs.probelauf_gespraech && '.zielprobe-gespraech/' || vars.FTP_ZIELPFAD || './httpdocs/' }}
+          ZUSTAND: ${{ inputs.probelauf_gespraech && '.deploy-state-gespraech.json' || vars.FTP_STATE_PFAD || '../.deploy-state-produktion.json' }}
         run: |
           set -euo pipefail
           python3 tools/kette/zustand.py --selbstprobe
@@ -979,8 +995,8 @@ jobs:
             --ftp-server "$FTP_SERVER" \
             --ftp-konto "$FTP_USERNAME" \
             --ftp-pass "$FTP_PASSWORD" \
-            --ftp-pfad ".zielprobe-gespraech/" \
-            --zustandspfad ".deploy-state-gespraech.json"
+            --ftp-pfad "$ZIEL" \
+            --zustandspfad "$ZUSTAND"
           {
             echo '### Zustandsdatei bereitgestellt (AP4)'
             echo

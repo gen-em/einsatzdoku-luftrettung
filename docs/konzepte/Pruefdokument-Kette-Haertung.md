@@ -24,9 +24,9 @@ abgehakt ist (R62).
 > | Stand | 20.09.2026 — **AP1 gebaut (Abnahme offen), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut (Abhilfe nicht bewiesen — Prüfpunkt 21).** AP5 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **26** (Abschnitt 2): F-KH-U-01 bis F-KH-U-27 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach |
-> | F3 | **GEFUNDEN am 20.09.2026** (F-KH-U-25). Der Abbruch passiert beim **`RETR` auf die nicht vorhandene Zustandsdatei** — die Datenverbindung steht per `EPSV` schon, der Server schließt sie, `basic-ftp` liest `ECONNRESET` auf dem Datensocket. Die Aktion deutet das als „first publish" und arbeitet mit einem **toten Client** weiter; beim ersten `MKD` fällt es auf. **Der Fehler liegt drei Schritte vor der Stelle, die er meldet.** Acht Trennversuche liefen daran vorbei, weil `curl` jedes Mal nur Dateien abrief, die es selbst hochgeladen hatte — **keiner hat je eine FEHLENDE Datei abgerufen**. **E-KH-09 zur Hälfte erfüllt:** Ursache benannt und belegt, Abhilfe vorgeschlagen und noch nicht gefahren (AP4) |
-> | Prüfliste | 26 Punkte: **9 abgehakt**, 5 teilweise, **12 offen** (Prüfpunkt 18 ist gegenstandslos geworden) |
+> | Funde | **27** (Abschnitt 2): F-KH-U-01 bis F-KH-U-28 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach |
+> | F3 | **GEFUNDEN UND BEHOBEN, der Beleg ist gefahren.** Ursache: `RETR` auf die nicht vorhandene Zustandsdatei tötet die Verbindung; die Aktion deutet es als „first publish" und arbeitet mit einem toten Client weiter, bis das erste `MKD` es bemerkt — **drei Schritte hinter der Stelle, die sie meldet** (F-KH-U-25). Abhilfe: die Datei einmal hinlegen, bevor die Aktion läuft (AP4, Richtung (e), `tools/kette/zustand.py`). Beleg: **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige Abgleich gegen diesen Server überhaupt (F-KH-U-28). **E-KH-09 ist erfüllt** |
+> | Prüfliste | 26 Punkte: **10 abgehakt**, 5 teilweise, **11 offen** — gegen das Dokument nachgezählt |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
 
 ---
@@ -484,6 +484,63 @@ Error: Client is closed because read ECONNRESET (data socket)
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-28 — DIE ABHILFE TRÄGT. Der erste vollständige FTPS-Abgleich gegen
+diesen Server, den es je gegeben hat.** *Lauf 35545737872, 20.09.2026,
+23:49–23:57 UTC, Gesprächslauf gegen `.zielprobe-gespraech/`.*
+
+```
+🎉 Sync complete. Saving current server state to ".zielprobe-gespraech/.deploy-state-gespraech.json"
+> EPSV
+< 229 Entering Extended Passive Mode (|||57021|)
+> STOR .deploy-state-gespraech.json
+< 150 Opening BINARY mode data connection for .deploy-state-gespraech.json
+< 226 Transfer complete
+> QUIT
+----------------------------------------------------------------
+Time spent connecting to server: 2.1 seconds
+Time spent deploying: 7 minutes 47.1 seconds (20.9 kB/second)
+  - changing dirs: 1 minute 7.7 seconds
+Total time: 7 minutes 50.4 seconds
+```
+
+**Kein `ECONNRESET`.** 688 Dateien, 62 Verzeichnisse, 9,7 MB, sieben Minuten
+und siebenundvierzig Sekunden — und am Ende schreibt die Aktion ihre
+Zustandsdatei selbst fort, genau wie vorhergesagt. Das Wort „Sync complete"
+stand in einem echten Abgleich gegen diesen Server noch nie.
+
+**Die Kette der Belege ist damit geschlossen:**
+
+| | |
+|---|---|
+| **Ursache** | `RETR` auf die nicht vorhandene Zustandsdatei tötet die Verbindung; die Aktion deutet es als „first publish" und arbeitet mit einem toten Client weiter (F-KH-U-25) |
+| **Abhilfe** | Die Zustandsdatei einmal hinlegen, bevor die Aktion läuft (AP4, Richtung (e)) |
+| **Beleg** | dieser Lauf — derselbe Client, derselbe Server, dieselbe Aktion, nur mit der Datei davor |
+
+**Warum das der kleinste mögliche Eingriff war:** Am Transport hat sich
+nichts geändert. Kein `lftp`, keine neue Fassung der Aktion, kein zweites
+FTP-Konto, keine Bitte an den Hoster. Eine Datei, die vorher fehlte.
+
+**Und der Zustand ist damit auch nicht mehr selbsterhaltend:** Die Aktion hat
+ihre Zustandsdatei jetzt selbst geschrieben. Ab dem nächsten Lauf findet sie
+sie ohne fremde Hilfe — im Probeverzeichnis wie im Webroot, sobald der Schritt
+dort scharf gestellt ist.
+
+**E-KH-09 ist erfüllt.** Ursache benannt, belegt, behoben und der Beleg
+gefahren — ohne einen Finger an der laufenden Anlage.
+
+**Was jetzt zu tun ist:**
+
+1. **Der Schritt wird für die echte Auslieferung scharf gestellt** — die
+   Bedingung `if: inputs.probelauf_gespraech` fällt, damit er auch vor dem
+   echten Abgleich läuft. **Er legt dort nichts an, was nicht fehlt:** Eine
+   vorhandene Zustandsdatei fasst er nie an.
+2. **Die Abnahme von AP4** (ersetzte Fassung, siehe AP4-Block): Probelauf
+   gegen Produktiv **zweimal hintereinander** mit **0 geplanten Löschungen**,
+   dann die Freigabe der Betreiberin vor dem ersten echten Lauf.
+3. **Prüfpunkt 20 ist größer geworden**, wie angekündigt: Unter
+   `.zielprobe-gespraech/` liegen jetzt **9,7 MB in 62 Verzeichnissen**.
+   Rekursiv entfernen.
 
 **F-KH-U-27 — Ein Produktivlauf für ein deutsches Anführungszeichen, und der
 Grund steht in `CLAUDE.md` 6.** *Lauf 35545461603, 20.09.2026, 23:43 UTC.*
@@ -2064,9 +2121,11 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   dort ohnehin nur wenige Dateien.
 
 - [ ] **20 — Das Probeverzeichnis entfernen** (Rest aus Prüfpunkt 18a).
-  *Was liegt da:* `.zielprobe-gespraech/` im Webroot von Produktiv, **leer** —
-  der Lauf starb vor der ersten Datei, angelegt wurde nur das Verzeichnis
-  (`257 "/.zielprobe-gespraech" - Directory successfully created`).
+  *Was liegt da — GRÖSSER GEWORDEN am 20.09.2026:* `.zielprobe-gespraech/`
+  im Webroot von Produktiv, jetzt mit **688 Dateien in 62 Verzeichnissen,
+  9,7 MB** — der Beweislauf von Prüfpunkt 21 ist durchgelaufen und hat
+  alles dorthin übertragen. **Rekursiv entfernen**, nicht nur ein leeres
+  Verzeichnis löschen. Das war angekündigt und ist der Preis des Beweises.
   *Weg:* Dateimanager des Hosters oder ein FTP-Client, `RMD` auf das
   Verzeichnis. Von Hand, weil das Werkzeug keine Bäume löscht.
   *Nebenbei zu prüfen, einmal:* `https://nadoku.gen-em.org/.zielprobe-gespraech/`
@@ -2077,13 +2136,16 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   an — aber es steht da, und was dasteht, ohne dass jemand weiß warum, wird
   irgendwann zur Frage.
 
-- [~] **21 — Der Beweislauf der Abhilfe** (AP4, Richtung (e)) — **einmal
-  gefahren am 20.09.2026 (Lauf 35544269232), rot am WERKZEUG und nicht an
-  der Abhilfe** (F-KH-U-26): `NLST` zeigt Punktdateien nicht, die
-  Nachmessung sah die eben hochgeladene Datei deshalb nicht. Behoben —
-  gefragt wird jetzt mit `--head`. **Zu wiederholen; die Abhilfe ist
-  weiter unbewiesen.** Er kostet einen Probelauf und fasst die Anwendung
-  nicht an.
+- [x] **21 — Der Beweislauf der Abhilfe** (AP4, Richtung (e)) — **ERLEDIGT
+  am 20.09.2026 im dritten Anlauf** (Lauf 35545737872): `🎉 Sync complete`,
+  **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der
+  erste vollständige FTPS-Abgleich gegen diesen Server überhaupt
+  (F-KH-U-28). **Die Abhilfe trägt.**
+  *Die beiden Fehlanläufe lagen am Werkzeug, nicht an der Abhilfe:*
+  35544269232 an der Punktdatei-Falle (`NLST` zeigt sie nicht, F-KH-U-26),
+  35545461603 an einem deutschen Anführungszeichen in einer Python-Zeile
+  (F-KH-U-27). Beide behoben, beide mit einer Prüfung abgedeckt, die es
+  vorher nicht gab.
   *Weg:* GitHub → Actions → „Auslieferung" → **Run workflow** → Zweig
   `claude/fervent-dirac-xirsqw` → Häkchen **`probelauf`** ✓ → Häkchen
   **`probelauf_gespraech`** ✓ → starten → **Freigabe erteilen**.
