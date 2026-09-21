@@ -231,7 +231,8 @@ und hat eine eigene Freigabe.
 
 ## 3. Die drei Stufen des Prüfstands
 
-*Entsteht mit PK-03.*
+*Gebaut mit PK-03; gemessen klein/neben/haupt = 26,8 / 25 / 22 s auf
+einem Zweig ohne `server/`-Änderung.*
 
 Der Umfang richtet sich nach der Versionsstufe in `server/version.php` im
 Unterschied gegen `main` (Zählweise in `CLAUDE.md` 2) und nach der
@@ -314,7 +315,8 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 
 ## 5. Der Prüfbericht
 
-*Entsteht mit PK-03 (Erzeugung) und PK-05 (Gegenlesung).*
+*Erzeugung gebaut mit PK-03 (`bericht.py`, Selbstprobe 6 Lagen / 0). Die
+Gegenlesung im Tor entsteht mit PK-05.*
 
 Der Prüfstand schreibt am Ende einen Block, der in die Commit-Nachricht
 gehört und maschinell lesbar ist:
