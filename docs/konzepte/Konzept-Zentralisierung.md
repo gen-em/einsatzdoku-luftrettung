@@ -19,7 +19,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > | Offen | nichts im Konzept. **F-ZE-1 bis F-ZE-6** (Abschnitt 2.3) sind mit der Freigabe vom 20.09.2026 entschieden. Außerhalb des Konzepts: die Einschübe (Abschnitt 8, 9) sind noch nicht eingespielt |
 > | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2 wartet auf Kette II**. **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
 > | Nummern | Dieses Konzept vergibt **keine** Rahmenplan-Fassung, **keine** Backlog-Nummer und **keine** Version. Einschübe in Abschnitt 8 und 9 übernimmt die einspielende Instanz |
-> | Steuerungsdokumente | liegen bis zum Merge von Kette II auf `claude/fervent-dirac-xirsqw` (Stand `af866c1`, 20.09.2026: Rahmenplan **Fassung 96**, Backlog 241–249 reserviert, nächste freie 250, **keine Spanne für Schritt 15 eingetragen**); `main` trägt Fassung 80. **Dieses Konzept liegt seit AP1 auf dem Umsetzungszweig** (`docs/konzepte/Konzept-Zentralisierung.md`) — Abschnitt 8.0. Schritt 15 rührt `docs/Rahmenplan.md` und `docs/Backlog.md` **nicht** an: Ein Zweig von `main` trägt Fassung 80 und einen Backlog ohne 241–249, jede Pflege dort wäre ein sicherer Konflikt. Die Einschübe aus Abschnitt 8 und 9 übernimmt die einspielende Instanz (E-ZE-03) |
+> | Steuerungsdokumente | liegen bis zum Merge von Kette II auf `claude/fervent-dirac-xirsqw` (Stand `af866c1`, 20.09.2026: Rahmenplan **Fassung 96**, Backlog 241–249 reserviert, nächste freie 250, **keine Spanne für Schritt 15 eingetragen**); `main` trägt Fassung 80. **Dieses Konzept liegt seit AP1 auf dem Umsetzungszweig** (`docs/konzepte/Konzept-Zentralisierung.md`) — Abschnitt 8.0. **Schritt 15 rührt `docs/Rahmenplan.md` und `docs/Backlog.md` nicht an und vergibt keine Backlog-Nummer** (AP1-f, Auftraggeber 21.09.2026) |
 
 > **Stand der Umsetzung**
 >
@@ -523,6 +523,26 @@ Zählungen hoch; vom Auftraggeber am 20.09.2026 so bestätigt).
   stehen überall.
 - **AP1-d — Z27 verlangt eine Zeichenkette als Format.** Begründung und Fund:
   Abschnitt 1.0a, letzter Absatz.
+- **AP1-f — `docs/Rahmenplan.md` und `docs/Backlog.md` bleiben in ganz Schritt 15
+  unberührt, und der Schritt vergibt keine Backlog-Nummer** (Auftraggeber,
+  21.09.2026). **Warum:** Der Umsetzungszweig kommt von `main` und trägt
+  Rahmenplan **Fassung 80** und einen Backlog **ohne 241–249** (nachgemessen:
+  0 Treffer); die gültigen Fassungen liegen bis zum Merge von Kette II auf
+  `claude/fervent-dirac-xirsqw` (Fassung 96, 241–249 vergeben). Würde hier
+  gepflegt, verschmölze Git später zwei auseinandergelaufene Fassungen
+  derselben Datei. Der gefährliche Fall ist dabei **nicht** der Konflikt,
+  sondern die *saubere* Verschmelzung: Genau das ist in diesem Projekt schon
+  passiert — der Backlog-Kopf hält fest, dass zwei Zweige nebeneinander
+  angehängt haben, die Datei **keinen Konflikt meldete**, und danach vier
+  Nummern zwei verschiedene Punkte trugen, zwei davon gleichzeitig unter
+  *Offen* und unter *Erledigt*. Backlog-Nummern sind dauerhafte Kennungen, auf
+  die Code und Dokumentation verweisen.
+  **Stattdessen:** Was in die Steuerungsdokumente gehört, sammelt dieses
+  Konzept in Abschnitt 8 und 9 — fertig formuliert, **ohne Nummer**. Die
+  einspielende Instanz sieht nach dem Merge von Kette II beide Zweige und
+  nummeriert kollisionsfrei aus der Spanne ab **250** (E-ZE-03). Ein Fund
+  eines Arbeitspakets, der eine Nummer bräuchte, geht denselben Weg; Abschnitt
+  9 führt vier solche Einträge bereits so.
 - **AP1-e — Z07 prüft die Rumpfvariable, nicht irgendein `is_array`.** Gezählt
   wird die Fehlerantwort, deren Bedingung `is_array()` auf eine Variable
   anwendet, die in derselben Datei aus `json_decode(` kommt. Damit bleibt
@@ -560,11 +580,11 @@ Zählungen hoch; vom Auftraggeber am 20.09.2026 so bestätigt).
    Selbstprobe hält es fest.
 5. **Für Schritt 15 ist im Backlog-Kopf keine Nummernspanne eingetragen.**
    Die Regel dort lautet: „Jeder weitere Zweig, der Nummern vergibt, beginnt
-   bei 250 und trägt seine Spanne hier ein, bevor er pusht." AP1 hat keine
-   Nummer gebraucht. **Offen für die Folgepakete:** Wer eine braucht, meldet
-   sich beim Auftraggeber, statt selbst eine Spanne zu vergeben — der Backlog
-   auf dem Umsetzungszweig ist der Stand von `main` (Fassung 80) und kennt
-   241–249 nicht.
+   bei 250 und trägt seine Spanne hier ein, bevor er pusht." Um eine Spanne
+   einzutragen, müsste der Zweig aber genau die Datei bearbeiten, deren
+   Bearbeitung das Problem ist. **Gelöst mit AP1-f:** Schritt 15 vergibt
+   keine Nummern, also braucht er keine Spanne. AP1 hat keine gebraucht; ein
+   späterer Fund kommt ohne Nummer nach Abschnitt 9.
 
 ### AP2 — Konfiguration und Sitzung (E-ZE-02, -06, -12, -13, -14; F-ZE-2)
 

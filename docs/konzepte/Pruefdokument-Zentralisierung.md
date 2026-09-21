@@ -89,11 +89,11 @@ erkennen ist**.
 | **P-2** | `php tools/zaehlung/zaehlen.php --selbstprobe` | **„Selbstprobe: 33 von 33"**, Rückgabe 0 | Eine Zeile beginnt mit `FEHL`. Dann misst das Werkzeug selbst falsch, und **jede** Zahl dieses Dokuments ist hinfällig — vor allem die grünen |
 | **P-3** | **Einmal absichtlich rot sehen.** In eine beliebige Datei unter `server/` die Zeile `error_log('probe');` einfügen, `php tools/zaehlung/zaehlen.php`, Zeile wieder entfernen | Zeile **Z38** springt von 77 auf 78 und trägt „DRUEBER", Rückgabe **1**; nach dem Entfernen wieder 0 | Der Lauf bleibt grün. Dann zählt die Zeile nicht, was sie zu zählen vorgibt — der gefährlichere Fall, weil er wie Erfolg aussieht. (Von mir am 20.09.2026 gefahren, Ergebnis in Abschnitt 1 — **eine zweite, unabhängige Ausführung ist trotzdem sinnvoll**) |
 | **P-4** | Die **Eichung** unabhängig nachrechnen: `grep -rc "error_log(" server --include=*.php \| grep -v vendor` und die Zahl gegen 77 halten | Der `grep` liefert **mehr** als 77 — er zählt Kommentare mit. Das Werkzeug zählt 77 echte Aufrufe | Der `grep` liefert **weniger** als 77. Dann zählt das Werkzeug etwas, das es nicht gibt |
-| **P-5** | **Das Register gegenlesen** (`tools/zaehlung/register.php`): Trifft jede `beschreibung` die Sache, die sie meint? Ist jede `decke_ziel` die Zahl, die nach dem Paket stehen soll? | 38 Zeilen, jede mit `grund`. Besonders: **Z15** (Decke 57 — gelaufene Migrationen bleiben, E-ZE-04), **Z22** (Decke 18 — AP7 zählt die Ausnahmen erst aus), **Z16** (Ziel 8, H-ZE-4) | Eine Decke, die zu hoch steht, macht die Zeile stumm. Das fällt nie auf — deshalb dieser Punkt |
+| **P-5** | **Das Register gegenlesen** (`tools/zaehlung/register.php`) — **nicht jetzt, sondern je Paket.** 32 der 38 Zeilen enden auf Decke 0 oder 1; dort gibt es nichts zu beurteilen. Die sechs Zeilen darüber stehen unten in Abschnitt 5 | Jede der sechs Zahlen kommt aus einer Entscheidung des Konzepts oder ist bis zu dem Paket offen, das sie misst | Eine Decke, die zu hoch steht, macht die Zeile stumm — sie meldet nie etwas, und das sieht aus wie Erfolg. Deshalb wird jede Herunterschreibung vom messenden Paket **mit der gemessenen Zahl** vorgelegt, nicht nebenbei gesetzt |
 | **P-6** | **Die neuen Texte gegenlesen** — `tools/zaehlung/LIESMICH.md`, die Kopfkommentare von `zaehlen.php` und `register.php`, dieses Dokument | Land und Luft neutral benannt (R28) | Die Wortliste sagt dazu nichts (N-3). Fällt ein Luftbegriff auf, gehört er in die Ausnahmeliste **mit Begründung** oder heraus |
 | **P-6a** | **Die vier Abweichungen bestätigen** (Konzept 1.0a): Z04 46 statt 44, Z19 42 statt 43, Z21 27 statt 26, Z18 12 statt 11 in 6 | Die Begründungen tragen. Bei **Z04** trägt sie nur zur Hälfte: Der Mehrtreffer in `db.php` ist erklärt (Z. 9 legt `$CFG` an), der in `serverkrypto_lib.php` nicht — alle 18 sind echte Zugriffe | Wenn eine der vier Begründungen nicht überzeugt, gilt trotzdem die Zahl des Werkzeugs; dann gehört der Widerspruch ins Konzept, nicht in eine stille Korrektur |
-| **P-7** | **Entscheiden: Backlog-Nummernspanne für Schritt 15.** Der Backlog-Kopf (auf `claude/fervent-dirac-xirsqw`) trägt für Schritt 15 **keine** Spanne; die nächste freie Nummer ist **250** | Eine Spanne wird eingetragen, **bevor** ein Paket eine Nummer braucht | Zwei Zweige vergeben dieselbe Nummer — genau der Fall, den der Backlog-Kopf für 215–225 und für 240 beschreibt |
-| **P-8** | **Entscheiden: Rahmenplan und Backlog bleiben unberührt?** Schritt 15 fasst `docs/Rahmenplan.md` und `docs/Backlog.md` nicht an, weil der Zweig von `main` (Fassung 80) kommt und die gültigen Fassungen auf dem Kette-II-Zweig liegen | Die Einschübe aus Konzept 8 und 9 übernimmt die einspielende Instanz (E-ZE-03) | Wird hier doch gepflegt, ist der Konflikt beim Merge von Kette II sicher — und er betrifft Nummernvergabe, also genau das, was sich nicht automatisch auflösen läßt |
+| **P-7** | **Nachsehen, dass kein Paket doch in die Steuerungsdokumente geschrieben hat:** `git diff origin/main --stat -- docs/Rahmenplan.md docs/Backlog.md` | **leere Ausgabe** — beide Dateien unverändert gegenüber `main` (AP1-f) | Es erscheint eine Zeile. Dann trägt der Zweig eine Änderung an einer Datei, die auf dem Kette-II-Zweig parallel fortgeschrieben wurde — beim Merge droht eine **stille** Doppelvergabe, kein Konflikt |
+| **P-8** | **Beim Einspielen nach dem Merge von Kette II:** die Einschübe aus Konzept Abschnitt 8 und 9 durchgehen und die Nummern aus der Spanne ab **250** vergeben | Jeder Eintrag bekommt genau eine Nummer; die Spanne wird im Backlog-Kopf eingetragen, **bevor** gepusht wird | Eine Nummer trägt zwei Punkte — der Fall, den der Backlog-Kopf für 215–225 und für 240 beschreibt. **Erst nach dem Merge von Kette II fällig**, nicht jetzt |
 
 ## 4. Grenzen der benutzten Prüfmittel
 
@@ -125,3 +125,24 @@ Ausdrücklich, damit eine grüne Zahl nicht mehr trägt, als sie kann:
   `server/` nicht vor; sollte es einmal vorkommen, sieht die Zählung es nicht.
 - **Die Vollständigkeit meldet 398 und Rückgabe 1.** Das ist die Schwelle
   dieses Stands, nicht ein Befund von AP1.
+
+---
+
+## 5. Die sechs Decken über 1 — woher ihre Zahl kommt
+
+32 der 38 Registerzeilen enden auf **0 oder 1** — „eine Stelle" ist die
+Aussage des ganzen Schritts, da ist nichts zu entscheiden. Diese sechs enden
+höher, und **keine der Zahlen ist in der Umsetzung erfunden**:
+
+| Zeile | Start → Decke | Woher die Zahl kommt | Wer sie festnagelt |
+|---|---|---|---|
+| **Z38** `error_log(` | 77 → **77** | **E-ZE-05**: Schritt 15 stellt keinen einzigen Aufruf um. Gehört nicht hierher | 10c AP3 setzt auf 2 (Nr. 248) |
+| **Z15** `information_schema` in `migration_lib.php` | 57 → **57** | **E-ZE-04** (Auftraggeber, 20.09.2026): gelaufene Migrationen werden nicht umgebaut. Die Decke friert den Stand ein, damit er nicht **wächst** | erledigt sich mit dem neuen Migrationsregister in P8 (R66) |
+| **Z22** Byte-Division für die Anzeige | 18 → **18** | **Platzhalter.** Von den 18 sind manche Anzeigen (müssen über `groesse_text()`) und manche Grenzwerte (bleiben). Welche welche sind, steht erst nach dem Auszählen fest — das Konzept sagt „AP7 nennt" | **AP7**, mit Zahl und namentlichen Ausnahmen |
+| **Z16** `beginTransaction(` | 33 → **8** | **Haltepunkt H-ZE-4** des Konzepts: „mehr als acht Transaktions-Ausnahmen → melden vor dem Umbau" | **AP5** zählt zuerst die Bauformen aus und trägt sie ins Konzept nach |
+| **Z14** `information_schema` außerhalb | 9 → **4** | Konzept AP4: „erwartet 3 bis 4" — was bleibt, fragt keine Existenz, sondern Spaltenlisten, Größen oder `is_nullable` | **AP4**, mit der Entscheidung, ob ein vierter Helfer lohnt (R83) |
+| **Z18** Handlisten `missions` | 12 → **4** | **E-ZE-22**: die vier **Abbildungen** dürfen von Hand bleiben, wenn eine Vollständigkeitsprobe belegt, dass sie genau die Registerspalten ihres Zwecks führen. Die sieben **SQL-Listen** werden erzeugt | **AP6**, mit der Probe je verbleibender Liste |
+
+**Der Umgang damit ist die Regel, nicht die Ausnahme:** Das Paket, das eine
+Decke herunterschreibt, legt die **gemessene** Zahl vor. Eine Decke wird nicht
+angehoben, ohne dass es im Konzept steht (E-ZE-24).
