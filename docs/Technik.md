@@ -4750,14 +4750,26 @@ genau ihn durch. Ein bloßes `/.well-known` **ohne** Schrägstrich fällt unter
 die Sperre; das ist gewollt, ACME fragt immer
 `/.well-known/acme-challenge/<Token>`.
 
-**Zwei Schranken, nicht eine.** `state-name` in `auslieferung.yml` legt die
-Datei zusätzlich eine Ebene über den Webroot
-(`../.deploy-state-staging.json`, `../.deploy-state-produktion.json` — zwei
-Namen, weil sich Staging und Produktion einen FTP-Zugang teilen könnten und
-zwei gleichnamige Zustandsdateien einander überschrieben). Erlaubt der Käfig
-des FTP-Zugangs kein `../`, bricht der Lauf; dann trägt man die Variable
-`FTP_STATE_PFAD` ein und zeigt wieder nach innen — und die `.htaccess` fängt
-die Datei dort ab. Der Rückbau ist deshalb eine Variable und kein Notfall.
+**Zwei Schranken, nicht eine.** `state-name` in `ausliefern-lauf.yml` (bis
+Kette II/AP5: `auslieferung.yml`, zweimal) legt die Datei zusätzlich eine
+Ebene über den Webroot — zwei Namen, weil sich Staging und Produktion einen
+FTP-Zugang teilen könnten und zwei gleichnamige Zustandsdateien einander
+überschrieben.
+
+**Seit AP6 kommt der Pfad ausschließlich aus der Variablen
+`FTP_STATE_PFAD`** (E-KH-07); der eingebaute Vorgabewert ist weg, und fehlt
+die Variable, bricht der Lauf im ersten Schritt ab. Die heute eingetragenen
+Werte sind `../.deploy-state-staging.json` bzw.
+`../.deploy-state-produktion.json` — **kein Vorschlag, sondern der
+Ist-Zustand:** Solange der Vorgabewert galt, hat die Kette genau diese
+Zeichenketten benutzt, und dort liegen die Dateien. Ein anderer Wert lässt
+die Aktion ihre Zustandsdatei nicht finden; sie hält den Server für leer und
+überträgt alles neu.
+
+Erlaubt der Käfig des FTP-Zugangs kein `../`, zeigt man mit derselben
+Variablen wieder nach innen — die `.htaccess` fängt die Datei dort ab
+(Prüfzeile `/.deploy-state-staging.json` → 403 in der Tabelle unter 6.3).
+Der Rückbau ist deshalb eine Eintragung und kein Notfall.
 
 **Warum das messbar ist und ein 404 nichts beweist.** `RewriteRule [F]`
 antwortet **403, ob die Datei da ist oder nicht** — mod_rewrite läuft vor der
@@ -7888,6 +7900,84 @@ E-SA-04) · vertrauenswürdige Proxys eingetragen (reine Auskunft).
 > einzeln, sondern nur in der Schlusszeile. Das ist gewollt — wo die
 > Sitzungen liegen und wie viele es sind, sagt Punkt 11, und der steht
 > immer da.
+>
+> **Und Punkt 11 sagt seit Web 20.26.1 auch, ob das Verzeichnis existiert.**
+> Der Grund ist ein Befund vom Ausrollen: Auf Staging meldete die Seite
+> „konnte kein eigenes Verzeichnis einrichten", obwohl es angelegt und
+> beschreibbar war — und ausgerechnet die Zeile, die das gezeigt hätte, war
+> als erfüllte Empfehlung unsichtbar. Eine Muss-Zeile, die immer dasteht,
+> trägt diese Auskunft jetzt mit.
+
+### 5b.2a Der Rückfall nennt seine Lage, er rät sie nicht (ab Web 20.26.1)
+
+**Bis Web 20.26.0 stand auf der Statusseite eine Ursache, die niemand
+gemessen hatte.** Sobald der wirksame Pfad nicht der eigene war, druckte sie
+„Die Anwendung konnte kein eigenes Verzeichnis einrichten" — ein Literal, kein
+Messergebnis. Auf der Staging-Anlage war der Satz falsch: Das Verzeichnis war
+angelegt und beschreibbar, nur hat die Anlage den gesetzten Pfad nicht
+übernommen. Für diesen Fall gab es keinen Zustand, also auch keinen wahren
+Satz.
+
+`sitzung_ablage_stand()` trägt deshalb eine **benannte Lage**, und
+`sitzung_ablage_satz()` hält je Lage genau einen Satz bereit:
+
+| Lage | wann |
+|---|---|
+| `eigen` | Pfad gesetzt **und zurückgelesen** |
+| `kommandozeile` | CLI — richtet absichtlich nichts ein |
+| `sitzung_lief` | beim Laden von `db.php` lief schon eine Sitzung |
+| `nicht_anlegbar` | `mkdir` gescheitert |
+| `nicht_beschreibbar` | Schreibprobe gescheitert |
+| `nicht_uebernommen` | angelegt und beschreibbar, aber der Pfad greift nicht |
+
+**Die Farbe kommt weiter aus der Messung, der Satz aus der Lage.** Wer einen
+Ausgang ergänzt, ergänzt den Satz mit; eine unbekannte Lage bekommt bewusst
+keinen erfundenen.
+
+**Der Rückgabewert von `session_save_path()` taugt zur Erfolgsprüfung
+nicht** — das ist der teuerste Einzelbefund dieses Pakets. Gemessen unter
+PHP 8.4.19:
+
+| Ablehnungsgrund | Rückgabe | Pfad danach |
+|---|---|---|
+| Sitzung schon aktiv | `false` | alt |
+| Kopfzeilen schon gesendet | `false` | alt |
+| **`open_basedir` sperrt den Pfad aus** | **der alte Pfad als Zeichenkette** | alt |
+
+Der dritte Fall sieht aus wie Erfolg. Ein `=== false` lässt ihn durch.
+**Belastbar ist allein das Zurücklesen** — der wirksame Pfad gegen den
+gewünschten, und genau so prüft `sitzung_ablage_setzen()` es.
+
+#### Wenn der Hoster den Pfad vorgibt: `.user.ini` (gemessen am 20.09.2026)
+
+**Genau das ist auf Staging eingetreten.** Die Zeile stand auf
+`nicht_uebernommen`: Verzeichnis angelegt, `0700`, Schreibprobe bestanden —
+und `session.save_path` blieb auf `/home/webpages/tmp`.
+
+**Die Abhilfe kostete eine Datei und keinen Support.** Eine `.user.ini` neben
+`index.php` mit einer Zeile:
+
+    session.save_path = "/pfad/zur/anwendung/.sitzungen"
+
+Danach stand die Zeile blau: *eigenes Verzeichnis, 0700*. Der Hoster hatte den
+Wert also nur **gesetzt**, nicht per `php_admin_value` **gesperrt**.
+
+**Sie gehört nicht ins Repositorium.** Der Pfad ist anlagenabhängig, und
+E-PP-04 sagt: Ein Hosterwechsel ändert `config.php`, keine Codezeile. Sie ist
+ein **Handgriff der Betreiberin**, und er steht als solcher im Runbook
+(Abschnitt 7). Zwei Bedingungen: `.user.ini` wirkt nur bei CGI/FastCGI, und
+sie greift erst nach `user_ini.cache_ttl` (Vorgabe 300 s). Gegen Abruf über
+die Adresszeile deckt sie dieselbe Punktregel wie `.sitzungen/` selbst.
+
+**Hilft sie nicht**, steht der Wert als `php_admin_value` fest. Dann bleibt
+der Weg über den Hoster — oder, wenn der nicht mitspielt, ein eigener
+Sitzungs-Handler (`session_set_save_handler`), den keine `php.ini`
+überstimmen kann. Das wäre ein eigener Umbau und der Punkt, an dem die in
+E-SA-00 vertagte Stufe 3 (Sitzungen in der Datenbank) wieder zur Frage steht.
+
+**Produktiv ist ungeprüft.** Dort ist `session.save_path` nie erhoben worden.
+Beim ersten Ausrollen dorthin zeigt dieselbe Zeile, ob derselbe Handgriff
+fällig ist — **das ist der Prüfpunkt, nicht eine Vermutung**.
 
 **Die Regel ist dauerhaft, die Zahl ist ein Stand** (E-PP-03): Für Versionen
 gilt „vom Hersteller noch mit Sicherheitskorrekturen versorgt". Die Zahlen
@@ -9742,6 +9832,36 @@ Browsersitzungen nicht.** Dasselbe passiert ein zweites Mal, falls sich der
 Ort noch einmal ändert — etwa wenn die Probe nach einer Stunde ein anderes
 Ergebnis liefert (E-SA-02). Ein Mischbetrieb zweier Ablagen wäre das
 Schlimmere; ein sauberer Schnitt ist deshalb gewollt.
+
+**Danach: Betrieb → Status, Zeile „Sitzungsablage" ansehen** (seit Web
+20.26.1). Steht sie **blau**, liegt alles richtig. Steht sie **rot**, sagt der
+Satz daneben, was zu tun ist — er rät nicht mehr:
+
+| Satz in der Kleinzeile | Handgriff |
+|---|---|
+| „Das eigene Verzeichnis liess sich nicht anlegen" | Schreibrecht der Anwendungswurzel prüfen |
+| „Das eigene Verzeichnis ist nicht beschreibbar" | Rechte von `server/.sitzungen/` prüfen |
+| **„die Anlage uebernimmt den gesetzten Pfad aber nicht"** | **`.user.ini` anlegen, siehe unten** |
+| „lief bereits eine Sitzung" | `session.auto_start` oder `auto_prepend_file` der Anlage; dann tragen die Sitzungscookies auch **kein** `secure`/`SameSite` — beim Hoster abstellen lassen |
+
+**Der Handgriff `.user.ini`** (gemessen auf Staging am 20.09.2026, 5b.2a).
+Eine Datei neben `index.php`, eine Zeile, der absolute Pfad der Anlage:
+
+    session.save_path = "/home/webpages/…/nadoku-staging/.sitzungen"
+
+Dann rund fünf Minuten warten (`user_ini.cache_ttl`, Vorgabe 300 s) und die
+Statusseite neu laden. **Auf Staging hat das gereicht** — der Hoster hatte
+`session.save_path` nur gesetzt, nicht gesperrt.
+
+Sie liegt **nur auf dem Server** und gehört nicht ins Repositorium: Der Pfad
+ist anlagenabhängig (E-PP-04). Sie beginnt mit einem Punkt und fällt damit
+unter dieselbe `.htaccess`-Sperre wie `.sitzungen/`. **Sie steht allerdings
+NICHT in der Ausnahmeliste des Transports** — sie muss dort nicht stehen,
+solange der Transport nur löscht, was er selbst hochgeladen hat (6.5), aber
+wer den Transport wechselt, denkt an sie.
+
+**Produktiv ist ungeprüft.** Dort ist `session.save_path` nie erhoben worden;
+ob der Handgriff auch dort fällig ist, sagt die Zeile beim ersten Ausrollen.
 
 **Sie wiederholt sich nicht bei jedem Deploy** — das ist nachgemessen und
 nicht angenommen (6.5): Der heutige Transport löscht `.sitzungen/` nicht, weil

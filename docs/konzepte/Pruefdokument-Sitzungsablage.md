@@ -22,6 +22,7 @@ steht in Abschnitt 2 und 3; was **nicht** geprüft werden konnte, steht zuerst.
 | N-6 | **`tools/jobregister/` in Stufe 1** | Derselbe Grund: `.github/workflows/pruefung.yml` gehört zu Kette II. Das Werkzeug liegt vor und läuft; es hängt nur noch nicht | Punkt K-2 |
 | N-7 | **nginx** | Es gibt keine Anlage dieses Projekts mit nginx. Dort greift die `.htaccess`-Regel nicht, und `0700` ist die **einzige** Sicherung | bleibt dauerhaft ungeprüft; steht so in `docs/Technik.md` 5b.2 |
 | N-8 | **„Verzeichnis nicht anlegbar" auf einer echten Anlage** | Nachgestellt, indem `.sitzungen` als **Datei** statt als Verzeichnis existierte — `mkdir` scheitert dann wie bei fehlendem Schreibrecht. Ein entzogenes Schreibrecht ließ sich nicht nachstellen: Der Prüfstand läuft als `root`, und root ignoriert die Rechtebits | Der Rückfallzweig selbst ist belegt (Abschnitt 2.4) |
+| N-8a | **Eine festgeschriebene `php.ini`-Einstellung** | Der Prüfstand ist ein `php -S` im Wegwerf-Behälter. Dort gibt es keinen Hoster, der `session.save_path` per `php_admin_value` festnagelt — **das Fehlerbild war dort nicht erzeugbar**. Genau dieses Fehlerbild trat auf Staging auf (F-6) | Punkt B-5, und die Grenze in Abschnitt 5 |
 | N-9 | **`tools/wartungsprobe/` nach der Änderung** | Braucht eine laufende Installation mit Datenbank (N-1). Die Änderung ist gelesen und eng (`sitzung_ort()` an zwei Stellen), **aber nicht gefahren** | Punkt B-10 — **wichtig**, weil diese Probe sonst 57 Erwartungen mit „nicht angemeldet" verliert |
 
 **Zwei Zahlen, die nicht das sind, wonach sie aussehen:**
@@ -187,6 +188,8 @@ deshalb ist das eine Auslassungszeichen aufgefallen (Abschnitt 0).
 | F-3 | **Ein U+2026 in einem neuen Kommentar in `db.php`** schob die Vollständigkeit auf 399 | `tools/vollstaendigkeit/` |
 | F-4 | **`tools/wegwerfdomains/` fehlte seit Web 20.22.0 im Werkzeugbaum** (46 gegen 48) | Zählung beim Eintragen von `tools/jobregister/` |
 | F-5 | **`docs/Technik.md` 6.5 nannte fünf Ausnahmen, die Kette führt sieben** (`ueberlast.json`, `install.php` fehlten) | Gegenlesen für den achten Pfad |
+| **F-7** | **Der Hoster gibt `session.save_path` vor.** Auf Staging blieb der wirksame Pfad `/home/webpages/tmp` (0773), obwohl die Anwendung ihr eigenes Verzeichnis angelegt und gesetzt hatte. **Behoben mit einer `.user.ini`** — der Wert war gesetzt, nicht gesperrt. Kein Codefehler, eine Anlageneigenschaft; dokumentiert in Technik.md 5b.2a und im Runbook | Durch den Satz, den 20.26.1 druckt (`nicht_uebernommen`) |
+| **F-6** | **AUSGELIEFERT UND ERST AUF STAGING GEFUNDEN** (Web 20.26.1). Die Statusseite nannte eine Ursache, die sie nicht gemessen hatte: „konnte kein eigenes Verzeichnis einrichten", obwohl es angelegt und beschreibbar war. `sitzung_ablage_setzen()` behauptete `eigen = true`, ohne den Erfolg von `session_save_path()` zu prüfen, und drei von sechs Ausgängen vermerkten gar nichts | Beim ersten Aufruf der Statusseite nach dem Ausrollen — also durch **Punkt B-5 dieser Liste**. Der Prüfstand konnte es nicht finden (N-8a) |
 
 ---
 
@@ -219,16 +222,71 @@ erkennen ist**.
       `@session_start()` die bestehende Sitzung nicht gefunden.
 - [ ] **B-5 Betrieb → Status.** Karte „Plattform" öffnen.
       **Erwartet:** Zeile **„Sitzungsablage"**, Plakette blau, Text
-      „eigenes Verzeichnis, 0700, N Dateien", darunter der Pfad. Die Zeile
-      „Ablage der Sitzungen" erscheint **nicht** — das ist richtig (Stufe
-      Empfohlen, erfüllt). Die Schlusszeile „Empfohlen insgesamt" zählt jetzt
+      „eigenes Verzeichnis, 0700, N Dateien"; in der Kleinzeile „Die Anwendung
+      legt ihre Sitzungen selbst ab. Eigenes Verzeichnis: vorhanden, 0700."
+      Die Zeile „Ablage der Sitzungen" erscheint **nicht** — das ist richtig
+      (Stufe Empfohlen, erfüllt). Die Schlusszeile „Empfohlen insgesamt" zählt
       **x/7** statt x/6.
-      **Scheitern:** Plakette rot oder „nicht messbar"; oder die Zeile fehlt ganz.
-- [ ] **B-6 Betrieb → Hintergrundjobs.** Zeile „Aufräumen".
-      **Erwartet:** Die Beschreibung nennt **siebzehn** Schritte, darunter
-      „Sitzungsdateien", und die Namen tragen richtige Umlaute
-      („Ratenschutz-Zähler", „Gerätevermerke").
-      **Scheitern:** Ein Schritt fehlt, oder es steht „Ratenschutz-Zaehler" da.
+      **Scheitern:** Plakette rot. **Dann ist der Satz in der Kleinzeile die
+      Diagnose** — seit Web 20.26.1 nennt er die Lage und rät nicht:
+
+      | Satz | was zu tun ist |
+      |---|---|
+      | „Das eigene Verzeichnis liess sich nicht anlegen" | Schreibrecht der Anwendungswurzel prüfen |
+      | „Das eigene Verzeichnis ist nicht beschreibbar" | Rechte von `server/.sitzungen/` prüfen |
+      | „die Anlage uebernimmt den gesetzten Pfad aber nicht" | Hoster schreibt `session.save_path` fest — siehe **B-11** |
+      | „lief bereits eine Sitzung" | `session.auto_start` oder `auto_prepend_file` — siehe **B-11**, und dann trägt das Sitzungscookie auch **kein** `secure`/`SameSite` |
+
+      **Stand 20.09.2026, abends: BESTANDEN.** Der erste Lauf ist gescheitert
+      und hat F-6 gefunden (rot, „konnte kein eigenes Verzeichnis
+      einrichten" — falsch). Mit 20.26.1 nannte die Zeile die wahre Lage
+      (`nicht_uebernommen`), nach dem Handgriff `.user.ini` steht sie
+      **blau**: *eigenes Verzeichnis, 0700, 11 Dateien*, wirksam
+      `…/nadoku-staging/.sitzungen`. Damit ist **B-2 mitgeprüft** — die
+      Dateizahl ist wieder ablesbar, weil das Verzeichnis uns gehört.
+
+- [x] **B-11 Welche der beiden Ursachen ist es?** — **beantwortet am
+      20.09.2026, ohne den Handgriff unten.** Die Zeile stand auf
+      `nicht_uebernommen`; das schließt `session.auto_start` aus (dann hieße
+      die Lage `sitzung_lief`). **Die Cookie-Härtung in `auth_guard.php`
+      wirkt also** — die Sorge um `secure`/`SameSite` ist gegenstandslos.
+      Die Ursache war ein vom Hoster gesetztes `session.save_path`; behoben
+      mit `.user.ini` (Technik.md 5b.2a und Runbook). Der Bedienweg unten
+      bleibt stehen, falls der Fall an einer anderen Anlage wiederkommt.
+
+      *Ursprünglicher Bedienweg:*
+      **Bedienweg, ohne Upload:** `server/.sitzungen/.geprueft` per FTPS
+      **löschen** — es ist Cache, kein Bestand —, dann die Statusseite laden,
+      dann im FTPS-Listing nachsehen.
+      **Erwartet:** Die Datei ist binnen Sekunden wieder da. Dann ist
+      `sitzung_ablage()` bis zum Ende durchgelaufen, das Tor „es lief schon
+      eine Sitzung" hat **nicht** gefeuert, und es bleibt das
+      festgeschriebene `session.save_path`.
+      **Scheitern:** Die Datei bleibt weg. Dann greift das Tor, die Ursache
+      ist `session.auto_start` oder ein `auto_prepend_file` — **und dann ist
+      zusätzlich zu prüfen, ob das Sitzungscookie `secure` und
+      `SameSite=Strict` trägt** (Entwicklerwerkzeuge, Reiter Netzwerk), denn
+      unter dieser Ursache greifen `session_set_cookie_params()` und
+      `use_strict_mode` in `auth_guard.php` ebenfalls nicht.
+      **Genauer, wenn ein Upload möglich ist:** eine Datei mit
+      `<?php var_dump(session_status(), ini_get_all('session')['session.save_path']);`
+      hochladen, aufrufen, **danach löschen**. `access === 4` heißt
+      festgeschrieben; `session_status() === 2` heißt, es lief schon eine.
+- [ ] **B-6 Betrieb → Hintergrundjobs** (`betrieb_jobs.php`), Zeile
+      „Aufräumen" — **nicht** die Karte „Hintergrundjobs" auf *Betrieb →
+      Status*. Dort steht die Beschreibung laut `status_lib.php` nur, wenn ein
+      Job **noch nie** gelaufen ist; sonst „Zuletzt gelaufen …".
+      **Erwartet** in der Kleinzeile, wörtlich siebzehn Namen:
+      „Kopplungssitzungen, **Sitzungsdateien**, Sperrliste gelöschter
+      Kennungen, Ratenschutz-Zähler, Sperrereignisse, Gerätevermerke,
+      CSP-Berichte, Mail-Warteschlange, Betriebsprotokoll, Mengen je Konto,
+      Verwaiste Kontomarken, Job-Verlauf, Papierkorb, Passwort-Tokens,
+      Erinnerung an die Verwaltung, Speicher messen und Warnschwellen melden".
+      **Scheitern:** Ein Name fehlt, oder es steht „Ratenschutz-Zaehler" mit
+      ASCII-Umschrift da.
+      *Die Karte auf Betrieb → Status zeigt dafür die **Zahl** der Jobs:
+      erwartet sind zwölf Zeilen — „Auslöser" plus **elf** Jobs. Am
+      20.09.2026 so gemessen.*
 - [ ] **B-7 `https://<basis>/.sitzungen/` aufrufen.**
       **Erwartet:** **403**, und zwar auch für
       `https://<basis>/.sitzungen/.geprueft` und für einen erfundenen
@@ -320,6 +378,13 @@ erkennen ist**.
 - **Der Prüfstand mit `php -S`** ist kein Apache: Er kennt `.htaccess` nicht.
   Er belegt den PHP-Teil (Verzeichnis, Rechte, Pfad, Marker, Räumen) und
   **nichts** über die 403-Sperre.
+- **Der Prüfstand kann keine festgeschriebene `php.ini`-Einstellung
+  nachstellen.** `php -d` setzt Werte, es sperrt sie nicht; `php_admin_value`
+  ist eine Apache-Anweisung. Dass `session_save_path()` scheitern kann, OHNE
+  dass der Rückgabewert es verrät, ist deshalb hier nur an den drei anderen
+  Ablehnungsgründen gemessen worden — und der gefährlichste (`open_basedir`,
+  liefert den alten Pfad als Zeichenkette) war zuerst gar nicht bedacht. Das
+  ist die Lücke, durch die F-6 gegangen ist.
 - **Der Prüfstand läuft als `root`.** Ein entzogenes Schreibrecht lässt sich
   darin nicht nachstellen; der Rückfall wurde deshalb über ein `mkdir`
   erzwungen, das an einer gleichnamigen Datei scheitert.

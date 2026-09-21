@@ -464,15 +464,30 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
               . ($anzahl === null ? '' : ', ' . $anzahl
                  . ($anzahl === 1 ? ' Datei' : ' Dateien'));
     }
+    /* DER SATZ KOMMT AUS DEM ZUSTAND, DIE FARBE AUS DER MESSUNG
+     * (Berichtigung 20.09.2026). Bis Web 20.26.0 stand hier ein fest
+     * verdrahtetes „konnte kein eigenes Verzeichnis einrichten", gedruckt
+     * allein daraufhin, dass der gemessene Pfad nicht der eigene war. Auf der
+     * Staging-Anlage war dieser Satz nachweislich falsch: Das Verzeichnis war
+     * angelegt und beschreibbar, nur hat die Anlage den gesetzten Pfad nicht
+     * uebernommen. Eine Ursache zu drucken, die man nicht gemessen hat, ist
+     * schlimmer als keine — sie schickt die Betreiberin auf die Suche nach
+     * einem Schreibrecht, das nicht fehlt.
+     *
+     * DIE LAGE DES VERZEICHNISSES STEHT MIT IN DIESER ZEILE, und das ist
+     * Absicht: Der vierte Schreibort ist Stufe `empfohlen` und im guten Fall
+     * unsichtbar — ausgerechnet die Zeile, die den Widerspruch sofort gezeigt
+     * haette, war nicht da. Diese hier ist Muss und steht immer. */
+    $sVerz = $cli ? '' : (!is_dir($sPfad)
+        ? ' Eigenes Verzeichnis: nicht vorhanden.'
+        : ' Eigenes Verzeichnis: vorhanden' . (($vRoh = @fileperms($sPfad)) === false
+            ? '.' : ', ' . sprintf('%04o', $vRoh & 0777) . '.'));
+
     $b[] = plattform_befund('sitzung_ablage', 'Sitzungsablage', 'muss',
         $sIst, 'eigenes Verzeichnis, fuer andere gesperrt', $sOk,
-        ($eigen
-            ? 'Die Anwendung legt ihre Sitzungen selbst ab. '
-            : 'RUECKFALL: Die Anwendung konnte kein eigenes Verzeichnis '
-            . 'einrichten und benutzt den Pfad des Hosters. '
-            . ($sStand['grund'] !== null ? $sStand['grund'] . ' ' : ''))
-      . 'Der Dateiname einer Sitzungsdatei IST die Sitzungskennung - wer sie '
-      . 'liest, ist angemeldet. ' . $wirk);
+        sitzung_ablage_satz($sStand) . $sVerz
+      . ' Der Dateiname einer Sitzungsdatei IST die Sitzungskennung - wer sie '
+      . 'liest, ist angemeldet. Wirksam: ' . $wirk);
 
     /* `config.php` beschreibbar ist EMPFOHLEN, nicht Muss (PP-5): Die
      * Backup-Ziele, der Serverschluessel und der Server-Anteil bieten dann

@@ -6530,5 +6530,101 @@ declare(strict_types=1);
  *   `tools/jobregister/pruefen.php` zaehlt das Register nach — mit dem
  *   Tokenizer und ohne Installation. Der Ketteneintrag dafuer gehoert zu
  *   Kette II und ist dort angemeldet.
+ *
+ * 20.26.1 — DIE STATUSSEITE NANNTE EINE URSACHE, DIE SIE NICHT GEMESSEN HATTE
+ *   (Berichtigung zu Schritt 16, gefunden auf Staging am 20.09.2026).
+ *
+ *   BEFUND AUF DER ANLAGE: Die Karte „Plattform" zeigte
+ *   „Sitzungsablage - fehlt - Hosterpfad, 0773 - RUECKFALL: Die Anwendung
+ *   konnte kein eigenes Verzeichnis einrichten". Der Satz war FALSCH. Das
+ *   Verzeichnis war angelegt und beschreibbar — die Zeile „Ablage der
+ *   Sitzungen" fehlte auf der Seite, und weil sie nur bei Abweichung
+ *   erscheint, heisst ihr Fehlen genau das. Was nicht gegriffen hatte, war
+ *   `session_save_path()`.
+ *
+ *   ZWEI FEHLER, EIN BILD:
+ *
+ *   ERSTENS BEHAUPTETE `sitzung_ablage_setzen()`, STATT ZU MESSEN. Sie rief
+ *   `session_save_path()` und vermerkte anschliessend `eigen = true`, ohne
+ *   den Erfolg zu pruefen — also genau das, was `docs/Technik.md` 5b.1
+ *   verbietet: „Wer nichts gemessen hat, darf nichts behaupten."
+ *
+ *   DER RUECKGABEWERT HAETTE ES AUCH NICHT GERETTET, und das ist der
+ *   lehrreiche Teil. Gemessen am 20.09.2026 unter PHP 8.4.19:
+ *
+ *     Sitzung schon aktiv        `false`, dazu eine Warnung
+ *     Kopfzeilen schon gesendet  `false`, dazu eine Warnung
+ *     `open_basedir` sperrt      DEN ALTEN PFAD ALS ZEICHENKETTE — also
+ *                                dasselbe wie bei Erfolg —, dazu eine Warnung
+ *
+ *   Ein `=== false` haette den dritten Fall durchgelassen. Belastbar ist
+ *   allein das ZURUECKLESEN: der wirksame Pfad gegen den gewuenschten.
+ *
+ *   ZWEITENS KEHRTEN DREI VON SECHS AUSGAENGEN STUMM ZURUECK. „Auf der
+ *   Kommandozeile" und „es lief schon eine Sitzung" vermerkten gar nichts,
+ *   der Stand blieb auf seinem Vorgabewert, und die Statusseite hatte keinen
+ *   Grund zu nennen. Sie nahm fuer das URTEIL die Messung und fuer die
+ *   BEGRUENDUNG die Buchfuehrung — zwei Quellen, die auseinanderliefen.
+ *
+ *   WAS JETZT GILT: Der Stand traegt eine BENANNTE Lage
+ *   (`eigen`, `kommandozeile`, `sitzung_lief`, `nicht_anlegbar`,
+ *   `nicht_beschreibbar`, `nicht_uebernommen`), je Lage steht EIN Satz in
+ *   `sitzung_ablage_satz()`, und die Statusseite druckt ihn statt zu raten.
+ *   Die Farbe kommt weiter aus der Messung. Das Feld `gelaufen` ist
+ *   ersatzlos entfallen — es wurde nirgends gelesen und war ausgerechnet der
+ *   Wert, der zwei Ursachen voneinander getrennt haette.
+ *
+ *   DIE MUSS-ZEILE SAGT JETZT AUCH, OB DAS VERZEICHNIS DA IST. Der vierte
+ *   Schreibort ist Stufe `empfohlen` und im guten Fall unsichtbar —
+ *   ausgerechnet die Zeile, die den Widerspruch sofort gezeigt haette, war
+ *   nicht da. Die Muss-Zeile steht immer und traegt es mit.
+ *
+ *   WARUM DER PRUEFSTAND ES NICHT FAND: Er ist ein `php -S` im
+ *   Wegwerf-Behaelter. Dort sperrt kein Hoster `session.save_path`, das
+ *   Fehlerbild war dort nicht erzeugbar. Der Rueckfall WURDE geprueft — aber
+ *   ueber ein scheiterndes `mkdir`, und das ist ausgerechnet der eine
+ *   Ausgang, der seinen Grund vermerkt. Aus einer Rueckfallform wurde auf
+ *   alle geschlossen.
+ *
+ *   NICHT BEHOBEN, WEIL NICHT MESSBAR VON HIER: WARUM die Anlage den Pfad
+ *   nicht uebernimmt. Die fuehrende Erklaerung ist ein festgeschriebenes
+ *   `session.save_path` (dasselbe Muster wie `gc_maxlifetime` 1440 s und
+ *   `gc_probability` 0, die dort ebenfalls vorgegeben sind). Die zweite,
+ *   nicht ausgeschlossene, ist `session.auto_start` — und die haette eine
+ *   stille Folge: Dann greifen auch `session_set_cookie_params()` und
+ *   `use_strict_mode` in `auth_guard.php` nicht, das Sitzungscookie truege
+ *   weder `secure` noch `SameSite`. Der Weg, beide zu trennen, steht im
+ *   Pruefdokument.
+ *
+ * 20.26.2 — DER HANDGRIFF STEHT IM RUNBOOK, UND DER PFAD NUR NOCH EINMAL
+ *   (Nachzug zu Schritt 16, 20.09.2026).
+ *
+ *   AUF STAGING HAT SICH DIE FRAGE VON 20.26.1 BEANTWORTET. Die Zeile stand
+ *   auf `nicht_uebernommen` — Verzeichnis angelegt, 0700, Schreibprobe
+ *   bestanden, und `session.save_path` blieb auf `/home/webpages/tmp`. Eine
+ *   `.user.ini` neben `index.php` mit einer Zeile hat es behoben; die Zeile
+ *   steht seither blau. Der Hoster hatte den Wert also nur GESETZT, nicht
+ *   per `php_admin_value` GESPERRT.
+ *
+ *   DAMIT IST AUCH `session.auto_start` AUSGESCHLOSSEN: Dann hiesse die Lage
+ *   `sitzung_lief`. Die Sorge aus 20.26.1, das Sitzungscookie truege weder
+ *   `secure` noch `SameSite`, ist gegenstandslos — die Haertung in
+ *   `auth_guard.php` wirkt.
+ *
+ *   DIE `.user.ini` GEHOERT NICHT INS REPOSITORIUM. Der Pfad ist
+ *   anlagenabhaengig, und E-PP-04 sagt: Ein Hosterwechsel aendert
+ *   `config.php`, keine Codezeile. Sie steht deshalb als HANDGRIFF im
+ *   Runbook, mit den zwei Bedingungen (nur CGI/FastCGI; greift erst nach
+ *   `user_ini.cache_ttl`) und mit dem Satz, an dem man erkennt, dass man sie
+ *   braucht. Das Runbook traegt dazu eine Tabelle „welcher Satz heisst
+ *   welchen Handgriff" fuer alle vier Rueckfall-Lagen.
+ *
+ *   DIE EINE CODEAENDERUNG: Der wirksame Pfad stand zweimal in derselben
+ *   Zeile. Der Grund nennt jetzt nur den GESETZTEN; der wirksame steht
+ *   ohnehin am Ende.
+ *
+ *   PRODUKTIV IST UNGEPRUEFT. Dort ist `session.save_path` nie erhoben
+ *   worden. Ob derselbe Handgriff faellig ist, sagt dieselbe Zeile beim
+ *   ersten Ausrollen — das ist der Pruefpunkt, keine Vermutung.
  */
-const WEB_VERSION = '20.26.0';
+const WEB_VERSION = '20.26.2';
