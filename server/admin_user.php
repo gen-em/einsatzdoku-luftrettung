@@ -136,13 +136,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $rollenwechsel = ($role !== $rolleAlt);
         if ($rollenwechsel && !ist_betreiberin()
-            && ($role === 'betreiberin' || $rolleAlt === 'betreiberin')) {
+            && (rolle_ist_betreiberin($role) || rolle_ist_betreiberin($rolleAlt))) {
             $error = 'Die Rolle „BetreiberIn" vergibt und entzieht nur eine BetreiberIn — '
                    . 'die Rolle wurde nicht geändert.';
         } elseif ($rollenwechsel && $uid === $userId && !rolle_darf_verwalten($role)) {
             $error = 'Du kannst dir nicht selbst die Verwaltungsrechte entziehen — '
                    . 'die Rolle wurde nicht geändert.';
-        } elseif ($rollenwechsel && $role !== 'betreiberin'
+        } elseif ($rollenwechsel && !rolle_ist_betreiberin($role)
                   && ist_letzte_betreiberin(db(), $uid, $rolleAlt)) {
             $error = 'Das ist das letzte Konto mit der Rolle „BetreiberIn". '
                    . 'Es lässt sich nicht zurückstufen — lege zuerst eine zweite '
@@ -576,7 +576,7 @@ if (!$u) { ui_abbruch(404, 'NutzerIn nicht gefunden.', ['zurueck' => 'admin_user
 $dv = db()->prepare('SELECT id, device_id, label, active, created_at, last_seen,
                             geraet_art, geraet_modell, geraet_teil
                      FROM devices
-                     WHERE user_id = ? AND device_id NOT LIKE \'manual-%\' ORDER BY created_at');
+                     WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . ' ORDER BY created_at');
 $dv->execute([$uid]);
 $devices = $dv->fetchAll();
 

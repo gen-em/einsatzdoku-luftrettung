@@ -43,30 +43,6 @@ require_once __DIR__ . '/../gpx_lib.php';
  * `FileReader`, wie beim CSV-Import.
  */
 
-/**
- * Das virtuelle Geraet fuer von Hand entstandene Eintraege.
- *
- * DASSELBE wie beim CSV-Import und beim Nachtragen: `manual-<userId>`,
- * abgeschaltet, kann nie hochladen. Die Nutzerkennung gehoert IN die Abfrage
- * (M3-12/M6-09) — dass der Schluessel die Zugehoerigkeit im Namen traegt, ist
- * eine Zeichenkette und keine Bedingung.
- */
-function gpx_import_geraet(PDO $pdo, int $userId): int
-{
-    $devKey = 'manual-' . $userId;
-    $q = $pdo->prepare('SELECT id FROM devices WHERE device_id = ? AND user_id = ?');
-    $q->execute([$devKey, $userId]);
-    $devId = $q->fetchColumn();
-    if ($devId !== false) { return (int)$devId; }
-
-    $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
-                   VALUES (?,?,?,?,0)')
-        ->execute([$userId, $devKey,
-                   geraet_schluessel_hash(bin2hex(random_bytes(24))),
-                   'Manuelle Einträge']);
-    return (int)$pdo->lastInsertId();
-}
-
 try {
     api_methode();
     csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
@@ -121,7 +97,7 @@ try {
     /* ---- Und jetzt in EINEM Zug ------------------------------------------ */
     $pdo->beginTransaction();
     try {
-        $devId = gpx_import_geraet($pdo, $userId);
+        $devId = geraet_virtuell_sicherstellen($pdo, $userId);
         /* `imp-` WIE BEIM UEBRIGEN IMPORT (E-S4-18). Daran haengt die
          * Sperrliste: Ein geloeschter Eintrag mit dieser Kennung wird von
          * `ingest.php` nicht wieder angelegt (`deleted_refs`). */

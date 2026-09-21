@@ -2,15 +2,14 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/mission_fields_lib.php';   // mf_pat_felder() (S9/AP7)
+require_once __DIR__ . '/einsatz_lib.php';
 
 // Einsatz-ID einlesen und Eigentum pruefen (liefert auch den Diensttag fuer die
 // Seitenleiste). Ohne Treffer: sauberes 404.
 $mid = (int)($_GET['id'] ?? 0);
-$mq = db()->prepare('SELECT day_id FROM missions WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
-$mq->execute([$mid, $userId]);
-$missionDayId = $mq->fetchColumn();
-if ($missionDayId === false) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
-$missionDayId = $missionDayId === null ? null : (int)$missionDayId;
+$mRumpf = einsatz_laden($mid, $userId, ['spalten' => 'day_id']);
+if ($mRumpf === null) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
+$missionDayId = $mRumpf['day_id'] === null ? null : (int)$mRumpf['day_id'];
 $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
 ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
 ?>

@@ -14,6 +14,90 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.29.0] — 2026-09-21
+
+**Vier Sachen, die an einer Stelle stehen statt an siebenundvierzig.**
+Schritt 15 AP4 (Zentralisierung, R83).
+
+### Hinzugefügt
+
+**Vier weitere `app_state`-Helfer in `db.php`.** `app_state_mehrere()` (eine
+Abfrage statt n), `app_state_setzen_mehrere()`, `app_state_loeschen()` und
+`app_state_einmalig()`. Gemessen waren es **27 Stellen in 17 Dateien**, die
+die Tabelle unmittelbar per SQL ansprachen; jetzt sind es **2**. Was die 27
+unterschied, war nie die Sache, sondern die Antwort auf die Frage „was, wenn
+`app_state` fehlt?" — mal `try/catch` mit `null`, mal ohne, mal mit
+`error_log`. Das ist kein seltener Zustand: Es ist der Zustand **jeder**
+Anlage zwischen Deploy und `update.php`.
+
+`app_state_einmalig()` ist der Sonderfall und der Grund, warum es eine eigene
+Funktion braucht: Die beiden Servergeheimnisse (`salt_secret`, `reg_secret`)
+benutzten schon `INSERT IGNORE`. Zwei gleichzeitige Anfragen erzeugen beide
+einen Wert, aber nur **einer** darf gewinnen — mit `ON DUPLICATE KEY UPDATE`
+gewänne der letzte, und die Pseudo-Salts änderten sich unter der Hand.
+
+**`geraet_virtuell_sicherstellen()`, `geraet_virtuell_kennung()`,
+`geraete_echt_sql($alias)` und `GERAET_VIRTUELL_MUSTER`.** Der Block „gibt es
+das virtuelle Gerät ‚Manuelle Einträge' schon? sonst anlegen" stand
+**viermal** — zweimal als eigene Funktion (`schnitt_geraet()`,
+`gpx_import_geraet()`), zweimal eingebettet, jedes Mal mit demselben
+zwanzigzeiligen Kommentar darüber, der erklärt, warum `user_id` **in** die
+Abfrage gehört. Die Kennung selbst stand an sieben Stellen. Jetzt an einer;
+die beiden Einzelfunktionen entfallen.
+
+**`einsatz_lib.php` mit `einsatz_laden($id, $userId, $o)`.** „Einen Einsatz
+per Kennung holen und dabei prüfen, dass er dem angemeldeten Konto gehört"
+stand **zwölfmal in neun Dateien**. Der Unterschied war nie die Sache,
+sondern die Spaltenliste und die Behandlung des Papierkorbs — mal
+`deleted_at IS NULL`, mal `IS NOT NULL`, mal gar nicht. Genau das sind jetzt
+die beiden Optionen `spalten` und `papierkorb`.
+
+**`db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()` in `db.php`.** Die
+drei Fragen ans Schema standen doppelt: privat in `migration_lib.php` und
+noch einmal handgeschrieben in vier Dateien, die `migration_lib.php` nicht
+laden — `ingest.php` sagte das sogar im Kommentar dazu. Die privaten `_hat_*`
+reichen jetzt nur noch durch, damit die 42 gelaufenen Migrationen unverändert
+bleiben (E-ZE-04).
+
+Sie nehmen ein `PDO`, und zwar zwingend: `tools/schemaprobe/` lässt
+Migrationen gegen ein **frisch angelegtes** Schema laufen, also gegen eine
+andere Verbindung als `db()`. Ein Helfer, der sich seine Verbindung selbst
+holte, fragte dort das falsche Schema — und zwar lautlos, denn `DATABASE()`
+hätte geantwortet.
+
+### Geändert
+
+**Vier Rollenvergleiche von Hand** (`=== 'betreiberin'`) in `admin_user.php`
+und `admin_users.php` rufen jetzt `rolle_ist_betreiberin()`.
+
+**`EDBAK_MARKE_MAX` ist jetzt `APP_STATE_MAX`** statt einer zweiten
+Konstante mit derselben 190. Beide beschreiben die Spaltenbreite von
+`app_state.v`; zwei Zahlen waren zwei Gelegenheiten, beim nächsten
+Schemawechsel eine davon zu vergessen. Der Name bleibt —
+`tools/wiederherstellungs-probe/` prüft gegen ihn.
+
+**Die Längenprüfung von `app_state` steht an einer Stelle**
+(`app_state_zu_lang()`). Sie muss in PHP stehen und nicht nur im Schema:
+Je nach Serverbetriebsart kürzt MySQL zu lange Werte **still** statt sie
+abzuweisen, und eine stille Kürzung ist hier das Schlimmste von allem — ein
+halbes JSON, das beim nächsten Lesen als „kein Auftrag" durchgeht.
+
+### Unverändert — und das ist die Aussage
+
+**`jobs.php` fragt `app_state` weiter selbst.** Der Endpunkt gehört zum
+Gerätevertrag und antwortet bei unerreichbarer Datenbank mit
+`500 {"error":"datenbank"}`. `app_state_lesen()` fängt und liefert `null` —
+daraus wäre ein „Token falsch" geworden, also eine andere Antwort an ein
+Gerät. Ebenso bleibt `job_aufraeumen_schritte()`: Es löscht mit einem Verbund
+auf `users`, das ist kein Schlüsselzugriff.
+
+**Zwei der zwölf Einsatz-Abfragen bleiben.** `trash_restore_mission()` fragt
+den Einsatz **und** den Löschzustand seines Diensttags in einem Verbund mit
+`days` — eine Entscheidung, die zusammen getroffen werden muss. Und in
+`api/import_commit.php` ist die Abfrage eine **einmal vorbereitete**
+Anweisung, die in der Import-Schleife bis zu 3000-mal ausgeführt wird; ein
+Funktionsaufruf je Zeile bereitete sie 3000-mal neu vor.
+
 ## [Web 20.28.0] — 2026-09-21
 
 **Ein Eingang für die Endpunkte, eine Meldung über die Umleitung.**

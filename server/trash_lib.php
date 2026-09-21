@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
+require_once __DIR__ . '/einsatz_lib.php';
 
 /**
  * Papierkorb (Soft-Delete) fuer Einsaetze und Diensttage.
@@ -31,9 +32,9 @@ const TRASH_DAYS = 90;
 /* ---- Umfang ermitteln (fuer die Sicherheitsabfragen) ------------------- */
 
 function trash_scope_mission(int $userId, int $id): ?array {
-    $st = db()->prepare('SELECT * FROM missions WHERE id = ? AND user_id = ?');
-    $st->execute([$id, $userId]);
-    $m = $st->fetch();
+    /* `papierkorb => egal`: Der Umfang wird VOR dem Loeschen und VOR dem
+     * Zurueckholen gefragt — der Einsatz kann auf beiden Seiten stehen. */
+    $m = einsatz_laden($id, $userId, ['papierkorb' => 'egal']);
     if (!$m) { return null; }
 
     $one = function (string $sql, array $p): int {
@@ -215,10 +216,8 @@ function trash_block_ref(PDO $pdo, array $m, string $ownerType = 'mission'): voi
 
 function trash_purge_mission(int $userId, int $id): void {
     $pdo = db();
-    $st = $pdo->prepare('SELECT id, device_id, client_ref FROM missions
-                         WHERE id = ? AND user_id = ? AND deleted_at IS NOT NULL');
-    $st->execute([$id, $userId]);
-    $m = $st->fetch();
+    $m = einsatz_laden($id, $userId,
+                       ['spalten' => 'id, device_id, client_ref', 'papierkorb' => 'ja']);
     if (!$m) { return; }
 
     $pdo->beginTransaction();

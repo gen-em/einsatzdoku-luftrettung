@@ -164,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * das Feld trotzdem. Wer nicht selbst BetreiberIn ist, kann keine
          * anlegen; das Konto entsteht dann als Admin. */
         $role  = rolle_normieren($_POST['role'] ?? 'user');
-        if ($role === 'betreiberin' && !ist_betreiberin()) { $role = 'admin'; }
+        if (rolle_ist_betreiberin($role) && !ist_betreiberin()) { $role = 'admin'; }
         $name  = trim((string)($_POST['name'] ?? ''));
 
         if ($email === null) {
@@ -324,7 +324,7 @@ $alle = db()->query(
             u.status, u.bestaetigt_am,
             COUNT(d.id) AS geraete
        FROM users u
-       LEFT JOIN devices d ON d.user_id = u.id AND d.device_id NOT LIKE \'manual-%\'
+       LEFT JOIN devices d ON d.user_id = u.id AND ' . geraete_echt_sql('d') . '
       GROUP BY u.id, u.email, u.name, u.role, u.created_at, u.last_login, u.account_key,
                u.status, u.bestaetigt_am'
 )->fetchAll();

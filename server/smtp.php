@@ -146,10 +146,8 @@ function smtp_versand_vermerken(bool $ok): void
 {
     if (!function_exists('db')) { return; }
     try {
-        db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?), (?, ?)
-                       ON DUPLICATE KEY UPDATE v = VALUES(v)')
-            ->execute(['smtp_last', gmdate('Y-m-d\TH:i:s\Z'),
-                       'smtp_last_ok', $ok ? '1' : '0']);
+        app_state_setzen_mehrere(['smtp_last'    => gmdate('Y-m-d\TH:i:s\Z'),
+                                  'smtp_last_ok' => $ok ? '1' : '0']);
     } catch (Throwable $ex) {
         /* Still: Der Versand ist gelaufen, der Vermerk nicht. Das ist die
          * richtige Reihenfolge der Wichtigkeit. */

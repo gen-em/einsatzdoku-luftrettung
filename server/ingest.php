@@ -7,16 +7,6 @@ require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/geraete_lib.php';  // herkunft_ableiten() (R64)
 require_once __DIR__ . '/ratelimit_lib.php'; // Mengenbremse (P5a/AP7, R19)
 
-/** Gibt es die Spalte? Eine Abfrage am Informationsschema -- ingest.php
- *  laedt migration_lib.php nicht, deshalb steht die Frage hier noch einmal. */
-function ingest_hat_spalte(PDO $pdo, string $tabelle, string $spalte): bool
-{
-    $q = $pdo->prepare('SELECT COUNT(*) FROM information_schema.columns
-                        WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?');
-    $q->execute([$tabelle, $spalte]);
-    return (int)$q->fetchColumn() > 0;
-}
-
 /**
  * Den Vermerk am Geraet fortschreiben (P5a/AP7, E-P5a-02).
  *
@@ -72,7 +62,7 @@ function ingest_tag_offen(PDO $pdo, int $dayId, string $eigeneTabelle, int $eige
     $juengste = null;
     foreach (['missions', 'rest_segments'] as $tab) {
         if ($tab === 'rest_segments'
-            && !ingest_hat_spalte($pdo, 'rest_segments', 'created_at')) { continue; }
+            && !db_hat_spalte($pdo, 'rest_segments', 'created_at')) { continue; }
         $sql  = "SELECT MAX(created_at) FROM `$tab` WHERE day_id = ?";
         $args = [$dayId];
         if ($tab === $eigeneTabelle && $eigeneId > 0) { $sql .= ' AND id <> ?'; $args[] = $eigeneId; }
@@ -500,7 +490,7 @@ try {
      * zurueck, wie der Kommentar dort verspricht. Eine Abfrage je Paket am
      * Informationsschema, nur fuer Ruhesegmente -- der Preis fuer einen
      * Deploy, der kein Paket verliert. */
-    $hatCreated = $kind === 'mission' || ingest_hat_spalte($pdo, 'rest_segments', 'created_at');
+    $hatCreated = $kind === 'mission' || db_hat_spalte($pdo, 'rest_segments', 'created_at');
     $chk = $pdo->prepare("SELECT id, day_id, deleted_at, started_at" . ($hatCreated ? ', created_at' : '')
                        . ($kind === 'mission' ? ', uhr_gesperrt' : '')
                        . " FROM `$tabelle` WHERE device_id = ? AND client_ref = ?");

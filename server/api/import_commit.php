@@ -228,33 +228,7 @@ function import_commit(array $b, int $userId): never
         // Importierte Einsaetze zaehlen wie von Hand angelegte: Sie haengen am
         // selben virtuellen Geraet, damit die Uhr sie nie ueberschreibt und sie
         // in der Geraeteliste nicht auftauchen (Filter 'manual-%').
-        $devKey = 'manual-' . $userId;
-        /* Die Nutzerkennung gehoert IN die Abfrage (M3-12/M6-09).
-         *
-         * Gesucht wurde allein ueber device_id. Dass 'manual-<id>' die
-         * Zugehoerigkeit im Namen traegt, machte die Abfrage praktisch
-         * richtig — aber nur, weil eine Zeichenkette zufaellig dasselbe
-         * aussagt wie eine Spalte. Steht die Bedingung nicht in der Abfrage,
-         * gibt es auch nichts, was sie durchsetzt: Ein spaeter geaendertes
-         * Namensschema, ein Tippfehler beim Zusammenbauen des Schluessels,
-         * und die gefundene Zeile gehoert jemand anderem. Das Ergebnis waere
-         * ein Einsatz am Geraet einer fremden Person.
-         *
-         * user_id ist ausserdem die Spalte, auf der die Fremdschluessel und
-         * alle uebrigen Abfragen dieser Datei arbeiten. Eine Ausnahme davon
-         * faellt bei der Durchsicht nicht auf. */
-        $q = $pdo->prepare('SELECT id FROM devices WHERE device_id = ? AND user_id = ?');
-        $q->execute([$devKey, $userId]);
-        $devId = $q->fetchColumn();
-        if ($devId === false) {
-            $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
-                           VALUES (?,?,?,?,0)')
-                ->execute([$userId, $devKey,
-                           geraet_schluessel_hash(bin2hex(random_bytes(24))),
-                           'Manuelle Einträge']);
-            $devId = (int)$pdo->lastInsertId();
-        }
-        $devId = (int)$devId;
+        $devId = geraet_virtuell_sicherstellen($pdo, $userId);
 
         /* ---- Einsaetze ---------------------------------------------------- */
         // Die zusaetzlichen Felder ab Web 2.10.0 haengen hinten an. Profile,

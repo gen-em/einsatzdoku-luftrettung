@@ -206,9 +206,7 @@ function logo_standard(): string
     if ($wert !== null) { return $wert; }
     $wert = LOGO_STANDARD_VORGABE;
     try {
-        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
-        $st->execute(['logo_standard']);
-        $v = (string)$st->fetchColumn();
+        $v = (string)(app_state_lesen('logo_standard') ?? '');
         if ($v === 'fahrzeug' || $v === 'hubschrauber' || $v === 'wechselnd') { $wert = $v; }
     } catch (Throwable) {
         // Keine Datenbank, keine Tabelle, kein Eintrag: Vorbelegung.

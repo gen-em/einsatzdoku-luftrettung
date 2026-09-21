@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
 require_once __DIR__ . '/../validate_lib.php';
+require_once __DIR__ . '/../einsatz_lib.php';
 require_once __DIR__ . '/../diensttag_lib.php';
 require_once __DIR__ . '/../spur_lib.php';
 
@@ -60,32 +61,6 @@ require_once __DIR__ . '/../spur_lib.php';
 
 /** Die drei Phasen, die der Schneide-Bereich als Abkuerzung anbietet (A0). */
 const SCHNITT_PHASEN = [3, 4, 7];
-
-/**
- * Das virtuelle Geraet fuer von Hand entstandene Eintraege.
- *
- * WOERTLICH AUS `einsatz_form.php` uebernommen, einschliesslich der
- * Nutzerkennung IN der Abfrage (M3-12/M6-09): Dass `manual-<id>` die
- * Zugehoerigkeit im Namen traegt, ist eine Zeichenkette und keine Bedingung.
- * Ohne `user_id` in der Abfrage gehoerte die gefundene Zeile beim naechsten
- * Namensschema jemand anderem — und der Einsatz staende am Geraet einer
- * fremden Person.
- */
-function schnitt_geraet(PDO $pdo, int $userId): int
-{
-    $devKey = 'manual-' . $userId;
-    $q = $pdo->prepare('SELECT id FROM devices WHERE device_id = ? AND user_id = ?');
-    $q->execute([$devKey, $userId]);
-    $devId = $q->fetchColumn();
-    if ($devId !== false) { return (int)$devId; }
-
-    $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
-                   VALUES (?,?,?,?,0)')
-        ->execute([$userId, $devKey,
-                   geraet_schluessel_hash(bin2hex(random_bytes(24))),
-                   'Manuelle Einträge']);
-    return (int)$pdo->lastInsertId();
-}
 
 /* ---- Schneiden ------------------------------------------------------------ */
 
@@ -168,7 +143,7 @@ function schnitt_ausfuehren(array $b, int $userId): never
     /* ---- Und jetzt in EINEM Zug ------------------------------------------ */
     $pdo->beginTransaction();
     try {
-        $devId = schnitt_geraet($pdo, $userId);
+        $devId = geraet_virtuell_sicherstellen($pdo, $userId);
         $pdo->prepare("INSERT INTO missions
                          (user_id, device_id, client_ref, day_id, started_at,
                           ended_at, final, uhr_gesperrt, origin, geraet_art, geraet_modell)
@@ -250,11 +225,10 @@ function schnitt_rueckgaengig(array $b, int $userId): never
     if ($misId === null) { json_out(['error' => 'eingabe',
         'meldung' => 'Kein Einsatz angegeben.'], 400); }
 
-    $q = $pdo->prepare('SELECT id, day_id FROM missions
-                         WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
-    $q->execute([$misId, $userId]);
-    if (!$q->fetch()) { json_out(['error' => 'nicht_gefunden',
-        'meldung' => 'Diesen Einsatz gibt es nicht (mehr).'], 404); }
+    if (einsatz_laden($misId, $userId, ['spalten' => 'id, day_id']) === null) {
+        json_out(['error' => 'nicht_gefunden',
+                  'meldung' => 'Diesen Einsatz gibt es nicht (mehr).'], 404);
+    }
 
     $schnitte = schnitte_zum_einsatz($pdo, $misId);
     if (!$schnitte) { json_out(['error' => 'kein_schnitt',

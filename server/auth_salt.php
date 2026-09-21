@@ -102,12 +102,7 @@ if ($u && $u['kdf_salt'] !== null) {
 }
 
 // Server-Geheimnis fuer Pseudo-Salts (einmalig erzeugt, app_state)
-$sec = $pdo->query("SELECT v FROM app_state WHERE k = 'salt_secret'")->fetchColumn();
-if ($sec === false) {
-    $sec = bin2hex(random_bytes(32));
-    $pdo->prepare("INSERT IGNORE INTO app_state (k, v) VALUES ('salt_secret', ?)")
-        ->execute([$sec]);
-}
+$sec = app_state_einmalig('salt_secret', fn (): string => bin2hex(random_bytes(32)));
 
 /* Unbekannte Adresse: Pseudo-Salt in derselben Form — die Antwort ist damit
  * nicht von einer echten unterscheidbar. Die Anmeldung scheitert anschliessend

@@ -174,12 +174,16 @@ return [
 
 ['kennung' => 'Z10', 'paket' => 'AP4',
  'beschreibung' => 'app_state-SQL ausserhalb db.php und migration_lib.php',
- 'grund' => 'Sechs Helfer in db.php (E-ZE-17). Ausnahmen: migration_lib.php (E-ZE-04) '
-          . 'und job_aufraeumen() in jobs_lib.php (Verbund, kein Schluesselzugriff).',
+ 'grund' => 'Sechs Helfer in db.php (E-ZE-17). Drei Ausnahmen: migration_lib.php '
+          . '(E-ZE-04), job_aufraeumen_schritte() in jobs_lib.php (DELETE mit Verbund '
+          . 'auf users, kein Schluesselzugriff) und jobs.php — GERAETEVERTRAG: Der '
+          . 'Endpunkt antwortet bei unerreichbarer app_state mit 500 "datenbank"; der '
+          . 'Helfer faengt und liefert null, was daraus ein "Token falsch" machte '
+          . '(AP4-c).',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/db.php', 'server/migration_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~\b(FROM|INTO|UPDATE|JOIN)\s+app_state\b~i'],
- 'start' => 27, 'decke_jetzt' => 27, 'decke_ziel' => 1],
+ 'start' => 27, 'decke_jetzt' => 2, 'decke_ziel' => 2],
 
 ['kennung' => 'Z11', 'paket' => 'AP4',
  'beschreibung' => "Literal 'manual-' ausserhalb db.php",
@@ -188,17 +192,23 @@ return [
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/db.php'],
  'regel' => ['art' => 'muster', 'muster' => '~manual-~'],
- 'start' => 7, 'decke_jetzt' => 7, 'decke_ziel' => 0],
+ 'start' => 7, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 ['kennung' => 'Z12', 'paket' => 'AP4',
- 'beschreibung' => 'Einsatz per ID mit Besitzpruefung per SQL ausserhalb einsatz_lib.php',
- 'grund' => 'einsatz_laden() (E-ZE-19). Ausnahme, namentlich: '
-          . 'trash_restore_mission() in trash_lib.php (Verbund mit days).',
- 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
+ 'beschreibung' => 'Einsatz per ID mit Besitzpruefung per SELECT ausserhalb einsatz_lib.php',
+ 'grund' => 'einsatz_laden() (E-ZE-19). Zwei Ausnahmen, namentlich: '
+          . 'trash_restore_mission() in trash_lib.php (Verbund mit days) und die '
+          . 'in der Import-Schleife wiederverwendete Anweisung in '
+          . 'api/import_commit.php (bis 3000 Ausfuehrungen, AP4-b). '
+          . 'DIE REGEL VERLANGT SEIT AP4 EIN SELECT: Der Startwert 13 aus AP1 '
+          . 'enthielt eine DELETE-Anweisung (api/schneiden.php), also keinen '
+          . 'Ladevorgang. Der berichtigte Startwert ist 12.',
+ 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
+ 'ausser' => ['server/einsatz_lib.php'],
  'regel' => ['art' => 'muster', 'muster' =>
-    '~FROM\s+missions\b[^;]{0,400}?\bid\s*=\s*\?[^;]{0,200}?\buser_id\s*=\s*\?'
-  . '|FROM\s+missions\b[^;]{0,400}?\buser_id\s*=\s*\?[^;]{0,200}?\bid\s*=\s*\?~is'],
- 'start' => 13, 'decke_jetzt' => 13, 'decke_ziel' => 1],
+    '~SELECT\s[^;]{0,300}?FROM\s+missions\b[^;]{0,400}?\bid\s*=\s*\?[^;]{0,200}?\buser_id\s*=\s*\?'
+  . '|SELECT\s[^;]{0,300}?FROM\s+missions\b[^;]{0,400}?\buser_id\s*=\s*\?[^;]{0,200}?\bid\s*=\s*\?~is'],
+ 'start' => 12, 'decke_jetzt' => 2, 'decke_ziel' => 2],
 
 ['kennung' => 'Z13', 'paket' => 'AP4',
  'beschreibung' => 'Rollenvergleich von Hand ausserhalb db.php',
@@ -209,27 +219,34 @@ return [
  'regel' => ['art' => 'muster', 'muster' =>
     '~(===|!==|==|!=)\s*[\'"](admin|betreiberin|user)[\'"]'
   . '|[\'"](admin|betreiberin|user)[\'"]\s*(===|!==|==|!=)~'],
- 'start' => 4, 'decke_jetzt' => 4, 'decke_ziel' => 0],
+ 'start' => 4, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 ['kennung' => 'Z14', 'paket' => 'AP4',
  'beschreibung' => 'information_schema ausserhalb migration_lib.php und db.php',
- 'grund' => 'db_hat_tabelle()/-spalte()/-index() werden oeffentlich (E-ZE-04). '
-          . 'Was bleibt, fragt keine Existenz, sondern Spaltenlisten, Groessen '
-          . 'oder is_nullable — Zahl nennt AP4.',
+ 'grund' => 'db_hat_tabelle()/-spalte()/-index() sind seit AP4 oeffentlich (E-ZE-04). '
+          . 'Was bleibt, fragt KEINE Existenz: komplett_lib.php 2 (Spaltenliste mit '
+          . 'Typen, Fremdschluessel), speicher_lib.php 1 (Groesse in Bytes) und '
+          . 'nachbearbeitung_lib.php 2 (is_nullable). Fuer is_nullable entsteht KEIN '
+          . 'vierter Helfer: Beide Stellen liegen in EINER Datei, und nb_moeglich() '
+          . 'fragt bewusst vier Tabellen in einer Abfrage (1,071 ms gegen 0,355 ms je '
+          . 'Seitenaufbau) — ein Einzelhelfer naehme das wieder auseinander. '
+          . 'Auftraggeber, 21.09.2026.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/migration_lib.php', 'server/db.php'],
  'regel' => ['art' => 'muster', 'muster' => '~information_schema~i'],
- 'start' => 9, 'decke_jetzt' => 9, 'decke_ziel' => 4],
+ 'start' => 9, 'decke_jetzt' => 5, 'decke_ziel' => 5],
 
 ['kennung' => 'Z15', 'paket' => 'AP4',
  'beschreibung' => 'information_schema in migration_lib.php',
- 'grund' => 'Gelaufene Migrationen werden nicht umgebaut (E-ZE-04) — die Zahl '
-          . 'darf aber nicht steigen. Neue Migrationen fragen ueber db_hat_*(). '
-          . 'Erledigt sich mit dem neuen Migrationsregister in P8 (R66).',
+ 'grund' => 'Gelaufene Migrationen werden nicht umgebaut (E-ZE-04) — die Zahl darf '
+          . 'aber nicht steigen. Neue Migrationen fragen ueber db_hat_*(). Seit AP4 '
+          . 'sind es 54 statt 57: Die drei privaten _hat_* reichen nur noch an db.php '
+          . 'durch und nennen information_schema nicht mehr. Erledigt sich mit dem '
+          . 'neuen Migrationsregister in P8 (R66).',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'nur' => 'server/migration_lib.php',
  'regel' => ['art' => 'muster', 'muster' => '~information_schema~i'],
- 'start' => 57, 'decke_jetzt' => 57, 'decke_ziel' => 57],
+ 'start' => 57, 'decke_jetzt' => 54, 'decke_ziel' => 54],
 
 /* ---- AP5: Transaktion und Kindtabellen ---------------------------------- */
 

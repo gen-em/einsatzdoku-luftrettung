@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';
 require_once __DIR__ . '/../mission_fields_lib.php';
+require_once __DIR__ . '/../einsatz_lib.php';
 require_once __DIR__ . '/../diensttag_lib.php';
 require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 
@@ -12,9 +13,7 @@ api_methode('GET');
 try {
     $id = (int)($_GET['id'] ?? 0);
 
-    $st = db()->prepare('SELECT * FROM missions WHERE id = ? AND user_id = ? AND deleted_at IS NULL');   // Datentrennung!
-    $st->execute([$id, $userId]);
-    $m = $st->fetch();
+    $m = einsatz_laden($id, $userId);   // Datentrennung steckt in der Funktion
     if (!$m) json_out(['error' => 'not_found'], 404);
 
     /* Zusatzfelder generisch aus der zentralen Definition (mission_fields.php).

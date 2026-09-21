@@ -42,6 +42,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 require_once __DIR__ . '/diensttag_lib.php';
+require_once __DIR__ . '/einsatz_lib.php';
 
 /**
  * Umfang eines Diensttages fuer die Rueckfrage (Akzeptanzkriterium 33).
@@ -103,14 +104,11 @@ function tz_tag_umfang(int $userId, int $dayId): array
 function tz_einsatz_verschieben(int $userId, int $missionId, int $zielDayId): array
 {
     $pdo = db();
-    $mq = $pdo->prepare('SELECT day_id FROM missions
-                         WHERE id = ? AND user_id = ? AND deleted_at IS NULL');   // Datentrennung!
-    $mq->execute([$missionId, $userId]);
-    $altId = $mq->fetchColumn();
-    if ($altId === false) {
+    $mAlt = einsatz_laden($missionId, $userId, ['spalten' => 'day_id']);
+    if ($mAlt === null) {
         return ['ok' => false, 'meldung' => 'Einsatz nicht gefunden.', 'day_id' => 0];
     }
-    $altId = $altId === null ? 0 : (int)$altId;
+    $altId = $mAlt['day_id'] === null ? 0 : (int)$mAlt['day_id'];
 
     $ziel = dt_laden($userId, $zielDayId, true);
     if ($ziel === null) {

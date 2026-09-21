@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/validate_lib.php';
+require_once __DIR__ . '/einsatz_lib.php';
 require_once __DIR__ . '/tageszuordnung_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
 
@@ -29,10 +30,8 @@ require_once __DIR__ . '/diensttag_lib.php';
 
 $mid = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
 
-$mq = db()->prepare('SELECT id, day_id, started_at, ended_at
-                     FROM missions WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
-$mq->execute([$mid, $userId]);                                       // Datentrennung!
-$mission = $mq->fetch();
+// Datentrennung steckt in einsatz_laden()
+$mission = einsatz_laden($mid, $userId, ['spalten' => 'id, day_id, started_at, ended_at']);
 if (!$mission) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
 
 $altDayId = $mission['day_id'] !== null ? (int)$mission['day_id'] : 0;

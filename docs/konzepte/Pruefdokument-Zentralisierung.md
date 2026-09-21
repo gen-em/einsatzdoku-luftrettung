@@ -1,6 +1,6 @@
 # Prüfdokument — Zentralisierung: eine Stelle je Sache (Schritt 15)
 
-**Stand:** 21.09.2026, nach **AP1**, **AP2** (Web 20.27.0) und **AP3** (Web 20.28.0) · **Zweig:** `claude/eager-euler-jlfi9i`,
+**Stand:** 21.09.2026, nach **AP1**, **AP2** (Web 20.27.0), **AP3** (Web 20.28.0) und **AP4** (Web 20.29.0) · **Zweig:** `claude/eager-euler-jlfi9i`,
 von `origin/main` `fd99989` (Web 20.26.2) · **Konzept:**
 `Konzept-Zentralisierung.md`
 
@@ -395,3 +395,105 @@ wiederholen lassen:
   weiterhin über das Aussehen; `flash_setzen('warn', …)` gibt es nicht, weil
   die drei Seiten nur `notice` und `error` kennen. Wer einen dritten Ton
   braucht, ergänzt `FLASH_TOENE`.
+
+---
+
+# AP4 — Datenzugriff klein (Web 20.29.0, 21.09.2026)
+
+**AP4 hat `server/` angefasst — 23 Dateien, davon eine neu**
+(`server/einsatz_lib.php`). Es ist das erste Paket, das an Stellen arbeitet,
+die in einer **offenen Transaktion** stehen (`demo_anlegen()`,
+`demo_entfernen()`), und das erste, bei dem eine Stelle wegen des
+**Gerätevertrags** ausdrücklich stehenbleibt (`jobs.php`).
+
+## D0. Was nicht geprüft werden konnte — und warum
+
+| # | Was | Warum nicht | Woran man ein Scheitern erkennt |
+|---|---|---|---|
+| **N4-1** | **Der Android- und der Uhr-Prüfstand** | Unverändert wie N3-2: kein `/opt/android-sdk` in diesem Container, `./gradlew test` bricht mit „SDK location not found" ab. AP4 fasst von den fünf Geräte-Dateien **nur `ingest.php`** an, und dort genau eine Zeile: `ingest_hat_spalte()` → `db_hat_spalte()`, gleiche Frage, gleiche Antwort, kein Fehlerschlüssel berührt | Ein Gerät bekommt eine Antwort, die es nicht kennt |
+| **N4-2** | **Der punktweise GPX-Vergleich** | Unverändert wie N3-1 (Backlog Nr. 259) | siehe dort |
+| **N4-3** | **`tools/schemaprobe/`** | Sie **löscht** das genannte Schema mehrfach und verlangt den Namen ausdrücklich; auf der Anlage, auf der auch die Kreisläufe laufen, wäre das der Demo-Bestand. **Sie ist für AP4 die wichtigste nicht gefahrene Probe**, weil sie die einzige ist, die Migrationen gegen eine **andere** Verbindung als `db()` laufen lässt — genau der Fall, für den `db_hat_*()` ein `PDO` nimmt (AP4-a). Belegt ist stattdessen durch Lesen: Die drei Helfer nehmen den übergebenen `$pdo` und holen sich nie selbst eine Verbindung | Ein Migrationslauf im Prüfschema meldet „Spalte fehlt" für eine Spalte, die dort steht — oder umgekehrt |
+| **N4-4** | **Ein Kontolöschvorgang von Hand** | `konto_loeschen()` ist über die Wiederherstellungs-Probe (111/0) nur mittelbar berührt. Der Weg über die Oberfläche steht in der Prüfliste als **D-3** | Nach dem Löschen bleiben Zeilen `mengen:<id>` in `app_state` stehen |
+
+## D1. Was maschinell geprüft wurde — mit Mittel **und** Zahl
+
+### Gegen den Quelltext
+
+| Mittel | Gemessen |
+|---|---|
+| `tools/zaehlung/zaehlen.php` | **38 Zeilen, 0 über der Decke.** Z10 **27 → 2** · Z11 **7 → 0** · Z12 **12 → 2** · Z13 **4 → 0** · Z14 **9 → 5** · Z15 **57 → 54** · Z38 **77 → 76** (Aufschlüsselung in AP4-g) |
+| Z12 mit verschärfter Regel gegen den Stand **vor** AP4 | **genau 12 Stellen**, die `DELETE`-Zeile nicht darunter — der berichtigte Startwert ist gemessen, nicht gerechnet (AP4-d) |
+| `tools/zaehlung/zaehlen.php --selbstprobe` | **34 von 34** |
+| `php -l` über `server/` | **136 Dateien, 0 Fehler** (135 im Repositorium plus die lokale `config.php`) |
+| `tools/wortliste/wortliste.py` | **0 Treffer ausserhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** |
+| `tools/vollstaendigkeit/pruefen.py` | **398** — nach einer Berichtigung: Der erste Lauf stand auf **399**, und der 399. Befund war ein **U+2026** in einem neuen Kommentar in `db.php`. Dieselbe Falle, dieselbe Datei, zum **dritten** Mal (Schritt 16, AP2, AP4). Ersetzt durch drei Punkte |
+| `tools/kettenaufrufe/pruefen.py` | **0 Befunde** |
+| `tools/sitzungshaertung/pruefen.php` | **0 Befunde** · `tools/cspprobe/` **0 Befunde** · `tools/migrationsregister/` **0 ungenutzte Ausnahmen** |
+| **E-ZE-17-Beleg je Stelle** | **7 Stellen in 5 Dateien nachgelesen**, alle holen `$pdo` unmittelbar aus `db()`; `db()` hält die Verbindung statisch (`db.php` Z. 42–43). **0 Stellen brauchen einen `?PDO $pdo`-Parameter.** Tabelle in AP4-i |
+
+### Gegen die laufende Anlage
+
+| Mittel | Gemessen |
+|---|---|
+| Kreislauf `edbak` | **328 771 Einzelvergleiche, 0 unerklärt, 21 erwartet** — wie vor dem Paket |
+| Kreislauf `csv` | **10 922 Einzelvergleiche, 0 unerklärt, 1 271 erwartet** — wie vor dem Paket |
+| `tools/ingestprobe/probe.php` | **83 Erwartungen, 0 nicht erfüllt** — fährt `db_hat_spalte()` auf `rest_segments.created_at` |
+| `tools/kopplungsprobe/probe.php` | **76, 0 nicht erfüllt, 0 übergangen** |
+| `tools/komplettprobe/probe.php` | **64, 0 nicht erfüllt** |
+| `tools/spurprobe/probe.php` | **45, 0 nicht erfüllt** |
+| `tools/jobprobe/probe.php` | **35, 0 nicht erfüllt** — `jobs_token()` und `jobs_pause()` laufen jetzt über die Helfer |
+| `tools/ratenprobe/probe.php` | **50 Prüfungen, 0 Befunde** |
+| `tools/wiederherstellungs-probe/probe.php` | **111, 0 nicht erfüllt** — prüft `EDBAK_MARKE_MAX` an drei Stellen (AP4-h) |
+| `tools/anteilprobe/probe.php` | **55 von 55** — `schluessel_marke_lesen()`/`-setzen()` |
+| `tools/versandprobe/probe.php` | **135, 0 nicht erfüllt** — `sz_tabelle_da()` und `sz_dateien_tabelle_da()` über `db_hat_tabelle()` |
+| `jobs_pause()` / `jobs_pause_bis()` von Hand | gesetzt und zurückgelesen: **`2026-09-21 22:04:55`** — der Rundweg durch `app_state_setzen()` und `app_state_lesen()` an einem echten Wert |
+| Demo-Reset | lief während der Prüfläufe **von selbst** und vollständig durch: Danach stehen **21 Diensttage und 106 Einsätze** im Demo-Konto, `demo_letzter_reset` und `demo_user_id` sind über die neuen Helfer geschrieben. Das ist der Beleg für `demo_entfernen()` und `demo_anlegen()` **innerhalb ihrer Transaktion** |
+
+## D2. Was im Browser geprüft wurde
+
+| Weg | Ergebnis |
+|---|---|
+| **Klickprobe** `node tools/klickprobe/probe.mjs` | **48 von 48 Wegen erfüllt, 0 verfehlt** — im **dritten** Lauf. Die beiden davor meldeten 42/48, und beide Male war der **Demo-Reset** die Ursache, nicht der Code (siehe unten) |
+| **Bilderlauf** `node tools/screenshots/aufnehmen.mjs` | *(Zahl nach dem Lauf)* |
+| **Helferprobe von Hand** gegen die laufende Datenbank | **13 Zellen, 13 erfüllt** — Einzelheiten im Konzept-Prüfprotokoll |
+
+**Der Demo-Reset hat zwei Läufe der Klickprobe entwertet, und `jobs_pause()`
+half nicht.** Das ist ein eigener Befund: Der Reset hängt **nicht** an der
+Jobschlange, sondern an `auth_guard.php` Z. 482 —
+`if (demo_ist_demo($userId)) { demo_reset_wenn_faellig(); }`. Er läuft bei
+**jeder Anmeldung des Demo-Kontos**, sobald `DEMO_RESET_SEKUNDEN` (1800) um
+sind; eine angehaltene Jobschlange ändert daran nichts. Das richtige Mittel
+steht in `tools/klickprobe/LIESMICH.md`:
+
+```sql
+UPDATE app_state SET v = UNIX_TIMESTAMP() WHERE k = 'demo_letzter_reset';
+```
+
+Damit lief die Probe durch. Nachgetragen in Backlog **Nr. 259**.
+
+## D3. Prüfliste — was **die Auftraggeberin** noch tun muss
+
+| # | Weg | Erwartet | Scheitern erkennbar an |
+|---|---|---|---|
+| **D-1** | **Betrieb → Demo-Konto**, „Jetzt zurücksetzen" | Der Bericht nennt Diensttage und Einsätze wie bisher | Leerer Bestand oder eine Fehlermeldung → `demo_anlegen()` schreibt `app_state` außerhalb seiner Transaktion |
+| **D-2** | **Betrieb → Jobs**, Pause setzen und wieder aufheben | Die Zeile „angehalten bis …" erscheint und verschwindet | Die Pause lässt sich nicht aufheben → `app_state_loeschen()` greift nicht |
+| **D-3** | **Ein Konto löschen** (Verwaltung → Konto → löschen) | Läuft durch wie bisher | Danach stehen noch Zeilen `mengen:<id>` in `app_state` |
+| **D-4** | **Einen Einsatz aus dem Papierkorb zurückholen** und einen **endgültig löschen** | Wie bisher; der Einsatz an einem gelöschten Diensttag wird weiterhin abgelehnt | „Einsatz nicht gefunden", wo er dasteht → `papierkorb`-Option falsch herum |
+| **D-5** | **Einen Einsatz von Hand anlegen**, einen **CSV-Import** fahren, eine **GPX-Datei einlesen**, einen Einsatz **schneiden** | Alle vier hängen am selben Gerät „Manuelle Einträge"; in der Geräteliste taucht es **nicht** auf | Ein zweites Gerät „Manuelle Einträge" oder ein Eintrag in der Geräteliste |
+| **D-6** | **Verwaltung → Konten**, eine Rolle auf „BetreiberIn" setzen und zurück | Wie bisher, einschließlich der Sperre „das letzte Konto mit der Rolle" | Die Sperre greift nicht mehr oder greift zu früh |
+| **D-7** | Nach dem Ausrollen **`update.php`** aufrufen — **nicht nötig** (keine Migration), aber die Seite **Betrieb → Updates** einmal ansehen | „Keine offenen Migrationen" wie bisher | Eine Migration meldet sich, obwohl AP4 keine anlegt → `_hat_*` reichen falsch durch |
+
+## D4. Grenzen — was sich mit diesem Paket NICHT beantworten lässt
+
+- **Die Ausnahme `jobs.php` ist gelesen, nicht gemessen** (AP4-c). Belegt ist,
+  dass der `catch` dort mit `500 datenbank` antwortet und `app_state_lesen()`
+  stattdessen `null` liefern würde. Ein Gegentest hieße, die Datenbank
+  mitten im Lauf unerreichbar zu machen; das leistet dieser Prüfstand nicht.
+- **`db_hat_*()` gegen eine fremde Verbindung** ist der Fall, für den die
+  Signatur gebaut ist — und genau der ist nicht gefahren (N4-3).
+- **Die Import-Ausnahme (AP4-b) ist mit einer Zahl aus dem Code begründet,
+  nicht mit einer Messung.** Dass 3 000 zusätzliche `prepare()` messbar
+  kosten, ist plausibel und unbelegt; AP5 bringt für `ingest.php` einen
+  Messstand mit, an dem sich so etwas künftig entscheiden lässt.
+- **Die `NULL`-Kleinigkeit** (Problem 3 im Protokoll) ist durch Lesen aller
+  Schreibwege ausgeschlossen, nicht durch eine Messung an Daten.

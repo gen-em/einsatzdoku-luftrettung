@@ -59,14 +59,7 @@ function geocoder_state(string $k, bool $frisch = false): ?string
     static $c = [];
     if ($frisch) { unset($c[$k]); }
     if (array_key_exists($k, $c)) { return $c[$k]; }
-    try {
-        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
-        $st->execute([$k]);
-        $v = $st->fetchColumn();
-        return $c[$k] = ($v === false ? null : (string)$v);
-    } catch (Throwable) {
-        return $c[$k] = null;      // app_state fehlt (Migration nicht gelaufen)
-    }
+    return $c[$k] = app_state_lesen($k);
 }
 
 /** Schalter der Installation. Vorgabe: an (F-SP-4). */
@@ -155,8 +148,7 @@ function geocoder_installation_setzen(bool $an, string $dienst): array
 
 function geocoder_state_setzen(string $k, string $v): void
 {
-    db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
-                   ON DUPLICATE KEY UPDATE v = VALUES(v)')->execute([$k, $v]);
+    app_state_setzen($k, $v);
     /* UND DEN ZWISCHENSPEICHER NACHZIEHEN. Er ist ab hier veraltet, und die
      * Seite, die gerade gespeichert hat, gibt sich in derselben Anfrage aus —
      * ohne diese Zeile mit dem Stand von vorher. Ein Neuladen holt das nicht

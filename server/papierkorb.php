@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/trash_lib.php';
+require_once __DIR__ . '/einsatz_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
 
 /**
@@ -97,9 +98,7 @@ if (!$zeigeListe && $istTag) {
      * oben zaehlt nur die geloeschten; sie war damit zu klein. */
     $aktiv = trash_aktiv_am_tag($userId, $dayId);
 } elseif (!$zeigeListe) {
-    $st = db()->prepare('SELECT * FROM missions WHERE id = ? AND user_id = ? AND deleted_at IS NOT NULL');
-    $st->execute([$id, $userId]);
-    $m = $st->fetch();
+    $m = einsatz_laden($id, $userId, ['papierkorb' => 'ja']);
     if (!$m) { header('Location: papierkorb.php'); exit; }
 }
 

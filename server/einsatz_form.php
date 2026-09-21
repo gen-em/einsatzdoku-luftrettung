@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/validate_lib.php';
+require_once __DIR__ . '/einsatz_lib.php';
 require_once __DIR__ . '/mission_fields_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
 $FIELDS = require __DIR__ . '/mission_fields.php';
@@ -19,12 +20,9 @@ $editing = $id > 0;
  * ueber „+ Diensttag anlegen". */
 $dayId = 0;
 if ($editing) {
-    $dq = db()->prepare('SELECT day_id FROM missions
-                         WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
-    $dq->execute([$id, $userId]);
-    $w = $dq->fetchColumn();
-    if ($w === false) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
-    $dayId = $w === null ? 0 : (int)$w;
+    $mTag = einsatz_laden($id, $userId, ['spalten' => 'day_id']);
+    if ($mTag === null) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
+    $dayId = $mTag['day_id'] === null ? 0 : (int)$mTag['day_id'];
 } else {
     $dayId = (int)($_GET['d'] ?? $_POST['day_id'] ?? 0);
 }
@@ -102,9 +100,7 @@ $error = null;
 /* ---- Bestehenden Einsatz laden (nur eigene!) ------------------------------ */
 $mission = null; $phases = [];
 if ($editing) {
-    $st = db()->prepare('SELECT * FROM missions WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
-    $st->execute([$id, $userId]);
-    $mission = $st->fetch();
+    $mission = einsatz_laden($id, $userId);
     if (!$mission) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
     $ph = db()->prepare('SELECT phase, occurred_at FROM mission_phases
                          WHERE mission_id = ? ORDER BY occurred_at');
@@ -528,32 +524,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ->execute(array_merge([$startedAt, $endedAt], $fieldVals, [$id, $userId]));
             } else {
                 // Virtuelles Geraet "Manuelle Einträge" (deaktiviert: kann nie hochladen)
-                $devKey = 'manual-' . $userId;
-                /* Die Nutzerkennung gehoert IN die Abfrage (M3-12/M6-09).
-                 *
-                 * Gesucht wurde allein ueber device_id. Dass 'manual-<id>' die
-                 * Zugehoerigkeit im Namen traegt, machte die Abfrage praktisch
-                 * richtig — aber nur, weil eine Zeichenkette zufaellig dasselbe
-                 * aussagt wie eine Spalte. Steht die Bedingung nicht in der Abfrage,
-                 * gibt es auch nichts, was sie durchsetzt: Ein spaeter geaendertes
-                 * Namensschema, ein Tippfehler beim Zusammenbauen des Schluessels,
-                 * und die gefundene Zeile gehoert jemand anderem. Das Ergebnis waere
-                 * ein Einsatz am Geraet einer fremden Person.
-                 *
-                 * user_id ist ausserdem die Spalte, auf der die Fremdschluessel und
-                 * alle uebrigen Abfragen dieser Datei arbeiten. Eine Ausnahme davon
-                 * faellt bei der Durchsicht nicht auf. */
-                $q = $pdo->prepare('SELECT id FROM devices WHERE device_id = ? AND user_id = ?');
-                $q->execute([$devKey, $userId]);
-                $devId = $q->fetchColumn();
-                if ($devId === false) {
-                    $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
-                                   VALUES (?,?,?,?,0)')
-                        ->execute([$userId, $devKey,
-                                   geraet_schluessel_hash(bin2hex(random_bytes(24))),
-                                   'Manuelle Einträge']);
-                    $devId = (int)$pdo->lastInsertId();
-                }
+                $devId = geraet_virtuell_sicherstellen($pdo, $userId);
                 $cols = 'user_id, device_id, client_ref, day_id, started_at, ended_at, final, uhr_gesperrt, origin';
                 $qms  = "?,?,?,?,?,?,1,1,'manual'";
                 foreach ($fieldCols as $c) { $cols .= ", `$c`"; $qms .= ',?'; }

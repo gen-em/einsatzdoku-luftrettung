@@ -1375,14 +1375,7 @@ function edbak_marke_lesen(string $k): ?string
 {
     $c = &edbak_marken_speicher();
     if (array_key_exists($k, $c)) { return $c[$k]; }
-    try {
-        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
-        $st->execute([$k]);
-        $v = $st->fetchColumn();
-        return $c[$k] = ($v === false ? null : (string)$v);
-    } catch (Throwable) {
-        return $c[$k] = null;   // app_state fehlt (Migration noch nicht gelaufen)
-    }
+    return $c[$k] = app_state_lesen($k);
 }
 
 /**
@@ -1405,28 +1398,21 @@ function edbak_marke_lesen(string $k): ?string
  * ist. Eine stille Kuerzung waere hier das Schlimmste von allem — ein halbes
  * JSON, das beim naechsten Lesen als „kein Auftrag" durchgeht.
  */
-const EDBAK_MARKE_MAX = 190;
+/* DIE ZAHL STEHT SEIT WEB 20.28.0 AN EINER STELLE (Schritt 15/AP4): Sie ist
+ * die Spaltenbreite von `app_state.v`, und die kennt `APP_STATE_MAX` in
+ * `db.php`. Zwei Konstanten mit derselben 190 waren zwei Gelegenheiten, beim
+ * naechsten Schemawechsel eine davon zu vergessen. Der Name bleibt —
+ * `tools/wiederherstellungs-probe/` prueft gegen ihn. */
+const EDBAK_MARKE_MAX = APP_STATE_MAX;
 
 function edbak_marke_setzen(string $k, string $v): bool
 {
-    if (strlen($v) > EDBAK_MARKE_MAX) {
-        error_log('adminbackup: Marke "' . $k . '" ist ' . strlen($v)
-                . ' Zeichen lang, erlaubt sind ' . EDBAK_MARKE_MAX . '.');
-        return false;
-    }
-    try {
-        db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
-                       ON DUPLICATE KEY UPDATE v = VALUES(v)')->execute([$k, $v]);
-        $c = &edbak_marken_speicher();
-        $c[$k] = $v;
-        return true;
-    } catch (Throwable $ex) {
-        /* Still gegenueber der Anfrage — das Backup selbst soll daran nicht
-         * scheitern —, aber nachlesbar. */
-        error_log('adminbackup: Marke "' . $k . '" liess sich nicht schreiben: '
-                . $ex->getMessage());
-        return false;
-    }
+    /* Laengenpruefung, Schreiben und das Protokollieren beider Fehlerfaelle
+     * stehen in `app_state_setzen()`; hier bleibt nur der Zwischenspeicher. */
+    if (!app_state_setzen($k, $v)) { return false; }
+    $c = &edbak_marken_speicher();
+    $c[$k] = $v;
+    return true;
 }
 
 function edbak_intervall(): int

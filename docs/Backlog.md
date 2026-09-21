@@ -3178,10 +3178,27 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     das Gemessene benennt"). Die Probe **sagt** es immerhin dazu; sie meldet
     aber nicht, dass ihr Hauptteil damit nichts mehr prüft.
 
-    **Vorschlag:** Entweder die Probe hält die Jobs an und setzt das
-    Demo-Konto selbst aus der Fixture zurück (wie es `kreislauf.py` tut),
-    oder sie legt sich wie die anderen Proben ein eigenes Konto an. Bis dahin
-    gilt: Wer `gpxprobe` fährt, prüft zuerst `demo_letzter_reset`.
+    **Vorschlag:** Entweder die Probe hält den Reset auf und setzt das
+    Demo-Konto selbst aus der Fixture zurück, oder sie legt sich wie die
+    anderen Proben ein eigenes Konto an. Bis dahin gilt: Wer `gpxprobe`
+    fährt, prüft zuerst `demo_letzter_reset`.
+
+    **`jobs_pause()` ist dafür das falsche Mittel, und das ist der Teil, der
+    Zeit kostet.** *(Nachgetragen 21.09.2026, Schritt 15 AP4.)* Der
+    Demo-Reset hängt **nicht** an der Jobschlange, sondern an
+    `auth_guard.php` Z. 482: `if (demo_ist_demo($userId)) {
+    demo_reset_wenn_faellig(); }` — er läuft bei **jeder Anmeldung des
+    Demo-Kontos**, sobald `DEMO_RESET_SEKUNDEN` (1800) um sind. Eine
+    angehaltene Jobschlange ändert daran nichts. Das richtige Mittel steht
+    in `tools/klickprobe/LIESMICH.md` und gilt für jede Probe, die gegen
+    das Demo-Konto misst:
+
+    ```sql
+    UPDATE app_state SET v = UNIX_TIMESTAMP() WHERE k = 'demo_letzter_reset';
+    ```
+
+    Das verschiebt den nächsten Reset um volle 30 Minuten. Ein Lauf, der
+    länger dauert, braucht die Zeile erneut — oder ein eigenes Konto.
 
     *In Schritt 15 AP3 nachgemessen:* **95/4 vor und nach dem Paket
     identisch** (`git stash` gegengemessen) — der Befund liegt nicht am Code.

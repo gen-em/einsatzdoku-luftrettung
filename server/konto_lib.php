@@ -706,12 +706,9 @@ function konto_loeschen(int $userId, bool $mitSicherungen = true): array
      * nicht um eine Marke, die wieder gebraucht wird, sondern um ein Konto,
      * das es nicht mehr gibt. Eine Zeile, die nie wieder gelesen wird, ist
      * Ballast. */
-    try {
-        $pdo->prepare('DELETE FROM app_state WHERE k IN (?, ?)')
-            ->execute(['mengen:' . $userId, 'mengen_gemeldet:' . $userId]);
-    } catch (Throwable $ex) {
-        error_log('app_state-Reste von Konto ' . $userId . ': ' . $ex->getMessage());
-    }
+    /* `app_state_loeschen()` faengt und protokolliert selbst — das Loeschen
+     * des Kontos darf daran nicht scheitern. */
+    app_state_loeschen('mengen:' . $userId, 'mengen_gemeldet:' . $userId);
 
     return ['ok' => true, 'grund' => ''];
 }

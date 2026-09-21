@@ -147,10 +147,8 @@ $leer     = false;
 $konten   = 0;
 try {
     $pdo = db();
-    $hat = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.tables
-                              WHERE table_schema = DATABASE() AND table_name = 'users'")
-                    ->fetchColumn();
-    $konten = $hat > 0 ? (int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn() : 0;
+    $konten = db_hat_tabelle($pdo, 'users')
+        ? (int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn() : 0;
     $leer = $konten === 0;
 } catch (Throwable $ex) {
     /* NUR DIE KENNUNG, NICHT DER TEXT (Backlog Nr. 131, K-11). Diese Seite ist

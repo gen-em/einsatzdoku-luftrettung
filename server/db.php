@@ -1474,6 +1474,81 @@ function geraet_virtuell(string $deviceId): bool
     return str_starts_with($deviceId, 'manual-');
 }
 
+/* ---- DAS VIRTUELLE GERAET AN EINER STELLE (Schritt 15/AP4, E-ZE-18) ------
+ *
+ * „Manuelle Einträge" ist ein deaktiviertes Geraet je Konto, an dem alles
+ * haengt, was nicht von einer Uhr kommt: Einsaetze aus dem Formular, aus dem
+ * Import, aus dem Schneiden und aus dem GPX-Einlesen. Der Block „gibt es das
+ * Geraet schon? sonst anlegen" stand bis Web 20.28.0 VIERMAL — zweimal als
+ * eigene Funktion (`schnitt_geraet()`, `gpx_import_geraet()`) und zweimal
+ * eingebettet (`api/import_commit.php`, `einsatz_form.php`), jedes Mal mit
+ * demselben zwanzigzeiligen Kommentar darueber.
+ *
+ * Und die Kennung selbst — `'manual-' . $userId` — stand an sieben Stellen,
+ * teils als Praefix beim Zusammenbauen, teils als `LIKE 'manual-%'` in einer
+ * Abfrage. Eine davon band das Muster als Parameter statt es einzusetzen
+ * (`betrieb_statistik.php`), zwei brauchten einen Tabellenalias (`d.`), den
+ * die Konstante `GERAETE_ECHT_SQL` nicht traegt. Deshalb drei Formen, nicht
+ * eine: die Funktion fuer die Kennung, `geraete_echt_sql($alias)` fuer die
+ * Bedingung und `GERAET_VIRTUELL_MUSTER` fuer die Stelle, die bindet.
+ */
+
+/** Das `LIKE`-Muster der virtuellen Geraete — fuer Abfragen, die es binden. */
+const GERAET_VIRTUELL_MUSTER = 'manual-%';
+
+/** Die Geraetekennung des virtuellen Geraets dieses Kontos. */
+function geraet_virtuell_kennung(int $userId): string
+{
+    return 'manual-' . $userId;
+}
+
+/**
+ * Bedingung „nur echte Geraete" — mit Tabellenalias, wenn einer gebraucht wird.
+ *
+ * `GERAETE_ECHT_SQL` bleibt als Konstante bestehen (sie steht in zwei
+ * Abfragen ohne Alias und ist dort gut lesbar); diese Funktion ist fuer die
+ * Abfragen mit Verbund, wo `device_id` mehrdeutig waere.
+ */
+function geraete_echt_sql(string $alias = ''): string
+{
+    $p = $alias === '' ? '' : rtrim($alias, '.') . '.';
+    return $p . "device_id NOT LIKE '" . GERAET_VIRTUELL_MUSTER . "'";
+}
+
+/**
+ * Das virtuelle Geraet dieses Kontos holen — und anlegen, wenn es fehlt.
+ *
+ * DIE NUTZERKENNUNG GEHOERT IN DIE ABFRAGE (M3-12/M6-09), und dieser Satz
+ * stand bisher vier Mal fast wortgleich daneben: Gesucht wurde einmal allein
+ * ueber `device_id`. Dass `manual-<id>` die Zugehoerigkeit im Namen traegt,
+ * machte die Abfrage praktisch richtig — aber nur, weil eine Zeichenkette
+ * zufaellig dasselbe aussagt wie eine Spalte. Steht die Bedingung nicht in
+ * der Abfrage, gibt es auch nichts, was sie durchsetzt: ein spaeter
+ * geaendertes Namensschema, ein Tippfehler beim Zusammenbauen des
+ * Schluessels — und der Einsatz staende am Geraet einer fremden Person.
+ *
+ * `active = 0`: Das Geraet kann nie hochladen. Es traegt trotzdem einen
+ * Schluesselhash, weil die Spalte ihn verlangt; er wird nie geprueft.
+ *
+ * NIMMT EIN `PDO`, weil drei der vier Aufrufer innerhalb einer Transaktion
+ * stehen und die vierte Stelle ihr `$pdo` ohnehin zur Hand hat.
+ */
+function geraet_virtuell_sicherstellen(PDO $pdo, int $userId): int
+{
+    $devKey = geraet_virtuell_kennung($userId);
+    $q = $pdo->prepare('SELECT id FROM devices WHERE device_id = ? AND user_id = ?');
+    $q->execute([$devKey, $userId]);
+    $devId = $q->fetchColumn();
+    if ($devId !== false) { return (int)$devId; }
+
+    $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
+                   VALUES (?,?,?,?,0)')
+        ->execute([$userId, $devKey,
+                   geraet_schluessel_hash(bin2hex(random_bytes(24))),
+                   'Manuelle Einträge']);
+    return (int)$pdo->lastInsertId();
+}
+
 /** Zahl der echten Geraete eines Kontos (aktive und deaktivierte). */
 function geraete_zahl(PDO $pdo, int $userId): int {
     $st = $pdo->prepare('SELECT COUNT(*) FROM devices
@@ -1569,13 +1644,31 @@ function app_state_lesen(string $k): ?string {
     }
 }
 
+/**
+ * Passt der Wert in die Spalte? Sonst `true` und eine Zeile im Protokoll.
+ *
+ * EINE STELLE FUER DIE PRUEFUNG UND IHREN SATZ (Schritt 15/AP4). Sie stand
+ * dreifach, sobald es drei schreibende Helfer gab — und ein viertes Mal in
+ * `edbak_marke_setzen()` mit einer eigenen Konstante derselben Zahl.
+ *
+ * WARUM SIE UEBERHAUPT IN PHP STEHT und nicht nur im Schema: Je nach
+ * Serverbetriebsart kuerzt MySQL zu lange Werte STILL statt abzuweisen. Eine
+ * stille Kuerzung ist hier das Schlimmste von allem — ein halbes JSON, das
+ * beim naechsten Lesen als „kein Auftrag" durchgeht. Genau das ist einmal
+ * passiert (S2/AP6): Die Warteschlange von „Alle sichern" war laenger als
+ * 190 Zeichen, niemand erfuhr davon, und die Schaltflaeche meldete „0 von 0
+ * Konten gesichert".
+ */
+function app_state_zu_lang(string $k, string $v): bool {
+    if (strlen($v) <= APP_STATE_MAX) { return false; }
+    error_log('app_state: "' . $k . '" ist ' . strlen($v) . ' Zeichen lang, '
+            . 'erlaubt sind ' . APP_STATE_MAX . '.');
+    return true;
+}
+
 /** Eine Zeile schreiben. `false` = zu lang oder nicht schreibbar, mit Log. */
 function app_state_setzen(string $k, string $v): bool {
-    if (strlen($v) > APP_STATE_MAX) {
-        error_log('app_state: "' . $k . '" ist ' . strlen($v) . ' Zeichen lang, '
-                . 'erlaubt sind ' . APP_STATE_MAX . '.');
-        return false;
-    }
+    if (app_state_zu_lang($k, $v)) { return false; }
     try {
         db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
                        ON DUPLICATE KEY UPDATE v = VALUES(v)')->execute([$k, $v]);
@@ -1585,6 +1678,199 @@ function app_state_setzen(string $k, string $v): bool {
                 . $ex->getMessage());
         return false;
     }
+}
+
+/* ---- VIER WEITERE HELFER (Schritt 15/AP4, E-ZE-17) -----------------------
+ *
+ * Der Absatz oben sagte bis Web 20.28.0: „Zusammengefuehrt sind sie nicht —
+ * das waere eine Aenderung an fuenf Bibliotheken fuer einen Gewinn, den
+ * niemand sieht." Gemessen waren es dann **27 Stellen in 17 Dateien**, und
+ * der Gewinn ist sichtbar geworden: Jede dieser Stellen beantwortete die
+ * Frage „was, wenn die Tabelle fehlt?" fuer sich, und sie beantworteten sie
+ * verschieden — mal `try/catch` mit `null`, mal ohne, mal mit einem
+ * `error_log`. Eine fehlende `app_state`-Tabelle (Migration noch nicht
+ * gelaufen) ist kein seltener Zustand: Sie ist der Zustand JEDER Anlage
+ * zwischen Deploy und `update.php`.
+ *
+ * DIE WRAPPER BLEIBEN. `edbak_marke_*`, `geocoder_state*`,
+ * `schluessel_marke_*`, `geraete_hinweis_*`, `demo_*`, `jobs_*`, `logo_*`
+ * behalten Namen und Signatur — sie tragen Bedeutung und teils einen eigenen
+ * Merker; nur ihr Rumpf ruft ab hier diese Helfer.
+ */
+
+/**
+ * Mehrere Zeilen auf einmal lesen.
+ *
+ * EINE ABFRAGE STATT N, und der Grund steht in `nb_moeglich()` nebenan:
+ * Vier Einzelabfragen kosteten dort 1,071 ms, eine gemeinsame 0,355 ms.
+ * Fehlende Schluessel fehlen auch im Ergebnis — wer eine Vorgabe braucht,
+ * nimmt `$aus[$k] ?? ...`.
+ *
+ * @param list<string> $k
+ * @return array<string,string> nur die gefundenen
+ */
+function app_state_mehrere(array $k): array {
+    if ($k === []) { return []; }
+    try {
+        $platz = implode(',', array_fill(0, count($k), '?'));
+        $st = db()->prepare("SELECT k, v FROM app_state WHERE k IN ($platz)");
+        $st->execute(array_values($k));
+        $aus = [];
+        foreach ($st->fetchAll(PDO::FETCH_NUM) as $r) {
+            $aus[(string)$r[0]] = (string)$r[1];
+        }
+        return $aus;
+    } catch (Throwable $ex) {
+        return [];   // Tabelle fehlt (Migration noch nicht gelaufen)
+    }
+}
+
+/**
+ * Mehrere Zeilen auf einmal schreiben.
+ *
+ * ALLES ODER NICHTS GIBT ES HIER NICHT, und das ist Absicht: Diese Funktion
+ * laeuft teils INNERHALB einer fremden Transaktion (`demo_anlegen()`), und
+ * eine eigene aufzumachen braeuchte dort eine verschachtelte — die gibt es
+ * nicht. Ein zu langer Wert bricht deshalb VOR dem ersten Schreiben ab; was
+ * danach schiefgeht, ist ein Datenbankfehler und kein Laengenfehler.
+ *
+ * @param array<string,string> $kv
+ */
+function app_state_setzen_mehrere(array $kv): bool {
+    if ($kv === []) { return true; }
+    foreach ($kv as $k => $v) {
+        if (app_state_zu_lang((string)$k, $v)) { return false; }
+    }
+    try {
+        $st = db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
+                             ON DUPLICATE KEY UPDATE v = VALUES(v)');
+        foreach ($kv as $k => $v) { $st->execute([(string)$k, $v]); }
+        return true;
+    } catch (Throwable $ex) {
+        error_log('app_state: Mehrfachschreiben fehlgeschlagen: ' . $ex->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Zeilen loeschen.
+ *
+ * KEIN RUECKGABEWERT, und keiner wird gebraucht: Die drei Aufrufer loeschen
+ * Reste (ein geloeschtes Konto, eine aufgehobene Jobpause). Ob die Zeile da
+ * war, aendert nichts an dem, was danach geschieht. Eine fehlende Tabelle
+ * ist derselbe Fall.
+ */
+function app_state_loeschen(string ...$k): void {
+    if ($k === []) { return; }
+    try {
+        $platz = implode(',', array_fill(0, count($k), '?'));
+        db()->prepare("DELETE FROM app_state WHERE k IN ($platz)")->execute($k);
+    } catch (Throwable $ex) {
+        error_log('app_state: Loeschen von "' . implode('", "', $k)
+                . '" fehlgeschlagen: ' . $ex->getMessage());
+    }
+}
+
+/**
+ * Einen Wert einmalig erzeugen und behalten — atomar.
+ *
+ * FUER DIE BEIDEN SERVERGEHEIMNISSE (`salt_secret` in `auth_salt.php`,
+ * `reg_secret` in `registrieren.php`). Beide standen vorher als „lesen, und
+ * wenn leer, erzeugen und schreiben" da, und beide benutzten dafuer schon
+ * `INSERT IGNORE` — das ist der springende Punkt und der Grund, warum diese
+ * Funktion NICHT `app_state_setzen()` ruft: Zwei gleichzeitige Anfragen
+ * erzeugen beide einen Wert, aber nur EINER darf gewinnen. Mit
+ * `ON DUPLICATE KEY UPDATE` gewaenne der letzte, und die Pseudo-Salts
+ * aenderten sich unter der Hand. `INSERT IGNORE` laesst den ersten stehen;
+ * danach wird zurueckgelesen, damit alle denselben sehen.
+ *
+ * ---- SIE FAENGT NICHTS, UND DAS IST DER UNTERSCHIED ZU DEN NACHBARN ------
+ *
+ * `app_state_lesen()`, `-setzen()`, `-loeschen()` und `-mehrere()` fangen
+ * eine fehlende Tabelle ab und liefern einen brauchbaren Ersatz. Hier waere
+ * das falsch: KEINER der beiden Aufrufer hatte je einen `try/catch`. Fehlt
+ * `app_state` (Migration noch nicht gelaufen), brach die Anfrage ab — und
+ * `auth_salt.php` gehoert zum GERAETEVERTRAG, seine Antwortform ist
+ * zeichengleich zu halten (Schritt 15, Abschnitt 0). Ein stillschweigend
+ * erzeugtes, NICHT gespeichertes Geheimnis waere je Anfrage ein anderes:
+ * Die Pseudo-Salts einer unbekannten Adresse waeren nicht mehr stabil, und
+ * genau ihre Stabilitaet ist ihr Zweck. Lieber ein Abbruch als eine Antwort,
+ * die aussieht wie eine richtige.
+ *
+ * Deshalb liest sie auch selbst und nicht ueber `app_state_lesen()`: Das
+ * wuerde den Fehler an der ersten Stelle schlucken.
+ *
+ * Der Erzeuger laeuft nur, wenn nichts dasteht. Er darf teuer sein.
+ */
+function app_state_einmalig(string $k, callable $erzeuger): string {
+    $pdo = db();
+    $st  = $pdo->prepare('SELECT v FROM app_state WHERE k = ?');
+    $st->execute([$k]);
+    $v = $st->fetchColumn();
+    if ($v !== false && $v !== null && (string)$v !== '') { return (string)$v; }
+
+    $neu = (string)$erzeuger();
+    /* Zu lang: Der Aufrufer bekommt trotzdem einen brauchbaren Wert — er soll
+     * nicht ohne Geheimnis dastehen —, die Zeile fehlt dann aber. */
+    if (app_state_zu_lang($k, $neu)) { return $neu; }
+
+    $pdo->prepare('INSERT IGNORE INTO app_state (k, v) VALUES (?, ?)')
+        ->execute([$k, $neu]);
+
+    /* ZURUECKLESEN, NICHT $neu ZURUECKGEBEN: Wenn zwischen Lesen und
+     * Schreiben jemand anderes schneller war, hat `INSERT IGNORE` nichts
+     * getan — und $neu waere ein Wert, den sonst niemand kennt. */
+    $st->execute([$k]);
+    $w = $st->fetchColumn();
+    return ($w === false || $w === null) ? $neu : (string)$w;
+}
+
+/* ---- DAS SCHEMA FRAGEN (Schritt 15/AP4, E-ZE-04) -------------------------
+ *
+ * Die drei Fragen „gibt es diese Tabelle / diese Spalte / diesen Index?"
+ * standen bis Web 20.28.0 doppelt: privat in `migration_lib.php`
+ * (`_hat_tabelle()`, `_hat_spalte()`, `_hat_index()`) und noch einmal
+ * handgeschrieben in vier Dateien, die `migration_lib.php` nicht laden —
+ * `ingest.php` sagte das sogar im Kommentar dazu.
+ *
+ * SIE NEHMEN EIN `PDO`, UND ZWAR ZWINGEND. `db()` waere hier falsch:
+ * `tools/schemaprobe/probe.php` laesst Migrationen gegen ein frisch
+ * angelegtes Schema laufen (`frisch()`), also gegen eine ANDERE Verbindung
+ * als `db()`. Ein Helfer, der sich seine Verbindung selbst holt, fragte dort
+ * das falsche Schema — und zwar lautlos, denn `DATABASE()` haette
+ * geantwortet.
+ *
+ * GELAUFENE MIGRATIONEN WERDEN NICHT UMGEBAUT (E-ZE-04). Die privaten
+ * `_hat_*` bleiben stehen und reichen nur noch durch; die 57
+ * `information_schema`-Erwaehnungen in `migration_lib.php` bleiben, wo sie
+ * sind. Registerzeile Z15 haelt ihre Zahl fest: Sie darf nicht steigen.
+ * NEUE Migrationen fragen ueber diese drei.
+ */
+
+/** Gibt es die Tabelle im aktuellen Schema? */
+function db_hat_tabelle(PDO $pdo, string $tabelle): bool {
+    $q = $pdo->prepare('SELECT COUNT(*) FROM information_schema.tables
+                        WHERE table_schema = DATABASE() AND table_name = ?');
+    $q->execute([$tabelle]);
+    return (int)$q->fetchColumn() > 0;
+}
+
+/** Gibt es die Spalte? */
+function db_hat_spalte(PDO $pdo, string $tabelle, string $spalte): bool {
+    $q = $pdo->prepare('SELECT COUNT(*) FROM information_schema.columns
+                        WHERE table_schema = DATABASE()
+                          AND table_name = ? AND column_name = ?');
+    $q->execute([$tabelle, $spalte]);
+    return (int)$q->fetchColumn() > 0;
+}
+
+/** Gibt es den Index? */
+function db_hat_index(PDO $pdo, string $tabelle, string $index): bool {
+    $q = $pdo->prepare('SELECT COUNT(*) FROM information_schema.statistics
+                        WHERE table_schema = DATABASE()
+                          AND table_name = ? AND index_name = ?');
+    $q->execute([$tabelle, $index]);
+    return (int)$q->fetchColumn() > 0;
 }
 
 /** Zeitpunkt der letzten Bestaetigung, oder null. */

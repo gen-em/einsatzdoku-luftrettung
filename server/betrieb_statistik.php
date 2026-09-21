@@ -98,7 +98,7 @@ $ohneGeraet = (int)$st->fetchColumn();
 $st = $pdo->prepare('SELECT geraet_art, geraet_modell, geraet_teil, active, last_seen,
                             created_at, user_id
                      FROM devices WHERE user_id <> ? AND device_id NOT LIKE ?');
-$st->execute([$demoId, 'manual-%']);
+$st->execute([$demoId, GERAET_VIRTUELL_MUSTER]);
 $geraete = $st->fetchAll();
 $geraeteZahl = count($geraete);
 

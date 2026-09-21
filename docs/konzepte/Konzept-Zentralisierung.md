@@ -28,7 +28,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > | AP1 Zählmittel, Register, Gegenprobe Paket 1 | **erledigt** 20.09.2026 | keine (nur `tools/` und `docs/`) | Selbstprobe **29 von 29** · Register **38 Zeilen, 0 über der Decke** · Eichung `error_log(` **77 in 32**, `session_start(` **9 in 9** · Bestand **133 PHP / 40 JS** · Gegenprobe Z30–Z33 **4× 0** · `php -l` **133/0** · Wortliste **0/0** · Vollständigkeit **398** (unverändert) · Kontraste **22/0** · Kettenaufrufe **30/0** · CSP **0** · Migrationsregister **0** |
 > | AP2 Konfiguration und Sitzung | **erledigt** 21.09.2026 | **Web 20.27.0** (Neben: zwei neue Funktionen, keine Migration) | Z01 **9 → 1** · Z02 **2 → 1** · Z03 **7 → 1** · Z04 **46 → 0** · `konfig_lib` **13/13** · Cookie-Parameter **16 Zellen, 0 Abweichungen** · Ladezyklus **7/7** · Sitzungshärtung **0 Befunde, Selbstprobe 12/12** · Register **38 Zeilen, 0 über der Decke** · `php -l` **134/0** · Wortliste **0/0** · Vollständigkeit **398** · `error_log(` **77** (unverändert, E-ZE-05). **Im Browser gegen eine laufende Anlage:** Bilderlauf **496 Bilder, 0 Überlauf, 0 Konsolenfehler** · Prüfliste **A-1 bis A-12 gefahren** · F-ZE-2 **40 anonyme Abrufe → 0 neue Sitzungsdateien** · Härtung wirkt (untergeschobene Kennung verworfen) · A-9 **8/8** · A-12 **7/7** · Abmelde-Probe erfüllt · Kopplungsprobe **76/0** · Ratenprobe **50/0** · **Nachtrag: fünf Proben repariert (448 Erwartungen, 0 offen; Nr. 257)** (der eine Befund war nicht von AP2 und ist behoben, Nr. 254) |
 > | AP3 API-Eingang und Flash | **erledigt** 21.09.2026 | **Web 20.28.0** (Neben: drei neue Funktionen, keine Migration) | Z05 **12 → 1** · Z06 **17 → 0** · Z07 **11 → 0** · Z08 **3 → 0** (Konzept erwartete 1, AP3-d) · Z09 **22 → 0** · `error_log(` **77** (unverändert, E-ZE-05) · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · `php -l` **135/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kettenaufrufe **0** · Sitzungshärtung **0**. **Gegen eine laufende Anlage:** Eingangsprobe **46 Zellen, 46 erfüllt** (davor **27 von 46** — die 19 Abweichungen sind F-ZE-5, aufgeschlüsselt im Protokoll; **beide Reihenfolge-Zellen schon davor grün**) · Flash-Probe **11/11** · Kreisläufe edbak **328 771/0/21**, csv **10 922/0/1 271** (Zahl für Zahl wie davor) · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0**. **GPX-Probe 95/4 — vor und nach dem Paket gleich**, Ursache ist der Demo-Reset dieser Anlage (Nr. 259) · Bilderlauf **496 Bilder, 0 Überlauf, 0 Konsolenfehler** |
-> | AP4 Datenzugriff klein | offen | — | — |
+> | AP4 Datenzugriff klein | **erledigt** 21.09.2026 | **Web 20.29.0** (Neben: neue Funktionen, keine Migration) | Z10 **27 → 2** (AP4-c: `jobs.php` bleibt, Gerätevertrag) · Z11 **7 → 0** · Z12 **12 → 2** (Startwert von 13 berichtigt, AP4-d; zweite Ausnahme AP4-b) · Z13 **4 → 0** · Z14 **9 → 5** (AP4-e, kein vierter Helfer) · Z15 **57 → 54** · Z38 **77 → 75** (AP4-g) · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · `php -l` **136/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kettenaufrufe **0** · Sitzungshärtung **0** · CSP **0** · Migrationsregister **0**. **E-ZE-17-Beleg: 7 Stellen in 5 Dateien nachgelesen, 0 brauchen `?PDO $pdo`.** **Gegen eine laufende Anlage:** Kreisläufe edbak **328 771/0/21**, csv **10 922/0/1 271** (Zahl für Zahl wie davor) · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0** · Wiederherstellungs-Probe **111/0** · Anteilprobe **55/55** · Versandprobe **135/0** |
 > | AP5 Transaktion und Kindtabellen | offen | — | — |
 > | AP6 Spaltenregister `missions` | offen | — | — |
 > | AP7 Zeit und Zahl (PHP) | offen | — | — |
@@ -306,8 +306,8 @@ Abweichungen, alle Proben unter `tools/` grün wie zuvor.
 | `sitzung_starten()` | **`sitzung_lib.php`** (besteht seit Schritt 16; lädt nie `db.php` und zieht nur für die stündliche Schreibprobe `plattform_lib.php` nach) | `install.php` lädt kein `db.php`; `session_lib.php` lädt `db.php` und scheidet deshalb aus |
 | `api_methode()`, `api_rumpf()` | **`db.php`**, neben `json_out()` | 10c AP6 (`api/health.php`) braucht den Eingang **ohne** `auth_guard.php`; CSRF bleibt deshalb draußen (E-ZE-15). **In AP3 auf zwei Funktionen aufgeteilt** (AP3-a): `csrf_check()` steht in allen elf Rumpf-Dateien zwischen Methodenprüfung und Rumpflesen, ein Aufruf hätte diese Reihenfolge gekehrt |
 | `flash_setzen()`, `flash_holen()` | `session_lib.php` | hängt an der Sitzung |
-| `app_state_*`, `db_transaktion()`, `db_hat_*()`, `geraet_virtuell_sicherstellen()`, `geraete_echt_sql()` | `db.php` | dort liegen die Nachbarn schon |
-| `einsatz_laden()`, `einsatz_*_ersetzen()` | **`einsatz_lib.php`** (neu) | Gegenstück zu `diensttag_lib.php` |
+| `app_state_*`, `db_transaktion()`, `db_hat_*()`, `geraet_virtuell_sicherstellen()`, `geraete_echt_sql()` | `db.php` | dort liegen die Nachbarn schon. **Seit AP4 gebaut** — dazu `app_state_zu_lang()`, `geraet_virtuell_kennung()` und `GERAET_VIRTUELL_MUSTER`. `db_hat_*()` nehmen ein `PDO` als **ersten** Parameter (AP4-a): `tools/schemaprobe/` fährt gegen eine andere Verbindung als `db()`. `db_transaktion()` folgt in AP5 |
+| `einsatz_laden()`, `einsatz_*_ersetzen()` | **`einsatz_lib.php`** (neu) | Gegenstück zu `diensttag_lib.php`. **`einsatz_laden(int $id, int $userId, array $o = []): ?array` ist seit AP4 gebaut**, Optionen `spalten` und `papierkorb` (`nein`/`ja`/`egal`); `einsatz_*_ersetzen()` folgt in AP5 |
 | `mf_missions_register()`, `mf_spalten()` | `mission_fields_lib.php` | der Katalog ist das Vorbild |
 | `groesse_text()`, `zeit_relativ()`, `zahl_text()`, `prozent_text()`, `iso_utc()`, `iso_utc_lesen()`, `heute_lokal()`, `datum_text()`, `datum_zeit_text()` | **`format_lib.php`** (neu; lädt nur `konfig_lib.php`) | kein Verbraucher soll dafür eine Fachbibliothek laden müssen — der R83-Beleg |
 | `EdApi` | **`assets/api.js`** (neu) | in der Immer-Liste von `ui.php` (`ui_seite_*`) |
@@ -1062,6 +1062,192 @@ und entscheiden, ob dafür ein vierter Helfer lohnt, R83); Z15 `information_sche
 Demo-Reset, Jobpause, Kontolöschung im Prüfstand je einmal; Kreisläufe 0
 unerklärt; Komplettprobe und Migrationsregister grün.
 
+**AP4 — erledigt 21.09.2026, Web 20.29.0.** Neu: vier `app_state`-Helfer,
+`app_state_zu_lang()`, `db_hat_tabelle()/-spalte()/-index()`,
+`geraet_virtuell_kennung()`, `geraet_virtuell_sicherstellen()`,
+`geraete_echt_sql()` und `GERAET_VIRTUELL_MUSTER` — alle in `db.php`; dazu
+`server/einsatz_lib.php` mit `einsatz_laden()`. `schnitt_geraet()` und
+`gpx_import_geraet()` entfallen.
+
+*Abnahmezahlen:*
+
+| Zeile | Start | Ziel (Konzept) | gemessen |
+|---|---|---|---|
+| Z10 `app_state`-SQL | 27 | 1 | **2** (AP4-c) |
+| Z11 Literal `'manual-'` | 7 | 0 | **0** |
+| Z12 Einsatz per ID | 13 → **12** (AP4-d) | 1 | **2** (AP4-b) |
+| Z13 Rollenvergleich von Hand | 4 | 0 | **0** |
+| Z14 `information_schema` außerhalb | 9 | 3–4 | **5** (AP4-e) |
+| Z15 `information_schema` in `migration_lib.php` | 57 | Decke 57 | **54** (AP4-f) |
+| Z38 `error_log(` (E-ZE-05) | 77 | 77 | **75** (AP4-g) |
+
+*Entscheidungen, die in diesem Paket gefallen sind:*
+
+- **AP4-a — `db_hat_*()` nehmen ein `PDO`, und zwar zwingend.** Die
+  naheliegende Form wäre `db_hat_tabelle(string $tabelle)` gewesen, wie
+  `app_state_lesen()` sich seine Verbindung selbst holt. Sie wäre falsch:
+  `tools/schemaprobe/probe.php` lässt Migrationen gegen ein **frisch
+  angelegtes** Schema laufen (`frisch()`, vier Stellen), also gegen eine
+  andere Verbindung als `db()`. Ein Helfer mit eigener Verbindung fragte dort
+  das falsche Schema — **und zwar lautlos**, denn `DATABASE()` hätte
+  geantwortet. Die Signatur folgt damit den privaten `_hat_*`, die sie ruft.
+- **AP4-b — `api/import_commit.php` ist die zweite namentliche Ausnahme von
+  Z12.** Das Konzept nennt nur `trash_restore_mission()`. Beim Lesen der
+  zwölf Stellen zeigte sich eine zweite, die strukturell etwas anderes tut:
+  Dort ist die Abfrage eine **einmal vorbereitete** Anweisung, die in der
+  Import-Schleife neben `$insE` und `$updE` bis zu **3 000**-mal ausgeführt
+  wird (Grenze `count($einsaetze) > 3000`). Ein Funktionsaufruf je Zeile
+  bereitete sie 3 000-mal neu vor. Das ist keine zweite Stelle derselben
+  Sache mehr, sondern ein Messstand-Thema — und AP5 bringt für genau diese
+  Datei einen Messstand mit.
+- **AP4-c — `jobs.php` ist die zweite namentliche Ausnahme von Z10, und
+  zwar wegen des Gerätevertrags.** Der Endpunkt liest `app_state` in einem
+  `try/catch`, dessen `catch` mit **`500 {"error":"datenbank"}`** antwortet.
+  `app_state_lesen()` fängt selbst und liefert `null`; der Vergleich
+  `hash_equals('', $token)` schlüge dann fehl und die Antwort wäre „Token
+  falsch" statt „Datenbank weg". Das ist eine **geänderte Antwort an ein
+  Gerät** — der Vertrag verbietet sie (Abschnitt 0). Die Stelle bleibt, wie
+  sie ist.
+- **AP4-d — Die Regel von Z12 verlangt jetzt ein `SELECT`; der Startwert ist
+  auf 12 berichtigt.** Der AP1-Wert 13 enthielt
+  `api/schneiden.php:319` — `DELETE FROM missions WHERE id = ? AND user_id =
+  ?`, also **keinen Ladevorgang**. Die Zeile heißt „Einsatz per ID **laden**
+  mit Besitzprüfung"; ein Löschen mit Besitzprüfung ist eine andere Sache und
+  gehört nicht in `einsatz_laden()`. **Nachgemessen statt gerechnet:** die
+  verschärfte Regel gegen den Stand **vor** AP4 gehalten ergibt **genau 12
+  Stellen**, und die `DELETE`-Zeile ist nicht darunter.
+- **AP4-e — Z14 erreicht 5, und es entsteht KEIN vierter Helfer**
+  (Auftraggeber, 21.09.2026). Das Konzept erwartete 3 bis 4 und nannte für
+  `nachbearbeitung_lib.php` **eine** `is_nullable`-Abfrage; gemessen sind es
+  **zwei**. Beide liegen in **einer** Datei — R83 zentralisiert beim zweiten
+  *Verbraucher*, nicht bei der zweiten Zeile derselben Datei. Und
+  `nb_moeglich()` fragt vier Tabellen bewusst in **einer** Abfrage; der
+  Kommentar dort nennt die Messung (**1,071 ms gegen 0,355 ms** je
+  Seitenaufbau, weil die Frage aus der Seitenleiste kommt). Ein Helfer „ist
+  diese eine Spalte nullbar?" nähme genau diese Zusammenfassung wieder
+  auseinander.
+- **AP4-f — Z15 fällt von 57 auf 54, die Decke folgt.** Die drei privaten
+  `_hat_*` reichen nur noch an `db.php` durch und nennen `information_schema`
+  nicht mehr. E-ZE-04 sagt „die Zahl darf nicht steigen" — sie fällt, und die
+  Decke wird mit ihr gesenkt, damit sie nicht unbemerkt zurückkommt.
+- **AP4-g — `error_log(` fällt von 77 auf 75, und hier ist die Aufteilung.**
+  `db.php` **4 → 6** (`app_state_zu_lang()` 1, dazu je ein `catch` in
+  `app_state_setzen_mehrere()` und `app_state_loeschen()`) ·
+  `adminbackup_lib.php` **2 → 0** · `konto_lib.php` **3 → 2** ·
+  `serverkrypto_lib.php` **1 → 0**. Die vier entfallenen Zeilen standen in
+  `catch`-Blöcken, die nach dem Umbau **unerreichbar** wären: Die Helfer
+  fangen selbst und protokollieren mit demselben Schlüsselnamen, also
+  derselben Auskunft. **Kein Aufruf ist umgestellt worden** (E-ZE-05); die
+  Übergabezahl an 10c AP3 ist damit **75** statt 77. Die Decke bleibt bei 77
+  — sie ist eine Obergrenze, kein Sollwert.
+  **Zwei Zwischenstände, die die Regel belegen:** Nach dem ersten Bauen stand
+  Z38 auf **79** — die neuen Helfer brachten drei eigene Längenprüfungen mit,
+  jede mit demselben Satz. Das war dieselbe Doppelung, die dieses Paket
+  abschafft, nur frisch gebaut; `app_state_zu_lang()` ist die Antwort darauf.
+  Und mit AP4-j fiel die Zahl von 76 auf 75, weil `app_state_einmalig()`
+  seinen `catch` wieder verloren hat.
+
+- **AP4-h — `EDBAK_MARKE_MAX` ist jetzt `APP_STATE_MAX`.** Zwei Konstanten
+  mit derselben 190, beide die Spaltenbreite von `app_state.v`. Der **Name
+  bleibt**: `tools/wiederherstellungs-probe/probe.php` prüft an drei Stellen
+  gegen ihn (Zeilen 1098, 1099, 1151). Genau diese Falle hat in AP2 fünf
+  Proben zerlegt — diesmal vorher nachgesehen.
+- **AP4-i — Ein optionaler Parameter `?PDO $pdo` wird NICHT gebraucht**
+  (der Beleg, den E-ZE-17 verlangt). Das Konzept nennt „12 Stellen in 5
+  Dateien", die mit einem übergebenen `$pdo` arbeiten, und verlangt je Stelle
+  den Nachweis, dass es dieselbe Verbindung ist wie `db()`. `db()` hält die
+  Verbindung **statisch** (`db.php` Z. 42–43: `static $pdo = null;`), es gibt
+  also je Anfrage genau eine. Und jede der fünf Dateien holt sie sich
+  unmittelbar daraus:
+
+  | Stelle | Herkunft des `$pdo` | Transaktion offen? |
+  |---|---|---|
+  | `demo_lib.php` `demo_anlegen()` (Z. 299) | `$pdo = db();` Z. 302 | **ja** |
+  | `demo_lib.php` `demo_entfernen()` (Z. 568) | `$pdo = db();` Z. 572 | **ja** |
+  | `konto_lib.php` `konto_loeschen()` (Z. 644) | `$pdo = db();` Z. 649 | nein |
+  | `auth_salt.php` (Dateiebene) | `$pdo = db();` Z. 90 | nein |
+  | `registrieren.php` `reg_secret()` | `$pdo = db();` in derselben Funktion | nein |
+  | `jobs_lib.php` `jobs_pause()`, `jobs_token()` | `$pdo = db();` in derselben Funktion | nein |
+
+  Die beiden Stellen **innerhalb einer offenen Transaktion** sind der Kern
+  des Belegs: Weil `app_state_setzen()` und `app_state_loeschen()` dieselbe
+  statische Verbindung nehmen, laufen sie in **derselben** Transaktion — ein
+  Rollback nimmt sie mit, wie vorher. Eine zweite Verbindung hätte hier
+  stillschweigend außerhalb geschrieben.
+
+- **AP4-j — `app_state_einmalig()` fängt NICHTS, anders als seine vier
+  Nachbarn.** Beim Durchsehen des Diffs fiel auf, dass `auth_salt.php` darin
+  steht — und das ist eine der fünf Dateien des **Gerätevertrags**. Beide
+  Aufrufer (`auth_salt.php`, `registrieren.php`) hatten **nie** einen
+  `try/catch`: Fehlt `app_state`, brach die Anfrage ab. Die erste Fassung des
+  Helfers fing die Ausnahme und lieferte ein frisch erzeugtes, **nicht
+  gespeichertes** Geheimnis zurück — je Anfrage ein anderes. Die Pseudo-Salts
+  einer unbekannten Adresse wären damit nicht mehr stabil gewesen, und genau
+  ihre Stabilität ist ihr Zweck: Sie sollen von einem echten Salt nicht zu
+  unterscheiden sein. **Gelöst:** Der Helfer liest selbst (nicht über
+  `app_state_lesen()`, das die Ausnahme an der ersten Stelle schlucken würde)
+  und fängt nichts. Beide Aufrufer verhalten sich damit wie vorher.
+
+*Probleme und wie sie gelöst wurden:*
+
+1. **Der erste Bau hob Z38 über die Decke (79 statt 77).** Meine drei neuen
+   schreibenden Helfer brachten jeder eine eigene Längenprüfung mit
+   demselben `error_log`-Satz mit — dieselbe Doppelung, die dieses Paket
+   abschafft, nur frisch gebaut, und das Register hat sie sofort gemeldet.
+   **Gelöst:** `app_state_zu_lang()`, eine Stelle für Prüfung und Satz; sie
+   ersetzt zugleich die vierte Fassung in `edbak_marke_setzen()` samt deren
+   eigener Konstante (AP4-h).
+2. **`jobs.php` wäre beinahe mit umgezogen.** Es stand ohne Auffälligkeit in
+   der Liste der 27 Stellen. Erst das Lesen des `catch` zeigte, dass dort
+   eine **Antwort an ein Gerät** hängt. Der Gerätevertrag nennt `jobs.php`
+   namentlich (Abschnitt 0); die Registerzeile hat das nicht gewusst, und
+   eine Liste ist kein Ersatz fürs Lesen. **Gelöst:** namentliche Ausnahme,
+   Begründung in der Registerzeile (AP4-c).
+3. **Die Vollständigkeit sprang auf 399 — ein U+2026 in einem neuen
+   Kommentar in `db.php`.** Dieselbe Falle, dieselbe Datei, zum **dritten**
+   Mal: Schritt 16 hat sie dokumentiert, AP2 ist hineingelaufen, AP4 wieder.
+   Ein „…" in einer PHP-Quelle zählt das Werkzeug als „Unicode-Zeichen als
+   Symbol im Markup". **Gelöst:** durch drei Punkte ersetzt, Zahl wieder 398.
+   *Die Lehre, die offenbar nicht wirkt, solange sie nur dokumentiert ist:*
+   Wer einen Kommentar in `server/` schreibt, tippt keine Auslassungspunkte.
+4. **Eine Kleinigkeit, die nur eine Messung klärt.** `app_state_lesen()`
+   bildet ein SQL-`NULL` auf `null` ab; drei der abgelösten Wrapper
+   (`edbak_marke_lesen()`, `geocoder_state()`, `logo_standard()`) bildeten es
+   auf `''` ab, weil sie `(string)$wert` schrieben und nur `false` prüften.
+   `app_state.v` ist `NULL`-bar. Nachgesehen: **Kein einziger Schreibweg
+   bindet `null`** — alle `INSERT`s binden Zeichenketten. Der Unterschied ist
+   damit unerreichbar; wo er erreichbar wäre, führte er ohnehin zum selben
+   Ergebnis (`'' !== '0'` und `null !== '0'` sind beide wahr,
+   `(string)null === ''` fällt in beiden Fällen auf die Vorgabe zurück).
+
+*Prüfprotokoll AP4:*
+
+- **Kreisläufe:** `edbak` **328 771 Einzelvergleiche, 0 unerklärt, 21
+  erwartet**; `csv` **10 922 Einzelvergleiche, 0 unerklärt, 1 271 erwartet**
+  — Zahl für Zahl wie vor dem Paket. Sie laufen über `einsatz_laden()`
+  (zehn umgezogene Stellen), über `geraet_virtuell_sicherstellen()` im
+  Importweg und über `app_state` in `edbak_marke_*`.
+- **Helferprobe von Hand gegen die laufende Datenbank, 13 Zellen, 13
+  erfüllt:** `app_state_einmalig()` zweimal gerufen liefert **denselben** Wert
+  (`wert-cd54992d`) · `app_state_loeschen()` räumt ihn weg (`null` danach) ·
+  `app_state_mehrere(['ap4_a','ap4_b','ap4_gibtsnicht'])` liefert **zwei**
+  Einträge, den dritten nicht · `app_state_setzen()` mit 191 Zeichen liefert
+  `false` und protokolliert „erlaubt sind 190" · `einsatz_laden()` mit
+  `spalten` liefert genau die zwei Spalten, mit `papierkorb => 'ja'` auf einen
+  aktiven Einsatz `null`, mit fremder Kontonummer `null` ·
+  `geraet_virtuell_kennung(2)` = `manual-2` · `geraete_echt_sql()` =
+  `device_id NOT LIKE 'manual-%'`, mit Alias `d.device_id NOT LIKE 'manual-%'`
+  · `db_hat_tabelle()` true/false richtig, `db_hat_spalte()` und
+  `db_hat_index()` true.
+- **Gerätevertrag:** Ingestprobe **83/0** (sie fährt `db_hat_spalte()` auf
+  `rest_segments.created_at`, die einzige umgezogene Stelle in `ingest.php`),
+  Kopplungsprobe **76/0**.
+- **Weitere Proben:** Komplettprobe **64/0** · Spurprobe **45/0** ·
+  Jobprobe **35/0** (`jobs_token()`, `jobs_pause()`) · Ratenprobe **50
+  Prüfungen, 0 Befunde** · Wiederherstellungs-Probe **111/0**
+  (`EDBAK_MARKE_MAX`) · Anteilprobe **55/55** (`schluessel_marke_*`) ·
+  Versandprobe **135/0** (`sz_tabelle_da()`, `sz_dateien_tabelle_da()`).
+
 ### AP5 — Transaktion und Kindtabellen (E-ZE-20, -21)
 
 Zuerst die Bauformen der 33 Stellen auszählen und hier eintragen; dann
@@ -1250,26 +1436,26 @@ daran, steht es nach AP10 hier.
 | **AP1 Banner** | Umgebungsetikett aus `config.php` | **`konfig('app.umgebung')`**; der Mail-Präfix kommt aus demselben Leser (`konfig('mail.betreff_praefix')`) — die Statuswarnung „Präfix ohne Etikett" vergleicht zwei `konfig()`-Werte | AP2 |
 | | Banner auf jeder Seite | `ui_seite_start()` ist **eine** Stelle (46 Aufrufe, 43 Dateien). **Nicht darüber laufen** und einzeln zu entscheiden: `install.php`, die Störungs- und Wartungsseiten in `wartung_lib.php`, `kopfzeilen_lib.php`, die Druckseiten `betrieb_schluesselblatt.php` und `notfallblatt.php`, `gpx_lib.php` — Schritt 15 fasst diese Hüllen nicht an | Bestand |
 | **AP2 Protokollseite, Archiv** | Schreibweg | `protokoll()` in `protokoll_lib.php` (13 Aufrufe, 8 Dateien) — von 15 **unberührt** | Bestand |
-| | Rollengatter je Reiter | `require_admin()`/`require_betreiberin()` (`auth_guard.php`), `rolle_*()` (`db.php`); **0 Rollenvergleiche von Hand** außerhalb `db.php` | AP4 |
+| | Rollengatter je Reiter | `require_admin()`/`require_betreiberin()` (`auth_guard.php`), `rolle_*()` (`db.php`); **0 Rollenvergleiche von Hand** außerhalb `db.php` | AP4, **gebaut** (Z13 4 → 0) |
 | | Zeile, Filter, Archivliste | `datum_zeit_text()`, `zeit_relativ()`, `zahl_text()`, `groesse_text()` aus `format_lib.php` | AP7 |
-| | Archivtakt, Fristen | `app_state_lesen/-setzen/-mehrere()` | AP4 |
+| | Archivtakt, Fristen | `app_state_lesen()`, `app_state_setzen()`, `app_state_mehrere()`, `app_state_setzen_mehrere()`, `app_state_loeschen()` | AP4, **gebaut** |
 | | Archivlauf | `db_transaktion()` | AP5 |
 | | ZIP schreiben | **R83: 10c AP2 ist der zweite Verbraucher und löst heraus.** Heute 4× `new ZipArchive` allein in `adminbackup_lib.php`; Schritt 15 baut **nichts**, nennt aber den Ort: **`zip_lib.php`** (neu, dort), `adminbackup_lib.php` zieht im selben Paket um. Registerzeile dafür legt 10c an | Bestand |
 | **AP3 Fehlerprotokoll** | Zahl der umzustellenden Aufrufe | **Übergabezahl** aus AP10 (Start 77 in 32 Dateien; Schritt 15 stellt keinen um) | E-ZE-05 |
 | | Zählmittel und Stufe-1-Schritt | `tools/zaehlung/`, Zeile **Z38**; 10c AP3 setzt die Decke auf **2** — Nr. 248 ist damit eine Registerzeile, kein neues Werkzeug | AP1, AP10 |
 | | Behandler „früh in `db.php`" | der frühe Teil von `db.php` trägt nach AP2: `konfig_lib.php` laden, `wartung_tor()`. **Der `sitzung_ablage()`-Aufruf aus Schritt 16 steht dort nicht mehr** (E-ZE-06) | AP2 |
 | | JSON-Fehler mit Kennung | `json_fehler()` (`db.php`, 18 Aufrufe, 14 Dateien) — unberührt; `api_rumpf()` fängt **keine** Ausnahmen | AP3 |
-| **AP4 Support-Rolle** | eine Andockstelle | `ROLLEN`, `rolle_darf_verwalten()` in `db.php` — `rolle_darf_support()` kommt daneben; **kein** Handvergleich mehr in `admin_user.php`/`admin_users.php` | AP4 |
+| **AP4 Support-Rolle** | eine Andockstelle | `ROLLEN`, `rolle_darf_verwalten()` in `db.php` — `rolle_darf_support()` kommt daneben; **kein** Handvergleich mehr in `admin_user.php`/`admin_users.php` | AP4, **gebaut**: die vier Vergleiche rufen jetzt `rolle_ist_betreiberin()` |
 | | „je Handlung, nicht je Seite" | Der POST-Verteiler der Verwaltungsseiten (`$_POST['action']`) ist von 15 **nicht** zentralisiert (Beifang, E-ZE-07) — 10c AP4 trifft ihn je Seite | — |
 | | Meldungen nach Handlungen | `flash_setzen(string $ton, string $text): void` und `flash_holen(): ?array` in **`session_lib.php`**, Töne `notice` und `error`, Sitzungsschlüssel `flash`. `flash_holen()` liest **und** löscht | AP3, **gebaut** |
 | **AP5 Zweitfaktor** | Sitzung und Tor | **`sitzung_starten('app')`** ist der einzige Weg in die Anmeldesitzung (`login.php`, `auth_guard.php`, `session_beenden()`); das Tor für Pflichtrollen dockt in `auth_guard.php` **nach** dem Sitzungsstart an, neben dem Einwilligungstor (E-P5b-15) | AP2 |
-| | Geheimnis einmalig, Einstellungen | `app_state_einmalig()`, `konfig()` | AP4, AP2 |
+| | Geheimnis einmalig, Einstellungen | `app_state_einmalig(string $k, callable $erzeuger): string` (`INSERT IGNORE`, dann zurücklesen), `konfig()` | AP4, AP2, **beide gebaut** |
 | **AP6 Health** | Eingang ohne Sitzung | **`api_methode('GET')`** aus `db.php` — lädt **kein** `auth_guard.php`. **Der Name hat sich in AP3 geändert** (AP3-a): aus dem einen `api_eingang()` sind `api_methode()` und `api_rumpf()` geworden, weil `csrf_check()` dazwischen steht. `api/health.php` braucht nur die erste | AP3, **gebaut** |
 | | Token, Dauer, Zustand | `konfig('betrieb.health_token')`, `rate_gleiche_dauer()` (Bestand), `migrationen_ausstehend()` (Bestand), `wartung_tor()` antwortet vorher mit 503 | AP2 |
 | **AP7 Betriebslage** | Zahlen und Anteile | `zahl_text()`, `prozent_text()`, `zeit_relativ()` | AP7 |
-| | „je echtem Gerät" | `geraete_echt_sql($alias)`, `GERAET_VIRTUELL_MUSTER` | AP4 |
-| | Migration für den Index | Regel „nur über `db_hat_index()`"; Registerzeile Z15 (Decke 57) schlägt sonst an | AP4, AP10 |
-| **AP8 R39-Rest** | Migration mit Vorzählung | `db_hat_spalte()`; `migrationen_inhalt_zaehlen()` (Bestand) | AP4 |
+| | „je echtem Gerät" | `geraete_echt_sql(string $alias = '')`, `GERAET_VIRTUELL_MUSTER`, dazu `geraet_virtuell_kennung()` und `geraet_virtuell_sicherstellen(PDO $pdo, int $userId)` | AP4, **gebaut** |
+| | Migration für den Index | Regel „nur über `db_hat_index(PDO $pdo, string $tabelle, string $index)`"; Registerzeile Z15 (Decke seit AP4 **54**) schlägt sonst an | AP4 **gebaut**, AP10 |
+| **AP8 R39-Rest** | Migration mit Vorzählung | `db_hat_spalte(PDO $pdo, string $tabelle, string $spalte)`; `migrationen_inhalt_zaehlen()` (Bestand) | AP4, **gebaut** |
 | | Besatzung am Diensttag | `einsatz_besatzung_ersetzen()` besteht für **Einsätze**; die Diensttag-Besatzung (`day_crew`) ist von 15 nicht berührt | AP5 |
 | **AP9 Aufräumen** | Datum-Zeit-Trenner | **übernimmt die Vereinheitlichung aus F-ZE-3**: nach 15 steht der Trenner an **einer** Stelle (`datum_zeit_text()`), 11 Aufrufer übergeben ` · ` — die Entscheidung ist danach eine Zeile | AP7 |
 | | JS von `einstellungen.php` | sechs JSON-POSTs laufen über `EdApi`; Textarbeit dort trifft kein Fehlerschema mehr je Knopf | AP8 |

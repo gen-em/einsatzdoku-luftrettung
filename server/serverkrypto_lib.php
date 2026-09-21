@@ -390,29 +390,19 @@ function huelle_anteil_kennung(?string $huelle): ?string
 /** Eine Marke lesen. `null`, wenn sie fehlt — oder `app_state` noch nicht da ist. */
 function schluessel_marke_lesen(string $k): ?string
 {
-    try {
-        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
-        $st->execute([$k]);
-        $v = $st->fetchColumn();
-        return ($v === false || $v === null) ? null : (string)$v;
-    } catch (Throwable $ex) {
-        /* app_state fehlt (Migration noch nicht gelaufen) — dann verhält sich
-         * die Installation wie vor S10, und das ist der richtige Zustand. */
-        return null;
-    }
+    /* FEHLT `app_state`, LIEFERT DER HELFER `null` — er faengt selbst. Dann
+     * verhält sich die Installation wie vor S10, und das ist der richtige
+     * Zustand. Der eigene `try/catch` stand hier, solange die Abfrage hier
+     * stand; seit Schritt 15/AP4 waere er unerreichbar. */
+    return app_state_lesen($k);
 }
 
 /** Eine Marke setzen. Scheitert leise; sie ist eine Auskunft, kein Riegel. */
 function schluessel_marke_setzen(string $k, string $v): void
 {
-    try {
-        db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
-                       ON DUPLICATE KEY UPDATE v = VALUES(v)')
-            ->execute([$k, $v]);
-    } catch (Throwable $ex) {
-        error_log('app_state: Marke ' . $k . ' liess sich nicht setzen — '
-                . $ex->getMessage());
-    }
+    /* `app_state_setzen()` faengt und protokolliert selbst — mit dem
+     * Schluesselnamen, also derselben Auskunft wie die Zeile, die hier stand. */
+    app_state_setzen($k, $v);
 }
 
 /**

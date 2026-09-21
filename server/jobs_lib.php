@@ -148,27 +148,20 @@ const JOB_PAUSE_MAX_S = 7200;
  */
 function jobs_pause(int $sekunden): void
 {
-    $pdo = db();
     if ($sekunden <= 0) {
-        $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([JOB_PAUSE_SCHLUESSEL]);
+        app_state_loeschen(JOB_PAUSE_SCHLUESSEL);
         return;
     }
     $bis = (new DateTime('now', new DateTimeZone('UTC')))
          ->modify('+' . min($sekunden, JOB_PAUSE_MAX_S) . ' seconds')
          ->format('Y-m-d H:i:s');
-    $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
-                   ON DUPLICATE KEY UPDATE v = VALUES(v)')
-        ->execute([JOB_PAUSE_SCHLUESSEL, $bis]);
+    app_state_setzen(JOB_PAUSE_SCHLUESSEL, $bis);
 }
 
 /** Bis wann sind die Jobs angehalten? null = sie laufen. */
 function jobs_pause_bis(): ?string
 {
-    try {
-        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
-        $st->execute([JOB_PAUSE_SCHLUESSEL]);
-        $wert = (string)($st->fetchColumn() ?: '');
-    } catch (Throwable $ex) { return null; }
+    $wert = (string)(app_state_lesen(JOB_PAUSE_SCHLUESSEL) ?? '');
     if ($wert === '') { return null; }
     $bis = new DateTime($wert, new DateTimeZone('UTC'));
     return $bis > new DateTime('now', new DateTimeZone('UTC')) ? $wert : null;
@@ -619,17 +612,15 @@ function jobs_zustand(): array
  */
 function jobs_token(bool $neu = false): string
 {
-    $pdo = db();
+    /* NICHT `app_state_einmalig()`: `$neu = true` MUSS den bestehenden Wert
+     * ueberschreiben — das ist der Sinn von „Token erneuern". Die einmalige
+     * Fassung liesse den alten stehen. */
     if (!$neu) {
-        $st = $pdo->prepare('SELECT v FROM app_state WHERE k = ?');
-        $st->execute([JOB_TOKEN_SCHLUESSEL]);
-        $wert = $st->fetchColumn();
-        if (is_string($wert) && $wert !== '') { return $wert; }
+        $wert = app_state_lesen(JOB_TOKEN_SCHLUESSEL);
+        if ($wert !== null && $wert !== '') { return $wert; }
     }
     $token = bin2hex(random_bytes(32));
-    $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
-                   ON DUPLICATE KEY UPDATE v = VALUES(v)')
-        ->execute([JOB_TOKEN_SCHLUESSEL, $token]);
+    app_state_setzen(JOB_TOKEN_SCHLUESSEL, $token);
     return $token;
 }
 

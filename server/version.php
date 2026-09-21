@@ -6745,5 +6745,63 @@ declare(strict_types=1);
  *   ist fuer alle 24 Handlungszweige nachgelesen worden — jeder ist eine
  *   if/elseif/else-Kette oder ein try/catch, und der Demo-Riegel setzt
  *   `$action = ''`.
+ *
+ * 20.29.0 — VIER SACHEN, DIE AN EINER STELLE STEHEN STATT AN SIEBENUNDVIERZIG
+ *   (21.09.2026, Schritt 15 AP4 — Zentralisierung, R83, E-ZE-04/-17/-18/-19).
+ *   NEBEN-Nummer: neue Funktionen, kein Datenmodell, keine Migration,
+ *   `update.php` nicht faellig.
+ *
+ *   `app_state`: 27 STELLEN IN 17 DATEIEN, JETZT ZWEI. Vier Helfer kommen zu
+ *   `app_state_lesen()` und `app_state_setzen()` dazu:
+ *   `app_state_mehrere()` (eine Abfrage statt n), `app_state_setzen_mehrere()`,
+ *   `app_state_loeschen()` und `app_state_einmalig()` — letzteres fuer die
+ *   beiden Servergeheimnisse (`salt_secret`, `reg_secret`). Die benutzten
+ *   schon `INSERT IGNORE`, und das ist der Punkt: Zwei gleichzeitige Anfragen
+ *   erzeugen beide einen Wert, aber nur EINER darf gewinnen — mit
+ *   `ON DUPLICATE KEY UPDATE` gewaenne der letzte, und die Pseudo-Salts
+ *   aenderten sich unter der Hand. Die Wrapper (`edbak_marke_*`,
+ *   `geocoder_state*`, `schluessel_marke_*`, `demo_*`, `jobs_*`, `logo_*`)
+ *   behalten Namen und Signatur; nur ihr Rumpf ruft die Helfer.
+ *
+ *   WAS DIE 27 STELLEN UNTERSCHIED, war nie die Sache, sondern die Antwort
+ *   auf die Frage „was, wenn `app_state` fehlt?" — mal `try/catch` mit
+ *   `null`, mal ohne, mal mit `error_log`. Das ist kein seltener Zustand: Es
+ *   ist der Zustand JEDER Anlage zwischen Deploy und `update.php`.
+ *
+ *   ZWEI STELLEN BLEIBEN, NAMENTLICH. `job_aufraeumen_schritte()` loescht mit
+ *   einem Verbund auf `users` (kein Schluesselzugriff). Und `jobs.php`, das
+ *   ist der wichtigere Fall: Der Endpunkt gehoert zum GERAETEVERTRAG und
+ *   antwortet bei unerreichbarer Datenbank mit `500 datenbank`. Der Helfer
+ *   faengt und liefert `null` — daraus waere ein „Token falsch" geworden.
+ *
+ *   DAS VIRTUELLE GERAET „Manuelle Einträge": Der Block „gibt es das Geraet
+ *   schon? sonst anlegen" stand VIERMAL — zweimal als eigene Funktion
+ *   (`schnitt_geraet()`, `gpx_import_geraet()`), zweimal eingebettet, jedes
+ *   Mal mit demselben zwanzigzeiligen Kommentar darueber, der erklaert, warum
+ *   `user_id` IN der Abfrage stehen muss. Jetzt:
+ *   `geraet_virtuell_sicherstellen()`. Die Kennung selbst stand an sieben
+ *   Stellen; dafuer `geraet_virtuell_kennung()`, `geraete_echt_sql($alias)`
+ *   fuer die Abfragen mit Tabellenalias und `GERAET_VIRTUELL_MUSTER` fuer die
+ *   eine Stelle, die das Muster bindet statt es einzusetzen.
+ *
+ *   `einsatz_laden()` IN `einsatz_lib.php` (neu): „Einsatz per Kennung holen
+ *   und dabei pruefen, dass er dem Konto gehoert" stand zwoelfmal in neun
+ *   Dateien. Der Unterschied war die Spaltenliste und die Behandlung des
+ *   Papierkorbs — mal `IS NULL`, mal `IS NOT NULL`, mal gar nicht. Genau das
+ *   sind die beiden Optionen. Zwei Stellen bleiben: der Verbund mit `days` in
+ *   `trash_restore_mission()` und die in der Import-Schleife bis zu 3000-mal
+ *   ausgefuehrte vorbereitete Anweisung in `api/import_commit.php`.
+ *
+ *   DIE SCHEMA-FRAGEN WERDEN OEFFENTLICH (E-ZE-04). `db_hat_tabelle()`,
+ *   `db_hat_spalte()`, `db_hat_index()` in `db.php`; die privaten `_hat_*` in
+ *   `migration_lib.php` reichen nur noch durch, damit 42 gelaufene
+ *   Migrationen unveraendert bleiben. Sie nehmen ein `PDO`, und das ist
+ *   zwingend: `tools/schemaprobe/` laesst Migrationen gegen ein frisch
+ *   angelegtes Schema laufen, also gegen eine ANDERE Verbindung als `db()`.
+ *   Ein Helfer, der sich seine Verbindung selbst holte, fragte dort das
+ *   falsche Schema — lautlos.
+ *
+ *   VIER ROLLENVERGLEICHE VON HAND (`=== 'betreiberin'`) rufen jetzt
+ *   `rolle_ist_betreiberin()`.
  */
-const WEB_VERSION = '20.28.0';
+const WEB_VERSION = '20.29.0';

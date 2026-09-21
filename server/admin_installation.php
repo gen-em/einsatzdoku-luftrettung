@@ -102,9 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!isset(INSTALLATION_LOGOS[$wahl])) {
             $logoMeldung = ['fehler', 'Unbekannte Logo-Wahl — es wurde nichts geändert.'];
         } else {
-            db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
-                           ON DUPLICATE KEY UPDATE v = VALUES(v)')
-                ->execute(['logo_standard', $wahl]);
+            app_state_setzen('logo_standard', $wahl);
             $logoMeldung = ['ok', 'Standard der Installation: ' . INSTALLATION_LOGOS[$wahl]
                 . ($wahl === 'wechselnd'
                    ? '. Je Anmeldung wird neu gewürfelt — innerhalb einer Sitzung '
