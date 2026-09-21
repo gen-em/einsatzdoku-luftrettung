@@ -117,17 +117,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Post/Redirect/Get: Ein Neuladen soll die Zuordnung nicht wiederholen.
-    if ($notice !== null) { $_SESSION['flash_notice'] = $notice; }
-    if ($error !== null)  { $_SESSION['flash_error']  = $error; }
+    if ($error !== null)      { flash_setzen('error', $error); }
+    elseif ($notice !== null) { flash_setzen('notice', $notice); }
     header('Location: nachbearbeitung.php');
     exit;
 }
 
-if (!empty($_SESSION['flash_notice'])) {
-    $notice = $_SESSION['flash_notice']; unset($_SESSION['flash_notice']);
-}
-if (!empty($_SESSION['flash_error'])) {
-    $error = $_SESSION['flash_error']; unset($_SESSION['flash_error']);
+$flash = flash_holen();
+if ($flash !== null) {
+    if ($flash['ton'] === 'error') { $error = $flash['text']; }
+    else                           { $notice = $flash['text']; }
 }
 
 $moeglich   = nb_moeglich();

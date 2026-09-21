@@ -53,12 +53,11 @@ const BACKUP_SPUREN_BLOCK = 25;
 const BACKUP_SPUREN_FENSTER_S = 20.0;
 
 try {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_out(['error' => 'method'], 405); }
+    api_methode();
     csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
     $t0 = microtime(true);
 
-    $b = json_decode(file_get_contents('php://input'), true);
-    if (!is_array($b)) { json_out(['error' => 'payload'], 400); }
+    $b = api_rumpf();
 
     $ownerType = (string)($b['owner_type'] ?? '');
     if (!in_array($ownerType, ['mission', 'rest'], true)) {

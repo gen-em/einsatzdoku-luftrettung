@@ -17,7 +17,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > | Stand | 21.09.2026 — **AP1 und AP2 erledigt** (Web 20.27.0). Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
 > | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen); E-ZE-09 ist nicht vergeben |
 > | Offen | nichts im Konzept. **F-ZE-1 bis F-ZE-6** (Abschnitt 2.3) sind mit der Freigabe vom 20.09.2026 entschieden. Außerhalb des Konzepts: die Einschübe (Abschnitt 8, 9) sind noch nicht eingespielt |
-> | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2 wartet auf Kette II**. **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
+> | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2 erledigt** (21.09.2026), **AP3 erledigt** (21.09.2026). **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
 > | Nummern | Dieses Konzept vergibt **keine** Rahmenplan-Fassung, **keine** Backlog-Nummer und **keine** Version. Einschübe in Abschnitt 8 und 9 übernimmt die einspielende Instanz |
 > | Steuerungsdokumente | **Seit 21.09.2026 auf `main`** (Kette II gemergt, PR #65/#68): Rahmenplan **Fassung 102**, Backlog mit der **Spanne 250–259 für Schritt 15** — 250–253 sind die vier Einträge aus Abschnitt 9 dieses Konzepts, **254–259 sind frei als Reserve für Funde der Umsetzung**. Das Konzept selbst ist mit Fassung 97 auf `main` eingespielt worden (unverändert; die fortgeschriebene Fassung liegt auf dem Umsetzungszweig). **Damit ist die Grundlage von AP1-f entfallen** — siehe dort; zur Neubewertung vorgelegt |
 
@@ -27,7 +27,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > |---|---|---|---|
 > | AP1 Zählmittel, Register, Gegenprobe Paket 1 | **erledigt** 20.09.2026 | keine (nur `tools/` und `docs/`) | Selbstprobe **29 von 29** · Register **38 Zeilen, 0 über der Decke** · Eichung `error_log(` **77 in 32**, `session_start(` **9 in 9** · Bestand **133 PHP / 40 JS** · Gegenprobe Z30–Z33 **4× 0** · `php -l` **133/0** · Wortliste **0/0** · Vollständigkeit **398** (unverändert) · Kontraste **22/0** · Kettenaufrufe **30/0** · CSP **0** · Migrationsregister **0** |
 > | AP2 Konfiguration und Sitzung | **erledigt** 21.09.2026 | **Web 20.27.0** (Neben: zwei neue Funktionen, keine Migration) | Z01 **9 → 1** · Z02 **2 → 1** · Z03 **7 → 1** · Z04 **46 → 0** · `konfig_lib` **13/13** · Cookie-Parameter **16 Zellen, 0 Abweichungen** · Ladezyklus **7/7** · Sitzungshärtung **0 Befunde, Selbstprobe 12/12** · Register **38 Zeilen, 0 über der Decke** · `php -l` **134/0** · Wortliste **0/0** · Vollständigkeit **398** · `error_log(` **77** (unverändert, E-ZE-05). **Im Browser gegen eine laufende Anlage:** Bilderlauf **496 Bilder, 0 Überlauf, 0 Konsolenfehler** · Prüfliste **A-1 bis A-12 gefahren** · F-ZE-2 **40 anonyme Abrufe → 0 neue Sitzungsdateien** · Härtung wirkt (untergeschobene Kennung verworfen) · A-9 **8/8** · A-12 **7/7** · Abmelde-Probe erfüllt · Kopplungsprobe **76/0** · Ratenprobe **50/0** · **Nachtrag: fünf Proben repariert (448 Erwartungen, 0 offen; Nr. 257)** (der eine Befund war nicht von AP2 und ist behoben, Nr. 254) |
-> | AP3 API-Eingang und Flash | offen | — | — |
+> | AP3 API-Eingang und Flash | **erledigt** 21.09.2026 | **Web 20.28.0** (Neben: drei neue Funktionen, keine Migration) | Z05 **12 → 1** · Z06 **17 → 0** · Z07 **11 → 0** · Z08 **3 → 0** (Konzept erwartete 1, AP3-d) · Z09 **22 → 0** · `error_log(` **77** (unverändert, E-ZE-05) · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · `php -l` **135/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kettenaufrufe **0** · Sitzungshärtung **0**. **Gegen eine laufende Anlage:** Eingangsprobe **46 Zellen, 46 erfüllt** (davor **27 von 46** — die 19 Abweichungen sind F-ZE-5, aufgeschlüsselt im Protokoll; **beide Reihenfolge-Zellen schon davor grün**) · Flash-Probe **11/11** · Kreisläufe edbak **328 771/0/21**, csv **10 922/0/1 271** (Zahl für Zahl wie davor) · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0**. **GPX-Probe 95/4 — vor und nach dem Paket gleich**, Ursache ist der Demo-Reset dieser Anlage (Nr. 259) |
 > | AP4 Datenzugriff klein | offen | — | — |
 > | AP5 Transaktion und Kindtabellen | offen | — | — |
 > | AP6 Spaltenregister `missions` | offen | — | — |
@@ -304,7 +304,7 @@ Abweichungen, alle Proben unter `tools/` grün wie zuvor.
 |---|---|---|
 | `konfig()`, `konfig_verwerfen()` | **`konfig_lib.php`** (neu, **ohne Abhängigkeiten**) | `install.php` und `sitzung_lib.php` müssen sie ohne `db.php` laden können |
 | `sitzung_starten()` | **`sitzung_lib.php`** (besteht seit Schritt 16; lädt nie `db.php` und zieht nur für die stündliche Schreibprobe `plattform_lib.php` nach) | `install.php` lädt kein `db.php`; `session_lib.php` lädt `db.php` und scheidet deshalb aus |
-| `api_eingang()` | **`db.php`**, neben `json_out()` | 10c AP6 (`api/health.php`) braucht ihn **ohne** `auth_guard.php`; CSRF bleibt deshalb draußen (E-ZE-15) |
+| `api_methode()`, `api_rumpf()` | **`db.php`**, neben `json_out()` | 10c AP6 (`api/health.php`) braucht den Eingang **ohne** `auth_guard.php`; CSRF bleibt deshalb draußen (E-ZE-15). **In AP3 auf zwei Funktionen aufgeteilt** (AP3-a): `csrf_check()` steht in allen elf Rumpf-Dateien zwischen Methodenprüfung und Rumpflesen, ein Aufruf hätte diese Reihenfolge gekehrt |
 | `flash_setzen()`, `flash_holen()` | `session_lib.php` | hängt an der Sitzung |
 | `app_state_*`, `db_transaktion()`, `db_hat_*()`, `geraet_virtuell_sicherstellen()`, `geraete_echt_sql()` | `db.php` | dort liegen die Nachbarn schon |
 | `einsatz_laden()`, `einsatz_*_ersetzen()` | **`einsatz_lib.php`** (neu) | Gegenstück zu `diensttag_lib.php` |
@@ -353,6 +353,15 @@ Prüfungen nach dem Eingang (fehlender Schlüssel `eintraege`, falsches
 `format`-Feld eines Backups, `leer` in `api/schneiden.php`) bleiben, wo sie
 sind, mit ihren Schlüsseln. **Ausnahme, namentlich:** `api/csp_bericht.php`
 (anderer Inhaltstyp, kein eigener Aufrufer). Fehlerschlüssel: F-ZE-5.
+
+> **In AP3 auf zwei Funktionen aufgeteilt** — `api_methode(string|array
+> $erlaubt = 'POST'): void` und `api_rumpf(array $o = []): array`. Grund,
+> Messung und Freigabe stehen im AP3-Protokoll unter **AP3-a**: In allen elf
+> Rumpf-Dateien steht `csrf_check()` zwischen Methodenprüfung und
+> Rumpflesen, ein einziger Aufruf hätte diese Reihenfolge gekehrt und wäre
+> eine sechste Verhaltensänderung gewesen. Alles Übrige dieses Absatzes
+> gilt unverändert — auch, dass CSRF draußen bleibt. **`max_bytes` bekommt
+> keinen Vorgabewert** (AP3-b).
 
 **E-ZE-16 — Flash:** `flash_setzen(string $ton, string $text): void`,
 `flash_holen(): ?array` (liest **und** löscht). Drei Seiten ziehen um; der
@@ -840,6 +849,196 @@ falscher Methode (405), leerem Rumpf (400 `leer`), Nicht-JSON (400 `format`) —
 unverändert grün); Kreisläufe 0 unerklärt; die drei Flash-Seiten im Browser
 je einmal (Meldung erscheint einmal, nach Neuladen nicht mehr).
 
+**AP3 — erledigt 21.09.2026, Web 20.28.0.** Neu: `api_methode()` und
+`api_rumpf()` in `db.php` (neben `json_out()`), `flash_setzen()` und
+`flash_holen()` in `session_lib.php`. Zwanzig der einundzwanzig Dateien unter
+`server/api/` sind umgezogen, `api/csp_bericht.php` bleibt als benannte
+Ausnahme. Drei Seiten ziehen auf den Flash um.
+
+*Abnahmezahlen (alle gemessen, nicht geschätzt):*
+
+| Zeile | Start | Ziel | gemessen |
+|---|---|---|---|
+| Z05 `php://input` unter `api/` | 12 | 1 | **1** (`csp_bericht.php`) |
+| Z06 `'error' => 'method'` unter `api/` | 17 | 0 | **0** |
+| Z07 „kein JSON-Objekt" von Hand | 11 | 0 | **0** |
+| Z08 `post_max_size`-Hinweis unter `api/` | 3 | 1 | **0** |
+| Z09 `$_SESSION['flash…']` | 22 | 0 | **0** |
+| Z38 `error_log(` (E-ZE-05) | 77 | 77 | **77** |
+
+*Entscheidungen, die in diesem Paket gefallen sind:*
+
+- **AP3-a — Der Eingang wird ZWEI Funktionen, nicht eine.** E-ZE-15 nennt
+  `api_eingang(array $o = []): array`, das Methode und Rumpf zusammen
+  erledigt. Beim Messen zeigte sich, dass zwischen beiden in **allen elf**
+  Rumpf-Dateien eine dritte Zeile steht, und zwar überall dieselbe:
+  `api_methode()` → `csrf_check()` → `api_rumpf()`. Ein zusammengefasster
+  Aufruf hätte das Rumpflesen vor die Token-Prüfung geschoben. Messbare
+  Folgen: Ein Aufrufer ohne gültiges Token bekäme `400 leer` oder
+  `400 format` statt `403 csrf`, und in `api/kdf_upgrade.php` liefe er am
+  Demo-Ausstieg vorbei, der zwischen csrf und Rumpf steht — aus `200
+  {"ok":true,"uebersprungen":"demo"}` würde `400 format`, und dafür braucht
+  es nicht einmal ein falsches Token. Das wäre eine **sechste**
+  Verhaltensänderung neben den fünf benannten gewesen (E-ZE-10), also ein
+  Haltepunkt. Der Auftraggeber hat die Aufteilung am 21.09.2026 freigegeben.
+  **Dieselbe Klasse von Fehler ist am 13.09.2026 schon einmal behoben
+  worden** — der Kopfkommentar von `api/kdf_upgrade.php` erzählt es: Bis
+  dahin stand der Demo-Ausstieg vor `csrf_check()`, und ein Aufruf ohne Token
+  kam für das Demo-Konto mit 200 zurück, während jedes andere Konto 403 sah.
+  **Abschnitt 6 ist entsprechend berichtigt:** 10c AP6 findet
+  `api_methode('GET')` vor, nicht `api_eingang(['methode' => 'GET', 'rumpf'
+  => 'keiner'])`.
+- **AP3-b — `max_bytes` bekommt keinen Vorgabewert.** F-ZE-5 nennt `zu_gross`
+  (413) als Schlüssel des Eingangs. Nachgemessen: Unter `api/` begrenzt
+  **keine** Stelle die Rumpfgröße; die beiden vorhandenen `zu_gross` (in
+  `export_data.php` und `import_commit.php`) sind **Inhalts**prüfungen auf
+  Zeilenzahl und bleiben, wo sie sind. `app.max_body_bytes` (512 KB) ist die
+  Grenze des **Geräte**-Eingangs in `ingest.php`; ein Konto-Backup ist
+  zweistellig megabytegroß. Eine Vorgabe hätte hier eine Prüfung eingeführt,
+  die es nicht gab. Die Option bleibt, der Vorgabewert entfällt.
+- **AP3-c — Die drei Dateien mit dem Schlüssel `methode` ziehen mit um.**
+  Freigegeben am 21.09.2026. `rueckfrage.php`, `schluessel_erneuern.php` und
+  `schluesselblatt_pruefen.php` antworteten mit
+  `http_response_code(405); echo json_encode(['error' => 'methode']); exit;`
+  — deutscher Schlüssel, eigener Ausgabeweg, am gemeinsamen `json_out()`
+  vorbei. Sie rufen jetzt `api_methode()`. Das ändert den Schlüssel auf
+  `method` und liegt damit in F-ZE-5; kein JavaScript wertet ihn aus
+  (nachgemessen über alle 40 Skripte: der einzige Vergleich auf `error` gilt
+  `maintenance`). Der **Rest** ihres Ausgabewegs — 19 `echo json_encode()`
+  ohne `nosniff` und ohne `no-store` — bleibt und steht als Backlog
+  **Nr. 258**.
+  **Nebenwirkung, benannt:** Ihre 405-Antwort geht jetzt durch `json_out()`
+  und trägt deshalb zusätzlich `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy`, HSTS und `Cache-Control: no-store`. Das sind
+  **Kopfzeilen, die dazukommen**, keine, die wegfallen; sie sind genau die,
+  die diese drei Dateien nach Nr. 203 ohnehin tragen müssten, und sie
+  betreffen nur den Fehlerfall „falsche Methode".
+- **AP3-d — Z08 erreicht 0, nicht 1.** Das Konzept erwartete, dass ein
+  `post_max_size`-Hinweis unter `api/` stehenbleibt. Der Hinweis steht jetzt
+  in `api_rumpf()`, und das ist `db.php` — unter `api/` bleibt **keiner**.
+  Die Registerzeile ist auf `decke_ziel` 0 gesetzt, mit Begründung im
+  Register. Von den drei Fassungen gilt die **vollständigste** (mit
+  `client_max_body_size`), weil F-ZE-5 „ein Hinweis statt drei Fassungen"
+  sagt und nicht, welcher.
+- **AP3-e — `api/adminbackup_freigabe.php` prüft die Methode jetzt vorn.**
+  Die Datei hatte die Prüfung als **Auffangzeile am Dateiende**, hinter dem
+  GET- und dem POST-Zweig; beide enden in `json_out()`, die Zeile war also
+  nur für jede dritte Methode erreichbar. `api_methode(['GET', 'POST'])`
+  steht jetzt vor beiden Zweigen. Erreichbar ist derselbe Satz Methoden,
+  nachgemessen (`DELETE` → 405).
+- **AP3-f — Der Flash bekommt EINEN Sitzungsschlüssel, und das ist
+  nachgelesen, nicht angenommen.** E-ZE-16 legt `flash` fest. Vorher gab es
+  `flash_notice` und `flash_error`, und `einstellungen.php` schrieb beide in
+  zwei unabhängigen `if`-Zeilen — ein Schlüssel kann also nur tragen, was
+  vorher zwei trugen, wenn nie beide gesetzt sind. Für **alle 24
+  Handlungszweige** nachgelesen: Jeder ist eine `if/elseif/else`-Kette oder
+  ein `try/catch`, in dem die `$notice`-Zuweisung die letzte Anweisung des
+  `try` ist; eine Stelle prüft ausdrücklich `if ($error === null)`; und der
+  Demo-Riegel am Anfang setzt `$action = ''`, sodass danach kein Zweig mehr
+  läuft. `nachbearbeitung.php` hat zwei Handlungen, und `$action` kann nur
+  eine sein. **Sie schließen einander aus.** Am Umleitungspunkt steht
+  trotzdem `if ($error !== null) … elseif ($notice !== null) …` — der Fehler
+  hätte Vorrang, wenn die Annahme je bräche.
+- **AP3-g — `papierkorb.php` prüft beim Holen den Ton.** Die Seite hinterlegt
+  nur Fehler und leitet auf sich selbst um; ein Hinweis kann dort nicht
+  ankommen. Sie nimmt den Text trotzdem nur, wenn der Ton `error` ist — eine
+  Erfolgsmeldung im Fehlerkasten wäre schlimmer als keine.
+
+*Probleme und wie sie gelöst wurden:*
+
+1. **Backlog Nr. 256 stand falsch im Backlog, und eine Freigabe hing daran.**
+   Der Eintrag behauptete, vier Dateien unter `api/` prüften die
+   Anfragemethode **nicht**; er war aus der Beobachtung geschlossen, dass die
+   Registerzeile Z06 sie nicht zählt. Nachgemessen **in den Dateien**:
+   **Alle 21 prüfen die Methode.** Z06 zählte drei davon nur deshalb nicht,
+   weil ihr Fehlerschlüssel `methode` heißt statt `method`, und
+   `csp_bericht.php` antwortet absichtlich mit einer stummen 204. Damit war
+   die darauf gestützte Freigabe („den Eingang dort ohne Methodenprüfung
+   einbauen") gegenstandslos. **Gelöst:** Der Eintrag ist auf den
+   tatsächlichen Befund umgeschrieben, nach *Erledigt* verschoben und in AP3
+   behoben worden; der verbliebene Teil steht als Nr. 258.
+   *Die Lehre:* Eine Registerzeile, die nicht zählt, belegt **nicht**, dass
+   es die Sache nicht gibt — sie belegt, dass das Muster nicht greift.
+2. **`docs/Technik.md` behauptete eine Zahl, die nicht stimmte.** Dort stand,
+   `grep -rn "Content-Type: application/json" server/` treffe „genau zwei
+   Codezeilen". Gemessen: **sechs**. Die drei Überzähligen sind genau die
+   Dateien aus AP3-c. **Gelöst:** Satz berichtigt, mit der Messung und dem
+   Verweis auf Nr. 258 daneben.
+3. **Die `$dayId`-Berechnung in `api/day.php` stand vor der
+   `is_array()`-Prüfung.** `$dayId = isset($b['day_id']) ? … : 0;` lief auf
+   `$b === null`, bevor geprüft wurde, ob überhaupt ein Feld da ist — das
+   ging gut, weil `isset(null['x'])` `false` ergibt. Nach dem Umbau liefert
+   `api_rumpf()` immer ein Feld, die Reihenfolge ist damit gegenstandslos.
+   Der inhaltliche Schlüssel `payload` für „`day_id` fehlt oder ist ≤ 0"
+   **bleibt** (E-ZE-15: inhaltliche Prüfungen behalten ihre Schlüssel).
+
+*Prüfprotokoll AP3:*
+
+- **Eingangsprobe gegen die laufende Anlage** (Einmalprobe, Befehlsfolge im
+  Prüfdokument): **46 Zellen, 46 erfüllt, 0 offen** — je Endpunkt eine
+  Anfrage mit falscher Methode (405 `method`), und bei den elf Endpunkten mit
+  Rumpf zusätzlich leerer Rumpf (400 `leer`) und Nicht-JSON (400 `format`);
+  dazu `csp_bericht.php` zweimal (204, leerer Rumpf) und **zwei
+  Reihenfolge-Zellen**: POST ohne Token mit leerem Rumpf → `403 csrf` (nicht
+  `400 leer`), GET ohne Token → `405 method` (nicht `403 csrf`).
+- **Dieselbe Probe gegen den Stand vor AP3** (`git stash`): **46 Zellen, 27
+  erfüllt, 19 offen.** Die 19 sind die Änderung, die F-ZE-5 beschreibt, und
+  zwar aufgeschlüsselt: acht `payload` → `format`, sechs `payload` → `leer`,
+  zwei `format` → `leer`, drei `methode` → `method`. **Beide
+  Reihenfolge-Zellen waren schon vorher grün** — das ist der Beleg, dass die
+  Aufteilung in zwei Funktionen die Reihenfolge wirklich erhält.
+- **Flash-Probe gegen die laufende Anlage:** **11 Zellen, 11 erfüllt.** Je
+  Seite: POST leitet um (302), die Meldung steht nach der Umleitung da, beim
+  Neuladen ist sie fort; `papierkorb.php` zusätzlich „die Meldung trägt den
+  Fehlerton". `nachbearbeitung.php` liefert auf dieser Anlage kein Formular
+  aus (`nb_moeglich()` ist falsch, `base_id` ist längst `NOT NULL`) — das
+  Token hängt an der **Sitzung**, nicht an der Seite, und kommt deshalb von
+  `einstellungen.php`.
+- **Kreisläufe:** `edbak` **328 771 Einzelvergleiche, 0 unerklärt, 21
+  erwartet**; `csv` **10 922 Einzelvergleiche, 0 unerklärt, 1 271 erwartet**
+  — beide Zahl für Zahl wie vor dem Paket. Sie laufen über
+  `api/export_data.php`, `api/import_commit.php`, `api/backup_restore.php`,
+  `api/backup_eintraege_restore.php`, `api/backup_spuren*.php` und
+  `api/day.php`, also über sechs der elf umgebauten Eingänge.
+- **Gerätevertrag:** Ingestprobe **83 Erwartungen, 0 offen**, Kopplungsprobe
+  **76, 0 offen, 0 übergangen**. Keine der fünf Gerätedateien ist angefasst
+  (`git diff --name-only` nennt sie nicht).
+- **Weitere Proben:** Komplettprobe **64, 0 offen** · Spurprobe **45, 0
+  offen** · Jobprobe **35, 0 offen** · Ratenprobe **50 Prüfungen, 0
+  Befunde** · Migrationsregister **0 ungenutzte Ausnahmen** · CSP-Prüfung
+  **0 Inline-Skripte ohne Nonce**.
+- **Klickprobe: 48 von 48 Wegen erfüllt, 0 verfehlt** — im **zweiten** Lauf.
+  Der erste meldete 42 von 48 und sagte selbst dazu, warum: „Der Demo-Reset
+  lief um 20:36:04 UTC mitten in diesem Lauf. Verfehlte Wege sind verdächtig
+  — bitte wiederholen." Mit `jobs_pause(3000)` davor ist der Lauf sauber.
+  Das ist dieselbe Ursache wie bei der GPX-Probe (Nr. 259) — mit dem
+  Unterschied, dass die Klickprobe es **sagt**.
+- **GPX-Probe: 95 Erwartungen, 4 nicht erfüllt — und zwar VOR und NACH dem
+  Paket gleich** (mit `git stash` gegengemessen). Ursache liegt nicht im
+  Code: Das Demo-Konto ist auf dieser Anlage heute zurückgesetzt worden
+  (`app_state.demo_letzter_reset`), die Einsatz-Kennungen passen seither
+  nicht mehr zum Referenzexport vom 15.09.2026 — „190 von 204 ohne
+  Gegenstück". Der punktweise Vergleich hat damit **0 von 204 Dateien**
+  verglichen. Backlog **Nr. 259**.
+- **Nicht gelaufen, mit Grund:** Der **Android-Prüfstand**, den Abschnitt 5
+  für AP3 vorsieht. `./gradlew test` bricht mit „SDK location not found" ab —
+  in diesem Container gibt es kein `/opt/android-sdk`, `ANDROID_HOME` ist
+  leer; mit `--offline` scheitert er davor am nicht zwischengespeicherten
+  Plugin `com.android.application:8.13.2`. Das ist ein **Befund mit Zahl**,
+  kein übersprungener Punkt (CLAUDE.md 6). Belegt ist der Gerätevertrag
+  stattdessen doppelt: keine der fünf Geräte-Dateien steht in
+  `git diff --name-only`, und Ingest- und Kopplungsprobe messen **83/0** und
+  **76/0**.
+- **Mailprobe: 41 Prüfungen, 1 Befund — vor und nach dem Paket gleich**
+  (`git stash` gegengemessen). Der Befund betrifft Pflichtwerte im
+  Beispielsatz dreier Mailvorlagen und hat mit AP3 nichts zu tun.
+- **Werkzeuge:** `php -l` **135 Dateien, 0 Fehler** (134 im Repositorium plus
+  die lokale `config.php`) · Wortliste **0 Treffer, 0 ungenutzte Ausnahmen,
+  0 durchgerutschte Fallen** · Vollständigkeit **398** (unverändert) ·
+  Kettenaufrufe **0 Befunde, 0 ungeprüft** · Sitzungshärtung **1 echter
+  `session_start()`, 0 Befunde** · Zählung **38 Zeilen, 0 über der Decke,
+  Selbstprobe 34 von 34, Zeilentreue über 522 Sichten 0 Abweichungen**.
+
 ### AP4 — Datenzugriff klein (E-ZE-04, -17, -18, -19)
 
 `app_state_*` vervollständigt, Wrapper-Rümpfe umgestellt; virtuelles Gerät;
@@ -979,7 +1178,7 @@ Z02: ["sitzung_ablage( Aufrufe (nach Schritt 16)", php_ohne_zeichenketten, 2, 1,
 Z03: ["config.php lesend einbinden", php_mit_zeichenketten, 7, 1, AP2]
 Z04: ["$CFG / global $CFG / $GLOBALS['CFG']", php_mit_zeichenketten, 46, 0, AP2]
 Z05: ["php://input unter api/", php_mit_zeichenketten, 12, 1, AP3]
-Z06: ["'error' => 'method' unter api/ ausserhalb api_eingang()", php_mit_zeichenketten, 17, 0, AP3]
+Z06: ["'error' => 'method' unter api/ ausserhalb api_methode()", php_mit_zeichenketten, 17, 0, AP3]
 Z07: ["kein-JSON-Objekt von Hand (payload|format) unter api/", php_mit_zeichenketten, 11, 0, AP3]
 Z08: ["post_max_size-Hinweis unter api/", php_mit_zeichenketten, 3, 1, AP3]
 Z09: ["$_SESSION['flash…'] ausserhalb session_lib.php", php_mit_zeichenketten, 22, 0, AP3]
@@ -1054,13 +1253,13 @@ daran, steht es nach AP10 hier.
 | **AP3 Fehlerprotokoll** | Zahl der umzustellenden Aufrufe | **Übergabezahl** aus AP10 (Start 77 in 32 Dateien; Schritt 15 stellt keinen um) | E-ZE-05 |
 | | Zählmittel und Stufe-1-Schritt | `tools/zaehlung/`, Zeile **Z38**; 10c AP3 setzt die Decke auf **2** — Nr. 248 ist damit eine Registerzeile, kein neues Werkzeug | AP1, AP10 |
 | | Behandler „früh in `db.php`" | der frühe Teil von `db.php` trägt nach AP2: `konfig_lib.php` laden, `wartung_tor()`. **Der `sitzung_ablage()`-Aufruf aus Schritt 16 steht dort nicht mehr** (E-ZE-06) | AP2 |
-| | JSON-Fehler mit Kennung | `json_fehler()` (`db.php`, 18 Aufrufe, 14 Dateien) — unberührt; `api_eingang()` fängt **keine** Ausnahmen | AP3 |
+| | JSON-Fehler mit Kennung | `json_fehler()` (`db.php`, 18 Aufrufe, 14 Dateien) — unberührt; `api_rumpf()` fängt **keine** Ausnahmen | AP3 |
 | **AP4 Support-Rolle** | eine Andockstelle | `ROLLEN`, `rolle_darf_verwalten()` in `db.php` — `rolle_darf_support()` kommt daneben; **kein** Handvergleich mehr in `admin_user.php`/`admin_users.php` | AP4 |
 | | „je Handlung, nicht je Seite" | Der POST-Verteiler der Verwaltungsseiten (`$_POST['action']`) ist von 15 **nicht** zentralisiert (Beifang, E-ZE-07) — 10c AP4 trifft ihn je Seite | — |
-| | Meldungen nach Handlungen | `flash_setzen()`/`flash_holen()` | AP3 |
+| | Meldungen nach Handlungen | `flash_setzen(string $ton, string $text): void` und `flash_holen(): ?array` in **`session_lib.php`**, Töne `notice` und `error`, Sitzungsschlüssel `flash`. `flash_holen()` liest **und** löscht | AP3, **gebaut** |
 | **AP5 Zweitfaktor** | Sitzung und Tor | **`sitzung_starten('app')`** ist der einzige Weg in die Anmeldesitzung (`login.php`, `auth_guard.php`, `session_beenden()`); das Tor für Pflichtrollen dockt in `auth_guard.php` **nach** dem Sitzungsstart an, neben dem Einwilligungstor (E-P5b-15) | AP2 |
 | | Geheimnis einmalig, Einstellungen | `app_state_einmalig()`, `konfig()` | AP4, AP2 |
-| **AP6 Health** | Eingang ohne Sitzung | **`api_eingang(['methode' => 'GET', 'rumpf' => 'keiner'])`** aus `db.php` — lädt **kein** `auth_guard.php` | AP3 |
+| **AP6 Health** | Eingang ohne Sitzung | **`api_methode('GET')`** aus `db.php` — lädt **kein** `auth_guard.php`. **Der Name hat sich in AP3 geändert** (AP3-a): aus dem einen `api_eingang()` sind `api_methode()` und `api_rumpf()` geworden, weil `csrf_check()` dazwischen steht. `api/health.php` braucht nur die erste | AP3, **gebaut** |
 | | Token, Dauer, Zustand | `konfig('betrieb.health_token')`, `rate_gleiche_dauer()` (Bestand), `migrationen_ausstehend()` (Bestand), `wartung_tor()` antwortet vorher mit 503 | AP2 |
 | **AP7 Betriebslage** | Zahlen und Anteile | `zahl_text()`, `prozent_text()`, `zeit_relativ()` | AP7 |
 | | „je echtem Gerät" | `geraete_echt_sql($alias)`, `GERAET_VIRTUELL_MUSTER` | AP4 |

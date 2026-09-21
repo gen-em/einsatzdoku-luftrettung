@@ -29,6 +29,11 @@ require_once __DIR__ . '/../adminbackup_lib.php';
  * Fehler zu machen sind.
  */
 
+/* Beide Zweige unten enden in `json_out()`; die Pruefung stand deshalb bis
+ * Web 20.28.0 als Auffangzeile am DATEIENDE. Sie steht jetzt vorn, wo man
+ * sie sucht — erreichbar ist derselbe Satz Methoden. */
+api_methode(['GET', 'POST']);
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $f = edbak_freigabe_fuer($userId);
     if ($f === null) { json_out(['freigabe' => null]); }
@@ -117,5 +122,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     edbak_freigabe_eingeloest($f['account_key']);
     json_out(['ok' => true]);
 }
-
-json_out(['error' => 'method'], 405);

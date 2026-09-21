@@ -607,8 +607,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      * sie hat auch nichts im Verlauf des Browsers zu suchen. */
                     rate_erfolg('pair_code', $koppelKonto);
                     $_SESSION['pair_warten'] = (string)$sitzung['device_id'];
-                    $_SESSION['flash_notice'] = 'Der Code ist deinem Konto zugeordnet. '
-                                              . 'Bestätige jetzt am Gerät mit Ja.';
+                    flash_setzen('notice', 'Der Code ist deinem Konto zugeordnet. '
+                                        . 'Bestätige jetzt am Gerät mit Ja.');
                     header('Location: einstellungen.php?t=geraete#koppeln');
                     exit;
                 }
@@ -623,8 +623,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $kw = (string)($_SESSION['pair_warten'] ?? '');
         if ($kw !== '') { pair_sitzung_verwerfen(db(), $kw, $userId); }
         unset($_SESSION['pair_warten']);
-        $_SESSION['flash_notice'] = 'Die Kopplung ist abgebrochen. Wenn du das Gerät doch '
-                                  . 'verbinden willst, hol dir dort einen neuen Code.';
+        flash_setzen('notice', 'Die Kopplung ist abgebrochen. Wenn du das Gerät doch '
+                            . 'verbinden willst, hol dir dort einen neuen Code.');
         header('Location: einstellungen.php?t=geraete#koppeln');
         exit;
     }
@@ -1173,21 +1173,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * `:target` und mit der Neuladen-Warnung des Browsers. */
     if ($abschnitt !== null
         && ($zielId !== null || $baseNeu !== null || $notice !== null || $error !== null)) {
-        if ($notice !== null) { $_SESSION['flash_notice'] = $notice; }
-        if ($error !== null) { $_SESSION['flash_error'] = $error; }
+        /* NUR EINES VON BEIDEN KANN GESETZT SEIN — nachgelesen fuer jeden der
+         * 24 Handlungszweige (Schritt 15/AP3): Jeder ist eine if/elseif/else-Kette
+         * oder ein try/catch, und der Demo-Riegel oben setzt `$action = ''`.
+         * Deshalb traegt EIN Sitzungsschluessel, was vorher zwei trugen. */
+        if ($error !== null)       { flash_setzen('error', $error); }
+        elseif ($notice !== null)  { flash_setzen('notice', $notice); }
         header('Location: ' . $zurueckZiel . '#' . $abschnitt);
         exit;
     }
 }
 
 // Meldung/Fehler aus der Umleitung uebernehmen
-if (!empty($_SESSION['flash_notice'])) {
-    $notice = $_SESSION['flash_notice'];
-    unset($_SESSION['flash_notice']);
-}
-if (!empty($_SESSION['flash_error'])) {
-    $error = $_SESSION['flash_error'];
-    unset($_SESSION['flash_error']);
+$flash = flash_holen();
+if ($flash !== null) {
+    if ($flash['ton'] === 'error') { $error = $flash['text']; }
+    else                           { $notice = $flash['text']; }
 }
 
 /* ---- Wartet dieses Konto gerade auf ein Gerät? (S5, E-S5-53) --------------

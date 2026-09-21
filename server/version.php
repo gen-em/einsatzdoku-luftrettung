@@ -6689,5 +6689,61 @@ declare(strict_types=1);
  *   Befund". Der Zugewinn ist der letzte Punkt: Ein neuer Sitzungsstart MIT
  *   Haertung war vorher gruen und haette die Cookie-Parameter trotzdem neu
  *   erfinden muessen. Genau so sind die neun entstanden.
+ *
+ * 20.28.0 — EIN EINGANG FUER DIE ENDPUNKTE, EINE MELDUNG UEBER DIE UMLEITUNG
+ *   (21.09.2026, Schritt 15 AP3 — Zentralisierung, R83, E-ZE-15/-16,
+ *   F-ZE-5). NEBEN-Nummer: drei neue Funktionen, kein Datenmodell, keine
+ *   Migration, `update.php` nicht faellig.
+ *
+ *   EINUNDZWANZIG DATEIEN UNTER `api/` FINGEN GLEICH AN — und liefen
+ *   auseinander. Methode pruefen, Rumpf lesen, „leer?", „ist das ein
+ *   JSON-Objekt?": vier Handgriffe, in vier Schreibweisen. Siebzehn Dateien
+ *   antworteten `'method'`, drei `'methode'`; acht sagten `'payload'`, drei
+ *   `'format'`; den Hinweis auf `post_max_size` gab es in drei Fassungen,
+ *   und acht Endpunkte hatten gar keinen Leer-Zweig — ein leerer POST endete
+ *   dort in `payload`, also in „dein JSON ist falsch" fuer eine Anfrage, die
+ *   gar keins mitbrachte. Jetzt: `api_methode()` und `api_rumpf()` in
+ *   `db.php`, gemessen 12 -> 1 Rumpf-Lesestellen (die eine ist
+ *   `api/csp_bericht.php`, benannte Ausnahme), 17 -> 0 Methodenpruefungen,
+ *   11 -> 0 Handpruefungen auf „kein JSON-Objekt", 3 -> 0 Fassungen des
+ *   `post_max_size`-Hinweises.
+ *
+ *   ZWEI FUNKTIONEN UND NICHT EINE — die Reihenfolge traegt. Das Konzept sah
+ *   EINEN Aufruf vor, der Methode und Rumpf zusammen erledigt. Zwischen
+ *   beiden steht in allen elf Rumpf-Dateien `csrf_check()`, und ein
+ *   zusammengefasster Aufruf haette das Rumpflesen davor geschoben: Ein
+ *   Aufrufer ohne gueltiges Token saehe `leer` oder `format` statt `csrf`,
+ *   und in `api/kdf_upgrade.php` liefe er am Demo-Ausstieg vorbei, der
+ *   zwischen csrf und Rumpf steht (200 wuerde zu 400). Dieselbe Klasse von
+ *   Fehler ist am 13.09.2026 schon einmal behoben worden; der Kopfkommentar
+ *   jener Datei erzaehlt es. Zwei Funktionen halten die Reihenfolge — gemessen
+ *   an einer laufenden Anlage: POST ohne Token mit leerem Rumpf antwortet
+ *   weiterhin `403 csrf`, GET ohne Token weiterhin `405 method`.
+ *
+ *   DIE FEHLERSCHLUESSEL AENDERN SICH, UND ZWAR ABSICHTLICH (F-ZE-5). 19 von
+ *   46 gemessenen Zellen antworten anders als vorher: acht `payload` ->
+ *   `format`, sechs `payload` -> `leer`, zwei `format` -> `leer`, drei
+ *   `methode` -> `method`. Kein JavaScript wertet einen dieser Schluessel aus
+ *   — nachgemessen ueber alle 40 Skripte, der einzige Vergleich auf `error`
+ *   gilt `maintenance`. Die Geraete-Endpunkte (`ingest.php`, `pair.php`,
+ *   `auth_salt.php`, `jobs.php`, `gpx.php`) sind nicht angefasst und behalten
+ *   `payload` und `too_large` zeichengleich (JSON-Vertrag).
+ *
+ *   `max_bytes` HAT KEINEN VORGABEWERT. Eine Grenze fuer die Rumpfgroesse
+ *   gab es unter `api/` bisher an keiner Stelle, und ein Konto-Backup kann
+ *   zweistellig megabytegross sein. `app.max_body_bytes` (512 KB) ist die
+ *   Grenze des GERAETE-Eingangs. Eine Vorgabe haette hier eine Pruefung
+ *   eingefuehrt, die es nicht gab.
+ *
+ *   ZWEI SITZUNGSSCHLUESSEL FUER MELDUNGEN, JETZT EINER.
+ *   `flash_setzen()`/`flash_holen()` in `session_lib.php`; drei Seiten —
+ *   Einstellungen, Nachbearbeitung, Papierkorb — setzten und raeumten
+ *   `flash_notice` und `flash_error` von Hand, 22 Stellen. Der Ton ist eine
+ *   Eigenschaft der Meldung, keine eigene Ablage: Zwei Schluessel heissen,
+ *   dass beide gleichzeitig gesetzt sein koennen, und dann entscheidet die
+ *   Reihenfolge des Auslesens, was jemand sieht. Dass sie es NICHT koennen,
+ *   ist fuer alle 24 Handlungszweige nachgelesen worden — jeder ist eine
+ *   if/elseif/else-Kette oder ein try/catch, und der Demo-Riegel setzt
+ *   `$action = ''`.
  */
-const WEB_VERSION = '20.27.0';
+const WEB_VERSION = '20.28.0';

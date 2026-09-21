@@ -102,12 +102,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     json_out(['missions' => $liste, 'offen' => (int)$offenQ->fetchColumn()]);
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_out(['error' => 'method'], 405); }
+api_methode();
 
 csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
 
-$b = json_decode((string)file_get_contents('php://input'), true);
-if (!is_array($b) || !isset($b['missions']) || !is_array($b['missions'])) {
+$b = api_rumpf();
+if (!isset($b['missions']) || !is_array($b['missions'])) {
     json_out(['error' => 'format'], 400);
 }
 if (count($b['missions']) > PAT_ANHEBEN_GRENZE) { json_out(['error' => 'zu_viele'], 400); }

@@ -562,6 +562,87 @@ function json_out(array $data, int $code = 200): never {
     json_roh_out((string)json_encode($data), $code);
 }
 
+/* ---- DER EINGANG DER ENDPUNKTE (Schritt 15/AP3, E-ZE-15, F-ZE-5) ---------
+ *
+ * Einundzwanzig Dateien unter `api/` begannen mit derselben Handarbeit:
+ * Methode pruefen, Rumpf lesen, „leer?", „ist das ein JSON-Objekt?". Vier
+ * Muster, vier Schreibweisen, und sie waren auseinandergelaufen — siebzehn
+ * Dateien antworteten `'method'`, drei `'methode'`; acht sagten `'payload'`,
+ * drei `'format'`; der Hinweis auf `post_max_size` stand in drei Fassungen.
+ * Kein einziger dieser Schluessel wird im Browser ausgewertet (gemessen: 0
+ * Stellen im JavaScript), sie sind also reine Drift.
+ *
+ * ---- WARUM ZWEI FUNKTIONEN UND NICHT EINE --------------------------------
+ *
+ * Das Konzept sah EINEN Aufruf vor, `api_eingang()`, der Methode und Rumpf
+ * zusammen erledigt. Das geht nicht, ohne Verhalten zu aendern, denn zwischen
+ * beiden steht in ALLEN elf Rumpf-Dateien eine dritte Zeile:
+ *
+ *     Methode pruefen  ->  csrf_check()  ->  Rumpf lesen
+ *
+ * Ein Aufruf, der Methode und Rumpf zusammenfasst, schiebt das Rumpflesen vor
+ * die Token-Pruefung — ein Aufrufer ohne gueltiges Token bekaeme dann `leer`
+ * oder `format` statt `csrf`, und in `api/kdf_upgrade.php` liefe er am
+ * Demo-Ausstieg vorbei, der zwischen csrf und Rumpf steht (200 wuerde zu
+ * 400). Genau diese Klasse von Fehler hat das Projekt am 13.09.2026 schon
+ * einmal behoben; der Kopfkommentar jener Datei erzaehlt es.
+ *
+ * Also zwei Funktionen, und die `csrf_check()`-Zeile bleibt, wo sie ist. CSRF
+ * gehoert aus einem zweiten Grund nicht hier hinein: Ein Endpunkt ohne
+ * Sitzung (10c AP6, `api/health.php`) braucht die Methodenpruefung und sonst
+ * nichts.
+ */
+/**
+ * Erlaubte Anfragemethode — sonst 405 `method`.
+ *
+ * @param string|list<string> $erlaubt Eine Methode oder mehrere.
+ */
+function api_methode(string|array $erlaubt = 'POST'): void {
+    $liste = is_array($erlaubt) ? $erlaubt : [$erlaubt];
+    if (!in_array((string)($_SERVER['REQUEST_METHOD'] ?? ''), $liste, true)) {
+        json_out(['error' => 'method'], 405);
+    }
+}
+
+/**
+ * Den Anfragerumpf lesen und als JSON-Objekt zurueckgeben.
+ *
+ * Antwortet selbst und bricht ab bei: leerem Rumpf (400 `leer`, mit dem
+ * Hinweis auf `post_max_size` — er steht seit AP3 einmal, hier), Rumpf ist
+ * kein JSON-Objekt (400 `format`) und, WENN `max_bytes` gesetzt ist, zu
+ * grossem Rumpf (413 `zu_gross`).
+ *
+ * `max_bytes` HAT KEINEN VORGABEWERT, und das ist Absicht: Heute begrenzt
+ * keiner der elf Endpunkte die Rumpfgroesse — ein Konto-Backup kann zweistellig
+ * megabytegross sein, und `app.max_body_bytes` (512 KB) ist die Grenze des
+ * Geraete-Eingangs, nicht die der Weboberflaeche. Eine Vorgabe haette hier
+ * eine Pruefung eingefuehrt, die es nicht gab (E-ZE-10).
+ *
+ * INHALTLICHE Pruefungen bleiben beim Aufrufer: ob ein `format`-Feld den
+ * richtigen Wert hat, ob `eintraege` da ist, ob die Liste zu lang ist. Der
+ * Eingang beantwortet nur die Frage, ob ueberhaupt ein Objekt angekommen ist.
+ *
+ * @param array{max_bytes?:int} $o
+ * @return array<mixed>
+ */
+function api_rumpf(array $o = []): array {
+    $roh = file_get_contents('php://input');
+    if ($roh === false) { $roh = ''; }
+
+    if (isset($o['max_bytes']) && strlen($roh) > (int)$o['max_bytes']) {
+        json_out(['error' => 'zu_gross'], 413);
+    }
+    if ($roh === '') {
+        json_out(['error' => 'leer', 'hinweis' =>
+            'Es kamen keine Daten an — evtl. begrenzt der Server die Upload-Größe '
+          . '(post_max_size, client_max_body_size).'], 400);
+    }
+
+    $b = json_decode($roh, true);
+    if (!is_array($b)) { json_out(['error' => 'format'], 400); }
+    return $b;
+}
+
 /* ---- DAS TOR DES WARTUNGSMODUS (S5 Paket W, E-S5W-06) --------------------
  *
  * Hier und nicht in `auth_guard.php`: Dort liefen nur die SEITEN durch.

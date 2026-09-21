@@ -16,7 +16,7 @@ require_once __DIR__ . '/../auth_guard.php';
  * Gelesen wird dabei nichts Fremdes (die Abfrage haengt an $userId), aber
  * ein lesender Endpunkt, der POST beantwortet, ist eine Einladung, die
  * niemand aussprechen wollte. */
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_out(['error' => 'method'], 405); }
+api_methode('GET');
 
 $jahr  = (string)($_GET['y'] ?? '');
 $monat = (string)($_GET['m'] ?? '');

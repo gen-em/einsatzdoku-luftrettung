@@ -14,6 +14,91 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.28.0] — 2026-09-21
+
+**Ein Eingang für die Endpunkte, eine Meldung über die Umleitung.**
+Schritt 15 AP3 (Zentralisierung, R83).
+
+### Hinzugefügt
+
+**`api_methode()` und `api_rumpf()` in `db.php` — der Eingang der
+Endpunkte.** Einundzwanzig Dateien unter `server/api/` fingen mit derselben
+Handarbeit an: Methode prüfen, Rumpf lesen, „leer?", „ist das ein
+JSON-Objekt?". Vier Handgriffe, und sie waren auseinandergelaufen. Siebzehn
+Dateien antworteten `'method'`, drei `'methode'`; acht sagten `'payload'`,
+drei `'format'`; den Hinweis auf `post_max_size` gab es in **drei** Fassungen.
+Und acht Endpunkte hatten gar keinen Leer-Zweig: Ein leerer POST endete dort
+in `payload` — also in „dein JSON ist falsch" für eine Anfrage, die gar keins
+mitgebracht hatte. Gemessen: **12 → 1** Rumpf-Lesestellen unter `api/` (die
+eine ist `api/csp_bericht.php`, benannte Ausnahme), **17 → 0**
+Methodenprüfungen, **11 → 0** Handprüfungen auf „kein JSON-Objekt",
+**3 → 0** Fassungen des `post_max_size`-Hinweises.
+
+**Warum zwei Funktionen und nicht eine.** Das Konzept sah *einen* Aufruf vor,
+der Methode und Rumpf zusammen erledigt. Das geht nicht, ohne Verhalten zu
+ändern: Zwischen beiden steht in allen elf Rumpf-Dateien `csrf_check()`. Ein
+zusammengefasster Aufruf hätte das Rumpflesen **vor** die Token-Prüfung
+geschoben — ein Aufrufer ohne gültiges Token bekäme dann `leer` oder `format`
+statt `csrf`, und in `api/kdf_upgrade.php` liefe er am Demo-Ausstieg vorbei,
+der zwischen csrf und Rumpf steht (200 würde zu 400). Genau diese Klasse von
+Fehler hat das Projekt am 13.09.2026 schon einmal behoben. Zwei Funktionen
+halten die Reihenfolge, und die `csrf_check()`-Zeile bleibt, wo sie ist.
+
+**`flash_setzen()` und `flash_holen()` in `session_lib.php`.** Meldungen, die
+eine Umleitung überdauern, lagen in **zwei** Sitzungsschlüsseln
+(`flash_notice`, `flash_error`) und wurden auf drei Seiten von Hand gesetzt
+und mit `unset()` wieder weggeräumt — 22 Stellen. Der Ton ist aber eine
+Eigenschaft der Meldung, keine eigene Ablage: Zwei Schlüssel heißen, dass
+beide gleichzeitig gesetzt sein können, und dann entscheidet die Reihenfolge
+des Auslesens, was jemand sieht. Jetzt trägt **ein** Schlüssel `flash` beides.
+
+### Geändert
+
+**Die Fehlerschlüssel des API-Eingangs sind einheitlich** (F-ZE-5). `method`
+(405), `leer` (400, mit dem einen `post_max_size`-Hinweis), `format` (400,
+Rumpf ist kein JSON-Objekt). `payload` verschwindet aus `api/`. Gemessen an
+einer laufenden Anlage: **19 von 46 Zellen** antworten anders als vorher —
+acht `payload` → `format`, sechs `payload` → `leer`, zwei `format` → `leer`,
+drei `methode` → `method`. Das ist der Grund, warum es diese Änderung gibt,
+und es ist ohne Folge für die Oberfläche: **kein JavaScript wertet einen
+dieser Schlüssel aus**, nachgemessen über alle 40 Skripte — der einzige
+Vergleich auf `error` gilt `maintenance`.
+
+**Die Geräte-Endpunkte sind nicht angefasst.** `ingest.php`, `pair.php`,
+`auth_salt.php`, `jobs.php` und `gpx.php` behalten `payload` und `too_large`
+zeichengleich; der JSON-Vertrag und die Android-Prüffälle hängen daran.
+
+**Keine Größengrenze für den Rumpf.** `api_rumpf()` kennt die Option
+`max_bytes`, hat aber **keinen Vorgabewert** und bekommt in diesem Paket von
+niemandem einen. Eine Grenze gab es unter `api/` bisher an keiner Stelle, und
+ein Konto-Backup kann zweistellig megabytegroß sein; `app.max_body_bytes`
+(512 KB) ist die Grenze des **Geräte**-Eingangs, nicht die der
+Weboberfläche. Eine Vorgabe hätte hier eine Prüfung eingeführt, die es nicht
+gab.
+
+**`api/adminbackup_freigabe.php` prüft die Methode jetzt vorn statt am
+Dateiende.** Beide Zweige der Datei enden in `json_out()`, die Prüfung war
+deshalb eine Auffangzeile nach ihnen. Erreichbar ist derselbe Satz Methoden —
+sie steht nur dort, wo man sie sucht.
+
+### Behoben
+
+**Vier Dateien unter `api/` antworteten auf eine falsche Methode anders als
+die übrigen siebzehn** (Backlog Nr. 256). `rueckfrage.php`,
+`schluessel_erneuern.php` und `schluesselblatt_pruefen.php` schrieben ihre
+405 mit `echo json_encode(['error' => 'methode'])` selbst, am gemeinsamen
+`json_out()` vorbei und mit deutschem Schlüssel. Sie rufen jetzt
+`api_methode()` wie alle anderen. `api/csp_bericht.php` bleibt bei seiner
+stummen 204 — das ist Absicht und im Konzept namentlich ausgenommen: Ein
+Berichts-Endpunkt sagt dem meldenden Browser nichts.
+
+Weil diese 405 jetzt durch `json_out()` geht, trägt sie zusätzlich
+`X-Content-Type-Options: nosniff`, `Referrer-Policy`, HSTS und
+`Cache-Control: no-store` — Kopfzeilen, die **dazukommen**, keine, die
+wegfallen. Es sind genau die, die diese drei Dateien seit Web 20.9.1
+ohnehin tragen müssten. Für ihre **übrigen** 19 Antworten fehlen sie
+weiterhin; das steht als Backlog Nr. 258.
+
 ## [Web 20.27.0] — 2026-09-21
 
 **Eine Stelle für die Konfiguration, eine für die Sitzung.** Schritt 15 AP2

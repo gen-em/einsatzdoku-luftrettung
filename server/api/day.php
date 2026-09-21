@@ -42,16 +42,14 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 
 // Dieser Endpunkt kennt zwei Methoden — jede andere ist ein Irrtum und wird
 // benannt, statt stillschweigend als GET behandelt zu werden (M3-11).
-if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) {
-    json_out(['error' => 'method'], 405);
-}
+api_methode(['GET', 'POST']);
 
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
-        $b = json_decode(file_get_contents('php://input'), true);
+        $b = api_rumpf();
         $dayId = isset($b['day_id']) ? (int)$b['day_id'] : 0;
-        if (!is_array($b) || $dayId <= 0) {
+        if ($dayId <= 0) {
             json_out(['error' => 'payload'], 400);
         }
 

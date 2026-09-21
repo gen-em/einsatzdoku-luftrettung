@@ -1,6 +1,6 @@
 # Prüfdokument — Zentralisierung: eine Stelle je Sache (Schritt 15)
 
-**Stand:** 21.09.2026, nach **AP1** und **AP2** (Web 20.27.0) · **Zweig:** `claude/eager-euler-jlfi9i`,
+**Stand:** 21.09.2026, nach **AP1**, **AP2** (Web 20.27.0) und **AP3** (Web 20.28.0) · **Zweig:** `claude/eager-euler-jlfi9i`,
 von `origin/main` `fd99989` (Web 20.26.2) · **Konzept:**
 `Konzept-Zentralisierung.md`
 
@@ -270,3 +270,128 @@ das, was ein Wegwerf-Container nicht beantworten kann.
   bleibt ungemessen (N2-2).
 - **`konfig()` kennt keinen Schlüssel mit einem Punkt im Namen.** Heute hat
   keiner einen; wer einen einführt, muss das wissen.
+
+---
+
+# AP3 — API-Eingang und Flash (Web 20.28.0, 21.09.2026)
+
+**AP3 hat `server/` angefasst — 25 Dateien** (20 unter `api/`, dazu `db.php`,
+`session_lib.php`, `einstellungen.php`, `nachbearbeitung.php`,
+`papierkorb.php`). Die lokale Anlage stand zur Verfügung; fast alles ist
+gegen sie gefahren worden.
+
+## C0. Was nicht geprüft werden konnte — und warum
+
+**Diese Liste steht am Anfang.**
+
+| # | Was | Warum nicht | Woran man ein Scheitern erkennt |
+|---|---|---|---|
+| **N3-1** | **Der punktweise GPX-Vergleich** (`tools/gpxprobe`, Teil „Jeder Punkt stimmt mit der Browserfassung überein") | Das Demo-Konto dieser Anlage ist heute zurückgesetzt worden; die Einsatz-Kennungen passen nicht mehr zum Referenzexport vom 15.09.2026. Die Probe meldet „190 von 204 ohne Gegenstück" und vergleicht dann **0 von 204 Dateien**. **Gegengemessen: 95/4 vor und nach dem Paket identisch** (`git stash`), der Befund liegt also nicht am Code. Backlog **Nr. 259** | Nach einem Lauf mit frischer Fixture bleiben Abweichungen stehen, die nicht in der Ausnahmeliste der Probe stehen |
+| **N3-2** | **Der Android-Prüfstand** (`SenderTest`, `SendeantwortTest` — Abschnitt 5 des Konzepts verlangt ihn für AP3) | **Versucht, mit Befund und Zahl:** `./gradlew test` bricht ab mit „SDK location not found"; in diesem Container gibt es **kein** `/opt/android-sdk` und `ANDROID_HOME` ist leer (`ls -d /opt/android-sdk` → „No such file or directory"). Ein Lauf mit `--offline` scheitert davor am nicht zwischengespeicherten Plugin `com.android.application:8.13.2`. **Was stattdessen belegt ist:** AP3 fasst **keine** der fünf Geräte-Dateien an (`ingest.php`, `pair.php`, `auth_salt.php`, `jobs.php`, `gpx.php` stehen nicht in `git diff --name-only`), und der Gerätevertrag ist mittelbar über Ingestprobe **83/0** und Kopplungsprobe **76/0** gemessen | Ein Android-`SenderTest` schlägt fehl mit einem Fehlerschlüssel, den er nicht kennt |
+| **N3-2a** | **Der Uhr-Prüfstand** (`tools/uhr-pruefstand/`) | Dasselbe: AP3 ändert keine Zeile unter `watch/` und keinen Geräte-Endpunkt | Die Uhr meldet beim Hochladen einen unbekannten Fehlerschlüssel |
+| **N3-3** | **Die `schemaprobe`** | Sie **löscht** das genannte Schema mehrfach und verlangt den Namen ausdrücklich. Auf der Anlage, auf der auch die Kreisläufe laufen, wäre das der Demo-Bestand | Nicht von AP3 berührt: AP3 ändert kein Schema und keine Migration |
+| **N3-4** | **Die `eingabe-probe`** | Sie ist ein Monkey-C-Projekt (Garmin), kein PHP-Werkzeug | Nicht von AP3 berührt |
+
+## C1. Was maschinell geprüft wurde — mit Mittel **und** Zahl
+
+### Gegen den Quelltext
+
+| Mittel | Gemessen |
+|---|---|
+| `tools/zaehlung/zaehlen.php` | **38 Zeilen, 0 über der Decke.** Z05 **12 → 1** · Z06 **17 → 0** · Z07 **11 → 0** · Z08 **3 → 0** · Z09 **22 → 0** · **Z38 `error_log(` unverändert 77** (E-ZE-05) |
+| `tools/zaehlung/zaehlen.php --selbstprobe` | **34 von 34**, darunter „Zeilentreue über 522 Sichten: 0 Abweichungen" |
+| `php -l` über `server/` | **135 Dateien, 0 Fehler** (134 im Repositorium plus die lokale `config.php`) |
+| `tools/wortliste/wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** (99 Regeln, 99 gegriffen) |
+| `tools/vollstaendigkeit/pruefen.py` | **398 Befunde** — unverändert gegenüber AP1 und AP2 |
+| `tools/kettenaufrufe/pruefen.py` | **0 Befunde, 0 ungeprüft** |
+| `tools/sitzungshaertung/pruefen.php` | **1 echter `session_start()`, 0 Befunde** |
+| `tools/cspprobe/pruefen.php` | **0 Inline-Skripte ohne Nonce** |
+| `tools/migrationsregister/pruefen.php` | **0 ungenutzte Ausnahmen** |
+| JavaScript gegen die Fehlerschlüssel | Über alle **40** Skripte unter `server/assets/`: **0** Vergleiche auf `method`, `methode`, `payload`, `format` oder `leer`; der einzige Vergleich auf `error` gilt `maintenance`. Das ist die Voraussetzung, unter der F-ZE-5 entschieden wurde — sie gilt auch nach dem Paket |
+
+### Gegen die laufende Anlage
+
+| Mittel | Gemessen |
+|---|---|
+| **Eingangsprobe** (Einmalprobe, Befehl unten) | **46 Zellen, 46 erfüllt, 0 offen** |
+| **Dieselbe gegen den Stand VOR AP3** (`git stash`) | **46 Zellen, 27 erfüllt, 19 offen** — die 19 sind genau die in F-ZE-5 entschiedene Änderung: **8** `payload` → `format`, **6** `payload` → `leer`, **2** `format` → `leer`, **3** `methode` → `method` |
+| **Die zwei Reihenfolge-Zellen** in beiden Läufen | **grün vor und nach dem Paket**: POST ohne Token mit leerem Rumpf → `403 csrf` (nicht `400 leer`); GET ohne Token → `405 method` (nicht `403 csrf`). Das ist der Beleg dafür, dass die Aufteilung in `api_methode()` und `api_rumpf()` die Reihenfolge wirklich erhält (AP3-a) |
+| **Flash-Probe** (Einmalprobe, Befehl unten) | **11 Zellen, 11 erfüllt** |
+| Kreislauf `edbak` (`vergleich/kreislauf.py --art edbak --frisch`) | **328 771 Einzelvergleiche, 0 unerklärt, 21 erwartet** — Zahl für Zahl wie vor dem Paket |
+| Kreislauf `csv` | **10 922 Einzelvergleiche, 0 unerklärt, 1 271 erwartet** — ebenso |
+| `tools/ingestprobe/probe.php` | **83 Erwartungen, 0 nicht erfüllt** |
+| `tools/kopplungsprobe/probe.php` | **76 Erwartungen, 0 nicht erfüllt, 0 übergangen** |
+| `tools/komplettprobe/probe.php` | **64 Erwartungen, 0 nicht erfüllt** |
+| `tools/spurprobe/probe.php` | **45 Erwartungen, 0 nicht erfüllt** |
+| `tools/jobprobe/probe.php` | **35 Erwartungen, 0 nicht erfüllt** |
+| `tools/ratenprobe/probe.php` | **50 Prüfungen, 0 Befunde** |
+| `tools/gpxprobe/probe.php` | **95 Erwartungen, 4 nicht erfüllt** — **vor und nach dem Paket gleich**, Ursache in N3-1 |
+| `tools/mailprobe/probe.php` | **41 Prüfungen, 1 Befund** — **vor und nach dem Paket gleich** (`git stash`); der Befund betrifft Pflichtwerte im Beispielsatz dreier Mailvorlagen |
+| `node tools/klickprobe/probe.mjs` | **48 von 48 Wegen erfüllt, 0 verfehlt** — im **zweiten** Lauf. Der erste meldete 42/48 **und sagte selbst, warum**: „Der Demo-Reset lief um 20:36:04 UTC mitten in diesem Lauf. Verfehlte Wege sind verdächtig — bitte wiederholen." Mit `jobs_pause(3000)` davor ist der Lauf sauber |
+
+**Die beiden Einmalproben sind kein Werkzeug im Repositorium.** Sie liegen im
+Arbeitsverzeichnis der Sitzung und sind hier beschrieben, damit sie sich
+wiederholen lassen:
+
+- **Eingangsprobe:** legt per SQL ein Konto mit der Rolle `betreiberin` an
+  (wie `tools/gpxprobe` eines mit `user` anlegt), meldet sich über
+  `login.php` an, holt das Token aus `const CSRF` und ruft dann je Datei
+  unter `server/api/` auf: einmal mit einer **nicht** erlaubten Methode, und
+  bei den elf Dateien mit Rumpf zusätzlich mit leerem und mit
+  Nicht-JSON-Rumpf. Dazu `csp_bericht.php` zweimal (muss **204** ohne Rumpf
+  liefern) und die zwei Reihenfolge-Zellen ohne Token.
+  **Die Rolle `betreiberin` ist nötig**, sonst antwortet
+  `api/schluesselblatt_pruefen.php` mit `403 forbidden` aus
+  `require_betreiberin()`, bevor die Methodenprüfung überhaupt läuft — mit
+  der Rolle `admin` fehlt genau diese eine Zelle.
+- **Flash-Probe:** dasselbe Konto (Rolle `admin` genügt), dann je Seite eine
+  Handlung, die umleitet — `einstellungen.php` `koppeln_abbrechen`,
+  `papierkorb.php` `restore_mission` auf einen Einsatz, dessen Diensttag
+  ebenfalls im Papierkorb liegt, `nachbearbeitung.php` `notnull` —, danach
+  zwei GET auf dieselbe Seite: beim ersten muss die Meldung dastehen, beim
+  zweiten nicht mehr.
+  **`nachbearbeitung.php` liefert auf einer fertig eingerichteten Anlage kein
+  Formular aus** (`nb_moeglich()` ist falsch, `base_id` ist längst
+  `NOT NULL`) und damit kein `csrf_field()`. Das Token hängt aber an der
+  **Sitzung**, nicht an der Seite — es kommt deshalb von `einstellungen.php`.
+
+## C2. Was im Browser geprüft wurde
+
+| Weg | Ergebnis |
+|---|---|
+| **Bilderlauf** `node tools/screenshots/aufnehmen.mjs` | siehe unten — Zahl eingetragen nach dem Lauf |
+| **Meldung nach der Umleitung**, drei Seiten | **11 von 11 Zellen**, siehe C1. `papierkorb.php` zusätzlich: die Meldung trägt die Klasse `meldung-fehler` |
+| **Sechs der elf umgebauten Eingänge** unter echter Last | über die Kreisläufe: Export, Import, Backup zurückspielen, Einträge zurückspielen, Spuren sichern und zurückspielen, Tagesdaten — **0 unerklärte Abweichungen** in 339 693 Einzelvergleichen |
+
+## C3. Prüfliste — was **die Auftraggeberin** noch tun muss
+
+| # | Weg | Erwartet | Scheitern erkennbar an |
+|---|---|---|---|
+| **C-1** | Nach dem Ausrollen **ein Konto-Backup einspielen** (Einstellungen → Sicherung), eine Datei, die vor dem Update entstanden ist | Läuft durch wie bisher | Meldung `format` oder `leer`, wo vorher eine inhaltliche Meldung stand → dann greift eine Prüfung des Eingangs zu früh |
+| **C-2** | **Einen Export** über einen Zeitraum ziehen, **CSV und JSON** | Beide Dateien wie bisher | Ein leerer Download oder eine JSON-Fehlermeldung im Browser |
+| **C-3** | **Einstellungen → Geräte:** einen Kopplungscode eingeben und dann **abbrechen** | Die Meldung „Die Kopplung ist abgebrochen …" steht **einmal** da; nach `F5` ist sie fort | Sie bleibt nach dem Neuladen stehen → `flash_holen()` löscht nicht; oder sie kommt gar nicht → der Schlüssel `flash` wird nicht gelesen |
+| **C-4** | **Papierkorb:** einen Einsatz zurückholen, dessen **Diensttag ebenfalls im Papierkorb liegt** | Roter Kasten „Der Diensttag dieses Einsatzes liegt ebenfalls im Papierkorb …", **einmal** | Der Kasten ist grün statt rot → der Ton wird nicht mitgeführt |
+| **C-5** | **Einstellungen → Standorte:** einen Standort speichern und einen löschen | Je eine grüne Meldung nach der Umleitung, **einmal** | Zwei Meldungen gleichzeitig, oder die falsche → die Annahme aus AP3-f (Hinweis und Fehler schließen einander aus) trägt auf dieser Anlage nicht |
+| **C-6** | **Ein Gerät koppeln** (echte Uhr oder Handy) | Unverändert | Die Uhr meldet einen Fehler, den sie nicht kennt → ein Geräte-Endpunkt wurde doch berührt (er sollte nicht) |
+
+## C4. Grenzen — was sich mit diesem Paket NICHT beantworten lässt
+
+- **Die Eingangsprobe misst den Eingang, nicht den Endpunkt.** Sie stellt je
+  Datei drei Fragen an die ersten Zeilen. Dass der Endpunkt danach dasselbe
+  tut wie vorher, belegen die Kreisläufe und die Proben — für die fünf
+  Dateien, die in keinem von beiden vorkommen
+  (`adminbackup_freigabe.php`, `kdf_upgrade.php`, `rueckfrage.php`,
+  `schluessel_erneuern.php`, `schluesselblatt_pruefen.php`), belegt es
+  **nichts** außer dem Lesen. Deshalb C-3 und C-6.
+- **`api_rumpf()` hat keine Größengrenze, und das ist Absicht** (AP3-b). Wer
+  eine will, führt sie ein — und das ist dann eine Verhaltensänderung mit
+  eigener Entscheidung, kein Nachziehen.
+- **Die 19 geänderten Zellen sind gemessen, die Folgenlosigkeit ist
+  gefolgert.** Gemessen ist, dass kein JavaScript die Schlüssel vergleicht.
+  Ein Aufrufer außerhalb dieses Repositoriums — ein Skript, ein Test, eine
+  fremde Integration — ist damit nicht ausgeschlossen. Für die
+  **Geräte**-Endpunkte ist er ausgeschlossen, weil sie nicht angefasst sind.
+- **Der Flash trägt einen Ton, kein Markup.** `ui_meldung()` entscheidet
+  weiterhin über das Aussehen; `flash_setzen('warn', …)` gibt es nicht, weil
+  die drei Seiten nur `notice` und `error` kennen. Wer einen dritten Ton
+  braucht, ergänzt `FLASH_TOENE`.

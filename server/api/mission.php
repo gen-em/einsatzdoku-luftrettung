@@ -7,7 +7,7 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 
 // Nur lesen (M3-11) — derselbe Grund wie bei den uebrigen lesenden
 // Endpunkten: Was nichts aendert, beantwortet auch kein POST.
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_out(['error' => 'method'], 405); }
+api_methode('GET');
 
 try {
     $id = (int)($_GET['id'] ?? 0);

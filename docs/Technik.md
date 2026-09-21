@@ -302,7 +302,9 @@ Daten erst nach Server-Bestätigung.
 │   │                       Zwischenablage mit Rückfall auf Markieren; ohne
 │   │                       JavaScript bleibt der Wert lesbar und markierbar
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
-│   │                       gelöschtes Konto, Passwortwechsel)
+│   │                       gelöschtes Konto, Passwortwechsel); dazu seit
+│   │                       Web 20.28.0 flash_setzen()/flash_holen() — die
+│   │                       Meldung, die eine Umleitung überdauert
 │   ├── sitzung_lib.php    WO die Sitzungen liegen — nicht, wie sie enden
 │   │                       (Schritt 16, E-SA-01 bis -07; Backlog Nr. 241).
 │   │                       Legt `.sitzungen/` mit 0700 an, richtet
@@ -2943,9 +2945,62 @@ fehlten außerdem `nosniff` und `Referrer-Policy`.
 
 **Eine Ausnahme, benannt:** `wartung_lib.php` setzt seinen Satz weiter selbst.
 Die Wartungsseite ist ausdrücklich ohne Datenbank gebaut und darf `db.php`
-nicht laden — `no-store` steht dort trotzdem. `grep -rn "Content-Type:
-application/json" server/` trifft seither genau zwei Codezeilen: `db.php` und
-`wartung_lib.php`.
+nicht laden — `no-store` steht dort trotzdem.
+
+> **Hier stand bis Web 20.28.0, `grep -rn "Content-Type: application/json"
+> server/` treffe „genau zwei Codezeilen".** Gemessen sind es **sechs**: zwei
+> in `wartung_lib.php`, eine in `db.php` — und drei in `api/rueckfrage.php`,
+> `api/schluessel_erneuern.php` und `api/schluesselblatt_pruefen.php`, die
+> ihre Antworten mit `echo json_encode()` selbst schreiben und deshalb weder
+> `nosniff` noch `no-store` setzen. Das ist derselbe Mangel, den Web 20.9.1
+> an sieben anderen Stellen behoben hat; diese drei arbeiten über `$_POST`
+> und sind damals niemandem als „JSON-Endpunkt" aufgefallen. Backlog
+> **Nr. 258**.
+
+### Der Eingang der Endpunkte (ab Web 20.28.0)
+
+Einundzwanzig Dateien unter `server/api/` fingen mit derselben Handarbeit an.
+Seit Schritt 15 AP3 gibt es dafür zwei Funktionen in `db.php`, neben
+`json_out()`:
+
+| Funktion | tut | antwortet selbst mit |
+|---|---|---|
+| `api_methode($erlaubt = 'POST')` | prüft `$_SERVER['REQUEST_METHOD']` gegen eine Methode oder eine Liste | **405** `method` |
+| `api_rumpf($o = [])` | liest `php://input`, prüft „leer" und „ist ein JSON-Objekt", gibt das Feld zurück | **400** `leer` (mit dem einen `post_max_size`-Hinweis), **400** `format`, **413** `zu_gross` nur wenn `max_bytes` gesetzt ist |
+
+**Die Reihenfolge ist der Grund für zwei Funktionen und nicht eine.** In
+allen elf Dateien mit Rumpf steht dazwischen eine dritte Zeile:
+
+```
+api_methode();   ->   csrf_check();   ->   $b = api_rumpf();
+```
+
+Ein Aufruf, der Methode und Rumpf zusammenfasst, schöbe das Rumpflesen vor
+die Token-Prüfung: Ein Aufrufer ohne gültiges Token bekäme `leer` oder
+`format` statt `csrf`, und in `api/kdf_upgrade.php` liefe er am
+Demo-Ausstieg vorbei, der zwischen csrf und Rumpf steht. **CSRF gehört aus
+einem zweiten Grund nicht in den Eingang:** Ein Endpunkt ohne Sitzung (10c
+AP6, `api/health.php`) braucht `api_methode()` und sonst nichts.
+
+**`max_bytes` hat keinen Vorgabewert.** Unter `api/` gab es an keiner Stelle
+eine Grenze für die Rumpfgröße, und ein Konto-Backup kann zweistellig
+megabytegroß sein. `app.max_body_bytes` (512 KB) ist die Grenze des
+**Geräte**-Eingangs in `ingest.php`, nicht die der Weboberfläche.
+
+**Inhaltliche Prüfungen bleiben beim Aufrufer**, mit ihren eigenen
+Schlüsseln: ob `$b['eintraege']` da ist, ob `$data['format']` den richtigen
+Wert hat, ob die Liste zu lang ist. Der Eingang beantwortet nur, ob
+überhaupt ein Objekt angekommen ist.
+
+**Eine Ausnahme, namentlich:** `api/csp_bericht.php` liest `php://input`
+weiter selbst und antwortet auf alles mit einer stummen **204**. Ein
+Berichts-Endpunkt sagt dem meldenden Browser nichts — weder über die
+Methode noch über den Rumpf.
+
+**Die Geräte-Endpunkte sind nicht beteiligt.** `ingest.php`, `pair.php`,
+`auth_salt.php`, `jobs.php` und `gpx.php` liegen nicht unter `api/` und
+behalten ihre Fehlerschlüssel (`payload`, `too_large`) zeichengleich — der
+JSON-Vertrag und die Android-Prüffälle hängen daran.
 
 Die nur **lesenden** Endpunkte (`range`, `suchindex`, `mission`) weisen seit
 4.5.2 alles außer GET mit 405 ab; `day.php` kennt GET und POST und weist alles
@@ -5290,6 +5345,8 @@ Die Bausteine im Einzelnen:
 | Zeitrechnung | `db.php` | **`TIMESTAMP` und `DATETIME` verhalten sich verschieden, und das ist bei jeder Zeitspalte mitzudenken.** `TIMESTAMP` rechnet MySQL beim Schreiben in UTC um und beim Lesen zurück — der gespeicherte Wert ist unabhängig von der Sitzungszone immer richtig (`pair_sessions.erstellt_am`, `devices.last_seen`/`created_at`, `users.created_at`, `missions.created_at`, `deleted_refs`). `DATETIME` speichert unverändert, was dasteht; dort entscheidet die Sitzungszone (`rate_limits`, `password_resets.expires_at`, sowie die Einsatz- und Papierkorbzeiten — Letztere werden aber über `local_to_utc()` bzw. `UTC_TIMESTAMP()` befüllt und waren nie zonenabhängig). |
 | Zeitrechnung | `db.php` | Die Verbindung steht seit Web 4.5.2 ausdrücklich auf UTC (`SET time_zone = '+00:00'`). Ohne das käme die Zeitrechnung von `NOW()` aus einer Hoster-Einstellung, und `NOW()` und `UTC_TIMESTAMP()` liefen um den Zonenversatz auseinander. Der Unterschied im Code bleibt: `UTC_TIMESTAMP()` für den Papierkorb (90-Tage-Frist, `TRASH_DAYS`), `NOW()` für Kurzlebiges (Ratenschutz, Token, Kopplungssitzungen). Die **Anzeige** rechnet in PHP nach `konfig('app.timezone')` um (bis Web 20.26.2: `$CFG['app']['timezone']`). |
 | Sitzungsende | `session_lib.php` | Eine Fassung für Abmelden, Ablauf, gelöschtes Konto **und** Passwortwechsel; räumt die Schlüssel im Browser und nennt den Grund. `session_verwerfen()` für Abrufe, die JSON erwarten. |
+| Meldung über eine Umleitung | `session_lib.php` | `flash_setzen($ton, $text)` und `flash_holen()` (liest **und** löscht), Töne `notice` und `error`, Sitzungsschlüssel `flash`. Ab Web 20.28.0; vorher setzten drei Seiten `$_SESSION['flash_notice']` und `$_SESSION['flash_error']` an 22 Stellen von Hand. **Ein** Schlüssel statt zwei: Der Ton ist eine Eigenschaft der Meldung, und bei zwei Schlüsseln entscheidet die Reihenfolge des Auslesens, was jemand sieht. |
+| Eingang der Endpunkte | `db.php` | `api_methode($erlaubt)` und `api_rumpf($o)` — Methodenprüfung (405 `method`) und Rumpf als JSON-Objekt (400 `leer`/`format`). Ab Web 20.28.0. **Zwei Funktionen, weil `csrf_check()` dazwischen steht**; Einzelheiten im Abschnitt „Der Eingang der Endpunkte". |
 | E-Mail-Adressen | `server/email_lib.php` | Eine Fassung für Normalisierung (`email_normalisieren()`), Prüfung (`email_pruefen()`) und Dublettenerkennung (`ist_dublettenfehler()`). **Ohne Abhängigkeiten**, damit `install.php` sie vor der Ersteinrichtung laden kann. |
 | Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |
 | Maskierung | `assets/html.js` (`EdHtml.escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). Seit Web 4.6.0 in einer eigenen Datei statt in `missiontable.js` — die wird nur von zwei Seiten geladen, gebraucht wird die Maskierung auf fünf. `EdMissionTable.escape`/`.esc` bleiben als Weiterleitung. **Nicht dasselbe** wie `xmlEscape()` in `export.js`: GPX ist XML mit eigenen Regeln. |

@@ -371,3 +371,67 @@ function csrf_ok(): bool
     $soll = (string)($_SESSION['csrf'] ?? '');
     return $soll !== '' && hash_equals($soll, $mit);
 }
+
+/* ---- MELDUNGEN UEBER EINE UMLEITUNG HINWEG (Schritt 15/AP3, E-ZE-16) -----
+ *
+ * Post/Redirect/Get: Wer ein Formular abschickt, soll den Erfolg nicht als
+ * POST-Ergebnis sehen, sondern nach einer Umleitung — sonst fragt der Browser
+ * beim Neuladen, ob er die Handlung wiederholen soll. Ueber die Umleitung
+ * hinweg traegt nur die Sitzung, und genau dafuer gibt es diese zwei Zeilen.
+ *
+ * WAS VORHER WAR: drei Seiten, zwei Sitzungsschluessel, zweiundzwanzig
+ * Handgriffe. `einstellungen.php`, `nachbearbeitung.php` und `papierkorb.php`
+ * setzten `$_SESSION['flash_notice']` und `$_SESSION['flash_error']` direkt
+ * und raeumten sie mit `unset()` wieder weg — jede Seite mit ihrem eigenen
+ * `if (!empty(...))`-Paar. `papierkorb.php` las dabei NUR den Fehler; eine
+ * Erfolgsmeldung waere dort liegengeblieben.
+ *
+ * WARUM EIN SCHLUESSEL UND NICHT ZWEI: Der Ton ist eine Eigenschaft der
+ * Meldung, keine eigene Ablage. Zwei Schluessel heissen, dass beide
+ * gleichzeitig gesetzt sein koennen — und dann entscheidet die Reihenfolge
+ * des Auslesens, was die Person sieht. Ein Schluessel kann das nicht.
+ */
+
+/** Erlaubte Toene — die beiden, die die drei Seiten kennen.
+ *
+ * NICHT die Toene von `ui_meldung_markup()` (`fehler`, `warn`, `ok`, `info`,
+ * `schutz`, Design.md 9.5). Die Namen hier sind die der beiden entfallenen
+ * Sitzungsschluessel; die aufrufende Seite entscheidet, in welchen Kasten
+ * der Text geht — `notice` in den Hinweis-, `error` in den Fehlerkasten.
+ * Wer einen dritten braucht, ergaenzt diese Liste UND die Seite. */
+const FLASH_TOENE = ['notice', 'error'];
+
+/**
+ * Eine Meldung fuer die naechste Seitenansicht hinterlegen.
+ *
+ * Ueberschreibt eine noch nicht abgeholte Meldung — das ist richtig: Wer
+ * zweimal hintereinander etwas hinterlegt, ohne dass dazwischen eine Seite
+ * ausgeliefert wurde, meint die zweite.
+ */
+function flash_setzen(string $ton, string $text): void
+{
+    if (!in_array($ton, FLASH_TOENE, true)) {
+        throw new InvalidArgumentException('Unbekannter Meldungston: ' . $ton);
+    }
+    $_SESSION['flash'] = ['ton' => $ton, 'text' => $text];
+}
+
+/**
+ * Die hinterlegte Meldung holen — und dabei loeschen.
+ *
+ * LIEST UND LOESCHT IN EINEM: Eine Meldung, die nach dem Anzeigen liegen
+ * bleibt, erscheint auf der naechsten Seite noch einmal. Deshalb gibt es kein
+ * `flash_lesen()` ohne Raeumen; wer den Wert zweimal braucht, merkt ihn sich
+ * in einer Variablen.
+ *
+ * @return array{ton:string, text:string}|null
+ */
+function flash_holen(): ?array
+{
+    $f = $_SESSION['flash'] ?? null;
+    unset($_SESSION['flash']);
+    if (!is_array($f) || !isset($f['ton'], $f['text'])) { return null; }
+    $ton = (string)$f['ton'];
+    if (!in_array($ton, FLASH_TOENE, true)) { return null; }
+    return ['ton' => $ton, 'text' => (string)$f['text']];
+}

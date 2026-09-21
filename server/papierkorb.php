@@ -40,9 +40,9 @@ if ($isPost && $action === 'restore_mission' && $id > 0) {
      * Die Meldung geht ueber die Sitzung, weil danach umgeleitet wird. */
     $ergebnis = trash_restore_mission($userId, $id);
     if ($ergebnis === 'tag_im_papierkorb') {
-        $_SESSION['flash_error'] =
+        flash_setzen('error',
             'Der Diensttag dieses Einsatzes liegt ebenfalls im Papierkorb. '
-          . 'Stelle zuerst den Diensttag wieder her — der Einsatz bleibt so lange hier.';
+          . 'Stelle zuerst den Diensttag wieder her — der Einsatz bleibt so lange hier.');
         header('Location: papierkorb.php'); exit;
     }
     header('Location: index.php'); exit;
@@ -111,11 +111,11 @@ $trashMissions = $zeigeListe ? trash_list_missions($userId) : [];
  * Zurueckholen eines Einsatzes abgelehnt werden kann (Backlog Nr. 33): Nach
  * einer Umleitung ist eine Variable weg, und eine Handlung, die nichts tut
  * und nichts sagt, ist die schlechteste von beidem. */
-$fehler = null;
-if (!empty($_SESSION['flash_error'])) {
-    $fehler = (string)$_SESSION['flash_error'];
-    unset($_SESSION['flash_error']);
-}
+/* Diese Seite hinterlegt nur Fehler und leitet auf sich selbst um; ein
+ * Hinweis kann hier also nicht ankommen. Der Ton wird trotzdem geprueft —
+ * eine Erfolgsmeldung im Fehlerkasten waere schlimmer als keine. */
+$flashPk = flash_holen();
+$fehler  = ($flashPk !== null && $flashPk['ton'] === 'error') ? $flashPk['text'] : null;
 
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);

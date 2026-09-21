@@ -330,12 +330,9 @@ function schnitt_rueckgaengig(array $b, int $userId): never
 /* ---- Eingang -------------------------------------------------------------- */
 
 try {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        json_out(['error' => 'method'], 405);
-    }
+    api_methode();
     csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
-    $b = json_decode(file_get_contents('php://input'), true);
-    if (!is_array($b)) { json_out(['error' => 'payload'], 400); }
+    $b = api_rumpf();
 
     switch ((string)($b['action'] ?? '')) {
         case 'schneiden':    schnitt_ausfuehren($b, $userId);

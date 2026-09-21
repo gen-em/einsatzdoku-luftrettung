@@ -107,9 +107,10 @@ kollidieren.
 | 253 | Datum-Zeit-Trenner vereinheitlichen | 10c AP9 |
 | 254 | Ratenprobe erwartet fünf Töpfe mit Leiter — es sind sechs | erledigt 21.09.2026 |
 | 255 | `lokal_einrichten.sh` kopiert Handbuch und Bilder nicht nach `server/doku/` | behoben 21.09.2026 |
-| 256 | Vier Dateien unter `api/` prüfen die Anfragemethode nicht | Backlog-Runde / 10c AP6 |
+| 256 | Vier `api/`-Dateien antworten auf eine falsche Methode anders als die übrigen | erledigt 21.09.2026 |
 | 257 | Fünf Prüfwerkzeuge hingen an der globalen `$CFG` | erledigt 21.09.2026 |
-| 258–259 | frei — Reserve für weitere Funde der Umsetzung von Schritt 15 | Schritt 15 |
+| 258 | Drei `api/`-Dateien antworten am `json_out()` vorbei | Backlog-Runde / 10c AP6 |
+| 259 | GPX-Probe wird durch den Demo-Reset blind (4/95, Kernvergleich 0 von 204) | Backlog-Runde |
 
 > **Keiner der vier gehört in Schritt 15 selbst**, und das ist kein Versehen:
 > 250 ändert Wege durch die Anwendung, 251 und 252 hängen an späteren
@@ -2152,13 +2153,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
       Fassungen. **Der CSRF-Teil ist auf dem P5a-Zweig erledigt** (AP4,
       Nr. 67: 12 Dateien auf `csrf_check()`, 0 inline). Übrig: Methode,
       Rumpf, Fehlerschlüssel → `api_eingang()`.
+      **Erledigt mit Schritt 15 AP3** (Web 20.28.0) — als **zwei**
+      Funktionen `api_methode()` und `api_rumpf()`, nicht als eine:
+      `csrf_check()` steht in allen elf Rumpf-Dateien dazwischen.
     - Sitzungsstart (`session_set_cookie_params` + `session_start`) 7× in
       drei Varianten. → `sitzung_starten($art)` in `session_lib.php`
       (Nr. 205 setzt vorab nur `use_strict_mode`).
+      **Erledigt mit Schritt 15 AP2** (Web 20.27.0) — gemessen waren es
+      **neun** Starts in vier Fassungen, und die Funktion liegt in
+      `sitzung_lib.php` (Schritt 16), nicht in `session_lib.php`.
     - Flash-Meldung über die Sitzung in `einstellungen.php`,
       `nachbearbeitung.php`, `papierkorb.php`. → `flash_setzen()`/
       `flash_holen()`, daraus `post_ende()` für Admin-Seiten, die heute
       nicht umleiten.
+      **Erledigt mit Schritt 15 AP3** (Web 20.28.0) — `post_ende()` wird
+      ausdrücklich **nicht** gebaut (F-ZE-4), es steht als **Nr. 250**.
     - Verzögerte JSON-Fehlerantwort der unangemeldeten Endpunkte:
       `pair.php` sauber (`abweisen()`/`antworten()`/`gesperrt()`),
       `auth_salt.php` 4× und `jobs.php` 3× inline. → nach
@@ -3150,31 +3159,75 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     einer Stelle (`format_lib.php`) — dann ist es eine Zeile statt einer
     Suche, und deshalb wartet es bis dahin.
 
-256. **Vier Dateien unter `api/` prüfen die Anfragemethode nicht.**
-    *Aufgenommen 21.09.2026 bei der Vorbereitung von Schritt 15 AP3.*
-    Zugeordnet: **Backlog-Runde** oder 10c AP6, wo der Eingang ohnehin
-    angefasst wird.
+259. **Die GPX-Probe wird durch den Demo-Reset blind — 4 von 95 Erwartungen
+    fallen, und ihr Kernvergleich läuft gar nicht.** *Aufgenommen
+    21.09.2026 (Schritt 15 AP3).* Zugeordnet: **Backlog-Runde** oder das
+    Paket, das `tools/referenzdatensatz/` als Nächstes anfasst.
 
-    Siebzehn der einundzwanzig Dateien unter `server/api/` beginnen mit
-    `if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_out(['error' =>
-    'method'], 405); }`. Vier tun es nicht: `csp_bericht.php`,
-    `rueckfrage.php`, `schluessel_erneuern.php`, `schluesselblatt_pruefen.php`.
-    Ein `GET` auf diese vier läuft heute in den Rumpf hinein.
+    `tools/gpxprobe/probe.php` hält den Referenzexport vom 15.09.2026 gegen
+    die GPX-Dateien des Demo-Kontos. Auf einer Anlage, deren Demo-Konto
+    zwischenzeitlich zurückgesetzt wurde (`app_state.demo_letzter_reset`,
+    alle 30 Minuten), haben die Einsätze neue Kennungen: **„190 von 204 ohne
+    Gegenstück"**. Es folgen drei weitere Fehlschläge, die daran hängen.
 
-    **Praktische Folge heute: gering.** Alle vier rufen `csrf_check()`, und
-    ein `GET` bringt kein Token mit — er endet also in der CSRF-Abweisung
-    statt in einer 405. Der Unterschied ist die Meldung, nicht die Sicherheit.
-    `csp_bericht.php` ist ohnehin ein Sonderfall (anderer Inhaltstyp, kein
-    eigener Aufrufer).
+    **Das Schlimme ist nicht der rote Punkt, sondern der stille:** Der
+    punktweise Vergleich meldet „**0 von 204 Dateien verglichen (0
+    Einzelvergleiche, 0 Abweichungen)**". Eine Null, die nichts gemessen hat,
+    steht neben Nullen, die etwas gemessen haben — genau der Fall, vor dem
+    `CLAUDE.md` 6 warnt („Eine grüne Zahl ist erst dann ein Beleg, wenn sie
+    das Gemessene benennt"). Die Probe **sagt** es immerhin dazu; sie meldet
+    aber nicht, dass ihr Hauptteil damit nichts mehr prüft.
 
-    **Warum es nicht in Schritt 15 AP3 behoben wird** (Entscheidung des
-    Auftraggebers, 21.09.2026): AP3 zieht die Methodenprüfung in
-    `api_eingang()` zusammen. Die vier dort *mitzunehmen* hieße, eine Prüfung
-    **neu einzuführen** — ein `GET`, der heute durchgeht, bekäme künftig 405.
-    Das wäre eine sechste Verhaltensänderung neben den fünf benannten, und
-    **E-ZE-10 ist die härtere Zusage**. AP3 baut den Eingang dort deshalb
-    ohne Methodenprüfung ein; die Registerzeile Z06 erreicht ihre Null
-    trotzdem.
+    **Vorschlag:** Entweder die Probe hält die Jobs an und setzt das
+    Demo-Konto selbst aus der Fixture zurück (wie es `kreislauf.py` tut),
+    oder sie legt sich wie die anderen Proben ein eigenes Konto an. Bis dahin
+    gilt: Wer `gpxprobe` fährt, prüft zuerst `demo_letzter_reset`.
+
+    *In Schritt 15 AP3 nachgemessen:* **95/4 vor und nach dem Paket
+    identisch** (`git stash` gegengemessen) — der Befund liegt nicht am Code.
+
+    **Die Klickprobe hat dasselbe Problem und löst es richtig.** Sie lief am
+    21.09.2026 in einen Demo-Reset (42 von 48 Wegen) und schrieb darunter:
+    „Der Demo-Reset lief um 20:36:04 UTC mitten in diesem Lauf. Verfehlte
+    Wege sind verdächtig — bitte wiederholen." Mit `jobs_pause(3000)` davor
+    waren es **48 von 48**. Das ist das Vorbild: Wer gegen den Demo-Bestand
+    misst, hält entweder die Jobs an oder sagt hinterher, dass er es nicht
+    getan hat.
+
+258. **Drei Dateien unter `api/` antworten am `json_out()` vorbei.**
+    *Aufgenommen 21.09.2026 (Schritt 15 AP3).* Zugeordnet:
+    **Backlog-Runde** oder 10c AP6.
+
+    `rueckfrage.php`, `schluessel_erneuern.php` und
+    `schluesselblatt_pruefen.php` schreiben ihre Antworten mit
+    `header('Content-Type: application/json; charset=utf-8')` und
+    `echo json_encode(...); exit;` — **19 Stellen**. AP3 hat ihre
+    Methodenprüfung auf `api_methode()` gezogen (Nr. 256); der Rest steht
+    noch.
+
+    **Was daran hängt:** `json_out()` ruft `json_kopf()`, und das setzt
+    `kopfzeilen_json()` (`X-Content-Type-Options: nosniff`,
+    `Referrer-Policy`, HSTS) und `Cache-Control: no-store`. Die 19 Stellen
+    setzen nichts davon. Genau derselbe Mangel ist mit Web 20.9.1 an sieben
+    anderen Stellen behoben worden (Nr. 203) — diese drei Dateien waren
+    damals nicht dabei, weil sie über `$_POST` arbeiten und niemandem als
+    „JSON-Endpunkt" aufgefallen sind.
+
+    **Praktische Folge heute: gering.** Keine der 19 Antworten trägt Daten,
+    die ein Zwischenspeicher ausliefern dürfte — es sind Quittungen (`ok`),
+    Fehlerkennungen und ein Prüfergebnis. `nosniff` fehlt allerdings, und
+    das ist bei `Content-Type: application/json` die Zeile, auf die es
+    ankommt.
+
+    **Warum nicht in AP3 erledigt:** AP3 zentralisiert den **Eingang**, nicht
+    den Ausgang. Ein Umbau auf `json_out()` verändert an jeder der 19 Stellen
+    die gesendeten Kopfzeilen — das ist eine sichtbare Änderung und wäre eine
+    sechste neben den fünf benannten (E-ZE-10).
+
+    *Nebenbefund:* `docs/Technik.md` behauptete, `grep -rn "Content-Type:
+    application/json" server/` treffe „genau zwei Codezeilen". Gemessen sind
+    es **sechs** — zwei in `wartung_lib.php`, eine in `db.php` und diese
+    drei. Der Satz ist mit AP3 berichtigt worden.
 
 260. **Zwei Code-Kommentare in `server/` sagen „beider FTPS-Schritte" — seit
     Kette II/AP5 ist es einer.** *Aufgenommen 21.09.2026 (Kette II, AP5).*
@@ -3401,6 +3454,39 @@ zutreffen.
     `server/` **und** `tools/`. Die Zeile zählt eine Globale, die es
     **nirgends** mehr geben darf — ein Bereich, der fehlt, meldet keine Null,
     sondern gar nichts (`CLAUDE.md` 6, in eigener Sache).
+
+256. **Vier Dateien unter `api/` antworten auf eine falsche Methode anders
+    als die übrigen siebzehn.** *Aufgenommen 21.09.2026 bei der Vorbereitung
+    von Schritt 15 AP3, am selben Tag berichtigt.* **Erledigt am 21.09.2026**
+    (Schritt 15 AP3).
+
+    **Der Eintrag stand zuerst falsch hier.** Er behauptete, vier Dateien
+    prüften die Anfragemethode **nicht**, und schloss das daraus, dass die
+    Registerzeile Z06 sie nicht zählte. Nachgemessen in den Dateien selbst:
+    **Alle 21 prüfen die Methode.** Z06 zählte drei davon nur deshalb nicht,
+    weil ihr Fehlerschlüssel `methode` heißt statt `method` — deutsche statt
+    englischer Schreibung, dieselbe Sache. Ein `GET` ist nirgends in den
+    Rumpf gelaufen.
+
+    **Der tatsächliche Befund** war eine Drift in zwei Richtungen:
+    `rueckfrage.php`, `schluessel_erneuern.php` und
+    `schluesselblatt_pruefen.php` antworteten mit
+    `http_response_code(405); echo json_encode(['error' => 'methode']); exit;`
+    — anderer Schlüssel, anderer Ausgabeweg. `csp_bericht.php` antwortet mit
+    einer stummen **204**, und das ist Absicht: Ein Berichts-Endpunkt sagt
+    dem meldenden Browser nichts.
+
+    **Behoben:** Die drei rufen jetzt `api_methode()` wie alle anderen; der
+    Schlüssel heißt überall `method`. Kein JavaScript wertet ihn aus
+    (nachgemessen über alle 40 Skripte), die Änderung fällt damit unter
+    F-ZE-5. `csp_bericht.php` bleibt unberührt — E-ZE-15 nimmt sie
+    namentlich aus. Der Rest ihres Ausgabewegs steht als **Nr. 258**.
+
+    *Die Lehre:* Eine Registerzeile, die nicht zählt, belegt **nicht**, dass
+    es die Sache nicht gibt — sie belegt, dass das Muster nicht greift. Wer
+    aus einer Null auf einen Befund schließt, ohne in die Dateien zu sehen,
+    schreibt einen falschen Eintrag, und eine Entscheidung darauf ist
+    gegenstandslos.
 
 254. **Die Ratenprobe erwartet fünf Töpfe mit Leiter — es sind sechs.**
     *Aufgenommen 21.09.2026 beim ersten Lauf der Probe gegen eine lokal

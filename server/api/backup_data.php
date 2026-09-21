@@ -50,7 +50,7 @@ require_once __DIR__ . '/../backup_lib.php';
 /** Hoechstens so viele Eintraege je Anfrage. */
 const BACKUP_EINTRAEGE_MAX = 1000;
 
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_out(['error' => 'method'], 405); }
+api_methode('GET');
 
 try {
     $teil = (string)($_GET['teil'] ?? '');

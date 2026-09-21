@@ -54,11 +54,7 @@ require_once __DIR__ . '/../einstieg_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'methode']);
-    exit;
-}
+api_methode();
 csrf_check();
 
 $antwort = (string)($_POST['antwort'] ?? '');

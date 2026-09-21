@@ -128,18 +128,21 @@ return [
 
 ['kennung' => 'Z05', 'paket' => 'AP3',
  'beschreibung' => 'php://input unter api/',
- 'grund' => 'api_eingang() liest den Rumpf (E-ZE-15). Ausnahme: api/csp_bericht.php '
-          . '(anderer Inhaltstyp, kein eigener Aufrufer).',
+ 'grund' => 'api_rumpf() liest den Rumpf (E-ZE-15, in AP3 auf zwei Funktionen '
+          . 'aufgeteilt). Ausnahme: api/csp_bericht.php (anderer Inhaltstyp, kein '
+          . 'eigener Aufrufer).',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'api', 'ausser' => [],
  'regel' => ['art' => 'muster', 'muster' => '~php://input~'],
- 'start' => 12, 'decke_jetzt' => 12, 'decke_ziel' => 1],
+ 'start' => 12, 'decke_jetzt' => 1, 'decke_ziel' => 1],
 
 ['kennung' => 'Z06', 'paket' => 'AP3',
  'beschreibung' => "'error' => 'method' unter api/",
- 'grund' => 'Die Methodenpruefung wandert in api_eingang(); ausserhalb bleibt keine.',
+ 'grund' => 'Die Methodenpruefung wandert in api_methode(); ausserhalb bleibt keine. '
+          . 'api/csp_bericht.php prueft weiter selbst, antwortet aber mit 204 statt '
+          . 'mit dem Schluessel method und wird deshalb hier nicht gezaehlt.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'api', 'ausser' => [],
  'regel' => ['art' => 'muster', 'muster' => '~[\'"]error[\'"]\s*=>\s*[\'"]method[\'"]~'],
- 'start' => 17, 'decke_jetzt' => 17, 'decke_ziel' => 0],
+ 'start' => 17, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 ['kennung' => 'Z07', 'paket' => 'AP3',
  'beschreibung' => "„Rumpf ist kein JSON-Objekt\" von Hand (payload|format) unter api/",
@@ -147,22 +150,25 @@ return [
           . 'verschwindet aus api/. Die Geraete-Endpunkte behalten payload (JSON-Vertrag).',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'api', 'ausser' => [],
  'regel' => ['art' => 'eigen', 'name' => 'rumpf_kein_objekt'],
- 'start' => 11, 'decke_jetzt' => 11, 'decke_ziel' => 0],
+ 'start' => 11, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 ['kennung' => 'Z08', 'paket' => 'AP3',
  'beschreibung' => 'post_max_size-Hinweis unter api/',
- 'grund' => 'Drei Fassungen desselben Satzes; nach AP3 steht er einmal im Eingang.',
+ 'grund' => 'Drei Fassungen desselben Satzes; seit AP3 steht er einmal in '
+          . 'api_rumpf() (db.php). Unter api/ bleibt damit KEINE — das Konzept '
+          . 'hatte 1 erwartet, gemessen sind 0.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'api', 'ausser' => [],
  'regel' => ['art' => 'muster', 'muster' => '~post_max_size~'],
- 'start' => 3, 'decke_jetzt' => 3, 'decke_ziel' => 1],
+ 'start' => 3, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 ['kennung' => 'Z09', 'paket' => 'AP3',
  'beschreibung' => "\$_SESSION['flash…'] ausserhalb session_lib.php",
- 'grund' => 'flash_setzen()/flash_holen() in session_lib.php (E-ZE-16).',
+ 'grund' => 'flash_setzen()/flash_holen() in session_lib.php (E-ZE-16). Der '
+          . 'Sitzungsschluessel heisst seit AP3 einheitlich flash.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/session_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~\$_SESSION\[\s*[\'"]flash~'],
- 'start' => 22, 'decke_jetzt' => 22, 'decke_ziel' => 0],
+ 'start' => 22, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 /* ---- AP4: Datenzugriff klein -------------------------------------------- */
 
