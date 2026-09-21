@@ -42,7 +42,7 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 > | AP3 — Tor, Zielprobe, Probelauf; F3-Messung | offen | | | |
 > | AP4 — F3 beheben | offen (wartet auf E-KH-09) | | | |
 > | AP5 — Gemeinsame Schrittfolge | **ABGENOMMEN** | 21.09.2026 | — (nur `.github/`, `docs/`) | Eine Folge fuer beide Umgebungen; Staging 4 → 14 Schritte; Schutzliste **einmal**, 8 Pfade; `auslieferung.yml` 1 205 → 657 Zeilen. Drei Messrunden (35549413032, 35549610955, 35560508628); Befunde F-KH-U-30 bis -34; E-KH-27, -28. Pruefpunkt 22 und 23 abgehakt (Lauf 35566000648). **Offen: der Staging-Lauf** |
-> | AP6 — Abbruchverhalten und Härtung | **gebaut; Abnahme offen** | 21.09.2026 | — (nur `.github/`, `tools/`, `docs/`) | 10 von 10 fremden `uses:` auf SHA; 2 `concurrency`-Gruppen; 5 → 0 Ueberspringen; 14 → 17 Schritte; `tor.py` 19 → 29 Lagen; Vorgabewerte gefallen. Fund F-KH-U-35. **Offen: Pruefpunkt 24 (Variablen) und 25 (provozierter Fehlschlag)** |
+> | AP6 — Abbruchverhalten und Härtung | **gebaut; Abnahme offen** | 21.09.2026 | — (nur `.github/`, `tools/`, `docs/`) | 10 von 10 fremden `uses:` auf SHA; 2 `concurrency`-Gruppen; 5 → 0 Ueberspringen; 14 → 17 Schritte; `tor.py` 19 → 29 Lagen; Vorgabewerte gefallen. Fund F-KH-U-35. **Offen: Pruefpunkt 24 (Variablen) und 25a/25b (Schlussschritt — neu gefasst, F-KH-U-37)** |
 > | **M1 — erster grüner Produktivlauf** | **BLOCKIERT** (Botschutz lima-city, F-KH-U-10/-36) | | | Das Tor der gruenen Laeufe laesst keinen Tag durch, solange Stufe 2 rot ist. Wartet auf den Hoster, nicht auf ein Paket |
 > | AP7 — Hotfix-Weg | offen | | | |
 > | **M2 — Probe-Hotfix** | offen (Betreiberin) | | | |
@@ -1385,6 +1385,26 @@ für die Messung zu verbiegen.
   Wartung von Hand aus, Geheimnis zurück, Lauf grün. Fehlende Variable
   `FTP_ZIELPFAD` → rot vor jedem Zugriff.
 
+> **Der zweite Teil dieser Abnahme ist so nicht fahrbar — weil AP6
+> funktioniert hat** (F-KH-U-37, 21.09.2026). Ausgezählt am gebauten Lauf
+> braucht das FTP-Passwort die Schritte 4, 8 und 12, das `JOBS_TOKEN` den
+> Schritt 9 — **alle vor** „Wartung einschalten" (Schritt 13). Ein kaputtes
+> Geheimnis lässt den Lauf also vor dem Wartungsschalter scheitern; dahinter
+> steht nur noch der Abgleich, und der benutzt dasselbe Passwort, das Schritt
+> 8 gerade erfolgreich benutzt hat.
+>
+> Das ist genau, was E-KH-06 verlangt: *Alles, was scheitern kann, ohne den
+> Server zu verändern, steht vor dem Wartungsschalter.* **Die
+> Unfahrbarkeit ist damit selbst das Messergebnis** — das Fenster, in dem die
+> Kette eine Anlage zugesperrt zurücklässt, ist einen Schritt breit.
+>
+> **Neu gefasst als Prüfpunkt 25a und 25b:** Statt den *Weg* in die Lage
+> nachzustellen, wird die **Lage** hergestellt — Wartung von Hand an, dann
+> ein beliebiger Fehlschlag; der Schlussschritt muss `Wartung: an` melden.
+> Dazu der Gegenfall mit ausgeschalteter Wartung, denn die Frage an einen
+> Schlussschritt ist nicht „meldet er?", sondern **„meldet er das Richtige,
+> auch wenn das Richtige unbequem ist?"**
+
 #### Umsetzung — Stand 21.09.2026: gebaut, Abnahme offen
 
 **Zehn Punkte, und sie hängen enger zusammen, als die Aufzählung oben
@@ -1447,10 +1467,16 @@ nebenbei den Nachweis, den die Abnahme ohnehin verlangt („fehlende Variable
 → rot vor jedem Zugriff").
 
 **Nicht gefahren, und aus der Umsetzung heraus auch nicht fahrbar:** der
-provozierte Fehlschlag nach „Wartung an" (Prüfpunkt 25). Er verlangt ein
-falsches FTP-Passwort in der Umgebung `staging` und macht Staging
-vorübergehend unbenutzbar — das ist die Betreiberin. **AP6 ist damit gebaut
-und nicht abgenommen.**
+Nachweis des Schlussschritts (**Prüfpunkt 25a und 25b**). Er verlangt ein
+falsches FTP-Passwort in der Umgebung `staging` und, für den zweiten Teil,
+eine von Hand eingeschaltete Wartung — das ist die Betreiberin. **AP6 ist
+damit gebaut und nicht abgenommen.**
+
+Die ursprüngliche Fassung dieses Punktes ließ sich nicht fahren, und der
+Grund ist AP6 selbst (F-KH-U-37): Über ein kaputtes Geheimnis ist ein
+Fehlschlag **hinter** dem Wartungsschalter nicht mehr herstellbar. Der Punkt
+ist deshalb neu gefasst — die Lage wird hergestellt, nicht der Weg dorthin
+nachgestellt.
 
 
 ### M1 — Erster grüner Produktivlauf (Betreiberin)
