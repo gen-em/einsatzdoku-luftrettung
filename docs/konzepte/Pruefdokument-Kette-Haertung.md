@@ -21,12 +21,12 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN.** AP5 bis AP8 nicht begonnen |
+> | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, AP5 vermessen (Form entschieden, Umbau noch nicht begonnen).** AP6 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **28** (Abschnitt 2): F-KH-U-01 bis F-KH-U-29 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach |
+> | Funde | **31** (Abschnitt 2): F-KH-U-01 bis F-KH-U-32 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. Zuletzt **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22 |
 > | F3 | **GEFUNDEN UND BEHOBEN, der Beleg ist gefahren.** Ursache: `RETR` auf die nicht vorhandene Zustandsdatei tötet die Verbindung; die Aktion deutet es als „first publish" und arbeitet mit einem toten Client weiter, bis das erste `MKD` es bemerkt — **drei Schritte hinter der Stelle, die sie meldet** (F-KH-U-25). Abhilfe: die Datei einmal hinlegen, bevor die Aktion läuft (AP4, Richtung (e), `tools/kette/zustand.py`). Beleg: **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige Abgleich gegen diesen Server überhaupt (F-KH-U-28). **E-KH-09 ist erfüllt** |
-> | Prüfliste | 26 Punkte: **10 abgehakt**, 5 teilweise, **11 offen** — gegen das Dokument nachgezählt |
+> | Prüfliste | **28** Punkte: **11 abgehakt**, 5 teilweise, **12 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu: **22** (die drei Zugangswerte eine Ebene höher löschen, F-KH-U-32) und **23** (die Pflichtfreigabe nach dem Umbau von AP5 nachmessen, F-KH-U-31) |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
 
 ---
@@ -171,6 +171,46 @@ geschützten Pfade (`config.php`, `install.php`, `install.lock`,
 weiterhin **zweimal** — genau das, was E-KH-20 (1) beheben will, und zwar in
 **AP5**. Die Köderprobe (E-KH-20 (4)) gehört zu **AP4** und kann vorher
 nichts belegen.
+
+> **Nachtrag vom 21.09.2026 — die Zahlen dieses Absatzes sind überholt, der
+> Satz dahinter nicht.** AP4 hat `.sitzungen/` eingetragen (E-KH-20 (2)):
+> gemessen jetzt **zwei** Blöcke, je **14 Zeilen**, wortgleich, darin
+> **acht** geschützte Pfade. Die Zahl acht ist der Prüfwert. Was unverändert
+> gilt: Die Liste steht **zweimal**, und das ist AP5.
+
+**7 — Ob die Pflichtfreigabe dem `environment:` in einen aufgerufenen
+Arbeitslauf folgt, ist NICHT gemessen — und daran hängt AP5.** Die Formprobe
+(F-KH-U-31, Läufe 35549413032 und 35549610955) hat belegt, dass ein
+aufgerufener Lauf `environment:` als Ausdruck tragen darf und die Umgebung
+dabei wirklich **bindet**: Vier von sieben Werten sind drinnen belegt und
+draußen leer. Das ist die halbe Antwort. Die andere Hälfte — schaltet die
+**Freigabepflicht** dabei genauso vor den ersten Schritt wie heute? — kann
+kein Lauf gegen `staging` zeigen, weil `staging` keine hat. Und ein Lauf
+gegen `produktion`, nur um es zu sehen, wäre ein Missbrauch des Tors: Er
+zwingt die Betreiberin zum Klicken für eine Messung.
+
+Dass die Bindung greift, ist ein starkes Indiz — Umgebungswerte werden erst
+nach den Schutzregeln ausgeliefert —, aber ein Indiz ist keine Messung, und
+dieses Konzept hat dreimal bezahlt, was der Unterschied kostet. **Der Beweis
+steht als Prüfpunkt 23** und ist ein Probelauf: Bleibt er vor dem ersten
+Schritt stehen und fragt, trägt die Form. Läuft er durch, ohne zu fragen,
+wird AP5 zurückgenommen — der Ausweichweg (zusammengesetzte Aktion mit
+durchgereichten Eingaben) ist gemessen gangbar.
+
+**Solange Prüfpunkt 23 offen ist, wird kein Tag gesetzt.** Das ist keine
+zusätzliche Vorsicht, sondern dieselbe wie bisher: M1 steht ohnehin hinter
+der Freigabe der Betreiberin.
+
+**8 — Dass die drei FTPS-Zugangswerte außerhalb der Umgebungen liegen, ist
+gemessen; welcher Ebene sie gehören und welchen Wert sie tragen, ist es
+nicht.** F-KH-U-32 zeigt, dass `FTP_SERVER`, `FTP_USERNAME` und
+`FTP_PASSWORD` auch ohne `environment:` auflösen. Ob das
+Repositoriums- oder Organisationsgeheimnisse sind, sagt kein Lauf — die
+Unterscheidung steht nur in den Einstellungen. Und **welchen** Server sie
+nennen, ist absichtlich nicht gemessen: Ein Prüfmittel, das
+Zugangswerte ausgibt, um sie zu vergleichen, wäre schlimmer als der Befund.
+Beides gehört in einen Blick in die Einstellungen, und der steht als
+**Prüfpunkt 22**.
 
 ---
 
@@ -484,6 +524,165 @@ Error: Client is closed because read ECONNRESET (data socket)
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-32 — Die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen,
+und damit kann die Geheimnisprüfung der Kette nicht fehlschlagen.**
+*Lauf 35549610955, 21.09.2026, 01:02 UTC — Nebenbefund der Formprobe.*
+
+Die Formprobe hat dieselben sieben Werte zweimal gelesen: einmal in einem Job
+mit `environment: staging`, einmal in einem Job **ohne** `environment:`
+(beide über `secrets: inherit`). Erwartet war, dass draußen alles leer
+bleibt. Es blieb nicht:
+
+| Wert | mit `environment:` | ohne `environment:` |
+|---|---|---|
+| `secrets.FTP_SERVER` | BELEGT | **BELEGT** |
+| `secrets.FTP_USERNAME` | BELEGT | **BELEGT** |
+| `secrets.FTP_PASSWORD` | BELEGT | **BELEGT** |
+| `secrets.JOBS_TOKEN` | BELEGT | LEER |
+| `vars.FTP_ZIELPFAD` | BELEGT | LEER |
+| `vars.STAGING_URL` | BELEGT | LEER |
+| `vars.FTP_STATE_PFAD` | LEER | LEER |
+
+Ausgegeben wurde nie ein Wert, nur belegt oder leer.
+
+**Es gibt also drei gleichnamige Zugangswerte eine Ebene höher** — als
+Repositoriums- oder Organisationsgeheimnis. `JOBS_TOKEN` hat das nicht, die
+drei Variablen haben es nicht; bei denen ist die Umstellung auf Umgebungen
+vollständig. Bei den dreien ist sie **angefangen und nie zu Ende geführt
+worden.** Der Kommentar im Produktiv-Job sagt seit P5a das Gegenteil: „die
+FTPS-Zugangsdaten … stehen nicht mehr als Repositoriums-Secrets herum". Der
+Satz beschreibt eine Absicht, keinen Zustand.
+
+**Was daran schiefgeht — drei Dinge, aufsteigend nach Preis:**
+
+1. **Die Geheimnisprüfung der Kette kann nicht mehr fehlschlagen.** Sie steht
+   als erster Schritt in beiden Jobs und ist genau dafür da, ein fehlendes
+   oder vertipptes Umgebungsgeheimnis zu fangen, **bevor** Backup und Wartung
+   laufen (der Kommentar dort begründet das ausführlich). Fehlt der
+   Umgebungswert, greift still der von oben, und der Schritt meldet „Drei
+   Geheimnisse vorhanden". Ein Tor, das immer aufgeht.
+2. **Das Tor der Umgebung umgeht man, indem man es nicht benutzt.** Jeder
+   Arbeitslauf dieses Repositoriums kann die FTPS-Zugangsdaten lesen, ohne
+   `environment:` zu schreiben und damit ohne Freigabe — `pruefung.yml`
+   läuft auf **jeden** Push auf **jeden** Zweig. Gelesen werden sie dort
+   heute nicht (nachgezählt: außerhalb von `auslieferung.yml` nennt kein
+   Arbeitslauf ein `FTP_*`; `pruefung.yml` nennt ein einziges Geheimnis, und
+   das ist `CIQ_GERAETE_URL`). Der Punkt ist nicht, dass es jemand tut,
+   sondern dass die Umgebung nicht hindert.
+3. **Der teuerste: Verschwindet der Umgebungswert, liefert die Kette
+   trotzdem — woandershin.** Wird das Produktiv-Geheimnis einmal gelöscht,
+   umbenannt oder beim Hosterwechsel neu gesetzt und dabei vertippt, fällt
+   der Job stillschweigend auf den Wert von oben zurück. Welcher das ist,
+   sagt die Messung nicht; steht dort Stagings Zugang, geht eine
+   Produktivauslieferung nach Staging, und umgekehrt. Beides wäre ein
+   grüner Lauf mit einer falschen Zieladresse — und die Zielprobe (AP3)
+   fiele darauf **nicht** herein, weil sie Adresse und FTP-Konto
+   gegeneinander hält. Das ist der Riegel, der hier trägt; er trägt aber
+   erst im Produktiv-Job und erst seit AP3.
+
+**Behebung gehört nicht hierher, sondern der Betreiberin** — sie ist ein
+Klick und kein Code: die drei Werte auf Repositoriums- bzw.
+Organisationsebene löschen, die in den beiden Umgebungen stehen bleiben.
+**Vorher ist zu prüfen, ob es Organisations- und nicht
+Repositoriumsgeheimnisse sind:** Ein Organisationsgeheimnis kann ein anderes
+Repositorium derselben Organisation benutzen, und das sieht dieser Lauf
+nicht. Der Prüfweg steht in Abschnitt 3.
+
+**Bis dahin bleibt alles wie es ist, und das ist vertretbar:** Die Umgebung
+gewinnt gegen die Ebene darüber, Produktiv bekommt also weiter den richtigen
+Wert. Was fehlt, ist nicht die Auslieferung, sondern die Warnung.
+
+---
+
+**F-KH-U-31 — Die Formfrage von AP5 ist gemessen, nicht gelesen: die
+zusammengesetzte Aktion kann `secrets` und `vars` gar nicht sehen.**
+*Läufe 35549413032 (Runde 1) und 35549610955 (Runde 2), 21.09.2026.*
+
+Das Konzept lässt die Form von AP5 ausdrücklich offen und sagt, sie werde
+„nach Messung" gewählt. `docs.github.com` ist vom Läufer dieser Umsetzung aus
+gesperrt (Egress-Regel der Arbeitsumgebung, HTTP-403 des Proxys), und dieses
+Konzept hat dreimal bezahlt, was eine ungeprüfte Behauptung kostet
+(`_openDir`, die KVM-Zeile in `android/LIESMICH.md`, die Punktdatei-Falle
+F-KH-U-26). Also ein Wegwerf-Messmittel, gegen **`staging` und nur dagegen**
+— eine Messung, die die Betreiberin zum Freigeben zwingt, wäre ein Missbrauch
+des Tors —, das nichts schreibt.
+
+**A — Eine zusammengesetzte Aktion sieht weder `secrets` noch `vars`.** Sie
+lädt nicht einmal:
+
+```
+Unrecognized named-value: 'secrets'. Located at position 1 within expression: secrets.FTP_SERVER
+Unrecognized named-value: 'vars'.    Located at position 1 within expression: vars.FTP_ZIELPFAD
+TemplateValidationException: The template is not valid.
+Failed to load .../formprobe-direkt/action.yml
+```
+
+Das ist der einzige Trost daran: Es bleibt nicht still leer, es bricht laut.
+Ein Wert, der unbemerkt leer bliebe, wäre in einer Auslieferungskette das
+Schlimmere.
+
+**B — Über Eingaben geht es.** Die Aktion mit durchgereichten Eingaben lief
+durch, `if:` innerhalb der Aktion schaltete, und verschachteltes `uses:`
+lief ebenfalls („C5 verschachteltes uses: GELAUFEN") — was für den
+FTPS-Schritt die Bedingung wäre. Die Maskierung hält: im Protokoll steht
+`G1: ***`, nicht der Wert.
+
+**C — Ein aufgerufener Arbeitslauf darf `environment:` als AUSDRUCK tragen,
+und die Umgebung bindet wirklich.** Das ist die Frage, an der alles hängt,
+und **Runde 1 hat sie nicht beantwortet, obwohl sie grün war**: Sie las nur
+`FTP_SERVER`, und das kommt laut F-KH-U-32 auch von außen. Ein belegter Wert
+belegte also gar nichts. Runde 2 hat denselben Job einmal mit und einmal ohne
+`environment:` gefahren und sieben Werte verglichen (Tabelle oben): **vier
+davon unterscheiden sich in genau der Richtung, die die Bindung beweist** —
+`JOBS_TOKEN`, `FTP_ZIELPFAD` und `STAGING_URL` sind drinnen belegt und
+draußen leer; `FTP_STATE_PFAD` ist beidseits leer und zeigt, dass die
+Messung auch „leer" sagen kann.
+
+**D, E — Nebenbei:** `needs:` auf einen aufgerufenen Lauf hält. Der Jobname
+wird zusammengesetzt: `Complete job name: C -- aufgerufener Lauf MIT
+environment / mit`, also *Name des aufrufenden Jobs* **/** *Name des Jobs im
+aufgerufenen Lauf*. Das ist für die Abnahme von AP5 wichtig, die
+„dieselben Schrittnamen" verlangt: Die **Schritt**namen bleiben gleich, der
+**Job**name bekommt einen Zusatz.
+
+**Was die Messung NICHT zeigt, und das steht auch in Abschnitt 0:** ob die
+**Pflichtfreigabe** dem `environment:` in den aufgerufenen Lauf folgt. Auf
+`staging` gibt es keine Freigabepflicht, also kann dieser Lauf sie nicht
+sehen. Dass die Umgebung bindet, ist ein starkes Indiz — Umgebungswerte
+werden erst nach den Schutzregeln ausgeliefert —, aber ein Indiz und keine
+Messung. **Der Beweis ist ein Probelauf gegen `produktion` mit der neuen
+Struktur**, und den gibt es schon: Genau dafür ist der Probelauf aus AP3
+gebaut. Er gehört in die Abnahme von AP5, und zwar als Riegel: Fordert er
+die Freigabe **nicht** an, ist die Form falsch gewählt und wird
+zurückgenommen.
+
+---
+
+**F-KH-U-30 — Staging hat den Zustandsdatei-Schritt aus AP4 nicht, und läuft
+damit in dasselbe F3, sobald seine Zustandsdatei einmal fehlt.**
+*Gefunden beim Auszählen der beiden Jobs für AP5, 21.09.2026.*
+
+Gezählt: `staging` hat **4** Schritte, `produktion` **13**. Der Schritt
+„Zustandsdatei der Aktion bereitstellen" ist einer der neun, die nur im
+Produktiv-Job stehen.
+
+Heute merkt das niemand, weil Stagings Zustandsdatei liegt — der Job läuft
+bei jedem Push auf `main` und hat sie längst angelegt. Geht sie verloren, und
+dafür genügt eine Wiederherstellung aus dem Backup, ein aufgeräumtes
+Verzeichnis oder der nächste Hosterwechsel, dann sendet die Aktion `RETR` auf
+einen Namen, den es nicht gibt, und alles Weitere steht in F-KH-U-25: Der
+Datenkanal steht schon, der Server schließt ihn, `basic-ftp` liest
+`ECONNRESET` auf dem Datensocket, die Aktion deutet es als „first publish"
+und stirbt drei Schritte später am ersten `MKD`. Sieben Trennversuche haben
+das einmal gekostet.
+
+**AP5 behebt es nebenbei** — das ist einer der Gründe, warum die gemeinsame
+Schrittfolge mehr ist als Aufräumen: Was nur in einem der beiden Jobs steht,
+ist nicht gemeinsam geprüft, und was nicht gemeinsam geprüft ist, fällt
+irgendwann einzeln aus. Genau das meint E-KH-17.
+
+---
 
 **F-KH-U-29 — Die Abnahme von AP4 ist gefahren: zweimal grün, 0 geplante
 Löschungen, und beim zweiten Mal fasst der Schritt die Datei nicht an.**
@@ -2214,6 +2413,76 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   scharf gestellt (die Bedingung `if: inputs.probelauf_gespraech` fällt), und
   die Abnahme von AP4 läuft — Probelauf gegen Produktiv zweimal
   hintereinander mit 0 geplanten Löschungen, dann die Freigabe.
+
+- [ ] **22 — Die drei FTPS-Zugangswerte eine Ebene höher löschen**
+  (F-KH-U-32). **Das ist der Punkt mit dem besten Verhältnis von Aufwand zu
+  Wirkung in diesem Dokument: drei Klicks, und die Geheimnisprüfung der
+  Kette kann wieder fehlschlagen.**
+  *Warum:* Gemessen am 21.09.2026 (Lauf 35549610955) lösen `FTP_SERVER`,
+  `FTP_USERNAME` und `FTP_PASSWORD` **auch ohne `environment:`** auf — es
+  gibt sie also zusätzlich auf Repositoriums- oder Organisationsebene.
+  Solange das so ist, findet der erste Schritt beider Jobs („Sind die drei
+  Geheimnisse der Umgebung … da?") immer etwas, auch wenn der
+  Umgebungswert fehlt oder vertippt ist. Der Schritt ist genau dafür
+  gebaut, dass er **vor** Backup und Wartung anschlägt; heute kann er das
+  nicht.
+  *Weg, erster Teil — nachsehen, welcher Ebene sie gehören:* GitHub →
+  Repositorium → **Settings** → **Secrets and variables** → **Actions**.
+  Dort stehen drei Listen: *Environment secrets*, *Repository secrets* und
+  *Organization secrets*. Gesucht sind `FTP_SERVER`, `FTP_USERNAME` und
+  `FTP_PASSWORD` in den **unteren beiden**.
+  *Weg, zweiter Teil — löschen:*
+  **(a)** Stehen sie unter **Repository secrets**: dort je auf **Remove**.
+  Die Einträge unter *Environments* → `staging` und `produktion` bleiben
+  unangetastet — sie sind die, die die Kette benutzt.
+  **(b)** Stehen sie unter **Organization secrets**: **nicht ungeprüft
+  löschen.** Ein Organisationsgeheimnis kann ein anderes Repositorium
+  derselben Organisation benutzen, und das sieht diese Messung nicht.
+  Dann zuerst in der Organisationseinstellung nachsehen, welche
+  Repositorien Zugriff haben; ist es nur dieses, löschen — sonst hier
+  den Zugriff dieses Repositoriums entziehen.
+  *Erwartet:* Beide Umgebungen behalten ihre drei Einträge; Produktiv und
+  Staging liefern unverändert aus. **An der Auslieferung ändert sich
+  nichts** — die Umgebung hat schon bisher gegen die Ebene darüber
+  gewonnen.
+  *Gegenprobe, und sie kostet nichts:* Danach einen Push auf den
+  Arbeitszweig. `pruefung.yml` läuft ohne `environment:` und ohne diese
+  Werte — bleibt sie grün, hat nichts außerhalb der Umgebungen sie
+  gebraucht.
+  *Scheitern erkennbar an:* Der nächste Staging-Lauf bricht im ersten
+  Schritt ab mit „Umgebung staging: es fehlt …". Dann war der gelöschte
+  Wert der einzige, den es gab — das Umgebungsgeheimnis fehlt also
+  wirklich, und die Prüfung hat zum ersten Mal getan, wofür es sie gibt.
+  Abhilfe: den Wert in der **Umgebung** neu eintragen, nicht eine Ebene
+  höher.
+  *Was es NICHT behebt:* Dass jeder Arbeitslauf dieses Repositoriums die
+  Umgebungswerte lesen könnte, indem er `environment:` einfach hinschreibt.
+  Dagegen hilft nur die Freigabepflicht, und die steht auf `produktion`
+  schon.
+
+- [ ] **23 — Die Pflichtfreigabe nach dem Umbau von AP5 nachmessen**
+  (F-KH-U-31). **Der Riegel unter der Formentscheidung — er kostet einen
+  Probelauf und einen Klick.**
+  *Warum:* AP5 legt die Schrittfolge in einen aufgerufenen Arbeitslauf, und
+  damit wandert die Zeile `environment:` aus `auslieferung.yml` dorthin.
+  Gemessen ist, dass die Umgebung dabei **bindet** (vier von sieben Werten
+  unterscheiden sich in genau der Richtung, die es beweist). **Nicht**
+  gemessen ist, ob die **Freigabepflicht** mitwandert — auf `staging` gibt
+  es keine, also kann kein Lauf gegen Staging es zeigen.
+  *Weg:* GitHub → Actions → „Auslieferung" → **Run workflow** → Zweig
+  `claude/fervent-dirac-xirsqw` → Häkchen **`probelauf`** ✓ → starten.
+  *Erwartet:* Der Lauf bleibt stehen und fragt nach der Freigabe,
+  **bevor** ein Schritt des Produktiv-Jobs gelaufen ist — genau wie vor dem
+  Umbau.
+  *Woran ein Scheitern zu erkennen ist — und es ist das ernsteste in diesem
+  Dokument:* Der Lauf läuft **durch, ohne zu fragen**. Dann trägt die
+  gewählte Form die Pflichtfreigabe nicht, und ein Tag-Push liefe künftig
+  ungefragt auf Produktiv. **Dann wird AP5 zurückgenommen**, und die
+  Schrittfolge bleibt dort, wo `environment:` heute steht — die
+  zusammengesetzte Aktion mit durchgereichten Eingaben ist der Ausweichweg,
+  gemessen als gangbar (F-KH-U-31, Messung B).
+  *Vorher nicht zu tun:* kein Tag setzen, keine echte Auslieferung. Dieser
+  Punkt steht vor M1, nicht danach.
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 
