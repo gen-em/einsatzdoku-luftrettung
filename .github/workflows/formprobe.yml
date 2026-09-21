@@ -1,0 +1,64 @@
+# WEGWERF-MESSMITTEL (AP5, Runde 3). Wird nach der Messung geloescht.
+#
+# EINE EINZIGE FRAGE, UND SIE IST DIE LETZTE UNGEMESSENE AN AP5:
+# Loest `${{ env.X }}` in einem `with:`-Block auf, wenn `X` vorher ueber
+# `$GITHUB_ENV` gesetzt wurde?
+#
+# WARUM DAS ZAEHLT: Der gemeinsame Lauf bestimmt Zielpfad und Zustandsdatei
+# EINMAL im ersten Schritt und reicht sie ueber `$GITHUB_ENV` an den
+# FTPS-Schritt weiter -- `server-dir: ${{ env.ZIELPFAD }}`. Loeste das nicht
+# auf, waere `server-dir` LEER, und die Aktion synchronisierte in das
+# WURZELVERZEICHNIS des FTP-Zugangs: neben den Webroot, im schlimmsten Fall
+# ueber fremde Verzeichnisse. Das ist der eine Fehler, den AP5 einbauen
+# koennte, und er faellt im Trockenlauf nicht auf.
+#
+# GEMESSEN WIRD MIT `actions/checkout` UND SEINEM `path:` -- eine echte
+# Fremd-Aktion, ein echter `with:`-Block, und das Ergebnis ist ein
+# Verzeichnis, das es gibt oder nicht gibt. Kein Zugangswert kommt vor,
+# nichts wird irgendwohin geschrieben ausser in den Arbeitsbereich des
+# Laeufers.
+#
+# KEINE UMGEBUNG, KEIN `environment:` -- diese Frage hat mit Geheimnissen
+# nichts zu tun.
+name: Formprobe
+on:
+  push:
+    branches: [ claude/fervent-dirac-xirsqw ]
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash -eo pipefail {0}
+jobs:
+  env_in_with:
+    name: Loest env.X in einem with-Block auf?
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wert ueber GITHUB_ENV setzen
+        run: |
+          set -euo pipefail
+          echo "PROBEPFAD=probe-ziel" >> "$GITHUB_ENV"
+          echo "Gesetzt: PROBEPFAD=probe-ziel"
+
+      - name: Wert im with-Block einer Fremd-Aktion benutzen
+        uses: actions/checkout@v7
+        with:
+          path: ${{ env.PROBEPFAD }}
+
+      - name: Nachmessen
+        run: |
+          set -euo pipefail
+          # DIE GEGENPROBE STECKT IM NAMEN DES VERZEICHNISSES. Loest der
+          # Ausdruck nicht auf, ist `path:` leer, und `checkout` legt in den
+          # Arbeitsbereich selbst -- dann gibt es `probe-ziel/` NICHT, wohl
+          # aber `.github/` direkt daneben. Beide Faelle sind unterscheidbar.
+          if [ -d probe-ziel/.github ]; then
+            echo "F1 env.X im with-Block: LOEST AUF (probe-ziel/ existiert)"
+          elif [ -d .github ]; then
+            echo "F1 env.X im with-Block: LOEST NICHT AUF -- path: war LEER."
+            echo "::error::env.X loest im with-Block NICHT auf. Der gemeinsame Auslieferungslauf muss die Pfade wieder als vollstaendige Ausdruecke fuehren."
+            exit 1
+          else
+            echo "F1 env.X im with-Block: NICHT FESTSTELLBAR -- weder das eine noch das andere Verzeichnis ist da."
+            exit 1
+          fi
