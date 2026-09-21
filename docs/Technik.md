@@ -8892,14 +8892,15 @@ E-P5a-10.
 | Auslöser | Ziel | Umgebung | Davor |
 |---|---|---|---|
 | Push auf `main` | **Staging** | `staging` | Stufe 1 |
-| Tag `web-vX.Y.Z` | **Produktiv** | `produktion` | Stufe 1, Stufe 2, Pflichtfreigabe, Backup-Tor |
+| **Handlauf auf `hotfix/*`** (ab AP7) | **Staging** | `staging` | Stufe 1 |
+| Tag `web-vX.Y.Z` | **Produktiv** | `produktion` | Stufe 1, Stufe 2, Pflichtfreigabe, Backup-Tor, **Abstammung** |
 
 Vier Arbeitsläufe unter `.github/workflows/`:
 
 | Datei | Was |
 |---|---|
 | `pruefung.yml` | **Stufe 1** — jeder Push, jeder Zweig, jeder Pull Request |
-| `auslieferung.yml` | **wann**: Jobs `staging`, `stufe2`, `produktion` und `zeiger` |
+| `auslieferung.yml` | **wann**: Jobs `staging`, `stufe2`, `produktion`, `Rückfallstand (Staging)` und `zeiger` |
 | `ausliefern-lauf.yml` | **was**: die Schrittfolge, einmal, für beide Umgebungen |
 | `integritaet.yml` | die Wache; läuft nach einem **Produktiv**-Deploy und täglich |
 
@@ -8944,8 +8945,10 @@ Zustandsdatei der Aktion dann einen Server beschreibt, den es so nicht gibt.
 ein Lauf; ein dritter verdrängt den zweiten wartenden. Für Staging ist das
 hinnehmbar — der jüngste Stand gewinnt, und genau den will man.
 
-**Alle zehn fremden `uses:`-Zeilen hängen an einer 40-stelligen Commit-SHA**
-(E-KH-10), die Version steht als Kommentar daneben. Die beiden **lokalen**
+**Alle elf fremden `uses:`-Zeilen hängen an einer 40-stelligen Commit-SHA**
+(E-KH-10), die Version steht als Kommentar daneben. **Die Zahl ist eine
+Orientierung, kein Prüfwert** — nachgezählt wird „keine fremde Zeile ohne
+SHA", und dafür stehen zwei Zählungen nebeneinander (`CLAUDE.md` 3). Die beiden **lokalen**
 (`./.github/workflows/ausliefern-lauf.yml`) tragen keine und können es
 nicht: Ein lokaler Pfad nimmt keinen Ref und läuft immer auf dem Commit des
 Aufrufers — das ist strenger als ein Pin, nicht schwächer.
@@ -8953,6 +8956,52 @@ Aufrufers — das ist strenger als ein Pin, nicht schwächer.
 **Das Tor der grünen Läufe fragt nach dem Job, nicht nach dem Lauf.** Ein
 übersprungener Job macht den Lauf nicht rot; bis AP6 zählte das Tor also,
 dass ein Lauf stattgefunden hat, und nicht, dass ausgeliefert wurde.
+
+**Seit AP7 entscheidet es nicht mehr selbst** (E-KH-15). Der Schritt holt nur
+noch die Tatsachen — welche Läufe es gab, wie sie ausgingen, ob der Commit
+vom Zeiger `produktion` abstammt —, und das Urteil fällt
+`tools/kette/freigabe.py`. Der Grund ist derselbe wie beim Backup-Tor
+(E-P5a-12): Eine Bedingung, die eine Auslieferung verhindern soll, gehört
+dorthin, wo eine `--selbstprobe` sie nachweisen kann. Als Bash im
+Arbeitslauf wäre die Gegenprobe — *ein Hotfix ohne Abstammung muss abgelehnt
+werden* — nur durch einen echten Produktivlauf zu belegen, also praktisch
+nie. Jetzt ist sie eine von **32 Lagen** in Stufe 1.
+
+**Was anerkannt wird, und was nicht:**
+
+| Lage | zählt |
+|---|---|
+| Push auf `main`, Job `staging` grün | **ja** |
+| Handlauf auf `hotfix/*`, Job `staging` grün, Commit stammt vom Zeiger ab | **ja** (E-KH-15) |
+| derselbe Hotfix **ohne** Abstammung | nein |
+| Abstammung nicht zu ermitteln (Zweig `produktion` fehlt, Abruf scheitert) | nein — **im Zweifel zu** |
+| Handlauf auf `main` | nein (E-KH-29) |
+| Push auf einen Arbeitszweig | nein |
+| irgendetwas davon mit übersprungenem oder rotem `staging`-Job | nein |
+
+**Warum die Abstammung an die Stelle des Zweigschutzes tritt:** Ein
+`hotfix/*`-Zweig kommt per **Handlauf** auf Staging, nicht per Push — und
+ein Handlauf umginge den Zweigschutz von `main`, auf dem die alte Regel
+ruht. E-KH-15 setzt dafür die Abstammung vom Zeiger `produktion` ein, also
+von genau dem Stand, der heute ausgeliefert ist. Wer einen Hotfix baut,
+zweigt vom Ausgelieferten ab; wer etwas anderes unterschieben will, kann das
+nicht, ohne die Abstammung zu verlieren. Verglichen wird über
+`compare/produktion...<sha>`; `ahead` und `identical` belegen die
+Abstammung, `behind` und `diverged` nicht.
+
+**Ein Handlauf auf `main` zählt ausdrücklich nicht** (E-KH-29). Wörtlich
+gelesen ließe E-KH-15 ihn zu — die Entscheidung setzt aber den Zweigschutz
+von `main` voraus, und der ist laut Zuarbeit Z4 **noch nicht gesetzt**. Bis
+dahin wäre ein Handlauf auf `main` genau der Weg, den E-KH-15 versperren
+will. Für `main` ist der Push ohnehin der normale Weg.
+
+**Der Jobname wird auf Gleichheit geprüft, nicht auf den Anfang** (AP7). Bis
+dahin stand dort `startswith("staging")`, und das war eine Falle mit
+Zeitzünder: AP7 bringt mit `Rückfallstand (Staging)` einen zweiten Job in
+dieselbe Datei, der etwas mit Staging tut. Hieße er `staging-sicherung`,
+zählte ein **Tag**-Lauf — in dem `staging` übersprungen ist — sich selbst
+als Nachweis „stand auf Staging". Beide Riegel stehen: der Name **und** der
+Vergleich.
 
 > **Die Pflichtfreigabe wandert mit — nachgemessen.** Sie hängt am
 > `environment:`, und das liegt seit AP5 im aufgerufenen Lauf. Beides ist
@@ -9131,8 +9180,8 @@ Token, wird übersprungen und gesagt** — nicht still auf den lokalen Weg
 zurückgefallen, der hier ohnehin an der fehlenden `config.php` scheitert.
 
 **Der Bilderlauf braucht es seit Web 20.16.2 ebenfalls** (Backlog Nr. 220),
-aber für etwas anderes und mit einem anderen Verhalten. Zwei der fünfzig
-Seiten tragen `"wartung": true` in `seiten.json` — `07-wartungsseite` und
+aber für etwas anderes und mit einem anderen Verhalten. **Zwei** Seiten
+tragen `"wartung": true` in `seiten.json` — `07-wartungsseite` und
 `46a-betrieb-updates-wartung` —, und `aufnehmen.mjs` schaltete den
 Wartungsmodus über die **lokale** Datei `server/wartung.lock`, was gegen ein
 fernes Staging wirkungslos ist.
@@ -9736,6 +9785,92 @@ wäre.
 **Die Regel für Menschen** steht in `CLAUDE.md` 3: Auf `produktion` wird
 nicht entwickelt, es gibt keinen PR dorthin, und von Hand bewegt wird er
 nicht.
+
+### 6.6b Der Hotfix-Weg — Runbook (ab AP7, E-KH-15/-16)
+
+**Wann man ihn braucht.** Auf Produktiv liegt Tag `web-v20.26.2`, etwas ist
+kaputt, und `main` ist inzwischen bei `20.28.0` mit Dingen, die noch nicht
+ausgeliefert werden sollen. Über `main` zu reparieren hieße, alles
+mitzuliefern. Der Hotfix-Weg zweigt stattdessen **vom Ausgelieferten** ab.
+
+**Die Zusage dahinter, und sie ist der Grund für die Abstammungsprüfung:**
+Ein Handlauf auf einem Zweig umgeht den Zweigschutz von `main`. Was ihn
+ersetzt, ist die Abstammung vom Zeiger `produktion` — der Hotfix muss von dem
+Stand kommen, der draußen läuft, sonst lässt das Tor ihn nicht durch.
+
+**Der Rückfallstand entsteht von selbst.** Bei jeder Produktiv-Auslieferung
+legt der Job `Rückfallstand (Staging)` ein Komplett-Backup **auf Staging** an
+und schreibt dessen Dateinamen neben den Tag in die Laufzusammenfassung
+(E-KH-16). Diesen Namen braucht Schritt 2.
+
+---
+
+1. **Schemaunterschied zwischen Tag und `main` prüfen.** Unterscheiden sich
+   die Migrationsstände nicht, ist Staging schon brauchbar — **weiter bei
+   Schritt 3.** Unterscheiden sie sich, zeigt Staging ein Datenmodell, das es
+   auf Produktiv nicht gibt, und ein dort geprobter Hotfix beweist nichts.
+
+2. **Staging auf den Stand des Tags zurücksetzen.** Die Laufzusammenfassung
+   der Auslieferung dieses Tags nennt den Dateinamen des Komplett-Standes.
+   Einspielen über **Betrieb → Wiederherstellen** (`wiederherstellen.php`),
+   als angemeldete Administratorin.
+   **Die Kette setzt nichts aus der Ferne zurück** (E-KH-16): Eine
+   Wiederherstellung ist der einschneidendste Vorgang, den die Anwendung
+   kennt, und sie bleibt dort, wo die Anwendung sie hingelegt hat.
+   > **Der Stand wird verdrängt.** Staging bewahrt nur eine begrenzte Zahl
+   > von Komplett-Ständen auf — **der Vorgabewert ist 2**
+   > (`KOMP_AUFBEWAHRUNG_VORGABE`), einstellbar unter **Betrieb →
+   > Komplettsicherung → „Stände aufbewahren"** (1 bis 20). Bei 2 ist der
+   > Stand des vorletzten Tags bereits weg. Wer den Hotfix-Weg ernst meint,
+   > setzt die Aufbewahrung höher oder lädt den Stand herunter, wenn die
+   > Zusammenfassung ihn nennt.
+
+3. **`hotfix/*` vom Zeiger abzweigen.**
+   `git fetch origin produktion && git switch -c hotfix/20.26.3-anmeldung origin/produktion`
+   Der Zweigname muss mit `hotfix/` anfangen — der Schrägstrich gehört dazu,
+   `hotfix-schnell` ist keiner. Dann der Fix, und **eine eigene
+   Korrekturversion** in `server/version.php`; der Changelog nennt den
+   Hotfix.
+
+4. **Handlauf auf Staging, Stufe 2 grün.** Actions → „Auslieferung" → *Run
+   workflow* → Zweig `hotfix/…` → **alle Kästchen leer**. Der Job
+   `staging / ausliefern` fährt dieselbe Schrittfolge wie sonst; danach läuft
+   Stufe 2 gegen Staging. Beides muss grün sein — das Tor fragt nachher genau
+   danach.
+
+5. **Tag und Freigabe.** `git tag web-v20.26.3 && git push origin web-v20.26.3`.
+   Das Tor der grünen Läufe prüft jetzt dreierlei: grüner Stufe-1-Lauf,
+   grüner `staging`-Job auf **diesem** Commit, und **Abstammung vom Zeiger**.
+   Dann die Pflichtfreigabe. Nach dem Lauf rückt der Zeiger `produktion` auf
+   den Hotfix nach.
+
+6. **PR nach `main`.** Der Hotfix wird geholt, **`main` behält seine höhere
+   Fassung** — die Korrekturversion des Hotfixes ist eine Seitenlinie, kein
+   Rückschritt für `main`. Der Changelog nennt den Hotfix als solchen.
+
+7. **Staging zurück auf `main`.** Handlauf auf `main` (oder der nächste Push
+   dorthin), und **Migrationen von Hand** unter Betrieb → Updates: Der
+   Rücksprung von einem älteren auf einen neueren Schemastand geschieht nicht
+   von selbst.
+
+---
+
+**Was schiefgehen kann, und woran man es merkt:**
+
+| Symptom | Ursache |
+|---|---|
+| Der Tag-Lauf bricht am Tor ab: „stammt NICHT vom Zeiger `produktion` ab" | Der Hotfix-Zweig wurde von `main` abgezweigt statt vom Zeiger — Schritt 3 noch einmal |
+| Dasselbe, obwohl richtig abgezweigt | Der Zeiger ist inzwischen weitergerückt (eine andere Auslieferung dazwischen). Neu abzweigen und Schritt 4 wiederholen |
+| „Abstammung: nein (Vergleich: — nicht ermittelt —)" | Der Zweig `produktion` fehlt. Er ist kein Arbeitszweig und wird nur vom Job `zeiger` bewegt (6.6a) |
+| Der Handlauf auf `hotfix/*` zählt nicht | Der Job `staging` war übersprungen oder rot. Übersprungen ist nicht geprüft (B5) |
+| Der Rückfallstand heißt `unbekannt` | Die Anlage hat keinen Komplett-Stand gemeldet. Der Job ist dann **rot** — ein Stand, dessen Namen niemand kennt, ist keiner |
+
+**Der Rückfallstand blockiert die Auslieferung nicht** (E-KH-30). Scheitert
+er, ist der Lauf rot und sagt, dass er fehlt; ausgeliefert wird trotzdem.
+Die Begründung ist unbequem und trägt: Ein Hotfix wird gebraucht, **weil**
+etwas kaputt ist. Hinge die Produktiv-Auslieferung daran, dass Staging
+erreichbar ist, dann sperrte eine kranke Testumgebung die Reparatur der
+echten — genau verkehrt herum.
 
 ### 6.7 Selbst hosten — der Weg ohne GitHub bleibt vollständig
 

@@ -352,6 +352,25 @@ def zustand_auskunft(antwort: dict, frage: str):
             return "unbekannt", 1
         return fassung.strip(), 0
 
+    if frage == "komplett":
+        # DER DATEINAME DES LETZTEN KOMPLETT-STANDES (AP7, E-KH-16). Die Kette
+        # stoesst bei jeder Produktiv-Auslieferung ein Komplett-Backup auf
+        # STAGING an und nennt dessen Dateinamen neben dem Tag -- damit man
+        # spaeter weiss, WELCHEN Stand man einspielen muss, um Staging auf den
+        # Stand des Tags zurueckzusetzen (Runbook in `Technik.md`).
+        #
+        # EIN NAME, DEN MAN NICHT HAT, IST SCHLIMMER ALS KEINER: Wer beim
+        # Zuruecksetzen den falschen Stand einspielt, hat danach eine
+        # Testumgebung, die etwas anderes zeigt als das, was ausgeliefert ist.
+        # Deshalb hier dieselbe Strenge wie bei `version`.
+        k = antwort.get("komplett")
+        if not isinstance(k, dict):
+            return "unbekannt", 1
+        datei = k.get("datei")
+        if not isinstance(datei, str) or not datei.strip():
+            return "unbekannt", 1
+        return datei.strip(), 0
+
     if frage == "wartung":
         w = antwort.get("wartung")
         # ZWEI FORMEN, UND BEIDE KOMMEN VOR: `zustand` liefert ein Objekt
@@ -649,6 +668,32 @@ def selbstprobe() -> int:
     pruefe(zustand_auskunft({"ok": False, "version": "20.26.0"}, "version") == ("unbekannt", 1),
            "Eine Antwort ohne `ok` wird gar nicht erst ausgeschlachtet")
 
+    # ------------------------------------------------------------------
+    # `--frage komplett` (AP7, E-KH-16): der Dateiname des letzten
+    # Komplett-Standes. Er wandert in die Laufzusammenfassung, damit beim
+    # Zuruecksetzen von Staging klar ist, WELCHER Stand gemeint ist.
+    # ------------------------------------------------------------------
+    KOMP = {"ok": True,
+            "komplett": {"datei": "2026-09-21T07-54-57Z_708a0f59.edk",
+                         "zeit": "2026-09-21T07:54:57Z", "groesse": 4821}}
+    pruefe(zustand_auskunft(KOMP, "komplett")
+           == ("2026-09-21T07-54-57Z_708a0f59.edk", 0),
+           "--frage komplett gibt den Dateinamen und 0")
+    pruefe(zustand_auskunft({"ok": True}, "komplett") == ("unbekannt", 1),
+           "ALTER SERVER: kein `komplett`-Feld -> 'unbekannt' und 1")
+    pruefe(zustand_auskunft({"ok": True, "komplett": {}}, "komplett")
+           == ("unbekannt", 1),
+           "…ein `komplett`-Objekt OHNE `datei` ebenso")
+    pruefe(zustand_auskunft({"ok": True, "komplett": {"datei": "  "}}, "komplett")
+           == ("unbekannt", 1),
+           "…und ein leerer Dateiname ist kein Dateiname")
+    pruefe(zustand_auskunft({"ok": True, "komplett": None}, "komplett")
+           == ("unbekannt", 1),
+           "NOCH NIE EIN KOMPLETT-STAND: `komplett` ist null -> 'unbekannt', "
+           "nicht 'None'")
+    pruefe(zustand_auskunft({**KOMP, "ok": False}, "komplett") == ("unbekannt", 1),
+           "Eine Antwort ohne `ok` wird auch hier nicht ausgeschlachtet")
+
     # Die Antwort der Installation bleibt die Antwort der Installation.
     pruefe(ohne_eigenes({"ok": True, "_serverzeit": "x"}) == {"ok": True},
            "`_serverzeit` steht nicht in der ausgegebenen Serverantwort")
@@ -674,9 +719,11 @@ def main(argv: list[str]) -> int:
                    help="backup: Wartezeit ZWISCHEN zwei Aufrufen")
     p.add_argument("--sekunden", type=int, default=None,
                    help="pause: so lange anhalten (0 = Pause aufheben)")
-    p.add_argument("--frage", choices=["migration", "version", "wartung"],
+    p.add_argument("--frage",
+                   choices=["migration", "version", "wartung", "komplett"],
                    help="zustand: nur diese eine Auskunft — migration: ja/nein, "
-                        "version: die Fassung, wartung: an/aus; unlesbar: unbekannt")
+                        "version: die Fassung, wartung: an/aus, komplett: der "
+                        "Dateiname des letzten Komplett-Standes; unlesbar: unbekannt")
     p.add_argument("--selbstprobe", action="store_true",
                    help="ohne Netz prüfen, ob das Tor überhaupt zugeht")
     a = p.parse_args(argv)

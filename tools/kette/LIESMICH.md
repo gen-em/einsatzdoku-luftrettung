@@ -5,7 +5,7 @@ python3 tools/kette/tor.py --selbstprobe                              # ohne Net
 python3 tools/kette/tor.py backup      --basis https://… --token …
 python3 tools/kette/tor.py wartung-an  --basis https://… --token …
 python3 tools/kette/tor.py wartung-aus --basis https://… --token …
-python3 tools/kette/tor.py zustand     --basis https://… --token … [--frage migration]
+python3 tools/kette/tor.py zustand     --basis https://… --token … [--frage migration|version|wartung|komplett]
 python3 tools/kette/tor.py pause       --basis https://… --token … --sekunden 1800
 ```
 
@@ -498,3 +498,79 @@ Dreiwertigkeit (5 — unbekannter Rückgabewert heißt NICHT FESTSTELLBAR, und
 `curl 19`/`curl 78` heißen FEHLT), „Hochladen scheitert → rot mit
 Servermeldung" (2), Trockenlauf (1) und das Passwort außerhalb der
 Befehlszeile (1).
+
+---
+
+# Freigabe — darf dieser Stand auf Produktiv? (AP7, E-KH-15)
+
+```
+python3 tools/kette/freigabe.py --selbstprobe                       # ohne Netz
+python3 tools/kette/freigabe.py urteil --laeufe laeufe.json \
+                                       --vergleich ahead --stufe1 1
+echo '[…]' | python3 tools/kette/freigabe.py urteil --laeufe - --vergleich diverged
+```
+
+Rückgabewert: `0` = darf ausliefern · `1` = nein (der Grund steht darüber) ·
+`2` = Aufruf unvollständig.
+
+## Warum es das gibt
+
+Vor einer Produktiv-Auslieferung fragt die Kette: Stand dieser Commit schon
+auf Staging, und war er dort grün? Bis AP7 war die Antwort einfach — ein Push
+auf `main`, ein erfolgreicher Job `staging`, fertig.
+
+Der **Hotfix-Weg** bricht das auf. Ein `hotfix/*`-Zweig kommt per **Handlauf**
+auf Staging, nicht per Push — und ein Handlauf umgeht den Zweigschutz von
+`main`, auf dem die alte Regel ruht. E-KH-15 setzt an dessen Stelle die
+**Abstammung**: Der Commit muss den Stand enthalten, der heute auf Produktiv
+liegt (Zeiger `produktion`). Wer vom Ausgelieferten abzweigt, hat sie; wer
+etwas anderes unterschieben will, bekommt sie nicht.
+
+## Warum es ein Werkzeug ist und keine Zeile Bash
+
+Dieselbe Begründung wie beim Backup-Tor (E-P5a-12): Was eine Auslieferung
+verhindern soll, gehört dorthin, wo eine `--selbstprobe` es nachweisen kann.
+**Die Abnahme von AP7 verlangt wörtlich die Gegenprobe** — *ein Hotfix ohne
+Abstammung muss abgelehnt werden*. Als Bash im Arbeitslauf wäre sie nur durch
+einen echten Produktivlauf zu belegen, also praktisch nie.
+
+## Was es nicht tut: ins Netz gehen
+
+Die Tatsachen — welche Läufe es gab, wie sie ausgingen, ob der Commit
+abstammt — holt der Arbeitslauf mit `gh api`. Dieses Werkzeug bekommt sie als
+JSON und fällt das Urteil. Die Trennung ist Absicht: Abrufen kann man nicht
+ohne Netz proben, Entscheiden schon.
+
+Je Eintrag erwartet: `id`, `event`, `head_branch`, `staging_ok`.
+`--vergleich` ist die Antwort von `compare/produktion...<sha>`.
+
+## Was zählt
+
+| Lage | zählt |
+|---|---|
+| Push auf `main`, `staging` grün | **ja** |
+| Handlauf auf `hotfix/*`, `staging` grün, Abstammung | **ja** |
+| derselbe Hotfix ohne Abstammung | nein |
+| Abstammung nicht zu ermitteln | nein — **im Zweifel zu** |
+| Handlauf auf `main` | nein (E-KH-29) |
+| Push auf einen Arbeitszweig | nein |
+| irgendetwas mit übersprungenem oder rotem `staging`-Job | nein |
+
+**Im Zweifel nein** ist die ganze Kunst von `abstammt()`. Ein leerer Wert, ein
+unbekanntes Wort, ein gescheiterter Abruf — alles das heißt „ich weiß es
+nicht", und das darf hier nie zu „ja" werden. Ein Tor, das bei einer
+misslungenen Abfrage aufgeht, ist kein Tor, sondern eine Tür mit einem Schild
+daneben.
+
+## Selbstprobe
+
+`--selbstprobe` fährt **32 Lagen ohne Netz**: die Vergleichsantworten (10,
+darunter `behind`, `None`, ein unbekanntes Wort und eine Zahl), der alte Weg
+über `main` (2), der Hotfix-Weg samt **Gegenprobe** (3), die Ränder des
+Präfixes `hotfix/` (3 — `hotfix-schnell` zählt nicht, `feature/hotfix/x`
+auch nicht), was ausdrücklich nicht zählt (3), und das Gesamturteil (11 —
+darunter eine kaputte Zuarbeit, die das Tor schließt statt es zu öffnen, und
+die Frage, ob der Grund im Protokoll steht).
+
+Sie läuft in **Stufe 1** bei jedem Push; sie braucht kein Netz, keine
+Installation und keine Auslieferung.
