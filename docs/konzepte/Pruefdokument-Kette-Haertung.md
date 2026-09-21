@@ -635,12 +635,18 @@ Satz beschreibt eine Absicht, keinen Zustand.
    erst im Produktiv-Job und erst seit AP3.
 
 **Behebung gehört nicht hierher, sondern der Betreiberin** — sie ist ein
-Klick und kein Code: die drei Werte auf Repositoriums- bzw.
-Organisationsebene löschen, die in den beiden Umgebungen stehen bleiben.
-**Vorher ist zu prüfen, ob es Organisations- und nicht
-Repositoriumsgeheimnisse sind:** Ein Organisationsgeheimnis kann ein anderes
-Repositorium derselben Organisation benutzen, und das sieht dieser Lauf
-nicht. Der Prüfweg steht in Abschnitt 3.
+Klick und kein Code: die drei Werte auf Repositoriumsebene löschen, die in
+den beiden Umgebungen stehen bleiben.
+
+> **Nachgesehen am 21.09.2026, und es ist der einfache Fall.** Die
+> Einstellungsseite sagt wörtlich „There are no organization secrets
+> available to this repository" — die Sorge, ein anderes Repositorium der
+> Organisation könnte daran hängen, ist damit gegenstandslos. Es sind drei
+> *Repository secrets*, **zwei Monate alt**, während alle zehn
+> Umgebungseinträge Stunden bis Tage alt sind: **Reste von vor der
+> Umstellung auf Umgebungen.** Beide Umgebungen tragen ihre drei Werte
+> vollständig, es hängt also nichts daran. Der Bedienweg steht als
+> Prüfpunkt 22.
 
 **Bis dahin bleibt alles wie es ist, und das ist vertretbar:** Die Umgebung
 gewinnt gegen die Ebene darüber, Produktiv bekommt also weiter den richtigen
@@ -2497,35 +2503,55 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   Umgebungswert fehlt oder vertippt ist. Der Schritt ist genau dafür
   gebaut, dass er **vor** Backup und Wartung anschlägt; heute kann er das
   nicht.
-  *Weg, erster Teil — nachsehen, welcher Ebene sie gehören:* GitHub →
-  Repositorium → **Settings** → **Secrets and variables** → **Actions**.
-  Dort stehen drei Listen: *Environment secrets*, *Repository secrets* und
-  *Organization secrets*. Gesucht sind `FTP_SERVER`, `FTP_USERNAME` und
-  `FTP_PASSWORD` in den **unteren beiden**.
-  *Weg, zweiter Teil — löschen:*
-  **(a)** Stehen sie unter **Repository secrets**: dort je auf **Remove**.
-  Die Einträge unter *Environments* → `staging` und `produktion` bleiben
-  unangetastet — sie sind die, die die Kette benutzt.
-  **(b)** Stehen sie unter **Organization secrets**: **nicht ungeprüft
-  löschen.** Ein Organisationsgeheimnis kann ein anderes Repositorium
-  derselben Organisation benutzen, und das sieht diese Messung nicht.
-  Dann zuerst in der Organisationseinstellung nachsehen, welche
-  Repositorien Zugriff haben; ist es nur dieses, löschen — sonst hier
-  den Zugriff dieses Repositoriums entziehen.
+  **ERSTER TEIL ERLEDIGT am 21.09.2026 — nachgesehen, und der unangenehme
+  Fall fällt weg.** Die Seite *Settings → Secrets and variables → Actions*
+  sagt wörtlich: **„There are no organization secrets available to this
+  repository."** Es sind schlichte *Repository secrets*:
+
+  | Abschnitt | Eintrag | zuletzt geändert |
+  |---|---|---|
+  | Repository secrets | `CIQ_GERAETE_URL` | vor 4 Tagen |
+  | Repository secrets | **`FTP_PASSWORD`** | **vor 2 Monaten** |
+  | Repository secrets | **`FTP_SERVER`** | **vor 2 Monaten** |
+  | Repository secrets | **`FTP_USERNAME`** | **vor 2 Monaten** |
+
+  **Die Zeitstempel belegen die Vermutung aus F-KH-U-32.** Alle zehn
+  Umgebungseinträge (`FTP_*` und `JOBS_TOKEN` je zweimal, dazu
+  `STAGING_KONTO` und `STAGING_PASS`) sind **Stunden bis Tage** alt; die
+  drei hier sind **zwei Monate** alt und damit älter als die Umstellung auf
+  Umgebungen. Es sind Reste, die beim Umzug liegen geblieben sind — nicht
+  etwas, das jemand gesetzt hat und braucht.
+
+  **Und es hängt nichts daran:** Beide Umgebungen tragen ihre drei Werte
+  vollständig, es gibt also keinen Fall, in dem der Rückfall gebraucht
+  würde.
+
+  *Weg — löschen:* Auf derselben Seite, Abschnitt **Repository secrets**, je
+  das Papierkorb-Symbol rechts: `FTP_PASSWORD`, `FTP_SERVER`,
+  `FTP_USERNAME`.
+
+  > **`CIQ_GERAETE_URL` BLEIBT STEHEN.** Er steht unmittelbar über den
+  > dreien, in derselben Liste, mit demselben Papierkorb daneben. Der
+  > Uhr-Prüfstand in Stufe 1 liest ihn, und er gehört genau dorthin — er
+  > hängt an keiner Umgebung.
+
+  Die zehn Einträge unter *Environment secrets* bleiben alle unangetastet.
+
   *Erwartet:* Beide Umgebungen behalten ihre drei Einträge; Produktiv und
   Staging liefern unverändert aus. **An der Auslieferung ändert sich
   nichts** — die Umgebung hat schon bisher gegen die Ebene darüber
-  gewonnen.
-  *Gegenprobe, und sie kostet nichts:* Danach einen Push auf den
-  Arbeitszweig. `pruefung.yml` läuft ohne `environment:` und ohne diese
-  Werte — bleibt sie grün, hat nichts außerhalb der Umgebungen sie
-  gebraucht.
-  *Scheitern erkennbar an:* Der nächste Staging-Lauf bricht im ersten
-  Schritt ab mit „Umgebung staging: es fehlt …". Dann war der gelöschte
-  Wert der einzige, den es gab — das Umgebungsgeheimnis fehlt also
-  wirklich, und die Prüfung hat zum ersten Mal getan, wofür es sie gibt.
-  Abhilfe: den Wert in der **Umgebung** neu eintragen, nicht eine Ebene
-  höher.
+  gewonnen. Was sich ändert: Der erste Schritt kann jetzt scheitern.
+  *Gegenprobe — sie fällt mit **Prüfpunkt 23** zusammen und kostet damit
+  nichts extra:* der Probelauf gegen `produktion`. Kommt er durch den
+  ersten Schritt **und** durch die Zielprobe, lösen die Umgebungswerte ohne
+  das Duplikat auf. Er ist auch der sichere Ort dafür: Er liefert nichts
+  aus, schaltet keine Wartung, und seit F-KH-U-33 läuft `staging` nicht
+  mehr mit.
+  *Scheitern erkennbar an:* Der Lauf bricht im ersten Schritt ab mit
+  „Umgebung produktion: es fehlt …". Dann war der gelöschte Wert der
+  einzige, den es gab — das Umgebungsgeheimnis fehlt also wirklich, und die
+  Prüfung hat **zum ersten Mal getan, wofür es sie gibt**. Abhilfe: den
+  Wert in der **Umgebung** eintragen, nicht eine Ebene höher.
   *Was es NICHT behebt:* Dass jeder Arbeitslauf dieses Repositoriums die
   Umgebungswerte lesen könnte, indem er `environment:` einfach hinschreibt.
   Dagegen hilft nur die Freigabepflicht, und die steht auf `produktion`
