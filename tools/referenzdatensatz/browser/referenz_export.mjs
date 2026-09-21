@@ -15,6 +15,7 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { basename } from 'node:path';
+import { downloadMitFortschritt } from './download_lib.mjs';
 /* Kontrollkästchen und Segmenttasten sind seit P3 unsichtbar; bedient
  * wird die Beschriftung. Warum und wie: bedienen.mjs. */
 const { ankreuzen, abwaehlen } = await import(
@@ -108,18 +109,6 @@ async function rueckfragenBestaetigen(hoechstens = 4) {
   return n;
 }
 
-/* Der Fortschritt wird mitgelesen. Ein Export über 82 Einsätze mit rund
-   56 000 Spurpunkten baut 182 GPX-Dateien; ohne diese Ausgabe ist ein
-   langsamer Lauf von einem hängenden nicht zu unterscheiden. */
-async function mitFortschritt(warten, feld) {
-  let letzter = '';
-  const uhr = setInterval(async () => {
-    const s = (await seite.locator(feld).textContent().catch(() => '') || '').trim();
-    if (s && s !== letzter) { letzter = s; console.log(`     · ${s}`); }
-  }, 3000);
-  try { return await warten; } finally { clearInterval(uhr); }
-}
-
 /* DAS WARTEN WIRD VOR DEM KLICK ANGEMELDET.
    waitForEvent() horcht erst ab dem Aufruf. Wer es hinter das Bestätigen der
    Rückfragen setzt, verliert das Rennen, sobald der Export schneller fertig
@@ -131,7 +120,7 @@ const wartenCsv = seite.waitForEvent('download', { timeout: 900000 });
 await seite.click('#exp_go');
 const fragenCsv = await rueckfragenBestaetigen();
 pruefe(fragenCsv > 0, 'Keine Rückfrage erschienen — erscheint der Dialog überhaupt?');
-const dlCsv = await mitFortschritt(wartenCsv, '#exp_state');
+const dlCsv = await downloadMitFortschritt(seite, wartenCsv, '#exp_state', konsole);
 const nameCsv = dlCsv.suggestedFilename();
 await dlCsv.saveAs(`${ziel}/${nameCsv}`);
 const zustandCsv = (await seite.locator('#exp_state').textContent().catch(() => '') || '').trim();
@@ -152,7 +141,7 @@ schritt(10, 'Backup-Passwort zweimal eingeben');
 const wartenBak = seite.waitForEvent('download', { timeout: 900000 });
 await seite.click('#expbtn');
 const fragenBak = await rueckfragenBestaetigen();
-const dlBak = await mitFortschritt(wartenBak, '#expstate');
+const dlBak = await downloadMitFortschritt(seite, wartenBak, '#expstate', konsole);
 const nameBak = dlBak.suggestedFilename();
 await dlBak.saveAs(`${ziel}/${nameBak}`);
 const zustandBak = (await seite.locator('#expstate').textContent().catch(() => '') || '').trim();

@@ -16,6 +16,7 @@
  *   node kreislauf_csv.mjs [basis] [referenz.zip] [zielordner]
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { downloadMitFortschritt } from './download_lib.mjs';
 /* Kontrollkästchen und Segmenttasten sind seit P3 unsichtbar; bedient
  * wird die Beschriftung. Warum und wie: bedienen.mjs. */
 const { ankreuzen, abwaehlen } = await import(
@@ -123,7 +124,7 @@ await seite.waitForTimeout(300);
 const warten = seite.waitForEvent('download', { timeout: 900000 });
 await seite.click('#exp_go');
 await rueckfragen();
-const dl = await warten;
+const dl = await downloadMitFortschritt(seite, warten, '#exp_state', konsole);
 const ziel = `${ordner}/${dl.suggestedFilename()}`;
 await dl.saveAs(ziel);
 const expZustand = (await seite.locator('#exp_state').textContent().catch(() => '') || '').trim();
