@@ -30,7 +30,7 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > | Entschieden | **E-PK-01 bis -30** — alle im Gespräch vom 21.09.2026 entschieden oder bestätigt (Abschnitt 3.1). Die offenen Fragen F-PK-1 bis -6 der ersten Fassung sind beantwortet (Abschnitt 3.2). |
 > | Nächstes | Z1 und Z2, dann Push, Freigabe, dann **PK-01**. |
 > | Kette II | wird nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
-> | Hakt | der HTTP 500 beim `.edbak`-Export auf Staging (Fehlerkennung `097D7622`, 21.09.2026) — ein Fehler der Anwendung, nicht der Kette; erster Prüfpunkt von PK-03. |
+> | Hakt | nichts mehr: Der HTTP 500 beim `.edbak`-Export auf Staging (`097D7622`) ist am 21.09.2026 **in der Sandbox reproduziert und behoben** (Web 20.26.3, PR #69, Nr. 267) — P-PK-02 vorgezogen, siehe 1.5. Offen ist die Bestätigung durch Stufe 2 nach dem Merge. |
 >
 > **Stand der Umsetzung**
 >
@@ -135,7 +135,11 @@ Das ist das Gefühl des Auftraggebers, nachgemessen.
 
 Gemessen an den letzten fünfzehn Läufen: auf dem Arbeitszweig rund 1 min
 (Bereichserkennung überspringt Android und Uhr), **auf `main` und bei jedem
-Pull Request 40 bis 51 min**, weil dort immer alles gemessen wird. Der
+Pull Request 40 bis 51 min**, weil dort immer alles gemessen wird. Am
+21.09.2026 noch einmal an PR #67 gemessen: **eine** geänderte Datei unter
+`docs/`, und der Lauf des Pull-Request-Ereignisses baute Android (9 min) und
+übersetzte die Uhr (35 min), während der Lauf des Push-Ereignisses auf
+demselben Commit in 55 s fertig war. Der
 Merge-Riegel wartet 40 min auf Code, der in 59 von 60 Commits nicht angefasst
 wurde (Zahl aus `pruefung.yml` selbst).
 
@@ -172,8 +176,9 @@ unten mit Namen.
 
 | | Sandbox | Staging (lima-city) | Produktiv (Plesk) |
 |---|---|---|---|
-| PHP | **8.4.19** im Abbild; **8.3.33** nachbaubar, zwei Wege gemessen (unten) | 8.3.33 | 8.3.33 |
-| Datenbank | **MariaDB 10.11.14** im Abbild; dazu nachgebaut **MariaDB 10.6.23**, **MySQL 8.0.46**, **MySQL 8.4.0** | ⬚ | MariaDB 10.11.14 |
+| PHP | **8.4.19** im Abbild; **8.3.33** nachbaubar, zwei Wege gemessen (unten) | 8.3.33 (fpm-fcgi) | 8.3.33 |
+| Datenbank | **MariaDB 10.11.14** im Abbild; dazu nachgebaut **MariaDB 10.6.23**, **MySQL 8.0.46**, **MySQL 8.4.0** | **MySQL 8.4.10** (Statusseite, 21.09.2026) — eine andere Datenbank als Produktiv | MariaDB 10.11.14 |
+| PHP-Grenzen | 512M, 300 s | 512M, 300 s, `post_max_size` 500M, OPcache „aus“ gemeldet (Nr. 266) | 512M, 240 s, 256M, OPcache aus |
 | Node / Python | 22.22 / 3.11 | — | — |
 | Browser | Chromium 141, Firefox 142, WebKit 26 (Playwright 1.56) — WebKit erst nach `aufbau.sh browser`, siehe 1.6 | — | — |
 | Android-SDK | fehlt, nachladbar | — | — |
@@ -245,8 +250,22 @@ gehört dorthin, wo ein Umlauf Sekunden kostet und das Protokoll auf der
 Platte liegt. Die Kette ist der Ort für den **Riegel**: kurz, unabhängig,
 und nur für das, was die Arbeit nicht selbst belegen kann. Der 500 selbst ist
 ein Fehler der Anwendung und blockiert M1 der Kette II auch unter PK, weil
-der edbak-Kreislauf als Plattformprobe bleibt. Ihn lokal zu reproduzieren ist
-der erste Prüfpunkt von PK-03.
+der edbak-Kreislauf als Plattformprobe bleibt. Ihn lokal zu reproduzieren war
+als erster Prüfpunkt von PK-03 vorgesehen — und ist am 21.09.2026 in dieser
+Konzeptsitzung vorgezogen worden, weil die Sandbox schon stand:
+
+| Messung (PHP 8.3.33) | Ergebnis |
+|---|---|
+| Kreislauf edbak gegen MariaDB 10.11 | grün, 328 771 Vergleiche, 0 unerklärt — **reproduziert sich nicht** |
+| dieselbe Anwendung auf einem MySQL-8.4.0-Container | **rot in Sekunden**, im lokalen Fehlerprotokoll `[F8F2D37A] backup: 1064 … near 'manual, origin, edited,'` |
+| Ursache | `uhr_gesperrt AS manual` — Nr. 238 hatte die Spalte umbenannt, der bewahrte **Alias** ist auf MySQL 8.4.0–8.4.10 ebenso reserviert; Staging läuft auf MySQL 8.4.10 |
+| Fix (Web 20.26.3, PR #69, Nr. 267) | zwei Backticks; danach MySQL 8.4.0 grün 328 771 / 0, MariaDB unverändert grün |
+
+Drei Kreisläufe à vier Minuten in der Sandbox gegen drei Stufe-2-Läufe à
+fünfzehn Minuten ohne Ursache. Das ist der Beleg für Abschnitt 2, bevor ein
+Paket gebaut ist — und für die Plattformmatrix (E-PK-30): Der Fehler war auf
+der Datenbank von Produktiv unsichtbar und auf der von Staging tödlich, und
+keine der beiden Anlagen hatte je gesagt, dass sie verschieden sind.
 
 ### 1.6 Zwei Beschaffungswege mit zwei Listen — gemessen
 
@@ -736,15 +755,15 @@ Konzepts eine Auskunft (1.2); deshalb vor der Freigabe.
   erzeugen; Rückgabewert.
 - `pruefablauf.json` und `bericht.py` (`schreiben`, `lesen` mit Selbstprobe,
   `erzeugen-doku`); `kettenaufrufe` liest die JSON mit.
-- **Erster Prüfpunkt (P-PK-02): den edbak-500 lokal reproduzieren.** Export
-  über den Kreislauf gegen die lokale Installation unter PHP 8.3.33 und 8.4;
-  fällt er, ist die Ursache in Minuten benannt und wird als eigene
-  Korrekturstufe behoben; fällt er nicht, ist es die Plattform, und die
-  Betreiberin liest das Webspace-Protokoll zu `097D7622`.
+- **P-PK-02 (den edbak-500 lokal reproduzieren) ist am 21.09.2026 vorgezogen
+  und erledigt** (1.5): reproduziert auf MySQL 8.4.0, behoben in Web 20.26.3.
+  Für PK-03 bleibt daraus die Regel: Der Prüfstand fährt bei `haupt` und bei
+  `--gegen staging` den edbak-Kreislauf **gegen MySQL 8.4.0**, nicht nur
+  gegen MariaDB.
 - **Abnahme:** je Stufe ein Lauf mit gemessener Dauer; Bericht in einer
   Commit-Nachricht; `bericht.py lesen --selbstprobe` fährt die vier roten
   Lagen und eine grüne; 0 Dateien unter `server/` ohne Muster in
-  `pruefablauf.json`; P-PK-02 hat ein Ergebnis.
+  `pruefablauf.json`.
 
 ### PK-04 — Werkzeuge zusammenlegen und bereinigen
 
@@ -850,9 +869,10 @@ aufwirft, trägt sie als F-PK-07 ff. hier ein.
 | Nr. | Was | Wann | Stand |
 |---|---|---|---|
 | Z1 | PK-M1: Zweigschutz und Merge-Recht setzen; danach die drei Messungen aus P-PK-01 durch eine Claude-Instanz | **vor dem Push dieses Konzepts** | offen |
-| Z2 | Den offenen Kette-II-Zweig `claude/fervent-dirac-xirsqw` (ein Commit, `download_lib`) per PR mergen, damit PK-06 nicht kollidiert | vor der Freigabe | offen |
+| Z2 | Den Kette-II-Zweig per PR mergen (PR #68, mit Übergabevermerk), damit PK-06 nicht kollidiert | vor der Freigabe | PR #68 offen, wartet auf Stufe 1 |
+| Z2a | **PR #69 (Web 20.26.3) mergen** — der edbak-Fix; danach Stufe 2 auf `main` beobachten, dann Tag `web-v20.26.3` und Freigabe = **M1 der Kette II** | nach Stufe 1 grün | offen |
 | Z3 | Umgebungswerte der Cloud-Umgebung: die sieben Namen aus 1.4 vollständig und in Anführungszeichen; Netzregel mit Docker Hub und `deb.debian.org` | — | **erledigt 21.09.2026** |
-| Z4 | Staging: Mailversand reparieren (Webspace-Protokoll), Backup-Ziel eintragen, Fehlerkennung `097D7622` auslesen | vor PK-M2 | offen |
+| Z4 | Staging: Mailversand reparieren (Webspace-Protokoll), Backup-Ziel eintragen | vor PK-M2 | offen (`097D7622` ist ohne das Protokoll geklärt, 1.5) |
 | Z5 | Freigabe dieses Konzepts | nach Z1, Z2 | offen |
 | Z6 | PK-08: Upload-Schlüssel und Connect-IQ-Schlüssel als Geheimnisse der Umgebung `produktion` | vor PK-08 | offen |
 | Z7 | PK-M2: einen echten PR durch die neue Kette mergen | nach PK-06 | offen |
@@ -868,7 +888,7 @@ Merge-Recht ergänzen; Fahrplanzeile für PK; eine Zeile in Abschnitt 10;
 
 **Backlog:** Nr. 227 nach Erledigt (E-PK-16). Neu: „Nr. 234 hat seinen Platz
 in Stufe 2, gebaut ist er nicht"; „edbak-Export auf Staging antwortet 500
-(`097D7622`)"; „Zwei Beschaffer mit zwei Listen" (erledigt mit PK-02);
+(`097D7622`)" — **entfällt, ist Nr. 267 (Web 20.26.3)**; „Zwei Beschaffer mit zwei Listen" (erledigt mit PK-02);
 „Regeldokumente aufteilen — `CLAUDE.md` Überblick, `Pruefablauf.md`,
 `Sandbox-Setup.md`, `Technik.md` Kompendium, was fehlt" als eigenes Konzept
 nach PK; „Mailversand auf Staging fehlgeschlagen" (Z4); „App-Signatur in der
@@ -891,7 +911,7 @@ bleibt fast vollständig, weil PK die Auslieferung nicht anfasst:
 | Hotfix-Weg mit Abstammungsprüfung (AP7) | bleibt; das Tor der grünen Läufe fragt weiter nach Stufe 1 und Staging, beide gibt es unter PK |
 | Stufe 2 mit Kreisläufen und Bilderlauf | **PK-06 kürzt sie auf drei Schritte** |
 | der offene Commit `download_lib` („fünfzehn Minuten messen") | nützlich, auch lokal; wird gemergt (Z2) |
-| M1 erster grüner Produktivlauf | **bleibt nötig**, wird durch PK-06 leichter; blockiert bis der edbak-500 behoben ist (P-PK-02) |
+| M1 erster grüner Produktivlauf | **bleibt nötig** und ist nach dem Merge von PR #69 (Web 20.26.3) erreichbar: Push-Lauf auf `main`, Stufe 2 grün, Tag, Freigabe (Z2a) |
 | M2 Probe-Hotfix | entfällt als eigener Meilenstein; der Hotfix-Weg wird beim ersten echten Hotfix geprobt |
 | AP8 Buchführung, Erledigt-Zeile, Konzeptlöschung | **übernimmt PK-07** |
 
