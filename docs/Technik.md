@@ -9346,12 +9346,28 @@ Pflichtfreigabe — und läuft deshalb auch von `main`, wo kein Tag steht:
 | gefahren | nicht gefahren |
 |---|---|
 | die drei Geheimnisse | Tag gegen `WEB_VERSION` |
+| **Zustandsdatei anlegen, falls sie fehlt** (E-KH-26) | — |
 | Zielprobe (samt Selbstprobe) — **oder, mit `probelauf_mengenprobe` bzw. `probelauf_sitzungsprobe`, die Mengen- oder die Sitzungsprobe an ihrer Stelle** | Tor der grünen Läufe |
 | Abgleich als **Trockenlauf** (`dry-run`) — **außer im Gesprächslauf, siehe unten** | Backup-Tor, Wartungsmodus, `doku`-Kopie, Migrationsabfrage |
 
-Geschrieben wird nichts außer der Probedatei, und die wird im selben Schritt
-gelöscht. Die Zusammenfassung beginnt mit **„PROBELAUF — nichts
-ausgeliefert"**.
+Geschrieben wird nichts außer **der Probedatei** — die im selben Schritt
+gelöscht wird — **und der Zustandsdatei der Auslieferungsaktion**, falls sie
+fehlt. Die Zusammenfassung beginnt mit **„PROBELAUF — nichts ausgeliefert"**,
+und das gilt: **ausgeliefert** wird nichts. Geschrieben schon, und zwar diese
+eine Datei.
+
+**Warum sie dazugekommen ist (E-KH-26, 20.09.2026).** Fehlt die
+Zustandsdatei, läuft auch der **Trockenlauf** in den toten Client — er merkt
+es nur nicht, weil danach kein Steuerbefehl mehr kommt (6.5b). Die Zeile
+„0 geplante Löschungen", auf der die Abnahme beruht, käme dann aus dem
+**Fehlerpfad** und nicht aus einem Vergleich mit dem Serverbestand. Eine
+Abnahme, die ihre Zahl aus dem Fehlerpfad liest, prüft nichts.
+
+**Was die Datei ist:** wenige hundert Byte, `data: []`, **außerhalb des
+Webroots** (`../.deploy-state-produktion.json`) und damit nicht öffentlich
+abrufbar. Die Aktion schreibt sie beim ersten echten Lauf ohnehin selbst
+fort. **Eine vorhandene wird nie angefasst** — sie trägt den Bestand des
+Servers.
 
 **Eine Ausnahme, und sie steht hier und nicht im Kleingedruckten: der
 Gesprächslauf** (`probelauf_gespraech`, Prüfpunkt 18a der Kettenhärtung). Er
@@ -9381,6 +9397,68 @@ das Verzeichnisbäume auf dem Produktivserver löscht, soll es nicht geben.
 Produktiv davor, ungeprobten Code zu bekommen — der Probelauf liefert keinen
 Code aus. Und es wäre der falsche Riegel am falschen Tag: Ausgerechnet wenn
 die Kette klemmt, braucht man den Probelauf, um zu messen **warum**.
+
+### 6.5b Warum die Zustandsdatei der Auslieferungsaktion da sein muss
+
+**Ohne sie liefert die Kette gar nicht aus.** Das ist nicht Vorsicht, sondern
+gemessen: Bis zum 20.09.2026 ist **kein einziger** Abgleich gegen den
+Produktivserver durchgelaufen, und das war der Grund.
+
+**Der Ablauf, wörtlich aus dem FTP-Dialog:**
+
+```
+> MKD .zielprobe-gespraech
+< 257 "/.zielprobe-gespraech" - Directory successfully created
+> CWD .zielprobe-gespraech
+< 250 CWD command successful
+> EPSV
+< 229 Entering Extended Passive Mode (|||63029|)
+> RETR .deploy-state-gespraech.json
+> QUIT
+```
+
+**`RETR` — und keine Serverantwort.** Jede andere Zeile hat ihr `<`, diese
+nicht. Die Datenverbindung steht per `EPSV` schon, als der Server merkt, dass
+die Datei fehlt; er schließt sie, und `basic-ftp` liest `ECONNRESET` **auf
+dem Datensocket** statt der `550` auf dem Steuerkanal.
+
+**Und dann kommt das Tückische:** `getServerFiles` fängt jeden Fehler ab und
+deutet ihn als *„this must be your first publish! 🎉"*. Die Aktion rechnet
+weiter — **mit einem toten Client** — und stirbt erst beim nächsten
+Steuerbefehl:
+
+```
+creating folder "api/"
+Error: Client is closed because read ECONNRESET (data socket)
+    at Client.sendIgnoringError → Client._openDir → Client.ensureDir
+```
+
+**Die Meldung nennt eine Stelle drei Schritte hinter der Ursache.** Wer sie
+für die Ursache hält, sucht bei `ensureDir` — und findet nichts, weil
+`_openDir` nur `MKD` und `CWD` sendet und gar keine Datenverbindung öffnet
+(`basic-ftp` 6.2.1, Z. 686–689). Acht Trennversuche sind daran vorbeigelaufen.
+
+**Der Zustand erhält sich selbst:** Solange keine Zustandsdatei da ist, stirbt
+jeder Lauf daran — und weil er stirbt, wird nie eine geschrieben. Jeder Lauf
+ist der erste.
+
+**Die Abhilfe** ist ein eigener Schritt vor dem Abgleich
+(`tools/kette/zustand.py`): Er prüft mit `--head` (`SIZE`/`MDTM` auf dem
+Steuerkanal, **kein** `RETR` — das ist ja die Operation, die tötet) und legt
+die Datei an, wenn sie fehlt. **Eine vorhandene fasst er nie an**, denn sie
+trägt den Bestand des Servers; sie zu überschreiben hieße, der Aktion zu
+sagen, der Server sei leer. Nach dem Schreiben wird **nachgemessen**, nicht
+geglaubt.
+
+**Belegt am 20.09.2026:** 688 Dateien, 62 Verzeichnisse, 9,7 MB, 7 Minuten
+47 Sekunden, kein `ECONNRESET` — der erste vollständige Abgleich gegen diesen
+Server, gefahren gegen ein Probeverzeichnis. Danach hat die Aktion ihre
+Zustandsdatei selbst fortgeschrieben.
+
+**Was zu tun ist, wenn F3 wiederkommt:** Die Zustandsdatei ist weg — aus dem
+Backup zurückgespielt, aufgeräumt, oder der Webspace ist neu. Der Schritt
+legt sie dann von selbst wieder an; er läuft vor **jedem** Abgleich, gerade
+deshalb.
 
 ### 6.6a Der Zeiger `produktion` — wogegen die Wache vergleicht
 

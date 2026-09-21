@@ -555,6 +555,39 @@ merken. Das wiegt die Vermischung nicht auf.
 einzeln. `tools/kettenaufrufe/` prüft die neuen Aufrufe von selbst mit
 (gemessen: 32 Aufrufe, 0 Befunde).
 
+**E-KH-26 — Der Probelauf legt die Zustandsdatei an, und die Zusage „er
+schreibt nichts" wird dafür präzisiert statt umgangen.** *Entschieden vom
+Auftraggeber am 20.09.2026, nach Vorlage der Abwägung.*
+
+Seit AP4 läuft der Schritt „Zustandsdatei der Aktion bereitstellen" **vor
+jedem** Abgleich, auch im Probelauf. Dort schreibt er damit auf Produktiv:
+`../.deploy-state-produktion.json`, eine Ebene über dem Webroot.
+
+**Das berührt eine Zusage** (`docs/Technik.md` 6.5a): „Geschrieben wird
+nichts außer der Probedatei." Sie wird **nachgezogen**, nicht stillschweigend
+gebrochen.
+
+**Warum der Schritt im Probelauf laufen muss:** Fehlt die Zustandsdatei,
+läuft auch der **Trockenlauf** intern in den toten Client — er merkt es nur
+nicht, weil danach kein Steuerbefehl mehr kommt (F-KH-U-25). Die Zeile
+„0 geplante Löschungen", auf der die Abnahme von AP4 beruht, käme dann aus
+dem **„first publish"-Fehlerpfad** und nicht aus einem Vergleich mit dem
+Serverbestand. **Eine Abnahme, die ihre Zahl aus dem Fehlerpfad liest, prüft
+nichts.**
+
+**Was die Datei anrichtet:** wenige hundert Byte, `data: []`, außerhalb des
+Webroots und damit nicht öffentlich abrufbar — und die Aktion schreibt sie
+beim ersten echten Lauf ohnehin selbst. **Der eine Nebeneffekt, offen
+gesagt:** Solange sie `data: []` sagt, hält die Aktion den Server für leer;
+der erste echte Lauf überträgt deshalb alle 688 Dateien statt nur der
+Änderungen. Das ist für einen Erstlauf richtig und kostet acht Minuten
+statt Sekunden — kein Schaden, nur Zeit.
+
+**Die Alternative ist geprüft und verworfen:** den Schritt im Probelauf nur
+melden zu lassen (`--trocken`) hätte die Zusage wörtlich erhalten und die
+Abnahme entwertet. Eine Zusage, die formal stimmt und die Messung wertlos
+macht, ist schlechter als eine präzisierte Zusage.
+
 ---
 
 ## 3. Arbeitspakete
