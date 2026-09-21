@@ -53,7 +53,7 @@ verwechselt wird — dieselbe Lehre wie F-S10-AP3-03:
 |---|---|
 | A–D (`probe.php`) | MariaDB und eine `server/config.php` mit einem eingerichteten `kdf_anteil`. **Ohne Anteil meldet Teil B eine andere Lage**, nicht einen Fehler |
 | E (`endpunkt.py`) | zusätzlich einen laufenden Server unter `https://127.0.0.1:8443` (`tools/referenzdatensatz/einspielen/lokal_starten.sh`) und das Admin-Konto mit seinem Kennwort. **E0 stellt die Ausgangslage selbst her** und zählt sie mit |
-| F, G (`*.mjs`) | zusätzlich Playwright mit der gewünschten Engine (`tools/containeraufbau/aufbau.sh browser`). **G Abschnitt 8b** braucht zusätzlich den Wiederherstellungsschlüssel aus Abschnitt 8; fehlt er, meldet der Lauf **10 nicht gemessene** Erwartungen statt einer kleineren grünen Zahl |
+| F, G (`*.mjs`) | zusätzlich Playwright mit der gewünschten Engine (`tools/sandbox/aufbauen.sh web` beschafft die Bibliotheken und misst nach, dass alle drei starten). **G Abschnitt 8b** braucht zusätzlich den Wiederherstellungsschlüssel aus Abschnitt 8; fehlt er, meldet der Lauf **10 nicht gemessene** Erwartungen statt einer kleineren grünen Zahl |
 
 ## Was gemessen wird
 

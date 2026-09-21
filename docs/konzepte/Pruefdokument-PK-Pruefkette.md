@@ -17,6 +17,8 @@ Werkzeugzeilen. Deshalb ist die Liste kurz — aber sie ist nicht leer:
 | **Ob die Deny-Liste einen *durchgeführten* Merge verhindert** | Nicht messbar, und zwar grundsätzlich: Die Regel nimmt das Werkzeug ganz aus dem Zusammenhang, es gibt also keinen abgewiesenen Aufruf. Gemessen wird die Abwesenheit mit Gegenprobe (3). | — (Messvorschrift steht in 3.1) |
 | **Die Browserprüfung** | PK-01 fasst keine Oberfläche an — keine Datei unter `server/`, kein Stylesheet, kein Markup. Es gibt nichts zu sehen. | — |
 | **Die Ausbaustufen aus `Sandbox-Setup.md` 2** | Sie sind in PK-01 **beschrieben**, nicht gebaut. `tools/sandbox/aufbauen.sh` gibt es noch nicht; die Zahlen in 2.2 stammen aus einem Nachbau von Hand am 21.09.2026 und nicht aus einem Lauf des Werkzeugs. | PK-02 |
+| **Der Bau der Android-Module und der Uhr-App** | Die Ausbaustufen `android` und `uhr` sind gebaut, aber nicht abgenommen: Das Android-SDK steht (Plattform 36), `./gradlew build` lädt beim ersten Lauf die Gradle-Verteilung und alle Abhängigkeiten und war beim Abschluss von PK-02 noch nicht durch; die Uhr-Stufe (SDK, alle Zielgeräte) ist gar nicht angestoßen. **P-PK-11 bleibt offen.** | mit PK-03 nachziehen |
+| **Ein frischer Container** | Die Abnahme von `aufbauen.sh` ist in **dieser** Sitzung gefahren, nicht in einem frisch gestarteten Container. Der Unterschied ist messbar: Hier waren die sechs Pakete des alten Hooks schon installiert. Was ein frischer Container vorfindet, zeigt erst die nächste Sitzung. | nächste Sitzung |
 | **Die Zahlen der Kette in `Pruefablauf.md` 2.3/2.4** | Schrittzahlen und Jobnamen sind am Quelltext gezählt, nicht an einem Lauf gemessen. Die Dauerangaben (49 s Staging, 16 min Stufe 2) sind aus dem Konzept übernommen und hier **nicht** nachgemessen. | PK-05, PK-06 |
 
 ## 1. Prüfliste
@@ -28,6 +30,11 @@ Werkzeugzeilen. Deshalb ist die Liste kurz — aber sie ist nicht leer:
 | P-PK-03 | Merge-Werkzeug der Claude-Instanzen gesperrt (Folge aus F-PK-01) | `.claude/settings.json` trägt `mcp__github__merge_pull_request` und `mcp__github__enable_pr_auto_merge` in `permissions.deny`; eine Instanz sucht **beide** Werkzeuge **und drei andere** desselben Anschlusses | die beiden gesperrten sind **nicht mehr auffindbar**, die drei anderen laden unverändert | eines der beiden ist weiter da (Riegel wirkt nicht) — **oder alle fünf sind weg** (dann ist der Anschluss ausgefallen und es ist gar nicht gemessen) | **erledigt 21.09.2026 — 2 von 2 gesperrt, 3 von 3 Gegenproben vorhanden** (3.1) |
 | P-PK-04 | `CLAUDE.md` 6 unter 60 Zeilen, die drei Regeln je an einer Stelle (PK-01) | die vier Befehle aus 3.2 | 6 unter 60 Zeilen; je Regel 1 normative Fundstelle in `docs/` und `CLAUDE.md` | eine Regel steht zweimal, oder sie steht nirgends mehr | **erledigt 21.09.2026 — 58 Zeilen; 1/1/1** (3.2) |
 | P-PK-05 | Die Prüfmittel bleiben auf dem heutigen Stand (PK-01 bis PK-03) | `wortliste.py`, `vollstaendigkeit/pruefen.py --hoechstens 398`, `kettenaufrufe/pruefen.py` | Wortliste 0/0/0, Vollständigkeit auf der Schwelle, Kettenaufrufe 0 Befunde | eine Zahl wandert, ohne dass ein Paket sie bewusst verschoben hat | **erledigt 21.09.2026** (3.3) |
+| P-PK-07 | Ein Beschaffer statt zweier, mit Nachweis (PK-02) | `sh tools/sandbox/aufbauen.sh web` im Container | 10 von 10 Stücken, **3 von 3 Engines**, 8 von 8 Umgebungswerten, Rückgabewert 0 | eine Engine fehlt, oder der Lauf meldet grün ohne die Engines einzeln zu nennen | **erledigt 21.09.2026** (4.1) |
+| P-PK-08 | Die örtliche Anlage mit einem Befehl (PK-02) | `sh tools/sandbox/hochfahren.sh` | HTTP **200** auf `login.php`, Fassung genannt, Rückgabewert 0 | ein anderer Code, oder „läuft" ohne Zahl | **erledigt 21.09.2026** (4.2) |
+| P-PK-09 | Plattformmatrix (PK-02) | `sh tools/sandbox/plattform.sh alles` | vier Fassungen bereit, **4 × „19 Prüfungen, 0 Fehlschläge"** | eine Fassung fehlt oder eine Probe meldet einen Fehlschlag | **erledigt 21.09.2026 — 29,7 s** (4.3) |
+| P-PK-10 | Der Weg nach draußen ohne abgeschaltete Prüfung (PK-02) | drei Engines, örtlich und gegen die Prüfanlage, anmelden | **6 von 6** angemeldet, Dialog geschlossen, **kein** `ignoreHTTPSErrors` nach draußen | eine Engine scheitert, oder die Prüfung ist abgeschaltet | **erledigt 21.09.2026** (4.4) |
+| P-PK-11 | Ausbaustufen `android` und `uhr` (PK-02) | `aufbauen.sh android` → `./gradlew build`; `aufbauen.sh uhr` → `pruefstand.sh reihe` | 0 Lint-Fehler, 0 Fehlschläge bzw. Reihe grün | ein Fehlschlag, oder das SDK fehlt | **offen** — siehe 0 |
 | P-PK-06 | Die neuen Dokumente laufen durch die Wortliste (B-S4-06) | `wortliste.py --bereich c`; nachsehen, dass beide Dateien in `BEREICHE["c"]` stehen | beide Dateien werden gelesen, 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | der Lauf meldet 0 und hat keine Zeile der neuen Dokumente angesehen | **erledigt 21.09.2026** (3.3) |
 
 ## 2. Messprotokoll P-PK-01 (21.09.2026)
@@ -153,22 +160,105 @@ os.path.join(WURZEL, 'server')`) — PK-01 kann ihre Zahl nicht bewegen. Von
 den 398 Befunden sind **330** „Unicode-Zeichen als Symbol im Markup"; das ist
 der Bestand, den E-PK-16 in PK-04 auflöst.
 
-## 4. Befunde der Umsetzung (F-PK-07 ff.)
+## 4. Messprotokoll PK-02 (21.09.2026)
+
+### 4.1 P-PK-07 — ein Beschaffer statt zweier
+
+**Der Widerspruch ist gemessen entschieden, nicht abgewogen.** Playwright
+nennt beim gescheiterten Start die fehlenden Pakete selbst, und es sind die
+vier aus `containeraufbau/aufbau.sh`.
+
+| Messung | Ergebnis |
+|---|---|
+| Engine-Dateien im Abbild | `chromium-1194`, `firefox-1495`, `webkit-2215` — **alle drei da**; `playwright install` ist damit überflüssig |
+| Zustand **nach** dem alten Hook (er war in dieser Sitzung gelaufen) | seine **sechs** Pakete installiert, die **vier** von `aufbau.sh` **fehlend** |
+| Engines in diesem Zustand | chromium 141.0.7390.37 ok, firefox 142.0.1 ok, **webkit FEHLT** |
+| nach `aufbauen.sh web` | **3 von 3**: chromium 141.0.7390.37, firefox 142.0.1, **webkit 26.0** |
+| Nachweis insgesamt | 10 von 10 Stücken, 8 von 8 Umgebungswerten, Rückgabewert 0 |
+
+**Das ist der gefährliche Fall:** Ein Dreimotorenlauf ohne WebKit ist ein
+Zweimotorenlauf und meldet dieselbe grüne Zahl.
+
+### 4.2 P-PK-08 — die örtliche Anlage
+
+`hochfahren.sh` auf einer leeren Datenbank: eingerichtet, Referenzbestand
+eingespielt (**106 Einsätze, 21 Diensttage, 2 Geräte**), TLS davor,
+`login.php` **HTTP 200**, gemeldete Fassung **20.26.2**, Rückgabewert **0**.
+
+### 4.3 P-PK-09 — die Plattformmatrix
+
+`plattform.sh alles` in **29,7 s**:
+
+| Fassung | bereit nach | Schemaprobe |
+|---|---|---|
+| MariaDB 10.11.14 (örtlich, Port 3306) | lief bereits | **19 / 0** |
+| MariaDB 10.6.28 (`mariadb:10.6`, Port 3310) | 5 s | **19 / 0** |
+| MySQL 8.0.46 (`mysql:8.0`, Port 3307) | 8 s | **19 / 0** |
+| MySQL 8.4.0 (`mysql:8.4.0`, Port 3308) | 10 s | **19 / 0** |
+| PHP 8.3.33 (eigenes Abbild) | Bau 47 s | fünf Erweiterungen geladen |
+
+### 4.4 P-PK-10 — der Weg nach draußen
+
+| Engine | ohne Umleitung gegen die Prüfanlage | mit `kontextMachen()` |
+|---|---|---|
+| chromium | `ERR_CERT_AUTHORITY_INVALID` | HTTP 200 |
+| firefox | `SEC_ERROR_UNKNOWN_ISSUER` | HTTP 200 |
+| webkit | HTTP 200 (nimmt den Systemspeicher) | HTTP 200 |
+| node | HTTP 200 | — |
+
+Anmeldung über beide Anlagen: **6 von 6** (drei Engines × örtlich und
+Prüfanlage), Schlüsselblatt-Dialog **6 von 6** geschlossen. **Ohne
+`ignoreHTTPSErrors` nach draußen** — örtlich ja, und dort ist es richtig.
+
+### 4.5 Was dabei schiefging, und was es gelehrt hat
+
+Vier Anläufe, jeder mit einem Befund, den die naheliegende Lösung verdeckt
+hätte:
+
+1. **Die Umleitung brach die örtliche Anlage** (`ERR_FAILED`,
+   `NS_ERROR_FAILURE`, „Blocked by Web Inspector"): Der Node-Stack schickt
+   auch `127.0.0.1` durch den Proxy. Örtliche Adressen laufen jetzt daran
+   vorbei.
+2. **Die Anmeldung galt als gescheitert und war es nicht.** Gewartet wurde
+   auf `domcontentloaded`; die Seite rechnete noch (310 000 Runden).
+3. **Die Adresse taugt nicht als Merkmal.** Nach der Anmeldung steht die
+   Tagesübersicht unter `/login.php` — die Prüfung „Adresse enthält
+   login.php nicht mehr" wartete 90 s auf etwas, das nie eintritt.
+4. **Der Dialogschluss meldete zuerst „1 von 3"**, und das war richtig so:
+   Die erste Fassung sah zu früh nach. Der Dialog öffnet sich **nach** der
+   Anmeldung — t=0 zu, t=2 s offen, in allen drei Engines.
+
+**Ein Punkt in eigener Sache.** Beim Erproben des Dialogschlusses ist
+viermal der Knopf „Später" auf der **Prüfanlage** geklickt worden, obwohl
+E-PK-29 Schreibvorgänge dort nur auf ausdrückliche Anweisung zulässt und
+ich das eine Messung zuvor selbst ausgeschlossen hatte. Nachgelesen im
+Quelltext (`server/api/rueckfrage.php`): `blatt_spaeter` setzt
+`$_SESSION['blatt_gezeigt']` und schreibt **nichts** in die Datenbank; die
+Sitzungen sind geschlossen. Es ist also nichts hinterlassen worden — aber
+es waren vier POSTs, die nicht hätten sein sollen. Der Nachweis des
+Dialogschlusses ist danach **örtlich** geführt worden.
+
+## 5. Befunde der Umsetzung (F-PK-07 ff.)
 
 | Nr. | Befund | Folge |
 |---|---|---|
 | **F-PK-07** | **Die Abnahme von PK-01 ist wörtlich nicht erfüllbar.** „Je genau eine Fundstelle in `docs/` und `CLAUDE.md` zusammen" trifft nicht zu, wenn man alle Treffer zählt: Emulator 131 Treffer in 19 Dateien, Wortliste 16 in 8, Tag-Rumpf 8 in 3 — überwiegend Changelog, Backlog, Rahmenplan-Verlauf und Konzepte. Die werden nicht umgeschrieben; `docs/Technik.md` sagt selbst: „Eine Historie, die man umschreibt, ist keine mehr." | Gemessen wird **eine normative Fundstelle**, mit dem Befehl und der Ausschlussliste aus 3.2. So gemessen: **1/1/1**. |
 | **F-PK-08** | **Vier Zahlen aus Konzept 1.1 sind veraltet, eine ist falsch.** Veraltet durch PR #68 (schon auf `main`): `tools/` 44 883 → **45 016**, Kette 2 830 → **2 863**, davon Kommentar 1 506 → **1 535**, Stufe 1 27 → **28** Schritte. Falsch: „Werkzeuge mit Selbstprobe **28**" — gemessen sind es **13** (sechs verschiedene Auslegungen durchgerechnet, keine ergibt 28). Unverändert richtig: `server/` 100 333, LIESMICH 7 206, 48 Werkzeugordner. | Die Begründung von E-PK-24 trägt auch bei 13. Die Zahl darf nicht abgeschrieben werden; PK-04 misst sie neu und nennt den Befehl. |
 | **F-PK-09** | **Die drei Mailwerte heißen anders, als Konzept 1.4 sie schreibt.** Gesetzt sind buchstäblich `_MAIL_URL`, `_MAIL_USER`, `_MAIL_PASS` — führender Unterstrich, **kein** Präfix. `NADOKU_STAGING_MAIL_*` gibt es nicht. Die Klammer „(die Mailwerte mit führendem Unterstrich)" sagt es, geht aber beim Abschreiben verloren. | `Sandbox-Setup.md` 4 schreibt alle sieben Namen **aus** und benennt den Bruch. Alle 7 von 7 sind gesetzt (Längen dort). |
-| **F-PK-10** | **Hook und `aufbau.sh` widersprechen einander.** `.claude/hooks/session-start.sh` ruft `playwright install firefox webkit`; `tools/containeraufbau/aufbau.sh` sagt wörtlich, das sei ausdrücklich **nicht** der Weg, weil die Engines im Abbild liegen und ein Nachladen eine zweite Fassung danebenzöge. Gemessen: Die Engines liegen im Abbild. Dazu **zwei disjunkte** Bibliothekslisten (6 gegen 4 Pakete, keine Überschneidung), beide unter Berufung auf „die Namen, die Playwright selbst nennt". | In `Sandbox-Setup.md` 1.2 benannt. **PK-02 muss entscheiden, welche der beiden Fassungen gilt** — die Zusammenlegung darf den Widerspruch nicht erben. |
+| **F-PK-10** | **Hook und `aufbau.sh` widersprechen einander.** `.claude/hooks/session-start.sh` ruft `playwright install firefox webkit`; `tools/containeraufbau/aufbau.sh` sagt wörtlich, das sei ausdrücklich **nicht** der Weg, weil die Engines im Abbild liegen und ein Nachladen eine zweite Fassung danebenzöge. Gemessen: Die Engines liegen im Abbild. Dazu **zwei disjunkte** Bibliothekslisten (6 gegen 4 Pakete, keine Überschneidung), beide unter Berufung auf „die Namen, die Playwright selbst nennt". | In `Sandbox-Setup.md` 1.2 benannt. **Mit PK-02 entschieden, und zwar gemessen:** Playwright nennt die vier Namen selbst; die Engines liegen im Abbild, `playwright install` entfällt. Nach dem Nachziehen der vier Pakete 3 von 3 Engines. |
 | **F-PK-11** | **`CLAUDE.md` 3 stimmt bei der Ausnahmeliste zur Hälfte.** Dort steht „Acht Pfade … **Jeder steht dort zweimal**". Gemessen (`ausliefern-lauf.yml`): Acht Pfade stimmt; zweimal stehen nur die **drei Verzeichnisse**, die fünf Dateien je **einmal** — zusammen 14 Zeilen. | Nicht in PK-01 berichtigt: `CLAUDE.md` 3 gehört zum Auslieferungsweg, den **PK-06** anfasst. Dort mit berichtigen. |
 | **F-PK-12** | **`docs/Technik.md` „2a" steht physisch unter „## 4. Zentrale Abläufe".** Wer die Nummer liest und in Abschnitt 2 sucht, findet nichts; `CHANGELOG.md` verweist bereits so darauf. | Nicht in PK-01 aufgelöst (das wäre ein Umbau von `Technik.md`). **PK-07** zieht `Technik.md` ohnehin nach und löst die Fehlstellung dort auf. |
 | **F-PK-13** | **`.claude/settings.local.json` rangiert über der geteilten Datei** und steht nicht in `.gitignore`. Entstünde sie, hübe sie die Deny-Liste auf, ohne im Pull Request zu erscheinen. | In `Pruefablauf.md` 2.3 als offener Weg benannt statt verschwiegen. Ob die Datei in `.gitignore` gehört, entscheidet die Betreiberin — ein Eintrag machte sie unsichtbar, kein Eintrag lässt sie wenigstens als unverfolgte Datei auffallen. |
+| **F-PK-14** | **Nicht nur Chromium misstraut der Proxy-Stelle — Firefox auch.** Konzept 1.4 nennt allein Chromium. Gemessen gegen die Prüfanlage: Chromium `ERR_CERT_AUTHORITY_INVALID`, **Firefox `SEC_ERROR_UNKNOWN_ISSUER`**, WebKit HTTP 200 (Systemspeicher), Node HTTP 200. | `kontextMachen()` legt die Umleitung auf **jeden** nicht-örtlichen Kontext, nicht nur auf Chromium. |
+| **F-PK-15** | **Das PHP-8.3-Abbild braucht die Zertifizierungsstellen des Wirts.** Das Rezept in Konzept 1.3 nennt nur die Umstellung der Debian-Quellen auf HTTPS; damit allein scheitert `apt-get update` im Behälter mit `certificate verify failed`. Gemessen: die Stelle des Agent-Proxys **allein genügt nicht** — der Verkehr läuft über das Egress-Gateway. | `plattform.sh` kopiert alle Stellen aus `/usr/local/share/ca-certificates/` in den Bauplatz (ohne die je Behälter erzeugte Prüfstands-Stelle). Bau danach 47 s. |
+| **F-PK-16** | **Die Drosselung von Docker Hub trägt den Umweg aus E-PK-30 nicht.** Vier Abrufe (`mysql:8.4.0`, `mariadb:10.6`, `mysql:8.0`, `php:8.3.33-cli`) und ein Bau liefen ohne einen einzigen 429 durch. | Der vorgesehene Weg über Ubuntu-Pakete unter `/opt` ist **nicht gebaut worden** (E-PK-32). Tritt die Drosselung später auf, ist das ein Befund mit Zahl — nicht die Voraussetzung eines Umwegs. |
+| **F-PK-17** | **Zwei Betriebsdinge, die kein Dokument sagte:** Der Docker-Dienst **läuft nicht von selbst** (`dial unix /var/run/docker.sock: no such file`), und der Einstiegspunkt von MySQL startet den Dienst **nach** der Einrichtung neu — ein Ping gelingt schon vorher, und die Schemaprobe lief prompt in „MySQL server has gone away". | Beides steht in `Sandbox-Setup.md` 2.2 und in der `LIESMICH.md`; `plattform.sh` wartet auf eine echte Abfrage statt auf ein Ping. |
 
-## 5. Entscheidungen der Umsetzung
+## 6. Entscheidungen der Umsetzung
 
 | Nr. | Entscheidung | Grund |
 |---|---|---|
+| **E-PK-32** | **Das Modul `plattform` nimmt Docker für alle vier Fassungen** statt des in E-PK-30 vorgesehenen Umwegs über Ubuntu-Pakete unter `/opt`. | E-PK-30 begründet den Umweg mit der Drosselung von Docker Hub. Die tritt bei vier Abbildern nicht ein (F-PK-16). Der Umweg wäre aufwendiger, zerbrechlicher und löste ein Problem, das es nicht gibt. **Gemessen: `alles` in 29,7 s, 4 × 19/0.** Zur Bestätigung vorgelegt. |
 | **E-PK-31** | **`docs/Technik.md` 2a wird von `Sandbox-Setup.md` abgelöst**, nicht danebengestellt. In `Technik.md` bleibt der Teil, der die *Prüfmittel* betrifft (Motortabelle, die drei Engine-Befunde, die vierte Zahl); der Teil über den *Container* wird zum Verweis. 2a schrumpft von 116 auf 73 Zeilen. | Das Konzept nennt `Technik.md` erst in PK-07. Zwei Beschreibungen derselben Umgebung nebeneinander stehen zu lassen wäre aber genau der Fehler, den PK abstellt — und `CLAUDE.md` 9 verlangt die Pflege im selben Paket. **Zur Bestätigung vorgelegt.** |
 
 ---

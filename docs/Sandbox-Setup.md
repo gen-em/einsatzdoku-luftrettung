@@ -23,13 +23,14 @@ steht seither ein Verweis hierher.
 | Stück | Stand |
 |---|---|
 | Was das Abbild mitbringt (1) | **gemessen 21.09.2026** |
-| Die beiden heutigen Beschaffungswege (1.2) | **gilt** — und ist das Problem, das PK-02 abstellt |
-| Die sieben Umgebungswerte (4) | **gilt, 7 von 7 gemessen** |
+| Die acht Umgebungswerte (4) | **8 von 8 gemessen** |
 | Netzregeln und Grenzen (5, 6) | **gemessen 21.09.2026** |
-| Die vier Ausbaustufen und das Modul (2) | entsteht mit **PK-02** |
-| `tools/sandbox/aufbauen.sh`, `hochfahren.sh` (2, 3) | entsteht mit **PK-02** |
-| Die Proxy-Route für Chromium (5.2) | entsteht mit **PK-02** |
-| Die Plattformmatrix (2.2) | **einmal von Hand nachgebaut und gemessen** (21.09.2026); als Ausbaustufe entsteht sie mit PK-02 |
+| `tools/sandbox/aufbauen.sh`, `hochfahren.sh`, `plattform.sh` | **gebaut und gemessen mit PK-02** |
+| Die Ausbaustufen `web` und `plattform` (2) | **gebaut und gemessen** |
+| Die Ausbaustufen `android` und `uhr` (2) | gebaut, **noch nicht gemessen** — siehe Prüfdokument |
+| Die Route nach draußen (5.2) | **gebaut und gemessen** in `tools/motor.mjs` |
+| Der Schlüsselblatt-Dialog (5.3) | **gebaut und gemessen**, örtlich und gegen die Prüfanlage |
+| Zwei Beschaffer mit zwei Listen (1.2) | **behoben mit PK-02** — es gibt nur noch einen |
 
 ---
 
@@ -72,10 +73,10 @@ rechnet (Backlog Nr. 185); und ein Prüfmittel maß eine Drehung mit
 enthält — ein Fehler im Prüfmittel, der wie einer der Anwendung aussah
 (Nr. 186). Die Motorwahl steht an einer Stelle, `tools/motor.mjs`.
 
-### 1.2 Zwei Beschaffungswege mit zwei Listen — der Grund für PK-02
+### 1.2 Zwei Beschaffungswege mit zwei Listen — behoben mit PK-02
 
-**Heute beschaffen zwei Stellen dasselbe, und zwar verschieden.** Gemessen
-am 21.09.2026:
+**Bis PK-02 beschafften zwei Stellen dasselbe, und zwar verschieden.**
+Gemessen am 21.09.2026, kurz bevor sie zusammengelegt wurden:
 
 | | `.claude/hooks/session-start.sh` | `tools/containeraufbau/aufbau.sh` |
 |---|---|---|
@@ -90,29 +91,42 @@ am 21.09.2026:
 
 **Die beiden Bibliothekslisten haben keinen einzigen Eintrag gemeinsam**,
 und in der Frage, ob Engines nachgeladen werden, widersprechen sich die
-Dateien. Gemessen: Im frischen Container starten nach dem Hook Chromium und
-Firefox, **WebKit nicht**; erst `aufbau.sh browser` bringt 3 von 3. Welche
-Arbeitsmittel eine Sitzung vorfindet, hängt also davon ab, welche der beiden
-Dateien zuletzt jemand gepflegt hat.
+Dateien. Welche Arbeitsmittel eine Sitzung vorfand, hing also davon ab,
+welche der beiden Dateien zuletzt jemand gepflegt hatte.
 
-**PK-02 legt beide zu einer zusammen** (`tools/sandbox/aufbauen.sh`);
-`session-start.sh` ruft sie dann mit `web`, `tools/containeraufbau/` fällt
-weg. Bis dahin gilt: Wer drei Engines braucht, fährt `aufbau.sh browser`
-nach.
+**PK-02 hat beide zu einer zusammengelegt.** `tools/sandbox/aufbauen.sh` ist
+die eine Beschaffung, `session-start.sh` ruft sie mit `web`,
+`tools/containeraufbau/` ist entfernt.
+
+**Der Widerspruch ist durch Messung entschieden, nicht durch Abwägung.**
+Playwright nennt die Paketnamen selbst, wenn WebKit nicht startet — und es
+sind die vier aus `aufbau.sh`:
+
+```
+Alternatively, use apt:
+    apt-get install libenchant-2-2 libsecret-1-0 libwayland-server0 libmanette-0.2-0
+```
+
+Gemessen am 21.09.2026 in dieser Sitzung, **nachdem der Hook gelaufen war**:
+seine sechs Pakete installiert, die vier von `aufbau.sh` nicht — und WebKit
+startete nicht. Nach dem Nachziehen der vier: **3 von 3 Engines, WebKit 26.0**.
+Die Engine-Dateien selbst liegen im Abbild (`chromium-1194`, `firefox-1495`,
+`webkit-2215`); `playwright install` ist deshalb nicht der Weg und zöge nur
+eine zweite Fassung daneben. `aufbauen.sh` installiert die vier
+Bibliotheken, lädt keine Engine nach und gibt bei einem Fehlschlag die
+Meldung von Playwright aus — sie nennt die Namen und altert nicht mit.
 
 ---
 
 ## 2. Die vier Ausbaustufen und das Modul
 
-*Entsteht mit PK-02.*
-
-`tools/sandbox/aufbauen.sh <web|android|uhr|alles|plattform>` stellt eine
+`tools/sandbox/aufbauen.sh <web|android|uhr|plattform|alles>` stellt eine
 fest beschriebene Ausbaustufe her, idempotent, und **misst nach, was
 steht**.
 
 | Stufe | Enthält | Wofür |
 |---|---|---|
-| `web` | MariaDB 10.11, PHP 8.4, PHP-Server mit TLS, **drei** Engines (nachgemessen, nicht angenommen), Python-Pakete, Referenzbestand, die sieben Umgebungswerte geprüft | jede Änderung unter `server/`, `docs/`, `tools/` |
+| `web` | MariaDB 10.11, PHP 8.4, **drei** Engines (nachgemessen, nicht angenommen), Python-Pakete, die acht Umgebungswerte geprüft | jede Änderung unter `server/`, `docs/`, `tools/` |
 | `android` | `web` plus Android-SDK 36, JDK 21, Emulator-Abbild | Änderungen unter `android/` |
 | `uhr` | `web` plus Uhr-SDK, Gerätedateien, Simulator-Bibliotheken | Änderungen unter `watch/` |
 | `alles` | alle drei plus das Modul `plattform` | Hauptstufe, Abnahmen |
@@ -123,30 +137,51 @@ Der Hook ruft `web`. Wer mehr braucht, ruft nach.
 ### 2.1 Die Nachweistabelle
 
 Jeder Lauf endet mit einer Tabelle, die **je Stück die Fassung nennt** — die
-drei Engines **einzeln**, die sieben Umgebungswerte mit ihrer Länge, nie mit
+drei Engines **einzeln**, die acht Umgebungswerte mit ihrer Länge, nie mit
 ihrem Wert. Der Grund steht in `Pruefablauf.md` 6.5: „3 Browser da" sagt
 nicht, welcher fehlt, und es fehlt immer nur einer. Der Prüfbericht führt
 diese Tabelle mit (`Pruefablauf.md` 5).
 
 ### 2.2 Das Modul `plattform` — Fassungen und Wege
 
-Am 21.09.2026 einmal von Hand nachgebaut und gemessen; jede Datenbankzeile
-mit `tools/schemaprobe/` geprüft (**19 Prüfungen, 0 Fehlschläge**).
+```
+sh tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|--aus]
+```
 
-| Stück | Weg | Dauer |
+**Alle vier über Docker, gemessen am 21.09.2026 — `alles` in 29,7 s:**
+
+| Stück | Weg | gemessen |
 |---|---|---|
-| PHP 8.3.33 | Abbild `php:8.3.33-cli` plus Dockerfile mit fünf Erweiterungen (`pdo_mysql`, `mysqli`, `zip`, `intl`, `gd`); die Debian-Quellen müssen im Abbild auf `https://` stehen, weil der Proxy nur HTTPS durchlässt | Holen 10 s, Bau 43 s |
-| PHP 8.3.33, Ausweich | `git clone --branch php-8.3.33`, `make -j4` | 266 s |
-| Anwendung unter PHP 8.3.33 | `lokal_einrichten.sh` mit `/opt/php83`; Anwendung im Behälter gegen die Datenbank des Wirts | 11 s; `login.php` antwortet 200 |
-| MariaDB 10.6.23 | Ubuntu-22.04-Pakete nach `/opt/mariadb106`, Port 3310 | Laden und Start 30 s |
-| MySQL 8.0.46 | Ubuntu-24.04-Pakete nach `/opt/mysql80`, Port 3307 | Start 2 s |
-| MySQL 8.4.0 | Abbild `mysql:8.4.0` — **der einzige Weg** zu dieser Fassung | Holen 10 s, bereit nach 6 s |
-| drei Engines | `aufbau.sh browser` | 16 s |
+| PHP 8.3.33 | Abbild aus `php:8.3.33-cli` plus fünf Erweiterungen (`pdo_mysql`, `mysqli`, `zip`, `intl`, `gd`) | Bau **47 s**; alle fünf geladen |
+| MariaDB 10.6 | `mariadb:10.6`, Port 3310 | bereit nach **5 s**, 10.6.28 |
+| MySQL 8.0 | `mysql:8.0`, Port 3307 | bereit nach **8 s**, 8.0.46 |
+| MySQL 8.4.0 | `mysql:8.4.0`, Port 3308 | bereit nach **10 s**, 8.4.0 |
+| MariaDB 10.11 | die örtliche, Port 3306 | 10.11.14 |
+| Schemaprobe je Fassung | `tools/schemaprobe/` | **4 × „19 Prüfungen, 0 Fehlschläge"** |
 
-**Warum Ubuntu-Pakete, wo es geht:** Docker Hub drosselt anonyme Abrufe
-(gemessen: 429 nach rund acht Abrufen), die Ubuntu-Quellen nicht. Deshalb
-wird der Behälter nur dort genommen, wo es keinen anderen Weg gibt — MySQL
-8.4.0 und PHP 8.3.
+**Drei Dinge, die erst die Messung ergeben hat** — und die alle drei gegen die
+erste Planung stehen:
+
+- **Der Docker-Dienst läuft nicht von selbst.** Er muss gestartet werden
+  (`dockerd >/tmp/dockerd.log 2>&1 &`), sonst meldet jeder Aufruf „dial unix
+  /var/run/docker.sock: no such file". Das Werkzeug sagt es und rät nicht.
+- **Die Drosselung von Docker Hub trägt den Umweg nicht.** Vier Abrufe und
+  ein Bau liefen durch, ohne einen 429 zu sehen. Der vorgesehene Umweg über
+  Ubuntu-Pakete unter `/opt` ist damit **nicht gebaut worden**: Er wäre
+  aufwendiger, zerbrechlicher und löst ein Problem, das bei vier Abbildern
+  nicht auftritt. Tritt es später auf, ist es ein Befund mit Zahl.
+- **Das PHP-Abbild braucht die Zertifizierungsstellen des Wirts.** Nur HTTPS
+  kommt hinaus, und im Behälter scheitert es ohne sie mit „certificate
+  verify failed". Gemessen: die Stelle des Agent-Proxys **allein genügt
+  nicht** — der Verkehr des Behälters läuft über das Egress-Gateway. Das
+  Werkzeug kopiert deshalb alle Stellen aus
+  `/usr/local/share/ca-certificates/` in den Bauplatz, bis auf die, die
+  `lokal_starten.sh` je Behälter neu erzeugt.
+
+**Und eine Falle beim Warten:** Der Einstiegspunkt von MySQL richtet erst ein
+und startet den Dienst **danach neu**. Ein Ping gelingt schon vorher — die
+Schemaprobe lief prompt in „MySQL server has gone away". Gewartet wird
+deshalb auf eine echte Abfrage (`SELECT VERSION()`), nicht auf ein Ping.
 
 **Warum die Matrix überhaupt:** Staging läuft auf **MySQL 8.4.10**,
 Produktiv auf **MariaDB 10.11.14**. Am 21.09.2026 scheiterte ein Export auf
@@ -158,21 +193,31 @@ auffällt, bevor es ausgeliefert ist.
 
 ## 3. Hochfahren
 
-*`tools/sandbox/hochfahren.sh` entsteht mit PK-02.* Er fasst zusammen, was
-heute drei Aufrufe sind, gibt einen Rückgabewert und schaltet mit
-`--php 8.3` auf das Abbild um.
-
-**Heute, bis PK-02:**
-
 ```
-sh tools/containeraufbau/aufbau.sh alles
-sh tools/referenzdatensatz/einspielen/lokal_einrichten.sh
-sh tools/referenzdatensatz/einspielen/lokal_starten.sh
+sh tools/sandbox/hochfahren.sh [--neu] [--php 8.3]
 ```
+
+Er fasst zusammen, was vorher drei Aufrufe waren: MariaDB starten, die
+Anwendung einrichten oder starten, TLS davor. **Ein Rückgabewert**, und am
+Ende eine Zeile, die den Gegenstand nennt — Adresse, HTTP-Code, gemeldete
+Fassung, nicht bloß „läuft".
+
+**Ohne `--neu` wird nicht neu eingerichtet.** `lokal_einrichten.sh` löscht die
+Datenbank und `config.php`; das soll niemand aus Versehen auslösen. Steht
+eine Installation, wird sie nur gestartet.
+
+**`--php 8.3`** beendet den PHP-Server des Containers und fährt die Anwendung
+im Abbild `nadoku-php83` weiter, im Netzwerk des Wirts, gegen dieselbe
+Datenbank und denselben TLS-Vorbau. Dafür muss das Abbild stehen
+(`plattform.sh php83`).
+
+*Gemessen am 21.09.2026: frische Einrichtung auf einer leeren Datenbank,
+106 Einsätze und 21 Diensttage eingespielt, `login.php` HTTP **200**,
+Fassung 20.26.2, Rückgabewert 0.*
 
 ---
 
-## 4. Die sieben Umgebungswerte
+## 4. Die acht Umgebungswerte
 
 Sie stehen **nicht** im Repositorium, sondern in den Umgebungsvariablen der
 Arbeitsumgebung. Hier stehen nur die Namen, und das bleibt so: Ein Wert, der
@@ -242,17 +287,50 @@ Umweg prüft das Zertifikat weiterhin, er prüft es nur an einer anderen
 Stelle. `ignoreHTTPSErrors` prüfte gar nicht mehr, und eine Prüfanlage, die
 man nicht mehr von einer untergeschobenen unterscheiden kann, misst nichts.
 
-Das wird mit **PK-02** eine Funktion in `tools/motor.mjs` (heute exportiert
-die Datei `MOTOREN`, `motorWahl()` und `starten()` und kennt keine
-Anmeldung).
+**Gebaut mit PK-02**, in `tools/motor.mjs`: `proxyRoute()` legt die Umleitung
+auf einen Kontext, `kontextMachen()` trifft die Entscheidung gleich mit.
+
+**Zwei Dinge, die dabei erst die Messung zeigte:**
+
+- **Es sind zwei Engines, nicht eine.** Gemessen gegen die Prüfanlage:
+  Chromium `ERR_CERT_AUTHORITY_INVALID`, **Firefox
+  `SEC_ERROR_UNKNOWN_ISSUER`**, WebKit HTTP 200 (es nimmt den
+  Systemspeicher), Node HTTP 200.
+- **Örtliche Adressen dürfen NICHT über die Umleitung laufen.** Der
+  Node-Stack schickt auch `127.0.0.1` durch den Proxy, und der kennt den
+  Wirt nicht: Mit Umleitung scheiterte `https://127.0.0.1:8443` in allen
+  drei Engines. Für die örtliche Anlage ist `ignoreHTTPSErrors` richtig und
+  harmlos — die Stelle hat dieser Behälter vor Minuten selbst angelegt, und
+  auf 127.0.0.1 sitzt niemand dazwischen. **Nach draußen wäre dasselbe
+  falsch.** `kontextMachen()` hält beide Fälle auseinander, damit die Wahl
+  nicht in jedem Werkzeug neu getroffen wird.
+
+*Gemessen: 6 von 6 — drei Engines, örtlich und gegen die Prüfanlage,
+angemeldet.*
 
 ### 5.3 Der Dialog „Schlüsselblatt bestätigen"
 
 Er erscheint alle drei Monate nach der Anmeldung. **Jedes Werkzeug, das sich
 anmeldet, muss ihn mit „Später" schließen können** — sonst bleibt es alle
 drei Monate an einer Stelle hängen, die mit seiner Messung nichts zu tun
-hat, und meldet einen Fehlschlag, den niemand zuordnet. Die gemeinsame
-Anmeldefunktion in `tools/motor.mjs` übernimmt das mit PK-02.
+hat, und meldet einen Fehlschlag, den niemand zuordnet.
+`blattDialogSchliessen()` in `tools/motor.mjs` übernimmt das seit PK-02,
+`anmelden()` ruft es mit.
+
+**Er öffnet sich NACH der Anmeldung, nicht mit ihr.** Gemessen am 21.09.2026
+in allen drei Engines: unmittelbar nachdem das Passwortfeld verschwunden ist,
+steht `dialog.open` auf `false`, zwei Sekunden später auf `true`. Wer sofort
+nachsieht, findet nichts und meldet „kein Dialog" — und stolpert eine Messung
+später über ihn. Deshalb wird gewartet, und zwar nur dann, wenn das Element
+überhaupt im Markup liegt (der Server bindet es nur ein, wenn er fragen will).
+
+**Und die Adresse taugt nicht als Merkmal:** Nach der Anmeldung steht die
+Tagesübersicht **unter `/login.php`** — es gibt keine Umleitung. Eine Prüfung
+auf „Adresse enthält login.php nicht mehr" wartet auf etwas, das nie
+eintritt. Das verlässliche Merkmal ist das Verschwinden des Passwortfeldes;
+gemessene Dauer danach 1,1 s. Dass die Anmeldung überhaupt Zeit braucht,
+liegt an der Ableitung im Browser (310 000 Runden, während einer Anhebung
+zweimal).
 
 ---
 

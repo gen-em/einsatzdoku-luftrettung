@@ -494,17 +494,16 @@ Daten erst nach Server-Bestätigung.
 │   │                      config.php oder app_state verstellt — die Probe
 │   │                      stellt sie her und im finally zurück. **Nicht auf
 │   │                      einer Installation mit Betrieb** (s. LIESMICH.md)
-│   ├── containeraufbau/   zieht in einer Wegwerf-Umgebung nach, was das Abbild
-│   │                      nicht mitbringt: MariaDB, Android-SDK 36,
-│   │                      librsvg/imagemagick, socat, die vier
-│   │                      WebKit-Bibliotheken und ein brauchbares
-│   │                      python3-cryptography. Der Teil `browser`
-│   │                      MISST NACH, dass alle drei Playwright-Engines
-│   │                      starten — WebKit tut es im Abbild ohne die Pakete
-│   │                      nicht, und ein Dreimotorenlauf wäre dann
-│   │                      stillschweigend ein Zweimotorenlauf. Baut NICHT den
-│   │                      Uhr-Prüfstand (der holt sein SDK selbst) und
-│   │                      richtet NICHT die Anwendung ein (s. LIESMICH.md)
+│   ├── sandbox/           stellt die Arbeitsumgebung her und fährt sie hoch:
+│   │                      aufbauen.sh (web|android|uhr|plattform|alles),
+│   │                      hochfahren.sh (--neu, --php 8.3), plattform.sh
+│   │                      (PHP 8.3.33 und drei Datenbankfassungen als
+│   │                      Abbilder). MISST JE STÜCK NACH — die drei
+│   │                      Engines einzeln, die acht Umgebungswerte mit
+│   │                      ihrer Länge, nie mit ihrem Wert. Ablösung von
+│   │                      containeraufbau/ und dem Beschaffungsteil des
+│   │                      SessionStart-Hooks (PK-02); Ausbaustufen und
+│   │                      Grenzen in docs/Sandbox-Setup.md
 │   ├── containerprobe/    hält Containerfassung 4 der Sicherung gegen DREI
 │   │                  unabhängige Umsetzungen — die Anwendung, ein
 │   │                  Node-Leser und ein Python-Leser. Ein Format, das nur
@@ -852,11 +851,10 @@ Daten erst nach Server-Bestätigung.
 │                          Dokumentation neutral von Land und Luft sprechen:
 │                          Sperrliste, Ausnahmeliste mit Begründungen, drei
 │                          Zahlen je Bereich (s. LIESMICH.md)
-├── .claude/hooks/session-start.sh  beschafft beim Containerstart, was der
-│                          Pruefstand braucht und das Abbild nicht mitbringt:
-│                          MariaDB, ImageMagick, rsvg-convert, Python-
-│                          jsonschema. STARTET nichts — das macht
-│                          tools/referenzdatensatz/einspielen/lokal_starten.sh
+├── .claude/hooks/session-start.sh  ruft beim Containerstart
+│                          tools/sandbox/aufbauen.sh web — er beschafft nicht
+│                          mehr selbst (PK-02). STARTET nichts, und schlägt
+│                          nicht fehl: ein Mangel wird mit Zahl gemeldet
 └── .github/workflows/     die Auslieferungskette (P5a/AP1, Abschnitt 6)
     ├── pruefung.yml       Stufe 1: jeder Push, ohne Installation
     ├── auslieferung.yml   WANN ausgeliefert wird: Staging (Push auf main),

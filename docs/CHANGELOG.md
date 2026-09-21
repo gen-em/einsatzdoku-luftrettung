@@ -14,6 +14,64 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Ein Beschaffer statt zweier — und WebKit startet wieder (PK-02)] — 2026-09-21
+
+**Zwei Skripte beschafften dasselbe mit zwei verschiedenen Listen, und keins
+von beiden war vollständig.** `.claude/hooks/session-start.sh` zog sechs
+Systembibliotheken, `tools/containeraufbau/aufbau.sh` vier andere — **keine
+davon dieselbe**. In der Frage, ob die Playwright-Engines nachzuladen sind,
+widersprachen sich die beiden Dateien ausdrücklich. Welche Arbeitsmittel eine
+Sitzung vorfand, hing davon ab, welche zuletzt jemand gepflegt hatte.
+
+**Entschieden hat es nicht die Abwägung, sondern Playwright selbst.** Beim
+Startversuch nennt es die fehlenden Pakete beim Namen, und es sind die vier
+aus `aufbau.sh`. Nachgemessen in einer Sitzung, in der der Hook bereits
+gelaufen war: seine sechs Pakete installiert, die vier anderen nicht — und
+**WebKit startete nicht**. Nach dem Nachziehen: 3 von 3 Engines, WebKit 26.0.
+Die Engine-Dateien liegen ohnehin im Abbild; `playwright install` zöge nur
+eine zweite, abweichende Fassung daneben.
+
+**Das ist der gefährliche Fall, nicht der ärgerliche.** Ein Dreimotorenlauf
+ohne WebKit ist ein Zweimotorenlauf, und er meldet dieselbe grüne Zahl.
+
+**Neu: `tools/sandbox/`** mit drei Befehlen. `aufbauen.sh` beschafft und misst
+nach — zehn Stücke, die drei Engines **einzeln**, acht Umgebungswerte mit
+ihrer Länge und nie mit ihrem Wert. `hochfahren.sh` richtet die örtliche
+Anlage ein oder startet sie, mit **einem** Rückgabewert und einer Schlusszeile,
+die den Gegenstand nennt (Adresse, HTTP-Code, gemeldete Fassung).
+`plattform.sh` stellt PHP 8.3.33 und drei weitere Datenbankfassungen bereit.
+`tools/containeraufbau/` ist entfernt, der Hook ruft nur noch `aufbauen.sh web`.
+
+**Die Plattformmatrix steht und misst 4 × 19/0** — MariaDB 10.11.14 und
+10.6.28, MySQL 8.0.46 und 8.4.0, zusammen in 29,7 s. Drei Dinge daran waren
+anders als geplant: Der Docker-Dienst **läuft nicht von selbst**; die
+Drosselung von Docker Hub trägt den vorgesehenen Umweg über Ubuntu-Pakete
+**nicht** (vier Abrufe und ein Bau liefen ohne 429 durch, deshalb ist der
+Umweg nicht gebaut worden); und das PHP-Abbild braucht die
+**Zertifizierungsstellen des Wirts** — die des Agent-Proxys allein genügt
+nicht, der Verkehr des Behälters läuft über das Egress-Gateway.
+
+**`tools/motor.mjs` kommt jetzt nach draußen, ohne die Prüfung abzuschalten.**
+Die Browser kennen die Zertifizierungsstelle des Proxys nicht — **zwei von
+dreien**, nicht nur Chromium, wie bislang angenommen (Firefox meldet
+`SEC_ERROR_UNKNOWN_ISSUER`). `ignoreHTTPSErrors` wäre die kurze und die
+falsche Antwort: Ein Prüfmittel, das jedes Zertifikat nimmt, kann die
+Prüfanlage nicht mehr von einer untergeschobenen unterscheiden. Stattdessen
+führt `route.fetch()` die Anfrage im Node-Prozess aus, der die Stelle kennt —
+geprüft wird weiter, nur woanders. **Örtliche Adressen laufen bewusst NICHT
+darüber**: Der Node-Stack schickt auch `127.0.0.1` durch den Proxy, und mit
+Umleitung scheiterte die örtliche Anlage in allen drei Engines.
+
+**Und der Schlüsselblatt-Dialog wird weggeklickt.** Er erscheint alle drei
+Monate nach der Anmeldung und legte bisher jedes Werkzeug lahm, das sich
+anmeldet. Zwei Messungen haben dabei zwei naheliegende Griffe widerlegt: Der
+Dialog öffnet sich **nach** der Anmeldung (t=0 zu, t=2 s offen, in allen drei
+Engines) — wer sofort nachsieht, meldet „kein Dialog". Und die **Adresse
+bleibt `/login.php`**: Nach der Anmeldung steht die Tagesübersicht dort, es
+gibt keine Umleitung. Das verlässliche Merkmal ist das Verschwinden des
+Passwortfeldes. Abgenommen mit 6 von 6 — drei Engines, örtlich und gegen die
+Prüfanlage.
+
 ## [Werkzeug: Der Prüfablauf bekommt ein Dokument, und `CLAUDE.md` 6 wird kurz (PK-01)] — 2026-09-21
 
 **Das Problem war nicht, dass zu wenig geprüft wird, sondern dass niemand an
