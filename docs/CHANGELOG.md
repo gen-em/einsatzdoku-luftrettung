@@ -14,6 +14,32 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Das Muster `station` faellt aus der Sperrliste] — 2026-09-21
+
+**Angewiesen vom Auftraggeber.** Konzept PK gliedert die Pruefkette in fuenf
+*Stationen* — Haltepunkte auf dem Weg vom Quelltext zum Produktivserver.
+Das ist ein Homonym zum Luftrettungs-Begriff, den P2 ersetzt hat: Dort meint
+*Station* den Standort eines Rettungsmittels, und die Anwendung sagt dafuer
+seit Web 6.x durchgehend *Standort*.
+
+**PK-01 hatte das mit einer Ausnahme je Datei geloest** — Klasse Homonym,
+gebunden an `docs/Pruefablauf.md`. Das traegt, verlangt aber fuer jedes
+weitere Dokument der Pruefkette eine neue Begruendung, und die Begruendung
+waere jedesmal dieselbe. Das Muster faellt deshalb ganz, die Ausnahme mit ihm.
+
+**Der Preis, und er wird benannt statt verschwiegen:** *Station* im Sinn des
+Luftrettungs-Standorts faellt jetzt durch **kein** Muster mehr. Wer kuenftig
+einen sichtbaren Text schreibt, in dem *Station* den Standort meint, wird von
+der Wortliste nicht mehr aufgehalten. Der Geschwisterbegriff `basis` bleibt in
+der Liste und deckt den haeufigeren Fall weiter ab.
+
+**Gemessen:** Sperrliste **24 → 23 Muster**, Ausnahmeliste **100 → 99 Regeln**,
+Lauf danach **0 Treffer ausserhalb der Ausnahmen, 0 ungenutzte Ausnahmen,
+0 durchgerutschte Fallen** bei 99 von 99 gegriffenen Regeln. Die drei
+verbliebenen Vorkommen unter `server/` sind Kommentare, die die Wortliste
+ohnehin nicht liest; das vierte ist ein Sperrwort der Passwortguete und von
+einer anderen Ausnahme gedeckt.
+
 ## [Werkzeug: Ein Befehl vor dem Pull Request — Station B steht (PK-03)] — 2026-09-21
 
 **Bis hierher wusste man, welche Probe zu einer Änderung gehört, oder man

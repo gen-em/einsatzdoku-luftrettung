@@ -75,12 +75,6 @@
       "grund": "„Basis\" ist der Ausdruck der Luftrettung fuer den Standort; bodengebunden heisst die Einrichtung Wache. Die Anwendung sagt seit Web 6.x durchgehend „Standort\". Aufgenommen in der Umsetzung (F-P2-O): Die Wortliste fuehrte den Begriff als „bereits ersetzt\", im Handbuch stand er noch."
     },
     {
-      "id": "station",
-      "regex": "\\bstation",
-      "ersatz": "Standort",
-      "grund": "Wie basis. Die Wortgrenze davor haelt „Luftrettungsstation\" heraus — das ist ein Eigenname und bezeichnet tatsaechlich eine."
-    },
-    {
       "id": "christoph",
       "regex": "christoph",
       "ersatz": "„z. B. Christoph 17 oder NEF Kempten 1“",
