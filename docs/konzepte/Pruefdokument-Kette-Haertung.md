@@ -21,12 +21,12 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, **AP5 VOLLSTAENDIG ABGENOMMEN** (Produktiv-Haelfte Lauf 35566000648, Staging-Haelfte Lauf 35570398032), AP6 GEBAUT (Abnahme offen — sie verlangt einen provozierten Fehlschlag auf Staging). **Kette II liegt seit dem 21.09.2026 auf `main`** (PR #65, Merge `fb614d1`). **M1 ist blockiert:** Stufe 2 bleibt am Botschutz von lima-city rot (F-KH-U-10/-36), und das Tor der gruenen Laeufe laesst deshalb keinen Tag durch.** AP7 und AP8 nicht begonnen |
-> | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
+> | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, **AP5 VOLLSTAENDIG ABGENOMMEN** (Produktiv-Haelfte Lauf 35566000648, Staging-Haelfte Lauf 35570398032), **AP6 GEBAUT UND ABGENOMMEN** (die Abnahme war in ihrer alten Fassung unfahrbar, F-KH-U-37, und wurde als Prüfpunkt 25a/25b neu gefasst; beide sind am 21.09.2026 gefahren und bestanden, F-KH-U-39). **Offen ist allein der Rückbau von Staging** — es steht noch in Wartung, das FTP-Passwort ist noch falsch (Prüfpunkt 25c). **Kette II liegt seit dem 21.09.2026 auf `main`** (PR #65, Merge `fb614d1`). **M1 ist blockiert:** Stufe 2 bleibt am Botschutz von lima-city rot (F-KH-U-10/-36), und das Tor der gruenen Laeufe laesst deshalb keinen Tag durch.** AP7 und AP8 nicht begonnen |
+> | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **29**, Zielprobe **93**, Zustand **28**, Wache **38** — alle 0 offen), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **zehn Probeläufe gegen Produktiv**, **drei Staging-Läufe über die neue Schrittfolge** (einer grün, zwei absichtlich rot). Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **37** (Abschnitt 2): F-KH-U-01 bis F-KH-U-38 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben |
+> | Funde | **38** (Abschnitt 2): F-KH-U-01 bis F-KH-U-39 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben. **Zuletzt F-KH-U-39: der Schlussschritt von AP6 ist zweimal gelaufen** — einmal bei eingeschalteter, einmal bei ausgeschalteter Wartung, und die beiden Wortlaute unterscheiden sich an genau der einen Stelle, an der sie sich unterscheiden müssen |
 > | F3 | **GEFUNDEN UND BEHOBEN, der Beleg ist gefahren.** Ursache: `RETR` auf die nicht vorhandene Zustandsdatei tötet die Verbindung; die Aktion deutet es als „first publish" und arbeitet mit einem toten Client weiter, bis das erste `MKD` es bemerkt — **drei Schritte hinter der Stelle, die sie meldet** (F-KH-U-25). Abhilfe: die Datei einmal hinlegen, bevor die Aktion läuft (AP4, Richtung (e), `tools/kette/zustand.py`). Beleg: **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige Abgleich gegen diesen Server überhaupt (F-KH-U-28). **E-KH-09 ist erfüllt** |
-> | Prüfliste | **31** Punkte: **13 abgehakt**, 5 teilweise, **13 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu: **22** (die drei Zugangswerte eine Ebene höher löschen, F-KH-U-32) und **23** (die Pflichtfreigabe nach dem Umbau von AP5 nachmessen, F-KH-U-31) |
+> | Prüfliste | **32** Punkte: **16 abgehakt**, 5 teilweise, **11 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu am 21.09.2026: **25c** (der Rückbau von Staging — er ist eine eigene Prüfung, kein Aufräumen, und solange er offen ist, ist Staging nicht benutzbar). Abgehakt am selben Tag: **24**, **25a**, **25b** |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
 
 ---
@@ -512,6 +512,60 @@ Error: Client is closed because read ECONNRESET (data socket)
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-39 — AP6 IST AN SEINER EIGENEN ABNAHME GEMESSEN: Der
+Schlussschritt meldet die Wartung, und er meldet sie richtig — in beide
+Richtungen.**
+*Läufe 35573954983 (Wartung an) und 35574032478 (Wartung aus), 21.09.2026,
+beide auf `main`, Stand `fb614d1`, beide rot an der Zielprobe.*
+
+Der Schlussschritt (`if: failure()`) ist die einzige Stelle der Kette, die
+nur im Unglück läuft. Bis heute war er eine Behauptung. Jetzt ist er
+zweimal gelaufen, und die beiden Wortlaute unterscheiden sich an **einer**
+Stelle:
+
+```
+##[error]Auslieferung nach staging GESCHEITERT. Wartung: an  · gemeldete Fassung: 20.26.2 · Dateistand: UNBEKANNT (der Abgleich kann halb gelaufen sein).
+##[error]Auslieferung nach staging GESCHEITERT. Wartung: aus · gemeldete Fassung: 20.26.2 · Dateistand: UNBEKANNT (der Abgleich kann halb gelaufen sein).
+```
+
+**Das ist der ganze Beleg, und er ist knapp:** Derselbe Fehlschlag,
+dieselbe Anlage, dieselbe Fassung — und die Auskunft über den
+Wartungsschalter folgt der Wirklichkeit statt einer Vermutung. Ein
+Schlussschritt, der immer „Wartung: an" meldete, wäre ebenso grün gewesen
+und hätte im Ernstfall jemanden an einen Schalter geschickt, an dem es
+nichts zu tun gibt; einer, der immer „aus" meldete, hätte Entwarnung
+gegeben, während die Anlage zusteht. Beides ist ausgeschlossen, weil die
+beiden Läufe nebeneinanderliegen.
+
+**Zwei Dinge fallen nebenbei ab, und beide sind eigene Nachweise:**
+
+1. **`jobs.php` antwortet auch bei eingeschalteter Wartung.** Die Fassung
+   `20.26.2` im Lauf mit Wartung ist aus einer zugesperrten Anlage gelesen.
+   Das war bisher aus Schritt 16 erschlossen (er schaltet die Wartung wieder
+   aus, also muss er durchkommen) — jetzt ist es unmittelbar gemessen.
+2. **Der Botschutz von lima-city (F-KH-U-10) liegt nicht auf diesem Weg.**
+   Die Zielprobe scheiterte beim **Hochladen** (`curl: (67) Access denied:
+   530`), nicht beim Zurückholen per HTTPS; die `jobs.php`-Abfrage des
+   Schlussschritts kam durch. Zusammen mit F-KH-U-36 heißt das: Der
+   Botschutz trifft den Formular-POST auf `login.php` und sonst nichts, was
+   die Kette benutzt.
+
+**Was der Nachweis NICHT umfasst** — und das gehört dazu: Beide Läufe sind
+**vor** dem Wartungsschalter gescheitert. Der Schlussschritt hat also
+gemeldet, was er von einer Anlage liest, deren Zustand die Kette nicht
+selbst herbeigeführt hat. Dass er dasselbe täte, wenn die Kette die Wartung
+in Schritt 13 eingeschaltet und Schritt 14 dann abgebrochen wäre, ist
+**erschlossen, nicht gemessen** — er fragt in beiden Fällen dieselbe
+Anlage mit demselben Aufruf. Warum diese Lage nicht herstellbar ist, steht
+in F-KH-U-37, und es ist dort kein Mangel, sondern der Beleg.
+
+**Offen bleibt der Rückbau** (Prüfpunkt 25c): Staging steht in Wartung und
+das Passwort ist falsch. Bis der Wiederholungslauf grün ist, ist Staging
+nicht benutzbar — und dieser Lauf ist selbst eine Prüfung, keine
+Aufräumarbeit.
+
+---
 
 **F-KH-U-38 — Der Adressvergleich ist gelaufen und grün: Kette und Wache
 meinen dieselbe Anlage.**
@@ -2874,9 +2928,10 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   (E-KH-14) — sie hängt an einem Push auf `main` und steht weiter offen.
 
 
-- [ ] **24 — Die Variablen eintragen, die ihren Vorgabewert verloren haben**
-  (AP6, E-KH-07). **Vor dem nächsten Lauf — sonst ist er rot, und zwar
-  absichtlich.**
+- [x] **24 — Die Variablen eintragen, die ihren Vorgabewert verloren haben**
+  (AP6, E-KH-07). **ERLEDIGT am 21.09.2026 — eingetragen von der Betreiberin,
+  belegt durch fünf Läufe** (Ergebnis unten). **Vor dem nächsten Lauf — sonst
+  ist er rot, und zwar absichtlich.**
   *Warum:* `FTP_ZIELPFAD`, `FTP_STATE_PFAD` und `WACHE_BASIS` sprangen bis
   AP6 auf einen fest eingebauten Wert zurück. Das ließ eine falsch
   eingerichtete Anlage nicht auffallen: Der Lauf war grün und
@@ -2942,8 +2997,28 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   `FTP_STATE_PFAD` auf `staging` fehlt, führt der nächste Lauf diesen
   Nachweis von selbst.
 
-- [ ] **25a — Der Schlussschritt, wenn die Wartung AUS ist** (Abnahme von
-  AP6, E-KH-06, erster Teil). **Kostet nichts: Es wird nichts ausgeliefert,
+  **ERGEBNIS — alle drei stehen, und keine Messung ist mehr abgeleitet.**
+  Der erste Schritt bricht seit AP6 bei jedem leeren Wert ab; er ist seither
+  in fünf Läufen durchgekommen, und das ist der Nachweis:
+
+  | Variable | Umgebung | belegt durch |
+  |---|---|---|
+  | `FTP_ZIELPFAD` | `staging` | Läufe 35570398032, 35573954983, 35574032478 — `ZIELPFAD: /` im Protokoll |
+  | `FTP_STATE_PFAD` | `staging` | dieselben — `ZUSTANDSPFAD: ../.deploy-state-staging.json` |
+  | `FTP_ZIELPFAD`, `FTP_STATE_PFAD` | `produktion` | Läufe 35573692312, 35573791969 — der erste Schritt grün, also beide belegt |
+  | `WACHE_BASIS` | Repositorium | derselbe Lauf, **Adressvergleich grün** (F-KH-U-38) — als *Variable*, nicht als Geheimnis |
+
+  **Die Ableitung aus dem Protokolltext wird damit hinfällig** und ist nur
+  noch Historie: Oben stand, `FTP_ZIELPFAD` auf `produktion` sei aus der
+  Zeile `Saving current server state to …` erschlossen. Sie ist jetzt
+  unmittelbar belegt, weil ein leerer Wert den Lauf im ersten Schritt
+  angehalten hätte. **Das ist der Unterschied, den AP6 gemacht hat:** Vorher
+  musste man die Einrichtung aus dem Verhalten erraten, jetzt sagt sie der
+  Lauf.
+
+- [x] **25a — Der Schlussschritt, wenn die Wartung AUS ist** (Abnahme von
+  AP6, E-KH-06, erster Teil). **BESTANDEN am 21.09.2026 — Lauf 35574032478**
+  (Ergebnis unten). **Kostet nichts: Es wird nichts ausgeliefert,
   Staging bleibt benutzbar, keine Wartung.**
   *Warum:* Der Schlussschritt ist die einzige Stelle der Kette, die nur im
   Unglück läuft. Ein Riegel, der nie ausgelöst hat, ist eine Behauptung.
@@ -2971,7 +3046,37 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   später. Der Schlussschritt läuft und meldet als Fehlerzeile **und** in der
   Zusammenfassung: **`Wartung: aus`**, die gemeldete Fassung,
   „Dateistand: unbekannt" und die zwei Bedienwege.
-  **Den Wortlaut bitte hierher kopieren.**
+
+  **ERGEBNIS — Lauf 35574032478, 21.09.2026, 07:40 UTC**, Job
+  `staging / ausliefern` auf `main` (Stand `fb614d1`), **rot nach 32 s**.
+  Fehlerzeile im Wortlaut:
+
+  ```
+  ##[error]Auslieferung nach staging GESCHEITERT. Wartung: aus · gemeldete Fassung: 20.26.2 · Dateistand: UNBEKANNT (der Abgleich kann halb gelaufen sein).
+  ```
+
+  Die Schrittfolge dazu, wie sie das Protokoll zählt: Schritt 3 (PROBELAUF)
+  **übersprungen** — das Häkchen war leer, der Lauf ging also nach `staging`;
+  Schritte 6, 7, 8 übersprungen (Produktiv-only); **Schritt 9 (Zielprobe)
+  rot**; Schritte 10 bis 17 übersprungen; **Schritt 18 (Schlussschritt)
+  grün**. Die Umgebungswerte standen im Protokoll:
+  `BASIS: https://staging-nadoku.gen-em.org`, `ZIELPFAD: /`,
+  `ZUSTANDSPFAD: ../.deploy-state-staging.json`.
+
+  > **Zwei Berichtigungen an diesem Punkt, beide klein, beide der Genauigkeit
+  > wegen.**
+  >
+  > 1. *„rot an der Zielprobe (Schritt 8)"* — die Oberfläche zählt
+  >    **Schritt 9**, weil `Set up job` als Schritt 1 mitzählt. Die
+  >    Schrittfolge selbst hat die Zielprobe an achter Stelle; beide Zahlen
+  >    stimmen, sie zählen Verschiedenes. Wer im Protokoll sucht, sucht
+  >    nach dem Namen, nicht nach der Nummer.
+  > 2. Die Zielprobe scheiterte beim **Hochladen** (`curl: (67) Access
+  >    denied: 530`, FTPS), nicht beim Zurückholen per HTTPS. Das ist die
+  >    erwartete Stelle für ein falsches Passwort — und es heißt nebenbei,
+  >    dass der Botschutz von lima-city (F-KH-U-10) hier gar nicht erst
+  >    erreicht wurde. Der Lauf misst den Schlussschritt und sonst nichts.
+
   *Woran ein Scheitern zu erkennen ist — und das ist der eigentliche
   Prüfwert:* Der Schlussschritt meldet **`Wartung: an`**, obwohl sie aus ist.
   Dann liest er die Antwort der Anlage falsch, und im Ernstfall schickte er
@@ -2983,17 +3088,44 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   *Danach:* `FTP_PASSWORD` zurücksetzen. Staging ist unberührt — es wurde
   nichts übertragen und nichts geschaltet.
 
-- [ ] **25b — Der Schlussschritt, wenn die Wartung AN ist** (Abnahme von
-  AP6, zweiter Teil). **Das ist der Wortlaut, den die Abnahme will.**
+- [x] **25b — Der Schlussschritt, wenn die Wartung AN ist** (Abnahme von
+  AP6, zweiter Teil). **BESTANDEN am 21.09.2026 — Lauf 35573954983.**
+  **Das ist der Wortlaut, den die Abnahme will.**
   *Weg:* Auf Staging von Hand **Betrieb → Updates → Wartung einschalten**.
   `FTP_PASSWORD` steht weiter falsch (aus 25a). Denselben Lauf noch einmal
   starten.
   *Erwartet:* wieder rot an der Zielprobe — aber der Schlussschritt meldet
   jetzt **`Wartung: an`**, dazu Fassung, „Dateistand: unbekannt" und die
   beiden Bedienwege.
-  **Wortlaut hierher kopieren.** Die beiden Wortlaute aus 25a und 25b
-  nebeneinander sind der Beleg: dieselbe Lage, ein Unterschied, und er steht
-  an der richtigen Stelle.
+  **ERGEBNIS — Lauf 35573954983, 21.09.2026, 07:39 UTC**, Job
+  `staging / ausliefern` auf `main` (Stand `fb614d1`), **rot nach 40 s**,
+  dieselbe Schrittfolge wie in 25a. Fehlerzeile im Wortlaut:
+
+  ```
+  ##[error]Auslieferung nach staging GESCHEITERT. Wartung: an · gemeldete Fassung: 20.26.2 · Dateistand: UNBEKANNT (der Abgleich kann halb gelaufen sein).
+  ```
+
+  **Die beiden Wortlaute nebeneinander — das ist der Beleg:**
+
+  | | 25a (Wartung aus) | 25b (Wartung an) |
+  |---|---|---|
+  | Lauf | 35574032478 | 35573954983 |
+  | roter Schritt | Zielprobe | Zielprobe |
+  | **Wartung** | **`aus`** | **`an`** |
+  | gemeldete Fassung | `20.26.2` | `20.26.2` |
+  | Dateistand | `UNBEKANNT` | `UNBEKANNT` |
+  | Schlussschritt gelaufen | ja | ja |
+
+  **Dieselbe Lage, ein Unterschied, und er steht an der richtigen Stelle.**
+  Der Schlussschritt rät nicht und meldet nicht pauschal — er **fragt die
+  Anlage** und gibt weiter, was sie sagt. Dass er in 25b `an` meldet,
+  belegt zugleich zum zweiten Mal, dass `jobs.php` auch bei eingeschalteter
+  Wartung antwortet: Die Fassung `20.26.2` ist aus einer zugesperrten
+  Anlage gelesen.
+
+  **Damit ist AP6 an seiner eigenen Abnahme gemessen und bestanden** — die
+  Stelle der Kette, die nur im Unglück läuft, hat im Unglück gelaufen und
+  das Richtige gesagt.
   *Woran ein Scheitern zu erkennen ist:* `Wartung: aus` oder `unbekannt`.
   **Das wäre der ernsteste Befund dieses Dokuments** — ein Schlussschritt,
   der Entwarnung gibt, während die Anlage zusteht, ist schlimmer als keiner.
@@ -3001,9 +3133,32 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   antwortet auch bei eingeschalteter Wartung — anders könnte Schritt 16 die
   Wartung nicht wieder ausschalten, und im Lauf 35570398032 hat er das
   getan.
-  *Danach, und beides gehört zum Punkt:* Wartung auf Staging **von Hand**
-  aus (Betrieb → Updates → Wartung beenden), `FTP_PASSWORD` zurücksetzen,
-  Lauf wiederholen → **grün**. Erst damit ist 25 erledigt.
+  *Danach:* siehe 25c — der Rückbau ist ein eigener Punkt geworden, weil er
+  eine eigene Prüfung ist und nicht bloß ein Aufräumen.
+
+- [ ] **25c — Rückbau, und er ist selbst ein Prüfpunkt.** **Staging steht
+  nach 25b in Wartung, und das Passwort ist falsch.** Beides bleibt so,
+  bis dieser Punkt abgehakt ist — solange ist Staging nicht benutzbar.
+  *Weg, in dieser Reihenfolge:*
+  1. Auf Staging **Betrieb → Updates → Wartung beenden**.
+  2. Settings → Environments → **`staging`** → `FTP_PASSWORD` auf den
+     richtigen Wert zurücksetzen.
+  3. Denselben Lauf noch einmal starten (**alle Kästchen leer**).
+  *Erwartet:* **grün, alle 17 Schritte**, Schlussschritt übersprungen
+  (`if: failure()` greift nicht).
+  *Warum das eine Prüfung ist und nicht nur Aufräumen:* Der Lauf belegt
+  dreierlei auf einmal — dass die Kette nach zwei Fehlschlägen ohne
+  Handarbeit wieder durchläuft, dass die Zustandsdatei der Aktion die
+  abgebrochenen Läufe unbeschadet überstanden hat (AP4), und dass die
+  17 Schritte auf Staging auch auf `main` stehen. **Erst damit ist 25
+  erledigt.**
+  *Woran ein Scheitern zu erkennen ist:* Der Lauf überträgt auffällig
+  viele Dateien (die Aktion meldet die Zahl). Dann hat sie ihre
+  Zustandsdatei nicht gefunden und gleicht gegen Null ab — das wäre ein
+  Befund an AP4, nicht an 25, und gehört als solcher notiert.
+  *Und wenn die Wartung von selbst ausgegangen ist:* Das wäre ein Fehler.
+  Die Kette schaltet sie im Unglück ausdrücklich **nicht** aus (E-KH-06).
+  Wer sie aus vorfindet, ohne sie ausgeschaltet zu haben, hat einen Befund.
 
 > **WARUM DIESER PUNKT NEU GEFASST IST — und warum die alte Fassung nicht
 > fahrbar war** (F-KH-U-37, 21.09.2026). Die Abnahme im Konzept verlangte:
