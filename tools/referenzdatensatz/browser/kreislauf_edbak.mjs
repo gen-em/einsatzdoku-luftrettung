@@ -22,6 +22,7 @@
  *   node kreislauf_edbak.mjs [basis] [referenz.edbak] [backup-pw] [zielordner]
  */
 import { mkdirSync, writeFileSync, readdirSync } from 'node:fs';
+import { downloadMitFortschritt } from './download_lib.mjs';
 
 /* Die Referenzdatei NICHT mit Namen fest verdrahten.
  *
@@ -148,7 +149,7 @@ await seite.fill('#bpw2', bpw);
 const warten = seite.waitForEvent('download', { timeout: 900000 });
 await seite.click('#expbtn');
 await rueckfragen();
-const dl = await warten;
+const dl = await downloadMitFortschritt(seite, warten, '#expstate', konsole);
 const ziel = `${ordner}/${dl.suggestedFilename()}`;
 await dl.saveAs(ziel);
 const expZustand = (await seite.locator('#expstate').textContent().catch(() => '') || '').trim();

@@ -203,6 +203,21 @@ jobs:
     name: Prüfung Stufe 2
     needs: staging
     runs-on: ubuntu-latest
+    # EINE ZEITGRENZE, WEIL DIE VORGABE SECHS STUNDEN IST (21.09.2026).
+    #
+    # ANLASS: Der Kreislauf `edbak` hing am 21.09. fuenfzehn Minuten an einem
+    # Download, der nie kam — und haette ohne die interne Zeitgrenze des
+    # Browserschritts (900 s) bis zum Abend laufen duerfen, ohne dass irgendwo
+    # etwas rot geworden waere. Ein PRUEFSCHRITT, der stundenlang stillsteht,
+    # meldet nichts; er belegt nur einen Laeufer.
+    #
+    # WARUM 45 UND NICHT WENIGER: Der laengste bekannte Durchlauf dieses Jobs
+    # ist der gescheiterte vom 21.09. mit 15:40 — und der war ABGEBROCHEN, der
+    # gute Fall ist noch nie zu Ende gelaufen. Die Zahl ist deshalb bewusst
+    # grosszuegig: Sie soll das Haengen begrenzen, nicht einen langsamen, aber
+    # arbeitenden Lauf abschneiden. Wer sie spaeter enger zieht, hat dann
+    # Messwerte, die es heute nicht gibt.
+    timeout-minutes: 45
     environment: staging
     env:
       STAGING_URL:   ${{ vars.STAGING_URL }}
