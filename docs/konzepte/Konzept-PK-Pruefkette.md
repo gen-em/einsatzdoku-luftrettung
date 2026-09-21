@@ -26,9 +26,9 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 >
 > | | |
 > |---|---|
-> | Stand | **21.09.2026 — Fassung nach dem Gespräch; wartet auf den Abschluss der Zuarbeiten Z1 und Z2 (Abschnitt 7), dann Push und Freigabe.** Kein Paket begonnen. |
+> | Stand | **21.09.2026 — Fassung nach dem Gespräch; Z1 und Z2 erledigt, zur Freigabe vorgelegt (Z5).** Kein Paket begonnen; P-PK-02 vorgezogen und erledigt. |
 > | Entschieden | **E-PK-01 bis -30** — alle im Gespräch vom 21.09.2026 entschieden oder bestätigt (Abschnitt 3.1). Die offenen Fragen F-PK-1 bis -6 der ersten Fassung sind beantwortet (Abschnitt 3.2). |
-> | Nächstes | Z1 und Z2, dann Push, Freigabe, dann **PK-01**. |
+> | Nächstes | Freigabe (Z5); parallel die Merges von PR #70 und #69, danach Tag `web-v20.26.3` = M1 der Kette II (Z2a); dann **PK-01**. |
 > | Kette II | wird nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
 > | Hakt | nichts mehr: Der HTTP 500 beim `.edbak`-Export auf Staging (`097D7622`) ist am 21.09.2026 **in der Sandbox reproduziert und behoben** (Web 20.26.3, PR #69, Nr. 267) — P-PK-02 vorgezogen, siehe 1.5. Offen ist die Bestätigung durch Stufe 2 nach dem Merge. |
 >
@@ -888,7 +888,7 @@ aufwirft, trägt sie als F-PK-07 ff. hier ein.
 | Nr. | Was | Wann | Stand |
 |---|---|---|---|
 | Z1 | PK-M1: Zweigschutz und Merge-Recht setzen; danach die drei Messungen aus P-PK-01 durch eine Claude-Instanz | **vor dem Push dieses Konzepts** | **erledigt 21.09.2026** — (c) mit dem Merge von PR #70 |
-| Z2 | Den Kette-II-Zweig per PR mergen (PR #68, mit Übergabevermerk), damit PK-06 nicht kollidiert | vor der Freigabe | PR #68 offen, wartet auf Stufe 1 |
+| Z2 | Den Kette-II-Zweig per PR mergen (PR #68, mit Übergabevermerk), damit PK-06 nicht kollidiert | vor der Freigabe | **erledigt 21.09.2026** (PR #68 gemergt) |
 | Z2a | **PR #69 (Web 20.26.3) mergen** — der edbak-Fix; danach Stufe 2 auf `main` beobachten, dann Tag `web-v20.26.3` und Freigabe = **M1 der Kette II** | nach Stufe 1 grün | offen |
 | Z3 | Umgebungswerte der Cloud-Umgebung: die sieben Namen aus 1.4 vollständig und in Anführungszeichen; Netzregel mit Docker Hub und `deb.debian.org` | — | **erledigt 21.09.2026** |
 | Z4 | Staging: Mailversand reparieren (Webspace-Protokoll), Backup-Ziel eintragen | vor PK-M2 | offen (`097D7622` ist ohne das Protokoll geklärt, 1.5) |
