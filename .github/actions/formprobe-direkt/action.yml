@@ -1,0 +1,21 @@
+# WEGWERF-MESSMITTEL (AP5). Wird nach der Messung geloescht.
+#
+# FRAGE: Sind `secrets` und `vars` INNERHALB einer zusammengesetzten Aktion
+# erreichbar? Die Antwort entscheidet die Form von AP5 und steht in keiner
+# Quelle, die dieser Laeufer erreicht (docs.github.com ist gesperrt).
+#
+# Die beiden Ausdruecke stehen ABSICHTLICH direkt hier und nicht als Eingabe.
+# Faellt die Aktion beim Laden auf die Nase, IST das die Messung.
+name: Formprobe direkt
+description: Misst, ob secrets und vars in einer zusammengesetzten Aktion aufloesen.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GEHEIM: ${{ secrets.FTP_SERVER }}
+        VARIABLE: ${{ vars.FTP_ZIELPFAD }}
+      run: |
+        # NIE DEN WERT AUSGEBEN -- nur belegt/leer.
+        if [ -n "${GEHEIM:-}" ]; then echo "B1 secrets.FTP_SERVER in der Aktion: BELEGT"; else echo "B1 secrets.FTP_SERVER in der Aktion: LEER"; fi
+        if [ -n "${VARIABLE:-}" ]; then echo "B2 vars.FTP_ZIELPFAD in der Aktion: BELEGT"; else echo "B2 vars.FTP_ZIELPFAD in der Aktion: LEER"; fi

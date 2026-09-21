@@ -1,0 +1,47 @@
+# WEGWERF-MESSMITTEL (AP5). Wird nach der Messung geloescht.
+#
+# FRAGE: Traegt ein AUFGERUFENER Arbeitslauf seine eigene `environment:`-Zeile
+# -- und zwar als AUSDRUCK --, und loesen dann die Umgebungsgeheimnisse und
+# Umgebungsvariablen DIESER Umgebung auf? Nur wenn ja, kann AP5 die Form
+# "wiederverwendbarer Arbeitslauf" waehlen, ohne die Pflichtfreigabe zu
+# verlieren: Loest das Geheimnis auf, hat GitHub den Job als Auslieferung in
+# diese Umgebung behandelt -- und dann greifen auch ihre Schutzregeln.
+name: Formprobe Lauf
+on:
+  workflow_call:
+    inputs:
+      umgebung:
+        required: true
+        type: string
+      mit_umgebung:
+        required: true
+        type: boolean
+jobs:
+  mit:
+    if: ${{ inputs.mit_umgebung }}
+    runs-on: ubuntu-latest
+    # DER AUSDRUCK IST DER KERN DER MESSUNG. Eine literale Zeile waere
+    # gemessen und nutzlos -- AP5 braucht genau diese Form.
+    environment: ${{ inputs.umgebung }}
+    steps:
+      - name: Loesen Geheimnis und Variable im aufgerufenen Lauf auf?
+        env:
+          GEHEIM:   ${{ secrets.FTP_SERVER }}
+          VARIABLE: ${{ vars.FTP_ZIELPFAD }}
+          BASIS:    ${{ vars.STAGING_URL }}
+        run: |
+          echo "D0 Umgebung laut Ausdruck: ${{ inputs.umgebung }}"
+          if [ -n "${GEHEIM:-}" ];   then echo "D1 secrets.FTP_SERVER  MIT environment-Ausdruck: BELEGT"; else echo "D1 secrets.FTP_SERVER  MIT environment-Ausdruck: LEER"; fi
+          if [ -n "${VARIABLE:-}" ]; then echo "D2 vars.FTP_ZIELPFAD   MIT environment-Ausdruck: BELEGT"; else echo "D2 vars.FTP_ZIELPFAD   MIT environment-Ausdruck: LEER"; fi
+          if [ -n "${BASIS:-}" ];    then echo "D3 vars.STAGING_URL    MIT environment-Ausdruck: BELEGT"; else echo "D3 vars.STAGING_URL    MIT environment-Ausdruck: LEER"; fi
+  ohne:
+    if: ${{ !inputs.mit_umgebung }}
+    runs-on: ubuntu-latest
+    # KEIN `environment:`. Die Gegenprobe: Ist FTP_SERVER wirklich ein
+    # UMGEBUNGSgeheimnis, muss es hier LEER sein -- auch mit `secrets: inherit`.
+    steps:
+      - name: Gegenprobe -- dasselbe Geheimnis ohne environment
+        env:
+          GEHEIM: ${{ secrets.FTP_SERVER }}
+        run: |
+          if [ -n "${GEHEIM:-}" ]; then echo "E1 secrets.FTP_SERVER OHNE environment: BELEGT -- dann ist es KEIN Umgebungsgeheimnis"; else echo "E1 secrets.FTP_SERVER OHNE environment: LEER (erwartet)"; fi

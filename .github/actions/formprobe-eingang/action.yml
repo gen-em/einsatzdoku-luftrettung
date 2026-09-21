@@ -1,0 +1,42 @@
+# WEGWERF-MESSMITTEL (AP5). Wird nach der Messung geloescht.
+#
+# FRAGE: Kommen Geheimnis und Variable als EINGABEN heil an, bleibt das
+# Geheimnis maskiert, und darf eine zusammengesetzte Aktion eine Fremd-Aktion
+# aufrufen (`uses:` verschachtelt)? Das ist der Weg, den AP5 gehen muesste,
+# falls `secrets` drinnen nicht aufloest.
+name: Formprobe Eingang
+description: Misst Eingaben, Maskierung und verschachteltes uses.
+inputs:
+  geheim:
+    description: Ein Umgebungsgeheimnis, vom Aufrufer durchgereicht.
+    required: true
+  variable:
+    description: Eine Umgebungsvariable, vom Aufrufer durchgereicht.
+    required: false
+  probelauf:
+    description: Schaltet den bedingten Schritt.
+    required: false
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GEHEIM: ${{ inputs.geheim }}
+        VARIABLE: ${{ inputs.variable }}
+      run: |
+        if [ -n "${GEHEIM:-}" ]; then echo "C1 Geheimnis als Eingabe: BELEGT"; else echo "C1 Geheimnis als Eingabe: LEER"; fi
+        if [ -n "${VARIABLE:-}" ]; then echo "C2 Variable als Eingabe: BELEGT"; else echo "C2 Variable als Eingabe: LEER"; fi
+        echo "C3 Maskierungsprobe (der Wert steht hier, GitHub muss ihn schwaerzen): $GEHEIM"
+    - name: Bedingter Schritt in der Aktion
+      if: ${{ inputs.probelauf == 'true' }}
+      shell: bash
+      run: |
+        echo "C4 if in der Aktion -- gelaufen (probelauf=true)"
+    - name: Verschachteltes uses in der Aktion
+      uses: actions/checkout@v7
+      with:
+        path: formprobe-checkout
+    - shell: bash
+      run: |
+        if [ -d formprobe-checkout/.github ]; then echo "C5 verschachteltes uses: GELAUFEN"; else echo "C5 verschachteltes uses: NICHT GELAUFEN"; fi
