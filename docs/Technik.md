@@ -9292,7 +9292,7 @@ erklärt.
 | `max_execution_time` | **240 s** | **300 s** |
 | `post_max_size` / `upload_max_filesize` | **256 MB / 256 MB** | **500 MB / 500 MB** |
 | OPcache | **aus** | **an** — aber nur **Dateicache** (`file_cache_only`), SHM und JIT aus. **Die Statusseite wird ihn trotzdem als „aus" melden** — siehe Kasten |
-| Datenbank | **MariaDB 10.11.14** | ⬚ — die phpinfo nennt nur den Client (`mysqlnd 8.3.33`); die Serverfassung sagt erst die Anwendung |
+| Datenbank | **MariaDB 10.11.14** | **MySQL 8.4.10** (Statusseite, 21.09.2026) — **eine andere Datenbank als Produktiv**; genau daran ist der Export bis Web 20.26.3 gescheitert (Nr. 267) |
 | `max_user_connections` | **nicht gesetzt**; es gilt `max_connections` = **151** | ⬚ |
 | Kontingent der Datenbank | Angabe 10 GB, belegt 9,8 MB (0 %) | ⬚ |
 | Freier Platz | **861,7 GB gemeldet** — Datenträger des Hosts, nicht das Kontingent | ⬚ |
