@@ -105,7 +105,9 @@ kollidieren.
 | 251 | Cookie-Attribut `secure` der Sitzung — zwei Arten HTTPS-abhängig, zwei fest | Schritt 18 |
 | 252 | Gelaufene Migrationen fragen das Schema 57× von Hand | P8 (R66) |
 | 253 | Datum-Zeit-Trenner vereinheitlichen | 10c AP9 |
-| 254–259 | frei — Reserve für Funde der Umsetzung von Schritt 15 | Schritt 15 |
+| 254 | Ratenprobe erwartet fünf Töpfe mit Leiter — es sind sechs | Backlog-Runde |
+| 255 | `lokal_einrichten.sh` kopiert Handbuch und Bilder nicht nach `server/doku/` | behoben 21.09.2026 |
+| 256–259 | frei — Reserve für weitere Funde der Umsetzung von Schritt 15 | Schritt 15 |
 
 > **Keiner der vier gehört in Schritt 15 selbst**, und das ist kein Versehen:
 > 250 ändert Wege durch die Anwendung, 251 und 252 hängen an späteren
@@ -3145,6 +3147,49 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     mal nur ein Leerzeichen. Nach Schritt 15 AP7 steht die Formatierung an
     einer Stelle (`format_lib.php`) — dann ist es eine Zeile statt einer
     Suche, und deshalb wartet es bis dahin.
+
+254. **Die Ratenprobe erwartet fünf Töpfe mit Leiter — es sind sechs.**
+    *Aufgenommen 21.09.2026 beim ersten Lauf der Probe gegen eine lokal
+    eingerichtete Anlage (Schritt 15 AP2).* Zugeordnet: **Backlog-Runde.**
+
+    `tools/ratenprobe/probe.php` prüft `Genau fuenf Toepfe haben eine Leiter`
+    gegen die Liste `ingest, ingest_ip, login, login_ip, salt`. Gemessen sind
+    **sechs**: `blatt, ingest, ingest_ip, login, login_ip, salt`. Der Topf
+    `blatt` (Schlüsselblatt-Prüfung) ist mit **Web 20.24.0** (P5b/AP9)
+    dazugekommen, die Erwartung der Probe stammt aus **Web 20.11.0**.
+
+    **Der Befund ist die Probe, nicht der Code.** `RATE_GRENZEN` ist in
+    Ordnung; die Probe zählt einen Bestand, der gewachsen ist, gegen eine von
+    Hand geführte Zahl — genau die Bauform, vor der diese Datei sonst warnt
+    (siehe die Warnung zu gezählten Werten im Kopf). Lauf am 21.09.2026:
+    **50 Prüfungen, 1 Befund**, und dieser eine ist es.
+
+    **Warum er einen Monat unbemerkt blieb:** Die Ratenprobe braucht eine
+    laufende Installation und hängt nicht in Stufe 1. Zwischen Web 20.24.0
+    und heute hat sie niemand gefahren.
+
+255. **`lokal_einrichten.sh` richtet eine Anlage ein, deren Handbuch drei
+    kaputte Bilder hat.** *Aufgenommen 21.09.2026 (Schritt 15 AP2).*
+    **Behoben am selben Tag** — der Eintrag bleibt wegen der Zahl.
+
+    Der FTPS-Schritt lädt nur `server/` hoch; `docs/` liegt daneben. Deshalb
+    kopiert `ausliefern-lauf.yml` `docs/Handbuch.md`,
+    `docs/Was-ist-NAdoku.md` und `docs/bilder/` vor dem Sync nach
+    `server/doku/`. **Das lokale Einrichten tat das nicht** — es gibt den
+    Schritt in der Kette, und nur dort.
+
+    **Was das kostete:** Der Bilderlauf gegen die lokal eingerichtete Anlage
+    meldete **48 Konsolenfehler** und ging mit Rückgabe 1 aus — drei fehlende
+    Bilder (`tagesuebersicht-desktop.png`, `tagesuebersicht-mobil.png`,
+    `schublade-mobil.png`) mal 16 Breiten. Nach dem Kopierschritt: **0**.
+    Eine Instanz, die die Zahl nicht zuordnen kann, sucht sie in der eigenen
+    Änderung; das hat hier eine Dreiviertelstunde gekostet.
+
+    Der Kommentar in `doku_lib.php` sagt den Fall wörtlich voraus („Wer selbst
+    hostet und nur `docs/` neben `server/` legt, bekommt den TEXT und keine
+    BILDER"). Er stand nur nicht dort, wo man ihn sucht, wenn der Bilderlauf
+    rot wird. Der Kopierschritt steht jetzt als Schritt 6a im Skript, mit der
+    Zahl 48 im Kommentar.
 
 260. **Zwei Code-Kommentare in `server/` sagen „beider FTPS-Schritte" — seit
     Kette II/AP5 ist es einer.** *Aufgenommen 21.09.2026 (Kette II, AP5).*

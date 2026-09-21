@@ -156,77 +156,108 @@ zum ersten Mal wirklich, und das ist der wichtigste Satz dieses Abschnitts.
 
 ## A0. Was nicht geprüft werden konnte — und warum
 
+**Diese Liste ist mit dem 21.09.2026 kurz geworden.** In der Arbeitsumgebung
+steht seither eine **vollständige lokale Anlage** (MariaDB, `php -S`, socat
+für TLS, Demo-Bestand mit 106 Einsätzen und 21 Diensttagen), eingerichtet mit
+`tools/referenzdatensatz/einspielen/lokal_einrichten.sh`. Damit ist die
+Prüfliste A-1 bis A-12 **gefahren** und nicht mehr offen.
+
 | # | Was | Warum nicht | Woran man ein Scheitern erkennt |
 |---|---|---|---|
-| **N2-1** | **Jeder Weg durch die Anwendung im Browser** — Anmeldung bis Tagesübersicht, Abmelden, Passwort-Reset, Handbuch/Rechtstext/Notfallblatt angemeldet, `install.php`, `wiederherstellen.php` | In der Arbeitsumgebung liegt **keine Installation**: `server/config.php` fehlt, es gibt keine Datenbank. Gemessen: `php -r 'require "server/db.php";'` bricht mit „config.php fehlt" ab — das ist der erwartete Abbruch, aber eben auch das Ende jedes Browserwegs | **Prüfliste A-1 bis A-9.** Dieses Paket fasst JEDE Sitzung der Anwendung an; wenn etwas bricht, bricht es hier |
-| **N2-2** | **Abmelde-, Raten-, Kopplungsprobe** (Konzept Abschnitt 5 verlangt sie für AP2–AP5) | Alle drei sprechen über echtes HTTP mit einer laufenden Anlage | Prüfliste A-10 |
-| **N2-3** | **Ob `session.use_strict_mode` WIRKT** | `ini_set()` kann scheitern — manche Hoster sperren einzelne Direktiven. Dass die Zeile dasteht, ist gemessen; dass sie greift, misst nur eine laufende Anlage | Prüfliste A-11 |
-| **N2-4** | **F-ZE-2 gegen echte Bots** | Nachgestellt mit einem Aufruf ohne Cookie (bestanden). Ob ein echter Crawler kein Cookie mitbringt, misst nur der Betrieb | Prüfliste A-6 — die Zahl in `.sitzungen/` muss **fallen** |
-| **N2-5** | **Das Verhalten hinter einem Reverse Proxy** | `netz_proxys()` liest jetzt über `konfig()`. Die Umstellung ist eng und gelesen; eine Anlage mit eingetragenen Proxys stand nicht zur Verfügung | Prüfliste A-12 |
+| **N2-1** | **Der Betrieb auf einer echten Anlage** — anderer Hoster, andere `php.ini`, echte Last | Die lokale Anlage ist ein `php -S` im Wegwerf-Container. Sie belegt das **Verhalten der Anwendung**, nicht das einer Hosterumgebung | Die Zeile „Sitzungsablage" auf Betrieb → Status beim ersten Ausrollen |
+| **N2-2** | **`secure` am Cookie der Arten `lesend` und `einrichtung`** | socat terminiert TLS, PHP sieht eine HTTP-Anfrage — `!empty($_SERVER['HTTPS'])` ist dort **immer** falsch. Gemessen ist deshalb der HTTPS-freie Zweig; dass der andere `true` liefert, ist gelesen | Auf einer echten Anlage fehlt `secure` am Cookie von `install.php` oder `hilfe.php`, obwohl HTTPS anliegt |
+| **N2-3** | **F-ZE-2 gegen echte Bots** | Nachgestellt mit 40 Abrufen ohne Cookie (bestanden, siehe A1). Ob ein echter Crawler kein Cookie mitbringt, misst der Betrieb | Die Zahl der Sitzungsdateien auf der Statusseite fällt **nicht** |
+| **N2-4** | **Die Android- und Uhr-Clients** | AP2 fasst `server/` an; der Gerätevertrag ist davon nicht berührt (keine der fünf Geräte-Dateien geändert). Der Android-Prüfstand ist nicht gelaufen | Erst ab AP3 relevant, wo `ingest.php` und `pair.php` im Umfang stehen |
 
 ## A1. Was maschinell geprüft wurde — mit Mittel **und** Zahl
+
+### Gegen den Quelltext
 
 | Mittel | Zahl |
 |---|---|
 | **Registerzeilen des Pakets** | Z01 `session_start(` **9 → 1** · Z02 `sitzung_ablage(` **2 → 1** · Z03 `config.php` lesend **7 → 1** · Z04 `$CFG` **46 → 0** |
-| **Register gesamt** | **38 Zeilen, 0 über der Decke**; Selbstprobe **33 von 33** |
-| **`error_log(`** (E-ZE-05) | **77 in 32 Dateien — unverändert.** Kein Aufruf umgestellt, kein Aufruf verschoben |
-| **`konfig_lib` — eigene Probe** | **13 von 13**: Punktpfad zwei Ebenen · oberste Ebene ohne Punkt · Feld als Wert · fehlender Schlüssel → Vorgabe · Pfad durch einen Nicht-Array → Vorgabe · fehlende `config.php` → Vorgabe · Merker hält · `konfig_verwerfen()` liest neu · gelöschte Datei → wieder Vorgabe |
-| **Die vier Sitzungsarten** | **16 Zellen** (4 Arten × `secure`, `samesite`, `httponly`, Sitzungsname), **0 Abweichungen** gegen die Tabelle aus Konzept 1.3. `use_strict_mode` in allen vier auf `1`. Je Art ein eigener Prozess — nach dem ersten `session_start()` lassen sich die Parameter nicht mehr für eine andere Art messen |
-| **F-ZE-2** | Art `lesend` **ohne** Cookie: `lief=false`, `session_status()` = keine · **mit** Cookie: `lief=true`, aktiv |
-| **Ladezyklus** (die Falle aus Konzept 3.0) | **7 von 7**, über `get_included_files()`: `konfig_lib.php` zieht **0** Dateien nach · `sitzung_lib.php` beim Laden **0** · `plattform_lib.php` zieht `email_lib.php` und `php_mindest.php` nach und erreicht `db.php` **nicht** · `db.php` verlangt `config.php` hart · `db.php` richtet die Ablage **nicht mehr** ein (Lage `nicht_gelaufen`) · `sitzung_starten()` richtet sie ein · unbekannte Art **wirft** statt still zu starten |
-| **Sitzungshärtung, umgestellt** | Lauf **0 Befunde** bei **1 Aufruf** (erwartet 1); Selbstprobe **12 von 12**, darunter „gehärtet, aber am falschen Ort" und „zwei Aufrufe — der zweite ist ein Befund" |
+| **Register gesamt** | **38 Zeilen, 0 über der Decke**; Selbstprobe **34 von 34** |
+| **`error_log(`** (E-ZE-05) | **77 in 32 Dateien — unverändert** |
+| **Sitzungshärtung, umgestellt** | Lauf **0 Befunde** bei **1 Aufruf**; Selbstprobe **12 von 12** |
 | `php -l` | `server/` **134 Dateien, 0 Fehler** · `tools/` **30 Dateien, 0 Fehler** |
-| Wortliste | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** |
-| Vollständigkeit | **398** — die Schwelle, unverändert. *Sprang zwischendurch auf 399, siehe unten* |
-| Kontraste · Kettenaufrufe · CSP · Migrationsregister · Jobregister · Installweiche · Schemaprobe | **22/0** · **0 Befunde, 0 ungeprüft** · **0** · **0 Befunde, 0 ungenutzte Ausnahmen** · **0** · **0** · **4 Prüfungen, 0 Fehlschläge** |
+| Wortliste · Vollständigkeit · Kontraste · Kettenaufrufe · CSP · Migrationsregister · Jobregister · Installweiche · Schemaprobe | **0/0** · **398** (Schwelle) · **22/0** · **0/0** · **0** · **0** · **0** · **0** · **4 Prüfungen, 0 Fehlschläge** |
 
-**Zwei Zahlen, die etwas anderes heißen, als sie aussehen:**
+### Gegen die laufende Anlage — neu am 21.09.2026
+
+| Mittel | Zahl |
+|---|---|
+| **Bilderlauf, 62 Seiten** | **496 Einzelbilder, 62 Kontaktbögen** · Überlauf **0** · **Konsolenfehler 0** · Knöpfe falscher Höhe **0** · Karten außerhalb `main.inhalt` **0 von 162** · Rückgabe **0** |
+| **Die vier Sitzungsarten, live über HTTPS** | `app` (`login.php`): `PHPSESSID`, **secure**, **Strict** · `passwort` (`pw_handling.php`): **`EDPWSESS`**, **secure**, **Lax** · `einrichtung` (`install.php`, `wiederherstellen.php`): `PHPSESSID`, **Lax** · alle vier **HttpOnly** |
+| **F-ZE-2 — der eigentliche Beleg** | **40 anonyme Abrufe** von `hilfe.php` und `impressum.php` → **0 neue Sitzungsdateien** (vorher 7, nachher 7). Vier öffentliche Seiten: **0 `Set-Cookie`** bei HTTP 200 |
+| **Härtung wirkt** (war als „nicht messbar" geführt) | Untergeschobenes `PHPSESSID=abc123…` → zurück kam **eine andere Kennung**; **keine** Sitzungsdatei unter der vorgegebenen |
+| **`konfig_verwerfen()` greift** (A-9) | **8 von 8**: `config_eintrag_schreiben()` schreibt, `konfig()` und `kdf_anteil_alt()` sehen den neuen Wert **in derselben Anfrage**, der Nachbarschlüssel bleibt, Entfernen wirkt sofort |
+| **Proxys über `konfig()`** (A-12) | **7 von 7**: frische Anlage hat keinen `netz`-Abschnitt → Vorgabe; mit zwei Einträgen liest `netz_proxys()` beide; Statuszeile sagt „2 eingetragen"; `config.php` danach **bytegleich** |
+| **Ladezyklus** | **7 von 7** über `get_included_files()` |
+| **`konfig_lib` einzeln** | **13 von 13** |
+| **Abmelde-Probe** | V-10 **erfüllt**, kein Schlüsselmaterial nach dem Abmelden, **keine Seitenfehler** |
+| **Kopplungsprobe** | **76 Erwartungen, 0 nicht erfüllt, 0 übergangen** |
+| **Ratenprobe** | **50 Prüfungen, 1 Befund** — und der ist **nicht von AP2**: Backlog **Nr. 254** |
+
+**Drei Zahlen, die etwas anderes heißen, als sie aussehen:**
 
 - **„398" der Vollständigkeit ist die Schwelle, nicht null.** Der erste Lauf
   nach dem Paket meldete **399** — ein Auslassungszeichen (U+2026) in einem
   neuen Kommentar in `db.php`. Dieselbe Falle, dieselbe Datei, einen Tag nach
-  Schritt 16, wo sie im Prüfdokument steht. Ersetzt durch drei Punkte.
-- **„16 Zellen" statt der im Konzept genannten 12.** Das Konzept verlangt
-  4 Arten × 3 Attribute; gemessen wurde zusätzlich der **Sitzungsname**,
-  weil die Art `passwort` als einzige einen eigenen trägt (`EDPWSESS`) und
-  ein falscher Name dort bedeutete, dass ein Passwort-Reset die
-  Anmeldesitzung überschreibt.
+  Schritt 16, wo sie im Prüfdokument steht.
+- **„0 Konsolenfehler" gilt erst seit dem Kopierschritt.** Der erste
+  Bilderlauf meldete **48** — drei fehlende Handbuch-Bilder mal 16 Breiten,
+  weil `lokal_einrichten.sh` den Kopierschritt der Auslieferungskette nicht
+  hatte. **Kein Fehler der Anwendung**, sondern des Prüfstands: Backlog
+  **Nr. 255**, am selben Tag behoben.
+- **„134 PHP-Dateien" gilt seit dem 21.09.2026 auch mit eingerichteter
+  Anlage.** Vorher zählten `tools/zaehlung/` und `tools/sitzungshaertung/`
+  **135** — sie lasen `server/config.php` mit, die nur dort liegt, wo eine
+  Anlage steht. Zeile **Z31** ging dadurch über ihre Decke (`'base_url'` in
+  `config.php`), ohne dass sich eine Zeile Code geändert hätte. Beide
+  Werkzeuge nehmen die Datei jetzt aus, mit derselben Begründung wie
+  `tools/wortliste/` seit jeher; ein Selbstprobenfall hält es fest.
+- **„1 Befund" der Ratenprobe steht seit Web 20.24.0** und ist auch auf
+  `main` da. Die Probe zählt sechs Töpfe gegen eine von Hand geführte Fünf.
 
 ## A2. Was im Browser geprüft wurde
 
-**Nichts.** Siehe N2-1. Das ist bei diesem Paket kein Formalismus: AP2 fasst
-jeden Sitzungsstart der Anwendung an.
+**Der ganze Weg, in Chromium, angemeldet und abgemeldet.**
 
-## A3. Prüfliste AP2 — was **die Auftraggeberin** tun muss
+| Punkt | Gemessen |
+|---|---|
+| **A-1 Anmeldung** | `login.php` → `index.php`, **keine Schleife**; Cookie `PHPSESSID` mit **secure, SameSite=Strict, HttpOnly** |
+| **A-2 Abmelden** | Danach führt `index.php` auf `login.php`; Abmelde-Probe: V-10 erfüllt |
+| **A-3 Passwort-Weg** | Cookie heißt **`EDPWSESS`** (nicht `PHPSESSID`), secure, Lax. Zusätzlich: `lokal_einrichten.sh` setzt das Admin-Passwort **über genau diesen Weg** — er ist bei jeder Einrichtung gelaufen |
+| **A-4 Die fünf öffentlichen Seiten angemeldet** | **5 von 5 zeigen angemeldet etwas anderes als abgemeldet.** `ueber.php`: „Startseite, Suche" statt „Zur Anmeldung" · `impressum.php`: „**Du bist mit Verwaltungsrechten angemeldet**" — also wird die Rolle weiterhin **aus der Datenbank** gelesen · `notfallblatt.php`: die **Kontoadresse** steht auf dem Blatt · `hilfe.php` und `datenschutz.php` ebenso |
+| **A-5 Dieselben Seiten anonym** | HTTP 200, **0 `Set-Cookie`**, **0 neue Sitzungsdateien** nach 40 Abrufen |
+| **A-6 Betrieb → Status** | Zeile „Sitzungsablage" steht da und sagt **nicht** „nicht gelaufen" |
+| **A-7 `install.php`** | Die ganze Einrichtung ist über diesen Weg gelaufen — Schema, Admin-Anlage, `config.php` |
+| **A-8 `wiederherstellen.php`** | HTTP 200, Cookie mit SameSite=Lax (Art `einrichtung`) |
+| **Konsolenfehler im Klickweg** | **keine** |
 
-Auf einer Anlage mit Web 20.27.0. Je Punkt: Weg, Erwartung, Scheiternsmerkmal.
+**Offen bleibt allein, was eine echte Anlage braucht** — siehe A0.
+
+## A3. Prüfliste — was **die Auftraggeberin** noch tun muss
+
+Deutlich kürzer als gestern. Die zwölf Punkte sind gefahren; was bleibt, ist
+das, was ein Wegwerf-Container nicht beantworten kann.
 
 | # | Weg | Erwartet | Scheitern erkennbar an |
 |---|---|---|---|
-| **A-1** | **Anmelden** und bis zur Tagesübersicht durchklicken | Anmeldung geht, Tagesübersicht lädt, keine Schleife | Endlose Weiterleitung zwischen `login.php` und `index.php`. Dann sieht `auth_guard.php` die Sitzung nicht, die `login.php` gesetzt hat — die beiden benutzen jetzt dieselbe Art `app`, also wäre die Ablage schuld |
-| **A-2** | **Abmelden** | Rückkehr zur Anmeldung mit Grundmeldung; erneuter Aufruf einer angemeldeten Seite führt zur Anmeldung | Man bleibt angemeldet, oder die Abmeldeseite bricht ab |
-| **A-3** | **Passwort vergessen** → Mail → Link → neues Passwort setzen | Der Weg geht durch; das Cookie heißt `EDPWSESS` (Entwicklerwerkzeuge → Anwendung → Cookies) | Heißt es `PHPSESSID`, ist die Art falsch gewählt — dann überschreibt ein Passwort-Reset die Anmeldesitzung |
-| **A-4** | **Handbuch, „Was ist NAdoku", Rechtstexte, Notfallblatt — angemeldet** | Der **angemeldete Kopf** steht da wie vorher | Kopf fehlt oder zeigt „nicht angemeldet". Dann greift die Cookie-Bedingung zu streng |
-| **A-5** | Dieselben Seiten **im privaten Fenster** (nicht angemeldet) | Seiten sind lesbar; **kein** `Set-Cookie` in den Antwortkopfzeilen | Ein `Set-Cookie` erscheint → F-ZE-2 wirkt nicht |
-| **A-6** | **Betrieb → Status**, Zeile „Sitzungsablage" und die Zahl der Sitzungsdateien; nach ein paar Tagen erneut | Die Zeile sagt dasselbe wie vor dem Update; die **Zahl fällt** über die Tage, weil Bots keine Datei mehr anlegen | Die Zeile sagt „nicht gelaufen". Dann füllt `sitzung_starten()` den Stand nicht — die Statusseite läuft über `auth_guard.php`, also müsste er stehen |
-| **A-7** | **`install.php`** auf einer leeren Anlage (oder im Prüfstand) | Startseite erscheint, Einrichtung läuft durch | Weiße Seite oder „Call to undefined function konfig" → `konfig_lib.php` fehlt in der Auslieferung |
-| **A-8** | **`wiederherstellen.php`** aufrufen | Die Seite lädt und zeigt ihr Formular | Abbruch am Sitzungsstart |
-| **A-9** | **Server­einstellungen → Schlüssel des Servers**: einen Schlüssel anlegen oder erneuern | Die Seite zeigt **sofort** den neuen Stand, nicht mehr „fehlt" | Sie zeigt weiter „fehlt" → `konfig_verwerfen()` greift nicht (E-ZE-14, derselbe Fehler wie S2/AP7) |
-| **A-10** | `tools/abmelde-probe/`, `tools/ratenprobe/`, `tools/kopplungsprobe/` gegen die Anlage | grün wie vor dem Paket | Rot — dann hat die Sitzungsumstellung einen dieser Wege getroffen |
-| **A-11** | **Wirkt die Härtung?** Mit einer selbst gesetzten Sitzungskennung anmelden (Befehl in `tools/sitzungshaertung/LIESMICH.md`) | Es kommt eine **andere** Kennung zurück | Dieselbe Kennung kommt zurück → `session.use_strict_mode` greift nicht, und dann hängt der Schutz weiter an der `php.ini` |
-| **A-12** | Nur wenn `netz.vertrauenswuerdige_proxys` **eingetragen** ist: Betrieb → Status, Zeile „Vertrauenswürdige Proxys" | Dieselbe Zahl wie vorher | „keine eingetragen", obwohl welche dastehen → `konfig()` liest den Pfad falsch |
+| **B-1** | Nach dem Ausrollen: **Betrieb → Status**, Zeile „Sitzungsablage" | Dasselbe wie vor dem Update | „nicht gelaufen" → dann füllt `sitzung_starten()` den Stand auf dieser Anlage nicht |
+| **B-2** | Dieselbe Seite, **Zahl der Sitzungsdateien**, nach ein paar Tagen erneut | Die Zahl **fällt**, weil Bots keine Datei mehr anlegen | Sie steigt weiter wie bisher → F-ZE-2 greift auf dieser Anlage nicht |
+| **B-3** | In den Entwicklerwerkzeugen das Cookie von `hilfe.php` und `install.php` ansehen, **auf der echten Anlage mit HTTPS** | Beide tragen **`secure`** | `secure` fehlt → dann sieht PHP die Anfrage nicht als HTTPS (Proxy-Kopfzeile, N2-2) |
+| **B-4** | **Backlog Nr. 254** entscheiden: Ratenprobe auf sechs Töpfe nachziehen | Eine Zeile in `probe.php` | — |
 
 ## A4. Grenzen — was sich mit diesem Paket NICHT beantworten lässt
 
 - **Dass es genau einen `session_start()` gibt, heißt nicht, dass jede Seite
-  die richtige ART wählt.** Das Werkzeug zählt Aufrufe, nicht Absichten. Die
-  Zuordnung ist Lesearbeit; sie steht in der Tabelle `SITZUNG_ARTEN` und in
-  Konzept 1.3. Prüfpunkte A-3 und A-4 sind der Gegentest von außen.
-- **Die Messung der Cookie-Parameter lief auf der Kommandozeile**, wo
-  `$_SERVER['HTTPS']` nicht gesetzt ist. „HTTPS-abhängig" war dort also
-  immer `false`. Dass der Zweig mit HTTPS `true` liefert, ist gelesen und
-  nicht gemessen.
+  die richtige ART wählt.** Das Werkzeug zählt Aufrufe, nicht Absichten. Der
+  Gegentest von außen ist A-3 und A-4, und der ist gefahren: Das
+  Passwort-Cookie heißt `EDPWSESS`, die fünf öffentlichen Seiten erkennen die
+  Anmeldung.
+- **Die lokale Anlage ist ein `php -S`.** Sie belegt das Verhalten der
+  Anwendung, nicht das eines Hosters. `secure` bei den HTTPS-abhängigen Arten
+  bleibt ungemessen (N2-2).
 - **`konfig()` kennt keinen Schlüssel mit einem Punkt im Namen.** Heute hat
-  keiner einen; wer einen einführt, muss das wissen. Steht im Kopf von
-  `konfig_lib.php`.
+  keiner einen; wer einen einführt, muss das wissen.

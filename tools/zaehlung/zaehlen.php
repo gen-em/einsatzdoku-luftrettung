@@ -329,6 +329,20 @@ function zh_bestand(): array
         $p = $f->getPathname();
         if (str_contains($p, '/vendor/')) { continue; }
         if (!in_array($f->getExtension(), ['php', 'js'], true)) { continue; }
+        /* `config.php` GEHOERT NICHT ZUM REPOSITORIUM. Sie steht in
+         * `.gitignore` und liegt nur auf dem Server — und in einer
+         * Arbeitsumgebung, in der gerade eine lokale Anlage eingerichtet ist.
+         * Waere sie dabei, haengt die Dateizahl davon ab, ob jemand
+         * `lokal_einrichten.sh` gefahren hat, und die Zahlen zweier Laeufe
+         * waeren nicht vergleichbar. Dieselbe Ausnahme und dieselbe
+         * Begruendung wie in `tools/wortliste/wortliste.py`, Bereich (a).
+         *
+         * GEFUNDEN AM 21.09.2026, und zwar von der Sache selbst: Nach dem
+         * Einrichten einer lokalen Anlage meldete Zeile Z31 ('base_url'
+         * ausserhalb der drei erlaubten Dateien) einen Treffer — in
+         * `config.php`, wo `base_url` natuerlich steht. Die Zeile war rot,
+         * ohne dass sich eine Zeile Code geaendert haette. */
+        if ($p === $wurzel . '/config.php') { continue; }
         $pfade[] = $p;
     }
     sort($pfade);
@@ -730,10 +744,19 @@ function zh_selbstprobe(): int
         if ($passt) { $ok++; }
     }
 
+    /* Die Ausnahme fuer `config.php`: Sie darf im Bestand NICHT auftauchen,
+     * gleich ob gerade eine lokale Anlage eingerichtet ist oder nicht. */
+    $bestand = zh_bestand();
+    $hat = isset($bestand['server/config.php']);
+    printf("  %s  %-52s erwartet %s, gemessen %s\n",
+           !$hat ? 'ok  ' : 'FEHL', 'config.php steht NICHT im Bestand',
+           'nein', $hat ? 'ja' : 'nein');
+    if (!$hat) { $ok++; }
+
     /* Zeilentreue ueber alle drei Sichten am echten Bestand: Jede Sicht muss
      * so viele Zeilen haben wie die Quelle — sonst zeigt jeder Befund daneben. */
     $schief = 0; $geprueft = 0;
-    foreach (zh_bestand() as $rel => $d) {
+    foreach ($bestand as $rel => $d) {
         $n = substr_count($d['quelle'], "\n");
         foreach ($d['sichten'] as $s) { $geprueft++; if (substr_count($s, "\n") !== $n) { $schief++; } }
     }
@@ -741,7 +764,7 @@ function zh_selbstprobe(): int
            $schief === 0 ? 'ok  ' : 'FEHL', 'Zeilentreue ueber ' . $geprueft . ' Sichten', 0, $schief);
     if ($schief === 0) { $ok++; }
 
-    $n = count($faelle) + 1;
+    $n = count($faelle) + 2;
     printf("\nSelbstprobe: %d von %d\n", $ok, $n);
     return $ok === $n ? 0 : 1;
 }

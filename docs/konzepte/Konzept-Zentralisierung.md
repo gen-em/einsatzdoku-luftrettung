@@ -26,7 +26,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > | Paket | Stand | Stufe | Abnahmezahlen |
 > |---|---|---|---|
 > | AP1 Zählmittel, Register, Gegenprobe Paket 1 | **erledigt** 20.09.2026 | keine (nur `tools/` und `docs/`) | Selbstprobe **29 von 29** · Register **38 Zeilen, 0 über der Decke** · Eichung `error_log(` **77 in 32**, `session_start(` **9 in 9** · Bestand **133 PHP / 40 JS** · Gegenprobe Z30–Z33 **4× 0** · `php -l` **133/0** · Wortliste **0/0** · Vollständigkeit **398** (unverändert) · Kontraste **22/0** · Kettenaufrufe **30/0** · CSP **0** · Migrationsregister **0** |
-> | AP2 Konfiguration und Sitzung | **erledigt** 21.09.2026 | **Web 20.27.0** (Neben: zwei neue Funktionen, keine Migration) | Z01 **9 → 1** · Z02 **2 → 1** · Z03 **7 → 1** · Z04 **46 → 0** · `konfig_lib` **13/13** · Cookie-Parameter **16 Zellen, 0 Abweichungen** · Ladezyklus **7/7** · Sitzungshärtung **0 Befunde, Selbstprobe 12/12** · Register **38 Zeilen, 0 über der Decke** · `php -l` **134/0** · Wortliste **0/0** · Vollständigkeit **398** · `error_log(` **77** (unverändert, E-ZE-05) |
+> | AP2 Konfiguration und Sitzung | **erledigt** 21.09.2026 | **Web 20.27.0** (Neben: zwei neue Funktionen, keine Migration) | Z01 **9 → 1** · Z02 **2 → 1** · Z03 **7 → 1** · Z04 **46 → 0** · `konfig_lib` **13/13** · Cookie-Parameter **16 Zellen, 0 Abweichungen** · Ladezyklus **7/7** · Sitzungshärtung **0 Befunde, Selbstprobe 12/12** · Register **38 Zeilen, 0 über der Decke** · `php -l` **134/0** · Wortliste **0/0** · Vollständigkeit **398** · `error_log(` **77** (unverändert, E-ZE-05). **Im Browser gegen eine laufende Anlage:** Bilderlauf **496 Bilder, 0 Überlauf, 0 Konsolenfehler** · Prüfliste **A-1 bis A-12 gefahren** · F-ZE-2 **40 anonyme Abrufe → 0 neue Sitzungsdateien** · Härtung wirkt (untergeschobene Kennung verworfen) · A-9 **8/8** · A-12 **7/7** · Abmelde-Probe erfüllt · Kopplungsprobe **76/0** · Ratenprobe **50/1** (Befund nicht von AP2, Nr. 254) |
 > | AP3 API-Eingang und Flash | offen | — | — |
 > | AP4 Datenzugriff klein | offen | — | — |
 > | AP5 Transaktion und Kindtabellen | offen | — | — |
@@ -718,14 +718,60 @@ Datenmodell, keine Migration, `update.php` nicht fällig.
    `sitzung_starten()` wird aus Seiten gerufen, die `db.php` geladen haben.
    Die Bedingung gilt unverändert und steht als Kommentar in beiden Dateien.
 
-*Was NICHT geprüft werden konnte:* alles im Browser. In der Arbeitsumgebung
-liegt keine Installation (`config.php` fehlt, keine Datenbank). Die
-Abnahmeliste des Konzepts verlangt „alle Wege einmal gegangen" — Anmeldung
-bis Tagesübersicht, Passwort-Reset, Abmelden, Handbuch · Rechtstext ·
-Notfallblatt angemeldet, `install.php` und `wiederherstellen.php` im
-Prüfstand, dazu Abmelde-, Raten- und Kopplungsprobe. **Keiner dieser Wege ist
-gegangen.** Was stattdessen belegt ist, steht oben und im Prüfdokument; die
-Lücke steht dort an erster Stelle.
+*Nachtrag vom 21.09.2026 — die Browserprüfung ist nachgeholt.* Der
+Auftraggeber hat angewiesen, die Prüfwerkzeuge zu beschaffen. Mit
+`tools/referenzdatensatz/einspielen/lokal_einrichten.sh` steht seither eine
+**vollständige Anlage in der Arbeitsumgebung** (MariaDB, `php -S`, socat für
+TLS, Demo-Bestand: 106 Einsätze, 21 Diensttage, 2 Geräte). **Die Abnahmeliste
+ist damit gefahren**, nicht mehr offen:
+
+- **Bilderlauf, 62 Seiten in acht Breiten: 496 Einzelbilder, 0 Überlauf,
+  0 Konsolenfehler, 0 Knöpfe falscher Höhe**, Rückgabe 0.
+- **Die vier Sitzungsarten live über HTTPS:** `app` → `PHPSESSID` secure
+  Strict · `passwort` → **`EDPWSESS`** secure Lax · `einrichtung` →
+  `PHPSESSID` Lax. Alle HttpOnly.
+- **F-ZE-2, der eigentliche Beleg:** 40 anonyme Abrufe → **0 neue
+  Sitzungsdateien**; vier öffentliche Seiten HTTP 200 mit **0 `Set-Cookie`**.
+  Angemeldet zeigen **5 von 5** dieser Seiten etwas anderes als abgemeldet —
+  `impressum.php` sogar „Du bist mit Verwaltungsrechten angemeldet", die
+  Rolle kommt also weiterhin aus der Datenbank.
+- **Die Härtung wirkt** — das stand im Prüfdokument als „nicht messbar":
+  Eine untergeschobene Sitzungskennung wird verworfen, es kommt eine andere
+  zurück, und unter der vorgegebenen entsteht keine Datei.
+- **A-9** (`konfig_verwerfen()` greift) **8/8**, **A-12** (Proxys über
+  `konfig()`) **7/7**, Ladezyklus 7/7, `konfig_lib` 13/13.
+- **Abmelde-Probe** V-10 erfüllt, **Kopplungsprobe** 76/0.
+
+*Ein Fund im eigenen Werkzeug, und die Anlage hat ihn gefunden:* Nach dem
+Einrichten meldete die Zählung **Z31 über der Decke** — 'base_url' außerhalb
+der drei erlaubten Dateien, gefunden in `server/config.php`, wo `base_url`
+selbstverständlich steht. Die Datei gehört nicht zum Repositorium (sie steht
+in `.gitignore`), aber das Zählmittel liest das Dateisystem. **Die Folge wäre
+gewesen: Eine rote Registerzeile, ohne dass sich eine Zeile Code geändert
+hat** — und zwar nur bei der Instanz, die gerade eine Anlage eingerichtet
+hat. `tools/wortliste/` löst genau das seit jeher mit einer Ausnahme und
+einer Begründung; beide sind übernommen, in `tools/zaehlung/` **und** in
+`tools/sitzungshaertung/`, deren Dateizahl dieselbe Schwankung hatte
+(135 statt 134). Selbstprobe der Zählung jetzt **34 von 34** — der neue Fall
+hält die Ausnahme fest.
+
+*Zwei Funde, beide NICHT von AP2 — und beide vorher unsichtbar:*
+
+- **Backlog Nr. 254:** Die Ratenprobe erwartet fünf Töpfe mit Leiter, es sind
+  **sechs** (`blatt` kam mit Web 20.24.0, die Erwartung stammt aus 20.11.0).
+  Der Befund steht seit einem Monat und auch auf `main`; die Probe braucht
+  eine laufende Anlage und hängt nicht in Stufe 1, also hat sie niemand
+  gefahren.
+- **Backlog Nr. 255, am selben Tag behoben:** `lokal_einrichten.sh` kopierte
+  Handbuch und `docs/bilder/` nicht nach `server/doku/` — der Schritt steht
+  nur in der Auslieferungskette. Der erste Bilderlauf meldete dadurch **48
+  Konsolenfehler**, die es auf einer ausgelieferten Anlage nicht gibt. Nach
+  dem Kopierschritt: 0.
+
+*Was auch jetzt nicht geprüft ist:* das Verhalten auf einer **echten** Anlage
+(anderer Hoster, andere `php.ini`) und `secure` an den HTTPS-abhängigen
+Cookie-Arten — socat terminiert TLS, PHP sieht eine HTTP-Anfrage. Beides
+steht im Prüfdokument unter N2-1 und N2-2.
 
 ### AP3 — API-Eingang und Flash (E-ZE-15, -16; F-ZE-5)
 

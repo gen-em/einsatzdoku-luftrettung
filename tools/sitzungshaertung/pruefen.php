@@ -156,6 +156,11 @@ foreach ($it as $f) {
     if (!$f->isFile() || $f->getExtension() !== 'php') { continue; }
     $pfad = $f->getPathname();
     if (str_contains($pfad, '/vendor/')) { continue; }
+    /* `config.php` gehoert nicht zum Repositorium und liegt nur dort, wo eine
+     * Anlage eingerichtet ist. Waere sie dabei, haengt die gemeldete
+     * Dateizahl davon ab — und zwei Laeufe waeren nicht vergleichbar.
+     * Dieselbe Ausnahme wie in `tools/wortliste/` und `tools/zaehlung/`. */
+    if ($pfad === $wurzel . '/config.php') { continue; }
     $liste[] = $pfad;
 }
 sort($liste);
