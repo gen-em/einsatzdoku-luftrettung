@@ -30,7 +30,7 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); F-PK-1 bis -6 beantwortet (3.2). **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **zur Bestätigung vorgelegt**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. |
 > | Nächstes | **PK-04** — **erst nach ausdrücklichem Wort**; bis dahin **Halt**. Daneben liegt ein **Vorgriff auf PK-05** bei der Betreiberin: PR #71 stellt den Auslöser von `pruefung.yml` um (Zweig `claude/pk-vorgriff-stufe1-ausloeser`, Backlog Nr. 268, Abnahme P-PK-17). **PK-05 selbst bleibt offen.** und Rückmeldung an den Auftraggeber, weil PK-04 sichtbare Texte in `server/` anfasst. Parallel bei der Betreiberin die Merges von PR #70 und #69, danach Tag `web-v20.26.3` = M1 der Kette II (Z2a). **Parallelität:** PK-01 bis PK-03 laufen neben Schritt 15 und fassen `server/` nicht an. |
 > | Kette II | wird nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
-> | Hakt | nichts. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); offen bleibt die Bestätigung durch Stufe 2 nach dem Merge. **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
+> | Hakt | nichts. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); Stufe 2 hat ihn nach dem Merge bestätigt: Kreisläufe csv und edbak **104 s grün** gegen Staging mit **MySQL 8.4.10** (Lauf 35639445224, Versuch 2, Schritt 5) — im Lauf davor, ohne den Fix, derselbe Schritt nach **15 min 51 s rot**. Der Tag `web-v20.26.3` folgt darauf (Z2a). **Stufe 2 als Ganzes bleibt rot, und zwar planmäßig:** Schritt 6 meldet sich mit einem Konto an, das es auf der neuen Anlage nicht gibt (F-PK-04). Bis PK-06 ist das der erwartete Zustand, kein Schaden. **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
 >
 > **Stand der Umsetzung**
 >
@@ -42,7 +42,7 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > | PK-03 Prüfstand-Befehl | **erledigt 21.09.2026** | keine (nur `tools/`, `docs/`) | *wird beim Commit eingetragen* | Stufen klein/neben/haupt: **26,8 / 25 / 22 s**, je 13 Proben, 0 rot, 0 nicht gemessen · `bericht.py --selbstprobe` **6 Lagen / 0** (5 rote, 1 grüne) · `auswahl.py --selbstprobe` **11 / 0** · Abdeckung **262 Dateien, 0 ohne Muster** · `kettenaufrufe` liest die Zuordnung mit: mit eingebautem Fehler **2 Befunde**, ohne **0** (82 Aufrufe, 0 Befunde, 18 ungeprüft) · Befund **F-PK-18** |
 > | PK-04 Werkzeuge zusammenlegen und bereinigen | offen | | | |
 > | PK-05 Tor umbauen | offen | | | |
-> | PK-06 Staging verschlanken | offen | | | |
+> | PK-06 Staging verschlanken | offen — **trägt seit dem 21.09.2026 abends drei Nachträge**: F-PK-02 (Gruppe je Umgebung über den Lauf), F-PK-03 (Job-Pause, von derselben Gruppe miterledigt), F-PK-04 (Bilderlauf ohne Vorgabekonto), dazu F-PK-11 | | | Abnahme zusätzlich P-PK-18 und P-PK-19 |
 > | PK-07 Abschluss | offen | | | |
 > | PK-08 App-Auslieferung mit Signatur | offen (nach PK-07, eigene Freigabe) | | | |
 > | PK-M2 Erster Durchlauf der neuen Kette | offen (Betreiberin) | | | |
@@ -828,10 +828,32 @@ Konzepts eine Auskunft (1.2); deshalb vor der Freigabe.
 - `stufe2`: drei Schritte plus der leere Platz für Nr. 234; Zeitgrenze
   20 min; Cache, wo tragfähig; Kommentare auf einen Satz. `ausliefern-lauf.yml`
   und `integritaet.yml`: nur Kommentare, kein Schritt ändert sich.
+- **Dazu die drei Nachträge vom Abend des 21.09.2026** (Abschnitt 6;
+  Messwerte im Prüfdokument 6.1). Sie gehören sachlich zu PK-01, werden aber
+  hier behoben, weil sie `auslieferung.yml` anfassen:
+  1. **[F-PK-02]** Eine **`concurrency`-Gruppe je Umgebung über den Lauf**,
+     nicht über einen Job. `ausliefern-lauf.yml` hat schon eine — sie reiht
+     die Abgleiche, aber `stufe2` steht außerhalb, und genau dort entstand
+     der Schaden. **Staging: `cancel-in-progress: true`** (der jüngste Stand
+     gewinnt). **Produktiv: niemals abbrechen** — ein abgebrochener
+     Produktivlauf lässt die Wartung an und einen halben Dateistand oben.
+  2. **[F-PK-03]** Damit erledigt sich die Job-Pause mit: Kein Backup-Tor
+     läuft mehr in die 1 800 s des Nachbarlaufs. **Eine Maßnahme, zwei
+     Anlässe** — keine zweite Änderung.
+  3. **[F-PK-04]** Der Bilderlauf verlässt Stufe 2 (E-PK-01). **Es wird kein
+     Konto mit Vorgabekennwort auf Staging angelegt**; im Prüfstand kommt das
+     Demo-Konto aus der Fixture. Bis dahin ist Stufe 2 nach einem Merge
+     **planmäßig rot am Schritt 6** — wer sie rot sieht, hat nichts kaputt
+     gemacht.
+  4. **[F-PK-11]** `CLAUDE.md` 3 sagt zur Ausnahmeliste „acht Pfade … jeder
+     steht dort zweimal". Zweimal stehen nur die drei Verzeichnisse.
 - **Abnahme:** Push auf `main` → Staging grün, Stufe 2 grün, zusammen unter
   zehn Minuten; Stufe 2 mit falschem `STAGING_PASS` → rot **innerhalb einer
   Minute** mit dem Grund; alle vier Arbeitsläufe zusammen unter 1 200 Zeilen
-  (heute 2 830).
+  (heute 2 830). **Dazu:** zwei Merges innerhalb einer Minute → der zweite
+  Staging-Lauf bricht den ersten ab, **kein** Lauf steht 13 min im Backup-Tor
+  (P-PK-18); Stufe 2 grün **ohne** ein Konto mit Vorgabekennwort auf Staging
+  (P-PK-19).
 
 ### PK-07 — Abschluss
 
@@ -889,12 +911,20 @@ ist.
 
 ## 6. Offene Fragen und Befunde der Umsetzung
 
-F-PK-1 bis -6 der Konzeptfassung sind beantwortet (3.2). Was die Umsetzung
-aufwirft, steht ab F-PK-07. **Ausführlich mit Messwerten im Prüfdokument,
-Abschnitt 4** — hier die Kurzfassung mit der Folge:
+F-PK-1 bis -6 der Konzeptfassung sind beantwortet (3.2) — **einstellig, und
+das ist die Unsauberkeit**: Die Befunde zählen zweistellig ab F-PK-01, und
+damit stehen F-PK-1 und F-PK-01 nebeneinander. Die Umsetzung begann deshalb
+vorsichtshalber bei F-PK-07 und ließ 02 bis 06 frei; **der Auftraggeber hat
+die Lücke am Abend des 21.09.2026 mit F-PK-02 bis -04 belegt.** `CLAUDE.md` 7
+verlangt zweistellige Nummern: Wer zitiert, schreibt zweistellig und meint
+einen Befund. **Ausführlich mit Messwerten im Prüfdokument, Abschnitt 6** —
+hier die Kurzfassung mit der Folge:
 
 | Nr. | Aus | Befund | Folge |
 |---|---|---|---|
+| **F-PK-02** | PK-01 (Nachtrag) | **Der Auslieferungslauf hat keine Gruppe — nur sein Job `ausliefern` hat eine** (`ausliefern-lauf.yml`, E-KH-11/B4). Zwei Merges in 28 s (PR #70 18:35:47, PR #69 18:36:15 UTC) erzeugten zwei überlappende Läufe (**35639395259**, **35639445224**). | **PK-06:** eine Gruppe je Umgebung über den **Lauf**; laufende **Staging**-Läufe abbrechen, den **Produktiv**lauf **nie**. |
+| **F-PK-03** | PK-01 (Nachtrag) | **Die Job-Pause der Stufe 2 legt den Nachbarlauf lahm.** `kreislauf.py:345` hält die Jobs 1 800 s an; das Backup-Tor des Nachbarn wartete 40 Aufrufe auf `fertig`, bekam „angehalten bis 19:06:50" und schloss nach 13 min — **Lauf 69 Versuch 1 rot, keine Datei übertragen**. | Keine eigene Maßnahme: **die Gruppe aus F-PK-02 löst es mit.** Eine Maßnahme, zwei Anlässe. |
+| **F-PK-04** | PK-01 (Nachtrag) | **Der Bilderlauf meldet sich an Staging mit dem eingebauten Vorgabekennwort als `demo@gen-em.org` an; das Konto gibt es auf der neuen Anlage nicht.** Lauf 69 Versuch 2, Stufe 2 Schritt 6, nach 11 s. **Der Schritt war auf der neuen Anlage nie grün.** **Z7 der Kette II** (nicht die Z7 dieses Konzepts) hatte Demo-Konto, Referenzbestand und Messstand-Konto vorgesehen; gebucht wurde Z7 als erfüllt mit Komplett-Backup und `JOBS_TOKEN` — die drei Konten-Punkte wurden nie nachgemessen. | **Kein Konto mit Vorgabekennwort auf Staging anlegen.** Der Schritt fällt mit **E-PK-01** aus Stufe 2 heraus und wandert in den Prüfstand (Demo-Konto aus der Fixture). Bis **PK-06** ist Stufe 2 nach einem Merge **planmäßig rot am Schritt 6**; die Kreisläufe davor sind der Nachweis. |
 | F-PK-07 | PK-01 | Die Abnahme „je genau eine Fundstelle" ist wörtlich nicht erfüllbar (Emulator allein: 131 Treffer in 19 Dateien, fast alle Geschichte). | Gemessen wird **eine normative Fundstelle**, mit benanntem Befehl und Ausschlussliste. So gemessen: 1/1/1. |
 | F-PK-08 | PK-01 | Vier Zahlen aus 1.1 sind veraltet (PR #68): `tools/` **45 016**, Kette **2 863**, Kommentar **1 535**, Stufe 1 **28** Schritte. Eine ist falsch: „Werkzeuge mit Selbstprobe 28" — gemessen **13**. | 1.1 bleibt als Befund vom 21.09.2026 stehen; **PK-04 misst die Selbstproben neu und nennt den Befehl**. Die Begründung von E-PK-24 trägt auch bei 13. |
 | F-PK-09 | PK-01 | Die drei Mailwerte heißen buchstäblich `_MAIL_URL`, `_MAIL_USER`, `_MAIL_PASS` — führender Unterstrich, kein Präfix. Die Schreibweise in 1.4 liest sich als gemeinsames Präfix. | `Sandbox-Setup.md` 4 schreibt alle sieben Namen aus. 7 von 7 gesetzt. |
@@ -916,7 +946,7 @@ Abschnitt 4** — hier die Kurzfassung mit der Folge:
 |---|---|---|---|
 | Z1 | PK-M1: Zweigschutz und Merge-Recht setzen; danach die drei Messungen aus P-PK-01 durch eine Claude-Instanz | **vor dem Push dieses Konzepts** | **erledigt 21.09.2026** — (c) mit dem Merge von PR #70 |
 | Z2 | Den Kette-II-Zweig per PR mergen (PR #68, mit Übergabevermerk), damit PK-06 nicht kollidiert | vor der Freigabe | **erledigt 21.09.2026** (PR #68 gemergt) |
-| Z2a | **PR #69 (Web 20.26.3) mergen** — der edbak-Fix; danach Stufe 2 auf `main` beobachten, dann Tag `web-v20.26.3` und Freigabe = **M1 der Kette II** | nach Stufe 1 grün | offen |
+| Z2a | **PR #69 (Web 20.26.3) mergen** — der edbak-Fix; danach Stufe 2 auf `main` beobachten, dann Tag `web-v20.26.3` und Freigabe = **M1 der Kette II** | nach Stufe 1 grün | **gemergt und beobachtet 21.09.2026** — Kreisläufe 104 s grün gegen MySQL 8.4.10 (Nr. 267 belegt). **Offen: der Tag.** Der Rest der Stufe 2 ist am Schritt 6 rot, planmäßig (F-PK-04) |
 | Z3 | Umgebungswerte der Cloud-Umgebung: die sieben Namen aus 1.4 vollständig und in Anführungszeichen; Netzregel mit Docker Hub und `deb.debian.org` | — | **erledigt 21.09.2026** |
 | Z4 | Staging: Mailversand reparieren (Webspace-Protokoll), Backup-Ziel eintragen | vor PK-M2 | offen (`097D7622` ist ohne das Protokoll geklärt, 1.5) |
 | Z5 | Freigabe dieses Konzepts | nach Z1, Z2 | **erteilt 21.09.2026** |

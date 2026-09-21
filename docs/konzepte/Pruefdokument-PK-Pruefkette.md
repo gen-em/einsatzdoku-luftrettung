@@ -23,6 +23,8 @@ einer Fußnote.
 | **Die meisten Aufrufe in `pruefablauf.json`** | Von **40** eingetragenen Proben sind **17 über den Prüfstand gefahren** worden (15 grün, 2 rot — davon einer ein Verdrahtungsfehler, einer ein echter Befund). Die übrigen 23 stehen eingetragen und sind nie ausgeführt. `tools/kettenaufrufe/` hält sie gegen die Schnittstelle ihres Werkzeugs (0 Befunde) — das ist etwas anderes als ein Lauf. | beim ersten Paket, das die jeweilige Fläche berührt |
 | **Der lange Lauf mit Bilderlauf und Bedienprobe** | Ein Lauf mit `--datei server/spur_lib.php --datei server/backup_lib.php` war bei **14 grünen Proben** (darunter `spurprobe` und `containerprobe`), als der Behälter neu startete. Bilderlauf und Bedienprobe sind damit **nicht** über den Prüfstand gefahren worden. | nächster Lauf |
 | **Ein frischer Container** | Die Abnahme von `aufbauen.sh` ist in **dieser** Sitzung gefahren, nicht in einem frisch gestarteten Container. Der Unterschied ist messbar: Hier waren die sechs Pakete des alten Hooks schon installiert. Was ein frischer Container vorfindet, zeigt erst die nächste Sitzung. | nächste Sitzung |
+| **Der rote Versuch 1 von Lauf 35639445224** | Die Lauf-API liefert zu einem Lauf den **jüngsten Versuch**; das Protokoll von Versuch 1 (Backup-Tor, 40 Aufrufe, 13 min) ist über das benutzte Werkzeug nicht erreichbar. Was dort steht, ist **berichtet, nicht nachgemessen** — F-PK-03 sagt es an der Stelle noch einmal. | wenn jemand mit Zugang zur Oberfläche das Protokoll des Versuchs 1 liest |
+| **Eine grüne Stufe 2 nach einem Merge** | Sie kann bis PK-06 nicht grün werden: Schritt 6 meldet sich mit einem Konto an, das es auf der neuen Staging-Anlage nicht gibt (F-PK-04), und ein solches Konto wird **nicht angelegt**. **Stufe 2 ist nach einem Merge planmäßig rot am Schritt 6**; grün sind die Schritte 1 bis 5, und die sind der Nachweis. | PK-06 |
 | **Die Zahlen der Kette in `Pruefablauf.md` 2.3/2.4** | Schrittzahlen und Jobnamen sind am Quelltext gezählt, nicht an einem Lauf gemessen. Die Dauerangaben (49 s Staging, 16 min Stufe 2) sind aus dem Konzept übernommen und hier **nicht** nachgemessen. | PK-05, PK-06 |
 
 ## 1. Prüfliste
@@ -45,6 +47,8 @@ einer Fußnote.
 | P-PK-17 | Nach dem Merge von PR #71: ein Arbeitszweig-Push erzeugt nur noch **einen** Lauf (Vorgriff auf PK-05) | auf einem Arbeitszweig committen und pushen, dann die Läufe von `pruefung.yml` zu diesem Commit zählen | **genau 1 Lauf**, Ereignis `pull_request`; **kein** `push`-Lauf | es entstehen zwei Läufe, oder gar keiner (dann prüft der Zweig nichts mehr) | **offen** — misst die Betreiberin oder die nächste Instanz |
 | P-PK-16 | Der offene Befund der Wiederherstellungsprobe | Sicherungsziel eintragen, `php tools/wiederherstellungs-probe/probe.php` | 110 Erwartungen, 0 nicht erfüllt | die zwei Befunde bleiben auch mit Sicherungsziel stehen (dann ist es die Anwendung) | **offen** — siehe F-PK-18 |
 | P-PK-11 | Ausbaustufen `android` und `uhr` (PK-02) | `aufbauen.sh android` → `./gradlew build`; `aufbauen.sh uhr` → `pruefstand.sh reihe` | 0 Lint-Fehler, 0 Fehlschläge bzw. Reihe grün | ein Fehlschlag, oder das SDK fehlt | **android erledigt 21.09.2026** (BUILD SUCCESSFUL in 7m 19s, **0 Lint-Fehler**, **670 Prüffälle, 0 Fehlschläge**); **uhr offen** |
+| P-PK-18 | Zwei Merges kurz hintereinander erzeugen keine sich störenden Läufe mehr (F-PK-02, F-PK-03) | nach PK-06: zwei PRs innerhalb einer Minute nach `main` mergen; die Läufe von `auslieferung.yml` ansehen | der zweite Lauf **bricht den ersten ab** oder wartet; **kein** Backup-Tor läuft in die Job-Pause des Nachbarn; der Produktivlauf wird **nie** abgebrochen | ein Lauf steht 13 min im Backup-Tor, oder ein Produktivlauf wird abgebrochen (dann ist die Gruppe falsch herum gebaut) | **offen** — gehört zur Abnahme von PK-06 |
+| P-PK-19 | Stufe 2 kommt ohne Konto mit Vorgabekennwort aus (F-PK-04) | nach PK-06: Push auf `main`, Stufe 2 ansehen | Stufe 2 grün; der Bilderlauf läuft im **Prüfstand** gegen die örtliche Anlage (Demo-Konto aus der Fixture) | Stufe 2 meldet wieder `Anmeldung als demo@gen-em.org gescheitert`, oder jemand hat das Konto auf Staging angelegt | **offen** — bis dahin ist Stufe 2 nach einem Merge **planmäßig rot am Schritt 6** |
 | P-PK-06 | Die neuen Dokumente laufen durch die Wortliste (B-S4-06) | `wortliste.py --bereich c`; nachsehen, dass beide Dateien in `BEREICHE["c"]` stehen | beide Dateien werden gelesen, 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | der Lauf meldet 0 und hat keine Zeile der neuen Dokumente angesehen | **erledigt 21.09.2026** (3.3) |
 
 ## 2. Messprotokoll P-PK-01 (21.09.2026)
@@ -331,7 +335,51 @@ geschrieben hatte:
    damit an genau einer Stelle, sobald PK-05 die Kette dieselbe Datei lesen
    lässt.
 
-## 6. Befunde der Umsetzung (F-PK-07 ff.)
+## 6. Befunde der Umsetzung
+
+**Zur Nummernvergabe, damit niemand darüber stolpert.** Dieses Dokument
+führt zwei Zählungen mit demselben Kürzel, und das ist kein Versehen der
+Umsetzung, sondern lag schon im Konzept: **`F-PK-1` bis `F-PK-6`** (einstellig)
+sind die *beantworteten Fragen der ersten Konzeptfassung* (Konzept 3.2),
+**`F-PK-01` ff.** (zweistellig) sind die *Befunde*. Der Befund F-PK-01 und die
+Frage F-PK-1 stehen also seit dem 21.09.2026 nebeneinander. Die Befunde der
+Umsetzung begannen deshalb vorsichtshalber bei **F-PK-07**; die Lücke 02 bis 06
+blieb frei. **Der Auftraggeber hat sie am Abend des 21.09.2026 mit den drei
+Nachträgen unten belegt** (F-PK-02 bis -04) — die Lücke ist damit geschlossen,
+die Doppeldeutigkeit gegenüber F-PK-2 bis -4 bleibt bestehen. `CLAUDE.md` 7
+verlangt zweistellige Nummern; **die einstelligen sind der Fehler, nicht die
+zweistelligen**. Wer zitiert, schreibt zweistellig und meint einen Befund.
+
+### 6.1 Nachträge vom Abend des 21.09.2026 (F-PK-02 bis -04)
+
+Drei Befunde aus den beiden Auslieferungsläufen, die auf die Merges von
+PR #70 und PR #69 folgten. Sie gehören sachlich zu PK-01 (Bestandsaufnahme),
+werden aber erst in **PK-06** behoben, weil sie `auslieferung.yml` anfassen.
+
+| Nr. | Befund | Folge |
+|---|---|---|
+| **F-PK-02** | **Der ganze Auslieferungslauf hat keine Gruppe — nur einer seiner Jobs hat eine.** Zwei Merges nach `main` innerhalb von 28 Sekunden (PR #70 um 18:35:47, PR #69 um 18:36:15 UTC) erzeugten zwei Läufe von `auslieferung.yml` (**35639395259** und **35639445224**), die sich überlappten. | **PK-06:** eine Gruppe je Umgebung über den **Lauf**, nicht über einen Job — laufende **Staging**-Läufe abbrechen, den **Produktiv**lauf **nie**. |
+| **F-PK-03** | **Die Job-Pause der Stufe 2 legt den Nachbarlauf lahm.** `kreislauf.py` hält die Hintergrundjobs auf Staging über `jobs_pause(1800, …)` an; das Backup-Tor des Nachbarlaufs wartet auf `fertig`, bekam „angehalten bis 19:06:50" und schloss nach **13 Minuten** mit 40 Aufrufen: **Lauf 69, Versuch 1 rot, ohne dass eine einzige Datei übertragen war.** | Keine eigene Änderung nötig — **die Gruppe aus F-PK-02 löst es mit.** Sie steht in PK-06 als *eine* Maßnahme mit *zwei* Anlässen. |
+| **F-PK-04** | **Der Bilderlauf gegen Staging meldet sich mit dem eingebauten Vorgabekennwort an, und dieses Konto gibt es auf der neuen Anlage nicht.** Gemessen in Lauf 69, Versuch 2, Job „Prüfung Stufe 2", Schritt 6, nach 11 s: `Error: Anmeldung als demo@gen-em.org gescheitert — die Seite sagt: Anmeldung fehlgeschlagen. E-Mail oder Passwort prüfen.` (`aufnehmen.mjs:547`). **Der Schritt war auf der neuen Staging-Anlage nie grün.** **Woher die Lücke kommt:** **Z7 der Kette II** (nicht die Z7 des Konzepts PK) verlangte „Demo-Konto, Referenzbestand, Messstand-Konto"; gebucht wurde Z7 als **erfüllt** mit dem gelungenen Komplett-Backup und dem `JOBS_TOKEN` — **die drei Konten-Punkte wurden nie nachgemessen.** Ein Haken auf einer Zuarbeit mit sieben Teilen, gesetzt nach zwei gemessenen. | **Nichts anlegen.** Der Schritt fällt mit **E-PK-01** ohnehin aus Stufe 2 heraus und wandert in den Prüfstand, wo das Demo-Konto aus der Fixture kommt. Bis PK-06 ist Stufe 2 nach einem Merge deshalb **planmäßig rot am Schritt 6**; die Kreisläufe davor sind der Nachweis. |
+
+**Kein Konto mit Vorgabekennwort auf Staging anlegen.** Das ist die Anweisung
+des Auftraggebers vom 21.09.2026 und der Grund, warum F-PK-04 *nicht* durch
+eine Zuarbeit behoben wird: `nadokudemo0815` steht im Quelltext von sieben
+Werkzeugen; ein Konto damit auf einer erreichbaren Anlage wäre ein
+veröffentlichtes Kennwort.
+
+#### Was gemessen ist und was berichtet
+
+| Aussage | Beleg |
+|---|---|
+| Zwei Läufe, überlappend | **gemessen** über die Lauf-API: 35639395259 (`f03023e`) `staging / ausliefern` 18:35:50–18:36:19, `Prüfung Stufe 2` 18:36:22–**18:52:19**; 35639445224 (`807f462`) Versuch 2 ab **18:53:40**. Der Nachbarlauf lag also **volle 16 Minuten** im Zeitfenster der Stufe 2 des ersten. |
+| Die Gruppe fehlt dem Lauf, nicht dem Job | **gemessen** am Quelltext: `ausliefern-lauf.yml` trägt auf dem Job `ausliefern` `group: ausliefern-${{ inputs.umgebung }}` mit `cancel-in-progress: false` (E-KH-11, B4). `auslieferung.yml` trägt **keine** — weder auf dem Lauf noch auf einem der fünf Jobs, `stufe2` eingeschlossen. **Das ist die Lücke:** Die Gruppe reiht die Abgleiche hintereinander, aber `stufe2` steht außerhalb, und deshalb lief der Abgleich des einen Laufs in die Job-Pause des anderen. |
+| 1 800 s Pause | **gemessen** am Quelltext: `kreislauf.py:345` `jobs_pause(1800, a.basis, a.jobs_token)`. |
+| Backup-Tor, 40 Aufrufe, 13 Minuten, „angehalten bis 19:06:50" | **berichtet vom Auftraggeber**, nicht nachgemessen: Die Lauf-API liefert zu 35639445224 den **Versuch 2**; das Protokoll von Versuch 1 ist über das benutzte Werkzeug nicht erreichbar. Der Zeitrahmen passt: Die Pause begann um 18:36:27 (Schritt 5 der Stufe 2 des Nachbarlaufs), 1 800 s später ist 19:06:27. |
+| Anmeldung des Bilderlaufs | **gemessen** im Protokoll von Job 106471304585, Schritt 6 (11 s, 18:56:05–18:56:16). |
+| Kreisläufe grün gegen die echte Anlage | **gemessen**: Lauf 69, Versuch 2, Schritt 5, 18:54:21–18:56:05 = **104 s grün** gegen Staging mit **MySQL 8.4.10**. Das ist der Beleg für Backlog **Nr. 267** auf der echten Anlage — im Lauf davor (`f03023e`, ohne den Fix) war derselbe Schritt nach **15 min 51 s rot**. Der Tag `web-v20.26.3` folgt darauf. |
+
+### 6.2 Befunde aus den Paketen (F-PK-07 ff.)
 
 | Nr. | Befund | Folge |
 |---|---|---|
