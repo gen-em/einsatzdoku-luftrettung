@@ -3118,6 +3118,34 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     einer Stelle (`format_lib.php`) — dann ist es eine Zeile statt einer
     Suche, und deshalb wartet es bis dahin.
 
+260. **Zwei Code-Kommentare in `server/` sagen „beider FTPS-Schritte" — seit
+    Kette II/AP5 ist es einer.** *Aufgenommen 21.09.2026 (Kette II, AP5).*
+    Zugeordnet: **das Paket, das Kette II nach `main` bringt.**
+
+    Betroffen sind `server/wartung_lib.php` (Kopfkommentar zu
+    `ueberlast.json`) und `server/adminbackup_lib.php` (der `ZWINGEND`-Absatz
+    zu `sicherungen/`). Beide behaupten im Präsens, die Ausnahmeliste stehe in
+    **beiden** FTPS-Schritten von `auslieferung.yml`. Seit AP5 steht sie
+    einmal, in `ausliefern-lauf.yml`.
+
+    **Warum das nicht im selben Paket erledigt ist, und zwar ausdrücklich:**
+    Die Sätze beschreiben die **ausgelieferte** Kette, und auf `main` und auf
+    Produktiv stehen die zwei Schritte noch. Sie werden falsch in dem
+    Augenblick, in dem AP5 dort ankommt — also gehören sie in genau dieses
+    Paket. Dazu kommt, dass eine Änderung unter `server/` eine Versionsstufe
+    und einen Changelog-Eintrag verlangt (`CLAUDE.md` 2); eine Nummer dafür
+    auszugeben, solange **Prüfpunkt 23** AP5 noch zurücknehmen kann, hieße
+    sie für etwas auszugeben, das vielleicht nicht bleibt.
+
+    **Nicht betroffen:** die zwei Stellen in `server/version.php` (5514,
+    5781). Sie stehen im Werdegang der Fassungen und beschreiben den Stand
+    von Web 20.15.2 bzw. 20.16.x — dort ist „zwei FTPS-Schritte" richtig und
+    bleibt es. Die Datei sagt das über sich selbst: *„Nicht angefasst sind
+    … die Stellen, die den alten Namen ausdrücklich als Historie nennen."*
+    Ebenso wenig betroffen sind CHANGELOG, Backlog und die Prüfdokumente —
+    Protokolle werden nicht rückwirkend umgeschrieben.
+
+
 ## Erledigt
 
 

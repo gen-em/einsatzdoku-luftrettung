@@ -859,8 +859,11 @@ Daten erst nach Server-Bestätigung.
 │                          tools/referenzdatensatz/einspielen/lokal_starten.sh
 └── .github/workflows/     die Auslieferungskette (P5a/AP1, Abschnitt 6)
     ├── pruefung.yml       Stufe 1: jeder Push, ohne Installation
-    ├── auslieferung.yml   Staging (Push auf main), Stufe 2, Produktion
-    │                      (Tag, Pflichtfreigabe, Backup-Tor)
+    ├── auslieferung.yml   WANN ausgeliefert wird: Staging (Push auf main),
+    │                      Stufe 2, Produktion (Tag, Pflichtfreigabe,
+    │                      Backup-Tor), Zeiger
+    ├── ausliefern-lauf.yml WAS dabei geschieht: die Schrittfolge, EINMAL,
+    │                      für beide Umgebungen (Kette II/AP5, E-KH-14)
     └── integritaet.yml    die Wache — hängt am Anzeigenamen „Auslieferung"
                           (`deploy.yml` ist mit Web 20.4.0 gelöscht worden)
 ```
@@ -4682,7 +4685,7 @@ Trägt der Name keine, steht keine da.
 | Ort | Eintrag | ohne ihn |
 |---|---|---|
 | `.gitignore` | `server/apk/` | Ein signiertes APK läge im Verlauf — ein Erzeugnis, kein Quelltext, bei jeder Fassung ein zweistelliges MB |
-| `.github/workflows/deploy.yml` (bis Web 20.3.0; seither `auslieferung.yml`, beide FTPS-Schritte) | `apk/**` und `apk/` | **Der nächste Push löschte die Dateien.** Die Action synchronisiert `server/` und entfernt, was nicht ausgenommen ist |
+| `.github/workflows/deploy.yml` (bis Web 20.3.0; dann `auslieferung.yml`, beide FTPS-Schritte; seit AP5 `ausliefern-lauf.yml`, einer) | `apk/**` und `apk/` | **Der nächste Push löschte die Dateien.** Die Action synchronisiert `server/` und entfernt, was nicht ausgenommen ist |
 
 Der zweite ist der, den man vergisst. Dasselbe Muster wie `config.php` und
 `sicherungen/`, inklusive der doppelten Schreibweise: Die Action prüft
@@ -5945,8 +5948,9 @@ unlesbar oder kein gültiges JSON, gilt die Wartung trotzdem; der Balken sagt
 keine Installation öffnen, die jemand ausdrücklich geschlossen hat.
 
 **Zwei Einträge, die zusammengehören:** `server/wartung.lock` steht in
-`.gitignore` **und** in der Ausnahmeliste **beider** FTPS-Schritte von
-`.github/workflows/auslieferung.yml` (bis Web 20.3.0: `deploy.yml`). Ohne den ersten schlösse ein Checkout jede
+`.gitignore` **und** in der Ausnahmeliste des FTPS-Schritts in
+`.github/workflows/ausliefern-lauf.yml` (bis Kette II/AP5: zweimal in
+`auslieferung.yml`; bis Web 20.3.0: `deploy.yml`). Ohne den ersten schlösse ein Checkout jede
 Installation; ohne den zweiten löschte der Push die Datei — mitten im Update,
 für das sie da ist. Dasselbe Muster wie `config.php`, `install.php`,
 `install.lock`, `sicherungen/`, `apk/` — und seit Web 20.13.0 `ueberlast.json` (Abschnitt 5e).
@@ -8739,7 +8743,7 @@ der über `wartung.lock` steht. Erwogen und verworfen wurde, den Vorfall in
 eine Datei zu schreiben und beim nächsten gelungenen Verbindungsaufbau nach
 `app_state` nachzutragen — das hätte den Buchstaben erfüllt und **zwei
 Speicher für eine Zahl** gebraucht. Die Datei steht in `.gitignore` **und** in
-der Ausnahmeliste beider FTPS-Schritte, wie `config.php`, `install.php`
+der Ausnahmeliste des FTPS-Schritts, wie `config.php`, `install.php`
 (Nr. 214), `install.lock`, `wartung.lock`, `sicherungen/` und `apk/`.
 
 **Der Riegel gegen die Schleife.** Alles, was unterhalb der 503-Antwort noch
@@ -8800,13 +8804,40 @@ E-P5a-10.
 | Push auf `main` | **Staging** | `staging` | Stufe 1 |
 | Tag `web-vX.Y.Z` | **Produktiv** | `produktion` | Stufe 1, Stufe 2, Pflichtfreigabe, Backup-Tor |
 
-Drei Arbeitsläufe unter `.github/workflows/`:
+Vier Arbeitsläufe unter `.github/workflows/`:
 
 | Datei | Was |
 |---|---|
 | `pruefung.yml` | **Stufe 1** — jeder Push, jeder Zweig, jeder Pull Request |
-| `auslieferung.yml` | Jobs `staging`, `stufe2` und `produktion` |
+| `auslieferung.yml` | **wann**: Jobs `staging`, `stufe2`, `produktion` und `zeiger` |
+| `ausliefern-lauf.yml` | **was**: die Schrittfolge, einmal, für beide Umgebungen |
 | `integritaet.yml` | die Wache; läuft nach einem **Produktiv**-Deploy und täglich |
+
+**Die Trennung ist seit Kette II/AP5 (21.09.2026) und hat einen Grund.**
+Bis dahin standen die Schritte zweimal in `auslieferung.yml`: vier im Job
+`staging`, dreizehn im Job `produktion`. Staging hatte weder Zielprobe noch
+Backup-Tor, weder Wartungsmodus noch Migrationsabfrage — **also lief auf
+Produktiv jedes Mal etwas, was vorher nirgends gelaufen war.** Genau das
+verbietet E-KH-17, und genau deshalb steht die Folge jetzt einmal:
+`auslieferung.yml` ruft sie zweimal auf und reicht `umgebung` durch.
+
+**Was die Umgebung noch trennt, ist klein und begründet sich selbst:** zwei
+Schritte (der Tag-Vergleich — Staging fährt von `main` und hat keinen Tag;
+und das Tor der grünen Läufe — es fragt, ob dieser Stand auf *Staging* grün
+war, und müsste auf Staging nach sich selbst fragen) und drei Werte
+(Basisadresse, Zielpfad, Pfad der Zustandsdatei), die der **erste** Schritt
+des gemeinsamen Laufs bestimmt. Alles Übrige ist gleich.
+
+**Der Anzeigename eines Jobs wird zusammengesetzt** — `staging / ausliefern`
+und `produktion / ausliefern`. Die **Schritt**namen bleiben, wie sie waren.
+
+> **Ein Vorbehalt, und er steht hier und nicht in einer Fußnote:** Die
+> Pflichtfreigabe hängt am `environment:`, und das liegt seit AP5 im
+> aufgerufenen Lauf. Dass die Umgebung dort **bindet**, ist gemessen
+> (F-KH-U-31). Dass die **Freigabepflicht** mitwandert, ist es nicht —
+> `staging` hat keine, also kann kein Lauf dagegen es zeigen. Der Beweis ist
+> ein Probelauf gegen `produktion` (Prüfdokument Kette II, Prüfpunkt 23),
+> und er steht **vor** dem nächsten Tag.
 
 **Der Tag ist die Fassung** (F-P5a-1, entschieden 15.09.2026): `web-vX.Y.Z`,
 gleich `WEB_VERSION` in `server/version.php`. Der Produktionslauf verweigert,
@@ -9210,9 +9241,17 @@ sind `config.php` und `install.lock` (bei der Einrichtung erzeugt),
 `wartung.lock` (der Schalter des Wartungsmodus), `ueberlast.json` (der Zähler
 der Verbindungsgrenze, P5a/AP9), `install.php` (liegt im Repositorium, wird
 aber nicht ausgeliefert — Nr. 214), `sicherungen/` und `apk/`.
-Diese Ausnahmeliste steht in beiden FTPS-Schritten wortgleich und ist tragend
-— ohne sie löscht der nächste Deploy, was nur dort entsteht. Sie steht
-**zusätzlich** in `.gitignore` (außer `install.php`); beides muss so bleiben.
+Diese Ausnahmeliste ist tragend — ohne sie löscht der nächste Deploy, was nur
+dort entsteht. Sie steht **zusätzlich** in `.gitignore` (außer `install.php`);
+beides muss so bleiben.
+
+**Seit Kette II/AP5 steht sie EINMAL** (E-KH-20 (1)), im FTPS-Schritt von
+`ausliefern-lauf.yml`; **acht Pfade, und die Zahl ist der Prüfwert.** Bis
+dahin stand sie zweimal, wortgleich, je einmal für Staging und Produktiv.
+Zwei wortgleiche Listen sind keine zwei Riegel, sondern einer und ein
+Versprechen: Wer die eine ergänzt und die andere vergisst, schützt eine
+Umgebung und die andere nicht — und merkt es erst, wenn eine Datei fehlt,
+die es nur auf dem Server gab.
 
 > **Dieser Absatz nannte bis Web 20.25.0 fünf Einträge und die Listen führten
 > sieben** — `ueberlast.json` und `install.php` fehlten hier, seit Web 20.15.2
@@ -9260,20 +9299,63 @@ sondern an den **Umgebungen**:
 
 `FTP_SERVER` ist der **nackte Hostname**, ohne Protokoll und ohne Pfad.
 
+> **Der Satz über der Tabelle stimmt heute nur zur Hälfte, und zwar
+> gemessen** (Kette II, F-KH-U-32, 21.09.2026). `FTP_SERVER`,
+> `FTP_USERNAME` und `FTP_PASSWORD` lösen **auch ohne `environment:`** auf —
+> es gibt sie zusätzlich eine Ebene höher, als Repositoriums- oder
+> Organisationsgeheimnis. `JOBS_TOKEN` und alle Variablen nicht; bei denen
+> ist die Umstellung vollständig.
+>
+> **Was das kostet:** Der erste Schritt des Auslieferungslaufs prüft, ob die
+> drei Werte da sind, und ist genau dafür gebaut, **vor** Backup und Wartung
+> anzuschlagen. Fehlt der Umgebungswert, greift still der von oben, und der
+> Schritt meldet „Drei Geheimnisse vorhanden" — **ein Tor, das immer
+> aufgeht.** Ausgeliefert wird weiterhin richtig (die Umgebung gewinnt gegen
+> die Ebene darüber); was fehlt, ist die Warnung.
+>
+> **Abhilfe ist ein Klick und kein Code:** die drei Werte auf
+> Repositoriums- bzw. Organisationsebene löschen, die in den Umgebungen
+> stehen lassen. Der Bedienweg steht im Prüfdokument von Kette II als
+> **Prüfpunkt 22** — samt dem Hinweis, dass ein *Organisations*geheimnis
+> vorher gegen andere Repositorien der Organisation zu prüfen ist. Die Regel
+> daraus (E-KH-28): **Ein Wert, den die Kette aus einer Umgebung liest, darf
+> auf keiner Ebene darüber denselben Namen haben** — sonst ist jede Prüfung
+> auf sein Vorhandensein eine Prüfung auf den falschen Wert.
+
 **`FTP_ZIELPFAD` und `FTP_STATE_PFAD` tragen heute noch Vorgabewerte**
 (`./staging/` bzw. `./httpdocs/`, `../.deploy-state-staging.json` bzw.
 `../.deploy-state-produktion.json`) — eine fehlende Variable führt damit
 still in ein fremdes Verzeichnis, statt den Lauf anzuhalten. Beide verlieren
 ihre Vorgabe mit Konzept Kette II (E-KH-07, AP6); bis dahin gehören sie in
-**beiden** Umgebungen ausdrücklich gesetzt (Zuarbeit Z4). Welche Werte die
+**beiden** Umgebungen ausdrücklich gesetzt (Zuarbeit Z4).
+
+**Seit AP5 stehen diese Vorgaben an EINER Stelle** — im ersten Schritt des
+gemeinsamen Laufs, zusammen mit der Basisadresse, in einem `case` über die
+Umgebung. Vorher standen sie an fünf Stellen verstreut in zwei Jobs. Der
+Schritt **bricht ab**, wenn die Basisadresse leer ist oder die Umgebung
+weder `staging` noch `produktion` heißt; ein leerer Zielpfad bricht
+unmittelbar vor dem Abgleich ab, statt die Anwendung in das
+Wurzelverzeichnis des FTP-Zugangs zu synchronisieren.
+
+**Warum dort ein `case` steht und kein Ausdruck:** Ein `A && B || C` in
+einem GitHub-Ausdruck fällt auf `C` durch, sobald `B` **leer** ist — nicht
+nur, wenn `A` falsch ist. Mit
+`umgebung == 'produktion' && vars.PRODUKTION_URL || vars.STAGING_URL` hätte
+ein Produktivlauf bei leerer `PRODUKTION_URL` still gegen **Staging**
+gemessen: Backup-Tor an der falschen Anlage, Zielprobe an der falschen
+Adresse, Lauf grün. Das ist der Fehler, den die Zusammenführung hätte
+einbauen können. Welche Werte die
 beiden Anlagen tragen, steht in `docs/Rahmenplan.md` 6a.
 
 **`JOBS_TOKEN` steht in beiden Umgebungen unter demselben Namen und trägt
 verschiedene Werte.** Das Token gehört der **Installation**
 (`app_state.jobs_token`, sichtbar unter Betrieb → Hintergrundjobs), nicht dem
-Repositorium; Staging und Produktiv sind zwei Installationen. Jeder Job liest
-es aus seiner eigenen Umgebung, deshalb kollidiert der gleiche Name nicht —
-und die beiden Zeilen in `auslieferung.yml` lassen sich nebeneinander lesen.
+Repositorium; Staging und Produktiv sind zwei Installationen. Jeder Lauf liest
+es aus seiner eigenen Umgebung, deshalb kollidiert der gleiche Name nicht.
+**Seit Kette II/AP5 gibt es dafür keine zwei Zeilen mehr, sondern einen
+Schritt:** Der erste Schritt des gemeinsamen Laufs bestimmt Basisadresse,
+Zielpfad und Pfad der Zustandsdatei je Umgebung — mit einem `case` und einem
+Abbruch, wenn einer fehlt.
 
 ### 6.6 Die Integritätswache hängt am Namen
 
@@ -9291,10 +9373,14 @@ Abschnitt.
 ### 6.5a Zielprobe und Probelauf — die Kette misst, statt zu glauben
 
 **Die Zielprobe** (`tools/kette/zielprobe.py`, seit AP3 der Kettenhärtung,
-E-KH-07) steht im Job `produktion` **vor dem Backup-Tor**. Sie schreibt per
-FTPS eine Datei mit Zufallsnamen und Zufallsinhalt ins Zielverzeichnis, holt
-sie über HTTPS unter `PRODUKTION_URL` zurück, vergleicht sie, löscht sie und
+E-KH-07) steht **vor dem Backup-Tor**. Sie schreibt per FTPS eine Datei mit
+Zufallsnamen und Zufallsinhalt ins Zielverzeichnis, holt sie über HTTPS
+unter der Basisadresse der Umgebung zurück, vergleicht sie, löscht sie und
 prüft das Löschen (danach 404).
+
+**Seit AP5 läuft sie in beiden Umgebungen** — bis dahin nur auf Produktiv.
+Das ist keine Zugabe, sondern E-KH-17: Ein Tor, das nur dort steht, wo es
+teuer wird, ist auf dem Weg dorthin nie gefahren worden.
 
 **Warum vor dem Backup-Tor:** Bis dahin hat noch nichts den Server verändert.
 Zeigt das FTP-Konto auf ein anderes Verzeichnis als die öffentliche Adresse,
@@ -10276,7 +10362,7 @@ letztere sind reine Clientfilter und erreichen den Server nie.
 
 **Neuinstallation:** leere DB + `server/` hochladen → `index.php` leitet zum
 Installer. **Seit Nr. 214 gehört `install.php` nicht mehr zur Auslieferung** —
-sie steht in der Ausnahmeliste beider FTPS-Schritte. Eine leere Anlage lässt
+sie steht in der Ausnahmeliste des FTPS-Schritts. Eine leere Anlage lässt
 sich damit **nicht allein über die Kette** einrichten: Die Datei
 `server/install.php` muss **einmal von Hand** hinauf, danach wird eingerichtet
 und danach wird sie wieder gelöscht — so, wie es der letzte Satz dieses
@@ -10406,7 +10492,7 @@ Verzeichnis. Ohne eingerichtetes SMTP (`smtp_eingerichtet()`) steht statt der
 Mail ein dauerhafter Hinweis im Adminbereich. Einzelheiten:
 `docs/Backup-Format.md` 5b.
 
-**`sicherungen/` steht in der `exclude`-Liste beider FTPS-Schritte von `.github/workflows/auslieferung.yml`** (bis Web 20.3.0: `deploy.yml`).**
+**`sicherungen/` steht in der `exclude`-Liste des FTPS-Schritts von `.github/workflows/ausliefern-lauf.yml`** (bis Kette II/AP5: zweimal in `auslieferung.yml`; bis Web 20.3.0: `deploy.yml`).**
 Das ist keine Feinheit: Der FTP-Deploy synchronisiert `server/` und löscht alles,
 was nicht ausgenommen ist. Deshalb wird die `.htaccess` auch zur Laufzeit
 erzeugt und nicht mitgeliefert — eine mitgelieferte käme im ausgenommenen Ordner

@@ -61,8 +61,12 @@ Welches Dokument zu welcher Änderung gehört, steht in Abschnitt 9
 ## 3. Deployment — Vorsicht
 
 **Seit Web 20.4.0 gibt es zwei Wege** (P5a/AP1, R67; Einzelheiten in
-`docs/Technik.md` 6, die Kette selbst in
-`.github/workflows/auslieferung.yml`):
+`docs/Technik.md` 6). **Die Kette liegt seit Kette II/AP5 in zwei Dateien:**
+`.github/workflows/auslieferung.yml` sagt, **wann** ausgeliefert wird (die
+Auslöser, die vier Jobs, die Freigabe), und
+`.github/workflows/ausliefern-lauf.yml` sagt, **was dabei geschieht** — die
+Schrittfolge, einmal, für beide Umgebungen. Wer einen Schritt ändert, ändert
+ihn dort und damit für beide; das ist der Zweck (E-KH-14, -17).
 
 - **Push auf `main`** → per FTPS auf **Staging**
   (`staging-nadoku.gen-em.org`). Kein Produktivserver.
@@ -106,10 +110,18 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   `server/sicherungen/`, `server/apk/` und — seit Web 20.26.0 —
   `server/.sitzungen/` (die PHP-Sitzungsdateien, Schritt 16, E-SA-05) liegen
   nur auf dem Server. Sie stehen in `.gitignore` **und** in der
-  Ausnahmeliste **beider** FTPS-Schritte — beides muss so bleiben.
+  Ausnahmeliste des FTPS-Schritts — beides muss so bleiben.
   **Acht Pfade sind es, und die Zahl ist der Prüfwert.** Jeder steht dort
   zweimal, als Datei- und als Verzeichnismuster (`sicherungen/**` und
   `sicherungen/`), weil die Aktion beides getrennt prüft.
+  **Seit Kette II/AP5 steht die Liste EINMAL**, in
+  `.github/workflows/ausliefern-lauf.yml` (E-KH-20 (1)). Bis dahin stand sie
+  zweimal, wortgleich, je einmal für Staging und Produktiv — und zwei
+  wortgleiche Listen sind keine zwei Riegel, sondern einer und ein
+  Versprechen: Wer die eine ergänzt und die andere vergisst, schützt eine
+  Umgebung und die andere nicht, und merkt es erst, wenn eine Datei fehlt,
+  die es nur auf dem Server gab. **Wer eine ältere Quelle liest, findet dort
+  „beide FTPS-Schritte" — das ist der Stand bis zum 21.09.2026.**
   **Was passiert, wenn `.sitzungen/` fehlt:** beim heutigen Transport nichts —
   die Fremd-Aktion listet das Fernverzeichnis nie, sondern liest nur ihre
   eigene Zustandsdatei (nachgemessen im Quelltext von

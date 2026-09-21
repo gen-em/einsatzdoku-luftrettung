@@ -21,7 +21,7 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, AP5 vermessen (Form entschieden, Umbau noch nicht begonnen).** AP6 bis AP8 nicht begonnen |
+> | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, AP5 GEBAUT (Abnahme offen — Pruefpunkt 23 und ein Staging-Lauf).** AP6 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
 > | Funde | **31** (Abschnitt 2): F-KH-U-01 bis F-KH-U-32 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. Zuletzt **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22 |
@@ -638,6 +638,24 @@ davon unterscheiden sich in genau der Richtung, die die Bindung beweist** —
 `JOBS_TOKEN`, `FTP_ZIELPFAD` und `STAGING_URL` sind drinnen belegt und
 draußen leer; `FTP_STATE_PFAD` ist beidseits leer und zeigt, dass die
 Messung auch „leer" sagen kann.
+
+**F — Runde 3 (Lauf 35560508628): `${{ env.X }}` löst in einem
+`with:`-Block auf**, wenn `X` vorher über `$GITHUB_ENV` gesetzt wurde. Das
+war die letzte ungemessene Annahme an AP5 und keine akademische: Der
+gemeinsame Lauf bestimmt Zielpfad und Zustandsdatei **einmal** im ersten
+Schritt und reicht sie so an den FTPS-Schritt weiter (`server-dir:
+${{ env.ZIELPFAD }}`). Löste das nicht auf, wäre `server-dir` **leer**, und
+die Aktion synchronisierte in das **Wurzelverzeichnis des FTP-Zugangs** —
+neben den Webroot, im schlimmsten Fall über fremde Verzeichnisse. Im
+Trockenlauf fiele das nicht auf.
+
+Gemessen mit `actions/checkout` und seinem `path:` — eine echte
+Fremd-Aktion, ein echter `with:`-Block, und das Ergebnis ist ein Verzeichnis,
+das es gibt oder nicht gibt. Beleg im Protokoll: die Pfade des Laufs lauten
+`…/einsatzdoku-luftrettung/probe-ziel/.git`, der Checkout ist also dort
+gelandet, wo der Ausdruck hinzeigte. **Die Probe war so gebaut, dass der
+gegenteilige Ausgang sie rot gemacht hätte** — `exit 1` mit der Ansage, die
+Pfade wieder als vollständige Ausdrücke zu führen.
 
 **D, E — Nebenbei:** `needs:` auf einen aufgerufenen Lauf hält. Der Jobname
 wird zusammengesetzt: `Complete job name: C -- aufgerufener Lauf MIT
