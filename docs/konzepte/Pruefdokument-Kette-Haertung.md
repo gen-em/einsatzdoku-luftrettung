@@ -21,10 +21,10 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 20.09.2026 — **AP1 gebaut (Abnahme offen), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut (Abhilfe nicht bewiesen — Prüfpunkt 21).** AP5 bis AP8 nicht begonnen |
+> | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN.** AP5 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **27** (Abschnitt 2): F-KH-U-01 bis F-KH-U-28 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach |
+> | Funde | **28** (Abschnitt 2): F-KH-U-01 bis F-KH-U-29 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. Zuletzt **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach |
 > | F3 | **GEFUNDEN UND BEHOBEN, der Beleg ist gefahren.** Ursache: `RETR` auf die nicht vorhandene Zustandsdatei tötet die Verbindung; die Aktion deutet es als „first publish" und arbeitet mit einem toten Client weiter, bis das erste `MKD` es bemerkt — **drei Schritte hinter der Stelle, die sie meldet** (F-KH-U-25). Abhilfe: die Datei einmal hinlegen, bevor die Aktion läuft (AP4, Richtung (e), `tools/kette/zustand.py`). Beleg: **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige Abgleich gegen diesen Server überhaupt (F-KH-U-28). **E-KH-09 ist erfüllt** |
 > | Prüfliste | 26 Punkte: **10 abgehakt**, 5 teilweise, **11 offen** — gegen das Dokument nachgezählt |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
@@ -484,6 +484,59 @@ Error: Client is closed because read ECONNRESET (data socket)
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-29 — Die Abnahme von AP4 ist gefahren: zweimal grün, 0 geplante
+Löschungen, und beim zweiten Mal fasst der Schritt die Datei nicht an.**
+*Läufe 35547147256 und 35547171397, 21.09.2026, 00:16 UTC.*
+
+**Lauf 1 — der Schritt legt an:**
+
+```
+Making changes to 688 files/folders to sync server state
+Uploading: 9.74 MB -- Deleting: 0 B -- Replacing: 0 B
+🎉 Sync complete. Saving current server state to "/../.deploy-state-produktion.json"
+Total time: 2.2 seconds
+```
+
+**Lauf 2 — der Schritt findet sie und lässt sie liegen:**
+
+```
+Zustandsdatei der Auslieferungsaktion: ../.deploy-state-produktion.json
+  Zielverzeichnis: /
+  Vorhanden. Es wird nichts angelegt und nichts angefasst — sie trägt den Bestand des Servers.
+…
+Making changes to 688 files/folders to sync server state
+Uploading: 9.74 MB -- Deleting: 0 B -- Replacing: 0 B
+Total time: 3.1 seconds
+```
+
+| Bedingung der Abnahme | Lauf 1 | Lauf 2 |
+|---|---|---|
+| Job `produktion` grün | **ja** | **ja** |
+| Zielprobe grün | ja | ja |
+| geplante Löschungen | **0 B** | **0 B** |
+| Zustandsdatei | **angelegt** (Schritt 4 s) | **vorhanden, nicht angefasst** (Schritt 2 s) |
+| Job `zeiger` | **übersprungen** (richtig — Probelauf) | übersprungen |
+
+**Die zweite Zeile ist die wichtigere.** Dass der Schritt anlegt, wenn die
+Datei fehlt, war in der Selbstprobe zu sehen. Dass er sie **in Ruhe lässt**,
+wenn sie da ist, konnte nur ein zweiter Lauf gegen den echten Server zeigen —
+und das ist die Vorsicht, an der alles hängt: Eine überschriebene
+Zustandsdatei hieße „der Server ist leer" und wäre bei der nächsten echten
+Auslieferung eine Voll-Übertragung statt der Änderungen.
+
+**`Deleting: 0 B` in beiden Läufen** heißt: Die Aktion plant nichts zu
+löschen. Das ist die Bedingung, die E-KH-20 für jeden Transportwechsel
+verlangt — hier gilt sie unverändert, weil der Transport unverändert ist.
+
+**Was die Zahl 688 bedeutet und was nicht:** Die Zustandsdatei sagt
+`data: []`, also hält die Aktion den Server für leer und kündigt an, alles zu
+übertragen. Das ist für einen Erstlauf richtig und war angekündigt
+(E-KH-26). Beim ersten **echten** Lauf kostet es acht Minuten statt
+Sekunden; danach schreibt die Aktion den wirklichen Bestand fort.
+
+**Damit ist AP4 abgenommen.** Offen bleibt allein die Freigabe der
+Betreiberin vor dem ersten echten Auslieferungslauf.
 
 **F-KH-U-28 — DIE ABHILFE TRÄGT. Der erste vollständige FTPS-Abgleich gegen
 diesen Server, den es je gegeben hat.** *Lauf 35545737872, 20.09.2026,
