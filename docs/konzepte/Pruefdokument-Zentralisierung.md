@@ -359,7 +359,7 @@ wiederholen lassen:
 
 | Weg | Ergebnis |
 |---|---|
-| **Bilderlauf** `node tools/screenshots/aufnehmen.mjs` | siehe unten — Zahl eingetragen nach dem Lauf |
+| **Bilderlauf** `node tools/screenshots/aufnehmen.mjs` | **496 Einzelbilder, 62 Kontaktbögen** · Überlauf **0** · Konsolenfehler **0** · Knöpfe falscher Höhe **0** (Zeiger, 44/36 px) · Karten im Seitengerüst **162 geprüft, 0 außerhalb von `main.inhalt`** — Zahl für Zahl wie nach AP2 |
 | **Meldung nach der Umleitung**, drei Seiten | **11 von 11 Zellen**, siehe C1. `papierkorb.php` zusätzlich: die Meldung trägt die Klasse `meldung-fehler` |
 | **Sechs der elf umgebauten Eingänge** unter echter Last | über die Kreisläufe: Export, Import, Backup zurückspielen, Einträge zurückspielen, Spuren sichern und zurückspielen, Tagesdaten — **0 unerklärte Abweichungen** in 339 693 Einzelvergleichen |
 
