@@ -21,10 +21,10 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, AP5 GEBAUT und zur Haelfte abgenommen (Form und Pflichtfreigabe belegt, Lauf 35566000648), AP6 GEBAUT (Abnahme offen — sie verlangt einen provozierten Fehlschlag auf Staging).** AP7 und AP8 nicht begonnen |
+> | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, **AP5 VOLLSTAENDIG ABGENOMMEN** (Produktiv-Haelfte Lauf 35566000648, Staging-Haelfte Lauf 35570398032), AP6 GEBAUT (Abnahme offen — sie verlangt einen provozierten Fehlschlag auf Staging). **Kette II liegt seit dem 21.09.2026 auf `main`** (PR #65, Merge `fb614d1`). **M1 ist blockiert:** Stufe 2 bleibt am Botschutz von lima-city rot (F-KH-U-10/-36), und das Tor der gruenen Laeufe laesst deshalb keinen Tag durch.** AP7 und AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **34** (Abschnitt 2): F-KH-U-01 bis F-KH-U-35 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben |
+> | Funde | **35** (Abschnitt 2): F-KH-U-01 bis F-KH-U-36 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben |
 > | F3 | **GEFUNDEN UND BEHOBEN, der Beleg ist gefahren.** Ursache: `RETR` auf die nicht vorhandene Zustandsdatei tötet die Verbindung; die Aktion deutet es als „first publish" und arbeitet mit einem toten Client weiter, bis das erste `MKD` es bemerkt — **drei Schritte hinter der Stelle, die sie meldet** (F-KH-U-25). Abhilfe: die Datei einmal hinlegen, bevor die Aktion läuft (AP4, Richtung (e), `tools/kette/zustand.py`). Beleg: **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige Abgleich gegen diesen Server überhaupt (F-KH-U-28). **E-KH-09 ist erfüllt** |
 > | Prüfliste | **28** Punkte: **13 abgehakt**, 5 teilweise, **10 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu: **22** (die drei Zugangswerte eine Ebene höher löschen, F-KH-U-32) und **23** (die Pflichtfreigabe nach dem Umbau von AP5 nachmessen, F-KH-U-31) |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
@@ -512,6 +512,101 @@ Error: Client is closed because read ECONNRESET (data socket)
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-36 — Die Staging-Hälfte der Abnahme von AP5 ist gefahren und grün.
+Stufe 2 dahinter ist rot, und zwar am Botschutz — nicht an der neuen
+Schrittfolge.**
+*Lauf 35570398032, 21.09.2026, 06:53 UTC — der erste Push auf `main` mit
+Kette II.*
+
+**Das war die Hälfte, die aus der Umsetzung heraus nicht erreichbar war.**
+E-KH-14 verlangt für AP5 einen Staging-Lauf, der dieselbe Schrittfolge zeigt
+wie Produktiv. Produktiv hatte den neuen Weg gefahren (F-KH-U-34), Staging
+noch nie — ausgerechnet die Hälfte, um derentwillen AP5 gebaut wurde. Sie
+ist jetzt gefahren: **`staging / ausliefern`, alle 17 Schritte, 49 Sekunden,
+grün.**
+
+| Schritt | | |
+|---|---|---|
+| Adresse, Zielpfad, Zustandsdatei bestimmen | ✅ | **Prüfpunkt 24 damit belegt** — die Variablen stehen |
+| Geheimnisse der Umgebung `staging` | ✅ | |
+| Tag, Tor der grünen Läufe, Adressvergleich | übersprungen | Produktiv-only — richtig |
+| **Zielprobe** | ✅ 26 s | **zum ersten Mal gegen Staging** |
+| Backup-Tor | ✅ 1 s | |
+| `doku`-Kopie, Gesprächslauf-Riegel | ✅ | |
+| Zustandsdatei bereitstellen | ✅ 3 s | AP4 auf Staging |
+| **Wartung einschalten** | ✅ | |
+| **FTPS-Abgleich** | ✅ 7 s | |
+| Versionsprüfung nach dem Abgleich | übersprungen | Produktiv-only — richtig |
+| Migration → Wartung aus | ✅ | |
+| Schlussschritt | übersprungen | `if: failure()` — es ging nichts schief |
+
+**Der Jobname lautet `staging / ausliefern`** — die zusammengesetzte Form,
+wie in F-KH-U-31 gemessen. Die **Schritt**namen sind dieselben wie auf
+Produktiv; das ist, was die Abnahme verlangt.
+
+**Nebenbei belegt:** Die Integritätswache lief danach an (`workflow_run`) und
+ist **grün** (Lauf 35570502601). Seit AP6 bricht sie bei leerer
+`WACHE_BASIS` ab — sie lief durch, also steht die Variable richtig, als
+*Variable* und nicht als Geheimnis. Und der Zeiger `produktion` stand still
+(dieser Lauf hat nichts auf Produktiv ausgeliefert), die Wache misst also den
+richtigen Stand: genau der tägliche Falschalarm, den AP2 beseitigt hat.
+
+---
+
+**Stufe 2 dahinter ist rot, und der Grund ist ein alter Bekannter.**
+
+```
+RuntimeError: Anmeldung gescheitert: kein Meldungstext auf der Seite — HTTP 403
+  · Adresse https://staging-nadoku.gen-em.org/login.php
+  · Titel "Dein Browser wird geprüft · lima-city"
+  · Ueberschrift "Dein Browser wird geprüft"
+  · Cookies der Antwort: keine
+```
+
+**Das ist F-KH-U-10**, der Botschutz von lima-city — derselbe Schritt,
+dieselbe Ursache wie im Lauf 35547147256 vom 21.09.2026, 00:16 UTC. **Weder
+AP5 noch AP6 haben ihn verursacht**, und B5 ist es auch nicht: Der Schritt
+scheitert an einer echten, abgewiesenen Anmeldung, nicht an einer fehlenden
+Zuarbeit.
+
+> **Ein neuer, gemessener Zug an F-KH-U-10:** Der Botschutz greift **nicht
+> überall**. Die Zielprobe holt ihre Probedatei über dieselbe Adresse per
+> HTTPS zurück und kam **durch** (26 s, grün); die Anmeldung auf `login.php`
+> wird abgewiesen. Statischer Abruf passiert, Formular-POST nicht. Das war
+> vorher nicht auseinandergehalten — und es heißt, dass die Zielprobe als
+> Prüfmittel auf Staging brauchbar bleibt, auch solange der Botschutz steht.
+>
+> Anmerkung zur Ehrlichkeit: Beim Zusehen hatte ich den Botschutz **bei der
+> Zielprobe** vermutet, weil sie lange lief. Sie lief nicht lange — ich hatte
+> eine Lücke zwischen zwei Abfragen für Laufzeit gehalten. Die Vermutung war
+> an der richtigen Ursache und an der falschen Stelle.
+
+**Die Fehlermeldung ist brauchbar geworden.** Sie nennt Titel und
+Überschrift der Seite; bis zum 20.09.2026 stand dort nur `unbekannt`. Das
+war die Arbeit an `fehlertext()` und `seitenkennung()` — sie zahlt sich hier
+zum ersten Mal aus, an genau dem Lauf, für den sie gemacht wurde.
+
+---
+
+**DIE FOLGE, UND SIE IST UNANGENEHM: M1 IST BLOCKIERT.**
+
+Das Tor der grünen Läufe vor der Produktivauslieferung verlangt einen Lauf,
+der **als Ganzes** erfolgreich war (`status=success`) und in dem der Job
+`staging` erfolgreich war (AP6, F-KH-U-35). Dieser Lauf ist rot, weil Stufe 2
+rot ist. **Auf diesem Stand kommt also kein Tag durch auf Produktiv.**
+
+Das ist richtig so — ein Stand, dessen Stufe 2 nie gemessen hat, ist nicht
+freigabefähig, und genau dafür gibt es das Tor. Aber es heißt: **Kette II
+kommt nicht bis M1, solange der Botschutz steht.**
+
+**Und es ist keine Code-Frage mehr.** Der Botschutz gehört dem Hoster; er
+muss für die Läufer ausgesetzt werden (oder für `login.php`). Ihn im
+Werkzeug zu umgehen wäre der falsche Weg: Dann prüfte Stufe 2 gegen eine
+Anlage, die sich anders verhält als die, die Nutzerinnen sehen — eine grüne
+Zahl ohne Aussage, und davor warnt `CLAUDE.md` 6 ausdrücklich.
+
+---
 
 **F-KH-U-35 — Das Tor der grünen Läufe zählte Läufe, nicht Auslieferungen.
 Ein übersprungener `staging`-Job galt ihm als „stand auf Staging".**
@@ -1990,11 +2085,30 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   **gemessen grün** (`login.php`, Punktdateien), der dritte ist **rot**
   (Kreisläufe, siehe Punkt 5), die letzten zwei sind deshalb nicht gelaufen.
   **Offen bleibt: alle fünf grün.**
-  *Weg für den nächsten Versuch:* GitHub → Actions → „Auslieferung" → **Run
-  workflow** → Zweig `claude/fervent-dirac-xirsqw`. Ein Push auf `main` ist
-  **nicht nötig** und wäre nach `CLAUDE.md` 8 verfrüht — der Handlauf fährt
-  dieselben Jobs in derselben Umgebung; nur der Auslöser ist ein anderer, und
-  dass ein `push` auf `main` sie auslöst, ist seit dem 18.09.2026 belegt.
+
+  > **Zum zweiten Mal gefahren am 21.09.2026 — diesmal als echter Push auf
+  > `main`** (Lauf 35570398032, der Merge von Kette II, F-KH-U-36). **Der
+  > Auslieferungsteil ist damit abgehakt und mehr als das:** `staging /
+  > ausliefern` lief **alle 17 Schritte der neuen gemeinsamen Folge** grün
+  > durch, in 49 Sekunden — nicht mehr die vier von damals. Auch die
+  > Integritätswache dahinter ist grün.
+  >
+  > **In Stufe 2 steht es unverändert bei zwei von fünf**: `login.php` und
+  > Punktdateien gemessen grün, die Kreisläufe rot, die letzten zwei
+  > deshalb nicht gelaufen. **Die Ursache ist dieselbe wie beim ersten
+  > Versuch und hat nichts mit der Kette zu tun** — der Botschutz von
+  > lima-city weist die Anmeldung ab (F-KH-U-10). Ein dritter Kettenlauf
+  > ändert daran nichts; dieser Punkt wartet auf den Hoster, nicht auf
+  > einen Lauf.
+  >
+  > **Neu dabei gemessen:** Der Botschutz greift nicht überall. Die
+  > Zielprobe holt über dieselbe Adresse eine Datei per HTTPS zurück und
+  > kommt **durch**; nur die Anmeldung wird abgewiesen.
+
+  *Weg für den nächsten Versuch — erst sinnvoll, wenn der Botschutz weg
+  ist:* GitHub → Actions → „Auslieferung" → **Run workflow**. Ein Push auf
+  `main` ist **nicht nötig**; der Handlauf fährt dieselben Jobs in derselben
+  Umgebung.
   *Erwartet:* `staging` grün, danach **alle fünf** Messschritte gemessen —
   `login.php`, Punktdateien (4× 403, `.well-known/` 404), Kreislauf csv,
   Kreislauf edbak (je **0 unerklärt**), Bilderlauf (**0/0/0**).
