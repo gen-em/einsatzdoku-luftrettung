@@ -14,6 +14,44 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Stufe 2 misst nur noch die Anlage, und die Läufe warten aufeinander] — 2026-09-21
+
+**Der erste Tag durch die neue Kette kam nicht durch, und der Grund lag nicht
+im Stand.** `web-v20.26.3` stand auf einem Commit, dessen Staging-Lauf den
+Job `staging` grün und den edbak-Kreislauf gegen MySQL 8.4.10 grün hatte —
+und der trotzdem rot war, weil der Bilderlauf sich auf Staging nicht als
+`demo@gen-em.org` anmelden konnte. Das Tor der grünen Läufe zählt nur Läufe,
+die **als Ganzes** grün sind. Auf der neuen Staging-Anlage war der
+Bilderlauf nie grün gewesen; vor diesem Tag war Stufe 2 nur nie bis zu ihm
+gekommen.
+
+**Stufe 2 fährt jetzt drei Schritte** (Konzept PK, E-PK-01 und E-PK-17,
+vorgezogen aus PK-06): Antwortprobe, Punktdateien, edbak-Kreislauf.
+csv-Kreislauf und Bilderlauf messen die Anwendung, nicht die Anlage, und
+gehören in die Sandbox; der Messstand-Hinweis sagte nur, wo Zahlen stehen.
+Was bleibt, ist, was nur Hoster-PHP, Hoster-Datenbank und Hoster-Apache
+zeigen — Nr. 267 fiel genau dort. Zeitgrenze des Jobs 20 statt 45 Minuten;
+gemessen sind 1:56.
+
+**Und die Läufe warten aufeinander.** Zwei Merges innerhalb einer Minute
+hatten zwei Staging-Läufe zugleich erzeugt: Der erste hielt für seinen
+Kreislauf die Hintergrundjobs 1800 s an, der zweite wartete am Backup-Tor
+vierzig Aufrufe auf ein Komplett-Backup, das „angehalten bis 19:06:50"
+meldete, und schloss nach dreizehn Minuten, ohne eine Datei übertragen zu
+haben. `auslieferung.yml` hatte keine `concurrency`-Gruppe, `pruefung.yml`
+hatte eine. Jetzt eine Gruppe je Umgebung, und der jüngere Lauf **wartet**,
+statt den älteren abzubrechen: Ein Abbruch mitten im Abgleich hinterließe
+einen halben Stand bei eingeschalteter Wartung, ein Abbruch mitten im
+Kreislauf die Jobpause für bis zu 30 Minuten.
+
+**Was bewusst stehen bleibt:** der Rest von PK-06 — der benannte Platz für
+Nr. 234, der Aktions-Cache, die Kommentare auf einen Satz — und der
+Kopfkommentar von `pruefung.yml`, der Bilderlauf und Messstand noch dem
+Staging-Lauf zuschreibt; ihn anzufassen misst einmal alles, und PK-05
+schreibt die Datei ohnehin um. Kein Demo-Konto mit Vorgabekennwort auf
+Staging: Das wäre ein bekanntes Kennwort auf einer öffentlichen Adresse für
+einen Schritt, der dort nichts misst, was die Sandbox nicht misst.
+
 ## [Kette: Stufe 1 läuft auf Arbeitszweigen nur noch beim Pull Request] — 2026-09-21
 
 **Das Problem war nicht, dass zu viel geprüft wurde, sondern dass dieselbe
