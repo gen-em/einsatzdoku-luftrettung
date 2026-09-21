@@ -26,9 +26,9 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 >
 > | | |
 > |---|---|
-> | Stand | **21.09.2026 — Fassung nach dem Gespräch; Z1 und Z2 erledigt, zur Freigabe vorgelegt (Z5).** Kein Paket begonnen; P-PK-02 vorgezogen und erledigt. |
+> | Stand | **21.09.2026 — FREIGEGEBEN vom Auftraggeber (Z5), ohne Änderungen.** Z1 und Z2 erledigt; P-PK-02 vorgezogen und erledigt. Kein Paket begonnen — die Umsetzung startet mit PK-01 auf einem neuen Zweig. |
 > | Entschieden | **E-PK-01 bis -30** — alle im Gespräch vom 21.09.2026 entschieden oder bestätigt (Abschnitt 3.1). Die offenen Fragen F-PK-1 bis -6 der ersten Fassung sind beantwortet (Abschnitt 3.2). |
-> | Nächstes | Freigabe (Z5); parallel die Merges von PR #70 und #69, danach Tag `web-v20.26.3` = M1 der Kette II (Z2a); dann **PK-01**. |
+> | Nächstes | **PK-01** (Umsetzungsinstanz, Opus); parallel bei der Betreiberin die Merges von PR #70 und #69, danach Tag `web-v20.26.3` = M1 der Kette II (Z2a). **Parallelität:** PK-01 bis PK-03 laufen neben Schritt 15; PK-04 bis PK-06 erst, wenn kein Schritt-15-Paket in einem offenen PR steht (Abschnitt 4.0). |
 > | Kette II | wird nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
 > | Hakt | nichts mehr: Der HTTP 500 beim `.edbak`-Export auf Staging (`097D7622`) ist am 21.09.2026 **in der Sandbox reproduziert und behoben** (Web 20.26.3, PR #69, Nr. 267) — P-PK-02 vorgezogen, siehe 1.5. Offen ist die Bestätigung durch Stufe 2 nach dem Merge. |
 >
@@ -892,7 +892,7 @@ aufwirft, trägt sie als F-PK-07 ff. hier ein.
 | Z2a | **PR #69 (Web 20.26.3) mergen** — der edbak-Fix; danach Stufe 2 auf `main` beobachten, dann Tag `web-v20.26.3` und Freigabe = **M1 der Kette II** | nach Stufe 1 grün | offen |
 | Z3 | Umgebungswerte der Cloud-Umgebung: die sieben Namen aus 1.4 vollständig und in Anführungszeichen; Netzregel mit Docker Hub und `deb.debian.org` | — | **erledigt 21.09.2026** |
 | Z4 | Staging: Mailversand reparieren (Webspace-Protokoll), Backup-Ziel eintragen | vor PK-M2 | offen (`097D7622` ist ohne das Protokoll geklärt, 1.5) |
-| Z5 | Freigabe dieses Konzepts | nach Z1, Z2 | offen |
+| Z5 | Freigabe dieses Konzepts | nach Z1, Z2 | **erteilt 21.09.2026** |
 | Z6 | PK-08: Upload-Schlüssel und Connect-IQ-Schlüssel als Geheimnisse der Umgebung `produktion` | vor PK-08 | offen |
 | Z7 | PK-M2: einen echten PR durch die neue Kette mergen | nach PK-06 | offen |
 | Z8 | Freigabe des Abschlusses | nach PK-07 | offen |
