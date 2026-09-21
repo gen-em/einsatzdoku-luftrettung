@@ -21,9 +21,10 @@ derselbe Export in Sekunden gescheitert. Nicht die Kette war falsch — der
 
 ## 0. Was schon gilt und was noch entsteht
 
-Dieses Dokument beschreibt die Prüfkette vollständig. Gebaut ist sie noch
-nicht. Die Spalte **Stand** sagt bei jedem Stück, woran man ist; ein Stück
-ohne „gilt" ist eine Vorgabe an das genannte Paket, keine Beschreibung der
+Dieses Dokument beschreibt die Prüfkette vollständig. **Gebaut ist sie zur
+Hälfte** — die Stationen A und B stehen, das Tor und Staging folgen. Die
+Spalte **Stand** sagt bei jedem Stück, woran man ist; ein Stück ohne „gilt"
+oder „gebaut" ist eine Vorgabe an das genannte Paket, keine Beschreibung der
 Gegenwart. Wer das verwechselt, meldet eine Prüfung als gefahren, die es
 nicht gibt.
 
@@ -35,7 +36,7 @@ nicht gibt.
 | Regeln für Prüfmittel (6) | **gilt** |
 | Benennung (7) | **gilt** |
 | Was nicht geprüft wird (8) | **gilt** |
-| Arbeitsumgebung in vier Ausbaustufen | **gebaut mit PK-02** (`Sandbox-Setup.md` 2); `web` und `plattform` gemessen, `android` und `uhr` noch nicht |
+| Arbeitsumgebung in vier Ausbaustufen | **gebaut mit PK-02** (`Sandbox-Setup.md` 2); `web`, `plattform` und `android` gemessen, **`uhr` noch nicht** |
 | Station B, der Prüfstand-Befehl, die drei Stufen (3) | **gebaut und gemessen mit PK-03** |
 | `pruefablauf.json`, die Tabelle Berührung → Probe (4) | **gebaut mit PK-03**, Tabelle erzeugt |
 | Der Prüfbericht (5) | **gebaut mit PK-03**, Selbstprobe 6 Lagen / 0 Fehlschläge |
