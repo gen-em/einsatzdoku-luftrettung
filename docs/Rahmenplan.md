@@ -294,14 +294,17 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 - **Regressionspflicht (R24):** vor jedem Phasenabschluss beide Kreisläufe
   (`tools/referenzdatensatz/vergleich/kreislauf.py`, `csv` und `edbak`),
   Sollstand **0** unerklärte Abweichungen; Zahlen ins Prüfdokument.
-- **Prüfmittel laufen mit** — Wiederherstellungsprobe und Papierkorb-Mischfall
-  (R27) bei jeder Berührung von Papierkorb, Rückspielweg oder
-  Diensttag-Zuordnung; **Wortliste** `tools/wortliste/` (R28) bei jeder
-  sichtbaren Text- oder Doku-Änderung, Soll 0/0/0; **Messstand**
-  `tools/messstand/` (R35) bei Spurspeicherung, Sicherungsformat, Suche und
-  anderen Mengenpfaden; Vollständigkeit und Bilderlauf nach `CLAUDE.md` 6.
+- **Prüfmittel laufen mit** — die Zuordnung „welche Berührung, welches
+  Mittel, ab welcher Stufe" steht seit PK-01 an **einer** Stelle:
+  `docs/Pruefablauf.md`. Die Entscheidungen, aus denen einzelne Pflichten
+  erwachsen sind, bleiben hier verzeichnet — Wiederherstellungsprobe und
+  Papierkorb-Mischfall (R27), Wortliste (R28), Messstand (R35) —, ihr
+  Auslöser und ihr Sollwert aber dort. *Bis PK-01 stand die Wortliste-Pflicht
+  hier ein zweites Mal ausformuliert; zwei normative Fassungen derselben
+  Regel altern getrennt.*
 - **Prüfmittel laufen zuletzt**, nach der letzten Änderung, und jede grüne
-  Zahl benennt, was sie gemessen hat (`CLAUDE.md` 6).
+  Zahl benennt, was sie gemessen hat (`CLAUDE.md` 6, ausgeführt in
+  `docs/Pruefablauf.md` 6.5 und 6.7).
 - **Modell (R14):** Konzepte mit Fable, hohe Denktiefe; mechanische Pflege
   ohne. Umsetzung nach K2/K8.
 - **Deploy (R40):** bis einschließlich S4 Autodeploy auf Produktiv; **mit

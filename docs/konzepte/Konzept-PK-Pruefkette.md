@@ -26,18 +26,18 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 >
 > | | |
 > |---|---|
-> | Stand | **21.09.2026 — FREIGEGEBEN vom Auftraggeber (Z5), ohne Änderungen.** Z1 und Z2 erledigt; P-PK-02 vorgezogen und erledigt. Kein Paket begonnen — die Umsetzung startet mit PK-01 auf einem neuen Zweig. |
-> | Entschieden | **E-PK-01 bis -30** — alle im Gespräch vom 21.09.2026 entschieden oder bestätigt (Abschnitt 3.1). Die offenen Fragen F-PK-1 bis -6 der ersten Fassung sind beantwortet (Abschnitt 3.2). |
-> | Nächstes | **PK-01** (Umsetzungsinstanz, Opus); parallel bei der Betreiberin die Merges von PR #70 und #69, danach Tag `web-v20.26.3` = M1 der Kette II (Z2a). **Parallelität:** PK-01 bis PK-03 laufen neben Schritt 15; PK-04 bis PK-06 erst, wenn kein Schritt-15-Paket in einem offenen PR steht (Abschnitt 4.0). |
+> | Stand | **21.09.2026 — PK-01 ERLEDIGT.** Umsetzung läuft auf `claude/serene-dijkstra-bcpbjy` (von `main` `08e032e`); das Konzept ist mit seiner Historie vom Konzeptzweig dorthin übernommen, ebenso der Inhalt von PR #70. Freigegeben vom Auftraggeber (Z5) ohne Änderungen; Z1, Z2, Z3 erledigt; P-PK-02 vorgezogen und erledigt. |
+> | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); F-PK-1 bis -6 beantwortet (3.2). **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) — **zur Bestätigung vorgelegt**, Prüfdokument 5. |
+> | Nächstes | **PK-02** (Sandbox-Setup), danach PK-03; dann **Halt** und Rückmeldung an den Auftraggeber, weil PK-04 sichtbare Texte in `server/` anfasst. Parallel bei der Betreiberin die Merges von PR #70 und #69, danach Tag `web-v20.26.3` = M1 der Kette II (Z2a). **Parallelität:** PK-01 bis PK-03 laufen neben Schritt 15 und fassen `server/` nicht an. |
 > | Kette II | wird nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
-> | Hakt | nichts mehr: Der HTTP 500 beim `.edbak`-Export auf Staging (`097D7622`) ist am 21.09.2026 **in der Sandbox reproduziert und behoben** (Web 20.26.3, PR #69, Nr. 267) — P-PK-02 vorgezogen, siehe 1.5. Offen ist die Bestätigung durch Stufe 2 nach dem Merge. |
+> | Hakt | nichts. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); offen bleibt die Bestätigung durch Stufe 2 nach dem Merge. **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
 >
 > **Stand der Umsetzung**
 >
 > | Paket | Stand | Version | Commit | Abnahmezahlen |
 > |---|---|---|---|---|
 > | PK-M1 Zweigschutz und Merge-Recht | **gesetzt und gemessen 21.09.2026** (zwei Rulesets); Befund F-PK-01 | — | PR #67 (Messung), PR #70 (Nachmessung) | (b) abgewiesen; (a) durchgegangen unter der Identität der Betreiberin; (c) mit PR #70 |
-> | PK-01 Regeldokumente | offen | | | |
+> | PK-01 Regeldokumente | **erledigt 21.09.2026** | keine (nur `docs/`, `CLAUDE.md`, `.claude/`, `tools/`) | *wird beim Commit eingetragen* | `CLAUDE.md` 6: **58** Zeilen (vorher 166), Ziel <60 · Doppelstellen **1/1/1** normativ (Emulator, Tag-Rumpf, Wortliste) · Deny-Liste **2 von 2** gesperrt bei **3 von 3** Gegenproben · Wortliste **0/0/0** bei 100 Regeln, 100 gegriffen (mit den zwei neuen Dokumenten in Bereich c) · Vollständigkeit **398, auf der Schwelle** · Kettenaufrufe **43/0/0** · neu: `Pruefablauf.md` 561 Zeilen, `Sandbox-Setup.md` 306 · Befunde **F-PK-07 bis -13** |
 > | PK-02 Sandbox-Setup | offen | | | |
 > | PK-03 Prüfstand-Befehl | offen | | | |
 > | PK-04 Werkzeuge zusammenlegen und bereinigen | offen | | | |
@@ -876,10 +876,21 @@ ist.
 
 ---
 
-## 6. Offene Fragen
+## 6. Offene Fragen und Befunde der Umsetzung
 
-Keine. F-PK-1 bis -6 sind beantwortet (3.2). Was die Umsetzung selbst
-aufwirft, trägt sie als F-PK-07 ff. hier ein.
+F-PK-1 bis -6 der Konzeptfassung sind beantwortet (3.2). Was die Umsetzung
+aufwirft, steht ab F-PK-07. **Ausführlich mit Messwerten im Prüfdokument,
+Abschnitt 4** — hier die Kurzfassung mit der Folge:
+
+| Nr. | Aus | Befund | Folge |
+|---|---|---|---|
+| F-PK-07 | PK-01 | Die Abnahme „je genau eine Fundstelle" ist wörtlich nicht erfüllbar (Emulator allein: 131 Treffer in 19 Dateien, fast alle Geschichte). | Gemessen wird **eine normative Fundstelle**, mit benanntem Befehl und Ausschlussliste. So gemessen: 1/1/1. |
+| F-PK-08 | PK-01 | Vier Zahlen aus 1.1 sind veraltet (PR #68): `tools/` **45 016**, Kette **2 863**, Kommentar **1 535**, Stufe 1 **28** Schritte. Eine ist falsch: „Werkzeuge mit Selbstprobe 28" — gemessen **13**. | 1.1 bleibt als Befund vom 21.09.2026 stehen; **PK-04 misst die Selbstproben neu und nennt den Befehl**. Die Begründung von E-PK-24 trägt auch bei 13. |
+| F-PK-09 | PK-01 | Die drei Mailwerte heißen buchstäblich `_MAIL_URL`, `_MAIL_USER`, `_MAIL_PASS` — führender Unterstrich, kein Präfix. Die Schreibweise in 1.4 liest sich als gemeinsames Präfix. | `Sandbox-Setup.md` 4 schreibt alle sieben Namen aus. 7 von 7 gesetzt. |
+| F-PK-10 | PK-01 | `session-start.sh` und `containeraufbau/aufbau.sh` widersprechen einander beim Nachladen der Engines und führen **zwei disjunkte** Bibliothekslisten (6 gegen 4 Pakete). | **PK-02 muss entscheiden, welche Fassung gilt** — die Zusammenlegung darf den Widerspruch nicht erben. |
+| F-PK-11 | PK-01 | `CLAUDE.md` 3 sagt zur Ausnahmeliste „acht Pfade … jeder steht dort zweimal". Zweimal stehen nur die drei Verzeichnisse; die fünf Dateien je einmal (14 Zeilen). | **PK-06** berichtigt es mit, weil es den Auslieferungsweg anfasst. |
+| F-PK-12 | PK-01 | `Technik.md` „2a" steht physisch unter „## 4. Zentrale Abläufe". | **PK-07** löst die Fehlstellung mit auf. |
+| F-PK-13 | PK-01 | `.claude/settings.local.json` rangiert über der geteilten Datei und steht nicht in `.gitignore` — ein Weg um die Deny-Liste, der im Pull Request nicht erscheint. | In `Pruefablauf.md` 2.3 benannt. Ob die Datei in `.gitignore` gehört, entscheidet die Betreiberin (Z9). |
 
 ---
 
@@ -896,6 +907,7 @@ aufwirft, trägt sie als F-PK-07 ff. hier ein.
 | Z6 | PK-08: Upload-Schlüssel und Connect-IQ-Schlüssel als Geheimnisse der Umgebung `produktion` | vor PK-08 | offen |
 | Z7 | PK-M2: einen echten PR durch die neue Kette mergen | nach PK-06 | offen |
 | Z8 | Freigabe des Abschlusses | nach PK-07 | offen |
+| Z9 | Kleine Entscheidung (F-PK-13): Soll `.claude/settings.local.json` in `.gitignore`? Ein Eintrag macht sie unsichtbar; kein Eintrag lässt sie wenigstens als unverfolgte Datei auffallen. Heute steht sie **nicht** darin und es gibt sie nicht | mit PK-07 | offen |
 
 ---
 

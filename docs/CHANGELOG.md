@@ -14,6 +14,65 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Der Prüfablauf bekommt ein Dokument, und `CLAUDE.md` 6 wird kurz (PK-01)] — 2026-09-21
+
+**Das Problem war nicht, dass zu wenig geprüft wird, sondern dass niemand an
+einer Stelle nachlesen konnte, was wo läuft.** `CLAUDE.md` 6 war auf 166
+Zeilen angewachsen und führte Regeln, Werkzeugbeschreibungen, Prüfzahlen und
+Geschichte durcheinander; daneben stand dieselbe Pflicht noch einmal im
+Rahmenplan, ein drittes Mal in einer `LIESMICH.md`, und die Zahl des
+Bilderlaufs zusätzlich in `Technik.md`. Zwei Fassungen derselben Regel altern
+getrennt — das ist nicht Redundanz, sondern eine Verabredung, dass die
+nächste Instanz rät.
+
+**Zwei neue Dokumente, und die alten Stellen werden zu Verweisen.**
+`docs/Pruefablauf.md` sagt, wo welche Prüfung läuft: sieben Grundsätze, fünf
+Stationen von der Arbeit bis Produktiv, drei Stufen des Prüfstands, die Form
+des Prüfberichts, die Regeln für Prüfmittel — und ein Abschnitt „was nicht
+geprüft wird", weil eine benannte Lücke besser ist als eine unbemerkte.
+`docs/Sandbox-Setup.md` sagt, was die Arbeitsumgebung mitbringt, was
+nachgeholt wird und was sie **nicht** kann; der letzte Teil ist der
+wichtigste, denn eine Umgebung, von der man etwas Falsches annimmt, erzeugt
+Messwerte, die nach einer Prüfung aussehen.
+
+**`CLAUDE.md` 6 steht jetzt bei 58 Zeilen statt 166** und enthält keine
+einzige Prüfzahl mehr. Was dort noch steht, sind die sieben Grundsätze, vier
+Sätze, die beim Arbeiten im Kopf sein müssen, und drei Verweise. Die
+Kürzung ist **nicht** das Ziel gewesen, sondern die Folge: Jede
+Werkzeugerzählung, die dort stand, steht seither an genau einer Stelle.
+
+**Acht Stellen wären dabei beinahe verlorengegangen**, weil sie nur in
+`CLAUDE.md` 6 standen und nirgends sonst — darunter der Auslöser des
+Stilvergleichs (seine eigene `LIESMICH.md` sagt bis heute nicht, wann er zu
+fahren ist), der Auslöser der Kettenaufrufe, der Satz, dass Muster über
+*gelieferte* Antworten von der Tag-Rumpf-Regel ausgenommen sind, und das
+Verbot von Backtick-Namen mit Leerzeichen unterhalb von DEX 040. Sie stehen
+jetzt in `Pruefablauf.md`. Die Reihenfolge war dabei zwingend: erst das neue
+Dokument schreiben, dann das alte kürzen.
+
+**Eine Zahl ist dabei berichtigt worden.** `CLAUDE.md` 6 nannte vier
+Werkzeuge, die auf das lange Tag-Muster durchgesehen seien, und zählte dabei
+`tools/wortliste/` mit (das die kurze Form mit Begründung trägt) und
+`tools/wartungsprobe/` nicht (das die lange trägt). Die Zahl stimmte, die
+Liste nicht — nachgemessen sind es `integritaetswache`, `vollstaendigkeit`,
+`stilvergleich` und `wartungsprobe`.
+
+**Der Merge-Riegel hat eine zweite Lage bekommen.** Am selben Tag war
+gemessen worden, dass der Zweigschutz auf `main` gegen Git hält, aber nicht
+gegen den Werkzeugweg: Die GitHub-Werkzeuge handeln unter der Identität der
+Betreiberin, und ein Ruleset kann sie nicht von ihr unterscheiden. Deshalb
+sperrt `.claude/settings.json` jetzt `mcp__github__merge_pull_request` und
+`mcp__github__enable_pr_auto_merge`, und `CLAUDE.md` 8 sagt den Satz dazu:
+eine Instanz mergt nie. Gemessen wurde die **Abwesenheit** der beiden
+Werkzeuge mit Gegenprobe an drei anderen desselben Anschlusses — ein
+ausgefallener Anschluss sähe sonst aus wie ein wirksamer Riegel.
+
+**Bewusst stehen geblieben:** die Wortliste als Pflicht bei jeder
+Textänderung und die Vollständigkeit mit ihrer heutigen Schwelle. Beide baut
+erst PK-04 um; sie jetzt schon herabzustufen hieße, sie zwischen zwei
+Paketen ganz abzuschaffen. Ebenso stehen geblieben ist die Kette selbst —
+PK-01 ändert keine Zeile unter `.github/`.
+
 ## [Werkzeug: Fünfzehn Minuten messen und „es kam nichts" melden] — 2026-09-21
 
 **Der Botschutz von lima-city ist weg, und dahinter stand ein Fehler, den

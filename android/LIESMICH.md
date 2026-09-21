@@ -879,7 +879,8 @@ Räumteil von 114) dazugelegt hat:
 
 ### Der Emulator — er läuft, und er ist ab 03.09.2026 Pflicht
 
-**Die Regel zuerst** (CLAUDE.md 6, angewiesen am 03.09.2026): Bei jeder
+**Die Regel zuerst** (`docs/Pruefablauf.md` 6.9, angewiesen am 03.09.2026):
+Bei jeder
 Änderung an einem der beiden Android-Module läuft der Emulator mit, Aussehen
 **und** Funktion werden darin geprüft, und beides wird mit Bildern belegt —
 so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:

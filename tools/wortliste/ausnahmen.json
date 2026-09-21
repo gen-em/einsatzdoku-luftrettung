@@ -688,6 +688,14 @@
       "zeile": "sichtbar in Garmin Connect|die Uhr zeigt das Feld in Garmin Connect",
       "klasse": "G",
       "begruendung": "Technik.md 5d.8 begruendet, warum die Vorgabe-Serveradresse der Uhr-App auf gen-em.org stehen BLEIBT (E-P5a-42, Auftraggeber 16.09.2026). Die Begruendung IST die Plattform: Das Feld steht in Garmin Connect und ist dort von jeder Betreiberin aenderbar — deshalb ist die Vorgabe eine Vorgabe und keine Festverdrahtung. Ohne den Namen waere der Satz „die Uhr zeigt das Feld irgendwo\" und begruendete gar nichts; die Wear-OS-Uhr hat dieses Feld ausdruecklich NICHT (E-S4-11, sie kennt weder Adresse noch Schluessel). Dieselbe Ueberlegung wie `statistik-hersteller-garmin` und `handbuch-geraete-verlust-garmin` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST."
+    },
+    {
+      "id": "pruefablauf-station-haltepunkt",
+      "bereich": "c",
+      "datei": "docs/Pruefablauf.md",
+      "muster": "station",
+      "klasse": "Homonym",
+      "begruendung": "Aufgestellt in PK-01. „Station“ ist hier NICHT der Standort eines Rettungsmittels, sondern ein Haltepunkt auf dem Weg vom Quelltext zum Produktivserver: Konzept PK gliedert die Pruefkette in fuenf davon (A Arbeit, B Pruefstand, C Tor, D Staging, E Produktiv). Das Dokument sagt das in seinem Abschnitt 2 ausdruecklich dazu. Der Ersatz „Standort“ waere hier falsch, nicht neutraler — er bezeichnet eine Einrichtung, und gemeint ist ein Zeitpunkt im Ablauf. Das Wort traegt die Gliederung des freigegebenen Konzepts; es zu vermeiden hiesse, die Begriffe der Sache umzubenennen, um ein Muster zu umgehen. docs/Sandbox-Setup.md kommt ohne aus und steht deshalb NICHT in dieser Ausnahme."
     }
   ]
 }

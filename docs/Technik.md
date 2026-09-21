@@ -5313,39 +5313,16 @@ Schutz gegen einen Angreifer mit Zugriff auf die Ablaufumgebung (Hoster,
 Datenbank, Protokolle) hängt damit allein an der Passwortwahl der Person. Das
 ist eine bewusste Entscheidung und gehört genau so dokumentiert.
 
-### 2a Was der Wegwerf-Container mitbringt — und was nicht
+### 2a Die Arbeitsumgebung — und was ihre Motoren messen
 
-Aufgestellt am 13.09.2026 (Backlog-Runde 3), nachdem zwei Arbeitspakete
-dieselbe Viertelstunde verloren hatten: AP2 konnte `tools/uhr-bilder/`
-nicht laufen lassen, AP4 musste vor der ersten Browserprobe einen
-Datenbankserver nachinstallieren.
+**Was der Wegwerf-Container mitbringt, was nachgeholt wird, welche sieben
+Umgebungswerte er braucht und was er nicht kann, steht seit PK-01 in
+`Sandbox-Setup.md`** — dort und nur dort. Hier stand es bis dahin; zwei
+Beschreibungen derselben Umgebung altern getrennt, und die eine hätte den
+Umbau der Beschaffung in PK-02 nicht mitbekommen.
 
-**Das Abbild bringt mit:** PHP 8.4 (mit `pdo_mysql`, `mysqli`, `openssl`,
-`gd`, `zip`, `mbstring`), Node 22 samt Playwright und Chromium unter
-`/opt/pw-browsers/`, `socat`, `zip`/`unzip`, `git`, `curl`, `openssl`, und
-aus Python `requests` und `cryptography`.
-
-**Es bringt NICHT mit**, und ohne diese fünf steht die Hälfte der Prüfmittel:
-
-| fehlt | wer es braucht |
-|---|---|
-| **MariaDB** | jede Browserprobe, beide Kreisläufe, Klickprobe, Wartungsprobe, `lokal_einrichten.sh` |
-| **ImageMagick** (`convert`, `compare`) | `tools/uhr-bilder/erzeugen.sh` und jeder Bildvergleich |
-| **rsvg-convert** (`librsvg2-bin`) | dieselbe Kette: SVG → PNG für die Uhr-Bilder |
-| **Python `jsonschema`** | `tools/referenzdatensatz/` prüft damit seine Quelldaten |
-| **Firefox und WebKit** samt sechs Systembibliotheken | jede Aussage über die Oberfläche, die für mehr als Chromium gelten soll (seit 14.09.2026, Backlog Nr. 183) |
-
-**Die beiden anderen Engines, und warum sie dazugehören.** Bis zum 14.09.2026
-lief jede Browserprobe des Projekts in Chromium — und das war tragbar, solange
-die Oberfläche sich auf Breitentricks beschränkte. Seit Web 19.4.1 hängt eine
-Darstellung an einer **Container-Abfrage**, seit P3 ohnehin an `:has()` und
-`dvh`. Eine Engine, die eines davon nicht kann, fiele **lautlos** durch jede
-Prüfung. Der Startvorgang holt deshalb `firefox` und `webkit` über Playwright
-nach; die beiden Downloadadressen (`cdn.playwright.dev`,
-`playwright.download.prss.microsoft.com`) mussten dafür in der Egress-Liste
-der Arbeitsumgebung freigegeben werden und waren es bis dahin nicht.
-Gemessen am 14.09.2026: **Chromium 141.0.7390.37, Firefox 142.0.1,
-WebKit 26.0**.
+Was hier bleibt, ist die andere Frage: **wie oft welches Prüfmittel welche
+Engine fährt, und warum.**
 
 **Seit AP3b der Mockup-Runde fahren die drei Prüfmittel sie selbst**
 (`--motor chromium|firefox|webkit`, Vorgabe Chromium). Motorwahl und die
@@ -5404,30 +5381,10 @@ geprüfte.
 weiterblätterte als die Schriften luden; im echten Lauf melden alle drei
 Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 
-`.claude/hooks/session-start.sh` beschafft sie beim Sitzungsstart und meldet
-je Stück „ok" oder „FEHLT" — die drei Engines **einzeln**, denn „3 Browser da"
-sagt nicht, welcher fehlt, und es fehlt immer nur einer. Zwei Dinge sind daran Absicht: Er **startet
-nichts** — das bleibt bei `lokal_starten.sh`, das Einrichten bei
-`lokal_einrichten.sh` —, und er **schlägt nicht fehl**, wenn etwas fehlt: Eine
-Sitzung, die sich wegen eines Bildwerkzeugs nicht öffnen lässt, ist schlimmer
-als eine, die den Mangel mit Zahl meldet. Auf einer Entwicklungsmaschine tut
-er gar nichts (`CLAUDE_CODE_REMOTE`).
 
-**Eine Falle, die Zeit kostet, wenn man sie nicht kennt:** `python3` ist in
-diesem Abbild **3.11** (deadsnakes), während apt seine Python-Pakete nach
-**3.12** legt. Ein `apt-get install python3-jsonschema` landet damit in einem
-Verzeichnis, das `python3` nicht liest — deshalb nimmt der Hook dafür `pip`
-mit `--break-system-packages`. Dasselbe erklärt, warum das apt-`cryptography`
-(für 3.12 gebaut, abi3) hier nur meistens trägt; der Hook prüft den Import und
-ersetzt das Paket nur, wenn er scheitert.
-
-**Und eine, die Messungen verfälscht:** Der eingebaute PHP-Server (`php -S`)
-liefert nach einer Dateiänderung für einige Sekunden noch den alten Stand.
-Gemessen am 13.09.2026: dieselbe Anfrage 0 s nach der Änderung mit dem alten
-Verhalten, 4 s danach mit dem neuen. Es ist **nicht** opcache
-(`opcache.enable_cli` ist Off). Wer eine Serveränderung prüft, startet den
-Server vorher neu — sonst misst er den Stand davor und hält ihn für den
-danach.
+*Die Staffelung dieser Tabelle ändert sich mit PK-04 (E-PK-14): Der
+Bilderlauf wird nach Stufen abgestuft, die von Hand gepflegte Risikoliste
+fällt. Bis dahin gilt sie wie beschrieben.*
 
 ### 4.99a Demo-Konto (ab Web 7.3.0)
 

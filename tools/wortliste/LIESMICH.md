@@ -85,18 +85,17 @@ echt waren es zwei.
 |---|---|
 | **a** | `server/*.php`, `server/api/*.php` — ohne Kommentare |
 | **b** | `server/assets/*.js` ohne `vendor/` — ohne Kommentare |
-| **c** | `README.md`, `docs/Handbuch.md`, `docs/Export-Format.md`, `docs/Technik.md`, `docs/Backup-Format.md`, `docs/JSON-Vertrag.md`, `docs/Design.md`, `docs/Lizenzen.md` — und seit dem 17.09.2026 die drei Rechtstext-Entwürfe unter `docs/rechtstexte/` |
+| **c** | `README.md`, `docs/Handbuch.md`, `docs/Export-Format.md`, `docs/Technik.md`, `docs/Backup-Format.md`, `docs/JSON-Vertrag.md`, `docs/Design.md`, `docs/Lizenzen.md` — seit dem 17.09.2026 die drei Rechtstext-Entwürfe unter `docs/rechtstexte/`, seit PK-01 `docs/Pruefablauf.md` und `docs/Sandbox-Setup.md` |
 | **d** | `android/*/src/main/res/values/strings.xml` — die sichtbaren Texte der Handy- und der Wear-OS-App (seit S4/D1) |
 | **e** | `watch/resources*/**/*.xml` **und** `watch/source*/*.mc` — die sichtbaren Texte der Garmin-App (seit S5/C) |
 
 ### Die Regel dahinter
 
-> **Jeder sichtbare Text der Anwendung läuft durch die Wortliste — gleich, in
-> welchem Client er steht.** Ein Bereich fehlt nicht, weil ein Verzeichnis
-> jung ist; er fehlt, weil ihn niemand eingetragen hat. Wer einen Client
-> hinzufügt, trägt seine Textdateien im selben Paket ein, in dem der Client
-> entsteht. **Ein Lauf, der einen Client übergeht, meldet keine Null — er
-> meldet gar nichts.**
+**Sie steht in `docs/Pruefablauf.md` 6.6** und seit PK-01 nur dort: Jeder
+sichtbare Text läuft durch die Wortliste, gleich in welchem Client er steht;
+wer ein Verzeichnis oder ein normatives Dokument hinzufügt, trägt es im
+selben Paket in `BEREICHE` ein, in dem es entsteht. Hier stand sie bis PK-01
+wörtlich ein zweites Mal.
 
 *Aufgestellt auf Ansage am 01.09.2026 (S4, Fund B-S4-06).* Der Anlass: Die
 Android-Apps entstanden in S4/B1, und der Lauf nach dem letzten Paket meldete

@@ -133,6 +133,15 @@ BEREICHE: dict[str, dict] = {
             "docs/JSON-Vertrag.md",
             "docs/Design.md",
             "docs/Lizenzen.md",
+            # DIE BEIDEN REGELDOKUMENTE DER PRUEFKETTE, seit PK-01. Sie sind
+            # normative Dokumentation wie Technik.md und Design.md — und sie
+            # stehen hier, weil die Regel es verlangt, die sie selbst
+            # aufschreiben: Wer ein normatives Dokument hinzufuegt, traegt es
+            # im selben Paket ein, in dem es entsteht (B-S4-06,
+            # docs/Pruefablauf.md 6.6). Ein Bereich fehlt nicht, weil eine
+            # Datei jung ist, sondern weil ihn niemand eingetragen hat.
+            "docs/Pruefablauf.md",
+            "docs/Sandbox-Setup.md",
             # DIE RECHTSTEXTE GEHOEREN HIERHER, seit 17.09.2026 (P5b, E-P5b-25).
             # Sie sind Entwuerfe in `docs/`, aber ihr Ziel ist die Tabelle
             # `rechtstexte`, und von dort rendern `nutzungsbedingungen.php`,
