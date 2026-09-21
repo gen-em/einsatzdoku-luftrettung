@@ -470,6 +470,24 @@ jobs:
         # nicht zu wissen.
         run: python3 tools/kette/tor.py --selbstprobe
 
+      - name: Warten auf einen Download — sagt es, wenn keiner kommt?
+        # ANLASS, 21.09.2026: Der Kreislauf `edbak` gegen Staging ist nach
+        # fuenfzehn Minuten gescheitert, und das Protokoll sagte genau einen
+        # Satz -- „Timeout 900000ms exceeded while waiting for event
+        # download". Nicht, ob der Export angelaufen war; nicht, wie weit er
+        # kam; nicht, ob der Browser einen Fehler geworfen hatte. Die Frage,
+        # die man danach stellt -- LIEF er langsam oder HING er? --
+        # beantwortete das Protokoll nicht.
+        #
+        # `tools/referenzdatensatz/browser/download_lib.mjs` liest den
+        # Zustand seither mit und legt ihn samt Verlauf und Konsolenfehlern in
+        # die Fehlermeldung. Die Selbstprobe prueft nicht den guten Fall --
+        # der ist trivial --, sondern ob im SCHLECHTEN Fall die Auskunft
+        # entsteht, um derentwillen es die Datei gibt.
+        #
+        # Ohne Browser, ohne Anlage, ohne Netz. Erwartet: 0 offen.
+        run: node tools/referenzdatensatz/browser/download_lib.mjs --selbstprobe
+
       - name: Das Tor der grünen Läufe — geht es zu, wenn es zugehen muss?
         # AP7, E-KH-15. Die Entscheidung, ob ein Stand auf Produktiv darf,
         # liegt seit AP7 in `tools/kette/freigabe.py` und nicht mehr als Bash

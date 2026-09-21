@@ -43,6 +43,7 @@
  *   node papierkorb_misch.mjs [basis] [quellkonto] [zielkonto]
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { downloadMitFortschritt } from './download_lib.mjs';
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
@@ -226,7 +227,7 @@ await seite.fill('#bpw2', bpw);
 const warten = seite.waitForEvent('download', { timeout: 900000 });
 await seite.click('#expbtn');
 await rueckfragen();
-const dl = await warten;
+const dl = await downloadMitFortschritt(seite, warten, '#expstate', konsole);
 const datei = `${ordner}/${dl.suggestedFilename()}`;
 await dl.saveAs(datei);
 schritt(`Gesichert → ${dl.suggestedFilename()}`);

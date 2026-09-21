@@ -21,10 +21,11 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
+> | **Übergabe** | **Ab 21.09.2026 übernimmt Konzept PK (`docs/konzepte/Konzept-PK-Pruefkette.md`, Abschnitt 9) Stufe 1, Stufe 2 und den Abschluss. M1 bleibt offen bis der edbak-500 behoben ist. Keine weiteren Pakete in Kette II.** |
 > | Stand | 21.09.2026 — **AP7 gebaut, die Gegenprobe abgenommen; das Zusatz-Backup hängt an M1.** **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, **AP5 VOLLSTAENDIG ABGENOMMEN** (Produktiv-Haelfte Lauf 35566000648, Staging-Haelfte Lauf 35570398032), **AP6 GEBAUT UND ABGENOMMEN** (die Abnahme war in ihrer alten Fassung unfahrbar, F-KH-U-37, und wurde als Prüfpunkt 25a/25b neu gefasst; beide sind am 21.09.2026 gefahren und bestanden, F-KH-U-39). **Offen ist allein der Rückbau von Staging** — es steht noch in Wartung, das FTP-Passwort ist noch falsch (Prüfpunkt 25c). **Kette II liegt seit dem 21.09.2026 auf `main`** (PR #65, Merge `fb614d1`). **M1 ist blockiert:** Stufe 2 bleibt am Botschutz von lima-city rot (F-KH-U-10/-36), und das Tor der gruenen Laeufe laesst deshalb keinen Tag durch.** AP7 und AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **29**, Zielprobe **93**, Zustand **28**, Wache **38** — alle 0 offen), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **zehn Probeläufe gegen Produktiv**, **vier Staging-Läufe über die neue Schrittfolge** (zwei grün, zwei absichtlich rot). Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **40** (Abschnitt 2): F-KH-U-01 bis F-KH-U-41 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben. **Zuletzt F-KH-U-39: der Schlussschritt von AP6 ist zweimal gelaufen** — einmal bei eingeschalteter, einmal bei ausgeschalteter Wartung, und die beiden Wortlaute unterscheiden sich an genau der einen Stelle, an der sie sich unterscheiden müssen. Aus AP7: **F-KH-U-40** (Staging bewahrt **zwei** Komplett-Stände auf — die vom Konzept verlangte Messung, und sie fällt negativ aus) und **F-KH-U-41** (das Tor erkannte den Staging-Job am Namensanfang; AP7 hätte den Riegel aus B5 von hinten wieder geöffnet) |
+> | Funde | **41** (Abschnitt 2): F-KH-U-01 bis F-KH-U-42 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben. **Zuletzt F-KH-U-39: der Schlussschritt von AP6 ist zweimal gelaufen** — einmal bei eingeschalteter, einmal bei ausgeschalteter Wartung, und die beiden Wortlaute unterscheiden sich an genau der einen Stelle, an der sie sich unterscheiden müssen. Aus AP7: **F-KH-U-40** (Staging bewahrt **zwei** Komplett-Stände auf — die vom Konzept verlangte Messung, und sie fällt negativ aus) und **F-KH-U-41** (das Tor erkannte den Staging-Job am Namensanfang; AP7 hätte den Riegel aus B5 von hinten wieder geöffnet). **Zuletzt F-KH-U-42: der Botschutz ist weg — und dahinter steht ein Fehler, den niemand sehen konnte.** Stufe 2 kommt jetzt bis zum Export und scheitert dort; der erste vollständige Import gegen lima-city ist gelaufen (106 Einsätze) |
 > | F3 | **GEFUNDEN UND BEHOBEN, der Beleg ist gefahren.** Ursache: `RETR` auf die nicht vorhandene Zustandsdatei tötet die Verbindung; die Aktion deutet es als „first publish" und arbeitet mit einem toten Client weiter, bis das erste `MKD` es bemerkt — **drei Schritte hinter der Stelle, die sie meldet** (F-KH-U-25). Abhilfe: die Datei einmal hinlegen, bevor die Aktion läuft (AP4, Richtung (e), `tools/kette/zustand.py`). Beleg: **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige Abgleich gegen diesen Server überhaupt (F-KH-U-28). **E-KH-09 ist erfüllt** |
 > | Prüfliste | **35** Punkte: **17 abgehakt**, 5 teilweise, **13 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu am 21.09.2026: **25c** (der Rückbau von Staging — er ist eine eigene Prüfung, kein Aufräumen, und solange er offen ist, ist Staging nicht benutzbar). Abgehakt am selben Tag: **24**, **25a**, **25b** und **25c** — **Prüfpunkt 25 ist damit vollständig**. Aus AP7 neu: **26** (der Rückfallstand bei einer echten Auslieferung), **27** (ein Hotfix über den ganzen Weg, M2) und **28** (die Aufbewahrung festlegen) — alle drei hängen an M1 |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
@@ -218,8 +219,14 @@ Sonderbedingung „nur für die Prüfung" prüfte eine Schrittfolge, die es im
 Ernstfall nicht gibt — R84 (E-KH-17), und derselbe Grund, aus dem in AP6 ein
 „auf Zuruf scheiternder" Schritt verworfen wurde (F-KH-U-37).
 
-**10 — M1 ist nicht gefahren, und es liegt nicht an der Kette.** Stufe 2
-kommt am **Botschutz von lima-city** nicht durch: `login.php` weist die
+**10 — M1 ist nicht gefahren.** **ÜBERHOLT AM 21.09.2026, und zwar zur
+Hälfte:** Der Botschutz ist aufgehoben (F-KH-U-42), Stufe 2 kommt jetzt bis
+zum **Export** und scheitert dort. M1 bleibt blockiert, aber nicht mehr am
+Hoster — der Grund steht in F-KH-U-42, und die Ursache ist offen. **Der
+Absatz unten bleibt als Stand vom Vormittag stehen**, weil er erklärt, warum
+dieser Fehler erst jetzt sichtbar wurde.
+
+Stufe 2 kam am **Botschutz von lima-city** nicht durch: `login.php` weist die
 Anmeldung des Prüfkontos mit **HTTP 403** ab („Dein Browser wird geprüft",
 F-KH-U-10). Das Tor der grünen Läufe verlangt einen Lauf, der **als Ganzes**
 erfolgreich war — auf einem Stand, dessen Stufe 2 nie gemessen hat, kommt
@@ -586,6 +593,77 @@ kann es nicht, solange M1 blockiert ist (Abschnitt 0, Punkte 9 und 10).
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-42 — DER BOTSCHUTZ IST WEG, UND DAHINTER STAND EIN FEHLER, DEN
+NIEMAND SEHEN KONNTE. Stufe 2 scheitert jetzt am Export, nicht an der
+Anmeldung.**
+*Lauf 35585472939, 21.09.2026, 09:50 UTC — der erste Lauf, der über die
+Anmeldung hinauskam.*
+
+**Zuerst die gute Hälfte, und sie ist groß.** Der Botschutz von lima-city
+(F-KH-U-10) ist auf der Staging-Subdomain aufgehoben. Belegt an genau der
+Stelle, an der der Lauf bisher nach 22 Sekunden starb:
+
+```
+Konto umlauf-edbak@gen-em.org angelegt.
+Passwort im Browser gesetzt (dort entsteht das Schlüsselmaterial).
+Backup eingespielt — Import fertig: 106 Einsätze übernommen, 119 Ruhesegmente,
+21 Diensttage, 56 Standortdaten-Einträge. Sperrvermerke des Schneidens: 3
+übernommen. In den Papierkorb übernommen: 5 Einsätze, 5 Ruhesegmente, 1
+Diensttag. 214 Aufzeichnungen übernommen.
+```
+
+**Das ist der erste Datenkreislauf gegen lima-city überhaupt** — Anmeldung,
+Kontoanlage, Schlüsselmaterial im Browser, vollständiger Import. Dazu die
+Auslieferung selbst: `staging / ausliefern` grün, alle 17 Schritte, 39 s.
+
+**Dann die schlechte Hälfte.** Schritt 4 des Kreislaufs sichert das frische
+Konto erneut. Der Download kam nicht:
+
+```
+page.waitForEvent: Timeout 900000ms exceeded while waiting for event "download"
+  at tools/referenzdatensatz/browser/kreislauf_edbak.mjs:148
+```
+
+Weil die Schleife `for art in edbak csv` lautet und `edbak` zuerst läuft,
+**ist der csv-Kreislauf nie gelaufen** — er bleibt ungemessen, ebenso
+Bilderlauf und Messstand.
+
+> **ZUR URSACHE STEHT HIER NICHTS, UND DAS IST DER EIGENTLICHE BEFUND.**
+> Das Protokoll sagt „es kam nichts" und sonst gar nichts: nicht, ob der
+> Export angelaufen war, nicht, wie weit er kam, nicht, ob der Browser einen
+> Fehler geworfen hatte. **Fünfzehn Minuten Messung, und die Frage, die man
+> danach stellt — lief er langsam oder hing er? —, ist daraus nicht zu
+> beantworten.**
+>
+> Zwei Richtungen sind plausibel und beide **unbelegt**: Der Export
+> verschlüsselt im Browser, und 106 Einsätze auf einem Headless-Chromium
+> gegen eine geteilte Anlage könnten den Rahmen sprengen; oder die
+> Job-Pause, die der Kreislauf vorher setzt (absichtlich, sonst dünnt der
+> Verdichtungsjob die Spuren aus), trifft auch den Export. **Welche davon
+> stimmt, sagt erst der nächste Lauf.**
+
+**Behoben ist deshalb nicht der Fehler, sondern die Blindheit** (Werkzeug,
+21.09.2026): `download_lib.mjs` liest den Zustand alle drei Sekunden mit und
+legt Zustand, Verlauf und Konsolenfehler in die Meldung; **fünf Stellen in
+vier Skripten** rufen sie. Dazu eine Zeitgrenze von 45 Minuten für den
+Stufe-2-Job — er hatte keine, es galt GitHubs Vorgabe von **sechs Stunden**.
+
+**Folge für M1: weiterhin blockiert, aber aus einem anderen Grund.** Nicht
+mehr der Hoster, sondern ein Fehler im Kreislauf gegen diese Anlage. Das Tor
+der grünen Läufe verlangt einen Lauf, der **als Ganzes** erfolgreich war;
+den gibt es nicht.
+
+**Und eine zweite Hürde, die dabei aufgefallen ist:** Der Handlauf, mit dem
+dieser Test gefahren wurde, **zählt für das Tor ohnehin nicht** — er ist ein
+`workflow_dispatch` auf `main`, und **E-KH-29** schließt genau das aus. Für
+M1 braucht es einen **Push**-Lauf auf `main`, der als Ganzes grün ist; der
+Merge-Lauf 35579655798 wäre der richtige, er ist aber am Botschutz
+gescheitert und müsste neu gestartet werden, sobald Stufe 2 durchläuft. Die
+Entscheidung E-KH-29 bleibt richtig — sie kostet hier einen Zwischenschritt,
+und der ist es wert.
+
+---
 
 **F-KH-U-41 — Das Tor der grünen Läufe erkannte den Staging-Job am
 NAMENSANFANG. AP7 hätte den Riegel aus B5 von hinten wieder geöffnet.**

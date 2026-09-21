@@ -14,6 +14,52 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Fünfzehn Minuten messen und „es kam nichts" melden] — 2026-09-21
+
+**Der Botschutz von lima-city ist weg, und dahinter stand ein Fehler, den
+niemand sehen konnte.** Der Kreislauf `edbak` gegen Staging kam zum ersten
+Mal über die Anmeldung hinaus: Konto angelegt, Schlüsselmaterial im Browser
+erzeugt, Backup eingespielt — **106 Einsätze, 119 Ruhesegmente, 21
+Diensttage, 214 Aufzeichnungen**. Dann sollte er das frische Konto erneut
+sichern, und der Download kam nicht. Nach fünfzehn Minuten brach er ab, und
+das Protokoll sagte genau einen Satz: *„Timeout 900000ms exceeded while
+waiting for event download."*
+
+**Nicht, ob der Export angelaufen war. Nicht, wie weit er kam. Nicht, ob der
+Browser einen Fehler geworfen hatte.** Fünfzehn Minuten Messung, und als
+Ergebnis die Auskunft „es kam nichts" — die Frage, die man danach stellt,
+nämlich *lief er langsam oder hing er?*, war aus dem Protokoll nicht zu
+beantworten. Damit wäre auch die nächste Messung ein Ratespiel gewesen.
+
+**Die Wartestelle liest jetzt mit.** Alle drei Sekunden den Zustandstext, und
+im Fehlerfall stehen Zustand, Verlauf und Konsolenfehler in der Meldung. Der
+**Verlauf** ist der eigentliche Gewinn: Ein Export, der bis „182 von 182
+Dateien" kam und dann stehenblieb, ist ein anderer Befund als einer, der nie
+eine Zeile gemeldet hat — und für den zweiten Fall steht dort ausdrücklich
+`KEIN Fortschritt gemeldet` statt einer leeren Liste. Eine leere Liste sähe
+aus wie ein Messfehler; der Satz benennt die Lage.
+
+**Eine halbe Fassung gab es schon, und sie stand an der falschen Stelle.**
+`referenz_export.mjs` brachte eine eigene Funktion `mitFortschritt()` mit,
+die den Fortschritt mitlas — aber den Abbruch nicht abfing, und die drei
+anderen Skripte hatten sie gar nicht. Jetzt steht die Sache **einmal**
+(`download_lib.mjs`) und wird von **fünf Stellen in vier Skripten** gerufen.
+Zwei Fassungen derselben Sache sind keine zwei Riegel.
+
+**Der Stufe-2-Job bekommt eine Zeitgrenze.** Er hatte keine, es galt also
+GitHubs Vorgabe von **sechs Stunden**: Ohne die interne Grenze des
+Browserschritts hätte dieser Lauf bis zum Abend stillstehen dürfen, ohne dass
+irgendwo etwas rot geworden wäre. Jetzt sind es 45 Minuten — bewusst
+großzügig, weil der gute Fall gegen diese Anlage **noch nie zu Ende gelaufen
+ist** und es also keinen Messwert gibt, an dem man sie enger ziehen könnte.
+Sie soll das Hängen begrenzen, nicht einen langsamen, aber arbeitenden Lauf
+abschneiden.
+
+**Was das nicht ist: die Behebung.** Warum der Download ausbleibt, ist
+weiterhin offen — diese Änderung sorgt dafür, dass der nächste Lauf es sagt.
+Ein Prüfmittel, das eine Viertelstunde misst und dann nur „nichts" meldet,
+ist die Zeit nicht wert.
+
 ## [Werkzeug: Der Hotfix-Weg — reparieren, ohne alles mitzuliefern] — 2026-09-21
 
 **Das Problem war eine Sackgasse, und sie stand seit dem ersten Tag der
