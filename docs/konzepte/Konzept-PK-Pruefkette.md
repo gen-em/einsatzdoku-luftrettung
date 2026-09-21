@@ -28,7 +28,7 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > |---|---|
 > | Stand | **21.09.2026 — PK-01, PK-02 UND PK-03 ERLEDIGT.** Offen bleibt P-PK-11 zur Hälfte: die Ausbaustufe `uhr` ist gebaut, aber nicht abgenommen; `android` ist es (Bau in 7m 19s, 0 Lint-Fehler, 670 Prüffälle / 0). **Halt nach PK-03 wie beauftragt** — PK-04 bis PK-06 erst auf ausdrückliches Wort, weil PK-04 sichtbare Texte in `server/` bereinigt. Umsetzung läuft auf `claude/serene-dijkstra-bcpbjy` (von `main` `08e032e`); das Konzept ist mit seiner Historie vom Konzeptzweig dorthin übernommen, ebenso der Inhalt von PR #70. Freigegeben vom Auftraggeber (Z5) ohne Änderungen; Z1, Z2, Z3 erledigt; P-PK-02 vorgezogen und erledigt. |
 > | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); F-PK-1 bis -6 beantwortet (3.2). **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **zur Bestätigung vorgelegt**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. |
-> | Nächstes | **PK-04** — **erst nach ausdrücklichem Wort**; bis dahin **Halt** und Rückmeldung an den Auftraggeber, weil PK-04 sichtbare Texte in `server/` anfasst. Parallel bei der Betreiberin die Merges von PR #70 und #69, danach Tag `web-v20.26.3` = M1 der Kette II (Z2a). **Parallelität:** PK-01 bis PK-03 laufen neben Schritt 15 und fassen `server/` nicht an. |
+> | Nächstes | **PK-04** — **erst nach ausdrücklichem Wort**; bis dahin **Halt**. Daneben liegt ein **Vorgriff auf PK-05** bei der Betreiberin: PR #71 stellt den Auslöser von `pruefung.yml` um (Zweig `claude/pk-vorgriff-stufe1-ausloeser`, Backlog Nr. 268, Abnahme P-PK-17). **PK-05 selbst bleibt offen.** und Rückmeldung an den Auftraggeber, weil PK-04 sichtbare Texte in `server/` anfasst. Parallel bei der Betreiberin die Merges von PR #70 und #69, danach Tag `web-v20.26.3` = M1 der Kette II (Z2a). **Parallelität:** PK-01 bis PK-03 laufen neben Schritt 15 und fassen `server/` nicht an. |
 > | Kette II | wird nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
 > | Hakt | nichts. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); offen bleibt die Bestätigung durch Stufe 2 nach dem Merge. **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
 >
@@ -690,7 +690,7 @@ Risikoliste dieselben.
 | PK-02 | Sandbox-Setup | E-PK-12, -30 | PK-01 | `tools/sandbox/`, `.claude/hooks/`, `tools/containeraufbau/` (weg), `motor.mjs` | — |
 | PK-03 | Prüfstand-Befehl | E-PK-05, -06, -11, -19, -29 | PK-02 | `tools/pruefstand/` | erster Prüfpunkt: edbak-500 lokal reproduzieren |
 | PK-04 | Werkzeuge zusammenlegen und bereinigen | E-PK-03, -08, -14, -15, -16, -22, -24, -25, -26, -27, -28 | PK-03 | `tools/` (drei Sammelordner, Streichliste, Textprobe, Bedienprobe, Bilderlauf); Binnen-I- und Adressbereinigung in `server/`-Texten und `docs/` | Binnen-I und Adressen berühren sichtbare Texte → **Korrekturstufe Web** |
-| PK-05 | Tor umbauen | E-PK-04, -07, -13, -18, -20 | PK-04, PK-M1 | `pruefung.yml` | — |
+| PK-05 | Tor umbauen | E-PK-04, -07, -13, -18, -20 | PK-04, PK-M1 | `pruefung.yml` | **Auslöser bereits umgestellt** (Vorgriff 21.09.2026, PR #71); der Rest offen |
 | PK-06 | Staging verschlanken | E-PK-01, -07, -17, -21 | PK-05 | `auslieferung.yml` (`stufe2`), Kommentare in `ausliefern-lauf.yml`, `integritaet.yml` | — |
 | PK-07 | Abschluss | — | PK-06 | `Technik.md` 6, `CLAUDE.md`, Rahmenplan, Backlog, Prüfdokument; Erledigt-Zeile Kette II | Freigabe |
 | PK-08 | App-Auslieferung mit Signatur | E-PK-23 | PK-07, eigene Freigabe | `auslieferung.yml` (Jobs `android`, `uhr`), Umgebung `produktion` (zwei Geheimnisse), `Technik.md` 4.97g | Freigabe vor dem ersten Tag |
@@ -804,7 +804,18 @@ Konzepts eine Auskunft (1.2); deshalb vor der Freigabe.
 
 ### PK-05 — Tor umbauen
 
-- `pruefung.yml`: Auslöser `pull_request` und `push: main`; Android, Uhr und
+> **Der Auslöser ist bereits umgestellt** — Vorgriff vom 21.09.2026, PR #71,
+> Zweig `claude/pk-vorgriff-stufe1-ausloeser`. `push: branches: ['**']` steht
+> auf `branches: [ main ]`; `pull_request` und `workflow_dispatch` unverändert,
+> die Bereichserkennung unverändert, der Jobname `Stufe 1` unverändert.
+> **Das Paket bleibt offen**: Android, Uhr, die Bereichserkennung, die
+> Gegenlesung des Berichts und die Kürzung der Datei sind nicht Teil des
+> Vorgriffs. Grund für das Vorziehen: Jeder Push erzeugte zwei Läufe desselben
+> Namens, und der Zweigschutz wartete auf den langsameren — 56 statt 1 Minute
+> (Backlog Nr. 268, Abnahme P-PK-17).
+
+- `pruefung.yml`: Auslöser `pull_request` und `push: main` — **erledigt**;
+  Android, Uhr und
   Bereichserkennung raus; Bericht-Gegenlesung rein; Aufruf von `quelltext/`
   statt sieben Einzelschritten; Vollständigkeit gegen null; Kommentare auf je
   einen Satz. Der Jobname `Stufe 1` bleibt (der Zweigschutz nennt ihn).
@@ -929,6 +940,16 @@ in Stufe 2, gebaut ist er nicht"; „edbak-Export auf Staging antwortet 500
 `Sandbox-Setup.md`, `Technik.md` Kompendium, was fehlt" als eigenes Konzept
 nach PK; „Mailversand auf Staging fehlgeschlagen" (Z4); „App-Signatur in der
 Kette" (PK-08, ersetzt den Nachtrag zu Nr. 100).
+
+**Nr. 268 (neu, nach Erledigt) — „Stufe 1 lief bei jedem Push doppelt".**
+`pruefung.yml` trug `push: branches: ['**']` **und** `pull_request`; jeder
+Push auf einen Arbeitszweig erzeugte zwei Läufe desselben Namens `Stufe 1` —
+einen über `pull_request` (rund 1 min, vergleicht gegen den gemeinsamen
+Vorfahren) und einen über `push` (rund 56 min, ohne Vergleichsstand misst er
+alles). Der Zweigschutz wartet auf den Namen, also auf den langsameren.
+Gemessen an PR #69 (Läufe 192, 193) und PR #70 (Lauf 186). **Erledigt mit dem
+Vorgriff auf PK-05** (PR #71, 21.09.2026): `branches: [ main ]`. Die Abnahme —
+nur noch **ein** Lauf je Arbeitszweig-Push — steht als **P-PK-17** offen.
 
 **`CLAUDE.md` 7:** die Benennungsregel E-PK-09.
 
