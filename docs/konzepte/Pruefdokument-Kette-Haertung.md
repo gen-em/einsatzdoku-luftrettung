@@ -22,11 +22,11 @@ abgehakt ist (R62).
 > | | |
 > |---|---|
 > | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, **AP5 VOLLSTAENDIG ABGENOMMEN** (Produktiv-Haelfte Lauf 35566000648, Staging-Haelfte Lauf 35570398032), **AP6 GEBAUT UND ABGENOMMEN** (die Abnahme war in ihrer alten Fassung unfahrbar, F-KH-U-37, und wurde als Prüfpunkt 25a/25b neu gefasst; beide sind am 21.09.2026 gefahren und bestanden, F-KH-U-39). **Offen ist allein der Rückbau von Staging** — es steht noch in Wartung, das FTP-Passwort ist noch falsch (Prüfpunkt 25c). **Kette II liegt seit dem 21.09.2026 auf `main`** (PR #65, Merge `fb614d1`). **M1 ist blockiert:** Stufe 2 bleibt am Botschutz von lima-city rot (F-KH-U-10/-36), und das Tor der gruenen Laeufe laesst deshalb keinen Tag durch.** AP7 und AP8 nicht begonnen |
-> | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **29**, Zielprobe **93**, Zustand **28**, Wache **38** — alle 0 offen), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **zehn Probeläufe gegen Produktiv**, **drei Staging-Läufe über die neue Schrittfolge** (einer grün, zwei absichtlich rot). Zahlen in Abschnitt 1 |
+> | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **29**, Zielprobe **93**, Zustand **28**, Wache **38** — alle 0 offen), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **zehn Probeläufe gegen Produktiv**, **vier Staging-Läufe über die neue Schrittfolge** (zwei grün, zwei absichtlich rot). Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
 > | Funde | **38** (Abschnitt 2): F-KH-U-01 bis F-KH-U-39 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben. **Zuletzt F-KH-U-39: der Schlussschritt von AP6 ist zweimal gelaufen** — einmal bei eingeschalteter, einmal bei ausgeschalteter Wartung, und die beiden Wortlaute unterscheiden sich an genau der einen Stelle, an der sie sich unterscheiden müssen |
 > | F3 | **GEFUNDEN UND BEHOBEN, der Beleg ist gefahren.** Ursache: `RETR` auf die nicht vorhandene Zustandsdatei tötet die Verbindung; die Aktion deutet es als „first publish" und arbeitet mit einem toten Client weiter, bis das erste `MKD` es bemerkt — **drei Schritte hinter der Stelle, die sie meldet** (F-KH-U-25). Abhilfe: die Datei einmal hinlegen, bevor die Aktion läuft (AP4, Richtung (e), `tools/kette/zustand.py`). Beleg: **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige Abgleich gegen diesen Server überhaupt (F-KH-U-28). **E-KH-09 ist erfüllt** |
-> | Prüfliste | **32** Punkte: **16 abgehakt**, 5 teilweise, **11 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu am 21.09.2026: **25c** (der Rückbau von Staging — er ist eine eigene Prüfung, kein Aufräumen, und solange er offen ist, ist Staging nicht benutzbar). Abgehakt am selben Tag: **24**, **25a**, **25b** |
+> | Prüfliste | **32** Punkte: **17 abgehakt**, 5 teilweise, **10 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu am 21.09.2026: **25c** (der Rückbau von Staging — er ist eine eigene Prüfung, kein Aufräumen, und solange er offen ist, ist Staging nicht benutzbar). Abgehakt am selben Tag: **24**, **25a**, **25b** und **25c** — **Prüfpunkt 25 ist damit vollständig** |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
 
 ---
@@ -3136,9 +3136,9 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   *Danach:* siehe 25c — der Rückbau ist ein eigener Punkt geworden, weil er
   eine eigene Prüfung ist und nicht bloß ein Aufräumen.
 
-- [ ] **25c — Rückbau, und er ist selbst ein Prüfpunkt.** **Staging steht
-  nach 25b in Wartung, und das Passwort ist falsch.** Beides bleibt so,
-  bis dieser Punkt abgehakt ist — solange ist Staging nicht benutzbar.
+- [x] **25c — Rückbau, und er ist selbst ein Prüfpunkt.** **BESTANDEN am
+  21.09.2026 — Lauf 35575180595** (Ergebnis unten). **Staging ist wieder
+  offen: Wartung aus, Passwort richtig, Kette grün.**
   *Weg, in dieser Reihenfolge:*
   1. Auf Staging **Betrieb → Updates → Wartung beenden**.
   2. Settings → Environments → **`staging`** → `FTP_PASSWORD` auf den
@@ -3159,6 +3159,50 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   *Und wenn die Wartung von selbst ausgegangen ist:* Das wäre ein Fehler.
   Die Kette schaltet sie im Unglück ausdrücklich **nicht** aus (E-KH-06).
   Wer sie aus vorfindet, ohne sie ausgeschaltet zu haben, hat einen Befund.
+
+  **ERGEBNIS — Lauf 35575180595, 21.09.2026, 07:54 UTC**, Job
+  `staging / ausliefern` auf dem Arbeitszweig (Stand `5651e91`), **grün,
+  alle 17 Schritte, 33 Sekunden**. Schlussschritt korrekt **übersprungen**
+  (`if: failure()` greift nicht). Die drei Nachweise, die der Punkt
+  zusammenfasst, jeder mit seiner Zahl:
+
+  | | gemessen | |
+  |---|---|---|
+  | Die Kette läuft nach zwei Fehlschlägen ohne Handarbeit wieder durch | Zielprobe **20 s** grün, Backup-Tor grün, Abgleich grün | kein Eingriff nötig ausser Passwort und Wartungsschalter |
+  | **Die Zustandsdatei hat die Abbrüche überstanden** (AP4) | **0 Dateien, 0 B, 3,8 s** | der eigentliche Prüfwert — siehe unten |
+  | Die 17 Schritte stehen auch ausserhalb von `main` | Schritte 1–18 der Oberfläche, 6/7/8 und 16 übersprungen (Produktiv-only), 3 übersprungen (kein Probelauf) | |
+
+  Der Wortlaut des Abgleichs:
+
+  ```
+  Making changes to 0 files/folders to sync server state
+  Uploading: 0 B -- Deleting: 0 B -- Replacing: 0 B
+  🎉 Sync complete. Saving current server state to "/../.deploy-state-staging.json"
+  Total time: 3.8 seconds
+  ```
+
+  **Das ist die Zahl, auf die es ankam, und sie ist das Gegenteil des
+  Fehlerbilds.** Hätte die Aktion ihre Zustandsdatei nicht gefunden, hielte
+  sie den Server für leer und übertrüge alle **688** Dateien in rund
+  **7:47** (F-KH-U-28). Sie hat sie gefunden, hat 0 Unterschiede gezählt und
+  war in 3,8 Sekunden fertig. **Zwei abgebrochene Läufe haben die
+  Zustandsdatei nicht beschädigt** — und das ist mehr, als der Punkt
+  verlangt hat: Er fragte, ob sie die Abbrüche übersteht, und die Antwort
+  ist nicht „ungefähr", sondern 0.
+
+  > **Ein Nebenbefund, und er belegt die Reihenfolge des Rückbaus.** Schritt
+  > 17 las die Anlage aus und bekam
+  > `"wartung": {"aktiv": true, "seit": "2026-09-21T07:55:00Z", "von": "kette"}`.
+  > Die Wartung, die er vorfand, war also die von **Schritt 14** gesetzte —
+  > nicht die von Hand eingeschaltete aus 25b. **Schritt 1 des Rückbaus ist
+  > damit mitbelegt**, ohne dass jemand ihn bezeugen musste: Die Anlage
+  > sagt, wer den Schalter zuletzt umgelegt hat und wann.
+  >
+  > Danach `{"ok": true, "aktion": "wartung_aus", "wartung": false}` —
+  > **Staging ist wieder offen.**
+
+  **Damit ist Prüfpunkt 25 vollständig erledigt** (25a, 25b, 25c), und AP6
+  ist an seiner eigenen Abnahme gemessen.
 
 > **WARUM DIESER PUNKT NEU GEFASST IST — und warum die alte Fassung nicht
 > fahrbar war** (F-KH-U-37, 21.09.2026). Die Abnahme im Konzept verlangte:
