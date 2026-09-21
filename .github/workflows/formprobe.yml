@@ -2,15 +2,41 @@
 #
 # WARUM ES DAS GIBT: Das Konzept sagt, die Form von AP5 -- wiederverwendbarer
 # Arbeitslauf ODER zusammengesetzte Aktion -- werde "nach Messung" gewaehlt,
-# unter der Bedingung, dass Umgebungsgeheimnisse und Pflichtfreigabe erhalten
-# bleiben. `docs.github.com` ist von diesem Laeufer aus gesperrt; geraten wird
-# an der Auslieferungskette nicht. Also misst dieser Lauf es.
+# unter der Bedingung, dass die Umgebungsbindung und die Pflichtfreigabe
+# erhalten bleiben. `docs.github.com` ist von diesem Laeufer aus gesperrt;
+# geraten wird an der Auslieferungskette nicht.
 #
 # ER FAEHRT NUR GEGEN `staging`. Die Umgebung `produktion` hat die
 # Pflichtfreigabe der Betreiberin; eine Messung, die sie zum Klicken zwingt,
 # waere ein Missbrauch des Tors.
 #
 # ER SCHREIBT NICHTS -- kein FTP, kein Upload, keine Datei auf einem Server.
+#
+# RUNDE 1 (Lauf 35549413032) hat drei Fragen abschliessend beantwortet; ihre
+# Messmittel sind deshalb wieder entfernt:
+#
+#   A  Loesen `secrets`/`vars` INNERHALB einer zusammengesetzten Aktion auf?
+#      NEIN, und zwar LAUT -- die Aktion laedt gar nicht erst:
+#        "Unrecognized named-value: 'secrets'. Located at position 1 within
+#         expression: secrets.FTP_SERVER"
+#        "Unrecognized named-value: 'vars'. ..."
+#        "Failed to load .../formprobe-direkt/action.yml"
+#      Kein stilles Leerbleiben; das ist der einzige Trost daran.
+#   B  Ueber Eingaben geht es, verschachteltes `uses:` in der Aktion laeuft
+#      ("C5 verschachteltes uses: GELAUFEN"), `if:` in der Aktion ebenso.
+#   E  `needs:` auf einen aufgerufenen Lauf haelt.
+#
+# OFFEN UND EINZIGER ZWECK DIESER RUNDE: Runde 1 hat nebenbei gezeigt, dass
+# `secrets.FTP_SERVER` auch OHNE `environment:` aufloest -- es gibt einen
+# gleichnamigen Wert auf Repositoriums- oder Organisationsebene. Damit ist
+# Runde 1 fuer die eigentliche Frage WERTLOS: Dass im aufgerufenen Lauf mit
+# `environment:`-AUSDRUCK etwas ankam, belegt nicht, dass die Umgebung
+# gebunden hat -- es kann der Wert von aussen gewesen sein.
+#
+# Diese Runde misst dieselben SIEBEN Werte einmal MIT und einmal OHNE
+# `environment:`. Ein Wert, der drinnen belegt und draussen leer ist, ist der
+# Beweis der Bindung. Nebenbei faellt ab, wie weit der Befund aus Runde 1
+# reicht -- gemessen war er fuer eines von vier Geheimnissen.
 name: Formprobe
 # NUR AUF DIESEM ZWEIG, UND NUR ueber `push`. `workflow_dispatch` schiede aus:
 # Ein Arbeitslauf, den es auf dem Standardzweig nicht gibt, steht nicht in der
@@ -25,37 +51,6 @@ defaults:
   run:
     shell: bash -eo pipefail {0}
 jobs:
-  a_aktion_direkt:
-    name: A -- Aktion, Kontexte direkt
-    runs-on: ubuntu-latest
-    environment: staging
-    steps:
-      - uses: actions/checkout@v7
-      - id: direkt
-        # DER FEHLSCHLAG IST EIN ERGEBNIS, KEIN UNFALL. Loest `secrets` in
-        # einer zusammengesetzten Aktion nicht auf, faellt sie beim Laden --
-        # und dieser Schalter haelt die uebrigen Messungen am Leben.
-        continue-on-error: true
-        uses: ./.github/actions/formprobe-direkt
-      - name: Ausgang der direkten Aktion
-        run: echo "A-ERGEBNIS formprobe-direkt outcome=${{ steps.direkt.outcome }}"
-
-  b_aktion_eingang:
-    name: B -- Aktion, ueber Eingaben
-    runs-on: ubuntu-latest
-    environment: staging
-    steps:
-      - uses: actions/checkout@v7
-      - id: eingang
-        continue-on-error: true
-        uses: ./.github/actions/formprobe-eingang
-        with:
-          geheim:    ${{ secrets.FTP_SERVER }}
-          variable:  ${{ vars.FTP_ZIELPFAD }}
-          probelauf: 'true'
-      - name: Ausgang der Eingabe-Aktion
-        run: echo "B-ERGEBNIS formprobe-eingang outcome=${{ steps.eingang.outcome }}"
-
   c_lauf_mit_umgebung:
     name: C -- aufgerufener Lauf MIT environment
     uses: ./.github/workflows/formprobe-lauf.yml
@@ -71,11 +66,3 @@ jobs:
       umgebung: staging
       mit_umgebung: false
     secrets: inherit
-
-  e_needs:
-    name: E -- needs auf einen aufgerufenen Lauf
-    needs: c_lauf_mit_umgebung
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo "F1 needs auf einen aufgerufenen Lauf -- haelt"
