@@ -206,6 +206,15 @@ wurde nichts übertragen). **Ursache offen (E-KH-09); Trennversuch in AP3.**
 > **`FTP_STATE_PFAD` ist nicht gesetzt** — es greift also die Vorgabe
 > `../.deploy-state-produktion.json`, eine Ebene **über** dem Käfig.
 >
+> > **DIESER SATZ BESCHREIBT DEN 20.09.2026 UND GILT NICHT MEHR** (Marke
+> > gesetzt am 21.09.2026, AP8a). Seit AP6 gibt es **keine Vorgabewerte**
+> > (E-KH-07): Eine leere Variable ist rot im ersten Schritt. Und
+> > `FTP_STATE_PFAD` **ist** inzwischen gesetzt, in beiden Umgebungen, auf
+> > genau den Wert, den die Vorgabe hatte — belegt durch fünf Läufe
+> > (Prüfpunkt 24). Der Absatz bleibt als **Befund stehen**, weil er die
+> > Kette der Schlüsse trägt, die zu F3 geführt hat; wer ihn als Auskunft
+> > über den heutigen Stand liest, liest ihn falsch.
+>
 > Damit fällt die erste Hälfte von Erklärung (2) weg: **„Hauptkonto statt
 > eingesperrtem Zusatzkonto" trifft nicht zu** — Produktiv fährt dieselbe
 > Bauform wie die alte Staging-Anlage, die am 17./18.09. mit derselben Aktion

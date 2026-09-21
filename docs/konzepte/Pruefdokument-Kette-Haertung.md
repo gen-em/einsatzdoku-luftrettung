@@ -200,6 +200,51 @@ F-KH-U-34.
 > hingen an einer Handlung der Betreiberin, und beide sind in einem einzigen
 > Lauf gefallen.
 
+**9 — Der Job `Rückfallstand (Staging)` ist gebaut und nie gelaufen** (AP7,
+E-KH-16). Er löst nur bei einem **Tag-Push** aus, und einen Tag gibt es nicht,
+solange M1 blockiert ist (Punkt 10). Geprüft ist, was ohne Auslieferung
+prüfbar war: die Aufrufe gegen die Schnittstelle von `tor.py`
+(`tools/kettenaufrufe/`, 0 Befunde), die neue Auskunft `--frage komplett`
+samt ihrer Ränder (6 Lagen in der Selbstprobe von `tor.py`), und die
+YAML-Gültigkeit. **Nicht geprüft ist der Lauf selbst** — ob das
+Komplett-Backup auf Staging durchläuft und der Dateiname in der
+Zusammenfassung ankommt. Das steht als **Prüfpunkt 26**.
+
+**Ihn für die Prüfung doch auslösen zu lassen, wäre der falsche Weg**, und
+das ist hier keine Bequemlichkeitsausrede: Ein Probelauf löst ihn
+ausdrücklich nicht aus, weil er sonst je Probelauf einen Komplett-Stand
+anlegte und damit genau die Stände verdrängte, um die es geht (Nr. 261). Eine
+Sonderbedingung „nur für die Prüfung" prüfte eine Schrittfolge, die es im
+Ernstfall nicht gibt — R84 (E-KH-17), und derselbe Grund, aus dem in AP6 ein
+„auf Zuruf scheiternder" Schritt verworfen wurde (F-KH-U-37).
+
+**10 — M1 ist nicht gefahren, und es liegt nicht an der Kette.** Stufe 2
+kommt am **Botschutz von lima-city** nicht durch: `login.php` weist die
+Anmeldung des Prüfkontos mit **HTTP 403** ab („Dein Browser wird geprüft",
+F-KH-U-10). Das Tor der grünen Läufe verlangt einen Lauf, der **als Ganzes**
+erfolgreich war — auf einem Stand, dessen Stufe 2 nie gemessen hat, kommt
+also kein Tag durch. **Das ist richtig so; dafür gibt es das Tor.** Aber es
+heißt: **M1, M2 und damit AP8b warten auf den Hoster, nicht auf ein
+Arbeitspaket.**
+
+**Verworfen, bevor es jemand vorschlägt:** den Botschutz im Werkzeug zu
+umgehen. Dann prüfte Stufe 2 gegen eine Anlage, die sich anders verhält als
+die, die Nutzerinnen sehen — eine grüne Zahl ohne Aussage, und davor warnt
+`CLAUDE.md` 6 ausdrücklich.
+
+**Gemessen und nützlich:** Der Botschutz trifft **nur den Formular-POST**.
+Die Zielprobe holt ihre Probedatei über dieselbe Adresse per HTTPS zurück und
+kommt durch (F-KH-U-36/-39) — sie bleibt auf Staging als Prüfmittel
+brauchbar, solange er steht.
+
+**11 — Die Aufbewahrung der Komplett-Stände ist im QUELLTEXT gemessen, nicht
+auf der Anlage.** `KOMP_AUFBEWAHRUNG_VORGABE = 2` steht in
+`server/komplett_lib.php`; `komp_aufbewahrung()` liest aber zuerst eine
+Marke, und **ob auf Staging eine gesetzt ist, weiß von hier aus niemand** —
+der Wegwerf-Container erreicht die Anlage nicht. Die Zahl im Befund
+F-KH-U-40 ist also die **Untergrenze dessen, was gilt**, nicht der Wert der
+Anlage. Nachsehen kann das nur die Betreiberin, **Prüfpunkt 28**.
+
 ---
 
 ## 1. Prüfprotokoll — Soll und Ist
@@ -508,6 +553,35 @@ Error: Client is closed because read ECONNRESET (data socket)
 - Die Zielprobe steht **vor** dem Backup-Tor und **ohne** `if` — sie läuft in
   beiden Fällen, Probelauf wie Auslieferung.
 - Ihre Selbstprobe läuft im selben Schritt davor, jedes Mal.
+
+---
+
+### 1.7 AP4 bis AP7 — wo der Beleg steht und wie die Zahl lautet
+
+**Warum hier keine vier weiteren Abschnitte stehen.** Die Abschnitte 1.1 bis
+1.6 sind entstanden, als die Belege verstreut lagen. Seit AP4 fällt jeder
+Beleg als **Fund mit Lauf-Nummer** an — die ausführliche Fassung steht dort,
+und sie hier zu wiederholen hieße, zwei Stände desselben Satzes zu pflegen.
+Was fehlte, war die **Übersicht**: dass man von „AP6, ist das belegt?" in
+einem Schritt zur Zahl kommt. Das ist diese Tabelle.
+
+| Paket | Abnahme verlangt | belegt durch | Zahl |
+|---|---|---|---|
+| **AP4** — F3 beheben | Ein Abgleich, der durchläuft | F-KH-U-25 (Ursache), F-KH-U-28 (Beleg) | **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige Abgleich gegen diesen Server überhaupt. Dazu zwei Probeläufe mit **0 geplanten Löschungen** und, seit AP7, ein dritter unabhängiger Beleg: **0 Dateien in 3,8 s** nach zwei abgebrochenen Läufen (Prüfpunkt 25c) |
+| **AP5** — gemeinsame Schrittfolge | Beide Umgebungen fahren dieselben Schrittnamen; Dauer vorher/nachher | F-KH-U-34 (Produktiv), F-KH-U-36 (Staging) | Staging **4 → 17 Schritte**, **12 s → 49 s**; `auslieferung.yml` **1 205 → 657 Zeilen**; Schutzliste **einmal** statt zweimal, **acht** Projektpfade. Pflichtfreigabe **wandert mit** — Lauf 35566000648 hat angefordert und gestanden, bis freigegeben war |
+| **AP6** — Abbruchverhalten und Härtung | Jede fremde `uses:`-Zeile auf SHA; provozierter Fehlschlag, Schlussschritt meldet die Wartung; fehlende Variable → rot vor jedem Zugriff | F-KH-U-35, -37, -38, -39 | **11 von 11** fremden `uses:` auf 40-stelliger SHA; **zwei** Läufe aus **derselben** Lage, die `Wartung: aus` (35574032478) und `Wartung: an` (35573954983) meldeten; `tor.py` **19 → 35 Lagen**, 0 offen; fünf Läufe durch den ersten Schritt, der bei leerer Variable abbricht |
+| **AP7** — Hotfix-Weg | **Tor lehnt einen `hotfix/*`-Commit ohne Abstammung ab; nimmt einen an, der abstammt** | Selbstprobe `freigabe.py`; dazu der Kettenschritt gegen eine `gh`-Attrappe | **32 Lagen, 0 offen**; der Schritt selbst **6 von 6 Lagen** richtig (Push auf `main` → 0, Hotfix mit Abstammung → 0, **ohne Abstammung → 1**, Vergleich nicht zu holen → 1, kein Lauf → 1, `staging` übersprungen → 1) |
+
+**Die Zeile AP7 ist die, auf die es ankommt, und sie verdient einen Satz.**
+Die Abnahme verlangt eine **Ablehnung**. Eine Ablehnung lässt sich an einem
+echten Produktivlauf nicht messen, ohne ihn absichtlich scheitern zu lassen —
+deshalb liegt die Entscheidung seit AP7 in einem Werkzeug und nicht als Bash
+im Arbeitslauf (E-P5a-12). **Sie ist damit zweimal unabhängig belegt, ohne
+dass etwas ausgeliefert wurde.**
+
+**Was diese Tabelle NICHT behauptet:** dass AP7 vollständig abgenommen sei.
+Die zweite Hälfte — das Zusatz-Backup auf Staging — ist nie gelaufen und
+kann es nicht, solange M1 blockiert ist (Abschnitt 0, Punkte 9 und 10).
 
 ---
 
@@ -3376,7 +3450,20 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   Laufzusammenfassung, und unter **Betrieb → Wiederherstellen** ist er nicht
   mehr da. Dann ist der Hotfix-Weg für dieses Tag zu.
 
-## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
+## 4. Vorschläge an den Backlog — **EINGESPIELT am 21.09.2026 (AP8a)**
+
+> **Die Nummern sind vergeben; dieser Abschnitt ist damit Protokoll und keine
+> Aufgabe mehr.** Er hat sie gebraucht: Das Prüfdokument wird gelöscht, wenn
+> seine Prüfliste abgehakt ist (`CLAUDE.md` 7), und ein Vorschlag ohne Nummer
+> wäre mit ihm verschwunden.
+>
+> | Vorschlag | wurde |
+> |---|---|
+> | Verweise von `.github/` in die Dokumentation | **Backlog Nr. 265** |
+> | `docs/Technik.md` 6.3 nennt „zwei der fünfzig Seiten" | **erledigt statt aufgeschrieben** — die Zahl ist ersatzlos aus dem Satz genommen; sie wächst mit jeder neuen Seite und steht in `seiten.json`, eine Zahl im Fließtext veraltet dort planmäßig |
+> | `plattform_pruefen()` sagt „aus" statt „nicht feststellbar" | **Backlog Nr. 266** |
+> | Die Anwendung überlässt ihre Sitzungsablage dem Hoster | **war schon Nr. 241** — mit Schritt 16 gebaut und gemergt (Web 20.26.0); hier nur noch Herkunft |
+
 
 - **Verweise von `.github/` in die Dokumentation werden von keinem Prüfmittel
   nachgehalten.** Anlass: F-KH-U-02. `auslieferung.yml` verweist in

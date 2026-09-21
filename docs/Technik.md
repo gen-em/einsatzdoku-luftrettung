@@ -9180,8 +9180,8 @@ Token, wird übersprungen und gesagt** — nicht still auf den lokalen Weg
 zurückgefallen, der hier ohnehin an der fehlenden `config.php` scheitert.
 
 **Der Bilderlauf braucht es seit Web 20.16.2 ebenfalls** (Backlog Nr. 220),
-aber für etwas anderes und mit einem anderen Verhalten. Zwei der fünfzig
-Seiten tragen `"wartung": true` in `seiten.json` — `07-wartungsseite` und
+aber für etwas anderes und mit einem anderen Verhalten. **Zwei** Seiten
+tragen `"wartung": true` in `seiten.json` — `07-wartungsseite` und
 `46a-betrieb-updates-wartung` —, und `aufnehmen.mjs` schaltete den
 Wartungsmodus über die **lokale** Datei `server/wartung.lock`, was gegen ein
 fernes Staging wirkungslos ist.

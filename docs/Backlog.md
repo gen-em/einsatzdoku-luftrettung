@@ -113,7 +113,7 @@ kollidieren.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **262** und trägt seine
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **267** und trägt seine
 Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
@@ -2793,6 +2793,26 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Riegel unsichtbar statt tödlich — aber die Anmeldung der BetreiberIn
     muss auch dann durchkommen, sonst ist nichts gewonnen.
 
+    **Nachtrag 21.09.2026 (Kette II, Einschub Abschnitt 8).** Die
+    Grundsatzfrage ist **beantwortet, der Punkt bleibt trotzdem offen** — und
+    zwar genau um seinen eigentlichen Kern.
+
+    **Beantwortet:** Die Kette erzwingt den Wartungsmodus. Seit Kette II/AP6
+    steht „Wartung einschalten" unmittelbar vor dem Abgleich, und **bei
+    ausstehender Migration bleibt die Wartung an** — der Lauf sagt es und
+    schickt zu „Betrieb → Updates". Scheitert ein Lauf, bleibt sie ebenfalls
+    an, und der Schlussschritt meldet, was gilt (belegt: zwei provozierte
+    Fehlschläge, F-KH-U-39). Die Sorge „die Anmeldung der BetreiberIn muss
+    durchkommen" trägt der Torwächter, der seit P5a/AP3 auch ohne Kette
+    greift.
+
+    **Offen bleibt, was der Titel sagt:** Es fährt weiterhin **kein
+    Prüfmittel den Weg einer frisch ausgelieferten Anlage** — Deploy, dann
+    Anmeldung, dann `update.php`, dann noch einmal Anmeldung. Kette II hat
+    den Weg **von Hand** auf Staging gefahren und dabei gemessen, dass er
+    geht; ein Prüfmittel ist das nicht. **Der Handweg steht in
+    `docs/Technik.md` 6; der automatisierte Weg bleibt dieser Punkt.**
+
 
 236. **`ubuntu-latest` wandert am 19.10.2026 auf Ubuntu 26.**
     *Aufgenommen 18.09.2026, Merkposten mit Datum.*
@@ -3184,6 +3204,112 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ein Rückfallstand vier weitere Auslieferungen. Die Zahl ist ein
     Vorschlag, kein Messwert — wie viele Tags man rückwirkend reparieren
     können will, weiß nur die Betreiberin.
+
+
+262. **Atomare Auslieferung — umschalten statt überschreiben.**
+    *Aufgenommen 21.09.2026 (Kette II, Einschub Abschnitt 8).* Auslöser:
+    **P8 oder ein Hosterwechsel.** Priorität: niedrig.
+
+    Die Kette überträgt heute **in das laufende Verzeichnis**. Zwischen der
+    ersten und der letzten Datei liegt ein Zeitfenster, in dem die Anwendung
+    halb alt und halb neu ist — der Wartungsmodus verdeckt es, beseitigt es
+    aber nicht. Der Schlussschritt sagt bei einem Abbruch deshalb
+    „Dateistand: **unbekannt**", und das ist keine Schwäche der Meldung,
+    sondern eine ehrliche Auskunft über die Bauform.
+
+    **Abhilfe wäre ein Release-Verzeichnis:** hochladen nach
+    `releases/<tag>/`, prüfen, dann einen Symlink umlegen. Der Umschaltpunkt
+    ist dann **eine** Operation statt 688.
+
+    **Warum nicht jetzt:** Der heutige Hoster gibt über FTPS keine Symlinks
+    her, und ohne sie wäre das Umschalten ein Verzeichnis-Umbenennen —
+    schneller als 688 Dateien, aber nicht atomar. Der Gewinn hinge am Hoster,
+    und genau deshalb hängt der Punkt an P8 oder einem Wechsel.
+
+263. **Die Integritätswache sieht nur, was öffentlich abrufbar ist.**
+    *Aufgenommen 21.09.2026 (Kette II, Einschub Abschnitt 8).* Priorität:
+    niedrig. **Abhilfe offen — hier wird die Grenze benannt, nicht
+    geschlossen.**
+
+    `tools/integritaetswache/wache.py` vergleicht den Produktivserver gegen
+    den Zeiger `produktion`. Sie holt sich die Dateien **über HTTPS**, sieht
+    also `assets/`, die Anmeldeseite und was sonst ausgeliefert wird —
+    **keinen PHP-Quelltext**. Eine untergeschobene Zeile in `db.php` oder
+    `login.php` bemerkt sie nicht.
+
+    **Was sie trotzdem leistet, und es ist nicht wenig:** Der häufigste
+    Angriff auf eine solche Anlage ist ein untergeschobenes **Skript** im
+    Frontend — und genau das ist öffentlich abrufbar und wird verglichen.
+
+    **Warum die Abhilfe offen bleibt:** Sie hieße, dem Server eine Schnittstelle
+    zu geben, die eigenen Quelldateien auszuliefern oder zu hashen. Das ist
+    ein neuer Angriffsweg für ein Problem, das der Vergleich nur teilweise
+    löst — die Entscheidung gehört in einen eigenen Durchgang, nicht in einen
+    Nachtrag.
+
+264. **Die Fremd-Aktion des Transports ablösen.**
+    *Aufgenommen 21.09.2026 (Kette II, Einschub Abschnitt 8).* Priorität:
+    niedrig. **Auslöser, und erst dann:** erneute Abbrüche, Bedarf an
+    Wiederaufnahme, oder ein Ende der Pflege der Aktion.
+
+    Der Transport läuft über `SamKirkland/FTP-Deploy-Action`. Kette II/AP4
+    hat sich gegen eine Ablösung entschieden und für den kleinsten Eingriff
+    (die Zustandsdatei hinlegen, bevor die Aktion läuft) — **die Aktion
+    bleibt, der Transport bleibt, das Löschverhalten bleibt.**
+
+    **Was gegen sie spricht, gesammelt aus der Arbeit an F3:** Sie fängt
+    jeden Fehler von `getServerFiles` ab und deutet ihn als „first publish",
+    rechnet danach mit einem toten Client weiter und meldet die Stelle **drei
+    Schritte hinter der Ursache** — acht Trennversuche lang stand deshalb der
+    falsche Aufruf im Verdacht (F-KH-U-25). Sie kennt keine Wiederaufnahme:
+    Ein Abbruch bei Datei 400 von 688 beginnt beim nächsten Lauf von vorn.
+    Und ihr jüngstes Tag ist vom **19.04.2026**.
+
+    **Was für sie spricht:** Sie funktioniert, seit die Zustandsdatei liegt —
+    688 Dateien ohne `ECONNRESET`, und seither vier Staging-Läufe, zuletzt
+    0 Dateien in 3,8 s. Ein eigener Transport wäre neuer Code an der
+    empfindlichsten Stelle der Kette, und den prüft niemand außer uns.
+
+
+265. **Verweise von `.github/` in die Dokumentation hält kein Prüfmittel
+    nach.** *Aufgenommen 21.09.2026 (Kette II, AP8a; Anlass F-KH-U-02).*
+    Priorität: niedrig. Auslöser: eine weitere Neufassung von Rahmenplan 6a.
+
+    `.github/workflows/auslieferung.yml` verweist in seinen Fehlermeldungen
+    auf **„Rahmenplan 6a, Schritte 1 bis 3"** und „Schritt 4". Wer 6a
+    umnummeriert — und das ist am 20.09.2026 beim Hosterwechsel beinahe
+    passiert —, macht daraus einen Irrweg: Die Meldung schickt jemanden zu
+    einem Schritt, der etwas anderes sagt als gemeint.
+
+    **`tools/kettenaufrufe/` schlägt dabei nicht an**, und das ist kein
+    Versäumnis: Es prüft **Werkzeugschnittstellen**, nicht Textverweise. Die
+    Schrittnummern in 6a sind beim Umzug ausdrücklich beibehalten worden,
+    **weil** die Kette sie nennt — der Verweis hält heute also, aber nur,
+    weil jemand daran gedacht hat.
+
+    **Zu tun:** ein Prüfschritt, der die in `.github/` genannten
+    Dokumentstellen gegen die Überschriften hält, die es wirklich gibt.
+
+266. **`plattform_pruefen()` sagt „aus", wo „nicht feststellbar" stehen
+    müsste.** *Aufgenommen 21.09.2026 (Kette II, AP8a; Anlass F-KH-U-05).*
+    Priorität: niedrig.
+
+    Steht eine geprüfte Funktion in `disable_functions`, antwortet
+    `function_exists()` mit `false` — und der Befund wird zu einem **Mangel**
+    statt zu einer **Nichtmessung**. Betroffen ist heute der **OPcache**
+    (`opcache_get_status`, auf lima-city abgeschaltet): Die Statusseite meldet
+    ihn als „aus", obwohl niemand weiß, ob er läuft.
+
+    **Die Bauform steckt in jeder weiteren Prüfung, die über
+    `function_exists()` geht**, nicht nur in dieser einen — das ist der Grund,
+    warum der Punkt aufgeschrieben wird und nicht nur der OPcache-Fall.
+
+    **Warum das mehr als Kosmetik ist:** Dreiwertigkeit ist im Projekt schon
+    einmal teuer erkauft worden. Die Zielprobe unterscheidet ausdrücklich
+    **LIEGT / FEHLT / NICHT FESTSTELLBAR** (`tools/kette/zielprobe.py`), weil
+    ein „fehlt", das in Wahrheit ein „ich konnte nicht nachsehen" war, die
+    Kette zu falschen Schlüssen brachte. Hier gilt dasselbe, nur auf der
+    Statusseite.
 
 
 ## Erledigt
