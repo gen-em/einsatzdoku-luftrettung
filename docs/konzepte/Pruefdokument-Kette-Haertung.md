@@ -2120,22 +2120,9 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   löscht, soll es nicht geben. Bricht der Lauf wie erwartet früh ab, liegen
   dort ohnehin nur wenige Dateien.
 
-- [ ] **20 — Das Probeverzeichnis entfernen** (Rest aus Prüfpunkt 18a).
-  *Was liegt da — GRÖSSER GEWORDEN am 20.09.2026:* `.zielprobe-gespraech/`
-  im Webroot von Produktiv, jetzt mit **688 Dateien in 62 Verzeichnissen,
-  9,7 MB** — der Beweislauf von Prüfpunkt 21 ist durchgelaufen und hat
-  alles dorthin übertragen. **Rekursiv entfernen**, nicht nur ein leeres
-  Verzeichnis löschen. Das war angekündigt und ist der Preis des Beweises.
-  *Weg:* Dateimanager des Hosters oder ein FTP-Client, `RMD` auf das
-  Verzeichnis. Von Hand, weil das Werkzeug keine Bäume löscht.
-  *Nebenbei zu prüfen, einmal:* `https://nadoku.gen-em.org/.zielprobe-gespraech/`
-  im Browser aufrufen — **erwartet 403**. Kommt etwas anderes, greift die
-  Punktpfad-Sperre für Verzeichnisse nicht; das wäre ein eigener Befund und
-  gehört gemeldet, auch nachdem das Verzeichnis weg ist.
-  *Dringlichkeit:* gering. Ein leeres, gesperrtes Verzeichnis richtet nichts
-  an — aber es steht da, und was dasteht, ohne dass jemand weiß warum, wird
-  irgendwann zur Frage.
-
+- [x] **20 — Das Probeverzeichnis entfernen** — **ERLEDIGT am 20.09.2026
+  durch die Betreiberin.** `.zielprobe-gespraech/` ist weg (zuletzt 688
+  Dateien in 62 Verzeichnissen, 9,7 MB, aus dem Beweislauf von Prüfpunkt 21).
 - [x] **21 — Der Beweislauf der Abhilfe** (AP4, Richtung (e)) — **ERLEDIGT
   am 20.09.2026 im dritten Anlauf** (Lauf 35545737872): `🎉 Sync complete`,
   **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der
