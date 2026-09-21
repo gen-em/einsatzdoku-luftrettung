@@ -454,7 +454,7 @@ die in einer **offenen Transaktion** stehen (`demo_anlegen()`,
 | Weg | Ergebnis |
 |---|---|
 | **Klickprobe** `node tools/klickprobe/probe.mjs` | **48 von 48 Wegen erfüllt, 0 verfehlt** — im **dritten** Lauf. Die beiden davor meldeten 42/48, und beide Male war der **Demo-Reset** die Ursache, nicht der Code (siehe unten) |
-| **Bilderlauf** `node tools/screenshots/aufnehmen.mjs` | *(Zahl nach dem Lauf)* |
+| **Bilderlauf** `node tools/screenshots/aufnehmen.mjs` | **496 Einzelbilder, 62 Kontaktbögen** · Überlauf **0** · Konsolenfehler **0** · Knöpfe falscher Höhe **0** · Karten im Seitengerüst **162 geprüft, 0 außerhalb von `main.inhalt`** — Zahl für Zahl wie nach AP2 und AP3 |
 | **Helferprobe von Hand** gegen die laufende Datenbank | **13 Zellen, 13 erfüllt** — Einzelheiten im Konzept-Prüfprotokoll |
 
 **Der Demo-Reset hat zwei Läufe der Klickprobe entwertet, und `jobs_pause()`
