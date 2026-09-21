@@ -45,6 +45,7 @@ einer Fußnote.
 | P-PK-14 | Abdeckung: keine Datei ohne Muster (PK-03) | `auswahl.py --abdeckung` | **0 Dateien unter `server/` ohne Muster** | eine Datei trifft kein Muster und hat damit keine Probe | **erledigt 21.09.2026 — 262 Dateien, 0 ohne Muster** (5.3) |
 | P-PK-15 | `kettenaufrufe` liest die Zuordnung mit (PK-03) | Fehler einbauen (`--format` statt `--art`), Werkzeug fahren, zurücksetzen | mit Fehler **2 Befunde** mit Namen, ohne Fehler **0** | der Fehler kommt durch | **erledigt 21.09.2026** (5.4) |
 | P-PK-17 | Nach dem Merge von PR #71: ein Arbeitszweig-Push erzeugt nur noch **einen** Lauf (Vorgriff auf PK-05) | auf einem Arbeitszweig committen und pushen, dann die Läufe von `pruefung.yml` zu diesem Commit zählen | **genau 1 Lauf**, Ereignis `pull_request`; **kein** `push`-Lauf | es entstehen zwei Läufe, oder gar keiner (dann prüft der Zweig nichts mehr) | **teilweise gemessen 21.09.2026 (5.6)** — die Wirkung ist belegt, der volle Bedienweg noch nicht gefahren |
+| P-PK-20 | Die vier roten Proben aus 5.7 trennen: veraltete Erwartung oder Fehler der Anwendung (F-PK-18, F-PK-22) | je Probe den Befund nachvollziehen, Referenzbestand erneuern, erneut fahren | jede Probe nennt danach entweder eine behobene Anwendung oder eine berichtigte Erwartung — mit Zahl | eine Probe bleibt rot, ohne dass jemand sagen kann, woran | **offen** — eigene Korrekturstufe, kein PK-Paket |
 | P-PK-16 | Der offene Befund der Wiederherstellungsprobe | Sicherungsziel eintragen, `php tools/wiederherstellungs-probe/probe.php` | 110 Erwartungen, 0 nicht erfüllt | die zwei Befunde bleiben auch mit Sicherungsziel stehen (dann ist es die Anwendung) | **offen** — siehe F-PK-18 |
 | P-PK-11 | Ausbaustufen `android` und `uhr` (PK-02) | `aufbauen.sh android` → `./gradlew build`; `aufbauen.sh uhr` → `pruefstand.sh reihe` | 0 Lint-Fehler, 0 Fehlschläge bzw. Reihe grün | ein Fehlschlag, oder das SDK fehlt | **beide erledigt 21.09.2026.** android: BUILD SUCCESSFUL in 7m 19s, **0 Lint-Fehler**, **670 Prüffälle / 0**. uhr: `aufbauen.sh uhr` rc 0 mit Gegenstand — SDK **9.2.0**, **1332** Schriftdateien, **99 von 99** Manifest-Geräten, **173** Geräte mit `compiler.json`, **0** fehlende Simulatorbibliotheken, Nachweis **15 Stücke ok** (darunter die zwei neuen Uhr-Zeilen), **8 von 8** Umgebungswerten. Stufe I danach über alle Geräte: **99 übersetzt, 0 fehlgeschlagen, 0 ohne Gerätedatei**, rc 0. **Der Bedienweg oben war unvollständig** — siehe F-PK-21 |
 | P-PK-18 | Zwei Merges kurz hintereinander erzeugen keine sich störenden Läufe mehr (F-PK-02, F-PK-03) | nach PK-06: zwei PRs innerhalb einer Minute nach `main` mergen; die Läufe von `auslieferung.yml` ansehen | der zweite Lauf **bricht den ersten ab** oder wartet; **kein** Backup-Tor läuft in die Job-Pause des Nachbarn; der Produktivlauf wird **nie** abgebrochen | ein Lauf steht 13 min im Backup-Tor, oder ein Produktivlauf wird abgebrochen (dann ist die Gruppe falsch herum gebaut) | **offen** — gehört zur Abnahme von PK-06 |
@@ -368,6 +369,57 @@ am **Phasen-PR** oder an PR #72.
 
 ---
 
+### 5.7 Die 18 „ungeprüften" Aufrufe, einzeln gefahren (21.09.2026)
+
+**Warum überhaupt.** Drei Stichproben, drei Treffer: `--format` statt `--art`
+(PK-03), der Stilvergleich ohne Vergleichsstand (F-PK-20) und `uhr-stufe1`
+ohne Listendatei (F-PK-21). Nach dem dritten war die Frage nicht mehr, ob die
+Zuordnung stimmt, sondern wie viele der übrigen Aufrufe nie gelaufen sind.
+Also gefahren, einzeln, mit Zeitgrenze 600 s, Rückgabewert und letzter
+Ausgabezeile.
+
+**Es sind 17, nicht 15.** Die Liste hat 18 Einträge; `stilvergleich` war
+schon behoben. `uhr-stufe1` stand nie darin — das ist F-PK-21.
+
+**Das Ergebnis, zuerst und ohne Beschönigung: Kein einziger der 17 Aufrufe
+ist falsch verdrahtet.** Alle 17 sind richtig geschrieben; 15 laufen, 2
+scheitern an einem fehlenden Prüfkonto. Die Sorge nach den drei Treffern war
+also falsch, und das ist gemessen und nicht vermutet.
+
+| Probe | rc | Dauer | Was sie meldet |
+|---|---|---|---|
+| `ingestprobe` | 0 | 1 s | **83 Erwartungen, 0 nicht erfüllt** |
+| `spurprobe` | 0 | 2 s | **45 / 0** |
+| `jobprobe` | 0 | 0 s | **35 / 0** |
+| `komplettprobe` | 0 | 1 s | **64 / 0** |
+| `wiederherstellung` | **1** | 0 s | **110 / 2** — bekannt, **F-PK-18** |
+| `gpxprobe` | **1** | 2 s | **95 / 4** — **neu**, siehe F-PK-22 |
+| `geraeteprobe` | 0 | 0 s | **59 Erwartungen geprüft** |
+| `kopplungsprobe` | 0 | 9 s | **76 / 0 / 0 übergangen** |
+| `mailprobe` | **1** | 18 s | 1 Erwartung `FEHL` — **neu**, F-PK-22 |
+| `ratenprobe` | **1** | 12 s | 1 Erwartung `FEHL` — **neu**, F-PK-22 |
+| `wartungsprobe` | 0 | 1 s | **67 / 0** |
+| `verbindungsprobe` | 0 | 0 s | **alle 24 Erwartungen erfüllt** |
+| `freigabeprobe` | **1** | 1 s | **läuft nicht** — Zielkonto `umlauf-edbak@gen-em.org` fehlt |
+| `fristprobe` | 0 | 2 s | grün |
+| `abmelde-probe` | 0 | 2 s | grün, „Seitenfehler: keine" |
+| `containerprobe` | 0 | 2 s | **32 / 0** |
+| `messstand` | **124** | **600 s** | **läuft nicht** — Konto `messstand@gen-em.org` fehlt; danach 180 s Wartezeit auf ein Element, dann Zeitgrenze |
+
+**11 grün, 4 rot mit Sachbefund, 2 ohne Voraussetzung.** Zusammen **690
+genannte Erwartungen** aus den elf Proben, die eine Zahl nennen.
+
+**Die zwei fehlenden Konten sind keine Verdrahtungsfehler, sondern eine
+Lücke im Referenzbestand** — und sie berühren **E-PK-27** („nur
+`demo@gen-em.org`, alles andere `example.invalid"): Beide, `umlauf-edbak@`
+und `messstand@`, stehen unter `gen-em.org`. Sie stammen aus vorhandenen
+Werkzeugen, nicht aus diesem Paket; **festgehalten, nicht angefasst.**
+`messstand` kostet dabei die volle Zeitgrenze, weil es nach der
+gescheiterten Anmeldung 180 s auf ein Element wartet, statt abzubrechen —
+das ist der teuerste Einzelposten des ganzen Durchlaufs.
+
+---
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in
@@ -432,6 +484,7 @@ veröffentlichtes Kennwort.
 | **F-PK-19** | **Mein eigener Beschaffer aus PK-02 meldet grün, ohne die Uhr angesehen zu haben.** `bash tools/sandbox/aufbauen.sh uhr` lief am 21.09.2026 mit **Rückgabewert 0** und der Schlusszeile „Arbeitsumgebung vollständig" — obwohl drei Zeilen darüber `pruefstand.sh: 11: set: Illegal option -o pipefail` stand. **Zwei Fehler, beide meine:** (1) `teil_uhr()` rief den Prüfstand mit `sh` auf; der ist `#!/usr/bin/env bash` und setzt `-o pipefail`, und `sh` ist in diesem Abbild dash. **Denselben Fehler hatte ich in PK-03 in `pruefen.sh` gefunden und behoben** — in `aufbauen.sh` und in `pruefablauf.json` blieb er stehen. (2) Die Aufrufe von `teil_web`, `teil_android`, `teil_uhr` und `teil_plattform` standen nackt in der `case`-Schleife, ihr Rückgabewert wurde verworfen; der `nachweis` prüfte ausschließlich Stücke der Stufe `web`. **`aufbauen.sh uhr` konnte nicht rot werden.** | **Das ist Grundsatz 7 im eigenen Werkzeug** — genau die grüne Zahl ohne Gegenstand, gegen die PK gebaut wird, und sie stand in dem Werkzeug, das die Abnahme liefern sollte. Behoben am 21.09.2026: `bash` statt `sh` an beiden Stellen; jeder Teil zählt seinen Fehlschlag; der Nachweis prüft bei `android` Plattform 36 und Build-Tools, bei `uhr` `monkeyc` und `Devices/`. **P-PK-11 stand bis dahin zu Recht auf „offen" — aber aus dem falschen Grund:** nicht weil niemand gefahren hatte, sondern weil ein Lauf nichts gesagt hätte. |
 | **F-PK-20** | **Zwei Proben in `pruefablauf.json` waren örtlich rot, ohne etwas gemessen zu haben.** Gefunden beim nachgeholten langen Lauf vom 21.09.2026 (`--datei server/assets/style.css --datei server/einsatz.php`): 15 Proben, **13 grün, 2 rot, 0 nicht gemessen**, Rückgabewert 1. **(a) Bilderlauf, 48 Konsolenfehler** — drei fehlende Bilder auf zwei Handbuchseiten über acht Breiten (2 × 8 × 3 = 48): `doku/bilder/schublade-mobil.png`, `tagesuebersicht-desktop.png`, `tagesuebersicht-mobil.png`. **Kein Fehler der Anwendung:** Die Kette kopiert `docs/bilder/` in ihrem Schritt 11 nach `server/doku/` mit; örtlich legte sie niemand an. **(b) Stilvergleich** — der Aufruf lautete `python3 tools/stilvergleich/proben.py`, **ohne Argumente**. `proben.py` baut nur die vier Proben und gibt ohne Argumente seine Anleitung aus; der Vergleich ist `stilvergleich.js` und braucht den alten Stand. Beim Reparieren fiel auf: **`stilvergleich.js` ist CJS und macht `require('playwright')`** — es geht an `tools/motor.mjs` vorbei, und Playwright liegt in diesem Abbild unter `/opt/node22/lib/node_modules`. | **(a)** `hochfahren.sh` macht jetzt dieselben zwei Zeilen wie die Kette. Gegenprobe an denselben zwei Seiten: 16 Einzelbilder, **48 → 0 Konsolenfehler**. **(b)** Neu: `tools/stilvergleich/gegen.sh` — Vergleichsstand aus git, Proben bauen, messen; ein Treiber im vorhandenen Werkzeugordner, kein neues Werkzeug. Gemessen: **40 989 Elementmessungen, 0 Abweichungen, 175 Eigenschaften je Element**. Das `NODE_PATH` darin ist ein **Pflaster** und steht als solches im Kommentar und im LIESMICH; `stilvergleich.js` auf den Motor zu heben gehört nach **PK-04**. **Und der eigentliche Punkt: Der Stilvergleich war einer der „18 ungeprüft" von `kettenaufrufe`.** Diese Zahl steht in drei Commits als Beiwerk — sie ist keins, sondern die Liste der Aufrufe, über die niemand etwas weiß. |
 | **F-PK-21** | **`kettenaufrufe` prüft Namen, nicht Vollständigkeit — und sagt das nicht.** Aufgefallen beim Nachsehen, warum `uhr-stufe1` nicht unter den 18 Ungeprüften steht: **Es steht überhaupt nicht in der Ausgabe**, gilt also als geprüft und in Ordnung. Der Aufruf `bash tools/uhr-pruefstand/pruefstand.sh reihe` bricht aber sofort mit `line 355: 1: Listendatei fehlt` ab — Stufe I braucht eine Geräteliste, die erst `geraeteklassen.py` erzeugt. **Strukturell:** Die Prüfung hält Unterbefehle und Schalter gegen den Quelltext. `reihe` **gibt es**, also kein Widerspruch; dass `reihe` ein **Pflichtargument** hat, sieht sie nicht. Ihr Schlusssatz „Kein Aufruf widerspricht der Schnittstelle seines Werkzeugs" ist wörtlich wahr und trotzdem irreführend. | **Das verschiebt die Bedeutung der Zahl 18.** Die 18 sind nicht die Liste der ungewissen Aufrufe, sondern die, bei denen das Werkzeug seine Unwissenheit **einräumt**. `uhr-stufe1` war kaputt und zählte zu den **82 grünen**. Daraus folgt: **Eine Schnittstellenprüfung ersetzt keinen Lauf.** Die 18 werden deshalb einzeln gefahren (5.7). Ob `kettenaufrufe` Pflichtargumente lernen soll oder ob der Prüfstand das ohnehin beim Fahren merkt, entscheidet **PK-04**. |
+| **F-PK-22** | **Drei unbekannte Sachbefunde aus den nie gefahrenen Proben** (5.7), alle in `server/`, keiner aus diesem Paket. **(a) `gpxprobe` 95 / 4:** zwei davon sind eine veraltete Referenz („178 von 204 ohne Gegenstück — die Referenz ist älter als die Datenbank"; „9 Abweichungen, erste: 65 gegen 259 Punkte"), zwei sehen nach Sache aus („Ein Eintrag ohne Spur steht da, aber ohne Abruf — Plakette ‚keine Spur' gefunden"; „Der Kopf sagt, was die Datei als Ganzes ist"). **(b) `mailprobe`:** „Alle Pflichtwerte im Beispielsatz abgedeckt" schlägt fehl — `loeschung_beantragt/termin`, `konto_menge/einsaetze`, `konto_menge/speicher`. **(c) `ratenprobe`:** „Genau **fünf** Töpfe haben eine Leiter" schlägt fehl und zählt **sechs** auf: `blatt`, `ingest`, `ingest_ip`, `login`, `login_ip`, `salt`. | **Nicht behoben, und zwar bewusst:** Alle drei liegen in `server/`, das dieses Paket nicht anfasst, und zwei von ihnen sind vermutlich veraltete Erwartungen im Prüfmittel selbst, keine Fehler der Anwendung — das zu trennen ist eigene Arbeit. **Sie sind der Ertrag des Durchlaufs:** Vier Proben waren rot, seit jemand sie zuletzt gefahren hat, und niemand wusste es, weil niemand sie fuhr. **Das ist genau der Zweck von Station B.** Gehört als eigene Korrekturstufe untersucht, zusammen mit F-PK-18; **Prüfpunkt P-PK-20**. |
 
 ## 7. Entscheidungen der Umsetzung
 
