@@ -2,7 +2,13 @@
 """Integritaetswache — laeuft die ausgelieferte Fassung noch der aus?
 
     python3 tools/integritaetswache/wache.py [basisadresse]
+    python3 tools/integritaetswache/wache.py [basisadresse] --stand PFAD
     python3 tools/integritaetswache/wache.py --selbstprobe
+
+`--stand PFAD` sagt, WOGEGEN verglichen wird: ein Verzeichnis mit `server/`
+darin -- in der Kette die Arbeitskopie des Zeigerzweigs `produktion`, also der
+zuletzt ausgelieferte Stand. Ohne den Schalter ist es das Repositorium neben
+dem Werkzeug. Warum das ueberhaupt zwei Dinge sind, steht bei `stand_setzen()`.
 
 Rueckgabewert 0 = kein Unterschied, 1 = mindestens einer (oder etwas war nicht
 erreichbar), 2 = die Wache selbst ist kaputt.
@@ -93,9 +99,95 @@ import urllib.request
 from pathlib import Path
 
 WURZEL = Path(__file__).resolve().parents[2]
+
+# DER VERGLEICHSSTAND IST NICHT MEHR ZWANGSLAEUFIG DAS AUSGECHECKTE
+# REPOSITORIUM (AP2/E-KH-13, 20.09.2026).
+#
+# Bis dahin verglich die Wache die Auslieferung gegen `server/` NEBEN sich --
+# also gegen den Zweig, auf dem sie gerade lief, und das war `main`. Auf
+# Produktiv liegt aber nicht `main`, sondern der zuletzt AUSGELIEFERTE Stand.
+# Sobald `main` einen Schritt weiter ist -- und das ist der Normalfall --,
+# meldete sie eine Abweichung, die keine war: Am 18.09.2026 waren es
+# 128 Dateien, 120 gleich, 2 abweichend, 6 x 404, allesamt die Dateien aus
+# P5a und P5b, die schlicht noch nicht ausgeliefert waren (Befund B6).
+#
+# Sie wurde deshalb seit dem 17.09. TAEGLICH ROT. Eine Wache, die regelmaessig
+# grundlos rot wird, ist nach dem dritten Mal abgeschaltet -- und dann ist der
+# Angriff, gegen den es sie gibt, unbeobachtet. Das ist der eigentliche
+# Schaden, und er ist groesser als der, den ein stiller Falschalarm anrichtet.
+#
+# Jetzt nennt der Aufrufer den Stand, gegen den verglichen wird:
+# `--stand PFAD` zeigt auf ein Verzeichnis mit einem `server/` darin -- in der
+# Kette die Arbeitskopie des Zeigerzweigs `produktion`. Ohne `--stand` bleibt
+# es beim Verzeichnis neben dem Werkzeug; das ist der Weg fuer den Handlauf
+# auf dem eigenen Rechner und fuer die Selbstprobe.
 SERVER = WURZEL / 'server'
 
-VORGABE_BASIS = os.environ.get('WACHE_BASIS') or 'https://nadoku.gen-em.org'
+
+class VergleichsstandFehlt(Exception):
+    """Der Stand, gegen den verglichen werden soll, ist nicht da."""
+
+
+def stand_setzen(pfad: str) -> None:
+    """Legt fest, wogegen verglichen wird. Wirft, wenn dort nichts liegt.
+
+    FEHLENDER ZEIGER IST ROT MIT ANSAGE, NIE STILL GRUEN (E-KH-13). Gaebe es
+    hier einen Rueckfall auf das Verzeichnis neben dem Werkzeug, verglaeche
+    die Wache nach einem misslungenen Auschecken wieder gegen `main` -- und
+    zwar ohne dass es jemand merkte. Genau dieser stille Rueckfall ist der
+    Fehler, den AP2 behebt; er darf nicht durch die Hintertuer zurueckkommen.
+    """
+    global SERVER
+    wurzel = Path(pfad).expanduser().resolve()
+    ziel = wurzel / 'server'
+    if not wurzel.is_dir():
+        raise VergleichsstandFehlt(
+            f'Der Vergleichsstand {wurzel} ist kein Verzeichnis. '
+            'In der Kette ist das die Arbeitskopie des Zeigerzweigs '
+            '`produktion` — fehlt sie, ist der Zeiger nicht ausgecheckt '
+            'worden oder es gibt ihn nicht.')
+    if not ziel.is_dir():
+        raise VergleichsstandFehlt(
+            f'Im Vergleichsstand {wurzel} liegt kein Ordner `server/`. '
+            'Damit gibt es nichts zu vergleichen — die Wache meldet das, '
+            'statt still gruen zu laufen.')
+    SERVER = ziel
+
+
+def stand_kennung(pfad: Path) -> str:
+    """Welcher Commit liegt im Vergleichsstand, und traegt er ein Tag?
+
+    DIE WACHE FRAGT SELBST, statt sich den Commit vom Aufrufer nennen zu
+    lassen. Eine Beschriftung, die der Arbeitslauf mitgibt, ist eine zweite
+    Stelle, die veralten kann -- und ausgerechnet bei einem Pruefmittel waere
+    eine falsche Beschriftung schlimmer als gar keine: Sie beglaubigt einen
+    Vergleich, den es so nicht gab.
+    """
+    import subprocess
+    def git(*a: str) -> str:
+        try:
+            return subprocess.run(('git', '-C', str(pfad), *a),
+                                  capture_output=True, text=True, timeout=20,
+                                  check=True).stdout.strip()
+        except Exception:                             # noqa: BLE001
+            return ''
+    commit = git('rev-parse', 'HEAD')
+    if not commit:
+        return f'{pfad} (kein Git-Verzeichnis — Commit nicht feststellbar)'
+    tag = git('describe', '--tags', '--exact-match', commit) or 'kein Tag'
+    return f'{commit[:7]} ({tag})'
+
+# DIE VORGABE IST MIT AP6 GEFALLEN (Kette II, E-KH-07). Hier stand bis zum
+# 21.09.2026 `… or 'https://nadoku.gen-em.org'`, und das war die bequeme
+# Variante der gefaehrlichen Bauform: Wer `WACHE_BASIS` vergass oder
+# vertippte, bekam keine Fehlermeldung, sondern eine Wache, die IRGENDEINE
+# Anlage bewachte -- die fest eingebaute. Auf einer Selbsthoster-Installation
+# haette sie damit dauerhaft die fremde Anlage gemessen und zur eigenen
+# geschwiegen.
+#
+# `None` heisst jetzt: Es wurde keine genannt. Wer das Werkzeug ohne Adresse
+# und ohne `WACHE_BASIS` aufruft, bekommt es gesagt (siehe `main()`).
+VORGABE_BASIS = os.environ.get('WACHE_BASIS') or None
 
 # Was unter `assets/` NICHT ausgeliefert wird oder nicht ausgeliefert werden
 # muss. `.md` ist Begleittext des Repositoriums.
@@ -480,6 +572,11 @@ def assets() -> list[Path]:
 def lauf(basis: str, unsicher: bool) -> int:
     basis = basis.rstrip('/')
     print(f'Integritaetswache gegen {basis}')
+    # WAS GEMESSEN WIRD, STEHT UEBER DEM ERGEBNIS (`CLAUDE.md` 6: eine gruene
+    # Zahl ist erst dann ein Beleg, wenn sie das Gemessene benennt). Ohne
+    # diese Zeile sagt ein "Kein Unterschied" nicht, WOGEGEN kein Unterschied
+    # besteht -- und genau das war bei B6 die Frage.
+    print(f'Vergleichsstand:  {SERVER.parent} — {stand_kennung(SERVER.parent)}')
     abweichung: list[str] = []
     unerreichbar: list[str] = []
 
@@ -776,6 +873,57 @@ def selbstprobe() -> int:
            'Skriptinhalt zaehlt nicht als Ereignisattribut oder javascript:-Adresse',
            f"{z9['handler_ist']} Attribute, {z9['jsurl_ist']} Adressen, Block verglichen")
 
+    # ---- 10. Der Vergleichsstand laesst sich umstellen, und sein Fehlen
+    #          ist rot, nicht still gruen (AP2/E-KH-13) ---------------------
+    #
+    # DAS IST DIE GEGENPROBE ZU B6. Bis zum 20.09.2026 verglich die Wache
+    # immer gegen das Verzeichnis neben sich. Dass sie es jetzt woandershin
+    # richten kann, ist eine Zusage -- und eine Zusage ohne Gegenprobe ist
+    # eine Behauptung. Alles hier rechnet auf der Platte, ohne Netz.
+    import shutil
+    import tempfile
+    merker = SERVER
+    try:
+        for weg, was in (('/gibt/es/nicht/zeiger', 'ein Pfad, den es nicht gibt'),):
+            try:
+                stand_setzen(weg)
+                pruefe(False, f'Fehlender Vergleichsstand faellt auf ({was})', 'still angenommen')
+            except VergleichsstandFehlt as ex:
+                pruefe(True, f'Fehlender Vergleichsstand faellt auf ({was})', str(ex)[:60])
+
+        with tempfile.TemporaryDirectory() as tmp:
+            leer = Path(tmp) / 'leer'
+            leer.mkdir()
+            try:
+                stand_setzen(str(leer))
+                pruefe(False, 'Vergleichsstand ohne server/ faellt auf', 'still angenommen')
+            except VergleichsstandFehlt as ex:
+                pruefe(True, 'Vergleichsstand ohne server/ faellt auf', str(ex)[:60])
+
+            # Ein echter Stand daneben: eine Datei unter assets/, ein Byte
+            # gekippt. Findet die Wache sie, zeigt SERVER tatsaechlich dorthin
+            # -- und nicht mehr auf das Repositorium.
+            anders = Path(tmp) / 'zeiger'
+            (anders / 'server' / 'assets').mkdir(parents=True)
+            shutil.copy2(beispiel, anders / 'server' / 'assets' / beispiel.name)
+            stand_setzen(str(anders))
+            pruefe(SERVER == anders / 'server', 'Der Vergleichsstand zeigt danach woandershin',
+                   str(SERVER))
+            d2 = assets()
+            pruefe(len(d2) == 1 and d2[0].name == beispiel.name,
+                   'Verglichen wird ab jetzt DORT', f'{len(d2)} Datei(en): '
+                   + ', '.join(x.name for x in d2))
+            roh = (anders / 'server' / 'assets' / beispiel.name).read_bytes()
+            pruefe(sha(roh) != sha(kippe(roh)),
+                   'Ein gekipptes Byte im Vergleichsstand ergibt eine andere Summe',
+                   f'{sha(roh)[:12]}… gegen {sha(kippe(roh))[:12]}…')
+            # Und der Rueckweg: Ohne Umstellung ist es wieder das Repositorium.
+            stand_setzen(str(WURZEL))
+            pruefe(len(assets()) == len(d), 'Zurueckgestellt misst sie wieder das Repositorium',
+                   f'{len(assets())} Dateien')
+    finally:
+        globals()['SERVER'] = merker
+
     print(f'\n  -> {erwartungen} Erwartungen, {offen} nicht erfuellt')
     return 0 if offen == 0 else 1
 
@@ -785,9 +933,42 @@ def main() -> int:
     unsicher = '--unsicher' in args
     if unsicher:
         args.remove('--unsicher')
+    # `--stand PFAD` VOR der Selbstprobe auswerten, aber danach anwenden:
+    # Die Selbstprobe rechnet gegen das Repositorium neben sich und braucht
+    # keinen Zeiger; ein `--stand` dabei waere ein Bedienfehler und wird
+    # gesagt, nicht stillschweigend ignoriert.
+    stand = None
+    if '--stand' in args:
+        i = args.index('--stand')
+        if i + 1 >= len(args):
+            print('--stand braucht einen Pfad.', file=sys.stderr)
+            return 2
+        stand = args[i + 1]
+        del args[i:i + 2]
     if '--selbstprobe' in args:
+        if stand is not None:
+            print('--selbstprobe und --stand zusammen ergeben keinen Sinn: '
+                  'Die Selbstprobe rechnet ohne Netz gegen das Repositorium '
+                  'neben sich.', file=sys.stderr)
+            return 2
         return selbstprobe()
+    if stand is not None:
+        try:
+            stand_setzen(stand)
+        except VergleichsstandFehlt as ex:
+            print(f'VERGLEICHSSTAND FEHLT: {ex}', file=sys.stderr)
+            print('Die Wache ist damit ROT — sie hat NICHT verglichen.',
+                  file=sys.stderr)
+            return 1
     basis = args[0] if args else VORGABE_BASIS
+    if not basis:
+        print('FEHLER: Keine Basisadresse. Erwartet wird sie als erstes Argument '
+              'oder in der Umgebungsvariablen WACHE_BASIS.\n'
+              '        Bis zum 21.09.2026 sprang hier `https://nadoku.gen-em.org` '
+              'ein; diese Vorgabe ist absichtlich weg (Kette II, E-KH-07),\n'
+              '        weil eine vergessene Variable sonst eine Wache ergab, die '
+              'die falsche Anlage bewacht -- und zwar gruen.', file=sys.stderr)
+        return 2
     return lauf(basis, unsicher)
 
 

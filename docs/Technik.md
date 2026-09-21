@@ -1,6 +1,6 @@
 # Gen-EM NAdoku — Technische Dokumentation
 
-*Stand: 17.09.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
+*Stand: 20.09.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
 Historie: `CHANGELOG.md`.*
 
 ## 1. Architekturüberblick
@@ -671,8 +671,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      Quelltext lesbar ist, zaehlt es als UNGEPRUEFT und
 │   │                      nennt die Zahl. Mit `--probe` (10 Faelle, davon 5
 │   │                      die NICHT anschlagen duerfen)
-│   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit der des
-│   │                      Repositoriums: jede Datei unter `server/assets/`
+│   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit dem
+│   │                      ZEIGER `produktion` (`--stand`, 6.6a): jede Datei
+│   │                      unter `server/assets/`
 │   │                      über SHA-256, und auf `login.php` die GANZE Menge
 │   │                      dessen, was den Weg des Passworts bestimmt —
 │   │                      Skripte (zitiert oder nicht), Inline-Blöcke,
@@ -858,8 +859,11 @@ Daten erst nach Server-Bestätigung.
 │                          tools/referenzdatensatz/einspielen/lokal_starten.sh
 └── .github/workflows/     die Auslieferungskette (P5a/AP1, Abschnitt 6)
     ├── pruefung.yml       Stufe 1: jeder Push, ohne Installation
-    ├── auslieferung.yml   Staging (Push auf main), Stufe 2, Produktion
-    │                      (Tag, Pflichtfreigabe, Backup-Tor)
+    ├── auslieferung.yml   WANN ausgeliefert wird: Staging (Push auf main),
+    │                      Stufe 2, Produktion (Tag, Pflichtfreigabe,
+    │                      Backup-Tor), Zeiger
+    ├── ausliefern-lauf.yml WAS dabei geschieht: die Schrittfolge, EINMAL,
+    │                      für beide Umgebungen (Kette II/AP5, E-KH-14)
     └── integritaet.yml    die Wache — hängt am Anzeigenamen „Auslieferung"
                           (`deploy.yml` ist mit Web 20.4.0 gelöscht worden)
 ```
@@ -4681,7 +4685,7 @@ Trägt der Name keine, steht keine da.
 | Ort | Eintrag | ohne ihn |
 |---|---|---|
 | `.gitignore` | `server/apk/` | Ein signiertes APK läge im Verlauf — ein Erzeugnis, kein Quelltext, bei jeder Fassung ein zweistelliges MB |
-| `.github/workflows/deploy.yml` (bis Web 20.3.0; seither `auslieferung.yml`, beide FTPS-Schritte) | `apk/**` und `apk/` | **Der nächste Push löschte die Dateien.** Die Action synchronisiert `server/` und entfernt, was nicht ausgenommen ist |
+| `.github/workflows/deploy.yml` (bis Web 20.3.0; dann `auslieferung.yml`, beide FTPS-Schritte; seit AP5 `ausliefern-lauf.yml`, einer) | `apk/**` und `apk/` | **Der nächste Push löschte die Dateien.** Die Action synchronisiert `server/` und entfernt, was nicht ausgenommen ist |
 
 Der zweite ist der, den man vergisst. Dasselbe Muster wie `config.php` und
 `sicherungen/`, inklusive der doppelten Schreibweise: Die Action prüft
@@ -4746,14 +4750,26 @@ genau ihn durch. Ein bloßes `/.well-known` **ohne** Schrägstrich fällt unter
 die Sperre; das ist gewollt, ACME fragt immer
 `/.well-known/acme-challenge/<Token>`.
 
-**Zwei Schranken, nicht eine.** `state-name` in `auslieferung.yml` legt die
-Datei zusätzlich eine Ebene über den Webroot
-(`../.deploy-state-staging.json`, `../.deploy-state-produktion.json` — zwei
-Namen, weil sich Staging und Produktion einen FTP-Zugang teilen könnten und
-zwei gleichnamige Zustandsdateien einander überschrieben). Erlaubt der Käfig
-des FTP-Zugangs kein `../`, bricht der Lauf; dann trägt man die Variable
-`FTP_STATE_PFAD` ein und zeigt wieder nach innen — und die `.htaccess` fängt
-die Datei dort ab. Der Rückbau ist deshalb eine Variable und kein Notfall.
+**Zwei Schranken, nicht eine.** `state-name` in `ausliefern-lauf.yml` (bis
+Kette II/AP5: `auslieferung.yml`, zweimal) legt die Datei zusätzlich eine
+Ebene über den Webroot — zwei Namen, weil sich Staging und Produktion einen
+FTP-Zugang teilen könnten und zwei gleichnamige Zustandsdateien einander
+überschrieben.
+
+**Seit AP6 kommt der Pfad ausschließlich aus der Variablen
+`FTP_STATE_PFAD`** (E-KH-07); der eingebaute Vorgabewert ist weg, und fehlt
+die Variable, bricht der Lauf im ersten Schritt ab. Die heute eingetragenen
+Werte sind `../.deploy-state-staging.json` bzw.
+`../.deploy-state-produktion.json` — **kein Vorschlag, sondern der
+Ist-Zustand:** Solange der Vorgabewert galt, hat die Kette genau diese
+Zeichenketten benutzt, und dort liegen die Dateien. Ein anderer Wert lässt
+die Aktion ihre Zustandsdatei nicht finden; sie hält den Server für leer und
+überträgt alles neu.
+
+Erlaubt der Käfig des FTP-Zugangs kein `../`, zeigt man mit derselben
+Variablen wieder nach innen — die `.htaccess` fängt die Datei dort ab
+(Prüfzeile `/.deploy-state-staging.json` → 403 in der Tabelle unter 6.3).
+Der Rückbau ist deshalb eine Eintragung und kein Notfall.
 
 **Warum das messbar ist und ein 404 nichts beweist.** `RewriteRule [F]`
 antwortet **403, ob die Datei da ist oder nicht** — mod_rewrite läuft vor der
@@ -5944,8 +5960,9 @@ unlesbar oder kein gültiges JSON, gilt die Wartung trotzdem; der Balken sagt
 keine Installation öffnen, die jemand ausdrücklich geschlossen hat.
 
 **Zwei Einträge, die zusammengehören:** `server/wartung.lock` steht in
-`.gitignore` **und** in der Ausnahmeliste **beider** FTPS-Schritte von
-`.github/workflows/auslieferung.yml` (bis Web 20.3.0: `deploy.yml`). Ohne den ersten schlösse ein Checkout jede
+`.gitignore` **und** in der Ausnahmeliste des FTPS-Schritts in
+`.github/workflows/ausliefern-lauf.yml` (bis Kette II/AP5: zweimal in
+`auslieferung.yml`; bis Web 20.3.0: `deploy.yml`). Ohne den ersten schlösse ein Checkout jede
 Installation; ohne den zweiten löschte der Push die Datei — mitten im Update,
 für das sie da ist. Dasselbe Muster wie `config.php`, `install.php`,
 `install.lock`, `sicherungen/`, `apk/` — und seit Web 20.13.0 `ueberlast.json` (Abschnitt 5e).
@@ -7761,7 +7778,10 @@ Es gibt keine Uhr und kein Telefon. Was trotzdem geht, steht in
 `android/LIESMICH.md`; die Kurzform:
 
 - **Prüffälle** über JUnit und Robolectric — auch gegen ein *echtes* SQLite
-  und, wo eine lokale Installation läuft, gegen `ingest.php` selbst.
+  und, wo eine lokale Installation läuft, gegen `ingest.php` selbst. Das
+  Android-Abbild, das Robolectric dafür braucht, kommt seit Android 0.15.1
+  über **Gradle** statt über Robolectrics eigenen Downloader; die Läufe sind
+  damit netzunabhängig (`android/LIESMICH.md` 2.3).
 - **Bilder** über Robolectric im NATIVE-Grafikmodus. `captureToImage()` ist
   unter Robolectric strukturell unbrauchbar (Deadlock in
   `WindowCapture.forceRedraw`); der Weg darüber ist der einzige, der ohne
@@ -7802,6 +7822,11 @@ greift — das ist Gerätetest und steht aus.
 **Was eine Installation von ihrer Plattform braucht — hosterneutral, in genau
 zwei Stufen.** Beschlossen am 15.09.2026 als R81; Volltext der Herleitung in
 `docs/konzepte/Vorbereitung-P5-Plattformprofil.md` (PP-1 bis PP-9).
+
+**Zwei Installationen lesen diese Liste, und sie stehen auf zwei
+Plattformen.** Seit dem 20.09.2026 liegt Staging bei einem anderen Hoster als
+Produktiv; was das für die Übertragbarkeit einer Messung bedeutet — und der
+Vergleich beider Auskünfte nebeneinander — steht in **Abschnitt 6.3a**.
 
 | Stufe | Bedeutung | Was die Anwendung daraus macht |
 |---|---|---|
@@ -8808,7 +8833,7 @@ der über `wartung.lock` steht. Erwogen und verworfen wurde, den Vorfall in
 eine Datei zu schreiben und beim nächsten gelungenen Verbindungsaufbau nach
 `app_state` nachzutragen — das hätte den Buchstaben erfüllt und **zwei
 Speicher für eine Zahl** gebraucht. Die Datei steht in `.gitignore` **und** in
-der Ausnahmeliste beider FTPS-Schritte, wie `config.php`, `install.php`
+der Ausnahmeliste des FTPS-Schritts, wie `config.php`, `install.php`
 (Nr. 214), `install.lock`, `wartung.lock`, `sicherungen/` und `apk/`.
 
 **Der Riegel gegen die Schleife.** Alles, was unterhalb der 503-Antwort noch
@@ -8869,13 +8894,75 @@ E-P5a-10.
 | Push auf `main` | **Staging** | `staging` | Stufe 1 |
 | Tag `web-vX.Y.Z` | **Produktiv** | `produktion` | Stufe 1, Stufe 2, Pflichtfreigabe, Backup-Tor |
 
-Drei Arbeitsläufe unter `.github/workflows/`:
+Vier Arbeitsläufe unter `.github/workflows/`:
 
 | Datei | Was |
 |---|---|
 | `pruefung.yml` | **Stufe 1** — jeder Push, jeder Zweig, jeder Pull Request |
-| `auslieferung.yml` | Jobs `staging`, `stufe2` und `produktion` |
+| `auslieferung.yml` | **wann**: Jobs `staging`, `stufe2`, `produktion` und `zeiger` |
+| `ausliefern-lauf.yml` | **was**: die Schrittfolge, einmal, für beide Umgebungen |
 | `integritaet.yml` | die Wache; läuft nach einem **Produktiv**-Deploy und täglich |
+
+**Die Trennung ist seit Kette II/AP5 (21.09.2026) und hat einen Grund.**
+Bis dahin standen die Schritte zweimal in `auslieferung.yml`: vier im Job
+`staging`, dreizehn im Job `produktion`. Staging hatte weder Zielprobe noch
+Backup-Tor, weder Wartungsmodus noch Migrationsabfrage — **also lief auf
+Produktiv jedes Mal etwas, was vorher nirgends gelaufen war.** Genau das
+verbietet E-KH-17, und genau deshalb steht die Folge jetzt einmal:
+`auslieferung.yml` ruft sie zweimal auf und reicht `umgebung` durch.
+
+**Was die Umgebung noch trennt, ist klein und begründet sich selbst:** zwei
+Schritte (der Tag-Vergleich — Staging fährt von `main` und hat keinen Tag;
+und das Tor der grünen Läufe — es fragt, ob dieser Stand auf *Staging* grün
+war, und müsste auf Staging nach sich selbst fragen) und drei Werte
+(Basisadresse, Zielpfad, Pfad der Zustandsdatei), die der **erste** Schritt
+des gemeinsamen Laufs bestimmt. Alles Übrige ist gleich.
+
+**Der Anzeigename eines Jobs wird zusammengesetzt** — `staging / ausliefern`
+und `produktion / ausliefern`. Die **Schritt**namen bleiben, wie sie waren.
+
+**Die Reihenfolge ist seit AP6 eine Regel und keine Gewohnheit** (E-KH-06):
+*Alles, was scheitern kann, ohne den Server zu verändern, steht vor dem
+Wartungsschalter; unmittelbar danach folgt der Abgleich.* Vorher lagen die
+`doku`-Kopie, der Gesprächslauf-Riegel und das Bereitstellen der
+Zustandsdatei **hinter** „Wartung an" — scheiterte einer davon, stand die
+Anlage zu, ohne dass auch nur eine Datei ausgeliefert worden wäre.
+
+Dazu drei Schritte, die es vorher nicht gab:
+
+| Schritt | Wofür |
+|---|---|
+| **Adressvergleich** | `PRODUKTION_URL` gegen `WACHE_BASIS`. Gehen sie auseinander, liefert die Kette nach A aus und die Wache bewacht B — **beide Seiten sind für sich grün**, und der Produktivserver bliebe unbeobachtet |
+| **Versionsprüfung nach dem Abgleich** | Der FTPS-Schritt meldet Erfolg, wenn die Übertragung gelungen ist — nicht, wenn die Anwendung danach die neue Fassung ausliefert. Stimmt sie nicht: rot, **Wartung bleibt an** |
+| **Schlussschritt** (`if: failure()`) | Fragt die Anlage nach Wartungsmodus und Fassung und schreibt beides samt „Dateistand unbekannt" und den zwei Bedienwegen in die Zusammenfassung. Antwortet sie nicht, steht dort **`unbekannt`** — nie „aus" |
+
+**Zwei `concurrency`-Gruppen, je eine Umgebung, ohne Abbruch** (E-KH-11). Ein
+abgebrochener Produktivlauf ließe die Wartung an und einen halben Dateistand
+oben; ein abgebrochener Staging-Abgleich ist nicht harmloser, weil die
+Zustandsdatei der Aktion dann einen Server beschreibt, den es so nicht gibt.
+**Bekannte Folge, benannt statt verschwiegen:** Je Gruppe wartet höchstens
+ein Lauf; ein dritter verdrängt den zweiten wartenden. Für Staging ist das
+hinnehmbar — der jüngste Stand gewinnt, und genau den will man.
+
+**Alle zehn fremden `uses:`-Zeilen hängen an einer 40-stelligen Commit-SHA**
+(E-KH-10), die Version steht als Kommentar daneben. Die beiden **lokalen**
+(`./.github/workflows/ausliefern-lauf.yml`) tragen keine und können es
+nicht: Ein lokaler Pfad nimmt keinen Ref und läuft immer auf dem Commit des
+Aufrufers — das ist strenger als ein Pin, nicht schwächer.
+
+**Das Tor der grünen Läufe fragt nach dem Job, nicht nach dem Lauf.** Ein
+übersprungener Job macht den Lauf nicht rot; bis AP6 zählte das Tor also,
+dass ein Lauf stattgefunden hat, und nicht, dass ausgeliefert wurde.
+
+> **Die Pflichtfreigabe wandert mit — nachgemessen.** Sie hängt am
+> `environment:`, und das liegt seit AP5 im aufgerufenen Lauf. Beides ist
+> belegt: dass die Umgebung dort **bindet** (F-KH-U-31) und dass die
+> **Freigabepflicht** mitwandert — **Lauf 35566000648 vom 21.09.2026 hat
+> die Freigabe angefordert und gestanden, bis sie erteilt war**
+> (F-KH-U-34). Ein Ausdruck, der ins Leere zeigte, ließe den Job ohne
+> Umgebung und damit ohne Freigabe laufen; **wer diese Zeile ändert, misst
+> es neu** — ein Probelauf gegen `produktion` kostet einen Klick und
+> liefert nichts aus.
 
 **Der Tag ist die Fassung** (F-P5a-1, entschieden 15.09.2026): `web-vX.Y.Z`,
 gleich `WEB_VERSION` in `server/version.php`. Der Produktionslauf verweigert,
@@ -8903,8 +8990,10 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 | `tools/schemaprobe/probe.php` (eigener Auftrag, Matrix) | **19 Erwartungen, 0 Fehlschläge** je Fassung — MySQL 8.4.0 und MariaDB 10.6; Selbstprobe 4/4 |
 | `tools/cspprobe/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `tools/sitzungshaertung/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
-| `tools/jobregister/pruefen.php` | 0 Befunde, Selbstprobe 9/9 — **noch nicht eingehängt**, siehe unten |
+| `tools/jobregister/pruefen.php` | 0 Befunde, Selbstprobe 9/9 (Schritt 16, Nr. 208) |
+| Java 21 (`actions/setup-java`) | Temurin 21 für den Android-Schritt — **nur wenn `android/` berührt ist**; eine Festlegung, kein Sollwert |
 | `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge — **nur wenn `android/` berührt ist** |
+| Berichte des Android-Fehlschlags (`actions/upload-artifact`) | Artefakt `android-berichte` — **nur bei `failure()`**; bei Grün nichts |
 | Uhr Stufe I (`pruefstand.sh aufbau-uebersetzen`) | übersetzt für alle Zielgeräte — **nur wenn `watch/` oder `tools/uhr-pruefstand/` berührt ist** |
 
 > **`tools/jobregister/` liegt vor und hängt noch nicht in `pruefung.yml`**
@@ -8925,6 +9014,22 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 > **Die Reihenfolge ist die des Arbeitslaufs**, und sie hat einen Grund: Was
 > ohne Netz und ohne SDK läuft, läuft zuerst. Ein Syntaxfehler soll nicht erst
 > nach dem Android-Build auffallen, der Minuten braucht.
+>
+> **Der Android-Schritt lädt seine Berichte nur bei Rot hoch** (seit Android
+> 0.15.1). Grund: Am 20.09.2026 meldete er „264 tests completed, 1 failed"
+> und nannte den Fehlschlag nirgends erreichbar — die Log-API liest vom Ende,
+> und dort standen 9000 Zeilen CloseGuard-Ausgabe für elf Sekunden. Der
+> Name stand im HTML-Bericht unter
+> `android/handy/build/reports/tests/…/index.html`, und der starb mit dem
+> Läufer. Das Artefakt trägt jetzt `reports/**` (Prüffälle **und** Lint) und
+> `test-results/**` (JUnit-XML). Bei Grün gibt es nichts zu lesen.
+>
+> **`setup-java` wirkt global auf alle folgenden Schritte** — auch auf den
+> Uhr-Schritt, der danach rund 35 Minuten übersetzt und `java` vom PATH
+> nimmt. Der Uhr-Schritt setzt deshalb ausdrücklich auf das JDK des Läufers
+> zurück, dessen Wert der Schritt „Fassungen nennen" vorher in
+> `JAVA_HOME_LAEUFER` festhält (E-KH-24). Wer die Reihenfolge der Schritte
+> ändert, prüft diese Kopplung mit.
 >
 > **`tools/kettenaufrufe/` ist das einzige Prüfmittel, das die KETTE prüft**
 > und nicht die Anwendung. Es liest jeden `run:`-Block der drei Arbeitsläufe,
@@ -9081,6 +9186,147 @@ Datei da ist oder nicht**: mod_rewrite läuft vor der Dateisuche. Ein 404
 käme auch von einer leeren Adresse — genau so wurde der auslösende Befund
 zuerst falsch entlastet.
 
+### 6.3a Staging und Produktiv sind zwei Plattformen (ab 20.09.2026, E-KH-04)
+
+**Bis zum 19.09.2026 lagen sie im selben Webspace.** `staging.nadoku.gen-em.org`
+war eine Subdomain desselben Plesk-Abonnements wie Produktiv, mit eigener
+Datenbank und eigenem FTPS-Konto — aber **unter demselben Systemnutzer**. Das
+war der Fehler: Staging-PHP konnte Produktivs `config.php` lesen, und damit
+reichten die Staging-Zugangsdaten faktisch bis Produktiv — an der
+Pflichtfreigabe und am Backup-Tor vorbei. Wer Staging kompromittiert, hätte
+den Serverschlüssel, den Server-Anteil am Datenschlüssel und den DB-Zugang
+von Produktiv gehabt. Eine Prüfumgebung, deren Zugangsdaten die
+Produktionsumgebung öffnen, ist keine.
+
+**Seit dem 20.09.2026 liegt Staging bei lima-city**
+(`staging-nadoku.gen-em.org`), also bei einem **anderen Hoster**; die alte
+Anlage ist am selben Tag stillgelegt worden. Die Einrichtung steht in
+`docs/Rahmenplan.md`, Abschnitt 6a.
+
+**Der Preis ist eine Zusage, die es nicht mehr gibt.** E-PP-09 hatte Staging
+ausdrücklich „beim selben Hoster im selben Tarif" festgelegt, und zwar mit
+dieser Begründung: *Nur dann misst der Messstand die Grenzen, die Produktiv
+wirklich hat.* Diese Eigenschaft ist fort. **Was Stufe 2 auf Staging misst,
+gilt für Staging.** Zeitgrenzen, Speichergrenzen, `max_user_connections`,
+Plattenplatz, die Antwortzeiten des Messstands — keine dieser Zahlen ist auf
+Produktiv übertragbar, und keine darf so zitiert werden. Wer aus einem grünen
+Stufe-2-Lauf liest, dass eine Abfrage auf Produktiv innerhalb der Zeitgrenze
+bleibt, liest etwas, das dort nicht steht.
+
+**Was an die Stelle tritt** (Konzept Kette II): der **Probelauf gegen
+Produktiv** (E-KH-08) — eine Handauslösung mit Pflichtfreigabe, die
+Geheimnisse, Adressvergleich, Zielprobe und einen Trockenlauf des Transports
+fährt und **nichts ausliefert**; und dieser Abschnitt. Der Leitsatz dahinter
+ist E-KH-17: **Die Logik probt Staging bei jedem Push, die Plattform probt
+der Probelauf.**
+
+**Und ein Gewinn, den die alte Anordnung nicht hatte.** R81 sagt, die
+Anwendung sei nicht auf einen Hoster zugeschnitten. Solange Staging und
+Produktiv derselbe Hoster waren, war das eine Behauptung, die nichts prüfte.
+Seither läuft die Anwendung mit **jedem Push auf `main`** auf einer zweiten,
+anders konfigurierten Plattform los — und ein Zuschnitt, der sich
+eingeschlichen hat, fällt dort auf, bevor ein Selbsthoster ihn findet.
+
+#### Der Plattformvergleich
+
+Beide Anlagen melden ihre Plattform selbst: **Betrieb → Status**, gespeist aus
+`plattform_pruefen()` (Abschnitt 5b). Die Auskunft gehört hierher
+nebeneinander, damit ein Unterschied sichtbar ist, bevor er eine Messung
+erklärt.
+
+| Prüfpunkt (5b.2) | Produktiv (Plesk) | Staging (lima-city) |
+|---|---|---|
+| PHP-Fassung | **8.3.33** | **8.3.33** — dieselbe |
+| Server-API | ⬚ Z3 | **FPM/FastCGI**, Apache 2.4 davor |
+| PHP-Erweiterungen | alle fünf vorhanden | alle fünf vorhanden |
+| `memory_limit` | **512 MB** | **512 MB** — gleich |
+| `max_execution_time` | **240 s** | **300 s** |
+| `post_max_size` / `upload_max_filesize` | **256 MB / 256 MB** | **500 MB / 500 MB** |
+| OPcache | **aus** | **an** — aber nur **Dateicache** (`file_cache_only`), SHM und JIT aus. **Die Statusseite wird ihn trotzdem als „aus" melden** — siehe Kasten |
+| Datenbank | **MariaDB 10.11.14** | ⬚ — die phpinfo nennt nur den Client (`mysqlnd 8.3.33`); die Serverfassung sagt erst die Anwendung |
+| `max_user_connections` | **nicht gesetzt**; es gilt `max_connections` = **151** | ⬚ |
+| Kontingent der Datenbank | Angabe 10 GB, belegt 9,8 MB (0 %) | ⬚ |
+| Freier Platz | **861,7 GB gemeldet** — Datenträger des Hosts, nicht das Kontingent | ⬚ |
+| Cron | **nein** — alle elf Jobs laufen **huckepack** („anfrage") | ⬚ |
+| FTPS | **ja**, belegt mit WinSCP | **ja**; Konto auf `/` eingesperrt |
+| HTTPS | **ja** | **ja** — Apache 2.4, Port 443 |
+| Herkunft des Zertifikats | **Let's Encrypt**, automatisch erneuert | ⬚ |
+| Anwendungswurzel | eigenes Verzeichnis unter einem Plesk-Vhost (`…/nadoku-produktion`) | eigenes Verzeichnis im lima-city-Webspace (`…/nadoku-staging`) |
+| Zeitzone | ⬚ Z3 | `Europe/Berlin` |
+
+**Die beiden Spalten sind auf verschiedenen Wegen erhoben, und das ändert,
+was sie belegen.** Produktiv ist am 20.09.2026 aus **Betrieb → Status** und
+**Betrieb → Hintergrundjobs** abgelesen — also aus `plattform_pruefen()`.
+Staging ist am selben Tag aus einer **`phpinfo()`-Ausgabe** erhoben, weil die
+Anwendung dort noch nicht installiert ist (Rahmenplan 6a, Schritt 6 steht
+aus). **`phpinfo()` zeigt die PHP-Einstellung, die Statusseite zeigt, was die
+Anwendung daraus macht** — und der OPcache unten beweist, dass das nicht
+dasselbe ist. Die Staging-Spalte ist deshalb **vorläufig** und wird ersetzt,
+sobald die Statusseite dort antwortet. Alles, was nur die Anwendung weiß
+(Datenbank, Platz, Kontingent, Jobwege), steht bis dahin auf `⬚`.
+
+> **Der OPcache meldet auf lima-city das Gegenteil dessen, was läuft.**
+> `plattform_pruefen()` fragt zuerst `function_exists('opcache_get_status')`
+> und dann die Funktion selbst. Auf Staging steht
+> **`disable_functions = dl, syslog, opcache_get_status`** — und
+> `function_exists()` antwortet für eine so abgeschaltete Funktion **`false`**.
+> Die Statusseite wird dort also **„OPcache: aus"** zeigen, während die
+> phpinfo **„Opcode Caching: Up and Running"** meldet.
+>
+> **Der Schaden ist klein, der Fehler ist grundsätzlich.** Klein, weil OPcache
+> nur *Empfohlen* ist und keine Ampel färbt, und weil
+> `opcache_invalidate()` — das die Anwendung nach jedem Schreiben in
+> `config.php` ruft (`serverkrypto_lib.php`) — **nicht** abgeschaltet ist und
+> weiter wirkt. Grundsätzlich, weil Abschnitt 5b.1 genau das verbietet:
+> *„`ok` ist dreiwertig … **`null` nicht feststellbar**. Wer nichts gemessen
+> hat, darf nichts behaupten."* Hier hat die Anwendung nichts gemessen und
+> behauptet „aus".
+>
+> **Und es ist der erste Ertrag des Hosterwechsels.** E-KH-04 versprach, die
+> Portabilitätszusage aus R81 werde von nun an wirklich geprobt statt nur
+> behauptet. Das hier ist der Beleg: ein Zuschnitt auf den einen Hoster, der
+> sechs Tage lang niemandem auffiel, weil beide Anlagen derselbe Hoster
+> waren. **Behoben wird er nicht hier** — das wäre Servercode und gehört
+> nicht in ein Dokumentationspaket; der Vorschlag steht im Prüfdokument.
+
+> **Zwei Zahlen der Produktiv-Spalte sind keine Messung, und das muss
+> dabeistehen.** **Freier Platz** meldet auf geteiltem Webspace den
+> Datenträger des **Hosts**, nicht das Kontingent dieses Kontos — 861,7 GB ist
+> eine Untergrenze für schlechte Nachrichten und keine Entwarnung. **Das
+> Kontingent der Datenbank** ist überhaupt keine Messung, sondern eine
+> **Angabe** (Vorgabe 10 GB, Z2, einstellbar unter *Betrieb →
+> Servereinstellungen*); kein Hoster macht sie abfragbar. Wer eine dieser
+> beiden Zahlen zitiert, zitiert diesen Kasten mit.
+
+> **Der auffälligste Wert ist eine Nicht-Zahl: Produktiv hat keinen Cron.**
+> Alle elf Hintergrundjobs tragen als Weg **„anfrage"** — sie laufen huckepack
+> auf einer Seitenanfrage (Abschnitt 4.97a). Das ist ein zulässiger der drei
+> Wege und kein Mangel, aber es heißt: **Ohne Besucher läuft nichts.** Der
+> Job „GPS-Daten verdichten" stand am 20.09.2026 auf **Rückstand 69**. Für
+> die Kette ist das die Zeile, die zählt, sobald AP5 das Backup-Tor auch auf
+> Staging fährt: Ein Komplett-Backup, das huckepack abgearbeitet wird,
+> braucht Anfragen — und ein Läufer, der auf `tor.py` wartet, erzeugt sie
+> nicht von selbst.
+
+> **Drei Staging-Einstellungen, die keine Tabellenzeile sind, aber in AP5
+> zählen werden.** **(1) `default_socket_timeout = 5`** statt der üblichen 60:
+> Jede Netzverbindung, die PHP über einen Stream aufbaut — SMTP-Probe,
+> Backup-Ziel per SFTP, ein HTTP-Abruf — bricht dort nach fünf Sekunden ab.
+> **(2) `session.save_path = /home/webpages/tmp`** liegt **über** dem eigenen
+> Verzeichnis — es ist also **geteilt**. **Gemessen am 20.09.2026:** root als
+> Eigentümer, Rechte **0773**, für Fremde also `-wx` **ohne Leserecht**; ein
+> `scandir()` aus der Anlage heraus scheitert. Andere Kunden können die
+> Sitzungsdateien damit **nicht auflisten**, und Sitzungs-IDs sind 128 Bit.
+> Der Zuschnitt ist Absicht des Hosters, und er trägt. **Dass die Anwendung
+> sich darauf verlässt, ohne es zu prüfen, trägt nicht:** Auf Produktiv ist
+> derselbe Wert nicht erhoben, und für Selbsthoster ist er offen. Eine
+> Sitzungsdatei führt zwar kein Schlüsselmaterial — ihr **Dateiname ist die
+> Sitzungs-ID**, und wer sie auflisten kann, ist angemeldet. Vorschlag im
+> Prüfdokument, Abschnitt 4.
+> **(3) `open_basedir` ist leer** und `allow_url_fopen` an. Beides ist die
+> Voreinstellung vieler Hoster und kein Mangel der Anwendung; es steht hier,
+> damit der Vergleich später nicht bei null anfängt.
+
 ### 6.4 Das Backup-Tor
 
 Vor dem Schreiben auf Produktiv läuft das Komplett-Backup **nachweislich zu
@@ -9120,9 +9366,17 @@ sind `config.php` und `install.lock` (bei der Einrichtung erzeugt),
 `wartung.lock` (der Schalter des Wartungsmodus), `ueberlast.json` (der Zähler
 der Verbindungsgrenze, P5a/AP9), `install.php` (liegt im Repositorium, wird
 aber nicht ausgeliefert — Nr. 214), `sicherungen/` und `apk/`.
-Diese Ausnahmeliste steht in beiden FTPS-Schritten wortgleich und ist tragend
-— ohne sie löscht der nächste Deploy, was nur dort entsteht. Sie steht
-**zusätzlich** in `.gitignore` (außer `install.php`); beides muss so bleiben.
+Diese Ausnahmeliste ist tragend — ohne sie löscht der nächste Deploy, was nur
+dort entsteht. Sie steht **zusätzlich** in `.gitignore` (außer `install.php`);
+beides muss so bleiben.
+
+**Seit Kette II/AP5 steht sie EINMAL** (E-KH-20 (1)), im FTPS-Schritt von
+`ausliefern-lauf.yml`; **acht Pfade, und die Zahl ist der Prüfwert.** Bis
+dahin stand sie zweimal, wortgleich, je einmal für Staging und Produktiv.
+Zwei wortgleiche Listen sind keine zwei Riegel, sondern einer und ein
+Versprechen: Wer die eine ergänzt und die andere vergisst, schützt eine
+Umgebung und die andere nicht — und merkt es erst, wenn eine Datei fehlt,
+die es nur auf dem Server gab.
 
 > **Dieser Absatz nannte bis Web 20.25.0 fünf Einträge und die Listen führten
 > sieben** — `ueberlast.json` und `install.php` fehlten hier, seit Web 20.15.2
@@ -9162,21 +9416,84 @@ Diese Ausnahmeliste steht in beiden FTPS-Schritten wortgleich und ist tragend
 Geheimnisse liegen seit Web 20.4.0 nicht mehr als Repositoriums-Secrets herum,
 sondern an den **Umgebungen**:
 
-| Umgebung | Geheimnisse | Variablen |
+| Ort | Geheimnisse | Variablen |
 |---|---|---|
-| `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `JOBS_TOKEN` | `FTP_ZIELPFAD`, `STAGING_URL` |
-| `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN` | `FTP_ZIELPFAD`, `PRODUKTION_URL` |
-
+| Umgebung `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `STAGING_URL` |
+| Umgebung `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `PRODUKTION_URL` |
 | Repositorium | `CIQ_GERAETE_URL` (Stufe 1) | `WACHE_BASIS` |
 
 `FTP_SERVER` ist der **nackte Hostname**, ohne Protokoll und ohne Pfad.
 
+> **Der Satz über der Tabelle stimmt heute nur zur Hälfte, und zwar
+> gemessen** (Kette II, F-KH-U-32, 21.09.2026). `FTP_SERVER`,
+> `FTP_USERNAME` und `FTP_PASSWORD` lösen **auch ohne `environment:`** auf —
+> es gibt sie zusätzlich eine Ebene höher, als Repositoriums- oder
+> Organisationsgeheimnis. `JOBS_TOKEN` und alle Variablen nicht; bei denen
+> ist die Umstellung vollständig.
+>
+> **Was das kostet:** Der erste Schritt des Auslieferungslaufs prüft, ob die
+> drei Werte da sind, und ist genau dafür gebaut, **vor** Backup und Wartung
+> anzuschlagen. Fehlt der Umgebungswert, greift still der von oben, und der
+> Schritt meldet „Drei Geheimnisse vorhanden" — **ein Tor, das immer
+> aufgeht.** Ausgeliefert wird weiterhin richtig (die Umgebung gewinnt gegen
+> die Ebene darüber); was fehlt, ist die Warnung.
+>
+> **BEHOBEN am 21.09.2026** (Prüfpunkt 22, F-KH-U-34). Es waren drei
+> *Repository secrets*, zwei Monate alt und damit älter als die Umstellung
+> auf Umgebungen — Reste, die beim Umzug liegen geblieben sind;
+> Organisationsgeheimnisse gab es keine. Die Betreiberin hat sie gelöscht,
+> die Gegenprobe ist gefahren (Lauf 35566000648: die Zielprobe schreibt,
+> holt zurück, vergleicht und löscht — mit den reinen Umgebungswerten).
+> **Der erste Schritt kann damit wieder fehlschlagen.**
+>
+> **Die Regel bleibt und gilt weiter (E-KH-28): Ein Wert, den die Kette aus
+> einer Umgebung liest, darf auf keiner Ebene darüber denselben Namen
+> haben** — sonst ist jede Prüfung auf sein Vorhandensein eine Prüfung auf
+> den falschen Wert. Den maschinellen Nachweis baut AP6 ein.
+
+**`FTP_ZIELPFAD` und `FTP_STATE_PFAD` haben ihre Vorgabewerte mit AP6
+verloren** (Kette II, E-KH-07, 21.09.2026). Bis dahin sprang bei fehlender
+Variable `./staging/` bzw. `./httpdocs/` ein und
+`../.deploy-state-staging.json` bzw. `../.deploy-state-produktion.json` —
+eine fehlende Variable führte damit **still in ein fremdes Verzeichnis**,
+statt den Lauf anzuhalten. **Jetzt heißt fehlend rot**, und zwar im ersten
+Schritt des Auslieferungslaufs: vor dem Auschecken, vor den Geheimnissen,
+vor jedem Zugriff auf den Server. Die Meldung nennt den Namen der Variablen,
+die Umgebung und den Weg in die Einstellungen.
+
+**Sie gehören damit in beiden Umgebungen ausdrücklich gesetzt** (Zuarbeit
+Z4). Am 21.09.2026 war `FTP_STATE_PFAD` auf `staging` **gemessen leer**
+(F-KH-U-31, Runde 2); der erste Lauf nach AP6 wird dort rot, bis sie steht.
+Dasselbe gilt für `WACHE_BASIS`, das seine Vorgabe an zwei Stellen verloren
+hat — in `integritaet.yml` und in `wache.py` selbst.
+
+**Seit AP5 stehen diese Vorgaben an EINER Stelle** — im ersten Schritt des
+gemeinsamen Laufs, zusammen mit der Basisadresse, in einem `case` über die
+Umgebung. Vorher standen sie an fünf Stellen verstreut in zwei Jobs. Der
+Schritt **bricht ab**, wenn die Basisadresse leer ist oder die Umgebung
+weder `staging` noch `produktion` heißt; ein leerer Zielpfad bricht
+unmittelbar vor dem Abgleich ab, statt die Anwendung in das
+Wurzelverzeichnis des FTP-Zugangs zu synchronisieren.
+
+**Warum dort ein `case` steht und kein Ausdruck:** Ein `A && B || C` in
+einem GitHub-Ausdruck fällt auf `C` durch, sobald `B` **leer** ist — nicht
+nur, wenn `A` falsch ist. Mit
+`umgebung == 'produktion' && vars.PRODUKTION_URL || vars.STAGING_URL` hätte
+ein Produktivlauf bei leerer `PRODUKTION_URL` still gegen **Staging**
+gemessen: Backup-Tor an der falschen Anlage, Zielprobe an der falschen
+Adresse, Lauf grün. Das ist der Fehler, den die Zusammenführung hätte
+einbauen können. Welche Werte die
+beiden Anlagen tragen, steht in `docs/Rahmenplan.md` 6a.
+
 **`JOBS_TOKEN` steht in beiden Umgebungen unter demselben Namen und trägt
 verschiedene Werte.** Das Token gehört der **Installation**
 (`app_state.jobs_token`, sichtbar unter Betrieb → Hintergrundjobs), nicht dem
-Repositorium; Staging und Produktiv sind zwei Installationen. Jeder Job liest
-es aus seiner eigenen Umgebung, deshalb kollidiert der gleiche Name nicht —
-und die beiden Zeilen in `auslieferung.yml` lassen sich nebeneinander lesen.
+Repositorium; Staging und Produktiv sind zwei Installationen. Jeder Lauf liest
+es aus seiner eigenen Umgebung, deshalb kollidiert der gleiche Name nicht.
+**Seit Kette II/AP5 gibt es dafür keine zwei Zeilen mehr, sondern einen
+Schritt:** Der erste Schritt des gemeinsamen Laufs bestimmt Basisadresse,
+Zielpfad und Pfad der Zustandsdatei je Umgebung — mit einem `case` und einem
+Abbruch, wenn einer fehlt.
 
 ### 6.6 Die Integritätswache hängt am Namen
 
@@ -9186,10 +9503,239 @@ Fehlermeldung.** Genau das stand bis Web 20.3.0 im Raum: Dort hieß die
 Kupplung „Server per FTP hochladen" (Fund F4 des P5a-Konzepts).
 
 Seit der Kette hat der Auslieferungslauf **zwei Ziele**, die Wache misst aber
-Produktiv. Sie fragt deshalb zuerst über die API, ob der Job `produktion` in
-diesem Lauf mit Erfolg geendet hat, und hält sonst still — eine Wache, die
-nach jedem Staging-Deploy falschen Alarm gibt, wird abgeschaltet, und das ist
-der eigentliche Schaden.
+Produktiv. **Bis zum 20.09.2026** fragte sie deshalb zuerst über die API, ob
+der Job `produktion` in diesem Lauf mit Erfolg geendet hat, und hielt sonst
+still. Dieser Riegel ist mit AP2 entfallen — warum, steht im nächsten
+Abschnitt.
+
+### 6.5a Zielprobe und Probelauf — die Kette misst, statt zu glauben
+
+**Die Zielprobe** (`tools/kette/zielprobe.py`, seit AP3 der Kettenhärtung,
+E-KH-07) steht **vor dem Backup-Tor**. Sie schreibt per FTPS eine Datei mit
+Zufallsnamen und Zufallsinhalt ins Zielverzeichnis, holt sie über HTTPS
+unter der Basisadresse der Umgebung zurück, vergleicht sie, löscht sie und
+prüft das Löschen (danach 404).
+
+**Seit AP5 läuft sie in beiden Umgebungen** — bis dahin nur auf Produktiv.
+Das ist keine Zugabe, sondern E-KH-17: Ein Tor, das nur dort steht, wo es
+teuer wird, ist auf dem Weg dorthin nie gefahren worden.
+
+**Warum vor dem Backup-Tor:** Bis dahin hat noch nichts den Server verändert.
+Zeigt das FTP-Konto auf ein anderes Verzeichnis als die öffentliche Adresse,
+fällt das dort auf — und nicht erst, nachdem ein Komplett-Backup gelaufen und
+die Wartung an ist.
+
+**Sie fährt zwei Rundläufe** (seit 20.09.2026): einen **flachen** in das
+bestehende Zielverzeichnis, und einen **durch ein neu angelegtes
+Verzeichnis** — Anlegen, Hineinschreiben, **Auflisten**, HTTPS, aufräumen.
+Der zweite stellt `ensureDir` nach, die Stelle, an der die
+Auslieferungsaktion mit `ECONNRESET` abbricht. Der flache berührt sie nie,
+und genau deshalb war der Trennversuch zur TLS-Sitzung viermal grün, während
+der echte Upload viermal rot war.
+
+**Warum `curl` und nicht die Auslieferungsaktion:** Er ist bewusst ein
+**zweiter** FTPS-Client. Scheitert der Upload in der Aktion und die Probe
+gelingt, liegt es an der Bibliothek; scheitern beide an derselben Stelle, an
+der Plattform. Das ist der Trennschnitt, den F3 braucht. Zwei Betriebsarten
+— mit und ohne Wiederverwendung der TLS-Sitzung auf dem Datenkanal —, und ob
+`curl` sie tatsächlich wiederverwendet, meldet die Probe **dreiwertig**
+(`JA` / `NEIN` / **`NICHT FESTSTELLBAR`**). Einzelheiten:
+`tools/kette/LIESMICH.md`.
+
+**Die Mengenprobe** (`--mengenprobe N`, 1–500) gehört zur selben Datei und
+läuft **in keinem Kettenschritt**. Sie fährt einen einzigen `curl`-Aufruf,
+der `N` Verzeichnisse anlegt und beschreibt — über **eine** Steuerverbindung.
+Sie ist die Antwort auf die Lücke, die nach fünf Trennversuchen übrigblieb:
+Die Zielprobe ruft `curl` je Operation einmal auf und bekommt jedes Mal eine
+frische Sitzung, die Auslieferungsaktion hält **eine** Verbindung für 688
+Dateien und 62 Verzeichnisse offen. Ein Server, der die zweite oder dritte
+Datenverbindung **einer** Sitzung abweist, ist für die Zielprobe unsichtbar.
+Gemeldet wird die Zahl der abgeschlossenen Übertragungen gegen die verlangte
+(„2 von 5") und bei Abbruch der Servertext wörtlich. **Die Zeitgrenze wächst
+mit der Zahl der Ziele** (30 s + 8 s je Ziel); gemessen gegen Produktiv sind
+80 Ziele ein Schritt von 2:49, Aufräumen eingeschlossen. Läuft sie ab, meldet die Probe ausdrücklich, dass **sie selbst**
+abgebrochen hat und nicht der Server — die Falschdiagnose wäre ein falscher
+Befund an den Hoster. Sie legt Dateien auf
+einem echten Server an — deshalb hinter zwei Riegeln: Sie läuft nur über die
+Eingabe **`probelauf_mengenprobe`** (1–500) des Arbeitslaufs „Auslieferung",
+und nur zusammen mit dem Häkchen `probelauf`; ohne dieses bricht der Schritt
+ab. Ein Tag-Lauf und ein Push haben das Feld nicht. Dann tritt sie **an die
+Stelle** der beiden Rundläufe. Aufgeräumt wird im `finally`, auch nach
+Abbruch.
+
+**Der Probelauf** (E-KH-08) ist eine Handauslösung mit der Eingabe
+`probelauf`. Er fährt denselben Job `produktion` mit derselben
+Pflichtfreigabe — und läuft deshalb auch von `main`, wo kein Tag steht:
+
+| gefahren | nicht gefahren |
+|---|---|
+| die drei Geheimnisse | Tag gegen `WEB_VERSION` |
+| **Zustandsdatei anlegen, falls sie fehlt** (E-KH-26) | — |
+| Zielprobe (samt Selbstprobe) — **oder, mit `probelauf_mengenprobe` bzw. `probelauf_sitzungsprobe`, die Mengen- oder die Sitzungsprobe an ihrer Stelle** | Tor der grünen Läufe |
+| Abgleich als **Trockenlauf** (`dry-run`) — **außer im Gesprächslauf, siehe unten** | Backup-Tor, Wartungsmodus, `doku`-Kopie, Migrationsabfrage |
+
+Geschrieben wird nichts außer **der Probedatei** — die im selben Schritt
+gelöscht wird — **und der Zustandsdatei der Auslieferungsaktion**, falls sie
+fehlt. Die Zusammenfassung beginnt mit **„PROBELAUF — nichts ausgeliefert"**,
+und das gilt: **ausgeliefert** wird nichts. Geschrieben schon, und zwar diese
+eine Datei.
+
+**Warum sie dazugekommen ist (E-KH-26, 20.09.2026).** Fehlt die
+Zustandsdatei, läuft auch der **Trockenlauf** in den toten Client — er merkt
+es nur nicht, weil danach kein Steuerbefehl mehr kommt (6.5b). Die Zeile
+„0 geplante Löschungen", auf der die Abnahme beruht, käme dann aus dem
+**Fehlerpfad** und nicht aus einem Vergleich mit dem Serverbestand. Eine
+Abnahme, die ihre Zahl aus dem Fehlerpfad liest, prüft nichts.
+
+**Was die Datei ist:** wenige hundert Byte, `data: []`, **außerhalb des
+Webroots** (`../.deploy-state-produktion.json`) und damit nicht öffentlich
+abrufbar. Die Aktion schreibt sie beim ersten echten Lauf ohnehin selbst
+fort. **Eine vorhandene wird nie angefasst** — sie trägt den Bestand des
+Servers.
+
+**Eine Ausnahme, und sie steht hier und nicht im Kleingedruckten: der
+Gesprächslauf** (`probelauf_gespraech`, Prüfpunkt 18a der Kettenhärtung). Er
+schaltet den Trockenlauf **ab** — die Aktion schreibt echt. Sie muss es,
+denn im Trockenlauf erreicht sie `ensureDir` nie (`syncProvider.js` beginnt
+`createFolder` mit `if (this.dryRun === true) return;`), und genau deshalb
+hat kein Probelauf F3 je ausgelöst. Dazu `log-level: verbose`, womit
+`basic-ftp` seinen FTP-Dialog mitschreibt.
+
+**Drei Riegel halten den Preis klein:**
+
+1. Ohne `probelauf` bricht ein eigener Schritt ab. Er läuft **ohne `if`** —
+   ein Riegel, der nur greift, wenn die Lage schon stimmt, ist keiner.
+2. `server-dir` zeigt auf **`.zielprobe-gespraech/`** statt auf den Webroot.
+   Die Anwendung bleibt unberührt: kein Wartungsmodus, kein halber Stand. Der
+   **führende Punkt** ist Absicht — `.htaccess` weist jeden Pfad mit
+   führendem Punkt mit 403 ab (Z. 64), sonst läge dort eine zweite,
+   öffentlich abrufbare Kopie der Anwendung.
+3. `state-name` zeigt auf eine **eigene** Zustandsdatei *innerhalb* des
+   Probeverzeichnisses. Ohne das zeigte `../` von dort in den Webroot.
+
+**Was er hinterlässt:** das Probeverzeichnis. Es wird **von Hand** entfernt.
+Das Werkzeug räumt einzelne Probedateien weg, keine Bäume — ein Werkzeug,
+das Verzeichnisbäume auf dem Produktivserver löscht, soll es nicht geben.
+
+**Das Tor der grünen Läufe entfällt im Probelauf mit Absicht:** Es schützt
+Produktiv davor, ungeprobten Code zu bekommen — der Probelauf liefert keinen
+Code aus. Und es wäre der falsche Riegel am falschen Tag: Ausgerechnet wenn
+die Kette klemmt, braucht man den Probelauf, um zu messen **warum**.
+
+### 6.5b Warum die Zustandsdatei der Auslieferungsaktion da sein muss
+
+**Ohne sie liefert die Kette gar nicht aus.** Das ist nicht Vorsicht, sondern
+gemessen: Bis zum 20.09.2026 ist **kein einziger** Abgleich gegen den
+Produktivserver durchgelaufen, und das war der Grund.
+
+**Der Ablauf, wörtlich aus dem FTP-Dialog:**
+
+```
+> MKD .zielprobe-gespraech
+< 257 "/.zielprobe-gespraech" - Directory successfully created
+> CWD .zielprobe-gespraech
+< 250 CWD command successful
+> EPSV
+< 229 Entering Extended Passive Mode (|||63029|)
+> RETR .deploy-state-gespraech.json
+> QUIT
+```
+
+**`RETR` — und keine Serverantwort.** Jede andere Zeile hat ihr `<`, diese
+nicht. Die Datenverbindung steht per `EPSV` schon, als der Server merkt, dass
+die Datei fehlt; er schließt sie, und `basic-ftp` liest `ECONNRESET` **auf
+dem Datensocket** statt der `550` auf dem Steuerkanal.
+
+**Und dann kommt das Tückische:** `getServerFiles` fängt jeden Fehler ab und
+deutet ihn als *„this must be your first publish! 🎉"*. Die Aktion rechnet
+weiter — **mit einem toten Client** — und stirbt erst beim nächsten
+Steuerbefehl:
+
+```
+creating folder "api/"
+Error: Client is closed because read ECONNRESET (data socket)
+    at Client.sendIgnoringError → Client._openDir → Client.ensureDir
+```
+
+**Die Meldung nennt eine Stelle drei Schritte hinter der Ursache.** Wer sie
+für die Ursache hält, sucht bei `ensureDir` — und findet nichts, weil
+`_openDir` nur `MKD` und `CWD` sendet und gar keine Datenverbindung öffnet
+(`basic-ftp` 6.2.1, Z. 686–689). Acht Trennversuche sind daran vorbeigelaufen.
+
+**Der Zustand erhält sich selbst:** Solange keine Zustandsdatei da ist, stirbt
+jeder Lauf daran — und weil er stirbt, wird nie eine geschrieben. Jeder Lauf
+ist der erste.
+
+**Die Abhilfe** ist ein eigener Schritt vor dem Abgleich
+(`tools/kette/zustand.py`): Er prüft mit `--head` (`SIZE`/`MDTM` auf dem
+Steuerkanal, **kein** `RETR` — das ist ja die Operation, die tötet) und legt
+die Datei an, wenn sie fehlt. **Eine vorhandene fasst er nie an**, denn sie
+trägt den Bestand des Servers; sie zu überschreiben hieße, der Aktion zu
+sagen, der Server sei leer. Nach dem Schreiben wird **nachgemessen**, nicht
+geglaubt.
+
+**Belegt am 20.09.2026:** 688 Dateien, 62 Verzeichnisse, 9,7 MB, 7 Minuten
+47 Sekunden, kein `ECONNRESET` — der erste vollständige Abgleich gegen diesen
+Server, gefahren gegen ein Probeverzeichnis. Danach hat die Aktion ihre
+Zustandsdatei selbst fortgeschrieben.
+
+**Was zu tun ist, wenn F3 wiederkommt:** Die Zustandsdatei ist weg — aus dem
+Backup zurückgespielt, aufgeräumt, oder der Webspace ist neu. Der Schritt
+legt sie dann von selbst wieder an; er läuft vor **jedem** Abgleich, gerade
+deshalb.
+
+### 6.6a Der Zeiger `produktion` — wogegen die Wache vergleicht
+
+**Der Fehler war nicht der Auslöser, sondern der Vergleichsstand** (Befund B6
+der Kettenhärtung, E-KH-13). Die Wache verglich den Produktivserver gegen
+`server/` **neben sich** — also gegen den Zweig, auf dem sie lief, und das
+ist `main`. Auf Produktiv liegt aber nicht `main`, sondern der zuletzt
+**ausgelieferte** Stand. Sobald `main` einen Schritt weiter ist, und das ist
+der Normalfall, meldete sie eine Abweichung, die keine ist. Sie war deshalb
+seit dem 17.09.2026 **täglich rot**.
+
+**Nachgerechnet** (20.09.2026, aus den Ständen selbst, ohne Netz): Am
+18.09.2026 lag auf Produktiv `14f99ac` (P5a) und auf `main` stand `eec41e1`
+(P5b). Die alte Anordnung meldete damit **128 Dateien, 121 gleich, 1
+abweichend** (`assets/style.css`) **und 6 × 404** (`doku.js`,
+`rueckfrage.js`, `schluessel.js`, `schluesselblatt.js`, zwei Symbole) — dazu
+in Teil 2 `login.php`, das zwischen beiden Ständen um 128 Zeilen gewachsen
+war. Die neue Anordnung, gegen den Zeiger gerechnet: **122 Dateien, 122
+gleich, 0 abweichend, 0 × 404.**
+
+**Der Zeiger ist der Zweig `produktion`.** Er zeigt auf den Commit, der
+ausgeliefert wurde. Bewegt wird er vom Job **`zeiger`** in
+`auslieferung.yml`, und zwar nur nach einem erfolgreichen `produktion`-Job
+(`if: needs.produktion.result == 'success'` — `needs` allein genügt nicht,
+ein übersprungener Job gilt GitHub als erfüllte Abhängigkeit).
+
+| | |
+|---|---|
+| Werkzeug | von `main` — eine Verbesserung an der Wache soll sofort greifen, nicht erst nach dem nächsten Deploy |
+| Vergleichsstand | vom Zeiger — `actions/checkout` mit `ref: produktion`, `path: zeiger`, `fetch-tags: true` |
+| Aufruf | `wache.py "$BASIS" --stand zeiger` |
+| Zusammenfassung | nennt verglichenen Commit, Tag und Dateizahl |
+| Fehlender Zeiger | **rot mit Ansage**, nie still grün — samt dem Befehl, ihn anzulegen |
+| Auslöser | **jeder** — der `workflow_run`-Riegel ist entfallen |
+| Berechtigungen | `contents: write` **nur** im Job `zeiger`; der Job mit den FTPS-Geheimnissen bleibt bei `read`. `actions: read` ist mit dem Riegel entfallen |
+
+**Warum nicht das jüngste `web-v*`-Tag:** Es ist nicht der ausgelieferte
+Stand. Ein Tag kann gesetzt und die Freigabe nie erteilt worden sein, das
+Backup-Tor kann zugegangen sein — und nach einem Zurücksetzen liegt ein
+**älterer** Stand oben als der jüngste Tag. Deshalb schiebt der Job erzwungen:
+Ein Zurücksetzen ist eine Auslieferung, und der Zeiger folgt dorthin.
+
+**Dass der Riegel entfallen kann, ist eine Folge davon und kein Nebenbei.**
+Er war nötig, solange gegen `main` verglichen wurde: Nach einem
+Staging-Deploy hätte die Wache Produktiv gegen einen Stand gehalten, der dort
+gar nicht liegt. Jetzt ändert sich der Vergleichsstand **nur** bei einer
+Produktiv-Auslieferung — der Riegel wäre ab jetzt schädlich, weil er die
+Wache nach einem Staging-Deploy schweigen ließe, obwohl der Vergleich gültig
+wäre.
+
+**Die Regel für Menschen** steht in `CLAUDE.md` 3: Auf `produktion` wird
+nicht entwickelt, es gibt keinen PR dorthin, und von Hand bewegt wird er
+nicht.
 
 ### 6.7 Selbst hosten — der Weg ohne GitHub bleibt vollständig
 
@@ -9984,7 +10530,7 @@ letztere sind reine Clientfilter und erreichen den Server nie.
 
 **Neuinstallation:** leere DB + `server/` hochladen → `index.php` leitet zum
 Installer. **Seit Nr. 214 gehört `install.php` nicht mehr zur Auslieferung** —
-sie steht in der Ausnahmeliste beider FTPS-Schritte. Eine leere Anlage lässt
+sie steht in der Ausnahmeliste des FTPS-Schritts. Eine leere Anlage lässt
 sich damit **nicht allein über die Kette** einrichten: Die Datei
 `server/install.php` muss **einmal von Hand** hinauf, danach wird eingerichtet
 und danach wird sie wieder gelöscht — so, wie es der letzte Satz dieses
@@ -10114,7 +10660,7 @@ Verzeichnis. Ohne eingerichtetes SMTP (`smtp_eingerichtet()`) steht statt der
 Mail ein dauerhafter Hinweis im Adminbereich. Einzelheiten:
 `docs/Backup-Format.md` 5b.
 
-**`sicherungen/` steht in der `exclude`-Liste beider FTPS-Schritte von `.github/workflows/auslieferung.yml`** (bis Web 20.3.0: `deploy.yml`).**
+**`sicherungen/` steht in der `exclude`-Liste des FTPS-Schritts von `.github/workflows/ausliefern-lauf.yml`** (bis Kette II/AP5: zweimal in `auslieferung.yml`; bis Web 20.3.0: `deploy.yml`).**
 Das ist keine Feinheit: Der FTP-Deploy synchronisiert `server/` und löscht alles,
 was nicht ausgenommen ist. Deshalb wird die `.htaccess` auch zur Laufzeit
 erzeugt und nicht mitgeliefert — eine mitgelieferte käme im ausgenommenen Ordner

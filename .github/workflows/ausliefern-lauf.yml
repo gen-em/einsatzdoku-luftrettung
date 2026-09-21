@@ -1,0 +1,1010 @@
+name: Auslieferungslauf
+
+# EINE SCHRITTFOLGE FUER BEIDE UMGEBUNGEN (Kette II, AP5; E-KH-14, -17, -27).
+#
+# Bis AP5 gab es zwei Jobs in `auslieferung.yml`: `staging` mit vier
+# Schritten und `produktion` mit dreizehn. Was Produktiv an Toren hatte --
+# Zielprobe, Backup-Tor, Wartungsmodus, Migrationsabfrage --, hatte Staging
+# nicht. **Damit wurde auf Produktiv jedes Mal etwas gefahren, was vorher
+# nirgends gelaufen war**, und genau das verbietet E-KH-17. Der Preis stand
+# in `staging`: vier Schritte, 137 Zeilen, und ein Deploy, der nichts probte
+# ausser sich selbst.
+#
+# HIER STEHT DIE FOLGE JETZT EINMAL. `auslieferung.yml` ruft sie zweimal auf
+# und reicht `umgebung` durch; alles andere ergibt sich daraus.
+#
+# ------------------------------------------------------------------------
+# WARUM EIN AUFGERUFENER ARBEITSLAUF UND KEIN ZUSAMMENGESETZTER BAUSTEIN
+# ------------------------------------------------------------------------
+#
+# GEMESSEN, NICHT GELESEN (E-KH-27, F-KH-U-31; Laeufe 35549413032 und
+# 35549610955 vom 21.09.2026). Ein zusammengesetzter Baustein
+# (`.github/actions/…/action.yml`) sieht WEDER `secrets` NOCH `vars` und
+# laedt bei dem Versuch gar nicht erst:
+#
+#     Unrecognized named-value: 'secrets'. Located at position 1 within
+#     expression: secrets.FTP_SERVER
+#     Failed to load .../action.yml
+#
+# Er bekaeme also drei Zugangswerte, drei Variablen und sechs Schalter als
+# Eingaben gereicht -- **an beiden Aufrufstellen ausgeschrieben**, womit die
+# Doppelung in kleinerer Form zurueckkaeme. Der aufgerufene Arbeitslauf kann
+# beides: `secrets: inherit` reicht die Werte durch, und `environment:`
+# BINDET auch als Ausdruck (gemessen: vier von sieben Werten sind mit
+# `environment:` belegt und ohne leer).
+#
+# **UND DIE PFLICHTFREIGABE WANDERT MIT -- NACHGEMESSEN.** Dass die Umgebung
+# bindet, sagte noch nichts darueber, ob die Freigabepflicht mitkommt; gegen
+# `staging` war das nicht messbar, weil es dort keine gibt. Gefahren wurde
+# es deshalb mit dem Probelauf, der ohnehin faellig war:
+#
+#   **Lauf 35566000648 vom 21.09.2026 hat die Freigabe angefordert und
+#   gestanden, bis die Betreiberin sie erteilt hat** (F-KH-U-34,
+#   Pruefpunkt 23).
+#
+# Hier stand bis dahin ein Vorbehalt: Fragt der Lauf nicht nach der
+# Freigabe, wird AP5 zurueckgenommen. Er ist eingeloest. Der Ausweichweg --
+# zusammengesetzter Baustein mit durchgereichten Eingaben -- bleibt gemessen
+# gangbar und wird nicht gebraucht.
+#
+# ------------------------------------------------------------------------
+# WAS DIE UMGEBUNG UNTERSCHEIDET -- UND WIE WENIG DAS IST
+# ------------------------------------------------------------------------
+#
+# ZWEI SCHRITTE laufen nur auf Produktiv, und beide begruenden sich selbst:
+# der Tag-Vergleich (Staging faehrt von `main` und hat keinen Tag) und das
+# Tor der gruenen Laeufe (es fragt, ob dieser Stand auf STAGING gruen war --
+# auf Staging gefragt, fragte es nach sich selbst). **Jeder weitere waere
+# begruendungspflichtig.**
+#
+# DREI WERTE haengen an der Umgebung: die Basisadresse, der Zielpfad und der
+# Pfad der Zustandsdatei. Sie werden im ERSTEN Schritt bestimmt, an einer
+# Stelle, mit einem Abbruch, wenn einer fehlt.
+#
+# ALLES UEBRIGE ist gleich, und das ist der Punkt: Was auf Produktiv laeuft,
+# ist auf Staging bei jedem Push gelaufen.
+#
+# ------------------------------------------------------------------------
+# DIE GEHEIMNISSE HEISSEN IN BEIDEN UMGEBUNGEN GLEICH
+# ------------------------------------------------------------------------
+#
+# `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `JOBS_TOKEN` -- und die
+# UMGEBUNG entscheidet, welcher Wert ankommt. Ein Job kann die Zugangsdaten
+# der falschen Seite nicht erwischen, weil es die anderen in seiner Umgebung
+# gar nicht gibt. Mit sprechenden Praefixen waere ein kopierter Job, der den
+# falschen stehen laesst, ein Deploy auf die falsche Anlage.
+#
+# **HEUTE STIMMT DIESER ABSATZ NUR ZUR HAELFTE, UND ZWAR GEMESSEN**
+# (F-KH-U-32): Die drei `FTP_*` loesen auch OHNE `environment:` auf -- es
+# gibt sie zusaetzlich eine Ebene hoeher. Die Umgebung gewinnt, es wird also
+# richtig ausgeliefert; was fehlt, ist die WARNUNG, wenn der Umgebungswert
+# einmal fehlt. Abhilfe: Pruefpunkt 22, ein Klick. Regel: E-KH-28.
+on:
+  workflow_call:
+    inputs:
+      umgebung:
+        description: '`staging` oder `produktion` — bestimmt Umgebung, Adresse und Zielpfad.'
+        required: true
+        type: string
+      probelauf:
+        description: 'PROBELAUF — nichts ausliefern, nur den Weg messen (E-KH-08).'
+        required: false
+        type: boolean
+        default: false
+      probelauf_ohne_sitzung:
+        description: 'Zielprobe ohne Wiederverwendung der TLS-Sitzung (Trennversuch F3).'
+        required: false
+        type: boolean
+        default: false
+      probelauf_mengenprobe:
+        description: 'Mengenprobe statt der Rundlaeufe, 1–500 Verzeichnisse (leer = aus).'
+        required: false
+        type: string
+        default: ''
+      probelauf_sitzungsprobe:
+        description: 'Sitzungsprobe statt der Rundlaeufe (Abruf, dann Steuerbefehl).'
+        required: false
+        type: boolean
+        default: false
+      probelauf_gespraech:
+        description: 'GESPRAECHSLAUF — echt schreiben, aber in ein Probeverzeichnis, mit Mitschnitt.'
+        required: false
+        type: boolean
+        default: false
+
+# `permissions` UND `defaults` ERBEN NICHT. Ein aufgerufener Arbeitslauf
+# bekommt sie nicht vom Aufrufer -- sie stehen deshalb hier noch einmal.
+# Wer sie hier weglaesst, faehrt `bash -e` OHNE `pipefail`, und dann gibt
+# eine Pipe den Wert ihres LETZTEN Glieds zurueck: ein Schritt, der nicht rot
+# werden kann. Gemessen und begruendet im Kopf von `auslieferung.yml`.
+permissions:
+  contents: read
+  # `actions: read` braucht das Tor der gruenen Laeufe (`gh api … /runs`).
+  actions: read
+
+defaults:
+  run:
+    shell: bash -eo pipefail {0}
+
+jobs:
+  ausliefern:
+    # DER ANZEIGENAME WIRD ZUSAMMENGESETZT: *aufrufender Job* / *dieser Job*,
+    # also `staging / ausliefern` und `produktion / ausliefern` (gemessen,
+    # F-KH-U-31). Stuende hier `${{ inputs.umgebung }}`, hiesse er
+    # `staging / staging` -- die Umgebung zweimal und die Sache gar nicht.
+    #
+    # DIE SCHRITTNAMEN BLEIBEN UNVERAENDERT, und das ist es, was die Abnahme
+    # von AP5 mit "dieselben Schrittnamen wie Produktiv" meint.
+    name: ausliefern
+    runs-on: ubuntu-latest
+    # DIE UMGEBUNG IST DAS TOR (T1 aus E-PV-3). Auf `produktion` haengt daran
+    # die Pflichtfreigabe der Betreiberin; auf `staging` bindet sie die
+    # Zugangswerte, ohne jemanden zu fragen.
+    #
+    # DASS DER AUSDRUCK BINDET, IST GEMESSEN (F-KH-U-31): Umgebungswerte
+    # loesen hier auf und ausserhalb nicht. Und dass die PFLICHTFREIGABE
+    # mitkommt, ebenfalls (F-KH-U-34, Lauf 35566000648).
+    #
+    # **WER DIESE ZEILE AENDERT, MISST BEIDES NEU.** Ein Ausdruck, der ins
+    # Leere zeigte, liesse den Job OHNE Umgebung laufen -- und damit ohne
+    # Freigabe. Das faellt nicht auf: Der Lauf waere gruen, nur eben
+    # ungefragt. Der Nachweis kostet einen Probelauf und einen Klick und
+    # liefert nichts aus.
+    environment: ${{ inputs.umgebung }}
+    # ZWEI GRUPPEN, EINE JE UMGEBUNG (E-KH-11, B4) -- und sie entstehen hier
+    # von selbst, weil `inputs.umgebung` im Gruppennamen steht. Auf die
+    # aufrufenden Jobs gehoerte es nicht: Ein Job, der einen Arbeitslauf
+    # aufruft, nimmt nicht jeden Schluessel, und ein `concurrency`, das dort
+    # still ignoriert wuerde, waere schlimmer als keines.
+    #
+    # **NIE ABBRECHEN, UND DAS IST DER GANZE PUNKT.** Ein abgebrochener
+    # Produktivlauf laesst die Wartung an und einen halben Dateistand oben.
+    # Ein abgebrochener Staging-Abgleich ist nicht harmloser: Die
+    # Zustandsdatei der Aktion beschreibt dann einen Server, den es so nicht
+    # gibt, und der naechste Lauf uebertraegt entweder alles neu oder --
+    # schlimmer -- uebersieht Aenderungen.
+    #
+    # BEKANNTE FOLGE, benannt statt verschwiegen: Je Gruppe wartet hoechstens
+    # EIN Lauf; ein dritter verdraengt den zweiten wartenden. Fuer Staging ist
+    # das hinnehmbar (der juengste Stand gewinnt, und genau den will man);
+    # auf Produktiv kommt der Fall praktisch nicht vor, weil dort ein Tag und
+    # eine Freigabe davorstehen.
+    concurrency:
+      group: ausliefern-${{ inputs.umgebung }}
+      cancel-in-progress: false
+    env:
+      JOBS_TOKEN: ${{ secrets.JOBS_TOKEN }}
+    steps:
+      - name: Adresse, Zielpfad und Zustandsdatei dieser Umgebung bestimmen
+        # DREI WERTE, EINE STELLE, UND EIN ABBRUCH, WENN EINER FEHLT.
+        #
+        # WARUM NICHT ALS AUSDRUCK AN JEDER VERWENDUNGSSTELLE. Ein
+        # `A && B || C` in einem GitHub-Ausdruck faellt auf `C` durch, sobald
+        # `B` LEER ist -- nicht nur, wenn `A` falsch ist. Stuende hier
+        # `inputs.umgebung == 'produktion' && vars.PRODUKTION_URL ||
+        # vars.STAGING_URL`, dann maesse ein Produktivlauf mit leerer
+        # `PRODUKTION_URL` still gegen STAGING: Das Backup-Tor fragte die
+        # falsche Anlage, die Zielprobe pruefte die falsche Adresse, und der
+        # Lauf waere gruen. **Das ist der Fehler, den die Zusammenfuehrung
+        # haette einbauen koennen**, und deshalb steht hier ein `case` und
+        # kein Ausdruck.
+        #
+        # **DIE VORGABEWERTE SIND MIT AP6 GEFALLEN (E-KH-07). FEHLEND HEISST
+        # ROT.** Bis dahin sprang bei fehlender Variable ein Vorgabewert ein --
+        # `./httpdocs/` bzw. `./staging/`. Das ist genau die Bauform, die eine
+        # falsch eingerichtete Anlage NICHT auffallen laesst: Der Lauf waere
+        # gruen und synchronisierte in ein fremdes Verzeichnis.
+        #
+        # **ES KOSTET EINE ZUARBEIT, UND DIE IST BENANNT** (Z4): `FTP_ZIELPFAD`
+        # und `FTP_STATE_PFAD` muessen in BEIDEN Umgebungen ausdruecklich
+        # gesetzt sein. Am 21.09.2026 war `FTP_STATE_PFAD` auf `staging`
+        # gemessen LEER (F-KH-U-31, Runde 2) -- der erste Lauf nach dieser
+        # Aenderung wird dort also rot, mit der Ansage unten. Das ist kein
+        # Unfall, sondern der Zweck.
+        #
+        # DER ABBRUCH KOSTET NICHTS: Dieser Schritt steht VOR dem Auschecken,
+        # vor den Geheimnissen, vor jedem Zugriff auf den Server.
+        env:
+          UMGEBUNG:      ${{ inputs.umgebung }}
+          PRODUKTION_URL: ${{ vars.PRODUKTION_URL }}
+          STAGING_URL:    ${{ vars.STAGING_URL }}
+          FTP_ZIELPFAD:   ${{ vars.FTP_ZIELPFAD }}
+          FTP_STATE_PFAD: ${{ vars.FTP_STATE_PFAD }}
+        run: |
+          set -euo pipefail
+          case "$UMGEBUNG" in
+            produktion)
+              basis="${PRODUKTION_URL:-}"
+              basisname='PRODUKTION_URL' ;;
+            staging)
+              basis="${STAGING_URL:-}"
+              basisname='STAGING_URL' ;;
+            *)
+              echo "::error::Unbekannte Umgebung '$UMGEBUNG'. Erlaubt sind genau 'staging' und 'produktion' — ein Tippfehler hier waere ein Job ohne Umgebung und damit ohne Freigabe."
+              exit 1 ;;
+          esac
+          # DREI RIEGEL, DREI MELDUNGEN -- und jede sagt, was einzutragen ist.
+          # Eine Fehlermeldung, die nur "fehlt" sagt, kostet die Betreiberin
+          # eine Suche in der Dokumentation.
+          fehlt=""
+          if [ -z "$basis" ]; then
+            echo "::error::Die Variable $basisname der Umgebung $UMGEBUNG ist leer. Ohne sie fragen Backup-Tor, Wartung und Zielprobe ins Leere. Eintragen unter Settings -> Environments -> $UMGEBUNG -> Variables."
+            fehlt="ja"
+          fi
+          if [ -z "${FTP_ZIELPFAD:-}" ]; then
+            echo "::error::Die Variable FTP_ZIELPFAD der Umgebung $UMGEBUNG ist leer. Bis AP6 sprang hier ein Vorgabewert ein (Produktiv './httpdocs/', Staging './staging/') -- er ist absichtlich weg (E-KH-07), weil er eine falsch eingerichtete Anlage nicht auffallen liess. Eintragen unter Settings -> Environments -> $UMGEBUNG -> Variables."
+            fehlt="ja"
+          fi
+          if [ -z "${FTP_STATE_PFAD:-}" ]; then
+            echo "::error::Die Variable FTP_STATE_PFAD der Umgebung $UMGEBUNG ist leer. Vorgabewert war '../.deploy-state-produktion.json' bzw. '../.deploy-state-staging.json'; er ist weg (E-KH-07). ZWEI NAMEN, NICHT EINER -- teilen sich beide Umgebungen einen FTP-Zugang, ueberschrieben sie sonst einander die Zustandsdatei. Eintragen unter Settings -> Environments -> $UMGEBUNG -> Variables."
+            fehlt="ja"
+          fi
+          if [ -n "$fehlt" ]; then
+            echo "::error::Abbruch VOR jedem Zugriff auf den Server -- es ist nichts geschehen, was rueckgaengig zu machen waere."
+            exit 1
+          fi
+          ziel="$FTP_ZIELPFAD"
+          zustand="$FTP_STATE_PFAD"
+          {
+            echo "BASIS=$basis"
+            echo "ZIELPFAD=$ziel"
+            echo "ZUSTANDSPFAD=$zustand"
+          } >> "$GITHUB_ENV"
+          # DIE ADRESSE IST KEIN GEHEIMNIS, der Zielpfad auch nicht -- beide
+          # stehen als Variablen und nicht als Geheimnisse da. Sie hier zu
+          # nennen, erspart beim naechsten Fehlersuchlauf eine Viertelstunde.
+          echo "Umgebung:      $UMGEBUNG"
+          echo "Basisadresse:  $basis"
+          echo "Zielpfad:      $ziel"
+          echo "Zustandsdatei: $zustand"
+
+      - name: PROBELAUF — was dieser Lauf NICHT tut
+        if: ${{ inputs.probelauf }}
+        run: |
+          echo "::notice::PROBELAUF — es wird nichts ausgeliefert."
+          {
+            echo '## PROBELAUF — nichts ausgeliefert'
+            echo
+            echo 'Gemessen werden: die drei Geheimnisse, der Adressvergleich, die'
+            echo '**Zielprobe** (Rundlauf FTPS → HTTPS → löschen) und der Abgleich'
+            echo 'als **Trockenlauf**.'
+            echo
+            echo 'NICHT gefahren werden: Tag-Vergleich, Tor der grünen Läufe,'
+            echo 'Backup-Tor, Wartungsmodus, `doku`-Kopie und die Migrationsabfrage.'
+            echo 'Geschrieben wird nichts außer der Probedatei und der Zustandsdatei;'
+            echo 'die Probedatei wird im selben Schritt wieder gelöscht, die'
+            echo 'Zustandsdatei bleibt liegen und wird bei jedem weiteren Lauf'
+            echo 'nur noch vorgefunden (AP4, E-KH-26).'
+            echo
+            echo '**Und der Job `staging` läuft gar nicht mit** — seit AP5. Vorher'
+            echo 'tat er es, und er hat dabei wirklich nach Staging ausgeliefert'
+            echo '(gemessen im Lauf 35547147256). Ein Probelauf liefert jetzt'
+            echo 'nirgendwohin aus, auch nicht auf die Testanlage.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Code auschecken
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Sind die drei Geheimnisse der Umgebung ${{ inputs.umgebung }} da?
+        # ER STEHT GANZ OBEN, UND AUF PRODUKTIV WIEGT DAS SCHWERER:
+        # Weiter unten haette der Lauf schon das Komplett-Backup
+        # angestossen und die Wartung EINGESCHALTET. Braeche er dann an der
+        # FTPS-Anmeldung ab, staende die Anwendung zu, und jemand muesste
+        # sie von Hand wieder aufmachen — wegen eines vertippten Namens.
+        #
+        # WAS ER HEUTE NICHT LEISTET, UND ZWAR GEMESSEN (F-KH-U-32,
+        # 21.09.2026): Die drei Namen loesen AUCH OHNE `environment:` auf --
+        # es gibt sie zusaetzlich eine Ebene hoeher. Fehlt der Umgebungswert,
+        # greift still der von oben, und dieser Schritt meldet trotzdem
+        # "Drei Geheimnisse vorhanden". **Ein Tor, das immer aufgeht.**
+        # Die Abhilfe ist keine Zeile hier, sondern ein Klick in den
+        # Einstellungen (Pruefdokument, Pruefpunkt 22; Regel: E-KH-28);
+        # den Nachweis baut AP6 ein. Bis dahin steht dieser Kommentar hier,
+        # damit niemand den Schritt fuer einen Riegel haelt, der er noch
+        # nicht ist.
+        env:
+          UMGEBUNG:     ${{ inputs.umgebung }}
+          FTP_SERVER:   ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          # AUSGESCHRIEBENE `if`-BLOECKE UND KEINE `&&`-KETTEN. Unter `set -e`,
+          # und GitHub setzt es, ist `[ -z "$X" ] && y=1` als LETZTE Zeile eines
+          # Skripts ein Abbruch mit Code 1, sobald die Bedingung nicht zutrifft
+          # — also genau dann, wenn alles in Ordnung ist. Die Falle ist bekannt
+          # und kostet eine halbe Stunde; drei Zeilen mehr kosten nichts.
+          fehlt=""
+          if [ -z "${FTP_SERVER:-}" ];   then fehlt="$fehlt FTP_SERVER"; fi
+          if [ -z "${FTP_USERNAME:-}" ]; then fehlt="$fehlt FTP_USERNAME"; fi
+          if [ -z "${FTP_PASSWORD:-}" ]; then fehlt="$fehlt FTP_PASSWORD"; fi
+          if [ -n "$fehlt" ]; then
+            echo "::error::Umgebung $UMGEBUNG: es fehlt$fehlt. Sie gehoeren als ENVIRONMENT SECRETS an die Umgebung, nicht als Repositoriums- oder Organisationsgeheimnis."
+            exit 1
+          fi
+          # Der Wert ist ein HOSTNAME, keine Adresse. Die FTPS-Aktion setzt ihn
+          # unveraendert als Server ein; ein `ftps://` davor, ein Pfad dahinter
+          # oder ein `:21` am Ende (die Aktion hat `port:` getrennt) ergibt eine
+          # Namensaufloesung, die nie gelingt — und eine Fehlermeldung ueber die
+          # Anmeldung statt ueber den Eintrag.
+          case "$FTP_SERVER" in
+            *://*|*/*|*:*)
+              echo "::error::FTP_SERVER traegt ein Schema, einen Pfad oder einen Port. Erwartet wird der blosse Hostname, z. B. ftp.example.de."
+              exit 1 ;;
+          esac
+          echo "Drei Geheimnisse vorhanden; der Host sieht wie ein Hostname aus."
+
+      - name: Tag gegen WEB_VERSION halten
+        # KEIN TAG IM PROBELAUF (E-KH-08) — er läuft von `main`.
+        #
+        # UND NUR AUF PRODUKTIV. Staging faehrt von `main` und hat keinen
+        # Tag; ein Tag-Vergleich dort verglibe gegen einen Zweignamen.
+        # Das ist einer von genau ZWEI Schritten, die die gemeinsame Folge
+        # nach Umgebung trennt — der andere ist das Tor der gruenen Laeufe.
+        # Jeder weitere waere begruendungspflichtig (E-KH-17).
+        if: ${{ inputs.umgebung == 'produktion' && !inputs.probelauf }}
+        # F-P5a-1: Der Tag heisst `web-vX.Y.Z` und ist gleich `WEB_VERSION`.
+        # Eine Auslieferung, deren Tag etwas anderes sagt als die Fusszeile
+        # der ausgelieferten Anwendung, ist beim nächsten Rollback ein Rätsel.
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          ver=$(php -r "require 'server/version.php'; echo WEB_VERSION;")
+          echo "Tag: $tag · WEB_VERSION: $ver"
+          if [ "$tag" != "web-v$ver" ]; then
+            echo "::error::Tag $tag passt nicht zu WEB_VERSION $ver (erwartet web-v$ver)."
+            exit 1
+          fi
+
+      - name: Grüner Staging- und Stufe-1-Lauf auf diesem Stand?
+        # IM PROBELAUF NICHT (E-KH-08 nennt ihn nicht). Dieses Tor schützt
+        # Produktiv davor, ungeprobten Code zu bekommen — der Probelauf
+        # liefert keinen Code aus, es gibt also nichts zu schützen. Und es
+        # wäre der falsche Riegel am falschen Tag: Ausgerechnet wenn die
+        # Kette klemmt, braucht man den Probelauf, um zu messen WARUM.
+        #
+        # UND NUR AUF PRODUKTIV, aus einem Grund, der sich selbst erklaert:
+        # Das Tor fragt, ob dieser Stand auf STAGING gruen war. Auf Staging
+        # gefragt, fragte es nach sich selbst — und muesste jedes Mal
+        # scheitern, weil der Lauf, der es beantworten soll, gerade erst
+        # laeuft.
+        if: ${{ inputs.umgebung == 'produktion' && !inputs.probelauf }}
+        # Ein Tag darf nur ausliefern, was auf Staging schon stand und dort
+        # grün war (E-P5a-13). Gefragt wird nach dem COMMIT, nicht nach dem
+        # Zweig: Ein Tag kann auf einem Stand sitzen, der nie auf `main` war.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha="${GITHUB_SHA}"
+          echo "Commit: $sha"
+          pruef=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/pruefung.yml/runs?head_sha=$sha&status=success" \
+                   --jq '.workflow_runs | length' 2>/dev/null || echo 0)
+          # DER LAUF MUSS GRUEN SEIN -- UND DER JOB `staging` DARIN MUSS
+          # GELAUFEN SEIN (AP6). Das ist nicht dieselbe Bedingung, und der
+          # Unterschied ist genau die Luecke, die B5 meint:
+          #
+          # **Ein uebersprungener Job macht den Lauf nicht rot.** Ein
+          # `auslieferung.yml`-Lauf, in dem `staging` uebersprungen wurde --
+          # weil eine Bedingung nicht griff, weil jemand ihn von Hand
+          # angestossen hat, weil ein `if` umgebaut wurde -- meldet
+          # `conclusion: success`. Bis hierher hat dieses Tor das als
+          # "stand auf Staging" gezaehlt. Es hat dann gezaehlt, dass ein Lauf
+          # stattgefunden hat, nicht dass ausgeliefert wurde.
+          #
+          # Deshalb wird jetzt der JOB abgefragt, nicht nur der Lauf.
+          laeufe=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/auslieferung.yml/runs?head_sha=$sha&status=success" \
+                   --jq '[.workflow_runs[] | select(.event == "push") | .id] | .[]' 2>/dev/null || true)
+          stg=0
+          for lauf in $laeufe; do
+            # Der Jobname ist seit AP5 zusammengesetzt (`staging / ausliefern`),
+            # deshalb `startswith` und nicht Gleichheit. Wer den aufrufenden
+            # Job umbenennt, aendert diese Zeile mit -- sonst zaehlt sie still
+            # null und das Tor geht nie wieder auf.
+            treffer=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$lauf/jobs" \
+                      --jq '[.jobs[] | select(.name | startswith("staging")) | select(.conclusion == "success")] | length' 2>/dev/null || echo 0)
+            if [ "${treffer:-0}" -ge 1 ]; then
+              stg=$((stg + 1))
+            fi
+          done
+          echo "Grüne Stufe-1-Läufe auf diesem Commit:              $pruef"
+          echo "Läufe mit ERFOLGREICHEM Job \`staging\` auf diesem Commit: $stg"
+          if [ "$pruef" -lt 1 ]; then
+            echo "::error::Kein grüner Stufe-1-Lauf auf $sha — dieser Stand ist nicht freigabefähig."
+            exit 1
+          fi
+          if [ "$stg" -lt 1 ]; then
+            echo "::error::Kein Lauf auf $sha, in dem der Job \`staging\` ERFOLGREICH war — dieser Stand ist nie auf Staging ausgeliefert worden. Ein gruener Lauf mit UEBERSPRUNGENEM staging-Job zaehlt hier ausdruecklich nicht: Uebersprungen ist nicht geprueft."
+            exit 1
+          fi
+
+      - name: Adressvergleich — meint die Kette dieselbe Anlage wie die Wache?
+        # NUR AUF PRODUKTIV, denn `WACHE_BASIS` beschreibt Produktiv: Die
+        # Integritaetswache vergleicht den Produktivserver gegen den Zeiger
+        # `produktion` und holt sich die Dateien von dieser Adresse.
+        #
+        # WARUM DAS EINEN EIGENEN SCHRITT WERT IST (E-KH-07). Zwei Variablen
+        # nennen dieselbe Anlage: `PRODUKTION_URL` sagt der Kette, wohin sie
+        # ausliefert und wen sie fragt; `WACHE_BASIS` sagt der Wache, was sie
+        # nachmisst. Gehen sie auseinander, faellt das NIE von selbst auf --
+        # beide Seiten sind fuer sich gruen. Die Kette lieferte nach A aus,
+        # die Wache bewachte B, und der Angriff, gegen den es die Wache gibt,
+        # bliebe auf A unbeobachtet.
+        #
+        # VERGLICHEN WIRD NACH NORMALISIERUNG: Ein Schraegstrich am Ende und
+        # Gross-/Kleinschreibung des Hostnamens sind kein Unterschied. Alles
+        # andere ist einer.
+        if: ${{ inputs.umgebung == 'produktion' }}
+        env:
+          WACHE_BASIS: ${{ vars.WACHE_BASIS }}
+        run: |
+          set -euo pipefail
+          if [ -z "${WACHE_BASIS:-}" ]; then
+            echo "::error::Die Repositoriums-Variable WACHE_BASIS ist leer. Bis AP6 sprang in der Wache ein Vorgabewert ein; er ist weg (E-KH-07). Ohne sie kann niemand sagen, ob Kette und Wache dieselbe Anlage meinen. Eintragen unter Settings -> Secrets and variables -> Actions -> Variables."
+            exit 1
+          fi
+          norm() { printf '%s' "$1" | sed 's:/*$::' | tr 'A-Z' 'a-z'; }
+          a="$(norm "$BASIS")"
+          b="$(norm "$WACHE_BASIS")"
+          echo "Kette (PRODUKTION_URL): $a"
+          echo "Wache (WACHE_BASIS):    $b"
+          if [ "$a" != "$b" ]; then
+            echo "::error::PRODUKTION_URL und WACHE_BASIS nennen verschiedene Anlagen. Die Kette lieferte nach '$a' aus, die Integritaetswache bewachte '$b' — beide Seiten waeren fuer sich gruen, und der Produktivserver bliebe unbeobachtet. Abbruch vor dem Backup-Tor."
+            exit 1
+          fi
+          echo "Kette und Wache meinen dieselbe Anlage."
+
+      - name: Zielprobe — liegt eine hochgeladene Datei wirklich unter der Basisadresse?
+        # WARUM VOR DEM BACKUP-TOR (E-KH-07, F4). Bis hierher hat noch nichts
+        # den Server verändert. Zeigt das FTP-Konto auf ein anderes
+        # Verzeichnis als die Basisadresse dieser Umgebung, fällt das JETZT
+        # auf — und nicht
+        # erst, nachdem ein Komplett-Backup gelaufen ist und die Wartung an
+        # ist. Die Probe schreibt genau eine Datei mit Zufallsnamen, holt sie
+        # über HTTPS zurück, vergleicht sie, löscht sie und prüft das Löschen.
+        #
+        # `curl` UND NICHT DIE AUSLIEFERUNGSAKTION, und das ist Absicht: ein
+        # ZWEITER FTPS-Client. Scheitert der Upload unten und die Probe hier
+        # gelingt, liegt es an der Bibliothek; scheitern beide an derselben
+        # Stelle, an der Plattform. Das ist der Trennschnitt, den F3 braucht.
+        #
+        # DIE SELBSTPROBE LÄUFT DAVOR, jedes Mal: Ein Prüfmittel, das immer
+        # grün meldet, sieht genauso aus wie eines, das nichts gefunden hat.
+        # Sie rechnet ohne Netz und kostet eine Sekunde.
+        env:
+          FTP_SERVER:   ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          # DER TRENNVERSUCH IST EIN SCHALTER UND KEIN ZWEITER SCHRITT
+          # (E-KH-07). Zwei Schritte hiessen zwei Wege durch die Kette, und
+          # der eine waere nie gefahren worden. So misst der Probelauf beide
+          # Betriebsarten ueber DENSELBEN Weg — nur der Datenkanal aendert
+          # sich.
+          #
+          # UND ER GILT NUR IM PROBELAUF. Eine Auslieferung faehrt immer MIT
+          # Wiederverwendung; ein Tag-Lauf hat den Schalter gar nicht.
+          OHNE=""
+          if [ "${{ inputs.probelauf }}" = "true" ] \
+             && [ "${{ inputs.probelauf_ohne_sitzung }}" = "true" ]; then
+            OHNE="--ohne-sitzungswiederverwendung"
+            echo "::notice::TRENNVERSUCH — die Zielprobe läuft OHNE Wiederverwendung der TLS-Sitzung."
+            {
+              echo '### Trennversuch (F3)'
+              echo
+              echo 'Die Zielprobe läuft in dieser Runde **ohne** Wiederverwendung der'
+              echo 'TLS-Sitzung auf dem Datenkanal. Scheitert sie hier und gelingt sie'
+              echo 'mit Wiederverwendung, verlangt der Server sie — und das ist die'
+              echo 'Erklärung für den `ECONNRESET` der Auslieferungsaktion.'
+              echo
+              echo 'Die Zeile **„TLS-Sitzung wiederverwendet"** im Protokoll ist der'
+              echo 'Beleg. Steht dort `NICHT FESTSTELLBAR`, misst dieser Lauf nichts.'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          # DIE MENGENPROBE TRITT AN DIE STELLE DER RUNDLAEUFE (F-KH-U-20).
+          # Sie legt bis zu 500 Verzeichnisse auf dem Zielserver an -- deshalb
+          # NUR im Probelauf, nur auf ausdrueckliche Eingabe, und niemals
+          # nebenbei. Ohne diesen Riegel liefe sie eines Tages waehrend einer
+          # echten Auslieferung.
+          MENGE=""
+          ZAHL="${{ inputs.probelauf_mengenprobe }}"
+          if [ -n "$ZAHL" ]; then
+            if [ "${{ inputs.probelauf }}" != "true" ]; then
+              echo "::error::Die Mengenprobe laeuft NUR im Probelauf. Sie legt Verzeichnisse auf dem Zielserver an; in einer echten Auslieferung hat sie nichts zu suchen."
+              exit 1
+            fi
+            case "$ZAHL" in
+              ''|*[!0-9]*)
+                echo "::error::Die Eingabe probelauf_mengenprobe braucht eine Zahl, nicht '$ZAHL'."
+                exit 1 ;;
+            esac
+            if [ "$ZAHL" -lt 1 ] || [ "$ZAHL" -gt 500 ]; then
+              echo "::error::Die Eingabe probelauf_mengenprobe liegt ausserhalb von 1 bis 500: $ZAHL."
+              exit 1
+            fi
+            MENGE="--mengenprobe $ZAHL"
+            echo "::notice::MENGENPROBE — $ZAHL Verzeichnisse in EINER FTP-Sitzung. Die Rundlaeufe entfallen in dieser Runde."
+            {
+              echo '### Mengenprobe (F3)'
+              echo
+              echo "Statt der beiden Rundläufe legt dieser Lauf **$ZAHL Verzeichnisse in"
+              echo 'EINER FTP-Sitzung** an. Das ist der letzte Unterschied zwischen der'
+              echo 'Zielprobe und der Auslieferungsaktion: Die Probe ruft `curl` je'
+              echo 'Operation einmal auf und bekommt jedes Mal eine frische Sitzung, die'
+              echo 'Aktion hält **eine** Verbindung für 688 Dateien und 62 Verzeichnisse.'
+              echo
+              echo 'Die Zeile **„Übertragungen abgeschlossen (226): N von '"$ZAHL"'"** ist das'
+              echo 'Ergebnis. Ist N kleiner als '"$ZAHL"' und größer als 0, hat F3 einen Namen:'
+              echo 'eine Sitzungs- oder Mengengrenze des Servers — ein Befund für den Hoster.'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          # DIE SITZUNGSPROBE TRITT EBENSO AN DIE STELLE DER RUNDLAEUFE
+          # (F-KH-U-23). Sie schreibt nur EINE Probedatei und raeumt sie weg;
+          # der Riegel "nur im Probelauf" steht hier trotzdem, weil sie die
+          # Rundlaeufe verdraengt -- eine Auslieferung, die statt der
+          # Zielprobe eine Messung faehrt, hat ihr Tor nicht durchlaufen.
+          SITZUNG=""
+          if [ "${{ inputs.probelauf_sitzungsprobe }}" = "true" ]; then
+            if [ "${{ inputs.probelauf }}" != "true" ]; then
+              echo "::error::Die Sitzungsprobe laeuft NUR im Probelauf. Sie tritt an die Stelle der Rundlaeufe; eine echte Auslieferung braucht die Zielprobe, nicht eine Messung."
+              exit 1
+            fi
+            if [ -n "$MENGE" ]; then
+              echo "::error::Mengenprobe UND Sitzungsprobe zugleich geht nicht -- beide treten an die Stelle der Rundlaeufe. Eine von beiden, sonst misst der Lauf etwas anderes, als daransteht."
+              exit 1
+            fi
+            SITZUNG="--sitzungsprobe"
+            echo "::notice::SITZUNGSPROBE — Abruf, DANN ein Steuerbefehl, in EINER Sitzung. Die Rundlaeufe entfallen in dieser Runde."
+            {
+              echo '### Sitzungsprobe (F3)'
+              echo
+              echo 'Dieser Lauf misst die Reihenfolge, in der die Auslieferungsaktion'
+              echo 'stirbt: **Abruf über den Datenkanal, DANACH ein Steuerbefehl — in'
+              echo 'derselben Sitzung.** Die Aktion holt ihre Zustandsdatei und setzt'
+              echo 'danach `MKD` ab; `_openDir` selbst öffnet gar keine Datenverbindung'
+              echo '(`basic-ftp` 6.2.1, Z. 686–689), der Reset kommt also von davor.'
+              echo
+              echo '**Ein Reset an dieser Stelle ist im Trockenlauf unsichtbar**, weil'
+              echo 'danach kein Steuerbefehl mehr kommt — genau die beobachtete Lage:'
+              echo 'Probelauf grün, echter Lauf rot.'
+              echo
+              echo 'Die Zeile **„`PWD` NACH dem Abruf, dieselbe Sitzung"** ist das'
+              echo 'Ergebnis. **FEHLGESCHLAGEN wäre der Treffer.** Steht dort'
+              echo '`KEINE 257-Antwort gesehen`, misst dieser Lauf nichts.'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          python3 tools/kette/zielprobe.py --selbstprobe
+          python3 tools/kette/zielprobe.py \
+            --basis "$BASIS" \
+            --ftp-server "$FTP_SERVER" \
+            --ftp-konto "$FTP_USERNAME" \
+            --ftp-pass "$FTP_PASSWORD" \
+            --ftp-pfad "$ZIELPFAD" \
+            $OHNE $MENGE $SITZUNG
+
+      - name: Backup-Tor — Komplett-Backup zu Ende laufen lassen
+        # Der Probelauf verändert den Server nicht und braucht deshalb kein
+        # Backup — ein Komplett-Backup je Probelauf wäre teuer und sagte
+        # über den gemessenen Weg nichts.
+        if: ${{ !inputs.probelauf }}
+        # Erst die Selbstprobe, dann das Tor: Ein Tor, das immer aufgeht,
+        # sieht von aussen aus wie eines, das geprüft hat.
+        run: |
+          python3 tools/kette/tor.py --selbstprobe
+          python3 tools/kette/tor.py backup --basis "$BASIS" --token "$JOBS_TOKEN"
+
+      - name: Handbuch und „Was ist NAdoku" nach server/doku kopieren
+        if: ${{ !inputs.probelauf }}
+        run: |
+          # DER FTPS-SCHRITT LAEDT NUR `server/` HOCH. `docs/` liegt daneben
+          # und kaeme nie auf den Server -- `hilfe.php` und `ueber.php`
+          # zeigten dort dauerhaft "Dieses Dokument fehlt" (P5b/AP8,
+          # E-P5b-08, -22). Deshalb wandern beide Dateien VOR dem Sync nach
+          # `server/doku/`; `doku_pfad()` sucht erst `../docs/` (fuer
+          # Selbsthosterinnen, die das Repositorium hochladen) und dann dort.
+          #
+          # `server/doku/` steht NICHT in .gitignore und ist trotzdem leer im
+          # Repositorium: Der Ordner entsteht hier. Wer ihn eincheckte,
+          # haette zwei Fassungen desselben Handbuchs im Baum.
+          #
+          # BIS AP5 STAND DIESER SCHRITT ZWEIMAL DA, einmal je Job, mit dem
+          # Vermerk "die beiden Laeufe sind verschiedene Jobs auf
+          # verschiedenen Laeufern". Das stimmte und stimmt weiter -- nur
+          # ist es jetzt derselbe Schritt, der zweimal laeuft, und nicht
+          # zwei Schritte, die dasselbe tun sollen.
+          set -euo pipefail
+          mkdir -p server/doku
+          cp docs/Handbuch.md docs/Was-ist-NAdoku.md server/doku/
+          if [ -d docs/bilder ]; then cp -r docs/bilder server/doku/; fi
+          echo "Kopiert:"; ls -l server/doku/
+
+      - name: Gesprächslauf — Riegel und Ansage
+        # OHNE `if`, UND DAS IST DER PUNKT. Ein Riegel, der nur laeuft, wenn
+        # die Lage schon stimmt, ist keiner. Dieser Schritt prueft immer.
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.probelauf_gespraech }}" != "true" ]; then
+            exit 0
+          fi
+          if [ "${{ inputs.probelauf }}" != "true" ]; then
+            echo "::error::Der Gespraechslauf laeuft NUR im Probelauf. Er schaltet den Trockenlauf ab; ohne das Haekchen `probelauf` waere das eine echte Auslieferung ohne Tag."
+            exit 1
+          fi
+          echo "::warning::GESPRAECHSLAUF — die Auslieferungsaktion schreibt ECHT, aber in .zielprobe-gespraech/ und NICHT in den Webroot."
+          {
+            echo '### Gesprächslauf (F3, Prüfpunkt 18a)'
+            echo
+            echo 'Die Auslieferungsaktion läuft in dieser Runde **echt** — kein'
+            echo 'Trockenlauf — und schreibt ihren FTP-Dialog mit (`log-level: verbose`).'
+            echo 'Nach acht Trennversuchen ist das die einzige verbliebene Messung: Jede'
+            echo 'hat gezeigt, dass `curl` kann, woran die Aktion stirbt.'
+            echo
+            echo '**Zwei Riegel halten den Preis klein:**'
+            echo
+            echo '1. `server-dir` zeigt auf **`.zielprobe-gespraech/`** und nicht auf den'
+            echo '   Webroot. Die Anwendung bleibt unberührt: kein Wartungsmodus, kein'
+            echo '   halb ausgelieferter Stand. Der **führende Punkt** ist Absicht —'
+            echo '   `.htaccess` antwortet auf jeden Pfad mit führendem Punkt mit 403,'
+            echo '   also liegt dort keine zweite, abrufbare Kopie der Anwendung.'
+            echo '2. `state-name` zeigt auf eine **eigene** Zustandsdatei INNERHALB des'
+            echo '   Probeverzeichnisses. Der Gesprächslauf kann die der echten'
+            echo '   Auslieferung damit nicht anfassen.'
+            echo
+            echo '**Erwartet:** derselbe `ECONNRESET` wie im echten Lauf — und diesmal'
+            echo 'steht davor, bei welchem FTP-Befehl und mit welcher Serverantwort.'
+            echo
+            echo '**Danach von Hand:** `.zielprobe-gespraech/` entfernen. Das Werkzeug'
+            echo 'kann das nicht — es räumt einzelne Probedateien weg, keine Bäume, und'
+            echo 'ein Werkzeug, das Verzeichnisbäume auf dem Produktivserver löscht,'
+            echo 'soll es nicht geben.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Zustandsdatei der Aktion bereitstellen (AP4, F-KH-U-25)
+        # SCHARF SEIT DEM 20.09.2026 -- und zwar NACH dem Beweis, nicht davor
+        # (F-KH-U-28). Der Gespraechslauf gegen `.zielprobe-gespraech/` hat
+        # mit diesem Schritt davor den ersten vollstaendigen Abgleich gegen
+        # diesen Server geliefert, den es je gab: 688 Dateien, 62
+        # Verzeichnisse, 7:47, kein `ECONNRESET`. Bis dahin lief der Schritt
+        # nur im Gespraechslauf -- ein Eingriff auf Verdacht waere genau das
+        # gewesen, was acht Trennversuche lang schiefging.
+        #
+        # ER LAEUFT JETZT VOR JEDEM ABGLEICH, auch vor dem echten, und das
+        # ist ungefaehrlich: Eine VORHANDENE Zustandsdatei fasst er nie an
+        # (sie traegt den Bestand des Servers). Er legt nur an, was fehlt.
+        #
+        # WARUM ER NICHT WIEDER VERSCHWINDET, sobald die Datei einmal liegt:
+        # Sie kann verlorengehen -- eine Wiederherstellung aus dem Backup,
+        # ein aufgeraeumtes Verzeichnis, ein neuer Webspace. Dann faengt
+        # dieser Schritt es ab, statt dass F3 wiederkommt und niemand weiss,
+        # warum.
+        env:
+          FTP_SERVER:   ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          # DIESELBEN WERTE WIE DER FTPS-SCHRITT, aus denselben Ausdruecken.
+          # Wer sie hier anders setzt als dort, legt die Datei an eine Stelle,
+          # an der die Aktion sie nicht sucht -- und der Schritt meldet
+          # trotzdem Erfolg.
+          # `ZIELPFAD` und `ZUSTANDSPFAD` stehen im Job-Umfeld und werden
+          # EINMAL bestimmt (erster Schritt). Der Gespraechslauf biegt
+          # beide ab -- und nur er.
+          ZIEL:    ${{ inputs.probelauf_gespraech && '.zielprobe-gespraech/' || env.ZIELPFAD }}
+          ZUSTAND: ${{ inputs.probelauf_gespraech && '.deploy-state-gespraech.json' || env.ZUSTANDSPFAD }}
+        run: |
+          set -euo pipefail
+          # RIEGEL GEGEN EINEN LEEREN PFAD, und er steht hier, weil dieser
+          # Schritt DIESELBEN Ausdruecke benutzt wie der FTPS-Schritt gleich
+          # danach. Ein leeres `server-dir` liesse die Aktion in das
+          # WURZELVERZEICHNIS des FTP-Zugangs synchronisieren -- neben den
+          # Webroot, im schlimmsten Fall ueber fremde Verzeichnisse. Das ist
+          # der eine Fehler, den AP5 haette einbauen koennen, und deshalb
+          # steht der Riegel im selben Paket wie die Zusammenfuehrung.
+          if [ -z "${ZIEL:-}" ]; then
+            echo "::error::Der Zielpfad ist leer. Die Auslieferung wuerde in das Wurzelverzeichnis des FTP-Zugangs schreiben. Pruefe die Variable FTP_ZIELPFAD der Umgebung."
+            exit 1
+          fi
+          if [ -z "${ZUSTAND:-}" ]; then
+            echo "::error::Der Pfad der Zustandsdatei ist leer. Pruefe die Variable FTP_STATE_PFAD der Umgebung."
+            exit 1
+          fi
+          python3 tools/kette/zustand.py --selbstprobe
+          python3 tools/kette/zustand.py \
+            --ftp-server "$FTP_SERVER" \
+            --ftp-konto "$FTP_USERNAME" \
+            --ftp-pass "$FTP_PASSWORD" \
+            --ftp-pfad "$ZIEL" \
+            --zustandspfad "$ZUSTAND"
+          {
+            echo '### Zustandsdatei bereitgestellt (AP4)'
+            echo
+            echo 'Der Schritt davor legt die Zustandsdatei an, falls sie fehlt. Ohne'
+            echo 'sie sendet die Aktion `RETR` auf einen Namen, den es nicht gibt —'
+            echo 'der Datenkanal steht dann schon, der Server schließt ihn, und'
+            echo '`basic-ftp` liest `ECONNRESET` auf dem Datensocket (F-KH-U-25).'
+            echo
+            echo '**Läuft der Abgleich jetzt durch, ist die Abhilfe bewiesen** — und'
+            echo 'zwar ohne einen Finger an der laufenden Anlage: Es geht in'
+            echo '`.zielprobe-gespraech/`, nicht in den Webroot.'
+            echo
+            echo 'Danach liegen dort rund **9,7 MB in 62 Verzeichnissen**, die von Hand'
+            echo 'zu entfernen sind (Prüfpunkt 20).'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Wartung einschalten
+        # KEINE WARTUNG IM PROBELAUF: Sie ist der einzige Schritt, der
+        # Nutzerinnen aussperrt — für eine Messung, die nichts schreibt.
+        #
+        # **SEIT AP6 STEHT ER HIER UNTEN UND NICHT MEHR WEITER OBEN**
+        # (E-KH-06, F2). Die Regel dahinter in einem Satz: *Alles, was
+        # scheitern kann, ohne den Server zu veraendern, steht VOR dem
+        # Wartungsschalter; unmittelbar danach folgt der Abgleich.*
+        #
+        # Vorher lagen die `doku`-Kopie, der Gespraechslauf-Riegel und das
+        # Bereitstellen der Zustandsdatei HINTER diesem Schritt. Jeder von
+        # ihnen kann scheitern -- eine fehlende Datei in `docs/`, eine
+        # widerspruechliche Eingabe, ein FTP-Konto, das den Pfad nicht
+        # hergibt. Scheiterte einer, stand die Anlage zu, ohne dass auch nur
+        # eine Datei ausgeliefert worden waere: **Wartung an fuer nichts.**
+        #
+        # AB HIER IST JEDER FEHLSCHLAG TEUER, und genau deshalb ist ab hier
+        # auch Schluss mit Vorpruefungen. Was hinter diesem Schritt noch
+        # kommt, veraendert den Server absichtlich.
+        if: ${{ !inputs.probelauf }}
+        run: python3 tools/kette/tor.py wartung-an --basis "$BASIS" --token "$JOBS_TOKEN"
+
+      - name: server/ per FTPS synchronisieren
+        uses: SamKirkland/FTP-Deploy-Action@110f9186c050f71550953127052e77650219c287 # v4.4.0
+        with:
+          server:     ${{ secrets.FTP_SERVER }}
+          username:   ${{ secrets.FTP_USERNAME }}
+          password:   ${{ secrets.FTP_PASSWORD }}
+          protocol:   ftps
+          port:       21
+          local-dir:  ./server/
+          # IM GESPRAECHSLAUF IN EIN PROBEVERZEICHNIS (Pruefpunkt 18a). Die
+          # Aktion muss nicht in den Webroot schreiben, um `ensureDir` zu
+          # erreichen -- sie muss nur IRGENDWOHIN echt schreiben. Alles
+          # Entscheidende bleibt gleich: derselbe Client, derselbe Server,
+          # dieselbe Sitzung, echtes `ensureDir`, 688 Dateien in 62
+          # Verzeichnissen. Was entfaellt: Wartungsmodus, halber Stand ueber
+          # der laufenden Anwendung, Rueckweg.
+          #
+          # DER FUEHRENDE PUNKT IST ABSICHT: `.htaccess` antwortet auf jeden
+          # Pfad mit fuehrendem Punkt mit 403 (gemessen in F-KH-U-13, als die
+          # Zielprobe sich damit selbst ausgesperrt hat). Ohne ihn laege hier
+          # eine zweite, oeffentlich abrufbare Kopie der Anwendung.
+          server-dir: ${{ inputs.probelauf_gespraech && '.zielprobe-gespraech/' || env.ZIELPFAD }}
+          # TROCKENLAUF IM PROBELAUF (E-KH-08). Die Aktion verbindet sich,
+          # vergleicht und sagt, was sie täte — sie schreibt nichts. Damit
+          # misst der Probelauf genau den Weg, an dem F3 hängt, ohne eine
+          # einzige Datei zu bewegen.
+          #
+          # DER GESPRAECHSLAUF SCHALTET IHN AB (Pruefpunkt 18a) -- er MUSS echt
+          # schreiben, sonst erreicht die Aktion `ensureDir` nie:
+          # `syncProvider.js` beginnt `createFolder` mit
+          # `if (this.dryRun === true) { return; }`. Genau deshalb hat kein
+          # Probelauf F3 je ausgeloest, und genau deshalb braucht es ihn.
+          dry-run: ${{ inputs.probelauf == true && inputs.probelauf_gespraech != true }}
+          # DER MITSCHNITT (Pruefpunkt 18a). `verbose` setzt
+          # `client.ftp.verbose = true` und schreibt damit den FTP-Dialog von
+          # `basic-ftp` mit -- jeden Befehl, jede Serverantwort. Nachgelesen
+          # in `deploy.js` Z. 74, nicht geraten (die Lehre aus F-KH-U-15).
+          #
+          # DAS PASSWORT STEHT NICHT DARIN: `FtpContext.js` Z. 191/192 ersetzt
+          # `PASS …` durch `> PASS ###`, bevor irgendetwas geschrieben wird.
+          # Dass GitHub Geheimnisse ohnehin maskiert, ist der zweite Riegel
+          # und nicht der einzige.
+          log-level: ${{ inputs.probelauf_gespraech && 'verbose' || 'standard' }}
+          # DIE ZUSTANDSDATEI GEHOERT NICHT IN DEN WEBROOT (Nr. 213).
+          # Ohne sie legt die Aktion `.ftp-deploy-sync-state.json` in
+          # `server-dir` ab -- dorthin, wo der Webserver ausliefert. Darin
+          # steht je Datei Pfad, Groesse und Hash: kein Geheimnis, aber die
+          # ganze Struktur und der Versionsstand jeder einzelnen Datei.
+          # `../` hebt sie eine Ebene heraus; erlaubt der Kaefig das nicht,
+          # traegt man `FTP_STATE_PFAD` als Variable ein und zeigt wieder
+          # nach innen -- die Punktdatei-Sperre in `server/.htaccess` faengt
+          # sie dort ab.
+          #
+          # ZWEI NAMEN, NICHT EINER, und seit AP5 ist das keine Doppelung
+          # mehr, sondern ein Wert je Umgebung: Teilen sich Staging und
+          # Produktion einen FTP-Zugang, landeten beide Staende in derselben
+          # Datei und ueberschrieben einander -- die Kette lieferte dann
+          # jedes Mal alles neu aus oder, schlimmer, uebersaehe Aenderungen.
+          #
+          # UND DER GESPRAECHSLAUF BEKOMMT EINE EIGENE, INNERHALB DES
+          # PROBEVERZEICHNISSES. Ohne das zeigte `../` von dort aus in den
+          # Webroot -- der Gespraechslauf legte also eine Zustandsdatei mitten
+          # in die laufende Anlage. So kann er die der echten Auslieferung
+          # nicht einmal sehen, und seine eigene verschwindet mit dem
+          # Probeverzeichnis.
+          state-name: ${{ inputs.probelauf_gespraech && '.deploy-state-gespraech.json' || env.ZUSTANDSPFAD }}
+          # ------------------------------------------------------------
+          # DIE SCHUTZLISTE — SEIT AP5 STEHT SIE EINMAL (E-KH-20 (1))
+          # ------------------------------------------------------------
+          #
+          # Bis AP5 stand dieser Block ZWEIMAL in `auslieferung.yml`, je
+          # 14 Zeilen, wortgleich. Zwei wortgleiche Listen sind keine zwei
+          # Riegel, sondern einer und ein Versprechen: Wer die eine
+          # ergaenzt und die andere vergisst, schuetzt eine Umgebung und
+          # die andere nicht -- und merkt es erst, wenn eine Datei fehlt,
+          # die es nur auf dem Server gab. Genau davor warnt E-KH-20.
+          #
+          # **ACHT PFADE, UND DIE ZAHL IST DER PRUEFWERT.** Jeder steht
+          # zweimal, als Datei- und als Verzeichnismuster
+          # (`sicherungen/**` und `sicherungen/`), weil die Aktion beides
+          # getrennt prueft. Die drei `**/…`-Zeilen oben zaehlen nicht mit;
+          # sie halten Git- und Node-Innereien heraus.
+          #
+          # Jede Zeile hat eine Geschichte, und jede fehlende eine teurere:
+          #   config.php, install.lock   liegen nur auf dem Server
+          #   install.php                der Einrichter. NICHT weil er
+          #                              gefaehrlich waere -- er verweigert
+          #                              sich selbst, solange config.php oder
+          #                              install.lock existiert
+          #                              (install.php:136) --, sondern weil
+          #                              das Runbook seit jeher sagt
+          #                              "install.php danach loeschen"
+          #                              (Technik.md, Neuinstallation) und die
+          #                              Kette genau das jedes Mal rueckgaengig
+          #                              machte. Nr. 214.
+          #                              **PREIS, BENANNT:** Eine LEERE Anlage
+          #                              laesst sich damit nicht mehr allein
+          #                              ueber die Kette einrichten -- die
+          #                              Datei muss einmal von Hand hinauf.
+          #                              Stufe 2 sagt es, wenn dieser Fall
+          #                              eintritt.
+          #   sicherungen/               entstehen nur dort (A8.2)
+          #   wartung.lock               der Schalter des Wartungsmodus
+          #                              (E-S5W-02) — und der Deploy ist
+          #                              genau das, was währenddessen läuft
+          #   ueberlast.json             der Zähler der Verbindungsgrenze
+          #                              (P5a/AP9, E-P5a-50) — ein Zustand
+          #                              dieser Installation, kein Quelltext
+          #   apk/                       die Android-Pakete (E-S4-16)
+          #   .sitzungen/                die PHP-Sitzungsdateien (Schritt 16,
+          #                              E-SA-05). Beim heutigen Transport
+          #                              schadet ein Fehlen nichts -- die
+          #                              Fremd-Aktion loescht keine
+          #                              server-eigenen Dateien. Bei einem
+          #                              Spiegel mit Loeschabgleich loeschte
+          #                              jeder Deploy alle Sitzungen, und alle
+          #                              Angemeldeten flogen raus.
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            config.php
+            install.php
+            install.lock
+            wartung.lock
+            ueberlast.json
+            sicherungen/**
+            sicherungen/
+            apk/**
+            apk/
+            .sitzungen/**
+            .sitzungen/
+
+      - name: Liegt nach dem Abgleich wirklich die neue Fassung oben?
+        # NACH DEM ABGLEICH, UND DAS IST DER PUNKT (E-KH-07). Bis hierher hat
+        # die Kette geprueft, ob sie ausliefern DARF. Dieser Schritt prueft
+        # als einziger, ob sie es auch GETAN hat: Er fragt die laufende
+        # Anlage nach ihrer Fassung und haelt sie gegen den Tag.
+        #
+        # WOGEGEN ER SCHUETZT. Der FTPS-Schritt meldet Erfolg, wenn die
+        # Uebertragung gelungen ist -- nicht, wenn die Anwendung danach die
+        # neue Fassung ausliefert. Dazwischen liegen: ein Zielpfad, der auf
+        # ein anderes Verzeichnis zeigt als die oeffentliche Adresse (die
+        # Zielprobe faengt das, aber nur fuer EINE Datei), ein Zwischenspeicher
+        # des Hosters, eine `version.php`, die in der Ausnahmeliste gelandet
+        # ist. In jedem dieser Faelle waere der Lauf bisher GRUEN gewesen und
+        # die Anlage auf dem alten Stand.
+        #
+        # **UND DIE WARTUNG BLEIBT AN, WENN ES NICHT STIMMT.** Ein halber
+        # Stand hinter einem offenen Tor ist schlimmer als eine
+        # Wartungsmeldung; der Schlussschritt sagt danach, was zu tun ist.
+        #
+        # NUR AUF PRODUKTIV: Staging faehrt von `main` und hat keinen Tag,
+        # gegen den sich vergleichen liesse. Die Fassung wird dort trotzdem
+        # genannt -- im Schlussschritt und im Migrationsschritt.
+        if: ${{ inputs.umgebung == 'produktion' && !inputs.probelauf }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF#refs/tags/}"
+          erwartet="${tag#web-v}"
+          gemeldet=$(python3 tools/kette/tor.py zustand --basis "$BASIS" --token "$JOBS_TOKEN" --frage version)
+          echo "Tag: $tag · erwartet: $erwartet · gemeldet: $gemeldet"
+          if [ "$gemeldet" = unbekannt ]; then
+            echo "::error::Die Anlage hat ihre Fassung nicht genannt. Der Abgleich ist gelaufen, aber ob die neue Fassung oben liegt, ist damit UNBEKANNT — nicht 'in Ordnung'. Die Wartung bleibt an."
+            exit 1
+          fi
+          if [ "$gemeldet" != "$erwartet" ]; then
+            echo "::error::Nach dem Abgleich meldet die Anlage Fassung $gemeldet, der Tag sagt $erwartet. Es liegt nicht oben, was ausgeliefert werden sollte. Die Wartung bleibt an."
+            exit 1
+          fi
+          echo "Die Anlage meldet $gemeldet — das ist der Tag." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Zustand — Migration ausstehend?
+        if: ${{ !inputs.probelauf }}
+        # R66 SAGT: KEIN SELBST-UPDATE. Die Installation ändert ihren Code nie
+        # selbst, und sie fährt auch keine Migration von selbst. Steht eine
+        # aus, BLEIBT DIE WARTUNG AN und der Lauf endet GRÜN mit dem Hinweis —
+        # grün, weil das Ausliefern gelungen ist; der Hinweis, weil jetzt ein
+        # Mensch an der Reihe ist. Ein roter Lauf sagte hier etwas Falsches.
+        run: |
+          python3 tools/kette/tor.py zustand --basis "$BASIS" --token "$JOBS_TOKEN"
+          offen=$(python3 tools/kette/tor.py zustand --basis "$BASIS" --token "$JOBS_TOKEN" --frage migration)
+          echo "Migration ausstehend: $offen"
+          if [ "$offen" = ja ]; then
+            echo "::warning::Migration ausstehend — die Wartung BLEIBT AN."
+            {
+              echo '## Migration ausstehend'
+              echo
+              echo 'Die Dateien sind oben, die Wartung ist **an** und bleibt es.'
+              echo 'Jetzt von Hand: **Betrieb → Updates** öffnen, die ausstehenden'
+              echo 'Migrationen ausführen, danach dort **Wartung beenden**.'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python3 tools/kette/tor.py wartung-aus --basis "$BASIS" --token "$JOBS_TOKEN"
+          echo 'Keine Migration ausstehend — Wartung wieder aus.' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Wenn etwas schiefging — was jetzt gilt und was zu tun ist
+        # ER LAEUFT NUR BEI FEHLSCHLAG, UND ER LAEUFT IMMER (E-KH-06).
+        # `if: failure()` heisst: irgendein Schritt davor ist rot geworden.
+        # Ohne `always()`-Variante, weil ein gruener Lauf nichts zu erklaeren
+        # hat.
+        #
+        # WOZU ES IHN GIBT. Ein roter Auslieferungslauf hinterlaesst eine
+        # Anlage in einem Zustand, den niemand kennt: Wartung vielleicht an,
+        # Dateistand vielleicht halb. Wer dann in einem 400-Zeilen-Protokoll
+        # nach dem Schritt sucht, der zuerst rot wurde, verliert die Viertel-
+        # stunde, in der die Anlage zusteht. Dieser Schritt sagt es in fuenf
+        # Zeilen -- als Fehlerzeile UND in der Zusammenfassung, weil die
+        # Zusammenfassung auch noch da ist, wenn das Protokoll weggerollt ist.
+        #
+        # ER FRAGT DIE ANLAGE, statt zu raten. Und wenn sie nicht antwortet,
+        # sagt er GENAU DAS -- "unbekannt", nicht "aus". Ein Schlussschritt,
+        # der Entwarnung gibt, weil er die Antwort nicht lesen konnte, ist
+        # schlimmer als keiner.
+        if: ${{ failure() }}
+        run: |
+          set -uo pipefail
+          # KEIN `-e` HIER. Dieser Schritt darf nicht daran scheitern, dass
+          # die Anlage nicht antwortet -- dann ist genau das die Auskunft.
+          wartung=unbekannt
+          fassung=unbekannt
+          if [ -n "${BASIS:-}" ] && [ -n "${JOBS_TOKEN:-}" ]; then
+            wartung=$(python3 tools/kette/tor.py zustand --basis "$BASIS" --token "$JOBS_TOKEN" --frage wartung 2>/dev/null || echo unbekannt)
+            fassung=$(python3 tools/kette/tor.py zustand --basis "$BASIS" --token "$JOBS_TOKEN" --frage version 2>/dev/null || echo unbekannt)
+          fi
+          echo "::error::Auslieferung nach ${{ inputs.umgebung }} GESCHEITERT. Wartung: $wartung · gemeldete Fassung: $fassung · Dateistand: UNBEKANNT (der Abgleich kann halb gelaufen sein)."
+          {
+            echo "## Auslieferung nach \`${{ inputs.umgebung }}\` gescheitert"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Wartungsmodus | **$wartung** |"
+            echo "| Gemeldete Fassung | \`$fassung\` |"
+            echo "| Dateistand | **unbekannt** — der Abgleich kann halb gelaufen sein |"
+            echo "| Gescheitert in | Lauf \`${GITHUB_RUN_ID}\`, oben der erste rote Schritt |"
+            echo
+            echo 'Steht dort **unbekannt**, hat die Anlage nicht geantwortet — das ist'
+            echo 'keine Entwarnung, sondern eine eigene Auskunft: Dann ist auch der'
+            echo 'Wartungsmodus nicht abgefragt worden.'
+            echo
+            echo '### Zwei Wege, und beide sind von Hand'
+            echo
+            echo '1. **Denselben Stand noch einmal ausliefern.** Sinnvoll, wenn der'
+            echo '   gescheiterte Schritt eine Ursache hatte, die behoben ist (ein'
+            echo '   Geheimnis, eine Variable, ein Aussetzer der Gegenstelle). Der'
+            echo '   Abgleich ist wiederholbar: Er überträgt, was sich unterscheidet.'
+            echo '2. **Auf den vorigen Tag zurück.** Ein Lauf mit dem vorigen'
+            echo '   `web-v*`-Tag legt den alten Stand oben auf; der Zeiger'
+            echo '   `produktion` folgt dorthin. Hat die Auslieferung eine Migration'
+            echo '   mitgebracht, gehört die Datenbank aus der Sicherung dazu —'
+            echo '   Code zurückzurollen und das Schema vorwärts zu lassen ergibt'
+            echo '   eine Anwendung, die es nie gab.'
+            echo
+            echo '**Die Wartung schaltet die Kette NICHT von selbst aus** (E-KH-06):'
+            echo 'Mitten im Abgleich liegt ein gemischter Stand, und eine Anwendung,'
+            echo 'die den ausliefert, ist schlimmer als eine, die geschlossen ist.'
+            echo 'Von Hand geht es unter **Betrieb → Updates → Wartung beenden**.'
+          } >> "$GITHUB_STEP_SUMMARY"

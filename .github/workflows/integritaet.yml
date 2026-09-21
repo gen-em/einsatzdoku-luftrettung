@@ -24,6 +24,16 @@ on:
   # Nach jedem Deploy: Genau dann aendert sich die Auslieferung, und genau
   # dann will man wissen, ob sie so ankam, wie sie losgeschickt wurde.
   #
+  # SEIT AP2 LAEUFT DIE WACHE BEI JEDEM AUSLOESER DURCH (E-KH-13). Bis zum
+  # 20.09.2026 stand weiter unten ein Riegel, der nach einem `workflow_run`
+  # erst fragte, ob der Job `produktion` erfolgreich war -- sonst hielt sie
+  # still. Der Riegel war noetig, solange sie gegen `main` verglich: Nach
+  # einem Staging-Deploy haette sie Produktiv gegen einen Stand gehalten, der
+  # dort gar nicht liegt. Jetzt vergleicht sie gegen den ZEIGER, und der
+  # aendert sich nur bei einer Produktiv-Auslieferung. Damit ist der Riegel
+  # nicht nur entbehrlich, sondern schaedlich -- er liess die Wache nach
+  # einem Staging-Deploy schweigen, obwohl der Vergleich jetzt gueltig waere.
+  #
   # DER NAME IST DIE KUPPLUNG, UND SIE IST ZERBRECHLICH (P5a/AP1, Fund F4).
   # Bis Web 20.3.0 stand hier "Server per FTP hochladen" — der Anzeigename des
   # alten `deploy.yml`. Wer einen Lauf umbenennt, haengt diese Wache ab, und
@@ -36,9 +46,13 @@ on:
     types: [completed]
   workflow_dispatch:
 
+# `actions: read` IST MIT AP2 ENTFALLEN. Es gab diese Berechtigung nur fuer
+# den `gh api`-Aufruf des alten Riegels ("hat der Job `produktion` in diesem
+# Lauf geklappt?"). Der Riegel ist weg, der Aufruf auch -- und eine
+# Berechtigung, die niemand mehr braucht, wird ausgetragen und nicht
+# aufbewahrt. `contents: read` reicht fuer beide Auschecken.
 permissions:
   contents: read
-  actions: read
 
 # ALLE run-BLOECKE MIT `pipefail` (16.09.2026, gemessen).
 #
@@ -67,53 +81,97 @@ jobs:
   wache:
     runs-on: ubuntu-latest
     steps:
-      - name: Code auschecken
-        uses: actions/checkout@v7
+      - name: Werkzeug auschecken
+        # DAS WERKZEUG KOMMT VON HIER, DER VERGLEICHSSTAND VOM ZEIGER
+        # (E-KH-13). Beides aus dem Zeigerzweig zu nehmen waere falsch: Dann
+        # liefe eine Wache, die so alt ist wie die Auslieferung, und eine
+        # Verbesserung an ihr griffe erst nach dem naechsten Deploy.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Hat dieser Lauf ueberhaupt auf PRODUKTIV ausgeliefert?
-        # SEIT DER KETTE HAT DER AUSLIEFERUNGSLAUF ZWEI ZIELE (E-P5a-10): Ein
-        # Push auf `main` geht auf STAGING, nur ein Tag geht auf Produktiv. Die
-        # Wache misst aber Produktiv (`WACHE_BASIS`). Liefe sie nach jedem
-        # Staging-Deploy, verglaeche sie den Produktivserver mit einem Stand,
-        # der dort gar nicht liegt — und meldete eine Abweichung, die keine
-        # ist. Eine Wache, die regelmaessig falschen Alarm gibt, wird
-        # abgeschaltet; das ist der eigentliche Schaden.
-        #
-        # `workflow_run` kann nicht nach Job filtern. Also wird gefragt: Hat
-        # der Job `produktion` in diesem Lauf mit Erfolg geendet?
-        if: github.event_name == 'workflow_run'
-        id: ziel
-        env:
-          GH_TOKEN: ${{ github.token }}
-          LAUF_ID:  ${{ github.event.workflow_run.id }}
+      - name: Gibt es den Zeiger `produktion` ueberhaupt?
+        # FEHLENDER ZEIGER IST ROT MIT ANSAGE, NIE STILL GRUEN (E-KH-13).
+        # `actions/checkout` scheiterte zwar auch von selbst, aber mit
+        # "couldn't find remote ref" -- einer Meldung, die nicht sagt, was
+        # das fuer diese Anlage bedeutet. Hier steht es in unseren Worten,
+        # samt dem Weg, ihn anzulegen.
         run: |
-          stand=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$LAUF_ID/jobs" \
-                  --jq '[.jobs[] | select(.name == "produktion") | .conclusion] | join(",")' \
-                  2>/dev/null || echo '')
-          echo "Job 'produktion' in Lauf $LAUF_ID: ${stand:-nicht gelaufen}"
-          if [ "$stand" = success ]; then
-            echo "produktiv=ja" >> "$GITHUB_OUTPUT"
-          else
-            echo "produktiv=nein" >> "$GITHUB_OUTPUT"
-            echo "Dieser Lauf ging nicht auf Produktiv — die Wache haelt still." \
-                 >> "$GITHUB_STEP_SUMMARY"
+          if [ -z "$(git ls-remote --heads origin produktion)" ]; then
+            echo "::error::Der Zeigerzweig 'produktion' fehlt — die Wache hat NICHT verglichen."
+            {
+              echo '## Integritaetswache: kein Vergleich'
+              echo
+              echo "Der Zweig **\`produktion\`** gibt es nicht. Er zeigt auf den Commit,"
+              echo 'der auf dem Produktivserver liegt; ohne ihn ist unbekannt, wogegen'
+              echo 'zu vergleichen waere.'
+              echo
+              echo 'Anlegen: `git branch produktion <commit der letzten Auslieferung>`'
+              echo 'und pushen. Danach bewegt ihn der Auslieferungslauf selbst.'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
+          echo "Zeiger 'produktion': $(git ls-remote --heads origin produktion | cut -f1)"
+
+      - name: Zeiger auschecken — das ist der Vergleichsstand
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: produktion
+          path: zeiger
+          # `fetch-tags`, DAMIT DIE ZUSAMMENFASSUNG DAS TAG NENNEN KANN. Ohne
+          # Tags meldet `git describe --exact-match` nichts, und die Wache
+          # schriebe "kein Tag" an einen Stand, der sehr wohl eines traegt --
+          # eine Auskunft, die in die Irre fuehrt.
+          fetch-depth: 1
+          fetch-tags: true
 
       - name: Selbstprobe — erkennt die Wache eine Abweichung ueberhaupt?
-        if: github.event_name != 'workflow_run' || steps.ziel.outputs.produktiv == 'ja'
         # ZUERST, und das ist kein Formalismus: Ein gruener Lauf einer Wache,
         # die immer gruen meldet, sieht genauso aus wie einer, der nichts
         # gefunden hat. Die Selbstprobe rechnet ohne Netz und braucht eine
         # Sekunde.
         run: python3 tools/integritaetswache/wache.py --selbstprobe
 
-      - name: Auslieferung gegen das Repositorium
-        if: github.event_name != 'workflow_run' || steps.ziel.outputs.produktiv == 'ja'
+      - name: Auslieferung gegen den Zeiger `produktion`
+        # NICHT MEHR "gegen das Repositorium" (AP2/E-KH-13): Verglichen wird
+        # gegen den AUSGELIEFERTEN Stand, und der liegt im Zeigerzweig. Dass
+        # `main` weiter ist, ist der Normalfall und kein Befund mehr.
         env:
           # Ueber eine Repository-Variable umstellbar, damit ein Selbsthoster
           # die Datei nicht anfassen muss.
           WACHE_BASIS: ${{ vars.WACHE_BASIS }}
         run: |
-          BASIS="${WACHE_BASIS:-https://nadoku.gen-em.org}"
+          # KEINE VORGABE MEHR (AP6, E-KH-07). Hier stand
+          # `${WACHE_BASIS:-https://nadoku.gen-em.org}` -- eine vergessene
+          # Variable ergab damit eine Wache, die die fest eingebaute Anlage
+          # bewachte und zur eigentlichen schwieg. Gruen, und wertlos.
+          if [ -z "${WACHE_BASIS:-}" ]; then
+            echo "::error::Die Repositoriums-Variable WACHE_BASIS ist leer. Ohne sie weiss die Wache nicht, welche Anlage sie messen soll — und eine Vorgabe gibt es seit AP6 absichtlich nicht mehr. Eintragen unter Settings -> Secrets and variables -> Actions -> Variables."
+            exit 1
+          fi
+          BASIS="$WACHE_BASIS"
           echo "Basisadresse: $BASIS"
-          python3 tools/integritaetswache/wache.py "$BASIS"
+          rc=0
+          python3 tools/integritaetswache/wache.py "$BASIS" --stand zeiger \
+            > /tmp/wache.txt 2>&1 || rc=$?
+          cat /tmp/wache.txt
+          # DIE ZUSAMMENFASSUNG NENNT, WAS GEMESSEN WURDE (E-KH-13: Commit,
+          # Tag und Dateizahl). Ein "Kein Unterschied" ohne den verglichenen
+          # Stand ist eine gruene Zahl ohne Aussage -- genau die Sorte, vor
+          # der `CLAUDE.md` 6 warnt.
+          #
+          # `|| rc=$?` UND NICHT `| tee`: Ohne das haette `bash -e` hier
+          # abgebrochen, und die Zusammenfassung bliebe leer -- ausgerechnet
+          # im roten Lauf, in dem man sie braucht. Dieselbe Falle wie bei der
+          # Wortliste am 16.09.2026, nur andersherum.
+          {
+            echo '## Integritaetswache'
+            echo
+            grep -E '^(Integritaetswache gegen|Vergleichsstand:|  Teil )' /tmp/wache.txt \
+              | sed 's/^/- /' || true
+            echo
+            if [ "$rc" = 0 ]; then
+              echo '**Kein Unterschied.**'
+            else
+              echo '**ROT** — Einzelheiten im Protokoll des Schritts.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$rc"

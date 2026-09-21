@@ -14,6 +14,101 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Die Kette hält die Wartung an, wenn sie stürzt — und sagt, was gilt] — 2026-09-21
+
+**Ein roter Auslieferungslauf hinterließ eine Anlage in einem Zustand, den
+niemand kannte: Wartung vielleicht an, Dateistand vielleicht halb, und die
+Auskunft darüber irgendwo in vierhundert Zeilen Protokoll.** AP6 der
+Kettenhärtung dreht das um — die Kette prüft mehr, bevor sie etwas anfasst,
+und sie sagt hinterher in fünf Zeilen, was gilt. Keine der drei
+Auslieferungen ist geändert, deshalb keine Versionsnummer; die Änderungen
+liegen in `.github/workflows/` und `tools/`.
+
+### Werkzeug — `tor.py --frage` kennt jetzt `version` und `wartung`
+
+Bisher beantwortete `--frage` genau eine Frage (`migration`). Die
+Versionsprüfung nach dem Abgleich und der neue Schlussschritt brauchen zwei
+weitere, und beide holen sie aus derselben Datei statt aus einer eigenen
+JSON-Zeile im Arbeitslauf: `tor.py` ist **der** Client für
+`jobs.php?aktion=…`, und ein zweiter Aufrufer wäre ein zweiter Weg, den
+niemand pflegt und den keine Selbstprobe erreicht.
+
+Die Antwort steckt in einer reinen Funktion (`zustand_auskunft()`), damit sie
+ohne Netz durchgerechnet werden kann. **Die interessanten Fälle sind nicht
+die guten, sondern die halben:** eine Antwort ohne `ok`, ein Server, der das
+Feld noch nicht kennt, ein `wartung`, das mal ein Objekt und mal ein bloßer
+Wahrheitswert ist. Jeder davon antwortet **`unbekannt` und 1**, nie eine
+erfundene Null — ein Schlussschritt, der „Wartung: aus" meldet, weil er die
+Antwort nicht lesen konnte, schickt jemanden schlafen, während die Anlage
+zusteht. Das deckt zugleich E-KH-19 ab: Die Kette des Tags N spricht beim
+Ausliefern mit dem Server der Fassung N−1. Selbstprobe **19 → 29 Lagen**,
+0 offen.
+
+### Werkzeug — die Integritätswache hat keine eingebaute Anlage mehr
+
+`wache.py` fiel ohne `WACHE_BASIS` auf `https://nadoku.gen-em.org` zurück.
+Das ist die bequeme Variante einer gefährlichen Bauform: Wer die Variable
+vergaß oder vertippte, bekam keine Fehlermeldung, sondern **eine Wache, die
+eine andere Anlage bewachte** — auf einer Selbsthoster-Installation
+dauerhaft die fremde, und zur eigenen schwieg sie. Jetzt heißt „keine
+Adresse genannt" genau das: Rückgabewert 2 mit Ansage. Dasselbe in
+`integritaet.yml`, wo derselbe Vorgabewert noch einmal stand.
+
+### Kette — was jetzt vor dem Wartungsschalter steht
+
+Alles, was scheitern kann, ohne den Server zu verändern, steht jetzt **vor**
+„Wartung an"; unmittelbar danach folgt der Abgleich. Vorher lagen die
+`doku`-Kopie, der Gesprächslauf-Riegel und das Bereitstellen der
+Zustandsdatei dahinter — scheiterte einer davon, stand die Anlage zu, ohne
+dass auch nur eine Datei ausgeliefert worden wäre. **Wartung an für nichts.**
+
+Neu dazu: ein **Adressvergleich** (`PRODUKTION_URL` gegen `WACHE_BASIS` —
+gehen sie auseinander, liefert die Kette nach A aus und die Wache bewacht B,
+und beide Seiten sind für sich grün) und eine **Versionsprüfung nach dem
+Abgleich**: Der FTPS-Schritt meldet Erfolg, wenn die Übertragung gelungen
+ist — nicht, wenn die Anwendung danach die neue Fassung ausliefert. Stimmt
+sie nicht, bleibt die Wartung an.
+
+### Kette — Überspringen ist rot
+
+Die fünf Stellen in Stufe 2, die sich bei fehlender Zuarbeit selbst
+übersprangen und grün meldeten, brechen jetzt ab. Sie stammen aus der
+Einrichtungsphase, als Staging erst entstand; Staging steht. Ein Prüfschritt,
+der sich selbst überspringt, meldet grün, ohne gemessen zu haben.
+
+### Kette — Pins, Nebenläufigkeit, und ein Tor, das nicht mehr täuscht
+
+Alle **zehn** fremden `uses:`-Zeilen hängen an einer 40-stelligen Commit-SHA
+mit der Version als Kommentar. Die beiden lokalen bleiben ohne — ein lokaler
+Pfad nimmt keinen Ref und läuft immer auf dem Commit des Aufrufers, was
+strenger ist als ein Pin.
+
+Zwei `concurrency`-Gruppen, je eine Umgebung, **ohne** Abbruch: Ein
+abgebrochener Abgleich lässt eine Zustandsdatei zurück, die einen Server
+beschreibt, den es so nicht gibt.
+
+Und das Tor der grünen Läufe fragt jetzt nach dem **Job** `staging`, nicht
+nur nach dem Lauf: Ein übersprungener Job macht den Lauf nicht rot, das Tor
+zählte also bisher, dass ein Lauf stattgefunden hat — nicht, dass
+ausgeliefert wurde.
+
+### Was das kostet, und es ist benannt
+
+**Zwei Variablen verlieren ihren Vorgabewert** (`FTP_ZIELPFAD`,
+`FTP_STATE_PFAD`), dazu `WACHE_BASIS`. Fehlend heißt ab jetzt rot — vor
+jedem Zugriff auf den Server, mit einer Meldung, die sagt, was wo
+einzutragen ist. Am 21.09.2026 war `FTP_STATE_PFAD` auf `staging` gemessen
+leer; der erste Lauf danach wird dort also rot. **Das ist kein Unfall,
+sondern der Zweck:** Ein Vorgabewert, der einspringt, lässt eine falsch
+eingerichtete Anlage nicht auffallen — der Lauf wäre grün und
+synchronisierte in ein fremdes Verzeichnis.
+
+**Ein Unterschied, den man kennen muss, wenn man sie einträgt:**
+`FTP_ZIELPFAD` war längst gesetzt, die Vorgabe lief ins Leere — bei
+`FTP_STATE_PFAD` war sie **tatsächlich im Einsatz**. Dort liegen die
+Zustandsdateien also genau unter dem alten Vorgabewert, und wer beim
+Eintragen etwas anderes wählt, schickt die Aktion an eine Stelle, an der sie
+nichts findet: Sie hält den Server für leer und überträgt alles neu.
 ## [Web 20.26.2] — 2026-09-20
 
 **Der Handgriff, der den Rückfall auf Staging behoben hat, steht jetzt im Runbook.**
@@ -421,6 +516,127 @@ MySQL 8.4.0, MariaDB 10.6 und MariaDB 10.11.
 Quelltext, und die Kettenprüfung liest `'--…'`-Zeichenketten. Behoben, indem
 die Schalter mit ihren zwei Strichen dastehen; **30 Aufrufe geprüft,
 0 Befunde**.
+
+## [Android 0.15.1] — 2026-09-20
+
+**Stufe 1 meldete „264 tests completed, 1 failed" und verschwieg, welcher.**
+Es war keiner. Der Fehlschlag hieß `classMethod` — das ist der Klassenaufbau,
+kein Prüffall.
+
+### Behoben — Robolectric lädt sein Android-Abbild nicht mehr zur Laufzeit
+
+Robolectric holt das Abbild `org.robolectric:android-all-instrumented`
+(rund 145 MB) über seinen **eigenen** `MavenArtifactFetcher`, sobald der erste
+Prüffall anläuft. Das geht an Gradle vorbei: keine Wiederholung, keine
+Prüfsumme über den Abhängigkeitsauflöser, kein Zwischenspeicher, den ein
+Läufer aufbauen könnte — und abgelegt wird es in `~/.m2`, nicht im
+Gradle-Cache. Am 20.09.2026 brach der Download auf einem Läufer ab:
+
+```
+ERROR: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i7
+java.net.SocketException: Connection reset by peer
+	at org.robolectric.internal.dependency.MavenArtifactFetcher…(MavenArtifactFetcher.java:129)
+```
+
+**Warum es örtlich nie auffiel:** Dort liegt das Abbild seit dem ersten Lauf
+im Zwischenspeicher. Ein Läufer ist bei jedem Lauf neu — er lädt jedes Mal,
+und jedes Mal kann es schiefgehen. Das erklärt zugleich, warum es kein
+wackeliger Prüffall war, obwohl es wie einer aussah: Der Fehlschlag hing am
+Netz, nicht am Code.
+
+Das Abbild ist jetzt eine **erklärte** Test-Abhängigkeit in einer eigenen
+Konfiguration (`robolectricAbbild`), die Gradle wie jede andere auflöst —
+mit Wiederholung, Prüfsumme und Cache. Ein `Sync`-Schritt legt sie unter
+`build/robolectric-abbild/` ab, und Robolectric läuft mit
+`robolectric.offline=true` dagegen. **Gegengemessen:** `~/.m2` geleert, beide
+Module mit `--rerun-tasks` gefahren → `BUILD SUCCESSFUL`, und das Abbild
+taucht in `~/.m2` **nicht** wieder auf. Vorher tauchte es auf.
+
+**Der Preis, und er ist bewusst:** Die Fassung des Abbilds steht nun im
+Repositorium (`android/gradle/libs.versions.toml`) und muss zu
+`robolectric.properties` (`sdk=34`) passen. Was Robolectric bislang selbst
+wählte, wählen wir — dafür sichtbar, und ein Läufer ohne Netz kann die
+Prüffälle trotzdem fahren.
+
+### Geändert — die beiden Module reden endlich gleich über ihre Prüffälle
+
+Das Uhr-Modul hatte **gar kein** `testLogging`; das Handy-Modul hatte es, aber
+mit `showStandardStreams = true` fest an. Letzteres ist kein Versehen — der
+Rundlauf-Prüffall gegen eine echte `ingest.php` lebt von seiner Ausgabe. In
+dieser Form machte es das Protokoll aber unlesbar: **9000 Zeilen für elf
+Sekunden**, durchgehend CloseGuard-Stapelabzüge, und die Fehlschlag-Zeile lag
+davor. Über die Log-API, die nur vom Ende liest, war sie nicht erreichbar.
+
+`showStandardStreams` hängt jetzt an der Bedingung, die es begründet
+(`rundlauf.isNotBlank()`) — ist der Rundlauf nicht bestellt, bleibt die
+Ausgabe still. Abgeschaltet wird nichts. Dazu bei beiden Modulen die
+vollständige Ausnahme (`TestExceptionFormat.FULL`, Ursachen und Stapel), und
+das Uhr-Modul bekommt denselben Block.
+
+### Geändert — Stufe 1 nennt den Gegenstand ihres Fehlschlags
+
+`pruefung.yml` lädt bei einem roten Android-Schritt die Berichte als Artefakt
+hoch (`if: failure()`): `android/*/build/reports/**` — die HTML-Berichte der
+Prüffälle und die Lint-Ergebnisse, die daneben liegen — sowie
+`android/*/build/test-results/**` für die JUnit-XML. Bei Grün nichts, weil es
+dann nichts zu lesen gibt.
+
+Das Repositorium hält demselben Muster an anderer Stelle einen Vorwurf
+(Backlog Nr. 237, Bilderlauf): *„Ein Prüfmittel, das einen Befund meldet und
+den Grund verschweigt, kostet genau die Stunde, die es sparen sollte."* Hier
+kostete es einen ganzen zweiten Lauf, nur um den Namen zu erfahren — und der
+Name war dann `classMethod`.
+
+Außerdem steht das JDK des Android-Schritts jetzt fest (`setup-java`,
+Temurin 21) statt an dem, was das Läuferabbild gerade mitbringt. Die Module
+zielen unverändert auf `JavaVersion.VERSION_17` — das ist das Ziel des
+Bytecodes, nicht das JDK, das Gradle ausführt. Der Uhr-Schritt wird
+ausdrücklich auf das JDK des Läufers zurückgesetzt (E-KH-24): `setup-java`
+wirkt global auf alle folgenden Schritte, und die Uhr übersetzt danach rund
+35 Minuten lang — das wird nicht nebenbei umgestellt.
+
+## [Werkzeug: Eine Abweisung ohne Meldung sagt jetzt, was sie ist] — 2026-09-20
+
+**Zwei Kettenläufe gegen die neue Staging-Anlage scheiterten an
+`Anmeldung gescheitert: unbekannt`, und das Wort war alles, was dastand.**
+Keine der drei Auslieferungen ist geändert, deshalb keine Versionsnummer.
+
+### Werkzeug — `fehlertext()` liest auch die Störungs- und die Wartungsseite
+
+`sitzung.py` erkennt eine gescheiterte Anmeldung daran, dass die Adresse nach
+dem POST noch `login.php` enthält und die Seite kein „Abmelden" trägt. Den
+**Grund** holt `fehlertext()`, und die sucht die Klasse `meldung-fehler`.
+
+`login.php` hat drei Ausgänge, die genau dieses Bild erzeugen — und **keiner
+trägt die Klasse**: Kontostatus nicht aktiv (Z. 401), Wartung an und die Rolle
+darf nicht verwalten (Z. 417), dazu die Verlangsamung des Ratenschutzes. Alle
+drei antworten über `stoerung_seite_html()` bzw. `wartung_antwort_seite()`,
+und die bauen auf `<h1>` und `<p class="text">`. **Gemessen:**
+`grep -c meldung-fehler server/wartung_lib.php` → **0**.
+
+Damit waren drei verschiedene Abweisungen voneinander **und** von einem
+falschen Passwort ununterscheidbar. Genau davor warnt der Kopfkommentar von
+`fehlertext()` seit Web 9.14.0 („weil ein nicht gefundener Fehler wie ‚kein
+Fehler' aussieht"); die Funktion hatte die Lücke, die sie beschreibt.
+`fehlertext()` liest jetzt als zweiten Versuch `<h1>` samt folgendem
+`<p class="text">`. Die fünf anderen Aufrufer erben das, ohne etwas zu
+verlieren — nachgemessen: Eine Seite mit `meldung-fehler` liefert
+unverändert denselben Text, eine Seite ohne beides unverändert `None`.
+
+### Werkzeug — und eine Kennung der Seite, die man bekommen hat
+
+`fehlertext()` beantwortet „was ist schiefgegangen?". Die neue
+`seitenkennung()` beantwortet die Frage davor: **„was habe ich überhaupt
+bekommen?"** — HTTP-Status, Adresse, Umleitungskette, `<title>`, `<h1>` und
+ob ein Cookie zurückkam. Sie hängt seither an **jeder** Abweisung der
+Anmeldung, nicht nur an der ohne Meldungstext: Auch eine gefundene Meldung
+sagt nicht, ob die Antwort über eine Umleitung kam — und das unterscheidet
+„Passwort falsch" von „die Sitzung hält nicht".
+
+**Keine Geheimnisse.** Ausgegeben werden die **Namen** der Cookies, nie ihre
+Werte: Der Name des Sitzungscookies ist eine Auskunft, sein Wert ist die
+Sitzung selbst.
+
 
 ## [Web 20.24.2] — 2026-09-18
 

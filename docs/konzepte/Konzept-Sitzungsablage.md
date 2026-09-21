@@ -76,7 +76,13 @@ die Sitzungsbindung per Cookie-Token (E-SA-09, Backlog 242).
   (nachgemessen 20.09.2026): `auth_guard.php`, `login.php`,
   `pw_handling.php`, `session_lib.php` (in `session_beenden()`),
   `doku_seite.php`, `notfallblatt.php`, `rechtstext_seite.php` (die drei
-  letzten mit `@session_start()`, nur wenn ein Cookie da ist),
+  letzten mit `@session_start()`, **ohne** Cookie-Bedingung — berichtigt
+  20.09.2026, nachgemessen an `main` `fd99989`: Die Bedingung dort ist
+  `session_status() === PHP_SESSION_NONE`, ein `$_COOKIE`-Test kommt in
+  keiner der drei Dateien vor. Die Cookie-Bedingung **kommt erst mit
+  Schritt 15 AP2** (F-ZE-2). Bis dahin legt **jeder anonyme Abruf** von
+  Handbuch, Rechtstext oder Notfallblatt eine Sitzungsdatei an, auch die
+  Messschritte und der Bilderlauf von Stufe 2),
   `install.php`, `wiederherstellen.php`. **Acht davon laden `db.php` vor
   ihrem Sitzungsstart; `install.php` nicht** (dort gibt es noch keine
   `config.php`). Der Auftrag und die erste Fassung dieses Konzepts kannten

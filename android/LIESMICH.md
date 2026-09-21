@@ -185,15 +185,56 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
-**Stand Android 0.15.0 (Datum im Dienst und Erinnerung, Backlog Nr. 160),
-`./gradlew build` im Container, 08.09.2026:**
+**Stand Android 0.15.1 (Robolectric-Abbild über Gradle, Backlog Nr. 240),
+`./gradlew build` im Container, 20.09.2026 — `BUILD SUCCESSFUL in 6m 16s`:**
 
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
-| Lint-Warnungen | **14** | **0** |
+| Lint-Warnungen | **15** | **0** |
 | Prüffälle je Bauart | **264**, davon 15 übersprungen | **71**, davon 0 übersprungen |
-| APK (unsigniert, Release) | **7 868 398 B** | **19 574 402 B** |
+| APK (unsigniert, Release) | **7 868 394 B** | **19 574 402 B** |
+
+**Die 15 übersprungenen sind die Rundlauffälle** (`KopplungRundlaufTest`,
+`MissionRundlaufTest`, `SendeRundlaufTest` und zwei Fälle aus
+`ServeradresseTest`). Sie überspringen sich ohne `-Pnadoku.rundlauf`, und die
+Kette setzt das nirgends — siehe Backlog Nr. 240.
+
+**Die Lint-Warnung mehr kommt nicht von hier.** Alle 15 sind namentlich
+nachgesehen; keine betrifft die geänderten Dateien. Elf davon sind
+`GradleDependency`, `NewerVersionAvailable` und `AndroidGradlePluginVersion`
+— sie melden, dass es draußen eine neuere Fassung gibt, und **ändern sich von
+selbst, ohne dass hier jemand etwas anfasst**. Zwischen dem 08. und dem
+20.09.2026 ist eine dazugekommen (der Kandidat ist
+`org.robolectric:robolectric 4.16.1 → 4.17`; belegen lässt sich das nicht,
+weil der alte Bericht mit dem Läufer starb). Wer diese Zahl als Sollwert
+liest, liest sie falsch: **Sollwert sind die 0 Lint-FEHLER.**
+
+**Das APK ist um vier Bytes kleiner, und sie kommen restlos aus der
+Versionsnummer.** Gemessen (20.09.2026): Mit `version=0.15.0` gebaut trifft
+dasselbe Werk auf das Byte genau die vorher dokumentierten **7 868 398 B**.
+Der Eintrag-für-Eintrag-Vergleich beider APKs (175 gegen 175 Einträge, keiner
+fehlt, keiner ist neu) findet drei verschiedene Dateien —
+`AndroidManifest.xml`, `assets/dexopt/baseline.prof` und `classes2.dex`. In
+`classes2.dex`, gleich lang in beiden, weichen **26 Bytes** ab: die Bytes 8
+bis 31 sind Adler-32 und SHA-1 des DEX-Kopfes (sie ändern sich bei jedem
+einzelnen geänderten Byte), Byte 4 384 552 ist das `0` → `1` in der
+Zeichenkette `0.15.0`, und Byte 6 307 672 ist `0xdc` → `0xdd`, also der
+Versionscode 1500 → 1501. **Zwei inhaltliche Bytes, sonst Prüfsummen.**
+
+Dazu die Gegenprobe an der Wurzel: `./gradlew :handy:dependencies
+--configuration releaseRuntimeClasspath` nennt **kein** Robolectric und kein
+`android-all-instrumented`. Die neue Abhängigkeit hängt an einer eigenen
+Konfiguration und kann das Paket nicht erreichen.
+
+**Kein siebter Emulatorlauf für 0.15.1 — und das ist zu sagen, nicht zu
+verschweigen** (`CLAUDE.md` 6 macht den Emulator bei jeder Änderung an einem
+Android-Modul zur Pflicht). Die Änderung fasst `build.gradle.kts`, den
+Versionskatalog und `version.properties` an; **keine Zeile Anwendungscode,
+keine Ressource, keinen Text.** Es gibt im laufenden Programm nichts
+anzusehen und nichts zu bedienen, was vorher anders war — der Beleg dafür
+sind die zwei inhaltlichen Bytes oben, beide der Versionsstempel. Ein Bild
+davon wäre ein Bild von 0.15.0 mit einer anderen Zahl in der Fußzeile.
 
 **Sechster Emulatorlauf am 08.09.2026 (0.15.0, Datum und Erinnerung):** fünf
 Bilder unter `android/emulator-bilder/0150-*.png` — Kopplungsseite, Kopplung
@@ -591,6 +632,14 @@ Wrapper-Lauf. Eine siebte, `downloads.gradle.org`, trägt nur die
 Prüfsummen-Datei; sie war bis zum 07.09.2026 gesperrt und ist seither
 freigegeben — siehe 2.1.
 
+**Eine achte sprach nicht der Baulauf, sondern der Prüflauf — und zwar an
+Gradle vorbei** (bis Android 0.15.1). Robolectric holte sein Android-Abbild
+`org.robolectric:android-all-instrumented` (rund 145 MB) beim ersten
+Prüffall selbst über seinen `MavenArtifactFetcher` von `repo1.maven.org`,
+legte es in `~/.m2` ab (nicht im Gradle-Cache) und tat das ohne
+Wiederholung und ohne Prüfsumme über den Abhängigkeitsauflöser. Seit 0.15.1
+ist das Abbild eine erklärte Test-Abhängigkeit — siehe 2.3.
+
 ### 2.1 Die Prüfsumme der Gradle-Verteilung (seit Android 0.14.0, Backlog Nr. 145)
 
 `gradle-wrapper.properties` führt jetzt ein `distributionSha256Sum`:
@@ -636,6 +685,61 @@ nähme dem Gerätetest (E-R45-7) den einzigen Fehlerbericht, den er hat.
 Verschleierung ist auch kein Sicherheitsmerkmal: Der Geräteschlüssel liegt im
 Keystore, nicht im Code, und im APK steht nichts, was ein Leser nicht auch im
 öffentlichen Repositorium fände.
+
+### 2.3 Das Robolectric-Abbild kommt über Gradle (seit Android 0.15.1)
+
+**Der Anlass war ein Fehlschlag, der wie ein wackeliger Prüffall aussah und
+keiner war.** Stufe 1 meldete am 20.09.2026 „264 tests completed, 1 failed,
+15 skipped"; der Name des Fehlschlags war `classMethod` — der Klassenaufbau,
+kein Prüffall. Dahinter stand:
+
+```
+ERROR: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i7
+java.net.SocketException: Connection reset by peer
+	at … MavenArtifactFetcher.java:129
+```
+
+Robolectric lädt sein Android-Abbild **zur Testlaufzeit selbst**. Örtlich
+fällt das nie auf, weil das Abbild nach dem ersten Lauf im Zwischenspeicher
+liegt; ein Läufer ist bei jedem Lauf neu und lädt jedes Mal.
+
+**Was jetzt gilt.** Das Abbild steht in `gradle/libs.versions.toml`
+(`robolectricAbbild`, Eintrag `robolectric-abbild`) und hängt in beiden
+Modulen an einer eigenen Konfiguration:
+
+```kotlin
+val robolectricAbbild: Configuration by configurations.creating
+…
+robolectricAbbild(libs.robolectric.abbild)
+```
+
+Ein `Sync`-Schritt (`robolectricAbbildBereitstellen`) legt sie unter
+`build/robolectric-abbild/` ab, und jeder `Test`-Lauf hängt davon ab und
+setzt `robolectric.offline=true` samt `robolectric.dependency.dir`. Damit
+löst **Gradle** auf — mit Wiederholung, Prüfsumme und Cache.
+
+**Die eigene Konfiguration ist Absicht:** Über `testImplementation` läge das
+145-MB-Archiv im Klassenpfad der Prüffälle, wo es nichts zu suchen hat. So
+ist es reine Nutzlast, die ein Schritt an einen Ort kopiert.
+
+**Gegengemessen** (20.09.2026, Container): `~/.m2/repository/org/robolectric/`
+geleert, dann
+
+```
+./gradlew --no-daemon :handy:testDebugUnitTest :uhr:testDebugUnitTest --rerun-tasks
+```
+
+→ `BUILD SUCCESSFUL in 2m 29s`, und das Abbild taucht in `~/.m2` **nicht**
+wieder auf. Derselbe Lauf **vor** der Änderung: `BUILD SUCCESSFUL in 1m 34s`
+— und das Abbild lag hinterher in `~/.m2`. Das ist der Beleg, dass der
+Laufzeit-Download weg ist und nicht bloß gelungen war.
+
+**Zwei Dinge müssen zusammenpassen**, und niemand erzwingt es: die Fassung
+in `libs.versions.toml` (`14-robolectric-10818077-i7`) und das `sdk=34` in
+`robolectric.properties`. Wer eines ändert, ändert beides. Passt es nicht,
+sucht Robolectric ein Abbild, das nicht dort liegt — und ohne Netz scheitert
+es sofort statt es nachzuladen. Das ist ein gewollter Tausch: ein sichtbarer
+Fehler statt eines stillen Downloads.
 
 ## 3. Warum es zwei Module gibt und trotzdem gemeinsamen Quelltext
 

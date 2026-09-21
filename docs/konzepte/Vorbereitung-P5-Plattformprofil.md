@@ -13,7 +13,9 @@ steht in PP-9 (E-PP-09).
 P5-Konzept ein und wandert mit R72 in das Betreiberhandbuch („Installation
 und Selbsthosting"). Bleibt nach R62 als Herkunft liegen.
 **Stand:** 15.09.2026, zweite Runde (F-PP-2 entschieden, Staging-Ziel
-eingetragen).
+eingetragen). **Nachtrag 20.09.2026:** **E-PP-09 ist in Adresse und Hoster
+durch E-KH-04 ersetzt** (Konzept Kette II, AP1) — der Wortlaut unten bleibt
+als Herkunft stehen, die Vermerke sagen, was nicht mehr gilt.
 **Modell:** Fable (Konzept, R14). Kein Code.
 
 **Bezeichner:** Die neun Eckdaten heißen **PP-1 bis PP-9**. Die
@@ -411,6 +413,19 @@ kein Selbst-Update, die Installation ändert ihren Code nie selbst.
   bequeme Weg des Projekts, nicht die Voraussetzung.
 
 **Staging-Ziel (E-PP-09, Auftraggeber 15.09.2026)**
+
+> **ERSETZT IN ADRESSE UND HOSTER DURCH E-KH-04 (20.09.2026).** Staging liegt
+> seither unter **`staging-nadoku.gen-em.org`** bei **lima-city**, also bei
+> einem **anderen** Hoster als Produktiv; die alte Anlage ist am selben Tag
+> stillgelegt worden. Grund war kein Preis und kein Tarif, sondern ein Befund:
+> Beide Anlagen liefen unter demselben Systemnutzer im selben
+> Plesk-Abonnement, und damit konnte Staging-PHP Produktivs `config.php`
+> lesen — die Staging-Zugangsdaten reichten ohne jede Freigabe bis Produktiv
+> (B2 der Kettendurchsicht). **Der Preis steht im nächsten Vermerk.** Die
+> übrigen Festlegungen dieses Blocks gelten unverändert: eigener
+> Serverschlüssel und eigener Server-Anteil, Absender `staging@gen-em.org`,
+> Betreff-Präfix „[Staging]", eigenes SFTP-Sicherungsziel.
+
 - Adresse **`staging.nadoku.gen-em.org`**, beim selben Hoster im selben
   Tarif wie Produktiv („Webserver same same") — damit gilt das Empfohlen
   unten. HTTPS wie Produktiv über den Hoster (Let's Encrypt).
@@ -434,11 +449,30 @@ kein Selbst-Update, die Installation ändert ihren Code nie selbst.
   Freigabe) ist das **erste Code-Paket von P5**; bis dahin deployt `main`
   weiter auf Produktiv.
 
+  > **Der letzte Halbsatz gilt seit Web 20.4.0 nicht mehr** (P5a/AP1, PR #49
+  > vom 16.09.2026): Ein Push auf `main` geht seither auf **Staging**, und
+  > `deploy.yml` gibt es nicht mehr. Der Vermerk steht hier, weil `CLAUDE.md` 3
+  > genau vor diesem Satz warnt — *„Wer eine alte Sitzung, ein altes Protokoll
+  > oder einen alten Kommentar liest, liest das noch."* Er ist einer davon.
+  > **Und die Einrichtungsanleitung dieses Punktes meint die alte Anlage**
+  > (E-PP-09); die geltende steht in `docs/Rahmenplan.md` 6a.
+
 **Empfohlen**
 - **Staging beim selben Hoster im selben Tarif** wie Produktiv: Nur dann
   misst der Messstand die Grenzen, die Produktiv wirklich hat
   (`max_user_connections`, Zeitlimits, Platz). Ein Staging auf einem
   größeren Rechner findet die Fehler nicht, die auf Produktiv auftreten.
+
+  > **GILT SEIT E-KH-04 NICHT MEHR (20.09.2026).** Dieses Empfohlen ist der
+  > **Preis** des Umzugs, und er ist bewusst bezahlt: Staging belegt kein
+  > Plattformverhalten von Produktiv mehr, und die Zahlen des Messstands sind
+  > nicht mehr übertragbar. Was an ihre Stelle tritt, steht in Konzept
+  > Kette II: ein **Probelauf gegen Produktiv**, der nichts ausliefert
+  > (E-KH-08), und ein **dokumentierter Plattformvergleich** beider Anlagen
+  > (`docs/Technik.md` 6.3a). Dazu ein Gewinn, den dieser Punkt nicht hatte:
+  > Die Portabilitätszusage aus R81 — die Anwendung ist nicht auf einen
+  > Hoster zugeschnitten — wird seither mit **jedem Push** tatsächlich
+  > geprobt statt nur behauptet.
 - Die **Kette nach R67**: GitHub-Umgebungen `staging` und `produktion`,
   Prüftor Stufen 1 und 2, Pflichtfreigabe durch die Betreiberin,
   Backup-Tor vor dem Produktiv-Deploy. Ihre Zugangsdaten sind
@@ -538,7 +572,9 @@ Rückfrage entschieden worden** (15.09.2026), anders als zuerst gesetzt.
   der Konzeptsitzung, **nicht** gegen die Herstellerseiten nachgemessen —
   vor der Umsetzung prüfen (E-PP-03).
 - Staging-Ziel, Absender und Tarif: Angaben des Auftraggebers vom
-  15.09.2026 (E-PP-09).
+  15.09.2026 (E-PP-09). **Adresse und Hoster sind am 20.09.2026 durch
+  E-KH-04 ersetzt** — `staging-nadoku.gen-em.org` bei lima-city; Absender und
+  Betreff-Präfix gelten unverändert.
 - Zwei Zahlen dieses Dokuments waren beim ersten Schreiben falsch und sind
   mit dem P5a-Konzept berichtigt (E-P5a-11): die Warnschwelle des
   DB-Kontingents (PP-2) und die Vorgabe der Komplett-Aufbewahrung (PP-5). `nachaufloesen.php`: Kopfkommentar und

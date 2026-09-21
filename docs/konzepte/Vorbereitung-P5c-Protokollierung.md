@@ -1,8 +1,8 @@
 # Vorbereitung P5c — Protokollierung („Log")
 
 **Angelegt:** 16.09.2026, während P5a/AP5, auf Anweisung des Auftraggebers.
-**Stand:** 16.09.2026 — **V1 entschieden** (gehalten, Abschnitt 5); V2–V9
-offen. Der Schreibweg (Tabelle, `protokoll()`, Ereignisformat) wird nach
+**Stand:** 20.09.2026 — **V1 bis V9 entschieden** (Abschnitt 5; V1 am 16.09.,
+V2 über E-P5b-06, V3–V9 am 20.09.2026). Das 10c-Konzept ist geschrieben und seit dem 20.09.2026 freigegeben (`Konzept-P5c-Rollen-Sicherheit-Betriebslage.md`). Der Schreibweg (Tabelle, `protokoll()`, Ereignisformat) wird nach
 Rahmenplan Fassung 74 im **10b-Konzept** als erstes Paket festgelegt, weil
 10b vor 10c läuft und dessen Verwaltungsereignisse erzeugt; 10c baut
 Reiter, Archiv und Download darauf. Der Log-Helfer aus der
@@ -212,14 +212,14 @@ bewegt, der einzige unprotokollierte.
 | # | Frage | Warum sie jetzt beantwortet werden muss |
 |---|---|---|
 | **V1** | **Wird die Zusage „kein Zugriffsprotokoll" gehalten oder zurückgenommen?** — **Entschieden 16.09.2026 (Auftraggeber): gehalten.** Der Bereich heißt **Protokoll** und führt **Betriebsereignisse**, keine Datenzugriffe (3.1). Lesen, Exportieren, Herunterladen von Einsätzen bleiben ungeloggt; Handlungen — Backup eingespielt, Rolle oder Adresse geändert, Löschungen, der Download des Protokolls selbst — werden protokolliert. |
-| **V2** | **IP nur bei Sperren/Angriffen — bestätigt?** Und mit welcher Frist? | Vorgabe des Auftraggebers ist Datenminimierung und damit der verteidigungsfähige Entwurf. **Die Fristlänge braucht juristische Bestätigung, keine technische.** R41 verlangt die Speicherdauer ohnehin in der Datenschutzerklärung. |
-| **V3** | **Wie lange werden Protokolle aufbewahrt, je Reiter?** | E-P5a-09 hat 30 Tage für Betriebsdaten **fest** entschieden. „Einstellbar" widerspräche dem — außer für das Audit, für das dort „länger" steht. Die Einstellbarkeit ist also auf einen Teil zu begrenzen. |
-| **V4** | **Was passiert mit alten Logs beim Wechsel des Serverschlüssels?** | Sonst sind sie nach der ersten Rotation stumm. |
-| **V5** | **Geht das Protokoll ins Komplettbackup?** | `komplett_lib.php` nimmt neue Tabellen **automatisch** mit. Wenn ja, verlässt es verschlüsselt das Haus — wenn nein, muss es ausdrücklich ausgenommen werden. |
-| **V6** | **Datei oder Tabelle?** | Der Auftrag sagt „Log-File", ZIP-komprimiert. Eine Tabelle ist leichter zu filtern und zu löschen, eine Datei leichter zu rotieren und zu versiegeln. Ein Mischweg (Tabelle für die letzten X Tage, versiegelte ZIP-Datei fürs Archiv) ist wahrscheinlich richtig — das ist zu entscheiden, nicht anzunehmen. |
-| **V7** | **Was schreibt in das Protokoll — und was passiert, wenn das Schreiben scheitert?** | Ein Protokoll, dessen Fehlschlag die Handlung abbricht, ist ein Ausfallrisiko. Eines, das still scheitert, ist wertlos. |
-| **V8** | **Wer darf es sehen?** Admin oder nur BetreiberIn? | Das Audit „schützt auch die Admins selbst" (R38) — dann darf ein Admin es nicht löschen können. |
-| **V9** | **Wird der Reiter je Ereignisart gefüllt, oder gibt es Ereignisse ohne Reiter?** | Ein „Sonstiges" sammelt erfahrungsgemäß alles und wird nie gelesen. |
+| **V2** | **IP nur bei Sperren/Angriffen — bestätigt?** Und mit welcher Frist? — **Entschieden 16.09.2026 (über E-P5b-06):** IP-Adressen nur im Reiter **Sicherheit** (Sperren, Angriffe), Frist **30 Tage fest** (= E-P5a-09); beim Archivieren wird die IP-Spalte entfernt (V6). Die Vorgabe des Auftraggebers ist Datenminimierung und damit der verteidigungsfähige Entwurf. **Die Fristlänge braucht weiterhin juristische Bestätigung, keine technische** — R41 verlangt die Speicherdauer ohnehin in der Datenschutzerklärung. |
+| **V3** | **Wie lange werden Protokolle aufbewahrt, je Reiter?** — Entschieden 20.09.2026 (über E-P5b-06): Sicherheit und die übrigen Betriebsreiter **30 Tage fest**; Verwaltung **365 Tage, einstellbar 90–1 095**. |
+| **V4** | **Was passiert mit alten Logs beim Wechsel des Serverschlüssels?** — Entschieden 20.09.2026: Einen Schlüsselwechsel gibt es heute nicht (`serverkrypto_lib.php` kennt keinen). 10c gibt jeder Archivdatei die **Kennung des Serverschlüssels** in Name und ZIP-Kopf; passt sie nicht zum aktuellen Schlüssel, sagt die Seite das und nennt das Wiederanlaufpaket des alten Schlüssels. „Serverschlüssel wechseln" (alles Versiegelte umhüllen, neues Blatt) wird **Backlog**, nicht P5. |
+| **V5** | **Geht das Protokoll ins Komplettbackup?** — Entschieden 20.09.2026: `protokoll_ereignisse` **ja** (keine IPs); `sicherheit_ereignisse` und `rate_limits` **ausdrücklich ausgenommen** (IP-Frist 30 Tage); das Archiv wird nicht noch einmal eingepackt, geht aber **mit dem Versandjob** auf das Sicherungsziel (Einstellung, Vorgabe an) und zählt bei E-P5a-03 als eigene Dateiart mit 365-Tage-Frist. |
+| **V6** | **Datei oder Tabelle?** — Entschieden 20.09.2026: **Mischweg** — Tabelle für das Sichtbare (Reiter, Fristen nach V3); versiegeltes ZIP-Archiv **alle 7 Tage** (einstellbar) mit JSON-Zeilen je Reiter nach `sicherungen/protokoll/`, **365 Tage** aufbewahrt (einstellbar); Download entsiegelt beim Herunterladen und wird selbst protokolliert; **IP-Spalte wird beim Archivieren entfernt**. |
+| **V7** | **Was schreibt in das Protokoll — und was passiert, wenn das Schreiben scheitert?** — Entschieden 20.09.2026 (über E-P5b-12): Schreibweg `protokoll()` in `protokoll_lib.php`; scheitert das Schreiben, **scheitert die Handlung nicht** — `error_log()` mit Kennung, Zähler `protokoll_fehler`, Status-Hinweis. Die `error_log()`-Aufrufe (16.09.2026: 42; nachgemessen 20.09.2026 an `862ca7f`: **77 in 32 Dateien**) werden in 10c auf den Reiter System umgestellt. |
+| **V8** | **Wer darf es sehen?** Admin oder nur BetreiberIn? — Entschieden 20.09.2026: **Sehen** — BetreiberIn alle Reiter; Admin Verwaltung, E-Mail, Jobs, Sicherung (nicht Sicherheit, nicht Ziele); Support (10c) Verwaltung und E-Mail nur lesend. **Löschen: niemand**, nur Fristen. **Herunterladen und Fristen ändern:** nur BetreiberIn, protokolliert. Rollenwechsel bleibt BetreiberIn-Sache und steht immer im Protokoll. |
+| **V9** | **Wird der Reiter je Ereignisart gefüllt, oder gibt es Ereignisse ohne Reiter?** — Entschieden 20.09.2026 (über E-P5b-12): Reiter Verwaltung, Sicherheit, E-Mail, Jobs, Sicherung, Ziele, System — **jedes Ereignis hat einen Reiter, kein „Sonstiges"**; System ist für Fehler und Laufzeit, kein Sammelbecken; ein fehlender Reiter ist eine Konzeptänderung. |
 
 ---
 
@@ -248,8 +248,8 @@ Download). Ein Konzept, das bei null anfängt, baut vier Dinge zweimal.
 ## 7. Vorschlag für die Reihenfolge
 
 1. ~~**V1 und V2 entscheiden** (Zusage, IP) — alles andere hängt daran.~~
-   **V1 ist entschieden** (gehalten); **V2** (IP nur bei Sperren; Frist)
-   steht noch aus.
+   **V1 und V2 sind entschieden** (V1 gehalten, 16.09.2026; V2 über
+   E-P5b-06: IP nur im Reiter Sicherheit, 30 Tage fest).
 2. Bestand aus P5a sichten (Abschnitt 6) und festlegen, was übernommen wird.
 3. Datenmodell: ein Ereignisformat für alle Reiter, oder je Reiter eines.
 4. Archivweg: Rotation, Versiegelung, Frist, Schlüsselwechsel (V4).
