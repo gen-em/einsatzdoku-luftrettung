@@ -119,10 +119,16 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   ab. Ein Prüfschritt, der sich selbst überspringt, meldet grün, ohne
   gemessen zu haben.
 - **Jede fremde `uses:`-Zeile hängt an einer 40-stelligen Commit-SHA**
-  (E-KH-10), die Version als Kommentar daneben — **zehn sind es**. Die zwei
-  **lokalen** (`./.github/workflows/…`) tragen keine und können es nicht:
-  Ein lokaler Pfad nimmt keinen Ref und läuft immer auf dem Commit des
-  Aufrufers. Wer eine Aktion aktualisiert, tauscht SHA **und** Kommentar.
+  (E-KH-10), die Version als Kommentar daneben — **elf sind es** (zehn bis
+  AP7; der Job `Rückfallstand (Staging)` bringt einen weiteren
+  `actions/checkout` mit). Die zwei **lokalen** (`./.github/workflows/…`)
+  tragen keine und können es nicht: Ein lokaler Pfad nimmt keinen Ref und
+  läuft immer auf dem Commit des Aufrufers. Wer eine Aktion aktualisiert,
+  tauscht SHA **und** Kommentar. **Die Zahl ist kein Prüfwert, sondern eine
+  Orientierung** — der Prüfwert ist „keine fremde Zeile ohne SHA", und den
+  zählt man nach, statt ihn abzuschreiben:
+  `grep -rhoE 'uses: [^ ]+@[0-9a-f]{40}' .github/workflows/ | wc -l` gegen
+  `grep -rh 'uses:' .github/workflows/ | grep -vc 'uses: \./'`.
 - `server/config.php`, `install.lock`, `server/wartung.lock`,
   `server/ueberlast.json` (der Zähler der Verbindungsgrenze, P5a/AP9),
   `server/sicherungen/`, `server/apk/` und — seit Web 20.26.0 —

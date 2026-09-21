@@ -14,6 +14,71 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Der Hotfix-Weg — reparieren, ohne alles mitzuliefern] — 2026-09-21
+
+**Das Problem war eine Sackgasse, und sie stand seit dem ersten Tag der
+Kette offen.** Auf Produktiv liegt ein Tag, auf `main` liegen längst neue
+Dinge, und dann geht etwas kaputt. Über `main` zu reparieren hieße, alles
+Unfertige mitzuliefern; an der Kette vorbei zu reparieren hieße, ohne
+Prüftore auszuliefern. Es gab keinen dritten Weg. Jetzt gibt es ihn: Ein
+Zweig `hotfix/*` zweigt **vom Ausgelieferten** ab, kommt per Handlauf auf
+Staging, und das Tor der grünen Läufe lässt ihn durch, weil er vom Zeiger
+`produktion` abstammt.
+
+**Warum ausgerechnet die Abstammung.** Ein Handlauf umgeht den Zweigschutz
+von `main` — das ist kein Nebeneffekt, sondern genau der Grund, warum die
+Kette Handläufe bisher nicht anerkannt hat. An die Stelle des Zweigschutzes
+tritt deshalb ein Nachweis, der sich nicht umgehen lässt: Der Commit muss den
+Stand enthalten, der heute auf Produktiv liegt. Wer vom Ausgelieferten
+abzweigt, hat ihn; wer etwas anderes unterschieben will, kann ihn nicht
+bekommen, ohne das Unterzuschiebende aufzugeben.
+
+**Die Entscheidung liegt jetzt in einem Werkzeug, nicht in einer Zeile Bash**
+(`tools/kette/freigabe.py`). Der Grund ist derselbe wie beim Backup-Tor: Was
+eine Auslieferung verhindern soll, gehört dorthin, wo eine Selbstprobe es
+nachweisen kann. Die Abnahme dieses Pakets verlangt wörtlich die Gegenprobe —
+*ein Hotfix ohne Abstammung muss abgelehnt werden* —, und die wäre als Bash im
+Arbeitslauf nur durch einen echten Produktivlauf zu belegen gewesen, also
+praktisch nie. Als Werkzeug ist sie eine von **32 Lagen**, die bei jedem Push
+laufen. Sechs davon sind die unbequemen: eine Abstammung, die gar nicht zu
+ermitteln war, gilt als **nein**; ein `behind` ebenso; ein Handlauf auf `main`
+ebenso.
+
+**Ein Rückfallstand entsteht jetzt von selbst.** Ein Hotfix taugt nur, wenn er
+gegen den Stand geprobt wird, der draußen läuft — Staging spiegelt aber
+`main`. Also legt die Kette bei jeder Produktiv-Auslieferung ein
+Komplett-Backup auf Staging an und schreibt dessen **Dateinamen neben den
+Tag**. Zurückgespielt wird er von Hand über `wiederherstellen.php`: Eine
+Wiederherstellung ist der einschneidendste Vorgang, den die Anwendung kennt,
+und sie bleibt dort, wo die Anwendung sie hingelegt hat.
+
+**Er blockiert die Auslieferung nicht, und das ist mit Absicht unbequem.**
+Der erste Entwurf machte ihn blockierend — nach dem Muster „alles, was
+scheitern kann, ohne den Server zu verändern, steht davor". Hier ist das
+falsch herum: Ein Hotfix wird gebraucht, **weil** etwas kaputt ist. Hinge die
+Produktiv-Auslieferung daran, dass Staging erreichbar ist, dann sperrte eine
+kranke Testumgebung die Reparatur der echten. Scheitert er, ist der Lauf rot
+und sagt, dass der Rückfallstand fehlt; ausgeliefert wird trotzdem. Still
+übersprungen wird er nicht.
+
+**Zwei Riegel, die beim Bauen entstanden sind und bleiben.** Der neue Job
+heißt `Rückfallstand (Staging)` und ausdrücklich **nicht** `staging-…`: Das
+Tor erkannte den Staging-Job am Namensanfang, und ein zweiter Job mit diesem
+Anfang hätte einen Tag-Lauf — in dem `staging` übersprungen ist — sich selbst
+als Nachweis „stand auf Staging" zählen lassen. Der Riegel gegen
+übersprungene Jobs wäre von hinten wieder offen gewesen. Deshalb der Name
+**und** ein Vergleich auf Gleichheit statt auf den Anfang; einer der beiden
+wird irgendwann jemand „aufräumen".
+
+**Gemessen und unangenehm:** Staging bewahrt in der Vorgabe **zwei**
+Komplett-Stände auf. Bei zwei Auslieferungen ist der Rückfallstand des
+vorletzten Tags bereits verdrängt. Das Runbook sagt es an der Stelle, an der
+es wehtut, und die Laufzusammenfassung auch — geändert wird die Vorgabe
+nicht: Sie ist eine Betriebsentscheidung über Speicherplatz, keine der Kette.
+
+**Was dabei nicht angefasst wurde:** kein `server/`-Code, also keine
+Versionsstufe. Der Hotfix-Weg ist vollständig eine Sache der Kette.
+
 ## [Werkzeug: Die Kette hält die Wartung an, wenn sie stürzt — und sagt, was gilt] — 2026-09-21
 
 **Ein roter Auslieferungslauf hinterließ eine Anlage in einem Zustand, den

@@ -583,6 +583,101 @@ jobs:
       probelauf_gespraech:     ${{ inputs.probelauf_gespraech     || false }}
     secrets: inherit
   # ---------------------------------------------------------------------------
+  rueckfall:
+    # DER RUECKFALLSTAND AUF STAGING (AP7, E-KH-16).
+    #
+    # WOZU. Ein Hotfix wird vom Zeiger `produktion` abgezweigt und auf Staging
+    # geprobt. Dafuer muss Staging den Stand des ausgelieferten Tags zeigen
+    # koennen -- und Staging spiegelt sonst `main`, das dem Tag vorausgeeilt
+    # ist. Also braucht es einen Stand, den man einspielen kann. Dieser Job
+    # legt ihn bei JEDER Produktiv-Auslieferung an und nennt seinen Dateinamen
+    # neben dem Tag: Beim Zuruecksetzen muss klar sein, WELCHEN Stand man
+    # nimmt. Wer den falschen einspielt, probt seinen Hotfix gegen etwas
+    # anderes als das, was draussen laeuft.
+    #
+    # ER HEISST NICHT `staging...`, UND DAS IST KEINE GESCHMACKSFRAGE. Das Tor
+    # der gruenen Laeufe in `ausliefern-lauf.yml` erkennt den Staging-Job am
+    # Namen. Hiesse dieser Job `staging-sicherung`, zaehlte ein Tag-Lauf, in
+    # dem `staging` uebersprungen wurde, sich selbst als Nachweis „stand auf
+    # Staging" -- der Riegel aus B5 (F-KH-U-35) waere von hinten wieder offen.
+    # Das Tor vergleicht seit AP7 zusaetzlich auf GLEICHHEIT statt auf den
+    # Namensanfang; beide Riegel stehen, weil einer davon irgendwann jemand
+    # „aufraeumt".
+    #
+    # ER BLOCKIERT DIE AUSLIEFERUNG NICHT (E-KH-30), und das ist die
+    # unbequeme, aber richtige Wahl. Ein Hotfix wird gebraucht, WEIL etwas
+    # kaputt ist. Haenge die Produktiv-Auslieferung daran, dass Staging
+    # erreichbar ist, dann sperrt eine kranke Testumgebung die Reparatur der
+    # echten -- genau verkehrt herum. Scheitert dieser Job, ist der LAUF rot
+    # und sagt, dass der Rueckfallstand fehlt; ausgeliefert wird trotzdem.
+    # **Still uebersprungen wird er nicht** -- das waere B5 noch einmal.
+    name: Rückfallstand (Staging)
+    # NUR BEI EINER ECHTEN AUSLIEFERUNG. Ein Probelauf veraendert nichts und
+    # braucht keinen Rueckfallstand; ein Komplett-Backup je Probelauf waere
+    # teuer und verdraengte obendrein die Staende, um die es hier geht.
+    if: ${{ startsWith(github.ref, 'refs/tags/web-v') && !inputs.probelauf }}
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Komplett-Backup auf Staging anstossen und zu Ende laufen lassen
+        env:
+          STAGING_URL: ${{ vars.STAGING_URL }}
+          JOBS_TOKEN:  ${{ secrets.JOBS_TOKEN }}
+        run: |
+          set -euo pipefail
+          # KEIN VORGABEWERT, wie ueberall seit AP6 (E-KH-07): Eine leere
+          # Adresse ist rot und nicht „dann eben Staging raten".
+          if [ -z "${STAGING_URL:-}" ]; then
+            echo "::error::Die Variable STAGING_URL ist leer. Ohne sie kann kein Rückfallstand auf Staging angelegt werden."
+            exit 1
+          fi
+          if [ -z "${JOBS_TOKEN:-}" ]; then
+            echo "::error::Das Geheimnis JOBS_TOKEN der Umgebung staging ist leer."
+            exit 1
+          fi
+          python3 tools/kette/tor.py --selbstprobe
+          python3 tools/kette/tor.py backup --basis "$STAGING_URL" --token "$JOBS_TOKEN"
+
+      - name: Den Dateinamen neben den Tag schreiben
+        env:
+          STAGING_URL: ${{ vars.STAGING_URL }}
+          JOBS_TOKEN:  ${{ secrets.JOBS_TOKEN }}
+        run: |
+          set -euo pipefail
+          datei=$(python3 tools/kette/tor.py zustand --basis "$STAGING_URL" \
+                    --token "$JOBS_TOKEN" --frage komplett)
+          tag="${GITHUB_REF_NAME}"
+          echo "Tag: $tag · Rückfallstand auf Staging: $datei"
+          {
+            echo "## Rückfallstand auf Staging"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Ausgeliefertes Tag | \`$tag\` |"
+            echo "| Komplett-Stand auf Staging | \`$datei\` |"
+            echo
+            echo 'Diesen Stand braucht man, um **Staging auf den Stand des Tags'
+            echo 'zurückzusetzen** — der Hinweg eines Hotfixes. Eingespielt wird er'
+            echo 'von einer angemeldeten Administratorin über `wiederherstellen.php`;'
+            echo 'die Kette setzt nichts aus der Ferne zurück (E-KH-16). Die'
+            echo 'Schrittfolge steht im Runbook in `docs/Technik.md`.'
+            echo
+            echo '**Er wird verdrängt.** Staging bewahrt nur eine begrenzte Zahl'
+            echo 'von Komplett-Ständen auf (Betrieb → Komplettsicherung →'
+            echo '„Stände aufbewahren"). Wer diesen Stand in ein paar Tagen noch'
+            echo 'braucht, lädt ihn jetzt herunter.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+        # STEHT `unbekannt` DA, IST DER SCHRITT ROT. Ein Rückfallstand, dessen
+        # Namen niemand kennt, ist keiner -- und eine Zusammenfassung, die
+        # „unbekannt" neben den Tag schreibt und gruen meldet, waere genau die
+        # gruene Zahl ohne Aussage, vor der `CLAUDE.md` 6 warnt. `tor.py`
+        # liefert dafuer den Rueckgabewert 1, und `set -e` traegt ihn nach
+        # aussen.
+  # ---------------------------------------------------------------------------
   zeiger:
     name: zeiger
     # DER ZEIGER SAGT, WAS AUF PRODUKTIV LIEGT (AP2/E-KH-13).

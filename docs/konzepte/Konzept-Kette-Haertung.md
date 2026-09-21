@@ -20,8 +20,8 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 >
 > | | |
 > |---|---|
-> | Stand | **21.09.2026 — AP1 bis AP6 gebaut; AP2 bis AP6 abgenommen, AP1 haengt am Botschutz. Kette II liegt auf `main` (PR #65, `fb614d1`).** Offen: **M1 — blockiert am Botschutz von lima-city**, danach AP7 und AP8. — **AP1 umgesetzt** (Dokumentation; kein Web-Code, keine Versionsstufe). Konzept freigegeben (Auftraggeber, 20.09.2026, ohne Änderungen; Fassung nach der ersten Fortschreibung vom selben Tag: F3 neu gefasst, E-KH-20, AP3/AP4 angepasst, Z1 und Z2 erledigt) |
-> | Entschieden | **E-KH-01 bis -08 und -10 bis -20** — die Vorschläge aus Abschnitt 2.2 gelten seit der Freigabe. Dazu **E-KH-21 bis -25** aus der Umsetzung (Abschnitt 2.4; -24 außerhalb der Pakete, -25 aus AP3) — **von der Umsetzung entschieden, zur Kenntnis und zum Widerspruch** |
+> | Stand | **21.09.2026 — AP1 bis AP7 gebaut; AP2 bis AP6 abgenommen, AP7 zur Haelfte (die Gegenprobe), AP1 haengt am Botschutz. Kette II liegt auf `main` (PR #65, `fb614d1`); AP7 liegt auf dem Arbeitszweig.** Offen: **M1 — blockiert am Botschutz von lima-city**, danach M2 und AP8. — **AP1 umgesetzt** (Dokumentation; kein Web-Code, keine Versionsstufe). Konzept freigegeben (Auftraggeber, 20.09.2026, ohne Änderungen; Fassung nach der ersten Fortschreibung vom selben Tag: F3 neu gefasst, E-KH-20, AP3/AP4 angepasst, Z1 und Z2 erledigt) |
+> | Entschieden | **E-KH-01 bis -08 und -10 bis -20** — die Vorschläge aus Abschnitt 2.2 gelten seit der Freigabe. Dazu **E-KH-21 bis -30** aus der Umsetzung (Abschnitt 2.4; -24 außerhalb der Pakete, -25 aus AP3) — **von der Umsetzung entschieden, zur Kenntnis und zum Widerspruch** |
 > | Von außen | **Einschub vom 20.09.2026 eingespielt** (Auftrag der Konzeptinstanz): Backlog 241–249 reserviert und angelegt, drei Konzeptdateien eingecheckt, Rahmenplan **Fassung 85**. Dabei angemeldet: `.sitzungen/` als **achter Schutzlistenpfad** (E-KH-20, einzutragen in AP4 oder AP5). **Der Einschub nannte Fassung 84 — die hatte AP2 schon vergeben und gepusht; er ist auf 85 gerückt** |
 > | Zuarbeiten erledigt | **Z1** (alte Staging-Anlage stillgelegt — B2 damit geschlossen), **Z2** (Zeiger `produktion` auf `7150793`) und **Z3** — alle 20.09.2026. Z3 **beide Anlagen**, aber auf zwei Wegen: Produktiv aus *Betrieb → Status*, Staging aus einer `phpinfo()`, weil die Anwendung dort noch nicht läuft. Fünf Zeilen der Staging-Spalte bleiben leer |
 > | Offen | **E-KH-09 (Ursache und Abhilfe F3)** — fällt nach der Messung am Ende von AP3; der Nachtrag in Abschnitt 1.4 hat eine der drei Erklärungen verschmälert. **Z3-Rest**: die fünf Zeilen, die nur die Anwendung weiß — sie hängen an Rahmenplan 6a, Schritt 6 |
@@ -44,7 +44,7 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 > | AP5 — Gemeinsame Schrittfolge | **ABGENOMMEN** | 21.09.2026 | — (nur `.github/`, `docs/`) | Eine Folge fuer beide Umgebungen; Staging 4 → 14 Schritte; Schutzliste **einmal**, 8 Pfade; `auslieferung.yml` 1 205 → 657 Zeilen. Drei Messrunden (35549413032, 35549610955, 35560508628); Befunde F-KH-U-30 bis -34; E-KH-27, -28. Pruefpunkt 22 und 23 abgehakt (Lauf 35566000648). **Offen: der Staging-Lauf** |
 > | AP6 — Abbruchverhalten und Härtung | **ABGENOMMEN** | 21.09.2026 | — (nur `.github/`, `tools/`, `docs/`) | 10 von 10 fremden `uses:` auf SHA; 2 `concurrency`-Gruppen; 5 → 0 Ueberspringen; 14 → 17 Schritte; `tor.py` 19 → 29 Lagen; Vorgabewerte gefallen. Funde F-KH-U-35, -37, -39. Pruefpunkt 24 (Variablen) erledigt, 25a/25b (Schlussschritt) **bestanden** -- `Wartung: aus` und `Wartung: an` aus derselben Lage. Rueckbau 25c gefahren: **0 Dateien in 3,8 s**, Staging wieder offen |
 > | **M1 — erster grüner Produktivlauf** | **BLOCKIERT** (Botschutz lima-city, F-KH-U-10/-36) | | | Das Tor der gruenen Laeufe laesst keinen Tag durch, solange Stufe 2 rot ist. Wartet auf den Hoster, nicht auf ein Paket |
-> | AP7 — Hotfix-Weg | offen | | | |
+> | AP7 — Hotfix-Weg | **gebaut; Gegenprobe abgenommen, das Zusatz-Backup haengt an M1** | 21.09.2026 | — (nur `.github/`, `tools/`, `docs/`) | `freigabe.py` 32 Lagen 0 offen; Kettenschritt 6 von 6 Lagen gegen eine Attrappe; `tor.py` 29 → 35 Lagen; Kettenaufrufe 42, 0 Befunde. Entscheidungen E-KH-29, -30. Messung: Aufbewahrung **2** (Backlog Nr. 261) |
 > | **M2 — Probe-Hotfix** | offen (Betreiberin) | | | |
 > | AP8 — Abschluss | offen | | | |
 ---
@@ -639,6 +639,70 @@ liest, darf auf keiner Ebene darüber denselben Namen haben.** Sonst ist jede
 Prüfung auf sein Vorhandensein eine Prüfung auf den falschen Wert. AP6 nimmt
 den Nachweis in die Härtung auf — es genügt ein Schritt ohne `environment:`,
 der die Namen liest und rot wird, wenn einer belegt ist.
+
+---
+
+**E-KH-29 — Ein Handlauf auf `main` zählt für das Tor NICHT, obwohl E-KH-15
+ihn wörtlich zuließe.** E-KH-15 sagt, das Tor erkenne einen grünen
+Staging-Lauf an, wenn der Commit „auf `main` liegt *oder* auf `hotfix/*` und
+vom Zeiger abstammt". Wörtlich gelesen zählte damit auch ein **Handlauf** auf
+`main`.
+
+Das ist beim Bauen von AP7 als Lücke aufgefallen, und zwar durch den
+Nebensatz der Entscheidung selbst: *„So ersetzt die Abstammung vom
+Ausgelieferten den Zweigschutz von `main`, den ein Handlauf sonst umginge."*
+E-KH-15 **setzt den Zweigschutz von `main` voraus** — und der ist laut
+Zuarbeit Z4 noch nicht gesetzt (Rahmenplan, 16.09.2026). Solange das so ist,
+wäre ein Handlauf auf `main` genau der Weg, den E-KH-15 versperren soll:
+irgendein Stand, per Hand auf Staging, dann ein Tag.
+
+**Entschieden:** Für `main` zählt nur ein **Push**; für `hotfix/*` zählt der
+Handlauf, weil dort die Abstammung geprüft wird und der stärkere Nachweis
+ist. Für `main` kostet das nichts — der Push ist ohnehin der normale Weg.
+**Wenn der Zweigschutz steht, kann man es neu entscheiden**; bis dahin ist
+die engere Lesart die sichere.
+
+**Mitgenommen, weil es dieselbe Klasse Fehler ist:** Bis AP6 zählte das Tor
+**jeden** Push-Lauf, ohne nach dem Zweig zu fragen. Das ging nur deshalb gut,
+weil `on.push.branches` allein `main` nennt — eine Regel, die nur wegen einer
+Zeile in einer anderen Datei stimmt, stimmt nicht. Seit AP7 wird der Zweig
+geprüft.
+
+---
+
+**E-KH-30 — Der Rückfallstand auf Staging blockiert die Produktiv-Auslieferung
+NICHT.** E-KH-16 verlangt, dass die Kette bei jeder Produktiv-Auslieferung
+ein Komplett-Backup auf Staging anstößt. Offen war, was gilt, wenn das
+misslingt.
+
+Der erste Entwurf machte es blockierend — nach dem Muster von E-KH-06
+(*alles, was scheitern kann, ohne den Server zu verändern, steht davor*).
+**Das ist hier falsch herum**, und der Grund ist der Zweck der Sache: Ein
+Hotfix wird gebraucht, **weil** etwas kaputt ist. Hinge die
+Produktiv-Auslieferung daran, dass Staging erreichbar ist, dann sperrte eine
+kranke Testumgebung die Reparatur der echten. Der Rückfallstand ist eine
+Bequemlichkeit für den **nächsten** Hotfix, kein Schutz für **diese**
+Auslieferung.
+
+**Entschieden:** ein eigener Job ohne `needs`-Verbindung zur Auslieferung.
+Scheitert er, ist der **Lauf rot** und sagt, dass der Rückfallstand fehlt;
+ausgeliefert wird trotzdem. **Still übersprungen wird er nicht** — das wäre
+B5 noch einmal (E-KH-12).
+
+**Zwei Nebenentscheidungen, beide klein und beide nötig:**
+
+1. **Der Job heißt nicht `staging…`.** Das Tor der grünen Läufe erkannte den
+   Staging-Job am Namensanfang. Hieße der neue Job `staging-sicherung`,
+   zählte ein **Tag**-Lauf — in dem `staging` übersprungen ist — sich selbst
+   als Nachweis „stand auf Staging", und der Riegel aus B5 wäre von hinten
+   wieder offen. Er heißt `Rückfallstand (Staging)`, **und** das Tor
+   vergleicht seither auf Gleichheit statt auf den Anfang. Zwei Riegel, weil
+   einer davon irgendwann jemand „aufräumt".
+2. **Ein Rückfallstand ohne Namen ist keiner.** Meldet die Anlage keinen
+   Dateinamen, ist der Schritt **rot** statt „unbekannt" in die
+   Zusammenfassung zu schreiben. Wer beim Zurücksetzen den falschen Stand
+   einspielt, probt seinen Hotfix gegen etwas anderes als das, was draußen
+   läuft.
 
 ---
 
@@ -1569,6 +1633,52 @@ bei dieser Gelegenheit mitfahren.
 - **Abnahme:** Tor lehnt einen `hotfix/*`-Commit ab, der **nicht** vom Zeiger
   abstammt (Gegenprobe); nimmt einen an, der abstammt.
 
+> **GEBAUT AM 21.09.2026. Die Abnahme ist zur Hälfte gefahren, und die
+> gefahrene Hälfte ist die, um die es geht.**
+>
+> **Die Gegenprobe ist belegt, ohne dass etwas ausgeliefert wurde** — und
+> zwar zweimal unabhängig:
+>
+> | Wo | Was |
+> |---|---|
+> | `tools/kette/freigabe.py --selbstprobe` | **32 Lagen, 0 offen**; darunter „Hotfix mit Abstammung → ja" und „derselbe Hotfix ohne Abstammung → nein" |
+> | Der Kettenschritt selbst, gegen eine `gh`-Attrappe | **6 Lagen, 6 richtig**: Push auf `main` (0), Hotfix mit Abstammung (0), Hotfix ohne (1), Vergleich nicht zu holen (1), gar kein Lauf (1), `staging` übersprungen (1) |
+>
+> Das war der Zweck, das Urteil in ein Werkzeug zu legen: Die Abnahme
+> verlangt eine Ablehnung, und eine Ablehnung ist an einem echten
+> Produktivlauf nicht zu messen, ohne ihn absichtlich scheitern zu lassen.
+>
+> **Offen bleibt die Hälfte, die an M1 hängt:** das Zusatz-Backup auf
+> Staging (E-KH-16) löst erst bei einer echten Produktiv-Auslieferung aus.
+> Der Job ist gebaut und geprüft, soweit er ohne Auslieferung zu prüfen ist;
+> **gelaufen ist er nie.** Das steht als Prüfpunkt und nicht als erledigt.
+>
+> **Die verlangte Messung ist gefahren und fällt negativ aus.** Das Konzept
+> verlangt: *„Zu messen: wie viele Komplett-Stände Staging aufbewahrt — der
+> Stand des letzten Tags darf nicht verdrängt sein, wenn man ihn braucht."*
+> Gemessen: `KOMP_AUFBEWAHRUNG_VORGABE = 2` (`server/komplett_lib.php`),
+> einstellbar 1 bis 20. **Bei 2 ist der Rückfallstand des vorletzten Tags
+> bereits verdrängt**, und der geplante Sicherungslauf von Staging verdrängt
+> ihn zusätzlich. Das ist keine Code-, sondern eine Betriebsentscheidung
+> (Backlog Nr. 261, Vorschlag: 5) — eine Vorgabe hochzusetzen, weil eine
+> Umgebung sie braucht, änderte sie für jede andere Installation mit.
+>
+> **Zwei Entscheidungen sind beim Bauen gefallen** und stehen in Abschnitt 2:
+> **E-KH-29** (ein Handlauf auf `main` zählt nicht, obwohl E-KH-15 ihn
+> wörtlich zuließe — er setzt den Zweigschutz voraus, und der ist laut Z4
+> nicht gesetzt) und **E-KH-30** (der Rückfallstand blockiert die
+> Auslieferung nicht — ein Hotfix wird gebraucht, *weil* etwas kaputt ist).
+>
+> **Ein Riegel ist beim Bauen entstanden und bleibt.** Das Tor erkannte den
+> Staging-Job am **Namensanfang**. AP7 bringt einen zweiten Job in dieselbe
+> Datei, der etwas mit Staging tut; hieße er `staging-sicherung`, zählte ein
+> Tag-Lauf — in dem `staging` übersprungen ist — sich selbst als Nachweis
+> „stand auf Staging", und B5 wäre von hinten wieder offen. Der Job heißt
+> `Rückfallstand (Staging)`, **und** das Tor vergleicht jetzt auf Gleichheit.
+> Zwei Riegel, weil einer davon irgendwann jemand „aufräumt".
+>
+> **Kein `server/`-Code, keine Versionsstufe** (E-KH-23).
+
 ### M2 — Probe-Hotfix (Betreiberin)
 
 Eine Textkorrektur über den ganzen Weg aus AP7. Wahlweise im selben Zug den
@@ -1629,7 +1739,7 @@ Fall „Wartung an, laut gesagt" (E-KH-06).
 | **Z1** | **Alte Staging-Anlage im Produktiv-Webspace stilllegen:** Subdomain `staging.nadoku…`, Verzeichnis, Datenbank samt Nutzer, FTP-Zusatzkonto, Cron-Eintrag, A-Record bei Hoster 1, altes SFTP-Ziel. **Solange sie besteht, ist B2 offen.** | **erledigt 20.09.2026** |
 | Z2 | Zweig `produktion` auf `7150793` anlegen: `git push origin 71507932006d1431abe3823b97cf877b18ccb055:refs/heads/produktion` | **erledigt 20.09.2026** (nachgemessen) |
 | Z3 | Nicht-geheime Einrichtungswerte der neuen Staging-Anlage und Plattformauskunft beider Anlagen nennen | AP1 |
-| Z4 | GitHub: Zweigschutz `main` (PR, Stufe 1 Pflicht — laut Rahmenplan am 16.09. noch offen); Umgebung `staging` auf `main` beschränken, mit AP7 zusätzlich `hotfix/*`. **Die Variablen sind erledigt (21.09.2026):** `WACHE_BASIS` steht als Repositoriums-Variable, `FTP_ZIELPFAD` und `FTP_STATE_PFAD` in **beiden** Umgebungen — belegt durch fünf Läufe, nicht mehr abgeleitet (Prüfpunkt 24, F-KH-U-38/-39) | bis AP6 / AP7 |
+| Z4 | GitHub: Zweigschutz `main` (PR, Stufe 1 Pflicht — laut Rahmenplan am 16.09. noch offen); Umgebung `staging` auf `main` und `hotfix/*` beschränken — **ausdrücklich ERST NACH M1, M2 und AP7** (Auftraggeber, 21.09.2026): Heute ist die Umgebung gar nicht beschränkt, das Zuziehen ist also eine Verengung, und danach kommt kein Handlauf von einem Arbeitszweig mehr durch. Genau solche Handläufe haben die Prüfpunkte 25a bis 25c getragen. **Die Variablen sind erledigt (21.09.2026):** `WACHE_BASIS` steht als Repositoriums-Variable, `FTP_ZIELPFAD` und `FTP_STATE_PFAD` in **beiden** Umgebungen — belegt durch fünf Läufe, nicht mehr abgeleitet (Prüfpunkt 24, F-KH-U-38/-39) | bis AP6 / AP7 |
 | Z5 | F3: Runner-Abbild/Node-Fassung der Läufe vom 18.09. und 20.09. nachtragen; Probeläufe freigeben; **nur falls der Trennversuch es verlangt:** FTP-Zusatzkonto für Produktiv (eingesperrt auf den Webroot) anlegen | AP3, AP4 |
 | Z6 | M1 und M2: Tag, Freigabe | nach AP6 / AP7 |
 | Z7 | Neue Staging-Anlage vollständig: **eigener** Serverschlüssel und Server-Anteil, SFTP-Sicherungsziel, Komplett-Backup einmal von Hand gelungen, Demo-Konto, Referenzbestand, Messstand-Konto, Betreff-Präfix | vor AP5 |

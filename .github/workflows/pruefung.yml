@@ -461,8 +461,30 @@ jobs:
         # der Auslieferung.
         #
         # Sie braucht kein Netz und keine Installation (Attrappen statt
-        # Abrufe) und kostet Sekunden. Erwartet: 11 von 11.
+        # Abrufe) und kostet Sekunden. Erwartet: 0 offen.
+        #
+        # DIE ZAHL STEHT HIER NICHT MEHR. Sie stand als „11 von 11" da und war
+        # seit AP6 falsch (29), seit AP7 noch einmal (35) -- eine von Hand
+        # gepflegte Zahl neben einer wachsenden Liste. Die Probe zaehlt selbst
+        # und meldet rot, wenn etwas offen ist; mehr braucht dieser Schritt
+        # nicht zu wissen.
         run: python3 tools/kette/tor.py --selbstprobe
+
+      - name: Das Tor der grünen Läufe — geht es zu, wenn es zugehen muss?
+        # AP7, E-KH-15. Die Entscheidung, ob ein Stand auf Produktiv darf,
+        # liegt seit AP7 in `tools/kette/freigabe.py` und nicht mehr als Bash
+        # im Auslieferungslauf -- damit genau DAS hier moeglich ist: die
+        # Gegenprobe, ohne auszuliefern.
+        #
+        # DIE ABNAHME VON AP7 IST DIESER SCHRITT. Sie verlangt „lehnt einen
+        # `hotfix/*`-Commit ab, der NICHT vom Zeiger abstammt; nimmt einen an,
+        # der abstammt" -- beide Lagen stehen in der Selbstprobe, samt der
+        # unbequemen Raender: ein Vergleich, der gar nicht zu holen war
+        # (dann NEIN), ein `behind` (dann NEIN), ein Handlauf auf `main`
+        # (dann NEIN, weil er den Zweigschutz umginge).
+        #
+        # Ohne Netz, ohne Installation, ohne Auslieferung. Erwartet: 0 offen.
+        run: python3 tools/kette/freigabe.py --selbstprobe
 
       - name: Python-Werkzeuge — lassen sie sich überhaupt übersetzen?
         # ANLASS, 20.09.2026: Ein deutsches Schlusszeichen in einer

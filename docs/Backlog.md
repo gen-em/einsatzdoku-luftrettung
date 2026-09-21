@@ -113,7 +113,7 @@ kollidieren.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **260** und trägt seine
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **262** und trägt seine
 Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
@@ -3149,6 +3149,41 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     … die Stellen, die den alten Namen ausdrücklich als Historie nennen."*
     Ebenso wenig betroffen sind CHANGELOG, Backlog und die Prüfdokumente —
     Protokolle werden nicht rückwirkend umgeschrieben.
+
+261. **Staging bewahrt zwei Komplett-Stände auf — der Hotfix-Weg braucht
+    mehr.** *Aufgenommen 21.09.2026 (Kette II, AP7).* Zugeordnet:
+    **Betriebsentscheidung der Betreiberin**, kein Code.
+
+    `KOMP_AUFBEWAHRUNG_VORGABE` steht auf **2** (`server/komplett_lib.php`),
+    einstellbar unter **Betrieb → Komplettsicherung → „Stände aufbewahren"**
+    (1 bis 20). Seit AP7 legt die Kette bei **jeder** Produktiv-Auslieferung
+    einen Komplett-Stand auf Staging an — den Rückfallstand, mit dem man
+    Staging auf den Stand des ausgelieferten Tags zurücksetzt (E-KH-16).
+
+    **Bei 2 ist der Rückfallstand des vorletzten Tags bereits verdrängt**,
+    und der geplante Komplettsicherungs-Plan von Staging verdrängt ihn
+    zusätzlich. Wer einen Hotfix für ein Tag bauen will, das zwei
+    Auslieferungen zurückliegt, findet seinen Stand nicht mehr. Das Konzept
+    hat diese Messung ausdrücklich verlangt („der Stand des letzten Tags darf
+    nicht verdrängt sein, wenn man ihn braucht") — hier ist sie, und sie
+    fällt negativ aus.
+
+    **Warum das nicht im Code behoben wird:** Die Aufbewahrung ist eine
+    Entscheidung über Speicherplatz auf einer konkreten Anlage, nicht über
+    das Verhalten der Kette. Eine Vorgabe hochzusetzen, weil eine Umgebung sie
+    braucht, verschöbe die Entscheidung dorthin, wo niemand sie sieht — und
+    änderte sie zugleich für jede andere Installation mit.
+
+    **Was stattdessen geschieht, und es steht schon:** Die
+    Laufzusammenfassung nennt den Dateinamen und sagt daneben, dass er
+    verdrängt wird und man ihn herunterladen soll; das Runbook
+    (`docs/Technik.md` 6.6b, Schritt 2) sagt dasselbe an der Stelle, an der
+    es wehtut.
+
+    **Vorschlag:** Aufbewahrung auf Staging auf **5** setzen. Dann überlebt
+    ein Rückfallstand vier weitere Auslieferungen. Die Zahl ist ein
+    Vorschlag, kein Messwert — wie viele Tags man rückwirkend reparieren
+    können will, weiß nur die Betreiberin.
 
 
 ## Erledigt

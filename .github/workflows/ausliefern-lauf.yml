@@ -370,6 +370,15 @@ jobs:
         # Ein Tag darf nur ausliefern, was auf Staging schon stand und dort
         # grün war (E-P5a-13). Gefragt wird nach dem COMMIT, nicht nach dem
         # Zweig: Ein Tag kann auf einem Stand sitzen, der nie auf `main` war.
+        #
+        # SEIT AP7 ENTSCHEIDET `tools/kette/freigabe.py`, nicht dieser Schritt.
+        # Hier werden nur noch die TATSACHEN geholt -- welche Laeufe es gab, wie
+        # sie ausgingen, ob der Commit vom Zeiger abstammt. Das Urteil faellt
+        # ein Werkzeug mit `--selbstprobe`, und zwar aus demselben Grund wie
+        # beim Backup-Tor (E-P5a-12): Die Abnahme von AP7 verlangt eine
+        # GEGENPROBE -- ein Hotfix ohne Abstammung muss abgelehnt werden -- und
+        # die waere als Bash hier nur durch einen echten Produktivlauf zu
+        # belegen, also praktisch nie.
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -377,43 +386,69 @@ jobs:
           echo "Commit: $sha"
           pruef=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/pruefung.yml/runs?head_sha=$sha&status=success" \
                    --jq '.workflow_runs | length' 2>/dev/null || echo 0)
-          # DER LAUF MUSS GRUEN SEIN -- UND DER JOB `staging` DARIN MUSS
-          # GELAUFEN SEIN (AP6). Das ist nicht dieselbe Bedingung, und der
-          # Unterschied ist genau die Luecke, die B5 meint:
+
+          # STAMMT DIESER COMMIT VOM ZEIGER `produktion` AB? (AP7, E-KH-15)
           #
-          # **Ein uebersprungener Job macht den Lauf nicht rot.** Ein
-          # `auslieferung.yml`-Lauf, in dem `staging` uebersprungen wurde --
-          # weil eine Bedingung nicht griff, weil jemand ihn von Hand
-          # angestossen hat, weil ein `if` umgebaut wurde -- meldet
-          # `conclusion: success`. Bis hierher hat dieses Tor das als
-          # "stand auf Staging" gezaehlt. Es hat dann gezaehlt, dass ein Lauf
-          # stattgefunden hat, nicht dass ausgeliefert wurde.
+          # Ueber die Vergleichsschnittstelle und NICHT ueber `git merge-base`:
+          # Der Auscheckschritt holt flach, die Abstammung laege also gar nicht
+          # im Arbeitsverzeichnis. Ein `fetch-depth: 0` dafuer waere ein voller
+          # Klon bei jeder Auslieferung.
           #
-          # Deshalb wird jetzt der JOB abgefragt, nicht nur der Lauf.
+          # `|| true` UND EIN LEERER WERT SIND HIER KEIN DURCHWINKEN: Das
+          # Werkzeug liest einen leeren Vergleich als „nicht abgestammt" und
+          # schliesst das Tor. Fehlt der Zweig `produktion`, ist das Ergebnis
+          # also rot und nicht gruen.
+          vergleich=$(gh api "repos/${GITHUB_REPOSITORY}/compare/produktion...$sha" \
+                       --jq '.status' 2>/dev/null || true)
+          echo "Vergleich gegen den Zeiger \`produktion\`: ${vergleich:-— nicht ermittelt —}"
+
+          # DIE LAEUFE ZUSAMMENTRAGEN. Gefragt wird nach ALLEN erfolgreichen
+          # Auslieferungslaeufen auf diesem Commit -- ohne Filter auf das
+          # Ereignis, denn seit AP7 zaehlt auch ein HANDLAUF auf `hotfix/*`.
+          # Welcher davon anerkannt wird, entscheidet `freigabe.py`.
           laeufe=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/auslieferung.yml/runs?head_sha=$sha&status=success" \
-                   --jq '[.workflow_runs[] | select(.event == "push") | .id] | .[]' 2>/dev/null || true)
-          stg=0
-          for lauf in $laeufe; do
-            # Der Jobname ist seit AP5 zusammengesetzt (`staging / ausliefern`),
-            # deshalb `startswith` und nicht Gleichheit. Wer den aufrufenden
-            # Job umbenennt, aendert diese Zeile mit -- sonst zaehlt sie still
-            # null und das Tor geht nie wieder auf.
-            treffer=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$lauf/jobs" \
-                      --jq '[.jobs[] | select(.name | startswith("staging")) | select(.conclusion == "success")] | length' 2>/dev/null || echo 0)
-            if [ "${treffer:-0}" -ge 1 ]; then
-              stg=$((stg + 1))
-            fi
+                    --jq '[.workflow_runs[] | {id, event, head_branch}]' 2>/dev/null || echo '[]')
+
+          # UND JE LAUF: WAR DER JOB `staging` WIRKLICH ERFOLGREICH?
+          #
+          # Das ist nicht dasselbe wie „der Lauf war gruen", und der Unterschied
+          # ist die Luecke, die B5 meint (F-KH-U-35): Ein UEBERSPRUNGENER Job
+          # macht den Lauf nicht rot. Bis AP6 zaehlte dieses Tor deshalb, dass
+          # ein Lauf stattgefunden hat, nicht dass ausgeliefert wurde.
+          #
+          # DER JOBNAME WIRD AUF GLEICHHEIT GEPRUEFT, NICHT AUF DEN ANFANG
+          # (AP7). Seit AP5 ist er zusammengesetzt (`staging / ausliefern`),
+          # deshalb stehen beide Formen da -- die alte fuer Laeufe von vor AP5.
+          #
+          # Bis AP7 stand hier `startswith("staging")`, und das war eine Falle
+          # mit Zeitzuender: AP7 bringt einen zweiten Job in dieselbe Datei,
+          # der etwas mit Staging tut. Hiesse er `staging-sicherung`, zaehlte
+          # ein TAG-Lauf -- in dem `staging` uebersprungen ist -- sich selbst
+          # als Nachweis „stand auf Staging", und der Riegel aus B5
+          # (F-KH-U-35) waere von hinten wieder offen. Der Job heisst deshalb
+          # `Rueckfallstand (Staging)`, UND hier wird verglichen statt
+          # gestartet. Zwei Riegel, weil einer davon irgendwann jemand
+          # „aufraeumt".
+          #
+          # WER DEN AUFRUFENDEN JOB UMBENENNT, AENDERT DIESE ZEILE MIT --
+          # sonst zaehlt sie still null und das Tor geht nie wieder auf.
+          echo "$laeufe" > roh.json
+          : > zeilen.jsonl
+          for lauf in $(jq -r '.[].id' roh.json); do
+            ok=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$lauf/jobs" \
+                  --jq '[.jobs[] | select(.name == "staging" or .name == "staging / ausliefern") | select(.conclusion == "success")] | length' 2>/dev/null || echo 0)
+            if [ "${ok:-0}" -ge 1 ]; then flagge=true; else flagge=false; fi
+            jq -c --argjson ok "$flagge" --argjson id "$lauf" \
+               '.[] | select(.id == $id) | . + {staging_ok: $ok}' roh.json >> zeilen.jsonl
           done
-          echo "Grüne Stufe-1-Läufe auf diesem Commit:              $pruef"
-          echo "Läufe mit ERFOLGREICHEM Job \`staging\` auf diesem Commit: $stg"
-          if [ "$pruef" -lt 1 ]; then
-            echo "::error::Kein grüner Stufe-1-Lauf auf $sha — dieser Stand ist nicht freigabefähig."
-            exit 1
-          fi
-          if [ "$stg" -lt 1 ]; then
-            echo "::error::Kein Lauf auf $sha, in dem der Job \`staging\` ERFOLGREICH war — dieser Stand ist nie auf Staging ausgeliefert worden. Ein gruener Lauf mit UEBERSPRUNGENEM staging-Job zaehlt hier ausdruecklich nicht: Uebersprungen ist nicht geprueft."
-            exit 1
-          fi
+          jq -s '.' zeilen.jsonl > laeufe.json
+          echo "Zusammengetragen:"
+          jq -c '.[]' laeufe.json
+
+          python3 tools/kette/freigabe.py urteil \
+            --laeufe laeufe.json \
+            --vergleich "${vergleich:-}" \
+            --stufe1 "${pruef:-0}"
 
       - name: Adressvergleich — meint die Kette dieselbe Anlage wie die Wache?
         # NUR AUF PRODUKTIV, denn `WACHE_BASIS` beschreibt Produktiv: Die

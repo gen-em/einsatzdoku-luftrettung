@@ -21,12 +21,12 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, **AP5 VOLLSTAENDIG ABGENOMMEN** (Produktiv-Haelfte Lauf 35566000648, Staging-Haelfte Lauf 35570398032), **AP6 GEBAUT UND ABGENOMMEN** (die Abnahme war in ihrer alten Fassung unfahrbar, F-KH-U-37, und wurde als Prüfpunkt 25a/25b neu gefasst; beide sind am 21.09.2026 gefahren und bestanden, F-KH-U-39). **Offen ist allein der Rückbau von Staging** — es steht noch in Wartung, das FTP-Passwort ist noch falsch (Prüfpunkt 25c). **Kette II liegt seit dem 21.09.2026 auf `main`** (PR #65, Merge `fb614d1`). **M1 ist blockiert:** Stufe 2 bleibt am Botschutz von lima-city rot (F-KH-U-10/-36), und das Tor der gruenen Laeufe laesst deshalb keinen Tag durch.** AP7 und AP8 nicht begonnen |
+> | Stand | 21.09.2026 — **AP7 gebaut, die Gegenprobe abgenommen; das Zusatz-Backup hängt an M1.** **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, **AP5 VOLLSTAENDIG ABGENOMMEN** (Produktiv-Haelfte Lauf 35566000648, Staging-Haelfte Lauf 35570398032), **AP6 GEBAUT UND ABGENOMMEN** (die Abnahme war in ihrer alten Fassung unfahrbar, F-KH-U-37, und wurde als Prüfpunkt 25a/25b neu gefasst; beide sind am 21.09.2026 gefahren und bestanden, F-KH-U-39). **Offen ist allein der Rückbau von Staging** — es steht noch in Wartung, das FTP-Passwort ist noch falsch (Prüfpunkt 25c). **Kette II liegt seit dem 21.09.2026 auf `main`** (PR #65, Merge `fb614d1`). **M1 ist blockiert:** Stufe 2 bleibt am Botschutz von lima-city rot (F-KH-U-10/-36), und das Tor der gruenen Laeufe laesst deshalb keinen Tag durch.** AP7 und AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **29**, Zielprobe **93**, Zustand **28**, Wache **38** — alle 0 offen), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **zehn Probeläufe gegen Produktiv**, **vier Staging-Läufe über die neue Schrittfolge** (zwei grün, zwei absichtlich rot). Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **38** (Abschnitt 2): F-KH-U-01 bis F-KH-U-39 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben. **Zuletzt F-KH-U-39: der Schlussschritt von AP6 ist zweimal gelaufen** — einmal bei eingeschalteter, einmal bei ausgeschalteter Wartung, und die beiden Wortlaute unterscheiden sich an genau der einen Stelle, an der sie sich unterscheiden müssen |
+> | Funde | **40** (Abschnitt 2): F-KH-U-01 bis F-KH-U-41 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben. **Zuletzt F-KH-U-39: der Schlussschritt von AP6 ist zweimal gelaufen** — einmal bei eingeschalteter, einmal bei ausgeschalteter Wartung, und die beiden Wortlaute unterscheiden sich an genau der einen Stelle, an der sie sich unterscheiden müssen. Aus AP7: **F-KH-U-40** (Staging bewahrt **zwei** Komplett-Stände auf — die vom Konzept verlangte Messung, und sie fällt negativ aus) und **F-KH-U-41** (das Tor erkannte den Staging-Job am Namensanfang; AP7 hätte den Riegel aus B5 von hinten wieder geöffnet) |
 > | F3 | **GEFUNDEN UND BEHOBEN, der Beleg ist gefahren.** Ursache: `RETR` auf die nicht vorhandene Zustandsdatei tötet die Verbindung; die Aktion deutet es als „first publish" und arbeitet mit einem toten Client weiter, bis das erste `MKD` es bemerkt — **drei Schritte hinter der Stelle, die sie meldet** (F-KH-U-25). Abhilfe: die Datei einmal hinlegen, bevor die Aktion läuft (AP4, Richtung (e), `tools/kette/zustand.py`). Beleg: **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige Abgleich gegen diesen Server überhaupt (F-KH-U-28). **E-KH-09 ist erfüllt** |
-> | Prüfliste | **32** Punkte: **17 abgehakt**, 5 teilweise, **10 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu am 21.09.2026: **25c** (der Rückbau von Staging — er ist eine eigene Prüfung, kein Aufräumen, und solange er offen ist, ist Staging nicht benutzbar). Abgehakt am selben Tag: **24**, **25a**, **25b** und **25c** — **Prüfpunkt 25 ist damit vollständig** |
+> | Prüfliste | **35** Punkte: **17 abgehakt**, 5 teilweise, **13 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu am 21.09.2026: **25c** (der Rückbau von Staging — er ist eine eigene Prüfung, kein Aufräumen, und solange er offen ist, ist Staging nicht benutzbar). Abgehakt am selben Tag: **24**, **25a**, **25b** und **25c** — **Prüfpunkt 25 ist damit vollständig**. Aus AP7 neu: **26** (der Rückfallstand bei einer echten Auslieferung), **27** (ein Hotfix über den ganzen Weg, M2) und **28** (die Aufbewahrung festlegen) — alle drei hängen an M1 |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
 
 ---
@@ -512,6 +512,80 @@ Error: Client is closed because read ECONNRESET (data socket)
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-41 — Das Tor der grünen Läufe erkannte den Staging-Job am
+NAMENSANFANG. AP7 hätte den Riegel aus B5 von hinten wieder geöffnet.**
+*Gefunden beim Bauen von AP7, 21.09.2026 — nicht durch einen Lauf, sondern
+durch die Frage, wie der neue Job heißen soll.*
+
+Das Tor zählte erfolgreiche Jobs mit
+`select(.name | startswith("staging"))`. Das war richtig, solange es genau
+einen solchen Job gab. AP7 bringt einen zweiten in dieselbe Datei — den, der
+den Rückfallstand auf Staging anlegt. Der naheliegende Name wäre
+`staging-sicherung` gewesen.
+
+**Was dann passiert wäre, und es ist nicht offensichtlich:** In einem
+**Tag**-Lauf ist der Job `staging` übersprungen — der Stand geht ja auf
+Produktiv, nicht auf Staging. Der Rückfallstand-Job dagegen läuft und wird
+grün. Ein späterer Tag auf demselben Commit fragte das Tor: „gab es hier
+einen erfolgreichen Job, dessen Name mit `staging` anfängt?" — und die
+Antwort wäre **ja** gewesen, obwohl dieser Stand nie auf Staging
+ausgeliefert wurde.
+
+**Das ist F-KH-U-35 noch einmal**, nur von der anderen Seite: Dort zählte
+das Tor Läufe statt Auslieferungen, hier hätte es einen fremden Job für den
+Staging-Job gehalten. Beide Male ist das Ergebnis dasselbe — ein Stand käme
+auf Produktiv, der auf Staging nie gestanden hat.
+
+**Zwei Riegel, und das ist Absicht:** Der Job heißt `Rückfallstand
+(Staging)`, **und** das Tor vergleicht seither auf Gleichheit
+(`.name == "staging" or .name == "staging / ausliefern"`) statt auf den
+Anfang. Einer allein hätte genügt — aber einen davon räumt irgendwann jemand
+auf, und der andere trägt dann weiter.
+
+> **Was daraus allgemein folgt:** Ein Muster, das auf den Namensanfang
+> prüft, ist eine Wette darauf, dass niemand einen zweiten Namen mit
+> demselben Anfang erfindet. Diese Wette hat hier **zwei Tage** gehalten.
+
+---
+
+**F-KH-U-40 — Staging bewahrt zwei Komplett-Stände auf. Der Hotfix-Weg
+braucht mehr, und das Konzept hat genau danach gefragt.**
+*Gemessen beim Bauen von AP7, 21.09.2026, im Quelltext — die laufende Anlage
+ist aus dem Wegwerf-Container nicht erreichbar.*
+
+Das Konzept verlangt für AP7 ausdrücklich: *„Zu messen: wie viele
+Komplett-Stände Staging aufbewahrt — der Stand des letzten Tags darf nicht
+verdrängt sein, wenn man ihn braucht."* Hier ist die Zahl:
+
+| | |
+|---|---|
+| `KOMP_AUFBEWAHRUNG_VORGABE` | **2** (`server/komplett_lib.php`, Zeile 106) |
+| einstellbar | 1 bis 20, unter **Betrieb → Komplettsicherung → „Stände aufbewahren"** |
+| gelesen von | `komp_aufbewahrung()` — die Vorgabe greift nur, solange nichts gesetzt ist |
+
+**Die Messung fällt negativ aus.** Seit AP7 legt **jede**
+Produktiv-Auslieferung einen Rückfallstand auf Staging an. Bei 2 ist der
+Stand des vorletzten Tags bereits verdrängt — und der geplante
+Komplettsicherungs-Lauf von Staging verdrängt ihn zusätzlich, ohne dass eine
+Auslieferung nötig wäre. Wer einen Hotfix für ein Tag bauen will, das zwei
+Auslieferungen zurückliegt, findet seinen Stand nicht mehr.
+
+**Was die Grenze dieser Messung ist, und sie ist real:** Gemessen ist die
+**Vorgabe im Quelltext**, nicht der Wert auf der laufenden Staging-Anlage.
+Steht dort eine Marke, gilt sie. Nachsehen kann das nur die Betreiberin
+(Prüfpunkt 28).
+
+**Nicht im Code behoben, und das ist eine Entscheidung:** Die Aufbewahrung
+ist eine Entscheidung über Speicherplatz auf einer konkreten Anlage, nicht
+über das Verhalten der Kette. Eine Vorgabe hochzusetzen, weil **eine**
+Umgebung sie braucht, verschöbe die Entscheidung dorthin, wo niemand sie
+sieht — und änderte sie für jede andere Installation mit. Stattdessen sagen
+es beide Stellen, an denen es jemanden erreicht: die Laufzusammenfassung
+(„wer ihn in ein paar Tagen noch braucht, lädt ihn jetzt herunter") und das
+Runbook an Schritt 2. Backlog Nr. 261, Vorschlag 5.
+
+---
 
 **F-KH-U-39 — AP6 IST AN SEINER EIGENEN ABNAHME GEMESSEN: Der
 Schlussschritt meldet die Wartung, und er meldet sie richtig — in beide
@@ -3233,6 +3307,74 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
 > E-KH-17 verbietet. Stattdessen wird die **Lage** hergestellt, die der
 > Schlussschritt melden soll (Wartung an), und nicht der Weg dorthin
 > nachgestellt.
+
+- [ ] **26 — Der Rückfallstand auf Staging, bei einer echten
+  Produktiv-Auslieferung** (Abnahme von AP7, zweite Hälfte, E-KH-16).
+  **Hängt an M1 und ist bis dahin nicht fahrbar** — der Job löst nur bei
+  einem Tag-Push aus, und M1 ist am Botschutz blockiert (F-KH-U-10/-36).
+  *Warum er nicht vorgezogen werden kann:* Ein Probelauf löst ihn
+  absichtlich nicht aus (er legte sonst je Probelauf einen Komplett-Stand an
+  und verdrängte damit genau die Stände, um die es geht). Ihn für die
+  Prüfung doch auslösen zu lassen, hieße eine Schrittfolge zu prüfen, die es
+  nur für die Prüfung gibt — der Fehler, den E-KH-17 verbietet.
+  *Weg:* fällt bei M1 von selbst an. Nichts zu tun, nur hinsehen.
+  *Erwartet:* Der Job **`Rückfallstand (Staging)`** ist grün, und die
+  Laufzusammenfassung nennt **Tag und Dateiname** nebeneinander, etwa
+  `2026-09-21T07-54-57Z_708a0f59.edk`.
+  *Woran ein Scheitern zu erkennen ist:* Der Dateiname lautet `unbekannt` —
+  dann ist der Schritt rot, und das ist richtig so. Ein Rückfallstand,
+  dessen Namen niemand kennt, ist keiner: Wer beim Zurücksetzen den falschen
+  Stand einspielt, probt seinen Hotfix gegen etwas anderes als das, was
+  draußen läuft.
+  *Und der eigentliche Prüfwert, der leicht übersehen wird:* Der Job darf die
+  **Auslieferung nicht blockieren** (E-KH-30). Ist Staging beim nächsten Tag
+  gerade nicht erreichbar, muss der Lauf **rot** sein und **trotzdem
+  ausgeliefert** haben. Wer das prüfen will, ohne darauf zu warten: die
+  Variable `STAGING_URL` kurz leeren — dann ist der Job rot, und `produktion`
+  muss davon unberührt durchlaufen.
+
+- [ ] **27 — Ein Hotfix über den ganzen Weg** (M2, Probe-Hotfix; Abnahme des
+  Runbooks in `docs/Technik.md` 6.6b). **Nach M1.**
+  *Warum:* Die Gegenprobe des Tors ist maschinell belegt (32 Lagen, dazu
+  6 Lagen am Kettenschritt selbst). Was **nicht** belegt ist, ist der Weg
+  drumherum: ob ein Handlauf auf `hotfix/*` auf Staging überhaupt
+  durchkommt, ob Stufe 2 dort grün wird, ob der Zeiger nachrückt, und ob das
+  Runbook stimmt, wenn man es Schritt für Schritt abarbeitet.
+  *Weg:* Eine **Textkorrektur** als Hotfix, die sieben Schritte des Runbooks
+  der Reihe nach. Wahlweise im selben Zug den Rückweg proben (voriger Tag
+  erneut ausliefern, Zeiger geht zurück, dann wieder vor, E-PV-3).
+  *Erwartet:* Schritt 5 des Runbooks kommt durch das Tor, und das Protokoll
+  sagt warum — `Abstammung vom Zeiger `produktion`: ja (Vergleich: ahead)`.
+  *Woran ein Scheitern zu erkennen ist — und es ist der interessante Fall:*
+  Das Tor lehnt ab, obwohl richtig abgezweigt wurde. Dann ist der Zeiger
+  inzwischen weitergerückt, oder der Zweig `produktion` fehlt. Beides steht
+  mit seinem Symptom in der Tabelle am Ende von 6.6b.
+  *Die unbequeme Gegenprobe gehört dazu, und sie kostet nichts:* **einen
+  Hotfix-Zweig von `main` abzweigen** statt vom Zeiger, Handlauf, Tag. Der
+  Lauf **muss** am Tor scheitern mit „stammt NICHT vom Zeiger `produktion`
+  ab". Geht er durch, ist der Riegel wirkungslos, und das wäre der ernsteste
+  Befund dieses Pakets.
+
+- [ ] **28 — Die Aufbewahrung der Komplett-Stände auf Staging festlegen**
+  (Backlog Nr. 261). **Betriebsentscheidung, kein Code — und sie sollte vor
+  M2 fallen.**
+  *Gemessen am 21.09.2026:* `KOMP_AUFBEWAHRUNG_VORGABE = 2`
+  (`server/komplett_lib.php`), einstellbar 1 bis 20 unter **Betrieb →
+  Komplettsicherung → „Stände aufbewahren"**.
+  *Warum das zu wenig ist:* Seit AP7 legt jede Produktiv-Auslieferung einen
+  Rückfallstand auf Staging an. **Bei 2 ist der Stand des vorletzten Tags
+  schon weg**, und der geplante Sicherungslauf von Staging verdrängt ihn
+  zusätzlich. Wer einen Hotfix für ein Tag bauen will, das zwei
+  Auslieferungen zurückliegt, findet seinen Stand nicht mehr.
+  *Weg:* Den Wert auf Staging nachsehen (er kann abweichen — die Vorgabe
+  gilt nur, solange nichts gesetzt ist) und auf einen Wert setzen, der zur
+  Frage passt: **Wie viele Tags will ich rückwirkend reparieren können?**
+  Vorschlag 5.
+  *Erwartet:* Der Wert steht, und er ist größer als 2.
+  *Woran man merkt, dass es zu wenig war — im Nachhinein:* Das Runbook
+  (6.6b, Schritt 2) verlangt einen Dateinamen aus einer alten
+  Laufzusammenfassung, und unter **Betrieb → Wiederherstellen** ist er nicht
+  mehr da. Dann ist der Hotfix-Weg für dieses Tag zu.
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 
