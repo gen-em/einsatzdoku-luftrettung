@@ -2694,21 +2694,52 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   35549610955). Für `produktion` und für `WACHE_BASIS` sagt keine Messung
   etwas — der bisherige Vorgabewert hat beide Fälle ununterscheidbar
   gemacht.
-  *Weg:* Settings → Environments → `staging` bzw. `produktion` → Variables.
-  Die Werte, die bisher als Vorgabe einsprangen:
+  **Nachgemessen am 21.09.2026 — es sind nicht drei Einträge, sondern
+  wahrscheinlich einer.** Die beiden Fälle liegen verschieden, und die
+  Unterscheidung ist der ganze Punkt:
 
-  | Variable | `staging` | `produktion` |
-  |---|---|---|
-  | `FTP_ZIELPFAD` | `./staging/` | `./httpdocs/` |
-  | `FTP_STATE_PFAD` | `../.deploy-state-staging.json` | `../.deploy-state-produktion.json` |
+  | Variable | Ebene | Stand | zu tun |
+  |---|---|---|---|
+  | `FTP_ZIELPFAD` | Umgebung | **gesetzt, `/`** — auf `staging` gemessen (F-KH-U-31), auf `produktion` aus dem Protokoll von Lauf 35566000648 abgeleitet | nichts, nur nachsehen |
+  | `FTP_STATE_PFAD` | Umgebung | auf `staging` **leer** (gemessen); auf `produktion` nicht unterscheidbar | **eintragen** |
+  | `WACHE_BASIS` | Repositorium | nicht feststellbar — die Vorgabe hat beide Fälle verdeckt | nachsehen, ggf. eintragen |
 
-  **`WACHE_BASIS`** steht dagegen unter Settings → Secrets and variables →
-  Actions → Variables (Repositoriumsebene, nicht Umgebung) und trägt die
-  Adresse von Produktiv.
-  > **Die Tabelle nennt die alten Vorgaben, nicht die richtigen Werte.**
-  > Auf `staging` liegt seit dem Hosterwechsel ein anderer Pfad — gemessen
-  > hat der letzte Lauf dort `/`. Wer die Tabelle abschreibt, ohne
-  > nachzusehen, trägt einen Wert ein, der einmal gestimmt hat.
+  **Die Ableitung für `produktion`:** Der FTPS-Schritt schrieb
+  `Saving current server state to "/../.deploy-state-produktion.json"`. Die
+  Aktion setzt diesen Pfad aus `server-dir` und `state-name` zusammen — das
+  führende `/` ist also `FTP_ZIELPFAD`. Wäre die Variable leer gewesen,
+  stünde dort der Vorgabewert `./httpdocs/`.
+
+  *Weg für `FTP_STATE_PFAD`:* Settings → Environments → `staging` bzw.
+  `produktion` → Variables → **New environment variable**.
+
+  | Umgebung | Wert |
+  |---|---|
+  | `staging` | `../.deploy-state-staging.json` |
+  | `produktion` | `../.deploy-state-produktion.json` |
+
+  > **DIESE ZWEI WERTE SIND KEINE EMPFEHLUNG, SONDERN DER IST-ZUSTAND.**
+  > Anders als bei `FTP_ZIELPFAD` war hier der **Vorgabewert tatsächlich im
+  > Einsatz** — die Variable war leer, also hat die Kette genau diese
+  > Zeichenketten benutzt, und **dort liegen die Zustandsdateien jetzt**.
+  > Wer etwas anderes einträgt, sagt der Aktion, sie solle ihre Zustandsdatei
+  > woanders suchen; sie findet keine, hält den Server für leer und
+  > **überträgt alle 688 Dateien neu**. Kein Schaden, aber acht Minuten
+  > Wartung statt Sekunden — und auf Produktiv wäre das mitten in einer
+  > Auslieferung.
+  >
+  > Das `../` sieht bei `FTP_ZIELPFAD = /` falsch aus, ist es aber nicht:
+  > Der FTP-Server klemmt `..` an der Wurzel seines Käfigs ab, die Datei
+  > landet also **im** Zielverzeichnis. Die Punktdatei-Sperre in
+  > `server/.htaccess` fängt sie dort ab — genau der Rückweg, den Nr. 213
+  > vorgesehen hat.
+
+  *Weg für `WACHE_BASIS`:* Settings → Secrets and variables → Actions →
+  **Variables** (Repositoriumsebene, **nicht** Umgebung). Der Wert ist die
+  Adresse von Produktiv und **muss `PRODUKTION_URL` gleichen** — der neue
+  Adressvergleich hält beide gegeneinander und bricht ab, wenn sie
+  auseinandergehen. Verglichen wird nach Normalisierung: ein Schrägstrich am
+  Ende und die Groß-/Kleinschreibung des Hostnamens sind kein Unterschied.
   *Erwartet:* Der nächste Lauf kommt durch den ersten Schritt und nennt
   Basisadresse, Zielpfad und Zustandsdatei im Protokoll.
   *Scheitern erkennbar an:* „Die Variable … ist leer" im **ersten** Schritt.

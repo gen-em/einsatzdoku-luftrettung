@@ -103,6 +103,13 @@ sondern der Zweck:** Ein Vorgabewert, der einspringt, lässt eine falsch
 eingerichtete Anlage nicht auffallen — der Lauf wäre grün und
 synchronisierte in ein fremdes Verzeichnis.
 
+**Ein Unterschied, den man kennen muss, wenn man sie einträgt:**
+`FTP_ZIELPFAD` war längst gesetzt, die Vorgabe lief ins Leere — bei
+`FTP_STATE_PFAD` war sie **tatsächlich im Einsatz**. Dort liegen die
+Zustandsdateien also genau unter dem alten Vorgabewert, und wer beim
+Eintragen etwas anderes wählt, schickt die Aktion an eine Stelle, an der sie
+nichts findet: Sie hält den Server für leer und überträgt alles neu.
+
 ## [Web 20.26.0] — 2026-09-20
 
 **Die Anwendung legt ihre Sitzungsdateien selbst ab.**
