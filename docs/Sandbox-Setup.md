@@ -145,7 +145,7 @@ diese Tabelle mit (`Pruefablauf.md` 5).
 ### 2.2 Das Modul `plattform` — Fassungen und Wege
 
 ```
-sh tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|--aus]
+bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|--aus]
 ```
 
 **Alle vier über Docker, gemessen am 21.09.2026 — `alles` in 29,7 s:**
@@ -194,7 +194,7 @@ auffällt, bevor es ausgeliefert ist.
 ## 3. Hochfahren
 
 ```
-sh tools/sandbox/hochfahren.sh [--neu] [--php 8.3]
+bash tools/sandbox/hochfahren.sh [--neu] [--php 8.3]
 ```
 
 Er fasst zusammen, was vorher drei Aufrufe waren: MariaDB starten, die

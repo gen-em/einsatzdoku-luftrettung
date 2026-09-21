@@ -1,8 +1,8 @@
 #!/bin/bash
 # Modul `plattform` — die Fassungen, auf denen die Anlagen wirklich laufen.
 #
-# Aufruf:  sh tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles]
-#          sh tools/sandbox/plattform.sh --aus      (Behälter wieder weg)
+# Aufruf:  bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles]
+#          bash tools/sandbox/plattform.sh --aus      (Behälter wieder weg)
 #
 # Anlass: Nr. 267. Am 21.09.2026 scheiterte der Export auf Staging und lief
 # auf Produktiv — Staging hat MySQL 8.4.10, Produktiv MariaDB 10.11.14, und

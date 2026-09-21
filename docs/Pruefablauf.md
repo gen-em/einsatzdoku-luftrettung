@@ -36,9 +36,10 @@ nicht gibt.
 | Benennung (7) | **gilt** |
 | Was nicht geprüft wird (8) | **gilt** |
 | Arbeitsumgebung in vier Ausbaustufen | **gebaut mit PK-02** (`Sandbox-Setup.md` 2); `web` und `plattform` gemessen, `android` und `uhr` noch nicht |
-| Station B, der Prüfstand-Befehl, die drei Stufen (3) | entsteht mit **PK-03** |
-| `pruefablauf.json`, die Tabelle Berührung → Probe (4) | entsteht mit **PK-03** |
-| Der Prüfbericht und seine Gegenlesung (5) | entsteht mit **PK-03** (Bericht) und **PK-05** (Gegenlesung) |
+| Station B, der Prüfstand-Befehl, die drei Stufen (3) | **gebaut und gemessen mit PK-03** |
+| `pruefablauf.json`, die Tabelle Berührung → Probe (4) | **gebaut mit PK-03**, Tabelle erzeugt |
+| Der Prüfbericht (5) | **gebaut mit PK-03**, Selbstprobe 6 Lagen / 0 Fehlschläge |
+| Seine Gegenlesung im Tor (5.1) | entsteht mit **PK-05** |
 | Station C in der beschriebenen Form (2) | entsteht mit **PK-05** |
 | Station D in der beschriebenen Form (2) | entsteht mit **PK-06** |
 
@@ -109,10 +110,16 @@ in eine Fußnote.
 
 ### 2.2 Station B — der Prüfstand
 
-**Ein Befehl vor dem Pull Request**, `tools/pruefstand/pruefen.sh`. Er
+**Ein Befehl vor dem Pull Request**, `bash tools/pruefstand/pruefen.sh`. Er
 ermittelt die Stufe selbst (3), fährt die örtliche Installation hoch, läuft
 die Proben, die zur Berührung gehören (4), und **erzeugt** am Ende den
-Prüfbericht (5). Er kommt mit **PK-03**.
+Prüfbericht (5).
+
+**Was nicht laufen kann, wird gezählt und benannt, nicht übersprungen**
+(E-KH-12): Fehlt das Android-SDK, `CIQ_GERAETE_URL` oder das Modul
+`plattform`, meldet der Lauf die Probe als *nicht gemessen* — mit Grund —
+und sagt am Ende „n rot, m nicht gemessen, k grün". Eine übersprungene
+Probe, die grün meldet, gibt es nicht.
 
 Station B ist die geprüfte Partei. Ihr Bericht ist ein **Nachweis**, kein
 Riegel — was das heißt und wo die Grenze liegt, steht in 5.2.
@@ -252,19 +259,56 @@ auf** — das ist eine der vier roten Lagen in 5.1.
 
 ## 4. Berührung → Probe
 
-*Entsteht mit PK-03.*
-
 `tools/pruefstand/pruefablauf.json` ist die eine Zuordnung von der berührten
 Datei zur Probe: je Muster auf Dateipfade die Werkzeuge und die Stufe, ab
-der sie laufen. Die Tabelle an dieser Stelle wird **daraus erzeugt**, wie
-die Tabellen in `Design.md` — wer sie von Hand ändert, ändert sie an der
-falschen Stelle.
+der sie laufen. Die Tabelle unten wird **daraus erzeugt**
+(`bericht.py erzeugen-doku`), wie die Tabellen in `Design.md` — wer sie von
+Hand ändert, ändert sie an der falschen Stelle.
 
-Zwei Dinge hängen mit daran: `tools/kettenaufrufe/` liest dieselbe Datei
-mit, damit ein Aufruf in der Kette und eine Zuordnung nicht
-auseinanderlaufen; und der Prüfstand meldet, wenn eine Datei unter `server/`
-**kein** Muster trifft — eine Datei ohne Zuordnung ist eine Datei ohne
-Probe, und das soll man sehen, statt es zu vermuten.
+Zwei Dinge hängen mit daran, und beide sind gemessen:
+
+- **`tools/kettenaufrufe/` liest dieselbe Datei mit.** Es hält jeden Aufruf
+  gegen die Schnittstelle seines Werkzeugs. Gegenprobe am 21.09.2026: Ein von
+  Hand eingetragenes `--format` statt `--art` ergibt **2 Befunde** mit Namen
+  („kennt `--format` nicht", „verlangt `--art`"); nach der Berichtigung 0.
+  Genau dieser Fehler war beim ersten Lauf drin.
+- **Der Prüfstand meldet, wenn eine Datei unter `server/` kein Muster
+  trifft.** Gemessen: **262 versionierte Dateien, 0 ohne Muster**; 87 treffen
+  nur das Auffangmuster und haben damit keine eigene Probe — das ist eine
+  Aussage, kein Fehler.
+
+<!-- ERZEUGT von tools/pruefstand/bericht.py erzeugen-doku — nicht von Hand ändern. -->
+
+| Berührung | ab Stufe | Proben | Anlass |
+|---|---|---|---|
+| `server/**` | klein | — (nur die Riegel) | Auffangmuster: Jede Datei unter server/ laeuft durch die billigen Riegel. Sie traegt KEINE eigene Probe -- wer hier landet und sonst nirgends, hat keine zugeordnete Probe, und der Pruefstand sagt das. |
+| `server/spur_lib.php`, `server/tag_spuren.php`, `server/api/spur*.php` | klein | `spurprobe`, `containerprobe` | int gegen float (S2) |
+| `server/ingest.php`, `server/validate_lib.php` | klein | `ingestprobe` | stiller Datenverlust bei "ok" |
+| `server/jobs_lib.php`, `server/jobs.php` | klein | `jobprobe`, `jobregister` | Huckepack 18 s; Nr. 208 |
+| `server/backup_lib.php`, `server/adminbackup_*.php`, `server/import*.php` | klein | `wiederherstellung`, `containerprobe`, `kreislauf-edbak` | Nr. 31, 33, 34, 35 |
+| `server/komplett_lib.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02 |
+| `server/gpx_lib.php`, `server/*export*.php`, `server/assets/export.js` | klein | `gpxprobe` | Nr. 130 |
+| `server/geraete_lib.php`, `server/pair.php`, `server/geraete*.php` | klein | `geraeteprobe`, `kopplungsprobe` | Edge, das sich "uhr" nennt; Nr. 178, 180 |
+| `server/mail_lib.php`, `server/email_lib.php` | klein | `mailprobe` | smtp_letzter_fehler() |
+| `server/sicherungsziel_lib.php`, `server/admin_sicherungsziele.php` | klein | `versandprobe` | halb englische Meldungen |
+| `server/ratelimit_lib.php` | klein | `ratenprobe` | Stufe fiel nie zurueck |
+| `server/wartung_lib.php`, `server/auth_guard.php` | klein | `wartungsprobe` | F-S8-P-04, Nr. 171 |
+| `server/db.php` | klein | `verbindungsprobe` | Nr. 210 |
+| `server/serverkrypto_lib.php`, `server/auth_salt.php`, `server/assets/unlock.js`, `server/assets/crypto.js` | klein | `anteilprobe`, `containerprobe` | S10-Kern, F-S10-AP3-03 |
+| `server/*freigabe*.php`, `server/*schluessel*.php` | klein | `freigabeprobe` | F-S2-F |
+| `server/sitzung_lib.php`, `server/session_lib.php`, `server/assets/keyguard.js` | klein | `fristprobe`, `abmelde-probe`, `sitzungshaertung` | R44; Nr. 22; Nr. 205 |
+| `server/kopfzeilen_lib.php` | klein | `cspprobe`, `browserprobe-csp` | 15.09.: Meldeweg tot |
+| `server/schema.sql`, `server/migration_lib.php`, `server/update.php` | klein | `migrationsregister`, `schemaprobe` | Nr. 238; Hausregel dreimal vergessen |
+| `server/install.php`, `server/plattform_lib.php` | klein | `installweiche` | PP-1 |
+| `docs/rechtstexte/*.md`, `server/nutzungsbedingungen.php`, `server/avv.php`, `server/datenschutz.php` | klein | `rechtstexte` | P3/O10 |
+| `server/assets/style.css` | klein | `stilvergleich`, `bilderlauf`, `kontraste` | P0/A3 |
+| `server/*.php`, `server/assets/*.js` | klein | `bilderlauf`, `bedienprobe` | Nr. 185, 225; PS-2 |
+| `.github/workflows/*.yml`, `tools/**` | klein | `kettenaufrufe` | Nr. 217 |
+| `android/**` | klein | `android-bau` | E-PK-02 |
+| `watch/**` | klein | `uhr-stufe1` | E-PK-02 |
+| `server/**` | haupt | `messstand`, `kreislauf-csv`, `kreislauf-edbak`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 |
+
+**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `installweiche`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`.
 
 ---
 
@@ -497,7 +541,7 @@ hier steht, ist nur, **was grün heißt**:
 | Mittel | grün heißt |
 |---|---|
 | `tools/wortliste/` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen |
-| `tools/vollstaendigkeit/` | auf der Schwelle oder darunter — **die Schwelle steht in `.github/workflows/pruefung.yml`** (`--hoechstens`) und wird hier nicht wiederholt |
+| `tools/vollstaendigkeit/` | auf der Schwelle oder darunter — **die Schwelle steht im Aufruf in `pruefablauf.json`** und wird hier nicht wiederholt |
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt` |
 | `tools/kettenaufrufe/` | 0/0 |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
@@ -511,7 +555,9 @@ die Vollständigkeit weiter gegen die Schwelle, die in `pruefung.yml` steht.
 *Warum hier keine Zahl steht:* `docs/Technik.md` 6.2 trug die Zahl des
 Bilderlaufs ein zweites Mal und stand bis Web 20.21.1 auf 366, während die
 Kette längst mit 377 lief. Eine Schwelle hat genau einen Ort, und das ist
-der Aufruf, der sie anwendet.
+der Aufruf, der sie anwendet — seit PK-03 `tools/pruefstand/pruefablauf.json`.
+**Bis PK-05 steht sie noch ein zweites Mal in `pruefung.yml`**; dort liest
+die Kette sie dann aus derselben Datei.
 
 ---
 

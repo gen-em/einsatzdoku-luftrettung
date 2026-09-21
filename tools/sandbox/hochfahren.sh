@@ -1,7 +1,7 @@
 #!/bin/bash
 # Die örtliche Installation hochfahren — ein Befehl, ein Rückgabewert.
 #
-# Aufruf:  sh tools/sandbox/hochfahren.sh [--neu] [--php 8.3]
+# Aufruf:  bash tools/sandbox/hochfahren.sh [--neu] [--php 8.3]
 #            --neu      richtet neu ein — LÖSCHT die Datenbank und config.php
 #            --php 8.3  fährt die Anwendung im Abbild nadoku-php83 statt
 #                       unter dem PHP des Containers (8.4)
@@ -58,7 +58,7 @@ if [ -n "$PHPFASSUNG" ]; then
     [ "$PHPFASSUNG" = "8.3" ] || { zeile "Nur --php 8.3 ist vorgesehen."; exit 2; }
     melde "Anwendung unter PHP 8.3 (Abbild nadoku-php83)"
     docker image inspect nadoku-php83 >/dev/null 2>&1 \
-        || { zeile "Abbild fehlt — erst: sh tools/sandbox/plattform.sh php83"; exit 1; }
+        || { zeile "Abbild fehlt — erst: bash tools/sandbox/plattform.sh php83"; exit 1; }
     # Netzwerk des Wirts, damit die Anwendung dieselbe Datenbank und denselben
     # TLS-Vorbau erreicht wie unter 8.4. Der alte Server wird vorher beendet.
     pkill -f "php -S $ADRESSE" 2>/dev/null || true

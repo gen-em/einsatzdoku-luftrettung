@@ -23,8 +23,8 @@ fi
 
 WURZEL="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
 
-if sh "$WURZEL/tools/sandbox/aufbauen.sh" web; then
-  printf '  Hochfahren: sh tools/sandbox/hochfahren.sh\n' >&2
+if bash "$WURZEL/tools/sandbox/aufbauen.sh" web; then
+  printf '  Hochfahren: bash tools/sandbox/hochfahren.sh\n' >&2
 else
   printf '  Die Arbeitsumgebung ist unvollständig — die Zahlen stehen oben.\n' >&2
   printf '  Das ist ein Befund mit Zahl, kein stiller Ausfall: im Prüfdokument nennen.\n' >&2

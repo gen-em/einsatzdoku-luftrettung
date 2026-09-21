@@ -6,9 +6,11 @@ und eine abhakbare Prüfliste. Angelegt mit PK-M1; fortgeschrieben mit PK-01.
 
 ## 0. Was nicht geprüft werden konnte
 
-**Stand nach PK-01.** PK-01 ändert keine Zeile Anwendungscode und keine
-Zeile der Kette; es schreibt Dokumente, eine Deny-Liste und zwei
-Werkzeugzeilen. Deshalb ist die Liste kurz — aber sie ist nicht leer:
+**Stand nach PK-03.** Keines der drei Pakete ändert eine Zeile
+Anwendungscode oder eine Zeile der Kette: PK-01 schreibt Dokumente und
+eine Deny-Liste, PK-02 und PK-03 bauen Werkzeuge. Deshalb ist die Liste
+kurz — aber sie ist nicht leer, und sie steht hier vorn und nicht in
+einer Fußnote.
 
 | Was | Warum nicht | Wann dann |
 |---|---|---|
@@ -16,8 +18,10 @@ Werkzeugzeilen. Deshalb ist die Liste kurz — aber sie ist nicht leer:
 | **Die Wirksamkeit der Deny-Liste für *andere* Instanzen** | Gemessen ist sie in **dieser** Sitzung. Solange PK-01 nicht gemergt ist, liegt die Datei nur auf dem Arbeitszweig; eine Instanz, die `main` auscheckt, hat den Riegel nicht. | nach dem Merge des Phasen-PR |
 | **Ob die Deny-Liste einen *durchgeführten* Merge verhindert** | Nicht messbar, und zwar grundsätzlich: Die Regel nimmt das Werkzeug ganz aus dem Zusammenhang, es gibt also keinen abgewiesenen Aufruf. Gemessen wird die Abwesenheit mit Gegenprobe (3). | — (Messvorschrift steht in 3.1) |
 | **Die Browserprüfung** | PK-01 fasst keine Oberfläche an — keine Datei unter `server/`, kein Stylesheet, kein Markup. Es gibt nichts zu sehen. | — |
-| **Die Ausbaustufen aus `Sandbox-Setup.md` 2** | Sie sind in PK-01 **beschrieben**, nicht gebaut. `tools/sandbox/aufbauen.sh` gibt es noch nicht; die Zahlen in 2.2 stammen aus einem Nachbau von Hand am 21.09.2026 und nicht aus einem Lauf des Werkzeugs. | PK-02 |
-| **Der Bau der Android-Module und der Uhr-App** | Die Ausbaustufen `android` und `uhr` sind gebaut, aber nicht abgenommen: Das Android-SDK steht (Plattform 36), `./gradlew build` lädt beim ersten Lauf die Gradle-Verteilung und alle Abhängigkeiten und war beim Abschluss von PK-02 noch nicht durch; die Uhr-Stufe (SDK, alle Zielgeräte) ist gar nicht angestoßen. **P-PK-11 bleibt offen.** | mit PK-03 nachziehen |
+| **Ein Lauf der Kette gegen die neuen Werkzeuge** | `pruefung.yml` ruft weiterhin die Einzelwerkzeuge, nicht `pruefablauf.json`. Dass beide dieselben Zahlen liefern, ist nicht gemessen. | PK-05 |
+| **Der Bau der Uhr-App** | Die Ausbaustufe `uhr` ist gebaut, aber **nicht abgenommen**: SDK und Gerätedateien sind nicht geholt, `pruefstand.sh reihe` ist nicht gefahren. Die Android-Seite ist inzwischen abgenommen (7m 19s, 0 Lint-Fehler, 670 Prüffälle / 0). **P-PK-11 bleibt zur Hälfte offen.** | vor dem Phasen-PR |
+| **Die meisten Aufrufe in `pruefablauf.json`** | Von **40** eingetragenen Proben sind **17 über den Prüfstand gefahren** worden (15 grün, 2 rot — davon einer ein Verdrahtungsfehler, einer ein echter Befund). Die übrigen 23 stehen eingetragen und sind nie ausgeführt. `tools/kettenaufrufe/` hält sie gegen die Schnittstelle ihres Werkzeugs (0 Befunde) — das ist etwas anderes als ein Lauf. | beim ersten Paket, das die jeweilige Fläche berührt |
+| **Der lange Lauf mit Bilderlauf und Bedienprobe** | Ein Lauf mit `--datei server/spur_lib.php --datei server/backup_lib.php` war bei **14 grünen Proben** (darunter `spurprobe` und `containerprobe`), als der Behälter neu startete. Bilderlauf und Bedienprobe sind damit **nicht** über den Prüfstand gefahren worden. | nächster Lauf |
 | **Ein frischer Container** | Die Abnahme von `aufbauen.sh` ist in **dieser** Sitzung gefahren, nicht in einem frisch gestarteten Container. Der Unterschied ist messbar: Hier waren die sechs Pakete des alten Hooks schon installiert. Was ein frischer Container vorfindet, zeigt erst die nächste Sitzung. | nächste Sitzung |
 | **Die Zahlen der Kette in `Pruefablauf.md` 2.3/2.4** | Schrittzahlen und Jobnamen sind am Quelltext gezählt, nicht an einem Lauf gemessen. Die Dauerangaben (49 s Staging, 16 min Stufe 2) sind aus dem Konzept übernommen und hier **nicht** nachgemessen. | PK-05, PK-06 |
 
@@ -30,11 +34,16 @@ Werkzeugzeilen. Deshalb ist die Liste kurz — aber sie ist nicht leer:
 | P-PK-03 | Merge-Werkzeug der Claude-Instanzen gesperrt (Folge aus F-PK-01) | `.claude/settings.json` trägt `mcp__github__merge_pull_request` und `mcp__github__enable_pr_auto_merge` in `permissions.deny`; eine Instanz sucht **beide** Werkzeuge **und drei andere** desselben Anschlusses | die beiden gesperrten sind **nicht mehr auffindbar**, die drei anderen laden unverändert | eines der beiden ist weiter da (Riegel wirkt nicht) — **oder alle fünf sind weg** (dann ist der Anschluss ausgefallen und es ist gar nicht gemessen) | **erledigt 21.09.2026 — 2 von 2 gesperrt, 3 von 3 Gegenproben vorhanden** (3.1) |
 | P-PK-04 | `CLAUDE.md` 6 unter 60 Zeilen, die drei Regeln je an einer Stelle (PK-01) | die vier Befehle aus 3.2 | 6 unter 60 Zeilen; je Regel 1 normative Fundstelle in `docs/` und `CLAUDE.md` | eine Regel steht zweimal, oder sie steht nirgends mehr | **erledigt 21.09.2026 — 58 Zeilen; 1/1/1** (3.2) |
 | P-PK-05 | Die Prüfmittel bleiben auf dem heutigen Stand (PK-01 bis PK-03) | `wortliste.py`, `vollstaendigkeit/pruefen.py --hoechstens 398`, `kettenaufrufe/pruefen.py` | Wortliste 0/0/0, Vollständigkeit auf der Schwelle, Kettenaufrufe 0 Befunde | eine Zahl wandert, ohne dass ein Paket sie bewusst verschoben hat | **erledigt 21.09.2026** (3.3) |
-| P-PK-07 | Ein Beschaffer statt zweier, mit Nachweis (PK-02) | `sh tools/sandbox/aufbauen.sh web` im Container | 10 von 10 Stücken, **3 von 3 Engines**, 8 von 8 Umgebungswerten, Rückgabewert 0 | eine Engine fehlt, oder der Lauf meldet grün ohne die Engines einzeln zu nennen | **erledigt 21.09.2026** (4.1) |
-| P-PK-08 | Die örtliche Anlage mit einem Befehl (PK-02) | `sh tools/sandbox/hochfahren.sh` | HTTP **200** auf `login.php`, Fassung genannt, Rückgabewert 0 | ein anderer Code, oder „läuft" ohne Zahl | **erledigt 21.09.2026** (4.2) |
-| P-PK-09 | Plattformmatrix (PK-02) | `sh tools/sandbox/plattform.sh alles` | vier Fassungen bereit, **4 × „19 Prüfungen, 0 Fehlschläge"** | eine Fassung fehlt oder eine Probe meldet einen Fehlschlag | **erledigt 21.09.2026 — 29,7 s** (4.3) |
+| P-PK-07 | Ein Beschaffer statt zweier, mit Nachweis (PK-02) | `bash tools/sandbox/aufbauen.sh web` im Container | 10 von 10 Stücken, **3 von 3 Engines**, 8 von 8 Umgebungswerten, Rückgabewert 0 | eine Engine fehlt, oder der Lauf meldet grün ohne die Engines einzeln zu nennen | **erledigt 21.09.2026** (4.1) |
+| P-PK-08 | Die örtliche Anlage mit einem Befehl (PK-02) | `bash tools/sandbox/hochfahren.sh` | HTTP **200** auf `login.php`, Fassung genannt, Rückgabewert 0 | ein anderer Code, oder „läuft" ohne Zahl | **erledigt 21.09.2026** (4.2) |
+| P-PK-09 | Plattformmatrix (PK-02) | `bash tools/sandbox/plattform.sh alles` | vier Fassungen bereit, **4 × „19 Prüfungen, 0 Fehlschläge"** | eine Fassung fehlt oder eine Probe meldet einen Fehlschlag | **erledigt 21.09.2026 — 29,7 s** (4.3) |
 | P-PK-10 | Der Weg nach draußen ohne abgeschaltete Prüfung (PK-02) | drei Engines, örtlich und gegen die Prüfanlage, anmelden | **6 von 6** angemeldet, Dialog geschlossen, **kein** `ignoreHTTPSErrors` nach draußen | eine Engine scheitert, oder die Prüfung ist abgeschaltet | **erledigt 21.09.2026** (4.4) |
-| P-PK-11 | Ausbaustufen `android` und `uhr` (PK-02) | `aufbauen.sh android` → `./gradlew build`; `aufbauen.sh uhr` → `pruefstand.sh reihe` | 0 Lint-Fehler, 0 Fehlschläge bzw. Reihe grün | ein Fehlschlag, oder das SDK fehlt | **offen** — siehe 0 |
+| P-PK-12 | Der Prüfstand-Befehl je Stufe (PK-03) | `bash tools/pruefstand/pruefen.sh --stufe klein` (ebenso neben, haupt) | je Lauf: Stufe genannt, Proben gefahren, Bericht erzeugt, Rückgabewert 0 | eine Probe wird still übersprungen, oder der Bericht fehlt | **erledigt 21.09.2026** (5.1) |
+| P-PK-13 | Die Selbstproben (PK-03) | `bericht.py lesen --selbstprobe`; `auswahl.py --selbstprobe` | **6 Lagen / 0 Fehlschläge** (5 rote, 1 grüne) bzw. **11 Lagen / 0** | eine rote Lage wird nicht rot | **erledigt 21.09.2026** (5.2) |
+| P-PK-14 | Abdeckung: keine Datei ohne Muster (PK-03) | `auswahl.py --abdeckung` | **0 Dateien unter `server/` ohne Muster** | eine Datei trifft kein Muster und hat damit keine Probe | **erledigt 21.09.2026 — 262 Dateien, 0 ohne Muster** (5.3) |
+| P-PK-15 | `kettenaufrufe` liest die Zuordnung mit (PK-03) | Fehler einbauen (`--format` statt `--art`), Werkzeug fahren, zurücksetzen | mit Fehler **2 Befunde** mit Namen, ohne Fehler **0** | der Fehler kommt durch | **erledigt 21.09.2026** (5.4) |
+| P-PK-16 | Der offene Befund der Wiederherstellungsprobe | Sicherungsziel eintragen, `php tools/wiederherstellungs-probe/probe.php` | 110 Erwartungen, 0 nicht erfüllt | die zwei Befunde bleiben auch mit Sicherungsziel stehen (dann ist es die Anwendung) | **offen** — siehe F-PK-18 |
+| P-PK-11 | Ausbaustufen `android` und `uhr` (PK-02) | `aufbauen.sh android` → `./gradlew build`; `aufbauen.sh uhr` → `pruefstand.sh reihe` | 0 Lint-Fehler, 0 Fehlschläge bzw. Reihe grün | ein Fehlschlag, oder das SDK fehlt | **android erledigt 21.09.2026** (BUILD SUCCESSFUL in 7m 19s, **0 Lint-Fehler**, **670 Prüffälle, 0 Fehlschläge**); **uhr offen** |
 | P-PK-06 | Die neuen Dokumente laufen durch die Wortliste (B-S4-06) | `wortliste.py --bereich c`; nachsehen, dass beide Dateien in `BEREICHE["c"]` stehen | beide Dateien werden gelesen, 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | der Lauf meldet 0 und hat keine Zeile der neuen Dokumente angesehen | **erledigt 21.09.2026** (3.3) |
 
 ## 2. Messprotokoll P-PK-01 (21.09.2026)
@@ -238,7 +247,90 @@ Sitzungen sind geschlossen. Es ist also nichts hinterlassen worden — aber
 es waren vier POSTs, die nicht hätten sein sollen. Der Nachweis des
 Dialogschlusses ist danach **örtlich** geführt worden.
 
-## 5. Befunde der Umsetzung (F-PK-07 ff.)
+## 5. Messprotokoll PK-03 (21.09.2026)
+
+### 5.1 P-PK-12 — der Prüfstand je Stufe
+
+| Stufe | Dauer | Muster | Proben | Ergebnis |
+|---|---|---|---|---|
+| klein | **26,8 s** | kette, android | 13 (12 Riegel + 1) | 0 rot, 0 nicht gemessen, 13 grün |
+| neben | **25 s** | kette, android | 13 | 0 rot, 0 grün-Lücke |
+| haupt | **22 s** | kette, android | 13 | 0 rot |
+
+**Warum alle drei dieselben 13 Proben fahren, und warum das richtig ist:**
+Auf diesem Zweig ist **keine Datei unter `server/` berührt**. Der Umfang
+folgt der Berührung, nicht der Stufe allein (Grundsatz 4) — eine Hauptstufe
+ohne Anwendungsänderung hat nichts Teures zu messen. Dass die teuren Proben
+sehr wohl greifen, zeigt die Auswahl bei berührtem `server/`:
+
+```
+auswahl.py --stufe haupt --datei server/spur_lib.php --datei server/backup_lib.php \
+                         --datei server/assets/style.css
+-> 6 Muster, 11 Proben (plus 12 Riegel):
+   spurprobe, containerprobe, wiederherstellung, kreislauf-edbak, stilvergleich,
+   bilderlauf, kontraste, bedienprobe, messstand, kreislauf-csv, schemaprobe
+```
+
+Ein Lauf damit kam bis **14 grüne Proben** (einschließlich `spurprobe` und
+`containerprobe`), als der Behälter neu startete; Bilderlauf und Bedienprobe
+sind über den Prüfstand **nicht** gefahren worden (Abschnitt 0).
+
+### 5.2 P-PK-13 — die Selbstproben
+
+`bericht.py lesen --selbstprobe` → **6 Lagen, 0 Fehlschläge** (5 rote, 1
+grüne): Baum-Hash passt nicht · Stufe zu klein · berührte Fläche als
+„nicht berührt“ gemeldet · Riegel meldet eine andere Zahl · gar kein
+Bericht · und der grüne Fall.
+
+**Jede Lage geht durch dieselbe Funktion.** Die erste Fassung stellte den
+Stufenfall daneben nach, weil er ohne Git nicht lief — und prüfte damit
+ihren Nachbau statt des Werkzeugs. Das ist berichtigt: `pruefen()` nimmt die
+verlangte Stufe jetzt als Angabe entgegen, der Vergleich bleibt derselbe.
+
+`auswahl.py --selbstprobe` → **11 Lagen, 0 Fehlschläge**, darunter die
+Stufengrenze (das Muster `mengen` greift bei `klein` nicht und bei `haupt`
+schon) und die Gegenfälle (`server/index.php` trifft **nicht** `spur`).
+
+### 5.3 P-PK-14 — die Abdeckung
+
+`auswahl.py --abdeckung`: **262 versionierte Dateien** unter `server/` (ohne
+`vendor/`), **0 ohne Muster**. **87** treffen nur das Auffangmuster und haben
+damit keine eigene Probe — sie laufen durch die billigen Riegel und den
+Bilderlauf. Das ist eine Aussage über den Bestand, kein Fehler; aber eine,
+die man sehen soll, statt sie zu vermuten.
+
+### 5.4 P-PK-15 — `kettenaufrufe` liest die Zuordnung mit
+
+Das Werkzeug hält jetzt auch jeden Aufruf aus `pruefablauf.json` gegen die
+Schnittstelle seines Werkzeugs. **Gegenprobe mit wieder eingebautem Fehler**
+(`--format` statt `--art`):
+
+| Zustand | Befunde |
+|---|---|
+| mit dem Fehler | **2** — „kennt `--format` nicht“ und „verlangt `--art`, der Aufruf übergibt es nicht“ |
+| nach der Berichtigung | **0** |
+
+Insgesamt **82 Aufrufe** geprüft (4 Arbeitsläufe und **40** Proben),
+**0 Befunde**, **18 ungeprüft** — Werkzeuge ohne Schalter, bei denen das
+Werkzeug sagt, was es nicht wissen kann, statt eine Null zu melden.
+
+### 5.5 Was dabei schiefging
+
+Vier Fehler, alle beim ersten echten Lauf, alle in dem, was ich selbst
+geschrieben hatte:
+
+1. **`sh` ist dash.** `pruefen.sh` rief die Sandbox-Skripte mit `sh` auf,
+   die aber `#!/bin/bash` tragen und Felder benutzen — `set: Illegal option
+   -o pipefail`. Alle Aufrufe und alle Anleitungen stehen jetzt auf `bash`.
+2. **`--format` statt `--art`** beim Kreislauf. Genau der Fehlertyp, für den
+   `kettenaufrufe` da ist — deshalb liest es jetzt die Zuordnung mit (5.4).
+3. **`./gradlew` ohne Wechsel nach `android/`.**
+4. **Die Vollständigkeit lief ohne ihre Schwelle** und meldete rot bei 398
+   Befunden. Die Schwelle steht jetzt im Aufruf in `pruefablauf.json` — und
+   damit an genau einer Stelle, sobald PK-05 die Kette dieselbe Datei lesen
+   lässt.
+
+## 6. Befunde der Umsetzung (F-PK-07 ff.)
 
 | Nr. | Befund | Folge |
 |---|---|---|
@@ -252,9 +344,10 @@ Dialogschlusses ist danach **örtlich** geführt worden.
 | **F-PK-14** | **Nicht nur Chromium misstraut der Proxy-Stelle — Firefox auch.** Konzept 1.4 nennt allein Chromium. Gemessen gegen die Prüfanlage: Chromium `ERR_CERT_AUTHORITY_INVALID`, **Firefox `SEC_ERROR_UNKNOWN_ISSUER`**, WebKit HTTP 200 (Systemspeicher), Node HTTP 200. | `kontextMachen()` legt die Umleitung auf **jeden** nicht-örtlichen Kontext, nicht nur auf Chromium. |
 | **F-PK-15** | **Das PHP-8.3-Abbild braucht die Zertifizierungsstellen des Wirts.** Das Rezept in Konzept 1.3 nennt nur die Umstellung der Debian-Quellen auf HTTPS; damit allein scheitert `apt-get update` im Behälter mit `certificate verify failed`. Gemessen: die Stelle des Agent-Proxys **allein genügt nicht** — der Verkehr läuft über das Egress-Gateway. | `plattform.sh` kopiert alle Stellen aus `/usr/local/share/ca-certificates/` in den Bauplatz (ohne die je Behälter erzeugte Prüfstands-Stelle). Bau danach 47 s. |
 | **F-PK-16** | **Die Drosselung von Docker Hub trägt den Umweg aus E-PK-30 nicht.** Vier Abrufe (`mysql:8.4.0`, `mariadb:10.6`, `mysql:8.0`, `php:8.3.33-cli`) und ein Bau liefen ohne einen einzigen 429 durch. | Der vorgesehene Weg über Ubuntu-Pakete unter `/opt` ist **nicht gebaut worden** (E-PK-32). Tritt die Drosselung später auf, ist das ein Befund mit Zahl — nicht die Voraussetzung eines Umwegs. |
+| **F-PK-18** | **Die Wiederherstellungsprobe meldet auf einer frisch eingerichteten örtlichen Anlage 2 von 110 Erwartungen nicht erfüllt**: „ein knapper Schub sichert wenigstens ein Konto“ (2 erledigt, 0 von 2 offen) und „der Zeiger steht auf dem zuletzt gesicherten Konto“ (cur=—). | **Nicht geklärt**, ob eine Voraussetzung fehlt (kein Sicherungsziel eingetragen) oder die Anwendung einen Fehler hat. Der Prüfstand hat es gefunden, ohne danach zu suchen — das ist sein Zweck. Prüfpunkt P-PK-16; gehört nicht in ein PK-Paket, sondern als eigene Korrekturstufe untersucht. |
 | **F-PK-17** | **Zwei Betriebsdinge, die kein Dokument sagte:** Der Docker-Dienst **läuft nicht von selbst** (`dial unix /var/run/docker.sock: no such file`), und der Einstiegspunkt von MySQL startet den Dienst **nach** der Einrichtung neu — ein Ping gelingt schon vorher, und die Schemaprobe lief prompt in „MySQL server has gone away". | Beides steht in `Sandbox-Setup.md` 2.2 und in der `LIESMICH.md`; `plattform.sh` wartet auf eine echte Abfrage statt auf ein Ping. |
 
-## 6. Entscheidungen der Umsetzung
+## 7. Entscheidungen der Umsetzung
 
 | Nr. | Entscheidung | Grund |
 |---|---|---|

@@ -3,9 +3,9 @@
 ## Aufruf
 
 ```
-sh tools/sandbox/aufbauen.sh   [web|android|uhr|plattform|alles]   # Vorgabe: web
-sh tools/sandbox/hochfahren.sh [--neu] [--php 8.3]
-sh tools/sandbox/plattform.sh  [php83|mariadb106|mysql80|mysql84|alles|--aus]
+bash tools/sandbox/aufbauen.sh   [web|android|uhr|plattform|alles]   # Vorgabe: web
+bash tools/sandbox/hochfahren.sh [--neu] [--php 8.3]
+bash tools/sandbox/plattform.sh  [php83|mariadb106|mysql80|mysql84|alles|--aus]
 ```
 
 ## Was es misst

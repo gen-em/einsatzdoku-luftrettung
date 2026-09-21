@@ -14,6 +14,55 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Ein Befehl vor dem Pull Request — Station B steht (PK-03)] — 2026-09-21
+
+**Bis hierher wusste man, welche Probe zu einer Änderung gehört, oder man
+wusste es nicht.** Die Zuordnung stand in zwanzig Anleitungen, in `CLAUDE.md`
+6 noch einmal kürzer, und im Zweifel im Gedächtnis dessen, der das Werkzeug
+gebaut hatte. `tools/pruefstand/pruefablauf.json` ist jetzt die eine Stelle:
+je Muster auf Dateipfade die Proben und die Stufe, ab der sie laufen.
+
+**`pruefen.sh` fährt daraus einen Lauf.** Er ermittelt die Stufe aus dem
+Versionssprung gegen `main` und **sagt sie**, fährt die örtliche Anlage hoch,
+läuft die zwölf billigen Riegel und die Proben der Berührung, und **erzeugt**
+am Ende den Prüfbericht für die Commit-Nachricht. Gemessen: Stufe klein auf
+einem Zweig ohne `server/`-Änderung — **13 Proben, 0 rot, 0 nicht gemessen,
+26,8 s**.
+
+**Was nicht laufen kann, wird gezählt und benannt.** Fehlt das Android-SDK,
+`CIQ_GERAETE_URL` oder das Modul `plattform`, meldet der Lauf die Probe als
+*nicht gemessen*, mit Grund, und die Schlusszeile lautet „n rot, m nicht
+gemessen, k grün". Eine übersprungene Probe, die grün meldet, gibt es nicht
+(E-KH-12).
+
+**Der Prüfbericht hängt am Baum-Hash des Arbeitsbestands**, nicht am Commit —
+das ist der O9c-Fehler, gegen den es ihn gibt: gemessen wurde vor der letzten
+Änderung, gemeldet wurde die Zahl von davor. `bericht.py lesen` prüft vier
+rote Lagen (Baum, Stufe, als „nicht berührt" gemeldete Fläche, abweichende
+Riegelzahl), und seine Selbstprobe fährt **fünf rote und eine grüne durch
+dieselbe Funktion** — eine Selbstprobe, die den Fall daneben nachbaut, prüft
+ihren Nachbau.
+
+**`tools/kettenaufrufe/` liest die Zuordnung mit, und das hat sich sofort
+gelohnt.** Beim ersten Lauf standen zwei Aufrufe falsch darin: `--format`
+statt `--art` beim Kreislauf, und ein `./gradlew` ohne Wechsel nach
+`android/`. Gegenprobe mit wieder eingebautem Fehler: **2 Befunde** mit Namen
+(„kennt `--format` nicht", „verlangt `--art`"), nach der Berichtigung 0.
+Derselbe Fehler, der in der Kette dreimal zum ersten echten Lauf gebraucht
+hat (Nr. 217), kostet hier eine Sekunde.
+
+**Und die Abdeckung ist gemessen, nicht behauptet:** 262 versionierte Dateien
+unter `server/`, **0 ohne Muster**; 87 treffen nur das Auffangmuster und
+haben damit keine eigene Probe. Das ist eine Aussage über den Bestand, kein
+Fehler — aber eine, die man sehen soll, statt sie zu vermuten.
+
+**Ein Befund dabei, der nicht vom Prüfstand kommt:** Die
+Wiederherstellungsprobe meldet auf einer frisch eingerichteten örtlichen
+Anlage **2 von 110 Erwartungen nicht erfüllt** (ein knapper Schub sichert
+kein Konto; der Zeiger steht auf keinem). Ob das eine fehlende Voraussetzung
+ist — kein Sicherungsziel eingetragen — oder ein Fehler der Anwendung, ist
+**nicht geklärt**. Es steht im Prüfdokument, nicht in einer Fußnote.
+
 ## [Werkzeug: Ein Beschaffer statt zweier — und WebKit startet wieder (PK-02)] — 2026-09-21
 
 **Zwei Skripte beschafften dasselbe mit zwei verschiedenen Listen, und keins

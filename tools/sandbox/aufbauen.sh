@@ -1,7 +1,7 @@
 #!/bin/bash
 # Die Arbeitsumgebung herstellen — eine Beschaffung, ein Nachweis.
 #
-# Aufruf:  sh tools/sandbox/aufbauen.sh [web|android|uhr|plattform|alles]
+# Aufruf:  bash tools/sandbox/aufbauen.sh [web|android|uhr|plattform|alles]
 #          ohne Argument: web
 #
 # Anlass: Nr. 183 (WebKit fehlte still), 13.09.2026 (Container ohne MariaDB).
@@ -95,7 +95,7 @@ teil_plattform() {
     # Docker Hub drosselt anonyme Abrufe (429 nach rund acht Abrufen), die
     # Ubuntu-Quellen nicht — deshalb Docker nur dort, wo es keinen anderen
     # Weg gibt: MySQL 8.4.0 und PHP 8.3.
-    sh "$(dirname "$0")/plattform.sh" || return 1
+    bash "$(dirname "$0")/plattform.sh" || return 1
 }
 
 # ------------------------------------------------------------- Umgebung
@@ -186,5 +186,5 @@ if [ "$fehler" -gt 0 ]; then
     zeile "Das ist ein Befund mit Zahl, kein stiller Ausfall: im Prüfdokument nennen."
     exit 1
 fi
-melde "Arbeitsumgebung vollständig. Hochfahren: sh tools/sandbox/hochfahren.sh"
+melde "Arbeitsumgebung vollständig. Hochfahren: bash tools/sandbox/hochfahren.sh"
 exit 0
