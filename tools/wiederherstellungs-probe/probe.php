@@ -1466,9 +1466,16 @@ $weg($uid11);
  * ====================================================================== */
 echo "\n  Teil 12 — Der Rueckweg, wenn der Server-Anteil weg ist (S10/AP5)\n";
 require_once $server . '/serverkrypto_lib.php';
+require_once __DIR__ . '/../konfig_stellen.php';
 
-global $CFG;
-$anteilVorher = $CFG['kdf_anteil'] ?? null;
+/* BIS WEB 20.26.3 WURDE DER ANTEIL IM SPEICHER VERSTELLT (`$CFG`). Die
+ * globale `$CFG` ist mit Schritt 15 AP2 entfallen; die Anwendung liest ueber
+ * `konfig()` aus der Datei, und eine Zuweisung erreicht niemanden mehr —
+ * sie scheitert nicht, sie tut nur nichts. Teil 12 stand danach still auf
+ * „nicht erfuellt" (gemessen 21.09.2026). `konfig_stellen()` geht denselben
+ * Weg wie die Anwendung und legt den Urstand bytegleich zurueck, auch bei
+ * einem Abbruch. */
+$anteilVorher = konfig('kdf_anteil');
 /* MARKE ZUERST LESEN, DANN DEN ZUSTAND FRAGEN (Gegenprobe zu AP5).
  *
  * `anteil_zustand()` ist nicht nur eine Auskunft: Fehlt die Marke in
@@ -1500,8 +1507,8 @@ if ($anteilVorher === null || ($standVorher['stand'] ?? '') !== 'bereit') {
         ->execute([$huelleNeu, $huelleRc, str_repeat('b', 32), $kennung12, $uid12]);
 
     try {
-        /* ---- Der Anteil verschwindet (nur im Speicher) -------------------- */
-        unset($CFG['kdf_anteil']);
+        /* ---- Der Anteil verschwindet (in der Datei, und zwar kurz) -------- */
+        $zurueck12konfig = konfig_stellen(['kdf_anteil' => null]);
         kdf_anteil(true); kdf_anteil_alt(true);
         $weg12 = anteil_zustand(true);
 
@@ -1583,7 +1590,7 @@ if ($anteilVorher === null || ($standVorher['stand'] ?? '') !== 'bereit') {
          * der Erwartungen darueber eine Ausnahme werfen kann — und weil ein
          * Prozess, der mit fehlendem Anteil im Speicher weiterliefe, den Rest
          * der Probe still falsch messen wuerde. */
-        if ($anteilVorher !== null) { $CFG['kdf_anteil'] = $anteilVorher; }
+        if (isset($zurueck12konfig)) { $zurueck12konfig(); }
         kdf_anteil(true); kdf_anteil_alt(true);
         $zurueck12 = anteil_zustand(true);
         $sag('(8) Nach dem Zuruecklegen steht der Stand wieder auf „bereit"',

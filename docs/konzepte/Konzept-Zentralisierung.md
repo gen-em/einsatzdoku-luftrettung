@@ -26,7 +26,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > | Paket | Stand | Stufe | Abnahmezahlen |
 > |---|---|---|---|
 > | AP1 Zählmittel, Register, Gegenprobe Paket 1 | **erledigt** 20.09.2026 | keine (nur `tools/` und `docs/`) | Selbstprobe **29 von 29** · Register **38 Zeilen, 0 über der Decke** · Eichung `error_log(` **77 in 32**, `session_start(` **9 in 9** · Bestand **133 PHP / 40 JS** · Gegenprobe Z30–Z33 **4× 0** · `php -l` **133/0** · Wortliste **0/0** · Vollständigkeit **398** (unverändert) · Kontraste **22/0** · Kettenaufrufe **30/0** · CSP **0** · Migrationsregister **0** |
-> | AP2 Konfiguration und Sitzung | **erledigt** 21.09.2026 | **Web 20.27.0** (Neben: zwei neue Funktionen, keine Migration) | Z01 **9 → 1** · Z02 **2 → 1** · Z03 **7 → 1** · Z04 **46 → 0** · `konfig_lib` **13/13** · Cookie-Parameter **16 Zellen, 0 Abweichungen** · Ladezyklus **7/7** · Sitzungshärtung **0 Befunde, Selbstprobe 12/12** · Register **38 Zeilen, 0 über der Decke** · `php -l` **134/0** · Wortliste **0/0** · Vollständigkeit **398** · `error_log(` **77** (unverändert, E-ZE-05). **Im Browser gegen eine laufende Anlage:** Bilderlauf **496 Bilder, 0 Überlauf, 0 Konsolenfehler** · Prüfliste **A-1 bis A-12 gefahren** · F-ZE-2 **40 anonyme Abrufe → 0 neue Sitzungsdateien** · Härtung wirkt (untergeschobene Kennung verworfen) · A-9 **8/8** · A-12 **7/7** · Abmelde-Probe erfüllt · Kopplungsprobe **76/0** · Ratenprobe **50/0** (der eine Befund war nicht von AP2 und ist behoben, Nr. 254) |
+> | AP2 Konfiguration und Sitzung | **erledigt** 21.09.2026 | **Web 20.27.0** (Neben: zwei neue Funktionen, keine Migration) | Z01 **9 → 1** · Z02 **2 → 1** · Z03 **7 → 1** · Z04 **46 → 0** · `konfig_lib` **13/13** · Cookie-Parameter **16 Zellen, 0 Abweichungen** · Ladezyklus **7/7** · Sitzungshärtung **0 Befunde, Selbstprobe 12/12** · Register **38 Zeilen, 0 über der Decke** · `php -l` **134/0** · Wortliste **0/0** · Vollständigkeit **398** · `error_log(` **77** (unverändert, E-ZE-05). **Im Browser gegen eine laufende Anlage:** Bilderlauf **496 Bilder, 0 Überlauf, 0 Konsolenfehler** · Prüfliste **A-1 bis A-12 gefahren** · F-ZE-2 **40 anonyme Abrufe → 0 neue Sitzungsdateien** · Härtung wirkt (untergeschobene Kennung verworfen) · A-9 **8/8** · A-12 **7/7** · Abmelde-Probe erfüllt · Kopplungsprobe **76/0** · Ratenprobe **50/0** · **Nachtrag: fünf Proben repariert (448 Erwartungen, 0 offen; Nr. 257)** (der eine Befund war nicht von AP2 und ist behoben, Nr. 254) |
 > | AP3 API-Eingang und Flash | offen | — | — |
 > | AP4 Datenzugriff klein | offen | — | — |
 > | AP5 Transaktion und Kindtabellen | offen | — | — |
@@ -776,6 +776,54 @@ hält die Ausnahme fest.
 (anderer Hoster, andere `php.ini`) und `secure` an den HTTPS-abhängigen
 Cookie-Arten — socat terminiert TLS, PHP sieht eine HTTP-Anfrage. Beides
 steht im Prüfdokument unter N2-1 und N2-2.
+
+*Nachtrag vom 21.09.2026, zweiter Teil — AP2 hatte einen Fehler, und die
+Zählung hat ihn nicht gefunden.* Beim Fahren der Proben für AP3 fiel die
+Ingestprobe auf. Ursache: **Fünf Prüfwerkzeuge unter `tools/` lasen oder
+setzten die globale `$CFG`**, die AP2 entfernt hat. Eine Zuweisung an `$CFG`
+scheitert nicht — sie tut nur nichts.
+
+**Die Registerzeile Z04 hat 46 → 0 bestätigt, und der Umbau galt als
+erledigt. Sie mass nur `server/`.** Das ist derselbe Fehler, den
+`CLAUDE.md` 6 für die Wortliste beschreibt und den ich im Prüfdokument von
+AP1 für die Wortliste sogar zitiert habe: Ein Lauf, der einen Bereich
+übergeht, meldet keine Null — er meldet gar nichts.
+
+| Werkzeug | Erwartungen | vorher offen | nachher |
+|---|---|---|---|
+| `ingestprobe` | 83 | 1 | **0** |
+| `anteilprobe` | 55 | **22** | **0** |
+| `versandprobe` | 135 | 5 | **0** |
+| `wiederherstellungs-probe` | 104 → **111** | 1 (+7 übersprungen) | **0** |
+| `komplettprobe` | 64 | 1 | **0** |
+| **Summe** | **448** | **30** | **0** |
+
+**Die Anwendung war nie kaputt** — `konfig('app.max_body_bytes')` liefert
+exakt denselben Wert wie der alte Weg (524288, nachgemessen). Kaputt war das
+Prüfwerkzeug, und zwar still.
+
+*Behoben (Backlog Nr. 257):* `tools/konfig_stellen.php` — eine Stelle, fünf
+Verbraucher, dieselbe Überlegung wie bei `tools/motor.mjs`. Sie geht den Weg
+der Anwendung (`config.php` schreiben, `konfig_verwerfen()`) und legt den
+Urstand **bytegleich** zurück, auch bei einem Abbruch. **Keine Hintertür in
+`konfig_lib.php`** — ein zweiter Weg in Produktionscode, den nur Proben
+benutzen, wäre genau das, was dieser Schritt abschafft.
+
+*Zwei Fehler beim Bauen des Helfers, beide gemessen:* Die Abbruchsicherung
+war je Aufruf angemeldet; Abschlussfunktionen laufen in Anmeldereihenfolge,
+also überschrieb eine spätere den zurückgelegten Urstand — nach einem Lauf
+der `versandprobe` stand ein **zufälliger `server_key`** in der `config.php`.
+Und der erste Rückweg schrieb einen `var_export` statt der Bytes, womit der
+**Kopfkommentar des Installers** verschwand. Beides behoben und in der Datei
+begründet.
+
+*Und die Zählung kann es künftig sehen:* **Z04 misst seit heute `server/`
+und `tools/`** (Bereich `php_und_tools`). Die Zeile zählt eine Globale, die
+es **nirgends** mehr geben darf. Ihr Startwert 46 galt für `server/`; die
+Decke bleibt 0, und sie ist jetzt für beide Bereiche eingehalten.
+`komplettprobe` trug ein lokales Feld namens `$CFG` — umbenannt in
+`$kopieCfg`, weil ein lokaler Name, der wie die entfallene Globale aussieht,
+die nächste Instanz in dieselbe Falle führt.
 
 ### AP3 — API-Eingang und Flash (E-ZE-15, -16; F-ZE-5)
 

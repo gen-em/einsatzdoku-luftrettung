@@ -197,6 +197,7 @@ Prüfliste A-1 bis A-12 **gefahren** und nicht mehr offen.
 | **Abmelde-Probe** | V-10 **erfüllt**, kein Schlüsselmaterial nach dem Abmelden, **keine Seitenfehler** |
 | **Kopplungsprobe** | **76 Erwartungen, 0 nicht erfüllt, 0 übergangen** |
 | **Ratenprobe** | **50 Prüfungen, 0 Befunde** — der eine Befund war **nicht von AP2** und ist am selben Tag behoben (Backlog **Nr. 254**) |
+| **Ingest-, Anteil-, Versand-, Wiederherstellungs- und Komplettprobe** | **448 Erwartungen, 0 nicht erfüllt.** Zuvor **30 offen** — nicht wegen eines Fehlers der Anwendung, sondern weil diese fünf Werkzeuge an der mit AP2 entfallenen globalen `$CFG` hingen (Backlog **Nr. 257**, am selben Tag behoben). Einzeln: 83/0 · 55/0 · 135/0 · 111/0 · 64/0 |
 
 **Drei Zahlen, die etwas anderes heißen, als sie aussehen:**
 
@@ -216,6 +217,12 @@ Prüfliste A-1 bis A-12 **gefahren** und nicht mehr offen.
   `config.php`), ohne dass sich eine Zeile Code geändert hätte. Beide
   Werkzeuge nehmen die Datei jetzt aus, mit derselben Begründung wie
   `tools/wortliste/` seit jeher; ein Selbstprobenfall hält es fest.
+- **„448 Erwartungen, 0 offen" ist erst seit dem Nachtrag zu AP2 wahr.** Die
+  Zählung meldete für `$CFG` **46 → 0** und AP2 galt als erledigt — Zeile Z04
+  mass aber nur `server/`. Fünf Prüfwerkzeuge unter `tools/` lasen oder
+  setzten dieselbe Globale weiter; **30 Erwartungen standen still auf „nicht
+  erfüllt"**, und die Wiederherstellungsprobe übersprang sieben weitere ganz.
+  Z04 misst seit dem 21.09.2026 `server/` **und** `tools/`.
 - **Die Ratenprobe stand einen Monat auf einem Befund, den niemand sah.**
   Sie zählte sechs Töpfe gegen eine von Hand geführte Fünf; `blatt` kam mit
   Web 20.24.0 dazu. Der Grund für den Monat: Sie braucht eine laufende Anlage

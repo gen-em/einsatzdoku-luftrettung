@@ -314,16 +314,40 @@ function zh_zeile(string $text, int $versatz): int
     return substr_count($text, "\n", 0, min($versatz, strlen($text))) + 1;
 }
 
-/** Alle gezaehlten Dateien mit ihren Sichten. `vendor/` bleibt draussen. */
-function zh_bestand(): array
+/**
+ * Alle gezaehlten Dateien mit ihren Sichten. `vendor/` bleibt draussen.
+ *
+ * `$auch_tools` nimmt `tools/` dazu. Gebraucht wird das von den Zeilen, die
+ * etwas zaehlen, das es NICHT MEHR GEBEN DARF — eine entfallene Globale
+ * etwa. Warum das eine eigene Schaltung ist und nicht die Vorgabe: Die
+ * meisten Zeilen messen die Anwendung, und `tools/` darf dort anders
+ * aussehen (eine Probe DARF `session_start()` rufen).
+ *
+ * WOHER DIE SCHALTUNG KOMMT. Schritt 15 AP2 hat die globale `$CFG`
+ * entfernt; Zeile Z04 bestaetigte 46 -> 0 und der Umbau galt als erledigt.
+ * Z04 sah aber nur `server/`. FUENF PRUEFWERKZEUGE lasen oder setzten
+ * dieselbe Globale, und 30 ihrer Erwartungen standen danach still auf
+ * „nicht erfuellt" — ohne dass die Anwendung einen Fehler gehabt haette
+ * (Backlog Nr. 257, gemessen 21.09.2026). Genau davor warnt `CLAUDE.md` 6
+ * in anderer Sache: Ein Lauf, der einen Bereich uebergeht, meldet keine
+ * Null — er meldet gar nichts.
+ */
+function zh_bestand(bool $auch_tools = false): array
 {
     $wurzel = realpath(ZH_SERVER);
     if ($wurzel === false || !is_dir($wurzel)) {
         fwrite(STDERR, "server/ nicht gefunden.\n");
         exit(2);
     }
+    $wurzeln = [$wurzel => 'server/'];
+    if ($auch_tools) {
+        $t = realpath(ZH_WURZEL . '/..');
+        if ($t !== false && is_dir($t)) { $wurzeln[$t] = 'tools/'; }
+    }
+
     $pfade = [];
-    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($wurzel));
+    foreach ($wurzeln as $w => $_) {
+    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($w));
     foreach ($it as $f) {
         if (!$f->isFile()) { continue; }
         $p = $f->getPathname();
@@ -343,13 +367,18 @@ function zh_bestand(): array
          * `config.php`, wo `base_url` natuerlich steht. Die Zeile war rot,
          * ohne dass sich eine Zeile Code geaendert haette. */
         if ($p === $wurzel . '/config.php') { continue; }
+        /* Der Rueckweg, den `konfig_stellen()` fuer einen harten Abbruch
+         * hinterlegt — eine Kopie, kein Quelltext. */
+        if (str_ends_with($p, '/config.php.vor-probe')) { continue; }
         $pfade[] = $p;
+    }
     }
     sort($pfade);
 
+    $repo = dirname($wurzel);
     $bestand = [];
     foreach ($pfade as $p) {
-        $rel = 'server/' . substr($p, strlen($wurzel) + 1);
+        $rel = substr($p, strlen($repo) + 1);
         $quelle = (string)file_get_contents($p);
         $bestand[$rel] = ['quelle' => $quelle, 'sichten' => zh_sichten($p, $quelle)];
     }
@@ -363,6 +392,7 @@ function zh_gilt(string $rel, array $zeile): bool
     $ist_js  = str_ends_with($rel, '.js');
     if ($bereich === 'php' && $ist_js) { return false; }
     if ($bereich === 'js_und_inline' && !$ist_js && !str_ends_with($rel, '.php')) { return false; }
+    if ($bereich === 'php_und_tools' && $ist_js) { return false; }
     if ($bereich === 'api' && !str_starts_with($rel, 'server/api/')) { return false; }
     if (isset($zeile['nur']) && $rel !== $zeile['nur']) { return false; }
     foreach (($zeile['ausser'] ?? []) as $aus) {
@@ -784,6 +814,7 @@ $mitStellen = in_array('--stellen', $argv, true);
 
 $register = require __DIR__ . '/register.php';
 $bestand  = zh_bestand();
+$bestandMitTools = null;   /* erst bauen, wenn eine Zeile ihn braucht */
 
 $phpZahl = count(array_filter(array_keys($bestand), static fn($r) => str_ends_with($r, '.php')));
 $jsZahl  = count($bestand) - $phpZahl;
@@ -798,7 +829,12 @@ $ueber = []; $gesehen = 0;
 foreach ($register as $z) {
     if ($nurZeile !== null && $z['kennung'] !== $nurZeile) { continue; }
     $gesehen++;
-    $m = zh_messen($z, $bestand);
+    if (($z['bereich'] ?? '') === 'php_und_tools') {
+        $bestandMitTools ??= zh_bestand(true);
+        $m = zh_messen($z, $bestandMitTools);
+    } else {
+        $m = zh_messen($z, $bestand);
+    }
     $decke = $z['decke_jetzt'];
     $lage  = $m['treffer'] > $decke ? 'DRUEBER' : ($m['treffer'] < $decke ? 'drunter' : 'genau');
     if ($m['treffer'] > $decke) { $ueber[] = $z['kennung']; }

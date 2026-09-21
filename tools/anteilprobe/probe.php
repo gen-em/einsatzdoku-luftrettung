@@ -46,6 +46,7 @@ $wurzel  = dirname(__DIR__, 2) . '/server';
 $schreib = in_array('--schreiben', array_slice($argv, 1), true);
 
 require_once $wurzel . '/db.php';
+require_once __DIR__ . '/../konfig_stellen.php';
 require_once $wurzel . '/serverkrypto_lib.php';
 
 /* ---- Buchfuehrung -------------------------------------------------------- */
@@ -80,15 +81,25 @@ printf("Anteilprobe — %s\n", date('c'));
 printf("  app_state.kdf_anteil_kennung vorher: %s\n",
        $merke === null ? '(nicht gesetzt)' : $merke);
 
-/** `config.php` im Speicher verstellen und die gemerkten Werte verwerfen. */
+/**
+ * Eine Anteilslage in `config.php` herstellen.
+ *
+ * BIS WEB 20.26.3 GING DAS IM SPEICHER: `$CFG['kdf_anteil'] = …`, und
+ * `config_gemerktes_verwerfen()` sorgte dafuer, dass die Serverkrypto neu
+ * las. Mit Schritt 15 AP2 ist die globale `$CFG` entfallen — die Anwendung
+ * liest ueber `konfig()` aus der DATEI, und eine Zuweisung an `$CFG`
+ * erreicht niemanden mehr. Sie scheitert nicht, sie tut nur nichts:
+ * **22 der 55 Erwartungen dieser Probe standen danach still auf „nicht
+ * erfuellt"** (gemessen 21.09.2026).
+ *
+ * `konfig_stellen()` geht denselben Weg wie die Anwendung — Datei schreiben,
+ * Merker verwerfen — und legt den Urstand am Ende zurueck, auch bei einem
+ * Abbruch. Der Rueckgabewert wird hier NICHT gebraucht: Das `finally` unten
+ * stellt ohnehin alles zurueck, und zwar bytegleich.
+ */
 function stelle(?string $anteil, ?string $alt = null): void
 {
-    global $CFG;
-    if ($anteil === null) { unset($CFG['kdf_anteil']); }
-    else                  { $CFG['kdf_anteil'] = $anteil; }
-    if ($alt === null) { unset($CFG['kdf_anteil_alt']); }
-    else               { $CFG['kdf_anteil_alt'] = $alt; }
-    config_gemerktes_verwerfen();
+    konfig_stellen(['kdf_anteil' => $anteil, 'kdf_anteil_alt' => $alt]);
 }
 
 /** Die Marke setzen oder loeschen. */
@@ -102,7 +113,9 @@ function marke(?string $wert): void
     }
 }
 
-$cfgSicherung = $CFG;
+/* Den Urstand der Datei merken — `konfig_stellen()` tut das selbst, aber
+ * diese Probe braucht ihn auch fuer das `finally` unten. */
+$zurueckKonfig = konfig_stellen([]);
 
 try {
 
@@ -285,13 +298,12 @@ if ($schreib) {
         /* Die Probe schreibt in `kdf_anteil_alt` — den einzigen der drei
          * Eintraege, der auf dieser Installation nicht in Gebrauch ist. Ein
          * Fehlschlag mitten im Lauf kostet damit nichts, was gebraucht wird. */
-        $CFG = $cfgSicherung;
-        config_gemerktes_verwerfen();
+        $zurueckKonfig();
 
         [$ok, $wert] = config_eintrag_schreiben('kdf_anteil_alt', B_HEX);
         pruefe('(D1) ein neuer Eintrag laesst sich schreiben', $ok, true);
-        pruefe('(D1) und steht danach in $CFG', $CFG['kdf_anteil_alt'] ?? null,
-               strtolower(B_HEX));
+        pruefe('(D1) und steht danach in der Konfiguration',
+               strtolower((string)konfig('kdf_anteil_alt')), strtolower(B_HEX));
         pruefe('(D1) kdf_anteil_alt() liest ihn', bin2hex((string)kdf_anteil_alt()),
                strtolower(B_HEX));
 
@@ -309,8 +321,8 @@ if ($schreib) {
         [$ok4, ] = config_eintrag_schreiben('kdf_anteil_alt', null);
         pruefe('(D4) der Eintrag laesst sich entfernen', $ok4, true);
         pruefe('(D4) danach liest kdf_anteil_alt() nichts', kdf_anteil_alt(true), null);
-        pruefe('(D4) und $CFG kennt ihn nicht mehr',
-               array_key_exists('kdf_anteil_alt', $CFG), false);
+        pruefe('(D4) und die Konfiguration kennt ihn nicht mehr',
+               konfig('kdf_anteil_alt', 'FORT'), 'FORT');
 
         /* DIE GESCHLOSSENE LISTE. Ohne sie waere das Formular „Nachtragen vom
          * Blatt" eine Handhabe, einen beliebigen Eintrag in die
@@ -341,8 +353,7 @@ if ($schreib) {
     /* ZURUECKSTELLEN, AUCH BEI EINEM ABBRUCH. Eine Probe, die eine fremde
      * Kennung in `app_state` liegen laesst, sperrt danach jede angemeldete
      * Sitzung von ihrem Anteil aus — und zwar still. */
-    $CFG = $cfgSicherung;
-    config_gemerktes_verwerfen();
+    $zurueckKonfig();
     marke($merke);
     printf("\napp_state.kdf_anteil_kennung zurueckgestellt auf: %s\n",
            $merke === null ? '(nicht gesetzt)' : $merke);

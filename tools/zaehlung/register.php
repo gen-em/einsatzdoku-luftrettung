@@ -113,8 +113,14 @@ return [
 
 ['kennung' => 'Z04', 'paket' => 'AP2',
  'beschreibung' => "\$CFG / global \$CFG / \$GLOBALS['CFG']",
- 'grund' => 'Die globale $CFG entfaellt in AP2, sobald ihre Zugriffszahl 0 ist (E-ZE-14).',
- 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
+ 'grund' => 'Die globale $CFG ist mit AP2 entfallen (E-ZE-14). '
+          . 'BEREICH IST server/ UND tools/, und das ist der Kern dieser Zeile: '
+          . 'Die Globale gibt es NIRGENDS mehr. Bis zum 21.09.2026 mass sie nur '
+          . 'server/, meldete 46 -> 0 — und fuenf Pruefwerkzeuge lasen oder '
+          . 'setzten dieselbe Globale weiter. 30 ihrer Erwartungen standen '
+          . 'danach still auf „nicht erfuellt" (Backlog Nr. 257).',
+ 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php_und_tools',
+ 'ausser' => ['tools/zaehlung/register.php', 'tools/konfig_stellen.php'],
  'regel' => ['art' => 'muster', 'muster' => '~\$CFG\b|\$GLOBALS\[\s*[\'"]CFG[\'"]\s*\]~'],
  'start' => 46, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 

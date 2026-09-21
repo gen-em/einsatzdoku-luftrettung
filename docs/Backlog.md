@@ -107,7 +107,9 @@ kollidieren.
 | 253 | Datum-Zeit-Trenner vereinheitlichen | 10c AP9 |
 | 254 | Ratenprobe erwartet fünf Töpfe mit Leiter — es sind sechs | erledigt 21.09.2026 |
 | 255 | `lokal_einrichten.sh` kopiert Handbuch und Bilder nicht nach `server/doku/` | behoben 21.09.2026 |
-| 256–259 | frei — Reserve für weitere Funde der Umsetzung von Schritt 15 | Schritt 15 |
+| 256 | Vier Dateien unter `api/` prüfen die Anfragemethode nicht | Backlog-Runde / 10c AP6 |
+| 257 | Fünf Prüfwerkzeuge hingen an der globalen `$CFG` | erledigt 21.09.2026 |
+| 258–259 | frei — Reserve für weitere Funde der Umsetzung von Schritt 15 | Schritt 15 |
 
 > **Keiner der vier gehört in Schritt 15 selbst**, und das ist kein Versehen:
 > 250 ändert Wege durch die Anwendung, 251 und 252 hängen an späteren
@@ -3148,6 +3150,32 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     einer Stelle (`format_lib.php`) — dann ist es eine Zeile statt einer
     Suche, und deshalb wartet es bis dahin.
 
+256. **Vier Dateien unter `api/` prüfen die Anfragemethode nicht.**
+    *Aufgenommen 21.09.2026 bei der Vorbereitung von Schritt 15 AP3.*
+    Zugeordnet: **Backlog-Runde** oder 10c AP6, wo der Eingang ohnehin
+    angefasst wird.
+
+    Siebzehn der einundzwanzig Dateien unter `server/api/` beginnen mit
+    `if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_out(['error' =>
+    'method'], 405); }`. Vier tun es nicht: `csp_bericht.php`,
+    `rueckfrage.php`, `schluessel_erneuern.php`, `schluesselblatt_pruefen.php`.
+    Ein `GET` auf diese vier läuft heute in den Rumpf hinein.
+
+    **Praktische Folge heute: gering.** Alle vier rufen `csrf_check()`, und
+    ein `GET` bringt kein Token mit — er endet also in der CSRF-Abweisung
+    statt in einer 405. Der Unterschied ist die Meldung, nicht die Sicherheit.
+    `csp_bericht.php` ist ohnehin ein Sonderfall (anderer Inhaltstyp, kein
+    eigener Aufrufer).
+
+    **Warum es nicht in Schritt 15 AP3 behoben wird** (Entscheidung des
+    Auftraggebers, 21.09.2026): AP3 zieht die Methodenprüfung in
+    `api_eingang()` zusammen. Die vier dort *mitzunehmen* hieße, eine Prüfung
+    **neu einzuführen** — ein `GET`, der heute durchgeht, bekäme künftig 405.
+    Das wäre eine sechste Verhaltensänderung neben den fünf benannten, und
+    **E-ZE-10 ist die härtere Zusage**. AP3 baut den Eingang dort deshalb
+    ohne Methodenprüfung ein; die Registerzeile Z06 erreicht ihre Null
+    trotzdem.
+
 260. **Zwei Code-Kommentare in `server/` sagen „beider FTPS-Schritte" — seit
     Kette II/AP5 ist es einer.** *Aufgenommen 21.09.2026 (Kette II, AP5).*
     Zugeordnet: **das Paket, das Kette II nach `main` bringt.**
@@ -3327,6 +3355,52 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+257. **Fünf Prüfwerkzeuge hingen an der globalen `$CFG` — und meldeten nach
+    ihrem Wegfall 30 Erwartungen als „nicht erfüllt", ohne dass die
+    Anwendung einen Fehler hatte.** *Aufgenommen und erledigt am 21.09.2026
+    (Schritt 15, Nachtrag zu AP2).*
+
+    AP2 hat die globale `$CFG` entfernt; die Anwendung liest seither über
+    `konfig()` aus der Datei. **Die Registerzeile Z04 bestätigte 46 → 0 und
+    der Umbau galt als erledigt** — sie mass aber nur `server/`. Unter
+    `tools/` lasen oder setzten fünf Proben dieselbe Globale weiter. Eine
+    Zuweisung an `$CFG` scheitert nicht; sie tut nur nichts.
+
+    | Werkzeug | Erwartungen | vorher offen | nachher |
+    |---|---|---|---|
+    | `ingestprobe` | 83 | 1 | 0 |
+    | `anteilprobe` | 55 | 22 | 0 |
+    | `versandprobe` | 135 | 5 | 0 |
+    | `wiederherstellungs-probe` | 104 → **111** | 1 (+7 übersprungen) | 0 |
+    | `komplettprobe` | 64 | 1 | 0 |
+
+    Die Wiederherstellungsprobe zeigt den Schaden am deutlichsten: Sie
+    **übersprang Teil 12 ganz** und meldete dafür einen einzelnen Fehlschlag.
+    Sieben Erwartungen wurden gar nicht gemessen.
+
+    *Behoben:* `tools/konfig_stellen.php` — eine Stelle, fünf Verbraucher.
+    Sie geht denselben Weg wie die Anwendung (`config.php` schreiben,
+    `konfig_verwerfen()`) und legt den **Urstand bytegleich** zurück, auch
+    bei einem Abbruch. Ausdrücklich **nicht** gebaut wurde eine Hintertür in
+    `konfig_lib.php` „nur für Proben": Das wäre ein zweiter Weg in
+    Produktionscode.
+
+    *Zwei Fehler beim Bauen des Helfers, beide gemessen und behoben:* Die
+    Abbruchsicherung war **je Aufruf** angemeldet — Abschlussfunktionen
+    laufen in Anmeldereihenfolge, also legte die äußere den Urstand zurück
+    und eine spätere schrieb ihren Zwischenstand darüber. Nach einem Lauf der
+    `versandprobe` stand ein **zufälliger `server_key`** in der `config.php`;
+    damit wären die versiegelten Sicherungsziele nicht mehr zu öffnen
+    gewesen. Und der erste Rückweg schrieb einen `var_export` statt der
+    Bytes — der **Kopfkommentar des Installers** („niemals ins Git-Repo
+    committen") war danach fort. Jetzt: eine Sicherung je Pfad, und
+    zurückgelegt werden die Bytes.
+
+    *Die eigentliche Lehre steht in der Registerzeile:* Z04 misst seit heute
+    `server/` **und** `tools/`. Die Zeile zählt eine Globale, die es
+    **nirgends** mehr geben darf — ein Bereich, der fehlt, meldet keine Null,
+    sondern gar nichts (`CLAUDE.md` 6, in eigener Sache).
 
 254. **Die Ratenprobe erwartet fünf Töpfe mit Leiter — es sind sechs.**
     *Aufgenommen 21.09.2026 beim ersten Lauf der Probe gegen eine lokal
