@@ -14,6 +14,7 @@ ist die wiederholbare Fassung, die Klickstrecke die prüfbare.
 | `papierkorb_misch.mjs` | E-S1-04 und Backlog Nr. 33: ein Diensttag mit **einzeln** und **mit dem Tag** gelöschten Einsätzen übersteht den Umlauf, die Papierkorbseite zeigt den Unterschied, und das Zurückholen wird abgelehnt, solange der Diensttag selbst im Papierkorb liegt |
 | `demo_pruefen.mjs` | Abnahme der Demo-Funktion (E-P1-08) — **verändert das Konto, gegen das es läuft** |
 | `demo_bremse.mjs` | die Mengenbremse greift auch für das Demo-Konto |
+| `download_lib.mjs` | **kein Schritt, sondern die gemeinsame Wartestelle**: auf einen Download warten und sagen, was war, wenn keiner kommt |
 
 Zwei davon fassen Daten an und haben deshalb einen Riegel:
 `demo_pruefen.mjs` bricht ab, wenn unter der Demo-Adresse ein Konto liegt, das
@@ -206,3 +207,69 @@ Wert tatsächlich anzeigen, sonst wäre die Prüfung gegenstandslos.
 **Hier wurde ein echter Fehler gefunden** (F-P1-I, ausgeliefert als Web 7.2.1):
 Die Spalte *Alter* gab ihren Wert unmaskiert aus. Gegen den Stand vor der
 Korrektur meldet das Skript sechs Befunde über drei Seiten.
+
+---
+
+## `download_lib.mjs` — warten auf einen Download (21.09.2026)
+
+```
+node tools/referenzdatensatz/browser/download_lib.mjs --selbstprobe
+```
+
+**Erwartet: 10 Lagen, 0 offen.** Läuft in Stufe 1 bei jedem Push — ohne
+Browser, ohne Anlage, ohne Netz.
+
+### Warum es sie gibt
+
+Am 21.09.2026 ist der Kreislauf `edbak` gegen Staging nach **fünfzehn
+Minuten** gescheitert, und das Protokoll sagte genau einen Satz:
+
+```
+page.waitForEvent: Timeout 900000ms exceeded while waiting for event "download"
+```
+
+Mehr nicht. Nicht, ob der Export überhaupt angelaufen war; nicht, wie weit er
+kam; nicht, ob der Browser einen Fehler geworfen hatte. **Fünfzehn Minuten
+Messung, und als Ergebnis die Auskunft „es kam nichts".** Die Frage, die man
+danach stellt — *lief er langsam oder hing er?* —, beantwortete das Protokoll
+nicht, und ohne diese Antwort ist die nächste Messung ein Ratespiel.
+
+Dieser Fehler stand vorher hinter dem **Botschutz von lima-city**: Der Lauf
+kam nie bis zum Export, also hat ihn nie jemand gesehen.
+
+### Was sie tut
+
+Sie liest das Zustandsfeld alle drei Sekunden mit und legt im Fehlerfall
+**Zustand, Verlauf und Konsolenfehler** in die Meldung:
+
+```
+Kein Download innerhalb der Zeitgrenze.
+  Zustand von #expstate: Schritt 2 von 3
+  Verlauf:            Schritt 1 von 3  →  Schritt 2 von 3
+  Konsolenfehler:     TypeError: x ist undefined
+  Ursprung:           page.waitForEvent: Timeout 900000ms exceeded …
+```
+
+**Der Verlauf ist der Punkt.** Ein Export, der bis „182 von 182 Dateien" kam
+und dann stehenblieb, ist ein anderer Befund als einer, der nie eine Zeile
+gemeldet hat — und für den zweiten Fall steht dort ausdrücklich
+**`KEIN Fortschritt gemeldet`** statt einer leeren Liste.
+
+### Wo sie gerufen wird
+
+**Fünf Stellen in vier Skripten** — `kreislauf_edbak.mjs`,
+`kreislauf_csv.mjs`, `papierkorb_misch.mjs` und `referenz_export.mjs`
+(zweimal). Die halbe Fassung, die `referenz_export.mjs` als eigene Funktion
+`mitFortschritt()` mitbrachte, ist damit abgelöst: Sie las den Fortschritt
+zwar mit, **fing den Abbruch aber nicht ab**, und die drei anderen Skripte
+hatten sie gar nicht.
+
+### Was der Aufrufer weiterhin selbst tun muss
+
+**Das Warten vor dem Klick anmelden.** `waitForEvent()` horcht erst ab dem
+Aufruf. Wer es hinter das Bestätigen der Rückfragen setzt, verliert das
+Rennen, sobald der Export schneller fertig ist als die Schleife ihre letzten
+Leerläufe abwartet — der Download kommt, niemand hört zu, und das Skript
+wartet bis zum Zeitlimit auf ein Ereignis, das längst vorbei ist. **Das sah
+schon einmal aus wie ein Fehler der Anwendung und war einer des
+Prüfmittels.**

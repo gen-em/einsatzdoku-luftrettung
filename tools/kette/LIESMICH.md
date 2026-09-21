@@ -5,7 +5,7 @@ python3 tools/kette/tor.py --selbstprobe                              # ohne Net
 python3 tools/kette/tor.py backup      --basis https://… --token …
 python3 tools/kette/tor.py wartung-an  --basis https://… --token …
 python3 tools/kette/tor.py wartung-aus --basis https://… --token …
-python3 tools/kette/tor.py zustand     --basis https://… --token … [--frage migration]
+python3 tools/kette/tor.py zustand     --basis https://… --token … [--frage migration|version|wartung|komplett]
 python3 tools/kette/tor.py pause       --basis https://… --token … --sekunden 1800
 ```
 
@@ -116,3 +116,461 @@ Ob die Gegenstelle wirklich der Produktivserver ist, ob das Backup lesbar ist
 und ob der Serverschlüssel der richtige ist. Das erste ist Sache der Umgebung
 (`PRODUKTION_URL`), das zweite und dritte Sache der
 Wiederherstellungsprobe (`tools/wiederherstellungs-probe/`).
+
+---
+
+# Zielprobe — liegt eine hochgeladene Datei hinterher wirklich im Web?
+
+```
+python3 tools/kette/zielprobe.py --basis https://nadoku.example \
+        --ftp-server HOST --ftp-konto NAME --ftp-pass … [--ftp-pfad /]
+python3 tools/kette/zielprobe.py … --ohne-sitzungswiederverwendung
+python3 tools/kette/zielprobe.py --selbstprobe
+```
+
+Rückgabewert 0 = Rundlauf gelungen, 1 = nicht, 2 = Bedienfehler.
+
+## Warum es sie gibt (F4, E-KH-07)
+
+Die Kette hat bis zum 20.09.2026 geglaubt, was ihr die FTP-Aktion sagte. Ein
+grüner Upload-Schritt heißt aber nur: **Die Bibliothek hat keinen Fehler
+gemeldet.** Er heißt nicht, dass die Dateien unter der Adresse liegen, die
+`PRODUKTION_URL` nennt. Ein falscher Zielpfad, ein zweiter Webspace, ein
+Konto, das woandershin eingesperrt ist — von innen sehen alle drei aus wie
+Erfolg.
+
+Die Probe schreibt eine Datei mit Zufallsnamen und Zufallsinhalt ins
+Zielverzeichnis, holt sie über **HTTPS** zurück, vergleicht Byte für Byte,
+löscht sie und prüft das Löschen (danach 404). Das belegt den **lebenden**
+Weg vom FTP-Konto bis zur öffentlichen Adresse.
+
+## Zwei Rundläufe, und der zweite ist der wichtige
+
+| | was er misst |
+|---|---|
+| **1 — flach** | Datei in das **bestehende** Zielverzeichnis, HTTPS zurück, löschen |
+| **2 — durch ein neues Verzeichnis** | Verzeichnis **anlegen** (`--ftp-create-dirs`), hineinschreiben, **auflisten**, HTTPS zurück, Datei und Verzeichnis entfernen |
+
+**Warum es den zweiten gibt** (gemessen 20.09.2026): Die Auslieferungsaktion
+meldet ihren Abbruch an dieser Stelle —
+
+```
+creating folder "api/"
+  at Client._openDir → Client.ensureDir → ECONNRESET (data socket)
+```
+
+> **BERICHTIGT am 20.09.2026 (F-KH-U-23/-25).** Hier stand: „also beim
+> **Auflisten** eines eben angelegten Verzeichnisses über den Datenkanal".
+> **Beides ist falsch.** `_openDir` sendet `MKD` und `CWD` und listet nie
+> (`basic-ftp` 6.2.1, Z. 686–689), und die gemeldete Stelle ist **nicht die
+> Ursache**: „Client **is closed** *because*…" ist eine Zustandsmeldung. Der
+> Client war beim `MKD` schon tot; gestorben ist er drei Schritte vorher, am
+> `RETR` auf die fehlende Zustandsdatei (F-KH-U-25, gefunden am 20.09.2026).
+>
+> Der zweite Rundlauf bleibt trotzdem: Er misst `MKD`, `CWD` und ein
+> Auflisten in einer frischen Sitzung, und das ist für sich genommen eine
+> Auskunft. Er misst nur **nicht**, was hier stand.
+
+**Das hat vier Läufe gekostet.** Der Trennversuch zur TLS-Sitzung war viermal
+grün, während der echte Upload viermal rot war — die Probe hatte die kranke
+Stelle gar nicht angefasst. Ein Prüfmittel, das den Weg misst, den die
+Auslieferung **nicht** geht, ist eine grüne Zahl ohne Aussage.
+
+**Beide laufen immer**, auch wenn der erste scheitert. Gelingt Rundlauf 1 und
+scheitert Rundlauf 2, sagt die Probe genau das — und nennt `_openDir` beim
+Namen.
+
+## Warum `curl` und nicht die Auslieferungsaktion
+
+Nicht weil er da ist, sondern weil er ein **zweiter** FTPS-Client ist.
+
+Scheitert der Upload in `SamKirkland/FTP-Deploy-Action` und die Zielprobe
+gelingt → es liegt an der Bibliothek. Scheitern beide an derselben Stelle →
+es liegt an der Plattform. **Das ist der Trennschnitt, den F3 braucht.** Ein
+Werkzeug, das denselben Client benutzt, könnte diese Frage nicht beantworten.
+
+## Die zwei Betriebsarten
+
+| Schalter | `curl`-Option | wofür |
+|---|---|---|
+| (Vorgabe) | — (Wiederverwendung ist `curl`s Verhalten ohne Zutun) | Normalbetrieb |
+| `--ohne-sitzungswiederverwendung` | `--no-sessionid` | der Trennversuch (F3) |
+
+`--ssl-reqd` steht in **beiden** Betriebsarten: Es verlangt TLS und hat mit
+der Wiederverwendung nichts zu tun. Bis zum 20.09.2026 stand es hier so, als
+wäre es der Schalter für „mit" — das war falsch beschriftet.
+
+> **Hier stand `--no-ssl-session-reuse`, und den gibt es nicht.** Gemessen im
+> ersten Trennversuch (Lauf 35534784406): `curl: option
+> --no-ssl-session-reuse: is unknown`. Der ganze Lauf hat damit **nichts**
+> gemessen. Die Selbstprobe hatte geprüft, dass die Zeichenkette im
+> ausgeführten Befehl **landet** — nicht, dass `curl` sie **kennt**. Seither
+> fragt `curl_kennt()` das Werkzeug selbst (`curl --help all`), in der
+> Selbstprobe **und** vor jedem echten Lauf in dieser Betriebsart.
+
+Viele FTPS-Server verlangen die Wiederverwendung; wer sie nicht bietet,
+bekommt die Datenverbindung abgeschnitten — **das sieht aus wie ein
+`ECONNRESET`**. Gelingt die Probe *mit* und scheitert *ohne*, ist die
+Forderung des Servers belegt.
+
+**Ob `curl` die Sitzung in der Fassung dieses Läufers tatsächlich
+wiederverwendet, wird gemessen und nicht angenommen.** Der Schalter kann
+fehlen oder still ignoriert werden — dann belegte ein gelungener Lauf gar
+nichts. Die Ausgabe ist **dreiwertig**, wie `plattform_pruefen()`
+(`Technik.md` 5b.1): `JA (gemessen)`, `NEIN (gemessen)` oder **`NICHT
+FESTSTELLBAR`**. Das dritte ist kein Nein.
+
+## Was sie über den Datenkanal sagt
+
+Neben „TLS-Sitzung wiederverwendet" steht in **jedem** Rundlauf eine Zeile
+**`Datenkanal:`** — `EPSV`, `PASV`, oder **`PASV — NACH einem
+EPSV-Fehlschlag`**. Dreiwertig wie die Sitzungszeile: Was nicht zu sehen
+war, heißt „nicht feststellbar" und nicht „nein".
+
+**Warum das zählt:** `curl` versucht `EPSV` und fällt bei Fehlschlag
+selbsttätig auf `PASV` zurück. Eine Bibliothek, die das nicht tut, bliebe an
+derselben Stelle hängen — und das sähe aus wie ein `ECONNRESET` auf der
+ersten Datenverbindung. Bis zum 20.09.2026 gab die Probe die ausführliche
+Ausgabe nur **im Fehlerfall** aus; vier grüne Läufe haben die Auskunft
+verschluckt, auf die es ankam.
+
+## Was sie hinterlässt: nichts
+
+Sie räumt Reste früherer Proben weg (alles mit dem Präfix `zielprobe-` im
+Zielverzeichnis, **und** alles mit dem alten Präfix `.zielprobe-`) und löscht
+ihre eigene Datei **auch im Fehlerfall** — sonst liegt nach dem dritten roten
+Lauf Müll im Webroot, den jeder abrufen kann. Beim zweiten Rundlauf gehört
+das Probeverzeichnis dazu: erst die Datei darin, dann `RMD`.
+
+**Der Präfix beginnt ausdrücklich NICHT mit einem Punkt**, und das ist eine
+Behebung vom 20.09.2026. Er tat es einmal, als zweiter Riegel neben dem
+Löschen: `.htaccess` (Z. 64) antwortet auf jeden Pfad mit führendem Punkt mit
+403. Genau das hat die Probe ausgesperrt — sie ruft ihre Datei ja selbst über
+HTTPS ab und bekam 403 statt 200. Schlimmer als der Fehlschlag war die
+Diagnose: Sie meldete „FTPS-Ziel und HTTPS-Basis zeigen nicht auf dasselbe
+Verzeichnis", und das stimmte nicht. Seither ist 403 eine eigene Meldung
+(**GESPERRT**) und nie ein falsches Ziel.
+
+## Mengenprobe — EINE Sitzung, viele Verzeichnisse
+
+`--mengenprobe N` (1–500) fährt **statt** der beiden Rundläufe einen einzigen
+`curl`-Aufruf, der `N` Verzeichnisse anlegt und in jedes eine Datei schreibt
+— über **eine** Steuerverbindung, eine Anmeldung, einen TLS-Aufbau.
+
+**Warum es sie gibt.** Nach fünf Trennversuchen zum `ECONNRESET` auf
+Produktiv (F3) waren Läuferabbild, Node-Fassung, Zertifikat, die
+TLS-Sitzungswiederverwendung, das Anlegen eines Verzeichnisses und der Weg
+zum Datenkanal ausgeschlossen — alle gemessen, alle grün. Übrig blieb ein
+Unterschied, den die Zielprobe **bauartbedingt nicht messen kann**: Sie ruft
+`curl` je Operation einmal auf und bekommt jedes Mal eine frische Sitzung.
+Die Auslieferungsaktion hält **eine** Verbindung offen und fährt 688 Dateien
+und 62 Verzeichnisse darüber.
+
+Ein Server, der die zweite oder dritte Datenverbindung **einer** Sitzung
+abweist — Zeitgrenze, erschöpfter Portbereich, `MaxConnectionsPerHost`, ein
+Ratenschutz —, sieht in der Zielprobe wie ein gesunder Server aus. Er wird
+ja jedes Mal neu gefragt.
+
+**Was sie ausgibt.** Den Weg zum Datenkanal, die Zahl der abgeschlossenen
+Übertragungen (`226`) gegen die Zahl der verlangten — **„2 von 5" ist das
+Ergebnis, auf das es ankommt** —, und bei Abbruch die letzten 40 Zeilen der
+Servermeldung wörtlich.
+
+**Die Zeitgrenze wächst mit der Zahl der Ziele** (`MENGE_GRUNDZEIT_S +
+MENGE_JE_ZIEL_S × N`, heute 30 + 8·N). Grund: Die Mengenprobe macht **einen**
+`curl`-Aufruf für alle Ziele, und der feste Wert von 60 s je Aufruf hat beim
+ersten echten Lauf das eigene Messgerät erschlagen — 21 von 80 Verzeichnissen
+waren fertig, gemessene 2,9 s je Stück. **Gemessen gegen Produktiv: 80 Ziele
+in einem Schritt von 2:49**, Aufräumen eingeschlossen — die Grenze von 670 s
+ist Luft, kein Sollwert. `curl` bekommt zusätzlich
+ein eigenes `--max-time` fünf Sekunden darunter, damit er sich selbst beendet
+und seine Schlusszeile schreibt.
+
+**Eine Zeitgrenze ist kein Befund über den Server, und sie wird auch nicht so
+gemeldet.** Sie sagt **„ABGEBROCHEN VON DER PROBE SELBST … NICHT vom
+Server"**, rechnet die gemessene Zeit je Ziel vor und nennt die Stellschraube.
+Der Satz „Einzeln geht jede dieser Operationen durch" — der Satz, der die
+Sitzung beschuldigt — steht dort ausdrücklich nicht. Das ist die eine
+Falschdiagnose, die diese Probe nie stellen darf: Sie schickte sonst jemanden
+mit einem falschen Befund zum Hoster.
+
+**Sie läuft nie von selbst**, und zwar hinter zwei Riegeln. Der Arbeitslauf
+„Auslieferung" hat dafür das Feld **`probelauf_mengenprobe`**: Es wirkt nur
+zusammen mit dem Häkchen `probelauf` (sonst bricht der Schritt mit einer
+Fehlermeldung ab) und nur mit einer Zahl von 1 bis 500. Dann tritt die
+Mengenprobe **an die Stelle** der beiden Rundläufe. Ein Tag-Lauf hat das Feld
+gar nicht; ein Push hat es gar nicht.
+
+**Warum überhaupt über die Kette und nicht von Hand:** Die drei Geheimnisse
+liegen dort und sonst nirgends. Eine Prüfliste, deren Punkt niemand ausführen
+kann, ist keine Prüfliste.
+
+Aufgeräumt wird in einem `finally`, auch nach Abbruch, und was übrigbleibt,
+wird **nachgemessen** und benannt — der nächste Lauf der Zielprobe nimmt es
+mit. Nachgemessen, nicht gerechnet: Der erste Lauf meldete „59 Verzeichnisse
+konnten nicht entfernt werden", und 59 davon hatte es nie gegeben, weil der
+Satz *gewollt minus weggeräumt* rechnete. Eine Warnung, die auf dem Server
+nichts findet, schickt jemanden suchen.
+
+**Alle Löschbefehle gehen in EINEN `curl`-Aufruf** (`-Q` mehrfach). Vorher
+war es einer je Befehl: bei 21 Verzeichnissen 42 TLS-Aufbauten und drei
+Minuten, bei 500 wären es tausend und der Job liefe in seine Zeitgrenze —
+mit genau dem Müll im Webroot, den er wegräumen soll. Weil `curl` die
+Befehlskette beim ersten Fehler abbricht, sagt der Rückgabewert wenig;
+deshalb wird danach **neu aufgelistet** und zurückgegeben, was tatsächlich
+verschwunden ist. Höchstens vier Runden, und ohne Fortschritt ist nach einer
+Schluss.
+
+## Sitzungsprobe — Abruf, DANN ein Steuerbefehl
+
+`--sitzungsprobe` lädt eine Datei hoch, ruft sie ab und setzt **in derselben
+`curl`-Sitzung** danach ein `PWD` ab (`-Q "-PWD"`; der führende Strich heißt
+„nach der Übertragung").
+
+**Warum es sie gibt (F-KH-U-23).** Der Stacktrace von F3 lautet „Client **is
+closed** *because* read ECONNRESET (data socket)" und steht an
+`sendIgnoringError("MKD api")`. `_openDir` sendet aber nur `MKD` und `CWD` —
+beides Steuerkanal, keine Datenverbindung (nachgelesen in `basic-ftp` 6.2.1,
+Z. 686–689). **Der Client war also schon tot, als das `MKD` kam;** die Zeile
+ist die Stelle, die es *bemerkt*, nicht die, die es verursacht.
+
+Daraus folgt eine Lage, die bis heute niemand gemessen hat: Vor dem ersten
+`MKD` holt die Aktion ihre Zustandsdatei — **eine Datenverbindung**. Wird die
+zurückgesetzt, fällt es erst beim nächsten Steuerbefehl auf. **Im Probelauf
+kommt danach keiner mehr**, nur noch „Sync complete". Ein Reset genau dort
+wäre im Trockenlauf unsichtbar — und das ist die beobachtete Lage:
+Probelauf grün, echter Lauf rot.
+
+Die Zielprobe konnte das nie sehen, weil sie je Operation eine neue
+Verbindung öffnet. Diese Probe macht beides in einer.
+
+> **Und sie hat F3 trotzdem nicht gefunden — weil sie die falsche Datei
+> abruft.** Sie lädt erst hoch und ruft **ihre eigene** Datei ab. Die
+> Auslieferungsaktion ruft eine Datei ab, **die es nicht gibt** (ihre
+> Zustandsdatei beim ersten Lauf), und genau daran stirbt sie: Die
+> Datenverbindung steht per `EPSV` schon, der Server schließt sie, und
+> `basic-ftp` liest `ECONNRESET` auf dem Datensocket statt der `550` auf dem
+> Steuerkanal (F-KH-U-25, gefunden am 20.09.2026 durch den Gesprächslauf).
+>
+> **Das ist die Lehre dieser acht Trennversuche, und sie steht hier und
+> nicht in einer Fußnote:** Alle acht haben nur Dateien abgerufen, die
+> `curl` zuvor selbst hochgeladen hatte. **Eine Probe, die nur den
+> Erfolgsfall nachstellt, misst den Erfolgsfall.** Wer die nächste baut,
+> fragt zuerst: Welche Operation der Gegenseite kommt darin **nicht** vor?
+
+**Dreiwertig wie alles hier:** Sieht `curl` keine `257`-Antwort, heißt das
+**NICHT FESTSTELLBAR** und nicht „belegt". Und scheitert schon das
+Hochladen, sagt sie, dass die Frage **gar nicht gestellt** wurde — statt ein
+Ergebnis vorzutäuschen.
+
+**In der Kette:** die Eingabe `probelauf_sitzungsprobe` des Arbeitslaufs
+„Auslieferung", nur zusammen mit dem Häkchen `probelauf`. Sie tritt **an die
+Stelle** der beiden Rundläufe und schließt `probelauf_mengenprobe` aus — beide
+zugleich wäre ein Lauf, der etwas anderes misst, als daransteht; das Werkzeug
+weist die Kombination auch bei einem Handaufruf ab.
+
+## Geheimnisse
+
+Das Passwort geht über `--config -` und **nicht** über die Befehlszeile —
+`/proc/<pid>/cmdline` ist lesbar. Jede Ausgabe läuft durch `sag()`, das
+maskiert; `curl --verbose` schreibt die Adresse samt Passwort mit.
+
+**Unter vier Zeichen wird nicht maskiert**, und das ist eine Behebung: Mit
+einem einzeichigen „Geheimnis" zerschnitt die Maskierung die Dateiliste, die
+`aufraeumen()` danach auswerten muss — aus `.zielprobe-alt.txt` wurde
+`.zielpro***e-alt.txt`, und das Aufräumen fand seine eigenen Reste nicht
+mehr (gefunden von der Selbstprobe am 20.09.2026). Maskiert wird seither am
+**Rand**, nicht in der Mitte.
+
+## Selbstprobe
+
+`--selbstprobe` fährt **93 Lagen ohne Netz**: Maskierung (4), Adressen (3),
+der Weg zum Datenkanal (5), die Dreiwertigkeit der Sitzungsmessung (4), der
+flache Rundlauf gegen Attrappen (13 — darunter „liegt im FTP, ist über HTTPS
+404", „Inhalt weicht ab", „nach dem Löschen weiter abrufbar", „Hochladen
+scheitert" und jedes Mal die Gegenprobe, dass **trotzdem gelöscht wird**),
+die Betriebsarten und die Frage an `curl` selbst, ob er den Schalter kennt
+(6), das Aufräumen (4), 403 als Sperre statt als falsches Ziel (2), das
+Passwort außerhalb der Befehlszeile (1), der Rundlauf durch ein neues
+Verzeichnis samt Gegenprobe am Auflisten (8), die Mengenprobe (17), die
+Bündelung des Aufräumens (6), die Zeitgrenze als Befund (8) und die
+Sitzungsprobe (12).
+
+Die Lage, die dort am wichtigsten ist: **alle Ziele stehen in EINEM
+`curl`-Aufruf.** Zerfiele die Mengenprobe in viele Aufrufe, wäre sie eine
+teurere Fassung des Rundlaufs und könnte den Unterschied, für den es sie
+gibt, nie zeigen.
+
+Die Selbstprobe läuft in der Kette **vor** jedem echten Lauf.
+
+## Was sie nicht kann
+
+Sie misst den Weg für eine **statische** Datei. Ob PHP läuft, ob die
+Anwendung antwortet, ob `.htaccess` greift — davon sagt sie nichts. Und sie
+misst das Verzeichnis, auf das `--ftp-pfad` zeigt, samt **einem** darunter
+neu angelegten; ein tiefer Baum wie der der Auslieferung entsteht nur in der
+Mengenprobe, und auch dort flach.
+
+---
+
+# Zustandsdatei — der kleinste Eingriff gegen F3
+
+`tools/kette/zustand.py` prüft, ob die Zustandsdatei der Auslieferungsaktion
+auf dem Server liegt, und legt sie an, wenn sie fehlt.
+
+## Warum es sie gibt (AP4, F-KH-U-25)
+
+Die Aktion holt vor jeder Übertragung ihre Zustandsdatei
+(`getServerFiles` → `downloadFileList`). Fehlt sie, sendet sie `RETR` auf
+einen Namen, den es nicht gibt — und der Datenkanal steht zu diesem Zeitpunkt
+schon (`EPSV`, Antwort 229). Der Server schließt ihn; `basic-ftp` liest
+`ECONNRESET` auf dem **Datensocket** statt der `550` auf dem Steuerkanal.
+
+**Die Aktion merkt es nicht.** Sie fängt den Fehler ab, deutet ihn als
+„first publish" und rechnet mit einem toten Client weiter; sie stirbt erst
+beim nächsten `MKD`. Gemeldet wird also eine Stelle **drei Schritte hinter
+der Ursache** — deshalb stand `ensureDir` acht Trennversuche lang im Verdacht.
+
+**Und der Zustand erhält sich selbst:** Solange keine Zustandsdatei da ist,
+stirbt jeder Lauf daran, und weil er stirbt, wird nie eine geschrieben.
+
+## Warum gerade dieser Eingriff
+
+Er ist der kleinste, den es gibt: **Der Transport bleibt, die Aktion bleibt,
+das Löschverhalten bleibt.** Das Konzept nennt für AP4 vier Richtungen —
+`lftp` (a), neuere Fassung (b, entfällt), serverseitig (c, verworfen),
+Konto/Pfad (d). **Keine davon passt auf den Befund**, denn keine war für
+diesen Fehler gedacht; (a) zielte auf die Sitzungswiederverwendung, die
+inzwischen ausgeschlossen ist. Das hier ist Richtung **(e)**, und nach der
+Regel des Konzepts („kleinster Eingriff ist vorzuziehen") geht sie vor.
+
+## Drei Vorsichten, jede mit Grund
+
+- **Eine vorhandene Datei wird nie angefasst.** Sie trägt den Bestand des
+  Servers; sie zu überschreiben hieße, der Aktion zu sagen, der Server sei
+  leer — und das wäre beim nächsten Lauf eine Voll-Übertragung von 688
+  Dateien.
+- **Gefragt wird mit `--head`** (`SIZE`/`MDTM` auf dem Steuerkanal), nicht
+  mit `RETR` und nicht per Auflisten. Kein `RETR`, weil das genau die
+  Operation ist, die den Fehler auslöst — eine Prüfung, die ihn auslöst, um
+  ihn zu vermeiden, wäre ein Witz. Und keine Datenverbindung, also auch kein
+  Datenkanal, der sterben könnte.
+
+  **Aufgelistet wurde es einen Lauf lang, und das war ein Fehler.** `NLST`
+  zeigt **Punktdateien nicht**, und die Zustandsdatei fängt mit einem Punkt
+  an. Das Werkzeug hätte auf dem Produktivserver **immer** „fehlt" gemeldet,
+  auch wenn die Datei liegt — und sie dann überschrieben. Genau der Schaden,
+  vor dem die erste Vorsicht schützen soll. **Gefunden hat es die
+  Nachmessung** (Lauf 35544269232): Sie meldete „nach dem Hochladen ist sie
+  NICHT in der Liste", statt „angelegt" zu behaupten.
+- **Nicht feststellbar heißt nicht feststellbar.** Lässt sich das
+  Verzeichnis nicht auflisten, wird **nichts** angelegt und der Lauf ist rot.
+
+## Was angelegt wird
+
+`data: []` — „auf dem Server liegt nichts". Beim ersten echten Lauf ist das
+richtig: Die Aktion überträgt dann alles und schreibt die Datei danach selbst
+fort. Eine erfundene Dateiliste wäre schlimmer als keine; sie ließe die
+Aktion Dateien überspringen, die es nicht gibt. Der Warnkopf steht wortgleich
+wie in `types.js` der Aktion darin, damit ein Mensch, der sie auf dem Server
+findet, dieselbe Warnung liest wie bei einer, die die Aktion selbst schrieb.
+
+**Nachgemessen, nicht geglaubt:** Nach dem Hochladen wird erneut aufgelistet.
+Ein `curl`, das 0 zurückgibt, sagt, dass es gesendet hat — nicht, dass die
+Datei liegt.
+
+## Wo sie heute läuft
+
+**Nur im Gesprächslauf** (`probelauf_gespraech`), gegen das Probeverzeichnis.
+Das ist Absicht: Die Abhilfe ist gefunden, aber **noch nicht bewiesen**. Der
+Gesprächslauf ist der Beweis, und er fällt ohne einen Finger an der laufenden
+Anlage. Erst wenn er durchläuft, wird der Schritt für die echte Auslieferung
+scharf gestellt — vorher wäre es ein Eingriff auf Verdacht.
+
+## Selbstprobe
+
+`--selbstprobe` fährt **28 Lagen ohne Netz**: das Format der Datei (5), die
+Zerlegung des Pfades mit `../` (2), „vorhanden → nichts anfassen" (3), die
+**Punktdatei-Falle** (4 — es wird nicht aufgelistet, mit `--head` gefragt, nie
+mit `RETR`, und nach der Datei statt nach dem Verzeichnis), „fehlt → anlegen
+und nachmessen" (3), „Upload meldet 0, Datei liegt nicht → rot" (2),
+Dreiwertigkeit (5 — unbekannter Rückgabewert heißt NICHT FESTSTELLBAR, und
+`curl 19`/`curl 78` heißen FEHLT), „Hochladen scheitert → rot mit
+Servermeldung" (2), Trockenlauf (1) und das Passwort außerhalb der
+Befehlszeile (1).
+
+---
+
+# Freigabe — darf dieser Stand auf Produktiv? (AP7, E-KH-15)
+
+```
+python3 tools/kette/freigabe.py --selbstprobe                       # ohne Netz
+python3 tools/kette/freigabe.py urteil --laeufe laeufe.json \
+                                       --vergleich ahead --stufe1 1
+echo '[…]' | python3 tools/kette/freigabe.py urteil --laeufe - --vergleich diverged
+```
+
+Rückgabewert: `0` = darf ausliefern · `1` = nein (der Grund steht darüber) ·
+`2` = Aufruf unvollständig.
+
+## Warum es das gibt
+
+Vor einer Produktiv-Auslieferung fragt die Kette: Stand dieser Commit schon
+auf Staging, und war er dort grün? Bis AP7 war die Antwort einfach — ein Push
+auf `main`, ein erfolgreicher Job `staging`, fertig.
+
+Der **Hotfix-Weg** bricht das auf. Ein `hotfix/*`-Zweig kommt per **Handlauf**
+auf Staging, nicht per Push — und ein Handlauf umgeht den Zweigschutz von
+`main`, auf dem die alte Regel ruht. E-KH-15 setzt an dessen Stelle die
+**Abstammung**: Der Commit muss den Stand enthalten, der heute auf Produktiv
+liegt (Zeiger `produktion`). Wer vom Ausgelieferten abzweigt, hat sie; wer
+etwas anderes unterschieben will, bekommt sie nicht.
+
+## Warum es ein Werkzeug ist und keine Zeile Bash
+
+Dieselbe Begründung wie beim Backup-Tor (E-P5a-12): Was eine Auslieferung
+verhindern soll, gehört dorthin, wo eine `--selbstprobe` es nachweisen kann.
+**Die Abnahme von AP7 verlangt wörtlich die Gegenprobe** — *ein Hotfix ohne
+Abstammung muss abgelehnt werden*. Als Bash im Arbeitslauf wäre sie nur durch
+einen echten Produktivlauf zu belegen, also praktisch nie.
+
+## Was es nicht tut: ins Netz gehen
+
+Die Tatsachen — welche Läufe es gab, wie sie ausgingen, ob der Commit
+abstammt — holt der Arbeitslauf mit `gh api`. Dieses Werkzeug bekommt sie als
+JSON und fällt das Urteil. Die Trennung ist Absicht: Abrufen kann man nicht
+ohne Netz proben, Entscheiden schon.
+
+Je Eintrag erwartet: `id`, `event`, `head_branch`, `staging_ok`.
+`--vergleich` ist die Antwort von `compare/produktion...<sha>`.
+
+## Was zählt
+
+| Lage | zählt |
+|---|---|
+| Push auf `main`, `staging` grün | **ja** |
+| Handlauf auf `hotfix/*`, `staging` grün, Abstammung | **ja** |
+| derselbe Hotfix ohne Abstammung | nein |
+| Abstammung nicht zu ermitteln | nein — **im Zweifel zu** |
+| Handlauf auf `main` | nein (E-KH-29) |
+| Push auf einen Arbeitszweig | nein |
+| irgendetwas mit übersprungenem oder rotem `staging`-Job | nein |
+
+**Im Zweifel nein** ist die ganze Kunst von `abstammt()`. Ein leerer Wert, ein
+unbekanntes Wort, ein gescheiterter Abruf — alles das heißt „ich weiß es
+nicht", und das darf hier nie zu „ja" werden. Ein Tor, das bei einer
+misslungenen Abfrage aufgeht, ist kein Tor, sondern eine Tür mit einem Schild
+daneben.
+
+## Selbstprobe
+
+`--selbstprobe` fährt **32 Lagen ohne Netz**: die Vergleichsantworten (10,
+darunter `behind`, `None`, ein unbekanntes Wort und eine Zahl), der alte Weg
+über `main` (2), der Hotfix-Weg samt **Gegenprobe** (3), die Ränder des
+Präfixes `hotfix/` (3 — `hotfix-schnell` zählt nicht, `feature/hotfix/x`
+auch nicht), was ausdrücklich nicht zählt (3), und das Gesamturteil (11 —
+darunter eine kaputte Zuarbeit, die das Tor schließt statt es zu öffnen, und
+die Frage, ob der Grund im Protokoll steht).
+
+Sie läuft in **Stufe 1** bei jedem Push; sie braucht kein Netz, keine
+Installation und keine Auslieferung.

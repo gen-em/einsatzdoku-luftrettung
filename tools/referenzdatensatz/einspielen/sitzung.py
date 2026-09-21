@@ -41,11 +41,68 @@ def fehlertext(html: str) -> str | None:
     m = (re.search(r'meldung-fehler[^>]*>.*?<p[^>]*>(.*?)</p>', html, re.S)
          or re.search(r'alert-danger[^>]*>(.*?)</', html, re.S))
     if not m:
+        # DIE STOERUNGS- UND DIE WARTUNGSSEITE TRAGEN DIE KLASSE NICHT
+        # (Kette II, F-KH-U-06, 20.09.2026). `stoerung_seite_html()` und
+        # `wartung_antwort_seite()` in `server/wartung_lib.php` bauen auf
+        # <h1> und <p class="text"> -- gemessen: `grep -c meldung-fehler`
+        # ueber jene Datei ergibt 0.
+        #
+        # `login.php` hat drei Ausgaenge dieser Bauform, und ALLE DREI
+        # antworten auf login.php selbst, ohne Umleitung: Kontostatus nicht
+        # aktiv (Z. 401), Wartung an und die Rolle darf nicht verwalten
+        # (Z. 417), dazu die Verlangsamung des Ratenschutzes. Ohne diese
+        # zweite Suche sind sie voneinander und von einem falschen Passwort
+        # ununterscheidbar -- jede hiess "unbekannt". Genau davor warnt der
+        # Absatz oben, und genau das ist am 20.09.2026 passiert: Zwei
+        # Kettenlaeufe gegen Staging meldeten "Anmeldung gescheitert:
+        # unbekannt", und die Ursachensuche kostete die Stunde, die diese
+        # Funktion sparen soll.
+        m = re.search(r'<h1[^>]*>(.*?)</h1>\s*<p class="text"[^>]*>(.*?)</p>',
+                      html, re.S)
+        if m:
+            roh = re.sub(r"<[^>]+>", " ", " \u00b7 ".join(m.groups()))
+            return re.sub(r"\s+", " ", roh).strip() or None
         return None
     # Auszeichnung raus, Leerraum zusammenziehen — die Meldung traegt seit P3
     # ein <strong> fuer den Auftakt.
     roh = re.sub(r"<[^>]+>", " ", m.group(1))
     return re.sub(r"\s+", " ", roh).strip() or None
+
+
+def seitenkennung(antwort) -> str:
+    """Woran eine Seite zu erkennen ist, die keine Fehlermeldung traegt.
+
+    WOZU. `fehlertext()` beantwortet "was ist schiefgegangen?". Diese
+    Funktion beantwortet die Frage davor: "WAS habe ich ueberhaupt
+    bekommen?" -- Status, Umleitungskette, Titel, Ueberschrift, und ob
+    ueberhaupt ein Sitzungscookie gesetzt wurde.
+
+    SIE STEHT HIER, WEIL EINE ABWEISUNG OHNE MELDUNG KEIN RANDFALL IST.
+    Am 20.09.2026 (Kette II, F-KH-U-06) scheiterten zwei Kettenlaeufe gegen
+    Staging an `Anmeldung gescheitert: unbekannt`. Die drei naheliegenden
+    Ursachen -- ausstehende Migration, zu schwache Rolle, gesperrtes Konto --
+    liessen sich von Hand alle ausschliessen, und danach war der Lauf am
+    Ende: Die Meldung sagte nicht, ob die Antwort 200 oder 503 war, ob sie
+    ueber eine Umleitung kam oder ob ueberhaupt ein Cookie zurueckkam.
+
+    KEINE GEHEIMNISSE. Ausgegeben werden Status, Adresse, Titel,
+    Ueberschrift und die NAMEN der Cookies -- nie ihre Werte: Der Name des
+    Sitzungscookies ist eine Auskunft, sein Wert ist die Sitzung selbst.
+    """
+    teile = [f"HTTP {antwort.status_code}", f"Adresse {antwort.url}"]
+    if getattr(antwort, "history", None):
+        kette = " -> ".join(str(h.status_code) for h in antwort.history)
+        teile.append(f"ueber {kette}")
+    t = re.search(r"<title[^>]*>(.*?)</title>", antwort.text, re.S)
+    if t:
+        teile.append("Titel " + re.sub(r"\s+", " ", t.group(1)).strip())
+    h = re.search(r"<h1[^>]*>(.*?)</h1>", antwort.text, re.S)
+    if h:
+        roh = re.sub(r"<[^>]+>", " ", h.group(1))
+        teile.append("Ueberschrift " + re.sub(r"\s+", " ", roh).strip())
+    namen = sorted({k.name for k in antwort.cookies}) if antwort.cookies else []
+    teile.append("Cookies der Antwort: " + (", ".join(namen) if namen else "keine"))
+    return " \u00b7 ".join(teile)
 
 
 class Sitzung:
@@ -128,8 +185,15 @@ class Sitzung:
             "tokens": json.dumps(token_nach),
         }, allow_redirects=True)
         if "login.php" in antwort.url and "Abmelden" not in antwort.text:
-            raise RuntimeError("Anmeldung gescheitert: "
-                               + (fehlertext(antwort.text) or "unbekannt"))
+            # DIE SEITENKENNUNG GEHOERT AN JEDE ABWEISUNG, nicht nur an die
+            # ohne Meldungstext: Auch eine gefundene Meldung sagt nicht, ob
+            # die Antwort ueber eine Umleitung kam oder ob ein Cookie
+            # zurueckkam -- und beides unterscheidet "Passwort falsch" von
+            # "die Sitzung haelt nicht".
+            raise RuntimeError(
+                "Anmeldung gescheitert: "
+                + (fehlertext(antwort.text) or "kein Meldungstext auf der Seite")
+                + " \u2014 " + seitenkennung(antwort))
         self.email = email
 
         # Jetzt sagt die angemeldete Seite, welche Rundenzahl dieses Konto

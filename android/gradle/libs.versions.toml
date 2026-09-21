@@ -43,6 +43,26 @@ playServicesWearable = "20.0.1"
 # --- Nur zum Pruefen; nichts davon liegt im APK ---
 junit = "4.13.2"
 robolectric = "4.16.1"
+# DAS ANDROID-ABBILD, MIT DEM ROBOLECTRIC LAEUFT -- als Abhaengigkeit und
+# nicht als Laufzeit-Download (Backlog Nr. 240, 20.09.2026).
+#
+# Robolectric holt sich dieses Archiv (145 MB) sonst WAEHREND DES TESTLAUFS
+# selbst von Maven, ueber seinen eigenen `MavenArtifactFetcher` -- an Gradle
+# vorbei, ohne Wiederholung und ohne den Abhaengigkeits-Zwischenspeicher. Am
+# 20.09.2026 brach genau dieser Download auf einem Laeufer ab
+# (`SocketException: Connection reset by peer`), und der ganze Prueflauf war
+# rot: "HandyBildTest > classMethod FAILED, AssertionError at
+# MavenArtifactFetcher.java:129". `classMethod` ist der Klassenaufbau, kein
+# Prueffall -- es war also nie ein Testfehler.
+#
+# DIE ZAHL 14 IST ANDROID 14 = API 34 und gehoert zu `sdk=34` aus
+# `src/test/resources/robolectric.properties`. Wer dort die Stufe aendert
+# ODER Robolectric hochstuft, zieht diese Kennung mit: Die richtige steht im
+# Protokoll eines Laufs OHNE `robolectric.offline` ("Failed to fetch maven
+# artifact org.robolectric:android-all-instrumented:<hier>"), und sie ist im
+# Maven-Zentralverzeichnis nachschlagbar. Passt sie nicht zur eingestellten
+# Stufe, faellt das beim ersten Lauf auf und nicht still.
+robolectricAbbild = "14-robolectric-10818077-i7"
 androidxTestCore = "1.7.0"
 androidxTestJunit = "1.3.0"
 # Der Testlaeufer fuer INSTRUMENTIERTE Faelle (S4/D2). Er laeuft auf dem
@@ -76,6 +96,7 @@ play-services-wearable = { group = "com.google.android.gms", name = "play-servic
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+robolectric-abbild = { group = "org.robolectric", name = "android-all-instrumented", version.ref = "robolectricAbbild" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestJunit" }
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }

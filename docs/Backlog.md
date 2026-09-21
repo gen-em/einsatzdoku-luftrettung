@@ -64,7 +64,56 @@ Typografie, 228 Proof-of-Work gegen Registrierungs-Spam, 229 Uhr-Anzeige bei
 > schon bei Nr. 214 und bei Web 20.16.0. Wer in einem Commit vor dem Merge
 > eine dieser Nummern liest, liest die alte Zählung.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **238** und trägt seine
+**238 und 239 sind auf `main`** (PR #60, 20.09.2026: reserviertes Wort
+`MANUAL` in MySQL 8.4.0–8.4.10; `backup_lib.php` ohne Backticks). **240 liegt
+auf dem Zweig `claude/fervent-dirac-xirsqw`** (Kette II, 20.09.2026: der
+Rundlauf-Prüffall des Handy-Moduls läuft in der Kette nie).
+
+**241 bis 249 sind für den Einschub vom 20.09.2026 reserviert** — das
+Doku-Paket der Konzeptinstanz (P5c, Sitzungsablage, Nachtrag vom 18.09.).
+Feste Zuordnung, damit die Instanzen, die auf eigenen Zweigen daran
+arbeiten, nicht erneut kollidieren:
+
+| Nr. | Sache | gehört zu |
+|---|---|---|
+| 241 | Sitzungsablage — PHP-Sitzungen im geteilten Hosterverzeichnis | Schritt 16 |
+| 242 | Sitzungsbindung per Cookie-Token | Schritt 18 |
+| 243 | Staging-Umgebungsbanner | 10c AP1 |
+| 244 | Einstellungen-Übersicht: Bereiche als Gliederung erkennbar | 10c AP9 |
+| 245 | Erklärtext-Regel und Überarbeitung aller Texte in Verwaltung und Betrieb | 10c AP9 |
+| 246 | Schlüsselblatt und Notfallblatt: Druckseite | 10c AP9 |
+| 247 | Serverschlüssel wechseln — als Vorgang | Schritt 18 |
+| 248 | Prüftor Stufe 1 zählt die `error_log(`-Aufrufe | 10c AP3 |
+| 249 | TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes verliert | Schritt 18 |
+
+> **Warum die Spanne bei 241 beginnt und nicht bei 240.** Das Paket sah 240
+> für die Sitzungsablage vor; am selben Tag hat Kette II 240 für den
+> Rundlauf-Prüffall vergeben und **gepusht**. Nach der Regel oben weicht,
+> wer noch nicht gepusht hat — das war das Paket. Entschieden vom
+> Auftraggeber am 20.09.2026.
+
+**250 bis 259 sind für Schritt 15 reserviert** (Zentralisierung,
+`docs/konzepte/Konzept-Zentralisierung.md`, eingespielt am 20.09.2026). Vier
+Nummern sind vergeben, **sechs bleiben frei für Funde der Umsetzung** — nach
+derselben Überlegung wie bei 241–249: Ein Paket, das erst beim Bauen neue
+Punkte findet, soll sie anhängen können, ohne mit dem nächsten Zweig zu
+kollidieren.
+
+| Nr. | Sache | gehört zu |
+|---|---|---|
+| 250 | Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten | Schritt 17 |
+| 251 | Cookie-Attribut `secure` der Sitzung — zwei Arten HTTPS-abhängig, zwei fest | Schritt 18 |
+| 252 | Gelaufene Migrationen fragen das Schema 57× von Hand | P8 (R66) |
+| 253 | Datum-Zeit-Trenner vereinheitlichen | 10c AP9 |
+| 254–259 | frei — Reserve für Funde der Umsetzung von Schritt 15 | Schritt 15 |
+
+> **Keiner der vier gehört in Schritt 15 selbst**, und das ist kein Versehen:
+> 250 ändert Wege durch die Anwendung, 251 und 252 hängen an späteren
+> Schritten, 253 ist Gestaltung. Schritt 15 verschiebt Code an eine Stelle;
+> was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
+> mitgemacht.
+
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **267** und trägt seine
 Spanne hier ein, bevor er pusht.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
@@ -795,6 +844,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     > stehen — und dann sieht es aus wie ein neuer Fehler, nicht wie ein
     > verlorener Vertrag.
 
+
+    **Zuordnung (20.09.2026): Schritt 15 AP9** — mit dem Konzept
+    Zentralisierung. Dort kommen zwei Dinge dazu, die hier fehlten:
+    **E-ZE-01** (die Gleichstände — was passiert, wenn zwei Einsätze
+    dieselbe Sortiergröße haben; `sortable` entscheidet das heute
+    stillschweigend anders als der Aufbau in `index.php`) und **F-ZE-6**
+    (der **Spaltensatz je Seite** ist nicht derselbe — die drei Tabellen
+    zeigen verschiedene Spalten, und das muss eine Vereinheitlichung
+    abbilden, statt es einzuebnen).
 62. **Logodateien tragen teilweise wieder die alten Farbwerte.**
     *Bis zum 02.09.2026 trug dieser Punkt die Nummer 49. Sie war durch die
     Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
@@ -1009,6 +1067,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     *Zuordnung 15.09.2026:* **Konzept P5a** (`docs/konzepte/Konzept-P5a-Kette-und-Fundament.md`), AP11 nur für den Nachlöse-Job (E-P5a-21, E-PP-06); Herkunft je Einsatz und Dashboard bleiben 10c.
 
+    **Zuordnung (20.09.2026): 10c, AP7** — die Auswertung wird Teil der Betriebslage (Konzept P5c, E-P5c-18).
+
 90. **Der Simulator kann keinen Verbindungsabriss herstellen.**
     *Aufgenommen 03.09.2026 aus S5 Paket C.*
     Der Rundlauf der Uhr-Kopplung sollte sechs Fälle belegen; der sechste —
@@ -1136,6 +1196,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     bliebe ein Abruf gegen den Server beim Innehalten. **Neue Funktion.**
     Zuordnung: Backlog-Runde.
 
+    **Zuordnung (20.09.2026): 10c, AP9** — die Rechtstextseiten werden dort ohnehin angefasst (E-P5c-20).
+
 122. **Freie Zeiträume und Diagramme in der Statistik.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 04).* Die Seite
     Betrieb → Statistik (S8 AP4) rechnet feste Zeiträume — 7 Tage, 30 Tage,
@@ -1147,6 +1209,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (`CLAUDE.md` 5); die Diagrammfrage berührt außerdem die Zusage „keine
     fremde Quelle zur Laufzeit" — eine Diagrammbibliothek müsste vendoriert
     werden. Zuordnung: Backlog-Runde oder P5 (Dashboard, R38).
+
+    **Zuordnung (20.09.2026): Schritt 17** (Backlog-Runde 4) — nicht 10c. Entschieden mit der Freigabe des P5c-Konzepts (E-P5c-23, F-P5c-4).
 
 140. **Push auf `main` ist Deploy — Zugang zum Repositorium ist Zugang zum Schlüssel.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-16).* Die
@@ -1203,6 +1267,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Ersatzcodes gehasht, „Gerät 30 Tage merken". Schützt die Anmeldung,
     nicht den Offline-Angriff (dafür S10). Zuordnung: **P5** (erweitert
     R38).
+
+    **Zuordnung (20.09.2026): 10c, AP5** — dort wird der Zweitfaktor konkretisiert: Pflicht für Admin, BetreiberIn und Support, Angebot für alle übrigen (E-P5c-15, F-P5c-1).
 
 146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.**
     *Aufgenommen 06.09.2026 (R78).* Drei Fragen, keine Fehler: **Argon2id
@@ -1370,6 +1436,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `edbak`, `edbak-alt` und `csv` laufen mit **0 unerklärten** Abweichungen;
     eine Sicherung im alten Format spielt weiterhin ein.
 
+    **Zuordnung (20.09.2026): 10c, AP8** (R39-Rest, E-P5c-19).
+
 169. **Ein Diensttag mit „Anderem Rettungsmittel" kann keine Besatzung
     festhalten.** *Aufgenommen 09.09.2026 beim Beantworten von Frage 11
     (S9/AP6, Web 18.1.1).* Ein Rettungsmittel nur für den Tag führt keine
@@ -1403,6 +1471,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Abnahme:* Ein Diensttag mit „Anderem Rettungsmittel" erlaubt einen
     Besatzungsnamen — oder der Text sagt weiterhin richtig, dass er es nicht
     tut. Kein dritter Zustand.
+
+    **Zuordnung (20.09.2026): 10c, AP8** (R39-Rest, E-P5c-19).
 
 170. **Kein Prüfmittel misst, ob die Kennzeichnung vollständig ist.**
     *Aufgenommen 10.09.2026 nach zwei Rückmeldungen zu Web 19.1.0 (behoben
@@ -1686,6 +1756,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `EXPLAIN` zeigt den Index an einer kontenübergreifenden Zeitraumzählung.
     Zuordnung: **P5**, mit dem Dashboard.
 
+    **Zuordnung (20.09.2026): 10c, AP7** — der Index wird mit der Betriebslage gelegt (E-P5c-18).
+
 192. **R38 und die Statistikseite aus S8 zählen Verschiedenes — „aktiv", die
     Fenster und die Zählgröße.**
     *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
@@ -1717,6 +1789,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     und R38 und die Seite beschreiben dieselbe Zählung. Zuordnung:
     **Entscheidung in einer Backlog-Runde, Umsetzung P5** — wie bei Nr. 122.
 
+    **Zuordnung (20.09.2026): 10c, AP7** — die Zählung heißt dort sichtbar „Bestand" (E-P5c-18).
+
+
+    **Zuordnung (20.09.2026): erledigt sich mit 10c AP7.** Dort entsteht
+    eine **Zählung ab Beginn des Einsatzes** (E-P5c-18) — damit ist die
+    Zählgröße entschieden, und die beiden Zählweisen stehen nicht mehr
+    nebeneinander.
 193. **Register und Doku führen die R42-Auswertung als offen, obwohl sie
     seit Web 15.3.0 läuft.**
     *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
@@ -1890,6 +1969,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zeigen 0. Zuordnung: **P6** (Review der Oberfläche) oder ein eigenes
     kleines Paket mit Mockup.
 
+    **Zuordnung (20.09.2026): 10c, AP9** — Kacheln nach Typ, Mockup mit der 10c-Runde (E-P5c-20).
+
+
+    **Wird NICHT umgesetzt — entschieden am 20.09.2026 (E-P5c-27, in der
+    Mockup-Runde M-P5c-01).** Damit ist dieser Punkt geschlossen; er wandert
+    aber nicht nach *Erledigt*, weil nichts erledigt wurde.
+
+    **Die Folge, damit sie niemanden überrascht:** Die **Winden-Cycles
+    bodengebundener Bergwacht-Diensttage erscheinen in keiner Ansicht der
+    Zeitraumübersicht.** Wer sie sucht, findet sie dort nicht — weder in der
+    Fähigkeitenauswahl noch in den Zahlen. Das Einsatzformular zeigt die
+    Windenfelder weiterhin (`cap_gate` fragt den Diensttag ohne Artfilter),
+    die Daten werden also erfasst und nur nicht ausgewertet.
+
+    Wer das später ändern will, findet die beiden Stellen oben benannt.
 199. **Die Nummer 5 fehlt im Backlog, obwohl der Changelog sie unter
     *Erledigt* verortet.**
     *Aufgenommen 15.09.2026 (Gegenlesen des Merges von PR #47 in den
@@ -1933,6 +2027,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Anmelden gefragt wird. Ohne Postfach bleibt der Vermerk aus. Zuordnung:
     nach P5a, mit dem Konto-Lebenszyklus (10b) oder als Backlog-Runde.
 
+    **Zuordnung (20.09.2026): 10c, AP10** (Bounce-Postfach, E-P5c-21, F-P5c-3).
+
 201. **`Retry-After` in Uhr und Handy auswerten.**
     *Aufgenommen 15.09.2026 (Konzept P5a, Befund 1.7).* Beide Clients
     behandeln jeden Antwortcode außer 200/400/401/403/413 als „später
@@ -1952,6 +2048,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     16.09.2026 — der P5a-Zweig hat Teile bereits erledigt (vermerkt). Regel
     R83: zentralisiert wird beim zweiten echten Verbraucher; ein Helfer mit
     einem Verbraucher liegt in einer `_lib.php`, nicht in einer Seite.
+
+    **Die Zahlen von 16.09.2026 gelten nicht mehr** (FF-6). Nachgemessen am
+    20.09.2026 an `origin/main` `862ca7f`; **maßgeblich ist Abschnitt 1 von
+    `docs/konzepte/Konzept-Zentralisierung.md`**, nicht die Zahlen hier.
+    Die Zuordnung je Paket:
+
+    | Paket | Sache | gehört zu |
+    |---|---|---|
+    | 1 | Marke, Mail, Link, Token | **durch** — Gegenprobe in Schritt 15 AP1 |
+    | 2 | Datenzugriff | Schritt 15 AP4 und AP5 |
+    | 3 | API-Eingang, Sitzung, Flash | Schritt 15 AP2 und AP3 |
+    | 3 | *davon* Log-Helfer — **77 Aufrufe in 32 Dateien** | **10c AP3** |
+    | 4 | JavaScript | Schritt 15 AP8 |
+    | 5 | Zeit, Zahl, Migration | Schritt 15 AP7 |
+    | 6 | Beifang | kein Arbeitspaket — nur mit Arbeit an der Datei |
 
     **Paket 1 — Marke, Mail, Link, Token.**
     - Mailrahmen (Anrede, Produktname, Kontaktadresse, Grußformel) an sieben
@@ -2203,6 +2314,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Verbindungsenge) meldet **0 × 503** und 0 Gedrängel im Fehlerprotokoll.
     Zuordnung: offen, ein eigenes Paket.
 
+
+    **Vermerk vom 20.09.2026 (Konzept Zentralisierung, E-ZE-20):**
+    `db_transaktion()` aus **Schritt 15 AP5** fasst `ingest.php`
+    **nicht** an. Die Wiederholung bei Deadlock gehört hierher und nicht
+    dorthin: Schritt 15 vereinheitlicht, wie Transaktionen geschrieben
+    werden — er ändert nicht, was bei einem Deadlock geschieht. Wer beides
+    in einem Paket macht, kann hinterher nicht sagen, welche der beiden
+    Änderungen die Probe grün gemacht hat.
 211. **Ein `/api/`-Aufruf ohne Sitzung bekommt eine Weiterleitung statt
     einer JSON-Antwort.** `auth_guard.php` prüft in Zeile 33
     `empty($_SESSION['user_id'])` und antwortet mit
@@ -2674,6 +2793,26 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Riegel unsichtbar statt tödlich — aber die Anmeldung der BetreiberIn
     muss auch dann durchkommen, sonst ist nichts gewonnen.
 
+    **Nachtrag 21.09.2026 (Kette II, Einschub Abschnitt 8).** Die
+    Grundsatzfrage ist **beantwortet, der Punkt bleibt trotzdem offen** — und
+    zwar genau um seinen eigentlichen Kern.
+
+    **Beantwortet:** Die Kette erzwingt den Wartungsmodus. Seit Kette II/AP6
+    steht „Wartung einschalten" unmittelbar vor dem Abgleich, und **bei
+    ausstehender Migration bleibt die Wartung an** — der Lauf sagt es und
+    schickt zu „Betrieb → Updates". Scheitert ein Lauf, bleibt sie ebenfalls
+    an, und der Schlussschritt meldet, was gilt (belegt: zwei provozierte
+    Fehlschläge, F-KH-U-39). Die Sorge „die Anmeldung der BetreiberIn muss
+    durchkommen" trägt der Torwächter, der seit P5a/AP3 auch ohne Kette
+    greift.
+
+    **Offen bleibt, was der Titel sagt:** Es fährt weiterhin **kein
+    Prüfmittel den Weg einer frisch ausgelieferten Anlage** — Deploy, dann
+    Anmeldung, dann `update.php`, dann noch einmal Anmeldung. Kette II hat
+    den Weg **von Hand** auf Staging gefahren und dabei gemessen, dass er
+    geht; ein Prüfmittel ist das nicht. **Der Handweg steht in
+    `docs/Technik.md` 6; der automatisierte Weg bleibt dieser Punkt.**
+
 
 236. **`ubuntu-latest` wandert am 19.10.2026 auf Ubuntu 26.**
     *Aufgenommen 18.09.2026, Merkposten mit Datum.*
@@ -2772,12 +2911,461 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     eine gemeinsame Helferfunktion sinnvoller ist als zwei Kopien — sie wäre
     der naheliegende Ort, an dem der nächste Schreibweg sie auch findet.
 
+240. **Der Rundlauf-Prüffall des Handy-Moduls läuft in der Kette nie.**
+    *Aufgenommen 20.09.2026 beim Beheben des Robolectric-Downloads.*
+
+    `showStandardStreams` hängt jetzt an `rundlauf.isNotBlank()` — der
+    Bedingung, die es begründet. Damit steht schwarz auf weiß, was vorher nur
+    unausgesprochen galt: **In Stufe 1 ist `rundlauf` leer** — `.github/`
+    setzt `-Pnadoku.rundlauf` nirgends (gemessen: `grep -rn` → 0 Treffer).
+    Die Rundlauffälle überspringen sich dort also selbst; die 15 „skipped"
+    des Laufs vom 20.09.2026 enthalten sie.
+
+    **Das ist heute richtig** — die Kette hat keine PHP-Anlage, gegen die sie
+    laufen könnten, und eine gegen `staging-nadoku.gen-em.org` wäre eine
+    Schreibprobe gegen eine Anlage, die nicht dafür da ist. Es ist trotzdem
+    eine Lücke mit Ansage: Die drei Rundlaufklassen sind die einzigen
+    Prüffälle, die Handy und Server **zusammen** messen — und die einzigen,
+    die die Kette nie fährt. Was sie fänden, findet niemand automatisch.
+
+    **Zwei Wege stehen offen**, beide ungemessen: ein PHP-Dienst im
+    Prüfschritt selbst (`php -S` über `server/`, plus die Datenbank — das ist
+    der Aufwand), oder ein Vertragsprüfstand, der die erwarteten Anfragen als
+    Attrappe beantwortet und nur das Nachrichtenformat prüft (billig, misst
+    aber den Server nicht mit). Wer das angeht, entscheidet zuerst, welche
+    der beiden Fragen er beantworten will — sie sind nicht dieselbe.
+
+
+242. **Sitzungsbindung per Cookie-Token — benannt, nicht mitgenommen.**
+    *Aufgenommen 20.09.2026 (E-SA-09 des Konzepts Sitzungsablage).*
+    Zugeordnet: **Schritt 18** (Sicherheitsrunde II).
+
+    Ein Zufallstoken nur im Cookie, dessen Hash in der Sitzung liegt, macht
+    eine gelesene Sitzungsdatei wertlos — auch eine aus einem gefundenen
+    Backup. Das ist der Schutz, den Nr. 241 **nicht** leistet: 241 verlegt
+    den Ort, 242 entwertet die Datei.
+
+    **Warum getrennt:** Das ist ein Sicherheitsumbau mit eigener Prüfung
+    (Cookie-Handling — Uhr und Handy sind nicht betroffen, nur der Browser;
+    Reset-Fluss; Wechselwirkung mit `users.session_epoch`) und gehört nicht
+    in einen Verzeichniswechsel.
+
+243. **Ein Umgebungsbanner, damit Staging nicht für Produktiv gehalten wird.**
+    *Aufgenommen 20.09.2026 (E-P5c-05).* Zugeordnet: **10c, AP1**.
+
+    `config.php` bekommt `app.umgebung = ['name' => 'Staging',
+    'farbe' => 'rot']`, Vorgabe leer. Ist es gesetzt: Kopfleiste in
+    **Newroz-Rot** statt Dunkelblau, darunter die Zeile „Staging —
+    Testdaten, kein Echtbetrieb", Seitentitel mit Präfix „[Staging]".
+
+    **Nie abgeleitet** — nicht aus Domain, Zweig oder Kette. Eine Ableitung
+    wäre bequem und falsch: Sie stimmte genau so lange, bis jemand eine
+    zweite Anlage unter derselben Domain aufsetzt. Die Statusseite warnt,
+    wenn `mail.betreff_praefix` gesetzt ist und `app.umgebung` nicht — das
+    ist der Fall, in dem die Mails schon „Staging" sagen und die Oberfläche
+    noch nicht.
+
+    **Derselbe Baustein** trägt das Ankündigungsbanner (E-P5c-13); zwei
+    Banner wären zwei Stellen, die auseinanderlaufen.
+
+244. **Einstellungen-Übersicht: die drei Bereiche sind als Gliederung nicht
+    erkennbar.** *Aufgenommen 18.09.2026, präzisiert 20.09.2026
+    (Auftraggeber).* Zugeordnet: **10c, AP9**.
+
+    In der Übersicht (`ui_einstellungen_uebersicht()`) gehen die
+    Bereichsnamen Einstellungen / Verwaltung / Betrieb als oberste Ebene
+    unter.
+
+    **Berichtigt am 20.09.2026 (M-P5c-01, E-P5c-29):** Gemeint war vor allem
+    das **linke Menü** (`ui_leiste_einstellungen()`), nicht die Übersicht —
+    dort fällt die fehlende Gliederung zuerst auf, weil man es auf jeder
+    Seite sieht. **Entschieden und freigegeben:** Die **Leiste** bekommt
+    Bereichsüberschriften nach **Option 1 „Linie"**; die **Übersicht**
+    bekommt je Bereich eine **eigene Karte** mit Bereichszeichen und mittigem
+    Kopf. **Der Fable-Schritt ist damit erledigt** — es braucht kein weiteres
+    Mockup.
+
+    **Entschieden:** zuerst ein Mockup mit einer klaren
+    **Überschriftenzeile je Bereich** (Bricolage, Abstand davor, Linie);
+    trägt das nicht, bekommt jeder Bereich eine **eigene Karte** mit seiner
+    Liste. Fable-Schritt (Mockup), Umsetzung klein; das Mockup läuft mit den
+    übrigen 10c-Mockups in einer Runde.
+
+245. **Erklärtext-Regel — und danach alle Texte in Verwaltung und Betrieb.**
+    *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
+    **10c, AP9**.
+
+    Gemeint ist der **gesamte** Bereich Verwaltung und Betrieb unter
+    Einstellungen: viel Erklärtext, viele neue Funktionen seit S8–S10 und
+    P5a.
+
+    **Entschieden als Grundregel für `docs/Design.md`:** In der Oberfläche
+    steht je Karte **höchstens ein Satz**, der sagt, was hier passiert;
+    alles Erklärende steht im **Handbuch**, die Karte trägt den Verweis auf
+    die Sprungmarke (`hilfe.php#abschnitt`, E-P5b-08). Warnungen bleiben als
+    Meldung, Feldhinweise bleiben eine Zeile.
+
+    **Folge:** Alle Texte des Bereichs werden nach der Regel überarbeitet;
+    der ausgelagerte Text **wandert ins Handbuch und wird nicht gelöscht**.
+    Voraussetzung: 10b AP8 (Handbuch aus der Anwendung erreichbar).
+    Abnahme: ein Textpaket mit Wortliste und Bilderlauf; gezählt werden
+    Sätze je Karte (Ziel ≤ 1) und Handbuch-Verweise (Ziel ≥ 1 je Karte mit
+    ausgelagertem Text).
+
+246. **Schlüsselblatt und Notfallblatt: eine Druckseite, die eine ist.**
+    *Aufgenommen 18.09.2026, präzisiert 20.09.2026.* Zugeordnet:
+    **10c, AP9**.
+
+    Drei Vorgaben für `betrieb_schluesselblatt.php` (S10) und das
+    Notfallblatt (P5b AP9):
+
+    (a) Der Schlüssel steht **abgesetzt in einer Kachel** — Rahmen, Rauch,
+    Vierergruppen, Feste Schrift.
+    (b) Der Druck passt **genau auf eine A4-Seite** (`@page A4`, Ränder,
+    kein Umbruch). Abnahme: PDF-Druck aus Chromium **und** Firefox hat je
+    eine Seite.
+    (c) Oben stehen **Marke und „NAdoku"** (das Wort-Bild-Logo) und die
+    Überschrift, damit sofort klar ist, worum es geht.
+
+    **Das ändert E-P5b-09** („ohne Logo" → mit Logo). Beide Blätter
+    bekommen denselben Baustein (`.blatt-druck`); 10b AP9 ist gebaut, das
+    Notfallblatt wird dort nachgezogen.
+
+
+    **Berichtigt am 20.09.2026 (M-P5c-01f, E-P5c-08/-30):** Oben steht
+    **nicht** „Marke + NAdoku", sondern **Bildmarke + Kurzname der
+    Installation** (`instanz_kurz()`, Vorgabe „Gen-EM NAdoku"). Ein fest
+    eingebautes „NAdoku" wäre auf einer umbenannten Installation schlicht
+    falsch. Die **Webversion steht in der Fußzeile** des Blattes.
+    **Freigegeben am Bild M-P5c-01f** (`docs/konzepte/konzept-p5c/mockups/`),
+    beide Blätter mit demselben Baustein `.blatt-druck`.
+247. **Serverschlüssel wechseln — als Vorgang, nicht von Hand.**
+    *Aufgenommen 20.09.2026 (aus V4 der P5c-Vorbereitung).* Zugeordnet:
+    **Schritt 18**.
+
+    Heute gibt es keinen Wechsel. Wer `server_key` von Hand ändert, macht
+    **alles Versiegelte stumm** — und merkt es erst, wenn er es braucht.
+
+    Gesucht ist ein Vorgang unter Betrieb: neuen Schlüssel erzeugen, alles
+    Versiegelte **umhüllen** (Adminpakete, Zugänge der Sicherungsziele,
+    Protokoll-Archive, Wiederanlaufpaket), neues Schlüsselblatt, Eintrag im
+    Protokoll, und **der Nachweis der Öffenbarkeit vor dem Verwerfen des
+    alten Schlüssels** — das ist der Schritt, dessen Fehlen den Vorgang
+    gefährlich macht. Auslöser: Verdacht, dass das Blatt in falsche Hände
+    kam.
+
+    Eigenes Paket mit eigener Prüfung; **nicht P5**. Bis dahin steht im
+    Betreiberhandbuch: Der Schlüssel wird nicht gewechselt, das Blatt wird
+    gehütet (Quartalsrückfrage E-P5b-10).
+
+248. **Das Prüftor Stufe 1 zählt die `error_log(`-Aufrufe.**
+    *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).* Zugeordnet:
+    **10c, AP3** — dort erledigt, hier als Prüfmittel-Vermerk.
+
+    Mit 10c wandern die `error_log()`-Aufrufe auf den Protokollreiter
+    System. Damit sie nicht nach und nach zurückkehren, zählt Stufe 1 sie
+    nach: **Soll ≤ 2**, und zwar ohne Kommentare und ohne Zeichenketten —
+    sonst zählt das Prüfmittel seine eigene Dokumentation mit.
+    Mitgeprüft wird der `set_exception_handler()`-Behandler.
+
+    **Berichtigt am 20.09.2026 (E-ZE-03):** Hier stand, das Zählmittel
+    entstehe mit 10c AP3. Es **besteht seit Schritt 15 AP1**
+    (`tools/zaehlung/`); 10c AP3 setzt nur die Registerzeile **Z38** auf
+    **Decke 2**. Zwei Pakete, die dasselbe Werkzeug bauen, hätten es zweimal
+    gebaut.
+
+    **Die Ausgangszahl ist gemessen:** 42 am 16.09.2026, nachgemessen am
+    20.09.2026 an `862ca7f` **77 Aufrufe in 32 Dateien**. Die Zahl ist in
+    vier Tagen um 35 gestiegen — genau deshalb braucht es einen Zähler und
+    keine Vorsatzerklärung.
+
+249. **TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes
+    verliert.** *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).*
+    Zugeordnet: **Schritt 18** (Sicherheitsrunde II).
+
+    10c macht den Zweitfaktor für Admin, BetreiberIn und Support zur
+    Pflicht. Der Reset durch eine **zweite** BetreiberIn ist damit gelöst —
+    der Fall „es gibt nur eine, und sie hat beides verloren" ist es nicht.
+
+    Das ist ein **Wiederanlauf-Fall** und gehört zum S10-Runbook, nicht in
+    10c: Er wird nicht über die Oberfläche gelöst, sondern über das
+    Wiederanlaufpaket. Hier nur benannt, damit er nicht erst auffällt, wenn
+    er eintritt.
+
+250. **Umleiten nach POST auf den Admin-Seiten, die heute nicht umleiten.**
+    *Aufgenommen 20.09.2026 (Konzept Zentralisierung, F-ZE-4, aus Nr. 202 —
+    `post_ende()`).* Zugeordnet: **Schritt 17**.
+
+    Ein POST, der seine Seite selbst ausgibt statt umzuleiten, hinterlässt
+    im Browser ein Formular, das sich beim Neuladen wiederholt. Ein Teil der
+    Admin-Seiten macht es richtig, ein Teil nicht.
+
+    **Nicht in Schritt 15**, obwohl der Befund dort entstanden ist: Schritt
+    15 verschiebt Code an eine Stelle und ändert keine Wege durch die
+    Anwendung. Umleiten nach POST ist ein geänderter Weg — er gehört in eine
+    Runde, die Wege ändern darf.
+
+251. **Cookie-Attribut `secure` der Sitzung ist in zwei Arten
+    HTTPS-abhängig, in zwei fest.** *Aufgenommen 20.09.2026 (Konzept
+    Zentralisierung, E-ZE-12).* Zugeordnet: **Schritt 18**, zusammen mit der
+    Sitzungsbindung (Nr. 242).
+
+    Vier Stellen setzen das Attribut, und sie setzen es verschieden: zweimal
+    abhängig davon, ob die Anfrage über HTTPS kam, zweimal fest. Nach
+    Schritt 15 AP2 stehen sie alle in `sitzung_lib.php` — dann ist es eine
+    Tabelle und keine Suche, und dann lässt sich entscheiden, welche der
+    vier Arten die richtige ist.
+
+252. **Gelaufene Migrationen fragen das Schema 57× von Hand.**
+    *Aufgenommen 20.09.2026 (Konzept Zentralisierung, E-ZE-04).* Zugeordnet:
+    **P8** (R66, neues Migrationsregister).
+
+    Jede Migration prüft selbst, ob ihre Spalte schon da ist. Das ist 57 Mal
+    dieselbe Abfrage, und sie ist der Grund, warum eine gelaufene Migration
+    nicht einfach umgeschrieben werden kann.
+
+    **Schritt 15 fasst sie ausdrücklich nicht an** (E-ZE-04 ist die eine
+    Ausnahme von „alles wird angegangen"): Eine gelaufene Migration
+    umzuschreiben heißt, eine Anlage anders zu behandeln als die, auf der
+    sie schon lief. Das Register in P8 löst es an der Wurzel; bis dahin
+    steht im Zählmittel eine **Decke von 57** — sie darf nicht wachsen.
+
+253. **Datum-Zeit-Trenner vereinheitlichen.** *Aufgenommen 20.09.2026
+    (Konzept Zentralisierung, F-ZE-3/FF-5).* Zugeordnet: **10c AP9**.
+
+    Zwischen Datum und Uhrzeit steht mal ein Komma, mal ein Gedankenstrich,
+    mal nur ein Leerzeichen. Nach Schritt 15 AP7 steht die Formatierung an
+    einer Stelle (`format_lib.php`) — dann ist es eine Zeile statt einer
+    Suche, und deshalb wartet es bis dahin.
+
+260. **Zwei Code-Kommentare in `server/` sagen „beider FTPS-Schritte" — seit
+    Kette II/AP5 ist es einer.** *Aufgenommen 21.09.2026 (Kette II, AP5).*
+    Zugeordnet: **das Paket, das Kette II nach `main` bringt.**
+
+    Betroffen sind `server/wartung_lib.php` (Kopfkommentar zu
+    `ueberlast.json`) und `server/adminbackup_lib.php` (der `ZWINGEND`-Absatz
+    zu `sicherungen/`). Beide behaupten im Präsens, die Ausnahmeliste stehe in
+    **beiden** FTPS-Schritten von `auslieferung.yml`. Seit AP5 steht sie
+    einmal, in `ausliefern-lauf.yml`.
+
+    **Warum das nicht im selben Paket erledigt ist, und zwar ausdrücklich:**
+    Die Sätze beschreiben die **ausgelieferte** Kette, und auf `main` und auf
+    Produktiv stehen die zwei Schritte noch. Sie werden falsch in dem
+    Augenblick, in dem AP5 dort ankommt — also gehören sie in genau dieses
+    Paket. Dazu kommt, dass eine Änderung unter `server/` eine Versionsstufe
+    und einen Changelog-Eintrag verlangt (`CLAUDE.md` 2), und die gehört zu
+    dem Paket, das ohnehin Code bewegt.
+
+    *Nachtrag 21.09.2026:* Der zweite Grund war ursprünglich ein anderer —
+    **Prüfpunkt 23** hätte AP5 noch zurücknehmen können. Er ist am selben
+    Tag abgehakt worden (F-KH-U-34), AP5 bleibt. Der Punkt bleibt trotzdem
+    stehen, weil der erste Grund trägt: Die Sätze sind richtig, solange die
+    ausgelieferte Kette zwei FTPS-Schritte hat.
+
+    **Nicht betroffen:** die zwei Stellen in `server/version.php` (5514,
+    5781). Sie stehen im Werdegang der Fassungen und beschreiben den Stand
+    von Web 20.15.2 bzw. 20.16.x — dort ist „zwei FTPS-Schritte" richtig und
+    bleibt es. Die Datei sagt das über sich selbst: *„Nicht angefasst sind
+    … die Stellen, die den alten Namen ausdrücklich als Historie nennen."*
+    Ebenso wenig betroffen sind CHANGELOG, Backlog und die Prüfdokumente —
+    Protokolle werden nicht rückwirkend umgeschrieben.
+
+261. **Staging bewahrt zwei Komplett-Stände auf — der Hotfix-Weg braucht
+    mehr.** *Aufgenommen 21.09.2026 (Kette II, AP7).* Zugeordnet:
+    **Betriebsentscheidung der Betreiberin**, kein Code.
+
+    `KOMP_AUFBEWAHRUNG_VORGABE` steht auf **2** (`server/komplett_lib.php`),
+    einstellbar unter **Betrieb → Komplettsicherung → „Stände aufbewahren"**
+    (1 bis 20). Seit AP7 legt die Kette bei **jeder** Produktiv-Auslieferung
+    einen Komplett-Stand auf Staging an — den Rückfallstand, mit dem man
+    Staging auf den Stand des ausgelieferten Tags zurücksetzt (E-KH-16).
+
+    **Bei 2 ist der Rückfallstand des vorletzten Tags bereits verdrängt**,
+    und der geplante Komplettsicherungs-Plan von Staging verdrängt ihn
+    zusätzlich. Wer einen Hotfix für ein Tag bauen will, das zwei
+    Auslieferungen zurückliegt, findet seinen Stand nicht mehr. Das Konzept
+    hat diese Messung ausdrücklich verlangt („der Stand des letzten Tags darf
+    nicht verdrängt sein, wenn man ihn braucht") — hier ist sie, und sie
+    fällt negativ aus.
+
+    **Warum das nicht im Code behoben wird:** Die Aufbewahrung ist eine
+    Entscheidung über Speicherplatz auf einer konkreten Anlage, nicht über
+    das Verhalten der Kette. Eine Vorgabe hochzusetzen, weil eine Umgebung sie
+    braucht, verschöbe die Entscheidung dorthin, wo niemand sie sieht — und
+    änderte sie zugleich für jede andere Installation mit.
+
+    **Was stattdessen geschieht, und es steht schon:** Die
+    Laufzusammenfassung nennt den Dateinamen und sagt daneben, dass er
+    verdrängt wird und man ihn herunterladen soll; das Runbook
+    (`docs/Technik.md` 6.6b, Schritt 2) sagt dasselbe an der Stelle, an der
+    es wehtut.
+
+    **Vorschlag:** Aufbewahrung auf Staging auf **5** setzen. Dann überlebt
+    ein Rückfallstand vier weitere Auslieferungen. Die Zahl ist ein
+    Vorschlag, kein Messwert — wie viele Tags man rückwirkend reparieren
+    können will, weiß nur die Betreiberin.
+
+
+262. **Atomare Auslieferung — umschalten statt überschreiben.**
+    *Aufgenommen 21.09.2026 (Kette II, Einschub Abschnitt 8).* Auslöser:
+    **P8 oder ein Hosterwechsel.** Priorität: niedrig.
+
+    Die Kette überträgt heute **in das laufende Verzeichnis**. Zwischen der
+    ersten und der letzten Datei liegt ein Zeitfenster, in dem die Anwendung
+    halb alt und halb neu ist — der Wartungsmodus verdeckt es, beseitigt es
+    aber nicht. Der Schlussschritt sagt bei einem Abbruch deshalb
+    „Dateistand: **unbekannt**", und das ist keine Schwäche der Meldung,
+    sondern eine ehrliche Auskunft über die Bauform.
+
+    **Abhilfe wäre ein Release-Verzeichnis:** hochladen nach
+    `releases/<tag>/`, prüfen, dann einen Symlink umlegen. Der Umschaltpunkt
+    ist dann **eine** Operation statt 688.
+
+    **Warum nicht jetzt:** Der heutige Hoster gibt über FTPS keine Symlinks
+    her, und ohne sie wäre das Umschalten ein Verzeichnis-Umbenennen —
+    schneller als 688 Dateien, aber nicht atomar. Der Gewinn hinge am Hoster,
+    und genau deshalb hängt der Punkt an P8 oder einem Wechsel.
+
+263. **Die Integritätswache sieht nur, was öffentlich abrufbar ist.**
+    *Aufgenommen 21.09.2026 (Kette II, Einschub Abschnitt 8).* Priorität:
+    niedrig. **Abhilfe offen — hier wird die Grenze benannt, nicht
+    geschlossen.**
+
+    `tools/integritaetswache/wache.py` vergleicht den Produktivserver gegen
+    den Zeiger `produktion`. Sie holt sich die Dateien **über HTTPS**, sieht
+    also `assets/`, die Anmeldeseite und was sonst ausgeliefert wird —
+    **keinen PHP-Quelltext**. Eine untergeschobene Zeile in `db.php` oder
+    `login.php` bemerkt sie nicht.
+
+    **Was sie trotzdem leistet, und es ist nicht wenig:** Der häufigste
+    Angriff auf eine solche Anlage ist ein untergeschobenes **Skript** im
+    Frontend — und genau das ist öffentlich abrufbar und wird verglichen.
+
+    **Warum die Abhilfe offen bleibt:** Sie hieße, dem Server eine Schnittstelle
+    zu geben, die eigenen Quelldateien auszuliefern oder zu hashen. Das ist
+    ein neuer Angriffsweg für ein Problem, das der Vergleich nur teilweise
+    löst — die Entscheidung gehört in einen eigenen Durchgang, nicht in einen
+    Nachtrag.
+
+264. **Die Fremd-Aktion des Transports ablösen.**
+    *Aufgenommen 21.09.2026 (Kette II, Einschub Abschnitt 8).* Priorität:
+    niedrig. **Auslöser, und erst dann:** erneute Abbrüche, Bedarf an
+    Wiederaufnahme, oder ein Ende der Pflege der Aktion.
+
+    Der Transport läuft über `SamKirkland/FTP-Deploy-Action`. Kette II/AP4
+    hat sich gegen eine Ablösung entschieden und für den kleinsten Eingriff
+    (die Zustandsdatei hinlegen, bevor die Aktion läuft) — **die Aktion
+    bleibt, der Transport bleibt, das Löschverhalten bleibt.**
+
+    **Was gegen sie spricht, gesammelt aus der Arbeit an F3:** Sie fängt
+    jeden Fehler von `getServerFiles` ab und deutet ihn als „first publish",
+    rechnet danach mit einem toten Client weiter und meldet die Stelle **drei
+    Schritte hinter der Ursache** — acht Trennversuche lang stand deshalb der
+    falsche Aufruf im Verdacht (F-KH-U-25). Sie kennt keine Wiederaufnahme:
+    Ein Abbruch bei Datei 400 von 688 beginnt beim nächsten Lauf von vorn.
+    Und ihr jüngstes Tag ist vom **19.04.2026**.
+
+    **Was für sie spricht:** Sie funktioniert, seit die Zustandsdatei liegt —
+    688 Dateien ohne `ECONNRESET`, und seither vier Staging-Läufe, zuletzt
+    0 Dateien in 3,8 s. Ein eigener Transport wäre neuer Code an der
+    empfindlichsten Stelle der Kette, und den prüft niemand außer uns.
+
+
+265. **Verweise von `.github/` in die Dokumentation hält kein Prüfmittel
+    nach.** *Aufgenommen 21.09.2026 (Kette II, AP8a; Anlass F-KH-U-02).*
+    Priorität: niedrig. Auslöser: eine weitere Neufassung von Rahmenplan 6a.
+
+    `.github/workflows/auslieferung.yml` verweist in seinen Fehlermeldungen
+    auf **„Rahmenplan 6a, Schritte 1 bis 3"** und „Schritt 4". Wer 6a
+    umnummeriert — und das ist am 20.09.2026 beim Hosterwechsel beinahe
+    passiert —, macht daraus einen Irrweg: Die Meldung schickt jemanden zu
+    einem Schritt, der etwas anderes sagt als gemeint.
+
+    **`tools/kettenaufrufe/` schlägt dabei nicht an**, und das ist kein
+    Versäumnis: Es prüft **Werkzeugschnittstellen**, nicht Textverweise. Die
+    Schrittnummern in 6a sind beim Umzug ausdrücklich beibehalten worden,
+    **weil** die Kette sie nennt — der Verweis hält heute also, aber nur,
+    weil jemand daran gedacht hat.
+
+    **Zu tun:** ein Prüfschritt, der die in `.github/` genannten
+    Dokumentstellen gegen die Überschriften hält, die es wirklich gibt.
+
+266. **`plattform_pruefen()` sagt „aus", wo „nicht feststellbar" stehen
+    müsste.** *Aufgenommen 21.09.2026 (Kette II, AP8a; Anlass F-KH-U-05).*
+    Priorität: niedrig.
+
+    Steht eine geprüfte Funktion in `disable_functions`, antwortet
+    `function_exists()` mit `false` — und der Befund wird zu einem **Mangel**
+    statt zu einer **Nichtmessung**. Betroffen ist heute der **OPcache**
+    (`opcache_get_status`, auf lima-city abgeschaltet): Die Statusseite meldet
+    ihn als „aus", obwohl niemand weiß, ob er läuft.
+
+    **Die Bauform steckt in jeder weiteren Prüfung, die über
+    `function_exists()` geht**, nicht nur in dieser einen — das ist der Grund,
+    warum der Punkt aufgeschrieben wird und nicht nur der OPcache-Fall.
+
+    **Warum das mehr als Kosmetik ist:** Dreiwertigkeit ist im Projekt schon
+    einmal teuer erkauft worden. Die Zielprobe unterscheidet ausdrücklich
+    **LIEGT / FEHLT / NICHT FESTSTELLBAR** (`tools/kette/zielprobe.py`), weil
+    ein „fehlt", das in Wahrheit ein „ich konnte nicht nachsehen" war, die
+    Kette zu falschen Schlüssen brachte. Hier gilt dasselbe, nur auf der
+    Statusseite.
+
 
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+241. **Die Anwendung überlässt ihre Sitzungen dem Hoster.**
+    *Aufgenommen 20.09.2026 aus dem Befund der Kettenhärtung (AP1).*
+
+    *Erledigt am 20.09.2026 in Web 20.26.0 (Schritt 16, PR #61):
+    `server/sitzung_lib.php` legt `.sitzungen/` mit 0700 an, gerufen an
+    zwei Stellen (`db.php`, `install.php`); Rückfall auf den Hosterpfad
+    mit Anzeige; vierter Schreibort (Empfohlen) und Prüfpunkt
+    „Sitzungsablage" (Muss, dreiwertig) in `plattform_pruefen()`;
+    Aufräumteil „Sitzungsdateien" (nur `sess_*`). Gemessen: 2
+    Aufrufstellen, 8 von 9 Sitzungsstarts mit `db.php` davor,
+    Dateizählung 1/0/1, Marker 0/1 Probedateien, „1 gelöscht". Offen ist
+    die Prüfung durch die Betreiberin — Liste in
+    `docs/konzepte/Pruefdokument-Sitzungsablage.md` — und der achte
+    Schutzlistenpfad, der zu Kette II gehört.*
+
+    **Der achte Schutzlistenpfad ist mit Kette II/AP3 eingetragen**
+    (20.09.2026): `.sitzungen/**` und `.sitzungen/` stehen in beiden
+    `exclude`-Blöcken von `auslieferung.yml` und in `CLAUDE.md` 3. Damit
+    ist auch dieser Rest erledigt; offen bleibt allein die Prüfung durch
+    die Betreiberin.
+    Zugeordnet: **Schritt 16**, Konzept
+    `docs/konzepte/Konzept-Sitzungsablage.md` (freigegeben 20.09.2026).
+
+    `session.save_path` zeigt dorthin, wohin der Hoster ihn zeigen lässt. Auf
+    der Staging-Anlage bei lima-city ist das ein **geteiltes** Verzeichnis:
+    `/home/webpages/tmp`, Rechte **0773**, Eigentümer **root**,
+    `gc_probability` **0**. Es ist gutgegangen, weil der Hoster das Auflisten
+    sperrt — **die Anwendung hätte es nicht gemerkt.** Für Produktiv ist
+    derselbe Wert nicht erhoben, für Selbsthoster ist er offen.
+
+    **Was auf dem Spiel steht, nüchtern:** Eine Sitzungsdatei trägt kein
+    Schlüsselmaterial, die E2E-Zusage ist nicht berührt. Sie trägt aber die
+    Sitzung selbst — der Dateiname *ist* die Sitzungs-ID. Wer sie liest, ist
+    angemeldet und sieht die Klartextliste aus `CLAUDE.md` 4; bei
+    `role = admin` die Verwaltung.
+
+    **Die Anwendung legt ihre Sitzungen künftig selbst ab** — eigenes,
+    nicht auflistbares Verzeichnis `.sitzungen/` mit `0700` (Stufe 2).
+    Stufe 3 (Sitzungen in der Datenbank) ist mit vier Gründen verworfen, mit
+    Verfallsdatum: Sie wird alternativlos, sobald mehrere Anwendungsserver
+    eine Ablage teilen sollen — das steht auf keinem Fahrplan.
+
+    **Gemessen, und es hat das Konzept umgeworfen:** Es gibt **neun**
+    `session_start()`-Aufrufe in neun Dateien, nicht drei. Mit der Annahme
+    „drei" hätte `login.php` die Sitzung beim Hoster abgelegt und
+    `auth_guard.php` sie in `.sitzungen/` gesucht — **niemand hätte sich
+    anmelden können.**
+
 
 235. **`actions/checkout@v4` hängt an einer abgekündigten Laufzeit.**
     *Aufgenommen 18.09.2026 aus den Annotations des Auslieferungslaufs.*
@@ -6450,7 +7038,6 @@ zutreffen.
     Datenschutzerklärung in Handbuch 11.5 — die Anwendung liefert weiterhin
     keinen Rechtstext mit, aber die technische Tatsache dahinter kann nur sie
     kennen.
-
 
 142. **Android: HTTP-Ausnahme gilt auch im Release-Build.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-1).*

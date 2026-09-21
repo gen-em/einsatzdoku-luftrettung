@@ -61,13 +61,27 @@ Welches Dokument zu welcher Änderung gehört, steht in Abschnitt 9
 ## 3. Deployment — Vorsicht
 
 **Seit Web 20.4.0 gibt es zwei Wege** (P5a/AP1, R67; Einzelheiten in
-`docs/Technik.md` 6, die Kette selbst in
-`.github/workflows/auslieferung.yml`):
+`docs/Technik.md` 6). **Die Kette liegt seit Kette II/AP5 in zwei Dateien:**
+`.github/workflows/auslieferung.yml` sagt, **wann** ausgeliefert wird (die
+Auslöser, die vier Jobs, die Freigabe), und
+`.github/workflows/ausliefern-lauf.yml` sagt, **was dabei geschieht** — die
+Schrittfolge, einmal, für beide Umgebungen. Wer einen Schritt ändert, ändert
+ihn dort und damit für beide; das ist der Zweck (E-KH-14, -17).
 
 - **Push auf `main`** → per FTPS auf **Staging**
-  (`staging.nadoku.gen-em.org`). Kein Produktivserver.
+  (`staging-nadoku.gen-em.org`). Kein Produktivserver.
 - **Tag `web-vX.Y.Z`** → nach **Pflichtfreigabe durch die Betreiberin**
   (GitHub-Umgebung `produktion`) und nach dem **Backup-Tor** auf Produktiv.
+
+**Staging liegt seit dem 20.09.2026 bei einem anderen Hoster als Produktiv**
+(lima-city, `staging-nadoku.gen-em.org`; E-KH-04). Vorher lag es im selben
+Webspace wie Produktiv, und das war der Fehler: Staging-PHP konnte Produktivs
+`config.php` lesen. Der Preis des Umzugs steht in `docs/Technik.md` 6.3a —
+**Staging belegt kein Plattformverhalten von Produktiv mehr.** Eine Zahl, die
+Stufe 2 auf Staging misst (Zeitgrenzen, Speicher, `max_user_connections`),
+gilt für Staging und sonst nirgends. Wer eine ältere Quelle liest, findet
+dort `staging.nadoku.gen-em.org` im selben Tarif — das ist der Stand bis zum
+19.09.2026.
 
 Davor stehen zwei Prüftore: Stufe 1 (`pruefung.yml`, jeder Push, ohne
 Installation) und Stufe 2 (gegen Staging). **Der Produktionslauf verlangt einen
@@ -90,12 +104,54 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   der Torwächter auch ohne Kette.
 - Ohne erhöhte `WEB_VERSION` sieht der Browser alte Dateien. Seit P5a
   verweigert der Produktionslauf außerdem, wenn Tag und `WEB_VERSION`
-  auseinandergehen.
+  auseinandergehen — **und seit Kette II/AP6 prüft er nach dem Abgleich
+  nach**, ob die Anlage die neue Fassung auch wirklich meldet. Tut sie es
+  nicht, bleibt die Wartung an.
+- **Die Kette hat keine Vorgabewerte mehr** (E-KH-07, AP6). `FTP_ZIELPFAD`
+  und `FTP_STATE_PFAD` müssen in **beiden** Umgebungen stehen, `WACHE_BASIS`
+  als Repositoriums-Variable; fehlt eine, ist der Lauf **rot** — im ersten
+  Schritt, vor jedem Zugriff auf den Server. Bis dahin sprang ein fest
+  eingebauter Wert ein, und das ließ eine falsch eingerichtete Anlage nicht
+  auffallen: Der Lauf war grün und synchronisierte in ein fremdes
+  Verzeichnis. Wer eine Anlage neu einrichtet, trägt sie zuerst ein.
+- **Überspringen ist rot** (E-KH-12, AP6). Die fünf Stellen in Stufe 2, die
+  sich bei fehlender Zuarbeit selbst übersprangen und grün meldeten, brechen
+  ab. Ein Prüfschritt, der sich selbst überspringt, meldet grün, ohne
+  gemessen zu haben.
+- **Jede fremde `uses:`-Zeile hängt an einer 40-stelligen Commit-SHA**
+  (E-KH-10), die Version als Kommentar daneben — **elf sind es** (zehn bis
+  AP7; der Job `Rückfallstand (Staging)` bringt einen weiteren
+  `actions/checkout` mit). Die zwei **lokalen** (`./.github/workflows/…`)
+  tragen keine und können es nicht: Ein lokaler Pfad nimmt keinen Ref und
+  läuft immer auf dem Commit des Aufrufers. Wer eine Aktion aktualisiert,
+  tauscht SHA **und** Kommentar. **Die Zahl ist kein Prüfwert, sondern eine
+  Orientierung** — der Prüfwert ist „keine fremde Zeile ohne SHA", und den
+  zählt man nach, statt ihn abzuschreiben:
+  `grep -rhoE 'uses: [^ ]+@[0-9a-f]{40}' .github/workflows/ | wc -l` gegen
+  `grep -rh 'uses:' .github/workflows/ | grep -vc 'uses: \./'`.
 - `server/config.php`, `install.lock`, `server/wartung.lock`,
   `server/ueberlast.json` (der Zähler der Verbindungsgrenze, P5a/AP9),
-  `server/sicherungen/` und `server/apk/` liegen nur auf dem Server. Sie
-  stehen in `.gitignore` **und** in der Ausnahmeliste **beider** FTPS-Schritte
-  — beides muss so bleiben.
+  `server/sicherungen/`, `server/apk/` und — seit Web 20.26.0 —
+  `server/.sitzungen/` (die PHP-Sitzungsdateien, Schritt 16, E-SA-05) liegen
+  nur auf dem Server. Sie stehen in `.gitignore` **und** in der
+  Ausnahmeliste des FTPS-Schritts — beides muss so bleiben.
+  **Acht Pfade sind es, und die Zahl ist der Prüfwert.** Jeder steht dort
+  zweimal, als Datei- und als Verzeichnismuster (`sicherungen/**` und
+  `sicherungen/`), weil die Aktion beides getrennt prüft.
+  **Seit Kette II/AP5 steht die Liste EINMAL**, in
+  `.github/workflows/ausliefern-lauf.yml` (E-KH-20 (1)). Bis dahin stand sie
+  zweimal, wortgleich, je einmal für Staging und Produktiv — und zwei
+  wortgleiche Listen sind keine zwei Riegel, sondern einer und ein
+  Versprechen: Wer die eine ergänzt und die andere vergisst, schützt eine
+  Umgebung und die andere nicht, und merkt es erst, wenn eine Datei fehlt,
+  die es nur auf dem Server gab. **Wer eine ältere Quelle liest, findet dort
+  „beide FTPS-Schritte" — das ist der Stand bis zum 21.09.2026.**
+  **Was passiert, wenn `.sitzungen/` fehlt:** beim heutigen Transport nichts —
+  die Fremd-Aktion listet das Fernverzeichnis nie, sondern liest nur ihre
+  eigene Zustandsdatei (nachgemessen im Quelltext von
+  `@samkirkland/ftp-deploy` 1.2.3 bis 1.2.5). Bei einem Spiegel mit
+  Löschabgleich **löscht jeder Deploy alle Sitzungen**, und alle Angemeldeten
+  fliegen raus.
 - **`server/install.php` steht seit Web 20.15.2 ebenfalls in der
   Ausnahmeliste** (Nr. 214) — anders als die Zeile darüber aber **nicht** in
   `.gitignore`: Sie liegt im Repositorium, wird nur nicht ausgeliefert, weil
@@ -105,6 +161,22 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
 - **`integritaet.yml` hängt am Anzeigenamen des Auslieferungslaufs.** Er heißt
   jetzt „Auslieferung" und nicht mehr „Server per FTP hochladen". Wer ihn
   umbenennt, hängt die Wache ab, und zwar still.
+- **Der Zweig `produktion` ist ein Zeiger, kein Arbeitszweig** (seit AP2 der
+  Kettenhärtung, E-KH-13). Er zeigt auf den Commit, der auf dem
+  Produktivserver liegt, und die Integritätswache vergleicht **gegen ihn**.
+  Bewegt wird er **ausschließlich vom Job `zeiger`** in
+  `.github/workflows/auslieferung.yml`, und nur nach einem erfolgreichen
+  `produktion`-Job. Daraus folgt dreierlei: **Niemand entwickelt dort**, es
+  gibt **keinen PR dorthin**, und er wird **nicht von Hand bewegt** — ein
+  Zeiger, der auf etwas anderes zeigt als auf das Ausgelieferte, macht die
+  Wache nicht blind, sondern zu einer Quelle von Falschmeldungen, und das ist
+  schlimmer.
+  **Rückwärts ist erlaubt und ausdrücklich vorgesehen:** Ein Zurücksetzen legt
+  einen älteren Stand oben auf, und der Zeiger folgt dorthin. Deshalb schiebt
+  der Job erzwungen.
+  **Fehlt der Zweig, ist die Wache rot** und sagt, wie man ihn anlegt — sie
+  läuft nie still grün weiter. Wer den Zweig löscht, schaltet damit keine
+  Prüfung ab, sondern löst sie aus.
 
 ## 4. Feste Zusagen der Anwendung
 
