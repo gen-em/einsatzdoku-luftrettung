@@ -26,7 +26,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > | Paket | Stand | Stufe | Abnahmezahlen |
 > |---|---|---|---|
 > | AP1 Zählmittel, Register, Gegenprobe Paket 1 | **erledigt** 20.09.2026 | keine (nur `tools/` und `docs/`) | Selbstprobe **29 von 29** · Register **38 Zeilen, 0 über der Decke** · Eichung `error_log(` **77 in 32**, `session_start(` **9 in 9** · Bestand **133 PHP / 40 JS** · Gegenprobe Z30–Z33 **4× 0** · `php -l` **133/0** · Wortliste **0/0** · Vollständigkeit **398** (unverändert) · Kontraste **22/0** · Kettenaufrufe **30/0** · CSP **0** · Migrationsregister **0** |
-> | AP2 Konfiguration und Sitzung | **erledigt** 21.09.2026 | **Web 20.27.0** (Neben: zwei neue Funktionen, keine Migration) | Z01 **9 → 1** · Z02 **2 → 1** · Z03 **7 → 1** · Z04 **46 → 0** · `konfig_lib` **13/13** · Cookie-Parameter **16 Zellen, 0 Abweichungen** · Ladezyklus **7/7** · Sitzungshärtung **0 Befunde, Selbstprobe 12/12** · Register **38 Zeilen, 0 über der Decke** · `php -l` **134/0** · Wortliste **0/0** · Vollständigkeit **398** · `error_log(` **77** (unverändert, E-ZE-05). **Im Browser gegen eine laufende Anlage:** Bilderlauf **496 Bilder, 0 Überlauf, 0 Konsolenfehler** · Prüfliste **A-1 bis A-12 gefahren** · F-ZE-2 **40 anonyme Abrufe → 0 neue Sitzungsdateien** · Härtung wirkt (untergeschobene Kennung verworfen) · A-9 **8/8** · A-12 **7/7** · Abmelde-Probe erfüllt · Kopplungsprobe **76/0** · Ratenprobe **50/1** (Befund nicht von AP2, Nr. 254) |
+> | AP2 Konfiguration und Sitzung | **erledigt** 21.09.2026 | **Web 20.27.0** (Neben: zwei neue Funktionen, keine Migration) | Z01 **9 → 1** · Z02 **2 → 1** · Z03 **7 → 1** · Z04 **46 → 0** · `konfig_lib` **13/13** · Cookie-Parameter **16 Zellen, 0 Abweichungen** · Ladezyklus **7/7** · Sitzungshärtung **0 Befunde, Selbstprobe 12/12** · Register **38 Zeilen, 0 über der Decke** · `php -l` **134/0** · Wortliste **0/0** · Vollständigkeit **398** · `error_log(` **77** (unverändert, E-ZE-05). **Im Browser gegen eine laufende Anlage:** Bilderlauf **496 Bilder, 0 Überlauf, 0 Konsolenfehler** · Prüfliste **A-1 bis A-12 gefahren** · F-ZE-2 **40 anonyme Abrufe → 0 neue Sitzungsdateien** · Härtung wirkt (untergeschobene Kennung verworfen) · A-9 **8/8** · A-12 **7/7** · Abmelde-Probe erfüllt · Kopplungsprobe **76/0** · Ratenprobe **50/0** (der eine Befund war nicht von AP2 und ist behoben, Nr. 254) |
 > | AP3 API-Eingang und Flash | offen | — | — |
 > | AP4 Datenzugriff klein | offen | — | — |
 > | AP5 Transaktion und Kindtabellen | offen | — | — |
@@ -757,11 +757,15 @@ hält die Ausnahme fest.
 
 *Zwei Funde, beide NICHT von AP2 — und beide vorher unsichtbar:*
 
-- **Backlog Nr. 254:** Die Ratenprobe erwartet fünf Töpfe mit Leiter, es sind
-  **sechs** (`blatt` kam mit Web 20.24.0, die Erwartung stammt aus 20.11.0).
-  Der Befund steht seit einem Monat und auch auf `main`; die Probe braucht
-  eine laufende Anlage und hängt nicht in Stufe 1, also hat sie niemand
-  gefahren.
+- **Backlog Nr. 254, am selben Tag behoben:** Die Ratenprobe erwartete fünf
+  Töpfe mit Leiter, es sind **sechs** (`blatt` kam mit Web 20.24.0, die
+  Erwartung stammte aus 20.11.0). Der Befund stand einen Monat und auch auf
+  `main`; die Probe braucht eine laufende Anlage und hängt nicht in Stufe 1,
+  also hatte sie niemand gefahren. **Die Behebung ändert die Bauform, nicht
+  nur die Zahl:** Die Liste `TOEPFE_MIT_LEITER` ist der Sollwert, und der
+  Satz rechnet seine Zahl aus ihr — dieselbe Zahl stand vorher zweimal da,
+  einmal als Wort und einmal als Aufzählung. Lauf danach: **50 Prüfungen, 0
+  Befunde.**
 - **Backlog Nr. 255, am selben Tag behoben:** `lokal_einrichten.sh` kopierte
   Handbuch und `docs/bilder/` nicht nach `server/doku/` — der Schritt steht
   nur in der Auslieferungskette. Der erste Bilderlauf meldete dadurch **48

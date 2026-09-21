@@ -196,7 +196,7 @@ Prüfliste A-1 bis A-12 **gefahren** und nicht mehr offen.
 | **`konfig_lib` einzeln** | **13 von 13** |
 | **Abmelde-Probe** | V-10 **erfüllt**, kein Schlüsselmaterial nach dem Abmelden, **keine Seitenfehler** |
 | **Kopplungsprobe** | **76 Erwartungen, 0 nicht erfüllt, 0 übergangen** |
-| **Ratenprobe** | **50 Prüfungen, 1 Befund** — und der ist **nicht von AP2**: Backlog **Nr. 254** |
+| **Ratenprobe** | **50 Prüfungen, 0 Befunde** — der eine Befund war **nicht von AP2** und ist am selben Tag behoben (Backlog **Nr. 254**) |
 
 **Drei Zahlen, die etwas anderes heißen, als sie aussehen:**
 
@@ -216,8 +216,11 @@ Prüfliste A-1 bis A-12 **gefahren** und nicht mehr offen.
   `config.php`), ohne dass sich eine Zeile Code geändert hätte. Beide
   Werkzeuge nehmen die Datei jetzt aus, mit derselben Begründung wie
   `tools/wortliste/` seit jeher; ein Selbstprobenfall hält es fest.
-- **„1 Befund" der Ratenprobe steht seit Web 20.24.0** und ist auch auf
-  `main` da. Die Probe zählt sechs Töpfe gegen eine von Hand geführte Fünf.
+- **Die Ratenprobe stand einen Monat auf einem Befund, den niemand sah.**
+  Sie zählte sechs Töpfe gegen eine von Hand geführte Fünf; `blatt` kam mit
+  Web 20.24.0 dazu. Der Grund für den Monat: Sie braucht eine laufende Anlage
+  und hängt nicht in Stufe 1. Behoben am 21.09.2026 (Nr. 254) — die Liste ist
+  jetzt der Sollwert, und der Satz rechnet seine Zahl aus ihr.
 
 ## A2. Was im Browser geprüft wurde
 
@@ -247,7 +250,6 @@ das, was ein Wegwerf-Container nicht beantworten kann.
 | **B-1** | Nach dem Ausrollen: **Betrieb → Status**, Zeile „Sitzungsablage" | Dasselbe wie vor dem Update | „nicht gelaufen" → dann füllt `sitzung_starten()` den Stand auf dieser Anlage nicht |
 | **B-2** | Dieselbe Seite, **Zahl der Sitzungsdateien**, nach ein paar Tagen erneut | Die Zahl **fällt**, weil Bots keine Datei mehr anlegen | Sie steigt weiter wie bisher → F-ZE-2 greift auf dieser Anlage nicht |
 | **B-3** | In den Entwicklerwerkzeugen das Cookie von `hilfe.php` und `install.php` ansehen, **auf der echten Anlage mit HTTPS** | Beide tragen **`secure`** | `secure` fehlt → dann sieht PHP die Anfrage nicht als HTTPS (Proxy-Kopfzeile, N2-2) |
-| **B-4** | **Backlog Nr. 254** entscheiden: Ratenprobe auf sechs Töpfe nachziehen | Eine Zeile in `probe.php` | — |
 
 ## A4. Grenzen — was sich mit diesem Paket NICHT beantworten lässt
 

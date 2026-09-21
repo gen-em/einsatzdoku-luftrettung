@@ -355,13 +355,32 @@ pruef('Ein gesetztes Passwort raeumt beide Toepfe (auch bei anderer Schreibweise
 /* ======================================================================== */
 abschnitt('10  Welche Toepfe eine Leiter haben — und welche ausdruecklich nicht');
 
+/* DIE LISTE IST DER SOLLWERT, UND DIE ZAHL KOMMT AUS IHR.
+ *
+ * Hier stand bis zum 21.09.2026 „Genau fuenf Toepfe haben eine Leiter" neben
+ * einer fuenfelementigen Liste — dieselbe Zahl zweimal, einmal als Satz und
+ * einmal als Aufzaehlung. Mit Web 20.24.0 (P5b/AP9) kam `blatt` dazu, die
+ * Liste wurde nicht nachgezogen, und die Probe stand EINEN MONAT auf einem
+ * Befund, den niemand sah: Sie braucht eine laufende Anlage und haengt nicht
+ * in Stufe 1. Gefunden am 21.09.2026 beim ersten Lauf nach Schritt 15 AP2
+ * (Backlog Nr. 254).
+ *
+ * Jetzt rechnet die Ueberschrift ihre Zahl aus der Liste. Wer einen Topf
+ * ergaenzt, ergaenzt die Liste — und der Satz stimmt von selbst. Das ist
+ * genau die Bauform, die der Backlog-Kopf fuer gezaehlte Werte verlangt.
+ *
+ * `blatt` (Schluesselblatt-Pruefung, S10) HAT eine Leiter, und das ist
+ * richtig: Wer die Vierergruppen raet, soll nach drei Fehlversuchen laenger
+ * warten. Anmeldung und Anwendung bleiben dabei offen. */
+const TOEPFE_MIT_LEITER = ['blatt', 'ingest', 'ingest_ip', 'login', 'login_ip', 'salt'];
+
 $mitLeiter = []; $ohne = [];
 foreach (RATE_GRENZEN as $topf => $g) {
     if (!empty($g['leiter'])) { $mitLeiter[] = $topf; } else { $ohne[] = $topf; }
 }
 sort($mitLeiter);
-pruef('Genau fuenf Toepfe haben eine Leiter',
-      $mitLeiter === ['ingest', 'ingest_ip', 'login', 'login_ip', 'salt'],
+pruef('Genau ' . count(TOEPFE_MIT_LEITER) . ' Toepfe haben eine Leiter',
+      $mitLeiter === TOEPFE_MIT_LEITER,
       implode(', ', $mitLeiter));
 pruef('Die beiden Ingest-Toepfe haben DIESELBE Zahl (E-P5a-47)',
       RATE_GRENZEN['ingest']['max'] === RATE_GRENZEN['ingest_ip']['max']
