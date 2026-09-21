@@ -190,3 +190,13 @@ waren so 44 von 253 Paaren auffällig und alle 44 unerreichbar.
 | `chunks.py` | zerlegt `style.css` in Blöcke — Gliederungsansicht beim Umsortieren |
 | `proben.py` | erzeugt die vier Proben und die Pseudoklassen-Stylesheets |
 | `stilvergleich.js` | misst die berechneten Stile in Chromium (braucht Playwright) |
+| `gegen.sh` | **der eine Aufruf für den Prüfstand** — holt den Vergleichsstand aus git, baut die Proben, fährt `stilvergleich.js`. `bash tools/stilvergleich/gegen.sh [<ref>]`, Vorgabe `origin/main` |
+
+**Warum `gegen.sh` (21.09.2026, F-PK-20).** `tools/pruefstand/pruefablauf.json`
+rief `proben.py` **ohne Argumente** auf. Das baut keine Messung, sondern gibt
+die Anleitung aus; jeder Lauf, der `style.css` berührte, war damit rot, ohne
+etwas gemessen zu haben. `gegen.sh` fasst die drei Schritte zusammen, damit
+die Zuordnung eine Zeile bleibt. **Es setzt `NODE_PATH`**, weil
+`stilvergleich.js` CJS ist und `require('playwright')` macht — es geht damit
+an `tools/motor.mjs` vorbei, das genau diese Stelle löst. Das Pflaster hält;
+die Umstellung auf den Motor gehört nach PK-04.

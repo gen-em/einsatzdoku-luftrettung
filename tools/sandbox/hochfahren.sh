@@ -72,6 +72,22 @@ if [ -n "$PHPFASSUNG" ]; then
     zeile "PHP im Behälter: $(docker exec nadoku-php83-lauf php -r 'echo PHP_VERSION;' 2>/dev/null)"
 fi
 
+# ---- 3a. Doku nach server/doku -------------------------------------------
+# DIESELBEN ZWEI ZEILEN WIE IN DER KETTE (`ausliefern-lauf.yml`, Schritt
+# „Handbuch und ‚Was ist NAdoku' nach server/doku kopieren"). Anlass: Der
+# Bilderlauf war oertlich am 21.09.2026 mit 48 Konsolenfehlern rot — drei
+# fehlende Bilder auf zwei Handbuchseiten, ueber acht Breiten gezaehlt
+# (2 x 8 x 3 = 48). Auf Staging und Produktiv liegen sie, weil die Kette
+# `docs/bilder/` mitkopiert; oertlich legte sie niemand an.
+#
+# EIN ROTER SCHRITT OHNE GEGENSTAND ist so schaedlich wie ein gruener ohne
+# Gegenstand: Beim naechsten Mal sieht man hin, beim uebernaechsten nicht
+# mehr. `server/doku/` traegt ein eigenes `.gitignore`, das alles ignoriert —
+# es entsteht hier und wird nie committet.
+mkdir -p server/doku
+cp docs/Handbuch.md docs/Was-ist-NAdoku.md server/doku/ 2>/dev/null || true
+[ -d docs/bilder ] && cp -r docs/bilder server/doku/
+
 # ---- 4. Nachweis ----------------------------------------------------------
 # EINE ZAHL, DIE DEN GEGENSTAND NENNT: nicht „läuft", sondern welcher Code
 # von welcher Adresse und welche Fassung die Anlage meldet.
