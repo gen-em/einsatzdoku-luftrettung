@@ -14,6 +14,43 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.26.3] — 2026-09-21
+
+**Der Export scheiterte auf MySQL 8.4 am Alias, nicht an der Spalte.**
+
+### Behoben
+
+**`uhr_gesperrt AS manual` steht jetzt in Backticks** — in `backup_lib.php`
+und `api/export_data.php`. Nr. 238 hatte die Spalte `manual` umbenannt, weil
+MySQL 8.4.0 bis 8.4.10 das Wort reserviert, und den Schlüssel in der Datei
+über einen Alias bewahrt. Der Alias unterliegt derselben Reservierung. Auf
+Staging (MySQL 8.4.10) antwortete `api/backup_data.php` deshalb mit 1064 und
+HTTP 500 (Kennung `097D7622`); der Browser wartete fünfzehn Minuten auf einen
+Download, der nie kam, und Stufe 2 war dreimal rot, ohne die Ursache zu
+nennen.
+
+**Gefunden in der Sandbox, nicht in der Kette.** Lokal gegen MariaDB 10.11
+war derselbe Kreislauf grün (328 771 Vergleiche, 0 unerklärt). Erst die
+Anwendung auf einem MySQL-8.4.0-Container fiel — in Sekunden, mit derselben
+Kennung im lokalen Fehlerprotokoll. Das ist genau der Fall, für den das
+Konzept PK die Plattformmatrix lokal vorsieht; die Staging-Datenbank stand
+bis heute als unbekannt in `docs/Technik.md` 6.3a.
+
+### Geprüft
+
+Kreislauf `edbak` gegen die Anwendung auf **MySQL 8.4.0**: vorher rot
+(Timeout, 1064), nachher grün — 328 771 Vergleiche, 0 unerklärt; derselbe
+Kreislauf gegen **MariaDB 10.11** unverändert grün mit derselben Zahl. Beides
+unter PHP 8.3.33, der Fassung beider Anlagen. Wortliste 0 Treffer,
+Vollständigkeit 398 unverändert, `php -l` beide Dateien ohne Befund.
+
+### Offen
+
+Stufe 2 gegen Staging muss es bestätigen; damit ist M1 der Kette II wieder
+erreichbar.
+
+---
+
 ## [Werkzeug: Fünfzehn Minuten messen und „es kam nichts" melden] — 2026-09-21
 
 **Der Botschutz von lima-city ist weg, und dahinter stand ein Fehler, den

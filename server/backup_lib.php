@@ -228,9 +228,15 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * und `edbak_restore()` weiter unten liest ihn unter diesem Namen.
      * Ohne den Alias hiesse der Schluessel in jeder NEUEN Datei still
      * `uhr_gesperrt` — und das Einspielen faende das Feld nicht mehr, ohne
-     * eine einzige Fehlermeldung. */
+     * eine einzige Fehlermeldung.
+     *
+     * UND DER ALIAS STEHT IN BACKTICKS (Web 20.26.3): `manual` ist auf
+     * MySQL 8.4.0 bis 8.4.10 auch als ALIAS ein reserviertes Wort. Ohne
+     * die Backticks antwortete der Export dort mit 1064 und die Sicherung
+     * kam nie an (Staging, MySQL 8.4.10, Kennung 097D7622). Gleiche Stelle
+     * in api/export_data.php. */
     $missionSpalten = 'client_ref, day_id, started_at, ended_at, distance_m, ascent_m,
-                       site_ele_m, final, uhr_gesperrt AS manual, origin, edited,
+                       site_ele_m, final, uhr_gesperrt AS `manual`, origin, edited,
                        geraet_art, geraet_modell, transport_dest,
                        transport_mode, na_escort, false_alarm, start_src,
                        dest_lat, dest_lon,

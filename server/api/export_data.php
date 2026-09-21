@@ -290,7 +290,7 @@ function export_meta(array $b, int $userId): never
     $st = $pdo->prepare(
         "SELECT x.id, x.day_id, d.day, x.started_at, x.ended_at,
                 x.distance_m, x.ascent_m,
-                x.final, x.uhr_gesperrt AS manual, x.origin, x.edited,
+                x.final, x.uhr_gesperrt AS `manual`, x.origin, x.edited,
                 x.geraet_art, x.geraet_modell,
                 x.transport_dest, x.winch,
                 x.transport_mode, x.na_escort, x.false_alarm,
