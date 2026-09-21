@@ -20,6 +20,7 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 >
 > | | |
 > |---|---|
+> | **Übergabe** | **Ab 21.09.2026 übernimmt Konzept PK (`docs/konzepte/Konzept-PK-Pruefkette.md`, Abschnitt 9) Stufe 1, Stufe 2 und den Abschluss. M1 bleibt offen bis der edbak-500 behoben ist. Keine weiteren Pakete in Kette II.** |
 > | Stand | **21.09.2026 — AP1 bis AP7 gebaut; AP2 bis AP6 abgenommen, AP7 zur Haelfte (die Gegenprobe), AP1 haengt am Botschutz. Kette II liegt auf `main` (PR #65, `fb614d1`); AP7 liegt auf dem Arbeitszweig.** Offen: **M1 — blockiert am Botschutz von lima-city**, danach M2 und AP8. — **AP1 umgesetzt** (Dokumentation; kein Web-Code, keine Versionsstufe). Konzept freigegeben (Auftraggeber, 20.09.2026, ohne Änderungen; Fassung nach der ersten Fortschreibung vom selben Tag: F3 neu gefasst, E-KH-20, AP3/AP4 angepasst, Z1 und Z2 erledigt) |
 > | Entschieden | **E-KH-01 bis -08 und -10 bis -20** — die Vorschläge aus Abschnitt 2.2 gelten seit der Freigabe. Dazu **E-KH-21 bis -30** aus der Umsetzung (Abschnitt 2.4; -24 außerhalb der Pakete, -25 aus AP3) — **von der Umsetzung entschieden, zur Kenntnis und zum Widerspruch** |
 > | Von außen | **Einschub vom 20.09.2026 eingespielt** (Auftrag der Konzeptinstanz): Backlog 241–249 reserviert und angelegt, drei Konzeptdateien eingecheckt, Rahmenplan **Fassung 85**. Dabei angemeldet: `.sitzungen/` als **achter Schutzlistenpfad** (E-KH-20, einzutragen in AP4 oder AP5). **Der Einschub nannte Fassung 84 — die hatte AP2 schon vergeben und gepusht; er ist auf 85 gerückt** |
