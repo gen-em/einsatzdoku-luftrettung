@@ -29,8 +29,8 @@ declare(strict_types=1);
  * genau deshalb sagt der Kopf von `install.php` es zusaetzlich im Klartext.
  *
  * Aufruf:
- *   php tools/installweiche/pruefen.php
- *   php tools/installweiche/pruefen.php --selbstprobe
+ *   php tools/quelltext/installweiche.php
+ *   php tools/quelltext/installweiche.php --selbstprobe
  *
  * Rueckgabewert: 0 = die Weiche traegt · 1 = Befund · 2 = Datei fehlt.
  */

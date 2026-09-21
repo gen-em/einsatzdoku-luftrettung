@@ -71,10 +71,10 @@ declare(strict_types=1);
  * braucht eine Sekunde.
  *
  * Aufruf:
- *   php tools/migrationsregister/pruefen.php
- *   php tools/migrationsregister/pruefen.php --ausfuehrlich
- *   php tools/migrationsregister/pruefen.php --selbstprobe
- *   php tools/migrationsregister/pruefen.php --katalog=… --schema=…
+ *   bash tools/quelltext/pruefen.sh migrationsregister
+ *   bash tools/quelltext/pruefen.sh migrationsregister --ausfuehrlich
+ *   bash tools/quelltext/pruefen.sh migrationsregister --selbstprobe
+ *   bash tools/quelltext/pruefen.sh migrationsregister --katalog=… --schema=…
  *
  * Rueckgabewert: 0 = alle sieben Pruefungen sauber, 1 = mindestens ein
  * Befund, 2 = die Pruefung selbst kam nicht zustande (Datei fehlt).
@@ -83,7 +83,7 @@ declare(strict_types=1);
 $wurzel     = dirname(__DIR__, 2);
 $katalogDat = $wurzel . '/server/migration_lib.php';
 $schemaDat  = $wurzel . '/server/schema.sql';
-$ausnDat    = __DIR__ . '/ausnahmen.json';
+$ausnDat    = __DIR__ . '/migrationsregister-ausnahmen.json';
 
 $ausfuehrlich = false;
 $selbstprobe  = false;

@@ -88,7 +88,7 @@ gelegt und zurückgeholt; ein Entwicklungsrechner behält seine Einstellungen.
   da.
 - **Sie prüft nur, was im Katalog steht.** Eine Migration, die ihr DDL zur
   Laufzeit aus Variablen baut, sieht sie so wenig wie
-  `tools/migrationsregister/`.
+  `tools/quelltext/ (migrationsregister)`.
 - **Sie misst eine Fassung je Lauf.** Der Sinn liegt darin, sie gegen
   *mehrere* zu fahren — in der Kette gegen MySQL 8.4.0 und MariaDB 10.6, das
   ist die dokumentierte Untergrenze (`docs/Technik.md` 7). Ein Lauf gegen eine
@@ -97,7 +97,7 @@ gelegt und zurückgeholt; ein Entwicklungsrechner behält seine Einstellungen.
 - **Die Selbstprobe braucht keine Datenbank** und beantwortet nur die Frage,
   ob das Zählwerk einen Fehlschlag überhaupt bemerkt. Ein grüner Lauf einer
   Prüfung, die immer grün meldet, sieht genauso aus wie einer, der nichts
-  gefunden hat (dieselbe Begründung wie bei `tools/migrationsregister/`).
+  gefunden hat (dieselbe Begründung wie bei `tools/quelltext/ (migrationsregister)`).
 
 ## In der Kette
 

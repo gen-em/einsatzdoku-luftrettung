@@ -101,14 +101,14 @@ umgekehrten Fall: Wer die Tabelle wieder mit `--leer` erzeugt, macht die
 Ausnahme zur **ungenutzten** — und die ist ebenso ein Fehlschlag.
 
 **Solange die Tabelle leer ist, darf keine Ausnahme dafür stehen** —
-`tools/wortliste/` wertet eine ungenutzte Ausnahme als Fehlschlag, genau wie
+`tools/quelltext/ (textprobe)` wertet eine ungenutzte Ausnahme als Fehlschlag, genau wie
 einen unerklärten Treffer.
 
 **Bei gefüllter Tabelle ist eine nötig, und zwar dateiweit.** Die
 erzeugte Datei liegt unter `server/*.php` und fällt damit in Bereich (a) der
 Wortliste; ihre Werte sind Zeichenketten und keine Kommentare, der Zerleger
 räumt sie nicht weg. Darin stehen dann `Venu`, `Forerunner`, `fēnix` — allesamt
-Sperrwörter (`tools/wortliste/sperrliste.json`). Die Ausnahme gehört auf die
+Sperrwörter (`tools/quelltext/textprobe-sperrliste.json`). Die Ausnahme gehört auf die
 **Datei**, nicht auf einzelne Zeilen: Ein Muster auf „Venu 3S" wäre nach dem
 nächsten Lauf mit anderem Gerätebestand entweder unvollständig oder ungenutzt,
 und beides ist rot. Begründung der Klasse G: öffentliche Produktnamen sind hier

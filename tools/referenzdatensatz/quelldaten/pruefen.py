@@ -777,7 +777,7 @@ def main() -> int:
 
     # ---- Sperrwoerter in den Geraetebeschriftungen (R64/AP4) ---------------
     #
-    # WARUM HIER UND NICHT IN tools/wortliste/. Die Beschriftungen der zwei
+    # WARUM HIER UND NICHT IN tools/quelltext/. Die Beschriftungen der zwei
     # Referenzgeraete werden ueber `server/demo/fixture.json.gz` zu SICHTBAREM
     # TEXT des Demo-Kontos -- auf dem Produktivserver, alle 30 Minuten neu.
     # Die Wortliste kennt fuenf Bereiche (server/*.php, assets/*.js,
@@ -791,8 +791,17 @@ def main() -> int:
     # DIE LISTE WIRD GELESEN, NICHT KOPIERT. Eine zweite Liste ginge beim
     # naechsten Eintrag auseinander, und dann prueft diese Stelle gegen einen
     # Stand, den es nicht mehr gibt.
-    sperr = HIER.parent.parent / "wortliste" / "sperrliste.json"
-    if sperr.exists():
+    #
+    # FEHLT SIE, IST DAS ROT UND NICHT STILL (PK-04). Bis zum 21.09.2026 stand
+    # hier `if sperr.exists():` — die Pruefung uebersprang sich dann selbst und
+    # meldete gruen, ohne eine Beschriftung angesehen zu haben. Der Umzug der
+    # Liste nach tools/quelltext/ haette genau das ausgeloest.
+    sperr = HIER.parent.parent / "quelltext" / "textprobe-sperrliste.json"
+    if not sperr.exists():
+        lauf.befunde.append(
+            f"Sperrliste nicht gefunden: {sperr} — die Beschriftungen der "
+            "Geraete sind damit UNGEPRUEFT (kein stilles Ueberspringen)")
+    else:
         muster = json.loads(sperr.read_text("utf-8"))["muster"]
         for g in geraete:
             for m in muster:
@@ -800,7 +809,7 @@ def main() -> int:
                     lauf.befunde.append(
                         f"geraete.json/{g['nummer']}: die Beschriftung "
                         f"{g['beschriftung']!r} enthaelt das Sperrwort "
-                        f"{m['id']!r} (tools/wortliste/sperrliste.json). Sie wird "
+                        f"{m['id']!r} (tools/quelltext/textprobe-sperrliste.json). Sie wird "
                         f"ueber die Fixture zu sichtbarem Text des Demo-Kontos. "
                         f"Ersatz: {m['ersatz']}")
                 lauf.pruefungen += 1

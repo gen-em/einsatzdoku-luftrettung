@@ -14,6 +14,47 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Acht Quelltextprüfungen unter einem Läufer] — 2026-09-21
+
+### Geändert
+
+- **`tools/quelltext/` löst acht Werkzeugordner ab** (PK-04/1a, E-PK-24).
+  Installweiche, Sitzungshärtung, CSP-Quelltextprüfung, Jobregister,
+  Migrationsregister, Linkprobe, Vollständigkeit und die Wortliste (jetzt
+  `textprobe`) lagen in acht Ordnern mit acht Anleitungen und acht
+  Aufrufkonventionen. Das Problem war nie die Messung, sondern der Aufwand
+  drumherum: Wer eine Prüfung dazunahm, schrieb eine neunte Anleitung.
+  Jetzt ein Ordner, ein Läufer (`bash tools/quelltext/pruefen.sh
+  <name>|alle|--selbstprobe`), ein LIESMICH.
+  **Die Messungen selbst sind unverändert, und das ist nachgewiesen statt
+  zugesagt:** Alle acht Ausgaben sind vor und nach dem Umzug abgelegt und
+  gegeneinander gehalten worden — **8 von 8 bytegleich**.
+  Die Schwelle der Vollständigkeit führt der Läufer nicht selbst, sondern
+  **liest sie** aus `tools/pruefstand/pruefablauf.json`; eine Zahl an zwei
+  Stellen altert an einer davon unbemerkt.
+
+### Entfernt
+
+- **`tools/s5-anker/` und `tools/maskierungs-probe/`** (Streichliste der
+  Inventur). Der S5-Anker war seit Längerem rot — acht seiner 52 Anker zeigten
+  auf Stellen, die es nicht mehr gibt — und wurde von keiner Kette aufgerufen;
+  seine Aufgabe ist getan. Die Maskierungsprobe misst einen Fall, der im
+  Referenzdatensatz liegt. Die Git-Historie behält beide.
+
+### Behoben
+
+- **Eine Prüfung übersprang sich stillschweigend.**
+  `tools/referenzdatensatz/quelldaten/pruefen.py` las die Sperrliste mit
+  `if sperr.exists():` — fehlte die Datei, meldete der Lauf grün, ohne eine
+  einzige Gerätebeschriftung angesehen zu haben. Der Umzug der Liste hätte
+  genau das ausgelöst. Pfad nachgezogen **und** das Überspringen beseitigt:
+  Fehlt die Liste, ist es jetzt ein Befund. Es bleibt bewusst stehen, dass
+  die Liste **gelesen** und nicht kopiert wird — eine zweite Liste ginge beim
+  nächsten Eintrag auseinander.
+
+Werkzeuge und Dokumentation, keine Datei unter `server/` — **keine
+Versionsstufe** (`CLAUDE.md` 2: drei Zählungen, drei Auslieferungen).
+
 ## [Werkzeug: Das Muster `station` faellt aus der Sperrliste] — 2026-09-21
 
 **Angewiesen vom Auftraggeber.** Konzept PK gliedert die Pruefkette in fuenf

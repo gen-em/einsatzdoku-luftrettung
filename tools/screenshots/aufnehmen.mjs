@@ -274,7 +274,7 @@ if (OHNE_WARTUNGSWEG) {
  *
  * Was diese Klasse WEITERHIN verschweigt: einen Verbindungsfehler auf einer
  * fremden Adresse, die gar nicht abgerufen werden duerfte. Hier stand zuerst,
- * das messe tools/vollstaendigkeit/ — das war FALSCH, als es hier stand:
+ * das messe tools/quelltext/ (vollstaendigkeit) — das war FALSCH, als es hier stand:
  * Dessen Gruppe 5 kannte zwei Zusagen, und kein Werkzeug zaehlte "keine fremde
  * Quelle zur Laufzeit" nach. Seit dem 14.09.2026 tut es das (Backlog Nr. 179,
  * Pruefung `fremde Quelle`) — aber AM QUELLTEXT, nicht zur Laufzeit: Es

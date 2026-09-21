@@ -437,8 +437,8 @@ def main() -> int:
                    help="auch die durch Ausnahmen erklärten Treffer auflisten")
     p.add_argument("--probe", action="store_true",
                    help="Selbstprobe des Zerlegers fahren und beenden")
-    p.add_argument("--sperrliste", default=str(HIER / "sperrliste.json"))
-    p.add_argument("--ausnahmen", default=str(HIER / "ausnahmen.json"))
+    p.add_argument("--sperrliste", default=str(HIER / "textprobe-sperrliste.json"))
+    p.add_argument("--ausnahmen", default=str(HIER / "textprobe-ausnahmen.json"))
     p.add_argument("--bericht", help="Bericht zusätzlich in diese Datei schreiben")
     a = p.parse_args()
 

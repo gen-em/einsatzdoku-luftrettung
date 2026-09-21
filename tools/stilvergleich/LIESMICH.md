@@ -7,7 +7,7 @@ Wird **nicht ausgeliefert** (`tools/` ist vom Deploy ausgenommen).
 > Dieses Werkzeug ist auf die Frage gebaut: **Hat sich etwas geändert?** In
 > Phase P3 (Oberflächen-Redesign) hat sich alles geändert — Stylesheet,
 > Bausteine, Klassennamen, Schwellen. Es hat deshalb während der ganzen Phase
-> **geruht**; an seiner Stelle standen `tools/vollstaendigkeit/` (ist etwas
+> **geruht**; an seiner Stelle standen `tools/quelltext/ (vollstaendigkeit)` (ist etwas
 > verlorengegangen?) und `tools/screenshots/` (sieht es in allen acht Breiten
 > so aus, wie es soll?). Beide bleiben in Gebrauch.
 >
@@ -33,7 +33,7 @@ Wird **nicht ausgeliefert** (`tools/` ist vom Deploy ausgenommen).
 >   Web 8.0.1) und ist damit für die Kaskadenfrage richtig gebaut, für eine
 >   Vollständigkeitsprüfung aber unbrauchbar. Die rauschfreie Menge — die
 >   Klassen aus den **Selektoren** des Stylesheets — steht in
->   `tools/vollstaendigkeit/vorher-klassen.txt`.
+>   `tools/quelltext/vollstaendigkeit-vorher-klassen.txt`.
 >
 > **Und die Regel, unter der er ab P4 gelesen wird:** Bei einer
 > *beabsichtigten* Gestaltungsänderung ist das Ergebnis keine Null, sondern

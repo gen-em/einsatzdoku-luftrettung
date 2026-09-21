@@ -59,8 +59,8 @@ declare(strict_types=1);
  *     im Bericht, damit ein Wachsen auffaellt.
  *
  * Aufruf:
- *   php tools/cspprobe/pruefen.php
- *   php tools/cspprobe/pruefen.php --selbstprobe
+ *   php tools/quelltext/csp.php
+ *   php tools/quelltext/csp.php --selbstprobe
  *
  * Rueckgabewert: 0 = die Richtlinie traegt · 1 = Befund · 2 = Aufbau kaputt.
  */

@@ -1,10 +1,10 @@
-# CSP-Probe — trägt die Richtlinie noch?
+# CSP-Probe im Browser — trägt die Richtlinie zur Laufzeit?
 
-    php tools/cspprobe/pruefen.php
-    php tools/cspprobe/pruefen.php --selbstprobe
+    node tools/cspprobe/browserprobe.mjs
 
-Rückgabewert `0` = die Richtlinie trägt, `1` = Befund, `2` = Aufbau kaputt.
-Braucht weder Datenbank noch `config.php` — nur die Quellen.
+**Die Quelltexthälfte ist mit PK-04 nach `tools/quelltext/` gezogen**
+(`bash tools/quelltext/pruefen.sh csp`); hier bleibt, was einen Browser
+braucht. In PK-04/2 geht auch das nach `tools/proben/`.
 
 ## Wogegen
 
@@ -88,7 +88,7 @@ Braucht eine **laufende lokale Installation**
 (`sh tools/referenzdatensatz/einspielen/lokal_starten.sh`). 33 Erwartungen,
 Rückgabewert 0, wenn alle erfüllt sind; legt nebenbei `kopfzeilen.png` ab.
 
-`pruefen.php` sieht, ob ein `<script>` im Quelltext einen Nonce **trägt**. Ob
+`tools/quelltext/csp.php` sieht, ob ein `<script>` im Quelltext einen Nonce **trägt**. Ob
 er **wirkt**, sieht nur ein Browser: Dass `kopf_nonce_attr()` dasteht, heißt
 nicht, dass `kopfzeilen_seite()` vorher lief. Gemessen wird deshalb am
 laufenden Server — Kopfzeilen jeder Seite, Nonce je Anfrage neu, JSON-Antwort

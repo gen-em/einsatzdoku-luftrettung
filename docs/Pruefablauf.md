@@ -427,9 +427,9 @@ Wo die kurze Form richtig ist, weil die PHP-Inseln vorher ausgeräumt wurden,
 PHP bereits ausgeführt, und das lange Muster wäre dort falsch.
 
 *Durchgesehen und auf der langen Form (Stand 21.09.2026, nachgemessen):
-`tools/integritaetswache/`, `tools/vollstaendigkeit/`,
+`tools/integritaetswache/`, `tools/quelltext/`,
 `tools/stilvergleich/` und `tools/wartungsprobe/` — **vier**.
-`tools/wortliste/zerlegen.py` trägt die kurze Form mit dem Kommentar
+`tools/quelltext/zerlegen.py` trägt die kurze Form mit dem Kommentar
 daneben. Bis PK-01 nannte `CLAUDE.md` 6 an dieser Stelle vier Werkzeuge und
 zählte dabei `wortliste` (kurze Form) mit und `wartungsprobe` (lange Form)
 nicht — die Zahl stimmte, die Liste nicht.*
@@ -448,7 +448,7 @@ geschlossen hat, standen neben einer richtigen Zahl (Backlog Nr. 170).
 
 Für jede Änderung an einem sichtbaren Text — der Weboberfläche, der
 Handy- und Uhr-Anwendungen oder der normativen Dokumentation — läuft
-`tools/wortliste/`: Es zählt nach, ob Land und Luft neutral benannt sind.
+`tools/quelltext/` (`textprobe`): Es zählt nach, ob Land und Luft neutral benannt sind.
 Erwartet werden null Treffer außerhalb der Ausnahmeliste und null ungenutzte
 Ausnahmen; ein Begriff, der bleiben soll, braucht einen Eintrag **mit
 Begründung** — kein Ausblenden.
@@ -543,8 +543,8 @@ hier steht, ist nur, **was grün heißt**:
 
 | Mittel | grün heißt |
 |---|---|
-| `tools/wortliste/` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen |
-| `tools/vollstaendigkeit/` | auf der Schwelle oder darunter — **die Schwelle steht im Aufruf in `pruefablauf.json`** und wird hier nicht wiederholt |
+| `tools/quelltext/` `textprobe` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen |
+| `tools/quelltext/` `vollstaendigkeit` | auf der Schwelle oder darunter — **die Schwelle steht im Aufruf in `pruefablauf.json`** und wird hier nicht wiederholt |
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt` |
 | `tools/kettenaufrufe/` | 0/0 |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |

@@ -26,9 +26,9 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 >
 > | | |
 > |---|---|
-> | Stand | **21.09.2026 — PK-01, PK-02 UND PK-03 ERLEDIGT.** Offen bleibt P-PK-11 zur Hälfte: die Ausbaustufe `uhr` ist gebaut, aber nicht abgenommen; `android` ist es (Bau in 7m 19s, 0 Lint-Fehler, 670 Prüffälle / 0). **Halt nach PK-03 wie beauftragt** — PK-04 bis PK-06 erst auf ausdrückliches Wort, weil PK-04 sichtbare Texte in `server/` bereinigt. Umsetzung läuft auf `claude/serene-dijkstra-bcpbjy` (von `main` `08e032e`); das Konzept ist mit seiner Historie vom Konzeptzweig dorthin übernommen, ebenso der Inhalt von PR #70. Freigegeben vom Auftraggeber (Z5) ohne Änderungen; Z1, Z2, Z3 erledigt; P-PK-02 vorgezogen und erledigt. |
+> | Stand | **21.09.2026 — PK-01 bis PK-03 erledigt, PK-04 in Arbeit (Teilstück 1a von 5).** Offen bleibt P-PK-11 zur Hälfte: die Ausbaustufe `uhr` ist gebaut, aber nicht abgenommen; `android` ist es (Bau in 7m 19s, 0 Lint-Fehler, 670 Prüffälle / 0). **Halt nach PK-03 wie beauftragt** — PK-04 bis PK-06 erst auf ausdrückliches Wort, weil PK-04 sichtbare Texte in `server/` bereinigt. Umsetzung läuft auf `claude/serene-dijkstra-bcpbjy` (von `main` `08e032e`); das Konzept ist mit seiner Historie vom Konzeptzweig dorthin übernommen, ebenso der Inhalt von PR #70. Freigegeben vom Auftraggeber (Z5) ohne Änderungen; Z1, Z2, Z3 erledigt; P-PK-02 vorgezogen und erledigt. |
 > | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **vom Auftraggeber bestätigt am 21.09.2026**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. |
-> | Nächstes | **PK-04** — **erst nach ausdrücklichem Wort**; bis dahin **Halt**. **Zwei Vorgriffe liegen daneben, von zwei Instanzen:** PR #71 (PK-05, Auslöser von `pruefung.yml`, Backlog Nr. 269, Abnahme P-PK-17) ist am 21.09.2026 um 20:13 **gemergt**; PR #72 (PK-06, Stufe 2 auf drei Schritte und die Gruppe je Umgebung, Zweig `claude/pk-06-vorgriff-stufe2`, Backlog Nr. 268) liegt bei der Betreiberin. **PK-05 und PK-06 bleiben als Pakete offen** — beide Vorgriffe nehmen nur den dringenden Teil vorweg. **Parallelität:** Dieser Zweig läuft neben Schritt 15 und neben dem PK-06-Vorgriff und fasst `server/` nicht an. |
+> | Nächstes | **PK-04/1b** (Vollständigkeit ohne Symbolzählung, E-PK-16), dann 1c (Textprobe, E-PK-08), 2 (`tools/proben/`), 3 (`tools/erzeugen/`), 4 (Bedienprobe, Bilderlauf, LIESMICH-Form). **Teilstück 5 (Bereinigung in `server/`) kommt zuletzt** — Entscheidung des Auftraggebers vom 21.09.2026, weil Schritt 15 parallel in `server/` arbeitet. **Zwei Vorgriffe liegen daneben, von zwei Instanzen:** PR #71 (PK-05, Auslöser von `pruefung.yml`, Backlog Nr. 269, Abnahme P-PK-17) ist am 21.09.2026 um 20:13 **gemergt**; PR #72 (PK-06, Stufe 2 auf drei Schritte und die Gruppe je Umgebung, Zweig `claude/pk-06-vorgriff-stufe2`, Backlog Nr. 268) liegt bei der Betreiberin. **PK-05 und PK-06 bleiben als Pakete offen** — beide Vorgriffe nehmen nur den dringenden Teil vorweg. **Parallelität:** Dieser Zweig läuft neben Schritt 15 und neben dem PK-06-Vorgriff und fasst `server/` nicht an. |
 > | Kette II | wird nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
 > | Hakt | nichts. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); Stufe 2 hat ihn nach dem Merge bestätigt: Kreisläufe csv und edbak **104 s grün** gegen Staging mit **MySQL 8.4.10** (Lauf 35639445224, Versuch 2, Schritt 5) — im Lauf davor, ohne den Fix, derselbe Schritt nach **15 min 51 s rot**. Der Tag `web-v20.26.3` folgt darauf (Z2a). **Stufe 2 als Ganzes blieb rot** — Schritt 6 meldet sich mit einem Konto an, das es auf der neuen Anlage nicht gibt (F-PK-04). **Und das war nicht folgenlos:** Der Tag `web-v20.26.3` blieb am Schritt 7 des Produktionslaufs hängen (Lauf 35646453443, „Grüner Staging- und Stufe-1-Lauf auf diesem Stand?", rot nach 2 s, nichts ausgeliefert). Der Riegel hat gehalten, aber **die Auslieferung war blockiert** — deshalb der Vorgriff auf PK-06 (PR #72). **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
 >
@@ -40,7 +40,7 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > | PK-01 Regeldokumente | **erledigt 21.09.2026** | keine (nur `docs/`, `CLAUDE.md`, `.claude/`, `tools/`) | *wird beim Commit eingetragen* | `CLAUDE.md` 6: **58** Zeilen (vorher 166), Ziel <60 · Doppelstellen **1/1/1** normativ (Emulator, Tag-Rumpf, Wortliste) · Deny-Liste **2 von 2** gesperrt bei **3 von 3** Gegenproben · Wortliste **0/0/0** bei 100 Regeln, 100 gegriffen (mit den zwei neuen Dokumenten in Bereich c) · Vollständigkeit **398, auf der Schwelle** · Kettenaufrufe **43/0/0** · neu: `Pruefablauf.md` **561** Zeilen, `Sandbox-Setup.md` **306** — **Stand bei Abschluss von PK-01**; PK-02, PK-03 und der Nachtrag haben nachgetragen, heute sind es **620** und **384** (`wc -l`, 21.09.2026 abends) · Befunde **F-PK-07 bis -13** |
 > | PK-02 Sandbox-Setup | **erledigt 21.09.2026**, P-PK-11 offen | keine (nur `tools/`, `.claude/`, `docs/`) | *wird beim Commit eingetragen* | `aufbauen.sh web`: 10 von 10 Stücken, **3 von 3 Engines** (WebKit startete vorher nicht), 8 von 8 Umgebungswerten · `hochfahren.sh`: HTTP **200**, Fassung 20.26.2, 106 Einsätze, rc 0 · `plattform.sh alles`: **4 × 19/0** in **29,7 s** · Weg nach draußen: **6 von 6** angemeldet (3 Engines × örtlich und Prüfanlage), Dialog 6 von 6 geschlossen, ohne `ignoreHTTPSErrors` nach draußen · Befunde **F-PK-14 bis -17**, E-PK-32 |
 > | PK-03 Prüfstand-Befehl | **erledigt 21.09.2026** | keine (nur `tools/`, `docs/`) | *wird beim Commit eingetragen* | Stufen klein/neben/haupt: **26,8 / 25 / 22 s**, je 13 Proben, 0 rot, 0 nicht gemessen · `bericht.py --selbstprobe` **6 Lagen / 0** (5 rote, 1 grüne) · `auswahl.py --selbstprobe` **11 / 0** · Abdeckung **262 Dateien, 0 ohne Muster** · `kettenaufrufe` liest die Zuordnung mit: mit eingebautem Fehler **2 Befunde**, ohne **0** (82 Aufrufe, 0 Befunde, 18 ungeprüft) · Befund **F-PK-18** |
-> | PK-04 Werkzeuge zusammenlegen und bereinigen | offen | | | |
+> | PK-04 Werkzeuge zusammenlegen und bereinigen | **1a erledigt 21.09.2026**, 1b bis 5 offen | keine bisher (1a fasst `server/` nicht an); Teilstück 5 bringt die Korrekturstufe | | `tools/quelltext/`: **8 Ausgaben bytegleich** vor und nach dem Umzug · Läufer **8 von 8 grün**, Selbstproben **5 von 5** · Ordner **49 → 41** · LIESMICH **7 191 → 6 261** Zeilen · Prüfstand klein **13 grün / 0 rot / 0 nicht gemessen** · kettenaufrufe **82 / 0 / 18** |
 > | PK-05 Tor umbauen | offen | | | |
 > | PK-06 Staging verschlanken | offen — **trägt seit dem 21.09.2026 abends drei Nachträge**: F-PK-02 (Gruppe je Umgebung über den Lauf), F-PK-03 (Job-Pause, von derselben Gruppe miterledigt), F-PK-04 (Bilderlauf ohne Vorgabekonto), dazu F-PK-11 | | | Abnahme zusätzlich P-PK-18 und P-PK-19 |
 > | PK-07 Abschluss | offen | | | |
@@ -796,6 +796,31 @@ Konzepts eine Auskunft (1.2); deshalb vor der Freigabe.
   `pruefablauf.json`.
 
 ### PK-04 — Werkzeuge zusammenlegen und bereinigen
+
+**Fünf Teilstücke, eines nach dem anderen** (Gliederung vom 21.09.2026):
+
+| Nr. | Was | `server/` | Stand |
+|---|---|---|---|
+| **1a** | `tools/quelltext/` — acht Werkzeuge unter einen Läufer | nein | **erledigt** |
+| 1b | Vollständigkeit ohne Symbolzählung gegen null (E-PK-16) | nein | offen |
+| 1c | Textprobe mit fünf Regelklassen (E-PK-08) | nein | offen |
+| 2 | `tools/proben/` — 19 Werkzeuge unter einen Rahmen | nein | offen |
+| 3 | `tools/erzeugen/` — sechs Erzeuger | nein | offen |
+| 4 | Bedienprobe nach Seiten (E-PK-15), Bilderlauf abgestuft (E-PK-14), LIESMICH-Form | nein | offen |
+| **5** | Bereinigung in `server/` — Binnen-I, Prüfkonten, Symbole | **ja** | **zuletzt** |
+
+**Teilstück 5 kommt zuletzt**, entschieden vom Auftraggeber am 21.09.2026:
+Schritt 15 (Zentralisierung) arbeitet parallel in `server/`, und rund 190
+breit gestreute Textänderungen wären dort die größte Konfliktfläche, die es
+gibt. Die vier Teilstücke davor fassen `server/` nicht an.
+
+**Offen aus 1a, gehört zu Teilstück 5:** **19 Stellen in 9 Dateien unter
+`server/`** verweisen im Kommentar auf die alten Werkzeugordner
+(`tools/wortliste/`, `tools/vollstaendigkeit/` und weitere). Sie sind mit dem
+Umzug tot; berichtigt werden sie in Teilstück 5, weil jede Änderung an
+`server/` dorthin gehört. Die Dateien: `assets/style.css`, `assets/symbol.js`,
+`betrieb_server.php`, `install.php`, `jobs_lib.php`, `migration_lib.php`,
+`sicherungsziel_lib.php`, `stammdaten_ui.php`, `version.php`.
 
 - Die drei Sammelordner nach E-PK-24, Streichliste und Aufgehen nach 3.3,
   jede LIESMICH auf die Fünf-Abschnitte-Form (E-PK-25).

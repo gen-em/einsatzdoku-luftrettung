@@ -420,6 +420,55 @@ das ist der teuerste Einzelposten des ganzen Durchlaufs.
 
 ---
 
+## 5a. Messprotokoll PK-04/1a — `tools/quelltext/` (21.09.2026)
+
+**Die Abnahme ist die Bytegleichheit.** Ein Umzug darf keine Messung
+verändern; deshalb sind die Ausgaben aller acht Prüfungen **vor** dem Umzug
+abgelegt und **nach** dem Umzug dagegen gehalten worden.
+
+| Was | Zahl |
+|---|---|
+| Ausgaben vorher gegen nachher | **8 von 8 bytegleich, 0 abweichend** |
+| Läufer `pruefen.sh alle` | **8 von 8 Prüfungen grün**, rc 0 |
+| Läufer `--selbstprobe` | **5 von 5 grün** (installweiche 8, sitzungshaertung 8, csp 8, jobregister 9, migrationsregister 4 = **37 Fälle**) |
+| Werkzeugordner | **49 → 41** (Ziel 15; sieben zusammengelegt, zwei gestrichen, einer neu) |
+| LIESMICH-Zeilen | **7 191 → 6 261** in 40 Dateien (Ziel unter 1 000) |
+| `tools/quelltext/LIESMICH.md` | **40 Zeilen, 5 Abschnitte** (E-PK-25 ist die Obergrenze, nicht ein Richtwert) |
+| `kettenaufrufe` | **82 Aufrufe, 0 Befunde, 18 ungeprüft** |
+| Prüfstand `--stufe klein` | **13 grün, 0 rot, 0 nicht gemessen**, rc 0 |
+
+**Gegenprobe zum Läufer, damit „8 von 8 grün" ein Beleg ist und keine
+Behauptung:** Die Schwelle in `pruefablauf.json` von 398 auf 397 gesetzt →
+`alle` meldet **7 von 8 grün, rc 1** und nennt den Grund („UEBER DER
+SCHWELLE: 398 statt hoechstens 397"). Danach zurückgesetzt → wieder 8 von 8,
+rc 0. Damit ist belegt, dass der Läufer die Schwelle **liest** statt sie zu
+führen — sie steht an einer Stelle (CLAUDE.md 6).
+
+**Zwei Dinge, die der Umzug fast kaputtgemacht hätte, und eines, das er
+aufgedeckt hat:**
+
+1. **`vollstaendigkeit.py` las `zusagen.md` über einen zweiten Weg**
+   (`listenname='zusagen.md'` als Vorgabewert einer Funktion, nicht über die
+   Konstante). Der erste Vergleich war deshalb an einer Stelle **nicht**
+   bytegleich: „native Dialoge 0" wurde zu „2". Gefunden durch den Vergleich,
+   nicht durch Nachdenken — genau dafür ist er da.
+2. **`referenzdatensatz/quelldaten/pruefen.py` las die Sperrliste mit
+   `if sperr.exists():`.** Nach dem Umzug hätte die Datei nicht mehr dort
+   gelegen, und die Prüfung hätte sich **stillschweigend übersprungen** und
+   grün gemeldet — Grundsatz 7, und diesmal ausgelöst von meinem eigenen
+   Umzug. Pfad nachgezogen **und** der stille Ausfall beseitigt: Fehlt die
+   Liste, ist es jetzt ein Befund.
+3. **`s5-anker` war längst rot** (8 Anker nicht gefunden, rc 1) und wurde von
+   nichts aufgerufen. Er stand ohnehin auf der Streichliste; gestrichen,
+   zusammen mit `maskierungs-probe`.
+
+**Was noch nicht stimmt, und zwar benannt:** **19 Stellen in 9 Dateien unter
+`server/`** verweisen im Kommentar auf die alten Ordner. Sie sind tot. Sie
+werden in **Teilstück 5** berichtigt, weil jede Änderung an `server/` dorthin
+gehört (Entscheidung des Auftraggebers).
+
+---
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in

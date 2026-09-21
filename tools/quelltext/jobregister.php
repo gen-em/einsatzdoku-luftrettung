@@ -33,8 +33,8 @@ declare(strict_types=1);
  * es keinen geben soll.
  *
  * Aufruf:
- *   php tools/jobregister/pruefen.php
- *   php tools/jobregister/pruefen.php --selbstprobe
+ *   php tools/quelltext/jobregister.php
+ *   php tools/quelltext/jobregister.php --selbstprobe
  *
  * Rueckgabewert: 0 = Register und Code stimmen ueberein · 1 = Befund ·
  *                2 = eine der beiden Dateien fehlt oder ist unlesbar.

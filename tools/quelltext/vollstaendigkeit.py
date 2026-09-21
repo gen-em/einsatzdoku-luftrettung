@@ -269,7 +269,7 @@ def liste_lesen(name, spalten=1):
 
 # =========================================================== 1. Klassen
 def pruefung_klassen(bericht):
-    vorher_pfad = os.path.join(HIER, 'vorher-klassen.txt')
+    vorher_pfad = os.path.join(HIER, 'vollstaendigkeit-vorher-klassen.txt')
     if not os.path.exists(vorher_pfad):
         bericht.fehler('1 Klassen', 'vorher-klassen.txt fehlt — erst `pruefen.py --vorher` laufen lassen.')
         return
@@ -280,7 +280,7 @@ def pruefung_klassen(bericht):
             vorher.add(z)
 
     jetzt_css = css_klassen(lies(CSS)) if os.path.exists(CSS) else set()
-    streich_zeilen = liste_lesen('streichliste.md', 3)
+    streich_zeilen = liste_lesen('vollstaendigkeit-streichliste.md', 3)
     streich = {z[0].strip('`') for z in streich_zeilen}
     # ZWEI SORTEN AUF EINER LISTE (O11). Die meisten Eintraege sind Klassen,
     # die aus dem Markup VERSCHWINDEN — ihr Vorkommen dort waere ein Rest.
@@ -315,7 +315,7 @@ def pruefung_klassen(bericht):
     #   [bleibt]  begruendet ohne Regel  -> kein Befund, nur eine Zahl
     #   [offen]   Frage noch offen       -> Befund, aber unter eigener
     #                                       Ueberschrift
-    or_zeilen = liste_lesen('ohne-regel.md', 2)
+    or_zeilen = liste_lesen('vollstaendigkeit-ohne-regel.md', 2)
     or_bleibt = {z[0].strip('`') for z in or_zeilen
                  if z[1].lstrip().startswith('[bleibt]')}
     or_offen = {z[0].strip('`') for z in or_zeilen
@@ -389,7 +389,7 @@ def pruefung_werte(bericht):
     # Pixelmasse: alles ausser 0. Was bleiben darf, steht mit Grund in
     # ausnahmen.md — nach Eigenschaftsnamen, nicht nach Zeilennummer, damit
     # die Liste eine Umsortierung des Stylesheets ueberlebt.
-    frei = {z[0].strip('`') for z in liste_lesen('ausnahmen.md', 2)}
+    frei = {z[0].strip('`') for z in liste_lesen('vollstaendigkeit-ausnahmen.md', 2)}
     px = []
     for m in re.finditer(r'(?<![\w-])([a-z-]+)\s*:\s*([^;{}]*?\d+(?:\.\d+)?px[^;{}]*)', css):
         eig, wert = m.group(1), m.group(2).strip()
@@ -413,7 +413,7 @@ def pruefung_werte(bericht):
                 stil.append('%s:%d  %s' % (kurz(pfad), zeile_von(t, m.start()),
                                            m.group(2)[:60].replace('\n', ' ')))
     bericht.befund('2 Werte', 'style="..."-Attribute in PHP/JS', stil,
-                   frei=[z for z in liste_lesen('ausnahmen.md', 2) if z[0] == 'style'])
+                   frei=[z for z in liste_lesen('vollstaendigkeit-ausnahmen.md', 2) if z[0] == 'style'])
 
 
 # =========================================================== 3. Symbole
@@ -686,7 +686,7 @@ def zusagen_treffer(muster, endungen=('.php', '.js')):
             yield kurz(pfad), zeile_von(ohne, m.start()), m.group(0).strip()
 
 
-def zusagen_werten(bericht, name, treffer, listenname='zusagen.md'):
+def zusagen_werten(bericht, name, treffer, listenname='vollstaendigkeit-zusagen.md'):
     """Treffer gegen die Ausnahmeliste halten -- in beide Richtungen.
 
     EINE AUSNAHME, DIE NICHTS MEHR ERKLAERT, IST EIN BEFUND. Sonst verwahrlost
@@ -850,7 +850,7 @@ class Bericht:
 def vorher_sichern():
     """Klassenliste des ALTEN Stylesheets sichern (einmalig, vor dem Umbau)."""
     namen = sorted(css_klassen(lies(CSS)))
-    pfad = os.path.join(HIER, 'vorher-klassen.txt')
+    pfad = os.path.join(HIER, 'vollstaendigkeit-vorher-klassen.txt')
     with io.open(pfad, 'w', encoding='utf-8') as f:
         f.write('# Klassen des Stylesheets VOR dem Umbau in P3 (O1, Schritt 1).\n')
         f.write('# Sollmenge der Pruefung 1: jede dieser Klassen hat am Ende\n')

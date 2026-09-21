@@ -453,7 +453,8 @@ nicht später, nicht „in P6":
   in `docs/konzepte/erledigt/Konzept-S1-Sicherung-Import.md` und
   `…/Konzept-S2-Mengen-Spuren-Sicherung.md` (Protokoll, nicht mehr
   fortgeschrieben).
-- **Begriffe und Texte:** `tools/wortliste/` laufen lassen; Handbuch an
+- **Begriffe und Texte:** `bash tools/quelltext/pruefen.sh textprobe`
+  laufen lassen; Handbuch an
   der betroffenen Stelle nachziehen.
 - **Fremdbestandteile** (Bibliotheken, Schriften, Symbole, Dienste):
   `docs/Lizenzen.md`.

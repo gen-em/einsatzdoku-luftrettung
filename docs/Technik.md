@@ -553,11 +553,6 @@ Daten erst nach Server-Bestätigung.
 │   │                      verfällt, und dass der Huckepack-Weg wenig und
 │   │                      selten trägt. Legt eigene Waisen an und räumt hinter
 │   │                      sich auf — ändert am Bestand nichts (s. LIESMICH.md)
-│   ├── jobregister/       hält die Tabelle „Der Katalog" in 4.97a gegen
-│   │                      `jobs_lib.php`: Jobnamen, Zahl der Aufräumschritte
-│   │                      und deren Namen. Mit dem Tokenizer und OHNE
-│   │                      Installation, deshalb in Stufe 1 (Backlog Nr. 208,
-│   │                      Schritt 16; s. LIESMICH.md)
 │   ├── kopplungsprobe/    zwei Proben. `probe.php` prüft `pair.php` über
 │   │                      ECHTES HTTP (S5, Web 13.0.0): Zustände, Frist,
 │   │                      Gerätelimit, Antwortgleichheit, drei Töpfe,
@@ -599,13 +594,6 @@ Daten erst nach Server-Bestätigung.
 │   │                      dorthin keinen Netzzugang, und ohne feste
 │   │                      Trefferzahl wäre jeder Sollwert geraten. Braucht
 │   │                      die lokale Installation (s. LIESMICH.md)
-│   ├── installweiche/     traegt die Versionspruefung am Kopf von
-│   │                      `install.php` noch? Misst mit dem Tokenizer, ob die
-│   │                      Datei PHP-7-lesbar geblieben ist — eine einzige
-│   │                      `match`-Anweisung macht aus der Meldung „PHP ist zu
-│   │                      alt" einen Parse Error. Nennt bei jedem Lauf ihre
-│   │                      eigenen Grenzen; mit `--selbstprobe` (8 Faelle,
-│   │                      davon 4 die NICHT anschlagen duerfen)
 │   ├── schemaprobe/       läuft `schema.sql` und der Migrationskatalog auf
 │   │                      der Datenbank, gegen die sie laufen sollen? Vier
 │   │                      Installationsfälle, 19 Erwartungen, gegen eine
@@ -617,24 +605,10 @@ Daten erst nach Server-Bestätigung.
 │   │                      und MariaDB 10.6: Der Stand vor Web 20.25.0 legt
 │   │                      auf MariaDB 42 Tabellen an und scheitert auf MySQL
 │   │                      mit 1064 (Nr. 238). Mit `--selbstprobe`
-│   ├── migrationsregister/ steht in `schema.sql` und `migration_lib.php`
-│   │                      dasselbe? Sieben Prüfungen über zwei Dateien —
-│   │                      Kennungen beidseits, Reihenfolge nach Datum, was
-│   │                      eine Migration anlegt und löscht. **Ohne
-│   │                      Installation**: keine Datenbank, keine
-│   │                      `config.php`, kein Netz; deshalb Stufe 1 des
-│   │                      Prüftors. Liest den Katalog über `token_get_all()`
-│   │                      statt ihn zu laden — und sagt in ihrer LIESMICH,
-│   │                      was sie damit NICHT sieht (DDL aus eingesetzten
-│   │                      Namen). Mit `--selbstprobe`
 │   ├── ratenprobe/        Sperrleiter, Verfall, zwei Schwellen, Verlangsamung,
 │   │                      Sammelmail und „Sperre aufheben" (P5a/AP6). Greift
 │   │                      die Bibliothek unmittelbar an und datiert stufe_bis
 │   │                      zurueck, statt 24 h zu warten (s. LIESMICH.md)
-│   ├── sitzungshaertung/  steht vor jedem session_start() die Haertung
-│   │                      `session.use_strict_mode`? (P5a/AP4a, Nr. 205).
-│   │                      Tokenizer statt grep; Selbstprobe 8 Faelle. Laeuft
-│   │                      in Stufe 1 (s. LIESMICH.md)
 │   ├── cspprobe/          traegt die Content-Security-Policy noch? (P5a/AP4)
 │   │                      Fuenf Regeln: Inline-`<script>` ohne Nonce,
 │   │                      `<style>`-Block, Ereignis-Attribut,
@@ -686,17 +660,6 @@ Daten erst nach Server-Bestätigung.
 │   │                      (`integritaet.yml`); `--selbstprobe` beantwortet
 │   │                      zuerst, ob sie eine Abweichung überhaupt erkennt
 │   │                      (Backlog Nr. 140, SP-6)
-│   ├── linkprobe/         hält jede Adresse `<seite>.php?<name>=` unter
-│   │                      `server/` (PHP und JavaScript) gegen die Parameter,
-│   │                      die die Zielseite tatsächlich liest — 99 Zielseiten,
-│   │                      132 Verweise. Entstanden aus Backlog Nr. 148: Der
-│   │                      Bilderlauf fotografiert Warnungen und klickt keine
-│   │                      Knöpfe. Bekannte, noch nicht behobene Abweichungen
-│   │                      stehen mit Backlog-Nummer in `ausnahmen.md`; eine
-│   │                      tote Zeile dort macht den Lauf rot. Nur Python 3,
-│   │                      keine Installation nötig (s. LIESMICH.md)
-│   ├── maskierungs-probe/ Vorher/Nachher-Probe zur Maskierung der
-│   │                      Einsatztabelle (Backlog Nr. 22, s. LIESMICH.md)
 │   ├── messstand/         stellt ein Konto mit 5000 Einsätzen her — aus der
 │   │                      Referenz-Backup vervielfältigt und über den
 │   │                      REGULÄREN Wiederherstellungsweg eingespielt — und
@@ -705,6 +668,13 @@ Daten erst nach Server-Bestätigung.
 │   │                      Tabellengrößen. Browserprobe unter CPU-Drossel 6×.
 │   │                      Riegel: füllt nur ein Konto mit dem Präfix
 │   │                      „messstand" (s. LIESMICH.md)
+│   ├── quelltext/         acht Prüfungen, die nur Quelltext lesen und im
+│   │                      Tor laufen (PK-04, E-PK-24): installweiche,
+│   │                      sitzungshaertung, csp, jobregister,
+│   │                      migrationsregister, linkprobe,
+│   │                      vollstaendigkeit, textprobe. Ein Läufer
+│   │                      (`pruefen.sh <name>|alle|--selbstprobe`), ein
+│   │                      LIESMICH. Vorher acht Ordner.
 │   ├── referenzdatensatz/ erfundener Beispielbestand (21 Diensttage,
 │   │   │                  106 Einsätze) — Demo-Konto UND Regressionsreferenz
 │   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu die zwei
@@ -754,12 +724,6 @@ Daten erst nach Server-Bestätigung.
 │   │                      Rechtstexte: 81 Proben in acht Gruppen plus eine
 │   │                      Positivlisten-Schranke ueber JEDE erzeugte Ausgabe
 │   │                      (s. LIESMICH.md)
-│   ├── s5-anker/          hält die Fundstellen des S5-Konzepts am INHALT fest
-│   │                      statt an der Zeilennummer: 83 Muster, je Datei und
-│   │                      Sollzeile. Ein Lauf nach einem fremden Paket sagt,
-│   │                      welche Stelle gewandert ist und welche verschwunden
-│   │                      — Letzteres heißt: Konzeptabsatz neu lesen. Wird mit
-│   │                      dem Abschluss von S5 gelöscht (s. LIESMICH.md)
 │   ├── screenshots/       nimmt alle Seiten in acht Breiten von 360 bis 1920 px
 │   │                      auf, je Seite ein Kontaktbogen; misst dabei
 │   │                      waagerechten Überlauf, Konsolenfehler, Knopfhöhen
@@ -815,20 +779,6 @@ Daten erst nach Server-Bestätigung.
 │   ├── uhr-pruefstand/    baut SDK und Simulator auf einem nackten Linux-
 │   │                      Rechner auf, übersetzt die Uhr-App und startet
 │   │                      sie ohne Fensteroberfläche (s. Abschnitt 5.2b)
-│   ├── vollstaendigkeit/  prüft, ob beim Redesign etwas verlorengegangen ist
-│   │                      (jede Klasse des alten Stylesheets hat eine Regel
-│   │                      oder steht mit Begründung auf der Streichliste) und
-│   │                      ob jeder Wert in :root steht. Vier Hilfslisten mit
-│   │                      Begründungspflicht: streichliste.md, ausnahmen.md,
-│   │                      ohne-regel.md, zusagen.md (s. LIESMICH.md). Seit
-│   │                      Web 19.3.1 zählt Gruppe 5 „Zusagen" DREI Regeln
-│   │                      nach, die vorher nur im Kopf standen: native
-│   │                      Dialoge und Seite ohne Gerüst (Backlog Nr. 47, 58)
-│   │                      sowie „keine fremde Quelle zur Laufzeit" (Nr. 179)
-│   │                      — Letztere meldet jede absolute Adresse in eigenem
-│   │                      Quelltext; die 15 Ausnahmen nennen je Eintrag die
-│   │                      Art. Am Quelltext, nicht zur Laufzeit: eine CSP
-│   │                      schickt die Anwendung nicht (Nr. 181)
 │   ├── freigabeprobe/    der Freigabeweg MIT Wiederherstellungsschlüssel
 │   │                      (E20): Kasten erscheint, falscher Schlüssel wird
 │   │                      abgewiesen, richtiger schlüsselt um. Die Krypto
@@ -841,16 +791,12 @@ Daten erst nach Server-Bestätigung.
 │   │                      der Auftrag „Alle sichern" und der Rückweg bei
 │   │                      verlorenem Server-Anteil (E-S1-04/19, S2/AP6, S10;
 │   │                      Backlog Nr. 31/35; s. LIESMICH.md)
-│   ├── wegwerfdomains/    holt die Liste der Wegwerf-Mailanbieter, misst den
-│   │                      Unterschied und schreibt sie erst auf Zuruf
-│   │                      (Backlog Nr. 230, Web 20.22.0; Runbook, Abschnitt 7).
-│   │                      Ein Handgriff und kein Automatismus — die Zusage
-│   │                      „keine fremde Quelle zur Laufzeit" kennt keine
-│   │                      Ausnahme (s. LIESMICH.md)
-│   └── wortliste/         zählt nach, ob sichtbare Texte und normative
-│                          Dokumentation neutral von Land und Luft sprechen:
-│                          Sperrliste, Ausnahmeliste mit Begründungen, drei
-│                          Zahlen je Bereich (s. LIESMICH.md)
+│   └── wegwerfdomains/    holt die Liste der Wegwerf-Mailanbieter, misst den
+│                          Unterschied und schreibt sie erst auf Zuruf
+│                          (Backlog Nr. 230, Web 20.22.0; Runbook, Abschnitt 7).
+│                          Ein Handgriff und kein Automatismus — die Zusage
+│                          „keine fremde Quelle zur Laufzeit" kennt keine
+│                          Ausnahme (s. LIESMICH.md)
 ├── .claude/hooks/session-start.sh  ruft beim Containerstart
 │                          tools/sandbox/aufbauen.sh web — er beschafft nicht
 │                          mehr selbst (PK-02). STARTET nichts, und schlägt
@@ -3396,7 +3342,7 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 |---|---|---|
 | `mail` | nein | Nachrichten, deren erster Versuch scheiterte — fünf Versuche über 24 Stunden, danach steht die Nachricht als unzustellbar auf der Statusseite (4.99). Steht **ganz vorn** im Katalog: `jobs_lauf()` arbeitet ihn der Reihe nach ab, und am Huckepack-Weg sind 3 s für alle Jobs zusammen — ein Job dahinter bekäme dort regelmäßig nichts |
 | `konto_loeschung` | nein | Konten, deren 30-Tage-Karenz abgelaufen ist, endgültig löschen (P5b/AP5, E-P5b-16) — **höchstens fünf je Lauf**, weil eine Löschung die Spuren von Hand räumt, einen Ordner im Dateisystem löscht und über vierzehn Tabellen kaskadiert. Steht weit vorn: im Regelfall eine Abfrage über einen Index, und wenn er etwas zu tun hat, ist es das, worauf jemand ein Recht hat |
-| `aufraeumen` | ja, höchstens 1×/Kalendertag | **siebzehn Schritte** — Kopplungssitzungen, **Sitzungsdateien** (Schritt 16, E-SA-06 — der einzige Schritt, der das Dateisystem anfasst; er räumt `server/.sitzungen/` und nur `sess_*`), Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), Mengen je Konto, Verwaiste Kontomarken (P5b/AP6), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speicher messen, Warnschwellen melden. **Maßgeblich ist `job_aufraeumen_schritte()`, nicht diese Zeile** — und seit Web 20.26.0 wird das nachgezählt statt zugesagt (`tools/jobregister/`, Stufe 1). Die Namen hier sind deshalb die Schlüssel aus dem Code, Zeichen für Zeichen |
+| `aufraeumen` | ja, höchstens 1×/Kalendertag | **siebzehn Schritte** — Kopplungssitzungen, **Sitzungsdateien** (Schritt 16, E-SA-06 — der einzige Schritt, der das Dateisystem anfasst; er räumt `server/.sitzungen/` und nur `sess_*`), Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), Mengen je Konto, Verwaiste Kontomarken (P5b/AP6), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speicher messen, Warnschwellen melden. **Maßgeblich ist `job_aufraeumen_schritte()`, nicht diese Zeile** — und seit Web 20.26.0 wird das nachgezählt statt zugesagt (`tools/quelltext/` `jobregister`, Stufe 1). Die Namen hier sind deshalb die Schlüssel aus dem Code, Zeichen für Zeichen |
 | `konto_verfall` | nein | Registrierungen, die nicht bestätigt wurden, und Freischaltfristen, die abgelaufen sind (P5b) — **höchstens fünf je Lauf**, aus demselben Grund wie beim Löschjob darüber |
 | `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
 | `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
@@ -3422,7 +3368,7 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 > Abstand wieder. Deshalb jetzt zweierlei: Die **sichtbare** Beschreibung
 > unter Betrieb → Hintergrundjobs wird aus `array_keys(job_aufraeumen_schritte())`
 > **erzeugt** und kann nicht mehr altern. Und diese Tabelle wird
-> **nachgezählt** — `tools/jobregister/pruefen.php` hält Jobnamen, Schrittzahl
+> **nachgezählt** — `tools/quelltext/jobregister.php` hält Jobnamen, Schrittzahl
 > und Schrittnamen gegen den Quelltext, mit dem Tokenizer und ohne
 > Installation. Maßgeblich ist weiterhin der Code; neu ist, dass ein
 > Auseinanderlaufen auffällt, statt bemerkt werden zu müssen.
@@ -7956,7 +7902,7 @@ ausführt. Eine einzige `match`-Anweisung weiter unten, und die Besucherin auf
 PHP 8.0 bekommt statt der Erklärung einen Parse Error.
 
 `install.php` bleibt deshalb **PHP-7-lesbar**, und Stufe 1 des Prüftors zählt
-das mit dem Tokenizer nach (`tools/installweiche/`) — für `install.php`
+das mit dem Tokenizer nach (`tools/quelltext/` `installweiche`) — für `install.php`
 **und** für `server/php_mindest.php`. Die Prüfung ist nicht vollständig —
 benannte Argumente und Eigenschaftenbeförderung sieht sie nicht —, und sie
 sagt das bei jedem Lauf selbst.
@@ -8060,7 +8006,7 @@ auch wenn es sie nie vergeben hat — Session-Fixation. Sie stand bis dahin an
 genau **zwei** Stellen (`install.php`, `wiederherstellen.php`), ausgerechnet
 den beiden Wegen, die **keine** Anmeldesitzung tragen.
 
-`tools/sitzungshaertung/` zählt in Stufe 1 nach, mit dem Tokenizer: **7 echte
+`tools/quelltext/` `sitzungshaertung` zählt in Stufe 1 nach, mit dem Tokenizer: **7 echte
 `session_start()`-Aufrufe, 0 ohne Härtung**, Selbstprobe 8/8. Was sie *nicht*
 messen kann, ist ob die Einstellung **wirkt** — das misst nur eine laufende
 Installation (Befehl in der dortigen `LIESMICH.md`).
@@ -8233,7 +8179,7 @@ Protokolleintrag, keine rote Seite. Die Probe zählt nach: fünf Regeln
 (Inline-Skript ohne Nonce, `<style>`-Block, Ereignis-Attribut,
 `javascript:`-Adresse, fremde Herkunft), gemessen mit dem Tokenizer über ein
 **Markup-Bild** der Datei. Anleitung und Grenzen in
-`tools/cspprobe/LIESMICH.md`; sie läuft auch in Stufe 1 der
+`tools/quelltext/LIESMICH.md`; sie läuft auch in Stufe 1 der
 Auslieferungskette.
 
 ## 5d. Der Name dieser Installation (ab Web 20.8.0, P5a/AP5)
@@ -8983,31 +8929,31 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 | Fassungen nennen (Web, Uhr, Android) | drei Nummern in der Zusammenfassung — **kein** Sollwert, eine Auskunft |
 | Welche Bereiche sind berührt? | `android=ja\|nein`, `uhr=ja\|nein` — eine Auskunft, kein Sollwert (siehe unten) |
 | `php -l` über `server/` und `tools/` | 0 Fehler |
-| `tools/wortliste/wortliste.py` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen |
-| `tools/vollstaendigkeit/pruefen.py --hoechstens N` | **genau N** — die Schwelle, nicht null (heute **398**; die Zahl steht in `pruefung.yml`, nicht hier — dieser Eintrag stand bis Web 20.21.1 auf 366, während die Kette längst mit 377 lief) |
+| `bash tools/quelltext/pruefen.sh textprobe` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen |
+| `bash tools/quelltext/pruefen.sh vollstaendigkeit --hoechstens N` | **genau N** — die Schwelle, nicht null (die Zahl steht in `tools/pruefstand/pruefablauf.json`, nicht hier — dieser Eintrag stand bis Web 20.21.1 auf 366, während die Kette längst mit 377 lief) |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft, Selbstprobe 10/10 |
 | `tools/kette/tor.py --selbstprobe` | 11 erfüllt, 0 offen |
 | Backlog-Nummern (`grep … uniq -d`) | leer |
-| `tools/installweiche/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
-| `tools/migrationsregister/pruefen.php` | 0 Befunde, Selbstprobe 4/4 |
+| `bash tools/quelltext/pruefen.sh installweiche` | 0 Befunde, Selbstprobe 8/8 |
+| `bash tools/quelltext/pruefen.sh migrationsregister` | 0 Befunde, Selbstprobe 4/4 |
 | `tools/schemaprobe/probe.php` (eigener Auftrag, Matrix) | **19 Erwartungen, 0 Fehlschläge** je Fassung — MySQL 8.4.0 und MariaDB 10.6; Selbstprobe 4/4 |
-| `tools/cspprobe/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
-| `tools/sitzungshaertung/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
-| `tools/jobregister/pruefen.php` | 0 Befunde, Selbstprobe 9/9 (Schritt 16, Nr. 208) |
+| `bash tools/quelltext/pruefen.sh csp` | 0 Befunde, Selbstprobe 8/8 |
+| `bash tools/quelltext/pruefen.sh sitzungshaertung` | 0 Befunde, Selbstprobe 8/8 |
+| `bash tools/quelltext/pruefen.sh jobregister` | 0 Befunde, Selbstprobe 9/9 (Schritt 16, Nr. 208) |
 | Java 21 (`actions/setup-java`) | Temurin 21 für den Android-Schritt — **nur wenn `android/` berührt ist**; eine Festlegung, kein Sollwert |
 | `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge — **nur wenn `android/` berührt ist** |
 | Berichte des Android-Fehlschlags (`actions/upload-artifact`) | Artefakt `android-berichte` — **nur bei `failure()`**; bei Grün nichts |
 | Uhr Stufe I (`pruefstand.sh aufbau-uebersetzen`) | übersetzt für alle Zielgeräte — **nur wenn `watch/` oder `tools/uhr-pruefstand/` berührt ist** |
 
-> **`tools/jobregister/` liegt vor und hängt noch nicht in `pruefung.yml`**
+> **`jobregister` liegt vor und hängt noch nicht in `pruefung.yml`**
 > (Schritt 16, Backlog Nr. 208). Schritt 16 fasst `.github/` nicht an — die
 > Änderung ist bei Kette II angemeldet, zusammen mit dem achten
 > Schutzlistenpfad. Einzuhängen ist sie neben `sitzungshaertung`, mit zwei
 > Zeilen und ohne Bedingung:
 >
->     php tools/jobregister/pruefen.php --selbstprobe
->     php tools/jobregister/pruefen.php
+>     php tools/quelltext/jobregister.php --selbstprobe
+>     bash tools/quelltext/pruefen.sh jobregister
 >
 > **Bis dahin ist der Punkt nur halb erledigt**: Die erzeugte Beschreibung im
 > Katalog kann nicht mehr altern, das Register in diesem Dokument schon —

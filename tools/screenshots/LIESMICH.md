@@ -1,7 +1,7 @@
 # Bildaufnahme aller Seiten in acht Breiten
 
 Entstanden in P3 (Konzept, Anlage F). Zusammen mit
-`tools/vollstaendigkeit/` ersetzt sie den Stilvergleich für die Dauer der
+`tools/quelltext/ (vollstaendigkeit)` ersetzt sie den Stilvergleich für die Dauer der
 Phase.
 
 > ## Drei Engines, und wann welche fährt
@@ -474,7 +474,7 @@ Fehler im Bericht statt als grüne Zahl.
 - **Ein Verbindungsfehler auf einer fremden Adresse bleibt stumm.** Die dritte
   Rauschklasse verwirft ihn — sie kann nicht wissen, ob die Adresse überhaupt
   abgerufen werden durfte. Hier stand zuerst, das messe
-  `tools/vollstaendigkeit/`; **als es hier stand, war das falsch** — dessen
+  `tools/quelltext/ (vollstaendigkeit)`; **als es hier stand, war das falsch** — dessen
   Gruppe 5 kannte zwei Zusagen, und kein Werkzeug zählte „keine fremde Quelle
   zur Laufzeit" nach. **Seit dem 13.09.2026 tut es das** (Backlog Nr. 179,
   Prüfung `fremde Quelle`, 15 Ausnahmen mit Grund) — aber **am Quelltext**,

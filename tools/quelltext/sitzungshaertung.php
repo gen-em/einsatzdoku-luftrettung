@@ -5,7 +5,7 @@ declare(strict_types=1);
  * SITZUNGSHAERTUNG — steht vor jedem `session_start()` die Härtung?
  * ===========================================================================
  *
- * Aufruf:  php tools/sitzungshaertung/pruefen.php [--selbstprobe]
+ * Aufruf:  php tools/quelltext/sitzungshaertung.php [--selbstprobe]
  * Rückgabe: 0 = keine Befunde · 1 = Befunde · 2 = die Probe kam nicht los
  *
  * WOGEGEN. Bis Web 20.9.1 stand `ini_set('session.use_strict_mode', '1')` an

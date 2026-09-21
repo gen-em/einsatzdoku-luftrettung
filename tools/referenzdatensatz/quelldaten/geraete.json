@@ -5,7 +5,7 @@
 
   "$warum_teilenummer": "Die Uhr kennt ihren Modellnamen nicht und schickt ihre Teilenummer (JSON-Vertrag 1a.4); der Server loest sie in `geraetemodelle.php` auf. Die hier eingetragene Nummer ist eine ECHTE aus dieser Tabelle -- eine erfundene liefe in den Rueckfall `geraet_teil` und zeigte im Demo-Konto eine Nummer statt eines Modells, also gerade nicht das, was R64 belegen soll.",
 
-  "$warum_beschriftung": "Die Beschriftung entsteht NICHT beim Koppeln: `pair.php` setzt beim Ja `label = geraet_vorgabename(art)`, also schlicht `Uhr` oder `Handy`. Die sprechenden Namen kommen danach ueber `einstellungen.php action=rename`. Sie sind sichtbarer Text des Demo-Kontos auf dem Produktivserver und laufen deshalb seit R64/AP4 durch `tools/wortliste/` (Bereich f) -- der frueher hier stehende Name `Uhr Luftrettung (Referenz)` trug ein Sperrwort, und niemand hat es je gemessen.",
+  "$warum_beschriftung": "Die Beschriftung entsteht NICHT beim Koppeln: `pair.php` setzt beim Ja `label = geraet_vorgabename(art)`, also schlicht `Uhr` oder `Handy`. Die sprechenden Namen kommen danach ueber `einstellungen.php action=rename`. Sie sind sichtbarer Text des Demo-Kontos auf dem Produktivserver und laufen deshalb seit R64/AP4 durch `tools/quelltext/` (textprobe, Bereich f) -- der frueher hier stehende Name `Uhr Luftrettung (Referenz)` trug ein Sperrwort, und niemand hat es je gemessen.",
 
   "geraete": [
     {

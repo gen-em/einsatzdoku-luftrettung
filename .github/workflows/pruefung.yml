@@ -265,7 +265,7 @@ jobs:
           # in dem man sie lesen will. Deshalb der Umweg ueber `$rc`: erst
           # schreiben, dann scheitern.
           rc=0
-          python3 tools/wortliste/wortliste.py > /tmp/wortliste.txt 2>&1 || rc=$?
+          bash tools/quelltext/pruefen.sh textprobe > /tmp/wortliste.txt 2>&1 || rc=$?
           cat /tmp/wortliste.txt
           {
             echo '```'
@@ -355,7 +355,7 @@ jobs:
         #
         # Die drei anderen Gruppen stehen unveraendert: 50 ohne Gegenstueck,
         # 10 style="...", 8 Emoji — dieses Paket hat keine davon hinzugefuegt.
-        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 398
+        run: bash tools/quelltext/pruefen.sh vollstaendigkeit --hoechstens 398
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py
@@ -591,15 +591,15 @@ jobs:
         # Besucherin auf PHP 8.0 bekommt statt der Erklaerung einen Parse
         # Error. Gemessen wird mit dem Tokenizer, nicht mit `grep`.
         run: |
-          php tools/installweiche/pruefen.php --selbstprobe
-          php tools/installweiche/pruefen.php
+          php tools/quelltext/installweiche.php --selbstprobe
+          bash tools/quelltext/pruefen.sh installweiche
 
       - name: Migrationsregister — schema.sql gegen migration_lib.php
         # Selbstprobe zuerst: Ein grüner Lauf einer Prüfung, die immer grün
         # meldet, sieht genauso aus wie einer, der nichts gefunden hat.
         run: |
-          php tools/migrationsregister/pruefen.php --selbstprobe
-          php tools/migrationsregister/pruefen.php
+          php tools/quelltext/migrationsregister.php --selbstprobe
+          bash tools/quelltext/pruefen.sh migrationsregister
 
       - name: CSP — Inline-Skripte ohne Nonce
         # Seit Web 20.7.0 gilt `script-src 'self' 'nonce-…'` ohne
@@ -610,8 +610,8 @@ jobs:
         # `<script src="<?= asset(…) ?>">` in drei Stücke zerfällt und ein
         # naives `grep` deshalb null von 108 Stellen fände.
         run: |
-          php tools/cspprobe/pruefen.php --selbstprobe
-          php tools/cspprobe/pruefen.php
+          php tools/quelltext/csp.php --selbstprobe
+          bash tools/quelltext/pruefen.sh csp
 
       - name: Sitzungshärtung — `use_strict_mode` vor jedem `session_start()`
         # Die Zeile ist unscheinbar und steht neben dem Aufruf, den sie
@@ -622,8 +622,8 @@ jobs:
         # Gemessen mit dem Tokenizer, nicht mit `grep`: Die erste Fassung
         # dieser Pruefung meldete zwei Befunde, und beide waren Kommentare.
         run: |
-          php tools/sitzungshaertung/pruefen.php --selbstprobe
-          php tools/sitzungshaertung/pruefen.php
+          php tools/quelltext/sitzungshaertung.php --selbstprobe
+          bash tools/quelltext/pruefen.sh sitzungshaertung
 
       - name: Jobregister — steht in Technik.md noch, was in jobs_lib.php steht?
         # ZUARBEIT AUS SCHRITT 16 (Backlog Nr. 208). Das Werkzeug liegt seit
@@ -640,8 +640,8 @@ jobs:
         # PHP-Tokenizer und rechnet in Millisekunden — es gibt keinen Grund,
         # es an eine Bereichserkennung zu hängen.
         run: |
-          php tools/jobregister/pruefen.php --selbstprobe
-          php tools/jobregister/pruefen.php
+          php tools/quelltext/jobregister.php --selbstprobe
+          bash tools/quelltext/pruefen.sh jobregister
 
       - name: Java 21 für die Android-Module
         if: steps.bereiche.outputs.android == 'ja'

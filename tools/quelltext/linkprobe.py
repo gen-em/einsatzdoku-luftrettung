@@ -42,7 +42,7 @@ WAS SIE NICHT KANN, und warum das kein Mangel ist:
   - Sie ersetzt keinen Klick. Ob der Knopf sichtbar ist und wohin er fuehrt,
     sagt der Browser.
 
-Ausnahmen stehen in `ausnahmen.md` daneben — mit Begruendung, nicht als
+Ausnahmen stehen in `linkprobe-ausnahmen.md` daneben — mit Begruendung, nicht als
 Ausblendung.
 
 Aufruf und Bedeutung stehen in LIESMICH.md daneben.
@@ -145,7 +145,7 @@ def listen():
     Unterschieden werden sie an der Ueberschrift, nicht an der Reihenfolge der
     Zeilen — eine umsortierte Datei soll nichts still umdeuten.
     """
-    pfad = os.path.join(HIER, 'ausnahmen.md')
+    pfad = os.path.join(HIER, 'linkprobe-ausnahmen.md')
     aus, bekannt = {}, {}
     if not os.path.exists(pfad):
         return aus, bekannt
