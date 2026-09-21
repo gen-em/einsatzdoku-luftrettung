@@ -52,6 +52,55 @@ schreibt die Datei ohnehin um. Kein Demo-Konto mit Vorgabekennwort auf
 Staging: Das wäre ein bekanntes Kennwort auf einer öffentlichen Adresse für
 einen Schritt, der dort nichts misst, was die Sandbox nicht misst.
 
+## [Kette: Stufe 1 läuft auf Arbeitszweigen nur noch beim Pull Request] — 2026-09-21
+
+**Das Problem war nicht, dass zu viel geprüft wurde, sondern dass dieselbe
+Prüfung zweimal lief — einmal schnell und einmal langsam.** `pruefung.yml`
+hatte die Auslöser `push: branches: ['**']` **und** `pull_request`. Jeder
+Push auf einen Arbeitszweig erzeugte damit zwei Läufe, und beide heißen
+`Stufe 1`:
+
+| Ereignis | Was er misst | Dauer |
+|---|---|---|
+| `pull_request` | vergleicht gegen den gemeinsamen Vorfahren; lässt Uhr und Android weg, wenn `watch/` und `android/` nicht berührt sind | **rund 1 Minute** |
+| `push` | findet bei einem neuen Zweig oder einem Merge-Commit keinen Vergleichsstand und misst im Zweifel **alles** | **rund 56 Minuten** |
+
+**Der Zweigschutz wartet auf den Namen, also auf den langsameren.** Gemessen
+am 21.09.2026 an PR #69 (Läufe 192 und 193) und PR #70 (Lauf 186): 56 Minuten
+Wartezeit für eine Messung, die der Lauf daneben in einer Minute schon
+erledigt hatte.
+
+**Die Änderung ist eine Zeile:** `branches: ['**']` wird zu
+`branches: [ main ]`. `pull_request` und `workflow_dispatch` bleiben
+unverändert, die Bereichserkennung bleibt unverändert, der Jobname bleibt
+`Stufe 1` — er ist der Name, an dem die Pflichtprüfung des Zweigschutzes
+hängt, und wer ihn ändert, hängt sie still ab.
+
+**Auf `main` bleibt der Push-Auslöser, und dort ist er richtig:** Es gibt
+keinen Pull Request mehr, gegen den zu vergleichen wäre, und die
+Bereichserkennung misst dort ohnehin alles — das ist die Eigenschaft, auf der
+Tor 3 des Produktionslaufs steht.
+
+**Was bewusst stehen bleibt:** Der Rest von PK-05 ist *nicht* Teil dieser
+Änderung. Uhr und Android sollen ganz aus Stufe 1 heraus (der Bau findet dann
+in der Arbeitsumgebung statt, und der Prüfbericht meldet ihn), das Tor soll
+den Prüfbericht gegenlesen, und die Datei soll von 852 auf unter 250 Zeilen
+schrumpfen. Das gehört in das Paket und nicht in einen Vorgriff.
+
+**Nicht betroffen: das Tor der grünen Läufe.** `tools/kette/freigabe.py`
+zählt nur einen `push` auf `main` und den `workflow_dispatch`-Hotfix-Weg; ein
+Push-Lauf auf einem Arbeitszweig zählte dort schon vorher nicht — der
+Prüffall dafür steht wörtlich in der Selbstprobe („EIN PUSH AUF EINEN
+ARBEITSZWEIG ZÄHLT NICHT"). Gemessen nach der Änderung: **32 erfüllt,
+0 offen**. `tools/kettenaufrufe/`: **43 Aufrufe, 0 Befunde, 0 ungeprüft**.
+
+**Zwei überholte Sätze sind dabei mit berichtigt worden**, beide unmittelbar
+neben der Änderung: Die Pflichtprüfung heißt **`Stufe 1`** (nach dem Job),
+nicht `pruefung` — `docs/Technik.md` 6.2 und der Kopf von `pruefung.yml`
+sagten das Falsche, der Rahmenplan 6b das Richtige. Und der Zweigschutz ist
+seit dem 21.09.2026 **gesetzt**; beide Stellen führten ihn noch als offene
+Zuarbeit.
+
 ## [Web 20.26.3] — 2026-09-21
 
 **Der Export scheiterte auf MySQL 8.4 am Alias, nicht an der Spalte.**

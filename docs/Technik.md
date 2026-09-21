@@ -858,7 +858,8 @@ Daten erst nach Server-Bestätigung.
 │                          jsonschema. STARTET nichts — das macht
 │                          tools/referenzdatensatz/einspielen/lokal_starten.sh
 └── .github/workflows/     die Auslieferungskette (P5a/AP1, Abschnitt 6)
-    ├── pruefung.yml       Stufe 1: jeder Push, ohne Installation
+    ├── pruefung.yml       Stufe 1 ohne Installation: Arbeitszweige beim
+    │                      Pull Request, main bei jedem Push
     ├── auslieferung.yml   WANN ausgeliefert wird: Staging (Push auf main),
     │                      Stufe 2, Produktion (Tag, Pflichtfreigabe,
     │                      Backup-Tor), Zeiger
@@ -8899,7 +8900,7 @@ Vier Arbeitsläufe unter `.github/workflows/`:
 
 | Datei | Was |
 |---|---|
-| `pruefung.yml` | **Stufe 1** — jeder Push, jeder Zweig, jeder Pull Request |
+| `pruefung.yml` | **Stufe 1** — jeder Pull Request, dazu jeder Push auf `main` (seit 21.09.2026; vorher jeder Push auf jedem Zweig) |
 | `auslieferung.yml` | **wann**: Jobs `staging`, `stufe2`, `produktion`, `Rückfallstand (Staging)` und `zeiger` |
 | `ausliefern-lauf.yml` | **was**: die Schrittfolge, einmal, für beide Umgebungen |
 | `integritaet.yml` | die Wache; läuft nach einem **Produktiv**-Deploy und täglich |
@@ -9021,7 +9022,24 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 
 ### 6.2 Stufe 1 — was ohne Installation messbar ist
 
-`pruefung.yml`, bei jedem Push auf jedem Zweig:
+`pruefung.yml`, **bei jedem Pull Request und bei jedem Push auf `main`**.
+
+> **Seit dem 21.09.2026 löst ein Push auf einen Arbeitszweig keinen Lauf mehr
+> aus** (Vorgriff auf PK-05 des Konzepts PK). Vorher stand dort
+> `branches: ['**']`, und jeder Push erzeugte **zwei** Läufe, die beide
+> `Stufe 1` heißen: Der über `pull_request` vergleicht gegen den gemeinsamen
+> Vorfahren von Zweig und `main` und lässt Uhr und Android weg, wenn
+> `watch/` und `android/` nicht berührt sind — **rund eine Minute**. Der über `push` findet bei einem neuen Zweig
+> oder einem Merge-Commit keinen Vergleichsstand, misst im Zweifel alles und
+> braucht **rund 56 Minuten**. Der Zweigschutz wartet auf den Namen, also auf
+> den langsameren. Gemessen an PR #69 (Läufe 192 und 193) und PR #70
+> (Lauf 186).
+>
+> Auf `main` bleibt der Push-Auslöser und ist dort richtig: Es gibt keinen
+> Pull Request mehr, gegen den zu vergleichen wäre, und die Bereichserkennung
+> misst ohnehin alles.
+
+Die Schritte:
 
 | Schritt | Sollwert |
 |---|---|
@@ -9137,7 +9155,10 @@ selbst fährt **beides**, sonst prüft niemand den Prüfschritt.
 > (`server/apk/` ist der Verteilweg, 4.97g), ist er neu zu bewerten.
 
 **Rot heißt kein Merge** — das entscheidet aber nicht die Datei, sondern der
-Zweigschutz auf `main` mit `pruefung` als Pflichtprüfung. Ohne ihn ist der
+Zweigschutz auf `main`. **Seine Pflichtprüfung heißt `Stufe 1`**, nach dem
+Namen des **Jobs**, nicht nach dem des Arbeitslaufs („Prüfung") und nicht
+nach dem Dateinamen; wer sie anders einträgt, hängt sie an nichts
+(Rahmenplan 6b). Er ist seit dem **21.09.2026** gesetzt — bis dahin war der
 Lauf eine Auskunft und keine Schranke.
 
 **Kein stilles Überspringen.** Der Uhr-Prüfstand braucht `CIQ_GERAETE_URL`,
