@@ -159,7 +159,25 @@ jobs:
   staging:
     name: staging
     # DER STAGING-WEG: jeder Push auf `main`, ohne Freigabe, ohne Tag.
-    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+    #
+    # **UND NICHT IM PROBELAUF** (seit AP5). Das ist eine Berichtigung und
+    # keine Feinheit:
+    #
+    # Bisher lief dieser Job bei JEDEM Probelauf mit -- `github.ref` zeigt
+    # dann auf den Arbeitszweig, also nicht auf ein Tag, also war die
+    # Bedingung erfuellt. Gemessen im Lauf 35547147256 (Abnahme AP4): Der
+    # Schritt "server/ per FTPS auf Staging synchronisieren" ist dort GRUEN
+    # DURCHGELAUFEN. **Ein Probelauf hat also ausgeliefert** -- nach Staging,
+    # aber ausgeliefert --, waehrend er oben "es wird nichts ausgeliefert"
+    # in die Zusammenfassung schrieb. Die Zusage galt nur fuer Produktiv.
+    #
+    # MIT AP5 WAERE DAS TEUER GEWORDEN: Staging faehrt jetzt dieselben
+    # vierzehn Schritte, also haette jeder Probelauf Staging in den
+    # WARTUNGSMODUS geschaltet und ein abgeschlossenes Komplett-Backup
+    # verlangt. Eine Messung, die die Testanlage zusperrt, ist keine.
+    #
+    # Beides faellt mit derselben Zeile.
+    if: ${{ !startsWith(github.ref, 'refs/tags/') && !inputs.probelauf }}
     # SEIT AP5 DIESELBE SCHRITTFOLGE WIE PRODUKTIV (E-KH-14, -17).
     #
     # Vorher standen hier vier Schritte -- auschecken, Geheimnisse pruefen,

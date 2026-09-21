@@ -24,7 +24,7 @@ abgehakt ist (R62).
 > | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, AP5 GEBAUT (Abnahme offen — Pruefpunkt 23 und ein Staging-Lauf).** AP6 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **31** (Abschnitt 2): F-KH-U-01 bis F-KH-U-32 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. Zuletzt **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22 |
+> | Funde | **32** (Abschnitt 2): F-KH-U-01 bis F-KH-U-33 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben |
 > | F3 | **GEFUNDEN UND BEHOBEN, der Beleg ist gefahren.** Ursache: `RETR` auf die nicht vorhandene Zustandsdatei tötet die Verbindung; die Aktion deutet es als „first publish" und arbeitet mit einem toten Client weiter, bis das erste `MKD` es bemerkt — **drei Schritte hinter der Stelle, die sie meldet** (F-KH-U-25). Abhilfe: die Datei einmal hinlegen, bevor die Aktion läuft (AP4, Richtung (e), `tools/kette/zustand.py`). Beleg: **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige Abgleich gegen diesen Server überhaupt (F-KH-U-28). **E-KH-09 ist erfüllt** |
 > | Prüfliste | **28** Punkte: **11 abgehakt**, 5 teilweise, **12 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu: **22** (die drei Zugangswerte eine Ebene höher löschen, F-KH-U-32) und **23** (die Pflichtfreigabe nach dem Umbau von AP5 nachmessen, F-KH-U-31) |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
@@ -524,6 +524,59 @@ Error: Client is closed because read ECONNRESET (data socket)
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-33 — Der Probelauf hat ausgeliefert. Nach Staging, aber
+ausgeliefert — und mit AP5 hätte er die Testanlage zugesperrt.**
+*Gefunden beim Gegenlesen des AP5-Umbaus, 21.09.2026; belegt am Lauf
+35547147256 (der Abnahme von AP4).*
+
+Der Job `staging` trug die Bedingung
+`if: ${{ !startsWith(github.ref, 'refs/tags/') }}`. Bei einem Probelauf
+zeigt `github.ref` auf den **Arbeitszweig**, also nicht auf ein Tag, also
+war sie erfüllt. Im Protokoll des Laufs 35547147256 steht deshalb:
+
+```
+staging
+  ✓ Sind die drei Geheimnisse der Umgebung `staging` da?
+  ✓ Handbuch und „Was ist NAdoku" nach server/doku kopieren
+  ✓ server/ per FTPS auf Staging synchronisieren
+```
+
+**Grün durchgelaufen** — während derselbe Lauf eine Zeile höher
+`## PROBELAUF — nichts ausgeliefert` in die Zusammenfassung schrieb. Die
+Zusage galt für Produktiv und war dort auch wahr; für Staging hat sie nie
+jemand geprüft. `stufe2` lief gleich mit und wurde rot (Kreisläufe) — ein
+roter Prüfschritt an einem Lauf, der nichts prüfen sollte.
+
+**Warum es erst jetzt auffällt, und warum das die schlechtere Nachricht
+ist:** Solange `staging` vier Schritte hatte, sah der Schaden klein aus —
+ein Abgleich auf die Testanlage, den ein Push auf `main` ohnehin gemacht
+hätte. Erst AP5 macht die Rechnung sichtbar: Staging fährt jetzt **dieselben
+vierzehn Schritte**. Jeder Probelauf hätte damit das **Komplett-Backup** von
+Staging verlangt, Staging in den **Wartungsmodus** geschaltet, ausgeliefert
+und die Wartung wieder aufgemacht. **Eine Messung, die die Testanlage
+zusperrt, ist keine.**
+
+**Behoben in derselben Zeile, in der es steckte:**
+
+```yaml
+if: ${{ !startsWith(github.ref, 'refs/tags/') && !inputs.probelauf }}
+```
+
+`stufe2` hat kein eigenes `if:` und wird mit übersprungen — nachgesehen,
+nicht angenommen. Das Tor der grünen Läufe zählt Arbeitslauf-Läufe mit
+`event == "push"`; ein Probelauf ist `workflow_dispatch` und hat dort nie
+mitgezählt, die Bedingung ändert daran nichts. Die Ansage des Probelaufs
+sagt den Sachverhalt jetzt selbst.
+
+**Die Lehre ist nicht „eine Bedingung war zu weit", sondern:** Eine Zusage,
+die nur für den Teil geprüft wurde, für den sie gemeint war, ist keine
+geprüfte Zusage. „Es wird nichts ausgeliefert" stand im Job `produktion` und
+galt dort; dass daneben ein zweiter Job stand, der genau das tat, hat
+niemand nachgezählt — auch nicht bei der Abnahme von AP4, die genau diesen
+Lauf als Beleg führt.
+
+---
 
 **F-KH-U-32 — Die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen,
 und damit kann die Geheimnisprüfung der Kette nicht fehlschlagen.**

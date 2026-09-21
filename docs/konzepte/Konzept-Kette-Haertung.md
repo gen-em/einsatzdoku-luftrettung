@@ -1320,6 +1320,20 @@ werden sie erst, wenn AP5 auf `main` ankommt. Dazu verlangte eine Änderung
 unter `server/` eine Versionsstufe — und die für etwas auszugeben, das
 **Prüfpunkt 23** noch zurücknehmen kann, wäre voreilig.
 
+**Ein Fund aus dem Gegenlesen, und er gehört zu den unangenehmeren**
+(F-KH-U-33): Der Job `staging` lief bei **jedem Probelauf** mit — seine
+Bedingung fragte nur nach einem Tag, und ein Probelauf fährt vom
+Arbeitszweig. Im Lauf 35547147256, dem Beleg der Abnahme von AP4, ist der
+Schritt „server/ per FTPS auf Staging synchronisieren" **grün
+durchgelaufen**, während derselbe Lauf „nichts ausgeliefert" meldete. Mit
+AP5 wäre das teuer geworden: Staging fährt jetzt dieselben vierzehn
+Schritte, jeder Probelauf hätte also das Komplett-Backup verlangt und die
+Testanlage in den Wartungsmodus geschaltet. Behoben mit
+`&& !inputs.probelauf`; `stufe2` wird mangels eigenem `if:` mit
+übersprungen (nachgesehen). **Die Lehre ist nicht „eine Bedingung war zu
+weit":** Die Zusage „es wird nichts ausgeliefert" war für den Job geprüft,
+in dem sie stand, und für den Job daneben nie.
+
 **Offen, und es ist der Riegel unter der ganzen Formwahl:** Prüfpunkt 23 —
 ein Probelauf gegen `produktion` mit dieser Struktur, **vor** dem nächsten
 Tag. Fragt er nicht nach der Freigabe, wird AP5 zurückgenommen.

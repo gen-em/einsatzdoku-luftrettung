@@ -212,8 +212,15 @@ jobs:
             echo
             echo 'NICHT gefahren werden: Tag-Vergleich, Tor der grünen Läufe,'
             echo 'Backup-Tor, Wartungsmodus, `doku`-Kopie und die Migrationsabfrage.'
-            echo 'Geschrieben wird nichts außer der Probedatei — und die wird im'
-            echo 'selben Schritt wieder gelöscht.'
+            echo 'Geschrieben wird nichts außer der Probedatei und der Zustandsdatei;'
+            echo 'die Probedatei wird im selben Schritt wieder gelöscht, die'
+            echo 'Zustandsdatei bleibt liegen und wird bei jedem weiteren Lauf'
+            echo 'nur noch vorgefunden (AP4, E-KH-26).'
+            echo
+            echo '**Und der Job `staging` läuft gar nicht mit** — seit AP5. Vorher'
+            echo 'tat er es, und er hat dabei wirklich nach Staging ausgeliefert'
+            echo '(gemessen im Lauf 35547147256). Ein Probelauf liefert jetzt'
+            echo 'nirgendwohin aus, auch nicht auf die Testanlage.'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Code auschecken
