@@ -44,7 +44,7 @@ einer Fußnote.
 | P-PK-13 | Die Selbstproben (PK-03) | `bericht.py lesen --selbstprobe`; `auswahl.py --selbstprobe` | **6 Lagen / 0 Fehlschläge** (5 rote, 1 grüne) bzw. **11 Lagen / 0** | eine rote Lage wird nicht rot | **erledigt 21.09.2026** (5.2) |
 | P-PK-14 | Abdeckung: keine Datei ohne Muster (PK-03) | `auswahl.py --abdeckung` | **0 Dateien unter `server/` ohne Muster** | eine Datei trifft kein Muster und hat damit keine Probe | **erledigt 21.09.2026 — 262 Dateien, 0 ohne Muster** (5.3) |
 | P-PK-15 | `kettenaufrufe` liest die Zuordnung mit (PK-03) | Fehler einbauen (`--format` statt `--art`), Werkzeug fahren, zurücksetzen | mit Fehler **2 Befunde** mit Namen, ohne Fehler **0** | der Fehler kommt durch | **erledigt 21.09.2026** (5.4) |
-| P-PK-17 | Nach dem Merge von PR #71: ein Arbeitszweig-Push erzeugt nur noch **einen** Lauf (Vorgriff auf PK-05) | auf einem Arbeitszweig committen und pushen, dann die Läufe von `pruefung.yml` zu diesem Commit zählen | **genau 1 Lauf**, Ereignis `pull_request`; **kein** `push`-Lauf | es entstehen zwei Läufe, oder gar keiner (dann prüft der Zweig nichts mehr) | **offen** — misst die Betreiberin oder die nächste Instanz |
+| P-PK-17 | Nach dem Merge von PR #71: ein Arbeitszweig-Push erzeugt nur noch **einen** Lauf (Vorgriff auf PK-05) | auf einem Arbeitszweig committen und pushen, dann die Läufe von `pruefung.yml` zu diesem Commit zählen | **genau 1 Lauf**, Ereignis `pull_request`; **kein** `push`-Lauf | es entstehen zwei Läufe, oder gar keiner (dann prüft der Zweig nichts mehr) | **teilweise gemessen 21.09.2026 (5.6)** — die Wirkung ist belegt, der volle Bedienweg noch nicht gefahren |
 | P-PK-16 | Der offene Befund der Wiederherstellungsprobe | Sicherungsziel eintragen, `php tools/wiederherstellungs-probe/probe.php` | 110 Erwartungen, 0 nicht erfüllt | die zwei Befunde bleiben auch mit Sicherungsziel stehen (dann ist es die Anwendung) | **offen** — siehe F-PK-18 |
 | P-PK-11 | Ausbaustufen `android` und `uhr` (PK-02) | `aufbauen.sh android` → `./gradlew build`; `aufbauen.sh uhr` → `pruefstand.sh reihe` | 0 Lint-Fehler, 0 Fehlschläge bzw. Reihe grün | ein Fehlschlag, oder das SDK fehlt | **android erledigt 21.09.2026** (BUILD SUCCESSFUL in 7m 19s, **0 Lint-Fehler**, **670 Prüffälle, 0 Fehlschläge**); **uhr offen** |
 | P-PK-18 | Zwei Merges kurz hintereinander erzeugen keine sich störenden Läufe mehr (F-PK-02, F-PK-03) | nach PK-06: zwei PRs innerhalb einer Minute nach `main` mergen; die Läufe von `auslieferung.yml` ansehen | der zweite Lauf **bricht den ersten ab** oder wartet; **kein** Backup-Tor läuft in die Job-Pause des Nachbarn; der Produktivlauf wird **nie** abgebrochen | ein Lauf steht 13 min im Backup-Tor, oder ein Produktivlauf wird abgebrochen (dann ist die Gruppe falsch herum gebaut) | **offen** — gehört zur Abnahme von PK-06 |
@@ -335,6 +335,39 @@ geschrieben hatte:
    damit an genau einer Stelle, sobald PK-05 die Kette dieselbe Datei lesen
    lässt.
 
+### 5.6 P-PK-17 — der Auslöser der Stufe 1, nach dem Merge von PR #71
+
+**Gemessen am 21.09.2026 an der Lauf-API, nicht abgeschrieben.** PR #71 ist um
+**20:13:03 UTC** von der Betreiberin gemergt worden (`523a5eb`).
+
+**Was belegt ist — die Wirkung, am Vorgriffszweig selbst:** Zum Commit
+`d5a9d7c` gibt es **genau einen** Lauf von `pruefung.yml`: Nr. **205**,
+Ereignis **`pull_request`**, 19:03:54–19:46:53, grün. **Kein `push`-Lauf.**
+Das ist der Kern der Sache und war schon **vor** dem Merge messbar — der
+PR-Text sagte „erst nach dem Merge" und war damit zu vorsichtig: Für ein
+`push`-Ereignis liest GitHub die Workflow-Datei **aus dem gepushten Commit**,
+und der trug die Änderung bereits.
+
+**Die Gegenprobe steht daneben und ist genauso wichtig.** Drei Läufe desselben
+Abends, alle Ereignis `push`, alle richtig:
+
+| Lauf | Zweig | Warum ein `push`-Lauf richtig ist |
+|---|---|---|
+| **209** | `claude/pk-06-vorgriff-stufe2` (`014a661`, 19:53) | von `main` **vor** dem Merge abgezweigt — trägt noch `branches: ['**']` |
+| **211** | `claude/serene-dijkstra-bcpbjy` (`e86aed9`, 19:58) | dasselbe |
+| **213** | `main` (`523a5eb`, 20:13) | **auf `main` bleibt der Auslöser**, und das ist Absicht |
+
+**Was noch nicht gefahren ist:** der Bedienweg des Prüfpunkts in seinem
+Wortlaut — ein Push auf einen Arbeitszweig, **der die neue Datei trägt und zu
+dem ein Pull Request offen ist**. Dieser Zweig trägt sie nach dem nächsten
+Push, hat aber **keinen offenen PR**; dort entstehen dann **null** Läufe. Das
+ist kein Fehlschlag, sondern der Zweck der Änderung — Stufe 1 läuft beim Pull
+Request, nicht bei jedem Push —, aber es ist **nicht dasselbe wie „genau ein
+Lauf"**. Die Zeile in der Prüfliste beschreibt den PR-Fall; gemessen wird er
+am **Phasen-PR** oder an PR #72.
+
+---
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in
@@ -361,7 +394,7 @@ werden aber erst in **PK-06** behoben, weil sie `auslieferung.yml` anfassen.
 |---|---|---|
 | **F-PK-02** | **Der ganze Auslieferungslauf hat keine Gruppe — nur einer seiner Jobs hat eine.** Zwei Merges nach `main` innerhalb von 28 Sekunden (PR #70 um 18:35:47, PR #69 um 18:36:15 UTC) erzeugten zwei Läufe von `auslieferung.yml` (**35639395259** und **35639445224**), die sich überlappten. | **PK-06:** eine Gruppe je Umgebung über den **Lauf**, nicht über einen Job — laufende **Staging**-Läufe abbrechen, den **Produktiv**lauf **nie**. |
 | **F-PK-03** | **Die Job-Pause der Stufe 2 legt den Nachbarlauf lahm.** `kreislauf.py` hält die Hintergrundjobs auf Staging über `jobs_pause(1800, …)` an; das Backup-Tor des Nachbarlaufs wartet auf `fertig`, bekam „angehalten bis 19:06:50" und schloss nach **13 Minuten** mit 40 Aufrufen: **Lauf 69, Versuch 1 rot, ohne dass eine einzige Datei übertragen war.** | Keine eigene Änderung nötig — **die Gruppe aus F-PK-02 löst es mit.** Sie steht in PK-06 als *eine* Maßnahme mit *zwei* Anlässen. |
-| **F-PK-04** | **Der Bilderlauf gegen Staging meldet sich mit dem eingebauten Vorgabekennwort an, und dieses Konto gibt es auf der neuen Anlage nicht.** Gemessen in Lauf 69, Versuch 2, Job „Prüfung Stufe 2", Schritt 6, nach 11 s: `Error: Anmeldung als demo@gen-em.org gescheitert — die Seite sagt: Anmeldung fehlgeschlagen. E-Mail oder Passwort prüfen.` (`aufnehmen.mjs:547`). **Der Schritt war auf der neuen Staging-Anlage nie grün.** **Woher die Lücke kommt:** **Z7 der Kette II** (nicht die Z7 des Konzepts PK) verlangte „Demo-Konto, Referenzbestand, Messstand-Konto"; gebucht wurde Z7 als **erfüllt** mit dem gelungenen Komplett-Backup und dem `JOBS_TOKEN` — **die drei Konten-Punkte wurden nie nachgemessen.** Ein Haken auf einer Zuarbeit mit sieben Teilen, gesetzt nach zwei gemessenen. | **Nichts anlegen.** Der Schritt fällt mit **E-PK-01** ohnehin aus Stufe 2 heraus und wandert in den Prüfstand, wo das Demo-Konto aus der Fixture kommt. Bis PK-06 ist Stufe 2 nach einem Merge deshalb **planmäßig rot am Schritt 6**; die Kreisläufe davor sind der Nachweis. |
+| **F-PK-04** | **Der Bilderlauf gegen Staging meldet sich mit dem eingebauten Vorgabekennwort an, und dieses Konto gibt es auf der neuen Anlage nicht.** Gemessen in Lauf 69, Versuch 2, Job „Prüfung Stufe 2", Schritt 6, nach 11 s: `Error: Anmeldung als demo@gen-em.org gescheitert — die Seite sagt: Anmeldung fehlgeschlagen. E-Mail oder Passwort prüfen.` (`aufnehmen.mjs:547`). **Der Schritt war auf der neuen Staging-Anlage nie grün.** **Woher die Lücke kommt:** **Z7 der Kette II** (nicht die Z7 des Konzepts PK) verlangte „Demo-Konto, Referenzbestand, Messstand-Konto"; gebucht wurde Z7 als **erfüllt** mit dem gelungenen Komplett-Backup und dem `JOBS_TOKEN` — **die drei Konten-Punkte wurden nie nachgemessen.** Ein Haken auf einer Zuarbeit mit sieben Teilen, gesetzt nach zwei gemessenen. | **Nichts anlegen.** Der Schritt fällt mit **E-PK-01** ohnehin aus Stufe 2 heraus und wandert in den Prüfstand, wo das Demo-Konto aus der Fixture kommt. Bis PK-06 ist Stufe 2 nach einem Merge deshalb **planmäßig rot am Schritt 6**; die Kreisläufe davor sind der Nachweis. **NACHTRAG 21.09.2026, 19:42 — die Folge ist größer, als dieser Satz sagte:** Für den Produktionslauf ist ein roter Staging-Lauf ein roter Staging-Lauf, gleich woran er scheiterte. Der Tag `web-v20.26.3` (Lauf **35646453443**, `807f462`) blieb deshalb am **Schritt 7 „Grüner Staging- und Stufe-1-Lauf auf diesem Stand?"** hängen, nach **2 Sekunden**; Schritte 8 bis 17 übersprungen, **nichts ausgeliefert**. **Der Riegel hat gehalten** — aber F-PK-04 blockiert damit nicht nur eine Messung, sondern **jede Auslieferung nach Produktiv**. Das macht PK-06 dringlich statt planbar. |
 
 **Kein Konto mit Vorgabekennwort auf Staging anlegen.** Das ist die Anweisung
 des Auftraggebers vom 21.09.2026 und der Grund, warum F-PK-04 *nicht* durch
@@ -396,14 +429,15 @@ veröffentlichtes Kennwort.
 | **F-PK-16** | **Die Drosselung von Docker Hub trägt den Umweg aus E-PK-30 nicht.** Vier Abrufe (`mysql:8.4.0`, `mariadb:10.6`, `mysql:8.0`, `php:8.3.33-cli`) und ein Bau liefen ohne einen einzigen 429 durch. | Der vorgesehene Weg über Ubuntu-Pakete unter `/opt` ist **nicht gebaut worden** (E-PK-32). Tritt die Drosselung später auf, ist das ein Befund mit Zahl — nicht die Voraussetzung eines Umwegs. |
 | **F-PK-18** | **Die Wiederherstellungsprobe meldet auf einer frisch eingerichteten örtlichen Anlage 2 von 110 Erwartungen nicht erfüllt**: „ein knapper Schub sichert wenigstens ein Konto“ (2 erledigt, 0 von 2 offen) und „der Zeiger steht auf dem zuletzt gesicherten Konto“ (cur=—). | **Nicht geklärt**, ob eine Voraussetzung fehlt (kein Sicherungsziel eingetragen) oder die Anwendung einen Fehler hat. Der Prüfstand hat es gefunden, ohne danach zu suchen — das ist sein Zweck. Prüfpunkt P-PK-16; gehört nicht in ein PK-Paket, sondern als eigene Korrekturstufe untersucht. |
 | **F-PK-17** | **Zwei Betriebsdinge, die kein Dokument sagte:** Der Docker-Dienst **läuft nicht von selbst** (`dial unix /var/run/docker.sock: no such file`), und der Einstiegspunkt von MySQL startet den Dienst **nach** der Einrichtung neu — ein Ping gelingt schon vorher, und die Schemaprobe lief prompt in „MySQL server has gone away". | Beides steht in `Sandbox-Setup.md` 2.2 und in der `LIESMICH.md`; `plattform.sh` wartet auf eine echte Abfrage statt auf ein Ping. |
+| **F-PK-19** | **Mein eigener Beschaffer aus PK-02 meldet grün, ohne die Uhr angesehen zu haben.** `bash tools/sandbox/aufbauen.sh uhr` lief am 21.09.2026 mit **Rückgabewert 0** und der Schlusszeile „Arbeitsumgebung vollständig" — obwohl drei Zeilen darüber `pruefstand.sh: 11: set: Illegal option -o pipefail` stand. **Zwei Fehler, beide meine:** (1) `teil_uhr()` rief den Prüfstand mit `sh` auf; der ist `#!/usr/bin/env bash` und setzt `-o pipefail`, und `sh` ist in diesem Abbild dash. **Denselben Fehler hatte ich in PK-03 in `pruefen.sh` gefunden und behoben** — in `aufbauen.sh` und in `pruefablauf.json` blieb er stehen. (2) Die Aufrufe von `teil_web`, `teil_android`, `teil_uhr` und `teil_plattform` standen nackt in der `case`-Schleife, ihr Rückgabewert wurde verworfen; der `nachweis` prüfte ausschließlich Stücke der Stufe `web`. **`aufbauen.sh uhr` konnte nicht rot werden.** | **Das ist Grundsatz 7 im eigenen Werkzeug** — genau die grüne Zahl ohne Gegenstand, gegen die PK gebaut wird, und sie stand in dem Werkzeug, das die Abnahme liefern sollte. Behoben am 21.09.2026: `bash` statt `sh` an beiden Stellen; jeder Teil zählt seinen Fehlschlag; der Nachweis prüft bei `android` Plattform 36 und Build-Tools, bei `uhr` `monkeyc` und `Devices/`. **P-PK-11 stand bis dahin zu Recht auf „offen" — aber aus dem falschen Grund:** nicht weil niemand gefahren hatte, sondern weil ein Lauf nichts gesagt hätte. |
 
 ## 7. Entscheidungen der Umsetzung
 
 | Nr. | Entscheidung | Grund |
 |---|---|---|
 | **E-PK-33** | **Das Muster `station` fällt aus der Sperrliste**, zusammen mit der Ausnahme, die PK-01 dafür angelegt hatte. Angewiesen vom Auftraggeber am 21.09.2026. | Konzept PK gliedert die Prüfkette in fünf „Stationen" — Haltepunkte auf dem Weg zum Produktivserver, nicht Standorte eines Rettungsmittels. Eine Ausnahme je Datei hätte das Wort für jedes neue Dokument neu begründen müssen. **Der Preis, benannt:** „Station" im Sinn des Luftrettungs-Standorts fällt jetzt durch **kein** Muster mehr; `basis` deckt den Geschwisterbegriff weiter ab. Sperrliste 24 → **23** Muster, Ausnahmen 100 → **99** Regeln; Lauf danach **0/0/0**, 99 von 99 Regeln gegriffen. |
-| **E-PK-32** | **Das Modul `plattform` nimmt Docker für alle vier Fassungen** statt des in E-PK-30 vorgesehenen Umwegs über Ubuntu-Pakete unter `/opt`. | E-PK-30 begründet den Umweg mit der Drosselung von Docker Hub. Die tritt bei vier Abbildern nicht ein (F-PK-16). Der Umweg wäre aufwendiger, zerbrechlicher und löste ein Problem, das es nicht gibt. **Gemessen: `alles` in 29,7 s, 4 × 19/0.** Zur Bestätigung vorgelegt. |
-| **E-PK-31** | **`docs/Technik.md` 2a wird von `Sandbox-Setup.md` abgelöst**, nicht danebengestellt. In `Technik.md` bleibt der Teil, der die *Prüfmittel* betrifft (Motortabelle, die drei Engine-Befunde, die vierte Zahl); der Teil über den *Container* wird zum Verweis. 2a schrumpft von 116 auf 73 Zeilen. | Das Konzept nennt `Technik.md` erst in PK-07. Zwei Beschreibungen derselben Umgebung nebeneinander stehen zu lassen wäre aber genau der Fehler, den PK abstellt — und `CLAUDE.md` 9 verlangt die Pflege im selben Paket. **Zur Bestätigung vorgelegt.** |
+| **E-PK-32** | **Das Modul `plattform` nimmt Docker für alle vier Fassungen** statt des in E-PK-30 vorgesehenen Umwegs über Ubuntu-Pakete unter `/opt`. | E-PK-30 begründet den Umweg mit der Drosselung von Docker Hub. Die tritt bei vier Abbildern nicht ein (F-PK-16). Der Umweg wäre aufwendiger, zerbrechlicher und löste ein Problem, das es nicht gibt. **Gemessen: `alles` in 29,7 s, 4 × 19/0.** **Bestätigt vom Auftraggeber am 21.09.2026.** |
+| **E-PK-31** | **`docs/Technik.md` 2a wird von `Sandbox-Setup.md` abgelöst**, nicht danebengestellt. In `Technik.md` bleibt der Teil, der die *Prüfmittel* betrifft (Motortabelle, die drei Engine-Befunde, die vierte Zahl); der Teil über den *Container* wird zum Verweis. 2a schrumpft von 116 auf 73 Zeilen. **Bestätigt vom Auftraggeber am 21.09.2026.** | Das Konzept nennt `Technik.md` erst in PK-07. Zwei Beschreibungen derselben Umgebung nebeneinander stehen zu lassen wäre aber genau der Fehler, den PK abstellt — und `CLAUDE.md` 9 verlangt die Pflege im selben Paket. |
 
 ---
 

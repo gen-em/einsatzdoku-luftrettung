@@ -87,7 +87,14 @@ teil_uhr() {
         zeile "CIQ_GERAETE_URL fehlt — ohne sie gibt es keine Gerätedateien."; return 1
     fi
     # Der Prüfstand holt sein SDK selbst; hier wird er nur angestoßen.
-    CIQ_ZIELE=${CIQ_ZIELE:-alle} sh "$WURZEL/tools/uhr-pruefstand/pruefstand.sh" aufbau
+    #
+    # BASH, NICHT SH (21.09.2026). `pruefstand.sh` ist `#!/usr/bin/env bash`
+    # und setzt `-o pipefail`; `sh` ist in diesem Abbild dash und bricht in
+    # Zeile 11 mit „Illegal option -o pipefail" ab. Derselbe Fehler stand in
+    # `tools/pruefstand/pruefen.sh` und ist dort in PK-03 behoben worden —
+    # hier blieb er stehen und fiel nicht auf, weil der Rückgabewert dieser
+    # Funktion verworfen wurde (siehe unten, „Lauf").
+    CIQ_ZIELE=${CIQ_ZIELE:-alle} bash "$WURZEL/tools/uhr-pruefstand/pruefstand.sh" aufbau
 }
 
 teil_plattform() {
@@ -162,19 +169,39 @@ nachweis() {
     pruefe "python-jsonschema" "python3 -c 'import jsonschema'"
     pruefe "python-requests"   "python3 -c 'import requests'"
     engines
+    # STUFENABHÄNGIG, damit der Nachweis einen Gegenstand hat. Bis zum
+    # 21.09.2026 prüfte er ausschließlich die Stücke der Stufe `web` — ein
+    # Lauf `uhr` meldete deshalb „Arbeitsumgebung vollständig", ohne ein
+    # einziges Uhr-Stück angesehen zu haben (Grundsatz 7).
+    if [ -n "${STUFE_ANDROID:-}" ]; then
+        pruefe "android-sdk     Plattform 36" "[ -d \"$ANDROID_SDK/platforms/android-36\" ]"
+        pruefe "android-sdk     Build-Tools 36.0.0" "[ -d \"$ANDROID_SDK/build-tools/36.0.0\" ]"
+    fi
+    if [ -n "${STUFE_UHR:-}" ]; then
+        pruefe "ciq-sdk         monkeyc" "[ -x \"$CIQ_BASIS_PFAD/sdk/bin/monkeyc\" ]"
+        pruefe "ciq-geraete     Devices" "[ -d \"$HOME/.Garmin/ConnectIQ/Devices\" ]"
+    fi
     umgebungswerte || fehler=$((fehler+1))
 }
 
 # ------------------------------------------------------------------ Lauf
 
+# JEDER TEIL ZÄHLT SEINEN FEHLSCHLAG (21.09.2026). Bis dahin standen die
+# Aufrufe nackt da, und die Schale verwarf ihren Rückgabewert: Der
+# Uhr-Prüfstand konnte abbrechen, und der Lauf meldete trotzdem 0. Gemessen
+# am Lauf `aufbauen.sh uhr` vom 21.09.2026 — „Illegal option -o pipefail",
+# danach „Arbeitsumgebung vollständig", Rückgabewert 0.
+CIQ_BASIS_PFAD="${CIQ_BASIS:-$HOME/.ciq-pruefstand}"
 [ $# -eq 0 ] && set -- web
 for stufe in "$@"; do
     case "$stufe" in
-        web)       teil_web ;;
-        android)   teil_web; teil_android ;;
-        uhr)       teil_web; teil_uhr ;;
-        plattform) teil_plattform ;;
-        alles)     teil_web; teil_android; teil_uhr; teil_plattform ;;
+        web)       teil_web || fehler=$((fehler+1)) ;;
+        android)   STUFE_ANDROID=1; teil_web || fehler=$((fehler+1)); teil_android || fehler=$((fehler+1)) ;;
+        uhr)       STUFE_UHR=1; teil_web || fehler=$((fehler+1)); teil_uhr || fehler=$((fehler+1)) ;;
+        plattform) teil_plattform || fehler=$((fehler+1)) ;;
+        alles)     STUFE_ANDROID=1; STUFE_UHR=1
+                   teil_web || fehler=$((fehler+1)); teil_android || fehler=$((fehler+1))
+                   teil_uhr || fehler=$((fehler+1)); teil_plattform || fehler=$((fehler+1)) ;;
         *) echo "Unbekannte Stufe: $stufe (web, android, uhr, plattform, alles)" >&2; exit 2 ;;
     esac
 done

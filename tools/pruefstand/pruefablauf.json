@@ -46,7 +46,7 @@
     "schemaprobe":       { "aufruf": "php tools/schemaprobe/probe.php --datenbank nadoku_probe",             "braucht": "plattform" },
 
     "android-bau":       { "aufruf": "cd android && ANDROID_HOME=${ANDROID_HOME:-/opt/android-sdk} ./gradlew build", "braucht": "android" },
-    "uhr-stufe1":        { "aufruf": "sh tools/uhr-pruefstand/pruefstand.sh reihe",         "braucht": "uhr" }
+    "uhr-stufe1":        { "aufruf": "bash tools/uhr-pruefstand/pruefstand.sh reihe",         "braucht": "uhr" }
   },
 
   "riegel": {

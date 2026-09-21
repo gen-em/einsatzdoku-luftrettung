@@ -27,10 +27,10 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > | | |
 > |---|---|
 > | Stand | **21.09.2026 — PK-01, PK-02 UND PK-03 ERLEDIGT.** Offen bleibt P-PK-11 zur Hälfte: die Ausbaustufe `uhr` ist gebaut, aber nicht abgenommen; `android` ist es (Bau in 7m 19s, 0 Lint-Fehler, 670 Prüffälle / 0). **Halt nach PK-03 wie beauftragt** — PK-04 bis PK-06 erst auf ausdrückliches Wort, weil PK-04 sichtbare Texte in `server/` bereinigt. Umsetzung läuft auf `claude/serene-dijkstra-bcpbjy` (von `main` `08e032e`); das Konzept ist mit seiner Historie vom Konzeptzweig dorthin übernommen, ebenso der Inhalt von PR #70. Freigegeben vom Auftraggeber (Z5) ohne Änderungen; Z1, Z2, Z3 erledigt; P-PK-02 vorgezogen und erledigt. |
-> | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **zur Bestätigung vorgelegt**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. |
-> | Nächstes | **PK-04** — **erst nach ausdrücklichem Wort**; bis dahin **Halt**. Daneben liegt ein **Vorgriff auf PK-05** bei der Betreiberin: PR #71 stellt den Auslöser von `pruefung.yml` um (Zweig `claude/pk-vorgriff-stufe1-ausloeser`, Backlog Nr. 268, Abnahme P-PK-17). **PK-05 selbst bleibt offen.** und Rückmeldung an den Auftraggeber, weil PK-04 sichtbare Texte in `server/` anfasst. Parallel bei der Betreiberin die Merges von PR #70 und #69, danach Tag `web-v20.26.3` = M1 der Kette II (Z2a). **Parallelität:** PK-01 bis PK-03 laufen neben Schritt 15 und fassen `server/` nicht an. |
+> | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **vom Auftraggeber bestätigt am 21.09.2026**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. |
+> | Nächstes | **PK-04** — **erst nach ausdrücklichem Wort**; bis dahin **Halt**. **Zwei Vorgriffe liegen daneben, von zwei Instanzen:** PR #71 (PK-05, Auslöser von `pruefung.yml`, Backlog Nr. 269, Abnahme P-PK-17) ist am 21.09.2026 um 20:13 **gemergt**; PR #72 (PK-06, Stufe 2 auf drei Schritte und die Gruppe je Umgebung, Zweig `claude/pk-06-vorgriff-stufe2`, Backlog Nr. 268) liegt bei der Betreiberin. **PK-05 und PK-06 bleiben als Pakete offen** — beide Vorgriffe nehmen nur den dringenden Teil vorweg. **Parallelität:** Dieser Zweig läuft neben Schritt 15 und neben dem PK-06-Vorgriff und fasst `server/` nicht an. |
 > | Kette II | wird nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
-> | Hakt | nichts. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); Stufe 2 hat ihn nach dem Merge bestätigt: Kreisläufe csv und edbak **104 s grün** gegen Staging mit **MySQL 8.4.10** (Lauf 35639445224, Versuch 2, Schritt 5) — im Lauf davor, ohne den Fix, derselbe Schritt nach **15 min 51 s rot**. Der Tag `web-v20.26.3` folgt darauf (Z2a). **Stufe 2 als Ganzes bleibt rot, und zwar planmäßig:** Schritt 6 meldet sich mit einem Konto an, das es auf der neuen Anlage nicht gibt (F-PK-04). Bis PK-06 ist das der erwartete Zustand, kein Schaden. **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
+> | Hakt | nichts. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); Stufe 2 hat ihn nach dem Merge bestätigt: Kreisläufe csv und edbak **104 s grün** gegen Staging mit **MySQL 8.4.10** (Lauf 35639445224, Versuch 2, Schritt 5) — im Lauf davor, ohne den Fix, derselbe Schritt nach **15 min 51 s rot**. Der Tag `web-v20.26.3` folgt darauf (Z2a). **Stufe 2 als Ganzes blieb rot** — Schritt 6 meldet sich mit einem Konto an, das es auf der neuen Anlage nicht gibt (F-PK-04). **Und das war nicht folgenlos:** Der Tag `web-v20.26.3` blieb am Schritt 7 des Produktionslaufs hängen (Lauf 35646453443, „Grüner Staging- und Stufe-1-Lauf auf diesem Stand?", rot nach 2 s, nichts ausgeliefert). Der Riegel hat gehalten, aber **die Auslieferung war blockiert** — deshalb der Vorgriff auf PK-06 (PR #72). **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
 >
 > **Stand der Umsetzung**
 >
@@ -823,7 +823,7 @@ Konzepts eine Auskunft (1.2); deshalb vor der Freigabe.
 > Gegenlesung des Berichts und die Kürzung der Datei sind nicht Teil des
 > Vorgriffs. Grund für das Vorziehen: Jeder Push erzeugte zwei Läufe desselben
 > Namens, und der Zweigschutz wartete auf den langsameren — 56 statt 1 Minute
-> (Backlog Nr. 268, Abnahme P-PK-17).
+> (Backlog Nr. 269, Abnahme P-PK-17).
 
 - `pruefung.yml`: Auslöser `pull_request` und `push: main` — **erledigt**;
   Android, Uhr und
@@ -845,9 +845,14 @@ Konzepts eine Auskunft (1.2); deshalb vor der Freigabe.
   1. **[F-PK-02]** Eine **`concurrency`-Gruppe je Umgebung über den Lauf**,
      nicht über einen Job. `ausliefern-lauf.yml` hat schon eine — sie reiht
      die Abgleiche, aber `stufe2` steht außerhalb, und genau dort entstand
-     der Schaden. **Staging: `cancel-in-progress: true`** (der jüngste Stand
-     gewinnt). **Produktiv: niemals abbrechen** — ein abgebrochener
-     Produktivlauf lässt die Wartung an und einen halben Dateistand oben.
+     der Schaden.
+     **`cancel-in-progress: false` für beide Umgebungen.** Hier stand bis zum
+     21.09.2026 abends „Staging abbrechen, der jüngste Stand gewinnt"; **das
+     war falsch, und der Grund steht seit AP5 im Quelltext:** Ein
+     abgebrochener Staging-Abgleich hinterlässt eine Zustandsdatei, die einen
+     Server beschreibt, den es so nicht gibt — der nächste Lauf überträgt
+     dann alles neu oder, schlimmer, übersieht Änderungen (E-KH-11). Warten
+     löst F-PK-03 genauso; es kostet nur Zeit statt Richtigkeit.
   2. **[F-PK-03]** Damit erledigt sich die Job-Pause mit: Kein Backup-Tor
      läuft mehr in die 1 800 s des Nachbarlaufs. **Eine Maßnahme, zwei
      Anlässe** — keine zweite Änderung.
@@ -858,6 +863,13 @@ Konzepts eine Auskunft (1.2); deshalb vor der Freigabe.
      gemacht.
   4. **[F-PK-11]** `CLAUDE.md` 3 sagt zur Ausnahmeliste „acht Pfade … jeder
      steht dort zweimal". Zweimal stehen nur die drei Verzeichnisse.
+- **Ein Vorgriff auf PK-06 liegt seit dem 21.09.2026 abends bei der
+  Betreiberin** (PR #72, Zweig `claude/pk-06-vorgriff-stufe2`, andere
+  Instanz): Stufe 2 auf drei Schritte, Zeitgrenze 20 min, Gruppe über den
+  **Lauf** mit `cancel-in-progress: false` je Umgebung. Anlass war der
+  hängengebliebene Tag `web-v20.26.3`. **Damit sind die Punkte 1 bis 3
+  oben abgedeckt; Punkt 4 (F-PK-11) und die Kommentarkürzung in
+  `ausliefern-lauf.yml` bleiben dem Paket.**
 - **Abnahme:** Push auf `main` → Staging grün, Stufe 2 grün, zusammen unter
   zehn Minuten; Stufe 2 mit falschem `STAGING_PASS` → rot **innerhalb einer
   Minute** mit dem Grund; alle vier Arbeitsläufe zusammen unter 1 200 Zeilen
@@ -982,7 +994,18 @@ in Stufe 2, gebaut ist er nicht"; „edbak-Export auf Staging antwortet 500
 nach PK; „Mailversand auf Staging fehlgeschlagen" (Z4); „App-Signatur in der
 Kette" (PK-08, ersetzt den Nachtrag zu Nr. 100).
 
-**Nr. 268 (neu, nach Erledigt) — „Stufe 1 lief bei jedem Push doppelt".**
+**Nr. 269 (neu, nach Erledigt) — „Stufe 1 lief bei jedem Push doppelt".**
+**Die Nummer war bis zum 21.09.2026 abends die 268, und das war eine
+Kollision:** Der Zweig `claude/pk-06-vorgriff-stufe2` (PR #72, andere
+Instanz) hat die 268 zeitgleich in `docs/Backlog.md` eingetragen, für die
+überlappenden Staging-Läufe und den Bilderlauf ohne Demo-Konto. **Dort steht
+sie in der Datei, hier stand sie nur in diesem Konzept** — also weicht dieser
+Einschub. Ursache ist der Satz in `Backlog.md`: „Jeder weitere Zweig, der
+Nummern vergibt, beginnt bei 267." Zwei Zweige, die gleichzeitig arbeiten,
+beginnen dann beide dort. Der Satz beschreibt keinen Riegel, sondern eine
+Hoffnung; **wer eine Nummer vergibt, sieht vorher auf `origin/main` und auf
+die offenen Pull Requests nach.**
+
 `pruefung.yml` trug `push: branches: ['**']` **und** `pull_request`; jeder
 Push auf einen Arbeitszweig erzeugte zwei Läufe desselben Namens `Stufe 1` —
 einen über `pull_request` (rund 1 min, vergleicht gegen den gemeinsamen
