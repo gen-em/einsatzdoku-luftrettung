@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Code auschecken
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # VORAUSSETZUNG DER BEREICHSERKENNUNG (Schritt danach). Die Vorgabe
           # holt EINEN Commit; ohne Historie gibt es nichts zu vergleichen,
@@ -360,6 +360,77 @@ jobs:
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py
 
+      - name: Liegt ein Umgebungswert eine Ebene höher noch einmal?
+        # DER NACHWEIS ZU E-KH-28, UND ER KANN NUR HIER STEHEN (AP6).
+        #
+        # WARUM AUSGERECHNET IN STUFE 1. Die Frage lautet: Gibt es
+        # `FTP_SERVER` und Konsorten AUCH AUSSERHALB der Umgebungen -- als
+        # Repositoriums- oder Organisationsgeheimnis? Beantworten kann das nur
+        # ein Job OHNE `environment:`, denn in einem Job MIT gewinnt der
+        # Umgebungswert und verdeckt den anderen. Der Auslieferungslauf hat
+        # ueberall ein `environment:`; dieser Lauf hat keines. Er ist die
+        # einzige Stelle im Repositorium, die es sehen kann.
+        #
+        # WAS DER BEFUND WAR, DER IHN AUSLOEST (F-KH-U-32, 21.09.2026). Genau
+        # diese drei Namen lagen zusaetzlich auf Repositoriumsebene -- zwei
+        # Monate alte Reste von vor der Umstellung auf Umgebungen. Folge: Der
+        # erste Schritt des Auslieferungslaufs prueft, ob die drei Werte da
+        # sind, und **konnte nicht mehr fehlschlagen** -- fehlte der
+        # Umgebungswert, griff still der von oben. Ein Tor, das immer aufgeht.
+        # Schlimmer: Welcher Wert von oben kam, sagt niemand. Stuende dort
+        # Stagings Zugang, ginge eine Produktivauslieferung nach Staging.
+        #
+        # ER IST BILLIG UND LAEUFT BEI JEDEM PUSH. Ein Geheimnis, das es nicht
+        # gibt, ist LEER -- GitHub bricht nicht ab. Genau deshalb faellt der
+        # Rueckfall sonst nie auf.
+        #
+        # **AUSGEGEBEN WIRD NIE EIN WERT.** Belegt oder leer, mehr braucht die
+        # Frage nicht, und mehr gehoert nicht in ein Protokoll.
+        env:
+          G1: ${{ secrets.FTP_SERVER }}
+          G2: ${{ secrets.FTP_USERNAME }}
+          G3: ${{ secrets.FTP_PASSWORD }}
+          G4: ${{ secrets.JOBS_TOKEN }}
+          V1: ${{ vars.FTP_ZIELPFAD }}
+          V2: ${{ vars.FTP_STATE_PFAD }}
+        run: |
+          set -uo pipefail
+          gefunden=""
+          pruefe() {
+            if [ -n "$2" ]; then
+              echo "  $1: BELEGT — liegt AUSSERHALB der Umgebungen"
+              gefunden="$gefunden $1"
+            else
+              echo "  $1: leer (so gehört es sich)"
+            fi
+          }
+          echo "Gesucht wird in einem Job OHNE environment: — was hier auflöst, steht eine Ebene höher."
+          pruefe FTP_SERVER     "${G1:-}"
+          pruefe FTP_USERNAME   "${G2:-}"
+          pruefe FTP_PASSWORD   "${G3:-}"
+          pruefe JOBS_TOKEN     "${G4:-}"
+          pruefe FTP_ZIELPFAD   "${V1:-}"
+          pruefe FTP_STATE_PFAD "${V2:-}"
+          if [ -n "$gefunden" ]; then
+            echo "::error::Diese Namen liegen außerhalb der Umgebungen:$gefunden. Damit kann die Geheimnisprüfung der Auslieferungskette nicht mehr fehlschlagen — fehlt der Umgebungswert, greift still der von oben (E-KH-28, F-KH-U-32). Löschen unter Settings -> Secrets and variables -> Actions; die Einträge unter Environments bleiben stehen."
+            {
+              echo '## Ein Umgebungswert liegt eine Ebene höher'
+              echo
+              echo "Betroffen:$gefunden"
+              echo
+              echo 'Die Auslieferungskette liest diese Namen aus der **Umgebung**'
+              echo '(`staging` bzw. `produktion`). Gibt es sie zusätzlich als'
+              echo 'Repositoriums- oder Organisationswert, greift dieser still,'
+              echo 'sobald der Umgebungswert fehlt — und die Prüfung im ersten'
+              echo 'Schritt der Kette meldet trotzdem „vorhanden".'
+              echo
+              echo 'Zu löschen sind die Einträge unter **Repository secrets** bzw.'
+              echo '**Organization secrets**. Die unter **Environments** bleiben.'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "Kein Umgebungswert liegt doppelt. Die Geheimnisprüfung der Kette kann fehlschlagen — und das ist ihr Zweck."
+
       - name: Kettenaufrufe — passt jeder Aufruf zu seinem Werkzeug?
         # WARUM DAS IN STUFE 1 GEHOERT (Nr. 217, 17.09.2026).
         #
@@ -544,7 +615,7 @@ jobs:
         # `build.gradle.kts`) — das bleibt so. 17 ist das Ziel des erzeugten
         # Bytecodes, 21 ist das JDK, das Gradle selbst ausführt; das eine sagt
         # nichts über das andere.
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin
           java-version: '21'
@@ -586,7 +657,7 @@ jobs:
         # Android-Bau, und dann gibt es keinen Ordner `build/` — das Artefakt
         # wäre leer und die Warnung darüber verwirrend.
         if: failure() && steps.androidbau.outcome == 'failure'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: android-berichte
           path: |
@@ -695,7 +766,7 @@ jobs:
           --health-retries=20
     steps:
       - name: Code auschecken
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Datenbank-Klient bereitstellen
         # Der Läufer bringt den `mysql`-Klienten mit, den `mariadb`-Klienten

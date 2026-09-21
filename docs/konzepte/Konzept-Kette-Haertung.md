@@ -25,6 +25,7 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 > | Von außen | **Einschub vom 20.09.2026 eingespielt** (Auftrag der Konzeptinstanz): Backlog 241–249 reserviert und angelegt, drei Konzeptdateien eingecheckt, Rahmenplan **Fassung 85**. Dabei angemeldet: `.sitzungen/` als **achter Schutzlistenpfad** (E-KH-20, einzutragen in AP4 oder AP5). **Der Einschub nannte Fassung 84 — die hatte AP2 schon vergeben und gepusht; er ist auf 85 gerückt** |
 > | Zuarbeiten erledigt | **Z1** (alte Staging-Anlage stillgelegt — B2 damit geschlossen), **Z2** (Zeiger `produktion` auf `7150793`) und **Z3** — alle 20.09.2026. Z3 **beide Anlagen**, aber auf zwei Wegen: Produktiv aus *Betrieb → Status*, Staging aus einer `phpinfo()`, weil die Anwendung dort noch nicht läuft. Fünf Zeilen der Staging-Spalte bleiben leer |
 > | Offen | **E-KH-09 (Ursache und Abhilfe F3)** — fällt nach der Messung am Ende von AP3; der Nachtrag in Abschnitt 1.4 hat eine der drei Erklärungen verschmälert. **Z3-Rest**: die fünf Zeilen, die nur die Anwendung weiß — sie hängen an Rahmenplan 6a, Schritt 6 |
+> | In Arbeit (3) — AP6 | **GEBAUT; Abnahme offen.** Der rote Faden ist einer: *Die Kette soll scheitern koennen.* Zehn von zehn fremden `uses:`-Zeilen auf 40-stelliger SHA (die zwei lokalen koennen keine tragen und sind strenger ohne); zwei `concurrency`-Gruppen ohne Abbruch; die fuenf Ueberspring-Stellen in Stufe 2 brechen jetzt ab; 14 → 17 Schritte, darunter Adressvergleich, Versionspruefung nach dem Abgleich und ein Schlussschritt, der bei Fehlschlag sagt, was gilt; `tor.py` beantwortet `--frage version` und `--frage wartung` (19 → **29** Lagen, zwei davon E-KH-19). **Der Wartungsschalter ist nach hinten gewandert** -- vorher konnte die Anlage zustehen, ohne dass eine Datei ausgeliefert war. **Fund F-KH-U-35:** Das Tor der gruenen Laeufe zaehlte Laeufe statt Auslieferungen. **Was es kostet:** Drei Variablen verlieren ihren Vorgabewert; `FTP_STATE_PFAD` ist auf `staging` gemessen leer, der naechste Lauf dort wird rot -- absichtlich, und er fuehrt damit gleich den Nachweis, den die Abnahme verlangt (Pruefpunkt 24). **Offen: Pruefpunkt 25**, der provozierte Fehlschlag auf Staging -- er macht Staging voruebergehend unbenutzbar und ist die Betreiberin |
 > | In Arbeit (2) — AP5 | **GEBAUT; Form und Pflichtfreigabe ABGENOMMEN (Lauf 35566000648, 21.09.2026) — offen bleibt allein der Staging-Lauf, der an einem Push auf `main` haengt.** Eine Schrittfolge fuer beide Umgebungen: Staging 4 → 14 Schritte (Zielprobe, Backup-Tor, Wartung, Migrationsabfrage, Zustandsdatei), Schutzliste **einmal** mit **acht** Pfaden (E-KH-20 (1) erfuellt), `auslieferung.yml` 1 205 → 657 Zeilen. Umgebungsabhaengig bleiben **zwei** Schritte und **drei** Werte. Verschoben als Text, fuenfzehn zugesicherte Ersetzungen. **Vorher vermessen, nicht geraten.** Das Konzept verlangte die Formwahl „nach Messung"; gemessen wurde in zwei Runden gegen `staging` (35549413032, 35549610955), weil `docs.github.com` vom Läufer dieser Umsetzung aus gesperrt ist und dieses Konzept dreimal bezahlt hat, was eine ungeprüfte Behauptung kostet. **Ergebnis:** Der zusammengesetzte Baustein sieht weder `secrets` noch `vars` und lädt bei dem Versuch gar nicht erst (`Unrecognized named-value: 'secrets'`); der aufgerufene Arbeitslauf kann beides, und `environment:` **bindet** auch als Ausdruck — vier von sieben Werten sind drinnen belegt und draußen leer. **Entschieden: aufgerufener Arbeitslauf** (E-KH-27), **unter Vorbehalt** — ob die **Pflichtfreigabe** mitwandert, ist gegen `staging` nicht messbar und steht als **Prüfpunkt 23**; fragt der erste Probelauf mit der neuen Struktur nicht nach der Freigabe, wird AP5 zurückgenommen. **Bis dahin kein Tag.** **Zwei Befunde fielen nebenbei ab:** die drei FTPS-Zugangswerte liegen zusätzlich eine Ebene über den Umgebungen, womit die Geheimnisprüfung der Kette nicht fehlschlagen kann (F-KH-U-32, E-KH-28, Prüfpunkt 22 — ein Klick der Betreiberin); und Staging fehlt der Zustandsdatei-Schritt aus AP4, läuft also in dasselbe F3, sobald seine Zustandsdatei einmal fehlt (F-KH-U-30) — AP5 behebt es dadurch, dass es AP5 ist. **Z7 ist erfüllt** (Komplett-Backup gelungen; `JOBS_TOKEN` liegt in `staging`, gemessen daran, dass `stufe2` es von dort liest) |
 > | In Arbeit | **AP4 ist abgenommen — F3 ist behoben, belegt und zweimal nachgemessen.** Ursache (F-KH-U-25): Die Auslieferungsaktion sendet `RETR` auf ihre Zustandsdatei; fehlt die, steht der Datenkanal per `EPSV` schon, der Server schließt ihn, `basic-ftp` liest `ECONNRESET` auf dem Datensocket — und die Aktion deutet das als „first publish", arbeitet mit einem **toten Client** weiter und stirbt erst beim nächsten `MKD`, **drei Schritte hinter der Ursache**. Deshalb stand `ensureDir` acht Trennversuche lang im Verdacht. **Abhilfe:** Richtung (e), die das Konzept nicht kannte — `tools/kette/zustand.py` legt die Datei hin, bevor die Aktion läuft. Transport, Aktion und Löschverhalten unverändert; der kleinste Eingriff, den es gibt. **Beleg (F-KH-U-28, Lauf 35545737872):** `🎉 Sync complete`, **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige FTPS-Abgleich gegen diesen Server überhaupt, gefahren gegen ein Probeverzeichnis, ohne einen Finger an der laufenden Anlage. **Abnahme (F-KH-U-29, Läufe 35547147256 und 35547171397):** zweimal `produktion` grün, **`Deleting: 0 B`** in beiden, Lauf 1 legt die Zustandsdatei an, **Lauf 2 findet sie und fasst sie nicht an** — genau die Vorsicht, an der alles hängt, und die nur ein zweiter Lauf gegen den echten Server zeigen konnte. Der Zeiger blieb beide Male stehen. **E-KH-09 ist erfüllt, AP4 ist abgenommen.** Drei Fehlanläufe davor lagen sämtlich am Werkzeug und nicht am Befund (Punktdatei-Falle F-KH-U-26, deutsches Anführungszeichen F-KH-U-27) — beide seither durch Prüfungen abgedeckt, die es vorher nicht gab: 28 Lagen in der Selbstprobe und ein Syntaxriegel über **48** Werkzeuge in Stufe 1. **Offen: allein die Freigabe der Betreiberin vor dem ersten echten Auslieferungslauf.** Danach AP5 bis AP8, der Merge nach `main` und M1 |
 > | **Antwort auf die Frage der Konzeptinstanz (20.09.2026): Wie kommt dieser Zweig nach `main`?** | **Nach AP6, als PR, ausgelöst vom Auftraggeber.** Der Schritt fehlte im Konzept; hier ist er. **(1) Wann:** nach **AP6** (Abbruchverhalten und Härtung) — die Fahrplantabelle nennt für M1 genau „AP4, AP6" als Voraussetzung; AP7 (Hotfix-Weg) setzt M1 seinerseits voraus, AP8 ist der Abschluss und kommt nach der Freigabe. **(2) Wie:** ein **PR** von `claude/fervent-dirac-xirsqw` nach `main`, nicht ein Push. `CLAUDE.md` 8: „Auf `main` kommt eine Phase einmal, am Ende, nach ausdrücklicher Bestätigung." **(3) Wer:** Ich stelle den PR und melde ihn; **der Auftraggeber gibt frei und mergt**. Der Merge löst einen **Staging**-Deploy aus, keinen Produktiv-Deploy. **(4) Was der Merge NICHT mitbringt:** eine Versionsstufe. Kette II fasst keinen `server/`-Code an (E-KH-23), `WEB_VERSION` bleibt unverändert. **(5) Der Tag für M1 ist frei — nachgemessen am 20.09.2026:** Das Repositorium hat **genau einen** Tag, `web-v20.24.2` auf `7150793` (derselbe Commit, auf den der Zeiger `produktion` zeigt). `main` steht bei **Web 20.26.2**, also ist `web-v20.26.2` frei, und M1 braucht keine Korrekturstufe nur um des Tags willen. **Vorbehalt:** Kommt Schritt 15 vor M1 auf `main`, gilt dessen Version — deshalb sagt M1 „auf den dann aktuellen, grün geprüften Commit" und nicht eine Zahl. **(6) Was vorher erledigt sein muss:** **AP4 ist gebaut, aber nicht bewiesen** (Prüfpunkt 21). Ohne einen Abgleich, der durchläuft, gibt es kein M1 — und damit auch keinen Merge, der etwas wert wäre |
@@ -41,7 +42,7 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 > | AP3 — Tor, Zielprobe, Probelauf; F3-Messung | offen | | | |
 > | AP4 — F3 beheben | offen (wartet auf E-KH-09) | | | |
 > | AP5 — Gemeinsame Schrittfolge | **gebaut; Form und Freigabe abgenommen, Staging-Lauf offen** | 21.09.2026 | — (nur `.github/`, `docs/`) | Eine Folge fuer beide Umgebungen; Staging 4 → 14 Schritte; Schutzliste **einmal**, 8 Pfade; `auslieferung.yml` 1 205 → 657 Zeilen. Drei Messrunden (35549413032, 35549610955, 35560508628); Befunde F-KH-U-30 bis -34; E-KH-27, -28. Pruefpunkt 22 und 23 abgehakt (Lauf 35566000648). **Offen: der Staging-Lauf** |
-> | AP6 — Abbruchverhalten und Härtung | offen | | | |
+> | AP6 — Abbruchverhalten und Härtung | **gebaut; Abnahme offen** | 21.09.2026 | — (nur `.github/`, `tools/`, `docs/`) | 10 von 10 fremden `uses:` auf SHA; 2 `concurrency`-Gruppen; 5 → 0 Ueberspringen; 14 → 17 Schritte; `tor.py` 19 → 29 Lagen; Vorgabewerte gefallen. Fund F-KH-U-35. **Offen: Pruefpunkt 24 (Variablen) und 25 (provozierter Fehlschlag)** |
 > | **M1 — erster grüner Produktivlauf** | offen (Betreiberin) | | | |
 > | AP7 — Hotfix-Weg | offen | | | |
 > | **M2 — Probe-Hotfix** | offen (Betreiberin) | | | |
@@ -1372,6 +1373,74 @@ ihn noch nie gefahren.**
   meldet Wartung an, Fassung, Bedienweg — Wortlaut ins Prüfdokument; danach
   Wartung von Hand aus, Geheimnis zurück, Lauf grün. Fehlende Variable
   `FTP_ZIELPFAD` → rot vor jedem Zugriff.
+
+#### Umsetzung — Stand 21.09.2026: gebaut, Abnahme offen
+
+**Zehn Punkte, und sie hängen enger zusammen, als die Aufzählung oben
+aussehen lässt.** Der rote Faden ist einer: *Die Kette soll scheitern
+können.* Fast jeder Punkt beseitigt eine Stelle, an der sie das bisher nicht
+konnte.
+
+| | gemessen vorher | gemessen nachher |
+|---|---|---|
+| Fremde `uses:`-Zeilen mit 40-stelliger SHA | 0 von 10 | **10 von 10** |
+| `concurrency` in der Kette | keine | **2 Gruppen**, `cancel-in-progress: false` |
+| `exit 0` in `stufe2` (Überspringen) | 5 | **0** |
+| Schritte im gemeinsamen Lauf | 14 | **17** |
+| `--selbstprobe` von `tor.py` | 19 Lagen | **29 Lagen**, 0 offen |
+| Kettenaufrufe | 36 | **38**, 0 Befunde |
+
+**Die zwei lokalen `uses:`-Zeilen sind nicht gepinnt, und das ist richtig**
+(Entscheidung des Auftraggebers, 21.09.2026): Ein lokaler Pfad nimmt keinen
+Ref und läuft immer auf dem Commit des Aufrufers — strenger als ein Pin. Die
+Abnahme sagt „jede `uses:`-Zeile"; die ehrliche Zahl ist **10 von 10
+fremden**, nicht 12 von 12. Wer die Zahl 12 sucht, findet sie nicht, und das
+soll er auch nicht.
+
+**Reihenfolge (E-KH-06).** Es wanderte genau ein Block, aber der richtige:
+„Wartung einschalten" nach hinten, direkt vor den Abgleich. Vorher lagen
+`doku`-Kopie, Gesprächslauf-Riegel und Zustandsdatei dahinter — jeder von
+ihnen kann scheitern, und scheiterte einer, **stand die Anlage zu, ohne dass
+eine einzige Datei ausgeliefert worden wäre.** Wartung an für nichts.
+
+**Schlussschritt (E-KH-06).** `if: failure()`, fragt die Anlage nach
+Wartungsmodus und Fassung. Er läuft ohne `set -e`: Er darf nicht daran
+scheitern, dass die Anlage nicht antwortet — dann ist genau das die Auskunft,
+und sie heißt `unbekannt` und nicht `aus`.
+
+**Zwei neue Tore (E-KH-07).** Der *Adressvergleich* hält `PRODUKTION_URL`
+gegen `WACHE_BASIS`: Gehen sie auseinander, liefert die Kette nach A aus und
+die Wache bewacht B — **beide Seiten sind für sich grün**, und der
+Produktivserver bliebe unbeobachtet. Die *Versionsprüfung nach dem Abgleich*
+fragt, ob die Anlage die neue Fassung auch wirklich meldet; der FTPS-Schritt
+bestätigt nur, dass übertragen wurde.
+
+**`tor.py` statt einer JSON-Zeile im YAML.** Beide neuen Auskünfte
+(`--frage version`, `--frage wartung`) stecken in einer reinen Funktion,
+damit die Selbstprobe sie durchrechnen kann. Die zehn neuen Lagen prüfen
+nicht die guten Fälle, sondern die halben — und **zwei davon sind E-KH-19**:
+Ein Server, der das Feld noch nicht kennt, bekommt `unbekannt` und 1, nie
+eine erfundene Null.
+
+**Ein Fund fiel dabei ab (F-KH-U-35):** Das Tor der grünen Läufe zählte
+Läufe, nicht Auslieferungen — ein übersprungener `staging`-Job galt ihm als
+„stand auf Staging". Seit AP5 ist das noch weniger wert, weil ein Probelauf
+`staging` jetzt absichtlich überspringt.
+
+**Was AP6 kostet, und es ist keine Kleinigkeit:** Drei Variablen verlieren
+ihren Vorgabewert. Auf `staging` ist `FTP_STATE_PFAD` **gemessen leer** —
+der erste Lauf danach wird dort rot. Das ist der Zweck und nicht der Preis:
+Ein Vorgabewert, der einspringt, lässt eine falsch eingerichtete Anlage
+nicht auffallen. Die Zuarbeit steht als **Prüfpunkt 24**, und sie führt
+nebenbei den Nachweis, den die Abnahme ohnehin verlangt („fehlende Variable
+→ rot vor jedem Zugriff").
+
+**Nicht gefahren, und aus der Umsetzung heraus auch nicht fahrbar:** der
+provozierte Fehlschlag nach „Wartung an" (Prüfpunkt 25). Er verlangt ein
+falsches FTP-Passwort in der Umgebung `staging` und macht Staging
+vorübergehend unbenutzbar — das ist die Betreiberin. **AP6 ist damit gebaut
+und nicht abgenommen.**
+
 
 ### M1 — Erster grüner Produktivlauf (Betreiberin)
 

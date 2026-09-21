@@ -14,6 +14,95 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Die Kette hält die Wartung an, wenn sie stürzt — und sagt, was gilt] — 2026-09-21
+
+**Ein roter Auslieferungslauf hinterließ eine Anlage in einem Zustand, den
+niemand kannte: Wartung vielleicht an, Dateistand vielleicht halb, und die
+Auskunft darüber irgendwo in vierhundert Zeilen Protokoll.** AP6 der
+Kettenhärtung dreht das um — die Kette prüft mehr, bevor sie etwas anfasst,
+und sie sagt hinterher in fünf Zeilen, was gilt. Keine der drei
+Auslieferungen ist geändert, deshalb keine Versionsnummer; die Änderungen
+liegen in `.github/workflows/` und `tools/`.
+
+### Werkzeug — `tor.py --frage` kennt jetzt `version` und `wartung`
+
+Bisher beantwortete `--frage` genau eine Frage (`migration`). Die
+Versionsprüfung nach dem Abgleich und der neue Schlussschritt brauchen zwei
+weitere, und beide holen sie aus derselben Datei statt aus einer eigenen
+JSON-Zeile im Arbeitslauf: `tor.py` ist **der** Client für
+`jobs.php?aktion=…`, und ein zweiter Aufrufer wäre ein zweiter Weg, den
+niemand pflegt und den keine Selbstprobe erreicht.
+
+Die Antwort steckt in einer reinen Funktion (`zustand_auskunft()`), damit sie
+ohne Netz durchgerechnet werden kann. **Die interessanten Fälle sind nicht
+die guten, sondern die halben:** eine Antwort ohne `ok`, ein Server, der das
+Feld noch nicht kennt, ein `wartung`, das mal ein Objekt und mal ein bloßer
+Wahrheitswert ist. Jeder davon antwortet **`unbekannt` und 1**, nie eine
+erfundene Null — ein Schlussschritt, der „Wartung: aus" meldet, weil er die
+Antwort nicht lesen konnte, schickt jemanden schlafen, während die Anlage
+zusteht. Das deckt zugleich E-KH-19 ab: Die Kette des Tags N spricht beim
+Ausliefern mit dem Server der Fassung N−1. Selbstprobe **19 → 29 Lagen**,
+0 offen.
+
+### Werkzeug — die Integritätswache hat keine eingebaute Anlage mehr
+
+`wache.py` fiel ohne `WACHE_BASIS` auf `https://nadoku.gen-em.org` zurück.
+Das ist die bequeme Variante einer gefährlichen Bauform: Wer die Variable
+vergaß oder vertippte, bekam keine Fehlermeldung, sondern **eine Wache, die
+eine andere Anlage bewachte** — auf einer Selbsthoster-Installation
+dauerhaft die fremde, und zur eigenen schwieg sie. Jetzt heißt „keine
+Adresse genannt" genau das: Rückgabewert 2 mit Ansage. Dasselbe in
+`integritaet.yml`, wo derselbe Vorgabewert noch einmal stand.
+
+### Kette — was jetzt vor dem Wartungsschalter steht
+
+Alles, was scheitern kann, ohne den Server zu verändern, steht jetzt **vor**
+„Wartung an"; unmittelbar danach folgt der Abgleich. Vorher lagen die
+`doku`-Kopie, der Gesprächslauf-Riegel und das Bereitstellen der
+Zustandsdatei dahinter — scheiterte einer davon, stand die Anlage zu, ohne
+dass auch nur eine Datei ausgeliefert worden wäre. **Wartung an für nichts.**
+
+Neu dazu: ein **Adressvergleich** (`PRODUKTION_URL` gegen `WACHE_BASIS` —
+gehen sie auseinander, liefert die Kette nach A aus und die Wache bewacht B,
+und beide Seiten sind für sich grün) und eine **Versionsprüfung nach dem
+Abgleich**: Der FTPS-Schritt meldet Erfolg, wenn die Übertragung gelungen
+ist — nicht, wenn die Anwendung danach die neue Fassung ausliefert. Stimmt
+sie nicht, bleibt die Wartung an.
+
+### Kette — Überspringen ist rot
+
+Die fünf Stellen in Stufe 2, die sich bei fehlender Zuarbeit selbst
+übersprangen und grün meldeten, brechen jetzt ab. Sie stammen aus der
+Einrichtungsphase, als Staging erst entstand; Staging steht. Ein Prüfschritt,
+der sich selbst überspringt, meldet grün, ohne gemessen zu haben.
+
+### Kette — Pins, Nebenläufigkeit, und ein Tor, das nicht mehr täuscht
+
+Alle **zehn** fremden `uses:`-Zeilen hängen an einer 40-stelligen Commit-SHA
+mit der Version als Kommentar. Die beiden lokalen bleiben ohne — ein lokaler
+Pfad nimmt keinen Ref und läuft immer auf dem Commit des Aufrufers, was
+strenger ist als ein Pin.
+
+Zwei `concurrency`-Gruppen, je eine Umgebung, **ohne** Abbruch: Ein
+abgebrochener Abgleich lässt eine Zustandsdatei zurück, die einen Server
+beschreibt, den es so nicht gibt.
+
+Und das Tor der grünen Läufe fragt jetzt nach dem **Job** `staging`, nicht
+nur nach dem Lauf: Ein übersprungener Job macht den Lauf nicht rot, das Tor
+zählte also bisher, dass ein Lauf stattgefunden hat — nicht, dass
+ausgeliefert wurde.
+
+### Was das kostet, und es ist benannt
+
+**Zwei Variablen verlieren ihren Vorgabewert** (`FTP_ZIELPFAD`,
+`FTP_STATE_PFAD`), dazu `WACHE_BASIS`. Fehlend heißt ab jetzt rot — vor
+jedem Zugriff auf den Server, mit einer Meldung, die sagt, was wo
+einzutragen ist. Am 21.09.2026 war `FTP_STATE_PFAD` auf `staging` gemessen
+leer; der erste Lauf danach wird dort also rot. **Das ist kein Unfall,
+sondern der Zweck:** Ein Vorgabewert, der einspringt, lässt eine falsch
+eingerichtete Anlage nicht auffallen — der Lauf wäre grün und
+synchronisierte in ein fremdes Verzeichnis.
+
 ## [Web 20.26.0] — 2026-09-20
 
 **Die Anwendung legt ihre Sitzungsdateien selbst ab.**

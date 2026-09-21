@@ -7,7 +7,9 @@ python3 tools/integritaetswache/wache.py --selbstprobe
 python3 tools/integritaetswache/wache.py https://127.0.0.1:8443 --unsicher
 ```
 
-Vorgabe der Adresse: `$WACHE_BASIS`, sonst `https://nadoku.gen-em.org`.
+Die Adresse kommt als erstes Argument oder aus `$WACHE_BASIS`. **Eine
+Vorgabe gibt es seit dem 21.09.2026 nicht mehr** (Kette II, E-KH-07): Fehlt
+beides, bricht das Werkzeug mit Rückgabewert 2 ab und sagt es.
 `--unsicher` schaltet die Zertifikatsprüfung ab — **nur** für eine lokale
 Installation mit selbst ausgestelltem Zertifikat.
 
@@ -247,9 +249,16 @@ nach einem Staging-Deploy schweigen ließe, obwohl der Vergleich gültig ist.
 GitHub-Benachrichtigung aus (Einstellung „Actions"). Wer die Meldung woanders
 haben will, braucht eine — vorher nicht.
 
-Die Adresse steht in der Repository-Variablen `WACHE_BASIS`; ist sie nicht
-gesetzt, gilt `https://nadoku.gen-em.org`. Ein Selbsthoster setzt die Variable
-und fasst die Workflow-Datei nicht an.
+Die Adresse steht in der Repository-Variablen `WACHE_BASIS`. Ein
+Selbsthoster setzt sie und fasst die Workflow-Datei nicht an.
+
+**Fehlt sie, ist der Lauf rot** — seit dem 21.09.2026 (Kette II, AP6,
+E-KH-07). Vorher sprang `https://nadoku.gen-em.org` ein, und das war die
+bequeme Variante der gefährlichen Bauform: Wer die Variable vergaß oder
+vertippte, bekam keine Fehlermeldung, sondern **eine Wache, die eine andere
+Anlage bewachte**. Auf einer Selbsthoster-Installation hätte sie damit
+dauerhaft die fremde gemessen und zur eigenen geschwiegen — grün, und
+wertlos.
 
 ## Wenn sie rot wird
 

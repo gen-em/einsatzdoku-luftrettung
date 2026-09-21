@@ -86,7 +86,7 @@ jobs:
         # (E-KH-13). Beides aus dem Zeigerzweig zu nehmen waere falsch: Dann
         # liefe eine Wache, die so alt ist wie die Auslieferung, und eine
         # Verbesserung an ihr griffe erst nach dem naechsten Deploy.
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Gibt es den Zeiger `produktion` ueberhaupt?
         # FEHLENDER ZEIGER IST ROT MIT ANSAGE, NIE STILL GRUEN (E-KH-13).
@@ -112,7 +112,7 @@ jobs:
           echo "Zeiger 'produktion': $(git ls-remote --heads origin produktion | cut -f1)"
 
       - name: Zeiger auschecken — das ist der Vergleichsstand
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: produktion
           path: zeiger
@@ -139,7 +139,15 @@ jobs:
           # die Datei nicht anfassen muss.
           WACHE_BASIS: ${{ vars.WACHE_BASIS }}
         run: |
-          BASIS="${WACHE_BASIS:-https://nadoku.gen-em.org}"
+          # KEINE VORGABE MEHR (AP6, E-KH-07). Hier stand
+          # `${WACHE_BASIS:-https://nadoku.gen-em.org}` -- eine vergessene
+          # Variable ergab damit eine Wache, die die fest eingebaute Anlage
+          # bewachte und zur eigentlichen schwieg. Gruen, und wertlos.
+          if [ -z "${WACHE_BASIS:-}" ]; then
+            echo "::error::Die Repositoriums-Variable WACHE_BASIS ist leer. Ohne sie weiss die Wache nicht, welche Anlage sie messen soll — und eine Vorgabe gibt es seit AP6 absichtlich nicht mehr. Eintragen unter Settings -> Secrets and variables -> Actions -> Variables."
+            exit 1
+          fi
+          BASIS="$WACHE_BASIS"
           echo "Basisadresse: $BASIS"
           rc=0
           python3 tools/integritaetswache/wache.py "$BASIS" --stand zeiger \

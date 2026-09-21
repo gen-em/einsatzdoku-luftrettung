@@ -21,10 +21,10 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, AP5 GEBAUT und zur Haelfte abgenommen (Form und Pflichtfreigabe belegt, Lauf 35566000648; offen bleibt der Staging-Lauf, der an einem Push auf `main` haengt).** AP6 bis AP8 nicht begonnen |
+> | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, AP5 GEBAUT und zur Haelfte abgenommen (Form und Pflichtfreigabe belegt, Lauf 35566000648), AP6 GEBAUT (Abnahme offen — sie verlangt einen provozierten Fehlschlag auf Staging).** AP7 und AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **33** (Abschnitt 2): F-KH-U-01 bis F-KH-U-34 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben |
+> | Funde | **34** (Abschnitt 2): F-KH-U-01 bis F-KH-U-35 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben |
 > | F3 | **GEFUNDEN UND BEHOBEN, der Beleg ist gefahren.** Ursache: `RETR` auf die nicht vorhandene Zustandsdatei tötet die Verbindung; die Aktion deutet es als „first publish" und arbeitet mit einem toten Client weiter, bis das erste `MKD` es bemerkt — **drei Schritte hinter der Stelle, die sie meldet** (F-KH-U-25). Abhilfe: die Datei einmal hinlegen, bevor die Aktion läuft (AP4, Richtung (e), `tools/kette/zustand.py`). Beleg: **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige Abgleich gegen diesen Server überhaupt (F-KH-U-28). **E-KH-09 ist erfüllt** |
 > | Prüfliste | **28** Punkte: **13 abgehakt**, 5 teilweise, **10 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu: **22** (die drei Zugangswerte eine Ebene höher löschen, F-KH-U-32) und **23** (die Pflichtfreigabe nach dem Umbau von AP5 nachmessen, F-KH-U-31) |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
@@ -512,6 +512,44 @@ Error: Client is closed because read ECONNRESET (data socket)
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-35 — Das Tor der grünen Läufe zählte Läufe, nicht Auslieferungen.
+Ein übersprungener `staging`-Job galt ihm als „stand auf Staging".**
+*Gefunden beim Bauen von AP6, 21.09.2026 — nicht durch einen Lauf, sondern
+durch die Frage, was E-KH-12 für dieses Tor bedeutet.*
+
+Das Tor vor der Produktivauslieferung fragte:
+
+```
+gh api ".../auslieferung.yml/runs?head_sha=$sha&status=success"
+  --jq '[.workflow_runs[] | select(.event == "push")] | length'
+```
+
+Das zählt **Läufe**, die grün endeten. Ein Lauf ist aber auch dann grün, wenn
+der Job `staging` darin **übersprungen** wurde — GitHub wertet einen
+übersprungenen Job als erfüllte Abhängigkeit, nicht als Fehlschlag. Genau
+diese Lücke hat am 20.09.2026 schon einmal zugeschlagen, an anderer Stelle:
+Der Zeiger `produktion` wanderte auf einen Commit, der nie auf dem Server
+lag, weil `needs` allein nicht zwischen „gelaufen" und „übersprungen"
+unterscheidet (Kommentar im Job `zeiger`).
+
+**Was das wert war:** Das Tor soll sicherstellen, dass dieser Stand auf
+Staging gestanden hat. Es hat sichergestellt, dass an diesem Commit ein
+`auslieferung.yml`-Lauf grün geworden ist. Seit AP5 ist das noch weniger
+wert als vorher: Ein Probelauf-Dispatch überspringt `staging` jetzt
+absichtlich (F-KH-U-33) — der Lauf ist grün, und der Job hat nie gearbeitet.
+
+**Behoben in AP6:** Das Tor liest die Jobs jedes Kandidatenlaufs nach und
+zählt nur, wo ein Job mit `startswith("staging")` die `conclusion: success`
+trägt. `startswith` und nicht Gleichheit, weil der Jobname seit AP5
+zusammengesetzt ist (`staging / ausliefern`) — mit einer Zeile daneben, die
+sagt, dass eine Umbenennung des aufrufenden Jobs diese Stelle mitnimmt.
+Sonst zählte sie still null, und das Tor ginge nie wieder auf.
+
+**Die Lehre ist dieselbe wie bei F-KH-U-33:** „Der Lauf war grün" ist keine
+Aussage über das, was darin geschehen ist.
+
+---
 
 **F-KH-U-34 — Die Form von AP5 trägt: Die Pflichtfreigabe folgt dem
 `environment:` in den aufgerufenen Arbeitslauf. Und die drei Zugangswerte
@@ -2643,6 +2681,69 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   *Was der Punkt NICHT abdeckt:* die **Staging-Hälfte** der Abnahme von AP5
   (E-KH-14) — sie hängt an einem Push auf `main` und steht weiter offen.
 
+
+- [ ] **24 — Die Variablen eintragen, die ihren Vorgabewert verloren haben**
+  (AP6, E-KH-07). **Vor dem nächsten Lauf — sonst ist er rot, und zwar
+  absichtlich.**
+  *Warum:* `FTP_ZIELPFAD`, `FTP_STATE_PFAD` und `WACHE_BASIS` sprangen bis
+  AP6 auf einen fest eingebauten Wert zurück. Das ließ eine falsch
+  eingerichtete Anlage nicht auffallen: Der Lauf war grün und
+  synchronisierte in ein fremdes Verzeichnis. Jetzt heißt fehlend rot.
+  *Was gemessen ist und was nicht:* Auf `staging` war `FTP_ZIELPFAD`
+  **belegt** und `FTP_STATE_PFAD` **leer** (F-KH-U-31, Runde 2, Lauf
+  35549610955). Für `produktion` und für `WACHE_BASIS` sagt keine Messung
+  etwas — der bisherige Vorgabewert hat beide Fälle ununterscheidbar
+  gemacht.
+  *Weg:* Settings → Environments → `staging` bzw. `produktion` → Variables.
+  Die Werte, die bisher als Vorgabe einsprangen:
+
+  | Variable | `staging` | `produktion` |
+  |---|---|---|
+  | `FTP_ZIELPFAD` | `./staging/` | `./httpdocs/` |
+  | `FTP_STATE_PFAD` | `../.deploy-state-staging.json` | `../.deploy-state-produktion.json` |
+
+  **`WACHE_BASIS`** steht dagegen unter Settings → Secrets and variables →
+  Actions → Variables (Repositoriumsebene, nicht Umgebung) und trägt die
+  Adresse von Produktiv.
+  > **Die Tabelle nennt die alten Vorgaben, nicht die richtigen Werte.**
+  > Auf `staging` liegt seit dem Hosterwechsel ein anderer Pfad — gemessen
+  > hat der letzte Lauf dort `/`. Wer die Tabelle abschreibt, ohne
+  > nachzusehen, trägt einen Wert ein, der einmal gestimmt hat.
+  *Erwartet:* Der nächste Lauf kommt durch den ersten Schritt und nennt
+  Basisadresse, Zielpfad und Zustandsdatei im Protokoll.
+  *Scheitern erkennbar an:* „Die Variable … ist leer" im **ersten** Schritt.
+  Das kostet nichts — der Schritt steht vor dem Auschecken und vor jedem
+  Zugriff auf den Server.
+  *Und es ist zugleich der Nachweis:* Die Abnahme von AP6 verlangt
+  „fehlende Variable `FTP_ZIELPFAD` → rot vor jedem Zugriff". Solange
+  `FTP_STATE_PFAD` auf `staging` fehlt, führt der nächste Lauf diesen
+  Nachweis von selbst.
+
+- [ ] **25 — Der provozierte Fehlschlag nach „Wartung an"** (Abnahme von
+  AP6, E-KH-06). **Er macht Staging vorübergehend unbenutzbar — das gehört
+  dazu.**
+  *Warum:* Der Schlussschritt ist die einzige Stelle der Kette, die nur im
+  Unglück läuft. Ein Riegel, der nie ausgelöst hat, ist eine Behauptung.
+  *Weg:* In der Umgebung **`staging`** das Geheimnis `FTP_PASSWORD` auf
+  einen falschen Wert setzen → Push auf `main` (oder Handauslösung ohne
+  `probelauf`) → der Lauf kommt bis „Wartung einschalten" durch und
+  scheitert am FTPS-Abgleich.
+  *Erwartet:* Der Lauf ist **rot**; der Schlussschritt meldet als
+  Fehlerzeile **und** in der Zusammenfassung: `Wartung: an`, die gemeldete
+  Fassung, „Dateistand: unbekannt" und die zwei Bedienwege.
+  **Den Wortlaut bitte hierher kopieren** — die Abnahme verlangt ihn.
+  *Danach, und das ist Teil des Punktes:* Wartung auf Staging **von Hand**
+  aus (Betrieb → Updates → Wartung beenden), Geheimnis zurücksetzen, Lauf
+  wiederholen, grün.
+  *Scheitern erkennbar an:* Der Lauf ist rot, aber der Schlussschritt sagt
+  nichts oder meldet `Wartung: aus`, obwohl sie an ist. Dann liest er die
+  Antwort der Anlage falsch — die Selbstprobe von `tor.py` deckt zehn solche
+  Fälle ab, aber sie misst ohne Netz.
+  *Woran man sieht, dass der Lauf nichts belegt:* Er scheitert schon **vor**
+  „Wartung einschalten" (etwa im ersten Schritt an einer fehlenden
+  Variablen). Dann ist der Schlussschritt zwar gelaufen, aber der
+  interessante Zustand — Wartung an, Dateistand halb — ist nie entstanden.
+  Erst Prüfpunkt 24 erledigen.
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 

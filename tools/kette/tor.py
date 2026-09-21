@@ -18,7 +18,12 @@ DIE VIER UNTERBEFEHLE
     wartung-an    schaltet den Wartungsmodus ein (`wartung_einschalten('kette')`)
     wartung-aus   schaltet ihn aus
     zustand       holt den Zustand und schreibt ihn als JSON nach stdout;
-                  mit `--frage migration` nur `ja` oder `nein`
+                  mit `--frage` nur EINE Auskunft, zum Weiterverarbeiten:
+                  `migration` -> `ja`/`nein`, `version` -> die Fassung,
+                  `wartung` -> `an`/`aus`. Kennt der Server das Feld nicht,
+                  lautet die Antwort `unbekannt` und der Rueckgabewert 1 --
+                  nie eine erfundene Null (E-KH-19: die Kette des Tags N
+                  spricht mit dem Server der Fassung N-1).
     pause         hält die Hintergrundjobs an (`--sekunden N`) oder gibt sie
                   wieder frei (`--sekunden 0`)
 
@@ -49,7 +54,7 @@ Aufruf:
     python3 tools/kette/tor.py backup      --basis https://… --token …
     python3 tools/kette/tor.py wartung-an  --basis https://… --token …
     python3 tools/kette/tor.py wartung-aus --basis https://… --token …
-    python3 tools/kette/tor.py zustand     --basis https://… --token … [--frage migration]
+    python3 tools/kette/tor.py zustand     --basis https://… --token … [--frage migration|version|wartung]
     python3 tools/kette/tor.py pause       --basis https://… --token … --sekunden 1800
     python3 tools/kette/tor.py --selbstprobe
 
@@ -319,6 +324,51 @@ def backup_tor(basis: str, token: str, versuche: int, pause: int,
 
 # ---------------------------------------------------------------- Selbstprobe
 
+def zustand_auskunft(antwort: dict, frage: str):
+    """Beantwortet EINE Frage an die Zustandsantwort -- ohne Netz, ohne Zustand.
+
+    Rueckgabe: `(text, rueckgabewert)`.
+
+    WARUM DAS EINE EIGENE FUNKTION IST UND KEIN `if` IN `main()`: So laesst
+    sie sich von der Selbstprobe durchrechnen. Die interessanten Faelle sind
+    nicht die guten, sondern die halben -- eine Antwort ohne `ok`, ein Server,
+    der das Feld noch nicht kennt, ein `wartung`, das mal ein Objekt und mal
+    ein blosser Wahrheitswert ist. Jeder davon hat genau eine richtige
+    Antwort, und die heisst im Zweifel `unbekannt`.
+
+    **NIE EINE ERFUNDENE NULL.** Ein Schlussschritt, der „Wartung: aus" meldet,
+    weil er die Antwort nicht lesen konnte, schickt jemanden schlafen, waehrend
+    die Anlage zusteht.
+    """
+    if not antwort.get("ok"):
+        return "unbekannt", 1
+
+    if frage == "migration":
+        return ("ja" if antwort.get("migration_ausstehend") else "nein"), 0
+
+    if frage == "version":
+        fassung = antwort.get("version")
+        if not isinstance(fassung, str) or not fassung.strip():
+            return "unbekannt", 1
+        return fassung.strip(), 0
+
+    if frage == "wartung":
+        w = antwort.get("wartung")
+        # ZWEI FORMEN, UND BEIDE KOMMEN VOR: `zustand` liefert ein Objekt
+        # (`{'aktiv': …, 'seit': …, 'von': …}`), `wartung_an`/`wartung_aus`
+        # einen blossen Wahrheitswert. Wer nur die eine Form kennt, meldet
+        # gegen die andere „aus".
+        if isinstance(w, dict):
+            if "aktiv" not in w:
+                return "unbekannt", 1
+            return ("an" if w["aktiv"] else "aus"), 0
+        if isinstance(w, bool):
+            return ("an" if w else "aus"), 0
+        return "unbekannt", 1
+
+    return "unbekannt", 1
+
+
 def selbstprobe() -> int:
     """Bricht das Tor auch wirklich ab, und landet `sekunden` in der Adresse?
 
@@ -562,6 +612,43 @@ def selbstprobe() -> int:
            f"Eine 400-Antwort kommt mit ihrer Begründung an, nicht als Netzfehler "
            f"({list(antwort)})")
 
+    # ------------------------------------------------------------------
+    # `--frage` (AP6): version und wartung, und was bei halben Antworten
+    # herauskommen MUSS.
+    # ------------------------------------------------------------------
+    #
+    # DIE GUTEN FAELLE SIND NICHT DIE INTERESSANTEN. Ein Schlussschritt, der
+    # "Wartung: aus" meldet, weil er die Antwort nicht lesen konnte, schickt
+    # jemanden schlafen, waehrend die Anlage zusteht. Deshalb steht hier fuer
+    # jede unlesbare Form eine Lage.
+    VOLL = {"ok": True, "version": "20.26.0",
+            "wartung": {"aktiv": True, "seit": "x", "von": "kette"},
+            "migration_ausstehend": False}
+
+    pruefe(zustand_auskunft(VOLL, "version") == ("20.26.0", 0),
+           "--frage version gibt die Fassung und 0")
+    pruefe(zustand_auskunft(VOLL, "wartung") == ("an", 0),
+           "--frage wartung liest `wartung.aktiv` = true als 'an'")
+    pruefe(zustand_auskunft({**VOLL, "wartung": {"aktiv": False}}, "wartung") == ("aus", 0),
+           "…und `aktiv` = false als 'aus'")
+    pruefe(zustand_auskunft({**VOLL, "wartung": True}, "wartung") == ("an", 0),
+           "Die ANDERE Form -- ein blosser Wahrheitswert -- wird auch gelesen")
+    pruefe(zustand_auskunft(VOLL, "migration") == ("nein", 0),
+           "--frage migration antwortet unveraendert")
+
+    # E-KH-19: Die Kette des Tags N spricht mit dem Server der Fassung N-1.
+    # Ein Server, der ein Feld noch nicht kennt, darf keine Null erfinden.
+    pruefe(zustand_auskunft({"ok": True}, "version") == ("unbekannt", 1),
+           "ALTER SERVER: kein `version`-Feld -> 'unbekannt' und 1, nicht ''")
+    pruefe(zustand_auskunft({"ok": True}, "wartung") == ("unbekannt", 1),
+           "ALTER SERVER: kein `wartung`-Feld -> 'unbekannt' und 1, nicht 'aus'")
+    pruefe(zustand_auskunft({"ok": True, "wartung": {}}, "wartung") == ("unbekannt", 1),
+           "…und ein `wartung`-Objekt OHNE `aktiv` ebenso")
+    pruefe(zustand_auskunft({"ok": True, "version": "   "}, "version") == ("unbekannt", 1),
+           "Eine leere Fassung ist keine Fassung")
+    pruefe(zustand_auskunft({"ok": False, "version": "20.26.0"}, "version") == ("unbekannt", 1),
+           "Eine Antwort ohne `ok` wird gar nicht erst ausgeschlachtet")
+
     # Die Antwort der Installation bleibt die Antwort der Installation.
     pruefe(ohne_eigenes({"ok": True, "_serverzeit": "x"}) == {"ok": True},
            "`_serverzeit` steht nicht in der ausgegebenen Serverantwort")
@@ -587,8 +674,9 @@ def main(argv: list[str]) -> int:
                    help="backup: Wartezeit ZWISCHEN zwei Aufrufen")
     p.add_argument("--sekunden", type=int, default=None,
                    help="pause: so lange anhalten (0 = Pause aufheben)")
-    p.add_argument("--frage", choices=["migration"],
-                   help="zustand: nur diese eine Auskunft, als 'ja' oder 'nein'")
+    p.add_argument("--frage", choices=["migration", "version", "wartung"],
+                   help="zustand: nur diese eine Auskunft — migration: ja/nein, "
+                        "version: die Fassung, wartung: an/aus; unlesbar: unbekannt")
     p.add_argument("--selbstprobe", action="store_true",
                    help="ohne Netz prüfen, ob das Tor überhaupt zugeht")
     a = p.parse_args(argv)
@@ -627,12 +715,10 @@ def main(argv: list[str]) -> int:
         return 0 if antwort.get("ok") else 1
 
     antwort = rufen(a.basis, a.token, "zustand")
-    if a.frage == "migration":
-        if not antwort.get("ok"):
-            print("unbekannt")
-            return 1
-        print("ja" if antwort.get("migration_ausstehend") else "nein")
-        return 0
+    if a.frage:
+        text, rc = zustand_auskunft(antwort, a.frage)
+        print(text)
+        return rc
     print(json.dumps(ohne_eigenes(antwort), ensure_ascii=False, indent=2))
     return 0 if antwort.get("ok") else 1
 

@@ -177,7 +177,17 @@ def stand_kennung(pfad: Path) -> str:
     tag = git('describe', '--tags', '--exact-match', commit) or 'kein Tag'
     return f'{commit[:7]} ({tag})'
 
-VORGABE_BASIS = os.environ.get('WACHE_BASIS') or 'https://nadoku.gen-em.org'
+# DIE VORGABE IST MIT AP6 GEFALLEN (Kette II, E-KH-07). Hier stand bis zum
+# 21.09.2026 `… or 'https://nadoku.gen-em.org'`, und das war die bequeme
+# Variante der gefaehrlichen Bauform: Wer `WACHE_BASIS` vergass oder
+# vertippte, bekam keine Fehlermeldung, sondern eine Wache, die IRGENDEINE
+# Anlage bewachte -- die fest eingebaute. Auf einer Selbsthoster-Installation
+# haette sie damit dauerhaft die fremde Anlage gemessen und zur eigenen
+# geschwiegen.
+#
+# `None` heisst jetzt: Es wurde keine genannt. Wer das Werkzeug ohne Adresse
+# und ohne `WACHE_BASIS` aufruft, bekommt es gesagt (siehe `main()`).
+VORGABE_BASIS = os.environ.get('WACHE_BASIS') or None
 
 # Was unter `assets/` NICHT ausgeliefert wird oder nicht ausgeliefert werden
 # muss. `.md` ist Begleittext des Repositoriums.
@@ -951,6 +961,14 @@ def main() -> int:
                   file=sys.stderr)
             return 1
     basis = args[0] if args else VORGABE_BASIS
+    if not basis:
+        print('FEHLER: Keine Basisadresse. Erwartet wird sie als erstes Argument '
+              'oder in der Umgebungsvariablen WACHE_BASIS.\n'
+              '        Bis zum 21.09.2026 sprang hier `https://nadoku.gen-em.org` '
+              'ein; diese Vorgabe ist absichtlich weg (Kette II, E-KH-07),\n'
+              '        weil eine vergessene Variable sonst eine Wache ergab, die '
+              'die falsche Anlage bewacht -- und zwar gruen.', file=sys.stderr)
+        return 2
     return lauf(basis, unsicher)
 
 

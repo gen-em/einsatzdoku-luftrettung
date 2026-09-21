@@ -8831,6 +8831,39 @@ des gemeinsamen Laufs bestimmt. Alles Übrige ist gleich.
 **Der Anzeigename eines Jobs wird zusammengesetzt** — `staging / ausliefern`
 und `produktion / ausliefern`. Die **Schritt**namen bleiben, wie sie waren.
 
+**Die Reihenfolge ist seit AP6 eine Regel und keine Gewohnheit** (E-KH-06):
+*Alles, was scheitern kann, ohne den Server zu verändern, steht vor dem
+Wartungsschalter; unmittelbar danach folgt der Abgleich.* Vorher lagen die
+`doku`-Kopie, der Gesprächslauf-Riegel und das Bereitstellen der
+Zustandsdatei **hinter** „Wartung an" — scheiterte einer davon, stand die
+Anlage zu, ohne dass auch nur eine Datei ausgeliefert worden wäre.
+
+Dazu drei Schritte, die es vorher nicht gab:
+
+| Schritt | Wofür |
+|---|---|
+| **Adressvergleich** | `PRODUKTION_URL` gegen `WACHE_BASIS`. Gehen sie auseinander, liefert die Kette nach A aus und die Wache bewacht B — **beide Seiten sind für sich grün**, und der Produktivserver bliebe unbeobachtet |
+| **Versionsprüfung nach dem Abgleich** | Der FTPS-Schritt meldet Erfolg, wenn die Übertragung gelungen ist — nicht, wenn die Anwendung danach die neue Fassung ausliefert. Stimmt sie nicht: rot, **Wartung bleibt an** |
+| **Schlussschritt** (`if: failure()`) | Fragt die Anlage nach Wartungsmodus und Fassung und schreibt beides samt „Dateistand unbekannt" und den zwei Bedienwegen in die Zusammenfassung. Antwortet sie nicht, steht dort **`unbekannt`** — nie „aus" |
+
+**Zwei `concurrency`-Gruppen, je eine Umgebung, ohne Abbruch** (E-KH-11). Ein
+abgebrochener Produktivlauf ließe die Wartung an und einen halben Dateistand
+oben; ein abgebrochener Staging-Abgleich ist nicht harmloser, weil die
+Zustandsdatei der Aktion dann einen Server beschreibt, den es so nicht gibt.
+**Bekannte Folge, benannt statt verschwiegen:** Je Gruppe wartet höchstens
+ein Lauf; ein dritter verdrängt den zweiten wartenden. Für Staging ist das
+hinnehmbar — der jüngste Stand gewinnt, und genau den will man.
+
+**Alle zehn fremden `uses:`-Zeilen hängen an einer 40-stelligen Commit-SHA**
+(E-KH-10), die Version steht als Kommentar daneben. Die beiden **lokalen**
+(`./.github/workflows/ausliefern-lauf.yml`) tragen keine und können es
+nicht: Ein lokaler Pfad nimmt keinen Ref und läuft immer auf dem Commit des
+Aufrufers — das ist strenger als ein Pin, nicht schwächer.
+
+**Das Tor der grünen Läufe fragt nach dem Job, nicht nach dem Lauf.** Ein
+übersprungener Job macht den Lauf nicht rot; bis AP6 zählte das Tor also,
+dass ein Lauf stattgefunden hat, und nicht, dass ausgeliefert wurde.
+
 > **Die Pflichtfreigabe wandert mit — nachgemessen.** Sie hängt am
 > `environment:`, und das liegt seit AP5 im aufgerufenen Lauf. Beides ist
 > belegt: dass die Umgebung dort **bindet** (F-KH-U-31) und dass die
@@ -9328,12 +9361,21 @@ sondern an den **Umgebungen**:
 > haben** — sonst ist jede Prüfung auf sein Vorhandensein eine Prüfung auf
 > den falschen Wert. Den maschinellen Nachweis baut AP6 ein.
 
-**`FTP_ZIELPFAD` und `FTP_STATE_PFAD` tragen heute noch Vorgabewerte**
-(`./staging/` bzw. `./httpdocs/`, `../.deploy-state-staging.json` bzw.
-`../.deploy-state-produktion.json`) — eine fehlende Variable führt damit
-still in ein fremdes Verzeichnis, statt den Lauf anzuhalten. Beide verlieren
-ihre Vorgabe mit Konzept Kette II (E-KH-07, AP6); bis dahin gehören sie in
-**beiden** Umgebungen ausdrücklich gesetzt (Zuarbeit Z4).
+**`FTP_ZIELPFAD` und `FTP_STATE_PFAD` haben ihre Vorgabewerte mit AP6
+verloren** (Kette II, E-KH-07, 21.09.2026). Bis dahin sprang bei fehlender
+Variable `./staging/` bzw. `./httpdocs/` ein und
+`../.deploy-state-staging.json` bzw. `../.deploy-state-produktion.json` —
+eine fehlende Variable führte damit **still in ein fremdes Verzeichnis**,
+statt den Lauf anzuhalten. **Jetzt heißt fehlend rot**, und zwar im ersten
+Schritt des Auslieferungslaufs: vor dem Auschecken, vor den Geheimnissen,
+vor jedem Zugriff auf den Server. Die Meldung nennt den Namen der Variablen,
+die Umgebung und den Weg in die Einstellungen.
+
+**Sie gehören damit in beiden Umgebungen ausdrücklich gesetzt** (Zuarbeit
+Z4). Am 21.09.2026 war `FTP_STATE_PFAD` auf `staging` **gemessen leer**
+(F-KH-U-31, Runde 2); der erste Lauf nach AP6 wird dort rot, bis sie steht.
+Dasselbe gilt für `WACHE_BASIS`, das seine Vorgabe an zwei Stellen verloren
+hat — in `integritaet.yml` und in `wache.py` selbst.
 
 **Seit AP5 stehen diese Vorgaben an EINER Stelle** — im ersten Schritt des
 gemeinsamen Laufs, zusammen mit der Basisadresse, in einem `case` über die

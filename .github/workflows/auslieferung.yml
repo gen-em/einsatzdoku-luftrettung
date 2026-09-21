@@ -217,7 +217,7 @@ jobs:
       JOBS_TOKEN:    ${{ secrets.JOBS_TOKEN }}
     steps:
       - name: Code auschecken
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Antwortet Staging wie eine eingerichtete Installation?
         # SEIT DEM 16.09.2026, UND ZWAR AUS EINEM KONKRETEN ANLASS: Solange
@@ -247,9 +247,9 @@ jobs:
         # und nicht erst, wenn jemand die fremde Seite sucht.
         run: |
           if [ -z "${STAGING_URL:-}" ]; then
-            echo "::warning::STAGING_URL fehlt — Stufe 2 ÜBERSPRUNGEN, nicht gemessen."
-            echo '**Stufe 2: ÜBERSPRUNGEN** (keine STAGING_URL) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
+            echo "::error::STAGING_URL fehlt — Stufe 2 kann nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Eintragen unter Settings -> Environments -> staging -> Variables."
+            echo '**Stufe 2: NICHT GEMESSEN** (keine `STAGING_URL`) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
           antwort=$(curl -sS -o /tmp/staging-login.html -L --max-time 30 \
                          -w '%{http_code} %{url_effective}' "$STAGING_URL/login.php" || echo '000 -')
@@ -307,9 +307,9 @@ jobs:
         # steht.
         run: |
           if [ -z "${STAGING_URL:-}" ]; then
-            echo "::warning::STAGING_URL fehlt — Punktdatei-Prüfung ÜBERSPRUNGEN, nicht gemessen."
-            echo '**Punktdateien: ÜBERSPRUNGEN** (keine STAGING_URL) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
+            echo "::error::STAGING_URL fehlt — die Punktdatei-Prüfung kann nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Eintragen unter Settings -> Environments -> staging -> Variables."
+            echo '**Punktdateien: NICHT GEMESSEN** (keine `STAGING_URL`) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
           fehler=0
 
@@ -342,9 +342,9 @@ jobs:
         # Zugangsdaten grün meldet, hat nichts gemessen (`CLAUDE.md` 6).
         run: |
           if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ]; then
-            echo "::warning::Prüfkonto auf Staging fehlt — Kreisläufe ÜBERSPRUNGEN, nicht gemessen."
-            echo '**Kreisläufe: ÜBERSPRUNGEN** (kein Prüfkonto) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
+            echo "::error::Prüfkonto auf Staging fehlt — die Kreisläufe können nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Erwartet werden STAGING_KONTO und STAGING_PASS in der Umgebung staging."
+            echo '**Kreisläufe: NICHT GEMESSEN** (kein Prüfkonto) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
           # ALLE RIEGEL VOR DER ERSTEN INSTALLATION. Der JOBS_TOKEN-Riegel
           # stand zuerst hinter pip, npm und dem Chromium-Download: Fehlte das
@@ -353,9 +353,9 @@ jobs:
           # weiter „übersprungen, nicht gemessen" gestanden hätte. Man sucht
           # dann am falschen Ort. Begründung zum Token selbst weiter unten.
           if [ -z "${JOBS_TOKEN:-}" ]; then
-            echo "::warning::JOBS_TOKEN der Umgebung staging fehlt — Kreisläufe ÜBERSPRUNGEN, nicht gemessen."
-            echo '**Kreisläufe: ÜBERSPRUNGEN** (kein `JOBS_TOKEN`) — nicht gemessen. Der Wert steht auf Staging unter Betrieb → Hintergrundjobs.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
+            echo "::error::JOBS_TOKEN der Umgebung staging fehlt — die Kreisläufe können nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Der Wert steht auf Staging unter Betrieb -> Hintergrundjobs."
+            echo '**Kreisläufe: NICHT GEMESSEN** (kein `JOBS_TOKEN`) — der Lauf ist deshalb rot. Der Wert steht auf Staging unter Betrieb → Hintergrundjobs.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
           pip -q install cffi cryptography
           # PLAYWRIGHT LIEGT NICHT DA, WO DIE WERKZEUGE ES SUCHEN.
@@ -423,9 +423,9 @@ jobs:
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
         run: |
           if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ]; then
-            echo "::warning::Prüfkonto auf Staging fehlt — Bilderlauf ÜBERSPRUNGEN, nicht gemessen."
-            echo '**Bilderlauf: ÜBERSPRUNGEN** (kein Prüfkonto) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
+            echo "::error::Prüfkonto auf Staging fehlt — der Bilderlauf kann nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Erwartet werden STAGING_KONTO und STAGING_PASS in der Umgebung staging."
+            echo '**Bilderlauf: NICHT GEMESSEN** (kein Prüfkonto) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
           # PLAYWRIGHT LIEGT NICHT DA, WO DIE WERKZEUGE ES SUCHEN.
           # `aufnehmen.mjs` und `kreislauf.py` laden es ueber einen PFAD
@@ -637,7 +637,7 @@ jobs:
       contents: write
     steps:
       - name: Code auschecken
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # Volle Historie: Ohne sie kennt der Laeufer den bisherigen Zeiger
           # nicht und koennte nicht sagen, wohin er sich bewegt.
