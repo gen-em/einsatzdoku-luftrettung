@@ -817,6 +817,11 @@ Konzepts eine Auskunft (1.2); deshalb vor der Freigabe.
 - `stufe2`: drei Schritte plus der leere Platz für Nr. 234; Zeitgrenze
   20 min; Cache, wo tragfähig; Kommentare auf einen Satz. `ausliefern-lauf.yml`
   und `integritaet.yml`: nur Kommentare, kein Schritt ändert sich.
+- **Vorgezogen am 21.09.2026** (Einschub 1, Abschnitt 8): die drei Schritte
+  und die Zeitgrenze (E-PK-17) sowie eine `concurrency`-Gruppe je Umgebung,
+  wartend statt abbrechend. Für PK-06 bleiben: der Platz für Nr. 234
+  (E-PK-21), der Cache, die Kommentare, `integritaet.yml`, der
+  Kopfkommentar von `pruefung.yml` (fällt mit PK-05).
 - **Abnahme:** Push auf `main` → Staging grün, Stufe 2 grün, zusammen unter
   zehn Minuten; Stufe 2 mit falschem `STAGING_PASS` → rot **innerhalb einer
   Minute** mit dem Grund; alle vier Arbeitsläufe zusammen unter 1 200 Zeilen
@@ -914,6 +919,28 @@ nach PK; „Mailversand auf Staging fehlgeschlagen" (Z4); „App-Signatur in der
 Kette" (PK-08, ersetzt den Nachtrag zu Nr. 100).
 
 **`CLAUDE.md` 7:** die Benennungsregel E-PK-09.
+
+**Einschub 1 — Vorgriff auf PK-06 (21.09.2026, PR nach PR #70, Backlog
+Nr. 268).** Anlass: Der erste Tag durch Kette II (`web-v20.26.3`, Lauf
+35646453443) blieb am Tor der grünen Läufe hängen. Das Tor zählt nur
+Staging-Läufe, die **als Ganzes** grün sind, und der Lauf auf `807f462` war
+rot am Bilderlauf: Er meldet sich für 32 Seiten mit dem Vorgabekennwort als
+`demo@gen-em.org` an, und dieses Konto gab es auf der neuen Staging-Anlage
+nie (Kette II hatte es in Z7 vorgesehen und Z7 ohne diese Messung als
+erfüllt gebucht). Dazu zwei Befunde aus derselben Stunde: `auslieferung.yml`
+hatte keine `concurrency`-Gruppe, zwei Merges innerhalb einer Minute liefen
+überlappend nach Staging, und die Jobpause des einen (1800 s) schloss das
+Backup-Tor des anderen (40 Aufrufe, 13 min rot ohne übertragene Datei).
+**Vorgezogen:** Stufe 2 auf Antwortprobe, Punktdateien, edbak-Kreislauf
+(E-PK-01, E-PK-17), Zeitgrenze 20 min; eine Gruppe je Umgebung, der jüngere
+Lauf wartet (ein Abbruch mitten im Abgleich hinterließe einen halben Stand
+bei eingeschalteter Wartung). **Entschieden dabei:** kein Demo-Konto mit
+Vorgabekennwort auf Staging; `pruefung.yml` unangetastet, weil jede Änderung
+dort einmal alles misst. **Gemessen vor dem Vorgriff:** Job `staging` grün
+in 31 s, Kreisläufe csv und edbak gegen MySQL 8.4.10 grün in 104 s — der
+Beleg für Nr. 267 auf der echten Anlage. **Folge für M1:** Der Tag wandert
+auf den Commit des Vorgriff-Merges; `web-v20.26.3` auf `807f462` wird
+gelöscht und neu gesetzt, er hat nie ausgeliefert.
 
 ---
 
