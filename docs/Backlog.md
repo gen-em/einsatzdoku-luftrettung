@@ -3133,9 +3133,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Produktiv stehen die zwei Schritte noch. Sie werden falsch in dem
     Augenblick, in dem AP5 dort ankommt — also gehören sie in genau dieses
     Paket. Dazu kommt, dass eine Änderung unter `server/` eine Versionsstufe
-    und einen Changelog-Eintrag verlangt (`CLAUDE.md` 2); eine Nummer dafür
-    auszugeben, solange **Prüfpunkt 23** AP5 noch zurücknehmen kann, hieße
-    sie für etwas auszugeben, das vielleicht nicht bleibt.
+    und einen Changelog-Eintrag verlangt (`CLAUDE.md` 2), und die gehört zu
+    dem Paket, das ohnehin Code bewegt.
+
+    *Nachtrag 21.09.2026:* Der zweite Grund war ursprünglich ein anderer —
+    **Prüfpunkt 23** hätte AP5 noch zurücknehmen können. Er ist am selben
+    Tag abgehakt worden (F-KH-U-34), AP5 bleibt. Der Punkt bleibt trotzdem
+    stehen, weil der erste Grund trägt: Die Sätze sind richtig, solange die
+    ausgelieferte Kette zwei FTPS-Schritte hat.
 
     **Nicht betroffen:** die zwei Stellen in `server/version.php` (5514,
     5781). Sie stehen im Werdegang der Fassungen und beschreiben den Stand

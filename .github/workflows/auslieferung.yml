@@ -563,12 +563,16 @@ jobs:
     # kein `environment:` tragen -- das ist keine Wahl, sondern die Bauform.
     #
     # **DARAN HAENGT DAS TOR, UND DESHALB STEHT ES HIER NOCH EINMAL:**
-    # Gemessen ist, dass die Umgebung dort BINDET (Umgebungswerte loesen im
-    # aufgerufenen Lauf auf und ausserhalb nicht). NICHT gemessen ist, ob die
-    # PFLICHTFREIGABE mitwandert -- `staging` hat keine, also kann kein Lauf
-    # dagegen es zeigen. Der Beweis ist ein Probelauf mit dieser Struktur
-    # (Pruefdokument, Pruefpunkt 23), und er steht VOR dem naechsten Tag.
-    # Fragt er nicht nach der Freigabe, wird AP5 zurueckgenommen.
+    # Gemessen ist beides -- dass die Umgebung dort BINDET (F-KH-U-31) und
+    # dass die PFLICHTFREIGABE mitwandert: **Lauf 35566000648 vom 21.09.2026
+    # hat die Freigabe angefordert und gestanden, bis sie erteilt war**
+    # (F-KH-U-34, Pruefpunkt 23).
+    #
+    # **WER DIE STRUKTUR WIEDER ANFASST, MISST ES NEU.** Zeigte das
+    # `environment:` drueben ins Leere, liefe dieser Job ohne Umgebung und
+    # damit ohne Freigabe -- gruen, nur eben ungefragt, und ein Tag-Push
+    # ginge unbemerkt auf Produktiv. Der Nachweis ist ein Probelauf und ein
+    # Klick; er liefert nichts aus.
     uses: ./.github/workflows/ausliefern-lauf.yml
     with:
       umgebung: produktion

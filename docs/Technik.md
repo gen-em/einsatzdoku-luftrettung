@@ -8831,13 +8831,15 @@ des gemeinsamen Laufs bestimmt. Alles Übrige ist gleich.
 **Der Anzeigename eines Jobs wird zusammengesetzt** — `staging / ausliefern`
 und `produktion / ausliefern`. Die **Schritt**namen bleiben, wie sie waren.
 
-> **Ein Vorbehalt, und er steht hier und nicht in einer Fußnote:** Die
-> Pflichtfreigabe hängt am `environment:`, und das liegt seit AP5 im
-> aufgerufenen Lauf. Dass die Umgebung dort **bindet**, ist gemessen
-> (F-KH-U-31). Dass die **Freigabepflicht** mitwandert, ist es nicht —
-> `staging` hat keine, also kann kein Lauf dagegen es zeigen. Der Beweis ist
-> ein Probelauf gegen `produktion` (Prüfdokument Kette II, Prüfpunkt 23),
-> und er steht **vor** dem nächsten Tag.
+> **Die Pflichtfreigabe wandert mit — nachgemessen.** Sie hängt am
+> `environment:`, und das liegt seit AP5 im aufgerufenen Lauf. Beides ist
+> belegt: dass die Umgebung dort **bindet** (F-KH-U-31) und dass die
+> **Freigabepflicht** mitwandert — **Lauf 35566000648 vom 21.09.2026 hat
+> die Freigabe angefordert und gestanden, bis sie erteilt war**
+> (F-KH-U-34). Ein Ausdruck, der ins Leere zeigte, ließe den Job ohne
+> Umgebung und damit ohne Freigabe laufen; **wer diese Zeile ändert, misst
+> es neu** — ein Probelauf gegen `produktion` kostet einen Klick und
+> liefert nichts aus.
 
 **Der Tag ist die Fassung** (F-P5a-1, entschieden 15.09.2026): `web-vX.Y.Z`,
 gleich `WEB_VERSION` in `server/version.php`. Der Produktionslauf verweigert,
@@ -9313,14 +9315,18 @@ sondern an den **Umgebungen**:
 > aufgeht.** Ausgeliefert wird weiterhin richtig (die Umgebung gewinnt gegen
 > die Ebene darüber); was fehlt, ist die Warnung.
 >
-> **Abhilfe ist ein Klick und kein Code:** die drei Werte auf
-> Repositoriums- bzw. Organisationsebene löschen, die in den Umgebungen
-> stehen lassen. Der Bedienweg steht im Prüfdokument von Kette II als
-> **Prüfpunkt 22** — samt dem Hinweis, dass ein *Organisations*geheimnis
-> vorher gegen andere Repositorien der Organisation zu prüfen ist. Die Regel
-> daraus (E-KH-28): **Ein Wert, den die Kette aus einer Umgebung liest, darf
-> auf keiner Ebene darüber denselben Namen haben** — sonst ist jede Prüfung
-> auf sein Vorhandensein eine Prüfung auf den falschen Wert.
+> **BEHOBEN am 21.09.2026** (Prüfpunkt 22, F-KH-U-34). Es waren drei
+> *Repository secrets*, zwei Monate alt und damit älter als die Umstellung
+> auf Umgebungen — Reste, die beim Umzug liegen geblieben sind;
+> Organisationsgeheimnisse gab es keine. Die Betreiberin hat sie gelöscht,
+> die Gegenprobe ist gefahren (Lauf 35566000648: die Zielprobe schreibt,
+> holt zurück, vergleicht und löscht — mit den reinen Umgebungswerten).
+> **Der erste Schritt kann damit wieder fehlschlagen.**
+>
+> **Die Regel bleibt und gilt weiter (E-KH-28): Ein Wert, den die Kette aus
+> einer Umgebung liest, darf auf keiner Ebene darüber denselben Namen
+> haben** — sonst ist jede Prüfung auf sein Vorhandensein eine Prüfung auf
+> den falschen Wert. Den maschinellen Nachweis baut AP6 ein.
 
 **`FTP_ZIELPFAD` und `FTP_STATE_PFAD` tragen heute noch Vorgabewerte**
 (`./staging/` bzw. `./httpdocs/`, `../.deploy-state-staging.json` bzw.

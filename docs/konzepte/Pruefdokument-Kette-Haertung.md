@@ -21,12 +21,12 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, AP5 GEBAUT (Abnahme offen — Pruefpunkt 23 und ein Staging-Lauf).** AP6 bis AP8 nicht begonnen |
+> | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, AP5 GEBAUT und zur Haelfte abgenommen (Form und Pflichtfreigabe belegt, Lauf 35566000648; offen bleibt der Staging-Lauf, der an einem Push auf `main` haengt).** AP6 bis AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **32** (Abschnitt 2): F-KH-U-01 bis F-KH-U-33 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben |
+> | Funde | **33** (Abschnitt 2): F-KH-U-01 bis F-KH-U-34 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben |
 > | F3 | **GEFUNDEN UND BEHOBEN, der Beleg ist gefahren.** Ursache: `RETR` auf die nicht vorhandene Zustandsdatei tötet die Verbindung; die Aktion deutet es als „first publish" und arbeitet mit einem toten Client weiter, bis das erste `MKD` es bemerkt — **drei Schritte hinter der Stelle, die sie meldet** (F-KH-U-25). Abhilfe: die Datei einmal hinlegen, bevor die Aktion läuft (AP4, Richtung (e), `tools/kette/zustand.py`). Beleg: **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige Abgleich gegen diesen Server überhaupt (F-KH-U-28). **E-KH-09 ist erfüllt** |
-> | Prüfliste | **28** Punkte: **11 abgehakt**, 5 teilweise, **12 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu: **22** (die drei Zugangswerte eine Ebene höher löschen, F-KH-U-32) und **23** (die Pflichtfreigabe nach dem Umbau von AP5 nachmessen, F-KH-U-31) |
+> | Prüfliste | **28** Punkte: **13 abgehakt**, 5 teilweise, **10 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu: **22** (die drei Zugangswerte eine Ebene höher löschen, F-KH-U-32) und **23** (die Pflichtfreigabe nach dem Umbau von AP5 nachmessen, F-KH-U-31) |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
 
 ---
@@ -178,39 +178,27 @@ nichts belegen.
 > **acht** geschützte Pfade. Die Zahl acht ist der Prüfwert. Was unverändert
 > gilt: Die Liste steht **zweimal**, und das ist AP5.
 
-**7 — Ob die Pflichtfreigabe dem `environment:` in einen aufgerufenen
-Arbeitslauf folgt, ist NICHT gemessen — und daran hängt AP5.** Die Formprobe
-(F-KH-U-31, Läufe 35549413032 und 35549610955) hat belegt, dass ein
-aufgerufener Lauf `environment:` als Ausdruck tragen darf und die Umgebung
-dabei wirklich **bindet**: Vier von sieben Werten sind drinnen belegt und
-draußen leer. Das ist die halbe Antwort. Die andere Hälfte — schaltet die
-**Freigabepflicht** dabei genauso vor den ersten Schritt wie heute? — kann
-kein Lauf gegen `staging` zeigen, weil `staging` keine hat. Und ein Lauf
-gegen `produktion`, nur um es zu sehen, wäre ein Missbrauch des Tors: Er
-zwingt die Betreiberin zum Klicken für eine Messung.
+**7 — ERLEDIGT am 21.09.2026: Die Pflichtfreigabe wandert mit.** Hier stand
+bis eben, dass es **nicht** gemessen sei, ob die Freigabepflicht dem
+`environment:` in einen aufgerufenen Arbeitslauf folgt — die Frage, an der
+die ganze Formwahl von AP5 hing. Sie ist beantwortet: **Lauf 35566000648
+hat die Freigabe angefordert und stand, bis die Betreiberin sie erteilt
+hat** (bestätigt von ihr, 21.09.2026). Einzelheiten in F-KH-U-34.
 
-Dass die Bindung greift, ist ein starkes Indiz — Umgebungswerte werden erst
-nach den Schutzregeln ausgeliefert —, aber ein Indiz ist keine Messung, und
-dieses Konzept hat dreimal bezahlt, was der Unterschied kostet. **Der Beweis
-steht als Prüfpunkt 23** und ist ein Probelauf: Bleibt er vor dem ersten
-Schritt stehen und fragt, trägt die Form. Läuft er durch, ohne zu fragen,
-wird AP5 zurückgenommen — der Ausweichweg (zusammengesetzte Aktion mit
-durchgereichten Eingaben) ist gemessen gangbar.
+**8 — ERLEDIGT am 21.09.2026: Die drei Zugangswerte sind weg.** Hier stand,
+dass zwar gemessen sei, **dass** sie außerhalb der Umgebungen liegen, aber
+nicht, **welcher Ebene** sie gehören. Nachgesehen: drei *Repository
+secrets*, keine Organisationsgeheimnisse („There are no organization secrets
+available to this repository"). Die Betreiberin hat sie am 21.09.2026
+gelöscht; derselbe Lauf 35566000648 ist die Gegenprobe. Ebenfalls in
+F-KH-U-34.
 
-**Solange Prüfpunkt 23 offen ist, wird kein Tag gesetzt.** Das ist keine
-zusätzliche Vorsicht, sondern dieselbe wie bisher: M1 steht ohnehin hinter
-der Freigabe der Betreiberin.
-
-**8 — Dass die drei FTPS-Zugangswerte außerhalb der Umgebungen liegen, ist
-gemessen; welcher Ebene sie gehören und welchen Wert sie tragen, ist es
-nicht.** F-KH-U-32 zeigt, dass `FTP_SERVER`, `FTP_USERNAME` und
-`FTP_PASSWORD` auch ohne `environment:` auflösen. Ob das
-Repositoriums- oder Organisationsgeheimnisse sind, sagt kein Lauf — die
-Unterscheidung steht nur in den Einstellungen. Und **welchen** Server sie
-nennen, ist absichtlich nicht gemessen: Ein Prüfmittel, das
-Zugangswerte ausgibt, um sie zu vergleichen, wäre schlimmer als der Befund.
-Beides gehört in einen Blick in die Einstellungen, und der steht als
-**Prüfpunkt 22**.
+> **Beide Punkte bleiben als erledigte stehen und werden nicht gestrichen.**
+> Abschnitt 0 ist die Liste dessen, was nicht geprüft werden konnte — wer sie
+> leert, sobald etwas geprüft ist, nimmt ihr die Auskunft darüber, **wie
+> lange** eine Lücke offen war und **wodurch** sie geschlossen wurde. Beide
+> hingen an einer Handlung der Betreiberin, und beide sind in einem einzigen
+> Lauf gefallen.
 
 ---
 
@@ -524,6 +512,74 @@ Error: Client is closed because read ECONNRESET (data socket)
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-34 — Die Form von AP5 trägt: Die Pflichtfreigabe folgt dem
+`environment:` in den aufgerufenen Arbeitslauf. Und die drei Zugangswerte
+sind weg.**
+*Lauf 35566000648, 21.09.2026, 05:49 UTC — Prüfpunkt 22 und 23 in einem
+Lauf; bestätigt von der Betreiberin.*
+
+**Das war der Riegel unter der ganzen Formwahl.** AP5 verlegt die
+Schrittfolge in einen aufgerufenen Arbeitslauf und damit die Zeile
+`environment:` aus `auslieferung.yml` dorthin. Dass die Umgebung dabei
+**bindet**, war gemessen (F-KH-U-31). Ob die **Freigabepflicht** mitwandert,
+war es nicht — gegen `staging` nicht messbar, und ein Lauf gegen
+`produktion` nur zum Zusehen wäre ein Missbrauch des Tors gewesen. Also
+wurde er mit dem Probelauf gefahren, der ohnehin fällig war.
+
+**Der Lauf hat die Freigabe angefordert und gestanden, bis sie erteilt
+war** (Betreiberin, 21.09.2026). **E-KH-27 gilt damit ohne Vorbehalt; AP5
+wird nicht zurückgenommen.**
+
+**Was der Lauf sonst belegt — die neue Struktur, Schritt für Schritt:**
+
+| | |
+|---|---|
+| Jobname | `produktion / ausliefern` — zusammengesetzt, wie gemessen |
+| `staging` | **übersprungen** — F-KH-U-33 trägt |
+| `stufe2` | übersprungen (folgt `staging` mangels eigenem `if:`) |
+| `zeiger` | übersprungen |
+| Adresse/Zielpfad/Zustandsdatei bestimmen | grün |
+| Geheimnisprüfung | grün |
+| Tag-Vergleich, Tor der grünen Läufe | übersprungen (Produktiv-only **und** Probelauf) |
+| **Zielprobe** | **grün, 17 s** |
+| Backup-Tor, Wartung, doku, Migration | übersprungen (Probelauf) |
+| Zustandsdatei bereitstellen | grün |
+| FTPS-Abgleich | grün, **2,3 s** |
+
+**Die Zielprobe ist der Beweis, dass der `case`-Schritt den richtigen Zweig
+genommen hat.** Sie schreibt per FTPS eine Datei mit Zufallsinhalt, holt sie
+über HTTPS unter der Basisadresse zurück, vergleicht, löscht und prüft das
+Löschen. Das gelingt nur, wenn FTP-Konto **und** Adresse beide die von
+`produktion` sind — genau dafür gibt es sie (E-KH-07). Eine Verwechslung der
+Umgebungen hätte hier aufgeschlagen und nicht erst beim Abgleich.
+
+**Und `env.ZUSTANDSPFAD` löst im `with:`-Block auf — jetzt auch in der
+echten Kette.** Im Protokoll steht
+`Saving current server state to "/../.deploy-state-produktion.json"`. Bis
+hierher war das nur am Wegwerf-Messmittel belegt (F-KH-U-31, Runde 3); jetzt
+steht es am echten Server. **`Total time: 2.3 seconds`** für 688 Dateien
+sagt dazu, dass es ein Trockenlauf war — ein echter Abgleich hat 7:47
+gebraucht (F-KH-U-28).
+
+**Prüfpunkt 22 ist mit demselben Lauf erledigt.** Die Betreiberin hat die
+drei *Repository secrets* vorher gelöscht; die Zielprobe hat danach mit den
+**reinen Umgebungswerten** funktioniert. Damit kann die Geheimnisprüfung im
+ersten Schritt wieder fehlschlagen — sie ist von einem Tor, das immer
+aufgeht, zu einem Riegel geworden. `CIQ_GERAETE_URL` steht unberührt in
+derselben Liste.
+
+**Was das NICHT belegt, und es steht hier und nicht in einer Fußnote:** die
+**Staging-Hälfte** der Abnahme von AP5. E-KH-14 verlangt einen Staging-Lauf,
+der dieselben Schrittnamen zeigt, mit genannter Dauer vorher/nachher, und
+einen Lauf mit ausstehender Migration, der die Wartung anlässt. Der hängt an
+einem **Push auf `main`** und ist damit der Betreiberin vorbehalten
+(`CLAUDE.md` 3 und 8). **AP5 ist damit zur Hälfte abgenommen:** Die Form
+steht, die Freigabe ist belegt, Produktiv hat den neuen Weg gefahren —
+Staging hat ihn noch nie gefahren. Das ist ausgerechnet die Hälfte, um
+derentwillen AP5 gebaut wurde.
+
+---
 
 **F-KH-U-33 — Der Probelauf hat ausgeliefert. Nach Staging, aber
 ausgeliefert — und mit AP5 hätte er die Testanlage zugesperrt.**
@@ -2491,8 +2547,13 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   die Abnahme von AP4 läuft — Probelauf gegen Produktiv zweimal
   hintereinander mit 0 geplanten Löschungen, dann die Freigabe.
 
-- [ ] **22 — Die drei FTPS-Zugangswerte eine Ebene höher löschen**
-  (F-KH-U-32). **Das ist der Punkt mit dem besten Verhältnis von Aufwand zu
+- [x] **22 — Die drei FTPS-Zugangswerte eine Ebene höher löschen**
+  (F-KH-U-32) — **ERLEDIGT am 21.09.2026 durch die Betreiberin.** Die drei
+  *Repository secrets* sind gelöscht, `CIQ_GERAETE_URL` steht unberührt
+  daneben. **Gegenprobe gefahren:** Lauf 35566000648 — die Zielprobe hat
+  mit den reinen Umgebungswerten geschrieben, zurückgeholt, verglichen und
+  gelöscht. Die Geheimnisprüfung im ersten Schritt ist damit von einem Tor,
+  das immer aufgeht, zu einem Riegel geworden (F-KH-U-34). **Das ist der Punkt mit dem besten Verhältnis von Aufwand zu
   Wirkung in diesem Dokument: drei Klicks, und die Geheimnisprüfung der
   Kette kann wieder fehlschlagen.**
   *Warum:* Gemessen am 21.09.2026 (Lauf 35549610955) lösen `FTP_SERVER`,
@@ -2557,29 +2618,31 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   Dagegen hilft nur die Freigabepflicht, und die steht auf `produktion`
   schon.
 
-- [ ] **23 — Die Pflichtfreigabe nach dem Umbau von AP5 nachmessen**
-  (F-KH-U-31). **Der Riegel unter der Formentscheidung — er kostet einen
-  Probelauf und einen Klick.**
-  *Warum:* AP5 legt die Schrittfolge in einen aufgerufenen Arbeitslauf, und
-  damit wandert die Zeile `environment:` aus `auslieferung.yml` dorthin.
-  Gemessen ist, dass die Umgebung dabei **bindet** (vier von sieben Werten
-  unterscheiden sich in genau der Richtung, die es beweist). **Nicht**
-  gemessen ist, ob die **Freigabepflicht** mitwandert — auf `staging` gibt
-  es keine, also kann kein Lauf gegen Staging es zeigen.
-  *Weg:* GitHub → Actions → „Auslieferung" → **Run workflow** → Zweig
-  `claude/fervent-dirac-xirsqw` → Häkchen **`probelauf`** ✓ → starten.
-  *Erwartet:* Der Lauf bleibt stehen und fragt nach der Freigabe,
-  **bevor** ein Schritt des Produktiv-Jobs gelaufen ist — genau wie vor dem
-  Umbau.
-  *Woran ein Scheitern zu erkennen ist — und es ist das ernsteste in diesem
-  Dokument:* Der Lauf läuft **durch, ohne zu fragen**. Dann trägt die
-  gewählte Form die Pflichtfreigabe nicht, und ein Tag-Push liefe künftig
-  ungefragt auf Produktiv. **Dann wird AP5 zurückgenommen**, und die
-  Schrittfolge bleibt dort, wo `environment:` heute steht — die
-  zusammengesetzte Aktion mit durchgereichten Eingaben ist der Ausweichweg,
-  gemessen als gangbar (F-KH-U-31, Messung B).
-  *Vorher nicht zu tun:* kein Tag setzen, keine echte Auslieferung. Dieser
-  Punkt steht vor M1, nicht danach.
+- [x] **23 — Die Pflichtfreigabe nach dem Umbau von AP5 nachmessen**
+  (F-KH-U-31) — **ERLEDIGT am 21.09.2026, Lauf 35566000648.** Der Lauf hat
+  die Freigabe **angefordert und gestanden, bis die Betreiberin sie erteilt
+  hat** (von ihr bestätigt). Die Form von AP5 trägt die Pflichtfreigabe;
+  **E-KH-27 gilt ohne Vorbehalt, AP5 wird nicht zurückgenommen.** Die
+  übrigen Zahlen des Laufs stehen in F-KH-U-34.
+  *Warum es diesen Punkt gab:* AP5 legt die Schrittfolge in einen
+  aufgerufenen Arbeitslauf, und damit wandert die Zeile `environment:` aus
+  `auslieferung.yml` dorthin. Dass die Umgebung dabei **bindet**, war
+  gemessen (vier von sieben Werten unterscheiden sich in genau der Richtung,
+  die es beweist). Ob die **Freigabepflicht** mitwandert, war es nicht — auf
+  `staging` gibt es keine, also konnte kein Lauf dagegen es zeigen.
+  *Gefahrener Weg:* Actions → „Auslieferung" → **Run workflow** → Zweig
+  `claude/fervent-dirac-xirsqw` → Häkchen **`probelauf`** ✓ → starten →
+  Freigabe erteilen.
+  *Was der Fehlschlag gewesen wäre — und er wäre der ernsteste in diesem
+  Dokument gewesen:* Der Lauf läuft **durch, ohne zu fragen**. Dann trüge
+  die gewählte Form die Pflichtfreigabe nicht, und ein Tag-Push liefe
+  künftig ungefragt auf Produktiv. AP5 wäre zurückgenommen worden; der
+  Ausweichweg — zusammengesetzter Baustein mit durchgereichten Eingaben —
+  ist gemessen gangbar (F-KH-U-31, Messung B) und bleibt es, falls die
+  Struktur je wieder angefasst wird.
+  *Was der Punkt NICHT abdeckt:* die **Staging-Hälfte** der Abnahme von AP5
+  (E-KH-14) — sie hängt an einem Push auf `main` und steht weiter offen.
+
 
 ## 4. Vorschläge an den Backlog (Nummern vergibt die einspielende Instanz)
 

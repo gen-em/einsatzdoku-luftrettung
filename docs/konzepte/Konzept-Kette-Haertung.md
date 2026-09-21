@@ -25,7 +25,7 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 > | Von außen | **Einschub vom 20.09.2026 eingespielt** (Auftrag der Konzeptinstanz): Backlog 241–249 reserviert und angelegt, drei Konzeptdateien eingecheckt, Rahmenplan **Fassung 85**. Dabei angemeldet: `.sitzungen/` als **achter Schutzlistenpfad** (E-KH-20, einzutragen in AP4 oder AP5). **Der Einschub nannte Fassung 84 — die hatte AP2 schon vergeben und gepusht; er ist auf 85 gerückt** |
 > | Zuarbeiten erledigt | **Z1** (alte Staging-Anlage stillgelegt — B2 damit geschlossen), **Z2** (Zeiger `produktion` auf `7150793`) und **Z3** — alle 20.09.2026. Z3 **beide Anlagen**, aber auf zwei Wegen: Produktiv aus *Betrieb → Status*, Staging aus einer `phpinfo()`, weil die Anwendung dort noch nicht läuft. Fünf Zeilen der Staging-Spalte bleiben leer |
 > | Offen | **E-KH-09 (Ursache und Abhilfe F3)** — fällt nach der Messung am Ende von AP3; der Nachtrag in Abschnitt 1.4 hat eine der drei Erklärungen verschmälert. **Z3-Rest**: die fünf Zeilen, die nur die Anwendung weiß — sie hängen an Rahmenplan 6a, Schritt 6 |
-> | In Arbeit (2) — AP5 | **GEBAUT; Abnahme offen.** Eine Schrittfolge fuer beide Umgebungen: Staging 4 → 14 Schritte (Zielprobe, Backup-Tor, Wartung, Migrationsabfrage, Zustandsdatei), Schutzliste **einmal** mit **acht** Pfaden (E-KH-20 (1) erfuellt), `auslieferung.yml` 1 205 → 657 Zeilen. Umgebungsabhaengig bleiben **zwei** Schritte und **drei** Werte. Verschoben als Text, fuenfzehn zugesicherte Ersetzungen. **Vorher vermessen, nicht geraten.** Das Konzept verlangte die Formwahl „nach Messung"; gemessen wurde in zwei Runden gegen `staging` (35549413032, 35549610955), weil `docs.github.com` vom Läufer dieser Umsetzung aus gesperrt ist und dieses Konzept dreimal bezahlt hat, was eine ungeprüfte Behauptung kostet. **Ergebnis:** Der zusammengesetzte Baustein sieht weder `secrets` noch `vars` und lädt bei dem Versuch gar nicht erst (`Unrecognized named-value: 'secrets'`); der aufgerufene Arbeitslauf kann beides, und `environment:` **bindet** auch als Ausdruck — vier von sieben Werten sind drinnen belegt und draußen leer. **Entschieden: aufgerufener Arbeitslauf** (E-KH-27), **unter Vorbehalt** — ob die **Pflichtfreigabe** mitwandert, ist gegen `staging` nicht messbar und steht als **Prüfpunkt 23**; fragt der erste Probelauf mit der neuen Struktur nicht nach der Freigabe, wird AP5 zurückgenommen. **Bis dahin kein Tag.** **Zwei Befunde fielen nebenbei ab:** die drei FTPS-Zugangswerte liegen zusätzlich eine Ebene über den Umgebungen, womit die Geheimnisprüfung der Kette nicht fehlschlagen kann (F-KH-U-32, E-KH-28, Prüfpunkt 22 — ein Klick der Betreiberin); und Staging fehlt der Zustandsdatei-Schritt aus AP4, läuft also in dasselbe F3, sobald seine Zustandsdatei einmal fehlt (F-KH-U-30) — AP5 behebt es dadurch, dass es AP5 ist. **Z7 ist erfüllt** (Komplett-Backup gelungen; `JOBS_TOKEN` liegt in `staging`, gemessen daran, dass `stufe2` es von dort liest) |
+> | In Arbeit (2) — AP5 | **GEBAUT; Form und Pflichtfreigabe ABGENOMMEN (Lauf 35566000648, 21.09.2026) — offen bleibt allein der Staging-Lauf, der an einem Push auf `main` haengt.** Eine Schrittfolge fuer beide Umgebungen: Staging 4 → 14 Schritte (Zielprobe, Backup-Tor, Wartung, Migrationsabfrage, Zustandsdatei), Schutzliste **einmal** mit **acht** Pfaden (E-KH-20 (1) erfuellt), `auslieferung.yml` 1 205 → 657 Zeilen. Umgebungsabhaengig bleiben **zwei** Schritte und **drei** Werte. Verschoben als Text, fuenfzehn zugesicherte Ersetzungen. **Vorher vermessen, nicht geraten.** Das Konzept verlangte die Formwahl „nach Messung"; gemessen wurde in zwei Runden gegen `staging` (35549413032, 35549610955), weil `docs.github.com` vom Läufer dieser Umsetzung aus gesperrt ist und dieses Konzept dreimal bezahlt hat, was eine ungeprüfte Behauptung kostet. **Ergebnis:** Der zusammengesetzte Baustein sieht weder `secrets` noch `vars` und lädt bei dem Versuch gar nicht erst (`Unrecognized named-value: 'secrets'`); der aufgerufene Arbeitslauf kann beides, und `environment:` **bindet** auch als Ausdruck — vier von sieben Werten sind drinnen belegt und draußen leer. **Entschieden: aufgerufener Arbeitslauf** (E-KH-27), **unter Vorbehalt** — ob die **Pflichtfreigabe** mitwandert, ist gegen `staging` nicht messbar und steht als **Prüfpunkt 23**; fragt der erste Probelauf mit der neuen Struktur nicht nach der Freigabe, wird AP5 zurückgenommen. **Bis dahin kein Tag.** **Zwei Befunde fielen nebenbei ab:** die drei FTPS-Zugangswerte liegen zusätzlich eine Ebene über den Umgebungen, womit die Geheimnisprüfung der Kette nicht fehlschlagen kann (F-KH-U-32, E-KH-28, Prüfpunkt 22 — ein Klick der Betreiberin); und Staging fehlt der Zustandsdatei-Schritt aus AP4, läuft also in dasselbe F3, sobald seine Zustandsdatei einmal fehlt (F-KH-U-30) — AP5 behebt es dadurch, dass es AP5 ist. **Z7 ist erfüllt** (Komplett-Backup gelungen; `JOBS_TOKEN` liegt in `staging`, gemessen daran, dass `stufe2` es von dort liest) |
 > | In Arbeit | **AP4 ist abgenommen — F3 ist behoben, belegt und zweimal nachgemessen.** Ursache (F-KH-U-25): Die Auslieferungsaktion sendet `RETR` auf ihre Zustandsdatei; fehlt die, steht der Datenkanal per `EPSV` schon, der Server schließt ihn, `basic-ftp` liest `ECONNRESET` auf dem Datensocket — und die Aktion deutet das als „first publish", arbeitet mit einem **toten Client** weiter und stirbt erst beim nächsten `MKD`, **drei Schritte hinter der Ursache**. Deshalb stand `ensureDir` acht Trennversuche lang im Verdacht. **Abhilfe:** Richtung (e), die das Konzept nicht kannte — `tools/kette/zustand.py` legt die Datei hin, bevor die Aktion läuft. Transport, Aktion und Löschverhalten unverändert; der kleinste Eingriff, den es gibt. **Beleg (F-KH-U-28, Lauf 35545737872):** `🎉 Sync complete`, **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige FTPS-Abgleich gegen diesen Server überhaupt, gefahren gegen ein Probeverzeichnis, ohne einen Finger an der laufenden Anlage. **Abnahme (F-KH-U-29, Läufe 35547147256 und 35547171397):** zweimal `produktion` grün, **`Deleting: 0 B`** in beiden, Lauf 1 legt die Zustandsdatei an, **Lauf 2 findet sie und fasst sie nicht an** — genau die Vorsicht, an der alles hängt, und die nur ein zweiter Lauf gegen den echten Server zeigen konnte. Der Zeiger blieb beide Male stehen. **E-KH-09 ist erfüllt, AP4 ist abgenommen.** Drei Fehlanläufe davor lagen sämtlich am Werkzeug und nicht am Befund (Punktdatei-Falle F-KH-U-26, deutsches Anführungszeichen F-KH-U-27) — beide seither durch Prüfungen abgedeckt, die es vorher nicht gab: 28 Lagen in der Selbstprobe und ein Syntaxriegel über **48** Werkzeuge in Stufe 1. **Offen: allein die Freigabe der Betreiberin vor dem ersten echten Auslieferungslauf.** Danach AP5 bis AP8, der Merge nach `main` und M1 |
 > | **Antwort auf die Frage der Konzeptinstanz (20.09.2026): Wie kommt dieser Zweig nach `main`?** | **Nach AP6, als PR, ausgelöst vom Auftraggeber.** Der Schritt fehlte im Konzept; hier ist er. **(1) Wann:** nach **AP6** (Abbruchverhalten und Härtung) — die Fahrplantabelle nennt für M1 genau „AP4, AP6" als Voraussetzung; AP7 (Hotfix-Weg) setzt M1 seinerseits voraus, AP8 ist der Abschluss und kommt nach der Freigabe. **(2) Wie:** ein **PR** von `claude/fervent-dirac-xirsqw` nach `main`, nicht ein Push. `CLAUDE.md` 8: „Auf `main` kommt eine Phase einmal, am Ende, nach ausdrücklicher Bestätigung." **(3) Wer:** Ich stelle den PR und melde ihn; **der Auftraggeber gibt frei und mergt**. Der Merge löst einen **Staging**-Deploy aus, keinen Produktiv-Deploy. **(4) Was der Merge NICHT mitbringt:** eine Versionsstufe. Kette II fasst keinen `server/`-Code an (E-KH-23), `WEB_VERSION` bleibt unverändert. **(5) Der Tag für M1 ist frei — nachgemessen am 20.09.2026:** Das Repositorium hat **genau einen** Tag, `web-v20.24.2` auf `7150793` (derselbe Commit, auf den der Zeiger `produktion` zeigt). `main` steht bei **Web 20.26.2**, also ist `web-v20.26.2` frei, und M1 braucht keine Korrekturstufe nur um des Tags willen. **Vorbehalt:** Kommt Schritt 15 vor M1 auf `main`, gilt dessen Version — deshalb sagt M1 „auf den dann aktuellen, grün geprüften Commit" und nicht eine Zahl. **(6) Was vorher erledigt sein muss:** **AP4 ist gebaut, aber nicht bewiesen** (Prüfpunkt 21). Ohne einen Abgleich, der durchläuft, gibt es kein M1 — und damit auch keinen Merge, der etwas wert wäre |
 > | Hakt | **Es gibt bis heute keinen erfolgreichen Produktivlauf der Kette** (Abschnitt 1.2). **AP1 ist gebaut, aber nicht abgenommen:** Der erste Kettenlauf gegen lima-city (Lauf 21, 20.09.2026, Handlauf vom Arbeitszweig) brachte `staging` **grün** und in Stufe 2 **zwei von fünf** Messschritten gemessen grün — der dritte ist rot, weil `STAGING_KONTO`/`STAGING_PASS` sich auf der neuen Anlage nicht anmelden. **Ein Push auf `main` ist dafür nicht nötig** (`workflow_dispatch` fährt dieselben Jobs). Einzelheiten im Prüfdokument, Abschnitt 1.4 |
@@ -40,7 +40,7 @@ Versionen vergibt die Umsetzung je Paket nach `CLAUDE.md` 2.
 > | AP2 — Zeiger und Wache | offen | | | |
 > | AP3 — Tor, Zielprobe, Probelauf; F3-Messung | offen | | | |
 > | AP4 — F3 beheben | offen (wartet auf E-KH-09) | | | |
-> | AP5 — Gemeinsame Schrittfolge | **gebaut; Abnahme offen** | 21.09.2026 | — (nur `.github/`, `docs/`) | Eine Folge fuer beide Umgebungen; Staging 4 → 14 Schritte; Schutzliste **einmal**, 8 Pfade; `auslieferung.yml` 1 205 → 657 Zeilen. Drei Messrunden (35549413032, 35549610955, 35560508628); Befunde F-KH-U-30 bis -32; E-KH-27, -28. **Offen: Pruefpunkt 23 (Pflichtfreigabe) und der Staging-Lauf** |
+> | AP5 — Gemeinsame Schrittfolge | **gebaut; Form und Freigabe abgenommen, Staging-Lauf offen** | 21.09.2026 | — (nur `.github/`, `docs/`) | Eine Folge fuer beide Umgebungen; Staging 4 → 14 Schritte; Schutzliste **einmal**, 8 Pfade; `auslieferung.yml` 1 205 → 657 Zeilen. Drei Messrunden (35549413032, 35549610955, 35560508628); Befunde F-KH-U-30 bis -34; E-KH-27, -28. Pruefpunkt 22 und 23 abgehakt (Lauf 35566000648). **Offen: der Staging-Lauf** |
 > | AP6 — Abbruchverhalten und Härtung | offen | | | |
 > | **M1 — erster grüner Produktivlauf** | offen (Betreiberin) | | | |
 > | AP7 — Hotfix-Weg | offen | | | |
@@ -611,16 +611,19 @@ bekommt einen Zusatz: *aufrufender Job* **/** *Job im aufgerufenen Lauf*.
 Die Abnahme verlangt „dieselben Schrittnamen" — das ist erfüllt; der
 Jobname ist damit ausdrücklich nicht gemeint.
 
-**Was die Messung nicht zeigt, steht als Bedingung an der Entscheidung:**
-ob die **Pflichtfreigabe** dem `environment:` dorthin folgt. `staging` hat
-keine, also kann kein Lauf dagegen es zeigen; ein Lauf gegen `produktion`
-nur zum Zusehen wäre ein Missbrauch des Tors. **Deshalb gilt E-KH-27 unter
-Vorbehalt, und der Vorbehalt hat einen Prüfweg:** ein Probelauf gegen
-`produktion` mit der neuen Struktur (Prüfdokument, Prüfpunkt 23). Fragt er
-nach der Freigabe, bevor ein Schritt läuft, ist die Form bestätigt. Fragt er
-nicht, **wird AP5 zurückgenommen** — der zusammengesetzte Baustein mit
-durchgereichten Eingaben ist als Ausweichweg gemessen gangbar, nur
-umständlicher. **Bis Prüfpunkt 23 abgehakt ist, wird kein Tag gesetzt.**
+**Ein Vorbehalt stand an dieser Entscheidung, und er ist eingelöst.** Die
+Messung zeigte, dass die Umgebung **bindet** — nicht, ob die
+**Pflichtfreigabe** dem `environment:` dorthin folgt. `staging` hat keine,
+also konnte kein Lauf dagegen es zeigen; ein Lauf gegen `produktion` nur zum
+Zusehen wäre ein Missbrauch des Tors gewesen. Der Prüfweg war deshalb ein
+Probelauf, der ohnehin fällig war (Prüfdokument, Prüfpunkt 23).
+
+> **Gefahren am 21.09.2026, Lauf 35566000648: Der Lauf hat die Freigabe
+> angefordert und gestanden, bis die Betreiberin sie erteilt hat.**
+> **E-KH-27 gilt damit ohne Vorbehalt; AP5 wird nicht zurückgenommen.**
+> Der Ausweichweg — zusammengesetzter Baustein mit durchgereichten
+> Eingaben — bleibt gemessen gangbar (F-KH-U-31, Messung B) und wird nicht
+> gebraucht. Einzelheiten: F-KH-U-34.
 
 **E-KH-28 — Die Zugangswerte der Kette gehören in die Umgebung und sonst
 nirgendwohin.** Die Formprobe hat nebenbei gezeigt, dass `FTP_SERVER`,
@@ -1334,14 +1337,26 @@ Testanlage in den Wartungsmodus geschaltet. Behoben mit
 weit":** Die Zusage „es wird nichts ausgeliefert" war für den Job geprüft,
 in dem sie stand, und für den Job daneben nie.
 
-**Offen, und es ist der Riegel unter der ganzen Formwahl:** Prüfpunkt 23 —
-ein Probelauf gegen `produktion` mit dieser Struktur, **vor** dem nächsten
-Tag. Fragt er nicht nach der Freigabe, wird AP5 zurückgenommen.
+**Der Riegel unter der ganzen Formwahl ist gefallen** (Prüfpunkt 23,
+F-KH-U-34): Lauf 35566000648 hat die Freigabe angefordert und gestanden,
+bis sie erteilt war. Dieselbe Runde hat **Prüfpunkt 22** miterledigt — die
+drei *Repository secrets* sind gelöscht, und die Zielprobe ist danach mit
+den reinen Umgebungswerten durchgelaufen.
 
-**Ebenfalls offen und von außen zu erledigen:** die Abnahme nach E-KH-14
-verlangt einen **Staging-Lauf** — der hängt an einem Push auf `main` und ist
-damit der Betreiberin vorbehalten (`CLAUDE.md` 3 und 8). Bis dahin ist AP5
-gebaut und nicht abgenommen.
+**Was der Lauf gezeigt hat:** Jobname `produktion / ausliefern`, `staging`
+**übersprungen** (F-KH-U-33 trägt), `stufe2` und `zeiger` ebenso, Zielprobe
+grün in 17 s, Abgleich grün in 2,3 s als Trockenlauf, und im Protokoll
+`Saving current server state to "/../.deploy-state-produktion.json"` — der
+Beleg, dass `env.ZUSTANDSPFAD` im `with:`-Block auch in der echten Kette
+auflöst.
+
+**Offen bleibt die STAGING-HÄLFTE der Abnahme, und das ist ausgerechnet
+die, um derentwillen AP5 gebaut wurde.** E-KH-14 verlangt einen
+Staging-Lauf mit denselben Schrittnamen, die Dauer vorher/nachher, und
+einen Lauf mit ausstehender Migration, der die Wartung anlässt. Er hängt an
+einem Push auf `main` und ist damit der Betreiberin vorbehalten
+(`CLAUDE.md` 3 und 8). **Produktiv hat den neuen Weg gefahren; Staging hat
+ihn noch nie gefahren.**
 
 
 ### AP6 — Abbruchverhalten und Härtung (F2, F4-Rest, B3, B4, B5)

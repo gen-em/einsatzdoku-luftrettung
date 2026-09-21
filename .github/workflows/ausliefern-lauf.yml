@@ -33,12 +33,19 @@ name: Auslieferungslauf
 # BINDET auch als Ausdruck (gemessen: vier von sieben Werten sind mit
 # `environment:` belegt und ohne leer).
 #
-# **DER VORBEHALT STEHT AN DER ENTSCHEIDUNG UND WIRD NICHT VERSCHWIEGEN:**
-# Ob die PFLICHTFREIGABE dem `environment:` hierher folgt, ist gegen
-# `staging` nicht messbar -- dort gibt es keine. Der Beweis ist ein
-# Probelauf gegen `produktion` mit dieser Struktur (Pruefdokument,
-# Pruefpunkt 23), und er steht VOR dem naechsten Tag. Fragt er nicht nach
-# der Freigabe, wird AP5 zurueckgenommen.
+# **UND DIE PFLICHTFREIGABE WANDERT MIT -- NACHGEMESSEN.** Dass die Umgebung
+# bindet, sagte noch nichts darueber, ob die Freigabepflicht mitkommt; gegen
+# `staging` war das nicht messbar, weil es dort keine gibt. Gefahren wurde
+# es deshalb mit dem Probelauf, der ohnehin faellig war:
+#
+#   **Lauf 35566000648 vom 21.09.2026 hat die Freigabe angefordert und
+#   gestanden, bis die Betreiberin sie erteilt hat** (F-KH-U-34,
+#   Pruefpunkt 23).
+#
+# Hier stand bis dahin ein Vorbehalt: Fragt der Lauf nicht nach der
+# Freigabe, wird AP5 zurueckgenommen. Er ist eingeloest. Der Ausweichweg --
+# zusammengesetzter Baustein mit durchgereichten Eingaben -- bleibt gemessen
+# gangbar und wird nicht gebraucht.
 #
 # ------------------------------------------------------------------------
 # WAS DIE UMGEBUNG UNTERSCHEIDET -- UND WIE WENIG DAS IST
@@ -135,10 +142,14 @@ jobs:
     # Zugangswerte, ohne jemanden zu fragen.
     #
     # DASS DER AUSDRUCK BINDET, IST GEMESSEN (F-KH-U-31): Umgebungswerte
-    # loesen hier auf und ausserhalb nicht. Ein Ausdruck, der ins Leere
-    # zeigte, liesse den Job OHNE Umgebung laufen -- und damit ohne Freigabe.
-    # Deshalb steht diese Zeile unter Beobachtung, bis Pruefpunkt 23 gefahren
-    # ist.
+    # loesen hier auf und ausserhalb nicht. Und dass die PFLICHTFREIGABE
+    # mitkommt, ebenfalls (F-KH-U-34, Lauf 35566000648).
+    #
+    # **WER DIESE ZEILE AENDERT, MISST BEIDES NEU.** Ein Ausdruck, der ins
+    # Leere zeigte, liesse den Job OHNE Umgebung laufen -- und damit ohne
+    # Freigabe. Das faellt nicht auf: Der Lauf waere gruen, nur eben
+    # ungefragt. Der Nachweis kostet einen Probelauf und einen Klick und
+    # liefert nichts aus.
     environment: ${{ inputs.umgebung }}
     env:
       JOBS_TOKEN: ${{ secrets.JOBS_TOKEN }}
