@@ -24,7 +24,7 @@ abgehakt ist (R62).
 > | Stand | 21.09.2026 — **AP1 gebaut (Abnahme offen, hängt am Botschutz von lima-city), AP2 gebaut, AP3 abgeschlossen (F3 gefunden), AP4 gebaut UND ABGENOMMEN, **AP5 VOLLSTAENDIG ABGENOMMEN** (Produktiv-Haelfte Lauf 35566000648, Staging-Haelfte Lauf 35570398032), AP6 GEBAUT (Abnahme offen — sie verlangt einen provozierten Fehlschlag auf Staging). **Kette II liegt seit dem 21.09.2026 auf `main`** (PR #65, Merge `fb614d1`). **M1 ist blockiert:** Stufe 2 bleibt am Botschutz von lima-city rot (F-KH-U-10/-36), und das Tor der gruenen Laeufe laesst deshalb keinen Tag durch.** AP7 und AP8 nicht begonnen |
 > | Geprüft | Maschinell: Wortliste, Kettenaufrufe samt aller Selbstproben (Tor **19**, Zielprobe **67**, Wache **38**), YAML-Gültigkeit, Zählung der Fundstellen. Gefahren: **ein Kettenlauf gegen lima-city**, **acht Probeläufe gegen Produktiv**. Zahlen in Abschnitt 1 |
 > | Nicht geprüft | **Der Staging-Lauf gegen lima-city** — die Abnahme von AP1; er bleibt am Botschutz hängen (F-KH-U-10). Dazu **der FTP-Dialog der Auslieferungsaktion selbst** (Prüfpunkt 18): Im Probelauf ist er nicht zu bekommen, weil die Aktion dort als Trockenlauf kein Verzeichnis anlegt. Abschnitt 0 |
-> | Funde | **36** (Abschnitt 2): F-KH-U-01 bis F-KH-U-37 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben |
+> | Funde | **37** (Abschnitt 2): F-KH-U-01 bis F-KH-U-38 **ohne 07** — diese Nummer ist nie vergeben worden, die Lücke bleibt offen, weil Nummern dauerhaft sind. **F-KH-U-25: F3 IST GEFUNDEN** — der Abbruch passiert beim `RETR` auf die nicht vorhandene Zustandsdatei, gemeldet wird er erst beim `MKD` danach. **F-KH-U-32: die drei FTPS-Zugangswerte liegen AUSSERHALB der Umgebungen** — damit kann die Geheimnisprüfung der Kette nicht fehlschlagen; Behebung ist ein Klick der Betreiberin, Prüfweg als Prüfpunkt 22. Zuletzt **F-KH-U-33: der Probelauf hat ausgeliefert** — der Job `staging` lief bei jedem Probelauf mit und synchronisierte wirklich nach Staging, während der Lauf „nichts ausgeliefert" meldete; mit AP5 hätte er die Testanlage zugesperrt. In derselben Zeile behoben |
 > | F3 | **GEFUNDEN UND BEHOBEN, der Beleg ist gefahren.** Ursache: `RETR` auf die nicht vorhandene Zustandsdatei tötet die Verbindung; die Aktion deutet es als „first publish" und arbeitet mit einem toten Client weiter, bis das erste `MKD` es bemerkt — **drei Schritte hinter der Stelle, die sie meldet** (F-KH-U-25). Abhilfe: die Datei einmal hinlegen, bevor die Aktion läuft (AP4, Richtung (e), `tools/kette/zustand.py`). Beleg: **688 Dateien, 62 Verzeichnisse, 9,7 MB, 7:47, kein `ECONNRESET`** — der erste vollständige Abgleich gegen diesen Server überhaupt (F-KH-U-28). **E-KH-09 ist erfüllt** |
 > | Prüfliste | **31** Punkte: **13 abgehakt**, 5 teilweise, **13 offen** — maschinell nachgezählt (`grep -c` über die Kästchen), nicht geschätzt. **Die Zeile stand bis zum 21.09.2026 auf „26 Punkte: 10 abgehakt, 5 teilweise, 11 offen" — die 10 war schon damals falsch, es waren 11.** Eine von Hand geführte Zahl neben einer Liste, die wächst, ist genau die Art Beleg, vor der dieses Dokument sonst warnt. Neu: **22** (die drei Zugangswerte eine Ebene höher löschen, F-KH-U-32) und **23** (die Pflichtfreigabe nach dem Umbau von AP5 nachmessen, F-KH-U-31) |
 > | Prüfumgebung | Wegwerf-Container ohne Netzzugang zu den Anlagen (Abschnitt 0, Punkt 3); Python 3 für die Prüfmittel; **keine** lokale Installation nötig, weil kein Paket Web-Code anfasst |
@@ -512,6 +512,38 @@ Error: Client is closed because read ECONNRESET (data socket)
 ---
 
 ## 2. Funde aus der Umsetzung
+
+**F-KH-U-38 — Der Adressvergleich ist gelaufen und grün: Kette und Wache
+meinen dieselbe Anlage.**
+*Läufe 35573692312 und 35573791969, 21.09.2026 — abgefallen bei zwei
+Probeläufen, die eigentlich etwas anderes messen sollten.*
+
+Der Adressvergleich ist neu aus AP6 (E-KH-07) und hält `PRODUKTION_URL`
+gegen `WACHE_BASIS`. Er ist in beiden Läufen **grün** — und das ist der
+erste Nachweis, dass die Umstellung von `WACHE_BASIS` auf eine
+**Repositoriums-Variable** sitzt. Lag der Wert noch als *Organization
+Secret* vor, wäre `vars.WACHE_BASIS` leer gewesen und genau dieser Schritt
+rot geworden; der Schritt bricht seit AP6 bei leerem Wert ab, statt eine
+Vorgabe einzusetzen.
+
+**Wogegen er schützt, zur Erinnerung:** Gehen die beiden Adressen
+auseinander, liefert die Kette nach A aus und die Integritätswache bewacht
+B. **Beide Seiten sind dann für sich grün**, und der Produktivserver bliebe
+unbeobachtet — der Fall, den niemand bemerkt, weil nichts rot wird.
+
+Mitgemessen in denselben Läufen: Zielprobe grün (16 s), Zustandsdatei
+bereitgestellt, Abgleich als Trockenlauf grün, Schlussschritt korrekt
+**übersprungen** (`if: failure()` — es ging nichts schief).
+
+**Beide Läufe waren am Ziel vorbei**, und das steht als Falle jetzt in
+Prüfpunkt 25a: Mit gesetztem `probelauf` läuft `produktion` statt `staging`,
+weil der Probelauf `staging` seit F-KH-U-33 absichtlich überspringt. Das
+falsche Passwort lag in `staging`. **Der Lauf war grün und hat die falsche
+Anlage gemessen** — genau die Sorte grüner Zahl, vor der `CLAUDE.md` 6
+warnt, und diesmal war die Anweisung schuld: „kein Häkchen" sagte nicht,
+was das Häkchen anrichtet.
+
+---
 
 **F-KH-U-37 — Die Abnahme von AP6 verlangt eine Lage, die AP6 gerade
 abgeschafft hat. Das ist kein Mangel, sondern der Beleg.**
@@ -2917,7 +2949,24 @@ Ergebnis, und **woran ein Scheitern zu erkennen ist**.
   Unglück läuft. Ein Riegel, der nie ausgelöst hat, ist eine Behauptung.
   *Weg:* Settings → Environments → **`staging`** → `FTP_PASSWORD` auf einen
   falschen Wert setzen. Dann Actions → „Auslieferung" → **Run workflow** →
-  Zweig `claude/fervent-dirac-xirsqw` → **kein Häkchen** → starten.
+  Zweig `claude/fervent-dirac-xirsqw` → **ALLE Kästchen leer lassen** →
+  starten.
+
+  > **DAS HÄKCHEN `probelauf` DARF NICHT GESETZT SEIN, und das ist die
+  > Falle** (gemessen am 21.09.2026, Läufe 35573692312 und 35573791969 —
+  > beide grün, beide am Ziel vorbei). Mit Häkchen läuft **`produktion`**
+  > statt `staging`: Der Probelauf überspringt `staging` seit F-KH-U-33
+  > absichtlich, damit er nirgendwohin ausliefert. Das falsche Passwort
+  > liegt aber in der Umgebung `staging`; `produktion` hat sein eigenes,
+  > richtiges. Der Lauf wird grün und hat die falsche Anlage gemessen.
+  >
+  > **Woran man es im Protokoll sieht:** Der Job heißt
+  > `produktion / ausliefern` statt `staging / ausliefern`, und Schritt 3
+  > („PROBELAUF — was dieser Lauf NICHT tut") ist **gelaufen** statt
+  > übersprungen.
+  >
+  > Ohne Häkchen wird `produktion` übersprungen (kein Tag, kein Probelauf) —
+  > es gibt also keine Freigabe und keine Produktivberührung.
   *Erwartet:* Der Lauf ist **rot an der Zielprobe** (Schritt 8) — nicht
   später. Der Schlussschritt läuft und meldet als Fehlerzeile **und** in der
   Zusammenfassung: **`Wartung: aus`**, die gemeldete Fassung,
