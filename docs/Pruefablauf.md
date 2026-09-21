@@ -573,10 +573,20 @@ Jedes Konzept führt ein Kürzel; daraus leiten sich alle Nummern ab:
 | `XX-NN Schlagwort` | Arbeitspaket | `PK-03 Prüfstand-Befehl` |
 | `XX-MN` | Meilenstein der Betreiberin | `PK-M1` |
 | `E-XX-NN` | Entscheidung | `E-PK-04` |
-| `F-XX-NN` | Befund oder offene Frage | `F-PK-01` |
+| `F-XX-NN` | **Befund** — etwas, das gemessen anders ist als angenommen | `F-PK-01` |
+| `Q-XX-NN` | **Frage an die Betreiberin**, mit ihrer Antwort im Konzept | `Q-PK-01` |
 | `P-XX-NN` | Prüfpunkt im Prüfdokument | `P-PK-03` |
 
 Nummern sind **zweistellig** und werden **nie wiederverwendet**.
+
+**`F` und `Q` waren bis zum 21.09.2026 dasselbe Kürzel** („Befund oder
+offene Frage"), und das ging schief: Konzept PK führte seine Fragen
+einstellig (`F-PK-1`) und seine Befunde zweistellig (`F-PK-01`), sodass
+beide nebeneinanderstanden und die Befunde vorsichtshalber erst bei 07
+begannen. Ein Kürzel, das zwei Dinge meint, wird von der Stelligkeit
+auseinandergehalten — und die Stelligkeit ist keine Bedeutung, sondern ein
+Tippfehler, der noch keiner war. Seither zwei Kürzel, beide zweistellig.
+
 Commit-Nachrichten beginnen mit dem Paket: `PK-03: …`.
 
 ---

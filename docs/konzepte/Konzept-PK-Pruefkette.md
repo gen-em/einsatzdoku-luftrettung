@@ -27,7 +27,7 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > | | |
 > |---|---|
 > | Stand | **21.09.2026 — PK-01, PK-02 UND PK-03 ERLEDIGT.** Offen bleibt P-PK-11 zur Hälfte: die Ausbaustufe `uhr` ist gebaut, aber nicht abgenommen; `android` ist es (Bau in 7m 19s, 0 Lint-Fehler, 670 Prüffälle / 0). **Halt nach PK-03 wie beauftragt** — PK-04 bis PK-06 erst auf ausdrückliches Wort, weil PK-04 sichtbare Texte in `server/` bereinigt. Umsetzung läuft auf `claude/serene-dijkstra-bcpbjy` (von `main` `08e032e`); das Konzept ist mit seiner Historie vom Konzeptzweig dorthin übernommen, ebenso der Inhalt von PR #70. Freigegeben vom Auftraggeber (Z5) ohne Änderungen; Z1, Z2, Z3 erledigt; P-PK-02 vorgezogen und erledigt. |
-> | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); F-PK-1 bis -6 beantwortet (3.2). **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **zur Bestätigung vorgelegt**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. |
+> | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **zur Bestätigung vorgelegt**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. |
 > | Nächstes | **PK-04** — **erst nach ausdrücklichem Wort**; bis dahin **Halt**. Daneben liegt ein **Vorgriff auf PK-05** bei der Betreiberin: PR #71 stellt den Auslöser von `pruefung.yml` um (Zweig `claude/pk-vorgriff-stufe1-ausloeser`, Backlog Nr. 268, Abnahme P-PK-17). **PK-05 selbst bleibt offen.** und Rückmeldung an den Auftraggeber, weil PK-04 sichtbare Texte in `server/` anfasst. Parallel bei der Betreiberin die Merges von PR #70 und #69, danach Tag `web-v20.26.3` = M1 der Kette II (Z2a). **Parallelität:** PK-01 bis PK-03 laufen neben Schritt 15 und fassen `server/` nicht an. |
 > | Kette II | wird nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
 > | Hakt | nichts. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); Stufe 2 hat ihn nach dem Merge bestätigt: Kreisläufe csv und edbak **104 s grün** gegen Staging mit **MySQL 8.4.10** (Lauf 35639445224, Versuch 2, Schritt 5) — im Lauf davor, ohne den Fix, derselbe Schritt nach **15 min 51 s rot**. Der Tag `web-v20.26.3` folgt darauf (Z2a). **Stufe 2 als Ganzes bleibt rot, und zwar planmäßig:** Schritt 6 meldet sich mit einem Konto an, das es auf der neuen Anlage nicht gibt (F-PK-04). Bis PK-06 ist das der erwartete Zustand, kein Schaden. **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
@@ -37,7 +37,7 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > | Paket | Stand | Version | Commit | Abnahmezahlen |
 > |---|---|---|---|---|
 > | PK-M1 Zweigschutz und Merge-Recht | **gesetzt und gemessen 21.09.2026** (zwei Rulesets); Befund F-PK-01 | — | PR #67 (Messung), PR #70 (Nachmessung) | (b) abgewiesen; (a) durchgegangen unter der Identität der Betreiberin; (c) mit PR #70 |
-> | PK-01 Regeldokumente | **erledigt 21.09.2026** | keine (nur `docs/`, `CLAUDE.md`, `.claude/`, `tools/`) | *wird beim Commit eingetragen* | `CLAUDE.md` 6: **58** Zeilen (vorher 166), Ziel <60 · Doppelstellen **1/1/1** normativ (Emulator, Tag-Rumpf, Wortliste) · Deny-Liste **2 von 2** gesperrt bei **3 von 3** Gegenproben · Wortliste **0/0/0** bei 100 Regeln, 100 gegriffen (mit den zwei neuen Dokumenten in Bereich c) · Vollständigkeit **398, auf der Schwelle** · Kettenaufrufe **43/0/0** · neu: `Pruefablauf.md` 561 Zeilen, `Sandbox-Setup.md` 306 · Befunde **F-PK-07 bis -13** |
+> | PK-01 Regeldokumente | **erledigt 21.09.2026** | keine (nur `docs/`, `CLAUDE.md`, `.claude/`, `tools/`) | *wird beim Commit eingetragen* | `CLAUDE.md` 6: **58** Zeilen (vorher 166), Ziel <60 · Doppelstellen **1/1/1** normativ (Emulator, Tag-Rumpf, Wortliste) · Deny-Liste **2 von 2** gesperrt bei **3 von 3** Gegenproben · Wortliste **0/0/0** bei 100 Regeln, 100 gegriffen (mit den zwei neuen Dokumenten in Bereich c) · Vollständigkeit **398, auf der Schwelle** · Kettenaufrufe **43/0/0** · neu: `Pruefablauf.md` **561** Zeilen, `Sandbox-Setup.md` **306** — **Stand bei Abschluss von PK-01**; PK-02, PK-03 und der Nachtrag haben nachgetragen, heute sind es **620** und **384** (`wc -l`, 21.09.2026 abends) · Befunde **F-PK-07 bis -13** |
 > | PK-02 Sandbox-Setup | **erledigt 21.09.2026**, P-PK-11 offen | keine (nur `tools/`, `.claude/`, `docs/`) | *wird beim Commit eingetragen* | `aufbauen.sh web`: 10 von 10 Stücken, **3 von 3 Engines** (WebKit startete vorher nicht), 8 von 8 Umgebungswerten · `hochfahren.sh`: HTTP **200**, Fassung 20.26.2, 106 Einsätze, rc 0 · `plattform.sh alles`: **4 × 19/0** in **29,7 s** · Weg nach draußen: **6 von 6** angemeldet (3 Engines × örtlich und Prüfanlage), Dialog 6 von 6 geschlossen, ohne `ignoreHTTPSErrors` nach draußen · Befunde **F-PK-14 bis -17**, E-PK-32 |
 > | PK-03 Prüfstand-Befehl | **erledigt 21.09.2026** | keine (nur `tools/`, `docs/`) | *wird beim Commit eingetragen* | Stufen klein/neben/haupt: **26,8 / 25 / 22 s**, je 13 Proben, 0 rot, 0 nicht gemessen · `bericht.py --selbstprobe` **6 Lagen / 0** (5 rote, 1 grüne) · `auswahl.py --selbstprobe` **11 / 0** · Abdeckung **262 Dateien, 0 ohne Muster** · `kettenaufrufe` liest die Zuordnung mit: mit eingebautem Fehler **2 Befunde**, ohne **0** (82 Aufrufe, 0 Befunde, 18 ungeprüft) · Befund **F-PK-18** |
 > | PK-04 Werkzeuge zusammenlegen und bereinigen | offen | | | |
@@ -604,14 +604,25 @@ wird aber nicht vorausgesetzt.
 
 ### 3.2 Beantwortete Fragen der ersten Fassung
 
+**Eigenes Kürzel `Q-PK-NN`, seit dem 21.09.2026.** Bis dahin trugen diese
+sechs Zeilen `F-PK-1` bis `-6` — einstellig, während die Befunde zweistellig
+ab `F-PK-01` zählen. Damit standen `F-PK-1` und `F-PK-01` nebeneinander und
+meinten Verschiedenes; die Umsetzung ließ deshalb 02 bis 06 frei und begann
+bei `F-PK-07`. **Die Fragen heißen jetzt `Q-PK-01` bis `-06`**, die Nummern
+02 bis 06 sind für Befunde frei und belegt (Abschnitt 6). `F-XX-NN` meint
+von hier an **nur noch Befunde**; `Q-XX-NN` ist in `docs/Pruefablauf.md` 7
+und `CLAUDE.md` 7 eingetragen. **Wer eine ältere Quelle liest** — einen
+Commit, ein Protokoll, eine alte Sitzung —, findet dort `F-PK-1` bis `-6`
+und meint diese Tabelle.
+
 | Nr. | Frage | Antwort des Auftraggebers (21.09.2026) |
 |---|---|---|
-| F-PK-1 | E-PK-13 bis -22 so entscheiden? | ja, wie besprochen (E-PK-13 berichtigt, -14 ohne Risikoliste, -15 als Umbau) |
-| F-PK-2 | Android und Uhr im Tor? | ganz raus; Signatur bei GitHub hinter der Freigabe (E-PK-23) |
-| F-PK-3 | Streichliste und Zusammenlegungen? | ja; dazu die drei Zusammenlegungen (E-PK-24) |
-| F-PK-4 | Hausform? | Binnen-I (E-PK-26) |
-| F-PK-5 | Prüfkonten unter `gen-em.org`? | nur `demo@gen-em.org`, alles andere `example.invalid` (E-PK-27) |
-| F-PK-6 | Stilvergleich? | behalten (E-PK-28) |
+| Q-PK-01 | E-PK-13 bis -22 so entscheiden? | ja, wie besprochen (E-PK-13 berichtigt, -14 ohne Risikoliste, -15 als Umbau) |
+| Q-PK-02 | Android und Uhr im Tor? | ganz raus; Signatur bei GitHub hinter der Freigabe (E-PK-23) |
+| Q-PK-03 | Streichliste und Zusammenlegungen? | ja; dazu die drei Zusammenlegungen (E-PK-24) |
+| Q-PK-04 | Hausform? | Binnen-I (E-PK-26) |
+| Q-PK-05 | Prüfkonten unter `gen-em.org`? | nur `demo@gen-em.org`, alles andere `example.invalid` (E-PK-27) |
+| Q-PK-06 | Stilvergleich? | behalten (E-PK-28) |
 
 ### 3.3 Inventur — 48 Werkzeuge, ein Urteil je Werkzeug
 
@@ -911,14 +922,14 @@ ist.
 
 ## 6. Offene Fragen und Befunde der Umsetzung
 
-F-PK-1 bis -6 der Konzeptfassung sind beantwortet (3.2) — **einstellig, und
-das ist die Unsauberkeit**: Die Befunde zählen zweistellig ab F-PK-01, und
-damit stehen F-PK-1 und F-PK-01 nebeneinander. Die Umsetzung begann deshalb
-vorsichtshalber bei F-PK-07 und ließ 02 bis 06 frei; **der Auftraggeber hat
-die Lücke am Abend des 21.09.2026 mit F-PK-02 bis -04 belegt.** `CLAUDE.md` 7
-verlangt zweistellige Nummern: Wer zitiert, schreibt zweistellig und meint
-einen Befund. **Ausführlich mit Messwerten im Prüfdokument, Abschnitt 6** —
-hier die Kurzfassung mit der Folge:
+Die beantworteten Fragen der ersten Konzeptfassung heißen seit dem
+21.09.2026 **`Q-PK-01` bis `-06`** (3.2) und nicht mehr `F-PK-1` bis `-6`;
+`F-XX-NN` meint hier nur noch **Befunde**. Damit zählt dieser Abschnitt
+lückenlos ab **F-PK-01**: 01 aus PK-M1, **02 bis 04 aus dem Nachtrag vom
+Abend des 21.09.2026**, ab 07 die Befunde der Pakete. **05 und 06 sind frei**
+und werden nicht nachbelegt — die Lücke ist billiger als eine Nummer, die
+zweimal etwas bedeutet. **Ausführlich mit Messwerten im Prüfdokument,
+Abschnitt 6** — hier die Kurzfassung mit der Folge:
 
 | Nr. | Aus | Befund | Folge |
 |---|---|---|---|

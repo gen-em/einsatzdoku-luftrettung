@@ -337,18 +337,19 @@ geschrieben hatte:
 
 ## 6. Befunde der Umsetzung
 
-**Zur Nummernvergabe, damit niemand darüber stolpert.** Dieses Dokument
-führt zwei Zählungen mit demselben Kürzel, und das ist kein Versehen der
-Umsetzung, sondern lag schon im Konzept: **`F-PK-1` bis `F-PK-6`** (einstellig)
-sind die *beantworteten Fragen der ersten Konzeptfassung* (Konzept 3.2),
-**`F-PK-01` ff.** (zweistellig) sind die *Befunde*. Der Befund F-PK-01 und die
-Frage F-PK-1 stehen also seit dem 21.09.2026 nebeneinander. Die Befunde der
-Umsetzung begannen deshalb vorsichtshalber bei **F-PK-07**; die Lücke 02 bis 06
-blieb frei. **Der Auftraggeber hat sie am Abend des 21.09.2026 mit den drei
-Nachträgen unten belegt** (F-PK-02 bis -04) — die Lücke ist damit geschlossen,
-die Doppeldeutigkeit gegenüber F-PK-2 bis -4 bleibt bestehen. `CLAUDE.md` 7
-verlangt zweistellige Nummern; **die einstelligen sind der Fehler, nicht die
-zweistelligen**. Wer zitiert, schreibt zweistellig und meint einen Befund.
+**Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in
+diesem Dokument **einen Befund und sonst nichts**. Bis zum 21.09.2026 war das
+nicht so: Die *beantworteten Fragen der ersten Konzeptfassung* (Konzept 3.2)
+hießen `F-PK-1` bis `-6` — einstellig, während die Befunde zweistellig ab
+`F-PK-01` zählen. `F-PK-1` und `F-PK-01` standen nebeneinander und meinten
+Verschiedenes; die Umsetzung ließ deshalb vorsichtshalber 02 bis 06 frei und
+begann bei **F-PK-07**. **Aufgelöst am 21.09.2026 auf Weisung des
+Auftraggebers:** Die Fragen heißen jetzt **`Q-PK-01` bis `-06`**, eingetragen
+in `docs/Pruefablauf.md` 7 und `CLAUDE.md` 7. Der Nachtrag desselben Abends
+belegt **F-PK-02 bis -04**; **05 und 06 bleiben frei** und werden nicht
+nachbelegt. **Wer eine ältere Quelle liest** — einen Commit, ein Protokoll,
+eine alte Sitzung —, findet dort noch `F-PK-1` bis `-6` und meint die
+Fragentabelle.
 
 ### 6.1 Nachträge vom Abend des 21.09.2026 (F-PK-02 bis -04)
 

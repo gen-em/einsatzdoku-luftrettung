@@ -398,10 +398,13 @@ R62). Innerhalb von Claude Code gilt:
   Anfang, nicht in eine Fußnote.
 - **Benennung.** Jedes Konzept führt ein Kürzel; daraus leiten sich alle
   Nummern ab: `XX-NN Schlagwort` für Arbeitspakete, `XX-MN` für Meilensteine
-  der Betreiberin, `E-XX-NN` für Entscheidungen, `F-XX-NN` für Befunde und
-  offene Fragen, `P-XX-NN` für Prüfpunkte. Nummern sind **zweistellig** und
-  werden **nie wiederverwendet**; die Commit-Nachricht beginnt mit dem Paket
-  (`PK-03: …`). Die Tabelle steht in `docs/Pruefablauf.md` 7.
+  der Betreiberin, `E-XX-NN` für Entscheidungen, `F-XX-NN` für **Befunde**,
+  `Q-XX-NN` für **Fragen an die Betreiberin**, `P-XX-NN` für Prüfpunkte.
+  Nummern sind **zweistellig** und werden **nie wiederverwendet**; die
+  Commit-Nachricht beginnt mit dem Paket (`PK-03: …`). **`F` und `Q` waren
+  bis zum 21.09.2026 ein Kürzel** („Befunde und offene Fragen") — wer eine
+  ältere Quelle liest, findet Fragen dort als `F-…`. Die Tabelle steht in
+  `docs/Pruefablauf.md` 7.
 
 **Modellwahl:** Standard für die Umsetzung ist **Opus**, ohne Nachfrage.
 Sieht das Konzept für einen Schritt ausdrücklich **Fable** vor, vor Beginn
