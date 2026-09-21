@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+/* Der eine Leser fuer config.php (Schritt 15 AP2). Laedt seinerseits nichts —
+ * diese Datei darf `db.php` nicht erreichen. */
+require_once __DIR__ . '/konfig_lib.php';
+
 /**
  * DAS PLATTFORMPROFIL — eine Prueffunktion fuer zwei Leser (P5a/AP2, E-P5a-19).
  *
@@ -652,10 +656,8 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
 
     /* ---- 11 Vertrauenswuerdige Proxys — reine Auskunft (E-PP-08) ----------- */
     $proxys = [];
-    if (isset($GLOBALS['CFG']) && is_array($GLOBALS['CFG'])) {
-        $roh = $GLOBALS['CFG']['netz']['vertrauenswuerdige_proxys'] ?? [];
-        if (is_array($roh)) { $proxys = $roh; }
-    }
+    $roh = konfig('netz.vertrauenswuerdige_proxys', []);
+    if (is_array($roh)) { $proxys = $roh; }
     $b[] = plattform_befund('proxys', 'Vertrauenswürdige Proxys', 'empfohlen',
         $proxys === [] ? 'keine eingetragen' : count($proxys) . ' eingetragen',
         'nur nötig hinter einem Reverse Proxy', true,

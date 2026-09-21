@@ -73,13 +73,10 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/komplett_lib.php';
 
 /* Eigene Sitzung — `auth_guard.php` gibt es hier nicht, es gibt ja keine
- * Konten. Dieselben Einstellungen wie im Einrichter (M1-19). */
-session_set_cookie_params([
-    'httponly' => true, 'secure' => !empty($_SERVER['HTTPS']),
-    'samesite' => 'Lax', 'path' => '/',
-]);
-ini_set('session.use_strict_mode', '1');
-session_start();
+ * Konten. Dieselben Einstellungen wie im Einrichter (M1-19), und seit
+ * Web 20.27.0 ist „dieselben" keine Zusage mehr, sondern dieselbe Zeile:
+ * Art `einrichtung` (Schritt 15 AP2). */
+sitzung_starten('einrichtung');
 if (empty($_SESSION['wh_csrf'])) { $_SESSION['wh_csrf'] = bin2hex(random_bytes(32)); }
 
 /** Zeitbudget eines Durchgangs in Sekunden — wie bei „Alle sichern". */

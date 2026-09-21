@@ -40,7 +40,16 @@ Daten erst nach Server-Bestätigung.
 ├── server/                komplette Web-App (wird per FTPS deployt)
 │   ├── version.php        WEB_VERSION (einzige Stelle für die Versionsnummer)
 │   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc),
-│   │                       Einstieg der Wartung huckepack (run_cleanup_if_due)
+│   │                       Einstieg der Wartung huckepack (run_cleanup_if_due).
+│   │                       Verlangt config.php hart — die globale $CFG gibt
+│   │                       es seit Web 20.27.0 nicht mehr
+│   ├── konfig_lib.php     Der EINE Leser fuer config.php (Schritt 15 AP2,
+│   │                       E-ZE-02/-14): konfig('app.timezone'),
+│   │                       konfig_alles(), konfig_verwerfen(). Punktpfad,
+│   │                       Merker in einer static, fehlende Datei = Vorgabe.
+│   │                       LAEDT SELBST NICHTS — Bedingung, nicht
+│   │                       Sparsamkeit: install.php und sitzung_lib.php
+│   │                       brauchen ihn, ohne db.php zu laden
 │   ├── ui.php             Seitenhülle (ui_seite_start/-_ende), Kopf-/Seitenleisten,
 │   │                       Fußzeile, Meldungszeile, Abbruchseite, Krypto-Rüstzeug
 │   ├── auth_guard.php     Session/Rollen (Rolle+Existenz je Anfrage aus der DB,
@@ -632,10 +641,14 @@ Daten erst nach Server-Bestätigung.
 │   │                      Sammelmail und „Sperre aufheben" (P5a/AP6). Greift
 │   │                      die Bibliothek unmittelbar an und datiert stufe_bis
 │   │                      zurueck, statt 24 h zu warten (s. LIESMICH.md)
-│   ├── sitzungshaertung/  steht vor jedem session_start() die Haertung
-│   │                      `session.use_strict_mode`? (P5a/AP4a, Nr. 205).
-│   │                      Tokenizer statt grep; Selbstprobe 8 Faelle. Laeuft
-│   │                      in Stufe 1 (s. LIESMICH.md)
+│   ├── sitzungshaertung/  gibt es GENAU EINEN session_start(), steht er in
+│   │                      sitzung_lib.php, und steht die Haertung
+│   │                      `session.use_strict_mode` davor? (P5a/AP4a,
+│   │                      Nr. 205; verschaerft mit Schritt 15 AP2,
+│   │                      E-ZE-13 — jeder weitere Aufruf ist ein Befund,
+│   │                      auch ein gehaerteter). Tokenizer statt grep;
+│   │                      Selbstprobe 12 Faelle. Laeuft in Stufe 1
+│   │                      (s. LIESMICH.md)
 │   ├── cspprobe/          traegt die Content-Security-Policy noch? (P5a/AP4)
 │   │                      Fuenf Regeln: Inline-`<script>` ohne Nonce,
 │   │                      `<style>`-Block, Ereignis-Attribut,
@@ -1194,7 +1207,7 @@ Konto und ist dort lesbar.
 Schutz am nötigsten braucht, lädt `auth_guard.php` nicht. In `auth_guard.php`
 bleibt `csrf_check()`, der Abbruchweg der angemeldeten Seiten. Das Token
 entsteht **faul** — `session_lib.php` wird eingebunden, bevor
-`session_start()` gelaufen ist.
+`sitzung_starten()` gelaufen ist.
 
 Zwei Eigenschaften der Prüfung am Anmeldeformular: Sie steht **vor** allen
 Zählern, damit ein abgelaufenes Formular keine Ratenstrafe auslöst (es ist
@@ -5275,7 +5288,7 @@ Die Bausteine im Einzelnen:
 | Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn nach derselben Frist ablaufen wie die Sitzung — **gleitend wie sie**: Jeder Treffer erneuert den Zeitstempel (R44, seit Web 12.9.0). Vorher war es eine feste Frist ab dem Entsperren, und genau daraus entstand der Entsperrdialog mitten in der Arbeit. **Muss vor `unlock.js` geladen werden.** |
 | Fehlerantwort der Endpunkte | `db.php` | `json_fehler()` protokolliert den vollen Ausnahmetext und gibt nach außen nur eine achtstellige Kennung. `fehler_kennung()` für Stellen mit eigener Antwortform (`ingest.php`). |
 | Zeitrechnung | `db.php` | **`TIMESTAMP` und `DATETIME` verhalten sich verschieden, und das ist bei jeder Zeitspalte mitzudenken.** `TIMESTAMP` rechnet MySQL beim Schreiben in UTC um und beim Lesen zurück — der gespeicherte Wert ist unabhängig von der Sitzungszone immer richtig (`pair_sessions.erstellt_am`, `devices.last_seen`/`created_at`, `users.created_at`, `missions.created_at`, `deleted_refs`). `DATETIME` speichert unverändert, was dasteht; dort entscheidet die Sitzungszone (`rate_limits`, `password_resets.expires_at`, sowie die Einsatz- und Papierkorbzeiten — Letztere werden aber über `local_to_utc()` bzw. `UTC_TIMESTAMP()` befüllt und waren nie zonenabhängig). |
-| Zeitrechnung | `db.php` | Die Verbindung steht seit Web 4.5.2 ausdrücklich auf UTC (`SET time_zone = '+00:00'`). Ohne das käme die Zeitrechnung von `NOW()` aus einer Hoster-Einstellung, und `NOW()` und `UTC_TIMESTAMP()` liefen um den Zonenversatz auseinander. Der Unterschied im Code bleibt: `UTC_TIMESTAMP()` für den Papierkorb (90-Tage-Frist, `TRASH_DAYS`), `NOW()` für Kurzlebiges (Ratenschutz, Token, Kopplungssitzungen). Die **Anzeige** rechnet in PHP nach `$CFG['app']['timezone']` um. |
+| Zeitrechnung | `db.php` | Die Verbindung steht seit Web 4.5.2 ausdrücklich auf UTC (`SET time_zone = '+00:00'`). Ohne das käme die Zeitrechnung von `NOW()` aus einer Hoster-Einstellung, und `NOW()` und `UTC_TIMESTAMP()` liefen um den Zonenversatz auseinander. Der Unterschied im Code bleibt: `UTC_TIMESTAMP()` für den Papierkorb (90-Tage-Frist, `TRASH_DAYS`), `NOW()` für Kurzlebiges (Ratenschutz, Token, Kopplungssitzungen). Die **Anzeige** rechnet in PHP nach `konfig('app.timezone')` um (bis Web 20.26.2: `$CFG['app']['timezone']`). |
 | Sitzungsende | `session_lib.php` | Eine Fassung für Abmelden, Ablauf, gelöschtes Konto **und** Passwortwechsel; räumt die Schlüssel im Browser und nennt den Grund. `session_verwerfen()` für Abrufe, die JSON erwarten. |
 | E-Mail-Adressen | `server/email_lib.php` | Eine Fassung für Normalisierung (`email_normalisieren()`), Prüfung (`email_pruefen()`) und Dublettenerkennung (`ist_dublettenfehler()`). **Ohne Abhängigkeiten**, damit `install.php` sie vor der Ersteinrichtung laden kann. |
 | Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |
@@ -8055,10 +8068,19 @@ die auseinanderläuft.
 > Deren beide `require_once` liegen im Rumpf einer Funktion — eines davon
 > stand bis Web 20.25.0 auf Spalte 0 eingerückt und sah damit aus wie ein
 > Aufruf auf oberster Ebene. Auf oberster Ebene zöge es über `mail_lib.php`
-> **`db.php` nach**, und weil `db.php` `sitzung_ablage()` während des eigenen
-> Ladens ruft, liefe die Funktion dann in einer halb geladenen `db.php`.
-> `require_once` meldete den Zyklus nicht, sondern kehrte still zurück. Die
-> Einrückung ist berichtigt und trägt jetzt einen Kommentar, der das sagt.
+> **`db.php` nach**, und die Funktion liefe dann in einer halb geladenen
+> `db.php`. `require_once` meldete den Zyklus nicht, sondern kehrte still
+> zurück. Die Einrückung ist berichtigt und trägt jetzt einen Kommentar, der
+> das sagt.
+>
+> **Seit Web 20.27.0 ist der Zyklus kürzer, aber nicht fort** (Schritt 15
+> AP2, E-ZE-06): `db.php` ruft `sitzung_ablage()` nicht mehr beim eigenen
+> Laden — das tut jetzt `sitzung_starten()`, unmittelbar bevor PHP die
+> Sitzungsdatei anlegt. Die Bedingung bleibt trotzdem dieselbe: **Kein Weg
+> aus `sitzung_lib.php` oder `plattform_lib.php` darf `db.php` erreichen**,
+> denn `sitzung_starten()` wird aus Seiten gerufen, die `db.php` geladen
+> haben. Nachgemessen über `get_included_files()`: `plattform_lib.php` zieht
+> `email_lib.php` und `php_mindest.php` nach, `db.php` nicht.
 
 ### 5b.6 Die zwei Kontingente und ihre Warnung
 
@@ -8108,17 +8130,31 @@ keine Kopfzeilen; und HSTS war ein Jahr, fest verdrahtet.
 | `kopf_nonce_attr()` | jedes Inline-`<script>` | ` nonce="…"` |
 | `https_tor()` | `auth_guard.php`, `login.php` — **vor** `session_start()` | 301 auf HTTPS, wenn HSTS an ist |
 
-**Und vor jedem `session_start()` steht seit Web 20.9.1
+**Und vor dem `session_start()` steht seit Web 20.9.1
 `ini_set('session.use_strict_mode', '1')`** (E-P5a-38, Backlog Nr. 205).
 Ohne die Zeile übernimmt PHP eine Sitzungskennung, die der Browser mitbringt,
 auch wenn es sie nie vergeben hat — Session-Fixation. Sie stand bis dahin an
 genau **zwei** Stellen (`install.php`, `wiederherstellen.php`), ausgerechnet
 den beiden Wegen, die **keine** Anmeldesitzung tragen.
 
-`tools/sitzungshaertung/` zählt in Stufe 1 nach, mit dem Tokenizer: **7 echte
-`session_start()`-Aufrufe, 0 ohne Härtung**, Selbstprobe 8/8. Was sie *nicht*
-messen kann, ist ob die Einstellung **wirkt** — das misst nur eine laufende
-Installation (Befehl in der dortigen `LIESMICH.md`).
+**Seit Web 20.27.0 heißt „vor dem" wörtlich einen** (Schritt 15 AP2,
+E-ZE-12/-13): Es gibt in `server/` genau **einen** `session_start()`, und er
+steht in `sitzung_starten()` in `sitzung_lib.php`. Vorher waren es **neun in
+neun Dateien und vier Fassungen** — mit vier verschiedenen Sätzen
+Cookie-Parameter, deren Unterschied nirgends aufgeschrieben war. Die vier
+**Arten** (`app`, `lesend`, `einrichtung`, `passwort`) stehen jetzt als
+Tabelle neben der Funktion.
+
+`tools/sitzungshaertung/` zählt in Stufe 1 nach, mit dem Tokenizer, und prüft
+seither vier Dinge statt einem: **genau ein Aufruf** · **er steht in
+`sitzung_lib.php`** · **die Härtung steht in den zwölf Zeilen davor** ·
+**jeder weitere Aufruf ist ein Befund, auch ein gehärteter**. Gemessen:
+**1 Aufruf, 0 Befunde**, Selbstprobe 12/12. Der vierte Punkt ist der
+eigentliche Zugewinn — ein neuer Sitzungsstart *mit* Härtung war unter der
+alten Prüfung grün und hätte die Cookie-Parameter trotzdem neu erfinden
+müssen. Genau so sind die neun entstanden. Was sie *nicht* messen kann, ist
+ob die Einstellung **wirkt** — das misst nur eine laufende Installation
+(Befehl in der dortigen `LIESMICH.md`).
 
 Weil beide Wege durch *eine* Stelle gehen, bekommt jede Seite und jede
 API-Antwort die Kopfzeilen — gleich auf welchem Webserver.
@@ -11092,7 +11128,7 @@ getroffen haben.
 
 **`logo_src()`** ist die Fassung für die beiden Seiten **ohne** Sitzung
 (Anmeldung, Passwort setzen). Sie folgt seit Web 9.10.0 ebenfalls der Wahl;
-`$CFG['app']['logo_path']` gewinnt nur noch, wenn dort eine **fremde** Datei
+`konfig('app.logo_path')` gewinnt nur noch, wenn dort eine **fremde** Datei
 steht (F-P3-AN). `pw_handling.php` lädt dafür `session_lib.php`.
 
 **Der Platzhalterhinweis** an der Logo-Karte fragt die Datei, nicht eine
@@ -11163,10 +11199,25 @@ aus einem Fehler eine Unsichtbarkeit.
 
 `rechtstext_seite.php` lädt **nicht** `auth_guard.php` — der leitet
 Nichtangemeldete auf die Anmeldung um, und das ist bei einem Impressum falsch.
-Sie ruft stattdessen selbst `session_start()` (das nimmt ein vorhandenes Cookie
-an und meldet niemanden an) und liest die Rolle **aus der Datenbank**, nicht aus
-der Sitzung — dieselbe Regel wie im Guard (M1-05): Eine zurückgenommene
+Sie ruft stattdessen `sitzung_starten('lesend')` (das nimmt ein vorhandenes
+Cookie an und meldet niemanden an) und liest die Rolle **aus der Datenbank**,
+nicht aus der Sitzung — dieselbe Regel wie im Guard (M1-05): Eine zurückgenommene
 Adminrolle würde sonst bis zur nächsten Anmeldung weitergelten.
+
+> **Sie legt dabei seit Web 20.27.0 keine Sitzung mehr an** (Schritt 15 AP2,
+> F-ZE-2). Die Art `lesend` startet **nur, wenn ein Sitzungscookie da ist** —
+> und das gilt für alle drei Seiten dieser Bauart: `rechtstext_seite.php`,
+> `doku_seite.php` (Handbuch, „Was ist NAdoku") und `notfallblatt.php`.
+>
+> **Vorher bekam jeder Besucher eine Sitzung**, auch jeder Bot, und seit
+> Web 20.26.0 landete jede davon als Datei in `server/.sitzungen/`. Das
+> Konzept der Sitzungsablage hatte behauptet, die drei Seiten prüfen auf das
+> Cookie; nachgemessen am 20.09.2026 taten sie es nicht. **Für Angemeldete
+> ändert sich nichts** — ihr Browser schickt das Cookie, die Sitzung startet,
+> der angemeldete Kopf sieht aus wie vorher.
+>
+> **Wer Dateien in `.sitzungen/` zählt, rechnet das ein:** Die Zahl auf der
+> Statusseite fällt seither, ohne dass jemand etwas gelöscht hätte.
 
 Ohne `config.php` leitet sie auf `install.php` um, wie `login.php` es tut. Ein
 Impressum ist das erste, was jemand auf einer frischen Installation aufruft — es

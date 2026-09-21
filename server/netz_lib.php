@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+/* Der eine Leser fuer config.php (Schritt 15 AP2). Laedt seinerseits nichts —
+ * diese Datei darf `db.php` nicht erreichen. */
+require_once __DIR__ . '/konfig_lib.php';
+
 /**
  * VERTRAUENSWUERDIGE PROXYS — wer darf sagen, woher eine Anfrage kommt?
  * (P5a/AP4, E-P5a-17; Vorbereitung E-PP-08, F-PP-3)
@@ -47,9 +51,7 @@ declare(strict_types=1);
  */
 function netz_proxys(): array
 {
-    $cfg = $GLOBALS['CFG'] ?? null;
-    if (!is_array($cfg)) { return []; }
-    $roh = $cfg['netz']['vertrauenswuerdige_proxys'] ?? [];
+    $roh = konfig('netz.vertrauenswuerdige_proxys', []);
     if (is_string($roh)) { $roh = array_map('trim', explode(',', $roh)); }
     if (!is_array($roh)) { return []; }
     $aus = [];

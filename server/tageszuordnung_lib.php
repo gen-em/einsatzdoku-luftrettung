@@ -184,8 +184,6 @@ function tz_einsatz_verschieben(int $userId, int $missionId, int $zielDayId): ar
  */
 function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
 {
-    global $CFG;
-
     $tag = dt_laden($userId, $dayId);
     if ($tag === null) {
         return ['ok' => false, 'meldung' => 'Diensttag nicht gefunden. Es wurde nichts geändert.'];
@@ -195,7 +193,7 @@ function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
         return ['ok' => false, 'meldung' => 'Das Datum ist unverändert. Es wurde nichts geändert.'];
     }
 
-    $tz  = new DateTimeZone($CFG['app']['timezone'] ?? 'Europe/Berlin');
+    $tz  = new DateTimeZone((string)konfig('app.timezone', 'Europe/Berlin'));
     $von = new DateTime($altTag . ' 00:00:00', $tz);
     $bis = new DateTime($neuTag . ' 00:00:00', $tz);
     $delta = $bis->getTimestamp() - $von->getTimestamp();   // Sekunden, vorzeichenbehaftet

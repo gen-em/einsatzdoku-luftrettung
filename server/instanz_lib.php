@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+/* Der eine Leser fuer config.php (Schritt 15 AP2). Laedt seinerseits nichts —
+ * diese Datei darf `db.php` nicht erreichen. */
+require_once __DIR__ . '/konfig_lib.php';
+
 /**
  * DER NAME DIESER INSTALLATION — an einer Stelle (P5a/AP5, E-P5a-35).
  *
@@ -192,20 +196,13 @@ function app_url(string $pfad = ''): string
     static $basis = null;
     if ($basis === null) {
         $basis = '';
-        /* ERST DIE SCHON GELADENE FASSUNG. `db.php` legt `$CFG` global ab;
-         * die Datei ein zweites Mal zu lesen waere ein Dateizugriff je
-         * Aufruf und je Anfrage — bei acht Links in einer Mail achtmal. */
-        $cfg = $GLOBALS['CFG'] ?? null;
-        if (is_array($cfg)) {
-            $basis = rtrim((string)($cfg['app']['base_url'] ?? ''), '/');
-        }
-        if ($basis === '') {
-            $datei = __DIR__ . '/config.php';
-            if (is_file($datei)) {
-                $alles = require $datei;
-                $basis = rtrim((string)($alles['app']['base_url'] ?? ''), '/');
-            }
-        }
+        /* EINE ABFRAGE STATT ZWEIER WEGE (Schritt 15 AP2). Bis Web
+         * 20.26.3 stand hier erst ein Blick auf die globale `$CFG` und
+         * danach, falls die fehlte, ein ZWEITES `require` derselben Datei —
+         * ein Dateizugriff je Aufruf und je Anfrage, bei acht Links in einer
+         * Mail achtmal. `konfig()` merkt sich den Inhalt selbst; der
+         * Rueckfall ist damit derselbe Weg wie der Normalfall. */
+        $basis = rtrim((string)konfig('app.base_url', ''), '/');
     }
     if ($pfad === '') { return $basis; }
     return $basis . '/' . ltrim($pfad, '/');

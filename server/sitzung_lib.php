@@ -19,20 +19,31 @@ declare(strict_types=1);
  * SITZUNGSKENNUNG. Wer sie liest, ist angemeldet und sieht die Klartextliste
  * aus `CLAUDE.md` 4; bei `role = admin` die Verwaltung.
  *
- * ZWEI AUFRUFSTELLEN, NICHT NEUN (E-SA-02). Es gibt neun `session_start()`
- * in neun Dateien — `auth_guard.php`, `login.php`, `pw_handling.php`,
- * `session_lib.php`, `doku_seite.php`, `notfallblatt.php`,
- * `rechtstext_seite.php`, `install.php`, `wiederherstellen.php`. ACHT davon
- * laden `db.php` vor ihrem Sitzungsstart; die neunte ist `install.php`, wo es
- * noch keine `config.php` gibt. Der Aufruf steht deshalb in `db.php` (frueh,
- * neben `wartung_tor()`, ohne Datenbank) und in `install.php` — und ein
- * kuenftiger zehnter Sitzungsstart ist damit von selbst gedeckt.
+ * EINE AUFRUFSTELLE, NICHT NEUN — UND SEIT WEB 20.27.0 AUCH NICHT MEHR ZWEI
+ * (E-SA-02, dann Schritt 15 AP2/E-ZE-06). Bis Web 20.26.3 standen neun
+ * `session_start()` in neun Dateien, und `sitzung_ablage()` wurde an zwei
+ * Stellen gerufen: in `db.php` (frueh, neben `wartung_tor()`) und in
+ * `install.php`, das `db.php` nie laedt. Jetzt gibt es `sitzung_starten()`
+ * am Ende dieser Datei — sie ruft `sitzung_ablage()` selbst, unmittelbar
+ * bevor PHP die Sitzungsdatei anlegt. Die beiden Aufrufe von aussen sind
+ * entfallen.
+ *
+ * WAS DAS AENDERT, UND ZWAR ZUM BESSEREN: Die Einrichtung der Ablage laeuft
+ * nur noch, wenn wirklich eine Sitzung startet — nicht mehr bei jeder
+ * Anfrage, die `db.php` laedt. Ein API-Aufruf ohne Sitzung fasst
+ * `.sitzungen/` gar nicht mehr an.
+ *
+ * WAS DAS NICHT AENDERT: Die Reihenfolge. `sitzung_ablage()` stand vorher
+ * VOR jedem Sitzungsstart und steht es weiterhin — sie ist die erste Zeile
+ * nach der Cookie-Pruefung.
  *
  * Der erste Entwurf des Konzepts kannte nur DREI der neun und gab nur ihnen
  * den Aufruf. Darunter fehlte `login.php`: Die Anmeldung haette die Sitzung
  * beim Hoster abgelegt und `auth_guard.php` sie in `.sitzungen/` gesucht.
  * NIEMAND HAETTE SICH ANMELDEN KOENNEN. Das ist der Grund fuer die zentrale
- * Stelle, und er ist teuer bezahlt.
+ * Stelle, und er ist teuer bezahlt. Mit `sitzung_starten()` kann der Fall
+ * nicht wiederkommen: Es gibt keinen zweiten Weg mehr, an dem man ihn
+ * vergessen koennte.
  *
  * DIESE DATEI LAEDT NICHTS (E-SA-02). Weder `db.php` noch `config.php` —
  * `db.php` ruft sie waehrend des eigenen Ladens, und `install.php` hat zu
@@ -403,4 +414,170 @@ function sitzung_wirksamer_pfad(): string
     if ($roh === '') { return sys_get_temp_dir(); }
     $teile = explode(';', $roh);
     return (string)end($teile);
+}
+
+/* ===========================================================================
+ * DER SITZUNGSSTART — eine Stelle, vier Arten
+ * ======================================================================== */
+
+/**
+ * Der Name der Passwort-Sitzung.
+ *
+ * STAND BIS WEB 20.26.3 IN `pw_handling.php` und ist mit Schritt 15 AP2
+ * hierher gezogen (E-ZE-12): Die Cookie-Parameter aller vier Arten stehen
+ * jetzt in EINER Tabelle, und ein Name, der woanders liegt als die Tabelle,
+ * die ihn braucht, ist genau die Trennung, die dieser Schritt aufhebt.
+ *
+ * EIGENER NAME, WEIL ES EINE ANDERE SITZUNG IST: Der Passwort-Weg traegt ein
+ * Token und keine Anmeldung. Hiesse sie wie die Anmeldesitzung, loeschte ein
+ * Abmelden sie mit — oder schlimmer: Wer ein Passwort zuruecksetzt, waere
+ * danach in der Sitzung, die vorher da war.
+ */
+const PW_SESSION_NAME = 'EDPWSESS';
+
+/**
+ * Die vier Arten und ihre Cookie-Parameter — gemessen am Bestand vor dem
+ * Umzug (Schritt 15, Konzept Abschnitt 1.3), nicht neu erfunden.
+ *
+ * `secure => null` heisst „haengt an HTTPS" (`!empty($_SERVER['HTTPS'])`).
+ *
+ * DIE DRIFT BLEIBT, WIE SIE IST, UND DAS IST EINE ENTSCHEIDUNG (E-ZE-12):
+ * `app` und `passwort` setzen `secure` FEST, `lesend` und `einrichtung`
+ * machen es von HTTPS abhaengig. Das anzugleichen waere eine
+ * Sicherheitsentscheidung und keine Zentralisierung — sie gehoert zu
+ * Schritt 18, zusammen mit der Sitzungsbindung (Backlog Nr. 251). Was
+ * Schritt 15 tut, ist den Unterschied an EINE Stelle zu holen, wo man ihn
+ * sieht. Vorher stand er in neun Dateien, und niemand konnte ihn zaehlen.
+ *
+ * `nur_mit_cookie` ist F-ZE-2 und die einzige Verhaltensaenderung dieses
+ * Pakets — siehe `sitzung_starten()`.
+ */
+const SITZUNG_ARTEN = [
+    'app' => [
+        'secure' => true,  'samesite' => 'Strict', 'name' => null,
+        'still'  => false, 'nur_mit_cookie' => false,
+    ],
+    'lesend' => [
+        'secure' => null,  'samesite' => 'Strict', 'name' => null,
+        'still'  => true,  'nur_mit_cookie' => true,
+    ],
+    'einrichtung' => [
+        'secure' => null,  'samesite' => 'Lax',    'name' => null,
+        'still'  => false, 'nur_mit_cookie' => false,
+    ],
+    'passwort' => [
+        'secure' => true,  'samesite' => 'Lax',    'name' => PW_SESSION_NAME,
+        'still'  => false, 'nur_mit_cookie' => false,
+    ],
+];
+
+/**
+ * Eine Sitzung starten — der einzige Weg dorthin (E-ZE-12, E-ZE-13).
+ *
+ *     sitzung_starten('app');          // auth_guard, login, Abmelden
+ *     sitzung_starten('lesend');       // Handbuch, Rechtstext, Notfallblatt
+ *     sitzung_starten('einrichtung');  // install.php, wiederherstellen.php
+ *     sitzung_starten('passwort');     // pw_handling.php
+ *
+ * Nach Schritt 15 AP2 gibt es in `server/` genau EINEN `session_start()`, und
+ * er steht hier. Der Stufe-1-Schritt „Sitzungshaertung" zaehlt das nach: Ein
+ * zweiter Aufruf irgendwo ist ein Befund, nicht eine Ausnahme.
+ *
+ * VORHER STANDEN NEUN STARTS IN NEUN DATEIEN, in vier Fassungen, und der
+ * Unterschied zwischen ihnen war nirgends aufgeschrieben. Zwei davon
+ * vergassen `session_set_cookie_params()` nicht, wohl aber die Reihenfolge
+ * mitzudenken: `auth_guard.php` setzte sie, `login.php` auch — aber wer eine
+ * zehnte Seite gebaut haette, haette abgeschrieben, was gerade in der Naehe
+ * stand.
+ *
+ * WAS SIE TUT, in dieser Reihenfolge:
+ *
+ * 1. Laeuft schon eine Sitzung, ist nichts zu tun — `true`.
+ * 2. Bei `lesend` OHNE Sitzungscookie: gar nicht erst anfangen (F-ZE-2).
+ * 3. `sitzung_ablage()` — der Ablageort steht, BEVOR PHP die Datei anlegt.
+ * 4. `session_name()`, aber nur bei `passwort`.
+ * 5. Cookie-Parameter aus der Tabelle oben.
+ * 6. `session.use_strict_mode` — unmittelbar davor, nicht irgendwo.
+ * 7. `session_start()`, bei `lesend` mit `@`.
+ *
+ * F-ZE-2 — DIE EINZIGE VERHALTENSAENDERUNG DIESES PAKETS. Handbuch,
+ * „Was ist NAdoku" und die Rechtstexte sind ohne Anmeldung erreichbar und
+ * fragten die Sitzung nur, um den angemeldeten Kopf zeigen zu koennen. Sie
+ * STARTETEN sie dabei aber — fuer jeden Besucher, auch fuer jeden Bot.
+ * Seit Schritt 16 landet jede dieser Sitzungen als Datei in `.sitzungen/`.
+ * Das Konzept Sitzungsablage behauptete, die drei Seiten pruefen auf das
+ * Cookie; nachgemessen am 20.09.2026 taten sie es nicht (FF-2). Jetzt tun
+ * sie es. **Fuer Angemeldete aendert sich nichts** — ihr Browser schickt das
+ * Cookie, die Sitzung startet, der Kopf sieht aus wie vorher.
+ *
+ * `@` NUR BEI `lesend`, und auch das ist Bestand und nicht neu: Diese drei
+ * Seiten sollen lesbar bleiben, wenn die Sitzung aus irgendeinem Grund nicht
+ * aufgeht. Bei den anderen drei Arten waere ein verschluckter Fehler das
+ * Gegenteil von hilfreich.
+ *
+ * @param  string $art `app` · `lesend` · `einrichtung` · `passwort`
+ * @return bool   Laeuft danach eine Sitzung?
+ * @throws InvalidArgumentException bei unbekannter Art — ein Tippfehler im
+ *         Namen darf nicht in einer stillen Sitzung ohne Cookie-Parameter
+ *         enden.
+ */
+function sitzung_starten(string $art): bool
+{
+    if (!isset(SITZUNG_ARTEN[$art])) {
+        throw new InvalidArgumentException('Unbekannte Sitzungsart: ' . $art);
+    }
+    if (session_status() !== PHP_SESSION_NONE) { return true; }
+
+    $a = SITZUNG_ARTEN[$art];
+
+    /* F-ZE-2: ohne Cookie kein Start — und damit keine Sitzungsdatei. Der
+     * Name wird VOR der Abfrage gesetzt, sonst fragte `passwort` nach dem
+     * falschen Cookie. (Heute traegt keine Art beides; die Reihenfolge
+     * stimmt trotzdem, damit sie es koennte.) */
+    if ($a['name'] !== null) { session_name($a['name']); }
+    if ($a['nur_mit_cookie'] && !isset($_COOKIE[session_name()])) { return false; }
+
+    /* Der Ablageort steht, bevor PHP die Datei anlegt (E-SA-02, E-ZE-06).
+     * Bis Web 20.26.3 rief `db.php` das beim eigenen Laden und `install.php`
+     * noch einmal; beide Aufrufe sind mit AP2 entfallen. */
+    sitzung_ablage();
+
+    session_set_cookie_params([
+        'httponly' => true,
+        'secure'   => $a['secure'] ?? !empty($_SERVER['HTTPS']),
+        'samesite' => $a['samesite'],
+        'path'     => '/',
+    ]);
+    /* ZWEI ZEILEN, DIE ZUSAMMENGEHOEREN UND DESHALB NEBENEINANDER STEHEN.
+     *
+     * `use_strict_mode` VOR `session_start()` (P5a/AP4a, E-P5a-38, Backlog
+     * Nr. 205). Ohne das uebernimmt PHP eine Sitzungskennung, die der Browser
+     * mitbringt, auch wenn es sie nie vergeben hat — Session-Fixation, und
+     * der Schutz haengt sonst an der `php.ini` des Hosters. Die Zeile stand
+     * bis Web 20.26.3 neunmal da; jetzt einmal, und genau hier.
+     *
+     * EIN AUFRUF, NICHT ZWEI — und das ist keine Kosmetik fuer die Zaehlung,
+     * sondern deren Zweck: Nach diesem Paket steht in `server/` genau ein
+     * `session_start()`, und der Stufe-1-Schritt zaehlt das nach. Eine
+     * Fassung `$a['still'] ? @session_start() : session_start()` waeren
+     * zwei, und die Zeile stuende dauerhaft auf zwei statt auf eins.
+     *
+     * DAS `@` DER ART `lesend` IST DESHALB EINE MASKE UM DEN EINEN AUFRUF.
+     * Sie nimmt E_WARNING und E_NOTICE weg — genau das, was `@` an den drei
+     * lesenden Seiten bis Web 20.26.3 unterdrueckt hat — und stellt danach
+     * her, was vorher galt. Fuer die anderen drei Arten bleibt jede Warnung
+     * sichtbar; ein verschluckter Fehler waere dort das Gegenteil von
+     * hilfreich.
+     *
+     * UND DER LANGE KOMMENTAR STEHT HIER OBEN UND NICHT DAZWISCHEN: Die
+     * Sitzungshaertung sucht die Haertung in den zwoelf Zeilen VOR dem
+     * Aufruf. Ein Kommentarblock zwischen beiden schoebe sie aus dem Fenster
+     * und machte Stufe 1 rot — mit einem Befund, der sachlich falsch waere.
+     * Dieselbe Falle steht in `install.php` beschrieben; sie ist beim Bauen
+     * dieses Pakets tatsaechlich zugeschnappt. */
+    $maske = $a['still'] ? error_reporting(error_reporting() & ~E_WARNING & ~E_NOTICE) : null;
+    ini_set('session.use_strict_mode', '1');
+    $lief = session_start();
+    if ($maske !== null) { error_reporting($maske); }
+    return $lief;
 }

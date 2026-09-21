@@ -1,6 +1,6 @@
 # Prüfdokument — Zentralisierung: eine Stelle je Sache (Schritt 15)
 
-**Stand:** 20.09.2026, nach **AP1** · **Zweig:** `claude/eager-euler-jlfi9i`,
+**Stand:** 21.09.2026, nach **AP1** und **AP2** (Web 20.27.0) · **Zweig:** `claude/eager-euler-jlfi9i`,
 von `origin/main` `fd99989` (Web 20.26.2) · **Konzept:**
 `Konzept-Zentralisierung.md`
 
@@ -26,7 +26,7 @@ CHANGELOG-Abschnitt, in den der Eintrag gehörte. Vom Auftraggeber am
 
 | # | Was | Warum nicht | Woran man es später erkennt |
 |---|---|---|---|
-| **N-1** | **Die Anwendung im Browser** | In dieser Umgebung liegt **keine Installation**: `server/config.php` fehlt, es gibt keine Datenbank. AP1 ändert allerdings auch keine Zeile unter `server/` — es gibt nichts zu bedienen. Ab **AP2** ist das ein echter Mangel und kein Formalismus | ab AP2 in diesem Abschnitt neu zu bewerten |
+| **N-1** | **Die Anwendung im Browser** | In dieser Umgebung liegt **keine Installation**: `server/config.php` fehlt, es gibt keine Datenbank. AP1 ändert allerdings auch keine Zeile unter `server/` — es gibt nichts zu bedienen. **Ab AP2 ist das ein echter Mangel und kein Formalismus** | **eingetreten mit AP2** — siehe N2-1 und Prüfliste A-1 bis A-12 |
 | **N-2** | **Der Stufe-1-Schritt „Zentralisierung"** | Er entsteht erst in **AP10** (`.github/workflows/pruefung.yml`, eingetragen in `tools/kettenaufrufe`). Bis dahin läuft die Zählung nur von Hand | Punkt P-1; der Kettenschritt selbst in AP10 |
 | **N-3** | **Die Wortliste hat die meisten neuen Dateien nicht angesehen** | `tools/zaehlung/*` und `docs/konzepte/*` fallen in **keinen** der fünf Bereiche (a `server/*.php` · b `server/assets/*.js` · c **elf namentlich genannte** normative Dokumente · d Android · e Uhr). Gesehen hat der Lauf von AP1 allein den Nachtrag in `docs/Technik.md` (Bereich c). Für den Rest meldet er 0 Treffer, ohne eine Zeile davon gelesen zu haben — CLAUDE.md 6 in eigener Sache: „Ein Lauf, der einen Bereich übergeht, meldet keine Null — er meldet gar nichts" | Punkt P-6 |
 | **N-4** | **Ob das Register die richtigen Muster beschreibt** | Das Werkzeug zählt Vorkommen; **ob zwei Stellen dieselbe Sache tun**, behauptet das Register. Die Prüfung dieser Behauptung ist Lesearbeit, keine Messung | Punkt P-5 |
@@ -146,3 +146,87 @@ höher, und **keine der Zahlen ist in der Umsetzung erfunden**:
 **Der Umgang damit ist die Regel, nicht die Ausnahme:** Das Paket, das eine
 Decke herunterschreibt, legt die **gemessene** Zahl vor. Eine Decke wird nicht
 angehoben, ohne dass es im Konzept steht (E-ZE-24).
+
+---
+
+# AP2 — Konfiguration und Sitzung (Web 20.27.0, 21.09.2026)
+
+**AP2 hat `server/` angefasst — 21 Dateien.** Damit gilt N-1 aus Abschnitt 0
+zum ersten Mal wirklich, und das ist der wichtigste Satz dieses Abschnitts.
+
+## A0. Was nicht geprüft werden konnte — und warum
+
+| # | Was | Warum nicht | Woran man ein Scheitern erkennt |
+|---|---|---|---|
+| **N2-1** | **Jeder Weg durch die Anwendung im Browser** — Anmeldung bis Tagesübersicht, Abmelden, Passwort-Reset, Handbuch/Rechtstext/Notfallblatt angemeldet, `install.php`, `wiederherstellen.php` | In der Arbeitsumgebung liegt **keine Installation**: `server/config.php` fehlt, es gibt keine Datenbank. Gemessen: `php -r 'require "server/db.php";'` bricht mit „config.php fehlt" ab — das ist der erwartete Abbruch, aber eben auch das Ende jedes Browserwegs | **Prüfliste A-1 bis A-9.** Dieses Paket fasst JEDE Sitzung der Anwendung an; wenn etwas bricht, bricht es hier |
+| **N2-2** | **Abmelde-, Raten-, Kopplungsprobe** (Konzept Abschnitt 5 verlangt sie für AP2–AP5) | Alle drei sprechen über echtes HTTP mit einer laufenden Anlage | Prüfliste A-10 |
+| **N2-3** | **Ob `session.use_strict_mode` WIRKT** | `ini_set()` kann scheitern — manche Hoster sperren einzelne Direktiven. Dass die Zeile dasteht, ist gemessen; dass sie greift, misst nur eine laufende Anlage | Prüfliste A-11 |
+| **N2-4** | **F-ZE-2 gegen echte Bots** | Nachgestellt mit einem Aufruf ohne Cookie (bestanden). Ob ein echter Crawler kein Cookie mitbringt, misst nur der Betrieb | Prüfliste A-6 — die Zahl in `.sitzungen/` muss **fallen** |
+| **N2-5** | **Das Verhalten hinter einem Reverse Proxy** | `netz_proxys()` liest jetzt über `konfig()`. Die Umstellung ist eng und gelesen; eine Anlage mit eingetragenen Proxys stand nicht zur Verfügung | Prüfliste A-12 |
+
+## A1. Was maschinell geprüft wurde — mit Mittel **und** Zahl
+
+| Mittel | Zahl |
+|---|---|
+| **Registerzeilen des Pakets** | Z01 `session_start(` **9 → 1** · Z02 `sitzung_ablage(` **2 → 1** · Z03 `config.php` lesend **7 → 1** · Z04 `$CFG` **46 → 0** |
+| **Register gesamt** | **38 Zeilen, 0 über der Decke**; Selbstprobe **33 von 33** |
+| **`error_log(`** (E-ZE-05) | **77 in 32 Dateien — unverändert.** Kein Aufruf umgestellt, kein Aufruf verschoben |
+| **`konfig_lib` — eigene Probe** | **13 von 13**: Punktpfad zwei Ebenen · oberste Ebene ohne Punkt · Feld als Wert · fehlender Schlüssel → Vorgabe · Pfad durch einen Nicht-Array → Vorgabe · fehlende `config.php` → Vorgabe · Merker hält · `konfig_verwerfen()` liest neu · gelöschte Datei → wieder Vorgabe |
+| **Die vier Sitzungsarten** | **16 Zellen** (4 Arten × `secure`, `samesite`, `httponly`, Sitzungsname), **0 Abweichungen** gegen die Tabelle aus Konzept 1.3. `use_strict_mode` in allen vier auf `1`. Je Art ein eigener Prozess — nach dem ersten `session_start()` lassen sich die Parameter nicht mehr für eine andere Art messen |
+| **F-ZE-2** | Art `lesend` **ohne** Cookie: `lief=false`, `session_status()` = keine · **mit** Cookie: `lief=true`, aktiv |
+| **Ladezyklus** (die Falle aus Konzept 3.0) | **7 von 7**, über `get_included_files()`: `konfig_lib.php` zieht **0** Dateien nach · `sitzung_lib.php` beim Laden **0** · `plattform_lib.php` zieht `email_lib.php` und `php_mindest.php` nach und erreicht `db.php` **nicht** · `db.php` verlangt `config.php` hart · `db.php` richtet die Ablage **nicht mehr** ein (Lage `nicht_gelaufen`) · `sitzung_starten()` richtet sie ein · unbekannte Art **wirft** statt still zu starten |
+| **Sitzungshärtung, umgestellt** | Lauf **0 Befunde** bei **1 Aufruf** (erwartet 1); Selbstprobe **12 von 12**, darunter „gehärtet, aber am falschen Ort" und „zwei Aufrufe — der zweite ist ein Befund" |
+| `php -l` | `server/` **134 Dateien, 0 Fehler** · `tools/` **30 Dateien, 0 Fehler** |
+| Wortliste | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** |
+| Vollständigkeit | **398** — die Schwelle, unverändert. *Sprang zwischendurch auf 399, siehe unten* |
+| Kontraste · Kettenaufrufe · CSP · Migrationsregister · Jobregister · Installweiche · Schemaprobe | **22/0** · **0 Befunde, 0 ungeprüft** · **0** · **0 Befunde, 0 ungenutzte Ausnahmen** · **0** · **0** · **4 Prüfungen, 0 Fehlschläge** |
+
+**Zwei Zahlen, die etwas anderes heißen, als sie aussehen:**
+
+- **„398" der Vollständigkeit ist die Schwelle, nicht null.** Der erste Lauf
+  nach dem Paket meldete **399** — ein Auslassungszeichen (U+2026) in einem
+  neuen Kommentar in `db.php`. Dieselbe Falle, dieselbe Datei, einen Tag nach
+  Schritt 16, wo sie im Prüfdokument steht. Ersetzt durch drei Punkte.
+- **„16 Zellen" statt der im Konzept genannten 12.** Das Konzept verlangt
+  4 Arten × 3 Attribute; gemessen wurde zusätzlich der **Sitzungsname**,
+  weil die Art `passwort` als einzige einen eigenen trägt (`EDPWSESS`) und
+  ein falscher Name dort bedeutete, dass ein Passwort-Reset die
+  Anmeldesitzung überschreibt.
+
+## A2. Was im Browser geprüft wurde
+
+**Nichts.** Siehe N2-1. Das ist bei diesem Paket kein Formalismus: AP2 fasst
+jeden Sitzungsstart der Anwendung an.
+
+## A3. Prüfliste AP2 — was **die Auftraggeberin** tun muss
+
+Auf einer Anlage mit Web 20.27.0. Je Punkt: Weg, Erwartung, Scheiternsmerkmal.
+
+| # | Weg | Erwartet | Scheitern erkennbar an |
+|---|---|---|---|
+| **A-1** | **Anmelden** und bis zur Tagesübersicht durchklicken | Anmeldung geht, Tagesübersicht lädt, keine Schleife | Endlose Weiterleitung zwischen `login.php` und `index.php`. Dann sieht `auth_guard.php` die Sitzung nicht, die `login.php` gesetzt hat — die beiden benutzen jetzt dieselbe Art `app`, also wäre die Ablage schuld |
+| **A-2** | **Abmelden** | Rückkehr zur Anmeldung mit Grundmeldung; erneuter Aufruf einer angemeldeten Seite führt zur Anmeldung | Man bleibt angemeldet, oder die Abmeldeseite bricht ab |
+| **A-3** | **Passwort vergessen** → Mail → Link → neues Passwort setzen | Der Weg geht durch; das Cookie heißt `EDPWSESS` (Entwicklerwerkzeuge → Anwendung → Cookies) | Heißt es `PHPSESSID`, ist die Art falsch gewählt — dann überschreibt ein Passwort-Reset die Anmeldesitzung |
+| **A-4** | **Handbuch, „Was ist NAdoku", Rechtstexte, Notfallblatt — angemeldet** | Der **angemeldete Kopf** steht da wie vorher | Kopf fehlt oder zeigt „nicht angemeldet". Dann greift die Cookie-Bedingung zu streng |
+| **A-5** | Dieselben Seiten **im privaten Fenster** (nicht angemeldet) | Seiten sind lesbar; **kein** `Set-Cookie` in den Antwortkopfzeilen | Ein `Set-Cookie` erscheint → F-ZE-2 wirkt nicht |
+| **A-6** | **Betrieb → Status**, Zeile „Sitzungsablage" und die Zahl der Sitzungsdateien; nach ein paar Tagen erneut | Die Zeile sagt dasselbe wie vor dem Update; die **Zahl fällt** über die Tage, weil Bots keine Datei mehr anlegen | Die Zeile sagt „nicht gelaufen". Dann füllt `sitzung_starten()` den Stand nicht — die Statusseite läuft über `auth_guard.php`, also müsste er stehen |
+| **A-7** | **`install.php`** auf einer leeren Anlage (oder im Prüfstand) | Startseite erscheint, Einrichtung läuft durch | Weiße Seite oder „Call to undefined function konfig" → `konfig_lib.php` fehlt in der Auslieferung |
+| **A-8** | **`wiederherstellen.php`** aufrufen | Die Seite lädt und zeigt ihr Formular | Abbruch am Sitzungsstart |
+| **A-9** | **Server­einstellungen → Schlüssel des Servers**: einen Schlüssel anlegen oder erneuern | Die Seite zeigt **sofort** den neuen Stand, nicht mehr „fehlt" | Sie zeigt weiter „fehlt" → `konfig_verwerfen()` greift nicht (E-ZE-14, derselbe Fehler wie S2/AP7) |
+| **A-10** | `tools/abmelde-probe/`, `tools/ratenprobe/`, `tools/kopplungsprobe/` gegen die Anlage | grün wie vor dem Paket | Rot — dann hat die Sitzungsumstellung einen dieser Wege getroffen |
+| **A-11** | **Wirkt die Härtung?** Mit einer selbst gesetzten Sitzungskennung anmelden (Befehl in `tools/sitzungshaertung/LIESMICH.md`) | Es kommt eine **andere** Kennung zurück | Dieselbe Kennung kommt zurück → `session.use_strict_mode` greift nicht, und dann hängt der Schutz weiter an der `php.ini` |
+| **A-12** | Nur wenn `netz.vertrauenswuerdige_proxys` **eingetragen** ist: Betrieb → Status, Zeile „Vertrauenswürdige Proxys" | Dieselbe Zahl wie vorher | „keine eingetragen", obwohl welche dastehen → `konfig()` liest den Pfad falsch |
+
+## A4. Grenzen — was sich mit diesem Paket NICHT beantworten lässt
+
+- **Dass es genau einen `session_start()` gibt, heißt nicht, dass jede Seite
+  die richtige ART wählt.** Das Werkzeug zählt Aufrufe, nicht Absichten. Die
+  Zuordnung ist Lesearbeit; sie steht in der Tabelle `SITZUNG_ARTEN` und in
+  Konzept 1.3. Prüfpunkte A-3 und A-4 sind der Gegentest von außen.
+- **Die Messung der Cookie-Parameter lief auf der Kommandozeile**, wo
+  `$_SERVER['HTTPS']` nicht gesetzt ist. „HTTPS-abhängig" war dort also
+  immer `false`. Dass der Zweig mit HTTPS `true` liefert, ist gelesen und
+  nicht gemessen.
+- **`konfig()` kennt keinen Schlüssel mit einem Punkt im Namen.** Heute hat
+  keiner einen; wer einen einführt, muss das wissen. Steht im Kopf von
+  `konfig_lib.php`.

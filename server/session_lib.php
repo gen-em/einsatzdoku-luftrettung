@@ -78,16 +78,12 @@ function session_beenden(string $grund = 'abgemeldet'): never
 {
     if (!in_array($grund, SESSION_ENDE_GRUENDE, true)) { $grund = 'ende'; }
 
-    if (session_status() === PHP_SESSION_NONE) {
-        session_set_cookie_params([
-            'httponly' => true, 'secure' => true, 'samesite' => 'Strict', 'path' => '/',
-        ]);
-        /* `use_strict_mode` — siehe `auth_guard.php` (E-P5a-38, Nr. 205).
-         * Hier geht es ums ABMELDEN, und gerade deshalb: Wer eine Sitzung
-         * beendet, soll nicht eine untergeschobene Kennung beenden. */
-        ini_set('session.use_strict_mode', '1');
-        session_start();
-    }
+    /* Auch das Abmelden braucht die Sitzung, die es beendet — und zwar
+     * dieselbe Art wie die Anmeldung, sonst spraeche es ein anderes Cookie
+     * an. `sitzung_starten()` kehrt sofort zurueck, wenn schon eine laeuft
+     * (Schritt 15 AP2). Wer eine Sitzung beendet, soll keine
+     * untergeschobene Kennung beenden — dafuer sorgt dort die Haertung. */
+    sitzung_starten('app');
     $_SESSION = [];
     if (ini_get('session.use_cookies')) {
         $p = session_get_cookie_params();

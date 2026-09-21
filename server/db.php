@@ -5,17 +5,48 @@ require_once __DIR__ . '/version.php';
 // E-Mail-Normalisierung (M1-13). Eigene Datei ohne Abhaengigkeiten, weil
 // install.php sie ebenfalls braucht und dort noch keine config.php existiert.
 require_once __DIR__ . '/email_lib.php';
+/* Der eine Leser fuer config.php (Schritt 15 AP2, E-ZE-02/-14). Laedt
+ * seinerseits NICHTS — Bedingung, nicht Sparsamkeit: `install.php` und
+ * `sitzung_lib.php` brauchen ihn, ohne `db.php` zu laden.
+ *
+ * BIS WEB 20.26.3 STAND HIER `$CFG = require __DIR__ . '/config.php';` und
+ * legte die Konfiguration als GLOBALE ab. Elf Dateien griffen mit
+ * `global $CFG` darauf zu, fuenf weitere lasen die Datei ein zweites Mal —
+ * zusammen 46 Zugriffe und 7 Lesestellen. Jetzt: `konfig('app.timezone')`.
+ *
+ * UND ES IST KEIN `require` MEHR, das scheitern kann: Fehlt `config.php`
+ * (die Anlage ist noch nicht eingerichtet), liefert jede Abfrage ihre
+ * Vorgabe, statt dass die Datei mit einem Fatal abbricht. */
+require_once __DIR__ . '/konfig_lib.php';
 
-$CFG = require __DIR__ . '/config.php';
+/* UND `db.php` VERLANGT `config.php` WEITERHIN HART.
+ *
+ * `konfig_lib.php` TOLERIERT die fehlende Datei — es muss, weil
+ * `install.php` auf einer Anlage laeuft, die noch keine hat. `db.php` darf
+ * das nicht erben: Bis Web 20.26.3 brach sie mit einem Fatal ab
+ * (`require ... config.php: Failed to open stream`), und genau dabei bleibt
+ * es. Ohne diese Zeile waere aus dem klaren Befund „config.php fehlt" eine
+ * PDO-Ausnahme auf einem leeren DSN geworden — also die Meldung
+ * „Datenbank nicht erreichbar" fuer ein Problem, das nichts mit der
+ * Datenbank zu tun hat. Eine falsche Diagnose ist teurer als ein Abbruch.
+ *
+ * DAMIT AENDERT DIESES PAKET AUCH HIER KEIN VERHALTEN (E-ZE-10): Wer
+ * `db.php` ohne `config.php` laedt, kommt nicht weiter — vorher wie
+ * nachher. Was sich aendert, ist allein der Satz, den er dabei liest. */
+if (!is_file(__DIR__ . '/config.php')) {
+    throw new RuntimeException(
+        'server/config.php fehlt. Die Anwendung ist nicht eingerichtet — '
+      . 'install.php anlegen und aufrufen (docs/Technik.md, Runbook).');
+}
 
 function db(): PDO {
     static $pdo = null;
     /* DER RIEGEL GEGEN DIE SCHLEIFE (P5a/AP9). Siehe den Block unten. */
     static $inUeberlast = false;
-    global $CFG;
     if ($pdo === null) {
         try {
-            $pdo = new PDO($CFG['db']['dsn'], $CFG['db']['user'], $CFG['db']['pass'], [
+            $pdo = new PDO((string)konfig('db.dsn'), (string)konfig('db.user'),
+                           (string)konfig('db.pass'), [
                 /* KEINE PERSISTENTEN VERBINDUNGEN (E-P5a-18). Die Zeile
                  * fehlt hier mit Absicht: `PDO::ATTR_PERSISTENT` haelt die
                  * Verbindung ueber das Ende der Anfrage hinaus offen und
@@ -374,7 +405,6 @@ function favicon_tags(): string {
  * bliebe die Seite bei einem veralteten Eintrag in der config.php ohne Logo.
  */
 function logo_src(): string {
-    global $CFG;
     /* SEIT WEB 9.10.0 ENTSCHEIDET DIE LOGO-WAHL (F-P3-AN).
      *
      * Diese Funktion versorgt die beiden Seiten OHNE Sitzung — Anmeldung und
@@ -391,7 +421,7 @@ function logo_src(): string {
      * `function_exists`: db.php ist die untere Schicht und laedt session_lib
      * nicht. Wo sie fehlt — im Einrichter vor der ersten Einrichtung —, bleibt
      * es beim Hubschrauber. */
-    $pfad = (string)($CFG['app']['logo_path'] ?? '');
+    $pfad = (string)konfig('app.logo_path', '');
     $eigen = $pfad !== ''
         && !str_contains($pfad, 'gen-em_logo_helicopter')
         && !str_contains($pfad, 'gen-em_logo_nef')
@@ -425,10 +455,9 @@ function hex_vierergruppen(string $hex): string
 }
 
 function fmt_local(?string $utc, string $format = 'H:i'): string {
-    global $CFG;
     if ($utc === null || $utc === '') return '–';
     $dt = new DateTime($utc, new DateTimeZone('UTC'));
-    $dt->setTimezone(new DateTimeZone($CFG['app']['timezone']));
+    $dt->setTimezone(new DateTimeZone((string)konfig('app.timezone')));
     return $dt->format($format);
 }
 
@@ -442,7 +471,6 @@ function fmt_local(?string $utc, string $format = 'H:i'): string {
  * $addDays deckt Zeiten nach Mitternacht ab, die noch zum Diensttag gehoeren.
  */
 function local_to_utc(string $day, string $hhmm, int $addDays = 0): ?string {
-    global $CFG;
     // Nicht nur das Muster pruefen, sondern auch den Wertebereich: "25:00"
     // passt auf \d{2}:\d{2}, und DateTime rechnet daraus klaglos den naechsten
     // Tag 00:00. Eine Falscheingabe waere so als stiller Datumssprung
@@ -450,7 +478,7 @@ function local_to_utc(string $day, string $hhmm, int $addDays = 0): ?string {
     if (!preg_match('/^(\d{2}):(\d{2})$/', $hhmm, $t)) return null;
     if ((int)$t[1] > 23 || (int)$t[2] > 59) return null;
     $dt = DateTime::createFromFormat('Y-m-d H:i', "$day $hhmm",
-        new DateTimeZone($CFG['app']['timezone']));
+        new DateTimeZone((string)konfig('app.timezone')));
     if ($dt === false) return null;
     if ($addDays > 0) { $dt->modify("+$addDays day"); }
     $dt->setTimezone(new DateTimeZone('UTC'));
@@ -583,7 +611,13 @@ wartung_tor();
  * Bis zu dieser Stelle ist keine Kopfzeile gesendet und keine Verbindung
  * geoeffnet. `sitzung_lib.php` laedt ihrerseits nichts. */
 require_once __DIR__ . '/sitzung_lib.php';
-sitzung_ablage();
+/* BIS WEB 20.26.3 STAND HIER `sitzung_ablage();`. Der Aufruf ist mit
+ * Schritt 15 AP2 entfallen (E-ZE-06): `sitzung_starten()` ruft ihn jetzt
+ * selbst, unmittelbar bevor PHP die Sitzungsdatei anlegt. Damit laeuft die
+ * Einrichtung der Ablage genau dann, wenn sie gebraucht wird — und NICHT
+ * mehr bei jeder Anfrage, die `db.php` laedt, ohne eine Sitzung zu starten.
+ * Die Datei wird hier weiter geladen, weil `jobs_lib.php` den Raeumteil und
+ * `plattform_lib.php` die Auskunft daraus braucht. */
 
 function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
 

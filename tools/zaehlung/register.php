@@ -94,7 +94,7 @@ return [
           . 'in sitzung_lib.php (E-ZE-12). Jeder weitere Aufruf ist ein Befund.',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'regel' => ['art' => 'aufruf', 'namen' => ['session_start']],
- 'start' => 9, 'decke_jetzt' => 9, 'decke_ziel' => 1],
+ 'start' => 9, 'decke_jetzt' => 1, 'decke_ziel' => 1],
 
 ['kennung' => 'Z02', 'paket' => 'AP2',
  'beschreibung' => 'sitzung_ablage( Aufrufe',
@@ -102,21 +102,21 @@ return [
           . 'allein sitzung_starten() (E-ZE-06).',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'regel' => ['art' => 'aufruf', 'namen' => ['sitzung_ablage']],
- 'start' => 2, 'decke_jetzt' => 2, 'decke_ziel' => 1],
+ 'start' => 2, 'decke_jetzt' => 1, 'decke_ziel' => 1],
 
 ['kennung' => 'Z03', 'paket' => 'AP2',
  'beschreibung' => 'config.php lesend einbinden',
  'grund' => 'Nach AP2 liest konfig_lib.php die Datei, sonst niemand (E-ZE-02, -14).',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'regel' => ['art' => 'eigen', 'name' => 'konfig_lesestelle'],
- 'start' => 7, 'decke_jetzt' => 7, 'decke_ziel' => 1],
+ 'start' => 7, 'decke_jetzt' => 1, 'decke_ziel' => 1],
 
 ['kennung' => 'Z04', 'paket' => 'AP2',
  'beschreibung' => "\$CFG / global \$CFG / \$GLOBALS['CFG']",
  'grund' => 'Die globale $CFG entfaellt in AP2, sobald ihre Zugriffszahl 0 ist (E-ZE-14).',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'regel' => ['art' => 'muster', 'muster' => '~\$CFG\b|\$GLOBALS\[\s*[\'"]CFG[\'"]\s*\]~'],
- 'start' => 46, 'decke_jetzt' => 46, 'decke_ziel' => 0],
+ 'start' => 46, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 /* ---- AP3: API-Eingang und Flash ----------------------------------------- */
 

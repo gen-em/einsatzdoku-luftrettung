@@ -496,8 +496,14 @@ function migrationen_katalog(): array
         'web'   => '2.0.0',
         'label' => 'Tageszuordnung: Tag = lokales Datum des Einsatz-/Segmentbeginns (Wechsel 0:00); Bestand wird neu zugeordnet',
         'run'   => function (PDO $pdo): void {
-            global $CFG;
-            $tz  = new DateTimeZone($CFG['app']['timezone'] ?? 'Europe/Berlin');
+            /* MIT UMGESTELLT, OBWOHL E-ZE-04 GELAUFENE MIGRATIONEN IN RUHE
+             * LAESST: Hier stand `global $CFG`, und die Globale gibt es seit
+             * Web 20.27.0 nicht mehr. Stehen geblieben waere die Zeile nicht
+             * neutral — sie fiele auf `Europe/Berlin` zurueck, und zwar
+             * STILL. Auf einer Anlage mit anderer Zeitzone ordnete diese
+             * Migration die Tage dann falsch zu. Das waere eine
+             * Verhaltensaenderung, und E-ZE-10 laesst keine zu. */
+            $tz  = new DateTimeZone((string)konfig('app.timezone', 'Europe/Berlin'));
             $utc = new DateTimeZone('UTC');
             foreach (['missions', 'rest_segments'] as $tab) {
                 $rows = $pdo->query("SELECT id, day, started_at FROM `$tab`")->fetchAll(PDO::FETCH_ASSOC);

@@ -14,6 +14,98 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.27.0] — 2026-09-21
+
+**Eine Stelle für die Konfiguration, eine für die Sitzung.** Schritt 15 AP2
+(Zentralisierung, R83).
+
+### Hinzugefügt
+
+**`konfig_lib.php` — der eine Leser für `config.php`.** `konfig('app.timezone')`
+statt `global $CFG`, `konfig('server_key', '')` statt eines zweiten `require`
+derselben Datei. Die Konfiguration lag bis hierher an **zwei** Stellen
+gleichzeitig: `db.php` las sie beim Laden in die globale `$CFG`, und fünf
+weitere Dateien lasen sie bei Bedarf noch einmal von der Platte — `smtp.php`
+dreimal, und der Kommentar dort warnte selbst davor, dass zwei Ladevorgänge
+zwei verschiedene Stände sehen können. Gemessen waren es **7 Lesestellen in
+5 Dateien und 46 `$CFG`-Zugriffe in 11 Dateien**; jetzt **1 und 0**.
+
+Der Leser **lädt selbst nichts**, und das ist Bedingung, nicht Sparsamkeit:
+`install.php` läuft auf einer Anlage ohne `config.php`, und `sitzung_lib.php`
+wird aus `db.php` heraus gerufen, *während* diese lädt. Zöge der Leser etwas
+nach, das `db.php` erreicht, liefe `sitzung_ablage()` in einer halb geladenen
+`db.php` — und `require_once` verdeckte den Zyklus, statt ihn zu melden.
+
+**`sitzung_starten()` — der eine Sitzungsstart.** Vier Arten (`app`,
+`lesend`, `einrichtung`, `passwort`) mit genau den Cookie-Parametern, die
+vorher über neun Dateien verstreut standen. Statt neun `session_start()` in
+vier Fassungen gibt es jetzt **einen**, in `sitzung_lib.php`.
+
+### Geändert
+
+**Die drei öffentlichen Seiten starten keine Sitzung mehr für jeden
+Besucher.** Handbuch, „Was ist NAdoku" und die Rechtstexte sind ohne
+Anmeldung erreichbar und fragten die Sitzung bisher nur, um den angemeldeten
+Kopf zeigen zu können — **starteten** sie dabei aber für jeden, auch für
+jeden Bot. Seit Web 20.26.0 landete jede davon als Datei in `.sitzungen/`.
+Jetzt startet die Art `lesend` nur, wenn ein Sitzungscookie da ist. **Für
+Angemeldete ändert sich nichts**; ihr Browser schickt das Cookie, die Sitzung
+startet, der Kopf sieht aus wie vorher. Das ist die einzige sichtbare Folge
+dieses Pakets.
+
+**`sitzung_ablage()` wird jetzt von `sitzung_starten()` gerufen**, nicht mehr
+aus `db.php` und `install.php`. Folge: Die Ablage wird nur noch eingerichtet,
+wenn wirklich eine Sitzung startet — ein API-Aufruf ohne Sitzung fasst
+`.sitzungen/` gar nicht mehr an.
+
+**Die Sitzungshärtung prüft schärfer.** Bisher: „steht `use_strict_mode` vor
+jedem `session_start()`". Jetzt zusätzlich: „es gibt **genau einen** Aufruf,
+und er steht in `sitzung_lib.php`". Der Zugewinn ist der zweite Teil — ein
+neuer Sitzungsstart *mit* Härtung war vorher grün und hätte die
+Cookie-Parameter trotzdem neu erfinden müssen. Genau so sind die neun
+entstanden.
+
+### Entfernt
+
+**`PW_SESSION_NAME` und `pw_session_start()` aus `pw_handling.php`.** Der Name
+steht jetzt in `sitzung_lib.php` neben der Tabelle der vier Arten, die ihn
+braucht; der Start heißt `sitzung_starten('passwort')`. Die Parameter sind
+dieselben. **Die globale `$CFG`** ist ersatzlos fort.
+
+### Was bewusst stehen bleibt
+
+**Die Drift bei `secure`.** Zwei Arten setzen es fest, zwei machen es von
+HTTPS abhängig. Das anzugleichen wäre eine Sicherheitsentscheidung und keine
+Zentralisierung — sie gehört zu Schritt 18 (Backlog **Nr. 251**). Was sich
+ändert, ist dass man die Drift jetzt *sieht*: Sie steht in einer Tabelle
+statt in neun Dateien.
+
+**`db.php` verlangt `config.php` weiterhin hart.** Der Leser toleriert die
+fehlende Datei, `db.php` erbt das nicht. Ohne diese Prüfung wäre aus dem
+klaren Befund „config.php fehlt" eine PDO-Ausnahme auf einem leeren DSN
+geworden — also „Datenbank nicht erreichbar" für ein Problem, das nichts mit
+der Datenbank zu tun hat.
+
+### Geprüft
+
+`konfig_lib` **13 von 13** Fällen (Punktpfad, oberste Ebene, fehlende Datei,
+Merker und Verwurf). Sitzungsarten: **16 Zellen** (4 Arten × `secure`,
+`samesite`, `httponly`, Name), **0 Abweichungen**, Härtung in allen vier
+wirksam. F-ZE-2: ohne Cookie keine Sitzung, mit Cookie eine — beides
+gemessen. Ladezyklus **7 von 7** (`konfig_lib` und `sitzung_lib` ziehen beim
+Laden keine Datei nach, `plattform_lib` erreicht `db.php` nicht — über
+`get_included_files()`, nicht durch Lesen). Sitzungshärtung **0 Befunde,
+Selbstprobe 12/12**. Zählung **38 Zeilen, 0 über der Decke**; `php -l` über
+134 Dateien **0 Fehler**; Wortliste 0/0, Vollständigkeit 398 unverändert.
+
+### Offen
+
+**Nicht im Browser geprüft** — in der Arbeitsumgebung liegt keine
+Installation. Die Wege Anmeldung, Abmelden, Passwort-Reset, Handbuch
+angemeldet, `install.php` und `wiederherstellen.php` stehen in
+`docs/konzepte/Pruefdokument-Zentralisierung.md`.
+
+---
 ## [Werkzeug: Fünfzehn Minuten messen und „es kam nichts" melden] — 2026-09-21
 
 **Der Botschutz von lima-city ist weg, und dahinter stand ein Fehler, den

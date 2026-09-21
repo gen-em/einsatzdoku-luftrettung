@@ -96,15 +96,10 @@ $code = nb_code((string)($_POST['code'] ?? ''));
  * Erstvergabe-Fall (noch keine Sitzung) nimmt den gesendeten Wert, und der
  * muss dann eine Adresse sein. */
 $konto = '';
-$angemeldet = false;
-if (session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params([
-        'httponly' => true, 'secure' => !empty($_SERVER['HTTPS']),
-        'samesite' => 'Strict', 'path' => '/',
-    ]);
-    ini_set('session.use_strict_mode', '1');
-    @session_start();
-}
+/* Siehe `doku_seite.php` — Art `lesend`, seit Web 20.27.0 nur mit Cookie
+ * (F-ZE-2). Der Erstvergabe-Fall (noch keine Sitzung) bleibt genau der
+ * Fall, in dem hier nichts startet und der gesendete Wert gilt. */
+sitzung_starten('lesend');
 $angemeldet = !empty($_SESSION['user_id']);
 if ($angemeldet) {
     try {

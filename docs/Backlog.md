@@ -3116,6 +3116,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Tabelle und keine Suche, und dann lässt sich entscheiden, welche der
     vier Arten die richtige ist.
 
+    **Eingetreten am 21.09.2026 (Web 20.27.0, Schritt 15 AP2).** Die Tabelle
+    heißt `SITZUNG_ARTEN` und steht in `sitzung_lib.php` neben
+    `sitzung_starten()`. Fest auf `true`: `app` und `passwort`. Von HTTPS
+    abhängig: `lesend` und `einrichtung` — also die beiden Arten, die auf
+    einer Anlage laufen können, deren HTTPS-Lage die Einrichterin erst
+    herstellt. Die Entscheidung für Schritt 18 ist damit **eine Zeile in
+    einer Tabelle**, nicht mehr eine Suche über neun Dateien.
+
 252. **Gelaufene Migrationen fragen das Schema 57× von Hand.**
     *Aufgenommen 20.09.2026 (Konzept Zentralisierung, E-ZE-04).* Zugeordnet:
     **P8** (R66, neues Migrationsregister).
@@ -3323,7 +3331,10 @@ zutreffen.
 
     *Erledigt am 20.09.2026 in Web 20.26.0 (Schritt 16, PR #61):
     `server/sitzung_lib.php` legt `.sitzungen/` mit 0700 an, gerufen an
-    zwei Stellen (`db.php`, `install.php`); Rückfall auf den Hosterpfad
+    zwei Stellen (`db.php`, `install.php` — **seit Web 20.27.0 nur noch aus
+    `sitzung_starten()`**, Schritt 15 AP2/E-ZE-06: Die Ablage wird
+    eingerichtet, wenn eine Sitzung startet, und nicht mehr bei jeder
+    Anfrage, die `db.php` lädt); Rückfall auf den Hosterpfad
     mit Anzeige; vierter Schreibort (Empfohlen) und Prüfpunkt
     „Sitzungsablage" (Muss, dreiwertig) in `plattform_pruefen()`;
     Aufräumteil „Sitzungsdateien" (nur `sess_*`). Gemessen: 2

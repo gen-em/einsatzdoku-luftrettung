@@ -14,7 +14,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 >
 > | | |
 > |---|---|
-> | Stand | 20.09.2026 — **AP1 erledigt.** Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
+> | Stand | 21.09.2026 — **AP1 und AP2 erledigt** (Web 20.27.0). Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
 > | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen); E-ZE-09 ist nicht vergeben |
 > | Offen | nichts im Konzept. **F-ZE-1 bis F-ZE-6** (Abschnitt 2.3) sind mit der Freigabe vom 20.09.2026 entschieden. Außerhalb des Konzepts: die Einschübe (Abschnitt 8, 9) sind noch nicht eingespielt |
 > | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2 wartet auf Kette II**. **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
@@ -26,7 +26,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > | Paket | Stand | Stufe | Abnahmezahlen |
 > |---|---|---|---|
 > | AP1 Zählmittel, Register, Gegenprobe Paket 1 | **erledigt** 20.09.2026 | keine (nur `tools/` und `docs/`) | Selbstprobe **29 von 29** · Register **38 Zeilen, 0 über der Decke** · Eichung `error_log(` **77 in 32**, `session_start(` **9 in 9** · Bestand **133 PHP / 40 JS** · Gegenprobe Z30–Z33 **4× 0** · `php -l` **133/0** · Wortliste **0/0** · Vollständigkeit **398** (unverändert) · Kontraste **22/0** · Kettenaufrufe **30/0** · CSP **0** · Migrationsregister **0** |
-> | AP2 Konfiguration und Sitzung | **wartet auf Kette II (M1)** | — | — |
+> | AP2 Konfiguration und Sitzung | **erledigt** 21.09.2026 | **Web 20.27.0** (Neben: zwei neue Funktionen, keine Migration) | Z01 **9 → 1** · Z02 **2 → 1** · Z03 **7 → 1** · Z04 **46 → 0** · `konfig_lib` **13/13** · Cookie-Parameter **16 Zellen, 0 Abweichungen** · Ladezyklus **7/7** · Sitzungshärtung **0 Befunde, Selbstprobe 12/12** · Register **38 Zeilen, 0 über der Decke** · `php -l` **134/0** · Wortliste **0/0** · Vollständigkeit **398** · `error_log(` **77** (unverändert, E-ZE-05) |
 > | AP3 API-Eingang und Flash | offen | — | — |
 > | AP4 Datenzugriff klein | offen | — | — |
 > | AP5 Transaktion und Kindtabellen | offen | — | — |
@@ -539,10 +539,13 @@ Zählungen hoch; vom Auftraggeber am 20.09.2026 so bestätigt).
   > **Was davon bleibt:** Schritt 15 vergibt weiterhin **keine
   > Rahmenplan-Fassung** — daran arbeiten parallel andere Zweige (`pk-m1-*`),
   > und E-ZE-03 weist die Einschübe ohnehin der einspielenden Instanz zu.
-  > **Was neu zu entscheiden ist:** ob ein Fund der Umsetzung seine Nummer
-  > unmittelbar aus 254–259 nimmt und im Backlog einträgt (so verlangt es
-  > CLAUDE.md 2.4 im Normalfall) oder weiter ohne Nummer in Abschnitt 9
-  > gesammelt wird. **Vorgelegt am 21.09.2026.**
+  > **AUFGEHOBEN AM 21.09.2026 (Auftraggeber), und zwar zur Hälfte:** Der
+  > **Backlog wird wieder normal gepflegt** (CLAUDE.md 2.4); Funde der
+  > Umsetzung nehmen ihre Nummer aus der reservierten Spanne **254–259**.
+  > Der **Rahmenplan bleibt unberührt** — daran arbeiten parallel andere
+  > Zweige (`claude/pk-m1-*`), und E-ZE-03 weist die Einschübe ohnehin der
+  > einspielenden Instanz zu. AP2 hat davon Gebrauch gemacht: Nr. 241 und
+  > Nr. 251 sind nachgezogen, eine neue Nummer war nicht nötig.
 
   **Warum AP1-f am 21.09.2026 entschieden wurde:** Der Umsetzungszweig kommt von `main` und trägt
   Rahmenplan **Fassung 80** und einen Backlog **ohne 241–249** (nachgemessen:
@@ -632,6 +635,97 @@ gemessen (4 Arten × 3 Attribute = **12 Zellen, 0 Abweichungen**);
 Abmelde-Probe, Ratenprobe, Kopplungsprobe grün; `konfig()` ohne `config.php`
 liefert die Vorgabe (Prüfstand `install.php`); nach `config_eintrag_schreiben()`
 zeigt dieselbe Anfrage den neuen Wert.
+
+**AP2 — erledigt 21.09.2026, Web 20.27.0.** Neu: `server/konfig_lib.php`
+(`konfig()`, `konfig_alles()`, `konfig_verwerfen()`) und `sitzung_starten()`
+samt Tabelle `SITZUNG_ARTEN` in `sitzung_lib.php`. Umgezogen: 7 Lesestellen,
+46 `$CFG`-Zugriffe, 9 Sitzungsstarts. Entfallen: die globale `$CFG`,
+`PW_SESSION_NAME` und `pw_session_start()` in `pw_handling.php`, die beiden
+`sitzung_ablage()`-Aufrufe aus Schritt 16. `tools/sitzungshaertung/`
+umgestellt (E-ZE-13). **Versionsstufe Neben** — zwei neue Funktionen, kein
+Datenmodell, keine Migration, `update.php` nicht fällig.
+
+*Was dabei entschieden wurde:*
+
+- **AP2-a — `db.php` verlangt `config.php` weiterhin hart, und das ist der
+  Grund, warum dieses Paket KEINE sechste Verhaltensänderung hat.**
+  `konfig_lib.php` toleriert die fehlende Datei — es muss, weil `install.php`
+  auf einer Anlage ohne sie läuft. Ohne eine ausdrückliche Prüfung hätte
+  `db.php` das geerbt: Der bisherige Fatal (`require … config.php: Failed to
+  open stream`) wäre zu `new PDO('')` geworden, also zur Meldung „Datenbank
+  nicht erreichbar" für ein Problem, das nichts mit der Datenbank zu tun hat.
+  Gemessen und dann verhindert: `db.php` bricht ohne `config.php` weiterhin
+  ab, nur mit einem besseren Satz. **Eine sechste Ausnahme wäre nach dem
+  Auftrag ein Haltepunkt gewesen; sie ist nicht entstanden.**
+- **AP2-b — Ein `session_start(`, nicht zwei, und die Maske statt `@`.** Die
+  naheliegende Fassung `$a['still'] ? @session_start() : session_start()`
+  wären **zwei** Aufrufe gewesen — Z01 stünde dauerhaft auf 2 statt auf 1,
+  und der Stufe-1-Schritt aus AP10 könnte „genau einer" nie prüfen. Das `@`
+  der Art `lesend` ist deshalb eine Maske um den einen Aufruf
+  (`error_reporting()` ohne `E_WARNING` und `E_NOTICE`, danach
+  wiederhergestellt). Für die drei anderen Arten bleibt jede Warnung
+  sichtbar.
+- **AP2-c — `migration_lib.php` wird an EINER Stelle doch angefasst**,
+  obwohl E-ZE-04 gelaufene Migrationen in Ruhe lässt. In
+  `2026_07_22_tag_zuordnung` stand `global $CFG`; die Globale gibt es nicht
+  mehr. Stehen geblieben wäre die Zeile **nicht neutral** — sie fiele auf
+  `Europe/Berlin` zurück, und zwar still, und ordnete auf einer Anlage mit
+  anderer Zeitzone die Tage falsch zu. E-ZE-04 schützt vor Risiko ohne
+  Ertrag, nicht vor dem Weiterlaufen. Z15 (`information_schema` in
+  `migration_lib.php`) ist davon unberührt und steht weiter auf 57.
+- **AP2-d — `config_gemerktes_verwerfen()` wirft jetzt zuerst die
+  Konfiguration weg.** Die vier Zeilen darunter lesen über `konfig()` nach;
+  stünde das Gemerkte noch, holten sie sich genau den Stand zurück, den sie
+  wegwerfen sollen. Das ist derselbe Fehler wie S2/AP7, nur eine Ebene
+  tiefer.
+- **AP2-e — Die Drift bei `secure` bleibt und wird sichtbar.** `app` und
+  `passwort` fest, `lesend` und `einrichtung` HTTPS-abhängig — also die
+  beiden Arten, die auf einer Anlage laufen können, deren HTTPS-Lage erst
+  hergestellt wird. Backlog Nr. 251 ist entsprechend nachgezogen: Die
+  Entscheidung für Schritt 18 ist jetzt eine Zeile in einer Tabelle.
+
+*Probleme und wie sie gelöst wurden:*
+
+1. **Die Sitzungshärtung wurde rot, und der Befund war sachlich falsch.**
+   Das Werkzeug sucht `use_strict_mode` in den **zwölf** Zeilen vor dem
+   Aufruf; mein Begründungskommentar stand dazwischen und schob sie aus dem
+   Fenster. **Gelöst,** indem der Kommentar über die beiden Zeilen wanderte
+   statt zwischen sie — nicht, indem die Schwelle gelockert wurde. Genau
+   diese Falle steht seit Schritt 16 in `install.php` beschrieben; sie ist
+   hier zum zweiten Mal zugeschnappt, und der Kommentar sagt das jetzt auch
+   in `sitzung_lib.php`.
+2. **Die Vollständigkeit sprang von 398 auf 399** — ein Auslassungszeichen
+   (U+2026) in einem neuen Kommentar in `db.php`. **Dieselbe Falle, dieselbe
+   Datei, einen Tag nach Schritt 16**, wo sie im Prüfdokument steht. Ersetzt
+   durch drei Punkte, wieder 398. Der Wert ist die Schwelle und nicht null;
+   wer ihn nicht kennt, hält 399 für unauffällig.
+3. **E-ZE-06 hätte die Statusseite stumm machen können.**
+   `sitzung_ablage_stand()` ist ein `static`, den nur `sitzung_ablage()`
+   füllt — und `plattform_pruefen()` liest ihn. Fiele der Aufruf aus
+   `db.php` weg, ohne dass ein Sitzungsstart ihn ersetzt, meldete die
+   Statusseite dauerhaft „nicht gelaufen". **Vor dem Umbau belegt:** Beide
+   Aufrufer von `plattform_pruefen()` haben vorher eine Sitzung gestartet —
+   `betrieb_status.php` über `auth_guard.php` (`app`), `install.php` über
+   `einrichtung` an Zeile 144, die Prüfung selbst erst an Zeile 317. Der
+   Aufräumjob ist nicht betroffen: `sitzung_aufraeumen()` hängt an
+   `sitzung_ablage_pfad()` (gerechnet), nicht an `session_save_path()`
+   (gesetzt).
+4. **Der Ladezyklus ist gemessen, nicht behauptet.** Über
+   `get_included_files()`: `konfig_lib.php` zieht **keine** Datei nach,
+   `sitzung_lib.php` beim Laden ebenfalls keine, `plattform_lib.php` zieht
+   `email_lib.php` und `php_mindest.php` nach und **erreicht `db.php`
+   nicht**. Der Zyklus ist durch E-ZE-06 kürzer geworden, aber nicht fort:
+   `sitzung_starten()` wird aus Seiten gerufen, die `db.php` geladen haben.
+   Die Bedingung gilt unverändert und steht als Kommentar in beiden Dateien.
+
+*Was NICHT geprüft werden konnte:* alles im Browser. In der Arbeitsumgebung
+liegt keine Installation (`config.php` fehlt, keine Datenbank). Die
+Abnahmeliste des Konzepts verlangt „alle Wege einmal gegangen" — Anmeldung
+bis Tagesübersicht, Passwort-Reset, Abmelden, Handbuch · Rechtstext ·
+Notfallblatt angemeldet, `install.php` und `wiederherstellen.php` im
+Prüfstand, dazu Abmelde-, Raten- und Kopplungsprobe. **Keiner dieser Wege ist
+gegangen.** Was stattdessen belegt ist, steht oben und im Prüfdokument; die
+Lücke steht dort an erster Stelle.
 
 ### AP3 — API-Eingang und Flash (E-ZE-15, -16; F-ZE-5)
 

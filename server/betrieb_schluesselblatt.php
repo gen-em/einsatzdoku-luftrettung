@@ -53,10 +53,9 @@ header('Pragma: no-cache');
 header('Referrer-Policy: no-referrer');
 header('X-Robots-Tag: noindex, nofollow, noarchive');
 
-global $CFG;
-$skHex = (string)($CFG['server_key'] ?? '');
-$anHex = (string)($CFG['kdf_anteil'] ?? '');
-$anAlt = (string)($CFG['kdf_anteil_alt'] ?? '');
+$skHex = (string)konfig('server_key', '');
+$anHex = (string)konfig('kdf_anteil', '');
+$anAlt = (string)konfig('kdf_anteil_alt', '');
 
 $eintraege = [];
 if (preg_match('/^[0-9a-f]{64}$/i', $skHex)) {

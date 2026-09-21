@@ -6626,5 +6626,68 @@ declare(strict_types=1);
  *   PRODUKTIV IST UNGEPRUEFT. Dort ist `session.save_path` nie erhoben
  *   worden. Ob derselbe Handgriff faellig ist, sagt dieselbe Zeile beim
  *   ersten Ausrollen — das ist der Pruefpunkt, keine Vermutung.
+ *
+ * 20.27.0 — EINE STELLE FUER DIE KONFIGURATION, EINE FUER DIE SITZUNG
+ *   (21.09.2026, Schritt 15 AP2 — Zentralisierung, R83, E-ZE-02/-06/-12
+ *   bis -14, F-ZE-2). NEBEN-Nummer: zwei neue Funktionen, kein Datenmodell,
+ *   keine Migration, `update.php` nicht faellig.
+ *
+ *   DIE KONFIGURATION LAG AN ZWEI STELLEN GLEICHZEITIG. `db.php` las
+ *   `config.php` beim Laden in die globale `$CFG`; fuenf weitere Dateien
+ *   lasen dieselbe Datei bei Bedarf noch einmal — `smtp.php` dreimal.
+ *   Gemessen: 7 Lesestellen in 5 Dateien, 46 Zugriffe auf `$CFG` in 11.
+ *   Wer einen Wert brauchte, hatte die Wahl zwischen `global $CFG` (setzt
+ *   voraus, dass `db.php` schon geladen ist) und einem eigenen `require`
+ *   (liest die Datei noch einmal von der Platte). Jetzt:
+ *   `konfig('app.timezone')` — eine Datei, ein Merker, 7 -> 1 und 46 -> 0.
+ *
+ *   `konfig_lib.php` LAEDT NICHTS, und das ist Bedingung, nicht Sparsamkeit:
+ *   `install.php` laeuft ohne `config.php`, und `sitzung_lib.php` wird aus
+ *   `db.php` heraus gerufen, WAEHREND diese laedt. Zoege der Leser etwas
+ *   nach, das `db.php` erreicht, liefe `sitzung_ablage()` in einer halb
+ *   geladenen `db.php` — und `require_once` verdeckte den Zyklus, statt ihn
+ *   zu melden. Nachgemessen ueber `get_included_files()`: Der Leser zieht
+ *   keine einzige Datei nach.
+ *
+ *   `db.php` VERLANGT `config.php` WEITERHIN HART. Der Leser toleriert die
+ *   fehlende Datei — er muss, wegen `install.php`. `db.php` erbt das nicht:
+ *   Ohne die Pruefung waere aus dem klaren Befund „config.php fehlt" eine
+ *   PDO-Ausnahme auf einem leeren DSN geworden, also die Meldung „Datenbank
+ *   nicht erreichbar" fuer ein Problem, das nichts mit der Datenbank zu tun
+ *   hat. Eine falsche Diagnose ist teurer als ein Abbruch.
+ *
+ *   NEUN SITZUNGSSTARTS IN VIER FASSUNGEN, JETZT EINER. `sitzung_starten()`
+ *   in `sitzung_lib.php` kennt vier Arten — `app`, `lesend`, `einrichtung`,
+ *   `passwort` — mit genau den Cookie-Parametern, die vorher verstreut
+ *   standen. Die Drift bei `secure` (zwei Arten fest, zwei HTTPS-abhaengig)
+ *   BLEIBT, wie sie war: Sie zu schliessen ist eine Sicherheitsentscheidung
+ *   fuer Schritt 18 (Backlog Nr. 251), keine Zentralisierung. Was sich
+ *   aendert, ist dass man sie jetzt SIEHT — vorher stand sie in neun Dateien
+ *   und niemand konnte sie zaehlen.
+ *
+ *   `PW_SESSION_NAME` und `pw_session_start()` sind damit entfallen; der
+ *   Name steht neben der Tabelle, die ihn braucht.
+ *
+ *   `sitzung_ablage()` RUFT JETZT `sitzung_starten()` SELBST. Die beiden
+ *   Aufrufe aus Schritt 16 (`db.php`, `install.php`) sind fort. Folge: Die
+ *   Ablage wird nur noch eingerichtet, wenn wirklich eine Sitzung startet —
+ *   nicht mehr bei jeder Anfrage, die `db.php` laedt. Ein API-Aufruf ohne
+ *   Sitzung fasst `.sitzungen/` gar nicht mehr an.
+ *
+ *   DIE EINE SICHTBARE FOLGE (F-ZE-2): Handbuch, „Was ist NAdoku" und die
+ *   Rechtstexte starten eine Sitzung nur noch, wenn ein Sitzungscookie da
+ *   ist. Sie sind ohne Anmeldung erreichbar und fragten die Sitzung bisher
+ *   nur, um den angemeldeten Kopf zeigen zu koennen — STARTETEN sie dabei
+ *   aber fuer jeden Besucher, auch fuer jeden Bot, und seit Web 20.26.0
+ *   landete jede davon als Datei in `.sitzungen/`. Das Konzept Sitzungsablage
+ *   behauptete, die drei Seiten pruefen auf das Cookie; nachgemessen taten
+ *   sie es nicht. Fuer Angemeldete aendert sich nichts.
+ *
+ *   DIE SITZUNGSHAERTUNG PRUEFT JETZT SCHAERFER: nicht mehr nur „steht die
+ *   Haertung vor jedem Aufruf", sondern „es gibt genau einen Aufruf, er
+ *   steht in `sitzung_lib.php`, er ist gehaertet, und jeder weitere ist ein
+ *   Befund". Der Zugewinn ist der letzte Punkt: Ein neuer Sitzungsstart MIT
+ *   Haertung war vorher gruen und haette die Cookie-Parameter trotzdem neu
+ *   erfinden muessen. Genau so sind die neun entstanden.
  */
-const WEB_VERSION = '20.26.2';
+const WEB_VERSION = '20.27.0';

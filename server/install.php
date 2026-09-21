@@ -141,14 +141,13 @@ $schemaPath = __DIR__ . '/schema.sql';
  * schoebe die Haertung aus dem Fenster und machte Stufe 1 der Kette rot —
  * mit einem Befund, der sachlich falsch waere. */
 require_once __DIR__ . '/sitzung_lib.php';
-sitzung_ablage();
-
-session_set_cookie_params([
-    'httponly' => true, 'secure' => !empty($_SERVER['HTTPS']),
-    'samesite' => 'Lax', 'path' => '/',
-]);
-ini_set('session.use_strict_mode', '1');
-session_start();
+/* EINE ZEILE STATT SECHS (Schritt 15 AP2, E-ZE-06/-12). Bis Web 20.26.3
+ * standen hier `sitzung_ablage()`, die Cookie-Parameter, die Haertung und
+ * der Start einzeln; `sitzung_starten()` tut beides in derselben
+ * Reihenfolge. Die Art `einrichtung` ist `Lax` und HTTPS-abhaengig — diese
+ * Seite laeuft auf einer Anlage, die noch keine `config.php` hat und deren
+ * HTTPS-Lage die Einrichterin erst herstellt. */
+sitzung_starten('einrichtung');
 if (empty($_SESSION['inst_csrf'])) { $_SESSION['inst_csrf'] = bin2hex(random_bytes(32)); }
 
 function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }

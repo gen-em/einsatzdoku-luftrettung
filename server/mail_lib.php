@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+/* Der eine Leser fuer config.php (Schritt 15 AP2). */
+require_once __DIR__ . '/konfig_lib.php';
+
 /**
  * MAIL: EIN KATALOG UND EINE WARTESCHLANGE (P5a/AP5, E-P5a-14, E-P5a-39).
  *
@@ -504,8 +507,7 @@ function mail_praefix(): string
 {
     static $p = null;
     if ($p === null) {
-        $alles = require __DIR__ . '/config.php';
-        $roh = trim((string)($alles['mail']['betreff_praefix'] ?? ''));
+        $roh = trim((string)konfig('mail.betreff_praefix', ''));
         $p = $roh === '' ? '' : $roh . ' ';
     }
     return $p;

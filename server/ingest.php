@@ -150,7 +150,7 @@ function ingest_tag_nachziehen(PDO $pdo, string $tabelle, int $id, $existing, ?i
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_out(['error' => 'method'], 405);
 
 $raw = file_get_contents('php://input');
-if (strlen($raw) > $CFG['app']['max_body_bytes']) json_out(['error' => 'too_large'], 413);
+if (strlen($raw) > (int)konfig('app.max_body_bytes')) json_out(['error' => 'too_large'], 413);
 
 /* --- Geraet authentifizieren -------------------------------------------------
  *
