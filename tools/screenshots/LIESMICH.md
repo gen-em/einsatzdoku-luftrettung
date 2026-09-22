@@ -473,8 +473,28 @@ python3 tools/screenshots/vergleichen.py <vorher> [<nachher>]
 python3 tools/screenshots/vergleichen.py <vorher> --erwartet 46-betrieb-updates
 ```
 
-Verglichen wird **Bit für Bit** über die SHA-256 jedes Einzelbilds. Voreinstellung
-für `<nachher>` ist `ausgabe/`.
+**Zwei Vergleiche, und der wichtigere ist der Text.**
+
+| | |
+|---|---|
+| **Bild** | SHA-256 je Einzelbild. Streng, aber laut — er meldet jede Schriftrasterung mit |
+| **Text** | `document.body.innerText` je Seite und Breite, zeilenweise. Das ist die Frage, die ein Formatierungsumbau stellt: *Steht ein Buchstabe anders da als vorher?* |
+
+**Warum beide — mit der Zahl, die es entschieden hat.** Gemessen am 22.09.2026
+auf **unverändertem** Code: **303 von 496 Bildern** wichen ab. Ursache war
+nicht die Anwendung, sondern der **Countdown im Demo-Banner** („in etwa
+43 188 Minuten"), der auf jeder Seite des Demo-Kontos steht und in Echtzeit
+herunterzählt — ein Kasten von 43 × 19 Pixeln, der 303 Bilder unbrauchbar
+machte. Ein Bildvergleich kann so eine Zeile nicht benennen; er sieht nur
+Pixel, und wer die Seite ganz ausnimmt, nimmt 1 200 andere Zeilen mit aus.
+Der Textvergleich sieht die Zeile.
+
+Der Bildvergleich bleibt daneben stehen: Er findet, was **kein** Text ist —
+eine verrutschte Spalte, ein anderer Abstand, eine Farbe.
+
+Voreinstellung für `<nachher>` ist `ausgabe/`. `--nur-text` lässt den
+Bildvergleich außer Wertung, `--selbstprobe` hält das Werkzeug gegen sieben
+Fälle mit Sollwert.
 
 **Die Reihenfolge ist nicht wahlfrei, und sie ist der ganze Trick:** Jeder Lauf
 löscht den vorigen (`rmSync` auf `ausgabe/`, siehe *Grenzen*). Wer vergleichen
@@ -492,7 +512,8 @@ python3 tools/screenshots/vergleichen.py /tmp/bilder_vor
 
 | | |
 |---|---|
-| `ausnahmen.json`, Abschnitt `zeitabhaengig` | **dauerhaft.** Die Seite ändert sich zwischen zwei Läufen, ohne dass jemand etwas geändert hätte — sie zeigt eine Uhrzeit, ein Alter, einen Zähler. Mit Begründung je Eintrag |
+| `ausnahmen.json`, Abschnitt `zeitabhaengig` | **dauerhaft, ganze Seite, nur Bild.** Die Seite ändert sich zwischen zwei Läufen, ohne dass jemand etwas geändert hätte |
+| `ausnahmen.json`, Abschnitt `zeilenmuster` | **dauerhaft, einzelne Zeile, nur Text.** Ein regulärer Ausdruck auf die Textzeile — so bleibt der Rest der Seite in der Messung. Hier steht heute genau ein Eintrag: der Demo-Countdown |
 | `--erwartet <seite>` | **für diesen einen Lauf.** Die Abweichung ist die beabsichtigte Folge der Änderung, die gerade gebaut wurde |
 
 Für beide gilt die Regel des Hauses: **Eine Ausnahme ohne Treffer ist selbst ein
@@ -504,6 +525,15 @@ nicht **was**. Eine gemeldete Datei wird angesehen — das Werkzeug ersetzt den
 Blick nicht, es sagt nur, wohin er gehört. Und er ist **streng**: Eine
 Abweichung von einem Pixel in einer Schriftrasterung zählt wie eine
 verschobene Spalte.
+
+**Der Textvergleich ist kein echter Diff**, und das mit Absicht: Er stellt die
+Zeilen stumpf nebeneinander. Eine eingefügte Zeile verschiebt alles dahinter
+und erzeugt lauter Abweichungen — das ist die richtige Lautstärke für einen
+Umbau, der keinen Buchstaben ändern darf, denn der fügt auch keine Zeile ein.
+
+**`texte/` entsteht erst seit Schritt 15 AP7.** Ein älterer weggesicherter Lauf
+hat den Ordner nicht; der Vergleich sagt dann ausdrücklich **„NICHT
+GEMESSEN"** statt eine Null zu melden.
 
 ## Grenzen
 
@@ -525,6 +555,11 @@ verschobene Spalte.
   nicht zur Laufzeit. Was erst zur Laufzeit dazukommt, sieht weiterhin
   niemand: Eine Content-Security-Policy schickt die Anwendung nicht
   (**Nr. 181**).
+- **Der Bilderlauf misst nicht, ob der Text stimmt.** Überlauf, Konsolenfehler
+  und Knopfhöhen melden **0/0/0**, auch wenn aus „2,00 GB" ein „2 GB"
+  geworden ist. Dafür gibt es seit Schritt 15 AP7 den Textvergleich
+  (`vergleichen.py`) — die Zahl 0/0/0 allein ist **kein** Beleg dafür, dass
+  sich nichts geändert hat.
 - **Jeder Lauf löscht den vorigen.** `ausgabe/` wird beim Start geräumt
   (`rmSync`). Zwei Läufe zu vergleichen geht nur, wenn der erste Bericht
   vorher weggesichert wurde — sonst ist seine Zahl hinterher unbelegbar. In

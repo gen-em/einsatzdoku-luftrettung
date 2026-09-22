@@ -1,4 +1,10 @@
 {
-  "_lies_mich": "Seiten, deren Bild sich zwischen zwei Laeufen aendert, OHNE dass jemand etwas geaendert haette. Schluessel ist der Seitenname aus seiten.json (ohne Breite), Wert die Begruendung. Eine Ausnahme ohne Treffer ist ein Befund — siehe vergleichen.py.",
-  "zeitabhaengig": {}
+  "_lies_mich": "Zwei Arten, eine Abweichung zwischen zwei Bilderlaeufen dauerhaft zu erklaeren. `zeitabhaengig` nimmt ganze SEITEN vom BILDvergleich aus (Schluessel = Seitenname aus seiten.json, ohne Breite). `zeilenmuster` nimmt einzelne ZEILEN vom TEXTvergleich aus (Schluessel = kurzer Name, `muster` = regulaerer Ausdruck auf die Zeile). Fuer beide gilt: Eine Ausnahme ohne Treffer ist selbst ein Befund — siehe vergleichen.py.",
+  "zeitabhaengig": {},
+  "zeilenmuster": {
+    "demo-countdown": {
+      "muster": "in etwa [0-9\\u00a0.]+ Minuten",
+      "grund": "Der Countdown bis zum naechsten Demo-Reset steht im Banner JEDER Seite des Demo-Kontos und zaehlt in Echtzeit herunter. Gemessen am 22.09.2026: Er allein machte 303 von 496 Bildern zwischen zwei Laeufen auf unveraendertem Code verschieden."
+    }
+  }
 }
