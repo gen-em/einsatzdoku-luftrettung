@@ -5958,7 +5958,7 @@ daraus ableitet und ob die Langdruck-Erkennung dort funktioniert. Datenblätter
 reichen dafür nicht: Auf der Venu 3s ist eine der drei Tasten systemseitig
 belegt und für Connect-IQ-Apps unsichtbar — das steht in keiner Übersicht.
 
-Dafür liegt unter `tools/eingabe-probe/` ein eigenständiges Connect-IQ-Projekt.
+Dafür liegt unter `tools/uhr-pruefstand/eingabe-probe/` ein eigenständiges Connect-IQ-Projekt.
 Es wird nie ausgeliefert, hat eine eigene UUID und keine Berechtigungen. Es
 protokolliert jedes Eingabeereignis mit Millisekunden-Stempel auf Konsole und
 Display und startet bei jedem Tastendruck einen 1000-ms-Timer — denselben
@@ -5966,7 +5966,7 @@ Mechanismus, den die App über `Const.LONG_PRESS_MS` für Langdrücke benutzt.
 Steht `HALTE-TIMER` im Protokoll vor dem `KeyReleased`, sind Langdrücke
 möglich; steht es danach oder gar nicht, sind sie es nicht.
 
-Messfolge und Auswertung: `tools/eingabe-probe/LIESMICH.md`.
+Messfolge und Auswertung: `tools/uhr-pruefstand/eingabe-probe/LIESMICH.md`.
 Ergebnisse gehören nach `Geraete-Eingabe.md`.
 
 **Build:** VS Code + Monkey-C-Erweiterung + Connect-IQ-SDK + JDK;
@@ -8534,7 +8534,7 @@ Die Seite zeigt IP- und E-Mail-Adressen im Klartext. Die Anwendung liefert
 zur Adresssuche aus S9/AP2 — und anders als jener **ohne Bedingung**: Den
 Ratenschutz gibt es in jeder Installation, und er lässt sich nicht abschalten.
 
-**Nachweis:** `node tools/klickprobe/probe.mjs --nur P5a-AP8` — 1 von 1 Weg
+**Nachweis:** `node tools/bedienprobe/probe.mjs --nur P5a-AP8` — 1 von 1 Weg
 erfüllt, gemessen am DOM *und* an der Datenbank (Zeile 1 → 0, `rate_limits`
 1 → 0, Ereignis „aufgehoben" mit Kontokennung).
 

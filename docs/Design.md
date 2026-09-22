@@ -2091,7 +2091,7 @@ eine Nummer: Backlog Nr. 102. Ein Mausklick ist `mousedown` → `blur` →
 `mouseup` → `click`; wer die Taste länger hält als der Blur-Aufschub (150 ms),
 findet den Eintrag beim `mouseup` schon versteckt, und `click` fällt nie.
 Gemessen bei 300 ms gehaltener Maus: vorher 0 von 3 Übernahmen, nachher 3 von
-3 (`tools/klickprobe/`).
+3 (`tools/bedienprobe/`).
 
 **Ob eine Gruppenzeile erscheint, entscheidet der Aufrufer** — er setzt
 `titel` oder lässt ihn weg. Die Regel ist nicht mechanisch: Das Besatzungsfeld
@@ -2654,7 +2654,7 @@ lief, misst einen Stand, den es nicht mehr gibt.
 | `tools/erzeugen/design.py` | Erzeugt die Tabellen dieses Dokuments aus den Quellen. |
 | `tools/wortliste/wortliste.py` | Sprechen Oberfläche und Dokumentation neutral von Land und Luft? |
 | `tools/stilvergleich/` | Hat sich am Erscheinungsbild etwas geändert, das nicht geplant war? |
-| `tools/klickprobe/probe.mjs` | Tut ein Bedienelement, was es soll — wenn man es **bedient**? Je Weg eine Zahl. |
+| `tools/bedienprobe/probe.mjs` | Tut ein Bedienelement, was es soll — wenn man es **bedient**? Je Weg eine Zahl. |
 
 **Der Stilvergleich hat während P3 geruht** und ist in O12 neu geeicht: Die
 Frage „hat sich etwas geändert?" ist in einer Phase, in der sich alles ändert,

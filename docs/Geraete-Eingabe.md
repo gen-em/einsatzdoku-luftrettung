@@ -143,8 +143,8 @@ Bewusst hingenommen.
 
 ## 5. Ein Gerät ergänzen
 
-1. Gerät in `tools/eingabe-probe/manifest.xml` unter `<iq:products>` eintragen.
-2. Messfolge aus `tools/eingabe-probe/LIESMICH.md` durchgehen.
+1. Gerät in `tools/uhr-pruefstand/eingabe-probe/manifest.xml` unter `<iq:products>` eintragen.
+2. Messfolge aus `tools/uhr-pruefstand/eingabe-probe/LIESMICH.md` durchgehen.
 3. Hier einen Abschnitt nach dem Muster von Abschnitt 4 anlegen und die
    Übersichtstabelle in Abschnitt 1 ergänzen.
 4. Größe des Launcher-Icons aus der Compiler-Warnung übernehmen und ein

@@ -22,7 +22,7 @@
  *
  * DER ABNAHMELAUF BRAUCHT FÜNF BREITEN, nicht die zwei aus der LIESMICH:
  *
- *   node tools/klickprobe/probe.mjs --nur AP4a \
+ *   node tools/bedienprobe/probe.mjs --nur AP4a \
  *        --breiten 390,1024,1100,1199,1280 --bilder
  *
  * Die Vorgabe (1280) und der dort genannte volle Lauf (390, 1280) liegen

@@ -698,6 +698,61 @@ Teilstück 4 — `klickprobe` → `bedienprobe` und `netzprobe`/`eingabe-probe`
 
 ---
 
+## 5f. Messprotokoll PK-04/4 — Bedienprobe, Bilderlauf, LIESMICH (22.09.2026)
+
+**Das Ziel aus E-PK-24 ist erreicht: 15 Werkzeugordner statt 48.**
+
+| | Ausgangswert | heute |
+|---|---|---|
+| Werkzeugordner | 48 (Inventur 3.3) / 49 (gemessen) | **15** |
+| LIESMICH-Zeilen | 7 206 | **574** in 15 Dateien (Ziel unter 1 000) |
+| LIESMICH-Form | frei | **je 5 Abschnitte, je ≤ 40 Zeilen** (E-PK-25) |
+
+Die drei Zusammenlegungen: `klickprobe` → **`bedienprobe`**, `netzprobe`
+und `eingabe-probe` → **`uhr-pruefstand/`**. Die Bedienprobe läuft danach
+unverändert: **48 von 48 Wegen erfüllt, 0 verfehlt**.
+
+### Der Bilderlauf, abgestuft (E-PK-14)
+
+`--stufe klein|neben|haupt`: klein = berührte Seiten in **drei** Breiten
+(360, 1024, 1920), Chromium · neben = alle Seiten, acht Breiten · haupt =
+alle drei Engines. **Gemessen:** `--stufe klein --nur 05-datenschutz` → **3
+Einzelbilder** statt acht.
+
+**Die Risikoliste ist entfallen**, und der Preis steht im Werkzeug: Sie
+nannte zehn Seiten mit Container-Abfragen, `:has()`, `dvh` und `sticky` und
+ließ Firefox und WebKit nur diese fahren. Eine von Hand gepflegte Liste
+altert in eine Richtung — **der einzige WebKit-Fund des Projekts (Nr. 185)
+lag auf einer Seite, die nicht darauf stand.**
+
+### Die md5-Gegenprobe, und ein Fehler darin
+
+Acht Breiten je Seite sind acht Dateien — und wenn das Werkzeug die Breite
+nicht wirklich umstellt, sind es acht **identische** Dateien, bei denen
+alles grün meldet. Die Prüfung vergleicht deshalb die Prüfsummen **je
+Seite** (zwei Seiten dürfen gleich aussehen, acht Breiten derselben nicht).
+
+**Meine erste Fassung sah im Ordner `seiten/` nach, der Ordner heißt aber
+`einzeln/`.** Sie meldete „0 mit gleichen Bildern", ohne eine einzige Datei
+geöffnet zu haben — eine grüne Zahl ohne Gegenstand, in genau der Prüfung,
+die gegen grüne Zahlen ohne Gegenstand gebaut wurde. Gefunden beim
+Gegenprobieren, nicht beim Lesen. Die Zahl nennt jetzt, **was sie gelesen
+hat**: „3 Bilder aus 1 Seiten gelesen · 0 mit gleichen Bildern".
+
+**Gegenprobe:** zwei Dateien gleich gemacht → **„05-datenschutz: 360, 1024
+px", 1 mit gleichen Bildern**. Zurückgenommen.
+
+### Was aus Teilstück 4 offen bleibt
+
+**E-PK-15 — die Wege nach Seiten ordnen.** Sie tragen weiter die Namen der
+Arbeitspakete, aus denen sie stammen (`ap1`, `ap2`, `p5a-ap8`). Solange die
+Zuordnung fehlt, kann `pruefablauf.json` nicht „diese Datei berührt, also
+diese Wege" sagen — Stufe klein fährt deshalb alle 48. Das ist inhaltliche
+Arbeit an 48 Wegen und braucht je einen Blick auf die Seite; **nicht
+geraten.**
+
+---
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in

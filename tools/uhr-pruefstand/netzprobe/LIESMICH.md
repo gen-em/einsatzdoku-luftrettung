@@ -2,7 +2,7 @@
 
 ```bash
 sh tools/referenzdatensatz/einspielen/lokal_starten.sh          # Server und TLS davor
-tools/uhr-pruefstand/pruefstand.sh bauen fenix6pro tools/netzprobe/monkey.jungle
+tools/uhr-pruefstand/pruefstand.sh bauen fenix6pro tools/uhr-pruefstand/netzprobe/monkey.jungle
 tools/uhr-pruefstand/pruefstand.sh speicher-leeren
 tools/uhr-pruefstand/pruefstand.sh starten fenix6pro 40
 tools/uhr-pruefstand/pruefstand.sh konsole | grep NETZPROBE
@@ -68,4 +68,4 @@ weitreichender als das selbstsignierte Zertifikat, das vorher dort stand.
 Kein Prüfmittel im Sinn von `CLAUDE.md` 6 und kein Bestandteil der App. Sie
 trägt eine **eigene Anwendungs-ID**, damit die Einstellungen und der Speicher
 der echten Uhr-App unberührt bleiben — dieselbe Überlegung wie bei
-`tools/eingabe-probe/`, aus der sie hervorgegangen ist.
+`tools/uhr-pruefstand/eingabe-probe/`, aus der sie hervorgegangen ist.

@@ -26,19 +26,15 @@ für `uhr-stufe1` `CIQ_GERAETE_URL`, für die Schemaprobe das Modul
 
 ## Erwartete Zahl
 
-`bericht.py lesen --selbstprobe` → **6 Lagen, 0 Fehlschläge** (5 rote, 1
-grüne). `auswahl.py --selbstprobe` → **11 Lagen, 0 Fehlschläge**.
-`auswahl.py --abdeckung` → **0 Dateien ohne Muster**. `pruefen.sh` → 0 rot,
-0 nicht gemessen; der Rückgabewert ist 0. Stufe klein auf einem Zweig ohne
-`server/`-Änderung: **13 Proben in rund 25 s** (gemessen 21.09.2026).
+`bericht.py lesen --selbstprobe` → **6 Lagen / 0**, `auswahl.py
+--selbstprobe` → **11 / 0**, `--abdeckung` → **0 Dateien ohne Muster**.
+`pruefen.sh` → 0 rot, 0 nicht gemessen, rc 0; Stufe klein ohne
+`server/`-Änderung **13 Proben in rund 25 s**.
 
 ## Was es nicht kann
 
 Der Bericht ist ein **Nachweis, kein Riegel**: Station B ist die geprüfte
-Partei, und ein Bericht, der einen Lauf behauptet, den es nicht gab, kommt
-durch (`docs/Pruefablauf.md` 5.2). Die Stufe wird aus `server/version.php`
-gelesen — wer sie nicht hochstuft, bekommt „klein", auch wenn er umbaut.
-`--gegen staging` misst **nur lesend** (E-PK-29).
+Partei (`docs/Pruefablauf.md` 5.2). Die Stufe kommt aus
+`server/version.php`. `--gegen staging` misst **nur lesend** (E-PK-29).
 
-*Anlass: O9c (gemessen vor der letzten Änderung), Nr. 217 (ein Aufruf, der
-zur Schnittstelle nicht passte), Nr. 267 (nur MySQL 8.4 scheiterte).*
+*Anlass: O9c, Nr. 217, Nr. 267.*

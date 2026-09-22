@@ -20,8 +20,7 @@ Nichts — es erzeugt:
 | `design` | die Tabellen in `docs/Design.md` (CLAUDE.md 5) |
 | `logos` | die Favicons **aus** den Logodateien |
 | `uhr-bilder` | die vorgerasterten Bildmarken der Uhr-App |
-| `geraetemodelle` | `server/geraetemodelle.php` aus der Garmin-Liste |
-| `nachaufloesen` | Teilenummern, die `geraetemodelle` offen ließ |
+| `geraetemodelle` | `server/geraetemodelle.php` (+ `nachaufloesen`) |
 | `wegwerfdomains` | die Liste der Wegwerf-Mailanbieter (Nr. 230) |
 | `pruefkonten` | 300+ Konten in der örtlichen Anlage (P-P3-16) |
 

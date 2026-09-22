@@ -14,6 +14,46 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Fünfzehn Werkzeugordner statt achtundvierzig] — 2026-09-22
+
+### Geändert
+
+- **Drei Zusammenlegungen schließen E-PK-24 ab** (PK-04/4): `klickprobe`
+  heißt jetzt **`bedienprobe`**, `netzprobe` und `eingabe-probe` liegen unter
+  `uhr-pruefstand/`. Damit sind es **15 Werkzeugordner** — das Ziel der
+  Inventur. Die Bedienprobe läuft unverändert: 48 von 48 Wegen erfüllt.
+- **Alle 15 `LIESMICH.md` haben die Fünf-Abschnitte-Form** (E-PK-25): Aufruf,
+  was es misst, was es braucht, erwartete Zahl, was es nicht kann — je
+  höchstens 40 Zeilen. Zusammen **574 Zeilen** statt 7 206. Was dabei
+  herausfällt, sind Fundgeschichten und Fehlanläufe; die stehen in den
+  Commits, wo sie hingehören, und nicht in einer Anleitung, die niemand zu
+  Ende liest.
+- **Der Bilderlauf ist abgestuft** (E-PK-14): `--stufe klein|neben|haupt` —
+  berührte Seiten in drei Breiten, alle Seiten in acht, alle drei Engines.
+  **Die Risikoliste ist entfallen.** Sie nannte zehn Seiten mit Merkmalen,
+  bei denen Engines auseinandergehen können, und war eine von Hand gepflegte
+  Liste, die in eine Richtung altert — der einzige WebKit-Fund des Projekts
+  (Nr. 185) lag auf einer Seite, die nicht darauf stand.
+
+### Hinzugefügt
+
+- **Eine Gegenprobe gegen doppelte Bilder.** Acht Breiten je Seite sind acht
+  Dateien; stellt das Werkzeug die Breite nicht wirklich um, sind es acht
+  identische, bei denen alles grün meldet. Verglichen werden die Prüfsummen
+  **je Seite** — zwei Seiten dürfen gleich aussehen, acht Breiten derselben
+  nicht.
+
+### Behoben
+
+- **Die neue Gegenprobe las zuerst nichts.** Sie sah im Ordner `seiten/`
+  nach, der Ordner heißt `einzeln/` — und meldete „0 mit gleichen Bildern",
+  ohne eine Datei geöffnet zu haben. Eine grüne Zahl ohne Gegenstand, in
+  genau der Prüfung, die gegen grüne Zahlen ohne Gegenstand gebaut wurde.
+  Sie nennt jetzt, **wie viele Bilder sie gelesen hat**.
+
+Werkzeuge und Dokumentation, keine Datei unter `server/` — **keine
+Versionsstufe**.
+
 ## [Werkzeug: Die Erzeuger bekommen einen eigenen Ordner] — 2026-09-22
 
 ### Geändert

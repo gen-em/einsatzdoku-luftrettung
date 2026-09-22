@@ -36,13 +36,13 @@
  * (Aufbau von Null: `lokal_einrichten.sh`).
  *
  * AUFRUF
- *   node tools/klickprobe/probe.mjs
- *   node tools/klickprobe/probe.mjs --nur ap1
- *   node tools/klickprobe/probe.mjs --bilder      (Bild je Weg)
- *   node tools/klickprobe/probe.mjs --breiten 390,1280 --bilder
- *   node tools/klickprobe/probe.mjs --breiten 390,1280 --finger --bilder --behalten
+ *   node tools/bedienprobe/probe.mjs
+ *   node tools/bedienprobe/probe.mjs --nur ap1
+ *   node tools/bedienprobe/probe.mjs --bilder      (Bild je Weg)
+ *   node tools/bedienprobe/probe.mjs --breiten 390,1280 --bilder
+ *   node tools/bedienprobe/probe.mjs --breiten 390,1280 --finger --bilder --behalten
  *
- * AUSGABE unter tools/klickprobe/ausgabe/ (steht in .gitignore):
+ * AUSGABE unter tools/bedienprobe/ausgabe/ (steht in .gitignore):
  *   bericht.md, bericht.json  — je Weg Soll, Ist, Urteil
  *   bild/<weg>.png            — nur mit --bilder
  *

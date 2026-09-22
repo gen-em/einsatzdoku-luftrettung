@@ -127,7 +127,7 @@
       "id": "connect-iq-projekt",
       "zeile": "Connect-IQ-Projekt|Connect-IQ-Probe",
       "klasse": "G",
-      "begruendung": "`watch/` und `tools/eingabe-probe/` SIND Connect-IQ-Projekte. Der Begriff bezeichnet hier die Sache, nicht die Einstellungen der Uhr-App."
+      "begruendung": "`watch/` und `tools/uhr-pruefstand/eingabe-probe/` SIND Connect-IQ-Projekte. Der Begriff bezeichnet hier die Sache, nicht die Einstellungen der Uhr-App."
     },
     {
       "id": "garmin-zusatz-kopplung",

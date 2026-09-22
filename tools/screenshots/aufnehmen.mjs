@@ -52,6 +52,7 @@ import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 /* Hinter einem HTTPS_PROXY (etwa in der Claude-Umgebung) braucht Nodes
  * eingebautes fetch die Variable NODE_USE_ENV_PROXY — und die wird nur beim
@@ -106,10 +107,10 @@ const JOBS_TOKEN = wert('--jobs-token', '');
  * der Stelle, an der er entsteht. `--motor` und sein Wert stehen in der
  * Liste, weil motorWahl() sie aus demselben argv liest. */
 const BEKANNT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
-                         '--klein', '--finger', '--nur', '--risiko', '--selbstprobe',
+                         '--klein', '--finger', '--nur', '--stufe', '--selbstprobe',
                          '--motor', '--jobs-token']);
 const MIT_WERT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
-                          '--nur', '--motor', '--jobs-token']);
+                          '--nur', '--motor', '--jobs-token', '--stufe']);
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
   if (!a.startsWith('--')) continue;
@@ -124,7 +125,7 @@ for (let i = 0; i < argv.length; i++) {
 /* Acht Breiten, je mit einer realistischen Höhe. Die Höhe entscheidet nur
  * darüber, wie viel ohne Scrollen sichtbar ist — aufgenommen wird die ganze
  * Seite; sie steuert aber, was `position:sticky` und `100vh` tun. */
-const BREITEN = [
+const ALLE_BREITEN = [
   { b:  360, h:  800, art: 'Handy'   },
   { b:  390, h:  844, art: 'Handy'   },
   { b:  420, h:  900, art: 'Handy'   },
@@ -135,57 +136,40 @@ const BREITEN = [
   { b: 1920, h: 1080, art: 'Desktop' },
 ];
 
+/* ---- Die drei Stufen (--stufe, E-PK-14) ---------------------------------
+ *
+ * klein  berührte Seiten (`--nur`), DREI Breiten, Chromium
+ * neben  alle Seiten, acht Breiten, Chromium
+ * haupt  alle Seiten, acht Breiten, ALLE DREI Engines
+ *
+ * DIE RISIKOLISTE IST WEG, und das ist eine Entscheidung mit Preis. Sie
+ * nannte zehn Seiten mit Container-Abfragen, `:has()`, `dvh` und `sticky`
+ * und ließ Firefox und WebKit nur diese fahren — eine von Hand gepflegte
+ * Liste, die in eine Richtung altert: Wer ein solches Merkmal neu einbaut,
+ * muss daran denken. Der EINZIGE WebKit-Fund des Projekts (Nr. 185) lag auf
+ * einer Seite, die NICHT darauf stand. Dreißig Minuten bei einer Hauptstufe
+ * sind kein Preis, der eine Liste rechtfertigt, die das Gesuchte verfehlt.
+ *
+ * Ohne `--stufe` bleibt es bei allen acht Breiten — so lief das Werkzeug
+ * vor PK-04, und die Kette ruft es weiter so. */
+const STUFE = wert('--stufe', '');
+if (STUFE && !['klein', 'neben', 'haupt'].includes(STUFE)) {
+  console.error(`Unbekannte Stufe: ${STUFE} (klein, neben, haupt)`);
+  process.exit(2);
+}
+const BREITEN = STUFE === 'klein'
+  ? ALLE_BREITEN.filter(x => [360, 1024, 1920].includes(x.b))
+  : ALLE_BREITEN;
+
 const { seiten } = JSON.parse(readFileSync(join(HIER, 'seiten.json'), 'utf-8'));
 
-/* ---- Die Risikoliste (--risiko, AP3b) -----------------------------------
- *
- * WOZU. Der volle Lauf misst 49 Seiten in acht Breiten und braucht in jeder
- * Engine rund zehn Minuten; dreimal gefahren sind das eine gute halbe
- * Stunde nach JEDEM Arbeitspaket. Das Meiste davon ist Wiederholung — ein
- * Layoutfehler in Chromium ist fast immer auch in Gecko und WebKit einer.
- * Chromium faehrt deshalb weiter den vollen Lauf; Firefox und WebKit fahren
- * die vom Paket beruehrten Seiten (`--nur`) UND diese Liste.
- *
- * WAS DRINSTEHT, UND WARUM GENAU DAS. Jede Seite hier traegt ein
- * CSS-Merkmal, bei dem die drei Engines auseinandergehen KOENNEN. Wer eine
- * Zeile streicht, streicht die Abdeckung dieses Merkmals — deshalb steht der
- * Grund daneben und nicht in einer Anleitung. Und wer ein solches Merkmal neu
- * einbaut, traegt die Seite hier ein; die Liste ist keine Momentaufnahme aus
- * AP3b, sondern eine Pflegepflicht (docs/Technik.md, Pruefstand).
- *
- * Ein Name, der in seiten.json nicht vorkommt, ist ein ABBRUCH und kein
- * stilles Weniger: Eine Risikoliste, die sich selbst kuerzt, meldet eine
- * schmeichelhafte Null. */
-const RISIKO = [
-  { name: '01-anmeldung',                 wegen: '100dvh am Seitengeruest' },
-  { name: '10-tagesuebersicht',           wegen: 'Kopfleiste position:sticky; .tag-raster:has(.geo-gross) ab 1600 px' },
-  { name: '11-tagesuebersicht-schublade', wegen: 'Schublade position:sticky ab 1024 px' },
-  { name: '12-einsatzansicht',            wegen: '.einsatz-neben position:sticky im Raster' },
-  { name: '13-einsatzformular',           wegen: 'Speichern-Leiste position:sticky; label:has(> input)' },
-  { name: '14-zeitraum',                  wegen: '.titelzeile-aktionen:has(.segment-art)' },
-  { name: '15-suche',                     wegen: '.kachel-zeit:has(.kachel-datum)' },
-  { name: '20-diensttag-loeschen',        wegen: 'dialog + ::backdrop, max-height in dvh' },
-  { name: '33a-geraete-rueckfrage',       wegen: 'dialog ueber einer Einstellungsseite' },
-  { name: '35-import-export',             wegen: 'container-type:inline-size und 100cqi (Nr. 182)' },
-];
-
 const liste = (() => {
-  const vorhanden = new Set(seiten.map(s => s.name));
-  let gewaehlt = FILTER.length
+  // WELCHE SEITEN. `--nur` filtert nach Namensanfang; ohne Filter alle.
+  // Die Risikoliste und `--risiko` sind mit E-PK-14 entfallen (Begründung
+  // oben bei den Stufen).
+  return FILTER.length
     ? seiten.filter(s => FILTER.some(f => s.name.startsWith(f)))
-    : (flag('--risiko') ? [] : seiten);
-  if (flag('--risiko')) {
-    const fehlend = RISIKO.filter(r => !vorhanden.has(r.name)).map(r => r.name);
-    if (fehlend.length) {
-      console.error('Risikoliste nennt Seiten, die es in seiten.json nicht gibt: '
-        + fehlend.join(', '));
-      process.exit(2);
-    }
-    const schon = new Set(gewaehlt.map(s => s.name));
-    const dazu = seiten.filter(s => RISIKO.some(r => r.name === s.name) && !schon.has(s.name));
-    gewaehlt = gewaehlt.concat(dazu);
-  }
-  return gewaehlt;
+    : seiten;
 })();
 
 /* DER RIEGEL GEGEN EIN STILLES DURCHLAUFEN (Backlog Nr. 220).
@@ -1539,6 +1523,46 @@ if (ausgefallen.length) {
   const teile = Object.entries(nachGrund).map(([g, n]) => `${n}× ${g}`).join(' · ');
   console.log(`OHNE BILD: ${ausgefallen.length} Aufnahmen — ${teile}`);
 }
+/* ---- Gegenprobe gegen doppelte Bilder (E-PK-14) -------------------------
+ *
+ * WOZU. Acht Breiten je Seite sind acht Dateien — und wenn das Werkzeug
+ * die Breite nicht wirklich umstellt, sind es acht IDENTISCHE Dateien, bei
+ * denen alles grün meldet: kein Überlauf, keine Konsolenfehler, die richtige
+ * Zahl Bilder. Eine Zahl, die entsteht, ohne gemessen zu haben — genau der
+ * Fall, gegen den Grundsatz 7 geschrieben ist.
+ *
+ * GEZAEHLT WIRD JE SEITE, nicht über den ganzen Ordner: Zwei Seiten dürfen
+ * gleich aussehen (eine Rückfrage über derselben Seite), acht Breiten
+ * DERSELBEN Seite nicht. */
+const doppelte = [];
+let gelesen = 0;
+for (const z of bericht.seiten) {
+  const summen = new Map();
+  for (const { b } of BREITEN) {
+    const datei = join(AUSGABE, 'einzeln', `${z.name}-${b}.png`);
+    if (!existsSync(datei)) continue;
+    gelesen++;
+    const summe = createHash('md5').update(readFileSync(datei)).digest('hex');
+    if (!summen.has(summe)) summen.set(summe, []);
+    summen.get(summe).push(b);
+  }
+  for (const [, breiten] of summen) {
+    if (breiten.length > 1) doppelte.push(`${z.name}: ${breiten.join(', ')} px`);
+  }
+}
+/* DIE ZAHL NENNT, WAS SIE GELESEN HAT — und das ist hier keine Förmlichkeit:
+   Die erste Fassung dieser Prüfung sah im Ordner `seiten/` nach, der Ordner
+   heißt aber `einzeln/`. Sie meldete „0 mit gleichen Bildern", ohne eine
+   einzige Datei geöffnet zu haben. Gefunden beim Gegenprobieren, nicht beim
+   Lesen. */
+console.log(`Bildgleichheit: ${gelesen} Bilder aus ${bericht.seiten.length} Seiten `
+  + `gelesen · ${doppelte.length} mit gleichen Bildern über mehrere Breiten`);
+if (gelesen === 0 && bilderZahl > 0) {
+  console.log('  ACHTUNG: kein Bild gelesen, obwohl welche entstanden sind — '
+    + 'die Prüfung hat nichts gemessen.');
+}
+for (const d of doppelte) console.log(`  ${d}`);
+
 console.log(`Bericht: ${join(AUSGABE, 'bericht.md')}`);
 
 await browser.close();
