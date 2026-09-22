@@ -83,10 +83,19 @@ gilt für Staging und sonst nirgends. Wer eine ältere Quelle liest, findet
 dort `staging.nadoku.gen-em.org` im selben Tarif — das ist der Stand bis zum
 19.09.2026.
 
-Davor stehen zwei Prüftore: Stufe 1 (`pruefung.yml`, jeder Push, ohne
-Installation) und Stufe 2 (gegen Staging). **Der Produktionslauf verlangt einen
-grünen Stufe-1-Lauf auf demselben Commit** — fehlt er, bricht er ab, statt
-ungeprüft auszuliefern.
+Davor stehen zwei Prüftore: Stufe 1 (`pruefung.yml`, ohne Installation) und
+Stufe 2 (gegen Staging). **Der Produktionslauf verlangt einen grünen
+Stufe-1-Lauf auf demselben Commit** — fehlt er, bricht er ab, statt ungeprüft
+auszuliefern.
+
+**Stufe 1 läuft seit dem 21.09.2026 auf Arbeitszweigen nur noch beim Pull
+Request, auf `main` bei jedem Push** (Vorgriff auf PK-05). Bis dahin stand
+dort `branches: ['**']`, und jeder Push löste **zwei** Läufe desselben Namens
+aus: einen schnellen über das Ereignis `pull_request` (rund eine Minute, weil
+er gegen den gemeinsamen Vorfahren vergleicht) und einen langsamen über
+`push` (rund 56 Minuten, weil er ohne Vergleichsstand im Zweifel alles
+misst). Der Zweigschutz wartet auf den Namen, also auf den langsameren. Wer
+eine ältere Quelle liest, findet dort „jeder Push, jeder Zweig".
 
 **Bis Web 20.3.0 stand hier das Gegenteil**, und es stimmte: Ein Push auf
 `main` mit Änderungen unter `server/` lud sofort auf den Produktivserver, ohne

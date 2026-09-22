@@ -2889,6 +2889,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `tools/schemaprobe/` in Stufe 1, mit einer **Matrix** über MySQL 8.4.0
     und MariaDB 10.6.
 
+    **Nachtrag 21.09.2026 (Web 20.26.3):** Der bewahrte Alias `AS manual`
+    war selbst betroffen — MySQL 8.4.0 bis 8.4.10 reserviert das Wort auch
+    als Alias. Export und Sicherung scheiterten auf Staging (MySQL 8.4.10)
+    mit 1064. Behoben mit Backticks um den Alias, Nr. 267.
+
 239. **`backup_lib.php` baut sein `INSERT` ohne Backticks, `komplett_lib.php`
     mit.**
     *Aufgenommen 20.09.2026 beim Beheben von Nr. 238.*
@@ -3317,6 +3322,49 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+268. **Zwei Staging-Läufe zugleich, und der Bilderlauf ohne Demo-Konto —
+    kein Tag kam durch die Kette.** *Aufgenommen und erledigt 21.09.2026
+    (Vorgriff auf PK-06, Konzept PK).*
+
+    Drei Befunde aus dem ersten Tag durch Kette II. (1) `auslieferung.yml`
+    hatte keine `concurrency`-Gruppe; zwei Merges innerhalb einer Minute
+    liefen überlappend nach Staging. (2) Die Jobpause des Kreislaufs
+    (1800 s) und das Backup-Tor des Nachbarlaufs schlossen einander aus —
+    vierzig Aufrufe „angehalten bis …", dann rot ohne eine übertragene
+    Datei. (3) Der Bilderlauf meldet sich für 32 Seiten mit dem
+    Vorgabekennwort als `demo@gen-em.org` an; auf der neuen Staging-Anlage
+    gab es das Konto nicht. Kette II hatte es in Z7 vorgesehen und Z7 mit
+    Komplett-Backup und `JOBS_TOKEN` als erfüllt gebucht. Weil das Tor der
+    grünen Läufe einen als Ganzes grünen Staging-Lauf verlangt, blieb
+    `web-v20.26.3` am Tor hängen (Lauf 35646453443), ohne Produktiv zu
+    berühren.
+
+    *Erledigt: eine Gruppe je Umgebung, wartend statt abbrechend; Stufe 2
+    auf drei Schritte (E-PK-17), Zeitgrenze 20 min. Der Bilderlauf läuft in
+    der Sandbox; auf Staging wird kein Konto mit Vorgabekennwort angelegt.*
+
+267. **Der Alias `AS manual` scheiterte auf MySQL 8.4 — der Exportweg war
+    nach Nr. 238 nur zur Hälfte umgestellt.** *Aufgenommen 21.09.2026 aus dem
+    ersten Stufe-2-Lauf gegen Staging (Kennung `097D7622`).* **Behoben in Web
+    20.26.3.** *Bestätigt am 21.09.2026: Kreislauf edbak gegen Staging
+    (MySQL 8.4.10) grün in 104 s, Lauf 35639445224, Versuch 2 — vorher
+    dreimal die Fünfzehn-Minuten-Grenze.*
+
+    Nr. 238 benannte die Spalte um und bewahrte den Dateischlüssel über
+    `uhr_gesperrt AS manual`. MySQL reserviert MANUAL von 8.4.0 bis 8.4.10
+    auch als Alias; Staging läuft auf 8.4.10. `api/backup_data.php` antwortete
+    mit 1064 und HTTP 500, der Browser wartete fünfzehn Minuten auf einen
+    Download, drei Stufe-2-Läufe blieben ohne Ursache.
+
+    **Gefunden lokal:** Die Anwendung auf einem MySQL-8.4.0-Container fiel
+    beim ersten Kreislauf mit derselben Kennung im lokalen Fehlerprotokoll;
+    gegen MariaDB 10.11 war sie grün. Das ist P-PK-02 des Konzepts PK.
+
+    **Was daraus folgt:** Die Staging-Datenbank ist MySQL 8.4.10, nicht
+    MariaDB — `docs/Technik.md` 6.3a führte sie als unbekannt. Ein zweiter
+    Alias auf ein reserviertes Wort kommt im Serverquelltext nicht vor
+    (nachgezählt gegen die in 8.4 neu reservierten Wörter).
 
 241. **Die Anwendung überlässt ihre Sitzungen dem Hoster.**
     *Aufgenommen 20.09.2026 aus dem Befund der Kettenhärtung (AP1).*

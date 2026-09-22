@@ -802,7 +802,8 @@ Daten erst nach Server-Bestätigung.
 │                          mehr selbst (PK-02). STARTET nichts, und schlägt
 │                          nicht fehl: ein Mangel wird mit Zahl gemeldet
 └── .github/workflows/     die Auslieferungskette (P5a/AP1, Abschnitt 6)
-    ├── pruefung.yml       Stufe 1: jeder Push, ohne Installation
+    ├── pruefung.yml       Stufe 1 ohne Installation: Arbeitszweige beim
+    │                      Pull Request, main bei jedem Push
     ├── auslieferung.yml   WANN ausgeliefert wird: Staging (Push auf main),
     │                      Stufe 2, Produktion (Tag, Pflichtfreigabe,
     │                      Backup-Tor), Zeiger
@@ -8800,7 +8801,7 @@ Vier Arbeitsläufe unter `.github/workflows/`:
 
 | Datei | Was |
 |---|---|
-| `pruefung.yml` | **Stufe 1** — jeder Push, jeder Zweig, jeder Pull Request |
+| `pruefung.yml` | **Stufe 1** — jeder Pull Request, dazu jeder Push auf `main` (seit 21.09.2026; vorher jeder Push auf jedem Zweig) |
 | `auslieferung.yml` | **wann**: Jobs `staging`, `stufe2`, `produktion`, `Rückfallstand (Staging)` und `zeiger` |
 | `ausliefern-lauf.yml` | **was**: die Schrittfolge, einmal, für beide Umgebungen |
 | `integritaet.yml` | die Wache; läuft nach einem **Produktiv**-Deploy und täglich |
@@ -8922,7 +8923,24 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 
 ### 6.2 Stufe 1 — was ohne Installation messbar ist
 
-`pruefung.yml`, bei jedem Push auf jedem Zweig:
+`pruefung.yml`, **bei jedem Pull Request und bei jedem Push auf `main`**.
+
+> **Seit dem 21.09.2026 löst ein Push auf einen Arbeitszweig keinen Lauf mehr
+> aus** (Vorgriff auf PK-05 des Konzepts PK). Vorher stand dort
+> `branches: ['**']`, und jeder Push erzeugte **zwei** Läufe, die beide
+> `Stufe 1` heißen: Der über `pull_request` vergleicht gegen den gemeinsamen
+> Vorfahren von Zweig und `main` und lässt Uhr und Android weg, wenn
+> `watch/` und `android/` nicht berührt sind — **rund eine Minute**. Der über `push` findet bei einem neuen Zweig
+> oder einem Merge-Commit keinen Vergleichsstand, misst im Zweifel alles und
+> braucht **rund 56 Minuten**. Der Zweigschutz wartet auf den Namen, also auf
+> den langsameren. Gemessen an PR #69 (Läufe 192 und 193) und PR #70
+> (Lauf 186).
+>
+> Auf `main` bleibt der Push-Auslöser und ist dort richtig: Es gibt keinen
+> Pull Request mehr, gegen den zu vergleichen wäre, und die Bereichserkennung
+> misst ohnehin alles.
+
+Die Schritte:
 
 | Schritt | Sollwert |
 |---|---|
@@ -9038,7 +9056,10 @@ selbst fährt **beides**, sonst prüft niemand den Prüfschritt.
 > (`server/apk/` ist der Verteilweg, 4.97g), ist er neu zu bewerten.
 
 **Rot heißt kein Merge** — das entscheidet aber nicht die Datei, sondern der
-Zweigschutz auf `main` mit `pruefung` als Pflichtprüfung. Ohne ihn ist der
+Zweigschutz auf `main`. **Seine Pflichtprüfung heißt `Stufe 1`**, nach dem
+Namen des **Jobs**, nicht nach dem des Arbeitslaufs („Prüfung") und nicht
+nach dem Dateinamen; wer sie anders einträgt, hängt sie an nichts
+(Rahmenplan 6b). Er ist seit dem **21.09.2026** gesetzt — bis dahin war der
 Lauf eine Auskunft und keine Schranke.
 
 **Kein stilles Überspringen.** Der Uhr-Prüfstand braucht `CIQ_GERAETE_URL`,
@@ -9049,57 +9070,68 @@ aus wie eine Prüfung.
 
 ### 6.3 Stufe 2 — was eine Installation braucht
 
-Job `stufe2` in `auslieferung.yml`, nach dem Staging-Sync: der Griff auf
-`login.php`, die Punktdatei-Sperre, die Kreisläufe csv und edbak
-(0 unerklärt) und der Bilderlauf (0 Überlauf, 0 Konsolenfehler, 0 falsche
-Knopfhöhen). **Kreisläufe und Bilderlauf** brauchen ein **Prüfkonto auf
+Job `stufe2` in `auslieferung.yml`, nach dem Staging-Sync, **drei Schritte**
+(seit dem 21.09.2026, Konzept PK, E-PK-01/E-PK-17): der Griff auf
+`login.php`, die Punktdatei-Sperre und der Kreislauf edbak (`--frisch`, mit
+Job-Pause, 0 unerklärt). Das ist, was nur die echte Anlage zeigt —
+Hoster-PHP, Hoster-Datenbank, Hoster-Apache. Nr. 267 fiel genau dort: Der
+Alias `AS manual` war auf MySQL 8.4.10 reserviert, und die Sandbox hatte bis
+dahin nur MariaDB gesehen. **Der Kreislauf** braucht ein **Prüfkonto auf
 Staging** (Umgebungsgeheimnisse `STAGING_KONTO`, `STAGING_PASS`, Variable
-`STAGING_URL`); fehlt es, wird der Schritt ausdrücklich übersprungen und
-gemeldet.
+`STAGING_URL`); fehlt es, ist der Lauf rot und sagt warum. Zeitgrenze des
+Jobs 20 Minuten; gemessen sind 1:56 für alles zusammen (Lauf 35639445224,
+Versuch 2, damals noch mit dem csv-Kreislauf).
+
+**Bis zum 21.09.2026 liefen hier auch der csv-Kreislauf und der Bilderlauf**
+(62 Seiten in acht Breiten). Beide messen die Anwendung, nicht die Anlage,
+und laufen seither in der Sandbox (Konzept PK). Der Bilderlauf war auf der
+neuen Staging-Anlage nie grün: Er meldet sich für 32 Seiten als
+`demo@gen-em.org` mit dem Vorgabekennwort an, und dieses Konto gab es dort
+nicht. Weil das Tor der grünen Läufe einen **als Ganzes** grünen
+Staging-Lauf verlangt, kam damit kein Tag durch — der erste Versuch mit
+`web-v20.26.3` (Lauf 35646453443) scheiterte genau daran, ohne Produktiv zu
+berühren (Nr. 268). Was der Bilderlauf auf Staging noch brauchte
+(`JOBS_TOKEN` für die zwei Wartungsseiten, Nr. 220; der Bericht mit der
+Spalte `Verursacher` in der Zusammenfassung, Nr. 221), gilt für seinen Lauf
+in der Sandbox weiter.
+
+**Die Läufe fahren je Umgebung in Reihe** (`concurrency`, seit dem
+21.09.2026). Zwei Merges innerhalb einer Minute erzeugten zwei Staging-Läufe
+zugleich: Der erste hielt für seinen Kreislauf die Hintergrundjobs 1800 s an,
+der zweite wartete am Backup-Tor vierzig Aufrufe auf ein Komplett-Backup, das
+„angehalten bis 19:06:50" meldete, und schloss nach dreizehn Minuten. Ein
+jüngerer Lauf **wartet** jetzt, statt den älteren abzubrechen: Ein Abbruch
+mitten im Abgleich hinterließe einen halben Stand bei eingeschalteter
+Wartung, ein Abbruch mitten im Kreislauf die Jobpause für bis zu 30 Minuten.
+GitHub hält je Gruppe einen wartenden Lauf; kommt ein dritter, fällt der
+mittlere weg, bevor er die Anlage berührt hat — sein Commit steht dann nie
+auf Staging, und der Tag gehört auf den nächsten. Tag-Läufe haben ihre
+eigene Gruppe und warten nie hinter einem Merge; ein Tag **während** eines
+laufenden Staging-Laufs kann mit `Rückfallstand (Staging)` auf dessen
+Jobpause treffen und wird dann nach dessen Ende neu gestartet.
 
 **Der Messstand läuft hier nicht, und bei einem Tag-Lauf läuft Stufe 2
 überhaupt nicht.** Bis Web 20.16.4 stand an dieser Stelle „und **nur bei
 Tag-Läufen** der Messstand" — ein Satz, der zwei Dinge zugleich behauptete,
 die beide nicht zutreffen. Der Messstand-Schritt ist in P5a/AP9 **ersatzlos
-aus der Kette gestrichen** (Nr. 206); geblieben ist ein Schritt gleichen
-Namens, der nur noch sagt, wo seine Zahlen stehen. Und `staging` ist für
-Tag-Läufe abgeschaltet (`if: !startsWith(github.ref, 'refs/tags/')`),
-`stufe2` hängt mit `needs: staging` daran — ein Tag lässt **allein**
-`produktion` laufen. Der Stand, den ein Tag ausliefert, hat Stufe 2 deshalb
-schon vorher gesehen, und genau das prüft das Tor „Grüner Staging- und
-Stufe-1-Lauf auf diesem Stand?" nach.
+aus der Kette gestrichen** (Nr. 206); seine Zahlen stehen in
+`tools/messstand/ausgangsmessung.md`. Und `staging` ist für Tag-Läufe
+abgeschaltet (`if: !startsWith(github.ref, 'refs/tags/')`), `stufe2` hängt
+mit `needs: staging` daran — ein Tag lässt **allein** `produktion` laufen.
+Der Stand, den ein Tag ausliefert, hat Stufe 2 deshalb schon vorher gesehen,
+und genau das prüft das Tor „Grüner Staging- und Stufe-1-Lauf auf diesem
+Stand?" nach — **am ganzen Lauf**, nicht nur am Job `staging`.
 
-**Die Kreisläufe brauchen seit Web 20.16.0 zusätzlich `JOBS_TOKEN`** in der
-Umgebung `staging` (Backlog Nr. 219). Sie halten die Hintergrundjobs an, bevor
-sie ein Backup in ein frisches Konto spielen — sonst dünnt der
+**Der Kreislauf braucht seit Web 20.16.0 zusätzlich `JOBS_TOKEN`** in der
+Umgebung `staging` (Backlog Nr. 219). Er hält die Hintergrundjobs an, bevor
+er ein Backup in ein frisches Konto spielt — sonst dünnt der
 Verdichtungsjob die wiederhergestellten Spuren aus, und der Vergleich misst
 „hat der Job dazwischen zugeschlagen" statt „kommt zurück, was hineinging"
 (gemessen: 125 verdichtete Spuren in einem Lauf ohne Pause). Das ging bis
 dahin nur über die Kommandozeile und damit nur auf dem Rechner der
 Installation; hier läuft ein Läufer gegen ein fernes Staging. **Fehlt das
-Token, wird übersprungen und gesagt** — nicht still auf den lokalen Weg
+Token, ist der Lauf rot und sagt es** — nicht still auf den lokalen Weg
 zurückgefallen, der hier ohnehin an der fehlenden `config.php` scheitert.
-
-**Der Bilderlauf braucht es seit Web 20.16.2 ebenfalls** (Backlog Nr. 220),
-aber für etwas anderes und mit einem anderen Verhalten. **Zwei** Seiten
-tragen `"wartung": true` in `seiten.json` — `07-wartungsseite` und
-`46a-betrieb-updates-wartung` —, und `aufnehmen.mjs` schaltete den
-Wartungsmodus über die **lokale** Datei `server/wartung.lock`, was gegen ein
-fernes Staging wirkungslos ist.
-
-**Hier wird NICHT übersprungen, sondern ausgefallen**, und der Unterschied ist
-Absicht: Bei den Kreisläufen hängt die ganze Messung am Token, beim
-Bilderlauf nur **zwei von fünfzig** Seiten. Der Lauf misst deshalb die
-übrigen achtundvierzig, lässt die zwei ausfallen, nennt sie beim Namen — und
-endet **rot**, weil eine ausgefallene Aufnahme in den Rückgabewert geht.
-Gesagt wird es zusätzlich **vor** den zwölf Minuten Laufzeit. Dasselbe gilt,
-wenn das Token falsch ist oder die Leitung im Lauf abreißt: Der Grund steht
-dann bei der Seite, und der Rest des Laufs bleibt erhalten.
-
-**Und wenn das Ausschalten misslingt, ist der Lauf rot** — auch dann, wenn
-sonst nichts zu beanstanden war. Eine Installation, die nach einem Bilderlauf
-im Wartungsmodus stehenbliebe, wäre ein stiller Ausfall; der Lauf versucht es
-nach jeder folgenden Seite erneut und sagt es am Ende ausdrücklich.
 
 **Der erste Schritt unterscheidet seit Nr. 214 zwei Fälle.** Landet der
 Aufruf auf `install.php`, fragt er diese Datei zusätzlich ab: Kommt **404**,
@@ -9108,13 +9140,7 @@ in der Ausnahmeliste steht und bewusst nicht ausgeliefert wird — die Meldung
 sagt dann, die Datei einmal von Hand hochzuladen. Ohne diese Unterscheidung
 suchte man den Fehler im falschen Ort.
 
-**Der Bericht des Bilderlaufs steht seit Web 20.16.2 in der Zusammenfassung
-des Laufs.** Er trägt je Seite die Spalte **`Verursacher`** — das Element, das
-überläuft. Bis dahin wurde er mit dem Arbeitsverzeichnis des Läufers
-weggeräumt, und ein „Überlauf bei 360" blieb ein Befund ohne Adresse: Örtlich
-ließ sich nur noch ausschließen, was es **nicht** ist (Backlog Nr. 221).
-
-**Dazu seit Web 20.15.1 ein vierter Schritt: „Punktdateien gesperrt,
+**Dazu seit Web 20.15.1 der Schritt „Punktdateien gesperrt,
 .well-known offen?"** (Nr. 213). Er braucht **kein** Prüfkonto — nur
 `STAGING_URL` — und misst die `.htaccess`-Sperre aus Abschnitt 4.97g in
 beide Richtungen:
@@ -9193,7 +9219,7 @@ erklärt.
 | `max_execution_time` | **240 s** | **300 s** |
 | `post_max_size` / `upload_max_filesize` | **256 MB / 256 MB** | **500 MB / 500 MB** |
 | OPcache | **aus** | **an** — aber nur **Dateicache** (`file_cache_only`), SHM und JIT aus. **Die Statusseite wird ihn trotzdem als „aus" melden** — siehe Kasten |
-| Datenbank | **MariaDB 10.11.14** | ⬚ — die phpinfo nennt nur den Client (`mysqlnd 8.3.33`); die Serverfassung sagt erst die Anwendung |
+| Datenbank | **MariaDB 10.11.14** | **MySQL 8.4.10** (Statusseite, 21.09.2026) — **eine andere Datenbank als Produktiv**; genau daran ist der Export bis Web 20.26.3 gescheitert (Nr. 267) |
 | `max_user_connections` | **nicht gesetzt**; es gilt `max_connections` = **151** | ⬚ |
 | Kontingent der Datenbank | Angabe 10 GB, belegt 9,8 MB (0 %) | ⬚ |
 | Freier Platz | **861,7 GB gemeldet** — Datenträger des Hosts, nicht das Kontingent | ⬚ |

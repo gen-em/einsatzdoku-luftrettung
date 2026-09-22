@@ -132,6 +132,33 @@ permissions:
   contents: read
   actions: read
 
+# EIN LAUF JE UMGEBUNG, IN REIHE — NICHT ABGEBROCHEN (21.09.2026, gemessen;
+# Konzept PK, Vorgriff auf PK-06).
+#
+# Zwei Merges innerhalb einer Minute (PR #70 um 18:35:47, PR #69 um 18:36:15)
+# erzeugten zwei Staging-Läufe zugleich. Der erste hielt für seinen Kreislauf
+# die Hintergrundjobs auf Staging 1800 s an; der zweite wartete am Backup-Tor
+# vierzig Aufrufe auf „fertig", bekam „angehalten bis 19:06:50" und schloss
+# nach dreizehn Minuten — rot, ohne eine Datei übertragen zu haben.
+#
+# WARUM WARTEN UND NICHT ABBRECHEN: Ein Abbruch mitten im FTPS-Abgleich
+# hinterlässt einen halben Stand bei eingeschalteter Wartung, und ein Abbruch
+# mitten im Kreislauf lässt die Jobpause bis zu 30 Minuten stehen, weil das
+# `finally` des Werkzeugs nicht mehr läuft. Der jüngere Lauf wartet deshalb.
+# GitHub hält je Gruppe EINEN wartenden Lauf; kommt ein dritter, fällt der
+# mittlere weg, bevor er die Anlage berührt hat — sein Commit steht dann nie
+# auf Staging, und ein Tag darauf bleibt am Tor hängen: den nächsten Commit
+# taggen.
+#
+# ZWEI GRUPPEN, weil ein Tag-Lauf nie hinter einem Merge warten und nie von
+# einem verdrängt werden soll. Preis: Ein Tag WÄHREND eines laufenden
+# Staging-Laufs trifft mit `Rückfallstand (Staging)` auf dessen Jobpause —
+# dann rot am Backup-Schritt, und der Lauf wird nach dem Ende des
+# Staging-Laufs neu gestartet.
+concurrency:
+  group: auslieferung-${{ startsWith(github.ref, 'refs/tags/') && 'produktion' || 'staging' }}
+  cancel-in-progress: false
+
 # ALLE run-BLOECKE MIT `pipefail` (16.09.2026, gemessen).
 #
 # GitHub faehrt run-Bloecke mit `bash -e {0}` — OHNE pipefail. Der
@@ -203,21 +230,17 @@ jobs:
     name: Prüfung Stufe 2
     needs: staging
     runs-on: ubuntu-latest
-    # EINE ZEITGRENZE, WEIL DIE VORGABE SECHS STUNDEN IST (21.09.2026).
+    # ZEITGRENZE 20 MINUTEN (E-PK-17), WEIL DIE VORGABE SECHS STUNDEN IST.
     #
-    # ANLASS: Der Kreislauf `edbak` hing am 21.09. fuenfzehn Minuten an einem
-    # Download, der nie kam — und haette ohne die interne Zeitgrenze des
-    # Browserschritts (900 s) bis zum Abend laufen duerfen, ohne dass irgendwo
-    # etwas rot geworden waere. Ein PRUEFSCHRITT, der stundenlang stillsteht,
-    # meldet nichts; er belegt nur einen Laeufer.
-    #
-    # WARUM 45 UND NICHT WENIGER: Der laengste bekannte Durchlauf dieses Jobs
-    # ist der gescheiterte vom 21.09. mit 15:40 — und der war ABGEBROCHEN, der
-    # gute Fall ist noch nie zu Ende gelaufen. Die Zahl ist deshalb bewusst
-    # grosszuegig: Sie soll das Haengen begrenzen, nicht einen langsamen, aber
-    # arbeitenden Lauf abschneiden. Wer sie spaeter enger zieht, hat dann
-    # Messwerte, die es heute nicht gibt.
-    timeout-minutes: 45
+    # ANLASS: Der Kreislauf `edbak` hing am 21.09.2026 fuenfzehn Minuten an
+    # einem Download, der nie kam (Nr. 267) — und haette ohne die interne
+    # Zeitgrenze des Browserschritts (900 s) bis zum Abend laufen duerfen.
+    # Bis zum 21.09. standen hier 45 Minuten, weil der gute Fall nie zu Ende
+    # gelaufen war. Seither ist er gemessen: Antwortprobe, Punktdateien und
+    # beide Kreislaeufe zusammen in 1:56 (Lauf 35639445224, Versuch 2).
+    # Zwanzig Minuten begrenzen das Haengen und schneiden keinen arbeitenden
+    # Lauf ab.
+    timeout-minutes: 20
     environment: staging
     env:
       STAGING_URL:   ${{ vars.STAGING_URL }}
@@ -351,14 +374,14 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           echo "Punktdateien gesperrt, .well-known offen."
 
-      - name: Kreisläufe csv und edbak gegen Staging
+      - name: Kreislauf edbak gegen Staging
         # BRAUCHT EIN PRÜFKONTO auf Staging (Umgebungsgeheimnis). Fehlt es,
         # wird der Schritt ÜBERSPRUNGEN UND GESAGT — ein Lauf, der ohne
         # Zugangsdaten grün meldet, hat nichts gemessen (`CLAUDE.md` 6).
         run: |
           if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ]; then
-            echo "::error::Prüfkonto auf Staging fehlt — die Kreisläufe können nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Erwartet werden STAGING_KONTO und STAGING_PASS in der Umgebung staging."
-            echo '**Kreisläufe: NICHT GEMESSEN** (kein Prüfkonto) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Prüfkonto auf Staging fehlt — der Kreislauf kann nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Erwartet werden STAGING_KONTO und STAGING_PASS in der Umgebung staging."
+            echo '**Kreislauf: NICHT GEMESSEN** (kein Prüfkonto) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
           # ALLE RIEGEL VOR DER ERSTEN INSTALLATION. Der JOBS_TOKEN-Riegel
@@ -368,8 +391,8 @@ jobs:
           # weiter „übersprungen, nicht gemessen" gestanden hätte. Man sucht
           # dann am falschen Ort. Begründung zum Token selbst weiter unten.
           if [ -z "${JOBS_TOKEN:-}" ]; then
-            echo "::error::JOBS_TOKEN der Umgebung staging fehlt — die Kreisläufe können nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Der Wert steht auf Staging unter Betrieb -> Hintergrundjobs."
-            echo '**Kreisläufe: NICHT GEMESSEN** (kein `JOBS_TOKEN`) — der Lauf ist deshalb rot. Der Wert steht auf Staging unter Betrieb → Hintergrundjobs.' >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::JOBS_TOKEN der Umgebung staging fehlt — der Kreislauf kann nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Der Wert steht auf Staging unter Betrieb -> Hintergrundjobs."
+            echo '**Kreislauf: NICHT GEMESSEN** (kein `JOBS_TOKEN`) — der Lauf ist deshalb rot. Der Wert steht auf Staging unter Betrieb → Hintergrundjobs.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
           pip -q install cffi cryptography
@@ -398,8 +421,13 @@ jobs:
           #   der Umgebung ist das ADMIN-Konto — also `--admin-email` und
           #   `--admin-passwort`, nicht `--konto`/`--passwort`.
           #
-          #   EIN Aufruf, obwohl der Schrittname "csv UND edbak" verspricht.
-          #   Jetzt zwei, und beide muessen gruen sein.
+          #   EIN Aufruf, obwohl der Schrittname "csv UND edbak" versprach.
+          #   Vom 16. bis 21.09.2026 waren es zwei; seit Konzept PK
+          #   (E-PK-01, E-PK-17) ist es wieder EINER, und zwar bewusst: Der
+          #   csv-Kreislauf misst die Anwendung, nicht die Anlage, und
+          #   laeuft in der Sandbox. Hier bleibt, was nur die echte
+          #   Installation zeigt — der edbak-Weg ueber Hoster-PHP und
+          #   Hoster-Datenbank (Nr. 267 fiel genau dort).
           #
           # `--frisch` ist Pflicht und keine Bequemlichkeit: Ein Umlauf in ein
           # GEFUELLTES Konto misst nichts, weil die Dublettenerkennung alles
@@ -422,7 +450,7 @@ jobs:
           # OHNE TOKEN WIRD NICHT GEMESSEN, statt still auf den lokalen Weg
           # zurueckzufallen: Der schlaegt hier fehl, und ein Kreislauf ohne
           # Pause waere eine gruene Zahl ohne Aussage (`CLAUDE.md` 6).
-          for art in edbak csv; do
+          for art in edbak; do
             echo "--- Kreislauf $art ---"
             python3 tools/referenzdatensatz/vergleich/kreislauf.py \
                     --art "$art" --frisch \
@@ -433,131 +461,15 @@ jobs:
               || { echo "::error::Kreislauf $art gegen Staging gescheitert."; exit 1; }
           done
 
-      - name: Bilderlauf gegen Staging
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
-        run: |
-          if [ -z "${STAGING_URL:-}" ] || [ -z "${STAGING_KONTO:-}" ]; then
-            echo "::error::Prüfkonto auf Staging fehlt — der Bilderlauf kann nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Erwartet werden STAGING_KONTO und STAGING_PASS in der Umgebung staging."
-            echo '**Bilderlauf: NICHT GEMESSEN** (kein Prüfkonto) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-          # PLAYWRIGHT LIEGT NICHT DA, WO DIE WERKZEUGE ES SUCHEN.
-          # `aufnehmen.mjs` und `kreislauf.py` laden es ueber einen PFAD
-          # (`PLAYWRIGHT_MODUL`, Vorgabe /opt/node22/... — der Pfad der
-          # Arbeitsumgebung dieses Projekts). Auf einem Laeufer gibt es den
-          # nicht. `npx playwright install` holt nur die BROWSER, nicht das
-          # Modul an diesen Pfad. Also lokal installieren und den Pfad sagen.
-          npm install --no-save --silent playwright@1.56
-          export PLAYWRIGHT_MODUL="$PWD/node_modules/playwright/index.mjs"
-          [ -f "$PLAYWRIGHT_MODUL" ] \
-            || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
-          npx --yes playwright@1.56 install chromium
-          # `--admin`/`--admin-pw` UND NICHT `--konto`/`--passwort`.
-          # Die beiden letzten gibt es in diesem Werkzeug nicht; es kannte bis
-          # zum 16.09.2026 keine Pruefung auf Unbekanntes und hat sie STILL
-          # verworfen — der Lauf meldete sich dann mit den eingebauten
-          # Vorgaben an und scheiterte mit "Anmeldung gescheitert", einer
-          # Meldung, die den Grund nicht nennt. `aufnehmen.mjs` bricht jetzt
-          # mit Rueckgabewert 2 ab, wenn ein Schalter unbekannt ist.
-          #
-          # `STAGING_KONTO` IST das Admin-Konto — derselbe Wert geht im
-          # Kreislauf-Schritt als `--admin-email` hinein, und `--frisch`
-          # braucht dort Adminrechte.
-          #
-          # DIE 29 DEMO-SEITEN laufen ueber die eingebauten Vorgaben
-          # (`demo@gen-em.org` / `nadokudemo0815`). Das Konto kommt NICHT aus
-          # dem Einspiellauf, sondern aus der Fixture: Adminbereich ->
-          # Demo-Konto -> „Demo-Konto anlegen" (Rahmenplan 6a Schritt 8, seit
-          # 17.09.2026 erledigt). `seiten.json` fuehrt 29 Demo-, 15 Admin- und
-          # 6 anmeldungsfreie Seiten; `aufnehmen.mjs` baut alle drei Rollen
-          # auf, bevor es das erste Bild macht.
-          #
-          # ERSTE MESSUNG MIT DEMO-KONTO (17.09.2026): 400 Einzelbilder, 50
-          # Kontaktboegen — alle drei Rollen trugen. Rot blieb der Schritt aus
-          # zwei anderen Gruenden, und beide stehen im Backlog:
-          # Nr. 220 (`07-wartungsseite`: `aufnehmen.mjs` schaltet den
-          # Wartungsmodus ueber die LOKALE Datei `server/wartung.lock` — gegen
-          # ein fernes Staging wirkungslos) und Nr. 221 (waagerechter Ueberlauf
-          # auf `05-datenschutz` bei 360 px).
-          # `--jobs-token` FUER DIE WARTUNGSSEITE (Backlog Nr. 220). Zwei
-          # Eintraege in `seiten.json` tragen `"wartung": true` und brauchen
-          # die Installation im Wartungsmodus. `aufnehmen.mjs` schaltete ihn
-          # ueber die LOKALE Datei `server/wartung.lock` — auf einem Laeufer
-          # wirkungslos. Ohne Token bricht der Lauf jetzt VORHER ab, statt
-          # acht Bilder der Anmeldeseite abzulegen.
-          rc=0
-          node tools/screenshots/aufnehmen.mjs \
-               --basis "$STAGING_URL" \
-               --admin "$STAGING_KONTO" --admin-pw "$STAGING_PASS" \
-               --jobs-token "$JOBS_TOKEN" || rc=$?
-
-          # DER BERICHT GEHOERT IN DIE ZUSAMMENFASSUNG, NICHT IN DEN MUELL.
-          #
-          # Der Lauf schreibt `ausgabe/bericht.md` mit einer Spalte
-          # VERURSACHER — dem Element, das ueberlaeuft. Auf dem Laeufer wird
-          # sie mit dem Arbeitsverzeichnis weggeraeumt. Am 17.09.2026 meldete
-          # der erste Durchlauf, der ALLE 50 Seiten erreichte — rot, aber
-          # vollstaendig — „Ueberlauf bei 360" auf
-          # `05-datenschutz`, und weil der Bericht fort war, liess sich
-          # oertlich nur noch ausschliessen, was es NICHT ist: Markup und
-          # Stylesheet sind byteidentisch mit dem Repositorium, alle zehn
-          # Schriftdateien liegen und stimmen, und oertlich laeuft nichts
-          # ueber — weder bei Massstab 1 noch 2 (Backlog Nr. 221).
-          #
-          # Eine Zahl ohne den Verursacher ist ein Befund, den niemand
-          # nachgehen kann. Ab jetzt steht er im Lauf.
-          if [ -f tools/screenshots/ausgabe/bericht.md ]; then
-            {
-              echo '<details><summary>Bilderlauf — Bericht</summary>'
-              echo
-              cat tools/screenshots/ausgabe/bericht.md
-              echo
-              echo '</details>'
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
-          exit "$rc"
-
-      # DER MESSSTAND STAND HIER UND KONNTE NIE LAUFEN (Backlog Nr. 206,
-      # behoben in P5a/AP9, E-P5a-53).
-      #
-      # Der Schritt rief `serverprobe.py --basis "$STAGING_URL"` auf. Diese
-      # Kennzeichnung gibt es nicht — `serverprobe.py` kennt `--konto`,
-      # `--ausgabe`, `--wartung-fahren` und `--optimieren` —, also wäre jeder
-      # Tag-Lauf hier mit „unrecognized arguments" abgebrochen. Und die
-      # Kennzeichnung fehlt nicht aus Versehen: Die Serverprobe misst
-      # TABELLENGRÖSSEN, SPEICHERSPITZEN und den Waisen-Vollscan, und dafür
-      # braucht sie die Datenbank selbst. Über HTTP ist davon nichts zu
-      # sehen. Eine Adresse als Ziel war ein Denkfehler, kein Tippfehler.
-      #
-      # Ersatzlos gestrichen und nicht ersetzt: Der Messstand ist ein
-      # MANUELLES Regressionsmittel (R35) und läuft lokal vor einer
-      # Auslieferung, nicht in der Kette. Seine Zahlen stehen in
-      # `tools/messstand/ausgangsmessung.md`, und was von ihnen auf der
-      # Zielanlage gilt, steht dort auf der Plattformkarte
-      # (Betrieb → Status → Plattform, seit P5a/AP2) — einschließlich
-      # `post_max_size`, der Zahl, um die es in Backlog Nr. 37 geht.
-      - name: Messstand — wo seine Zahlen stehen
-        # OHNE BEDINGUNG, und das ist die Berichtigung (16.09.2026).
-        #
-        # Hier stand `if: startsWith(github.ref, 'refs/tags/web-v')`. Damit
-        # konnte der Schritt in KEINEM Lauf laufen: Bei einem Tag wird
-        # `staging` uebersprungen (sein `if` schliesst Tags aus), `stufe2`
-        # haengt per `needs` daran und wird mit uebersprungen — die Bedingung
-        # waere zwar erfuellt, der Job laeuft aber nicht. Auf `main` laeuft
-        # `stufe2`, dort ist die Bedingung falsch. Zwei Wege, kein Treffer.
-        #
-        # Der Satz gehoert ohnehin in JEDEN Stufe-2-Lauf: Wer die
-        # Zusammenfassung liest, sucht den Messstand und soll erfahren, warum
-        # er nicht dabei ist — nicht nur an Tagen.
-        run: |
-          {
-            echo '**Messstand: läuft nicht in der Kette** — er misst die Datenbank'
-            echo 'selbst (Tabellengrößen, Speicherspitzen) und ist über HTTP nicht'
-            echo 'zu haben. Er ist ein manuelles Regressionsmittel (R35); seine'
-            echo 'Zahlen stehen in `tools/messstand/ausgangsmessung.md`, die Grenzen'
-            echo 'der Zielanlage auf Betrieb → Status → Plattform.'
-          } >> "$GITHUB_STEP_SUMMARY"
+      # BILDERLAUF UND MESSSTAND-HINWEIS STANDEN HIER BIS ZUM 21.09.2026
+      # (Konzept PK, E-PK-01/E-PK-17, Vorgriff auf PK-06). Der Bilderlauf
+      # misst Markup und CSS, nicht die Anlage, und laeuft in der Sandbox;
+      # auf der neuen Staging-Anlage kam er nie ueber die Anmeldung des
+      # Demo-Kontos hinaus — und weil das Tor der gruenen Laeufe einen ALS
+      # GANZES gruenen Staging-Lauf verlangt, kam damit kein Tag durch
+      # (Lauf 35646453443, Nr. 268). Der Messstand laeuft seit P5a/AP9
+      # nirgends in der Kette (Nr. 206); seine Zahlen stehen in
+      # `tools/messstand/ausgangsmessung.md`.
 
   produktion:
     name: produktion

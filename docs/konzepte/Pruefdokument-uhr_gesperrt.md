@@ -311,6 +311,20 @@ zwischen den beiden Abbildern und steht deshalb in der Matrix).
 
 ---
 
+## 4a. Nachtrag 21.09.2026 — der Alias war das Loch (Web 20.26.3, Nr. 267)
+
+Die Prüfliste oben setzte voraus, dass `uhr_gesperrt AS manual` trägt. Auf
+MySQL 8.4.0 bis 8.4.10 tut es das nicht: Das Wort ist auch als Alias
+reserviert. Gemessen in der Sandbox gegen einen MySQL-8.4.0-Container:
+
+| Messung | vorher | nachher |
+|---|---|---|
+| Kreislauf `edbak`, MySQL 8.4.0 | rot — Download-Timeout, im Protokoll `[F8F2D37A] backup: 1064 … near 'manual, origin, edited,'` | **grün** — 328 771 Vergleiche, 0 unerklärt, 21 erwartet; kein neuer Eintrag im Fehlerprotokoll |
+| Kreislauf `edbak`, MariaDB 10.11 | grün — 328 771 Vergleiche, 0 unerklärt | **grün** — 328 771 Vergleiche, 0 unerklärt, 21 erwartet |
+
+Auf Staging (MySQL 8.4.10) hieß derselbe Fehler `097D7622`. Die Punkte der
+Prüfliste zu Sicherung und Export gelten erst ab Web 20.26.3.
+
 ## 5. Grenzen der benutzten Prüfmittel
 
 - **`tools/schemaprobe/` prüft das Schema und die Migrationen, nicht die
