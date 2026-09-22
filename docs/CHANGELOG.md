@@ -14,6 +14,50 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.36.0] — 2026-09-22
+
+**Die Suche folgt der Fähigkeit auch in ihren Filtern.** Schritt 15 AP9a
+(Nachtrag; Entscheidung E-ZE-35).
+
+### Was der Befund war
+
+Web 20.35.0 hat die **Spalten** der Suchtabelle an die Fähigkeit gehängt und
+die **Filter** beim Bestand gelassen — als ausdrücklich benannte Grenze, nicht
+aus Versehen. Der Auftraggeber hat sie aufgehoben: „Suche immer möglich,
+sobald Fähigkeiten vorkommen."
+
+Die alte Regel (`spaltenMitBestand()`, seit S3) zeigt einen Filter nur, wenn
+**irgendein** Einsatz zu seiner Spalte etwas führt. In einem Bestand mit
+eingerichteter, aber nie benutzter Winde verschwand damit der ganze Block
+**„Bergrettung"** — acht Filter —, und **„Winde: nein" ließ sich nicht
+suchen**. Der Filter fehlte genau dann, wenn man ihn zum Nachweis einer Null
+gebraucht hätte.
+
+### Geändert
+
+`KATALOG_CAP` bildet Spalte auf Fähigkeit ab — **erzeugt** aus `cap_gate` im
+Feldkatalog und **auf die Unterfelder vererbt**: `winch_cycles` steht unter
+`winch` und braucht keinen eigenen Eintrag. Keine zweite Liste, die man beim
+nächsten Feld nachzupflegen vergisst; dieselbe Überlegung wie bei
+`KATALOG_ART`. Felder **ohne** Fähigkeit folgen unverändert dem Bestand — die
+Regel aus S3 bleibt, sie bekommt nur eine Ausnahme mit Herkunft.
+
+Die Ausnahme für geteilte Links bleibt ebenfalls: Ein Filter, den ein
+Fragment gesetzt hat, wird gezeigt, auch wenn weder Fähigkeit noch Bestand
+ihn rechtfertigen.
+
+### Geprüft
+
+Drei Zustände, je acht Filter und der Block „Bergrettung":
+
+| Zustand | vorher | nachher |
+|---|---|---|
+| Fähigkeit ja, Haken ja | 8, Block da | **8, Block da** |
+| Fähigkeit **nein**, Haken ja (abgefangene Antwort) | 8, Block da | **0, Block weg** |
+| Fähigkeit ja, Haken **nirgends** | **0, Block weg** | **8, Block da** |
+
+**0 Konsolenfehler.**
+
 ## [Web 20.35.0] — 2026-09-22
 
 **Winde und Bergwacht: die Auswertung folgt der Betriebsart, die Bearbeitung

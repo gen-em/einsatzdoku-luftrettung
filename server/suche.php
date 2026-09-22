@@ -422,6 +422,30 @@ const KATALOG_ART = <?php
     $sammle($FELDER);
     echo json_js($arten, JSON_UNESCAPED_UNICODE);
 ?>;
+/* WELCHE SPALTE AN WELCHER FAEHIGKEIT HAENGT (Schritt 15 AP9a).
+   Aus 'cap_gate' im Katalog, VERERBT AUF DIE UNTERFELDER: `winch_cycles`
+   steht unter `winch` und haengt damit an derselben Faehigkeit, ohne einen
+   eigenen Eintrag zu brauchen. Dieselbe Ueberlegung wie bei KATALOG_ART --
+   keine zweite Liste, die man beim naechsten Feld nachzupflegen vergisst.
+
+   WOZU. Die Sichtbarkeit der Filter folgte seit S3 ALLEIN dem Bestand: Wo
+   kein Einsatz einen Haken trug, verschwand der Filter. Fuer die
+   Bergrettungsfelder war das zu eng -- ein Bestand mit eingerichteter
+   Winde, in dem noch niemand gewindet hat, liess sich nach der Winde gar
+   nicht durchsuchen, auch nicht nach „nein". Genau das soll die Suche
+   koennen, sobald die Faehigkeit vorkommt. */
+const KATALOG_CAP = <?php
+    $caps = [];
+    $sammleCap = function (array $felder, string $erbe) use (&$sammleCap, &$caps): void {
+        foreach ($felder as $col => $f) {
+            $cap = (string)($f['cap_gate'] ?? '') ?: $erbe;
+            if ($cap !== '' && mf_ist_spalte($f)) { $caps[$col] = $cap; }
+            if (!empty($f['children'])) { $sammleCap($f['children'], $cap); }
+        }
+    };
+    $sammleCap($FELDER, '');
+    echo json_js($caps, JSON_UNESCAPED_UNICODE);
+?>;
 const TRANSPORT_OPTIONEN = <?php
     $taOpt = [];
     foreach (mf_optionen($FELDER['transport_mode']['options']) as $wert => $text) {
@@ -917,8 +941,15 @@ function gruppenSichtbarkeit() {
 
   FILTER.forEach(f => {
     if (!f.gruppe) { return; }                 // das Freitextfeld
+    /* EIN FELD AN EINER FAEHIGKEIT FOLGT DER FAEHIGKEIT, NICHT DEM BESTAND
+       (Schritt 15 AP9a). Winde und Bergwacht sind durchsuchbar, sobald die
+       Faehigkeit im Bestand vorkommt -- luft- wie bodengebunden, denn die
+       Suche sucht im ganzen Bestand. Ohne diese Zeile fiel der Block
+       „Bergrettung" an einem Bestand mit eingerichteter, aber nie benutzter
+       Winde ganz weg, und „Winde: nein" war nicht zu suchen. */
+    const cap = f.spalte ? KATALOG_CAP[f.spalte] : undefined;
     const zeigen = !f.spalte
-                || bestand.has(f.spalte)
+                || (cap ? !!faehig[cap] : bestand.has(f.spalte))
                 || wertLesen(f) !== '';
     if (zeigen) { sichtbar[f.gruppe] = true; }
     if (!f.spalte) { return; }                 // immer da, nichts zu schalten

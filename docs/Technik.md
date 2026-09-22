@@ -2187,13 +2187,32 @@ Blöcke bei einem geteilten Link leiten sich alle aus `FILTER` ab. Die Gruppen
 sind `einsatz`, `patient`, `transport`, `wer` und `bergrettung`; der Freitext
 steht in der Hauptspalte und hat keine Gruppe.
 
-Zwei Sichtbarkeitsregeln, beide gegen den **gesamten** Bestand geprüft (nicht
-gegen die Trefferliste — sonst hüpfte die Spalte beim Tippen):
-`GRUPPE_NUR_WENN` blendet einen ganzen Block aus (derzeit `bergrettung`),
-`FELD_NUR_WENN` ein einzelnes Feld (derzeit `fe` = Fehleinsatz). Letzteres kam
-mit Web 7.0.0 dazu: Der Fehleinsatz steht jetzt in einem Block, der bleiben
-muss. Beide Regeln haben dieselbe Ausnahme — ein Filter aus einem geteilten
-Link bleibt sichtbar, auch wenn der eigene Bestand nichts dazu hat.
+**Die Sichtbarkeit entsteht aus dem Feldkatalog, nicht aus zwei Listen.**
+Bis S3 standen hier `GRUPPE_NUR_WENN` (ein ganzer Block) und `FELD_NUR_WENN`
+(ein einzelnes Feld) — zwei handgepflegte Listen, also genau der
+Einzelfall-Wildwuchs, den der Katalog abschaffen soll. Seither trägt jeder
+Filter, der zu einer Katalogspalte gehört, sie als `spalte`; sichtbar ist er,
+wenn der **gesamte** Bestand zu dieser Spalte etwas führt (nicht die
+Trefferliste — sonst hüpfte die Spalte beim Tippen). Ein Filter **ohne**
+Spalte — Zeitraum, Uhrzeit, Wochentag, Strecke, Dauer, Alter, Standort,
+Rettungsmittel, Besatzung — ist immer sinnvoll und steht immer da. Ein
+**Block** verschwindet, wenn alle seine Filter verschwunden sind; er braucht
+keine eigene Bedingung mehr.
+
+**Eine Ausnahme mit Herkunft: Felder an einer Fähigkeit** (ab Web 20.36.0,
+E-ZE-35). `KATALOG_CAP` bildet Spalte auf Fähigkeit ab — erzeugt aus
+`cap_gate` und **auf die Unterfelder vererbt**, sodass `winch_cycles` unter
+`winch` ohne eigenen Eintrag mitgeht. Ein solches Feld folgt der **Fähigkeit**
+statt dem Bestand: Winde und Bergwacht sind durchsuchbar, sobald irgendein
+Diensttag die Fähigkeit führt — luft- wie bodengebunden. Vorher fiel der Block
+`bergrettung` in einem Bestand mit eingerichteter, aber nie benutzter Winde
+ganz weg, und damit war auch **„Winde: nein"** nicht zu suchen; der Filter
+fehlte gerade in dem Fall, für den man ihn braucht.
+
+Die Ausnahme für geteilte Links gilt weiter — ein Filter, den ein Fragment
+gesetzt hat, bleibt sichtbar, auch wenn weder Fähigkeit noch Bestand ihn
+rechtfertigen. `gruppenSichtbarkeit()` läuft deshalb beim Start **nach**
+`fragmentLesen()` und erneut nach „Filter zurücksetzen".
 
 **Layout (ab Web 9.5.0, O6).** Die Filter stehen in der **gemeinsamen**
 `.leiste` — derselben, die sonst die Diensttage trägt; `suche.php` ruft
@@ -2325,24 +2344,29 @@ ohne dass sich ein Filter geändert hätte. Seit Web 9.5.0 steht sie als
 Filter; `onAfterDraw` bekommt dafür als dritten Wert die sortierte Liste, aus
 der die Streckensumme fällt.
 
-**Filterblöcke nach Bestand (`GRUPPE_NUR_WENN` in `suche.php`, ab Web 5.10.0).**
-Ein Eintrag je Block: die Bedingung, unter der er gebraucht wird (heute `winde`,
-`bergwacht` und seit Web 6.2.0 `einsatz`). Geprüft wird der **gesamte** Bestand,
-nicht die aktuelle Trefferliste — sonst verschwände ein Block, sobald ein
-anderer Filter die betreffenden Einsätze gerade ausschliesst, und die Spalte
-spränge beim Tippen. Ein Block, in dem ein Filter gesetzt ist (geteilter Link),
-bleibt sichtbar; `gruppenSichtbarkeit()` läuft deshalb beim Start **nach**
-`fragmentLesen()` und erneut nach „Filter zurücksetzen".
+**Filterblöcke: seit S3 katalogabgeleitet.** Der Abschnitt zur Suche weiter
+oben beschreibt die geltende Regel und die Fähigkeits-Ausnahme aus Web 20.36.0.
+Hier stand bis dahin `GRUPPE_NUR_WENN` — eine handgepflegte Liste mit einem
+Eintrag je Block, die es seit S3 nicht mehr gibt.
 
 **Spalten nach Bestand (`nurWenn` in `assets/missiontable.js`, ab Web 6.2.0).**
 Dieselbe Überlegung eine Ebene tiefer: Eine Spalte, die im ganzen Bestand leer
 bleibt, kostet auf schmalen Geräten Platz und sagt nichts. `nurWenn` bekommt den
 Bestand und entscheidet, ob die Spalte überhaupt erscheint — heute `art` (mehr
-als eine Art vorhanden), `winch`, `bw` und `fehl`. Welche Liste der Bestand ist,
+als eine Art vorhanden), `col` und `fehl`. Welche Liste der Bestand ist,
 sagt die Seite mit `setSpaltenBestand()`: `suche.php` setzt ihn **einmal** auf
-den Gesamtbestand (sonst käme und ginge die Windenspalte beim Tippen),
+den Gesamtbestand (sonst käme und ginge die Spalte beim Tippen),
 `zeitraum.php` bei jedem Tabwechsel auf die Einsätze des Tabs. Ohne den Aufruf
-gilt die Trefferliste selbst. **Sortiert** wird weiterhin über alle Spalten,
+gilt die Trefferliste selbst.
+
+**`winch` und `bw` folgen seit Web 20.35.0 nicht mehr dem Bestand, sondern der
+Fähigkeit** (E-ZE-31). `nurWenn` bekommt dafür ein **zweites** Argument, das
+die Seite mit `setFaehigkeiten()` setzt: `zeitraum.php` reicht die
+Luft-Fähigkeiten des Zeitraums durch und im Bodentab ausdrücklich `{false,
+false}`, `suche.php` die Fähigkeiten des ganzen Bestands ohne Artfilter.
+**Ohne den Aufruf gilt weiter der Bestand** — das ist ein benannter Rückfall
+und kein Vergessen: Eine Seite, die das Modul einbindet und die Fähigkeiten
+nicht kennt, soll ihre Spalten nicht stillschweigend verlieren. **Sortiert** wird weiterhin über alle Spalten,
 auch über verborgene: Ein geteilter Link kann nach einer Spalte sortieren, die
 der eigene Bestand nicht zeigt — die Reihenfolge stimmt dann trotzdem, nur der
 Pfeil hat keinen Kopf.

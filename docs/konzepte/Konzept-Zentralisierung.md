@@ -14,8 +14,8 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 >
 > | | |
 > |---|---|
-> | Stand | 22.09.2026 — **AP1 bis AP8 erledigt** (zuletzt Web 20.34.0); **AP9a erledigt** (Web 20.35.0, die Fähigkeitsregel), **AP9b in Arbeit** (der Generatorzusammenzug), **AP10 gebaut bis auf die AP9-abhaengigen Teile**. Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
-> | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen), **E-ZE-25** (Ultracode), **E-ZE-26** (`assets/format.js` in AP7, sechste Ausnahme), **E-ZE-27** bis **E-ZE-30** (die vier Zielzahlen von AP8, die begruendet ueber null enden: Z29 bei 2, Z37 bei 4, Z34 bei 5, Z36 bei 1), **E-ZE-31** bis **E-ZE-34** (die vier Entscheidungen zu AP9: Fähigkeitsregel, Nachtdienst-Sortierung, Spalte „Nr.", Beschriftung) — alle 22.09.2026; E-ZE-09 ist nicht vergeben |
+> | Stand | 22.09.2026 — **AP1 bis AP8 erledigt** (zuletzt Web 20.34.0); **AP9a erledigt** (Web 20.35.0 die Fähigkeitsregel, Web 20.36.0 die Suchfilter), **AP9b in Arbeit** (der Generatorzusammenzug), **AP10 gebaut bis auf die AP9-abhaengigen Teile**. Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
+> | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen), **E-ZE-25** (Ultracode), **E-ZE-26** (`assets/format.js` in AP7, sechste Ausnahme), **E-ZE-27** bis **E-ZE-30** (die vier Zielzahlen von AP8, die begruendet ueber null enden: Z29 bei 2, Z37 bei 4, Z34 bei 5, Z36 bei 1), **E-ZE-31** bis **E-ZE-34** (die vier Entscheidungen zu AP9: Fähigkeitsregel, Nachtdienst-Sortierung, Spalte „Nr.", Beschriftung), **E-ZE-35** (die Suchfilter folgen der Fähigkeit — hebt die zweite Grenze von AP9a auf) — alle 22.09.2026; E-ZE-09 ist nicht vergeben |
 > | Offen | nichts im Konzept. **F-ZE-1 bis F-ZE-6** (Abschnitt 2.3) sind mit der Freigabe vom 20.09.2026 entschieden. Außerhalb des Konzepts: die Einschübe (Abschnitt 8, 9) sind noch nicht eingespielt |
 > | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2** und **AP3 erledigt** (21.09.2026), **AP4 erledigt** (21.09.2026), **AP5**, **AP6** und **AP7 erledigt** (22.09.2026). **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
 > | Nummern | Dieses Konzept vergibt **keine** Rahmenplan-Fassung, **keine** Backlog-Nummer und **keine** Version. Einschübe in Abschnitt 8 und 9 übernimmt die einspielende Instanz |
@@ -38,7 +38,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > |  AP8d `EdFormat`-Ausbau | **erledigt** 22.09.2026 | (in Web 20.34.0) | Z34 **14 → 5** (E-ZE-29) · 14 Definitionen in fuenf Dateien, dazu drei ungezaehlte Inline-Rechnungen und eine sechste km-Fassung, die erst eine Gegenprobe ueber das Muster der RECHNUNG fand (`luftlinie.js`, **57 143 Werte zeichengleich**) · drei sichtbare Aenderungen, je gemessen: zweistellige Minute **231/1441 (16,0 %)**, kein „60min“ mehr **720/86 401 (0,83 %)**, Tausenderpunkt der Streckensumme · **14 Agenten, 1,74 Mio Token**, 18 Maengel |
 > |  AP8f `EdPat.listeLaden()` | **erledigt** 22.09.2026 | (in Web 20.34.0) | Z36 **4 → 1** (E-ZE-30) · drei Anzeigeseiten, `einstellungen.php` begruendet drausen · im Browser nachgemessen: **6/6, 96/96, 96/96 Eintraege entschluesselt, 0 unlesbar, 0 Konsolenfehler** |
 > | AP9 Nr. 57 — eine Einsatztabelle | **in zwei Teile geschnitten** 22.09.2026, nachdem die Vermessung die Prämisse widerlegt hat | — | **Vermessung:** 4 lesende Agenten, 0 Dateiaenderungen · **Die Praemisse stimmt nicht:** `cap_gate` erreicht die Einsatztabelle NICHT (`mf_tagesspalten()` nimmt keinen Parameter, `mf_gates_erfuellt()` hat zwei Aufrufer, beide in `einsatz_form.php`; `capabilit` kommt in `index.php` nullmal vor) — **69 von 69 Diensttagen tragen heute die Windenspalte** · dazu vier Funde ausserhalb beider Dokumente, darunter eine Sortierung, die den Nachtdienst kippt |
-> |  AP9a Die Fähigkeitsregel | **erledigt** 22.09.2026 | **Web 20.35.0** (Neben: Funktionsänderung mit Freigabe, keine Migration) | `mf_tagesspalten()` trägt `cap` · fünf Diensttage im Browser, je vier Zahlen (Köpfe sichtbar / versteckt / Zellen / Sortierblatt): **11/0/11/10** am Lufttag mit Fähigkeit, **9/2/9/8** an den vier übrigen — vorher **11** an allen fünf · Zeitraum: Bodentab **10 → 8** Spalten, Luft und Mix unverändert · **Gegenprobe Suche:** mit abgefangener Antwort `faehigkeiten={false,false}` gehen beide Spalten, obwohl **7 Winden- und 15 Bergwachthaken** im Bestand stehen — die Fähigkeit entscheidet, nicht das Datum · **Formvergleich 56 Seiten: 41 formgleich, 15 abweichend (105 Zeilen)** — die drei Tagesübersichtsseiten in den fünf Breiten ab 768 px; **jede der 120 gedruckten Diff-Zeilen einzeln klassifiziert, 0 unerklärt** · Bilderlauf **56 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knopfhöhen** · Register **38 Zeilen, 0 über der Decke** · Wortliste **0/0/0** · Vollständigkeit **397** (unverändert bis auf eine verschobene Zeilennummer) · Kettenaufrufe **47/0/0** · CSP **0** · `php -l` **0 Fehler** |
+> |  AP9a Die Fähigkeitsregel | **erledigt** 22.09.2026 | **Web 20.35.0** (Neben: Funktionsänderung mit Freigabe, keine Migration), **20.36.0** (Neben: die Suchfilter nach, E-ZE-35) | `mf_tagesspalten()` trägt `cap` · fünf Diensttage im Browser, je vier Zahlen (Köpfe sichtbar / versteckt / Zellen / Sortierblatt): **11/0/11/10** am Lufttag mit Fähigkeit, **9/2/9/8** an den vier übrigen — vorher **11** an allen fünf · Zeitraum: Bodentab **10 → 8** Spalten, Luft und Mix unverändert · **Gegenprobe Suche:** mit abgefangener Antwort `faehigkeiten={false,false}` gehen beide Spalten, obwohl **7 Winden- und 15 Bergwachthaken** im Bestand stehen — die Fähigkeit entscheidet, nicht das Datum · **Formvergleich 56 Seiten: 41 formgleich, 15 abweichend (105 Zeilen)** — die drei Tagesübersichtsseiten in den fünf Breiten ab 768 px; **jede der 120 gedruckten Diff-Zeilen einzeln klassifiziert, 0 unerklärt** · Bilderlauf **56 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knopfhöhen** · Register **38 Zeilen, 0 über der Decke** · Wortliste **0/0/0** · Vollständigkeit **397** (unverändert bis auf eine verschobene Zeilennummer) · Kettenaufrufe **47/0/0** · CSP **0** · `php -l` **0 Fehler**. **Nachtrag 20.36.0:** Suchfilter in drei Zuständen — Fähigkeit ja/Haken ja **8, Block da**; Fähigkeit nein/Haken ja **0, Block weg**; Fähigkeit ja/Haken nirgends **8, Block da** (vorher **0**) |
 > | AP10 Abschluss und Übergabe an 10c | **gebaut** 22.09.2026, bis auf die AP9-abhaengigen Teile | keine (nur `.github/`, `tools/`, `docs/`, `CLAUDE.md`) | Stufe-1-Schritt „Zentralisierung“ eingehaengt, **einmal absichtlich rot gesehen** (zwei Zeilen ueber der Decke, Rueckgabewert 1) und wieder gruen (0 ueber der Decke, Rueckgabewert 0) · Kettenaufrufe **0 Befunde, 0 ungeprueft** · `CLAUDE.md` 4 und `docs/Technik.md` 4.98a tragen die Regel · **Uebergabezahl `error_log(`: 75**, nicht 77 — die Rechnung steht im Protokoll |
 
 ---
@@ -2367,10 +2367,11 @@ zweite entsteht.
    verbergen ist etwas anderes als eine leere Spalte wegzulassen, und es
    steht nicht in E-ZE-31. Nachgemessen am Boden-Tag 367: Spalten weg,
    Plaketten „Bergwacht" und „Winde" stehen.
-2. **Die Sichtbarkeit der Filterblöcke in `suche.php` bleibt unberührt.** Sie
-   folgt seit S3 einer eigenen, katalogabgeleiteten Regel über den Bestand.
-   Sie auf die Fähigkeit umzustellen wäre eine weitere Funktionsänderung; sie
-   steht nicht in E-ZE-31 und wird nicht nebenbei mitgemacht (E-ZE-10).
+2. ~~**Die Sichtbarkeit der Filterblöcke in `suche.php` bleibt unberührt.**~~
+   **Aufgehoben am 22.09.2026 durch E-ZE-35** (siehe unten). Sie stand hier
+   als benannte Grenze — vorgelegt, nicht übergangen —, und der Auftraggeber
+   hat sie nach Vorlage aufgehoben. So ist die Regel gedacht: Eine Grenze wird
+   genannt, damit über sie entschieden werden kann.
 
 **Ein Fund am Rande, der die Richtung bestätigt:** `docs/Handbuch.md` sagte
 schon vorher „Winde und Bergwacht stehen nur an einem Diensttag, dessen
@@ -2384,6 +2385,48 @@ Klammer. Sobald `nurWenn` ein zweites Argument bekam, griff sie nicht mehr,
 und der Lauf meldete einen Treffer auf einen Bezeichner. Eine Ausnahme, die
 an der **Stelligkeit eines Aufrufs** hängt, misst nicht den Begriff, sondern
 den Zufall; sie steht jetzt auf `nurWenn\(basis\b`.
+
+**E-ZE-35 — Die Suche folgt der Fähigkeit auch in ihren Filtern**
+(Auftraggeber, 22.09.2026: *„Suche aber immer möglich, sobald Fähigkeiten
+vorkommen"*). Web 20.36.0.
+
+Damit fällt die zweite der beiden Grenzen, die AP9a gezogen hatte. Die
+Begründung des Auftraggebers ist zugleich der Nachweis, dass die alte Regel
+zu eng war: In einem Bestand mit **eingerichteter, aber nie benutzter** Winde
+verschwand der ganze Block „Bergrettung" — acht Filter —, und damit war auch
+**„Winde: nein"** nicht zu suchen. Der Filter fehlte genau in dem Fall, für
+den man ihn braucht.
+
+`KATALOG_CAP` bildet Spalte auf Fähigkeit ab, **erzeugt** aus `cap_gate` und
+**auf die Unterfelder vererbt** (`winch_cycles` steht unter `winch` und
+braucht keinen eigenen Eintrag) — dieselbe Bauform wie `KATALOG_ART` aus
+S3/AP9, keine zweite Liste. Felder **ohne** Fähigkeit folgen unverändert dem
+Bestand; die Ausnahme für geteilte Links bleibt.
+
+Gemessen in drei Zuständen, je acht Filter und der Block:
+
+| Zustand | vorher | nachher |
+|---|---|---|
+| Fähigkeit ja, Haken ja | 8, Block da | **8, Block da** |
+| Fähigkeit **nein**, Haken ja (abgefangene Antwort) | 8, Block da | **0, Block weg** |
+| Fähigkeit ja, Haken **nirgends** | **0, Block weg** | **8, Block da** |
+
+0 Konsolenfehler. Der zweite Zustand ist zugleich die Gegenprobe: Er zeigt,
+dass die **Fähigkeit** entscheidet und nicht das Datum.
+
+**Eine Frage aus derselben Runde, beantwortet statt umgesetzt:** *„In der
+gemeinsamen Übersicht — ist da bisher eine Windenkachel?"* **Nein.**
+`KACHELN_GEMISCHT` sind die **ersten vier** des Bodensatzes (Einsätze,
+Diensttage, Ø Einsätze/Diensttag, Sekundärtransporte). Der Grund steht im
+Quelltext daneben und ist älter als dieses Paket: Über beide Arten hinweg
+sind Kilometer, Dauern, Fehleinsätze **und** Winden-Cycles Äpfel und Birnen.
+Die beiden Windenkacheln stehen nur im Luftsatz, am Ende, weil sie als
+einzige verschwinden können. **Daran ändert AP9a nichts** — wohl aber gibt
+die gemischte Ansicht seit Web 20.35.0 die **Spalten** Winde und Bergwacht
+aus, wenn ein Luft-Diensttag des Zeitraums die Fähigkeit führt. Das ist kein
+Widerspruch (eine Spalte zeigt den einzelnen Einsatz, eine Kachel eine Summe
+über beide Arten), aber es ist ein Unterschied, und er ist hier festgehalten,
+falls jemand ihn später für einen Fehler hält.
 
 ### AP10 — Abschluss und Übergabe an 10c
 

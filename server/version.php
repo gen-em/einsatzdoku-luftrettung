@@ -7107,5 +7107,31 @@ declare(strict_types=1);
  *   `faehigkeiten = {false, false}` verschwinden beide Spalten, obwohl im
  *   Bestand 7 Einsaetze mit Winden- und 15 mit Bergwachthaken stehen — die
  *   Faehigkeit entscheidet, nicht das Datum. 0 Konsolenfehler.
+ *
+ * 20.36 — DIE SUCHE FOLGT DER FAEHIGKEIT AUCH IN IHREN FILTERN
+ *         (Schritt 15 AP9a, Nachtrag; E-ZE-35).
+ *
+ *   20.35 hat die SPALTEN der Suchtabelle an die Faehigkeit gehaengt, die
+ *   FILTER aber beim Bestand gelassen — das war als benannte Grenze
+ *   stehengeblieben und ist jetzt entschieden worden: „Suche immer moeglich,
+ *   sobald Faehigkeiten vorkommen."
+ *
+ *   WAS VORHER WAR: `spaltenMitBestand()` zeigt einen Filter nur, wenn
+ *   IRGENDEIN Einsatz zu seiner Spalte etwas fuehrt. In einem Bestand mit
+ *   eingerichteter, aber nie benutzter Winde verschwand damit der ganze
+ *   Block „Bergrettung" — acht Filter —, und „Winde: nein" liess sich nicht
+ *   suchen. Der Filter fehlte genau dann, wenn man ihn zum Nachweis einer
+ *   Null gebraucht haette.
+ *
+ *   `KATALOG_CAP` bildet Spalte auf Faehigkeit ab, ERZEUGT aus 'cap_gate'
+ *   und auf die Unterfelder VERERBT: `winch_cycles` steht unter `winch` und
+ *   braucht keinen eigenen Eintrag. Keine zweite Liste — dieselbe
+ *   Ueberlegung wie bei `KATALOG_ART` (S3/AP9). Felder ohne Faehigkeit
+ *   folgen unveraendert dem Bestand.
+ *
+ *   Nachgemessen in drei Zustaenden, je acht Filter und der Block:
+ *   Faehigkeit ja / Haken ja -> 8, Block da. Faehigkeit NEIN / Haken ja
+ *   (abgefangene Antwort) -> 0, Block weg. Faehigkeit ja / Haken NIRGENDS
+ *   -> 8, Block da; vorher waren es hier 0. 0 Konsolenfehler.
  */
-const WEB_VERSION = '20.35.0';
+const WEB_VERSION = '20.36.0';

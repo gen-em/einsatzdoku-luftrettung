@@ -1198,3 +1198,64 @@ leeren Tabulatorfeldern vor der km-Zahl) und **45 neue Datenzeilen** (ohne).
 | **J-8** | **Suche öffnen** | Beide Spalten stehen, solange **irgendein** Diensttag die Fähigkeit führt — auch ein bodengebundener | Sie fehlen, obwohl ein Bergwacht-Rettungsmittel eingerichtet ist |
 | **J-9** | **Auf einem Tag ohne Windenspalte das Sortierblatt öffnen** (unter 1024 px, Knopf „Sortieren") | Acht Einträge, „Winde" und „Bergwacht" sind **nicht** dabei | Sie stehen in der Liste und lassen sich antippen — dann sortiert die Tabelle nach einer Spalte, die es nicht gibt |
 | **J-10** | **Auf einem Lufttag nach „Winde" sortieren, dann die Tagesdaten speichern** mit einem bodengebundenen Rettungsmittel | Die Tabelle fällt auf „Beginn" zurück, der Pfeil steht dort | Der Pfeil verschwindet ganz, oder die Reihenfolge bleibt ohne sichtbaren Grund die alte |
+
+---
+
+## J4. AP9a Nachtrag (Web 20.36.0) — die Suchfilter folgen der Fähigkeit
+
+**Die zweite Grenze aus J0 ist aufgehoben** (E-ZE-35). Sie stand dort als
+benannte Grenze, wurde vorgelegt, und der Auftraggeber hat entschieden:
+„Suche immer möglich, sobald Fähigkeiten vorkommen."
+
+### Gemessen — drei Zustände, je acht Filter und der Block „Bergrettung"
+
+Gezählt wurden die sichtbaren Kästen von `f-wi`, `f-cv`, `f-cb`, `f-pv`,
+`f-pb`, `f-lv`, `f-bw`, `f-bu` sowie der umschließende Block:
+
+| Zustand | vorher | nachher |
+|---|---|---|
+| Fähigkeit ja, Haken ja (der Demo-Bestand) | 8, Block da | **8, Block da** |
+| Fähigkeit **nein**, Haken ja — Antwort abgefangen, `faehigkeiten={false,false}` | 8, Block da | **0, Block weg** |
+| Fähigkeit ja, Haken **nirgends** — Antwort abgefangen, alle Haken auf `false`/`null` | **0, Block weg** | **8, Block da** |
+
+**0 Konsolenfehler.** Der mittlere Zustand ist die Gegenprobe: Er zeigt, dass
+die **Fähigkeit** entscheidet und nicht das Datum — die Haken liegen dort
+unverändert im Bestand.
+
+### Warum die beiden abgefangenen Zustände nötig waren
+
+Der Demo-Bestand kann die Regel nicht unterscheiden: Wo eine Fähigkeit
+eingerichtet ist, trägt auch mindestens ein Einsatz den Haken. Der Fall
+„Fähigkeit ja, Einsatz nein" existiert nur **je Diensttag** (12 Tage für
+`winch`, 9 für `bergwacht`), nicht auf Bestandsebene. Ihn zu bauen hieße, den
+Referenzdatensatz zu ändern; ihn abzufangen misst dieselbe Verzweigung, ohne
+den Bestand anzufassen. **Was damit NICHT gemessen ist:** ob der Server den
+Fall richtig beantwortet — nur, dass der Browser ihn richtig verarbeitet. Die
+Serverseite ist eine `GROUP BY`-Abfrage ohne Artfilter und wurde gelesen,
+nicht gefahren.
+
+### Prüfliste — Ergänzung
+
+| # | Weg | Erwartet | Scheitern erkennbar an |
+|---|---|---|---|
+| **J-11** | **Ein Rettungsmittel mit Windenfähigkeit einrichten, aber keinen Windeneinsatz dokumentieren**, dann die Suche öffnen | Der Block **„Bergrettung"** steht in der Filterleiste, mit allen acht Feldern; „Windeneinsatz: nein" ist auswählbar und liefert alle Einsätze | Der Block fehlt — dann folgt die Sichtbarkeit noch dem Bestand, und eine Null lässt sich nicht nachweisen |
+| **J-12** | **Kein Rettungsmittel mit Fähigkeit** (oder alle Fähigkeiten abwählen), Suche öffnen | Der Block „Bergrettung" **fehlt**, und die Tabelle hat keine Winden-/Bergwachtspalte | Der Block steht mit acht dauerhaft wirkungslosen Feldern |
+| **J-13** | **Einen geteilten Suchlink öffnen, der `wi=ja` setzt**, auf einem Bestand ohne Windenfähigkeit | Der Filter ist **sichtbar** und gesetzt — die Ausnahme für geteilte Links gilt weiter | Der Filter ist unsichtbar, hält die Trefferliste aber leer: ein gesetzter Filter, den man nicht findet |
+
+### Eine Frage aus derselben Runde, beantwortet statt umgesetzt
+
+*„In der gemeinsamen Übersicht — ist da bisher eine Windenkachel?"* **Nein.**
+`KACHELN_GEMISCHT` sind die **ersten vier** des Bodensatzes: Einsätze,
+Diensttage, Ø Einsätze/Diensttag, Sekundärtransporte. Die beiden
+Windenkacheln (`winchcycles`, `avgwinch`) stehen ausschließlich im Luftsatz.
+Der Grund ist älter als dieses Paket und steht im Quelltext daneben: Über
+beide Arten hinweg sind Kilometer, Dauern, Fehleinsätze und Winden-Cycles
+nicht sinnvoll addierbar.
+
+**Ein Unterschied, der daraus folgt und festgehalten gehört:** Die gemischte
+Ansicht hat seit Web 20.35.0 die **Spalten** Winde und Bergwacht, wenn ein
+Luft-Diensttag des Zeitraums die Fähigkeit führt — aber keine Windenkachel.
+Das ist kein Widerspruch (eine Spalte zeigt den einzelnen Einsatz, eine
+Kachel eine Summe über beide Arten), sieht aber wie einer aus. Wer die
+Kacheln im Mischsatz haben will, braucht eine Gestaltungsentscheidung mit
+Mockup (`CLAUDE.md` 5) — sie steht heute nicht an.

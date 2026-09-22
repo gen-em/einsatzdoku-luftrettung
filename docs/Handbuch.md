@@ -1833,10 +1833,17 @@ enthalten nur, was in deinem Bestand tatsächlich vorkommt.
 
 **Ein Filter erscheint nur, wenn im Bestand etwas dahintersteht** (seit
 Web 12.4.0 für alle Filter, vorher nur für den Block Bergrettung und das Feld
-Fehleinsatz). Wer nie windet, hat die Windenfelder gar nicht erst in der
-Leiste; wer keinen Transport dokumentiert, keine Transportfelder. Sie könnten
-dort nur Filter setzen, die garantiert null Treffer ergeben. **Ein Block
-verschwindet**, sobald alle seine Felder verschwunden sind.
+Fehleinsatz). Wer keinen Transport dokumentiert, hat die Transportfelder gar
+nicht erst in der Leiste. Sie könnten dort nur Filter setzen, die garantiert
+null Treffer ergeben. **Ein Block verschwindet**, sobald alle seine Felder
+verschwunden sind.
+
+**Winde und Bergwacht sind davon ausgenommen** (seit Web 20.36.0): Sie
+erscheinen, sobald **irgendein** Diensttag die Fähigkeit führt — luft- wie
+bodengebunden —, auch wenn noch niemand gewindet hat. Der Grund ist der Fall,
+für den man einen Filter gerade braucht: In einem Bestand mit eingerichteter,
+aber nie benutzter Winde wäre sonst auch „Winde: nein" nicht zu suchen
+gewesen, weil der ganze Block „Bergrettung" fehlte.
 
 **Immer da bleibt, was immer sinnvoll ist:** Zeitraum, Uhrzeit, Wochentag,
 Strecke, Dauer, Alter, Standort, Rettungsmittel, Art, Besatzung und weitere
