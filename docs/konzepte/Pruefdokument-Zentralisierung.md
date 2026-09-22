@@ -1,6 +1,6 @@
 # Prüfdokument — Zentralisierung: eine Stelle je Sache (Schritt 15)
 
-**Stand:** 22.09.2026, nach **AP1**, **AP2** (Web 20.27.0), **AP3** (Web 20.28.0), **AP4** (Web 20.29.0), **AP5** (Web 20.30.0) und **AP6** (Web 20.31.0) · **Zweig:** `claude/eager-euler-jlfi9i`,
+**Stand:** 22.09.2026, nach **AP1** bis **AP7** (zuletzt Web 20.32.0) · **Zweig:** `claude/eager-euler-jlfi9i`,
 von `origin/main` `fd99989` (Web 20.26.2) · **Konzept:**
 `Konzept-Zentralisierung.md`
 
@@ -717,3 +717,120 @@ der Byte-Vergleich, nicht das Bild.
   kommt damit durch.
 - **N6-1 bleibt offen:** Ein Backup mit Nutzlast ≤ 8, dem Spalten fehlen, ist
   gelesen und nicht gefahren.
+
+---
+
+# AP7 — Zeit und Zahl in PHP (Web 20.32.0, 22.09.2026)
+
+**Das Paket mit der größten Zahl an Fundstellen und der leisesten Gefahr.**
+205 Ausdrücke in 38 Dateien wurden ersetzt, und keiner davon darf einen
+Buchstaben ändern. Ein falsch gerundeter Prozentwert, eine Nachkommastelle
+mehr, ein Komma statt eines Punktes — nichts davon wirft einen Fehler. Es
+steht einfach anders da.
+
+Deshalb ist der Beleg hier **ein Textvergleich und eine Rechnung je Funktion**,
+nicht ein Augenschein.
+
+## G0. Was nicht geprüft werden konnte — und warum
+
+**Diese Liste steht am Anfang und nicht in einer Fußnote.**
+
+| # | Was | Warum nicht | Woran man ein Scheitern erkennt |
+|---|---|---|---|
+| **N7-1** | **Der Android- und der Uhr-Prüfstand** | Unverändert wie N3-2/N4-1/N5-3/N6-3: kein `/opt/android-sdk`, keine `CIQ_GERAETE_URL`. `ingest.php` **ist angefasst** — zwei Zeilen, der Fülltext der 507-Antwort. Dafür gibt es einen eigenen Beleg (100 009 Fälle, 0 Abweichungen, G1) und die Ingestprobe (83/0) | Ein Gerät meldet beim vollen Konto einen anders geschriebenen Grund |
+| **N7-2** | **Das volle Konto im Betrieb** | Die 507-Antwort entsteht nur, wenn ein Konto seine Grenze erreicht. Auf dieser Anlage ist kein Konto voll, und eines künstlich vollzuschreiben hieße, den Demo-Bestand zu zerstören. Belegt ist der **Text** (rechnerisch), nicht der **Weg** | Ein Gerät bekommt beim vollen Konto eine 500 statt einer 507 |
+| **N7-3** | **Die drei Formularwerte auf Betrieb → Server** | Speichergrenze, Webspace und DB-Kontingent stehen als Formularwerte mit **Punkt** als Dezimaltrenner da und werden vom selben POST-Zweig zurückgelesen. Sie sind **nicht angefasst** (AP7-c) — es gibt also nichts zu prüfen, was sich geändert hätte. Dass sie weiter abzuschicken sind, ist im Browser **nicht** durchgefahren worden | „Bitte eine Zahl eingeben" beim Speichern, obwohl im Feld eine Zahl steht |
+| **N7-4** | **Der Wartungsmodus** | `wartung_lib.php` ist **nicht angefasst** (AP7-e). Ihre drei Stellen bleiben, weil die Datei zusagt, nichts zu laden | Die Wartungsseite zeigt einen anderen Zeitpunkt als vorher |
+| **N7-5** | **Der punktweise GPX-Vergleich** | Unverändert Nr. 259 (Demo-Reset). **95/4 vor und nach dem Paket** | siehe dort |
+| **N7-6** | **`tools/schemaprobe/`** | Unverändert N4-3/N5-5/N6-5 | Eine Migration im Prüfschema schreibt in die falsche Datenbank |
+| **N7-7** | **Ein Backup unter 1 MiB herunterladen** | Die sichtbare Folge von E-ZE-26 („312 KB" statt „0,3 MB") entsteht erst beim **Download** einer Sicherungsdatei im Browser. Belegt ist, dass PHP und JavaScript dieselbe Regel rechnen (2 014 Werte, 0 Abweichungen) — nicht, dass die Zeile im Browser erscheint | Nach dem Download steht dort „NaN MB" oder gar nichts |
+
+## G1. Was maschinell geprüft wurde — mit Mittel **und** Zahl
+
+### Der Kernbeleg: jede Funktion gegen ihre Vorgängerin
+
+Die alten Rümpfe wurden wortgetreu daneben gestellt und beide über einen
+Wertebereich gerechnet, der die Stufengrenzen einschließt.
+
+| Funktion | gegen | gemessen |
+|---|---|---|
+| `groesse_text` | `edbak_groesse_text()` | **3 017 Byte-Werte, 0 Abweichungen** |
+| `groesse_kurz_text` | `plattform_groesse()` | **3 017 Werte, 0** |
+| `groesse_text` | `apk_groesse()` | 4 Abweichungen, **alle ≥ 1 GiB** — für eine APK unerreichbar; unterhalb 1 GiB **0** |
+| `zahl_text` | `stat_zahl()` | **28 Fälle, 0** |
+| `prozent_text` | `stat_anteil()` | **6 030 Fälle, 0** |
+| `prozent_wert('kauf')` | `round(100·a / max(1,b))` | **200 004 Paare einschließlich Nullfall, 0** |
+| `zeit_relativ` | `status_alter()` | **10 811 Zeitpunkte (0 bis 400 000 s), 0** |
+| `iso_utc` / `iso_utc_lesen` | `gmdate(…)` / `strtotime(str_replace(…))` | **5 000 Zeitstempel hin und zurück, 0** |
+| `groesse_paar_text` | der 507-Antworttext des Gerätevertrags | **100 009 Fälle, 0** |
+| `EdFormat.groesse` (JS) | `groesse_text` (PHP) | **2 014 Werte, 0** |
+
+**Dazu die unabhängigen Rechnungen der Gegenleser.** Einer allein fuhr
+**4 420 679 Vergleiche** (jede Minute des Jahres 2026, je einmal als ISO-Marke
+und einmal als MySQL-`DATETIME`, durch vier Umstellungsarten) und führte
+zusätzlich eine **In-situ-Gegenprobe**: dieselbe Funktion in alter und neuer
+Fassung gegen **dieselbe echte Datenbank**, je 367 Zeilen / 15 858 Bytes JSON,
+`diff` = 0, `stderr` beidseitig 0 Bytes.
+
+### Gegen den Quelltext
+
+| Mittel | Gemessen |
+|---|---|
+| `tools/zaehlung/zaehlen.php` | **38 Zeilen, 0 über der Decke.** Z19 **42 → 0** · Z20 **2 → 1** · Z21 **27 → 0** · Z22 **18 → 5** · Z23 **10 → 2** · Z24 **20 → 2** · Z25 **9 → 2** · Z26 **67 → 3** · Z27 **4 → 0** |
+| `tools/zaehlung/zaehlen.php --selbstprobe` | **34 von 34** |
+| Umfang der Änderung | **205 Stellen umgestellt, 15 namentlich stehengelassen, 38 Dateien, 36 `require`-Zeilen ergänzt, 2 entfernt** |
+| `php -l` über `server/` | **137 Dateien, 0 Fehler** |
+| `tools/wortliste/wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** |
+| `tools/vollstaendigkeit/pruefen.py` | **398** — unverändert (nach der Berichtigung, Problem 7 im Protokoll) |
+| `python3 tools/screenshots/kontrast.py` | **22 Paare, 0 verfehlt** |
+| `tools/kettenaufrufe/pruefen.py` | **45 Aufrufe, 0 Befunde, 0 ungeprüft** |
+| `tools/spaltenregister/pruefen.php` | Selbstprobe **16/16**, Lauf **0 Befunde** |
+
+### Gegen die laufende Anlage
+
+| Mittel | Gemessen |
+|---|---|
+| `tools/ingestprobe/probe.php` | **83 / 0** |
+| `tools/kopplungsprobe/probe.php` | **76 / 0, 0 übergangen** |
+| `tools/komplettprobe/probe.php` | **64 / 0** |
+| `tools/spurprobe/probe.php` | **45 / 0** |
+| `tools/jobprobe/probe.php` | **35 / 0** |
+| `tools/ratenprobe/probe.php` | **50 Prüfungen, 0 Befunde** |
+| `tools/wiederherstellungs-probe/probe.php` | **111 / 0** — sie war durch AP7 kaputt und ist es nicht mehr (Problem 1a) |
+| `tools/gpxprobe/probe.php` | **95 / 4** — unverändert der Befund aus Nr. 259 |
+
+## G3. Prüfliste — was **die Auftraggeberin** noch tun muss
+
+| # | Weg | Erwartet | Scheitern erkennbar an |
+|---|---|---|---|
+| **G-1** | **Betrieb → Status** öffnen und die Altersangaben lesen („zuletzt gelaufen vor …") | Wie bisher: „gerade eben" unter 90 s, dann Minuten bis 90 Minuten, dann Stunden | Eine Angabe springt an einer anderen Stelle von Minuten auf Stunden, oder es steht „nie"/„unbekannt", wo ein Zeitpunkt vorliegt |
+| **G-2** | **Betrieb → Updates** öffnen, wenn ein Komplett-Backup besteht | Das Alter des jüngsten Backups steht da — **und zwar nach der neuen Regel**: unter 90 s „gerade eben", zwischen 60 und 90 Minuten „vor 60 … 90 Minuten". Das ist die benannte Ausnahme E-ZE-23 | „vor 1 Minuten" bei einem frischen Backup — dann ist die alte Kopie noch da |
+| **G-3** | **Betrieb → Server** öffnen, **Speichergrenze ändern und speichern** (etwa von 2 auf 3 GB und zurück) | Das Feld nimmt die Zahl an, das Speichern gelingt, die Zahl steht danach wieder da | „Bitte eine gültige Zahl" oder ein Komma im Feld — dann ist ein Formularwert doch umgestellt worden (N7-3) |
+| **G-4** | **Betrieb → Statistik** öffnen, alle drei Zeiträume durchschalten | Zahlen mit Tausenderpunkt, Anteile als „42 %", leere Anteile **leer** statt „0 %" | Ein Anteil steht als „0 %" da, wo vorher nichts stand |
+| **G-5** | **Statistik als CSV herunterladen** | Die Anteilsspalten enthalten **0**, wo es keine Bezugsgröße gibt — **nicht** leer | Eine leere Zelle, wo eine 0 stehen muss: in einer Tabelle heißt das etwas anderes |
+| **G-6** | **Ein Konto-Backup herunterladen** — am besten aus einem **kleinen** Konto (unter 1 MB) | Die Erfolgsmeldung endet auf eine Größe mit **KB**, nicht „0,3 MB". Das ist die benannte Ausnahme E-ZE-26 | „NaN MB", gar keine Größe, oder ein Punkt statt eines Kommas |
+| **G-7** | **Einstellungen → Sicherung**: die Speicherzeile lesen | „3 von 250 MB" mit **einer** gemeinsamen Einheit — genau wie bisher | „3,4 MB von 250,0 MB" — dann ist das Paar doch je Wert umgestellt |
+| **G-8** | **Verwaltung → ein Konto öffnen** und dieselbe Speicherzeile lesen | **Wortgleich** mit G-7 | Zwei Seiten zeigen denselben Füllstand verschieden |
+| **G-9** | **Einen Diensttag anlegen** — am besten **abends nach 23 Uhr** Ortszeit | Das Datumsfeld ist mit **heute** in deiner Zeitzone vorbelegt, nicht mit gestern. Das ist die benannte Ausnahme F-ZE-1 | Das Feld zeigt den Vortag |
+| **G-10** | **Einen Einsatz löschen** und den Kartentitel lesen | „Einsatz vom 22.09.2026, 14:30 Uhr" — Datum, Komma, Zeit, „Uhr" | Ein fehlender Gedankenstrich, eine doppelte Zeit, ein verschobenes Komma |
+| **G-11** | **Papierkorb** öffnen | Dieselbe Schreibweise wie in G-10, dazu „gelöscht am …" | wie G-10 |
+| **G-12** | **Eine GPX-Datei herunterladen** und im Editor den Kopf ansehen | `<time>` trägt die Marke mit `T` und `Z`, **ohne** `+00:00` | Ein Zonenversatz statt des `Z` — dann liest keine Karten-App die Datei mehr wie bisher |
+| **G-13** | **Ein Gerät koppeln** und den Zeitpunkt in der Bestätigung lesen | Wie bisher | Ein anderes Format |
+| **G-14** | **Ein Gerät mit vollem Konto senden lassen** (nur wenn ohnehin ein Konto an der Grenze steht) | Die Antwort nennt „… Einsätzen, 250 von 250 MB." — mit Satzschlusspunkt | Der Punkt fehlt, oder die Größe steht anders da (N7-2) |
+
+## G4. Grenzen — was sich mit diesem Paket NICHT beantworten lässt
+
+- **Der Textvergleich misst, was auf einer Seite STEHT, nicht was nach einem
+  Klick erscheint.** Meldungen nach dem Speichern, Mailtexte, die 507-Antwort
+  und die Größenangabe nach einem Download sind darin nicht enthalten. Für
+  sie steht die Rechnung je Funktion — und die Prüfliste unten.
+- **Die 15 stehengelassenen Stellen sind begründet, nicht vorgeführt.** Dass
+  das Formular auf Betrieb → Server mit einem Komma unabschickbar wäre, ist
+  aus dem POST-Zweig gelesen und nicht ausprobiert worden (N7-3).
+- **Eine Zeichengleichheit über Zufallswerte ist keine über alle Werte.**
+  Wo es ging, sind die Stufengrenzen lückenlos abgedeckt (1 KiB, 1 MiB, 1 GiB
+  je ±1024; die Zeitschwellen 90 / 5 400 / 172 800 s lückenlos). Wo nicht, ist
+  es eine Stichprobe mit Zahl.
+- **Der Textvergleich braucht einen Vorzustand, und den gibt es nur, weil er
+  vorher weggesichert wurde.** Jeder Bilderlauf löscht den vorigen. Wer AP8
+  ebenso belegen will, sichert **vor** der ersten Änderung.
