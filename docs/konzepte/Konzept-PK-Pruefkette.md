@@ -28,9 +28,9 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > |---|---|
 > | Stand | **21.09.2026 — FREIGEGEBEN vom Auftraggeber (Z5), ohne Änderungen.** Z1 und Z2 erledigt; P-PK-02 vorgezogen und erledigt. Kein Paket begonnen — die Umsetzung startet mit PK-01 auf einem neuen Zweig. |
 > | Entschieden | **E-PK-01 bis -30** — alle im Gespräch vom 21.09.2026 entschieden oder bestätigt (Abschnitt 3.1). Die offenen Fragen F-PK-1 bis -6 der ersten Fassung sind beantwortet (Abschnitt 3.2). |
-> | Nächstes | **PK-01** (Umsetzungsinstanz, Opus); parallel bei der Betreiberin die Merges von PR #70 und #69, danach Tag `web-v20.26.3` = M1 der Kette II (Z2a). **Parallelität:** PK-01 bis PK-03 laufen neben Schritt 15; PK-04 bis PK-06 erst, wenn kein Schritt-15-Paket in einem offenen PR steht (Abschnitt 4.0). |
+> | Nächstes | **PK-01** (Umsetzungsinstanz, Opus). **M1 der Kette II ist erreicht** (21.09.2026, Z2a): Tag `web-v20.26.3` auf `a1c6494`, Lauf 35654132667 Versuch 2, Produktiv meldet 20.26.3, Migrationen von Hand ausgeführt, Wartung beendet, Status „Alles läuft", Zeiger `produktion` auf `a1c6494`. Die beiden Vorgriffe (PR #71 zu PK-05, PR #72 zu PK-06) sind auf `main`. **Parallelität:** PK-01 bis PK-03 laufen neben Schritt 15; PK-04 bis PK-06 erst, wenn kein Schritt-15-Paket in einem offenen PR steht (Abschnitt 4.0). |
 > | Kette II | wird nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
-> | Hakt | nichts mehr: Der HTTP 500 beim `.edbak`-Export auf Staging (`097D7622`) ist am 21.09.2026 **in der Sandbox reproduziert und behoben** (Web 20.26.3, PR #69, Nr. 267) — P-PK-02 vorgezogen, siehe 1.5. Offen ist die Bestätigung durch Stufe 2 nach dem Merge. |
+> | Hakt | nichts mehr: Der HTTP 500 beim `.edbak`-Export auf Staging (`097D7622`) ist am 21.09.2026 **in der Sandbox reproduziert und behoben** (Web 20.26.3, PR #69, Nr. 267) — P-PK-02 vorgezogen, siehe 1.5. Bestätigt am 21.09.2026 durch Stufe 2 gegen Staging (MySQL 8.4.10, Kreislauf edbak grün in 104 s) und durch den Produktivlauf. |
 >
 > **Stand der Umsetzung**
 >
@@ -894,7 +894,7 @@ aufwirft, trägt sie als F-PK-07 ff. hier ein.
 |---|---|---|---|
 | Z1 | PK-M1: Zweigschutz und Merge-Recht setzen; danach die drei Messungen aus P-PK-01 durch eine Claude-Instanz | **vor dem Push dieses Konzepts** | **erledigt 21.09.2026** — (c) mit dem Merge von PR #70 |
 | Z2 | Den Kette-II-Zweig per PR mergen (PR #68, mit Übergabevermerk), damit PK-06 nicht kollidiert | vor der Freigabe | **erledigt 21.09.2026** (PR #68 gemergt) |
-| Z2a | **PR #69 (Web 20.26.3) mergen** — der edbak-Fix; danach Stufe 2 auf `main` beobachten, dann Tag `web-v20.26.3` und Freigabe = **M1 der Kette II** | nach Stufe 1 grün | offen |
+| Z2a | **PR #69 (Web 20.26.3) mergen** — der edbak-Fix; danach Stufe 2 auf `main` beobachten, dann Tag `web-v20.26.3` und Freigabe = **M1 der Kette II** | nach Stufe 1 grün | **erledigt 21.09.2026** — der Tag brauchte vorher den Vorgriff auf PK-06 (Einschub 1): Das Tor verlangt einen als Ganzes grünen Staging-Lauf, und den gab es auf der neuen Anlage erst ohne Bilderlauf. Produktiv 20.24.2 → 20.26.3, Migrationen von Hand, Zeiger auf `a1c6494` |
 | Z3 | Umgebungswerte der Cloud-Umgebung: die sieben Namen aus 1.4 vollständig und in Anführungszeichen; Netzregel mit Docker Hub und `deb.debian.org` | — | **erledigt 21.09.2026** |
 | Z4 | Staging: Mailversand reparieren (Webspace-Protokoll), Backup-Ziel eintragen | vor PK-M2 | offen (`097D7622` ist ohne das Protokoll geklärt, 1.5) |
 | Z5 | Freigabe dieses Konzepts | nach Z1, Z2 | **erteilt 21.09.2026** |
@@ -957,7 +957,7 @@ bleibt fast vollständig, weil PK die Auslieferung nicht anfasst:
 | Hotfix-Weg mit Abstammungsprüfung (AP7) | bleibt; das Tor der grünen Läufe fragt weiter nach Stufe 1 und Staging, beide gibt es unter PK |
 | Stufe 2 mit Kreisläufen und Bilderlauf | **PK-06 kürzt sie auf drei Schritte** |
 | der offene Commit `download_lib` („fünfzehn Minuten messen") | nützlich, auch lokal; wird gemergt (Z2) |
-| M1 erster grüner Produktivlauf | **bleibt nötig** und ist nach dem Merge von PR #69 (Web 20.26.3) erreichbar: Push-Lauf auf `main`, Stufe 2 grün, Tag, Freigabe (Z2a) |
+| M1 erster grüner Produktivlauf | **erreicht am 21.09.2026** (Z2a, Einschub 1): Tag `web-v20.26.3` auf `a1c6494`, Lauf 35654132667 Versuch 2 — Tor, Zielprobe, Backup-Tor, FTPS 6:32 min, Fassung 20.26.3 gemeldet, Wartung wegen ausstehender Migration an gelassen und von Hand beendet, Zeiger gesetzt. Die Erledigt-Zeile für Kette II schreibt PK-07 |
 | M2 Probe-Hotfix | entfällt als eigener Meilenstein; der Hotfix-Weg wird beim ersten echten Hotfix geprobt |
 | AP8 Buchführung, Erledigt-Zeile, Konzeptlöschung | **übernimmt PK-07** |
 
