@@ -299,84 +299,33 @@ jobs:
           fi
 
       - name: Vollständigkeit des Stylesheets
-        # GEGEN EINE SCHWELLE, NICHT GEGEN NULL — und das war hier von Anfang
-        # an falsch (behoben mit Web 20.8.0). Dieses Werkzeug misst einen
-        # ALTBESTAND aus P3: Unicode-Zeichen im Markup, `style=`-Attribute in
-        # JavaScript, Emoji. „0 Befunde" ist ein Ziel, kein erreichbarer
-        # Zustand — der Stand lag schon bei der Einführung dieses Laufs bei
-        # 340. Der Schritt verlangte trotzdem `exit 0` und war damit bei JEDEM
-        # Push rot; ein Tor, das immer rot ist, sagt nichts mehr.
+        # GEGEN EINE SCHWELLE, NICHT GEGEN NULL. Das Werkzeug misst einen
+        # ALTBESTAND: Klassen im Markup ohne Regel im Stylesheet,
+        # `style=`-Attribute in PHP/JS, Toene ohne Regel. „0 Befunde" ist ein
+        # Ziel, kein erreichbarer Zustand — der Schritt verlangte anfangs
+        # `exit 0` und war damit bei JEDEM Push rot; ein Tor, das immer rot
+        # ist, sagt nichts mehr.
         #
-        # Die Schwelle wirkt in BEIDE Richtungen: Wächst der Altbestand, ist
-        # das ein Befund. Schrumpft er, ebenfalls — dann ist die Zahl hier
-        # nachzuziehen, sonst bekommt er stillschweigend wieder Luft.
+        # Die Schwelle wirkt in BEIDE Richtungen: Waechst der Altbestand, ist
+        # das ein Befund. Schrumpft er, ebenfalls — dann ist sie nachzuziehen,
+        # sonst bekommt er stillschweigend wieder Luft.
         #
-        # 367 (Web 20.9.1). Der Weg dahin, weil er eine Lehre enthaelt:
+        # DIE ZAHL STEHT HIER NICHT MEHR (PK-04, Grundsatz 1: jede Pruefung
+        # hat genau eine Stelle). Sie steht in `tools/pruefstand/
+        # pruefablauf.json` und nirgends sonst; der Laeufer liest sie von
+        # dort — seit PK-04 auch beim Einzelaufruf, den dieser Schritt macht.
         #
-        # 371 stand hier waehrend des Umzugs auf den Mailkatalog — dieselben
-        # Texte lagen im Katalog UND noch in den alten Aufrufern, und das
-        # Werkzeug liest ganze Dateien, nicht nur Markup (Backlog Nr. 184).
-        # Mit dem letzten Umzug fiel der Doppelbestand weg.
+        # BIS ZUM 22.09.2026 STAND SIE AN BEIDEN STELLEN, und genau das ist
+        # eingetreten, wogegen die Regel gerichtet ist: Teilstueck 1c hat den
+        # Bestand von 398 auf 18 gebracht und die Ablaufdatei nachgezogen —
+        # hier blieb 398 stehen. Der Lauf war seither rot wegen
+        # UNTERSCHREITUNG, und aufgefallen ist es erst beim Abgleich mit
+        # Schritt 15, der dieselbe Zeile anfasste. Eine Zahl an zwei Stellen
+        # altert an einer davon unbemerkt.
         #
-        # DANN STAND HIER 366, UND DAS WAR FALSCH GEMESSEN. Die Zahl entstand
-        # mitten in AP5, VOR den letzten Kommentar- und Dokumentationszeilen
-        # desselben Pakets; committet wurde ein Stand mit 367. Der Lauf auf
-        # `main` war damit rot, und zwar wegen UNTERSCHREITUNG — das Werkzeug
-        # hat genau das getan, wofuer die Schwelle in beide Richtungen wirkt.
-        # `CLAUDE.md` 6 sagt es als Regel: „Die Pruefmittel laufen zuletzt,
-        # nicht zwischendurch. Ein Werkzeug, das vor der letzten Aenderung
-        # lief, misst einen Stand, den es nicht mehr gibt."
-        #
-        # Gemessen am 16.09.2026 gegen den ausgecheckten Stand (eigener
-        # Arbeitsbaum, nicht der Arbeitskopie): 50 + 10 + 299 + 8 = 367.
-        #
-        # 372 MIT AP6 (Web 20.10.0): +5 Pfeile „Betrieb -> Status" in den neuen
-        # sichtbaren Texten. Die Zahl zaehlt Unicode-Zeichen im Markup und kann
-        # Prosa nicht von einem Symbol unterscheiden (Backlog Nr. 184) — der
-        # Pfeil in „Verwaltung -> Installation" ist die Hausschreibweise und
-        # steht so an hundert Stellen. Was AP6 an ZIERDE mitgebracht hatte —
-        # fuenf Auslassungszeichen in Kommentaren und Probenbeschriftungen —
-        # ist wieder entfernt, statt die Zahl damit wachsen zu lassen.
-        #
-        # 387 MIT P5b (Web 20.21.1): +10. Gleiche Rechnung, gleiche Reihenfolge.
-        # P5b brachte zunaechst +18; ZWOELF davon waren Zierde in Kommentaren
-        # und in einem error_log() und sind entfernt (Pfeil zu "->",
-        # Auslassung zu "..."). Die verbleibenden ZEHN stehen in SICHTBAREM
-        # Text: „Unter Einstellungen -> Konto", „unter Betrieb -> Updates die
-        # Migration ausfuehren", „Du wirst abgemeldet ...". Sie zu aendern
-        # hiesse, den Hausstil an zehn Stellen zu brechen, damit eine Zahl
-        # gleich bleibt, die ohnehin das Falsche misst.
-        #
-        # WAS SIE MISST, IST JETZT AUSGEZAEHLT (Backlog Nr. 227): von 319
-        # Befunden sind 195 „...", 104 Pfeile — zusammen 299 Satzzeichen in
-        # Prosa. Nur ZWANZIG sind Zeichen, die wirklich statt eines Symbols
-        # stehen. Solange die Liste beide Sorten in einen Topf wirft, kann
-        # diese Schwelle nur steigen. Der Weg heraus steht in Nr. 227.
-        #
-        # 388 MIT P5b/AP3: +1. Der Pfeil in „Verwaltung -> NutzerInnen" im Text
-        # der Sammelmail an die Verwaltung (konto_lib.php) — sichtbarer Text,
-        # Hausschreibweise, dieselbe Form wie „Betrieb -> Status" zwei Dateien
-        # weiter in ratelimit_lib.php. Nach derselben Regel behandelt wie die
-        # zehn davor: Zierde raus, sichtbarer Text bleibt.
-        #
-        # 398 MIT P5b/AP9: +10, alle zehn in drei neuen Dateien. Nachgezaehlt
-        # mit `--ausfuehrlich` gegen denselben Lauf auf HEAD, nicht geschaetzt:
-        #   api/schluesselblatt_pruefen.php  5  (2 Pfeile, 3 Auslassungen)
-        #   notfallblatt.php                 4  (Pfeile in „Einstellungen ->
-        #                                       Konto" und im Bedienweg)
-        #   blatt_dialog.php                 1  („Betrieb -> Schluesselblatt")
-        # Sieben Pfeile und drei Auslassungspunkte, alle in sichtbarem Text,
-        # alle in der Hausschreibweise der elf davor.
-        #
-        # MEIN ERSTER EINTRAG HIER WAR FALSCH: Ich hatte die zehn auf fuenf
-        # Dateien verteilt, ohne nachzuzaehlen — `einstellungen.php`,
-        # `erststart_karte.php` und `rueckfrage_dialog.php` steuern in
-        # Wahrheit KEINEN Befund bei. Eine Aufschluesselung, die nicht
-        # gemessen ist, ist schlimmer als keine: Sie sieht aus wie ein Beleg.
-        #
-        # Die drei anderen Gruppen stehen unveraendert: 50 ohne Gegenstueck,
-        # 10 style="...", 8 Emoji — dieses Paket hat keine davon hinzugefuegt.
-        run: bash tools/quelltext/pruefen.sh vollstaendigkeit --hoechstens 398
+        # Wie die Zahl zustande kommt, steht in der Bemerkung der Ablaufdatei
+        # und im Commit — nicht hier (CLAUDE.md 6, Grundsatz 6).
+        run: bash tools/quelltext/pruefen.sh vollstaendigkeit
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py

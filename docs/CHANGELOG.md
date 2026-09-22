@@ -14,6 +14,38 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Die Vollständigkeits-Schwelle steht nur noch an einer Stelle] — 2026-09-22
+
+### Behoben
+
+- **Stufe 1 war rot, und niemand hat es gemerkt.** `pruefung.yml` gab dem
+  Vollständigkeitswerkzeug `--hoechstens 398` mit, während der Bestand seit
+  PK-04/1c bei **18** liegt. Das Werkzeug meldet Unterschreitungen
+  ausdrücklich als Befund — „sonst bekommt der Altbestand stillschweigend
+  wieder Luft" — und gab Rückgabewert 1 zurück. Der Schritt gibt jetzt gar
+  keine Zahl mehr.
+- **Der Grund war ein halb umgesetzter Vorsatz.** Der Läufer
+  `tools/quelltext/pruefen.sh` liest die Schwelle aus
+  `tools/pruefstand/pruefablauf.json`, damit sie genau eine Stelle hat
+  (Grundsatz 1). Das griff aber nur im Zweig `alle` — und die Kette ruft
+  **einzeln** auf. Sie musste die Zahl deshalb selbst führen, während der
+  Kopfkommentar des Läufers daneben behauptete, sie stehe „nirgends sonst".
+  Ein Satz, der eine Regel beschreibt, die der Code daneben nicht
+  durchsetzt, ist schlimmer als kein Satz: Er wird geglaubt. Die Vorgabe
+  greift jetzt auf beiden Wegen; eine von der Aufruferin mitgegebene Zahl
+  hat weiter Vorrang.
+- **Aufgefallen ist es erst beim Abgleich mit Schritt 15**, der dieselbe
+  Zeile anfasste. Zwei Pakete, die unabhängig voneinander dieselbe Zahl
+  pflegen, sind der Beleg dafür, dass sie dort nicht hingehört.
+
+### Geändert
+
+- **Die Fundgeschichte der Zahl ist aus `pruefung.yml` heraus** (79
+  Kommentarzeilen, die den Weg von 340 über 367, 372, 387, 388 auf 398
+  erzählten). Sie beschrieb einen Bestand, den es seit 1c nicht mehr gibt,
+  und stand an einer Stelle, an der die Zahl selbst nicht mehr steht.
+  Geschichte gehört in den Commit (CLAUDE.md 6, Grundsatz 6).
+
 ## [Werkzeug: Fünfzehn Werkzeugordner statt achtundvierzig] — 2026-09-22
 
 ### Geändert

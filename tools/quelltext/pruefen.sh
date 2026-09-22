@@ -32,11 +32,17 @@ starter() {   # starter <name> — womit die Datei gefahren wird
 }
 
 # DIE SCHWELLE STEHT IN pruefablauf.json UND NIRGENDS SONST (CLAUDE.md 6).
-# `alle` liest sie von dort, statt sie ein zweites Mal zu führen — eine Zahl
-# an zwei Stellen altert an einer davon unbemerkt. **PK-04/1b hat sie von
-# 398 auf 18 gebracht, nicht auf null** — die verbliebenen 18 sind Klassen im
-# Markup ohne Regel (Backlog Nr. 269) und lassen sich nur in `server/`
-# auflösen. Teilstück 5 nimmt sie dann ganz weg, und diese Funktion fällt mit.
+# Der Läufer liest sie von dort, statt sie ein zweites Mal zu führen — eine
+# Zahl an zwei Stellen altert an einer davon unbemerkt. **PK-04/1c hat sie
+# von 398 auf 18 gebracht, nicht auf null** — die verbliebenen 18 sind
+# Klassen im Markup ohne Regel und lassen sich nur in `server/` auflösen.
+# Teilstück 5 nimmt sie dann ganz weg, und diese Funktion fällt mit.
+#
+# BIS ZUM 22.09.2026 GRIFF DAS NUR BEI `alle`, und die Kette ruft EINZELN
+# auf. Sie musste die Zahl deshalb selbst führen, und dieser Kopfkommentar
+# behauptete trotzdem „und nirgends sonst". Ein Satz, der eine Regel
+# beschreibt, die der Code daneben nicht durchsetzt, ist schlimmer als kein
+# Satz: Er wird geglaubt. Jetzt greift die Vorgabe auf BEIDEN Wegen.
 zusatz() {
     [ "$1" = vollstaendigkeit ] || return 0
     python3 - <<'PY'
@@ -51,8 +57,15 @@ PY
 einzeln() {   # einzeln <name> [zusatz…]
     local n="$1"; shift
     local ruf; ruf="$(starter "$n")"
+    # Gibt die Aufruferin selbst eine Schwelle, hat sie Vorrang — sonst
+    # kommt sie aus der Ablaufdatei. Wortzerlegung ist hier gewollt:
+    # `zusatz` gibt entweder nichts oder zwei Wörter, und beide sollen als
+    # getrennte Argumente ankommen.
+    local vorgabe=''
+    case " $* " in *' --hoechstens '*) ;; *) vorgabe="$(zusatz "$n")" ;; esac
     printf '\033[1m==\033[0m %s\n' "$n" >&2
-    $ruf "$@"
+    # shellcheck disable=SC2086
+    $ruf $vorgabe "$@"
 }
 
 fall="${1:-}"
@@ -72,10 +85,7 @@ case "$fall" in
   alle)
     fehl=0
     for n in "${NAMEN[@]}"; do
-        # Wortzerlegung ist hier gewollt: `zusatz` gibt entweder nichts oder
-        # zwei Wörter zurück, und beide sollen als getrennte Argumente ankommen.
-        # shellcheck disable=SC2046
-        einzeln "$n" $(zusatz "$n") || fehl=$((fehl+1))
+        einzeln "$n" || fehl=$((fehl+1))
     done
     printf '\033[1m==\033[0m %s von %s Prüfungen grün\n' \
            "$(( ${#NAMEN[@]} - fehl ))" "${#NAMEN[@]}" >&2

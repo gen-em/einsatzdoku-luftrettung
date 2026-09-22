@@ -753,6 +753,44 @@ geraten.**
 
 ---
 
+## 5g. Messprotokoll — die Schwelle an zwei Stellen (22.09.2026)
+
+**Anlass:** F-PK-23, gefunden beim Abgleich mit Schritt 15 (PR #74), der
+dieselbe Zeile in `pruefung.yml` anfasst.
+
+### Der Befund, in drei Zahlen
+
+| Aufruf | vorher | nachher |
+|---|---|---|
+| `bash tools/quelltext/pruefen.sh vollstaendigkeit` (wie die Kette ihn macht) | Schwelle 398 aus `pruefung.yml`, Bestand 18, **rc 1** | Schwelle 18 aus der Ablaufdatei, Bestand 18, **rc 0** |
+| derselbe Aufruf mit `--hoechstens 5` | — | **rc 1**, „18 statt höchstens 5 — um 13 gewachsen" |
+| `bash tools/quelltext/pruefen.sh alle` | 8 von 8 grün | **8 von 8 grün, rc 0** |
+
+Die mittlere Zeile ist die Gegenprobe in die andere Richtung: Eine Vorgabe,
+die immer greift, wäre keine Vorgabe mehr, sondern eine Übersteuerung. Eine
+von der Aufruferin mitgegebene Zahl hat weiter Vorrang, und das ist
+nachgemessen, nicht angenommen.
+
+### Wie der Fehler entstehen konnte
+
+Der Läufer liest die Schwelle aus `tools/pruefstand/pruefablauf.json` — aber
+nur im Zweig `alle`. Die Kette ruft **einzeln** auf, also musste sie die Zahl
+selbst führen. PK-04/1c senkte den Bestand von 398 auf 18 und zog die
+Ablaufdatei nach; die Kette blieb auf 398 stehen. Das Werkzeug meldet
+Unterschreitungen ausdrücklich als Befund und gab rc 1 zurück.
+
+**Der Kopfkommentar des Läufers behauptete daneben, die Zahl stehe „in
+pruefablauf.json UND NIRGENDS SONST".** Das war der eigentliche Schaden: Ein
+Satz, der eine Regel beschreibt, die der Code daneben nicht durchsetzt, wird
+geglaubt und ersetzt das Nachsehen. Die Regel gilt jetzt auf beiden Wegen.
+
+### Gegenprobe, dass nichts anderes verrutscht ist
+
+`python3 tools/kettenaufrufe/pruefen.py` — **0 Befunde, 2 ungeprüft**, Zeile
+für Zeile wie vor der Änderung (die zwei sind `stilvergleich` und
+`messstand`, F-PK-21). YAML von `pruefung.yml` mit `yaml.safe_load`
+eingelesen: lesbar.
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in
@@ -823,6 +861,7 @@ veröffentlichtes Kennwort.
 | **F-PK-20** | **Zwei Proben in `pruefablauf.json` waren örtlich rot, ohne etwas gemessen zu haben.** Gefunden beim nachgeholten langen Lauf vom 21.09.2026 (`--datei server/assets/style.css --datei server/einsatz.php`): 15 Proben, **13 grün, 2 rot, 0 nicht gemessen**, Rückgabewert 1. **(a) Bilderlauf, 48 Konsolenfehler** — drei fehlende Bilder auf zwei Handbuchseiten über acht Breiten (2 × 8 × 3 = 48): `doku/bilder/schublade-mobil.png`, `tagesuebersicht-desktop.png`, `tagesuebersicht-mobil.png`. **Kein Fehler der Anwendung:** Die Kette kopiert `docs/bilder/` in ihrem Schritt 11 nach `server/doku/` mit; örtlich legte sie niemand an. **(b) Stilvergleich** — der Aufruf lautete `python3 tools/stilvergleich/proben.py`, **ohne Argumente**. `proben.py` baut nur die vier Proben und gibt ohne Argumente seine Anleitung aus; der Vergleich ist `stilvergleich.js` und braucht den alten Stand. Beim Reparieren fiel auf: **`stilvergleich.js` ist CJS und macht `require('playwright')`** — es geht an `tools/motor.mjs` vorbei, und Playwright liegt in diesem Abbild unter `/opt/node22/lib/node_modules`. | **(a)** `hochfahren.sh` macht jetzt dieselben zwei Zeilen wie die Kette. Gegenprobe an denselben zwei Seiten: 16 Einzelbilder, **48 → 0 Konsolenfehler**. **(b)** Neu: `tools/stilvergleich/gegen.sh` — Vergleichsstand aus git, Proben bauen, messen; ein Treiber im vorhandenen Werkzeugordner, kein neues Werkzeug. Gemessen: **40 989 Elementmessungen, 0 Abweichungen, 175 Eigenschaften je Element**. Das `NODE_PATH` darin ist ein **Pflaster** und steht als solches im Kommentar und im LIESMICH; `stilvergleich.js` auf den Motor zu heben gehört nach **PK-04**. **Und der eigentliche Punkt: Der Stilvergleich war einer der „18 ungeprüft" von `kettenaufrufe`.** Diese Zahl steht in drei Commits als Beiwerk — sie ist keins, sondern die Liste der Aufrufe, über die niemand etwas weiß. |
 | **F-PK-21** | **`kettenaufrufe` prüft Namen, nicht Vollständigkeit — und sagt das nicht.** Aufgefallen beim Nachsehen, warum `uhr-stufe1` nicht unter den 18 Ungeprüften steht: **Es steht überhaupt nicht in der Ausgabe**, gilt also als geprüft und in Ordnung. Der Aufruf `bash tools/uhr-pruefstand/pruefstand.sh reihe` bricht aber sofort mit `line 355: 1: Listendatei fehlt` ab — Stufe I braucht eine Geräteliste, die erst `geraeteklassen.py` erzeugt. **Strukturell:** Die Prüfung hält Unterbefehle und Schalter gegen den Quelltext. `reihe` **gibt es**, also kein Widerspruch; dass `reihe` ein **Pflichtargument** hat, sieht sie nicht. Ihr Schlusssatz „Kein Aufruf widerspricht der Schnittstelle seines Werkzeugs" ist wörtlich wahr und trotzdem irreführend. | **Das verschiebt die Bedeutung der Zahl 18.** Die 18 sind nicht die Liste der ungewissen Aufrufe, sondern die, bei denen das Werkzeug seine Unwissenheit **einräumt**. `uhr-stufe1` war kaputt und zählte zu den **82 grünen**. Daraus folgt: **Eine Schnittstellenprüfung ersetzt keinen Lauf.** Die 18 werden deshalb einzeln gefahren (5.7). Ob `kettenaufrufe` Pflichtargumente lernen soll oder ob der Prüfstand das ohnehin beim Fahren merkt, entscheidet **PK-04**. |
 | **F-PK-22** | **Drei unbekannte Sachbefunde aus den nie gefahrenen Proben** (5.7), alle in `server/`, keiner aus diesem Paket. **(a) `gpxprobe` 95 / 4:** zwei davon sind eine veraltete Referenz („178 von 204 ohne Gegenstück — die Referenz ist älter als die Datenbank"; „9 Abweichungen, erste: 65 gegen 259 Punkte"), zwei sehen nach Sache aus („Ein Eintrag ohne Spur steht da, aber ohne Abruf — Plakette ‚keine Spur' gefunden"; „Der Kopf sagt, was die Datei als Ganzes ist"). **(b) `mailprobe`:** „Alle Pflichtwerte im Beispielsatz abgedeckt" schlägt fehl — `loeschung_beantragt/termin`, `konto_menge/einsaetze`, `konto_menge/speicher`. **(c) `ratenprobe`:** „Genau **fünf** Töpfe haben eine Leiter" schlägt fehl und zählt **sechs** auf: `blatt`, `ingest`, `ingest_ip`, `login`, `login_ip`, `salt`. | **Nicht behoben, und zwar bewusst:** Alle drei liegen in `server/`, das dieses Paket nicht anfasst, und zwei von ihnen sind vermutlich veraltete Erwartungen im Prüfmittel selbst, keine Fehler der Anwendung — das zu trennen ist eigene Arbeit. **Sie sind der Ertrag des Durchlaufs:** Vier Proben waren rot, seit jemand sie zuletzt gefahren hat, und niemand wusste es, weil niemand sie fuhr. **Das ist genau der Zweck von Station B.** Gehört als eigene Korrekturstufe untersucht, zusammen mit F-PK-18; **Prüfpunkt P-PK-20**. |
+| **F-PK-23** | **Die Vollständigkeits-Schwelle stand an zwei Stellen, und Stufe 1 war deshalb rot.** `pruefung.yml` gab `--hoechstens 398` mit, während der Bestand seit PK-04/1c bei **18** liegt; das Werkzeug meldet Unterschreitungen als Befund und gab **rc 1** zurück. Ursache: Der Läufer `tools/quelltext/pruefen.sh` liest die Schwelle aus der Ablaufdatei — aber nur im Zweig `alle`, und die Kette ruft **einzeln** auf. Sein Kopfkommentar behauptete trotzdem „und nirgends sonst". **Gefunden nicht von einem Prüfmittel, sondern beim Abgleich mit Schritt 15** (PR #74), der dieselbe Zeile anfasst. | **Behoben** (22.09.2026): Die Vorgabe greift jetzt auf beiden Wegen, eine mitgegebene Zahl hat Vorrang; `pruefung.yml` nennt keine Zahl mehr, und die 79 Kommentarzeilen mit der Fundgeschichte von 340 bis 398 sind heraus — sie beschrieben einen Bestand, den es nicht mehr gibt. Nachgemessen in drei Richtungen, siehe 5g. |
 
 ## 7. Entscheidungen der Umsetzung
 
