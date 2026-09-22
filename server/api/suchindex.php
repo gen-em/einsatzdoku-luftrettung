@@ -176,6 +176,17 @@ try {
             // Nachteinsatz nicht wie ein falsch zugeordneter aussieht.
             'dienst_day'  => $d !== null ? (string)$d['day'] : null,
             'start_hhmm'  => $hhmm,
+            /* CHRONOLOGISCHER SORTIERSCHLUESSEL (Schritt 15 AP9b, E-ZE-32).
+             * `start_hhmm` allein taugt nicht zum Sortieren: Ein Dienst ueber
+             * Mitternacht -- laut Handbuch „der klassische Fall" -- hat
+             * Einsaetze um 23:50 und um 01:10, und als Zeichenkette steht
+             * 01:10 davor. `day` hilft dabei nicht ueberall: In api/day.php
+             * und api/range.php ist es der DIENSTTAG, und der ist fuer beide
+             * derselbe. Also schickt der Server den Zeitpunkt, nach dem
+             * sortiert werden soll -- in Ortszeit, damit er zu `start_hhmm`
+             * passt, und als 'Y-m-d H:i', weil eine Zeichenkette in diesem
+             * Format in derselben Reihenfolge sortiert wie der Zeitpunkt. */
+            'start_sort'  => fmt_local($m['started_at'], 'Y-m-d H:i'),
             'start_min'   => $startMin,
             'duration_s'  => $dur,
             'distance_m'  => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,

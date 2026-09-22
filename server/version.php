@@ -7133,5 +7133,50 @@ declare(strict_types=1);
  *   Faehigkeit ja / Haken ja -> 8, Block da. Faehigkeit NEIN / Haken ja
  *   (abgefangene Antwort) -> 0, Block weg. Faehigkeit ja / Haken NIRGENDS
  *   -> 8, Block da; vorher waren es hier 0. 0 Konsolenfehler.
+ *
+ * 20.37 — EINE EINSATZTABELLE (Schritt 15 AP9b, Backlog Nr. 57).
+ *
+ *   Drei Seiten zeigen dieselbe Tabelle, und bis heute bauten zwei Erzeuger
+ *   sie: `assets/missiontable.js` fuer Suche und Zeitraumuebersicht, und
+ *   `index.php` noch einmal von Hand. Der Kommentar an der Dauerspalte sagte
+ *   es seit S3 ausdruecklich — „Dass es zwei Aufbauten fuer dieselbe Tabelle
+ *   gibt, ist der eigentliche Fund" (F-S3-A). Jetzt gibt es einen.
+ *
+ *   GEZAEHLT: Zeilenerzeugung `tr.innerHTML` in index.php 1 -> 0.
+ *   Spaltenlisten fuer Einsatztabellen 4 -> 1 (index.php hatte drei: den
+ *   handgeschriebenen <thead>, `DAY_COLS` und die `switch`-Leiter in
+ *   `sortVal()`). Sortierblatt-Erzeuger 3 -> 1.
+ *
+ *   DREI DINGE SEHEN ANDERS AUS, alle drei entschieden (E-ZE-34): Der Kopf
+ *   heisst „Sekundär­transport" mit weichem Trennzeichen statt
+ *   „Sekundär<br>Transport" mit hartem Umbruch; das Alter steht
+ *   rechtsbuendig wie in den beiden anderen Tabellen; die Haken stehen in
+ *   der Reihenfolge Winde, Bergwacht, Sekundaertransport.
+ *
+ *   WAS DAS MODUL GELERNT HAT: die Spalte „Nr." (E-ZE-33) — sie ist keine
+ *   Zierspalte, sondern die Verbindung zur Karte, deren Pins „Einsatz <Nr.>"
+ *   heissen; die chronologische Sortierung (E-ZE-32); den Gleichstand nach
+ *   der Einsatznummer; ein Sortierblatt, das nach dem Umstellen zeichnet.
+ *
+ *   DER NACHTDIENST WAR EIN ECHTER FEHLER, kein Gedankenspiel. Das Modul
+ *   sortierte „Beginn" ueber die ZEICHENKETTE `start_hhmm`; bei einem Dienst
+ *   ueber Mitternacht stand damit 01:10 vor 23:50. Der neue Schluessel
+ *   `start_sort` ('Y-m-d H:i' in Ortszeit) kommt aus allen drei Endpunkten.
+ *   Nachgemessen an einem gebauten Nachtdienst: MIT Schluessel 21:10, 22:30,
+ *   23:50, 00:20, 01:10, 02:40 — OHNE ihn 00:20, 01:10, 02:40, 21:10, 22:30,
+ *   23:50. Der Bestand hat keinen solchen Tag, also war der Fall zu bauen.
+ *
+ *   ZWEI FEHLER NEBENBEI BEHOBEN, beide aelter als dieses Paket: Das mobile
+ *   Sortierblatt von Suche und Zeitraumuebersicht stellte um, OHNE neu zu
+ *   zeichnen (setSort() zeichnete nicht, die Seite auch nicht) — unter
+ *   720 px ist das Blatt der einzige Weg zu sortieren. Und es zeigte
+ *   „Sekundär&shy;transport" als rohe Entitaet: Die alte Zeile streifte nur
+ *   Tags ab, und esc() machte aus dem `&` ein `&amp;`.
+ *
+ *   DER FELDKATALOG BEHAELT SEINEN GRIFF, und er reicht jetzt weiter. Der
+ *   Katalog bestimmt, WELCHE Hakenspalten es gibt ('day_col'), das Modul,
+ *   wie sie aussehen und in welcher Reihenfolge sie stehen. Preis, und er
+ *   gehoert gesagt: 'day_col' heisst ab jetzt „Spalte in JEDER
+ *   Einsatztabelle" und nicht mehr „Spalte in der Tagesuebersicht".
  */
-const WEB_VERSION = '20.36.0';
+const WEB_VERSION = '20.37.0';

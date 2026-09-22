@@ -322,11 +322,45 @@ const EdMissionTable = (() => {
           : esc(s.text);
         return `<td>${zeichen}</td>`;
       } },
+    /* DIE EINSATZNUMMER DES TAGES (E-ZE-33, Schritt 15 AP9b). Sie kam mit
+       der Tagesuebersicht hinzu und ist dort keine Zierspalte, sondern die
+       VERBINDUNG ZUR KARTE: Pins und Popups heissen „Einsatz <Nr.>". Faellt
+       sie weg, steht die Nummer im Kartenpopup und sonst nirgends mehr.
+
+       `_no` vergibt die Seite, nicht der Server -- api/day.php liefert
+       aufsteigend nach Beginn, index.php zaehlt durch. Suche und
+       Zeitraumuebersicht setzen sie nicht und bekommen die Spalte deshalb
+       gar nicht erst: Eine laufende Nummer ueber mehrere Diensttage hinweg
+       waere keine Nummer, sondern eine Zeilenzahl. */
+    { key: 'no',    kopf: 'Nr.',                   thClass: 'mitte-spalte',
+      nurWenn: liste => liste.some(m => m._no != null),
+      wert: m => m._no == null ? -1 : m._no,
+      zelle: m => `<td class="mitte-spalte">${m._no == null ? '' : m._no}</td>` },
+    /* DAS DATUM HAT KEIN `nurWenn`, UND DAS IST EINE KORREKTUR.
+       In AP9b stand hier zuerst „nur zeigen, wenn es mehrere Tage gibt" --
+       die Tagesuebersicht hat einen, und die Spalte waere von selbst
+       weggefallen. Der Bildvergleich hat gezeigt, was das anrichtet: Im
+       Monat Januar des Referenzbestands liegen beide Einsaetze auf DEMSELBEN
+       Tag, und die Zeitraumuebersicht verlor dort ihre Datumsspalte --
+       waehrend sie weiter nach ihr sortierte. Die Beschriftung las sich dann
+       „älteste zuerst" ohne Spaltennamen: sortiert nach etwas, das nicht
+       dasteht.
+       Die Artspalte darf das (ein Zeichen, das sich nie aendert, sagt
+       nichts), das Datum nicht (es sagt, WELCHER Tag). Wer die Spalte nicht
+       will, nennt sie in `opts.ohne` -- so macht es index.php. */
     { key: 'day',   kopf: 'Datum',                 thClass: '',
       wert: m => m.day,
       zelle: m => `<td>${fmtTag(m.day)}</td>` },
+    /* SORTIERT WIRD CHRONOLOGISCH, NICHT ALPHABETISCH (E-ZE-32).
+       `start_hhmm` ist eine Zeichenkette, und bei einem Dienst ueber
+       Mitternacht -- laut Handbuch „der klassische Fall" -- stuende damit
+       01:10 vor 23:50. Still: keine Meldung, keine Luecke, nur eine falsche
+       Reihenfolge, die richtig aussieht. `start_sort` kommt seit Schritt 15
+       AP9b aus allen drei Endpunkten und traegt 'Y-m-d H:i' in Ortszeit.
+       Der Rueckfall haelt die Datei fuer sich lauffaehig; er ist NICHT die
+       Loesung, sondern das Verhalten von vorher. */
     { key: 'start', kopf: 'Beginn',                thClass: '',
-      wert: m => m.start_hhmm,
+      wert: m => m.start_sort || ((m.day || '') + ' ' + (m.start_hhmm || '')),
       zelle: m => `<td>${m.start_hhmm}</td>` },
     /* NOWRAP STATT UMBRUCH (F-N1-G). „1h 06min" passte nicht in die Spalte
        und brach nach der Stunde um — eine Dauer auf zwei Zeilen liest sich
@@ -349,10 +383,12 @@ const EdMissionTable = (() => {
        mehr der Bestand. Siehe den Kopfkommentar oben; `f` ist null, solange
        die Seite keine Faehigkeiten gesetzt hat. */
     { key: 'winch', kopf: 'Winde',                 thClass: 'haken-spalte',
+      katalog: 'winch',
       nurWenn: (liste, f) => f ? !!f.winch : liste.some(m => m.winch),
       wert: m => m.winch ? 1 : 0,
       zelle: m => `<td class="haken-spalte">${m.winch ? HAKEN() : ''}</td>` },
     { key: 'bw',    kopf: 'Bergwacht',             thClass: 'haken-spalte',
+      katalog: 'bergwacht',
       nurWenn: (liste, f) => f ? !!f.bergwacht : liste.some(m => m.bergwacht),
       wert: m => m.bergwacht ? 1 : 0,
       zelle: m => `<td class="haken-spalte">${m.bergwacht ? HAKEN() : ''}</td>` },
@@ -363,6 +399,7 @@ const EdMissionTable = (() => {
        muss er trennen, setzt er den Bindestrich dazu. Dasselbe bei
        „Fehleinsatz". */
     { key: 'sec',   kopf: 'Sekundär&shy;transport', thClass: 'haken-spalte',
+      katalog: 'secondary',
       wert: m => m.secondary ? 1 : 0,
       zelle: m => `<td class="haken-spalte">${m.secondary ? HAKEN() : ''}</td>` },
     /* Fehleinsatz (E17, seit Web 6.1.0 erfassbar). Wie Winde und Bergwacht
@@ -387,6 +424,113 @@ const EdMissionTable = (() => {
       zelle: m => `<td class="zahl-spalte">${fmtKmZahl(m.distance_m)}</td>` }
   ];
 
+  /* ---- Der Feldkatalog behaelt seinen Griff auf die Tabelle -------------
+   *
+   * Drei Spalten oben tragen `katalog`: Sie gehoeren zu einem Feld mit
+   * 'day_col' in mission_fields.php. Bis Schritt 15 AP9b galt dieser
+   * Schluessel NUR fuer die Tagesuebersicht, und die baute ihre Zeilen
+   * selbst; Suche und Zeitraum fuehrten dieselben drei Spalten ein zweites
+   * Mal, von Hand. Jetzt gibt es einen Erzeuger -- und damit die Frage, wer
+   * ueber die Spalten bestimmt.
+   *
+   * DIE ANTWORT IST GETEILT, und beide Haelften stehen hier:
+   *
+   *   Der KATALOG bestimmt, WELCHE Spalten es gibt. Faellt ein 'day_col'
+   *   weg, faellt die Spalte -- auf allen drei Seiten. Kommt eines hinzu,
+   *   erscheint die Spalte, ohne dass hier jemand etwas eintraegt
+   *   (Backlog Nr. 10, „Feldkatalog statt Sonderfall").
+   *
+   *   DIESE DATEI bestimmt, WIE sie aussehen und in welcher REIHENFOLGE sie
+   *   stehen. Das ist E-ZE-34: Beschriftung, Ausrichtung und
+   *   Hakenreihenfolge folgen dem Modul. Deshalb heisst die Spalte hier
+   *   „Sekundär&shy;transport" mit weichem Trennzeichen und nicht
+   *   „Sekundär<br>Transport" wie im Katalog, und deshalb stehen Winde und
+   *   Bergwacht VOR dem Sekundaertransport, obwohl der Katalog sie
+   *   dahinter fuehrt.
+   *
+   * WAS DAS KOSTET, und es gehoert gesagt: 'day_col' heisst ab jetzt „Spalte
+   * in JEDER Einsatztabelle", nicht mehr „Spalte in der Tagesuebersicht".
+   * Wer den Schluessel an einem Feld entfernt, nimmt die Spalte auch aus
+   * Suche und Zeitraumuebersicht. Das ist die Folge davon, dass es nur noch
+   * einen Erzeuger gibt.
+   *
+   * OHNE `KATALOG_SPALTEN` bleibt alles, wie es ist. Eine Seite, die die
+   * Liste nicht setzt, bekommt die drei Spalten unveraendert -- derselbe
+   * benannte Rueckfall wie bei setFaehigkeiten(). Eine Zentrale, die bei
+   * fehlender Zuarbeit still etwas WEGLAESST, ist schlimmer als gar keine.
+   */
+  function katalogListe() {
+    return (typeof KATALOG_SPALTEN !== 'undefined' && Array.isArray(KATALOG_SPALTEN))
+      ? KATALOG_SPALTEN : null;
+  }
+
+  /* Ein Spaltenkopf ALS REINER TEXT -- fuer das Sortierblatt und fuer
+   * `data-label`. Beides zeigte bis Schritt 15 AP9b die ENTITAET roh:
+   * „Sekundär&shy;transport" und „Fehl&shy;einsatz" standen so im mobilen
+   * Blatt von suche.php und zeitraum.php, seit es das Blatt gibt. Die alte
+   * Zeile streifte nur die TAGS ab (`/<[^>]*>/g`), und ein `&shy;` ist kein
+   * Tag; die Seite maskierte den Text danach mit esc(), und aus dem `&`
+   * wurde `&amp;`.
+   *
+   * Der Umweg ueber ein Wegwerf-Element loest jede Entitaet, nicht die drei,
+   * die einem gerade einfallen. Die Tags werden VORHER durch ein Leerzeichen
+   * ersetzt: textContent wuerde `Sekundär<br>Transport` sonst zu
+   * „SekundärTransport" zusammenziehen. Das weiche Trennzeichen bleibt als
+   * U+00AD stehen — unsichtbar, und es erlaubt dem Blatt dieselbe Trennung
+   * wie dem Tabellenkopf.
+   *
+   * Der Text stammt aus dieser Datei oder aus dem Feldkatalog, nie aus einer
+   * Eingabe; dieselbe Zeichenkette geht zwei Zeilen weiter ohnehin als
+   * innerHTML in den Kopf. */
+  function nurText(html) {
+    const el = document.createElement('div');
+    el.innerHTML = String(html == null ? '' : html).replace(/<[^>]*>/g, ' ');
+    return el.textContent.replace(/\s+/g, ' ').trim();
+  }
+
+  /** Eine Spalte, die der Katalog kennt und diese Datei nicht: generisch. */
+  function katalogSpalte(d) {
+    const haken = d.art === 'check';
+    return {
+      key: 'dc:' + d.col,
+      kopf: d.label || d.col,
+      thClass: (haken ? 'haken-spalte ' : '') + (d.klasse || ''),
+      katalog: d.col,
+      /* Haengt das Feld an einer Faehigkeit ('cap_gate'), folgt die Spalte
+         ihr -- genau wie Winde und Bergwacht oben (E-ZE-31). */
+      nurWenn: d.cap
+        ? (liste, f) => f ? !!f[d.cap] : liste.some(m => m[d.col])
+        : null,
+      wert: m => haken ? (m[d.col] ? 1 : 0) : String(m[d.col] == null ? '' : m[d.col]).toLowerCase(),
+      zelle: m => {
+        if (haken) {
+          return `<td class="haken-spalte ${d.klasse || ''}">${m[d.col] ? HAKEN() : ''}</td>`;
+        }
+        const t = (m[d.col] == null || m[d.col] === '') ? '' : String(m[d.col]);
+        return `<td class="${d.klasse || ''}${t ? '' : ' dash'}">${t ? esc(t) : '–'}</td>`;
+      },
+    };
+  }
+
+  /** SPALTEN, abgeglichen mit dem Feldkatalog. */
+  function spaltenSatz() {
+    const kat = katalogListe();
+    if (!kat) { return SPALTEN; }
+    const bekannt = new Set(kat.map(d => d.col));
+    const behalten = SPALTEN.filter(sp => !sp.katalog || bekannt.has(sp.katalog));
+    const gedeckt = new Set(behalten.filter(sp => sp.katalog).map(sp => sp.katalog));
+    const neue = kat.filter(d => !gedeckt.has(d.col)).map(katalogSpalte);
+    if (!neue.length) { return behalten; }
+    /* Hinter die LETZTE gedeckte Katalogspalte, nicht ans Ende: Dort stuende
+       sie hinter „km", und die Kilometer sind die Schlussspalte aller drei
+       Tabellen. */
+    let i = behalten.length;
+    for (let k = behalten.length - 1; k >= 0; k--) {
+      if (behalten[k].katalog) { i = k + 1; break; }
+    }
+    return behalten.slice(0, i).concat(neue, behalten.slice(i));
+  }
+
   /**
    * Baut eine Tabelle auf dem uebergebenen <table>-Element auf.
    *
@@ -400,6 +544,11 @@ const EdMissionTable = (() => {
    *                   (zeitraum.php tut das historisch nicht — dort false)
    * opts.seite        Zeilen je Seite; 0 oder fehlend = alle auf einmal.
    *                   Siehe den Abschnitt „Seitengroesse" unten.
+   * opts.sortblatt    Behaelter des mobilen Sortierblatts (`.blatt-liste`);
+   *                   ohne ihn entsteht keins
+   * opts.sortlabel    Element fuer „Datum, neueste zuerst"; wahlfrei
+   * opts.onSortChange wird nach einem Umstellen gerufen: (sortKey, sortAsc)
+   * opts.ohne         Spaltenschluessel, die diese Seite NICHT fuehrt
    * opts.onAfterDraw  wird nach jedem Zeichnen gerufen: (gesamt, gezeigt)
    *                   'gesamt'  Zeilen, die dem Filter entsprechen
    *                   'gezeigt' davon tatsaechlich gezeichnete, 'zeilen'
@@ -443,6 +592,7 @@ const EdMissionTable = (() => {
      * beim Oeffnen sortiert — die eine sagte es, die andere liess es raten.
      * Der Unterschied war historisch gewachsen, nicht gewollt. */
     let daten = [];
+    let datenGesetzt = false;
     /* Bestand fuer die Spaltensichtbarkeit (siehe SPALTEN oben). null heisst
      * „noch nicht gesetzt" — dann gilt die Trefferliste selbst. Das ist fuer
      * zeitraum.php richtig (dort ist die Liste der Zeitraum) und fuer
@@ -486,10 +636,19 @@ const EdMissionTable = (() => {
       table.insertAdjacentElement('afterend', mehrZeile);
     }
 
+    /* Spalten, die diese Seite ausdruecklich NICHT fuehrt. Eine Liste mit
+     * heute genau einem Eintrag, und der steht in index.php: Die
+     * Tagesuebersicht zeigt den Fehleinsatz bewusst nicht (Handbuch 4.1 —
+     * „er steht im Einsatz selbst und auf der Kachel"). Alles andere
+     * entscheidet `nurWenn` von selbst: Die Nummer gibt es nur, wo `_no`
+     * gesetzt ist, das Datum nur bei mehreren, die Art nur bei mehreren. */
+    const ohne = new Set(opts.ohne || []);
+
     /** Die Spalten, die dieser Bestand rechtfertigt (A13d). */
     function sichtbareSpalten() {
       const basis = bestand !== null ? bestand : daten;
-      return SPALTEN.filter(sp => !sp.nurWenn || sp.nurWenn(basis, faehig));
+      return spaltenSatz().filter(sp => !ohne.has(sp.key)
+        && (!sp.nurWenn || sp.nurWenn(basis, faehig)));
     }
 
     function zeichneKopf(spalten) {
@@ -500,7 +659,7 @@ const EdMissionTable = (() => {
         th.dataset.key = sp.key;
         /* Beschriftung ohne Auszeichnung — fuer das Sortierblatt, das
          * dieselben Spalten fuehrt wie der Kopf (E-P3-32). */
-        th.dataset.label = sp.kopf.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        th.dataset.label = nurText(sp.kopf);
         th.innerHTML = sp.kopf;
         if (sp.key === sortKey) {
           const pfeil = document.createElement('span');
@@ -531,11 +690,24 @@ const EdMissionTable = (() => {
        * geteilter Link kann nach einer Spalte sortieren, die der eigene
        * Bestand nicht zeigt. Die Reihenfolge stimmt dann trotzdem, nur der
        * Pfeil hat keinen Kopf, an dem er stehen koennte. */
-      const sp = SPALTEN.find(s => s.key === sortKey) || SPALTEN[0];
+      const alle = spaltenSatz();
+      const sp = alle.find(s => s.key === sortKey) || alle[0];
+      /* GLEICHSTAENDE: die Einsatznummer entscheidet, wo es eine gibt
+       * (Schritt 15 AP9b). Die Tagesuebersicht hatte das schon -- sechs
+       * gleich lange Einsaetze standen dort nach einem zweiten Klick wieder
+       * 1-6 und nicht in der Reihenfolge, die der Sortierer gerade uebrig
+       * liess. Ohne sie waere das eine stille Verschlechterung: Array.sort
+       * ist zwar stabil, aber die vorige Reihenfolge ist nach dem ersten
+       * Sortieren nicht mehr die urspruengliche.
+       * Die Nummer geht NICHT in die Richtung ein: Sie ordnet den
+       * Gleichstand, sie kehrt ihn nicht um. Wo es keine gibt (Suche,
+       * Zeitraum), bleibt es bei der stabilen Sortierung von vorher. */
       const sortiert = daten.slice().sort((a, b) => {
         const x = sp.wert(a), y = sp.wert(b);
         const r = (x > y) - (x < y);
-        return sortAsc ? r : -r;
+        if (r !== 0) { return sortAsc ? r : -r; }
+        if (a._no != null && b._no != null) { return a._no - b._no; }
+        return 0;
       });
       const gezeigt = seite > 0 ? sortiert.slice(0, sichtbar) : sortiert;
       tbody.innerHTML = '';
@@ -574,6 +746,7 @@ const EdMissionTable = (() => {
         opts.kacheln.innerHTML = gezeigt
           .map(m => kachel(m, Object.assign({ farbe: m._col }, ko))).join('');
       }
+      zeichneSortblatt(spalten);
       zeichneMehr(sortiert.length, gezeigt.length);
       /* Dritter Wert: die vollstaendige Trefferliste. Die Suche rechnet
        * daraus ihre km-Summe — ueber ALLE Treffer, nicht nur die
@@ -595,6 +768,57 @@ const EdMissionTable = (() => {
       if (mehrZeile.hidden && naechste) { naechste.focus(); }
     }
 
+    /* ---- DAS MOBILE SORTIERBLATT -------------------------------------
+     *
+     * Unter 720 px zeigen alle drei Seiten Kacheln statt einer Tabelle, und
+     * eine Kachel hat keine Spaltenkoepfe zum Anklicken. Das Blatt ist dort
+     * der EINZIGE Weg zu sortieren (E-P3-32).
+     *
+     * SEIT SCHRITT 15 AP9b STEHT ES HIER. Bis dahin baute es jede Seite
+     * selbst: 22 Zeilen in `suche.php`, dieselben 22 in `zeitraum.php`
+     * (zeichengleich bis auf einen Aufruf) und 20 in `index.php`. Alle drei
+     * lasen ihre Spalten schon aus `tabelle.spalten()` — die LISTE war also
+     * gemeinsam, die SCHLEIFE dreifach. Und der Unterschied kostete: In
+     * suche.php und zeitraum.php stellte ein Klick im Blatt um, ohne dass
+     * sich etwas bewegte, weil setSort() nicht zeichnete und die Seite es
+     * auch nicht tat.
+     *
+     * DIE BESCHRIFTUNG IST WAHLFREI. `sortlabel` bekommt „Datum, neueste
+     * zuerst"; index.php hat kein solches Feld und uebergibt keins. Die
+     * Sonderworte fuer den Datumsschluessel stehen hier, weil „absteigend"
+     * bei einem Datum niemandem sagt, was oben steht. */
+    function zeichneSortblatt(spalten) {
+      const liste = opts.sortblatt;
+      const richtung = sortKey === 'day'
+        ? (sortAsc ? 'älteste zuerst' : 'neueste zuerst')
+        : (sortAsc ? 'aufsteigend' : 'absteigend');
+      const sichtbareSp = spalten.filter(sp => sp.kopf !== '');
+
+      if (opts.sortlabel) {
+        const sp = sichtbareSp.find(x => x.key === sortKey);
+        opts.sortlabel.innerHTML = sp
+          ? esc(nurText(sp.kopf)) + '<span class="nur-ab-720">, ' + esc(richtung) + '</span>'
+          : esc(richtung);
+      }
+      if (!liste) { return; }
+      liste.innerHTML = '';
+      sichtbareSp.forEach(sp => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        const aktiv = sp.key === sortKey;
+        b.className = 'blatt-zeile' + (aktiv ? ' aktiv' : '');
+        b.innerHTML = '<span>' + esc(nurText(sp.kopf)) + '</span>'
+          + (aktiv ? edSymbol('pfeil-hoch', sortAsc ? '' : 'symbol-oben', richtung) : '');
+        b.addEventListener('click', () => {
+          if (aktiv) { sortAsc = !sortAsc; } else { sortKey = sp.key; sortAsc = true; }
+          zeichne();
+          if (opts.onSortChange) { opts.onSortChange(sortKey, sortAsc); }
+          if (window.edBlatt) { edBlatt.zu(); }
+        });
+        liste.appendChild(b);
+      });
+    }
+
     /* Nachladezeile beschriften. Sie verschwindet, sobald nichts mehr fehlt —
      * eine Schaltflaeche, die nichts mehr zu tun hat, ist eine Frage an die
      * NutzerIn, die sie nicht beantworten kann. Der zweite Knopf („alle")
@@ -612,14 +836,24 @@ const EdMissionTable = (() => {
 
     function setData(liste) {
       daten = liste || [];
+      datenGesetzt = true;
       // Neue Liste, neue erste Seite (siehe „Seitengroesse" oben).
       sichtbar = seite;
       zeichne();
     }
 
+    /* ZEICHNET SEIT SCHRITT 15 AP9b SELBST. Bis dahin setzte diese Funktion
+     * nur Schluessel und Richtung -- das mobile Sortierblatt der Suche und
+     * der Zeitraumuebersicht stellte also um, ohne dass sich etwas bewegte,
+     * und funktionierte nur dort, wo die Seite hinterher von Hand
+     * nachzeichnete. Wer eine Sortierfunktion ruft, will sortiert sehen. */
     function setSort(key, asc) {
-      if (!SPALTEN.some(s => s.key === key)) { return; }
+      if (!spaltenSatz().some(s => s.key === key)) { return; }
       sortKey = key; sortAsc = !!asc;
+      /* Nur, wenn es schon etwas zu zeichnen gab. `fragmentLesen()` in
+       * suche.php ruft setSort VOR dem ersten setData -- dort waere ein
+       * Zeichnen eine leere Tabelle, die der naechste Zug sofort ersetzt. */
+      if (datenGesetzt) { zeichne(); }
     }
 
     /* Bestand fuer die Spaltensichtbarkeit setzen. Zeichnet NICHT selbst: Die
@@ -639,8 +873,7 @@ const EdMissionTable = (() => {
        * sortiert niemand. */
       spalten: () => sichtbareSpalten()
         .filter(sp => sp.kopf !== '')
-        .map(sp => ({ key: sp.key,
-                      label: sp.kopf.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() })),
+        .map(sp => ({ key: sp.key, label: nurText(sp.kopf) })),
       get sortKey() { return sortKey; },
       get sortAsc() { return sortAsc; }
     };

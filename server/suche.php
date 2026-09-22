@@ -359,13 +359,11 @@ ui_seite_start(['titel' => 'Suche']);
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
-<?php /* Artsymbole für die Spalte „Art" der Einsatztabelle — dieselben wie in
-         der Tagesleiste, aus dt_art_symbole() (Befund P9). */ ?>
-<script<?= kopf_nonce_attr() ?>>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
-        /* Die Zeichen der Diensttag-TYPEN daneben (E-S9-13, Web 16.0.0) — sonst
-           zeichnet diese Tabelle die Betriebsart, waehrend die Leiste den Typ
-           zeichnet. Dieselbe Quelle wie auf der Serverseite. */
-        const TYP_SYMBOLE = <?= json_js(dt_typ_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
+<?php /* Vorspann der Einsatztabelle (Artsymbole, Typsymbole, Katalogspalten)
+         — seit Schritt 15 AP9b an EINER Stelle, ui_tabellen_bootstrap() in
+         ui.php. Hier standen diese Zeilen wortgleich in zwei Dateien.
+         Er muss VOR assets/missiontable.js stehen. */
+      ui_tabellen_bootstrap(); ?>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <?php /* Boolesche Freitextsuche (Baustein B10, Web 7.0.0). Eigene Datei, weil
@@ -991,7 +989,13 @@ const tabelle = EdMissionTable.erzeuge({
   hervor: maskiert => EdSuchtext.hervor(maskiert, trefferworte),
   sortKey: 'day', sortAsc: false,   // neueste zuerst
   seite: ZEILEN_JE_SEITE,
-  onSortChange: () => { fragmentSchreiben(); sortLabel(); },
+  /* Das mobile Sortierblatt und seine Beschriftung baut seit Schritt 15
+     AP9b das Modul (dieselben 22 Zeilen standen in zeitraum.php). Was hier
+     bleibt, gehoert zu DIESER Seite: Der Sortierschluessel steht im
+     Fragment, damit ein geteilter Link ihn mitbringt. */
+  sortblatt: document.getElementById('sortliste'),
+  sortlabel: document.getElementById('sortlabel'),
+  onSortChange: () => fragmentSchreiben(),
   /* Die Ergebniszeile entsteht HIER und nicht in anwenden(): Auch das
      Nachladen zeichnet neu, ohne dass ein Filter sich geändert hätte. Stünde
      der Text dort, bliebe nach dem ersten Klick auf „Weitere 200 anzeigen"
@@ -1096,37 +1100,6 @@ function zeigeFilterzustand(treffer) {
     treffer === 1 ? '1 Treffer zeigen' : `${treffer} Treffer zeigen`;
 }
 
-/** Beschriftung des Sortierknopfs: Spalte und Richtung im Klartext. */
-function sortLabel() {
-  const sp = tabelle.spalten().find(s => s.key === tabelle.sortKey);
-  /* Beim Datum sagt „neueste zuerst" mehr als „absteigend" (Mockup 28) —
-     überall sonst ist die Richtung selbst die Auskunft. Mobil bleibt nur der
-     Spaltenname stehen, daneben zeigt der Pfeil die Richtung. */
-  const richtung = tabelle.sortKey === 'day'
-    ? (tabelle.sortAsc ? 'älteste zuerst' : 'neueste zuerst')
-    : (tabelle.sortAsc ? 'aufsteigend' : 'absteigend');
-  $('sortlabel').innerHTML = sp
-    ? esc(sp.label) + '<span class="nur-ab-720">, ' + esc(richtung) + '</span>'
-    : esc(richtung);
-  // Das Blatt fuehrt dieselben Spalten wie der Kopf — keine zweite Liste.
-  const liste = $('sortliste');
-  liste.innerHTML = '';
-  tabelle.spalten().forEach(sp2 => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    const aktiv = sp2.key === tabelle.sortKey;
-    b.className = 'blatt-zeile' + (aktiv ? ' aktiv' : '');
-    b.innerHTML = '<span>' + esc(sp2.label) + '</span>'
-      + (aktiv ? edSymbol('pfeil-hoch', tabelle.sortAsc ? '' : 'symbol-oben', richtung) : '');
-    b.addEventListener('click', () => {
-      tabelle.setSort(sp2.key, aktiv ? !tabelle.sortAsc : true);
-      fragmentSchreiben();
-      sortLabel();
-      if (window.edBlatt) { edBlatt.zu(); }
-    });
-    liste.appendChild(b);
-  });
-}
 
 function anwenden() {
   const q = $('f-q').value;
@@ -1289,7 +1262,6 @@ function verdrahten() {
   gruppenOeffnen();   // Blöcke aus einem geteilten Link sichtbar machen
   missions.forEach(baueHeuhaufen);
   anwenden();
-  sortLabel();
 
   // Auch ohne Wrap aufrufen: dann liefert EdUnlock sofort null, es erscheint
   // kein Dialog, und der Altersfilter wird korrekt als unbenutzbar markiert.

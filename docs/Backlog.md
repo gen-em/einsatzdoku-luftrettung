@@ -759,110 +759,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 ---
 
 
-57. **Die Tagesübersicht baut ihre Einsatztabelle ein zweites Mal.**
-    *Aufgenommen 02.09.2026 als F-S3-A (S3/AP5).*
-    `assets/missiontable.js` führt die Spaltendefinitionen der drei
-    Einsatztabellen an **einer** Stelle; `index.php` baut seine Zeilen daneben
-    noch einmal selbst zusammen (`tr.innerHTML = …`). Die beiden sind
-    auseinandergelaufen: Die Dauerspalte trug in `missiontable.js` seit
-    F-N1-G die Klasse `zeit-spalte`, in `index.php` nicht — deshalb brach
-    „1h 06min" dort um. **Die Folge ist behoben** (die Klasse steht jetzt in
-    beiden), **die Ursache nicht**: Solange es zwei Aufbauten gibt, kommt die
-    nächste Änderung wieder nur an einem an, und es fällt wieder erst
-    jemandem im Browser auf.
-    Nicht in S3 gemacht, weil die Vereinheitlichung Sortierung, Sortierblatt
-    und die Kachelform berührt — das ist ein eigenes Paket, kein Nachklapp.
-
-    **Nachgemessen am 12.09.2026 (Backlog-Runde 2) — der Punkt ist größer als
-    er dasteht, und zwei seiner Angaben stimmen nicht.** Er bleibt offen: Was
-    hier zu tun wäre, braucht ein Mockup und eine Freigabe und passt damit
-    nicht in eine Backlog-Runde. Damit der nächste Anlauf nicht wieder bei
-    null anfängt, steht hier, was gemessen ist.
-
-    *Was am Text oben nicht stimmt:*
-
-    - *„`missiontable.js` führt die Spaltendefinitionen der drei
-      Einsatztabellen an einer Stelle."* Es sind **zwei** Tabellen
-      (`suche.php`, `zeitraum.php`). Die dritte hat sie **nie** von dort
-      bezogen: `index.php` baut Kopf, Zellen und Sortierschlüssel selbst, in
-      **drei** getrennten Listen. Von `missiontable.js` holt sie nur
-      Zellbausteine. Es sind also zwei Erzeuger und **vier** Spaltenlisten —
-      sechs, wenn man `api/range.php` und `api/suchindex.php` mitzählt, die
-      `winch`/`bergwacht`/`secondary`/`false_alarm` hart im SELECT führen,
-      während `api/day.php` sie aus `mf_tagesspalten()` zieht.
-    - *„weil die Vereinheitlichung … die Kachelform berührt."* Tut sie nicht
-      mehr. Seit E-P3-32 baut `index.php` seine Kacheln bereits über
-      `EdMissionTable.kachel()`, wortgleich zu den anderen beiden. Von den
-      drei genannten Hindernissen sind zwei übrig — und eines davon, das
-      **Sortierblatt**, ist selbst dreifach vorhanden (`index.php` baut es aus
-      den `th`, `suche.php` und `zeitraum.php` je aus `tabelle.spalten()`).
-
-    *Fünf Driften, vier davon sichtbar* (der Eintrag nennt nur die eine
-    behobene):
-
-    1. **Spaltensatz:** drei Spalten nur im Modul, eine nur in `index.php`.
-    2. **Sekundärtransport:** ein Wort mit weichem Trennstrich gegen zwei
-       Zeilen mit hartem `<br>` — Kopfhöhe **42 gegen 64 px**.
-    3. **Ausrichtung:** Alter zentriert gegen rechtsbündig, Beginn zentriert
-       gegen links. Die Entscheidung dazu fiel in **derselben Sitzung**, in
-       der dieser Punkt aufgenommen wurde (S3/AP5 Block I) — sie wurde am
-       zweiten Aufbau getroffen und erreichte den ersten nie. Der Punkt hat
-       sich beim Aufschreiben also selbst wiederholt.
-    4. **Hakenreihenfolge:** Sekundär-Bergwacht-Winde gegen
-       Winde-Bergwacht-Sekundär, genau umgekehrt.
-    5. Die Dauerspalte — behoben, wie oben beschrieben.
-
-    *Und eine Falle, die „nur den Erzeuger zusammenführen, 0 Pixel bewegen
-    sich" widerlegt:* Die beiden Sortierungen behandeln **Gleichstände**
-    verschieden. `index.php` multipliziert den Stichentscheid mit der
-    Richtung, `missiontable.js` verlässt sich auf die stabile Sortierung.
-    Nachgerechnet mit sechs gleichwertigen Zeilen: heute absteigend
-    6,5,4,3,2,1 — über das Modul 1,2,3,4,5,6. Ein zweiter Klick auf
-    „Sekundärtransport" dreht an einem NEF-Tag heute alle sechs Zeilen und
-    täte es danach nicht mehr. Dazu setzt `missiontable.js` `sortable` auf
-    **jeden** Kopf, woran `cursor:pointer` und ein Hover hängen.
-
-    *Was daraus folgt:* **Schritt 0 ist eine Freigabe, keine Codearbeit.** Drei
-    Fragen müssen vorher beantwortet sein — Beschriftung, Ausrichtung,
-    Hakenreihenfolge —, und jede Antwort ändert eine der beiden Seiten
-    sichtbar. Danach der Erzeuger (rund 110 Zeilen JS und 21 Zeilen PHP
-    entfallen), danach die Liste aus dem Feldkatalog, soweit er sie trägt: Er
-    kennt heute **3 von 13** Spalten, und nur für die Tagesübersicht —
-    `day_col` heißt wörtlich das. Vier Spalten können gar nicht aus ihm
-    kommen, weil sie keine Spalten von `missions` sind. Geschätzt
-    zweieinhalb bis drei Tage. Zuordnung: eigenes Paket, nicht Backlog-Runde.
-
-    **Entschieden am 12.09.2026: Das gemeinsame Modul (`assets/missiontable.js`)
-    ist die Vorlage.** Beschriftung der Spalte „Sekundärtransport",
-    Ausrichtung von Alter und Beginn und die Reihenfolge der Haken folgen
-    ihm; `index.php` zieht nach. Die drei Freigabefragen aus Schritt 0 sind
-    damit beantwortet; es bleibt ein eigenes Paket.
-
-    > **Bindende Nebenbedingung — am Code belegt und wichtiger, als sie
-    > klingt.** Die bedingte Anzeige von Winde und Bergwacht läuft über
-    > `cap_gate` im Feldkatalog (`mission_fields.php`): Ein Feld erscheint
-    > nur, wenn der Diensttag die passende Fähigkeit trägt. `index.php` holt
-    > seine Spalten über `mf_tagesspalten()` und bekommt das Verhalten
-    > geschenkt. **Suche und Zeitraumübersicht tun das nicht** —
-    > `api/range.php` und `api/suchindex.php` führen `winch`, `bergwacht`,
-    > `secondary` und `false_alarm` hart im SELECT.
-    >
-    > Genau die Eigenschaft, die erhalten bleiben soll, sitzt heute auf der
-    > Seite, die weichen soll. Sie muss beim Zusammenführen **ausdrücklich**
-    > mitgenommen werden — als erster Prüffall des Pakets. Geht sie verloren,
-    > fällt das erst an einem NEF-Tag auf, an dem plötzlich Windenspalten
-    > stehen — und dann sieht es aus wie ein neuer Fehler, nicht wie ein
-    > verlorener Vertrag.
-
-
-    **Zuordnung (20.09.2026): Schritt 15 AP9** — mit dem Konzept
-    Zentralisierung. Dort kommen zwei Dinge dazu, die hier fehlten:
-    **E-ZE-01** (die Gleichstände — was passiert, wenn zwei Einsätze
-    dieselbe Sortiergröße haben; `sortable` entscheidet das heute
-    stillschweigend anders als der Aufbau in `index.php`) und **F-ZE-6**
-    (der **Spaltensatz je Seite** ist nicht derselbe — die drei Tabellen
-    zeigen verschiedene Spalten, und das muss eine Vereinheitlichung
-    abbilden, statt es einzuebnen).
 62. **Logodateien tragen teilweise wieder die alten Farbwerte.**
     *Bis zum 02.09.2026 trug dieser Punkt die Nummer 49. Sie war durch die
     Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
@@ -3579,6 +3475,153 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+57. **Die Tagesübersicht baut ihre Einsatztabelle ein zweites Mal.**
+    *Aufgenommen 02.09.2026 als F-S3-A (S3/AP5).*
+    `assets/missiontable.js` führt die Spaltendefinitionen der drei
+    Einsatztabellen an **einer** Stelle; `index.php` baut seine Zeilen daneben
+    noch einmal selbst zusammen (`tr.innerHTML = …`). Die beiden sind
+    auseinandergelaufen: Die Dauerspalte trug in `missiontable.js` seit
+    F-N1-G die Klasse `zeit-spalte`, in `index.php` nicht — deshalb brach
+    „1h 06min" dort um. **Die Folge ist behoben** (die Klasse steht jetzt in
+    beiden), **die Ursache nicht**: Solange es zwei Aufbauten gibt, kommt die
+    nächste Änderung wieder nur an einem an, und es fällt wieder erst
+    jemandem im Browser auf.
+    Nicht in S3 gemacht, weil die Vereinheitlichung Sortierung, Sortierblatt
+    und die Kachelform berührt — das ist ein eigenes Paket, kein Nachklapp.
+
+    **Nachgemessen am 12.09.2026 (Backlog-Runde 2) — der Punkt ist größer als
+    er dasteht, und zwei seiner Angaben stimmen nicht.** Er bleibt offen: Was
+    hier zu tun wäre, braucht ein Mockup und eine Freigabe und passt damit
+    nicht in eine Backlog-Runde. Damit der nächste Anlauf nicht wieder bei
+    null anfängt, steht hier, was gemessen ist.
+
+    *Was am Text oben nicht stimmt:*
+
+    - *„`missiontable.js` führt die Spaltendefinitionen der drei
+      Einsatztabellen an einer Stelle."* Es sind **zwei** Tabellen
+      (`suche.php`, `zeitraum.php`). Die dritte hat sie **nie** von dort
+      bezogen: `index.php` baut Kopf, Zellen und Sortierschlüssel selbst, in
+      **drei** getrennten Listen. Von `missiontable.js` holt sie nur
+      Zellbausteine. Es sind also zwei Erzeuger und **vier** Spaltenlisten —
+      sechs, wenn man `api/range.php` und `api/suchindex.php` mitzählt, die
+      `winch`/`bergwacht`/`secondary`/`false_alarm` hart im SELECT führen,
+      während `api/day.php` sie aus `mf_tagesspalten()` zieht.
+    - *„weil die Vereinheitlichung … die Kachelform berührt."* Tut sie nicht
+      mehr. Seit E-P3-32 baut `index.php` seine Kacheln bereits über
+      `EdMissionTable.kachel()`, wortgleich zu den anderen beiden. Von den
+      drei genannten Hindernissen sind zwei übrig — und eines davon, das
+      **Sortierblatt**, ist selbst dreifach vorhanden (`index.php` baut es aus
+      den `th`, `suche.php` und `zeitraum.php` je aus `tabelle.spalten()`).
+
+    *Fünf Driften, vier davon sichtbar* (der Eintrag nennt nur die eine
+    behobene):
+
+    1. **Spaltensatz:** drei Spalten nur im Modul, eine nur in `index.php`.
+    2. **Sekundärtransport:** ein Wort mit weichem Trennstrich gegen zwei
+       Zeilen mit hartem `<br>` — Kopfhöhe **42 gegen 64 px**.
+    3. **Ausrichtung:** Alter zentriert gegen rechtsbündig, Beginn zentriert
+       gegen links. Die Entscheidung dazu fiel in **derselben Sitzung**, in
+       der dieser Punkt aufgenommen wurde (S3/AP5 Block I) — sie wurde am
+       zweiten Aufbau getroffen und erreichte den ersten nie. Der Punkt hat
+       sich beim Aufschreiben also selbst wiederholt.
+    4. **Hakenreihenfolge:** Sekundär-Bergwacht-Winde gegen
+       Winde-Bergwacht-Sekundär, genau umgekehrt.
+    5. Die Dauerspalte — behoben, wie oben beschrieben.
+
+    *Und eine Falle, die „nur den Erzeuger zusammenführen, 0 Pixel bewegen
+    sich" widerlegt:* Die beiden Sortierungen behandeln **Gleichstände**
+    verschieden. `index.php` multipliziert den Stichentscheid mit der
+    Richtung, `missiontable.js` verlässt sich auf die stabile Sortierung.
+    Nachgerechnet mit sechs gleichwertigen Zeilen: heute absteigend
+    6,5,4,3,2,1 — über das Modul 1,2,3,4,5,6. Ein zweiter Klick auf
+    „Sekundärtransport" dreht an einem NEF-Tag heute alle sechs Zeilen und
+    täte es danach nicht mehr. Dazu setzt `missiontable.js` `sortable` auf
+    **jeden** Kopf, woran `cursor:pointer` und ein Hover hängen.
+
+    *Was daraus folgt:* **Schritt 0 ist eine Freigabe, keine Codearbeit.** Drei
+    Fragen müssen vorher beantwortet sein — Beschriftung, Ausrichtung,
+    Hakenreihenfolge —, und jede Antwort ändert eine der beiden Seiten
+    sichtbar. Danach der Erzeuger (rund 110 Zeilen JS und 21 Zeilen PHP
+    entfallen), danach die Liste aus dem Feldkatalog, soweit er sie trägt: Er
+    kennt heute **3 von 13** Spalten, und nur für die Tagesübersicht —
+    `day_col` heißt wörtlich das. Vier Spalten können gar nicht aus ihm
+    kommen, weil sie keine Spalten von `missions` sind. Geschätzt
+    zweieinhalb bis drei Tage. Zuordnung: eigenes Paket, nicht Backlog-Runde.
+
+    **Entschieden am 12.09.2026: Das gemeinsame Modul (`assets/missiontable.js`)
+    ist die Vorlage.** Beschriftung der Spalte „Sekundärtransport",
+    Ausrichtung von Alter und Beginn und die Reihenfolge der Haken folgen
+    ihm; `index.php` zieht nach. Die drei Freigabefragen aus Schritt 0 sind
+    damit beantwortet; es bleibt ein eigenes Paket.
+
+    > **Bindende Nebenbedingung — am Code belegt und wichtiger, als sie
+    > klingt.** Die bedingte Anzeige von Winde und Bergwacht läuft über
+    > `cap_gate` im Feldkatalog (`mission_fields.php`): Ein Feld erscheint
+    > nur, wenn der Diensttag die passende Fähigkeit trägt. `index.php` holt
+    > seine Spalten über `mf_tagesspalten()` und bekommt das Verhalten
+    > geschenkt. **Suche und Zeitraumübersicht tun das nicht** —
+    > `api/range.php` und `api/suchindex.php` führen `winch`, `bergwacht`,
+    > `secondary` und `false_alarm` hart im SELECT.
+    >
+    > Genau die Eigenschaft, die erhalten bleiben soll, sitzt heute auf der
+    > Seite, die weichen soll. Sie muss beim Zusammenführen **ausdrücklich**
+    > mitgenommen werden — als erster Prüffall des Pakets. Geht sie verloren,
+    > fällt das erst an einem NEF-Tag auf, an dem plötzlich Windenspalten
+    > stehen — und dann sieht es aus wie ein neuer Fehler, nicht wie ein
+    > verlorener Vertrag.
+
+
+    **Zuordnung (20.09.2026): Schritt 15 AP9** — mit dem Konzept
+    Zentralisierung. Dort kommen zwei Dinge dazu, die hier fehlten:
+    **E-ZE-01** (die Gleichstände — was passiert, wenn zwei Einsätze
+    dieselbe Sortiergröße haben; `sortable` entscheidet das heute
+    stillschweigend anders als der Aufbau in `index.php`) und **F-ZE-6**
+    (der **Spaltensatz je Seite** ist nicht derselbe — die drei Tabellen
+    zeigen verschiedene Spalten, und das muss eine Vereinheitlichung
+    abbilden, statt es einzuebnen).
+
+    **ERLEDIGT am 22.09.2026 — Schritt 15 AP9b, Web 20.37.0.**
+    `index.php` bezieht Kopf, Zeilen, Kacheln, Sortierung und Sortierblatt
+    aus `assets/missiontable.js`. Gezählt: Zeilenerzeugung `tr.innerHTML`
+    **1 → 0**, Spaltenlisten für Einsatztabellen **4 → 1**,
+    Sortierblatt-Erzeuger **3 → 1**.
+
+    **Die vier Freigabefragen sind entschieden** (E-ZE-31 bis E-ZE-34):
+    Beschriftung, Ausrichtung, Hakenreihenfolge und Gleichstände folgen dem
+    Modul; die Spalte „Nr." bleibt und das Modul lernt sie; die Sortierung
+    nach „Beginn" bleibt chronologisch; Winde und Bergwacht folgen der
+    Fähigkeit und der Betriebsart (AP9a, Web 20.35.0).
+
+    **Der Feldkatalog hat seinen Griff behalten** — der vierte Fund der
+    Vermessung. Das Modul gleicht seine Hakenspalten gegen
+    `KATALOG_SPALTEN` ab: Der Katalog bestimmt, **welche** es gibt
+    (`day_col`), das Modul, **wie** sie aussehen und in welcher Reihenfolge.
+    Preis, benannt: `day_col` heißt ab jetzt „Spalte in **jeder**
+    Einsatztabelle".
+
+    **Drei Fehler kamen dabei ans Licht, alle älter als das Paket:**
+    Das Modul sortierte „Beginn" über die *Zeichenkette* `start_hhmm` und
+    stellte damit bei einem Dienst über Mitternacht 01:10 vor 23:50; das
+    mobile Sortierblatt von Suche und Zeitraumübersicht stellte um, **ohne
+    neu zu zeichnen** (unter 720 px ist es der einzige Weg zu sortieren);
+    und dasselbe Blatt zeigte `Sekundär&shy;transport` als rohe Entität.
+
+    **Nachgemessen:** Formvergleich über 56 Seiten — nach Abzug von
+    Countdown, Versionszeile und dem einen beabsichtigten Kopfwechsel sind
+    **0 von 56** Seiten noch abweichend. Suche und Zeitraumübersicht
+    **0/0/0**. Nachtdienst gebaut (der Bestand hat keinen): mit
+    `start_sort` 21:10 · 22:30 · 23:50 · 00:20 · 01:10 · 02:40, ohne ihn
+    00:20 · 01:10 · 02:40 · 21:10 · 22:30 · 23:50. Gleichstände: zwei
+    Einsätze mit 51 min bleiben in **beiden** Richtungen 3 vor 4.
+    0 Konsolenfehler.
+
+    **Eine Zwischenfassung hat der Bildvergleich abgefangen**, und sie wäre
+    still geblieben: „Datumsspalte nur bei mehreren Tagen" als `nurWenn` im
+    Modul nahm der **Zeitraumübersicht** die Spalte, sobald alle Treffer
+    eines Monats auf einen Tag fielen — während sie weiter nach ihr
+    sortierte. Die Spalte steht jetzt in `opts.ohne` von `index.php`: Eine
+    Seite, die eine Spalte nicht will, sagt es; das Modul rät es nicht.
 
 257. **Fünf Prüfwerkzeuge hingen an der globalen `$CFG` — und meldeten nach
     ihrem Wegfall 30 Erwartungen als „nicht erfüllt", ohne dass die

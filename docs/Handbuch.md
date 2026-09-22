@@ -890,7 +890,25 @@ Pro Tag:
   selbst und auf der Kachel; auswerten lässt er sich in der
   Zeitraum-Übersicht und der Suche. Zahlenspalten stehen rechtsbündig,
   Haken zentriert; ein Klick auf eine Zeile öffnet den Einsatz, ein Klick
-  auf einen Spaltenkopf sortiert. Die Dauer rechnet von Beginn bis Ende des
+  auf einen Spaltenkopf sortiert.
+
+  **Seit Web 20.37.0 ist es dieselbe Tabelle wie in Suche und
+  Zeitraum-Übersicht** — vorher baute die Tagesübersicht sie ein zweites Mal
+  von Hand. Drei Kleinigkeiten sehen dadurch anders aus: Der Kopf
+  „Sekundärtransport" steht als *ein* Wort und trennt nur, wenn der Platz es
+  verlangt (vorher stand „Sekundär" und „Transport" ohne Bindestrich
+  untereinander); das **Alter** steht rechtsbündig wie die übrigen Zahlen;
+  und Winde und Bergwacht stehen **vor** dem Sekundärtransport. Die
+  Reihenfolge der Spalten oben in diesem Absatz stimmte schon vorher — das
+  Handbuch beschrieb die gemeinsame Tabelle, die Tagesübersicht wich davon
+  ab.
+
+  **Beim Sortieren nach „Beginn" steht jetzt auch ein Nachtdienst richtig**
+  (seit Web 20.37.0). Bei einem Dienst über Mitternacht stand in der
+  Zeitraum-Übersicht und in der Suche bis dahin 01:10 *vor* 23:50 — die
+  Uhrzeit wurde als Text verglichen, nicht als Zeitpunkt. Bei gleichen
+  Werten — zwei Einsätze derselben Dauer — entscheidet die Einsatznummer,
+  in beiden Richtungen. Die Dauer rechnet von Beginn bis Ende des
   Einsatzes; ist er noch nicht abgeschlossen, steht dort die Plakette
   „kein Ende". *Bis Web 14.2.1 rechnete sie bis Phase 9 — ein geschnittener
   oder importierter Einsatz hat keine und galt damit als „kein Ende",

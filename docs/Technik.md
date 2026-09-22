@@ -2359,6 +2359,41 @@ den Gesamtbestand (sonst käme und ginge die Spalte beim Tippen),
 `zeitraum.php` bei jedem Tabwechsel auf die Einsätze des Tabs. Ohne den Aufruf
 gilt die Trefferliste selbst.
 
+**Seit Web 20.37.0 baut das Modul alle drei Tabellen** (Schritt 15 AP9b,
+Backlog Nr. 57). `index.php` hatte bis dahin einen eigenen Erzeuger: einen
+handgeschriebenen `<thead>`, `DAY_COLS`, eine `switch`-Leiter in `sortVal()`
+und ein eigenes Sortierblatt. Gezählt: Zeilenerzeugung `tr.innerHTML`
+**1 → 0**, Spaltenlisten **4 → 1**, Sortierblatt-Erzeuger **3 → 1**.
+
+Der Vorspann steht in **`ui_tabellen_bootstrap()`** (`ui.php`) und setzt
+`ART_SYMBOLE`, `TYP_SYMBOLE` und `KATALOG_SPALTEN`; er muss **vor**
+`assets/missiontable.js` stehen. Die drei Hakenspalten gleicht das Modul
+gegen `KATALOG_SPALTEN` ab: **Der Katalog bestimmt, welche es gibt
+(`day_col`), das Modul, wie sie aussehen und in welcher Reihenfolge**
+(E-ZE-34). Damit heißt `day_col` ab jetzt „Spalte in **jeder**
+Einsatztabelle" und nicht mehr „Spalte in der Tagesübersicht" — wer den
+Schlüssel entfernt, nimmt die Spalte auch aus Suche und Zeitraumübersicht.
+Ohne `KATALOG_SPALTEN` bleiben die drei Spalten unverändert; das ist ein
+benannter Rückfall, damit eine Seite ohne Vorspann nicht still Spalten
+verliert.
+
+`opts.ohne` nennt die Spalten, die eine Seite **nicht** führt —
+`index.php` gibt `['fehl', 'day']` an. Beides ist ausdrücklich, nicht
+geraten: `day` stand in einem Zwischenstand als `nurWenn` („nur bei mehreren
+Tagen") im Modul, und das nahm der **Zeitraumübersicht** ihre Datumsspalte,
+sobald alle Treffer eines Monats auf einen Tag fielen — während sie weiter
+nach ihr sortierte. Gefunden hat das der Bildvergleich.
+
+**`start_sort` sortiert chronologisch** (E-ZE-32). `api/day.php`,
+`api/range.php` und `api/suchindex.php` liefern seit Web 20.37.0 den
+Zeitpunkt als `Y-m-d H:i` in Ortszeit. `start_hhmm` allein taugt nicht:
+Bei einem Dienst über Mitternacht steht 01:10 als Zeichenkette vor 23:50,
+und `day` hilft nicht überall — in `api/day.php` und `api/range.php` ist es
+der **Diensttag**, für beide Einsätze derselbe. Bei Gleichstand entscheidet
+`_no`, in beiden Richtungen. Das **mobile Sortierblatt** baut ebenfalls das
+Modul (`opts.sortblatt`, `opts.sortlabel`); bis Web 20.37.0 stellte es auf
+Suche und Zeitraumübersicht um, **ohne neu zu zeichnen**.
+
 **`winch` und `bw` folgen seit Web 20.35.0 nicht mehr dem Bestand, sondern der
 Fähigkeit** (E-ZE-31). `nurWenn` bekommt dafür ein **zweites** Argument, das
 die Seite mit `setFaehigkeiten()` setzt: `zeitraum.php` reicht die

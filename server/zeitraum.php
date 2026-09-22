@@ -128,16 +128,11 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
-<?php /* Die Artsymbole VOR der Tabelle setzen — sie stammen aus
-         dt_art_symbole() (diensttag_lib.php) und sind damit dieselben wie in
-         der Tagesleiste. Gleiches Muster wie CREW_ROLLEN in import.php
-         (Befund P9); assets/missiontable.js führt einen Rückfall, falls die
-         Vorgabe fehlt. */ ?>
-<script<?= kopf_nonce_attr() ?>>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
-        /* Die Zeichen der Diensttag-TYPEN daneben (E-S9-13, Web 16.0.0) — sonst
-           zeichnet diese Tabelle die Betriebsart, waehrend die Leiste den Typ
-           zeichnet. Dieselbe Quelle wie auf der Serverseite. */
-        const TYP_SYMBOLE = <?= json_js(dt_typ_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
+<?php /* Vorspann der Einsatztabelle (Artsymbole, Typsymbole, Katalogspalten)
+         — seit Schritt 15 AP9b an EINER Stelle, ui_tabellen_bootstrap() in
+         ui.php. Hier standen diese Zeilen wortgleich in zwei Dateien.
+         Er muss VOR assets/missiontable.js stehen. */
+      ui_tabellen_bootstrap(); ?>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
@@ -571,7 +566,12 @@ const tabelle = EdMissionTable.erzeuge({
   kacheln: document.getElementById('rangekacheln'),
   kachelOpts: { artDatum: true, knapp: true },
   sortKey: 'day', sortAsc: true,
-  onSortChange: () => sortLabel(),
+  /* Das mobile Sortierblatt und seine Beschriftung baut seit Schritt 15
+     AP9b das Modul. Hier standen 22 Zeilen, die in suche.php zeichengleich
+     noch einmal standen — und ein Klick darin stellte um, ohne dass sich
+     etwas bewegte: setSort() zeichnete nicht, und diese Seite auch nicht. */
+  sortblatt: document.getElementById('sortliste'),
+  sortlabel: document.getElementById('sortlabel'),
   onAfterDraw: (gesamt, gezeigt, zeilen) => {
     document.getElementById('leer').hidden = gesamt > 0;
     document.getElementById('rangetable').hidden = gesamt === 0;
@@ -594,34 +594,6 @@ const tabelle = EdMissionTable.erzeuge({
   }
 });
 
-/* Sortierknopf und -blatt — dasselbe Markup und dieselbe Bedienung wie auf
-   der Suchseite (E-P3-32). Unter 720 px gibt es keinen Tabellenkopf, über den
-   sich sortieren ließe; das Blatt ist dort der einzige Weg. */
-function sortLabel(){
-  const sp = tabelle.spalten().find(x => x.key === tabelle.sortKey);
-  const richtung = tabelle.sortKey === 'day'
-    ? (tabelle.sortAsc ? 'älteste zuerst' : 'neueste zuerst')
-    : (tabelle.sortAsc ? 'aufsteigend' : 'absteigend');
-  document.getElementById('sortlabel').innerHTML = sp
-    ? esc(sp.label) + '<span class="nur-ab-720">, ' + esc(richtung) + '</span>'
-    : esc(richtung);
-  const liste = document.getElementById('sortliste');
-  liste.innerHTML = '';
-  tabelle.spalten().forEach(sp2 => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    const aktiv = sp2.key === tabelle.sortKey;
-    b.className = 'blatt-zeile' + (aktiv ? ' aktiv' : '');
-    b.innerHTML = '<span>' + esc(sp2.label) + '</span>'
-      + (aktiv ? edSymbol('pfeil-hoch', tabelle.sortAsc ? '' : 'symbol-oben', richtung) : '');
-    b.addEventListener('click', () => {
-      tabelle.setSort(sp2.key, aktiv ? !tabelle.sortAsc : true);
-      sortLabel();
-      if (window.edBlatt) { edBlatt.zu(); }
-    });
-    liste.appendChild(b);
-  });
-}
 
 /* ====================================================================
  * Tabs nach Art (Abschnitt 3.7.1).
@@ -867,7 +839,6 @@ function zeigeFehler(msg){
     tageGesamt === 1 ? '1 Diensttag' : tageGesamt + ' Diensttage';
 
   zeichne();
-  sortLabel();
   // Die Ansicht von Anfang an ins Fragment schreiben, nicht erst beim ersten
   // Wechsel: Sonst zeigte ein sofort kopierter Link auf keine bestimmte.
 

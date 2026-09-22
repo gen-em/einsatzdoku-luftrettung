@@ -1259,3 +1259,113 @@ Das ist kein Widerspruch (eine Spalte zeigt den einzelnen Einsatz, eine
 Kachel eine Summe über beide Arten), sieht aber wie einer aus. Wer die
 Kacheln im Mischsatz haben will, braucht eine Gestaltungsentscheidung mit
 Mockup (`CLAUDE.md` 5) — sie steht heute nicht an.
+
+---
+
+## J5. AP9b (Web 20.37.0) — der Generatorzusammenzug
+
+### Was **nicht** geprüft werden konnte, und warum
+
+- **Der Nachtdienst existiert im Bestand nicht.** Kein Diensttag des
+  Demo-Kontos hat Einsätze auf zwei Kalendertagen (nachgezählt per SQL über
+  `CONVERT_TZ`: 0 von 20 Tagen). Der Fall wurde **gebaut** — die Antwort von
+  `api/day.php` abgefangen und sechs Einsätze auf 21:10 bis 02:40 gesetzt.
+  Das misst die Sortierung im Browser; es misst **nicht**, ob der Server
+  `start_sort` für einen echten Nachtdienst richtig rechnet. Die drei Zeilen
+  sind `fmt_local($m['started_at'], 'Y-m-d H:i')` und wurden gelesen, nicht
+  gefahren.
+- **Der Bildvergleich ist auf dem Demo-Konto unbrauchbar** (Countdown im
+  Banner; siehe J0). Was trägt, ist der Formvergleich und die
+  DOM-Messung.
+- **Die Kachelform wurde an zwei Seiten geprüft, nicht an allen.**
+  Zeitraumübersicht und Suche unter 420 px; die Tagesübersicht ebenso. Die
+  Kachel selbst hat sich nicht geändert — `EdMissionTable.kachel()` baute sie
+  schon vorher auf allen drei Seiten.
+
+### Was maschinell geprüft wurde, mit Mittel **und** Zahl
+
+**Die Abnahmezahlen, gezählt über den Quelltext (`grep -c`, vorher gegen
+`HEAD`):**
+
+| | vorher | nachher |
+|---|---|---|
+| `tr.innerHTML` in `index.php` | 1 | **0** |
+| Spaltenlisten für Einsatztabellen | 4 | **1** |
+| Sortierblatt-Erzeuger (`blatt-zeile'`) | 3 (je eine in index/suche/zeitraum) | **1** (im Modul) |
+
+**Formvergleich, 56 Seiten** (6 Seitentypen × 8 Breiten): roh **15
+abweichend, 615 Zeilen**. Die Zahl ist irreführend — der Tabellenkopf ging
+von zwei Zeilen auf eine, und der Zeilenvergleich zählt alles darunter mit.
+Deshalb **zeilenweise klassifiziert**: nach Abzug der zeitabhängigen Zeilen
+(Demo-Countdown, Versionszeile) und der einen beabsichtigten Kopfzeile sind
+**0 von 56** Seiten noch abweichend. Suche und Zeitraumübersicht:
+**0 / 0 / 0**.
+
+**Nachtdienst** (gebaut, s. o.):
+
+| | Reihenfolge |
+|---|---|
+| **mit** `start_sort` | 21:10 · 22:30 · 23:50 · 00:20 · 01:10 · 02:40 |
+| **ohne** (das Verhalten vor diesem Paket) | 00:20 · 01:10 · 02:40 · 21:10 · 22:30 · 23:50 |
+
+**Gleichstände** (Tag 364, zwei Einsätze mit 51 min): aufsteigend
+`3:51min 4:51min`, absteigend ebenfalls `3:51min 4:51min` — die
+Einsatznummer ordnet den Gleichstand und kehrt ihn **nicht** um.
+Zurück auf „Beginn" ergibt wieder 1–6.
+
+**Ausrichtung**, über `getComputedStyle` abgelesen statt aus dem Bild
+geschätzt: `no` center (unverändert), `start` center → **left**, `age`
+center → **right**, `dur` right, Haken center, Reihenfolge
+**`winch bw sec`**.
+
+**Mobiles Sortierblatt**, 420 px: Auf Zeitraumübersicht und Suche ändert ein
+Klick jetzt Beschriftung **und** Kachelreihenfolge (vorher nur die
+Beschriftung — und auch die nur, weil die Seite sie selbst schrieb). Auf der
+Tagesübersicht: Kacheln `07:52 10:11 12:16 14:58 16:02 19:40` → nach „Dauer"
+`19:40 12:16 14:58 07:52 16:02 10:11`, was der Dauerreihenfolge 6·3·4·1·5·2
+entspricht.
+
+**Die übrigen Prüfmittel:** `php -l` **0 Fehler**, `node --check` ok,
+Register **38 Zeilen / 0 über der Decke**, Wortliste **0/0/0**, CSP **0**,
+Kettenaufrufe **47/0/0**, Bilderlauf **56 Bilder, 0 Überlauf,
+0 Konsolenfehler, 0 falsche Knopfhöhen**.
+
+**Vollständigkeit 397 → 396, und die eine Zahl ist nachgegangen worden.**
+Eine Zahl, die sich ändert, ist erst dann in Ordnung, wenn man weiß, warum.
+Die Differenz liegt in der Zeile „Unicode-Zeichen als Symbol im Markup"
+(329 → 328), und zwar in `index.php` (16 → 15): Mit der alten
+Zeilenerzeugung ist ein **Auslassungszeichen aus einem Kommentar**
+verschwunden (`el.style.x = …`). Keine Regel ist verlorengegangen, keine
+Klasse ohne Regel entstanden — `missiontable.js` steht unverändert bei 2,
+und der Rest des Berichts ist Zeile für Zeile gleich.
+
+### Ein Befund aus dem Prüflauf selbst
+
+**Eine Zwischenfassung hätte still geschadet, und der Bildvergleich hat sie
+gefunden.** Die Datumsspalte bekam im Modul ein `nurWenn` — „nur zeigen,
+wenn es mehrere Tage gibt" —, damit sie auf der Tagesübersicht von selbst
+wegfällt. Im Januar des Referenzbestands liegen beide Einsätze auf
+**demselben** Tag: Die **Zeitraumübersicht** verlor dort ihre Datumsspalte,
+während sie weiter nach ihr sortierte, und die Beschriftung las sich
+„älteste zuerst" ohne Spaltennamen. Die Spalte steht jetzt in `opts.ohne`
+von `index.php`.
+
+**Die Lehre gehört ins Dokument, nicht nur in den Kommentar:** Eine Seite,
+die eine Spalte nicht will, sagt es. Das Modul rät es nicht aus dem Bestand
+— außer, wo das Raten harmlos ist (ein Artzeichen, das sich nie ändert, sagt
+nichts; ein Datum sagt, *welcher* Tag).
+
+### Prüfliste — was **die Auftraggeberin** noch tun muss
+
+| # | Weg | Erwartet | Scheitern erkennbar an |
+|---|---|---|---|
+| **J-14** | **Tagesübersicht ab 768 px öffnen** und den Tabellenkopf lesen | „Sekundärtransport" steht als **ein** Wort in einer Zeile (trennt nur bei Platzmangel, dann mit Bindestrich) | „Sekundär" und „Transport" untereinander ohne Bindestrich — dann greift der alte Kopf noch |
+| **J-15** | **Dieselbe Tabelle:** Spalte „Alter" ansehen | Die Zahlen stehen **rechtsbündig**, wie Dauer und km | Sie stehen mittig — dann kommt die Zeile nicht aus dem Modul |
+| **J-16** | **Einen Lufttag mit Windenfähigkeit öffnen** | Die Haken stehen in der Reihenfolge **Winde, Bergwacht, Sekundärtransport** | Umgekehrte Reihenfolge |
+| **J-17** | **Auf einen Spaltenkopf klicken**, dann auf denselben noch einmal | Die Richtung kehrt sich um, der Pfeil dreht sich; bei zwei Einsätzen **gleicher Dauer** bleibt der mit der kleineren Nr. oben — in **beiden** Richtungen | Die beiden tauschen beim zweiten Klick die Plätze |
+| **J-18** | **Unter 720 px** (Handy) auf „Sortieren" tippen und „Dauer" wählen | Das Blatt schließt sich, und die **Kacheln ordnen sich um** | Das Blatt schließt sich, die Kacheln bleiben, wie sie waren — dann zeichnet `setSort()` nicht |
+| **J-19** | **Dasselbe in Suche und Zeitraumübersicht** | Ebenso — und die Beschriftung neben dem Symbol nennt die neue Spalte („Dauer, aufsteigend") | Nur die Beschriftung ändert sich |
+| **J-20** | **Sortierblatt öffnen** und die Einträge lesen | „Sekundärtransport" und „Fehleinsatz" als Wort | `Sekundär&shy;transport` mit sichtbarem `&shy;` |
+| **J-21** | **Einen Dienst über Mitternacht anlegen** (ein Einsatz um 23:50, einer um 01:10) und nach „Beginn" aufsteigend sortieren | 23:50 steht **vor** 01:10 | 01:10 steht oben — dann fehlt `start_sort` in der Antwort |
+| **J-22** | **Zeitraumübersicht, ein Monat mit Einsätzen an nur einem Tag** | Die Spalte **„Datum"** steht trotzdem da | Sie fehlt, und die Beschriftung sagt nur „älteste zuerst" |
+| **J-23** | **Tagesübersicht:** Prüfen, dass **kein** „Fehleinsatz" und **keine** „Art"- und **keine** „Datum"-Spalte erscheint | Neun bzw. elf Spalten, keine davon | Eine der drei taucht auf — dann greift `ohne` nicht oder eine Seite setzt den Vorspann nicht |

@@ -2570,6 +2570,51 @@ function ui_ortsfeld(array $o): void
 <?php }
 
 /**
+ * Die Vorgaben, die `assets/missiontable.js` braucht — EINMAL, fuer alle
+ * drei Seiten mit einer Einsatztabelle (Schritt 15 AP9b).
+ *
+ * Bis dahin standen `ART_SYMBOLE` und `TYP_SYMBOLE` wortgleich in
+ * `suche.php` und `zeitraum.php`, und `index.php` hatte statt dessen seine
+ * eigene Liste `DAY_COLS`. Drei Seiten, drei Vorspaenne, eine Tabelle —
+ * genau die Bauform, die Schritt 15 abschafft.
+ *
+ * `KATALOG_SPALTEN` ist `mf_tagesspalten()`, also die Felder mit 'day_col'
+ * aus `mission_fields.php`. Das Modul gleicht seine Hakenspalten dagegen ab:
+ * Der Katalog bestimmt, WELCHE es gibt, das Modul, wie sie aussehen und in
+ * welcher Reihenfolge sie stehen (E-ZE-34). `label` darf Auszeichnung
+ * tragen und geht deshalb unmaskiert hinaus — der Wert stammt aus einer
+ * Datei des Projekts, nie aus einer Eingabe.
+ *
+ * MUSS VOR `assets/missiontable.js` STEHEN. Das Modul fragt die drei Namen
+ * erst beim Zeichnen ab und traegt fuer jeden einen benannten Rueckfall,
+ * aber ein Vorspann, der nach dem Modul kommt, ist ein Vorspann, der beim
+ * ersten Zeichnen fehlt.
+ */
+function ui_tabellen_bootstrap(): void
+{
+    /* Die Funktion holt sich, was sie braucht -- wie ui_days_sidebar() mit
+     * diensttag_lib.php. `zeitraum.php` bindet mission_fields_lib.php nicht
+     * ein und muss es auch nicht: Wer einen Baustein ruft, soll nicht dessen
+     * Abhaengigkeiten kennen muessen. */
+    require_once __DIR__ . '/diensttag_lib.php';
+    require_once __DIR__ . '/mission_fields_lib.php';
+
+    $spalten = array_map(
+        static fn(array $dc): array => ['col' => $dc['col'], 'art' => $dc['art'],
+                                        'label' => $dc['label'], 'klasse' => $dc['klasse'],
+                                        'cap' => $dc['cap']],
+        mf_tagesspalten());
+    ?>
+<script<?= kopf_nonce_attr() ?>>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
+        /* Die Zeichen der Diensttag-TYPEN daneben (E-S9-13, Web 16.0.0) — sonst
+           zeichnet diese Tabelle die Betriebsart, waehrend die Leiste den Typ
+           zeichnet. Dieselbe Quelle wie auf der Serverseite. */
+        const TYP_SYMBOLE = <?= json_js(dt_typ_symbole(), JSON_UNESCAPED_UNICODE) ?>;
+        const KATALOG_SPALTEN = <?= json_js($spalten, JSON_UNESCAPED_UNICODE) ?>;</script>
+<?php
+}
+
+/**
  * Ruestzeug der Ende-zu-Ende-Verschluesselung: die Skripte und die Werte,
  * die sie aus der Nutzerzeile brauchen.
  *

@@ -14,6 +14,93 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.37.0] — 2026-09-22
+
+**Eine Einsatztabelle.** Schritt 15 AP9b (Zentralisierung, R83; Backlog
+Nr. 57, E-ZE-01/-08, E-ZE-32 bis -34).
+
+### Was der Befund war
+
+Drei Seiten zeigen dieselbe Tabelle — Tagesübersicht, Suche,
+Zeitraumübersicht —, und bis heute bauten sie **zwei** Erzeuger:
+`assets/missiontable.js` für Suche und Zeitraum, und `index.php` noch einmal
+von Hand. Der Kommentar an der Dauerspalte sagte es seit S3 ausdrücklich:
+„Dass es zwei Aufbauten für dieselbe Tabelle gibt, ist der eigentliche Fund"
+(F-S3-A).
+
+### Geändert
+
+`index.php` bezieht Kopf, Zeilen, Kacheln, Sortierung und Sortierblatt aus
+dem Modul. Gezählt:
+
+| | vorher | nachher |
+|---|---|---|
+| Zeilenerzeugung `tr.innerHTML` in `index.php` | 1 | **0** |
+| Spaltenlisten für Einsatztabellen | 4 | **1** |
+| Sortierblatt-Erzeuger | 3 | **1** |
+
+Die vier Spaltenlisten waren: der handgeschriebene `<thead>` in `index.php`
+(acht Spalten), `DAY_COLS`, die `switch`-Leiter in `sortVal()` — und die des
+Moduls, die geblieben ist.
+
+**Drei Dinge sehen auf der Tagesübersicht anders aus**, alle drei entschieden
+(E-ZE-34, Backlog Nr. 57): Der Kopf heißt **„Sekundär­transport"** mit weichem
+Trennzeichen statt „Sekundär<br>Transport" mit hartem Umbruch —
+„Sekundärtransport" ist *ein* Wort, und der harte Umbruch trennte es ohne
+Bindestrich. Das **Alter** steht rechtsbündig wie in den beiden anderen
+Tabellen. Die **Haken** stehen in der Reihenfolge Winde, Bergwacht,
+Sekundärtransport.
+
+**Was das Modul dafür gelernt hat:** die Spalte **„Nr."** (E-ZE-33) — keine
+Zierspalte, sondern die Verbindung zur Karte, deren Pins und Popups
+„Einsatz <Nr.>" heißen; die **chronologische Sortierung** (E-ZE-32); den
+**Gleichstand nach der Einsatznummer**; und ein **Sortierblatt, das nach dem
+Umstellen auch zeichnet**.
+
+### Behoben
+
+**Der Nachtdienst kippte die Sortierung.** Das Modul sortierte „Beginn" über
+die *Zeichenkette* `start_hhmm`; bei einem Dienst über Mitternacht — laut
+Handbuch „der klassische Fall" — stand damit 01:10 vor 23:50. Still: keine
+Meldung, keine Lücke, nur eine falsche Reihenfolge, die richtig aussieht.
+Die drei Endpunkte liefern jetzt `start_sort` (`Y-m-d H:i` in Ortszeit). Der
+Bestand hat keinen solchen Diensttag, der Fall war also zu **bauen**:
+mit Schlüssel 21:10 · 22:30 · 23:50 · 00:20 · 01:10 · 02:40, ohne ihn
+00:20 · 01:10 · 02:40 · 21:10 · 22:30 · 23:50.
+
+**Das mobile Sortierblatt von Suche und Zeitraumübersicht stellte um, ohne
+neu zu zeichnen.** `setSort()` setzte Schlüssel und Richtung und rief
+`zeichne()` nicht; die Seiten taten es auch nicht. Es funktionierte nur auf
+der Tagesübersicht, weil die von Hand nachzeichnete. **Unter 720 px ist das
+Blatt der einzige Weg zu sortieren.**
+
+**Dasselbe Blatt zeigte `Sekundär&shy;transport` als rohe Entität.** Die alte
+Zeile streifte nur *Tags* ab (`/<[^>]*>/g`), und ein `&shy;` ist kein Tag;
+`esc()` machte aus dem `&` dann ein `&amp;`. Beide Fehler sind älter als
+dieses Paket und wären mit dem Zusammenzug auf die Tagesübersicht
+gewandert.
+
+### Was bewusst so bleibt
+
+**Der Feldkatalog behält seinen Griff — und er reicht jetzt weiter.** Der
+Katalog bestimmt, **welche** Hakenspalten es gibt (`day_col`), das Modul,
+**wie** sie aussehen und in welcher **Reihenfolge** sie stehen. Der Preis
+gehört gesagt: `day_col` heißt ab jetzt „Spalte in **jeder**
+Einsatztabelle" und nicht mehr „Spalte in der Tagesübersicht". Wer den
+Schlüssel an einem Feld entfernt, nimmt die Spalte auch aus Suche und
+Zeitraumübersicht.
+
+**`ohne: ['fehl']`** ist die einzige Abweichung, die die Tagesübersicht noch
+braucht: Sie führt den Fehleinsatz bewusst nicht (er steht im Einsatz selbst
+und auf der Kachel). Alles andere entscheidet das Modul von selbst — die
+Artspalte fällt weg, weil ein Diensttag eine Art hat, die Datumsspalte, weil
+er ein Datum hat.
+
+**Ohne `KATALOG_SPALTEN` bleibt alles, wie es ist.** Eine Seite, die die
+Liste nicht setzt, bekommt die drei Spalten unverändert — derselbe benannte
+Rückfall wie bei `setFaehigkeiten()`. Eine Zentrale, die bei fehlender
+Zuarbeit still etwas *weglässt*, ist schlimmer als gar keine.
+
 ## [Web 20.36.0] — 2026-09-22
 
 **Die Suche folgt der Fähigkeit auch in ihren Filtern.** Schritt 15 AP9a

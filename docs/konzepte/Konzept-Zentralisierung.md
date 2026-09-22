@@ -14,7 +14,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 >
 > | | |
 > |---|---|
-> | Stand | 22.09.2026 — **AP1 bis AP8 erledigt** (zuletzt Web 20.34.0); **AP9a erledigt** (Web 20.35.0 die Fähigkeitsregel, Web 20.36.0 die Suchfilter), **AP9b in Arbeit** (der Generatorzusammenzug), **AP10 gebaut bis auf die AP9-abhaengigen Teile**. Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
+> | Stand | 22.09.2026 — **AP1 bis AP8 erledigt** (zuletzt Web 20.34.0); **AP9 erledigt** (AP9a: Web 20.35.0 die Fähigkeitsregel, Web 20.36.0 die Suchfilter; AP9b: Web 20.37.0 der Generatorzusammenzug), **AP10 gebaut bis auf die AP9-abhaengigen Teile**. Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
 > | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen), **E-ZE-25** (Ultracode), **E-ZE-26** (`assets/format.js` in AP7, sechste Ausnahme), **E-ZE-27** bis **E-ZE-30** (die vier Zielzahlen von AP8, die begruendet ueber null enden: Z29 bei 2, Z37 bei 4, Z34 bei 5, Z36 bei 1), **E-ZE-31** bis **E-ZE-34** (die vier Entscheidungen zu AP9: Fähigkeitsregel, Nachtdienst-Sortierung, Spalte „Nr.", Beschriftung), **E-ZE-35** (die Suchfilter folgen der Fähigkeit — hebt die zweite Grenze von AP9a auf) — alle 22.09.2026; E-ZE-09 ist nicht vergeben |
 > | Offen | nichts im Konzept. **F-ZE-1 bis F-ZE-6** (Abschnitt 2.3) sind mit der Freigabe vom 20.09.2026 entschieden. Außerhalb des Konzepts: die Einschübe (Abschnitt 8, 9) sind noch nicht eingespielt |
 > | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2** und **AP3 erledigt** (21.09.2026), **AP4 erledigt** (21.09.2026), **AP5**, **AP6** und **AP7 erledigt** (22.09.2026). **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
@@ -39,6 +39,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > |  AP8f `EdPat.listeLaden()` | **erledigt** 22.09.2026 | (in Web 20.34.0) | Z36 **4 → 1** (E-ZE-30) · drei Anzeigeseiten, `einstellungen.php` begruendet drausen · im Browser nachgemessen: **6/6, 96/96, 96/96 Eintraege entschluesselt, 0 unlesbar, 0 Konsolenfehler** |
 > | AP9 Nr. 57 — eine Einsatztabelle | **in zwei Teile geschnitten** 22.09.2026, nachdem die Vermessung die Prämisse widerlegt hat | — | **Vermessung:** 4 lesende Agenten, 0 Dateiaenderungen · **Die Praemisse stimmt nicht:** `cap_gate` erreicht die Einsatztabelle NICHT (`mf_tagesspalten()` nimmt keinen Parameter, `mf_gates_erfuellt()` hat zwei Aufrufer, beide in `einsatz_form.php`; `capabilit` kommt in `index.php` nullmal vor) — **69 von 69 Diensttagen tragen heute die Windenspalte** · dazu vier Funde ausserhalb beider Dokumente, darunter eine Sortierung, die den Nachtdienst kippt |
 > |  AP9a Die Fähigkeitsregel | **erledigt** 22.09.2026 | **Web 20.35.0** (Neben: Funktionsänderung mit Freigabe, keine Migration), **20.36.0** (Neben: die Suchfilter nach, E-ZE-35) | `mf_tagesspalten()` trägt `cap` · fünf Diensttage im Browser, je vier Zahlen (Köpfe sichtbar / versteckt / Zellen / Sortierblatt): **11/0/11/10** am Lufttag mit Fähigkeit, **9/2/9/8** an den vier übrigen — vorher **11** an allen fünf · Zeitraum: Bodentab **10 → 8** Spalten, Luft und Mix unverändert · **Gegenprobe Suche:** mit abgefangener Antwort `faehigkeiten={false,false}` gehen beide Spalten, obwohl **7 Winden- und 15 Bergwachthaken** im Bestand stehen — die Fähigkeit entscheidet, nicht das Datum · **Formvergleich 56 Seiten: 41 formgleich, 15 abweichend (105 Zeilen)** — die drei Tagesübersichtsseiten in den fünf Breiten ab 768 px; **jede der 120 gedruckten Diff-Zeilen einzeln klassifiziert, 0 unerklärt** · Bilderlauf **56 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knopfhöhen** · Register **38 Zeilen, 0 über der Decke** · Wortliste **0/0/0** · Vollständigkeit **397** (unverändert bis auf eine verschobene Zeilennummer) · Kettenaufrufe **47/0/0** · CSP **0** · `php -l` **0 Fehler**. **Nachtrag 20.36.0:** Suchfilter in drei Zuständen — Fähigkeit ja/Haken ja **8, Block da**; Fähigkeit nein/Haken ja **0, Block weg**; Fähigkeit ja/Haken nirgends **8, Block da** (vorher **0**) |
+> |  AP9b Der Generatorzusammenzug | **erledigt** 22.09.2026 | **Web 20.37.0** (Neben: eine neue Funktion in ui.php, drei neue Modulfähigkeiten, keine Migration) | `tr.innerHTML` in index.php **1 → 0** · Spaltenlisten **4 → 1** · Sortierblatt-Erzeuger **3 → 1** · **Formvergleich 56 Seiten: nach Abzug von Countdown, Versionszeile und dem einen beabsichtigten Kopfwechsel 0 von 56 abweichend**; Suche und Zeitraum **0/0/0** · Nachtdienst gebaut (der Bestand hat keinen): mit `start_sort` 21:10·22:30·23:50·00:20·01:10·02:40, ohne ihn 00:20·01:10·02:40·21:10·22:30·23:50 · Gleichstände in **beiden** Richtungen 3 vor 4 · Ausrichtung über `getComputedStyle` abgelesen: `age` center → right, `start` center → left, `no` center · **drei ältere Fehler behoben** (Nachtdienst-Sortierung, Sortierblatt ohne Neuzeichnen, rohe `&shy;`-Entität) · **eine Zwischenfassung vom Bildvergleich abgefangen** (Datumsspalte der Zeitraumübersicht) · Register **38/0** · Wortliste **0/0/0** · Vollständigkeit **397** · CSP **0** · Kettenaufrufe **47/0/0** · Bilderlauf **56 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knopfhöhen** |
 > | AP10 Abschluss und Übergabe an 10c | **gebaut** 22.09.2026, bis auf die AP9-abhaengigen Teile | keine (nur `.github/`, `tools/`, `docs/`, `CLAUDE.md`) | Stufe-1-Schritt „Zentralisierung“ eingehaengt, **einmal absichtlich rot gesehen** (zwei Zeilen ueber der Decke, Rueckgabewert 1) und wieder gruen (0 ueber der Decke, Rueckgabewert 0) · Kettenaufrufe **0 Befunde, 0 ungeprueft** · `CLAUDE.md` 4 und `docs/Technik.md` 4.98a tragen die Regel · **Uebergabezahl `error_log(`: 75**, nicht 77 — die Rechnung steht im Protokoll |
 
 ---
@@ -2385,6 +2386,80 @@ Klammer. Sobald `nurWenn` ein zweites Argument bekam, griff sie nicht mehr,
 und der Lauf meldete einen Treffer auf einen Bezeichner. Eine Ausnahme, die
 an der **Stelligkeit eines Aufrufs** hängt, misst nicht den Begriff, sondern
 den Zufall; sie steht jetzt auf `nurWenn\(basis\b`.
+
+#### AP9b — der Generatorzusammenzug (gebaut am 22.09.2026, Web 20.37.0)
+
+**Gebaut:**
+
+| Datei | Was |
+|---|---|
+| `server/assets/missiontable.js` | Spalte „Nr." (E-ZE-33); `start` sortiert über `start_sort` statt über die Zeichenkette (E-ZE-32); Gleichstand nach `_no`; die drei Hakenspalten gegen `KATALOG_SPALTEN` abgeglichen; `opts.ohne`; das mobile Sortierblatt samt Beschriftung; `setSort()` zeichnet; `nurText()` für Kopf und Blatt |
+| `server/index.php` | eigener `<thead>`, `DAY_COLS`, `sortVal()`, Zeilenerzeugung, Pfeilschleife und Sortierblatt **entfallen**; `EdMissionTable.erzeuge()` mit `ohne: ['fehl','day']` |
+| `server/ui.php` | `ui_tabellen_bootstrap()` — `ART_SYMBOLE`, `TYP_SYMBOLE`, `KATALOG_SPALTEN` an **einer** Stelle für alle drei Seiten |
+| `server/suche.php`, `server/zeitraum.php` | eigener Vorspann und eigener Sortierblatt-Erzeuger entfallen |
+| `server/api/day.php`, `range.php`, `suchindex.php` | `start_sort` (`Y-m-d H:i`, Ortszeit) |
+
+**Die Abnahmezahlen, gezählt:**
+
+| | vorher | nachher |
+|---|---|---|
+| Zeilenerzeugung `tr.innerHTML` in `index.php` | 1 | **0** |
+| Spaltenlisten für Einsatztabellen | 4 | **1** |
+| Sortierblatt-Erzeuger (baut `blatt-zeile`-Knöpfe) | 3 | **1** |
+
+**Der vierte Fund der Vermessung ist beantwortet, nicht umgangen.** Er
+lautete: „Der Feldkatalog verlöre seinen Griff auf die Tagestabelle." Die
+Antwort ist geteilt, und beide Hälften stehen im Modul: **Der Katalog
+bestimmt, welche Hakenspalten es gibt** (`day_col` — fällt eines weg, fällt
+die Spalte; kommt eines hinzu, erscheint sie ohne Codeänderung), **das Modul
+bestimmt, wie sie aussehen und in welcher Reihenfolge** (E-ZE-34). Der Preis
+ist benannt: `day_col` heißt ab jetzt „Spalte in **jeder** Einsatztabelle"
+und nicht mehr „Spalte in der Tagesübersicht".
+
+**Drei Fehler kamen ans Licht, alle älter als dieses Paket.** Sie standen
+nicht im Auftrag, sie standen im Weg:
+
+1. **Der Nachtdienst kippte die Sortierung.** Belegt statt behauptet: Der
+   Bestand hat keinen Diensttag über Mitternacht, also war der Fall zu
+   bauen — die Antwort von `api/day.php` abgefangen und sechs Einsätze auf
+   21:10 bis 02:40 gesetzt. **Mit** `start_sort`: 21:10 · 22:30 · 23:50 ·
+   00:20 · 01:10 · 02:40. **Ohne** ihn: 00:20 · 01:10 · 02:40 · 21:10 ·
+   22:30 · 23:50.
+2. **Das mobile Sortierblatt von Suche und Zeitraumübersicht stellte um,
+   ohne neu zu zeichnen.** Es funktionierte nur auf der Tagesübersicht, weil
+   die von Hand nachzeichnete — und unter 720 px ist das Blatt der einzige
+   Weg zu sortieren. Der Zusammenzug hätte den Fehler auf die dritte Seite
+   gebracht, statt ihn zu beheben.
+3. **Dasselbe Blatt zeigte `Sekundär&shy;transport` als rohe Entität.** Die
+   alte Zeile streifte nur *Tags* ab, und ein `&shy;` ist keines; `esc()`
+   machte aus dem `&` dann ein `&amp;`. Auch das wäre mitgewandert.
+
+**Eine Zwischenfassung hat der Bildvergleich abgefangen, und das gehört
+hierher, weil sie still geblieben wäre.** Die Datumsspalte bekam im Modul
+ein `nurWenn` — „nur zeigen, wenn es mehrere Tage gibt" —, damit sie auf der
+Tagesübersicht von selbst wegfällt. Im Januar des Referenzbestands liegen
+beide Einsätze auf **demselben** Tag: Die **Zeitraumübersicht** verlor dort
+ihre Datumsspalte, während sie weiter nach ihr sortierte; die Beschriftung
+las sich „älteste zuerst" ohne Spaltennamen. Die Spalte steht jetzt in
+`opts.ohne` von `index.php`. **Die Lehre:** Eine Seite, die eine Spalte nicht
+will, sagt es — das Modul rät es nicht aus dem Bestand. Die Artspalte darf
+raten (ein Zeichen, das sich nie ändert, sagt nichts), das Datum nicht (es
+sagt, *welcher* Tag).
+
+**Was der Formvergleich sagt, und wie es gemessen wurde.** 56 Seiten, sechs
+Seitentypen in acht Breiten. Roh weichen **15** ab (615 Zeilen) — das ist
+die Tagesübersicht in den fünf Breiten ab 768 px. Die Zahl ist irreführend,
+weil der Kopf von zwei Zeilen auf eine ging und der Zeilenvergleich alles
+darunter mitzählt. Deshalb **zeilenweise klassifiziert**: Nach Abzug der
+zeitabhängigen Zeilen (Demo-Countdown, Versionszeile) und der einen
+beabsichtigten Kopfzeile sind **0 von 56** Seiten noch abweichend. Suche und
+Zeitraumübersicht: **0/0/0**.
+
+**Was der Text nicht zeigt, ist einzeln gemessen.** Die Hakenreihenfolge
+(`winch bw sec` statt `sec bw winch`) und die Ausrichtung — `age` von
+`center` auf `right`, `start` von `center` auf `left`, `no` bleibt `center`
+— stehen im DOM und wurden über `getComputedStyle` abgelesen, nicht aus dem
+Bild geschätzt.
 
 **E-ZE-35 — Die Suche folgt der Fähigkeit auch in ihren Filtern**
 (Auftraggeber, 22.09.2026: *„Suche aber immer möglich, sobald Fähigkeiten
