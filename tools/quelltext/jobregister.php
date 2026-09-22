@@ -27,7 +27,7 @@ declare(strict_types=1);
  * Kommentar und jede gleichnamige Zeichenkette.
  *
  * WAS SIE NICHT SIEHT. Ob ein Job auch TUT, was danebensteht — das ist eine
- * Frage an `tools/jobprobe/`. Und einen Job, der nicht als Zeichenketten-
+ * Frage an `tools/proben/jobs/`. Und einen Job, der nicht als Zeichenketten-
  * schluessel im Katalogliteral steht, sondern zur Laufzeit hineingerechnet
  * wird; es gibt heute keinen, und der Kopf von `jobs_katalog()` sagt, dass
  * es keinen geben soll.
@@ -260,7 +260,7 @@ foreach ($befunde as $b) { echo "  BEFUND: $b\n"; }
 printf("\nBefunde: %d\n", count($befunde));
 
 echo "\nGRENZEN dieser Pruefung — was sie NICHT sieht:\n";
-echo "  · ob ein Job tut, was danebensteht (dafuer: tools/jobprobe/)\n";
+echo "  · ob ein Job tut, was danebensteht (dafuer: tools/proben/jobs/)\n";
 echo "  · einen Job, der nicht als Zeichenkettenschluessel im Katalogliteral\n";
 echo "    steht, sondern zur Laufzeit hineingerechnet wird\n";
 echo "  · die Prosa der Registerzeile jenseits der Namen und der Zahl\n";

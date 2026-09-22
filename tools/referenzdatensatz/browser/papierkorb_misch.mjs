@@ -15,7 +15,7 @@
  * mitgelöschte an Tag 3, einer einzeln an Tag 9, der aktiv ist). Der
  * Kreislauftest konnte den Unterschied deshalb gar nicht sehen — und ein
  * Fehler, der aus `deleted_with_day` der Datei fälschlich eine 1 machte,
- * lief durch alle Prüfungen. `tools/wiederherstellungs-probe/` misst
+ * lief durch alle Prüfungen. `tools/proben/wiederherstellung/` misst
  * denselben Fall in der Datenbank; hier geht es um den Weg durch den Browser
  * und um die Anzeige.
  *

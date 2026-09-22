@@ -788,7 +788,7 @@ const PLATZ = await platzhalter();
  * wiederverwendet. Das ist kein Geiz, sondern noetig: Der Ratenschutz-Topf
  * `pair_start` laesst 20 Aufrufe je zehn Minuten und Adresse zu (E-S5-33).
  * Ein Lauf mit einer Sitzung je Breite braeuchte sechzehn und stuende damit
- * knapp vor der Sperre — zusammen mit `tools/kopplungsprobe/rundlauf.mjs` im
+ * knapp vor der Sperre — zusammen mit `tools/proben/kopplung/rundlauf.mjs` im
  * selben Zeitfenster darueber.
  *
  * Der Wartezustand braucht ueberhaupt nur EINEN Durchgang: Er haengt an der
@@ -812,7 +812,7 @@ async function kopplungSitzung(seite, schluessel, fehlerSammler) {
   if (a.status !== 200 || !a.code) {
     fehlerSammler.push(`Kopplungssitzung nicht bekommen (HTTP ${a.status}, `
       + `${a.error || '—'}) — steht der Topf \`pair_start\` voll? Er lässt 20 Aufrufe `
-      + 'je 10 Minuten und Adresse zu; ein Lauf von tools/kopplungsprobe/rundlauf.mjs '
+      + 'je 10 Minuten und Adresse zu; ein Lauf von tools/proben/kopplung/rundlauf.mjs '
       + 'im selben Zeitfenster kann ihn gefüllt haben.');
     return null;
   }

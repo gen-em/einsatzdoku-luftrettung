@@ -14,6 +14,45 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Zwanzig Proben unter einem Läufer] — 2026-09-22
+
+### Geändert
+
+- **`tools/proben/` löst zwanzig Werkzeugordner ab** (PK-04/2, E-PK-24).
+  Jede Probe hatte ihre eigene Aufrufkonvention — `probe.php`, `pruefe.mjs`,
+  `probe.mjs`, `pruefen.php`, je nachdem, wer sie geschrieben hatte. Jetzt
+  `bash tools/proben/proben.sh <name>`, und `pruefablauf.json` zeigt nur
+  noch auf den Namen. Werkzeugordner 41 → **22**, LIESMICH-Zeilen 6 261 →
+  **3 820**.
+  **Die Messungen sind unverändert, und das ist am Rückgabewert
+  nachgewiesen** — nicht an der Ausgabe: Diese Proben legen Konten an und
+  nennen Zeitstempel, von 19 Vergleichen waren nur 2 bytegleich. Vorher 13
+  grün und 6 rot, nachher dieselben 13 und dieselben 6.
+- **`versand` fährt `alle` nicht mit** — sie verlangt einen Pfad als
+  Argument. Sie steht mit **Grund** im Läufer und wird in der Schlusszeile
+  als „1 ausgelassen" gezählt, statt still zu fehlen.
+
+### Behoben
+
+- **Drei Fehler, die der Umzug erzeugt hat, und alle drei gemessen statt
+  gelesen.** Die Verzeichnistiefe (`dirname(__DIR__, 2)` zeigte auf
+  `tools/` statt auf die Wurzel — 19 Dateien); zwei Node-Proben, die ihre
+  Probeseite über den alten Pfad luden und sich als Zeitüberschreitung
+  tarnten; und `container`, das den Leser des Referenzdatensatzes nicht mehr
+  fand (`ModuleNotFoundError: No module named 'lesen'`, mitten im Lauf nach
+  den ersten grünen Zeilen). Der Letzte war der einzige echte Regress und
+  fiel nur durch den Vergleich der Rückgabewerte auf.
+
+### Nebenbei
+
+- **`kettenaufrufe` meldet statt 18 nur noch 2 ungeprüfte Aufrufe.** Es
+  konnte an zwanzig verschiedenen Aufrufkonventionen keine Schnittstelle
+  erkennen; der Läufer hat eine. Zwanzig Aufrufe, die das Werkzeug vorher
+  nur zählen konnte, prüft es jetzt.
+
+Werkzeuge und Dokumentation, keine Datei unter `server/` — **keine
+Versionsstufe**.
+
 ## [Werkzeug: Aus der Wortliste wird eine Textprobe mit fünf Regelklassen] — 2026-09-22
 
 ### Hinzugefügt

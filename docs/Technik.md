@@ -474,26 +474,6 @@ Daten erst nach Server-Bestätigung.
 │   │                      Eine Stelle für Bilderlauf, Klickprobe und
 │   │                      Stilvergleich — dreimal geschrieben wäre sie
 │   │                      zweimal richtig und einmal falsch
-│   ├── abmelde-probe/     zeigt, was der Abmeldeweg im sessionStorage
-│   │                      zurücklässt — Beleg zu V-10 (s. LIESMICH.md)
-│   ├── anteilprobe/       prüft den Server-Anteil (S10): `probe.php` die
-│   │                      Rechnungen (Kennung, HMAC je Konto) und die fünf
-│   │                      Lagen aus E-S10-09, mit `--schreiben` dazu den
-│   │                      Schreibweg in config.php; `endpunkt.py` die
-│   │                      Hüllenfassung von api/kdf_upgrade.php über ECHTES
-│   │                      HTTP; `umstellungslauf.mjs` die stille Umstellung
-│   │                      im Browser; `betriebslauf.mjs` (S10/AP3) die
-│   │                      OBERFLÄCHE der Lagen — Karte, Statuszeile und
-│   │                      Schlüsselblatt nennen dieselbe Kennung, das Blatt
-│   │                      im Druck bei 210 mm, Nachtragen mit falschem und
-│   │                      richtigem Wert, Rotation, Neuanfang.
-│   │                      `huelle_stellen.py` stellt eine Hülle auf edk1:
-│   │                      oder edka1: zurück — die Voraussetzung, ohne die
-│   │                      ein zweiter Lauf etwas anderes misst als der erste.
-│   │                      Vier der fünf Lagen entstehen nur, wenn man
-│   │                      config.php oder app_state verstellt — die Probe
-│   │                      stellt sie her und im finally zurück. **Nicht auf
-│   │                      einer Installation mit Betrieb** (s. LIESMICH.md)
 │   ├── sandbox/           stellt die Arbeitsumgebung her und fährt sie hoch:
 │   │                      aufbauen.sh (web|android|uhr|plattform|alles),
 │   │                      hochfahren.sh (--neu, --php 8.3), plattform.sh
@@ -504,84 +484,13 @@ Daten erst nach Server-Bestätigung.
 │   │                      containeraufbau/ und dem Beschaffungsteil des
 │   │                      SessionStart-Hooks (PK-02); Ausbaustufen und
 │   │                      Grenzen in docs/Sandbox-Setup.md
-│   ├── containerprobe/    hält Containerfassung 4 der Sicherung gegen DREI
-│   │                  unabhängige Umsetzungen — die Anwendung, ein
-│   │                  Node-Leser und ein Python-Leser. Ein Format, das nur
-│   │                  die eine Anwendung öffnen kann, ist genau in dem Fall
-│   │                  wertlos, für den man ein Backup aufbewahrt. Prüft dazu
-│   │                  die Bindung der Teile: ein vertauschtes Teil darf nicht
-│   │                  klaglos entsiegeln (s. LIESMICH.md)
 │   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
-│   ├── fristprobe/        belegt die Angleichung der Schlüsselfrist (R44, S6):
-│   │                      spielt eine Schicht durch und zählt, wie oft der
-│   │                      Inhaltsschlüssel neu entpackt werden muss — vorher
-│   │                      17, nachher 1 (s. LIESMICH.md)
 │   ├── geraetemodelle/    erzeugt server/geraetemodelle.php (Teilenummer auf
 │   │                      Modellname) aus den Connect-IQ-Gerätedateien und
 │   │                      löst mit `nachaufloesen.php` bestehende Zeilen
 │   │                      nachträglich auf. Braucht eine Zuarbeit, die nicht
 │   │                      im Repositorium steht (s. LIESMICH.md)
-│   ├── geraeteprobe/      hält das Auslesen des Kopplungsblocks `geraet`
-│   │                      gegen beide Geräteformen und gegen Unsinn (R42, S6).
-│   │                      Teil 2 (P5a/AP11) misst den Nachlöse-Job GEGEN DIE
-│   │                      DATENBANK: fünf Zeilen mit je einer Frage, zwei
-│   │                      Modelltabellen in einem Lauf. 59 Erwartungen; ohne
-│   │                      Datenbank läuft nur Teil 1 und sagt es
-│   │                      (s. LIESMICH.md)
-│   ├── gpxprobe/          prüft den GPX-Abruf (S2/AP4): gültig gegen das
-│   │                       vendorierte amtliche GPX-1.1-XSD, Punkt für Punkt
-│   │                       gegen die browsergebauten Referenzdateien,
-│   │                       Kennzeichnung in Datei, Dateiname und Seite
-│   │                       (s. LIESMICH.md)
-│   ├── ingestprobe/       prüft die Uhr-Schnittstelle nach der Ausdünnung
-│   │                      (S2/AP3) über ECHTES HTTP: Nachzügler an Stufe 2
-│   │                      werden angenommen, Punkte hinter einer Stufe-3-Spur
-│   │                      verworfen UND quittiert. Seit P5a/AP7 dazu Teil 10,
-│   │                      die Mengenbremse (14 ohne Sperre, 30 mit,
-│   │                      Retry-After, was NICHT zählt) — 83 Erwartungen.
-│   │                      Legt ihr eigenes Konto an und räumt es ab
-│   │                      (s. LIESMICH.md)
-│   ├── mailprobe/         Warteschlange, Katalog und Frist gegen eine EIGENE
-│   │                      SMTPS-Gegenstelle, die auf Kommando ablehnt,
-│   │                      schweigt oder zwölf Fortsetzungszeilen schickt
-│   │                      (P5a/AP5). Tauscht server/config.php aus und stellt
-│   │                      sie wieder her — auch bei Abbruch (s. LIESMICH.md)
-│   ├── jobprobe/          prüft den Job-Rahmen (S2/AP2): dass alle drei
-│   │                      Auslöser denselben Rückstand abtragen, dass die
-│   │                      gemeldete Zahl stimmt, dass die Sperre greift und
-│   │                      verfällt, und dass der Huckepack-Weg wenig und
-│   │                      selten trägt. Legt eigene Waisen an und räumt hinter
-│   │                      sich auf — ändert am Bestand nichts (s. LIESMICH.md)
-│   ├── kopplungsprobe/    zwei Proben. `probe.php` prüft `pair.php` über
-│   │                      ECHTES HTTP (S5, Web 13.0.0): Zustände, Frist,
-│   │                      Gerätelimit, Antwortgleichheit, drei Töpfe,
-│   │                      Obergrenze, Dublettenschleife, Aufräumjob —
-│   │                      76 Erwartungen; dazu `rundlauf.mjs`, der den Weg
-│   │                      im Browser fährt (25). Legt eigene Konten an und räumt
-│   │                      ab (s. LIESMICH.md)
-│   ├── wartungsprobe/     prüft den Wartungsmodus über ECHTES HTTP (S5 Paket
-│   │                      W): was gesperrt wird, was offen bleibt, Schalten
-│   │                      per POST, kaputte Schalterdatei, Antwortzeit — und
-│   │                      seit Web 15.5.2 die Zählweise der Migrationen
-│   │                      (Teil 6, Backlog Nr. 149) und seit 15.6.0, dass die
-│   │                      Integritätswache im Wartungsmodus nicht rot wird
-│   │                      (12a, Nr. 140) und seit S10 mit 6a, dass das
-│   │                      Schlüsselblatt erreichbar bleibt; seit Web 20.6.0
-│   │                      Teil 7, der Torwächter samt Nr. 54 — 67 Erwartungen.
-│   │                      **Legt den Schalter selbst um** und nimmt für
-│   │                      Teil 6 eine Zeile aus dem Migrationsregister;
-│   │                      räumt beides im finally ab. Nicht auf einer
-│   │                      Installation mit Betrieb fahren (s. LIESMICH.md)
-│   ├── verbindungsprobe/ prüft über ECHTES HTTP, was die Anwendung tut, wenn
-│   │                      die Datenbank keine Verbindung mehr annimmt
-│   │                      (P5a/AP9): 503 statt 500, `Retry-After: 5`, kein
-│   │                      Wort über die Datenbank, der Zähler zählt genau die
-│   │                      Abweisungen — und 0 verlorene Uploads bei
-│   │                      gleichzeitigen Paketen. 24 Erwartungen.
-│   │                      **Setzt `max_user_connections` der Datenbank** und
-│   │                      schreibt den Ausgangswert im finally zurück; nur
-│   │                      gegen 127.0.0.1 (s. LIESMICH.md)
 │   ├── klickprobe/        fährt Bedienwege im Browser und BEDIENT dabei
 │   │                      Elemente (S9, E-S9-16): Playwright wie der
 │   │                      Bilderlauf, aber `mouse.down()` — **300 ms halten** —
@@ -605,21 +514,6 @@ Daten erst nach Server-Bestätigung.
 │   │                      und MariaDB 10.6: Der Stand vor Web 20.25.0 legt
 │   │                      auf MariaDB 42 Tabellen an und scheitert auf MySQL
 │   │                      mit 1064 (Nr. 238). Mit `--selbstprobe`
-│   ├── ratenprobe/        Sperrleiter, Verfall, zwei Schwellen, Verlangsamung,
-│   │                      Sammelmail und „Sperre aufheben" (P5a/AP6). Greift
-│   │                      die Bibliothek unmittelbar an und datiert stufe_bis
-│   │                      zurueck, statt 24 h zu warten (s. LIESMICH.md)
-│   ├── cspprobe/          traegt die Content-Security-Policy noch? (P5a/AP4)
-│   │                      Fuenf Regeln: Inline-`<script>` ohne Nonce,
-│   │                      `<style>`-Block, Ereignis-Attribut,
-│   │                      `javascript:`-Adresse, fremde Herkunft. Ein
-│   │                      vergessener Nonce legt eine Seite STILL lahm —
-│   │                      kein Fehler, kein Protokoll, der Knopf tut nichts.
-│   │                      Gemessen ueber ein MARKUP-BILD der Datei: der
-│   │                      erste Entwurf meldete null von 108 Stellen, weil
-│   │                      `<script src="<?= asset(…) ?>">` in drei Stuecke
-│   │                      zerfaellt. Ohne Installation; mit `--selbstprobe`
-│   │                      (8 Faelle, davon 4 die NICHT anschlagen duerfen)
 │   ├── kette/             die Tore der Auslieferungskette (P5a/AP1):
 │   │                      Backup-Tor, Wartung an/aus, Zustand und seit
 │   │                      Web 20.16.0 die Job-Pause — gegen
@@ -716,14 +610,18 @@ Daten erst nach Server-Bestätigung.
 │   │                      Umbau voraussetzt — und trennt „kommt nicht raus"
 │   │                      von „kommt raus, Antwort wird verworfen"
 │   │                      (s. LIESMICH.md)
+│   ├── proben/            zwanzig Prüfungen gegen die laufende Anlage
+│   │                      (PK-04/2, E-PK-24): ingest, spur, jobs,
+│   │                      kopplung, wartung, raten, mail, versand,
+│   │                      komplett, wiederherstellung, gpx, geraete,
+│   │                      verbindung, anteil, rechtstexte, freigabe,
+│   │                      container, frist, abmelden, csp-browser.
+│   │                      Ein Läufer (`proben.sh <name>|alle|--liste`),
+│   │                      ein LIESMICH. Vorher zwanzig Ordner.
 │   ├── pruefkonten/       legt einen Bestand von 300+ Konten mit gemischten
 │   │                      Backup-Staenden an (fester Zufallsstartwert) —
 │   │                      fuer Seitenwechsel, Filter und Sammelauswahl der
 │   │                      NutzerInnen-Liste (P-P3-16)
-│   ├── rechtstexte/       Angriffsprobe fuer den Markdown-Renderer der
-│   │                      Rechtstexte: 81 Proben in acht Gruppen plus eine
-│   │                      Positivlisten-Schranke ueber JEDE erzeugte Ausgabe
-│   │                      (s. LIESMICH.md)
 │   ├── screenshots/       nimmt alle Seiten in acht Breiten von 360 bis 1920 px
 │   │                      auf, je Seite ein Kontaktbogen; misst dabei
 │   │                      waagerechten Überlauf, Konsolenfehler, Knopfhöhen
@@ -740,37 +638,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      steht in der LIESMICH).
 │   │                      kontrast.py rechnet die Kontraste der Token nach
 │   │                      (s. LIESMICH.md)
-│   ├── spurprobe/         prüft den Rundlauf des Blob-Formats SPUR1 über den
-│   │                      ganzen Referenzbestand: Punkte → Blob → Punkte, dazu
-│   │                      Kopf, Ablehnung fremder Fassungen und die Frage, ob
-│   │                      die Leser vor und nach der Verdichtung dasselbe
-│   │                      liefern. Verdichtet in einer Transaktion, die sie
-│   │                      zurückrollt — ändert nichts (s. LIESMICH.md)
 │   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
 │   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
 │   │                      plus berechnete Stile im Browser, 13 Breiten.
 │   │                      Ruhte waehrend P3, in O12 neu geeicht; ab P4 wieder
 │   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
-│   ├── komplettprobe/     fährt den ganzen Zyklus des Komplett-Backups
-│   │                      (S2/AP8): erzeugen in Häppchen, versiegeln, öffnen,
-│   │                      in eine LEERE Datenbank einspielen und Tabelle für
-│   │                      Tabelle vergleichen, aufs Backup-Ziel schieben.
-│   │                      72 Erwartungen mit allen Schaltern (64 ohne).
-│   │                      Arbeitet in einer Kopie unter /tmp, liest aber
-│   │                      aus der ECHTEN Datenbank
-│   ├── versandprobe/      prüft die beiden Backup-Ziel-Adapter (S2/AP7;
-│   │                      `ftp` ist seit S10/AP4 abgeschafft) gegen ECHTE
-│   │                      Server auf 127.0.0.1: Rundlauf je Protokoll,
-│   │                      Fingerabdruck als Riegel, Fehlerfälle,
-│   │                      Versiegelung der Zugangsdaten. 116 Erwartungen.
-│   │                      ZWEI Sätze Gegenstellen, und beide werden
-│   │                      gebraucht: gegenstellen.py (pyftpdlib/paramiko,
-│   │                      portabel) und echte_gegenstellen.sh (vsftpd und
-│   │                      OpenSSH, braucht root) — vsftpd kennt kein MLSD und
-│   │                      fährt damit als einziges den Rückfallzweig der
-│   │                      Verzeichnisliste. Was sie NICHT prüfen kann — ein
-│   │                      echtes Ziel im Internet — steht an erster Stelle
-│   │                      ihrer LIESMICH.md
 │   ├── uhr-bilder/        rastert Launcher-Symbole und Bildmarken der Uhr
 │   │                      aus den beiden SVG unter server/assets/images/.
 │   │                      Das Rezept ist aus den vorhandenen Dateien
@@ -779,18 +651,6 @@ Daten erst nach Server-Bestätigung.
 │   ├── uhr-pruefstand/    baut SDK und Simulator auf einem nackten Linux-
 │   │                      Rechner auf, übersetzt die Uhr-App und startet
 │   │                      sie ohne Fensteroberfläche (s. Abschnitt 5.2b)
-│   ├── freigabeprobe/    der Freigabeweg MIT Wiederherstellungsschlüssel
-│   │                      (E20): Kasten erscheint, falscher Schlüssel wird
-│   │                      abgewiesen, richtiger schlüsselt um. Die Krypto
-│   │                      entsteht im Browser über assets/crypto.js — PHP
-│   │                      legt sie nur ab (s. LIESMICH.md)
-│   ├── wiederherstellungs-probe/
-│   │                      Grenzfälle von edbak_restore(), die der Kreislauf
-│   │                      nicht herstellen kann: Papierkorb-Mischfall,
-│   │                      kaputte Datei, Adminpaket Fassung 3, Speichergrenze,
-│   │                      der Auftrag „Alle sichern" und der Rückweg bei
-│   │                      verlorenem Server-Anteil (E-S1-04/19, S2/AP6, S10;
-│   │                      Backlog Nr. 31/35; s. LIESMICH.md)
 │   └── wegwerfdomains/    holt die Liste der Wegwerf-Mailanbieter, misst den
 │                          Unterschied und schreibt sie erst auf Zuruf
 │                          (Backlog Nr. 230, Web 20.22.0; Runbook, Abschnitt 7).
@@ -885,7 +745,7 @@ unschädlich (`INSERT IGNORE` auf den Punkte-PK, Upsert auf `client_ref`) —
 bedingungslos, weil ein nicht-finales Paket diese drei Felder gar nicht trägt
 und sie sonst auf NULL zurücksetzte, während `final` (mit `GREATEST`
 geschützt) auf 1 blieb. Übrig blieb ein abgeschlossener Einsatz ohne Ende.
-Gehalten von `tools/ingestprobe/` Teil 7.
+Gehalten von `tools/proben/ingest/` Teil 7.
 Phasen/Rea werden je Upload **vollständig ersetzt** (kein Delta). Die Uhr darf
 lokal erst löschen, wenn `final` bestätigt und `next_seq` = Punktzahl.
 
@@ -998,7 +858,7 @@ welchen die Installation hat. Erst der Vergleich beider ergibt eine Aussage:
 Dass im Zweifel **gar nichts** ausgeliefert wird, ist die eigentliche
 Entscheidung: Ein Anteil, der nicht passt, ergäbe einen Datenschlüssel, der
 nicht passt — und der Fehlschlag sähe für jede NutzerIn gleichzeitig aus wie
-ein falsches Passwort. Belegt von `tools/anteilprobe/`.
+ein falsches Passwort. Belegt von `tools/proben/anteil/`.
 
 *Bedient werden die Lagen auf einer Seite* (seit Web 20.1.0, S10/AP3):
 **Betrieb → Servereinstellungen**, Karte „Schlüssel des Servers"
@@ -1141,7 +1001,7 @@ Wechsel sonst.
 
 Zwei Prüfmittel melden sich ohne Browser an und schicken das Feld seither
 selbst: `tools/referenzdatensatz/einspielen/sitzung.py` (holt zuerst
-`login.php`) und `tools/gpxprobe/probe.php` (tat den GET schon, las das Feld
+`login.php`) und `tools/proben/gpx/probe.php` (tat den GET schon, las das Feld
 aber nicht). Alle übrigen fahren einen echten Browser und schicken es von
 selbst mit.
 
@@ -1228,7 +1088,7 @@ Entsperrdialog zu; das ist im Rahmenplan-Archiv am 01.09.2026 berichtigt.
 den Inhaltsschlüssel daraus **ohne Passwort** neu — der Ablauf kostete ein
 **stilles Neu-Entpacken**. Zahl dazu: acht Stunden Dienst, alle fünf Minuten
 eine Seite, 97 Aufrufe ohne Pause — **vorher 17 Neu-Entpackungen, nachher 1**
-(`tools/fristprobe/`, dort auch die Gegenprobe, dass die Frist weiterhin
+(`tools/proben/frist/`, dort auch die Gegenprobe, dass die Frist weiterhin
 greift). Der Dialog fällt an der Stelle darüber: wenn `getContentKey()` `null`
 liefert, also in genau den drei aufgezählten Fällen. **Das bleibt so.**
 
@@ -2684,8 +2544,8 @@ Personenbezug im Fehlerprotokoll, und sie widersprach der Zusage im Kopf von
 ihre Fehlerspalte. Wer einem Fehlschlag nachgeht, findet über die Kennung
 beides zusammen — das Protokoll allein sagt nicht, wer gemeint war.
 
-**Nachweis:** `tools/mailprobe/` gegen eine eigene SMTPS-Gegenstelle — 41
-Prüfungen, 0 Befunde; `tools/jobprobe/` Teil 10 — 35 von 35.
+**Nachweis:** `tools/proben/mail/` gegen eine eigene SMTPS-Gegenstelle — 41
+Prüfungen, 0 Befunde; `tools/proben/jobs/` Teil 10 — 35 von 35.
 
 ### Was ein Gerät beim Koppeln über sich meldet — seit Web 12.9.0 gespeichert
 
@@ -2753,7 +2613,7 @@ der falschen Stelle abgeschnittenes UTF-8-Zeichen macht die Spalte unlesbar),
 Steuerzeichen zu Leerzeichen, eine Geräteart außerhalb der drei erlaubten
 Werte zu `NULL`. **Eine Kopplung scheitert nie an einer Statistikangabe**
 (JSON-Vertrag 1a): Ein Block, der gar keiner ist, ergibt drei leere Werte und
-keinen Fehler. Nachweis ohne Datenbank: `php tools/geraeteprobe/probe.php`.
+keinen Fehler. Nachweis ohne Datenbank: `php tools/proben/geraete/probe.php`.
 
 **Was bewusst nicht gesendet wird:** `uniqueIdentifier` (Uhr), `ANDROID_ID`,
 IMEI und Seriennummer (Handy) — dauerhafte Gerätekennungen, die für eine
@@ -3044,7 +2904,7 @@ zueinander passen und kein Punkt verlorengeht, seine Stelle wechselt oder
 seine Reihenfolge verliert — nicht eine Genauigkeit, die das Format nie
 zugesagt hat.
 
-Nachgemessen wird sie mit `php tools/spurprobe/probe.php`; der Lauf arbeitet in
+Nachgemessen wird sie mit `php tools/proben/spur/probe.php`; der Lauf arbeitet in
 einer Transaktion, die er am Ende zurückrollt, und ändert deshalb nichts.
 
 #### Stufe 3: die Ausdünnung (ab Web 10.2.0, E-S2-05)
@@ -3407,7 +3267,7 @@ hat.
 | Hash schreiben | **erst am Ende.** Bricht der Lauf mitten im Bestand ab, bleibt die Marke im Zustand und der alte Hash stehen. Wäre der Hash schon geschrieben, gälte der halb durchgegangene Bestand als erledigt — und zwar still |
 | Drei Regeln, unverändert | nur ändern, was die Tabelle **wirklich** kennt · die **Rohangabe** nie anfassen · **Handy-Zeilen** bleiben unberührt (ihre Rohangabe ist der Klarname, und die Tabelle führt keine Handys — dieselbe Regel wie für jede andere unbekannte Angabe, kein Sonderfall) |
 | Anzeige | Betrieb → Status, Karte **Server**, Zeile **Gerätemodelle**: „N Teilenummern · zuletzt nachgelöst … · X nachgezogen, Y unbekannt". **Orange „steht aus"**, wenn die Tabelle sich geändert hat und der Job noch nicht gelaufen ist — ohne diese Zeile wäre das ein Zustand, den niemand sieht |
-| Prüfmittel | `tools/geraeteprobe/` Teil 2, **gegen die Datenbank**: fünf Zeilen mit je einer Frage, zwei Tabellen in einem Lauf |
+| Prüfmittel | `tools/proben/geraete/` Teil 2, **gegen die Datenbank**: fünf Zeilen mit je einer Frage, zwei Tabellen in einem Lauf |
 
 **`geraet_modell_aufloesen()` und `gm_nachaufloesen()` nehmen die Tabelle als
 Parameter.** Das ist die Naht für die Probe: Sie misst gegen eine eigene,
@@ -3845,7 +3705,7 @@ bzw. Nr. 46). Eine Migration braucht S10 nicht.
 | **FTPS** | ja | nein |
 
 Der zweite Fall wird leicht überschätzt: **`ext/ftp` prüft das Zertifikat
-nicht.** Nachgemessen in `tools/versandprobe/` gegen eine Gegenstelle mit
+nicht.** Nachgemessen in `tools/proben/versand/` gegen eine Gegenstelle mit
 selbst ausgestelltem Zertifikat ohne Vertrauenskette — die Verbindung kommt
 zustande. Schutz gegen Mitlesen ja, Schutz gegen einen untergeschobenen Server
 nein.
@@ -3962,7 +3822,7 @@ gekürzte Datei wurde beim nächsten Lauf **einzeln** erneut geschickt (1 von
 64). Mit einem Budget von 2 s teilte sich derselbe Lauf in zwei Schübe
 (34 + 30) und war danach vollständig.
 
-`tools/versandprobe/` deckt Adapter, Fingerabdruck-Riegel, Fehlerfälle und
+`tools/proben/versand/` deckt Adapter, Fingerabdruck-Riegel, Fehlerfälle und
 Versiegelung ab: **135 Erwartungen** (115 bis S10/AP4 — die 116. weist ein
 **leeres** Protokoll ab; Teil 12 mit der Aufbewahrungsregel kam in P5a/AP10
 dazu und bringt 19), gefahren gegen zwei Sätze Gegenstellen
@@ -3997,7 +3857,7 @@ Versand, der drüben aufräumt, trägt genau diesen Fehler mit hinüber.
 | Die drei Sicherungen | **Herkunft:** Namensmuster (`edbak_paketname_gueltig()` bzw. `komp_name_gueltig()`) **und** eine Zeile im Versandprotokoll. **Menge:** nie unter N/M, gezählt nur über die eigenen Dateien. **Lauf:** nur nach einem Versand ohne Fehler und ohne Zeitüberschreitung |
 | Anzeige der Löschungen | Betrieb → Status → **Sicherheit**, Karte „Löschungen auf Sicherungszielen" (30 Tage, mit Grund). Dazu die Zahl im Versandlauf und in der Jobzeile |
 | Statuszeile | Karte **Backups**, Zeile „Aufbewahrung am Ziel": orange, wenn ein Ziel **ohne** Regel seit über 30 Tagen beschickt wird und dort **nie** etwas entfernt wurde (`sz_waechst()`, liest das Protokoll — keine Verbindung) |
-| Prüfmittel | `tools/versandprobe/` Teil 12: fünf eigene Sicherungen, fünf fremde Dateien, Regel aus → 0 Löschungen; Regel an (N = 2) → 3 Löschungen, **alle fünf fremden bleiben**, sieben Dateien übrig, Protokollzeilen = Löschungen |
+| Prüfmittel | `tools/proben/versand/` Teil 12: fünf eigene Sicherungen, fünf fremde Dateien, Regel aus → 0 Löschungen; Regel an (N = 2) → 3 Löschungen, **alle fünf fremden bleiben**, sieben Dateien übrig, Protokollzeilen = Löschungen |
 
 **Warum das Protokoll eine Tabelle ist und nicht `app_state`** (E-P5a-56).
 Das Konzept sagt `app_state`. `app_state.v` ist `VARCHAR(190)`, und die Frage
@@ -4278,7 +4138,7 @@ Am Messbestand: 5 000 Einsätze, **1 121 802 Zeilen** in 34 Tabellen.
 | Einspielen | 784 Anweisungen in 6,0 s |
 | Rundlauf | **34 von 34** Schemata zeichengleich, **34 von 34** Prüfsummen gleich (`CHECKSUM TABLE EXTENDED`) |
 
-`tools/komplettprobe/` fährt den ganzen Zyklus: **72 Erwartungen mit allen
+`tools/proben/komplett/` fährt den ganzen Zyklus: **72 Erwartungen mit allen
 Schaltern** (`--pruefdb` und `--ziel`; ohne sie sind es 64, weil die Teile 7
 und 10 dann mit `[ -- ]` ausfallen), einschliesslich Versand auf eine echte
 FTPS-Gegenstelle, „halbe Datei liegt dort", abgeschnitten an einer
@@ -4441,7 +4301,7 @@ geht über den Papierkorb, wo die Frist läuft.
 
 #### Nachweis
 
-`tools/spurprobe/probe.php`, **Teil 6** — auf einer eigens angelegten Kulisse
+`tools/proben/spur/probe.php`, **Teil 6** — auf einer eigens angelegten Kulisse
 in einer zurückgerollten Transaktion. Der Bestand liefert diesen Fall nicht:
 Er braucht eine Spur, die beim Schnitt absichtlich nur zur Hälfte geliefert
 ist. **20 Erwartungen, alle erfüllt.** Die Kernzahlen: 350 Punkte geliefert,
@@ -4561,7 +4421,7 @@ erfahren, dass ihr die Zeitstempel fehlen.
 > UTF-8 umgeschrieben, denn die Bytes **sind** UTF-8 (geprüft) und libxml
 > würde sie sonst nach der Deklaration lesen; von 935 Kodierungen aus `iconv -l`
 > waren genau UTF-7 und UTF7 durchgekommen, die Liste schließt alle.
-> `tools/gpxprobe/` Teil 8 hält neun Umgehungsversuche dagegen — **9 Proben,
+> `tools/proben/gpx/` Teil 8 hält neun Umgehungsversuche dagegen — **9 Proben,
 > 0 durch** (am Stand davor: 9 Proben, 1 durch) —, und drei saubere Dateien
 > gehen weiterhin durch (UTF-8, utf-8, ohne Deklaration).
 
@@ -5738,7 +5598,7 @@ im offenen Fenster; außerhalb wird gar kein Tag bestimmt). Der Weg gegen
 eine verlorene Uhr bleibt das **Trennen** des Geräts (Handbuch 10); das
 Fenster begrenzt nur, was bis dahin geschehen kann.
 
-Nachweis: `tools/ingestprobe/` Teil 9 — **1 Paket angenommen, 1 abgewiesen**,
+Nachweis: `tools/proben/ingest/` Teil 9 — **1 Paket angenommen, 1 abgewiesen**,
 dazu die Gegenprobe, dass ein neuer Einsatz weiterhin entsteht, und seit den
 Nachbesserungen **neun Erwartungen der Gegenprüfungen** (Diensttag bleibt,
 Abschlusspaket genannt, falsch gestellte Uhr nimmt weiter an, Zukunft
@@ -5929,7 +5789,7 @@ es darf nichts mehr ausstehen, und die Wartung muss noch stehen.
 **Nicht Umfang:** eine eigene Wartungsmeldung auf Uhr und Handy ist
 Backlog-Kandidat.
 
-**Nachweis:** `php tools/wartungsprobe/probe.php` — **67 Erwartungen**, beide
+**Nachweis:** `php tools/proben/wartung/probe.php` — **67 Erwartungen**, beide
 Richtungen (zu wenig gesperrt / zu viel gesperrt), einschließlich der drei
 Regeln aus E-S5W-09 am Code und seit Web 20.6.0 **Teil 7**: der Torwächter
 schließt, nennt den Grund, gibt `ingest.php` sein JSON-503, lässt Betrieb →
@@ -7977,7 +7837,7 @@ Warnung beim nächsten Überschreiten wiederkommt.
 > Warnung für die Speichergrenze der Backups, seit S8 vorhanden — **wurde im
 > Betrieb von niemandem aufgerufen**. Nachgemessen am 15.09.2026:
 > `grep -rn "schwellen_melden" --include=*.php` findet die Definition und
-> einen Aufruf in `tools/wiederherstellungs-probe/probe.php`, sonst nichts.
+> einen Aufruf in `tools/proben/wiederherstellung/probe.php`, sonst nichts.
 > Geschrieben, geprüft, tot — dieselbe Klasse Fehler wie Backlog Nr. 89
 > („Dieser Job lief von Web 12.2.0 bis 12.9.2 nie"). Der Aufruf steht jetzt im
 > täglichen Aufräumjob, direkt hinter der Messung.
@@ -8120,7 +7980,7 @@ eine Fehlermeldung wäre eine Auskunft an jemanden, der nichts zu fragen hatte.
 > Kopfzeile, die auf eine Gruppe zeigt, die es nicht gibt, ist schlimmer als
 > keine.
 >
-> Nachgehalten wird das von `tools/cspprobe/browserprobe.mjs`, Abschnitt 7:
+> Nachgehalten wird das von `tools/proben/csp-browser/browserprobe.mjs`, Abschnitt 7:
 > Sie löst einen Verstoß **absichtlich** aus und sieht nach, ob er ankommt.
 
 ### 5c.4 HSTS ist eine Einstellung — und `.htaccess` hat die Zeile verloren
@@ -8173,7 +8033,7 @@ Zwölf API-Dateien trugen denselben handgeschriebenen Prüfblock; sie rufen nun
 Pseudo-Feld mitschleppen müsste — nebenbei verschwinden zwölf Kopien einer
 Prüfung, die hätten auseinanderlaufen können.
 
-### 5c.7 Nachweis: `tools/cspprobe/`
+### 5c.7 Nachweis: `tools/proben/csp-browser/`
 
 Ein vergessener Nonce legt eine Seite **still** lahm — kein PHP-Fehler, kein
 Protokolleintrag, keine rote Seite. Die Probe zählt nach: fünf Regeln
@@ -8478,7 +8338,7 @@ die **laufende** Sperre gelöscht.
 **Die Stufe wäre nie zurückgefallen.** Der Verfall wurde nur dort
 aufgefrischt, wo *nicht* gesperrt wurde — also bei den ersten neun
 Fehlversuchen. Jeder schob die Frist um 24 h vor, sodass sie beim zehnten nie
-abgelaufen war. Gefunden von `tools/ratenprobe/`; im Betrieb wäre es niemandem
+abgelaufen war. Gefunden von `tools/proben/raten/`; im Betrieb wäre es niemandem
 aufgefallen.
 
 #### 5e.5 Der Weg zurück
@@ -8505,7 +8365,7 @@ werfen — und weil `rate_misserfolg()` alles in *einem* `try/catch` fängt und
 still zurückkehrt, zählte der Ratenschutz gar nicht mehr. Für **alle** Töpfe,
 nicht nur für die Leiter, und ohne dass irgendetwas rot würde.
 
-**Nachweis:** `php tools/ratenprobe/probe.php` — 50 Prüfungen, 0 Befunde.
+**Nachweis:** `php tools/proben/raten/probe.php` — 50 Prüfungen, 0 Befunde.
 
 #### 5e.7 Die Mengenbremse von `ingest.php` (Web 20.11.0, P5a/AP7)
 
@@ -8601,7 +8461,7 @@ Beide tun es bereits: Die Uhr fällt in ihren Zweig „später erneut"
 von Connect IQ bekommt `(code, data)` und keine Kopfzeilen. Die Zeile steht
 für einen fremden Client an derselben Schnittstelle.
 
-**Nachweis:** `php tools/ingestprobe/probe.php` — 83 Erwartungen, 0 nicht
+**Nachweis:** `php tools/proben/ingest/probe.php` — 83 Erwartungen, 0 nicht
 erfüllt, davon 21 in Teil 10. Laufzeit über den erzeugten Sendeplan (612
 Anfragen, 64 478 Punkte, je zwei Läufe): Median **14,43 ms ohne**,
 **15,14 ms mit** Bremse (+4,9 %), Mittel 19,67 gegen 20,33 ms (+3,4 %), 0
@@ -8725,7 +8585,7 @@ der Datenbank.
 | Zähler | Datei `server/ueberlast.json` — laufende Stunde, Zahl darin, größte je gemessene Stunde, Gesamtzahl, Zeitpunkt des letzten Vorfalls. `flock`, weil eine Überlast viele Prozesse gleichzeitig trifft |
 | Anzeige | Statusseite, Karte **Server**, Zeile **Verbindungen**. Orange ab zehn Vorfällen in der laufenden Stunde — **oder** wenn die Spitze diese Schwelle erreicht hat und der letzte Vorfall keine 24 Stunden her ist. Ist die Datei nicht schreibbar, sagt die Zeile das: „0 Vorfälle" und „nicht gezählt" sähen sonst gleich aus |
 | Persistente Verbindungen | bleiben aus. `PDO::ATTR_PERSISTENT` steht nirgends (gezählt 16.09.2026: 0 Treffer unter `server/` und `tools/`) — eine persistente Verbindung belegt über das Ende der Anfrage hinaus genau den Platz, um den es hier geht |
-| Prüfmittel | `tools/verbindungsprobe/` — stellt 1226 her, misst über echtes HTTP. 24 Erwartungen |
+| Prüfmittel | `tools/proben/verbindung/` — stellt 1226 her, misst über echtes HTTP. 24 Erwartungen |
 
 **Warum der Zähler in einer Datei steht und nicht in `app_state`** (E-P5a-50).
 Das Konzept sagt `app_state`. Das geht nicht, und zwar aus dem Grund, der den
@@ -9989,7 +9849,7 @@ für das sie da ist.
 (neben `db.php`)? (2) Ist die aufgerufene Seite eine der **dreizehn** Ausnahmen?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
-`php tools/wartungsprobe/probe.php` (**57 Erwartungen**; seit Web 15.5.2 misst
+`php tools/proben/wartung/probe.php` (**57 Erwartungen**; seit Web 15.5.2 misst
 ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149, seit
 15.6.0 mit 12a, dass die Integritaetswache im Wartungsmodus nicht rot wird,
 Nr. 140, und seit S10 mit 6a, dass das **Schluesselblatt** erreichbar bleibt —
@@ -11029,7 +10889,7 @@ Rechtstext warten.
 | `impressum.php`, `datenschutz.php` | Zwei Zeilen: Schlüssel setzen, Seite laden |
 | `admin_installation.php` | Editor, ein Formular für beide Texte — und daneben das Logo der Installation (S8/AP3, E-S8-05) |
 | `admin_rechtstexte.php` | Weiterleitung (302) auf `admin_installation.php`; die Adresse steht in Lesezeichen |
-| `tools/rechtstexte/` | Angriffsprobe für `rt_html()` |
+| `tools/proben/rechtstexte/` | Angriffsprobe für `rt_html()` |
 
 #### `rt_html()` — erst maskieren, dann Struktur erkennen
 

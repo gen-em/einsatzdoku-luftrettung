@@ -616,6 +616,61 @@ ist entsprechend nachgezogen.
 
 ---
 
+## 5d. Messprotokoll PK-04/2 — `tools/proben/` (22.09.2026)
+
+Zwanzig Werkzeuge unter einen Läufer. **Die Abnahme ist hier NICHT die
+Bytegleichheit** — anders als bei `quelltext/`: Diese Proben schreiben in
+die Datenbank, legen Konten an und nennen Zeitstempel. Von 19 Vorher-Nachher-
+Vergleichen waren nur 2 bytegleich, und die 17 Abweichungen sind Konto-IDs
+(`uid 57` → `uid 88`), Zeitstempel, Zufallscodes, Messzeiten (`140 ms` →
+`134 ms`), temporäre Pfade und CSP-Nonces. **Gemessen wird deshalb der
+Rückgabewert je Probe, vorher gegen nachher.**
+
+| | vorher | nachher |
+|---|---|---|
+| Rückgabewert 0 | 13 | **13** |
+| Rückgabewert ≠ 0 | 6 | **6** — dieselben sechs |
+| Werkzeugordner | 41 | **22** |
+| LIESMICH-Zeilen | 6 261 in 40 Dateien | **3 820 in 21** |
+| `kettenaufrufe` ungeprüft | 18 | **2** |
+
+**Die sechs roten sind dieselben wie vor dem Umzug:** `raten`, `mail`,
+`wiederherstellung`, `gpx`, `freigabe`, `csp-browser` — die Sachbefunde aus
+F-PK-22, unverändert. **Kein Regress.**
+
+**Die Zahl 18 ist auf 2 gefallen, und das ist kein Zufall.** `kettenaufrufe`
+konnte an den zwanzig Einzelaufrufen keine Schnittstelle erkennen (jedes
+Werkzeug hatte seine eigene Aufrufkonvention); der Läufer hat eine, und
+damit prüft das Werkzeug jetzt zwanzig Aufrufe, die es vorher nur zählen
+konnte. Übrig bleiben `stilvergleich` und `messstand` — beide eigene Ordner.
+
+### Drei Fehler beim Umzug, alle gefunden und behoben
+
+1. **Die Verzeichnistiefe.** Die Proben liegen eine Ebene tiefer
+   (`tools/proben/<name>/`), also zeigte `dirname(__DIR__, 2)` auf
+   `tools/` statt auf die Wurzel. 17 PHP-Dateien und 2 Python-Dateien
+   angepasst.
+2. **Zwei Node-Proben stürzten ab.** `frist` und `abmelden` laden ihre
+   Probeseite über einen kleinen Webserver und riefen `tools/fristprobe/`
+   bzw. `tools/abmelde-probe/` auf — Pfade, die es nicht mehr gab.
+   `page.waitForFunction: Timeout 30000ms exceeded`, also ein Fehler, der
+   sich als Zeitüberschreitung tarnt.
+3. **`container` wurde neu rot** — und das war der einzige echte Regress:
+   `lesen_pruefen.py` holt den Leser des Referenzdatensatzes über zweimal
+   `dirname` und landete damit in `tools/proben/` statt in `tools/`.
+   `ModuleNotFoundError: No module named 'lesen'`, mitten im Lauf und erst
+   nach den ersten grünen Zeilen. **Gefunden durch den Vergleich der
+   Rückgabewerte, nicht durch Lesen.**
+
+### Eine Probe fährt `alle` nicht mit, und das steht im Läufer
+
+`versand` verlangt den Wurzelpfad der Gegenstellen als Argument (`rc 2`
+ohne). Sie ist im Läufer mit **Grund** ausgetragen und wird in der
+Schlusszeile als „1 ausgelassen" gezählt — kein stilles Überspringen
+(Grundsatz 7).
+
+---
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in

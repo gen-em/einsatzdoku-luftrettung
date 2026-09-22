@@ -133,7 +133,7 @@ foreach (['pat_wrap_pw' => 'Schluesselhuelle',
           . "oeffnen. Das Demo-Konto kaeme herein und saehe nichts.\n"
           . "Weg zurueck: Passwort des Demo-Kontos im Browser neu setzen,\n"
           . "solange `config.php` KEINEN `kdf_anteil` fuehrt -- oder\n"
-          . "`tools/anteilprobe/huelle_stellen.py %s <passwort> edk1`.\n",
+          . "`tools/proben/anteil/huelle_stellen.py %s <passwort> edk1`.\n",
             $name, $email, explode(':', $huelle)[0] . ':', $email));
         exit(2);
     }

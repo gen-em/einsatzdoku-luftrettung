@@ -58,7 +58,7 @@ mitsamt ihren Einsätzen.
 
 Der Papierkorb ist für einen MENGENPRUEFSTAND ohnehin nicht die Frage: Was
 er beim Sichern und Zurückspielen bedeutet, prüfen der Kreislauf (R24) und
-`tools/wiederherstellungs-probe/` (R27), und die tun es gründlicher, als ein
+`tools/proben/wiederherstellung/` (R27), und die tun es gründlicher, als ein
 58-fach kopierter Papierkorb es je könnte. Hier gilt deshalb: gelöschte Tage,
 Einsätze und Ruhesegmente werden NICHT mitvervielfältigt. Damit trägt jede
 Runde genau 82 Einsätze, 95 Ruhesegmente und 15 Diensttage — eine Zahl, die

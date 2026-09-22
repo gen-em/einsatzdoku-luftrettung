@@ -115,7 +115,7 @@ Stand 17.09.2026: **11 von 11 erfüllt.**
 Ob die Gegenstelle wirklich der Produktivserver ist, ob das Backup lesbar ist
 und ob der Serverschlüssel der richtige ist. Das erste ist Sache der Umgebung
 (`PRODUKTION_URL`), das zweite und dritte Sache der
-Wiederherstellungsprobe (`tools/wiederherstellungs-probe/`).
+Wiederherstellungsprobe (`tools/proben/wiederherstellung/`).
 
 ---
 

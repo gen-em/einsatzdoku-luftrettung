@@ -94,7 +94,7 @@ if (!str_starts_with((string)$neg['praefix'], 'edka1:')) {
     fwrite(STDERR, sprintf(
         "Das Negativkonto %s traegt `%s`, gebraucht wird `edka1:`.\n"
       . "Herzustellen, indem sich das Konto einmal im Browser anmeldet -- oder\n"
-      . "mit tools/anteilprobe/huelle_stellen.py <konto> <passwort> edka1.\n",
+      . "mit tools/proben/anteil/huelle_stellen.py <konto> <passwort> edka1.\n",
         $negativKonto, (string)$neg['praefix']));
     exit(2);
 }

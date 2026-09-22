@@ -379,7 +379,7 @@ Sie sprechen mit `pair.php`, wie eine Uhr es täte. Der Code wird je Schritt
 **einmal** geholt und über alle acht Breiten wiederverwendet — der
 Ratenschutz-Topf `pair_start` lässt zwanzig Aufrufe je zehn Minuten und Adresse
 zu, ein Lauf mit einer Sitzung je Breite bräuchte sechzehn davon. Wer im selben
-Zeitfenster `tools/kopplungsprobe/rundlauf.mjs` fährt, kann den Topf trotzdem
+Zeitfenster `tools/proben/kopplung/rundlauf.mjs` fährt, kann den Topf trotzdem
 füllen; dann meldet der Schritt es ausdrücklich, statt ein Bild des falschen
 Zustands aufzunehmen. Zurück bleibt eine Sitzung, die nach zehn Minuten
 verfällt — eine Gerätezeile entsteht nie, denn das Gerät sagt in diesem Lauf

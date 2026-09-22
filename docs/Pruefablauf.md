@@ -428,7 +428,7 @@ PHP bereits ausgeführt, und das lange Muster wäre dort falsch.
 
 *Durchgesehen und auf der langen Form (Stand 21.09.2026, nachgemessen):
 `tools/integritaetswache/`, `tools/quelltext/`,
-`tools/stilvergleich/` und `tools/wartungsprobe/` — **vier**.
+`tools/stilvergleich/` und `tools/proben/wartung/` — **vier**.
 `tools/quelltext/zerlegen.py` trägt die kurze Form mit dem Kommentar
 daneben. Bis PK-01 nannte `CLAUDE.md` 6 an dieser Stelle vier Werkzeuge und
 zählte dabei `wortliste` (kurze Form) mit und `wartungsprobe` (lange Form)

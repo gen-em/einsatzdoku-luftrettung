@@ -278,7 +278,7 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   `spur_lesen_viele()`, `spur_zahlen()`, `spur_naechste_seq()`,
   `spur_loeschen()`, `spur_zeit_verschieben()`. Ein neuer Verbraucher, der
   daran vorbeigeht, ist ein Fehler. Format und Begründung:
-  `docs/Technik.md`, Abschnitt 4.97; Nachweis: `php tools/spurprobe/probe.php`.
+  `docs/Technik.md`, Abschnitt 4.97; Nachweis: `php tools/proben/spur/probe.php`.
 
 ## 5. Oberfläche
 

@@ -46,7 +46,7 @@ Danach wird umbenannt: `pair.php` setzt beim Ja `label` auf „Uhr" bzw.
 > und **nichts** setzt den Topf zurück — es gibt kein `rate_erfolg`
 > dafür. Zwei Geräte je Lauf heißt **zehn Läufe je zehn Minuten**. Wer beim
 > Entwickeln öfter fahren muss, räumt den Topf so ab, wie es
-> `tools/kopplungsprobe/probe.php` tut; hier steht dafür kein SQL (R4).
+> `tools/proben/kopplung/probe.php` tut; hier steht dafür kein SQL (R4).
 
 > **Die Aufräumschleife darf nie nach dem Ingest laufen.** `devices` hängt an
 > `missions`, `rest_segments` und `day_refs` mit `ON DELETE SET NULL`. Ein
@@ -170,7 +170,7 @@ Weg nicht mehr, den eine NutzerIn geht (E-P1-10).
 - **Und es stellt NICHT um** (E-S10-15). `sitzung.py` liest, was dasteht. Ein
   Konto, das nur über den Prüfstand angemeldet war, bleibt auf `edk1:`; die
   stille Umstellung gehört dem Browser, und sie zu messen ist Sache von
-  `tools/anteilprobe/umstellungslauf.mjs`. Das ist die Grenze dieses
+  `tools/proben/anteil/umstellungslauf.mjs`. Das ist die Grenze dieses
   Prüfmittels — und der Grund, warum **beide** Fassungen für es lesbar sein
   müssen. Gemessen wird das von `sitzungsprobe.py` (2 von 2), an je einem
   echten Konto des Bestands.
