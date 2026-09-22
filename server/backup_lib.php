@@ -230,15 +230,11 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * Ohne den Alias hiesse der Schluessel in jeder NEUEN Datei still
      * `uhr_gesperrt` — und das Einspielen faende das Feld nicht mehr, ohne
      * eine einzige Fehlermeldung. */
-    $missionSpalten = 'client_ref, day_id, started_at, ended_at, distance_m, ascent_m,
-                       site_ele_m, final, uhr_gesperrt AS manual, origin, edited,
-                       geraet_art, geraet_modell, transport_dest,
-                       transport_mode, na_escort, false_alarm, start_src,
-                       dest_lat, dest_lon,
-                       winch, winch_cycles, winch_cycles_pat, winch_airload,
-                       bergwacht, secondary, schockraum, bw_unit, bw_info,
-                       other_ema, crew_override,
-                       pat_blob, created_at, deleted_at, deleted_with_day';
+    /* AUS DEM REGISTER (Schritt 15/AP6, E-ZE-22). Die Liste stand hier von
+     * Hand; die Gruende, warum id, user_id, device_id und die tote
+     * other_resources fehlen, stehen jetzt in `mf_missions_gruende()` und
+     * damit neben den Spalten selbst statt in diesem Kommentar. */
+    $missionSpalten = mf_spalten_sql('backup');
     /* NICHT in der Liste, und zwar mit Absicht:
      *
      *   id, user_id, device_id   Interne Verweise. Sie gelten nur in DIESER

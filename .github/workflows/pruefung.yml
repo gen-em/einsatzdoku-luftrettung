@@ -601,6 +601,16 @@ jobs:
           php tools/migrationsregister/pruefen.php --selbstprobe
           php tools/migrationsregister/pruefen.php
 
+      - name: Spaltenregister — schema.sql gegen mf_missions_register()
+        # `missions` hat 41 Spalten, und sechs Stellen brauchen eine Auswahl
+        # davon. Eine NEUE Spalte, die niemand ins Register einträgt, fehlt
+        # still in Export und Backup — sie taucht in keiner erzeugten Liste
+        # auf, und auffallen würde es erst, wenn jemand eine Sicherung
+        # zurückspielt und etwas vermisst. Der Schritt prüft beide
+        # Richtungen und zusätzlich, dass die Positionen jedes Zwecks eine
+        # lückenlose Folge ab 0 sind (Schritt 15/AP6, E-ZE-22).
+        run: php tools/spaltenregister/pruefen.php
+
       - name: CSP — Inline-Skripte ohne Nonce
         # Seit Web 20.7.0 gilt `script-src 'self' 'nonce-…'` ohne
         # `'unsafe-inline'`. Ein vergessener Nonce legt eine Seite STILL

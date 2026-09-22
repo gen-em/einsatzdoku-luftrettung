@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';
+require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten_sql() (Schritt 15/AP6)
 
 /**
  * Einsaetze eines Jahres oder Monats — Grundlage der Zeitraum-Uebersicht.
@@ -55,11 +56,10 @@ try {
      * Sie war die einzige Verwenderin von `p9_at` hier -- und eine
      * korrelierte Unterabfrage je Zeile fuer einen Wert, der als Spalte
      * danebensteht. */
-    $st = db()->prepare('SELECT m.id, m.day_id, d.day, d.kind, d.vehicle_typ,
-                               m.started_at, m.ended_at,
-                           m.distance_m,
-                           m.winch, m.bergwacht, m.secondary, m.winch_cycles,
-                           m.false_alarm, m.site_ele_m, m.pat_blob
+    /* Die `missions`-Spalten aus dem Register (Schritt 15/AP6); die drei
+     * Diensttag-Spalten stehen daneben — sie gehoeren zu `days`. */
+    $st = db()->prepare('SELECT ' . mf_spalten_sql('range', 'm.')
+                         . ', d.day, d.kind, d.vehicle_typ
                          FROM missions m
                          JOIN days d ON d.id = m.day_id
                          WHERE m.user_id = ? AND d.day BETWEEN ? AND ?

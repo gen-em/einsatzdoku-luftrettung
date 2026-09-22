@@ -56,16 +56,10 @@ try {
      * Antwort, ohne je gelesen zu werden. Der Bearbeitungsstand steht
      * unveraendert in der Einsatzansicht (api/mission.php). */
     $st = db()->prepare(
-        'SELECT m.id, m.day_id, m.started_at, m.distance_m,
-                m.transport_mode, m.na_escort, m.transport_dest, m.schockraum,
-                m.false_alarm,
-                m.winch, m.winch_cycles, m.winch_cycles_pat, m.winch_airload,
-                m.bergwacht, m.bw_unit, m.bw_info,
-                m.secondary, m.other_ema, m.crew_override,
-                m.pat_blob,
-                /* `ended_at` statt der Phase-9-Unterabfrage
-                   (Web 14.2.2, F-R64-05) -- siehe api/day.php. */
-                m.ended_at
+        /* AUS DEM REGISTER (Schritt 15/AP6). `ended_at` steht dort an letzter
+         * Stelle dieses Zwecks — es kam mit Web 14.2.2 an die Phase-9-
+         * Unterabfrage heran und wurde hinten angehaengt (F-R64-05). */
+        'SELECT ' . mf_spalten_sql('suchindex', 'm.') . '
            FROM missions m
           WHERE m.user_id = ? AND m.deleted_at IS NULL
           ORDER BY m.started_at'
