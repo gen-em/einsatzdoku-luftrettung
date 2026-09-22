@@ -360,8 +360,22 @@ function status_erhebung(): array
         $ulPlak = 'in Ordnung';
     } else {
         $ulAkut  = $ul['stunde'] === gmdate('Y-m-d H') ? $ul['n'] : 0;
+        /* iso_utc_lesen() UND NICHT strtotime(x . ' UTC') — zwanzig Zeilen
+         * weiter unten liest zeit_relativ() DENSELBEN Wert, und bis AP7
+         * taten es zwei verschiedene Leser.
+         *
+         * ES GING DABEI NICHTS SCHIEF, und das ist ausdruecklich gemessen
+         * und nicht vermutet: Beide liefern fuer die MySQL-Form dasselbe
+         * (50 000 Marken, 0 Abweichungen), und auch fuer die ISO-Form mit
+         * T und Z — PHP liest 'x UTC' mit abschliessendem Z klaglos. Der
+         * Gegenleser von AP7 hatte hier einen stillen Fehlschlag vermutet;
+         * nachgerechnet gibt es ihn nicht.
+         *
+         * Umgestellt wird trotzdem, und zwar aus dem Grund, aus dem es
+         * diesen Schritt gibt: Ein Wert, zwei Leser, und niemand haette
+         * gemerkt, wenn einer von beiden sich geaendert haette. */
         $ulFrisch = $ul['letzt'] !== null
-                 && strtotime($ul['letzt'] . ' UTC') > time() - 86400;
+                 && (iso_utc_lesen($ul['letzt']) ?? 0) > time() - 86400;
         $ulEng   = $ulAkut >= UEBERLAST_ORANGE
                 || ($ulFrisch && $ul['spitze'] >= UEBERLAST_ORANGE);
         $ulText = ($ulAkut > 0

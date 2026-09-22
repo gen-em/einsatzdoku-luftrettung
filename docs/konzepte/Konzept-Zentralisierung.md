@@ -14,10 +14,10 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 >
 > | | |
 > |---|---|
-> | Stand | 22.09.2026 — **AP1 bis AP6 erledigt** (zuletzt Web 20.31.0). Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
+> | Stand | 22.09.2026 — **AP1 bis AP7 erledigt** (zuletzt Web 20.32.0). Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
 > | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen), **E-ZE-25** (Ultracode) und **E-ZE-26** (`assets/format.js` in AP7, sechste Ausnahme), beide 22.09.2026; E-ZE-09 ist nicht vergeben |
 > | Offen | nichts im Konzept. **F-ZE-1 bis F-ZE-6** (Abschnitt 2.3) sind mit der Freigabe vom 20.09.2026 entschieden. Außerhalb des Konzepts: die Einschübe (Abschnitt 8, 9) sind noch nicht eingespielt |
-> | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2** und **AP3 erledigt** (21.09.2026), **AP4 erledigt** (21.09.2026), **AP5** und **AP6 erledigt** (22.09.2026). **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
+> | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2** und **AP3 erledigt** (21.09.2026), **AP4 erledigt** (21.09.2026), **AP5**, **AP6** und **AP7 erledigt** (22.09.2026). **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
 > | Nummern | Dieses Konzept vergibt **keine** Rahmenplan-Fassung, **keine** Backlog-Nummer und **keine** Version. Einschübe in Abschnitt 8 und 9 übernimmt die einspielende Instanz |
 > | Steuerungsdokumente | **Seit 21.09.2026 auf `main`** (Kette II gemergt, PR #65/#68): Rahmenplan **Fassung 102**, Backlog mit der **Spanne 250–259 für Schritt 15** — 250–253 sind die vier Einträge aus Abschnitt 9 dieses Konzepts, **254–259 sind frei als Reserve für Funde der Umsetzung**. Das Konzept selbst ist mit Fassung 97 auf `main` eingespielt worden (unverändert; die fortgeschriebene Fassung liegt auf dem Umsetzungszweig). **Damit ist die Grundlage von AP1-f entfallen** — siehe dort; zur Neubewertung vorgelegt |
 
@@ -31,7 +31,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > | AP4 Datenzugriff klein | **erledigt** 21.09.2026 | **Web 20.29.0** (Neben: neue Funktionen, keine Migration) | Z10 **27 → 2** (AP4-c: `jobs.php` bleibt, Gerätevertrag) · Z11 **7 → 0** · Z12 **12 → 2** (Startwert von 13 berichtigt, AP4-d; zweite Ausnahme AP4-b) · Z13 **4 → 0** · Z14 **9 → 5** (AP4-e, kein vierter Helfer) · Z15 **57 → 54** · Z38 **77 → 75** (AP4-g) · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · `php -l` **136/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kettenaufrufe **0** · Sitzungshärtung **0** · CSP **0** · Migrationsregister **0**. **E-ZE-17-Beleg: 7 Stellen in 5 Dateien nachgelesen, 0 brauchen `?PDO $pdo`.** **Gegen eine laufende Anlage:** Kreisläufe edbak **328 771/0/21**, csv **10 922/0/1 271** (Zahl für Zahl wie davor) · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0** · Wiederherstellungs-Probe **111/0** · Anteilprobe **55/55** · Versandprobe **135/0** · Klickprobe **48/48** · Bilderlauf **496 Bilder, 0 Überlauf, 0 Konsolenfehler** |
 > | AP5 Transaktion und Kindtabellen | **erledigt** 22.09.2026 | **Web 20.30.0** (Neben: fünf neue Funktionen, keine Migration) | Z16 **33 → 9** (neun namentliche Ausnahmen, H-ZE-4 ausgesetzt, AP5-c) · Z17 **30 → 0** · Bauformen mit dem Tokenizer ausgezählt: **19 / 12 / 2**, dazu **42 rollBack, 14 mit Wache** (AP5-a) · Probe für `db_transaktion()` **10/10** (einschließlich der drei Verschachtelungsfälle) · **Messstand Import: 41,78 / 41,31 s gegen 41,71 / 41,47 s davor** · Kreisläufe edbak **328 771/0/21**, csv **10 922/0/1 271** · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Wiederherstellungs-Probe **111/0** · Ratenprobe **50/0** · Klickprobe **48/48** · `php -l` **136/0**. **Ein latenter Fehler behoben** (einsatz_form.php: rollBack auf eine bereits bestätigte Transaktion) |
 > | AP6 Spaltenregister `missions` | **erledigt** 22.09.2026 | **Web 20.31.0** (Neben: vier neue Funktionen, keine Migration) | Z18 **12 → 3** (Ziel war ≤ 4; drei Abbildungen bleiben, jede mit Probe — AP6-b) · Register **41 Spalten, 9 Zwecke, 0 ohne Zweck und ohne Grund**, Schema↔Register **0/0** · erzeugte gegen eingefrorene Listen **9 von 9 gleich**, Zeichen für Zeichen · Vollständigkeitsprobe **38/22/30 Schlüssel, 0 fehlend, 0 überzählig, 0 tote Ausnahmen**, Selbstprobe **16/16** · **Byte-Vergleich gegen den Stand VOR AP6 (Web 20.30.0, `7a55192`): 447 291 Bytes, gleiche SHA-256** · `Export-Format.md`/`Backup-Format.md` **0 geänderte Zeilen** · Wegprobe **34/0** · Kreisläufe edbak **328 771/0/21**, **edbak-alt (altes Backup mit Schlüssel `manual`) 287 852/0/795**, csv **10 922/0/1 271** · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0** · Wiederherstellungs-Probe **111/0** · Klickprobe **48/48** · `php -l` **136/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kontraste **22/0** · Kettenaufrufe **45/0/0** · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · Bilderlauf **496 Bilder, 62 Kontaktbögen, 0 Überlauf, 0 Konsolenfehler, 0 falsche Knopfhöhen** |
-> | AP7 Zeit und Zahl (PHP) | offen | — | — |
+> | AP7 Zeit und Zahl (PHP) | **erledigt** 22.09.2026 | **Web 20.32.0** (Neben: zwei neue Dateien, keine Migration) | Z19 **42 → 0** · Z20 **2 → 1** · Z21 **27 → 0** · Z22 **18 → 5** (AP7-c) · Z23 **10 → 2** (AP7-d) · Z24 **20 → 2** · Z25 **9 → 2** · Z26 **67 → 3** (AP7-e/-f) · Z27 **4 → 0** · **205 Stellen umgestellt, 15 namentlich stehengelassen, 38 Dateien, 36 require ergänzt, 2 entfernt** · Zeichengleichheit je Funktion nachgerechnet: `groesse_text` **3 017 Werte/0**, `groesse_kurz_text` **3 017/0**, `zahl_text` **28/0**, `prozent_text` **6 030/0**, `zeit_relativ` **10 811 Zeitpunkte/0**, `iso_utc` **5 000/0**, `EdFormat.groesse` gegen PHP **2 014/0** · ein Gegenleser allein **4 420 679 Vergleiche/0** · `php -l` **137/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kettenaufrufe **45/0/0** · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · Spaltenregister **16/16, 0** · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0** · Wiederherstellungs-Probe **111/0**. **33 Agenten, 4,1 Mio Token** (E-ZE-25); die Gegenleser fanden **2 Fehler und 13 Nachlässigkeiten** |
 > | AP8 JavaScript | offen | — | — |
 > | AP9 Nr. 57 — eine Einsatztabelle | offen | — | — |
 > | AP10 Abschluss und Übergabe an 10c | offen | — | — |
@@ -1676,6 +1676,137 @@ Bereiche ab.
 > aus dem Befund von Nr. 202 und sind bei der Eichung in AP1 nachgemessen
 > worden — die Registertabelle in Abschnitt 4 trug seither die richtigen,
 > dieser Absatz nicht. **Es gilt das Werkzeug.**
+
+**AP7 — erledigt 22.09.2026, Web 20.32.0.** Neu: `server/format_lib.php`
+(dreizehn Funktionen) und `server/assets/format.js` (`EdFormat`, zwei
+Funktionen). Entfallen: `edbak_groesse_text()`, `apk_groesse()`,
+`plattform_groesse()`, `stat_zahl()`, `stat_anteil()`, `status_alter()` und
+die Inline-Zeitkopie in `betrieb_updates.php`.
+
+*Abnahmezahlen:*
+
+| Zeile | Start | Ziel (Konzept) | gemessen |
+|---|---|---|---|
+| Z19 `edbak_groesse_text(` | 42 | 0 | **0** |
+| Z20 relative Zeit von Hand | 2 | 1 | **1** (`format_lib.php` selbst) |
+| Z21 `number_format(` deutsche Form | 27 | 0 | **0** |
+| Z22 Byte-Division | 18 | „AP7 nennt" | **5** (AP7-c) |
+| Z23 Anteil von Hand | 10 | 0 | **2** (AP7-d) |
+| Z24 ISO-Marke schreiben | 20 | 1 | **2** (AP7-e) |
+| Z25 ISO-Marke lesen | 9 | 1 | **2** (AP7-e) |
+| Z26 Datumsformat-Literale | 67 | 0 | **3** (AP7-e, AP7-f) |
+| Z27 `date(` ohne Zeitstempel | 4 | 0 | **0** |
+
+**205 Fundstellen umgestellt, 15 namentlich stehengelassen, 38 Dateien
+berührt, 36 `require`-Zeilen ergänzt und 2 entfernt.**
+
+*Entscheidungen, die in diesem Paket gefallen sind:*
+
+- **AP7-a — Der Umbau lief gefächert, das Messen auch** (E-ZE-25). Elf
+  überschneidungsfreie Dateigruppen, jede mit einem **zweiten Agenten, der
+  den Diff adversarisch gegenlas**. Vorher neun Messagenten, einer je
+  Zählzeile, dazu zwei für Sonderfragen. Zusammen 33 Agenten, 4,1 Mio Token.
+  Was das gebracht hat, steht unter *Probleme*: Zwei Fehler und dreizehn
+  Nachlässigkeiten, die ein einzelner Durchgang nicht gefunden hätte — und
+  drei Zahlen, die im Konzept falsch standen.
+- **AP7-b — `fmt_local()` zieht nach `format_lib.php`**, unter demselben
+  Namen. Nicht vorgesehen, aber zwingend: `datum_text()` und
+  `datum_zeit_text()` bauen darauf auf, und `format_lib.php` darf `db.php`
+  nicht laden — `install.php` erreicht sie über `plattform_lib.php`, bevor es
+  eine `config.php` gibt. Die Alternative wäre die Rechnung ein zweites Mal
+  gewesen. Alle 113 Aufrufer in 37 Dateien merken nichts, weil `db.php` die
+  neue Datei lädt. **`local_to_utc()` bleibt in `db.php`:** Sie liest einen
+  Formularwert, um damit zu rechnen — die andere Richtung.
+- **AP7-c — Z22 landet bei 5, und die Zahl kommt aus der Auszählung**, wie
+  das Konzept es vorsah. Vier Stellen in `betrieb_server.php` (eine ist ein
+  Vergleichswert, der nie ausgegeben wird; drei sind **Formularwerte**, die
+  derselbe POST-Zweig mit `is_numeric()` und `(float)` zurückliest — der
+  **Punkt** als Dezimaltrenner ist dort Bedingung des Vergleichs, und
+  `groesse_text()` schriebe ein Komma; das Formular wäre nicht mehr
+  abzuschicken, zu merken erst beim Speichern). Dazu `gpx_lib.php`: ein
+  `sprintf('%.1f')` mit Punkt statt Komma, dessen Umstellung eine weitere
+  sichtbare Textänderung wäre.
+- **AP7-d — Z23 landet bei 2 statt 0, und zwei Funktionen statt einer.** Von
+  den zehn Handrechnungen runden **fünf ab** (sie lösen eine Schwelle aus),
+  **drei kaufmännisch** (sie werden nur gelesen) und **zwei gar nicht** (sie
+  rechnen eine CSS-Länge). Eine gemeinsame Funktion ohne Rundungsschalter
+  verschöbe den Auslösezeitpunkt der Speicher-Warnmail um bis zu einen
+  Prozentpunkt — das wäre eine weitere Ausnahme gewesen. Die zwei CSS-Längen
+  bleiben: Ein gerundeter Strich wanderte um bis zu einen Prozentpunkt.
+- **AP7-e — `wartung_lib.php` wird nicht angefasst**, drei Stellen (Z24, Z25,
+  Z26). Ihr Dateikopf sagt als Eigenschaft 2 zu, **nichts** zu laden: Sie
+  trägt den Wartungsmodus gerade dann, wenn der Rest ersetzt wird, und
+  benutzt deshalb `function_exists()` statt `require`. Ein `require_once` auf
+  `format_lib.php` bräche diese Zusage — und fiele erst auf, wenn eine
+  Migration halb durchgelaufen ist.
+- **AP7-f — Zwei Zeitstempel bleiben ohne Zonenumrechnung**
+  (`admin_installation.php`, `rechtstexte_lib.php`). Beide formatieren einen
+  Unix-Zeitstempel mit `date('d.m.Y', $ts)` und rechnen bewusst nicht in die
+  App-Zeitzone um. Eine Umstellung auf `datum_text()` wäre eine weitere
+  sichtbare Ausnahme gewesen. **F-ZE-1 nennt ausdrücklich nur `date()` OHNE
+  Zeitstempel** — und die vier Stellen sind umgestellt (Z27 = 0).
+- **AP7-g — Vertragsdateien werden umgestellt, weil die Zusage der ANTWORT
+  gilt** (Auftraggeber, 22.09.2026). `gpx_lib.php`, `gpx.php`, `pair.php`,
+  `ingest.php` und `jobs_lib.php` gehen über `format_lib.php`; die
+  Bytegleichheit ist je Stelle nachgerechnet, nicht behauptet. Die beiden
+  Zeilen in `pair.php` stehen nachweislich **hinter** `antwort_abschliessen()`
+  und damit außerhalb der Antwortform.
+- **AP7-h — Das Paar „X von Y MB" behält seine gemeinsame Einheit**
+  (Auftraggeber, 22.09.2026) und wird `groesse_paar_text()`. Vier wortgleiche
+  Stellen — Verwaltung, Kontoseite, Warnmail und die 507-Antwort an das
+  Gerät. `groesse_text()` je Wert hätte aus „0 von 250 MB" ein „312 KB von
+  250,0 MB" gemacht: genauer, aber eine sichtbare Änderung an vier Stellen
+  **und** im Antworttext an das Gerät.
+
+*Probleme und wie sie gelöst wurden:*
+
+1. **Zwei Fehler, beide von den Gegenlesern gefunden.**
+   **(a)** `tools/wiederherstellungs-probe/probe.php` rief an drei Stellen
+   `edbak_groesse_text()`, das es nicht mehr gab. **Der Zähler misst nur
+   `server/` und sah sie nie** — die Probe wäre erst beim nächsten Lauf mit
+   „Call to undefined function" gescheitert. Behoben; die Probe läuft wieder
+   (111/0). *Die Lehre:* Eine Zählzeile, deren Bereich `server/` ist, belegt
+   nichts über `tools/`.
+   **(b)** E-ZE-26 stand an drei Stellen dokumentiert und war im Code **nicht
+   umgesetzt** — die JS-Zeile war absichtlich aus der Fächerung
+   herausgenommen und danach liegengeblieben. Behoben.
+2. **Ein Leerfall wäre nicht zeichengleich gewesen.** Ein Agent stellte
+   `fmt_local($x,'d.m.Y') . ' um ' . fmt_local($x,'H:i')` auf
+   `datum_zeit_text($x, ' um ')` um. Für jeden echten Zeitpunkt ist das
+   gleich (75 086-mal nachgemessen), für den **leeren** nicht: alt „– um –",
+   neu „–". Zurückgenommen auf die Zweiaufrufform. *Die Lehre:* Eine Funktion
+   mit Frühausstieg ersetzt eine Verkettung nur dort, wo der Leerfall nicht
+   vorkommt.
+3. **Meine eigene Gegenprobe fand einen Unterschied im Nullfall.** Beim
+   Umstellen zweier Prozentrechnungen in `wiederherstellen.php` wäre
+   `100 * v / max(1, 0)` zu `prozent_wert(v, 0)` geworden — 100·v gegen 0.
+   Der Fall ist nicht erreichbar (ohne Datei kein Versatz), aber
+   Zeichengleichheit wird **belegt und nicht erschlossen**: `max(1, …)` bleibt
+   stehen, 200 004 Fälle einschließlich Nullfall, 0 Abweichungen.
+4. **Drei Zahlen im Konzept stimmten nicht.** Z19 stand auf 43 (sind 42 — die
+   43. Fundstelle ist die Definition), Z21 auf 26 (sind 27), und „8 Aufrufe
+   von `status_alter()`" sind 7, wieder wegen der Definition. Alle drei
+   berichtigt; es gilt das Werkzeug.
+5. **Meine eigene Arbeitsanweisung war an einer Stelle falsch.** Sie sagte
+   „SIEBEN STELLEN bleiben stehen" und nannte dann sechs Zeilennummern. Der
+   Agent hat nachgezählt, sechs gefunden und **nichts hinzuerfunden** — und
+   es gemeldet.
+6. **Der Baum war zwischen zwei Agenten rot.** Als der `adminbackup`-Agent
+   `edbak_groesse_text()` entfernte, liefen drei noch nicht umgestellte
+   Dateien ins Leere. Bei elf gleichzeitigen Agenten ist das unvermeidlich,
+   aber es gehört gesagt: **Zwischen dem ersten und dem letzten Datei-Agenten
+   ist der Arbeitsbaum nicht lauffähig.** Ein `git bisect` über diesen
+   Zeitraum fände nichts.
+7. **Die Auslassungspunkte, zum fünften Mal.** Ein `…` in den neuen
+   Kommentaren trieb die Vollständigkeit von 398 auf 406. Behoben; die Zahl
+   steht wieder auf 398.
+8. **Ein Gegenleser hat sich geirrt, und das ist nachgemessen worden.** Er
+   meldete einen latenten Fehler in `status_lib.php` (zwei verschiedene Leser
+   für denselben Wert, einer davon blind für die ISO-Form). Nachgerechnet:
+   `strtotime('<marke> UTC')` liest das abschließende `Z` sehr wohl — beide
+   Leser liefern dasselbe, für beide Formen. Die Stelle ist trotzdem auf
+   `iso_utc_lesen()` umgestellt, aber aus dem richtigen Grund: **ein Wert,
+   zwei Leser.** Der Kommentar dort sagt beides.
 
 ### AP8 — JavaScript
 
