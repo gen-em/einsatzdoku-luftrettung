@@ -1,6 +1,6 @@
 # Prüfdokument — Zentralisierung: eine Stelle je Sache (Schritt 15)
 
-**Stand:** 21.09.2026, nach **AP1**, **AP2** (Web 20.27.0), **AP3** (Web 20.28.0), **AP4** (Web 20.29.0) und **AP5** (Web 20.30.0) · **Zweig:** `claude/eager-euler-jlfi9i`,
+**Stand:** 22.09.2026, nach **AP1**, **AP2** (Web 20.27.0), **AP3** (Web 20.28.0), **AP4** (Web 20.29.0), **AP5** (Web 20.30.0) und **AP6** (Web 20.31.0) · **Zweig:** `claude/eager-euler-jlfi9i`,
 von `origin/main` `fd99989` (Web 20.26.2) · **Konzept:**
 `Konzept-Zentralisierung.md`
 
@@ -588,3 +588,132 @@ gesetztes `commit()` verliert Daten still.
 - **Der behobene Fehler in `einsatz_form.php` ist eine Verhaltensänderung**
   (Problem 3 im Protokoll). Sie tritt nur ein, wenn ohnehin schon etwas
   fehlgeschlagen ist — aber sie ist eine.
+
+---
+
+# AP6 — Spaltenregister `missions` (Web 20.31.0, 22.09.2026)
+
+**Das Paket mit dem schärfsten Beleg und der größten stillen Gefahr.** Es
+erzeugt neun SQL-Anweisungen, die bisher von Hand dastanden — darunter den
+Export, das Zurückspielen eines Backups und beide Import-Anweisungen. Eine
+Spalte, die dabei an die falsche Stelle rutscht, fällt nicht auf: Die Zeile
+wird geschrieben, sie trägt nur die falschen Werte.
+
+Deshalb ist der Beleg hier ein **Byte-Vergleich** und nicht ein Augenschein.
+
+## F0. Was nicht geprüft werden konnte — und warum
+
+**Diese Liste steht am Anfang und nicht in einer Fußnote.**
+
+| # | Was | Warum nicht | Woran man ein Scheitern erkennt |
+|---|---|---|---|
+| **N6-1** | **Ein Backup, das eine Spalte NICHT führt** (Nutzlast ≤ 8) | Der Bestand hat keines. Der Zweig ist gelesen: `$extraCols` hängt nur an, was `array_key_exists()` in der Datei findet; die 15 Grundspalten kommen aus dem Register und sind immer da | Ein altes Backup spielt ein, aber `geraet_art` oder `geraet_modell` stehen auf einem Wert statt auf `NULL` |
+| **N6-2** | **Eine Exportdatei, die jemand seit Monaten aufhebt** | Die Reihenfolge der Spalten im CSV ist eingefroren, und der Kreislauf vergleicht gegen die eingecheckte Referenz vom 15.09.2026 — nicht gegen eine Datei aus dem Frühjahr | Eine Tabellenkalkulation, die auf Spaltennummern zeigt, zeigt auf die falsche Spalte |
+| **N6-3** | **Der Android- und der Uhr-Prüfstand** | Unverändert wie N3-2/N4-1/N5-3: kein `/opt/android-sdk`, keine `CIQ_GERAETE_URL` in dieser Umgebung. `ingest.php` **ist angefasst** — eine Stelle, die Spaltenliste des Einsatz-INSERT; kein Fehlerschlüssel, keine Antwortform. Die Ingestprobe (83/0) fährt sie | Ein Android-`SenderTest` schlägt fehl |
+| **N6-4** | **Der punktweise GPX-Vergleich** | Unverändert Nr. 259 (Demo-Reset dieser Anlage). **95/4 vor und nach dem Paket** | siehe dort |
+| **N6-5** | **`tools/schemaprobe/`** | Unverändert N4-3/N5-5 | Eine Migration im Prüfschema schreibt in die falsche Datenbank |
+| **N6-6** | **Die Wegprobe gegen das Demo-Konto** | Sie **schreibt** (schneidet einen Einsatz, überschreibt einen zweiten zweimal). Gefahren ist sie gegen ein frisches Umlaufkonto des Kreislaufs; der Dateikopf und eine Sperre im Werkzeug halten sie vom Demo-Konto fern | Der Demo-Bestand trägt plötzlich 107 statt 106 Einsätze, und ein Einsatz heißt „Klinik Probe B" |
+
+## F1. Was maschinell geprüft wurde — mit Mittel **und** Zahl
+
+### Der Kernbeleg: der Byte-Vergleich
+
+`git checkout 7a55192 -- server/` legt den Stand **vor** AP6 (Web 20.30.0) auf
+dieselbe laufende Anlage mit demselben Bestand; abgezogen werden die
+Serverantworten, die AP6 anfasst.
+
+| Abzug | Bytes | gleich? |
+|---|---|---|
+| `api/export_data.php`, `action: meta`, **mit** personenbezogenen Angaben | 182 474 | **ja** |
+| dieselbe Anfrage **ohne** personenbezogene Angaben | 146 895 | **ja** |
+| `api/suchindex.php` | 105 442 | **ja** |
+| `api/range.php` 2026-01 / 2026-05 / 2026-09 | 3 942 / 4 474 / 3 948 | **ja** |
+| **zusammen** | **447 291** | **SHA-256 `fefb84e2…e40ced86` — identisch** |
+
+**Warum gegen `7a55192` und nicht gegen den letzten Commit:** AP6 ist in zwei
+Schritten entstanden; ein Vergleich gegen den Zwischenstand hätte nur die
+halbe Änderung gesehen.
+
+### Gegen den Quelltext
+
+| Mittel | Gemessen |
+|---|---|
+| `tools/spaltenregister/pruefen.php` | Schema **41**, Register **41**, im Schema nicht im Register **0**, im Register nicht im Schema **0**, Spalten ohne Zweck **und** ohne Grund **0**; neun Zwecke mit **32 / 35 / 15 / 31 / 28 / 12 / 11 / 21 / 12** Spalten |
+| dieselbe, Vollständigkeitsprobe | `export_data.php` **38 Schlüssel, 32 aus dem Register** · `import_commit.php` **22 / 22** · `suchindex.php` **30 / 18** — je **0 fehlend, 0 überzählig, 0 tote Ausnahmen**; Werteliste des Imports passt auf **beide** Anweisungen (**22 = 22**) |
+| `tools/spaltenregister/pruefen.php --selbstprobe` | **16 von 16**, darunter **vier Gegenproben**, die keinen Befund ergeben dürfen |
+| Die neun erzeugten Anweisungen gegen die alten | `ingest_neu`, `import_neu`: **Zeichen für Zeichen identisch**. `schnitt_neu`, `import_aendern`, `export` (mit und ohne Flag): **identisch nach Umbruchnormierung**. Platzhalter **29 = 29** (INSERT), **28 = 28** (UPDATE) |
+| `tools/zaehlung/zaehlen.php` | **38 Zeilen, 0 über der Decke.** Z18 **12 → 3** |
+| `tools/zaehlung/zaehlen.php --selbstprobe` | **34 von 34** |
+| `php -l` über `server/` | **136 Dateien, 0 Fehler** |
+| `tools/wortliste/wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** (99 Regeln, 99 gegriffen) |
+| `tools/vollstaendigkeit/pruefen.py` | **398** — unverändert (nach der Berichtigung, Problem 4) |
+| `python3 tools/screenshots/kontrast.py` | **22 Paare gerechnet, 0 verfehlt** |
+| `tools/kettenaufrufe/pruefen.py` | **45 Aufrufe, 0 Befunde, 0 ungeprüft** |
+| `git diff 7a55192 -- docs/Export-Format.md docs/Backup-Format.md docs/JSON-Vertrag.md` | **0 geänderte Zeilen** |
+
+### Gegen die laufende Anlage
+
+| Mittel | Gemessen |
+|---|---|
+| Kreislauf `edbak` (zweimal) | **328 771 Einzelvergleiche, 0 unerklärt, 21 erwartet** — fährt die erzeugte Wiederherstellung (**106 Einsätze übernommen**) |
+| Kreislauf **`edbak-alt`** — das **alte** Backup mit dem Schlüssel `manual` | **287 852 Einzelvergleiche, 0 unerklärt, 795 erwartet** |
+| Kreislauf `csv` | **10 922 Einzelvergleiche, 0 unerklärt, 1 271 erwartet** — fährt den erzeugten INSERT (**101 angelegt**) und den erzeugten Export (**101 exportiert**) |
+| `tools/spaltenregister/wegprobe.py` (frisches Umlaufkonto) | **34 Erwartungen, 0 nicht erfüllt** — 12 für den Schnitt, 22 für den UPDATE-Zweig des Imports |
+| Export-Schranke, beide Fassungen | mit Flag **38 Schlüssel**, `site_ele_m` 85 / `bw_info` 10 / `other_ema` 6 / `pat_blob` 96 belegt · ohne Flag **38 Schlüssel**, alle vier **0**; außerhalb der Schranke unverändert (`transport_dest` 77, `manual` 101, `source` 101, `geraet_art` 90, `day` 101) |
+| `tools/ingestprobe/probe.php` | **83 / 0** — der erzeugte `ingest_neu`-INSERT |
+| `tools/kopplungsprobe/probe.php` | **76 / 0, 0 übergangen** |
+| `tools/komplettprobe/probe.php` | **64 / 0** |
+| `tools/spurprobe/probe.php` | **45 / 0** |
+| `tools/jobprobe/probe.php` | **35 / 0** |
+| `tools/wiederherstellungs-probe/probe.php` | **111 / 0** |
+| `tools/ratenprobe/probe.php` | **50 Prüfungen, 0 Befunde** |
+| `tools/gpxprobe/probe.php` | **95 / 4** — unverändert der Befund aus Nr. 259 |
+
+## F2. Was im Browser geprüft wurde
+
+| Weg | Ergebnis |
+|---|---|
+| **Klickprobe** (`node tools/klickprobe/probe.mjs`) | **48 von 48 Wegen erfüllt, 0 verfehlt** |
+| **Bilderlauf** (`node tools/screenshots/aufnehmen.mjs`) | **496 Einzelbilder, 62 Kontaktbögen** · Überlauf **0** · Konsolenfehler **0** · Knöpfe falscher Höhe **0** (Zeiger, 44/36 px) · Karten im Seitengerüst **162 geprüft, 0 außerhalb von `main.inhalt`** |
+
+**Was diese beiden Zahlen benennen** (CLAUDE.md 6): Der Bilderlauf misst 62
+Seiten in acht Breiten — er sieht den Export, die Suche und die
+Zeitraumansicht **als Seite**, nicht ihre Daten. Dass die Daten stimmen, sagt
+der Byte-Vergleich, nicht das Bild.
+
+## F3. Prüfliste — was **die Auftraggeberin** noch tun muss
+
+| # | Weg | Erwartet | Scheitern erkennbar an |
+|---|---|---|---|
+| **F-1** | **CSV-Export mit personenbezogenen Angaben** herunterladen und die Kopfzeile von `einsaetze.csv` mit einer **älteren** Exportdatei vergleichen | Gleiche Spalten in gleicher Reihenfolge | Eine Spalte ist gewandert oder fehlt — dann zeigt jede Tabellenkalkulation, die auf Spaltennummern rechnet, auf die falsche Spalte (N6-2) |
+| **F-2** | **CSV-Export OHNE personenbezogene Angaben** | Die Spalten `site_ele_m`, `bw_info`, `other_ema` und `pat_blob` sind **da, aber leer**; alles andere gefüllt | Eine der vier trägt Werte (Schranke undicht) oder eine fünfte ist leer (Schranke zu weit) |
+| **F-3** | **Ein Konto-Backup schreiben und in ein leeres Konto einspielen** | Einsatzzahl, Papierkorb und Gerätemomentaufnahme wie im Ursprung | Ein Einsatz trägt die Geräteart im Löschdatum oder umgekehrt — das wäre der Fall, den AP6-d ausschließt |
+| **F-4** | **Ein ALTES Backup einspielen** (eines aus dem Frühjahr, mit dem Schlüssel `manual`) | Läuft durch; „von Hand angelegt" bleibt gesetzt | Alle Einsätze kommen als „von der Uhr" zurück — dann sitzt `uhr_gesperrt`/`manual` falsch |
+| **F-5** | **Einen CSV-Export zurückimportieren mit „überschreiben"** auf einen Einsatz, bei dem `bw_info` und `other_ema` im Bestand gefüllt sind, in der Datei aber leer | Beide Angaben **bleiben stehen**; `bw_unit` und `transport_dest` werden dagegen überschrieben | Eine der beiden Angaben ist fort — dann sitzt die Export-Schranke (`COALESCE`) eine Spalte daneben |
+| **F-6** | **Aus einem Ruhesegment einen Einsatz schneiden** | Der Einsatz trägt „Schnitt" als Herkunft, gilt als abgeschlossen und als von Hand angelegt; Einsatzort, Alter und Diagnose sind leer | Der Einsatz steht als „von der Uhr" da oder ist nicht abgeschlossen |
+| **F-7** | **Die Suche öffnen** und nach Zielklinik, Bergwacht-Bereitschaft und Schockraum filtern | Wie bisher, gleiche Trefferzahlen | Ein Filter findet nichts mehr — dann fehlt seine Spalte im Suchindex |
+| **F-8** | **Die Zeitraumansicht** für einen Monat mit Windeneinsätzen öffnen | Karte, Statistik und Tabelle wie bisher | Windenzahl oder Höhe fehlen |
+| **F-9** | **Ein Gerät koppeln und einen Upload fahren** (echte Uhr) | Unverändert | Die Uhr meldet einen unbekannten Fehler (N6-3) |
+
+## F4. Grenzen — was sich mit diesem Paket NICHT beantworten lässt
+
+- **Der Byte-Vergleich deckt drei Endpunkte ab, nicht neun Zwecke.** Export,
+  Suchindex und Zeitraum liefern eine Serverantwort, die sich abziehen lässt.
+  `backup_restore`, `import_neu`, `import_aendern`, `ingest_neu` und
+  `schnitt_neu` **schreiben** — für sie ist der Beleg der Kreislauf (Feld für
+  Feld gegen eine eingecheckte Referenz) und die Wegprobe, nicht eine
+  Prüfsumme.
+- **Die drei Abbildungen sind auf Vollständigkeit geprüft, nicht auf
+  Richtigkeit.** Die Probe sagt, dass jeder Schlüssel da ist; ob
+  `winch_cycles` auch wirklich `winch_cycles` liest und nicht
+  `winch_cycles_pat`, sagt sie nicht. Das sagen die Kreisläufe.
+- **Z18 = 3 belegt für `backup_lib.php` nicht, was es zu belegen scheint**
+  (Problem 3 im Konzept). Die Stelle nennt weiterhin 15 Spalten — als
+  Schlüssel einer Wertekarte, nicht als zweite Liste. Dass es nur noch **eine**
+  Liste gibt, sagt der Quelltext, nicht die Zahl.
+- **Eine Ausnahme in der Vollständigkeitsprobe ist eine Behauptung im Feld.**
+  Die Probe prüft, dass sie **greift** — nicht, dass ihre Begründung stimmt.
+  Wer eine Spalte mit einer erfundenen Begründung als `abgeleitet` einträgt,
+  kommt damit durch.
+- **N6-1 bleibt offen:** Ein Backup mit Nutzlast ≤ 8, dem Spalten fehlen, ist
+  gelesen und nicht gefahren.

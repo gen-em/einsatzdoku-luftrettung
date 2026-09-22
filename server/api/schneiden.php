@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
 require_once __DIR__ . '/../validate_lib.php';
 require_once __DIR__ . '/../einsatz_lib.php';
+require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten() (Schritt 15/AP6)
 require_once __DIR__ . '/../diensttag_lib.php';
 require_once __DIR__ . '/../spur_lib.php';
 
@@ -144,10 +145,19 @@ function schnitt_ausfuehren(array $b, int $userId): never
     $pdo->beginTransaction();
     try {
         $devId = geraet_virtuell_sicherstellen($pdo, $userId);
-        $pdo->prepare("INSERT INTO missions
-                         (user_id, device_id, client_ref, day_id, started_at,
-                          ended_at, final, uhr_gesperrt, origin, geraet_art, geraet_modell)
-                       VALUES (?,?,?,?,?,?,1,1,'schnitt',?,?)")
+        /* SPALTEN AUS DEM REGISTER (Schritt 15/AP6, E-ZE-22), Zweck
+         * `schnitt_neu`. DREI WERTE SIND FEST und stehen deshalb als Literal
+         * in der Werteliste, nicht als Fragezeichen: `final` und
+         * `uhr_gesperrt` sind 1 (ein geschnittener Einsatz ist fertig und
+         * von Hand entstanden), `origin` ist 'schnitt'. Die Zuordnung steht
+         * in `$fest` und wird beim Bauen nachgeschlagen — so bleibt sie an
+         * die Spalte gebunden und nicht an die Stelle im Satz. */
+        $fest = ['final' => '1', 'uhr_gesperrt' => '1', 'origin' => "'schnitt'"];
+        $sp   = mf_spalten('schnitt_neu', '', false);
+        $wert = array_map(static fn(string $c): string => $fest[$c] ?? '?', $sp);
+        $pdo->prepare('INSERT INTO missions
+                         (' . implode(', ', $sp) . ')
+                       VALUES (' . implode(',', $wert) . ')')
             ->execute([$userId, $devId, 'cut-' . uniqid(), (int)$seg['day_id'],
                        $beginn, $ende, $seg['geraet_art'], $seg['geraet_modell']]);
         $misId = (int)$pdo->lastInsertId();

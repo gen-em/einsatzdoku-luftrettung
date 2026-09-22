@@ -2,7 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
 require_once __DIR__ . '/../validate_lib.php';
-require_once __DIR__ . '/../einsatz_lib.php';   // Kindtabellen (Schritt 15/AP5)
+require_once __DIR__ . '/../einsatz_lib.php';           // Kindtabellen (Schritt 15/AP5)
+require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten() (Schritt 15/AP6)
 require_once __DIR__ . '/../diensttag_lib.php';
 
 /**
@@ -238,17 +239,19 @@ function import_commit(array $b, int $userId): never
         /* `final` ist jetzt ein Platzhalter, kein Literal (Backlog Nr. 28).
          * Es stand hier als `1` — ein nicht abgeschlossener Einsatz kam damit
          * abgeschlossen zurueck, obwohl die Exportdatei die Spalte fuehrt. */
+        /* SPALTEN AUS DEM REGISTER (Schritt 15/AP6, E-ZE-22), Zweck
+         * `import_neu`. ZWEI WERTE SIND FEST: `uhr_gesperrt` ist 1 (ein
+         * importierter Einsatz gilt wie ein von Hand angelegter) und `origin`
+         * ist 'import'. Sie stehen in `$festNeu` und damit an ihrer SPALTE,
+         * nicht an ihrer Stelle im Satz — die 31 Fragezeichen von Hand
+         * abzuzaehlen war die Quelle, aus der sich Spalten- und Werteliste
+         * auseinanderentwickeln konnten. */
+        $festNeu = ['uhr_gesperrt' => '1', 'origin' => "'import'"];
+        $spNeu   = mf_spalten('import_neu', '', false);
         $insE = $pdo->prepare(
-            'INSERT INTO missions (user_id, device_id, client_ref, day_id, started_at, ended_at,
-                                   final, uhr_gesperrt, origin, transport_dest, winch,
-                                   crew_override, pat_blob,
-                                   site_ele_m, distance_m, ascent_m,
-                                   schockraum, secondary, winch_cycles, winch_cycles_pat,
-                                   winch_airload, bergwacht, bw_unit, bw_info,
-                                   other_ema,
-                                   transport_mode, na_escort, false_alarm,
-                                   dest_lat, dest_lon, start_src)
-             VALUES (?,?,?,?,?,?,?,1,\'import\',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+            'INSERT INTO missions (' . implode(', ', $spNeu) . ')
+             VALUES (' . implode(',', array_map(
+                 static fn(string $c): string => $festNeu[$c] ?? '?', $spNeu)) . ')');
         /* UEBERSCHREIBEN LOESCHT NICHTS, WAS DIE DATEI NICHT KENNT (P10, A9).
          *
          * Die Felder unter der Export-Schranke stehen hier mit
@@ -279,20 +282,22 @@ function import_commit(array $b, int $userId): never
          * Punkt von Backlog Nr. 28: Ein Rueckimport des eigenen Exports darf
          * einen nicht abgeschlossenen Einsatz nicht abschliessen, und ein
          * Import einer Jahresliste darf ihn nicht anfassen. */
+        /* SPALTEN AUS DEM REGISTER, Zweck `import_aendern`. Drei Wertformen:
+         * die vier Felder unter der Export-Schranke mit COALESCE (siehe den
+         * Absatz darueber), `uhr_gesperrt` und `edited` fest auf 1, alles
+         * uebrige als Platzhalter. Die Form haengt an der SPALTE, nicht an
+         * ihrer Stelle — wer eine Spalte unter die Schranke nimmt, traegt sie
+         * in `$schranke` ein und sonst nirgends. */
+        $festAend = ['uhr_gesperrt' => '1', 'edited' => '1'];
+        $schranke = ['pat_blob', 'site_ele_m', 'bw_info', 'other_ema'];
+        $spAend   = mf_spalten('import_aendern', '', false);
         $updE = $pdo->prepare(
-            'UPDATE missions SET day_id = ?, started_at = ?, ended_at = ?, final = ?,
-                                 transport_dest = ?, winch = ?, crew_override = ?,
-                                 pat_blob    = COALESCE(?, pat_blob),
-                                 site_ele_m  = COALESCE(?, site_ele_m),
-                                 distance_m = ?, ascent_m = ?,
-                                 schockraum = ?, secondary = ?, winch_cycles = ?,
-                                 winch_cycles_pat = ?, winch_airload = ?, bergwacht = ?,
-                                 bw_unit = ?,
-                                 bw_info     = COALESCE(?, bw_info),
-                                 other_ema   = COALESCE(?, other_ema),
-                                 transport_mode = ?, na_escort = ?, false_alarm = ?,
-                                 dest_lat = ?, dest_lon = ?, start_src = ?,
-                                 uhr_gesperrt = 1, edited = 1
+            'UPDATE missions SET ' . implode(', ', array_map(
+                static function (string $c) use ($festAend, $schranke): string {
+                    if (isset($festAend[$c]))          { return "$c = {$festAend[$c]}"; }
+                    if (in_array($c, $schranke, true)) { return "$c = COALESCE(?, $c)"; }
+                    return "$c = ?";
+                }, $spAend)) . '
              WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
         $hatPhase2 = $pdo->prepare(
             'SELECT id FROM mission_phases WHERE mission_id = ? AND phase = 2 LIMIT 1');
@@ -428,23 +433,29 @@ function import_commit(array $b, int $userId): never
              * beim naechsten Umbau vergessen wird. */
             [$zielLat, $zielLon] = pruef_ortspaar($m['dest_lat'] ?? null, $m['dest_lon'] ?? null);
 
+            /* JEDER WERT TRAEGT SEINEN SPALTENNAMEN (Schritt 15/AP6). Bis
+             * Web 20.30.0 war das eine Liste ohne Namen, die auf zwei
+             * Anweisungen mit 31 und 28 Spalten passen musste — wer eine
+             * Spalte einfuegte, zaehlte an drei Stellen nach. Jetzt ordnet
+             * das Register unten zu; die Reihenfolge hier ist nur noch die
+             * Lesereihenfolge. */
             $werte = [
-                $txt($m['transport_dest'] ?? null, 190),
-                $flag($m['winch'] ?? null),
-                $flag($m['crew_override'] ?? null),
-                $blob,
-                $zahl($m['site_ele_m'] ?? null, -500, 9000),
-                $zahl($m['distance_m'] ?? null, 0, 100000000),
-                $zahl($m['ascent_m'] ?? null, 0, 1000000),
-                $flag($m['schockraum'] ?? null),
-                $flag($m['secondary'] ?? null),
-                $zahl($m['winch_cycles'] ?? null, 0, 127),
-                $zahl($m['winch_cycles_pat'] ?? null, 0, 127),
-                $flag($m['winch_airload'] ?? null),
-                $flag($m['bergwacht'] ?? null),
-                $txt($m['bw_unit'] ?? null, 120),
-                $txt($m['bw_info'] ?? null, 190),
-                $txt($m['other_ema'] ?? null, 190),
+                'transport_dest' => $txt($m['transport_dest'] ?? null, 190),
+                'winch'          => $flag($m['winch'] ?? null),
+                'crew_override'  => $flag($m['crew_override'] ?? null),
+                'pat_blob'       => $blob,
+                'site_ele_m'     => $zahl($m['site_ele_m'] ?? null, -500, 9000),
+                'distance_m'     => $zahl($m['distance_m'] ?? null, 0, 100000000),
+                'ascent_m'       => $zahl($m['ascent_m'] ?? null, 0, 1000000),
+                'schockraum'     => $flag($m['schockraum'] ?? null),
+                'secondary'      => $flag($m['secondary'] ?? null),
+                'winch_cycles'     => $zahl($m['winch_cycles'] ?? null, 0, 127),
+                'winch_cycles_pat' => $zahl($m['winch_cycles_pat'] ?? null, 0, 127),
+                'winch_airload'  => $flag($m['winch_airload'] ?? null),
+                'bergwacht'      => $flag($m['bergwacht'] ?? null),
+                'bw_unit'        => $txt($m['bw_unit'] ?? null, 120),
+                'bw_info'        => $txt($m['bw_info'] ?? null, 190),
+                'other_ema'      => $txt($m['other_ema'] ?? null, 190),
                 /* `notes` NIMMT DIESER ENDPUNKT NICHT MEHR ENTGEGEN (S9/AP7).
                  * Der Text steht im `pat_blob` daneben, den der Browser
                  * verschluesselt liefert. Waere die Spalte hier geblieben,
@@ -461,12 +472,14 @@ function import_commit(array $b, int $userId): never
                  * Sie stehen AUSSERHALB der COALESCE-Schranke: Wie
                  * transport_dest und die Flags stehen sie in jedem Export, ein
                  * leerer Wert ist dort eine Aussage (siehe Kommentar oben). */
-                $auswahl($m['transport_mode'] ?? null, ['air', 'ground', 'ambulant']),
-                $flag($m['na_escort'] ?? null),
-                $flag($m['false_alarm'] ?? null),
-                $zielLat, $zielLon,
-                $auswahl($m['start_src'] ?? null,
-                         ['base', 'prev_site', 'prev_dest', 'manual']),
+                'transport_mode' => $auswahl($m['transport_mode'] ?? null,
+                                             ['air', 'ground', 'ambulant']),
+                'na_escort'      => $flag($m['na_escort'] ?? null),
+                'false_alarm'    => $flag($m['false_alarm'] ?? null),
+                'dest_lat'       => $zielLat,
+                'dest_lon'       => $zielLon,
+                'start_src'      => $auswahl($m['start_src'] ?? null,
+                                             ['base', 'prev_site', 'prev_dest', 'manual']),
             ];
 
             $id = null;
@@ -499,15 +512,31 @@ function import_commit(array $b, int $userId): never
                     $grund['fremd_oder_geloescht']++;
                     $uebersprungen++; continue;
                 }
-                $updE->execute(array_merge(
-                    [$dayId, $startedAt, $endedAt, $dateiFinal ?? (int)$bestandFinal],
-                    $werte, [$id, $userId]));
+                /* DIE REIHENFOLGE KOMMT AUS DEM REGISTER, nicht aus dem
+                 * Abzaehlen: fuer jede Spalte des Zwecks ein Wert — es sei
+                 * denn, sie steht als Literal im Satz. Die beiden WHERE-Werte
+                 * haengen hinten an. */
+                $kopf = ['day_id' => $dayId, 'started_at' => $startedAt,
+                         'ended_at' => $endedAt,
+                         'final' => $dateiFinal ?? (int)$bestandFinal];
+                $p = [];
+                foreach ($spAend as $c) {
+                    if (isset($festAend[$c])) { continue; }
+                    $p[] = array_key_exists($c, $kopf) ? $kopf[$c] : $werte[$c];
+                }
+                $updE->execute(array_merge($p, [$id, $userId]));
                 $ersetzt++;
             } else {
-                $insE->execute(array_merge(
-                    [$userId, $devId, 'imp-' . bin2hex(random_bytes(12)),
-                     $dayId, $startedAt, $endedAt, $dateiFinal ?? 1],
-                    $werte));
+                $kopf = ['user_id' => $userId, 'device_id' => $devId,
+                         'client_ref' => 'imp-' . bin2hex(random_bytes(12)),
+                         'day_id' => $dayId, 'started_at' => $startedAt,
+                         'ended_at' => $endedAt, 'final' => $dateiFinal ?? 1];
+                $p = [];
+                foreach ($spNeu as $c) {
+                    if (isset($festNeu[$c])) { continue; }
+                    $p[] = array_key_exists($c, $kopf) ? $kopf[$c] : $werte[$c];
+                }
+                $insE->execute($p);
                 $id = (int)$pdo->lastInsertId();
                 $neu++;
             }

@@ -14,6 +14,103 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.31.0] — 2026-09-22
+
+**Das Spaltenregister von `missions`.** Schritt 15 AP6 (Zentralisierung, R83).
+
+### Hinzugefügt
+
+**`mf_missions_register()` und `mf_spalten()` in `mission_fields_lib.php`.**
+`missions` hat 41 Spalten, und **zwölf Stellen** führten eine eigene Liste
+davon — Export, Backup, Backup-Wiederherstellung, die beiden Import-Anweisungen
+samt ihrer Werteliste, der Uhr-Eingang, das Schneiden, der Suchindex und die
+Zeitraumansicht. Jede in ihrer eigenen Reihenfolge, und **keine sagte, warum
+eine Spalte fehlt.**
+
+Was das kostet, stand im Bestand und nicht in einer Befürchtung:
+
+- Die tote Altspalte `other_resources` ging **jahrelang in jedes Backup**,
+  weil dort `SELECT *` stand — ein Feld, das seit der Migration 2026_07
+  niemand mehr füllte und das beim Einspielen verworfen wurde.
+- `site_ele_m` steht im Backup, aber **in keiner Einspielliste** — weder in
+  den Grundspalten noch unter den Zusatzspalten aus dem Feldkatalog. Der Wert
+  kommt trotzdem wieder, weil die Wiederherstellung ihn nach dem Bestätigen
+  aus den Phasenkoordinaten **neu rechnet**. Das ist ein Unterschied, den man
+  sehen können muss: Ein Backup trägt die Höhe nicht zurück, es stellt sie
+  wieder her — steht in der Datei eine Höhe, die zu den Koordinaten nicht
+  passt, gewinnt die Rechnung.
+
+Das Register führt jetzt jede Spalte **genau einmal** und sagt je Zweck, ob
+sie dabei ist — und an welcher Stelle. Neun Zwecke: `export`, `backup`,
+`backup_restore`, `import_neu`, `import_aendern`, `ingest_neu`, `schnitt_neu`,
+`suchindex`, `range`. Wo eine Spalte in einem Zweck fehlt, steht der Grund
+daneben (`mf_missions_gruende()`); eine Spalte ohne Zweck **und** ohne Grund
+ist ein Befund.
+
+**Warum die Position mitgeführt wird** und nicht einfach die
+Registerreihenfolge gilt: Die Listen sind in Menge **und** Reihenfolge
+eingefroren. Eine geänderte Reihenfolge ändert die Spaltenfolge im
+CSV-Export — also in einer Datei, die Menschen aufheben. `mf_spalten()`
+verlangt deshalb je Zweck eine lückenlose Positionsfolge ab 0 und bricht bei
+einer doppelten oder fehlenden Position ab, statt eine stillschweigend kürzere
+Liste zu liefern.
+
+**`tools/spaltenregister/pruefen.php`** hält `schema.sql` gegen das Register
+(beide Richtungen) und prüft die Vollständigkeit der drei verbliebenen
+Abbildungen. Der Lauf hängt in Stufe 1 und kostet nichts.
+
+**`tools/spaltenregister/wegprobe.py`** fährt die zwei Anweisungen, die kein
+Kreislauf abdeckt: den Schnitt und den UPDATE-Zweig des Imports. Sie
+**schreibt** — sie gehört an ein Wegwerfkonto, nie an die Demo.
+
+### Geändert
+
+**Neun Anweisungen kommen aus dem Register**, und alle neun sind Zeichen für
+Zeichen dieselben wie vorher — nachgemessen, nicht angenommen. Wo Werte fest
+im Satz stehen, hängt die Wertform seither an der **Spalte** statt an ihrer
+Stelle im Satz:
+
+| Stelle | Wertform |
+|---|---|
+| `api/import_commit.php` (INSERT) | `uhr_gesperrt = 1`, `origin = 'import'` |
+| `api/import_commit.php` (UPDATE) | `COALESCE(?, spalte)` für die vier Felder unter der Export-Schranke (A9/P10), `uhr_gesperrt = 1`, `edited = 1` |
+| `api/schneiden.php` | `final = 1`, `uhr_gesperrt = 1`, `origin = 'schnitt'` |
+| `api/export_data.php` | `NULL AS spalte` statt `x.spalte`, wenn das Flag fehlt |
+
+Wer ein Feld unter die Export-Schranke nimmt, trägt es jetzt an **einer**
+Stelle ein statt an dreien.
+
+**Zwei Wertelisten verlieren ihre Positionsbindung.** In `backup_lib.php`
+standen die Spalten oben und die Werte darunter; in `api/import_commit.php`
+stand eine **namenlose** Werteliste, die auf zwei Anweisungen mit 31 und 28
+Spalten passen musste. Beide Kommentare warnten davor, dass ein Einschub
+stumm alle Werte dahinter verschiebt — und diese Warnung war die einzige
+Sicherung, die es gab. Passiert ist es nie. Jetzt trägt jeder Wert seinen
+Spaltennamen, und das Register ordnet zu; die **Schreibreihenfolge** im
+Quelltext bleibt dabei die alte, weil `pruef_text()` und `pruef_zahl()` ihre
+Beanstandungen an den Prüfbericht anhängen und eine Umsortierung den Bericht
+umsortiert hätte.
+
+### Bewusst nicht geändert
+
+**Drei Abbildungen bleiben von Hand.** `api/export_data.php`,
+`api/import_commit.php` und `api/suchindex.php` bilden eine Datenbankzeile auf
+fremde Schlüssel ab (oder umgekehrt) und rechnen dabei **jeden Wert einzeln**
+um — nach Ortszeit, auf eine Länge, in eine Beschriftung. Ein `implode()` über
+Spaltennamen kann das nicht, und eine erzwungene Erzeugung wäre eine
+Abstraktion, die mehr verbirgt als sie spart.
+
+Stattdessen belegt die Vollständigkeitsprobe, dass jede von ihnen **genau**
+die Registerspalten ihres Zwecks führt. Eine Ausnahme braucht eine Begründung
+im Feld (`abgeleitet` für eine verarbeitete Spalte ohne eigenen Schlüssel,
+`fremd` für einen Schlüssel aus einer anderen Tabelle) — und eine Ausnahme,
+die nichts mehr trifft, ist selbst ein Befund. Sonst wächst die Liste zu und
+die Probe misst nichts mehr.
+
+**`api/mission.php` bekommt keinen Zweck.** Es liest `SELECT *` und gibt die
+Zeile weiter, wie sie ist. Ein Zweck wäre dort eine Liste, die niemand
+braucht — und die beim nächsten Spaltenzuwachs vergessen würde.
+
 ## [Web 20.30.0] — 2026-09-22
 
 **Ein Transaktionsrahmen, vier Kindtabellen.** Schritt 15 AP5

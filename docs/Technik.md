@@ -67,7 +67,9 @@ Daten erst nach Server-Bestätigung.
 │   │                       (mf_tagesspalten() = Spalten der Tagestabelle,
 │   │                        mf_optionen() = Wert/Beschriftung eines Auswahlfelds,
 │   │                        mf_ort_spalten() = Koordinatenspalten eines Ortsfelds,
-│   │                        mf_show_if() + mf_gates_erfuellt() = Sichtbarkeit)
+│   │                        mf_show_if() + mf_gates_erfuellt() = Sichtbarkeit,
+│   │                        mf_missions_register() + mf_spalten() = das
+│   │                        Spaltenregister von `missions`, Schritt 15 AP6)
 │   ├── tageszuordnung_lib.php  Einsatz verschieben · Datum eines Tages ändern
 │   ├── einsatz_verschieben.php  die zugehörige Seite
 │   ├── einstellungen.php  Profil/Standorte/Backup/Geräte (Reiter `?t=`)
@@ -796,6 +798,17 @@ Daten erst nach Server-Bestätigung.
 │   │                      steht in der LIESMICH).
 │   │                      kontrast.py rechnet die Kontraste der Token nach
 │   │                      (s. LIESMICH.md)
+│   ├── spaltenregister/   hält `schema.sql` gegen `mf_missions_register()`
+│   │                      (beide Richtungen) und misst die Vollständigkeit der
+│   │                      drei Abbildungen, die von Hand bleiben — jede muss
+│   │                      genau die Registerspalten ihres Zwecks führen, jede
+│   │                      Ausnahme eine Begründung im Feld, und eine Ausnahme
+│   │                      ohne Treffer ist selbst ein Befund. pruefen.php
+│   │                      hängt in Stufe 1 und ist rein lesend. wegprobe.py
+│   │                      fährt die zwei Anweisungen, die kein Kreislauf
+│   │                      abdeckt (Schnitt, UPDATE-Zweig des Imports) — sie
+│   │                      SCHREIBT und gehört an ein Wegwerfkonto
+│   │                      (Schritt 15 AP6, E-ZE-22; s. Dateikopf)
 │   ├── spurprobe/         prüft den Rundlauf des Blob-Formats SPUR1 über den
 │   │                      ganzen Referenzbestand: Punkte → Blob → Punkte, dazu
 │   │                      Kopf, Ablehnung fremder Fassungen und die Frage, ob
@@ -5359,6 +5372,8 @@ Die Bausteine im Einzelnen:
 | Transaktionsrahmen | `db.php` | `db_transaktion($pdo, $fn)` — beginnen, den Rumpf laufen lassen, bestätigen; bei jedem `Throwable` zurückrollen und **weiterwerfen**. **Verschachtelungsfest und asymmetrisch:** Wer schon in einer fremden Transaktion steht, öffnet keine eigene und bestätigt und verwirft dann auch nichts. Vor dem `rollBack()` wird nachgefragt, ob sie noch steht — ein DDL bestätigt in MySQL still, und der Rumpf darf selbst zurückgerollt haben; sonst verdeckte eine zweite Ausnahme die erste. Ab Web 20.30.0; **neun Rahmen bleiben namentlich außen vor**, die Registerzeile Z16 führt sie mit Grund. |
 | Kindtabellen eines Einsatzes | `einsatz_lib.php` | `einsatz_phasen_ersetzen()`, `einsatz_reas_ersetzen()`, `einsatz_rettungsmittel_ersetzen()`, `einsatz_besatzung_ersetzen()` — fünf Schreibwege (Formular, CSV-Import, Uhr-Eingang, Backup, Schneiden), dreißig Anweisungen, jetzt null außerhalb. Schalter `loeschen` (Vorgabe `true`; das Backup schreibt in einen gerade angelegten Einsatz) und `ignorieren` (dessen `INSERT IGNORE`). **Sie prüfen nichts** — was gültig ist, entscheidet der Aufrufer. Ab Web 20.30.0. |
 | Vorbereitete Anweisung | `einsatz_lib.php` (`einsatz_anweisung()`) | Eine `PDOStatement` je Verbindung und SQL-Text. Nötig, weil `db.php` `ATTR_EMULATE_PREPARES => false` setzt: Jedes `prepare()` ist ein Roundtrip, und der CSV-Import führt seine Anweisungen bis zu 3 000-mal aus. Die Verbindung wird **mitgehalten**, nicht nur ihre Objektkennung — eine freigegebene PDO gäbe ihre `spl_object_id` an die nächste weiter. |
+| Spalten von `missions` | `mission_fields_lib.php` | `mf_missions_register()` führt jede der 41 Spalten **genau einmal** und sagt je Zweck, ob sie dabei ist und an welcher **Position**; `mf_spalten($zweck, $präfix, $alias)` erzeugt die Liste, `mf_spalten_sql()` den SQL-Text. Neun Zwecke: `export` · `backup` · `backup_restore` · `import_neu` · `import_aendern` · `ingest_neu` · `schnitt_neu` · `suchindex` · `range`. Die Position wird mitgeführt, weil die Listen in Menge **und** Reihenfolge eingefroren sind — eine andere Reihenfolge ändert die Spaltenfolge im CSV-Export. `mf_spalten()` verlangt je Zweck eine lückenlose Folge ab 0. Fehlt eine Spalte in einem Zweck, steht der Grund in `mf_missions_gruende()`. Ab Web 20.31.0. |
+| Feste Werte in einer erzeugten Anweisung | (Aufrufseite) | Wo Werte fest im Satz stehen, hängt die Wertform an der **Spalte**, nicht an ihrer Stelle: `['uhr_gesperrt' => '1', 'origin' => "'import'"]`, `COALESCE(?, spalte)` für die vier Felder unter der Export-Schranke (A9/P10), `NULL AS spalte` im Export ohne personenbezogene Angaben. Wer ein Feld unter die Schranke nimmt, trägt es an **einer** Stelle ein. |
 | Schema fragen | `db.php` | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()` — sie nehmen ein `PDO`, **zwingend**: `tools/schemaprobe/` lässt Migrationen gegen ein frisch angelegtes Schema laufen, also gegen eine andere Verbindung als `db()`. Die privaten `_hat_*` in `migration_lib.php` reichen seit Web 20.29.0 nur noch durch (E-ZE-04: gelaufene Migrationen werden nicht umgebaut). |
 | Maskierung | `assets/html.js` (`EdHtml.escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). Seit Web 4.6.0 in einer eigenen Datei statt in `missiontable.js` — die wird nur von zwei Seiten geladen, gebraucht wird die Maskierung auf fünf. `EdMissionTable.escape`/`.esc` bleiben als Weiterleitung. **Nicht dasselbe** wie `xmlEscape()` in `export.js`: GPX ist XML mit eigenen Regeln. |
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Backup-Lauf) und schreibt je Einsatz `_pat` und `_patState`. |

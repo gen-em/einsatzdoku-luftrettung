@@ -7,6 +7,7 @@ require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/geraete_lib.php';  // herkunft_ableiten() (R64)
 require_once __DIR__ . '/ratelimit_lib.php'; // Mengenbremse (P5a/AP7, R19)
 require_once __DIR__ . '/einsatz_lib.php';   // Kindtabellen (Schritt 15/AP5)
+require_once __DIR__ . '/mission_fields_lib.php';   // mf_spalten() (Schritt 15/AP6)
 
 /**
  * Den Vermerk am Geraet fortschreiben (P5a/AP7, E-P5a-02).
@@ -704,8 +705,14 @@ try {
          * denn, jemand hat das Geraet zwischendurch neu gekoppelt und anders
          * aufgeloest. Dann traegt der Einsatz weiter, was beim Anlegen galt.
          * Das IST die Momentaufnahme. */
-        $pdo->prepare('INSERT INTO missions (user_id, device_id, client_ref, day_id, started_at, ended_at, distance_m, ascent_m, final, origin, geraet_art, geraet_modell)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+        /* SPALTEN AUS DEM REGISTER (Schritt 15/AP6, E-ZE-22), Zweck
+         * `ingest_neu`. Die Fragezeichen werden mitgezaehlt statt
+         * hingeschrieben: Wer eine Spalte ergaenzt, ergaenzt sonst die Liste
+         * und vergisst das Fragezeichen — und MariaDB meldet das erst zur
+         * Laufzeit, beim ersten echten Paket eines Geraets. */
+        $sp = mf_spalten('ingest_neu', '', false);
+        $pdo->prepare('INSERT INTO missions (' . implode(', ', $sp) . ')
+                       VALUES (' . implode(',', array_fill(0, count($sp), '?')) . ')
                        ON DUPLICATE KEY UPDATE
                          ended_at   = COALESCE(VALUES(ended_at),   ended_at),
                          distance_m = COALESCE(VALUES(distance_m), distance_m),

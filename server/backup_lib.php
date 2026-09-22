@@ -29,7 +29,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/einsatz_lib.php';   // Kindtabellen (Schritt 15/AP5)
 require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
-require_once __DIR__ . '/mission_fields_lib.php';   // mf_ist_spalte(), mf_ort_spalten()
+require_once __DIR__ . '/mission_fields_lib.php';   // mf_ist_spalte(), mf_ort_spalten(), mf_spalten()
 require_once __DIR__ . '/geraete_lib.php';         // HERKUNFT_WERTE, herkunft_ableiten() (R64)
 
 /**
@@ -252,14 +252,22 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      *                            niemand mehr fuellt und das beim
      *                            Einspielen verworfen wird.
      *
-     * WAS BEIM EINSPIELEN NICHT ANKOMMT (vorgefunden, hier nicht geaendert):
-     * Der Einspielweg schreibt die Spalten aus mission_fields.php plus
-     * pat_blob. site_ele_m steht dort nicht — die Einsatzort-Hoehe wird beim
-     * Uhr-Upload gerechnet, nicht eingegeben. Sie ist im Backup
-     * enthalten (die Datei soll den Bestand vollstaendig abbilden), kommt
-     * beim Einspielen aber nicht zurueck. Das ist eine Asymmetrie, die dieses
-     * Paket nur SICHTBAR macht; sie zu beheben hiesse, den Einspielweg zu
-     * aendern, und das ist ein eigener Vorgang. */
+     * WAS BEIM EINSPIELEN NICHT TRANSPORTIERT WIRD (vorgefunden, hier nicht
+     * geaendert): Der Einspielweg schreibt die Grundspalten (Zweck
+     * `backup_restore` im Register) plus die Spalten aus mission_fields.php
+     * plus pat_blob. `site_ele_m` steht in KEINER dieser Listen — die
+     * Einsatzort-Hoehe wird beim Uhr-Upload gerechnet, nicht eingegeben.
+     * Sie ist im Backup enthalten (die Datei soll den Bestand vollstaendig
+     * abbilden), wird beim Einspielen aber nicht uebernommen.
+     *
+     * SIE KOMMT TROTZDEM WIEDER, und dieser Satz fehlte hier bis Schritt 15
+     * AP6: Nach dem Bestaetigen rechnet dieser Lauf sie fuer jeden
+     * eingespielten Einsatz NEU (`compute_site_elevation()`, die Liste
+     * `$hoeheOffen` weiter unten). Der Unterschied ist keiner fuer den
+     * Bestand, aber einer fuer das Verstaendnis: Steht in der Datei eine
+     * Hoehe, die zu den Phasenkoordinaten nicht passt, gewinnt die Rechnung.
+     * Wer den Transport haben will, aendert den Einspielweg — ein eigener
+     * Vorgang. */
     /* IN FENSTERN, NICHT AUF EINMAL (S2/AP5).
      *
      * WARUM. Hier standen vier Abfragen ueber ALLE Einsaetze eines Kontos —
@@ -1862,30 +1870,51 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
              * FEHLEN SIE IN DER DATEI (Nutzlast <= 8), wird NULL geschrieben —
              * und das ist richtig: „unbekannt" ist genau die Aussage. */
             /* HIER WIRD AUS DEM DATEISCHLUESSEL WIEDER DIE SPALTE (Nr. 238).
-             * `$cols` sind SPALTENNAMEN (`uhr_gesperrt`), `$vals` darunter
-             * liest den DATEISCHLUESSEL (`$m['manual']`). Die beiden Listen
-             * sind positionsgebunden — wer hier einfuegt oder umsortiert,
-             * verschiebt stumm alle Werte dahinter. */
-            $cols = ['user_id', 'client_ref', 'day_id', 'started_at', 'ended_at',
-                     'uhr_gesperrt', 'origin', 'edited', 'final', 'distance_m', 'ascent_m',
-                     'geraet_art', 'geraet_modell',
-                     'deleted_at', 'deleted_with_day'];
-            $vals = [$userId,
-                     pruef_text($m['client_ref'] ?? null, 64, 'client_ref', $pruef)
-                        ?? ('bak-' . bin2hex(random_bytes(6))),
-                     $dayId, $startedAt, $endedAt,
-                     /* pruef_flag statt (int): Beide Spalten sind TINYINT(1),
-                      * und (int) einer Zahl jenseits von 127 laeuft dort ueber
-                      * — ein Fehler, der die ganze Transaktion kostet. Fuer
-                      * gueltige Werte ist das Ergebnis dasselbe. */
-                     pruef_flag($m['manual'] ?? 0), $oe['origin'], $oe['edited'],
-                     pruef_flag($m['final'] ?? 1),
-                     pruef_zahl($m['distance_m'] ?? null, 0, 100000000, 'distance_m', $pruef),
-                     pruef_zahl($m['ascent_m'] ?? null, 0, 100000, 'ascent_m', $pruef),
-                     edbak_geraet_art($m['geraet_art'] ?? null, 'geraet_art', $pruef),
-                     pruef_text($m['geraet_modell'] ?? null, GERAET_MAX_MODELL,
-                                'geraet_modell', $pruef),
-                     $mGeloescht ? $loeschZeit : null, $mitTag];
+             * Die SCHLUESSEL sind Spaltennamen (`uhr_gesperrt`), die WERTE
+             * lesen den Dateischluessel (`$m['manual']`).
+             *
+             * BIS WEB 20.30.0 WAREN ES ZWEI LISTEN — Spalten oben, Werte
+             * darunter, positionsgebunden; der Kommentar dort warnte davor.
+             * Wer eine der beiden Listen ergaenzt und die andere nicht,
+             * verschiebt stumm alle Werte dahinter — die Wiederherstellung
+             * schriebe dann die Geraeteart ins Loeschdatum, ohne dass
+             * irgendetwas rot wuerde. Passiert ist das nie; die Warnung war
+             * die einzige Sicherung. Jetzt traegt jeder Wert seinen
+             * Spaltennamen; die REIHENFOLGE kommt aus dem Register
+             * (Schritt 15/AP6, E-ZE-22, Zweck `backup_restore`).
+             *
+             * DIE SCHREIBREIHENFOLGE HIER BLEIBT DIE ALTE, und das mit
+             * Absicht: `pruef_text()`, `pruef_zahl()` und `edbak_geraet_art()`
+             * haengen ihre Beanstandungen an `$pruef` an. Wer sie umsortiert,
+             * sortiert den Pruefbericht um, den jemand neben die Datei legt. */
+            $werte = [
+                'user_id'     => $userId,
+                'client_ref'  => pruef_text($m['client_ref'] ?? null, 64, 'client_ref', $pruef)
+                                    ?? ('bak-' . bin2hex(random_bytes(6))),
+                'day_id'      => $dayId,
+                'started_at'  => $startedAt,
+                'ended_at'    => $endedAt,
+                /* pruef_flag statt (int): Beide Spalten sind TINYINT(1),
+                 * und (int) einer Zahl jenseits von 127 laeuft dort ueber
+                 * — ein Fehler, der die ganze Transaktion kostet. Fuer
+                 * gueltige Werte ist das Ergebnis dasselbe. */
+                'uhr_gesperrt' => pruef_flag($m['manual'] ?? 0),
+                'origin'      => $oe['origin'],
+                'edited'      => $oe['edited'],
+                'final'       => pruef_flag($m['final'] ?? 1),
+                'distance_m'  => pruef_zahl($m['distance_m'] ?? null, 0, 100000000,
+                                            'distance_m', $pruef),
+                'ascent_m'    => pruef_zahl($m['ascent_m'] ?? null, 0, 100000,
+                                            'ascent_m', $pruef),
+                'geraet_art'  => edbak_geraet_art($m['geraet_art'] ?? null, 'geraet_art', $pruef),
+                'geraet_modell' => pruef_text($m['geraet_modell'] ?? null, GERAET_MAX_MODELL,
+                                              'geraet_modell', $pruef),
+                'deleted_at'  => $mGeloescht ? $loeschZeit : null,
+                'deleted_with_day' => $mitTag,
+            ];
+            $cols = mf_spalten('backup_restore', '', false);
+            $vals = [];
+            foreach ($cols as $c) { $vals[] = $werte[$c]; }
             foreach ($extraCols as $c) {
                 if (!array_key_exists($c, $m)) { continue; }
                 if ($c === 'created_at') {
@@ -1911,11 +1940,11 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
                  . implode(',', array_fill(0, count($cols), '?')) . ')';
             $pdo->prepare($sql)->execute($vals);
             $mid = (int)$pdo->lastInsertId();
-            /* $vals[1] und nicht $m['client_ref']: Das ist die Kennung, die
-             * TATSAECHLICH in der Zeile steht — die aus der Datei oder die
-             * Ersatzkennung. Beide sollen wiederfindbar sein. */
-            $merke('mission', $vals[1], $mid);
-            $neueEinsaetze[$vals[1]] = true;
+            /* $werte['client_ref'] und nicht $m['client_ref']: Das ist die
+             * Kennung, die TATSAECHLICH in der Zeile steht — die aus der
+             * Datei oder die Ersatzkennung. Beide sollen wiederfindbar sein. */
+            $merke('mission', $werte['client_ref'], $mid);
+            $neueEinsaetze[$werte['client_ref']] = true;
 
             /* Abweichende Besatzung (`mission_crew`, E7). Bis Web 5.10.0 waren
              * es fuenf Spalten und wanderten ueber $extraCols mit; jetzt sind es

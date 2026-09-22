@@ -6863,5 +6863,55 @@ declare(strict_types=1);
  *   Zwischenspeicher waeren daraus bis zu 21 000 Roundtrips geworden.
  *   Nachgemessen am csv-Kreislauf: 41,78 s und 41,31 s gegen 41,71 s und
  *   41,47 s davor — dieselbe Streuung.
+ *
+ * 20.31.0 — DAS SPALTENREGISTER VON `missions`
+ *   (22.09.2026, Schritt 15 AP6 — Zentralisierung, R83, E-ZE-22).
+ *   NEBEN-Nummer: vier neue Funktionen im Feldkatalog, kein Datenmodell,
+ *   keine Migration, `update.php` nicht faellig.
+ *
+ *   `missions` HAT 41 SPALTEN, UND ZWOELF STELLEN FUEHRTEN EINE EIGENE LISTE
+ *   DAVON — jede in ihrer eigenen Reihenfolge, keine sagte, warum eine Spalte
+ *   fehlt. Was das kostet, stand im Bestand: Die tote Altspalte
+ *   `other_resources` ging jahrelang in jedes Backup, weil dort `SELECT *`
+ *   stand; `site_ele_m` steht im Backup, aber in keiner Einspielliste — der
+ *   Wert kommt nur wieder, weil die Wiederherstellung ihn hinterher aus den
+ *   Phasenkoordinaten NEU RECHNET. Beides fiel erst auf, als jemand die
+ *   Listen nebeneinander legte.
+ *
+ *   JETZT FUEHRT `mf_missions_register()` JEDE SPALTE GENAU EINMAL und sagt
+ *   je Zweck, ob sie dabei ist und AN WELCHER STELLE. `mf_spalten($zweck)`
+ *   erzeugt daraus die Liste, `mf_spalten_sql()` den SQL-Text. Neun Zwecke:
+ *   `export`, `backup`, `backup_restore`, `import_neu`, `import_aendern`,
+ *   `ingest_neu`, `schnitt_neu`, `suchindex`, `range`.
+ *
+ *   WARUM DIE POSITION MITGEFUEHRT WIRD und nicht die Registerreihenfolge
+ *   gilt: Die Listen sind in Menge UND Reihenfolge eingefroren. Eine andere
+ *   Reihenfolge aendert die Spaltenfolge im CSV-Export — also in einer Datei,
+ *   die Menschen aufheben. `mf_spalten()` verlangt deshalb je Zweck eine
+ *   lueckenlose Positionsfolge ab 0 und bricht bei einer doppelten oder
+ *   fehlenden ab.
+ *
+ *   NEUN ANWEISUNGEN WERDEN ERZEUGT, und alle neun sind Zeichen fuer Zeichen
+ *   dieselben wie vorher (nachgemessen, nicht angenommen). Wo Werte fest im
+ *   Satz stehen, haengt die Wertform seither an der SPALTE statt an ihrer
+ *   Stelle: `['uhr_gesperrt' => '1', 'origin' => "'import'"]` beim Import,
+ *   `COALESCE(?, spalte)` fuer die vier Felder unter der Export-Schranke
+ *   (A9/P10), `NULL AS spalte` im Export ohne personenbezogene Angaben. Wer
+ *   ein Feld unter die Schranke nimmt, traegt es an EINER Stelle ein.
+ *
+ *   ZWEI WERTELISTEN VERLIEREN IHRE POSITIONSBINDUNG. In `backup_lib.php`
+ *   standen Spalten oben und Werte darunter, in `api/import_commit.php` eine
+ *   namenlose Werteliste fuer zwei Anweisungen mit 31 und 28 Spalten. Beide
+ *   Kommentare warnten davor, dass ein Einschub stumm alles dahinter
+ *   verschiebt — die Warnung war die einzige Sicherung. Jetzt traegt jeder
+ *   Wert seinen Spaltennamen, und das Register ordnet zu.
+ *
+ *   DREI ABBILDUNGEN BLEIBEN VON HAND, und zwar zu Recht: `export_data.php`,
+ *   `import_commit.php` und `api/suchindex.php` rechnen je Wert um — nach
+ *   Ortszeit, auf eine Laenge, in eine Beschriftung. Ein `implode()` ueber
+ *   Spaltennamen kann das nicht. `tools/spaltenregister/pruefen.php` belegt
+ *   dafuer, dass jede genau die Registerspalten ihres Zwecks fuehrt; eine
+ *   Ausnahme braucht eine Begruendung im Feld, und eine, die nichts mehr
+ *   trifft, ist selbst ein Befund.
  */
-const WEB_VERSION = '20.30.0';
+const WEB_VERSION = '20.31.0';

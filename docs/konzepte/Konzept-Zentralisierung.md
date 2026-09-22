@@ -14,10 +14,10 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 >
 > | | |
 > |---|---|
-> | Stand | 21.09.2026 — **AP1 und AP2 erledigt** (Web 20.27.0). Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
-> | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen); E-ZE-09 ist nicht vergeben |
+> | Stand | 22.09.2026 — **AP1 bis AP6 erledigt** (zuletzt Web 20.31.0). Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
+> | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen), **E-ZE-25** (Ultracode, 22.09.2026); E-ZE-09 ist nicht vergeben |
 > | Offen | nichts im Konzept. **F-ZE-1 bis F-ZE-6** (Abschnitt 2.3) sind mit der Freigabe vom 20.09.2026 entschieden. Außerhalb des Konzepts: die Einschübe (Abschnitt 8, 9) sind noch nicht eingespielt |
-> | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2 erledigt** (21.09.2026), **AP3 erledigt** (21.09.2026). **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
+> | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2** und **AP3 erledigt** (21.09.2026), **AP4 erledigt** (21.09.2026), **AP5** und **AP6 erledigt** (22.09.2026). **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
 > | Nummern | Dieses Konzept vergibt **keine** Rahmenplan-Fassung, **keine** Backlog-Nummer und **keine** Version. Einschübe in Abschnitt 8 und 9 übernimmt die einspielende Instanz |
 > | Steuerungsdokumente | **Seit 21.09.2026 auf `main`** (Kette II gemergt, PR #65/#68): Rahmenplan **Fassung 102**, Backlog mit der **Spanne 250–259 für Schritt 15** — 250–253 sind die vier Einträge aus Abschnitt 9 dieses Konzepts, **254–259 sind frei als Reserve für Funde der Umsetzung**. Das Konzept selbst ist mit Fassung 97 auf `main` eingespielt worden (unverändert; die fortgeschriebene Fassung liegt auf dem Umsetzungszweig). **Damit ist die Grundlage von AP1-f entfallen** — siehe dort; zur Neubewertung vorgelegt |
 
@@ -30,7 +30,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > | AP3 API-Eingang und Flash | **erledigt** 21.09.2026 | **Web 20.28.0** (Neben: drei neue Funktionen, keine Migration) | Z05 **12 → 1** · Z06 **17 → 0** · Z07 **11 → 0** · Z08 **3 → 0** (Konzept erwartete 1, AP3-d) · Z09 **22 → 0** · `error_log(` **77** (unverändert, E-ZE-05) · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · `php -l` **135/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kettenaufrufe **0** · Sitzungshärtung **0**. **Gegen eine laufende Anlage:** Eingangsprobe **46 Zellen, 46 erfüllt** (davor **27 von 46** — die 19 Abweichungen sind F-ZE-5, aufgeschlüsselt im Protokoll; **beide Reihenfolge-Zellen schon davor grün**) · Flash-Probe **11/11** · Kreisläufe edbak **328 771/0/21**, csv **10 922/0/1 271** (Zahl für Zahl wie davor) · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0**. **GPX-Probe 95/4 — vor und nach dem Paket gleich**, Ursache ist der Demo-Reset dieser Anlage (Nr. 259) · Bilderlauf **496 Bilder, 0 Überlauf, 0 Konsolenfehler** |
 > | AP4 Datenzugriff klein | **erledigt** 21.09.2026 | **Web 20.29.0** (Neben: neue Funktionen, keine Migration) | Z10 **27 → 2** (AP4-c: `jobs.php` bleibt, Gerätevertrag) · Z11 **7 → 0** · Z12 **12 → 2** (Startwert von 13 berichtigt, AP4-d; zweite Ausnahme AP4-b) · Z13 **4 → 0** · Z14 **9 → 5** (AP4-e, kein vierter Helfer) · Z15 **57 → 54** · Z38 **77 → 75** (AP4-g) · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · `php -l` **136/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kettenaufrufe **0** · Sitzungshärtung **0** · CSP **0** · Migrationsregister **0**. **E-ZE-17-Beleg: 7 Stellen in 5 Dateien nachgelesen, 0 brauchen `?PDO $pdo`.** **Gegen eine laufende Anlage:** Kreisläufe edbak **328 771/0/21**, csv **10 922/0/1 271** (Zahl für Zahl wie davor) · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0** · Wiederherstellungs-Probe **111/0** · Anteilprobe **55/55** · Versandprobe **135/0** · Klickprobe **48/48** · Bilderlauf **496 Bilder, 0 Überlauf, 0 Konsolenfehler** |
 > | AP5 Transaktion und Kindtabellen | **erledigt** 22.09.2026 | **Web 20.30.0** (Neben: fünf neue Funktionen, keine Migration) | Z16 **33 → 9** (neun namentliche Ausnahmen, H-ZE-4 ausgesetzt, AP5-c) · Z17 **30 → 0** · Bauformen mit dem Tokenizer ausgezählt: **19 / 12 / 2**, dazu **42 rollBack, 14 mit Wache** (AP5-a) · Probe für `db_transaktion()` **10/10** (einschließlich der drei Verschachtelungsfälle) · **Messstand Import: 41,78 / 41,31 s gegen 41,71 / 41,47 s davor** · Kreisläufe edbak **328 771/0/21**, csv **10 922/0/1 271** · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Wiederherstellungs-Probe **111/0** · Ratenprobe **50/0** · Klickprobe **48/48** · `php -l` **136/0**. **Ein latenter Fehler behoben** (einsatz_form.php: rollBack auf eine bereits bestätigte Transaktion) |
-> | AP6 Spaltenregister `missions` | offen | — | — |
+> | AP6 Spaltenregister `missions` | **erledigt** 22.09.2026 | **Web 20.31.0** (Neben: vier neue Funktionen, keine Migration) | Z18 **12 → 3** (Ziel war ≤ 4; drei Abbildungen bleiben, jede mit Probe — AP6-b) · Register **41 Spalten, 9 Zwecke, 0 ohne Zweck und ohne Grund**, Schema↔Register **0/0** · erzeugte gegen eingefrorene Listen **9 von 9 gleich**, Zeichen für Zeichen · Vollständigkeitsprobe **38/22/30 Schlüssel, 0 fehlend, 0 überzählig, 0 tote Ausnahmen**, Selbstprobe **16/16** · **Byte-Vergleich gegen den Stand VOR AP6 (Web 20.30.0, `7a55192`): 447 291 Bytes, gleiche SHA-256** · `Export-Format.md`/`Backup-Format.md` **0 geänderte Zeilen** · Wegprobe **34/0** · Kreisläufe edbak **328 771/0/21**, **edbak-alt (altes Backup mit Schlüssel `manual`) 287 852/0/795**, csv **10 922/0/1 271** · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0** · Wiederherstellungs-Probe **111/0** · Klickprobe **48/48** · `php -l` **136/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kontraste **22/0** · Kettenaufrufe **45/0/0** · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · Bilderlauf **496 Bilder, 62 Kontaktbögen, 0 Überlauf, 0 Konsolenfehler, 0 falsche Knopfhöhen** |
 > | AP7 Zeit und Zahl (PHP) | offen | — | — |
 > | AP8 JavaScript | offen | — | — |
 > | AP9 Nr. 57 — eine Einsatztabelle | offen | — | — |
@@ -456,6 +456,25 @@ Stufe-1-Schritt (AP10) schlägt fehl, wenn ein Ist-Wert **über** der Decke
 liegt. So kommt eine zweite Stelle nicht unbemerkt zurück — der Fall, den R83
 mit `edbak_groesse_text()` selbst belegt. Die Startdecken stehen in
 Abschnitt 4.
+
+**E-ZE-25 — Ultracode ab AP7: Freigabe ohne Festlegung im Konzept**
+(Auftraggeber, 22.09.2026). Arbeit darf auf Unter-Agenten gefächert werden
+(Workflow, „Ultracode"), wo sie sich fächern lässt; **was gefächert wurde,
+steht hinterher im Paketbericht**, nicht vorher im Konzept. Die
+Paketfestlegung wäre die sauberere Form und ist deshalb für **künftige**
+Konzepte in `CLAUDE.md` 7 hinterlegt — dieses Konzept ist zu weit, um sie
+rückwirkend einzuziehen.
+
+**Was sich damit NICHT fächern lässt, und zwar aus Gründen dieses Projekts:**
+Es gibt **eine** lokale Anlage und **einen** Demo-Bestand — zwei Agenten, die
+gleichzeitig Proben fahren, messen einander. Prüfarbeit bleibt seriell.
+Und Changelog, `version.php` und dieses Konzept sind erzählende Prosa mit
+einem Ton; drei Agenten schreiben drei Töne. Gefächert wird die **Messung**
+(lesend, ohne Nebenwirkung) und der **Umbau getrennter Dateien** — wo zwei
+Zählzeilen dieselbe Datei anfassen, bleibt es seriell, sonst überschreiben
+sie sich.
+
+**AP6 ist davon nicht mehr berührt** — es war beim Beschluss fertig gebaut.
 
 ### 2.3 Zum Gegenlesen — mit der Freigabe vom 20.09.2026 entschieden
 
@@ -1409,6 +1428,179 @@ ausgeblendet); Kreisläufe 0 unerklärt; Einspielen eines **alten** Backups (mit
 Schlüssel `manual`) gelingt; `Export-Format.md`, `Backup-Format.md`: **0
 geänderte Zeilen**.
 
+**AP6 — erledigt 22.09.2026, Web 20.31.0.** Neu in `mission_fields_lib.php`:
+`mf_missions_register()`, `mf_missions_gruende()`, `mf_spalten()`,
+`mf_spalten_sql()`. Neu unter `tools/`: `spaltenregister/pruefen.php` (in
+Stufe 1) und `spaltenregister/wegprobe.py`.
+
+*Abnahmezahlen:*
+
+| Zeile | Start | Ziel (Konzept) | gemessen |
+|---|---|---|---|
+| Z18 Handlisten `missions` | 12 | ≤ 4, jede mit Probe | **3** (AP6-b) |
+| erzeugte gegen eingefrorene Listen | — | 7 von 7 gleich | **9 von 9 gleich**, Zeichen für Zeichen (AP6-a) |
+| `schema.sql` minus Register | — | 0 Spalten | **0** (beide Richtungen) |
+| Byte-Vergleich gegen den Stand vor AP6 | — | gleiche Prüfsumme | **447 291 Bytes, SHA-256 identisch** (AP6-e) |
+| `Export-Format.md`, `Backup-Format.md` | — | 0 geänderte Zeilen | **0** (`git diff` gegen `7a55192`) |
+
+*Das Register in Zahlen:* **41 Spalten**, **neun Zwecke** (`export` 32 ·
+`backup` 35 · `backup_restore` 15 · `import_neu` 31 · `import_aendern` 28 ·
+`ingest_neu` 12 · `schnitt_neu` 11 · `suchindex` 21 · `range` 12), **0
+Spalten ohne Zweck und ohne Grund**.
+
+*Entscheidungen, die in diesem Paket gefallen sind:*
+
+- **AP6-a — Neun Zwecke statt sieben, und drei davon hat erst die Messung
+  gefunden.** Das Konzept nannte sieben Listen. Beim Nachzählen waren es
+  **zwölf** Stellen: dazu der Uhr-Eingang (`ingest.php`), das Schneiden
+  (`api/schneiden.php`), die Wiederherstellung aus dem Backup
+  (`backup_lib.php`) und die namenlose Werteliste des Imports. Alle vier
+  ließen sich aufnehmen, weil ihre **Spaltenliste** aus lauter Namen besteht —
+  die festen Werte stehen in der WERTELISTE (`VALUES (?,?,1,'schnitt',…)`),
+  nicht in der Spaltenliste. Sie hängen jetzt an der Spalte, nicht an ihrer
+  Stelle im Satz.
+- **AP6-b — Drei Abbildungen bleiben, nicht vier, und jede hat ihre Probe.**
+  Das Konzept ließ vier zu. Übrig sind `api/export_data.php` (Zeile → Datei),
+  `api/import_commit.php` (Datei → Zeile) und `api/suchindex.php` (Zeile →
+  Indexfeld). Sie rechnen **jeden Wert einzeln** um — nach Ortszeit, auf eine
+  Länge, in eine Beschriftung; ein `implode()` über Spaltennamen kann das
+  nicht, und eine erzwungene Erzeugung verbärge mehr, als sie spart.
+  `tools/spaltenregister/pruefen.php` belegt stattdessen, dass jede genau die
+  Registerspalten ihres Zwecks führt. Zwei Ausnahmeklassen, beide mit
+  Begründung **im Feld**: `abgeleitet` (Spalte wird verarbeitet, hat aber
+  keinen eigenen Schlüssel — `started_at` wird im Suchindex zu `day`,
+  `start_hhmm`, `start_min` und `duration_s`) und `fremd` (Schlüssel kommt aus
+  einer anderen Tabelle). **Eine Ausnahme ohne Treffer ist selbst ein
+  Befund** — sonst wächst die Liste zu und die Probe misst nichts mehr.
+- **AP6-c — Die Position steht im Register, nicht die Reihenfolge der
+  Einträge.** Die Listen sind in Menge **und** Reihenfolge eingefroren: Eine
+  andere Reihenfolge ändert die Spaltenfolge im CSV-Export, also in einer
+  Datei, die Menschen aufheben. `mf_spalten()` verlangt deshalb je Zweck eine
+  lückenlose Folge ab 0 und **wirft** bei einer doppelten oder fehlenden
+  Position, statt eine stillschweigend kürzere Liste zu liefern.
+- **AP6-d — Zwei Wertelisten verlieren ihre Positionsbindung.** In
+  `backup_lib.php` standen 15 Spalten oben und 15 Werte darunter; in
+  `api/import_commit.php` stand eine **namenlose** Werteliste aus 22
+  Einträgen, die auf zwei Anweisungen mit 31 und 28 Spalten passen musste.
+  Beide Kommentare warnten davor, dass ein Einschub stumm alles dahinter
+  verschiebt — und diese Warnung war die einzige Sicherung, die es gab;
+  passiert ist es nie. Jetzt trägt jeder Wert seinen Spaltennamen. **Die
+  Schreibreihenfolge im Quelltext bleibt die alte**, weil `pruef_text()`,
+  `pruef_zahl()` und `edbak_geraet_art()` ihre Beanstandungen an den
+  Prüfbericht anhängen: Wer sie umsortiert, sortiert den Bericht um, den
+  jemand neben die Datei legt.
+- **AP6-e — Der Byte-Vergleich ist gegen den Stand VOR AP6 gefahren, nicht
+  gegen den letzten Commit.** `git checkout 7a55192 -- server/` legt den Stand
+  Web 20.30.0 auf dieselbe laufende Anlage; verglichen werden die
+  Serverantworten, die AP6 anfasst — Export mit und ohne personenbezogene
+  Angaben, Suchindex, drei Monate der Zeitraumansicht. **447 291 Bytes,
+  dieselbe SHA-256.** Gegen den letzten Commit allein hätte der Vergleich nur
+  die halbe Änderung gesehen.
+- **AP6-g — Was das Register beim Hinlegen der Listen sichtbar gemacht hat.**
+  Zwei Befunde, beide **vorgefunden**, keiner von diesem Paket verursacht,
+  beide nicht behoben (E-ZE-10: kein Verhalten ändern):
+  **(1)** `other_resources` steht in keinem Zweck — die Spalte ist seit der
+  Migration 2026_07 tot, wurde damals nur nicht gelöscht, und ging bis
+  Web 12.x über `SELECT *` in jedes Backup. **(2)** `site_ele_m` steht im
+  Backup, aber in **keiner** Einspielliste — weder in `backup_restore` noch
+  unter den `$extraCols` aus dem Feldkatalog. Der Wert kommt trotzdem wieder,
+  weil `edbak_restore()` ihn nach dem Bestätigen aus den Phasenkoordinaten
+  **neu rechnet** (`compute_site_elevation()`). Deshalb meldet der
+  edbak-Kreislauf auch nichts. Der Satz im Kopf von `backup_lib.php`
+  („kommt beim Einspielen nicht zurück") ist so nicht vollständig und ist
+  mit diesem Paket berichtigt worden — er beschrieb den Transport und
+  verschwieg die Rechnung dahinter.
+- **AP6-f — `api/mission.php` bekommt keinen Zweck.** Es liest `SELECT *` und
+  gibt die Zeile weiter, wie sie ist. Ein Zweck wäre dort eine Liste, die
+  niemand braucht — und die beim nächsten Spaltenzuwachs vergessen würde.
+
+*Probleme und wie sie gelöst wurden:*
+
+1. **Die Vollständigkeitsprobe hätte grün gemeldet, ohne etwas zu können.**
+   Drei eingebaute Fehler zeigten, dass sie beißt (fehlender Schlüssel,
+   fremder Schlüssel, tote Ausnahme — je ein Befund). Danach ist die Probe als
+   `--selbstprobe` fest verdrahtet: **16 Zellen**, darunter vier Gegenproben,
+   die **keinen** Befund ergeben dürfen. Sie hängt in Stufe 1 vor dem
+   eigentlichen Lauf — dieselbe Reihenfolge wie beim Migrationsregister.
+2. **Der Leser des Array-Literals muss über den Tokenstrom gehen.** An allen
+   drei Abbildungen stehen Kommentare, die Spaltennamen nennen; ein Muster
+   über den Quelltext zählte sie mit. `token_get_all()` sieht den Unterschied.
+   Das ist dieselbe Regel wie in AP5 (AP5-a) und in `CLAUDE.md` 6.
+3. **Z18 fiel von 9 auf 3, aber nicht nur, weil Listen verschwunden sind.**
+   Bei `backup_lib.php` **nennt die Stelle weiterhin 15 Spalten** — als
+   Schlüssel einer Wertekarte. Die Zählregel („zehn Spaltennamen dicht
+   beieinander") greift dort nicht mehr, weil Kommentare den Lauf
+   unterbrechen. *Das ist ehrlich zu sagen:* Die Zahl belegt für diese Stelle
+   nicht, dass die zweite Liste fort ist — das belegt der Quelltext (es gibt
+   nur noch eine) und die Wegprobe.
+4. **Die Ellipse `…` in einem neuen Kommentar** trieb die Vollständigkeit von
+   398 auf 399. Vierter Fall derselben Falle in diesem Schritt.
+   **Gelöst:** durch das Wort ersetzt.
+5. **Die Wegprobe brauchte zweimal einen Anlauf.** Beim ersten Lauf suchte sie
+   Ruhesegmente über `COUNT(*)` auf `track_points` — und fand keines, weil die
+   Punkte in diesem Bestand als Blob liegen (`CLAUDE.md` 4: nur über
+   `spur_lib.php`). Beim zweiten war das Zeitfenster des vorigen Laufs schon
+   geschnitten. **Gelöst:** Die Probe misst das punktreichste Segment über
+   `spur_zahlen()` und gehört an ein frisches Wegwerfkonto; der Dateikopf sagt
+   das.
+
+*Prüfprotokoll AP6:*
+
+- **Byte-Vergleich gegen den Stand vor AP6** (Web 20.30.0, `7a55192`, dieselbe
+  laufende Anlage): **447 291 Bytes, SHA-256
+  `fefb84e2…e40ced86`** — identisch. Sechs Abzüge einzeln: Export mit
+  personenbezogenen Angaben **182 474 B**, ohne **146 895 B**, Suchindex
+  **105 442 B**, Zeitraum 2026-01/05/09 **3 942 / 4 474 / 3 948 B**.
+- **Die neun erzeugten Anweisungen gegen die alten**, Zeichen für Zeichen
+  nachgerechnet statt angenommen: `ingest_neu` und `import_neu` **identisch**,
+  `schnitt_neu`, `import_aendern`, `export` (mit **und** ohne
+  personenbezogene Angaben) **identisch nach Umbruchnormierung**;
+  Platzhalterzahlen **29 = 29** (INSERT) und **28 = 28** (UPDATE).
+- **Registerprobe:** Schema 41, Register 41, **0** in die eine und **0** in
+  die andere Richtung; **0** Spalten ohne Zweck und ohne Grund;
+  Vollständigkeit der drei Abbildungen **38 / 22 / 30 Schlüssel, 0 fehlend, 0
+  überzählig, 0 tote Ausnahmen**; Werteliste des Imports passt auf beide
+  Anweisungen (**22 = 22**). **Selbstprobe 16 von 16.**
+- **Wegprobe** (`tools/spaltenregister/wegprobe.py`, gegen ein frisches
+  Umlaufkonto): **34 Erwartungen, 0 nicht erfüllt.** Sie fährt die zwei
+  Anweisungen, die kein Kreislauf abdeckt — den Schnitt (11 Zellen: `origin`,
+  `final`, `uhr_gesperrt`, virtuelles Gerät, gewanderte Punkte, Phasen, und
+  als **Gegenprobe**, dass der Schnitt keine Einsatzfelder füllt) und den
+  UPDATE-Zweig des Imports (22 Zellen in zwei Durchgängen: erst alles gesetzt,
+  dann die vier Felder unter der Export-Schranke **weggelassen** — sie müssen
+  stehenbleiben, `bw_unit` daneben muss geleert werden. **Säße die Schranke
+  eine Spalte daneben, fiele genau diese Zelle.**)
+- **Export-Schranke im Betrieb:** mit Flag **38 Schlüssel**, `site_ele_m` 85 ·
+  `bw_info` 10 · `other_ema` 6 · `pat_blob` 96 belegt; ohne Flag **38
+  Schlüssel**, alle vier **0** belegt, alles außerhalb der Schranke
+  unverändert (`transport_dest` 77, `manual` 101, `source` 101, `geraet_art`
+  90, `day` 101). Die Schlüsselmenge ist in beiden Fällen dieselbe.
+- **Kreisläufe:** `edbak` **328 771 Einzelvergleiche, 0 unerklärt, 21
+  erwartet** (zweimal gefahren) · `edbak-alt` — **das alte Backup mit dem
+  Schlüssel `manual`** — **287 852, 0 unerklärt, 795 erwartet** · `csv`
+  **10 922, 0 unerklärt, 1 271 erwartet**. Der csv-Umlauf fährt dabei den
+  erzeugten INSERT (**101 Einsätze angelegt**) und den erzeugten Export (101
+  exportiert), der edbak-Umlauf die erzeugte Wiederherstellung (**106
+  Einsätze übernommen**).
+- **Gerätevertrag:** Ingestprobe **83 Erwartungen, 0 nicht erfüllt** — sie
+  fährt den erzeugten `ingest_neu`-INSERT.
+- **Weitere Proben:** Kopplungsprobe **76/0** · Komplettprobe **64/0** ·
+  Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50 Prüfungen, 0
+  Befunde** · Wiederherstellungs-Probe **111/0** · Klickprobe **48 von 48
+  Wegen erfüllt, 0 verfehlt**.
+- **Stufe-1-Mittel:** `php -l` **136/0** · Wortliste **0 Treffer außerhalb der
+  Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** ·
+  Vollständigkeit **398** (unverändert) · Kontraste **22 Paare, 0 verfehlt** ·
+  Kettenaufrufe **45 Aufrufe, 0 Befunde, 0 ungeprüft** · Zählung **38 Zeilen,
+  0 über der Decke**, Selbstprobe **34/34**.
+- **Bilderlauf: 496 Einzelbilder, 62 Kontaktbögen, 0 Überlauf, 0
+  Konsolenfehler, 0 Knöpfe falscher Höhe** (Zeiger, 44/36 px); 162 Karten im
+  Seitengerüst, 0 außerhalb von `main.inhalt`.
+- **GPX-Probe 95/4** — unverändert der Befund aus Nr. 259 (Demo-Reset dieser
+  Anlage), nicht von diesem Paket.
+- **`error_log(` unverändert bei 77** (E-ZE-05) — dieses Paket hat keine Zeile
+  umgeschrieben.
+
 ### AP7 — Zeit und Zahl in PHP (E-ZE-23; F-ZE-1, F-ZE-3)
 
 `format_lib.php`; Umzug der Aufrufer.
@@ -1680,6 +1872,22 @@ Umsetzung —, wie bei 241–249):**
   erledigt sich mit dem neuen Migrationsregister in P8 (R66); bis dahin
   Decke 57 im Register.
 - *Datum-Zeit-Trenner vereinheitlichen* (F-ZE-3, FF-5). Zuordnung: 10c AP9.
+
+**Ohne Nummer geblieben — die Spanne 250–259 ist voll** (Stand 22.09.2026;
+254 bis 259 sind durch Funde von AP2 bis AP5 belegt). AP6 hat einen Punkt
+gefunden, der eine Nummer verdiente, und **bekommt keine**, weil die nächste
+freie (260) außerhalb der für Schritt 15 angemeldeten Spanne läge und mit
+einem Nachbarzweig kollidieren könnte:
+
+- *Die tote Spalte `missions.other_resources` löschen.* Seit der Migration
+  2026_07 liegen die weiteren Rettungsmittel als Zeilen in
+  `mission_resources`; die Spalte wurde damals nur nicht entfernt und ging
+  bis Web 12.x über `SELECT *` in jedes Backup. **Sie ist nicht verloren:**
+  Das Spaltenregister führt sie mit genau dieser Begründung
+  (`mf_missions_gruende()`), und `tools/spaltenregister/pruefen.php` würde
+  anschlagen, wenn jemand die Begründung entfernte, ohne die Spalte zu
+  löschen. Zuordnung, sobald eine Nummer da ist: **P8 (R66)** — es ist eine
+  Migration. **Dem Auftraggeber am 22.09.2026 vorgelegt.**
 
 **Ein Satz im freigegebenen P5c-Konzept** (E-ZE-03), AP3, Abnahme: „das
 Zählmittel entsteht hier und geht in Stufe 1 (Nr. 248)" → „das Zählmittel

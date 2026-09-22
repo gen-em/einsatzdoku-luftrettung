@@ -510,6 +510,27 @@ Sieht das Konzept für einen Schritt ausdrücklich **Fable** vor, vor Beginn
 dieses Schritts darauf hinweisen und **pausieren**, bis das Modell
 umgestellt oder anders entschieden ist.
 
+**Fächerung auf Unter-Agenten (Ultracode):** Ein Konzept legt **je
+Arbeitspaket** fest, was auf Agenten gefächert wird und was seriell bleibt —
+eine Zeile, gebaut wie die Modellwahl darüber. Ohne diese Zeile wird nicht
+gefächert; ein Workflow wird nie nebenbei aufgemacht, weil er zweistellig
+viele Agenten und entsprechend Credits verbraucht. Beschlossen am 22.09.2026
+(Schritt 15, E-ZE-25); Schritt 15 selbst fährt noch ohne die Zeile und
+berichtet die Fächerung hinterher im Paketbericht.
+
+Zwei Dinge lassen sich in diesem Projekt **nicht** fächern, und das ist keine
+Vorsicht, sondern eine Eigenschaft der Anlage:
+
+- **Prüfarbeit.** Es gibt eine lokale Installation und einen Demo-Bestand.
+  Zwei Agenten, die gleichzeitig Proben fahren, messen einander — und der
+  Bilderlauf schreibt in einen Ausgabeordner, nicht in zwei.
+- **Erzählender Text.** `docs/CHANGELOG.md`, der Kopf von `server/version.php`
+  und das Konzept haben einen Ton (Abschnitt 2). Drei Agenten schreiben drei.
+
+Gut gefächert sind dagegen die **Messung** (lesend, ohne Nebenwirkung) und der
+**Umbau getrennter Dateien**. Fassen zwei Teilaufgaben dieselbe Datei an,
+bleiben sie seriell; sonst überschreiben sie sich gegenseitig.
+
 ## 8. Commits
 
 Ein Commit je abgeschlossenem Arbeitspaket, deutsche Nachricht. Die Historie

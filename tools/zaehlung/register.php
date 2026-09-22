@@ -286,12 +286,15 @@ return [
 
 ['kennung' => 'Z18', 'paket' => 'AP6',
  'beschreibung' => 'Handlisten der missions-Spalten (>= 10 Spaltennamen dicht beieinander)',
- 'grund' => 'mf_missions_register()/mf_spalten() erzeugen die sieben SQL-Listen '
-          . '(E-ZE-22); die vier Abbildungen duerfen mit Vollstaendigkeitsprobe bleiben.',
+ 'grund' => 'mf_missions_register()/mf_spalten() erzeugen die neun SQL-Listen '
+          . '(E-ZE-22). Drei Abbildungen bleiben — sie rechnen je Wert um und '
+          . 'lassen sich nicht erzeugen; tools/spaltenregister/pruefen.php belegt, '
+          . 'dass jede genau die Registerspalten ihres Zwecks fuehrt.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
- 'ausser' => ['server/migration_lib.php', 'server/mission_fields.php'],
+ 'ausser' => ['server/migration_lib.php', 'server/mission_fields.php',
+              'server/mission_fields_lib.php'],
  'regel' => ['art' => 'eigen', 'name' => 'missions_handliste'],
- 'start' => 12, 'decke_jetzt' => 12, 'decke_ziel' => 4],
+ 'start' => 12, 'decke_jetzt' => 3, 'decke_ziel' => 3],
 
 /* ---- AP7: Zeit und Zahl in PHP ------------------------------------------ */
 
