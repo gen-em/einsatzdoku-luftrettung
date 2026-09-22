@@ -31,9 +31,9 @@ declare(strict_types=1);
  *
  * AUFRUF
  *
- *     php tools/pruefkonten/pruefkonten.php anlegen [anzahl]   (Vorgabe 300)
- *     php tools/pruefkonten/pruefkonten.php zeigen
- *     php tools/pruefkonten/pruefkonten.php entfernen
+ *     php tools/erzeugen/pruefkonten.php anlegen [anzahl]   (Vorgabe 300)
+ *     php tools/erzeugen/pruefkonten.php zeigen
+ *     php tools/erzeugen/pruefkonten.php entfernen
  *
  * Optional als zweites Argument der Pfad zu `server/`.
  */
@@ -224,7 +224,7 @@ if ($befehl === 'anlegen') {
 
     printf("%d Prüfkonten angelegt (%s%s).\n", $anzahl, PRAEFIX, DOMAENE);
     foreach ($zahl as $k => $v) { printf("  %-16s %4d\n", $k, $v); }
-    echo "  Entfernen mit: php tools/pruefkonten/pruefkonten.php entfernen\n";
+    echo "  Entfernen mit: php tools/erzeugen/pruefkonten.php entfernen\n";
     exit(0);
 }
 
@@ -279,5 +279,5 @@ if ($befehl === 'zeigen') {
     exit(0);
 }
 
-fwrite(STDERR, "Aufruf: php tools/pruefkonten/pruefkonten.php anlegen|zeigen|entfernen [anzahl]\n");
+fwrite(STDERR, "Aufruf: php tools/erzeugen/pruefkonten.php anlegen|zeigen|entfernen [anzahl]\n");
 exit(2);

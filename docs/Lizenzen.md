@@ -196,7 +196,7 @@ Namen nicht weiterführen. Hier wird nichts verändert.
 56 Dateien unter `server/assets/images/symbole/`, je Zeichen eine Datei,
 24 × 24, Strich 2 px, Farbe über `currentColor`. Jede Datei trägt im Kommentar
 ihren Tabler-Namen; die Zuordnungstabelle steht in der `LIESMICH.md` daneben.
-Eine erzeugte Übersicht liefert `python3 tools/design/tabellen.py symbole`.
+Eine erzeugte Übersicht liefert `python3 tools/erzeugen/design.py symbole`.
 
 **Eine** Datei stammt nicht von Tabler: `luftlinie.svg` ist ein eigener
 Entwurf im selben Stil (24er-Raster, 2 px, runde Enden) und im Dateikopf als
@@ -441,7 +441,7 @@ einen Eintrag nötig.
 | | |
 |---|---|
 | Datei | `server/geraetemodelle.php` (erzeugt) |
-| Erzeuger | `tools/geraetemodelle/erzeugen.py` |
+| Erzeuger | `tools/erzeugen/geraetemodelle.py` |
 | Quelle | Connect-IQ-Gerätedateien von Garmin (`compiler.json` je Gerät) |
 | Übernommen | Teilenummer → Produktname und Gerätegruppe |
 | Nicht übernommen | die Gerätedateien selbst, Auflösungen, Speichergrenzen, Schriften, Bilder |
@@ -475,7 +475,7 @@ zählt hier die Lizenz und nicht die Überlegung zum Verzeichnis von Tatsachen.
 | | |
 |---|---|
 | Datei | `server/wegwerfdomains.txt` (übernommen) |
-| Werkzeug | `tools/wegwerfdomains/aktualisieren.py` |
+| Werkzeug | `tools/erzeugen/wegwerfdomains.py` |
 | Quelle | `disposable-email-domains/disposable-email-domains`, Datei `disposable_email_blocklist.conf` |
 | Lizenz | **CC0 1.0 Universal** (Public Domain Dedication) |
 | Stand | 17.09.2026 — **8 883 Domains**, 126 389 Byte, SHA-256 `87bf7187…` |

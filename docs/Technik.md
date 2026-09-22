@@ -102,7 +102,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      EINZIGE Stelle, die ihn auslegt (Uhr- und
 │   │                      Handy-Form), und die Beschriftungen der Gerätelisten
 │   ├── geraetemodelle.php Teilenummer → Modellname und Geräteart. **ERZEUGT**
-│   │                      (`tools/geraetemodelle/`), nicht von Hand ändern
+│   │                      (`tools/erzeugen/ (geraetemodelle)`), nicht von Hand ändern
 │   ├── geraetemodelle_lib.php
 │   │                      Der Nachlöse-Kern (P5a/AP11, E-P5a-21): Fingerabdruck
 │   │                      der Tabelle, Stand in `app_state`, `gm_nachaufloesen()`
@@ -427,7 +427,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      je Subset latin und latin-ext (@fontsource, OFL-1.1)
 │   │   └── images/        Logos als SVG (farbig + weiss) je Hubschrauber und Fahrzeug,
 │   │       │                favicon.png + favicon-fahrzeug.png (erzeugt aus den
-│   │       │                Logodateien, s. tools/logos/); das Fahrzeug-Logo ist bis
+│   │       │                Logodateien, s. tools/erzeugen/ (logos)); das Fahrzeug-Logo ist bis
 │   │       │                zur Zulieferung ein PLATZHALTER (gestrichelter Rahmen)
 │   │       └── symbole/    55 Zeichen als je eine SVG-Datei (Tabler Icons, MIT;
 │   │                       ein eigener Entwurf), 24 x 24, currentColor, Anker
@@ -486,11 +486,6 @@ Daten erst nach Server-Bestätigung.
 │   │                      Grenzen in docs/Sandbox-Setup.md
 │   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
-│   ├── geraetemodelle/    erzeugt server/geraetemodelle.php (Teilenummer auf
-│   │                      Modellname) aus den Connect-IQ-Gerätedateien und
-│   │                      löst mit `nachaufloesen.php` bestehende Zeilen
-│   │                      nachträglich auf. Braucht eine Zuarbeit, die nicht
-│   │                      im Repositorium steht (s. LIESMICH.md)
 │   ├── klickprobe/        fährt Bedienwege im Browser und BEDIENT dabei
 │   │                      Elemente (S9, E-S9-16): Playwright wie der
 │   │                      Bilderlauf, aber `mouse.down()` — **300 ms halten** —
@@ -514,6 +509,14 @@ Daten erst nach Server-Bestätigung.
 │   │                      und MariaDB 10.6: Der Stand vor Web 20.25.0 legt
 │   │                      auf MariaDB 42 Tabellen an und scheitert auf MySQL
 │   │                      mit 1064 (Nr. 238). Mit `--selbstprobe`
+│   ├── erzeugen/          sieben Befehle, die Dateien HERSTELLEN statt zu
+│   │                      prüfen (PK-04/3, E-PK-24): design (die Tabellen
+│   │                      in Design.md), logos, uhr-bilder,
+│   │                      geraetemodelle (+ nachaufloesen),
+│   │                      wegwerfdomains, pruefkonten. Ein Läufer
+│   │                      (`erzeugen.sh <name>`), OHNE `alle`: Sie
+│   │                      schreiben ins Repositorium und werden einzeln
+│   │                      auf Zuruf gefahren
 │   ├── kette/             die Tore der Auslieferungskette (P5a/AP1):
 │   │                      Backup-Tor, Wartung an/aus, Zustand und seit
 │   │                      Web 20.16.0 die Job-Pause — gegen
@@ -596,14 +599,6 @@ Daten erst nach Server-Bestätigung.
 │   │                      misst die zwei Riegel darin (Zielrundenzahl,
 │   │                      Hülle bleibt edk1: — sonst wäre das Demo-Konto auf
 │   │                      der Produktivinstallation ausgesperrt, S10)
-│   ├── design/            erzeugt die Tabellen von docs/Design.md aus den
-│   │                      Quellen: Token aus :root, Schwellen aus den
-│   │                      @media-Bloecken, Symbole aus dem Vorrat, Bausteine
-│   │                      aus ui.php. Eine abgeschriebene Tabelle stimmt am
-│   │                      Tag des Abschreibens und danach nie wieder
-│   │                      (s. LIESMICH.md)
-│   ├── logos/             erzeugt die Favicons AUS den Logodateien, damit beide
-│   │                      nicht auseinanderlaufen (s. LIESMICH.md)
 │   ├── netzprobe/         eine Connect-IQ-Probe mit EINER Anfrage: Kommt der
 │   │                      Simulator an einen Server auf 127.0.0.1 heran?
 │   │                      Beantwortet in fuenf Minuten, was sonst ein halber
@@ -618,10 +613,6 @@ Daten erst nach Server-Bestätigung.
 │   │                      container, frist, abmelden, csp-browser.
 │   │                      Ein Läufer (`proben.sh <name>|alle|--liste`),
 │   │                      ein LIESMICH. Vorher zwanzig Ordner.
-│   ├── pruefkonten/       legt einen Bestand von 300+ Konten mit gemischten
-│   │                      Backup-Staenden an (fester Zufallsstartwert) —
-│   │                      fuer Seitenwechsel, Filter und Sammelauswahl der
-│   │                      NutzerInnen-Liste (P-P3-16)
 │   ├── screenshots/       nimmt alle Seiten in acht Breiten von 360 bis 1920 px
 │   │                      auf, je Seite ein Kontaktbogen; misst dabei
 │   │                      waagerechten Überlauf, Konsolenfehler, Knopfhöhen
@@ -643,15 +634,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      plus berechnete Stile im Browser, 13 Breiten.
 │   │                      Ruhte waehrend P3, in O12 neu geeicht; ab P4 wieder
 │   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
-│   ├── uhr-bilder/        rastert Launcher-Symbole und Bildmarken der Uhr
-│   │                      aus den beiden SVG unter server/assets/images/.
-│   │                      Das Rezept ist aus den vorhandenen Dateien
-│   │                      zurückgerechnet und reproduziert sie bitgleich
-│   │                      (s. LIESMICH.md)
 │   ├── uhr-pruefstand/    baut SDK und Simulator auf einem nackten Linux-
 │   │                      Rechner auf, übersetzt die Uhr-App und startet
 │   │                      sie ohne Fensteroberfläche (s. Abschnitt 5.2b)
-│   └── wegwerfdomains/    holt die Liste der Wegwerf-Mailanbieter, misst den
 │                          Unterschied und schreibt sie erst auf Zuruf
 │                          (Backlog Nr. 230, Web 20.22.0; Runbook, Abschnitt 7).
 │                          Ein Handgriff und kein Automatismus — die Zusage
@@ -2574,7 +2559,7 @@ sie sind damit erledigt und fallen weg.
 128 kB wäre der falsche Platz. Die Teilenummer ist dagegen eindeutig und gegen
 die Gerätedateien der Uhr-Plattform auflösbar (325 Teilenummern auf 173
 Modelle, samt Geräteart). Die Tabelle steht in `server/geraetemodelle.php` und
-ist **erzeugt**: `tools/geraetemodelle/erzeugen.py`, aus denselben Dateien, mit
+ist **erzeugt**: `tools/erzeugen/geraetemodelle.py`, aus denselben Dateien, mit
 denen `tools/uhr-pruefstand/geraeteklassen.py` arbeitet.
 
 **Stand: 325 Teilenummern auf 173 Modelle** (Web 12.9.1) — dieselbe Zahl, die
@@ -3253,7 +3238,7 @@ Selbstauskunft** des Geräts: Die Uhr-App sendet dort fest `"uhr"`, ein
 Radcomputer wäre damit dauerhaft als Uhr gezählt.
 
 Nachtragen ließ sich das seit Web 12.9.1 mit
-`tools/geraetemodelle/nachaufloesen.php` — **über die Kommandozeile**. Auf
+`tools/erzeugen/geraetemodelle-nachaufloesen.php` — **über die Kommandozeile**. Auf
 einem Webspace ohne SSH gibt es diesen Weg nicht; dort holten die betroffenen
 Geräte ihre Angabe erst bei der nächsten Kopplung nach, also womöglich nie.
 Die Zahl, die Backlog Nr. 80 auswerten will, hing damit daran, ob jemand SSH
@@ -5927,9 +5912,9 @@ folgt. Ein Bitmap kann `Ui.s()` nicht folgen (`dc.drawBitmap` zeichnet 1:1),
 vorgerasterte Stufen holen das nach. Alle 99 Geräte liegen damit zwischen 25,0
 und 28,8 %; vor Uhr 1.10.3 reichte die Spanne von 15 % bis 34 %, weil die
 Zuordnung an der Symbolgröße hing. Begründung der Stufenzahl:
-`tools/uhr-bilder/LIESMICH.md`.
+`tools/erzeugen/ (uhr-bilder)LIESMICH.md`.
 
-Bilder erzeugen: `tools/uhr-bilder/erzeugen.sh`. Die passenden Jungle-Zeilen:
+Bilder erzeugen: `tools/erzeugen/uhr-bilder.sh`. Die passenden Jungle-Zeilen:
 `tools/uhr-pruefstand/geraeteklassen.py --bloecke`.
 
 ### 5.1c Was die Uhr mit einer Absage anfängt (ab Uhr 3.1.0, Backlog Nr. 159)
@@ -6631,7 +6616,7 @@ geht von der vollen Domain nach oben (`a.b.example.com` → `b.example.com` →
 denn eine Liste, die `com` sperrte, sperrte das halbe Netz. Fehlt die Datei,
 trifft nichts: Eine Installation, die alle Registrierungen abweist, *weil* eine
 Datei fehlt, wäre das Gegenteil des Schalters. Pflege:
-`tools/wegwerfdomains/aktualisieren.py` (Runbook, Abschnitt 7; Backlog
+`tools/erzeugen/wegwerfdomains.py` (Runbook, Abschnitt 7; Backlog
 Nr. 230), Herkunft in `docs/Lizenzen.md` 7b.
 
 **Zwei Fristen, zwei Zustände, ein Job.** `konto_verfall` löscht
@@ -9672,8 +9657,8 @@ Hand sind gleichwertig. Was sie weiß, ist ihre eigene Fassung
 **Vor jeder Auslieferung: die Wegwerfliste nachziehen** (seit Web 20.22.0,
 Backlog Nr. 230).
 
-    python3 tools/wegwerfdomains/aktualisieren.py              # holen, messen, Diff zeigen
-    python3 tools/wegwerfdomains/aktualisieren.py --schreiben  # und schreiben
+    python3 tools/erzeugen/wegwerfdomains.py              # holen, messen, Diff zeigen
+    python3 tools/erzeugen/wegwerfdomains.py --schreiben  # und schreiben
 
 **Ein Handgriff, kein Automatismus** — die Zusage „keine fremde Quelle zur
 Laufzeit" (R36) kennt keine Ausnahme, auch nicht für eine Textdatei. Der Preis
@@ -10092,7 +10077,7 @@ des Geräts bleiben und keine Eingabe.
 006-B4261-00"): Die Modelltabelle kennt diese Teilenummer nicht — entweder ist
 das Gerät neuer als die Tabelle, oder sie wurde nie gefüllt. Zwei Schritte:
 
-1. `python3 tools/geraetemodelle/erzeugen.py <Gerätedateien>` neu laufen lassen
+1. `python3 tools/erzeugen/geraetemodelle.py <Gerätedateien>` neu laufen lassen
    und ausrollen. Die Gerätedateien liefert nur der SDK-Manager; ihre
    Bereitstellungsadresse (`CIQ_GERAETE_URL`) steht nicht im Repositorium und
    **muss erfragt werden**.
@@ -10104,7 +10089,7 @@ das Gerät neuer als die Tabelle, oder sie wurde nie gefüllt. Zwei Schritte:
    nachgezogen, M unbekannt").
 
    Wer zusehen will, kann weiterhin
-   `php tools/geraetemodelle/nachaufloesen.php` fahren — es zeigt Zeile für
+   `php tools/erzeugen/geraetemodelle-nachaufloesen.php` fahren — es zeigt Zeile für
    Zeile, was es vorhat, und trägt mit `--schreiben` ein. **Das war bis
    Web 20.14.0 der einzige Weg, und er braucht Shell-Zugriff**; auf einem
    Webspace ohne SSH holten die Geräte ihre Angabe erst bei der nächsten

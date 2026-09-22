@@ -568,7 +568,7 @@ pruefe(($h['geraet_art'] ?? '') === 'handy' && ($h['geraet_modell'] ?? '') === $
 /* 6. DIE ZUSICHERUNG, AN DER DER GANZE PUNKT HAENGT: Die Momentaufnahme wird
  *    NIE nachgezogen (E-R64-05). Hier wird das Geraet zwischen zwei Paketen
  *    umgeschrieben — so, wie eine spaetere Nachaufloesung es taete
- *    (tools/geraetemodelle/nachaufloesen.php). Der Einsatz muss weiter das
+ *    (tools/erzeugen/geraetemodelle-nachaufloesen.php). Der Einsatz muss weiter das
  *    tragen, was beim Anlegen galt; ein neuer Einsatz das Neue. Ginge die
  *    Momentaufnahme mit, waere sie keine — dann koennte man auch gleich ueber
  *    `device_id` lesen, und genau das trug nicht (R47). */

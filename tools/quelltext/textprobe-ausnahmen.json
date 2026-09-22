@@ -557,13 +557,6 @@
       "begruendung": "Die Zeile des Aenderungsverlaufs fasst Abschnitt 7a zusammen und nennt dieselbe Herkunft. Eigene Regel, weil der Verlauf am Dateiende und damit ausserhalb des Abschnitts steht."
     },
     {
-      "id": "technik-werkzeugbaum-geraetemodelle",
-      "datei": "docs/Technik.md",
-      "zeile": "Modellname\\) aus den Connect-IQ-Gerätedateien",
-      "klasse": "G",
-      "begruendung": "Der Werkzeugbaum beschreibt, WORAUS `tools/geraetemodelle/` seine Tabelle erzeugt. Die Connect-IQ-Geraetedateien sind der Gegenstand des Werkzeugs; ohne ihren Namen sagt die Zeile nicht, was das Werkzeug braucht (und genau danach sucht, wer die Zuarbeit besorgen soll)."
-    },
-    {
       "id": "technik-runbook-selbstauskunft",
       "datei": "docs/Technik.md",
       "zeile": "Garmin-App sendet dort fest",
@@ -574,7 +567,7 @@
       "id": "geraetemodelle-erzeugt",
       "datei": "server/geraetemodelle.php",
       "klasse": "G",
-      "begruendung": "Die erzeugte Modelltabelle (tools/geraetemodelle/). Sie enthaelt oeffentliche Produktnamen von Garmin — „Forerunner\", „Venu\", „fēnix\", „Edge\" —, und die sind hier die Sache selbst und keine Formulierung, die sich ersetzen liesse: Der Server loest damit die Teilenummer auf, die eine Uhr beim Koppeln sendet (JSON-Vertrag 1a, R42). DATEIWEIT und nicht je Zeile: Der Bestand wechselt mit jedem Lauf des Erzeugers; ein Muster auf einzelne Namen waere danach entweder unvollstaendig oder ungenutzt, und beides ist ein Fehlschlag. Zur gemeldeten Zahl: Sie ist KLEINER als der Bestand — Garmin schreibt „fēnix\" mit Makron, das Sperrmuster lautet \\bfenix und trifft diese Zeilen nicht. Wer die Zahl liest, weiss das besser."
+      "begruendung": "Die erzeugte Modelltabelle (tools/erzeugen/ (geraetemodelle)). Sie enthaelt oeffentliche Produktnamen von Garmin — „Forerunner\", „Venu\", „fēnix\", „Edge\" —, und die sind hier die Sache selbst und keine Formulierung, die sich ersetzen liesse: Der Server loest damit die Teilenummer auf, die eine Uhr beim Koppeln sendet (JSON-Vertrag 1a, R42). DATEIWEIT und nicht je Zeile: Der Bestand wechselt mit jedem Lauf des Erzeugers; ein Muster auf einzelne Namen waere danach entweder unvollstaendig oder ungenutzt, und beides ist ein Fehlschlag. Zur gemeldeten Zahl: Sie ist KLEINER als der Bestand — Garmin schreibt „fēnix\" mit Makron, das Sperrmuster lautet \\bfenix und trifft diese Zeilen nicht. Wer die Zahl liest, weiss das besser."
     },
     {
       "id": "herkunft-wertevorrat-garmin",

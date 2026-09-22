@@ -12,11 +12,11 @@ Das Werkzeug liest und schreibt nichts am Stylesheet. Es gibt Markdown auf die
 Standardausgabe; wer Design.md fortschreibt, ersetzt damit die entsprechenden
 Abschnitte.
 
-    python3 tools/design/tabellen.py token       # Abschnitt 4
-    python3 tools/design/tabellen.py schwellen   # Abschnitt 7
-    python3 tools/design/tabellen.py symbole     # Abschnitt 8
-    python3 tools/design/tabellen.py bausteine   # Abschnitt 9
-    python3 tools/design/tabellen.py alle
+    python3 tools/erzeugen/design.py token       # Abschnitt 4
+    python3 tools/erzeugen/design.py schwellen   # Abschnitt 7
+    python3 tools/erzeugen/design.py symbole     # Abschnitt 8
+    python3 tools/erzeugen/design.py bausteine   # Abschnitt 9
+    python3 tools/erzeugen/design.py alle
 
 GRENZE: Es erzeugt Tabellen, keine Prosa. Was ein Token BEDEUTET, steht als
 Kommentar im Stylesheet und wird uebernommen, wenn einer da ist; wo keiner
@@ -128,7 +128,7 @@ def tabelle_token() -> str:
         if e['gruppe'] not in reihenfolge:
             reihenfolge.append(e['gruppe'])
 
-    zeilen = ['<!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->',
+    zeilen = ['<!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->',
               '',
               f'{len(eintraege)} Token in {len(reihenfolge)} Gruppen, alle aus `:root` in '
               '`server/assets/style.css`. Die Spalte **benutzt** zählt die '
@@ -181,7 +181,7 @@ def tabelle_schwellen() -> str:
         px = int(re.search(r'(\d+)px', s).group(1))
         return (0 if 'min-width' in s else 1, -px)
 
-    zeilen = ['<!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->',
+    zeilen = ['<!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->',
               '', '| Abfrage | Regelblöcke |', '|---|--:|']
     for s in sorted(treffer, key=sortwert):
         zeilen.append(f'| `@media {s}` | {treffer[s]} |')
@@ -211,7 +211,7 @@ def tabelle_symbole() -> str:
         for p in list((WURZEL / 'server').rglob('*.php')) + list((WURZEL / 'server').rglob('*.js'))
         if 'vendor' not in str(p))
 
-    zeilen = ['<!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->',
+    zeilen = ['<!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->',
               '', '| Datei | Herkunft (Tabler-Name) | Nennungen im Code |', '|---|---|--:|']
     dateien = sorted(SYMBOLE.glob('*.svg'))
     ohne = []
@@ -300,7 +300,7 @@ def bausteine_lesen() -> list[dict]:
 
 def tabelle_bausteine() -> str:
     eintraege = bausteine_lesen()
-    zeilen = ['<!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->',
+    zeilen = ['<!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->',
               '', '| Baustein | Klasse | Regel im Stylesheet | `ui.php` |', '|---|---|---|--:|']
     for e in eintraege:
         if e['klasse'] is None:

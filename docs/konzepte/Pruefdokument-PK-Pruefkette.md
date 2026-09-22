@@ -671,6 +671,33 @@ Schlusszeile als „1 ausgelassen" gezählt — kein stilles Überspringen
 
 ---
 
+## 5e. Messprotokoll PK-04/3 — `tools/erzeugen/` (22.09.2026)
+
+Sechs Erzeuger flach in einen Ordner, ein Läufer. Sie **prüfen nichts** und
+standen bisher zwischen den Prüfmitteln, als wären sie welche.
+
+| | vorher | nachher |
+|---|---|---|
+| Werkzeugordner | 22 | **17** (Ziel 15) |
+| LIESMICH-Zeilen | 3 820 in 21 | **3 310 in 17** |
+| `design alle` | schreibt `docs/Design.md` | **unverändert** (`git diff` leer) |
+
+**Kein `alle` im Läufer**, und der Grund steht dort: Diese Befehle schreiben
+ins Repositorium. Gesammelt gefahren ergäben sie einen Commit mit sechs
+unzusammenhängenden Änderungen.
+
+**Die Textprobe hat den Umzug selbst bemerkt.** Der entfernte Baumeintrag in
+`docs/Technik.md` machte die Ausnahme `technik-werkzeugbaum-geraetemodelle`
+ungenutzt — der Lauf wurde rot und nannte sie beim Namen. Ausgetragen,
+Regeln 100 → 99. **Das ist die Probe aus 1c, die ihre erste echte Aufgabe
+erledigt hat.**
+
+**Noch 17 statt 15 Ordner:** Es fehlen die beiden Zusammenlegungen aus
+Teilstück 4 — `klickprobe` → `bedienprobe` und `netzprobe`/`eingabe-probe`
+→ `uhr-pruefstand`.
+
+---
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in

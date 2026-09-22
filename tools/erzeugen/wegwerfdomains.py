@@ -13,9 +13,9 @@ Registrierung sieht aus wie eine richtige, und die Seite antwortet ohnehin auf
 jede gleich (E-P5b-13). Deshalb steht der Lauf im Auslieferungs-Runbook
 (`docs/Technik.md`, Abschnitt 7) und nicht im guten Willen. Backlog Nr. 230.
 
-    python3 tools/wegwerfdomains/aktualisieren.py            # holen und pruefen
-    python3 tools/wegwerfdomains/aktualisieren.py --schreiben  # auch schreiben
-    python3 tools/wegwerfdomains/aktualisieren.py --pruefen   # nur messen, nichts holen
+    python3 tools/erzeugen/wegwerfdomains.py            # holen und pruefen
+    python3 tools/erzeugen/wegwerfdomains.py --schreiben  # auch schreiben
+    python3 tools/erzeugen/wegwerfdomains.py --pruefen   # nur messen, nichts holen
 
 ZWEI ZAHLEN, NICHT EINE. Der Unterschied zur alten Datei ist die harmlose
 Zahl. Die gefaehrliche ist die zweite: **Landet eine Klinik- oder

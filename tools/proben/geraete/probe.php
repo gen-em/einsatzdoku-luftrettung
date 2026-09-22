@@ -33,7 +33,7 @@ declare(strict_types=1);
  *   eine Datenbank; der Weg dafür steht in `docs/konzepte/` beim jeweiligen
  *   Prüfdokument bzw. im Runbook (`docs/Technik.md`, Abschnitt 7).
  * - Ob die Modelltabelle richtig ist. Sie ist erzeugt
- *   (`tools/geraetemodelle/`); diese Probe setzt eine EIGENE, kleine Tabelle,
+ *   (`tools/erzeugen/ (geraetemodelle)`); diese Probe setzt eine EIGENE, kleine Tabelle,
  *   damit sie nicht vom ausgelieferten Bestand abhängt.
  * - Ob eine echte Uhr sendet, was der Vertrag sagt. Dafür gibt es nur die Uhr.
  */

@@ -385,7 +385,7 @@ Dieselbe Regel gilt für die Kommentare in `.github/workflows/`: ein Satz an
 jeder Stelle, die eine Falle beschreibt, die sonst jemand wieder einbaut.
 
 *Gemessen am 21.09.2026: 47 Anleitungen mit zusammen 7 206 Zeilen, dazu ein
-Werkzeug ohne Anleitung (`tools/wegwerfdomains/`). Die Form wird mit PK-04
+Werkzeug ohne Anleitung (`tools/erzeugen/ (wegwerfdomains)`). Die Form wird mit PK-04
 hergestellt.*
 
 ### 6.3 Selbstprobe nur, wo etwas aufgehalten wird

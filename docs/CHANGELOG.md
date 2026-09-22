@@ -14,6 +14,33 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Die Erzeuger bekommen einen eigenen Ordner] — 2026-09-22
+
+### Geändert
+
+- **`tools/erzeugen/` löst sechs Werkzeugordner ab** (PK-04/3, E-PK-24):
+  `design`, `logos`, `uhr-bilder`, `geraetemodelle` (samt
+  `nachaufloesen`), `wegwerfdomains`, `pruefkonten`. Sie **prüfen nichts**,
+  sie stellen Dateien her — und standen bisher zwischen den Prüfmitteln, als
+  wären sie welche. Werkzeugordner 22 → **17**, LIESMICH-Zeilen 3 820 →
+  **3 310**.
+- **Der Läufer hat bewusst kein `alle`.** Diese Befehle schreiben in das
+  Repositorium: Tabellen in `docs/Design.md`, Favicons, Gerätebilder, eine
+  Domänenliste, einen Kontenbestand. Gesammelt gefahren ergäben sie einen
+  Commit mit sechs unzusammenhängenden Änderungen, und niemand wüsste
+  hinterher, welche davon gewollt war. Jeder wird einzeln und auf Zuruf
+  gefahren — der Grund steht im Läufer, nicht nur hier.
+- **`wegwerfdomains` bekommt seine Anleitung.** Es war der einzige Ordner
+  ohne `LIESMICH.md`.
+- **Eine Ausnahme der Textprobe ist ausgetragen**
+  (`technik-werkzeugbaum-geraetemodelle`): Sie deckte einen Baumeintrag in
+  `docs/Technik.md`, den dieses Paket entfernt hat. Die Probe hat das selbst
+  gemeldet („1 ungenutzt") und den Lauf dafür rot gemacht — so ist sie
+  gebaut.
+
+Werkzeuge und Dokumentation, keine Datei unter `server/` — **keine
+Versionsstufe**.
+
 ## [Werkzeug: Zwanzig Proben unter einem Läufer] — 2026-09-22
 
 ### Geändert

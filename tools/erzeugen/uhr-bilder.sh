@@ -5,7 +5,7 @@
 # SVG in server/assets/images/. Bis hierher lagen sie ohne Rezept im
 # Repositorium: Wer eine Groesse ergaenzen wollte, musste raten, mit welcher
 # Breite und welcher Ausrichtung die vorhandenen entstanden waren. Dasselbe
-# Problem beschreibt tools/logos/LIESMICH.md fuer das Favicon — „das PNG ist
+# Problem beschreibt tools/erzeugen/ (logos)LIESMICH.md fuer das Favicon — „das PNG ist
 # eine Ableitung und soll keine sein, die jemand in einem Bildprogramm
 # nachbaut".
 #

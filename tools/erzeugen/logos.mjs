@@ -17,7 +17,7 @@
  * (Konzept P3, 10.5).
  *
  * AUFRUF
- *   node tools/logos/erzeugen.mjs
+ *   node tools/erzeugen/logos.mjs
  *
  * Erzeugt aus jeder Quelldatei ein PNG mit durchsichtigem Grund, in das die
  * Zeichnung vollstaendig hineinpasst (object-fit: contain) — dieselbe Bauform

@@ -13,7 +13,7 @@ declare(strict_types=1);
  * wieder von vorn, 200 Fehlversuche -> Antwortzeit >= 1 s, gleiche Antwortzeit
  * fuer Namen mit und ohne Konto, Sammelmail genau einmal je Stunde.
  *
- * `tools/pruefkonten/` KANN DAS NICHT — es legt Konten an und misst die
+ * `tools/erzeugen/ (pruefkonten)` KANN DAS NICHT — es legt Konten an und misst die
  * NutzerInnen-Liste. Deshalb diese Probe.
  *
  * SIE GREIFT DIE BIBLIOTHEK UNMITTELBAR AN, nicht ueber HTTP. Der Grund ist

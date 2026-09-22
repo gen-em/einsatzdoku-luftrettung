@@ -1,7 +1,7 @@
 {
   "beschreibung": "Was am Tag der Einfuehrung schon dastand (E-PK-08). Je (Datei, Muster) eine Zahl; rot ist nur, was DARUEBER liegt — und was darunter liegt, ohne ausgetragen zu sein. Erzeugt mit `--altbestand-schreiben`, nie von Hand.",
   "stand": "PK-04/1c",
-  "summe": 497,
+  "summe": 496,
   "stellen": {
     "README.md\thausform-weiblich": 1,
     "android/handy/src/main/res/values/strings.xml\thausform-weiblich": 1,
@@ -22,7 +22,7 @@
     "docs/Pruefablauf.md\thausform-weiblich": 7,
     "docs/Sandbox-Setup.md\tnetz-fremd": 1,
     "docs/Technik.md\thausform-maennlich": 26,
-    "docs/Technik.md\thausform-weiblich": 60,
+    "docs/Technik.md\thausform-weiblich": 59,
     "docs/Technik.md\tmail-fremd": 1,
     "docs/Technik.md\tname-real": 1,
     "docs/Technik.md\tnetz-fremd": 1,

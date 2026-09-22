@@ -32,8 +32,8 @@ declare(strict_types=1);
  *
  * AUFRUF
  *
- *     php tools/geraetemodelle/nachaufloesen.php            (nur zeigen)
- *     php tools/geraetemodelle/nachaufloesen.php --schreiben
+ *     php tools/erzeugen/geraetemodelle-nachaufloesen.php            (nur zeigen)
+ *     php tools/erzeugen/geraetemodelle-nachaufloesen.php --schreiben
  *
  * Optional als weiteres Argument der Pfad zu `server/`.
  *
@@ -80,7 +80,7 @@ echo 'Geräte mit Rohangabe: ' . gm_zeilen_mit_rohangabe($pdo) . "\n\n";
 
 if ($bekannt === 0) {
     echo "Die Modelltabelle ist leer — es gibt nichts aufzulösen.\n";
-    echo "Zuerst: python3 tools/geraetemodelle/erzeugen.py <Gerätedateien>\n";
+    echo "Zuerst: python3 tools/erzeugen/geraetemodelle.py <Gerätedateien>\n";
     exit(0);
 }
 

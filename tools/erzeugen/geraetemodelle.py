@@ -17,9 +17,9 @@ gebraucht werden:
 
 Aufruf:
 
-    python3 tools/geraetemodelle/erzeugen.py ~/.Garmin/ConnectIQ/Devices
-    python3 tools/geraetemodelle/erzeugen.py <verz> --ziel server/geraetemodelle.php
-    python3 tools/geraetemodelle/erzeugen.py --leer      # gültige, leere Tabelle
+    python3 tools/erzeugen/geraetemodelle.py ~/.Garmin/ConnectIQ/Devices
+    python3 tools/erzeugen/geraetemodelle.py <verz> --ziel server/geraetemodelle.php
+    python3 tools/erzeugen/geraetemodelle.py --leer      # gültige, leere Tabelle
 
 Rückgabewert: 0 = Datei geschrieben · 1 = keine lesbaren Gerätedateien.
 
@@ -35,7 +35,7 @@ Wer am Arbeitsplatz ein eingerichtetes SDK hat, stellt `~/.Garmin/ConnectIQ`
 
     export CIQ_GERAETE_URL=https://beispiel.invalid/ciq
     tools/uhr-pruefstand/pruefstand.sh aufbau     # holt Devices/ und Fonts/
-    python3 tools/geraetemodelle/erzeugen.py ~/.Garmin/ConnectIQ/Devices
+    python3 tools/erzeugen/geraetemodelle.py ~/.Garmin/ConnectIQ/Devices
 
 ## Was NICHT in die erzeugte Datei geht
 
@@ -178,7 +178,7 @@ declare(strict_types=1);
 /**
  * Teilenummer -> [Modellname, Geraeteart]. ERZEUGT — NICHT VON HAND AENDERN.
  *
- *     python3 tools/geraetemodelle/erzeugen.py ~/.Garmin/ConnectIQ/Devices
+ *     python3 tools/erzeugen/geraetemodelle.py ~/.Garmin/ConnectIQ/Devices
  *
  * Wozu: Die Garmin-Uhr kennt ihren Modellnamen nicht und sendet beim Koppeln
  * ihre Teilenummer (JSON-Vertrag 1a, R42). `geraete_lib.php` loest sie hier
