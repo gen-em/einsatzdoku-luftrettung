@@ -152,22 +152,23 @@ const MONAT = <?= json_js($monat) ?>;
 // Karte bleibt ausgeblendet (CSS [hidden]), bis feststeht, dass mindestens
 // ein Pin gezeichnet wird — preferCanvas fuer performantes Rendering bei
 // mehreren hundert Einsaetzen.
-const map = L.map('rangemap', { preferCanvas: true });
-/* AUSGANGSAUSSCHNITT SETZEN, BEVOR EIN PIN DAZUKOMMT.
+/* Die Karte entsteht ueber EdKarte.anlegen() (Schritt 15 AP8).
  *
- * Ohne ihn gilt die Karte als "noch nicht bereit": Leaflet nimmt eine Ebene
- * dann zwar entgegen, stellt sie aber zurueck (whenReady) und rechnet ihre
- * Bildschirmposition NICHT aus. Ein spaeteres setStyle() auf so einen Pin
- * scheitert mit "this._point is undefined" — genau das stand beim Aufbau der
- * Zeitraumansicht in der Browser-Konsole, weil die Hervorhebung nach jedem
- * Neuzeichnen der Tabelle ueber alle Pins laeuft, waehrend fitBounds() erst
- * danach kommt.
+ * DER AUSGANGSAUSSCHNITT STEHT, BEVOR EIN PIN DAZUKOMMT — EdKarte setzt ihn
+ * als erstes, vor den Ebenen. Ohne ihn gilt die Karte als "noch nicht
+ * bereit": Leaflet nimmt eine Ebene dann zwar entgegen, stellt sie aber
+ * zurueck (whenReady) und rechnet ihre Bildschirmposition NICHT aus. Ein
+ * spaeteres setStyle() auf so einen Pin scheitert mit "this._point is
+ * undefined" — genau das stand beim Aufbau der Zeitraumansicht in der
+ * Browser-Konsole, weil die Hervorhebung nach jedem Neuzeichnen der Tabelle
+ * ueber alle Pins laeuft, waehrend fitBounds() erst danach kommt.
+ * Der Ausschnitt ist ein Platzhalter; fitBounds() ueberschreibt ihn, sobald
+ * die Pins stehen.
  *
- * index.php loest das seit jeher mit derselben Zeile. Der Ausschnitt ist ein
- * Platzhalter; fitBounds() ueberschreibt ihn, sobald die Pins stehen. */
-map.setView([48.5, 10.5], 7);   // Fallback, bis Daten da sind
-attachBaseLayers(map);
-attachFullscreenControl(map);
+ * `preferCanvas` geht als `leaflet` durch: mehrere hundert Pins. Es ist die
+ * einzige Leaflet-Option im ganzen Bestand, und sie gilt nur hier. */
+const map = EdKarte.anlegen('rangemap',
+  { mitte: [48.5, 10.5], zoom: 7, leaflet: { preferCanvas: true } });
 
 let missions = [];
 let bases    = [];        // Standorte der Diensttage des Zeitraums (E-P3-40)

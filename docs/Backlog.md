@@ -3462,6 +3462,38 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     22.09.2026 „260 nehmen" gesagt; 260 war zu diesem Zeitpunkt bereits
     belegt, deshalb die nächste freie.
 
+268. **`einstellungen.php` — ein `await fetch` ohne eigenes `catch` steht vor
+    der Erfolgsmeldung.** Gefunden bei der AP8-Vermessung am 22.09.2026
+    (Schritt 15), in der Funktion, die den Wiederherstellungsschlüssel
+    abschließt (bei Aufnahme Zeile 4158). Der Aufruf liegt im großen `try`
+    des Knopfes; bricht das Netz genau dort, springt der Ablauf in den
+    äußeren `catch`, und die Person liest eine Fehlermeldung zu einem
+    Vorgang, der auf dem Server bereits durchgelaufen sein kann.
+    **Nicht in Schritt 15 behoben** (E-ZE-10: das Paket ändert kein
+    Verhalten). Beim Anfassen mitzudenken: Der Satz muss sagen, dass der
+    Zustand unklar ist, nicht dass es fehlgeschlagen ist.
+
+269. **`assets/schluesselblatt.js` — bei Netzausfall eine stille Sackgasse.**
+    Gefunden bei derselben Vermessung. Der Prüfknopf setzt `disabled = true`
+    **vor** dem Senden, und die Wiederfreigabe liegt im `.then`. Wirft das
+    `fetch`, fängt niemand: Der Knopf bleibt tot, das Fehlerfeld leer, der
+    Dialog offen. Die Person kann weder weiter noch erkennen, warum.
+    Zwei Aufrufer sind betroffen (Prüfen und Antworten). **Nicht in
+    Schritt 15 behoben.** Beim Anfassen mitzudenken: `EdApi.postForm()` aus
+    AP8c liefert im Netzfehler ein `{ ok: false, status: 0 }` statt zu
+    werfen — damit ist die Stelle danach mit drei Zeilen zu heilen.
+
+270. **`assets/import_ui.js` — eine 500 mit wohlgeformtem JSON gilt als
+    Erfolg.** Gefunden bei derselben Vermessung (bei Aufnahme Zeile 258).
+    Der Bestandsabgleich vor dem Import prüft nur `d.error`, nicht `res.ok`.
+    Antwortet der Server mit Status 500 und einem JSON-Rumpf ohne
+    `error`-Schlüssel, läuft der Dublettenabgleich **wortlos** gegen einen
+    leeren Bestand weiter — und meldet keine einzige Dublette, obwohl der
+    Bestand voll ist. Der Fehler ist still: Die Vorschau sieht richtig aus.
+    **Nicht in Schritt 15 behoben.** Von den 15 JSON-Sendestellen prüfen
+    **acht** `res.ok` nicht; diese hier ist die mit der schlimmsten Folge,
+    weil ihr Ergebnis eine Entscheidung der Person trägt.
+
 
 ## Erledigt
 

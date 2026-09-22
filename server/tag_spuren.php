@@ -268,10 +268,9 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
 <script<?= kopf_nonce_attr() ?>>
 const SPUREN = <?= json_js($spuren, JSON_UNESCAPED_UNICODE) ?>;
 
-const map = L.map('map');
-map.setView([47.7, 10.3], 9);
-attachBaseLayers(map);
-attachFullscreenControl(map);
+/* Die Karte entsteht ueber EdKarte.anlegen() (Schritt 15 AP8); Ausschnitt
+   wie in der Einsatzansicht. */
+const map = EdKarte.anlegen('map', { mitte: [47.7, 10.3], zoom: 9 });
 
 const linien = [];
 const bounds = [];

@@ -6983,6 +6983,29 @@ declare(strict_types=1);
  *   Einzelvergleiche waren gruen, weil sie den Inhalt der Datei pruefen,
  *   nicht den Satz darueber.
  *
+ * 20.33 — EINE KARTE ENTSTEHT AN EINER STELLE (Schritt 15 AP8a).
+ *
+ *   `EdKarte.anlegen(el, o)` in `assets/map_layers.js`. Vier Seiten bauten
+ *   ihre Karte selbst auf, mit denselben vier Zeilen in DREI verschiedenen
+ *   Reihenfolgen: L.map, setView, attachBaseLayers, attachFullscreenControl.
+ *   Gemessen: 4 von 4 riefen attachBaseLayers(), 4 von 4
+ *   attachFullscreenControl(), 1 von 4 attachGroessenControl() — und KEINE
+ *   setzte auch nur eine der ueblichen Leaflet-Optionen. Der gemeinsame Teil
+ *   war also fast alles, und die Unterschiede sind drei Parameter:
+ *   `mitte`/`zoom` (zwei Ausschnitte bei vier Seiten, OHNE Vorgabewert —
+ *   ein Vorgabewert zoege sie auf einen), `groesse` (der dritte Kartenknopf
+ *   gehoert nur der Tagesuebersicht, Backlog Nr. 45) und `leaflet`
+ *   (`preferCanvas` gilt nur der Zeitraumansicht).
+ *
+ *   EINE SICHTBARE FOLGE, benannt und entschieden: Auf der Tagesuebersicht
+ *   kommt `setView()` jetzt ZUERST statt zuletzt. Drei der vier Seiten
+ *   machten es schon so, und der Grund steht ausgeschrieben in ihren
+ *   Kommentaren — ohne festen Ausschnitt gilt die Karte Leaflet als nicht
+ *   bereit und rechnet Pin-Positionen nicht aus. Nachgemessen: 496 Seiten
+ *   im Formvergleich, 0 Befunde ausserhalb des CSP-Verstossprotokolls;
+ *   Klickprobe 48/48; die vier Karten im Browser mit Kacheln, Umschalter
+ *   und 0 Konsolenfehlern.
+ *
  *   ZWOELF STELLEN BLEIBEN NAMENTLICH STEHEN, jede mit Grund im Register:
  *   vier Formular- und Vergleichswerte in `betrieb_server.php` (der PUNKT
  *   als Dezimaltrenner ist dort Bedingung eines Vergleichs, nicht
@@ -6991,4 +7014,4 @@ declare(strict_types=1);
  *   zwei Zeitstempel ohne Zonenumrechnung und eine `sprintf`-Groesse mit
  *   Punkt statt Komma.
  */
-const WEB_VERSION = '20.32.1';
+const WEB_VERSION = '20.33.0';

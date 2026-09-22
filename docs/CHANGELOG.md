@@ -14,6 +14,90 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.33.0] — 2026-09-22
+
+**Eine Karte entsteht an einer Stelle.** Schritt 15 AP8a (Zentralisierung, R83).
+
+### Hinzugefügt
+
+**`EdKarte.anlegen(el, o)`** in `server/assets/map_layers.js` — die eine Stelle,
+an der eine Leaflet-Karte entsteht. Dort steht jetzt, was auf vier Seiten gleich
+war: `L.map`, `setView`, `attachBaseLayers`, `attachFullscreenControl` und, auf
+Wunsch, `attachGroessenControl`.
+
+### Geändert
+
+`einsatz.php`, `index.php`, `tag_spuren.php` und `zeitraum.php` bauen ihre Karte
+nicht mehr selbst auf. **Zählzeile Z35: 4 → 0.**
+
+### Was der Befund war
+
+Vier Seiten, dieselben vier Zeilen, **drei verschiedene Reihenfolgen**. Gemessen
+am 22.09.2026: 4 von 4 riefen `attachBaseLayers()`, 4 von 4
+`attachFullscreenControl()`, 1 von 4 `attachGroessenControl()` — und **keine**
+setzte auch nur eine der üblichen Leaflet-Optionen: kein `zoomControl`, kein
+`attributionControl`, kein `scrollWheelZoom`, keine Zoomgrenzen an der Karte.
+Alle vier leben von den Vorgaben. Der gemeinsame Teil war also fast alles.
+
+Wirklich unterschiedlich waren drei Sachen, und alle drei sind Parameter
+geworden:
+
+| Parameter | Warum | Vorgabe |
+|---|---|---|
+| `mitte` / `zoom` | Zwei Ausschnitte bei vier Seiten: `[47.7, 10.3]`/9 gegen `[48.5, 10.5]`/7 | **keine** — siehe unten |
+| `groesse` | Der dritte Kartenknopf gehört nur der Tagesübersicht (Backlog Nr. 45) | `false` |
+| `leaflet` | `{ preferCanvas: true }` gilt nur der Zeitraumansicht (mehrere hundert Pins) | keine Optionen |
+
+**`mitte` und `zoom` haben ausdrücklich keinen Vorgabewert.** Ein Vorgabewert
+zöge die beiden Ausschnitte auf einen, und Zoom 7 gegen Zoom 9 ist der Faktor 4
+in der Fläche — eine Karte, die still am falschen Ort steht, fällt niemandem
+auf. Wer sie weglässt, bekommt jetzt einen Wurf.
+
+### Eine sichtbare Änderung, benannt und nachgemessen
+
+**Auf der Tagesübersicht kommt `setView()` jetzt zuerst statt zuletzt.** Drei
+der vier Seiten setzten den Ausschnitt schon vor den Ebenen; `index.php` setzte
+ihn danach. Das Argument für „zuerst" stand die ganze Zeit ausgeschrieben in den
+Kommentaren von `einsatz.php` und `zeitraum.php`: Ohne festen Ausschnitt gilt
+die Karte Leaflet als nicht bereit — es nimmt eine Ebene zwar entgegen, rechnet
+ihre Bildschirmposition aber nicht aus, und ein späteres `setStyle()` auf so
+einen Pin scheitert mit „this._point is undefined". Genau das stand beim Aufbau
+der Zeitraumansicht in der Konsole. Die Mehrheit und das Argument zeigen in
+dieselbe Richtung; die Tagesübersicht zieht mit.
+
+Nachgemessen: **496 Seiten im Formvergleich, 0 Befunde außerhalb des
+CSP-Verstoßprotokolls** (dazu unten), **Klickprobe 48 von 48**, und die vier
+Karten im Browser einzeln angesehen — Behälter da, Kacheln geladen,
+Ebenenumschalter da, Vollbildknopf da, Größenknopf **nur** auf der
+Tagesübersicht, **0 Konsolenfehler**.
+
+### Was bewusst stehen bleibt
+
+Der ausdrückliche `map.invalidateSize()` der Zeitraumansicht vor `fitBounds()`.
+Ihr Kartenbehälter trägt `hidden`, die Karte entsteht also in einer Fläche der
+Größe 0, und der `ResizeObserver` aus `attachBaseLayers()` kommt asynchron. Wer
+den Ruf für „jetzt überflüssig" hält, weil die Zentrale ja beobachtet, macht die
+Kacheln auf der Zeitraumansicht wieder grau.
+
+`assets/ortswahl.js` bleibt draußen: ein Modul, keine Seite.
+
+### Zum Prüfprotokoll: die 41 Textbefunde waren keine
+
+Der Formvergleich meldete 41 Abweichungen, alle acht Breiten einer einzigen
+Seite — `betrieb_server.php`, das CSP-Verstoßprotokoll. Nachgesehen in der
+Datenbank: **drei Zeilen, alle vom 21.09.2026 erstellt**, keine neue. Die Seite
+sortiert nach dem letzten Auftreten, und im Nachlauf ist der
+`photon.komoot.io`-Verstoß erneut aufgetreten und nach oben gerutscht. Dieselben
+drei Verstoßarten vorher wie nachher, nur in anderer Reihenfolge.
+
+Der **Bildvergleich** meldete daneben 295 abweichende Bilder. Auch die gehören
+nicht hierher: Zwischen Grundlinie und Nachlauf ist die Klickprobe gelaufen und
+hat den Demo-Bestand verändert (Rettungsmittel, Besatzung, Zielklinik, ein
+gelöschter Standort, eine aufgehobene Sperre). Öffentliche Seiten ohne
+Anmeldung sind bitgleich geblieben — geprüft an drei Seiten in zwei Breiten.
+Genau dafür gibt es den Formvergleich: Werte verschwinden, Schreibweisen
+bleiben.
+
 ## [Web 20.32.1] — 2026-09-22
 
 **„263 KB MB" — ein Literal, das den Umbau überlebt hat.** Nachtrag zu

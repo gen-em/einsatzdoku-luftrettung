@@ -688,15 +688,20 @@ let currentDay = null;      // Datum des Diensttags, fuer die Altersberechnung
    Koordinate hinterlegt ist — dann entsteht für diese Regel keine Linie (A13i). */
 let currentBase = null;
 
-const map = L.map('map');
-attachBaseLayers(map);
-attachFullscreenControl(map);
-/* Die dritte Kartengroesse gibt es NUR hier (Backlog Nr. 45): Diese Seite ist
-   die einzige mit einer Liste unter der Karte, die vom Hoeherwerden etwas
-   hat. Einsatzansicht, Spurenseite und Zeitraumuebersicht bekommen den Knopf
-   ausdruecklich nicht. */
-attachGroessenControl(map);
-map.setView([48.5, 10.5], 7); // Fallback, bis Daten da sind
+/* Die Karte entsteht ueber EdKarte.anlegen() (Schritt 15 AP8).
+ *
+ * `groesse: true` haengt den dritten Kartenknopf an. Den gibt es NUR hier
+ * (Backlog Nr. 45): Diese Seite ist die einzige mit einer Liste unter der
+ * Karte, die vom Hoeherwerden etwas hat. Einsatzansicht, Spurenseite und
+ * Zeitraumuebersicht bekommen ihn ausdruecklich nicht — deshalb ist die
+ * Vorgabe des Schalters false.
+ *
+ * REIHENFOLGE GEAENDERT: Bis Schritt 15 kam setView() hier ZULETZT, nach den
+ * drei Anbauten. Jetzt kommt es zuerst, wie auf den drei anderen Karten.
+ * Der Grund steht in map_layers.js; kurz: eine Karte ohne festen Ausschnitt
+ * gilt Leaflet als nicht bereit und rechnet Pin-Positionen nicht aus. */
+const map = EdKarte.anlegen('map',
+  { mitte: [48.5, 10.5], zoom: 7, groesse: true }); // Fallback, bis Daten da sind
 
 let layerGroup = L.layerGroup().addTo(map);
 const trackLines = [];

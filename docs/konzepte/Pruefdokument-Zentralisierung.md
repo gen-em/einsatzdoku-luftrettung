@@ -847,3 +847,91 @@ Fassung gegen **dieselbe echte Datenbank**, je 367 Zeilen / 15 858 Bytes JSON,
 - **Der Textvergleich braucht einen Vorzustand, und den gibt es nur, weil er
   vorher weggesichert wurde.** Jeder Bilderlauf löscht den vorigen. Wer AP8
   ebenso belegen will, sichert **vor** der ersten Änderung.
+
+---
+
+## H0. AP8a — was nicht geprüft werden konnte, und warum
+
+**Diese Liste steht am Anfang und nicht in einer Fußnote.**
+
+| # | Was | Warum nicht | Woran man ein Scheitern erkennt |
+|---|---|---|---|
+| **N8a-1** | **Der Bildvergleich als Beleg** | Zwischen Grundlinie und Nachlauf ist die **Klickprobe** gelaufen und hat den Demo-Bestand verändert — Rettungsmittel, Besatzung, Zielklinik, ein gelöschter Standort, eine aufgehobene Sperre. 295 von 496 Bildern weichen deshalb ab, und keine dieser Abweichungen sagt etwas über AP8a. Dass das Werkzeug nicht *pauschal* rauscht, ist belegt: drei öffentliche Seiten in zwei Breiten sind **bitgleich**. Der Beleg ist der **Formvergleich** (Ziffern zu `#`) | Eine Seite weicht in der **Form** ab, nicht nur im Wert |
+| **N8a-2** | **Der Vollbildmodus der Karte** | `attachFullscreenControl` ist nicht angefasst. Dass der Knopf **da** ist, ist gemessen (4 von 4); dass er **wirkt**, ist es nicht — der Bilderlauf klickt ihn nicht, und die Klickprobe hat keinen Weg dafür | Klick auf den Vollbildknopf ändert nichts, oder die Karte kommt grau zurück |
+| **N8a-3** | **Der Ebenenumschalter** | Dass er da ist und vier Einträge trägt, kommt aus `attachBaseLayers` und ist nicht angefasst. Ein Wechsel auf Wanderkarte, Topo oder Satellit ist **nicht durchgefahren** | Ein Eintrag im Umschalter lädt keine Kacheln |
+| **N8a-4** | **Die Größenüberwachung (`ResizeObserver`)** | Sie hängt an `attachBaseLayers()`, unverändert. Ob sie nach der Reihenfolgeänderung auf der Tagesübersicht noch greift, ist **rechnerisch** unbedenklich (sie beobachtet den Behälter, nicht den Ausschnitt), aber nicht im Browser bei 1920 px mit wachsender Tabelle nachgefahren | Die Karte der Tagesübersicht zeigt ab 1600 px unten graue Fläche statt Kacheln |
+| **N8a-5** | **`ortswahl.js`** | Bleibt draußen (Modul, keine Seite). Der Ortswahl-Dialog ist **nicht** neu durchgefahren worden | Der Ortswahl-Dialog zeigt keine Karte mehr |
+
+## H1. AP8a — was maschinell geprüft wurde, mit Mittel **und** Zahl
+
+### Gegen den Quelltext
+
+| Mittel | Gemessen |
+|---|---|
+| `php tools/zaehlung/zaehlen.php` | **38 Zeilen, 0 über der Decke.** Z35 **4 → 0** |
+| `php tools/zaehlung/zaehlen.php --selbstprobe` | **34 von 34** |
+| Gegenprobe `grep -rn "L\.map("` über `server/` ohne `vendor/` | **1 Fundstelle** — `assets/ortswahl.js:184`, das Modul, das das Register ausdrücklich ausnimmt. Dazu 5 Erwähnungen in Kommentaren |
+| `node --check server/assets/map_layers.js` | **fehlerfrei** |
+| `php -l` über die vier geänderten Seiten | **4 Dateien, 0 Fehler** |
+| `tools/wortliste/wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** (99 Regeln, 99 gegriffen) |
+| `tools/vollstaendigkeit/pruefen.py` | **398** — unverändert |
+
+### Gegen die laufende Anlage
+
+| Mittel | Gemessen |
+|---|---|
+| `node tools/klickprobe/probe.mjs` | **48 von 48 Wegen erfüllt, 0 verfehlt** |
+| `node tools/screenshots/aufnehmen.mjs` | **496 Einzelbilder, 62 Kontaktbögen · Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0 · 162 Karten im Seitengerüst, 0 außerhalb `main.inhalt`** |
+| `tools/screenshots/vergleichen.py --nur-text` | **496 Seiten verglichen, 41 Befunde — alle acht Breiten von `48-betrieb-server`** (Erklärung unten) |
+| `tools/screenshots/vergleichen.py --selbstprobe` | **14 von 14** |
+| eigene Kartenprobe im Browser (Chromium, 1440 px) | **4 von 4 Karten**: Behälter da, Kacheln geladen (6 bis 10), Ebenenumschalter da, Vollbildknopf da, Größenknopf **nur** auf der Tagesübersicht, **0 Konsolenfehler**, 0 unbehandelte Ausnahmen |
+
+### Die 41 Befunde des Formvergleichs — nachgegangen, nicht abgetan
+
+Alle 41 liegen auf `betrieb_server.php`, dem CSP-Verstoßprotokoll, in allen
+acht Breiten. Die Zeilenformen, die verschwinden, und die, die neu auftauchen,
+sind **dieselben drei** — `connect-src · data`, `connect-src ·
+https://photon.komoot.io`, `script-src · wasm-eval` —, nur in anderer
+Reihenfolge; dazu wechselt eine Quellseite von `blob` auf `einsatz_form.php`.
+
+Nachgesehen in der Datenbank:
+
+```
+SELECT * FROM csp_berichte ORDER BY zuletzt DESC;
+→ 3 Zeilen, erstellt 2026-09-21 19:48:03 / 19:48:03 / 20:37:16
+```
+
+**Drei Zeilen, alle einen Tag vor AP8a erstellt, keine neue.** Die Seite
+sortiert nach dem letzten Auftreten; im Nachlauf ist der
+`photon.komoot.io`-Verstoß erneut aufgetreten (`zuletzt` 11:28:39) und nach
+oben gerutscht. Damit ist die Abweichung vollständig erklärt und **kein
+Befund gegen AP8a**.
+
+## H2. AP8a — Prüfliste: was **die Auftraggeberin** noch tun muss
+
+| # | Weg | Erwartet | Scheitern erkennbar an |
+|---|---|---|---|
+| **H-1** | **Tagesübersicht** öffnen, einen Tag mit Spuren wählen | Die Karte steht, Pins und Linien sitzen richtig, der Ausschnitt springt einmal auf die Daten | Die Karte bleibt auf `[48.5, 10.5]` stehen, oder die Konsole zeigt „this._point is undefined" — dann hat die Reihenfolgeänderung (AP8a-d) doch etwas gekostet |
+| **H-2** | **Tagesübersicht bei 1600 px oder breiter**, warten bis die Einsatztabelle daneben steht | Die Karte füllt ihre ganze Höhe mit Kacheln | Unten bleibt graue Fläche — dann greift die Größenüberwachung nach der Reihenfolgeänderung nicht mehr (N8a-4) |
+| **H-3** | **Tagesübersicht:** den **dritten Kartenknopf** benutzen (Karte größer/kleiner) | Der Knopf ist da und wirkt; nach dem Umschalten sind die Kacheln vollständig | Der Knopf fehlt, oder die Karte kommt halb grau zurück |
+| **H-4** | **Einsatzansicht, Tagesspuren und Zeitraum** öffnen | Dort gibt es **keinen** dritten Kartenknopf — nur Zoom, Vollbild und den Ebenenumschalter | Ein Größenknopf ist dort aufgetaucht: dann steht `groesse` fälschlich auf `true` |
+| **H-5** | **Zeitraumansicht** (`zeitraum.php?y=2026`) öffnen und einen Monat wählen | Die Karte erscheint erst, wenn Pins da sind, und zeigt dann vollständige Kacheln | Die Karte bleibt grau oder zeigt nur ein Kachelquadrat — dann ist der ausdrückliche `invalidateSize()` verlorengegangen (AP8a-e) |
+| **H-6** | Auf **einer** Karte den **Ebenenumschalter** durchgehen: Standard, Wanderkarte, Topographisch, Satellitenbild | Jede der vier lädt Kacheln, die Attributionszeile unten rechts wechselt mit | Eine Ebene bleibt leer (N8a-3) |
+| **H-7** | Auf **einer** Karte den **Vollbildknopf** drücken und wieder verlassen | Vollbild geht auf, die Kacheln sind vollständig, ESC bringt zurück | Nach dem Umschalten fehlen Kacheln (N8a-2) |
+| **H-8** | **Einsatzort wählen** (Ortswahl-Dialog in einem Einsatzformular) | Die Karte im Dialog steht wie bisher | Keine Karte im Dialog (N8a-5) |
+
+## H3. AP8a — Grenzen
+
+- **Der Formvergleich misst, was auf einer Seite steht, nicht wie eine Karte
+  aussieht.** Eine Karte hat als Text nur die Attributionszeile und die
+  Beschriftungen des Umschalters. Dass diese da sind, ist ein guter
+  Anhaltspunkt — dass die Kacheln am richtigen Ort liegen, sagt er nicht.
+  Dafür steht die Prüfliste oben.
+- **Der Bildvergleich war in diesem Paket nicht benutzbar** (N8a-1). Wer AP8b
+  ebenso belegen will, fährt den Bilderlauf **vor** der Klickprobe, nicht
+  danach — oder nimmt eine zweite Grundlinie nach der Klickprobe auf.
+- **Die Reihenfolgeänderung ist an 496 Seiten ohne Formbefund und an einer
+  Kartenprobe ohne Konsolenfehler gemessen, nicht bewiesen.** Was sie
+  betrifft — Pin-Positionen zum Zeitpunkt des ersten Zeichnens — ist genau
+  das, was ein statischer Abzug schlecht zeigt. H-1 und H-2 sind deshalb die
+  zwei Punkte der Liste, die wirklich zählen.

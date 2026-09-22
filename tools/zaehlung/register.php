@@ -417,7 +417,7 @@ return [
  'sicht' => 'js_und_inline', 'bereich' => 'js_und_inline',
  'ausser' => ['server/assets'], 'zaehlt' => 'dateien',
  'regel' => ['art' => 'muster', 'muster' => '~\bL\.map\s*\(~'],
- 'start' => 4, 'decke_jetzt' => 4, 'decke_ziel' => 0],
+ 'start' => 4, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 ['kennung' => 'Z36', 'paket' => 'AP8',
  'beschreibung' => 'JS: EdPat.entschluessleListe( in Seiten',

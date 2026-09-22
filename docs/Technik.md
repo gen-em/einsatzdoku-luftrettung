@@ -1431,14 +1431,42 @@ Sonderfall im Formular. Formaterkennung/Parser liegt in
 die Plus-Code-Dekodierung nutzt die gevendorte Bibliothek
 `assets/openlocationcode.js` (`google/open-location-code`, Apache-2.0).
 
+**Eine Karte entsteht über `EdKarte.anlegen(el, o)`** (`assets/map_layers.js`,
+seit Web 20.33.0, Schritt 15 AP8a). Die Funktion macht, was auf allen
+Kartenseiten gleich war: `L.map(el, o.leaflet)`, `setView(o.mitte, o.zoom)`,
+`attachBaseLayers`, `attachFullscreenControl` — und bei `o.groesse`
+zusätzlich `attachGroessenControl`. Sie gibt die Karte zurück.
+
+| Parameter | Bedeutung | Vorgabe |
+|---|---|---|
+| `el` | Behälter-ID oder Element, 1:1 an `L.map()` | — |
+| `mitte` | `[lat, lon]` des Ausgangsausschnitts | **keine** (Wurf) |
+| `zoom` | Zoomstufe des Ausgangsausschnitts | **keine** (Wurf) |
+| `groesse` | dritter Kartenknopf (`attachGroessenControl`) | `false` |
+| `leaflet` | Optionsobjekt, 1:1 an `L.map()` | keine Optionen |
+
+`mitte` und `zoom` haben **keinen** Vorgabewert, und das ist Absicht: Die vier
+Kartenseiten benutzen zwei verschiedene Ausschnitte (`[47.7, 10.3]`/Zoom 9 auf
+Einsatzansicht und Tagesspuren, `[48.5, 10.5]`/Zoom 7 auf Tagesübersicht und
+Zeitraum). Ein Vorgabewert zöge sie auf einen, und eine Karte, die still am
+falschen Ort steht, fällt niemandem auf.
+
+**`setView()` kommt zuerst**, vor den Ebenen. Ohne festen Ausschnitt gilt die
+Karte Leaflet als nicht bereit: Es nimmt eine Ebene entgegen, rechnet ihre
+Bildschirmposition aber nicht aus, und ein späteres `setStyle()` scheitert mit
+„this._point is undefined". Bis Web 20.32.1 setzte `index.php` den Ausschnitt
+als einzige zuletzt.
+
 **Karten-Controls (`assets/map_fullscreen.js`, `assets/map_layers.js`, ab Web
 2.5.0):** Beide Dateien exportieren je eine Funktion
 (`attachFullscreenControl(map)` / `attachBaseLayers(map)`) und kapseln ihren
 Zustand vollständig in Closures — keine globalen Variablen, damit mehrere
-Karten pro Seite (aktuell max. eine) nicht kollidieren würden. Alle drei
-Kartenseiten (`index.php`, `einsatz.php`, `zeitraum.php`) rufen dieselben
-zwei Funktionen auf, kein Duplikat-Code je Seite; `tag_spuren.php` und der
-Ortswahl-Dialog (`assets/ortswahl.js`) rufen `attachBaseLayers` ebenfalls.
+Karten pro Seite (aktuell max. eine) nicht kollidieren würden. Die vier
+Kartenseiten (`index.php`, `einsatz.php`, `tag_spuren.php`, `zeitraum.php`)
+rufen sie seit Web 20.33.0 nicht mehr selbst, sondern über `EdKarte.anlegen()`;
+der Ortswahl-Dialog (`assets/ortswahl.js`) ruft `attachBaseLayers` weiter
+unmittelbar — er ist ein Modul, keine Seite, und legt seine Karte in einem
+Dialog an.
 
 `attachFullscreenControl` nutzt primär die native Fullscreen-API auf dem
 Karten-Container (inkl. `webkit`-Präfix); wo diese für beliebige Elemente

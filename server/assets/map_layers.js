@@ -36,6 +36,71 @@
 (function () {
   'use strict';
 
+  /* ---------------------------------------------------------------------
+   * EdKarte.anlegen(el, o) -- die eine Stelle, an der eine Karte entsteht
+   *   (Schritt 15 AP8, Zaehlzeile Z35)
+   *
+   * WAS VORHER WAR. Vier Seiten bauten ihre Karte selbst auf, mit denselben
+   * vier Zeilen in drei verschiedenen Reihenfolgen. Gemessen am 22.09.2026:
+   * 4 von 4 riefen attachBaseLayers(), 4 von 4 attachFullscreenControl(),
+   * 1 von 4 attachGroessenControl(), und KEINE setzte auch nur eine der
+   * ueblichen Leaflet-Optionen. Der gemeinsame Teil war also fast alles.
+   *
+   * WAS PARAMETER IST UND WARUM. Drei Sachen unterschieden sich wirklich:
+   *
+   *   `mitte` und `zoom` -- zwei Ausgangsausschnitte bei vier Seiten,
+   *     [47.7, 10.3]/9 (Einsatz, Tagesspuren) gegen [48.5, 10.5]/7 (Tag,
+   *     Zeitraum). SIE HABEN KEINEN VORGABEWERT, und das ist Absicht: Ein
+   *     Vorgabewert zoege die beiden auf einen, und Zoom 7 gegen Zoom 9 ist
+   *     der Faktor 4 in der Flaeche. Wer sie weglaesst, bekommt einen Wurf
+   *     und keine stille Karte am falschen Ort.
+   *
+   *   `groesse` -- den dritten Kartenknopf gibt es NUR auf der
+   *     Tagesuebersicht (Backlog Nr. 45): Sie ist die einzige Seite mit
+   *     einer Liste unter der Karte, die vom Hoeherwerden etwas hat.
+   *     Vorgabe false, damit die drei anderen ihn nicht geschenkt bekommen.
+   *
+   *   `leaflet` -- wird 1:1 an L.map() durchgereicht. Heute nutzt das nur
+   *     die Zeitraumansicht mit { preferCanvas: true } (mehrere hundert
+   *     Pins). preferCanvas fuer alle zu setzen waere eine Aenderung des
+   *     Zeichenwegs auf drei Seiten. `L.map(el, undefined)` ist mit
+   *     `L.map(el)` nachweislich gleich -- Leaflets setOptions laeuft mit
+   *     `for (var i in undefined)` null Durchlaeufe.
+   *
+   * DIE REIHENFOLGE IST setView ZUERST, und das aendert die Tagesuebersicht.
+   * Drei der vier Seiten setzten den Ausschnitt vor den Ebenen, index.php
+   * danach. Die Begruendung fuer "zuerst" steht ausgeschrieben in den
+   * Kommentaren von einsatz.php und zeitraum.php: Ohne festen Ausschnitt
+   * nimmt Leaflet eine Ebene zwar entgegen, rechnet ihre Bildschirmposition
+   * aber nicht aus -- ein spaeteres setStyle() auf so einen Pin scheitert
+   * mit "this._point is undefined". Auf der Zeitraumansicht ist genau das
+   * passiert. Die Mehrheit und das Argument zeigen in dieselbe Richtung;
+   * die Tagesuebersicht zieht mit. Das ist eine benannte Aenderung, kein
+   * Versehen -- und sie ist mit dem Bilderlauf nachgemessen.
+   *
+   * WAS NICHT HIERHER GEHOERT. Der ausdrueckliche map.invalidateSize() der
+   * Zeitraumansicht vor fitBounds() bleibt dort stehen. Ihr Behaelter
+   * traegt `hidden`, die Karte entsteht also in einer Flaeche der Groesse 0,
+   * und der ResizeObserver aus attachBaseLayers() kommt asynchron. Wer den
+   * Ruf fuer "jetzt ueberfluessig" haelt, macht die Kacheln dort wieder grau.
+   * ------------------------------------------------------------------- */
+  window.EdKarte = {
+    anlegen: function (el, o) {
+      const opt = o || {};
+      if (!Array.isArray(opt.mitte) || opt.mitte.length !== 2
+          || typeof opt.zoom !== 'number') {
+        throw new Error(
+          'EdKarte.anlegen: mitte [lat, lon] und zoom sind Pflicht.');
+      }
+      const map = L.map(el, opt.leaflet);
+      map.setView(opt.mitte, opt.zoom);
+      attachBaseLayers(map);
+      attachFullscreenControl(map);
+      if (opt.groesse) { attachGroessenControl(map); }
+      return map;
+    }
+  };
+
   window.attachBaseLayers = function (map) {
     const standard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,

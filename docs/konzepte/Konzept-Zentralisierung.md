@@ -32,7 +32,9 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > | AP5 Transaktion und Kindtabellen | **erledigt** 22.09.2026 | **Web 20.30.0** (Neben: fünf neue Funktionen, keine Migration) | Z16 **33 → 9** (neun namentliche Ausnahmen, H-ZE-4 ausgesetzt, AP5-c) · Z17 **30 → 0** · Bauformen mit dem Tokenizer ausgezählt: **19 / 12 / 2**, dazu **42 rollBack, 14 mit Wache** (AP5-a) · Probe für `db_transaktion()` **10/10** (einschließlich der drei Verschachtelungsfälle) · **Messstand Import: 41,78 / 41,31 s gegen 41,71 / 41,47 s davor** · Kreisläufe edbak **328 771/0/21**, csv **10 922/0/1 271** · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Wiederherstellungs-Probe **111/0** · Ratenprobe **50/0** · Klickprobe **48/48** · `php -l` **136/0**. **Ein latenter Fehler behoben** (einsatz_form.php: rollBack auf eine bereits bestätigte Transaktion) |
 > | AP6 Spaltenregister `missions` | **erledigt** 22.09.2026 | **Web 20.31.0** (Neben: vier neue Funktionen, keine Migration) | Z18 **12 → 3** (Ziel war ≤ 4; drei Abbildungen bleiben, jede mit Probe — AP6-b) · Register **41 Spalten, 9 Zwecke, 0 ohne Zweck und ohne Grund**, Schema↔Register **0/0** · erzeugte gegen eingefrorene Listen **9 von 9 gleich**, Zeichen für Zeichen · Vollständigkeitsprobe **38/22/30 Schlüssel, 0 fehlend, 0 überzählig, 0 tote Ausnahmen**, Selbstprobe **16/16** · **Byte-Vergleich gegen den Stand VOR AP6 (Web 20.30.0, `7a55192`): 447 291 Bytes, gleiche SHA-256** · `Export-Format.md`/`Backup-Format.md` **0 geänderte Zeilen** · Wegprobe **34/0** · Kreisläufe edbak **328 771/0/21**, **edbak-alt (altes Backup mit Schlüssel `manual`) 287 852/0/795**, csv **10 922/0/1 271** · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0** · Wiederherstellungs-Probe **111/0** · Klickprobe **48/48** · `php -l` **136/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kontraste **22/0** · Kettenaufrufe **45/0/0** · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · Bilderlauf **496 Bilder, 62 Kontaktbögen, 0 Überlauf, 0 Konsolenfehler, 0 falsche Knopfhöhen** |
 > | AP7 Zeit und Zahl (PHP) | **erledigt** 22.09.2026 | **Web 20.32.0** (Neben: zwei neue Dateien, keine Migration), **20.32.1** (Korrektur: „263 KB MB”, Problem 9) | Z19 **42 → 0** · Z20 **2 → 1** · Z21 **27 → 0** · Z22 **18 → 5** (AP7-c) · Z23 **10 → 2** (AP7-d) · Z24 **20 → 2** · Z25 **9 → 2** · Z26 **67 → 3** (AP7-e/-f) · Z27 **4 → 0** · **205 Stellen umgestellt, 15 namentlich stehengelassen, 38 Dateien, 36 require ergänzt, 2 entfernt** · Zeichengleichheit je Funktion nachgerechnet: `groesse_text` **3 017 Werte/0**, `groesse_kurz_text` **3 017/0**, `zahl_text` **28/0**, `prozent_text` **6 030/0**, `zeit_relativ` **10 811 Zeitpunkte/0**, `iso_utc` **5 000/0**, `EdFormat.groesse` gegen PHP **2 014/0** · ein Gegenleser allein **4 420 679 Vergleiche/0** · `php -l` **137/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kettenaufrufe **45/0/0** · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · Spaltenregister **16/16, 0** · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0** · Wiederherstellungs-Probe **111/0** · **Formvergleich 496 von 496 Seiten formgleich, 0 abweichende Schreibweisen** · **Klickprobe 48/48, 0 verfehlt** · Kreislauf **edbak 328 771/0**, **edbak-alt 287 852/0**, **csv 10 922/0** — je dieselbe Zahl wie vor dem Paket. **33 Agenten, 4,1 Mio Token** (E-ZE-25); die Gegenleser fanden **2 Fehler und 13 Nachlässigkeiten**, eine **zehnte Stelle fand erst der Kreislauf nach dem Commit** (Problem 9) |
-> | AP8 JavaScript | offen | — | — |
+> | AP8 JavaScript | **in Arbeit** — in sechs Unterpakete geschnitten (AP8a bis AP8f), Vermessung erledigt 22.09.2026 | — | **Vermessung:** 7 lesende Agenten, 1,04 Mio Token, 308 Werkzeugaufrufe, 0 Dateiaenderungen · CSP-Schritt **bereits 0** (115 `<script>`-Stellen, 27 inline, 0 ohne Nonce; zweimal unabhaengig gemessen) · drei bestehende Fehler gefunden (Backlog Nr. 268–270) |
+> |  AP8a `EdKarte.anlegen()` | **erledigt** 22.09.2026 | **Web 20.33.0** (Neben: eine neue Funktion, keine Migration) | Z35 **4 → 0** · Klickprobe **48/48** · Formvergleich **496 Seiten, 41 Befunde — alle auf dem CSP-Verstossprotokoll, drei Zeilen vom 21.09.2026, keine neue** · vier Karten im Browser: Kacheln, Umschalter, Vollbild, Groessenknopf nur auf der Tagesuebersicht, **0 Konsolenfehler** · Bilderlauf **496 Bilder, 0 Ueberlauf, 0 Konsolenfehler, 0 Knopfhoehen** · Register **38 Zeilen, 0 ueber der Decke**, Selbstprobe **34/34** |
+> |  AP8b bis AP8f | offen — Entscheidungen liegen beim Auftraggeber | — | — |
 > | AP9 Nr. 57 — eine Einsatztabelle | offen | — | — |
 > | AP10 Abschluss und Übergabe an 10c | offen | — | — |
 
@@ -1826,6 +1828,8 @@ berührt, 36 `require`-Zeilen ergänzt und 2 entfernt.**
    nach demselben Muster an allen Aufrufstellen der sechs Formatierer mit
    Einheit und an beiden `EdFormat`-Aufrufen — es war die eine Stelle.
 
+
+
 ### AP8 — JavaScript
 
 `assets/api.js` (`EdApi.postJson(url, daten)`, `EdApi.postForm(url, felder)`,
@@ -1842,6 +1846,130 @@ Klickprobe und Eingabe-Probe grün; Bilderlauf 0/0/0; im Browser je einmal:
 Export, Import-Vorschau, Schneiden, Schlüssel erneuern, Rückfrage,
 Schlüsselblatt-Prüfung, Entsperren mit KDF-Anhebung; ein provozierter
 Serverfehler zeigt auf allen sechs JSON-POST-Seiten **denselben** Satzbau.
+
+
+#### Die Vermessung vom 22.09.2026 — und was sie am Paket ändert
+
+**Sieben lesende Agenten, 1,04 Mio Token, 308 Werkzeugaufrufe, 0
+Dateiänderungen.** Je ein Thema: die 15 `X-CSRF`-Stellen, die 5
+`csrf`-Feldstellen, die 14 Formatierer, die 8 Meldungsstellen, die 4
+Kartenpräambeln, die 4 `EdPat`-Stellen, die Infrastruktur. Grund für die
+Fächerung: Messen ist lesend und ohne Nebenwirkung — genau der Fall, den
+`CLAUDE.md` 7 dafür vorsieht (E-ZE-25).
+
+**Der Befund in einem Satz: Der zentralisierbare Kern ist schmal, und er
+liegt fast überall VOR dem eigentlichen Vorgang.** Bei `EdApi` sind alle 15
+Stellen im Aufruf zeichengleich — POST, genau zwei Kopfzeilen,
+`JSON.stringify`, Token aus der globalen `CSRF`. Sie gehen **hinter** dem
+`fetch` auseinander, auf sieben Achsen: vier Regeln dafür, was als Erfolg
+gilt (8 von 15 prüfen `res.ok` gar nicht), zwei Politiken bei Nicht-JSON,
+sechs Vorrangketten für die Meldung, fünf Satzbauten, sieben Anzeigewege,
+und 14 von 15 zeigen im Netzfehler den englischen Browsertext.
+
+**Daraus folgt der Schnitt in sechs Unterpakete.** Ein Paket mit sechs
+Zentralen, fünfzig Stellen und vierzehn Dateien ließe sich nicht mehr
+zurücknehmen, und die sechs sind verschieden weit:
+
+| Unterpaket | Zentrale | Stellen | Reife |
+|---|---|---|---|
+| **AP8a** | `EdKarte.anlegen()` | Z35, 4 Seiten | **reif** — jeder Unterschied ist ein Parameter |
+| **AP8b** | `EdApi.postJson()` | Z28, 15 Stellen | Entscheidung nötig (Satzbau) |
+| **AP8c** | `EdApi.postForm()` | Z29, 4+1 Stellen | Entscheidung nötig (Schnittstelle `schluessel.js`) |
+| **AP8d** | `EdFormat`-Ausbau | Z34, 14 (+3 ungezählte) | Entscheidung nötig (drei sichtbare Änderungen) |
+| **AP8e** | `EdHtml.meldung()` | Z37, 7 (+4 ungezählte) | Entscheidung nötig (Rohmarkup, Tonliste) |
+| **AP8f** | `EdPat.listeLaden()` | Z36, 3 von 4 | Entscheidung nötig (die vierte passt nicht) |
+
+**Fächerung je Unterpaket (E-ZE-25):** Die **Vermessung** wurde gefächert,
+sieben Agenten. Der **Umbau** läuft seriell — die Zentralen fassen einander
+an (`EdApi` braucht `EdHtml` für seine Meldungen; `missiontable.js` steht in
+Z34 **und** Z37), und Prüfarbeit ist nach `CLAUDE.md` 7 ohnehin nicht
+fächerbar. Für AP8b und AP8d ist je ein gegenlesender Agent vorgesehen, wie
+in AP7.
+
+**Was die Vermessung an Zahlen dieses Konzepts berichtigt hat:**
+
+- Z34 steht im Text oben auf „12 (+2)", im Register auf **14**. Es sind 14;
+  es gilt das Werkzeug.
+- Z29 **„5 → 0" ist so nicht erreichbar.** Nur 4 der 5 Treffer sind
+  CSRF-Formularfelder; der fünfte (`rueckfrage.js:168`) ist eine
+  Parameterweitergabe und fällt nur über eine Schnittstellenänderung an
+  `schluessel.js` (AP8c).
+- Z36 **„4 → 0" verlangt, dass `einstellungen.php` mit in den Rahmen geht.**
+  Die Messung sagt: Die drei Anzeigeseiten teilen wirklich einen Rahmen,
+  `einstellungen.php` teilt nur den Aufruf — mit einem harten Grund.
+  `hinweisUnlesbar()` wertet die **ganze** Liste aus; dort kommen Fenster zu
+  250 aus einem Bestand von tausenden, und der Satz „Keiner der Einträge …"
+  wäre eine Falschaussage.
+- **CSP-Schritt 0 ist bereits erfüllt**, nicht erst herzustellen: 115
+  `<script>`-Stellen unter `server/`, 27 davon inline, **0 ohne Nonce**.
+  Zweimal unabhängig gemessen — mit `tools/cspprobe/pruefen.php` (115
+  Stellen, 5 Regeln, 0 Befunde) und mit einem eigenen Lauf über das in
+  `CLAUDE.md` 6 vorgeschriebene Tag-Rumpf-Muster. Ohne dieses Muster meldet
+  derselbe Lauf **9 falsche Treffer**, alle neun Fließtext in Kommentaren.
+
+**Und eine Falle, die erst der Umbau auslöst** (A1 der Infrastrukturmessung):
+`ui_geruest_ende()` steht auf 28 von 30 Seiten **vor** den Seitenskripten —
+aber auf `einstellungen.php` und `import.php` **danach**. Diese beiden tragen
+zusammen **8 der 15** `X-CSRF`-Stellen. Eine „Immer-Liste", die `api.js`
+ausliefert, erreicht sie dort also zu spät. AP8b muss das lösen, bevor es
+eine Zeile umstellt.
+
+**Drei bestehende Fehler, die die Vermessung nebenbei gefunden hat** — keiner
+von Schritt 15 verursacht, keiner in AP8 zu beheben (E-ZE-10), alle in den
+Backlog:
+
+- `einstellungen.php:4158` — ein `await fetch` ohne eigenes `catch` steht
+  vor der Erfolgsmeldung im großen `try`.
+- `assets/schluesselblatt.js` — bei Netzausfall bleibt der Knopf gesperrt,
+  das Fehlerfeld leer, der Dialog offen. Eine stille Sackgasse.
+- `assets/import_ui.js:258` — `res.ok` wird nicht geprüft; eine 500 mit
+  wohlgeformtem JSON gilt als Erfolg, und der Dublettenabgleich läuft
+  wortlos gegen einen leeren Bestand weiter.
+
+#### AP8a — `EdKarte.anlegen()` (Z35)
+
+**Erledigt 22.09.2026.** `EdKarte.anlegen(el, o)` steht in
+`assets/map_layers.js`; die vier Seiten `einsatz.php`, `index.php`,
+`tag_spuren.php` und `zeitraum.php` rufen es. **Z35 4 → 0.**
+
+*Entscheidungen:*
+
+- **AP8a-a — `mitte` und `zoom` haben keinen Vorgabewert.** Vier Seiten,
+  zwei Ausschnitte: `[47.7, 10.3]`/Zoom 9 (Einsatz, Tagesspuren) gegen
+  `[48.5, 10.5]`/Zoom 7 (Tag, Zeitraum). Ein Vorgabewert zöge die beiden
+  auf einen, und Zoom 7 gegen 9 ist der Faktor 4 in der Fläche. Wer sie
+  wegläßt, bekommt einen Wurf statt einer stillen Karte am falschen Ort.
+- **AP8a-b — `leaflet` wird 1:1 durchgereicht.** `{ preferCanvas: true }`
+  ist die einzige Leaflet-Option im ganzen Bestand und gilt nur für die
+  Zeitraumansicht (mehrere hundert Pins). Sie für alle zu setzen wäre eine
+  Änderung des Zeichenwegs auf drei Seiten. Belegt: `L.map(el, undefined)`
+  ist mit `L.map(el)` gleich — Leaflets `setOptions` läuft mit
+  `for (var i in undefined)` null Durchläufe, nachgerechnet.
+- **AP8a-c — `groesse` hat die Vorgabe `false`.** Den dritten Kartenknopf
+  gibt es nur auf der Tagesübersicht (Backlog Nr. 45).
+- **AP8a-d — `setView()` kommt zuerst, und das ändert die Tagesübersicht.**
+  Drei der vier Seiten setzten den Ausschnitt vor den Ebenen, `index.php`
+  danach. Das Argument für „zuerst" steht ausgeschrieben in den Kommentaren
+  von `einsatz.php` und `zeitraum.php`: Ohne festen Ausschnitt gilt die
+  Karte Leaflet als nicht bereit und rechnet Pin-Positionen nicht aus — ein
+  späteres `setStyle()` scheitert dann mit „this._point is undefined", und
+  genau das ist auf der Zeitraumansicht passiert. **Benannte Änderung,
+  nachgemessen** (siehe Prüfprotokoll).
+- **AP8a-e — Der ausdrückliche `map.invalidateSize()` der Zeitraumansicht
+  bleibt stehen.** Ihr Behälter trägt `hidden`, die Karte entsteht in einer
+  Fläche der Größe 0, und der `ResizeObserver` aus `attachBaseLayers()`
+  kommt asynchron. Wer den Ruf für „jetzt überflüssig" hält, macht die
+  Kacheln dort wieder grau.
+- **AP8a-f — `ortswahl.js` bleibt draußen.** Es ist ein Modul, keine Seite;
+  das Register nimmt `server/assets` ausdrücklich aus.
+
+*Probleme und wie sie gelöst wurden:*
+
+1. **Meine eigene Kartenprobe fand die Zeitraumansicht nicht** — und der
+   Fehler lag bei der Probe, nicht am Umbau. Sie rief `zeitraum.php?j=2026`;
+   der Parameter heißt `y`, und ohne ihn leitet die Seite auf `index.php`
+   um (Zeile 19). Mit `?y=2026` steht die Karte: Behälter da, 10 Kacheln,
+   Umschalter da, 0 Konsolenfehler.
 
 ### AP9 — Nr. 57: eine Einsatztabelle (E-ZE-01, -08; F-ZE-6)
 
