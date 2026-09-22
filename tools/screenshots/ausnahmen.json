@@ -1,10 +1,21 @@
 {
-  "_lies_mich": "Zwei Arten, eine Abweichung zwischen zwei Bilderlaeufen dauerhaft zu erklaeren. `zeitabhaengig` nimmt ganze SEITEN vom BILDvergleich aus (Schluessel = Seitenname aus seiten.json, ohne Breite). `zeilenmuster` nimmt einzelne ZEILEN vom TEXTvergleich aus (Schluessel = kurzer Name, `muster` = regulaerer Ausdruck auf die Zeile). Fuer beide gilt: Eine Ausnahme ohne Treffer ist selbst ein Befund — siehe vergleichen.py.",
+  "_lies_mich": "Drei Vergleiche, drei Arten von Ausnahme. `zeitabhaengig` nimmt ganze SEITEN vom BILDvergleich aus. `zeilenmuster` nimmt einzelne ZEILEN vom FORMvergleich aus (Schluessel = kurzer Name, `muster` = regulaerer Ausdruck, optional `seiten` = Liste der Seiten, auf denen die Ausnahme ueberhaupt gilt). DER ZEILENVERGLEICH BRAUCHT KEINE AUSNAHMEN: Er ist eine Zahl und kein Befund, weil sich Werte zwischen zwei Laeufen zwangslaeufig aendern. Nur wer die SCHREIBWEISE aendert, wird gemeldet — und dafuer gibt es genau zwei legitime Gruende, beide Zufall: ein frisch erzeugter Code und ein Zufallstoken. EIN MUSTER, DAS JEDE SEITE TREFFEN KOENNTE, BRAUCHT `seiten`. Eine Ausnahme ohne Treffer ist selbst ein Befund.",
   "zeitabhaengig": {},
   "zeilenmuster": {
-    "demo-countdown": {
-      "muster": "in etwa [0-9\\u00a0.]+ Minuten",
-      "grund": "Der Countdown bis zum naechsten Demo-Reset steht im Banner JEDER Seite des Demo-Kontos und zaehlt in Echtzeit herunter. Gemessen am 22.09.2026: Er allein machte 303 von 496 Bildern zwischen zwei Laeufen auf unveraendertem Code verschieden."
+    "geraetekennung": {
+      "muster": "Kennung dev-",
+      "grund": "Die Geraetekennung entsteht beim Koppeln aus Zufall. Der Einspiellauf des Referenzbestandes erzeugt sie neu; sie ist einer der Werte, die laut tools/referenzdatensatz/LIESMICH.md ausdruecklich NICHT identisch wiederkommen. Sie steht auf derselben Zeile wie der frisch erzeugte Kopplungscode; ein eigener Eintrag fuer den Code waere deshalb dauerhaft ohne Treffer — und damit selbst ein Befund.",
+      "seiten": [
+        "33a-geraete-rueckfrage",
+        "33b-geraete-warten"
+      ]
+    },
+    "jobs-token": {
+      "muster": "jobs\\.php\\?token=",
+      "seiten": [
+        "47-betrieb-jobs"
+      ],
+      "grund": "Die Adresse fuer den Jobaufruf traegt ein ZUFAELLIGES Hex-Token. Seine Ziffern und Buchstaben verteilen sich bei jedem Lauf anders, also aendert sich auch die FORM der Zeile — ohne dass jemand etwas geaendert haette."
     }
   }
 }

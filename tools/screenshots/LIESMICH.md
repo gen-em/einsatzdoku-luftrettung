@@ -492,6 +492,38 @@ Der Textvergleich sieht die Zeile.
 Der Bildvergleich bleibt daneben stehen: Er findet, was **kein** Text ist —
 eine verrutschte Spalte, ein anderer Abstand, eine Farbe.
 
+> **Über eine Versionsstufe hinweg kann der Bildvergleich nicht null werden**,
+> und das ist keine Schwäche, sondern Arithmetik: Die Versionsnummer steht in
+> der Fußzeile **jeder** Seite, und jedes Arbeitspaket stuft sie hoch
+> (`CLAUDE.md` 2.1). Damit ändert sich jedes einzelne Bild. Wer ein Paket mit
+> Versionsstufe belegen will, fährt `--nur-text`; der Bildvergleich ist dann
+> für den **nächsten** Lauf ohne Stufe wieder brauchbar.
+
+### Drei Vergleiche, und nur einer ist der Befund
+
+| | misst | ist ein |
+|---|---|---|
+| **Bild** | SHA-256 je Einzelbild | Zahl mit Rauschen (Fußzeile, Uhrzeiten) |
+| **Zeile** | `innerText` Zeile für Zeile | **Zahl, kein Befund** — zwischen zwei Läufen ändern sich Werte zwangsläufig: eine Datenbank wächst, ein Alter läuft weiter |
+| **Form** | dieselbe Zeile, jede Ziffernfolge durch `#` ersetzt | **der Befund** |
+
+**Warum die Form das richtige Maß ist.** Ein Formatierungsumbau darf die
+*Schreibweise* nicht ändern; die *Werte* ändern sich ohnehin. Aus „1,0 MB" und
+„1,3 MB" wird beide Male `#,# MB` — aus „2,00 GB" und „2 GB" dagegen
+`#,## GB` und `# GB`, und genau das ist der Unterschied, den ein solches
+Paket ausschließen muss. Auch „gerade eben" gegen „vor 1 Minuten" bleibt
+sichtbar, weil die Wörter verschieden sind.
+
+**Was die Form nicht sieht:** eine Änderung, die *nur* Ziffern betrifft — etwa
+eine andere Rundung bei gleicher Stellenzahl. Dafür stehen die Rechnungen je
+Funktion.
+
+**Deshalb braucht der Zeilenvergleich keine Ausnahmeliste**, der Formvergleich
+dagegen schon: In Schritt 15 AP7 waren es nach dem Umstieg auf die Form noch
+**zwei** Einträge (ein Zufallstoken, eine Gerätekennung) statt der sieben, die
+der Zeilenvergleich gebraucht hätte. Eine kurze Ausnahmeliste ist keine
+Bequemlichkeit — sie ist der Beleg, dass das Maß zur Frage passt.
+
 Voreinstellung für `<nachher>` ist `ausgabe/`. `--nur-text` lässt den
 Bildvergleich außer Wertung, `--selbstprobe` hält das Werkzeug gegen sieben
 Fälle mit Sollwert.

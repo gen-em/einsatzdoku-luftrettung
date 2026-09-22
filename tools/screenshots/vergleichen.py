@@ -84,17 +84,38 @@ def texte(verzeichnis: pathlib.Path) -> dict:
     return werte
 
 
-def ist_ausgenommen(zeile: str, muster: dict) -> str:
-    """Name der greifenden Zeilenausnahme, sonst leer."""
+def ist_ausgenommen(zeile: str, muster: dict, seite: str = "") -> str:
+    """Name der greifenden Zeilenausnahme, sonst leer.
+
+    EINE AUSNAHME DARF AUF SEITEN EINGESCHRAENKT WERDEN (`seiten`), und fuer
+    manche ist das Pflicht: Das Muster einer Datum-Zeit-Zeile trifft sonst
+    JEDE Seite der Anwendung — und macht den Vergleich genau dort blind, wo
+    ein Formatierungsumbau geprueft werden soll. Wer eine solche Ausnahme
+    ohne `seiten` eintraegt, schaltet die Messung ab und meldet eine Null.
+    """
     for name, eintrag in muster.items():
+        seiten = eintrag.get("seiten")
+        if seiten and seite not in seiten:
+            continue
         if re.search(eintrag["muster"], zeile):
             return name
     return ""
 
 
 def seite_von(dateiname: str) -> str:
-    """`46-betrieb-updates-1280.png` -> `46-betrieb-updates`."""
-    stamm = dateiname[:-4] if dateiname.endswith(".png") else dateiname
+    """`46-betrieb-updates-1280.png` -> `46-betrieb-updates`.
+
+    BEIDE ENDUNGEN, und das war ein Fehler: Hier stand nur `.png`. Fuer einen
+    Textabzug (`…-1280.txt`) blieb der Name damit ungekuerzt, die
+    Seitenbindung einer Ausnahme (`seiten`) lief ins Leere, und die Ausnahme
+    meldete sich als tot — waehrend die Abweichung als offen gezaehlt wurde.
+    Gefunden in Schritt 15 AP7 beim ersten seitengebundenen Eintrag.
+    """
+    stamm = dateiname
+    for endung in (".png", ".txt"):
+        if stamm.endswith(endung):
+            stamm = stamm[:-len(endung)]
+            break
     teile = stamm.rsplit("-", 1)
     return teile[0] if len(teile) == 2 and teile[1].isdigit() else stamm
 
@@ -105,6 +126,8 @@ def main() -> int:
     p.add_argument("nachher", nargs="?", default=str(VORGABE_NACHHER))
     p.add_argument("--erwartet", action="append", default=[],
                    help="Seitenname, dessen Abweichung in diesem Lauf beabsichtigt ist")
+    p.add_argument("--werte", action="store_true",
+                   help="die Zeilen mit anderem WERT einzeln auflisten (Laerm, kein Befund)")
     p.add_argument("--nur-text", action="store_true",
                    help="nur den Textvergleich fahren (der Bildvergleich ist laut, siehe Kopf)")
     p.add_argument("--selbstprobe", action="store_true",
@@ -224,28 +247,23 @@ def main() -> int:
             for alt_z, neu_z in zip_laengst(av, an):
                 if alt_z == neu_z:
                     continue
-                treffer = ist_ausgenommen(alt_z or "", zeilenmuster) \
-                    or ist_ausgenommen(neu_z or "", zeilenmuster)
-                if treffer:
-                    zeilen_erklaert[treffer] = zeilen_erklaert.get(treffer, 0) + 1
-                else:
-                    unterschiede.append((alt_z, neu_z))
+                unterschiede.append((alt_z, neu_z))
             if unterschiede:
                 zeilen_offen.append((name, unterschiede))
             else:
                 gleiche_seiten += 1
         zeilen_zahl = sum(len(u) for _, u in zeilen_offen)
+        print("  (Der Zeilenvergleich ist eine ZAHL, kein Befund: Zwischen zwei")
+        print("   Laeufen aendern sich Werte zwangslaeufig — eine Datenbank waechst,")
+        print("   ein Alter laeuft weiter. Der BEFUND steht im Formvergleich unten.)")
         print(f"  Seiten verglichen:           {len(t_gemeinsam):4d}")
         print(f"  ohne offene Abweichung:      {gleiche_seiten:4d}")
         print(f"  mit offener Abweichung:      {len(zeilen_offen):4d}  "
               f"({zeilen_zahl} Zeilen)")
-        for name, zahl in sorted(zeilen_erklaert.items()):
-            print(f"  erklaert durch '{name}':      {zahl:4d} Zeilen")
         print(f"  nur im alten Lauf:           {len(t_nur_vor):4d}")
         print(f"  nur im neuen Lauf:           {len(t_nur_nach):4d}")
-        tote_zeilenmuster = sorted(set(zeilenmuster) - set(zeilen_erklaert))
-        if zeilen_offen:
-            print("\n  OFFENE TEXTABWEICHUNGEN:")
+        if zeilen_offen and "--werte" in sys.argv:
+            print("\n  ZEILEN MIT ANDEREM WERT (--werte):")
             for name, unterschiede in zeilen_offen[:40]:
                 print(f"    {name}")
                 for alt_z, neu_z in unterschiede[:4]:
@@ -255,10 +273,55 @@ def main() -> int:
                     print(f"      … und {len(unterschiede) - 4} weitere Zeilen")
             if len(zeilen_offen) > 40:
                 print(f"    … und {len(zeilen_offen) - 40} weitere Seiten")
-        if tote_zeilenmuster:
-            print("\n  ZEILENAUSNAHME OHNE TREFFER: " + ", ".join(tote_zeilenmuster))
-        text_befunde = zeilen_zahl + len(t_nur_vor) + len(t_nur_nach) \
-            + len(tote_zeilenmuster)
+        elif zeilen_offen:
+            print("  (`--werte` zeigt sie einzeln)")
+        text_befunde = len(t_nur_vor) + len(t_nur_nach)
+
+        # ---- Teil 3: die FORM ---------------------------------------------
+        print()
+        print("-" * 74)
+        print("Formvergleich — steht eine Zahl anders GESCHRIEBEN?")
+        print("-" * 74)
+        form_offen, form_zeilen, form_erklaert = [], 0, {}
+        for name in t_gemeinsam:
+            av = [form(z) for z in v_texte[name]]
+            an = [form(z) for z in n_texte[name]]
+            if av == an:
+                continue
+            unt = [(a_, n_) for a_, n_ in zip_laengst(av, an) if a_ != n_]
+            offen_hier = []
+            for a_, n_ in unt:
+                seite = seite_von(name)
+                treffer = ist_ausgenommen(a_ or "", zeilenmuster, seite) \
+                    or ist_ausgenommen(n_ or "", zeilenmuster, seite)
+                if treffer:
+                    form_erklaert[treffer] = form_erklaert.get(treffer, 0) + 1
+                else:
+                    offen_hier.append((a_, n_))
+            unt = offen_hier
+            if unt:
+                form_offen.append((name, unt))
+                form_zeilen += len(unt)
+        print(f"  Seiten verglichen:           {len(t_gemeinsam):4d}")
+        print(f"  gleiche Form:                {len(t_gemeinsam) - len(form_offen):4d}")
+        print(f"  ABWEICHENDE FORM:            {len(form_offen):4d}  ({form_zeilen} Zeilen)")
+        for nm, zahl in sorted(form_erklaert.items()):
+            print(f"  erklaert durch '{nm}':{' ' * max(1, 22 - len(nm))}{zahl:4d} Zeilen")
+        tote = sorted(set(zeilenmuster) - set(form_erklaert))
+        if tote:
+            print("\n  ZEILENAUSNAHME OHNE TREFFER (die Liste waechst zu): "
+                  + ", ".join(tote))
+        form_zeilen += len(tote)
+        if form_offen:
+            print("\n  ABWEICHENDE SCHREIBWEISEN:")
+            for name, unt in form_offen[:30]:
+                print(f"    {name}")
+                for a_, n_ in unt[:4]:
+                    print(f"      - {str(a_)[:110]}")
+                    print(f"      + {str(n_)[:110]}")
+            if len(form_offen) > 30:
+                print(f"    … und {len(form_offen) - 30} weitere Seiten")
+        text_befunde += form_zeilen
 
     gesamt = befunde + text_befunde
     print("\n" + "=" * 74)
@@ -269,6 +332,28 @@ def main() -> int:
     else:
         print(f"BEFUNDE: {gesamt}  (Bild {befunde}, Text {text_befunde})\n")
     return 0 if gesamt == 0 else 1
+
+
+def form(zeile) -> str:
+    """Die FORM einer Zeile: jede Ziffernfolge wird zu `#`.
+
+    WOZU. Ein Formatierungsumbau darf die SCHREIBWEISE nicht aendern; die
+    WERTE aendern sich zwischen zwei Laeufen ohnehin (eine Datenbank waechst,
+    ein Alter laeuft weiter, eine Uhrzeit rueckt vor). Der Zeilenvergleich
+    sieht beides und kann es nicht trennen — er meldete deshalb die
+    Statusseite als abweichend, obwohl dort nur andere ZAHLEN standen.
+
+    Die Form trennt es: aus „1,0 MB" und „1,3 MB" wird beide Male
+    „#,# MB", aus „2,00 GB" und „2 GB" dagegen „#,## GB" und „# GB" — und
+    genau das ist der Unterschied, den dieses Paket ausschliessen muss.
+    Auch „gerade eben" gegen „vor 1 Minuten" bleibt sichtbar, weil die
+    Woerter verschieden sind.
+
+    WAS SIE NICHT SIEHT: eine Aenderung, die nur Ziffern betrifft — etwa
+    eine andere Rundung bei gleicher Stellenzahl. Dafuer stehen die
+    Rechnungen je Funktion im Pruefdokument.
+    """
+    return re.sub(r"\d+", "#", zeile if zeile is not None else "\x00")
 
 
 def zip_laengst(a: list, b: list):
@@ -305,6 +390,16 @@ def selbstprobe() -> int:
            seite_von("bericht.md"), "bericht.md")
     pruefe("seite_von: Seitenname mit Ziffer am Ende",
            seite_von("02a-registrieren-360.png"), "02a-registrieren")
+    pruefe("seite_von: Textabzug wird genauso gekuerzt",
+           seite_von("41-kontoseite-1280.txt"), "41-kontoseite")
+    pruefe("form: andere Zahl, gleiche Form",
+           form("1,0 MB") == form("1,3 MB"), True)
+    pruefe("form: andere Stellenzahl wird sichtbar",
+           form("2,00 GB") == form("2 GB"), False)
+    pruefe("form: anderes Trennzeichen wird sichtbar",
+           form("1.234,5 MB") == form("1,234.5 MB"), False)
+    pruefe("form: andere Worte werden sichtbar",
+           form("gerade eben") == form("vor 1 Minuten"), False)
     pruefe("zip_laengst: gleich lang",
            zip_laengst(["a", "b"], ["a", "c"]), [("a", "a"), ("b", "c")])
     pruefe("zip_laengst: rechts kuerzer",
@@ -314,6 +409,11 @@ def selbstprobe() -> int:
            ist_ausgenommen("Zuruecksetzen in etwa 27 Minuten.", muster), "demo")
     pruefe("Zeilenausnahme greift NICHT auf fremdem Text",
            ist_ausgenommen("2,00 GB von 2,00 GB belegt.", muster), "")
+    eng = {"nur-dort": {"muster": r"\d{2}:\d{2}", "seiten": ["41-kontoseite"]}}
+    pruefe("Seitengebundene Ausnahme greift auf ihrer Seite",
+           ist_ausgenommen("22.09.2026 10:13", eng, "41-kontoseite"), "nur-dort")
+    pruefe("Seitengebundene Ausnahme greift NICHT auf anderer Seite",
+           ist_ausgenommen("22.09.2026 10:13", eng, "10-tagesuebersicht"), "")
     print("=" * 74)
     print(f"Selbstprobe: {ok} von {ok + fehl}")
     return 0 if fehl == 0 else 1
