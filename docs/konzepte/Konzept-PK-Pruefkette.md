@@ -842,6 +842,13 @@ Nummern aus Abschnitt 8); Konzept wird nach der Freigabe gelöscht.
   Abgleichs bleibt unangetastet); Uhr-Paket als Artefakt.
 - Zuarbeit Z6: Upload-Schlüssel und Connect-IQ-Schlüssel als Geheimnisse der
   Umgebung `produktion`; `signatur.properties` wird im Lauf aus ihnen erzeugt.
+  Die Namen stehen in Z6 (Abschnitt 7): `APK_SPEICHER_B64`,
+  `APK_SPEICHER_PASSWORT`, `APK_SCHLUESSEL_NAME`, `APK_SCHLUESSEL_PASSWORT`,
+  `UHR_ENTWICKLERSCHLUESSEL_B64`. Die beiden Dateien liegen Base64-kodiert
+  im Geheimnis und werden im Lauf mit `base64 -d` in das Arbeitsverzeichnis
+  geschrieben, nie ins Protokoll. Die Sandbox sieht keinen der fünf Werte
+  (E-PK-23); `tools/uhr-pruefstand/` erzeugt sich weiter seinen eigenen
+  Wegwerfschlüssel.
 - **Abnahme:** ein Tag `android-v…` → Lauf wartet auf Freigabe, baut,
   signiert (`apksigner verify` im Lauf), legt ab; die Fassung auf der
   Geräteseite stimmt. Vorher ein Probelauf ohne Ablage.
@@ -896,9 +903,9 @@ aufwirft, trägt sie als F-PK-07 ff. hier ein.
 | Z2 | Den Kette-II-Zweig per PR mergen (PR #68, mit Übergabevermerk), damit PK-06 nicht kollidiert | vor der Freigabe | **erledigt 21.09.2026** (PR #68 gemergt) |
 | Z2a | **PR #69 (Web 20.26.3) mergen** — der edbak-Fix; danach Stufe 2 auf `main` beobachten, dann Tag `web-v20.26.3` und Freigabe = **M1 der Kette II** | nach Stufe 1 grün | **erledigt 21.09.2026** — der Tag brauchte vorher den Vorgriff auf PK-06 (Einschub 1): Das Tor verlangt einen als Ganzes grünen Staging-Lauf, und den gab es auf der neuen Anlage erst ohne Bilderlauf. Produktiv 20.24.2 → 20.26.3, Migrationen von Hand, Zeiger auf `a1c6494` |
 | Z3 | Umgebungswerte der Cloud-Umgebung: die sieben Namen aus 1.4 vollständig und in Anführungszeichen; Netzregel mit Docker Hub und `deb.debian.org` | — | **erledigt 21.09.2026** |
-| Z4 | Staging: Mailversand reparieren (Webspace-Protokoll), Backup-Ziel eintragen | vor PK-M2 | offen (`097D7622` ist ohne das Protokoll geklärt, 1.5) |
+| Z4 | Staging: Mailversand reparieren (Webspace-Protokoll), Backup-Ziel eintragen | vor PK-M2 | **Mailversand erledigt 22.09.2026.** Backup-Ziel (Betrieb → Sicherungsziele, die drei Konten) offen; für Stufe 2 ohne Bedeutung, Entscheidung der Betreiberin (`097D7622` ist ohne das Protokoll geklärt, 1.5) |
 | Z5 | Freigabe dieses Konzepts | nach Z1, Z2 | **erteilt 21.09.2026** |
-| Z6 | PK-08: Upload-Schlüssel und Connect-IQ-Schlüssel als Geheimnisse der Umgebung `produktion` | vor PK-08 | offen |
+| Z6 | PK-08: Upload-Schlüssel und Connect-IQ-Schlüssel als Geheimnisse der Umgebung `produktion` — fünf Namen, festgelegt 22.09.2026: `APK_SPEICHER_B64` (`nadoku-auslieferung.jks`, Base64), `APK_SPEICHER_PASSWORT`, `APK_SCHLUESSEL_NAME` (`nadoku`), `APK_SCHLUESSEL_PASSWORT`, `UHR_ENTWICKLERSCHLUESSEL_B64` (`developer_key.der`, Base64). Der Keystore liegt bei der Betreiberin vor; der Connect-IQ-Schlüssel wird **einmal neu erzeugt** (auf dem Rechner der Betreiberin, nicht in der Sandbox) und ab dann für jede Uhr-Fassung verwendet | vor PK-08 | offen |
 | Z7 | PK-M2: einen echten PR durch die neue Kette mergen | nach PK-06 | offen |
 | Z8 | Freigabe des Abschlusses | nach PK-07 | offen |
 
