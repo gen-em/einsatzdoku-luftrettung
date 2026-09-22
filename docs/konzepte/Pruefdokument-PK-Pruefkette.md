@@ -470,6 +470,77 @@ gehört (Entscheidung des Auftraggebers).
 
 ---
 
+## 5b. Messprotokoll PK-04/1b — die Vollständigkeit (22.09.2026)
+
+**Ziel war null, erreicht sind 18** — und das steht hier vorn, nicht in
+einer Fußnote. Was die 18 sind und warum sie nicht in dieses Teilstück
+gehören, steht unten.
+
+| Schritt | vorher | nachher |
+|---|---|---|
+| Befunde gesamt | **398** | **18** |
+| Unicode-Zeichen als Symbol | 330 **Befunde** | 14 **Hinweise** |
+| Emoji im Markup | 8 **Befunde** | 8 **Hinweise** |
+| Klassen ohne Gegenstück | 50 | **18** (32 eingetragen) |
+| `style="…"` in PHP/JS | 10 | **0** (vier Ausnahmen) |
+| Schwelle in `pruefablauf.json` | 398 | **18** |
+
+**Woraus die 398 bestanden** — zuerst gemessen, dann gehandelt: 330 Unicode
++ 8 Emoji + 50 Klassen + 10 `style=` = 398. Die Zahl war also zu **85
+Prozent** Typografie.
+
+**Die 32 Streichlisteneinträge sind maschinell eingeordnet**, nicht aus dem
+Gedächtnis: **6** kommen in `vendor/leaflet.css` vor (ihre Regel gehört
+einer fremden Bibliothek), **26** kommen am 22.09.2026 in keiner PHP-, JS-
+oder CSS-Datei unter `server/` mehr vor. Der Eintrag sagt deshalb, **wo die
+Klasse heute steht** — nicht, wodurch sie ersetzt wurde; das wäre eine
+Behauptung. Ein Sonderfall ist benannt: `map` lebt als **Kennung**
+(`id="map"`) weiter, nicht als Klasse.
+
+### Gegenproben, damit die Nullen Belege sind
+
+| Probe | Erwartet | Gemessen |
+|---|---|---|
+| `style="left:12px"` und `style="color:#abc"` in eine Datei eingefügt | beide werden gemeldet | **2 Befunde**, die berechneten Werte weiterhin 0. Datei danach zurückgenommen, `git diff` leer |
+| Schwelle auf 17 gesetzt | Lauf wird rot | **7 von 8 Prüfungen grün**, rc 1; zurückgesetzt → 8 von 8 |
+
+### Drei Dinge, die beim Bauen aufgefallen sind
+
+1. **Die Ausnahmeliste für `style="…"` hat nie gewirkt.** Der Parameter
+   `frei` in `befund()` stand in der Signatur, wurde übergeben — und dann
+   verworfen. Ein Eintrag hätte wirkungslos dagestanden. Dieselbe Falle, die
+   der Kommentar in `pruefung_symbole` für die Token-Ausnahmen beschreibt,
+   nur eine Ebene tiefer und **unbemerkt**.
+2. **Gefiltert werden muss der Wert, nicht die Zeile.** Ein Eintrag lautet
+   `pfad:zeile  wert`; filtert man gegen die ganze Zeile, verankert `^` am
+   **Pfad**, und kein Muster mit `^` greift je. Gemessen: vier richtige
+   Muster, null Wirkung.
+3. **Ein `\|` in einer Markdown-Zelle beendete den ganzen Lauf** mit
+   `re.error`, ohne eine einzige Prüfung zu melden: `liste_lesen()` zerlegt
+   die Zeile an **jedem** `|`, auch am escapeten. Behoben durch zwei
+   getrennte Einträge **und** dadurch, dass ein kaputtes Muster jetzt ein
+   Befund ist statt eines Abbruchs.
+
+### Was nicht erreicht wurde, und warum
+
+**Die Kommentarfrage bleibt offen, und zwar bewusst.** Ein Teil der 14
+Symbolzeichen und alle 8 Emoji stehen in **Kommentaren** — `version.php` im
+Kopftext, `pwquality.js` in der Erklärung zur Graphemzerlegung. Die Prüfung
+kann das nicht trennen: Der Abtaster versagt in PHP-Dateien mit HTML, wo ein
+ungepaartes `"` im Fließtext ihn in den Zeichenketten-Modus schickt
+(gemessen 14.09.2026, **Backlog Nr. 184**). Diese Entscheidung ist älter als
+dieses Paket und wurde **nicht angetastet**; deshalb sind beide Zählungen
+Hinweise und keine Befunde.
+
+**Die 18 verbliebenen Klassen gehören in `server/`.** Sie stehen im Markup
+und haben in keinem Stylesheet eine Regel — jede ist entweder ein toter
+Markup-Rest oder eine fehlende Regel. Welche von beidem, lässt sich nicht
+raten: Ein falsch entfernter Markup-Rest ist ein stiller Darstellungsfehler.
+Sie stehen als **Backlog Nr. 269** und gehören in **Teilstück 5**, das die
+Schwelle dann ganz wegnimmt. Die 14 Symbolzeichen ebenso (**Nr. 270**).
+
+---
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in

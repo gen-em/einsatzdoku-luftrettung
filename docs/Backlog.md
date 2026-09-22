@@ -2485,7 +2485,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 227. **Die Symbolregel zählt Typografie und findet deshalb keine Symbole
     mehr.**
-    *Gemessen 17.09.2026 auf dem P5b-Zweig; nicht behoben.*
+    *Gemessen 17.09.2026 auf dem P5b-Zweig; **erledigt am 22.09.2026 mit
+    PK-04/1b**.* Die Zeichenliste trägt die Typografie nicht mehr
+    (`… → ← « » ‹ › ⋯` sind raus); von **330** Treffern blieben **14**.
+    Symbol- und Emoji-Zählung sind außerdem vom Befund zum **Hinweis**
+    geworden: Ein Teil der 14 steht in Kommentaren, und die Prüfung kann das
+    nicht trennen, solange Nr. 184 offen ist. Die 14 selbst stehen als
+    Nr. 270. **Der Vorschlag unten ist umgesetzt, die Messung bleibt stehen**
+    — sie ist die Begründung.
     `tools/vollstaendigkeit/` prüft „Unicode-Zeichen als Symbol im Markup" —
     gemeint sind Zeichen, die **statt eines Symbols** stehen (`▸ ✓ ⚠ ★ ●`).
     In der Zeichenliste stehen aber auch **`…` und `→`**, und die sind in
@@ -3316,6 +3323,45 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Kette zu falschen Schlüssen brachte. Hier gilt dasselbe, nur auf der
     Statusseite.
 
+
+269. **Achtzehn Klassen stehen im Markup und haben in keinem Stylesheet
+    eine Regel.**
+    *Gemessen 22.09.2026 mit PK-04/1b; nicht behoben.*
+    Die Vollständigkeitsprüfung meldete 50 Klassen „ohne Gegenstück". 32
+    davon sind eingetragen und begründet (6 gehören Leaflet, 26 kommen
+    nirgends mehr vor). **Die restlichen 18 stehen im Markup, ohne dass
+    irgendein Stylesheet sie kennt:**
+
+    `actions` `chip` `chips` `feld-gesperrt` `filtergruppen` `gefahr`
+    `imp-cell` `imp-dupe` `imp-row` `imp-skip` `imp-skipped` `leer`
+    `loc-inline` `patfields` `phase-marker` `showif` `unlockbtn`
+    `wochentage`
+
+    Jede ist entweder ein **toter Markup-Rest** (dann gehört sie aus dem
+    Markup heraus) oder eine **fehlende Regel** (dann gehört sie ins
+    Stylesheet). Beides ändert `server/` und gehört deshalb in **PK-04
+    Teilstück 5**; solange sie stehen, steht die Schwelle der
+    Vollständigkeit auf 18 statt auf null.
+
+    **Nicht geraten, was welche ist:** Das braucht je einen Blick auf die
+    Stelle, und ein falsch entfernter Markup-Rest ist ein stiller
+    Darstellungsfehler.
+
+270. **Vierzehn Zeichen stehen im Markup, wo ein Symbol hingehört.**
+    *Gemessen 22.09.2026 mit PK-04/1b; nicht behoben.* Rest aus Nr. 227,
+    nachdem die Typografie aus der Zeichenliste gefallen ist:
+
+    `✕` (4×), `×` (5×), `✓` (2×), `★` (2×), `⚠` (1×) in zwölf Dateien —
+    `einsatz_form.php`, `mission_fields.php`, `mission_fields_lib.php`,
+    `nachbearbeitung_lib.php`, `plattform_lib.php`, `suche.php`,
+    `validate_lib.php`, `version.php`, `import_ui.js`, `missiontable.js`,
+    `ortsfeld.js`.
+
+    **Ein Teil davon steht in Kommentaren** (`version.php` im Kopftext) und
+    ist damit kein Befund, sondern Prosa. Die Prüfung kann das nicht
+    trennen, solange **Nr. 184** offen ist — deshalb ist die Zählung ein
+    Hinweis und kein Befund. Wer die echten ersetzt, fasst `server/` an:
+    **PK-04 Teilstück 5.**
 
 ## Erledigt
 

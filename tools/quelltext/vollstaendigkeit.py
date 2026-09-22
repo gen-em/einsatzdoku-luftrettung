@@ -413,14 +413,28 @@ def pruefung_werte(bericht):
                 stil.append('%s:%d  %s' % (kurz(pfad), zeile_von(t, m.start()),
                                            m.group(2)[:60].replace('\n', ' ')))
     bericht.befund('2 Werte', 'style="..."-Attribute in PHP/JS', stil,
-                   frei=[z for z in liste_lesen('vollstaendigkeit-ausnahmen.md', 2) if z[0] == 'style'])
+                   frei=[z for z in liste_lesen('vollstaendigkeit-ausnahmen.md', 2)
+                             if z[0].strip('`').startswith('style')])
 
 
 # =========================================================== 3. Symbole
 # Zeichen, die im Markup als SYMBOL dienen. Kein Emoji darunter — die stehen
 # in EMOJI, und die beiden Listen ueberschneiden sich nicht. Ein Zeichen in
 # beiden Listen wuerde zweimal gemeldet, und die Summe stimmte nie.
-UNICODE_SYMBOLE = ('▸▾▴▿▲▼◂◃►◄✓✔✗✘✕✖×⚠★☆◌●○◆■□←→↑↓⌄⌃⌃⋯…⚙⋮❯❮›‹»«'
+#
+# DIE TYPOGRAFIE IST RAUS (PK-04/1b, E-PK-16). Bis zum 22.09.2026 standen
+# hier auch `…` `→` `←` `«` `»` `‹` `›` `⋯` — Satzzeichen, die in Prosa
+# vorkommen und kein Symbol sind. Sie machten die Zahl aus: GEMESSEN am
+# 22.09.2026 fielen mit ihrem Wegfall 330 Treffer auf 14. Eine Zahl, die zu
+# 96 Prozent aus Gedankenstrichen und Auslassungspunkten besteht, ist keine
+# Messung, sondern Rauschen — und Rauschen liest niemand mehr nach dem
+# dritten Mal (Backlog Nr. 227).
+#
+# WER EIN ZEICHEN HIER EINTRAEGT, prueft vorher, ob es in Fliesstext
+# vorkommen kann. Kommt es vor, gehoert es nicht hierher: Die Pruefung kann
+# Kommentare nicht ausblenden (der Abtaster versagt in PHP mit HTML,
+# Backlog Nr. 184), und jeder Prosatreffer waere ein Falschbefund.
+UNICODE_SYMBOLE = ('▸▾▴▿▲▼◂◃►◄✓✔✗✘✕✖×⚠★☆◌●○◆■□↑↓⌄⌃⌃⚙⋮❯❮'
                    '⇧⇩⊕⊖⊗✎✓')
 
 # Emoji im engeren Sinn: die Bloecke ab U+1F000 und der Variantenwaehler
@@ -506,9 +520,20 @@ def pruefung_symbole(bericht):
     # niemand. Solange die Zahl aus Typografie besteht, ist sie eine ZAHL und
     # kein Befund je Zeile; wer sie klein bekommen will, braucht zuerst
     # Nr. 184 (der Abtaster) und dann eine engere Zeichenliste.
-    bericht.befund('3 Symbole', 'Unicode-Zeichen als Symbol im Markup',
-                   ['%s:%d  %s' % z for z in unicode_])
-    bericht.befund('3 Symbole', 'Emoji im Markup', emoji)
+    # HINWEIS UND NICHT BEFUND (PK-04/1b, E-PK-16). Beide Zahlen stehen
+    # weiter da — eine Messung, die man behalten kann, wirft man nicht weg —,
+    # aber sie halten keinen Lauf mehr auf. Der Grund ist die Kommentarfrage
+    # oben: Von den 14 verbliebenen Symbolzeichen und den 8 Emoji steht ein
+    # Teil in KOMMENTAREN (`version.php` im Kopftext, `pwquality.js` in der
+    # Erklaerung zur Graphemzerlegung), und die Pruefung kann das nicht
+    # trennen, solange Nr. 184 offen ist. Ein Befund, der sich nicht abstellen
+    # laesst, ohne die Sache zu verschlechtern, ist ein Hinweis.
+    #
+    # WAS DAMIT NICHT GESAGT IST: dass die 14 in Ordnung sind. Sie gehoeren
+    # in Symboldateien und stehen als Rest im Backlog (Nr. 270).
+    bericht.hinweis('3 Symbole', 'Unicode-Zeichen als Symbol im Markup',
+                    ['%s:%d  %s' % z for z in unicode_])
+    bericht.hinweis('3 Symbole', 'Emoji im Markup', emoji)
     bericht.befund('3 Symbole', 'Verweis auf fehlende Symboldatei', fehlend)
     bericht.hinweis('3 Symbole', 'Symboldatei ohne Verweis', ohne_verweis)
 
@@ -776,7 +801,50 @@ class Bericht:
         self.zeilen.append(('zahl', gruppe, was, n, []))
 
     def befund(self, gruppe, was, liste, frei=None):
+        """Eine Pruefung eintragen. `frei` ist die Ausnahmeliste dazu.
+
+        `frei` WIRKTE BIS ZUM 22.09.2026 NICHT (PK-04/1b). Der Parameter
+        stand in der Signatur, wurde uebergeben — und dann verworfen. Eine
+        Ausnahme fuer `style=` liess sich also eintragen, und sie tat nichts:
+        der Treffer blieb ein Befund, der Eintrag stand wirkungslos da. Das
+        ist dieselbe Falle, die der Kommentar in `pruefung_symbole` fuer die
+        Token-Ausnahmen beschreibt, nur eine Ebene tiefer und unbemerkt.
+
+        Jeder Eintrag in `frei` ist ein Paar (Muster, Grund). Das Muster
+        traegt die Form `<name>:<regex>`; gefiltert wird gegen den TEXT des
+        Treffers, nicht gegen seinen Pfad. Ein Muster ohne `:` filtert
+        nichts — es waere eine Ausnahme fuer alles.
+        """
         liste = list(liste)
+        muster = []
+        for eintrag in (frei or []):
+            # BACKTICKS ABSTREIFEN. `liste_lesen()` liefert die Markdown-Zelle
+            # roh, also mit ihren Ruecken-Anfuehrungszeichen; die anderen
+            # Verbraucher tun dasselbe (Zeile 392). Ohne das passte kein
+            # Muster, und die Ausnahme waere zum zweiten Mal wirkungslos.
+            teil = eintrag[0].strip('`').split(':', 1)
+            if len(teil) == 2 and teil[1].strip():
+                # EIN KAPUTTES MUSTER IST EIN BEFUND, KEIN ABSTURZ. Beim
+                # Bauen der ersten drei Eintraege hat ein `\|` in der
+                # Markdown-Zelle den Lauf mit `re.error` beendet, ohne eine
+                # einzige Pruefung zu melden — `liste_lesen()` zerlegt die
+                # Zeile an JEDEM `|`, und das Muster kam halbiert an.
+                try:
+                    muster.append(re.compile(teil[1].strip()))
+                except re.error as e:
+                    self.fehler(gruppe, 'Ausnahmemuster unbrauchbar: %s (%s)'
+                                        % (eintrag[0], e))
+        if muster:
+            # GEGEN DEN WERT, NICHT GEGEN DIE ZEILE. Ein Eintrag hat die Form
+            # `pfad:zeile  wert` (zwei Leerzeichen als Trenner). Filterte man
+            # gegen die ganze Zeile, verankerte `^` am PFAD und kein Muster
+            # mit `^` griffe je — gemessen beim Bauen: vier richtige Muster,
+            # null Wirkung.
+            def wert(e):
+                teil = e.split('  ', 1)
+                return teil[1] if len(teil) == 2 else e
+            liste = [e for e in liste
+                     if not any(m.search(wert(e)) for m in muster)]
         self.zeilen.append(('befund', gruppe, was, len(liste), liste))
         self.befunde += len(liste)
 

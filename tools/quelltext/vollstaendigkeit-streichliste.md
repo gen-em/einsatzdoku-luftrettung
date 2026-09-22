@@ -151,3 +151,50 @@ im selben Paket hier ein, nicht später.
 | `phasen-name` | **Ersatzlos**, dieselbe Entscheidung. Der Name einer Phase in der Einsatzansicht, zweimal als `<span>` in `einsatz.php` (der Eintrag in `ohne-regel.md` nannte dazu `einsatz.php:631` — beim Austragen nachgemessen sind es die Zeilen 764 und 805). Ohne Regel stand er in der Textschrift der Zeile, und genau so soll er stehen; das `<span>` selbst bleibt, weil es den Text gruppiert. Stand ebenfalls nicht im alten Stylesheet. | Backlog-Runde 3 |
 
 | `imp-warn` | **Ersatzlos — ersetzt durch einen vorhandenen Baustein.** Die Warnung „abweichende Crew" in der Kopfzeile einer Tagesgruppe der Importvorschau stand als Fließtext zwischen zwei Punkten und sah aus wie die Besatzungsangabe daneben. Sie ist jetzt eine `.plakette-orange` mit dem Symbol `warnung` (M-MR-01, Variante A, F-MR-1) — dieselbe Form, mit der die Anwendung überall „Zustand, der Aufmerksamkeit will" zeigt. Eine eigene Regel (Variante B des Mockups) hätte eine zweite Darstellung für dieselbe Aussage angelegt. Stand **nicht** im alten Stylesheet; der Eintrag steht hier, damit die Prüfung meldet, falls die Klasse ins Markup zurückkehrt. | Mockup-Runde 9c / AP1 |
+
+## Nachtrag PK-04/1b (22.09.2026)
+
+**Zweiunddreißig Klassen, die seit dem Redesign ohne Eintrag dastanden.**
+Die Prüfung meldete sie als „ohne Gegenstück"; sie sind hier eingetragen,
+weil eine Prüfung gegen null erst dann etwas sagt, wenn nichts mehr ohne
+Begründung übrig ist (E-PK-16).
+
+**Der Grund ist in beiden Gruppen GEMESSEN und nicht erinnert.** Was hier
+steht, ist, wo die Klasse heute vorkommt — nicht, wodurch sie ersetzt wurde.
+Das wäre eine Behauptung; die Messung ist eine Auskunft.
+
+| Klasse | Grund | Paket |
+|---|---|---|
+| `leaflet-bottom` | Gehört **Leaflet**, nicht diesem Stylesheet: Die Regel liegt in `server/assets/vendor/leaflet.css`. Eine Regel dafür in `style.css` wäre ein Eingriff in eine fremde Bibliothek. | PK-04/1b |
+| `leaflet-control-layers` | Gehört **Leaflet**, nicht diesem Stylesheet: Die Regel liegt in `server/assets/vendor/leaflet.css`. Eine Regel dafür in `style.css` wäre ein Eingriff in eine fremde Bibliothek. | PK-04/1b |
+| `leaflet-control-layers-expanded` | Gehört **Leaflet**, nicht diesem Stylesheet: Die Regel liegt in `server/assets/vendor/leaflet.css`. Eine Regel dafür in `style.css` wäre ein Eingriff in eine fremde Bibliothek. | PK-04/1b |
+| `leaflet-control-layers-selector` | Gehört **Leaflet**, nicht diesem Stylesheet: Die Regel liegt in `server/assets/vendor/leaflet.css`. Eine Regel dafür in `style.css` wäre ein Eingriff in eine fremde Bibliothek. | PK-04/1b |
+| `leaflet-control-layers-separator` | Gehört **Leaflet**, nicht diesem Stylesheet: Die Regel liegt in `server/assets/vendor/leaflet.css`. Eine Regel dafür in `style.css` wäre ein Eingriff in eine fremde Bibliothek. | PK-04/1b |
+| `leaflet-top` | Gehört **Leaflet**, nicht diesem Stylesheet: Die Regel liegt in `server/assets/vendor/leaflet.css`. Eine Regel dafür in `style.css` wäre ein Eingriff in eine fremde Bibliothek. | PK-04/1b |
+| `add-link` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `badge` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `btn-danger` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `btn-yellow` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `c-dc-bergwacht` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `c-dc-false_alarm` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `c-dc-secondary` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `c-dc-winch` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `imp-error` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `map` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. Der Kartenbehälter trägt heute `id="map"` und `class="geo"` — der Name lebt als **Kennung** weiter, nicht als Klasse. | PK-04/1b |
+| `map-tall` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `neu-feld` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `neu-form` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `neu-titel` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `neu-zeile` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `pwquality` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `rowlink` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `settings-form` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `sictab` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `stammblock` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `stammunter` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `stammzahl` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `stat-tile-link` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `stats-grid` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `zeilenmenu` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+| `zeilenmenu-inhalt` | **Ersatzlos entfallen.** Gemessen am 22.09.2026: Die Klasse steht in keiner PHP-, JS- oder CSS-Datei unter `server/` mehr. | PK-04/1b |
+

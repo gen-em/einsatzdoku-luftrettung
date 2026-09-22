@@ -6,8 +6,8 @@
   "proben": {
     "syntax-php":        { "aufruf": "php -l",                                              "braucht": "nichts" },
     "wortliste":         { "aufruf": "bash tools/quelltext/pruefen.sh textprobe",                "braucht": "nichts" },
-    "vollstaendigkeit":  { "aufruf": "bash tools/quelltext/pruefen.sh vollstaendigkeit --hoechstens 398", "braucht": "nichts",
-                           "bemerkung": "Die Schwelle steht HIER und sonst nirgends. E-PK-16 nimmt sie in PK-04 ganz weg; PK-05 laesst die Kette dieselbe Datei lesen, statt die Zahl ein zweites Mal zu fuehren." },
+    "vollstaendigkeit":  { "aufruf": "bash tools/quelltext/pruefen.sh vollstaendigkeit --hoechstens 18", "braucht": "nichts",
+                           "bemerkung": "Die Schwelle steht HIER und sonst nirgends; der Laeufer in tools/quelltext/ LIEST sie von hier. PK-04/1b hat sie von 398 auf 18 gebracht (Typografie aus der Zeichenliste, 32 Streichlisteneintraege, vier style-Ausnahmen). Die verbliebenen 18 sind Klassen im Markup ohne Regel (Backlog Nr. 269) und lassen sich nur in server/ aufloesen -- PK-04 Teilstueck 5 nimmt die Schwelle dann ganz weg (E-PK-16)." },
     "linkprobe":         { "aufruf": "bash tools/quelltext/pruefen.sh linkprobe",                    "braucht": "nichts" },
     "installweiche":     { "aufruf": "bash tools/quelltext/pruefen.sh installweiche",                 "braucht": "nichts" },
     "sitzungshaertung":  { "aufruf": "bash tools/quelltext/pruefen.sh sitzungshaertung",              "braucht": "nichts" },

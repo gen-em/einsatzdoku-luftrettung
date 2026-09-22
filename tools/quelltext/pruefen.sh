@@ -33,8 +33,10 @@ starter() {   # starter <name> — womit die Datei gefahren wird
 
 # DIE SCHWELLE STEHT IN pruefablauf.json UND NIRGENDS SONST (CLAUDE.md 6).
 # `alle` liest sie von dort, statt sie ein zweites Mal zu führen — eine Zahl
-# an zwei Stellen altert an einer davon unbemerkt. E-PK-16 nimmt sie in
-# PK-04/1b ganz weg; dann fällt diese Funktion mit.
+# an zwei Stellen altert an einer davon unbemerkt. **PK-04/1b hat sie von
+# 398 auf 18 gebracht, nicht auf null** — die verbliebenen 18 sind Klassen im
+# Markup ohne Regel (Backlog Nr. 269) und lassen sich nur in `server/`
+# auflösen. Teilstück 5 nimmt sie dann ganz weg, und diese Funktion fällt mit.
 zusatz() {
     [ "$1" = vollstaendigkeit ] || return 0
     python3 - <<'PY'

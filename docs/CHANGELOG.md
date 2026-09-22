@@ -14,6 +14,59 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Die Vollständigkeit misst wieder Symbole statt Satzzeichen] — 2026-09-22
+
+### Geändert
+
+- **Die Zeichenliste der Symbolprüfung trägt die Typografie nicht mehr**
+  (PK-04/1b, E-PK-16, Backlog Nr. 227). Sie enthielt `…` `→` `←` `«` `»`
+  `‹` `›` `⋯` — Satzzeichen, die in jedem zweiten Hilfetext vorkommen
+  („Betrieb → Servereinstellungen", „Daten werden geladen…"). **Gemessen:
+  330 Treffer fielen auf 14.** Eine Zahl, die zu 96 Prozent aus
+  Gedankenstrichen besteht, ist keine Messung; die echten Symbole standen
+  zwischen ihnen und fielen niemandem auf.
+- **Symbol- und Emoji-Zählung sind Hinweis statt Befund.** Beide Zahlen
+  stehen weiter da, halten aber keinen Lauf mehr auf. Grund: Ein Teil der 14
+  steht in **Kommentaren** (`version.php` im Kopftext, `pwquality.js` in der
+  Erklärung zur Graphemzerlegung), und die Prüfung kann das nicht trennen,
+  solange Nr. 184 offen ist. Ein Befund, der sich nicht abstellen lässt,
+  ohne die Sache zu verschlechtern, ist ein Hinweis. Die 14 stehen als
+  Nr. 270 im Backlog — damit ist nicht gesagt, dass sie in Ordnung sind.
+- **Zweiunddreißig Klassen sind in die Streichliste eingetragen**: sechs
+  gehören Leaflet (ihre Regel liegt in `vendor/leaflet.css`), 26 kommen am
+  22.09.2026 in keiner Datei unter `server/` mehr vor. Der Grund ist in
+  beiden Gruppen **gemessen und nicht erinnert** — es steht dort, wo die
+  Klasse heute vorkommt, nicht wodurch sie ersetzt wurde.
+- **Die Schwelle der Vollständigkeit steht auf 18 statt 398.** Sie fällt
+  nicht ganz, und der Grund steht im Backlog: Die verbliebenen 18 sind
+  Klassen, die im Markup stehen und in keinem Stylesheet eine Regel haben
+  (Nr. 269). Jede ist entweder ein toter Markup-Rest oder eine fehlende
+  Regel; beides ändert `server/`.
+
+### Behoben
+
+- **Eine Ausnahmeliste, die nichts tat.** Der Parameter `frei` in
+  `befund()` stand in der Signatur, wurde übergeben — und dann verworfen.
+  Eine Ausnahme für `style="…"` ließ sich eintragen, und sie wirkte nicht:
+  Der Treffer blieb ein Befund, der Eintrag stand wirkungslos da. Jetzt
+  filtert `frei` gegen den **Wert** des Treffers (nicht gegen die ganze
+  Zeile — sonst verankerte `^` am Dateipfad und kein Muster mit `^` griffe
+  je). Damit sind die zehn `style="…"`-Treffer erklärt: Alle zehn sind
+  **berechnete Laufzeitwerte** — eine Farbe aus den Daten, ein Drehwinkel,
+  Prozentbreiten. Die Muster verlangen das Anführungszeichen hinter dem
+  Doppelpunkt, damit ein festes `left: 12px` ein Befund bleibt;
+  **gegengeprüft**: ein eingefügtes `left:12px` und ein `color:#abc` wurden
+  gemeldet, die berechneten nicht.
+- **Ein kaputtes Ausnahmemuster beendete den Lauf**, statt ein Befund zu
+  sein. Beim Schreiben der ersten Einträge hat ein `\|` in einer
+  Markdown-Zelle den ganzen Lauf mit `re.error` abgebrochen, ohne eine
+  einzige Prüfung zu melden — die Tabellenzeile wird an **jedem** `|`
+  zerlegt, auch am escapeten, und das Muster kam halbiert an. Jetzt meldet
+  das Werkzeug das Muster als Befund und misst weiter.
+
+Werkzeuge und Dokumentation, keine Datei unter `server/` — **keine
+Versionsstufe**.
+
 ## [Werkzeug: Acht Quelltextprüfungen unter einem Läufer] — 2026-09-21
 
 ### Geändert

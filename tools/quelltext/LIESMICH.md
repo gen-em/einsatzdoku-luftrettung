@@ -30,8 +30,8 @@ Nichts — kein Netz, keine Datenbank, keine Installation. `php` und `python3`.
 ## Erwartete Zahl
 
 `alle` → **8 von 8 Prüfungen grün**, `--selbstprobe` → **5 von 5**.
-Die Schwelle der Vollständigkeit steht in `tools/pruefstand/pruefablauf.json`
-und wird von dort **gelesen**, nicht hier geführt (E-PK-16 nimmt sie weg).
+Die Schwelle der Vollständigkeit steht in `pruefablauf.json` und wird von
+dort **gelesen**. PK-04/1b brachte sie von 398 auf **18** (Nr. 269).
 
 ## Was es nicht kann
 
