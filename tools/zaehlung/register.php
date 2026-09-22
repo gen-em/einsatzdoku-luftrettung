@@ -276,7 +276,7 @@ return [
  'beschreibung' => 'INSERT/DELETE auf Kindtabellen ausserhalb einsatz_lib.php, migration_lib.php',
  'grund' => 'Vier Datenzugriffsfunktionen einsatz_*_ersetzen() (E-ZE-21).',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
- 'ausser' => ['server/migration_lib.php'],
+ 'ausser' => ['server/migration_lib.php', 'server/einsatz_lib.php'],
  'regel' => ['art' => 'muster', 'muster' =>
     '~\b(INSERT\s+(?:IGNORE\s+)?INTO|DELETE\b[^;]{0,40}?FROM|REPLACE\s+INTO)\s+`?('
   . ZH_KINDTABELLEN . ')`?~i'],

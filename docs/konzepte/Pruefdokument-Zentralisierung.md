@@ -1,6 +1,6 @@
 # Prüfdokument — Zentralisierung: eine Stelle je Sache (Schritt 15)
 
-**Stand:** 21.09.2026, nach **AP1**, **AP2** (Web 20.27.0), **AP3** (Web 20.28.0) und **AP4** (Web 20.29.0) · **Zweig:** `claude/eager-euler-jlfi9i`,
+**Stand:** 21.09.2026, nach **AP1**, **AP2** (Web 20.27.0), **AP3** (Web 20.28.0), **AP4** (Web 20.29.0) und **AP5** (Web 20.30.0) · **Zweig:** `claude/eager-euler-jlfi9i`,
 von `origin/main` `fd99989` (Web 20.26.2) · **Konzept:**
 `Konzept-Zentralisierung.md`
 
@@ -497,3 +497,94 @@ Damit lief die Probe durch. Nachgetragen in Backlog **Nr. 259**.
   Messstand mit, an dem sich so etwas künftig entscheiden lässt.
 - **Die `NULL`-Kleinigkeit** (Problem 3 im Protokoll) ist durch Lesen aller
   Schreibwege ausgeschlossen, nicht durch eine Messung an Daten.
+
+---
+
+# AP5 — Transaktion und Kindtabellen (Web 20.30.0, 22.09.2026)
+
+**Das heikelste Paket bisher.** Es fasst 24 Transaktionsrahmen und 30
+Schreibanweisungen auf Kindtabellen an — darunter den Geräte-Eingang, das
+Zurückspielen von Backups, den CSV-Import und alle Löschwege. Ein falsch
+gesetztes `commit()` verliert Daten still.
+
+## E0. Was nicht geprüft werden konnte — und warum
+
+| # | Was | Warum nicht | Woran man ein Scheitern erkennt |
+|---|---|---|---|
+| **N5-1** | **Ein echter Deadlock** | `db_transaktion()` rollt zurück und wirft weiter; ob sich das bei einem MySQL-Deadlock (Fehler 1213) genauso verhält wie vorher, ließe sich nur mit zwei gleichzeitigen Schreibern nachstellen. `ingest.php` — die Stelle, an der Deadlocks auftreten (Nr. 210) — **ist nicht angefasst** | Ein Upload der Uhr meldet einen Fehler, den der JSON-Vertrag nicht kennt |
+| **N5-2** | **Der Fall „DDL bestätigt still"** | Der zweite Grund für die `inTransaction()`-Nachfrage in `db_transaktion()` ist gelesen, nicht gemessen: Kein Rumpf der 24 umgestellten Rahmen setzt ein `ALTER`/`CREATE` ab. Der **erste** Grund ist gemessen (28 von 42 `rollBack()` ohne Wache) | Im Protokoll steht „There is no active transaction" statt des eigentlichen Grundes |
+| **N5-3** | **Der Android- und der Uhr-Prüfstand** | Unverändert wie N3-2/N4-1: kein `/opt/android-sdk`. `ingest.php` ist angefasst — **zwei** Stellen, beide Kindtabellen-Schreibwege, kein Fehlerschlüssel und keine Antwortform berührt; die Ingestprobe (83/0) fährt sie | Ein Android-`SenderTest` schlägt fehl |
+| **N5-4** | **Der punktweise GPX-Vergleich** | Unverändert Nr. 259 (Demo-Reset) | siehe dort |
+| **N5-5** | **`tools/schemaprobe/`** | Unverändert N4-3. Für AP5 ist sie doppelt relevant: `einsatz_anweisung()` hält Anweisungen **je Verbindung**, und die Schemaprobe ist die einzige Stelle mit mehreren Verbindungen nebeneinander. Belegt ist stattdessen durch Lesen und durch die gehaltene PDO-Referenz, die eine Wiederverwendung der `spl_object_id` ausschließt | Eine Migration im Prüfschema schreibt in die falsche Datenbank |
+
+## E1. Was maschinell geprüft wurde — mit Mittel **und** Zahl
+
+### Gegen den Quelltext
+
+| Mittel | Gemessen |
+|---|---|
+| `tools/zaehlung/zaehlen.php` | **38 Zeilen, 0 über der Decke.** Z16 **33 → 9** · Z17 **30 → 0** |
+| Bauform-Auszählung mit `token_get_all()` | **19 / 12 / 2** (weitergeben · schlucken · kein `try`); **42 `rollBack()`, 14 mit Wache, 28 ohne** |
+| Gegenprobe „verirrtes `commit`/`rollBack` in einer Closure" | über **alle** `db_transaktion()`-Aufrufe: **0** (nach einem Fund, siehe Problem 1) |
+| `tools/zaehlung/zaehlen.php --selbstprobe` | **34 von 34** |
+| `php -l` über `server/` | **136 Dateien, 0 Fehler** |
+| `tools/wortliste/wortliste.py` | **0 / 0 / 0** |
+| `tools/vollstaendigkeit/pruefen.py` | **398** — unverändert |
+| `tools/kettenaufrufe/pruefen.py` | **0 Befunde** |
+| `tools/sitzungshaertung/pruefen.php` | **0 Befunde** |
+
+### Gegen die laufende Anlage
+
+| Mittel | Gemessen |
+|---|---|
+| **Probe für `db_transaktion()`** (Einmalprobe) | **10 Zellen, 10 erfüllt** — darunter die drei Verschachtelungsfälle: innerer Fehler wirft weiter, **äußere** Transaktion steht noch, äußeres `rollBack()` nimmt die innere Arbeit mit |
+| **Messstand `api/import_commit.php`** (csv-Kreislauf, Wanduhr) | **davor 41,71 s und 41,47 s · danach 41,78 s und 41,31 s** — innerhalb der Streuung |
+| Kreislauf `edbak` | **328 771 Einzelvergleiche, 0 unerklärt, 21 erwartet** |
+| Kreislauf `csv` | **10 922 Einzelvergleiche, 0 unerklärt, 1 271 erwartet** |
+| `tools/ingestprobe/probe.php` | **83 / 0** — der umgebaute Uhr-Eingang |
+| `tools/kopplungsprobe/probe.php` | **76 / 0, 0 übergangen** |
+| `tools/komplettprobe/probe.php` | **64 / 0** |
+| `tools/spurprobe/probe.php` | **45 / 0** |
+| `tools/jobprobe/probe.php` | **35 / 0** |
+| `tools/wiederherstellungs-probe/probe.php` | **111 / 0** |
+| `tools/ratenprobe/probe.php` | **50 Prüfungen, 0 Befunde** |
+| `tools/gpxprobe/probe.php` | **95 / 4** — unverändert der Befund aus Nr. 259 |
+| Demo-Reset von Hand | **106 Einsätze, 21 Diensttage** wie zuvor — `demo_anlegen()` und `demo_entfernen()` laufen jetzt über `db_transaktion()` |
+
+## E2. Was im Browser geprüft wurde
+
+| Weg | Ergebnis |
+|---|---|
+| **Klickprobe**, Transaktionshälfte | **48 von 48 Wegen erfüllt, 0 verfehlt** |
+| **Klickprobe**, nach dem Kindtabellen-Umbau | **48 von 48 Wegen erfüllt, 0 verfehlt** — je Lauf mit vorgestellter `demo_letzter_reset`-Marke (Nr. 259) |
+
+## E3. Prüfliste — was **die Auftraggeberin** noch tun muss
+
+| # | Weg | Erwartet | Scheitern erkennbar an |
+|---|---|---|---|
+| **E-1** | **Einen Einsatz im Formular speichern** — mit Besatzung, Phasenzeiten, einer Reanimation und zwei weiteren Rettungsmitteln | Alles steht nach dem Speichern da | Eine der vier Gruppen fehlt oder ist doppelt |
+| **E-2** | Denselben Einsatz **erneut speichern**, dabei eine Phase löschen und eine Besatzungszeile leeren | Der Satz wird **ersetzt**, nicht gemischt | Die gelöschte Phase steht noch da |
+| **E-3** | **Einen CSV-Export zurückimportieren**, der Phasen und Reanimation enthält | Wie bisher; der Bericht nennt dieselben Zahlen | Weniger übernommene Einsätze, oder der Import läuft spürbar länger |
+| **E-4** | **Ein Konto-Backup einspielen** | Wie bisher | Fehlende Phasen, Besatzung oder Rettungsmittel im wiederhergestellten Bestand |
+| **E-5** | **Schneiden und Rückgängig** an einem Ruhesegment mit Spur | Der Einsatz entsteht mit Phasen und verschwindet restlos wieder | Ein Einsatz ohne Phasen, oder Phasenzeilen ohne Einsatz |
+| **E-6** | **Einen Diensttag umdatieren** und einen **Einsatz verschieben** | Wie bisher | „Verschieben fehlgeschlagen", wo es klappen müsste |
+| **E-7** | **Ein Passwort wechseln** (Einstellungen → Profil) | Wie bisher; andere Sitzungen enden | Der Wechsel meldet Erfolg, das alte Passwort gilt aber noch — dann wurde die Transaktion nicht bestätigt |
+| **E-8** | **Einen Standort löschen**, an dem Rettungsmittel hängen | Wie bisher, mit derselben Zahl in der Rückfrage | Der Standort bleibt stehen, oder die Vorbelegungen bleiben liegen |
+| **E-9** | **Ein Gerät koppeln und einen Upload fahren** (echte Uhr) | Unverändert | Die Uhr meldet einen unbekannten Fehler |
+
+## E4. Grenzen — was sich mit diesem Paket NICHT beantworten lässt
+
+- **Die neun Ausnahmen sind gelesen, nicht gemessen.** Belegt ist ihre
+  Bauform (Tokenizer) und ihre Größe (Zeilen und Variablen). Dass eine
+  Umstellung dort schadete, ist begründet und nicht vorgeführt.
+- **`einsatz_anweisung()` gegen zwei gleichzeitige Verbindungen** ist der
+  Fall, für den die gehaltene PDO-Referenz gebaut ist — und genau der ist
+  nicht gefahren (N5-5).
+- **Der Messstand misst den ganzen csv-Kreislauf, nicht `import_commit.php`
+  allein.** 41,7 s enthalten Browser, Export, Vergleich. Eine Verschlechterung
+  von einigen hundert Millisekunden im Import verschwände darin. Was die
+  Messung ausschließt, ist die Größenordnung, um die es ging: 21 000
+  zusätzliche Roundtrips wären Sekunden, nicht Millisekunden.
+- **Der behobene Fehler in `einsatz_form.php` ist eine Verhaltensänderung**
+  (Problem 3 im Protokoll). Sie tritt nur ein, wenn ohnehin schon etwas
+  fehlgeschlagen ist — aber sie ist eine.

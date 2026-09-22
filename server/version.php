@@ -6803,5 +6803,65 @@ declare(strict_types=1);
  *
  *   VIER ROLLENVERGLEICHE VON HAND (`=== 'betreiberin'`) rufen jetzt
  *   `rolle_ist_betreiberin()`.
+ *
+ * 20.30.0 — EIN TRANSAKTIONSRAHMEN, VIER KINDTABELLEN
+ *   (22.09.2026, Schritt 15 AP5 — Zentralisierung, R83, E-ZE-20, E-ZE-21).
+ *   NEBEN-Nummer: fuenf neue Funktionen, kein Datenmodell, keine Migration,
+ *   `update.php` nicht faellig.
+ *
+ *   DREIUNDDREISSIG TRANSAKTIONSRAHMEN IN ZWEIUNDZWANZIG DATEIEN, und der
+ *   Tokenizer hat sie in drei Bauformen sortiert (mit einem Muster ging es
+ *   nicht: Drei Anlaeufe ergaben drei Verteilungen, weil geschweifte Klammern
+ *   in Kommentaren und Zeichenketten mitzaehlen). 19x beginnen, versuchen,
+ *   bestaetigen, bei Fehler zurueckrollen und weitergeben; 12x dasselbe, aber
+ *   der `catch` schluckt; 2x gar kein `try`. Dazu 42 `rollBack()`-Aufrufe,
+ *   von denen 14 hinter einer Wache standen und 28 nicht.
+ *
+ *   `db_transaktion(PDO $pdo, callable $fn): mixed` — 24 Rahmen ziehen um.
+ *   Sie ist verschachtelungsfest und ASYMMETRISCH: Wer schon in einer fremden
+ *   Transaktion steht, oeffnet keine eigene und bestaetigt und verwirft dann
+ *   auch nichts; die Ausnahme kommt heraus, und der Aufrufer entscheidet.
+ *   Und sie fragt vor dem `rollBack()` nach, ob die Transaktion noch steht:
+ *   Ein DDL-Befehl bestaetigt in MySQL still, und der Rumpf darf selbst
+ *   zurueckgerollt haben — sonst wuerfe `rollBack()` eine ZWEITE Ausnahme und
+ *   verdeckte die erste. Genau das war der Zustand: „There is no active
+ *   transaction" im Protokoll statt des Grundes.
+ *
+ *   NEUN RAHMEN BLEIBEN, NAMENTLICH (Auftraggeber, 22.09.2026; das Konzept
+ *   liess acht zu, H-ZE-4). Drei wegen Groesse oder Vertrag: `ingest.php`
+ *   (Geraetevertrag, Deadlock-Behandlung in Schritt 18), `backup_lib.php`
+ *   (Rumpf 1153 Zeilen, 145 Variablen) und `api/import_commit.php` (542
+ *   Zeilen, 78 Variablen) — eine `use`-Liste mit 145 Eintraegen ist kein
+ *   Zentralisieren, sondern ein Rewrite. Sechs wegen Bauform: `pair.php`
+ *   (Geraetevertrag), `jobs_lib.php`, `diensttag_zusammenfuehren.php`,
+ *   `api/day.php`, `api/kdf_upgrade.php`, `api/schneiden.php` — sie rollen
+ *   MITTEN im `try` zurueck und machen dann etwas anderes weiter.
+ *
+ *   EIN LATENTER FEHLER IST DABEI HERAUSGEFALLEN (`einsatz_form.php`).
+ *   Hinter dem `commit()` standen noch die Hoehenermittlung und die
+ *   Rettungsmittel-Zeilen — INNERHALB desselben `try`, dessen `catch` ein
+ *   unbedingtes `$pdo->rollBack()` hatte. Warf eine der beiden, rollte der
+ *   `catch` eine BEREITS BESTAETIGTE Transaktion zurueck: Das wirft
+ *   seinerseits, und statt „Speichern fehlgeschlagen." gab es eine 500.
+ *
+ *   VIER KINDTABELLEN, FUENF SCHREIBWEGE, DREISSIG ANWEISUNGEN — jetzt vier
+ *   Funktionen in `einsatz_lib.php`: `einsatz_phasen_ersetzen()`,
+ *   `einsatz_reas_ersetzen()`, `einsatz_rettungsmittel_ersetzen()`,
+ *   `einsatz_besatzung_ersetzen()`. Zwei Schalter statt zweier
+ *   Funktionsformen: `loeschen` (Vorgabe `true`) fuer das Backup, das in
+ *   einen gerade erst angelegten Einsatz schreibt, und `ignorieren` fuer
+ *   dessen `INSERT IGNORE`. Eine leere Liste mit `loeschen => true` IST das
+ *   Loeschen — das ist der Zweig des Schneidens.
+ *
+ *   SIE PRUEFEN NICHTS. Was gueltig ist, entscheidet weiter der Aufrufer;
+ *   eine Pruefpolitik hier waere eine sechste neben den fuenf vorhandenen.
+ *
+ *   UND SIE HALTEN IHRE ANWEISUNGEN VOR (`einsatz_anweisung()`). `db.php`
+ *   setzt `ATTR_EMULATE_PREPARES => false`, also ist jedes `prepare()` ein
+ *   Roundtrip. `api/import_commit.php` bereitete seine sieben Anweisungen
+ *   deshalb EINMAL vor und fuehrte sie je Einsatz aus — bis zu 3000-mal. Ohne
+ *   Zwischenspeicher waeren daraus bis zu 21 000 Roundtrips geworden.
+ *   Nachgemessen am csv-Kreislauf: 41,78 s und 41,31 s gegen 41,71 s und
+ *   41,47 s davor — dieselbe Streuung.
  */
-const WEB_VERSION = '20.29.0';
+const WEB_VERSION = '20.30.0';

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
 require_once __DIR__ . '/../validate_lib.php';
+require_once __DIR__ . '/../einsatz_lib.php';   // Kindtabellen (Schritt 15/AP5)
 require_once __DIR__ . '/../diensttag_lib.php';
 
 /**
@@ -293,21 +294,15 @@ function import_commit(array $b, int $userId): never
                                  dest_lat = ?, dest_lon = ?, start_src = ?,
                                  uhr_gesperrt = 1, edited = 1
              WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
-        $insPhase = $pdo->prepare(
-            'INSERT INTO mission_phases (mission_id, phase, occurred_at, lat, lon)
-             VALUES (?,?,?,?,?)');
         $hatPhase2 = $pdo->prepare(
             'SELECT id FROM mission_phases WHERE mission_id = ? AND phase = 2 LIMIT 1');
-        $delPhasen = $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?');
-        $delRes = $pdo->prepare('DELETE FROM mission_resources WHERE mission_id = ?');
-        $insRes = $pdo->prepare('INSERT INTO mission_resources (mission_id, name) VALUES (?, ?)');
-        // resus_events haengt per FOREIGN KEY ... ON DELETE CASCADE an
-        // resus_sessions — das Loeschen der Sitzungen raeumt die Ereignisse mit.
-        $delRea = $pdo->prepare('DELETE FROM resus_sessions WHERE mission_id = ?');
-        $insReaS = $pdo->prepare(
-            'INSERT INTO resus_sessions (mission_id, started_at) VALUES (?, ?)');
-        $insReaE = $pdo->prepare(
-            'INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
+        /* DIE SIEBEN ANWEISUNGEN FUER DIE KINDTABELLEN STANDEN HIER, damit sie
+         * in der Schleife nur EINMAL vorbereitet werden — `db.php` setzt
+         * `ATTR_EMULATE_PREPARES => false`, jedes `prepare()` ist ein
+         * Roundtrip. Seit Schritt 15/AP5 halten die vier
+         * `einsatz_*_ersetzen()` sie selbst vor (`einsatz_anweisung()`), und
+         * zwar je Verbindung und SQL-Text. Der Vorteil bleibt, die Anweisungen
+         * stehen aber nicht mehr hier. */
 
         $neu = 0; $ersetzt = 0; $uebersprungen = 0;
         /* ZWEI MERKER FUER DEN ERSTEN TAG, nicht einer (Backlog Nr. 151).
@@ -526,12 +521,7 @@ function import_commit(array $b, int $userId): never
              * solche Datei zurueckspielt, darf die vorhandene Abweichung nicht
              * verlieren — sie stand nie in der Datei, sie wurde nicht
              * aufgehoben. Nennt die Datei dagegen eine Besatzung, gilt ihre. */
-            if ($mCrew) {
-                $pdo->prepare('DELETE FROM mission_crew WHERE mission_id = ?')->execute([$id]);
-                $insMC = $pdo->prepare('INSERT INTO mission_crew (mission_id, role_code, name)
-                                        VALUES (?,?,?)');
-                foreach ($mCrew as $rolle => $name) { $insMC->execute([$id, $rolle, $name]); }
-            }
+            if ($mCrew) { einsatz_besatzung_ersetzen($pdo, $id, $mCrew); }
 
             // Der Diensttag muss den Einsatz umschliessen (JSON-Vertrag 4.4).
             dt_zeitraum_fortschreiben($pdo, $dayId, $startedAt, $endedAt);
@@ -593,7 +583,8 @@ function import_commit(array $b, int $userId): never
                     $altOrt[(int)$a['phase']][] = [$a['lat'], $a['lon']];
                 }
 
-                $delPhasen->execute([$id]);
+                einsatz_phasen_ersetzen($pdo, $id, []);   // leere Liste = nur loeschen
+                $neuePhasen = [];
                 foreach ($phasen as $p) {
                     if (!is_array($p)) { continue; }
                     $nr = pruef_phase($p['phase'] ?? null, 'phases.phase', $pruef);
@@ -610,14 +601,17 @@ function import_commit(array $b, int $userId): never
                     if ($lat === null && $lon === null && !empty($altOrt[$nr])) {
                         [$lat, $lon] = array_shift($altOrt[$nr]);
                     }
-                    $insPhase->execute([$id, $nr, $wann, $lat, $lon]);
+                    $neuePhasen[] = ['phase' => $nr, 'occurred_at' => $wann,
+                                     'lat' => $lat, 'lon' => $lon];
                     $gesetzt[$nr] = true;
                 }
+                einsatz_phasen_ersetzen($pdo, $id, $neuePhasen, ['loeschen' => false]);
             }
             if (!isset($gesetzt[2])) {
                 $hatPhase2->execute([$id]);
                 if ($hatPhase2->fetchColumn() === false) {
-                    $insPhase->execute([$id, 2, $startedAt, null, null]);
+                    einsatz_phasen_ersetzen($pdo, $id,
+                        [['phase' => 2, 'occurred_at' => $startedAt]], ['loeschen' => false]);
                 }
             }
 
@@ -628,15 +622,14 @@ function import_commit(array $b, int $userId): never
              * gar nicht kennt, darf sie nicht loeschen.
              */
             if (is_array($m['rea'] ?? null)) {
-                $delRea->execute([$id]);
+                $neueReas = [];
                 foreach (pruef_menge($m['rea'], LIMIT_REA_SESSION, 'rea', $pruef) as $s) {
                     if (!is_array($s)) { continue; }
                     $beginn = pruef_utc($s['started_at'] ?? null, 'rea.started_at', $pruef);
                     if ($beginn === null) { continue; }
-                    $insReaS->execute([$id, $beginn]);
-                    $sid = (int)$pdo->lastInsertId();
                     $ereignisse = pruef_menge($s['events'] ?? [], LIMIT_REA_EREIGN,
                                               'rea.events', $pruef);
+                    $ausEreignisse = [];
                     foreach ($ereignisse as $e) {
                         if (!is_array($e)) { continue; }
                         // Nur bekannte Schluessel — ein freier Text waere im
@@ -644,9 +637,11 @@ function import_commit(array $b, int $userId): never
                         $typ  = pruef_reanimationsart($e['type'] ?? null, 'rea.events.type', $pruef);
                         $wann = pruef_utc($e['at'] ?? null, 'rea.events.at', $pruef);
                         if ($typ === null || $wann === null) { continue; }
-                        $insReaE->execute([$sid, $typ, $wann]);
+                        $ausEreignisse[] = [$typ, $wann];
                     }
+                    $neueReas[] = ['started_at' => $beginn, 'events' => $ausEreignisse];
                 }
+                einsatz_reas_ersetzen($pdo, $id, $neueReas);
             }
 
             // Weitere Rettungsmittel als eigene Zeilen (einzeln entfernbar),
@@ -658,8 +653,7 @@ function import_commit(array $b, int $userId): never
                 if ($name !== '' && !in_array($name, $sauber, true)) { $sauber[] = $name; }
                 if (count($sauber) >= LIMIT_RESSOURCEN) { break; }
             }
-            $delRes->execute([$id]);
-            foreach ($sauber as $name) { $insRes->execute([$id, $name]); }
+            einsatz_rettungsmittel_ersetzen($pdo, $id, $sauber);
 
             if ($ersterTag === null || $tag < $ersterTag) {
                 $ersterTag = $tag; $ersterTagId = $dayId;

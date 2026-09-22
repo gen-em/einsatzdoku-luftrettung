@@ -29,7 +29,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > | AP2 Konfiguration und Sitzung | **erledigt** 21.09.2026 | **Web 20.27.0** (Neben: zwei neue Funktionen, keine Migration) | Z01 **9 → 1** · Z02 **2 → 1** · Z03 **7 → 1** · Z04 **46 → 0** · `konfig_lib` **13/13** · Cookie-Parameter **16 Zellen, 0 Abweichungen** · Ladezyklus **7/7** · Sitzungshärtung **0 Befunde, Selbstprobe 12/12** · Register **38 Zeilen, 0 über der Decke** · `php -l` **134/0** · Wortliste **0/0** · Vollständigkeit **398** · `error_log(` **77** (unverändert, E-ZE-05). **Im Browser gegen eine laufende Anlage:** Bilderlauf **496 Bilder, 0 Überlauf, 0 Konsolenfehler** · Prüfliste **A-1 bis A-12 gefahren** · F-ZE-2 **40 anonyme Abrufe → 0 neue Sitzungsdateien** · Härtung wirkt (untergeschobene Kennung verworfen) · A-9 **8/8** · A-12 **7/7** · Abmelde-Probe erfüllt · Kopplungsprobe **76/0** · Ratenprobe **50/0** · **Nachtrag: fünf Proben repariert (448 Erwartungen, 0 offen; Nr. 257)** (der eine Befund war nicht von AP2 und ist behoben, Nr. 254) |
 > | AP3 API-Eingang und Flash | **erledigt** 21.09.2026 | **Web 20.28.0** (Neben: drei neue Funktionen, keine Migration) | Z05 **12 → 1** · Z06 **17 → 0** · Z07 **11 → 0** · Z08 **3 → 0** (Konzept erwartete 1, AP3-d) · Z09 **22 → 0** · `error_log(` **77** (unverändert, E-ZE-05) · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · `php -l` **135/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kettenaufrufe **0** · Sitzungshärtung **0**. **Gegen eine laufende Anlage:** Eingangsprobe **46 Zellen, 46 erfüllt** (davor **27 von 46** — die 19 Abweichungen sind F-ZE-5, aufgeschlüsselt im Protokoll; **beide Reihenfolge-Zellen schon davor grün**) · Flash-Probe **11/11** · Kreisläufe edbak **328 771/0/21**, csv **10 922/0/1 271** (Zahl für Zahl wie davor) · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0**. **GPX-Probe 95/4 — vor und nach dem Paket gleich**, Ursache ist der Demo-Reset dieser Anlage (Nr. 259) · Bilderlauf **496 Bilder, 0 Überlauf, 0 Konsolenfehler** |
 > | AP4 Datenzugriff klein | **erledigt** 21.09.2026 | **Web 20.29.0** (Neben: neue Funktionen, keine Migration) | Z10 **27 → 2** (AP4-c: `jobs.php` bleibt, Gerätevertrag) · Z11 **7 → 0** · Z12 **12 → 2** (Startwert von 13 berichtigt, AP4-d; zweite Ausnahme AP4-b) · Z13 **4 → 0** · Z14 **9 → 5** (AP4-e, kein vierter Helfer) · Z15 **57 → 54** · Z38 **77 → 75** (AP4-g) · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · `php -l` **136/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kettenaufrufe **0** · Sitzungshärtung **0** · CSP **0** · Migrationsregister **0**. **E-ZE-17-Beleg: 7 Stellen in 5 Dateien nachgelesen, 0 brauchen `?PDO $pdo`.** **Gegen eine laufende Anlage:** Kreisläufe edbak **328 771/0/21**, csv **10 922/0/1 271** (Zahl für Zahl wie davor) · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0** · Wiederherstellungs-Probe **111/0** · Anteilprobe **55/55** · Versandprobe **135/0** · Klickprobe **48/48** · Bilderlauf **496 Bilder, 0 Überlauf, 0 Konsolenfehler** |
-> | AP5 Transaktion und Kindtabellen | offen | — | — |
+> | AP5 Transaktion und Kindtabellen | **erledigt** 22.09.2026 | **Web 20.30.0** (Neben: fünf neue Funktionen, keine Migration) | Z16 **33 → 9** (neun namentliche Ausnahmen, H-ZE-4 ausgesetzt, AP5-c) · Z17 **30 → 0** · Bauformen mit dem Tokenizer ausgezählt: **19 / 12 / 2**, dazu **42 rollBack, 14 mit Wache** (AP5-a) · Probe für `db_transaktion()` **10/10** (einschließlich der drei Verschachtelungsfälle) · **Messstand Import: 41,78 / 41,31 s gegen 41,71 / 41,47 s davor** · Kreisläufe edbak **328 771/0/21**, csv **10 922/0/1 271** · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Wiederherstellungs-Probe **111/0** · Ratenprobe **50/0** · Klickprobe **48/48** · `php -l` **136/0**. **Ein latenter Fehler behoben** (einsatz_form.php: rollBack auf eine bereits bestätigte Transaktion) |
 > | AP6 Spaltenregister `missions` | offen | — | — |
 > | AP7 Zeit und Zahl (PHP) | offen | — | — |
 > | AP8 JavaScript | offen | — | — |
@@ -306,8 +306,8 @@ Abweichungen, alle Proben unter `tools/` grün wie zuvor.
 | `sitzung_starten()` | **`sitzung_lib.php`** (besteht seit Schritt 16; lädt nie `db.php` und zieht nur für die stündliche Schreibprobe `plattform_lib.php` nach) | `install.php` lädt kein `db.php`; `session_lib.php` lädt `db.php` und scheidet deshalb aus |
 | `api_methode()`, `api_rumpf()` | **`db.php`**, neben `json_out()` | 10c AP6 (`api/health.php`) braucht den Eingang **ohne** `auth_guard.php`; CSRF bleibt deshalb draußen (E-ZE-15). **In AP3 auf zwei Funktionen aufgeteilt** (AP3-a): `csrf_check()` steht in allen elf Rumpf-Dateien zwischen Methodenprüfung und Rumpflesen, ein Aufruf hätte diese Reihenfolge gekehrt |
 | `flash_setzen()`, `flash_holen()` | `session_lib.php` | hängt an der Sitzung |
-| `app_state_*`, `db_transaktion()`, `db_hat_*()`, `geraet_virtuell_sicherstellen()`, `geraete_echt_sql()` | `db.php` | dort liegen die Nachbarn schon. **Seit AP4 gebaut** — dazu `app_state_zu_lang()`, `geraet_virtuell_kennung()` und `GERAET_VIRTUELL_MUSTER`. `db_hat_*()` nehmen ein `PDO` als **ersten** Parameter (AP4-a): `tools/schemaprobe/` fährt gegen eine andere Verbindung als `db()`. `db_transaktion()` folgt in AP5 |
-| `einsatz_laden()`, `einsatz_*_ersetzen()` | **`einsatz_lib.php`** (neu) | Gegenstück zu `diensttag_lib.php`. **`einsatz_laden(int $id, int $userId, array $o = []): ?array` ist seit AP4 gebaut**, Optionen `spalten` und `papierkorb` (`nein`/`ja`/`egal`); `einsatz_*_ersetzen()` folgt in AP5 |
+| `app_state_*`, `db_transaktion()`, `db_hat_*()`, `geraet_virtuell_sicherstellen()`, `geraete_echt_sql()` | `db.php` | dort liegen die Nachbarn schon. **Seit AP4 gebaut** — dazu `app_state_zu_lang()`, `geraet_virtuell_kennung()` und `GERAET_VIRTUELL_MUSTER`. `db_hat_*()` nehmen ein `PDO` als **ersten** Parameter (AP4-a): `tools/schemaprobe/` fährt gegen eine andere Verbindung als `db()`. `db_transaktion(PDO $pdo, callable $fn): mixed` ist seit AP5 gebaut |
+| `einsatz_laden()`, `einsatz_*_ersetzen()` | **`einsatz_lib.php`** (neu) | Gegenstück zu `diensttag_lib.php`. **Seit AP5 vollständig gebaut**, dazu `einsatz_anweisung()` (ein Anweisungs-Zwischenspeicher je Verbindung — `ATTR_EMULATE_PREPARES` ist `false`, jedes `prepare()` kostet einen Roundtrip). **`einsatz_laden(int $id, int $userId, array $o = []): ?array` ist seit AP4 gebaut**, Optionen `spalten` und `papierkorb` (`nein`/`ja`/`egal`); `einsatz_*_ersetzen()` folgt in AP5 |
 | `mf_missions_register()`, `mf_spalten()` | `mission_fields_lib.php` | der Katalog ist das Vorbild |
 | `groesse_text()`, `zeit_relativ()`, `zahl_text()`, `prozent_text()`, `iso_utc()`, `iso_utc_lesen()`, `heute_lokal()`, `datum_text()`, `datum_zeit_text()` | **`format_lib.php`** (neu; lädt nur `konfig_lib.php`) | kein Verbraucher soll dafür eine Fachbibliothek laden müssen — der R83-Beleg |
 | `EdApi` | **`assets/api.js`** (neu) | in der Immer-Liste von `ui.php` (`ui_seite_*`) |
@@ -1266,6 +1266,133 @@ Ingestprobe, Spurprobe, GPX-Probe grün; Kreisläufe csv und edbak 0 unerklärt;
 **Messstand:** Laufzeit von `ingest.php` innerhalb der Streuung der letzten
 drei Läufe (Zahlen im Prüfdokument); Schneiden und Rückgängig im Browser je
 einmal.
+
+**AP5 — erledigt 22.09.2026, Web 20.30.0.** Neu: `db_transaktion()` in
+`db.php`; `einsatz_phasen_ersetzen()`, `einsatz_reas_ersetzen()`,
+`einsatz_rettungsmittel_ersetzen()`, `einsatz_besatzung_ersetzen()` und
+`einsatz_anweisung()` in `einsatz_lib.php`.
+
+*Abnahmezahlen:*
+
+| Zeile | Start | Ziel (Konzept) | gemessen |
+|---|---|---|---|
+| Z16 `beginTransaction(` außerhalb `db.php` | 33 | ≤ 8 Ausnahmen | **9** (AP5-c) |
+| Z17 Kindtabellen-Anweisungen | 30 | 0 | **0** |
+
+*Die Bauformen, wie E-ZE-20 sie verlangt — vor dem Umbau ausgezählt:*
+
+| Bauform | Anzahl |
+|---|---|
+| beginnen · versuchen · bestätigen · bei Fehler zurückrollen und **weitergeben** | **19** (12 werfen, 7 antworten selbst) |
+| dasselbe, aber der `catch` **schluckt** und setzt eine Meldung | **12** |
+| **gar kein `try`** | **2** |
+
+Dazu **42 `rollBack()`-Aufrufe, 14 hinter einer Wache, 28 ohne**.
+
+*Entscheidungen, die in diesem Paket gefallen sind:*
+
+- **AP5-a — Die Bauformen sind mit dem Tokenizer ausgezählt, nicht mit einem
+  Muster.** Drei Anläufe mit regulären Ausdrücken ergaben **drei verschiedene
+  Verteilungen**, weil geschweifte Klammern in Kommentaren und Zeichenketten
+  mitzählen und `inTransaction()` in mehreren Blöcken im erklärenden Kommentar
+  steht. Erst `token_get_all()` lieferte eine Zahl, die zweimal dieselbe war.
+  Das ist dieselbe Regel wie in `CLAUDE.md` 6 zum Tag-Rumpf, nur an anderer
+  Stelle: **Wer Struktur aus dem Quelltext liest, liest sie nicht mit einem
+  Muster.**
+- **AP5-b — `db_transaktion()` fragt vor dem `rollBack()` nach, ob die
+  Transaktion noch steht.** Das ist kein Übereifer, sondern der gemessene
+  Zustand: 28 der 42 `rollBack()`-Aufrufe standen ohne Wache. Ein `rollBack()`
+  auf einer Verbindung ohne offene Transaktion wirft — **aus dem `catch`
+  heraus**, womit die ursprüngliche Ausnahme verlorengeht und im Protokoll
+  „There is no active transaction" steht statt des Grundes. Zwei Anlässe
+  reichen: Ein DDL-Befehl bestätigt in MySQL still, und der Rumpf darf selbst
+  zurückgerollt haben.
+- **AP5-c — Neun Ausnahmen statt acht; H-ZE-4 ausgesetzt** (Auftraggeber,
+  22.09.2026). **Drei wegen Größe oder Vertrag:** `ingest.php` (vorab gesetzt,
+  Nr. 210), `backup_lib.php` (**1153 Zeilen, 145 Variablen**) und
+  `api/import_commit.php` (**542 Zeilen, 78 Variablen**). Eine `use`-Liste mit
+  145 Einträgen, davon einige als Referenz, ist kein Zentralisieren, sondern
+  ein Rewrite mit 145 Gelegenheiten, still etwas zu ändern. **Sechs wegen
+  Bauform:** `pair.php` (Gerätevertrag; `commit()` **und** `rollBack()`
+  mehrfach im `try`, Antwort mitten im Rahmen), `jobs_lib.php`
+  (`spur_ausduennen_eine()`: drei `rollBack(); return …` als **regulärer**
+  Weg), `diensttag_zusammenfuehren.php` (ebenso) sowie `api/day.php`,
+  `api/kdf_upgrade.php` und `api/schneiden.php` (`rollBack(); json_out()` im
+  `try`). `db_transaktion()` setzt voraus, dass der Rumpf durchläuft **oder**
+  wirft.
+- **AP5-d — Zwei Schalter statt zweier Funktionsformen** (E-ZE-21). Die fünf
+  Schreibwege der Kindtabellen haben nicht dieselbe Form: Das Backup schreibt
+  in einen **gerade erst angelegten** Einsatz (nichts zu löschen, Besatzung
+  mit `INSERT IGNORE`), das Schneiden fügt im einen Zweig ein und löscht im
+  anderen. Statt `einsatz_*_ersetzen()` **und** `einsatz_*_schreiben()`
+  nebeneinander gibt es `loeschen` (Vorgabe `true`) und `ignorieren`. Eine
+  leere Liste mit `loeschen => true` **ist** das Löschen — das ist der
+  Rückgängig-Zweig des Schneidens. Drei Funktionsformen für eine Sache wären
+  nach R83 eine Verallgemeinerung auf Verdacht.
+- **AP5-e — `einsatz_anweisung()`: ein Anweisungs-Zwischenspeicher, und er
+  ist Bedingung, nicht Feinschliff.** `db.php` setzt
+  `ATTR_EMULATE_PREPARES => false` — **jedes** `prepare()` ist ein Roundtrip
+  zum Server. `api/import_commit.php` bereitete seine sieben Anweisungen
+  deshalb einmal vor und führte sie je Einsatz aus, bis zu **3 000**-mal; ein
+  Funktionsaufruf, der selbst vorbereitet, machte daraus bis zu **21 000**
+  Roundtrips. Der Zwischenspeicher hält die **Verbindung mit**, nicht nur ihre
+  `spl_object_id`: Eine freigegebene PDO gäbe ihre Kennung an die nächste
+  weiter, und der Speicher lieferte dann eine Anweisung an einer toten
+  Verbindung — `tools/schemaprobe/` arbeitet mit mehreren Verbindungen
+  nebeneinander.
+- **AP5-f — Die Phasen bekommen immer fünf Spalten.** Das Formular schrieb
+  drei (`mission_id, phase, occurred_at`) und ließ `lat`/`lon` auf ihrem
+  Vorgabewert; nachgesehen in `schema.sql`: `lat DOUBLE NULL, lon DOUBLE NULL`
+  **ohne** `DEFAULT`, der Vorgabewert ist also `NULL`. Ausdrücklich `NULL` zu
+  schreiben legt denselben Wert ab — belegt durch den edbak-Kreislauf mit
+  **328 771 Einzelvergleichen, 0 unerklärt**.
+
+*Probleme und wie sie gelöst wurden:*
+
+1. **Ein `$pdo->commit();` blieb beim Umbau im Rumpf einer Closure stehen**
+   (`einstellungen.php`, Passwortwechsel). Ein zweites `commit()` hätte
+   geworfen. **Gelöst:** entfernt — und danach eine Gegenprobe mit dem
+   Tokenizer über **alle** `db_transaktion()`-Closures: **0 verirrte
+   `commit`/`rollBack`**. Die Gegenprobe wäre ohne den Fund nicht entstanden.
+2. **Z17 zählte die neue Bibliothek mit** und blieb nach dem ersten Umzug bei
+   29 statt zu fallen: `server/einsatz_lib.php` stand nicht in der
+   Ausnahmeliste der Registerzeile. Derselbe Fehler wie bei Z12 in AP4.
+   **Gelöst:** eingetragen. *Die Lehre:* Wer eine Zeile auf „außerhalb von X"
+   schreibt, trägt X ein, bevor X entsteht.
+3. **Ein latenter Fehler in `einsatz_form.php`, gefunden und behoben.** Hinter
+   dem `commit()` standen noch die Höhenermittlung und die
+   Rettungsmittel-Zeilen — **innerhalb desselben `try`**, dessen `catch` ein
+   unbedingtes `$pdo->rollBack()` hatte. Warf eine der beiden, rollte der
+   `catch` eine **bereits bestätigte** Transaktion zurück; das wirft
+   seinerseits, und statt „Speichern fehlgeschlagen." gab es eine 500.
+   **Das ist eine Verhaltensänderung, und sie ist gewollt:** Der Fehlerweg
+   liefert jetzt die vorgesehene Meldung. Sie tritt nur ein, wenn ohnehin
+   schon etwas anderes fehlgeschlagen ist.
+
+*Prüfprotokoll AP5:*
+
+- **Probe für `db_transaktion()`, 10 Zellen, 10 erfüllt:** Rückgabewert
+  durchgereicht (`42`) · bestätigt, der Wert steht · Fehler rollt zurück
+  **und** wird weitergeworfen · danach keine Transaktion offen · **verschachtelt:**
+  der innere Fehler wirft weiter, die **äußere** Transaktion steht noch, das
+  äußere `rollBack()` nimmt die innere Arbeit mit, und die innere bestätigt
+  nicht selbst.
+- **Messstand `api/import_commit.php`** (csv-Kreislauf, Wanduhr): **41,71 s
+  und 41,47 s davor**, **41,78 s und 41,31 s danach** — innerhalb der
+  Streuung, der Anweisungs-Zwischenspeicher trägt.
+- **Kreisläufe:** `edbak` **328 771 Einzelvergleiche, 0 unerklärt, 21
+  erwartet** · `csv` **10 922, 0 unerklärt, 1 271 erwartet** — beide Zahl für
+  Zahl wie vor dem Paket. Sie laufen über **vier** der fünf Schreibwege der
+  Kindtabellen (Import, Backup, Formular mittelbar, Schneiden nicht).
+- **Gerätevertrag:** Ingestprobe **83/0** — sie fährt den umgebauten
+  Uhr-Eingang samt `einsatz_phasen_ersetzen()` und `einsatz_reas_ersetzen()`.
+  Kopplungsprobe **76/0**; `pair.php` ist nicht angefasst.
+- **Weitere Proben:** Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe
+  **35/0** · Wiederherstellungs-Probe **111/0** · Ratenprobe **50/0**.
+- **Klickprobe: zweimal 48 von 48 Wegen erfüllt, 0 verfehlt** — einmal nach
+  dem Umbau der Transaktionsrahmen, einmal nach dem der Kindtabellen.
+- **GPX-Probe 95/4** — unverändert der Befund aus Nr. 259 (Demo-Reset), nicht
+  von diesem Paket.
 
 ### AP6 — Spaltenregister `missions` (E-ZE-22)
 

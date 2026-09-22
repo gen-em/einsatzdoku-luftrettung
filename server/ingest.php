@@ -6,6 +6,7 @@ require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/geraete_lib.php';  // herkunft_ableiten() (R64)
 require_once __DIR__ . '/ratelimit_lib.php'; // Mengenbremse (P5a/AP7, R19)
+require_once __DIR__ . '/einsatz_lib.php';   // Kindtabellen (Schritt 15/AP5)
 
 /**
  * Den Vermerk am Geraet fortschreiben (P5a/AP7, E-P5a-02).
@@ -771,11 +772,12 @@ try {
             $vorhandenePhasen = (int)$zaehl->fetchColumn();
 
             if (count($neuePhasen) >= $vorhandenePhasen) {
-                $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?')->execute([$ownerId]);
-                $ins = $pdo->prepare('INSERT INTO mission_phases (mission_id, phase, occurred_at, lat, lon) VALUES (?,?,?,?,?)');
+                $phasen = [];
                 foreach ($neuePhasen as $np) {
-                    $ins->execute([$ownerId, $np[0], $np[1], $np[2], $np[3]]);
+                    $phasen[] = ['phase' => $np[0], 'occurred_at' => $np[1],
+                                 'lat' => $np[2], 'lon' => $np[3]];
                 }
+                einsatz_phasen_ersetzen($pdo, $ownerId, $phasen);
             } else {
                 // Behalten und NENNEN — sonst waere der uebergangene Upload von
                 // einem uebernommenen nicht zu unterscheiden (JSON-Vertrag 5).
@@ -824,16 +826,11 @@ try {
             $vorhandeneSitzungen = (int)$zaehl->fetchColumn();
 
             if (count($neueSitzungen) >= $vorhandeneSitzungen) {
-                $pdo->prepare('DELETE FROM resus_sessions WHERE mission_id = ?')->execute([$ownerId]);
-                $insS = $pdo->prepare('INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)');
-                $insE = $pdo->prepare('INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
+                $reas = [];
                 foreach ($neueSitzungen as $ns) {
-                    $insS->execute([$ownerId, $ns['start']]);
-                    $sid = (int)$pdo->lastInsertId();
-                    foreach ($ns['events'] as $ne) {
-                        $insE->execute([$sid, $ne[0], $ne[1]]);
-                    }
+                    $reas[] = ['started_at' => $ns['start'], 'events' => $ns['events']];
                 }
+                einsatz_reas_ersetzen($pdo, $ownerId, $reas);
             } else {
                 $behalten['kept_resus'] = $vorhandeneSitzungen;
             }

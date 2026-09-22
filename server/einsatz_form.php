@@ -558,13 +558,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * eine Abweichung — und keine Abweichung ist keine Zeile. Ohne
                  * gesetzten Haken raeumt $readField die Werte ohnehin ab
                  * (Checkbox-Unterfelder), es bleibt dann nichts uebrig. */
-                $pdo->prepare('DELETE FROM mission_crew WHERE mission_id = ?')->execute([$id]);
-                $insC = $pdo->prepare('INSERT INTO mission_crew (mission_id, role_code, name)
-                                       VALUES (?,?,?)');
+                $besatzung = [];
                 foreach ($crewVals as $role => $name) {
                     if ($name === null || trim((string)$name) === '') { continue; }
-                    $insC->execute([$id, $role, mb_substr(trim((string)$name), 0, 120)]);
+                    $besatzung[(string)$role] = mb_substr(trim((string)$name), 0, 120);
                 }
+                einsatz_besatzung_ersetzen($pdo, $id, $besatzung);
 
                 /* Der Diensttag muss den Einsatz umschliessen (JSON-Vertrag 4.4).
                  * Ein nachgetragener Einsatz um 00:40 verlaengert den Dienst bis
@@ -573,9 +572,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 dt_zeitraum_fortschreiben($pdo, $dayId, $startedAt, $endedAt);
 
                 // Phasen vollstaendig ersetzen
-                $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?')->execute([$id]);
-                $ins = $pdo->prepare('INSERT INTO mission_phases (mission_id, phase, occurred_at) VALUES (?,?,?)');
-                foreach ($rows as $r) { $ins->execute([$id, $r[0], $r[1]]); }
+                $phasen = [];
+                foreach ($rows as $r) { $phasen[] = ['phase' => $r[0], 'occurred_at' => $r[1]]; }
+                einsatz_phasen_ersetzen($pdo, $id, $phasen);
 
                 /* Reanimationen ebenso vollstaendig ersetzen (A4.3). Die Ereignisse
                  * raeumt der Fremdschluessel mit ab (ON DELETE CASCADE), sie
@@ -587,16 +586,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * uhr_gesperrt = 1; ingest.php ruehrt seine Reanimationen dann nicht
                  * an. Eine nachliefernde Uhr kann die hier eingetragenen Zeiten
                  * also nicht ueberschreiben. */
-                $pdo->prepare('DELETE FROM resus_sessions WHERE mission_id = ?')->execute([$id]);
-                if ($reaSitzungen) {
-                    $insS = $pdo->prepare('INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)');
-                    $insE = $pdo->prepare('INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
-                    foreach ($reaSitzungen as $sitz) {
-                        $insS->execute([$id, $sitz['start']]);
-                        $sid = (int)$pdo->lastInsertId();
-                        foreach ($sitz['ereignisse'] as $e2) { $insE->execute([$sid, $e2[0], $e2[1]]); }
-                    }
+                $reas = [];
+                foreach ($reaSitzungen as $sitz) {
+                    $reas[] = ['started_at' => $sitz['start'], 'events' => $sitz['ereignisse']];
                 }
+                einsatz_reas_ersetzen($pdo, $id, $reas);
 
                 return $id;
             });
@@ -617,9 +611,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $name = mb_substr(trim((string)$name), 0, 120);
                 if ($name !== '' && !in_array($name, $sauber, true)) { $sauber[] = $name; }
             }
-            db()->prepare('DELETE FROM mission_resources WHERE mission_id = ?')->execute([$id]);
-            $insR = db()->prepare('INSERT INTO mission_resources (mission_id, name) VALUES (?, ?)');
-            foreach ($sauber as $name) { $insR->execute([$id, $name]); }
+            einsatz_rettungsmittel_ersetzen(db(), $id, $sauber);
 
             header('Location: einsatz.php?id=' . $id . ($editing ? '' : '&nachtrag=1'));
             exit;

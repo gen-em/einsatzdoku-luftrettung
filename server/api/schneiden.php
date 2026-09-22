@@ -152,9 +152,14 @@ function schnitt_ausfuehren(array $b, int $userId): never
                        $beginn, $ende, $seg['geraet_art'], $seg['geraet_modell']]);
         $misId = (int)$pdo->lastInsertId();
 
-        $ins = $pdo->prepare('INSERT INTO mission_phases (mission_id, phase, occurred_at)
-                              VALUES (?,?,?)');
-        foreach ($phasen as $ph => $wann) { $ins->execute([$misId, $ph, $wann]); }
+        /* `loeschen => false`: Der Einsatz ist eine Zeile alt, es gibt nichts
+         * zu ersetzen — ein DELETE liefe hier ins Leere und kostete einen
+         * Roundtrip je Schnitt. */
+        $neuePhasen = [];
+        foreach ($phasen as $ph => $wann) {
+            $neuePhasen[] = ['phase' => $ph, 'occurred_at' => $wann];
+        }
+        einsatz_phasen_ersetzen($pdo, $misId, $neuePhasen, ['loeschen' => false]);
 
         /* DIE PUNKTE WANDERN (E-S4-53). `spur_teilen()` schliesst sich dieser
          * Transaktion an — deshalb steht hier kein zweites
@@ -289,7 +294,7 @@ function schnitt_rueckgaengig(array $b, int $userId): never
          * eine Minute alt und hat nie etwas enthalten, was jemand
          * wiederfinden wollte. Die Spur ist oben schon abgeraeumt worden. */
         spur_loeschen($pdo, 'mission', [$misId]);
-        $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?')->execute([$misId]);
+        einsatz_phasen_ersetzen($pdo, $misId, []);   // leere Liste = loeschen
         $pdo->prepare('DELETE FROM missions WHERE id = ? AND user_id = ?')
             ->execute([$misId, $userId]);
         return $zurueck;

@@ -14,6 +14,91 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.30.0] — 2026-09-22
+
+**Ein Transaktionsrahmen, vier Kindtabellen.** Schritt 15 AP5
+(Zentralisierung, R83).
+
+### Hinzugefügt
+
+**`db_transaktion($pdo, $fn)` in `db.php`.** Dreiunddreißig
+Transaktionsrahmen in zweiundzwanzig Dateien schrieben denselben Ablauf von
+Hand. Der Tokenizer hat sie in drei Bauformen sortiert — mit einem regulären
+Ausdruck ging das nicht: Drei Anläufe ergaben drei verschiedene Verteilungen,
+weil geschweifte Klammern in Kommentaren und Zeichenketten mitzählen.
+
+| Bauform | Anzahl |
+|---|---|
+| beginnen · versuchen · bestätigen · bei Fehler zurückrollen und **weitergeben** | 19 |
+| dasselbe, aber der `catch` **schluckt** und setzt eine Meldung | 12 |
+| **gar kein `try`** | 2 |
+
+**24 Rahmen ziehen um.** Der Helfer ist verschachtelungsfest und dabei
+**asymmetrisch**: Wer schon in einer fremden Transaktion steht, öffnet keine
+eigene — und bestätigt und verwirft dann auch nichts. Das Zurückrollen bleibt
+dem überlassen, der begonnen hat.
+
+**Und er fragt vor dem `rollBack()` nach, ob die Transaktion noch steht.** Das
+ist kein Übereifer: Von 42 `rollBack()`-Aufrufen standen **14** hinter einer
+Wache und **28** nicht. Ein `rollBack()` ohne offene Transaktion wirft — und
+zwar *aus dem `catch` heraus*, womit die ursprüngliche Ausnahme verlorengeht
+und im Protokoll „There is no active transaction" steht statt des Grundes.
+
+**Vier Funktionen für die Kindtabellen in `einsatz_lib.php`**:
+`einsatz_phasen_ersetzen()`, `einsatz_reas_ersetzen()`,
+`einsatz_rettungsmittel_ersetzen()`, `einsatz_besatzung_ersetzen()`. Phasen,
+Reanimation, Rettungsmittel und Besatzung wurden auf **fünf** Wegen
+geschrieben — Formular, CSV-Import, Uhr-Eingang, Backup-Wiederherstellung und
+Schneiden —, zusammen **dreißig** Anweisungen. Jetzt null außerhalb der
+Bibliothek.
+
+Die fünf Wege hatten nicht dieselbe Form: Das Backup schreibt in einen
+**gerade erst angelegten** Einsatz und hat nichts zu löschen, das Schneiden
+fügt im einen Zweig ein und löscht im anderen. Dafür **zwei Schalter statt
+zweier Funktionsformen** — `loeschen` (Vorgabe `true`) und, nur für die
+Besatzung, `ignorieren` für das `INSERT IGNORE` des Backups. Eine leere Liste
+mit `loeschen => true` **ist** das Löschen; das ist der Zweig des Schneidens.
+
+**Sie prüfen nichts.** Was gültig ist, entscheidet weiter der Aufrufer — das
+Formular über `validate_lib.php`, Import und Backup über `pruef_*()`, die Uhr
+über `ingest.php`. Eine Prüfpolitik in den vier Funktionen wäre eine sechste,
+die neben den vorhandenen stünde und mit ihnen auseinanderliefe.
+
+**`einsatz_anweisung()` hält die vorbereiteten Anweisungen vor**, je
+Verbindung und SQL-Text. `db.php` setzt `ATTR_EMULATE_PREPARES => false`, also
+ist **jedes** `prepare()` ein Roundtrip zum Server. `api/import_commit.php`
+bereitete seine sieben Anweisungen deshalb einmal vor und führte sie je
+Einsatz aus — bis zu 3 000-mal; ohne Zwischenspeicher wären daraus bis zu
+21 000 Roundtrips geworden. Nachgemessen am csv-Kreislauf: **41,78 s und
+41,31 s gegen 41,71 s und 41,47 s** davor, also dieselbe Streuung.
+
+### Behoben
+
+**Ein latenter Fehler in `einsatz_form.php`.** Hinter dem `commit()` standen
+noch die Höhenermittlung und die Rettungsmittel-Zeilen — **innerhalb
+desselben `try`**, dessen `catch` ein unbedingtes `$pdo->rollBack()` hatte.
+Warf eine der beiden, rollte der `catch` eine **bereits bestätigte**
+Transaktion zurück; das wirft seinerseits, und statt „Speichern
+fehlgeschlagen." gab es eine 500. Der Rahmen endet jetzt dort, wo er
+hingehört.
+
+### Unverändert — und das ist die Aussage
+
+**Neun Transaktionsrahmen bleiben, namentlich.** Drei wegen Größe oder
+Vertrag: `ingest.php` (Gerätevertrag, Deadlock-Behandlung in Schritt 18),
+`backup_lib.php` (Rumpf **1153 Zeilen, 145 Variablen**) und
+`api/import_commit.php` (**542 Zeilen, 78 Variablen**) — eine `use`-Liste mit
+145 Einträgen ist kein Zentralisieren, sondern ein Rewrite mit 145
+Gelegenheiten, still etwas zu ändern. Sechs wegen Bauform: `pair.php`
+(Gerätevertrag), `jobs_lib.php`, `diensttag_zusammenfuehren.php`,
+`api/day.php`, `api/kdf_upgrade.php` und `api/schneiden.php` — sie rollen
+**mitten** im `try` zurück und machen dann etwas anderes weiter, kehren also
+normal zurück oder antworten selbst. `db_transaktion()` setzt voraus, dass der
+Rumpf durchläuft **oder** wirft.
+
+Die Registerzeile Z16 führt alle neun mit Grund; sie ist auf 9 gesetzt und
+schlägt an, sobald ein zehnter dazukäme.
+
 ## [Web 20.29.0] — 2026-09-21
 
 **Vier Sachen, die an einer Stelle stehen statt an siebenundvierzig.**

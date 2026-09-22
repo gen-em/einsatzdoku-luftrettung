@@ -26,6 +26,7 @@ declare(strict_types=1);
  * require damit verdeckt. Wer eine Bibliothek prueft, muss sie so laden, wie
  * die Anwendung sie laedt — sonst prueft er seinen eigenen Aufbau mit.
  */
+require_once __DIR__ . '/einsatz_lib.php';   // Kindtabellen (Schritt 15/AP5)
 require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 require_once __DIR__ . '/mission_fields_lib.php';   // mf_ist_spalte(), mf_ort_spalten()
@@ -1924,51 +1925,54 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
              * es fuenf Spalten und wanderten ueber $extraCols mit; jetzt sind es
              * Zeilen. Nur belegte Rollen: `mission_crew` fuehrt Abweichungen,
              * keine Leerzeilen. */
-            $insMC = $pdo->prepare('INSERT IGNORE INTO mission_crew
-                (mission_id, role_code, name) VALUES (?,?,?)');
+            /* `loeschen => false` ueberall hier: Der Einsatz ist gerade erst
+             * angelegt worden, es gibt nichts zu ersetzen. `ignorieren` bei der
+             * Besatzung, weil ein doppelter Rollenschluessel im Paket den Lauf
+             * nicht abbrechen soll. */
+            $besatzung = [];
             foreach ((array)($m['crew'] ?? []) as $rc => $nm) {
                 if (!array_key_exists((string)$rc, CREW_ROLES)) { continue; }
                 if ($nm === null || trim((string)$nm) === '') { continue; }
-                $insMC->execute([$mid, (string)$rc, mb_substr(trim((string)$nm), 0, 120)]);
+                $besatzung[(string)$rc] = mb_substr(trim((string)$nm), 0, 120);
             }
+            einsatz_besatzung_ersetzen($pdo, $mid, $besatzung,
+                                       ['loeschen' => false, 'ignorieren' => true]);
 
-            $insPh = $pdo->prepare('INSERT INTO mission_phases
-                (mission_id, phase, occurred_at, lat, lon) VALUES (?,?,?,?,?)');
+            $rNamen = [];
             foreach (($m['resources'] ?? []) as $rname) {
                 $rname = mb_substr(trim((string)$rname), 0, 120);
-                if ($rname !== '') {
-                    $pdo->prepare('INSERT INTO mission_resources (mission_id, name) VALUES (?,?)')
-                        ->execute([$mid, $rname]);
-                }
+                if ($rname !== '') { $rNamen[] = $rname; }
             }
+            einsatz_rettungsmittel_ersetzen($pdo, $mid, $rNamen, ['loeschen' => false]);
             // Phasen: Nummer 2 bis 9. Mehrfache Eintraege derselben Nummer
             // bleiben erhalten — sie sind Korrekturen (JSON-Vertrag 3).
+            $neuePhasen = [];
             foreach (pruef_menge($m['phases'] ?? [], LIMIT_PHASEN, 'phases', $pruef) as $p) {
                 if (!is_array($p)) { continue; }
                 $nr   = pruef_phase($p['phase'] ?? null, 'phases.phase', $pruef);
                 $wann = pruef_utc_oder_sql($p['occurred_at'] ?? null, 'phases.occurred_at', $pruef);
                 if ($nr === null || $wann === null) { continue; }
-                $insPh->execute([$mid, $nr, $wann,
-                                 pruef_breite($p['lat'] ?? null, 'phases.lat', $pruef),
-                                 pruef_laenge($p['lon'] ?? null, 'phases.lon', $pruef)]);
+                $neuePhasen[] = ['phase' => $nr, 'occurred_at' => $wann,
+                                 'lat' => pruef_breite($p['lat'] ?? null, 'phases.lat', $pruef),
+                                 'lon' => pruef_laenge($p['lon'] ?? null, 'phases.lon', $pruef)];
             }
+            einsatz_phasen_ersetzen($pdo, $mid, $neuePhasen, ['loeschen' => false]);
+            $neueReas = [];
             foreach (pruef_menge($m['resus'] ?? [], LIMIT_REA_SESSION, 'resus', $pruef) as $r) {
                 if (!is_array($r)) { continue; }
                 $rStart = pruef_utc_oder_sql($r['started_at'] ?? null, 'resus.started_at', $pruef);
                 if ($rStart === null) { continue; }
-                $pdo->prepare('INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)')
-                    ->execute([$mid, $rStart]);
-                $sid = (int)$pdo->lastInsertId();
-                $insEv = $pdo->prepare('INSERT INTO resus_events
-                    (session_id, type, occurred_at) VALUES (?,?,?)');
+                $ereignisse = [];
                 foreach (pruef_menge($r['events'] ?? [], LIMIT_REA_EREIGN, 'resus.events', $pruef) as $e2) {
                     if (!is_array($e2)) { continue; }
                     $typ  = pruef_reanimationsart($e2['type'] ?? null, 'resus.events.type', $pruef);
                     $wann = pruef_utc_oder_sql($e2['occurred_at'] ?? null, 'resus.events.at', $pruef);
                     if ($typ === null || $wann === null) { continue; }
-                    $insEv->execute([$sid, $typ, $wann]);
+                    $ereignisse[] = [$typ, $wann];
                 }
+                $neueReas[] = ['started_at' => $rStart, 'events' => $ereignisse];
             }
+            einsatz_reas_ersetzen($pdo, $mid, $neueReas, ['loeschen' => false]);
             /* ZWEI WEGE, UND DIE FASSUNG ENTSCHEIDET — nicht das Vorhandensein
              * eines `track`-Feldes. Eine Spur ohne Punkte saehe genauso aus
              * wie ein Verweis, und dann liefe eine Fassung-8-Datei still in
