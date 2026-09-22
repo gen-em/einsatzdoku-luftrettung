@@ -3399,14 +3399,21 @@ ui_seite_start(['titel' => 'Einstellungen',
            die einzige im Browser. EdFormat hat die dreistufige Regel der
            PHP-Seite; unter 1 MiB steht deshalb jetzt "312 KB" statt "0,3 MB"
            und ab 1 GiB "1,00 GB" statt "1.024,0 MB". Das ist die sechste
-           benannte Ausnahme von E-ZE-10 und ausdruecklich entschieden. */
-        const mb = EdFormat.groesse(blob.size);
+           benannte Ausnahme von E-ZE-10 und ausdruecklich entschieden.
+
+           DIE EINHEIT BRINGT EdFormat SELBST MIT. Das Literal " MB" hinter
+           der Variablen musste deshalb weg; beim ersten Umbau blieb es
+           stehen, und die Fertigmeldung sagte "263 KB MB" (gemessen im
+           edbak-Kreislauf am 22.09.2026). Aus demselben Grund heisst die
+           Variable nicht mehr `mb`: Sie traegt keine Megabyte mehr,
+           sondern eine fertige Groessenangabe. */
+        const groesse = EdFormat.groesse(blob.size);
         melde(expState, `Fertig: ${kopf.eintraege_gesamt} Einträge `
           + `(davon ${n} mit geschützten Angaben), `
           + `${(kopf.days || []).length} Diensttage, `
           + `${spurenGesamt} Aufzeichnungen mit ${punkteGesamt.toLocaleString('de-DE')} Punkten `
           + `in ${gesamt} ${gesamt === 1 ? 'Teil' : 'Teilen'} `
-          + `— ${mb} MB.`
+          + `— ${groesse}.`
           /* DASS DIE DATEI DA IST, MUSS DASTEHEN (Rückmeldung nach P3).
            *
            * Der Download läuft ohne Dialog und ohne Ton durch; wer nicht

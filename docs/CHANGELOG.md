@@ -14,6 +14,45 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.32.1] — 2026-09-22
+
+**„263 KB MB" — ein Literal, das den Umbau überlebt hat.** Nachtrag zu
+20.32.0.
+
+### Behoben
+
+**Die Fertigmeldung des Sicherns nannte die Einheit zweimal.** In
+`einstellungen.php` stand bis 20.32.0 `(blob.size / 1048576).toFixed(1)`, und
+dahinter, als Text im Satz, ein festes „ MB" — richtig so, denn die Rechnung
+lieferte immer Megabyte und nie eine Einheit. 20.32.0 hat die Rechnung durch
+`EdFormat.groesse()` ersetzt; die bringt ihre Einheit mit. Das Literal blieb
+stehen, und die Meldung las sich „… in 3 Teilen — 263 KB MB."
+
+Das Literal ist fort, und die Variable heißt nicht mehr `mb`: Sie trägt
+keine Megabyte mehr, sondern eine fertige Größenangabe. Der Name war die
+zweite Hälfte desselben Fehlers — er hat beim Gegenlesen niemanden
+stutzig gemacht, weil er zur alten Rechnung passte.
+
+### Warum es keine Prüfung gefunden hat
+
+Der Formvergleich von 20.32.0 hat 496 Seiten in acht Breiten auf abweichende
+**Schreibweisen** geprüft und 0 gefunden. Er konnte diesen Fehler nicht
+sehen: Er nimmt auf, was eine aufgerufene Seite anzeigt, und dieser Satz
+entsteht erst, nachdem jemand tatsächlich eine Sicherung geschrieben hat.
+Auch die 328 771 Einzelvergleiche des edbak-Kreislaufs blieben grün — sie
+prüfen den **Inhalt** der Sicherungsdatei, nicht den Satz darüber.
+
+Gefunden wurde er im **Protokoll** des Kreislaufs, das die Meldung mitschreibt.
+Daraus folgt nichts Großes, aber etwas Konkretes: Meldungstexte, die erst nach
+einer Aktion entstehen, haben in diesem Projekt kein maschinelles Auge. Wer
+einen davon umbaut, liest ihn einmal ganz — im Protokoll oder im Browser.
+
+Nachgesehen wurde dabei nach weiteren Stellen desselben Musters: Alle
+Aufrufstellen der sechs neuen Formatierer mit Einheit (`groesse_text()`,
+`groesse_kurz_text()`, `groesse_paar_text()`, `prozent_text()`,
+`prozent_wert()`, `zahl_text()`) sind durchgesehen, ebenso die beiden
+`EdFormat`-Aufrufe — es war die eine Stelle.
+
 ## [Web 20.32.0] — 2026-09-22
 
 **Zeit und Zahl: eine Stelle, an der Text entsteht.** Schritt 15 AP7

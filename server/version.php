@@ -6972,6 +6972,17 @@ declare(strict_types=1);
  *   AP8 baut sie aus. PHP und JavaScript sind ueber 2 014 Byte-Werte
  *   Zeichen fuer Zeichen gegeneinander geprueft.
  *
+ *   20.32.1 raeumt einen Fehler genau dieses Umbaus weg: Die Fertigmeldung
+ *   des Sicherns sagte „263 KB MB". `EdFormat.groesse()` bringt die Einheit
+ *   selbst mit, das Literal „ MB" hinter der Variablen war aus der alten
+ *   Rechnung stehengeblieben. Gefunden hat es nicht der Formvergleich
+ *   (496 Seiten, 0 abweichende Schreibweisen) — er sieht nur, was eine
+ *   aufgerufene Seite anzeigt, und diese Meldung entsteht erst NACH einem
+ *   tatsaechlichen Sicherungslauf. Gefunden hat es der edbak-Kreislauf,
+ *   und zwar im Protokoll, nicht im Vergleich: Seine 328 771
+ *   Einzelvergleiche waren gruen, weil sie den Inhalt der Datei pruefen,
+ *   nicht den Satz darueber.
+ *
  *   ZWOELF STELLEN BLEIBEN NAMENTLICH STEHEN, jede mit Grund im Register:
  *   vier Formular- und Vergleichswerte in `betrieb_server.php` (der PUNKT
  *   als Dezimaltrenner ist dort Bedingung eines Vergleichs, nicht
@@ -6980,4 +6991,4 @@ declare(strict_types=1);
  *   zwei Zeitstempel ohne Zonenumrechnung und eine `sprintf`-Groesse mit
  *   Punkt statt Komma.
  */
-const WEB_VERSION = '20.32.0';
+const WEB_VERSION = '20.32.1';

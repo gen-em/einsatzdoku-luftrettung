@@ -743,7 +743,7 @@ nicht ein Augenschein.
 | **N7-4** | **Der Wartungsmodus** | `wartung_lib.php` ist **nicht angefasst** (AP7-e). Ihre drei Stellen bleiben, weil die Datei zusagt, nichts zu laden | Die Wartungsseite zeigt einen anderen Zeitpunkt als vorher |
 | **N7-5** | **Der punktweise GPX-Vergleich** | Unverändert Nr. 259 (Demo-Reset). **95/4 vor und nach dem Paket** | siehe dort |
 | **N7-6** | **`tools/schemaprobe/`** | Unverändert N4-3/N5-5/N6-5 | Eine Migration im Prüfschema schreibt in die falsche Datenbank |
-| **N7-7** | **Ein Backup unter 1 MiB herunterladen** | Die sichtbare Folge von E-ZE-26 („312 KB" statt „0,3 MB") entsteht erst beim **Download** einer Sicherungsdatei im Browser. Belegt ist, dass PHP und JavaScript dieselbe Regel rechnen (2 014 Werte, 0 Abweichungen) — nicht, dass die Zeile im Browser erscheint | Nach dem Download steht dort „NaN MB" oder gar nichts |
+| **N7-7** | ~~**Ein Backup unter 1 MiB herunterladen**~~ — **inzwischen gefahren, und die Lücke war keine theoretische** | Stand bis 20.32.0: belegt war, dass PHP und JavaScript dieselbe Regel rechnen (2 014 Werte, 0 Abweichungen), **nicht**, wie die Zeile im Browser erscheint. Der edbak-Kreislauf hat sie dann geschrieben: „… in 3 Teilen — **263 KB MB**." Das feste „ MB" hinter der Variablen war aus der alten Rechnung stehengeblieben. Behoben in **20.32.1**, nachgemessen im selben Lauf: „… in 3 Teilen — **263 KB**." | erledigt — der Prüfpunkt bleibt als **G-6** bestehen, weil der Kreislauf nur die eine Größenstufe geschrieben hat |
 
 ## G1. Was maschinell geprüft wurde — mit Mittel **und** Zahl
 
@@ -798,6 +798,11 @@ Fassung gegen **dieselbe echte Datenbank**, je 367 Zeilen / 15 858 Bytes JSON,
 | `tools/ratenprobe/probe.php` | **50 Prüfungen, 0 Befunde** |
 | `tools/wiederherstellungs-probe/probe.php` | **111 / 0** — sie war durch AP7 kaputt und ist es nicht mehr (Problem 1a) |
 | `tools/gpxprobe/probe.php` | **95 / 4** — unverändert der Befund aus Nr. 259 |
+| `node tools/klickprobe/probe.mjs` | **48 von 48 Wegen erfüllt, 0 verfehlt** |
+| `kreislauf.py --art edbak --frisch` | **328 771 Einzelvergleiche, 0 unerklärte Abweichungen** (21 erwartete) — dieselbe Zahl wie vor dem Paket |
+| `kreislauf.py --art edbak-alt --frisch` | **287 852 Einzelvergleiche, 0 unerklärte** (795 erwartete) — dieselbe Zahl wie vor dem Paket |
+| `kreislauf.py --art csv --frisch` | **10 922 Einzelvergleiche, 0 unerklärte** (1 271 erwartete) — dieselbe Zahl wie vor dem Paket |
+| `tools/screenshots/vergleichen.py` | **496 von 496 Seiten formgleich, 0 abweichende Schreibweisen** (acht Breiten; Ziffern zu `#` vereinheitlicht) |
 
 ## G3. Prüfliste — was **die Auftraggeberin** noch tun muss
 
@@ -824,6 +829,14 @@ Fassung gegen **dieselbe echte Datenbank**, je 367 Zeilen / 15 858 Bytes JSON,
   Klick erscheint.** Meldungen nach dem Speichern, Mailtexte, die 507-Antwort
   und die Größenangabe nach einem Download sind darin nicht enthalten. Für
   sie steht die Rechnung je Funktion — und die Prüfliste unten.
+  **Diese Grenze ist keine Vorsichtsformel: in ihr saß ein echter Fehler.**
+  Die Fertigmeldung des Sicherns las sich „263 KB MB" (N7-7, Web 20.32.1).
+  496 formgleiche Seiten und 328 771 grüne Einzelvergleiche standen daneben
+  und konnten nichts dazu sagen — die einen sehen nur aufgerufene Seiten,
+  die anderen nur den Inhalt der Datei. Gefunden hat ihn das **Protokoll**
+  des Kreislaufs, weil es die Meldung mitschreibt. Wer also einen Text
+  umbaut, der erst nach einer Aktion entsteht, hat dafür kein Werkzeug und
+  muss ihn lesen.
 - **Die 15 stehengelassenen Stellen sind begründet, nicht vorgeführt.** Dass
   das Formular auf Betrieb → Server mit einem Komma unabschickbar wäre, ist
   aus dem POST-Zweig gelesen und nicht ausprobiert worden (N7-3).
