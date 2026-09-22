@@ -8,6 +8,7 @@ require_once __DIR__ . '/geraete_lib.php';  // herkunft_ableiten() (R64)
 require_once __DIR__ . '/ratelimit_lib.php'; // Mengenbremse (P5a/AP7, R19)
 require_once __DIR__ . '/einsatz_lib.php';   // Kindtabellen (Schritt 15/AP5)
 require_once __DIR__ . '/mission_fields_lib.php';   // mf_spalten() (Schritt 15/AP6)
+require_once __DIR__ . '/format_lib.php';           // groesse_paar_text() (Schritt 15/AP7)
 
 /**
  * Den Vermerk am Geraet fortschreiben (P5a/AP7, E-P5a-02).
@@ -320,10 +321,12 @@ require_once __DIR__ . '/konten_einstellungen_lib.php';
 $fuell = konto_fuellstand((int)$dev['user_id']);
 if ($fuell['voll']) {
     json_out(['error' => 'kontingent',
+              /* Der SATZSCHLUSSPUNKT haengt beim Aufrufer: `groesse_paar_text()`
+               * endet auf „ MB", der Satz hier auf „ MB." (Schritt 15/AP7). */
               'grund' => 'Das Konto ist voll — ' . $fuell['einsaetze'] . ' von '
                        . $fuell['grenze_einsaetze'] . ' Einsätzen, '
-                       . (int)round($fuell['bytes'] / 1048576) . ' von '
-                       . (int)round($fuell['grenze_bytes'] / 1048576) . ' MB.'], 507);
+                       . groesse_paar_text((int)$fuell['bytes'],
+                                           (int)$fuell['grenze_bytes']) . '.'], 507);
 }
 
 /* Geglueckt: den Kennungstopf und den Vermerk raeumen.

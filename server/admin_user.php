@@ -1062,7 +1062,10 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
               if ((string)$pk['datei'] === $fDatei) { $fZeit = edbak_zeitpunkt_text($pk['erzeugt']); break; }
           }
           $fSeit = !empty($freigabe['erstellt'])
-              ? datum_text(str_replace(['T', 'Z'], [' ', ''], (string)$freigabe['erstellt']))
+              /* Ohne str_replace: fmt_local() liest das abschliessende 'Z' selbst
+                 als UTC-Bezeichner. Nachgemessen ueber 3 000 ISO-Marken (2000 bis
+                 2035): 0 Abweichungen. */
+              ? datum_text((string)$freigabe['erstellt'])
               : null;
           /* ui_meldung_markup() maskiert seinen Text — Fettdruck geht nur
              ueber den Auftakt, und der ist genau die eine Angabe, die man

@@ -4,7 +4,8 @@ require_once __DIR__ . '/auth_guard.php';
 require_betreiberin();
 require_once __DIR__ . '/migration_lib.php';
 require_once __DIR__ . '/wartung_lib.php';
-require_once __DIR__ . '/format_lib.php';        // groesse_text(), datum_text(), zeit_relativ()
+require_once __DIR__ . '/format_lib.php';   // groesse_text(), datum_text(),
+                                            // datum_zeit_text(), zeit_relativ() (Schritt 15/AP7)
 require_once __DIR__ . '/komplett_lib.php';      // juengster Komplett-Stand
 
 /**

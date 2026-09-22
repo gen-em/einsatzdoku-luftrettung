@@ -5,6 +5,7 @@ if (!file_exists(__DIR__ . '/config.php')) { header('Location: install.php'); ex
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/mission_fields_lib.php';   // Spalten der Tagestabelle
 require_once __DIR__ . '/diensttag_lib.php';
+require_once __DIR__ . '/format_lib.php';         // datum_zeit_text() fuer die Geraetezeile
 
 // Spalten der Tagestabelle aus dem Feldkatalog (mission_fields.php, 'day_col').
 // Tabellenkopf, Zeilenaufbau und Sortierung unten leiten sich alle hieraus ab.
@@ -164,7 +165,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
                     $was  = ($g['geraet_modell'] ?? $g['geraet_teil']) ?? null;
                     $teile[] = $name
                              . ($was !== null ? ' · ' . $was : '')
-                             . ' (' . fmt_local($g['created_at'], 'd.m.Y H:i') . ')';
+                             . ' (' . datum_zeit_text($g['created_at']) . ')';
                 }
                 echo e(implode(', ', $teile)); ?>.
           Warst du das nicht, entferne

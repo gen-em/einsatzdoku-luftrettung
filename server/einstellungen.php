@@ -325,7 +325,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $termin = konto_loeschung_beantragen($userId);
                 mail_einreihen('loeschung_beantragt', (string)$z['email'],
-                               ['termin' => datum_zeit_text($termin, ' um ') . ' Uhr',
+                               /* ZWEI AUFRUFE UND NICHT datum_zeit_text($x, ' um '): Die Funktion
+                                 * steigt bei leerem Wert frueh aus und liefert EINEN
+                                 * Gedankenstrich; hier standen immer ZWEI ('– um –').
+                                 * Zeichengleichheit geht vor Kuerze (E-ZE-10). */
+                               ['termin' => datum_text($termin) . ' um '
+                                            . fmt_local($termin) . ' Uhr',
                                 'link'   => app_url('/login.php')]);
                 /* SOFORT ABMELDEN. Das Konto ist ab jetzt gesperrt; die
                  * Sitzung stehen zu lassen hiesse, dass die naechste Seite
@@ -3388,7 +3393,14 @@ ui_seite_start(['titel' => 'Einstellungen',
         a.click();
         URL.revokeObjectURL(url);
 
-        const mb = (blob.size / 1048576).toFixed(1).replace('.', ',');
+        /* EdFormat.groesse() statt eigener Rechnung (Schritt 15/AP7, E-ZE-26).
+           Hier stand (blob.size / 1048576).toFixed(1) — IMMER in MB, ohne
+           Tausenderpunkt, also eine vierte Fassung desselben Formatierers und
+           die einzige im Browser. EdFormat hat die dreistufige Regel der
+           PHP-Seite; unter 1 MiB steht deshalb jetzt "312 KB" statt "0,3 MB"
+           und ab 1 GiB "1,00 GB" statt "1.024,0 MB". Das ist die sechste
+           benannte Ausnahme von E-ZE-10 und ausdruecklich entschieden. */
+        const mb = EdFormat.groesse(blob.size);
         melde(expState, `Fertig: ${kopf.eintraege_gesamt} Einträge `
           + `(davon ${n} mit geschützten Angaben), `
           + `${(kopf.days || []).length} Diensttage, `
@@ -4627,4 +4639,4 @@ ui_seite_start(['titel' => 'Einstellungen',
          (`ui_codeblock_lang()`, Geräte-Reiter): Er blendet den Knopf ein und
          kopiert. Ohne das Skript bleibt der Wert lesbar und der Knopf
          verborgen — ein Knopf, der nichts tut, wäre schlechter als keiner. */ ?>
-<?php ui_seite_ende(['skripte' => ['assets/kopieren.js']]); ?>
+<?php ui_seite_ende(['skripte' => ['assets/kopieren.js', 'assets/format.js']]); ?>

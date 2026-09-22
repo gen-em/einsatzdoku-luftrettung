@@ -35,6 +35,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/format_lib.php';   // groesse_paar_text() fuer die Warnmail (Schritt 15/AP7)
 
 /**
  * Zeitbudget eines Haeppchens in Sekunden, je nach Ausloeser.
@@ -840,8 +841,8 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
                     mail_einreihen('konto_menge', (string)$u['email'], [
                         'prozent'   => (string)(int)round($f['anteil'] * 100),
                         'einsaetze' => $f['einsaetze'] . ' von ' . $f['grenze_einsaetze'],
-                        'speicher'  => (int)round($f['bytes'] / 1048576) . ' von '
-                                     . (int)round($f['grenze_bytes'] / 1048576) . ' MB',
+                        'speicher'  => groesse_paar_text((int)$f['bytes'],
+                                                         (int)$f['grenze_bytes']),
                     ]);
                     app_state_setzen($marke, '1');
                 }

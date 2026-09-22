@@ -14,6 +14,115 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.32.0] — 2026-09-22
+
+**Zeit und Zahl: eine Stelle, an der Text entsteht.** Schritt 15 AP7
+(Zentralisierung, R83).
+
+### Hinzugefügt
+
+**`server/format_lib.php`** — dreizehn Funktionen für alles, was aus einer Zahl
+oder einem Zeitpunkt lesbaren Text macht: `groesse_text()`,
+`groesse_kurz_text()`, `groesse_paar_text()`, `zahl_text()`, `prozent_wert()`,
+`prozent_text()`, `datum_text()`, `datum_zeit_text()`, `datum_stunde_text()`,
+`zeit_relativ()`, `heute_lokal()`, `iso_utc()`, `iso_utc_lesen()`. Dazu
+`fmt_local()`, die aus `db.php` hierhergezogen ist.
+
+**`server/assets/format.js`** (`EdFormat`) — dieselben Regeln für den Browser.
+Heute zwei Funktionen, genau die mit einem Verbraucher; AP8 baut sie aus.
+
+### Was der Befund war
+
+**Zwölf Sachen an 197 Stellen**, und drei davon gab es mehrfach:
+
+| Sache | Fassungen vorher |
+|---|---|
+| Bytes | **vier** — `edbak_groesse_text()` (42 Aufrufe in 10 Dateien), `apk_groesse()`, `plattform_groesse()` und eine Inline-Zeile in JavaScript |
+| Zahl | **eine**, und die lag in einer **Seite** (`stat_zahl()` in `betrieb_statistik.php`) |
+| Anteil | **keine** — zehn Handrechnungen, drei Rundungen, fünf Bauarten für „keine Bezugsgröße" |
+| relative Zeit | **zwei**, auseinandergelaufen |
+
+`plattform_groesse()` trug im Kopf den Satz „dieselbe Schreibweise wie
+`edbak_groesse_text()`" — **und das stimmte nie**: vierte Stufe „B",
+abgeschnittene Nachkommanullen, GB mit einer statt zwei Nachkommastellen. Aus
+2 GB wurde dort „2 GB" und daneben „2,00 GB". Dieselben Bytes sahen je nach
+Seite anders aus.
+
+**Zwei Dateien luden für acht Zeilen Zahlenformatierung rund 2 600 Zeilen
+Backup-Fachbibliothek** samt deren Krypto- und Prüfschicht. Und eine dritte,
+`betrieb_sicherheit.php`, rief `edbak_groesse_text()`, **ohne sie je
+einzubinden** — die Funktion war nur da, weil das Menü `status_lib.php`
+nachlädt. Das ist der Beleg, aus dem R83 entstanden ist.
+
+### Nachgerechnet, nicht begutachtet
+
+Jede neue Funktion ist gegen ihre Vorgängerin gemessen:
+
+| | |
+|---|---|
+| `groesse_text` gegen `edbak_groesse_text()` | 3 017 Byte-Werte, **0 Abweichungen** |
+| `groesse_kurz_text` gegen `plattform_groesse()` | 3 017 Werte, **0** |
+| `zahl_text` gegen `stat_zahl()` | 28 Fälle, **0** |
+| `prozent_text` gegen `stat_anteil()` | 6 030 Fälle, **0** |
+| `zeit_relativ` gegen `status_alter()` | 10 811 Zeitpunkte, **0** |
+| `iso_utc`/`iso_utc_lesen` hin und zurück | 5 000 Zeitstempel, **0** |
+| `EdFormat.groesse` (JS) gegen `groesse_text` (PHP) | 2 014 Werte, **0** |
+
+### Geändert
+
+**`fmt_local()` zieht aus `db.php` nach `format_lib.php`**, unter demselben
+Namen — alle 113 Aufrufer merken nichts. Der Grund ist zwingend: `datum_text()`
+baut auf ihr auf, und `format_lib.php` darf die Datenbankdatei **nicht** laden,
+weil `install.php` sie über `plattform_lib.php` erreicht, **bevor es eine
+`config.php` gibt**. `local_to_utc()` bleibt in `db.php`: Sie liest einen
+Formularwert, um damit zu **rechnen** — das ist die andere Richtung.
+
+**Zwei Funktionen für den Anteil, nicht eine.** Fünf der zehn Handrechnungen
+runden **ab**, weil sie eine Schwelle auslösen; drei kaufmännisch, weil sie nur
+gelesen werden. Eine gemeinsame Funktion ohne diesen Schalter verschöbe den
+Auslösezeitpunkt der Speicher-Warnmail um bis zu einen Prozentpunkt.
+
+**Der Trenner wird angehängt, nicht ins Format geschrieben.** Die naheliegende
+Bauform `fmt_local($x, 'd.m.Y' . $trenner . 'H:i')` geht für die drei heutigen
+Trenner zufällig gut, weil keiner einen Buchstaben enthält. Der erste mit einem
+Buchstaben würde still zu Formatzeichen — aus „ um " würde `u`
+(Mikrosekunden) und `m` (Monat). **Und so einer stand schon im Bestand.**
+
+### Drei sichtbare Folgen, alle benannt und entschieden
+
+1. **Die Altersangabe auf Betrieb → Updates** (E-ZE-23). Die Inline-Kopie dort
+   war von `status_alter()` abgewichen — lückenlos nachgerechnet über 0 bis
+   200 000 Sekunden: **1 890 Sekundenwerte** lieferten anderen Text, in genau
+   zwei Bändern. Unter 90 s steht jetzt „gerade eben" statt „vor 1 Minuten",
+   zwischen 3 600 und 5 399 s „vor 60 … 90 Minuten" statt „vor 1 Stunden".
+   Dazu: Die Kopie fing eine unlesbare Zeitmarke nicht ab und hätte „vor
+   20 718 Tagen" gezeigt; jetzt steht dort „unbekannt".
+2. **„Heute" rechnet in der App-Zeitzone** statt in der der `php.ini`
+   (F-ZE-1). Auf einem Server in UTC war „heute" zwischen 0 und 2 Uhr Ortszeit
+   **gestern** — und genau dieser Wert belegte das Datumsfeld eines neuen
+   Diensttags vor.
+3. **Die Größenangabe der heruntergeladenen Sicherungsdatei** (E-ZE-26). Die
+   Inline-Zeile rechnete immer in MB; `EdFormat.groesse()` hat drei Stufen.
+   Unter 1 MiB steht jetzt „312 KB" statt „0,3 MB", ab 1 GiB „1,00 GB" statt
+   „1.024,0 MB".
+
+### Bewusst nicht geändert
+
+**Zwölf Stellen bleiben namentlich stehen**, jede mit Grund im Register:
+
+- **Vier Formular- und Vergleichswerte in `betrieb_server.php`.** Drei davon
+  liest derselbe POST-Zweig mit `is_numeric()` und `(float)` wieder ein; der
+  **Punkt** als Dezimaltrenner ist dort Bedingung eines Vergleichs, nicht
+  Geschmack. Eine Umstellung machte das Formular unabschickbar — zu merken
+  erst beim Speichern.
+- **Zwei CSS-Längen**, die bewusst gar nicht runden. Ein gerundeter Strich
+  wanderte um bis zu einen Prozentpunkt.
+- **Drei Stellen in `wartung_lib.php`.** Deren Dateikopf sagt zu, **nichts** zu
+  laden — sie trägt den Wartungsmodus gerade dann, wenn der Rest ersetzt wird.
+- **Zwei Zeitstempel ohne Zonenumrechnung** (`admin_installation.php`,
+  `rechtstexte_lib.php`) und **eine `sprintf`-Größe** mit Punkt statt Komma
+  (`gpx_lib.php`). Alle drei wären eine weitere sichtbare Textänderung.
+
 ## [Web 20.31.0] — 2026-09-22
 
 **Das Spaltenregister von `missions`.** Schritt 15 AP6 (Zentralisierung, R83).

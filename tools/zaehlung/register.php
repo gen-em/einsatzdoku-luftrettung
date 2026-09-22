@@ -304,7 +304,7 @@ return [
           . 'dafuer. Heisst in format_lib.php groesse_text(); der alte Name entfaellt (E-ZE-23).',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'regel' => ['art' => 'aufruf', 'namen' => ['edbak_groesse_text']],
- 'start' => 42, 'decke_jetzt' => 42, 'decke_ziel' => 0],
+ 'start' => 42, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 ['kennung' => 'Z20', 'paket' => 'AP7',
  'beschreibung' => "Bauten fuer relative Zeit von Hand ('vor …')",
@@ -313,7 +313,7 @@ return [
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'zaehlt' => 'dateien',
  'regel' => ['art' => 'muster', 'muster' => '~[\'"]vor ~'],
- 'start' => 2, 'decke_jetzt' => 2, 'decke_ziel' => 1],
+ 'start' => 2, 'decke_jetzt' => 1, 'decke_ziel' => 1],
 
 ['kennung' => 'Z21', 'paket' => 'AP7',
  'beschreibung' => 'number_format( in deutscher Form ausserhalb format_lib.php',
@@ -321,44 +321,60 @@ return [
           . 'etwa Koordinaten und GPX) bleiben, wo sie sind.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => ['server/format_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~number_format\s*\([^;]{0,120}?,\s*[\'"],[\'"]\s*,\s*[\'"]\.[\'"]~'],
- 'start' => 27, 'decke_jetzt' => 27, 'decke_ziel' => 0],
+ 'start' => 27, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 ['kennung' => 'Z22', 'paket' => 'AP7',
  'beschreibung' => 'Byte-Division fuer die Anzeige',
  'grund' => 'Byte-ANZEIGEN laufen ueber groesse_text(); Byte-GRENZWERTE bleiben, '
-          . 'wo sie sind (E-ZE-23). AP7 zaehlt die Ausnahmen namentlich aus.',
+          . 'wo sie sind (E-ZE-23). FUENF NAMENTLICH (AP7): betrieb_server.php 125 '
+          . '(Vergleichswert, nie ausgegeben) und 937/950/957 (FORMULARWERTE mit Punkt '
+          . 'als Dezimaltrenner, die derselbe POST-Zweig zurueckliest — eine Umstellung '
+          . 'machte das Formular unabschickbar); gpx_lib.php 375 (sprintf %.1f mit PUNKT, '
+          . 'groesse_text() schriebe ein Komma — sichtbare Textaenderung).',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php', 'ausser' => ['server/format_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~/\s*\(?\s*1024|/\s*1048576|/\s*1073741824~'],
- 'start' => 18, 'decke_jetzt' => 18, 'decke_ziel' => 18],
+ 'start' => 18, 'decke_jetzt' => 5, 'decke_ziel' => 18],
 
 ['kennung' => 'Z23', 'paket' => 'AP7',
  'beschreibung' => 'Anteil von Hand (Teil * 100 / Ganzes)',
- 'grund' => 'prozent_text() in format_lib.php (E-ZE-23).',
+ 'grund' => 'prozent_wert() und prozent_text() in format_lib.php (E-ZE-23). ZWEI '
+          . 'NAMENTLICH (AP7): betrieb_server.php 572 und 585 rechnen eine CSS-LAENGE, '
+          . 'keinen Prozenttext — sie runden bewusst gar nicht, weil der Strich sonst '
+          . 'um bis zu einen Prozentpunkt wanderte.',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php', 'ausser' => ['server/format_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~\*\s*100\s*/~'],
- 'start' => 10, 'decke_jetzt' => 10, 'decke_ziel' => 0],
+ 'start' => 10, 'decke_jetzt' => 2, 'decke_ziel' => 0],
 
 ['kennung' => 'Z24', 'paket' => 'AP7',
  'beschreibung' => "gmdate('Y-m-d\\TH:i:s\\Z' — ISO-UTC-Marke schreiben",
- 'grund' => 'iso_utc() in format_lib.php (E-ZE-23).',
+ 'grund' => 'iso_utc() in format_lib.php (E-ZE-23). Die eine erlaubte Stelle ist die '
+          . 'Funktion selbst; dazu EINE NAMENTLICH (AP7): wartung_lib.php 215. Deren '
+          . 'Dateikopf sagt als Eigenschaft 2 zu, NICHTS zu laden — sie traegt den '
+          . 'Wartungsmodus gerade dann, wenn der Rest ersetzt wird.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'regel' => ['art' => 'muster', 'muster' => '~gmdate\s*\(\s*[\'"]Y-m-d\\\\TH:i:s\\\\Z[\'"]~'],
- 'start' => 20, 'decke_jetzt' => 20, 'decke_ziel' => 1],
+ 'start' => 20, 'decke_jetzt' => 2, 'decke_ziel' => 1],
 
 ['kennung' => 'Z25', 'paket' => 'AP7',
  'beschreibung' => "str_replace(['T','Z'] … — ISO-UTC-Marke lesen",
- 'grund' => 'iso_utc_lesen() in format_lib.php (E-ZE-23).',
+ 'grund' => 'iso_utc_lesen() in format_lib.php (E-ZE-23). Die eine erlaubte Stelle ist '
+          . 'die Funktion selbst; dazu EINE NAMENTLICH (AP7): wartung_lib.php 552, '
+          . 'dieselbe Ladezusage wie bei Z24.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'regel' => ['art' => 'muster', 'muster' => '~str_replace\s*\(\s*\[\s*[\'"]T[\'"]\s*,\s*[\'"]Z[\'"]~'],
- 'start' => 9, 'decke_jetzt' => 9, 'decke_ziel' => 1],
+ 'start' => 9, 'decke_jetzt' => 2, 'decke_ziel' => 1],
 
 ['kennung' => 'Z26', 'paket' => 'AP7',
  'beschreibung' => 'Datumsformat-Literale mit d.m. ausserhalb format_lib.php',
  'grund' => 'datum_text() und datum_zeit_text($utc, $trenner) (F-ZE-3). Schritt 15 '
-          . 'benennt die Varianten und aendert keinen Pixel; 10c AP9 entscheidet.',
+          . 'benennt die Varianten und aendert keinen Pixel; 10c AP9 entscheidet. '
+          . 'DREI NAMENTLICH (AP7): admin_installation.php 363 und rechtstexte_lib.php '
+          . '482 formatieren einen Unix-Zeitstempel bewusst OHNE Zonenumrechnung — eine '
+          . 'Umstellung waere eine weitere sichtbare Ausnahme; wartung_lib.php 554 '
+          . 'darf nichts laden (siehe Z24).',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => ['server/format_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~[\'"]d\.m\.[^\'"]*[\'"]~'],
- 'start' => 67, 'decke_jetzt' => 67, 'decke_ziel' => 0],
+ 'start' => 67, 'decke_jetzt' => 3, 'decke_ziel' => 0],
 
 ['kennung' => 'Z27', 'paket' => 'AP7',
  'beschreibung' => "date('…') ohne Zeitstempel ausserhalb install.php",
@@ -367,7 +383,7 @@ return [
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/install.php'],
  'regel' => ['art' => 'eigen', 'name' => 'date_ohne_zeitstempel'],
- 'start' => 4, 'decke_jetzt' => 4, 'decke_ziel' => 0],
+ 'start' => 4, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 /* ---- AP8: JavaScript ---------------------------------------------------- */
 

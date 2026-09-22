@@ -4,7 +4,8 @@ require_once __DIR__ . '/auth_guard.php';
 require_betreiberin();
 require_once __DIR__ . '/geraete_lib.php';
 require_once __DIR__ . '/demo_lib.php';
-require_once __DIR__ . '/format_lib.php';   // zahl_text(), prozent_text(), prozent_wert(), heute_lokal()
+require_once __DIR__ . '/format_lib.php';   // zahl_text(), prozent_text(), prozent_wert(),
+                                            // datum_zeit_text(), heute_lokal() (Schritt 15/AP7)
 
 /**
  * BETRIEB -> STATISTIK (S8/AP4, Mockup 04 Fassung 2).

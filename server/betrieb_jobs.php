@@ -4,6 +4,7 @@ require_once __DIR__ . '/auth_guard.php';
 require_betreiberin();
 require_once __DIR__ . '/jobs_lib.php';
 require_once __DIR__ . '/wartung_lib.php';
+require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Zeitangaben unten
 
 /**
  * BETRIEB → HINTERGRUNDJOBS (S8/AP2, E-S8-05).
@@ -87,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
             } else {
                 jobs_pause($sek);
                 $pauseMeldung = ['ok', 'Die Hintergrundarbeit ist angehalten bis '
-                    . fmt_local((string)jobs_pause_bis(), 'd.m.Y H:i') . '.'];
+                    . datum_zeit_text((string)jobs_pause_bis()) . '.'];
             }
         }
     } catch (Throwable $ex) {
@@ -149,7 +150,7 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
         <?= csrf_field() ?><input type="hidden" name="action" value="jobs_pause_aus">
       </form>
       <?= ui_meldung_markup('warn', 'Die Hintergrundarbeit ist angehalten bis '
-          . fmt_local($jobPause, 'd.m.Y H:i') . '. Bis dahin wird nichts '
+          . datum_zeit_text($jobPause) . '. Bis dahin wird nichts '
           . 'verdichtet, ausgedünnt, aufgeräumt, gesichert oder versendet — '
           . 'auch das Komplett-Backup nicht. Die Pause läuft von selbst ab.',
           '', ui_knopf(['text' => 'Pause aufheben', 'art' => 'neutral',
@@ -160,7 +161,7 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
          sie kommt mit einer Migration unter <a href="betrieb_updates.php">Updates</a>.</p>
     <?php else: foreach ($jobs as $j): ?>
       <?php
-        $lauf = $j['letzter_lauf'] ? fmt_local((string)$j['letzter_lauf'], 'd.m.Y H:i') : 'nie';
+        $lauf = $j['letzter_lauf'] ? datum_zeit_text((string)$j['letzter_lauf']) : 'nie';
         $plaketten = ui_plakette($lauf, ['ton' => $j['letzter_lauf'] ? 'blau' : 'neutral']);
         if ($j['letzter_ausloeser']) {
             $plaketten .= ui_plakette((string)$j['letzter_ausloeser'], ['ton' => 'neutral']);

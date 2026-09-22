@@ -51,6 +51,11 @@ require_once __DIR__ . '/konfig_lib.php';
 
 require_once __DIR__ . '/email_lib.php';
 
+/* `groesse_kurz_text()` fuer die Byte-Angaben der Befunde (Schritt 15 AP7).
+ * AUSDRUECKLICH, nicht ueber eine Ladekette geerbt — und unbedenklich vor der
+ * Einrichtung: `format_lib.php` laedt nur `konfig_lib.php`, wie diese Datei. */
+require_once __DIR__ . '/format_lib.php';
+
 /* ---- Die Zahlen, an einer Stelle (E-PP-03) ------------------------------- */
 
 /* Untergrenze PHP: `PLATTFORM_PHP_MIN`, definiert in `php_mindest.php`.
@@ -137,16 +142,6 @@ function plattform_byte(string $wert): int
         'k'     => $zahl * 1024,
         default => $zahl,
     };
-}
-
-/** Byte lesbar — dieselbe Schreibweise wie `edbak_groesse_text()`. */
-function plattform_groesse(int $b): string
-{
-    if ($b >= PHP_INT_MAX) { return 'unbegrenzt'; }
-    foreach ([['GB', 1073741824], ['MB', 1048576], ['KB', 1024]] as [$e, $t]) {
-        if ($b >= $t) { return rtrim(rtrim(number_format($b / $t, 1, ',', '.'), '0'), ',') . ' ' . $e; }
-    }
-    return $b . ' B';
 }
 
 /**
@@ -318,8 +313,8 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
         $roh = (string)ini_get($name);
         if ($art === 'byte') {
             $ist      = plattform_byte($roh);
-            $istText  = $roh === '' ? 'nicht gesetzt' : $roh . ' (' . plattform_groesse($ist) . ')';
-            $sollText = '≥ ' . plattform_groesse($min);
+            $istText  = $roh === '' ? 'nicht gesetzt' : $roh . ' (' . groesse_kurz_text($ist) . ')';
+            $sollText = '≥ ' . groesse_kurz_text($min);
         } else {
             /* `max_execution_time = 0` heisst unbegrenzt — auf der
              * Kommandozeile die Vorgabe, im Web selten und in Ordnung. */
@@ -529,8 +524,8 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
         $ok    = $groesstes === 0 ? null : ((int)$frei >= $groesstes);
         $knapp = $ok === true && (int)$frei < 2 * $groesstes;
         $b[] = plattform_befund('platz', 'Freier Platz', 'muss',
-            plattform_groesse((int)$frei),
-            $groesstes > 0 ? '≥ 2× ' . plattform_groesse($groesstes) : 'nicht bestimmbar',
+            groesse_kurz_text((int)$frei),
+            $groesstes > 0 ? '≥ 2× ' . groesse_kurz_text($groesstes) : 'nicht bestimmbar',
             $ok,
             $groesstes === 0
                 ? 'Es gibt noch kein Komplett-Backup, gegen das sich rechnen ließe.'
@@ -606,13 +601,13 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
         $konting = speicher_db_kontingent_bytes();
         $ist     = (int)(function_exists('edbak_marke_lesen')
                          ? (edbak_marke_lesen(SPEICHER_K_DB) ?? 0) : 0);
-        $proz    = $konting > 0 && $ist > 0 ? (int)floor($ist * 100 / $konting) : 0;
+        $proz    = $konting > 0 && $ist > 0 ? prozent_wert($ist, $konting, 'ab') : 0;
         $schw    = function_exists('edbak_schwellen') ? edbak_schwellen() : [70, 90];
         $b[] = plattform_befund('db_kontingent', 'Kontingent der Datenbank', 'muss',
-            $ist > 0 ? plattform_groesse($ist) . ' von ' . plattform_groesse($konting)
+            $ist > 0 ? groesse_kurz_text($ist) . ' von ' . groesse_kurz_text($konting)
                      . ' · ' . $proz . ' %'
                      : 'noch nicht gemessen',
-            '< ' . (int)max($schw) . ' % von ' . plattform_groesse($konting),
+            '< ' . (int)max($schw) . ' % von ' . groesse_kurz_text($konting),
             $ist === 0 ? null : $proz < (int)max($schw),
             'Kein Hoster macht das DB-Kontingent abfragbar — es ist deshalb eine '
           . 'ANGABE (Vorgabe 10 GB, Z2) und wird mit denselben Schwellen gewarnt '

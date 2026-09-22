@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/trash_lib.php';
+require_once __DIR__ . '/format_lib.php';   // datum_text(), zahl_text()
 
 /**
  * Zwischenseite fuer das Loeschen eines Einsatzes: zeigt erst den Umfang,
@@ -37,7 +38,7 @@ ui_seite_start(['titel' => 'Einsatz löschen']);
   ]); ?>
 
   <?php ui_karte_start(['titel' => 'Einsatz vom '
-      . fmt_local((string)$m['started_at'], 'd.m.Y') . ', '
+      . datum_text((string)$m['started_at']) . ', '
       . fmt_local((string)$m['started_at']) . ' Uhr']); ?>
 
     <p>Folgendes wandert mit in den Papierkorb:</p>
@@ -52,7 +53,7 @@ ui_seite_start(['titel' => 'Einsatz löschen']);
       ] as [$was, $zahl]) {
           ui_zeile([
               'text' => $was,
-              'plaketten' => ui_plakette(number_format($zahl, 0, ',', '.'),
+              'plaketten' => ui_plakette(zahl_text($zahl),
                                          ['ton' => $zahl > 0 ? 'rot' : 'neutral']),
           ]);
       }

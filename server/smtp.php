@@ -4,12 +4,13 @@ declare(strict_types=1);
 /* Der eine Leser fuer config.php (Schritt 15 AP2). */
 require_once __DIR__ . '/konfig_lib.php';
 
-/* ZWEI ABHAENGIGKEITEN, KEINE DAVON MIT DATENBANK: `instanz_lib.php` laedt
+/* DREI ABHAENGIGKEITEN, KEINE DAVON MIT DATENBANK — `konfig_lib.php` oben,
+ * dazu die beiden hier. `instanz_lib.php` laedt
  * selbst nichts (dort ausgeschrieben) und bringt `app_url()` fuer den
  * EHLO-Namen. Damit bleibt `smtp.php` weiterhin ohne Datenbank benutzbar. */
 require_once __DIR__ . '/instanz_lib.php';
 
-/* Die zweite: `format_lib.php` bringt `iso_utc()` fuer den Versandvermerk.
+/* Die dritte: `format_lib.php` bringt `iso_utc()` fuer den Versandvermerk.
  * Sie laedt selbst nur `konfig_lib.php` — nichts auf dem Weg erreicht
  * `db.php`. */
 require_once __DIR__ . '/format_lib.php';

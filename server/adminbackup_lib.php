@@ -44,7 +44,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/backup_lib.php';
 require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/serverkrypto_lib.php';   // Siegel der Fassung 3 (S10/AP4)
-require_once __DIR__ . '/format_lib.php';         // groesse_text(), iso_utc(), prozent_wert()
+require_once __DIR__ . '/format_lib.php';   // groesse_text(), zahl_text(), iso_utc(),
+                                            // datum_zeit_text(), prozent_wert() (Schritt 15/AP7)
 
 /* ===========================================================================
  * FASSUNG 3 — DIE TEILE SIND VERSIEGELT (S10/AP4, E-S10-13, E-S10-U-11/-12)

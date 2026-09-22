@@ -928,8 +928,8 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       <div class="fld-reihe">
         <?php /* DIE DREI FORMULARWERTE BLEIBEN BYTE-DIVISION (Z22, AP7) — und
                  zwar mit PUNKT als Dezimaltrenner. Derselbe POST-Zweig oben liest
-                 sie mit `is_numeric()` und `(float)` wieder ein (Zeilen 54/56,
-                 102/104, 128/130); `groesse_text()` schriebe „2,00 GB", und das
+                 sie mit `is_numeric()` und `(float)` wieder ein (Zeilen 54/55,
+                 97/103, 121/132); `groesse_text()` schriebe „2,00 GB", und das
                  Formular waere nicht mehr abzuschicken — zu merken erst beim
                  Speichern. Der Kommentar steht IM Tag, damit er kein Leerzeichen
                  in die Ausgabe schreibt. */ ui_feld(['name' => 'grenze', 'label' => 'Speichergrenze Backups',

@@ -726,6 +726,7 @@ $weg($uid8);
  * ====================================================================== */
 echo "\n  Teil 8 — Adminpaket Fassung 3: Rundlauf und Siegel (S2/AP6, S10/AP4)\n";
 require_once $server . '/adminbackup_lib.php';
+require_once $server . '/format_lib.php';   // groesse_text() (Schritt 15/AP7)
 
 $quelle = $konto('probe-adminquelle@example.invalid');
 $kennung = bin2hex(random_bytes(8));
@@ -975,7 +976,7 @@ $pdo->exec("DELETE FROM app_state WHERE k IN ('adminbackup_grenze_gb',
 $c = &edbak_marken_speicher(); $c = [];      // Zwischenspeicher der Marken leeren
 $sag('Ohne Einstellung gilt die Vorgabe: 2 GB',
      edbak_grenze_bytes() === 2 * 1024 * 1024 * 1024,
-     edbak_groesse_text(edbak_grenze_bytes()));
+     groesse_text(edbak_grenze_bytes()));
 $sag('...und die Schwellen 70 und 90 Prozent',
      edbak_schwellen() === [70, 90], implode(' / ', edbak_schwellen()) . ' %');
 
@@ -988,10 +989,10 @@ file_put_contents($restOrdner . '/gross.part', str_repeat('x', 300000));
 $standB = edbak_speicherstand(true);
 $sag('Ein liegengebliebener Bauordner zaehlt gegen die Grenze mit',
      $standB['bytes'] - $standA['bytes'] >= 300000,
-     '+' . edbak_groesse_text($standB['bytes'] - $standA['bytes']) . ' erkannt');
+     '+' . groesse_text($standB['bytes'] - $standA['bytes']) . ' erkannt');
 $sag('...und er wird als „sonstiges" ausgewiesen, nicht in den Paketen versteckt',
      $standB['sonstige_bytes'] >= 300000,
-     edbak_groesse_text($standB['sonstige_bytes']) . ' ausserhalb der Pakete');
+     groesse_text($standB['sonstige_bytes']) . ' ausserhalb der Pakete');
 edbak_ordner_leeren($restOrdner); @rmdir($restOrdner);
 
 /* Grenze auf einen Wert, den der vorhandene Bestand schon ueberschreitet. */

@@ -4,6 +4,7 @@ require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/spur_lib.php';
 require_once __DIR__ . '/gpx_lib.php';
+require_once __DIR__ . '/format_lib.php';   // datum_text() fuer den Diensttag im Rueckweg
 
 /**
  * Die Spuren eines Diensttages, einzeln abrufbar (S2/AP4, E-S2-09).
@@ -134,7 +135,7 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
   <div class="titelzeile">
     <a class="rueckweg" href="index.php?d=<?= $dayId ?>">
       <?= ui_symbol('winkel', 'symbol-links') ?><span>Diensttag
-        <?= e(fmt_local($tag['day'] . ' 12:00:00', 'd.m.Y')) ?></span>
+        <?= e(datum_text($tag['day'] . ' 12:00:00')) ?></span>
     </a>
     <div class="titelzeile-haupt">
       <div class="titelzeile-text">

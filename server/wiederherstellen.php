@@ -287,7 +287,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $darfArbeiten) {
                         $notice = 'Durchgang zu Ende: '
                                 . zahl_text((int)$stand['statements'], 0)
                                 . ' Anweisungen, '
-                                . round(100 * (int)$stand['versatz'] / max(1, (int)$stand['sql_bytes']))
+                                . prozent_wert((int)$stand['versatz'],
+                                               max(1, (int)$stand['sql_bytes']), 'kauf')
                                 . ' % der Datei. Weiter mit „Einspielen".';
                     }
                 } catch (Throwable $ex) {
@@ -627,7 +628,14 @@ ui_kopf(['menue' => false]);
               . 'Datenbank verlangen.', '        ') ?>
         <?php endif; ?>
         <?php
-        $anteil = (int)round(100 * (int)$stand['versatz'] / max(1, (int)$stand['sql_bytes']));
+        /* `max(1, x)` BLEIBT STEHEN, obwohl prozent_wert() den Nullfall selbst
+           abfaengt — die beiden Wachen sind NICHT gleichwertig. Bei sql_bytes = 0
+           und versatz > 0 rechnete die alte Form 100 * versatz / 1, die Funktion
+           gaebe 0. Der Fall ist nicht erreichbar (ohne Datei gibt es keinen
+           Versatz), aber Zeichengleichheit wird belegt und nicht erschlossen
+           (E-ZE-10). Nachgemessen mit max(): 200 000 Paare, 0 Abweichungen. */
+        $anteil = prozent_wert((int)$stand['versatz'],
+                               max(1, (int)$stand['sql_bytes']), 'kauf');
         ui_zeile(['text' => 'Quelle', 'klein' => (string)$stand['quelle'],
                   'plaketten' => ui_plakette(groesse_text((int)$stand['sql_bytes'])
                                              . ' SQL', ['ton' => 'neutral'])]);

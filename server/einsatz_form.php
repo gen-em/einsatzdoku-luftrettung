@@ -5,6 +5,8 @@ require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/einsatz_lib.php';
 require_once __DIR__ . '/mission_fields_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
+/* `heute_lokal()` — AUSDRUECKLICH, nicht ueber `db.php` geerbt (Schritt 15 AP7). */
+require_once __DIR__ . '/format_lib.php';
 $FIELDS = require __DIR__ . '/mission_fields.php';
 
 $id = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
@@ -738,7 +740,10 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
         $unterTeile[] = (string)$tag['base_name'];
     }
     if ($day !== (string)$tag['day']) {
-        $unterTeile[] = 'Einsatzdatum ' . date('d.m.Y', strtotime($day));
+        /* `$day` ist ein KALENDERTAG ('Y-m-d'), keine UTC-Marke — deshalb der
+           Umsteller aus `diensttag_lib.php` und nicht `datum_text()`: er
+           dreht nur das Muster um und rechnet keine Zone (Schritt 15 AP7). */
+        $unterTeile[] = 'Einsatzdatum ' . dt_datum_lesbar($day);
     }
     $unter = e(implode(' · ', $unterTeile));
     if ($tag['kind'] === null) {
@@ -1287,7 +1292,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
         </div>
         <div class="fld-reihe">
           <label>Geburtsdatum<?= $SCHLOSS ?>
-            <input type="date" id="pat_dob" max="<?= e(date('Y-m-d')) ?>"></label>
+            <input type="date" id="pat_dob" max="<?= e(heute_lokal()) ?>"></label>
           <label>Alter<?= $SCHLOSS ?>
             <input type="number" id="pat_age" min="0" max="120" step="1">
             <span class="feld-klein-inline" id="agehint"></span></label>

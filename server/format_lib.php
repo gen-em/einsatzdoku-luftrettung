@@ -45,7 +45,7 @@ declare(strict_types=1);
  *
  * DIE NAMEN TRAGEN KEIN PRAEFIX — `groesse_text()`, nicht `fmt_groesse_text()`.
  * Das folgt `konfig_lib.php` (`konfig()`) und nicht `mission_fields_lib.php`
- * (`mf_…`): Ein Praefix ordnet einer Herkunft zu, und diese Funktionen sollen
+ * (`mf_` davor): Ein Praefix ordnet einer Herkunft zu, und diese Funktionen sollen
  * keine Herkunft haben, sondern die eine Schreibweise des Hauses sein.
  *
  * DIE JS-SEITE HEISST GENAUSO. `server/assets/format.js` fuehrt `EdFormat`
@@ -130,8 +130,8 @@ function datum_stunde_text(?string $utc): string
  *
  *   0 bis 89 s        „gerade eben" hier, „vor 1 Minuten" dort (die Kopie
  *                     kannte die 90-Sekunden-Schwelle nicht und erzwang mit
- *                     `max(1, …)` die Eins).
- *   3 600 bis 5 399 s „vor 60 … 90 Minuten" hier, „vor 1 Stunden" dort (die
+ *                     `max(1, x)` die Eins).
+ *   3 600 bis 5 399 s „vor 60 bis 90 Minuten" hier, „vor 1 Stunden" dort (die
  *                     Kopie wechselte bei 3 600 s auf Stunden, diese Fassung
  *                     erst bei 5 400 s).
  *
@@ -248,7 +248,7 @@ function iso_utc_lesen(?string $iso): ?int
  * HIESS BIS WEB 20.31.0 `stat_zahl()` und lag in `betrieb_statistik.php` —
  * in einer SEITE, nicht in einer Bibliothek. Ein zweiter Verbraucher konnte
  * sie gar nicht erreichen; die uebrigen 26 Stellen schrieben deshalb
- * `number_format(…, ',', '.')` von Hand.
+ * `number_format(x, s, ',', '.')` von Hand.
  */
 function zahl_text(int|float $n, int $stellen = 0): string
 {
@@ -328,7 +328,7 @@ function groesse_kurz_text(int $b): string
  * Geraet, und die Fuenferliste der benannten Ausnahmen (E-ZE-10) waechst
  * dafuer nicht.
  *
- * `(int)round(… / 1048576)` wortgetreu wie an allen vier Stellen: Der
+ * `(int)round(x / 1048576)` wortgetreu wie an allen vier Stellen: Der
  * Grenzwert entsteht als `$g['mb'] * 1024 * 1024` und ist per Bauart ein
  * glattes Vielfaches von 1 MiB.
  */
@@ -356,7 +356,7 @@ function groesse_paar_text(int $ist, int $grenze): string
  *
  * NICHT AUF 100 GEDECKELT: Ein uebervolles Kontingent soll 104 melden und
  * nicht 100. Wer deckeln will, tut es beim Aufrufer — `betrieb_server.php`
- * macht das fuer die Balkenbreite mit `min(100, …)`.
+ * macht das fuer die Balkenbreite mit `min(100, x)`.
  */
 function prozent_wert(int|float $teil, int|float $ganz, string $rundung = 'ab'): int
 {

@@ -6913,5 +6913,71 @@ declare(strict_types=1);
  *   dafuer, dass jede genau die Registerspalten ihres Zwecks fuehrt; eine
  *   Ausnahme braucht eine Begruendung im Feld, und eine, die nichts mehr
  *   trifft, ist selbst ein Befund.
+ *
+ * 20.32.0 — ZEIT UND ZAHL: EINE STELLE, AN DER TEXT ENTSTEHT
+ *   (22.09.2026, Schritt 15 AP7 — Zentralisierung, R83, E-ZE-23, E-ZE-26;
+ *   F-ZE-1, F-ZE-3). NEBEN-Nummer: zwei neue Dateien, kein Datenmodell,
+ *   keine Migration, `update.php` nicht faellig.
+ *
+ *   ZWOELF SACHEN AN 197 STELLEN, und drei davon gab es mehrfach. Bytes
+ *   hatten DREI Fassungen: `edbak_groesse_text()` in `adminbackup_lib.php`
+ *   (42 Aufrufe in 10 Dateien), `apk_groesse()` und `plattform_groesse()`.
+ *   Die dritte trug im Kopf den Satz „dieselbe Schreibweise wie
+ *   edbak_groesse_text()" — und das stimmte nie: vierte Stufe „B",
+ *   abgeschnittene Nachkommanullen, GB mit einer statt zwei Stellen.
+ *   Dieselben Bytes sahen je nach Seite anders aus. Eine vierte Fassung
+ *   stand als Inline-JavaScript in `einstellungen.php`.
+ *   Zahlen hatten EINE Fassung, und die lag in einer SEITE (`stat_zahl()`)
+ *   — ein zweiter Verbraucher konnte sie gar nicht erreichen, deshalb
+ *   schrieben 26 Stellen `number_format(x, s, ',', '.')` von Hand.
+ *   Anteile hatten KEINE: zehn Handrechnungen, drei Rundungen, fuenf
+ *   Bauarten fuer „keine Bezugsgroesse".
+ *   Die relative Zeit hatte ZWEI, und sie waren auseinandergelaufen.
+ *
+ *   `server/format_lib.php` FUEHRT SIE JETZT, DREIZEHN FUNKTIONEN, und jede
+ *   ist gegen ihre Vorgaengerin NACHGERECHNET statt begutachtet:
+ *   `groesse_text` 3 017 Byte-Werte, `groesse_kurz_text` 3 017,
+ *   `zahl_text` 28 Faelle, `prozent_text` 6 030, `zeit_relativ` 10 811
+ *   Zeitpunkte, `iso_utc`/`iso_utc_lesen` 5 000 Zeitstempel hin und
+ *   zurueck — je 0 Abweichungen. Die Gegenleser haben unabhaengig
+ *   nachgemessen; ein Lauf allein brachte 4 420 679 Vergleiche.
+ *
+ *   ZWEI FUNKTIONEN FUER DEN ANTEIL, NICHT EINE. Fuenf der zehn Stellen
+ *   runden AB, weil sie eine SCHWELLE ausloesen; drei kaufmaennisch, weil
+ *   sie nur gelesen werden. Eine Funktion ohne diesen Schalter verschoebe
+ *   den Ausloesezeitpunkt der Speicher-Warnmail um bis zu einen
+ *   Prozentpunkt.
+ *
+ *   `fmt_local()` ZIEHT AUS `db.php` HIERHER, unter demselben Namen — alle
+ *   113 Aufrufer merken nichts. Der Grund ist zwingend: `datum_text()` baut
+ *   auf ihr auf, und `format_lib.php` darf die Datenbankdatei nicht laden,
+ *   weil `install.php` sie ueber `plattform_lib.php` erreicht, bevor es eine
+ *   `config.php` gibt. `local_to_utc()` bleibt in `db.php`: Sie liest einen
+ *   Formularwert, um damit zu RECHNEN — die andere Richtung.
+ *
+ *   DER TRENNER WIRD ANGEHAENGT, NICHT INS FORMAT GESCHRIEBEN. Die
+ *   naheliegende Bauform ginge fuer die drei heutigen Trenner zufaellig gut,
+ *   weil keiner einen Buchstaben enthaelt. Der erste mit einem Buchstaben
+ *   wuerde still zu Formatzeichen — und so einer stand schon im Bestand.
+ *
+ *   DREI SICHTBARE FOLGEN, alle benannt und entschieden: die Altersangabe
+ *   auf Betrieb -> Updates (E-ZE-23, zwei Baender mit zusammen 1 890
+ *   Sekundenwerten), „heute" in der App-Zeitzone statt in der der `php.ini`
+ *   (F-ZE-1 — auf einem Server in UTC war „heute" zwischen 0 und 2 Uhr
+ *   Ortszeit GESTERN), und die Groessenangabe der heruntergeladenen
+ *   Sicherungsdatei (E-ZE-26, jetzt dreistufig wie ueberall sonst).
+ *
+ *   `server/assets/format.js` IST DIE JS-SEITE DAVON (`EdFormat`). Sie
+ *   traegt heute zwei Funktionen — genau die, die einen Verbraucher haben;
+ *   AP8 baut sie aus. PHP und JavaScript sind ueber 2 014 Byte-Werte
+ *   Zeichen fuer Zeichen gegeneinander geprueft.
+ *
+ *   ZWOELF STELLEN BLEIBEN NAMENTLICH STEHEN, jede mit Grund im Register:
+ *   vier Formular- und Vergleichswerte in `betrieb_server.php` (der PUNKT
+ *   als Dezimaltrenner ist dort Bedingung eines Vergleichs, nicht
+ *   Geschmack), zwei CSS-Laengen, die bewusst gar nicht runden, drei
+ *   Stellen in `wartung_lib.php` (deren Dateikopf zusagt, NICHTS zu laden),
+ *   zwei Zeitstempel ohne Zonenumrechnung und eine `sprintf`-Groesse mit
+ *   Punkt statt Komma.
  */
-const WEB_VERSION = '20.31.0';
+const WEB_VERSION = '20.32.0';

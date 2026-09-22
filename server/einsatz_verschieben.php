@@ -5,6 +5,7 @@ require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/einsatz_lib.php';
 require_once __DIR__ . '/tageszuordnung_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
+require_once __DIR__ . '/format_lib.php';   // datum_text() fuer den Kartentitel
 
 /**
  * Einen Einsatz einem anderen Diensttag zuordnen (A5.2, Auftragspunkt 13).
@@ -121,7 +122,7 @@ ui_seite_start(['titel' => 'Einsatz verschieben']);
      der richtige Weg.</p>
 
   <?php ui_karte_start(['titel' => 'Einsatz vom '
-      . fmt_local((string)$mission['started_at'], 'd.m.Y')]); ?>
+      . datum_text((string)$mission['started_at'])]); ?>
 
     <?php
       ui_zeile([
