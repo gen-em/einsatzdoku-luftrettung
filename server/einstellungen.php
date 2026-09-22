@@ -20,6 +20,7 @@ require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste
 require_once __DIR__ . '/kopplung_lib.php';  // Kopplungssitzungen: Code suchen, beanspruchen (S5)
 require_once __DIR__ . '/ratelimit_lib.php'; // Topf `pair_code` an der Code-Eingabe (S5, E-S5-16)
 require_once __DIR__ . '/geocoder_lib.php'; // Adresssuche: beide Schalter (S9/AP2, E-S9-05)
+require_once __DIR__ . '/format_lib.php';   // datum_text(), datum_zeit_text(), groesse_text(), groesse_paar_text() (AP7)
 
 /* OHNE `t` DIE ÜBERSICHT (E-P3-11, P3/O2).
  *
@@ -324,8 +325,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $termin = konto_loeschung_beantragen($userId);
                 mail_einreihen('loeschung_beantragt', (string)$z['email'],
-                               ['termin' => fmt_local($termin, 'd.m.Y') . ' um '
-                                          . fmt_local($termin, 'H:i') . ' Uhr',
+                               ['termin' => datum_zeit_text($termin, ' um ') . ' Uhr',
                                 'link'   => app_url('/login.php')]);
                 /* SOFORT ABMELDEN. Das Konto ist ab jetzt gesperrt; die
                  * Sitzung stehen zu lassen hiesse, dass die naechste Seite
@@ -1661,8 +1661,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                        . $fuell['grenze_einsaetze'], ['ton' => 'neutral'])]); ?>
       <?php ui_zeile(['text' => 'Speicher',
           'klein' => 'Einsätze samt GPS-Daten und Ruhesegmenten, geschätzt',
-          'plaketten' => ui_plakette((int)round($fuell['bytes'] / 1048576) . ' von '
-                       . (int)round($fuell['grenze_bytes'] / 1048576) . ' MB',
+          'plaketten' => ui_plakette(groesse_paar_text($fuell['bytes'], $fuell['grenze_bytes']),
                        ['ton' => 'neutral'])]); ?>
       <?php if ($fuell['voll']): ?>
         <?= ui_meldung_markup('warn', 'Die Grenze ist erreicht. Der Server nimmt '
@@ -4324,9 +4323,9 @@ ui_seite_start(['titel' => 'Einstellungen',
                damit die haeufigste Auskunft ohne Aussage; „deaktiviert" sagt
                jetzt die Plakette. */
             $klein = geraet_bezeichnung($d['geraet_art'], $d['geraet_modell'], $d['geraet_teil'])
-                   . ' · gekoppelt ' . fmt_local($d['created_at'], 'd.m.Y')
+                   . ' · gekoppelt ' . datum_text($d['created_at'])
                    . ' · zuletzt gemeldet '
-                   . ($d['last_seen'] ? fmt_local($d['last_seen'], 'd.m.Y H:i') : 'nie');
+                   . ($d['last_seen'] ? datum_zeit_text($d['last_seen']) : 'nie');
             /* ABGEWIESENE ANMELDUNGEN (Web 20.11.0, P5a/AP7, E-P5a-02).
                Seit die Mengenbremse in `ingest.php` steht, sperrt sich eine
                Uhr mit veraltetem Schluessel selbst aus. Ohne diese Zeile stuende
@@ -4345,7 +4344,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             if ($abgewiesen > 0) {
                 $klein .= ' · ' . $abgewiesen . ' abgewiesen'
                         . (($d['abgewiesen_seit'] ?? null) !== null
-                           ? ' seit ' . fmt_local($d['abgewiesen_seit'], 'd.m.Y H:i') : '');
+                           ? ' seit ' . datum_zeit_text($d['abgewiesen_seit']) : '');
             }
             ?>
         <form method="post" id="f-dev-<?= $did ?>" class="nur-vorlesen"
@@ -4498,8 +4497,8 @@ ui_seite_start(['titel' => 'Einstellungen',
           <?php foreach ($apks as $apk): ?>
             <?php ui_zeile([
                 'text'  => 'NAdoku' . ($apk['version'] !== null ? ' ' . $apk['version'] : ''),
-                'klein' => 'APK · ' . apk_groesse($apk['groesse'])
-                         . ' · Stand ' . fmt_local(gmdate('Y-m-d H:i:s', $apk['stand']), 'd.m.Y'),
+                'klein' => 'APK · ' . groesse_text($apk['groesse'])
+                         . ' · Stand ' . datum_text(gmdate('Y-m-d H:i:s', $apk['stand'])),
                 'aktionen' => ui_knopf(['text' => 'Herunterladen', 'art' => 'leise',
                     'href' => 'apk.php?d=' . rawurlencode($apk['datei'])]),
             ]); ?>

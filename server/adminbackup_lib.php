@@ -44,6 +44,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/backup_lib.php';
 require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/serverkrypto_lib.php';   // Siegel der Fassung 3 (S10/AP4)
+require_once __DIR__ . '/format_lib.php';         // groesse_text(), iso_utc(), prozent_wert()
 
 /* ===========================================================================
  * FASSUNG 3 — DIE TEILE SIND VERSIEGELT (S10/AP4, E-S10-13, E-S10-U-11/-12)
@@ -756,7 +757,7 @@ function edbak_sicherung_erzeugen(int $userId): array
     unset($laufend, $index);
 
     /* ---- Das Manifest zuletzt: es kennt dann alle Zahlen --------------- */
-    $erzeugt = gmdate('Y-m-d\TH:i:s\Z');
+    $erzeugt = iso_utc();
     $manifest = [
         'format'      => 'einsatzdoku-adminsicherung',
         'version'     => EDBAK_FASSUNG,
@@ -1248,7 +1249,7 @@ function edbak_freigeben(string $kennung, string $datei, int $zielUserId): bool
     $begleit['freigabe'] = [
         'datei'       => $datei,
         'ziel_user'   => $zielUserId,
-        'erstellt'    => gmdate('Y-m-d\TH:i:s\Z'),
+        'erstellt'    => iso_utc(),
         'eingeloest'  => null,
     ];
     return edbak_begleit_schreiben($kennung, $begleit);
@@ -1292,7 +1293,7 @@ function edbak_freigabe_eingeloest(string $kennung): void
 {
     $begleit = edbak_begleit_lesen($kennung);
     if (isset($begleit['freigabe']) && is_array($begleit['freigabe'])) {
-        $begleit['freigabe']['eingeloest'] = gmdate('Y-m-d\TH:i:s\Z');
+        $begleit['freigabe']['eingeloest'] = iso_utc();
         edbak_begleit_schreiben($kennung, $begleit);
     }
 }
@@ -1681,26 +1682,8 @@ function edbak_umfang_text(array $p): string
                 : 'davon ' . $summe . ' im Papierkorb';
         }
     }
-    $teile[] = edbak_groesse_text((int)($p['groesse'] ?? 0));
+    $teile[] = groesse_text((int)($p['groesse'] ?? 0));
     return implode(' · ', $teile);
-}
-
-/**
- * Dateigrösse: KB unter einem Megabyte, MB darüber — und GB ab einem Gigabyte.
- *
- * DIE DRITTE STUFE KAM MIT DER SPEICHERGRENZE (S2/AP6). Sie wird in GB
- * angegeben (Vorgabe 2 GB); ohne diese Stufe hätte die Meldung „Die
- * Speichergrenze ist erreicht (2.048,0 MB von 2.048,0 MB)" gelautet — dieselbe
- * Zahl, die daneben als „2 GB" eingestellt wird, in einer anderen Einheit.
- */
-function edbak_groesse_text(int $bytes): string
-{
-    if ($bytes >= 1024 * 1024 * 1024) {
-        return number_format($bytes / (1024 * 1024 * 1024), 2, ',', '.') . ' GB';
-    }
-    return $bytes < 1024 * 1024
-        ? number_format($bytes / 1024, 0, ',', '.') . ' KB'
-        : number_format($bytes / (1024 * 1024), 1, ',', '.') . ' MB';
 }
 
 /** Zeitpunkt aus dem Paket (UTC in ISO) in Ortszeit. */
@@ -1709,7 +1692,7 @@ function edbak_zeitpunkt_text(?string $iso): string
     if (!$iso) { return 'unbekannt'; }
     /* Mittelpunkt zwischen Datum und Uhrzeit (Mockup 40: „03.08.2026 ·
      * 22:10") — derselbe Trenner wie in der Umfangszeile darunter. */
-    try { return fmt_local(str_replace(['T', 'Z'], [' ', ''], (string)$iso), 'd.m.Y · H:i'); }
+    try { return datum_zeit_text((string)$iso, ' · '); }
     catch (Throwable) { return (string)$iso; }
 }
 
@@ -1893,7 +1876,7 @@ function edbak_speicherstand(bool $frisch = false): array
         'pakete'         => $z['pakete'],
         'ordner'         => $z['ordner'],
         'grenze'         => $grenze,
-        'prozent'        => $grenze > 0 ? (int)floor($z['bytes'] * 100 / $grenze) : 0,
+        'prozent'        => prozent_wert($z['bytes'], $grenze, 'ab'),
         'voll'           => $grenze > 0 && $z['bytes'] >= $grenze,
     ];
 }
@@ -1911,8 +1894,8 @@ function edbak_grenze_pruefen(bool $frisch = false): array
     $st = edbak_speicherstand($frisch);
     if (!$st['voll']) { return [true, null]; }
     return [false, 'Die Speichergrenze für Backups ist erreicht ('
-                 . edbak_groesse_text($st['bytes']) . ' von '
-                 . edbak_groesse_text($st['grenze']) . '). Es wurde NICHTS '
+                 . groesse_text($st['bytes']) . ' von '
+                 . groesse_text($st['grenze']) . '). Es wurde NICHTS '
                  . 'gelöscht und nichts überschrieben. Bitte alte Backups '
                  . 'entfernen, die Aufbewahrung senken oder die Grenze erhöhen.'];
 }
@@ -1975,8 +1958,8 @@ function edbak_schwellen_melden(): array
     $ziele = mail_betriebsziele();
     foreach ($offen as $s) {
         $text = "Die Ablage der Backups hat " . $s . " % ihrer Grenze erreicht.\n\n"
-              . "Belegt:  " . edbak_groesse_text($st['bytes']) . "\n"
-              . "Grenze:  " . edbak_groesse_text($st['grenze']) . "\n"
+              . "Belegt:  " . groesse_text($st['bytes']) . "\n"
+              . "Grenze:  " . groesse_text($st['grenze']) . "\n"
               . "Pakete:  " . $st['pakete'] . " in " . $st['ordner'] . " Konten\n\n"
               . "Ist die Grenze erreicht, wird nicht mehr gesichert — es wird "
               . "nichts still verdraengt. Bitte alte Backups entfernen, die "
@@ -1987,8 +1970,8 @@ function edbak_schwellen_melden(): array
         foreach ($ziele as $m) {
             if (mail_einreihen('backup_grenze', $m, [
                     'prozent' => $s,
-                    'belegt'  => edbak_groesse_text($st['bytes']),
-                    'grenze'  => edbak_groesse_text($st['grenze']),
+                    'belegt'  => groesse_text($st['bytes']),
+                    'grenze'  => groesse_text($st['grenze']),
                     'pakete'  => (string)$st['pakete'],
                     'ordner'  => (string)$st['ordner'],
                 ]) !== MAIL_ABGELEHNT) {
@@ -2566,7 +2549,7 @@ function edbak_auftrag_starten(): array
                               WHERE account_key IS NOT NULL AND account_key <> ''")
                     ->fetchColumn();
     $a = ['cur' => 0, 'ges' => $ges, 'gut' => 0, 'feh' => 0,
-          'seit' => gmdate('Y-m-d\TH:i:s\Z')];
+          'seit' => iso_utc()];
     edbak_auftrag_schreiben($a);
     return $a;
 }

@@ -4,6 +4,7 @@ require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/trash_lib.php';
 require_once __DIR__ . '/einsatz_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
+require_once __DIR__ . '/format_lib.php';   // datum_text(), datum_zeit_text() (AP7)
 
 /**
  * Aktionen des Papierkorbs. Wiederherstellen laeuft direkt (harmlos,
@@ -149,7 +150,7 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
               $klein[] = dt_rm_kurz($t) !== '' ? dt_rm_kurz($t) : 'ohne Rettungsmittel';
               $klein[] = (int)$t['einsaetze'] === 1
                        ? '1 Einsatz' : (int)$t['einsaetze'] . ' Einsätze';
-              $klein[] = 'gelöscht am ' . fmt_local((string)$t['deleted_at'], 'd.m.Y H:i');
+              $klein[] = 'gelöscht am ' . datum_zeit_text((string)$t['deleted_at']);
         ?>
           <?php /* Das POST-Formular steht EINMAL und versteckt; der Knopf der
                    Zeile und der des Aktionsblatts zeigen beide über `form`
@@ -192,11 +193,11 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
             <input type="hidden" name="id" value="<?= $mid ?>">
           </form>
           <?php
-            $bez = 'Einsatz vom ' . fmt_local((string)$t['started_at'], 'd.m.Y')
+            $bez = 'Einsatz vom ' . datum_text((string)$t['started_at'])
                  . ', ' . fmt_local((string)$t['started_at']) . ' Uhr';
             ui_zeile([
               'text'  => $bez,
-              'klein' => 'gelöscht am ' . fmt_local((string)$t['deleted_at'], 'd.m.Y H:i'),
+              'klein' => 'gelöscht am ' . datum_zeit_text((string)$t['deleted_at']),
               'aktionen' => ui_zeilenaktionen([
                   'titel' => $bez,
                   'eintraege' => [
@@ -221,7 +222,7 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
 
     <?php ui_karte_start(['titel' => $istTag
         ? 'Diensttag ' . dt_lesbar($tag, true)
-        : 'Einsatz vom ' . fmt_local((string)$m['started_at'], 'd.m.Y')
+        : 'Einsatz vom ' . datum_text((string)$m['started_at'])
           . ', ' . fmt_local((string)$m['started_at']) . ' Uhr']); ?>
 
       <?php if ($istTag): ?>
@@ -278,7 +279,7 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
             . 'Wer einen davon behalten will, verschiebt ihn vorher an einen '
             . 'anderen Diensttag.') ?>
         <?php foreach ($aktiv['einsaetze'] as $a):
-              $abez = 'Einsatz vom ' . fmt_local((string)$a['started_at'], 'd.m.Y')
+              $abez = 'Einsatz vom ' . datum_text((string)$a['started_at'])
                     . ', ' . fmt_local((string)$a['started_at']) . ' Uhr';
               ui_zeile([
                   'text' => $abez,

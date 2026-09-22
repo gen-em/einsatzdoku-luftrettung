@@ -71,6 +71,10 @@ require_once __DIR__ . '/instanz_lib.php';
 
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/komplett_lib.php';
+/* Ausdruecklich und nicht ueber die Ladekette: Diese Seite soll mit so wenig
+ * Umgebung laufen wie moeglich, und `format_lib.php` zieht nur `konfig_lib.php`
+ * nach. groesse_text(), zahl_text(), iso_utc(). */
+require_once __DIR__ . '/format_lib.php';
 
 /* Eigene Sitzung — `auth_guard.php` gibt es hier nicht, es gibt ja keine
  * Konten. Dieselben Einstellungen wie im Einrichter (M1-19), und seit
@@ -264,7 +268,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $darfArbeiten) {
                 try {
                     $stand = wh_auspacken($datei, $pw, $stand);
                     wh_stand_schreiben($stand);
-                    $notice = 'Ausgepackt: ' . edbak_groesse_text((int)$stand['sql_bytes'])
+                    $notice = 'Ausgepackt: ' . groesse_text((int)$stand['sql_bytes'])
                             . ' SQL aus „' . $datei . '". '
                             . ($stand['endmarke'] ? 'Die Endmarke ist da — die Datei ist vollständig. '
                                                   : '')
@@ -277,11 +281,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $darfArbeiten) {
                     $stand = wh_einspielen($stand, $zeitLinks);
                     wh_stand_schreiben($stand);
                     if (($stand['phase'] ?? '') === 'fertig') {
-                        $notice = 'Eingespielt: ' . number_format((int)$stand['statements'], 0, ',', '.')
+                        $notice = 'Eingespielt: ' . zahl_text((int)$stand['statements'], 0)
                                 . ' Anweisungen. Die Installation steht wieder.';
                     } else {
                         $notice = 'Durchgang zu Ende: '
-                                . number_format((int)$stand['statements'], 0, ',', '.')
+                                . zahl_text((int)$stand['statements'], 0)
                                 . ' Anweisungen, '
                                 . round(100 * (int)$stand['versatz'] / max(1, (int)$stand['sql_bytes']))
                                 . ' % der Datei. Weiter mit „Einspielen".';
@@ -289,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $darfArbeiten) {
                 } catch (Throwable $ex) {
                     wh_stand_schreiben($stand);
                     $error = 'Das Einspielen ist an Anweisung '
-                           . number_format((int)($stand['statements'] ?? 0) + 1, 0, ',', '.')
+                           . zahl_text((int)($stand['statements'] ?? 0) + 1, 0)
                            . ' gescheitert: ' . $ex->getMessage()
                            . ' Es wurde NICHTS zurückgenommen — die Datenbank steht auf halbem Weg. '
                            . 'Vor einem neuen Versuch die Datenbank leeren.';
@@ -411,7 +415,7 @@ function wh_auspacken(string $datei, string $passwort, array $stand): array
 
     return ['phase' => 'einspielen', 'quelle' => $datei, 'sql_bytes' => $bytes,
             'versatz' => 0, 'statements' => 0, 'endmarke' => $endmarke, 'eigen' => $eigen,
-            'kopf' => $gefunden['kopf'], 'begonnen' => gmdate('Y-m-d\TH:i:s\Z')];
+            'kopf' => $gefunden['kopf'], 'begonnen' => iso_utc()];
 }
 
 /**
@@ -498,7 +502,7 @@ function wh_einspielen(array $stand, callable $zeitLinks): array
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
         $pdo->exec('SET UNIQUE_CHECKS = 1');
         $stand['phase'] = 'fertig';
-        $stand['beendet'] = gmdate('Y-m-d\TH:i:s\Z');
+        $stand['beendet'] = iso_utc();
         /* DEN TORWAECHTER VERGESSEN LASSEN (P5a/AP3, Backlog Nr. 54).
          *
          * Der eingespielte Dump bringt das `schema_migrations` der
@@ -576,7 +580,7 @@ ui_kopf(['menue' => false]);
         ui_zeile(['text' => 'Eingespielt',
                   'klein' => 'aus „' . (string)($stand['quelle'] ?? '') . '"',
                   'plaketten' => ui_plakette(
-                      number_format((int)($stand['statements'] ?? 0), 0, ',', '.')
+                      zahl_text((int)($stand['statements'] ?? 0), 0)
                       . ' Anweisungen', ['ton' => 'blau'])]);
         if ($dumpWeb !== '' && $dumpWeb !== WEB_VERSION) {
             ui_zeile(['text' => 'Der Dump stammt aus einer anderen Fassung',
@@ -625,10 +629,10 @@ ui_kopf(['menue' => false]);
         <?php
         $anteil = (int)round(100 * (int)$stand['versatz'] / max(1, (int)$stand['sql_bytes']));
         ui_zeile(['text' => 'Quelle', 'klein' => (string)$stand['quelle'],
-                  'plaketten' => ui_plakette(edbak_groesse_text((int)$stand['sql_bytes'])
+                  'plaketten' => ui_plakette(groesse_text((int)$stand['sql_bytes'])
                                              . ' SQL', ['ton' => 'neutral'])]);
         ui_zeile(['text' => 'Fortschritt',
-                  'klein' => number_format((int)$stand['statements'], 0, ',', '.')
+                  'klein' => zahl_text((int)$stand['statements'], 0)
                            . ' Anweisungen ausgeführt',
                   'plaketten' => ui_plakette($anteil . ' %',
                                              ['ton' => $anteil >= 100 ? 'blau' : 'orange'])]);
@@ -681,7 +685,7 @@ ui_kopf(['menue' => false]);
                 'text' => $q['datei'],
                 'klein' => $q['art'] === 'edk'
                     ? ('versiegelt · ' . (isset($k['zeilen'])
-                        ? number_format((int)$k['zeilen'], 0, ',', '.') . ' Zeilen aus '
+                        ? zahl_text((int)$k['zeilen'], 0) . ' Zeilen aus '
                           . (int)($k['tabellen'] ?? 0) . ' Tabellen · Web '
                           . (string)($k['web'] ?? '?')
                         : '') . ' · '
@@ -689,7 +693,7 @@ ui_kopf(['menue' => false]);
                            ? 'mit dem Serverschlüssel aus config.php'
                            : 'mit einer Passphrase'))
                     : ($q['art'] === 'gz' ? 'gepackter SQL-Dump' : 'SQL-Dump im Klartext'),
-                'plaketten' => ui_plakette(edbak_groesse_text((int)$q['groesse']),
+                'plaketten' => ui_plakette(groesse_text((int)$q['groesse']),
                                            ['ton' => 'neutral']),
             ]);
             ?>

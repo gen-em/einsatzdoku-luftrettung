@@ -4,7 +4,7 @@ require_once __DIR__ . '/auth_guard.php';
 require_betreiberin();
 require_once __DIR__ . '/migration_lib.php';
 require_once __DIR__ . '/wartung_lib.php';
-require_once __DIR__ . '/adminbackup_lib.php';   // edbak_groesse_text()
+require_once __DIR__ . '/format_lib.php';        // groesse_text(), datum_text(), zeit_relativ()
 require_once __DIR__ . '/komplett_lib.php';      // juengster Komplett-Stand
 
 /**
@@ -110,12 +110,7 @@ $kompStaende = komp_staende();
 $kompJuengst = $kompStaende[0] ?? null;
 $kompAlter   = null;
 if ($kompJuengst !== null && !empty($kompJuengst['zeit'])) {
-    $sek = time() - strtotime((string)$kompJuengst['zeit']);
-    $kompAlter = $sek < 3600
-        ? 'vor ' . max(1, (int)round($sek / 60)) . ' Minuten'
-        : ($sek < 172800
-           ? 'vor ' . (int)round($sek / 3600) . ' Stunden'
-           : 'vor ' . (int)round($sek / 86400) . ' Tagen');
+    $kompAlter = zeit_relativ((string)$kompJuengst['zeit']);
 }
 
 $stand = migrationen_stand($pdo);
@@ -228,7 +223,7 @@ ui_seite_start(['titel' => 'Updates']);
       <?= ui_meldung_markup('info',
           'Alles aktuell · ' . ($stand['letzte'] !== null
               ? e((string)$stand['letzte']) . ($stand['wann'] !== null
-                  ? ' am ' . e(fmt_local((string)$stand['wann'], 'd.m.Y'))
+                  ? ' am ' . e(datum_text((string)$stand['wann']))
                   : '')
               : 'noch keine Migration verbucht')
           . '. Es steht nichts an.') ?>
@@ -240,9 +235,9 @@ ui_seite_start(['titel' => 'Updates']);
                es nichts, worauf man nach einer verlorenen Spalte zurückgriffe. */ ?>
       <?= $kompJuengst !== null
           ? ui_meldung_markup('info', 'Jüngstes Komplett-Backup: '
-              . e(fmt_local((string)$kompJuengst['zeit'], 'd.m.Y H:i'))
+              . e(datum_zeit_text((string)$kompJuengst['zeit']))
               . ($kompAlter !== null ? ', ' . e($kompAlter) : '')
-              . ' · ' . edbak_groesse_text((int)$kompJuengst['groesse']) . '.',
+              . ' · ' . groesse_text((int)$kompJuengst['groesse']) . '.',
               '', ui_knopf(['text' => 'Komplett-Backup', 'art' => 'neutral',
                             'symbol' => 'datenbank',
                             'href' => 'admin_komplettsicherung.php']))
@@ -345,7 +340,7 @@ ui_seite_start(['titel' => 'Updates']);
       'vorschau' => $stand['letzte'] !== null
           ? 'zuletzt ' . (string)$stand['letzte']
             . ($stand['wann'] !== null
-               ? ' am ' . fmt_local((string)$stand['wann'], 'd.m.Y H:i') : '')
+               ? ' am ' . datum_zeit_text((string)$stand['wann']) : '')
           : 'noch nichts verbucht']); ?>
     <?php foreach (array_reverse($erledigt) as [$id, $label, , $detail, , , $web]): ?>
       <?php
@@ -393,7 +388,7 @@ ui_seite_start(['titel' => 'Updates']);
       ui_zeile(['text' => 'Android-App',
                 'klein' => $apk
                     ? 'APK auf dem Server, Stand '
-                      . fmt_local(gmdate('Y-m-d H:i:s', (int)$apk[0]['stand']), 'd.m.Y')
+                      . datum_text(gmdate('Y-m-d H:i:s', (int)$apk[0]['stand']))
                     : 'kein APK auf dem Server — die App kommt über den Store (R65)',
                 'plaketten' => ui_plakette($apkV ?? '—', ['ton' => 'neutral'])]);
     ?>

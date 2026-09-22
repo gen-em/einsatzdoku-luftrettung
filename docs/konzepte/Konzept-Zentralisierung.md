@@ -15,7 +15,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > | | |
 > |---|---|
 > | Stand | 22.09.2026 — **AP1 bis AP6 erledigt** (zuletzt Web 20.31.0). Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
-> | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen), **E-ZE-25** (Ultracode, 22.09.2026); E-ZE-09 ist nicht vergeben |
+> | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen), **E-ZE-25** (Ultracode) und **E-ZE-26** (`assets/format.js` in AP7, sechste Ausnahme), beide 22.09.2026; E-ZE-09 ist nicht vergeben |
 > | Offen | nichts im Konzept. **F-ZE-1 bis F-ZE-6** (Abschnitt 2.3) sind mit der Freigabe vom 20.09.2026 entschieden. Außerhalb des Konzepts: die Einschübe (Abschnitt 8, 9) sind noch nicht eingespielt |
 > | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2** und **AP3 erledigt** (21.09.2026), **AP4 erledigt** (21.09.2026), **AP5** und **AP6 erledigt** (22.09.2026). **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
 > | Nummern | Dieses Konzept vergibt **keine** Rahmenplan-Fassung, **keine** Backlog-Nummer und **keine** Version. Einschübe in Abschnitt 8 und 9 übernimmt die einspielende Instanz |
@@ -53,11 +53,18 @@ Abschnitt 6 nennt sie je 10c-Arbeitspaket.
 
 **Grundregel (E-ZE-10):** Dieser Schritt ändert **kein Verhalten**. Wo Kopien
 auseinandergelaufen sind, nennt das Konzept die Fassung, die gilt, und jede
-sichtbare Folge steht hier als Entscheidung. Es gibt genau **fünf** benannte
+sichtbare Folge steht hier als Entscheidung. Es gibt **sechs** benannte
 Ausnahmen: Nr. 57 (E-ZE-01, entschieden), „heute" in der App-Zeitzone
 (F-ZE-1), lesende Seiten starten keine Sitzung ohne Cookie (F-ZE-2), die
-Fehlerschlüssel des API-Eingangs (F-ZE-5) und die Altersangabe auf Betrieb →
-Updates (E-ZE-23). Nichts sonst.
+Fehlerschlüssel des API-Eingangs (F-ZE-5), die Altersangabe auf Betrieb →
+Updates (E-ZE-23) und — seit dem 22.09.2026 — die Größenangabe der
+heruntergeladenen Sicherungsdatei (E-ZE-26). Nichts sonst.
+
+> **Die sechste ist am 22.09.2026 dazugekommen** und war bis dahin eine
+> Fünferliste. Sie ist nicht dazugerutscht: Der Auftraggeber hat sie
+> ausdrücklich beschlossen, nachdem die Messung von AP7 die Stelle
+> aufgedeckt hatte (E-ZE-26). Wer eine ältere Quelle liest, findet dort
+> „genau fünf" — das ist der Stand bis zum 22.09.2026.
 
 **Nicht Gegenstand:**
 
@@ -470,6 +477,28 @@ steht beim Alter des jüngsten Komplett-Backups unter 90 Sekunden künftig
 `iso_utc_lesen()` liest die Marke. Byte-**Anzeigen** laufen über
 `groesse_text()`; Byte-**Grenzwerte** bleiben, wo sie sind. Datumsformate:
 F-ZE-3.
+
+**E-ZE-26 — `assets/format.js` entsteht schon in AP7, mit einer sichtbaren
+Folge** (Auftraggeber, 22.09.2026). `einstellungen.php` rechnete die Größe der
+heruntergeladenen Sicherungsdatei in einer **Inline-Zeile** aus —
+`(blob.size / 1048576).toFixed(1).replace('.', ',')`, also **immer in MB**,
+ohne Tausenderpunkt. Das ist eine vierte Fassung desselben Formatierers, und
+zwar die einzige im Browser.
+
+Sie zieht nach `server/assets/format.js` als `EdFormat.groesse()` und
+übernimmt dabei die **dreistufige** Regel der PHP-Seite. Die Folge ist
+sichtbar: Bei einer Sicherungsdatei **unter 1 MiB** steht künftig „312 KB"
+statt „0,3 MB", **ab 1 GiB** „1,00 GB" statt „1.024,0 MB". Beides ist
+erreichbar — ein leeres Konto sichert unter einem Megabyte.
+
+**Der andere Weg wäre gewesen**, die MB-Form als eigene Funktion zu erhalten.
+Das hätte kein Zeichen geändert, aber zwei Größenschreibweisen im Haus
+festgeschrieben — und die Frage nur nach AP8 verschoben. Nachgemessen sind
+die beiden Fassungen jetzt über **2 014 Byte-Werte** Zeichen für Zeichen
+gleich (PHP gegen JavaScript, 0 Abweichungen).
+
+**AP8 baut die Datei aus** (Z34). Bis dahin steht dort genau, was einen
+Verbraucher hat.
 
 **E-ZE-24 — Ein Register, das bleibt.** `tools/zaehlung/` führt je Muster eine
 Zeile: Kennung, Beschreibung, Regel, Sicht, **Decke**, Ausnahmen. Der

@@ -319,7 +319,7 @@ return [
  'beschreibung' => 'number_format( in deutscher Form ausserhalb format_lib.php',
  'grund' => 'zahl_text() (E-ZE-23). Die uebrigen number_format (andere Form, '
           . 'etwa Koordinaten und GPX) bleiben, wo sie sind.',
- 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
+ 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => ['server/format_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~number_format\s*\([^;]{0,120}?,\s*[\'"],[\'"]\s*,\s*[\'"]\.[\'"]~'],
  'start' => 27, 'decke_jetzt' => 27, 'decke_ziel' => 0],
 
@@ -327,14 +327,14 @@ return [
  'beschreibung' => 'Byte-Division fuer die Anzeige',
  'grund' => 'Byte-ANZEIGEN laufen ueber groesse_text(); Byte-GRENZWERTE bleiben, '
           . 'wo sie sind (E-ZE-23). AP7 zaehlt die Ausnahmen namentlich aus.',
- 'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php', 'ausser' => [],
+ 'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php', 'ausser' => ['server/format_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~/\s*\(?\s*1024|/\s*1048576|/\s*1073741824~'],
  'start' => 18, 'decke_jetzt' => 18, 'decke_ziel' => 18],
 
 ['kennung' => 'Z23', 'paket' => 'AP7',
  'beschreibung' => 'Anteil von Hand (Teil * 100 / Ganzes)',
  'grund' => 'prozent_text() in format_lib.php (E-ZE-23).',
- 'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php', 'ausser' => [],
+ 'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php', 'ausser' => ['server/format_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~\*\s*100\s*/~'],
  'start' => 10, 'decke_jetzt' => 10, 'decke_ziel' => 0],
 
@@ -356,7 +356,7 @@ return [
  'beschreibung' => 'Datumsformat-Literale mit d.m. ausserhalb format_lib.php',
  'grund' => 'datum_text() und datum_zeit_text($utc, $trenner) (F-ZE-3). Schritt 15 '
           . 'benennt die Varianten und aendert keinen Pixel; 10c AP9 entscheidet.',
- 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
+ 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => ['server/format_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~[\'"]d\.m\.[^\'"]*[\'"]~'],
  'start' => 67, 'decke_jetzt' => 67, 'decke_ziel' => 0],
 

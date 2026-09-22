@@ -5,6 +5,7 @@ require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/smtp.php';
 require_admin();
 require_once __DIR__ . '/adminbackup_lib.php';
+require_once __DIR__ . '/format_lib.php';   // zahl_text(), datum_text() (AP7)
 
 /**
  * NUTZERINNEN — die Liste, ausgelegt auf mehrere hundert Konten (E-P3-41, O9b).
@@ -580,7 +581,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
            Die Filterplaketten darunter machen es umgekehrt richtig: Sie
            zählen innerhalb der Suche und behalten sie deshalb. */ ?>
   <div class="kennzahl-raster kennzahl-raster-4">
-    <?= ui_kennzahl(['wert' => number_format($gesamt['konten'], 0, ',', '.'),
+    <?= ui_kennzahl(['wert' => zahl_text($gesamt['konten']),
                      'label' => 'Konten',
                      'href' => konten_weg(['f' => '', 'q' => '', 's' => ''])]) ?>
     <?= ui_kennzahl(['wert' => (string)$gesamt['admins'], 'label' => 'Admins',
@@ -596,7 +597,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
 
   <?php ui_karte_start([
       'titel' => 'Konten', 'id' => 'k-konten',
-      'zahl' => number_format($treffer, 0, ',', '.'),
+      'zahl' => zahl_text($treffer),
       'aktion' => ['text' => 'Anlegen', 'symbol' => 'plus', 'art' => 'orange',
                    'href' => '#', 'attr' => 'data-dialog="dlg-anlegen"'],
   ]); ?>
@@ -675,8 +676,8 @@ ui_seite_start(['titel' => 'NutzerInnen']);
                      Titel. KONTO bleibt linksbuendig: Name und Adresse sind
                      Text und werden gelesen, nicht verglichen. */ ?>
             <td class="mitte-spalte"><?= e(rolle_text($k['role'])) ?></td>
-            <td class="mitte-spalte"><?= e($k['created_at'] ? fmt_local($k['created_at'], 'd.m.Y') : '—') ?></td>
-            <td class="mitte-spalte"><?= e($k['last_login'] ? fmt_local($k['last_login'], 'd.m.Y') : '—') ?></td>
+            <td class="mitte-spalte"><?= e($k['created_at'] ? datum_text($k['created_at']) : '—') ?></td>
+            <td class="mitte-spalte"><?= e($k['last_login'] ? datum_text($k['last_login']) : '—') ?></td>
             <td class="mitte-spalte"><?= (int)$k['geraete'] ?></td>
             <td class="mitte-spalte"><?= ui_plakette($standText, ['ton' => $standTon]) ?></td>
             <td class="oeffnen-spalte"><a class="oeffnen" href="<?= e($ziel) ?>"><?=
@@ -697,7 +698,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
         [$standText, $standTon] = edbak_stand_plakette($k['stand']);
         $klein = [rolle_text($k['role'])];
         $klein[] = (int)$k['geraete'] . ($k['geraete'] === 1 ? ' Gerät' : ' Geräte');
-        $klein[] = 'zuletzt ' . ($k['last_login'] ? fmt_local($k['last_login'], 'd.m.Y') : '—');
+        $klein[] = 'zuletzt ' . ($k['last_login'] ? datum_text($k['last_login']) : '—');
         ui_zeile([
           'vorn'  => '<input type="checkbox" data-kontowahl value="' . (int)$k['id']
                    . '" aria-label="' . e((string)($k['name'] ?: $k['email'])) . ' auswählen">',
@@ -713,7 +714,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
     <?php /* ---- Fuss: Zaehlung und Seitenwechsel -------------------------- */ ?>
     <div class="listenfuss">
       <p class="listenzahl">Konten <?= $von ?>–<?= $bis ?> von
-         <?= number_format($treffer, 0, ',', '.') ?></p>
+         <?= zahl_text($treffer) ?></p>
       <?php if ($seiten > 1): ?>
         <nav class="seitenwahl" aria-label="Seiten">
           <a class="seitenknopf<?= $seite <= 1 ? ' aus' : '' ?>"

@@ -4,10 +4,15 @@ declare(strict_types=1);
 /* Der eine Leser fuer config.php (Schritt 15 AP2). */
 require_once __DIR__ . '/konfig_lib.php';
 
-/* DIE EINZIGE ABHAENGIGKEIT: `instanz_lib.php` laedt selbst nichts (dort
- * ausgeschrieben) und bringt `app_url()` fuer den EHLO-Namen. Damit bleibt
- * `smtp.php` weiterhin ohne Datenbank benutzbar. */
+/* ZWEI ABHAENGIGKEITEN, KEINE DAVON MIT DATENBANK: `instanz_lib.php` laedt
+ * selbst nichts (dort ausgeschrieben) und bringt `app_url()` fuer den
+ * EHLO-Namen. Damit bleibt `smtp.php` weiterhin ohne Datenbank benutzbar. */
 require_once __DIR__ . '/instanz_lib.php';
+
+/* Die zweite: `format_lib.php` bringt `iso_utc()` fuer den Versandvermerk.
+ * Sie laedt selbst nur `konfig_lib.php` — nichts auf dem Weg erreicht
+ * `db.php`. */
+require_once __DIR__ . '/format_lib.php';
 
 /**
  * DIE ANTWORT ABSCHLIESSEN, BEVOR LANGSAME ARBEIT BEGINNT.
@@ -146,7 +151,7 @@ function smtp_versand_vermerken(bool $ok): void
 {
     if (!function_exists('db')) { return; }
     try {
-        app_state_setzen_mehrere(['smtp_last'    => gmdate('Y-m-d\TH:i:s\Z'),
+        app_state_setzen_mehrere(['smtp_last'    => iso_utc(),
                                   'smtp_last_ok' => $ok ? '1' : '0']);
     } catch (Throwable $ex) {
         /* Still: Der Versand ist gelaufen, der Vermerk nicht. Das ist die

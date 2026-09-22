@@ -66,14 +66,6 @@ function apk_liste(): array
     return $aus;
 }
 
-/** Groesse lesbar — „7,2 MB". */
-function apk_groesse(int $bytes): string
-{
-    return $bytes >= 1048576
-        ? number_format($bytes / 1048576, 1, ',', '.') . ' MB'
-        : number_format($bytes / 1024, 0, ',', '.') . ' KB';
-}
-
 /**
  * Die Pruefsumme in Vierergruppen.
  *
