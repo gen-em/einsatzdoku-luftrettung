@@ -1369,3 +1369,45 @@ nichts; ein Datum sagt, *welcher* Tag).
 | **J-21** | **Einen Dienst über Mitternacht anlegen** (ein Einsatz um 23:50, einer um 01:10) und nach „Beginn" aufsteigend sortieren | 23:50 steht **vor** 01:10 | 01:10 steht oben — dann fehlt `start_sort` in der Antwort |
 | **J-22** | **Zeitraumübersicht, ein Monat mit Einsätzen an nur einem Tag** | Die Spalte **„Datum"** steht trotzdem da | Sie fehlt, und die Beschriftung sagt nur „älteste zuerst" |
 | **J-23** | **Tagesübersicht:** Prüfen, dass **kein** „Fehleinsatz" und **keine** „Art"- und **keine** „Datum"-Spalte erscheint | Neun bzw. elf Spalten, keine davon | Eine der drei taucht auf — dann greift `ohne` nicht oder eine Seite setzt den Vorspann nicht |
+
+
+---
+
+## K. Abschluss (AP10, 22.09.2026)
+
+**Dieses Dokument bleibt.** Das Konzept `Konzept-Zentralisierung.md` ist mit
+dem Abschluss gelöscht (`CLAUDE.md` 7, K9) — die Git-Historie behält es, und
+die Zusammenfassung steht im **Rahmenplan Abschnitt 8**. Das Prüfdokument
+bleibt, bis seine Prüfliste abgehakt ist, und wird dann ebenso gelöscht.
+
+**Die Prüfliste dieses Dokuments ist die offene Arbeit.** Sie umfasst
+A-1 bis I-14 aus den früheren Paketen und **J-1 bis J-23** aus AP9:
+J-1 bis J-10 zur Fähigkeitsregel, J-11 bis J-13 zu den Suchfiltern,
+J-14 bis J-23 zum Generatorzusammenzug. Keiner der Punkte ist maschinell
+nachholbar — sie alle verlangen einen Blick in den Browser oder einen
+Bestand, den der Referenzdatensatz nicht hat.
+
+**Zwei Punkte hängen an Daten, die es noch nicht gibt**, und das steht hier,
+damit niemand sie für „geht nicht" hält:
+
+- **J-11** (Fähigkeit eingerichtet, nie benutzt) verlangt ein
+  Rettungsmittel mit Windenfähigkeit ohne dokumentierten Windeneinsatz.
+- **J-21** (Nachtdienst) verlangt einen Dienst über Mitternacht. Der
+  Referenzdatensatz hat keinen — **Backlog Nr. 275** schließt die Lücke mit
+  zehn Einsätzen über Nacht im Demo-Konto. Bis dahin ist der Fall nur über
+  eine abgefangene Antwort zu prüfen, und das misst den Browser, nicht die
+  Anlage.
+
+**Was der Abschluss an Steuerungsdokumenten nachgezogen hat:**
+Rahmenplan **Fassung 103** (Erledigt-Zeile in Abschnitt 8, Fahrplanzeile 15
+auf „erledigt", Abschnitt 3 als Protokoll gekennzeichnet, Nr. 57 und Nr. 202
+in Abschnitt 5); Backlog **Nr. 57 nach *Erledigt***, **Nr. 198** mit dem
+Nachtrag zu E-ZE-31, **Nr. 275** neu; die **Andockstellen für 10c** aus dem
+gelöschten Konzept in `Konzept-P5c-Rollen-Sicherheit-Betriebslage.md`
+übernommen und gegen den gebauten Stand nachgezogen.
+
+**Prüfzahlen des Abschlusspakets** (nur `docs/` und `tools/` — keine
+Versionsstufe, `CLAUDE.md` 2.1): Backlog „keine Nummer zweimal"
+**0 doppelte bei 271 Nummernzeilen**, Wortliste **0/0/0**, Kettenaufrufe
+**47/0/0**, Register **38 Zeilen / 0 über der Decke**, Vollständigkeit
+**396**.

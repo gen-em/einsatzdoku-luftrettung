@@ -93,7 +93,10 @@ arbeiten, nicht erneut kollidieren:
 > Auftraggeber am 20.09.2026.
 
 **250 bis 259 sind für Schritt 15 reserviert** (Zentralisierung,
-`docs/konzepte/Konzept-Zentralisierung.md`, eingespielt am 20.09.2026). Vier
+`docs/konzepte/Konzept-Zentralisierung.md`, eingespielt am 20.09.2026; das
+Konzept ist mit dem Abschluss von Schritt 15 am 22.09.2026 gelöscht — die
+Git-Historie behält es, die Zusammenfassung steht im Rahmenplan Abschnitt 8).
+Vier
 Nummern waren vergeben, **sechs blieben frei für Funde der Umsetzung** — nach
 derselben Überlegung wie bei 241–249: Ein Paket, das erst beim Bauen neue
 Punkte findet, soll sie anhängen können, ohne mit dem nächsten Zweig zu
@@ -1980,7 +1983,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     **Die Zahlen von 16.09.2026 gelten nicht mehr** (FF-6). Nachgemessen am
     20.09.2026 an `origin/main` `862ca7f`; **maßgeblich ist Abschnitt 1 von
-    `docs/konzepte/Konzept-Zentralisierung.md`**, nicht die Zahlen hier.
+    **Schritt 15** — gemessen am 20.09.2026 an `862ca7f`, nicht die Zahlen
+    hier. Das Konzept ist mit dem Abschluss gelöscht; die Vorher/Nachher-Werte
+    je Zeile führt `tools/zaehlung/register.php`, die Zusammenfassung steht im
+    Rahmenplan Abschnitt 8.
     Die Zuordnung je Paket:
 
     | Paket | Sache | gehört zu |
@@ -3468,6 +3474,60 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     diese Stelle selbst prüfen"). Möglicher Weg: Das Werkzeug liest die
     Tonliste aus der Funktion und trägt die daraus gebildeten Klassen als
     belegt ein.
+275. **Der Referenzdatensatz kennt keinen Dienst über Mitternacht — und das
+    ist laut Handbuch „der klassische Fall".**
+    *Aufgenommen 22.09.2026 (Schritt 15 AP9b).*
+    Nachgezählt über `CONVERT_TZ` in Ortszeit: **0 von 20** aktiven
+    Diensttagen des Demo-Kontos haben Einsätze auf zwei Kalendertagen; über
+    alle fünf Konten ist es ebenso. Der Bestand deckt damit genau den Fall
+    nicht ab, an dem sich Datum, Uhrzeit und Sortierung unterscheiden.
+
+    **Was das gekostet hat, ist schon bezahlt.** In AP9b sortierte das
+    Einsatztabellen-Modul „Beginn" über die *Zeichenkette* `start_hhmm`;
+    bei einem Dienst über Mitternacht stand damit 01:10 vor 23:50. Der
+    Fehler war Jahre alt und kein Prüfmittel konnte ihn finden — es gab
+    nichts zu messen. Belegt wurde er, indem die Antwort von `api/day.php`
+    im Browser abgefangen und ein Nachtdienst **gebaut** wurde. Eine Probe,
+    die ihre eigenen Daten erfindet, misst den Browser und nicht die
+    Anlage: Ob `api/day.php`, `api/range.php` und `api/suchindex.php` den
+    Schlüssel `start_sort` für einen **echten** Nachtdienst richtig rechnen,
+    ist bis heute gelesen und nicht gefahren.
+
+    **Was zu tun ist.** Dem Demo-Konto **zehn Einsätze über Nacht**
+    hinzufügen, verteilt auf mindestens zwei Diensttage, sodass jeder davon
+    Einsätze **vor und nach** Mitternacht trägt — etwa 22:40, 23:55, 00:20,
+    01:10, 02:35. Mindestens einer der Tage luftgebunden, einer
+    bodengebunden, damit Tages-, Zeitraum- und Suchtabelle den Fall alle
+    drei sehen. Der Diensttag bleibt dabei **ein** Tag: `days.day` ist der
+    Dienstbeginn, die Einsätze nach Mitternacht liegen kalendarisch auf dem
+    Folgetag. Genau diese Unterscheidung ist der Prüfwert.
+
+    **Woran der Bestand danach etwas taugt:**
+
+    - Tagesübersicht, Sortierung nach „Beginn" aufsteigend: 22:40 steht
+      **vor** 00:20.
+    - Suche: `day` ist das **echte** Einsatzdatum (`api/suchindex.php`
+      rechnet es aus `started_at`), `dienst_day` der Diensttag — bei einem
+      Nachteinsatz sind sie **verschieden**, und die Suche zeigt beides.
+      Heute ist das nirgends zu sehen.
+    - Zeitraumübersicht: Ein Nachteinsatz taucht unter dem Diensttag auf,
+      nicht unter dem Kalendertag — `api/range.php` nimmt `days.day`.
+    - Der Bilderlauf bekommt eine Seite, auf der die drei Datumsbegriffe
+      auseinanderfallen.
+
+    *Abnahme:* Nach dem Einspielen des Referenzdatensatzes liefert
+    `SELECT COUNT(*) FROM days d WHERE (SELECT COUNT(DISTINCT
+    DATE(CONVERT_TZ(m.started_at,'UTC','Europe/Berlin'))) FROM missions m
+    WHERE m.day_id=d.id AND m.deleted_at IS NULL) > 1` **mindestens 2**.
+    *Fehlschlag:* 0 — dann liegen die neuen Einsätze doch alle auf einem
+    Kalendertag.
+
+    *Hinweis zur Umsetzung:* Der Referenzdatensatz liegt in
+    `tools/referenzdatensatz/`; die Einsätze kommen über den normalen
+    Einspielweg, nicht per SQL von Hand. Wer die Zeiten setzt, rechnet
+    daran, dass `started_at` in **UTC** steht und die Anlage in
+    `Europe/Berlin` anzeigt — eine Sommerzeitgrenze mitten im Dienst wäre
+    ein eigener, ebenfalls ungeprüfter Fall.
 
 
 ## Erledigt

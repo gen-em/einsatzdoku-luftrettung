@@ -1,7 +1,9 @@
 # Zählung — hält jede Sache ihre eine Stelle?
 
 **Entstanden in Schritt 15 (Zentralisierung), AP1** — Konzept
-`docs/konzepte/Konzept-Zentralisierung.md`, Entscheidungen E-ZE-03 (das
+Schritt 15 (Konzept Zentralisierung, mit dem Abschluss am 22.09.2026
+gelöscht — Zusammenfassung im Rahmenplan Abschnitt 8),
+Entscheidungen E-ZE-03 (das
 Zählmittel entsteht hier, nicht in 10c AP3) und E-ZE-24 (ein Register, das
 bleibt). Programmentscheidung **R83**.
 
