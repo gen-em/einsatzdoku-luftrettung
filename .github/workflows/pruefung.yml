@@ -626,6 +626,36 @@ jobs:
           php tools/spaltenregister/pruefen.php --selbstprobe
           php tools/spaltenregister/pruefen.php
 
+      - name: Zentralisierung — hält jede Sache ihre eine Stelle?
+        # SCHRITT 15 / AP10 (R83). Das Register in `tools/zaehlung/register.php`
+        # führt je Sache EINE Zeile mit einer Decke: wie viele Stellen es
+        # höchstens geben darf. Der Schritt schlägt an, sobald eine Zeile
+        # über ihre Decke steigt — also sobald jemand eine zweite Stelle
+        # einbaut, wo es eine geben soll.
+        #
+        # WARUM EINE DECKE UND KEINE NULL. Nicht jede Zeile endet bei null,
+        # und das ist Absicht: Vier Zeilen aus AP8 stehen begründet darüber
+        # (E-ZE-27 bis -30). Was dort steht, ist die Zentrale selbst, ein
+        # Fehlalarm des Zählmusters oder eine benannte Vorgabe je
+        # Zusammenhang. Wer eine Zeile auf null zwingt, ohne die Stelle zu
+        # verstehen, bekommt eine grüne Zahl und eine schlechtere Anwendung
+        # — deshalb trägt jede Decke im Register den ausgeschriebenen Grund
+        # und nicht nur den Wert.
+        #
+        # WAS ER NICHT SIEHT: Eine Sache, für die niemand eine Zeile
+        # angelegt hat. Das Register ist eine Liste, kein Spürsinn. Und die
+        # Zeilen messen verschieden scharf — Z34 etwa zählt über eine
+        # NAMENSLISTE und sieht einen neu erfundenen Formatierer nicht; die
+        # sechste km-Fassung des Bestands hat erst eine Gegenprobe über das
+        # Muster der RECHNUNG gefunden (AP8d).
+        #
+        # Selbstprobe zuerst, wie überall hier: 34 Fälle mit Sollwert,
+        # darunter die drei, an denen ein `grep` scheitert (Aufruf im
+        # Kommentar, Aufruf in einer Zeichenkette, Methodenaufruf `->date(`).
+        run: |
+          php tools/zaehlung/zaehlen.php --selbstprobe
+          php tools/zaehlung/zaehlen.php
+
       - name: CSP — Inline-Skripte ohne Nonce
         # Seit Web 20.7.0 gilt `script-src 'self' 'nonce-…'` ohne
         # `'unsafe-inline'`. Ein vergessener Nonce legt eine Seite STILL

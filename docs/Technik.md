@@ -5330,6 +5330,59 @@ sobald wieder Klartext hereinkommt: eine eingespielte Sicherung mit Nutzlast 10,
 ein CSV-Import einer alten Datei, das Zurücksetzen des Demo-Kontos. Der
 abgeleitete Zustand kennt diesen Fall von selbst.
 
+### 4.98a Eine Stelle je Sache — und das Register, das es nachzählt
+
+**R83, gebaut in Schritt 15 (Zentralisierung), Stand Web 20.34.0.** Die
+Anwendung hatte für eine Reihe von Sachen mehrere Eingänge — nicht als
+Entwurf, sondern weil sie gewachsen ist. Schritt 15 hat sie
+zusammengeführt und, wichtiger, ein **Maß** dafür angelegt.
+
+| Sache | Der eine Weg | Was es vorher gab |
+|---|---|---|
+| Konfiguration lesen | `konfig('schluessel')` | `$CFG` an 46 Stellen, `config.php` siebenmal eingebunden |
+| Sitzung starten | `sitzung_starten()` | 9 `session_start()` |
+| API-Eingang | `api_methode()`, `api_rumpf()` | 12 eigene `php://input`, 17 eigene Fehlerschlüssel |
+| Flash-Meldung | `flash_setzen()` / `flash_holen()` | 22 direkte `$_SESSION['flash…']` |
+| Schema fragen | `db_hat_tabelle/spalte/index()` | 9 eigene `information_schema` |
+| Transaktion | `db_transaktion()` | 33 eigene `beginTransaction()` |
+| Kindtabellen eines Einsatzes | `einsatz_lib.php` | 30 eigene `INSERT`/`DELETE` |
+| Spalten von `missions` | `mf_spalten($zweck)` | 12 Handlisten |
+| Zahl, Größe, Zeit (PHP) | `format_lib.php` | 4 Byte-Formatierer, 2 Zeitformen, 27 `number_format` |
+| Zahl, Größe, Zeit (Browser) | `EdFormat` | 14 benannte Formatierer in 5 Dateien |
+| Anfrage an den Server | `EdApi.postJson/.postForm` | 20 Sendestellen, 7 Achsen Unterschied |
+| Meldung im Browser | `EdHtml.meldung()` | 7 Nachbauten, 3 Ton-Tabellen |
+| Karte anlegen | `EdKarte.anlegen()` | 4 Präambeln in 3 Reihenfolgen |
+| Patientenliste laden | `EdPat.listeLaden()` | 3 gleichlautende Auftakte |
+
+**Das Register ist `tools/zaehlung/register.php`.** Es führt je Sache eine
+Zeile mit einer **Decke** — wie viele Stellen es höchstens geben darf — und
+zählt mit dem **Tokenizer**, nicht mit `grep`: Ein Aufruf in einem Kommentar
+oder in einer Zeichenkette zählt nicht, ein Methodenaufruf `->date(` auch
+nicht. Der Stufe-1-Schritt „Zentralisierung — hält jede Sache ihre eine
+Stelle?" fährt es bei jedem Push, mit vorgeschalteter Selbstprobe (34 Fälle
+mit Sollwert).
+
+**Drei Dinge, die man dem Register nicht ansieht und wissen muss:**
+
+**Nicht jede Decke ist null.** Vier Zeilen enden begründet darüber
+(E-ZE-27 bis -30): Die Zentrale selbst zählt mit; ein Zählmuster schlägt
+falsch an (eine Parameterweitergabe, die wie ein Formularfeld aussieht; ein
+`<p class="meldung">`, das gar keine Meldung ist); oder eine dünne
+Weiterleitung bindet einen **Leerwert** je Zusammenhang, und ihn aufzulösen
+hieße, ihn an fünfzehn Aufrufstellen zu wiederholen statt an fünf. Jede
+dieser Decken trägt den Grund ausgeschrieben im Register.
+
+**Das Register ist eine Liste, kein Spürsinn.** Es sieht keine Sache, für
+die niemand eine Zeile angelegt hat.
+
+**Die Zeilen messen verschieden scharf.** Die Zeile für die Formatierer im
+Browser zählt über eine **Namensliste** — einen neu erfundenen Formatierer
+unter neuem Namen sieht sie nicht. Die sechste Kilometerfassung des Bestands
+(`assets/luftlinie.js`) hat erst eine Gegenprobe über das Muster der
+**Rechnung** gefunden, und eine dritte Dauer-Schreibweise in
+`assets/schneiden.js` steht aus demselben Grund noch (Backlog Nr. 273). Wer
+etwas zentralisiert, zählt am Ende einmal unabhängig nach.
+
 ### 4.99 Gemeinsame Bausteine
 
 Die Anwendung hat vier unabhängige Schreibwege in dieselben Tabellen. Die

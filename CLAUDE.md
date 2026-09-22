@@ -271,6 +271,38 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   daran vorbeigeht, ist ein Fehler. Format und Begründung:
   `docs/Technik.md`, Abschnitt 4.97; Nachweis: `php tools/spurprobe/probe.php`.
 
+- **Eine Stelle je Sache — und ein Register, das es nachzählt** (R83,
+  Schritt 15). Fünf Wege haben seither genau einen Eingang, und wer daneben
+  einen zweiten baut, färbt Stufe 1 rot:
+
+  | Sache | Der eine Weg | Nicht |
+  |---|---|---|
+  | Konfiguration lesen | `konfig('schluessel')` | `$CFG`, `global $CFG`, `config.php` einbinden |
+  | Sitzung starten | `sitzung_starten()` | `session_start()` |
+  | Schema fragen (auch in neuen Migrationen) | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()` | `information_schema` von Hand |
+  | Transaktion | `db_transaktion()` | `beginTransaction()` |
+  | Aus Zahl oder Zeitpunkt Text machen | `format_lib.php` (PHP), `EdFormat` (Browser) | eigene Rechnung |
+  | Anfrage an den Server (Browser) | `EdApi.postJson()` / `.postForm()` | `fetch` mit eigenem `X-CSRF` |
+  | Meldung im Browser | `EdHtml.meldung()` | Markup von Hand |
+  | Spalten von `missions` | `mf_spalten($zweck)` | eigene Spaltenliste |
+
+  **Das Register steht in `tools/zaehlung/register.php`** und führt je Sache
+  EINE Zeile mit einer Decke. Der Stufe-1-Schritt „Zentralisierung — hält
+  jede Sache ihre eine Stelle?" schlägt an, sobald eine Zeile darüber steigt.
+
+  **Nicht jede Decke ist null, und das ist Absicht.** Wo eine Zeile darüber
+  endet, steht der Grund ausgeschrieben daneben — die Zentrale selbst zählt
+  mit, ein Zählmuster schlägt falsch an, oder eine Weiterleitung bindet einen
+  benannten Vorgabewert. Wer eine Zeile auf null zwingt, ohne die Stelle zu
+  verstehen, bekommt eine grüne Zahl und eine schlechtere Anwendung.
+
+  **Und das Register ist eine Liste, kein Spürsinn.** Es sieht keine Sache,
+  für die niemand eine Zeile angelegt hat, und seine Zeilen messen
+  verschieden scharf: Die Zeile für die Formatierer zählt über eine
+  NAMENSLISTE — die sechste Kilometerfassung des Bestands hat erst eine
+  Gegenprobe über das Muster der RECHNUNG gefunden. Wer etwas zentralisiert,
+  zählt am Ende einmal unabhängig nach.
+
 ## 5. Oberfläche
 
 Die Gestaltungsrichtlinie ist **`docs/Design.md`** — Farben, Token, Schriften,

@@ -14,7 +14,7 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 >
 > | | |
 > |---|---|
-> | Stand | 22.09.2026 — **AP1 bis AP8 erledigt** (zuletzt Web 20.34.0). Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
+> | Stand | 22.09.2026 — **AP1 bis AP8 erledigt** (zuletzt Web 20.34.0); **AP9 vermessen und angehalten**, **AP10 gebaut bis auf die AP9-abhaengigen Teile**. Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
 > | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen), **E-ZE-25** (Ultracode), **E-ZE-26** (`assets/format.js` in AP7, sechste Ausnahme), **E-ZE-27** bis **E-ZE-30** (die vier Zielzahlen von AP8, die begruendet ueber null enden: Z29 bei 2, Z37 bei 4, Z34 bei 5, Z36 bei 1) — alle 22.09.2026; E-ZE-09 ist nicht vergeben |
 > | Offen | nichts im Konzept. **F-ZE-1 bis F-ZE-6** (Abschnitt 2.3) sind mit der Freigabe vom 20.09.2026 entschieden. Außerhalb des Konzepts: die Einschübe (Abschnitt 8, 9) sind noch nicht eingespielt |
 > | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2** und **AP3 erledigt** (21.09.2026), **AP4 erledigt** (21.09.2026), **AP5**, **AP6** und **AP7 erledigt** (22.09.2026). **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
@@ -37,8 +37,8 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > |  AP8b/c/e `EdApi`, `EdHtml.meldung()` | **erledigt** 22.09.2026 | **Web 20.34.0** (Neben: eine neue Datei, vier neue Funktionen, keine Migration) | Z28 **15 → 1** · Z29 **5 → 2** (E-ZE-27) · Z37 **8 → 4** (E-ZE-28) · 26 Stellen in zehn Dateien · `EdHtml.meldung()` gegen `ui_meldung_markup()`: **200 von 200 Faellen gleicher DOM-Baum** (160 auch quellgleich; die 40 unterscheiden sich nur in `&#39;` gegen `&#039;`, was `EdHtml.escape` seit Baustein B7 so erzeugt) · **20 Agenten, 2,38 Mio Token**, die Gegenleser fanden **23 Maengel, einen schwer** — und der war echt |
 > |  AP8d `EdFormat`-Ausbau | **erledigt** 22.09.2026 | (in Web 20.34.0) | Z34 **14 → 5** (E-ZE-29) · 14 Definitionen in fuenf Dateien, dazu drei ungezaehlte Inline-Rechnungen und eine sechste km-Fassung, die erst eine Gegenprobe ueber das Muster der RECHNUNG fand (`luftlinie.js`, **57 143 Werte zeichengleich**) · drei sichtbare Aenderungen, je gemessen: zweistellige Minute **231/1441 (16,0 %)**, kein „60min“ mehr **720/86 401 (0,83 %)**, Tausenderpunkt der Streckensumme · **14 Agenten, 1,74 Mio Token**, 18 Maengel |
 > |  AP8f `EdPat.listeLaden()` | **erledigt** 22.09.2026 | (in Web 20.34.0) | Z36 **4 → 1** (E-ZE-30) · drei Anzeigeseiten, `einstellungen.php` begruendet drausen · im Browser nachgemessen: **6/6, 96/96, 96/96 Eintraege entschluesselt, 0 unlesbar, 0 Konsolenfehler** |
-> | AP9 Nr. 57 — eine Einsatztabelle | offen | — | — |
-> | AP10 Abschluss und Übergabe an 10c | offen | — | — |
+> | AP9 Nr. 57 — eine Einsatztabelle | **vermessen, nicht gebaut** 22.09.2026 — wartet auf vier Entscheidungen | — | **Vermessung:** 4 lesende Agenten, 0 Dateiaenderungen · **Die Praemisse stimmt nicht:** `cap_gate` erreicht die Einsatztabelle NICHT (`mf_tagesspalten()` nimmt keinen Parameter, `mf_gates_erfuellt()` hat zwei Aufrufer, beide in `einsatz_form.php`; `capabilit` kommt in `index.php` nullmal vor) — **69 von 69 Diensttagen tragen heute die Windenspalte** · dazu vier Funde ausserhalb beider Dokumente, darunter eine Sortierung, die den Nachtdienst kippt |
+> | AP10 Abschluss und Übergabe an 10c | **gebaut** 22.09.2026, bis auf die AP9-abhaengigen Teile | keine (nur `.github/`, `tools/`, `docs/`, `CLAUDE.md`) | Stufe-1-Schritt „Zentralisierung“ eingehaengt, **einmal absichtlich rot gesehen** (zwei Zeilen ueber der Decke, Rueckgabewert 1) und wieder gruen (0 ueber der Decke, Rueckgabewert 0) · Kettenaufrufe **0 Befunde, 0 ungeprueft** · `CLAUDE.md` 4 und `docs/Technik.md` 4.98a tragen die Regel · **Uebergabezahl `error_log(`: 75**, nicht 77 — die Rechnung steht im Protokoll |
 
 ---
 
@@ -2249,6 +2249,87 @@ Zeitraum **0/0/0**; Spaltensatz je Seite unverändert (F-ZE-6: Zählung der
 Köpfe vorher = nachher); Gleichstände: sechs gleichwertige Zeilen, zweiter
 Klick → Reihenfolge bleibt 1–6 (E-ZE-01); Kacheln unverändert.
 
+
+#### Die Vermessung vom 22.09.2026 — und warum AP9 so nicht gebaut wird
+
+**Vier lesende Agenten, je ein Thema, 0 Dateiänderungen.** Sie sind
+unabhängig voneinander auf denselben Befund gestoßen, und er stellt die
+Prämisse des Pakets in Frage.
+
+> **`cap_gate` erreicht die Einsatztabelle nicht. Die „bindende
+> Nebenbedingung" schützt etwas, das es nicht gibt.**
+>
+> Nachgemessen: `mf_tagesspalten()` (`mission_fields_lib.php:49`) nimmt
+> **keinen Parameter**, kennt **keinen Diensttag**, wertet **kein
+> `cap_gate`** aus und cacht statisch. `mf_gates_erfuellt()` hat **zwei**
+> Aufrufer, beide in `einsatz_form.php` — **keinen** in einer der drei
+> Tabellen. In `index.php` kommt die Zeichenfolge `capabilit` **nullmal**
+> vor, heute wie am 12.09.2026.
+>
+> Der Bestand zeigt es: **69 von 69 Diensttagen tragen heute die
+> Windenspalte.**
+
+Daraus folgt dreierlei, und jedes einzelne ist ein Haltepunkt:
+
+1. **Der erste Prüffall des Pakets kann nie fehlschlagen.** Er lautet
+   „NEF-Tag ohne Fähigkeit → keine Winden- und Bergwachtspalte". Wer ihn
+   nach dem Umbau prüft, findet die Spalten stehen — genau wie vorher — und
+   hakt ab. Umformuliert zu „an einem Tag ohne Windenfähigkeit steht keine
+   Windenspalte" ist er eine **neue Zusage, die heute verletzt ist**: also
+   eine Funktionsänderung mit Freigabebedarf, keine Bewahrung.
+2. **Das Modul blendet datengetrieben aus, nicht fähigkeitsgetrieben.**
+   `nurWenn: liste => liste.some(m => m.winch)` versteckt die Spalte an
+   einem Lufttag **mit** Windenfähigkeit, an dem niemand gewindet hat. Auf
+   Suche und Zeitraum über einen großen Bestand ist das gewollt; an einem
+   einzelnen Diensttag mit vier Einsätzen verschwindet die Spalte fast
+   täglich — und wer nachtragen will, sieht nicht mehr, dass es sie gibt.
+   **Drei Verhaltensweisen sind möglich** (immer zeigen, nach Fähigkeit,
+   nach Bestand), und nur eine kann gelten. Das ist die **vierte**
+   Freigabefrage, die Nr. 57 neben Beschriftung, Ausrichtung und
+   Hakenreihenfolge nicht stellt.
+3. **Die Abnahme des Bilderlaufs ist so nicht erfüllbar.** Sie erwartet
+   „genau die Abweichungen aus Nr. 57; jede weitere ist ein Befund". Mit
+   einer Fähigkeitsregel an der Tabelle verlören **34 von 69** Diensttagen
+   zwei Spalten — der Lauf stünde voller Befunde, die keine sind, und der
+   eine echte ginge darin unter.
+
+**Dazu vier Funde, die in keinem der beiden Dokumente stehen:**
+
+- **Die Sortierung nach „Beginn" kippt den Nachtdienst.** `index.php`
+  sortiert über `m._no`, also über die laufende Nummer, die `api/day.php`
+  nach `started_at` vergibt. Das Modul sortiert über die **Zeichenkette**
+  `start_hhmm`. Ein Dienst über Mitternacht — laut `docs/Handbuch.md` „der
+  klassische Fall" — hat Einsätze um 23:50 und um 01:10; heute stehen sie in
+  dieser Reihenfolge, nach dem Umbau stünde 01:10 davor. **Still**: keine
+  Meldung, keine Lücke, nur eine falsche Reihenfolge, die richtig aussieht.
+- **„Nr." ist keine Zierspalte, sondern die Verbindung zur Karte.**
+  `index.php` beschriftet Pins und Popups mit `Einsatz ${m._no}`. Das Modul
+  kennt `_no` nicht. Fällt die Spalte weg, steht die Nummer im Kartenpopup
+  und sonst nirgends mehr.
+- **Das mobile Sortierblatt zeichnet im Modul nicht neu.** `setSort()` setzt
+  Schlüssel und Richtung und ruft `zeichne()` **nicht**; es funktioniert
+  heute nur auf `index.php`, weil die Seite von Hand nachzeichnet. Ein
+  Umbau ohne diese Reparatur nimmt der Tagesübersicht eine Funktion — und
+  zwar unter 720 px, wo das Blatt der einzige Weg zum Sortieren ist.
+- **Der Feldkatalog verlöre seinen Griff auf die Tagestabelle.** Heute
+  erscheint ein neuer Eintrag mit `day_col` ohne Codeänderung in Kopf,
+  Zelle, Sortierung und `api/day.php`. Schreibt der Umbau die drei
+  Hakenspalten fest in `SPALTEN`, ist `day_col` wieder reine Dokumentation
+  — ein Rückschritt hinter Backlog Nr. 10 und eine Aufweichung von
+  **„Feldkatalog statt Sonderfall"** (`CLAUDE.md` 4, eine feste Zusage).
+
+**Und eine Messgrenze, die die Abnahme betrifft:** Der Demo-Bestand kann die
+entscheidende Regel auf Bestandsebene **nicht** prüfen — „mindestens ein
+Einsatz mit Haken" und „mindestens ein Diensttag mit Fähigkeit" liefern bei
+allen fünf Konten dasselbe Ergebnis. Der unterscheidende Fall (Fähigkeit ja,
+Einsatz nein) existiert nur **je Tag**: 12 Tage für `winch`, 9 für
+`bergwacht`. Für Suche und Zeitraum müsste er gebaut werden.
+
+**Stand: AP9 ist vermessen und wartet auf vier Entscheidungen.** Gebaut ist
+nichts. Der Grund steht oben: Das Paket so auszuführen, wie es dasteht,
+hieße, eine Funktion neu zu erfinden und sie für einen Erhalt zu halten —
+und dabei eine Sortierung zu zerlegen, die heute stimmt.
+
 ### AP10 — Abschluss und Übergabe an 10c
 
 Stufe-1-Schritt „Zentralisierung — hält jede Sache ihre eine Stelle?"
@@ -2264,6 +2345,60 @@ einmal **absichtlich rot** gesehen (eine zweite Stelle eingebaut, Schritt
 schlägt an — Selbstprobe der Kette); Kettenaufrufe 0/0; **Übergabezahl
 `error_log(`** genannt und gegen 77 erklärt; Wortliste, Vollständigkeit,
 Kontraste, CSP, Migrationsregister, `php -l` wie immer mit Zahl.
+
+#### AP10 — was gebaut ist, und was auf AP9 wartet
+
+**Gebaut am 22.09.2026.** Keine Versionsstufe: Das Paket fasst nur
+`.github/`, `tools/`, `docs/` und `CLAUDE.md` an (CLAUDE.md 2.1).
+
+*Erledigt:*
+
+- **Der Stufe-1-Schritt hängt.** „Zentralisierung — hält jede Sache ihre
+  eine Stelle?" in `.github/workflows/pruefung.yml`, mit vorgeschalteter
+  Selbstprobe. `tools/kettenaufrufe/` prüft den Aufruf gegen die
+  Schnittstelle des Werkzeugs: **0 Befunde, 0 ungeprüft.**
+- **Einmal absichtlich rot gesehen** — die Abnahme verlangt es, und sie hat
+  recht: Ein Prüfschritt, der nie angeschlagen hat, ist ein Versprechen.
+  Eine Wegwerfdatei mit einer zweiten `L.map(`-Präambel und einem zweiten
+  `'X-CSRF'` ließ **zwei Zeilen über die Decke** steigen, Rückgabewert **1**.
+  Nach dem Entfernen: **0 über der Decke, Rückgabewert 0.**
+- **`CLAUDE.md` Abschnitt 4** trägt die Regel „Eine Stelle je Sache" mit der
+  Tabelle der acht Wege, dem Verweis auf das Register — und mit den drei
+  Sätzen, die man dem Register nicht ansieht: dass nicht jede Decke null
+  ist, dass es eine Liste ist und kein Spürsinn, und dass seine Zeilen
+  verschieden scharf messen.
+- **`docs/Technik.md` 4.98a** trägt denselben Stoff für die Technikseite,
+  mit der Vorher-Zahl je Sache.
+- **Die Übergabezahl an 10c: `error_log(` steht bei 75**, nicht bei 77.
+
+*Die Rechnung dazu, weil E-ZE-05 sagt, dass Schritt 15 keinen einzigen
+`error_log()`-Aufruf umstellt:*
+
+| Datei | vorher | nachher | was geschah |
+|---|---|---|---|
+| `adminbackup_lib.php` | 2 | 0 | **umgezogen** nach `db.php` — AP4 hat das `app_state`-Schreiben dorthin gezogen (Z10). Dieselben zwei Sätze, Präfix von `adminbackup:` auf `app_state:` |
+| `db.php` | 4 | 6 | die beiden von oben |
+| `konto_lib.php` | 3 | 2 | **zusammengelaufen**: Die Stelle ruft jetzt `app_state_loeschen()`, und die Funktion „fängt und protokolliert selbst" |
+| `serverkrypto_lib.php` | 1 | 0 | ebenso, über `app_state_setzen()` |
+| **Summe** | **77** | **75** | |
+
+**Kein Protokolleintrag ist verlorengegangen.** Zwei Aufrufstellen sind in
+die zentralen `app_state`-Funktionen zusammengelaufen, die selbst
+protokollieren; zwei sind mit ihrem Code umgezogen. Was sich geändert hat,
+ist der **Wortlaut** zweier Meldungen — sie tragen jetzt das generische
+`app_state:`-Präfix statt des Namens der aufrufenden Stelle. Das gehört
+gesagt, weil eine Protokollzeile, nach der jemand greppt, nicht mehr so
+heißt wie früher.
+
+*Was auf AP9 wartet:*
+
+- Abschnitt 6 dieses Konzepts gegen den gebauten Stand nachziehen.
+- Das Prüfdokument abschließen (Abschnitt J).
+- Die Erledigt-Zeile in `docs/Rahmenplan.md` Abschnitt 8.
+
+Sie warten nicht aus Bequemlichkeit: Alle drei beschreiben einen Stand, und
+der Stand ist unvollständig, solange AP9 auf seinen vier Entscheidungen
+steht.
 
 ---
 
