@@ -541,6 +541,81 @@ Schwelle dann ganz wegnimmt. Die 14 Symbolzeichen ebenso (**Nr. 270**).
 
 ---
 
+## 5c. Messprotokoll PK-04/1c — die Textprobe (22.09.2026)
+
+Aus der Wortliste (ein Zweck: Luftbegriffe) ist eine Textprobe mit **fünf
+Regelklassen** geworden (E-PK-08). Sperrliste **23 → 28** Muster.
+
+| Klasse | Muster | offene Treffer |
+|---|---|---|
+| `luft` — Luftbegriffe (P2) | 23 | **0** (99 Ausnahmen greifen) |
+| `hausform` — Binnen-I (E-PK-26) | 2 | **442** |
+| `namen` — reale Namen und Orte (E-P1-02) | 1 | **38** |
+| `netz` — Adressen im Netz | 1 | **11** |
+| `adressen` — E-Mail (E-PK-27) | 1 | **9** |
+
+**Zwei Listen werden gelesen, nicht kopiert.** `@@NAMEN@@` holt die 49
+Einträge aus `VERBOTENE_NAMEN` in
+`tools/referenzdatensatz/quelldaten/pruefen.py`, `@@LIZENZEN@@` die erlaubten
+Hosts aus `docs/Lizenzen.md`. Fehlt eine Quelle, **bricht der Lauf ab** — ein
+leeres Muster träfe alles oder nichts, und beides wäre eine falsche Auskunft.
+
+**Rot ist nur ein NEUER Treffer** (E-PK-08). `textprobe-altbestand.json`
+hält **500 Treffer in 79 (Datei, Muster)-Paaren** — den Stand vom
+Einführungstag. Gezählt wird je **Datei und Muster**, nicht je Zeilennummer:
+Eine Zeilennummer verschiebt sich bei jeder Einfügung darüber, und der
+Altbestand wäre nach dem nächsten Commit falsch, ohne dass etwas geschieht.
+
+### Gegenproben — in beide Richtungen
+
+| Probe | Erwartet | Gemessen |
+|---|---|---|
+| Satz mit `Nutzern`, `admin@fremd.example` und `Kempten` an `Handbuch.md` angehängt | drei neue Treffer, rot | **3 neue Treffer**, je mit Datei, Muster und Zählerstand (`5 → 6`, `3 → 4`, `10 → 11`), **rc 1** |
+| eine bestehende Stelle bereinigt (`max@gen-em.de` → `max@example.invalid`) | „Altbestand austragen", rot | **1 Stelle**, `1 → 0`, **rc 1** |
+| beides zurückgenommen | grün | **rc 0**, `git diff` leer |
+
+Die zweite Richtung ist kein Formalismus: Eine bereinigte Stelle, die im
+Altbestand stehen bleibt, **verdeckt die nächste neue an derselben Datei**.
+
+### Drei Befunde beim Bauen
+
+1. **89 von 100 Ausnahmen wären stillschweigend breiter geworden.** Sie sind
+   für die Luftbegriffe geschrieben („dieser Abschnitt erklärt die
+   Garmin-Uhr und darf `Flug` sagen") und tragen keinen Musterfilter — mit
+   den vier neuen Klassen hätten sie auch fremde Adressen, reale Ortsnamen
+   und jede Rollenform gedeckt. **Gemessen:** Der angehängte Probesatz
+   landete im Block der Ausnahme `handbuch-geraete-verlust-garmin` und war
+   damit erklärt — drei Verstöße, kein Befund. Eine Ausnahme ohne `muster`
+   gilt jetzt **nur für die Klasse `luft`**; die offenen Treffer stiegen
+   damit von 385 auf **500**, und das ist die richtige Zahl.
+2. **Die Erlaubnisliste las die Hälfte ihrer Quelle nicht.** `Lizenzen.md`
+   nennt Dienste teils als Adresse (`https://photon.komoot.io`), teils als
+   Rechnernamen in Rückstrichen (`tile.openstreetmap.org` in der
+   Kartentabelle). Die erste Fassung las nur die Adressen und meldete damit
+   **jede** Kartenquelle als unerlaubt, obwohl alle drei seit P0 dort stehen.
+3. **Ein optionales `(?:www\.)?` im Muster genügt nicht.** Die Engine fällt
+   beim Fehlschlag darauf zurück, es nicht zu nehmen, und prüft dann
+   `www.topografix.com` gegen eine Liste, die `topografix.com` enthält.
+   Gemessen: Der GPX-Namensraum blieb ein Treffer. Jetzt stehen beide
+   Schreibweisen in der Liste.
+
+### Ein Sachbefund, den die neue Klasse gefunden hat
+
+**OpenHikingMap (`tile.openmaps.fr`) steht in keiner Lizenzliste** — die
+Kacheln werden geladen, der Host steht in der Content-Security-Policy, und
+`docs/Lizenzen.md` kennt ihn nicht. Das ist genau die Lücke, gegen die die
+Zusage „keine fremde Quelle zur Laufzeit" geschrieben ist. **Nicht nebenbei
+eingetragen:** Ein Eintrag dort nennt Rechteinhaber und Bedingungen, und das
+gehört nachgesehen statt abgeschrieben. **Backlog Nr. 271.**
+
+### Was das für `CLAUDE.md` heißt
+
+Die Pflicht, die Wortliste bei jeder Textänderung **von Hand** zu fahren,
+fällt (E-PK-08). Sie läuft im Tor und meldet nur, was neu ist. Abschnitt 9
+ist entsprechend nachgezogen.
+
+---
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in

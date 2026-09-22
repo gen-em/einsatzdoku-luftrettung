@@ -462,9 +462,9 @@ nicht später, nicht „in P6":
   in `docs/konzepte/erledigt/Konzept-S1-Sicherung-Import.md` und
   `…/Konzept-S2-Mengen-Spuren-Sicherung.md` (Protokoll, nicht mehr
   fortgeschrieben).
-- **Begriffe und Texte:** `bash tools/quelltext/pruefen.sh textprobe`
-  laufen lassen; Handbuch an
-  der betroffenen Stelle nachziehen.
+- **Begriffe und Texte:** Handbuch an der betroffenen Stelle nachziehen.
+  Die Textprobe **von Hand zu fahren ist seit PK-04/1c nicht mehr nötig** —
+  sie läuft im Tor und meldet nur **neue** Treffer (E-PK-08).
 - **Fremdbestandteile** (Bibliotheken, Schriften, Symbole, Dienste):
   `docs/Lizenzen.md`.
 - **Android-App** (`android/`): `android/LIESMICH.md` (Bauanleitung,

@@ -1,13 +1,10 @@
 # Quelltextprüfungen
 
-Acht Prüfungen, die nur Quelltext lesen und im Tor laufen (E-PK-24).
-
+Acht Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24).
 ## Aufruf
 
 ```bash
-bash tools/quelltext/pruefen.sh <name> [zusatz…]
-bash tools/quelltext/pruefen.sh alle
-bash tools/quelltext/pruefen.sh --selbstprobe
+bash tools/quelltext/pruefen.sh <name> [zusatz…]   # alle · --selbstprobe
 ```
 
 ## Was es misst
@@ -16,25 +13,27 @@ bash tools/quelltext/pruefen.sh --selbstprobe
 |---|---|---|
 | `installweiche` | die Weiche in `install.php` | PP-1 |
 | `sitzungshaertung` | Sitzungsflaggen und ihre Setzstellen | Nr. 205 |
-| `csp` | die Kopfzeilen gegen `kopfzeilen_lib.php` | 15.09.: Meldeweg tot |
+| `csp` | Kopfzeilen gegen `kopfzeilen_lib.php` | 15.09.: Meldeweg tot |
 | `jobregister` | Registerzeilen gegen `jobs_lib.php` | Nr. 208 |
 | `migrationsregister` | Migrationen gegen `schema.sql` | Nr. 238 |
 | `linkprobe` | jeder Verweis nennt einen Parameter, den sein Ziel liest | Nr. 148, 151 |
-| `vollstaendigkeit` | Klasse ohne Regel, Wert außerhalb `:root`, `style=`, fremde Quelle | Nr. 179, 227 |
-| `textprobe` | Luftbegriffe in sichtbarem Text | B-S4-06 |
+| `vollstaendigkeit` | Klasse ohne Regel, Wert außerhalb `:root`, `style=` | Nr. 179, 227 |
+| `textprobe` | **fünf Regelklassen** in sichtbarem Text: Luftbegriffe, Binnen-I, E-Mail-Adressen, Netzadressen, reale Namen | B-S4-06, E-PK-08 |
 
 ## Was es braucht
 
-Nichts — kein Netz, keine Datenbank, keine Installation. `php` und `python3`.
+Nichts — kein Netz, keine Datenbank. `php` und `python3`.
 
 ## Erwartete Zahl
 
 `alle` → **8 von 8 Prüfungen grün**, `--selbstprobe` → **5 von 5**.
-Die Schwelle der Vollständigkeit steht in `pruefablauf.json` und wird von
-dort **gelesen**. PK-04/1b brachte sie von 398 auf **18** (Nr. 269).
+Die Schwelle der Vollständigkeit steht in `pruefablauf.json` (nach 1b: **18**,
+Nr. 269). Die Textprobe meldet nur **neue** Treffer —
+`textprobe-altbestand.json` hält je (Datei, Muster) den Stand vom
+Einführungstag; neu schreiben mit `--altbestand-schreiben`, nie von Hand.
 
 ## Was es nicht kann
 
-Nichts, was einen Browser oder eine laufende Anlage braucht — dafür ist
-`tools/proben/`. `linkprobe`, `vollstaendigkeit` und `textprobe` haben keine
-eigene Selbstprobe; vor dem Umzug hatten sie auch keine.
+Nichts, was einen Browser oder eine Anlage braucht — dafür `tools/proben/`.
+`linkprobe` und `vollstaendigkeit` haben keine Selbstprobe; vor dem Umzug
+hatten sie auch keine.

@@ -3363,6 +3363,25 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Hinweis und kein Befund. Wer die echten ersetzt, fasst `server/` an:
     **PK-04 Teilstück 5.**
 
+271. **Die Kartenquelle OpenHikingMap steht in keiner Lizenzliste.**
+    *Gefunden 22.09.2026 von der neuen Regelklasse `netz` (PK-04/1c);
+    nicht behoben.*
+    `server/assets/map_layers.js` lädt Kacheln von `tile.openmaps.fr`, und
+    `server/kopfzeilen_lib.php` erlaubt den Host in der
+    Content-Security-Policy. **In `docs/Lizenzen.md` steht er nicht** — die
+    Kartentabelle dort nennt `tile.openstreetmap.org`,
+    `tile.opentopomap.org` und `server.arcgisonline.com`, aber nicht diesen.
+
+    Das ist genau die Lücke, gegen die die Zusage „keine fremde Quelle zur
+    Laufzeit" geschrieben ist: Eine Quelle, die läuft und die niemand
+    aufgeschrieben hat.
+
+    **Nicht nebenbei eingetragen:** Welche Lizenz für die Kacheln gilt, sagt
+    das Attributionsband im Code („© OpenHikingMap · © OpenStreetMap"), aber
+    ein Eintrag in `Lizenzen.md` behauptet mehr als das — er nennt
+    Rechteinhaber und Bedingungen. Das gehört nachgesehen, nicht
+    abgeschrieben.
+
 ## Erledigt
 
 

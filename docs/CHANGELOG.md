@@ -14,6 +14,52 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Aus der Wortliste wird eine Textprobe mit fünf Regelklassen] — 2026-09-22
+
+### Hinzugefügt
+
+- **Vier neue Regelklassen** neben den Luftbegriffen (PK-04/1c, E-PK-08):
+  **Hausform** (Binnen-I, E-PK-26), **E-Mail-Adressen** (E-PK-27),
+  **Adressen im Netz** (Erlaubnisliste aus `docs/Lizenzen.md`) und **reale
+  Namen und Orte** (`VERBOTENE_NAMEN` aus dem Referenzdatensatz, E-P1-02).
+  Sperrliste 23 → 28 Muster. Gemessen: 442 Treffer Hausform, 38 Namen, 11
+  Netz, 9 Adressen; die Luftbegriffe stehen bei 0.
+- **Zwei Listen werden gelesen, nicht kopiert.** `@@NAMEN@@` und
+  `@@LIZENZEN@@` werden beim Lauf aus ihrer Quelle gefüllt. Eine zweite
+  Liste ginge beim nächsten Eintrag auseinander, und zwar lautlos: Der
+  Referenzdatensatz prüfte weiter gegen seine, die Textprobe gegen eine
+  ältere. **Fehlt eine Quelle, bricht der Lauf ab** — ein leeres Muster
+  träfe alles oder nichts.
+- **Rot ist nur ein neuer Treffer.** `textprobe-altbestand.json` hält je
+  (Datei, Muster) den Stand vom Einführungstag: 500 Treffer in 79 Paaren.
+  Ohne diese Datei wäre die Probe von der ersten Minute an rot und bliebe es,
+  bis jemand ein paar hundert Stellen angefasst hat — und eine Prüfung, die
+  dauerhaft rot ist, liest nach der zweiten Woche niemand mehr. Gezählt wird
+  **je Datei**, nicht je Zeilennummer; eine Zeilennummer verschiebt sich bei
+  jeder Einfügung darüber.
+
+### Geändert
+
+- **Eine Ausnahme ohne Musterfilter gilt nur noch für die Luftbegriffe.**
+  89 der 100 Ausnahmen sind für sie geschrieben („dieser Abschnitt erklärt
+  die Garmin-Uhr und darf `Flug` sagen") — mit den neuen Klassen hätten sie
+  stillschweigend auch fremde Adressen, reale Ortsnamen und jede Rollenform
+  gedeckt. **Gemessen beim Bauen:** Ein Probesatz mit drei Verstößen landete
+  im Block einer Handbuch-Ausnahme und war damit erklärt.
+- **`CLAUDE.md` 9:** Die Pflicht, die Wortliste bei jeder Textänderung von
+  Hand zu fahren, fällt. Sie läuft im Tor.
+
+### Behoben
+
+- **Die Erlaubnisliste las die Hälfte ihrer Quelle nicht.** `Lizenzen.md`
+  nennt Dienste teils als volle Adresse, teils als Rechnernamen in
+  Rückstrichen — die Kartentabelle tut Letzteres. Die erste Fassung las nur
+  die Adressen und meldete jede Kartenquelle als unerlaubt, obwohl alle drei
+  seit P0 dort stehen.
+
+Werkzeuge und Dokumentation, keine Datei unter `server/` — **keine
+Versionsstufe**.
+
 ## [Werkzeug: Die Vollständigkeit misst wieder Symbole statt Satzzeichen] — 2026-09-22
 
 ### Geändert

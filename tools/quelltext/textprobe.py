@@ -169,8 +169,64 @@ def melde(t: str = "") -> None:
 
 # ------------------------------------------------------------------ Laden
 
+def liste_namen() -> list[str]:
+    """Die realen Rufnamen und Orte — GELESEN aus dem Referenzdatensatz.
+
+    `VERBOTENE_NAMEN` in `tools/referenzdatensatz/quelldaten/pruefen.py`
+    (E-P1-02) ist die eine Liste. Eine Kopie hier ginge beim naechsten
+    Eintrag auseinander, und zwar lautlos: Der Referenzdatensatz pruefte
+    weiter gegen seine Liste, die Textprobe gegen eine aeltere.
+
+    FEHLT SIE, IST DAS EIN ABBRUCH und kein leeres Muster. Ein leeres
+    Muster traefe alles oder nichts — beides waere eine falsche Auskunft.
+    """
+    quelle = WURZEL / "tools" / "referenzdatensatz" / "quelldaten" / "pruefen.py"
+    tr = re.search(r"VERBOTENE_NAMEN = \[(.*?)\]", quelle.read_text(encoding="utf-8"), re.S) \
+        if quelle.exists() else None
+    if not tr:
+        raise SystemExit(f"VERBOTENE_NAMEN nicht gefunden in {quelle} — "
+                         "die Regelklasse `namen` kann nicht messen.")
+    return re.findall(r'"([^"]+)"', tr.group(1))
+
+
+def liste_lizenzen() -> list[str]:
+    """Die erlaubten Adressen im Netz — GELESEN aus `docs/Lizenzen.md`.
+
+    Wer eine Bibliothek vendoriert, traegt ihre Herkunft dort ein; damit ist
+    sie hier von selbst erlaubt. Dieselbe Ueberlegung wie oben.
+    """
+    pfad = WURZEL / "docs" / "Lizenzen.md"
+    if not pfad.exists():
+        raise SystemExit(f"{pfad} fehlt — die Regelklasse `netz` kann nicht messen.")
+    t = pfad.read_text(encoding="utf-8")
+    # ZWEI SCHREIBWEISEN, UND DIE ZWEITE IST DIE HAEUFIGERE. `Lizenzen.md`
+    # nennt Dienste teils als volle Adresse (`https://photon.komoot.io`),
+    # teils nur als Rechnernamen in Rueckstrichen (`tile.openstreetmap.org`
+    # in der Kartentabelle). Die erste Fassung dieser Funktion las nur die
+    # Adressen — und meldete damit jede Kartenquelle als unerlaubt, obwohl
+    # alle drei seit P0 dort stehen. Eine Erlaubnisliste, die die Haelfte
+    # ihrer Quelle nicht liest, ist keine.
+    hosts = set(re.findall(r"https?://([a-z0-9.-]+)", t))
+    hosts |= set(re.findall(r"`([a-z0-9][a-z0-9.-]*\.[a-z]{2,})`", t))
+    # BEIDE SCHREIBWEISEN IN DIE LISTE, mit und ohne `www.`: `Lizenzen.md`
+    # nennt `topografix.com`, der Namensraum im GPX heisst
+    # `www.topografix.com`. Ein optionales `(?:www\.)?` im Muster genuegt
+    # dafuer NICHT — die Engine faellt beim Fehlschlag darauf zurueck, es
+    # nicht zu nehmen, und prueft dann `www.topografix.com` gegen die Liste.
+    # Gemessen beim Bauen: der Namensraum blieb ein Treffer.
+    ohne = {h[4:] if h.startswith("www.") else h for h in hosts}
+    return sorted(ohne | {"www." + h for h in ohne})
+
+
+# Muster-Kennung -> Regelklasse, und die Klassen mit ihrem Titel. Beide
+# werden von `lade_sperrliste()` gefuellt; der Bericht liest sie.
+KLASSE_VON: dict[str, str] = {}
+KLASSEN: dict[str, str] = {}
+
+
 def lade_sperrliste(pfad: pathlib.Path) -> tuple[list[dict], list[dict]]:
     d = json.loads(pfad.read_text(encoding="utf-8"))
+    KLASSEN.update(d.get("klassen", {}))
     muster = []
     for m in d["muster"]:
         for pflicht in ("id", "regex", "grund"):
@@ -178,7 +234,17 @@ def lade_sperrliste(pfad: pathlib.Path) -> tuple[list[dict], list[dict]]:
                 raise SystemExit(f"Muster ohne {pflicht}: {m}")
         flags = 0 if m.get("gross") else re.IGNORECASE
         m = dict(m)
+        # PLATZHALTER ZUR LAUFZEIT FUELLEN (PK-04/1c). Zwei Regelklassen
+        # halten gegen eine Liste, die anderswo gepflegt wird; sie steht
+        # deshalb NICHT in diesem Muster, sondern wird beim Lauf geholt.
+        if m.get("quelle") == "namen":
+            m["regex"] = m["regex"].replace(
+                "@@NAMEN@@", "|".join(re.escape(x) for x in liste_namen()))
+        elif m.get("quelle") == "lizenzen":
+            m["regex"] = m["regex"].replace(
+                "@@LIZENZEN@@", "|".join(re.escape(x) for x in liste_lizenzen()))
         m["_re"] = re.compile(m["regex"], flags)
+        KLASSE_VON[m["id"]] = m.get("klasse", "luft")
         muster.append(m)
     fallen = []
     for f in d.get("fallen", []):
@@ -186,6 +252,31 @@ def lade_sperrliste(pfad: pathlib.Path) -> tuple[list[dict], list[dict]]:
         f["_re"] = re.compile(f["regex"], re.IGNORECASE)
         fallen.append(f)
     return muster, fallen
+
+
+ALTBESTAND = HIER / "textprobe-altbestand.json"
+
+
+def lade_altbestand() -> dict:
+    """Was am Tag der Einfuehrung schon dastand — je (Datei, Muster) eine Zahl.
+
+    WARUM UEBERHAUPT (E-PK-08). Die vier Regelklassen aus PK-04/1c finden
+    einen Altbestand, den PK-04 Teilstueck 5 bereinigt. Ohne diese Datei
+    waere die Textprobe von der ersten Minute an rot und bliebe es, bis
+    jemand ein paar hundert Stellen angefasst hat — und eine Pruefung, die
+    dauerhaft rot ist, liest nach der zweiten Woche niemand mehr.
+    **Rot ist deshalb nur ein NEUER Treffer.**
+
+    ZAHLEN JE DATEI UND MUSTER, NICHT ZEILENNUMMERN. Eine Zeilennummer
+    verschiebt sich bei jeder Einfuegung darueber; der Altbestand waere nach
+    dem naechsten Commit falsch, ohne dass etwas geschieht. Die Zahl je Datei
+    haelt das aus: Wer eine Stelle bereinigt, senkt sie; wer eine neue
+    schreibt, hebt sie — und nur das ist rot.
+    """
+    if not ALTBESTAND.exists():
+        return {}
+    d = json.loads(ALTBESTAND.read_text(encoding="utf-8"))
+    return {tuple(k.split("\t")): v for k, v in d.get("stellen", {}).items()}
 
 
 def lade_ausnahmen(pfad: pathlib.Path) -> list[dict]:
@@ -266,7 +357,23 @@ def passt(regel: dict, bereich: str, rel: str, zeilennr: int,
         return False
     if regel.get("datei") and not fnmatch.fnmatch(rel, regel["datei"]):
         return False
-    if regel.get("muster") and muster_id not in regel["muster"]:
+    # EINE AUSNAHME OHNE `muster` GILT NUR FUER DIE KLASSE `luft` (PK-04/1c).
+    #
+    # Die 89 Ausnahmen ohne Musterfilter sind fuer die LUFTBEGRIFFE
+    # geschrieben worden — sie sagen Dinge wie „dieser Abschnitt des
+    # Handbuchs erklaert die Garmin-Uhr und darf `Flug` sagen". Mit den vier
+    # neuen Regelklassen aus 1c waeren sie stillschweigend breiter geworden:
+    # Derselbe Abschnitt haette dann auch eine fremde E-Mail-Adresse, einen
+    # realen Ortsnamen und jede Rollenform gedeckt.
+    #
+    # GEMESSEN BEIM BAUEN: Ein angehaengter Satz mit `Nutzern`,
+    # `admin@fremd.example` und `Kempten` landete im Block der Ausnahme
+    # `handbuch-geraete-verlust-garmin` und war damit erklaert — drei neue
+    # Treffer, kein Befund. Genau das soll hier nicht passieren.
+    if regel.get("muster"):
+        if muster_id not in regel["muster"]:
+            return False
+    elif KLASSE_VON.get(muster_id, "luft") != "luft":
         return False
     if regel["_zeile"] and not regel["_zeile"].search(zeile):
         return False
@@ -419,7 +526,50 @@ def bericht(ergebnisse: list[dict], regeln: list[dict], alle: bool,
         for r in unbeteiligt:
             aus.append(f"    nicht geprüft: {r['id']}  ({r['datei']})")
 
-    schlecht = offen_gesamt + len(ungenutzt) + len(durchgerutscht)
+    # NACH KLASSEN (PK-04/1c, E-PK-08). Eine Summe ueber fuenf Regelklassen
+    # sagt nicht, welche davon gewachsen ist.
+    je_klasse: dict[str, int] = {}
+    for e in ergebnisse:
+        for rel, nr, mid, txt in e["offen"]:
+            k = KLASSE_VON.get(mid, "?")
+            je_klasse[k] = je_klasse.get(k, 0) + 1
+    if je_klasse:
+        aus.append("")
+        aus.append("Offene Treffer je Regelklasse")
+        for k in sorted(je_klasse):
+            aus.append(f"  {k:<12} {je_klasse[k]:>5}   {KLASSEN.get(k, '')}")
+
+    # ALTBESTAND VERRECHNEN. Rot ist, was ueber dem Stand vom Einfuehrungstag
+    # liegt — und ebenso, was darunter liegt, aber nicht ausgetragen wurde:
+    # Eine bereinigte Stelle, die im Altbestand stehen bleibt, verdeckt die
+    # naechste neue an derselben Datei.
+    jetzt: dict[tuple, int] = {}
+    for e in ergebnisse:
+        for rel, nr, mid, txt in e["offen"]:
+            jetzt[(rel, mid)] = jetzt.get((rel, mid), 0) + 1
+    alt = lade_altbestand()
+    neu_stellen, gesunken = [], []
+    for schluessel, n in sorted(jetzt.items()):
+        a = alt.get(schluessel, 0)
+        if n > a:
+            neu_stellen.append((schluessel, a, n))
+    for schluessel, a in sorted(alt.items()):
+        n = jetzt.get(schluessel, 0)
+        if n < a:
+            gesunken.append((schluessel, a, n))
+    if alt:
+        aus.append("")
+        aus.append(f"Altbestand: {sum(alt.values())} Treffer in {len(alt)} "
+                   f"(Datei, Muster)-Paaren — sie halten den Lauf NICHT auf.")
+        for (rel, mid), a, n in neu_stellen:
+            aus.append(f"  NEU   {rel}  [{mid}]  {a} -> {n}")
+        for (rel, mid), a, n in gesunken:
+            aus.append(f"  weniger geworden (Altbestand austragen): {rel}  [{mid}]  {a} -> {n}")
+        aus.append(f"  neue Treffer: {len(neu_stellen)} · "
+                   f"bereinigt und nicht ausgetragen: {len(gesunken)}")
+
+    schlecht = (len(neu_stellen) + len(gesunken) + len(ungenutzt) + len(durchgerutscht)
+                if alt else offen_gesamt + len(ungenutzt) + len(durchgerutscht))
     stellen_gesamt = len({(rel, nr) for e in ergebnisse for rel, nr, _, _ in e["offen"]})
     aus.append("")
     aus.append(f"Ergebnis: {offen_gesamt} Treffer außerhalb der Ausnahmen "
@@ -440,6 +590,9 @@ def main() -> int:
     p.add_argument("--sperrliste", default=str(HIER / "textprobe-sperrliste.json"))
     p.add_argument("--ausnahmen", default=str(HIER / "textprobe-ausnahmen.json"))
     p.add_argument("--bericht", help="Bericht zusätzlich in diese Datei schreiben")
+    p.add_argument("--altbestand-schreiben", action="store_true",
+                   help="den heutigen Stand als Altbestand festschreiben "
+                        "(nur beim VOLLSTÄNDIGEN Lauf sinnvoll)")
     a = p.parse_args()
 
     if a.probe:
@@ -458,6 +611,30 @@ def main() -> int:
     ergebnisse = [suche(k, muster, fallen, regeln) for k in kennungen]
     geprueft = [str(p.relative_to(WURZEL)) for k in kennungen
                 for p in dateien_des_bereichs(k)]
+    if a.altbestand_schreiben:
+        if a.bereich:
+            melde("--altbestand-schreiben verlangt den VOLLSTÄNDIGEN Lauf: "
+                  "ein Teillauf sähe die anderen Bereiche nicht und trüge "
+                  "deren Stellen aus.")
+            return 2
+        stellen: dict[str, int] = {}
+        for e in ergebnisse:
+            for rel, nr, mid, txt in e["offen"]:
+                k = f"{rel}\t{mid}"
+                stellen[k] = stellen.get(k, 0) + 1
+        ALTBESTAND.write_text(json.dumps({
+            "beschreibung": "Was am Tag der Einfuehrung schon dastand (E-PK-08). "
+                            "Je (Datei, Muster) eine Zahl; rot ist nur, was DARUEBER "
+                            "liegt — und was darunter liegt, ohne ausgetragen zu sein. "
+                            "Erzeugt mit `--altbestand-schreiben`, nie von Hand.",
+            "stand": "PK-04/1c",
+            "summe": sum(stellen.values()),
+            "stellen": dict(sorted(stellen.items())),
+        }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        melde(f"Altbestand geschrieben: {sum(stellen.values())} Treffer in "
+              f"{len(stellen)} (Datei, Muster)-Paaren → {ALTBESTAND}")
+        return 0
+
     text, rc = bericht(ergebnisse, regeln, a.alle, geprueft)
     melde(text)
     if a.bericht:
