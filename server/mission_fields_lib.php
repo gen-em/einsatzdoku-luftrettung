@@ -533,7 +533,20 @@ function mf_spalten(string $zweck, string $praefix = '', bool $alias = true): ar
         if (!isset($zwecke[$zweck])) { continue; }
         $e = $zwecke[$zweck];
         $nr = is_array($e) ? $e[0] : $e;
-        $as = (is_array($e) && $alias) ? ' AS ' . $e[1] : '';
+        /* DER ALIAS STEHT IN BACKTICKS, IMMER (Web 20.26.3, hierher gezogen
+         * beim Merge von Schritt 15). `manual` ist auf MySQL 8.4.0 bis
+         * 8.4.10 auch als ALIAS ein reserviertes Wort; ohne die Backticks
+         * antwortete der Export dort mit 1064, und die Sicherung kam nie an
+         * (Staging, MySQL 8.4.10, Kennung 097D7622, Nr. 267).
+         *
+         * Die Backticks stehen HIER und nicht im Register, und das ist
+         * Absicht: Sie sind eine Eigenschaft des SQL-Texts, nicht des
+         * Spaltennamens — `mf_spalten()` ist die einzige Stelle, die SQL
+         * daraus macht. Wer sie ins Register schriebe, muesste sie bei jedem
+         * neuen Alias von Hand mitschreiben und wuerde es beim naechsten
+         * reservierten Wort wieder vergessen. Ein Backtick um einen
+         * gewoehnlichen Bezeichner kostet nichts. */
+        $as = (is_array($e) && $alias) ? ' AS `' . $e[1] . '`' : '';
         if (isset($reihen[$nr])) {
             throw new RuntimeException("mf_spalten($zweck): Position $nr ist doppelt vergeben — "
                 . "'{$reihen[$nr]}' und '$spalte'.");

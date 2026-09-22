@@ -233,7 +233,16 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
     /* AUS DEM REGISTER (Schritt 15/AP6, E-ZE-22). Die Liste stand hier von
      * Hand; die Gruende, warum id, user_id, device_id und die tote
      * other_resources fehlen, stehen jetzt in `mf_missions_gruende()` und
-     * damit neben den Spalten selbst statt in diesem Kommentar. */
+     * damit neben den Spalten selbst statt in diesem Kommentar.
+     *
+     * DER ALIAS STEHT IN BACKTICKS, und zwar seit dem Merge von Schritt 15
+     * in `mf_spalten()` statt hier (Web 20.26.3, Nr. 267): `manual` ist auf
+     * MySQL 8.4.0 bis 8.4.10 auch als ALIAS ein reserviertes Wort. Ohne die
+     * Backticks antwortete der Export dort mit 1064 und die Sicherung kam
+     * nie an (Staging, MySQL 8.4.10, Kennung 097D7622). Die Behebung stand
+     * an ZWEI Stellen — hier und in api/export_data.php —; sie steht jetzt
+     * an der einen, die aus dem Register SQL macht, und gilt damit auch fuer
+     * jeden kuenftigen Alias. */
     $missionSpalten = mf_spalten_sql('backup');
     /* NICHT in der Liste, und zwar mit Absicht:
      *

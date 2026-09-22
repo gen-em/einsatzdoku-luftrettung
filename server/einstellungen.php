@@ -4174,7 +4174,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           s = out.stats;
         }
 
-        /* HIER WIRD EIN FEHLER BEWAHRT, NICHT BEHOBEN -- Backlog Nr. 268.
+        /* HIER WIRD EIN FEHLER BEWAHRT, NICHT BEHOBEN -- Backlog Nr. 277.
          *
          * Die Antwort wird auch jetzt NICHT gelesen: kein Blick auf den
          * Status, kein Blick auf den Rumpf. Eine 500 laeuft also weiterhin
@@ -4188,7 +4188,7 @@ ui_seite_start(['titel' => 'Einstellungen',
          * (E-ZE-10), bildet die Stelle den alten Wurf nach: `status === 0`
          * heisst, die Anfrage kam gar nicht durch -- genau der Fall, in dem
          * `fetch` bisher warf. Ein HTTP-Fehler wirft weiterhin nicht.
-         * Wer Nr. 268 loest, streicht die `status === 0`-Zeile und liest
+         * Wer Nr. 277 loest, streicht die `status === 0`-Zeile und liest
          * stattdessen `frei.ok`. */
         const frei = await EdApi.postJson('api/adminbackup_freigabe.php',
                                           { eingeloest: true });

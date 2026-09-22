@@ -3324,7 +3324,9 @@ keinen einzigen umgestellt; die zwei sind mit ihrem Code umgezogen bzw. in
 *Reste:* Backlog **Nr. 275** (der Referenzdatensatz kennt keinen Dienst über
 Mitternacht — genau den Fall, an dem der Sortierfehler hing), **250–253**
 (vier Funde, die etwas anderes ändern und deshalb nicht mitgemacht wurden),
-**268–270** und **274** (Funde der Vermessung). `zip_lib.php` baut 10c AP2.
+**269**, **270**, **274**, **276** und **277** (Funde der Vermessung — 276 und
+277 hiessen bis zum Merge 267 und 268; `main` hatte dieselben Nummern
+unabhaengig vergeben). `zip_lib.php` baut 10c AP2.
 
 ### P5b — Konto und Registrierung · Web 20.15.3 bis 20.24.0 · 16.–17.09.2026 (Schritt 10b, R82)
 

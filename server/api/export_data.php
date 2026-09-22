@@ -299,6 +299,12 @@ function export_meta(array $b, int $userId): never
      * die Reihenfolge einer SELECT-Liste ist das, was ein Leser vergleicht. */
     array_splice($einsCols, 2, 0, 'd.day');
     $st = $pdo->prepare(
+        /* DER ALIAS `manual` STEHT IN BACKTICKS (Web 20.26.3, Nr. 267) —
+         * jetzt aus mf_spalten(), nicht mehr von Hand. Auf MySQL 8.4.0 bis
+         * 8.4.10 ist `manual` auch als ALIAS ein reserviertes Wort; ohne die
+         * Backticks antwortete der Export dort mit 1064. Die Behebung lag
+         * bis zum Merge von Schritt 15 in dieser Zeile; sie steht jetzt an
+         * der einen Stelle, die aus dem Register SQL macht. */
         'SELECT ' . implode(', ', $einsCols) . "
          FROM missions x
          JOIN days d ON d.id = x.day_id

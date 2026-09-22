@@ -5,16 +5,37 @@ name: Prüfung
 # WAS SIE IST. Die Prüfmittel, die OHNE laufende Installation auskommen —
 # Syntax, Wortliste, Vollständigkeit, Kontraste, Backlog-Nummern,
 # Migrationsregister, die Android-Bauläufe und, wenn die Adresse da ist, das
-# Übersetzen der Uhr-App für alle Zielgeräte. Sie laufen bei JEDEM Push auf
-# JEDEM Zweig und bei jedem Pull Request.
+# Übersetzen der Uhr-App für alle Zielgeräte.
+#
+# WANN SIE LAUFEN. **Arbeitszweige beim Pull Request, `main` bei jedem Push.**
+# Ein Push auf einen Arbeitszweig löst KEINEN Lauf mehr aus (Vorgriff auf
+# PK-05 des Konzepts PK, 21.09.2026).
+#
+# WARUM DAS SO IST — gemessen am 21.09.2026 an PR #69 (Läufe 192 und 193) und
+# PR #70 (Lauf 186): Mit `branches: ['**']` löste jeder Push ZWEI Läufe aus,
+# und beide hießen `Stufe 1`. Der `pull_request`-Lauf vergleicht gegen den
+# gemeinsamen Vorfahren von Zweig und `main`, lässt Uhr und Android weg, wenn
+# `watch/` und `android/` nicht berührt sind, und ist nach rund einer Minute
+# durch. Der `push`-Lauf findet
+# bei einem neuen Zweig oder einem Merge-Commit keinen Vergleichsstand, misst
+# im Zweifel alles und braucht rund 56 Minuten. Das Ruleset wartet auf den
+# Namen, also auf den langsameren — 56 Minuten für eine Messung, die der
+# schnellere Lauf daneben schon erledigt hat.
+#
+# Auf `main` bleibt der Push-Auslöser, und dort ist er richtig: Es gibt keinen
+# Pull Request mehr, gegen den man vergleichen könnte, und die
+# Bereichserkennung misst dort ohnehin alles.
 #
 # WAS SIE NICHT IST. Kein Ersatz für die Browserprüfung (`CLAUDE.md` 6) und
 # kein Ersatz für Stufe 2: Kreisläufe, Bilderlauf und Messstand brauchen eine
 # Installation und laufen deshalb im Staging-Lauf (`auslieferung.yml`).
 #
 # ROT = KEIN MERGE. Das entscheidet nicht diese Datei, sondern der Zweigschutz
-# auf `main` mit `pruefung` als Pflichtprüfung (Zuarbeit, Rahmenplan
-# Abschnitt 6). Ohne ihn ist dieser Lauf eine Auskunft und keine Schranke.
+# auf `main`; seine Pflichtprüfung heißt `Stufe 1` — nach dem Namen des JOBS
+# unten, nicht nach dem des Arbeitslaufs und nicht nach dem Dateinamen. Wer
+# den Jobnamen ändert, hängt die Pflichtprüfung ab, und zwar still. Gesetzt
+# ist der Zweigschutz seit dem 21.09.2026 (Rahmenplan 6b); bis dahin war
+# dieser Lauf eine Auskunft und keine Schranke.
 #
 # KEIN STILLES ÜBERSPRINGEN. Fehlt einem Schritt seine Voraussetzung — der
 # Uhr-Prüfstand braucht `CIQ_GERAETE_URL`, und die steht bewusst nicht im
@@ -24,7 +45,7 @@ name: Prüfung
 
 on:
   push:
-    branches: [ '**' ]
+    branches: [ main ]
   pull_request:
   workflow_dispatch:
 
@@ -355,7 +376,25 @@ jobs:
         #
         # Die drei anderen Gruppen stehen unveraendert: 50 ohne Gegenstueck,
         # 10 style="...", 8 Emoji — dieses Paket hat keine davon hinzugefuegt.
-        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 398
+        #
+        # 396 MIT SCHRITT 15: -2, und das Werkzeug hat die Senkung selbst
+        # eingefordert. Beide Male ist ein AUSLASSUNGSZEICHEN aus einem
+        # geloeschten Kommentar verschwunden, kein Befund behoben:
+        #   AP8b bis AP8f (Web 20.34.0)  -1  server/einstellungen.php
+        #   AP9b           (Web 20.37.0)  -1  server/index.php
+        # Nachgezaehlt gegen denselben Lauf auf dem Stand davor, nicht
+        # geschaetzt: Die Zeile „Unicode-Zeichen als Symbol im Markup" geht
+        # von 330 auf 328, alle uebrigen Zeilen des Berichts sind Zeile fuer
+        # Zeile gleich.
+        #
+        # WARUM DAS EINEN ROTEN LAUF WERT WAR: Die Pruefung meldet auch
+        # UNTERSCHREITUNGEN und bricht ab („Bitte die Schwelle nachziehen,
+        # sonst bekommt der Altbestand stillschweigend wieder Luft"). Genau
+        # das ist hier passiert — Web 20.34.0 hat die Zahl gesenkt und die
+        # Schwelle stehen lassen, und der Lauf war seither rot. Eine Decke,
+        # die ueber dem Bestand schwebt, ist keine Decke, sondern ein
+        # Vorschuss auf den naechsten Zuwachs.
+        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 396
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py

@@ -6627,6 +6627,32 @@ declare(strict_types=1);
  *   worden. Ob derselbe Handgriff faellig ist, sagt dieselbe Zeile beim
  *   ersten Ausrollen — das ist der Pruefpunkt, keine Vermutung.
  *
+ * 20.26.3 — DER EXPORT SCHEITERTE AUF MYSQL 8.4 AM ALIAS, NICHT AN DER SPALTE
+ *   (21.09.2026, aus dem ersten Stufe-2-Lauf gegen Staging).
+ *
+ *   NR. 238 HATTE DIE SPALTE UMBENANNT UND DEN DATEISCHLUESSEL BEWAHRT:
+ *   `uhr_gesperrt AS manual`. MySQL 8.4.0 bis 8.4.10 fuehrt MANUAL aber
+ *   auch als ALIAS als reserviertes Wort. Der Export antwortete auf Staging
+ *   (MySQL 8.4.10) mit 1064 und HTTP 500 (Kennung 097D7622), der Browser
+ *   wartete fuenfzehn Minuten auf einen Download, der nie kam. Lokal gegen
+ *   MariaDB war derselbe Kreislauf gruen — 328 771 Vergleiche, 0 unerklaert.
+ *
+ *   GEFUNDEN IN DER SANDBOX, NICHT IN DER KETTE: Die Anwendung wurde auf
+ *   einem MySQL-8.4.0-Container eingerichtet, der Kreislauf fiel dort in
+ *   Sekunden mit derselben Kennung im lokalen Fehlerprotokoll. Das ist der
+ *   Fall, fuer den das Konzept PK gebaut wird (P-PK-02).
+ *
+ *   DIE AENDERUNG: zwei Backticks um den Alias, in `backup_lib.php` und
+ *   `api/export_data.php`. Der Schluessel in der Datei heisst weiter
+ *   `manual`; jede bisher ausgelieferte Sicherung bleibt lesbar.
+ *   NACHTRAG (Merge von Schritt 15, 22.09.2026): Die zwei Backticks
+ *   stehen nicht mehr in diesen beiden Dateien, sondern in `mf_spalten()`
+ *   — der einen Stelle, die aus dem Spaltenregister SQL macht. Schritt 15
+ *   hat beide Handlisten durch das Register ersetzt; haette der Merge die
+ *   Behebung an ihrem alten Ort gelassen, waere sie beim Aufloesen des
+ *   Konflikts verschwunden und der Fehler auf MySQL 8.4 zurueck gewesen.
+ *   Jetzt gilt sie fuer JEDEN Alias, auch fuer den naechsten.
+ *
  * 20.27.0 — EINE STELLE FUER DIE KONFIGURATION, EINE FUER DIE SITZUNG
  *   (21.09.2026, Schritt 15 AP2 — Zentralisierung, R83, E-ZE-02/-06/-12
  *   bis -14, F-ZE-2). NEBEN-Nummer: zwei neue Funktionen, kein Datenmodell,

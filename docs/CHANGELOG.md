@@ -1045,6 +1045,130 @@ angemeldet, `install.php` und `wiederherstellen.php` stehen in
 `docs/konzepte/Pruefdokument-Zentralisierung.md`.
 
 ---
+## [Werkzeug: Stufe 2 misst nur noch die Anlage, und die Läufe warten aufeinander] — 2026-09-21
+
+**Der erste Tag durch die neue Kette kam nicht durch, und der Grund lag nicht
+im Stand.** `web-v20.26.3` stand auf einem Commit, dessen Staging-Lauf den
+Job `staging` grün und den edbak-Kreislauf gegen MySQL 8.4.10 grün hatte —
+und der trotzdem rot war, weil der Bilderlauf sich auf Staging nicht als
+`demo@gen-em.org` anmelden konnte. Das Tor der grünen Läufe zählt nur Läufe,
+die **als Ganzes** grün sind. Auf der neuen Staging-Anlage war der
+Bilderlauf nie grün gewesen; vor diesem Tag war Stufe 2 nur nie bis zu ihm
+gekommen.
+
+**Stufe 2 fährt jetzt drei Schritte** (Konzept PK, E-PK-01 und E-PK-17,
+vorgezogen aus PK-06): Antwortprobe, Punktdateien, edbak-Kreislauf.
+csv-Kreislauf und Bilderlauf messen die Anwendung, nicht die Anlage, und
+gehören in die Sandbox; der Messstand-Hinweis sagte nur, wo Zahlen stehen.
+Was bleibt, ist, was nur Hoster-PHP, Hoster-Datenbank und Hoster-Apache
+zeigen — Nr. 267 fiel genau dort. Zeitgrenze des Jobs 20 statt 45 Minuten;
+gemessen sind 1:56.
+
+**Und die Läufe warten aufeinander.** Zwei Merges innerhalb einer Minute
+hatten zwei Staging-Läufe zugleich erzeugt: Der erste hielt für seinen
+Kreislauf die Hintergrundjobs 1800 s an, der zweite wartete am Backup-Tor
+vierzig Aufrufe auf ein Komplett-Backup, das „angehalten bis 19:06:50"
+meldete, und schloss nach dreizehn Minuten, ohne eine Datei übertragen zu
+haben. `auslieferung.yml` hatte keine `concurrency`-Gruppe, `pruefung.yml`
+hatte eine. Jetzt eine Gruppe je Umgebung, und der jüngere Lauf **wartet**,
+statt den älteren abzubrechen: Ein Abbruch mitten im Abgleich hinterließe
+einen halben Stand bei eingeschalteter Wartung, ein Abbruch mitten im
+Kreislauf die Jobpause für bis zu 30 Minuten.
+
+**Was bewusst stehen bleibt:** der Rest von PK-06 — der benannte Platz für
+Nr. 234, der Aktions-Cache, die Kommentare auf einen Satz — und der
+Kopfkommentar von `pruefung.yml`, der Bilderlauf und Messstand noch dem
+Staging-Lauf zuschreibt; ihn anzufassen misst einmal alles, und PK-05
+schreibt die Datei ohnehin um. Kein Demo-Konto mit Vorgabekennwort auf
+Staging: Das wäre ein bekanntes Kennwort auf einer öffentlichen Adresse für
+einen Schritt, der dort nichts misst, was die Sandbox nicht misst.
+
+## [Kette: Stufe 1 läuft auf Arbeitszweigen nur noch beim Pull Request] — 2026-09-21
+
+**Das Problem war nicht, dass zu viel geprüft wurde, sondern dass dieselbe
+Prüfung zweimal lief — einmal schnell und einmal langsam.** `pruefung.yml`
+hatte die Auslöser `push: branches: ['**']` **und** `pull_request`. Jeder
+Push auf einen Arbeitszweig erzeugte damit zwei Läufe, und beide heißen
+`Stufe 1`:
+
+| Ereignis | Was er misst | Dauer |
+|---|---|---|
+| `pull_request` | vergleicht gegen den gemeinsamen Vorfahren; lässt Uhr und Android weg, wenn `watch/` und `android/` nicht berührt sind | **rund 1 Minute** |
+| `push` | findet bei einem neuen Zweig oder einem Merge-Commit keinen Vergleichsstand und misst im Zweifel **alles** | **rund 56 Minuten** |
+
+**Der Zweigschutz wartet auf den Namen, also auf den langsameren.** Gemessen
+am 21.09.2026 an PR #69 (Läufe 192 und 193) und PR #70 (Lauf 186): 56 Minuten
+Wartezeit für eine Messung, die der Lauf daneben in einer Minute schon
+erledigt hatte.
+
+**Die Änderung ist eine Zeile:** `branches: ['**']` wird zu
+`branches: [ main ]`. `pull_request` und `workflow_dispatch` bleiben
+unverändert, die Bereichserkennung bleibt unverändert, der Jobname bleibt
+`Stufe 1` — er ist der Name, an dem die Pflichtprüfung des Zweigschutzes
+hängt, und wer ihn ändert, hängt sie still ab.
+
+**Auf `main` bleibt der Push-Auslöser, und dort ist er richtig:** Es gibt
+keinen Pull Request mehr, gegen den zu vergleichen wäre, und die
+Bereichserkennung misst dort ohnehin alles — das ist die Eigenschaft, auf der
+Tor 3 des Produktionslaufs steht.
+
+**Was bewusst stehen bleibt:** Der Rest von PK-05 ist *nicht* Teil dieser
+Änderung. Uhr und Android sollen ganz aus Stufe 1 heraus (der Bau findet dann
+in der Arbeitsumgebung statt, und der Prüfbericht meldet ihn), das Tor soll
+den Prüfbericht gegenlesen, und die Datei soll von 852 auf unter 250 Zeilen
+schrumpfen. Das gehört in das Paket und nicht in einen Vorgriff.
+
+**Nicht betroffen: das Tor der grünen Läufe.** `tools/kette/freigabe.py`
+zählt nur einen `push` auf `main` und den `workflow_dispatch`-Hotfix-Weg; ein
+Push-Lauf auf einem Arbeitszweig zählte dort schon vorher nicht — der
+Prüffall dafür steht wörtlich in der Selbstprobe („EIN PUSH AUF EINEN
+ARBEITSZWEIG ZÄHLT NICHT"). Gemessen nach der Änderung: **32 erfüllt,
+0 offen**. `tools/kettenaufrufe/`: **43 Aufrufe, 0 Befunde, 0 ungeprüft**.
+
+**Zwei überholte Sätze sind dabei mit berichtigt worden**, beide unmittelbar
+neben der Änderung: Die Pflichtprüfung heißt **`Stufe 1`** (nach dem Job),
+nicht `pruefung` — `docs/Technik.md` 6.2 und der Kopf von `pruefung.yml`
+sagten das Falsche, der Rahmenplan 6b das Richtige. Und der Zweigschutz ist
+seit dem 21.09.2026 **gesetzt**; beide Stellen führten ihn noch als offene
+Zuarbeit.
+
+## [Web 20.26.3] — 2026-09-21
+
+**Der Export scheiterte auf MySQL 8.4 am Alias, nicht an der Spalte.**
+
+### Behoben
+
+**`uhr_gesperrt AS manual` steht jetzt in Backticks** — in `backup_lib.php`
+und `api/export_data.php`. Nr. 238 hatte die Spalte `manual` umbenannt, weil
+MySQL 8.4.0 bis 8.4.10 das Wort reserviert, und den Schlüssel in der Datei
+über einen Alias bewahrt. Der Alias unterliegt derselben Reservierung. Auf
+Staging (MySQL 8.4.10) antwortete `api/backup_data.php` deshalb mit 1064 und
+HTTP 500 (Kennung `097D7622`); der Browser wartete fünfzehn Minuten auf einen
+Download, der nie kam, und Stufe 2 war dreimal rot, ohne die Ursache zu
+nennen.
+
+**Gefunden in der Sandbox, nicht in der Kette.** Lokal gegen MariaDB 10.11
+war derselbe Kreislauf grün (328 771 Vergleiche, 0 unerklärt). Erst die
+Anwendung auf einem MySQL-8.4.0-Container fiel — in Sekunden, mit derselben
+Kennung im lokalen Fehlerprotokoll. Das ist genau der Fall, für den das
+Konzept PK die Plattformmatrix lokal vorsieht; die Staging-Datenbank stand
+bis heute als unbekannt in `docs/Technik.md` 6.3a.
+
+### Geprüft
+
+Kreislauf `edbak` gegen die Anwendung auf **MySQL 8.4.0**: vorher rot
+(Timeout, 1064), nachher grün — 328 771 Vergleiche, 0 unerklärt; derselbe
+Kreislauf gegen **MariaDB 10.11** unverändert grün mit derselben Zahl. Beides
+unter PHP 8.3.33, der Fassung beider Anlagen. Wortliste 0 Treffer,
+Vollständigkeit 398 unverändert, `php -l` beide Dateien ohne Befund.
+
+### Offen
+
+Stufe 2 gegen Staging muss es bestätigen; damit ist M1 der Kette II wieder
+erreichbar.
+
+---
+
 ## [Werkzeug: Fünfzehn Minuten messen und „es kam nichts" melden] — 2026-09-21
 
 **Der Botschutz von lima-city ist weg, und dahinter stand ein Fehler, den
