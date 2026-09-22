@@ -128,22 +128,21 @@ function tz_einsatz_verschieben(int $userId, int $missionId, int $zielDayId): ar
                            . dt_lesbar($ziel, true) . '. Es wurde nichts geändert.'];
     }
 
-    $pdo->beginTransaction();
     try {
-        $pdo->prepare('UPDATE missions SET day_id = ? WHERE id = ? AND user_id = ?')
-            ->execute([$zielDayId, $missionId, $userId]);
-        /* Der Zieltag muss den Einsatz umschliessen. Sonst stuende ein Einsatz
-         * ausserhalb des Zeitraums seines eigenen Dienstes — und die Statistik,
-         * die nach Diensttag rechnet, haette einen Tag, dessen Ende vor seinem
-         * letzten Einsatz liegt. */
-        $z = $pdo->prepare('SELECT started_at, ended_at FROM missions WHERE id = ?');
-        $z->execute([$missionId]);
-        $m = $z->fetch();
-        dt_zeitraum_fortschreiben($pdo, $zielDayId, $m['started_at'] ?? null,
-                                  $m['ended_at'] ?? null);
-        $pdo->commit();
+        db_transaktion($pdo, function (PDO $pdo) use ($zielDayId, $missionId, $userId): void {
+            $pdo->prepare('UPDATE missions SET day_id = ? WHERE id = ? AND user_id = ?')
+                ->execute([$zielDayId, $missionId, $userId]);
+            /* Der Zieltag muss den Einsatz umschliessen. Sonst stuende ein Einsatz
+             * ausserhalb des Zeitraums seines eigenen Dienstes — und die Statistik,
+             * die nach Diensttag rechnet, haette einen Tag, dessen Ende vor seinem
+             * letzten Einsatz liegt. */
+            $z = $pdo->prepare('SELECT started_at, ended_at FROM missions WHERE id = ?');
+            $z->execute([$missionId]);
+            $m = $z->fetch();
+            dt_zeitraum_fortschreiben($pdo, $zielDayId, $m['started_at'] ?? null,
+                                      $m['ended_at'] ?? null);
+        });
     } catch (Throwable $ex) {
-        if ($pdo->inTransaction()) { $pdo->rollBack(); }
         return ['ok' => false, 'day_id' => $altId,
                 'meldung' => 'Verschieben fehlgeschlagen. Es wurde nichts geändert.'];
     }

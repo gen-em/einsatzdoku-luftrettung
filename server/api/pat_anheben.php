@@ -131,9 +131,9 @@ foreach ($b['missions'] as $m) {
     ];
 }
 
-$angehoben = 0; $uebersprungen = 0;
 try {
-    $pdo->beginTransaction();
+    [$angehoben, $uebersprungen] = db_transaktion($pdo, function (PDO $pdo) use ($posten, $userId): array {
+    $angehoben = 0; $uebersprungen = 0;
     $upd = $pdo->prepare('UPDATE missions
                              SET pat_blob = ?, notes = NULL
                            WHERE id = ? AND user_id = ?
@@ -143,9 +143,9 @@ try {
         $upd->execute([$p['blob'], $p['id'], $userId, $p['blob_alt']]);
         if ($upd->rowCount() === 1) { $angehoben++; } else { $uebersprungen++; }
     }
-    $pdo->commit();
+    return [$angehoben, $uebersprungen];
+    });
 } catch (Throwable $e) {
-    if ($pdo->inTransaction()) { $pdo->rollBack(); }
     json_out(['error' => 'schreiben'], 500);
 }
 

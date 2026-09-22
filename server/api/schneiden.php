@@ -268,8 +268,8 @@ function schnitt_rueckgaengig(array $b, int $userId): never
                              . 'über den Papierkorb löschen, wenn er weg soll.'], 409);
     }
 
-    $pdo->beginTransaction();
     try {
+        $zurueck = db_transaktion($pdo, function (PDO $pdo) use ($schnitte, $misId, $userId): int {
         $zurueck = 0;
         foreach ($schnitte as $sn) {
             /* DIE PUNKTE ZURUECK, ueber denselben Weg wie hin — nur mit
@@ -292,9 +292,9 @@ function schnitt_rueckgaengig(array $b, int $userId): never
         $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?')->execute([$misId]);
         $pdo->prepare('DELETE FROM missions WHERE id = ? AND user_id = ?')
             ->execute([$misId, $userId]);
-        $pdo->commit();
+        return $zurueck;
+        });
     } catch (Throwable $ex) {
-        $pdo->rollBack();
         json_fehler($ex, 'schneiden');
     }
 

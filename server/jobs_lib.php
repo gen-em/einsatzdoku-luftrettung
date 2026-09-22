@@ -1464,9 +1464,13 @@ function spur_verdichten_eine(PDO $pdo, string $typ, int $id, array $umriss): ?s
      * kodieren, nur wegraeumen. Ohne diesen Fall laegen sie fuer immer
      * unsichtbar da. */
     if ($umriss['n_original'] > 0 && $umriss['max_seq'] < $umriss['n_original']) {
-        $pdo->beginTransaction();
-        spur_loeschen_nur_zeilen($pdo, $typ, $id, $umriss['n_original']);
-        $pdo->commit();
+        /* Bis Web 20.29.0 stand hier `beginTransaction()` ohne `try`: Ein
+         * Abbruch dazwischen liess die Transaktion offen, bis PHP sie beim
+         * Verbindungsabbau still zurueckrollte. Jetzt rollt sie ausdruecklich
+         * zurueck, und der Grund kommt heraus. */
+        db_transaktion($pdo, function (PDO $pdo) use ($typ, $id, $umriss): void {
+            spur_loeschen_nur_zeilen($pdo, $typ, $id, $umriss['n_original']);
+        });
         return null;
     }
 
@@ -1485,10 +1489,10 @@ function spur_verdichten_eine(PDO $pdo, string $typ, int $id, array $umriss): ?s
     $m = spur_rundlauf_pruefen($punkte, $blob);
     if ($m !== null) { return 'Rundlauf: ' . $m; }
 
-    $pdo->beginTransaction();
-    spur_blob_schreiben($pdo, $typ, $id, $blob, SPUR_STUFE_ROH, $n, $n);
-    spur_loeschen_nur_zeilen($pdo, $typ, $id, $n);
-    $pdo->commit();
+    db_transaktion($pdo, function (PDO $pdo) use ($typ, $id, $blob, $n): void {
+        spur_blob_schreiben($pdo, $typ, $id, $blob, SPUR_STUFE_ROH, $n, $n);
+        spur_loeschen_nur_zeilen($pdo, $typ, $id, $n);
+    });
     return null;
 }
 

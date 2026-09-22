@@ -56,15 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$fehler) {
-        $pdo = db();
-        $pdo->beginTransaction();
         try {
-            $dayId = dt_anlegen($pdo, $userId, $tag, $startedAt,
-                                $vehId > 0 ? $vehId : null,
-                                $baseId > 0 ? $baseId : null);
-            $pdo->commit();
+            $dayId = db_transaktion(db(), fn (PDO $pdo): int =>
+                dt_anlegen($pdo, $userId, $tag, $startedAt,
+                           $vehId > 0 ? $vehId : null,
+                           $baseId > 0 ? $baseId : null));
         } catch (Throwable $ex) {
-            if ($pdo->inTransaction()) { $pdo->rollBack(); }
             $fehler = 'Der Diensttag konnte nicht angelegt werden.';
             $dayId = 0;
         }

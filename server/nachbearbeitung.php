@@ -38,8 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($tag === null) {
             $error = 'Dieser Diensttag ist nicht vorhanden. Es wurde nichts geändert.';
         } else {
-            $pdo = db();
-            $pdo->beginTransaction();
             try {
                 /* Dieselbe Funktion, die auch das Formular und der Import
                  * benutzen: Sie schreibt die Kennungen UND friert Art,
@@ -47,13 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * Faehigkeiten ein (E8). Eine eigene Fassung hier waere die
                  * Stelle, an der die Nachbearbeitung etwas anderes tut als das
                  * Formular — und genau das darf sie nicht (A7b). */
-                dt_zuordnen($pdo, $userId, $dayId,
-                            isset($_POST['vehicle_id']) ? (int)$_POST['vehicle_id'] : null,
-                            isset($_POST['base_id'])    ? (int)$_POST['base_id']    : null);
-                $pdo->commit();
+                db_transaktion(db(), function (PDO $pdo) use ($userId, $dayId): void {
+                    dt_zuordnen($pdo, $userId, $dayId,
+                                isset($_POST['vehicle_id']) ? (int)$_POST['vehicle_id'] : null,
+                                isset($_POST['base_id'])    ? (int)$_POST['base_id']    : null);
+                });
                 $notice = 'Diensttag ' . dt_lesbar($tag, true) . ' zugeordnet.';
             } catch (Throwable $ex) {
-                if ($pdo->inTransaction()) { $pdo->rollBack(); }
                 $error = 'Die Zuordnung ist fehlgeschlagen. Es wurde nichts geändert.';
             }
         }

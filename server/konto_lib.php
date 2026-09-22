@@ -177,8 +177,8 @@ function konto_anlegen(string $email, string $name, string $rolle,
 
     $token = bin2hex(random_bytes(32));
     $pdo ??= db();
-    $pdo->beginTransaction();
-    try {
+    $uid = db_transaktion($pdo, function (PDO $pdo) use ($email, $name, $rolle, $status,
+                                                          $token, $tokenLaufzeitS): int {
         /* `bestaetigt_am` wird MITGESCHRIEBEN, wenn das Konto schon aktiv
          * entsteht (Einladung, Einrichtung). Sonst stuende dort NULL bei
          * einem Konto, dessen Adresse die Verwaltung eingetippt hat — und
@@ -194,11 +194,8 @@ function konto_anlegen(string $email, string $name, string $rolle,
                        VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? SECOND))')
             ->execute([$uid, hash('sha256', $token), $tokenLaufzeitS]);
 
-        $pdo->commit();
-    } catch (Throwable $ex) {
-        $pdo->rollBack();
-        throw $ex;
-    }
+        return $uid;
+    });
 
     /* DAS PROTOKOLL STEHT AUSSERHALB DER TRANSAKTION, und das ist Absicht:
      * Ein Protokolleintrag, der nicht geschrieben werden kann, darf die

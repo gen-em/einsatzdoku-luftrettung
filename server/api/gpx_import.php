@@ -95,8 +95,9 @@ try {
     $bis    = gmdate('Y-m-d H:i:s', $bisTs);
 
     /* ---- Und jetzt in EINEM Zug ------------------------------------------ */
-    $pdo->beginTransaction();
     try {
+        [$id, $typ] = db_transaktion($pdo, function (PDO $pdo) use ($userId, $ziel, $dayId,
+                                                                    $von, $bis, $punkte): array {
         $devId = geraet_virtuell_sicherstellen($pdo, $userId);
         /* `imp-` WIE BEIM UEBRIGEN IMPORT (E-S4-18). Daran haengt die
          * Sperrliste: Ein geloeschter Eintrag mit dieser Kennung wird von
@@ -137,9 +138,9 @@ try {
          * (JSON-Vertrag 4.4) — dieselbe Regel wie beim Nachtragen und beim
          * Schneiden. */
         dt_zeitraum_fortschreiben($pdo, $dayId, $von, $bis);
-        $pdo->commit();
+        return [$id, $typ];
+        });
     } catch (Throwable $ex) {
-        $pdo->rollBack();
         json_fehler($ex, 'gpx_import');
     }
 
