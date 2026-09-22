@@ -28,8 +28,8 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > |---|---|
 > | Stand | **22.09.2026 — PK-01 bis PK-03 erledigt, PK-04 in Arbeit (Teilstück 1a von 5 erledigt).** `main` ist hereingezogen (`a1c6494`): beide Vorgriffe sind gemergt, **M1 der Kette II ist erreicht**. Offen bleibt P-PK-11 zur Hälfte: die Ausbaustufe `uhr` ist gebaut, aber nicht abgenommen; `android` ist es (Bau in 7m 19s, 0 Lint-Fehler, 670 Prüffälle / 0). **Halt nach PK-03 wie beauftragt** — PK-04 bis PK-06 erst auf ausdrückliches Wort, weil PK-04 sichtbare Texte in `server/` bereinigt. Umsetzung läuft auf `claude/serene-dijkstra-bcpbjy` (von `main` `08e032e`); das Konzept ist mit seiner Historie vom Konzeptzweig dorthin übernommen, ebenso der Inhalt von PR #70. Freigegeben vom Auftraggeber (Z5) ohne Änderungen; Z1, Z2, Z3 erledigt; P-PK-02 vorgezogen und erledigt. |
 > | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **vom Auftraggeber bestätigt am 21.09.2026**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. |
-> | Nächstes | **PK-04/5** — die Bereinigung in `server/`. **Halt: erst nach ausdrücklichem Wort**, weil Schritt 15 parallel dort arbeitet. **Teilstück 5 (Bereinigung in `server/`) kommt zuletzt** — Entscheidung des Auftraggebers vom 21.09.2026, weil Schritt 15 parallel in `server/` arbeitet. **Zwei Vorgriffe liegen daneben, von zwei Instanzen:** PR #71 (PK-05, Auslöser von `pruefung.yml`, Backlog Nr. 269, Abnahme P-PK-17) ist am 21.09.2026 um 20:13 **gemergt**; PR #72 (PK-06, Stufe 2 auf drei Schritte und die Gruppe je Umgebung, Zweig `claude/pk-06-vorgriff-stufe2`, Backlog Nr. 268) liegt bei der Betreiberin. **PK-05 und PK-06 bleiben als Pakete offen** — beide Vorgriffe nehmen nur den dringenden Teil vorweg. **Parallelität:** Dieser Zweig läuft neben Schritt 15 und neben dem PK-06-Vorgriff und fasst `server/` nicht an. |
-> | Kette II | **M1 ist am 21.09.2026 erreicht** — Tag `web-v20.26.3` auf `a1c6494`, Lauf **35654132667** Versuch 2, Produktiv meldet **20.26.3**, Zeiger `produktion` auf `a1c6494`. Im Übrigen wird Kette II nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
+> | Nächstes | **PK-04/5** — die Bereinigung in `server/`. **Halt: erst nach ausdrücklichem Wort.** **Parallelitätsregel aus der Konzeptfassung auf `main`, hier nachgetragen:** PK-01 bis PK-03 laufen neben Schritt 15; **PK-04 bis PK-06 erst, wenn kein Schritt-15-Paket in einem offenen PR steht.** Nachgesehen am 22.09.2026: **kein offener PR** — die Regel war während PK-04/1a bis 4 erfüllt, aber ich kannte sie nicht, als ich anfing. Die beiden Vorgriffe (PR #71 zu PK-05, PR #72 zu PK-06) sind auf `main`. |
+> | Kette II | **M1 ist am 21.09.2026 erreicht** — Tag `web-v20.26.3` auf `a1c6494`, Lauf **35654132667** Versuch 2, Produktiv meldet **20.26.3**, **Migrationen von Hand ausgeführt, Wartung beendet, Status „Alles läuft"**, Zeiger `produktion` auf `a1c6494`. Im Übrigen wird Kette II nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
 > | Hakt | nichts. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); Stufe 2 hat ihn nach dem Merge bestätigt: Kreisläufe csv und edbak **104 s grün** gegen Staging mit **MySQL 8.4.10** (Lauf 35639445224, Versuch 2, Schritt 5) — im Lauf davor, ohne den Fix, derselbe Schritt nach **15 min 51 s rot**. Der Tag `web-v20.26.3` folgt darauf (Z2a). **Nr. 267 ist auf beiden Anlagen bestätigt:** Staging mit MySQL 8.4.10 im Kreislauf edbak (104 s), Produktiv mit MariaDB im Produktivlauf. **Der Export von Hand auf Produktiv steht als Gegenprobe noch aus** — er ist kein Beleg, weil der Fehler dort nie auftrat, aber er ist die einzige Messung, die den Weg durch die Oberfläche geht. Der erste Tag war am Tor hängengeblieben (F-PK-04); nach dem Vorgriff auf PK-06 (PR #72) ging er durch. **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
 >
 > **Stand der Umsetzung**
@@ -948,6 +948,13 @@ Nummern aus Abschnitt 8); Konzept wird nach der Freigabe gelöscht.
   Abgleichs bleibt unangetastet); Uhr-Paket als Artefakt.
 - Zuarbeit Z6: Upload-Schlüssel und Connect-IQ-Schlüssel als Geheimnisse der
   Umgebung `produktion`; `signatur.properties` wird im Lauf aus ihnen erzeugt.
+  Die Namen stehen in Z6 (Abschnitt 7): `APK_SPEICHER_B64`,
+  `APK_SPEICHER_PASSWORT`, `APK_SCHLUESSEL_NAME`, `APK_SCHLUESSEL_PASSWORT`,
+  `UHR_ENTWICKLERSCHLUESSEL_B64`. Die beiden Dateien liegen Base64-kodiert
+  im Geheimnis und werden im Lauf mit `base64 -d` in das Arbeitsverzeichnis
+  geschrieben, nie ins Protokoll. Die Sandbox sieht keinen der fünf Werte
+  (E-PK-23); `tools/uhr-pruefstand/` erzeugt sich weiter seinen eigenen
+  Wegwerfschlüssel.
 - **Abnahme:** ein Tag `android-v…` → Lauf wartet auf Freigabe, baut,
   signiert (`apksigner verify` im Lauf), legt ab; die Fassung auf der
   Geräteseite stimmt. Vorher ein Probelauf ohne Ablage.
@@ -1030,9 +1037,9 @@ Abschnitt 6** — hier die Kurzfassung mit der Folge:
 | Z2 | Den Kette-II-Zweig per PR mergen (PR #68, mit Übergabevermerk), damit PK-06 nicht kollidiert | vor der Freigabe | **erledigt 21.09.2026** (PR #68 gemergt) |
 | Z2a | **PR #69 (Web 20.26.3) mergen** — der edbak-Fix; danach Stufe 2 auf `main` beobachten, dann Tag `web-v20.26.3` und Freigabe = **M1 der Kette II** | nach Stufe 1 grün | **erledigt 21.09.2026.** Kreisläufe 104 s grün gegen MySQL 8.4.10; der erste Tag blieb am Tor hängen (F-PK-04), nach dem Vorgriff auf PK-06 ging er durch: Lauf **35654132667** Versuch 2, Produktiv meldet **20.26.3**, Zeiger auf `a1c6494`. **M1 der Kette II erreicht.** |
 | Z3 | Umgebungswerte der Cloud-Umgebung: die sieben Namen aus 1.4 vollständig und in Anführungszeichen; Netzregel mit Docker Hub und `deb.debian.org` | — | **erledigt 21.09.2026** |
-| Z4 | Staging: Mailversand reparieren (Webspace-Protokoll), Backup-Ziel eintragen | vor PK-M2 | offen (`097D7622` ist ohne das Protokoll geklärt, 1.5) |
+| Z4 | Staging: Mailversand reparieren (Webspace-Protokoll), Backup-Ziel eintragen | vor PK-M2 | **erledigt 22.09.2026** — Mailversand geht, Sicherungsziel eingetragen, Konto-Backup gelaufen (`097D7622` war schon ohne das Protokoll geklärt, 1.5) |
 | Z5 | Freigabe dieses Konzepts | nach Z1, Z2 | **erteilt 21.09.2026** |
-| Z6 | PK-08: Upload-Schlüssel und Connect-IQ-Schlüssel als Geheimnisse der Umgebung `produktion` | vor PK-08 | offen |
+| Z6 | PK-08: Upload-Schlüssel und Connect-IQ-Schlüssel als Geheimnisse der Umgebung `produktion` — fünf Namen, festgelegt 22.09.2026: `APK_SPEICHER_B64` (`nadoku-auslieferung.jks`, Base64), `APK_SPEICHER_PASSWORT`, `APK_SCHLUESSEL_NAME` (`nadoku`), `APK_SCHLUESSEL_PASSWORT`, `UHR_ENTWICKLERSCHLUESSEL_B64` (`developer_key.der`, Base64). Der Keystore liegt bei der Betreiberin vor; der Connect-IQ-Schlüssel wird **einmal neu erzeugt** (auf dem Rechner der Betreiberin, nicht in der Sandbox) und ab dann für jede Uhr-Fassung verwendet | vor PK-08 | **erledigt 22.09.2026** — alle fünf Geheimnisse liegen in der Umgebung `produktion`; Keystore und Uhr-Schlüssel (`.der` und `.pem`) verwahrt die Betreiberin. Behälter- und Schlüsselpasswort des Keystores sind dasselbe (mit `keytool -certreq` geprüft) |
 | Z7 | PK-M2: einen echten PR durch die neue Kette mergen | nach PK-06 | offen |
 | Z8 | Freigabe des Abschlusses | nach PK-07 | offen |
 | Z9 | Kleine Entscheidung (F-PK-13): Soll `.claude/settings.local.json` in `.gitignore`? Ein Eintrag macht sie unsichtbar; kein Eintrag lässt sie wenigstens als unverfolgte Datei auffallen. Heute steht sie **nicht** darin und es gibt sie nicht | mit PK-07 | offen |
@@ -1074,6 +1081,28 @@ Gemessen an PR #69 (Läufe 192, 193) und PR #70 (Lauf 186). **Erledigt mit dem
 Vorgriff auf PK-05** (PR #71, 21.09.2026): `branches: [ main ]`. Die Abnahme —
 nur noch **ein** Lauf je Arbeitszweig-Push — steht als **P-PK-17** offen.
 
+**Einschub 1 — Vorgriff auf PK-06 (21.09.2026, PR nach PR #70, Backlog
+Nr. 268).** Anlass: Der erste Tag durch Kette II (`web-v20.26.3`, Lauf
+35646453443) blieb am Tor der grünen Läufe hängen. Das Tor zählt nur
+Staging-Läufe, die **als Ganzes** grün sind, und der Lauf auf `807f462` war
+rot am Bilderlauf: Er meldet sich für 32 Seiten mit dem Vorgabekennwort als
+`demo@gen-em.org` an, und dieses Konto gab es auf der neuen Staging-Anlage
+nie (Kette II hatte es in Z7 vorgesehen und Z7 ohne diese Messung als
+erfüllt gebucht). Dazu zwei Befunde aus derselben Stunde: `auslieferung.yml`
+hatte keine `concurrency`-Gruppe, zwei Merges innerhalb einer Minute liefen
+überlappend nach Staging, und die Jobpause des einen (1800 s) schloss das
+Backup-Tor des anderen (40 Aufrufe, 13 min rot ohne übertragene Datei).
+**Vorgezogen:** Stufe 2 auf Antwortprobe, Punktdateien, edbak-Kreislauf
+(E-PK-01, E-PK-17), Zeitgrenze 20 min; eine Gruppe je Umgebung, der jüngere
+Lauf wartet (ein Abbruch mitten im Abgleich hinterließe einen halben Stand
+bei eingeschalteter Wartung). **Entschieden dabei:** kein Demo-Konto mit
+Vorgabekennwort auf Staging; `pruefung.yml` unangetastet, weil jede Änderung
+dort einmal alles misst. **Gemessen vor dem Vorgriff:** Job `staging` grün
+in 31 s, Kreisläufe csv und edbak gegen MySQL 8.4.10 grün in 104 s — der
+Beleg für Nr. 267 auf der echten Anlage. **Folge für M1:** Der Tag wandert
+auf den Commit des Vorgriff-Merges; `web-v20.26.3` auf `807f462` wird
+gelöscht und neu gesetzt, er hat nie ausgeliefert.
+
 **`CLAUDE.md` 7:** die Benennungsregel E-PK-09.
 
 ---
@@ -1091,7 +1120,7 @@ bleibt fast vollständig, weil PK die Auslieferung nicht anfasst:
 | Hotfix-Weg mit Abstammungsprüfung (AP7) | bleibt; das Tor der grünen Läufe fragt weiter nach Stufe 1 und Staging, beide gibt es unter PK |
 | Stufe 2 mit Kreisläufen und Bilderlauf | **PK-06 kürzt sie auf drei Schritte** |
 | der offene Commit `download_lib` („fünfzehn Minuten messen") | nützlich, auch lokal; wird gemergt (Z2) |
-| M1 erster grüner Produktivlauf | **bleibt nötig** und ist nach dem Merge von PR #69 (Web 20.26.3) erreichbar: Push-Lauf auf `main`, Stufe 2 grün, Tag, Freigabe (Z2a) |
+| M1 erster grüner Produktivlauf | **erreicht am 21.09.2026** (Z2a, Einschub 1): Tag `web-v20.26.3` auf `a1c6494`, Lauf 35654132667 Versuch 2 — Tor, Zielprobe, Backup-Tor, FTPS 6:32 min, Fassung 20.26.3 gemeldet, Wartung wegen ausstehender Migration an gelassen und von Hand beendet, Zeiger gesetzt. Die Erledigt-Zeile für Kette II schreibt PK-07 |
 | M2 Probe-Hotfix | entfällt als eigener Meilenstein; der Hotfix-Weg wird beim ersten echten Hotfix geprobt |
 | AP8 Buchführung, Erledigt-Zeile, Konzeptlöschung | **übernimmt PK-07** |
 
