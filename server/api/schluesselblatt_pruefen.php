@@ -69,11 +69,7 @@ require_once __DIR__ . '/../ratelimit_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'methode']);
-    exit;
-}
+api_methode();
 csrf_check();
 
 /**
@@ -89,11 +85,10 @@ csrf_check();
  */
 function blatt_werte(): array
 {
-    global $CFG;
     $aus = [];
     foreach ([['sk', 'Serverschlüssel', 'server_key'],
               ['an', 'Server-Anteil',   'kdf_anteil']] as [$schl, $name, $k]) {
-        $hex = strtolower((string)($CFG[$k] ?? ''));
+        $hex = strtolower((string)konfig($k, ''));
         if (preg_match('/^[0-9a-f]{64}$/', $hex)) {
             $aus[] = ['schl' => $schl, 'name' => $name, 'hex' => $hex];
         }

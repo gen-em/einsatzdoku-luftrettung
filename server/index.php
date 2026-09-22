@@ -5,10 +5,7 @@ if (!file_exists(__DIR__ . '/config.php')) { header('Location: install.php'); ex
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/mission_fields_lib.php';   // Spalten der Tagestabelle
 require_once __DIR__ . '/diensttag_lib.php';
-
-// Spalten der Tagestabelle aus dem Feldkatalog (mission_fields.php, 'day_col').
-// Tabellenkopf, Zeilenaufbau und Sortierung unten leiten sich alle hieraus ab.
-$TAGESSPALTEN = mf_tagesspalten();
+require_once __DIR__ . '/format_lib.php';         // datum_zeit_text() fuer die Geraetezeile
 
 /* Stammdaten fuer die Auswahlfelder des Diensttags. Es sind die eigenen und die
  * AUSGEWAEHLTEN zentralen Standorte samt ihren Rettungsmitteln (E16) — dieselbe
@@ -26,6 +23,7 @@ $selDayId = (int)($_GET['d'] ?? 0);
 if ($selDayId > 0 && dt_laden($userId, $selDayId) === null) { $selDayId = 0; }
 if ($selDayId === 0) { $selDayId = dt_neuester($userId) ?? 0; }
 $selDay = $selDayId > 0 ? $selDayId : null;
+
 
 /* Neu hinzugekommene Geraete (M4-10). Die Startseite ist die Seite, auf der
  * nach der Anmeldung jede/r landet — ein Hinweis, der nur im Geraete-Reiter
@@ -164,7 +162,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
                     $was  = ($g['geraet_modell'] ?? $g['geraet_teil']) ?? null;
                     $teile[] = $name
                              . ($was !== null ? ' · ' . $was : '')
-                             . ' (' . fmt_local($g['created_at'], 'd.m.Y H:i') . ')';
+                             . ' (' . datum_zeit_text($g['created_at']) . ')';
                 }
                 echo e(implode(', ', $teile)); ?>.
           Warst du das nicht, entferne
@@ -502,28 +500,16 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
                  die dreizeilige Kachel (E-P3-32). Beide entstehen aus
                  demselben Zeilenbestand in renderMissionTable(). */ ?>
         <div class="tabelle-scroll nur-ab-720">
+          <?php /* Kopf UND Zeilen entstehen im Browser, aus
+                   assets/missiontable.js (Schritt 15 AP9b). Hier stand ein
+                   handgeschriebener <thead> mit sieben festen Spalten und
+                   einer Schleife ueber den Feldkatalog — eine zweite
+                   Spaltenliste neben der des Moduls, das Suche und
+                   Zeitraumuebersicht schon bediente. Beide Tabellen tun es
+                   jetzt gleich: leerer Kopf, leerer Rumpf, das Modul
+                   fuellt. */ ?>
           <table class="tabelle" id="missions">
-            <thead><tr>
-              <th class="streifen-spalte"></th>
-              <th class="sortable mitte-spalte" data-key="no"    data-label="Nr.">Nr.</th>
-              <th class="sortable mitte-spalte" data-key="start" data-label="Beginn">Beginn</th>
-              <th class="sortable zahl-spalte"  data-key="dur"   data-label="Dauer">Dauer</th>
-              <th class="sortable"              data-key="site"  data-label="Einsatzort">Einsatzort</th>
-              <th class="sortable mitte-spalte" data-key="age"   data-label="Alter">Alter</th>
-              <th class="sortable"             data-key="dx"    data-label="Diagnose">Diagnose</th>
-              <?php /* Spaltentitel aus dem Feldkatalog. Bewusst unmaskiert: Der
-                       Wert ist 'day_label' aus mission_fields.php und darf
-                       Auszeichnung enthalten (Sekundär<br>Transport). Er stammt
-                       aus einer Datei des Projekts, nie aus einer Eingabe.
-                       data-label ist derselbe Text ohne Auszeichnung — fuer
-                       das Sortierblatt. */
-                    foreach ($TAGESSPALTEN as $dc): ?>
-              <th class="sortable <?= $dc['art'] === 'check' ? 'haken-spalte ' : '' ?><?= e($dc['klasse']) ?>"
-                  data-key="dc:<?= e($dc['col']) ?>"
-                  data-label="<?= e(strip_tags(str_replace('<br>', ' ', (string)$dc['label']))) ?>"><?= $dc['label'] ?></th>
-              <?php endforeach; ?>
-              <th class="sortable zahl-spalte" data-key="km" data-label="km">km</th>
-            </tr></thead>
+            <thead></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -643,6 +629,10 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
          und steht deshalb nach html.js. */ ?>
 <script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
+<?php /* Vorspann der Einsatztabelle (Artsymbole, Typsymbole,
+         Katalogspalten) — dieselbe Stelle wie in suche.php und
+         zeitraum.php, seit Schritt 15 AP9b. */
+      ui_tabellen_bootstrap(); ?>
 <?php /* missiontable.js liefert die gemeinsamen Bausteine der drei
          Einsatztabellen. Muss NACH html.js stehen: Die Datei liest EdHtml
          schon beim Laden. */ ?>
@@ -671,13 +661,6 @@ const BASIS_LISTE = <?= json_js(array_map(
     static fn(array $b): array => ['id' => (int)$b['id'], 'name' => (string)$b['name']],
     $SD_BASES)) ?>;
 const DEF_BASE = <?= (int)($SD_DEFAULTS['base_id'] ?? 0) ?>;
-/* Spalten der Tagestabelle — dieselbe Liste, aus der oben der Tabellenkopf
-   entstanden ist. Der Titel fehlt hier bewusst: Er steht bereits im <thead>,
-   und das Skript baut nur noch Zellen. */
-const DAY_COLS = <?= json_js(array_map(
-        static fn(array $dc): array => ['col' => $dc['col'], 'art' => $dc['art'],
-                                        'klasse' => $dc['klasse']],
-        $TAGESSPALTEN), JSON_UNESCAPED_UNICODE) ?>;
 /* Die Spurfarben kommen aus den Token (--spur-1..8, EdGeo.spurFarbe) — hier
    stand eine COLORS-Liste mit fuenf markenfremden Werten (F-P3-H). */
 let currentDayId = null;
@@ -687,15 +670,20 @@ let currentDay = null;      // Datum des Diensttags, fuer die Altersberechnung
    Koordinate hinterlegt ist — dann entsteht für diese Regel keine Linie (A13i). */
 let currentBase = null;
 
-const map = L.map('map');
-attachBaseLayers(map);
-attachFullscreenControl(map);
-/* Die dritte Kartengroesse gibt es NUR hier (Backlog Nr. 45): Diese Seite ist
-   die einzige mit einer Liste unter der Karte, die vom Hoeherwerden etwas
-   hat. Einsatzansicht, Spurenseite und Zeitraumuebersicht bekommen den Knopf
-   ausdruecklich nicht. */
-attachGroessenControl(map);
-map.setView([48.5, 10.5], 7); // Fallback, bis Daten da sind
+/* Die Karte entsteht ueber EdKarte.anlegen() (Schritt 15 AP8).
+ *
+ * `groesse: true` haengt den dritten Kartenknopf an. Den gibt es NUR hier
+ * (Backlog Nr. 45): Diese Seite ist die einzige mit einer Liste unter der
+ * Karte, die vom Hoeherwerden etwas hat. Einsatzansicht, Spurenseite und
+ * Zeitraumuebersicht bekommen ihn ausdruecklich nicht — deshalb ist die
+ * Vorgabe des Schalters false.
+ *
+ * REIHENFOLGE GEAENDERT: Bis Schritt 15 kam setView() hier ZULETZT, nach den
+ * drei Anbauten. Jetzt kommt es zuerst, wie auf den drei anderen Karten.
+ * Der Grund steht in map_layers.js; kurz: eine Karte ohne festen Ausschnitt
+ * gilt Leaflet als nicht bereit und rechnet Pin-Positionen nicht aus. */
+const map = EdKarte.anlegen('map',
+  { mitte: [48.5, 10.5], zoom: 7, groesse: true }); // Fallback, bis Daten da sind
 
 let layerGroup = L.layerGroup().addTo(map);
 const trackLines = [];
@@ -713,152 +701,107 @@ map.on('zoomend', () => {
   trackLines.forEach(l => l.setStyle({ weight: w }));
 });
 
-function fmtDay(iso){ const [y,m,d]=iso.split('-'); return `${d}.${m}.${y}`; }
 let dayMissions = [];
 let dayRest = [];
-let sortKey = 'start', sortDir = 1;
+/* ---- DIE TAGESTABELLE ENTSTEHT AUS DEM GEMEINSAMEN ERZEUGER ----------
+ *
+ * Schritt 15 AP9b (Backlog Nr. 57, E-ZE-01/-08). Hier standen bis dahin
+ * eine eigene Zeilenerzeugung, eine eigene Sortierfunktion, ein eigener
+ * Sortierpfeil und ein eigenes Sortierblatt -- alles ein zweites Mal
+ * neben `assets/missiontable.js`, das Suche und Zeitraumuebersicht schon
+ * seit Web 5.2.0 bedient. Der Kommentar an der Dauerspalte sagte es
+ * ausdruecklich: „Dass es zwei Aufbauten fuer dieselbe Tabelle gibt, ist
+ * der eigentliche Fund" (F-S3-A). Jetzt gibt es einen.
+ *
+ * DREI DINGE SEHEN DADURCH ANDERS AUS, und alle drei sind entschieden
+ * (E-ZE-34, Nr. 57):
+ *
+ *   - Der Kopf heisst „Sekundär&shy;transport" mit weichem Trennzeichen
+ *     statt „Sekundär<br>Transport" mit hartem Umbruch. „Sekundaertransport"
+ *     ist EIN Wort; der harte Umbruch trennte es ohne Bindestrich.
+ *   - Alter steht rechtsbuendig statt mittig -- wie in den beiden anderen
+ *     Tabellen.
+ *   - Die Haken stehen in der Reihenfolge Winde, Bergwacht,
+ *     Sekundaertransport statt umgekehrt.
+ *
+ * WAS DAS MODUL DAFUER GELERNT HAT, steht dort und nicht hier: die Spalte
+ * „Nr." (E-ZE-33), die chronologische Sortierung nach `start_sort`
+ * (E-ZE-32), den Gleichstand nach der Einsatznummer und ein Sortierblatt,
+ * das nach dem Umstellen auch neu zeichnet.
+ *
+ * `ohne` nennt die zwei Spalten, die diese Seite nicht fuehrt:
+ *
+ *   'fehl'  Den Fehleinsatz zeigt die Tagesuebersicht bewusst nicht -- er
+ *           steht im Einsatz selbst und auf der Kachel (Handbuch 4.1).
+ *   'day'   Das Datum steht im Seitentitel; eine Spalte, die in jeder Zeile
+ *           denselben Tag wiederholt, ist die breiteste Auskunft ohne
+ *           Inhalt.
+ *
+ * DASS 'day' HIER STEHT UND NICHT ALS `nurWenn` IM MODUL, ist eine
+ * Korrektur aus dem Bildvergleich: „nur zeigen, wenn es mehrere Tage gibt"
+ * nahm der ZEITRAUMUEBERSICHT die Spalte, sobald alle Treffer eines Monats
+ * auf einen Tag fielen — waehrend sie weiter nach ihr sortierte. Eine
+ * Seite, die eine Spalte nicht will, sagt es; das Modul raet es nicht.
+ *
+ * Die Artspalte faellt dagegen von selbst weg: Ein Diensttag hat eine Art,
+ * und ein Zeichen, das sich nie aendert, sagt nichts.
+ */
+let tabelle = null;
 
-function sortVal(m, key){
-  // Spalten aus dem Feldkatalog tragen den Schluessel 'dc:<spalte>'. Haken
-  // sortieren als 0/1, Textspalten als kleingeschriebene Zeichenkette — wie
-  // die uebrigen Textspalten der Tabelle auch.
-  if (key.startsWith('dc:')) {
-    const col = key.slice(3);
-    const def = DAY_COLS.find(d => d.col === col);
-    const v = m[col];
-    if (!def || def.art === 'check') return v ? 1 : 0;
-    return String(v ?? '').toLowerCase();
-  }
-  switch (key) {
-    case 'no':
-    case 'start': return m._no;
-    case 'dur':   return m.duration_s == null ? -1 : m.duration_s;
-    case 'site':  return (m._ort || '').toLowerCase();
-    case 'age':   return m._age == null ? -1 : m._age;
-    case 'dx':    return (m._dx || '').toLowerCase();
-    case 'km':    return m.distance_m == null ? -1 : m.distance_m;
-  }
-  return 0;
+function tabelleAnlegen(){
+  tabelle = EdMissionTable.erzeuge({
+    table:   document.getElementById('missions'),
+    kacheln: document.getElementById('missionskacheln'),
+    sortKey: 'start',
+    sortAsc: true,
+    ohne:    ['fehl', 'day'],
+    /* Das mobile Sortierblatt baut seit Schritt 15 AP9b das Modul — unter
+       720 px zeigt diese Seite Kacheln, und die haben keine Spaltenkoepfe.
+       Ein `sortlabel` hat sie nicht: Die Kartenzeile traegt bereits Zahl und
+       km-Summe, eine zweite Beschriftung daneben waere eine Wiederholung. */
+    sortblatt: document.getElementById('sortliste'),
+    /* Zahl und km-Summe im Kartenkopf: „4 · 140 km" (Mockup 02). Gerechnet
+       ueber die VOLLSTAENDIGE Liste, nicht ueber die gezeichneten Zeilen --
+       diese Seite kennt zwar keine Seitengrenze, aber die Suche schon, und
+       der dritte Wert ist genau dafuer da. */
+    onAfterDraw: (gesamt, gezeigt, zeilen) => {
+      const km = zeilen.reduce((s, m) => s + (m.distance_m || 0), 0);
+      document.getElementById('mzahl').textContent = gesamt
+        ? gesamt + (km > 0 ? ' · ' + EdFormat.kmSumme(km) + ' km' : '')
+        : '';
+    },
+  });
+}
+
+/* WELCHE FAEHIGKEITEN DIESER DIENSTTAG AUSWERTEN LAESST (E-ZE-31).
+ *
+ * Winde und Bergwacht erscheinen in der Tagesuebersicht nur, wenn der Tag
+ * LUFTGEBUNDEN ist UND die Faehigkeit traegt. Bodengebunden steht keine der
+ * beiden Spalten, auch mit Faehigkeit -- so entschieden am 22.09.2026 nach
+ * Vorlage der Zahlen. Der Haken bleibt eintragbar und in der
+ * Einsatzbearbeitung sichtbar; nur die Auswertung folgt der Betriebsart.
+ *
+ * Die Faehigkeiten kommen aus dem KATALOG und nicht aus einer Liste hier:
+ * Ein weiteres Feld mit 'cap_gate' und 'day_col' zieht von selbst nach. */
+function tabelleFaehigkeiten(meta){
+  const luft = !!(meta && meta.kind === 'air');
+  const hat  = new Set((meta && meta.capabilities) || []);
+  const f = {};
+  (typeof KATALOG_SPALTEN !== 'undefined' ? KATALOG_SPALTEN : []).forEach(dc => {
+    if (dc.cap) { f[dc.cap] = luft && hat.has(dc.cap); }
+  });
+  tabelle.setFaehigkeiten(f);
 }
 
 function renderMissionTable(){
-  const tbody = document.querySelector('#missions tbody');
-  tbody.innerHTML = '';
-  const list = [...dayMissions].sort((a, b) => {
-    const va = sortVal(a, sortKey), vb = sortVal(b, sortKey);
-    return (va < vb ? -1 : va > vb ? 1 : a._no - b._no) * sortDir;
-  });
-  list.forEach(m => {
-    const tr = document.createElement('tr');
-    tr.className = 'clickable';
-    // Zellen der Katalogspalten in der Reihenfolge des Tabellenkopfes.
-    // Haken aus dem Symbolvorrat, dunkelblau (E-P3-32).
-    const dcZellen = DAY_COLS.map(d => {
-      const v = m[d.col];
-      if (d.art === 'check') {
-        return `<td class="haken-spalte ${d.klasse}">${v ? edSymbol('haken', 'tabelle-haken', 'ja') : ''}</td>`;
-      }
-      const t = (v == null || v === '') ? '' : String(v);
-      return `<td class="${d.klasse}${t ? '' : ' dash'}">${t ? esc(t) : '–'}</td>`;
-    }).join('');
-    /* NR., BEGINN UND ALTER MITTIG (S3/AP5, Block I). Eine laufende Nummer,
-       eine Uhrzeit und ein Alter sind weder Flietext noch Groessen, die man
-       an einer Kante vergleicht — rechtsbuendig gestellt fluchteten sie an
-       einer Kante, die nichts bedeutet, und der mittige Spaltentitel stand
-       ueber ihnen im Leeren.
-
-       DIE DAUER TRAEGT JETZT AUCH HIER `zeit-spalte`. Sie fehlte an genau
-       dieser Stelle: missiontable.js setzt sie seit F-N1-G, dieser Aufbau
-       der Tagesuebersicht ist ein zweiter, aelterer — und ohne die Klasse
-       brach „1h 06min" in schmaler Spalte nach der Stunde um und las sich
-       wie zwei Angaben. Dass es zwei Aufbauten fuer dieselbe Tabelle gibt,
-       ist der eigentliche Fund (F-S3-A). */
-    /* DIE FARBE WIRD NACH DEM AUFBAU GESETZT, NICHT INS MARKUP GESCHRIEBEN
-       (P5a/AP4, E-P5a-15). Ein Stilattribut, das per innerHTML ins Dokument
-       kommt, ist fuer die CSP ein INLINE-STIL und faellt unter `style-src`;
-       `el.style.x = …` ist CSSOM und faellt gar nicht darunter. Der
-       Unterschied kostet hier zwei Zeilen und erspart der Richtlinie ein
-       `'unsafe-inline'`. Dieselbe Umstellung in `missiontable.js`,
-       `geo.js` und `schneiden.js`. */
-    tr.innerHTML = `<td class="streifen-spalte"><span class="streifen"></span></td>
-      <td class="mitte-spalte">${m._no}</td>
-      <td class="mitte-spalte">${m.start_hhmm}</td>
-      <td class="zahl-spalte zeit-spalte">${EdMissionTable.zelleDauer(m.duration_s)}</td>
-      ${zelleGeschuetzt(m, m._ort)}
-      ${zelleGeschuetzt(m, m._age, null, 'mitte-spalte')}
-      ${zelleGeschuetzt(m, m._dx)}
-      ${dcZellen}
-      <td class="zahl-spalte">${EdMissionTable.fmtKmZahl(m.distance_m)}</td>`;
-    if (m._col) { tr.querySelector('.streifen').style.background = m._col; }
-    /* Die Zeile ist die Schaltflaeche — auch fuer die Tastatur (Backlog Nr. 16).
-     * Bis Web 6.3.0 hatte sie hier nur einen Klick-Handler und `cursor:pointer`:
-     * Die Tagesuebersicht war damit die einzige der drei Einsatztabellen, die
-     * sich ausschliesslich mit der Maus oeffnen liess. Suche und
-     * Zeitraum-Uebersicht bringen dieselben drei Zeilen seit Web 5.2.0 ueber
-     * assets/missiontable.js mit; hier stehen sie jetzt woertlich genauso.
-     * role="link" statt "button", weil die Handlung ein Seitenwechsel ist. */
-    tr.tabIndex = 0;
-    tr.setAttribute('role', 'link');
-    const oeffne = () => { location.href = 'einsatz.php?id=' + m.id; };
-    tr.addEventListener('click', oeffne);
-    tr.addEventListener('keydown', ev => {
-      // Leertaste bewusst mit: uebliche Ausloesung fuer fokussierte
-      // Bedienelemente — ohne preventDefault scrollt die Seite stattdessen weg.
-      if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
-        ev.preventDefault();
-        oeffne();
-      }
-    });
-    tbody.appendChild(tr);
-  });
-  document.querySelectorAll('#missions th.sortable').forEach(th => {
-    th.querySelector('.arrow')?.remove();
-    if (th.dataset.key === sortKey) {
-      const a = document.createElement('span');
-      a.className = 'arrow';
-      a.innerHTML = ' ' + edSymbol('pfeil-hoch', sortDir > 0 ? '' : 'symbol-oben',
-        sortDir > 0 ? 'aufsteigend' : 'absteigend');
-      th.appendChild(a);
-    }
-  });
-
-  /* Die Kachelliste — dieselben Zeilen in derselben Reihenfolge, aus dem
-     gemeinsamen Erzeuger (E-P3-32). Unter 720 px ist sie die einzige Form. */
-  document.getElementById('missionskacheln').innerHTML =
-    list.map(m => EdMissionTable.kachel(m, { farbe: m._col })).join('');
-
-  /* Zahl und km-Summe im Kartenkopf: „4 · 140 km" (Mockup 02). */
-  {
-    const km = list.reduce((s, m) => s + (m.distance_m || 0), 0);
-    document.getElementById('mzahl').textContent = list.length
-      ? list.length + (km > 0 ? ' · ' + Math.round(km / 1000) + ' km' : '')
-      : '';
-  }
-
-  /* Das Sortierblatt fuehrt dieselben Spalten wie der Tabellenkopf — es
-     entsteht aus ihm, eine zweite Spaltenliste gibt es nicht (E-P3-32). Die
-     aktive Spalte ist hervorgehoben und traegt die Richtung. */
-  {
-    const liste = document.getElementById('sortliste');
-    liste.innerHTML = '';
-    document.querySelectorAll('#missions th.sortable').forEach(th => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      const aktiv = th.dataset.key === sortKey;
-      b.className = 'blatt-zeile' + (aktiv ? ' aktiv' : '');
-      b.innerHTML = '<span>' + esc(th.dataset.label || '') + '</span>'
-        + (aktiv ? edSymbol('pfeil-hoch', sortDir > 0 ? '' : 'symbol-oben',
-                            sortDir > 0 ? 'aufsteigend' : 'absteigend') : '');
-      b.addEventListener('click', () => {
-        if (sortKey === th.dataset.key) { sortDir = -sortDir; }
-        else { sortKey = th.dataset.key; sortDir = 1; }
-        renderMissionTable();
-        if (window.edBlatt) { edBlatt.zu(); }
-      });
-      liste.appendChild(b);
-    });
-  }
+  if (!tabelle) { return; }
+  /* Bestand und Trefferliste sind hier dasselbe -- die Tagesuebersicht
+     filtert nicht. Der Aufruf steht trotzdem da, weil er sonst der einzige
+     der drei Seiten waere, der ihn auslaesst. */
+  tabelle.setSpaltenBestand(dayMissions);
+  tabelle.setData(dayMissions);
 }
+
 
 /* GEMEINSAME BAUSTEINE STATT EIGENER FASSUNGEN (A6, E-A6-07).
  *
@@ -869,10 +812,19 @@ function renderMissionTable(){
  * Bruchstueck „10.31600", in Suche und Zeitraum-Uebersicht dagegen die ganze
  * Koordinate „47.72800, 10.31600".
  *
- * zeitraum.php holt dieselben Bausteine seit jeher so. Die SPALTEN-Mechanik
- * von missiontable.js uebernimmt diese Seite bewusst NICHT: Sie fuehrt die
- * Katalogspalten aus DAY_COLS, die die anderen beiden Tabellen nicht haben. */
-const { extractOrt, fmtDur, fmtKm, zelleGeschuetzt } = EdMissionTable;
+ * zeitraum.php holt dieselben Bausteine seit jeher so. Seit Schritt 15 AP9b
+ * holt diese Seite auch die SPALTEN-Mechanik dort — hier stand bis dahin,
+ * sie uebernehme sie „bewusst NICHT", weil sie die Katalogspalten aus
+ * DAY_COLS fuehre, die die anderen beiden Tabellen nicht haetten. Das Modul
+ * kennt den Katalog jetzt selbst, und damit ist der Grund entfallen.
+ *
+ * UEBRIG BLEIBT EINE EINZIGE BINDUNG. `fmtDur` und `zelleGeschuetzt` standen
+ * hier mit, solange diese Seite ihre Zellen selbst baute; sie tut es nicht
+ * mehr. `fmtKm` war schon vor AP8d unbenutzt und ist dort entfallen — die
+ * Bindung hier waere danach still `undefined` geworden. Genau die Sorte
+ * Rest, die bleibt, wenn man eine Loeschung nur in ihrer eigenen Datei zu
+ * Ende denkt; gefunden beim Gegenlesen. */
+const { extractOrt } = EdMissionTable;
 
 // Maskierung: Baustein B7 (assets/html.js). Hier stand eine eigene Fassung
 // ueber ein Hilfselement — sie maskierte drei Zeichen statt fuenf (M6-03).
@@ -936,7 +888,7 @@ async function loadDay(dayId){
     const KURZ = ['So','Mo','Di','Mi','Do','Fr','Sa'];
     document.getElementById('daytitle').innerHTML =
       '<span class="wtag-lang">' + LANG[wt] + '</span>'
-      + '<span class="wtag-kurz">' + KURZ[wt] + '</span>, ' + fmtDay(d.day);
+      + '<span class="wtag-kurz">' + KURZ[wt] + '</span>, ' + EdFormat.tag(d.day);
 
     const unter = document.getElementById('dayunter');
     const teile = [];
@@ -948,7 +900,7 @@ async function loadDay(dayId){
     unter.hidden = !teile.length;
 
     const blattTitel = document.querySelector('#dayblatt .blatt-titel');
-    if (blattTitel) { blattTitel.textContent = 'Diensttag ' + fmtDay(d.day); }
+    if (blattTitel) { blattTitel.textContent = 'Diensttag ' + EdFormat.tag(d.day); }
   }
   document.getElementById('daydellink').href = 'diensttag_loeschen.php?d=' + d.day_id;
   document.getElementById('daydatelink').href = 'diensttag_datum.php?d=' + d.day_id;
@@ -1022,6 +974,10 @@ async function loadDay(dayId){
   });
   EdSchnitt.setzen(dayRest);
 
+  /* Welche Faehigkeiten dieser Tag auswerten laesst -- VOR
+     renderMissionTable(), weil das Modul sie beim Zeichnen liest. */
+  tabelleFaehigkeiten(d.meta);
+
   // Einsaetze: je eigene Farbe
   // Einsaetze: Nummer + Farbe stabil nach Alarmierungszeit vergeben
   // (API liefert aufsteigend nach Beginn), danach frei sortierbar.
@@ -1082,10 +1038,16 @@ async function loadDay(dayId){
  * die Entschluesselung warten. Ein erneuter Aufruf ueber den Entsperrknopf
  * ist gefahrlos: ohne Schluessel wurde vorher kein Pin gezeichnet. */
 async function entschluesselePat(){
-  const banner = document.getElementById('lockbanner');
-  const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
-  if (!ck) { if (banner) banner.hidden = !dayMissions.some(m => m.pat_blob); return; }
-  if (banner) banner.hidden = true;
+  /* Schluessel, Banner, Entschluesseln und Zaehlen kommen aus
+     EdPat.listeLaden() (Schritt 15 AP8f). Was DANACH geschieht, bleibt
+     hier: Diese Seite zeichnet Marker, Luftlinien und einen Ausschnitt,
+     und sie fuehrt als einzige Buch darueber, ob sich etwas geaendert hat
+     (`changed`) — nur dann wird die Tabelle neu gezeichnet. */
+  const { ck, zahl } = await EdPat.listeLaden(dayMissions, {
+    wrap: PAT_WRAP, salt: KDF_SALT, iter: KDF_ITER,
+    banner: document.getElementById('lockbanner'),
+  });
+  if (!ck) { return; }
   let changed = false;
   const pinBounds = [];
   /* ENTSCHLUESSELN UND ZAEHLEN GESCHIEHT AN EINER STELLE (M6-06, Baustein B8).
@@ -1095,7 +1057,6 @@ async function entschluesselePat(){
    * hochgeht, ob _pat gesetzt wird), und genau solche Kleinigkeiten sind es,
    * die beim naechsten Mal auseinanderlaufen. Was ANZUZEIGEN ist, bleibt
    * Sache der Seite; was ein Fehlschlag BEDEUTET, entscheidet EdPat. */
-  const zahl = await EdPat.entschluessleListe(dayMissions, ck);
   for (let i = 0; i < dayMissions.length; i++) {
     const m = dayMissions[i];
     if (m._patState === 'unlesbar') { changed = true; continue; }
@@ -1503,6 +1464,9 @@ function tagdatenBearbeiten(auf){
 }
 
 async function init(){
+  /* Die Tabelle VOR allem anderen: `loadDay()` fuellt sie, und der
+     Sortierpfeil des Blattes haengt an ihr. */
+  tabelleAnlegen();
   /* Der Schnitt bekommt den Weg zum Neuladen — nicht umgekehrt. Nach einem
      Schnitt aendern sich Einsatztabelle, Karte, Segmentliste und
      Diensttag-Zeitraum; vier Stellen von Hand fortzuschreiben waeren vier
@@ -1539,7 +1503,7 @@ async function init(){
     /* Das DATUM und nicht der Titel: Der trägt den Wochentag zweimal (lang
        und kurz, eine der beiden Fassungen ist per CSS ausgeblendet), und
        `textContent` sieht beide — „DonnerstagDo, 16.07.2026". */
-    EdSchnitt.gpxStarten(currentDayId, fmtDay(currentDay));
+    EdSchnitt.gpxStarten(currentDayId, EdFormat.tag(currentDay));
   });
   document.querySelector('#dayblatt [data-tagdaten-bearbeiten]')
     ?.addEventListener('click', ev => {
@@ -1548,13 +1512,6 @@ async function init(){
       tagdatenBearbeiten(true);
       document.getElementById('tagdaten').scrollIntoView({ block: 'start' });
     });
-  document.querySelectorAll('#missions th.sortable').forEach(th => {
-    th.addEventListener('click', () => {
-      if (sortKey === th.dataset.key) { sortDir = -sortDir; }
-      else { sortKey = th.dataset.key; sortDir = 1; }
-      renderMissionTable();
-    });
-  });
   document.getElementById('dayform').addEventListener('submit', async ev => {
     ev.preventDefault();
     if (!currentDayId) return;
@@ -1587,12 +1544,9 @@ async function init(){
     });
     const state = document.getElementById('savestate');
     state.textContent = 'Speichern…';
-    const res = await fetch('api/day.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-      body: JSON.stringify(body)
-    });
-    if (res.ok) {
+    const a = await EdApi.postJson('api/day.php', body,
+                                   { vorgang: 'Das Speichern' });
+    if (a.ok) {
       state.textContent = 'Gespeichert.';
       tagdatenBearbeiten(false);
       loadDay(currentDayId);
@@ -1600,20 +1554,23 @@ async function init(){
       /* Den GRUND zeigen, nicht nur "Fehler".
        * Der wichtigste Fall ist ein Diensttag im Papierkorb: Die Angaben
        * wurden dann NICHT gespeichert, und das muss dastehen — vorher
-       * meldete diese Stelle Erfolg für einen Vorgang, der nichts tat. */
-      let grund = 'Fehler beim Speichern.';
-      try {
-        const d = await res.json();
-        if (d.meldung) { grund = d.meldung; }
-        /* Die Prüfschicht meldet je FELD (S9/AP6). Ihre Sätze sind die
-           gleichen, die das Stammdatenformular zeigt — sie hier zu einem
-           „Fehler beim Speichern." zusammenzufassen hiesse, die Arbeit der
-           Prüfschicht wegzuwerfen. */
-        if (d.error === 'adhoc' && d.felder) {
-          const saetze = Object.values(d.felder);
-          if (saetze.length) { grund = saetze.join(' '); }
-        }
-      } catch (e) { /* keine JSON-Antwort */ }
+       * meldete diese Stelle Erfolg für einen Vorgang, der nichts tat.
+       * Den Satz baut jetzt EdApi (Schritt 15 AP8b). Hier landet seit dem
+       * Umbau AUCH der Netzabbruch: Er kommt als ok:false mit status:0
+       * zurueck, statt als unbehandelte Ablehnung zu enden und
+       * #savestate auf "Speichern..." stehen zu lassen. */
+      let grund = a.meldung;
+      /* Die Prüfschicht meldet je FELD (S9/AP6). Ihre Sätze sind die
+         gleichen, die das Stammdatenformular zeigt — sie zu einem einzigen
+         Satz zusammenzufassen hiesse, die Arbeit der Prüfschicht
+         wegzuwerfen. Diese Antwort (422, error 'adhoc') traegt KEIN Feld
+         `meldung`; EdApi kann die Saetze also nicht kennen, und nur deshalb
+         steht der Griff in `a.daten` hier noch. */
+      const d = a.daten;
+      if (d && d.error === 'adhoc' && d.felder) {
+        const saetze = Object.values(d.felder);
+        if (saetze.length) { grund = saetze.join(' '); }
+      }
       state.textContent = grund;
     }
   });

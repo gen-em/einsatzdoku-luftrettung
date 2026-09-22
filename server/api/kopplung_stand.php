@@ -34,7 +34,7 @@ require_once __DIR__ . '/../kopplung_lib.php';
  * und wer angemeldet ist, kann auf jeder anderen Seite mehr Arbeit auslösen.
  */
 
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_out(['error' => 'method'], 405); }
+api_methode('GET');
 
 $kennung = (string)($_SESSION['pair_warten'] ?? '');
 if ($kennung === '') { json_out(['zustand' => 'keine']); }

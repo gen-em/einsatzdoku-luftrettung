@@ -98,7 +98,7 @@ die Begründungen, die Empfehlung und alles, was vom Konzepttext abweicht.
     mit Komma, weil ` · ` in der Kleinzeile schon die Angaben trennt. Schritt 15
     hat gemessen, dass es heute drei Trenner gibt (Leerzeichen 25, ` · ` 11,
     Komma 1) und gibt die Entscheidung an **10c AP9** (F-ZE-3,
-    `Konzept-Zentralisierung.md`). Das Mockup nimmt sie nicht vorweg.
+    Schritt 15, seit 22.09.2026 gebaut). Das Mockup nimmt sie nicht vorweg.
 
 ## 4. Gemessen
 

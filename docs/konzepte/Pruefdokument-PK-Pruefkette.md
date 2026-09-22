@@ -52,6 +52,8 @@ einer Fußnote.
 | P-PK-19 | Stufe 2 kommt ohne Konto mit Vorgabekennwort aus (F-PK-04) | nach PK-06: Push auf `main`, Stufe 2 ansehen | Stufe 2 grün; der Bilderlauf läuft im **Prüfstand** gegen die örtliche Anlage (Demo-Konto aus der Fixture) | Stufe 2 meldet wieder `Anmeldung als demo@gen-em.org gescheitert`, oder jemand hat das Konto auf Staging angelegt | **offen** — bis dahin ist Stufe 2 nach einem Merge **planmäßig rot am Schritt 6** |
 | P-PK-21 | Ein Push auf `main` erzeugt genau **einen** Auslieferungslauf, dessen Stufe 2 **als Ganzes** grün ist (Folge aus F-PK-02 bis -04) | auf `main` mergen, dann die Läufe von `auslieferung.yml` zu diesem Commit ansehen | **genau 1 Lauf**; Stufe 2 grün in **unter drei Minuten** (gemessen 21.09.2026: Run 72 auf `a1c6494`, **107 s**) | zwei gleichzeitig laufende Staging-Läufe · ein Stufe-2-Job mit **mehr als vier** Schritten inkl. Checkout · ein rotes Backup-Tor mit „angehalten bis" | **offen** — misst die Betreiberin |
 | P-PK-06 | Die neuen Dokumente laufen durch die Wortliste (B-S4-06) | `wortliste.py --bereich c`; nachsehen, dass beide Dateien in `BEREICHE["c"]` stehen | beide Dateien werden gelesen, 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | der Lauf meldet 0 und hat keine Zeile der neuen Dokumente angesehen | **erledigt 21.09.2026** (3.3) |
+| P-PK-22 | Das Spaltenregister aus Schritt 15 wird in Stufe 1 grün (F-PK-27, Backlog Nr. 282) | `php tools/spaltenregister/pruefen.php --selbstprobe` und ohne Schalter, auf `main` nach dem Merge von PR #74 | Selbstprobe **16 von 16**, Lauf **0 Befunde** | `start_sort` fehlt weiter im Register, oder der Fall „mf_spalten: Alias an" bleibt rot — dann ist Stufe 1 rot und die Kette liefert nicht aus | **offen** — gehört zu Schritt 15, nicht zu PK; hier steht es, damit es nicht untergeht |
+| P-PK-23 | Die vier Schlüssellagen-Proben laufen nach dem Merge von PR #74 auf `main` (F-PK-24) | `php tools/proben/anteil/probe.php`, `…/komplett/probe.php`, `…/wiederherstellung/probe.php`, `…/versand/probe.php <wurzel>` | anteil 55/55 · komplett 64/0 · wiederherstellung 110/2 (unverändert F-PK-18) · versand wie vor dem Merge | eine Probe stirbt mit `Failed opening required …konfig_stellen.php` — dann ist die Pfadtiefe wieder falsch | **drei erledigt 22.09.2026 im Arbeitszweig** (5h); `versand` steht aus, sie braucht den Wurzelpfad der Gegenstellen als Argument |
 
 ## 2. Messprotokoll P-PK-01 (21.09.2026)
 
@@ -536,8 +538,8 @@ Hinweise und keine Befunde.
 und haben in keinem Stylesheet eine Regel — jede ist entweder ein toter
 Markup-Rest oder eine fehlende Regel. Welche von beidem, lässt sich nicht
 raten: Ein falsch entfernter Markup-Rest ist ein stiller Darstellungsfehler.
-Sie stehen als **Backlog Nr. 269** und gehören in **Teilstück 5**, das die
-Schwelle dann ganz wegnimmt. Die 14 Symbolzeichen ebenso (**Nr. 270**).
+Sie stehen als **Backlog Nr. 278** und gehören in **Teilstück 5**, das die
+Schwelle dann ganz wegnimmt. Die 14 Symbolzeichen ebenso (**Nr. 279**).
 
 ---
 
@@ -606,7 +608,7 @@ Kacheln werden geladen, der Host steht in der Content-Security-Policy, und
 `docs/Lizenzen.md` kennt ihn nicht. Das ist genau die Lücke, gegen die die
 Zusage „keine fremde Quelle zur Laufzeit" geschrieben ist. **Nicht nebenbei
 eingetragen:** Ein Eintrag dort nennt Rechteinhaber und Bedingungen, und das
-gehört nachgesehen statt abgeschrieben. **Backlog Nr. 271.**
+gehört nachgesehen statt abgeschrieben. **Backlog Nr. 280.**
 
 ### Was das für `CLAUDE.md` heißt
 
@@ -791,6 +793,80 @@ für Zeile wie vor der Änderung (die zwei sind `stilvergleich` und
 `messstand`, F-PK-21). YAML von `pruefung.yml` mit `yaml.safe_load`
 eingelesen: lesbar.
 
+## 5h. Messprotokoll — der Merge von Schritt 15 (22.09.2026)
+
+**Anlass:** PR #74 (Schritt 15, Zentralisierung, 143 Dateien, davon 111 in
+`server/`) kommt nach `main`, bevor PK-04 fertig ist. Der Merge wurde
+**vorweggenommen** und im Arbeitszweig aufgelöst, damit nach dem Merge nur
+noch gepusht werden muss.
+
+### Was der Merge kostete
+
+| | Zahl |
+|---|---|
+| Textkonflikte | **7** |
+| **Still zusammengeführte Brüche** | **3** |
+| doppelte Backlog-Nummern | **3** (269, 270, 271) |
+| veraltete Einträge im Verzeichnisbaum von `Technik.md` | **4** |
+| neue Werkzeugordner | 2 → **17 statt 15** |
+
+**Die drei stillen sind der Ertrag dieses Protokolls.** Ein Textkonflikt hält
+an; ein still zusammengeführter Bruch nicht. Schritt 15 hat die vier
+Schlüssellagen-Proben auf `require_once __DIR__ . '/../konfig_stellen.php'`
+umgestellt — ein Pfad, der annimmt, die Probe liege **eine** Ebene unter
+`tools/`. PK-04/2 hat sie **zwei** Ebenen tief gelegt. Git sieht eine
+Umbenennung und eine Änderung und führt beides ohne Konflikt zusammen; heraus
+kommt ein `require_once` auf eine Datei, die es unter dem gerechneten Pfad
+nicht gibt. **Bei einer der vier hielt der Merge an, bei dreien nicht.**
+
+### Nachgemessen, nicht angenommen
+
+Vor der Auflösung, im Probemerge (`realpath()` über alle vier):
+
+```
+tools/proben/anteil/../konfig_stellen.php            NICHT VORHANDEN
+tools/proben/komplett/../konfig_stellen.php          NICHT VORHANDEN
+tools/proben/wiederherstellung/../konfig_stellen.php NICHT VORHANDEN
+tools/proben/versand/../konfig_stellen.php           NICHT VORHANDEN
+```
+
+Danach zeigen alle vier auf `tools/konfig_stellen.php`. **Und die Probe ist
+nicht der Pfad, sondern der Lauf:**
+
+| Probe | Ergebnis |
+|---|---|
+| `anteil` | **55 von 55 Erwartungen**, rc 0 |
+| `komplett` | **64 Erwartungen, 0 nicht erfüllt**, rc 0 |
+| `wiederherstellung` | **110 Erwartungen, 2 nicht erfüllt**, rc 1 — **unverändert F-PK-18**, kein Regress |
+
+Ein Gegenbeleg aus einer zweiten Richtung: `php tools/zaehlung/zaehlen.php`,
+das Register aus Schritt 15, misst auf dessen eigenem Stand **38 Zeilen, 0
+über der Decke**, im Probemerge **1 darüber** (Z04, zwei `$CFG`-Treffer in
+`tools/proben/versand/probe.php`) und nach der Auflösung wieder **0**. Die
+Zeile deckt ausdrücklich `server/` **und** `tools/` ab.
+
+### Alle Riegel nach der Auflösung
+
+| Mittel | Zahl |
+|---|---|
+| `tools/quelltext/pruefen.sh alle` | **8 von 8 grün**, rc 0 |
+| `tools/quelltext/pruefen.sh --selbstprobe` | **5 von 5**, rc 0 |
+| Textprobe | **0 neue Treffer, 0 nicht ausgetragen**, rc 0 (Altbestand 496 → **492**) |
+| Vollständigkeit | **18**, auf der Schwelle, rc 0 |
+| Linkprobe | **122 Verweise, 0 Abweichungen**, rc 0 |
+| `kettenaufrufe` | **88 Aufrufe, 0 Befunde, 2 ungeprüft**, rc 0 |
+| `zaehlung` | **38 Zeilen, 0 über der Decke**, Selbstprobe 34/34, rc 0 |
+| `php -l` über `tools/` und `server/` | **169 Dateien, 0 Syntaxfehler** |
+| Verzeichnisbaum `Technik.md` gegen die Platte | **17 gegen 17, keine Abweichung** |
+
+### Was rot bleibt und nicht meines ist
+
+`php tools/spaltenregister/pruefen.php` — **1 Befund** (`start_sort` fehlt im
+Register) und **Selbstprobe 15 von 16** (Alias `uhr_gesperrt AS manual`).
+Beides auf dem Stand von Schritt 15 **selbst** nachgemessen, vor dem Merge,
+also kein Merge-Schaden. Die Prüfung hängt in Stufe 1 — **die Kette ist damit
+rot, bis Schritt 15 es behebt.** Backlog Nr. 282, Prüfpunkt **P-PK-22**.
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in
@@ -862,6 +938,11 @@ veröffentlichtes Kennwort.
 | **F-PK-21** | **`kettenaufrufe` prüft Namen, nicht Vollständigkeit — und sagt das nicht.** Aufgefallen beim Nachsehen, warum `uhr-stufe1` nicht unter den 18 Ungeprüften steht: **Es steht überhaupt nicht in der Ausgabe**, gilt also als geprüft und in Ordnung. Der Aufruf `bash tools/uhr-pruefstand/pruefstand.sh reihe` bricht aber sofort mit `line 355: 1: Listendatei fehlt` ab — Stufe I braucht eine Geräteliste, die erst `geraeteklassen.py` erzeugt. **Strukturell:** Die Prüfung hält Unterbefehle und Schalter gegen den Quelltext. `reihe` **gibt es**, also kein Widerspruch; dass `reihe` ein **Pflichtargument** hat, sieht sie nicht. Ihr Schlusssatz „Kein Aufruf widerspricht der Schnittstelle seines Werkzeugs" ist wörtlich wahr und trotzdem irreführend. | **Das verschiebt die Bedeutung der Zahl 18.** Die 18 sind nicht die Liste der ungewissen Aufrufe, sondern die, bei denen das Werkzeug seine Unwissenheit **einräumt**. `uhr-stufe1` war kaputt und zählte zu den **82 grünen**. Daraus folgt: **Eine Schnittstellenprüfung ersetzt keinen Lauf.** Die 18 werden deshalb einzeln gefahren (5.7). Ob `kettenaufrufe` Pflichtargumente lernen soll oder ob der Prüfstand das ohnehin beim Fahren merkt, entscheidet **PK-04**. |
 | **F-PK-22** | **Drei unbekannte Sachbefunde aus den nie gefahrenen Proben** (5.7), alle in `server/`, keiner aus diesem Paket. **(a) `gpxprobe` 95 / 4:** zwei davon sind eine veraltete Referenz („178 von 204 ohne Gegenstück — die Referenz ist älter als die Datenbank"; „9 Abweichungen, erste: 65 gegen 259 Punkte"), zwei sehen nach Sache aus („Ein Eintrag ohne Spur steht da, aber ohne Abruf — Plakette ‚keine Spur' gefunden"; „Der Kopf sagt, was die Datei als Ganzes ist"). **(b) `mailprobe`:** „Alle Pflichtwerte im Beispielsatz abgedeckt" schlägt fehl — `loeschung_beantragt/termin`, `konto_menge/einsaetze`, `konto_menge/speicher`. **(c) `ratenprobe`:** „Genau **fünf** Töpfe haben eine Leiter" schlägt fehl und zählt **sechs** auf: `blatt`, `ingest`, `ingest_ip`, `login`, `login_ip`, `salt`. | **Nicht behoben, und zwar bewusst:** Alle drei liegen in `server/`, das dieses Paket nicht anfasst, und zwei von ihnen sind vermutlich veraltete Erwartungen im Prüfmittel selbst, keine Fehler der Anwendung — das zu trennen ist eigene Arbeit. **Sie sind der Ertrag des Durchlaufs:** Vier Proben waren rot, seit jemand sie zuletzt gefahren hat, und niemand wusste es, weil niemand sie fuhr. **Das ist genau der Zweck von Station B.** Gehört als eigene Korrekturstufe untersucht, zusammen mit F-PK-18; **Prüfpunkt P-PK-20**. |
 | **F-PK-23** | **Die Vollständigkeits-Schwelle stand an zwei Stellen, und Stufe 1 war deshalb rot.** `pruefung.yml` gab `--hoechstens 398` mit, während der Bestand seit PK-04/1c bei **18** liegt; das Werkzeug meldet Unterschreitungen als Befund und gab **rc 1** zurück. Ursache: Der Läufer `tools/quelltext/pruefen.sh` liest die Schwelle aus der Ablaufdatei — aber nur im Zweig `alle`, und die Kette ruft **einzeln** auf. Sein Kopfkommentar behauptete trotzdem „und nirgends sonst". **Gefunden nicht von einem Prüfmittel, sondern beim Abgleich mit Schritt 15** (PR #74), der dieselbe Zeile anfasst. | **Behoben** (22.09.2026): Die Vorgabe greift jetzt auf beiden Wegen, eine mitgegebene Zahl hat Vorrang; `pruefung.yml` nennt keine Zahl mehr, und die 79 Kommentarzeilen mit der Fundgeschichte von 340 bis 398 sind heraus — sie beschrieben einen Bestand, den es nicht mehr gibt. Nachgemessen in drei Richtungen, siehe 5g. |
+| **F-PK-24** | **Drei von vier Proben brachen beim Merge von Schritt 15 STILL.** Schritt 15 schafft die globale `$CFG` ab und legt `tools/konfig_stellen.php` an; vier Proben laden sie mit `require_once __DIR__ . '/../konfig_stellen.php'` — ein Pfad, der eine Ebene unter `tools/` annimmt. PK-04/2 hat sie zwei Ebenen tief gelegt. Git führt Umbenennung und Änderung ohne Konflikt zusammen: **bei einer der vier hielt der Merge an, bei dreien nicht.** `require_once` auf eine fehlende Datei ist ein Fatal. | **Behoben** (22.09.2026): `../../` statt `../` in allen vier, der Kopfkommentar von `konfig_stellen.php` sagt jetzt, dass die Tiefe zwei ist und warum diese Stelle still bricht. Nachgemessen mit `realpath()` über alle vier **und** mit drei tatsächlichen Läufen (55/55, 64/0, 110/2 unverändert). Gegenbeleg aus Schritt 15s eigenem Register: Z04 von 1 über der Decke zurück auf 0. |
+| **F-PK-25** | **Der Verzeichnisbaum in `docs/Technik.md` war nach PK-04/4 veraltet, und keine Prüfung sagte es.** Vier Einträge: `klickprobe/` (heißt seit 4 `bedienprobe/`), `eingabe-probe/` und `netzprobe/` (liegen seit 4 unter `uhr-pruefstand/`) — und `pruefstand/` **fehlte ganz**, schon vorher. Aufgefallen beim Auflösen der Baumkonflikte, nicht von einem Werkzeug. | **Behoben** (22.09.2026): alle vier nachgezogen, `konfig_stellen.php` und `zaehlung/` und `spaltenregister/` ergänzt. Gegengelesen mit einem Abgleich Baum gegen Platte: **17 gegen 17, keine Abweichung.** Der Abgleich ist eine Zeile Python und gehört als Prüfmittel erwogen — **Backlog-Kandidat**, noch keine Nummer, weil Teilstück 5 ohnehin an `server/` arbeitet. |
+| **F-PK-26** | **Die Backlog-Nummern 269, 270 und 271 waren nach dem Merge dreifach doppelt.** Schritt 15 hat sie zeitgleich vergeben und geht bis 277. Dieselbe Sorte Kollision wie bei Nr. 268 (PR #72), nur dreifach — und diese Datei meldet dabei **keinen Konflikt**, weil die Einträge an verschiedenen Stellen stehen. | **Behoben**: meine drei sind 278, 279 und 280; die Vormerkung „Stufe 1 lief bei jedem Push doppelt" ist als **281** eingetragen. Alle 13 Querverweise nachgezogen (Konzept, Prüfdokument, CHANGELOG, `pruefablauf.json`, `vollstaendigkeit.py`, `quelltext/LIESMICH.md`). Die Regel in `Backlog.md` sagt jetzt nicht nur „beginnt bei 283", sondern **warum das nicht reicht**: Wer eine Nummer vergibt, sieht in die offenen Pull Requests. |
+| **F-PK-27** | **Zwei neue Prüfungen hingen in der Kette, aber nicht im Prüfablauf.** Schritt 15 hat `zaehlung` und `spaltenregister` als Schritte in `pruefung.yml` eingehängt; in `tools/pruefstand/pruefablauf.json` standen sie nicht. Damit sind sie **örtlich nicht zu fahren** — Grundsatz 2 sagt das Gegenteil: Was Fehler findet, läuft in der Arbeitsumgebung; das Tor liest gegen. | **Behoben**: beide als Riegel eingetragen (14 statt 12), dazu `spaltenregister-wegprobe` als eigene Probe mit `braucht: installation` — sie schreibt und gehört an ein Wegwerfkonto. `kettenaufrufe` hat den ersten Anlauf **abgelehnt** („verlangt --konto, der Aufruf übergibt es nicht") und damit selbst belegt, dass es misst: 88 Aufrufe, 0 Befunde nach der Berichtigung. Die zwei Zugangswerte stehen in `docs/Sandbox-Setup.md` 4.1 — als Namen, nie als Werte. |
+| **F-PK-28** | **Schritt 15 bringt zwei Werkzeugordner mit und weicht E-PK-24 und -25 auf.** `tools/zaehlung/` und `tools/spaltenregister/` machen aus 15 Ordnern **17**, dazu `tools/konfig_stellen.php` als zweite flache Datei neben `motor.mjs`. `tools/zaehlung/LIESMICH.md` hat **154 Zeilen und 6 Abschnitte** (E-PK-25: höchstens 40 und fünf), `tools/spaltenregister/` hat **gar keine**. | **Nicht behoben, und zwar bewusst.** Ein frisch gelandetes, durchdokumentiertes Paket im Merge wieder auseinanderzunehmen steht in keinem Verhältnis; und die Zahl 15 ist ein Ziel, kein Riegel. Entschieden wird es in **Teilstück 5**: entweder wandern beide nach `tools/quelltext/` (dort stehen `migrationsregister` und `jobregister`, dieselbe Bauform) — dann sind es wieder 15 —, oder E-PK-24 bekommt die 17 mit Begründung. `konfig_stellen.php` bleibt flach: Das ist die Bauform von `motor.mjs` und in Schritt 15 begründet. |
 
 ## 7. Entscheidungen der Umsetzung
 

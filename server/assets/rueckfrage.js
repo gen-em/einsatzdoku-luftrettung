@@ -95,20 +95,32 @@
    * nichts, was hier noch zu tun wäre. Ein Fehler landet im Fehlerprotokoll
    * des Browsers und sonst nirgends — die Frage kommt dann beim nächsten
    * Anmelden wieder, und das ist die richtige Richtung für einen Fehler
-   * dieser Art. */
+   * dieser Art.
+   *
+   * DER SENDER IST `EdApi.postForm` (Schritt 15 AP8, Zaehlzeile Z29). Er
+   * setzt `csrf`, `credentials` und die Kopfzeile selbst und WIRFT NIE --
+   * deshalb steht hier kein `catch` mehr. Kein `o.vorgang` und keine
+   * Anzeige: Die Stille dieser Stelle ist gewollt, siehe oben.
+   *
+   * WARUM DAS PROTOKOLL AN `daten === null` HAENGT UND NICHT AN `!ok`. Es
+   * soll genau die Faelle melden, die frueher das `catch` erreichten, und
+   * das waren zwei: ein abgebrochenes `fetch` UND eine Antwort, die kein
+   * JSON war. Der zweite ist der wichtigere -- eine leere Sitzung leitet
+   * `auth_guard.php` auch auf `/api/` nach `login.php` um, und dann kommt
+   * HTML mit HTTP 200 zurueck. An `!ok` gehaengt erschiene die Zeile
+   * zusaetzlich bei einer 403 oder 400 mit gueltigem JSON; das waere
+   * strenger als heute und damit eine Verhaltensaenderung. Dass diese
+   * beiden Antworten hier ungeprueft durchlaufen, ist ein Befund und in
+   * AP8 bewusst nicht behoben. */
   let gemeldet = false;
-  function antworte(antwort) {
+  async function antworte(antwort) {
     gemeldet = true;
-    if (!mitFrage) { return Promise.resolve(null); }
-    const leib = new URLSearchParams();
-    leib.set('csrf', typeof CSRF !== 'undefined' ? CSRF : '');
-    leib.set('antwort', antwort);
-    return fetch('api/rueckfrage.php', {
-      method: 'POST', credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: leib.toString(),
-    }).then(function (a) { return a.json(); })
-      .catch(function (e) { console.error('Rückfrage nicht gemeldet:', e); return null; });
+    if (!mitFrage) { return null; }
+    const ergebnis = await EdApi.postForm('api/rueckfrage.php', { antwort: antwort });
+    if (ergebnis.daten === null) {
+      console.error('Rückfrage nicht gemeldet:', ergebnis.meldung);
+    }
+    return ergebnis.daten;
   }
 
   function schliesse() {

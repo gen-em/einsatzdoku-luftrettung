@@ -12,6 +12,7 @@ require_once __DIR__ . '/sicherungsziel_lib.php';
 require_once __DIR__ . '/smtp.php';
 require_once __DIR__ . '/mail_lib.php';   // Lage der Warteschlange (P5a/AP5)
 require_once __DIR__ . '/plattform_lib.php';
+require_once __DIR__ . '/format_lib.php';   // groesse_text(), zeit_relativ(), datum_zeit_text() (AP7)
 
 /**
  * DIE ERHEBUNG DER STATUSSEITE — ohne eine Zeile Markup (S8/AP5).
@@ -46,19 +47,6 @@ require_once __DIR__ . '/plattform_lib.php';
  * Zaehler, der auf JEDER Seite des Einstellungsbereichs steht, ist das
  * trotzdem zu viel — dafuer gibt es `status_ampel()` mit Zwischenspeicher.
  */
-
-/** „vor 3 Stunden" — für Zeitpunkte, bei denen das Alter die Aussage ist. */
-function status_alter(?string $utc): string
-{
-    if ($utc === null || $utc === '') { return 'nie'; }
-    $t = strtotime(str_replace(['T', 'Z'], [' ', ''], $utc) . ' UTC');
-    if ($t === false) { return 'unbekannt'; }
-    $s = time() - $t;
-    if ($s < 90)     { return 'gerade eben'; }
-    if ($s < 5400)   { return 'vor ' . (int)round($s / 60) . ' Minuten'; }
-    if ($s < 172800) { return 'vor ' . (int)round($s / 3600) . ' Stunden'; }
-    return 'vor ' . (int)round($s / 86400) . ' Tagen';
-}
 
 /** Eine Zeile der Statusseite. Nur Daten — das Markup entsteht in der Seite. */
 function status_z(string $text, string $klein, string $ton, string $plakette,
@@ -179,7 +167,7 @@ function status_erhebung(): array
         $wAktiv
             ? 'Wartungsmodus seit '
               . ($wartung['seit'] !== null
-                  ? fmt_local(str_replace(['T', 'Z'], [' ', ''], $wartung['seit']), 'd.m.Y · H:i') . ' Uhr'
+                  ? datum_zeit_text($wartung['seit'], ' · ') . ' Uhr'
                   : 'unbekannt')
               . ($wartung['von'] !== null ? ' von ' . $wartung['von'] : '')
               . ' — alle anderen Anfragen bekommen 503'
@@ -326,9 +314,9 @@ function status_erhebung(): array
        es gäbe keine Seite. */
     $server[] = status_z('Datenbank',
         $sp['stand'] !== null
-            ? edbak_groesse_text($sp['gesamt']['datenbank'])
-              . ' · Dateien ' . edbak_groesse_text($sp['gesamt']['dateien'])
-              . ' · gemessen ' . status_alter($sp['stand'])
+            ? groesse_text($sp['gesamt']['datenbank'])
+              . ' · Dateien ' . groesse_text($sp['gesamt']['dateien'])
+              . ' · gemessen ' . zeit_relativ($sp['stand'])
             : 'Noch nicht gemessen — die Messung läuft im täglichen Aufräumjob',
         $sp['stand'] !== null ? 'blau' : 'neutral',
         $sp['stand'] !== null ? 'erreichbar' : 'ungemessen',
@@ -372,8 +360,22 @@ function status_erhebung(): array
         $ulPlak = 'in Ordnung';
     } else {
         $ulAkut  = $ul['stunde'] === gmdate('Y-m-d H') ? $ul['n'] : 0;
+        /* iso_utc_lesen() UND NICHT strtotime(x . ' UTC') — zwanzig Zeilen
+         * weiter unten liest zeit_relativ() DENSELBEN Wert, und bis AP7
+         * taten es zwei verschiedene Leser.
+         *
+         * ES GING DABEI NICHTS SCHIEF, und das ist ausdruecklich gemessen
+         * und nicht vermutet: Beide liefern fuer die MySQL-Form dasselbe
+         * (50 000 Marken, 0 Abweichungen), und auch fuer die ISO-Form mit
+         * T und Z — PHP liest 'x UTC' mit abschliessendem Z klaglos. Der
+         * Gegenleser von AP7 hatte hier einen stillen Fehlschlag vermutet;
+         * nachgerechnet gibt es ihn nicht.
+         *
+         * Umgestellt wird trotzdem, und zwar aus dem Grund, aus dem es
+         * diesen Schritt gibt: Ein Wert, zwei Leser, und niemand haette
+         * gemerkt, wenn einer von beiden sich geaendert haette. */
         $ulFrisch = $ul['letzt'] !== null
-                 && strtotime($ul['letzt'] . ' UTC') > time() - 86400;
+                 && (iso_utc_lesen($ul['letzt']) ?? 0) > time() - 86400;
         $ulEng   = $ulAkut >= UEBERLAST_ORANGE
                 || ($ulFrisch && $ul['spitze'] >= UEBERLAST_ORANGE);
         $ulText = ($ulAkut > 0
@@ -381,10 +383,10 @@ function status_erhebung(): array
                     : 'in dieser Stunde keine')
                 . ' · Spitze ' . $ul['spitze'] . ' je Stunde'
                 . ($ul['spitze_stunde'] !== null
-                    ? ' (' . fmt_local($ul['spitze_stunde'] . ':00:00', 'd.m.Y H') . ' Uhr)'
+                    ? ' (' . datum_stunde_text($ul['spitze_stunde'] . ':00:00') . ' Uhr)'
                     : '')
                 . ' · insgesamt ' . $ul['gesamt']
-                . ' · zuletzt ' . status_alter($ul['letzt'])
+                . ' · zuletzt ' . zeit_relativ($ul['letzt'])
                 . ($ulEng ? ' — max_user_connections beim Hoster anheben lassen' : '');
         $ulTon  = $ulEng ? 'orange' : 'blau';
         $ulPlak = $ulEng ? 'zu eng' : $ul['gesamt'] . ' gezählt';
@@ -420,7 +422,7 @@ function status_erhebung(): array
         $gmPlak = 'steht aus';
     } else {
         $gmText = $gmZahl . ' Teilenummern · zuletzt nachgelöst '
-                . fmt_local((string)$gmStand['am'], 'd.m.Y H:i') . ' Uhr · '
+                . datum_zeit_text((string)$gmStand['am']) . ' Uhr · '
                 . $gmStand['nachgeloest'] . ' nachgezogen, '
                 . $gmStand['unbekannt'] . ' unbekannt (Handys und fremde Modelle, '
                 . 'sie bleiben unberührt)';
@@ -515,7 +517,7 @@ function status_erhebung(): array
         $klein = 'Gerät „' . $abgErst['name'] . '": ' . $abgErst['anzahl']
                . ' abgewiesene Anmeldungen'
                . ($abgErst['seit'] !== null
-                  ? ' seit ' . fmt_local($abgErst['seit'], 'd.m.Y H:i') : '')
+                  ? ' seit ' . datum_zeit_text($abgErst['seit']) : '')
                . (count($abgRows) > 1 ? ' (und ' . (count($abgRows) - 1) . ' weitere)' : '')
                . '. Fast immer ein veralteter Schlüssel — das Gerät koppelt neu, '
                . 'und der Vermerk verschwindet beim nächsten gelungenen Upload';
@@ -547,8 +549,8 @@ function status_erhebung(): array
     } else {
         $gut = $smtpOk === '1';
         $mail[] = status_z('Letzter Versand',
-            status_alter($smtpLetzte) . ' · '
-            . fmt_local(str_replace(['T', 'Z'], [' ', ''], $smtpLetzte), 'd.m.Y · H:i')
+            zeit_relativ($smtpLetzte) . ' · '
+            . datum_zeit_text($smtpLetzte, ' · ')
             . ' Uhr'
             . ($gut ? '' : '. Die Ursache steht im Fehlerprotokoll des Webspace — '
                           . 'geprüft wird der Host, nicht die Zugangsdaten'),
@@ -618,7 +620,7 @@ function status_erhebung(): array
         if ($jobPause !== null) {
             $jobZeilen[] = status_z('Pause',
                 'Die Hintergrundarbeit ist angehalten bis '
-                . fmt_local(str_replace(['T', 'Z'], [' ', ''], $jobPause), 'd.m.Y · H:i')
+                . datum_zeit_text($jobPause, ' · ')
                 . ' Uhr. Aufheben über Betrieb → Hintergrundjobs '
                 . '(oder php jobs.php --pause 0)',
                 'orange', 'angehalten', 'betrieb_jobs.php');
@@ -636,7 +638,7 @@ function status_erhebung(): array
             }
         }
         $alterS = $letzterLauf === null ? null
-                : time() - (int)strtotime(str_replace(['T', 'Z'], [' ', ''], $letzterLauf) . ' UTC');
+                : time() - (int)iso_utc_lesen($letzterLauf);
         $wege = ['cli' => 'Kommandozeile (Cron)', 'token' => 'Abruf über die Adresse',
                  'anfrage' => 'huckepack an einer Anfrage'];
         if ($letzterLauf === null) {
@@ -648,7 +650,7 @@ function status_erhebung(): array
                   : (($ausloeser === 'anfrage') ? 'orange' : 'blau');
             $jobZeilen[] = status_z('Auslöser',
                 ($wege[$ausloeser] ?? (string)$ausloeser) . ' · zuletzt '
-                . status_alter($letzterLauf)
+                . zeit_relativ($letzterLauf)
                 . ($ausloeser === 'anfrage'
                     ? '. Der Huckepack-Weg läuft höchstens alle fünf Minuten und '
                       . 'nur, wenn jemand eine Seite aufruft — für einen gewachsenen '
@@ -670,13 +672,13 @@ function status_erhebung(): array
                 $klein = 'Letzter Fehler: ' . $fehler;
             } elseif ($rueck !== null && $rueck > 0) {
                 $ton = 'orange'; $pl = $rueck . ' offen';
-                $klein = 'Rückstand — zuletzt gelaufen ' . status_alter($j['letzter_lauf']);
+                $klein = 'Rückstand — zuletzt gelaufen ' . zeit_relativ($j['letzter_lauf']);
             } elseif ($j['letzter_lauf'] === null) {
                 $ton = 'neutral'; $pl = 'noch nie';
                 $klein = (string)$j['beschreibung'];
             } else {
                 $ton = 'blau'; $pl = 'in Ordnung';
-                $klein = 'Zuletzt gelaufen ' . status_alter($j['letzter_lauf']);
+                $klein = 'Zuletzt gelaufen ' . zeit_relativ($j['letzter_lauf']);
             }
             $jobZeilen[] = status_z((string)$j['titel'], $klein, $ton, $pl, 'betrieb_jobs.php');
         }
@@ -703,7 +705,7 @@ function status_erhebung(): array
     } else {
         $faellig = komp_faellig();
         $backups[] = status_z('Komplett-Backup',
-            'Jüngster Stand ' . status_alter($kompZeit)
+            'Jüngster Stand ' . zeit_relativ($kompZeit)
             . ' · Plan: ' . (KOMP_PLAENE[$kompPlan] ?? $kompPlan)
             . ' · ' . count($kompStaende)
             . (count($kompStaende) === 1 ? ' Stand aufbewahrt' : ' Stände aufbewahrt'),
@@ -805,12 +807,12 @@ function status_erhebung(): array
         $backups[] = status_z('Aufbewahrung am Ziel',
             count($waechst) === 1
                 ? 'Auf „' . $erstes['name'] . '" liegen ' . $erstes['dateien']
-                  . ' Sicherungen (' . edbak_groesse_text($erstes['bytes'])
+                  . ' Sicherungen (' . groesse_text($erstes['bytes'])
                   . '), und es ist dort nie etwas entfernt worden — seit '
-                  . fmt_local($erstes['seit'], 'd.m.Y')
+                  . datum_text($erstes['seit'])
                 : count($waechst) . ' Ziele wachsen seit über einem Monat, ohne dass '
                   . 'dort je etwas entfernt wurde — das größte ist „'
-                  . $erstes['name'] . '" mit ' . edbak_groesse_text($erstes['bytes']),
+                  . $erstes['name'] . '" mit ' . groesse_text($erstes['bytes']),
             'orange',
             count($waechst) === 1 ? 'wächst' : count($waechst) . ' wachsen',
             'admin_sicherungsziele.php');
@@ -822,8 +824,8 @@ function status_erhebung(): array
     $tonS = speicher_ton($proz, $sp['schwellen']);
     $backups[] = status_z('Speicher der Backups',
         $proz . ' % der Speichergrenze belegt · '
-        . edbak_groesse_text($sp['backups']['summe']) . ' von '
-        . edbak_groesse_text($sp['backups']['bezug'])
+        . groesse_text($sp['backups']['summe']) . ' von '
+        . groesse_text($sp['backups']['bezug'])
         . ' · Warnschwellen ' . implode(', ', $sp['schwellen']) . ' %',
         $tonS === 'neutral' ? 'blau' : $tonS,
         $proz . ' %',

@@ -177,8 +177,8 @@ function konto_anlegen(string $email, string $name, string $rolle,
 
     $token = bin2hex(random_bytes(32));
     $pdo ??= db();
-    $pdo->beginTransaction();
-    try {
+    $uid = db_transaktion($pdo, function (PDO $pdo) use ($email, $name, $rolle, $status,
+                                                          $token, $tokenLaufzeitS): int {
         /* `bestaetigt_am` wird MITGESCHRIEBEN, wenn das Konto schon aktiv
          * entsteht (Einladung, Einrichtung). Sonst stuende dort NULL bei
          * einem Konto, dessen Adresse die Verwaltung eingetippt hat — und
@@ -194,11 +194,8 @@ function konto_anlegen(string $email, string $name, string $rolle,
                        VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? SECOND))')
             ->execute([$uid, hash('sha256', $token), $tokenLaufzeitS]);
 
-        $pdo->commit();
-    } catch (Throwable $ex) {
-        $pdo->rollBack();
-        throw $ex;
-    }
+        return $uid;
+    });
 
     /* DAS PROTOKOLL STEHT AUSSERHALB DER TRANSAKTION, und das ist Absicht:
      * Ein Protokolleintrag, der nicht geschrieben werden kann, darf die
@@ -706,12 +703,9 @@ function konto_loeschen(int $userId, bool $mitSicherungen = true): array
      * nicht um eine Marke, die wieder gebraucht wird, sondern um ein Konto,
      * das es nicht mehr gibt. Eine Zeile, die nie wieder gelesen wird, ist
      * Ballast. */
-    try {
-        $pdo->prepare('DELETE FROM app_state WHERE k IN (?, ?)')
-            ->execute(['mengen:' . $userId, 'mengen_gemeldet:' . $userId]);
-    } catch (Throwable $ex) {
-        error_log('app_state-Reste von Konto ' . $userId . ': ' . $ex->getMessage());
-    }
+    /* `app_state_loeschen()` faengt und protokolliert selbst — das Loeschen
+     * des Kontos darf daran nicht scheitern. */
+    app_state_loeschen('mengen:' . $userId, 'mengen_gemeldet:' . $userId);
 
     return ['ok' => true, 'grund' => ''];
 }

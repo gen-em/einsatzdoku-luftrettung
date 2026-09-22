@@ -4,6 +4,7 @@ require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/tageszuordnung_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
+require_once __DIR__ . '/format_lib.php';   // zahl_text() fuer die Umfangszahlen
 
 /**
  * Das Datum eines Diensttages aendern (A5.3, Auftragspunkt 12).
@@ -94,7 +95,7 @@ ui_seite_start(['titel' => 'Datum des Diensttags ändern']);
       ]);
       ui_zeile([
           'text' => 'GPS-Trackpunkte',
-          'plaketten' => ui_plakette(number_format((int)$umfang['punkte'], 0, ',', '.'),
+          'plaketten' => ui_plakette(zahl_text((int)$umfang['punkte']),
                                      ['ton' => 'orange']),
       ]);
       ui_zeile([

@@ -31,6 +31,10 @@ declare(strict_types=1);
  * sagt es ausdrücklich.
  */
 
+/* `zahl_text()` fuer die Zeichenzahlen in den Pruefmeldungen (Schritt 15 AP7).
+ * AUSDRUECKLICH eingebunden, auch wenn die Ladekette sie mitbraechte. */
+require_once __DIR__ . '/format_lib.php';
+
 /**
  * Die Dokumente: Schlüssel => Überschrift der Seite.
  *
@@ -243,9 +247,9 @@ function rt_pruefen(string $text, ?string $stand): ?string
              . 'einfügen, nicht aus einem Textverarbeitungsprogramm.';
     }
     if (mb_strlen($text, 'UTF-8') > RT_MAX_ZEICHEN) {
-        return 'Der Text ist mit ' . number_format(mb_strlen($text, 'UTF-8'), 0, ',', '.')
+        return 'Der Text ist mit ' . zahl_text(mb_strlen($text, 'UTF-8'))
              . ' Zeichen länger als die zulässigen '
-             . number_format(RT_MAX_ZEICHEN, 0, ',', '.') . '. Er wurde '
+             . zahl_text(RT_MAX_ZEICHEN) . '. Er wurde '
              . 'nicht gespeichert — gekürzt würde ein Rechtstext unvollständig, '
              . 'ohne dass es jemandem auffällt.';
     }
@@ -470,5 +474,10 @@ function rt_stand_markup(?string $stand): string
     if ($stand === null || $stand === '') { return ''; }
     $ts = strtotime($stand);
     if ($ts === false) { return ''; }
+    /* MIT ZEITSTEMPEL, deshalb kein `datum_text()` (Schritt 15 AP7, benannte
+     * Ausnahme): `$stand` ist ein KALENDERTAG aus dem Editor, keine UTC-Marke.
+     * `strtotime()` legt ihn auf Mitternacht der php.ini-Zone, `date()` liest
+     * ihn in derselben Zone zurueck — der Tag bleibt der Tag. `datum_text()`
+     * rechnete von UTC nach `app.timezone` um und verschoebe ihn. */
     return '<p class="text-stand">Stand: ' . ui_e(date('d.m.Y', $ts)) . '</p>';
 }

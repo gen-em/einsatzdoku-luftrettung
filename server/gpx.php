@@ -58,6 +58,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/gpx_lib.php';
+require_once __DIR__ . '/format_lib.php';   // datum_text(), datum_zeit_text() (Schritt 15/AP7)
 require_once __DIR__ . '/ratelimit_lib.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_out(['error' => 'method'], 405); }
@@ -107,7 +108,7 @@ try {
      * der Spurenseite in der Kleinzeile jeder Zeile daneben. */
     $spurname = static function (string $art, int $id, ?string $von): string {
         $n = ($art === 'mission' ? 'Einsatz ' : 'Ruhezeit ') . $id;
-        return $von ? $n . ' — ' . fmt_local($von, 'd.m.Y H:i') : $n;
+        return $von ? $n . ' — ' . datum_zeit_text($von) : $n;
     };
 
     /* ---- Mehrere Spuren eines Diensttages als EINE Datei ------------------
@@ -247,8 +248,12 @@ try {
         };
 
         $datum = (string)$tagDatum;
+        /* Die MITTAGSVERANKERUNG bleibt (Schritt 15/AP7): `$datum` ist ein
+         * blosser Kalendertag und wird als UTC-Mitternacht gelesen. Ohne die
+         * 12:00:00 verschoebe sich der Diensttag in jeder Zone mit negativem
+         * Versatz um einen Tag — nachgerechnet 74 568 Tag/Zone-Faelle. */
         $xml = gpx_bauen_viele($folge(),
-                               'Diensttag ' . fmt_local($datum . ' 12:00:00', 'd.m.Y'));
+                               'Diensttag ' . datum_text($datum . ' 12:00:00'));
         $datei = gpx_dateiname_tag($datum, count($mitSpur), $stufen);
         gpx_ausliefern($xml, $datei);
         exit;

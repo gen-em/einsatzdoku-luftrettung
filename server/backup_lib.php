@@ -26,9 +26,10 @@ declare(strict_types=1);
  * require damit verdeckt. Wer eine Bibliothek prueft, muss sie so laden, wie
  * die Anwendung sie laedt — sonst prueft er seinen eigenen Aufbau mit.
  */
+require_once __DIR__ . '/einsatz_lib.php';   // Kindtabellen (Schritt 15/AP5)
 require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
-require_once __DIR__ . '/mission_fields_lib.php';   // mf_ist_spalte(), mf_ort_spalten()
+require_once __DIR__ . '/mission_fields_lib.php';   // mf_ist_spalte(), mf_ort_spalten(), mf_spalten()
 require_once __DIR__ . '/geraete_lib.php';         // HERKUNFT_WERTE, herkunft_ableiten() (R64)
 
 /**
@@ -228,22 +229,21 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * und `edbak_restore()` weiter unten liest ihn unter diesem Namen.
      * Ohne den Alias hiesse der Schluessel in jeder NEUEN Datei still
      * `uhr_gesperrt` — und das Einspielen faende das Feld nicht mehr, ohne
-     * eine einzige Fehlermeldung.
+     * eine einzige Fehlermeldung. */
+    /* AUS DEM REGISTER (Schritt 15/AP6, E-ZE-22). Die Liste stand hier von
+     * Hand; die Gruende, warum id, user_id, device_id und die tote
+     * other_resources fehlen, stehen jetzt in `mf_missions_gruende()` und
+     * damit neben den Spalten selbst statt in diesem Kommentar.
      *
-     * UND DER ALIAS STEHT IN BACKTICKS (Web 20.26.3): `manual` ist auf
-     * MySQL 8.4.0 bis 8.4.10 auch als ALIAS ein reserviertes Wort. Ohne
-     * die Backticks antwortete der Export dort mit 1064 und die Sicherung
-     * kam nie an (Staging, MySQL 8.4.10, Kennung 097D7622). Gleiche Stelle
-     * in api/export_data.php. */
-    $missionSpalten = 'client_ref, day_id, started_at, ended_at, distance_m, ascent_m,
-                       site_ele_m, final, uhr_gesperrt AS `manual`, origin, edited,
-                       geraet_art, geraet_modell, transport_dest,
-                       transport_mode, na_escort, false_alarm, start_src,
-                       dest_lat, dest_lon,
-                       winch, winch_cycles, winch_cycles_pat, winch_airload,
-                       bergwacht, secondary, schockraum, bw_unit, bw_info,
-                       other_ema, crew_override,
-                       pat_blob, created_at, deleted_at, deleted_with_day';
+     * DER ALIAS STEHT IN BACKTICKS, und zwar seit dem Merge von Schritt 15
+     * in `mf_spalten()` statt hier (Web 20.26.3, Nr. 267): `manual` ist auf
+     * MySQL 8.4.0 bis 8.4.10 auch als ALIAS ein reserviertes Wort. Ohne die
+     * Backticks antwortete der Export dort mit 1064 und die Sicherung kam
+     * nie an (Staging, MySQL 8.4.10, Kennung 097D7622). Die Behebung stand
+     * an ZWEI Stellen — hier und in api/export_data.php —; sie steht jetzt
+     * an der einen, die aus dem Register SQL macht, und gilt damit auch fuer
+     * jeden kuenftigen Alias. */
+    $missionSpalten = mf_spalten_sql('backup');
     /* NICHT in der Liste, und zwar mit Absicht:
      *
      *   id, user_id, device_id   Interne Verweise. Sie gelten nur in DIESER
@@ -261,14 +261,22 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      *                            niemand mehr fuellt und das beim
      *                            Einspielen verworfen wird.
      *
-     * WAS BEIM EINSPIELEN NICHT ANKOMMT (vorgefunden, hier nicht geaendert):
-     * Der Einspielweg schreibt die Spalten aus mission_fields.php plus
-     * pat_blob. site_ele_m steht dort nicht — die Einsatzort-Hoehe wird beim
-     * Uhr-Upload gerechnet, nicht eingegeben. Sie ist im Backup
-     * enthalten (die Datei soll den Bestand vollstaendig abbilden), kommt
-     * beim Einspielen aber nicht zurueck. Das ist eine Asymmetrie, die dieses
-     * Paket nur SICHTBAR macht; sie zu beheben hiesse, den Einspielweg zu
-     * aendern, und das ist ein eigener Vorgang. */
+     * WAS BEIM EINSPIELEN NICHT TRANSPORTIERT WIRD (vorgefunden, hier nicht
+     * geaendert): Der Einspielweg schreibt die Grundspalten (Zweck
+     * `backup_restore` im Register) plus die Spalten aus mission_fields.php
+     * plus pat_blob. `site_ele_m` steht in KEINER dieser Listen — die
+     * Einsatzort-Hoehe wird beim Uhr-Upload gerechnet, nicht eingegeben.
+     * Sie ist im Backup enthalten (die Datei soll den Bestand vollstaendig
+     * abbilden), wird beim Einspielen aber nicht uebernommen.
+     *
+     * SIE KOMMT TROTZDEM WIEDER, und dieser Satz fehlte hier bis Schritt 15
+     * AP6: Nach dem Bestaetigen rechnet dieser Lauf sie fuer jeden
+     * eingespielten Einsatz NEU (`compute_site_elevation()`, die Liste
+     * `$hoeheOffen` weiter unten). Der Unterschied ist keiner fuer den
+     * Bestand, aber einer fuer das Verstaendnis: Steht in der Datei eine
+     * Hoehe, die zu den Phasenkoordinaten nicht passt, gewinnt die Rechnung.
+     * Wer den Transport haben will, aendert den Einspielweg — ein eigener
+     * Vorgang. */
     /* IN FENSTERN, NICHT AUF EINMAL (S2/AP5).
      *
      * WARUM. Hier standen vier Abfragen ueber ALLE Einsaetze eines Kontos —
@@ -1871,30 +1879,51 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
              * FEHLEN SIE IN DER DATEI (Nutzlast <= 8), wird NULL geschrieben —
              * und das ist richtig: „unbekannt" ist genau die Aussage. */
             /* HIER WIRD AUS DEM DATEISCHLUESSEL WIEDER DIE SPALTE (Nr. 238).
-             * `$cols` sind SPALTENNAMEN (`uhr_gesperrt`), `$vals` darunter
-             * liest den DATEISCHLUESSEL (`$m['manual']`). Die beiden Listen
-             * sind positionsgebunden — wer hier einfuegt oder umsortiert,
-             * verschiebt stumm alle Werte dahinter. */
-            $cols = ['user_id', 'client_ref', 'day_id', 'started_at', 'ended_at',
-                     'uhr_gesperrt', 'origin', 'edited', 'final', 'distance_m', 'ascent_m',
-                     'geraet_art', 'geraet_modell',
-                     'deleted_at', 'deleted_with_day'];
-            $vals = [$userId,
-                     pruef_text($m['client_ref'] ?? null, 64, 'client_ref', $pruef)
-                        ?? ('bak-' . bin2hex(random_bytes(6))),
-                     $dayId, $startedAt, $endedAt,
-                     /* pruef_flag statt (int): Beide Spalten sind TINYINT(1),
-                      * und (int) einer Zahl jenseits von 127 laeuft dort ueber
-                      * — ein Fehler, der die ganze Transaktion kostet. Fuer
-                      * gueltige Werte ist das Ergebnis dasselbe. */
-                     pruef_flag($m['manual'] ?? 0), $oe['origin'], $oe['edited'],
-                     pruef_flag($m['final'] ?? 1),
-                     pruef_zahl($m['distance_m'] ?? null, 0, 100000000, 'distance_m', $pruef),
-                     pruef_zahl($m['ascent_m'] ?? null, 0, 100000, 'ascent_m', $pruef),
-                     edbak_geraet_art($m['geraet_art'] ?? null, 'geraet_art', $pruef),
-                     pruef_text($m['geraet_modell'] ?? null, GERAET_MAX_MODELL,
-                                'geraet_modell', $pruef),
-                     $mGeloescht ? $loeschZeit : null, $mitTag];
+             * Die SCHLUESSEL sind Spaltennamen (`uhr_gesperrt`), die WERTE
+             * lesen den Dateischluessel (`$m['manual']`).
+             *
+             * BIS WEB 20.30.0 WAREN ES ZWEI LISTEN — Spalten oben, Werte
+             * darunter, positionsgebunden; der Kommentar dort warnte davor.
+             * Wer eine der beiden Listen ergaenzt und die andere nicht,
+             * verschiebt stumm alle Werte dahinter — die Wiederherstellung
+             * schriebe dann die Geraeteart ins Loeschdatum, ohne dass
+             * irgendetwas rot wuerde. Passiert ist das nie; die Warnung war
+             * die einzige Sicherung. Jetzt traegt jeder Wert seinen
+             * Spaltennamen; die REIHENFOLGE kommt aus dem Register
+             * (Schritt 15/AP6, E-ZE-22, Zweck `backup_restore`).
+             *
+             * DIE SCHREIBREIHENFOLGE HIER BLEIBT DIE ALTE, und das mit
+             * Absicht: `pruef_text()`, `pruef_zahl()` und `edbak_geraet_art()`
+             * haengen ihre Beanstandungen an `$pruef` an. Wer sie umsortiert,
+             * sortiert den Pruefbericht um, den jemand neben die Datei legt. */
+            $werte = [
+                'user_id'     => $userId,
+                'client_ref'  => pruef_text($m['client_ref'] ?? null, 64, 'client_ref', $pruef)
+                                    ?? ('bak-' . bin2hex(random_bytes(6))),
+                'day_id'      => $dayId,
+                'started_at'  => $startedAt,
+                'ended_at'    => $endedAt,
+                /* pruef_flag statt (int): Beide Spalten sind TINYINT(1),
+                 * und (int) einer Zahl jenseits von 127 laeuft dort ueber
+                 * — ein Fehler, der die ganze Transaktion kostet. Fuer
+                 * gueltige Werte ist das Ergebnis dasselbe. */
+                'uhr_gesperrt' => pruef_flag($m['manual'] ?? 0),
+                'origin'      => $oe['origin'],
+                'edited'      => $oe['edited'],
+                'final'       => pruef_flag($m['final'] ?? 1),
+                'distance_m'  => pruef_zahl($m['distance_m'] ?? null, 0, 100000000,
+                                            'distance_m', $pruef),
+                'ascent_m'    => pruef_zahl($m['ascent_m'] ?? null, 0, 100000,
+                                            'ascent_m', $pruef),
+                'geraet_art'  => edbak_geraet_art($m['geraet_art'] ?? null, 'geraet_art', $pruef),
+                'geraet_modell' => pruef_text($m['geraet_modell'] ?? null, GERAET_MAX_MODELL,
+                                              'geraet_modell', $pruef),
+                'deleted_at'  => $mGeloescht ? $loeschZeit : null,
+                'deleted_with_day' => $mitTag,
+            ];
+            $cols = mf_spalten('backup_restore', '', false);
+            $vals = [];
+            foreach ($cols as $c) { $vals[] = $werte[$c]; }
             foreach ($extraCols as $c) {
                 if (!array_key_exists($c, $m)) { continue; }
                 if ($c === 'created_at') {
@@ -1920,61 +1949,64 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
                  . implode(',', array_fill(0, count($cols), '?')) . ')';
             $pdo->prepare($sql)->execute($vals);
             $mid = (int)$pdo->lastInsertId();
-            /* $vals[1] und nicht $m['client_ref']: Das ist die Kennung, die
-             * TATSAECHLICH in der Zeile steht — die aus der Datei oder die
-             * Ersatzkennung. Beide sollen wiederfindbar sein. */
-            $merke('mission', $vals[1], $mid);
-            $neueEinsaetze[$vals[1]] = true;
+            /* $werte['client_ref'] und nicht $m['client_ref']: Das ist die
+             * Kennung, die TATSAECHLICH in der Zeile steht — die aus der
+             * Datei oder die Ersatzkennung. Beide sollen wiederfindbar sein. */
+            $merke('mission', $werte['client_ref'], $mid);
+            $neueEinsaetze[$werte['client_ref']] = true;
 
             /* Abweichende Besatzung (`mission_crew`, E7). Bis Web 5.10.0 waren
              * es fuenf Spalten und wanderten ueber $extraCols mit; jetzt sind es
              * Zeilen. Nur belegte Rollen: `mission_crew` fuehrt Abweichungen,
              * keine Leerzeilen. */
-            $insMC = $pdo->prepare('INSERT IGNORE INTO mission_crew
-                (mission_id, role_code, name) VALUES (?,?,?)');
+            /* `loeschen => false` ueberall hier: Der Einsatz ist gerade erst
+             * angelegt worden, es gibt nichts zu ersetzen. `ignorieren` bei der
+             * Besatzung, weil ein doppelter Rollenschluessel im Paket den Lauf
+             * nicht abbrechen soll. */
+            $besatzung = [];
             foreach ((array)($m['crew'] ?? []) as $rc => $nm) {
                 if (!array_key_exists((string)$rc, CREW_ROLES)) { continue; }
                 if ($nm === null || trim((string)$nm) === '') { continue; }
-                $insMC->execute([$mid, (string)$rc, mb_substr(trim((string)$nm), 0, 120)]);
+                $besatzung[(string)$rc] = mb_substr(trim((string)$nm), 0, 120);
             }
+            einsatz_besatzung_ersetzen($pdo, $mid, $besatzung,
+                                       ['loeschen' => false, 'ignorieren' => true]);
 
-            $insPh = $pdo->prepare('INSERT INTO mission_phases
-                (mission_id, phase, occurred_at, lat, lon) VALUES (?,?,?,?,?)');
+            $rNamen = [];
             foreach (($m['resources'] ?? []) as $rname) {
                 $rname = mb_substr(trim((string)$rname), 0, 120);
-                if ($rname !== '') {
-                    $pdo->prepare('INSERT INTO mission_resources (mission_id, name) VALUES (?,?)')
-                        ->execute([$mid, $rname]);
-                }
+                if ($rname !== '') { $rNamen[] = $rname; }
             }
+            einsatz_rettungsmittel_ersetzen($pdo, $mid, $rNamen, ['loeschen' => false]);
             // Phasen: Nummer 2 bis 9. Mehrfache Eintraege derselben Nummer
             // bleiben erhalten — sie sind Korrekturen (JSON-Vertrag 3).
+            $neuePhasen = [];
             foreach (pruef_menge($m['phases'] ?? [], LIMIT_PHASEN, 'phases', $pruef) as $p) {
                 if (!is_array($p)) { continue; }
                 $nr   = pruef_phase($p['phase'] ?? null, 'phases.phase', $pruef);
                 $wann = pruef_utc_oder_sql($p['occurred_at'] ?? null, 'phases.occurred_at', $pruef);
                 if ($nr === null || $wann === null) { continue; }
-                $insPh->execute([$mid, $nr, $wann,
-                                 pruef_breite($p['lat'] ?? null, 'phases.lat', $pruef),
-                                 pruef_laenge($p['lon'] ?? null, 'phases.lon', $pruef)]);
+                $neuePhasen[] = ['phase' => $nr, 'occurred_at' => $wann,
+                                 'lat' => pruef_breite($p['lat'] ?? null, 'phases.lat', $pruef),
+                                 'lon' => pruef_laenge($p['lon'] ?? null, 'phases.lon', $pruef)];
             }
+            einsatz_phasen_ersetzen($pdo, $mid, $neuePhasen, ['loeschen' => false]);
+            $neueReas = [];
             foreach (pruef_menge($m['resus'] ?? [], LIMIT_REA_SESSION, 'resus', $pruef) as $r) {
                 if (!is_array($r)) { continue; }
                 $rStart = pruef_utc_oder_sql($r['started_at'] ?? null, 'resus.started_at', $pruef);
                 if ($rStart === null) { continue; }
-                $pdo->prepare('INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)')
-                    ->execute([$mid, $rStart]);
-                $sid = (int)$pdo->lastInsertId();
-                $insEv = $pdo->prepare('INSERT INTO resus_events
-                    (session_id, type, occurred_at) VALUES (?,?,?)');
+                $ereignisse = [];
                 foreach (pruef_menge($r['events'] ?? [], LIMIT_REA_EREIGN, 'resus.events', $pruef) as $e2) {
                     if (!is_array($e2)) { continue; }
                     $typ  = pruef_reanimationsart($e2['type'] ?? null, 'resus.events.type', $pruef);
                     $wann = pruef_utc_oder_sql($e2['occurred_at'] ?? null, 'resus.events.at', $pruef);
                     if ($typ === null || $wann === null) { continue; }
-                    $insEv->execute([$sid, $typ, $wann]);
+                    $ereignisse[] = [$typ, $wann];
                 }
+                $neueReas[] = ['started_at' => $rStart, 'events' => $ereignisse];
             }
+            einsatz_reas_ersetzen($pdo, $mid, $neueReas, ['loeschen' => false]);
             /* ZWEI WEGE, UND DIE FASSUNG ENTSCHEIDET — nicht das Vorhandensein
              * eines `track`-Feldes. Eine Spur ohne Punkte saehe genauso aus
              * wie ein Verweis, und dann liefe eine Fassung-8-Datei still in

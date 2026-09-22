@@ -42,6 +42,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 require_once __DIR__ . '/diensttag_lib.php';
+require_once __DIR__ . '/einsatz_lib.php';
 
 /**
  * Umfang eines Diensttages fuer die Rueckfrage (Akzeptanzkriterium 33).
@@ -103,14 +104,11 @@ function tz_tag_umfang(int $userId, int $dayId): array
 function tz_einsatz_verschieben(int $userId, int $missionId, int $zielDayId): array
 {
     $pdo = db();
-    $mq = $pdo->prepare('SELECT day_id FROM missions
-                         WHERE id = ? AND user_id = ? AND deleted_at IS NULL');   // Datentrennung!
-    $mq->execute([$missionId, $userId]);
-    $altId = $mq->fetchColumn();
-    if ($altId === false) {
+    $mAlt = einsatz_laden($missionId, $userId, ['spalten' => 'day_id']);
+    if ($mAlt === null) {
         return ['ok' => false, 'meldung' => 'Einsatz nicht gefunden.', 'day_id' => 0];
     }
-    $altId = $altId === null ? 0 : (int)$altId;
+    $altId = $mAlt['day_id'] === null ? 0 : (int)$mAlt['day_id'];
 
     $ziel = dt_laden($userId, $zielDayId, true);
     if ($ziel === null) {
@@ -130,22 +128,21 @@ function tz_einsatz_verschieben(int $userId, int $missionId, int $zielDayId): ar
                            . dt_lesbar($ziel, true) . '. Es wurde nichts geändert.'];
     }
 
-    $pdo->beginTransaction();
     try {
-        $pdo->prepare('UPDATE missions SET day_id = ? WHERE id = ? AND user_id = ?')
-            ->execute([$zielDayId, $missionId, $userId]);
-        /* Der Zieltag muss den Einsatz umschliessen. Sonst stuende ein Einsatz
-         * ausserhalb des Zeitraums seines eigenen Dienstes — und die Statistik,
-         * die nach Diensttag rechnet, haette einen Tag, dessen Ende vor seinem
-         * letzten Einsatz liegt. */
-        $z = $pdo->prepare('SELECT started_at, ended_at FROM missions WHERE id = ?');
-        $z->execute([$missionId]);
-        $m = $z->fetch();
-        dt_zeitraum_fortschreiben($pdo, $zielDayId, $m['started_at'] ?? null,
-                                  $m['ended_at'] ?? null);
-        $pdo->commit();
+        db_transaktion($pdo, function (PDO $pdo) use ($zielDayId, $missionId, $userId): void {
+            $pdo->prepare('UPDATE missions SET day_id = ? WHERE id = ? AND user_id = ?')
+                ->execute([$zielDayId, $missionId, $userId]);
+            /* Der Zieltag muss den Einsatz umschliessen. Sonst stuende ein Einsatz
+             * ausserhalb des Zeitraums seines eigenen Dienstes — und die Statistik,
+             * die nach Diensttag rechnet, haette einen Tag, dessen Ende vor seinem
+             * letzten Einsatz liegt. */
+            $z = $pdo->prepare('SELECT started_at, ended_at FROM missions WHERE id = ?');
+            $z->execute([$missionId]);
+            $m = $z->fetch();
+            dt_zeitraum_fortschreiben($pdo, $zielDayId, $m['started_at'] ?? null,
+                                      $m['ended_at'] ?? null);
+        });
     } catch (Throwable $ex) {
-        if ($pdo->inTransaction()) { $pdo->rollBack(); }
         return ['ok' => false, 'day_id' => $altId,
                 'meldung' => 'Verschieben fehlgeschlagen. Es wurde nichts geändert.'];
     }
@@ -184,8 +181,6 @@ function tz_einsatz_verschieben(int $userId, int $missionId, int $zielDayId): ar
  */
 function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
 {
-    global $CFG;
-
     $tag = dt_laden($userId, $dayId);
     if ($tag === null) {
         return ['ok' => false, 'meldung' => 'Diensttag nicht gefunden. Es wurde nichts geändert.'];
@@ -195,7 +190,7 @@ function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
         return ['ok' => false, 'meldung' => 'Das Datum ist unverändert. Es wurde nichts geändert.'];
     }
 
-    $tz  = new DateTimeZone($CFG['app']['timezone'] ?? 'Europe/Berlin');
+    $tz  = new DateTimeZone((string)konfig('app.timezone', 'Europe/Berlin'));
     $von = new DateTime($altTag . ' 00:00:00', $tz);
     $bis = new DateTime($neuTag . ' 00:00:00', $tz);
     $delta = $bis->getTimestamp() - $von->getTimestamp();   // Sekunden, vorzeichenbehaftet
@@ -234,85 +229,86 @@ function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
         }
     }
 
-    $pdo->beginTransaction();
     try {
-        /* 1. Der Diensttag selbst — Datum UND eigener Zeitraum. `started_at`
-         *    und `ended_at` sind echte Zeitstempel und gehoeren damit zu dem,
-         *    was bei falsch gestellter Uhr mitwandert. Blieben sie stehen,
-         *    laege der Dienst nach der Umdatierung an einem Datum, das seine
-         *    eigenen Zeiten nicht mehr enthaelt. */
-        $pdo->prepare('UPDATE days
-                       SET day = ?,
-                           started_at = DATE_ADD(started_at, INTERVAL ? SECOND),
-                           ended_at   = DATE_ADD(ended_at,   INTERVAL ? SECOND)
-                       WHERE id = ? AND user_id = ?')
-            ->execute([$neuTag, $delta, $delta, $dayId, $userId]);
+        db_transaktion($pdo, function (PDO $pdo) use ($dayId, $delta, $mIds, $neuTag,
+                                                      $platzhalter, $rIds, $userId,
+                                                      $werte): void {
+            /* 1. Der Diensttag selbst — Datum UND eigener Zeitraum. `started_at`
+             *    und `ended_at` sind echte Zeitstempel und gehoeren damit zu dem,
+             *    was bei falsch gestellter Uhr mitwandert. Blieben sie stehen,
+             *    laege der Dienst nach der Umdatierung an einem Datum, das seine
+             *    eigenen Zeiten nicht mehr enthaelt. */
+            $pdo->prepare('UPDATE days
+                           SET day = ?,
+                               started_at = DATE_ADD(started_at, INTERVAL ? SECOND),
+                               ended_at   = DATE_ADD(ended_at,   INTERVAL ? SECOND)
+                           WHERE id = ? AND user_id = ?')
+                ->execute([$neuTag, $delta, $delta, $dayId, $userId]);
 
-        // 2. Einsaetze und Ruhesegmente. Sie haengen ueber day_id am Tag und
-        //    wandern deshalb zwangslaeufig mit — auch die im Papierkorb.
-        $pdo->prepare('UPDATE missions
-                       SET started_at = DATE_ADD(started_at, INTERVAL ? SECOND),
-                           ended_at   = DATE_ADD(ended_at,   INTERVAL ? SECOND)
-                       WHERE user_id = ? AND day_id = ?')
-            ->execute([$delta, $delta, $userId, $dayId]);
-        $pdo->prepare('UPDATE rest_segments
-                       SET started_at = DATE_ADD(started_at, INTERVAL ? SECOND),
-                           ended_at   = DATE_ADD(ended_at,   INTERVAL ? SECOND)
-                       WHERE user_id = ? AND day_id = ?')
-            ->execute([$delta, $delta, $userId, $dayId]);
+            // 2. Einsaetze und Ruhesegmente. Sie haengen ueber day_id am Tag und
+            //    wandern deshalb zwangslaeufig mit — auch die im Papierkorb.
+            $pdo->prepare('UPDATE missions
+                           SET started_at = DATE_ADD(started_at, INTERVAL ? SECOND),
+                               ended_at   = DATE_ADD(ended_at,   INTERVAL ? SECOND)
+                           WHERE user_id = ? AND day_id = ?')
+                ->execute([$delta, $delta, $userId, $dayId]);
+            $pdo->prepare('UPDATE rest_segments
+                           SET started_at = DATE_ADD(started_at, INTERVAL ? SECOND),
+                               ended_at   = DATE_ADD(ended_at,   INTERVAL ? SECOND)
+                           WHERE user_id = ? AND day_id = ?')
+                ->execute([$delta, $delta, $userId, $dayId]);
 
-        // 3. Alles, was an einem Einsatz haengt. In Bloecken, damit die Zahl
-        //    der Abfragen nicht mit der Zahl der Einsaetze waechst.
-        if ($mIds) {
-            foreach (sql_in_bloecke_sql($mIds) as [$platzhalter, $werte]) {
-                $pdo->prepare("UPDATE mission_phases
-                               SET occurred_at = DATE_ADD(occurred_at, INTERVAL ? SECOND)
-                               WHERE mission_id IN ($platzhalter)")
-                    ->execute(array_merge([$delta], $werte));
-                $pdo->prepare("UPDATE resus_events e
-                               JOIN resus_sessions s ON s.id = e.session_id
-                               SET e.occurred_at = DATE_ADD(e.occurred_at, INTERVAL ? SECOND)
-                               WHERE s.mission_id IN ($platzhalter)")
-                    ->execute(array_merge([$delta], $werte));
-                $pdo->prepare("UPDATE resus_sessions
-                               SET started_at = DATE_ADD(started_at, INTERVAL ? SECOND)
-                               WHERE mission_id IN ($platzhalter)")
-                    ->execute(array_merge([$delta], $werte));
+            // 3. Alles, was an einem Einsatz haengt. In Bloecken, damit die Zahl
+            //    der Abfragen nicht mit der Zahl der Einsaetze waechst.
+            if ($mIds) {
+                foreach (sql_in_bloecke_sql($mIds) as [$platzhalter, $werte]) {
+                    $pdo->prepare("UPDATE mission_phases
+                                   SET occurred_at = DATE_ADD(occurred_at, INTERVAL ? SECOND)
+                                   WHERE mission_id IN ($platzhalter)")
+                        ->execute(array_merge([$delta], $werte));
+                    $pdo->prepare("UPDATE resus_events e
+                                   JOIN resus_sessions s ON s.id = e.session_id
+                                   SET e.occurred_at = DATE_ADD(e.occurred_at, INTERVAL ? SECOND)
+                                   WHERE s.mission_id IN ($platzhalter)")
+                        ->execute(array_merge([$delta], $werte));
+                    $pdo->prepare("UPDATE resus_sessions
+                                   SET started_at = DATE_ADD(started_at, INTERVAL ? SECOND)
+                                   WHERE mission_id IN ($platzhalter)")
+                        ->execute(array_merge([$delta], $werte));
+                }
+                /* SPUREN UEBER spur_lib.php (S2/AP1) — ausserhalb der
+                 * Blockschleife, weil die Funktion selbst blockt. Ein blosses
+                 * UPDATE auf track_points ginge am Blob vorbei: Die Zeilen
+                 * wanderten, die Blobpunkte blieben stehen, und die Spur haette
+                 * danach zwei Zeitrechnungen. */
+                spur_zeit_verschieben($pdo, 'mission', $mIds, $delta);
+                /* UND DIE SPERRVERMERKE DES SCHNITTS (Web 14.2.0, R64).
+                 *
+                 * Sie standen bis hierher still, waehrend alles andere wanderte —
+                 * ein Fehler seit Web 12.5.0, den erst die Sicherung sichtbar
+                 * gemacht hat. Was er anrichtet: Der Vermerk sperrt danach einen
+                 * Zeitraum, in dem die Spur gar nicht mehr liegt. Nachgelieferte
+                 * Punkte des tatsaechlichen Zeitraums kommen wieder durch, und
+                 * die Fahrt liegt in Einsatz UND Segment — wortgleich der
+                 * Schaden, gegen den Backlog Nr. 63 antritt. Seit Nutzlast 9
+                 * reist das falsche Fenster zusaetzlich in jede Sicherung.
+                 *
+                 * NACH QUELLE, wie in spur_lib.php begruendet: `von_ts`/`bis_ts`
+                 * beschreiben einen Ausschnitt der QUELLspur. Wer zusaetzlich
+                 * nach Ziel verschoebe, verschoebe jeden Vermerk zweimal, dessen
+                 * Quelle und Ziel am selben Tag haengen — und das ist der
+                 * Regelfall. */
+                schnitte_zeit_verschieben($pdo, 'mission', $mIds, $delta);
             }
-            /* SPUREN UEBER spur_lib.php (S2/AP1) — ausserhalb der
-             * Blockschleife, weil die Funktion selbst blockt. Ein blosses
-             * UPDATE auf track_points ginge am Blob vorbei: Die Zeilen
-             * wanderten, die Blobpunkte blieben stehen, und die Spur haette
-             * danach zwei Zeitrechnungen. */
-            spur_zeit_verschieben($pdo, 'mission', $mIds, $delta);
-            /* UND DIE SPERRVERMERKE DES SCHNITTS (Web 14.2.0, R64).
-             *
-             * Sie standen bis hierher still, waehrend alles andere wanderte —
-             * ein Fehler seit Web 12.5.0, den erst die Sicherung sichtbar
-             * gemacht hat. Was er anrichtet: Der Vermerk sperrt danach einen
-             * Zeitraum, in dem die Spur gar nicht mehr liegt. Nachgelieferte
-             * Punkte des tatsaechlichen Zeitraums kommen wieder durch, und
-             * die Fahrt liegt in Einsatz UND Segment — wortgleich der
-             * Schaden, gegen den Backlog Nr. 63 antritt. Seit Nutzlast 9
-             * reist das falsche Fenster zusaetzlich in jede Sicherung.
-             *
-             * NACH QUELLE, wie in spur_lib.php begruendet: `von_ts`/`bis_ts`
-             * beschreiben einen Ausschnitt der QUELLspur. Wer zusaetzlich
-             * nach Ziel verschoebe, verschoebe jeden Vermerk zweimal, dessen
-             * Quelle und Ziel am selben Tag haengen — und das ist der
-             * Regelfall. */
-            schnitte_zeit_verschieben($pdo, 'mission', $mIds, $delta);
-        }
-        // 4. Spurpunkte der Ruhesegmente. Leicht zu uebersehen: Sie haengen
-        //    nicht an einem Einsatz und tragen die Epoche, kein DATETIME.
-        if ($rIds) {
-            spur_zeit_verschieben($pdo, 'rest', $rIds, $delta);
-            schnitte_zeit_verschieben($pdo, 'rest', $rIds, $delta);
-        }
+            // 4. Spurpunkte der Ruhesegmente. Leicht zu uebersehen: Sie haengen
+            //    nicht an einem Einsatz und tragen die Epoche, kein DATETIME.
+            if ($rIds) {
+                spur_zeit_verschieben($pdo, 'rest', $rIds, $delta);
+                schnitte_zeit_verschieben($pdo, 'rest', $rIds, $delta);
+            }
 
-        $pdo->commit();
+        });
     } catch (Throwable $ex) {
-        if ($pdo->inTransaction()) { $pdo->rollBack(); }
         return ['ok' => false,
                 'meldung' => 'Die Umdatierung ist fehlgeschlagen. Es wurde nichts '
                            . 'geändert — der Diensttag steht unverändert am '

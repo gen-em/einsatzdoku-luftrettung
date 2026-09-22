@@ -45,7 +45,7 @@ require_once __DIR__ . '/../mission_fields_lib.php';
 
 // Nur lesen (M3-11) — derselbe Grund wie bei den uebrigen lesenden
 // Endpunkten: Was nichts aendert, beantwortet auch kein POST.
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_out(['error' => 'method'], 405); }
+api_methode('GET');
 
 try {
     // ---- Einsaetze -------------------------------------------------------
@@ -56,16 +56,10 @@ try {
      * Antwort, ohne je gelesen zu werden. Der Bearbeitungsstand steht
      * unveraendert in der Einsatzansicht (api/mission.php). */
     $st = db()->prepare(
-        'SELECT m.id, m.day_id, m.started_at, m.distance_m,
-                m.transport_mode, m.na_escort, m.transport_dest, m.schockraum,
-                m.false_alarm,
-                m.winch, m.winch_cycles, m.winch_cycles_pat, m.winch_airload,
-                m.bergwacht, m.bw_unit, m.bw_info,
-                m.secondary, m.other_ema, m.crew_override,
-                m.pat_blob,
-                /* `ended_at` statt der Phase-9-Unterabfrage
-                   (Web 14.2.2, F-R64-05) -- siehe api/day.php. */
-                m.ended_at
+        /* AUS DEM REGISTER (Schritt 15/AP6). `ended_at` steht dort an letzter
+         * Stelle dieses Zwecks — es kam mit Web 14.2.2 an die Phase-9-
+         * Unterabfrage heran und wurde hinten angehaengt (F-R64-05). */
+        'SELECT ' . mf_spalten_sql('suchindex', 'm.') . '
            FROM missions m
           WHERE m.user_id = ? AND m.deleted_at IS NULL
           ORDER BY m.started_at'
@@ -182,6 +176,17 @@ try {
             // Nachteinsatz nicht wie ein falsch zugeordneter aussieht.
             'dienst_day'  => $d !== null ? (string)$d['day'] : null,
             'start_hhmm'  => $hhmm,
+            /* CHRONOLOGISCHER SORTIERSCHLUESSEL (Schritt 15 AP9b, E-ZE-32).
+             * `start_hhmm` allein taugt nicht zum Sortieren: Ein Dienst ueber
+             * Mitternacht -- laut Handbuch „der klassische Fall" -- hat
+             * Einsaetze um 23:50 und um 01:10, und als Zeichenkette steht
+             * 01:10 davor. `day` hilft dabei nicht ueberall: In api/day.php
+             * und api/range.php ist es der DIENSTTAG, und der ist fuer beide
+             * derselbe. Also schickt der Server den Zeitpunkt, nach dem
+             * sortiert werden soll -- in Ortszeit, damit er zu `start_hhmm`
+             * passt, und als 'Y-m-d H:i', weil eine Zeichenkette in diesem
+             * Format in derselben Reihenfolge sortiert wie der Zeitpunkt. */
+            'start_sort'  => fmt_local($m['started_at'], 'Y-m-d H:i'),
             'start_min'   => $startMin,
             'duration_s'  => $dur,
             'distance_m'  => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,
@@ -227,7 +232,37 @@ try {
         ];
     }
 
-    json_out(['missions' => $missions]);
+    /* ---- Faehigkeiten des Bestands (Schritt 15 AP9, E-ZE-31) -----------
+     *
+     * Winde und Bergwacht bekommen in der Suchtabelle eine Spalte, wenn
+     * IRGENDEIN Diensttag die Faehigkeit traegt — nicht erst, wenn jemand
+     * tatsaechlich gewindet hat. Der Unterschied ist genau der Fall, den man
+     * sucht: „null Windeneinsaetze" ist etwas anderes als „Winde nicht
+     * eingerichtet", und wer nachtragen will, muss die Spalte sehen.
+     *
+     * OHNE ARTFILTER, anders als api/range.php. Das ist entschieden und
+     * nicht vergessen (E-ZE-31): Die Zeitraumuebersicht wertet einen
+     * Zeitraum aus und folgt dort der Betriebsart; die Suche sucht im
+     * ganzen Bestand, und ein bodengebundener Bergwacht-Dienst ist genauso
+     * ein Treffer wie ein luftgebundener. Ein Rettungsmittel des Typs
+     * Bergwacht darf die Faehigkeiten in BEIDEN Betriebsarten fuehren
+     * (`veh_caps_erlaubt()` in db.php).
+     *
+     * Der Schluessel spannt sich ueber VEHICLE_CAPABILITIES auf und waechst
+     * mit dem Katalog — dieselbe Ueberlegung wie in api/range.php. */
+    $faehig = array_fill_keys(array_keys(VEHICLE_CAPABILITIES), false);
+    $fq = db()->prepare('SELECT c.capability
+                           FROM day_capabilities c
+                           JOIN days d ON d.id = c.day_id
+                          WHERE d.user_id = ? AND d.deleted_at IS NULL
+                          GROUP BY c.capability');
+    $fq->execute([$userId]);
+    foreach ($fq->fetchAll() as $z) {
+        $k = (string)$z['capability'];
+        if (array_key_exists($k, $faehig)) { $faehig[$k] = true; }
+    }
+
+    json_out(['missions' => $missions, 'faehigkeiten' => $faehig]);
 } catch (Throwable $ex) {
     // Statt eines leeren HTTP 500 (z. B. fehlende Spalte nach vergessener
     // Migration) eine lesbare Meldung — das Frontend zeigt sie an.

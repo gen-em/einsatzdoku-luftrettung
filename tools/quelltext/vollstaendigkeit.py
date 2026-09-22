@@ -530,7 +530,7 @@ def pruefung_symbole(bericht):
     # laesst, ohne die Sache zu verschlechtern, ist ein Hinweis.
     #
     # WAS DAMIT NICHT GESAGT IST: dass die 14 in Ordnung sind. Sie gehoeren
-    # in Symboldateien und stehen als Rest im Backlog (Nr. 270).
+    # in Symboldateien und stehen als Rest im Backlog (Nr. 279).
     bericht.hinweis('3 Symbole', 'Unicode-Zeichen als Symbol im Markup',
                     ['%s:%d  %s' % z for z in unicode_])
     bericht.hinweis('3 Symbole', 'Emoji im Markup', emoji)

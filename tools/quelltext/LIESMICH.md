@@ -28,7 +28,7 @@ Nichts — kein Netz, keine Datenbank. `php` und `python3`.
 
 `alle` → **8 von 8 Prüfungen grün**, `--selbstprobe` → **5 von 5**.
 Die Schwelle der Vollständigkeit steht in `pruefablauf.json` (nach 1b: **18**,
-Nr. 269). Die Textprobe meldet nur **neue** Treffer —
+Nr. 278). Die Textprobe meldet nur **neue** Treffer —
 `textprobe-altbestand.json` hält je (Datei, Muster) den Stand vom
 Einführungstag; neu schreiben mit `--altbestand-schreiben`, nie von Hand.
 

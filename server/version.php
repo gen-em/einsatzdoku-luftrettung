@@ -6645,5 +6645,564 @@ declare(strict_types=1);
  *   DIE AENDERUNG: zwei Backticks um den Alias, in `backup_lib.php` und
  *   `api/export_data.php`. Der Schluessel in der Datei heisst weiter
  *   `manual`; jede bisher ausgelieferte Sicherung bleibt lesbar.
+ *   NACHTRAG (Merge von Schritt 15, 22.09.2026): Die zwei Backticks
+ *   stehen nicht mehr in diesen beiden Dateien, sondern in `mf_spalten()`
+ *   — der einen Stelle, die aus dem Spaltenregister SQL macht. Schritt 15
+ *   hat beide Handlisten durch das Register ersetzt; haette der Merge die
+ *   Behebung an ihrem alten Ort gelassen, waere sie beim Aufloesen des
+ *   Konflikts verschwunden und der Fehler auf MySQL 8.4 zurueck gewesen.
+ *   Jetzt gilt sie fuer JEDEN Alias, auch fuer den naechsten.
+ *
+ * 20.27.0 — EINE STELLE FUER DIE KONFIGURATION, EINE FUER DIE SITZUNG
+ *   (21.09.2026, Schritt 15 AP2 — Zentralisierung, R83, E-ZE-02/-06/-12
+ *   bis -14, F-ZE-2). NEBEN-Nummer: zwei neue Funktionen, kein Datenmodell,
+ *   keine Migration, `update.php` nicht faellig.
+ *
+ *   DIE KONFIGURATION LAG AN ZWEI STELLEN GLEICHZEITIG. `db.php` las
+ *   `config.php` beim Laden in die globale `$CFG`; fuenf weitere Dateien
+ *   lasen dieselbe Datei bei Bedarf noch einmal — `smtp.php` dreimal.
+ *   Gemessen: 7 Lesestellen in 5 Dateien, 46 Zugriffe auf `$CFG` in 11.
+ *   Wer einen Wert brauchte, hatte die Wahl zwischen `global $CFG` (setzt
+ *   voraus, dass `db.php` schon geladen ist) und einem eigenen `require`
+ *   (liest die Datei noch einmal von der Platte). Jetzt:
+ *   `konfig('app.timezone')` — eine Datei, ein Merker, 7 -> 1 und 46 -> 0.
+ *
+ *   `konfig_lib.php` LAEDT NICHTS, und das ist Bedingung, nicht Sparsamkeit:
+ *   `install.php` laeuft ohne `config.php`, und `sitzung_lib.php` wird aus
+ *   `db.php` heraus gerufen, WAEHREND diese laedt. Zoege der Leser etwas
+ *   nach, das `db.php` erreicht, liefe `sitzung_ablage()` in einer halb
+ *   geladenen `db.php` — und `require_once` verdeckte den Zyklus, statt ihn
+ *   zu melden. Nachgemessen ueber `get_included_files()`: Der Leser zieht
+ *   keine einzige Datei nach.
+ *
+ *   `db.php` VERLANGT `config.php` WEITERHIN HART. Der Leser toleriert die
+ *   fehlende Datei — er muss, wegen `install.php`. `db.php` erbt das nicht:
+ *   Ohne die Pruefung waere aus dem klaren Befund „config.php fehlt" eine
+ *   PDO-Ausnahme auf einem leeren DSN geworden, also die Meldung „Datenbank
+ *   nicht erreichbar" fuer ein Problem, das nichts mit der Datenbank zu tun
+ *   hat. Eine falsche Diagnose ist teurer als ein Abbruch.
+ *
+ *   NEUN SITZUNGSSTARTS IN VIER FASSUNGEN, JETZT EINER. `sitzung_starten()`
+ *   in `sitzung_lib.php` kennt vier Arten — `app`, `lesend`, `einrichtung`,
+ *   `passwort` — mit genau den Cookie-Parametern, die vorher verstreut
+ *   standen. Die Drift bei `secure` (zwei Arten fest, zwei HTTPS-abhaengig)
+ *   BLEIBT, wie sie war: Sie zu schliessen ist eine Sicherheitsentscheidung
+ *   fuer Schritt 18 (Backlog Nr. 251), keine Zentralisierung. Was sich
+ *   aendert, ist dass man sie jetzt SIEHT — vorher stand sie in neun Dateien
+ *   und niemand konnte sie zaehlen.
+ *
+ *   `PW_SESSION_NAME` und `pw_session_start()` sind damit entfallen; der
+ *   Name steht neben der Tabelle, die ihn braucht.
+ *
+ *   `sitzung_ablage()` RUFT JETZT `sitzung_starten()` SELBST. Die beiden
+ *   Aufrufe aus Schritt 16 (`db.php`, `install.php`) sind fort. Folge: Die
+ *   Ablage wird nur noch eingerichtet, wenn wirklich eine Sitzung startet —
+ *   nicht mehr bei jeder Anfrage, die `db.php` laedt. Ein API-Aufruf ohne
+ *   Sitzung fasst `.sitzungen/` gar nicht mehr an.
+ *
+ *   DIE EINE SICHTBARE FOLGE (F-ZE-2): Handbuch, „Was ist NAdoku" und die
+ *   Rechtstexte starten eine Sitzung nur noch, wenn ein Sitzungscookie da
+ *   ist. Sie sind ohne Anmeldung erreichbar und fragten die Sitzung bisher
+ *   nur, um den angemeldeten Kopf zeigen zu koennen — STARTETEN sie dabei
+ *   aber fuer jeden Besucher, auch fuer jeden Bot, und seit Web 20.26.0
+ *   landete jede davon als Datei in `.sitzungen/`. Das Konzept Sitzungsablage
+ *   behauptete, die drei Seiten pruefen auf das Cookie; nachgemessen taten
+ *   sie es nicht. Fuer Angemeldete aendert sich nichts.
+ *
+ *   DIE SITZUNGSHAERTUNG PRUEFT JETZT SCHAERFER: nicht mehr nur „steht die
+ *   Haertung vor jedem Aufruf", sondern „es gibt genau einen Aufruf, er
+ *   steht in `sitzung_lib.php`, er ist gehaertet, und jeder weitere ist ein
+ *   Befund". Der Zugewinn ist der letzte Punkt: Ein neuer Sitzungsstart MIT
+ *   Haertung war vorher gruen und haette die Cookie-Parameter trotzdem neu
+ *   erfinden muessen. Genau so sind die neun entstanden.
+ *
+ * 20.28.0 — EIN EINGANG FUER DIE ENDPUNKTE, EINE MELDUNG UEBER DIE UMLEITUNG
+ *   (21.09.2026, Schritt 15 AP3 — Zentralisierung, R83, E-ZE-15/-16,
+ *   F-ZE-5). NEBEN-Nummer: drei neue Funktionen, kein Datenmodell, keine
+ *   Migration, `update.php` nicht faellig.
+ *
+ *   EINUNDZWANZIG DATEIEN UNTER `api/` FINGEN GLEICH AN — und liefen
+ *   auseinander. Methode pruefen, Rumpf lesen, „leer?", „ist das ein
+ *   JSON-Objekt?": vier Handgriffe, in vier Schreibweisen. Siebzehn Dateien
+ *   antworteten `'method'`, drei `'methode'`; acht sagten `'payload'`, drei
+ *   `'format'`; den Hinweis auf `post_max_size` gab es in drei Fassungen,
+ *   und acht Endpunkte hatten gar keinen Leer-Zweig — ein leerer POST endete
+ *   dort in `payload`, also in „dein JSON ist falsch" fuer eine Anfrage, die
+ *   gar keins mitbrachte. Jetzt: `api_methode()` und `api_rumpf()` in
+ *   `db.php`, gemessen 12 -> 1 Rumpf-Lesestellen (die eine ist
+ *   `api/csp_bericht.php`, benannte Ausnahme), 17 -> 0 Methodenpruefungen,
+ *   11 -> 0 Handpruefungen auf „kein JSON-Objekt", 3 -> 0 Fassungen des
+ *   `post_max_size`-Hinweises.
+ *
+ *   ZWEI FUNKTIONEN UND NICHT EINE — die Reihenfolge traegt. Das Konzept sah
+ *   EINEN Aufruf vor, der Methode und Rumpf zusammen erledigt. Zwischen
+ *   beiden steht in allen elf Rumpf-Dateien `csrf_check()`, und ein
+ *   zusammengefasster Aufruf haette das Rumpflesen davor geschoben: Ein
+ *   Aufrufer ohne gueltiges Token saehe `leer` oder `format` statt `csrf`,
+ *   und in `api/kdf_upgrade.php` liefe er am Demo-Ausstieg vorbei, der
+ *   zwischen csrf und Rumpf steht (200 wuerde zu 400). Dieselbe Klasse von
+ *   Fehler ist am 13.09.2026 schon einmal behoben worden; der Kopfkommentar
+ *   jener Datei erzaehlt es. Zwei Funktionen halten die Reihenfolge — gemessen
+ *   an einer laufenden Anlage: POST ohne Token mit leerem Rumpf antwortet
+ *   weiterhin `403 csrf`, GET ohne Token weiterhin `405 method`.
+ *
+ *   DIE FEHLERSCHLUESSEL AENDERN SICH, UND ZWAR ABSICHTLICH (F-ZE-5). 19 von
+ *   46 gemessenen Zellen antworten anders als vorher: acht `payload` ->
+ *   `format`, sechs `payload` -> `leer`, zwei `format` -> `leer`, drei
+ *   `methode` -> `method`. Kein JavaScript wertet einen dieser Schluessel aus
+ *   — nachgemessen ueber alle 40 Skripte, der einzige Vergleich auf `error`
+ *   gilt `maintenance`. Die Geraete-Endpunkte (`ingest.php`, `pair.php`,
+ *   `auth_salt.php`, `jobs.php`, `gpx.php`) sind nicht angefasst und behalten
+ *   `payload` und `too_large` zeichengleich (JSON-Vertrag).
+ *
+ *   `max_bytes` HAT KEINEN VORGABEWERT. Eine Grenze fuer die Rumpfgroesse
+ *   gab es unter `api/` bisher an keiner Stelle, und ein Konto-Backup kann
+ *   zweistellig megabytegross sein. `app.max_body_bytes` (512 KB) ist die
+ *   Grenze des GERAETE-Eingangs. Eine Vorgabe haette hier eine Pruefung
+ *   eingefuehrt, die es nicht gab.
+ *
+ *   ZWEI SITZUNGSSCHLUESSEL FUER MELDUNGEN, JETZT EINER.
+ *   `flash_setzen()`/`flash_holen()` in `session_lib.php`; drei Seiten —
+ *   Einstellungen, Nachbearbeitung, Papierkorb — setzten und raeumten
+ *   `flash_notice` und `flash_error` von Hand, 22 Stellen. Der Ton ist eine
+ *   Eigenschaft der Meldung, keine eigene Ablage: Zwei Schluessel heissen,
+ *   dass beide gleichzeitig gesetzt sein koennen, und dann entscheidet die
+ *   Reihenfolge des Auslesens, was jemand sieht. Dass sie es NICHT koennen,
+ *   ist fuer alle 24 Handlungszweige nachgelesen worden — jeder ist eine
+ *   if/elseif/else-Kette oder ein try/catch, und der Demo-Riegel setzt
+ *   `$action = ''`.
+ *
+ * 20.29.0 — VIER SACHEN, DIE AN EINER STELLE STEHEN STATT AN SIEBENUNDVIERZIG
+ *   (21.09.2026, Schritt 15 AP4 — Zentralisierung, R83, E-ZE-04/-17/-18/-19).
+ *   NEBEN-Nummer: neue Funktionen, kein Datenmodell, keine Migration,
+ *   `update.php` nicht faellig.
+ *
+ *   `app_state`: 27 STELLEN IN 17 DATEIEN, JETZT ZWEI. Vier Helfer kommen zu
+ *   `app_state_lesen()` und `app_state_setzen()` dazu:
+ *   `app_state_mehrere()` (eine Abfrage statt n), `app_state_setzen_mehrere()`,
+ *   `app_state_loeschen()` und `app_state_einmalig()` — letzteres fuer die
+ *   beiden Servergeheimnisse (`salt_secret`, `reg_secret`). Die benutzten
+ *   schon `INSERT IGNORE`, und das ist der Punkt: Zwei gleichzeitige Anfragen
+ *   erzeugen beide einen Wert, aber nur EINER darf gewinnen — mit
+ *   `ON DUPLICATE KEY UPDATE` gewaenne der letzte, und die Pseudo-Salts
+ *   aenderten sich unter der Hand. Die Wrapper (`edbak_marke_*`,
+ *   `geocoder_state*`, `schluessel_marke_*`, `demo_*`, `jobs_*`, `logo_*`)
+ *   behalten Namen und Signatur; nur ihr Rumpf ruft die Helfer.
+ *
+ *   WAS DIE 27 STELLEN UNTERSCHIED, war nie die Sache, sondern die Antwort
+ *   auf die Frage „was, wenn `app_state` fehlt?" — mal `try/catch` mit
+ *   `null`, mal ohne, mal mit `error_log`. Das ist kein seltener Zustand: Es
+ *   ist der Zustand JEDER Anlage zwischen Deploy und `update.php`.
+ *
+ *   ZWEI STELLEN BLEIBEN, NAMENTLICH. `job_aufraeumen_schritte()` loescht mit
+ *   einem Verbund auf `users` (kein Schluesselzugriff). Und `jobs.php`, das
+ *   ist der wichtigere Fall: Der Endpunkt gehoert zum GERAETEVERTRAG und
+ *   antwortet bei unerreichbarer Datenbank mit `500 datenbank`. Der Helfer
+ *   faengt und liefert `null` — daraus waere ein „Token falsch" geworden.
+ *
+ *   DAS VIRTUELLE GERAET „Manuelle Einträge": Der Block „gibt es das Geraet
+ *   schon? sonst anlegen" stand VIERMAL — zweimal als eigene Funktion
+ *   (`schnitt_geraet()`, `gpx_import_geraet()`), zweimal eingebettet, jedes
+ *   Mal mit demselben zwanzigzeiligen Kommentar darueber, der erklaert, warum
+ *   `user_id` IN der Abfrage stehen muss. Jetzt:
+ *   `geraet_virtuell_sicherstellen()`. Die Kennung selbst stand an sieben
+ *   Stellen; dafuer `geraet_virtuell_kennung()`, `geraete_echt_sql($alias)`
+ *   fuer die Abfragen mit Tabellenalias und `GERAET_VIRTUELL_MUSTER` fuer die
+ *   eine Stelle, die das Muster bindet statt es einzusetzen.
+ *
+ *   `einsatz_laden()` IN `einsatz_lib.php` (neu): „Einsatz per Kennung holen
+ *   und dabei pruefen, dass er dem Konto gehoert" stand zwoelfmal in neun
+ *   Dateien. Der Unterschied war die Spaltenliste und die Behandlung des
+ *   Papierkorbs — mal `IS NULL`, mal `IS NOT NULL`, mal gar nicht. Genau das
+ *   sind die beiden Optionen. Zwei Stellen bleiben: der Verbund mit `days` in
+ *   `trash_restore_mission()` und die in der Import-Schleife bis zu 3000-mal
+ *   ausgefuehrte vorbereitete Anweisung in `api/import_commit.php`.
+ *
+ *   DIE SCHEMA-FRAGEN WERDEN OEFFENTLICH (E-ZE-04). `db_hat_tabelle()`,
+ *   `db_hat_spalte()`, `db_hat_index()` in `db.php`; die privaten `_hat_*` in
+ *   `migration_lib.php` reichen nur noch durch, damit 42 gelaufene
+ *   Migrationen unveraendert bleiben. Sie nehmen ein `PDO`, und das ist
+ *   zwingend: `tools/schemaprobe/` laesst Migrationen gegen ein frisch
+ *   angelegtes Schema laufen, also gegen eine ANDERE Verbindung als `db()`.
+ *   Ein Helfer, der sich seine Verbindung selbst holte, fragte dort das
+ *   falsche Schema — lautlos.
+ *
+ *   VIER ROLLENVERGLEICHE VON HAND (`=== 'betreiberin'`) rufen jetzt
+ *   `rolle_ist_betreiberin()`.
+ *
+ * 20.30.0 — EIN TRANSAKTIONSRAHMEN, VIER KINDTABELLEN
+ *   (22.09.2026, Schritt 15 AP5 — Zentralisierung, R83, E-ZE-20, E-ZE-21).
+ *   NEBEN-Nummer: fuenf neue Funktionen, kein Datenmodell, keine Migration,
+ *   `update.php` nicht faellig.
+ *
+ *   DREIUNDDREISSIG TRANSAKTIONSRAHMEN IN ZWEIUNDZWANZIG DATEIEN, und der
+ *   Tokenizer hat sie in drei Bauformen sortiert (mit einem Muster ging es
+ *   nicht: Drei Anlaeufe ergaben drei Verteilungen, weil geschweifte Klammern
+ *   in Kommentaren und Zeichenketten mitzaehlen). 19x beginnen, versuchen,
+ *   bestaetigen, bei Fehler zurueckrollen und weitergeben; 12x dasselbe, aber
+ *   der `catch` schluckt; 2x gar kein `try`. Dazu 42 `rollBack()`-Aufrufe,
+ *   von denen 14 hinter einer Wache standen und 28 nicht.
+ *
+ *   `db_transaktion(PDO $pdo, callable $fn): mixed` — 24 Rahmen ziehen um.
+ *   Sie ist verschachtelungsfest und ASYMMETRISCH: Wer schon in einer fremden
+ *   Transaktion steht, oeffnet keine eigene und bestaetigt und verwirft dann
+ *   auch nichts; die Ausnahme kommt heraus, und der Aufrufer entscheidet.
+ *   Und sie fragt vor dem `rollBack()` nach, ob die Transaktion noch steht:
+ *   Ein DDL-Befehl bestaetigt in MySQL still, und der Rumpf darf selbst
+ *   zurueckgerollt haben — sonst wuerfe `rollBack()` eine ZWEITE Ausnahme und
+ *   verdeckte die erste. Genau das war der Zustand: „There is no active
+ *   transaction" im Protokoll statt des Grundes.
+ *
+ *   NEUN RAHMEN BLEIBEN, NAMENTLICH (Auftraggeber, 22.09.2026; das Konzept
+ *   liess acht zu, H-ZE-4). Drei wegen Groesse oder Vertrag: `ingest.php`
+ *   (Geraetevertrag, Deadlock-Behandlung in Schritt 18), `backup_lib.php`
+ *   (Rumpf 1153 Zeilen, 145 Variablen) und `api/import_commit.php` (542
+ *   Zeilen, 78 Variablen) — eine `use`-Liste mit 145 Eintraegen ist kein
+ *   Zentralisieren, sondern ein Rewrite. Sechs wegen Bauform: `pair.php`
+ *   (Geraetevertrag), `jobs_lib.php`, `diensttag_zusammenfuehren.php`,
+ *   `api/day.php`, `api/kdf_upgrade.php`, `api/schneiden.php` — sie rollen
+ *   MITTEN im `try` zurueck und machen dann etwas anderes weiter.
+ *
+ *   EIN LATENTER FEHLER IST DABEI HERAUSGEFALLEN (`einsatz_form.php`).
+ *   Hinter dem `commit()` standen noch die Hoehenermittlung und die
+ *   Rettungsmittel-Zeilen — INNERHALB desselben `try`, dessen `catch` ein
+ *   unbedingtes `$pdo->rollBack()` hatte. Warf eine der beiden, rollte der
+ *   `catch` eine BEREITS BESTAETIGTE Transaktion zurueck: Das wirft
+ *   seinerseits, und statt „Speichern fehlgeschlagen." gab es eine 500.
+ *
+ *   VIER KINDTABELLEN, FUENF SCHREIBWEGE, DREISSIG ANWEISUNGEN — jetzt vier
+ *   Funktionen in `einsatz_lib.php`: `einsatz_phasen_ersetzen()`,
+ *   `einsatz_reas_ersetzen()`, `einsatz_rettungsmittel_ersetzen()`,
+ *   `einsatz_besatzung_ersetzen()`. Zwei Schalter statt zweier
+ *   Funktionsformen: `loeschen` (Vorgabe `true`) fuer das Backup, das in
+ *   einen gerade erst angelegten Einsatz schreibt, und `ignorieren` fuer
+ *   dessen `INSERT IGNORE`. Eine leere Liste mit `loeschen => true` IST das
+ *   Loeschen — das ist der Zweig des Schneidens.
+ *
+ *   SIE PRUEFEN NICHTS. Was gueltig ist, entscheidet weiter der Aufrufer;
+ *   eine Pruefpolitik hier waere eine sechste neben den fuenf vorhandenen.
+ *
+ *   UND SIE HALTEN IHRE ANWEISUNGEN VOR (`einsatz_anweisung()`). `db.php`
+ *   setzt `ATTR_EMULATE_PREPARES => false`, also ist jedes `prepare()` ein
+ *   Roundtrip. `api/import_commit.php` bereitete seine sieben Anweisungen
+ *   deshalb EINMAL vor und fuehrte sie je Einsatz aus — bis zu 3000-mal. Ohne
+ *   Zwischenspeicher waeren daraus bis zu 21 000 Roundtrips geworden.
+ *   Nachgemessen am csv-Kreislauf: 41,78 s und 41,31 s gegen 41,71 s und
+ *   41,47 s davor — dieselbe Streuung.
+ *
+ * 20.31.0 — DAS SPALTENREGISTER VON `missions`
+ *   (22.09.2026, Schritt 15 AP6 — Zentralisierung, R83, E-ZE-22).
+ *   NEBEN-Nummer: vier neue Funktionen im Feldkatalog, kein Datenmodell,
+ *   keine Migration, `update.php` nicht faellig.
+ *
+ *   `missions` HAT 41 SPALTEN, UND ZWOELF STELLEN FUEHRTEN EINE EIGENE LISTE
+ *   DAVON — jede in ihrer eigenen Reihenfolge, keine sagte, warum eine Spalte
+ *   fehlt. Was das kostet, stand im Bestand: Die tote Altspalte
+ *   `other_resources` ging jahrelang in jedes Backup, weil dort `SELECT *`
+ *   stand; `site_ele_m` steht im Backup, aber in keiner Einspielliste — der
+ *   Wert kommt nur wieder, weil die Wiederherstellung ihn hinterher aus den
+ *   Phasenkoordinaten NEU RECHNET. Beides fiel erst auf, als jemand die
+ *   Listen nebeneinander legte.
+ *
+ *   JETZT FUEHRT `mf_missions_register()` JEDE SPALTE GENAU EINMAL und sagt
+ *   je Zweck, ob sie dabei ist und AN WELCHER STELLE. `mf_spalten($zweck)`
+ *   erzeugt daraus die Liste, `mf_spalten_sql()` den SQL-Text. Neun Zwecke:
+ *   `export`, `backup`, `backup_restore`, `import_neu`, `import_aendern`,
+ *   `ingest_neu`, `schnitt_neu`, `suchindex`, `range`.
+ *
+ *   WARUM DIE POSITION MITGEFUEHRT WIRD und nicht die Registerreihenfolge
+ *   gilt: Die Listen sind in Menge UND Reihenfolge eingefroren. Eine andere
+ *   Reihenfolge aendert die Spaltenfolge im CSV-Export — also in einer Datei,
+ *   die Menschen aufheben. `mf_spalten()` verlangt deshalb je Zweck eine
+ *   lueckenlose Positionsfolge ab 0 und bricht bei einer doppelten oder
+ *   fehlenden ab.
+ *
+ *   NEUN ANWEISUNGEN WERDEN ERZEUGT, und alle neun sind Zeichen fuer Zeichen
+ *   dieselben wie vorher (nachgemessen, nicht angenommen). Wo Werte fest im
+ *   Satz stehen, haengt die Wertform seither an der SPALTE statt an ihrer
+ *   Stelle: `['uhr_gesperrt' => '1', 'origin' => "'import'"]` beim Import,
+ *   `COALESCE(?, spalte)` fuer die vier Felder unter der Export-Schranke
+ *   (A9/P10), `NULL AS spalte` im Export ohne personenbezogene Angaben. Wer
+ *   ein Feld unter die Schranke nimmt, traegt es an EINER Stelle ein.
+ *
+ *   ZWEI WERTELISTEN VERLIEREN IHRE POSITIONSBINDUNG. In `backup_lib.php`
+ *   standen Spalten oben und Werte darunter, in `api/import_commit.php` eine
+ *   namenlose Werteliste fuer zwei Anweisungen mit 31 und 28 Spalten. Beide
+ *   Kommentare warnten davor, dass ein Einschub stumm alles dahinter
+ *   verschiebt — die Warnung war die einzige Sicherung. Jetzt traegt jeder
+ *   Wert seinen Spaltennamen, und das Register ordnet zu.
+ *
+ *   DREI ABBILDUNGEN BLEIBEN VON HAND, und zwar zu Recht: `export_data.php`,
+ *   `import_commit.php` und `api/suchindex.php` rechnen je Wert um — nach
+ *   Ortszeit, auf eine Laenge, in eine Beschriftung. Ein `implode()` ueber
+ *   Spaltennamen kann das nicht. `tools/spaltenregister/pruefen.php` belegt
+ *   dafuer, dass jede genau die Registerspalten ihres Zwecks fuehrt; eine
+ *   Ausnahme braucht eine Begruendung im Feld, und eine, die nichts mehr
+ *   trifft, ist selbst ein Befund.
+ *
+ * 20.32.0 — ZEIT UND ZAHL: EINE STELLE, AN DER TEXT ENTSTEHT
+ *   (22.09.2026, Schritt 15 AP7 — Zentralisierung, R83, E-ZE-23, E-ZE-26;
+ *   F-ZE-1, F-ZE-3). NEBEN-Nummer: zwei neue Dateien, kein Datenmodell,
+ *   keine Migration, `update.php` nicht faellig.
+ *
+ *   ZWOELF SACHEN AN 197 STELLEN, und drei davon gab es mehrfach. Bytes
+ *   hatten DREI Fassungen: `edbak_groesse_text()` in `adminbackup_lib.php`
+ *   (42 Aufrufe in 10 Dateien), `apk_groesse()` und `plattform_groesse()`.
+ *   Die dritte trug im Kopf den Satz „dieselbe Schreibweise wie
+ *   edbak_groesse_text()" — und das stimmte nie: vierte Stufe „B",
+ *   abgeschnittene Nachkommanullen, GB mit einer statt zwei Stellen.
+ *   Dieselben Bytes sahen je nach Seite anders aus. Eine vierte Fassung
+ *   stand als Inline-JavaScript in `einstellungen.php`.
+ *   Zahlen hatten EINE Fassung, und die lag in einer SEITE (`stat_zahl()`)
+ *   — ein zweiter Verbraucher konnte sie gar nicht erreichen, deshalb
+ *   schrieben 26 Stellen `number_format(x, s, ',', '.')` von Hand.
+ *   Anteile hatten KEINE: zehn Handrechnungen, drei Rundungen, fuenf
+ *   Bauarten fuer „keine Bezugsgroesse".
+ *   Die relative Zeit hatte ZWEI, und sie waren auseinandergelaufen.
+ *
+ *   `server/format_lib.php` FUEHRT SIE JETZT, DREIZEHN FUNKTIONEN, und jede
+ *   ist gegen ihre Vorgaengerin NACHGERECHNET statt begutachtet:
+ *   `groesse_text` 3 017 Byte-Werte, `groesse_kurz_text` 3 017,
+ *   `zahl_text` 28 Faelle, `prozent_text` 6 030, `zeit_relativ` 10 811
+ *   Zeitpunkte, `iso_utc`/`iso_utc_lesen` 5 000 Zeitstempel hin und
+ *   zurueck — je 0 Abweichungen. Die Gegenleser haben unabhaengig
+ *   nachgemessen; ein Lauf allein brachte 4 420 679 Vergleiche.
+ *
+ *   ZWEI FUNKTIONEN FUER DEN ANTEIL, NICHT EINE. Fuenf der zehn Stellen
+ *   runden AB, weil sie eine SCHWELLE ausloesen; drei kaufmaennisch, weil
+ *   sie nur gelesen werden. Eine Funktion ohne diesen Schalter verschoebe
+ *   den Ausloesezeitpunkt der Speicher-Warnmail um bis zu einen
+ *   Prozentpunkt.
+ *
+ *   `fmt_local()` ZIEHT AUS `db.php` HIERHER, unter demselben Namen — alle
+ *   113 Aufrufer merken nichts. Der Grund ist zwingend: `datum_text()` baut
+ *   auf ihr auf, und `format_lib.php` darf die Datenbankdatei nicht laden,
+ *   weil `install.php` sie ueber `plattform_lib.php` erreicht, bevor es eine
+ *   `config.php` gibt. `local_to_utc()` bleibt in `db.php`: Sie liest einen
+ *   Formularwert, um damit zu RECHNEN — die andere Richtung.
+ *
+ *   DER TRENNER WIRD ANGEHAENGT, NICHT INS FORMAT GESCHRIEBEN. Die
+ *   naheliegende Bauform ginge fuer die drei heutigen Trenner zufaellig gut,
+ *   weil keiner einen Buchstaben enthaelt. Der erste mit einem Buchstaben
+ *   wuerde still zu Formatzeichen — und so einer stand schon im Bestand.
+ *
+ *   DREI SICHTBARE FOLGEN, alle benannt und entschieden: die Altersangabe
+ *   auf Betrieb -> Updates (E-ZE-23, zwei Baender mit zusammen 1 890
+ *   Sekundenwerten), „heute" in der App-Zeitzone statt in der der `php.ini`
+ *   (F-ZE-1 — auf einem Server in UTC war „heute" zwischen 0 und 2 Uhr
+ *   Ortszeit GESTERN), und die Groessenangabe der heruntergeladenen
+ *   Sicherungsdatei (E-ZE-26, jetzt dreistufig wie ueberall sonst).
+ *
+ *   `server/assets/format.js` IST DIE JS-SEITE DAVON (`EdFormat`). Sie
+ *   traegt heute zwei Funktionen — genau die, die einen Verbraucher haben;
+ *   AP8 baut sie aus. PHP und JavaScript sind ueber 2 014 Byte-Werte
+ *   Zeichen fuer Zeichen gegeneinander geprueft.
+ *
+ *   20.32.1 raeumt einen Fehler genau dieses Umbaus weg: Die Fertigmeldung
+ *   des Sicherns sagte „263 KB MB". `EdFormat.groesse()` bringt die Einheit
+ *   selbst mit, das Literal „ MB" hinter der Variablen war aus der alten
+ *   Rechnung stehengeblieben. Gefunden hat es nicht der Formvergleich
+ *   (496 Seiten, 0 abweichende Schreibweisen) — er sieht nur, was eine
+ *   aufgerufene Seite anzeigt, und diese Meldung entsteht erst NACH einem
+ *   tatsaechlichen Sicherungslauf. Gefunden hat es der edbak-Kreislauf,
+ *   und zwar im Protokoll, nicht im Vergleich: Seine 328 771
+ *   Einzelvergleiche waren gruen, weil sie den Inhalt der Datei pruefen,
+ *   nicht den Satz darueber.
+ *
+ * 20.33 — EINE KARTE ENTSTEHT AN EINER STELLE (Schritt 15 AP8a).
+ *
+ *   `EdKarte.anlegen(el, o)` in `assets/map_layers.js`. Vier Seiten bauten
+ *   ihre Karte selbst auf, mit denselben vier Zeilen in DREI verschiedenen
+ *   Reihenfolgen: L.map, setView, attachBaseLayers, attachFullscreenControl.
+ *   Gemessen: 4 von 4 riefen attachBaseLayers(), 4 von 4
+ *   attachFullscreenControl(), 1 von 4 attachGroessenControl() — und KEINE
+ *   setzte auch nur eine der ueblichen Leaflet-Optionen. Der gemeinsame Teil
+ *   war also fast alles, und die Unterschiede sind drei Parameter:
+ *   `mitte`/`zoom` (zwei Ausschnitte bei vier Seiten, OHNE Vorgabewert —
+ *   ein Vorgabewert zoege sie auf einen), `groesse` (der dritte Kartenknopf
+ *   gehoert nur der Tagesuebersicht, Backlog Nr. 45) und `leaflet`
+ *   (`preferCanvas` gilt nur der Zeitraumansicht).
+ *
+ *   EINE SICHTBARE FOLGE, benannt und entschieden: Auf der Tagesuebersicht
+ *   kommt `setView()` jetzt ZUERST statt zuletzt. Drei der vier Seiten
+ *   machten es schon so, und der Grund steht ausgeschrieben in ihren
+ *   Kommentaren — ohne festen Ausschnitt gilt die Karte Leaflet als nicht
+ *   bereit und rechnet Pin-Positionen nicht aus. Nachgemessen: 496 Seiten
+ *   im Formvergleich, 0 Befunde ausserhalb des CSP-Verstossprotokolls;
+ *   Klickprobe 48/48; die vier Karten im Browser mit Kacheln, Umschalter
+ *   und 0 Konsolenfehlern.
+ *
+ * 20.34 — VIER ZENTRALEN IM BROWSER (Schritt 15 AP8b bis AP8f).
+ *
+ *   `assets/api.js` (`EdApi`), `EdHtml.meldung()`, der Ausbau von
+ *   `EdFormat` und `EdPat.listeLaden()`. Sechsundvierzig Stellen in
+ *   vierzehn Dateien.
+ *
+ *   DER BEFUND, der den Umbau geformt hat: Der zentralisierbare Kern liegt
+ *   fast ueberall VOR dem eigentlichen Vorgang. Alle 15 Sendestellen waren
+ *   im AUFRUF zeichengleich — POST, zwei Kopfzeilen, JSON.stringify — und
+ *   gingen erst HINTER dem `fetch` auseinander, auf sieben Achsen: vier
+ *   Regeln fuer „Erfolg" (ACHT von 15 prueften `res.ok` gar nicht), zwei
+ *   Politiken bei Nicht-JSON, SECHS Vorrangketten, FUENF Satzbauten,
+ *   SIEBEN Anzeigewege, und VIERZEHN von 15 zeigten im Netzfehler den
+ *   englischen Browsertext „Failed to fetch".
+ *
+ *   DER SATZBAU IST JETZT EINER: `<Vorgang> ist fehlgeschlagen: <Grund>`.
+ *   Das ist die siebte benannte Ausnahme von E-ZE-10 und vom Auftraggeber
+ *   entschieden. Der Vorgangsname steht genau einmal; `error` erscheint
+ *   nicht mehr als Satz (es traegt Maschinenwoerter), sondern als Kennung
+ *   in einer Klammer; `hinweis` und `text` kommen in die Kette und damit
+ *   der Satz zu `post_max_size` ueberall an, wo er bisher an elf von
+ *   fuenfzehn Stellen fehlte.
+ *
+ *   DREI SCHREIBWEISEN WURDEN VEREINHEITLICHT, jede gemessen: die Minute
+ *   einer Dauer ist immer zweistellig (16,0 % der Minutenwerte), „60min"
+ *   gibt es nicht mehr (0,83 % der Sekundenwerte), und die Streckensumme
+ *   traegt ueberall den Tausenderpunkt — die Startseite schrieb als
+ *   einzige „1633 km", wo Suche und Zeitraum „1.633 km" zeigten.
+ *
+ *   `api.js` UND `format.js` STEHEN IM <head>, nicht in der Immer-Liste.
+ *   Der erste Anlauf legte sie in `ui_geruest_ende()`, mit dem Satz, das
+ *   trage schon, weil jeder Aufruf in einem Zuhoerer stecke. Ein
+ *   gegenlesender Agent hat den Satz mit Zeilennummern widerlegt: Auf
+ *   `einstellungen.php` und `import.php` steht diese Liste NACH den
+ *   Seitenskripten, und dort laeuft `unlock.js` seinen Sendeweg zur
+ *   LADEZEIT. `EdApi` waere undefiniert gewesen, der ReferenceError waere
+ *   in einen absichtlich stillen catch gefallen — die KDF-Anhebung haette
+ *   auf zwei Seiten wortlos aufgehoert zu laufen.
+ *
+ *   VIER ZIELZAHLEN ENDEN NICHT BEI NULL, jede mit Grund im Register
+ *   (Entscheidung des Auftraggebers: „ehrliche Zahl statt runder Null").
+ *   Z29 bei 2, Z34 bei 5, Z36 bei 1, Z37 bei 4. Was dort steht, ist kein
+ *   zweiter Rechenweg, sondern die Zentrale selbst, ein Fehlalarm des
+ *   Zaehlmusters oder eine benannte Vorgabe je Zusammenhang.
+ *
+ *   ZWANZIG AGENTEN HABEN GEGENGELESEN und 41 Maengel gefunden, zwei davon
+ *   schwer. Beide waren echt. Was das kostet, steht im Konzept; was es
+ *   bringt, steht in diesem Absatz und im vorigen.
+ *
+ *   ZWOELF STELLEN BLEIBEN NAMENTLICH STEHEN, jede mit Grund im Register:
+ *   vier Formular- und Vergleichswerte in `betrieb_server.php` (der PUNKT
+ *   als Dezimaltrenner ist dort Bedingung eines Vergleichs, nicht
+ *   Geschmack), zwei CSS-Laengen, die bewusst gar nicht runden, drei
+ *   Stellen in `wartung_lib.php` (deren Dateikopf zusagt, NICHTS zu laden),
+ *   zwei Zeitstempel ohne Zonenumrechnung und eine `sprintf`-Groesse mit
+ *   Punkt statt Komma.
+ *
+ * 20.35 — WINDE UND BERGWACHT: DIE AUSWERTUNG FOLGT DER BETRIEBSART
+ *         (Schritt 15 AP9a, E-ZE-31).
+ *
+ *   Eine FUNKTIONSAENDERUNG, ausdruecklich freigegeben — kein Umbau.
+ *   `cap_gate` stand seit Web 5.10.0 im Feldkatalog, wurde aber nur im
+ *   Einsatzformular ausgewertet. Die Tagesuebersicht bekam es nie zu sehen:
+ *   Sie zog ihre Spalten aus `mf_tagesspalten()`, und die Funktion nimmt
+ *   keinen Parameter, kennt keinen Diensttag und cacht statisch. Gemessen
+ *   am 22.09.2026: ALLE 69 Diensttage des Referenzbestands trugen die
+ *   Windenspalte, auch ein NEF ohne Winde.
+ *
+ *   ZWEI ORTE, ZWEI REGELN, und das ist kein Widerspruch, sondern der
+ *   Unterschied zwischen ERFASSEN und AUSWERTEN. Die Einsatzbearbeitung
+ *   (`einsatz_form.php`, `einsatz.php`) folgt der FAEHIGKEIT allein, auch
+ *   bodengebunden — unveraendert, das ist `cap_gate`. Tages- und
+ *   Zeitraumuebersicht folgen der BETRIEBSART UND der Faehigkeit: Spalten
+ *   nur an einem luftgebundenen Tag, der sie traegt. Die Suche folgt der
+ *   Faehigkeit ueber Luft UND Boden — sie sucht im ganzen Bestand, nicht
+ *   in einem Zeitraum.
+ *
+ *   WAS DAS KOSTET, ist vorgelegt und entschieden worden: vier
+ *   bodengebundene Bergwacht-Diensttage mit Faehigkeiten, zwei davon mit
+ *   einem dokumentierten Windeneinsatz. Diese Haken bleiben eintragbar und
+ *   in der Einsatzbearbeitung sichtbar, erscheinen aber nicht mehr in der
+ *   Tagestabelle.
+ *
+ *   DIE KACHELN UNTER 720 px SIND AUSGENOMMEN. Ihre Plaketten zeigen einen
+ *   TATSAECHLICH GESETZTEN Haken, keine vorgehaltene Spalte. Eine Spalte
+ *   ist Platz, eine Plakette ist ein Befund — vorhandene Daten zu verbergen
+ *   hat niemand entschieden.
+ *
+ *   `api/range.php` BEHAELT seinen `d.kind = 'air'`-Filter. Er war als
+ *   Luecke gemeldet (Backlog Nr. 198) und ist mit dieser Entscheidung genau
+ *   die Regel. `api/suchindex.php` bekommt dieselbe Abfrage OHNE Artfilter.
+ *
+ *   Nachgemessen: fuenf Diensttage des Demo-Bestands, je vier Zahlen
+ *   (sichtbare Koepfe, versteckte Koepfe, Zellen der ersten Zeile,
+ *   Eintraege des Sortierblatts) — 11/0/11/10 am Lufttag mit Faehigkeit,
+ *   9/2/9/8 an den vier uebrigen; vorher 11 an allen fuenf. Zeitraum: der
+ *   bodengebundene Tab verliert zwei Spalten (10 -> 8), Luft und Mix
+ *   unveraendert. Gegenprobe zur Suche: mit abgefangener Antwort
+ *   `faehigkeiten = {false, false}` verschwinden beide Spalten, obwohl im
+ *   Bestand 7 Einsaetze mit Winden- und 15 mit Bergwachthaken stehen — die
+ *   Faehigkeit entscheidet, nicht das Datum. 0 Konsolenfehler.
+ *
+ * 20.36 — DIE SUCHE FOLGT DER FAEHIGKEIT AUCH IN IHREN FILTERN
+ *         (Schritt 15 AP9a, Nachtrag; E-ZE-35).
+ *
+ *   20.35 hat die SPALTEN der Suchtabelle an die Faehigkeit gehaengt, die
+ *   FILTER aber beim Bestand gelassen — das war als benannte Grenze
+ *   stehengeblieben und ist jetzt entschieden worden: „Suche immer moeglich,
+ *   sobald Faehigkeiten vorkommen."
+ *
+ *   WAS VORHER WAR: `spaltenMitBestand()` zeigt einen Filter nur, wenn
+ *   IRGENDEIN Einsatz zu seiner Spalte etwas fuehrt. In einem Bestand mit
+ *   eingerichteter, aber nie benutzter Winde verschwand damit der ganze
+ *   Block „Bergrettung" — acht Filter —, und „Winde: nein" liess sich nicht
+ *   suchen. Der Filter fehlte genau dann, wenn man ihn zum Nachweis einer
+ *   Null gebraucht haette.
+ *
+ *   `KATALOG_CAP` bildet Spalte auf Faehigkeit ab, ERZEUGT aus 'cap_gate'
+ *   und auf die Unterfelder VERERBT: `winch_cycles` steht unter `winch` und
+ *   braucht keinen eigenen Eintrag. Keine zweite Liste — dieselbe
+ *   Ueberlegung wie bei `KATALOG_ART` (S3/AP9). Felder ohne Faehigkeit
+ *   folgen unveraendert dem Bestand.
+ *
+ *   Nachgemessen in drei Zustaenden, je acht Filter und der Block:
+ *   Faehigkeit ja / Haken ja -> 8, Block da. Faehigkeit NEIN / Haken ja
+ *   (abgefangene Antwort) -> 0, Block weg. Faehigkeit ja / Haken NIRGENDS
+ *   -> 8, Block da; vorher waren es hier 0. 0 Konsolenfehler.
+ *
+ * 20.37 — EINE EINSATZTABELLE (Schritt 15 AP9b, Backlog Nr. 57).
+ *
+ *   Drei Seiten zeigen dieselbe Tabelle, und bis heute bauten zwei Erzeuger
+ *   sie: `assets/missiontable.js` fuer Suche und Zeitraumuebersicht, und
+ *   `index.php` noch einmal von Hand. Der Kommentar an der Dauerspalte sagte
+ *   es seit S3 ausdruecklich — „Dass es zwei Aufbauten fuer dieselbe Tabelle
+ *   gibt, ist der eigentliche Fund" (F-S3-A). Jetzt gibt es einen.
+ *
+ *   GEZAEHLT: Zeilenerzeugung `tr.innerHTML` in index.php 1 -> 0.
+ *   Spaltenlisten fuer Einsatztabellen 4 -> 1 (index.php hatte drei: den
+ *   handgeschriebenen <thead>, `DAY_COLS` und die `switch`-Leiter in
+ *   `sortVal()`). Sortierblatt-Erzeuger 3 -> 1.
+ *
+ *   DREI DINGE SEHEN ANDERS AUS, alle drei entschieden (E-ZE-34): Der Kopf
+ *   heisst „Sekundär­transport" mit weichem Trennzeichen statt
+ *   „Sekundär<br>Transport" mit hartem Umbruch; das Alter steht
+ *   rechtsbuendig wie in den beiden anderen Tabellen; die Haken stehen in
+ *   der Reihenfolge Winde, Bergwacht, Sekundaertransport.
+ *
+ *   WAS DAS MODUL GELERNT HAT: die Spalte „Nr." (E-ZE-33) — sie ist keine
+ *   Zierspalte, sondern die Verbindung zur Karte, deren Pins „Einsatz <Nr.>"
+ *   heissen; die chronologische Sortierung (E-ZE-32); den Gleichstand nach
+ *   der Einsatznummer; ein Sortierblatt, das nach dem Umstellen zeichnet.
+ *
+ *   DER NACHTDIENST WAR EIN ECHTER FEHLER, kein Gedankenspiel. Das Modul
+ *   sortierte „Beginn" ueber die ZEICHENKETTE `start_hhmm`; bei einem Dienst
+ *   ueber Mitternacht stand damit 01:10 vor 23:50. Der neue Schluessel
+ *   `start_sort` ('Y-m-d H:i' in Ortszeit) kommt aus allen drei Endpunkten.
+ *   Nachgemessen an einem gebauten Nachtdienst: MIT Schluessel 21:10, 22:30,
+ *   23:50, 00:20, 01:10, 02:40 — OHNE ihn 00:20, 01:10, 02:40, 21:10, 22:30,
+ *   23:50. Der Bestand hat keinen solchen Tag, also war der Fall zu bauen.
+ *
+ *   ZWEI FEHLER NEBENBEI BEHOBEN, beide aelter als dieses Paket: Das mobile
+ *   Sortierblatt von Suche und Zeitraumuebersicht stellte um, OHNE neu zu
+ *   zeichnen (setSort() zeichnete nicht, die Seite auch nicht) — unter
+ *   720 px ist das Blatt der einzige Weg zu sortieren. Und es zeigte
+ *   „Sekundär&shy;transport" als rohe Entitaet: Die alte Zeile streifte nur
+ *   Tags ab, und esc() machte aus dem `&` ein `&amp;`.
+ *
+ *   DER FELDKATALOG BEHAELT SEINEN GRIFF, und er reicht jetzt weiter. Der
+ *   Katalog bestimmt, WELCHE Hakenspalten es gibt ('day_col'), das Modul,
+ *   wie sie aussehen und in welcher Reihenfolge sie stehen. Preis, und er
+ *   gehoert gesagt: 'day_col' heisst ab jetzt „Spalte in JEDER
+ *   Einsatztabelle" und nicht mehr „Spalte in der Tagesuebersicht".
  */
-const WEB_VERSION = '20.26.3';
+const WEB_VERSION = '20.37.0';

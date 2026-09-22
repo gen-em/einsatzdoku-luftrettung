@@ -35,6 +35,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/format_lib.php';   // groesse_paar_text() fuer die Warnmail (Schritt 15/AP7)
 
 /**
  * Zeitbudget eines Haeppchens in Sekunden, je nach Ausloeser.
@@ -148,27 +149,20 @@ const JOB_PAUSE_MAX_S = 7200;
  */
 function jobs_pause(int $sekunden): void
 {
-    $pdo = db();
     if ($sekunden <= 0) {
-        $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([JOB_PAUSE_SCHLUESSEL]);
+        app_state_loeschen(JOB_PAUSE_SCHLUESSEL);
         return;
     }
     $bis = (new DateTime('now', new DateTimeZone('UTC')))
          ->modify('+' . min($sekunden, JOB_PAUSE_MAX_S) . ' seconds')
          ->format('Y-m-d H:i:s');
-    $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
-                   ON DUPLICATE KEY UPDATE v = VALUES(v)')
-        ->execute([JOB_PAUSE_SCHLUESSEL, $bis]);
+    app_state_setzen(JOB_PAUSE_SCHLUESSEL, $bis);
 }
 
 /** Bis wann sind die Jobs angehalten? null = sie laufen. */
 function jobs_pause_bis(): ?string
 {
-    try {
-        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
-        $st->execute([JOB_PAUSE_SCHLUESSEL]);
-        $wert = (string)($st->fetchColumn() ?: '');
-    } catch (Throwable $ex) { return null; }
+    $wert = (string)(app_state_lesen(JOB_PAUSE_SCHLUESSEL) ?? '');
     if ($wert === '') { return null; }
     $bis = new DateTime($wert, new DateTimeZone('UTC'));
     return $bis > new DateTime('now', new DateTimeZone('UTC')) ? $wert : null;
@@ -619,17 +613,15 @@ function jobs_zustand(): array
  */
 function jobs_token(bool $neu = false): string
 {
-    $pdo = db();
+    /* NICHT `app_state_einmalig()`: `$neu = true` MUSS den bestehenden Wert
+     * ueberschreiben — das ist der Sinn von „Token erneuern". Die einmalige
+     * Fassung liesse den alten stehen. */
     if (!$neu) {
-        $st = $pdo->prepare('SELECT v FROM app_state WHERE k = ?');
-        $st->execute([JOB_TOKEN_SCHLUESSEL]);
-        $wert = $st->fetchColumn();
-        if (is_string($wert) && $wert !== '') { return $wert; }
+        $wert = app_state_lesen(JOB_TOKEN_SCHLUESSEL);
+        if ($wert !== null && $wert !== '') { return $wert; }
     }
     $token = bin2hex(random_bytes(32));
-    $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
-                   ON DUPLICATE KEY UPDATE v = VALUES(v)')
-        ->execute([JOB_TOKEN_SCHLUESSEL, $token]);
+    app_state_setzen(JOB_TOKEN_SCHLUESSEL, $token);
     return $token;
 }
 
@@ -849,8 +841,8 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
                     mail_einreihen('konto_menge', (string)$u['email'], [
                         'prozent'   => (string)(int)round($f['anteil'] * 100),
                         'einsaetze' => $f['einsaetze'] . ' von ' . $f['grenze_einsaetze'],
-                        'speicher'  => (int)round($f['bytes'] / 1048576) . ' von '
-                                     . (int)round($f['grenze_bytes'] / 1048576) . ' MB',
+                        'speicher'  => groesse_paar_text((int)$f['bytes'],
+                                                         (int)$f['grenze_bytes']),
                     ]);
                     app_state_setzen($marke, '1');
                 }
@@ -1473,9 +1465,13 @@ function spur_verdichten_eine(PDO $pdo, string $typ, int $id, array $umriss): ?s
      * kodieren, nur wegraeumen. Ohne diesen Fall laegen sie fuer immer
      * unsichtbar da. */
     if ($umriss['n_original'] > 0 && $umriss['max_seq'] < $umriss['n_original']) {
-        $pdo->beginTransaction();
-        spur_loeschen_nur_zeilen($pdo, $typ, $id, $umriss['n_original']);
-        $pdo->commit();
+        /* Bis Web 20.29.0 stand hier `beginTransaction()` ohne `try`: Ein
+         * Abbruch dazwischen liess die Transaktion offen, bis PHP sie beim
+         * Verbindungsabbau still zurueckrollte. Jetzt rollt sie ausdruecklich
+         * zurueck, und der Grund kommt heraus. */
+        db_transaktion($pdo, function (PDO $pdo) use ($typ, $id, $umriss): void {
+            spur_loeschen_nur_zeilen($pdo, $typ, $id, $umriss['n_original']);
+        });
         return null;
     }
 
@@ -1494,10 +1490,10 @@ function spur_verdichten_eine(PDO $pdo, string $typ, int $id, array $umriss): ?s
     $m = spur_rundlauf_pruefen($punkte, $blob);
     if ($m !== null) { return 'Rundlauf: ' . $m; }
 
-    $pdo->beginTransaction();
-    spur_blob_schreiben($pdo, $typ, $id, $blob, SPUR_STUFE_ROH, $n, $n);
-    spur_loeschen_nur_zeilen($pdo, $typ, $id, $n);
-    $pdo->commit();
+    db_transaktion($pdo, function (PDO $pdo) use ($typ, $id, $blob, $n): void {
+        spur_blob_schreiben($pdo, $typ, $id, $blob, SPUR_STUFE_ROH, $n, $n);
+        spur_loeschen_nur_zeilen($pdo, $typ, $id, $n);
+    });
     return null;
 }
 

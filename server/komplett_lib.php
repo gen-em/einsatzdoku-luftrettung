@@ -85,6 +85,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/serverkrypto_lib.php';
 require_once __DIR__ . '/adminbackup_lib.php';
+require_once __DIR__ . '/format_lib.php';      /* iso_utc() — ausdruecklich, nicht ueber db.php geerbt. */
 
 /* ---- Ablage --------------------------------------------------------------- */
 
@@ -511,7 +512,7 @@ function komp_dump_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserv
                   'warnung_ohne_pk', 'kopf_da', 'kopfzeile', 'siegel_i',
                   'siegel_bytes'] as $k) { unset($z[$k]); }
         $z['roh_bytes'] = 0;
-        $z['neu_begonnen'] = gmdate('Y-m-d\TH:i:s\Z');
+        $z['neu_begonnen'] = iso_utc();
         $gueltig = 0;
     }
 
@@ -795,7 +796,7 @@ function komp_kopfzeilen(PDO $pdo, array $tabellen, array $z): array
 
     $raus = [
         '-- Einsatzdokumentation Notarzt — Komplett-Backup der Installation',
-        '-- Erzeugt am:        ' . gmdate('Y-m-d\TH:i:s\Z') . ' (UTC)',
+        '-- Erzeugt am:        ' . iso_utc() . ' (UTC)',
         '-- Web-Version:       ' . (defined('WEB_VERSION') ? WEB_VERSION : 'unbekannt'),
         '-- Migrationsstand:   ' . ($stand !== '' ? $stand : 'keiner') . ' (' . $zahl . ' Einträge)',
         '-- Datenbankserver:   ' . ($server !== '' ? $server : 'unbekannt'),
@@ -899,7 +900,7 @@ function komp_kopf_bauen(array $angaben, ?array $kdf): string
     $kopf = [
         'art'      => 'komplett',
         'fassung'  => 1,
-        'erzeugt'  => $angaben['erzeugt'] ?? gmdate('Y-m-d\TH:i:s\Z'),
+        'erzeugt'  => $angaben['erzeugt'] ?? iso_utc(),
         'web'      => $angaben['web'] ?? (defined('WEB_VERSION') ? WEB_VERSION : ''),
         'migration'=> $angaben['migration'] ?? '',
         'tabellen' => (int)($angaben['tabellen'] ?? 0),
@@ -1226,7 +1227,7 @@ function komp_auftrag_starten(): array
         'stand'     => 'dump',
         'bau'       => $bau,
         'name'      => komp_dateiname(),
-        'begonnen'  => gmdate('Y-m-d\TH:i:s\Z'),
+        'begonnen'  => iso_utc(),
         'roh_bytes' => 0,
     ];
     if (!komp_zustand_setzen($neu)) {
@@ -1248,7 +1249,7 @@ function komp_auftrag_abbrechen(): array
         return ['ok' => false, 'meldung' => 'Es läuft kein Komplett-Backup.'];
     }
     if (isset($z['bau'])) { komp_bau_weg((string)$z['bau']); }
-    komp_zustand_setzen(['stand' => 'abgebrochen', 'zeit' => gmdate('Y-m-d\TH:i:s\Z')]);
+    komp_zustand_setzen(['stand' => 'abgebrochen', 'zeit' => iso_utc()]);
     return ['ok' => true, 'meldung' => 'Das Komplett-Backup ist abgebrochen; '
         . 'der halbe Stand ist entfernt.'];
 }
@@ -1285,7 +1286,7 @@ function komp_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserve = K
         $geraeumt = $bau !== '' && komp_bau_weg($bau);
         $z = [
             'stand'    => 'abgebrochen',
-            'zeit'     => gmdate('Y-m-d\TH:i:s\Z'),
+            'zeit'     => iso_utc(),
             'grund'    => $ex->getMessage(),
             'geraeumt' => $geraeumt,
         ];
@@ -1320,7 +1321,7 @@ function komp_schub_lauf(PDO $pdo, array &$z, callable $zeitLinks, float $reserv
         $bau = KOMP_BAU_PRAEFIX . bin2hex(random_bytes(4));
         komp_baureste_aufraeumen($bau);
         $z = ['stand' => 'dump', 'bau' => $bau, 'name' => komp_dateiname(),
-              'begonnen' => gmdate('Y-m-d\TH:i:s\Z'), 'roh_bytes' => 0, 'plan' => komp_plan()];
+              'begonnen' => iso_utc(), 'roh_bytes' => 0, 'plan' => komp_plan()];
         $stand = 'dump';
     }
 
@@ -1336,7 +1337,7 @@ function komp_schub_lauf(PDO $pdo, array &$z, callable $zeitLinks, float $reserv
          * Zeilenzahl und Rohgroesse nennt — beides steht erst am Ende fest. */
         clearstatcache(true, $roh);
         $z['kopfzeile'] = komp_kopf_bauen([
-            'erzeugt'   => (string)($z['begonnen'] ?? gmdate('Y-m-d\TH:i:s\Z')),
+            'erzeugt'   => (string)($z['begonnen'] ?? iso_utc()),
             'migration' => komp_migrationsstand($pdo),
             'tabellen'  => count($z['folge'] ?? []),
             'zeilen'    => (int)($z['zeilen'] ?? 0),
@@ -1378,7 +1379,7 @@ function komp_schub_lauf(PDO $pdo, array &$z, callable $zeitLinks, float $reserv
             'stand'      => 'fertig',
             'name'       => (string)$z['name'],
             'begonnen'   => (string)($z['begonnen'] ?? ''),
-            'beendet'    => gmdate('Y-m-d\TH:i:s\Z'),
+            'beendet'    => iso_utc(),
             'zeilen'     => (int)($z['zeilen'] ?? 0),
             'tabellen'   => count($z['folge'] ?? []),
             'roh_bytes'  => (int)($z['roh_bytes'] ?? 0),

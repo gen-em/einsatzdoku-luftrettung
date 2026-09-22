@@ -4,6 +4,7 @@ require_once __DIR__ . '/auth_guard.php';
 require_admin();
 require_once __DIR__ . '/adminbackup_lib.php';
 require_once __DIR__ . '/smtp.php';        // smtp_eingerichtet() (E-S2-15)
+require_once __DIR__ . '/format_lib.php';  // groesse_text(), zahl_text(), datum_zeit_text()
 
 /**
  * KONTO-BACKUPS — die Pakete, die die VERWALTUNG je Konto anlegt.
@@ -349,22 +350,25 @@ ui_seite_start(['titel' => 'Konto-Backups']);
         . (int)SICHERN_BUDGET . ' Sekunden ab; „Alle sichern" '
         . 'macht sofort dort weiter.'
         . (($auftrag['seit'] ?? null)
-            ? ' Begonnen ' . fmt_local(str_replace(['T', 'Z'], [' ', ''],
-                (string)$auftrag['seit']), 'd.m.Y · H:i') . ' Uhr.'
+            /* OHNE str_replace: `edbak_auftrag_starten()` schreibt `seit` mit
+               `iso_utc()`, und das `DateTime` in `fmt_local()` liest die
+               T/Z-Marke selbst — nachgerechnet ueber 112 574 Zeitpunkte
+               ueber Sommer- und Winterzeit, 0 Abweichungen. */
+            ? ' Begonnen ' . datum_zeit_text((string)$auftrag['seit'], ' · ') . ' Uhr.'
             : ''), 'Auftrag läuft.') ?>
   <?php endif; ?>
   <?php if ($speicher['voll']): ?>
     <?= ui_meldung_markup('fehler', 'Die Speichergrenze ist erreicht ('
-        . edbak_groesse_text($speicher['bytes']) . ' von '
-        . edbak_groesse_text($speicher['grenze']) . '). Es wird nicht mehr '
+        . groesse_text($speicher['bytes']) . ' von '
+        . groesse_text($speicher['grenze']) . '). Es wird nicht mehr '
         . 'gesichert. Es wurde nichts gelöscht und nichts überschrieben — bitte '
         . 'alte Pakete entfernen, die Aufbewahrung senken oder die Grenze '
         . 'erhöhen (Betrieb → Servereinstellungen).') ?>
   <?php elseif ($offeneSchwellen): ?>
     <?= ui_meldung_markup('warn', 'Die Ablage hat '
         . max($offeneSchwellen) . ' % der Speichergrenze erreicht ('
-        . edbak_groesse_text($speicher['bytes']) . ' von '
-        . edbak_groesse_text($speicher['grenze']) . '). '
+        . groesse_text($speicher['bytes']) . ' von '
+        . groesse_text($speicher['grenze']) . '). '
         . (smtp_eingerichtet()
             ? 'Die Warnmail liess sich nicht verschicken.'
             : 'Es ist kein SMTP eingerichtet, deshalb steht die Warnung hier '
@@ -402,10 +406,10 @@ ui_seite_start(['titel' => 'Konto-Backups']);
              Pakete wiegen. Der Fehler stand hier seit Web 12.0.0 und fiel
              nicht auf, weil beide Zahlen plausibel aussehen; erst seit
              Web 15.1.0 gibt es überhaupt eine getrennte Summe. */ ?>
-    <?= ui_kennzahl(['wert' => number_format($ablage['pakete'], 0, ',', '.'),
+    <?= ui_kennzahl(['wert' => zahl_text($ablage['pakete'], 0),
                      'label' => ($ablage['pakete'] === 1 ? 'Paket · ' : 'Pakete · ')
-                              . edbak_groesse_text($ablage['pakete_bytes'])]) ?>
-    <?= ui_kennzahl(['wert' => number_format($zahlen['konten'], 0, ',', '.'),
+                              . groesse_text($ablage['pakete_bytes'])]) ?>
+    <?= ui_kennzahl(['wert' => zahl_text($zahlen['konten'], 0),
                      'label' => 'Konten', 'href' => 'admin_users.php']) ?>
     <?= ui_kennzahl(['wert' => (string)$zahlen['ueberfaellig'],
                      'label' => 'Konto-Backup überfällig',
@@ -472,7 +476,7 @@ ui_seite_start(['titel' => 'Konto-Backups']);
                           'vorschau' => $verwaist
                               ? count($verwaist) . (count($verwaist) === 1 ? ' Ordner · ' : ' Ordner · ')
                                 . $paketeOhneKonto . ($paketeOhneKonto === 1 ? ' Paket · ' : ' Pakete · ')
-                                . edbak_groesse_text($bytesOhneKonto)
+                                . groesse_text($bytesOhneKonto)
                               : 'keine']); ?>
       <p class="feld-hinweis">Pakete, deren Konto gelöscht wurde. Sie bleiben, bis
          jemand sie einspielt oder löscht — typisch nach „Konto gelöscht und neu
@@ -513,7 +517,7 @@ ui_seite_start(['titel' => 'Konto-Backups']);
                Papierkorb" laeuft dort aus dem Feld heraus. Unterscheidbar
                sind die Pakete am Datum. */
             $paketliste[] = (string)$pk['datei'] . '|' . edbak_zeitpunkt_text($pk['erzeugt'])
-                          . ' · ' . edbak_groesse_text((int)$pk['groesse']);
+                          . ' · ' . groesse_text((int)$pk['groesse']);
         }
         $wDaten = ' data-w-handgriff="' . e($handgriff) . '"'
                 . ' data-w-titel="' . e('Kontokennung ' . $kennungKurz) . '"'

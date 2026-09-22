@@ -40,6 +40,9 @@
  *
  * AUSGABE unter tools/screenshots/ausgabe/ (steht in .gitignore):
  *   einzeln/<seite>-<breite>.png      die Einzelbilder
+ *   texte/<seite>-<breite>.txt        der SICHTBARE Text derselben Seite
+ *                                     (document.body.innerText) — die Grundlage
+ *                                     des Textvergleichs in vergleichen.py
  *   bogen/<seite>.png                 der Kontaktbogen, acht Breiten nebeneinander
  *   bericht.md, bericht.json          Zahlen und Befunde
  *
@@ -403,6 +406,7 @@ if (flag('--selbstprobe')) {
 rmSync(AUSGABE, { recursive: true, force: true });
 mkdirSync(join(AUSGABE, 'einzeln'), { recursive: true });
 mkdirSync(join(AUSGABE, 'bogen'), { recursive: true });
+mkdirSync(join(AUSGABE, 'texte'), { recursive: true });
 
 const browser = await starten(PW, MOTOR, { finger: FINGER });
 
@@ -1373,6 +1377,30 @@ for (const eintrag of liste) {
       try {
         await seite.screenshot({ path: datei, fullPage: ganz });
         bilder.push({ datei, b, art });
+        /* DER SICHTBARE TEXT DANEBEN (Schritt 15/AP7).
+         *
+         * WARUM DAS BILD NICHT REICHT: Ein Umbau, der nur die Formatierung
+         * zentralisiert, darf keinen Buchstaben aendern — und genau das
+         * belegt ein Bild nicht. Ueberlauf, Konsolenfehler und Knopfhoehen
+         * melden 0, auch wenn aus „2,00 GB" ein „2 GB" geworden ist.
+         *
+         * WARUM NICHT DER PIXELVERGLEICH: Er ist gefahren worden und hat
+         * auf UNVERAENDERTEM Code 303 von 496 Bildern als abweichend
+         * gemeldet. Ursache ist der Countdown im Demo-Banner („in etwa
+         * 43 188 Minuten"), der auf jeder Seite des Demo-Kontos steht und
+         * sich zwischen zwei Laeufen zwangslaeufig aendert. Ein
+         * Textvergleich kann solche Zeilen benennen und ausnehmen; ein
+         * Pixelvergleich kann es nicht.
+         *
+         * `innerText` und nicht `textContent`: Ersteres gibt den Text so
+         * wieder, wie er DARGESTELLT wird — ohne ausgeblendete Elemente,
+         * mit den Umbruechen der Darstellung. Das ist die Frage, die hier
+         * gestellt wird. */
+        const text = await seite.evaluate(() => document.body.innerText)
+                                .catch(() => null);
+        if (text !== null) {
+          writeFileSync(join(AUSGABE, 'texte', `${eintrag.name}-${b}.txt`), text);
+        }
       } catch (e) {
         ausgefallen.push({ was: `${eintrag.name} @ ${b}`,
                            grund: `Abzug misslang (${ganz ? 'ganzseitig' : 'Ausschnitt'}): `

@@ -5,17 +5,49 @@ require_once __DIR__ . '/version.php';
 // E-Mail-Normalisierung (M1-13). Eigene Datei ohne Abhaengigkeiten, weil
 // install.php sie ebenfalls braucht und dort noch keine config.php existiert.
 require_once __DIR__ . '/email_lib.php';
+/* Der eine Leser fuer config.php (Schritt 15 AP2, E-ZE-02/-14). Laedt
+ * seinerseits NICHTS — Bedingung, nicht Sparsamkeit: `install.php` und
+ * `sitzung_lib.php` brauchen ihn, ohne `db.php` zu laden.
+ *
+ * BIS WEB 20.26.3 STAND HIER `$CFG = require __DIR__ . '/config.php';` und
+ * legte die Konfiguration als GLOBALE ab. Elf Dateien griffen mit
+ * `global $CFG` darauf zu, fuenf weitere lasen die Datei ein zweites Mal —
+ * zusammen 46 Zugriffe und 7 Lesestellen. Jetzt: `konfig('app.timezone')`.
+ *
+ * UND ES IST KEIN `require` MEHR, das scheitern kann: Fehlt `config.php`
+ * (die Anlage ist noch nicht eingerichtet), liefert jede Abfrage ihre
+ * Vorgabe, statt dass die Datei mit einem Fatal abbricht. */
+require_once __DIR__ . '/konfig_lib.php';
+require_once __DIR__ . '/format_lib.php';   // fmt_local() u. a. (Schritt 15/AP7)
 
-$CFG = require __DIR__ . '/config.php';
+/* UND `db.php` VERLANGT `config.php` WEITERHIN HART.
+ *
+ * `konfig_lib.php` TOLERIERT die fehlende Datei — es muss, weil
+ * `install.php` auf einer Anlage laeuft, die noch keine hat. `db.php` darf
+ * das nicht erben: Bis Web 20.26.3 brach sie mit einem Fatal ab
+ * (`require ... config.php: Failed to open stream`), und genau dabei bleibt
+ * es. Ohne diese Zeile waere aus dem klaren Befund „config.php fehlt" eine
+ * PDO-Ausnahme auf einem leeren DSN geworden — also die Meldung
+ * „Datenbank nicht erreichbar" fuer ein Problem, das nichts mit der
+ * Datenbank zu tun hat. Eine falsche Diagnose ist teurer als ein Abbruch.
+ *
+ * DAMIT AENDERT DIESES PAKET AUCH HIER KEIN VERHALTEN (E-ZE-10): Wer
+ * `db.php` ohne `config.php` laedt, kommt nicht weiter — vorher wie
+ * nachher. Was sich aendert, ist allein der Satz, den er dabei liest. */
+if (!is_file(__DIR__ . '/config.php')) {
+    throw new RuntimeException(
+        'server/config.php fehlt. Die Anwendung ist nicht eingerichtet — '
+      . 'install.php anlegen und aufrufen (docs/Technik.md, Runbook).');
+}
 
 function db(): PDO {
     static $pdo = null;
     /* DER RIEGEL GEGEN DIE SCHLEIFE (P5a/AP9). Siehe den Block unten. */
     static $inUeberlast = false;
-    global $CFG;
     if ($pdo === null) {
         try {
-            $pdo = new PDO($CFG['db']['dsn'], $CFG['db']['user'], $CFG['db']['pass'], [
+            $pdo = new PDO((string)konfig('db.dsn'), (string)konfig('db.user'),
+                           (string)konfig('db.pass'), [
                 /* KEINE PERSISTENTEN VERBINDUNGEN (E-P5a-18). Die Zeile
                  * fehlt hier mit Absicht: `PDO::ATTR_PERSISTENT` haelt die
                  * Verbindung ueber das Ende der Anfrage hinaus offen und
@@ -126,6 +158,68 @@ function stammdaten_dup_global(string $table, string $col, string $val,
     $st = db()->prepare($sql);
     $st->execute($params);
     return (bool)$st->fetchColumn();
+}
+
+/* ---- EIN TRANSAKTIONSRAHMEN (Schritt 15/AP5, E-ZE-20) --------------------
+ *
+ * 33 Stellen in 22 Dateien schrieben denselben Rahmen von Hand, und der
+ * Tokenizer hat sie in drei Bauformen sortiert:
+ *
+ *   19x beginnen, versuchen, bestaetigen, bei Fehler zurueckrollen und
+ *       WEITERGEBEN — zwoelf werfen weiter, sieben antworten selbst
+ *       (`json_fehler()`, `json_out()`);
+ *   12x dasselbe, aber der `catch` SCHLUCKT und setzt stattdessen eine
+ *       Meldung fuer die Seite;
+ *    2x gar kein `try` — `beginTransaction()`, arbeiten, `commit()`. Bricht
+ *       es dazwischen ab, bleibt die Transaktion offen, bis PHP sie beim
+ *       Verbindungsabbau still zurueckrollt.
+ *
+ * WAS DABEI AUSEINANDERGELAUFEN IST, ist nicht die Absicht, sondern die
+ * Sorgfalt: 14 der 42 `rollBack()`-Aufrufe stehen hinter einer Wache
+ * (`inTransaction()` oder ein eigener Merker), 28 nicht. Ein `rollBack()` auf
+ * einer Verbindung ohne offene Transaktion wirft — und zwar AUS DEM CATCH
+ * HERAUS, womit die urspruengliche Ausnahme verlorengeht und im Protokoll
+ * „There is no active transaction" steht statt des Grundes. Dieser Rahmen
+ * fragt deshalb IMMER nach.
+ *
+ * VERSCHACHTELUNGSFEST, UND ZWAR ASYMMETRISCH: PDO kennt keine echten
+ * verschachtelten Transaktionen; ein zweites `beginTransaction()` wirft. Wer
+ * schon in einer fremden Transaktion steht, oeffnet deshalb keine eigene —
+ * und bestaetigt und verwirft dann auch nichts. Das Zurueckrollen bleibt dem
+ * ueberlassen, der begonnen hat; die Ausnahme kommt als Ausnahme heraus, und
+ * er entscheidet. Neun Dateien hatten diesen Merker schon selbst gebaut
+ * (`$eigeneTransaktion` in `backup_lib.php` erklaert ihn im Kommentar) — jetzt
+ * steht er einmal.
+ *
+ * DIE AUSNAHME, NAMENTLICH: `ingest.php`. Sein Rahmen spannt sich ueber 670
+ * Zeilen, gehoert zum Geraetevertrag und bekommt in Schritt 18 eine
+ * Deadlock-Behandlung (Backlog Nr. 210). Schritt 15 fasst ihn nicht an.
+ */
+
+/**
+ * Einen Rumpf in einer Transaktion laufen lassen.
+ *
+ * @template T
+ * @param callable(PDO):T $fn bekommt dieselbe Verbindung uebergeben
+ * @return T der Rueckgabewert des Rumpfs, unveraendert durchgereicht
+ * @throws Throwable jede Ausnahme des Rumpfs, nach dem Zurueckrollen
+ */
+function db_transaktion(PDO $pdo, callable $fn): mixed {
+    $eigene = !$pdo->inTransaction();
+    if ($eigene) { $pdo->beginTransaction(); }
+    try {
+        $ergebnis = $fn($pdo);
+        if ($eigene) { $pdo->commit(); }
+        return $ergebnis;
+    } catch (Throwable $ex) {
+        /* NUR DIE EIGENE, UND NUR WENN SIE NOCH STEHT. Der zweite Teil ist
+         * kein Uebereifer: Ein DDL-Befehl (`ALTER`, `CREATE`) bestaetigt in
+         * MySQL still, und der Rumpf darf selbst zurueckgerollt haben. In
+         * beiden Faellen wuerfe `rollBack()` hier eine ZWEITE Ausnahme und
+         * verdeckte die erste. */
+        if ($eigene && $pdo->inTransaction()) { $pdo->rollBack(); }
+        throw $ex;
+    }
 }
 
 /* `stammdaten_dup_personal_count()` STAND HIER BIS S9/AP5b. Sie zaehlte, wie
@@ -374,7 +468,6 @@ function favicon_tags(): string {
  * bliebe die Seite bei einem veralteten Eintrag in der config.php ohne Logo.
  */
 function logo_src(): string {
-    global $CFG;
     /* SEIT WEB 9.10.0 ENTSCHEIDET DIE LOGO-WAHL (F-P3-AN).
      *
      * Diese Funktion versorgt die beiden Seiten OHNE Sitzung — Anmeldung und
@@ -391,7 +484,7 @@ function logo_src(): string {
      * `function_exists`: db.php ist die untere Schicht und laedt session_lib
      * nicht. Wo sie fehlt — im Einrichter vor der ersten Einrichtung —, bleibt
      * es beim Hubschrauber. */
-    $pfad = (string)($CFG['app']['logo_path'] ?? '');
+    $pfad = (string)konfig('app.logo_path', '');
     $eigen = $pfad !== ''
         && !str_contains($pfad, 'gen-em_logo_helicopter')
         && !str_contains($pfad, 'gen-em_logo_nef')
@@ -424,16 +517,25 @@ function hex_vierergruppen(string $hex): string
     return trim(chunk_split($hex, 4, ' '));
 }
 
-function fmt_local(?string $utc, string $format = 'H:i'): string {
-    global $CFG;
-    if ($utc === null || $utc === '') return '–';
-    $dt = new DateTime($utc, new DateTimeZone('UTC'));
-    $dt->setTimezone(new DateTimeZone($CFG['app']['timezone']));
-    return $dt->format($format);
-}
+/* `fmt_local()` STAND HIER BIS WEB 20.31.0 und liegt jetzt in
+ * `format_lib.php` (Schritt 15 AP7). Der Name ist unveraendert, und diese
+ * Datei laedt die neue oben — jeder der 113 Aufrufer findet die Funktion
+ * also weiter, ohne etwas zu tun.
+ *
+ * WARUM SIE UMGEZOGEN IST: `datum_text()` und `datum_zeit_text()` bauen auf
+ * ihr auf. Waere sie hiergeblieben, muesste `format_lib.php` die
+ * Datenbankdatei laden — und die darf sie nicht laden, weil `install.php`
+ * sie ueber `plattform_lib.php` erreicht, bevor es eine `config.php` gibt.
+ * Die Rechnung ein zweites Mal zu fuehren waere das Gegenteil dessen,
+ * wofuer es diesen Schritt gibt.
+ *
+ * `local_to_utc()` BLEIBT HIER, und das ist kein Versehen: Sie liest einen
+ * Formularwert, um damit zu RECHNEN. `format_lib.php` macht aus Werten Text
+ * fuer Menschen; das ist die andere Richtung. */
 
 /**
- * Ortszeit (App-Zeitzone) -> UTC-DATETIME. Gegenstueck zu fmt_local().
+ * Ortszeit (App-Zeitzone) -> UTC-DATETIME. Gegenstueck zu fmt_local()
+ * (jetzt in format_lib.php).
  *
  * Lag frueher in einsatz_form.php. Seit dem Import (import_commit.php) gibt es
  * einen zweiten Aufrufer; zwei Kopien derselben Zeitrechnung waeren die
@@ -442,7 +544,6 @@ function fmt_local(?string $utc, string $format = 'H:i'): string {
  * $addDays deckt Zeiten nach Mitternacht ab, die noch zum Diensttag gehoeren.
  */
 function local_to_utc(string $day, string $hhmm, int $addDays = 0): ?string {
-    global $CFG;
     // Nicht nur das Muster pruefen, sondern auch den Wertebereich: "25:00"
     // passt auf \d{2}:\d{2}, und DateTime rechnet daraus klaglos den naechsten
     // Tag 00:00. Eine Falscheingabe waere so als stiller Datumssprung
@@ -450,7 +551,7 @@ function local_to_utc(string $day, string $hhmm, int $addDays = 0): ?string {
     if (!preg_match('/^(\d{2}):(\d{2})$/', $hhmm, $t)) return null;
     if ((int)$t[1] > 23 || (int)$t[2] > 59) return null;
     $dt = DateTime::createFromFormat('Y-m-d H:i', "$day $hhmm",
-        new DateTimeZone($CFG['app']['timezone']));
+        new DateTimeZone((string)konfig('app.timezone')));
     if ($dt === false) return null;
     if ($addDays > 0) { $dt->modify("+$addDays day"); }
     $dt->setTimezone(new DateTimeZone('UTC'));
@@ -534,6 +635,87 @@ function json_out(array $data, int $code = 200): never {
     json_roh_out((string)json_encode($data), $code);
 }
 
+/* ---- DER EINGANG DER ENDPUNKTE (Schritt 15/AP3, E-ZE-15, F-ZE-5) ---------
+ *
+ * Einundzwanzig Dateien unter `api/` begannen mit derselben Handarbeit:
+ * Methode pruefen, Rumpf lesen, „leer?", „ist das ein JSON-Objekt?". Vier
+ * Muster, vier Schreibweisen, und sie waren auseinandergelaufen — siebzehn
+ * Dateien antworteten `'method'`, drei `'methode'`; acht sagten `'payload'`,
+ * drei `'format'`; der Hinweis auf `post_max_size` stand in drei Fassungen.
+ * Kein einziger dieser Schluessel wird im Browser ausgewertet (gemessen: 0
+ * Stellen im JavaScript), sie sind also reine Drift.
+ *
+ * ---- WARUM ZWEI FUNKTIONEN UND NICHT EINE --------------------------------
+ *
+ * Das Konzept sah EINEN Aufruf vor, `api_eingang()`, der Methode und Rumpf
+ * zusammen erledigt. Das geht nicht, ohne Verhalten zu aendern, denn zwischen
+ * beiden steht in ALLEN elf Rumpf-Dateien eine dritte Zeile:
+ *
+ *     Methode pruefen  ->  csrf_check()  ->  Rumpf lesen
+ *
+ * Ein Aufruf, der Methode und Rumpf zusammenfasst, schiebt das Rumpflesen vor
+ * die Token-Pruefung — ein Aufrufer ohne gueltiges Token bekaeme dann `leer`
+ * oder `format` statt `csrf`, und in `api/kdf_upgrade.php` liefe er am
+ * Demo-Ausstieg vorbei, der zwischen csrf und Rumpf steht (200 wuerde zu
+ * 400). Genau diese Klasse von Fehler hat das Projekt am 13.09.2026 schon
+ * einmal behoben; der Kopfkommentar jener Datei erzaehlt es.
+ *
+ * Also zwei Funktionen, und die `csrf_check()`-Zeile bleibt, wo sie ist. CSRF
+ * gehoert aus einem zweiten Grund nicht hier hinein: Ein Endpunkt ohne
+ * Sitzung (10c AP6, `api/health.php`) braucht die Methodenpruefung und sonst
+ * nichts.
+ */
+/**
+ * Erlaubte Anfragemethode — sonst 405 `method`.
+ *
+ * @param string|list<string> $erlaubt Eine Methode oder mehrere.
+ */
+function api_methode(string|array $erlaubt = 'POST'): void {
+    $liste = is_array($erlaubt) ? $erlaubt : [$erlaubt];
+    if (!in_array((string)($_SERVER['REQUEST_METHOD'] ?? ''), $liste, true)) {
+        json_out(['error' => 'method'], 405);
+    }
+}
+
+/**
+ * Den Anfragerumpf lesen und als JSON-Objekt zurueckgeben.
+ *
+ * Antwortet selbst und bricht ab bei: leerem Rumpf (400 `leer`, mit dem
+ * Hinweis auf `post_max_size` — er steht seit AP3 einmal, hier), Rumpf ist
+ * kein JSON-Objekt (400 `format`) und, WENN `max_bytes` gesetzt ist, zu
+ * grossem Rumpf (413 `zu_gross`).
+ *
+ * `max_bytes` HAT KEINEN VORGABEWERT, und das ist Absicht: Heute begrenzt
+ * keiner der elf Endpunkte die Rumpfgroesse — ein Konto-Backup kann zweistellig
+ * megabytegross sein, und `app.max_body_bytes` (512 KB) ist die Grenze des
+ * Geraete-Eingangs, nicht die der Weboberflaeche. Eine Vorgabe haette hier
+ * eine Pruefung eingefuehrt, die es nicht gab (E-ZE-10).
+ *
+ * INHALTLICHE Pruefungen bleiben beim Aufrufer: ob ein `format`-Feld den
+ * richtigen Wert hat, ob `eintraege` da ist, ob die Liste zu lang ist. Der
+ * Eingang beantwortet nur die Frage, ob ueberhaupt ein Objekt angekommen ist.
+ *
+ * @param array{max_bytes?:int} $o
+ * @return array<mixed>
+ */
+function api_rumpf(array $o = []): array {
+    $roh = file_get_contents('php://input');
+    if ($roh === false) { $roh = ''; }
+
+    if (isset($o['max_bytes']) && strlen($roh) > (int)$o['max_bytes']) {
+        json_out(['error' => 'zu_gross'], 413);
+    }
+    if ($roh === '') {
+        json_out(['error' => 'leer', 'hinweis' =>
+            'Es kamen keine Daten an — evtl. begrenzt der Server die Upload-Größe '
+          . '(post_max_size, client_max_body_size).'], 400);
+    }
+
+    $b = json_decode($roh, true);
+    if (!is_array($b)) { json_out(['error' => 'format'], 400); }
+    return $b;
+}
+
 /* ---- DAS TOR DES WARTUNGSMODUS (S5 Paket W, E-S5W-06) --------------------
  *
  * Hier und nicht in `auth_guard.php`: Dort liefen nur die SEITEN durch.
@@ -583,7 +765,13 @@ wartung_tor();
  * Bis zu dieser Stelle ist keine Kopfzeile gesendet und keine Verbindung
  * geoeffnet. `sitzung_lib.php` laedt ihrerseits nichts. */
 require_once __DIR__ . '/sitzung_lib.php';
-sitzung_ablage();
+/* BIS WEB 20.26.3 STAND HIER `sitzung_ablage();`. Der Aufruf ist mit
+ * Schritt 15 AP2 entfallen (E-ZE-06): `sitzung_starten()` ruft ihn jetzt
+ * selbst, unmittelbar bevor PHP die Sitzungsdatei anlegt. Damit laeuft die
+ * Einrichtung der Ablage genau dann, wenn sie gebraucht wird — und NICHT
+ * mehr bei jeder Anfrage, die `db.php` laedt, ohne eine Sitzung zu starten.
+ * Die Datei wird hier weiter geladen, weil `jobs_lib.php` den Raeumteil und
+ * `plattform_lib.php` die Auskunft daraus braucht. */
 
 function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
 
@@ -1359,6 +1547,81 @@ function geraet_virtuell(string $deviceId): bool
     return str_starts_with($deviceId, 'manual-');
 }
 
+/* ---- DAS VIRTUELLE GERAET AN EINER STELLE (Schritt 15/AP4, E-ZE-18) ------
+ *
+ * „Manuelle Einträge" ist ein deaktiviertes Geraet je Konto, an dem alles
+ * haengt, was nicht von einer Uhr kommt: Einsaetze aus dem Formular, aus dem
+ * Import, aus dem Schneiden und aus dem GPX-Einlesen. Der Block „gibt es das
+ * Geraet schon? sonst anlegen" stand bis Web 20.28.0 VIERMAL — zweimal als
+ * eigene Funktion (`schnitt_geraet()`, `gpx_import_geraet()`) und zweimal
+ * eingebettet (`api/import_commit.php`, `einsatz_form.php`), jedes Mal mit
+ * demselben zwanzigzeiligen Kommentar darueber.
+ *
+ * Und die Kennung selbst — `'manual-' . $userId` — stand an sieben Stellen,
+ * teils als Praefix beim Zusammenbauen, teils als `LIKE 'manual-%'` in einer
+ * Abfrage. Eine davon band das Muster als Parameter statt es einzusetzen
+ * (`betrieb_statistik.php`), zwei brauchten einen Tabellenalias (`d.`), den
+ * die Konstante `GERAETE_ECHT_SQL` nicht traegt. Deshalb drei Formen, nicht
+ * eine: die Funktion fuer die Kennung, `geraete_echt_sql($alias)` fuer die
+ * Bedingung und `GERAET_VIRTUELL_MUSTER` fuer die Stelle, die bindet.
+ */
+
+/** Das `LIKE`-Muster der virtuellen Geraete — fuer Abfragen, die es binden. */
+const GERAET_VIRTUELL_MUSTER = 'manual-%';
+
+/** Die Geraetekennung des virtuellen Geraets dieses Kontos. */
+function geraet_virtuell_kennung(int $userId): string
+{
+    return 'manual-' . $userId;
+}
+
+/**
+ * Bedingung „nur echte Geraete" — mit Tabellenalias, wenn einer gebraucht wird.
+ *
+ * `GERAETE_ECHT_SQL` bleibt als Konstante bestehen (sie steht in zwei
+ * Abfragen ohne Alias und ist dort gut lesbar); diese Funktion ist fuer die
+ * Abfragen mit Verbund, wo `device_id` mehrdeutig waere.
+ */
+function geraete_echt_sql(string $alias = ''): string
+{
+    $p = $alias === '' ? '' : rtrim($alias, '.') . '.';
+    return $p . "device_id NOT LIKE '" . GERAET_VIRTUELL_MUSTER . "'";
+}
+
+/**
+ * Das virtuelle Geraet dieses Kontos holen — und anlegen, wenn es fehlt.
+ *
+ * DIE NUTZERKENNUNG GEHOERT IN DIE ABFRAGE (M3-12/M6-09), und dieser Satz
+ * stand bisher vier Mal fast wortgleich daneben: Gesucht wurde einmal allein
+ * ueber `device_id`. Dass `manual-<id>` die Zugehoerigkeit im Namen traegt,
+ * machte die Abfrage praktisch richtig — aber nur, weil eine Zeichenkette
+ * zufaellig dasselbe aussagt wie eine Spalte. Steht die Bedingung nicht in
+ * der Abfrage, gibt es auch nichts, was sie durchsetzt: ein spaeter
+ * geaendertes Namensschema, ein Tippfehler beim Zusammenbauen des
+ * Schluessels — und der Einsatz staende am Geraet einer fremden Person.
+ *
+ * `active = 0`: Das Geraet kann nie hochladen. Es traegt trotzdem einen
+ * Schluesselhash, weil die Spalte ihn verlangt; er wird nie geprueft.
+ *
+ * NIMMT EIN `PDO`, weil drei der vier Aufrufer innerhalb einer Transaktion
+ * stehen und die vierte Stelle ihr `$pdo` ohnehin zur Hand hat.
+ */
+function geraet_virtuell_sicherstellen(PDO $pdo, int $userId): int
+{
+    $devKey = geraet_virtuell_kennung($userId);
+    $q = $pdo->prepare('SELECT id FROM devices WHERE device_id = ? AND user_id = ?');
+    $q->execute([$devKey, $userId]);
+    $devId = $q->fetchColumn();
+    if ($devId !== false) { return (int)$devId; }
+
+    $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
+                   VALUES (?,?,?,?,0)')
+        ->execute([$userId, $devKey,
+                   geraet_schluessel_hash(bin2hex(random_bytes(24))),
+                   'Manuelle Einträge']);
+    return (int)$pdo->lastInsertId();
+}
+
 /** Zahl der echten Geraete eines Kontos (aktive und deaktivierte). */
 function geraete_zahl(PDO $pdo, int $userId): int {
     $st = $pdo->prepare('SELECT COUNT(*) FROM devices
@@ -1454,13 +1717,31 @@ function app_state_lesen(string $k): ?string {
     }
 }
 
+/**
+ * Passt der Wert in die Spalte? Sonst `true` und eine Zeile im Protokoll.
+ *
+ * EINE STELLE FUER DIE PRUEFUNG UND IHREN SATZ (Schritt 15/AP4). Sie stand
+ * dreifach, sobald es drei schreibende Helfer gab — und ein viertes Mal in
+ * `edbak_marke_setzen()` mit einer eigenen Konstante derselben Zahl.
+ *
+ * WARUM SIE UEBERHAUPT IN PHP STEHT und nicht nur im Schema: Je nach
+ * Serverbetriebsart kuerzt MySQL zu lange Werte STILL statt abzuweisen. Eine
+ * stille Kuerzung ist hier das Schlimmste von allem — ein halbes JSON, das
+ * beim naechsten Lesen als „kein Auftrag" durchgeht. Genau das ist einmal
+ * passiert (S2/AP6): Die Warteschlange von „Alle sichern" war laenger als
+ * 190 Zeichen, niemand erfuhr davon, und die Schaltflaeche meldete „0 von 0
+ * Konten gesichert".
+ */
+function app_state_zu_lang(string $k, string $v): bool {
+    if (strlen($v) <= APP_STATE_MAX) { return false; }
+    error_log('app_state: "' . $k . '" ist ' . strlen($v) . ' Zeichen lang, '
+            . 'erlaubt sind ' . APP_STATE_MAX . '.');
+    return true;
+}
+
 /** Eine Zeile schreiben. `false` = zu lang oder nicht schreibbar, mit Log. */
 function app_state_setzen(string $k, string $v): bool {
-    if (strlen($v) > APP_STATE_MAX) {
-        error_log('app_state: "' . $k . '" ist ' . strlen($v) . ' Zeichen lang, '
-                . 'erlaubt sind ' . APP_STATE_MAX . '.');
-        return false;
-    }
+    if (app_state_zu_lang($k, $v)) { return false; }
     try {
         db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
                        ON DUPLICATE KEY UPDATE v = VALUES(v)')->execute([$k, $v]);
@@ -1470,6 +1751,199 @@ function app_state_setzen(string $k, string $v): bool {
                 . $ex->getMessage());
         return false;
     }
+}
+
+/* ---- VIER WEITERE HELFER (Schritt 15/AP4, E-ZE-17) -----------------------
+ *
+ * Der Absatz oben sagte bis Web 20.28.0: „Zusammengefuehrt sind sie nicht —
+ * das waere eine Aenderung an fuenf Bibliotheken fuer einen Gewinn, den
+ * niemand sieht." Gemessen waren es dann **27 Stellen in 17 Dateien**, und
+ * der Gewinn ist sichtbar geworden: Jede dieser Stellen beantwortete die
+ * Frage „was, wenn die Tabelle fehlt?" fuer sich, und sie beantworteten sie
+ * verschieden — mal `try/catch` mit `null`, mal ohne, mal mit einem
+ * `error_log`. Eine fehlende `app_state`-Tabelle (Migration noch nicht
+ * gelaufen) ist kein seltener Zustand: Sie ist der Zustand JEDER Anlage
+ * zwischen Deploy und `update.php`.
+ *
+ * DIE WRAPPER BLEIBEN. `edbak_marke_*`, `geocoder_state*`,
+ * `schluessel_marke_*`, `geraete_hinweis_*`, `demo_*`, `jobs_*`, `logo_*`
+ * behalten Namen und Signatur — sie tragen Bedeutung und teils einen eigenen
+ * Merker; nur ihr Rumpf ruft ab hier diese Helfer.
+ */
+
+/**
+ * Mehrere Zeilen auf einmal lesen.
+ *
+ * EINE ABFRAGE STATT N, und der Grund steht in `nb_moeglich()` nebenan:
+ * Vier Einzelabfragen kosteten dort 1,071 ms, eine gemeinsame 0,355 ms.
+ * Fehlende Schluessel fehlen auch im Ergebnis — wer eine Vorgabe braucht,
+ * nimmt `$aus[$k] ?? ...`.
+ *
+ * @param list<string> $k
+ * @return array<string,string> nur die gefundenen
+ */
+function app_state_mehrere(array $k): array {
+    if ($k === []) { return []; }
+    try {
+        $platz = implode(',', array_fill(0, count($k), '?'));
+        $st = db()->prepare("SELECT k, v FROM app_state WHERE k IN ($platz)");
+        $st->execute(array_values($k));
+        $aus = [];
+        foreach ($st->fetchAll(PDO::FETCH_NUM) as $r) {
+            $aus[(string)$r[0]] = (string)$r[1];
+        }
+        return $aus;
+    } catch (Throwable $ex) {
+        return [];   // Tabelle fehlt (Migration noch nicht gelaufen)
+    }
+}
+
+/**
+ * Mehrere Zeilen auf einmal schreiben.
+ *
+ * ALLES ODER NICHTS GIBT ES HIER NICHT, und das ist Absicht: Diese Funktion
+ * laeuft teils INNERHALB einer fremden Transaktion (`demo_anlegen()`), und
+ * eine eigene aufzumachen braeuchte dort eine verschachtelte — die gibt es
+ * nicht. Ein zu langer Wert bricht deshalb VOR dem ersten Schreiben ab; was
+ * danach schiefgeht, ist ein Datenbankfehler und kein Laengenfehler.
+ *
+ * @param array<string,string> $kv
+ */
+function app_state_setzen_mehrere(array $kv): bool {
+    if ($kv === []) { return true; }
+    foreach ($kv as $k => $v) {
+        if (app_state_zu_lang((string)$k, $v)) { return false; }
+    }
+    try {
+        $st = db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
+                             ON DUPLICATE KEY UPDATE v = VALUES(v)');
+        foreach ($kv as $k => $v) { $st->execute([(string)$k, $v]); }
+        return true;
+    } catch (Throwable $ex) {
+        error_log('app_state: Mehrfachschreiben fehlgeschlagen: ' . $ex->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Zeilen loeschen.
+ *
+ * KEIN RUECKGABEWERT, und keiner wird gebraucht: Die drei Aufrufer loeschen
+ * Reste (ein geloeschtes Konto, eine aufgehobene Jobpause). Ob die Zeile da
+ * war, aendert nichts an dem, was danach geschieht. Eine fehlende Tabelle
+ * ist derselbe Fall.
+ */
+function app_state_loeschen(string ...$k): void {
+    if ($k === []) { return; }
+    try {
+        $platz = implode(',', array_fill(0, count($k), '?'));
+        db()->prepare("DELETE FROM app_state WHERE k IN ($platz)")->execute($k);
+    } catch (Throwable $ex) {
+        error_log('app_state: Loeschen von "' . implode('", "', $k)
+                . '" fehlgeschlagen: ' . $ex->getMessage());
+    }
+}
+
+/**
+ * Einen Wert einmalig erzeugen und behalten — atomar.
+ *
+ * FUER DIE BEIDEN SERVERGEHEIMNISSE (`salt_secret` in `auth_salt.php`,
+ * `reg_secret` in `registrieren.php`). Beide standen vorher als „lesen, und
+ * wenn leer, erzeugen und schreiben" da, und beide benutzten dafuer schon
+ * `INSERT IGNORE` — das ist der springende Punkt und der Grund, warum diese
+ * Funktion NICHT `app_state_setzen()` ruft: Zwei gleichzeitige Anfragen
+ * erzeugen beide einen Wert, aber nur EINER darf gewinnen. Mit
+ * `ON DUPLICATE KEY UPDATE` gewaenne der letzte, und die Pseudo-Salts
+ * aenderten sich unter der Hand. `INSERT IGNORE` laesst den ersten stehen;
+ * danach wird zurueckgelesen, damit alle denselben sehen.
+ *
+ * ---- SIE FAENGT NICHTS, UND DAS IST DER UNTERSCHIED ZU DEN NACHBARN ------
+ *
+ * `app_state_lesen()`, `-setzen()`, `-loeschen()` und `-mehrere()` fangen
+ * eine fehlende Tabelle ab und liefern einen brauchbaren Ersatz. Hier waere
+ * das falsch: KEINER der beiden Aufrufer hatte je einen `try/catch`. Fehlt
+ * `app_state` (Migration noch nicht gelaufen), brach die Anfrage ab — und
+ * `auth_salt.php` gehoert zum GERAETEVERTRAG, seine Antwortform ist
+ * zeichengleich zu halten (Schritt 15, Abschnitt 0). Ein stillschweigend
+ * erzeugtes, NICHT gespeichertes Geheimnis waere je Anfrage ein anderes:
+ * Die Pseudo-Salts einer unbekannten Adresse waeren nicht mehr stabil, und
+ * genau ihre Stabilitaet ist ihr Zweck. Lieber ein Abbruch als eine Antwort,
+ * die aussieht wie eine richtige.
+ *
+ * Deshalb liest sie auch selbst und nicht ueber `app_state_lesen()`: Das
+ * wuerde den Fehler an der ersten Stelle schlucken.
+ *
+ * Der Erzeuger laeuft nur, wenn nichts dasteht. Er darf teuer sein.
+ */
+function app_state_einmalig(string $k, callable $erzeuger): string {
+    $pdo = db();
+    $st  = $pdo->prepare('SELECT v FROM app_state WHERE k = ?');
+    $st->execute([$k]);
+    $v = $st->fetchColumn();
+    if ($v !== false && $v !== null && (string)$v !== '') { return (string)$v; }
+
+    $neu = (string)$erzeuger();
+    /* Zu lang: Der Aufrufer bekommt trotzdem einen brauchbaren Wert — er soll
+     * nicht ohne Geheimnis dastehen —, die Zeile fehlt dann aber. */
+    if (app_state_zu_lang($k, $neu)) { return $neu; }
+
+    $pdo->prepare('INSERT IGNORE INTO app_state (k, v) VALUES (?, ?)')
+        ->execute([$k, $neu]);
+
+    /* ZURUECKLESEN, NICHT $neu ZURUECKGEBEN: Wenn zwischen Lesen und
+     * Schreiben jemand anderes schneller war, hat `INSERT IGNORE` nichts
+     * getan — und $neu waere ein Wert, den sonst niemand kennt. */
+    $st->execute([$k]);
+    $w = $st->fetchColumn();
+    return ($w === false || $w === null) ? $neu : (string)$w;
+}
+
+/* ---- DAS SCHEMA FRAGEN (Schritt 15/AP4, E-ZE-04) -------------------------
+ *
+ * Die drei Fragen „gibt es diese Tabelle / diese Spalte / diesen Index?"
+ * standen bis Web 20.28.0 doppelt: privat in `migration_lib.php`
+ * (`_hat_tabelle()`, `_hat_spalte()`, `_hat_index()`) und noch einmal
+ * handgeschrieben in vier Dateien, die `migration_lib.php` nicht laden —
+ * `ingest.php` sagte das sogar im Kommentar dazu.
+ *
+ * SIE NEHMEN EIN `PDO`, UND ZWAR ZWINGEND. `db()` waere hier falsch:
+ * `tools/schemaprobe/probe.php` laesst Migrationen gegen ein frisch
+ * angelegtes Schema laufen (`frisch()`), also gegen eine ANDERE Verbindung
+ * als `db()`. Ein Helfer, der sich seine Verbindung selbst holt, fragte dort
+ * das falsche Schema — und zwar lautlos, denn `DATABASE()` haette
+ * geantwortet.
+ *
+ * GELAUFENE MIGRATIONEN WERDEN NICHT UMGEBAUT (E-ZE-04). Die privaten
+ * `_hat_*` bleiben stehen und reichen nur noch durch; die 57
+ * `information_schema`-Erwaehnungen in `migration_lib.php` bleiben, wo sie
+ * sind. Registerzeile Z15 haelt ihre Zahl fest: Sie darf nicht steigen.
+ * NEUE Migrationen fragen ueber diese drei.
+ */
+
+/** Gibt es die Tabelle im aktuellen Schema? */
+function db_hat_tabelle(PDO $pdo, string $tabelle): bool {
+    $q = $pdo->prepare('SELECT COUNT(*) FROM information_schema.tables
+                        WHERE table_schema = DATABASE() AND table_name = ?');
+    $q->execute([$tabelle]);
+    return (int)$q->fetchColumn() > 0;
+}
+
+/** Gibt es die Spalte? */
+function db_hat_spalte(PDO $pdo, string $tabelle, string $spalte): bool {
+    $q = $pdo->prepare('SELECT COUNT(*) FROM information_schema.columns
+                        WHERE table_schema = DATABASE()
+                          AND table_name = ? AND column_name = ?');
+    $q->execute([$tabelle, $spalte]);
+    return (int)$q->fetchColumn() > 0;
+}
+
+/** Gibt es den Index? */
+function db_hat_index(PDO $pdo, string $tabelle, string $index): bool {
+    $q = $pdo->prepare('SELECT COUNT(*) FROM information_schema.statistics
+                        WHERE table_schema = DATABASE()
+                          AND table_name = ? AND index_name = ?');
+    $q->execute([$tabelle, $index]);
+    return (int)$q->fetchColumn() > 0;
 }
 
 /** Zeitpunkt der letzten Bestaetigung, oder null. */

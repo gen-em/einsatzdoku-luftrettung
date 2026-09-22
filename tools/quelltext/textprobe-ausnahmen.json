@@ -282,9 +282,9 @@
     },
     {
       "id": "basis-als-bezeichner",
-      "zeile": "\\$basis\\b|const basis\\b|\\bbasis\\)|nurWenn\\(basis\\)",
+      "zeile": "\\$basis\\b|const basis\\b|\\bbasis\\)|nurWenn\\(basis\\b",
       "klasse": "E",
-      "begruendung": "`$basis` in db.php ist der Pfad-Praefix der Installation, `basis` in missiontable.js der Datenbestand, gegen den die Spaltenwahl entscheidet. Bezeichner im Code (Klasse E) — und obendrein Homonyme: mit dem Standort hat keiner der beiden zu tun."
+      "begruendung": "`$basis` in db.php ist der Pfad-Praefix der Installation, `basis` in missiontable.js der Datenbestand, gegen den die Spaltenwahl entscheidet. Bezeichner im Code (Klasse E) — und obendrein Homonyme: mit dem Standort hat keiner der beiden zu tun. Der vierte Teil stand bis zum 22.09.2026 auf `nurWenn\\(basis\\)` mit schliessender Klammer und griff nicht mehr, sobald `nurWenn` ein zweites Argument bekam (Schritt 15 AP9a). Eine Ausnahme, die an der Stelligkeit eines Aufrufs haengt, misst nicht den Begriff, sondern den Zufall."
     },
     {
       "id": "basis-als-grundlage",
@@ -690,6 +690,16 @@
       ],
       "begruendung": "E-PK-27: `demo@gen-em.org` ist die EINE echte Adresse, die in Texten, Werkzeugen und Doku stehen darf. Sie steht als Ausnahme hier und nicht im Muster — so faellt es auf, wenn jemand sie streicht, statt dass die Regel lautlos eine Adresse weniger kennt.",
       "zeile": "demo@gen-em\\.org"
+    },
+    {
+      "id": "technik-konfig-lib-leser",
+      "datei": "docs/Technik.md",
+      "zeile": "Der EINE Leser fuer config\\.php",
+      "klasse": "Homonym",
+      "muster": [
+        "hausform-maennlich"
+      ],
+      "begruendung": "E-PK-26 regelt die Hausform fuer ROLLEN VON MENSCHEN (NutzerIn, BetreiberIn). `konfig_lib.php` ist der eine Leser fuer `config.php` -- ein Stueck Code, kein Mensch, und `LeserIn` waere hier sinnlos. Die Sperrliste kann das nicht unterscheiden, weil sie am Wort misst und nicht am Gemeinten. Eingetragen 22.09.2026 beim Zusammenfuehren von Schritt 15 (PR #74), der die Zeile mitbringt."
     }
   ]
 }

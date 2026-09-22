@@ -26,11 +26,11 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 >
 > | | |
 > |---|---|
-> | Stand | **22.09.2026 — PK-01 bis PK-03 erledigt, PK-04 in Arbeit (Teilstück 1a von 5 erledigt).** `main` ist hereingezogen (`a1c6494`): beide Vorgriffe sind gemergt, **M1 der Kette II ist erreicht**. Offen bleibt P-PK-11 zur Hälfte: die Ausbaustufe `uhr` ist gebaut, aber nicht abgenommen; `android` ist es (Bau in 7m 19s, 0 Lint-Fehler, 670 Prüffälle / 0). **Halt nach PK-03 wie beauftragt** — PK-04 bis PK-06 erst auf ausdrückliches Wort, weil PK-04 sichtbare Texte in `server/` bereinigt. Umsetzung läuft auf `claude/serene-dijkstra-bcpbjy` (von `main` `08e032e`); das Konzept ist mit seiner Historie vom Konzeptzweig dorthin übernommen, ebenso der Inhalt von PR #70. Freigegeben vom Auftraggeber (Z5) ohne Änderungen; Z1, Z2, Z3 erledigt; P-PK-02 vorgezogen und erledigt. |
+> | Stand | **22.09.2026 — PK-01 bis PK-03 erledigt, PK-04 in Arbeit (Teilstücke 1a bis 4 von 5 erledigt, Teilstück 5 in Arbeit).** **Schritt 15 (PR #74) ist vorweggenommen hereingezogen** — der Merge war vor dem eigentlichen Merge nach `main` nötig, weil er drei Proben STILL gebrochen hätte (F-PK-24); aufgelöst und nachgemessen in Prüfdokument 5h. `main` ist hereingezogen (`a1c6494`): beide Vorgriffe sind gemergt, **M1 der Kette II ist erreicht**. Offen bleibt P-PK-11 zur Hälfte: die Ausbaustufe `uhr` ist gebaut, aber nicht abgenommen; `android` ist es (Bau in 7m 19s, 0 Lint-Fehler, 670 Prüffälle / 0). Umsetzung läuft auf `claude/serene-dijkstra-bcpbjy` (von `main` `08e032e`); das Konzept ist mit seiner Historie vom Konzeptzweig dorthin übernommen, ebenso der Inhalt von PR #70. Freigegeben vom Auftraggeber (Z5) ohne Änderungen; Z1, Z2, Z3 erledigt; P-PK-02 vorgezogen und erledigt. |
 > | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **vom Auftraggeber bestätigt am 21.09.2026**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. |
-> | Nächstes | **PK-04/5** — die Bereinigung in `server/`. **Halt: erst nach ausdrücklichem Wort.** **Parallelitätsregel aus der Konzeptfassung auf `main`, hier nachgetragen:** PK-01 bis PK-03 laufen neben Schritt 15; **PK-04 bis PK-06 erst, wenn kein Schritt-15-Paket in einem offenen PR steht.** Nachgesehen am 22.09.2026: **kein offener PR** — die Regel war während PK-04/1a bis 4 erfüllt, aber ich kannte sie nicht, als ich anfing. Die beiden Vorgriffe (PR #71 zu PK-05, PR #72 zu PK-06) sind auf `main`. |
+> | Nächstes | **PK-04/5** — die Bereinigung in `server/`. **Vom Auftraggeber freigegeben am 22.09.2026**, nachdem Schritt 15 durch ist. **Parallelitätsregel aus der Konzeptfassung auf `main`, hier nachgetragen:** PK-01 bis PK-03 laufen neben Schritt 15; **PK-04 bis PK-06 erst, wenn kein Schritt-15-Paket in einem offenen PR steht.** Nachgesehen am 22.09.2026: **kein offener PR** — die Regel war während PK-04/1a bis 4 erfüllt, aber ich kannte sie nicht, als ich anfing. Die beiden Vorgriffe (PR #71 zu PK-05, PR #72 zu PK-06) sind auf `main`. |
 > | Kette II | **M1 ist am 21.09.2026 erreicht** — Tag `web-v20.26.3` auf `a1c6494`, Lauf **35654132667** Versuch 2, Produktiv meldet **20.26.3**, **Migrationen von Hand ausgeführt, Wartung beendet, Status „Alles läuft"**, Zeiger `produktion` auf `a1c6494`. Im Übrigen wird Kette II nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
-> | Hakt | nichts. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); Stufe 2 hat ihn nach dem Merge bestätigt: Kreisläufe csv und edbak **104 s grün** gegen Staging mit **MySQL 8.4.10** (Lauf 35639445224, Versuch 2, Schritt 5) — im Lauf davor, ohne den Fix, derselbe Schritt nach **15 min 51 s rot**. Der Tag `web-v20.26.3` folgt darauf (Z2a). **Nr. 267 ist auf beiden Anlagen bestätigt:** Staging mit MySQL 8.4.10 im Kreislauf edbak (104 s), Produktiv mit MariaDB im Produktivlauf. **Der Export von Hand auf Produktiv steht als Gegenprobe noch aus** — er ist kein Beleg, weil der Fehler dort nie auftrat, aber er ist die einzige Messung, die den Weg durch die Oberfläche geht. Der erste Tag war am Tor hängengeblieben (F-PK-04); nach dem Vorgriff auf PK-06 (PR #72) ging er durch. **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
+> | Hakt | **Stufe 1 ist rot, und nicht wegen PK:** `tools/spaltenregister/pruefen.php` aus Schritt 15 meldet 1 Befund (`start_sort` fehlt im Register) und Selbstprobe **15 von 16** (Alias `uhr_gesperrt AS manual`) — auf dem Stand von Schritt 15 selbst nachgemessen, vor dem Merge. Backlog Nr. 282, Prüfpunkt P-PK-22. Sonst nichts. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); Stufe 2 hat ihn nach dem Merge bestätigt: Kreisläufe csv und edbak **104 s grün** gegen Staging mit **MySQL 8.4.10** (Lauf 35639445224, Versuch 2, Schritt 5) — im Lauf davor, ohne den Fix, derselbe Schritt nach **15 min 51 s rot**. Der Tag `web-v20.26.3` folgt darauf (Z2a). **Nr. 267 ist auf beiden Anlagen bestätigt:** Staging mit MySQL 8.4.10 im Kreislauf edbak (104 s), Produktiv mit MariaDB im Produktivlauf. **Der Export von Hand auf Produktiv steht als Gegenprobe noch aus** — er ist kein Beleg, weil der Fehler dort nie auftrat, aber er ist die einzige Messung, die den Weg durch die Oberfläche geht. Der erste Tag war am Tor hängengeblieben (F-PK-04); nach dem Vorgriff auf PK-06 (PR #72) ging er durch. **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
 >
 > **Stand der Umsetzung**
 >
@@ -819,7 +819,7 @@ gibt. Die vier Teilstücke davor fassen `server/` nicht an.
 vom Befund zum Hinweis), 32 Klassen sind in der Streichliste, die zehn
 `style="…"` sind als berechnete Werte erklärt. **Die verbliebenen 18 sind
 Klassen, die im Markup stehen und in keinem Stylesheet eine Regel haben**
-(Backlog Nr. 269) — jede ist entweder ein toter Markup-Rest oder eine
+(Backlog Nr. 278) — jede ist entweder ein toter Markup-Rest oder eine
 fehlende Regel, und beides ändert `server/`. Sie gehören damit in
 **Teilstück 5**, das die Schwelle dann ganz wegnimmt. Bis dahin ist die
 Schwelle 18 ein **Riegel** und keine Zahl, die alles durchlässt — das war
@@ -859,7 +859,7 @@ Umzug tot; berichtigt werden sie in Teilstück 5, weil jede Änderung an
 > Gegenlesung des Berichts und die Kürzung der Datei sind nicht Teil des
 > Vorgriffs. Grund für das Vorziehen: Jeder Push erzeugte zwei Läufe desselben
 > Namens, und der Zweigschutz wartete auf den langsameren — 56 statt 1 Minute
-> (Backlog Nr. 269, Abnahme P-PK-17).
+> (Backlog Nr. 278, Abnahme P-PK-17).
 
 **Was bleibt** (der Auslöser ist erledigt, alles andere nicht):
 
@@ -1060,7 +1060,7 @@ in Stufe 2, gebaut ist er nicht"; „edbak-Export auf Staging antwortet 500
 nach PK; „Mailversand auf Staging fehlgeschlagen" (Z4); „App-Signatur in der
 Kette" (PK-08, ersetzt den Nachtrag zu Nr. 100).
 
-**Nr. 269 (neu, nach Erledigt) — „Stufe 1 lief bei jedem Push doppelt".**
+**Nr. 281 (neu, nach Erledigt) — „Stufe 1 lief bei jedem Push doppelt".**
 **Die Nummer war bis zum 21.09.2026 abends die 268, und das war eine
 Kollision:** Der Zweig `claude/pk-06-vorgriff-stufe2` (PR #72, andere
 Instanz) hat die 268 zeitgleich in `docs/Backlog.md` eingetragen, für die

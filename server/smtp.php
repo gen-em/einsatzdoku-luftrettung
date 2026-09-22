@@ -1,10 +1,19 @@
 <?php
 declare(strict_types=1);
 
-/* DIE EINZIGE ABHAENGIGKEIT: `instanz_lib.php` laedt selbst nichts (dort
- * ausgeschrieben) und bringt `app_url()` fuer den EHLO-Namen. Damit bleibt
- * `smtp.php` weiterhin ohne Datenbank benutzbar. */
+/* Der eine Leser fuer config.php (Schritt 15 AP2). */
+require_once __DIR__ . '/konfig_lib.php';
+
+/* DREI ABHAENGIGKEITEN, KEINE DAVON MIT DATENBANK — `konfig_lib.php` oben,
+ * dazu die beiden hier. `instanz_lib.php` laedt
+ * selbst nichts (dort ausgeschrieben) und bringt `app_url()` fuer den
+ * EHLO-Namen. Damit bleibt `smtp.php` weiterhin ohne Datenbank benutzbar. */
 require_once __DIR__ . '/instanz_lib.php';
+
+/* Die dritte: `format_lib.php` bringt `iso_utc()` fuer den Versandvermerk.
+ * Sie laedt selbst nur `konfig_lib.php` — nichts auf dem Weg erreicht
+ * `db.php`. */
+require_once __DIR__ . '/format_lib.php';
 
 /**
  * DIE ANTWORT ABSCHLIESSEN, BEVOR LANGSAME ARBEIT BEGINNT.
@@ -114,8 +123,7 @@ function antwort_abschliessen(): bool {
  */
 function smtp_eingerichtet(): bool
 {
-    $alles = require __DIR__ . '/config.php';
-    $cfg = $alles['smtp'] ?? [];
+    $cfg = konfig('smtp', []);
     return is_array($cfg) && trim((string)($cfg['host'] ?? '')) !== '';
 }
 
@@ -144,10 +152,8 @@ function smtp_versand_vermerken(bool $ok): void
 {
     if (!function_exists('db')) { return; }
     try {
-        db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?), (?, ?)
-                       ON DUPLICATE KEY UPDATE v = VALUES(v)')
-            ->execute(['smtp_last', gmdate('Y-m-d\TH:i:s\Z'),
-                       'smtp_last_ok', $ok ? '1' : '0']);
+        app_state_setzen_mehrere(['smtp_last'    => iso_utc(),
+                                  'smtp_last_ok' => $ok ? '1' : '0']);
     } catch (Throwable $ex) {
         /* Still: Der Versand ist gelaufen, der Vermerk nicht. Das ist die
          * richtige Reihenfolge der Wichtigkeit. */
@@ -179,8 +185,8 @@ function smtp_probe(int $zeitlimit = 5): array
     if (!file_exists(__DIR__ . '/config.php')) {
         return ['ok' => false, 'grund' => 'Es gibt noch keine config.php.'];
     }
-    $alles = require __DIR__ . '/config.php';
-    $cfg   = $alles['smtp'] ?? [];
+    $cfg = konfig('smtp', []);
+    if (!is_array($cfg)) { $cfg = []; }
     $host  = trim((string)($cfg['host'] ?? ''));
     if ($host === '') {
         return ['ok' => false, 'grund' => 'In der config.php steht kein SMTP-Host.'];
@@ -214,9 +220,13 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
      * weiter unten noch einmal fuer die Basisadresse im EHLO. Das ist nicht
      * nur ein zweiter Dateizugriff: Zwei Ladevorgaenge koennen zwei
      * verschiedene Staende sehen, wenn die Datei dazwischen ersetzt wird.
-     * Unwahrscheinlich, aber es gibt keinen Grund dafuer. */
-    $alles = require __DIR__ . '/config.php';
-    $cfg   = $alles['smtp'];
+     * Unwahrscheinlich, aber es gibt keinen Grund dafuer.
+     *
+     * SEIT SCHRITT 15 AP2 IST DAS NICHT MEHR MOEGLICH: `konfig()` liest die
+     * Datei einmal je Anfrage und merkt sich den Inhalt. Die drei
+     * Lesestellen dieser Datei sind damit drei Abfragen an denselben
+     * Speicher. */
+    $cfg = (array)konfig('smtp', []);
 
     /* ZEILENUMBRUECHE IM EMPFAENGER ABLEHNEN (M1-14).
      *

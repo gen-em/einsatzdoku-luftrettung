@@ -66,23 +66,17 @@ require_once __DIR__ . '/demo_lib.php';
  * parallel offene, angemeldete Sitzung im selben Browser ihren Strict-Schutz.
  * Zwei Namen, zwei Sitzungen, keine Wechselwirkung.
  */
-const PW_SESSION_NAME = 'EDPWSESS';
+
+/* `PW_SESSION_NAME` UND `pw_session_start()` SIND MIT WEB 20.27.0 ENTFALLEN
+ * (Schritt 15 AP2, E-ZE-12). Der Name steht jetzt in `sitzung_lib.php`,
+ * neben der Tabelle der vier Arten, die ihn braucht; der Start heisst
+ * `sitzung_starten('passwort')`. Die Art traegt dieselben Parameter wie
+ * vorher — `secure` fest, `Lax`, eigener Sitzungsname — und dieselbe
+ * Haertung: Diese Sitzung traegt das Passwort-Token, eine untergeschobene
+ * Kennung waere hier die teuerste von allen. */
 
 header('Referrer-Policy: no-referrer');
 header('Cache-Control: no-store, no-cache, must-revalidate');
-
-function pw_session_start(): void {
-    if (session_status() !== PHP_SESSION_NONE) { return; }
-    session_name(PW_SESSION_NAME);
-    session_set_cookie_params([
-        'httponly' => true, 'secure' => true, 'samesite' => 'Lax', 'path' => '/',
-    ]);
-    /* `use_strict_mode` — siehe `auth_guard.php` (E-P5a-38, Nr. 205). Diese
-     * Sitzung traegt das Passwort-Token; eine untergeschobene Kennung waere
-     * hier die teuerste von allen. */
-    ini_set('session.use_strict_mode', '1');
-    session_start();
-}
 
 $tokenAusAdresse = (string)($_GET['token'] ?? '');
 $getauscht       = isset($_GET['w']);        // "weitergeleitet", zweiter Aufruf
@@ -91,14 +85,14 @@ if ($tokenAusAdresse !== '') {
     // Erster Aufruf: Token einlagern und ohne Parameter neu aufrufen. Ob er
     // gueltig ist, wird danach geprueft — die Weiterleitung erfolgt in jedem
     // Fall, sonst waere schon die Adresszeile die Auskunft, ob ein Token zieht.
-    pw_session_start();
+    sitzung_starten('passwort');
     session_regenerate_id(true);
     $_SESSION['pw_token'] = $tokenAusAdresse;
     header('Location: pw_handling.php?w=1', true, 302);
     exit;
 }
 
-pw_session_start();
+sitzung_starten('passwort');
 $token = (string)($_SESSION['pw_token'] ?? '');
 
 /* Kein Token in der Sitzung, obwohl die Weiterleitung gelaufen ist: Der
@@ -183,9 +177,10 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Der Inhaltsschlüssel gehört nicht zu diesem Konto. '
                . 'Es wurde nichts geändert.';
     } else {
-        $pdo = db();
-        $pdo->beginTransaction();
         try {
+            db_transaktion(db(), function (PDO $pdo) use ($erstvergabe, $neuTok, $neuSalt,
+                                                          $neuIter, $wrapPw, $wrapRc,
+                                                          $keyChk, $row): void {
             if ($erstvergabe) {
                 // Passwort und BEIDE Huellen in einem Zug — ein Konto ohne
                 // Wiederherstellungs-Huelle waere nach einem Reset verloren.
@@ -227,7 +222,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
              * anders drin ist. */
             $pdo->prepare('UPDATE users SET session_epoch = session_epoch + 1 WHERE id = ?')
                 ->execute([(int)$row['user_id']]);
-            $pdo->commit();
+            });
             $done = true;
 
             /* ---- DIE REGISTRIERUNG IST HIER ZU ENDE (P5b/AP3) ----------
@@ -295,7 +290,6 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
         } catch (Throwable $ex) {
-            $pdo->rollBack();
             $error = 'Speichern fehlgeschlagen. Bitte erneut versuchen.';
         }
     }

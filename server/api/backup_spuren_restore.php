@@ -51,17 +51,11 @@ require_once __DIR__ . '/../backup_lib.php';      // edbak_spuren_schreiben()
 const BACKUP_SPUREN_RESTORE_MAX = 500;
 
 try {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_out(['error' => 'method'], 405); }
+    api_methode();
     csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
 
-    $roh = file_get_contents('php://input');
-    if ($roh === '' || $roh === false) {
-        json_out(['error' => 'leer', 'hinweis' =>
-            'Es kamen keine Daten an — evtl. begrenzt der Server die Upload-Größe '
-          . '(post_max_size).'], 400);
-    }
-    $b = json_decode($roh, true);
-    if (!is_array($b) || !isset($b['spuren']) || !is_array($b['spuren'])) {
+    $b = api_rumpf();
+    if (!isset($b['spuren']) || !is_array($b['spuren'])) {
         json_out(['error' => 'payload'], 400);
     }
     $liste = $b['spuren'];

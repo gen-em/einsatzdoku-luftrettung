@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/trash_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
+require_once __DIR__ . '/format_lib.php';   // zahl_text() fuer die Aufstellung
 
 /**
  * Zwischenseite fuer das Loeschen eines kompletten Diensttags.
@@ -75,7 +76,7 @@ ui_seite_start(['titel' => 'Diensttag löschen']);
               'klein' => $klein ?? '',
               /* Null in Rot waere falsch — nichts zu loeschen ist keine
                  Warnung. Rot bekommt, was tatsaechlich verlorengeht. */
-              'plaketten' => ui_plakette(number_format($zahl, 0, ',', '.'),
+              'plaketten' => ui_plakette(zahl_text($zahl),
                                          ['ton' => $zahl > 0 ? 'rot' : 'neutral']),
           ]);
       }

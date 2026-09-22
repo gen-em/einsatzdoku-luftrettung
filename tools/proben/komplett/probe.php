@@ -42,7 +42,7 @@ if (!is_file($echt . '/config.php')) {
     fwrite(STDERR, "Ohne server/config.php geht es nicht — die Probe liest aus der echten Datenbank.\n");
     exit(2);
 }
-$CFG_ECHT = (array)(require $echt . '/config.php');
+$echtCfg = (array)(require $echt . '/config.php');
 
 /* ---- Die Kopie ----------------------------------------------------------- */
 $tmp = sys_get_temp_dir() . '/komplettprobe-' . bin2hex(random_bytes(4));
@@ -61,9 +61,9 @@ if (is_dir($echt . '/vendor')) {
     };
     $kopiere($echt . '/vendor', $srv . '/vendor');
 }
-$CFG = $CFG_ECHT;
-$CFG['server_key'] = bin2hex(random_bytes(32));
-file_put_contents($srv . '/config.php', "<?php\nreturn " . var_export($CFG, true) . ";\n");
+$kopieCfg = $echtCfg;
+$kopieCfg['server_key'] = bin2hex(random_bytes(32));
+file_put_contents($srv . '/config.php', "<?php\nreturn " . var_export($kopieCfg, true) . ";\n");
 
 register_shutdown_function(static function () use ($tmp): void {
     $weg = static function (string $p) use (&$weg): void {
@@ -78,6 +78,7 @@ register_shutdown_function(static function () use ($tmp): void {
 });
 
 require_once $srv . '/komplett_lib.php';
+require_once __DIR__ . '/../../konfig_stellen.php';
 
 /* ---- Zählwerk ------------------------------------------------------------ */
 $n = 0; $offen = 0;
@@ -93,7 +94,7 @@ function offenlassen(string $was, string $warum): void {
 }
 
 echo "Komplettprobe — Arbeitskopie unter " . $tmp . "\n";
-echo "Datenbank (gelesen): " . ($CFG['db']['dsn'] ?? '?') . "\n";
+echo "Datenbank (gelesen): " . ($kopieCfg['db']['dsn'] ?? '?') . "\n";
 
 /* =========================================================================
  * Teil 1 — Tabellen, Reihenfolge, Cursor
@@ -342,12 +343,12 @@ if ($pruefdb === '') {
      * DATABASE` in aller Regel NICHT — die Probe sagt das dann und schweigt
      * nicht. */
     $nutzer = isset($args['nutzer'])
-        ? (string)$args['nutzer'] : (string)($CFG['db']['user'] ?? 'root');
+        ? (string)$args['nutzer'] : (string)($kopieCfg['db']['user'] ?? 'root');
     $passwort = isset($args['passwort'])
         ? (string)$args['passwort']
-        : (isset($args['nutzer']) ? '' : (string)($CFG['db']['pass'] ?? ''));
+        : (isset($args['nutzer']) ? '' : (string)($kopieCfg['db']['pass'] ?? ''));
     $wirt = 'localhost';
-    if (preg_match('/host=([^;]+)/', (string)($CFG['db']['dsn'] ?? ''), $t)) { $wirt = $t[1]; }
+    if (preg_match('/host=([^;]+)/', (string)($kopieCfg['db']['dsn'] ?? ''), $t)) { $wirt = $t[1]; }
     try {
         $adm = new PDO("mysql:host={$wirt};charset=utf8mb4", $nutzer, $passwort,
                        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
@@ -665,25 +666,28 @@ if ($zielWurzel === '' || !is_dir($zielWurzel)) {
  * ====================================================================== */
 kopf('Teil 11 — Kein Geheimnis im Archiv, aber die Kennung (S10/AP5)');
 
-global $CFG, $CFG_ECHT;
-$anteilHex = strtolower((string)($CFG['kdf_anteil'] ?? ''));
-$anteilAlt = strtolower((string)($CFG['kdf_anteil_alt'] ?? ''));
+/* Die Zeile `global $kopieCfg, $echtCfg;` stand hier und war auf oberster Ebene
+ * ohnehin wirkungslos. Entfallen mit Web 20.27.0 zusammen mit der globalen
+ * `$kopieCfg`: Beide Felder sind LOKAL — sie tragen, was in die `config.php` der
+ * KOPIE geschrieben wurde, nicht was die Anwendung liest. */
+$anteilHex = strtolower((string)($kopieCfg['kdf_anteil'] ?? ''));
+$anteilAlt = strtolower((string)($kopieCfg['kdf_anteil_alt'] ?? ''));
 /* DER SERVERSCHLUESSEL MUSS DER ECHTE SEIN, NICHT DER DER ARBEITSKOPIE.
  *
  * Diese Probe laeuft gegen eine Kopie von `server/`, und ihr `config.php`
  * bekommt oben einen FRISCHEN Schluessel (`bin2hex(random_bytes(32))`) —
  * damit sie nie mit dem echten siegelt. Genau deshalb waere die Suche nach
- * `$CFG['server_key']` eine Scheinpruefung: Der Wert ist Sekunden alt und war
+ * `$kopieCfg['server_key']` eine Scheinpruefung: Der Wert ist Sekunden alt und war
  * nie in der Datenbank, 0 Treffer sind zwangslaeufig. Gesucht wird der
- * Schluessel der INSTALLATION aus `$CFG_ECHT` — der einzige, der ueberhaupt
+ * Schluessel der INSTALLATION aus `$echtCfg` — der einzige, der ueberhaupt
  * im Bestand haette landen koennen.
  *
- * Der Anteil dagegen wird NICHT ersetzt: `$CFG` traegt ihn unveraendert aus
- * `$CFG_ECHT`, die Suche darueber ist also schon die echte. Der Unterschied
+ * Der Anteil dagegen wird NICHT ersetzt: `$kopieCfg` traegt ihn unveraendert aus
+ * `$echtCfg`, die Suche darueber ist also schon die echte. Der Unterschied
  * steht hier, weil er beim Lesen nicht zu sehen ist — beide Zeilen sehen
  * gleich aus und messen Verschiedenes. */
-$skHex     = strtolower((string)($CFG_ECHT['server_key'] ?? ''));
-$skKopie   = strtolower((string)($CFG['server_key'] ?? ''));
+$skHex     = strtolower((string)($echtCfg['server_key'] ?? ''));
+$skKopie   = strtolower((string)($kopieCfg['server_key'] ?? ''));
 $dump      = strtolower((string)@file_get_contents($klar));
 
 if ($dump === '') {
@@ -753,10 +757,21 @@ if ($dump === '') {
           . 'legte die Marke beim Zuruecklegen an. Nicht gemessen, statt etwas '
           . 'zu hinterlassen.');
     } else {
-    $anteilSicher = $CFG['kdf_anteil'] ?? null;
+    $anteilSicher = $kopieCfg['kdf_anteil'] ?? null;
     $standVor11   = anteil_zustand(true);
     try {
-        unset($CFG['kdf_anteil']);
+        /* DIE LAGE WIRD IN DER DATEI DER KOPIE HERGESTELLT (Web 20.27.0).
+         *
+         * Hier stand `unset($kopieCfg['kdf_anteil'])`. Die globale `$kopieCfg` ist mit
+         * Schritt 15 AP2 entfallen; die Anwendung liest ueber `konfig()` aus
+         * der Datei, und ein `unset` auf dem lokalen Feld erreicht niemanden
+         * mehr — es scheitert nicht, es tut nur nichts. Der Stand blieb
+         * „bereit" statt „abweichend" (gemessen 21.09.2026).
+         *
+         * DER PFAD IST DER DER KOPIE, nicht der der Anlage: Diese Probe
+         * laeuft gegen `$srv`, und die echte `config.php` wird dabei nicht
+         * angefasst. */
+        $zurueck11 = konfig_stellen(['kdf_anteil' => null], $srv . '/config.php');
         kdf_anteil(true); kdf_anteil_alt(true);
         $stand11 = anteil_zustand(true);
         pruef('Ohne Anteil, aber mit Marke: Stand „abweichend"',
@@ -773,7 +788,7 @@ if ($dump === '') {
               $bl11 > 0 && $fehl11 === '',
               $fehl11 === '' ? $bl11 . ' Bloecke' : $fehl11);
     } finally {
-        if ($anteilSicher !== null) { $CFG['kdf_anteil'] = $anteilSicher; }
+        if (isset($zurueck11)) { $zurueck11(); }
         kdf_anteil(true); kdf_anteil_alt(true);
         $standNach11 = anteil_zustand(true);
         pruef('Nach dem Zuruecklegen steht der Stand wieder wie zuvor',

@@ -340,7 +340,7 @@ ui_seite_start(['titel' => 'Import / Export']);
     <script src="<?= asset('assets/import_profiles.js') ?>"></script>
     <script src="<?= asset('assets/import.js') ?>"></script>
     <script<?= kopf_nonce_attr() ?>>
-      const APP_TZ = <?= json_js($CFG['app']['timezone']) ?>;
+      const APP_TZ = <?= json_js(konfig('app.timezone')) ?>;
       const WEB_VERSION = <?= json_js(WEB_VERSION) ?>;
       // Kennung des Kontos fuer den Exportdateinamen (export.js). Beide Werte
       // stammen aus auth_guard.php; die Bereinigung zu einem

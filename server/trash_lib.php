@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
+require_once __DIR__ . '/einsatz_lib.php';
 
 /**
  * Papierkorb (Soft-Delete) fuer Einsaetze und Diensttage.
@@ -31,9 +32,9 @@ const TRASH_DAYS = 90;
 /* ---- Umfang ermitteln (fuer die Sicherheitsabfragen) ------------------- */
 
 function trash_scope_mission(int $userId, int $id): ?array {
-    $st = db()->prepare('SELECT * FROM missions WHERE id = ? AND user_id = ?');
-    $st->execute([$id, $userId]);
-    $m = $st->fetch();
+    /* `papierkorb => egal`: Der Umfang wird VOR dem Loeschen und VOR dem
+     * Zurueckholen gefragt — der Einsatz kann auf beiden Seiten stehen. */
+    $m = einsatz_laden($id, $userId, ['papierkorb' => 'egal']);
     if (!$m) { return null; }
 
     $one = function (string $sql, array $p): int {
@@ -97,9 +98,7 @@ function trash_delete_mission(int $userId, int $id): void {
 }
 
 function trash_delete_day(int $userId, int $dayId): void {
-    $pdo = db();
-    $pdo->beginTransaction();
-    try {
+    db_transaktion(db(), function (PDO $pdo) use ($userId, $dayId): void {
         /* Keine Traegerzeile mehr sicherstellen: Der Diensttag IST die Zeile,
          * ohne die es die Einsaetze nicht gaebe (Fremdschluessel `day_id`).
          * Bis Web 5.10.0 hing die Zuordnung am Datum und ein Tag konnte
@@ -114,8 +113,7 @@ function trash_delete_day(int $userId, int $dayId): void {
         $pdo->prepare('UPDATE rest_segments SET deleted_at = UTC_TIMESTAMP(), deleted_with_day = 1
                        WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL')
             ->execute([$userId, $dayId]);
-        $pdo->commit();
-    } catch (Throwable $ex) { $pdo->rollBack(); throw $ex; }
+    });
 }
 
 /* ---- Wiederherstellen -------------------------------------------------- */
@@ -171,9 +169,7 @@ function trash_restore_mission(int $userId, int $id): string {
 }
 
 function trash_restore_day(int $userId, int $dayId): void {
-    $pdo = db();
-    $pdo->beginTransaction();
-    try {
+    db_transaktion(db(), function (PDO $pdo) use ($userId, $dayId): void {
         $pdo->prepare('UPDATE days SET deleted_at = NULL WHERE user_id = ? AND id = ?')
             ->execute([$userId, $dayId]);
         $pdo->prepare('UPDATE missions SET deleted_at = NULL, deleted_with_day = 0
@@ -182,8 +178,7 @@ function trash_restore_day(int $userId, int $dayId): void {
         $pdo->prepare('UPDATE rest_segments SET deleted_at = NULL, deleted_with_day = 0
                        WHERE user_id = ? AND day_id = ? AND deleted_with_day = 1')
             ->execute([$userId, $dayId]);
-        $pdo->commit();
-    } catch (Throwable $ex) { $pdo->rollBack(); throw $ex; }
+    });
 }
 
 /* ---- Endgueltig entfernen ---------------------------------------------- */
@@ -215,14 +210,11 @@ function trash_block_ref(PDO $pdo, array $m, string $ownerType = 'mission'): voi
 
 function trash_purge_mission(int $userId, int $id): void {
     $pdo = db();
-    $st = $pdo->prepare('SELECT id, device_id, client_ref FROM missions
-                         WHERE id = ? AND user_id = ? AND deleted_at IS NOT NULL');
-    $st->execute([$id, $userId]);
-    $m = $st->fetch();
+    $m = einsatz_laden($id, $userId,
+                       ['spalten' => 'id, device_id, client_ref', 'papierkorb' => 'ja']);
     if (!$m) { return; }
 
-    $pdo->beginTransaction();
-    try {
+    db_transaktion($pdo, function (PDO $pdo) use ($id, $m): void {
         trash_block_ref($pdo, $m);
         // Zeilen UND Blob (E-S2-18). Beide haengen an keinem Fremdschluessel;
         // was hier nicht ausdruecklich geloescht wird, bleibt als Waise
@@ -237,8 +229,7 @@ function trash_purge_mission(int $userId, int $id): void {
         schnitte_loeschen($pdo, 'ziel', [$id]);
         schnitte_loeschen_quelle($pdo, 'mission', [$id]);
         $pdo->prepare('DELETE FROM missions WHERE id = ?')->execute([$id]);  // Rest kaskadiert
-        $pdo->commit();
-    } catch (Throwable $ex) { $pdo->rollBack(); throw $ex; }
+    });
 }
 
 /**
@@ -308,8 +299,7 @@ function trash_purge_day(int $userId, int $dayId): void {
     $chk->execute([$userId, $dayId]);
     if ($chk->fetchColumn() === false) { return; }
 
-    $pdo->beginTransaction();
-    try {
+    db_transaktion($pdo, function (PDO $pdo) use ($userId, $dayId): void {
         $ms = $pdo->prepare('SELECT id, device_id, client_ref FROM missions
                              WHERE user_id = ? AND day_id = ?');
         $ms->execute([$userId, $dayId]);
@@ -339,8 +329,7 @@ function trash_purge_day(int $userId, int $dayId): void {
         schnitte_loeschen_quelle($pdo, 'rest', $rLoeschen);
         $pdo->prepare('DELETE FROM days WHERE user_id = ? AND id = ? AND deleted_at IS NOT NULL')
             ->execute([$userId, $dayId]);
-        $pdo->commit();
-    } catch (Throwable $ex) { $pdo->rollBack(); throw $ex; }
+    });
 }
 
 /* ---- Aufraeumjob: abgelaufene Papierkorb-Eintraege --------------------- */

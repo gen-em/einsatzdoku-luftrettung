@@ -6,6 +6,7 @@ declare(strict_types=1);
  * Formaten der Anwendung gehören; gebraucht werden sie in
  * `huelle_pw_pruefen()` weiter unten. */
 require_once __DIR__ . '/validate_lib.php';
+require_once __DIR__ . '/konfig_lib.php';
 
 /**
  * DIE GEHEIMNISSE DES SERVERS — seit S10 sind es zwei.
@@ -101,8 +102,7 @@ function serverschluessel(bool $frisch = false): ?string
     static $roh = false;                      // false = noch nicht gelesen
     if ($frisch) { $roh = false; }
     if ($roh !== false) { return $roh; }
-    global $CFG;
-    $hex = (string)($CFG['server_key'] ?? '');
+    $hex = (string)konfig('server_key', '');
     if (!preg_match('/^[0-9a-fA-F]{64}$/', $hex)) { return $roh = null; }
     $bin = hex2bin(strtolower($hex));
     return $roh = ($bin === false ? null : $bin);
@@ -148,8 +148,7 @@ function schluessel_kennung(?string $hex): ?string
 /** Kennung des Serverschlüssels — für Anzeige und Schlüsselblatt, nie der Wert. */
 function serverschluessel_kennung(): ?string
 {
-    global $CFG;
-    return schluessel_kennung((string)($CFG['server_key'] ?? ''));
+    return schluessel_kennung((string)konfig('server_key', ''));
 }
 
 /**
@@ -291,8 +290,7 @@ function kdf_anteil(bool $frisch = false): ?string
     static $roh = false;
     if ($frisch) { $roh = false; }
     if ($roh !== false) { return $roh; }
-    global $CFG;
-    $hex = (string)($CFG['kdf_anteil'] ?? '');
+    $hex = (string)konfig('kdf_anteil', '');
     if (!preg_match('/^[0-9a-fA-F]{64}$/', $hex)) { return $roh = null; }
     $bin = hex2bin(strtolower($hex));
     return $roh = ($bin === false ? null : $bin);
@@ -312,8 +310,7 @@ function kdf_anteil_alt(bool $frisch = false): ?string
     static $roh = false;
     if ($frisch) { $roh = false; }
     if ($roh !== false) { return $roh; }
-    global $CFG;
-    $hex = (string)($CFG['kdf_anteil_alt'] ?? '');
+    $hex = (string)konfig('kdf_anteil_alt', '');
     if (!preg_match('/^[0-9a-fA-F]{64}$/', $hex)) { return $roh = null; }
     $bin = hex2bin(strtolower($hex));
     return $roh = ($bin === false ? null : $bin);
@@ -393,29 +390,19 @@ function huelle_anteil_kennung(?string $huelle): ?string
 /** Eine Marke lesen. `null`, wenn sie fehlt — oder `app_state` noch nicht da ist. */
 function schluessel_marke_lesen(string $k): ?string
 {
-    try {
-        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
-        $st->execute([$k]);
-        $v = $st->fetchColumn();
-        return ($v === false || $v === null) ? null : (string)$v;
-    } catch (Throwable $ex) {
-        /* app_state fehlt (Migration noch nicht gelaufen) — dann verhält sich
-         * die Installation wie vor S10, und das ist der richtige Zustand. */
-        return null;
-    }
+    /* FEHLT `app_state`, LIEFERT DER HELFER `null` — er faengt selbst. Dann
+     * verhält sich die Installation wie vor S10, und das ist der richtige
+     * Zustand. Der eigene `try/catch` stand hier, solange die Abfrage hier
+     * stand; seit Schritt 15/AP4 waere er unerreichbar. */
+    return app_state_lesen($k);
 }
 
 /** Eine Marke setzen. Scheitert leise; sie ist eine Auskunft, kein Riegel. */
 function schluessel_marke_setzen(string $k, string $v): void
 {
-    try {
-        db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
-                       ON DUPLICATE KEY UPDATE v = VALUES(v)')
-            ->execute([$k, $v]);
-    } catch (Throwable $ex) {
-        error_log('app_state: Marke ' . $k . ' liess sich nicht setzen — '
-                . $ex->getMessage());
-    }
+    /* `app_state_setzen()` faengt und protokolliert selbst — mit dem
+     * Schluesselnamen, also derselben Auskunft wie die Zeile, die hier stand. */
+    app_state_setzen($k, $v);
 }
 
 /**
@@ -468,9 +455,8 @@ function anteil_zustand(bool $frisch = false): array
     if ($frisch) { $merk = null; }
     if ($merk !== null) { return $merk; }
 
-    global $CFG;
-    $kennung    = schluessel_kennung((string)($CFG['kdf_anteil'] ?? ''));
-    $kennungAlt = schluessel_kennung((string)($CFG['kdf_anteil_alt'] ?? ''));
+    $kennung    = schluessel_kennung((string)konfig('kdf_anteil', ''));
+    $kennungAlt = schluessel_kennung((string)konfig('kdf_anteil_alt', ''));
     $erwartet   = schluessel_marke_lesen('kdf_anteil_kennung');
 
     if ($kennung === null) {
@@ -638,6 +624,10 @@ function config_eintrag_zeile(string $schluessel, string $hex): string
  */
 function config_gemerktes_verwerfen(): void
 {
+    /* ZUERST DIE KONFIGURATION SELBST (Schritt 15 AP2, E-ZE-14). Die vier
+     * Zeilen darunter lesen ueber `konfig()` nach; stuende das Gemerkte noch,
+     * holten sie sich genau den Stand zurueck, den sie wegwerfen sollen. */
+    konfig_verwerfen();
     serverschluessel(true);
     kdf_anteil(true);
     kdf_anteil_alt(true);
@@ -691,8 +681,6 @@ function config_gemerktes_verwerfen(): void
 function config_eintrag_schreiben(string $schluessel, ?string $hex,
                                   bool $ersetzen = false): array
 {
-    global $CFG;
-
     if (!in_array($schluessel, CONFIG_SCHREIBBAR, true)) {
         return [false, 'Dieser Eintrag darf nicht geschrieben werden.'];
     }
@@ -720,7 +708,7 @@ function config_eintrag_schreiben(string $schluessel, ?string $hex,
                   . '\1\s*=>.*\R?/m';
     $vorhanden = preg_match($zeilenMuster, $inhalt) === 1;
     $gueltig   = preg_match('/^[0-9a-fA-F]{64}$/',
-                            (string)($CFG[$schluessel] ?? '')) === 1;
+                            (string)konfig($schluessel, '')) === 1;
 
     if ($hex === null && !$vorhanden) {
         return [true, ''];                      // schon fort — nichts zu tun
@@ -795,7 +783,7 @@ function config_eintrag_schreiben(string $schluessel, ?string $hex,
             : (($probe[$schluessel] ?? null) === $hex);
     }
     if ($heil) {
-        foreach ($CFG as $k => $v) {
+        foreach (konfig_alles() as $k => $v) {
             if ($k === $schluessel) { continue; }
             if (!array_key_exists($k, $probe) || $probe[$k] != $v) {
                 $heil = false;
@@ -823,12 +811,17 @@ function config_eintrag_schreiben(string $schluessel, ?string $hex,
      * und der unmittelbar folgende Aufruf zeigte wieder „Serverschlüssel
      * fehlt". */
     if (function_exists('opcache_invalidate')) { @opcache_invalidate($pfad, true); }
-    /* Der gelesene Wert liegt in einer `static` — ohne diese Zeilen gaeben
+    /* Der gelesene Wert liegt in einer `static` — ohne diese Zeile gaeben
      * serverschluessel() und kdf_anteil() im selben Aufruf noch den alten
      * Stand zurueck, und die Seite zeigte nach dem Anlegen weiter den
-     * Hinweis, dass nichts da ist. */
-    if ($hex === null) { unset($CFG[$schluessel]); }
-    else               { $CFG[$schluessel] = $hex; }
+     * Hinweis, dass nichts da ist.
+     *
+     * BIS WEB 20.26.3 WURDE HIER ZUSAETZLICH DIE GLOBALE `$CFG` VON HAND
+     * NACHGEFUEHRT (`unset` bzw. Zuweisung). Das entfaellt mit Schritt 15
+     * AP2: `konfig_verwerfen()` wirft das Gemerkte weg, und die naechste
+     * Abfrage liest die Datei, die eben geschrieben wurde. Damit kann der
+     * Speicher nicht mehr von der Datei abweichen — bisher haette eine
+     * vergessene der beiden Zeilen genau das erzeugt, und zwar still. */
     config_gemerktes_verwerfen();
     return [true, (string)$hex];
 }
@@ -889,8 +882,7 @@ function anteil_wechseln(): array
         return [false, 'Es läuft bereits eine Rotation. Erst den alten Anteil '
                      . 'entfernen, wenn kein Konto mehr auf ihm steht.'];
     }
-    global $CFG;
-    $altHex = strtolower((string)$CFG['kdf_anteil']);
+    $altHex = strtolower((string)konfig('kdf_anteil', ''));
 
     [$ok, $was] = config_eintrag_schreiben('kdf_anteil_alt', $altHex);
     if (!$ok) { return [false, $was]; }

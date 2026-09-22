@@ -38,6 +38,10 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/spur_lib.php';
+/* iso_utc() — die ISO-UTC-Marke mit 'Z' fuer <time> (Schritt 15/AP7).
+ * AUSDRUECKLICH EINGEBUNDEN, obwohl die Kette spur_lib -> validate_lib ->
+ * db.php sie ohnehin mitbraechte: Wer eine Funktion ruft, laedt sie selbst. */
+require_once __DIR__ . '/format_lib.php';
 /* Der Leser (S4/A3) prueft Koordinaten ueber die gemeinsame Pruefschicht.
  * Der Schreiber braucht sie nicht — er gibt aus, was schon geprueft war. */
 require_once __DIR__ . '/validate_lib.php';
@@ -171,7 +175,7 @@ function gpx_trk(array $punkte, string $name, string $beschreibung): string
          * deutsche Schreibweise mit Komma macht das Dokument unbrauchbar. */
         $x .= '<trkpt lat="' . $p[1] . '" lon="' . $p[2] . '">';
         if ($p[3] !== null) { $x .= '<ele>' . $p[3] . '</ele>'; }
-        $x .= '<time>' . gmdate('Y-m-d\TH:i:s\Z', (int)$p[4]) . '</time>';
+        $x .= '<time>' . iso_utc((int)$p[4]) . '</time>';
         $x .= '</trkpt>';
     }
     return $x . '</trkseg></trk>' . "\n";
@@ -242,7 +246,10 @@ function gpx_bauen_viele(iterable $spuren, string $name,
                                 $anzahl, $punkte, $stufenText);
     }
 
-    $erzeugt = gmdate('Y-m-d\TH:i:s\Z', $erzeugtAm ?? time());
+    /* Kein `?? time()` mehr: iso_utc() setzt den Vorgabewert selbst.
+       Zwei Stellen fuer denselben Vorgabewert waeren genau das Muster,
+       gegen das dieser Schritt antritt. */
+    $erzeugt = iso_utc($erzeugtAm);
 
     $x  = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     $x .= '<gpx version="' . GPX_FASSUNG . '" creator="' . e(gpx_creator()) . '"'
@@ -356,6 +363,13 @@ const GPX_DATEI_MAX = 12 * 1024 * 1024;
 function gpx_lesen(string $xml, ?Pruefliste $pruef = null): array
 {
     if (strlen($xml) > GPX_DATEI_MAX) {
+        /* BLEIBT HANDGERECHNET, und das ist entschieden (Schritt 15/AP7).
+         * `groesse_text()` waere die Hausschreibweise — sie setzt den
+         * Dezimaltrenner als KOMMA („5,0 MB"), dieses `%.1f` als PUNKT
+         * („5.0 MB"). Das ist eine sichtbare Textaenderung in einer Meldung,
+         * die eine BedienerIn zu lesen bekommt, und sie steht nicht unter den
+         * fuenf benannten Ausnahmen von E-ZE-10. Wer sie will, nimmt sie
+         * ausdruecklich in die Liste auf und stellt dann um. */
         throw new InvalidArgumentException(sprintf(
             'Die Datei ist %.1f MB gross; angenommen werden %d MB.',
             strlen($xml) / 1048576, intdiv(GPX_DATEI_MAX, 1048576)));

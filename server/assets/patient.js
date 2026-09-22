@@ -103,11 +103,34 @@
     return n || v || '';
   }
 
-  /** "JJJJ-MM-TT" -> "TT.MM.JJJJ" */
+  /* "JJJJ-MM-TT" -> "TT.MM.JJJJ" -- seit Schritt 15 AP8d eine Weiterleitung
+   * auf `EdFormat.tag()`.
+   *
+   * DIE FUNKTION BLEIBT, DER RUMPF GEHT. Sie hat fuenf Aufrufstellen in vier
+   * anderen Dateien -- suche.php, einsatz.php, export.js (zweimal) und
+   * import_ui.js -- und steht dort als `EdPat.datumDe` im Text. Der Name
+   * bleibt deshalb im Export-Objekt unten: Ein Streichen waere ein Umbau von
+   * vier fremden Dateien fuer keinen Gewinn.
+   *
+   * DIE FORMPRUEFUNG IST VON HIER IN DIE ZENTRALE GEWANDERT, nicht dort neu
+   * erfunden worden. Von den vier Datumsfassungen im Bestand war diese die
+   * einzige mit einer; die drei anderen warfen bei null eine TypeError und
+   * machten aus einem Zeitstempel still '14T10:00:00Z.08.2026'. `EdFormat.tag`
+   * hat genau diese Wache uebernommen. Bliebe der Rumpf hier stehen, stuende
+   * die Regel nach AP8 an zwei Stellen statt an einer -- und die zweite waere
+   * die, die beim naechsten Mal vergessen wird.
+   *
+   * ZEICHENGLEICH, UND ZWAR NACHGESEHEN: `EdFormat.tag` prueft ohne
+   * Dollarzeichen und nimmt deshalb auch einen ISO-Zeitstempel an, den der
+   * alte Rumpf verworfen hat. An allen fuenf Aufrufstellen kann keiner
+   * ankommen -- `pat.dob` entsteht nur aus einem `<input type="date">` oder
+   * aus dem Parser `dateFull`, `t.day` in import_ui.js nur aus `dateIso`,
+   * `dateNoYear` oder `dateFull`. Alle vier liefern zehn Zeichen oder gar
+   * nichts. Der Leerfall bleibt der Leerstring; den gibt `EdFormat.tag` ohne
+   * zweites Argument von selbst.
+   */
   function datumDe(iso) {
-    if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) { return ''; }
-    const [j, m, t] = iso.split('-');
-    return `${t}.${m}.${j}`;
+    return EdFormat.tag(iso);
   }
 
   /* ---- Entschluesseln und anzeigen (Baustein B8) ------------------------
@@ -288,7 +311,72 @@
    * Text — wer es einsetzt, nimmt innerHTML. Einziger Aufrufer ist
    * zeigeUnlesbar() hier in der Datei. `ZEICHEN_UNLESBAR` ist mit dem Zeichen
    * entfallen; es hatte keinen Aufrufer ausserhalb dieser Datei. */
+  /* -------------------------------------------------------------------
+   * EdPat.listeLaden(liste, o) -- der Auftakt der drei Anzeigeseiten
+   *   (Schritt 15 AP8f, Zaehlzeile Z36)
+   *
+   * WAS ER UEBERNIMMT, und mehr ist es nicht: den Schluessel holen, das
+   * Sperrbanner nach der Regel setzen, entschluesseln, zaehlen. Drei
+   * Seiten -- Tagesuebersicht, Suche, Zeitraumuebersicht -- taten genau
+   * das wortgleich, jede fuer sich.
+   *
+   * WAS ER NICHT UEBERNIMMT, und das ist der laengere Teil: die Schleife
+   * danach. Gemessen am 22.09.2026 sind es vier verschiedene Nachlaeufe
+   * mit 66, 7, 14 und 14 Zeilen, und KEINE ZWEI GLEICH. Die
+   * Tagesuebersicht zeichnet Marker, Luftlinien und einen Ausschnitt; die
+   * Zeitraumuebersicht vermerkt die Koordinate nur und ueberlaesst das
+   * Zeichnen dem Tab; die Suche baut ihren Suchheuhaufen neu. Ein Rahmen,
+   * der das mit einem Schalter zusammenzoege, waere kein Rahmen, sondern
+   * ein viertes Programm.
+   *
+   * ER GIBT DESHALB ZURUECK STATT ZU ENTSCHEIDEN: `{ ck, zahl }`.
+   * `ck === null` heisst "kein Schluessel". Ob die Seite dann ZURUECKKEHRT
+   * oder weiterlaeuft, ist ihre Sache und unterscheidet sich:
+   * Tagesuebersicht und Zeitraum kehren zurueck, die SUCHE NICHT -- sie
+   * muss ihre Trefferliste auch gesperrt zeigen und ihren Altersfilter
+   * sperren, sonst saehe er benutzbar aus. Waere der Ausstieg hier
+   * eingebaut, naehme er ihr genau diesen Weg.
+   *
+   * `zeigeUnlesbar(zahl)` RUFT DER AUFRUFER, nicht dieser Rahmen: Alle
+   * drei rufen es NACH ihrer Schleife, und vorher waere die Zahl zwar
+   * dieselbe, die Meldung aber stuende ueber einer Tabelle, die es noch
+   * nicht gibt.
+   *
+   * DIE VIERTE STELLE -- `einstellungen.php` -- BLEIBT DRAUSSEN, und das
+   * ist kein Vergessen. Sie teilt nur den Aufruf, nicht den Rahmen: kein
+   * Banner, kein `zeigeUnlesbar`, der Schluessel kommt von aussen, und die
+   * Liste ist ein FENSTER zu 250 aus einem Bestand von tausenden. Genau
+   * daran haengt es: `hinweisUnlesbar()` wertet die GANZE Liste aus und
+   * sagt "Keiner der Eintraege liess sich oeffnen" -- ueber ein Fenster
+   * gesagt waere das eine Falschaussage. Die Zaehlzeile Z36 endet deshalb
+   * bei 1 und nicht bei 0 (Entscheidung des Auftraggebers, 22.09.2026).
+   *
+   * @param {Array}  liste  die Eintraege mit `pat_blob`
+   * @param {Object} o
+   * @param {string} o.wrap    PAT_WRAP der Seite
+   * @param {string} o.salt    KDF_SALT
+   * @param {number} o.iter    KDF_ITER
+   * @param {Element} [o.banner] Sperrbanner; fehlt es, wird keins gesetzt
+   * @returns {Promise<{ck: ?Object, zahl: ?Object}>}
+   * ----------------------------------------------------------------- */
+  async function listeLaden(liste, o) {
+    const opt = o || {};
+    const ck = await EdUnlock.ensureContentKey(opt.wrap, opt.salt, opt.iter);
+
+    /* DIE BANNERREGEL, an einer Stelle. Sie lautet: sichtbar genau dann,
+     * wenn kein Schluessel da ist UND die Liste ueberhaupt etwas
+     * Verschluesseltes enthaelt. Der zweite Teil ist der, den man
+     * vergisst -- ohne ihn haengt auf jedem leeren Tag ein Sperrbanner
+     * ueber einer Tabelle, in der nichts zu entsperren waere. */
+    if (opt.banner) {
+      opt.banner.hidden = ck ? true
+        : !(liste || []).some(m => m && m.pat_blob);
+    }
+    if (!ck) { return { ck: null, zahl: null }; }
+    return { ck: ck, zahl: await entschluessleListe(liste, ck) };
+  }
+
   window.EdPat = { alterAm, alterAnzeige, alterText, name, datumDe,
-                   entschluessle, entschluessleListe, hinweisUnlesbar,
-                   zeigeUnlesbar, markeUnlesbar };
+                   entschluessle, entschluessleListe, listeLaden,
+                   hinweisUnlesbar, zeigeUnlesbar, markeUnlesbar };
 })();

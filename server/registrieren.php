@@ -90,14 +90,7 @@ function reg_geheimnis(): string
 {
     static $sec = null;
     if ($sec !== null) { return $sec; }
-    $pdo = db();
-    $v = $pdo->query("SELECT v FROM app_state WHERE k = 'reg_secret'")->fetchColumn();
-    if ($v === false) {
-        $v = bin2hex(random_bytes(32));
-        $pdo->prepare("INSERT IGNORE INTO app_state (k, v) VALUES ('reg_secret', ?)")
-            ->execute([$v]);
-    }
-    return $sec = (string)$v;
+    return $sec = app_state_einmalig('reg_secret', fn (): string => bin2hex(random_bytes(32)));
 }
 
 /** Der signierte Zeitstempel, wie er ins Formular geht: `<zeit>.<hmac>`. */

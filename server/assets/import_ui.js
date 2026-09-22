@@ -7,7 +7,8 @@
  * steckt in import.js, die Formatkenntnis in import_profiles.js.
  *
  * Erwartet aus der Seite: PAT_WRAP, KDF_SALT, KDF_ITER, CSRF, EdCrypto, EdUnlock,
- * ImportCore, ImportProfile.
+ * EdApi, EdHtml, ImportCore, ImportProfile. Das CSRF-Token liest seit
+ * Schritt 15 (AP8) EdApi selbst; diese Datei fasst es nicht mehr an.
  */
 (function () {
     'use strict';
@@ -42,18 +43,17 @@
     /* Fehler und Warnungen als MELDUNGS-BAUSTEIN (E-P3-16, ab Web 9.7.2).
      * Vorher waren beides graue `.alert`-Kästen — ein Fehler, der den Import
      * verhindert, sah aus wie ein Hinweis zum Dateiformat. Der Text stammt
-     * teils aus der gelesenen Datei und wird deshalb maskiert. */
-    function meldungMarkup(ton, text) {
-        var sym = ton === 'fehler' ? 'warnung' : (ton === 'warn' ? 'warnung' : 'hinweis');
-        return '<div class="meldung meldung-' + ton + '" role="'
-             + (ton === 'fehler' ? 'alert' : 'status') + '">'
-             + edSymbol(sym, 'symbol-gross')
-             + '<p>' + esc(text) + '</p></div>';
-    }
-
+     * teils aus der gelesenen Datei und wird deshalb maskiert.
+     *
+     * Das Markup baut seit Schritt 15 (AP8) EdHtml.meldung() -- dieselbe
+     * Stelle wie ui_meldung_markup() in server/ui.php. Hier stand bis dahin
+     * ein eigener Nachbau mit einer eigenen Ton-Tabelle, die nur zwei Zweige
+     * kannte: alles ausser fehler/warn bekam das Hinweiszeichen. Fuer 'ok'
+     * war das falsch, und genau deshalb stand die Erfolgsmeldung der
+     * Uebernahme weiter unten von Hand ausgeschrieben da. */
     function fehler(text) {
         var el = $('fehler');
-        el.innerHTML = text ? meldungMarkup('fehler', text) : '';
+        el.innerHTML = text ? EdHtml.meldung('fehler', text) : '';
         el.hidden = !text;
     }
 
@@ -189,7 +189,7 @@
         var el = $('profilwarnung');
         if (!el) { return; }
         var text = (profil && profil.warning) || '';
-        el.innerHTML = text ? meldungMarkup('warn', text) : '';
+        el.innerHTML = text ? EdHtml.meldung('warn', text) : '';
         el.hidden = !text;
     }
 
@@ -252,20 +252,27 @@
     async function bestandPruefen() {
         var tage = S.tage.map(function (t) { return t.day; });
         if (!tage.length) { S.bestand = { days: {}, missionNoIndex: {} }; return; }
-        try {
-            var res = await fetch('api/import_commit.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-                body: JSON.stringify({ action: 'check', days: tage })
-            });
-            var d = await res.json();
-            if (d.error) { throw new Error(d.meldung || d.error); }
-            S.bestand = d;
-            S.bestand.missionNoIndex = await bestandEinsatznummernIndex(d);
-        } catch (e) {
+        var vorgang = 'Der Abgleich mit den vorhandenen Einsätzen';
+        var a = await EdApi.postJson('api/import_commit.php',
+            { action: 'check', days: tage }, { vorgang: vorgang });
+        var fehltext = a.ok ? '' : a.meldung;
+        if (a.ok) {
+            /* Das catch bleibt, aber nur noch fuer das Entschluesseln:
+               EdApi wirft nicht, EdUnlock und EdPat schon. */
+            try {
+                S.bestand = a.daten;
+                S.bestand.missionNoIndex = await bestandEinsatznummernIndex(a.daten);
+            } catch (e) {
+                fehltext = vorgang + ' ist fehlgeschlagen: ' + e.message + '.';
+            }
+        }
+        if (fehltext) {
+            /* Der Vorgang bricht NICHT ab: Ohne Bestand wird weitergerechnet,
+               nur ohne Dublettenerkennung. Genau das sagt der Folgesatz --
+               er ist ein Zustandsbericht und gehoert deshalb hierher und
+               nicht in die Meldung von EdApi. */
             S.bestand = { days: {}, missionNoIndex: {} };
-            fehler('Der Abgleich mit den vorhandenen Einsätzen ist fehlgeschlagen ('
-                 + e.message + '). Dubletten werden deshalb nicht erkannt.');
+            fehler(fehltext + ' Dubletten werden deshalb nicht erkannt.');
         }
     }
 
@@ -726,7 +733,7 @@
         }
         S.nutzlast = await baueNutzlast();
         if (!S.nutzlast) {
-            $('bereit').innerHTML = meldungMarkup('fehler',
+            $('bereit').innerHTML = EdHtml.meldung('fehler',
                 'Die geschützten Angaben lassen sich nicht verschlüsseln — '
                 + 'bitte ab- und neu anmelden.');
             knopf.disabled = true;
@@ -746,70 +753,101 @@
         if (!S.nutzlast) { return; }
         knopf.disabled = true;
         zustand.textContent = 'Übernahme läuft …';
+        var a = await EdApi.postJson('api/import_commit.php', S.nutzlast,
+            { vorgang: 'Die Übernahme' });
+        if (!a.ok) {
+            /* Der Folgesatz bleibt hier: Dass nichts zurueckbleibt, weiss
+               nicht EdApi, sondern diese Stelle -- der Server macht aus dem
+               Ganzen EINE Transaktion. */
+            zustand.innerHTML = EdHtml.meldung('fehler',
+                a.meldung + ' — es wurde nichts gespeichert.');
+            knopf.disabled = false;
+            return;
+        }
+        var d = a.daten;
+
+        /* DER ANZEIGEBLOCK STEHT IN EINEM EIGENEN try, und der Grund ist
+         * unbequem: AB HIER IST DIE TRANSAKTION DURCH. Der Server hat
+         * geschrieben, der Vorgang ist nicht mehr rueckgaengig zu machen.
+         *
+         * Bis Schritt 15 lag der ganze Rumpf in EINEM try, dessen catch
+         * sagte „... es wurde nichts gespeichert." -- und das war HIER
+         * bereits falsch. Beim Umbau auf EdApi fiel das try zunaechst ganz
+         * weg (EdApi wirft nicht mehr), und damit waere ein Fehler in der
+         * Anzeige eine unbehandelte Ablehnung geworden: Knopf gesperrt,
+         * Anzeige auf „Uebernahme laeuft", Daten gespeichert, niemand
+         * erfaehrt es. Gefunden beim Gegenlesen.
+         *
+         * Jetzt steht hier ein eigenes try mit einem Satz, der stimmt. */
         try {
-            var res = await fetch('api/import_commit.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-                body: JSON.stringify(S.nutzlast)
-            });
-            var d = await res.json();
-            if (!d.ok) { throw new Error(d.meldung || d.error || ('HTTP ' + res.status)); }
 
-            /* Übersprungene und verworfene Werte AUFSCHLÜSSELN.
-             *
-             * „40 übersprungen" ist nicht deutbar: Es kann „alles war schon
-             * da" heißen (gut) oder „alles war kaputt" (schlecht). Vorher
-             * fielen vier verschiedene Ursachen in diese eine Zahl. */
-            var ursachen = {
-                bereits_vorhanden:    'bereits vorhanden',
-                auswahl:              'von dir übersprungen',
-                datum:                'unbrauchbares Datum',
-                uhrzeit:              'unbrauchbare Uhrzeit',
-                fremd_oder_geloescht: 'nicht mehr vorhanden oder fremd'
-            };
-            var teile = [];
-            for (var k in (d.skipped_reasons || {})) {
-                teile.push((ursachen[k] || k) + ': ' + d.skipped_reasons[k]);
-            }
-            var verworfen = [];
-            for (var u in (d.rejected || {})) {
-                verworfen.push(esc(u) + ' (' + d.rejected[u] + '×)');
-            }
+        /* Übersprungene und verworfene Werte AUFSCHLÜSSELN.
+         *
+         * „40 übersprungen" ist nicht deutbar: Es kann „alles war schon
+         * da" heißen (gut) oder „alles war kaputt" (schlecht). Vorher
+         * fielen vier verschiedene Ursachen in diese eine Zahl. */
+        var ursachen = {
+            bereits_vorhanden:    'bereits vorhanden',
+            auswahl:              'von dir übersprungen',
+            datum:                'unbrauchbares Datum',
+            uhrzeit:              'unbrauchbare Uhrzeit',
+            fremd_oder_geloescht: 'nicht mehr vorhanden oder fremd'
+        };
+        var teile = [];
+        for (var k in (d.skipped_reasons || {})) {
+            teile.push((ursachen[k] || k) + ': ' + d.skipped_reasons[k]);
+        }
+        var verworfen = [];
+        for (var u in (d.rejected || {})) {
+            verworfen.push(esc(u) + ' (' + d.rejected[u] + '×)');
+        }
 
-            /* Das Ergebnis als Meldung mit Haken (E-P3-16). `innerHTML`
-                bleibt: Der Bericht trägt einen Link auf den ersten Tag, und
-                die verworfenen Werte sind bereits maskiert. */
-            zustand.innerHTML = '<div class="meldung meldung-ok" role="status">'
-                + edSymbol('haken', 'symbol-gross') + '<p>'
-                + 'Fertig: ' + d.missions_inserted + ' Einsätze angelegt, '
-                + d.missions_overwritten + ' überschrieben, ' + d.missions_skipped + ' übersprungen'
-                + (teile.length ? ' (' + esc(teile.join(', ')) + ')' : '') + '; '
-                + d.days_inserted + ' Diensttage angelegt, ' + d.days_updated + ' aktualisiert.'
-                + (verworfen.length
-                   ? '<br><span class="feld-klein-inline">Einzelne Werte verworfen: '
-                     + verworfen.join(', ') + '. Die Einsätze wurden trotzdem angelegt.</span>'
-                   : '')
-                /* KENNUNG STATT DATUM (Backlog Nr. 151). Hier stand
-                   `index.php?day=<Kalendertag>`; gelesen wird `d`, und dort
-                   erwartet die Startseite eine Diensttags-KENNUNG. Zweimal
-                   falsch also — der Parametername UND die Form des Werts —,
-                   und beides scheiterte STILL: `index.php` faellt auf
-                   `dt_neuester()` zurueck und zeigte den juengsten Tag. Wer
-                   nach einem Import klickte, landete auf einer plausibel
-                   aussehenden Seite, die nicht die versprochene war. */
-                + (d.first_day_id ? ' <a href="index.php?d=' + esc(d.first_day_id) + '">Ersten Tag öffnen</a>' : '')
-                + '</p></div>';
+        /* Das Ergebnis als Meldung mit Haken (E-P3-16). DIE EINZIGE
+           STELLE MIT ROHEM MARKUP IM MELDUNGSTEXT: Der Bericht traegt
+           einen Zeilenumbruch, eine Kleinzeile und einen Link auf den
+           ersten Tag. Dafuer gibt es `roh: true` -- und dafuer sind die
+           eingesetzten Werte oben EINZELN maskiert: esc(u),
+           esc(teile.join(...)), esc(d.first_day_id). Wer hier einen Wert
+           ergaenzt, maskiert ihn beim Zusammenbauen, nicht hier.
+           Bis Schritt 15 (AP8) stand das Markup hier von Hand da, mit
+           edSymbol('haken') ausgeschrieben, weil die eigene Ton-Tabelle
+           dieser Datei fuer 'ok' den Kreis-i geliefert haette -- eine
+           Umgehung, und damit der Beweis fuer den Defekt. */
+        zustand.innerHTML = EdHtml.meldung('ok',
+            'Fertig: ' + d.missions_inserted + ' Einsätze angelegt, '
+            + d.missions_overwritten + ' überschrieben, ' + d.missions_skipped + ' übersprungen'
+            + (teile.length ? ' (' + esc(teile.join(', ')) + ')' : '') + '; '
+            + d.days_inserted + ' Diensttage angelegt, ' + d.days_updated + ' aktualisiert.'
+            + (verworfen.length
+               ? '<br><span class="feld-klein-inline">Einzelne Werte verworfen: '
+                 + verworfen.join(', ') + '. Die Einsätze wurden trotzdem angelegt.</span>'
+               : '')
+            /* KENNUNG STATT DATUM (Backlog Nr. 151). Hier stand
+               `index.php?day=<Kalendertag>`; gelesen wird `d`, und dort
+               erwartet die Startseite eine Diensttags-KENNUNG. Zweimal
+               falsch also — der Parametername UND die Form des Werts —,
+               und beides scheiterte STILL: `index.php` faellt auf
+               `dt_neuester()` zurueck und zeigte den juengsten Tag. Wer
+               nach einem Import klickte, landete auf einer plausibel
+               aussehenden Seite, die nicht die versprochene war. */
+            + (d.first_day_id ? ' <a href="index.php?d=' + esc(d.first_day_id) + '">Ersten Tag öffnen</a>' : ''),
+            { roh: true });
 
-            // Ein zweiter Klick wuerde alles ein weiteres Mal anlegen. Der Weg
-            // zurueck fuehrt bewusst ueber eine neu gewaehlte Datei.
-            $('schritt2').hidden = true;
-            S.nutzlast = null;
-            $('bereit').textContent = 'Übernommen. Für einen weiteren Import bitte erneut '
-                + 'eine Datei wählen.';
+        // Ein zweiter Klick wuerde alles ein weiteres Mal anlegen. Der Weg
+        // zurueck fuehrt bewusst ueber eine neu gewaehlte Datei.
+        $('schritt2').hidden = true;
+        S.nutzlast = null;
+        $('bereit').textContent = 'Übernommen. Für einen weiteren Import bitte erneut '
+            + 'eine Datei wählen.';
+
         } catch (e) {
-            zustand.innerHTML = meldungMarkup('fehler',
-                'Die Übernahme ist fehlgeschlagen: ' + e.message
-                + ' — es wurde nichts gespeichert.');
+            /* KEIN „es wurde nichts gespeichert" -- es wurde. Der Ton ist
+             * `warn` und nicht `fehler`, weil der Vorgang gelungen ist und
+             * nur sein Bericht nicht zustande kam. */
+            zustand.innerHTML = EdHtml.meldung('warn',
+                'Die Übernahme ist durchgelaufen, aber die Ergebnisanzeige ist '
+                + 'fehlgeschlagen: ' + e.message + ' Die Daten sind gespeichert; '
+                + 'bitte die Seite neu laden.');
             knopf.disabled = false;
         }
     }

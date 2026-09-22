@@ -140,7 +140,50 @@ function csp_sicht(string $quelle): string
                 $aus .= strtr($text, ['<' => '_', '>' => '_']);
         }
     }
-    return $aus;
+    return csp_js_kommentare_leeren($aus);
+}
+
+/**
+ * BLOCKKOMMENTARE IM RUMPF EINES <script> AUSRAEUMEN.
+ *
+ * WARUM. `token_get_all()` sieht einen JavaScript-Kommentar nicht: Fuer PHP
+ * ist alles zwischen `?>` und `<?php` ein einziges Stueck `T_INLINE_HTML`,
+ * und der Kommentar steckt mittendrin. Steht in einem solchen Kommentar das
+ * Wort `<script src>` als FLIESSTEXT -- und das steht es, sobald jemand
+ * erklaert, woher ein Baustein kommt --, meldet Regel 1 ein Skript ohne
+ * Nonce, das es nicht gibt.
+ *
+ * Gemessen am 22.09.2026 (Schritt 15 AP8): EIN Befund in `zeitraum.php`,
+ * entstanden aus dem Satz „steht als <script src> ueber diesem Block".
+ * Diese Pruefung haengt in Stufe 1; ein Fehlalarm faerbt die Kette rot,
+ * ohne dass etwas falsch waere.
+ *
+ * NUR BLOCKKOMMENTARE, NICHT ZEILENKOMMENTARE. Ein `//` steht in JavaScript
+ * auch mitten in einer Zeichenkette (`'https://…'`), und eine Zeile ab dort
+ * auszuraeumen hiesse, Markup zu verlieren, das danach kommt. Ein `/*`
+ * ausserhalb einer Zeichenkette beginnt dagegen unzweideutig einen
+ * Kommentar. Der Restfall -- ein `/*` INNERHALB einer JS-Zeichenkette, mit
+ * einem `<script` dahinter -- bleibt offen und ist im Kopf der Datei unter
+ * „Was diese Pruefung NICHT sieht" vermerkt.
+ *
+ * Die Laenge bleibt erhalten (Leerzeichen statt Zeichen, Umbrueche
+ * stehen), damit die Zeilennummern der Befunde weiter stimmen.
+ */
+function csp_js_kommentare_leeren(string $sicht): string
+{
+    return preg_replace_callback(
+        '~(<script\b[^>]*>)(.*?)(</script>)~is',
+        static function (array $m): string {
+            $rumpf = preg_replace_callback(
+                '~/\*.*?\*/~s',
+                static fn(array $k): string
+                    => preg_replace('/[^\n]/', ' ', $k[0]) ?? '',
+                $m[2]
+            );
+            return $m[1] . ($rumpf ?? $m[2]) . $m[3];
+        },
+        $sicht
+    ) ?? $sicht;
 }
 
 /** Zeilennummer einer Fundstelle im Markup-Bild. */
@@ -244,6 +287,10 @@ function csp_selbstprobe(): int
          '<?php ?><script src="<?= asset(\'assets/html.js\') ?>"></script>'],
         ['Kommentar, der <script> nennt', false,
          '<?php /* Ein <script>-Block ohne Nonce laeuft nicht. */ ?>'],
+        ['JS-Blockkommentar, der <script src> nennt', false,
+         "<?php ?><script<?= kopf_nonce_attr() ?>>\n/* holt sich <script src> von oben */\nalert(1);\n</script>"],
+        ['JS-Blockkommentar verdeckt kein echtes Skript danach', true,
+         "<?php ?><script<?= kopf_nonce_attr() ?>>\n/* Text */\n</script><script>alert(1)</script>"],
         ['Wort mit on-Anfang', false,
          '<?php ?><input data-onload="1" name="onlineform">'],
     ];

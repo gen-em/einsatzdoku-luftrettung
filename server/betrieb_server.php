@@ -6,6 +6,7 @@ require_once __DIR__ . '/speicher_lib.php';
 require_once __DIR__ . '/wartung_lib.php';
 require_once __DIR__ . '/geocoder_lib.php';
 require_once __DIR__ . '/serverkrypto_lib.php';   // Karte „Schlüssel des Servers" (S10)
+require_once __DIR__ . '/format_lib.php';         // groesse_text(), datum_zeit_text()
 
 /**
  * BETRIEB → SERVEREINSTELLUNGEN (S8/AP2, E-S8-05, E-S8-18; Mockup 07 Fassung 2).
@@ -118,6 +119,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
      * Frage im Ruecken. */
     if ($error === null) {
         $roh = str_replace(',', '.', trim((string)($_POST['db_gb'] ?? '')));
+        /* BLEIBT BYTE-DIVISION (Z22, AP7): keine Anzeige, sondern ein
+         * Vergleichswert — er geht unten in `abs((float)$roh - $istGb)`
+         * und wird nie ausgegeben. */
         $istGb = speicher_db_kontingent_bytes() / (1024 * 1024 * 1024);
         if ($roh === '') {
             if (edbak_marke_lesen(SPEICHER_K_DB_GB) !== null
@@ -561,6 +565,10 @@ function speicher_balken(array $teile, int $bezug, array $schwellen): string
 
     $h = '<div class="speicher-balken">';
     foreach ($teile as $t) {
+        /* BLEIBT HANDRECHNUNG (Z23, AP7): Das ist eine CSS-LAENGE, kein
+         * Prozenttext. Sie rundet bewusst gar nicht — `data-breite` traegt
+         * unten drei Nachkommastellen, `prozent_wert()` gaebe eine ganze
+         * Zahl und liesse den Balken sichtbar springen. */
         $p = $nenner > 0 ? (float)$t['bytes'] * 100 / $nenner : 0.0;
         if ($p <= 0) { continue; }
         $h .= '<span class="' . ui_e($t['klasse']) . '" data-breite="'
@@ -571,6 +579,9 @@ function speicher_balken(array $teile, int $bezug, array $schwellen): string
      * Balken, und der Balken ist ein Flex-Behälter. */
     if ($bezug > 0 && $schwellen) {
         $erste  = (int)min($schwellen);
+        /* BLEIBT HANDRECHNUNG (Z23, AP7): CSS-Laenge wie oben — die
+         * Differenz `$erste - $bisher` wird ungerundet zur Breite der
+         * Luecke vor dem Schwellenstrich. */
         $bisher = $nenner > 0 ? $summe * 100 / $nenner : 0;
         if ($erste > $bisher) {
             $h .= '<span class="speicher-luecke" data-breite="'
@@ -584,10 +595,10 @@ function speicher_balken(array $teile, int $bezug, array $schwellen): string
     foreach ($teile as $t) {
         if ((int)$t['bytes'] <= 0) { continue; }
         $h .= '<span><i class="' . ui_e($t['klasse']) . '"></i>'
-            . ui_e($t['text']) . ' ' . edbak_groesse_text((int)$t['bytes']) . '</span>';
+            . ui_e($t['text']) . ' ' . groesse_text((int)$t['bytes']) . '</span>';
     }
     if ($bezug > 0) {
-        $h .= '<span><i class="sb-frei"></i>frei ' . edbak_groesse_text($frei) . '</span>';
+        $h .= '<span><i class="sb-frei"></i>frei ' . groesse_text($frei) . '</span>';
         if ($schwellen) {
             $h .= '<span>Warnschwelle ' . (int)min($schwellen) . ' %</span>';
         }
@@ -863,7 +874,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
 
   <?php ui_karte_start(['titel' => 'Speicher', 'id' => 'k-speicher',
       'zahl' => $sp['stand'] !== null
-          ? 'Stand ' . fmt_local((string)$sp['stand'], 'd.m.Y H:i')
+          ? 'Stand ' . datum_zeit_text((string)$sp['stand'])
           : 'noch nicht gemessen',
       'plakette' => $sp['backups']['bezug'] > 0
           ? ui_plakette($sp['backups']['prozent'] . ' %',
@@ -877,8 +888,8 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     <?php endif; ?>
 
     <h3 class="listen-form-titel">Backups
-      <span class="feld-klein-inline"><?= edbak_groesse_text($sp['backups']['summe']) ?>
-        von <?= edbak_groesse_text($sp['backups']['bezug']) ?> Grenze ·
+      <span class="feld-klein-inline"><?= groesse_text($sp['backups']['summe']) ?>
+        von <?= groesse_text($sp['backups']['bezug']) ?> Grenze ·
         <?= (int)$sp['backups']['prozent'] ?> %</span></h3>
     <?= speicher_balken([
           ['klasse' => 'sb-konto',    'bytes' => $sp['backups']['konto'],
@@ -888,9 +899,9 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         ], $sp['backups']['bezug'], $sp['schwellen']) ?>
 
     <h3 class="listen-form-titel">Installation gesamt
-      <span class="feld-klein-inline"><?= edbak_groesse_text($sp['gesamt']['summe']) ?><?php
+      <span class="feld-klein-inline"><?= groesse_text($sp['gesamt']['summe']) ?><?php
         if ($sp['gesamt']['bezug'] > 0): ?> von
-        <?= edbak_groesse_text($sp['gesamt']['bezug']) ?> Webspace ·
+        <?= groesse_text($sp['gesamt']['bezug']) ?> Webspace ·
         <?= (int)$sp['gesamt']['prozent'] ?> %<?php
         else: ?> — ohne Webspace-Angabe kein Anteil<?php endif; ?></span></h3>
     <?= speicher_balken([
@@ -915,7 +926,13 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="speicher">
       <div class="fld-reihe">
-        <?php ui_feld(['name' => 'grenze', 'label' => 'Speichergrenze Backups',
+        <?php /* DIE DREI FORMULARWERTE BLEIBEN BYTE-DIVISION (Z22, AP7) — und
+                 zwar mit PUNKT als Dezimaltrenner. Derselbe POST-Zweig oben liest
+                 sie mit `is_numeric()` und `(float)` wieder ein (Zeilen 54/55,
+                 97/103, 121/132); `groesse_text()` schriebe „2,00 GB", und das
+                 Formular waere nicht mehr abzuschicken — zu merken erst beim
+                 Speichern. Der Kommentar steht IM Tag, damit er kein Leerzeichen
+                 in die Ausgabe schreibt. */ ui_feld(['name' => 'grenze', 'label' => 'Speichergrenze Backups',
             'wert' => rtrim(rtrim(number_format(
                           edbak_grenze_bytes() / (1024 * 1024 * 1024), 2, '.', ''), '0'), '.'),
             'klein' => 'GB für Konto-Backups und Komplett-Backups zusammen. Ist sie '
@@ -1033,7 +1050,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         <?php ui_zeile([
           'text'  => (string)$b['richtlinie'] . ' · ' . (string)$b['quelle'],
           'klein' => 'auf ' . (string)$b['seite'] . ' · zuletzt '
-                   . fmt_local((string)$b['zuletzt'], 'd.m.Y · H:i') . ' Uhr',
+                   . datum_zeit_text((string)$b['zuletzt'], ' · ') . ' Uhr',
           'plaketten' => ui_plakette((string)$b['anzahl'] . ' Meldungen', ['ton' => 'orange']),
         ]); ?>
       <?php endforeach; ?>

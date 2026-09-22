@@ -4,6 +4,10 @@ require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
+/* `heute_lokal()` — AUSDRUECKLICH, nicht ueber `db.php` geerbt (Schritt 15 AP7).
+ * `date('Y-m-d')` naehme die Zone der php.ini: auf einem Server in UTC waere
+ * „heute" zwischen 0 und 2 Uhr Ortszeit GESTERN (F-ZE-1). */
+require_once __DIR__ . '/format_lib.php';
 
 /**
  * Diensttag von Hand anlegen — fuer Dienste, an denen die Uhr nicht lief.
@@ -22,7 +26,7 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
  */
 
 $fehler = null;
-$tag    = (string)($_POST['day'] ?? date('Y-m-d'));
+$tag    = (string)($_POST['day'] ?? heute_lokal());
 $zeit   = (string)($_POST['zeit'] ?? '');
 $baseId = (int)($_POST['base_id'] ?? 0);
 $vehId  = (int)($_POST['vehicle_id'] ?? 0);
@@ -56,15 +60,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$fehler) {
-        $pdo = db();
-        $pdo->beginTransaction();
         try {
-            $dayId = dt_anlegen($pdo, $userId, $tag, $startedAt,
-                                $vehId > 0 ? $vehId : null,
-                                $baseId > 0 ? $baseId : null);
-            $pdo->commit();
+            $dayId = db_transaktion(db(), fn (PDO $pdo): int =>
+                dt_anlegen($pdo, $userId, $tag, $startedAt,
+                           $vehId > 0 ? $vehId : null,
+                           $baseId > 0 ? $baseId : null));
         } catch (Throwable $ex) {
-            if ($pdo->inTransaction()) { $pdo->rollBack(); }
             $fehler = 'Der Diensttag konnte nicht angelegt werden.';
             $dayId = 0;
         }
@@ -117,7 +118,7 @@ ui_seite_start(['titel' => 'Diensttag anlegen']);
         <?php ui_feld([
             'name' => 'day', 'label' => 'Datum', 'art' => 'date',
             'wert' => $tag, 'pflicht' => true,
-            'attr' => ' max="' . e(date('Y-m-d')) . '"',
+            'attr' => ' max="' . e(heute_lokal()) . '"',
         ]); ?>
 
         <?php /* VON HAND, NICHT DURCH ui_feld — und der Grund ist die Klasse:

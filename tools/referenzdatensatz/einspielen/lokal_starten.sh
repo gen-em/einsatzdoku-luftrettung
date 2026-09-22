@@ -8,6 +8,18 @@
 #
 # EINRICHTEN passiert damit NICHT. Das macht install.php ueber den Browser
 # (siehe LIESMICH.md, Abschnitt "Lokale Installation").
+#
+# ALLE DREI STARTS GEHEN UEBER `setsid`, und das ist keine Feinheit.
+#
+# Ein gewoehnliches `befehl &` bleibt in der Prozessgruppe der startenden
+# Shell. Endet die -- und in einer Werkzeugsitzung endet sie nach jedem
+# Befehl --, nimmt sie MariaDB, den PHP-Server und socat mit. Gemessen am
+# 22.09.2026 (Schritt 15 AP7): Der Bilderlauf brach bei 292 von 496 Seiten
+# ab, und der naechste Lauf bekam ERR_CONNECTION_REFUSED; vier Pruefmittel
+# hintereinander liefen ins Leere, bevor die Ursache klar war.
+#
+# `setsid` loest die drei aus der Gruppe. Damit tut das Skript, was sein
+# Kopfkommentar verspricht: Es faehrt die Anlage hoch, und sie bleibt oben.
 set -e
 
 MYSQLD=${MYSQLD:-mysqld_safe}
@@ -21,7 +33,7 @@ chown -R mysql:mysql /var/run/mysqld /var/lib/mysql /var/log/mysql 2>/dev/null |
 
 if ! mysqladmin ping >/dev/null 2>&1; then
   echo "MariaDB starten ..."
-  $MYSQLD >/var/log/mysql/safe.log 2>&1 &
+  setsid $MYSQLD >/var/log/mysql/safe.log 2>&1 &
   # --wait laesst mysqladmin selbst warten und erneut versuchen. Eine
   # eigene Warteschleife war hier zuerst drin und lief leer durch, weil sie
   # ohne Pause zaehlte -- sechzig Versuche in einer Zehntelsekunde.
@@ -32,7 +44,7 @@ echo "MariaDB laeuft."
 
 if ! curl -s --noproxy '*' -o /dev/null "http://$ADRESSE/login.php"; then
   echo "PHP-Server starten ..."
-  php -S "$ADRESSE" -t "$WURZEL" >/tmp/php-server.log 2>&1 &
+  setsid php -S "$ADRESSE" -t "$WURZEL" >/tmp/php-server.log 2>&1 &
   curl -s --noproxy '*' --retry 20 --retry-delay 1 --retry-all-errors \
        -o /dev/null "http://$ADRESSE/login.php" || true
 fi
@@ -86,7 +98,7 @@ if ! curl -sk --noproxy '*' -o /dev/null "https://127.0.0.1:$TLS_PORT/login.php"
     fi
   fi
   echo "TLS-Terminierung starten ..."
-  socat "OPENSSL-LISTEN:$TLS_PORT,cert=$TLS_DIR/beides.pem,verify=0,reuseaddr,fork" \
+  setsid socat "OPENSSL-LISTEN:$TLS_PORT,cert=$TLS_DIR/beides.pem,verify=0,reuseaddr,fork" \
         "TCP:$ADRESSE" >/tmp/socat.log 2>&1 &
   curl -sk --noproxy '*' --retry 20 --retry-delay 1 --retry-all-errors \
        -o /dev/null "https://127.0.0.1:$TLS_PORT/login.php" || true

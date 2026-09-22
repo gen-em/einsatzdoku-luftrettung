@@ -252,6 +252,24 @@ Adresse — **nie wird der Wert ausgegeben**.
 Umgebungswerten. Prüfen mit `[ -n "$CIQ_GERAETE_URL" ]`, und nur erfragen,
 wenn sie fehlt.
 
+### 4.1 Zwei weitere, die der Container NICHT mitbringt
+
+`WEGWERFKONTO` und `WEGWERFPASSWORT` gehören nicht zu den acht. Sie stehen
+in keiner Ausbaustufe, `aufbauen.sh` misst sie nicht, und eine Arbeitsumgebung
+ohne sie ist vollständig. Gebraucht werden sie von **genau einer** Probe:
+`spaltenregister-wegprobe` (Schritt 15/AP6).
+
+**Warum sie eigene Werte sind und nicht die Prüfkonto-Werte darüber.** Die
+Wegprobe **schreibt**: Sie schneidet einen Einsatz und überschreibt einen
+zweiten. Auf der Demo wäre das ein zerstörter Vorführbestand, auf dem
+Referenzbestand ein zerstörter Vergleichsmaßstab — beides fällt nicht sofort
+auf, sondern erst beim nächsten Kreislauf, der dann eine Abweichung meldet,
+die keine ist. Ein Wegwerfkonto ist eines, dessen Verlust niemanden stört.
+
+Wer die Probe fahren will, legt sich eines an und setzt die beiden Werte in
+der Sitzung. Sie gehören aus demselben Grund nicht ins Repositorium wie die
+acht darüber: **Ein eingecheckter Zugang ist ein Zugang.**
+
 ---
 
 ## 5. Das Netz

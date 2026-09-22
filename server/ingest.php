@@ -6,16 +6,9 @@ require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/geraete_lib.php';  // herkunft_ableiten() (R64)
 require_once __DIR__ . '/ratelimit_lib.php'; // Mengenbremse (P5a/AP7, R19)
-
-/** Gibt es die Spalte? Eine Abfrage am Informationsschema -- ingest.php
- *  laedt migration_lib.php nicht, deshalb steht die Frage hier noch einmal. */
-function ingest_hat_spalte(PDO $pdo, string $tabelle, string $spalte): bool
-{
-    $q = $pdo->prepare('SELECT COUNT(*) FROM information_schema.columns
-                        WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?');
-    $q->execute([$tabelle, $spalte]);
-    return (int)$q->fetchColumn() > 0;
-}
+require_once __DIR__ . '/einsatz_lib.php';   // Kindtabellen (Schritt 15/AP5)
+require_once __DIR__ . '/mission_fields_lib.php';   // mf_spalten() (Schritt 15/AP6)
+require_once __DIR__ . '/format_lib.php';           // groesse_paar_text() (Schritt 15/AP7)
 
 /**
  * Den Vermerk am Geraet fortschreiben (P5a/AP7, E-P5a-02).
@@ -72,7 +65,7 @@ function ingest_tag_offen(PDO $pdo, int $dayId, string $eigeneTabelle, int $eige
     $juengste = null;
     foreach (['missions', 'rest_segments'] as $tab) {
         if ($tab === 'rest_segments'
-            && !ingest_hat_spalte($pdo, 'rest_segments', 'created_at')) { continue; }
+            && !db_hat_spalte($pdo, 'rest_segments', 'created_at')) { continue; }
         $sql  = "SELECT MAX(created_at) FROM `$tab` WHERE day_id = ?";
         $args = [$dayId];
         if ($tab === $eigeneTabelle && $eigeneId > 0) { $sql .= ' AND id <> ?'; $args[] = $eigeneId; }
@@ -150,7 +143,7 @@ function ingest_tag_nachziehen(PDO $pdo, string $tabelle, int $id, $existing, ?i
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_out(['error' => 'method'], 405);
 
 $raw = file_get_contents('php://input');
-if (strlen($raw) > $CFG['app']['max_body_bytes']) json_out(['error' => 'too_large'], 413);
+if (strlen($raw) > (int)konfig('app.max_body_bytes')) json_out(['error' => 'too_large'], 413);
 
 /* --- Geraet authentifizieren -------------------------------------------------
  *
@@ -328,10 +321,12 @@ require_once __DIR__ . '/konten_einstellungen_lib.php';
 $fuell = konto_fuellstand((int)$dev['user_id']);
 if ($fuell['voll']) {
     json_out(['error' => 'kontingent',
+              /* Der SATZSCHLUSSPUNKT haengt beim Aufrufer: `groesse_paar_text()`
+               * endet auf „ MB", der Satz hier auf „ MB." (Schritt 15/AP7). */
               'grund' => 'Das Konto ist voll — ' . $fuell['einsaetze'] . ' von '
                        . $fuell['grenze_einsaetze'] . ' Einsätzen, '
-                       . (int)round($fuell['bytes'] / 1048576) . ' von '
-                       . (int)round($fuell['grenze_bytes'] / 1048576) . ' MB.'], 507);
+                       . groesse_paar_text((int)$fuell['bytes'],
+                                           (int)$fuell['grenze_bytes']) . '.'], 507);
 }
 
 /* Geglueckt: den Kennungstopf und den Vermerk raeumen.
@@ -500,7 +495,7 @@ try {
      * zurueck, wie der Kommentar dort verspricht. Eine Abfrage je Paket am
      * Informationsschema, nur fuer Ruhesegmente -- der Preis fuer einen
      * Deploy, der kein Paket verliert. */
-    $hatCreated = $kind === 'mission' || ingest_hat_spalte($pdo, 'rest_segments', 'created_at');
+    $hatCreated = $kind === 'mission' || db_hat_spalte($pdo, 'rest_segments', 'created_at');
     $chk = $pdo->prepare("SELECT id, day_id, deleted_at, started_at" . ($hatCreated ? ', created_at' : '')
                        . ($kind === 'mission' ? ', uhr_gesperrt' : '')
                        . " FROM `$tabelle` WHERE device_id = ? AND client_ref = ?");
@@ -713,8 +708,14 @@ try {
          * denn, jemand hat das Geraet zwischendurch neu gekoppelt und anders
          * aufgeloest. Dann traegt der Einsatz weiter, was beim Anlegen galt.
          * Das IST die Momentaufnahme. */
-        $pdo->prepare('INSERT INTO missions (user_id, device_id, client_ref, day_id, started_at, ended_at, distance_m, ascent_m, final, origin, geraet_art, geraet_modell)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+        /* SPALTEN AUS DEM REGISTER (Schritt 15/AP6, E-ZE-22), Zweck
+         * `ingest_neu`. Die Fragezeichen werden mitgezaehlt statt
+         * hingeschrieben: Wer eine Spalte ergaenzt, ergaenzt sonst die Liste
+         * und vergisst das Fragezeichen — und MariaDB meldet das erst zur
+         * Laufzeit, beim ersten echten Paket eines Geraets. */
+        $sp = mf_spalten('ingest_neu', '', false);
+        $pdo->prepare('INSERT INTO missions (' . implode(', ', $sp) . ')
+                       VALUES (' . implode(',', array_fill(0, count($sp), '?')) . ')
                        ON DUPLICATE KEY UPDATE
                          ended_at   = COALESCE(VALUES(ended_at),   ended_at),
                          distance_m = COALESCE(VALUES(distance_m), distance_m),
@@ -781,11 +782,12 @@ try {
             $vorhandenePhasen = (int)$zaehl->fetchColumn();
 
             if (count($neuePhasen) >= $vorhandenePhasen) {
-                $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?')->execute([$ownerId]);
-                $ins = $pdo->prepare('INSERT INTO mission_phases (mission_id, phase, occurred_at, lat, lon) VALUES (?,?,?,?,?)');
+                $phasen = [];
                 foreach ($neuePhasen as $np) {
-                    $ins->execute([$ownerId, $np[0], $np[1], $np[2], $np[3]]);
+                    $phasen[] = ['phase' => $np[0], 'occurred_at' => $np[1],
+                                 'lat' => $np[2], 'lon' => $np[3]];
                 }
+                einsatz_phasen_ersetzen($pdo, $ownerId, $phasen);
             } else {
                 // Behalten und NENNEN — sonst waere der uebergangene Upload von
                 // einem uebernommenen nicht zu unterscheiden (JSON-Vertrag 5).
@@ -834,16 +836,11 @@ try {
             $vorhandeneSitzungen = (int)$zaehl->fetchColumn();
 
             if (count($neueSitzungen) >= $vorhandeneSitzungen) {
-                $pdo->prepare('DELETE FROM resus_sessions WHERE mission_id = ?')->execute([$ownerId]);
-                $insS = $pdo->prepare('INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)');
-                $insE = $pdo->prepare('INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
+                $reas = [];
                 foreach ($neueSitzungen as $ns) {
-                    $insS->execute([$ownerId, $ns['start']]);
-                    $sid = (int)$pdo->lastInsertId();
-                    foreach ($ns['events'] as $ne) {
-                        $insE->execute([$sid, $ne[0], $ne[1]]);
-                    }
+                    $reas[] = ['started_at' => $ns['start'], 'events' => $ns['events']];
                 }
+                einsatz_reas_ersetzen($pdo, $ownerId, $reas);
             } else {
                 $behalten['kept_resus'] = $vorhandeneSitzungen;
             }
