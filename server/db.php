@@ -18,6 +18,7 @@ require_once __DIR__ . '/email_lib.php';
  * (die Anlage ist noch nicht eingerichtet), liefert jede Abfrage ihre
  * Vorgabe, statt dass die Datei mit einem Fatal abbricht. */
 require_once __DIR__ . '/konfig_lib.php';
+require_once __DIR__ . '/format_lib.php';   // fmt_local() u. a. (Schritt 15/AP7)
 
 /* UND `db.php` VERLANGT `config.php` WEITERHIN HART.
  *
@@ -516,15 +517,25 @@ function hex_vierergruppen(string $hex): string
     return trim(chunk_split($hex, 4, ' '));
 }
 
-function fmt_local(?string $utc, string $format = 'H:i'): string {
-    if ($utc === null || $utc === '') return '–';
-    $dt = new DateTime($utc, new DateTimeZone('UTC'));
-    $dt->setTimezone(new DateTimeZone((string)konfig('app.timezone')));
-    return $dt->format($format);
-}
+/* `fmt_local()` STAND HIER BIS WEB 20.31.0 und liegt jetzt in
+ * `format_lib.php` (Schritt 15 AP7). Der Name ist unveraendert, und diese
+ * Datei laedt die neue oben — jeder der 113 Aufrufer findet die Funktion
+ * also weiter, ohne etwas zu tun.
+ *
+ * WARUM SIE UMGEZOGEN IST: `datum_text()` und `datum_zeit_text()` bauen auf
+ * ihr auf. Waere sie hiergeblieben, muesste `format_lib.php` die
+ * Datenbankdatei laden — und die darf sie nicht laden, weil `install.php`
+ * sie ueber `plattform_lib.php` erreicht, bevor es eine `config.php` gibt.
+ * Die Rechnung ein zweites Mal zu fuehren waere das Gegenteil dessen,
+ * wofuer es diesen Schritt gibt.
+ *
+ * `local_to_utc()` BLEIBT HIER, und das ist kein Versehen: Sie liest einen
+ * Formularwert, um damit zu RECHNEN. `format_lib.php` macht aus Werten Text
+ * fuer Menschen; das ist die andere Richtung. */
 
 /**
- * Ortszeit (App-Zeitzone) -> UTC-DATETIME. Gegenstueck zu fmt_local().
+ * Ortszeit (App-Zeitzone) -> UTC-DATETIME. Gegenstueck zu fmt_local()
+ * (jetzt in format_lib.php).
  *
  * Lag frueher in einsatz_form.php. Seit dem Import (import_commit.php) gibt es
  * einen zweiten Aufrufer; zwei Kopien derselben Zeitrechnung waeren die
