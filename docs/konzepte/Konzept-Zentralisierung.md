@@ -1873,21 +1873,22 @@ Umsetzung —, wie bei 241–249):**
   Decke 57 im Register.
 - *Datum-Zeit-Trenner vereinheitlichen* (F-ZE-3, FF-5). Zuordnung: 10c AP9.
 
-**Ohne Nummer geblieben — die Spanne 250–259 ist voll** (Stand 22.09.2026;
-254 bis 259 sind durch Funde von AP2 bis AP5 belegt). AP6 hat einen Punkt
-gefunden, der eine Nummer verdiente, und **bekommt keine**, weil die nächste
-freie (260) außerhalb der für Schritt 15 angemeldeten Spanne läge und mit
-einem Nachbarzweig kollidieren könnte:
+**Außerhalb der Spanne vergeben — 250 bis 259 sind voll** (254 bis 259 sind
+Funde von AP2 bis AP5). Der Fund von AP6 hat auf Ansage des Auftraggebers
+(22.09.2026, „260 nehmen") **Nr. 267** bekommen: 260 war zu dem Zeitpunkt
+bereits belegt, und 260 bis 266 sind inzwischen von Kette II vergeben. Die
+nächste freie war 267.
 
-- *Die tote Spalte `missions.other_resources` löschen.* Seit der Migration
+- **Nr. 267** — *Die tote Spalte `missions.other_resources` löschen.* Seit der Migration
   2026_07 liegen die weiteren Rettungsmittel als Zeilen in
   `mission_resources`; die Spalte wurde damals nur nicht entfernt und ging
   bis Web 12.x über `SELECT *` in jedes Backup. **Sie ist nicht verloren:**
   Das Spaltenregister führt sie mit genau dieser Begründung
   (`mf_missions_gruende()`), und `tools/spaltenregister/pruefen.php` würde
   anschlagen, wenn jemand die Begründung entfernte, ohne die Spalte zu
-  löschen. Zuordnung, sobald eine Nummer da ist: **P8 (R66)** — es ist eine
-  Migration. **Dem Auftraggeber am 22.09.2026 vorgelegt.**
+  löschen. Zuordnung: **P8 (R66)** — es ist eine Migration. Die Migration
+  ist destruktiv und braucht `zerstoert` und `inhalt`
+  (`migrationen_inhalt_zaehlen()`); Einzelheiten im Backlog-Eintrag.
 
 **Ein Satz im freigegebenen P5c-Konzept** (E-ZE-03), AP3, Abnahme: „das
 Zählmittel entsteht hier und geht in Stufe 1 (Nr. 248)" → „das Zählmittel

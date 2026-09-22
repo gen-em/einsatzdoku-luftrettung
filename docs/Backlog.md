@@ -94,7 +94,7 @@ arbeiten, nicht erneut kollidieren:
 
 **250 bis 259 sind für Schritt 15 reserviert** (Zentralisierung,
 `docs/konzepte/Konzept-Zentralisierung.md`, eingespielt am 20.09.2026). Vier
-Nummern sind vergeben, **sechs bleiben frei für Funde der Umsetzung** — nach
+Nummern waren vergeben, **sechs blieben frei für Funde der Umsetzung** — nach
 derselben Überlegung wie bei 241–249: Ein Paket, das erst beim Bauen neue
 Punkte findet, soll sie anhängen können, ohne mit dem nächsten Zweig zu
 kollidieren.
@@ -111,6 +111,11 @@ kollidieren.
 | 257 | Fünf Prüfwerkzeuge hingen an der globalen `$CFG` | erledigt 21.09.2026 |
 | 258 | Drei `api/`-Dateien antworten am `json_out()` vorbei | Backlog-Runde / 10c AP6 |
 | 259 | GPX-Probe wird durch den Demo-Reset blind (4/95, Kernvergleich 0 von 204) | Backlog-Runde |
+
+**Die Spanne ist damit voll.** Der Fund von AP6 — *die tote Spalte
+`missions.other_resources` löschen* — hat deshalb **Nr. 267** bekommen, die
+nächste freie außerhalb der Spanne (260 bis 266 sind inzwischen von Kette II
+vergeben).
 
 > **Keiner der vier gehört in Schritt 15 selbst**, und das ist kein Versehen:
 > 250 ändert Wege durch die Anwendung, 251 und 252 hängen an späteren
@@ -3418,6 +3423,44 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ein „fehlt", das in Wahrheit ein „ich konnte nicht nachsehen" war, die
     Kette zu falschen Schlüssen brachte. Hier gilt dasselbe, nur auf der
     Statusseite.
+
+267. **Die tote Spalte `missions.other_resources` löschen.** *Aufgenommen
+    22.09.2026 (Schritt 15 AP6).* Zugeordnet: **P8 (R66)** — es ist eine
+    Migration. Priorität: niedrig.
+
+    Seit der Migration `2026_07` liegen die weiteren Rettungsmittel als
+    **Zeilen** in `mission_resources` und werden als `resources` gesichert.
+    Die Spalte `missions.other_resources` wurde damals nur **nicht
+    gelöscht**. Sie wird seither von nichts mehr gefüllt und von nichts mehr
+    gelesen.
+
+    **Was sie gekostet hat, bevor sie auffiel:** Bis das Backup seine
+    Spaltenliste bekam, stand dort `SELECT *` — die tote Spalte ging
+    **jahrelang in jede Sicherungsdatei** und wurde beim Einspielen wieder
+    verworfen. Niemand hat das bemerkt, weil eine Spalte, die überall
+    mitläuft, nirgends stört.
+
+    **Sie ist nicht verloren, und das ist der Grund, warum dieser Punkt
+    niedrige Priorität hat:** Das Spaltenregister
+    (`mf_missions_register()` in `server/mission_fields_lib.php`) führt sie
+    seit Web 20.31.0 mit **genau dieser Begründung** in
+    `mf_missions_gruende()`, und `tools/spaltenregister/pruefen.php` schlägt
+    an, wenn jemand die Begründung entfernt, ohne die Spalte zu löschen. Der
+    Zustand ist damit festgehalten statt vergessen.
+
+    **Beim Löschen mitzudenken:** Die Migration ist **destruktiv** und
+    braucht deshalb einen `zerstoert`-Eintrag (Klartext, was verlorenginge)
+    und einen `inhalt`-Eintrag, der die Ausführung blockiert, solange die
+    Spalte irgendwo noch Werte trägt — `migrationen_inhalt_zaehlen()` in
+    `server/migration_lib.php` ist dafür gebaut. Und der Registereintrag
+    fällt mit der Spalte; die Zeile in `mf_missions_gruende()` wird dann
+    gestrichen, nicht umgeschrieben.
+
+    **Nummer 267 und nicht 260:** Die für Schritt 15 angemeldete Spanne
+    250–259 ist voll (254 bis 259 sind Funde von AP2 bis AP5), und 260 bis
+    266 sind inzwischen von Kette II vergeben worden. Der Auftraggeber hat am
+    22.09.2026 „260 nehmen" gesagt; 260 war zu diesem Zeitpunkt bereits
+    belegt, deshalb die nächste freie.
 
 
 ## Erledigt
