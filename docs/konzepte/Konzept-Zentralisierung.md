@@ -443,7 +443,28 @@ ist die **einzige sichtbare Folge dieses Pakets**: Auf Betrieb → Updates
 steht beim Alter des jüngsten Komplett-Backups unter 90 Sekunden künftig
 „gerade eben" statt „vor 1 Minuten", und zwischen 60 und 90 Minuten „vor 60 …
 90 Minuten" statt „vor 1 Stunden" (die Kopie wechselt bei 3 600 s auf Stunden,
-`status_alter()` bei 5 400 s). `zahl_text()` ersetzt
+`status_alter()` bei 5 400 s).
+
+> **Eine DRITTE Folge, nachgetragen am 22.09.2026** (Auftraggeber: „als dritte
+> Folge in E-ZE-23 aufnehmen"), gefunden beim Auszählen von Z20 zu Beginn von
+> AP7: Die Kopie **fängt eine unlesbare Zeitmarke nicht ab**. `strtotime()`
+> liefert dort `false`, `time() - false` ist `time()`, und angezeigt würde
+> „vor ~20 400 Tagen"; `zeit_relativ()` sagt an derselben Stelle
+> **„unbekannt"**.
+>
+> **Sie ist keine sechste Ausnahme von E-ZE-10, sondern dieselbe, vollständig
+> beschrieben.** Die Entscheidung lautet seit dem 20.09.2026 „die Kopie
+> entfällt"; was sich dabei ändert, war nur unvollständig aufgezählt.
+>
+> **Auslösbar ist der Weg heute nicht.** Die einzige Eingabe ist
+> `komp_zeit_aus_name()` (`komplett_lib.php`), das die Marke aus einem
+> regexgeprüften Dateinamen baut und sonst `null` liefert — und `null` fängt
+> der äußere Wächter in `betrieb_updates.php` ab, bevor gerechnet wird. Die
+> Änderung geht außerdem in die richtige Richtung: von einer falschen Zahl zu
+> einer ehrlichen Auskunft. Das Prüfdokument führt sie als unauslösbaren
+> Fehlerweg.
+
+`zahl_text()` ersetzt
 `number_format(…, ',', '.')` (26 Stellen); die 15 übrigen `number_format`
 (andere Form, etwa Koordinaten und GPX) bleiben. `iso_utc()` schreibt,
 `iso_utc_lesen()` liest die Marke. Byte-**Anzeigen** laufen über
@@ -1604,9 +1625,9 @@ Spalten ohne Zweck und ohne Grund**.
 ### AP7 — Zeit und Zahl in PHP (E-ZE-23; F-ZE-1, F-ZE-3)
 
 `format_lib.php`; Umzug der Aufrufer.
-**Abnahme:** Z19 `edbak_groesse_text(` **43 → 0**, `function groesse_text`
+**Abnahme:** Z19 `edbak_groesse_text(` **42 → 0**, `function groesse_text`
 **= 1**; Z20 relative Zeit von Hand **2 → 1**; Z21 `number_format(` in
-deutscher Form außerhalb `format_lib.php` **26 → 0**; Z22 Byte-Division für
+deutscher Form außerhalb `format_lib.php` **27 → 0**; Z22 Byte-Division für
 die Anzeige **18 → namentliche Ausnahmen** (beim Start auszählen: Anzeige
 gegen Rechnung); Z23 Prozent von Hand **10 → 0**; Z24 ISO-UTC schreiben
 **20 → 1**; Z25 ISO-UTC lesen **9 → 1**; Z26 Datumsformat-Literale
@@ -1619,6 +1640,13 @@ Altersangabe auf Betrieb → Updates, E-ZE-23 — im Bilderlauf maskiert); `heut
 5 400 · 172 799 · 172 800 s: **7 von 7 gleich**; gegen die entfallene Kopie
 aus `betrieb_updates.php` weichen **genau** die zwei in E-ZE-23 benannten
 Bereiche ab.
+
+> **Zwei Startzahlen dieses Absatzes waren falsch und sind berichtigt**
+> (22.09.2026, beim Beginn von AP7): Z19 stand auf **43**, gemessen sind
+> **42**; Z21 stand auf **26**, gemessen sind **27**. Beide Zahlen stammen
+> aus dem Befund von Nr. 202 und sind bei der Eichung in AP1 nachgemessen
+> worden — die Registertabelle in Abschnitt 4 trug seither die richtigen,
+> dieser Absatz nicht. **Es gilt das Werkzeug.**
 
 ### AP8 — JavaScript
 

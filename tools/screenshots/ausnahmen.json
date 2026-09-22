@@ -1,0 +1,4 @@
+{
+  "_lies_mich": "Seiten, deren Bild sich zwischen zwei Laeufen aendert, OHNE dass jemand etwas geaendert haette. Schluessel ist der Seitenname aus seiten.json (ohne Breite), Wert die Begruendung. Eine Ausnahme ohne Treffer ist ein Befund — siehe vergleichen.py.",
+  "zeitabhaengig": {}
+}

@@ -461,6 +461,50 @@ meldet **zweimal Null**. Vor jeder Messung wird jetzt gewartet, bis
 `--knopf` in `:root` steht; ist es nach fünf Sekunden nicht da, steht das als
 Fehler im Bericht statt als grüne Zahl.
 
+## Bildvergleich — hat sich ein Pixel bewegt?
+
+`vergleichen.py` daneben beantwortet die Frage, die der Bilderlauf selbst
+**nicht** beantwortet. Überlauf, Konsolenfehler und Knopfhöhen sagen nichts
+darüber, ob eine Seite anders aussieht als gestern: 0/0/0 meldet auch eine
+Seite, die ein anderes Datum zeigt.
+
+```
+python3 tools/screenshots/vergleichen.py <vorher> [<nachher>]
+python3 tools/screenshots/vergleichen.py <vorher> --erwartet 46-betrieb-updates
+```
+
+Verglichen wird **Bit für Bit** über die SHA-256 jedes Einzelbilds. Voreinstellung
+für `<nachher>` ist `ausgabe/`.
+
+**Die Reihenfolge ist nicht wahlfrei, und sie ist der ganze Trick:** Jeder Lauf
+löscht den vorigen (`rmSync` auf `ausgabe/`, siehe *Grenzen*). Wer vergleichen
+will, sichert den ersten Lauf weg, **bevor** er die Änderung baut. Danach ist es
+zu spät.
+
+```
+cp -r tools/screenshots/ausgabe /tmp/bilder_vor    # VOR der Änderung
+…  bauen …
+node tools/screenshots/aufnehmen.mjs
+python3 tools/screenshots/vergleichen.py /tmp/bilder_vor
+```
+
+**Zwei Arten, eine Abweichung zu erklären, und sie sind nicht dasselbe:**
+
+| | |
+|---|---|
+| `ausnahmen.json`, Abschnitt `zeitabhaengig` | **dauerhaft.** Die Seite ändert sich zwischen zwei Läufen, ohne dass jemand etwas geändert hätte — sie zeigt eine Uhrzeit, ein Alter, einen Zähler. Mit Begründung je Eintrag |
+| `--erwartet <seite>` | **für diesen einen Lauf.** Die Abweichung ist die beabsichtigte Folge der Änderung, die gerade gebaut wurde |
+
+Für beide gilt die Regel des Hauses: **Eine Ausnahme ohne Treffer ist selbst ein
+Befund.** Sonst wächst die Liste zu, und der Vergleich meldet eine Null, die
+nichts mehr gemessen hat.
+
+**Was ein Bitvergleich nicht kann:** Er sagt, **dass** sich etwas geändert hat,
+nicht **was**. Eine gemeldete Datei wird angesehen — das Werkzeug ersetzt den
+Blick nicht, es sagt nur, wohin er gehört. Und er ist **streng**: Eine
+Abweichung von einem Pixel in einer Schriftrasterung zählt wie eine
+verschobene Spalte.
+
 ## Grenzen
 
 - **Nur Chromium.** WebKit (Safari, iOS) und Gecko (Firefox) stehen in der
