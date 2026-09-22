@@ -177,9 +177,10 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Der Inhaltsschlüssel gehört nicht zu diesem Konto. '
                . 'Es wurde nichts geändert.';
     } else {
-        $pdo = db();
-        $pdo->beginTransaction();
         try {
+            db_transaktion(db(), function (PDO $pdo) use ($erstvergabe, $neuTok, $neuSalt,
+                                                          $neuIter, $wrapPw, $wrapRc,
+                                                          $keyChk, $row): void {
             if ($erstvergabe) {
                 // Passwort und BEIDE Huellen in einem Zug — ein Konto ohne
                 // Wiederherstellungs-Huelle waere nach einem Reset verloren.
@@ -221,7 +222,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
              * anders drin ist. */
             $pdo->prepare('UPDATE users SET session_epoch = session_epoch + 1 WHERE id = ?')
                 ->execute([(int)$row['user_id']]);
-            $pdo->commit();
+            });
             $done = true;
 
             /* ---- DIE REGISTRIERUNG IST HIER ZU ENDE (P5b/AP3) ----------
@@ -289,7 +290,6 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
         } catch (Throwable $ex) {
-            $pdo->rollBack();
             $error = 'Speichern fehlgeschlagen. Bitte erneut versuchen.';
         }
     }

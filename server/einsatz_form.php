@@ -515,79 +515,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * Kombinationen. */
         if (!$error) {
 
-        $pdo = db(); $pdo->beginTransaction();
         try {
-            if ($editing) {
-                $set = 'started_at = ?, ended_at = ?, uhr_gesperrt = 1, edited = 1';
-                foreach ($fieldCols as $c) { $set .= ", `$c` = ?"; }
-                $pdo->prepare("UPDATE missions SET $set WHERE id = ? AND user_id = ?")
-                    ->execute(array_merge([$startedAt, $endedAt], $fieldVals, [$id, $userId]));
-            } else {
-                // Virtuelles Geraet "Manuelle Einträge" (deaktiviert: kann nie hochladen)
-                $devId = geraet_virtuell_sicherstellen($pdo, $userId);
-                $cols = 'user_id, device_id, client_ref, day_id, started_at, ended_at, final, uhr_gesperrt, origin';
-                $qms  = "?,?,?,?,?,?,1,1,'manual'";
-                foreach ($fieldCols as $c) { $cols .= ", `$c`"; $qms .= ',?'; }
-                $pdo->prepare("INSERT INTO missions ($cols) VALUES ($qms)")
-                    ->execute(array_merge(
-                        [$userId, (int)$devId, 'man-' . uniqid(), $dayId, $startedAt, $endedAt],
-                        $fieldVals));
-                $id = (int)$pdo->lastInsertId();
-            }
-
-            /* ---- Abweichende Besatzung (mission_crew) ----------------------
-             *
-             * VOLLSTAENDIG ERSETZEN, wie Phasen und Reanimationen: Ein Rollenfeld,
-             * das geleert wurde, muss seine Zeile verlieren — sonst blieb der alte
-             * Name als Abweichung stehen, obwohl im Formular nichts mehr stand.
-             *
-             * Geschrieben werden nur BELEGTE Rollen. Eine Zeile mit name = NULL
-             * hat in `mission_crew` keine Bedeutung: Anders als bei `day_crew`,
-             * wo die Zeilenmenge den Rollensatz bildet (E8), ist hier jede Zeile
-             * eine Abweichung — und keine Abweichung ist keine Zeile. Ohne
-             * gesetzten Haken raeumt $readField die Werte ohnehin ab
-             * (Checkbox-Unterfelder), es bleibt dann nichts uebrig. */
-            $pdo->prepare('DELETE FROM mission_crew WHERE mission_id = ?')->execute([$id]);
-            $insC = $pdo->prepare('INSERT INTO mission_crew (mission_id, role_code, name)
-                                   VALUES (?,?,?)');
-            foreach ($crewVals as $role => $name) {
-                if ($name === null || trim((string)$name) === '') { continue; }
-                $insC->execute([$id, $role, mb_substr(trim((string)$name), 0, 120)]);
-            }
-
-            /* Der Diensttag muss den Einsatz umschliessen (JSON-Vertrag 4.4).
-             * Ein nachgetragener Einsatz um 00:40 verlaengert den Dienst bis
-             * dahin; ohne das laege er ausserhalb des Zeitraums seines eigenen
-             * Dienstes. */
-            dt_zeitraum_fortschreiben($pdo, $dayId, $startedAt, $endedAt);
-
-            // Phasen vollstaendig ersetzen
-            $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?')->execute([$id]);
-            $ins = $pdo->prepare('INSERT INTO mission_phases (mission_id, phase, occurred_at) VALUES (?,?,?)');
-            foreach ($rows as $r) { $ins->execute([$id, $r[0], $r[1]]); }
-
-            /* Reanimationen ebenso vollstaendig ersetzen (A4.3). Die Ereignisse
-             * raeumt der Fremdschluessel mit ab (ON DELETE CASCADE), sie
-             * brauchen kein eigenes DELETE. Beim Nachtragen laeuft das DELETE
-             * ins Leere — das ist billiger als eine Fallunterscheidung, die
-             * beim naechsten Umbau vergessen wuerde.
-             *
-             * Ein ueber dieses Formular gespeicherter Einsatz traegt danach
-             * uhr_gesperrt = 1; ingest.php ruehrt seine Reanimationen dann nicht
-             * an. Eine nachliefernde Uhr kann die hier eingetragenen Zeiten
-             * also nicht ueberschreiben. */
-            $pdo->prepare('DELETE FROM resus_sessions WHERE mission_id = ?')->execute([$id]);
-            if ($reaSitzungen) {
-                $insS = $pdo->prepare('INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)');
-                $insE = $pdo->prepare('INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
-                foreach ($reaSitzungen as $sitz) {
-                    $insS->execute([$id, $sitz['start']]);
-                    $sid = (int)$pdo->lastInsertId();
-                    foreach ($sitz['ereignisse'] as $e2) { $insE->execute([$sid, $e2[0], $e2[1]]); }
+            /* DER RAHMEN ENDET HIER, NICHT ERST AM `catch` (Schritt 15/AP5).
+             * Hinter dem frueheren `commit()` standen noch die Hoehenermittlung
+             * und die Rettungsmittel-Zeilen — INNERHALB desselben `try`, dessen
+             * `catch` ein unbedingtes `$pdo->rollBack()` hatte. Warf eine der
+             * beiden, rollte der `catch` eine BEREITS BESTAETIGTE Transaktion
+             * zurueck: Das wirft seinerseits, und die urspruengliche Ausnahme
+             * ging verloren. `db_transaktion()` schliesst den Rahmen dort, wo er
+             * hingehoert; was danach kommt, laeuft ohne ihn. */
+            $id = db_transaktion(db(), function (PDO $pdo) use ($crewVals, $dayId, $editing,
+                                                               $endedAt, $fieldCols, $fieldVals,
+                                                               $id, $readField, $reaSitzungen,
+                                                               $rows, $startedAt, $userId): int {
+                if ($editing) {
+                    $set = 'started_at = ?, ended_at = ?, uhr_gesperrt = 1, edited = 1';
+                    foreach ($fieldCols as $c) { $set .= ", `$c` = ?"; }
+                    $pdo->prepare("UPDATE missions SET $set WHERE id = ? AND user_id = ?")
+                        ->execute(array_merge([$startedAt, $endedAt], $fieldVals, [$id, $userId]));
+                } else {
+                    // Virtuelles Geraet "Manuelle Einträge" (deaktiviert: kann nie hochladen)
+                    $devId = geraet_virtuell_sicherstellen($pdo, $userId);
+                    $cols = 'user_id, device_id, client_ref, day_id, started_at, ended_at, final, uhr_gesperrt, origin';
+                    $qms  = "?,?,?,?,?,?,1,1,'manual'";
+                    foreach ($fieldCols as $c) { $cols .= ", `$c`"; $qms .= ',?'; }
+                    $pdo->prepare("INSERT INTO missions ($cols) VALUES ($qms)")
+                        ->execute(array_merge(
+                            [$userId, (int)$devId, 'man-' . uniqid(), $dayId, $startedAt, $endedAt],
+                            $fieldVals));
+                    $id = (int)$pdo->lastInsertId();
                 }
-            }
 
-            $pdo->commit();
+                /* ---- Abweichende Besatzung (mission_crew) ----------------------
+                 *
+                 * VOLLSTAENDIG ERSETZEN, wie Phasen und Reanimationen: Ein Rollenfeld,
+                 * das geleert wurde, muss seine Zeile verlieren — sonst blieb der alte
+                 * Name als Abweichung stehen, obwohl im Formular nichts mehr stand.
+                 *
+                 * Geschrieben werden nur BELEGTE Rollen. Eine Zeile mit name = NULL
+                 * hat in `mission_crew` keine Bedeutung: Anders als bei `day_crew`,
+                 * wo die Zeilenmenge den Rollensatz bildet (E8), ist hier jede Zeile
+                 * eine Abweichung — und keine Abweichung ist keine Zeile. Ohne
+                 * gesetzten Haken raeumt $readField die Werte ohnehin ab
+                 * (Checkbox-Unterfelder), es bleibt dann nichts uebrig. */
+                $pdo->prepare('DELETE FROM mission_crew WHERE mission_id = ?')->execute([$id]);
+                $insC = $pdo->prepare('INSERT INTO mission_crew (mission_id, role_code, name)
+                                       VALUES (?,?,?)');
+                foreach ($crewVals as $role => $name) {
+                    if ($name === null || trim((string)$name) === '') { continue; }
+                    $insC->execute([$id, $role, mb_substr(trim((string)$name), 0, 120)]);
+                }
+
+                /* Der Diensttag muss den Einsatz umschliessen (JSON-Vertrag 4.4).
+                 * Ein nachgetragener Einsatz um 00:40 verlaengert den Dienst bis
+                 * dahin; ohne das laege er ausserhalb des Zeitraums seines eigenen
+                 * Dienstes. */
+                dt_zeitraum_fortschreiben($pdo, $dayId, $startedAt, $endedAt);
+
+                // Phasen vollstaendig ersetzen
+                $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?')->execute([$id]);
+                $ins = $pdo->prepare('INSERT INTO mission_phases (mission_id, phase, occurred_at) VALUES (?,?,?)');
+                foreach ($rows as $r) { $ins->execute([$id, $r[0], $r[1]]); }
+
+                /* Reanimationen ebenso vollstaendig ersetzen (A4.3). Die Ereignisse
+                 * raeumt der Fremdschluessel mit ab (ON DELETE CASCADE), sie
+                 * brauchen kein eigenes DELETE. Beim Nachtragen laeuft das DELETE
+                 * ins Leere — das ist billiger als eine Fallunterscheidung, die
+                 * beim naechsten Umbau vergessen wuerde.
+                 *
+                 * Ein ueber dieses Formular gespeicherter Einsatz traegt danach
+                 * uhr_gesperrt = 1; ingest.php ruehrt seine Reanimationen dann nicht
+                 * an. Eine nachliefernde Uhr kann die hier eingetragenen Zeiten
+                 * also nicht ueberschreiben. */
+                $pdo->prepare('DELETE FROM resus_sessions WHERE mission_id = ?')->execute([$id]);
+                if ($reaSitzungen) {
+                    $insS = $pdo->prepare('INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)');
+                    $insE = $pdo->prepare('INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
+                    foreach ($reaSitzungen as $sitz) {
+                        $insS->execute([$id, $sitz['start']]);
+                        $sid = (int)$pdo->lastInsertId();
+                        foreach ($sitz['ereignisse'] as $e2) { $insE->execute([$sid, $e2[0], $e2[1]]); }
+                    }
+                }
+
+                return $id;
+            });
 
             // Einsatzort-Hoehe neu ermitteln: Der Track bleibt unveraendert,
             // aber die Phasenzeiten (Referenz Phase 5/6) koennen sich gerade
@@ -612,7 +624,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: einsatz.php?id=' . $id . ($editing ? '' : '&nachtrag=1'));
             exit;
         } catch (Throwable $ex) {
-            $pdo->rollBack();
             $error = 'Speichern fehlgeschlagen.';
         }
 

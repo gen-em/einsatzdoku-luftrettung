@@ -411,9 +411,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             // Passwort und Huelle gemeinsam — sonst entstuende ein Konto, das
             // sich zwar anmelden laesst, dessen Angaben aber unlesbar waeren.
-            $pdo = db();
-            $pdo->beginTransaction();
             try {
+                $_SESSION['epoch'] = db_transaktion(db(), function (PDO $pdo) use (
+                        $newTok, $newSalt, $newIter, $userId, $patReady, $wrapPw, $keyChk): int {
                 /* Sitzungszaehler mit erhoehen (M1-09/D6).
                  *
                  * Wer sein Passwort wechselt, weil er Missbrauch vermutet,
@@ -461,7 +461,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare('UPDATE password_resets SET used_at = NOW()
                                WHERE user_id = ? AND used_at IS NULL')
                     ->execute([$userId]);
-                $pdo->commit();
 
                 /* Die EIGENE Sitzung zieht den neuen Stand mit und bleibt
                  * bestehen (Abnahmekriterium A5: "alle ANDEREN Sitzungen").
@@ -470,7 +469,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * kein Sicherheitsgewinn, sondern nur laestig. */
                 $st2 = $pdo->prepare('SELECT session_epoch FROM users WHERE id = ?');
                 $st2->execute([$userId]);
-                $_SESSION['epoch'] = (int)$st2->fetchColumn();
+                return (int)$st2->fetchColumn();
+                });
 
                 $notice = 'Passwort geändert. Alle anderen offenen Sitzungen dieses '
                         . 'Kontos sind damit beendet; noch offene Links zum '
@@ -479,7 +479,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * den neuen Datenschluessel uebernehmen. */
                 $pwGewechselt = true;
             } catch (Throwable $ex) {
-                $pdo->rollBack();
                 $error = 'Passwortwechsel fehlgeschlagen. Es wurde nichts geändert.';
             }
         }
@@ -805,9 +804,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $geloest = 0;
         } else {
             $bleiben = stammdaten_ohne_standortpflicht($bid, $userId);
-            $pdo = db();
-            $pdo->beginTransaction();
             try {
+                $geloest = db_transaktion(db(), function (PDO $pdo) use ($bid, $userId): int {
                 $geloest = stammdaten_standort_loesen($bid, $userId);
                 $pdo->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "base" AND item_id = ?')
                     ->execute([$userId, $bid]);
@@ -841,9 +839,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ->execute([$userId, $bid]);
                 $pdo->prepare('DELETE FROM bases WHERE id = ? AND user_id = ?')
                     ->execute([$bid, $userId]);
-                $pdo->commit();
+                return $geloest;
+                });
             } catch (PDOException $ex) {
-                if ($pdo->inTransaction()) { $pdo->rollBack(); }
                 $error = 'Der Standort konnte nicht gelöscht werden.';
                 $geloest = 0;
             }
@@ -908,9 +906,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rollen = $rm['roles'];
             $caps   = $rm['caps'];
 
-            $pdo = db();
-            $pdo->beginTransaction();
             try {
+                $vid = db_transaktion(db(), function (PDO $pdo) use ($vid, $userId, $rm,
+                                                                     $rollen, $caps): int {
                 if ($vid > 0) {
                     $pdo->prepare('UPDATE vehicles SET name = ?, kurz = ?, kind = ?, typ = ?, base_id = ?
                                    WHERE id = ? AND user_id = ?')
@@ -937,10 +935,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare('DELETE FROM vehicle_capabilities WHERE vehicle_id = ?')->execute([$vid]);
                 $insC = $pdo->prepare('INSERT IGNORE INTO vehicle_capabilities (vehicle_id, capability) VALUES (?,?)');
                 foreach ($caps as $c) { $insC->execute([$vid, $c]); }
-                $pdo->commit();
+                return $vid;
+                });
                 $zielId = $vid;
             } catch (PDOException $ex) {
-                if ($pdo->inTransaction()) { $pdo->rollBack(); }
                 $error = ist_dublettenfehler($ex)
                     ? 'Diese Bezeichnung existiert bereits.'
                     : 'Das Rettungsmittel konnte nicht gespeichert werden.';

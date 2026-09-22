@@ -252,13 +252,25 @@ return [
 
 ['kennung' => 'Z16', 'paket' => 'AP5',
  'beschreibung' => 'beginTransaction( ausserhalb db.php',
- 'grund' => 'db_transaktion() (E-ZE-20). Ausnahmen werden namentlich gefuehrt; '
-          . 'gesetzt ist ingest.php (Deadlocks, Nr. 210, Schritt 18). '
-          . 'H-ZE-4: mehr als acht Ausnahmen sind ein Haltepunkt.',
+ 'grund' => 'db_transaktion() in db.php (E-ZE-20). NEUN namentliche Ausnahmen, '
+          . 'freigegeben vom Auftraggeber am 22.09.2026 (H-ZE-4 ausgesetzt; das '
+          . 'Konzept liess acht zu). DREI wegen GROESSE oder Vertrag: ingest.php '
+          . '(Geraetevertrag, Deadlock-Behandlung Nr. 210 in Schritt 18; vorab '
+          . 'gesetzt), backup_lib.php (Rumpf 1153 Zeilen, 145 Variablen) und '
+          . 'api/import_commit.php (542 Zeilen, 78 Variablen) — eine use-Liste '
+          . 'mit 145 Eintraegen ist kein Zentralisieren, sondern ein Rewrite. '
+          . 'SECHS wegen BAUFORM: pair.php (Geraetevertrag; commit UND rollBack '
+          . 'mehrfach im try, Antwort mitten im Rahmen), jobs_lib.php '
+          . '(spur_ausduennen_eine: drei rollBack-return als REGULAERER Weg), '
+          . 'diensttag_zusammenfuehren.php (ebenso) sowie api/day.php, '
+          . 'api/kdf_upgrade.php und api/schneiden.php (rollBack + json_out im '
+          . 'try). db_transaktion() setzt voraus, dass der Rumpf durchlaeuft '
+          . 'ODER wirft; diese sechs rollen mittendrin zurueck und machen dann '
+          . 'etwas anderes weiter.',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/db.php'],
  'regel' => ['art' => 'methode', 'namen' => ['beginTransaction']],
- 'start' => 33, 'decke_jetzt' => 33, 'decke_ziel' => 8],
+ 'start' => 33, 'decke_jetzt' => 9, 'decke_ziel' => 9],
 
 ['kennung' => 'Z17', 'paket' => 'AP5',
  'beschreibung' => 'INSERT/DELETE auf Kindtabellen ausserhalb einsatz_lib.php, migration_lib.php',
