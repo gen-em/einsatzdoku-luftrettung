@@ -976,8 +976,12 @@ const tabelle = EdMissionTable.erzeuge({
     const km = zeilen.reduce((s, m) => s + (m.distance_m || 0), 0);
     const teile = [gefiltert ? `${gesamt} von ${missions.length}` : String(gesamt)];
     /* Ganze Kilometer: Die Summe ueber Dutzende Einsaetze auf 100 m genau
-       anzugeben behauptet eine Genauigkeit, die keine Aussage traegt. */
-    if (km > 0) { teile.push(Math.round(km / 1000).toLocaleString('de-DE') + ' km'); }
+       anzugeben behauptet eine Genauigkeit, die keine Aussage traegt.
+       Gerechnet wird sie in EdFormat (Schritt 15 AP8d, R83); DIE EINHEIT
+       BLEIBT HIER, weil kmSumme() die nackte Zahl liefert -- nicht jede
+       Aufrufstelle setzt eine. Kein Leerwert: `km > 0` schliesst den
+       Leerfall vor dem Aufruf aus. */
+    if (km > 0) { teile.push(EdFormat.kmSumme(km) + ' km'); }
     if (gezeigt < gesamt) { teile.push(`${gezeigt} angezeigt`); }
     $('trefferzahl').textContent = teile.join(' · ');
 
@@ -998,9 +1002,17 @@ function plakettenText(f, wert) {
     return wert.split(',').map(v => WOCHENTAGE[v] || v).join(', ');
   }
   if (f.art === 'segment') { return `${f.titel}: ${wert === 'j' ? 'ja' : 'nein'}`; }
+  /* Die beiden Datumsfilter zeigen ihren Tag deutsch. Gerechnet wird das seit
+     Schritt 15 AP8d in EdFormat und nicht mehr hier: Die Zerlegung an dieser
+     Stelle machte aus einem ISO-Zeitstempel still '14T10:00:00Z.08.2026' und
+     warf bei null.
+     LEERWERT IST `wert` SELBST. Erreichbar ist der Leerfall nicht -- die
+     Aufrufstelle nimmt nur Filter mit `wertLesen(f) !== ''`, und ein
+     Datumsfeld (`type=date`) gibt ohnehin nur '' oder einen gueltigen Tag
+     heraus. Steht dort trotzdem einmal etwas Unbrauchbares, erscheint es
+     wortwoertlich auf der Plakette statt halb zerlegt. */
   if (f.kurz === 'dv' || f.kurz === 'db') {
-    const [y, m, d] = wert.split('-');
-    return `${f.titel} ${d}.${m}.${y}`;
+    return `${f.titel} ${EdFormat.tag(wert, wert)}`;
   }
   /* Auswahlfelder zeigen ihre BESCHRIFTUNG, nicht ihren Wert: 'air' heisst
      „luftgebunden" (siehe ART_OPTIONEN). */
@@ -1094,9 +1106,16 @@ function anwenden() {
 /* ---- Geschützte Angaben --------------------------------------------- */
 
 async function entschluesselePat() {
-  const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+  /* KEIN FRUEHER AUSSTIEG, anders als auf Tages- und Zeitraumuebersicht.
+     Diese Seite muss ihre Trefferliste auch GESPERRT zeigen und dabei den
+     Altersfilter sperren — sonst saehe er benutzbar aus und lieferte
+     stumm nichts. Genau deshalb gibt EdPat.listeLaden() zurueck, statt zu
+     entscheiden (Schritt 15 AP8f). */
+  const { ck, zahl } = await EdPat.listeLaden(missions, {
+    wrap: PAT_WRAP, salt: KDF_SALT, iter: KDF_ITER,
+    banner: $('lockbanner'),
+  });
   entsperrt = !!ck;
-  $('lockbanner').hidden = entsperrt || !missions.some(m => m.pat_blob);
   $('f-av').disabled = $('f-ab').disabled = !entsperrt;
   $('lab-av').classList.toggle('feld-gesperrt', !entsperrt);
   $('lab-ab').classList.toggle('feld-gesperrt', !entsperrt);
@@ -1107,7 +1126,6 @@ async function entschluesselePat() {
      * auch nicht aussehen wie einer ohne Angaben. Beides entscheidet EdPat,
      * nicht diese Seite (M6-06, Baustein B8). _pat setzt die Schleife dort
      * bereits; hier bleibt nur, was die Suche daraus macht. */
-    const zahl = await EdPat.entschluessleListe(missions, ck);
     for (const m of missions) {
       if (m._patState !== 'ok') { continue; }
       const o = m._pat;

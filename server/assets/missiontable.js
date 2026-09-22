@@ -10,7 +10,10 @@
  * an die Einsatzobjekte geschrieben. Ist der Inhaltsschluessel gesperrt,
  * fehlen sie schlicht — die Tabelle zeigt dann Gedankenstriche.
  *
- * Erwartet aus der Seite: EdHtml (assets/html.js). Sonst reine DOM-Arbeit.
+ * Erwartet aus der Seite: EdHtml (assets/html.js) und EdFormat
+ * (assets/format.js) -- Letzteres steht seit Schritt 15 AP8d im Kopf JEDER
+ * Seite und muss deshalb nirgends mehr eingebunden werden. Sonst reine
+ * DOM-Arbeit.
  */
 'use strict';
 const EdMissionTable = (() => {
@@ -81,15 +84,39 @@ const EdMissionTable = (() => {
     const text = leer ? '–' : (formatiere ? formatiere(esc(wert)) : esc(wert));
     return `<td class="${kl}${leer ? 'dash' : ''}">${text}</td>`;
   }
-  function fmtTag(iso) { const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; }
-  function fmtDur(s) {
-    if (s == null) return 'kein Ende';
-    const h = Math.floor(s / 3600), m = Math.round(s % 3600 / 60);
-    return h ? `${h}h ${String(m).padStart(2, '0')}min` : `${m}min`;
-  }
-  function fmtKm(m) {
-    return m == null ? '<span class="dash">–</span>' : (m / 1000).toFixed(1).replace('.', ',') + ' km';
-  }
+  /* Tag, Dauer und Strecke rechnet seit Schritt 15 AP8d die Zentrale
+   * `EdFormat` (assets/format.js). Hier stehen nur noch die drei
+   * Weiterleitungen -- sie halten `EdMissionTable.fmtTag`/`.fmtDur`/
+   * `.fmtKmZahl` gueltig (zeitraum.php und index.php nehmen sie als Alias)
+   * und machen zugleich sichtbar, dass es NUR NOCH EINE Rechnung gibt.
+   * Dieselbe Bauform wie bei esc/escape zwei Absaetze weiter oben.
+   *
+   * DER LEERWERT STEHT HIER, NICHT IN DER ZENTRALE: Jede Aufrufstelle hat
+   * ihren eigenen, und `EdFormat` hat bewusst keinen festen. */
+
+  /* Leerwert: der Leerstring.
+   *
+   * EINE BENANNTE AENDERUNG. Die alte Fassung hatte keine Wache -- sie warf
+   * bei `null` eine TypeError, und aus einem ISO-Zeitstempel machte sie
+   * still '14T10:00:00Z.08.2026'. Einen Leerwert gab es also gar nicht, den
+   * man haette uebernehmen koennen. Die Formpruefung der Zentrale liefert
+   * statt des Abbruchs nichts: Aus "Seite bricht ab" wird "Angabe fehlt".
+   * Erreichbar ist das ueber `api/suchindex.php`, das `day` aus
+   * `fmt_local(started_at, 'Y-m-d')` bildet -- fehlt `started_at`, steht
+   * dort ein Gedankenstrich statt eines Datums. */
+  function fmtTag(iso) { return EdFormat.tag(iso, ''); }
+  /* Leerwert: 'kein Ende' -- NICHT der Leerstring. Der Text ist der
+   * Vertrag dieser Weiterleitung nach aussen; heute faengt zwar jede
+   * Aufrufstelle den Leerfall selbst ab (zelleDauer zeichnet daraus eine
+   * rote Plakette), aber die Funktion wird exportiert, und wer sie ohne
+   * Wache ruft, bekommt weiterhin 'kein Ende'.
+   *
+   * BENANNTE AENDERUNG: '60min' gibt es nicht mehr. Die alte Fassung
+   * rechnete Stunden und Minuten getrennt und schrieb bei 3599 s '60min',
+   * bei 7199 s '1h 60min'; die Zentrale rundet zuerst auf ganze Minuten und
+   * teilt dann -- 3599 s ergibt '1h 00min'. Die zweistellige Minute hatte
+   * diese Fassung schon, sie war die Vorlage dafuer. */
+  function fmtDur(s) { return EdFormat.dauer(s, 'kein Ende'); }
   /* Ortsanteil aus der Adresse: letzter Bestandteil ohne fuehrende PLZ.
    *
    * Die Zerlegung greift nur, wenn der letzte Teil nach dem Komma ueberhaupt
@@ -144,10 +171,14 @@ const EdMissionTable = (() => {
       : fmtDur(s);
   }
 
-  /** Kilometer ohne Einheit, eine Nachkommastelle, deutsches Komma. */
+  /** Kilometer ohne Einheit, eine Nachkommastelle, deutsches Komma.
+   *
+   *  Leerwert: ein fertiges <span class="dash">. Es bleibt HIER und wandert
+   *  nicht in die Zentrale -- die Zelle setzt ihren Inhalt per innerHTML,
+   *  andere Aufrufstellen von EdFormat.km() schieben ihr Ergebnis durch
+   *  esc(), und dort stuende das Markup buchstaeblich auf dem Bildschirm. */
   function fmtKmZahl(m) {
-    return m == null ? '<span class="dash">–</span>'
-                     : (m / 1000).toFixed(1).replace('.', ',');
+    return EdFormat.km(m, { einheit: false, leer: '<span class="dash">–</span>' });
   }
 
   /* ---- Die Kachel (E-P3-32, Mockup 10) ----------------------------------
@@ -332,7 +363,9 @@ const EdMissionTable = (() => {
        Flugterminologie bleibt allein den Kacheln vorbehalten (E32). */
     /* Die Zelle nennt nur die ZAHL — die Einheit steht im Spaltenkopf, und
        „38,4 km" in jeder Zeile unter einem Kopf „km" sagt sie doppelt
-       (Mockup 04). fmtKm mit Einheit bleibt fuer Fliesstext bestehen. */
+       (Mockup 04). Wer die Einheit im Fliesstext braucht, ruft
+       EdFormat.km() ohne `einheit: false`. Die eigene Fassung mit Einheit
+       (`fmtKm`) hatte keinen einzigen Aufrufer und ist in AP8d entfallen. */
     { key: 'km',    kopf: 'km',                    thClass: 'zahl-spalte',
       wert: m => m.distance_m == null ? -1 : m.distance_m,
       zelle: m => `<td class="zahl-spalte">${fmtKmZahl(m.distance_m)}</td>` }
@@ -596,6 +629,6 @@ const EdMissionTable = (() => {
      die Angaben da, aber nicht lesbar sind. Seit Web 7.2.1 bringt sie auch
      die Maskierung mit — beide Zeilen sind damit an derselben einen Stelle
      gegen Markup aus einer Importdatei abgesichert (Backlog Nr. 22). */
-  return { erzeuge, SPALTEN, esc, escape, fmtTag, fmtDur, fmtKm, fmtKmZahl,
+  return { erzeuge, SPALTEN, esc, escape, fmtTag, fmtDur, fmtKmZahl,
            extractOrt, artSymbol, zelleGeschuetzt, zelleDauer, kachel };
 })();

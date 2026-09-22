@@ -256,18 +256,13 @@ const EdSchnitt = (() => {
 
   /* ---- Senden --------------------------------------------------------------- */
 
-  async function ruf(nutzlast) {
-    const a = await fetch('api/schneiden.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF': (typeof CSRF === 'string' ? CSRF : '') },
-      body: JSON.stringify(nutzlast)
-    });
-    let d = null;
-    try { d = await a.json(); } catch (e) { d = null; }
-    if (!a.ok || !d || d.error) {
-      throw new Error((d && d.meldung) || 'Der Server hat den Vorgang abgelehnt.');
-    }
-    return d;
+  /* Beide Vorgaenge gehen ueber denselben Endpunkt und unterscheiden sich nur
+   * im Satzanfang der Fehlermeldung -- deshalb reicht `vorgang` durch. Das
+   * Ergebnis von EdApi geht unveraendert zurueck: WO ein Fehlschlag erscheint,
+   * entscheiden die beiden Aufrufer, und sie entscheiden es verschieden
+   * (Schnittblock bzw. Meldung ueber der Segmentliste). */
+  function ruf(nutzlast, vorgang) {
+    return EdApi.postJson('api/schneiden.php', nutzlast, { vorgang: vorgang });
   }
 
   async function schneiden(el, seg) {
@@ -286,13 +281,22 @@ const EdSchnitt = (() => {
     });
 
     knopf.disabled = true;
+    const r = await ruf({ action: 'schneiden', rest_id: seg.id,
+      beginn: w.bv, ende: w.ev, beginn_tag: w.bt, ende_tag: w.et, phasen },
+      'Das Schneiden');
+    if (!r.ok) { p.textContent = r.meldung; knopf.disabled = false; return; }
+    const d = r.daten;
+
+    /* NEU LADEN STATT NACHZIEHEN. Der Schnitt aendert die Einsatztabelle,
+     * die Karte, die Segmentliste und den Diensttag-Zeitraum. Vier Stellen
+     * von Hand fortzuschreiben hiesse, vier Gelegenheiten zu schaffen, an
+     * denen die Anzeige von der Datenbank abweicht.
+     *
+     * DAS try UMSCHLIESST JETZT NUR NOCH DAS NACHLADEN. Der Ruf wirft nicht
+     * mehr -- sein Fehlschlag wird weiter oben an `r.ok` abgefangen, noch
+     * vor diesem Block. Faellt dagegen das Nachladen aus, soll der Knopf
+     * wieder frei werden, wie bisher. */
     try {
-      const d = await ruf({ action: 'schneiden', rest_id: seg.id,
-        beginn: w.bv, ende: w.ev, beginn_tag: w.bt, ende_tag: w.et, phasen });
-      /* NEU LADEN STATT NACHZIEHEN. Der Schnitt aendert die Einsatztabelle,
-       * die Karte, die Segmentliste und den Diensttag-Zeitraum. Vier Stellen
-       * von Hand fortzuschreiben hiesse, vier Gelegenheiten zu schaffen, an
-       * denen die Anzeige von der Datenbank abweicht. */
       await neuLaden();
       melde('ok', 'Der Einsatz ist entstanden — ' + d.genommen
                 + ' Punkte sind zum Einsatz gewandert, '
@@ -305,8 +309,12 @@ const EdSchnitt = (() => {
   }
 
   async function rueckgaengig(missionId) {
+    const r = await ruf({ action: 'rueckgaengig', mission_id: missionId },
+                        'Das Rückgängigmachen');
+    if (!r.ok) { melde('warn', r.meldung); return; }
+    const d = r.daten;
+    /* Wie beim Schneiden: das try nur noch um das Nachladen. */
     try {
-      const d = await ruf({ action: 'rueckgaengig', mission_id: missionId });
       await neuLaden();
       melde('ok', 'Der Schnitt ist zurückgenommen — ' + d.zurueck
                 + ' Punkte liegen wieder im Ruhesegment, der Einsatz ist weg.');
@@ -482,18 +490,19 @@ const EdSchnitt = (() => {
       if (gpxText === null) { return; }
       los.disabled = true;
       gpxFehler('');
+      /* DIE GROSSE DATEI IST DER HAEUFIGE FALL. Uebersteigt der Rumpf
+       * `post_max_size`, schickt `api_rumpf()` den Grund im Feld `hinweis`
+       * -- EdApi liest es, die Handkette hier las nur `meldung` und zeigte
+       * stattdessen den Ersatzsatz. */
+      const r = await EdApi.postJson('api/gpx_import.php',
+        { day_id: dayId, ziel: gpxZiel(), xml: gpxText },
+        { vorgang: 'Der Import der GPX-Datei' });
+      if (!r.ok) { gpxFehler(r.meldung); los.disabled = false; return; }
+      const d = r.daten;
+
+      /* Das try umschliesst jetzt nur noch das Schliessen und Nachladen --
+       * der Ruf wirft nicht mehr. */
       try {
-        const a = await fetch('api/gpx_import.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json',
-                     'X-CSRF': (typeof CSRF === 'string' ? CSRF : '') },
-          body: JSON.stringify({ day_id: dayId, ziel: gpxZiel(), xml: gpxText })
-        });
-        let d = null;
-        try { d = await a.json(); } catch (e) { d = null; }
-        if (!a.ok || !d || d.error) {
-          throw new Error((d && d.meldung) || 'Der Server hat die Datei abgelehnt.');
-        }
         dlg.close();
         await neuLaden();
         let t = d.art === 'mission'

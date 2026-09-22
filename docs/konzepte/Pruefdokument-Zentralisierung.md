@@ -935,3 +935,145 @@ Befund gegen AP8a**.
   betrifft — Pin-Positionen zum Zeitpunkt des ersten Zeichnens — ist genau
   das, was ein statischer Abzug schlecht zeigt. H-1 und H-2 sind deshalb die
   zwei Punkte der Liste, die wirklich zählen.
+
+---
+
+## I0. AP8b bis AP8f — was nicht geprüft werden konnte, und warum
+
+**Diese Liste steht am Anfang und nicht in einer Fußnote.**
+
+| # | Was | Warum nicht | Woran man ein Scheitern erkennt |
+|---|---|---|---|
+| **N8-1** | **Der Netzausfall im echten Betrieb** | `EdApi` liefert bei Netzausfall `status: 0` und einen deutschen Satz. Gemessen ist das gegen einen toten Port (`https://127.0.0.1:9/`), **nicht** gegen ein abreißendes Mobilfunknetz mitten in einem Upload. Der Unterschied: Dort kann ein Teil bereits angekommen sein | Nach einem Abbruch steht „Die Verbindung zum Server ist abgebrochen", obwohl der Server geschrieben hat |
+| **N8-2** | **Der Satz zu `post_max_size`** | Er entsteht nur, wenn ein POST die Servergrenze übersteigt. Dass `EdApi` das Feld `hinweis` jetzt **überall** liest, ist im Quelltext belegt und an einer künstlichen Antwort nachgerechnet — **nicht** durch einen echten zu großen Upload | Ein zu großes Backup zeigt weiter „HTTP 400" statt des Hinweises |
+| **N8-3** | **Die Schlüsselblatt-Rückfrage** | Die Array-Regel von `postForm` ist Zeichen für Zeichen gegen die alte Fassung gehalten und an einem Rumpf nachgerechnet (`gruppen[]=a&gruppen[]=b…`) — **aber die Rückfrage selbst ist nicht durchgefahren**: Sie zählt Fehlversuche und sperrt, und ein Fehlversuch auf dem Prüfstand wäre einer zu viel | Beim Prüfen wird ein Fehlversuch gezählt, obwohl die Gruppen stimmen (siehe I3, Punkt I-6) |
+| **N8-4** | **Der Vollbildmodus und der Ebenenumschalter der Karten** | Unverändert N8a-2/N8a-3 aus AP8a | siehe dort |
+| **N8-5** | **Die KDF-Anhebung** | Sie läuft still und nur, wenn ein Konto auf einer alten Rundenzahl steht. Dass der Weg nach dem Umbau trägt, ist **rechnerisch** belegt (`api.js` steht im `<head>`, auf 47 Dateien statt 32; die Ladereihenfolge im Browser nachgemessen: Position 0 auf allen sieben geprüften Seiten) — **ein echtes Konto mit alter Rundenzahl wurde nicht angehoben** | Ein Bestandskonto bleibt nach der Anmeldung auf der alten Rundenzahl (Betrieb → Status, Zeile „Schlüsselableitung") |
+| **N8-6** | **Der Bildvergleich** | Unverändert N8a-1: Die Klickprobe lief zwischen Grundlinie und Nachlauf und hat den Demo-Bestand verändert. Der Beleg ist der **Formvergleich** | Eine Seite weicht in der **Form** ab, die nicht in der Liste der drei benannten Änderungen steht |
+| **N8-7** | **Die dritte Dauer-Schreibweise im Schnittblock** | `schneiden.js` schreibt weiter „1 h 6 min" mit Leerzeichen und trägt denselben Rundungsfehler, den AP8d behoben hat. **Absichtlich nicht angefasst** — es wäre eine vierte sichtbare Änderung, und die drei sind einzeln freigegeben worden (Backlog Nr. 273) | — (bekannt und gewollt) |
+
+## I1. AP8b bis AP8f — was maschinell geprüft wurde, mit Mittel **und** Zahl
+
+### Der Kernbeleg: die Zentralen gegen ihre Vorgängerinnen
+
+| Zentrale | gegen | gemessen |
+|---|---|---|
+| `EdHtml.meldung()` | `ui_meldung_markup()` (PHP, im Browser gegen den echten Server) | **200 von 200 Fällen gleicher DOM-Baum und gleicher Text**; 160 davon auch quellgleich. Die 40 Abweichungen liegen **nur** in der Entität des Hochkommas (`&#39;` gegen `&#039;`) — die erzeugt `EdHtml.escape` seit Baustein B7 so, nicht dieses Paket |
+| `EdFormat.tag` | `fmtTag` | **1116 Fälle** (alle Kalendertage 2024–2026 plus 20 Randwerte), **0 Abweichungen bei gültigen Datumsstrings**; alle 16 Abweichungen liegen außerhalb der Form `JJJJ-MM-TT`, acht davon warf die alte Fassung |
+| `EdFormat.dauer` | `fmtDur` | **86 442 Fälle**, im gültigen Bereich **720 Abweichungen = 0,83 %** — und **jede einzelne** endet in der alten Fassung auf „60min". Keine andere Art ist darunter (Gegenprobe gefahren) |
+| `EdFormat.km` | `fmtKmZahl` | **1496 Fälle, 3 Abweichungen**, alle bei nicht-numerischer Eingabe (`NaN`, `'abc'`, `{}`) |
+| `EdFormat.km` | `luftlinie.js` | **57 143 Meterwerte, 0 Abweichungen** |
+| `EdApi.postForm` Array-Regel | die alte Handschleife | Rumpf Zeichen für Zeichen: `csrf=X&gruppen[]=a&gruppen[]=b&gruppen[]=c&gruppen[]=d&aktion=pruefen` |
+
+### Gegen den Quelltext
+
+| Mittel | Gemessen |
+|---|---|
+| `php tools/zaehlung/zaehlen.php` | **38 Zeilen, 0 über der Decke.** Z28 **15 → 1** · Z29 **5 → 2** · Z34 **14 → 5** · Z35 **4 → 0** · Z36 **4 → 1** · Z37 **8 → 4** |
+| `--selbstprobe` | **34 von 34** |
+| `node --check` über `server/assets/` | **42 Dateien, 0 Fehler** |
+| `php -l` über `server/` | **116 Dateien, 0 Fehler** |
+| `tools/wortliste/wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** |
+| `tools/vollstaendigkeit/pruefen.py` | **397** (vorher 398) — beide Bewegungen erklärt, siehe unten |
+| `tools/kettenaufrufe/pruefen.py` | **0 Befunde, 0 ungeprüft** |
+| `php tools/cspprobe/pruefen.php` | **117 `<script>`-Stellen, 5 Regeln, 0 Befunde**; Selbstprobe **10 von 10** (zwei Fälle neu) |
+| Gegenprobe über das Muster der **Rechnung** | `(m/1000).toFixed` außerhalb `format.js`: **2 Treffer**, beide geprüft (einer ist eine Zahl für eine Tabellenzelle, keine Anzeige; einer war die sechste km-Fassung und ist umgestellt). `Math.floor(s/3600)`: **1 Treffer** — die dritte Dauer-Schreibweise, Backlog Nr. 273 |
+
+### Gegen die laufende Anlage
+
+| Mittel | Gemessen |
+|---|---|
+| `node tools/klickprobe/probe.mjs` | **48 von 48 Wegen erfüllt, 0 verfehlt** (dreimal gefahren: nach AP8b/c/e, nach AP8d, nach AP8f) |
+| `kreislauf.py --art edbak --frisch` | **328 771 Einzelvergleiche, 0 unerklärte** — dieselbe Zahl wie vor dem Paket |
+| `kreislauf.py --art edbak-alt --frisch` | **287 852 Einzelvergleiche, 0 unerklärte** — dieselbe Zahl |
+| `kreislauf.py --art csv --frisch` | **10 922 Einzelvergleiche, 0 unerklärte** — dieselbe Zahl |
+| eigene `EdApi`-Probe im Browser | **7 Seiten**: `EdApi` auf allen, **an Position 0, im `<head>`**, 0 Konsolenfehler. Fünf Fehlerfälle gegen den echten Server, alle im vorgeschriebenen Satzbau |
+| eigene `EdHtml`-Probe | **5 von 5 Tönen** mit richtiger Klasse, Rolle und Symbol; Wurf beim sechsten; `roh` und Maskierung je belegt |
+| eigene `EdPat`-Probe | **6/6, 96/96, 96/96 Einträge entschlüsselt**, 0 unlesbar, `_dx`/`_ort`/`_age` gefüllt, Banner richtig, Altersfilter der Suche frei, **0 Konsolenfehler** |
+
+**Dass die drei Kreisläufe dieselbe Zahl liefern, ist der stärkste Einzelbeleg
+dieses Pakets:** `export.js`, `import_ui.js` und das Inline-JavaScript von
+`einstellungen.php` sind an zwölf Sendestellen umgebaut worden, und der
+vollständige Weg Sicherung → Einspielen → erneute Sicherung liefert Byte für
+Byte dasselbe.
+
+### Warum die Vollständigkeit von 398 auf 397 gegangen ist
+
+Zwei Bewegungen, beide nachgesehen:
+
+- **Eine Klasse weniger als Literal, eine Regel mehr ohne Markup:**
+  `.meldung-ok`. Seit AP8e setzt `EdHtml.meldung()` die Tonklasse **zusammen**
+  (`'meldung meldung-' + ton`), wie `ui_meldung_markup()` in PHP seit jeher.
+  Das Werkzeug kann eine zusammengesetzte Klasse nicht sehen — `.meldung-schutz`
+  steht aus demselben Grund schon länger in der Liste. Kein Befund, aber ein
+  blinder Fleck (Backlog Nr. 274).
+- **Ein Unicode-Symbol weniger:** der Gedankenstrich im gelöschten `fmtKm`.
+
+### Der Formvergleich, und warum seine Zahl allein irrefuehrt
+
+**488 von 496 Seiten formgleich.** Die acht Abweichungen liegen alle auf
+`betrieb_server.php`, dem CSP-Verstoßprotokoll — und die Ursache ist diesmal
+**die eigene Prüfung**: In der Datenbank steht seit 13:15:17 eine Zeile
+`connect-src · https://127.0.0.1 · index.php`, entstanden, als die
+`EdApi`-Probe absichtlich einen toten Port anrief, um den Netzfehler zu
+messen. Kein Befund gegen den Umbau.
+
+**Diese Zahl ist trotzdem kein Beleg dafür, dass sich keine Schreibweise
+geändert hat** — und das ist der wichtigere Satz. Der Formvergleich ersetzt
+jede Ziffernfolge durch **ein** `#`. Aus „5" und aus „05" wird dasselbe
+`#h #min`. **Eine führende Null ist für ihn unsichtbar.**
+
+Die drei benannten Änderungen wurden deshalb einzeln nachgezählt:
+
+| Änderung | Im Bilderlauf sichtbar? | Gemessen |
+|---|---|---|
+| **(a) zweistellige Minute** | **Ja, aber nicht für den Formvergleich** | Verschiedene Dauern über alle 496 Abzüge: **33 vorher, 32 nachher.** Verschwunden ist `2h 5min`; an seiner Stelle steht `2h 05min` — auf `12a-einsatzansicht-winde` in **allen acht Breiten**. Genau die Seite, auf der `fmtDauer` saß |
+| **(b) kein „60min" mehr** | **Nein** | `60min` kommt in **0 von 496** Abzügen vor, vorher wie nachher. Der Fall braucht eine Dauer in den letzten 30 Sekunden vor einer vollen Stunde; der Demo-Bestand hat keine. Belegt ist er rechnerisch: **720 von 86 401 Sekundenwerten**, jede einzelne endete alt auf „60min" |
+| **(c) Tausenderpunkt** | **Nein** | Die einzige Summe über 999 km in den Abzügen ist `2.431 km` — und die kommt aus Suche und Zeitraum, wo der Punkt schon stand. Die Startseite, die ihn nicht hatte, zeigt im Demo-Bestand **59 km** |
+
+**Daraus folgt für die Prüfliste:** (b) und (c) sind im Demo-Bestand nicht
+erreichbar. Wer sie sehen will, braucht andere Daten — deshalb stehen sie
+unten als I-4 und I-5 mit einem Bedienweg, nicht als Häkchen.
+
+## I2. Grenzen
+
+- **Der Formvergleich misst, was auf einer Seite STEHT.** Die drei
+  Satzbau-Änderungen von AP8b erscheinen erst **nach** einem Fehler, und den
+  erzeugt keine Aufnahme. Dafür stehen die Rechnung je Funktion und die
+  Prüfliste unten. Das ist dieselbe Grenze, in der in AP7 ein echter Fehler
+  saß („263 KB MB") — sie ist keine Vorsichtsformel.
+- **Die Gegenprobe über das Muster der Rechnung ist nicht vollständig.** Sie
+  sucht drei Muster (`/1000).toFixed`, `split('-')`, `Math.floor(…/3600)`).
+  Ein vierter Weg, dieselbe Sache auszurechnen, fiele ihr nicht auf. Die
+  Zählzeile Z34 sucht über eine **Namensliste** und sieht noch weniger — sie
+  hätte `luftlinie.js` nie gefunden.
+- **Der Formvergleich ist blind für führende Nullen.** `\d+` ist gierig; „5"
+  und „05" ergeben dasselbe `#`. Seine Zahl beantwortet „hat sich eine
+  Schreibweise verschoben?", nicht „hat sich eine Stellenzahl geändert?".
+  Der Docstring der Funktion sagt das jetzt mit dem gemessenen Fall — vorher
+  stand dort nur „eine andere Rundung bei gleicher Stellenzahl", und das war
+  zu eng.
+- **Zwanzig Gegenleser sind keine Garantie.** Sie haben 41 Mängel gefunden,
+  zwei davon schwer, und beide waren echt. Sie haben auch Dinge behauptet, die
+  nicht stimmten — eine „schwere" Meldung betraf eine Datei, die schlicht noch
+  nicht committet war. Jeder Befund ist einzeln nachgemessen worden, bevor er
+  zu einer Änderung wurde.
+
+## I3. Prüfliste — was **die Auftraggeberin** noch tun muss
+
+| # | Weg | Erwartet | Scheitern erkennbar an |
+|---|---|---|---|
+| **I-1** | **Einen Fehler provozieren:** Backup einspielen mit einer Datei, die keine Backup-Datei ist | „Das Einspielen ist fehlgeschlagen: …" — **ein** „fehlgeschlagen" im Satz, der Vorgangsname **einmal** | Zwei „fehlgeschlagen" hintereinander, oder ein Maschinenwort wie `format` als Satz |
+| **I-2** | **Dasselbe im Export:** Einstellungen → Backup, Export mit falschem Passwort | „Der Export ist fehlgeschlagen: Das ist nicht dein Kontopasswort. …" | wie I-1 |
+| **I-3** | **Netz trennen und speichern:** Tagesübersicht, Tagesdaten ändern, WLAN aus, speichern | „Das Speichern ist fehlgeschlagen: Die Verbindung zum Server ist abgebrochen." | „Failed to fetch" (englisch), oder die Zeile bleibt auf „Speichern…" hängen |
+| **I-4** | **Einsatzansicht öffnen** und die Phasendauern lesen | „1h 06min" — **zweistellige** Minute. Das ist die benannte Änderung | „1h 6min" — dann ist die Vereinheitlichung nicht angekommen |
+| **I-5** | **Startseite:** die Streckensumme über der Einsatzliste bei mehr als 999 km | „1.633 km" mit Tausenderpunkt — wie auf Suche und Zeitraum | „1633 km" |
+| **I-6** | **Schlüsselblatt-Rückfrage** (Betrieb → Schlüsselblatt), alle vier Gruppen **richtig** eintragen und prüfen | Die Rückfrage geht durch. **Das ist der wichtigste Punkt der Liste** (N8-3) | Ein Fehlversuch wird gezählt, obwohl die Gruppen stimmen — dann ist die Array-Regel verlorengegangen, und weitere Versuche verlängern die Sperre |
+| **I-7** | **Schlüssel erneuern** (Einstellungen → Profil) mit **falschem** Passwort | „Die Erneuerung ist fehlgeschlagen: Das Passwort ist nicht korrekt." | Nur „Das Passwort ist nicht korrekt." ohne Vorgangsnamen, oder ein Maschinenwort in Klammern |
+| **I-8** | **Import durchführen** und die Erfolgsmeldung lesen | Haken-Symbol, Zahlen, und der Link „Ersten Tag öffnen" ist **klickbar** | Der Link steht als Quelltext da (`<a href=…>`) — dann ist die Rohmarkup-Ausnahme verlorengegangen |
+| **I-9** | **Suche öffnen, ohne zu entsperren** | Trefferliste da, Sperrbanner sichtbar, **Altersfilter gesperrt** und grau | Der Altersfilter sieht benutzbar aus und liefert nichts |
+| **I-10** | **Tagesübersicht und Zeitraum ohne Entsperren** | Sperrbanner sichtbar, Tabelle ohne geschützte Angaben | Kein Banner, oder ein Banner auf einem Tag **ohne** geschützte Angaben |
+| **I-11** | **Einen Tag mit Spuren öffnen und schneiden** | Der Schnittblock arbeitet wie bisher; im Fehlerfall „Das Schneiden ist fehlgeschlagen: …" | Der Hinweiskasten bleibt leer, oder der Knopf bleibt gesperrt |
+| **I-12** | **GPX-Datei importieren**, absichtlich eine kaputte | „Der Import der GPX-Datei ist fehlgeschlagen: …" im roten Kasten | Kasten ohne Symbol, oder Text außerhalb |
+| **I-13** | **Abmelden, neu anmelden** und Betrieb → Status öffnen | Zeile „Schlüsselableitung" grün; die stille KDF-Anhebung läuft (N8-5) | Ein Bestandskonto bleibt auf alter Rundenzahl |
+| **I-14** | **Statistik als CSV herunterladen** und die Dauerspalten ansehen | `HH:MM` wie bisher, leere Zellen wo bisher leer | Eine `0` wo eine leere Zelle stand — in einer Tabelle heißt das etwas anderes |

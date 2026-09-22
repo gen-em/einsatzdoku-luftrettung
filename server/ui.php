@@ -96,6 +96,45 @@ function ui_seite_start(array $o): void
         $zeilen[] = '<link rel="stylesheet" href="' . ui_asset('assets/style.css') . '">';
     }
     $zeilen[] = ui_favicon();
+
+    /* `assets/api.js` (EdApi) STEHT IM KOPF, und zwar auf JEDER Seite —
+     * Schritt 15 AP8b.
+     *
+     * ES STAND ZUERST IN DER IMMER-LISTE von ui_geruest_ende(), mit dem
+     * Kommentar, das trage schon, weil jeder EdApi-Aufruf in einem Zuhoerer
+     * stecke. DIESE ANNAHME WAR FALSCH, und ein Gegenleser hat sie mit
+     * Zeilennummern widerlegt: Auf `einstellungen.php` und `import.php`
+     * steht `ui_geruest_ende()` NACH den Seitenskripten (Z. 4672 bzw. 354),
+     * und auf genau diesen beiden laeuft `unlock.js` seinen Sendeweg zur
+     * LADEZEIT — `ck()` bzw. `sperrstatus()` fuehren ueber
+     * `ensureContentKey()` nach `loeseVormerkung()`. `EdApi` waere dort
+     * undefiniert gewesen, und der ReferenceError waere in einen
+     * ABSICHTLICH STILLEN catch gefallen: Die KDF-Anhebung haette auf zwei
+     * Seiten aufgehoert zu laufen, ohne dass irgendwo etwas erschienen
+     * waere.
+     *
+     * Im Kopf gibt es die Frage nicht mehr. Die Datei haengt an nichts
+     * (kein DOM, kein anderes Skript), legt nur `window.EdApi` an und ist
+     * klein genug, dass ihr Abruf den Seitenaufbau nicht aufhaelt.
+     *
+     * WER EINEN WEITEREN BAUSTEIN HIERHER ZIEHT, pruefe beides nach: Haengt
+     * er wirklich an nichts, und braucht ihn wirklich jede Seite? Der Kopf
+     * ist kein Ablageplatz, sondern die Antwort auf eine Reihenfolgefrage. */
+    $zeilen[] = '<script src="' . ui_asset('assets/api.js') . '"></script>';
+
+    /* `assets/format.js` (EdFormat) STEHT AUS DEMSELBEN GRUND HIER
+     * (Schritt 15 AP8d). Es setzt `window.EdFormat` und haengt an nichts.
+     * Seine Verbraucher sind ueber die Seiten verstreut -- die
+     * Einsatztabelle (`missiontable.js`, auf Suche und Zeitraum), die
+     * Einsatzansicht, die Startseite, der Export --, und
+     * `missiontable.js` liest seine Abhaengigkeiten zur LADEZEIT.
+     * Dieselbe Falle also wie bei `api.js`, nur eine Datei weiter; im Kopf
+     * gibt es sie nicht.
+     *
+     * DIE REGEL, nach der beide hier stehen: Wer `window.X` setzt, an
+     * nichts haengt und von mehr als einer Seite gebraucht wird, gehoert
+     * in den Kopf. Alles andere in die Immer-Liste oder zur Seite. */
+    $zeilen[] = '<script src="' . ui_asset('assets/format.js') . '"></script>';
     $zeilen[] = '</head>';
 
     $klasse = (string)($o['klasse'] ?? '');
@@ -569,6 +608,11 @@ function ui_geruest_ende(array $o = []): void
     echo "  </main>\n</div>\n";
     ui_fuss_seite($o);
 
+    /* `api.js` STAND HIER EINEN NACHMITTAG LANG und gehoert nicht hierher —
+     * es steht jetzt im <head> (ui_seite_start()). Warum, sagt der Kommentar
+     * dort. Kurz: Diese Liste kommt auf zwei Seiten NACH den Seitenskripten,
+     * und auf genau diesen beiden ruft `unlock.js` seinen Sendeweg zur
+     * LADEZEIT. */
     $skripte = ['assets/symbol.js', 'assets/schublade.js', 'assets/blatt.js',
                 'assets/confirm.js'];
     if (ui_hat_tagesleiste()) { $skripte[] = 'assets/daylist.js'; }

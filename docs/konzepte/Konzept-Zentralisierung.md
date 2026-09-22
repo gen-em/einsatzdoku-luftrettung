@@ -14,8 +14,8 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 >
 > | | |
 > |---|---|
-> | Stand | 22.09.2026 — **AP1 bis AP7 erledigt** (zuletzt Web 20.32.1). Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
-> | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen), **E-ZE-25** (Ultracode) und **E-ZE-26** (`assets/format.js` in AP7, sechste Ausnahme), beide 22.09.2026; E-ZE-09 ist nicht vergeben |
+> | Stand | 22.09.2026 — **AP1 bis AP8 erledigt** (zuletzt Web 20.34.0). Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
+> | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen), **E-ZE-25** (Ultracode), **E-ZE-26** (`assets/format.js` in AP7, sechste Ausnahme), **E-ZE-27** bis **E-ZE-30** (die vier Zielzahlen von AP8, die begruendet ueber null enden: Z29 bei 2, Z37 bei 4, Z34 bei 5, Z36 bei 1) — alle 22.09.2026; E-ZE-09 ist nicht vergeben |
 > | Offen | nichts im Konzept. **F-ZE-1 bis F-ZE-6** (Abschnitt 2.3) sind mit der Freigabe vom 20.09.2026 entschieden. Außerhalb des Konzepts: die Einschübe (Abschnitt 8, 9) sind noch nicht eingespielt |
 > | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2** und **AP3 erledigt** (21.09.2026), **AP4 erledigt** (21.09.2026), **AP5**, **AP6** und **AP7 erledigt** (22.09.2026). **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
 > | Nummern | Dieses Konzept vergibt **keine** Rahmenplan-Fassung, **keine** Backlog-Nummer und **keine** Version. Einschübe in Abschnitt 8 und 9 übernimmt die einspielende Instanz |
@@ -32,9 +32,11 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > | AP5 Transaktion und Kindtabellen | **erledigt** 22.09.2026 | **Web 20.30.0** (Neben: fünf neue Funktionen, keine Migration) | Z16 **33 → 9** (neun namentliche Ausnahmen, H-ZE-4 ausgesetzt, AP5-c) · Z17 **30 → 0** · Bauformen mit dem Tokenizer ausgezählt: **19 / 12 / 2**, dazu **42 rollBack, 14 mit Wache** (AP5-a) · Probe für `db_transaktion()` **10/10** (einschließlich der drei Verschachtelungsfälle) · **Messstand Import: 41,78 / 41,31 s gegen 41,71 / 41,47 s davor** · Kreisläufe edbak **328 771/0/21**, csv **10 922/0/1 271** · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Wiederherstellungs-Probe **111/0** · Ratenprobe **50/0** · Klickprobe **48/48** · `php -l` **136/0**. **Ein latenter Fehler behoben** (einsatz_form.php: rollBack auf eine bereits bestätigte Transaktion) |
 > | AP6 Spaltenregister `missions` | **erledigt** 22.09.2026 | **Web 20.31.0** (Neben: vier neue Funktionen, keine Migration) | Z18 **12 → 3** (Ziel war ≤ 4; drei Abbildungen bleiben, jede mit Probe — AP6-b) · Register **41 Spalten, 9 Zwecke, 0 ohne Zweck und ohne Grund**, Schema↔Register **0/0** · erzeugte gegen eingefrorene Listen **9 von 9 gleich**, Zeichen für Zeichen · Vollständigkeitsprobe **38/22/30 Schlüssel, 0 fehlend, 0 überzählig, 0 tote Ausnahmen**, Selbstprobe **16/16** · **Byte-Vergleich gegen den Stand VOR AP6 (Web 20.30.0, `7a55192`): 447 291 Bytes, gleiche SHA-256** · `Export-Format.md`/`Backup-Format.md` **0 geänderte Zeilen** · Wegprobe **34/0** · Kreisläufe edbak **328 771/0/21**, **edbak-alt (altes Backup mit Schlüssel `manual`) 287 852/0/795**, csv **10 922/0/1 271** · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0** · Wiederherstellungs-Probe **111/0** · Klickprobe **48/48** · `php -l` **136/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kontraste **22/0** · Kettenaufrufe **45/0/0** · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · Bilderlauf **496 Bilder, 62 Kontaktbögen, 0 Überlauf, 0 Konsolenfehler, 0 falsche Knopfhöhen** |
 > | AP7 Zeit und Zahl (PHP) | **erledigt** 22.09.2026 | **Web 20.32.0** (Neben: zwei neue Dateien, keine Migration), **20.32.1** (Korrektur: „263 KB MB”, Problem 9) | Z19 **42 → 0** · Z20 **2 → 1** · Z21 **27 → 0** · Z22 **18 → 5** (AP7-c) · Z23 **10 → 2** (AP7-d) · Z24 **20 → 2** · Z25 **9 → 2** · Z26 **67 → 3** (AP7-e/-f) · Z27 **4 → 0** · **205 Stellen umgestellt, 15 namentlich stehengelassen, 38 Dateien, 36 require ergänzt, 2 entfernt** · Zeichengleichheit je Funktion nachgerechnet: `groesse_text` **3 017 Werte/0**, `groesse_kurz_text` **3 017/0**, `zahl_text` **28/0**, `prozent_text` **6 030/0**, `zeit_relativ` **10 811 Zeitpunkte/0**, `iso_utc` **5 000/0**, `EdFormat.groesse` gegen PHP **2 014/0** · ein Gegenleser allein **4 420 679 Vergleiche/0** · `php -l` **137/0** · Wortliste **0/0/0** · Vollständigkeit **398** · Kettenaufrufe **45/0/0** · Register **38 Zeilen, 0 über der Decke**, Selbstprobe **34/34** · Spaltenregister **16/16, 0** · Ingestprobe **83/0** · Kopplungsprobe **76/0** · Komplettprobe **64/0** · Spurprobe **45/0** · Jobprobe **35/0** · Ratenprobe **50/0** · Wiederherstellungs-Probe **111/0** · **Formvergleich 496 von 496 Seiten formgleich, 0 abweichende Schreibweisen** · **Klickprobe 48/48, 0 verfehlt** · Kreislauf **edbak 328 771/0**, **edbak-alt 287 852/0**, **csv 10 922/0** — je dieselbe Zahl wie vor dem Paket. **33 Agenten, 4,1 Mio Token** (E-ZE-25); die Gegenleser fanden **2 Fehler und 13 Nachlässigkeiten**, eine **zehnte Stelle fand erst der Kreislauf nach dem Commit** (Problem 9) |
-> | AP8 JavaScript | **in Arbeit** — in sechs Unterpakete geschnitten (AP8a bis AP8f), Vermessung erledigt 22.09.2026 | — | **Vermessung:** 7 lesende Agenten, 1,04 Mio Token, 308 Werkzeugaufrufe, 0 Dateiaenderungen · CSP-Schritt **bereits 0** (115 `<script>`-Stellen, 27 inline, 0 ohne Nonce; zweimal unabhaengig gemessen) · drei bestehende Fehler gefunden (Backlog Nr. 268–270) |
+> | AP8 JavaScript | **erledigt** 22.09.2026 — in sechs Unterpakete geschnitten (AP8a bis AP8f) | — | **Vermessung:** 7 lesende Agenten, 1,04 Mio Token, 308 Werkzeugaufrufe, 0 Dateiaenderungen · CSP-Schritt **bereits 0** (115 `<script>`-Stellen, 27 inline, 0 ohne Nonce; zweimal unabhaengig gemessen) · drei bestehende Fehler gefunden (Backlog Nr. 268–270) |
 > |  AP8a `EdKarte.anlegen()` | **erledigt** 22.09.2026 | **Web 20.33.0** (Neben: eine neue Funktion, keine Migration) | Z35 **4 → 0** · Klickprobe **48/48** · Formvergleich **496 Seiten, 41 Befunde — alle auf dem CSP-Verstossprotokoll, drei Zeilen vom 21.09.2026, keine neue** · vier Karten im Browser: Kacheln, Umschalter, Vollbild, Groessenknopf nur auf der Tagesuebersicht, **0 Konsolenfehler** · Bilderlauf **496 Bilder, 0 Ueberlauf, 0 Konsolenfehler, 0 Knopfhoehen** · Register **38 Zeilen, 0 ueber der Decke**, Selbstprobe **34/34** |
-> |  AP8b bis AP8f | offen — Entscheidungen liegen beim Auftraggeber | — | — |
+> |  AP8b/c/e `EdApi`, `EdHtml.meldung()` | **erledigt** 22.09.2026 | **Web 20.34.0** (Neben: eine neue Datei, vier neue Funktionen, keine Migration) | Z28 **15 → 1** · Z29 **5 → 2** (E-ZE-27) · Z37 **8 → 4** (E-ZE-28) · 26 Stellen in zehn Dateien · `EdHtml.meldung()` gegen `ui_meldung_markup()`: **200 von 200 Faellen gleicher DOM-Baum** (160 auch quellgleich; die 40 unterscheiden sich nur in `&#39;` gegen `&#039;`, was `EdHtml.escape` seit Baustein B7 so erzeugt) · **20 Agenten, 2,38 Mio Token**, die Gegenleser fanden **23 Maengel, einen schwer** — und der war echt |
+> |  AP8d `EdFormat`-Ausbau | **erledigt** 22.09.2026 | (in Web 20.34.0) | Z34 **14 → 5** (E-ZE-29) · 14 Definitionen in fuenf Dateien, dazu drei ungezaehlte Inline-Rechnungen und eine sechste km-Fassung, die erst eine Gegenprobe ueber das Muster der RECHNUNG fand (`luftlinie.js`, **57 143 Werte zeichengleich**) · drei sichtbare Aenderungen, je gemessen: zweistellige Minute **231/1441 (16,0 %)**, kein „60min“ mehr **720/86 401 (0,83 %)**, Tausenderpunkt der Streckensumme · **14 Agenten, 1,74 Mio Token**, 18 Maengel |
+> |  AP8f `EdPat.listeLaden()` | **erledigt** 22.09.2026 | (in Web 20.34.0) | Z36 **4 → 1** (E-ZE-30) · drei Anzeigeseiten, `einstellungen.php` begruendet drausen · im Browser nachgemessen: **6/6, 96/96, 96/96 Eintraege entschluesselt, 0 unlesbar, 0 Konsolenfehler** |
 > | AP9 Nr. 57 — eine Einsatztabelle | offen | — | — |
 > | AP10 Abschluss und Übergabe an 10c | offen | — | — |
 
@@ -55,18 +57,27 @@ Abschnitt 6 nennt sie je 10c-Arbeitspaket.
 
 **Grundregel (E-ZE-10):** Dieser Schritt ändert **kein Verhalten**. Wo Kopien
 auseinandergelaufen sind, nennt das Konzept die Fassung, die gilt, und jede
-sichtbare Folge steht hier als Entscheidung. Es gibt **sechs** benannte
+sichtbare Folge steht hier als Entscheidung. Es gibt **zehn** benannte
 Ausnahmen: Nr. 57 (E-ZE-01, entschieden), „heute" in der App-Zeitzone
 (F-ZE-1), lesende Seiten starten keine Sitzung ohne Cookie (F-ZE-2), die
 Fehlerschlüssel des API-Eingangs (F-ZE-5), die Altersangabe auf Betrieb →
-Updates (E-ZE-23) und — seit dem 22.09.2026 — die Größenangabe der
-heruntergeladenen Sicherungsdatei (E-ZE-26). Nichts sonst.
+Updates (E-ZE-23), die Größenangabe der heruntergeladenen Sicherungsdatei
+(E-ZE-26) und — alle vier am 22.09.2026 aus AP8 — **der einheitliche
+Satzbau der Fehlermeldungen** (AP8b-a), **die zweistellige Minute einer
+Dauer**, **das Verschwinden von „60min"** und **der Tausenderpunkt der
+Streckensumme** (alle drei AP8d-a). Nichts sonst.
 
-> **Die sechste ist am 22.09.2026 dazugekommen** und war bis dahin eine
-> Fünferliste. Sie ist nicht dazugerutscht: Der Auftraggeber hat sie
-> ausdrücklich beschlossen, nachdem die Messung von AP7 die Stelle
-> aufgedeckt hatte (E-ZE-26). Wer eine ältere Quelle liest, findet dort
-> „genau fünf" — das ist der Stand bis zum 22.09.2026.
+> **Die Liste ist am 22.09.2026 von fünf auf zehn gewachsen**, und jeder
+> Zuwachs ist einzeln beschlossen worden: die sechste nach der Messung von
+> AP7 (E-ZE-26), die siebte bis zehnte nach der Messung von AP8, als
+> feststand, dass der Satzbau an fünf Mustern und die Dauer an drei
+> Schreibweisen auseinandergelaufen war. Keine ist dazugerutscht. Wer eine
+> ältere Quelle liest, findet dort „genau fünf" oder „sechs" — das ist
+> der Stand bis zum 22.09.2026.
+>
+> **Die drei Schreibweisen-Ausnahmen sind gemessen, nicht geschaetzt:**
+> 231 von 1441 Minutenwerten (16,0 %), 720 von 86 401 Sekundenwerten
+> (0,83 %), und bei der Streckensumme genau eine Seite von dreien.
 
 **Nicht Gegenstand:**
 
@@ -508,6 +519,23 @@ Stufe-1-Schritt (AP10) schlägt fehl, wenn ein Ist-Wert **über** der Decke
 liegt. So kommt eine zweite Stelle nicht unbemerkt zurück — der Fall, den R83
 mit `edbak_groesse_text()` selbst belegt. Die Startdecken stehen in
 Abschnitt 4.
+
+**E-ZE-27 bis E-ZE-30 — vier Zielzahlen enden begruendet ueber null**
+(Auftraggeber, 22.09.2026: „ehrliche Zahl statt runder Null“). Die
+Zaehlzeilen sind ein **Messmittel**, kein Zielkatalog; eine Null, die nur
+durch einen erzwungenen Umbau zustande kaeme, misst nichts mehr.
+
+| | Zeile | Ende | Was dort steht |
+|---|---|---|---|
+| **E-ZE-27** | Z29 Feld `csrf` | **2** | die Zentrale selbst, plus `rueckfrage.js` — dort ist es kein Formularfeld, sondern eine Parameterweitergabe an `EdSchluessel.erneuern()`, also ein Fehlalarm des Musters. Sie faellt nur ueber eine Schnittstellenaenderung, und die Schnittstelle bleibt. |
+| **E-ZE-28** | Z37 Meldungs-Markup | **4** | zweimal die Zentrale (zwei Treffer in einer Funktion: Tonklasse und Aktionszeile), dazu eine leere Huelle in `schneiden.js`, die ein Symbol bekaeme (Backlog Nr. 271), und ein `<p class="meldung">` in `unlock.js`, das gar keine Meldung ist (Backlog Nr. 272). |
+| **E-ZE-29** | Z34 Formatierer | **5** | duenne Weiterleitungen, die je einen anderen **Leerwert** binden. Sie aufzuloesen hiesse, den Leerwert an fuenfzehn Aufrufstellen zu wiederholen statt an fuenf. |
+| **E-ZE-30** | Z36 `entschluessleListe` | **1** | `einstellungen.php` teilt nur den Aufruf, nicht den Rahmen — und `hinweisUnlesbar()` wertet die ganze Liste aus, waehrend dort Fenster zu 250 aus tausenden kommen. |
+
+**Was daraus folgt, gilt ueber Schritt 15 hinaus:** Wer eine Zaehlzeile auf
+null zwingt, ohne die Stelle zu verstehen, bekommt eine gruene Zahl und eine
+schlechtere Anwendung. Die Decke im Register traegt deshalb je Zeile den
+ausgeschriebenen Grund, nicht nur den Wert.
 
 **E-ZE-25 — Ultracode ab AP7: Freigabe ohne Festlegung im Konzept**
 (Auftraggeber, 22.09.2026). Arbeit darf auf Unter-Agenten gefächert werden
@@ -1970,6 +1998,237 @@ Backlog:
    der Parameter heißt `y`, und ohne ihn leitet die Seite auf `index.php`
    um (Zeile 19). Mit `?y=2026` steht die Karte: Behälter da, 10 Kacheln,
    Umschalter da, 0 Konsolenfehler.
+
+#### AP8b, AP8c und AP8e — EdApi und EdHtml.meldung (Z28, Z29, Z37)
+
+**Erledigt 22.09.2026.** Die drei Unterpakete sind **zusammen gebaut** worden,
+und das ist eine Abweichung vom Schnitt oben, die begründet gehört: `EdApi`
+soll seine Meldung zeigen, und zeigen kann sie nur `EdHtml.meldung()`. Vier
+der sechs betroffenen Dateien tragen beides — eine getrennte Umsetzung hätte
+dieselben Funktionen zweimal angefasst und zweimal geprüft.
+
+*Was entstanden ist:*
+
+- **`server/assets/api.js`** (`EdApi.postJson`, `EdApi.postForm`) — der eine
+  Weg, auf dem der Browser etwas an den Server schickt. Liefert
+  `{ ok, status, daten, meldung }` und **wirft nie**.
+- **`EdHtml.meldung(ton, text, o)`** in `server/assets/html.js` — das eine
+  Meldungs-Markup. Fünf Töne, geschlossene Liste, Wurf bei einem sechsten.
+
+| Zeile | Start | Ziel laut Konzept | Erreicht |
+|---|---|---|---|
+| Z28 `'X-CSRF'` im JS | 15 | 1 | **1** — die Zentrale selbst |
+| Z29 Feld `csrf` von Hand | 5 | 0 | **2** (E-ZE-27) |
+| Z37 Meldungs-Markup | 8 | 0 | **4** (E-ZE-28) |
+
+*Entscheidungen, die in diesen Unterpaketen gefallen sind:*
+
+- **AP8b-a — Der Satzbau ist einheitlich, und das ist die siebte benannte
+  Ausnahme von E-ZE-10** (Auftraggeber, 22.09.2026: „in einem Zug
+  vereinheitlichen"). Er lautet überall
+  `<Vorgang> ist fehlgeschlagen: <Grund>`. Vorher waren es fünf Satzbauten,
+  sechs Vorrangketten und sieben Anzeigewege. **Der Vorgangsname steht genau
+  einmal**; wo der Aufrufer ihn bisher im `catch` anhängte, ist der Präfix
+  dort entfallen.
+- **AP8b-b — `error` wird nicht mehr als Satz ausgegeben.** Es trägt
+  Maschinenwörter (`leer`, `format`, `zu_gross`, `method`), keine Sätze;
+  sechs Stellen setzten es bis heute unverändert in den Fließtext. Es steht
+  jetzt als Kennung in der Klammer eines Ersatzsatzes — diagnostisch
+  erhalten, nicht als Satz ausgegeben.
+- **AP8b-c — `hinweis` und `text` kommen in die Vorrangkette.** `hinweis`
+  lasen bisher **4 von 15** Stellen — und genau dort steht der Satz zu
+  `post_max_size`, den `api_rumpf()` bei einem zu großen Upload schickt.
+  Derselbe zu große POST zeigte an einer Stelle den vollen Hinweis und an
+  einer anderen „HTTP 400". `text` ist dasselbe unter anderem Namen: Zwei
+  Endpunkte (`schluessel_erneuern.php`, `schluesselblatt_pruefen.php`)
+  nennen ihr Satzfeld so, **9 Stellen** gegen **32** mit `meldung`, keiner
+  schickt beides. Ohne diese Zeile hätten zwei Dateien weiter an der
+  Zentrale vorbeigegriffen — beide taten es, und beide Griffe sind fort.
+- **AP8b-d — `ok` ist ein Transport-Urteil, kein fachliches.** Es prüft
+  `daten.ok !== false` und **nicht** `daten.ok === true`, weil die lesenden
+  Endpunkte gar kein `ok` schicken. Folge: Wo ein Aufrufer bisher `daten.ok`
+  gelesen hat, ist `ok` allein **schwächer** als seine alte Prüfung. Zwei
+  Stellen in `schluesselblatt.js` prüfen `a.daten.ok` deshalb weiter mit.
+- **AP8b-e — `api.js` und `format.js` stehen im `<head>`, nicht in der
+  Immer-Liste.** Siehe *Probleme*, Punkt 1.
+- **E-ZE-27 — Z29 endet bei 2, nicht bei 0** (Auftraggeber: „ehrliche Zahl
+  statt runder Null"). Eine davon ist die Zentrale. Die andere ist
+  `rueckfrage.js`: kein Formularfeld, sondern eine Parameterweitergabe an
+  `EdSchluessel.erneuern()` — ein Fehlalarm des Zählmusters. Sie fiele nur
+  über eine Schnittstellenänderung, und die Schnittstelle bleibt.
+- **E-ZE-28 — Z37 endet bei 4, nicht bei 0.** Zwei davon sind die Zentrale
+  selbst (zwei Treffer in einer Funktion: Tonklasse und Aktionszeile). Die
+  dritte ist `schneiden.js`: eine **leere Hülle** mit `data-vorher` als
+  Anker, die später per `textContent` befüllt wird; sie trägt kein Symbol,
+  und eines einzusetzen wäre eine sichtbare Änderung im Schnittblock
+  (Backlog Nr. 271). Die vierte ist `unlock.js` und **gar keine Meldung**:
+  ein `<p class="meldung">` ohne Tonklasse, ohne Symbol, ohne `role` — ein
+  Fehlalarm des Musters und zugleich ein Missbrauch der Klasse
+  (Backlog Nr. 272).
+- **AP8e-a — `EdHtml.meldung()` übernimmt die PHP-Tontabelle und wirft bei
+  einem unbekannten Ton.** Im Bestand gab es **drei** Tabellen mit **drei**
+  Umfängen: PHP fünf Einträge, `einstellungen.php` vier (ohne `schutz`),
+  `import_ui.js` zwei Zweige (alles außer `fehler`/`warn` wurde zum
+  Hinweiszeichen). Dass das ein Defekt war und kein Geschmack, steht in
+  `import_ui.js` selbst: Zwanzig Zeilen unter der eigenen Tabelle stand die
+  Erfolgsmeldung **von Hand** gebaut da, mit `edSymbol('haken')`
+  ausgeschrieben — weil die eigene Tabelle für `ok` den Kreis-i geliefert
+  hätte. Eine Umgehung ist der Beweis für den Defekt. **Kein heute
+  erreichbarer Aufruf übergibt einen Ton außerhalb der fünf**; der Wurf ist
+  neu und ändert kein sichtbares Bild.
+- **AP8e-b — `o.roh` ist ein benanntes Loch in der Maskierung, mit genau
+  einem Verbraucher.** Die Erfolgsmeldung des Imports trägt einen
+  Zeilenumbruch, eine Kleinzeile und einen Link auf den ersten Tag. Ohne
+  diesen Weg wäre die Stelle nicht umstellbar gewesen und hätte als achter
+  Nachbau stehen bleiben müssen. Ein benanntes Loch ist besser als ein
+  ungezählter Nachbau — die eingesetzten Werte werden an der Aufrufstelle
+  einzeln maskiert.
+
+*Probleme und wie sie gelöst wurden:*
+
+1. **Die Ladereihenfolge — der schwerste Fehler des Pakets, und er war
+   meiner.** `api.js` stand zuerst in der Immer-Liste von
+   `ui_geruest_ende()`, und im Dateikopf stand daneben, das trage schon,
+   weil jeder `EdApi`-Aufruf in einem Zuhörer stecke. **Der Satz war
+   falsch.** Ein gegenlesender Agent hat ihn mit Zeilennummern widerlegt:
+   Auf `einstellungen.php` (`ui_geruest_ende()` in Zeile 4672) und
+   `import.php` (354) steht diese Liste **nach** den Seitenskripten, und auf
+   genau diesen beiden läuft `unlock.js` seinen Sendeweg zur **Ladezeit** —
+   `ck()` bzw. `sperrstatus()` führen über `ensureContentKey()` nach
+   `loeseVormerkung()`. `EdApi` wäre dort undefiniert gewesen, und der
+   `ReferenceError` wäre in einen **absichtlich stillen** `catch` gefallen:
+   Die KDF-Anhebung hätte auf zwei Seiten aufgehört zu laufen, ohne dass
+   irgendwo etwas erschienen wäre.
+   Behoben: `api.js` steht im `<head>` (`ui_seite_start()`, 47 Dateien statt
+   32), `format.js` später aus demselben Grund daneben. *Die Lehre steht im
+   Dateikopf:* Eine Zusage über die Ladereihenfolge ist nur so viel wert wie
+   die Liste der Aufrufer, die man dafür durchgegangen ist.
+2. **Zwei Dateien griffen an der Zentrale vorbei, und der Grund war ein
+   zweiter Feldname auf der Serverseite.** `schluesselblatt.js` hatte einen
+   eigenen Helfer `fehlersatz()`, `schluessel.js` einen Griff auf
+   `antw.daten.text` — beide lasen das Feld `text`, das die Vorrangkette
+   nicht kannte, und **verloren dabei genau den Vorgangsnamen**, den der
+   einheitliche Satzbau vorschreibt. Gemessen: `text` schicken **9 Stellen**
+   in zwei Endpunkten, `meldung` **32** in allen übrigen, keiner beides.
+   `text` ist in die Kette aufgenommen, beide Griffe sind fort. Die zwei
+   Namen auf der Serverseite zusammenzuführen rührt an Antwortverträge und
+   gehört nicht in dieses Paket.
+3. **Ein `try/catch` entfiel, das mehr umschloss als den Aufruf.** In
+   `uebernehmen()` (Import) lag der **gesamte** Erfolgsweg im alten `try`.
+   Weil `EdApi` nicht mehr wirft, nahm der Agent es ganz heraus — und machte
+   damit aus einem Fehler in der Ergebnisanzeige eine unbehandelte
+   Ablehnung: Knopf gesperrt, Anzeige auf „Übernahme läuft …", **Daten
+   gespeichert**, niemand erfährt es. Behoben mit einem eigenen `try` um den
+   Anzeigeblock — und einem Satz, der stimmt: Der alte sagte „es wurde
+   nichts gespeichert", und das war hier schon vor dem Umbau falsch.
+4. **Der Vorgangsname stand zweimal im Satz, an zwei Stellen.** In
+   `einstellungen.php` liegt die erste Sendestelle im `try` des ganzen
+   Exportwegs, dessen `catch` seit jeher „Export fehlgeschlagen: " davorhängt
+   — mit einem zweiten Namen aus `o.vorgang` las sich das „Der Export ist
+   fehlgeschlagen: Das Laden der GPS-Daten ist fehlgeschlagen: …". In
+   `schluesselblatt.js` dasselbe in der Konsolenzeile des Später-Knopfs.
+   Beide Male ist der innere Name entfallen; den äußeren trägt der `catch`,
+   einmal, für alle Fehlerquellen seines Knopfes.
+5. **Eine Erfolgsregel wurde schwächer statt strenger.** `EdApi` prüft
+   `daten.ok !== false`, nicht `=== true` — sonst könnten die lesenden
+   Endpunkte, die gar kein `ok` schicken, nie erfolgreich sein. Wo ein
+   Aufrufer bisher `daten.ok` **las**, ist `ok` allein damit schwächer: Eine
+   200 mit leerem Rumpf hätte in `schluesselblatt.js` einen bedienbaren Knopf
+   ohne Felder hinterlassen und `forEach` auf `undefined` geworfen. Zwei
+   Stellen prüfen `a.daten.ok` deshalb weiter mit; die Eigenschaft steht
+   jetzt im Kopf von `api.js`.
+6. **`tools/cspprobe/` schlug grundlos an — und hängt in Stufe 1.** Ein
+   Agent schrieb `<script src>` als Fließtext in einen JavaScript-Kommentar.
+   Für PHPs Tokenizer ist ein JS-Kommentar Teil von `T_INLINE_HTML`; die
+   Probe sah dort ein Skript ohne Nonce. Blockkommentare im Rumpf eines
+   `<script>` werden jetzt ausgeräumt, mit zwei neuen Fällen in der
+   Selbstprobe — einer davon belegt, dass ein echtes Skript **hinter** einem
+   Kommentar weiter gefunden wird (10 von 10, 117 Stellen, 0 Befunde).
+
+#### AP8d — `EdFormat` für Tag, Dauer und Strecke (Z34)
+
+**Erledigt 22.09.2026.** Vierzehn Definitionen in fünf Dateien, dazu drei
+ungezählte Inline-Rechnungen. **Z34 14 → 5.**
+
+*Entscheidungen:*
+
+- **AP8d-a — Die drei sichtbaren Änderungen sind einzeln freigegeben**
+  (Auftraggeber, 22.09.2026: „Vereinheitlichen, Änderungen benennen"):
+  zweistellige Minute (**231 von 1441 Minutenwerten, 16,0 %**), kein
+  „60min" mehr (**720 von 86 401 Sekundenwerten, 0,83 %**), Tausenderpunkt
+  in der Streckensumme.
+- **AP8d-b — Der Leerwert ist ein Parameter, kein fester Wert.** Das ist die
+  Lehre aus AP7. Gemessen waren **sechs** verschiedene Leer-Antworten im
+  Bestand: `null`, der Leerstring, „kein Ende" und zweimal ein fertiges
+  `<span class="dash">`. Ein fester Wert in der Zentrale wäre genau der
+  AP7-Fehler gewesen.
+- **AP8d-c — Markup bleibt an der Aufrufstelle.** Zwei Stellen geben im
+  Leerfall einen Gedankenstrich als Markup zurück. Eine dritte schiebt ihr
+  Ergebnis durch `esc()` — ein `<span>` aus der Zentrale stünde dort
+  buchstäblich auf dem Bildschirm.
+- **AP8d-d — Z34 endet bei 5, und die fünf sind kein zweiter Rechenweg.**
+  Es sind dünne Weiterleitungen, die je einen anderen Leerwert binden. Sie
+  aufzulösen hieße, den Leerwert an **fünfzehn** Aufrufstellen zu
+  wiederholen statt an fünf; drei von ihnen stehen außerdem im
+  Export-Objekt von `EdMissionTable`, das `zeitraum.php` als Alias nimmt.
+- **AP8d-e — Zwei tote Formatierer sind gelöscht** (`fmtKm` in
+  `missiontable.js`, `fmtKmDe` in `zeitraum.php`), je mit nachgemessener
+  Aufruferzahl 0.
+- **AP8d-f — Die Formprüfung der Zentrale kommt aus `EdPat.datumDe`**, der
+  einzigen Datumsfassung im Bestand, die eine hatte. Die drei anderen
+  warfen bei `null` eine `TypeError`. **Das Muster hat bewusst keinen
+  Endanker:** Ein ISO-Zeitstempel ergibt jetzt das richtige Datum statt
+  `14T10:00:00Z.08.2026`.
+
+*Probleme und wie sie gelöst wurden:*
+
+1. **Eine Löschung war dateiübergreifend halb fertig.** `missiontable.js`
+   nahm `fmtKm` aus seinem Export-Objekt; `index.php` zerlegte den Namen
+   weiter (`const { extractOrt, fmtDur, fmtKm, … } = EdMissionTable`). Kein
+   Wurf — das Zerlegen einer fehlenden Eigenschaft wirft nicht —, sondern
+   eine Bindung an nichts. Genau die Sorte Rest, die bleibt, wenn man eine
+   Löschung nur in ihrer eigenen Datei zu Ende denkt. Gefunden beim
+   Gegenlesen, behoben.
+2. **Die Zählzeile sieht nur, was auf ihrer Namensliste steht.** Eine
+   unabhängige Gegenprobe über das Muster der **Rechnung** — Meter durch
+   1000 mit `toFixed`, ISO-Tag zerlegt, Sekunden in Stunden geteilt — hat
+   zwei weitere Fassungen gefunden, die Z34 nie sehen konnte:
+   `luftlinie.js` (die **sechste** km-Fassung; umgestellt, **57 143 Werte
+   zeichengleich, 0 Abweichungen**) und `schneiden.js` mit einer **dritten**
+   Dauer-Schreibweise („1 h 6 min" mit Leerzeichen) samt demselben
+   Rundungsfehler. Die zweite ist **nicht** umgestellt: Es wäre eine
+   sichtbare Änderung, und die drei sichtbaren dieses Pakets sind einzeln
+   freigegeben worden — diese war nicht darunter (Backlog Nr. 273).
+3. **Mein eigener Kommentar in `format.js` behauptete etwas Falsches.** Er
+   sagte, ein ISO-Zeitstempel ergebe den Leerwert. Er ergibt das richtige
+   Datum — nachgemessen, und vom Gegenleser gefunden. Berichtigt.
+
+#### AP8f — `EdPat.listeLaden()` (Z36)
+
+**Erledigt 22.09.2026. Z36 4 → 1.**
+
+*Entscheidungen:*
+
+- **AP8f-a — Der Rahmen deckt drei Schritte, nicht den ganzen Ablauf.**
+  Schlüssel holen, Sperrbanner setzen, entschlüsseln, zählen — das war an
+  drei Seiten wortgleich. Was **danach** kommt, sind vier verschiedene
+  Nachläufe mit 66, 7, 14 und 14 Zeilen, und keine zwei gleich. Ein Rahmen,
+  der das mit einem Schalter zusammenzöge, wäre kein Rahmen, sondern ein
+  viertes Programm.
+- **AP8f-b — Er gibt zurück, statt zu entscheiden** (`{ ck, zahl }`).
+  Tagesübersicht und Zeitraum kehren bei fehlendem Schlüssel zurück, die
+  **Suche nicht** — sie muss ihre Trefferliste auch gesperrt zeigen und
+  dabei den Altersfilter sperren, sonst sähe er benutzbar aus. Ein
+  eingebauter Ausstieg hätte ihr genau diesen Weg genommen.
+- **AP8f-c — `zeigeUnlesbar()` ruft der Aufrufer**, nach seiner Schleife.
+  Vorher gerufen stünde die Meldung über einer Tabelle, die es noch nicht
+  gibt.
+- **AP8f-d — `einstellungen.php` bleibt draußen** (Z36 endet bei 1,
+  Auftraggeber 22.09.2026). Es teilt nur den Aufruf: kein Banner, kein
+  `zeigeUnlesbar`, Schlüssel von außen, und die Liste ist ein **Fenster zu
+  250** aus einem Bestand von tausenden. Daran hängt es: `hinweisUnlesbar()`
+  wertet die **ganze** Liste aus und sagt „Keiner der Einträge ließ sich
+  öffnen" — über ein Fenster gesagt wäre das eine Falschaussage.
 
 ### AP9 — Nr. 57: eine Einsatztabelle (E-ZE-01, -08; F-ZE-6)
 

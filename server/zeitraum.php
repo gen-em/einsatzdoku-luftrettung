@@ -208,15 +208,27 @@ const FARBE_NORMAL = token('--blau');
    Ebene laesst sich leeren, ohne die Karte selbst anzufassen. */
 const pinLayer = L.layerGroup().addTo(map);
 
-// Formatierung und Ortsauswertung teilen sich beide Uebersichten; die
-// Definitionen stehen in assets/missiontable.js.
+/* Formatierung und Ortsauswertung teilen sich beide Uebersichten; die
+ * Definitionen stehen in assets/missiontable.js.
+ *
+ * WARUM TAG UND DAUER WEITER VON DORT KOMMEN und nicht unmittelbar aus
+ * EdFormat: Seit Schritt 15 AP8d sind `fmtTag` und `fmtDur` dort nur noch
+ * Weiterleitungen -- aber sie tragen den LEERWERT der Tabelle ('' fuer den
+ * Tag, 'kein Ende' fuer die Dauer). Wer hier EdFormat.tag/.dauer naehme,
+ * muesste ihn ein zweites Mal hinschreiben, und die beiden Uebersichten
+ * liefen beim naechsten Mal auseinander.
+ *
+ * Die vier Zuweisungen lesen `EdMissionTable` zur LADEZEIT. Das traegt:
+ * `assets/missiontable.js` steht als <script src> ueber diesem Block, sein
+ * `const EdMissionTable = (() => { ... })()` ist beim Auswerten dieser
+ * Zeilen also fertig. Nachgesehen nach dem Umbau von missiontable.js --
+ * `fmtTag`, `fmtDur`, `esc` und `extractOrt` stehen dort weiterhin in der
+ * Rueckgabe. */
 const esc        = EdMissionTable.esc;
 const fmtTag     = EdMissionTable.fmtTag;
 const fmtDur     = EdMissionTable.fmtDur;
 const extractOrt = EdMissionTable.extractOrt;
 function fmtDe1(n){ return n.toFixed(1).replace('.', ','); }
-
-function fmtKmDe(meter){ return (meter / 1000).toFixed(1).replace('.', ',') + ' km'; }
 
 /* ====================================================================
  * KACHELN JE TAB (Abschnitt 3.7.2, E32/E33).
@@ -247,15 +259,25 @@ function fmtKmDe(meter){ return (meter / 1000).toFixed(1).replace('.', ',') + ' 
    Vorher lieferte eine einzige Funktion "61,0 km" am Stück; der Baustein
    (ui_kennzahl / .kennzahl-einheit) setzt die Einheit aber kleiner, und das
    geht nur, wenn sie ein eigenes Element ist. */
-function wertKm(meter){ return (meter / 1000).toFixed(1).replace('.', ','); }
 
 /* SUMMEN OHNE NACHKOMMA, EINZELWERTE MIT (Mockup 30: „486 km" für die Summe,
    „61,0 km" für die längste Strecke). Eine Summe über Dutzende Einsätze auf
    100 m genau anzugeben behauptet eine Genauigkeit, die die Einzelwerte nicht
-   haben — dieselbe Regel wie im Kopf der Trefferliste (O6). Die
-   Tausendertrennung kommt von toLocaleString, damit „1.633" nicht als
-   Kommazahl gelesen wird. */
-function wertKmSumme(meter){ return Math.round(meter / 1000).toLocaleString('de-DE'); }
+   haben — dieselbe Regel wie im Kopf der Trefferliste (O6).
+
+   DIE RECHNUNG STEHT SEIT SCHRITT 15 AP8d IN DER ZENTRALE `EdFormat`
+   (assets/format.js), nicht mehr hier: `EdFormat.km(m, { einheit: false })`
+   fuer den Einzelwert, `EdFormat.kmSumme(m)` fuer die Summe. Den
+   Tausenderpunkt bringt `kmSumme()` mit, damit „1.633" nicht als Kommazahl
+   gelesen wird -- diese Seite hatte ihn schon, die Startseite nicht, und
+   genau das war der Grund fuer die Zentrale. Die beiden Formatierer, die
+   hier standen (`wertKm`, `wertKmSumme`), sind damit entfallen; ein dritter
+   (`fmtKmDe`) hatte keinen einzigen Aufrufer und ist mitgegangen.
+
+   OHNE LEERWERT, und das ist nachgesehen statt angenommen: Die Einzelwerte
+   stehen hinter `k.maxKm.wert != null`, die Summe rechnet auf `k.km`, das
+   bei 0 beginnt und eine Zahl bleibt. Ein Leerwert waere hier eine Antwort
+   auf einen Fall, den es nicht gibt. */
 function wertGanz(n){ return Number(n).toLocaleString('de-DE'); }
 
 /* Die acht Kacheln des bodengebundenen Rettungsdienstes. Höchster Einsatzort
@@ -276,9 +298,9 @@ const KACHELN_BODEN = [
      obwohl der Haken auch luftgebunden zur Verfügung steht. */
   { id: 'fehl',         label: 'Fehleinsätze',                 wert: k => String(k.fehl) },
   { id: 'totalkm',      label: 'Einsatzkilometer gesamt', mobil: true,
-    wert: k => wertKmSumme(k.km), einheit: 'km' },
+    wert: k => EdFormat.kmSumme(k.km), einheit: 'km' },
   { id: 'maxkm',        label: 'Längste Einsatzstrecke',  extrem: 'maxKm',
-    wert: k => k.maxKm.wert != null ? wertKm(k.maxKm.wert) : '–',
+    wert: k => k.maxKm.wert != null ? EdFormat.km(k.maxKm.wert, { einheit: false }) : '–',
     einheit: k => k.maxKm.wert != null ? 'km' : '' },
   /* OHNE Einheit: fmtDur() liefert „1h 28min" — die Einheit steckt schon im
      Wert. Das Mockup schreibt „0:58 h"; die Anwendung schreibt Dauern seit
@@ -308,9 +330,9 @@ const KACHELN_LUFT = [
   { id: 'avgmissions',  label: 'Ø Einsätze / Flugtag',         wert: k => k.tage > 0 ? fmtDe1(k.n / k.tage) : '–' },
   { id: 'secondary',    label: 'Sekundärtransporte',           wert: k => String(k.sek) },
   { id: 'totalkm',      label: 'Flugkilometer gesamt', mobil: true,
-    wert: k => wertKmSumme(k.km), einheit: 'km' },
+    wert: k => EdFormat.kmSumme(k.km), einheit: 'km' },
   { id: 'maxkm',        label: 'Längste Flugstrecke',   extrem: 'maxKm',
-    wert: k => k.maxKm.wert != null ? wertKm(k.maxKm.wert) : '–',
+    wert: k => k.maxKm.wert != null ? EdFormat.km(k.maxKm.wert, { einheit: false }) : '–',
     einheit: k => k.maxKm.wert != null ? 'km' : '' },
   { id: 'maxdauer',     label: 'Längste Einsatzdauer',  extrem: 'maxDauer',
     wert: k => k.maxDauer.wert != null ? fmtDur(k.maxDauer.wert) : '–' },
@@ -442,7 +464,10 @@ function zeichneStatistik(liste, tage){
       if (traeger) {
         const tag = document.createElement('span');
         tag.className = 'kennzahl-tag';
-        tag.textContent = ' · ' + fmtTagKurz(traeger.day);
+        /* Kurz: „14.08." — das Jahr steht im Seitentitel. OHNE Leerwert,
+           weil keiner ankommt: `day` stammt aus api/range.php und damit aus
+           `days.day` (DATE NOT NULL), ist also immer ein gueltiger ISO-Tag. */
+        tag.textContent = ' · ' + EdFormat.tagKurz(traeger.day);
         lab.appendChild(tag);
       }
       tile.dataset.mid = k[def.extrem].mid;
@@ -461,12 +486,6 @@ function zeichneStatistik(liste, tage){
   knopf.hidden = verdeckt <= 0;
   knopf.querySelector('span').textContent = 'Weitere Statistik (' + verdeckt + ')';
   setzeMehrStatistik(mehrOffen);
-}
-
-/** Tag eines Extremwerts, kurz: „14.08." — das Jahr steht im Seitentitel. */
-function fmtTagKurz(iso){
-  const t = String(iso || '');
-  return t.length >= 10 ? t.slice(8, 10) + '.' + t.slice(5, 7) + '.' : t;
 }
 
 let mehrOffen = false;
@@ -565,8 +584,10 @@ const tabelle = EdMissionTable.erzeuge({
     const teile = [String(gesamt)];
     /* Ganze Kilometer, wie in der Suche: Die Summe über Dutzende Einsätze auf
        100 m genau anzugeben behauptet eine Genauigkeit, die keine Aussage
-       trägt. */
-    if (km > 0) { teile.push(Math.round(km / 1000).toLocaleString('de-DE') + ' km'); }
+       trägt. Gerechnet wird in `EdFormat.kmSumme()`; die Einheit bleibt
+       hier, weil die Zentrale die nackte Zahl liefert. Kein Leerwert: `km`
+       ist eine Summe und steht hinter `km > 0`. */
+    if (km > 0) { teile.push(EdFormat.kmSumme(km) + ' km'); }
     document.getElementById('einsatzzahl').textContent = teile.join(' · ');
 
     wendeHervorhebungAn(fixierteMid);
@@ -641,14 +662,15 @@ function zeigeNeutralHinweis(){
       ? 'Ein Diensttag dieses Zeitraums ist mitgezählt, aber noch keiner Art zugeordnet'
       : `${n} Diensttage dieses Zeitraums sind mitgezählt, aber noch keiner Art zugeordnet`)
     + ' — ihnen fehlt Standort oder Rettungsmittel.';
-  /* Derselbe Meldungs-Baustein wie überall (ui_meldung_markup), hier im
-     Browser gebaut: Ob der Hinweis nötig ist, weiß erst die Antwort. */
-  box.innerHTML = '<div class="meldung meldung-warn" role="status">'
-    + edSymbol('warnung', 'symbol-gross')
-    + '<p>' + esc(text) + '</p>'
-    + '<div class="meldung-aktion">'
-    + '<a class="knopf knopf-neutral" href="nachbearbeitung.php">'
-    + '<span>Zuordnung nachtragen</span></a></div></div>';
+  /* Derselbe Meldungs-Baustein wie ueberall, seit Schritt 15 ueber
+     EdHtml.meldung() -- das Browser-Gegenstueck zu ui_meldung_markup().
+     Gebaut wird er hier, weil erst die Antwort weiss, ob der Hinweis noetig
+     ist. Der Knopf bleibt von Hand geschrieben: Zu ui_knopf() gibt es kein
+     JS-Gegenstueck. Er geht unmaskiert durch, genau wie beim PHP-Baustein. */
+  box.innerHTML = EdHtml.meldung('warn', text, {
+    knopf: '<a class="knopf knopf-neutral" href="nachbearbeitung.php">'
+         + '<span>Zuordnung nachtragen</span></a>'
+  });
   box.hidden = false;
 }
 
@@ -786,9 +808,11 @@ document.getElementById('artwahl').addEventListener('change', ev => {
 
 function zeigeFehler(msg){
   const box = document.getElementById('loaderror');
-  box.innerHTML = '<div class="meldung meldung-fehler" role="alert">'
-    + edSymbol('warnung', 'symbol-gross')
-    + '<p><strong>Nicht geladen.</strong> ' + esc(msg) + '</p></div>';
+  /* Auftakt und Grund gehen durch EdHtml.meldung() -- dasselbe Markup wie
+     ui_meldung_markup(). Der Auftakt wird dort maskiert; am Literal
+     'Nicht geladen.' aendert das nichts. Und die Wortwahl bleibt: PHPs
+     Vorgabe heisst 'Nicht gespeichert.', hier geht es ums Laden. */
+  box.innerHTML = EdHtml.meldung('fehler', msg, { auftakt: 'Nicht geladen.' });
   box.hidden = false;
 }
 
@@ -844,12 +868,14 @@ function zeigeFehler(msg){
  * dessen Knopf diese Funktion erneut aufruft. Ein zweiter Durchlauf ist
  * gefahrlos: ohne Schluessel wurde vorher kein Pin gezeichnet. */
 async function entschluesselePat(){
-  const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
-  const banner = document.getElementById('lockbanner');
-  if (!ck) { banner.hidden = !missions.some(m => m.pat_blob); return; }
-  banner.hidden = true;
-  // Entschluesseln und zaehlen an einer Stelle (M6-06, Baustein B8).
-  const zahl = await EdPat.entschluessleListe(missions, ck);
+  /* Schluessel, Banner, Entschluesseln und Zaehlen: EdPat.listeLaden()
+     (Schritt 15 AP8f). Der Nachlauf bleibt hier — diese Seite vermerkt
+     die Koordinate nur und ueberlaesst das Zeichnen dem Tab. */
+  const { ck, zahl } = await EdPat.listeLaden(missions, {
+    wrap: PAT_WRAP, salt: KDF_SALT, iter: KDF_ITER,
+    banner: document.getElementById('lockbanner'),
+  });
+  if (!ck) { return; }
   for (const m of missions) {
     if (m._patState !== 'ok') { continue; }
     const o = m._pat;

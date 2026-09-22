@@ -14,6 +14,141 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.34.0] — 2026-09-22
+
+**Vier Zentralen im Browser.** Schritt 15 AP8b bis AP8f (Zentralisierung, R83).
+
+### Hinzugefügt
+
+**`server/assets/api.js`** (`EdApi.postJson`, `EdApi.postForm`) — der eine Weg,
+auf dem der Browser etwas an den Server schickt. Liefert
+`{ ok, status, daten, meldung }` und **wirft nie**; ein Netzfehler kommt als
+`status: 0` zurück.
+
+**`EdHtml.meldung(ton, text, o)`** in `server/assets/html.js` — das eine
+Meldungs-Markup. Fünf Töne, geschlossene Liste, Wurf bei einem sechsten.
+
+**`EdFormat` bekommt Tag, Dauer und Strecke** (`tag`, `tagKurz`, `spanne`,
+`dauer`, `dauerUhr`, `minuten`, `km`, `kmSumme`).
+
+**`EdPat.listeLaden(liste, o)`** — der Auftakt der drei Anzeigeseiten:
+Schlüssel holen, Sperrbanner setzen, entschlüsseln, zählen.
+
+### Was der Befund war
+
+Zwanzig Sendestellen in neun Dateien, und der **Aufruf** war an allen
+zeichengleich: POST, genau zwei Kopfzeilen, `JSON.stringify`. Auseinander
+gingen sie erst **hinter** dem `fetch`, und zwar auf sieben Achsen:
+
+| Achse | Befund |
+|---|---|
+| Was gilt als Erfolg | **vier** Regeln — 8 von 15 prüften `res.ok` gar nicht |
+| Antwort ist kein JSON | **zwei** Politiken — neun werfen, vier liefern `null` |
+| Woraus die Meldung entsteht | **sechs** Vorrangketten |
+| Satzbau | **fünf** Muster |
+| Wo der Text erscheint | **sieben** Wege |
+| Netzfehler | **14 von 15** zeigten „Failed to fetch" — englisch |
+| Statuscode im Text | sechs ja, neun nein; **null** verzweigen auf einen Code |
+
+Bei den Meldungen dasselbe Bild: **sieben** eigenständige Nachbauten, **keine
+zwei gleich**, und **drei** verschiedene Ton-zu-Symbol-Tabellen mit drei
+Umfängen. Dass das ein Defekt war und kein Geschmack, steht in `import_ui.js`
+selbst: Zwanzig Zeilen unter der eigenen Tabelle stand die Erfolgsmeldung von
+Hand gebaut da, mit `edSymbol('haken')` ausgeschrieben — weil die eigene
+Tabelle für `ok` den Kreis-i geliefert hätte. **Eine Umgehung ist der Beweis
+für den Defekt.**
+
+### Geändert — der Satzbau, und zwar überall
+
+Er lautet jetzt `<Vorgang> ist fehlgeschlagen: <Grund>`. Das ist eine bewusste,
+sichtbare Änderung und vom Auftraggeber entschieden. Drei Folgen:
+
+**Der Vorgangsname steht genau einmal.** Wo der Aufrufer ihn bisher im `catch`
+anhängte („Import fehlgeschlagen: " + …), ist der Präfix dort entfallen.
+
+**`error` erscheint nicht mehr als Satz.** Es trägt Maschinenwörter — `leer`,
+`format`, `zu_gross`, `method` —, und sechs Stellen setzten es bis heute
+unverändert in den Fließtext. „Der Import ist fehlgeschlagen: format" sagt
+niemandem etwas. Es steht jetzt als Kennung in der Klammer eines Ersatzsatzes.
+
+**`hinweis` und `text` kommen in die Kette.** `hinweis` lasen bisher **4 von
+15** Stellen — und genau dort steht der Satz zu `post_max_size`, den der Server
+bei einem zu großen Upload schickt. Derselbe zu große POST zeigte an einer
+Stelle den vollen Hinweis und an einer anderen „HTTP 400". `text` ist dasselbe
+unter anderem Namen: Zwei Endpunkte nennen ihr Satzfeld so (**9 Stellen** gegen
+**32** mit `meldung`, keiner schickt beides). Ohne diese Zeile hätten zwei
+Dateien weiter an der Zentrale vorbeigegriffen — beide taten es, beide Griffe
+sind fort.
+
+### Geändert — drei Schreibweisen, jede gemessen
+
+**Die Minute einer Dauer ist immer zweistellig.** Die Tabellenfassung schrieb
+seit Web 4.0.0 „1h 06min", die Fassung der Einsatzansicht „1h 6min". Gemessen
+über 0 bis 1440 Minuten: **231 von 1441 Werten (16,0 %)** liefen auseinander.
+Der Kommentar über der zweiten behauptete, die Schreibweise sei „projektweit
+dieselbe"; seine beiden Beispiele waren gerade die, bei denen es zufällig
+stimmte.
+
+**„60min" gibt es nicht mehr.** Die Tabellenfassung rechnete Stunden und
+Minuten **getrennt** und erzeugte damit bei 3599 s ein „60min", bei 7199 s ein
+„1h 60min". Gemessen: **720 von 86 400 Sekundenwerten (0,83 %)**. Jetzt wird
+zuerst auf ganze Minuten gerundet und dann geteilt.
+
+**Die Streckensumme trägt überall den Tausenderpunkt.** Die Startseite rechnete
+als einzige ohne `toLocaleString` und schrieb „1633 km", während Suche und
+Zeitraumübersicht „1.633 km" zeigten — dieselbe Zahl, zwei Schreibweisen, drei
+Seiten derselben Anwendung.
+
+### Behoben, als Nebenwirkung der Zentrale
+
+- **Eine 500 mit wohlgeformtem JSON gilt nicht mehr als Erfolg.** Acht von
+  fünfzehn Stellen prüften `res.ok` nicht; am schlimmsten beim
+  Dublettenabgleich des Imports, der dann wortlos gegen einen leeren Bestand
+  weiterlief (Backlog Nr. 270).
+- **Das Speichern eines Diensttags hatte kein `try/catch`.** Bei Netzausfall
+  gab es eine unbehandelte Ablehnung, und die Zeile blieb auf „Speichern…"
+  stehen. Jetzt steht dort ein deutscher Satz.
+- **`api.js` und `format.js` stehen im `<head>`, nicht in der Immer-Liste.**
+  Der erste Anlauf legte sie ans Seitenende, mit dem Satz, das trage schon,
+  weil jeder Aufruf in einem Zuhörer stecke. Ein gegenlesender Agent hat den
+  Satz mit Zeilennummern widerlegt: Auf `einstellungen.php` und `import.php`
+  steht diese Liste **nach** den Seitenskripten, und dort läuft `unlock.js`
+  seinen Sendeweg zur **Ladezeit**. `EdApi` wäre undefiniert gewesen, der
+  `ReferenceError` wäre in einen absichtlich stillen `catch` gefallen — die
+  KDF-Anhebung hätte auf zwei Seiten wortlos aufgehört zu laufen.
+
+### Was bewusst nicht bei null endet
+
+Vier Zählzeilen enden über null, jede mit ausgeschriebener Begründung im
+Register (Entscheidung des Auftraggebers: „ehrliche Zahl statt runder Null"):
+
+| Zeile | Start | Ende | Was dort steht |
+|---|---|---|---|
+| Z28 `'X-CSRF'` | 15 | **1** | die Zentrale selbst |
+| Z29 Feld `csrf` | 5 | **2** | die Zentrale, plus ein Fehlalarm des Musters |
+| Z34 Formatierer | 14 | **5** | dünne Weiterleitungen, die je einen anderen **Leerwert** binden |
+| Z36 `entschluessleListe` | 4 | **1** | `einstellungen.php` — teilt den Aufruf, nicht den Rahmen |
+| Z37 Meldungs-Markup | 8 | **4** | zweimal die Zentrale, eine leere Hülle, ein Fehlalarm |
+| Z35 `L.map(` | 4 | **0** | — |
+
+Die fünf bei Z34 sind kein zweiter Rechenweg: Der Leerwert ist bei `EdFormat`
+ein **Parameter** — das war die Lehre aus AP7, wo ein fester Frühausstieg aus
+„– um –" ein „–" machte. Diese fünf binden ihn je Zusammenhang: „kein Ende",
+den Leerstring, einen Gedankenstrich als Markup, `null`. Sie aufzulösen hieße,
+den Leerwert an fünfzehn Aufrufstellen zu wiederholen statt an fünf.
+
+### Am Prüfmittel
+
+**`tools/cspprobe/` sah JavaScript-Kommentare nicht.** Für PHPs Tokenizer ist
+alles zwischen `?>` und `<?php` ein Stück `T_INLINE_HTML`; ein JS-Kommentar
+steckt mittendrin. Schreibt jemand darin `<script src>` als Fließtext — und das
+tut er, sobald er erklärt, woher ein Baustein kommt —, meldete die Probe ein
+Skript ohne Nonce, das es nicht gibt. Genau das ist hier passiert. Die Probe
+hängt in Stufe 1; ein Fehlalarm färbt die Kette rot, ohne dass etwas falsch
+wäre. Blockkommentare im Rumpf eines `<script>` werden jetzt ausgeräumt, mit
+zwei neuen Fällen in der Selbstprobe — darunter einer, der belegt, dass ein
+echtes Skript **hinter** einem Kommentar weiter gefunden wird.
+
 ## [Web 20.33.0] — 2026-09-22
 
 **Eine Karte entsteht an einer Stelle.** Schritt 15 AP8a (Zentralisierung, R83).

@@ -122,9 +122,16 @@
         return s;
     }
 
-    /** „12,3 km Luftlinie" — die Benennung ist Teil der Aussage (E36). */
+    /** „12,3 km Luftlinie" — die Benennung ist Teil der Aussage (E36).
+     *
+     * DIE STRECKE RECHNET EdFormat (Schritt 15 AP8d). Hier stand die
+     * sechste Fassung derselben Rechnung im Bestand, und die Zaehlzeile Z34
+     * hat sie NIE gesehen: Sie zaehlt ueber eine Namensliste, und `text`
+     * stand nicht darauf. Gefunden hat sie erst eine Gegenprobe ueber das
+     * Muster der Rechnung selbst. Zeichengleich, nachgemessen ueber
+     * 57 143 Meterwerte von 0 bis 400 000: 0 Abweichungen. */
     function text(liste) {
-        return (meter(liste) / 1000).toFixed(1).replace('.', ',') + ' km Luftlinie';
+        return EdFormat.km(meter(liste)) + ' Luftlinie';
     }
 
     /**

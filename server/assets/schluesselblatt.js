@@ -59,34 +59,60 @@
     fehler.hidden = text === '';
   }
 
-  function senden(daten) {
-    const leib = new URLSearchParams();
-    leib.set('csrf', typeof CSRF !== 'undefined' ? CSRF : '');
-    for (const k in daten) {
-      if (Array.isArray(daten[k])) {
-        daten[k].forEach(function (w) { leib.append(k + '[]', w); });
-      } else {
-        leib.set(k, daten[k]);
-      }
-    }
-    return fetch('api/schluesselblatt_pruefen.php', {
-      method: 'POST', credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: leib.toString(),
-    }).then(async function (a) {
-      let d = {};
-      try { d = await a.json(); } catch (e) { /* unten */ }
-      return { status: a.status, daten: d };
-    });
+  /* DER SENDER IST `EdApi.postForm` (Schritt 15, AP8). Das Feld `csrf` haengt
+   * EdApi selbst an, die Erfolgsregel (HTTP UND Fachschluessel) liegt dort,
+   * und ein Netzfehler kommt als `status: 0` zurueck statt als Wurf.
+   *
+   * DIE ARRAY-REGEL IST DER GRUND, WARUM HIER GENAU HINGESEHEN WURDE. Ein
+   * Feld, dessen Wert ein Array ist, muss als `name[]` hinausgehen. Sonst
+   * liest `api/schluesselblatt_pruefen.php` bei `$_POST['gruppen']` eine
+   * Zeichenkette, `is_array()` schlaegt fehl (Zeile 190/191 dort), alle vier
+   * Gruppen werden gegen den Leerstring gehalten und `rate_misserfolg()`
+   * zaehlt einen Fehlversuch -- die Betreiberin sperrt sich aus ihrer eigenen
+   * Rueckfrage aus, ohne dass eine Zeile falsch aussaehe. `EdApi.postForm`
+   * fuehrt dieselbe Regel und nichts daneben: `csrf` zuerst, dann je Feld
+   * `Array.isArray` -> `append(k + '[]', w)`, sonst `set(k, w)`
+   * (`assets/api.js`, Zeilen 161-171, nachgelesen).
+   *
+   * `EdApi` NICHT beim Laden in eine Variable nehmen -- der Zugriff steht in
+   * dieser Funktion. Auf `index.php` kommt `ui_geruest_ende()` vor diesem
+   * Skript, `api.js` ist also schon da, wenn `stellen()` unten laeuft. */
+  function senden(daten, vorgang) {
+    return EdApi.postForm('api/schluesselblatt_pruefen.php', daten,
+                          { vorgang: vorgang });
   }
+
+  /* DIESER ENDPUNKT NENNT SEIN SATZFELD `text`, nicht `meldung`.
+   *
+   * Das war beim Umbau zuerst ein Problem und ist keins mehr: Die
+   * Vorrangkette von `EdApi` liest `text` seit AP8 mit (`grund()` in
+   * assets/api.js). Fuenf Saetze haengen daran -- kein_schluessel,
+   * gesperrt (zweimal), keine_frage und falsch --, darunter der wichtigste
+   * der ganzen Rueckfrage: „Stimmt nicht. Noch 2 Versuche, dann sperrt die
+   * Anmeldung diesen Weg fuer 15 Minuten."
+   *
+   * Gefunden wurde die Luecke beim Gegenlesen: Diese Datei hatte dafuer
+   * einen eigenen Helfer `fehlersatz()`, der `daten.text` VOR der fertigen
+   * Meldung las -- und damit den Vorgangsnamen verlor, den der einheitliche
+   * Satzbau vorschreibt. Der Helfer ist fort, die Kette kann es jetzt.
+   *
+   * DASS DER SERVER ZWEI NAMEN FUER DIESELBE SACHE FUEHRT, bleibt: neun
+   * Stellen `text` (hier und in schluessel_erneuern.php), zweiunddreissig
+   * `meldung` (alle uebrigen), keine schickt beides. Das zusammenzufuehren
+   * ruehrt an Antwortvertraege und gehoert nicht in dieses Paket. */
 
   /* ---- Die Frage stellen ------------------------------------------------ */
 
   function stellen() {
-    return senden({ aktion: 'stellen' }).then(function (a) {
-      if (!a.daten.ok) {
-        melde(a.daten.text || 'Die Frage lässt sich gerade nicht stellen ('
-                            + a.status + ').');
+    return senden({ aktion: 'stellen' }, 'Das Stellen der Frage').then(function (a) {
+      /* `a.daten.ok` WIRD MITGEPRUEFT, und das ist kein Rest aus der alten
+       * Fassung. `EdApi` prueft `daten.ok !== false` -- eine 200 mit einem
+       * Rumpf OHNE das Feld besteht dort. Dieser Endpunkt setzt `ok` aber
+       * immer, und die Zeilen darunter lesen `a.daten.fragen`. Ohne die
+       * zweite Bedingung bliebe bei einer leeren 200 ein bedienbarer Knopf
+       * ohne Felder stehen, und `forEach` wuerfe auf undefined. */
+      if (!a.ok || !a.daten.ok) {
+        melde(a.meldung);
         pruefen.disabled = true;
         return;
       }
@@ -150,13 +176,13 @@
     }
 
     pruefen.disabled = true;
-    senden({ aktion: 'pruefen', gruppen: werte }).then(function (a) {
-      if (a.daten.ok) {
+    senden({ aktion: 'pruefen', gruppen: werte }, 'Die Prüfung').then(function (a) {
+      if (a.ok && a.daten.ok) {   // siehe den Kommentar in stellen()
         if (typeof dlg.close === 'function') { dlg.close(); }
         else { dlg.removeAttribute('open'); }
         return;
       }
-      melde(a.daten.text || 'Die Prüfung ist fehlgeschlagen (' + a.status + ').');
+      melde(a.meldung);
       /* GESPERRT HEISST ZU. Weitere Felder anzubieten, während der Topf
        * gesperrt ist, wäre eine Einladung zum Weiterraten — und jeder
        * Versuch verlängerte die Sperre über die Leiter. */
@@ -169,7 +195,7 @@
        * vier Felder und einen bedienbaren Knopf stehen. Wer dann tippt,
        * bekommt beim naechsten Klick die 429 und hat die Sperre ueber die
        * Leiter verlaengert, ohne es zu wollen. */
-      if (a.status === 429 || a.daten.rest === 0) {
+      if (a.status === 429 || (a.daten && a.daten.rest === 0)) {
         felder.textContent = '';
         pruefen.disabled = true;
         return;
@@ -190,14 +216,19 @@
     /* KEIN ENDPUNKT, NUR EIN MERKMAL IN DER SITZUNG — über
      * `api/rueckfrage.php`, das dafür `blatt_spaeter` kennt. Warum nicht
      * sieben Tage: siehe Kopf von `blatt_dialog.php`. */
-    const leib = new URLSearchParams();
-    leib.set('csrf', typeof CSRF !== 'undefined' ? CSRF : '');
-    leib.set('antwort', 'blatt_spaeter');
-    fetch('api/rueckfrage.php', {
-      method: 'POST', credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: leib.toString(),
-    }).catch(function (e) { console.error('Später nicht gemeldet:', e); });
+    /* NUR DER NETZFEHLER WIRD GEMELDET, so wie bisher: Das alte `.catch` fing
+     * genau den Wurf des `fetch`, und `status: 0` ist derselbe Fall. Eine
+     * abgelehnte Antwort (HTTP 400) blieb hier schon immer still -- das ist
+     * eine Luecke, aber keine, die dieses Paket aufmacht. Statt des
+     * Browsertexts „Failed to fetch" steht jetzt ein deutscher Satz in der
+     * Konsole; den Fehlergegenstand selbst gibt EdApi nicht heraus. */
+    /* OHNE `vorgang`: Die Konsolenzeile nennt den Vorgang bereits
+     * („Spaeter nicht gemeldet:"). Mit einem zweiten Vorgangsnamen stuenden
+     * dort zwei Fehlersaetze hintereinander -- gefunden beim Gegenlesen. */
+    EdApi.postForm('api/rueckfrage.php', { antwort: 'blatt_spaeter' })
+      .then(function (a) {
+        if (a.status === 0) { console.error('Später nicht gemeldet:', a.meldung); }
+      });
     if (typeof dlg.close === 'function') { dlg.close(); }
     else { dlg.removeAttribute('open'); }
   });

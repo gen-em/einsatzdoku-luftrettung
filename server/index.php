@@ -719,7 +719,6 @@ map.on('zoomend', () => {
   trackLines.forEach(l => l.setStyle({ weight: w }));
 });
 
-function fmtDay(iso){ const [y,m,d]=iso.split('-'); return `${d}.${m}.${y}`; }
 let dayMissions = [];
 let dayRest = [];
 let sortKey = 'start', sortDir = 1;
@@ -833,11 +832,19 @@ function renderMissionTable(){
   document.getElementById('missionskacheln').innerHTML =
     list.map(m => EdMissionTable.kachel(m, { farbe: m._col })).join('');
 
-  /* Zahl und km-Summe im Kartenkopf: „4 · 140 km" (Mockup 02). */
+  /* Zahl und km-Summe im Kartenkopf: „4 · 140 km" (Mockup 02).
+
+     EdFormat.kmSumme() STATT EIGENER RECHNUNG (Schritt 15/AP8d, Z34). Hier
+     stand als einziger der drei Summenplaetze ein nacktes Math.round() ohne
+     toLocaleString -- die Startseite schrieb '1633 km', waehrend Suche und
+     Zeitraumuebersicht '1.633 km' zeigten. Die Einheit bleibt an dieser
+     Stelle: Die Zentrale liefert die nackte Zahl, weil nicht jede
+     Aufrufstelle eine setzt. Einen Leerfall gibt es hier nicht -- `km > 0`
+     haelt ihn ab. */
   {
     const km = list.reduce((s, m) => s + (m.distance_m || 0), 0);
     document.getElementById('mzahl').textContent = list.length
-      ? list.length + (km > 0 ? ' · ' + Math.round(km / 1000) + ' km' : '')
+      ? list.length + (km > 0 ? ' · ' + EdFormat.kmSumme(km) + ' km' : '')
       : '';
   }
 
@@ -878,7 +885,14 @@ function renderMissionTable(){
  * zeitraum.php holt dieselben Bausteine seit jeher so. Die SPALTEN-Mechanik
  * von missiontable.js uebernimmt diese Seite bewusst NICHT: Sie fuehrt die
  * Katalogspalten aus DAY_COLS, die die anderen beiden Tabellen nicht haben. */
-const { extractOrt, fmtDur, fmtKm, zelleGeschuetzt } = EdMissionTable;
+/* `fmtKm` STAND HIER MIT IN DER LISTE und war schon vor AP8d unbenutzt —
+ * die einzige Erwaehnung im Quelltext war der Kommentar darueber. In AP8d
+ * ist die Funktion aus `missiontable.js` entfallen (kein Aufrufer im ganzen
+ * Bestand); die Bindung hier waere danach still `undefined` geworden. Kein
+ * Wurf, kein Befund — genau die Sorte Rest, die bleibt, wenn man eine
+ * Loeschung nur in ihrer eigenen Datei zu Ende denkt. Gefunden beim
+ * Gegenlesen. */
+const { extractOrt, fmtDur, zelleGeschuetzt } = EdMissionTable;
 
 // Maskierung: Baustein B7 (assets/html.js). Hier stand eine eigene Fassung
 // ueber ein Hilfselement — sie maskierte drei Zeichen statt fuenf (M6-03).
@@ -942,7 +956,7 @@ async function loadDay(dayId){
     const KURZ = ['So','Mo','Di','Mi','Do','Fr','Sa'];
     document.getElementById('daytitle').innerHTML =
       '<span class="wtag-lang">' + LANG[wt] + '</span>'
-      + '<span class="wtag-kurz">' + KURZ[wt] + '</span>, ' + fmtDay(d.day);
+      + '<span class="wtag-kurz">' + KURZ[wt] + '</span>, ' + EdFormat.tag(d.day);
 
     const unter = document.getElementById('dayunter');
     const teile = [];
@@ -954,7 +968,7 @@ async function loadDay(dayId){
     unter.hidden = !teile.length;
 
     const blattTitel = document.querySelector('#dayblatt .blatt-titel');
-    if (blattTitel) { blattTitel.textContent = 'Diensttag ' + fmtDay(d.day); }
+    if (blattTitel) { blattTitel.textContent = 'Diensttag ' + EdFormat.tag(d.day); }
   }
   document.getElementById('daydellink').href = 'diensttag_loeschen.php?d=' + d.day_id;
   document.getElementById('daydatelink').href = 'diensttag_datum.php?d=' + d.day_id;
@@ -1088,10 +1102,16 @@ async function loadDay(dayId){
  * die Entschluesselung warten. Ein erneuter Aufruf ueber den Entsperrknopf
  * ist gefahrlos: ohne Schluessel wurde vorher kein Pin gezeichnet. */
 async function entschluesselePat(){
-  const banner = document.getElementById('lockbanner');
-  const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
-  if (!ck) { if (banner) banner.hidden = !dayMissions.some(m => m.pat_blob); return; }
-  if (banner) banner.hidden = true;
+  /* Schluessel, Banner, Entschluesseln und Zaehlen kommen aus
+     EdPat.listeLaden() (Schritt 15 AP8f). Was DANACH geschieht, bleibt
+     hier: Diese Seite zeichnet Marker, Luftlinien und einen Ausschnitt,
+     und sie fuehrt als einzige Buch darueber, ob sich etwas geaendert hat
+     (`changed`) — nur dann wird die Tabelle neu gezeichnet. */
+  const { ck, zahl } = await EdPat.listeLaden(dayMissions, {
+    wrap: PAT_WRAP, salt: KDF_SALT, iter: KDF_ITER,
+    banner: document.getElementById('lockbanner'),
+  });
+  if (!ck) { return; }
   let changed = false;
   const pinBounds = [];
   /* ENTSCHLUESSELN UND ZAEHLEN GESCHIEHT AN EINER STELLE (M6-06, Baustein B8).
@@ -1101,7 +1121,6 @@ async function entschluesselePat(){
    * hochgeht, ob _pat gesetzt wird), und genau solche Kleinigkeiten sind es,
    * die beim naechsten Mal auseinanderlaufen. Was ANZUZEIGEN ist, bleibt
    * Sache der Seite; was ein Fehlschlag BEDEUTET, entscheidet EdPat. */
-  const zahl = await EdPat.entschluessleListe(dayMissions, ck);
   for (let i = 0; i < dayMissions.length; i++) {
     const m = dayMissions[i];
     if (m._patState === 'unlesbar') { changed = true; continue; }
@@ -1545,7 +1564,7 @@ async function init(){
     /* Das DATUM und nicht der Titel: Der trägt den Wochentag zweimal (lang
        und kurz, eine der beiden Fassungen ist per CSS ausgeblendet), und
        `textContent` sieht beide — „DonnerstagDo, 16.07.2026". */
-    EdSchnitt.gpxStarten(currentDayId, fmtDay(currentDay));
+    EdSchnitt.gpxStarten(currentDayId, EdFormat.tag(currentDay));
   });
   document.querySelector('#dayblatt [data-tagdaten-bearbeiten]')
     ?.addEventListener('click', ev => {
@@ -1593,12 +1612,9 @@ async function init(){
     });
     const state = document.getElementById('savestate');
     state.textContent = 'Speichern…';
-    const res = await fetch('api/day.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-      body: JSON.stringify(body)
-    });
-    if (res.ok) {
+    const a = await EdApi.postJson('api/day.php', body,
+                                   { vorgang: 'Das Speichern' });
+    if (a.ok) {
       state.textContent = 'Gespeichert.';
       tagdatenBearbeiten(false);
       loadDay(currentDayId);
@@ -1606,20 +1622,23 @@ async function init(){
       /* Den GRUND zeigen, nicht nur "Fehler".
        * Der wichtigste Fall ist ein Diensttag im Papierkorb: Die Angaben
        * wurden dann NICHT gespeichert, und das muss dastehen — vorher
-       * meldete diese Stelle Erfolg für einen Vorgang, der nichts tat. */
-      let grund = 'Fehler beim Speichern.';
-      try {
-        const d = await res.json();
-        if (d.meldung) { grund = d.meldung; }
-        /* Die Prüfschicht meldet je FELD (S9/AP6). Ihre Sätze sind die
-           gleichen, die das Stammdatenformular zeigt — sie hier zu einem
-           „Fehler beim Speichern." zusammenzufassen hiesse, die Arbeit der
-           Prüfschicht wegzuwerfen. */
-        if (d.error === 'adhoc' && d.felder) {
-          const saetze = Object.values(d.felder);
-          if (saetze.length) { grund = saetze.join(' '); }
-        }
-      } catch (e) { /* keine JSON-Antwort */ }
+       * meldete diese Stelle Erfolg für einen Vorgang, der nichts tat.
+       * Den Satz baut jetzt EdApi (Schritt 15 AP8b). Hier landet seit dem
+       * Umbau AUCH der Netzabbruch: Er kommt als ok:false mit status:0
+       * zurueck, statt als unbehandelte Ablehnung zu enden und
+       * #savestate auf "Speichern..." stehen zu lassen. */
+      let grund = a.meldung;
+      /* Die Prüfschicht meldet je FELD (S9/AP6). Ihre Sätze sind die
+         gleichen, die das Stammdatenformular zeigt — sie zu einem einzigen
+         Satz zusammenzufassen hiesse, die Arbeit der Prüfschicht
+         wegzuwerfen. Diese Antwort (422, error 'adhoc') traegt KEIN Feld
+         `meldung`; EdApi kann die Saetze also nicht kennen, und nur deshalb
+         steht der Griff in `a.daten` hier noch. */
+      const d = a.daten;
+      if (d && d.error === 'adhoc' && d.felder) {
+        const saetze = Object.values(d.felder);
+        if (saetze.length) { grund = saetze.join(' '); }
+      }
       state.textContent = grund;
     }
   });

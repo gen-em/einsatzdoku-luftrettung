@@ -389,26 +389,49 @@ return [
 
 ['kennung' => 'Z28', 'paket' => 'AP8',
  'beschreibung' => "JS: Literal 'X-CSRF'",
- 'grund' => 'EdApi.postJson() haengt das Token selbst an (assets/api.js).',
+ 'grund' => 'EdApi.postJson() haengt das Token selbst an (assets/api.js). '
+          . 'Die verbleibende 1 IST diese Zentrale — der Zaehler nimmt sie '
+          . 'nicht aus, und das ist richtig so: Eine Stelle, an der das '
+          . 'Literal steht, soll es geben, und sie soll gezaehlt werden.',
  'sicht' => 'js_und_inline', 'bereich' => 'js_und_inline', 'ausser' => [],
  'regel' => ['art' => 'muster', 'muster' => '~[\'"]X-CSRF[\'"]~'],
- 'start' => 15, 'decke_jetzt' => 15, 'decke_ziel' => 1],
+ 'start' => 15, 'decke_jetzt' => 1, 'decke_ziel' => 1],
 
 ['kennung' => 'Z29', 'paket' => 'AP8',
  'beschreibung' => 'JS: Formularfeld csrf von Hand',
  'grund' => 'FF-4: 10b hat einen zweiten CSRF-Transport gebaut. EdApi.postForm() '
-          . 'haengt ihn an.',
+          . 'haengt ihn an. ZWEI BLEIBEN, nicht null — Entscheidung des '
+          . 'Auftraggebers vom 22.09.2026 (ehrliche Zahl statt runder Null). '
+          . 'Die eine ist die Zentrale selbst. Die andere ist rueckfrage.js: '
+          . 'KEIN Formularfeld, sondern eine Parameterweitergabe an '
+          . 'EdSchluessel.erneuern() — ein Fehlalarm des Musters. Sie faellt '
+          . 'nur ueber eine Schnittstellenaenderung, und die bleibt.',
  'sicht' => 'js_und_inline', 'bereich' => 'js_und_inline', 'ausser' => [],
  'regel' => ['art' => 'muster', 'muster' => '~[\'"]csrf[\'"]\s*[,:]|(?<![\w.$])csrf\s*:~'],
- 'start' => 5, 'decke_jetzt' => 5, 'decke_ziel' => 0],
+ 'start' => 5, 'decke_jetzt' => 2, 'decke_ziel' => 0],
 
 ['kennung' => 'Z34', 'paket' => 'AP8',
  'beschreibung' => 'JS: Formatierer-Definitionen ausserhalb assets/format.js',
- 'grund' => 'EdFormat in assets/format.js; missiontable.js wird erster Verbraucher.',
+ 'grund' => 'EdFormat in assets/format.js. FUENF BLEIBEN, nicht null, und '
+          . 'keine davon ist ein zweiter Rechenweg: Es sind duenne '
+          . 'Weiterleitungen, die je einen anderen LEERWERT binden — '
+          . 'kein Ende, den Leerstring, einen Gedankenstrich als Markup, '
+          . 'null. Der Leerwert ist bei EdFormat ein Parameter (das war '
+          . 'die Lehre aus AP7), und diese fuenf sind seine benannten '
+          . 'Vorgaben je Zusammenhang. Sie aufzuloesen hiesse, den '
+          . 'Leerwert an fuenfzehn Aufrufstellen zu wiederholen statt an '
+          . 'fuenf — und drei von ihnen stehen im Export-Objekt von '
+          . 'EdMissionTable, das zeitraum.php als Alias nimmt. '
+          . 'DIE ZEILE MISST UEBER EINE NAMENSLISTE und sieht deshalb '
+          . 'keinen neu erfundenen Formatierer. Zwei hat erst eine '
+          . 'Gegenprobe ueber das Muster der RECHNUNG gefunden: '
+          . 'luftlinie.js (umgestellt, 57 143 Werte zeichengleich) und '
+          . 'schneiden.js mit einer DRITTEN Dauer-Schreibweise '
+          . '(Backlog Nr. 273, nicht umgestellt — sichtbare Aenderung).',
  'sicht' => 'js_und_inline', 'bereich' => 'js_und_inline',
  'ausser' => ['server/assets/format.js'],
  'regel' => ['art' => 'eigen', 'name' => 'js_formatierer'],
- 'start' => 14, 'decke_jetzt' => 14, 'decke_ziel' => 0],
+ 'start' => 14, 'decke_jetzt' => 5, 'decke_ziel' => 0],
 
 ['kennung' => 'Z35', 'paket' => 'AP8',
  'beschreibung' => 'JS: Seiten mit eigener L.map(-Praeambel',
@@ -421,21 +444,38 @@ return [
 
 ['kennung' => 'Z36', 'paket' => 'AP8',
  'beschreibung' => 'JS: EdPat.entschluessleListe( in Seiten',
- 'grund' => 'Ein Rahmen EdPat.listeLaden() fuer die vier Seiten. Die beiden Module '
-          . '(export.js, import_ui.js) rufen weiter unmittelbar.',
+ 'grund' => 'Ein Rahmen EdPat.listeLaden() fuer die drei ANZEIGESEITEN. Die '
+          . 'beiden Module (export.js, import_ui.js) rufen weiter unmittelbar. '
+          . 'EINE BLEIBT, nicht null — Entscheidung des Auftraggebers vom '
+          . '22.09.2026. einstellungen.php teilt nur den AUFRUF, nicht den '
+          . 'Rahmen: kein Banner, kein zeigeUnlesbar, der Schluessel kommt '
+          . 'von aussen, und die Liste ist ein FENSTER zu 250 aus einem '
+          . 'Bestand von tausenden. Daran haengt es: hinweisUnlesbar() wertet '
+          . 'die GANZE Liste aus und sagt "Keiner der Eintraege liess sich '
+          . 'oeffnen" — ueber ein Fenster gesagt waere das eine '
+          . 'Falschaussage.',
  'sicht' => 'js_und_inline', 'bereich' => 'js_und_inline',
  'ausser' => ['server/assets'],
  'regel' => ['art' => 'muster', 'muster' => '~EdPat\.entschluessleListe\s*\(~'],
- 'start' => 4, 'decke_jetzt' => 4, 'decke_ziel' => 0],
+ 'start' => 4, 'decke_jetzt' => 1, 'decke_ziel' => 0],
 
 ['kennung' => 'Z37', 'paket' => 'AP8',
  'beschreibung' => 'JS: Meldungs-Markup von Hand',
  'grund' => 'EdHtml.meldung(ton, text) in assets/html.js. Gemessen in der Sicht '
           . 'js_und_inline — eine breite Suche ueber den Quelltext zaehlt das '
-          . 'PHP-Markup mit (35 Erwaehnungen in 15 Dateien) und misst etwas anderes.',
+          . 'PHP-Markup mit (35 Erwaehnungen in 15 Dateien) und misst etwas anderes. '
+          . 'VIER BLEIBEN. Zwei davon sind die Zentrale selbst (html.js, zwei '
+          . 'Treffer in einer Funktion: Tonklasse und Aktionszeile). Die dritte '
+          . 'ist schneiden.js, eine LEERE Huelle mit data-vorher als Anker, die '
+          . 'spaeter per textContent befuellt wird; sie traegt kein Symbol, und '
+          . 'eines einzusetzen waere eine sichtbare Aenderung im Schnittblock '
+          . '(Backlog Nr. 271). Die vierte ist unlock.js und gar keine Meldung: '
+          . 'ein p-Element mit der Klasse meldung, ohne Tonklasse, ohne Symbol, '
+          . 'ohne role — ein Fehlalarm des Musters und zugleich ein Missbrauch '
+          . 'der Klasse (Backlog Nr. 272).',
  'sicht' => 'js_und_inline', 'bereich' => 'js_und_inline', 'ausser' => [],
  'regel' => ['art' => 'muster', 'muster' => '~class\s*=\s*[\'"\\\\]{0,3}meldung~'],
- 'start' => 8, 'decke_jetzt' => 8, 'decke_ziel' => 0],
+ 'start' => 8, 'decke_jetzt' => 4, 'decke_ziel' => 0],
 
 /* ---- Uebergabe an 10c --------------------------------------------------- */
 

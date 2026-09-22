@@ -250,7 +250,6 @@ const SPUR = <?= json_js(['hat' => $hatSpur, 'stufe' => (int)$spurStand['stufe']
 // Maskierung: Baustein B7 (assets/html.js). Hier stand eine eigene Fassung
 // ueber ein Hilfselement — sie maskierte drei Zeichen statt fuenf (M6-03).
 const esc = EdHtml.escape;
-function fmtDay(d){ const p = d.split('-'); return `${p[2]}.${p[1]}.${p[0]}`; }
 function zeigeLadeFehler(msg){
   document.getElementById('title').textContent = 'Einsatz nicht geladen';
   document.getElementById('loaderror').textContent =
@@ -522,17 +521,6 @@ function dtGeschuetzt(text){
     + (typeof edSymbol === 'function'
        ? edSymbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt') : '');
 }
-function fmtKm(meter){
-  return (meter / 1000).toFixed(1).replace('.', ',') + ' km';
-}
-/* Dauer im Stil der Tagesuebersicht („51min", „1h 32min") — nicht „0:51 h"
- * wie im Mockup: Die Schreibweise ist projektweit dieselbe (E-P3-32,
- * dokumentierte Abweichung). */
-function fmtDauer(min){
-  if (min == null || min < 0) { return ''; }
-  const h = Math.floor(min / 60), r = min % 60;
-  return h > 0 ? `${h}h ${r}min` : `${r}min`;
-}
 function minutenDiff(a, b){
   const [ah, am] = a.split(':').map(Number), [bh, bm] = b.split(':').map(Number);
   let d = (bh * 60 + bm) - (ah * 60 + am);
@@ -566,7 +554,7 @@ async function init(){
     const wt = dt.getDay();
     document.getElementById('tagzurueck-text').innerHTML =
       '<span class="wtag-lang">' + LANG[wt] + '</span>'
-      + '<span class="wtag-kurz">' + KURZ[wt] + '</span>, ' + fmtDay(m.day);
+      + '<span class="wtag-kurz">' + KURZ[wt] + '</span>, ' + EdFormat.tag(m.day);
     document.getElementById('tagzurueck').hidden = false;
   }
 
@@ -616,7 +604,7 @@ async function init(){
   if (m.day_vehicle_name) { rest.push(m.day_vehicle_name); }
   if (m.day_base_name) { rest.push(m.day_base_name); }
   if (!m.day) { rest.push('kein Diensttag zugeordnet'); }
-  else if (m.day !== m.mission_day) { rest.push(`Dienst vom ${fmtDay(m.day)}`); }
+  else if (m.day !== m.mission_day) { rest.push(`Dienst vom ${EdFormat.tag(m.day)}`); }
   const meta = document.getElementById('meta');
   meta.innerHTML = esc(zeitteil) + ' ' + kennzeichen
     + (rest.length ? ' ' + esc(rest.join(' · ')) : '');
@@ -777,8 +765,19 @@ async function init(){
        Phasenkarte rechnet ohnehin von Beginn bis Ende des Einsatzes, nicht
        von Phase zu Phase — sie hing nur an Phase 9 als Stellvertreter. */
     if (m.hat_ende) {
+      /* '51min', '1h 06min' -- nicht '0:51 h' wie im Mockup (E-P3-32,
+         dokumentierte Abweichung). Hier stand eine eigene Fassung, und
+         ueber ihr der Satz, die Schreibweise sei projektweit dieselbe. Das
+         war falsch: Sie schrieb '1h 6min', die Einsatztabelle '1h 06min'.
+         Der Satz stimmt jetzt, aber aus einem anderen Grund -- es gibt nur
+         noch eine Fassung. Sichtbare Folge: die Minute ist immer
+         zweistellig (Schritt 15 AP8d).
+
+         SEKUNDEN HINEIN: minutenDiff() gibt Minuten, EdFormat.dauer() will
+         Sekunden -- daher mal 60. Leerwert '' wie bisher; erreichbar ist er
+         hier nicht, weil minutenDiff() immer eine Zahl liefert. */
       document.getElementById('phasendauer').textContent =
-        fmtDauer(minutenDiff(m.start_hhmm, m.end_hhmm));
+        EdFormat.dauer(minutenDiff(m.start_hhmm, m.end_hhmm) * 60, '');
     }
   }
   buildPhaseMarkers(m.phases);
@@ -884,7 +883,10 @@ async function zeigePat(m, bounds){
        mit „Strecke 12,4 km" und sagt nicht, WAS 1917 Meter sind — der
        Nachbarwert traegt sein Wort, dieser nicht. */
     if (hoeheZeigen) { klein.push(`Höhe ${hoeheWert} m`); }
-    if (m.distance_m != null) { klein.push('Strecke ' + fmtKm(m.distance_m)); }
+    /* KEIN LEERWERT: Die Bedingung derselben Zeile haelt null schon ab, und
+       das Ergebnis laeuft unten durch esc() -- ein Gedankenstrich als Markup
+       stuende dort buchstaeblich auf dem Bildschirm (AP8d). */
+    if (m.distance_m != null) { klein.push('Strecke ' + EdFormat.km(m.distance_m)); }
     zeile('einsatz', RANG.pat_loc, dtGeschuetzt('Einsatzort'),
       esc(o.loc.addr)
       + `<span class="lese-klein" id="ortklein"${klein.length ? '' : ' hidden'}>`
@@ -970,14 +972,17 @@ async function zeichneLuftlinie(m, o, ck, bounds){
    * „gerade Verbindung, kein aufgezeichneter Weg" steht im Popup der Linie.
    * Gibt es keine Einsatzort-Zeile (Adresse leer), eine eigene Zeile. */
   const klein = document.getElementById('ortklein');
-  const text = 'Luftlinie ' + fmtKm(EdLuftlinie.meter(punkte));
+  /* KEIN LEERWERT, beide Male: EdLuftlinie.meter() summiert und gibt immer
+     eine Zahl; punkte ist oben auf Laenge geprueft. Und beide Ziele vertragen
+     kein Markup -- textContent unten, esc() im else-Zweig (AP8d). */
+  const text = 'Luftlinie ' + EdFormat.km(EdLuftlinie.meter(punkte));
   if (klein) {
     klein.textContent = klein.textContent
       ? klein.textContent + ' · ' + text : text;
     klein.hidden = false;
   } else {
     zeile('einsatz', RANG.luftlinie, 'Luftlinie',
-      `${esc(fmtKm(EdLuftlinie.meter(punkte)))}
+      `${esc(EdFormat.km(EdLuftlinie.meter(punkte)))}
        <span class="lese-klein">gerade Verbindung, kein aufgezeichneter Weg</span>`);
   }
 

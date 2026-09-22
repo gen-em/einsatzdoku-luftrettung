@@ -349,9 +349,24 @@ def form(zeile) -> str:
     Auch „gerade eben" gegen „vor 1 Minuten" bleibt sichtbar, weil die
     Woerter verschieden sind.
 
-    WAS SIE NICHT SIEHT: eine Aenderung, die nur Ziffern betrifft — etwa
-    eine andere Rundung bei gleicher Stellenzahl. Dafuer stehen die
-    Rechnungen je Funktion im Pruefdokument.
+    WAS SIE NICHT SIEHT, und das ist scharf zu lesen: JEDE Aenderung
+    INNERHALB einer Ziffernfolge. `\\d+` ist gierig — aus „5“ und
+    aus „05“ wird dasselbe „#“. Eine FUEHRENDE NULL ist damit
+    unsichtbar, nicht nur eine andere Rundung bei gleicher Stellenzahl.
+
+    Gemessen am 22.09.2026 (Schritt 15 AP8d): Die Einsatzansicht schrieb
+    „2h 5min“ und schreibt jetzt „2h 05min“ — auf acht Aufnahmen
+    derselben Seite. Dieser Vergleich meldete trotzdem „488 von 496
+    formgleich“, und das war richtig gerechnet und irrefuehrend gelesen.
+    Gefunden wurde die Aenderung erst durch Auszaehlen der VERSCHIEDENEN
+    Dauern ueber alle Abzuege: 33 vorher, 32 nachher.
+
+    Was ein Trennzeichen betrifft, sieht sie dagegen sehr wohl: aus
+    „1633 km“ und „1.633 km“ wird „# km“ und „#.# km“.
+
+    Wer eine Stellenzahl pruefen will, zaehlt die verschiedenen
+    Schreibweisen ueber alle Abzuege aus. Die Rechnungen je Funktion
+    stehen im Pruefdokument.
     """
     return re.sub(r"\d+", "#", zeile if zeile is not None else "\x00")
 

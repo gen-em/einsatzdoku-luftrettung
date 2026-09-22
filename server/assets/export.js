@@ -4,8 +4,10 @@
  * Profil B (Vollständiges CSV inkl. GPX, ZIP mit optionaler AES-256-
  * Verschlüsselung via zip.js) ist seit Paket E3 mit umgesetzt.
  *
- * Erwartet aus der Seite: PAT_WRAP, KDF_SALT, KDF_ITER, CSRF, APP_TZ, WEB_VERSION,
- * KONTO_NAME, KONTO_MAIL, EdCrypto, EdUnlock, EdPat, EdPwQuality,
+ * Erwartet aus der Seite: PAT_WRAP, KDF_SALT, KDF_ITER, APP_TZ, WEB_VERSION,
+ * KONTO_NAME, KONTO_MAIL, EdApi (assets/api.js -- sendet und holt sich das
+ * CSRF-Token selbst), EdFormat (assets/format.js -- steht seit Schritt 15
+ * AP8d im Kopf jeder Seite), EdCrypto, EdUnlock, EdPat, EdPwQuality,
  * ImportProfile, XLSX (vendor/xlsx.full.min.js), zip (vendor/zipjs.min.js),
  * edConfirm (confirm.js).
  *
@@ -106,13 +108,22 @@
         return ph ? ph.at : null;
     }
 
-    /** Dauer zwischen zwei UTC-Zeitstempeln als 'HH:MM', oder null. */
+    /** Dauer zwischen zwei UTC-Zeitstempeln als 'HH:MM', oder null.
+     *
+     * SEIT SCHRITT 15 AP8d AUS `EdFormat` (assets/format.js, Zaehlzeile Z34).
+     * Gerechnet wird dort dasselbe: erst auf ganze Minuten runden, dann in
+     * Stunden und Minuten teilen, beide Teile zweistellig. Die zwei benannten
+     * Aenderungen des Pakets -- zweistellige Minute und kein '60min' mehr --
+     * treffen diese Stelle deshalb NICHT; sie hielt es schon immer so.
+     *
+     * DER LEERWERT null STEHT AUSDRUECKLICH DA, obwohl `dauerUhr()` ihn als
+     * Vorgabe fuehrt. Der Rueckgabewert landet in einer Zelle einer
+     * Ausgabedatei, und eine leere Zelle sagt dort etwas anderes als eine
+     * Null. Wer die Vorgabe in der Zentrale eines Tages aendert, soll damit
+     * nicht still den Inhalt einer XLSX-Datei aendern.
+     */
     function durationHHMM(startIso, endIso) {
-        if (!startIso || !endIso) return null;
-        var ms = new Date(endIso).getTime() - new Date(startIso).getTime();
-        if (!(ms >= 0)) return null;
-        var mins = Math.round(ms / 60000);
-        return pad2(Math.floor(mins / 60)) + ':' + pad2(mins % 60);
+        return EdFormat.dauerUhr(EdFormat.spanne(startIso, endIso), null);
     }
 
     function jaOrDash(v) { return Number(v) === 1 ? 'Ja' : '-'; }
@@ -169,17 +180,24 @@
 
     /* ------------------------------------------------ Daten laden/holen --- */
 
+    /* Ein Fehler, dessen Text schon der fertige Satz von EdApi ist. Der
+       Auffangzweig in runExport() erkennt ihn an der Marke und setzt KEINEN
+       zweiten Vorgangsnamen davor -- der steht bereits im Satz. Ohne die
+       Marke ginge das nicht: Derselbe Zweig faengt auch die Fehler von
+       XLSX, zip.js und der Entschluesselung, und die kommen ohne
+       Satzanfang. */
+    function fertigerFehler(satz) {
+        var f = new Error(satz);
+        f.fertig = true;
+        return f;
+    }
+
     async function fetchMeta(from, to, patient) {
-        var res = await fetch('api/export_data.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-            body: JSON.stringify({ action: 'meta', from: from, to: to, patient: patient })
-        });
-        var data = await res.json();
-        if (!res.ok || data.error) {
-            throw new Error(data.meldung || ('Serverfehler (' + (data.error || res.status) + ')'));
-        }
-        return data;
+        var a = await EdApi.postJson('api/export_data.php',
+            { action: 'meta', from: from, to: to, patient: patient },
+            { vorgang: 'Der Export' });
+        if (!a.ok) { throw fertigerFehler(a.meldung); }
+        return a.daten;
     }
 
     /** Zweite Schranke (A9): entfernt alle personenbezogenen Angaben aus dem
@@ -578,10 +596,21 @@
             + sign + pad2(Math.floor(abs / 60)) + ':' + pad2(abs % 60);
     }
 
+    /** Dauer zwischen zwei UTC-Zeitstempeln als nackte Minutenzahl, sonst ''.
+     *
+     * SEIT SCHRITT 15 AP8d AUS `EdFormat` (assets/format.js, Zaehlzeile Z34).
+     *
+     * DER LEERWERT IST HIER DER LEERSTRING und nicht null wie bei
+     * `durationHHMM()` daneben -- das ist kein Versehen, sondern das
+     * Versprechen der Spalte: `dauer_min` in `einsaetze.csv` und
+     * `ruhezeiten.csv` ist in `felder.csv` als 'leer wenn unvollstaendig'
+     * beschrieben. Auf dem heutigen Weg faellt der Unterschied nicht auf,
+     * weil `csvEscape()` auch aus null eine leere Zelle macht; der
+     * Leerstring steht trotzdem hier, weil die Spalte ihren Vertrag selbst
+     * tragen soll und nicht erst der Schreiber dahinter.
+     */
     function durationMinutes(startIso, endIso) {
-        if (!startIso || !endIso) return '';
-        var ms = new Date(endIso).getTime() - new Date(startIso).getTime();
-        return (ms >= 0) ? Math.round(ms / 60000) : '';
+        return EdFormat.minuten(EdFormat.spanne(startIso, endIso), '');
     }
 
     /* Reine Zahl im Ausgabeformat dieser Dateien: optionales Minus, Ziffern,
@@ -1085,28 +1114,24 @@
     }
 
     async function fetchTrack(ownerType, ids) {
-        var res = await fetch('api/export_data.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
+        /* DEN RUMPF LESEN, NICHT NUR DEN STATUS (Backlog Nr. 97). Hier
+           stand ein throw mit dem nackten Statuscode im Text -- die
+           Antwort wurde verworfen, und im Wartungsmodus las die Person
+           „Serverfehler beim Laden der Tracks (503)" statt des Satzes, den
+           der Server mitschickt. Wer das liest, liest den alten Stand: Seit
+           AP8 entscheidet es nicht mehr diese Stelle, sondern EdApi -- und
+           zwar fuer BEIDE Sendestellen dieser Datei nach derselben Regel.
+           Die Uneinheitlichkeit, gegen die Nr. 97 half, ist damit nicht nur
+           hier behoben, sondern aufgehoben. */
+        var a = await EdApi.postJson('api/export_data.php',
             // 'patient: true' ist hier keine Wahl, sondern eine Zusicherung:
             // GPX-Spuren gibt es nur im Export MIT personenbezogenen Angaben
             // (A9), und der Server weist die Anfrage sonst ab. Der Aufruf
             // erfolgt ausschliesslich aus diesem Zweig.
-            body: JSON.stringify({ action: 'track', owner_type: ownerType,
-                                   ids: ids, patient: true })
-        });
-        /* DEN RUMPF LESEN, NICHT NUR DEN STATUS (Backlog Nr. 97). Hier
-           stand ein throw mit dem nackten Statuscode im Text —
-           die Antwort wurde verworfen, und im Wartungsmodus las die Person
-           „Serverfehler beim Laden der Tracks (503)" statt des Satzes, den
-           der Server mitschickt. Dieselbe Datei macht es in fetchMeta()
-           seit jeher richtig; sie war in sich uneinheitlich. */
-        var daten = await res.json().catch(function () { return null; });
-        if (!res.ok || (daten && daten.error)) {
-            throw new Error((daten && daten.meldung)
-                || ('Serverfehler beim Laden der Tracks (' + res.status + ').'));
-        }
-        return daten;
+            { action: 'track', owner_type: ownerType, ids: ids, patient: true },
+            { vorgang: 'Das Laden der Aufzeichnungen' });
+        if (!a.ok) { throw fertigerFehler(a.meldung); }
+        return a.daten;
     }
 
     /** Holt GPX-relevante Tracks blockweise (höchstens 25 IDs je Anfrage, siehe
@@ -1545,7 +1570,12 @@
             }
             setState(schluss);
         } catch (e) {
-            setState('Export fehlgeschlagen: ' + e.message);
+            /* Traegt der Fehler den fertigen Satz von EdApi, steht der
+               Vorgangsname schon darin; ein zweiter davor ergaebe ihn
+               doppelt. Alles andere -- XLSX, zip.js, Entschluesselung,
+               Rueckfragen -- kommt ohne Satzanfang und bekommt ihn hier. */
+            setState(e && e.fertig ? e.message
+                : 'Der Export ist fehlgeschlagen: ' + e.message);
         } finally {
             goBtn.disabled = false;
         }

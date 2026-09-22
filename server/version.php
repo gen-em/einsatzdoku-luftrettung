@@ -7006,6 +7006,55 @@ declare(strict_types=1);
  *   Klickprobe 48/48; die vier Karten im Browser mit Kacheln, Umschalter
  *   und 0 Konsolenfehlern.
  *
+ * 20.34 — VIER ZENTRALEN IM BROWSER (Schritt 15 AP8b bis AP8f).
+ *
+ *   `assets/api.js` (`EdApi`), `EdHtml.meldung()`, der Ausbau von
+ *   `EdFormat` und `EdPat.listeLaden()`. Sechsundvierzig Stellen in
+ *   vierzehn Dateien.
+ *
+ *   DER BEFUND, der den Umbau geformt hat: Der zentralisierbare Kern liegt
+ *   fast ueberall VOR dem eigentlichen Vorgang. Alle 15 Sendestellen waren
+ *   im AUFRUF zeichengleich — POST, zwei Kopfzeilen, JSON.stringify — und
+ *   gingen erst HINTER dem `fetch` auseinander, auf sieben Achsen: vier
+ *   Regeln fuer „Erfolg" (ACHT von 15 prueften `res.ok` gar nicht), zwei
+ *   Politiken bei Nicht-JSON, SECHS Vorrangketten, FUENF Satzbauten,
+ *   SIEBEN Anzeigewege, und VIERZEHN von 15 zeigten im Netzfehler den
+ *   englischen Browsertext „Failed to fetch".
+ *
+ *   DER SATZBAU IST JETZT EINER: `<Vorgang> ist fehlgeschlagen: <Grund>`.
+ *   Das ist die siebte benannte Ausnahme von E-ZE-10 und vom Auftraggeber
+ *   entschieden. Der Vorgangsname steht genau einmal; `error` erscheint
+ *   nicht mehr als Satz (es traegt Maschinenwoerter), sondern als Kennung
+ *   in einer Klammer; `hinweis` und `text` kommen in die Kette und damit
+ *   der Satz zu `post_max_size` ueberall an, wo er bisher an elf von
+ *   fuenfzehn Stellen fehlte.
+ *
+ *   DREI SCHREIBWEISEN WURDEN VEREINHEITLICHT, jede gemessen: die Minute
+ *   einer Dauer ist immer zweistellig (16,0 % der Minutenwerte), „60min"
+ *   gibt es nicht mehr (0,83 % der Sekundenwerte), und die Streckensumme
+ *   traegt ueberall den Tausenderpunkt — die Startseite schrieb als
+ *   einzige „1633 km", wo Suche und Zeitraum „1.633 km" zeigten.
+ *
+ *   `api.js` UND `format.js` STEHEN IM <head>, nicht in der Immer-Liste.
+ *   Der erste Anlauf legte sie in `ui_geruest_ende()`, mit dem Satz, das
+ *   trage schon, weil jeder Aufruf in einem Zuhoerer stecke. Ein
+ *   gegenlesender Agent hat den Satz mit Zeilennummern widerlegt: Auf
+ *   `einstellungen.php` und `import.php` steht diese Liste NACH den
+ *   Seitenskripten, und dort laeuft `unlock.js` seinen Sendeweg zur
+ *   LADEZEIT. `EdApi` waere undefiniert gewesen, der ReferenceError waere
+ *   in einen absichtlich stillen catch gefallen — die KDF-Anhebung haette
+ *   auf zwei Seiten wortlos aufgehoert zu laufen.
+ *
+ *   VIER ZIELZAHLEN ENDEN NICHT BEI NULL, jede mit Grund im Register
+ *   (Entscheidung des Auftraggebers: „ehrliche Zahl statt runder Null").
+ *   Z29 bei 2, Z34 bei 5, Z36 bei 1, Z37 bei 4. Was dort steht, ist kein
+ *   zweiter Rechenweg, sondern die Zentrale selbst, ein Fehlalarm des
+ *   Zaehlmusters oder eine benannte Vorgabe je Zusammenhang.
+ *
+ *   ZWANZIG AGENTEN HABEN GEGENGELESEN und 41 Maengel gefunden, zwei davon
+ *   schwer. Beide waren echt. Was das kostet, steht im Konzept; was es
+ *   bringt, steht in diesem Absatz und im vorigen.
+ *
  *   ZWOELF STELLEN BLEIBEN NAMENTLICH STEHEN, jede mit Grund im Register:
  *   vier Formular- und Vergleichswerte in `betrieb_server.php` (der PUNKT
  *   als Dezimaltrenner ist dort Bedingung eines Vergleichs, nicht
@@ -7014,4 +7063,4 @@ declare(strict_types=1);
  *   zwei Zeitstempel ohne Zonenumrechnung und eine `sprintf`-Groesse mit
  *   Punkt statt Komma.
  */
-const WEB_VERSION = '20.33.0';
+const WEB_VERSION = '20.34.0';

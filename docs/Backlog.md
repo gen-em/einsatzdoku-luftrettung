@@ -3495,6 +3495,62 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     weil ihr Ergebnis eine Entscheidung der Person trägt.
 
 
+271. **Die leere Meldungshülle im Schnittblock trägt kein Symbol — und ihr
+    Ton bleibt „info", auch wenn ein Fehler darin steht.** Gefunden bei der
+    AP8-Vermessung (Schritt 15, 22.09.2026) in `assets/schneiden.js`. Die
+    Stelle erzeugt keine Meldung, sondern einen *Platz* für eine:
+    `<div class="meldung meldung-info" role="status" data-vorher><p></p></div>`,
+    später dreimal per `textContent` befüllt. Zwei Abweichungen vom Baustein:
+    **kein Symbol** (`EdHtml.meldung()` setzt eines ein — das wäre eine
+    sichtbare Änderung im Schnittblock), und **der Ton wechselt nie**, so dass
+    Sätze wie „Das Ende liegt vor dem Beginn." in blauer Hinweisfläche stehen
+    statt in roter. Das zweite ist fachlich falsch. **Nicht in Schritt 15
+    behoben** (E-ZE-10: das Paket ändert kein Verhalten); die Zählzeile Z37
+    endet deshalb bei 4 statt 0. Beim Anfassen mitzudenken: Der Anker
+    `data-vorher` hängt am Wrapper, den `EdHtml.meldung()` nicht mit
+    Attributen versieht — entweder bekommt die Funktion einen Weg dafür, oder
+    der Anker wandert nach innen.
+
+272. **`<p class="meldung">` im Entsperrdialog ist gar keine Meldung.**
+    Gefunden bei derselben Vermessung, in `assets/unlock.js`. Dort steht ein
+    Absatz mit der Klasse `meldung` — **ohne** Tonklasse, **ohne** Symbol,
+    **ohne** `role`. Er trägt den Namen des Bausteins, ist aber keiner; das
+    Zählmuster von Z37 hält ihn trotzdem für einen. Zwei Folgen: Die Zeile
+    zählt einen Nachbau, den es nicht gibt (Z37 endet bei 4), und der Absatz
+    bekommt aus `style.css` Regeln, die für einen Kasten gedacht sind.
+    **Nicht in Schritt 15 behoben:** Ihn auf den Baustein umzustellen gäbe
+    ihm einen farbigen Kasten mit Symbol — eine sichtbare Änderung im
+    Entsperrdialog, und die war nicht beauftragt.
+
+273. **Eine dritte Schreibweise für Dauern, die kein Zählmittel sieht.**
+    Gefunden in Schritt 15 AP8d, aber **nicht** von der Zählzeile Z34: Die
+    misst über eine Namensliste und kennt `dauer()` in `assets/schneiden.js`
+    nicht. Gefunden hat sie erst eine Gegenprobe über das Muster der
+    *Rechnung* (`Math.floor(s / 3600)`). Die Funktion schreibt
+    **„1 h 6 min" mit Leerzeichen**, während der Rest der Anwendung seit
+    AP8d durchgängig „1h 06min" schreibt; dazu trägt sie denselben
+    Rundungsfehler, den AP8d in `EdFormat.dauer()` behoben hat (getrennte
+    Rechnung von Stunden und Minuten erzeugt bei 3599 s ein „60min").
+    **Nicht umgestellt**, weil es eine sichtbare Änderung im Schnittblock
+    wäre und die drei sichtbaren Änderungen von AP8d einzeln freigegeben
+    wurden — diese war nicht darunter. Beim Anfassen: `EdFormat.dauer(s)`
+    genügt, der Leerwert ist dort nicht erreichbar (`Math.max(0, …)`).
+
+274. **Die Vollständigkeitsprüfung kann eine zusammengesetzte Klasse nicht
+    sehen — und das trifft jetzt zwei Meldungstöne.** Seit Web 20.34.0 baut
+    `EdHtml.meldung()` die Tonklasse zusammen (`'meldung meldung-' + ton`),
+    wie es `ui_meldung_markup()` in PHP seit jeher tut. `tools/vollstaendigkeit/`
+    meldet `.meldung-ok` und `.meldung-schutz` deshalb als „Regel im
+    Stylesheet, im Markup nicht gefunden". Beide Regeln werden benutzt; das
+    Werkzeug kann es nur nicht belegen. `meldung-schutz` stand aus demselben
+    Grund schon vorher in der Liste. **Kein Befund, aber ein blinder Fleck:**
+    Verschwände eine der beiden Regeln aus `style.css`, meldete es niemand.
+    Der Kommentar in `ui_meldung_markup()` sagt genau das („das kann nur
+    diese Stelle selbst prüfen"). Möglicher Weg: Das Werkzeug liest die
+    Tonliste aus der Funktion und trägt die daraus gebildeten Klassen als
+    belegt ein.
+
+
 ## Erledigt
 
 
