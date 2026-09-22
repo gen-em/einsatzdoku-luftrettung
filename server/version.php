@@ -7062,5 +7062,50 @@ declare(strict_types=1);
  *   Stellen in `wartung_lib.php` (deren Dateikopf zusagt, NICHTS zu laden),
  *   zwei Zeitstempel ohne Zonenumrechnung und eine `sprintf`-Groesse mit
  *   Punkt statt Komma.
+ *
+ * 20.35 — WINDE UND BERGWACHT: DIE AUSWERTUNG FOLGT DER BETRIEBSART
+ *         (Schritt 15 AP9a, E-ZE-31).
+ *
+ *   Eine FUNKTIONSAENDERUNG, ausdruecklich freigegeben — kein Umbau.
+ *   `cap_gate` stand seit Web 5.10.0 im Feldkatalog, wurde aber nur im
+ *   Einsatzformular ausgewertet. Die Tagesuebersicht bekam es nie zu sehen:
+ *   Sie zog ihre Spalten aus `mf_tagesspalten()`, und die Funktion nimmt
+ *   keinen Parameter, kennt keinen Diensttag und cacht statisch. Gemessen
+ *   am 22.09.2026: ALLE 69 Diensttage des Referenzbestands trugen die
+ *   Windenspalte, auch ein NEF ohne Winde.
+ *
+ *   ZWEI ORTE, ZWEI REGELN, und das ist kein Widerspruch, sondern der
+ *   Unterschied zwischen ERFASSEN und AUSWERTEN. Die Einsatzbearbeitung
+ *   (`einsatz_form.php`, `einsatz.php`) folgt der FAEHIGKEIT allein, auch
+ *   bodengebunden — unveraendert, das ist `cap_gate`. Tages- und
+ *   Zeitraumuebersicht folgen der BETRIEBSART UND der Faehigkeit: Spalten
+ *   nur an einem luftgebundenen Tag, der sie traegt. Die Suche folgt der
+ *   Faehigkeit ueber Luft UND Boden — sie sucht im ganzen Bestand, nicht
+ *   in einem Zeitraum.
+ *
+ *   WAS DAS KOSTET, ist vorgelegt und entschieden worden: vier
+ *   bodengebundene Bergwacht-Diensttage mit Faehigkeiten, zwei davon mit
+ *   einem dokumentierten Windeneinsatz. Diese Haken bleiben eintragbar und
+ *   in der Einsatzbearbeitung sichtbar, erscheinen aber nicht mehr in der
+ *   Tagestabelle.
+ *
+ *   DIE KACHELN UNTER 720 px SIND AUSGENOMMEN. Ihre Plaketten zeigen einen
+ *   TATSAECHLICH GESETZTEN Haken, keine vorgehaltene Spalte. Eine Spalte
+ *   ist Platz, eine Plakette ist ein Befund — vorhandene Daten zu verbergen
+ *   hat niemand entschieden.
+ *
+ *   `api/range.php` BEHAELT seinen `d.kind = 'air'`-Filter. Er war als
+ *   Luecke gemeldet (Backlog Nr. 198) und ist mit dieser Entscheidung genau
+ *   die Regel. `api/suchindex.php` bekommt dieselbe Abfrage OHNE Artfilter.
+ *
+ *   Nachgemessen: fuenf Diensttage des Demo-Bestands, je vier Zahlen
+ *   (sichtbare Koepfe, versteckte Koepfe, Zellen der ersten Zeile,
+ *   Eintraege des Sortierblatts) — 11/0/11/10 am Lufttag mit Faehigkeit,
+ *   9/2/9/8 an den vier uebrigen; vorher 11 an allen fuenf. Zeitraum: der
+ *   bodengebundene Tab verliert zwei Spalten (10 -> 8), Luft und Mix
+ *   unveraendert. Gegenprobe zur Suche: mit abgefangener Antwort
+ *   `faehigkeiten = {false, false}` verschwinden beide Spalten, obwohl im
+ *   Bestand 7 Einsaetze mit Winden- und 15 mit Bergwachthaken stehen — die
+ *   Faehigkeit entscheidet, nicht das Datum. 0 Konsolenfehler.
  */
-const WEB_VERSION = '20.34.0';
+const WEB_VERSION = '20.35.0';

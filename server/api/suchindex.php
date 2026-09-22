@@ -221,7 +221,37 @@ try {
         ];
     }
 
-    json_out(['missions' => $missions]);
+    /* ---- Faehigkeiten des Bestands (Schritt 15 AP9, E-ZE-31) -----------
+     *
+     * Winde und Bergwacht bekommen in der Suchtabelle eine Spalte, wenn
+     * IRGENDEIN Diensttag die Faehigkeit traegt — nicht erst, wenn jemand
+     * tatsaechlich gewindet hat. Der Unterschied ist genau der Fall, den man
+     * sucht: „null Windeneinsaetze" ist etwas anderes als „Winde nicht
+     * eingerichtet", und wer nachtragen will, muss die Spalte sehen.
+     *
+     * OHNE ARTFILTER, anders als api/range.php. Das ist entschieden und
+     * nicht vergessen (E-ZE-31): Die Zeitraumuebersicht wertet einen
+     * Zeitraum aus und folgt dort der Betriebsart; die Suche sucht im
+     * ganzen Bestand, und ein bodengebundener Bergwacht-Dienst ist genauso
+     * ein Treffer wie ein luftgebundener. Ein Rettungsmittel des Typs
+     * Bergwacht darf die Faehigkeiten in BEIDEN Betriebsarten fuehren
+     * (`veh_caps_erlaubt()` in db.php).
+     *
+     * Der Schluessel spannt sich ueber VEHICLE_CAPABILITIES auf und waechst
+     * mit dem Katalog — dieselbe Ueberlegung wie in api/range.php. */
+    $faehig = array_fill_keys(array_keys(VEHICLE_CAPABILITIES), false);
+    $fq = db()->prepare('SELECT c.capability
+                           FROM day_capabilities c
+                           JOIN days d ON d.id = c.day_id
+                          WHERE d.user_id = ? AND d.deleted_at IS NULL
+                          GROUP BY c.capability');
+    $fq->execute([$userId]);
+    foreach ($fq->fetchAll() as $z) {
+        $k = (string)$z['capability'];
+        if (array_key_exists($k, $faehig)) { $faehig[$k] = true; }
+    }
+
+    json_out(['missions' => $missions, 'faehigkeiten' => $faehig]);
 } catch (Throwable $ex) {
     // Statt eines leeren HTTP 500 (z. B. fehlende Spalte nach vergessener
     // Migration) eine lesbare Meldung — das Frontend zeigt sie an.

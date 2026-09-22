@@ -1929,6 +1929,12 @@ Dieselbe Mechanik tragen zwei weitere Filter: **`cap_gate`** prüft die
 eingefrorenen Fähigkeiten (`day_capabilities`) und steuert damit Winde und
 Bergwacht, **`kind_gate`** die Art des Diensttags. Alle drei laufen über
 `mf_gates_erfuellt()`.
+**`cap_gate` gilt im Formular ohne Rücksicht auf die Betriebsart** — auch ein
+bodengebundener Bergwacht-Dienst bekommt seine Windenfelder. Das ist die
+*Bearbeitung*; die *Auswertung* in Tages- und Zeitraumübersicht folgt seit
+Web 20.35.0 einer engeren Regel (E-ZE-31; siehe „Zeitraum-API" weiter unten
+in diesem Abschnitt). Wer nur eine der
+beiden Stellen liest, hält die andere für einen Fehler.
 **Nicht gerenderte Felder wären ein Datenverlust-Pfad** — der Browser sendet
 sie dann nicht mit, und `readField()` liest fehlend als leer und überschreibt
 den Bestand mit NULL. Deshalb wird immer gerendert und nur versteckt (`hidden`
@@ -2003,14 +2009,31 @@ nicht auftaucht, aber mitzählt.
 Objekt über `VEHICLE_CAPABILITIES`, heute `{winch, bergwacht}`, mit
 Wahrheitswerten. Es sagt, welche Fähigkeiten die **Luft**-Diensttage des
 Zeitraums tragen, gerechnet als `GROUP BY` über `day_capabilities` mit Join
-auf `days`. **Seit Web 20.3.0 ist „Luft" dabei eine Lücke und keine
-Herleitung mehr** (Backlog Nr. 198): Ein bodengebundener Bergwacht-Diensttag
-trägt die Fähigkeiten ebenfalls, wird hier aber übergangen — das
-Einsatzformular zeigt seine Windenfelder, die Zeitraumübersicht zählt sie
-nicht. Die Zeitraumübersicht entscheidet daran über die beiden
-Windenkacheln, statt sie aus der Einsatzliste zu erschließen: „null
+auf `days`. Die Zeitraumübersicht entscheidet daran über die beiden
+Windenkacheln — und **seit Web 20.35.0 auch über die beiden Tabellenspalten**
+(E-ZE-31) —, statt sie aus der Einsatzliste zu erschließen: „null
 Windeneinsätze" ist eine Aussage über den Dienst, „Winde nicht eingerichtet"
 eine über die Stammdaten, und bis dahin waren beide nicht zu unterscheiden.
+
+**„Luft" ist seit Web 20.35.0 die Regel und nicht mehr eine Lücke.** Hier
+stand bis dahin, der Artfilter sei seit Web 20.3.0 eine Lücke (Backlog
+Nr. 198), weil ein bodengebundener Bergwacht-Diensttag die Fähigkeiten
+ebenfalls trägt und hier übergangen wird. Das ist entschieden worden, und
+zwar so: Die **Auswertung** — Kacheln und Tabellenspalten in Tages- und
+Zeitraumübersicht — folgt der Betriebsart **und** der Fähigkeit; die
+**Bearbeitung** (`einsatz_form.php`, `einsatz.php`) folgt der Fähigkeit
+allein, auch bodengebunden. Das Einsatzformular zeigt die Windenfelder
+eines solchen Tages also weiter, die Haken bleiben eintragbar — ausgewertet
+werden sie in Tages- und Zeitraumübersicht nicht. Vorgelegt wurden dafür die
+Zahlen des Bestands: vier bodengebundene Bergwacht-Diensttage mit
+Fähigkeiten, zwei davon mit einem dokumentierten Windeneinsatz.
+
+**Die Suche macht es anders, und das ist ebenfalls entschieden.**
+`api/suchindex.php` liefert seit Web 20.35.0 dasselbe `faehigkeiten`-Objekt,
+aber **ohne Artfilter** — sie sucht im ganzen Bestand, nicht in einem
+Zeitraum, und ein bodengebundener Bergwacht-Dienst ist genauso ein Treffer
+wie ein luftgebundener. Wer die eine Abfrage ändert, ändert nicht
+selbstverständlich die andere mit.
 
 Drei Bedingungen der Abfrage sind nicht verhandelbar. `day_capabilities`
 führt **weder `user_id` noch `deleted_at`** — der Join auf `days` trägt
@@ -2046,6 +2069,15 @@ kann darin nicht suchen. Zusätzlich wäre ein Suchbegriff wie ein Nachname
 selbst schon ein Patientendatum — er darf den Browser gar nicht verlassen.
 `api/suchindex.php` nimmt deshalb **keine Suchparameter entgegen**; es liefert
 den kompletten aktiven Bestand der angemeldeten Person.
+
+**Seit Web 20.35.0 kommt `faehigkeiten` mit** (Schritt 15 AP9a, E-ZE-31) —
+dasselbe flache Objekt über `VEHICLE_CAPABILITIES` wie in `api/range.php`,
+aber **ohne Artfilter**: Es sagt, welche Fähigkeiten im Bestand überhaupt
+eingerichtet sind, luft- wie bodengebunden. Die Suchtabelle entscheidet
+daran über die Spalten „Winde" und „Bergwacht", statt sie aus der Treffer- oder
+Bestandsliste zu erschließen. Der Unterschied ist genau der Fall, den man
+sucht: „null Windeneinsätze" ist etwas anderes als „Winde nicht
+eingerichtet", und wer nachtragen will, muss die Spalte sehen.
 
 Mengengerüst: erwartet werden 50–80 Einsätze pro Jahr, nach zwei Jahrzehnten
 also unter etwa 1 600 Datensätze — für einen einmaligen Abruf je Sitzung

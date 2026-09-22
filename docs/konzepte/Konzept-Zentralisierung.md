@@ -14,8 +14,8 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 >
 > | | |
 > |---|---|
-> | Stand | 22.09.2026 — **AP1 bis AP8 erledigt** (zuletzt Web 20.34.0); **AP9 vermessen und angehalten**, **AP10 gebaut bis auf die AP9-abhaengigen Teile**. Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
-> | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen), **E-ZE-25** (Ultracode), **E-ZE-26** (`assets/format.js` in AP7, sechste Ausnahme), **E-ZE-27** bis **E-ZE-30** (die vier Zielzahlen von AP8, die begruendet ueber null enden: Z29 bei 2, Z37 bei 4, Z34 bei 5, Z36 bei 1) — alle 22.09.2026; E-ZE-09 ist nicht vergeben |
+> | Stand | 22.09.2026 — **AP1 bis AP8 erledigt** (zuletzt Web 20.34.0); **AP9a erledigt** (Web 20.35.0, die Fähigkeitsregel), **AP9b in Arbeit** (der Generatorzusammenzug), **AP10 gebaut bis auf die AP9-abhaengigen Teile**. Freigegeben (Auftraggeber, 20.09.2026). Umfang am 20.09.2026 bestätigt; vier Entscheidungen nach der Messung vom Auftraggeber getroffen (E-ZE-01 bis -04, „alles wie empfohlen"); F-ZE-1 bis F-ZE-6 gelten mit der Freigabe. |
+> | Entschieden | E-ZE-01 bis E-ZE-08 (Gespräch), E-ZE-10 bis E-ZE-24 (Nachmessen), **E-ZE-25** (Ultracode), **E-ZE-26** (`assets/format.js` in AP7, sechste Ausnahme), **E-ZE-27** bis **E-ZE-30** (die vier Zielzahlen von AP8, die begruendet ueber null enden: Z29 bei 2, Z37 bei 4, Z34 bei 5, Z36 bei 1), **E-ZE-31** bis **E-ZE-34** (die vier Entscheidungen zu AP9: Fähigkeitsregel, Nachtdienst-Sortierung, Spalte „Nr.", Beschriftung) — alle 22.09.2026; E-ZE-09 ist nicht vergeben |
 > | Offen | nichts im Konzept. **F-ZE-1 bis F-ZE-6** (Abschnitt 2.3) sind mit der Freigabe vom 20.09.2026 entschieden. Außerhalb des Konzepts: die Einschübe (Abschnitt 8, 9) sind noch nicht eingespielt |
 > | Umsetzung | zehn Arbeitspakete, eines nach dem anderen, Zweig `claude/eager-euler-jlfi9i` (von `main` `fd99989`). **AP1 erledigt** (20.09.2026), **AP2** und **AP3 erledigt** (21.09.2026), **AP4 erledigt** (21.09.2026), **AP5**, **AP6** und **AP7 erledigt** (22.09.2026). **Voraussetzungen:** Kette II bis M1 und auf `main` — **offen, am 20.09.2026 nachgeprüft** (`claude/fervent-dirac-xirsqw` steht bei `af866c1`, AP4 gebaut, Beweislauf offen; 35 Commits nicht in `main`; M1 folgt auf AP4, AP5 und AP6 und ist ein Schritt der Betreiberin: Tag und Freigabe). Der Auftraggeber hat AP1 am 20.09.2026 freigegeben und wartet Kette II für AP2 ab — AP1 fasst `server/` nicht an. Schritt 16 gemergt — **erfüllt und nachgeprüft** (`main` `fd99989`, Web 20.26.2; `sitzung_lib.php` besteht, `sitzung_ablage()` wird in `db.php` Z. 586 und `install.php` Z. 144 gerufen — genau zwei Aufrufstellen, der Rest sind Kommentare). **Merge nach `main` nur auf Ansage** (löst einen Staging-Deploy aus) |
 > | Nummern | Dieses Konzept vergibt **keine** Rahmenplan-Fassung, **keine** Backlog-Nummer und **keine** Version. Einschübe in Abschnitt 8 und 9 übernimmt die einspielende Instanz |
@@ -37,7 +37,8 @@ Fable-Schritt, kein Mockup**. **Ablage:** dieses Dokument
 > |  AP8b/c/e `EdApi`, `EdHtml.meldung()` | **erledigt** 22.09.2026 | **Web 20.34.0** (Neben: eine neue Datei, vier neue Funktionen, keine Migration) | Z28 **15 → 1** · Z29 **5 → 2** (E-ZE-27) · Z37 **8 → 4** (E-ZE-28) · 26 Stellen in zehn Dateien · `EdHtml.meldung()` gegen `ui_meldung_markup()`: **200 von 200 Faellen gleicher DOM-Baum** (160 auch quellgleich; die 40 unterscheiden sich nur in `&#39;` gegen `&#039;`, was `EdHtml.escape` seit Baustein B7 so erzeugt) · **20 Agenten, 2,38 Mio Token**, die Gegenleser fanden **23 Maengel, einen schwer** — und der war echt |
 > |  AP8d `EdFormat`-Ausbau | **erledigt** 22.09.2026 | (in Web 20.34.0) | Z34 **14 → 5** (E-ZE-29) · 14 Definitionen in fuenf Dateien, dazu drei ungezaehlte Inline-Rechnungen und eine sechste km-Fassung, die erst eine Gegenprobe ueber das Muster der RECHNUNG fand (`luftlinie.js`, **57 143 Werte zeichengleich**) · drei sichtbare Aenderungen, je gemessen: zweistellige Minute **231/1441 (16,0 %)**, kein „60min“ mehr **720/86 401 (0,83 %)**, Tausenderpunkt der Streckensumme · **14 Agenten, 1,74 Mio Token**, 18 Maengel |
 > |  AP8f `EdPat.listeLaden()` | **erledigt** 22.09.2026 | (in Web 20.34.0) | Z36 **4 → 1** (E-ZE-30) · drei Anzeigeseiten, `einstellungen.php` begruendet drausen · im Browser nachgemessen: **6/6, 96/96, 96/96 Eintraege entschluesselt, 0 unlesbar, 0 Konsolenfehler** |
-> | AP9 Nr. 57 — eine Einsatztabelle | **vermessen, nicht gebaut** 22.09.2026 — wartet auf vier Entscheidungen | — | **Vermessung:** 4 lesende Agenten, 0 Dateiaenderungen · **Die Praemisse stimmt nicht:** `cap_gate` erreicht die Einsatztabelle NICHT (`mf_tagesspalten()` nimmt keinen Parameter, `mf_gates_erfuellt()` hat zwei Aufrufer, beide in `einsatz_form.php`; `capabilit` kommt in `index.php` nullmal vor) — **69 von 69 Diensttagen tragen heute die Windenspalte** · dazu vier Funde ausserhalb beider Dokumente, darunter eine Sortierung, die den Nachtdienst kippt |
+> | AP9 Nr. 57 — eine Einsatztabelle | **in zwei Teile geschnitten** 22.09.2026, nachdem die Vermessung die Prämisse widerlegt hat | — | **Vermessung:** 4 lesende Agenten, 0 Dateiaenderungen · **Die Praemisse stimmt nicht:** `cap_gate` erreicht die Einsatztabelle NICHT (`mf_tagesspalten()` nimmt keinen Parameter, `mf_gates_erfuellt()` hat zwei Aufrufer, beide in `einsatz_form.php`; `capabilit` kommt in `index.php` nullmal vor) — **69 von 69 Diensttagen tragen heute die Windenspalte** · dazu vier Funde ausserhalb beider Dokumente, darunter eine Sortierung, die den Nachtdienst kippt |
+> |  AP9a Die Fähigkeitsregel | **erledigt** 22.09.2026 | **Web 20.35.0** (Neben: Funktionsänderung mit Freigabe, keine Migration) | `mf_tagesspalten()` trägt `cap` · fünf Diensttage im Browser, je vier Zahlen (Köpfe sichtbar / versteckt / Zellen / Sortierblatt): **11/0/11/10** am Lufttag mit Fähigkeit, **9/2/9/8** an den vier übrigen — vorher **11** an allen fünf · Zeitraum: Bodentab **10 → 8** Spalten, Luft und Mix unverändert · **Gegenprobe Suche:** mit abgefangener Antwort `faehigkeiten={false,false}` gehen beide Spalten, obwohl **7 Winden- und 15 Bergwachthaken** im Bestand stehen — die Fähigkeit entscheidet, nicht das Datum · **Formvergleich 56 Seiten: 41 formgleich, 15 abweichend (105 Zeilen)** — die drei Tagesübersichtsseiten in den fünf Breiten ab 768 px; **jede der 120 gedruckten Diff-Zeilen einzeln klassifiziert, 0 unerklärt** · Bilderlauf **56 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knopfhöhen** · Register **38 Zeilen, 0 über der Decke** · Wortliste **0/0/0** · Vollständigkeit **397** (unverändert bis auf eine verschobene Zeilennummer) · Kettenaufrufe **47/0/0** · CSP **0** · `php -l` **0 Fehler** |
 > | AP10 Abschluss und Übergabe an 10c | **gebaut** 22.09.2026, bis auf die AP9-abhaengigen Teile | keine (nur `.github/`, `tools/`, `docs/`, `CLAUDE.md`) | Stufe-1-Schritt „Zentralisierung“ eingehaengt, **einmal absichtlich rot gesehen** (zwei Zeilen ueber der Decke, Rueckgabewert 1) und wieder gruen (0 ueber der Decke, Rueckgabewert 0) · Kettenaufrufe **0 Befunde, 0 ungeprueft** · `CLAUDE.md` 4 und `docs/Technik.md` 4.98a tragen die Regel · **Uebergabezahl `error_log(`: 75**, nicht 77 — die Rechnung steht im Protokoll |
 
 ---
@@ -2330,6 +2331,60 @@ nichts. Der Grund steht oben: Das Paket so auszuführen, wie es dasteht,
 hieße, eine Funktion neu zu erfinden und sie für einen Erhalt zu halten —
 und dabei eine Sortierung zu zerlegen, die heute stimmt.
 
+#### AP9a — die Fähigkeitsregel (gebaut am 22.09.2026, Web 20.35.0)
+
+**AP9 zerfällt in zwei Teile, und dieser ist der erste.** Die Vermessung hat
+gezeigt, dass die geplante Zusammenführung der Einsatztabelle eine Zusage
+gäbe, die heute niemand einhält (`cap_gate` erreicht die Tabelle nicht). Die
+Zusage wird deshalb **zuerst** gebaut — als eigene, benannte
+Funktionsänderung —, und der Generatorzusammenzug (AP9b) kommt danach auf
+einen Stand, an dem der erste Prüffall des Pakets überhaupt fehlschlagen
+kann.
+
+**Warum getrennt und nicht in einem Zug:** Ein Paket, das die Regel ändert
+*und* den Erzeuger tauscht, liefert im Bildvergleich zwei Sorten von
+Abweichungen, die sich nicht auseinanderhalten lassen — genau der dritte
+Haltepunkt der Vermessung. Getrennt ist die erste Sorte gemessen, bevor die
+zweite entsteht.
+
+**Gebaut:**
+
+| Datei | Was |
+|---|---|
+| `server/mission_fields_lib.php` | `mf_tagesspalten()` liefert je Spalte `cap` (aus `cap_gate`). **Filtert nicht** — die Funktion kennt keinen Diensttag und soll keinen kennen |
+| `server/index.php` | `$dcSichtbar()` setzt den **Startzustand** des Kopfes (kein Aufblitzen), `dayColsSetzen(meta)` entscheidet bei **jedem** `loadDay()`. Zellen aus `dayCols`, Sortierblatt über `:not([hidden])`, Rückfall des Sortierschlüssels auf `start` |
+| `server/assets/missiontable.js` | `nurWenn(liste, faehig)` — zweites Argument, gesetzt mit `setFaehigkeiten()`. **Ohne den Aufruf gilt weiter der Bestand** (benannter Rückfall) |
+| `server/zeitraum.php` | Tabellenspalten aus `faehig` statt `liste.some(...)`; im Bodentab ausdrücklich `{false, false}` |
+| `server/api/suchindex.php` | liefert `faehigkeiten` — **ohne** Artfilter |
+| `server/suche.php` | nimmt sie entgegen und reicht sie an die Tabelle |
+| `server/api/range.php` | Kommentar berichtigt: Der `d.kind = 'air'`-Filter ist die **Regel**, nicht die gemeldete Lücke |
+
+**Zwei Grenzen, ausdrücklich gezogen — nicht vergessen:**
+
+1. **Die Kacheln unter 720 px bleiben datengetrieben.** Ihre Plaketten zeigen
+   einen *tatsächlich gesetzten* Haken, keine vorgehaltene Spalte. Eine
+   Spalte ist Platz, eine Plakette ist ein Befund; vorhandene Daten zu
+   verbergen ist etwas anderes als eine leere Spalte wegzulassen, und es
+   steht nicht in E-ZE-31. Nachgemessen am Boden-Tag 367: Spalten weg,
+   Plaketten „Bergwacht" und „Winde" stehen.
+2. **Die Sichtbarkeit der Filterblöcke in `suche.php` bleibt unberührt.** Sie
+   folgt seit S3 einer eigenen, katalogabgeleiteten Regel über den Bestand.
+   Sie auf die Fähigkeit umzustellen wäre eine weitere Funktionsänderung; sie
+   steht nicht in E-ZE-31 und wird nicht nebenbei mitgemacht (E-ZE-10).
+
+**Ein Fund am Rande, der die Richtung bestätigt:** `docs/Handbuch.md` sagte
+schon vorher „Winde und Bergwacht stehen nur an einem Diensttag, dessen
+Rettungsmittel sie führt". Das Handbuch hatte recht, der Code nicht — die
+Zusage stand seit Web 5.10.0 geschrieben und wurde nie eingehalten. Der Satz
+trägt jetzt zusätzlich die Betriebsart.
+
+**Ein zweiter Fund, an einem Prüfmittel:** Die Wortlisten-Ausnahme
+`basis-als-bezeichner` hing an `nurWenn\(basis\)` — mit schließender
+Klammer. Sobald `nurWenn` ein zweites Argument bekam, griff sie nicht mehr,
+und der Lauf meldete einen Treffer auf einen Bezeichner. Eine Ausnahme, die
+an der **Stelligkeit eines Aufrufs** hängt, misst nicht den Begriff, sondern
+den Zufall; sie steht jetzt auf `nurWenn\(basis\b`.
+
 ### AP10 — Abschluss und Übergabe an 10c
 
 Stufe-1-Schritt „Zentralisierung — hält jede Sache ihre eine Stelle?"
@@ -2345,6 +2400,52 @@ einmal **absichtlich rot** gesehen (eine zweite Stelle eingebaut, Schritt
 schlägt an — Selbstprobe der Kette); Kettenaufrufe 0/0; **Übergabezahl
 `error_log(`** genannt und gegen 77 erklärt; Wortliste, Vollständigkeit,
 Kontraste, CSP, Migrationsregister, `php -l` wie immer mit Zahl.
+
+#### Die fünf Entscheidungen zu AP9 (Auftraggeber, 22.09.2026)
+
+Sie sind in mehreren Runden gefallen, und die letzte hat die erste berichtigt.
+Was gilt, steht hier — und zwar vollständig, weil die Zwischenstände
+missverständlich waren.
+
+**E-ZE-31 — Winde und Bergwacht: die Anzeige folgt der Betriebsart, die
+Bearbeitung der Fähigkeit.** Zwei Orte, zwei Regeln, und das ist kein
+Widerspruch, sondern die Unterscheidung zwischen *erfassen* und *auswerten*:
+
+| Ort | Regel |
+|---|---|
+| **Einsatzbearbeitung** (`einsatz_form.php`, `einsatz.php`) | Winde und Bergwacht erscheinen, wenn **das Einsatzmittel** die Fähigkeit trägt — **unverändert**, auch bodengebunden. Das ist `cap_gate`, und es bleibt genau so |
+| **Tagesübersicht** und **Zeitraumübersicht** | Kacheln **und** Tabellenspalten nur, wenn der Diensttag **luftgebunden** ist **und** die Fähigkeit trägt. Bodengebunden: **weder Kachel noch Spalte**, auch mit Fähigkeit |
+| **Suche** | nach Fähigkeit, **Luft und Boden** |
+
+**Was das kostet, und es ist ausdrücklich entschieden:** Im Bestand stehen
+vier bodengebundene Bergwacht-Diensttage mit Fähigkeiten, **zwei davon mit
+einem dokumentierten Windeneinsatz** (01.08.2026, je einer). Diese Haken
+bleiben eintragbar und in der Einsatzbearbeitung sichtbar, erscheinen aber
+nicht mehr in der Tagesübersicht. Der Auftraggeber hat das nach Vorlage
+dieser Zahlen so entschieden.
+
+**Ein Nebenbefund, der eine gemeldete Lücke aufhebt:** Die Zeitraumübersicht
+macht ihre **Kacheln** bereits genau so — der Kommentar bei `KACHELSATZ`
+sagt wörtlich „Trägt ein **Luft**-Diensttag des Zeitraums die Fähigkeit,
+steht die Kachel" (E-S9-04, Backlog Nr. 104). Und der Filter `d.kind = 'air'`
+in `api/range.php`, den die AP9-Vermessung als Lücke meldete (Backlog
+Nr. 198), ist damit **kein Fehler, sondern genau diese Regel**. Er bleibt.
+Was fehlt, ist die Übertragung auf die **Tabellenspalten** — die stehen dort
+heute auf `liste.some(m => m.winch)`, also datengetrieben.
+
+**E-ZE-32 — Die Sortierung nach „Beginn" bleibt chronologisch; das Modul
+lernt den Nachtdienst.** `index.php` sortiert heute über die laufende
+Nummer, die `api/day.php` nach `started_at` vergibt; das Modul sortiert die
+**Zeichenkette** `start_hhmm`. Bei einem Dienst über Mitternacht — laut
+Handbuch „der klassische Fall" — stünde damit 01:10 vor 23:50. Das Modul
+bekommt die chronologische Sortierung, nicht umgekehrt.
+
+**E-ZE-33 — Die Spalte „Nr." bleibt.** Sie trägt die Einsatznummer **des
+Tages** und ist zugleich die Verbindung zur Karte: Pins und Popups heißen
+`Einsatz <Nr.>`. Das Modul lernt sie.
+
+**E-ZE-34 — Beschriftung, Ausrichtung, Hakenreihenfolge und Gleichstände
+folgen dem Modul**, wie am 12.09.2026 und in E-ZE-01 entschieden. Unverändert.
 
 #### AP10 — was gebaut ist, und was auf AP9 wartet
 

@@ -43,8 +43,22 @@ declare(strict_types=1);
  *            Breiten- oder Sonderregel in style.css, wenn eine Spalte eine
  *            braucht. Die Ausrichtung kommt nicht von hier: Hakenspalten
  *            (`art` = 'check') erhalten im Markup zusaetzlich `haken-spalte`.
+ *   'cap'    Faehigkeit aus 'cap_gate', sonst ''. Seit Schritt 15 AP9.
  *
- * @return list<array{col:string,art:string,label:string,klasse:string}>
+ * WOZU 'cap' DA IST -- und wozu nicht. Diese Funktion FILTERT NICHT. Sie
+ * kennt keinen Diensttag (sie nimmt keinen Parameter und cacht statisch),
+ * und sie soll auch keinen kennen: Die Tagesuebersicht wechselt den Tag
+ * OHNE Seitenwechsel, die Entscheidung faellt also ohnehin im Browser.
+ * Geliefert wird die Bedingung, angewendet wird sie dort.
+ *
+ * Bis Schritt 15 AP9 fiel die Bedingung unterwegs heraus: 'cap_gate' stand
+ * im Katalog, `mf_gates_erfuellt()` wertete es aus -- aber nur fuer das
+ * Einsatzformular. Die Tagestabelle bekam es nie zu sehen, und so trugen
+ * ALLE 69 Diensttage des Referenzbestands die Windenspalte, auch die ohne
+ * Winde. Die Regel, die jetzt gilt, steht in E-ZE-31: Anzeige nach
+ * Betriebsart UND Faehigkeit, Bearbeitung nach Faehigkeit allein.
+ *
+ * @return list<array{col:string,art:string,label:string,klasse:string,cap:string}>
  */
 function mf_tagesspalten(): array
 {
@@ -82,6 +96,7 @@ function mf_tagesspalten(): array
                     'art'    => $dc === 'check' ? 'check' : 'text',
                     'label'  => (string)($f['day_label'] ?? $f['label'] ?? $col),
                     'klasse' => 'c-dc-' . $col,
+                    'cap'    => (string)($f['cap_gate'] ?? ''),
                 ];
             }
             if (!empty($f['children']) && is_array($f['children'])) {

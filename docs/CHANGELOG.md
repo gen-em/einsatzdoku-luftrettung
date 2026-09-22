@@ -14,6 +14,96 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.35.0] — 2026-09-22
+
+**Winde und Bergwacht: die Auswertung folgt der Betriebsart, die Bearbeitung
+der Fähigkeit.** Schritt 15 AP9a (Zentralisierung, R83; Entscheidung E-ZE-31).
+
+Dies ist eine **Funktionsänderung mit ausdrücklicher Freigabe**, kein Umbau.
+Wer nur die Zentralisierungsarbeit erwartet, liest hier etwas anderes — und
+das ist Absicht: Der Umbau der Tagestabelle hätte eine Zusage gegeben, die
+heute niemand einhält.
+
+### Was der Befund war
+
+`cap_gate` steht seit Web 5.10.0 im Feldkatalog und sagt: „Dieses Feld gibt es
+nur, wenn der Diensttag diese Fähigkeit trägt." Ausgewertet wurde es an genau
+einer Stelle — im Einsatzformular. Die **Tagesübersicht bekam es nie zu
+sehen**: Sie zieht ihre Spalten aus `mf_tagesspalten()`, und diese Funktion
+nimmt keinen Parameter, kennt keinen Diensttag und speichert ihr Ergebnis
+statisch. Gemessen am 22.09.2026: **alle 69 Diensttage des Referenzbestands
+trugen die Windenspalte**, auch ein NEF ohne Winde. Die Zeichenfolge
+`capabilit` kam in `index.php` **nullmal** vor.
+
+Aufgefallen ist das erst, als vier lesende Agenten unabhängig voneinander
+denselben Befund meldeten — der erste Prüffall des geplanten Pakets („NEF-Tag
+ohne Fähigkeit → keine Windenspalte") konnte gar nicht fehlschlagen, weil er
+eine Zusage prüfte, die es nicht gab.
+
+### Geändert
+
+**Zwei Orte, zwei Regeln** — der Unterschied zwischen *erfassen* und
+*auswerten*:
+
+| Ort | Regel |
+|---|---|
+| **Einsatzbearbeitung** (`einsatz_form.php`, `einsatz.php`) | Winde und Bergwacht erscheinen, wenn das **Einsatzmittel** die Fähigkeit trägt — **unverändert**, auch bodengebunden |
+| **Tagesübersicht**, **Zeitraumübersicht** | Kacheln **und** Tabellenspalten nur, wenn der Diensttag **luftgebunden** ist **und** die Fähigkeit trägt |
+| **Suche** | nach Fähigkeit, über **Luft und Boden** |
+
+`mf_tagesspalten()` liefert dafür die Fähigkeit jeder Spalte mit (`cap`) —
+**gefiltert wird sie nicht dort**: Die Funktion kennt keinen Diensttag und
+soll auch keinen kennen. Geliefert wird die Bedingung, angewendet wird sie im
+Browser. Der Tabellenkopf entsteht mit dem richtigen Startzustand aus PHP,
+damit beim Seitenaufbau keine zwei leeren Spalten aufblitzen; die Entscheidung
+fällt trotzdem in `dayColsSetzen()`, weil `loadDay()` auch ohne Seitenwechsel
+wieder anläuft — nach dem Schneiden einer Spur und nach dem Speichern der
+Tagesdaten, und beim Speichern kann sich das Rettungsmittel geändert haben.
+
+In `assets/missiontable.js` bekommt `nurWenn` ein zweites Argument: die
+Fähigkeiten der Ansicht, gesetzt mit `setFaehigkeiten()`. **Ohne diesen Aufruf
+gilt weiter der Bestand.** Das ist kein Vergessen, sondern der Rückfall — eine
+Seite, die das Modul einbindet und die Fähigkeiten nicht kennt, soll ihre
+Spalten nicht stillschweigend verlieren.
+
+`api/suchindex.php` liefert die Fähigkeiten des Bestands neu mit
+(`faehigkeiten`), **ohne Artfilter**. `api/range.php` **behält** seinen
+`d.kind = 'air'`-Filter: Er war als Lücke gemeldet (Backlog Nr. 198) und ist
+mit dieser Entscheidung genau die Regel. Die beiden Endpunkte machen jetzt
+absichtlich Verschiedenes, und beide sagen im Kommentar, warum.
+
+### Was das kostet — vorgelegt und entschieden
+
+Im Bestand stehen **vier bodengebundene Bergwacht-Diensttage mit
+Fähigkeiten, zwei davon mit einem dokumentierten Windeneinsatz**. Diese Haken
+bleiben eintragbar und in der Einsatzbearbeitung sichtbar, **erscheinen aber
+nicht mehr in der Tagestabelle**. Der Auftraggeber hat das nach Vorlage dieser
+Zahlen so entschieden.
+
+### Was bewusst stehen bleibt
+
+**Die Kacheln unter 720 px.** Ihre Plaketten zeigen einen *tatsächlich
+gesetzten* Haken, keine vorgehaltene Spalte. Eine Spalte ist Platz, eine
+Plakette ist ein Befund — vorhandene Daten zu verbergen hat niemand
+entschieden, und es wäre etwas anderes als das, was entschieden wurde.
+
+**Die Sichtbarkeit der Filterblöcke in der Suche.** Sie folgt seit S3 dem
+Bestand und einer eigenen, katalogabgeleiteten Regel. Sie auf die Fähigkeit
+umzustellen wäre eine weitere Funktionsänderung; sie steht nicht in E-ZE-31
+und wird darum nicht nebenbei mitgemacht.
+
+### Geprüft
+
+Fünf Diensttage des Demo-Bestands, je vier Zahlen (sichtbare Köpfe, versteckte
+Köpfe, Zellen der ersten Zeile, Einträge des Sortierblatts): **11/0/11/10** am
+Lufttag mit Fähigkeit, **9/2/9/8** an den vier übrigen — vorher **11** an allen
+fünf. Zeitraumübersicht: der bodengebundene Tab verliert zwei Spalten
+(10 → 8), Luft- und Mischtab unverändert. Gegenprobe zur Suche: mit
+abgefangener Antwort `faehigkeiten = {false, false}` verschwinden beide
+Spalten, obwohl im Bestand **7 Einsätze mit Winden- und 15 mit
+Bergwachthaken** stehen — die Fähigkeit entscheidet, nicht das Datum.
+**0 Konsolenfehler.**
+
 ## [Web 20.34.0] — 2026-09-22
 
 **Vier Zentralen im Browser.** Schritt 15 AP8b bis AP8f (Zentralisierung, R83).

@@ -274,6 +274,21 @@ const EdMissionTable = (() => {
    * ausschliesst, und die Tabelle spraenge beim Tippen. Welche Liste der
    * Bestand ist, sagt die Seite mit setSpaltenBestand(); ohne diesen Aufruf
    * sind Bestand und Trefferliste dasselbe.
+   *
+   * WINDE UND BERGWACHT FOLGEN SEIT SCHRITT 15 AP9 DER FAEHIGKEIT, NICHT DEM
+   * BESTAND (E-ZE-31). `nurWenn` bekommt dafuer ein ZWEITES Argument: die
+   * Faehigkeiten der Ansicht, `{winch: bool, bergwacht: bool}`. Die Seite
+   * setzt sie mit setFaehigkeiten() -- WELCHE Tage sie zusammenfasst, ist
+   * ihre Sache und nicht die dieses Moduls: Die Zeitraumuebersicht zaehlt
+   * nur LUFT-Diensttage (api/range.php filtert auf `d.kind = 'air'`), die
+   * Suche zaehlt Luft UND Boden. Beides ist so entschieden.
+   *
+   * OHNE setFaehigkeiten() GILT WEITER DER BESTAND. Das ist kein Vergessen,
+   * sondern der Rueckfall: Eine Seite, die das Modul einbindet und die
+   * Faehigkeiten nicht kennt, soll ihre Spalten nicht stillschweigend
+   * verlieren. Der Unterschied zwischen beiden Regeln ist gerade der Fall
+   * „Faehigkeit ja, Einsatz nein" -- die Spalte steht dann leer da, statt zu
+   * fehlen, und wer nachtragen will, sieht, dass es sie gibt.
    */
   const SPALTEN = [
     /* Die Art als Symbolspalte. In der Tagesleiste steht sie am Namen des
@@ -329,15 +344,16 @@ const EdMissionTable = (() => {
     { key: 'dx',    kopf: 'Diagnose',              thClass: '',
       wert: m => (m._dx || '').toLowerCase(),
       zelle: (m, ctx) => zelleGeschuetzt(m, m._dx, ctx && ctx.hervor) },
-    /* Winde und Bergwacht sind FAEHIGKEITEN einzelner Rettungsmittel (E29).
-       Wer nie windet, sah bisher zwei dauerhaft leere Spalten — dieselbe
-       Ueberlegung, die in der Suche schon die Filterbloecke ausblendet. */
+    /* Winde und Bergwacht sind FAEHIGKEITEN einzelner Rettungsmittel (E29)
+       — und seit Schritt 15 AP9 entscheidet genau das ueber die Spalte, nicht
+       mehr der Bestand. Siehe den Kopfkommentar oben; `f` ist null, solange
+       die Seite keine Faehigkeiten gesetzt hat. */
     { key: 'winch', kopf: 'Winde',                 thClass: 'haken-spalte',
-      nurWenn: liste => liste.some(m => m.winch),
+      nurWenn: (liste, f) => f ? !!f.winch : liste.some(m => m.winch),
       wert: m => m.winch ? 1 : 0,
       zelle: m => `<td class="haken-spalte">${m.winch ? HAKEN() : ''}</td>` },
     { key: 'bw',    kopf: 'Bergwacht',             thClass: 'haken-spalte',
-      nurWenn: liste => liste.some(m => m.bergwacht),
+      nurWenn: (liste, f) => f ? !!f.bergwacht : liste.some(m => m.bergwacht),
       wert: m => m.bergwacht ? 1 : 0,
       zelle: m => `<td class="haken-spalte">${m.bergwacht ? HAKEN() : ''}</td>` },
     /* WEICHES TRENNZEICHEN STATT <br> (F-N1-G). „Sekundaertransport" ist EIN
@@ -433,6 +449,10 @@ const EdMissionTable = (() => {
      * suche.php nicht (dort ist sie das Suchergebnis); die Suche setzt ihn
      * deshalb einmal beim Laden auf den Gesamtbestand. */
     let bestand = null;
+    /* null = „die Seite hat nichts gesagt" und NICHT `{}`: Ein leeres Objekt
+     * hiesse „keine Faehigkeit vorhanden" und liesse die beiden Spalten
+     * verschwinden. Der Unterschied ist der ganze Zweck des Rueckfalls. */
+    let faehig = null;
 
     let thead = table.tHead;
     if (!thead) { thead = table.createTHead(); }
@@ -469,7 +489,7 @@ const EdMissionTable = (() => {
     /** Die Spalten, die dieser Bestand rechtfertigt (A13d). */
     function sichtbareSpalten() {
       const basis = bestand !== null ? bestand : daten;
-      return SPALTEN.filter(sp => !sp.nurWenn || sp.nurWenn(basis));
+      return SPALTEN.filter(sp => !sp.nurWenn || sp.nurWenn(basis, faehig));
     }
 
     function zeichneKopf(spalten) {
@@ -607,8 +627,12 @@ const EdMissionTable = (() => {
      * zeichnen waere zweimal dieselbe Tabelle. */
     function setSpaltenBestand(liste) { bestand = liste || []; }
 
+    /* Faehigkeiten der Ansicht setzen, `{winch, bergwacht}`. Zeichnet
+     * ebenfalls nicht selbst -- derselbe Grund. */
+    function setFaehigkeiten(f) { faehig = f || null; }
+
     return {
-      setData, zeichne, setSort, setSpaltenBestand,
+      setData, zeichne, setSort, setSpaltenBestand, setFaehigkeiten,
       /* Die sichtbaren Spalten mit ihrer schlichten Beschriftung — fuer ein
        * Sortierblatt, das nicht den Tabellenkopf abklauben muss. Spalten
        * ohne Kopftext (der Farbstreifen) bleiben draussen: Nach ihnen

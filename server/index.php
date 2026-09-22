@@ -28,6 +28,35 @@ if ($selDayId > 0 && dt_laden($userId, $selDayId) === null) { $selDayId = 0; }
 if ($selDayId === 0) { $selDayId = dt_neuester($userId) ?? 0; }
 $selDay = $selDayId > 0 ? $selDayId : null;
 
+/* WELCHE KATALOGSPALTEN DIESER TAG FUEHRT -- der Startzustand des Kopfes
+ * (Schritt 15 AP9, E-ZE-31). Winde und Bergwacht haengen an einer
+ * FAEHIGKEIT ('cap_gate' im Feldkatalog) und erscheinen in der
+ * Tagesuebersicht nur, wenn der Diensttag LUFTGEBUNDEN ist UND sie traegt.
+ *
+ * ENTSCHIEDEN WIRD ES TROTZDEM IM BROWSER, in dayColsSetzen(). Diese Zeilen
+ * hier sind der Startzustand und nicht die Entscheidung: `loadDay()` laeuft
+ * auch ohne Seitenwechsel wieder an -- nach dem Schneiden einer Spur und
+ * nach dem Speichern der Tagesdaten, und beim Speichern kann sich das
+ * Rettungsmittel und damit die Betriebsart geaendert haben. Stuende die
+ * Regel nur hier, zeigte der Kopf danach den Stand von vorhin, waehrend die
+ * Zellen darunter schon dem neuen folgen. Die Entscheidung gehoert an EINE
+ * Stelle, und das ist die, die bei jedem Laden laeuft.
+ *
+ * Wozu dann diese Zeilen? Ohne sie stuenden beim Seitenaufbau zwei leere
+ * Spalten im Kopf, bis api/day.php geantwortet hat -- ein Aufblitzen, das
+ * niemand braucht. */
+$selDayArt  = null;
+$selDayCaps = [];
+if ($selDay !== null) {
+    $t = dt_laden($userId, $selDay);
+    $selDayArt  = $t !== null && $t['kind'] !== null ? (string)$t['kind'] : null;
+    $selDayCaps = dt_faehigkeiten($selDay);
+}
+$dcSichtbar = static function (array $dc) use ($selDayArt, $selDayCaps): bool {
+    return $dc['cap'] === ''
+        || ($selDayArt === 'air' && in_array($dc['cap'], $selDayCaps, true));
+};
+
 /* Neu hinzugekommene Geraete (M4-10). Die Startseite ist die Seite, auf der
  * nach der Anmeldung jede/r landet — ein Hinweis, der nur im Geraete-Reiter
  * stuende, erreichte genau die Person nicht, die dort nie hinsieht. Die
@@ -520,7 +549,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
                        das Sortierblatt. */
                     foreach ($TAGESSPALTEN as $dc): ?>
               <th class="sortable <?= $dc['art'] === 'check' ? 'haken-spalte ' : '' ?><?= e($dc['klasse']) ?>"
-                  data-key="dc:<?= e($dc['col']) ?>"
+                  data-key="dc:<?= e($dc['col']) ?>"<?= $dcSichtbar($dc) ? '' : ' hidden' ?>
                   data-label="<?= e(strip_tags(str_replace('<br>', ' ', (string)$dc['label']))) ?>"><?= $dc['label'] ?></th>
               <?php endforeach; ?>
               <th class="sortable zahl-spalte" data-key="km" data-label="km">km</th>
@@ -674,10 +703,14 @@ const BASIS_LISTE = <?= json_js(array_map(
 const DEF_BASE = <?= (int)($SD_DEFAULTS['base_id'] ?? 0) ?>;
 /* Spalten der Tagestabelle — dieselbe Liste, aus der oben der Tabellenkopf
    entstanden ist. Der Titel fehlt hier bewusst: Er steht bereits im <thead>,
-   und das Skript baut nur noch Zellen. */
+   und das Skript baut nur noch Zellen.
+
+   `cap` ist die Faehigkeit aus dem Feldkatalog ('cap_gate'), leer bei einer
+   Spalte, die an keiner haengt. Gefiltert wird in dayColsSetzen(); der
+   Startzustand des Kopfes steht in PHP (siehe `$dcSichtbar` oben). */
 const DAY_COLS = <?= json_js(array_map(
         static fn(array $dc): array => ['col' => $dc['col'], 'art' => $dc['art'],
-                                        'klasse' => $dc['klasse']],
+                                        'klasse' => $dc['klasse'], 'cap' => $dc['cap']],
         $TAGESSPALTEN), JSON_UNESCAPED_UNICODE) ?>;
 /* Die Spurfarben kommen aus den Token (--spur-1..8, EdGeo.spurFarbe) — hier
    stand eine COLORS-Liste mit fuenf markenfremden Werten (F-P3-H). */
@@ -723,6 +756,47 @@ let dayMissions = [];
 let dayRest = [];
 let sortKey = 'start', sortDir = 1;
 
+/* DIE KATALOGSPALTEN DIESES TAGES (Schritt 15 AP9, E-ZE-31).
+ *
+ * Winde und Bergwacht sind FAEHIGKEITEN eines Rettungsmittels, und die
+ * Tagesuebersicht zeigt ihre Spalten nur, wenn der Diensttag LUFTGEBUNDEN
+ * ist UND die Faehigkeit traegt. Bodengebunden steht keine der beiden
+ * Spalten, auch wenn der Tag die Faehigkeit hat -- so entschieden am
+ * 22.09.2026 nach Vorlage der Zahlen (vier bodengebundene
+ * Bergwacht-Diensttage im Bestand, zwei davon mit einem dokumentierten
+ * Windeneinsatz). Der Haken bleibt eintragbar und in der Einsatzbearbeitung
+ * sichtbar; nur die Auswertung folgt der Betriebsart.
+ *
+ * WAS VORHER WAR: nichts davon. 'cap_gate' stand im Katalog, wurde aber nur
+ * im Einsatzformular ausgewertet -- ALLE 69 Diensttage des Referenzbestands
+ * trugen die Windenspalte, auch ein NEF ohne Winde.
+ *
+ * DIE KACHELN UNTER 720 px SIND AUSDRUECKLICH NICHT BETROFFEN. Ihre
+ * Plaketten zeigen einen TATSAECHLICH GESETZTEN Haken, keine vorgehaltene
+ * Spalte; sie zu unterdruecken hiesse, vorhandene Daten zu verbergen, und
+ * das hat niemand entschieden. Eine Spalte ist Platz, eine Plakette ist ein
+ * Befund. */
+let dayCols = DAY_COLS;
+
+/** Die Katalogspalten, die dieser Diensttag rechtfertigt. */
+function dayColsSetzen(meta){
+  const luft = !!(meta && meta.kind === 'air');
+  const caps = new Set((meta && meta.capabilities) || []);
+  dayCols = DAY_COLS.filter(dc => !dc.cap || (luft && caps.has(dc.cap)));
+
+  const gezeigt = new Set(dayCols.map(dc => 'dc:' + dc.col));
+  document.querySelectorAll('#missions th[data-key^="dc:"]').forEach(th => {
+    th.hidden = !gezeigt.has(th.dataset.key);
+  });
+  /* Sortiert die Tabelle gerade nach einer Spalte, die dieser Tag nicht
+   * fuehrt, faellt sie auf den Beginn zurueck. Ohne diesen Rueckfall
+   * zeigte der Pfeil auf keinen Kopf mehr, und die Reihenfolge waere ohne
+   * sichtbaren Grund eine andere als die gewohnte. */
+  if (sortKey.startsWith('dc:') && !gezeigt.has(sortKey)) {
+    sortKey = 'start'; sortDir = 1;
+  }
+}
+
 function sortVal(m, key){
   // Spalten aus dem Feldkatalog tragen den Schluessel 'dc:<spalte>'. Haken
   // sortieren als 0/1, Textspalten als kleingeschriebene Zeichenkette — wie
@@ -758,7 +832,7 @@ function renderMissionTable(){
     tr.className = 'clickable';
     // Zellen der Katalogspalten in der Reihenfolge des Tabellenkopfes.
     // Haken aus dem Symbolvorrat, dunkelblau (E-P3-32).
-    const dcZellen = DAY_COLS.map(d => {
+    const dcZellen = dayCols.map(d => {
       const v = m[d.col];
       if (d.art === 'check') {
         return `<td class="haken-spalte ${d.klasse}">${v ? edSymbol('haken', 'tabelle-haken', 'ja') : ''}</td>`;
@@ -816,6 +890,10 @@ function renderMissionTable(){
     });
     tbody.appendChild(tr);
   });
+  /* Ueber ALLE Koepfe, auch die versteckten: Ein Kopf, der bei einem
+     Tageswechsel wieder auftaucht, soll keinen alten Pfeil mittragen.
+     Ein versteckter Kopf kann nie der sortierte sein -- dayColsSetzen()
+     faellt in diesem Fall auf 'start' zurueck. */
   document.querySelectorAll('#missions th.sortable').forEach(th => {
     th.querySelector('.arrow')?.remove();
     if (th.dataset.key === sortKey) {
@@ -854,7 +932,7 @@ function renderMissionTable(){
   {
     const liste = document.getElementById('sortliste');
     liste.innerHTML = '';
-    document.querySelectorAll('#missions th.sortable').forEach(th => {
+    document.querySelectorAll('#missions th.sortable:not([hidden])').forEach(th => {
       const b = document.createElement('button');
       b.type = 'button';
       const aktiv = th.dataset.key === sortKey;
@@ -1041,6 +1119,10 @@ async function loadDay(dayId){
     }
   });
   EdSchnitt.setzen(dayRest);
+
+  /* Welche Katalogspalten dieser Tag fuehrt -- VOR renderMissionTable(),
+     weil der Zeilenaufbau `dayCols` liest (E-ZE-31). */
+  dayColsSetzen(d.meta);
 
   // Einsaetze: je eigene Farbe
   // Einsaetze: Nummer + Farbe stabil nach Alarmierungszeit vergeben

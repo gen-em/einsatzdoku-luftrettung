@@ -877,8 +877,15 @@ Pro Tag:
 
   Ab 720 px steht die **Tabelle**: Nr., Beginn, Dauer, **Einsatzort**
   (Ortschaft aus der verschlüsselten Adresse), **Alter**, **Diagnose**,
-  Winde, Bergwacht, Sekundärtransport, Kilometer. Winde und Bergwacht
-  stehen nur an einem Diensttag, dessen Rettungsmittel sie führt. Den
+  Winde, Bergwacht, Sekundärtransport, Kilometer. **Winde und Bergwacht
+  stehen nur an einem luftgebundenen Diensttag, dessen Rettungsmittel sie
+  führt** (seit Web 20.35.0). An einem bodengebundenen Dienst fehlen beide
+  Spalten, auch wenn das Rettungsmittel die Fähigkeit hat — die Haken
+  bleiben im Einsatz selbst eintragbar und dort sichtbar, und unter 720 px
+  stehen sie weiterhin als Plakette auf der Kachel. Davor stand die
+  Windenspalte an **jedem** Diensttag, auch an einem NEF-Dienst ohne Winde:
+  Die Regel war im Feldkatalog hinterlegt, aber in dieser Tabelle nie
+  ausgewertet worden. Den
   **Fehleinsatz** führt diese Tabelle bewusst nicht — er steht im Einsatz
   selbst und auf der Kachel; auswerten lässt er sich in der
   Zeitraum-Übersicht und der Suche. Zahlenspalten stehen rechtsbündig,
@@ -1445,6 +1452,9 @@ sie führt (Abschnitt 9.1a) — unabhängig davon, ob der Tag luft- oder
 bodengebunden ist. Wird ein Haken dort später abgewählt, verlieren bereits
 dokumentierte Einsätze nichts: Ihr Diensttag hat die Fähigkeit beim Anlegen
 eingefroren.
+Das gilt **hier im Formular**. In der Tages- und der Zeitraumübersicht
+erscheinen die beiden Spalten seit Web 20.35.0 nur an einem luftgebundenen
+Dienst (Abschnitte 4.1 und 4.4); erfassen lässt sich beides trotzdem.
 
 **Abweichende Besatzung.** Normalerweise gilt für jeden Einsatz die Besatzung
 des Diensttags — sie wird einmal am Tag eingetragen und muss am Einsatz nicht
@@ -1563,7 +1573,7 @@ Beschriftung.
 
 | Ansicht | Kacheln |
 |---|---|
-| **Luft** | Einsätze, Flugtage, Ø Einsätze/Flugtag, Sekundärtransporte, Flugkilometer gesamt, längste Flugstrecke, längste Einsatzdauer, höchster Einsatzort — dazu Anzahl und Ø Winden-Cycles, sofern im Zeitraum tatsächlich Windeneinsätze dokumentiert sind |
+| **Luft** | Einsätze, Flugtage, Ø Einsätze/Flugtag, Sekundärtransporte, Flugkilometer gesamt, längste Flugstrecke, längste Einsatzdauer, höchster Einsatzort — dazu Anzahl und Ø Winden-Cycles, sofern im Zeitraum ein **luftgebundener** Diensttag die Windenfähigkeit führt (nicht erst, wenn tatsächlich gewindet wurde: „null Windeneinsätze" ist etwas anderes als „Winde nicht eingerichtet") |
 | **Boden** | Einsätze, Diensttage, Ø Einsätze/Diensttag, Sekundärtransporte, **Fehleinsätze**, Einsatzkilometer gesamt, längste Einsatzstrecke, längste Einsatzdauer |
 | **Gemischt** | Einsätze, Diensttage, Ø Einsätze/Diensttag, Sekundärtransporte |
 
@@ -2801,10 +2811,18 @@ gilt weiter: Winde und Bergwacht gibt es nur luftgebunden. Im Formular siehst
 du das an der Kleinzeile neben „Fähigkeiten" — sie sagt „nur luftgebunden"
 oder „bei diesem Typ auch bodengebunden".
 
-Ein bodengebundener Bergwacht-Diensttag zeigt die Windenfelder im
-**Einsatzformular** genauso wie ein luftgebundener. In der
-**Zeitraumübersicht** zählen sie noch nicht mit: Die beiden Windenkacheln gibt
-es dort bisher nur in der Luftansicht.
+**Erfassen und auswerten sind zweierlei** (seit Web 20.35.0). Ein
+bodengebundener Bergwacht-Diensttag zeigt die Windenfelder im
+**Einsatzformular** genauso wie ein luftgebundener — dort entscheidet die
+Fähigkeit allein. Ausgewertet werden sie in **Tages- und Zeitraumübersicht**
+nicht: Dort erscheinen die Spalten „Winde" und „Bergwacht" und die beiden
+Windenkacheln nur an einem **luftgebundenen** Dienst mit der Fähigkeit. Die
+Haken bleiben eintragbar, sie stehen im Einsatz und auf seiner Kachel — nur
+in den beiden Tabellen sind sie nicht zu sehen.
+
+**Die Suche macht es anders**, und das ist gewollt: Sie zeigt die beiden
+Spalten, sobald **irgendein** Diensttag die Fähigkeit führt — luft- wie
+bodengebunden. Sie durchsucht den ganzen Bestand und nicht einen Dienst.
 
 **„Keine Rollen-Vorlagen"** heißt: Ein Diensttag mit einem solchen
 Rettungsmittel bekommt keine Besatzungsfelder angeboten. Das ist keine

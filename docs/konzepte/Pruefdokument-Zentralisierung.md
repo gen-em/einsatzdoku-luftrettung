@@ -1077,3 +1077,124 @@ unten als I-4 und I-5 mit einem Bedienweg, nicht als Häkchen.
 | **I-12** | **GPX-Datei importieren**, absichtlich eine kaputte | „Der Import der GPX-Datei ist fehlgeschlagen: …" im roten Kasten | Kasten ohne Symbol, oder Text außerhalb |
 | **I-13** | **Abmelden, neu anmelden** und Betrieb → Status öffnen | Zeile „Schlüsselableitung" grün; die stille KDF-Anhebung läuft (N8-5) | Ein Bestandskonto bleibt auf alter Rundenzahl |
 | **I-14** | **Statistik als CSV herunterladen** und die Dauerspalten ansehen | `HH:MM` wie bisher, leere Zellen wo bisher leer | Eine `0` wo eine leere Zelle stand — in einer Tabelle heißt das etwas anderes |
+
+---
+
+## J0. AP9a — was **nicht** geprüft werden konnte, und warum
+
+Das steht hier vorn, nicht in einer Fußnote.
+
+- **Kein Diensttag ohne jede Fähigkeit auf einem *gewachsenen* Bestand.** Der
+  Demo-Bestand hat alle vier Fälle (Luft/Boden × Fähigkeit ja/nein), aber er
+  ist frisch eingespielt. Auf einer Anlage, die die Migration
+  `2026_08_17_notarzt_erweiterung` durchlaufen hat, trägt **jeder** damals
+  bestehende Diensttag beide Fähigkeiten — auch ein NEF-Tag von 2025. Dort
+  sieht die Änderung an Alttagen **nichts**: Sie tragen die Fähigkeit, und
+  luftgebunden sind sie auch. Das ist kein Fehler, aber es heißt, dass die
+  Wirkung auf der Produktivanlage kleiner ausfällt als im Demo-Bestand.
+- **Der Bildvergleich kann die Frage nicht beantworten.** 56 von 56 Bildern
+  weichen ab — Ursache ist der Countdown im Demo-Banner, der auf jeder Seite
+  des Demo-Kontos steht (die LIESMICH des Werkzeugs nennt 303 von 496 auf
+  **unverändertem** Code). Was trägt, ist der **Formvergleich**; seine Zahl
+  steht unten.
+- **Die Kacheln unter 720 px sind nur an einem Tag nachgemessen** (Boden-Tag
+  367, Plaketten „Bergwacht" und „Winde" stehen trotz fehlender Spalten). Die
+  Regel ist einfach genug, dass ein Fall genügt — aber es ist einer.
+
+## J1. AP9a — was maschinell geprüft wurde, mit Mittel **und** Zahl
+
+### Gegen die laufende Anlage (Playwright, Demo-Konto)
+
+**Fünf Diensttage, je vier Zahlen.** Gemessen wurden sichtbare `<th>`,
+versteckte `<th>`, Zellen der ersten `<tr>` und Einträge des Sortierblatts:
+
+| Tag | Art / Fähigkeit | vorher | nachher |
+|---|---|---|---|
+| 364 | Luft, **mit** | 11 Köpfe | **11 / 0 / 11 / 10** |
+| 372 | Luft, **ohne** | 11 Köpfe | **9 / 2 / 9 / 8** |
+| 367 | Boden, **mit**, 1 Windeneinsatz | 11 Köpfe | **9 / 2 / 9 / 8** |
+| 355 | Boden, **mit**, 0 Windeneinsätze | 11 Köpfe | **9 / 2 / 9 / 8** |
+| 357 | Boden, **ohne** | 11 Köpfe | **9 / 2 / 9 / 8** |
+
+Zellen = Köpfe an allen fünf Tagen, vorher wie nachher. **0 Konsolenfehler.**
+
+**Zeitraumübersicht:** Bodentab **10 → 8** Spalten (`winch`, `bw` weg), Luft-
+und Mischtab unverändert bei 11 bzw. 12.
+
+**Gegenprobe zur Suche — der eigentliche Beleg.** Der Demo-Bestand kann die
+Regel auf Bestandsebene nicht unterscheiden (Fähigkeit und Haken fallen
+zusammen). Also wurde die Antwort von `api/suchindex.php` im Browser
+abgefangen und `faehigkeiten` auf `{winch: false, bergwacht: false}` gesetzt:
+**beide Spalten verschwinden**, obwohl im Bestand **7 Einsätze mit Winden-
+und 15 mit Bergwachthaken** stehen. Datengetrieben wären sie stehen
+geblieben. Damit ist belegt, dass die **Fähigkeit** entscheidet und nicht das
+Datum.
+
+### Formvergleich (`tools/screenshots/vergleichen.py`)
+
+56 Seiten (6 Seiten × 8 Breiten, plus die Mehrfachfassungen): **41 formgleich,
+15 mit abweichender Form, 105 Zeilen.** Die 15 sind die drei
+Tagesübersichtsseiten (`10-`, `11-`, `12-tagesuebersicht-adhoc`) in den fünf
+Breiten ab 768 px — unter 720 px zeigt die Seite keine Tabelle, also auch
+keine Spalten.
+
+**Jede gedruckte Diff-Zeile wurde einzeln klassifiziert**, nicht überschlagen:
+120 Zeilen, davon **15 alte Kopfzeilen** (`… Transport Bergwacht Winde km`),
+**15 neue Kopfzeilen** (`… Transport km`), **45 alte Datenzeilen** (mit zwei
+leeren Tabulatorfeldern vor der km-Zahl) und **45 neue Datenzeilen** (ohne).
+**0 unerklärte Zeilen.**
+
+### Gegen den Quelltext und die Prüfmittel
+
+| Mittel | Zahl |
+|---|---|
+| `php -l` über die berührten Dateien | **0 Fehler** |
+| `node --check assets/missiontable.js` | **ok** |
+| Register (`tools/zaehlung/`) | **38 Zeilen, 0 über der Decke**, Rückgabe 0 |
+| Wortliste | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** |
+| Vollständigkeit | **397** — Zeile für Zeile gleich dem Stand davor, bis auf **eine** verschobene Zeilennummer |
+| CSP-Probe | **0 Befunde** (vorher wie nachher) |
+| Kettenaufrufe | **47 Aufrufe, 0 Befunde, 0 ungeprüft** |
+| Bilderlauf | **56 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 falsche Knopfhöhen** |
+
+### Zwei Funde an den Werkzeugen selbst
+
+- **Die Wortlisten-Ausnahme `basis-als-bezeichner` hing an der Stelligkeit
+  eines Aufrufs.** Sie stand auf `nurWenn\(basis\)` — mit schließender
+  Klammer. Sobald `nurWenn` ein zweites Argument bekam, griff sie nicht mehr,
+  und der Lauf meldete einen Treffer auf einen Bezeichner. Steht jetzt auf
+  `nurWenn\(basis\b`. Eine Ausnahme, die an der Stelligkeit hängt, misst den
+  Zufall und nicht den Begriff.
+- **`--erwartet` nimmt EINEN Namen je Flag**, keine Kommaliste
+  (`action="append"`). Eine Kommaliste wird als ein Name gelesen, trifft
+  nichts und meldet „ERWARTUNG OHNE TREFFER" — die Befundzahl steigt dabei,
+  statt zu fallen. Das sieht aus wie eine Verschlechterung durch die eigene
+  Erklärung.
+
+## J2. AP9a — Grenzen der benutzten Prüfmittel
+
+- **Der Formvergleich ist blind für führende Nullen** (`\d+` → `#`, gierig).
+  Das ist hier ohne Belang, weil keine Zahl geändert wurde — es gilt aber
+  weiter und steht hier, damit es nicht vergessen wird.
+- **Der Bildvergleich ist auf dem Demo-Konto unbrauchbar** (siehe J0).
+- **Das Register zählt keine Fähigkeitsregel.** Es hat keine Zeile dafür und
+  bekommt auch keine: Die Regel ist keine „Stelle je Sache", sondern eine
+  fachliche Entscheidung. Wer sie prüfen will, prüft sie im Browser.
+- **Playwright misst das DOM, nicht die Wahrnehmung.** Dass ein `<th hidden>`
+  keine Spalte erzeugt, ist gemessen; dass die Tabelle **gut aussieht**,
+  ohne die beiden Spalten, ist eine Sichtprüfung und steht in der Liste unten.
+
+## J3. AP9a — Prüfliste: was **die Auftraggeberin** noch tun muss
+
+| # | Weg | Erwartet | Scheitern erkennbar an |
+|---|---|---|---|
+| **J-1** | **Einen luftgebundenen Diensttag mit Windenfähigkeit öffnen** (Tagesübersicht, ab 768 px) | Spalten „Bergwacht" und „Winde" stehen wie bisher | Sie fehlen — dann greift die Regel an der falschen Stelle |
+| **J-2** | **Einen luftgebundenen Diensttag OHNE Windenfähigkeit öffnen** | Beide Spalten **fehlen**; die Tabelle hat neun Spalten statt elf | Die Spalten stehen leer da — dann ist `cap_gate` wieder nicht angekommen |
+| **J-3** | **Einen bodengebundenen Bergwacht-Diensttag öffnen** (mit Fähigkeit) | Beide Spalten **fehlen** — auch wenn ein Einsatz des Tages den Haken trägt. **Das ist die entschiedene Folge** | Die Spalten stehen — dann folgt die Anzeige der Fähigkeit statt der Betriebsart |
+| **J-4** | **Denselben Tag am Handy ansehen** (unter 720 px) | Die Kachel des Einsatzes trägt weiterhin die Plakette „Winde" bzw. „Bergwacht" | Die Plakette fehlt — dann ist die gezogene Grenze verlorengegangen und es werden **Daten** verborgen, nicht nur Platz |
+| **J-5** | **Denselben Einsatz zur Bearbeitung öffnen** (`einsatz_form.php`) | Windenfelder und Bergwachtfelder sind **da** und bedienbar — die Bearbeitung folgt der Fähigkeit allein | Sie fehlen — dann ist die Regel in die Bearbeitung durchgeschlagen, und dokumentierte Daten sind nicht mehr änderbar |
+| **J-6** | **Zeitraumübersicht, Tab „bodengebunden"** | Keine Spalte „Winde"/„Bergwacht" | Sie stehen — dann greift der Bodentab die Luftfähigkeiten ab |
+| **J-7** | **Zeitraumübersicht, Tab „luftgebunden"** | Beide Spalten stehen, auch wenn im Zeitraum niemand gewindet hat | Sie fehlen an einem Zeitraum ohne Windeneinsatz — dann entscheidet noch der Bestand |
+| **J-8** | **Suche öffnen** | Beide Spalten stehen, solange **irgendein** Diensttag die Fähigkeit führt — auch ein bodengebundener | Sie fehlen, obwohl ein Bergwacht-Rettungsmittel eingerichtet ist |
+| **J-9** | **Auf einem Tag ohne Windenspalte das Sortierblatt öffnen** (unter 1024 px, Knopf „Sortieren") | Acht Einträge, „Winde" und „Bergwacht" sind **nicht** dabei | Sie stehen in der Liste und lassen sich antippen — dann sortiert die Tabelle nach einer Spalte, die es nicht gibt |
+| **J-10** | **Auf einem Lufttag nach „Winde" sortieren, dann die Tagesdaten speichern** mit einem bodengebundenen Rettungsmittel | Die Tabelle fällt auf „Beginn" zurück, der Pfeil steht dort | Der Pfeil verschwindet ganz, oder die Reihenfolge bleibt ohne sichtbaren Grund die alte |

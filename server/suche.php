@@ -377,6 +377,9 @@ ui_seite_start(['titel' => 'Suche']);
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>
 let missions = [];        // gesamter Bestand aus api/suchindex.php
+/* Welche Fähigkeiten im Bestand überhaupt eingerichtet sind — Luft UND Boden
+   (E-ZE-31). Steuert die Spalten „Winde" und „Bergwacht" der Tabelle. */
+let faehig = { winch: false, bergwacht: false };
 let entsperrt = false;    // geschuetzte Angaben verfuegbar?
 
 /* ZWEI AUSWAHLLISTEN MIT FESTEM WERTEVORRAT (Web 6.2.0).
@@ -1222,6 +1225,10 @@ function verdrahten() {
     const d = await r.json();
     if (d.error) { throw new Error(d.meldung || d.error); }
     missions = d.missions || [];
+    /* Vorgabe `false`, damit eine alte Antwort ohne den Schluessel die beiden
+       Spalten versteckt statt sie falsch zu zeigen — dieselbe Ueberlegung wie
+       in zeitraum.php. */
+    faehig = Object.assign({ winch: false, bergwacht: false }, d.faehigkeiten || {});
   } catch (e) {
     $('loaderror').textContent = 'Der Einsatzbestand konnte nicht geladen werden: ' + e.message;
     $('loaderrorbox').hidden = false;
@@ -1235,8 +1242,15 @@ function verdrahten() {
   /* Welche Spalten die Tabelle zeigt, entscheidet der GESAMTE Bestand und
      nicht die Trefferliste (A13d) — sonst käme und ginge die Windenspalte
      beim Tippen im Suchfeld. Der Aufruf steht deshalb hier, einmal, und nicht
-     in anwenden(). */
+     in anwenden().
+
+     WINDE UND BERGWACHT FOLGEN SEIT SCHRITT 15 AP9 DER FÄHIGKEIT (E-ZE-31),
+     und zwar über LUFT UND BODEN — anders als in der Zeitraumübersicht. Die
+     Suche sucht im ganzen Bestand; ein bodengebundener Bergwacht-Dienst ist
+     genauso ein Treffer wie ein Hubschrauber. `api/suchindex.php` liefert die
+     Fähigkeiten deshalb ohne Artfilter. */
   tabelle.setSpaltenBestand(missions);
+  tabelle.setFaehigkeiten(faehig);
   // Erst die Auswahllisten füllen, dann das Fragment anwenden — sonst hätten
   // die <select> die gespeicherten Werte noch gar nicht zur Auswahl.
   fragmentLesen();

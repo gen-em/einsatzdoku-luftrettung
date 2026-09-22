@@ -691,10 +691,21 @@ function zeichne(){
   const liste = gefiltert();
   zeichneSegment();
   zeigeNeutralHinweis();
-  /* Die Spaltensichtbarkeit der Tabelle richtet sich nach DIESER Liste: Im
-     bodengebundenen Tab gibt es keine Windeneinsaetze, also auch keine
-     Windenspalte (A13d). */
+  /* Die Spaltensichtbarkeit der Tabelle richtet sich nach DIESER Liste
+     (A13d) — mit EINER Ausnahme: Winde und Bergwacht folgen seit Schritt 15
+     AP9 der FAEHIGKEIT, nicht dem Bestand (E-ZE-31). Die Kacheln oben machen
+     es seit E-S9-04 genauso; hier stand bis jetzt `liste.some(m => m.winch)`,
+     und dadurch zeigte dieselbe Seite die Kachel „Winden-Cycles" und keine
+     Windenspalte, sobald im Zeitraum niemand gewindet hatte.
+
+     IM BODENGEBUNDENEN TAB BLEIBEN BEIDE SPALTEN WEG, auch wenn ein
+     bodengebundener Diensttag die Faehigkeit traegt. `faehig` zaehlt ohnehin
+     nur die LUFT-Tage (api/range.php filtert auf `d.kind = 'air'`) — die
+     ausdrueckliche Null hier sagt es trotzdem, damit der Tab nicht von einer
+     Eigenschaft der Abfrage abhaengt, die man ihm nicht ansieht. */
   tabelle.setSpaltenBestand(liste);
+  tabelle.setFaehigkeiten(ansicht === 'ground'
+    ? { winch: false, bergwacht: false } : faehig);
   tabelle.setData(liste);
   zeichneStatistik(liste, tageDerAnsicht());
   zeichneKarte(liste);

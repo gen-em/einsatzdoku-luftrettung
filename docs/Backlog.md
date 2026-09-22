@@ -1994,6 +1994,29 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     die Daten werden also erfasst und nur nicht ausgewertet.
 
     Wer das später ändern will, findet die beiden Stellen oben benannt.
+
+    **Nachtrag 22.09.2026 (Schritt 15 AP9a, E-ZE-31): der Artfilter ist jetzt
+    die Regel, nicht mehr eine zu enge Formulierung.** Dieser Punkt nannte
+    `d.kind = 'air'` „nur zu eng formuliert" und schlug
+    `d.kind = 'air' OR d.vehicle_typ = 'bergwacht'` als tragfähige Bedingung
+    vor. Der Auftraggeber hat anders entschieden: Die **Auswertung** —
+    Kacheln und Tabellenspalten in Tages- und Zeitraumübersicht — folgt der
+    **Betriebsart und der Fähigkeit**, die **Bearbeitung** der Fähigkeit
+    allein. Die vorgeschlagene Bedingung wird damit **nicht** umgesetzt, und
+    zwar nicht aus Aufwand, sondern weil sie der Entscheidung widerspricht.
+
+    **Was sich dadurch ändert, geht über diesen Punkt hinaus:** Die
+    Tagesübersicht wertete `cap_gate` bis Web 20.35.0 überhaupt nicht aus und
+    zeigte die Windenspalte an **allen** Diensttagen. Sie tut es jetzt — nach
+    derselben Regel. Die **Suche** folgt der Fähigkeit über **Luft und
+    Boden** (`api/suchindex.php`, ohne Artfilter): Sie sucht im ganzen
+    Bestand, nicht in einem Zeitraum.
+
+    **Der Preis steht weiterhin oben und ist jetzt größer:** Die Haken
+    bodengebundener Bergwacht-Diensttage erscheinen weder in der Zeitraum-
+    noch in der Tagestabelle. Vier solche Tage stehen im Bestand, zwei davon
+    mit einem dokumentierten Windeneinsatz. Erfasst und in der
+    Einsatzbearbeitung sichtbar bleiben sie.
 199. **Die Nummer 5 fehlt im Backlog, obwohl der Changelog sie unter
     *Erledigt* verortet.**
     *Aufgenommen 15.09.2026 (Gegenlesen des Merges von PR #47 in den
