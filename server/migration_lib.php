@@ -35,7 +35,7 @@ require_once __DIR__ . '/db.php';
  * IDs der Geraete, deren Name exakt dem automatisch vergebenen Muster
  * "Uhr (gekoppelt TT.MM.JJJJ)" entspricht (Migration vom 14.08.2026).
  *
- * Bewusst eng: Ein selbst vergebener Name — "Uhr Philipp", "Christoph 17",
+ * Bewusst eng: Ein selbst vergebener Name — "Uhr Anna", "Alpenfalke 1",
  * auch "Uhr (gekoppelt, alt)" — passt nicht und bleibt unberuehrt.
  */
 function _geraete_mit_datumsname(PDO $pdo): array

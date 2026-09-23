@@ -1065,6 +1065,115 @@ kopiert sie nach `server/doku/`, `doku_lib.php` rendert sie als Seite
 niemand sah. Eingetragen; die Null darüber war keine Aussage über diese
 Datei, sondern über ihr Fehlen in der Liste.
 
+## 5l. Messprotokoll PK-04/5c und 5d — Namen, Adressen, Netzquellen (23.09.2026)
+
+### Die Zahl
+
+| | vorher | nachher |
+|---|---|---|
+| Textprobe gesamt | **492** | **0** |
+| `hausform` | 434 | 0 |
+| `namen` | 38 | 0 |
+| `netz` | 11 | 0 |
+| `adressen` | 9 | 0 |
+| ungenutzte Ausnahmen | — | **0** von 108 Regeln |
+| durchgerutschte Fallen | — | **0** |
+| **Altbestand** | 492 Treffer in 79 Paaren | **0 in 0** |
+
+Der Altbestand ist der Punkt: Solange er stand, federte er jeden alten
+Treffer ab und nur ein **neuer** war rot. Jetzt ist er leer — **jeder**
+Treffer ist ab sofort rot. Das ist der Unterschied zwischen „wir kennen
+unsere Altlast" und „es gibt keine".
+
+### Zwei Regeln waren zu eng und meldeten Richtiges als Befund
+
+**`mail-fremd` erlaubte nur `example.invalid`.** `name@klinik.example` galt
+damit als Befund, obwohl `.example` von RFC 2606 genauso reserviert ist. Der
+Punkt der Regel ist nicht **eine** Schreibweise, sondern dass keine Adresse
+getroffen wird, die jemandem **gehören** kann. Jetzt erlaubt sie
+`example.com/net/org` und die TLDs `.invalid`, `.test`, `.example`,
+`.localhost`. Nachgerechnet an sieben Formen:
+
+| | `a@example.invalid` | `name@klinik.example` | `x@sub.example.com` | `y@host.test` | `noreply@example.de` | `neue@adresse.de` |
+|---|---|---|---|---|---|---|
+| trifft | — | — | — | — | **ja** | **ja** |
+
+**`netz-fremd` meldete die eigene Maschine.** Sechs von elf Treffern waren
+keine fremde Quelle: RFC-2606-Formen, `127.0.0.1`, und ein **Platzhalter**
+(`https://host//pw_handling.php` in `Technik.md` zeigt, wie ein doppelter
+Schrägstrich entsteht — `host` ist dort kein Name, sondern die Lücke). Eine
+Regel gegen fremde Quellen, die die eigene Maschine meldet, kostet Ausnahmen
+ohne Gegenwert.
+
+### Zwei Wörter sind aus der Wortliste gefallen
+
+`Leser` und `Prüfer` stehen im Bestand **126-mal für einen Programmteil** und
+**9-mal für einen Menschen** — und die neun sind generisch („sie sagt einem
+Leser, was in der Datei stehen kann"). Sie in der Liste zu lassen hätte
+**zwölf Ausnahmen** gekostet und keinen Fehler gefunden. Dieselbe Überlegung
+wie bei `Helfer` (47 Stellen, alle Hilfsfunktionen im Code).
+
+### Die Kartenquelle — was nicht geprüft werden konnte
+
+`tile.openmaps.fr` (OpenHikingMap) wird von `map_layers.js` geladen und war
+in der Content-Security-Policy freigeschaltet, **ohne je in
+`docs/Lizenzen.md` zu stehen** (Backlog Nr. 280).
+
+**Der Versuch, die Bedingungen nachzusehen, ist gescheitert, und zwar mit
+Zahl:** `wiki.openstreetmap.org` und `openmaps.fr` je **HTTP 403 am
+CONNECT-Tunnel** des Ausgangsproxys. Die Quelle steht jetzt in der
+Kartentabelle, **die Lizenzspalte ausdrücklich als „ungeprüft"**, und
+daneben, was belegt ist (das Attributionsband, die Kachel-Adresse) und was
+nicht (unter welchen Bedingungen der Betreiber sie bereitstellt). Nr. 280
+bleibt für diesen Teil offen.
+
+### Der Befund, der über dieses Paket hinausgeht
+
+**Ich habe eine Datei geändert, die eine laufende Fächerung noch offen
+hatte — und meine Änderung war weg.**
+
+Der Hergang: Die Gegenlesung von 5b meldete, dass ein Agent
+„Pilot 1, Pilot 2, Flugretter" gegendert hatte — Beschriftungen, die die
+Oberfläche unverändert zeigt. Ich habe **15 Stellen zurückgenommen** und es
+gemessen („13 Beschriftungen zurückgenommen"). Danach lief die **nächste**
+Fächerung (5c, Namen) weiter, und einer ihrer Agenten schrieb
+`docs/Handbuch.md` aus einem Stand zurück, den er vor meiner Rücknahme
+gelesen hatte. Die Rücknahme war damit weg, ohne dass irgendetwas
+fehlschlug.
+
+**Gefunden hat es die Gegenlesung**, mit Beleg bis in den Commit hinein:
+„Die Commit-Nachricht von `5c4f5f5` benennt diesen Fehler selbst — die
+Rücknahme hat den Handbuchtext nie erreicht." Ohne sie wäre es im Paket
+geblieben.
+
+> **Die Regel, die daraus folgt, gehört zu E-PK-35:** Wer fächert, fasst die
+> gefächerten Dateien **selbst nicht an**, solange der Lauf läuft. Ein Agent
+> liest eine Datei, denkt nach und schreibt sie zurück — dazwischen liegen
+> Minuten, und was in dieser Zeit von außen hineingeschrieben wird, ist
+> hinterher fort. Git meldet nichts: Es war nie ein Konflikt, nur der letzte
+> Schreibvorgang.
+
+### Die beiden anderen Befunde der Gegenlesung
+
+- **Das Handbuch widersprach sich selbst.** Es nannte das Formularfeld an
+  einer Stelle „Andere NotärztIn", 215 Zeilen früher aber „weitere
+  NotärztIn" — und `mission_fields.php` 466 sagt „Weitere NotärztIn".
+  „Andere" ist allein die Spaltenüberschrift des Exports.
+- **`Technik.md` 8443: „verwies ihre NutzerInnen an einen Unbekannten".**
+  Gemeint ist die EntwicklerIn aus der Zeile darüber; das substantivierte
+  Adjektiv zog als einziges Satzglied nicht mit.
+
+### Leistung der Fächerung
+
+| | 5b (Binnen-I) | 5b-Nachschlag (sieben Wörter) | 5c (Namen) |
+|---|---|---|---|
+| Agenten | 30 | **12** | 6 |
+| gegengelesene Zeilen | — | **357** | — |
+| Befunde der Gegenlesung | — | **8, davon 3 echt** | — |
+
+Die Gegenlesung ist damit **kein Formalismus**: Von acht Befunden waren drei
+echte Fehler, darunter der, den kein Prüfmittel gefunden hätte.
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in

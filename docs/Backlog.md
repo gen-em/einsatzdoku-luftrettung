@@ -3643,6 +3643,39 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Nummern vergibt, beginnt bei 267" beschreibt keinen Riegel, sondern eine
     Hoffnung.*
 
+283. **Die Textprobe liest die Kommentare in `server/` nicht — und dort
+    standen reale Ortsnamen.**
+    *Gefunden 23.09.2026 von der Gegenlesung in PK-04/5c; die acht Stellen
+    sind bereinigt, die Lücke im Prüfmittel nicht.*
+    Bereich `a` der Textprobe ist als „`server/*.php`, `server/api/*.php`
+    (sichtbare Texte, **ohne Kommentare**)" definiert, und das ist für vier
+    der fünf Regelklassen richtig: Ein Kommentar ist kein sichtbarer Text,
+    und die Luftbegriffe, die Hausform und die Adressen gehören dort nicht
+    gemessen.
+
+    **Für `namen` ist es falsch.** E-P1-02 richtet sich nicht gegen den
+    *sichtbaren* Text, sondern gegen das **öffentliche Repositorium**, das
+    die reale Station benennt — und ein Kommentar steht genauso darin.
+    Gemessen mit `grep`: **acht Stellen** in `server/` trugen „Kempten",
+    „Christoph 17" oder eine Ortskennung, alle in Kommentaren, alle für die
+    Textprobe unsichtbar.
+
+    **Die schärfste davon ist `einstellungen.php` 2038.** Dort stand
+    „Standort Kempten" **sechs Zeilen unter dem Platzhalter, der mit E-S3-13
+    auf „Standort Talwang" berichtigt worden war** — das Paket, das laut
+    `version.php` 1840 „elf Stellen getauscht" hat. Der Kommentar daneben
+    ist nicht mitgetauscht worden und hat den realen Ort seither getragen.
+
+    **Zu entscheiden ist, wie die Lücke geschlossen wird**, und beides hat
+    einen Preis:
+    - Bereich `a` um die Kommentare erweitern: Dann misst die Klasse `namen`
+      vollständig — aber die anderen vier messen Kommentare mit, und ihre
+      Null ist keine mehr. Vermutlich braucht es einen Bereich je Klasse.
+    - Eine eigene, schmale Prüfung nur für `namen` über den ganzen Baum.
+
+    Bis dahin gilt: **`namen = 0` heißt „null im sichtbaren Text", nicht
+    „null im Repositorium".** Steht so in `docs/Pruefablauf.md` 6.6.
+
 ## Erledigt
 
 

@@ -1785,8 +1785,8 @@ Diagnose, Einsatzort, Transportziel, Beschreibung des Einsatzorts,
 Bergwacht-Bereitschaft und -Infos, weitere NotärztIn, weitere Rettungsmittel,
 Standort, Rettungsmittel, Besatzung und Notizen. Groß- und Kleinschreibung spielt
 keine Rolle, Wortteile genügen. Gibst du mehrere Wörter ein, müssen **alle**
-vorkommen — aber nicht im selben Feld. „müller hochkreuth" findet also auch einen
-Einsatz, bei dem Müller die Besatzung und Hochkreuth das Transportziel ist. Das
+vorkommen — aber nicht im selben Feld. „müller auwiesen" findet also auch einen
+Einsatz, bei dem Müller die Besatzung und Auwiesen das Transportziel ist. Das
 Geburtsdatum findest du in beiden Schreibweisen, „12.03.1985" ebenso wie
 „1985-03-12".
 

@@ -549,7 +549,7 @@ seit Web 4.1.2 auch:
                         "roles": ["driver", "other", "trainee"],
                         "capabilities": [],
                         "is_default": 0 },
-                      { "name": "Sanitätsdienst Allgäuer Festwoche",
+                      { "name": "Sanitätsdienst Seefest",
                         "kurz": "SanD Fest",
                         "typ": "veranstaltung", "kind": "ground",
                         "base_ref": null,

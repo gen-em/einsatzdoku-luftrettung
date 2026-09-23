@@ -2035,7 +2035,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             <?php /* Koordinaten optional (E37/E39). Sie sind die Quelle des
                      Abfahrtorts „Standort" und werden beim Anlegen eines
                      Diensttags eingefroren (E8). Mit GETRENNTEM Suchfeld:
-                     „Standort Kempten" ist keine Adresse, und eine Suche im
+                     „Standort Talwang" ist keine Adresse, und eine Suche im
                      Namensfeld schriebe den Namen weg. */
                   $ORTSFELDER[] = 'sdbase'; ?>
             <?php ui_ortsfeld([

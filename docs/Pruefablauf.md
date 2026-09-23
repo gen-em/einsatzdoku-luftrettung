@@ -510,6 +510,18 @@ Uhr-Ressourcen und 14 normative Dokumente. **Nicht** gemessen werden
 `Rahmenplan.md`, `Backlog.md`, `CHANGELOG.md`, `docs/konzepte/**` und **alle
 Kommentare**. Wer die Zahl zitiert, zitiert diesen Absatz mit.
 
+> **Für die Klasse `namen` ist „ohne Kommentare" zu wenig** (Backlog
+> Nr. 283). E-P1-02 richtet sich gegen das **öffentliche Repositorium**, das
+> die reale Station benennt — und ein Kommentar steht genauso darin. Am
+> 23.09.2026 mit `grep` gemessen: **acht Stellen** in `server/` trugen einen
+> realen Orts- oder Rufnamen, alle in Kommentaren, alle für die Textprobe
+> unsichtbar. Die schärfste stand **sechs Zeilen unter einem Platzhalter,
+> den E-S3-13 schon berichtigt hatte**.
+>
+> **`namen = 0` heißt deshalb „null im sichtbaren Text", nicht „null im
+> Repositorium".** Die acht sind bereinigt; die Lücke im Prüfmittel ist es
+> nicht.
+
 ### 6.7 Die Prüfmittel laufen zuletzt, nicht zwischendurch
 
 Erst der Code, dann die Dokumentation, **dann** die Prüfmittel. Ein

@@ -318,7 +318,7 @@
         // Kriterium 74 ausdruecklich enthalten bleibt. 'Bergwacht: Namen /
         // Infos' (bw_info) gibt es in Profil A nicht.
         { label: 'Bergwacht-Einheit', star: false },
-        // Organisationskennungen ("RTW Kempten"). Vom Auftraggeber als
+        // Organisationskennungen ("RTW Talwang"). Vom Auftraggeber als
         // Grenzfall entschieden: bleibt enthalten.
         { label: 'Weitere Rettungsmittel', star: false },
         // Aus dem Einsatzort gerechnet und damit grob ortsverratend.

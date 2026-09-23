@@ -4961,7 +4961,7 @@ Eine Verwendung ist damit ein PHP-Aufruf und ein `init()`. Die fünf:
 Textfeld beim Tippen; ein Adresstreffer wird zur Bezeichnung. Bei `true`
 läuft die Suche **nur auf den Lupen-Knopf** (seit Web 9.4.0 — er ersetzt das
 frühere zweite Suchfeld „Lokalisation …"), und der Treffer setzt **nur** die
-Koordinaten — „Standort Hochkreuth" ist keine Adresse, und eine Suche, die
+Koordinaten — „Standort Talwang" ist keine Adresse, und eine Suche, die
 den Namen überschriebe, nähme ihn weg. Alles übrige ist in beiden Formen
 dasselbe: Chip statt Zahlen im Textfeld, lokale Formaterkennung vor jeder
 Netzanfrage, Bestätigung statt sofortiger Übernahme, ruhende Suche bei
