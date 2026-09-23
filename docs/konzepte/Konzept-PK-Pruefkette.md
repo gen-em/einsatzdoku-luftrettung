@@ -26,11 +26,11 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 >
 > | | |
 > |---|---|
-> | Stand | **23.09.2026 — PK-01 bis PK-04 erledigt.** Die beiden Prüfmittel der Station A messen gegen null: **Textprobe 492 → 0** (Altbestand 0 in 0 Paaren, keine Schwelle) und **Vollständigkeit 398 → 0** (Schwelle entfernt). Schritt 15 ist gemergt und hereingezogen. Offen bleibt P-PK-11 zur Hälfte (Ausbaustufe `uhr` gebaut, nicht abgenommen). Umsetzung auf `claude/serene-dijkstra-bcpbjy`. **Nächstes: PK-05.** |
-> | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **vom Auftraggeber bestätigt am 21.09.2026**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. **E-PK-34** (die Rechtstexte werden beim Binnen-I mitgenommen) und **E-PK-35** (die Fächerungszeile für PK) sind am 22.09.2026 entschieden — Abschnitt 3.1a. **E-PK-40** (die Android-Zeile aus 5b behält ihre Versionsstufe vorerst nicht) ist am 23.09.2026 angewiesen — gegen die Empfehlung der Instanz; Befund F-PK-29, Backlog Nr. 284, Abnahme P-PK-28. |
-> | Nächstes | **PK-05 — das Tor umbauen.** Android, Uhr und die Bereichserkennung aus `pruefung.yml` heraus, die Gegenlesung des Prüfberichts hinein, ein Aufruf `quelltext/pruefen.sh alle` statt sieben Schritten, die Datei unter 250 Zeilen. Der Auslöser ist seit PR #71 erledigt. |
+> | Stand | **23.09.2026 — PK-01 bis PK-05 erledigt, PK-05 wartet auf die Live-Abnahme am eigenen PR.** Stufe 1 liest den Prüfbericht gegen, statt zu wiederholen: fünf rote Lagen (Baum, Stufe, Fläche, Riegel, rote Probe), Selbstprobe **12 / 0**; Android, Uhr und die Bereichserkennung sind heraus, `pruefung.yml` **988 → 337** Zeilen. Die Stufe wird wieder erkannt (F-PK-30 — sie hieß seit PK-03 immer „klein"), und „neben" misst mehr als „klein". PK-05 auf `claude/pk05-tor-umbauen`; PK-01 bis PK-04 lagen auf `claude/serene-dijkstra-bcpbjy`. Offen bleibt P-PK-11 zur Hälfte (Ausbaustufe `uhr` gebaut, nicht abgenommen). **Nächstes: PK-06.** |
+> | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **vom Auftraggeber bestätigt am 21.09.2026**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. **E-PK-34** (die Rechtstexte werden beim Binnen-I mitgenommen) und **E-PK-35** (die Fächerungszeile für PK) sind am 22.09.2026 entschieden — Abschnitt 3.1a. **E-PK-40** (die Android-Zeile aus 5b behält ihre Versionsstufe vorerst nicht) ist am 23.09.2026 angewiesen — gegen die Empfehlung der Instanz; Befund F-PK-29, Backlog Nr. 284, Abnahme P-PK-28. **Aus PK-05, alle am 23.09.2026 vom Auftraggeber entschieden:** **E-PK-41** (Fächerung: nur lesend, drei Agenten), **E-PK-42** (streng: Baum des Kopfs, Weg nach fremdem Merge), **E-PK-43** (Gegenlesung auch beim Handlauf auf einem Zweig), **E-PK-44** („gebaut" heißt gebaut, Lage 5) — Abschnitt 4, PK-05. **Offen: Q-PK-07 bis -09** (Abschnitt 6). |
+> | Nächstes | **PK-06 — Staging verschlanken.** Vorher: PR von PK-05 mit Live-Abnahme (P-PK-29 bis -31) und die drei Fragen Q-PK-07 bis -09. P5c AP1 läuft auf eigenem Zweig daneben (E-P5c-32). |
 > | Kette II | **M1 ist am 21.09.2026 erreicht** — Tag `web-v20.26.3` auf `a1c6494`, Lauf **35654132667** Versuch 2, Produktiv meldet **20.26.3**, **Migrationen von Hand ausgeführt, Wartung beendet, Status „Alles läuft"**, Zeiger `produktion` auf `a1c6494`. Im Übrigen wird Kette II nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
-> | Hakt | **Ein Befund offen, bewusst zurückgestellt:** Die eine Android-Zeile aus 5b (`strings.xml`, Hausform) ist ausgelieferter Code und hat weder Versionsstufe noch Changelog-Zeile noch Emulatorlauf bekommen (F-PK-29). Der Auftraggeber hat am 23.09.2026 entschieden, sie stehen zu lassen und die drei Pflichten beim nächsten Android-Paket nachzuziehen (E-PK-40, Nr. 284, P-PK-28) — die Instanz hatte das Nachziehen im selben PR empfohlen. Aufgefallen ist es **nicht durch ein Prüfmittel**, sondern durch die Nachfrage des Auftraggebers; die Fächerung von 5b lief über Wort-Eimer statt über Auslieferungsbereiche. Im Übrigen: **Das Spaltenregister aus Schritt 15 ist grün** — es war zwei Tage rot (Backlog Nr. 282), und Schritt 15 hat es selbst behoben (`f1bc9e6`, nach dem Stand, den PK-04 vorweggenommen hatte). Nachgemessen am 23.09.2026: Selbstprobe **16 von 16**, Lauf **0 Befunde**, beide rc 0; P-PK-22 erledigt. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); Stufe 2 hat ihn nach dem Merge bestätigt: Kreisläufe csv und edbak **104 s grün** gegen Staging mit **MySQL 8.4.10** (Lauf 35639445224, Versuch 2, Schritt 5) — im Lauf davor, ohne den Fix, derselbe Schritt nach **15 min 51 s rot**. Der Tag `web-v20.26.3` folgt darauf (Z2a). **Nr. 267 ist auf beiden Anlagen bestätigt:** Staging mit MySQL 8.4.10 im Kreislauf edbak (104 s), Produktiv mit MariaDB im Produktivlauf. **Der Export von Hand auf Produktiv steht als Gegenprobe noch aus** — er ist kein Beleg, weil der Fehler dort nie auftrat, aber er ist die einzige Messung, die den Weg durch die Oberfläche geht. Der erste Tag war am Tor hängengeblieben (F-PK-04); nach dem Vorgriff auf PK-06 (PR #72) ging er durch. **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
+> | Hakt | **PK-05:** Die Gegenlesung ist streng (E-PK-42) — nach jedem fremden Merge braucht jeder offene PR einen neuen Prüfstandlauf, und „Update branch" macht ihn rot. Die Lücke „Handlauf auf dem PR-Zweig" ist auf Verdacht geschlossen, nicht gemessen (P-PK-31). **Ein Befund offen, bewusst zurückgestellt:** Die eine Android-Zeile aus 5b (`strings.xml`, Hausform) ist ausgelieferter Code und hat weder Versionsstufe noch Changelog-Zeile noch Emulatorlauf bekommen (F-PK-29). Der Auftraggeber hat am 23.09.2026 entschieden, sie stehen zu lassen und die drei Pflichten beim nächsten Android-Paket nachzuziehen (E-PK-40, Nr. 284, P-PK-28) — die Instanz hatte das Nachziehen im selben PR empfohlen. Aufgefallen ist es **nicht durch ein Prüfmittel**, sondern durch die Nachfrage des Auftraggebers; die Fächerung von 5b lief über Wort-Eimer statt über Auslieferungsbereiche. Im Übrigen: **Das Spaltenregister aus Schritt 15 ist grün** — es war zwei Tage rot (Backlog Nr. 282), und Schritt 15 hat es selbst behoben (`f1bc9e6`, nach dem Stand, den PK-04 vorweggenommen hatte). Nachgemessen am 23.09.2026: Selbstprobe **16 von 16**, Lauf **0 Befunde**, beide rc 0; P-PK-22 erledigt. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); Stufe 2 hat ihn nach dem Merge bestätigt: Kreisläufe csv und edbak **104 s grün** gegen Staging mit **MySQL 8.4.10** (Lauf 35639445224, Versuch 2, Schritt 5) — im Lauf davor, ohne den Fix, derselbe Schritt nach **15 min 51 s rot**. Der Tag `web-v20.26.3` folgt darauf (Z2a). **Nr. 267 ist auf beiden Anlagen bestätigt:** Staging mit MySQL 8.4.10 im Kreislauf edbak (104 s), Produktiv mit MariaDB im Produktivlauf. **Der Export von Hand auf Produktiv steht als Gegenprobe noch aus** — er ist kein Beleg, weil der Fehler dort nie auftrat, aber er ist die einzige Messung, die den Weg durch die Oberfläche geht. Der erste Tag war am Tor hängengeblieben (F-PK-04); nach dem Vorgriff auf PK-06 (PR #72) ging er durch. **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
 >
 > **Stand der Umsetzung**
 >
@@ -41,7 +41,7 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > | PK-02 Sandbox-Setup | **erledigt 21.09.2026**, P-PK-11 offen | keine (nur `tools/`, `.claude/`, `docs/`) | *wird beim Commit eingetragen* | `aufbauen.sh web`: 10 von 10 Stücken, **3 von 3 Engines** (WebKit startete vorher nicht), 8 von 8 Umgebungswerten · `hochfahren.sh`: HTTP **200**, Fassung 20.26.2, 106 Einsätze, rc 0 · `plattform.sh alles`: **4 × 19/0** in **29,7 s** · Weg nach draußen: **6 von 6** angemeldet (3 Engines × örtlich und Prüfanlage), Dialog 6 von 6 geschlossen, ohne `ignoreHTTPSErrors` nach draußen · Befunde **F-PK-14 bis -17**, E-PK-32 |
 > | PK-03 Prüfstand-Befehl | **erledigt 21.09.2026** | keine (nur `tools/`, `docs/`) | *wird beim Commit eingetragen* | Stufen klein/neben/haupt: **26,8 / 25 / 22 s**, je 13 Proben, 0 rot, 0 nicht gemessen · `bericht.py --selbstprobe` **6 Lagen / 0** (5 rote, 1 grüne) · `auswahl.py --selbstprobe` **11 / 0** · Abdeckung **262 Dateien, 0 ohne Muster** · `kettenaufrufe` liest die Zuordnung mit: mit eingebautem Fehler **2 Befunde**, ohne **0** (82 Aufrufe, 0 Befunde, 18 ungeprüft) · Befund **F-PK-18** |
 > | PK-04 Werkzeuge zusammenlegen und bereinigen | **erledigt (21.–23.09.2026)** | **Web 20.37.1** (Teilstück 5, die einzige Korrekturstufe des Pakets) | | `tools/quelltext/`: **8 Ausgaben bytegleich** vor und nach dem Umzug · Läufer **8 von 8 grün**, Selbstproben **5 von 5** · Ordner **49 → 41** · LIESMICH **7 191 → 6 261** Zeilen · Prüfstand klein **13 grün / 0 rot / 0 nicht gemessen** · kettenaufrufe **82 / 0 / 18**. **1b:** Vollständigkeit **398 → 18** Befunde; Symbolzählung **330 → 14** und vom Befund zum Hinweis; **32** Streichlisteneinträge; `style="…"` **10 → 0** über vier Ausnahmen, gegengeprüft (eingefügtes `left:12px` und `color:#abc` gemeldet, berechnete nicht); Backlog **227 erledigt, 269 und 270 neu**. **1c:** Sperrliste **23 → 28** Muster in **5 Regelklassen**; Altbestand **500** Treffer in **79** (Datei, Muster)-Paaren; Gegenproben in **beide** Richtungen grün (neuer Satz → 3 neue Treffer, rc 1; eine bereinigte Stelle → „Altbestand austragen", rc 1); **89 von 100** Ausnahmen waren stillschweigend auf die neuen Klassen ausgeweitet und sind jetzt an `luft` gebunden; Backlog **271** neu. **2:** 20 Werkzeuge nach `tools/proben/<name>/`, ein Läufer; Ordner **41 → 22**, LIESMICH **6 261 → 3 820** Zeilen in 21 Dateien; **kein Regress** (13 von 19 grün, dieselben 6 roten wie vorher); `kettenaufrufe` **ungeprüft 18 → 2**. **3:** sechs Erzeuger flach in `tools/erzeugen/`, ein Läufer **ohne `alle`** (sie schreiben ins Repositorium); Ordner **22 → 17**, LIESMICH **3 820 → 3 310** Zeilen in 17 Dateien. **4:** drei Zusammenlegungen (klickprobe → bedienprobe, netzprobe und eingabe-probe → uhr-pruefstand) — **Ordner 17 → 15, das Ziel aus E-PK-24 ist erreicht**; Bilderlauf mit `--stufe klein|neben|haupt` und **ohne Risikoliste** (E-PK-14), dazu die md5-Gegenprobe gegen doppelte Bilder; **alle 15 LIESMICH auf die Fünf-Abschnitte-Form**, zusammen **574 Zeilen** (von 7 206; Ziel unter 1 000). Bedienprobe **48 von 48 Wegen**. **Offen aus 4: E-PK-15** — die Wege nach Seiten ordnen  **5a:** tote Werkzeugverweise in `server/` **60 → 0** außerhalb `version.php` (dort bleiben **22** als Geschichte, benannt im Dateikopf); die Zuordnung aus `git diff -M90%` (78 Umbenennungen), neun Stellen von Hand, weil die Ordnerersetzung verliert, welches Werkzeug gemeint war. **5b:** Binnen-I **434 → 0**; 15 + 6 Eimer gefächert, je Datei ein Agent, danach Gegenlesung (**357** gegengelesene Zeilen, **8 Befunde, 3 echt**). Gegenproben gegen angefasste Bezeichner: PHP-Variablen **0/0**, Funktionsaufrufe **0/0**, Feldschlüssel **0/0**, CSS-Klassen **0/0**. **5c/5d:** Namen **38 → 0**, Adressen **9 → 0**, Netzquellen **11 → 0**; Gegenlesung fand **3 echte Fehler, zwei davon in meiner Vorgabe**, dazu **8 reale Namen in `server/`-Kommentaren**, die das Prüfmittel nicht liest (Nr. 283). **Textprobe gesamt 492 → 0**, Altbestand **0 Treffer in 0 Paaren** — E-PK-26 erreicht, keine Schwelle. **Entscheidungen E-PK-34 bis -39.**  **5e:** die 18 Klassen, je eine untersucht und unabhängig gegengeprüft (36 Agenten, 3,4 Mio. Token, 852 Werkzeugaufrufe, 61 min) — **17 von 18 Urteilen halten**, eines kippt auf das, was die eigene Messung schon gezeigt hatte. Vier Sorten statt einer: **8 toter Rest** (aus dem Markup), **6 Skriptanker** (Streichliste mit `[bleibt]`), **3 ersatzlos ersetzt**, **1 fehlende Regel** (`.feld-gesperrt`, ein vorhandenes Token, vom Auftraggeber entschieden). **Vollständigkeit 398 → 18 → 0, Schwelle entfernt** (E-PK-16). |
-> | PK-05 Tor umbauen | offen | | | |
+> | PK-05 Tor umbauen | **erledigt 23.09.2026**, Live-Abnahme am PR offen (P-PK-29 bis -31) | keine (nur `tools/`, `.github/`, `docs/`) | `f7f6802`, `24ad4bb`, `17fdd32`, `dba6dcd`, letzter mit Bericht | `bericht.py --selbstprobe` **6 → 12 Lagen / 0** · `auswahl.py --selbstprobe` **11 → 23 / 0** · Abdeckung **267 Dateien, 0 ohne Muster** · Stufe gegen 20.36.0: **„klein" → „neben"** · `kettenaufrufe` **13/13, 75 Aufrufe, 0 Befunde, 2 ungeprüft** · `uses:` **12 → 10**, alle an einer SHA · `pruefung.yml` **988 → 337** Zeilen (Ziel <250 verfehlt, Q-PK-09) · Tor-Schritt örtlich: ohne Bericht **rot**, falscher Baum **rot**, passend **grün** · Gegenlesung von 05/3: **18 Punkte**, 2 „muss" · Befunde **F-PK-30 bis -38** |
 > | PK-06 Staging verschlanken | offen — **trägt seit dem 21.09.2026 abends drei Nachträge**: F-PK-02 (Gruppe je Umgebung über den Lauf), F-PK-03 (Job-Pause, von derselben Gruppe miterledigt), F-PK-04 (Bilderlauf ohne Vorgabekonto), dazu F-PK-11 | | | Abnahme zusätzlich P-PK-18 und P-PK-19 |
 > | PK-07 Abschluss | offen | | | |
 > | PK-08 App-Auslieferung mit Signatur | offen (nach PK-07, eigene Freigabe) | | | |
@@ -909,7 +909,8 @@ Schritt 15 als E-ZE-25: ohne Zeile wird nicht gefächert). Für PK gilt:
 | PK-01 bis PK-03 | nichts — abgeschlossen, ohne Fächerung gefahren | alles |
 | **PK-04/1a bis 4** | nichts — ebenso abgeschlossen | alles |
 | **PK-04/5** | **(a) die Untersuchung der 18 Klassen und 14 Symbolzeichen** — rein lesend, je Fundstelle eine Frage, keine Nebenwirkung; **(b) der Umbau je Datei** beim Binnen-I und den Adressen: rund 50 Dateien, jede von genau einem Agenten | die Prüfläufe · `server/version.php` · `docs/CHANGELOG.md` · dieses Konzept · das Prüfdokument |
-| PK-05 bis PK-08 | offen — wird bei Beginn des Pakets entschieden | |
+| **PK-05** | **nur lesend, drei Agenten** (E-PK-41): zwei sichten die Kommentarprosa von `pruefung.yml` nach Fallen, einer liest am Ende von 05/3 gegen | jede Datei · jede Prüfung · jeder erzählende Text |
+| PK-06 bis PK-08 | offen — wird bei Beginn des Pakets entschieden | |
 
 **Die Regel dahinter, und warum sie hier greift:** Eine Datei hat genau
 einen Agenten. Binnen-I, Adressen und Rufnamen liegen teils in derselben
@@ -987,6 +988,66 @@ Umzug tot; berichtigt werden sie in Teilstück 5, weil jede Änderung an
   `pruefung.yml` unter 250 Zeilen (**heute 873**, am 22.09.2026 gezählt — die
   Zahl 834 im Konzept ist der Stand vor den beiden Vorgriffen);
   `kettenaufrufe` 0/0.
+
+#### Umsetzung (23.09.2026, Zweig `claude/pk05-tor-umbauen`)
+
+**Erledigt**, in vier Teilstücken, je ein Commit. Die Fächerungszeile steht
+in E-PK-41; Messwerte im Prüfdokument, Abschnitt 5o.
+
+| Teil | Was | Commit |
+|---|---|---|
+| **05/1** | Stufe wieder erkannt (F-PK-30), Stufe „neben" gebaut (Muster `nebenstufe`, 22 Proben), Bilderlauf bekommt die ermittelte Stufe; `mengen` trägt, was `Pruefablauf.md` 3 der Hauptstufe gibt | `f7f6802` |
+| **05/2** | Die Gegenlesung ins Tor (`bericht.py lesen --alle-riegel --riegel …`), dazu die Uhr-Fläche berichtigt (F-PK-31) und `kettenaufrufe` kennt Unterbefehle (F-PK-32). **Vorgezogen aus 05/3:** der eine Schritt `quelltext/pruefen.sh alle` und die Rechtstextprobe — die Gegenlesung braucht ihre Zahlen | `24ad4bb` |
+| **05/3** | Ausgeräumt und gekürzt: **988 → 314** Zeilen; nach der Gegenlesung **337** | `17fdd32`, `dba6dcd` |
+| **05/4** | Dokumente, Prüfstand, Bericht im letzten Commit, PR | *dieser Commit* |
+
+**Was die Gegenlesung von 05/3 fand** (ein Agent, nur lesend, 18 Punkte):
+zwei „muss", beide von der Betreiberin entschieden (E-PK-43, -44); dazu drei
+Befunde am Prüfstand (F-PK-34, -36, -37), vier Fallensätze berichtigt oder
+ergänzt, `pull_request` auf `main` begrenzt, die Meldung auch in die
+Zusammenfassung. **Einen Befund hat die Instanz dabei selbst gefunden, und er
+wäre beim ersten Versionssprung aufgefallen:** Die Stufe kam aus `HEAD`, nicht
+aus dem Arbeitsbestand (F-PK-33). Der Prüfstand misst aber vor dem Commit.
+
+**Abweichung, benannt:** Unter 250 Zeilen ist `pruefung.yml` nicht gekommen —
+**337**. Die Zahl 250 stammt aus der Zeit vor Konzept TB; `Schon gemessen?`
+und der Schema-Job (zusammen rund 125 Zeilen) bleiben nach Plan unverändert,
+und die Bindung der Riegel an ihre Schritte (E-PK-44) hat die Gegenlesung um
+rund 20 Zeilen verlängert. Ob das als Abnahme reicht, entscheidet die
+Betreiberin (Q-PK-09).
+
+**E-PK-41 — die Fächerungszeile für PK-05** (Auftraggeber, 23.09.2026):
+nur lesend, **drei Agenten** — zwei sichten die Kommentarprosa von
+`pruefung.yml` nach Fallen (je eine Hälfte), einer liest am Ende von 05/3
+gegen. Seriell: jede Datei, jede Prüfung, jeder erzählende Text.
+
+**E-PK-42 — streng: Der Baum im Bericht ist der Baum des Kopfs**
+(Auftraggeber, 23.09.2026). Nach einem fremden Merge wird der Prüfstand neu
+gefahren; der Weg ist örtlich mergen, messen, den Merge-Commit mit dem
+Bericht schreiben (`Pruefablauf.md` 5.3). „Update branch" macht Stufe 1 rot,
+und die Meldung sagt den Weg. **Preis:** Jeder fremde Merge kostet jeden
+offenen PR einen Prüfstandlauf.
+
+**E-PK-43 — die Gegenlesung läuft überall außer auf `main`** (Auftraggeber,
+23.09.2026, auf Befund der Gegenlesung). Sonst setzte ein Handlauf auf dem
+PR-Kopf ein grünes `Stufe 1` ohne Gegenlesung; ein Werkzeug der Instanzen
+kann Handläufe starten, dasselbe Muster wie F-PK-01. **Preis:** Der
+Hotfix-Weg braucht einen Bericht im Hotfix-Commit (`Technik.md` 6.6b,
+Schritt 3). **Ob das Ruleset den jüngeren Check wirklich nähme, ist nicht
+gemessen** — geschlossen wurde auf Verdacht, gemessen wird es an P-PK-31.
+
+**E-PK-44 — „gebaut" heißt gebaut, und eine rote Probe ist rot**
+(Auftraggeber, 23.09.2026). `bericht.py` leitet die Flächen aus Berührung
+und Bau ab („gebaut" nur nach grünem Bau, sonst „rot" oder
+„nicht-gemessen"); Lage 3 verlangt bei Berührung „gebaut"; **Lage 5** ist
+neu: Eine Probe mit einem anderen Wert als 0 im Bericht ist rot. Jeder
+Riegelwert im Tor hängt am Ausgang seines Schritts. Damit hat 5.1 **fünf**
+Lagen statt vier.
+
+**Offen aus PK-05:** die Live-Abnahme am eigenen PR (P-PK-29 bis -31), der
+Push-Weg auf `main` nach dem Merge (P-PK-32), die erste echte Nebenstufe
+(P-PK-33, kommt mit P5c) und drei Fragen an die Betreiberin (Q-PK-07 bis
+-09, Abschnitt 6).
 
 ### PK-06 — Staging verschlanken
 
@@ -1134,6 +1195,23 @@ Abschnitt 6** — hier die Kurzfassung mit der Folge:
 | **F-PK-20** | PK-03 | **Zwei Proben der Zuordnung waren rot, ohne zu messen.** Bilderlauf: 48 Konsolenfehler aus drei Bildern, die örtlich niemand nach `server/doku/` kopierte (die Kette tut es). Stilvergleich: `proben.py` **ohne Argumente** aufgerufen — das baut nur die Proben; der Vergleich ist `stilvergleich.js` und braucht den alten Stand, dazu `NODE_PATH`, weil er als CJS an `motor.mjs` vorbeigeht. | Behoben: `hochfahren.sh` kopiert wie die Kette (48 → **0**); neu `tools/stilvergleich/gegen.sh` (**40 989 Elementmessungen, 0 Abweichungen**). **Der Stilvergleich war einer der „18 ungeprüft" von `kettenaufrufe`** — die Zahl ist kein Beiwerk. `stilvergleich.js` auf den Motor heben: **PK-04**. |
 | **F-PK-21** | PK-03 | **`kettenaufrufe` prüft Namen, nicht Vollständigkeit.** `uhr-stufe1` stand nicht einmal unter den 18 Ungeprüften, galt also als grün — und bricht mit „Listendatei fehlt" ab. `reihe` gibt es, das Pflichtargument sieht die Prüfung nicht. | **Die 18 sind nicht die ungewissen Aufrufe, sondern die eingeräumt ungewissen.** Eine Schnittstellenprüfung ersetzt keinen Lauf; die 18 werden einzeln gefahren. Ob das Werkzeug Pflichtargumente lernen soll: **PK-04**. |
 | **F-PK-22** | PK-03 | **Die 18 „ungeprüften" Aufrufe einzeln gefahren: 17 davon, denn `stilvergleich` war behoben und `uhr-stufe1` stand nie in der Liste. Kein einziger ist falsch verdrahtet** — 15 laufen, 2 scheitern an einem fehlenden Prüfkonto. Ertrag: **11 grün (690 genannte Erwartungen), 4 rot mit Sachbefund** — `gpxprobe` 95/4, `mailprobe`, `ratenprobe` und das bekannte `wiederherstellung` 110/2. | **Die Sorge nach drei Treffern war falsch, gemessen statt vermutet.** Die vier roten liegen in `server/` und sind **nicht** behoben worden: eigene Korrekturstufe, Prüfpunkt **P-PK-20**. Die zwei fehlenden Konten (`umlauf-edbak@`, `messstand@`) sind eine Lücke im Referenzbestand und berühren **E-PK-27** — festgehalten, nicht angefasst. |
+| **F-PK-30** | PK-05 | **Die Stufenerkennung traf seit PK-03 nie.** Das Muster suchte `WEB_VERSION', '…'`; `version.php` trägt seit Web 20.8.0 `const WEB_VERSION = '…';`. Die Stufe hieß immer „klein", die Lage „Stufe zu klein" konnte nie anschlagen. | Behoben in 05/1: eine Lesestelle (`auswahl.py`), unlesbar ist rot. Gegen 20.36.0 → heute gemessen: vorher „klein", jetzt „neben". |
+| **F-PK-31** | PK-05 | **Die Fläche `uhr` hing am Ordner `uhr/`**, den es nicht gibt. | Behoben in 05/2: `watch/`. |
+| **F-PK-32** | PK-05 | **`kettenaufrufe` verlangte die Pflichtschalter aller Unterbefehle von jedem Aufruf** — `bericht.py lesen` galt als falsch, weil `schreiben` `--stufe` braucht. | Behoben in 05/2: Unterbefehle von argparse; drei neue Fälle, Selbstprobe 13/13. |
+| **F-PK-33** | PK-05 (Instanz) | **Die Stufe kam aus `HEAD`, nicht aus dem Arbeitsbestand.** Gemessen wird vor dem Commit; ein Versionssprung, der mit dem Bericht committet wird, war unsichtbar — das Tor hätte „Stufe zu klein" gemeldet. | Behoben im Nachtrag zu 05/3. Nachgestellt: nicht committeter Nebensprung → „neben" (vorher „klein"). |
+| **F-PK-34** | PK-05 (Gegenlesung) | **„gebaut" hieß nur „berührt".** `pruefen.sh` schrieb `handy=gebaut` aus dem Diff, auch nach rotem oder nie gelaufenem Bau; Lage 3 sah nur „nicht …". | E-PK-44. |
+| **F-PK-35** | PK-05 (Gegenlesung) | **Ein Handlauf auf dem PR-Zweig hätte die Gegenlesung umgangen** (nicht gemessen). | E-PK-43; Messung P-PK-31. |
+| **F-PK-36** | PK-05 (Gegenlesung) | **Der Uhr-Prüfstand gehörte nicht mehr zur Uhr-Fläche.** Die alte Bereichserkennung baute die Uhr auch bei `tools/uhr-pruefstand/`; das Muster in `pruefablauf.json` nicht. | Behoben: Muster, Fläche und Lage 3 kennen beide Ordner. |
+| **F-PK-37** | PK-05 (Gegenlesung) | **Die PHP-Zählung des Prüfstands zählte den Index, der Baum kommt aus `add -A`.** Eine neue, nicht vorgemerkte Datei stand im Baum, nicht in der Zahl — das Tor wäre mit einer irreführenden Meldung rot geworden. | Behoben: gezählt wird, was `add -A` in den Baum legt. |
+| **F-PK-38** | PK-05 | **PK-04/5e hatte die Schwelle der Vollständigkeit entfernt, vier Stellen nannten sie noch:** `Pruefablauf.md` 6.11 (zweimal), `tools/quelltext/LIESMICH.md`, die Meldung in `vollstaendigkeit.py`, `Technik.md` 6.2. | Berichtigt in 05/4. Die Option `--hoechstens` selbst steht noch, ohne Aufrufer. |
+
+**Fragen an die Betreiberin aus PK-05:**
+
+| Nr. | Frage | Empfehlung der Instanz |
+|---|---|---|
+| **Q-PK-07** | Soll `Schema gegen MySQL 8.4.0` / `Schema gegen MariaDB 10.6` Pflichtprüfung im Ruleset „Main Protect" werden? Heute hält ein roter Schemalauf keinen Merge auf; `Pruefablauf.md` 2 sagte bis PK-05 „Rot heißt kein Merge" für die ganze Station. | **Ja**, beide Namen eintragen. Auf `main` werden sie über `Schon gemessen?` übersprungen, und übersprungen zählt dem Ruleset als grün — das stört nicht. |
+| **Q-PK-08** | Das Repositoriumsgeheimnis `CIQ_GERAETE_URL` liest seit PK-05 kein Arbeitslauf mehr. Löschen? | **Stehen lassen** bis PK-08: Baut die Kette die Uhr für eine signierte Auslieferung, braucht sie es wieder. |
+| **Q-PK-09** | `pruefung.yml` hat **337** Zeilen statt „unter 250". Reicht das als Abnahme? | **Ja**, mit dem Grund aus 4 (PK-05, Umsetzung). Weiter käme man nur, indem `Schon gemessen?` in ein Werkzeug wandert — das wäre ein eigenes Stück. |
 
 ---
 
@@ -1151,6 +1229,8 @@ Abschnitt 6** — hier die Kurzfassung mit der Folge:
 | Z7 | PK-M2: einen echten PR durch die neue Kette mergen | nach PK-06 | offen |
 | Z8 | Freigabe des Abschlusses | nach PK-07 | offen |
 | Z9 | Kleine Entscheidung (F-PK-13): Soll `.claude/settings.local.json` in `.gitignore`? Ein Eintrag macht sie unsichtbar; kein Eintrag lässt sie wenigstens als unverfolgte Datei auffallen. Heute steht sie **nicht** darin und es gibt sie nicht | mit PK-07 | offen |
+| Z10 | **Q-PK-07 bis -09 beantworten** (Abschnitt 6): Schemaprobe als Pflichtprüfung, `CIQ_GERAETE_URL`, 337 Zeilen als Abnahme | mit dem PR von PK-05 | offen |
+| Z11 | **Nach einem fremden Merge nicht „Update branch" drücken** (E-PK-42): örtlich mergen und den Prüfstand fahren lassen, `Pruefablauf.md` 5.3 | ab dem Merge von PK-05 | Hinweis |
 
 ---
 
