@@ -845,7 +845,8 @@ jobs:
           # vorher, hat `setup-java` JAVA_HOME und PATH global auf Java 21
           # umgestellt. `monkeyc` ist ein Shell-Vorspann, der `java` vom PATH
           # nimmt — er bekäme die 21 ungefragt mit. Dieser Schritt übersetzt
-          # für alle Zielgeräte und dauert rund 35 Minuten; ein Fehlschlag
+          # für alle Zielgeräte und dauert rund 11 Minuten (Lauf 35840201595,
+          # mit den Archiven des Prüfstands; davor 38); ein Fehlschlag
           # darin, verursacht von einer Änderung am Android-Bau, wäre teuer und
           # schwer zuzuordnen. Also ausdrücklich zurück, und gesagt, worauf.
           if [ -n "${JAVA_HOME_LAEUFER:-}" ]; then

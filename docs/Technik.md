@@ -9194,7 +9194,8 @@ Die Schritte:
 > `test-results/**` (JUnit-XML). Bei Grün gibt es nichts zu lesen.
 >
 > **`setup-java` wirkt global auf alle folgenden Schritte** — auch auf den
-> Uhr-Schritt, der danach rund 35 Minuten übersetzt und `java` vom PATH
+> Uhr-Schritt, der danach rund 11 Minuten übersetzt (seit den Archiven des
+> Prüfstands; davor 38) und `java` vom PATH
 > nimmt. Der Uhr-Schritt setzt deshalb ausdrücklich auf das JDK des Läufers
 > zurück, dessen Wert der Schritt „Fassungen nennen" vorher in
 > `JAVA_HOME_LAEUFER` festhält (E-KH-24). Wer die Reihenfolge der Schritte
