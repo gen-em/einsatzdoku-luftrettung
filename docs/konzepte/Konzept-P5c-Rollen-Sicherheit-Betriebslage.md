@@ -34,10 +34,10 @@ Umsetzung.
 > |---|---|
 > | Stand | **23.09.2026 — Fassung 2.** Fassung 1 (20.09.2026, gegen `862ca7f`, Web 20.25.0) freigegeben, Mockup-Runde M-P5c-01 freigegeben. Am 23.09.2026 gegen `8fd4553` (Web 20.37.1, nach Schritt 15, 16 und PK-01 bis -04) abgeglichen: 139 Rohbefunde, 16 davon in der Gegenlesung widerlegt; 21 Fragen dem Auftraggeber vorgelegt und am selben Tag beantwortet (Q-P5c-05 bis -25, 2.7). Daraus **E-P5c-31 bis -58** und **F-P5c-15 bis -58**. Nachgezogen auf `main` `8ae873c` (PK-04 gemergt, Konzept TB). **Mockup-Runde M-P5c-02** am 23.09.2026 gebaut und freigegeben: **F-P5c-59 bis -63**, **Q-P5c-26 bis -30**, **E-P5c-59 bis -66** (2.8). |
 > | Entschieden | E-P5c-01 bis **E-P5c-66**; Q-P5c-01 bis **-30** beantwortet. **M-P5c-02 freigegeben am 23.09.2026** (2.8, 6.2) |
-> | Offen | Im Konzept nichts. **Vor P5c:** Backlog **288** (Neueinrichtung scheitert seit Web 20.30.0 — hält Station B auf) und **289** (Anmeldeseite), beide aus der Runde M-P5c-02 (F-P5c-62, -63), als eigene Korrekturstufe (3.0) |
-> | Umsetzung | nicht begonnen; **nach PK-05** (E-P5c-32) und nach Behebung von Nr. 288. Reihenfolge AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 → AP11 (3.0); **AP10 entfällt** |
+> | Offen | Nichts. Die beiden Fehler aus der Runde M-P5c-02 außerhalb von P5c — Backlog **288** (Neueinrichtung scheiterte seit Web 20.30.0) und **289** (Anmeldeseite) — sind mit der Korrekturstufe **Web 20.37.3** behoben (23.09.2026, F-P5c-62, -63); ihre Prüfliste steht in `Pruefdokument-Korrektur-288-289.md` |
+> | Umsetzung | nicht begonnen; **nach PK-05** (E-P5c-32). Reihenfolge AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 → AP11 (3.0); **AP10 entfällt** |
 > | Fable-Schritte | **keine.** M-P5c-01 ist am 20.09.2026 mit Fable gefahren; M-P5c-02 fährt Opus (Q-P5c-08) |
-> | Nummern | Backlog **286** (Admin-Tor, AP2) und **287** (Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb, Schritt 17) mit dieser Fassung eingetragen; **288** und **289** mit der Mockup-Runde M-P5c-02; der Kopf des Backlogs nennt **290** als nächste freie Nummer. Alle übrigen Einträge in Rahmenplan und Backlog stehen als Einschub in 7 und 8 und werden **mit AP1** eingespielt (F-P5c-50) |
+> | Nummern | Backlog **286** (Admin-Tor, AP2) und **287** (Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb, Schritt 17) mit dieser Fassung eingetragen; **288** und **289** mit der Mockup-Runde M-P5c-02 (beide erledigt mit Web 20.37.3, das **290** und **291** vergibt); der Kopf des Backlogs nennt **292** als nächste freie Nummer. Alle übrigen Einträge in Rahmenplan und Backlog stehen als Einschub in 7 und 8 und werden **mit AP1** eingespielt (F-P5c-50) |
 >
 > **Stand der Umsetzung**
 >
@@ -1165,11 +1165,11 @@ Karte „Server", die Umgebungszeile auf den Blättern.
 **Voraussetzungen:** Schritte 16 und 15 gemergt (erfüllt, 20. und
 23.09.2026); **PK-05 gemergt** (E-P5c-32); **M-P5c-02 freigegeben**
 (erfüllt, 23.09.2026);
-**Backlog Nr. 288 behoben** (F-P5c-62): Ohne sie scheitert
+**Backlog Nr. 288 behoben** (F-P5c-62; **erfüllt mit Web 20.37.3**,
+23.09.2026, zusammen mit Nr. 289): Ohne sie scheiterte
 `hochfahren.sh --neu`, und jedes Paket braucht Station B — auch für die
 Migrationen von AP4, AP5, AP7 und AP8, die auf einer frisch eingerichteten
-Anlage nachgemessen werden. Empfohlen als eigene Korrekturstufe vor P5c,
-zusammen mit Nr. 289.
+Anlage nachgemessen werden.
 
 **Reihenfolge:** AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 →
 AP11. Die Gründe:
@@ -1274,8 +1274,9 @@ Verwaltung → Installation). **Buchführung:** Einschub 7 und 8 einspielen.
 - Bedienweg `wege/betrieb_server.mjs`: Ankündigung setzen, erscheinen,
   wegklicken, nach Neuanmeldung wieder da.
 - **Anmeldeseite:** Die Streifen stehen über der Karte, die Verweise darunter
-  (Nr. 289 — ist sie bis AP1 nicht behoben, behebt AP1 sie mit, weil es die
-  Seite ohnehin anfasst; F-P5c-63).
+  (Nr. 289, behoben mit Web 20.37.3; F-P5c-63). `.anmeldung` stapelt seither
+  untereinander — die Reihe `.hinweise` wird dort ein drittes Kind, über der
+  Karte.
 - **Prüfpunkte der BetreiberIn** (Prüfdokument): Staging rot nach dem Merge,
   Produktiv blau nach dem Tag, Rundmail in einem echten Postfach angekommen.
 
@@ -1711,8 +1712,8 @@ angegebenen Kennung (A-, B-, … = Bereich und laufende Nummer).*
 | F-P5c-59 | *(M-P5c-02)* Der Menüzähler „Status" zählt Orange und Rot (`status_lib.php`); die Begründung von E-P5c-44 — Rot hielte den Zähler dauerhaft über null — gilt für Orange genauso | Q-P5c-30 → E-P5c-63: bleibt orange |
 | F-P5c-60 | *(M-P5c-02)* Die zwei Bedingungen aus E-P5c-16 sind eine: weniger als zwei handlungsfähige Verwaltungskonten heißt immer auch weniger als zwei handlungsfähige BetreiberInnen | AP5, Abnahme berichtigt |
 | F-P5c-61 | *(M-P5c-02)* `notfallblatt.php` schickt zweimal nach „Einstellungen → Konto" (Z. 169, 213); das freigegebene M-P5c-01f trägt den Fehler mit | AP9, Abnahme |
-| F-P5c-62 | *(M-P5c-02)* **Neueinrichtung scheitert seit Web 20.30.0:** `konto_anlegen()` ruft `db_transaktion()`, `konto_lib.php` lädt `db.php` nur mit `config.php`; `hochfahren.sh --neu` scheitert in Schritt 4 | **Backlog 288**, Voraussetzung (3.0) |
-| F-P5c-63 | *(M-P5c-02)* Die Anmeldeseite stellt die vier Verweise neben die Karte (`.anmeldung` in Zeilenrichtung) — bei 390 px ist die Karte rund 200 px breit; seit Web 20.23.0 | **Backlog 289**, spätestens AP1 |
+| F-P5c-62 | *(M-P5c-02)* **Neueinrichtung scheitert seit Web 20.30.0:** `konto_anlegen()` ruft `db_transaktion()`, `konto_lib.php` lädt `db.php` nur mit `config.php`; `hochfahren.sh --neu` scheitert in Schritt 4 | **Backlog 288** — behoben mit Web 20.37.3 |
+| F-P5c-63 | *(M-P5c-02)* Die Anmeldeseite stellt die vier Verweise neben die Karte (`.anmeldung` in Zeilenrichtung) — bei 390 px ist die Karte rund 200 px breit; seit Web 20.23.0 | **Backlog 289** — behoben mit Web 20.37.3 |
 
 ---
 
@@ -1823,8 +1824,9 @@ Scan mit einer echten Authenticator-App (beides Prüfpunkte der Umsetzung).
   Nr. **287** (Karten „Was hier gilt" auf `import.php`, `einsatz_form.php`,
   `wiederherstellen.php`, → Schritt 17); **mit M-P5c-02 (23.09.2026):**
   Nr. **288** (Neueinrichtung scheitert, eigene Korrekturstufe vor P5c) und
-  Nr. **289** (Anmeldeseite, mit 288, spätestens AP1). Kopf: nächste freie
-  Nummer **290**.
+  Nr. **289** (Anmeldeseite) — **beide erledigt mit Web 20.37.3**, das
+  **290** (Riegel in der Kette) und **291** (halbes Schema) vergibt. Kopf:
+  nächste freie Nummer **292**.
 - **141** berichtigen: QR-Code statt Text (E-P5c-41), zehn Codes, „Gerät
   merken" mit Nr. 242 in Schritt 18; → 10c AP5.
 - **200** schließen: „nicht umsetzen — entschieden 23.09.2026 (E-P5c-51)";

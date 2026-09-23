@@ -241,7 +241,7 @@ Prüfliste A-1 bis A-12 **gefahren** und nicht mehr offen.
 | **A-4 Die fünf öffentlichen Seiten angemeldet** | **5 von 5 zeigen angemeldet etwas anderes als abgemeldet.** `ueber.php`: „Startseite, Suche" statt „Zur Anmeldung" · `impressum.php`: „**Du bist mit Verwaltungsrechten angemeldet**" — also wird die Rolle weiterhin **aus der Datenbank** gelesen · `notfallblatt.php`: die **Kontoadresse** steht auf dem Blatt · `hilfe.php` und `datenschutz.php` ebenso |
 | **A-5 Dieselben Seiten anonym** | HTTP 200, **0 `Set-Cookie`**, **0 neue Sitzungsdateien** nach 40 Abrufen |
 | **A-6 Betrieb → Status** | Zeile „Sitzungsablage" steht da und sagt **nicht** „nicht gelaufen" |
-| **A-7 `install.php`** | Die ganze Einrichtung ist über diesen Weg gelaufen — Schema, Admin-Anlage, `config.php` |
+| **A-7 `install.php`** | Die ganze Einrichtung ist über diesen Weg gelaufen — Schema, Admin-Anlage, `config.php`. *Nachtrag 23.09.2026:* **AP5 hat diesen Weg danach gebrochen** (c3b5bff, 22.09.2026) — bis Web 20.37.2 scheiterte jede Neueinrichtung an „Call to undefined function db_transaktion()“ (Backlog Nr. 288, behoben mit 20.37.3). Die Messung hier lag vor AP5 oder auf einer schon eingerichteten Anlage; aus dem Dokument ist nicht zu sagen, welches von beiden |
 | **A-8 `wiederherstellen.php`** | HTTP 200, Cookie mit SameSite=Lax (Art `einrichtung`) |
 | **Konsolenfehler im Klickweg** | **keine** |
 

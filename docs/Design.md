@@ -2552,6 +2552,12 @@ unbedeckt nach 200 ms.
 | **Anmeldehülle** | `.anmeldung-body` + `<main class="anmeldung">` | keine | Anmeldung, Passwort setzen, Einrichter |
 | **Druckseite** | `.blatt-seite` + `.rahmen rahmen-lesespalte` | keine | Schlüsselblatt (`betrieb_schluesselblatt.php`) |
 
+**Die Anmeldehülle stapelt.** `.anmeldung` ordnet ihre Kinder
+**untereinander** und mittig an: die Karte, auf der Anmeldeseite darunter die
+vier Verweise `.fuss-anmeldung` auf Dunkelblau. Seit Web 20.37.3 (Nr. 289);
+bis dahin galt die Vorgabe „nebeneinander", und die Verweise standen rechts
+der Karte — bei 390 px war die Karte dadurch rund 200 px breit.
+
 **Es gibt keine zweite Leiste.** Unter 1024 px liegt dieselbe
 `<aside class="leiste">` als Schublade über dem Inhalt, darüber steht sie fest
 daneben; der Unterschied ist ausschließlich CSS.

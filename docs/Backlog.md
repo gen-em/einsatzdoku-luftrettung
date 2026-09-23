@@ -138,11 +138,12 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **290** und trägt seine
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **292** und trägt seine
 Spanne hier ein, bevor er pusht. *(Bis zum 23.09.2026 stand hier 283; 283 bis
 285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
 Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
-Tag — nachgesehen auf `origin/main` und in PR #77.)*
+Tag, **290 und 291** die Korrekturstufe Web 20.37.3 — nachgesehen auf
+`origin/main` und in den offenen Pull Requests.)*
 
 **Und sieht vorher nach — auf `origin/main` UND in die offenen Pull
 Requests.** Der Satz darüber beschreibt keinen Riegel, sondern eine Hoffnung:
@@ -3725,50 +3726,36 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `grep -l "Was hier gilt" server/*.php` findet eine Seite (außer
     Kommentaren in `version.php`). **Zuordnung: Schritt 17.**
 
-288. **Eine neue Anlage lässt sich seit Web 20.30.0 nicht einrichten.**
-    *Aufgenommen 23.09.2026 beim Bau der Mockup-Runde M-P5c-02 (F-P5c-62),
-    gemessen.* `install.php` legt die erste BetreiberIn über
-    `konto_anlegen()` an. Das ruft seit c3b5bff (Schritt 15, AP5)
-    `db_transaktion()` auf — `konto_lib.php` lädt `db.php` aber nur, wenn
-    `config.php` schon da ist (Z. 82), und während der Einrichtung ist sie es
-    nicht, weil sie erst danach geschrieben wird. Die Funktion fehlt, der
-    Einrichter fängt die Ausnahme und sagt „Einrichten gescheitert". Der Kopf
-    von `konto_lib.php` begründet das bedingte Laden ausgerechnet damit, dass
-    der Einrichter die Bibliothek ohne Konfiguration laden können muss.
+290. **Keine Stufe der Kette richtet eine Anlage ein.**
+    *Aufgenommen 23.09.2026 mit Web 20.37.3 (Anlass: Nr. 288).* Nr. 288 hat
+    elf Fassungen lang (20.30.0 bis 20.37.2) jede Neueinrichtung gebrochen,
+    und keine Stufe hat es gesehen: Stufe 1 richtet keine Anlage ein, Stufe 2
+    läuft gegen das eingerichtete Staging, und eine vorhandene örtliche
+    Installation überspringt den Schritt. Bemerkt hat es `hochfahren.sh
+    --neu`, und das fährt nur, wer es ausdrücklich will.
 
-    **Wen es trifft:** jede Neueinrichtung — eine neue Anlage, ein
-    Hosterwechsel, ein Neuanfang nach Verlust — und Station B der
-    Prüfkette: `hochfahren.sh --neu` scheitert in Schritt 4 („Einrichtungslink
-    nicht gefunden"). **Warum es niemand gemerkt hat:** Stufe 1 richtet keine
-    Anlage ein, und eine vorhandene örtliche Installation überspringt den
-    Schritt.
+    *Weg (zu entscheiden):* ein Stufe-1-Schritt, der `install.php` gegen eine
+    leere Datenbank laufen lässt und den Einrichtungslink verlangt — oder
+    kleiner, ein Schritt, der `konto_lib.php` ohne `config.php` lädt und jede
+    Funktion auf dem Weg des Einrichters als vorhanden verlangt. *Abnahme:*
+    der Schritt wird rot, wenn man c3b5bff nachstellt (den Rahmen zurück nach
+    `db.php`). *Fehlschlag:* grün auf diesem Stand. `docs/Pruefablauf.md`
+    führt ihn mit „Anlass: Nr. 288".
 
-    *Behebung:* `db_transaktion()` dort verfügbar machen, wo der Einrichter es
-    braucht, ohne `db()` zu laden — etwa `db.php` ohne Konfiguration ladbar
-    machen oder die Transaktionsklammer in eine eigene Datei ziehen, die
-    `konto_lib.php` immer lädt. *Abnahme:* `bash tools/sandbox/hochfahren.sh
-    --neu` grün, danach die Anmeldung über den Einrichtungslink. *Fehlschlag:*
-    „Einrichten gescheitert" auf einer leeren Datenbank. **Zuordnung: eigene
-    Korrekturstufe, vor P5c** — sie hält Station B auf, die jedes Paket von
-    P5c braucht.
+291. **Eine gescheiterte Einrichtung hinterlässt ein halbes Schema.**
+    *Aufgenommen 23.09.2026 mit Web 20.37.3, gemessen.* `install.php` spielt
+    `schema.sql` ein (Z. 352) und legt danach das Konto an. Scheitert
+    danach etwas, stehen die Tabellen — `schema.sql` legt 41 von 42 ohne
+    `IF NOT EXISTS` an —, und der nächste Versuch auf derselben Datenbank
+    bricht an ihnen ab. Die Meldung rät dabei in jedem Fall „eine leere
+    Datenbank verwenden", auch beim ersten Fehlschlag, der mit der Datenbank
+    nichts zu tun hatte (so bei Nr. 288). Eine Transaktion hilft hier nicht:
+    DDL bestätigt in MySQL still.
 
-289. **Die Anmeldeseite stellt die vier Verweise neben die Karte statt
-    darunter.**
-    *Aufgenommen 23.09.2026 beim Bau der Mockup-Runde M-P5c-02 (F-P5c-63),
-    im Bild gemessen.* `.anmeldung` ist ein Flex-Behälter in
-    Zeilenrichtung, und `nav.fuss-anmeldung` steht darin hinter der Karte
-    (`login.php` Z. 553). Der Kommentar dort will die Verweise „direkt unter
-    das Anmeldeformular". Am
-    Rechner stehen sie rechts neben der Karte, bei 390 px drücken sie die
-    Karte auf rund 200 px zusammen. Seit d3832e4 (Web 20.23.0).
-
-    *Behebung:* `.anmeldung` in Spaltenrichtung, die Verweise unter der
-    Karte. *Abnahme:* Anmeldeseite bei 390 und 1440 px — Karte in voller
-    Breite (`--anmeldekarte`), Verweise darunter; Bilderlauf ohne Überlauf.
-    *Fehlschlag:* ein Verweis steht auf gleicher Höhe wie die Karte. Die
-    Mockup-Runde M-P5c-02 (a) zeigt den berichtigten Stand. **Zuordnung:
-    eigene Korrekturstufe, zusammen mit Nr. 288**, spätestens P5c AP1 (die
-    Anmeldeseite bekommt dort die Streifen).
+    *Weg (zu entscheiden):* entweder den Rat nur geben, wenn der Fehler vom
+    Schema kommt, oder das Konto vor dem Schema prüfen lassen, was geht. Klein,
+    kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
+    **Zuordnung: Backlog-Runde.**
 
 ## Erledigt
 
@@ -9865,3 +9852,64 @@ zutreffen.
     Warten) — `docs/konzepte/Pruefdokument-TB-Tor-nach-Baum.md`.
     **P-TB-05 belegt am 23.09.2026** (Lauf 35844072753, 18 s statt rund
     41 min); P-TB-06 bleibt offen bis zum nächsten echten Tag.
+
+288. **Eine neue Anlage lässt sich seit Web 20.30.0 nicht einrichten.**
+    *Aufgenommen 23.09.2026 beim Bau der Mockup-Runde M-P5c-02 (F-P5c-62),
+    gemessen.* `install.php` legt die erste BetreiberIn über
+    `konto_anlegen()` an. Das ruft seit c3b5bff (Schritt 15, AP5)
+    `db_transaktion()` auf — `konto_lib.php` lädt `db.php` aber nur, wenn
+    `config.php` schon da ist (Z. 82), und während der Einrichtung ist sie es
+    nicht, weil sie erst danach geschrieben wird. Die Funktion fehlt, der
+    Einrichter fängt die Ausnahme und zeigt „Call to undefined function
+    db_transaktion()" (`hochfahren.sh` fasst das als „Einrichten
+    gescheitert" zusammen). Der Kopf
+    von `konto_lib.php` begründet das bedingte Laden ausgerechnet damit, dass
+    der Einrichter die Bibliothek ohne Konfiguration laden können muss.
+
+    **Wen es trifft:** jede Neueinrichtung — eine neue Anlage, ein
+    Hosterwechsel, ein Neuanfang nach Verlust — und Station B der
+    Prüfkette: `hochfahren.sh --neu` scheitert in Schritt 4 („Einrichtungslink
+    nicht gefunden"). **Warum es niemand gemerkt hat:** Stufe 1 richtet keine
+    Anlage ein, und eine vorhandene örtliche Installation überspringt den
+    Schritt.
+
+    *Behebung:* `db_transaktion()` dort verfügbar machen, wo der Einrichter es
+    braucht, ohne `db()` zu laden — etwa `db.php` ohne Konfiguration ladbar
+    machen oder die Transaktionsklammer in eine eigene Datei ziehen, die
+    `konto_lib.php` immer lädt. *Abnahme:* `bash tools/sandbox/hochfahren.sh
+    --neu` grün, danach die Anmeldung über den Einrichtungslink. *Fehlschlag:*
+    „Einrichten gescheitert" auf einer leeren Datenbank. **Zuordnung: eigene
+    Korrekturstufe, vor P5c** — sie hält Station B auf, die jedes Paket von
+    P5c braucht.
+
+    **Erledigt 23.09.2026 mit Web 20.37.3.** `db_transaktion()` steht in
+    `transaktion_lib.php`, die nichts lädt; `konto_lib.php` und `db.php`
+    binden sie ein, Registerzeile Z16 nimmt die neue Datei aus (Decke 9).
+    Vorher nachgestellt: `hochfahren.sh --neu` RC 1 in Schritt 4, die Seite
+    meldet „Call to undefined function db_transaktion()". Nachher: RC 0 bis
+    zum Ende — Einrichtungslink, Passwort im Browser gesetzt, Demo-Konto mit
+    106 Einsätzen eingespielt. Den Riegel in der Kette führt Nr. 290, das
+    halbe Schema nach einem Fehlschlag Nr. 291. Prüfliste:
+    `docs/konzepte/Pruefdokument-Korrektur-288-289.md`.
+
+289. **Die Anmeldeseite stellt die vier Verweise neben die Karte statt
+    darunter.**
+    *Aufgenommen 23.09.2026 beim Bau der Mockup-Runde M-P5c-02 (F-P5c-63),
+    im Bild gemessen.* `.anmeldung` ist ein Flex-Behälter in
+    Zeilenrichtung, und `nav.fuss-anmeldung` steht darin hinter der Karte
+    (`login.php` Z. 553). Der Kommentar dort will die Verweise „direkt unter
+    das Anmeldeformular". Am
+    Rechner stehen sie rechts neben der Karte, bei 390 px drücken sie die
+    Karte auf rund 200 px zusammen. Seit d3832e4 (Web 20.23.0).
+
+    *Behebung:* `.anmeldung` in Spaltenrichtung, die Verweise unter der
+    Karte. *Abnahme:* Anmeldeseite bei 390 und 1440 px — Karte in voller
+    Breite (`--anmeldekarte`), Verweise darunter; Bilderlauf ohne Überlauf.
+    *Fehlschlag:* ein Verweis steht auf gleicher Höhe wie die Karte. Die
+    Mockup-Runde M-P5c-02 (a) zeigt den berichtigten Stand. **Zuordnung:
+    eigene Korrekturstufe, zusammen mit Nr. 288**, spätestens P5c AP1 (die
+    Anmeldeseite bekommt dort die Streifen).
+
+    **Erledigt 23.09.2026 mit Web 20.37.3.** `.anmeldung` in
+    Spaltenrichtung (`flex-direction:column`); `Design.md` 10.1 sagt es.
+    Gemessen im Prüfdokument `docs/konzepte/Pruefdokument-Korrektur-288-289.md`.

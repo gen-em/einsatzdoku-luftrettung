@@ -42,7 +42,13 @@ Daten erst nach Server-Bestätigung.
 │   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc),
 │   │                       Einstieg der Wartung huckepack (run_cleanup_if_due).
 │   │                       Verlangt config.php hart — die globale $CFG gibt
-│   │                       es seit Web 20.27.0 nicht mehr
+│   │                       es seit Web 20.27.0 nicht mehr. Bindet
+│   │                       transaktion_lib.php ein
+│   ├── transaktion_lib.php Der EINE Transaktionsrahmen db_transaktion()
+│   │                       (Schritt 15 AP5, E-ZE-20). Bis Web 20.37.2 in
+│   │                       db.php; eigene Datei seit 20.37.3, weil der
+│   │                       Einrichter ihn ohne config.php braucht (Nr. 288).
+│   │                       LAEDT SELBST NICHTS
 │   ├── konfig_lib.php     Der EINE Leser fuer config.php (Schritt 15 AP2,
 │   │                       E-ZE-02/-14): konfig('app.timezone'),
 │   │                       konfig_alles(), konfig_verwerfen(). Punktpfad,
@@ -149,7 +155,8 @@ Daten erst nach Server-Bestätigung.
 │   ├── konto_lib.php      Lebenszyklus eines Kontos: anlegen, Token ausstellen,
 │   │                      Status wechseln, loeschen (P5b/AP2). Die EINE Stelle
 │   │                      fuer vier — Backlog Nr. 202 Paket 1. Laeuft auch
-│   │                      ohne config.php, weil install.php sie braucht
+│   │                      ohne config.php, weil install.php sie braucht;
+│   │                      laedt transaktion_lib.php deshalb unbedingt
 │   ├── konten_einstellungen_lib.php
 │   │                      Betriebsart der Registrierung, Fristen, Mengengrenzen,
 │   │                      Demo-Anmeldung — die Werte der Karte „Konten"
@@ -5341,7 +5348,7 @@ Die Bausteine im Einzelnen:
 | Schlüssel/Wert-Ablage | `db.php` | `app_state_lesen()`, `app_state_setzen()`, dazu ab Web 20.29.0 `app_state_mehrere()` (eine Abfrage statt n), `app_state_setzen_mehrere()`, `app_state_loeschen()` und `app_state_einmalig()` (`INSERT IGNORE`, dann zurücklesen — für die beiden Servergeheimnisse, bei denen von zwei gleichzeitigen Anfragen nur **eine** gewinnen darf). Die Längenprüfung gegen `APP_STATE_MAX` steht in `app_state_zu_lang()`. **Zwei Stellen fragen weiter selbst:** `jobs.php` (Gerätevertrag — es antwortet `500 datenbank`, wo der Helfer `null` liefert) und `job_aufraeumen_schritte()` (Verbund auf `users`). |
 | Virtuelles Gerät | `db.php` | `geraet_virtuell_sicherstellen($pdo, $userId)` — holen oder anlegen, an einer Stelle statt an vier. Dazu `geraet_virtuell_kennung()`, `geraet_virtuell()` (für Listen im Speicher), `GERAETE_ECHT_SQL` und `geraete_echt_sql($alias)` für Abfragen mit Tabellenalias sowie `GERAET_VIRTUELL_MUSTER` für die eine Abfrage, die das `LIKE`-Muster bindet. Ab Web 20.29.0. |
 | Einsatz laden | `einsatz_lib.php` | `einsatz_laden($id, $userId, ['spalten' => …, 'papierkorb' => 'nein'\|'ja'\|'egal'])`. Die Besitzprüfung steht **in** der Abfrage; die drei Fehlerfälle (gibt es nicht · gehört jemand anderem · falsche Seite des Papierkorbs) sind bewusst nicht unterscheidbar. Ab Web 20.29.0; zwei Stellen bleiben namentlich außen vor (siehe Dateikopf). |
-| Transaktionsrahmen | `db.php` | `db_transaktion($pdo, $fn)` — beginnen, den Rumpf laufen lassen, bestätigen; bei jedem `Throwable` zurückrollen und **weiterwerfen**. **Verschachtelungsfest und asymmetrisch:** Wer schon in einer fremden Transaktion steht, öffnet keine eigene und bestätigt und verwirft dann auch nichts. Vor dem `rollBack()` wird nachgefragt, ob sie noch steht — ein DDL bestätigt in MySQL still, und der Rumpf darf selbst zurückgerollt haben; sonst verdeckte eine zweite Ausnahme die erste. Ab Web 20.30.0; **neun Rahmen bleiben namentlich außen vor**, die Registerzeile Z16 führt sie mit Grund. |
+| Transaktionsrahmen | `transaktion_lib.php` (bis Web 20.37.2 `db.php`, Nr. 288) | `db_transaktion($pdo, $fn)` — beginnen, den Rumpf laufen lassen, bestätigen; bei jedem `Throwable` zurückrollen und **weiterwerfen**. **Verschachtelungsfest und asymmetrisch:** Wer schon in einer fremden Transaktion steht, öffnet keine eigene und bestätigt und verwirft dann auch nichts. Vor dem `rollBack()` wird nachgefragt, ob sie noch steht — ein DDL bestätigt in MySQL still, und der Rumpf darf selbst zurückgerollt haben; sonst verdeckte eine zweite Ausnahme die erste. Ab Web 20.30.0; **neun Rahmen bleiben namentlich außen vor**, die Registerzeile Z16 führt sie mit Grund. |
 | Kindtabellen eines Einsatzes | `einsatz_lib.php` | `einsatz_phasen_ersetzen()`, `einsatz_reas_ersetzen()`, `einsatz_rettungsmittel_ersetzen()`, `einsatz_besatzung_ersetzen()` — fünf Schreibwege (Formular, CSV-Import, Uhr-Eingang, Backup, Schneiden), dreißig Anweisungen, jetzt null außerhalb. Schalter `loeschen` (Vorgabe `true`; das Backup schreibt in einen gerade angelegten Einsatz) und `ignorieren` (dessen `INSERT IGNORE`). **Sie prüfen nichts** — was gültig ist, entscheidet der Aufrufer. Ab Web 20.30.0. |
 | Vorbereitete Anweisung | `einsatz_lib.php` (`einsatz_anweisung()`) | Eine `PDOStatement` je Verbindung und SQL-Text. Nötig, weil `db.php` `ATTR_EMULATE_PREPARES => false` setzt: Jedes `prepare()` ist ein Roundtrip, und der CSV-Import führt seine Anweisungen bis zu 3 000-mal aus. Die Verbindung wird **mitgehalten**, nicht nur ihre Objektkennung — eine freigegebene PDO gäbe ihre `spl_object_id` an die nächste weiter. |
 | Zahl, Größe, Anteil, Datum, Zeit | `format_lib.php` | `zahl_text()` · `groesse_text()` (drei Stufen: GB zwei, MB eine, KB null Nachkommastellen) · `groesse_kurz_text()` (mit Stufe „B", abgeschnittenen Nullen und `unbegrenzt` — eine **andere** Schreibweise, keine zweite Fassung) · `groesse_paar_text($ist, $grenze)` (gemeinsame Einheit: „3 von 250 MB") · `prozent_wert($teil, $ganz, 'ab'\|'kauf')` und `prozent_text()` · `datum_text()` · `datum_zeit_text($utc, $trenner)` · `datum_stunde_text()` · `zeit_relativ()` · `heute_lokal()` · `iso_utc()` / `iso_utc_lesen()`. Ab Web 20.32.0. **Sie lädt nur `konfig_lib.php`** — `install.php` erreicht sie über `plattform_lib.php`, bevor es eine `config.php` gibt. **Zwölf Stellen bleiben namentlich außen vor**, die Registerzeilen Z22–Z26 führen sie mit Grund. |
@@ -7000,7 +7007,8 @@ neben der Quelle.
 #### Wo die Seiten auftauchen
 
 - **Fußzeile der Anmeldeseite** (`.fuss-anmeldung`): Was ist NAdoku? ·
-  Handbuch · Impressum · Datenschutz. Der erste Link ist der einzige Weg, auf
+  Handbuch · Impressum · Datenschutz — **unter** der Karte (bis Web 20.37.2
+  stand sie daneben, Nr. 289). Der erste Link ist der einzige Weg, auf
   dem jemand **ohne Konto** erfährt, was diese Anwendung ist.
 - **Kopfleiste, angemeldet:** ein Fragezeichen links vom Zahnrad
   (`.kopf-hilfe`), das auch auf dem Handy stehen bleibt.
@@ -7396,6 +7404,20 @@ angelegt hat, und bringt deshalb seine eigene PDO-Verbindung mit. `konto_lib.php
 lädt `db.php` und `protokoll_lib.php` deshalb nur mit `is_file()`, und jede
 Funktion nimmt ein `?PDO` entgegen. Dieselbe Falle wie Backlog Nr. 223 — und
 hier von vornherein vermieden statt hinterher behoben.
+
+**Und dann doch hineingelaufen (Backlog Nr. 288).** Seit Schritt 15 legt
+`konto_anlegen()` das Konto in `db_transaktion()` an, und der Rahmen stand in
+`db.php` — also hinter derselben Weiche. Von **Web 20.30.0 bis 20.37.2**
+scheiterte jede Neueinrichtung an „Call to undefined function
+db_transaktion()"; bemerkt hat es erst `hochfahren.sh --neu`, weil Stufe 1
+keine Anlage einrichtet. Seit **Web 20.37.3** steht der Rahmen in
+`transaktion_lib.php`, die nichts lädt; `konto_lib.php` bindet sie
+**unbedingt** ein, `db.php` ebenfalls. **Nie ein zweites Mal definieren**,
+auch nicht hinter `function_exists()`: Die Erfolgsseite des Einrichters lädt
+`db.php` nach, sobald `config.php` steht, und eine zweite Definition bräche dort
+mit „Cannot redeclare" ab — nachdem `config.php` und `install.lock` geschrieben
+sind. **Wer hier eine Funktion aus einer bedingt geladenen Datei ruft, prüft
+den Einrichter mit `bash tools/sandbox/hochfahren.sh --neu`.**
 
 Der Protokolleintrag „erstes Konto angelegt" fällt im Einrichter aus
 (`function_exists('protokoll')`). Das ist richtig: Er trüge ohnehin keinen

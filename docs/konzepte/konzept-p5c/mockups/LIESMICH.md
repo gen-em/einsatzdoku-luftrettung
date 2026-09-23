@@ -292,8 +292,8 @@ Knöpfen weg statt ausgegraut; beide Statuszeilen oben in der Karte
 | **F-P5c-59** | Der Menüzähler zählt Orange und Rot (`status_lib.php`, Kopf der Menüzähler: „Status — orange + rot der Ampel"). E-P5c-44 begründet Orange damit, dass der Zähler bei Rot nie auf null stünde — in Orange steht er genauso | Q-P5c-30 → **bleibt orange** (E-P5c-63) |
 | **F-P5c-60** | Die zwei Bedingungen aus E-P5c-16 sind eine: Wer weniger als zwei handlungsfähige Verwaltungskonten hat, hat auch weniger als zwei handlungsfähige BetreiberInnen. Die Ampel hängt allein an „zwei BetreiberInnen handlungsfähig"; die Zahl der Verwaltungskonten wählt nur den Text (Fall 1 oder 2). Die Abnahme von AP5 („2 handlungsfähige → keiner") ist so zu lesen: **2 BetreiberInnen** → keiner, 1 BetreiberIn und 1 Admin → Orange | AP5, Abnahme |
 | **F-P5c-61** | `notfallblatt.php` schickt zweimal nach „Einstellungen → Konto" (Z. 169 und 213); den Reiter gibt es nicht, der Schlüssel liegt unter „Profil" (vgl. F-P5c-53). Das freigegebene M-P5c-01f trägt den Fehler mit; (e) berichtigt ihn | AP9 (Umbau des Notfallblatts) |
-| **F-P5c-62** | **Eine neue Anlage lässt sich seit Web 20.30.0 nicht einrichten.** `install.php` legt die erste BetreiberIn über `konto_anlegen()` an, und das ruft seit c3b5bff (Schritt 15, AP5) `db_transaktion()` auf. `konto_lib.php` lädt `db.php` aber nur, wenn `config.php` schon da ist (Z. 82) — während der Einrichtung ist sie es nicht. Die Funktion fehlt, die Ausnahme wird gefangen, die Seite sagt „Einrichten gescheitert". Gemessen mit `hochfahren.sh --neu` (Station B): scheitert in Schritt 4. Stufe 1 richtet keine Anlage ein und merkt es deshalb nicht | **Backlog Nr. 288**, außerhalb von P5c |
-| **F-P5c-63** | **Die Anmeldeseite stellt die vier Verweise neben die Karte statt darunter.** `.anmeldung` ist ein Flex-Behälter in Zeilenrichtung, `nav.fuss-anmeldung` steht darin hinter der Karte (`login.php` Z. 553) — der Kommentar dort will sie „direkt unter das Anmeldeformular". Bei 390 px drückt das die Karte auf rund 200 px. Seit d3832e4 (Web 20.23.0). (a) nimmt die Berichtigung im Rahmen „nur im Mockup" vorweg | **Backlog Nr. 289**, außerhalb von P5c |
+| **F-P5c-62** | **Eine neue Anlage lässt sich seit Web 20.30.0 nicht einrichten.** `install.php` legt die erste BetreiberIn über `konto_anlegen()` an, und das ruft seit c3b5bff (Schritt 15, AP5) `db_transaktion()` auf. `konto_lib.php` lädt `db.php` aber nur, wenn `config.php` schon da ist (Z. 82) — während der Einrichtung ist sie es nicht. Die Funktion fehlt, die Ausnahme wird gefangen, die Seite sagt „Einrichten gescheitert". Gemessen mit `hochfahren.sh --neu` (Station B): scheitert in Schritt 4. Stufe 1 richtet keine Anlage ein und merkt es deshalb nicht | **Backlog Nr. 288**, außerhalb von P5c — **behoben mit Web 20.37.3** |
+| **F-P5c-63** | **Die Anmeldeseite stellt die vier Verweise neben die Karte statt darunter.** `.anmeldung` ist ein Flex-Behälter in Zeilenrichtung, `nav.fuss-anmeldung` steht darin hinter der Karte (`login.php` Z. 553) — der Kommentar dort will sie „direkt unter das Anmeldeformular". Bei 390 px drückt das die Karte auf rund 200 px. Seit d3832e4 (Web 20.23.0). (a) nimmt die Berichtigung im Rahmen „nur im Mockup" vorweg | **Backlog Nr. 289**, außerhalb von P5c — **behoben mit Web 20.37.3** |
 
 **Zur Arbeitsumgebung:** Für den Abgriff war die örtliche Anlage neu
 einzurichten, und genau das scheitert (F-P5c-62). Überbrückt wurde es mit
@@ -337,7 +337,8 @@ entscheidet AP5 (Lizenz, Herkunft, SHA-256 nach `docs/Lizenzen.md`). Das
 Bauwerkzeug ist nicht Teil der Lieferung.
 
 **Nur im Mockup, nicht Teil des Vorschlags:** der beige Rahmen; die
-Verweiszeile der Anmeldeseite unter der Karte (F-P5c-63); geöffnete Dialoge
+Verweiszeile der Anmeldeseite unter der Karte (F-P5c-63 — im Mockup
+vorweggenommen, seit Web 20.37.3 auch in der Anwendung so); geöffnete Dialoge
 (`.mock-offen`); die Blende am unteren Rand gekürzter Rahmen. Das Datum
 „Sichtbar bis" in (a) ist im Bild ein Textfeld; im Bau ist es
 `type="date"` wie in der Suche — Chromium zeichnet Datumsfelder in dieser
