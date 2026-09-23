@@ -61,6 +61,12 @@ teil_web() {
     python3 -c 'from cryptography.hazmat.primitives.ciphers.aead import AESGCM' >/dev/null 2>&1 \
         || python3 -m pip install -q --break-system-packages cffi >/dev/null 2>&1 \
         || zeile "ACHTUNG: cryptography trägt weiter nicht"
+    # Die Gegenstellen der Versandprobe (FTP, FTPS, SFTP als Nachbau, RP-01).
+    # pyOpenSSL ist KEIN Beiwerk: Ohne es fehlt pyftpdlib der TLS_FTPHandler,
+    # FTPS startet nicht, und die Gegenstellen brechen alle drei ab.
+    python3 -c 'import paramiko; from pyftpdlib.handlers import TLS_FTPHandler' >/dev/null 2>&1 \
+        || python3 -m pip install -q --break-system-packages pyftpdlib paramiko pyopenssl >/dev/null 2>&1 \
+        || zeile "ACHTUNG: Gegenstellen der Versandprobe (pyftpdlib, paramiko, pyopenssl) fehlen"
 }
 
 teil_android() {

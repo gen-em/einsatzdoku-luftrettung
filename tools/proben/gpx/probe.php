@@ -377,7 +377,9 @@ echo "\n  Teil 2 — Serverseitig gebaut gegen browserseitig gebaut\n";
  * die Referenz aelter als die Datenbank — und dann misst dieser Teil etwas
  * anderes als bestellt. Beides steht jetzt als eigene Erwartung da, mit
  * Zahl. */
-$zipPfad = glob(dirname(__DIR__) . '/referenzdatensatz/referenz/*csv*.zip')[0] ?? null;
+// dirname(__DIR__, 2) ist tools/ — seit dem Umzug nach tools/proben/gpx/ (PK-04/2)
+// zeigte dirname(__DIR__) auf tools/proben/, und die Referenz fehlte (F-RP-01).
+$zipPfad = glob(dirname(__DIR__, 2) . '/referenzdatensatz/referenz/*csv*.zip')[0] ?? null;
 $vergleiche = 0; $abweichungen = []; $dateien = 0;
 $uebersprungenStufe = 0;   // verdichtet -> zu Recht uebersprungen
 $uebersprungenFehlt = 0;   // keine Zeile im Konto -> Referenz und Bestand passen nicht
@@ -669,9 +671,9 @@ foreach ($eigene as $stufe => $e) {
            || str_contains($seite['leib'], 'art=mission&id=' . $e['id']),
            'Auch der Einsatz (Stufe ' . $stufe . ') steht in der Liste', 'Einsatz ' . $e['id']);
 }
-pruefe(str_contains($seite['leib'], 'keine Spur'),
+pruefe(str_contains($seite['leib'], 'keine GPS-Daten'),   // seit E-S9-03 „GPS-Daten" statt „Spur" (F-RP-02)
        'Ein Eintrag ohne Spur steht da, aber ohne Abruf',
-       'Plakette „keine Spur" gefunden');
+       'Plakette „keine GPS-Daten" gefunden');
 pruefe(substr_count($seite['leib'], 'data-spur=') >= 4,
        'Jede Zeile ist mit der Karte verknuepfbar',
        substr_count($seite['leib'], 'data-spur=') . ' Zeilen mit data-spur');
@@ -780,7 +782,7 @@ pruefe(count($mitDuenn) === 1 && count($mitRoh) === 2,
        count($mitDuenn) . '× ausgeduennt, ' . count($mitRoh) . '× Original');
 
 $kopf = gpx_kopf_desc($r['leib']);
-pruefe(str_contains($kopf, '3 Spuren') && str_contains($kopf, 'teils ausgedünnt'),
+pruefe(str_contains($kopf, '3 Aufzeichnungen') && str_contains($kopf, 'teils ausgedünnt'),   // „Aufzeichnung" statt „Spur" (F-RP-02)
        'Der Kopf sagt, was die Datei als Ganzes ist', $kopf);
 
 preg_match('/filename="([^"]*)"/', $r['kopf'], $mm);

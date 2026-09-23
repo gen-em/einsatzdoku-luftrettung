@@ -14,6 +14,65 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Die Nebenstufe ist grün (Konzept RP)] — 2026-09-23
+
+Konzept RP, Backlog Nr. 292. Keine Versionsstufe: berührt sind nur `tools/`
+und `docs/`, und keine der neun roten Proben war ein Fehler der Anwendung.
+
+### Behoben
+
+- **Neun von 36 Proben der Nebenstufe waren rot, und keine davon hatte je
+  in einer Stufe gelaufen, die ein Tor las.** Bis PK-05 hieß jede Stufe
+  „klein", und eine rote Probe im Bericht ließ das Tor grün. Seit PK-05 hätte
+  jede davon den ersten Nebensprung aufgehalten — P5c AP1 zuerst.
+- **Vier waren nicht verdrahtet.** Die Versandprobe verlangte einen Pfad zu
+  laufenden Gegenstellen, die niemand startete; jetzt startet `proben.sh`
+  die Nachbauten aus `gegenstellen.py` selbst und hält sie danach an — in
+  eigener Prozessgruppe, weil die Kindprozesse sonst weiterhorchten. Die
+  Freigabeprobe arbeitete am Konto des edbak-Kreislaufs, der erst nach ihr
+  lief; jetzt legt sie ihr eigenes an und löscht es wieder, über die Wege
+  aus `kreislauf.py` (`pruefkonto.py`). Die Wegprobe wartete auf zwei
+  Umgebungswerte, die niemand setzte; jetzt nimmt sie das edbak-Umlaufkonto,
+  und der Prüfstand fährt den Kreislauf vorher (`nach` in `pruefablauf.json`).
+  Die GPX-Probe suchte ihre Referenz seit dem Umzug nach `tools/proben/`
+  einen Ordner zu hoch.
+- **Vier hatten veraltete Erwartungen:** „Spur" statt „Aufzeichnung" und
+  „GPS-Daten", „Betreiberin" statt der Hausform, ein Beispielsatz ohne die
+  Pflichtwerte der P5b-Mails, und `frame-ancestors` in einer Report-Only-
+  Richtlinie, in der es die Anwendung absichtlich nicht ausgibt (Nr. 224).
+  Die csv-Referenz war älter als die Hausform; sie ist neu erzeugt, statt mit
+  Ausnahmeregeln erklärt zu werden — eine Regel für eine veraltete Referenz
+  wäre ein Filter.
+- **Eine hatte zu wenige Konten.** Der „knappe Schub" der
+  Wiederherstellungsprobe bekam Zeit für zwei Konten, und eine frische Anlage
+  hat genau zwei. Er sicherte beide, und „hört dann auf" war rot — seit PK-03,
+  ohne dass `edbak_auftrag_schub()` falsch war. Die Probe legt jetzt für
+  diesen Teil zwei Konten dazu und räumt sie weg.
+- **Die Kreisläufe liefen im Prüfstand nur einmal.** Ohne `--frisch` brach der
+  zweite Lauf auf derselben Anlage ab, weil das Umlaufkonto schon bestand.
+
+### Geändert
+
+- **Der Prüfstand schreibt die Zeit je Probe.** Die Nebenstufe brauchte
+  1 266 s, und niemand konnte sagen, wofür. Jetzt: Bilderlauf 769 s,
+  Bedienprobe 261 s, die übrigen 34 Proben zusammen 209 s.
+- **Die Nebenstufe hat als Ziel rund 21 Minuten, nicht 15** (E-RP-05).
+  Bilderlauf und Bedienprobe laufen absichtlich nacheinander — die
+  Wartungsseiten schalten die ganze Anlage, die Bedienprobe ändert den
+  Bestand —, und schneller ginge es nur mit weniger Breiten.
+- **Zwei Proben räumen jetzt auf.** Die CSP-Probe legt ihr Bildschirmfoto
+  unter `/tmp` ab statt über eine eingecheckte Datei, die sonst in jedem
+  Prüfbericht mitgemessen wurde; die Freigabeprobe entfernt mit ihrer Quelle
+  auch deren Sicherungspaket (über `edbak_konto_ordner_loeschen()`).
+- **Die Arbeitsumgebung holt `pyftpdlib`, `paramiko` und `pyopenssl`** für die
+  Gegenstellen; ohne `pyopenssl` fehlt FTPS, und alle drei brechen ab.
+
+### Bewusst so
+
+- **Die Versandprobe misst gegen Nachbauten, nicht gegen vsftpd und
+  OpenSSH.** Die echten Server brauchen root; der Weg dorthin bleibt von
+  Hand (`echte_gegenstellen.sh`).
+
 ## [Werkzeug: Stufe 1 liest den Prüfbericht gegen (PK-05)] — 2026-09-23
 
 Konzept PK, Paket PK-05. Keine Versionsstufe: berührt sind nur `tools/`,

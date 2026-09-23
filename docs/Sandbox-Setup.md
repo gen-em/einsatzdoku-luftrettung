@@ -53,6 +53,7 @@ Speicher.
 | **ImageMagick** (`convert`, `compare`) | `tools/uhr-bilder/erzeugen.sh` und jeder Bildvergleich |
 | **rsvg-convert** (`librsvg2-bin`) | dieselbe Kette: SVG nach PNG |
 | **Python `jsonschema`** | `tools/referenzdatensatz/quelldaten/pruefen.py` |
+| **Python `pyftpdlib`, `paramiko`, `pyopenssl`** | die Gegenstellen der Versandprobe (`tools/proben/versand/gegenstellen.py`); ohne `pyopenssl` fehlt FTPS, und alle drei Nachbauten brechen ab (RP-01) |
 | **Systembibliotheken für Firefox und WebKit** | jede Aussage über die Oberfläche, die für mehr als Chromium gelten soll (Backlog Nr. 183) |
 | **Android-SDK** (Plattform 36, Build-Tools 36.0.0) | `./gradlew build` im Ordner `android/` |
 | **Uhr-SDK und Gerätedateien** | `tools/uhr-pruefstand/` |

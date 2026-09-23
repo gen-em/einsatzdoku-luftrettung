@@ -84,7 +84,7 @@ nur sie beantworten kann.
 | Station | Wann | Wer | Was dort geprüft wird | Dauer (Ziel) |
 |---|---|---|---|---|
 | **A Arbeit** | während der Entwicklung | die Instanz in der Arbeitsumgebung | Browser, Emulator, Uhr-Simulator, die Proben, die zur Änderung gehören | nach Bedarf |
-| **B Prüfstand** | vor dem Pull Request, **ein Befehl** | dieselbe Instanz | örtliche Installation hochfahren, Referenzbestand, die Proben der Stufe, Bau der Apps (unsigniert), die billigen Riegel; auf Anforderung die Plattformprobe gegen Staging. Ergebnis ist der **Prüfbericht** (5) | klein 5 min, neben 15 min, haupt 45 min |
+| **B Prüfstand** | vor dem Pull Request, **ein Befehl** | dieselbe Instanz | örtliche Installation hochfahren, Referenzbestand, die Proben der Stufe, Bau der Apps (unsigniert), die billigen Riegel; auf Anforderung die Plattformprobe gegen Staging. Ergebnis ist der **Prüfbericht** (5) | klein 5 min, neben **rund 21 min** (E-RP-05), haupt 45 min |
 | **C Tor** | beim Pull Request und auf `main` | GitHub | die billigen Riegel als Gegenlesung des Berichts, Schemaprobe gegen MySQL 8.4.0 und MariaDB 10.6, Bericht passt zum Baum und zur Berührung. **Rot in `Stufe 1` heißt kein Merge** — und in der Schemaprobe ebenso, sobald das Ruleset sie trägt (E-PK-47); der Merge ist Sache der BetreiberIn | 1 bis 2 min |
 | **D Staging** | nach dem Merge | GitHub | Auslieferung (unverändert), dann drei Schritte: Antwortprobe, Punktdateien, **ein** Kreislauf `edbak` als Gegenlesung auf PHP 8.3 beim Hoster | unter 10 min |
 | **E Produktiv** | beim Tag, nach Freigabe | GitHub | dieselbe Auslieferung, Backup-Tor, Fassungsprüfung, Integritätswache; App-Tags bauen und signieren einmal | wie heute |
@@ -245,10 +245,16 @@ und hat eine eigene Freigabe.
 = 26,8 / 25 / 22 s) sind **dreimal derselbe Umfang**: Bis PK-05 las der
 Befehl die Fassung nicht (F-PK-30) und kam immer auf „klein", und „neben"
 hatte kein eigenes Muster. **Die Nebenstufe, gemessen am 23.09.2026** auf
-frischer Anlage mit einer berührten Datei unter `server/`: **36 Proben,
-1 266 s** — über dem Ziel von 15 Minuten —, und **9 davon rot** (Backlog
-Nr. 292, vor P5c zu beheben, E-PK-45). Das Protokoll steht im Prüfdokument PK,
-5o.
+frischer Anlage mit einer berührten Datei unter `server/`: zuerst **9 von 36
+rot** (Backlog Nr. 292) — acht Fehler in `tools/`, einer in einer Erwartung,
+keiner in der Anwendung —, nach Konzept RP **36 grün, 0 rot, 0 nicht
+gemessen, 1 239 s.** Davon trägt der Bilderlauf 769 s (acht Breiten, 62
+Seiten) und die Bedienprobe 261 s; die übrigen 34 Proben zusammen 209 s.
+Beide großen laufen absichtlich nacheinander — Wartungsseiten schalten die
+ganze Anlage, die Bedienprobe ändert den Bestand —, und schneller ginge es
+nur mit weniger Breiten. **Das Ziel ist deshalb rund 21 Minuten, nicht 15**
+(E-RP-05). Die Zeit je Probe steht seit RP in jeder Zeile des Laufs.
+Protokolle: Prüfdokument PK 5o, Prüfdokument RP.
 
 Der Umfang richtet sich nach der Versionsstufe in `server/version.php` im
 Unterschied gegen `main` (Zählweise in `CLAUDE.md` 2) und nach der

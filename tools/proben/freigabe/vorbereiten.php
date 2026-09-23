@@ -23,8 +23,18 @@ $daten   = json_decode($argv[2] ?? '{}', true) ?: [];
 $pdo     = db();
 $MAIL    = 'probe-freigabe-quelle@example.invalid';
 
-if ($schritt === 'quelle') {
+/* Die Quelle MIT IHREN PAKETEN entfernen (RP, F-RP-14). Bis dahin ging nur
+ * die Zeile in `users`, und je Lauf blieb ein Ordner unter
+ * `server/sicherungen/` liegen. Derselbe Weg wie bei der Kontoloeschung (E25). */
+$quelleWeg = function () use ($pdo, $MAIL): void {
+    $k = $pdo->prepare('SELECT account_key FROM users WHERE email = ?');
+    $k->execute([$MAIL]);
+    foreach ($k->fetchAll(PDO::FETCH_COLUMN) as $kennung) { edbak_konto_ordner_loeschen($kennung); }
     $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$MAIL]);
+};
+
+if ($schritt === 'quelle') {
+    $quelleWeg();
     $pdo->prepare('INSERT INTO users (email, name, kdf_iter, role, session_epoch,
                                       account_key, pat_wrap_rc, pat_key_check)
                    VALUES (?,?,?,?,?,?,?,?)')
@@ -108,7 +118,7 @@ if ($schritt === 'pruefen') {
 }
 
 if ($schritt === 'aufraeumen') {
-    $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$MAIL]);
+    $quelleWeg();
     echo "ok\n";
     exit(0);
 }

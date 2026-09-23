@@ -68,7 +68,10 @@ ok('script-src mit Nonce, ohne unsafe-inline',
    /script-src 'self' 'nonce-[^']+'/.test(csp) && !csp.includes("script-src 'self' 'unsafe-inline'"));
 ok('style-src self + style-src-attr unsafe-inline',
    csp.includes("style-src 'self'") && csp.includes("style-src-attr 'unsafe-inline'"));
-ok('frame-ancestors none', csp.includes("frame-ancestors 'none'"));
+/* frame-ancestors NUR in der scharfen Fassung (Nr. 224): In einer
+ * Report-Only-Kopfzeile ignoriert der Browser sie und warnt in der Konsole.
+ * Bis RP-02 verlangte diese Zeile sie hier und war rot (F-RP-05). */
+ok('Report-Only: ohne frame-ancestors (Nr. 224)', !csp.includes('frame-ancestors'));
 ok('X-Content-Type-Options', kopf['x-content-type-options'] === 'nosniff');
 ok('X-Frame-Options', kopf['x-frame-options'] === 'DENY');
 ok('Referrer-Policy', (kopf['referrer-policy'] || '').includes('strict-origin'));
@@ -178,6 +181,7 @@ const r2 = await seite.goto(`${BASIS}/index.php`, { waitUntil: 'domcontentloaded
 const h2 = r2.headers();
 ok('Scharf: Kopfzeile heisst jetzt Content-Security-Policy',
    'content-security-policy' in h2 && !('content-security-policy-report-only' in h2));
+ok('Scharf: frame-ancestors none', (h2['content-security-policy'] || '').includes("frame-ancestors 'none'"));
 
 /* Ein eingeschleustes fremdes Skript — wird es blockiert? */
 const geladen = await seite.evaluate(() => new Promise(aufl => {
@@ -257,7 +261,12 @@ await seite.evaluate(() => {
 });
 await seite.waitForTimeout(2500);
 
-const BILD = wert('--bild', 'tools/proben/csp-browser/kopfzeilen.png');
+/* DAS BILD GEHT NACH /tmp, nicht ins Repositorium (RP, F-RP-13): Die Vorgabe
+ * war eine eingecheckte Datei, die jeder Lauf ueberschrieb -- im Pruefstand
+ * landete sie im gemessenen Baum und damit in jedem Commit. */
+const { tmpdir } = await import('node:os');
+const BILD = wert('--bild', tmpdir() + '/csp-kopfzeilen.png');
+console.log(`Bild: ${BILD}`);
 await seite.screenshot({ path: BILD });
 
 /* ---- Bericht ------------------------------------------------------------ */

@@ -799,7 +799,7 @@ if ($torBereit) {
            '29  ... und der Schalter steht auf „torwaechter"',
            'von ' . var_export(wartung_daten()['von'] ?? null, true));
     pruefe(str_contains($t1['rumpf'], 'selbst geschlossen')
-           && str_contains($t1['rumpf'], 'Betreiberin ist informiert'),
+           && str_contains($t1['rumpf'], 'BetreiberIn ist informiert'),   // Hausform seit PK-04/5b (F-RP-03)
            '30  Die Wartungsseite nennt den Grund');
 
     /* Die Geraete bekommen ihr 503 als JSON — dieselbe Zusage wie in Teil 1,

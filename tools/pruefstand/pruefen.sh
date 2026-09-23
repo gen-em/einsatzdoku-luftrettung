@@ -109,10 +109,13 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', sep='\t')")
             || { zeile "ROT   $name  $n/$s"; fehl=$((fehl+1)); }
         continue
     fi
+    # Die Zeit je Probe steht in der Zeile (RP-01): Die Nebenstufe brauchte
+    # 1 266 s, und niemand konnte sagen, wofür.
+    t0=$SECONDS
     if (cd "$WURZEL" && eval "$befehl" >/tmp/pruefstand-$name.log 2>&1); then
-        zeile "ok    $name"; ZAHL[$name]=0
+        zeile "ok    $name  $((SECONDS - t0)) s"; ZAHL[$name]=0
     else
-        zeile "ROT   $name  (siehe /tmp/pruefstand-$name.log)"; ZAHL[$name]=1; fehl=$((fehl+1))
+        zeile "ROT   $name  $((SECONDS - t0)) s  (siehe /tmp/pruefstand-$name.log)"; ZAHL[$name]=1; fehl=$((fehl+1))
     fi
 done
 
@@ -125,7 +128,7 @@ args=(schreiben --stufe "$STUFE" --basis "$BASIS"
 for k in "${!ZAHL[@]}"; do args+=(--zahl "$k=${ZAHL[$k]}"); done
 python3 "$HIER/bericht.py" "${args[@]}"
 
-melde "$fehl rot, $nicht nicht gemessen, $(( ${#PROBEN[@]} - fehl - nicht )) grün"
+melde "$fehl rot, $nicht nicht gemessen, $(( ${#PROBEN[@]} - fehl - nicht )) grün · $SECONDS s"
 [ "$nicht" -gt 0 ] && zeile "Was nicht gemessen werden konnte, gehört in das Prüfdokument — an den Anfang."
 # Nicht gemessen ist nicht grün (E-KH-12, E-PK-46): Der Bericht trägt es, und
 # das Tor liest es als rot — dann soll es der Lauf auch sein.

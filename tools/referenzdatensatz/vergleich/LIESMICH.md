@@ -15,6 +15,7 @@ ist ein Referenzzustand und ein Werkzeug, das jede Abweichung davon benennt.
 | `normalisieren.py` | flüchtige Anteile durch Marken ersetzen |
 | `vergleichen.py` | Feld für Feld vergleichen, Bericht schreiben |
 | `kreislauf.py` | den ganzen Umlauf fahren: Konto → Einspielen → Export → Vergleich |
+| `pruefkonto.py` | ein Prüfkonto `umlauf-…` anlegen oder löschen — über die Wege von `kreislauf.py`, für Proben mit eigenem Konto (RP-01, E-RP-02) |
 | `ausnahmen/` | erwartete Abweichungen, je Umlauf eine Liste |
 
 ## Was verglichen wird — und was nicht
