@@ -32,7 +32,7 @@ Browser aus `/opt/pw-browsers`; `versand` die Pakete der Gegenstellen (`web`).
 
 `alle` fährt **20**. `versand` startet ohne Pfad die Gegenstellen als
 Nachbau selbst und hält sie danach an (RP-01); `freigabe` legt ohne Konto
-ihr eigenes an und löscht es wieder. Zahl grüner Proben: Konzept RP, RP-05.
+ihr eigenes an und löscht es wieder. Stand 23.09.2026: **20 von 20 grün**.
 
 ## Was es nicht kann
 

@@ -15,10 +15,10 @@ entsteht mit RP-01. Zweig `claude/rp-rote-proben`, von `main` `b329ac3`.
 >
 > | | |
 > |---|---|
-> | Stand | **23.09.2026 — RP-01 bis RP-03 erledigt.** Alle neun Proben sind einzeln grün. **Keine davon war ein Fehler der Anwendung** — RP bleibt ohne Versionsstufe. |
-> | Entschieden | E-PK-45 (Paket vor P5c, keine Ausnahmeliste), E-PK-46 (nicht gemessen ist rot) — aus Konzept PK. **E-RP-01 bis -04** vom Auftraggeber am 23.09.2026 (Abschnitt 4) |
+> | Stand | **23.09.2026 — RP-01 bis RP-05 erledigt.** Die Nebenstufe auf frischer Anlage: **36 grün, 0 rot, 0 nicht gemessen, 1 239 s**; `proben.sh alle` **20 von 20**. **Keine der neun roten Proben war ein Fehler der Anwendung** — RP bleibt ohne Versionsstufe. |
+> | Entschieden | E-PK-45 (Paket vor P5c, keine Ausnahmeliste), E-PK-46 (nicht gemessen ist rot) — aus Konzept PK. **E-RP-01 bis -06** vom Auftraggeber am 23.09.2026 (Abschnitt 4) |
 > | Offen | nichts |
-> | Nächstes | **RP-04 und RP-05** — eine volle Nebenstufe auf frischer Anlage mit Zeit je Probe; daraus die Dauer |
+> | Nächstes | **PR** und Merge durch die Betreiberin; danach **P5c AP1** (E-P5c-32) |
 
 ---
 
@@ -55,8 +55,9 @@ lief keine davon in einer Stufe, die ein Tor las; deshalb fiel keiner auf.
 | F-RP-14 | `freigabeprobe` (Quelle) | (Hinweis, RP-03) | Beim Aufräumen löscht `vorbereiten.php` die Zeile der Quelle, nicht ihr Sicherungspaket: je Lauf ein verwaister Ordner unter `server/sicherungen/` (drei gezählt am 23.09.2026). Macht nichts rot und liegt nur in der Arbeitsumgebung (`.gitignore`) | **behoben (E-RP-06):** die Quelle geht über `edbak_konto_ordner_loeschen()` mit ihrem Paket; Ordner vor und nach einem Lauf 9 → 9 |
 | F-RP-10 | `wiederherstellung` | „Ein knapper Schub sichert wenigstens ein Konto und hört dann auf" (2 erledigt, 0 offen) und „Der Zeiger steht auf dem zuletzt gesicherten Konto" (`cur=—`) | **Erwartung** (geklärt in RP-03): Der Schub bekommt Zeit für zwei Konten, eine frische Anlage hat genau zwei mit Kontokennung — er sicherte beide, „hört dann auf" konnte nicht stimmen. Die Anwendung arbeitet richtig (`edbak_auftrag_schub()`) | `tools/` |
 
-**Dauer:** Der Prüfstand schreibt keine Zeit je Probe. Welche Probe die
-1 266 s trägt, ist nicht gemessen.
+**Dauer:** Der Prüfstand schrieb keine Zeit je Probe; welche Probe die
+1 266 s trug, war nicht gemessen. Seit RP-01 steht sie in jeder Zeile —
+Ergebnis in RP-04 unten.
 
 ## 3. Arbeitspakete
 
@@ -95,6 +96,19 @@ räumt sie danach weg. Damit sind Schub **und** Wiederaufnahme auch auf einer
 frischen Anlage messbar, statt dort als „nicht messbar" durchzugehen.
 **111 / 0**, 1 s; Zusatzkonten danach 0. Die Zusatzkonten stehen am Ende der
 Warteschlange und werden nicht gesichert — keine Pakete, keine Reste.
+
+**Stand RP-04 (23.09.2026, erledigt; Prüfdokument 5):** Nebenstufe 1 239 s —
+Bilderlauf **769 s**, Bedienprobe **261 s**, die übrigen 34 zusammen 209 s.
+Beide großen sind seriell mit Grund; schneller ginge es nur mit weniger
+Breiten. **E-RP-05: Ziel rund 21 min.** Dazu E-RP-06: F-RP-13 (Bild nach
+`/tmp`) und F-RP-14 (Paket der Quelle mit weg) behoben.
+
+**Stand RP-05 (23.09.2026, erledigt):** Nebenstufe auf frischer Anlage **36 /
+0 rot / 0 nicht gemessen**; zweiter Kreislauf auf bestehendem Konto grün
+(P-RP-05); `proben.sh alle` **20 / 20**. Dokumente: `Pruefablauf.md` 2 und 3,
+`Sandbox-Setup.md`, LIESMICH von `proben`, `pruefstand` und
+`referenzdatensatz/vergleich`, CHANGELOG, Backlog Nr. 292 nach Erledigt,
+Rahmenplan Fassung 107.
 
 **Eigener Fehler, im Konzept:** Das Kurzkonzept wies der Wegprobe das
 Umlaufkonto des **csv**-Kreislaufs zu. Gemessen: „Kein Ruhesegment mit genug
