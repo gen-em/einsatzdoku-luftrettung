@@ -9164,7 +9164,7 @@ Bilderzahl, die längst nicht mehr stimmte.
 
 Daneben, als eigener Job mit Matrix: **`Schema gegen …`** —
 `tools/schemaprobe/probe.php` gegen MySQL 8.4.0 und MariaDB 10.6, je mit
-Selbstprobe. **Er wird Pflichtprüfung** (E-PK-47): Die Betreiberin trägt
+Selbstprobe. **Er wird Pflichtprüfung** (E-PK-47): Die BetreiberIn trägt
 „Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" ins Ruleset ein
 — bis dahin hält ein roter Schemalauf einen Merge nicht auf.
 
