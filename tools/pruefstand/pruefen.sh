@@ -74,6 +74,7 @@ a=json.load(open('$HIER/pruefablauf.json'))
 p=a['proben'].get('$name')
 print(p['aufruf'] if p else '', p['braucht'] if p else '', sep='\t')")
     befehl=$(printf '%s' "$aufruf" | cut -f1); braucht=$(printf '%s' "$aufruf" | cut -f2)
+    befehl=${befehl//\{stufe\}/$STUFE}   # der Bilderlauf misst je Stufe anders (PK-05)
     if [ -z "$befehl" ]; then
         zeile "?     $name — steht nicht unter \"proben\" in pruefablauf.json"; fehl=$((fehl+1)); continue
     fi

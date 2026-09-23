@@ -28,6 +28,8 @@ import sys
 HIER = os.path.dirname(os.path.abspath(__file__))
 WURZEL = os.path.dirname(os.path.dirname(HIER))
 ABLAUF = os.path.join(HIER, 'pruefablauf.json')
+sys.path.insert(0, HIER)
+from auswahl import UNLESBAR, fassung, stufe_aus_fassungen  # noqa: E402 — die EINE Lesestelle (F-PK-30)
 
 STUFEN = ['klein', 'neben', 'haupt']
 KOPF_RE = re.compile(
@@ -122,22 +124,9 @@ def zerlegen(text):
 
 def versionsstufe(basis, commit):
     """Welche Stufe verlangt der Unterschied in server/version.php?
-
-    klein = Korrekturstufe oder gar kein Sprung · neben = Nebenstufe ·
-    haupt = Hauptstufe. Gelesen wird WEB_VERSION auf beiden Seiten.
-    """
-    def fassung(ref):
-        t = git('show', f'{ref}:server/version.php')
-        m = re.search(r"WEB_VERSION'?\s*,\s*'([0-9]+)\.([0-9]+)\.([0-9]+)", t)
-        return tuple(int(x) for x in m.groups()) if m else None
-    a, b = fassung(basis), fassung(commit)
-    if not a or not b or a == b:
-        return 'klein'
-    if b[0] != a[0]:
-        return 'haupt'
-    if b[1] != a[1]:
-        return 'neben'
-    return 'klein'
+    Gelesen in `auswahl.py` — eine Stelle für beide. UNLESBAR, wenn eine
+    Seite keine Fassung trägt."""
+    return stufe_aus_fassungen(fassung(basis), fassung(commit))[0]
 
 
 def beruehrt(basis, commit):
@@ -162,7 +151,10 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
     # (2) Stufe. `stufe_verlangt` setzt die Versionsstufe direkt — die
     # Selbstprobe braucht sie ohne Git, und der Vergleich selbst ist derselbe.
     verlangt = stufe_verlangt or (versionsstufe(basis, commit) if basis else None)
-    if verlangt:
+    if verlangt == UNLESBAR:
+        schlecht.append('Die Versionsstufe lässt sich nicht bestimmen: server/version.php trägt '
+                        'keine lesbare WEB_VERSION — gemessen wird dann gegen nichts (F-PK-30).')
+    elif verlangt:
         if STUFEN.index(bericht['stufe']) < STUFEN.index(verlangt):
             schlecht.append(
                 f"Stufe zu klein: Bericht „{bericht['stufe']}\", die Versionsstufe verlangt "
@@ -239,6 +231,9 @@ def selbstprobe():
     faelle.append(('rot (4) — Riegel meldet eine andere Zahl',
                    zerlegen(guter), dict(baum='abc1234', dateien=[],
                                          riegel={'vollstaendigkeit': '399'}), 1))
+    faelle.append(('rot (2b) — Versionsstufe nicht lesbar',
+                   zerlegen(guter), dict(baum='abc1234', dateien=[], riegel={},
+                                         stufe_verlangt=UNLESBAR), 1))
     faelle.append(('rot (0) — gar kein Bericht in der Nachricht',
                    zerlegen('Ein Commit ganz ohne Block.\n'),
                    dict(baum='abc1234', dateien=[], riegel={}), 1))
