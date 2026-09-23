@@ -7,7 +7,8 @@ Anwendungscode** — nichts unter `server/` ist angefasst.
 **Stand: abgeschlossen am 20.09.2026.** Nach mehreren Durchsichten des
 Auftraggebers am selben Tag ist **alles entschieden und freigegeben**; (e)
 ist entfallen. Die Entscheidungen stehen im Konzept P5c, Abschnitt 2.6
-(E-P5c-25 bis -30) und Abschnitt 6.
+(E-P5c-25 bis -30) und Abschnitt 6. **Nachtrag vom 23.09.2026** nach dem
+Abgleich mit Fassung 2 des Konzepts: Abschnitt 7.
 
 Je Darstellung eine HTML-Datei, die das **echte** `server/assets/style.css`
 einbindet (relativer Pfad) und die Schriften des Repositoriums nutzt; neue
@@ -173,4 +174,45 @@ der Umsetzung **aus der Tabler-Quelle** nehmen, nicht aus dem Mockup.
    betroffenen Zeilen im Rahmenplan-Einschub (198, 244, 246).
 2. Freigegebene Bausteine gehen mit AP2 (Reiter, aufklappbare Zeile), AP7
    (Layoutregel) und AP9 (Bereichskarte, Leiste, Vorschau, Druckblatt) in
-   `docs/Design.md` und `style.css`.
+   `docs/Design.md` und `style.css`. **Geändert am 23.09.2026:** Das
+   Druckblatt (`.blatt-druck`) entsteht schon in **AP5**, mit dem Codeblatt
+   des Zweitfaktors als erstem Verwender; AP9 stellt die beiden Blätter
+   darauf um.
+
+## 7. Nachtrag vom 23.09.2026 — Abgleich und Fassung 2 des Konzepts
+
+Das Konzept ist am 23.09.2026 gegen `8fd4553` abgeglichen worden (Fassung 2,
+Abschnitt 0a; Belege in `../Abgleich-2026-09-23.md`). Was davon diese Runde
+betrifft — **die Bilder bleiben freigegeben**, diese Punkte gelten bei der
+Übernahme:
+
+1. **Hausform.** Texte aus den Mockups folgen dem Binnen-I (E-PK-26/-37). Drei
+   Stellen tun es nicht: „Sache des Betreibers" in (d) und (d)-Handy, „der
+   Betreiber hat ihn nicht" in (f)-Notfallblatt. Der Code sagt schon „Sache der
+   BetreiberIn" bzw. „Die BetreiberIn hat …". **Das Bild ist maßgeblich für
+   die Form, nicht für die Schreibweise.**
+2. **(d) Reiter „AVV".** Beschriftet wird aus `RT_TEXTE`; der vierte Reiter
+   heißt „Vereinbarung zur Auftragsverarbeitung (AVV)" (Gestaltungsvorgabe 4
+   vom 17.09.2026), die Reihe rollt unter 720 px.
+3. **(c) Verwaltung hat sechs Einträge**, nicht fünf: NutzerInnen,
+   Konto-Backups, Installation, Rechtstexte, Demo-Konto, Protokoll (E-P5c-28).
+4. **(b) Reiter Geräte:** Der Satz, dass Wear-OS-Uhren dort bauartbedingt
+   nicht erscheinen (Z-02 vom 05.09.2026), **bleibt** — das Bild zeigt ihn
+   nicht. Die Karte „Konten" nach Rolle zeigt nach AP4 auch Support.
+5. **(f) Klassennamen.** `.blatt-gruppen` und `.blatt-gruppe` **gibt es schon**
+   (Betreiber-Rückfrage, P5b AP9); übernommen stünde die Rückfrage in acht
+   statt zwei Spalten. Bei der Übernahme heißen sie `.blatt-druck-gruppen`,
+   `.blatt-druck-gruppen-5`, `.blatt-druck-gruppe`.
+6. **(f) Umgebungszeile.** Auf Staging trägt der Blattkopf eine Textzeile mit
+   dem Namen der Umgebung (E-P5c-50) — das Bild dazu liefert M-P5c-02 (e).
+7. **(a), (f) Datum und Zeit:** Das Komma ist entschieden (E-P5c-37) — Punkt 13
+   in Abschnitt 3 ist damit erledigt.
+8. **Firefox** ist in der Arbeitsumgebung inzwischen vorhanden, aber
+   Playwright erzeugt PDF nur mit Chromium; der Druck aus Firefox bleibt Prüfpunkt der
+   BetreiberIn.
+9. **Benennung.** „F6" in Abschnitt 3 heißt im Konzept jetzt **F-P5c-13**,
+   „F-P5c-6/-7" heißen **F-P5c-06/-07**.
+
+Die nächste Runde, **M-P5c-02** (Banner, Zweitfaktor, Support-Sicht,
+Bus-Faktor, Umgebungszeile auf den Blättern), bekommt ihren Abschnitt in
+dieser Datei, wenn sie gebaut ist; der Auftrag steht im Konzept, 6.2.

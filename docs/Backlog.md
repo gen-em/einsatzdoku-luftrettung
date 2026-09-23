@@ -138,8 +138,10 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **283** und trägt seine
-Spanne hier ein, bevor er pusht.
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **288** und trägt seine
+Spanne hier ein, bevor er pusht. *(Bis zum 23.09.2026 stand hier 283; 283 bis
+285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
+Fassung 2 vom 23.09.2026 — nachgesehen auf `origin/main` und in PR #77.)*
 
 **Und sieht vorher nach — auf `origin/main` UND in die offenen Pull
 Requests.** Der Satz darüber beschreibt keinen Riegel, sondern eine Hoffnung:
@@ -3691,6 +3693,51 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     statt zu messen, und „Require branches to be up to date" im Ruleset
     (gesetzt 23.09.2026) macht den Vergleich beweisbar. Entscheidungen
     E-TB-01 bis -09.
+
+286. **Ein Admin erreicht Komplett-Backup und Backup-Ziele — samt
+    Klartext-Dump der ganzen Datenbank.**
+    *Aufgenommen 23.09.2026 im Abgleich des Konzepts P5c (F-P5c-15), von Hand
+    nachgeprüft.* R75 und der Kopf der Rollen in `db.php` behalten
+    Komplett-Backup und Backup-Ziele der BetreiberIn vor, und das Menü zeigt
+    beide Seiten nur ihr. **Die Seiten selbst fragen aber nur
+    `require_admin()`** (`admin_komplettsicherung.php` und
+    `admin_sicherungsziele.php`, je Z. 4; das Wort „betreiberin" kommt in
+    beiden Dateien nicht vor). Per Direktaufruf liefert
+    `action=herunterladen` jedem Admin über `komp_ausgeben_klar()` den
+    Klartext-Dump — mit Passwort-Hashes und versiegelten Zugängen; dazu
+    kommen die sieben Handlungen der Backup-Ziele. `admin_sicherungen.php`
+    verlinkt Admins sogar dorthin.
+
+    **Vorhergesagt und nie nachgemessen:** Das Prüfdokument S8 führt P-01
+    als „teilweise" mit der Auflage, nach AP5 zu wiederholen — „dann muss ein
+    Admin dort 403 bekommen". Die Wiederholung hat nie stattgefunden.
+
+    **Warum es heute nicht brennt:** Es gibt kein Konto mit der Rolle admin
+    (Auskunft der BetreiberIn, 23.09.2026; die Migration von S8 hat alle
+    Admins zu BetreiberInnen gemacht). **Bis zur Behebung legt niemand ein
+    Admin-Konto an.**
+
+    *Behebung:* `require_betreiberin()` an beiden Stellen, der Verweis in
+    `admin_sicherungen.php` nur für die BetreiberIn, Nachtrag in
+    `Technik.md`. *Abnahme:* die Rollenprobe (`tools/proben/rollen/`, Anlass
+    dieser Punkt) — 13 Handlungen, Admin 403, BetreiberIn 200. *Fehlschlag:*
+    ein Admin bekommt auf einer der beiden Seiten 200. **Zuordnung: 10c AP2**
+    (E-P5c-31).
+
+287. **Die Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb.**
+    *Aufgenommen 23.09.2026 (Konzept P5c, E-P5c-49).* R74 (5) schrieb
+    Erklärtext „einheitlich als EINE zugeklappte Karte ‚Was hier gilt' am
+    Seitenende" vor. E-P5c-06 (jünger) sagt: je Karte höchstens ein Satz,
+    alles Erklärende ins Handbuch. 10c AP9 räumt die acht Karten unter
+    Verwaltung und Betrieb ab. **Drei Seiten außerhalb tragen die Karte
+    ebenfalls:** `import.php`, `einsatz_form.php`, `wiederherstellen.php`.
+    Sie liegen nicht im Umfang von 10c, und bis zu ihrer Umstellung gelten
+    dort zwei Regeln nebeneinander.
+
+    *Abnahme:* 0 Karten „Was hier gilt" in `server/`, der Inhalt im Handbuch,
+    jede Karte der drei Seiten mit Verweis auf ihre Sprungmarke. *Fehlschlag:*
+    `grep -l "Was hier gilt" server/*.php` findet eine Seite (außer
+    Kommentaren in `version.php`). **Zuordnung: Schritt 17.**
 
 ## Erledigt
 
