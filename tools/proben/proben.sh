@@ -15,6 +15,31 @@ set -uo pipefail
 WURZEL="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$WURZEL" || exit 1
 
+# Die Versandprobe braucht laufende Gegenstellen. Mit einem Wurzelpfad als
+# Argument misst sie gegen das, was dort läuft (auch die echten Server aus
+# `echte_gegenstellen.sh`); ohne startet dieser Läufer die Nachbauten aus
+# `gegenstellen.py` und hält sie danach an (RP-01, F-RP-09). Bis dahin stand
+# sie unter „nicht in alle", und im Prüfstand war sie rot, ohne zu messen.
+versand_mit_nachbau() {
+    if [ $# -gt 0 ]; then php tools/proben/versand/probe.php "$@"; return; fi
+    local ordner pid rc=0 i
+    ordner=$(mktemp -d)
+    # Eigene Prozessgruppe: gegenstellen.py startet Kindprozesse, und ein
+    # `kill` auf den Elternprozess allein ließ sie weiterhorchen.
+    PYTHONUNBUFFERED=1 setsid python3 tools/proben/versand/gegenstellen.py "$ordner" > "$ordner.log" 2>&1 &
+    pid=$!
+    for i in $(seq 1 60); do grep -qE 'BEREIT|FEHLER' "$ordner.log" && break; sleep 1; done
+    if ! grep -q BEREIT "$ordner.log"; then
+        echo "Die Gegenstellen kamen nicht hoch (siehe $ordner.log) — gemessen wurde nichts." >&2
+        tail -3 "$ordner.log" >&2
+        kill -- -"$pid" 2>/dev/null; return 2
+    fi
+    php tools/proben/versand/probe.php "$ordner" || rc=$?
+    kill -- -"$pid" 2>/dev/null; wait "$pid" 2>/dev/null
+    rm -rf "$ordner" "$ordner.log"
+    return "$rc"
+}
+
 # Name -> Aufruf. DIE EINE STELLE, an der steht, womit eine Probe gefahren
 # wird; `tools/pruefstand/pruefablauf.json` zeigt nur noch auf den Namen.
 declare -A RUF=(
@@ -25,7 +50,7 @@ declare -A RUF=(
   [wartung]="php tools/proben/wartung/probe.php"
   [raten]="php tools/proben/raten/probe.php"
   [mail]="php tools/proben/mail/probe.php"
-  [versand]="php tools/proben/versand/probe.php"
+  [versand]="versand_mit_nachbau"
   [komplett]="php tools/proben/komplett/probe.php"
   [wiederherstellung]="php tools/proben/wiederherstellung/probe.php"
   [gpx]="php tools/proben/gpx/probe.php"
@@ -42,9 +67,7 @@ declare -A RUF=(
 
 # Proben, die `alle` NICHT fährt, mit dem Grund daneben. Kein stilles
 # Auslassen (Grundsatz 7): Wer `alle` fährt, liest hier, was fehlt.
-declare -A NICHT_IN_ALLE=(
-  [versand]="braucht den Wurzelpfad der Gegenstellen als Argument"
-)
+declare -A NICHT_IN_ALLE=()
 
 melde() { printf '\033[1m==\033[0m %s\n' "$*" >&2; }
 

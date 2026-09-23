@@ -70,7 +70,26 @@ def treffer(dateien, stufe, a):
             for p in m['proben']:
                 if p not in proben:
                     proben.append(p)
-    return muster, proben
+    return muster, mit_voraussetzungen(proben, a)
+
+
+def mit_voraussetzungen(proben, a):
+    """`nach` in pruefablauf.json: Eine Probe, die auf eine andere angewiesen
+    ist, bekommt sie mit — und läuft NACH ihr. Sonst hinge ihr Grün an der
+    Reihenfolge der Muster, und `--datei` wählte sie ohne ihre Voraussetzung
+    aus (F-RP-08: die Wegprobe braucht das Konto des csv-Kreislaufs)."""
+    aus = []
+
+    def rein(p, kette=()):
+        if p in kette:
+            raise ValueError(f"`nach` im Kreis: {' -> '.join(kette + (p,))}")
+        for v in a['proben'].get(p, {}).get('nach', []):
+            rein(v, kette + (p,))
+        if p not in aus:
+            aus.append(p)
+    for p in proben:
+        rein(p)
+    return aus
 
 
 # DIE FASSUNG STEHT EINMAL GELESEN — hier; `bericht.py` holt sie von hier.
@@ -202,6 +221,17 @@ def selbstprobe(a):
                ('bei neben kein Messstand',            'messstand' not in neben),
                ('bei haupt Messstand und Schemaprobe', {'messstand', 'schemaprobe'} <= set(haupt)),
                ('bei haupt alles von neben',           set(neben) <= set(haupt))]
+
+    # `nach`: Die Voraussetzung kommt mit und läuft davor (RP-01).
+    probe_a = {'proben': {'x': {}, 'y': {'nach': ['x']}, 'z': {'nach': ['y']}}}
+    grenzen += [
+        ('nach: die Voraussetzung kommt mit',   mit_voraussetzungen(['y'], probe_a) == ['x', 'y']),
+        ('nach: sie steht davor, auch später genannt',
+         mit_voraussetzungen(['y', 'x'], probe_a) == ['x', 'y']),
+        ('nach: über zwei Stufen',              mit_voraussetzungen(['z'], probe_a) == ['x', 'y', 'z']),
+        ('nach: die Wegprobe läuft nach dem csv-Kreislauf',
+         'spaltenregister-wegprobe' in neben
+         and neben.index('kreislauf-csv') < neben.index('spaltenregister-wegprobe'))]
 
     # Die Fassung — gegen die ECHTE Schreibweise der Datei, nicht gegen eine
     # ausgedachte. Genau das fehlte, als das Muster nie traf (F-PK-30).

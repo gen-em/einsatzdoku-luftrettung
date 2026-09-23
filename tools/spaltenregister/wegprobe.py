@@ -40,7 +40,9 @@ import zoneinfo
 
 WURZEL = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(WURZEL / "tools" / "referenzdatensatz" / "einspielen"))
+sys.path.insert(0, str(WURZEL / "tools" / "referenzdatensatz" / "vergleich"))
 import sitzung as sitzungsmodul   # noqa: E402
+import kreislauf                  # noqa: E402 — Umlaufkonto und Passwort, EINE Stelle (RP-01)
 
 ok = 0
 fehl = 0
@@ -210,8 +212,12 @@ def teil_import(s, uid: int) -> None:
 def main() -> int:
     p = argparse.ArgumentParser(description="Wegprobe zum Spaltenregister")
     p.add_argument("--basis", default="https://127.0.0.1:8443")
-    p.add_argument("--konto", required=True, help="WEGWERFKONTO, nicht die Demo")
-    p.add_argument("--passwort", required=True)
+    # OHNE ANGABE das Umlaufkonto des csv-Kreislaufs, das der Pruefstand
+    # vorher faehrt (`nach` in pruefablauf.json, F-RP-08). Bis RP-01 kamen
+    # Konto und Passwort aus zwei Umgebungswerten, die niemand setzte.
+    p.add_argument("--konto", default=kreislauf.umlauf_konto("csv"),
+                   help="WEGWERFKONTO, nicht die Demo")
+    p.add_argument("--passwort", default=kreislauf.UMLAUF_PASSWORT)
     a = p.parse_args()
 
     if a.konto.startswith("demo@"):
@@ -221,7 +227,8 @@ def main() -> int:
     s = sitzungsmodul.Sitzung(a.basis).anmelden(a.konto, a.passwort)
     reihen = sql(f"SELECT id FROM users WHERE email = {json.dumps(a.konto)}")
     if not reihen:
-        print(f"Konto {a.konto} nicht gefunden.")
+        print(f"Konto {a.konto} nicht gefunden. Das Umlaufkonto entsteht im "
+              f"Kreislauf csv — erst den fahren.")
         return 2
     uid = int(reihen[0]["id"])
     print(f"Wegprobe Spaltenregister — Konto {a.konto} (id {uid})\n")

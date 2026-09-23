@@ -25,14 +25,14 @@ bash tools/proben/proben.sh <name> [zusatz…]   # alle · --liste
 
 ## Was es braucht
 
-Eine örtliche Installation (`bash tools/sandbox/hochfahren.sh`); die
-Node-Proben zusätzlich einen Browser aus `/opt/pw-browsers`.
+Eine örtliche Anlage (`tools/sandbox/hochfahren.sh`); Node-Proben einen
+Browser aus `/opt/pw-browsers`; `versand` die Pakete der Gegenstellen (`web`).
 
 ## Erwartete Zahl
 
-`alle` fährt **19** und lässt `versand` aus (verlangt einen Pfad; der
-Grund steht im Läufer). Stand 22.09.2026: **13 von 19 grün**; die sechs
-roten sind Sachbefunde, keine Verdrahtung — Prüfpunkt P-PK-20.
+`alle` fährt **20**. `versand` startet ohne Pfad die Gegenstellen als
+Nachbau selbst und hält sie danach an (RP-01); `freigabe` legt ohne Konto
+ihr eigenes an und löscht es wieder. Zahl grüner Proben: Konzept RP, RP-05.
 
 ## Was es nicht kann
 

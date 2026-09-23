@@ -377,7 +377,9 @@ echo "\n  Teil 2 — Serverseitig gebaut gegen browserseitig gebaut\n";
  * die Referenz aelter als die Datenbank — und dann misst dieser Teil etwas
  * anderes als bestellt. Beides steht jetzt als eigene Erwartung da, mit
  * Zahl. */
-$zipPfad = glob(dirname(__DIR__) . '/referenzdatensatz/referenz/*csv*.zip')[0] ?? null;
+// dirname(__DIR__, 2) ist tools/ — seit dem Umzug nach tools/proben/gpx/ (PK-04/2)
+// zeigte dirname(__DIR__) auf tools/proben/, und die Referenz fehlte (F-RP-01).
+$zipPfad = glob(dirname(__DIR__, 2) . '/referenzdatensatz/referenz/*csv*.zip')[0] ?? null;
 $vergleiche = 0; $abweichungen = []; $dateien = 0;
 $uebersprungenStufe = 0;   // verdichtet -> zu Recht uebersprungen
 $uebersprungenFehlt = 0;   // keine Zeile im Konto -> Referenz und Bestand passen nicht

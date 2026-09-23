@@ -91,6 +91,16 @@ def lauf(befehl: list[str], **kw) -> subprocess.CompletedProcess:
 # Parser stimmt.
 UMLAUF_PRAEFIX = "umlauf-"
 
+# Die Vorgaben der OERTLICHEN Pruefanlage — eine Stelle, damit Proben, die ein
+# Umlaufkonto benutzen (Wegprobe, Freigabeprobe; RP-01), sie hier lesen statt
+# sie abzuschreiben. Zugaenge einer fernen Anlage kommen nie hierher.
+UMLAUF_PASSWORT = "umlaufpruefung2026"
+ADMIN_VORGABE = ("admin@gen-em.org", "pruefstandzugang2026")
+
+
+def umlauf_konto(art: str) -> str:
+    return f"{UMLAUF_PRAEFIX}{art}@gen-em.org"
+
 
 def konto_loeschen(basis: str, admin: tuple[str, str], konto: str,
                    praefix: str = UMLAUF_PRAEFIX) -> bool:
@@ -295,10 +305,10 @@ def main() -> int:
     p.add_argument("--referenz", default=str(WURZEL / "referenz"))
     p.add_argument("--ausgabe", default="/tmp/kreislauf")
     p.add_argument("--konto", default=None)
-    p.add_argument("--konto-passwort", default="umlaufpruefung2026")
+    p.add_argument("--konto-passwort", default=UMLAUF_PASSWORT)
     p.add_argument("--backup-passwort", default="nadokudemo0815")
-    p.add_argument("--admin-email", default="admin@gen-em.org")
-    p.add_argument("--admin-passwort", default="pruefstandzugang2026")
+    p.add_argument("--admin-email", default=ADMIN_VORGABE[0])
+    p.add_argument("--admin-passwort", default=ADMIN_VORGABE[1])
     p.add_argument("--ausnahmen", default=None)
     p.add_argument("--frisch", action="store_true",
                    help="vorhandenes Umlaufkonto vorher löschen")
@@ -314,7 +324,7 @@ def main() -> int:
                         "auf diesem Rechner liegt (sonst läuft die Job-Pause "
                         "über die Kommandozeile).")
     a = p.parse_args()
-    a.konto = a.konto or f"umlauf-{a.art}@gen-em.org"
+    a.konto = a.konto or umlauf_konto(a.art)
     a.ausnahmen = a.ausnahmen or str(HIER / "ausnahmen" / f"{a.art}_umlauf.json")
     admin = (a.admin_email, a.admin_passwort)
 

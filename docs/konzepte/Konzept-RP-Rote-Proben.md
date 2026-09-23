@@ -15,10 +15,10 @@ entsteht mit RP-01. Zweig `claude/rp-rote-proben`, von `main` `b329ac3`.
 >
 > | | |
 > |---|---|
-> | Stand | **23.09.2026 — Kurzkonzept, zur Bestätigung.** Nichts umgesetzt. |
-> | Entschieden | E-PK-45 (Paket vor P5c, keine Ausnahmeliste), E-PK-46 (nicht gemessen ist rot) — aus Konzept PK |
-> | Offen | Q-RP-01 bis -03 (Abschnitt 4) |
-> | Nächstes | Bestätigung, dann RP-01 |
+> | Stand | **23.09.2026 — freigegeben, RP-01 in Arbeit.** |
+> | Entschieden | E-PK-45 (Paket vor P5c, keine Ausnahmeliste), E-PK-46 (nicht gemessen ist rot) — aus Konzept PK. **E-RP-01 bis -04** vom Auftraggeber am 23.09.2026 (Abschnitt 4) |
+> | Offen | nichts |
+> | Nächstes | RP-01 Verdrahtung |
 
 ---
 
@@ -80,6 +80,13 @@ Einzeländerung in je einer Probe; die Ursachen sind schon gelesen.
 | **Q-RP-01** | `kreislauf-csv`: Die Referenz vom 15.09. ist älter als die Hausform. **Referenz erneuern** (neue Ausfuhr aus dem Demo-Bestand) oder **drei Ausnahmeregeln** mit Grund „Hausform, PK-04/5b"? | **Erneuern.** Die Ausnahmeliste des Kreislaufs sagt selbst, eine Regel für eine veraltete Referenz wäre ein Filter. Preis: Die GPX-Probe liest dieselbe Datei und muss mit ihr gegengeprüft werden |
 | **Q-RP-02** | `freigabeprobe`: nur **nach** den Kreisläufen laufen lassen (eine Reihenfolge im Prüfstand) oder **ein eigenes Konto** anlegen lassen (unabhängig, aber mehr Code)? | **Eigenes Konto.** Eine Probe, die nur in der richtigen Reihenfolge grün ist, bricht beim nächsten Umbau der Liste wieder — und `--datei` kann sie allein auswählen |
 | **Q-RP-03** | Fächerung in RP: keine? | **Keine** (Begründung in 3) |
+
+**Beantwortet am 23.09.2026, alle wie empfohlen:**
+
+- **E-RP-01** (Q-RP-01): Die csv-Referenz wird **erneuert**, nicht mit Ausnahmeregeln erklärt.
+- **E-RP-02** (Q-RP-02): Die Freigabeprobe legt **ihr eigenes Konto** an und räumt es weg.
+- **E-RP-03** (Q-RP-03): **Keine Fächerung** in RP.
+- **E-RP-04**: Das Kurzkonzept wird so umgesetzt, RP-01 bis RP-05 nacheinander.
 
 ## 5. Was dieses Konzept nicht klärt
 

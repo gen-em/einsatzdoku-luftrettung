@@ -28,6 +28,12 @@
  *
  * Aufruf:
  *   node tools/proben/freigabe/probe.mjs [basis] [ziel-email] [ziel-passwort]
+ *
+ * OHNE ZIELKONTO LEGT SIE SICH EINES AN (E-RP-02): `umlauf-freigabe@…` über
+ * den Anlegeweg des Kreislaufs (`pruefkonto.py`), und räumt es danach weg.
+ * Bis RP-01 arbeitete sie am Konto des edbak-Kreislaufs und war nur grün,
+ * wenn der vorher gelaufen war (F-RP-07). Wer ein Konto nennt, bekommt es
+ * unverändert — und es wird nicht gelöscht.
  */
 import { execFileSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
@@ -35,8 +41,10 @@ import { fileURLToPath } from 'node:url';
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const BASIS  = process.argv[2] || 'https://127.0.0.1:8443';
-const ZIEL   = process.argv[3] || 'umlauf-edbak@gen-em.org';
+const EIGENES = !process.argv[3];
+const ZIEL   = process.argv[3] || 'umlauf-freigabe@gen-em.org';
 const ZIELPW = process.argv[4] || 'umlaufpruefung2026';
+const KONTO  = join(HIER, '..', '..', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
@@ -52,7 +60,11 @@ const php = (schritt, daten) => JSON.parse(execFileSync('php',
   { encoding: 'utf8', maxBuffer: 1 << 26 }));
 
 console.log(`Freigabeprobe gegen ${BASIS}`);
-console.log(`  Zielkonto: ${ZIEL}`);
+console.log(`  Zielkonto: ${ZIEL}${EIGENES ? ' (eigenes, wird angelegt und geloescht)' : ''}`);
+if (EIGENES) {
+  execFileSync('python3', [KONTO, 'anlegen', ZIEL, '--passwort', ZIELPW, '--basis', BASIS],
+               { stdio: 'inherit' });
+}
 
 const lokal = /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(BASIS);
 const browser = await chromium.launch();
@@ -174,6 +186,11 @@ try {
 } finally {
   await browser.close();
   try { execFileSync('php', [join(HIER, 'vorbereiten.php'), 'aufraeumen', '{}']); } catch (e) {}
+  if (EIGENES) {
+    try {
+      execFileSync('python3', [KONTO, 'loeschen', ZIEL, '--basis', BASIS], { stdio: 'inherit' });
+    } catch (e) { console.log(`  Konto ${ZIEL} liess sich nicht loeschen: ${e.message}`); offen++; }
+  }
 }
 
 console.log(`\n  -> ${gesamt} Erwartungen, ${offen} nicht erfuellt`);
