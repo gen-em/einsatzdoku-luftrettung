@@ -11,7 +11,7 @@
 set -euo pipefail
 
 SDK_VERSION="${CIQ_SDK_VERSION:-9.2.0}"
-GERAETE_URL="${CIQ_GERAETE_URL:-}"      # Quelle fuer Devices/ und Fonts/
+GERAETE_URL="${CIQ_GERAETE_URL:-}"      # Quelle fuer Devices/ und Fonts/ (bzw. die Archive)
 # SCHRAEGSTRICH AM ENDE WEG — sonst entsteht ein leeres Pfadsegment.
 #
 # Die Adresse wird unten als "$GERAETE_URL/Devices/" zusammengesetzt. Endet sie
@@ -192,13 +192,54 @@ geraetedateien() {
    im Repositorium — sie kommt von der Projektleitung. Siehe LIESMICH.md,
    Abschnitt Quelle."
 
+    # ERST DAS ARCHIV, DANN DIE EINZELDATEIEN (23.09.2026, gemessen in Lauf
+    # #253 auf `main`). `wget -r` holt jede Datei einzeln, nacheinander und
+    # liest dazu jede Verzeichnisauflistung: 23 min 14 s fuer die Geraete,
+    # 7 min 32 s fuer die Schriften — zusammen vier Fuenftel des Uhr-Schritts.
+    # Die Zeit geht an die ZAHL der Anfragen, nicht an die Datenmenge: Die
+    # Schriften sind groesser und brauchten ein Drittel davon. Ein Archiv ist
+    # eine Anfrage.
+    #
+    # Das Archiv traegt IMMER DEN GANZEN BESTAND, auch wenn nur einzelne
+    # Geraete fehlen: `geraeteklassen.py` wendet die Auswahlregeln auf alles
+    # an, was daliegt, und bemerkt nur so ein neues Garmin-Geraet, das ins
+    # Manifest gehoert. Ein Archiv mit nur den Manifest-Geraeten schaltete
+    # diese Meldung still ab.
+    #
+    # FEHLT das Archiv, geht es auf dem alten Weg weiter — langsam, aber
+    # gruen — und das wird GESAGT (Warnung im Lauf und in der
+    # Zusammenfassung). Ist es dagegen DA und kaputt, ist das rot: Ein
+    # Rueckfall wuerde dann eine falsch gepackte Bereitstellung verdecken.
+    if [ "$voll" -eq 1 ] || [ -n "${fehlende// /}" ]; then
+        if archiv_holen devices.tar.gz "$GARMIN_HOME/Devices"; then
+            [ -n "$(ls "$GARMIN_HOME"/Devices/*/compiler.json 2>/dev/null)" ] || fehler \
+"devices.tar.gz enthaelt keine Geraete auf oberster Ebene.
+   Erwartet wird <geraet>/compiler.json, nicht Devices/<geraet>/... —
+   gepackt wird mit: tar czf devices.tar.gz -C Devices .  (LIESMICH.md)"
+            touch "$GARMIN_HOME/Devices/.vollstaendig"
+            voll=0; fehlende=""
+        else
+            rueckfall_melden devices.tar.gz
+        fi
+    fi
+    if [ "$schriften_fehlen" -eq 1 ]; then
+        if archiv_holen fonts.tar.gz "$GARMIN_HOME/Fonts"; then
+            [ -n "$(find "$GARMIN_HOME/Fonts" -maxdepth 1 -name '*.cft' -print -quit)" ] || fehler \
+"fonts.tar.gz enthaelt keine Schriften (*.cft) auf oberster Ebene.
+   Gepackt wird mit: tar czf fonts.tar.gz -C Fonts .  (LIESMICH.md)"
+            schriften_fehlen=0
+        else
+            rueckfall_melden fonts.tar.gz
+        fi
+    fi
+
     local schnitt=$(( $(pfadtiefe "$GERAETE_URL") + 1 ))
 
     if [ "$voll" -eq 1 ]; then
         # Fuer Stufe I und geraeteklassen.py wird der GANZE Bestand gebraucht:
         # Welche Geraete es gibt, steht nirgends sonst — die Liste ist das
         # Verzeichnis selbst.
-        melde "Geraetedateien holen (alle)"
+        melde "Geraetedateien holen (alle, einzeln)"
         mkdir -p "$GARMIN_HOME/Devices" && cd "$GARMIN_HOME/Devices"
         wget -q -r -np -nH --cut-dirs="$schnitt" -R "index.html*" "$GERAETE_URL/Devices/" \
             || fehler "Geraeteverzeichnis nicht abrufbar"
@@ -207,7 +248,7 @@ geraetedateien() {
         touch "$GARMIN_HOME/Devices/.vollstaendig"
         cd - >/dev/null
     elif [ -n "${fehlende// /}" ]; then
-        melde "Geraetedateien holen ($(printf '%s\n' $fehlende | grep -c .) fehlend)"
+        melde "Geraetedateien holen ($(printf '%s\n' $fehlende | grep -c .) fehlend, einzeln)"
         mkdir -p "$GARMIN_HOME/Devices" && cd "$GARMIN_HOME/Devices"
         for g in $fehlende; do
             wget -q -r -np -nH --cut-dirs="$schnitt" -R "index.html*" "$GERAETE_URL/Devices/$g/" \
@@ -222,11 +263,50 @@ geraetedateien() {
         # Bestand geholt statt geraten. Ein fehlender Zeichensatz aeussert sich
         # als "Invalid Font Specified" und beendet die App beim ersten
         # Zeichnen.
-        melde "Schriften holen (rund 1,2 GB, dauert)"
+        melde "Schriften holen (rund 1,2 GB, einzeln, dauert)"
         mkdir -p "$GARMIN_HOME/Fonts" && cd "$GARMIN_HOME/Fonts"
         wget -q -r -np -nH --cut-dirs="$schnitt" -R "index.html*" "$GERAETE_URL/Fonts/" \
             || fehler "Schriften nicht abrufbar"
         cd - >/dev/null
+    fi
+}
+
+# Holt "$GERAETE_URL/<name>" und entpackt es nach <ziel>.
+#   0 = geholt und entpackt
+#   1 = nicht da (jede Antwort ausser 200) -> der Aufrufer faellt zurueck
+#   rot = da, aber nicht zu entpacken
+# Die Datei landet erst in $BASIS und wird GANZ geholt, bevor tar sie
+# anfasst: `curl | tar` liesse bei einem abgerissenen Abruf einen halben
+# Baum stehen, und der Rueckfall fuellte ihn dann ohne Marke auf.
+archiv_holen() {
+    local name="$1" ziel="$2" code
+    local datei="$BASIS/$name"
+    mkdir -p "$BASIS" "$ziel"
+    melde "$name holen"
+    code=$(curl -sS -L --max-time 1800 -o "$datei" -w '%{http_code}' \
+                "$GERAETE_URL/$name" 2>/dev/null) || code="${code:-000}"
+    if [ "$code" != "200" ]; then
+        rm -f "$datei"
+        melde "$name nicht abrufbar (HTTP $code)"
+        return 1
+    fi
+    printf '   %s MB\n' "$(( $(stat -c%s "$datei") / 1048576 ))"
+    tar -xzf "$datei" -C "$ziel" \
+        || { rm -f "$datei"; fehler "$name ist abrufbar, laesst sich aber nicht entpacken"; }
+    rm -f "$datei"
+}
+
+# Kein stilles Zurueckfallen (CLAUDE.md 6, E-P5a-13): Der langsame Weg ist
+# gruen, aber er ist nicht der vorgesehene, und wer nur auf die Farbe sieht,
+# merkt sonst nie, dass die Archive fehlen.
+rueckfall_melden() {
+    local text="$1 fehlt unter CIQ_GERAETE_URL — Rueckfall auf Einzeldateien (langsam). Packen: tools/uhr-pruefstand/LIESMICH.md, Abschnitt Quelle."
+    if [ -n "${GITHUB_ACTIONS:-}" ]; then
+        echo "::warning::$text"
+        [ -n "${GITHUB_STEP_SUMMARY:-}" ] \
+            && echo "**Uhr-Pruefstand:** \`$1\` fehlt — Rueckfall auf Einzeldateien." >> "$GITHUB_STEP_SUMMARY"
+    else
+        printf '\033[33mWARNUNG:\033[0m %s\n' "$text" >&2
     fi
 }
 
@@ -361,6 +441,36 @@ reihe() {
     # fehlt dann einfach. Geraete, deren Icon exakt passt, bauen durch; der
     # Ausfall sieht deshalb nach einem Geraeteproblem aus und ist keins.
     export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
+
+    # ERST ALLE UEBERSETZEN, DANN ALLE AUSWERTEN (23.09.2026). Nacheinander
+    # brauchte die Reihe 7 min 36 s fuer 99 Geraete (Lauf #253), und der
+    # Laeufer hat vier Kerne, von denen `monkeyc` einen nutzt. Jeder Aufruf
+    # schreibt nur in seine eigenen Dateien — `$g.prg` samt Beiwerk und
+    # `reihe_$g.txt` —, deshalb stoeren sich parallele Aufrufe nicht.
+    #
+    # Die Auswertung bleibt seriell und in der Reihenfolge der Liste: Die
+    # Tabelle sieht aus wie vorher, und parallel entstandene Ausgaben mischen
+    # sich nicht. CIQ_PARALLEL=1 ist der alte Ablauf.
+    #
+    # Das alte Kompilat wird VORHER geloescht. Nacheinander war das egal;
+    # jetzt liegt zwischen Uebersetzen und Nachsehen die ganze Reihe, und ein
+    # Kompilat aus einem frueheren Lauf zaehlte sonst als Groesse eines
+    # Aufrufs, der keines erzeugt hat.
+    local parallel="${CIQ_PARALLEL:-$(nproc 2>/dev/null || echo 1)}"
+    case "$parallel" in ''|*[!0-9]*|0) fehler "CIQ_PARALLEL muss eine Zahl ab 1 sein, nicht '$parallel'" ;; esac
+    local anzahl
+    anzahl=$(grep -c . "$liste" || true)
+    melde "Uebersetzen: $anzahl Geraete, $parallel gleichzeitig"
+    while read -r g; do
+        [ -z "$g" ] && continue
+        [ -f "$GARMIN_HOME/Devices/$g/compiler.json" ] || continue
+        rm -f "$AUSGABE/$g.prg"
+        monkeyc -f "$WURZEL/watch/monkey.jungle" -d "$g" -o "$AUSGABE/$g.prg" \
+                -y "$SCHLUESSEL" -w "$@" >"$BASIS/reihe_$g.txt" 2>&1 </dev/null &
+        while [ "$(jobs -rp | wc -l)" -ge "$parallel" ]; do wait -n || true; done
+    done < "$liste"
+    wait || true
+
     local ok=0 mangel=0 fehlend=0
     printf '%-26s %5s %6s %10s  %s\n' "Gerät" "Warn" "Fehler" "Größe" "Anmerkung"
     printf '%s\n' "----------------------------------------------------------------------"
@@ -371,8 +481,6 @@ reihe() {
             fehlend=$((fehlend+1)); continue
         fi
         local log="$BASIS/reihe_$g.txt"
-        monkeyc -f "$WURZEL/watch/monkey.jungle" -d "$g" -o "$AUSGABE/$g.prg" \
-                -y "$SCHLUESSEL" -w "$@" >"$log" 2>&1 || true
         sed -i '/JAVA_TOOL_OPTIONS/d' "$log" 2>/dev/null || true
         local w e sz
         w=$(grep -c 'WARNING' "$log" || true)
@@ -615,10 +723,14 @@ Befehle:
 
 Umgebungsvariablen:
   CIQ_SDK_VERSION   SDK-Fassung (Vorgabe 9.2.0)
-  CIQ_GERAETE_URL   Quelle fuer Devices/ und Fonts/ — ohne sie kein Aufbau
+  CIQ_GERAETE_URL   Quelle fuer Devices/ und Fonts/ — ohne sie kein Aufbau;
+                    zuerst devices.tar.gz und fonts.tar.gz, fehlen sie,
+                    einzeln (langsam, mit Warnung)
   CIQ_ZIELE         Zielgeraete (Vorgabe: fenix6pro fr945 venu3s);
                     "alle" holt beim Aufbau den ganzen Geraetebestand —
                     noetig fuer reihe und geraeteklassen.py
+  CIQ_PARALLEL      gleichzeitige Uebersetzungen in reihe (Vorgabe:
+                    Zahl der Kerne; 1 = nacheinander)
   CIQ_WARTEZEIT     Sekunden je Geraet in bildreihe (Vorgabe 26)
   CIQ_BASIS         Ablage (Vorgabe ~/.ciq-pruefstand)
 ENDE

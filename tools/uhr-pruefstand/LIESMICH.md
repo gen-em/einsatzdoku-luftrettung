@@ -75,7 +75,45 @@ nach dem Start dieses Containers geändert — Umgebungsvariablen kommen beim
 fremde Umgebung. Dann erfragen. Ohne die Adresse bricht `aufbau` mit einem
 Hinweis ab, statt stillschweigend halb zu laufen.
 
-Zwei Anforderungen an die Bereitstellung, beide nicht offensichtlich:
+### Archive — der schnelle Weg (seit 23.09.2026)
+
+**Neben `Devices/` und `Fonts/` liegen unter derselben Adresse zwei Archive:**
+
+```bash
+cd ~/.Garmin/ConnectIQ
+tar czf devices.tar.gz -C Devices .
+tar czf fonts.tar.gz   -C Fonts   .
+# beide Dateien direkt unter die Adresse aus CIQ_GERAETE_URL legen
+```
+
+Das Skript versucht **zuerst** `devices.tar.gz` und `fonts.tar.gz`, je eine
+Anfrage. Der Grund ist gemessen (Lauf #253 auf `main`, 23.09.2026): `wget -r`
+brauchte **23 min 14 s** für die Gerätedateien und **7 min 32 s** für die
+rund 1,2 GB Schriften — die kleineren Gerätedateien dreimal so lange wie die
+großen Schriften. Die Zeit geht an die **Zahl der Anfragen**, nicht an die
+Datenmenge, und ein Archiv ist eine.
+
+- **`-C Devices .` und nicht `Devices/`.** Das Archiv trägt die Geräte auf
+  oberster Ebene (`./fenix7/compiler.json`). Wer `tar czf devices.tar.gz
+  Devices` packt, bekommt eine Ebene zu viel — dieselbe Falle wie oben bei
+  `--cut-dirs`. Das Skript prüft das nach dem Entpacken und bricht **rot**
+  ab, statt einen Baum eine Ebene zu tief liegen zu lassen.
+- **Immer der ganze Bestand**, nicht nur die Geräte des Manifests.
+  `geraeteklassen.py` wendet die Auswahlregeln auf alles an, was daliegt, und
+  nur so fällt in Stufe 1 auf, dass ein neues Garmin-Gerät ins Manifest
+  gehört.
+- **Fehlt ein Archiv, geht es auf dem alten Weg weiter** — Einzeldateien per
+  `wget`, langsam, aber grün — und das wird **gesagt**: eine Warnung im
+  Protokoll und eine Zeile in der Zusammenfassung des Laufs. **Ist es da und
+  lässt sich nicht entpacken, ist der Lauf rot**: Ein Rückfall würde eine
+  kaputte Bereitstellung verdecken.
+- **Wer am Arbeitsplatz Geräte nachlädt** (SDK-Manager), packt beide Archive
+  neu. Sonst holt die Kette den alten Stand, und zwar ohne Warnung — das
+  Archiv ist ja da. Die Verzeichnisse daneben bleiben für den Rückfall
+  stehen.
+
+Zwei Anforderungen an die Bereitstellung für den Rückfall über
+Einzeldateien, beide nicht offensichtlich:
 
 - **Verzeichnisauflistung muss an sein** (Apache `Options +Indexes`, nginx
   `autoindex on`, oder `python3 -m http.server`). Das Skript geht mit

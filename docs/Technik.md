@@ -6559,9 +6559,13 @@ Fensteranwendung mit Garmin-Anmeldung — auf einem Rechner ohne Bildschirm
 nicht zu bedienen. Sie werden deshalb von einer selbst bereitgestellten Quelle
 geholt, deren Adresse in `CIQ_GERAETE_URL` steht und bewusst **nicht** im
 Repositorium: Es ist öffentlich, und die Dateien gehören Garmin. Wer den
-Prüfstand neu aufsetzt, muss die Adresse also erfragen; die Quelle braucht eine
-eingeschaltete Verzeichnisauflistung, weil das Skript mit `wget -r` an den Baum
-geht. `aufbau` holt nur die drei Zielgeräte — für Stufe I und
+Prüfstand neu aufsetzt, muss die Adresse also erfragen. Seit dem 23.09.2026
+holt das Skript zuerst je ein Archiv (`devices.tar.gz`, `fonts.tar.gz`) von
+dort — eine Anfrage statt tausender, und die Anfragen waren die Zeit: 23 min
+für die Gerätedateien in Lauf #253. Fehlt ein Archiv, fällt es mit einer
+Warnung auf `wget -r` über die Einzeldateien zurück; dafür braucht die Quelle
+eine eingeschaltete Verzeichnisauflistung. `reihe` übersetzt seither so viele
+Geräte gleichzeitig, wie der Rechner Kerne hat (`CIQ_PARALLEL`). `aufbau` holt nur die drei Zielgeräte — für Stufe I und
 `geraeteklassen.py` braucht es `CIQ_ZIELE=alle`. Fehlen die
 Zeichensätze, übersetzt die App zwar, bricht aber beim ersten Zeichnen mit
 `Invalid Font Specified` ab — der Fehler zeigt auf die eigene Zeile, liegt
