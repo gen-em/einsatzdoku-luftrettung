@@ -229,9 +229,9 @@ def selbstprobe(a):
         ('nach: sie steht davor, auch später genannt',
          mit_voraussetzungen(['y', 'x'], probe_a) == ['x', 'y']),
         ('nach: über zwei Stufen',              mit_voraussetzungen(['z'], probe_a) == ['x', 'y', 'z']),
-        ('nach: die Wegprobe läuft nach dem csv-Kreislauf',
+        ('nach: die Wegprobe läuft nach dem edbak-Kreislauf',
          'spaltenregister-wegprobe' in neben
-         and neben.index('kreislauf-csv') < neben.index('spaltenregister-wegprobe'))]
+         and neben.index('kreislauf-edbak') < neben.index('spaltenregister-wegprobe'))]
 
     # Die Fassung — gegen die ECHTE Schreibweise der Datei, nicht gegen eine
     # ausgedachte. Genau das fehlte, als das Muster nie traf (F-PK-30).

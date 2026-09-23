@@ -185,9 +185,9 @@
     "spaltenregister-wegprobe": {
       "aufruf": "python3 tools/spaltenregister/wegprobe.py",
       "braucht": "installation",
-      "bemerkung": "Schritt 15/AP6. Faehrt die zwei Anweisungen, die kein Kreislauf abdeckt (Schnitt, UPDATE-Zweig des Imports). Sie SCHREIBT -- schneidet einen Einsatz, ueberschreibt einen zweiten -- und gehoert deshalb an ein WEGWERFKONTO: das Umlaufkonto des csv-Kreislaufs, das dafuer gemacht ist und Daten traegt. `nach` zieht den Kreislauf mit und stellt ihn davor (RP-01, F-RP-08); Konto und Passwort liest die Probe aus kreislauf.py, nicht aus dieser Datei (CLAUDE.md 4, E-PK-27). Laeuft NICHT in Stufe 1.",
+      "bemerkung": "Schritt 15/AP6. Faehrt die zwei Anweisungen, die kein Kreislauf abdeckt (Schnitt, UPDATE-Zweig des Imports). Sie SCHREIBT -- schneidet einen Einsatz, ueberschreibt einen zweiten -- und gehoert deshalb an ein WEGWERFKONTO: das Umlaufkonto des edbak-Kreislaufs, das dafuer gemacht ist und Daten MIT Spur traegt (eine csv-Ausfuhr hat keine GPS-Punkte). `nach` zieht den Kreislauf mit und stellt ihn davor (RP-01, F-RP-08); Konto und Passwort liest die Probe aus kreislauf.py, nicht aus dieser Datei (CLAUDE.md 4, E-PK-27). Laeuft NICHT in Stufe 1.",
       "nach": [
-        "kreislauf-csv"
+        "kreislauf-edbak"
       ]
     }
   },

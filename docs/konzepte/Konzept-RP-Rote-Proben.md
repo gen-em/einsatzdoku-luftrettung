@@ -15,10 +15,10 @@ entsteht mit RP-01. Zweig `claude/rp-rote-proben`, von `main` `b329ac3`.
 >
 > | | |
 > |---|---|
-> | Stand | **23.09.2026 — freigegeben, RP-01 in Arbeit.** |
+> | Stand | **23.09.2026 — RP-01 erledigt.** Versand, Freigabe, Wegprobe grün; GPX findet ihre Referenz; die Kreisläufe laufen wiederholbar; der Prüfstand schreibt die Zeit je Probe. |
 > | Entschieden | E-PK-45 (Paket vor P5c, keine Ausnahmeliste), E-PK-46 (nicht gemessen ist rot) — aus Konzept PK. **E-RP-01 bis -04** vom Auftraggeber am 23.09.2026 (Abschnitt 4) |
 > | Offen | nichts |
-> | Nächstes | RP-01 Verdrahtung |
+> | Nächstes | **RP-02** — veraltete Erwartungen und die csv-Referenz (E-RP-01) |
 
 ---
 
@@ -49,6 +49,8 @@ lief keine davon in einer Stufe, die ein Tor las; deshalb fiel keiner auf.
 | F-RP-07 | `freigabeprobe` | „Zielkonto nicht gefunden" | Sie arbeitet am Konto `umlauf-edbak@…`, das erst der Kreislauf `edbak` anlegt — und der läuft in der Liste **nach** ihr | `tools/` (Reihenfolge) |
 | F-RP-08 | `spaltenregister-wegprobe` | Umgebungswert fehlt | Braucht `WEGWERFKONTO`/`WEGWERFPASSWORT`; niemand setzt sie. Ihr eigener Kopf sagt, die Umlaufkonten des Kreislaufs seien dafür gemacht | `tools/` (Verdrahtung) |
 | F-RP-09 | `versandprobe` | „Aufruf: php probe.php <wurzel>" | Braucht laufende Gegenstellen; `gegenstellen.py` stellt FTP, FTPS und SFTP als Nachbau **ohne root** hin, der Prüfstand startet sie nicht | `tools/` (Verdrahtung) |
+| F-RP-11 | Kreisläufe im Prüfstand | (gefunden in RP-01) | Der Prüfstand rief beide Kreisläufe **ohne `--frisch`** auf; auf einer Anlage, die nicht frisch ist, bricht der zweite Lauf ab, weil das Umlaufkonto schon besteht | `tools/` (Verdrahtung) |
+| F-RP-12 | `gpxprobe` (hinter F-RP-01) | „190 von 204 ohne Gegenstück", „0 von 204 verglichen" | Erst mit dem richtigen Pfad erreicht: Die Referenz vom 15.09. ist älter als der Demo-Bestand — dieselbe Ursache wie F-RP-06 | `tools/` (Referenz, E-RP-01) |
 | F-RP-10 | `wiederherstellung` | „Ein knapper Schub sichert wenigstens ein Konto und hört dann auf" (2 erledigt, 0 offen) und „Der Zeiger steht auf dem zuletzt gesicherten Konto" (`cur=—`) | **ungeklärt** — seit PK-03 bekannt (F-PK-18). Entweder ist der „knappe Schub" auf dieser Anlage nicht knapp (Erwartung) oder der Job hört nicht auf (Anwendung) | offen |
 
 **Dauer:** Der Prüfstand schreibt keine Zeit je Probe. Welche Probe die
@@ -58,11 +60,27 @@ lief keine davon in einer Stufe, die ein Tor las; deshalb fiel keiner auf.
 
 | Paket | Was | Berührt | Abnahme |
 |---|---|---|---|
-| **RP-01 Verdrahtung** | F-RP-01, -07, -08, -09: Pfad der GPX-Probe; Reihenfolge (`freigabeprobe` nach `kreislauf-edbak`, oder eigenes Konto — Q-RP-02); `WEGWERFKONTO` aus dem Umlaufkonto des Kreislaufs `csv`; Gegenstellen-Nachbau starten und stoppen. Dazu **die Zeit je Probe** in die Laufausgabe | `tools/pruefstand/`, `tools/proben/` | die vier Proben laufen im Prüfstand; keine davon „nicht gemessen" |
+| **RP-01 Verdrahtung** | F-RP-01, -07, -08, -09, -11: Pfad der GPX-Probe; eigenes Konto der Freigabeprobe (E-RP-02); Wegprobe am Umlaufkonto des Kreislaufs **`edbak`** (im Kurzkonzept stand `csv` — falsch, siehe unten); Gegenstellen-Nachbau starten und stoppen; `--frisch` für die Kreisläufe. Dazu **die Zeit je Probe** in die Laufausgabe | `tools/pruefstand/`, `tools/proben/` | die vier Proben laufen im Prüfstand; keine davon „nicht gemessen" |
 | **RP-02 Veraltete Erwartungen** | F-RP-02 bis -06: Texte der GPX- und Wartungsprobe, Beispielsatz der Mailprobe, `frame-ancestors` in der scharfen Fassung prüfen; die csv-Referenz (Q-RP-01) | `tools/proben/`, `tools/referenzdatensatz/` | die fünf Proben grün, jede Berichtigung mit Fundstelle in der Anwendung belegt |
 | **RP-03 Wiederherstellung** | F-RP-10 klären: Anwendung oder Erwartung. **Ist es die Anwendung, ist es eine Korrekturstufe Web** — vorher Rückmeldung an die Betreiberin | offen; ggf. `server/` | Ursache mit Beleg; Probe grün |
 | **RP-04 Dauer** | Aus der Zeit je Probe (RP-01) die großen Posten benennen; was ohne Verlust schneller geht, umsetzen; sonst die Zahl mit Grund stehen lassen | `tools/` | gemessene Dauer der Nebenstufe mit Aufschlüsselung; Ziel 15 min oder Begründung |
 | **RP-05 Abschluss** | Nebenstufe auf frischer Anlage, Dokumente (`Pruefablauf.md` 3, `LIESMICH` der Proben, CHANGELOG, Backlog Nr. 292 nach Erledigt), Prüfdokument, PR | — | **36 Proben, 0 rot, 0 nicht gemessen**; Stufe 1 auf dem PR grün |
+
+**Stand RP-01 (23.09.2026, erledigt; Prüfdokument 2):**
+
+| Teil | Ergebnis |
+|---|---|
+| `versandprobe` | `proben.sh versand` startet ohne Pfad `gegenstellen.py` in eigener Prozessgruppe und hält es danach an; **135 Erwartungen, 0 nicht erfüllt, 9 s**. Dafür brauchte die Arbeitsumgebung `pyftpdlib`, `paramiko` **und `pyopenssl`** — ohne Letzteres fehlt FTPS, und alle drei Nachbauten brechen ab; `aufbauen.sh web` holt sie jetzt. Beim ersten Versuch liefen die Nachbauten nach der Probe weiter (Kindprozesse); behoben mit `setsid` und `kill -- -PID` |
+| `freigabeprobe` | legt `umlauf-freigabe@…` über `pruefkonto.py` an (die Wege aus `kreislauf.py`) und löscht es; **16 / 0, 17 s**, danach 0 Zeilen in `users` |
+| `gpxprobe` | Pfad berichtigt; die Referenz wird gefunden — dahinter F-RP-12 |
+| `spaltenregister-wegprobe` | Konto und Passwort aus `kreislauf.py` (`umlauf_konto()`, `UMLAUF_PASSWORT`), keine Zugänge in `pruefablauf.json`; `nach` zieht den edbak-Kreislauf mit und stellt ihn davor (`auswahl.py --selbstprobe` **27 / 0**). Gemessen: Kreislauf 328 771 Vergleiche, 0 unerklärt, 31 s; Wegprobe **34 / 0**, 3 s |
+| Zeit je Probe | steht in jeder Zeile des Prüfstands und in der Schlusszeile |
+
+**Eigener Fehler, im Konzept:** Das Kurzkonzept wies der Wegprobe das
+Umlaufkonto des **csv**-Kreislaufs zu. Gemessen: „Kein Ruhesegment mit genug
+GPS-Punkten" — eine csv-Ausfuhr trägt keine Spur. Der Kopf der Wegprobe
+nannte von Anfang an das **edbak**-Konto; die Zuordnung im Konzept war nicht
+gegen ihn gelesen. Umgestellt auf `kreislauf-edbak`.
 
 **Reihenfolge:** RP-01 → RP-02 → RP-03 → RP-04 → RP-05, je ein Commit mit
 Paketpräfix, Push nach jedem Paket (`CLAUDE.md` 7, 8). RP-01 zuerst, weil
