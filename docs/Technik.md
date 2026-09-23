@@ -6308,9 +6308,13 @@ Fensteranwendung mit Garmin-Anmeldung — auf einem Rechner ohne Bildschirm
 nicht zu bedienen. Sie werden deshalb von einer selbst bereitgestellten Quelle
 geholt, deren Adresse in `CIQ_GERAETE_URL` steht und bewusst **nicht** im
 Repositorium: Es ist öffentlich, und die Dateien gehören Garmin. Wer den
-Prüfstand neu aufsetzt, muss die Adresse also erfragen; die Quelle braucht eine
-eingeschaltete Verzeichnisauflistung, weil das Skript mit `wget -r` an den Baum
-geht. `aufbau` holt nur die drei Zielgeräte — für Stufe I und
+Prüfstand neu aufsetzt, muss die Adresse also erfragen. Seit dem 23.09.2026
+holt das Skript zuerst je ein Archiv (`devices.tar`, `fonts.tar`) von dort —
+eine Anfrage statt tausender, und die Anfragen waren die Zeit: rund 31 min für
+Gerätedateien und Schriften in Lauf #253, 1 min über die Archive. Fehlt ein
+Archiv, fällt es mit einer Warnung auf `wget -r` über die Einzeldateien
+zurück; dafür braucht die Quelle eine eingeschaltete Verzeichnisauflistung.
+`aufbau` holt nur die drei Zielgeräte — für Stufe I und
 `geraeteklassen.py` braucht es `CIQ_ZIELE=alle`. Fehlen die
 Zeichensätze, übersetzt die App zwar, bricht aber beim ersten Zeichnen mit
 `Invalid Font Specified` ab — der Fehler zeigt auf die eigene Zeile, liegt
@@ -9010,7 +9014,7 @@ Zustandsdatei der Aktion dann einen Server beschreibt, den es so nicht gibt.
 ein Lauf; ein dritter verdrängt den zweiten wartenden. Für Staging ist das
 hinnehmbar — der jüngste Stand gewinnt, und genau den will man.
 
-**Alle elf fremden `uses:`-Zeilen hängen an einer 40-stelligen Commit-SHA**
+**Alle zwölf fremden `uses:`-Zeilen hängen an einer 40-stelligen Commit-SHA**
 (E-KH-10), die Version steht als Kommentar daneben. **Die Zahl ist eine
 Orientierung, kein Prüfwert** — nachgezählt wird „keine fremde Zeile ohne
 SHA", und dafür stehen zwei Zählungen nebeneinander (`CLAUDE.md` 3). Die beiden **lokalen**
@@ -9030,7 +9034,19 @@ vom Zeiger `produktion` abstammt —, und das Urteil fällt
 dorthin, wo eine `--selbstprobe` sie nachweisen kann. Als Bash im
 Arbeitslauf wäre die Gegenprobe — *ein Hotfix ohne Abstammung muss abgelehnt
 werden* — nur durch einen echten Produktivlauf zu belegen, also praktisch
-nie. Jetzt ist sie eine von **32 Lagen** in Stufe 1.
+nie. Jetzt ist sie eine von **52 Lagen** in Stufe 1.
+
+**Stufe 1 zählt es seit dem 23.09.2026 nach Baum, nicht nach Commit**
+(Konzept TB). Ein PR-Lauf trägt die SHA des Zweigs, nie die des
+Merge-Commits; nach der SHA gefragt, wartete das Tor auf den Push-Lauf auf
+`main`, der denselben Inhalt noch einmal maß (Lauf 35834341392, Tag
+`web-v20.37.1`). Jetzt holt der Schritt die jüngsten 50 grünen
+`pruefung.yml`-Läufe, je Lauf den Baum seines Commits und bei passendem Baum
+die Jobs — anerkannt wird ein Lauf, dessen Baum der des Tag-Commits ist
+**und** in dem der Job `Stufe 1` selbst grün war. Den Verweis-Lauf auf
+`main`, der `Stufe 1` auslässt, zählt es damit nicht. Beweisbar gleich ist
+der Baum, weil das Ruleset „up to date" verlangt; liegt der grüne Lauf
+außerhalb der 50, hilft ein Handlauf von `pruefung.yml` auf dem Stand.
 
 **Was anerkannt wird, und was nicht:**
 
@@ -9178,7 +9194,8 @@ Die Schritte:
 > `test-results/**` (JUnit-XML). Bei Grün gibt es nichts zu lesen.
 >
 > **`setup-java` wirkt global auf alle folgenden Schritte** — auch auf den
-> Uhr-Schritt, der danach rund 35 Minuten übersetzt und `java` vom PATH
+> Uhr-Schritt, der danach rund 11 Minuten übersetzt (seit den Archiven des
+> Prüfstands; davor 38) und `java` vom PATH
 > nimmt. Der Uhr-Schritt setzt deshalb ausdrücklich auf das JDK des Läufers
 > zurück, dessen Wert der Schritt „Fassungen nennen" vorher in
 > `JAVA_HOME_LAEUFER` festhält (E-KH-24). Wer die Reihenfolge der Schritte
@@ -9221,7 +9238,7 @@ Beschleunigung eine Lücke:
 
 | | |
 |---|---|
-| **`main` misst immer alles** | Der schlimmste Fehler des Filters wäre, fälschlich zu überspringen; auf `main` kann das nicht passieren. Und `main` ist der Stand, den ein Tag ausliefert — Tor 3 des Produktionslaufs verlangt einen grünen Stufe-1-Lauf auf genau diesem Commit (6.4). |
+| **`main` misst alles — wenn es misst** | Der schlimmste Fehler des Filters wäre, fälschlich zu überspringen; auf `main` kann das nicht passieren. **Ob** auf `main` gemessen wird, entscheidet seit dem 23.09.2026 der Job `Schon gemessen?` davor am Baum: Hat ein grüner PR-Lauf denselben Baum gemessen, verweist der Lauf auf ihn (Konzept TB). Das Produktionstor verlangt einen grünen Stufe-1-Lauf auf demselben **Baum**, und ein PR-Lauf zählt (6.4). |
 | **Im Zweifel wird gemessen** | Neuer Zweig (`before` ist `0000…`), Force-Push (das Vorher ist unerreichbar), fehlende Historie, `workflow_dispatch` — jeder dieser Wege endet bei „alles". Getragen wird das von **zwei Schichten, jede für sich ausreichend**: der Erreichbarkeitsprüfung (`git cat-file`) und dem Fehlerzweig von `git diff`. Nachgemessen am 17.09.2026: Entwaffnet man eine der beiden, bleibt die Lage richtig; entwaffnet man **beide**, fällt sie um. |
 | **Die Auslassung nennt ihren Gegenstand** | Ein übersprungener Schritt läuft nicht und kann selbst nichts melden. Deshalb schreibt der **Erkennungsschritt** die Zeile: „**Uhr Stufe I: NICHT BERÜHRT** — 0 von 12 geänderten Dateien liegen unter `watch/` oder `tools/uhr-pruefstand/` (gegenüber `98a64f1`); nicht gemessen." Dieselbe Bauform wie beim fehlenden SDK oder fehlender `CIQ_GERAETE_URL`. |
 
@@ -9951,8 +9968,10 @@ und schreibt dessen Dateinamen neben den Tag in die Laufzusammenfassung
    danach.
 
 5. **Tag und Freigabe.** `git tag web-v20.26.3 && git push origin web-v20.26.3`.
-   Das Tor der grünen Läufe prüft jetzt dreierlei: grüner Stufe-1-Lauf,
-   grüner `staging`-Job auf **diesem** Commit, und **Abstammung vom Zeiger**.
+   Das Tor der grünen Läufe prüft jetzt dreierlei: grüner Stufe-1-Lauf auf
+   demselben **Baum** (ein Handlauf von `pruefung.yml` auf dem Hotfix-Zweig
+   liefert ihn), grüner `staging`-Job auf **diesem** Commit, und
+   **Abstammung vom Zeiger**.
    Dann die Pflichtfreigabe. Nach dem Lauf rückt der Zeiger `produktion` auf
    den Hotfix nach.
 

@@ -11,7 +11,7 @@
 set -euo pipefail
 
 SDK_VERSION="${CIQ_SDK_VERSION:-9.2.0}"
-GERAETE_URL="${CIQ_GERAETE_URL:-}"      # Quelle fuer Devices/ und Fonts/
+GERAETE_URL="${CIQ_GERAETE_URL:-}"      # Quelle fuer Devices/ und Fonts/ (bzw. die Archive)
 # SCHRAEGSTRICH AM ENDE WEG — sonst entsteht ein leeres Pfadsegment.
 #
 # Die Adresse wird unten als "$GERAETE_URL/Devices/" zusammengesetzt. Endet sie
@@ -187,10 +187,52 @@ geraetedateien() {
 
     [ -n "$GERAETE_URL" ] || fehler \
 "Geraetedateien fehlen und CIQ_GERAETE_URL ist nicht gesetzt.
-   Erwartet wird eine Adresse mit Verzeichnisauflistung, unter der Devices/
-   und Fonts/ aus ~/.Garmin/ConnectIQ abrufbar sind. Die Adresse steht nicht
-   im Repositorium — sie kommt von der Projektleitung. Siehe LIESMICH.md,
-   Abschnitt Quelle."
+   Erwartet wird eine Adresse, unter der devices.tar und fonts.tar liegen
+   (oder, langsamer, Devices/ und Fonts/ mit Verzeichnisauflistung). Die
+   Adresse steht nicht im Repositorium — sie kommt von der Projektleitung.
+   Siehe LIESMICH.md, Abschnitt „Was es braucht“."
+
+    # ERST DAS ARCHIV, DANN DIE EINZELDATEIEN (23.09.2026, gemessen in Lauf
+    # #253 auf `main`). `wget -r` holt jede Datei einzeln, nacheinander und
+    # liest dazu jede Verzeichnisauflistung: 23 min 14 s fuer die Geraete,
+    # 7 min 32 s fuer die Schriften — zusammen vier Fuenftel des Uhr-Schritts.
+    # Die Zeit geht an die ZAHL der Anfragen, nicht an die Datenmenge: Die
+    # Schriften sind groesser und brauchten ein Drittel davon. Ein Archiv ist
+    # eine Anfrage.
+    #
+    # Das Archiv traegt IMMER DEN GANZEN BESTAND, auch wenn nur einzelne
+    # Geraete fehlen: `geraeteklassen.py` wendet die Auswahlregeln auf alles
+    # an, was daliegt, und bemerkt nur so ein neues Garmin-Geraet, das ins
+    # Manifest gehoert. Ein Archiv mit nur den Manifest-Geraeten schaltete
+    # diese Meldung still ab.
+    #
+    # FEHLT das Archiv, geht es auf dem alten Weg weiter — langsam, aber
+    # gruen — und das wird GESAGT (Warnung im Lauf und in der
+    # Zusammenfassung). Ist es dagegen DA und kaputt, ist das rot: Ein
+    # Rueckfall wuerde dann eine falsch gepackte Bereitstellung verdecken.
+    if [ "$voll" -eq 1 ] || [ -n "${fehlende// /}" ]; then
+        if archiv_holen devices.tar Devices; then
+            [ -n "$(ls "$GARMIN_HOME"/Devices/*/compiler.json 2>/dev/null)" ] || fehler \
+"devices.tar liegt entpackt nicht als Devices/<geraet>/compiler.json vor.
+   Gepackt wird im Ordner ~/.Garmin/ConnectIQ mit: tar cf devices.tar Devices
+   (LIESMICH.md, „Was es braucht“)"
+            touch "$GARMIN_HOME/Devices/.vollstaendig"
+            voll=0; fehlende=""
+        else
+            rueckfall_melden devices.tar
+        fi
+    fi
+    if [ "$schriften_fehlen" -eq 1 ]; then
+        if archiv_holen fonts.tar Fonts; then
+            [ -n "$(find "$GARMIN_HOME/Fonts" -maxdepth 1 -name '*.cft' -print -quit)" ] || fehler \
+"fonts.tar liegt entpackt nicht als Fonts/*.cft vor.
+   Gepackt wird im Ordner ~/.Garmin/ConnectIQ mit: tar cf fonts.tar Fonts
+   (LIESMICH.md, „Was es braucht“)"
+            schriften_fehlen=0
+        else
+            rueckfall_melden fonts.tar
+        fi
+    fi
 
     local schnitt=$(( $(pfadtiefe "$GERAETE_URL") + 1 ))
 
@@ -198,7 +240,7 @@ geraetedateien() {
         # Fuer Stufe I und geraeteklassen.py wird der GANZE Bestand gebraucht:
         # Welche Geraete es gibt, steht nirgends sonst — die Liste ist das
         # Verzeichnis selbst.
-        melde "Geraetedateien holen (alle)"
+        melde "Geraetedateien holen (alle, einzeln)"
         mkdir -p "$GARMIN_HOME/Devices" && cd "$GARMIN_HOME/Devices"
         wget -q -r -np -nH --cut-dirs="$schnitt" -R "index.html*" "$GERAETE_URL/Devices/" \
             || fehler "Geraeteverzeichnis nicht abrufbar"
@@ -207,7 +249,7 @@ geraetedateien() {
         touch "$GARMIN_HOME/Devices/.vollstaendig"
         cd - >/dev/null
     elif [ -n "${fehlende// /}" ]; then
-        melde "Geraetedateien holen ($(printf '%s\n' $fehlende | grep -c .) fehlend)"
+        melde "Geraetedateien holen ($(printf '%s\n' $fehlende | grep -c .) fehlend, einzeln)"
         mkdir -p "$GARMIN_HOME/Devices" && cd "$GARMIN_HOME/Devices"
         for g in $fehlende; do
             wget -q -r -np -nH --cut-dirs="$schnitt" -R "index.html*" "$GERAETE_URL/Devices/$g/" \
@@ -222,11 +264,63 @@ geraetedateien() {
         # Bestand geholt statt geraten. Ein fehlender Zeichensatz aeussert sich
         # als "Invalid Font Specified" und beendet die App beim ersten
         # Zeichnen.
-        melde "Schriften holen (rund 1,2 GB, dauert)"
+        melde "Schriften holen (rund 1,2 GB, einzeln, dauert)"
         mkdir -p "$GARMIN_HOME/Fonts" && cd "$GARMIN_HOME/Fonts"
         wget -q -r -np -nH --cut-dirs="$schnitt" -R "index.html*" "$GERAETE_URL/Fonts/" \
             || fehler "Schriften nicht abrufbar"
         cd - >/dev/null
+    fi
+}
+
+# Holt "$GERAETE_URL/<name>" und entpackt es nach $GARMIN_HOME/<ordner>.
+#   0 = geholt und entpackt
+#   1 = nicht da (jede Antwort ausser 200) -> der Aufrufer faellt zurueck
+#   rot = da, aber nicht zu entpacken
+# Die Datei landet erst in $BASIS und wird GANZ geholt, bevor tar sie
+# anfasst: `curl | tar` liesse bei einem abgerissenen Abruf einen halben
+# Baum stehen, und der Rueckfall fuellte ihn dann ohne Marke auf.
+#
+# ZWEI PACKWEISEN WERDEN ANGENOMMEN, weil beide naheliegen: mit dem Ordner
+# (`tar cf devices.tar Devices`, so liegt es auf dem Server) und ohne
+# (`tar cf devices.tar -C Devices .`). Der erste Eintrag entscheidet; traegt
+# er den Ordnernamen, faellt diese eine Ebene weg. Was danach nicht an der
+# erwarteten Stelle liegt, faengt die Pruefung im Aufrufer — rot, nicht
+# still eine Ebene zu tief (dieselbe Falle wie bei --cut-dirs oben).
+# `tar -x` erkennt eine Kompression selbst; ein gzip-Archiv unter dem Namen
+# ginge also auch.
+archiv_holen() {
+    local name="$1" ordner="$2" code erster
+    local ziel="$GARMIN_HOME/$ordner"
+    local datei="$BASIS/$name"
+    mkdir -p "$BASIS" "$ziel"
+    melde "$name holen"
+    code=$(curl -sS -L --max-time 1800 -o "$datei" -w '%{http_code}' \
+                "$GERAETE_URL/$name" 2>/dev/null) || code="${code:-000}"
+    if [ "$code" != "200" ]; then
+        rm -f "$datei"
+        melde "$name nicht abrufbar (HTTP $code)"
+        return 1
+    fi
+    printf '   %s MB\n' "$(( $(stat -c%s "$datei") / 1048576 ))"
+    erster=$(tar -tf "$datei" 2>/dev/null | head -1 || true)
+    local ebene=0
+    case "$erster" in "$ordner"/*) ebene=1 ;; "./$ordner"/*) ebene=2 ;; esac
+    tar -xf "$datei" -C "$ziel" --strip-components="$ebene" \
+        || { rm -f "$datei"; fehler "$name ist abrufbar, laesst sich aber nicht entpacken"; }
+    rm -f "$datei"
+}
+
+# Kein stilles Zurueckfallen (CLAUDE.md 6, E-P5a-13): Der langsame Weg ist
+# gruen, aber er ist nicht der vorgesehene, und wer nur auf die Farbe sieht,
+# merkt sonst nie, dass die Archive fehlen.
+rueckfall_melden() {
+    local text="$1 fehlt unter CIQ_GERAETE_URL — Rueckfall auf Einzeldateien (langsam). Packen: tools/uhr-pruefstand/LIESMICH.md, Abschnitt „Was es braucht“."
+    if [ -n "${GITHUB_ACTIONS:-}" ]; then
+        echo "::warning::$text"
+        [ -n "${GITHUB_STEP_SUMMARY:-}" ] \
+            && echo "**Uhr-Pruefstand:** \`$1\` fehlt — Rueckfall auf Einzeldateien." >> "$GITHUB_STEP_SUMMARY"
+    else
+        printf '\033[33mWARNUNG:\033[0m %s\n' "$text" >&2
     fi
 }
 
@@ -615,7 +709,9 @@ Befehle:
 
 Umgebungsvariablen:
   CIQ_SDK_VERSION   SDK-Fassung (Vorgabe 9.2.0)
-  CIQ_GERAETE_URL   Quelle fuer Devices/ und Fonts/ — ohne sie kein Aufbau
+  CIQ_GERAETE_URL   Quelle fuer Devices/ und Fonts/ — ohne sie kein Aufbau;
+                    zuerst devices.tar und fonts.tar, fehlen sie,
+                    einzeln (langsam, mit Warnung)
   CIQ_ZIELE         Zielgeraete (Vorgabe: fenix6pro fr945 venu3s);
                     "alle" holt beim Aufbau den ganzen Geraetebestand —
                     noetig fuer reihe und geraeteklassen.py

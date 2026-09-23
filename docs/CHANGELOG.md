@@ -14,6 +14,109 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.37.2] — 2026-09-23
+
+**Eine Nummer, damit das neue Tor einmal echt gefragt wird.** Unter
+`server/` ändert sich nichts außer `version.php`; ausgeliefert wird dieselbe
+Anwendung wie 20.37.1, mit neuer Nummer in der Fußzeile.
+
+### Geändert
+
+- **Die Stufe ist ein Prüfmittel, keine Funktion.** Das Produktionstor
+  vergleicht seit Konzept TB Baum statt Commit (Eintrag darunter). Belegen
+  lässt sich das nur an einem echten Tag: Die Tag-Prüfung davor verlangt
+  genau `web-v<WEB_VERSION>`, und `web-v20.37.1` lag schon auf Produktiv.
+  Zwei Tags ohne passende Fassung — `web-v20.37.1-test` und `web-v20.37.2`
+  auf `eefffca` — sind genau dort abgewiesen worden, einen Schritt vor dem
+  Tor. Das war richtig, sagte aber nichts über das Tor.
+
+### Bewusst so
+
+- **Keine Funktion mitgenommen.** Eine Auslieferung, deren Zweck das Messen
+  der Kette ist, sollte nicht zugleich etwas an der Anwendung ändern — sonst
+  weiß man bei einem Fehler nicht, welches von beiden ihn verursacht hat.
+
+## [Werkzeug: Das Produktionstor vergleicht Baum statt Commit] — 2026-09-23
+
+Konzept TB, Backlog Nr. 285.
+
+### Behoben
+
+- **Ein Tag wartete auf eine Messung, die es schon gab.** Der Tag
+  `web-v20.37.1` auf dem Merge-Commit `10a942c` scheiterte am Produktionstor
+  (Lauf 35834341392: „Kein grüner Stufe-1-Lauf auf diesem Commit"), obwohl
+  Stufe 1 auf dem Zweig-Commit `f356a44` grün war — und beide Commits haben
+  **denselben Baum** (`447793e…`). Das Tor fragte nach der SHA; ein PR-Lauf
+  trägt die des Zweigs, nie die des Merge-Commits. Also wartete es auf den
+  Push-Lauf auf `main`, der 42 bis 56 Minuten lang Byte für Byte maß, was
+  schon gemessen war.
+- **Jetzt zählt der Baum, und der Job.** `tools/kette/freigabe.py` erkennt
+  einen grünen `pruefung.yml`-Lauf an, wenn sein Commit denselben Baum hat
+  wie der Tag-Commit **und** der Job `Stufe 1` darin selbst grün war; der
+  Schritt im Auslieferungslauf holt dazu die jüngsten 50 Läufe, ihre Bäume
+  und bei Treffern die Jobs. Die Selbstprobe wächst von 32 auf **52** Lagen.
+  Ein PR-Lauf zählt, weil er `server/` so vollständig misst wie ein Push-Lauf
+  (E-TB-02); ein Lauf mit übersprungenem `Stufe 1` zählt nicht, weil ein Lauf
+  auch dann „success" ist (E-TB-05).
+
+### Geändert
+
+- **Der Push-Lauf auf `main` verweist, statt zu messen.** Ein neuer Job
+  `Schon gemessen?` vor `Stufe 1` sucht beim Push auf `main` den grünen
+  PR-Lauf mit demselben Baum. Findet er ihn, laufen `Stufe 1` und
+  `Schema gegen …` nicht, und die Zusammenfassung nennt Lauf, Commit und
+  Zeitpunkt der Messung. Findet er ihn nicht — oder scheitert er selbst —,
+  wird gemessen: Die Jobs danach laufen, wenn nicht **ausdrücklich** „nein"
+  dasteht.
+- **Beweisbar ist der gleiche Baum durch das Ruleset.** „Require branches to
+  be up to date before merging" ist seit dem 23.09.2026 in „Main Protect"
+  gesetzt: Ein PR muss den Kopf von `main` enthalten, und dann hat der
+  Merge-Commit den Baum des Geprüften.
+
+### Bewusst so
+
+- **Der Preis sind zwei Dinge.** Nach einem fremden Merge muss jeder offene
+  PR `main` nachziehen und Stufe 1 neu bestehen — genau dann, wenn eine
+  zweite Messung etwas Neues misst. Und das Tor sieht nur die letzten 50
+  Läufe; liegt der grüne weiter zurück, hilft ein Handlauf von
+  `pruefung.yml` auf dem Stand.
+- **Das Tor akzeptiert nie weniger als vorher — nur früher.** Ein Irrtum im
+  Verweis auf `main` kann es nicht öffnen: Es holt seine Tatsachen selbst und
+  zählt einen Verweis nicht als Messung.
+
+## [Werkzeug: Gerätedateien und Schriften des Uhr-Prüfstands als Archiv] — 2026-09-23
+
+### Geändert
+
+- **Aus rund 31 Minuten wird eine.** Der Uhr-Schritt in Stufe 1 brauchte in
+  Lauf #253 38 von 46 Minuten, und davon gingen 23 min 14 s an die
+  Gerätedateien und 7 min 32 s an die Schriften — die kleineren
+  Gerätedateien dreimal so lange wie die großen Schriften. Die Zeit lag
+  nicht an der Datenmenge, sondern an der Zahl der Anfragen: `wget -r` holt
+  jede Datei einzeln, nacheinander, samt jeder Verzeichnisauflistung.
+  `pruefstand.sh` holt jetzt zuerst `devices.tar` und `fonts.tar` unter
+  `CIQ_GERAETE_URL`, je eine Anfrage: **47 s** gegen den echten Server, mit
+  demselben Bestand (173 Geräte, 1 332 Schriftdateien, 99 von 99
+  Manifest-Geräten).
+- **Das Archiv trägt immer den ganzen Bestand.** `geraeteklassen.py` wendet
+  die Auswahlregeln auf alles an, was daliegt — nur so fällt auf, dass ein
+  neues Garmin-Gerät ins Manifest gehört.
+
+### Bewusst so
+
+- **Fehlt ein Archiv, geht es auf dem alten Weg weiter**, mit Warnung im
+  Lauf und einer Zeile in der Zusammenfassung. Ist es da und lässt sich
+  nicht entpacken oder liegt es eine Ebene zu tief, ist der Lauf rot: Ein
+  Rückfall würde eine kaputte Bereitstellung verdecken.
+- **Wer am Arbeitsplatz Geräte nachlädt, packt beide Archive neu.** Sonst
+  holt die Kette den alten Stand, ohne Warnung — das Archiv ist ja da.
+- **Paralleles Übersetzen ist versucht und verworfen.** Im gemeinsamen
+  Ausgabeordner schlugen 10 von 99 Geräten fehl („Undefined symbol"),
+  weil `monkeyc` Zwischenstände unter `bin/gen/<teilenummer>/` teilt; mit
+  eigenem Ordner je Aufruf liefen alle durch und byte-gleich, aber in 6:43
+  statt 7:50 Minuten — `monkeyc` nutzt allein schon rund drei Kerne. Eine
+  Minute rechtfertigt den Umbau nicht.
+
 ## [Web 20.37.1] — 2026-09-23
 
 **Die Hausform, einmal durch.** PK-04 Teilstück 5 (E-PK-26); die einzige

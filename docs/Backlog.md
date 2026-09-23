@@ -3680,21 +3680,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Kopfabsatz, Changelog-Zeile und ein Emulatorlauf, der die
     Rechtstexte-Seite zeigt. Abnahme als **P-PK-28**.
 
-285. **Das Produktionstor zählt Stufe-1-Läufe nach SHA und wartet deshalb
-    auf eine Messung, die es schon gibt.**
-    *Aufgenommen 23.09.2026; Konzept `docs/konzepte/Konzept-TB-Tor-nach-Baum.md`.*
-    Der Tag `web-v20.37.1` auf dem Merge-Commit `10a942c` ist am Tor
-    gescheitert (Lauf 35834341392: „Kein grüner Stufe-1-Lauf auf diesem
-    Commit"), obwohl Stufe 1 auf dem Zweig-Commit `f356a44` grün war und
-    **beide Commits denselben Baum haben** (`447793e4…`). Das Tor fragt
-    `…/runs?head_sha=…`, ein PR-Lauf trägt aber die SHA des Zweigs, nie die
-    des Merge-Commits; der Push-Lauf auf `main` misst dann 42 bis 56 Minuten
-    lang noch einmal, was gemessen ist. Weg: Baum statt SHA im Tor
-    (`freigabe.py`), der Push-Lauf auf `main` verweist bei gleichem Baum
-    statt zu messen, und „Require branches to be up to date" im Ruleset
-    (gesetzt 23.09.2026) macht den Vergleich beweisbar. Entscheidungen
-    E-TB-01 bis -09.
-
 286. **Ein Admin erreicht Komplett-Backup und Backup-Ziele — samt
     Klartext-Dump der ganzen Datenbank.**
     *Aufgenommen 23.09.2026 im Abgleich des Konzepts P5c (F-P5c-15), von Hand
@@ -9855,3 +9840,28 @@ zutreffen.
     warum PK-04/1b die Zählung vom **Befund** zum **Hinweis** gemacht hat.
     Der Beleg dafür stand bis dahin aus.
 
+285. **Das Produktionstor zählt Stufe-1-Läufe nach SHA und wartet deshalb
+    auf eine Messung, die es schon gibt.**
+    *Aufgenommen 23.09.2026; Konzept TB (mit dem Abschluss gelöscht, Historie `a72c7df`).*
+    Der Tag `web-v20.37.1` auf dem Merge-Commit `10a942c` ist am Tor
+    gescheitert (Lauf 35834341392: „Kein grüner Stufe-1-Lauf auf diesem
+    Commit"), obwohl Stufe 1 auf dem Zweig-Commit `f356a44` grün war und
+    **beide Commits denselben Baum haben** (`447793e4…`). Das Tor fragt
+    `…/runs?head_sha=…`, ein PR-Lauf trägt aber die SHA des Zweigs, nie die
+    des Merge-Commits; der Push-Lauf auf `main` misst dann 42 bis 56 Minuten
+    lang noch einmal, was gemessen ist. Weg: Baum statt SHA im Tor
+    (`freigabe.py`), der Push-Lauf auf `main` verweist bei gleichem Baum
+    statt zu messen, und „Require branches to be up to date" im Ruleset
+    (gesetzt 23.09.2026) macht den Vergleich beweisbar. Entscheidungen
+    E-TB-01 bis -09.
+
+    **Erledigt 23.09.2026 mit Konzept TB (TB-01 bis TB-04).** Das Tor
+    (`freigabe.py`) zählt einen Lauf, dessen Commit denselben Baum hat wie der
+    Tag-Commit und in dem der Job `Stufe 1` grün war — Selbstprobe 52/0,
+    vorher 32/0. Der Push-Lauf auf `main` verweist mit dem Job
+    `Schon gemessen?` auf den PR-Lauf gleichen Baums, statt noch einmal zu
+    messen. **Offen, weil nur die echte Anlage es zeigt:** P-TB-05 (der erste
+    Verweis auf `main` nach dem Merge) und P-TB-06 (der erste Tag ohne
+    Warten) — `docs/konzepte/Pruefdokument-TB-Tor-nach-Baum.md`.
+    **P-TB-05 belegt am 23.09.2026** (Lauf 35844072753, 18 s statt rund
+    41 min); P-TB-06 bleibt offen bis zum nächsten echten Tag.

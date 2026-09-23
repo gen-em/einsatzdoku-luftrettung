@@ -7245,5 +7245,19 @@ declare(strict_types=1);
  *   zu stehen; sie steht jetzt dort — mit der Lizenzspalte ausdruecklich
  *   als UNGEPRUEFT, weil der Abruf aus der Arbeitsumgebung mit HTTP 403
  *   scheitert und eine Vermutung dort nichts zu suchen hat.
+ *
+ * 20.37.2 — DIE ERSTE AUSLIEFERUNG DURCH DAS TOR NACH BAUM (Konzept TB,
+ *   Pruefpunkt P-TB-06). Unter `server/` aendert sich NICHTS ausser dieser
+ *   Datei. Die Stufe gibt es, weil sich das neue Produktionstor nur an
+ *   einem echten Tag belegen laesst: Die Tag-Pruefung davor verlangt genau
+ *   `web-v<WEB_VERSION>`, und `web-v20.37.1` lag schon auf Produktiv. Zwei
+ *   Tags ohne passende Fassung (`web-v20.37.1-test`, `web-v20.37.2` auf
+ *   `eefffca`) sind am 23.09.2026 genau dort abgewiesen worden, einen
+ *   Schritt vor dem Tor — richtig so, aber ohne Aussage ueber das Tor.
+ *
+ *   WAS DIESER TAG ZEIGEN SOLL: Schritt 7 des Produktionslaufs nennt den
+ *   gruenen PR-Lauf mit demselben Baum und geht auf, ohne auf den Push-Lauf
+ *   auf `main` zu warten — der verweist seit TB ohnehin nur noch. Ausgeliefert
+ *   wird dieselbe Anwendung wie 20.37.1, mit neuer Nummer in der Fusszeile.
  */
-const WEB_VERSION = '20.37.1';
+const WEB_VERSION = '20.37.2';

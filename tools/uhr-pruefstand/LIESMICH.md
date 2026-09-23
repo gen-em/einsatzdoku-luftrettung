@@ -29,6 +29,16 @@ startet den Simulator für die Vertreter je Geräteklasse und nimmt Bilder auf
 `CIQ_GERAETE_URL` für die Gerätedateien; das SDK holt es selbst. Stufe II
 zusätzlich eine Grafikumgebung (`Xvfb`).
 
+**Unter der Adresse liegen zwei Archive** — `devices.tar` und `fonts.tar`,
+gepackt im Ordner `~/.Garmin/ConnectIQ` mit `tar cf devices.tar Devices` und
+`tar cf fonts.tar Fonts`, **immer der ganze Bestand** (sonst sieht
+`geraeteklassen.py` kein neues Gerät). Je eine Anfrage: 47 s statt rund
+31 min über Einzeldateien (Lauf #253). Fehlt ein Archiv, holt das Skript die
+Einzeldateien per `wget -r` — langsam, mit Warnung, dafür braucht die Quelle
+eine Verzeichnisauflistung. Lässt sich ein Archiv nicht entpacken oder liegt
+es eine Ebene zu tief, ist der Lauf rot. **Wer Geräte nachlädt, packt beide
+Archive neu** — sonst holt die Kette ohne Warnung den alten Stand.
+
 ## Erwartete Zahl
 
 Aufbau: **SDK 9.2.0, 1332 Schriftdateien, 99 von 99 Manifest-Geräten, 0
