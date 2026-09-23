@@ -7280,7 +7280,7 @@ declare(strict_types=1);
  *   20.23.0 steht in `login.php` neben der Karte ein zweites Kind: die vier
  *   Verweise „Was ist NAdoku?", Handbuch, Impressum, Datenschutz. Sie
  *   standen rechts neben der Karte und drueckten sie bei 390 px auf rund
- *   200 px. Jetzt Spaltenrichtung; die sieben Seiten mit nur der Karte
- *   sehen aus wie vorher.
+ *   200 px. Jetzt Spaltenrichtung; die fuenf uebrigen Seiten der Huelle
+ *   tragen nur die Karte und sehen aus wie vorher.
  */
 const WEB_VERSION = '20.37.3';

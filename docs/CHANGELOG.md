@@ -42,9 +42,10 @@ keine Migration — `update.php` ist nicht fällig.
   im Stylesheet. `.anmeldung` ordnete ihre Kinder aber nebeneinander an, und
   seit Web 20.23.0 hat sie auf der Anmeldeseite zwei. Am Rechner standen die
   Verweise rechts der Karte, bei 390 px drückten sie die Karte auf rund
-  200 px zusammen. `.anmeldung` stapelt jetzt untereinander; die sieben
+  200 px zusammen. `.anmeldung` stapelt jetzt untereinander. Die fünf
   übrigen Seiten der Anmeldehülle tragen nur die Karte und sehen aus wie
-  vorher.
+  vorher — gemessen: 10 von 10 Karten (fünf Seiten, 390 und 1440 px) auf den
+  Pixel gleich mit dem Stylesheet von 20.37.2.
 
 ### Für die BetreiberIn
 
