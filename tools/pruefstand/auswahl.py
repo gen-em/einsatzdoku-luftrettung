@@ -124,16 +124,28 @@ def stufe_aus_version(basis, commit=None):
 
 
 def beruehrte(basis):
+    """Was diese Arbeit gegenüber `basis` ändert: der Zweig seit dem gemeinsamen
+    Vorfahren, dazu der Arbeitsbestand — aber nur Dateien, die im
+    Arbeitsbestand WIRKLICH anders sind als in `basis`, und neue Dateien.
+
+    WARUM DER ABGLEICH MIT `basis`: Mitten in einem Merge von `origin/main`
+    (Pruefablauf.md 5.3) zeigt `git status` jede Datei, die `main` mitbringt,
+    als geändert gegenüber HEAD. Berührt hat sie diese Arbeit nicht; im Tor
+    zählt der Unterschied gegen `main` (F-PK-39)."""
     roh = git('diff', '--name-only', f'{basis}...HEAD') + git('status', '--porcelain')
-    aus = set()
+    neu, aus = set(), set()
     for z in roh.splitlines():
         z = z.strip()
         if not z:
             continue
-        if z[:2].strip() in ('M', 'A', 'D', 'R', '??', 'MM', 'AM'):
+        if z.startswith('??'):
+            neu.add(z[2:].strip())
+            continue
+        if z[:2].strip() in ('M', 'A', 'D', 'R', 'MM', 'AM'):
             z = z.split(None, 1)[-1]
         aus.add(z.split(' -> ')[-1])
-    return sorted(p for p in aus if p)
+    anders = set(git('diff', '--name-only', basis).splitlines())
+    return sorted(p for p in (aus & anders) | neu if p)
 
 
 def abdeckung(a):
