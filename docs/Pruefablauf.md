@@ -133,7 +133,8 @@ Riegel davor und keinen Hook.
 
 **Der Riegel ist der Zweigschutz, und er gilt seit dem 21.09.2026.** Zwei
 Rulesets auf `main`: „Main Protect" (Pull-Request-Pflicht, Pflichtprüfung
-`Stufe 1`, kein Force-Push, kein Löschen, Bypass leer) und „Main
+`Stufe 1` mit **„Require branches to be up to date before merging"** — gesetzt
+am 23.09.2026, Konzept TB —, kein Force-Push, kein Löschen, Bypass leer) und „Main
 Merge-Recht" (Restrict updates, Bypass nur die BetreiberIn, Modus „pull
 requests only"). Die Maske und die drei Fallen dabei stehen in
 `Rahmenplan.md` 6b.
@@ -180,10 +181,14 @@ steht.
 
 **Heutiger Umfang** (gemessen am 21.09.2026 an `main` `08e032e`): Der
 Arbeitslauf `pruefung.yml` heißt „Prüfung" und führt zwei Jobs — `Stufe 1`
-mit **24** Schritten und `Schema gegen …` mit **4**, zusammen **28**. Er
-läuft heute noch bei **jedem** Push auf **jedem** Zweig; **PK-05** nimmt ihm
-das ab, dazu den Bau der Apps und die Bereichserkennung, und setzt die
-Gegenlesung des Berichts an ihre Stelle. Der Jobname `Stufe 1` bleibt dabei
+mit **24** Schritten und `Schema gegen …` mit **4**, zusammen **28**. Seit
+dem 23.09.2026 steht ein dritter davor, **`Schon gemessen?`** (Konzept TB):
+Auf einem PR sagt er „messen"; beim Push auf `main` sucht er den grünen
+PR-Lauf mit demselben Baum und lässt `Stufe 1` und `Schema gegen …` dann
+aus, mit einem Verweis auf Lauf, Commit und Zeitpunkt in der
+Zusammenfassung. Das Produktionstor zählt Stufe 1 seither nach Baum und Job,
+nicht nach Commit. **PK-05** nimmt dem Lauf den Bau der Apps und die
+Bereichserkennung ab und setzt die Gegenlesung des Berichts an ihre Stelle. Der Jobname `Stufe 1` bleibt dabei
 unverändert — der Zweigschutz nennt ihn beim Namen, und ein umbenannter Job
 hängt die Pflichtprüfung still ab.
 

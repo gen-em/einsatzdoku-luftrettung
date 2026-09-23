@@ -33,9 +33,9 @@ die Werkzeug-Einträge vom 22.09.2026.
 >
 > | | |
 > |---|---|
-> | Stand | **23.09.2026 — TB-01 bis TB-03 erledigt, TB-04 in Arbeit.** Zweig `claude/serene-goldberg-wnn60k` (trägt daneben die Archive des Uhr-Prüfstands — eigenes Thema, nicht TB). TB-M1 ist erledigt (die Betreiberin hat „Require branches to be up to date before merging" am 23.09.2026 gesetzt; vorher war es nicht gesetzt, Q-TB-03). |
+> | Stand | **23.09.2026 — TB-01 bis TB-04 erledigt, TB-05 in Arbeit.** Zweig `claude/serene-goldberg-wnn60k` (trägt daneben die Archive des Uhr-Prüfstands — eigenes Thema, nicht TB). TB-M1 ist erledigt (die Betreiberin hat „Require branches to be up to date before merging" am 23.09.2026 gesetzt; vorher war es nicht gesetzt, Q-TB-03). |
 > | Entschieden | E-TB-01 bis E-TB-09 (Abschnitt 3), Q-TB-01 bis -04 beantwortet. |
-> | Nächstes | **TB-04** — Dokumente und Kommentare. |
+> | Nächstes | **TB-05** — Abschluss: PR öffnen, P-TB-03 an der Lauf-Nummer belegen. |
 > | Hakt | nichts. `kettenaufrufe` ist seit TB-02 wieder bei 0 Befunden (F-TB-08). **Zur Kenntnis:** Der gescheiterte Lauf 35834341392 (Tag `web-v20.37.1`) lässt sich **schon vor** dieser Umsetzung wiederholen, sobald der Push-Lauf 35834129884 auf `main` grün ist — er ist mit dem alten Tor zufrieden, weil dann ein Lauf mit derselben SHA existiert. TB verhindert das **nächste** Warten, nicht dieses. |
 >
 > **Stand der Umsetzung**
@@ -46,7 +46,7 @@ die Werkzeug-Einträge vom 22.09.2026.
 > | TB-01 `freigabe.py` lernt den Baum | **erledigt 23.09.2026** | siehe Zweig | Selbstprobe 52/0 (vorher 32/0); drei eingebaute Fehler: 3, 2, 1 offen |
 > | TB-02 Das Tor holt Bäume | **erledigt 23.09.2026** | siehe Zweig | `kettenaufrufe` 88 Aufrufe, 0 Befunde; `--stufe1 ` 0-mal; Schritt 7 gegen eine `gh`-Attrappe in vier Lagen: 0, 1, 1, 1 wie erwartet |
 > | TB-03 Der Push-Lauf auf `main` sagt, wo schon gemessen ist | **erledigt 23.09.2026** (im PR zu belegen: P-TB-03; nach dem Merge: P-TB-05) | siehe Zweig | Verweis-Job gegen eine `gh`-Attrappe in 7 Lagen richtig; `uses:` mit SHA 12 von 12 (vorher 11); `kettenaufrufe` 88/0 |
-> | TB-04 Dokumente und Kommentare | offen | | |
+> | TB-04 Dokumente und Kommentare | **erledigt 23.09.2026** | siehe Zweig | Linkprobe 122/0; Textprobe 0 Treffer, 0 ungenutzt; `demselben Commit` 0 Treffer außerhalb der Geschichte |
 > | TB-05 Abschluss | offen | | |
 
 ---
@@ -408,4 +408,5 @@ Neue Befunde `F-TB-08 …`, neue Fragen `Q-TB-05 …`, neue Entscheidungen
 | F-TB-10 | TB-02 | **Der Probelauf der Kette ist nicht gefahren.** Er überspringt Schritt 7 (E-KH-08) und belegte nur die YAML-Syntax — die belegt `yaml.safe_load` ebenso, ohne einen Lauf auf der Anlage auszulösen. Stattdessen ist der **Bash-Text des Schritts** aus der YAML gezogen und gegen eine `gh`-Attrappe gefahren worden, unter `bash -eo pipefail` wie in der Kette. | Die Abrufe selbst (Felder `.tree.sha`, `.jobs[].name`) belegt erst P-TB-06. |
 | E-TB-11 | TB-03 | **Die Jobs danach laufen, wenn NICHT ausdrücklich `nein` dasteht** — `if: !cancelled() && needs.schon-gemessen.outputs.messen != 'nein'`, nicht `== 'ja'`. Scheitert der Verweis-Job selbst (Läufer weg, Syntaxfehler), ist seine Ausgabe leer; mit `== 'ja'` würde `Stufe 1` dann übersprungen und die Pflichtprüfung des Rulesets fehlte. So misst der Lauf, und der Fehler steht rot daneben (E-TB-04 in der Form des Jobs). | Abweichung vom Wortlaut in 2.4 (`== 'ja'`); dieselbe Absicht, eine Lücke weniger. |
 | E-TB-12 | TB-03 | **Der eigene Baum per Auscheckschritt, nicht aus dem Ereignis.** `github.event.head_commit.tree_id` stünde im Push-Ereignis ohne Auschecken bereit; genommen ist trotzdem `git rev-parse HEAD^{tree}` wie im Konzept (2.4) und wie am Tor — eine Quelle für dieselbe Tatsache an beiden Stellen. Der Auscheckschritt läuft nur beim Push auf `main` und flach. | Ein `actions/checkout` mehr: 12 statt 11 SHA-Zeilen (`CLAUDE.md` 3, TB-04). |
+| F-TB-11 | TB-04 | **Drei weitere Stellen trugen die alte Zahl oder den alten Satz**, die das Konzept nicht nannte: „elf" SHA-Zeilen in `Technik.md` 6 (neben `CLAUDE.md` 3), „32 Lagen" in `Technik.md` 6 und der Hotfix-Ablauf in `Technik.md` (Schritt 5: „grüner Stufe-1-Lauf" ohne Baum). Dazu stand in `Pruefablauf.md` 2.3 noch „läuft heute noch bei jedem Push auf jedem Zweig" — seit dem 21.09.2026 falsch. | Alle nachgezogen. |
 | E-TB-10 | TB-01 | **`stufe1_ok` zählt nur als echtes `true`.** Eine Zeichenkette „success" wäre ein Fehler im Arbeitslauf (der Schritt soll ein Boolean liefern), und ein Fehler im Arbeitslauf öffnet das Tor nicht (E-TB-04). | Selbstprobe-Lage. |
