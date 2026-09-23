@@ -910,7 +910,15 @@ jobs:
             image: mysql:8.4.0
             klient: mysql
             pass_env: MYSQL_ROOT_PASSWORD
-            gesund: mysqladmin ping -uroot -pschemaprobe
+            # UEBER TCP, NICHT UEBER DEN SOCKET (23.09.2026, PR #77, Lauf
+            # 35840034467). Das Abbild faehrt zum Einrichten erst einen
+            # TEMPORAEREN Server hoch — nur Socket, „port: 0" im Protokoll —,
+            # beendet ihn und startet dann den echten. `mysqladmin ping` ohne
+            # Host fragt den Socket und meldete den temporaeren als gesund
+            # (08:57:20); die Probe verband sich 08:57:24,45 mit „MySQL server
+            # has gone away", der echte Server stand erst 08:57:24,58. Ueber
+            # TCP antwortet nur der echte.
+            gesund: mysqladmin ping -h 127.0.0.1 --protocol=tcp -uroot -pschemaprobe
           - name: MariaDB 10.6
             image: mariadb:10.6
             klient: mariadb
