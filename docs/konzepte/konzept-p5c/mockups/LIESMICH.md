@@ -1,8 +1,8 @@
 # Mockups zum Konzept P5c — Runden M-P5c-01 und M-P5c-02
 
 > **Runde M-P5c-02** (Banner, Zweitfaktor, Support-Sicht, Bus-Faktor,
-> Umgebungszeile auf den Blättern) steht in **Abschnitt 8** — gebaut am
-> 23.09.2026, **zur Freigabe**. Die Abschnitte 1 bis 7 gehören zu M-P5c-01.
+> Umgebungszeile auf den Blättern) steht in **Abschnitt 8** — gebaut und
+> **freigegeben am 23.09.2026**. Die Abschnitte 1 bis 7 gehören zu M-P5c-01.
 
 Sechs Mockups, eine Runde (Konzept P5c, Abschnitt 6; Konzept freigegeben
 20.09.2026). Gebaut gegen `origin/main` `862ca7f` (Web 20.25.0). **Kein
@@ -226,7 +226,11 @@ Auftrag im Konzept, 6.2.
 Gebaut am 23.09.2026 gegen `origin/main` `8ae873c` (Web 20.37.1), Auftrag im
 Konzept 6.2 (E-P5c-34): **Opus, aus dem HTML-Stand heraus, nicht frei
 gezeichnet.** **Kein Anwendungscode** — nichts unter `server/` ist angefasst.
-**Stand: zur Freigabe.** Offen sind die fünf Fragen in 8.2.
+**Stand: freigegeben am 23.09.2026**, mit zwei Änderungen aus der
+Durchsicht (8.2): Im Codeblatt steht das Kästchen vorn, und die Zeile
+„Umgebung" in (d) nennt die Umgebung in beiden Richtungen. Die fünf Fragen
+sind beantwortet; die Entscheidungen stehen im Konzept, 2.8 (E-P5c-59 bis
+-66).
 
 **„Aus dem HTML-Stand"** heißt hier: Jede Seite ist aus der örtlichen
 Installation (Station B, `hochfahren.sh`) mit Playwright **abgegriffen** —
@@ -245,37 +249,47 @@ M-P5c-01f aus.
 | `M-P5c-02a-banner-handy.html` / `.png` | Tagesübersicht und Anmeldeseite bei 376 px |
 | `M-P5c-02b-zweitfaktor.html` / `.png` | E-P5c-15, -41 bis -43, -53, -54. **1** Einstellungen → Profil (Rolle user), Karte „Zweitfaktor" nach „Wiederherstellungsschlüssel" · **2** die Karte in vier Zuständen: einrichten (QR, Knopf zur App, Geheimnis zum Abtippen, Code bestätigen) → zehn Codes einmal sichtbar → eingeschaltet → Pflichtrolle ohne „Ausschalten" · **3** Anmeldung: Code-Schritt, falscher Code, Wiederherstellungscode · **4** das Einrichtungstor für Pflichtrollen, Schritt 1 und 2 |
 | `M-P5c-02b-zweitfaktor-handy.html` / `.png` | Code-Schritt, Karte und Tor bei 376 px |
-| `M-P5c-02b-codeblatt.html` / `.png` / `.pdf` | das Codeblatt auf dem Druckblatt aus M-P5c-01f: zehn Codes, nummeriert, mit Kästchen zum Abhaken. Die HTML-Datei *ist* die Druckseite |
+| `M-P5c-02b-codeblatt.html` / `.png` / `.pdf` | das Codeblatt auf dem Druckblatt aus M-P5c-01f: zehn Codes, nummeriert, das Kästchen zum Abhaken **vor** der Nummer (nach der Durchsicht; am Zeilenende schien das Kästchen der linken Spalte zur Nummer der rechten zu gehören). Die HTML-Datei *ist* die Druckseite |
 | `M-P5c-02c-support.html` / `.png` | E-P5c-14, -40, -42. **1** NutzerInnen als Support (nur Rolle user, kein Anlegen, keine Sammelaktionen) · **2** Kontoseite als Support (Felder gesperrt, einspaltig, Leiste ohne Betrieb) · **3** Setz-Link, wenn die Mail nicht sofort hinausgeht — der Link wird nie gezeigt · **4** unbestätigte Registrierung: Bestätigungsmail erneut senden · **5** Kontoseite als BetreiberIn mit der Karte „Zweitfaktor" und der Rückfrage „Zurücksetzen" |
-| `M-P5c-02d-busfaktor.html` / `.png` | E-P5c-16, -44, -56 und E-P5c-05, -55. **1** Betrieb → Status als einzige BetreiberIn, Präfix gesetzt und Etikett nicht — beide neuen Zeilen orange, Zähler nachgezogen, „Was hier gilt" schon entfernt · **2** die Zeile „Verwaltungskonten" in allen vier Fällen · **3** die Zeile „Umgebung" in allen vier Fällen |
+| `M-P5c-02d-busfaktor.html` / `.png` | E-P5c-16, -44, -56 und E-P5c-05, -55. **1** Betrieb → Status als einzige BetreiberIn, Präfix gesetzt und Etikett nicht — beide neuen Zeilen orange, Zähler nachgezogen, „Was hier gilt" schon entfernt · **2** die Zeile „Verwaltungskonten" in allen vier Fällen · **3** die Zeile „Umgebung" in allen vier Fällen — Plakette „Staging" bzw. „Produktiv", je ein Satz, wofür die Umgebung da ist (nach der Durchsicht) |
 | `M-P5c-02e-schluesselblatt-staging.html` / `.png` / `.pdf` | E-P5c-50: das Schlüsselblatt aus M-P5c-01f auf Staging — Umgebungszeile unter dem Kopf, Adresse der Staging-Anlage |
 | `M-P5c-02e-notfallblatt-staging.html` / `.png` / `.pdf` | dasselbe für das Notfallblatt; dazu der Pfad „Einstellungen → Profil" berichtigt (F-P5c-61) |
 
-### 8.2 Zur Entscheidung
+### 8.2 Entscheidungen der Runde
 
-Die Bilder zeigen jeweils den Vorschlag; die Alternative steht in den
-Anmerkungen der Datei.
+Entschieden am 23.09.2026, **in allen fünf Fragen wie im Bild**. Bei
+Q-P5c-30 wich das Bild von der Empfehlung ab; die Antwort ist deshalb
+ausdrücklich nachgefragt worden.
 
-| Nr. | Frage | Vorschlag im Bild |
+| Nr. | Frage | Vorschlag im Bild → **Entscheidung** |
 |---|---|---|
-| **Q-P5c-26** | (a) Der aktive Kopfpunkt auf der roten Kopfleiste: **A** Strich in `--orange-hell` (4,12 : 1) oder **B** in Weiß (`--auf-dunkel`, 4,78 : 1)? Das heutige Orange hätte 2,10 : 1 | beide im Bild, **A** empfohlen — bleibt beim Orange der Anwendung („hier stehst du") |
-| **Q-P5c-27** | (a) Steht die Ankündigung auch auf der Anmeldeseite oder erst nach dem Anmelden? | auf der Anmeldeseite — eine Wartung betrifft auch den, der sich gerade anmelden will |
-| **Q-P5c-28** | (b) Ist das Einrichtungstor für Pflichtrollen eine eigene Seite in der Anmeldehülle, und heißt sie `zweitfaktor.php`? | ja und ja — keine andere Seite ist erreichbar, bevor der Zweitfaktor steht, also gehört das Tor nicht ins Gerüst |
-| **Q-P5c-29** | (c) Heißt der Eintrag im Aktionsblatt künftig für alle Rollen „Setz-Link senden" statt „Passwort zurücksetzen"? | ja — es wird kein Passwort gesetzt, sondern ein Link verschickt |
-| **Q-P5c-30** | (d) Der Menüzähler „Status" zählt Orange mit (F-P5c-59). Bleibt der Bus-Faktor orange, steht der Zähler auf einer Anlage mit einer BetreiberIn **dauerhaft** auf mindestens 1 | im Bild orange wie entschieden (E-P5c-44). **Empfohlen:** Fall 1 und 2 (es gibt keine zweite BetreiberIn) **neutral** „keine Vertretung", wie „Komplett-Backup: kein Plan" — nicht eingerichtet, keine Störung, zählt nicht; Fall 3 (es gibt eine zweite, aber sie ist nicht handlungsfähig) **orange** — dort ist etwas eingerichtet, das nicht trägt |
+| **Q-P5c-26** | (a) Der aktive Kopfpunkt auf der roten Kopfleiste: **A** Strich in `--orange-hell` (4,12 : 1) oder **B** in Weiß (`--auf-dunkel`, 4,78 : 1)? Das heutige Orange hätte 2,10 : 1 | beide im Bild, A empfohlen — bleibt beim Orange der Anwendung („hier stehst du") → **A** (E-P5c-59) |
+| **Q-P5c-27** | (a) Steht die Ankündigung auch auf der Anmeldeseite oder erst nach dem Anmelden? | auf der Anmeldeseite — eine Wartung betrifft auch den, der sich gerade anmelden will → **ja** (E-P5c-60) |
+| **Q-P5c-28** | (b) Ist das Einrichtungstor für Pflichtrollen eine eigene Seite in der Anmeldehülle, und heißt sie `zweitfaktor.php`? | ja und ja — keine andere Seite ist erreichbar, bevor der Zweitfaktor steht, also gehört das Tor nicht ins Gerüst → **ja, `zweitfaktor.php`** (E-P5c-61) |
+| **Q-P5c-29** | (c) Heißt der Eintrag im Aktionsblatt künftig für alle Rollen „Setz-Link senden" statt „Passwort zurücksetzen"? | ja — es wird kein Passwort gesetzt, sondern ein Link verschickt → **ja** (E-P5c-62) |
+| **Q-P5c-30** | (d) Der Menüzähler „Status" zählt Orange mit (F-P5c-59). Bleibt der Bus-Faktor orange, steht der Zähler auf einer Anlage mit einer BetreiberIn **dauerhaft** auf mindestens 1 | im Bild orange wie entschieden (E-P5c-44). Empfohlen war: Fall 1 und 2 neutral „keine Vertretung", nur Fall 3 orange → **orange wie im Bild, in allen drei Fällen**; der Zähler darf dauerhaft stehen (E-P5c-63) |
+
+**Zwei Änderungen aus der Durchsicht:**
+
+1. **(b) Codeblatt:** Das Kästchen steht vorn, vor der Nummer (E-P5c-65).
+   Am Zeilenende stand das Kästchen der linken Spalte unmittelbar vor der
+   Nummer der rechten und sah aus, als gehöre es zu ihr.
+2. **(d) Zeile „Umgebung":** Die Plakette nennt die Umgebung — „Staging"
+   bzw. „Produktiv", nicht „kein Etikett" —, der Satz sagt in beiden
+   Richtungen gleichwertig, wofür sie da ist; beide blau (E-P5c-64).
 
 Mit der Freigabe gelten außerdem die Vorschläge, die die Bilder ohne eigene
-Frage zeigen: die Reihe `.hinweise` an der Stelle des Demo-Hinweises; die
-Karte „Ankündigung" in Servereinstellungen; die Karte „Zweitfaktor" nach
-„Wiederherstellungsschlüssel"; Support einspaltig mit Knöpfen weg statt
-ausgegraut; beide Statuszeilen oben in der Karte „Server", „Umgebung" immer
-sichtbar (auf Produktiv neutral); die Umgebungszeile auf den Blättern.
+Frage zeigen (E-P5c-66): die Reihe `.hinweise` an der Stelle des
+Demo-Hinweises; die Karte „Ankündigung" in Servereinstellungen; die Karte
+„Zweitfaktor" nach „Wiederherstellungsschlüssel"; Support einspaltig mit
+Knöpfen weg statt ausgegraut; beide Statuszeilen oben in der Karte
+„Server", „Umgebung" immer sichtbar; die Umgebungszeile auf den Blättern.
 
 ### 8.3 Befunde — gehen mit der Freigabe ins Konzept
 
 | Nr. | Befund | Wohin |
 |---|---|---|
-| **F-P5c-59** | Der Menüzähler zählt Orange und Rot (`status_lib.php`, Kopf der Menüzähler: „Status — orange + rot der Ampel"). E-P5c-44 begründet Orange damit, dass der Zähler bei Rot nie auf null stünde — in Orange steht er genauso | Q-P5c-30 |
+| **F-P5c-59** | Der Menüzähler zählt Orange und Rot (`status_lib.php`, Kopf der Menüzähler: „Status — orange + rot der Ampel"). E-P5c-44 begründet Orange damit, dass der Zähler bei Rot nie auf null stünde — in Orange steht er genauso | Q-P5c-30 → **bleibt orange** (E-P5c-63) |
 | **F-P5c-60** | Die zwei Bedingungen aus E-P5c-16 sind eine: Wer weniger als zwei handlungsfähige Verwaltungskonten hat, hat auch weniger als zwei handlungsfähige BetreiberInnen. Die Ampel hängt allein an „zwei BetreiberInnen handlungsfähig"; die Zahl der Verwaltungskonten wählt nur den Text (Fall 1 oder 2). Die Abnahme von AP5 („2 handlungsfähige → keiner") ist so zu lesen: **2 BetreiberInnen** → keiner, 1 BetreiberIn und 1 Admin → Orange | AP5, Abnahme |
 | **F-P5c-61** | `notfallblatt.php` schickt zweimal nach „Einstellungen → Konto" (Z. 169 und 213); den Reiter gibt es nicht, der Schlüssel liegt unter „Profil" (vgl. F-P5c-53). Das freigegebene M-P5c-01f trägt den Fehler mit; (e) berichtigt ihn | AP9 (Umbau des Notfallblatts) |
 | **F-P5c-62** | **Eine neue Anlage lässt sich seit Web 20.30.0 nicht einrichten.** `install.php` legt die erste BetreiberIn über `konto_anlegen()` an, und das ruft seit c3b5bff (Schritt 15, AP5) `db_transaktion()` auf. `konto_lib.php` lädt `db.php` aber nur, wenn `config.php` schon da ist (Z. 82) — während der Einrichtung ist sie es nicht. Die Funktion fehlt, die Ausnahme wird gefangen, die Seite sagt „Einrichten gescheitert". Gemessen mit `hochfahren.sh --neu` (Station B): scheitert in Schritt 4. Stufe 1 richtet keine Anlage ein und merkt es deshalb nicht | **Backlog Nr. 288**, außerhalb von P5c |
@@ -338,9 +352,9 @@ Supports).
 | Mockup | Klassen | Art |
 |---|---|---|
 | (a) | `.hinweise` (Reihe der Streifen), `.hinweis-umgebung` (Ton des Umgebungsstreifens), `.meldung-ankuendigung` (Schließen-Knopf rechts, bricht nicht um) | Erweiterung von Hinweisstreifen und Meldung (Design.md 9) |
-| (a) | `.kopf-umgebung` samt aktivem Kopfpunkt (A oder B) und Name im Kopf | Variante der Kopfleiste; **freigabepflichtig** mit Q-P5c-26 |
-| (b) | `.qr`, `.qr-grund`, `.qr-modul`; `.zweitfaktor-einrichtung` (zwei Spalten ab 720 px); `.feld-code`; `.codeblock-liste`; `.anmeldung-schritt` | `.qr` ist **neue Darstellung** — freigabepflichtig; der Rest erweitert Feld, Codeblock und Anmeldekarte |
-| (b) | `.blatt-codes` | Erweiterung des Druckblatts aus M-P5c-01f |
+| (a) | `.kopf-umgebung` samt aktivem Kopfpunkt (A oder B) und Name im Kopf | Variante der Kopfleiste; **freigegeben**, Variante A (E-P5c-59) |
+| (b) | `.qr`, `.qr-grund`, `.qr-modul`; `.zweitfaktor-einrichtung` (zwei Spalten ab 720 px); `.feld-code`; `.codeblock-liste`; `.anmeldung-schritt` | `.qr` ist **neue Darstellung** — **freigegeben** (E-P5c-66); der Rest erweitert Feld, Codeblock und Anmeldekarte |
+| (b) | `.blatt-codes` (Kästchen vorn über `order:-1`) | Erweiterung des Druckblatts aus M-P5c-01f |
 | (c) | `.form-raster-einspaltig` | Variante des Formularrasters |
 | (d) | — | keine; zwei gewöhnliche Statuszeilen |
 | (e) | `.blatt-umgebung` | Erweiterung des Druckblatts; Text und Rahmen in `--rot-tief`, keine Fläche |
