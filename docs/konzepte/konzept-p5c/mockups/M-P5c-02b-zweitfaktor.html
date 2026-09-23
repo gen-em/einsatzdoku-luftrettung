@@ -1,0 +1,625 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=1440">
+<title>P5c · Mockup M-P5c-02 (b) — Zweitfaktor</title>
+<link rel="stylesheet" href="../../../../server/assets/style.css">
+<style>
+/* ---- Mockup-Rahmen (nicht Teil der Anwendung) ---------------------------- */
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.5}
+.mock-kopf{padding:20px 24px 4px}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau);line-height:1.2}
+.mock-kopf p{margin:0;color:var(--gedaempft);font-size:var(--groesse-2)}
+.reihe{padding:14px 24px 6px}
+.reihe > h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0 0 2px;color:var(--dunkelblau)}
+.reihe > .unter{margin:0 0 10px;color:var(--gedaempft);font-size:var(--groesse-2);max-width:1180px}
+.frames{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+.frame-huelle{flex:0 0 auto;max-width:100%}
+.frame-titel{display:inline-block;background:var(--dunkelblau);color:#fff;font-size:11px;line-height:1.4;padding:2px 10px;border-radius:8px 8px 0 0}
+.frame{position:relative;overflow:hidden;border-radius:0 var(--radius) var(--radius) var(--radius);background:var(--rauch);box-shadow:0 8px 24px rgba(26,46,77,.10)}
+.notiz{padding:6px 24px 26px;max-width:1180px}
+.notiz h3{font-family:var(--schrift-kopf);font-size:var(--groesse-4);margin:12px 0 4px;color:var(--dunkelblau)}
+.notiz ul{margin:0 0 8px 20px;padding:0}
+.notiz li{margin:0 0 4px;font-size:var(--groesse-2);line-height:1.45}
+.notiz code{font-family:var(--schrift-fest);font-size:12px;background:var(--schnee);padding:0 4px;border-radius:4px}
+/* Das Gerüst im Rahmen: nichts klebt, nichts ist an die Fensterhöhe gebunden. */
+.frame .kopf{position:static}
+.frame .leiste{position:static;height:auto;align-self:stretch}
+.frame .rahmen{min-height:0}
+.frame .anmeldung-body{min-height:0}
+.frame .fuss{margin-top:0}
+/* ---- Nur im Mockup, nicht Teil des Vorschlags -------------------------- */
+
+.anmeldung{flex-direction:column}   /* Befund Nr. 289, siehe (a) */
+.frame .schleier{display:none}
+.frame-kurz{max-height:1500px}
+.frame-kurz::after{content:"";position:absolute;left:0;right:0;bottom:0;height:60px;background:linear-gradient(to bottom,transparent,#EDE9DF)}
+.nur-karte{padding:24px}
+.nur-karte .karte{margin:0}
+
+/* ---- Vorschlag für style.css (neu mit P5c, M-P5c-02) ------------------- */
+
+/* QR-CODE (.qr) — E-P5c-41. Die Modulmatrix kommt aus qrcode-generator (MIT, vendoriert, kein Netz);
+   das SVG baut die Anwendung selbst: ein Pfad, Klassen statt style="…", Token statt Hexwerten.
+   Halbe Anmeldekarte breit (200 px): 49 Module bei Fehlerstufe M, also rund 4 px je Modul. */
+.qr{display:block;width:calc(var(--anmeldekarte) / 2);max-width:100%;height:auto;flex:0 0 auto}
+.qr-grund{fill:var(--schnee)}
+.qr-modul{fill:var(--asphalt)}
+/* Einrichtung: QR links, Text rechts ab 720 px; darunter gestapelt, der QR zuerst. */
+.zweitfaktor-einrichtung{display:grid;gap:var(--abstand-4);align-items:start;margin-bottom:var(--abstand-4)}
+@media (min-width:720px){.zweitfaktor-einrichtung{grid-template-columns:auto minmax(0,1fr)}}
+.anmeldung .zweitfaktor-einrichtung{grid-template-columns:1fr;justify-items:center;text-align:center}
+.zweitfaktor-einrichtung .codeblock{text-align:left}
+/* Das Geheimnis bricht nur zwischen den Vierergruppen um — .codeblock-wert trägt break-all für Werte ohne Leerzeichen. */
+.zweitfaktor-einrichtung .codeblock-wert{word-break:normal}
+/* Codefeld: dieselbe Schrift und Sperrung wie der Codeblock, damit Abschreiben und Eintippen gleich aussehen. */
+.feld-code .feld-eingabe{font-family:var(--schrift-fest);font-size:var(--groesse-5);letter-spacing:.06em}
+/* WIEDERHERSTELLUNGSCODES (.codeblock-liste) — Erweiterung des Codeblocks: zehn nummerierte Werte in zwei
+   Spalten, Schrift wie .codeblock-wert. Die Nummer hilft beim Abhaken auf dem Blatt. */
+.codeblock-liste{
+  list-style:none;margin:var(--abstand-2) 0 var(--abstand-3);padding:0;counter-reset:code;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-1) var(--abstand-4);
+  font-family:var(--schrift-fest);font-size:var(--groesse-4);font-weight:600;color:var(--dunkelblau);letter-spacing:.06em;
+}
+.codeblock-liste li{counter-increment:code;white-space:nowrap}
+.codeblock-liste li::before{content:counter(code) ".";display:inline-block;min-width:2.2em;color:var(--gedaempft);font-weight:400;letter-spacing:0}
+/* Zwischenüberschrift in der Anmeldekarte (Code-Schritt, Einrichtungstor). */
+.anmeldung-schritt{font-size:var(--groesse-5);margin:0 0 var(--abstand-2)}
+</style></head><body><svg style="display:none" aria-hidden="true"><symbol id="s-abmelden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" /> <path d="M9 12h12l-3 -3" /> <path d="M18 15l3 -3" /></symbol><symbol id="s-drucken" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2" /> <path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4" /> <path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z" /></symbol><symbol id="s-haken" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10" /></symbol><symbol id="s-hilfe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /> <path d="M12 17l0 .01" /> <path d="M12 13.5a1.5 1.5 0 0 1 1 -1.5a2.6 2.6 0 1 0 -3 -4" /></symbol><symbol id="s-kalender" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12" /> <path d="M16 3v4" /> <path d="M8 3v4" /> <path d="M4 11h16" /> <path d="M11 15h1" /> <path d="M12 15v3" /></symbol><symbol id="s-lupe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /> <path d="M21 21l-6 -6" /></symbol><symbol id="s-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l16 0" /> <path d="M4 12l16 0" /> <path d="M4 18l16 0" /></symbol><symbol id="s-profil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /> <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></symbol><symbol id="s-schliessen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-12 12" /> <path d="M6 6l12 12" /></symbol><symbol id="s-sicherung" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2" /> <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" /> <path d="M10 12l4 0" /></symbol><symbol id="s-standort" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /> <path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></symbol><symbol id="s-tausch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10h14l-4 -4" /> <path d="M17 14h-14l4 4" /></symbol><symbol id="s-uhr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a3 3 0 0 1 3 -3h6a3 3 0 0 1 3 3v6a3 3 0 0 1 -3 3h-6a3 3 0 0 1 -3 -3v-6" /> <path d="M9 18v3h6v-3" /> <path d="M9 6v-3h6v3" /></symbol><symbol id="s-warnung" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4" /> <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0" /> <path d="M12 16h.01" /></symbol><symbol id="s-winkel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6" /></symbol><symbol id="s-zahnrad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" /> <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></symbol></svg>
+<div class="mock-kopf"><h1>M-P5c-02 (b) — Zweitfaktor: Profil, Anmeldung, Einrichtungstor</h1><p>E-P5c-15, -41, -42, -53, -54 · aus dem HTML-Stand der örtlichen Installation (Web 20.37.1) · zur Freigabe</p></div><div class="reihe"><h2>1 · Einstellungen → Profil, Rolle user: die Karte „Zweitfaktor"</h2><p class="unter">Ein Angebot für die Rolle user (Q-P5c-01). Die Karte steht nach „Wiederherstellungsschlüssel"; Ausschnitt ab „Passwort ändern" — Angaben, Logo und Datenschutz stehen unverändert darüber.</p><div class="frames"><div class="frame-huelle" style="width:1392px"><span class="frame-titel">einstellungen.php?t=profil · Rolle user · Ausschnitt</span><div class="frame frame-kurz">
+
+<header class="kopf">
+  <div class="kopf-innen">
+        <button type="button" class="knopf knopf-symbol kopf-menue" data-schublade="auf" aria-expanded="false" aria-controls="leiste" aria-label="Menü öffnen">
+      <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-menu"></use></svg>    </button>
+    
+    <a class="kopf-marke" href="index.php">
+            <img src="../../../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="" width="54" height="34">
+      <span class="kopf-name">Gen-EM NAdoku</span>
+      <span class="kopf-nutzer">Mara Beispiel</span>    </a>
+
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+              <a class="kopf-punkt" href="index.php">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span>Startseite</span>
+        </a>
+        <a class="kopf-punkt" href="suche.php">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-lupe"></use></svg><span>Suche</span>
+        </a>
+                <a class="knopf knopf-symbol kopf-hilfe" href="hilfe.php" aria-label="Hilfe und Handbuch">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-hilfe"></use></svg>        </a>
+        <a class="knopf knopf-symbol kopf-zahnrad aktiv" href="einstellungen.php" aria-label="Einstellungen" aria-current="page">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-zahnrad"></use></svg>        </a>
+          </nav>
+  </div>
+</header>
+<div class="schleier" data-schublade="zu" hidden=""></div>
+<div class="rahmen">
+      <aside class="leiste" id="leiste" aria-label="Bereichsmenü" tabindex="-1">
+    <div class="leiste-kopf nur-schublade">
+      <button type="button" class="knopf knopf-symbol" data-schublade="zu" aria-label="Menü schließen">
+        <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-schliessen"></use></svg>      </button>
+      <span class="kopf-name">Gen-EM NAdoku</span>
+    </div>
+    <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche">
+      <a class="eintrag" href="index.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span class="eintrag-text">Startseite</span>
+      </a>
+      <a class="eintrag" href="suche.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-lupe"></use></svg><span class="eintrag-text">Suche</span>
+      </a>
+    </nav>
+    <div class="leiste-liste" data-menue="">
+                      <details class="akkordeon leiste-gruppe" open="" data-gruppe="einstellungen">
+          <summary class="akkordeon-zeile">
+            <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>            <span class="akkordeon-text">Einstellungen<span class="gruppen-zahl" aria-hidden="true"> · 5</span></span>
+          </summary>
+          <div class="akkordeon-inhalt">
+                                        <a class="eintrag aktiv" href="einstellungen.php?t=profil" aria-current="page">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-profil"></use></svg><span class="eintrag-text">Profil</span>
+                              </a><div class="eintrag-unterliste"><a class="eintrag-unter hier" href="#k-angaben" title="Angaben">Angaben</a><a class="eintrag-unter" href="#k-logo" title="Logo">Logo</a><a class="eintrag-unter" href="#k-datenschutz" title="Datenschutz">Datenschutz</a><a class="eintrag-unter" href="#k-passwort" title="Passwort ändern">Passwort ändern</a><a class="eintrag-unter" href="#k-zweitfaktor">Zweitfaktor</a><a class="eintrag-unter" href="#k-mengen" title="Was dein Konto hält">Was dein Konto hält</a><a class="eintrag-unter" href="#k-konto-loeschen" title="Konto löschen">Konto löschen</a></div>
+                                        <a class="eintrag" href="einstellungen.php?t=geraete">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-uhr"></use></svg><span class="eintrag-text">Geräte</span>
+                              </a>
+                                        <a class="eintrag" href="einstellungen.php?t=standorte">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-standort"></use></svg><span class="eintrag-text">Standorte</span>
+                              </a>
+                                        <a class="eintrag" href="einstellungen.php?t=backup">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-sicherung"></use></svg><span class="eintrag-text">Backup</span>
+                              </a>
+                                        <a class="eintrag" href="import.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-tausch"></use></svg><span class="eintrag-text">Import / Export</span>
+                              </a>
+                      </div>
+        </details>
+                      
+                      
+          </div>
+    <div class="leiste-fuss">
+      <a class="eintrag eintrag-leise" href="logout.php" data-confirm="Wirklich abmelden?" data-confirm-ok="Abmelden" data-confirm-tone="normal">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-abmelden"></use></svg><span class="eintrag-text">Abmelden</span>
+      </a>
+    </div>
+  </aside>
+  <main class="inhalt" id="inhalt">
+    <a class="rueckweg nur-schublade" href="einstellungen.php"><svg class="symbol symbol-links" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg><span>Einstellungen</span></a>
+  
+          <div class="titelzeile">
+      <div class="titelzeile-haupt">
+    <div class="titelzeile-text">
+      <h1>Profil</h1>
+    </div>
+      </div>
+  </div>
+
+    <form method="post" id="pfform">
+      <input type="hidden" name="csrf" value="1dda7e8f885cf0267708d0d0b6c452a323bb56ddac88ac4799b412172db79663"><input type="hidden" name="action" value="profile">
+      <input type="hidden" name="old_token" id="pf_oldtok">
+
+      <section class="karte" id="k-passwort">
+  <div class="karte-kopf">
+    <h2 class="karte-titel">Passwort ändern</h2>
+  </div>
+  <div class="karte-inhalt">
+        <div class="feld">
+      <label class="feld-label" for="pw_old">Aktuelles Passwort <span class="feld-pflicht" aria-hidden="true">*</span></label>
+        <input class="feld-eingabe" type="password" id="pw_old" name="old" value="" autocomplete="current-password" required="">
+    </div>
+        <div class="feld">
+      <label class="feld-label" for="pw_new1">Neues Passwort <span class="feld-pflicht" aria-hidden="true">*</span></label>
+        <input class="feld-eingabe" type="password" id="pw_new1" name="new1" value="" minlength="12" autocomplete="new-password" required="">
+        <p class="feld-klein">Mindestens 12 Zeichen. Die Stärke des Passworts ist unmittelbar die Stärke der Verschlüsselung.</p>
+  </div>
+        <span class="pwstaerke" id="pw_guete"></span>
+        <div class="feld">
+      <label class="feld-label" for="pw_new2">Neues Passwort wiederholen <span class="feld-pflicht" aria-hidden="true">*</span></label>
+        <input class="feld-eingabe" type="password" id="pw_new2" name="new2" value="" autocomplete="new-password" required="">
+    </div>
+        </div>
+</section>
+      <div class="listen-form-fuss">
+        <button class="knopf knopf-primaer" type="submit"><span>Passwort ändern</span></button>      </div>
+      <span class="feld-hinweis" id="pwstate"></span>
+    </form>
+
+        <section class="karte">
+  <div class="karte-kopf">
+    <h2 class="karte-titel">Wiederherstellungsschlüssel</h2>
+  </div>
+  <div class="karte-inhalt">
+      <p>Er öffnet deine verschlüsselten Daten, wenn du dein Passwort
+         vergessen hast — die BetreiberIn kann das nicht. Du hast ihn einmal
+         bekommen, beim Einrichten deines Kontos, auf dem
+         <strong>Notfallblatt</strong>.</p>
+      <p class="feld-hinweis">Verloren? Dann erzeuge einen neuen. Das alte
+         Blatt wird damit ungültig; deine Daten bleiben unverändert und
+         lesbar. Nachträglich drucken lässt sich ein Blatt nicht — der Server
+         kennt den Schlüssel nicht.</p>
+      <div class="listen-form-fuss">
+        <button class="knopf knopf-neutral" type="button" data-schluessel-auf=""><span>Neuen Schlüssel erzeugen</span></button>      </div>
+      </div>
+</section><section class="karte" id="k-zweitfaktor">
+  <div class="karte-kopf"><h2 class="karte-titel">Zweitfaktor</h2><span class="plakette plakette-neutral">aus</span></div>
+  <div class="karte-inhalt">
+    <p>Zusätzlich zum Passwort ein sechsstelliger Code aus einer App auf deinem Handy. <a href="hilfe.php#10-9-zweitfaktor">Wie das geht</a></p>
+    <div class="listen-form-fuss"><button class="knopf knopf-primaer" type="button"><span>Einrichten</span></button></div>
+  </div>
+</section>
+
+    <dialog class="dialog" id="dlg-schluessel" data-schluessel="">
+          <div class="dialog-teil" data-rf="passwort" hidden="">
+    <div class="dialog-kopf">
+      <h2>Neuen Wiederherstellungsschlüssel erzeugen</h2>
+      <p class="feld-hinweis">Konto-Sicherheit</p>
+    </div>
+    <div class="dialog-inhalt">
+      <p>Der neue Schlüssel ersetzt den alten; das alte Notfallblatt wird
+         damit ungültig. Dafür brauchen wir einmal dein Passwort.</p>
+      <div class="feld">
+      <label class="feld-label" for="rf-pw">Passwort</label>
+        <input class="feld-eingabe" type="password" id="rf-pw" name="" value="" autocomplete="current-password">
+        <p class="feld-klein">Der Schlüssel entsteht in deinem Browser. Der Server erhält nur den neu verpackten Datenschlüssel.</p>
+  </div>
+      <p class="meldung meldung-fehler" data-rf-fehler="" role="alert" hidden=""></p>
+    </div>
+    <div class="dialog-fuss">
+      <button class="knopf knopf-leise" type="button" data-rf-zurueck=""><span>Abbrechen</span></button>      <button class="knopf knopf-primaer" type="button" data-rf-erzeugen=""><span>Schlüssel erzeugen</span></button>    </div>
+  </div>
+
+    <div class="dialog-teil" data-rf="schluessel" hidden="">
+    <div class="dialog-kopf">
+      <h2>Dein neuer Wiederherstellungsschlüssel</h2>
+      <p class="feld-hinweis">Konto-Sicherheit</p>
+    </div>
+    <div class="dialog-inhalt">
+      <div class="codeblock">
+        <p class="codeblock-titel">Nur jetzt sichtbar — danach nie wieder</p>
+        <p class="codeblock-wert" data-rf-code=""></p>
+      </div>
+      <label class="rf-haken">
+        <input type="checkbox" data-rf-notiert="">
+        <span>Ich habe den Schlüssel sicher notiert oder das Notfallblatt
+              gedruckt.</span>
+      </label>
+    </div>
+    <div class="dialog-fuss">
+      <form method="post" action="notfallblatt.php" target="_blank" rel="noopener" class="rf-druck">
+        <input type="hidden" name="code" data-rf-druckwert="">
+        <button class="knopf knopf-primaer" type="submit"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-drucken"></use></svg><span>Notfallblatt drucken</span></button>      </form>
+            <button class="knopf knopf-neutral" type="button" data-rf-fertig="" disabled=""><span>Fertig</span></button>    </div>
+  </div>
+    </dialog>
+
+            
+    
+    
+    
+    
+    
+
+            <section class="karte" id="k-mengen">
+  <div class="karte-kopf">
+    <h2 class="karte-titel">Was dein Konto hält</h2>
+    <span class="plakette plakette-blau">0 %</span>
+  </div>
+  <div class="karte-inhalt">
+      <div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Einsätze</span>
+    <span class="zeile-klein">ohne die im Papierkorb — was dort liegt, zählt nicht gegen die Grenze</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-neutral">0 von 5000</span></div>
+</div>
+      <div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Speicher</span>
+    <span class="zeile-klein">Einsätze samt GPS-Daten und Ruhesegmenten, geschätzt</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-neutral">0 von 250 MB</span></div>
+</div>
+            <p class="feld-hinweis"><strong>Was hilft:</strong> alte Diensttage löschen —
+         was im Papierkorb liegt, zählt nicht mit, Löschen wirkt also sofort. Oder
+         die Verwaltung um eine höhere Grenze bitten; sie kann sie je Konto setzen.
+         Vorher ausleiten kannst du alles unter
+         <a href="import.php">Import / Export</a>.</p>
+      </div>
+</section>
+
+            <section class="karte karte-gefahr" id="k-konto-loeschen">
+  <div class="karte-kopf">
+    <h2 class="karte-titel">Konto löschen</h2>
+  </div>
+  <div class="karte-inhalt">
+              <p class="feld-hinweis"><strong>Dein Konto wird sofort gesperrt und nach
+           30 Tagen endgültig gelöscht.</strong> In dieser Zeit
+           genügt eine Anmeldung, und die Löschung ist zurückgenommen — einen Knopf
+           dafür brauchst du nicht.</p>
+        <p class="feld-hinweis">Nach dem Termin sind Einsätze, GPS-Daten, Stammdaten
+           und Konto-Backups <strong>endgültig fort</strong>. Es gibt danach keinen
+           Weg zurück, auch nicht über die Verwaltung: Deine Daten sind mit deinem
+           Passwort verschlüsselt, und niemand sonst kann sie öffnen.</p>
+        <p class="feld-hinweis"><strong>Willst du sie behalten, leite sie vorher
+           aus</strong> — unter <a href="import.php">Import / Export</a>. Danach ist
+           es zu spät.</p>
+        <form method="post" data-confirm="Konto wirklich zur Löschung anmelden? Es wird sofort gesperrt und nach 30 Tagen endgültig gelöscht. Eine Anmeldung in dieser Zeit nimmt die Löschung zurück." data-confirm-ok="Zur Löschung anmelden">
+          <input type="hidden" name="csrf" value="1dda7e8f885cf0267708d0d0b6c452a323bb56ddac88ac4799b412172db79663"><input type="hidden" name="action" value="konto_loeschen">
+                    <div class="feld">
+      <label class="feld-label" for="f-pw_loesch">Aktuelles Passwort <span class="feld-pflicht" aria-hidden="true">*</span></label>
+        <input class="feld-eingabe" type="password" id="f-pw_loesch" name="pw_loesch" value="" autocomplete="current-password" required="">
+    </div>
+          <div class="listen-form-fuss">
+            <button class="knopf knopf-gefahr" type="submit"><span>Konto zur Löschung anmelden</span></button>          </div>
+        </form>
+            </div>
+</section>
+
+  
+  
+
+  </main>
+</div>
+<footer class="fuss-seite">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.37.1</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+
+
+
+
+
+
+
+
+</div></div></div></div><div class="reihe"><h2>2 · Die Karte in ihren Zuständen</h2><p class="unter">Einrichten → Einschalten (erst nach einem bestätigten Code, E-P5c-54) → die zehn Codes einmal sichtbar → eingeschaltet. Der QR-Code ist echt: Inhalt = die otpauth-Adresse daneben.</p><div class="frames"><div class="frame-huelle" style="width:680px"><span class="frame-titel">a · Einrichtung</span><div class="frame"><div class="nur-karte"><section class="karte" id="k-zweitfaktor">
+  <div class="karte-kopf"><h2 class="karte-titel">Zweitfaktor</h2><span class="plakette plakette-orange">wird eingerichtet</span></div>
+  <div class="karte-inhalt">
+    <h3 class="listen-form-titel">1 · In der App hinzufügen</h3>
+    <div class="zweitfaktor-einrichtung">
+      <svg class="qr" viewBox="0 0 61 61" role="img" aria-label="QR-Code für die Authenticator-App" shape-rendering="crispEdges"><rect class="qr-grund" width="61" height="61"/><path class="qr-modul" d="M4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM17 4h1v1h-1zM18 4h1v1h-1zM19 4h1v1h-1zM22 4h1v1h-1zM23 4h1v1h-1zM24 4h1v1h-1zM25 4h1v1h-1zM28 4h1v1h-1zM29 4h1v1h-1zM30 4h1v1h-1zM31 4h1v1h-1zM33 4h1v1h-1zM34 4h1v1h-1zM35 4h1v1h-1zM36 4h1v1h-1zM37 4h1v1h-1zM39 4h1v1h-1zM40 4h1v1h-1zM41 4h1v1h-1zM42 4h1v1h-1zM43 4h1v1h-1zM44 4h1v1h-1zM45 4h1v1h-1zM46 4h1v1h-1zM50 4h1v1h-1zM51 4h1v1h-1zM52 4h1v1h-1zM53 4h1v1h-1zM54 4h1v1h-1zM55 4h1v1h-1zM56 4h1v1h-1zM4 5h1v1h-1zM10 5h1v1h-1zM13 5h1v1h-1zM14 5h1v1h-1zM15 5h1v1h-1zM16 5h1v1h-1zM17 5h1v1h-1zM19 5h1v1h-1zM21 5h1v1h-1zM22 5h1v1h-1zM23 5h1v1h-1zM27 5h1v1h-1zM28 5h1v1h-1zM30 5h1v1h-1zM31 5h1v1h-1zM39 5h1v1h-1zM46 5h1v1h-1zM47 5h1v1h-1zM50 5h1v1h-1zM56 5h1v1h-1zM4 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM14 6h1v1h-1zM15 6h1v1h-1zM16 6h1v1h-1zM17 6h1v1h-1zM18 6h1v1h-1zM19 6h1v1h-1zM22 6h1v1h-1zM23 6h1v1h-1zM26 6h1v1h-1zM27 6h1v1h-1zM32 6h1v1h-1zM43 6h1v1h-1zM45 6h1v1h-1zM47 6h1v1h-1zM50 6h1v1h-1zM52 6h1v1h-1zM53 6h1v1h-1zM54 6h1v1h-1zM56 6h1v1h-1zM4 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM12 7h1v1h-1zM14 7h1v1h-1zM15 7h1v1h-1zM16 7h1v1h-1zM17 7h1v1h-1zM18 7h1v1h-1zM19 7h1v1h-1zM21 7h1v1h-1zM23 7h1v1h-1zM26 7h1v1h-1zM27 7h1v1h-1zM28 7h1v1h-1zM29 7h1v1h-1zM33 7h1v1h-1zM34 7h1v1h-1zM35 7h1v1h-1zM37 7h1v1h-1zM39 7h1v1h-1zM44 7h1v1h-1zM46 7h1v1h-1zM48 7h1v1h-1zM50 7h1v1h-1zM52 7h1v1h-1zM53 7h1v1h-1zM54 7h1v1h-1zM56 7h1v1h-1zM4 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM15 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM21 8h1v1h-1zM22 8h1v1h-1zM23 8h1v1h-1zM24 8h1v1h-1zM25 8h1v1h-1zM26 8h1v1h-1zM28 8h1v1h-1zM29 8h1v1h-1zM30 8h1v1h-1zM31 8h1v1h-1zM32 8h1v1h-1zM33 8h1v1h-1zM34 8h1v1h-1zM35 8h1v1h-1zM36 8h1v1h-1zM37 8h1v1h-1zM39 8h1v1h-1zM40 8h1v1h-1zM41 8h1v1h-1zM42 8h1v1h-1zM43 8h1v1h-1zM45 8h1v1h-1zM46 8h1v1h-1zM50 8h1v1h-1zM52 8h1v1h-1zM53 8h1v1h-1zM54 8h1v1h-1zM56 8h1v1h-1zM4 9h1v1h-1zM10 9h1v1h-1zM12 9h1v1h-1zM16 9h1v1h-1zM17 9h1v1h-1zM18 9h1v1h-1zM20 9h1v1h-1zM21 9h1v1h-1zM22 9h1v1h-1zM25 9h1v1h-1zM28 9h1v1h-1zM32 9h1v1h-1zM33 9h1v1h-1zM34 9h1v1h-1zM35 9h1v1h-1zM36 9h1v1h-1zM38 9h1v1h-1zM40 9h1v1h-1zM41 9h1v1h-1zM46 9h1v1h-1zM50 9h1v1h-1zM56 9h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM10 10h1v1h-1zM12 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM20 10h1v1h-1zM22 10h1v1h-1zM24 10h1v1h-1zM26 10h1v1h-1zM28 10h1v1h-1zM30 10h1v1h-1zM32 10h1v1h-1zM34 10h1v1h-1zM36 10h1v1h-1zM38 10h1v1h-1zM40 10h1v1h-1zM42 10h1v1h-1zM44 10h1v1h-1zM46 10h1v1h-1zM48 10h1v1h-1zM50 10h1v1h-1zM51 10h1v1h-1zM52 10h1v1h-1zM53 10h1v1h-1zM54 10h1v1h-1zM55 10h1v1h-1zM56 10h1v1h-1zM12 11h1v1h-1zM13 11h1v1h-1zM14 11h1v1h-1zM16 11h1v1h-1zM19 11h1v1h-1zM22 11h1v1h-1zM25 11h1v1h-1zM26 11h1v1h-1zM28 11h1v1h-1zM32 11h1v1h-1zM33 11h1v1h-1zM34 11h1v1h-1zM38 11h1v1h-1zM39 11h1v1h-1zM40 11h1v1h-1zM44 11h1v1h-1zM46 11h1v1h-1zM4 12h1v1h-1zM8 12h1v1h-1zM10 12h1v1h-1zM11 12h1v1h-1zM12 12h1v1h-1zM24 12h1v1h-1zM28 12h1v1h-1zM29 12h1v1h-1zM30 12h1v1h-1zM31 12h1v1h-1zM32 12h1v1h-1zM33 12h1v1h-1zM34 12h1v1h-1zM39 12h1v1h-1zM40 12h1v1h-1zM42 12h1v1h-1zM43 12h1v1h-1zM45 12h1v1h-1zM47 12h1v1h-1zM49 12h1v1h-1zM50 12h1v1h-1zM51 12h1v1h-1zM52 12h1v1h-1zM53 12h1v1h-1zM56 12h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM12 13h1v1h-1zM13 13h1v1h-1zM15 13h1v1h-1zM19 13h1v1h-1zM20 13h1v1h-1zM25 13h1v1h-1zM26 13h1v1h-1zM28 13h1v1h-1zM29 13h1v1h-1zM33 13h1v1h-1zM34 13h1v1h-1zM35 13h1v1h-1zM37 13h1v1h-1zM42 13h1v1h-1zM46 13h1v1h-1zM47 13h1v1h-1zM48 13h1v1h-1zM49 13h1v1h-1zM51 13h1v1h-1zM52 13h1v1h-1zM53 13h1v1h-1zM54 13h1v1h-1zM55 13h1v1h-1zM56 13h1v1h-1zM4 14h1v1h-1zM5 14h1v1h-1zM7 14h1v1h-1zM8 14h1v1h-1zM9 14h1v1h-1zM10 14h1v1h-1zM11 14h1v1h-1zM13 14h1v1h-1zM14 14h1v1h-1zM15 14h1v1h-1zM16 14h1v1h-1zM19 14h1v1h-1zM21 14h1v1h-1zM25 14h1v1h-1zM26 14h1v1h-1zM28 14h1v1h-1zM29 14h1v1h-1zM30 14h1v1h-1zM32 14h1v1h-1zM34 14h1v1h-1zM35 14h1v1h-1zM36 14h1v1h-1zM38 14h1v1h-1zM42 14h1v1h-1zM45 14h1v1h-1zM46 14h1v1h-1zM47 14h1v1h-1zM54 14h1v1h-1zM56 14h1v1h-1zM4 15h1v1h-1zM6 15h1v1h-1zM7 15h1v1h-1zM8 15h1v1h-1zM12 15h1v1h-1zM13 15h1v1h-1zM17 15h1v1h-1zM18 15h1v1h-1zM21 15h1v1h-1zM23 15h1v1h-1zM24 15h1v1h-1zM29 15h1v1h-1zM31 15h1v1h-1zM33 15h1v1h-1zM36 15h1v1h-1zM37 15h1v1h-1zM38 15h1v1h-1zM40 15h1v1h-1zM43 15h1v1h-1zM47 15h1v1h-1zM48 15h1v1h-1zM49 15h1v1h-1zM50 15h1v1h-1zM51 15h1v1h-1zM52 15h1v1h-1zM53 15h1v1h-1zM5 16h1v1h-1zM7 16h1v1h-1zM8 16h1v1h-1zM10 16h1v1h-1zM11 16h1v1h-1zM13 16h1v1h-1zM16 16h1v1h-1zM20 16h1v1h-1zM21 16h1v1h-1zM25 16h1v1h-1zM27 16h1v1h-1zM28 16h1v1h-1zM32 16h1v1h-1zM33 16h1v1h-1zM34 16h1v1h-1zM36 16h1v1h-1zM37 16h1v1h-1zM40 16h1v1h-1zM41 16h1v1h-1zM42 16h1v1h-1zM43 16h1v1h-1zM45 16h1v1h-1zM46 16h1v1h-1zM48 16h1v1h-1zM52 16h1v1h-1zM53 16h1v1h-1zM55 16h1v1h-1zM56 16h1v1h-1zM7 17h1v1h-1zM8 17h1v1h-1zM11 17h1v1h-1zM12 17h1v1h-1zM14 17h1v1h-1zM16 17h1v1h-1zM17 17h1v1h-1zM18 17h1v1h-1zM19 17h1v1h-1zM21 17h1v1h-1zM24 17h1v1h-1zM25 17h1v1h-1zM26 17h1v1h-1zM30 17h1v1h-1zM32 17h1v1h-1zM34 17h1v1h-1zM35 17h1v1h-1zM37 17h1v1h-1zM39 17h1v1h-1zM42 17h1v1h-1zM46 17h1v1h-1zM48 17h1v1h-1zM49 17h1v1h-1zM53 17h1v1h-1zM54 17h1v1h-1zM55 17h1v1h-1zM56 17h1v1h-1zM4 18h1v1h-1zM7 18h1v1h-1zM8 18h1v1h-1zM9 18h1v1h-1zM10 18h1v1h-1zM11 18h1v1h-1zM12 18h1v1h-1zM13 18h1v1h-1zM15 18h1v1h-1zM17 18h1v1h-1zM18 18h1v1h-1zM20 18h1v1h-1zM21 18h1v1h-1zM23 18h1v1h-1zM24 18h1v1h-1zM26 18h1v1h-1zM28 18h1v1h-1zM29 18h1v1h-1zM32 18h1v1h-1zM37 18h1v1h-1zM43 18h1v1h-1zM46 18h1v1h-1zM48 18h1v1h-1zM49 18h1v1h-1zM53 18h1v1h-1zM56 18h1v1h-1zM4 19h1v1h-1zM5 19h1v1h-1zM7 19h1v1h-1zM12 19h1v1h-1zM13 19h1v1h-1zM15 19h1v1h-1zM17 19h1v1h-1zM24 19h1v1h-1zM25 19h1v1h-1zM29 19h1v1h-1zM34 19h1v1h-1zM35 19h1v1h-1zM39 19h1v1h-1zM40 19h1v1h-1zM41 19h1v1h-1zM45 19h1v1h-1zM46 19h1v1h-1zM47 19h1v1h-1zM51 19h1v1h-1zM52 19h1v1h-1zM53 19h1v1h-1zM56 19h1v1h-1zM6 20h1v1h-1zM9 20h1v1h-1zM10 20h1v1h-1zM11 20h1v1h-1zM12 20h1v1h-1zM14 20h1v1h-1zM16 20h1v1h-1zM17 20h1v1h-1zM19 20h1v1h-1zM22 20h1v1h-1zM23 20h1v1h-1zM24 20h1v1h-1zM25 20h1v1h-1zM27 20h1v1h-1zM28 20h1v1h-1zM29 20h1v1h-1zM36 20h1v1h-1zM38 20h1v1h-1zM40 20h1v1h-1zM41 20h1v1h-1zM42 20h1v1h-1zM43 20h1v1h-1zM47 20h1v1h-1zM51 20h1v1h-1zM52 20h1v1h-1zM54 20h1v1h-1zM56 20h1v1h-1zM4 21h1v1h-1zM6 21h1v1h-1zM7 21h1v1h-1zM8 21h1v1h-1zM9 21h1v1h-1zM11 21h1v1h-1zM12 21h1v1h-1zM15 21h1v1h-1zM16 21h1v1h-1zM19 21h1v1h-1zM20 21h1v1h-1zM21 21h1v1h-1zM23 21h1v1h-1zM24 21h1v1h-1zM26 21h1v1h-1zM27 21h1v1h-1zM28 21h1v1h-1zM32 21h1v1h-1zM33 21h1v1h-1zM34 21h1v1h-1zM36 21h1v1h-1zM37 21h1v1h-1zM38 21h1v1h-1zM39 21h1v1h-1zM40 21h1v1h-1zM42 21h1v1h-1zM45 21h1v1h-1zM46 21h1v1h-1zM47 21h1v1h-1zM48 21h1v1h-1zM49 21h1v1h-1zM51 21h1v1h-1zM52 21h1v1h-1zM53 21h1v1h-1zM54 21h1v1h-1zM55 21h1v1h-1zM56 21h1v1h-1zM5 22h1v1h-1zM6 22h1v1h-1zM7 22h1v1h-1zM10 22h1v1h-1zM11 22h1v1h-1zM14 22h1v1h-1zM16 22h1v1h-1zM17 22h1v1h-1zM20 22h1v1h-1zM21 22h1v1h-1zM27 22h1v1h-1zM28 22h1v1h-1zM32 22h1v1h-1zM33 22h1v1h-1zM35 22h1v1h-1zM36 22h1v1h-1zM37 22h1v1h-1zM38 22h1v1h-1zM42 22h1v1h-1zM44 22h1v1h-1zM45 22h1v1h-1zM50 22h1v1h-1zM54 22h1v1h-1zM56 22h1v1h-1zM5 23h1v1h-1zM6 23h1v1h-1zM7 23h1v1h-1zM9 23h1v1h-1zM11 23h1v1h-1zM18 23h1v1h-1zM19 23h1v1h-1zM20 23h1v1h-1zM21 23h1v1h-1zM22 23h1v1h-1zM23 23h1v1h-1zM25 23h1v1h-1zM29 23h1v1h-1zM33 23h1v1h-1zM34 23h1v1h-1zM36 23h1v1h-1zM38 23h1v1h-1zM39 23h1v1h-1zM40 23h1v1h-1zM47 23h1v1h-1zM48 23h1v1h-1zM51 23h1v1h-1zM56 23h1v1h-1zM5 24h1v1h-1zM7 24h1v1h-1zM8 24h1v1h-1zM10 24h1v1h-1zM12 24h1v1h-1zM14 24h1v1h-1zM15 24h1v1h-1zM17 24h1v1h-1zM18 24h1v1h-1zM19 24h1v1h-1zM20 24h1v1h-1zM21 24h1v1h-1zM22 24h1v1h-1zM24 24h1v1h-1zM25 24h1v1h-1zM26 24h1v1h-1zM27 24h1v1h-1zM28 24h1v1h-1zM30 24h1v1h-1zM31 24h1v1h-1zM32 24h1v1h-1zM33 24h1v1h-1zM34 24h1v1h-1zM36 24h1v1h-1zM37 24h1v1h-1zM40 24h1v1h-1zM41 24h1v1h-1zM42 24h1v1h-1zM45 24h1v1h-1zM46 24h1v1h-1zM47 24h1v1h-1zM50 24h1v1h-1zM51 24h1v1h-1zM52 24h1v1h-1zM55 24h1v1h-1zM6 25h1v1h-1zM8 25h1v1h-1zM9 25h1v1h-1zM13 25h1v1h-1zM14 25h1v1h-1zM15 25h1v1h-1zM17 25h1v1h-1zM19 25h1v1h-1zM20 25h1v1h-1zM23 25h1v1h-1zM27 25h1v1h-1zM29 25h1v1h-1zM30 25h1v1h-1zM33 25h1v1h-1zM34 25h1v1h-1zM36 25h1v1h-1zM37 25h1v1h-1zM41 25h1v1h-1zM42 25h1v1h-1zM43 25h1v1h-1zM46 25h1v1h-1zM47 25h1v1h-1zM48 25h1v1h-1zM54 25h1v1h-1zM55 25h1v1h-1zM4 26h1v1h-1zM5 26h1v1h-1zM7 26h1v1h-1zM10 26h1v1h-1zM11 26h1v1h-1zM12 26h1v1h-1zM15 26h1v1h-1zM17 26h1v1h-1zM19 26h1v1h-1zM21 26h1v1h-1zM22 26h1v1h-1zM23 26h1v1h-1zM25 26h1v1h-1zM26 26h1v1h-1zM27 26h1v1h-1zM29 26h1v1h-1zM30 26h1v1h-1zM33 26h1v1h-1zM34 26h1v1h-1zM37 26h1v1h-1zM38 26h1v1h-1zM40 26h1v1h-1zM46 26h1v1h-1zM48 26h1v1h-1zM49 26h1v1h-1zM51 26h1v1h-1zM52 26h1v1h-1zM56 26h1v1h-1zM4 27h1v1h-1zM5 27h1v1h-1zM6 27h1v1h-1zM11 27h1v1h-1zM14 27h1v1h-1zM15 27h1v1h-1zM16 27h1v1h-1zM18 27h1v1h-1zM19 27h1v1h-1zM20 27h1v1h-1zM22 27h1v1h-1zM25 27h1v1h-1zM28 27h1v1h-1zM29 27h1v1h-1zM31 27h1v1h-1zM33 27h1v1h-1zM34 27h1v1h-1zM35 27h1v1h-1zM36 27h1v1h-1zM37 27h1v1h-1zM39 27h1v1h-1zM41 27h1v1h-1zM42 27h1v1h-1zM43 27h1v1h-1zM44 27h1v1h-1zM45 27h1v1h-1zM46 27h1v1h-1zM48 27h1v1h-1zM50 27h1v1h-1zM52 27h1v1h-1zM53 27h1v1h-1zM56 27h1v1h-1zM5 28h1v1h-1zM6 28h1v1h-1zM8 28h1v1h-1zM9 28h1v1h-1zM10 28h1v1h-1zM11 28h1v1h-1zM12 28h1v1h-1zM13 28h1v1h-1zM19 28h1v1h-1zM20 28h1v1h-1zM21 28h1v1h-1zM25 28h1v1h-1zM28 28h1v1h-1zM29 28h1v1h-1zM30 28h1v1h-1zM31 28h1v1h-1zM32 28h1v1h-1zM35 28h1v1h-1zM36 28h1v1h-1zM37 28h1v1h-1zM39 28h1v1h-1zM43 28h1v1h-1zM45 28h1v1h-1zM46 28h1v1h-1zM48 28h1v1h-1zM49 28h1v1h-1zM50 28h1v1h-1zM51 28h1v1h-1zM52 28h1v1h-1zM55 28h1v1h-1zM4 29h1v1h-1zM5 29h1v1h-1zM6 29h1v1h-1zM7 29h1v1h-1zM8 29h1v1h-1zM12 29h1v1h-1zM14 29h1v1h-1zM18 29h1v1h-1zM20 29h1v1h-1zM22 29h1v1h-1zM23 29h1v1h-1zM26 29h1v1h-1zM27 29h1v1h-1zM28 29h1v1h-1zM32 29h1v1h-1zM33 29h1v1h-1zM34 29h1v1h-1zM35 29h1v1h-1zM37 29h1v1h-1zM42 29h1v1h-1zM44 29h1v1h-1zM45 29h1v1h-1zM46 29h1v1h-1zM48 29h1v1h-1zM52 29h1v1h-1zM54 29h1v1h-1zM56 29h1v1h-1zM4 30h1v1h-1zM5 30h1v1h-1zM7 30h1v1h-1zM8 30h1v1h-1zM10 30h1v1h-1zM12 30h1v1h-1zM13 30h1v1h-1zM16 30h1v1h-1zM17 30h1v1h-1zM19 30h1v1h-1zM20 30h1v1h-1zM23 30h1v1h-1zM28 30h1v1h-1zM30 30h1v1h-1zM32 30h1v1h-1zM33 30h1v1h-1zM37 30h1v1h-1zM40 30h1v1h-1zM45 30h1v1h-1zM46 30h1v1h-1zM47 30h1v1h-1zM48 30h1v1h-1zM50 30h1v1h-1zM52 30h1v1h-1zM56 30h1v1h-1zM5 31h1v1h-1zM7 31h1v1h-1zM8 31h1v1h-1zM12 31h1v1h-1zM15 31h1v1h-1zM19 31h1v1h-1zM20 31h1v1h-1zM22 31h1v1h-1zM23 31h1v1h-1zM26 31h1v1h-1zM28 31h1v1h-1zM32 31h1v1h-1zM35 31h1v1h-1zM37 31h1v1h-1zM39 31h1v1h-1zM40 31h1v1h-1zM41 31h1v1h-1zM42 31h1v1h-1zM43 31h1v1h-1zM44 31h1v1h-1zM46 31h1v1h-1zM48 31h1v1h-1zM52 31h1v1h-1zM53 31h1v1h-1zM55 31h1v1h-1zM4 32h1v1h-1zM5 32h1v1h-1zM6 32h1v1h-1zM8 32h1v1h-1zM9 32h1v1h-1zM10 32h1v1h-1zM11 32h1v1h-1zM12 32h1v1h-1zM15 32h1v1h-1zM16 32h1v1h-1zM18 32h1v1h-1zM21 32h1v1h-1zM23 32h1v1h-1zM25 32h1v1h-1zM27 32h1v1h-1zM28 32h1v1h-1zM29 32h1v1h-1zM30 32h1v1h-1zM31 32h1v1h-1zM32 32h1v1h-1zM34 32h1v1h-1zM35 32h1v1h-1zM36 32h1v1h-1zM38 32h1v1h-1zM40 32h1v1h-1zM42 32h1v1h-1zM43 32h1v1h-1zM45 32h1v1h-1zM48 32h1v1h-1zM49 32h1v1h-1zM50 32h1v1h-1zM51 32h1v1h-1zM52 32h1v1h-1zM55 32h1v1h-1zM56 32h1v1h-1zM4 33h1v1h-1zM7 33h1v1h-1zM8 33h1v1h-1zM11 33h1v1h-1zM12 33h1v1h-1zM14 33h1v1h-1zM15 33h1v1h-1zM16 33h1v1h-1zM22 33h1v1h-1zM23 33h1v1h-1zM24 33h1v1h-1zM27 33h1v1h-1zM28 33h1v1h-1zM29 33h1v1h-1zM30 33h1v1h-1zM31 33h1v1h-1zM32 33h1v1h-1zM33 33h1v1h-1zM34 33h1v1h-1zM36 33h1v1h-1zM37 33h1v1h-1zM39 33h1v1h-1zM40 33h1v1h-1zM42 33h1v1h-1zM44 33h1v1h-1zM45 33h1v1h-1zM46 33h1v1h-1zM47 33h1v1h-1zM50 33h1v1h-1zM51 33h1v1h-1zM52 33h1v1h-1zM54 33h1v1h-1zM56 33h1v1h-1zM5 34h1v1h-1zM7 34h1v1h-1zM8 34h1v1h-1zM10 34h1v1h-1zM11 34h1v1h-1zM12 34h1v1h-1zM13 34h1v1h-1zM14 34h1v1h-1zM17 34h1v1h-1zM18 34h1v1h-1zM20 34h1v1h-1zM21 34h1v1h-1zM22 34h1v1h-1zM24 34h1v1h-1zM25 34h1v1h-1zM26 34h1v1h-1zM27 34h1v1h-1zM28 34h1v1h-1zM29 34h1v1h-1zM30 34h1v1h-1zM33 34h1v1h-1zM34 34h1v1h-1zM37 34h1v1h-1zM38 34h1v1h-1zM41 34h1v1h-1zM42 34h1v1h-1zM43 34h1v1h-1zM46 34h1v1h-1zM50 34h1v1h-1zM52 34h1v1h-1zM53 34h1v1h-1zM56 34h1v1h-1zM7 35h1v1h-1zM8 35h1v1h-1zM9 35h1v1h-1zM11 35h1v1h-1zM12 35h1v1h-1zM16 35h1v1h-1zM20 35h1v1h-1zM27 35h1v1h-1zM30 35h1v1h-1zM31 35h1v1h-1zM32 35h1v1h-1zM34 35h1v1h-1zM35 35h1v1h-1zM36 35h1v1h-1zM41 35h1v1h-1zM42 35h1v1h-1zM48 35h1v1h-1zM51 35h1v1h-1zM53 35h1v1h-1zM5 36h1v1h-1zM6 36h1v1h-1zM7 36h1v1h-1zM9 36h1v1h-1zM10 36h1v1h-1zM11 36h1v1h-1zM13 36h1v1h-1zM15 36h1v1h-1zM17 36h1v1h-1zM18 36h1v1h-1zM23 36h1v1h-1zM25 36h1v1h-1zM28 36h1v1h-1zM31 36h1v1h-1zM36 36h1v1h-1zM39 36h1v1h-1zM40 36h1v1h-1zM41 36h1v1h-1zM43 36h1v1h-1zM46 36h1v1h-1zM47 36h1v1h-1zM49 36h1v1h-1zM51 36h1v1h-1zM53 36h1v1h-1zM55 36h1v1h-1zM56 36h1v1h-1zM7 37h1v1h-1zM9 37h1v1h-1zM11 37h1v1h-1zM13 37h1v1h-1zM16 37h1v1h-1zM18 37h1v1h-1zM19 37h1v1h-1zM22 37h1v1h-1zM25 37h1v1h-1zM26 37h1v1h-1zM27 37h1v1h-1zM29 37h1v1h-1zM30 37h1v1h-1zM31 37h1v1h-1zM32 37h1v1h-1zM33 37h1v1h-1zM37 37h1v1h-1zM41 37h1v1h-1zM42 37h1v1h-1zM43 37h1v1h-1zM46 37h1v1h-1zM47 37h1v1h-1zM51 37h1v1h-1zM52 37h1v1h-1zM53 37h1v1h-1zM56 37h1v1h-1zM4 38h1v1h-1zM7 38h1v1h-1zM9 38h1v1h-1zM10 38h1v1h-1zM11 38h1v1h-1zM15 38h1v1h-1zM16 38h1v1h-1zM17 38h1v1h-1zM18 38h1v1h-1zM19 38h1v1h-1zM22 38h1v1h-1zM26 38h1v1h-1zM27 38h1v1h-1zM29 38h1v1h-1zM32 38h1v1h-1zM33 38h1v1h-1zM35 38h1v1h-1zM36 38h1v1h-1zM37 38h1v1h-1zM39 38h1v1h-1zM40 38h1v1h-1zM41 38h1v1h-1zM42 38h1v1h-1zM44 38h1v1h-1zM46 38h1v1h-1zM50 38h1v1h-1zM56 38h1v1h-1zM4 39h1v1h-1zM5 39h1v1h-1zM6 39h1v1h-1zM7 39h1v1h-1zM12 39h1v1h-1zM14 39h1v1h-1zM17 39h1v1h-1zM21 39h1v1h-1zM23 39h1v1h-1zM24 39h1v1h-1zM25 39h1v1h-1zM26 39h1v1h-1zM28 39h1v1h-1zM29 39h1v1h-1zM32 39h1v1h-1zM33 39h1v1h-1zM37 39h1v1h-1zM38 39h1v1h-1zM39 39h1v1h-1zM40 39h1v1h-1zM41 39h1v1h-1zM42 39h1v1h-1zM48 39h1v1h-1zM49 39h1v1h-1zM51 39h1v1h-1zM53 39h1v1h-1zM4 40h1v1h-1zM5 40h1v1h-1zM6 40h1v1h-1zM9 40h1v1h-1zM10 40h1v1h-1zM15 40h1v1h-1zM17 40h1v1h-1zM20 40h1v1h-1zM23 40h1v1h-1zM25 40h1v1h-1zM28 40h1v1h-1zM29 40h1v1h-1zM30 40h1v1h-1zM31 40h1v1h-1zM33 40h1v1h-1zM34 40h1v1h-1zM36 40h1v1h-1zM37 40h1v1h-1zM39 40h1v1h-1zM40 40h1v1h-1zM43 40h1v1h-1zM45 40h1v1h-1zM47 40h1v1h-1zM50 40h1v1h-1zM51 40h1v1h-1zM53 40h1v1h-1zM54 40h1v1h-1zM55 40h1v1h-1zM6 41h1v1h-1zM7 41h1v1h-1zM9 41h1v1h-1zM11 41h1v1h-1zM12 41h1v1h-1zM14 41h1v1h-1zM16 41h1v1h-1zM18 41h1v1h-1zM20 41h1v1h-1zM21 41h1v1h-1zM23 41h1v1h-1zM24 41h1v1h-1zM26 41h1v1h-1zM27 41h1v1h-1zM31 41h1v1h-1zM33 41h1v1h-1zM34 41h1v1h-1zM36 41h1v1h-1zM40 41h1v1h-1zM42 41h1v1h-1zM43 41h1v1h-1zM44 41h1v1h-1zM45 41h1v1h-1zM46 41h1v1h-1zM47 41h1v1h-1zM49 41h1v1h-1zM52 41h1v1h-1zM56 41h1v1h-1zM7 42h1v1h-1zM8 42h1v1h-1zM10 42h1v1h-1zM11 42h1v1h-1zM12 42h1v1h-1zM16 42h1v1h-1zM18 42h1v1h-1zM20 42h1v1h-1zM23 42h1v1h-1zM25 42h1v1h-1zM26 42h1v1h-1zM27 42h1v1h-1zM33 42h1v1h-1zM34 42h1v1h-1zM35 42h1v1h-1zM38 42h1v1h-1zM40 42h1v1h-1zM42 42h1v1h-1zM45 42h1v1h-1zM47 42h1v1h-1zM50 42h1v1h-1zM53 42h1v1h-1zM56 42h1v1h-1zM4 43h1v1h-1zM6 43h1v1h-1zM7 43h1v1h-1zM14 43h1v1h-1zM18 43h1v1h-1zM19 43h1v1h-1zM24 43h1v1h-1zM26 43h1v1h-1zM29 43h1v1h-1zM30 43h1v1h-1zM32 43h1v1h-1zM36 43h1v1h-1zM39 43h1v1h-1zM40 43h1v1h-1zM41 43h1v1h-1zM42 43h1v1h-1zM45 43h1v1h-1zM47 43h1v1h-1zM48 43h1v1h-1zM49 43h1v1h-1zM52 43h1v1h-1zM53 43h1v1h-1zM56 43h1v1h-1zM5 44h1v1h-1zM6 44h1v1h-1zM7 44h1v1h-1zM8 44h1v1h-1zM10 44h1v1h-1zM11 44h1v1h-1zM14 44h1v1h-1zM17 44h1v1h-1zM18 44h1v1h-1zM19 44h1v1h-1zM22 44h1v1h-1zM23 44h1v1h-1zM28 44h1v1h-1zM30 44h1v1h-1zM31 44h1v1h-1zM32 44h1v1h-1zM34 44h1v1h-1zM36 44h1v1h-1zM37 44h1v1h-1zM39 44h1v1h-1zM40 44h1v1h-1zM41 44h1v1h-1zM47 44h1v1h-1zM49 44h1v1h-1zM53 44h1v1h-1zM54 44h1v1h-1zM55 44h1v1h-1zM6 45h1v1h-1zM7 45h1v1h-1zM13 45h1v1h-1zM15 45h1v1h-1zM16 45h1v1h-1zM19 45h1v1h-1zM20 45h1v1h-1zM21 45h1v1h-1zM22 45h1v1h-1zM23 45h1v1h-1zM25 45h1v1h-1zM27 45h1v1h-1zM31 45h1v1h-1zM32 45h1v1h-1zM34 45h1v1h-1zM35 45h1v1h-1zM39 45h1v1h-1zM40 45h1v1h-1zM46 45h1v1h-1zM47 45h1v1h-1zM51 45h1v1h-1zM52 45h1v1h-1zM53 45h1v1h-1zM54 45h1v1h-1zM55 45h1v1h-1zM56 45h1v1h-1zM4 46h1v1h-1zM5 46h1v1h-1zM7 46h1v1h-1zM8 46h1v1h-1zM9 46h1v1h-1zM10 46h1v1h-1zM13 46h1v1h-1zM15 46h1v1h-1zM17 46h1v1h-1zM19 46h1v1h-1zM20 46h1v1h-1zM21 46h1v1h-1zM23 46h1v1h-1zM25 46h1v1h-1zM27 46h1v1h-1zM29 46h1v1h-1zM31 46h1v1h-1zM34 46h1v1h-1zM35 46h1v1h-1zM37 46h1v1h-1zM44 46h1v1h-1zM46 46h1v1h-1zM48 46h1v1h-1zM50 46h1v1h-1zM52 46h1v1h-1zM53 46h1v1h-1zM54 46h1v1h-1zM55 46h1v1h-1zM56 46h1v1h-1zM5 47h1v1h-1zM6 47h1v1h-1zM11 47h1v1h-1zM12 47h1v1h-1zM14 47h1v1h-1zM17 47h1v1h-1zM18 47h1v1h-1zM19 47h1v1h-1zM20 47h1v1h-1zM21 47h1v1h-1zM23 47h1v1h-1zM24 47h1v1h-1zM26 47h1v1h-1zM32 47h1v1h-1zM33 47h1v1h-1zM34 47h1v1h-1zM35 47h1v1h-1zM36 47h1v1h-1zM41 47h1v1h-1zM43 47h1v1h-1zM44 47h1v1h-1zM46 47h1v1h-1zM47 47h1v1h-1zM49 47h1v1h-1zM50 47h1v1h-1zM7 48h1v1h-1zM10 48h1v1h-1zM11 48h1v1h-1zM15 48h1v1h-1zM16 48h1v1h-1zM18 48h1v1h-1zM19 48h1v1h-1zM21 48h1v1h-1zM23 48h1v1h-1zM25 48h1v1h-1zM27 48h1v1h-1zM28 48h1v1h-1zM29 48h1v1h-1zM30 48h1v1h-1zM31 48h1v1h-1zM32 48h1v1h-1zM34 48h1v1h-1zM35 48h1v1h-1zM36 48h1v1h-1zM38 48h1v1h-1zM40 48h1v1h-1zM43 48h1v1h-1zM45 48h1v1h-1zM47 48h1v1h-1zM48 48h1v1h-1zM49 48h1v1h-1zM50 48h1v1h-1zM51 48h1v1h-1zM52 48h1v1h-1zM56 48h1v1h-1zM12 49h1v1h-1zM13 49h1v1h-1zM17 49h1v1h-1zM18 49h1v1h-1zM19 49h1v1h-1zM21 49h1v1h-1zM23 49h1v1h-1zM24 49h1v1h-1zM26 49h1v1h-1zM27 49h1v1h-1zM28 49h1v1h-1zM32 49h1v1h-1zM33 49h1v1h-1zM34 49h1v1h-1zM36 49h1v1h-1zM37 49h1v1h-1zM39 49h1v1h-1zM40 49h1v1h-1zM42 49h1v1h-1zM45 49h1v1h-1zM46 49h1v1h-1zM47 49h1v1h-1zM48 49h1v1h-1zM52 49h1v1h-1zM53 49h1v1h-1zM54 49h1v1h-1zM56 49h1v1h-1zM4 50h1v1h-1zM5 50h1v1h-1zM6 50h1v1h-1zM7 50h1v1h-1zM8 50h1v1h-1zM9 50h1v1h-1zM10 50h1v1h-1zM12 50h1v1h-1zM13 50h1v1h-1zM14 50h1v1h-1zM15 50h1v1h-1zM22 50h1v1h-1zM24 50h1v1h-1zM27 50h1v1h-1zM28 50h1v1h-1zM30 50h1v1h-1zM32 50h1v1h-1zM33 50h1v1h-1zM35 50h1v1h-1zM39 50h1v1h-1zM42 50h1v1h-1zM43 50h1v1h-1zM44 50h1v1h-1zM45 50h1v1h-1zM46 50h1v1h-1zM48 50h1v1h-1zM50 50h1v1h-1zM52 50h1v1h-1zM55 50h1v1h-1zM56 50h1v1h-1zM4 51h1v1h-1zM10 51h1v1h-1zM14 51h1v1h-1zM15 51h1v1h-1zM16 51h1v1h-1zM17 51h1v1h-1zM18 51h1v1h-1zM19 51h1v1h-1zM20 51h1v1h-1zM22 51h1v1h-1zM25 51h1v1h-1zM27 51h1v1h-1zM28 51h1v1h-1zM32 51h1v1h-1zM33 51h1v1h-1zM34 51h1v1h-1zM40 51h1v1h-1zM44 51h1v1h-1zM48 51h1v1h-1zM52 51h1v1h-1zM53 51h1v1h-1zM56 51h1v1h-1zM4 52h1v1h-1zM6 52h1v1h-1zM7 52h1v1h-1zM8 52h1v1h-1zM10 52h1v1h-1zM12 52h1v1h-1zM14 52h1v1h-1zM16 52h1v1h-1zM18 52h1v1h-1zM20 52h1v1h-1zM23 52h1v1h-1zM24 52h1v1h-1zM25 52h1v1h-1zM26 52h1v1h-1zM28 52h1v1h-1zM29 52h1v1h-1zM30 52h1v1h-1zM31 52h1v1h-1zM32 52h1v1h-1zM34 52h1v1h-1zM39 52h1v1h-1zM40 52h1v1h-1zM41 52h1v1h-1zM42 52h1v1h-1zM43 52h1v1h-1zM46 52h1v1h-1zM48 52h1v1h-1zM49 52h1v1h-1zM50 52h1v1h-1zM51 52h1v1h-1zM52 52h1v1h-1zM53 52h1v1h-1zM4 53h1v1h-1zM6 53h1v1h-1zM7 53h1v1h-1zM8 53h1v1h-1zM10 53h1v1h-1zM17 53h1v1h-1zM18 53h1v1h-1zM19 53h1v1h-1zM20 53h1v1h-1zM21 53h1v1h-1zM22 53h1v1h-1zM23 53h1v1h-1zM27 53h1v1h-1zM28 53h1v1h-1zM29 53h1v1h-1zM30 53h1v1h-1zM33 53h1v1h-1zM34 53h1v1h-1zM35 53h1v1h-1zM37 53h1v1h-1zM39 53h1v1h-1zM42 53h1v1h-1zM43 53h1v1h-1zM44 53h1v1h-1zM45 53h1v1h-1zM46 53h1v1h-1zM47 53h1v1h-1zM49 53h1v1h-1zM50 53h1v1h-1zM51 53h1v1h-1zM52 53h1v1h-1zM53 53h1v1h-1zM55 53h1v1h-1zM4 54h1v1h-1zM6 54h1v1h-1zM7 54h1v1h-1zM8 54h1v1h-1zM10 54h1v1h-1zM13 54h1v1h-1zM15 54h1v1h-1zM21 54h1v1h-1zM27 54h1v1h-1zM30 54h1v1h-1zM32 54h1v1h-1zM33 54h1v1h-1zM34 54h1v1h-1zM35 54h1v1h-1zM36 54h1v1h-1zM38 54h1v1h-1zM39 54h1v1h-1zM40 54h1v1h-1zM42 54h1v1h-1zM43 54h1v1h-1zM45 54h1v1h-1zM46 54h1v1h-1zM47 54h1v1h-1zM50 54h1v1h-1zM53 54h1v1h-1zM55 54h1v1h-1zM4 55h1v1h-1zM10 55h1v1h-1zM13 55h1v1h-1zM14 55h1v1h-1zM15 55h1v1h-1zM18 55h1v1h-1zM19 55h1v1h-1zM20 55h1v1h-1zM21 55h1v1h-1zM22 55h1v1h-1zM23 55h1v1h-1zM25 55h1v1h-1zM27 55h1v1h-1zM30 55h1v1h-1zM32 55h1v1h-1zM33 55h1v1h-1zM36 55h1v1h-1zM38 55h1v1h-1zM41 55h1v1h-1zM43 55h1v1h-1zM45 55h1v1h-1zM50 55h1v1h-1zM52 55h1v1h-1zM53 55h1v1h-1zM55 55h1v1h-1zM56 55h1v1h-1zM4 56h1v1h-1zM5 56h1v1h-1zM6 56h1v1h-1zM7 56h1v1h-1zM8 56h1v1h-1zM9 56h1v1h-1zM10 56h1v1h-1zM12 56h1v1h-1zM13 56h1v1h-1zM16 56h1v1h-1zM17 56h1v1h-1zM18 56h1v1h-1zM20 56h1v1h-1zM22 56h1v1h-1zM23 56h1v1h-1zM26 56h1v1h-1zM27 56h1v1h-1zM28 56h1v1h-1zM29 56h1v1h-1zM30 56h1v1h-1zM33 56h1v1h-1zM34 56h1v1h-1zM36 56h1v1h-1zM37 56h1v1h-1zM38 56h1v1h-1zM39 56h1v1h-1zM40 56h1v1h-1zM42 56h1v1h-1zM43 56h1v1h-1zM46 56h1v1h-1zM47 56h1v1h-1zM48 56h1v1h-1zM51 56h1v1h-1zM52 56h1v1h-1zM55 56h1v1h-1z"/></svg>
+      <div>
+        <p>Mit der Authenticator-App den Code scannen — oder am Handy direkt öffnen:</p>
+        <p><a class="knopf knopf-neutral" href="otpauth://totp/Gen-EM%20NAdoku:mara.beispiel%40example.invalid?secret=K5QXGZLTMFZGKZLPN5ZW4ZLUMVZHEZLT&amp;issuer=Gen-EM%20NAdoku&amp;algorithm=SHA1&amp;digits=6&amp;period=30"><span>In der Authenticator-App öffnen</span></a></p>
+        <div class="codeblock">
+          <p class="codeblock-titel">Oder von Hand eintragen</p>
+          <p class="codeblock-wert">K5QX GZLT MFZG KZLP N5ZW 4ZLU MVZH EZLT</p>
+          <p class="feld-klein">Zeitbasiert · 6 Ziffern · 30 Sekunden</p>
+        </div>
+      </div>
+    </div>
+    <h3 class="listen-form-titel">2 · Code bestätigen</h3>
+    <div class="feld feld-code">
+      <label class="feld-label" for="f-totp">Code aus der App <span class="feld-pflicht" aria-hidden="true">*</span></label>
+      <input class="feld-eingabe" type="text" id="f-totp" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]{6,7}" value="481 205">
+    </div>
+    <div class="listen-form-fuss">
+      <button class="knopf knopf-primaer" type="button"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-haken"></use></svg><span>Einschalten</span></button>
+      <button class="knopf knopf-leise" type="button"><span>Abbrechen</span></button>
+    </div>
+  </div>
+</section></div></div></div><div class="frame-huelle" style="width:680px"><span class="frame-titel">b · eingeschaltet, Codes einmal sichtbar</span><div class="frame"><div class="nur-karte"><section class="karte" id="k-zweitfaktor">
+  <div class="karte-kopf"><h2 class="karte-titel">Zweitfaktor</h2><span class="plakette plakette-blau">an</span></div>
+  <div class="karte-inhalt">
+    <div class="meldung meldung-ok" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-haken"></use></svg><p><strong>Eingeschaltet.</strong> Ab der nächsten Anmeldung fragt die Anwendung nach dem Code.</p></div>
+    <div class="codeblock">
+      <p class="codeblock-titel">Deine zehn Wiederherstellungscodes — nur jetzt sichtbar</p>
+      <ol class="codeblock-liste"><li>K7QF 2MXD</li><li>9TRA 4HWP</li><li>6ZNC 3LVE</li><li>P8JD 5QKS</li><li>W2MY 7FHU</li><li>C4XT 9RBN</li><li>H6LQ 2DZA</li><li>R3VK 8PJM</li><li>E5NW 6TYC</li><li>U9GS 4XLF</li></ol>
+      <p class="feld-klein">Jeder Code gilt einmal, wenn das Handy fehlt.</p>
+      <label><input type="checkbox"> Ich habe die Codes gesichert.</label>
+      <form class="rf-druck"><button class="knopf knopf-neutral" type="button"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-drucken"></use></svg><span>Codeblatt drucken</span></button></form>
+    </div>
+  </div>
+</section></div></div></div><div class="frame-huelle" style="width:680px"><span class="frame-titel">c · eingeschaltet, Rolle user</span><div class="frame"><div class="nur-karte"><section class="karte" id="k-zweitfaktor">
+  <div class="karte-kopf"><h2 class="karte-titel">Zweitfaktor</h2><span class="plakette plakette-blau">an</span></div>
+  <div class="karte-inhalt">
+    <p>Zusätzlich zum Passwort ein sechsstelliger Code aus einer App auf deinem Handy. <a href="hilfe.php#10-9-zweitfaktor">Wie das geht</a></p>
+    <div class="zeile">
+      <div class="zeile-text"><span class="zeile-haupt">Eingeschaltet</span><span class="zeile-klein">seit 23.09.2026, 14:05</span></div>
+    </div>
+    <div class="zeile">
+      <div class="zeile-text"><span class="zeile-haupt">Wiederherstellungscodes</span><span class="zeile-klein">zwei benutzt — neue Codes machen die alten ungültig</span></div>
+      <div class="zeile-plaketten"><span class="plakette plakette-blau">8 von 10</span></div>
+    </div>
+    <div class="listen-form-fuss">
+      <button class="knopf knopf-neutral" type="button"><span>Neue Codes erzeugen</span></button>
+      <button class="knopf knopf-leise" type="button"><span>Ausschalten</span></button>
+    </div>
+  </div>
+</section></div></div></div><div class="frame-huelle" style="width:680px"><span class="frame-titel">d · eingeschaltet, Pflichtrolle</span><div class="frame"><div class="nur-karte"><section class="karte" id="k-zweitfaktor">
+  <div class="karte-kopf"><h2 class="karte-titel">Zweitfaktor</h2><span class="plakette plakette-blau">an</span></div>
+  <div class="karte-inhalt">
+    <p>Zusätzlich zum Passwort ein sechsstelliger Code aus einer App auf deinem Handy. <a href="hilfe.php#10-9-zweitfaktor">Wie das geht</a></p>
+    <div class="zeile">
+      <div class="zeile-text"><span class="zeile-haupt">Eingeschaltet</span><span class="zeile-klein">seit 23.09.2026, 14:05</span></div>
+    </div>
+    <div class="zeile">
+      <div class="zeile-text"><span class="zeile-haupt">Wiederherstellungscodes</span><span class="zeile-klein">zwei benutzt — neue Codes machen die alten ungültig</span></div>
+      <div class="zeile-plaketten"><span class="plakette plakette-blau">8 von 10</span></div>
+    </div>
+    <p class="feld-klein">Für die Rolle BetreiberIn Pflicht — ausschalten geht nicht; zurücksetzen kann eine andere BetreiberIn.</p>
+    <div class="listen-form-fuss">
+      <button class="knopf knopf-neutral" type="button"><span>Neue Codes erzeugen</span></button>
+    </div>
+  </div>
+</section></div></div></div></div></div><div class="reihe"><h2>3 · Anmeldung: der Code-Schritt</h2><p class="unter">Nach dem Passwort, vor der Sitzung (E-P5c-53): Die Seite hält Konto und Frist (fünf Minuten), <code>user_id</code> gibt es erst nach dem Code. Ein Knopf, zwei Rückwege.</p><div class="frames"><div class="frame-huelle" style="width:680px"><span class="frame-titel">login.php · Schritt 2 · Code</span><div class="frame"><div class="anmeldung-body">
+<main class="anmeldung">
+ <div class="anmeldung-karte">
+  <img src="../../../../server/assets/images/gen-em_logo_helicopter.svg" alt="" class="anmeldung-logo">
+  <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
+  <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+          <form method="post">
+    <p class="feld-hinweis">Angemeldet als <strong>mara.beispiel@example.invalid</strong> — es fehlt noch der Code aus deiner App.</p>
+    <div class="feld feld-code">
+      <label class="feld-label" for="f-code">Code aus der App</label>
+      <input class="feld-eingabe" type="text" id="f-code" name="code" inputmode="numeric" autocomplete="one-time-code" autofocus placeholder="000 000">
+    </div>
+    <div class="listen-form-fuss"><button class="knopf knopf-primaer knopf-breit" type="submit"><span>Anmelden</span></button></div>
+  </form>
+  <p class="anmeldung-neben"><a href="#">Wiederherstellungscode verwenden</a><br><a href="login.php">Zurück zur Anmeldung</a></p>
+  <p class="zustandszeile" id="loginstate"></p>
+ </div>
+
+  <nav class="fuss-anmeldung" aria-label="Über diese Anwendung">
+   <a href="ueber.php">Was ist NAdoku?</a>
+   <a href="hilfe.php">Handbuch</a>
+   <a href="impressum.php">Impressum</a>
+   <a href="datenschutz.php">Datenschutz</a>
+ </nav>
+</main>
+
+
+
+<footer class="fuss-seite fuss-dunkel">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.37.1</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+
+
+</div></div></div><div class="frame-huelle" style="width:680px"><span class="frame-titel">login.php · Schritt 2 · Code falsch</span><div class="frame"><div class="anmeldung-body">
+<main class="anmeldung">
+ <div class="anmeldung-karte">
+  <img src="../../../../server/assets/images/gen-em_logo_helicopter.svg" alt="" class="anmeldung-logo">
+  <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
+  <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+          <form method="post">
+    <p class="feld-hinweis">Angemeldet als <strong>mara.beispiel@example.invalid</strong> — es fehlt noch der Code aus deiner App.</p>
+    <div class="meldung meldung-fehler" role="alert"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-warnung"></use></svg><p><strong>Der Code passt nicht.</strong> Er gilt 30 Sekunden — den nächsten aus der App nehmen.</p></div>
+    <div class="feld feld-code">
+      <label class="feld-label" for="f-code">Code aus der App</label>
+      <input class="feld-eingabe" type="text" id="f-code" name="code" inputmode="numeric" autocomplete="one-time-code" autofocus placeholder="000 000">
+    </div>
+    <div class="listen-form-fuss"><button class="knopf knopf-primaer knopf-breit" type="submit"><span>Anmelden</span></button></div>
+  </form>
+  <p class="anmeldung-neben"><a href="#">Wiederherstellungscode verwenden</a><br><a href="login.php">Zurück zur Anmeldung</a></p>
+  <p class="zustandszeile" id="loginstate"></p>
+ </div>
+
+  <nav class="fuss-anmeldung" aria-label="Über diese Anwendung">
+   <a href="ueber.php">Was ist NAdoku?</a>
+   <a href="hilfe.php">Handbuch</a>
+   <a href="impressum.php">Impressum</a>
+   <a href="datenschutz.php">Datenschutz</a>
+ </nav>
+</main>
+
+
+
+<footer class="fuss-seite fuss-dunkel">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.37.1</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+
+
+</div></div></div><div class="frame-huelle" style="width:680px"><span class="frame-titel">login.php · Schritt 2 · Wiederherstellungscode</span><div class="frame"><div class="anmeldung-body">
+<main class="anmeldung">
+ <div class="anmeldung-karte">
+  <img src="../../../../server/assets/images/gen-em_logo_helicopter.svg" alt="" class="anmeldung-logo">
+  <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
+  <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+          <form method="post">
+    <p class="feld-hinweis">Angemeldet als <strong>mara.beispiel@example.invalid</strong> — kein Handy zur Hand?</p>
+    <div class="feld feld-code">
+      <label class="feld-label" for="f-rc">Wiederherstellungscode</label>
+      <input class="feld-eingabe" type="text" id="f-rc" name="rc" autocomplete="off" placeholder="XXXX XXXX">
+      <p class="feld-klein">Jeder Code gilt einmal. Danach unter Einstellungen → Profil den Zweitfaktor neu einrichten.</p>
+    </div>
+    <div class="listen-form-fuss"><button class="knopf knopf-primaer knopf-breit" type="submit"><span>Anmelden</span></button></div>
+  </form>
+  <p class="anmeldung-neben"><a href="#">Code aus der App verwenden</a><br><a href="login.php">Zurück zur Anmeldung</a></p>
+  <p class="zustandszeile" id="loginstate"></p>
+ </div>
+
+  <nav class="fuss-anmeldung" aria-label="Über diese Anwendung">
+   <a href="ueber.php">Was ist NAdoku?</a>
+   <a href="hilfe.php">Handbuch</a>
+   <a href="impressum.php">Impressum</a>
+   <a href="datenschutz.php">Datenschutz</a>
+ </nav>
+</main>
+
+
+
+<footer class="fuss-seite fuss-dunkel">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.37.1</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+
+
+</div></div></div></div></div><div class="reihe"><h2>4 · Das Einrichtungstor für Pflichtrollen</h2><p class="unter">Admin, BetreiberIn und Support ohne Zweitfaktor landen nach der Anmeldung hier, bevor eine andere Seite aufgeht (Ausnahmen: diese Seite, Abmelden). In der Hülle der Anmeldung, nicht im Gerüst — dort gäbe es Menüpunkte, die das Tor doch nicht öffnet.</p><div class="frames"><div class="frame-huelle" style="width:680px"><span class="frame-titel">zweitfaktor.php · Schritt 1 · Rolle BetreiberIn</span><div class="frame"><div class="anmeldung-body">
+<main class="anmeldung">
+ <div class="anmeldung-karte">
+  <img src="../../../../server/assets/images/gen-em_logo_helicopter.svg" alt="" class="anmeldung-logo">
+  <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
+  <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+          <form method="post">
+    <h2 class="anmeldung-schritt">Zweitfaktor einrichten</h2>
+    <p class="feld-hinweis">Für die Rolle <strong>BetreiberIn</strong> ist er Pflicht — danach geht es weiter.</p>
+    <h3 class="listen-form-titel">1 · In der App hinzufügen</h3>
+    <div class="zweitfaktor-einrichtung">
+      <svg class="qr" viewBox="0 0 61 61" role="img" aria-label="QR-Code für die Authenticator-App" shape-rendering="crispEdges"><rect class="qr-grund" width="61" height="61"/><path class="qr-modul" d="M4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM17 4h1v1h-1zM18 4h1v1h-1zM19 4h1v1h-1zM22 4h1v1h-1zM23 4h1v1h-1zM24 4h1v1h-1zM25 4h1v1h-1zM28 4h1v1h-1zM29 4h1v1h-1zM30 4h1v1h-1zM31 4h1v1h-1zM33 4h1v1h-1zM34 4h1v1h-1zM35 4h1v1h-1zM36 4h1v1h-1zM37 4h1v1h-1zM39 4h1v1h-1zM40 4h1v1h-1zM41 4h1v1h-1zM42 4h1v1h-1zM43 4h1v1h-1zM44 4h1v1h-1zM45 4h1v1h-1zM46 4h1v1h-1zM50 4h1v1h-1zM51 4h1v1h-1zM52 4h1v1h-1zM53 4h1v1h-1zM54 4h1v1h-1zM55 4h1v1h-1zM56 4h1v1h-1zM4 5h1v1h-1zM10 5h1v1h-1zM13 5h1v1h-1zM14 5h1v1h-1zM15 5h1v1h-1zM16 5h1v1h-1zM17 5h1v1h-1zM19 5h1v1h-1zM21 5h1v1h-1zM22 5h1v1h-1zM23 5h1v1h-1zM27 5h1v1h-1zM28 5h1v1h-1zM30 5h1v1h-1zM31 5h1v1h-1zM39 5h1v1h-1zM46 5h1v1h-1zM47 5h1v1h-1zM50 5h1v1h-1zM56 5h1v1h-1zM4 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM14 6h1v1h-1zM15 6h1v1h-1zM16 6h1v1h-1zM17 6h1v1h-1zM18 6h1v1h-1zM19 6h1v1h-1zM22 6h1v1h-1zM23 6h1v1h-1zM26 6h1v1h-1zM27 6h1v1h-1zM32 6h1v1h-1zM43 6h1v1h-1zM45 6h1v1h-1zM47 6h1v1h-1zM50 6h1v1h-1zM52 6h1v1h-1zM53 6h1v1h-1zM54 6h1v1h-1zM56 6h1v1h-1zM4 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM12 7h1v1h-1zM14 7h1v1h-1zM15 7h1v1h-1zM16 7h1v1h-1zM17 7h1v1h-1zM18 7h1v1h-1zM19 7h1v1h-1zM21 7h1v1h-1zM23 7h1v1h-1zM26 7h1v1h-1zM27 7h1v1h-1zM28 7h1v1h-1zM29 7h1v1h-1zM33 7h1v1h-1zM34 7h1v1h-1zM35 7h1v1h-1zM37 7h1v1h-1zM39 7h1v1h-1zM44 7h1v1h-1zM46 7h1v1h-1zM48 7h1v1h-1zM50 7h1v1h-1zM52 7h1v1h-1zM53 7h1v1h-1zM54 7h1v1h-1zM56 7h1v1h-1zM4 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM15 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM21 8h1v1h-1zM22 8h1v1h-1zM23 8h1v1h-1zM24 8h1v1h-1zM25 8h1v1h-1zM26 8h1v1h-1zM28 8h1v1h-1zM29 8h1v1h-1zM30 8h1v1h-1zM31 8h1v1h-1zM32 8h1v1h-1zM33 8h1v1h-1zM34 8h1v1h-1zM35 8h1v1h-1zM36 8h1v1h-1zM37 8h1v1h-1zM39 8h1v1h-1zM40 8h1v1h-1zM41 8h1v1h-1zM42 8h1v1h-1zM43 8h1v1h-1zM45 8h1v1h-1zM46 8h1v1h-1zM50 8h1v1h-1zM52 8h1v1h-1zM53 8h1v1h-1zM54 8h1v1h-1zM56 8h1v1h-1zM4 9h1v1h-1zM10 9h1v1h-1zM12 9h1v1h-1zM16 9h1v1h-1zM17 9h1v1h-1zM18 9h1v1h-1zM20 9h1v1h-1zM21 9h1v1h-1zM22 9h1v1h-1zM25 9h1v1h-1zM28 9h1v1h-1zM32 9h1v1h-1zM33 9h1v1h-1zM34 9h1v1h-1zM35 9h1v1h-1zM36 9h1v1h-1zM38 9h1v1h-1zM40 9h1v1h-1zM41 9h1v1h-1zM46 9h1v1h-1zM50 9h1v1h-1zM56 9h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM10 10h1v1h-1zM12 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM20 10h1v1h-1zM22 10h1v1h-1zM24 10h1v1h-1zM26 10h1v1h-1zM28 10h1v1h-1zM30 10h1v1h-1zM32 10h1v1h-1zM34 10h1v1h-1zM36 10h1v1h-1zM38 10h1v1h-1zM40 10h1v1h-1zM42 10h1v1h-1zM44 10h1v1h-1zM46 10h1v1h-1zM48 10h1v1h-1zM50 10h1v1h-1zM51 10h1v1h-1zM52 10h1v1h-1zM53 10h1v1h-1zM54 10h1v1h-1zM55 10h1v1h-1zM56 10h1v1h-1zM12 11h1v1h-1zM13 11h1v1h-1zM14 11h1v1h-1zM16 11h1v1h-1zM19 11h1v1h-1zM22 11h1v1h-1zM25 11h1v1h-1zM26 11h1v1h-1zM28 11h1v1h-1zM32 11h1v1h-1zM33 11h1v1h-1zM34 11h1v1h-1zM38 11h1v1h-1zM39 11h1v1h-1zM40 11h1v1h-1zM44 11h1v1h-1zM46 11h1v1h-1zM4 12h1v1h-1zM8 12h1v1h-1zM10 12h1v1h-1zM11 12h1v1h-1zM12 12h1v1h-1zM24 12h1v1h-1zM28 12h1v1h-1zM29 12h1v1h-1zM30 12h1v1h-1zM31 12h1v1h-1zM32 12h1v1h-1zM33 12h1v1h-1zM34 12h1v1h-1zM39 12h1v1h-1zM40 12h1v1h-1zM42 12h1v1h-1zM43 12h1v1h-1zM45 12h1v1h-1zM47 12h1v1h-1zM49 12h1v1h-1zM50 12h1v1h-1zM51 12h1v1h-1zM52 12h1v1h-1zM53 12h1v1h-1zM56 12h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM12 13h1v1h-1zM13 13h1v1h-1zM15 13h1v1h-1zM19 13h1v1h-1zM20 13h1v1h-1zM25 13h1v1h-1zM26 13h1v1h-1zM28 13h1v1h-1zM29 13h1v1h-1zM33 13h1v1h-1zM34 13h1v1h-1zM35 13h1v1h-1zM37 13h1v1h-1zM42 13h1v1h-1zM46 13h1v1h-1zM47 13h1v1h-1zM48 13h1v1h-1zM49 13h1v1h-1zM51 13h1v1h-1zM52 13h1v1h-1zM53 13h1v1h-1zM54 13h1v1h-1zM55 13h1v1h-1zM56 13h1v1h-1zM4 14h1v1h-1zM5 14h1v1h-1zM7 14h1v1h-1zM8 14h1v1h-1zM9 14h1v1h-1zM10 14h1v1h-1zM11 14h1v1h-1zM13 14h1v1h-1zM14 14h1v1h-1zM15 14h1v1h-1zM16 14h1v1h-1zM19 14h1v1h-1zM21 14h1v1h-1zM25 14h1v1h-1zM26 14h1v1h-1zM28 14h1v1h-1zM29 14h1v1h-1zM30 14h1v1h-1zM32 14h1v1h-1zM34 14h1v1h-1zM35 14h1v1h-1zM36 14h1v1h-1zM38 14h1v1h-1zM42 14h1v1h-1zM45 14h1v1h-1zM46 14h1v1h-1zM47 14h1v1h-1zM54 14h1v1h-1zM56 14h1v1h-1zM4 15h1v1h-1zM6 15h1v1h-1zM7 15h1v1h-1zM8 15h1v1h-1zM12 15h1v1h-1zM13 15h1v1h-1zM17 15h1v1h-1zM18 15h1v1h-1zM21 15h1v1h-1zM23 15h1v1h-1zM24 15h1v1h-1zM29 15h1v1h-1zM31 15h1v1h-1zM33 15h1v1h-1zM36 15h1v1h-1zM37 15h1v1h-1zM38 15h1v1h-1zM40 15h1v1h-1zM43 15h1v1h-1zM47 15h1v1h-1zM48 15h1v1h-1zM49 15h1v1h-1zM50 15h1v1h-1zM51 15h1v1h-1zM52 15h1v1h-1zM53 15h1v1h-1zM5 16h1v1h-1zM7 16h1v1h-1zM8 16h1v1h-1zM10 16h1v1h-1zM11 16h1v1h-1zM13 16h1v1h-1zM16 16h1v1h-1zM20 16h1v1h-1zM21 16h1v1h-1zM25 16h1v1h-1zM27 16h1v1h-1zM28 16h1v1h-1zM32 16h1v1h-1zM33 16h1v1h-1zM34 16h1v1h-1zM36 16h1v1h-1zM37 16h1v1h-1zM40 16h1v1h-1zM41 16h1v1h-1zM42 16h1v1h-1zM43 16h1v1h-1zM45 16h1v1h-1zM46 16h1v1h-1zM48 16h1v1h-1zM52 16h1v1h-1zM53 16h1v1h-1zM55 16h1v1h-1zM56 16h1v1h-1zM7 17h1v1h-1zM8 17h1v1h-1zM11 17h1v1h-1zM12 17h1v1h-1zM14 17h1v1h-1zM16 17h1v1h-1zM17 17h1v1h-1zM18 17h1v1h-1zM19 17h1v1h-1zM21 17h1v1h-1zM24 17h1v1h-1zM25 17h1v1h-1zM26 17h1v1h-1zM30 17h1v1h-1zM32 17h1v1h-1zM34 17h1v1h-1zM35 17h1v1h-1zM37 17h1v1h-1zM39 17h1v1h-1zM42 17h1v1h-1zM46 17h1v1h-1zM48 17h1v1h-1zM49 17h1v1h-1zM53 17h1v1h-1zM54 17h1v1h-1zM55 17h1v1h-1zM56 17h1v1h-1zM4 18h1v1h-1zM7 18h1v1h-1zM8 18h1v1h-1zM9 18h1v1h-1zM10 18h1v1h-1zM11 18h1v1h-1zM12 18h1v1h-1zM13 18h1v1h-1zM15 18h1v1h-1zM17 18h1v1h-1zM18 18h1v1h-1zM20 18h1v1h-1zM21 18h1v1h-1zM23 18h1v1h-1zM24 18h1v1h-1zM26 18h1v1h-1zM28 18h1v1h-1zM29 18h1v1h-1zM32 18h1v1h-1zM37 18h1v1h-1zM43 18h1v1h-1zM46 18h1v1h-1zM48 18h1v1h-1zM49 18h1v1h-1zM53 18h1v1h-1zM56 18h1v1h-1zM4 19h1v1h-1zM5 19h1v1h-1zM7 19h1v1h-1zM12 19h1v1h-1zM13 19h1v1h-1zM15 19h1v1h-1zM17 19h1v1h-1zM24 19h1v1h-1zM25 19h1v1h-1zM29 19h1v1h-1zM34 19h1v1h-1zM35 19h1v1h-1zM39 19h1v1h-1zM40 19h1v1h-1zM41 19h1v1h-1zM45 19h1v1h-1zM46 19h1v1h-1zM47 19h1v1h-1zM51 19h1v1h-1zM52 19h1v1h-1zM53 19h1v1h-1zM56 19h1v1h-1zM6 20h1v1h-1zM9 20h1v1h-1zM10 20h1v1h-1zM11 20h1v1h-1zM12 20h1v1h-1zM14 20h1v1h-1zM16 20h1v1h-1zM17 20h1v1h-1zM19 20h1v1h-1zM22 20h1v1h-1zM23 20h1v1h-1zM24 20h1v1h-1zM25 20h1v1h-1zM27 20h1v1h-1zM28 20h1v1h-1zM29 20h1v1h-1zM36 20h1v1h-1zM38 20h1v1h-1zM40 20h1v1h-1zM41 20h1v1h-1zM42 20h1v1h-1zM43 20h1v1h-1zM47 20h1v1h-1zM51 20h1v1h-1zM52 20h1v1h-1zM54 20h1v1h-1zM56 20h1v1h-1zM4 21h1v1h-1zM6 21h1v1h-1zM7 21h1v1h-1zM8 21h1v1h-1zM9 21h1v1h-1zM11 21h1v1h-1zM12 21h1v1h-1zM15 21h1v1h-1zM16 21h1v1h-1zM19 21h1v1h-1zM20 21h1v1h-1zM21 21h1v1h-1zM23 21h1v1h-1zM24 21h1v1h-1zM26 21h1v1h-1zM27 21h1v1h-1zM28 21h1v1h-1zM32 21h1v1h-1zM33 21h1v1h-1zM34 21h1v1h-1zM36 21h1v1h-1zM37 21h1v1h-1zM38 21h1v1h-1zM39 21h1v1h-1zM40 21h1v1h-1zM42 21h1v1h-1zM45 21h1v1h-1zM46 21h1v1h-1zM47 21h1v1h-1zM48 21h1v1h-1zM49 21h1v1h-1zM51 21h1v1h-1zM52 21h1v1h-1zM53 21h1v1h-1zM54 21h1v1h-1zM55 21h1v1h-1zM56 21h1v1h-1zM5 22h1v1h-1zM6 22h1v1h-1zM7 22h1v1h-1zM10 22h1v1h-1zM11 22h1v1h-1zM14 22h1v1h-1zM16 22h1v1h-1zM17 22h1v1h-1zM20 22h1v1h-1zM21 22h1v1h-1zM27 22h1v1h-1zM28 22h1v1h-1zM32 22h1v1h-1zM33 22h1v1h-1zM35 22h1v1h-1zM36 22h1v1h-1zM37 22h1v1h-1zM38 22h1v1h-1zM42 22h1v1h-1zM44 22h1v1h-1zM45 22h1v1h-1zM50 22h1v1h-1zM54 22h1v1h-1zM56 22h1v1h-1zM5 23h1v1h-1zM6 23h1v1h-1zM7 23h1v1h-1zM9 23h1v1h-1zM11 23h1v1h-1zM18 23h1v1h-1zM19 23h1v1h-1zM20 23h1v1h-1zM21 23h1v1h-1zM22 23h1v1h-1zM23 23h1v1h-1zM25 23h1v1h-1zM29 23h1v1h-1zM33 23h1v1h-1zM34 23h1v1h-1zM36 23h1v1h-1zM38 23h1v1h-1zM39 23h1v1h-1zM40 23h1v1h-1zM47 23h1v1h-1zM48 23h1v1h-1zM51 23h1v1h-1zM56 23h1v1h-1zM5 24h1v1h-1zM7 24h1v1h-1zM8 24h1v1h-1zM10 24h1v1h-1zM12 24h1v1h-1zM14 24h1v1h-1zM15 24h1v1h-1zM17 24h1v1h-1zM18 24h1v1h-1zM19 24h1v1h-1zM20 24h1v1h-1zM21 24h1v1h-1zM22 24h1v1h-1zM24 24h1v1h-1zM25 24h1v1h-1zM26 24h1v1h-1zM27 24h1v1h-1zM28 24h1v1h-1zM30 24h1v1h-1zM31 24h1v1h-1zM32 24h1v1h-1zM33 24h1v1h-1zM34 24h1v1h-1zM36 24h1v1h-1zM37 24h1v1h-1zM40 24h1v1h-1zM41 24h1v1h-1zM42 24h1v1h-1zM45 24h1v1h-1zM46 24h1v1h-1zM47 24h1v1h-1zM50 24h1v1h-1zM51 24h1v1h-1zM52 24h1v1h-1zM55 24h1v1h-1zM6 25h1v1h-1zM8 25h1v1h-1zM9 25h1v1h-1zM13 25h1v1h-1zM14 25h1v1h-1zM15 25h1v1h-1zM17 25h1v1h-1zM19 25h1v1h-1zM20 25h1v1h-1zM23 25h1v1h-1zM27 25h1v1h-1zM29 25h1v1h-1zM30 25h1v1h-1zM33 25h1v1h-1zM34 25h1v1h-1zM36 25h1v1h-1zM37 25h1v1h-1zM41 25h1v1h-1zM42 25h1v1h-1zM43 25h1v1h-1zM46 25h1v1h-1zM47 25h1v1h-1zM48 25h1v1h-1zM54 25h1v1h-1zM55 25h1v1h-1zM4 26h1v1h-1zM5 26h1v1h-1zM7 26h1v1h-1zM10 26h1v1h-1zM11 26h1v1h-1zM12 26h1v1h-1zM15 26h1v1h-1zM17 26h1v1h-1zM19 26h1v1h-1zM21 26h1v1h-1zM22 26h1v1h-1zM23 26h1v1h-1zM25 26h1v1h-1zM26 26h1v1h-1zM27 26h1v1h-1zM29 26h1v1h-1zM30 26h1v1h-1zM33 26h1v1h-1zM34 26h1v1h-1zM37 26h1v1h-1zM38 26h1v1h-1zM40 26h1v1h-1zM46 26h1v1h-1zM48 26h1v1h-1zM49 26h1v1h-1zM51 26h1v1h-1zM52 26h1v1h-1zM56 26h1v1h-1zM4 27h1v1h-1zM5 27h1v1h-1zM6 27h1v1h-1zM11 27h1v1h-1zM14 27h1v1h-1zM15 27h1v1h-1zM16 27h1v1h-1zM18 27h1v1h-1zM19 27h1v1h-1zM20 27h1v1h-1zM22 27h1v1h-1zM25 27h1v1h-1zM28 27h1v1h-1zM29 27h1v1h-1zM31 27h1v1h-1zM33 27h1v1h-1zM34 27h1v1h-1zM35 27h1v1h-1zM36 27h1v1h-1zM37 27h1v1h-1zM39 27h1v1h-1zM41 27h1v1h-1zM42 27h1v1h-1zM43 27h1v1h-1zM44 27h1v1h-1zM45 27h1v1h-1zM46 27h1v1h-1zM48 27h1v1h-1zM50 27h1v1h-1zM52 27h1v1h-1zM53 27h1v1h-1zM56 27h1v1h-1zM5 28h1v1h-1zM6 28h1v1h-1zM8 28h1v1h-1zM9 28h1v1h-1zM10 28h1v1h-1zM11 28h1v1h-1zM12 28h1v1h-1zM13 28h1v1h-1zM19 28h1v1h-1zM20 28h1v1h-1zM21 28h1v1h-1zM25 28h1v1h-1zM28 28h1v1h-1zM29 28h1v1h-1zM30 28h1v1h-1zM31 28h1v1h-1zM32 28h1v1h-1zM35 28h1v1h-1zM36 28h1v1h-1zM37 28h1v1h-1zM39 28h1v1h-1zM43 28h1v1h-1zM45 28h1v1h-1zM46 28h1v1h-1zM48 28h1v1h-1zM49 28h1v1h-1zM50 28h1v1h-1zM51 28h1v1h-1zM52 28h1v1h-1zM55 28h1v1h-1zM4 29h1v1h-1zM5 29h1v1h-1zM6 29h1v1h-1zM7 29h1v1h-1zM8 29h1v1h-1zM12 29h1v1h-1zM14 29h1v1h-1zM18 29h1v1h-1zM20 29h1v1h-1zM22 29h1v1h-1zM23 29h1v1h-1zM26 29h1v1h-1zM27 29h1v1h-1zM28 29h1v1h-1zM32 29h1v1h-1zM33 29h1v1h-1zM34 29h1v1h-1zM35 29h1v1h-1zM37 29h1v1h-1zM42 29h1v1h-1zM44 29h1v1h-1zM45 29h1v1h-1zM46 29h1v1h-1zM48 29h1v1h-1zM52 29h1v1h-1zM54 29h1v1h-1zM56 29h1v1h-1zM4 30h1v1h-1zM5 30h1v1h-1zM7 30h1v1h-1zM8 30h1v1h-1zM10 30h1v1h-1zM12 30h1v1h-1zM13 30h1v1h-1zM16 30h1v1h-1zM17 30h1v1h-1zM19 30h1v1h-1zM20 30h1v1h-1zM23 30h1v1h-1zM28 30h1v1h-1zM30 30h1v1h-1zM32 30h1v1h-1zM33 30h1v1h-1zM37 30h1v1h-1zM40 30h1v1h-1zM45 30h1v1h-1zM46 30h1v1h-1zM47 30h1v1h-1zM48 30h1v1h-1zM50 30h1v1h-1zM52 30h1v1h-1zM56 30h1v1h-1zM5 31h1v1h-1zM7 31h1v1h-1zM8 31h1v1h-1zM12 31h1v1h-1zM15 31h1v1h-1zM19 31h1v1h-1zM20 31h1v1h-1zM22 31h1v1h-1zM23 31h1v1h-1zM26 31h1v1h-1zM28 31h1v1h-1zM32 31h1v1h-1zM35 31h1v1h-1zM37 31h1v1h-1zM39 31h1v1h-1zM40 31h1v1h-1zM41 31h1v1h-1zM42 31h1v1h-1zM43 31h1v1h-1zM44 31h1v1h-1zM46 31h1v1h-1zM48 31h1v1h-1zM52 31h1v1h-1zM53 31h1v1h-1zM55 31h1v1h-1zM4 32h1v1h-1zM5 32h1v1h-1zM6 32h1v1h-1zM8 32h1v1h-1zM9 32h1v1h-1zM10 32h1v1h-1zM11 32h1v1h-1zM12 32h1v1h-1zM15 32h1v1h-1zM16 32h1v1h-1zM18 32h1v1h-1zM21 32h1v1h-1zM23 32h1v1h-1zM25 32h1v1h-1zM27 32h1v1h-1zM28 32h1v1h-1zM29 32h1v1h-1zM30 32h1v1h-1zM31 32h1v1h-1zM32 32h1v1h-1zM34 32h1v1h-1zM35 32h1v1h-1zM36 32h1v1h-1zM38 32h1v1h-1zM40 32h1v1h-1zM42 32h1v1h-1zM43 32h1v1h-1zM45 32h1v1h-1zM48 32h1v1h-1zM49 32h1v1h-1zM50 32h1v1h-1zM51 32h1v1h-1zM52 32h1v1h-1zM55 32h1v1h-1zM56 32h1v1h-1zM4 33h1v1h-1zM7 33h1v1h-1zM8 33h1v1h-1zM11 33h1v1h-1zM12 33h1v1h-1zM14 33h1v1h-1zM15 33h1v1h-1zM16 33h1v1h-1zM22 33h1v1h-1zM23 33h1v1h-1zM24 33h1v1h-1zM27 33h1v1h-1zM28 33h1v1h-1zM29 33h1v1h-1zM30 33h1v1h-1zM31 33h1v1h-1zM32 33h1v1h-1zM33 33h1v1h-1zM34 33h1v1h-1zM36 33h1v1h-1zM37 33h1v1h-1zM39 33h1v1h-1zM40 33h1v1h-1zM42 33h1v1h-1zM44 33h1v1h-1zM45 33h1v1h-1zM46 33h1v1h-1zM47 33h1v1h-1zM50 33h1v1h-1zM51 33h1v1h-1zM52 33h1v1h-1zM54 33h1v1h-1zM56 33h1v1h-1zM5 34h1v1h-1zM7 34h1v1h-1zM8 34h1v1h-1zM10 34h1v1h-1zM11 34h1v1h-1zM12 34h1v1h-1zM13 34h1v1h-1zM14 34h1v1h-1zM17 34h1v1h-1zM18 34h1v1h-1zM20 34h1v1h-1zM21 34h1v1h-1zM22 34h1v1h-1zM24 34h1v1h-1zM25 34h1v1h-1zM26 34h1v1h-1zM27 34h1v1h-1zM28 34h1v1h-1zM29 34h1v1h-1zM30 34h1v1h-1zM33 34h1v1h-1zM34 34h1v1h-1zM37 34h1v1h-1zM38 34h1v1h-1zM41 34h1v1h-1zM42 34h1v1h-1zM43 34h1v1h-1zM46 34h1v1h-1zM50 34h1v1h-1zM52 34h1v1h-1zM53 34h1v1h-1zM56 34h1v1h-1zM7 35h1v1h-1zM8 35h1v1h-1zM9 35h1v1h-1zM11 35h1v1h-1zM12 35h1v1h-1zM16 35h1v1h-1zM20 35h1v1h-1zM27 35h1v1h-1zM30 35h1v1h-1zM31 35h1v1h-1zM32 35h1v1h-1zM34 35h1v1h-1zM35 35h1v1h-1zM36 35h1v1h-1zM41 35h1v1h-1zM42 35h1v1h-1zM48 35h1v1h-1zM51 35h1v1h-1zM53 35h1v1h-1zM5 36h1v1h-1zM6 36h1v1h-1zM7 36h1v1h-1zM9 36h1v1h-1zM10 36h1v1h-1zM11 36h1v1h-1zM13 36h1v1h-1zM15 36h1v1h-1zM17 36h1v1h-1zM18 36h1v1h-1zM23 36h1v1h-1zM25 36h1v1h-1zM28 36h1v1h-1zM31 36h1v1h-1zM36 36h1v1h-1zM39 36h1v1h-1zM40 36h1v1h-1zM41 36h1v1h-1zM43 36h1v1h-1zM46 36h1v1h-1zM47 36h1v1h-1zM49 36h1v1h-1zM51 36h1v1h-1zM53 36h1v1h-1zM55 36h1v1h-1zM56 36h1v1h-1zM7 37h1v1h-1zM9 37h1v1h-1zM11 37h1v1h-1zM13 37h1v1h-1zM16 37h1v1h-1zM18 37h1v1h-1zM19 37h1v1h-1zM22 37h1v1h-1zM25 37h1v1h-1zM26 37h1v1h-1zM27 37h1v1h-1zM29 37h1v1h-1zM30 37h1v1h-1zM31 37h1v1h-1zM32 37h1v1h-1zM33 37h1v1h-1zM37 37h1v1h-1zM41 37h1v1h-1zM42 37h1v1h-1zM43 37h1v1h-1zM46 37h1v1h-1zM47 37h1v1h-1zM51 37h1v1h-1zM52 37h1v1h-1zM53 37h1v1h-1zM56 37h1v1h-1zM4 38h1v1h-1zM7 38h1v1h-1zM9 38h1v1h-1zM10 38h1v1h-1zM11 38h1v1h-1zM15 38h1v1h-1zM16 38h1v1h-1zM17 38h1v1h-1zM18 38h1v1h-1zM19 38h1v1h-1zM22 38h1v1h-1zM26 38h1v1h-1zM27 38h1v1h-1zM29 38h1v1h-1zM32 38h1v1h-1zM33 38h1v1h-1zM35 38h1v1h-1zM36 38h1v1h-1zM37 38h1v1h-1zM39 38h1v1h-1zM40 38h1v1h-1zM41 38h1v1h-1zM42 38h1v1h-1zM44 38h1v1h-1zM46 38h1v1h-1zM50 38h1v1h-1zM56 38h1v1h-1zM4 39h1v1h-1zM5 39h1v1h-1zM6 39h1v1h-1zM7 39h1v1h-1zM12 39h1v1h-1zM14 39h1v1h-1zM17 39h1v1h-1zM21 39h1v1h-1zM23 39h1v1h-1zM24 39h1v1h-1zM25 39h1v1h-1zM26 39h1v1h-1zM28 39h1v1h-1zM29 39h1v1h-1zM32 39h1v1h-1zM33 39h1v1h-1zM37 39h1v1h-1zM38 39h1v1h-1zM39 39h1v1h-1zM40 39h1v1h-1zM41 39h1v1h-1zM42 39h1v1h-1zM48 39h1v1h-1zM49 39h1v1h-1zM51 39h1v1h-1zM53 39h1v1h-1zM4 40h1v1h-1zM5 40h1v1h-1zM6 40h1v1h-1zM9 40h1v1h-1zM10 40h1v1h-1zM15 40h1v1h-1zM17 40h1v1h-1zM20 40h1v1h-1zM23 40h1v1h-1zM25 40h1v1h-1zM28 40h1v1h-1zM29 40h1v1h-1zM30 40h1v1h-1zM31 40h1v1h-1zM33 40h1v1h-1zM34 40h1v1h-1zM36 40h1v1h-1zM37 40h1v1h-1zM39 40h1v1h-1zM40 40h1v1h-1zM43 40h1v1h-1zM45 40h1v1h-1zM47 40h1v1h-1zM50 40h1v1h-1zM51 40h1v1h-1zM53 40h1v1h-1zM54 40h1v1h-1zM55 40h1v1h-1zM6 41h1v1h-1zM7 41h1v1h-1zM9 41h1v1h-1zM11 41h1v1h-1zM12 41h1v1h-1zM14 41h1v1h-1zM16 41h1v1h-1zM18 41h1v1h-1zM20 41h1v1h-1zM21 41h1v1h-1zM23 41h1v1h-1zM24 41h1v1h-1zM26 41h1v1h-1zM27 41h1v1h-1zM31 41h1v1h-1zM33 41h1v1h-1zM34 41h1v1h-1zM36 41h1v1h-1zM40 41h1v1h-1zM42 41h1v1h-1zM43 41h1v1h-1zM44 41h1v1h-1zM45 41h1v1h-1zM46 41h1v1h-1zM47 41h1v1h-1zM49 41h1v1h-1zM52 41h1v1h-1zM56 41h1v1h-1zM7 42h1v1h-1zM8 42h1v1h-1zM10 42h1v1h-1zM11 42h1v1h-1zM12 42h1v1h-1zM16 42h1v1h-1zM18 42h1v1h-1zM20 42h1v1h-1zM23 42h1v1h-1zM25 42h1v1h-1zM26 42h1v1h-1zM27 42h1v1h-1zM33 42h1v1h-1zM34 42h1v1h-1zM35 42h1v1h-1zM38 42h1v1h-1zM40 42h1v1h-1zM42 42h1v1h-1zM45 42h1v1h-1zM47 42h1v1h-1zM50 42h1v1h-1zM53 42h1v1h-1zM56 42h1v1h-1zM4 43h1v1h-1zM6 43h1v1h-1zM7 43h1v1h-1zM14 43h1v1h-1zM18 43h1v1h-1zM19 43h1v1h-1zM24 43h1v1h-1zM26 43h1v1h-1zM29 43h1v1h-1zM30 43h1v1h-1zM32 43h1v1h-1zM36 43h1v1h-1zM39 43h1v1h-1zM40 43h1v1h-1zM41 43h1v1h-1zM42 43h1v1h-1zM45 43h1v1h-1zM47 43h1v1h-1zM48 43h1v1h-1zM49 43h1v1h-1zM52 43h1v1h-1zM53 43h1v1h-1zM56 43h1v1h-1zM5 44h1v1h-1zM6 44h1v1h-1zM7 44h1v1h-1zM8 44h1v1h-1zM10 44h1v1h-1zM11 44h1v1h-1zM14 44h1v1h-1zM17 44h1v1h-1zM18 44h1v1h-1zM19 44h1v1h-1zM22 44h1v1h-1zM23 44h1v1h-1zM28 44h1v1h-1zM30 44h1v1h-1zM31 44h1v1h-1zM32 44h1v1h-1zM34 44h1v1h-1zM36 44h1v1h-1zM37 44h1v1h-1zM39 44h1v1h-1zM40 44h1v1h-1zM41 44h1v1h-1zM47 44h1v1h-1zM49 44h1v1h-1zM53 44h1v1h-1zM54 44h1v1h-1zM55 44h1v1h-1zM6 45h1v1h-1zM7 45h1v1h-1zM13 45h1v1h-1zM15 45h1v1h-1zM16 45h1v1h-1zM19 45h1v1h-1zM20 45h1v1h-1zM21 45h1v1h-1zM22 45h1v1h-1zM23 45h1v1h-1zM25 45h1v1h-1zM27 45h1v1h-1zM31 45h1v1h-1zM32 45h1v1h-1zM34 45h1v1h-1zM35 45h1v1h-1zM39 45h1v1h-1zM40 45h1v1h-1zM46 45h1v1h-1zM47 45h1v1h-1zM51 45h1v1h-1zM52 45h1v1h-1zM53 45h1v1h-1zM54 45h1v1h-1zM55 45h1v1h-1zM56 45h1v1h-1zM4 46h1v1h-1zM5 46h1v1h-1zM7 46h1v1h-1zM8 46h1v1h-1zM9 46h1v1h-1zM10 46h1v1h-1zM13 46h1v1h-1zM15 46h1v1h-1zM17 46h1v1h-1zM19 46h1v1h-1zM20 46h1v1h-1zM21 46h1v1h-1zM23 46h1v1h-1zM25 46h1v1h-1zM27 46h1v1h-1zM29 46h1v1h-1zM31 46h1v1h-1zM34 46h1v1h-1zM35 46h1v1h-1zM37 46h1v1h-1zM44 46h1v1h-1zM46 46h1v1h-1zM48 46h1v1h-1zM50 46h1v1h-1zM52 46h1v1h-1zM53 46h1v1h-1zM54 46h1v1h-1zM55 46h1v1h-1zM56 46h1v1h-1zM5 47h1v1h-1zM6 47h1v1h-1zM11 47h1v1h-1zM12 47h1v1h-1zM14 47h1v1h-1zM17 47h1v1h-1zM18 47h1v1h-1zM19 47h1v1h-1zM20 47h1v1h-1zM21 47h1v1h-1zM23 47h1v1h-1zM24 47h1v1h-1zM26 47h1v1h-1zM32 47h1v1h-1zM33 47h1v1h-1zM34 47h1v1h-1zM35 47h1v1h-1zM36 47h1v1h-1zM41 47h1v1h-1zM43 47h1v1h-1zM44 47h1v1h-1zM46 47h1v1h-1zM47 47h1v1h-1zM49 47h1v1h-1zM50 47h1v1h-1zM7 48h1v1h-1zM10 48h1v1h-1zM11 48h1v1h-1zM15 48h1v1h-1zM16 48h1v1h-1zM18 48h1v1h-1zM19 48h1v1h-1zM21 48h1v1h-1zM23 48h1v1h-1zM25 48h1v1h-1zM27 48h1v1h-1zM28 48h1v1h-1zM29 48h1v1h-1zM30 48h1v1h-1zM31 48h1v1h-1zM32 48h1v1h-1zM34 48h1v1h-1zM35 48h1v1h-1zM36 48h1v1h-1zM38 48h1v1h-1zM40 48h1v1h-1zM43 48h1v1h-1zM45 48h1v1h-1zM47 48h1v1h-1zM48 48h1v1h-1zM49 48h1v1h-1zM50 48h1v1h-1zM51 48h1v1h-1zM52 48h1v1h-1zM56 48h1v1h-1zM12 49h1v1h-1zM13 49h1v1h-1zM17 49h1v1h-1zM18 49h1v1h-1zM19 49h1v1h-1zM21 49h1v1h-1zM23 49h1v1h-1zM24 49h1v1h-1zM26 49h1v1h-1zM27 49h1v1h-1zM28 49h1v1h-1zM32 49h1v1h-1zM33 49h1v1h-1zM34 49h1v1h-1zM36 49h1v1h-1zM37 49h1v1h-1zM39 49h1v1h-1zM40 49h1v1h-1zM42 49h1v1h-1zM45 49h1v1h-1zM46 49h1v1h-1zM47 49h1v1h-1zM48 49h1v1h-1zM52 49h1v1h-1zM53 49h1v1h-1zM54 49h1v1h-1zM56 49h1v1h-1zM4 50h1v1h-1zM5 50h1v1h-1zM6 50h1v1h-1zM7 50h1v1h-1zM8 50h1v1h-1zM9 50h1v1h-1zM10 50h1v1h-1zM12 50h1v1h-1zM13 50h1v1h-1zM14 50h1v1h-1zM15 50h1v1h-1zM22 50h1v1h-1zM24 50h1v1h-1zM27 50h1v1h-1zM28 50h1v1h-1zM30 50h1v1h-1zM32 50h1v1h-1zM33 50h1v1h-1zM35 50h1v1h-1zM39 50h1v1h-1zM42 50h1v1h-1zM43 50h1v1h-1zM44 50h1v1h-1zM45 50h1v1h-1zM46 50h1v1h-1zM48 50h1v1h-1zM50 50h1v1h-1zM52 50h1v1h-1zM55 50h1v1h-1zM56 50h1v1h-1zM4 51h1v1h-1zM10 51h1v1h-1zM14 51h1v1h-1zM15 51h1v1h-1zM16 51h1v1h-1zM17 51h1v1h-1zM18 51h1v1h-1zM19 51h1v1h-1zM20 51h1v1h-1zM22 51h1v1h-1zM25 51h1v1h-1zM27 51h1v1h-1zM28 51h1v1h-1zM32 51h1v1h-1zM33 51h1v1h-1zM34 51h1v1h-1zM40 51h1v1h-1zM44 51h1v1h-1zM48 51h1v1h-1zM52 51h1v1h-1zM53 51h1v1h-1zM56 51h1v1h-1zM4 52h1v1h-1zM6 52h1v1h-1zM7 52h1v1h-1zM8 52h1v1h-1zM10 52h1v1h-1zM12 52h1v1h-1zM14 52h1v1h-1zM16 52h1v1h-1zM18 52h1v1h-1zM20 52h1v1h-1zM23 52h1v1h-1zM24 52h1v1h-1zM25 52h1v1h-1zM26 52h1v1h-1zM28 52h1v1h-1zM29 52h1v1h-1zM30 52h1v1h-1zM31 52h1v1h-1zM32 52h1v1h-1zM34 52h1v1h-1zM39 52h1v1h-1zM40 52h1v1h-1zM41 52h1v1h-1zM42 52h1v1h-1zM43 52h1v1h-1zM46 52h1v1h-1zM48 52h1v1h-1zM49 52h1v1h-1zM50 52h1v1h-1zM51 52h1v1h-1zM52 52h1v1h-1zM53 52h1v1h-1zM4 53h1v1h-1zM6 53h1v1h-1zM7 53h1v1h-1zM8 53h1v1h-1zM10 53h1v1h-1zM17 53h1v1h-1zM18 53h1v1h-1zM19 53h1v1h-1zM20 53h1v1h-1zM21 53h1v1h-1zM22 53h1v1h-1zM23 53h1v1h-1zM27 53h1v1h-1zM28 53h1v1h-1zM29 53h1v1h-1zM30 53h1v1h-1zM33 53h1v1h-1zM34 53h1v1h-1zM35 53h1v1h-1zM37 53h1v1h-1zM39 53h1v1h-1zM42 53h1v1h-1zM43 53h1v1h-1zM44 53h1v1h-1zM45 53h1v1h-1zM46 53h1v1h-1zM47 53h1v1h-1zM49 53h1v1h-1zM50 53h1v1h-1zM51 53h1v1h-1zM52 53h1v1h-1zM53 53h1v1h-1zM55 53h1v1h-1zM4 54h1v1h-1zM6 54h1v1h-1zM7 54h1v1h-1zM8 54h1v1h-1zM10 54h1v1h-1zM13 54h1v1h-1zM15 54h1v1h-1zM21 54h1v1h-1zM27 54h1v1h-1zM30 54h1v1h-1zM32 54h1v1h-1zM33 54h1v1h-1zM34 54h1v1h-1zM35 54h1v1h-1zM36 54h1v1h-1zM38 54h1v1h-1zM39 54h1v1h-1zM40 54h1v1h-1zM42 54h1v1h-1zM43 54h1v1h-1zM45 54h1v1h-1zM46 54h1v1h-1zM47 54h1v1h-1zM50 54h1v1h-1zM53 54h1v1h-1zM55 54h1v1h-1zM4 55h1v1h-1zM10 55h1v1h-1zM13 55h1v1h-1zM14 55h1v1h-1zM15 55h1v1h-1zM18 55h1v1h-1zM19 55h1v1h-1zM20 55h1v1h-1zM21 55h1v1h-1zM22 55h1v1h-1zM23 55h1v1h-1zM25 55h1v1h-1zM27 55h1v1h-1zM30 55h1v1h-1zM32 55h1v1h-1zM33 55h1v1h-1zM36 55h1v1h-1zM38 55h1v1h-1zM41 55h1v1h-1zM43 55h1v1h-1zM45 55h1v1h-1zM50 55h1v1h-1zM52 55h1v1h-1zM53 55h1v1h-1zM55 55h1v1h-1zM56 55h1v1h-1zM4 56h1v1h-1zM5 56h1v1h-1zM6 56h1v1h-1zM7 56h1v1h-1zM8 56h1v1h-1zM9 56h1v1h-1zM10 56h1v1h-1zM12 56h1v1h-1zM13 56h1v1h-1zM16 56h1v1h-1zM17 56h1v1h-1zM18 56h1v1h-1zM20 56h1v1h-1zM22 56h1v1h-1zM23 56h1v1h-1zM26 56h1v1h-1zM27 56h1v1h-1zM28 56h1v1h-1zM29 56h1v1h-1zM30 56h1v1h-1zM33 56h1v1h-1zM34 56h1v1h-1zM36 56h1v1h-1zM37 56h1v1h-1zM38 56h1v1h-1zM39 56h1v1h-1zM40 56h1v1h-1zM42 56h1v1h-1zM43 56h1v1h-1zM46 56h1v1h-1zM47 56h1v1h-1zM48 56h1v1h-1zM51 56h1v1h-1zM52 56h1v1h-1zM55 56h1v1h-1z"/></svg>
+      <div>
+        <p>Mit der Authenticator-App den Code scannen — oder am Handy direkt öffnen:</p>
+        <p><a class="knopf knopf-neutral" href="otpauth://totp/Gen-EM%20NAdoku:mara.beispiel%40example.invalid?secret=K5QXGZLTMFZGKZLPN5ZW4ZLUMVZHEZLT&amp;issuer=Gen-EM%20NAdoku&amp;algorithm=SHA1&amp;digits=6&amp;period=30"><span>In der Authenticator-App öffnen</span></a></p>
+        <div class="codeblock">
+          <p class="codeblock-titel">Oder von Hand eintragen</p>
+          <p class="codeblock-wert">K5QX GZLT MFZG KZLP N5ZW 4ZLU MVZH EZLT</p>
+          <p class="feld-klein">Zeitbasiert · 6 Ziffern · 30 Sekunden</p>
+        </div>
+      </div>
+    </div>
+    <h3 class="listen-form-titel">2 · Code bestätigen</h3>
+    <div class="feld feld-code">
+      <label class="feld-label" for="f-totp">Code aus der App <span class="feld-pflicht" aria-hidden="true">*</span></label>
+      <input class="feld-eingabe" type="text" id="f-totp" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]{6,7}" value="481 205">
+    </div>
+    <div class="listen-form-fuss"><button class="knopf knopf-primaer knopf-breit" type="submit"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-haken"></use></svg><span>Einschalten</span></button></div>
+  </form>
+  <p class="anmeldung-neben"><a href="logout.php">Abmelden</a></p>
+  <p class="zustandszeile" id="loginstate"></p>
+ </div>
+
+  <nav class="fuss-anmeldung" aria-label="Über diese Anwendung">
+   <a href="ueber.php">Was ist NAdoku?</a>
+   <a href="hilfe.php">Handbuch</a>
+   <a href="impressum.php">Impressum</a>
+   <a href="datenschutz.php">Datenschutz</a>
+ </nav>
+</main>
+
+
+
+<footer class="fuss-seite fuss-dunkel">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.37.1</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+
+
+</div></div></div><div class="frame-huelle" style="width:680px"><span class="frame-titel">zweitfaktor.php · Schritt 2 · Codes</span><div class="frame"><div class="anmeldung-body">
+<main class="anmeldung">
+ <div class="anmeldung-karte">
+  <img src="../../../../server/assets/images/gen-em_logo_helicopter.svg" alt="" class="anmeldung-logo">
+  <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
+  <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+          <form method="post">
+    <h2 class="anmeldung-schritt">Zweitfaktor ist eingeschaltet</h2>
+    <div class="codeblock">
+      <p class="codeblock-titel">Deine zehn Wiederherstellungscodes — nur jetzt sichtbar</p>
+      <ol class="codeblock-liste"><li>K7QF 2MXD</li><li>9TRA 4HWP</li><li>6ZNC 3LVE</li><li>P8JD 5QKS</li><li>W2MY 7FHU</li><li>C4XT 9RBN</li><li>H6LQ 2DZA</li><li>R3VK 8PJM</li><li>E5NW 6TYC</li><li>U9GS 4XLF</li></ol>
+      <p class="feld-klein">Jeder Code gilt einmal, wenn das Handy fehlt.</p>
+      <label><input type="checkbox"> Ich habe die Codes gesichert.</label>
+      <form class="rf-druck"><button class="knopf knopf-neutral" type="button"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-drucken"></use></svg><span>Codeblatt drucken</span></button></form>
+    </div>
+    <div class="listen-form-fuss"><button class="knopf knopf-primaer knopf-breit" type="submit" disabled><span>Weiter</span></button></div>
+    <p class="feld-klein">„Weiter" wird frei, sobald das Häkchen gesetzt ist.</p>
+  </form>
+  <p class="zustandszeile" id="loginstate"></p>
+ </div>
+
+  <nav class="fuss-anmeldung" aria-label="Über diese Anwendung">
+   <a href="ueber.php">Was ist NAdoku?</a>
+   <a href="hilfe.php">Handbuch</a>
+   <a href="impressum.php">Impressum</a>
+   <a href="datenschutz.php">Datenschutz</a>
+ </nav>
+</main>
+
+
+
+<footer class="fuss-seite fuss-dunkel">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.37.1</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+
+
+</div></div></div></div></div><div class="notiz"><h3>Anmerkungen</h3><ul>
+<li><strong>Der QR-Code ist echt</strong> — erzeugt mit <code>qrcode-generator</code> 2.0.4 (MIT), nur die Modulmatrix; das SVG
+baut die Anwendung (ein <code>&lt;path&gt;</code>, Klassen <code>.qr-grund</code>/<code>.qr-modul</code>, Token statt Hexwerten). Inhalt:
+die otpauth-Adresse des Knopfs daneben (Probe mit <code>jsqr</code>: gleich). Fehlerstufe M, 49 Module, 200 px — rund 4 px je Modul.</li>
+<li><strong>Drei Wege in die App, keiner fehlt:</strong> scannen (am Rechner), „In der Authenticator-App öffnen" (am Handy, die
+otpauth-Adresse als Verweis), abtippen (Base32 in Vierergruppen im vorhandenen Codeblock).</li>
+<li><strong>Eingeschaltet wird erst nach einem bestätigten Code</strong> — sonst sperrte sich aus, wer das Scannen abbricht.</li>
+<li><strong>Die Codes</strong> stehen einmal im Codeblock, nummeriert, zwei Spalten; „Codeblatt drucken" öffnet das Blatt aus
+(b)-Codeblatt. Im Tor wird „Weiter" erst frei, wenn das Häkchen sitzt (wie beim Wiederherstellungsschlüssel).</li>
+<li><strong>Pflichtrolle (Karte d):</strong> kein „Ausschalten"; der Satz sagt, wer zurücksetzen kann (E-P5c-42).</li>
+<li><strong>Code-Schritt:</strong> <code>autocomplete="one-time-code"</code> und <code>inputmode="numeric"</code> — am Handy bietet die
+Tastatur den Code aus der App an. Die Eingabe nimmt „481 205" und „481205".</li>
+<li><strong>Neu</strong> sind nur: <code>.qr</code>, <code>.zweitfaktor-einrichtung</code>, <code>.feld-code</code>,
+<code>.codeblock-liste</code>, <code>.anmeldung-schritt</code>. Keine neuen Maße: 200 px ist die halbe Anmeldekarte, die Sperrung die des
+Codeblocks.</li>
+<li><strong>Zum Entscheiden:</strong> (1) das Tor als eigene Seite in der Anmeldehülle wie im Bild; (2) Name der Seite
+(<code>zweitfaktor.php</code> ist ein Vorschlag).</li>
+<li>Namen, Codes und Geheimnis sind erfunden; die Seiten sind aus der örtlichen Installation (Web 20.37.1) abgegriffen und nur um das Neue
+ergänzt.</li></ul></div></body></html>

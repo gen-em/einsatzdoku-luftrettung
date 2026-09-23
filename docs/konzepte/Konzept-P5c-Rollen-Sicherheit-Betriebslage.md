@@ -34,16 +34,16 @@ Umsetzung.
 > |---|---|
 > | Stand | **23.09.2026 — Fassung 2.** Fassung 1 (20.09.2026, gegen `862ca7f`, Web 20.25.0) freigegeben, Mockup-Runde M-P5c-01 freigegeben. Am 23.09.2026 gegen `8fd4553` (Web 20.37.1, nach Schritt 15, 16 und PK-01 bis -04) abgeglichen: 139 Rohbefunde, 16 davon in der Gegenlesung widerlegt; 21 Fragen dem Auftraggeber vorgelegt und am selben Tag beantwortet (Q-P5c-05 bis -25, 2.7). Daraus **E-P5c-31 bis -58** und **F-P5c-15 bis -58**. Nachgezogen auf `main` `8ae873c` (PK-04 gemergt, Konzept TB). |
 > | Entschieden | E-P5c-01 bis **E-P5c-58**; Q-P5c-01 bis **-25** beantwortet |
-> | Offen | **M-P5c-02** (Mockup-Runde: Banner, Zweitfaktor, Support-Sicht, Bus-Faktor, Umgebungszeile auf den Blättern) — Bau und Freigabe stehen aus (6.2). Sonst nichts |
-> | Umsetzung | nicht begonnen; **nach PK-05** (E-P5c-32), nach Freigabe von M-P5c-02. Reihenfolge AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 → AP11 (3.0); **AP10 entfällt** |
+> | Offen | **M-P5c-02 gebaut am 23.09.2026, Freigabe steht aus** — mit ihr die Fragen **Q-P5c-26 bis -30** (6.2). Neue Befunde der Runde: **F-P5c-59 bis -63** (Abschnitt 5); zwei davon liegen außerhalb von P5c und stehen als **Backlog 288** (Neueinrichtung scheitert seit Web 20.30.0) und **289** (Anmeldeseite) — **Nr. 288 hält Station B auf** und gehört vor P5c (3.0) |
+> | Umsetzung | nicht begonnen; **nach PK-05** (E-P5c-32), nach Freigabe von M-P5c-02, nach Behebung von Nr. 288. Reihenfolge AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 → AP11 (3.0); **AP10 entfällt** |
 > | Fable-Schritte | **keine.** M-P5c-01 ist am 20.09.2026 mit Fable gefahren; M-P5c-02 fährt Opus (Q-P5c-08) |
-> | Nummern | Backlog **286** (Admin-Tor, AP2) und **287** (Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb, Schritt 17) mit dieser Fassung eingetragen; der Kopf des Backlogs nennt **288** als nächste freie Nummer. Alle übrigen Einträge in Rahmenplan und Backlog stehen als Einschub in 7 und 8 und werden **mit AP1** eingespielt (F-P5c-50) |
+> | Nummern | Backlog **286** (Admin-Tor, AP2) und **287** (Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb, Schritt 17) mit dieser Fassung eingetragen; **288** und **289** mit der Mockup-Runde M-P5c-02; der Kopf des Backlogs nennt **290** als nächste freie Nummer. Alle übrigen Einträge in Rahmenplan und Backlog stehen als Einschub in 7 und 8 und werden **mit AP1** eingespielt (F-P5c-50) |
 >
 > **Stand der Umsetzung**
 >
 > | Paket | Stand | Versionsstufe (Vorschlag) | Prüfstand | Migration | Commit | Abnahmezahlen |
 > |---|---|---|---|---|---|---|
-> | M-P5c-02 Mockup-Runde | offen | — (nur `docs/`) | — | — | | |
+> | M-P5c-02 Mockup-Runde | **gebaut 23.09.2026, Freigabe offen** | — (nur `docs/`) | — | — | | Überlauf 0 in 6 Bildschirmdateien; QR 2 von 2 gelesen; Codeblatt 1 Seite (74 %); Blätter auf Staging je 1 Seite (93 %, 71 %; Härtefall 1013 von 1017 px); Kontraste 8 von 8 gleich mit `kontrast.py` |
 > | AP1 Banner und Ankündigung | offen | Neben | neben | nein | | |
 > | AP2 Protokollseite und Archiv | offen | Neben | neben | nein | | |
 > | AP3 Fehlerprotokoll | offen | Neben | neben | nein | | |
@@ -892,6 +892,10 @@ jede neue Anlage wäre dauerhaft rot und der Menüzähler „Status" stünde nie
 auf null. Orange in beiden Fällen (weniger als zwei handlungsfähige
 Verwaltungskonten; nur eine BetreiberIn). `betreiberinnen_zahl()` zählt heute
 auch gesperrte Konten — der Bus-Faktor zählt handlungsfähige (E-P5c-56).
+**Nachgeprüft mit M-P5c-02 (23.09.2026):** Der Menüzähler zählt Orange
+ebenso wie Rot (F-P5c-59) — die Begründung trägt damit nur gegen die rote
+Farbe, nicht gegen den dauerhaften Zähler. Neu vorgelegt als **Q-P5c-30**
+(6.2).
 
 **E-P5c-45 — Herkunft je Einsatz ohne Datenschutz-Vorbedingung** (Q-P5c-19,
 Nr. 80). Die Zählung sind Summen einer vorhandenen Spalte, nur für die
@@ -1096,7 +1100,12 @@ Tabellen ließe nach einem Wiederanlauf `ratelimit_lib.php` scheitern.
 ### 3.0 Reihenfolge und Voraussetzungen
 
 **Voraussetzungen:** Schritte 16 und 15 gemergt (erfüllt, 20. und
-23.09.2026); **PK-05 gemergt** (E-P5c-32); **M-P5c-02 freigegeben**.
+23.09.2026); **PK-05 gemergt** (E-P5c-32); **M-P5c-02 freigegeben**;
+**Backlog Nr. 288 behoben** (F-P5c-62): Ohne sie scheitert
+`hochfahren.sh --neu`, und jedes Paket braucht Station B — auch für die
+Migrationen von AP4, AP5, AP7 und AP8, die auf einer frisch eingerichteten
+Anlage nachgemessen werden. Empfohlen als eigene Korrekturstufe vor P5c,
+zusammen mit Nr. 289.
 
 **Reihenfolge:** AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 →
 AP11. Die Gründe:
@@ -1197,6 +1206,9 @@ Verwaltung → Installation). **Buchführung:** Einschub 7 und 8 einspielen.
   Rundmail am selben Tag wird abgewiesen, genau 1 Protokolleintrag.
 - Bedienweg `wege/betrieb_server.mjs`: Ankündigung setzen, erscheinen,
   wegklicken, nach Neuanmeldung wieder da.
+- **Anmeldeseite:** Die Streifen stehen über der Karte, die Verweise darunter
+  (Nr. 289 — ist sie bis AP1 nicht behoben, behebt AP1 sie mit, weil es die
+  Seite ohnehin anfasst; F-P5c-63).
 - **Prüfpunkte der BetreiberIn** (Prüfdokument): Staging rot nach dem Merge,
   Produktiv blau nach dem Tag, Rundmail in einem echten Postfach angekommen.
 
@@ -1345,8 +1357,12 @@ Prüfstand `haupt`.
 - Wiederherstellungscode einmal gültig, zweimal nicht; Rücksetzen nach
   E-P5c-42 je Rolle in der Rollenprobe (Matrix erweitert).
 - Ratenprobe grün mit **7** Töpfen mit Leiter.
-- Bus-Faktor als Tabelle Rollenmix → Ton (1 BetreiberIn → Orange; 2
-  handlungsfähige → keiner; 2, eine davon ohne Zweitfaktor → Orange).
+- Bus-Faktor als Tabelle Rollenmix → Ton (1 BetreiberIn allein → Fall 1;
+  1 BetreiberIn und 1 Admin → Fall 2; 2 BetreiberInnen, eine ohne
+  Zweitfaktor → Fall 3, Orange; **2 handlungsfähige BetreiberInnen** →
+  keiner). Die Ampel hängt allein an „zwei BetreiberInnen handlungsfähig",
+  die Zahl der Verwaltungskonten wählt nur den Text (F-P5c-60). Der Ton von
+  Fall 1 und 2 folgt Q-P5c-30. Texte und Ort: M-P5c-02 (d).
 - Bilderlauf aller Seiten: **0 Seiten mit Code-Schritt** unter den Bildern.
 - Anmeldung und `betrieb_updates.php` vor `update.php` (Rückfall).
 - Plattformmatrix, Kreislauf `edbak` (Stufe `haupt`).
@@ -1479,7 +1495,12 @@ Wartung bleibt an.** **Stufe:** **Haupt**, Prüfstand `haupt`.
   eingebautem Fehler rot.
 - PDF beider Blätter aus **Chromium** = 1 Seite, das Schlüsselblatt mit drei
   Werten; **Firefox ist Prüfpunkt der BetreiberIn** (Playwright erzeugt PDF nur
-  mit Chromium, F-P5c-42).
+  mit Chromium, F-P5c-42). **Dazu der Härtefall mit Umgebungszeile**
+  (drei Werte, Kurzname 83, Adresse 62 Zeichen): im Mockup 1013 von 1017 px —
+  4 px Luft. Reicht es im Bau nicht, rückt die Zeile als erste Zeile in
+  `.blatt-kopf-rechts` (M-P5c-02, LIESMICH 8.4).
+- Notfallblatt: „Einstellungen → Profil" statt „→ Konto", zweimal
+  (F-P5c-61); `grep -c "Einstellungen → Konto" server/notfallblatt.php` = 0.
 - Kontraste (`kontrast.py`) von Kartenkopf und Reiterschrift ≥ 4,5 : 1.
 - **Stilvergleich** (`bash tools/stilvergleich/gegen.sh`): die Liste deckt sich
   mit den geplanten Änderungen (Regeln an `.leiste-gruppe`,
@@ -1615,6 +1636,11 @@ angegebenen Kennung (A-, B-, … = Bereich und laufende Nummer).*
 | F-P5c-56 | Die Ratenprobe führt die Töpfe mit Leiter als geschlossene Liste (F-13) | AP5 |
 | F-P5c-57 | Für den Vorschau-Endpunkt fehlten die Andockstellen; `forms.js` fragt im Stil der Anwendung nur über `data-cancel-form` (E-12) | AP9, E-P5c-25 |
 | F-P5c-58 | Die Verifikationsmail hat keine Funktion; der Verfall unbestätigter Konten zählt ab `created_at` (C-12) | E-P5c-14 |
+| F-P5c-59 | *(M-P5c-02)* Der Menüzähler „Status" zählt Orange und Rot (`status_lib.php`); die Begründung von E-P5c-44 — Rot hielte den Zähler dauerhaft über null — gilt für Orange genauso | Q-P5c-30 |
+| F-P5c-60 | *(M-P5c-02)* Die zwei Bedingungen aus E-P5c-16 sind eine: weniger als zwei handlungsfähige Verwaltungskonten heißt immer auch weniger als zwei handlungsfähige BetreiberInnen | AP5, Abnahme berichtigt |
+| F-P5c-61 | *(M-P5c-02)* `notfallblatt.php` schickt zweimal nach „Einstellungen → Konto" (Z. 169, 213); das freigegebene M-P5c-01f trägt den Fehler mit | AP9, Abnahme |
+| F-P5c-62 | *(M-P5c-02)* **Neueinrichtung scheitert seit Web 20.30.0:** `konto_anlegen()` ruft `db_transaktion()`, `konto_lib.php` lädt `db.php` nur mit `config.php`; `hochfahren.sh --neu` scheitert in Schritt 4 | **Backlog 288**, Voraussetzung (3.0) |
+| F-P5c-63 | *(M-P5c-02)* Die Anmeldeseite stellt die vier Verweise neben die Karte (`.anmeldung` in Zeilenrichtung) — bei 390 px ist die Karte rund 200 px breit; seit Web 20.23.0 | **Backlog 289**, spätestens AP1 |
 
 ---
 
@@ -1658,6 +1684,25 @@ gerechnet und gegen `kontrast.py` gehalten; PDF des Codeblatts = 1 Seite;
 Texte in der Hausform. **Freigabe** je Mockup durch den Auftraggeber;
 danach Rückschreibung ins Konzept (E-Einträge, Abnahmen).
 
+**Stand 23.09.2026: gebaut, zur Freigabe.** Neun Dateien mit Bild, drei
+davon mit PDF; Dateien, Messung und Bauart im `LIESMICH.md` der Mockups,
+Abschnitt 8. Gemessen: Überlauf 0 in sechs Bildschirmdateien, 0 fehlende
+Ressourcen, 0 Konsolenfehler; QR 2 von 2 aus dem Bild gelesen = otpauth-Adresse;
+Codeblatt 1 Seite (748 von 1017 px); Schlüssel- und Notfallblatt auf Staging
+je 1 Seite (945 und 727 px), Härtefall 1013 von 1017 px; Kontraste 8 von 8
+gleich mit den Funktionen von `kontrast.py`. **Nicht gemessen:** Firefox-Druck,
+Scan mit einer echten Authenticator-App (beides Prüfpunkte der Umsetzung).
+
+**Offen mit der Freigabe** (Q-P5c-26 bis -30, Vorschlag fett):
+
+| Nr. | Frage | Vorschlag |
+|---|---|---|
+| Q-P5c-26 | (a) Aktiver Kopfpunkt auf `--rot`: Strich in `--orange-hell` (A, 4,12 : 1) oder Weiß (B, 4,78 : 1) | **A** |
+| Q-P5c-27 | (a) Ankündigung auch auf der Anmeldeseite | **ja** |
+| Q-P5c-28 | (b) Einrichtungstor als eigene Seite in der Anmeldehülle, Name `zweitfaktor.php` | **ja, ja** |
+| Q-P5c-29 | (c) Aktionsblatt „Setz-Link senden" statt „Passwort zurücksetzen", für alle Rollen | **ja** |
+| Q-P5c-30 | (d) Bus-Faktor und Menüzähler (F-P5c-59): alle Fälle orange wie E-P5c-44, oder Fall 1 und 2 neutral („keine Vertretung", zählt nicht) und nur Fall 3 orange | **Fall 1 und 2 neutral, Fall 3 orange** — Vorbild „Komplett-Backup: kein Plan"; neutral heißt „nicht eingerichtet", orange „eingerichtet, trägt aber nicht" |
+
 ---
 
 ## 7. Einschub Rahmenplan (mit AP1; Fassung vergibt die einspielende Instanz)
@@ -1691,11 +1736,14 @@ danach Rückschreibung ins Konzept (E-Einträge, Abnahmen).
   niemand ein Konto mit der Rolle admin an (E-P5c-31).
 - **Abschnitt 10:** eine Zeile.
 
-## 8. Einschub Backlog (mit AP1, außer 286/287 und dem Kopf)
+## 8. Einschub Backlog (mit AP1, außer 286 bis 289 und dem Kopf)
 
 - **Mit dieser Fassung eingetragen:** Nr. **286** (Admin-Tor, → 10c AP2),
   Nr. **287** (Karten „Was hier gilt" auf `import.php`, `einsatz_form.php`,
-  `wiederherstellen.php`, → Schritt 17); Kopf: nächste freie Nummer **288**.
+  `wiederherstellen.php`, → Schritt 17); **mit M-P5c-02 (23.09.2026):**
+  Nr. **288** (Neueinrichtung scheitert, eigene Korrekturstufe vor P5c) und
+  Nr. **289** (Anmeldeseite, mit 288, spätestens AP1). Kopf: nächste freie
+  Nummer **290**.
 - **141** berichtigen: QR-Code statt Text (E-P5c-41), zehn Codes, „Gerät
   merken" mit Nr. 242 in Schritt 18; → 10c AP5.
 - **200** schließen: „nicht umsetzen — entschieden 23.09.2026 (E-P5c-51)";
