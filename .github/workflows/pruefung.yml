@@ -1,51 +1,6 @@
+# Stufe 1 — der Riegel vor dem Merge (Station C, docs/Pruefablauf.md 2.3): Sie liest den
+# Prüfbericht aus Station B gegen und fährt die billigen Riegel. Android und Uhr baut Station B.
 name: Prüfung
-
-# STUFE 1 DES PRÜFTORS (Konzept P5a, E-P5a-13; Rahmenplan R67/E-PV-3 (e)).
-#
-# WAS SIE IST. Die Prüfmittel, die OHNE laufende Installation auskommen —
-# Syntax, Wortliste, Vollständigkeit, Kontraste, Backlog-Nummern,
-# Migrationsregister, die Android-Bauläufe und, wenn die Adresse da ist, das
-# Übersetzen der Uhr-App für alle Zielgeräte.
-#
-# WANN SIE LAUFEN. **Arbeitszweige beim Pull Request, `main` bei jedem Push.**
-# Ein Push auf einen Arbeitszweig löst KEINEN Lauf mehr aus (Vorgriff auf
-# PK-05 des Konzepts PK, 21.09.2026).
-#
-# WARUM DAS SO IST — gemessen am 21.09.2026 an PR #69 (Läufe 192 und 193) und
-# PR #70 (Lauf 186): Mit `branches: ['**']` löste jeder Push ZWEI Läufe aus,
-# und beide hießen `Stufe 1`. Der `pull_request`-Lauf vergleicht gegen den
-# gemeinsamen Vorfahren von Zweig und `main`, lässt Uhr und Android weg, wenn
-# `watch/` und `android/` nicht berührt sind, und ist nach rund einer Minute
-# durch. Der `push`-Lauf findet
-# bei einem neuen Zweig oder einem Merge-Commit keinen Vergleichsstand, misst
-# im Zweifel alles und braucht rund 56 Minuten. Das Ruleset wartet auf den
-# Namen, also auf den langsameren — 56 Minuten für eine Messung, die der
-# schnellere Lauf daneben schon erledigt hat.
-#
-# Auf `main` bleibt der Push-Auslöser, und dort ist er richtig: Es gibt keinen
-# Pull Request mehr, gegen den man vergleichen könnte, und die
-# Bereichserkennung misst dort alles — WENN der Lauf misst. Ob er misst,
-# entscheidet seit dem 23.09.2026 der Job `Schon gemessen?` davor am BAUM
-# (Konzept TB): Hat ein grüner PR-Lauf denselben Baum gemessen, verweist der
-# Lauf auf `main` auf ihn, statt 42 bis 56 Minuten lang dasselbe noch einmal
-# zu messen.
-#
-# WAS SIE NICHT IST. Kein Ersatz für die Browserprüfung (`CLAUDE.md` 6) und
-# kein Ersatz für Stufe 2: Kreisläufe, Bilderlauf und Messstand brauchen eine
-# Installation und laufen deshalb im Staging-Lauf (`auslieferung.yml`).
-#
-# ROT = KEIN MERGE. Das entscheidet nicht diese Datei, sondern der Zweigschutz
-# auf `main`; seine Pflichtprüfung heißt `Stufe 1` — nach dem Namen des JOBS
-# unten, nicht nach dem des Arbeitslaufs und nicht nach dem Dateinamen. Wer
-# den Jobnamen ändert, hängt die Pflichtprüfung ab, und zwar still. Gesetzt
-# ist der Zweigschutz seit dem 21.09.2026 (Rahmenplan 6b); bis dahin war
-# dieser Lauf eine Auskunft und keine Schranke.
-#
-# KEIN STILLES ÜBERSPRINGEN. Fehlt einem Schritt seine Voraussetzung — der
-# Uhr-Prüfstand braucht `CIQ_GERAETE_URL`, und die steht bewusst nicht im
-# Repositorium —, sagt er das mit einer Zeile und einer Zusammenfassung. Ein
-# Schritt, der ohne Voraussetzung grün meldet, ist schlimmer als ein roter:
-# Er sieht aus wie eine Prüfung.
 
 on:
   push:
@@ -57,69 +12,26 @@ permissions:
   contents: read
 
 concurrency:
-  # Ein zweiter Push auf denselben Zweig macht den ersten Lauf gegenstandslos.
   group: pruefung-${{ github.ref }}
   cancel-in-progress: true
 
-# ALLE run-BLOECKE MIT `pipefail` (16.09.2026, gemessen).
-#
-# GitHub faehrt run-Bloecke mit `bash -e {0}` — OHNE pipefail. Der
-# Rueckgabewert einer Pipe ist damit der des LETZTEN Glieds, und ein
-# gescheitertes erstes Glied faellt lautlos durch. Im Schritt "Wortliste"
-# stand `python3 wortliste.py | tee /tmp/wortliste.txt`: `tee` gibt immer 0,
-# also konnte dieser Schritt NIE ROT WERDEN. Nachgemessen:
-# `bash -e -c 'python3 -c "import sys;sys.exit(1)" | tee /dev/null; echo $?'`
-# ergibt 0.
-#
-# Ein Pruefmittel, das nicht scheitern kann, ist kein Pruefmittel — es ist
-# eine gruene Zahl ohne Aussage. Deshalb hier, an EINER Stelle je Lauf, und
-# nicht als Flicken an der einen Pipe: Die naechste Pipe kommt bestimmt.
-#
-# GEMESSEN, WAS DADURCH ROT WIRD: von zehn Pipes in den drei Laeufen trifft
-# es genau eine — `grep -oE "WEB_VERSION..." | head -1` im Schritt
-# "Fassungen nennen". Die war ohnehin kaputt (das Muster verlangte ein Komma
-# hinter dem Namen, `version.php` schreibt `const WEB_VERSION = '…'`) und ist
-# im selben Zug berichtigt.
+# Ohne pipefail zählt nur das letzte Glied einer Pipe — `prüfung | tee` wäre nie rot; GitHub setzt es nicht selbst.
 defaults:
   run:
     shell: bash -eo pipefail {0}
 
 jobs:
-  # ---------------------------------------------------------------------------
-  # SCHON GEMESSEN? (Konzept TB, TB-03, E-TB-06.) Ein Merge-Commit auf `main`
-  # hat mit „Require branches to be up to date" im Ruleset denselben BAUM wie
-  # der Zweig-Commit, auf dem der PR-Lauf grün war (Konzept TB 2.2). Der
-  # Push-Lauf maß dann 42 bis 56 Minuten lang Byte für Byte noch einmal, was
-  # schon gemessen war. Dieser Job sucht den PR-Lauf mit demselben Baum; hat
-  # er einen, dessen Job `Stufe 1` grün war, misst der Lauf hier nicht und
-  # sagt in der Zusammenfassung, WO gemessen wurde — Lauf, Commit, Zeitpunkt.
-  # Eine Auslassung, die ihren Gegenstand nennt, ist kein stilles
-  # Überspringen (`CLAUDE.md` 6).
-  #
-  # WARUM DAS BASH SEIN DARF UND KEIN WERKZEUG MIT SELBSTPROBE (E-TB-08). Die
-  # Grenze aus der Bereichserkennung gilt: Eine Bedingung, die über
-  # AUSGELIEFERTEN Code entscheidet, gehört in ein Werkzeug. Diese entscheidet
-  # nur, ob der Lauf sich wiederholt. Das Produktionstor holt seine Tatsachen
-  # selbst und zählt einen Lauf mit übersprungenem `Stufe 1` nicht
-  # (`freigabe.py`, E-TB-05) — ein Irrtum HIER kann das Tor nicht öffnen,
-  # nur schließen (E-TB-07).
-  #
-  # IM ZWEIFEL MESSEN (E-TB-04). Kein Push auf `main`, kein Baum, eine
-  # gescheiterte Abfrage, kein Treffer — alles heißt `messen=ja`. Und die
-  # Jobs danach laufen, wenn hier NICHT ausdrücklich `nein` steht (E-TB-11):
-  # Ein kaputter Verweis-Job lässt messen, statt die Messung auszusperren.
   schon-gemessen:
     name: Schon gemessen?
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      actions: read       # die Läufe und ihre Jobs lesen
+      actions: read       # fehlt es, scheitert die Abfrage, und jeder Push auf main misst still neu
     outputs:
       messen: ${{ steps.vergleich.outputs.messen }}
     steps:
       - name: Code auschecken
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        # Flach genügt: gebraucht wird nur der eigene Baum.
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Baum gegen die grünen PR-Läufe halten
@@ -134,7 +46,7 @@ jobs:
             exit 0
           }
 
-          # EIN PR MISST IMMER. Das ist der Fall, den das Ruleset prüft.
+          # Ein PR misst immer: Dort prüft das Ruleset, und ein übersprungenes „Stufe 1" gälte ihm als grün.
           if [ "$GITHUB_EVENT_NAME" != "push" ] || [ "$GITHUB_REF" != "refs/heads/main" ]; then
             messen "kein Push auf \`main\` ($GITHUB_EVENT_NAME)"
           fi
@@ -143,9 +55,6 @@ jobs:
           [ -n "$baum" ] || messen "eigener Baum nicht ermittelt"
           echo "Eigener Baum: $baum"
 
-          # FENSTER 30 IST EINE KOSTENGRENZE (E-TB-09): höchstens 30
-          # Baum-Abrufe, die Jobs nur beim Treffer. Der passende PR-Lauf ist
-          # fast immer der jüngste.
           FENSTER=30
           gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/pruefung.yml/runs?event=pull_request&status=success&per_page=$FENSTER" \
              --jq '.workflow_runs[] | "\(.id) \(.head_sha)"' > kandidaten.txt 2>/dev/null \
@@ -156,8 +65,7 @@ jobs:
             [ -n "$lauf" ] || continue
             lb=$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$kopf" --jq '.tree.sha' 2>/dev/null || true)
             [ "$lb" = "$baum" ] || continue
-            # DER JOB, NICHT DER LAUF (E-TB-05, F-TB-06): Ein Lauf ist grün,
-            # auch wenn `Stufe 1` darin übersprungen wurde.
+            # Grün muss der Job „Stufe 1" sein, nicht der Lauf — ein Lauf ist auch mit übersprungenem Job grün.
             fertig=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$lauf/jobs" \
                        --jq '[.jobs[] | select(.name == "Stufe 1") | select(.conclusion == "success") | .completed_at][0] // empty' \
                        2>/dev/null || true)
@@ -173,208 +81,48 @@ jobs:
 
           messen "kein grüner PR-Lauf mit Baum \`${baum:0:7}\` unter den letzten $FENSTER"
 
+  # Der Jobname „Stufe 1" ist Kupplung: Das Ruleset, das Produktionstor in ausliefern-lauf.yml und „Schon gemessen?" suchen ihn wörtlich.
   pruefung:
     name: Stufe 1
-    # NACH DEM VERWEIS-JOB, und nur dann nicht, wenn er ausdrücklich `nein`
-    # sagt (TB-03, E-TB-11). Der Jobname bleibt `Stufe 1` — er ist die
-    # Pflichtprüfung des Rulesets und der Name, den das Produktionstor zählt.
     needs: schon-gemessen
+    # Ein per `if` übersprungener Job gilt dem Ruleset als grün — darum !cancelled() und != 'nein'.
     if: ${{ !cancelled() && needs.schon-gemessen.outputs.messen != 'nein' }}
     runs-on: ubuntu-latest
     steps:
       - name: Code auschecken
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          # VORAUSSETZUNG DER BEREICHSERKENNUNG (Schritt danach). Die Vorgabe
-          # holt EINEN Commit; ohne Historie gibt es nichts zu vergleichen,
-          # und die Erkennung fiele bei jedem Lauf auf „alles messen" zurueck
-          # — richtig, aber wirkungslos. Kostet wenige Sekunden.
-          fetch-depth: 0
+          fetch-depth: 0    # die Gegenlesung braucht origin/main und den PR-Kopf
 
       - name: Fassungen nennen — was misst hier eigentlich?
-        # ZUERST UND IMMER. Eine Zahl ohne die Fassung, die sie erzeugt hat,
-        # ist in einem Monat nicht mehr nachvollziehbar (`CLAUDE.md` 6).
+        # Erst zuweisen, dann ausgeben: Ein Fehler in `$(…)` als echo-Argument bliebe grün.
         run: |
-          echo "PHP:    $(php -v | head -1)"
-          echo "Python: $(python3 -V)"
-          echo "Node:   $(node -v)"
-          echo "Java:   $(java -version 2>&1 | head -1)"
-          # DEN STANDARD-JDK DES LAEUFERS FESTHALTEN. Weiter unten stellt
-          # `setup-java` fuer den Android-Schritt auf Java 21 um — und zwar
-          # global, fuer ALLE folgenden Schritte. Die Uhr uebersetzt danach;
-          # sie laeuft seit jeher auf dem JDK des Laeufers, und das ist ein
-          # 35-Minuten-Schritt, den hier niemand nebenbei umstellt. Also wird
-          # der Wert gemerkt und der Uhr-Schritt ausdruecklich darauf
-          # zurueckgesetzt (E-KH-24).
-          echo "JAVA_HOME_LAEUFER=${JAVA_HOME:-}" >> "$GITHUB_ENV"
-          # DREI ZAEHLUNGEN, DREI AUSLIEFERUNGEN (CLAUDE.md 2) — der
-          # Schrittname sagt "Fassungen", also muessen alle drei dastehen.
-          #
-          # Bis zum 16.09.2026 stand hier ein grep-Muster, das ein KOMMA hinter
-          # dem Namen verlangte (`WEB_VERSION', '…'`) — die Schreibweise von
-          # `define()`. `server/version.php` schreibt aber
-          # `const WEB_VERSION = '20.15.2';`. Das Muster traf nichts, `echo`
-          # gibt trotzdem 0 zurueck, und der Schritt lief gruen, ohne die
-          # Fassung je genannt zu haben. Jetzt fragt PHP die Konstante selbst:
-          # Das haengt nicht an der Schreibweise und scheitert hoerbar, wenn es
-          # sie nicht gibt.
-          echo "Web:     $(php -r "require 'server/version.php'; echo WEB_VERSION;")"
-          echo "Uhr:     $(grep -oE 'APP_VERSION *= *"[0-9.]+"' watch/source/Const.mc | grep -oE '[0-9.]+')"
-          echo "Android: $(grep -oE '^version=[0-9.]+' android/version.properties | cut -d= -f2)"
+          web=$(php -r "require 'server/version.php'; echo WEB_VERSION;")
+          uhr=$(grep -oE 'APP_VERSION *= *"[0-9.]+"' watch/source/Const.mc | grep -oE '[0-9.]+')
+          android=$(grep -oE '^version=[0-9.]+' android/version.properties | cut -d= -f2)
+          echo "PHP:     $(php -v | head -1)"
+          echo "Python:  $(python3 -V)"
+          echo "Node:    $(node -v)"
+          echo "Web:     $web"
+          echo "Uhr:     $uhr"
+          echo "Android: $android"
 
-      - name: Welche Bereiche sind berührt?
-        # WARUM ES DIESEN SCHRITT GIBT (gemessen 17.09.2026). Der Lauf braucht
-        # 42 min 28 s; davon sind 7:15 der Android-Bau und 34:46 das
-        # Uebersetzen der Uhr-App fuer alle Zielgeraete. Die uebrigen 13
-        # Schritte zusammen brauchen 23 Sekunden. Von den letzten 60 Commits
-        # auf `main` fasst KEINER `android/` an und EINER `watch/` — 59 von 60
-        # Laeufen messen also 42 Minuten lang Code, den niemand angefasst hat.
-        #
-        # DREI EIGENSCHAFTEN MACHEN DEN SPRUNG UNKRITISCH:
-        #
-        # (1) AUF `main` WIRD ALLES GEMESSEN — WENN GEMESSEN WIRD. Der
-        #     schlimmste Fehler dieses Schritts waere, faelschlich zu
-        #     ueberspringen; auf `main` kann das nicht passieren. OB auf
-        #     `main` gemessen wird, entscheidet der Job `Schon gemessen?`
-        #     davor am Baum (Konzept TB). Bis zum 23.09.2026 stand hier, das
-        #     Produktionstor verlange einen gruenen Lauf auf GENAU DIESEM
-        #     COMMIT — seither verlangt es einen auf demselben BAUM, und ein
-        #     gruener PR-Lauf zaehlt (E-TB-02).
-        # (2) IM ZWEIFEL WIRD GEMESSEN. Jeder Weg, auf dem der
-        #     Vergleichsstand nicht zu ermitteln ist — neuer Zweig,
-        #     Force-Push, fehlende Historie, `workflow_dispatch` —, endet bei
-        #     „alles". Ein Filter, der bei Unklarheit ueberspringt, ist genau
-        #     die Luecke, gegen die es ihn nicht gibt.
-        # (3) EINE AUSLASSUNG NENNT IHREN GEGENSTAND. Ein uebersprungener
-        #     Schritt laeuft nicht und kann daher selbst nichts melden —
-        #     deshalb schreibt DIESER Schritt die Zeile in die
-        #     Zusammenfassung, mit Bereich und Vergleichsstand. „Kein stilles
-        #     Ueberspringen" (`CLAUDE.md` 6) gilt hier wie beim fehlenden SDK.
-        #
-        # UND DIE GRENZE, DIE NICHT VERSCHOBEN WIRD: Dieser Filter gilt fuer
-        # ANDROID UND UHR. Beide werden von der Kette nicht ausgeliefert — der
-        # FTPS-Schritt laedt `server/` hoch, die Signatur der Apps liegt
-        # ausserhalb der CI (E-S4-16); eine ausgelassene Messung erreicht hier
-        # keinen Server. Fuer einen `server/`-Schritt gilt das NICHT: Der
-        # entscheidet ueber ausgelieferten Code, und eine Bedingung, die
-        # darueber entscheidet, gehoert in ein Werkzeug mit `--selbstprobe`
-        # (E-P5a-12, das Backup-Tor ist das Muster). Wer diesen Filter auf
-        # PHP-Syntax, CSP oder Sitzungshaertung ausdehnt, aendert seine Natur.
-        id: bereiche
-        env:
-          VORHER_SHA: ${{ github.event.before }}
-        run: |
-          alles() {
-            echo "android=ja" >> "$GITHUB_OUTPUT"
-            echo "uhr=ja"     >> "$GITHUB_OUTPUT"
-            echo "Bereichserkennung: ALLES messen — $1"
-            echo "**Bereiche:** alles gemessen ($1)." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          }
-
-          # (1) main misst immer alles.
-          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
-            alles "Push auf main"
-          fi
-
-          # Vergleichsstand je Anlass.
-          vorher=""
-          case "$GITHUB_EVENT_NAME" in
-            pull_request)
-              # Bei einem PR checkt die Aktion den MERGE-Commit aus. Dessen
-              # merge-base mit dem Zielzweig ist der Zielzweig selbst, der
-              # Diff dagegen also genau die Aenderung des PR.
-              git fetch --no-tags --quiet origin                   "+refs/heads/$GITHUB_BASE_REF:refs/remotes/origin/$GITHUB_BASE_REF"                   2>/dev/null || true
-              vorher=$(git merge-base "origin/$GITHUB_BASE_REF" HEAD 2>/dev/null || echo '')
-              ;;
-            push)
-              kandidat="${VORHER_SHA:-}"
-              case "$kandidat" in
-                ''|0000000000000000000000000000000000000000) kandidat="" ;;
-              esac
-              # Nach einem Force-Push kann das Vorher unerreichbar sein.
-              #
-              # ZWEI SCHICHTEN, JEDE FUER SICH AUSREICHEND — nachgemessen
-              # am 17.09.2026 mit drei Mutationen:
-              #
-              #   nur `cat-file` entwaffnet     -> Lage bleibt richtig
-              #                                    (der `__FEHLER__`-Zweig
-              #                                    unten faengt sie)
-              #   nur `__FEHLER__` entwaffnet   -> Lage bleibt richtig
-              #                                    (diese Zeile faengt sie)
-              #   BEIDE entwaffnet              -> Lage faellt um: nein/nein
-              #
-              # Im unmutierten Lauf faengt DIESE Zeile: Das Protokoll sagt
-              # „Vergleichsstand nicht ermittelbar", nicht „git diff
-              # gescheitert". Keine der beiden ist ueberfluessig, und keine
-              # einzelne Mutation kann die Luecke oeffnen — wer die Zeile
-              # streicht, weil „die andere es ja auch faengt", nimmt der
-              # Bauform genau diese Eigenschaft.
-              if [ -n "$kandidat" ] && git cat-file -e "${kandidat}^{commit}" 2>/dev/null; then
-                vorher="$kandidat"
-              fi
-              ;;
-          esac
-
-          # (2) Im Zweifel messen.
-          if [ -z "$vorher" ]; then
-            alles "Vergleichsstand nicht ermittelbar (Anlass $GITHUB_EVENT_NAME)"
-          fi
-
-          dateien=$(git diff --name-only "$vorher" HEAD 2>/dev/null || echo '__FEHLER__')
-          if [ "$dateien" = "__FEHLER__" ]; then
-            alles "git diff gegen $vorher gescheitert"
-          fi
-
-          anzahl=$(printf '%s\n' "$dateien" | grep -c . || true)
-          echo "Vergleichsstand: $vorher · geänderte Dateien: $anzahl"
-
-          hat() { printf '%s\n' "$dateien" | grep -qE "$1"; }
-
-          # Wer den Prüflauf selbst ändert, fährt beides.
-          if hat '^\.github/workflows/pruefung\.yml$'; then
-            alles "der Prüflauf selbst ist geändert"
-          fi
-
-          android=nein
-          uhr=nein
-          if hat '^android/'; then android=ja; fi
-          if hat '^(watch/|tools/uhr-pruefstand/)'; then uhr=ja; fi
-
-          echo "android=$android" >> "$GITHUB_OUTPUT"
-          echo "uhr=$uhr"         >> "$GITHUB_OUTPUT"
-          echo "android=$android · uhr=$uhr"
-
-          # (3) Die Auslassung nennt ihren Gegenstand.
-          kurz=$(git rev-parse --short "$vorher")
-          {
-            if [ "$android" = nein ]; then
-              echo "**Android: NICHT BERÜHRT** — 0 von $anzahl geänderten Dateien liegen unter \`android/\` (gegenüber \`$kurz\`); nicht gemessen."
-            fi
-            if [ "$uhr" = nein ]; then
-              echo "**Uhr Stufe I: NICHT BERÜHRT** — 0 von $anzahl geänderten Dateien liegen unter \`watch/\` oder \`tools/uhr-pruefstand/\` (gegenüber \`$kurz\`); nicht gemessen."
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: PHP-Syntax über server/
-        # `php -l` je Datei unter server/ und tools/. Die Zahl für die
-        # Gegenlesung zählt wie der Prüfstand: versionierte Dateien unter server/.
+      - name: PHP-Syntax über server/ und tools/
         id: php
+        # Gezählt wie im Prüfstand (versioniert, server/); 0 Dateien ist rot, nicht grün.
         run: |
-          set -e
           n=0
           while IFS= read -r f; do
             php -l "$f" > /dev/null
             n=$((n+1))
           done < <(find server tools -name '*.php' -type f)
           s=$(git ls-files 'server/*.php' 'server/**/*.php' | wc -l)
+          [ "$n" -gt 0 ] && [ "$s" -gt 0 ] || { echo "::error::Keine PHP-Datei gefunden -- gemessen wurde nichts."; exit 1; }
           echo "PHP-Dateien ohne Syntaxfehler: $n (davon versioniert unter server/: $s)"
           echo "zahl=php:$s/0" >> "$GITHUB_OUTPUT"
 
       - name: Quelltext — acht Prüfungen, ein Läufer
-        # Textprobe, Vollständigkeit, Linkprobe, Installweiche, Sitzungshärtung,
-        # CSP, Jobregister, Migrationsregister (E-PK-18: die Linkprobe ist neu im
-        # Tor). Die fünf mit Selbstprobe fahren sie vorher.
+        # Selbstprobe zuerst: Eine Prüfung, die kaputt ist und darum nichts findet, meldete sonst grün.
         run: |
           bash tools/quelltext/pruefen.sh --selbstprobe
           rc=0
@@ -387,171 +135,50 @@ jobs:
         run: python3 tools/screenshots/kontrast.py
 
       - name: Liegt ein Umgebungswert eine Ebene höher noch einmal?
-        # DER NACHWEIS ZU E-KH-28, UND ER KANN NUR HIER STEHEN (AP6).
-        #
-        # WARUM AUSGERECHNET IN STUFE 1. Die Frage lautet: Gibt es
-        # `FTP_SERVER` und Konsorten AUCH AUSSERHALB der Umgebungen -- als
-        # Repositoriums- oder Organisationsgeheimnis? Beantworten kann das nur
-        # ein Job OHNE `environment:`, denn in einem Job MIT gewinnt der
-        # Umgebungswert und verdeckt den anderen. Der Auslieferungslauf hat
-        # ueberall ein `environment:`; dieser Lauf hat keines. Er ist die
-        # einzige Stelle im Repositorium, die es sehen kann.
-        #
-        # WAS DER BEFUND WAR, DER IHN AUSLOEST (F-KH-U-32, 21.09.2026). Genau
-        # diese drei Namen lagen zusaetzlich auf Repositoriumsebene -- zwei
-        # Monate alte Reste von vor der Umstellung auf Umgebungen. Folge: Der
-        # erste Schritt des Auslieferungslaufs prueft, ob die drei Werte da
-        # sind, und **konnte nicht mehr fehlschlagen** -- fehlte der
-        # Umgebungswert, griff still der von oben. Ein Tor, das immer aufgeht.
-        # Schlimmer: Welcher Wert von oben kam, sagt niemand. Stuende dort
-        # Stagings Zugang, ginge eine Produktivauslieferung nach Staging.
-        #
-        # ER IST BILLIG UND LAEUFT BEI JEDEM PUSH. Ein Geheimnis, das es nicht
-        # gibt, ist LEER -- GitHub bricht nicht ab. Genau deshalb faellt der
-        # Rueckfall sonst nie auf.
-        #
-        # **AUSGEGEBEN WIRD NIE EIN WERT.** Belegt oder leer, mehr braucht die
-        # Frage nicht, und mehr gehoert nicht in ein Protokoll.
+        # Läuft absichtlich in einem Job ohne `environment:` — nur dort ist ein Wert eine Ebene höher sichtbar.
         env:
-          G1: ${{ secrets.FTP_SERVER }}
-          G2: ${{ secrets.FTP_USERNAME }}
-          G3: ${{ secrets.FTP_PASSWORD }}
-          G4: ${{ secrets.JOBS_TOKEN }}
-          V1: ${{ vars.FTP_ZIELPFAD }}
-          V2: ${{ vars.FTP_STATE_PFAD }}
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          JOBS_TOKEN: ${{ secrets.JOBS_TOKEN }}
+          FTP_ZIELPFAD: ${{ vars.FTP_ZIELPFAD }}
+          FTP_STATE_PFAD: ${{ vars.FTP_STATE_PFAD }}
         run: |
-          set -uo pipefail
           gefunden=""
-          pruefe() {
-            if [ -n "$2" ]; then
-              echo "  $1: BELEGT — liegt AUSSERHALB der Umgebungen"
-              gefunden="$gefunden $1"
-            else
-              echo "  $1: leer (so gehört es sich)"
-            fi
-          }
-          echo "Gesucht wird in einem Job OHNE environment: — was hier auflöst, steht eine Ebene höher."
-          pruefe FTP_SERVER     "${G1:-}"
-          pruefe FTP_USERNAME   "${G2:-}"
-          pruefe FTP_PASSWORD   "${G3:-}"
-          pruefe JOBS_TOKEN     "${G4:-}"
-          pruefe FTP_ZIELPFAD   "${V1:-}"
-          pruefe FTP_STATE_PFAD "${V2:-}"
+          for name in FTP_SERVER FTP_USERNAME FTP_PASSWORD JOBS_TOKEN FTP_ZIELPFAD FTP_STATE_PFAD; do
+            if [ -n "${!name:-}" ]; then echo "  $name: BELEGT — liegt AUSSERHALB der Umgebungen"; gefunden="$gefunden $name"
+            else echo "  $name: leer (so gehört es sich)"; fi
+          done
           if [ -n "$gefunden" ]; then
             echo "::error::Diese Namen liegen außerhalb der Umgebungen:$gefunden. Damit kann die Geheimnisprüfung der Auslieferungskette nicht mehr fehlschlagen — fehlt der Umgebungswert, greift still der von oben (E-KH-28, F-KH-U-32). Löschen unter Settings -> Secrets and variables -> Actions; die Einträge unter Environments bleiben stehen."
-            {
-              echo '## Ein Umgebungswert liegt eine Ebene höher'
-              echo
-              echo "Betroffen:$gefunden"
-              echo
-              echo 'Die Auslieferungskette liest diese Namen aus der **Umgebung**'
-              echo '(`staging` bzw. `produktion`). Gibt es sie zusätzlich als'
-              echo 'Repositoriums- oder Organisationswert, greift dieser still,'
-              echo 'sobald der Umgebungswert fehlt — und die Prüfung im ersten'
-              echo 'Schritt der Kette meldet trotzdem „vorhanden".'
-              echo
-              echo 'Zu löschen sind die Einträge unter **Repository secrets** bzw.'
-              echo '**Organization secrets**. Die unter **Environments** bleiben.'
-            } >> "$GITHUB_STEP_SUMMARY"
+            echo "## Ein Umgebungswert liegt eine Ebene höher:$gefunden — unter Repository/Organization secrets löschen, die unter Environments bleiben (E-KH-28)." >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
           echo "Kein Umgebungswert liegt doppelt. Die Geheimnisprüfung der Kette kann fehlschlagen — und das ist ihr Zweck."
 
       - name: Kettenaufrufe — passt jeder Aufruf zu seinem Werkzeug?
-        # WARUM DAS IN STUFE 1 GEHOERT (Nr. 217, 17.09.2026).
-        #
-        # Die Kette ruft Werkzeuge dieses Projekts auf. Ob ein Aufruf zur
-        # Schnittstelle passt, zeigte sich bisher erst, wenn der Schritt LIEF —
-        # und viele laufen selten: Stufe 2 erst mit eingerichtetem Staging, der
-        # Produktionslauf erst beim ersten Tag. Am 16./17.09.2026 sind drei
-        # Aufrufe beim jeweils ERSTEN echten Lauf gescheitert, alle drei mit
-        # gueltigem YAML und sauberer Shell-Syntax.
-        #
-        # Diese Pruefung liest den Quelltext der Werkzeuge und FUEHRT KEINES
-        # AUS. Sie kostet Sekunden und faengt genau die Klasse Fehler, die
-        # sonst erst der Ernstfall zeigt.
         run: |
           python3 tools/kettenaufrufe/pruefen.py --probe
           python3 tools/kettenaufrufe/pruefen.py
 
       - name: Tore der Kette — geht das Backup-Tor auch zu?
-        # WARUM DIESE SELBSTPROBE IN STUFE 1 GEHOERT (17.09.2026).
-        #
-        # Sie lief bisher NUR im Job `produktion` von `auslieferung.yml`, also
-        # erst beim Tag — unmittelbar vor dem Backup-Tor, das sie nachweisen
-        # soll. Fuer das Tor selbst ist das der richtige Ort und bleibt es.
-        # Aber seit Web 20.16.0 haengen dort auch die fuenf Faelle des
-        # Unterbefehls `pause`, und der laeuft in STUFE 2. Wer ihn kaputt
-        # macht, bekam von Stufe 1 ein Gruen, von Stufe 2 je nach Staging
-        # irgendetwas — und die Probe, die es gemerkt haette, lief erst bei
-        # der Auslieferung.
-        #
-        # Sie braucht kein Netz und keine Installation (Attrappen statt
-        # Abrufe) und kostet Sekunden. Erwartet: 0 offen.
-        #
-        # DIE ZAHL STEHT HIER NICHT MEHR. Sie stand als „11 von 11" da und war
-        # seit AP6 falsch (29), seit AP7 noch einmal (35) -- eine von Hand
-        # gepflegte Zahl neben einer wachsenden Liste. Die Probe zaehlt selbst
-        # und meldet rot, wenn etwas offen ist; mehr braucht dieser Schritt
-        # nicht zu wissen.
         run: python3 tools/kette/tor.py --selbstprobe
 
       - name: Warten auf einen Download — sagt es, wenn keiner kommt?
-        # ANLASS, 21.09.2026: Der Kreislauf `edbak` gegen Staging ist nach
-        # fuenfzehn Minuten gescheitert, und das Protokoll sagte genau einen
-        # Satz -- „Timeout 900000ms exceeded while waiting for event
-        # download". Nicht, ob der Export angelaufen war; nicht, wie weit er
-        # kam; nicht, ob der Browser einen Fehler geworfen hatte. Die Frage,
-        # die man danach stellt -- LIEF er langsam oder HING er? --
-        # beantwortete das Protokoll nicht.
-        #
-        # `tools/referenzdatensatz/browser/download_lib.mjs` liest den
-        # Zustand seither mit und legt ihn samt Verlauf und Konsolenfehlern in
-        # die Fehlermeldung. Die Selbstprobe prueft nicht den guten Fall --
-        # der ist trivial --, sondern ob im SCHLECHTEN Fall die Auskunft
-        # entsteht, um derentwillen es die Datei gibt.
-        #
-        # Ohne Browser, ohne Anlage, ohne Netz. Erwartet: 0 offen.
         run: node tools/referenzdatensatz/browser/download_lib.mjs --selbstprobe
 
       - name: Das Tor der grünen Läufe — geht es zu, wenn es zugehen muss?
-        # AP7, E-KH-15. Die Entscheidung, ob ein Stand auf Produktiv darf,
-        # liegt seit AP7 in `tools/kette/freigabe.py` und nicht mehr als Bash
-        # im Auslieferungslauf -- damit genau DAS hier moeglich ist: die
-        # Gegenprobe, ohne auszuliefern.
-        #
-        # DIE ABNAHME VON AP7 IST DIESER SCHRITT. Sie verlangt „lehnt einen
-        # `hotfix/*`-Commit ab, der NICHT vom Zeiger abstammt; nimmt einen an,
-        # der abstammt" -- beide Lagen stehen in der Selbstprobe, samt der
-        # unbequemen Raender: ein Vergleich, der gar nicht zu holen war
-        # (dann NEIN), ein `behind` (dann NEIN), ein Handlauf auf `main`
-        # (dann NEIN, weil er den Zweigschutz umginge).
-        #
-        # Ohne Netz, ohne Installation, ohne Auslieferung. Erwartet: 0 offen.
         run: python3 tools/kette/freigabe.py --selbstprobe
 
       - name: Python-Werkzeuge — lassen sie sich überhaupt übersetzen?
-        # ANLASS, 20.09.2026: Ein deutsches Schlusszeichen in einer
-        # doppelt gequoteten Zeichenkette hat `tools/kette/zustand.py`
-        # unuebersetzbar gemacht -- gemerkt hat es erst der Produktivlauf,
-        # und der war damit umsonst. Die Aenderung war eine Meldung, und
-        # die Selbstprobe war VORHER gelaufen; genau davor warnt
-        # `CLAUDE.md` 6 ("Die Pruefmittel laufen zuletzt").
-        #
-        # DIESER SCHRITT IST DER RIEGEL DAZU. Er kostet eine Sekunde und
-        # faengt jeden Syntaxfehler in JEDEM Werkzeug, auch in denen, die
-        # keine Selbstprobe haben und die niemand mehr faehrt.
-        #
-        # `ast.parse` statt `py_compile`: Es schreibt nichts und braucht
-        # kein Ausgabeziel.
         run: |
           python3 - <<'PY'
-          import ast, pathlib, sys
+          import pathlib, sys
           fehler = n = 0
           for p in sorted(pathlib.Path('tools').rglob('*.py')):
               n += 1
               try:
-                  ast.parse(p.read_text(encoding='utf-8'), filename=str(p))
+                  compile(p.read_text(encoding='utf-8'), str(p), 'exec')
               except SyntaxError as e:
                   fehler += 1
                   print(f"::error file={p},line={e.lineno}::{e.msg}")
@@ -560,7 +187,6 @@ jobs:
           PY
 
       - name: Backlog — keine Nummer zweimal
-        # Die Zeile stammt aus dem Kopf des Rahmenplans (Abschnitt 2.2).
         run: |
           doppelt=$(grep -oE '^[0-9]+\.' docs/Backlog.md | tr -d '.' | sort -n | uniq -d)
           if [ -n "$doppelt" ]; then
@@ -570,19 +196,7 @@ jobs:
           echo "Doppelte Backlog-Nummern: 0"
 
       - name: Handbuch und „Was ist NAdoku" — rendern sie überhaupt?
-        # P5b/AP8, E-P5b-22. Seit Web 20.23.0 rendert die ANWENDUNG diese
-        # beiden Dateien (`hilfe.php`, `ueber.php`). Damit ist ein
-        # Markdown-Fehler darin kein Schönheitsfehler mehr, sondern eine
-        # kaputte Seite — und zwar eine oeffentliche, die jemand VOR der
-        # Anmeldung sieht.
-        #
-        # `cmark-gfm --validate-utf8` ist hier der billigste ehrliche Test:
-        # Er faellt bei ungueltigem UTF-8 und bei Eingaben, die der Parser
-        # nicht verarbeiten kann. Er prueft NICHT, ob der Text stimmt — das
-        # tut die Wortliste einen Schritt weiter oben, und gegenlesen muss
-        # ihn ohnehin ein Mensch.
         run: |
-          set -euo pipefail
           sudo apt-get update -qq && sudo apt-get install -y -qq cmark-gfm
           fehler=0
           for f in docs/Handbuch.md docs/Was-ist-NAdoku.md; do
@@ -597,10 +211,6 @@ jobs:
               fehler=1
             fi
           done
-          # DIE ZWEITE PRUEFUNG IST DIE WICHTIGERE: ein Bild aus fremder
-          # Quelle. `DokuMarkdown::inlineImage()` weist es zur Laufzeit ab,
-          # aber dann steht im Handbuch eine Stelle, die nicht tut, was ihre
-          # Autorin wollte — besser, es faellt hier auf.
           fremd=$(grep -nE '!\[[^]]*\]\((https?:)?//' docs/Handbuch.md docs/Was-ist-NAdoku.md || true)
           if [ -n "$fremd" ]; then
             echo "::error::Bild aus fremder Quelle im Handbuch — die Anwendung zeigt es nicht an (keine fremde Quelle zur Laufzeit, CLAUDE.md 4):"
@@ -610,70 +220,21 @@ jobs:
           exit $fehler
 
       - name: Spaltenregister — schema.sql gegen mf_missions_register()
-        # `missions` hat 41 Spalten, und neun Zwecke brauchen eine Auswahl
-        # davon. Eine NEUE Spalte, die niemand ins Register einträgt, fehlt
-        # still in Export und Backup — sie taucht in keiner erzeugten Liste
-        # auf, und auffallen würde es erst, wenn jemand eine Sicherung
-        # zurückspielt und etwas vermisst. Der Schritt prüft beide
-        # Richtungen und zusätzlich, dass die Positionen jedes Zwecks eine
-        # lückenlose Folge ab 0 sind (Schritt 15/AP6, E-ZE-22).
-        #
-        # Teil 2 misst die drei Abbildungen, die NICHT erzeugt werden können,
-        # weil sie jeden Wert einzeln umrechnen: Führt jede genau die
-        # Registerspalten ihres Zwecks? Ohne diesen Teil wäre das Register
-        # nur dort die Wahrheit, wo es ohnehin SQL erzeugt.
-        #
-        # `wegprobe.py` daneben läuft hier NICHT: Sie schreibt (schneidet
-        # einen Einsatz, überschreibt einen zweiten) und braucht eine
-        # Installation mit Bestand. Stufe 1 hat keine.
-        #
-        # Selbstprobe zuerst, wie beim Migrationsregister darueber: Ein
-        # gruener Lauf einer Pruefung, die immer gruen meldet, sieht genauso
-        # aus wie einer, der nichts gefunden hat.
         run: |
           php tools/spaltenregister/pruefen.php --selbstprobe
           php tools/spaltenregister/pruefen.php
 
       - name: Zentralisierung — hält jede Sache ihre eine Stelle?
-        # SCHRITT 15 / AP10 (R83). Das Register in `tools/zaehlung/register.php`
-        # führt je Sache EINE Zeile mit einer Decke: wie viele Stellen es
-        # höchstens geben darf. Der Schritt schlägt an, sobald eine Zeile
-        # über ihre Decke steigt — also sobald jemand eine zweite Stelle
-        # einbaut, wo es eine geben soll.
-        #
-        # WARUM EINE DECKE UND KEINE NULL. Nicht jede Zeile endet bei null,
-        # und das ist Absicht: Vier Zeilen aus AP8 stehen begründet darüber
-        # (E-ZE-27 bis -30). Was dort steht, ist die Zentrale selbst, ein
-        # Fehlalarm des Zählmusters oder eine benannte Vorgabe je
-        # Zusammenhang. Wer eine Zeile auf null zwingt, ohne die Stelle zu
-        # verstehen, bekommt eine grüne Zahl und eine schlechtere Anwendung
-        # — deshalb trägt jede Decke im Register den ausgeschriebenen Grund
-        # und nicht nur den Wert.
-        #
-        # WAS ER NICHT SIEHT: Eine Sache, für die niemand eine Zeile
-        # angelegt hat. Das Register ist eine Liste, kein Spürsinn. Und die
-        # Zeilen messen verschieden scharf — Z34 etwa zählt über eine
-        # NAMENSLISTE und sieht einen neu erfundenen Formatierer nicht; die
-        # sechste km-Fassung des Bestands hat erst eine Gegenprobe über das
-        # Muster der RECHNUNG gefunden (AP8d).
-        #
-        # Selbstprobe zuerst, wie überall hier: 34 Fälle mit Sollwert,
-        # darunter die drei, an denen ein `grep` scheitert (Aufruf im
-        # Kommentar, Aufruf in einer Zeichenkette, Methodenaufruf `->date(`).
         run: |
           php tools/zaehlung/zaehlen.php --selbstprobe
           php tools/zaehlung/zaehlen.php
 
       - name: Rechtstexte — hält der Filter die Angriffe ab?
-        # E-PK-18: reine Funktion, Sekunden. Bis PK-05 lief sie nirgends in der Kette.
         run: bash tools/proben/proben.sh rechtstexte
 
       - name: Prüfbericht gegenlesen — passt er zu diesem Stand?
-        # E-PK-05/06: Das Tor wiederholt nicht, es liest gegen. Streng (E-PK-42):
-        # Der Baum im Bericht ist der Baum des PR-Kopfs. „Update branch" schreibt
-        # einen Commit ohne Bericht -- rot, und die Meldung sagt den Weg.
-        # Die Riegel davor sind grün, sonst liefe dieser Schritt nicht; ihre
-        # Zahl ist also 0 wie im Prüfstand. --alle-riegel hält die Liste gleich.
+        # Streng (E-PK-42): Baum im Bericht = Baum des PR-Kopfs; nach „Update branch" rot, die Meldung sagt den Weg.
+        # Die Riegel davor sind grün, sonst liefe dieser Schritt nicht; --alle-riegel hält die Liste gleich.
         if: github.event_name == 'pull_request'
         env:
           KOPF: ${{ github.event.pull_request.head.sha }}
@@ -686,169 +247,30 @@ jobs:
             --riegel kontraste=0 --riegel kettenaufrufe=0 --riegel zaehlung=0 \
             --riegel spaltenregister=0 --riegel rechtstexte=0
 
-      - name: Java 21 für die Android-Module
-        if: steps.bereiche.outputs.android == 'ja'
-        # WARUM AUSDRÜCKLICH. Bis hierher lief der Android-Bau auf dem JDK, das
-        # das Läuferabbild gerade mitbringt — eine Zahl, die sich ohne unser
-        # Zutun ändert. Ein Gradle-Lauf, der auf dem Entwicklungsrechner (Java
-        # 21) grün ist und in der Kette auf einem anderen JDK rot wird, ist ein
-        # Fehlschlag ohne Aussage. `setup-java` schreibt die Zahl fest.
-        #
-        # DIE MODULE ZIELEN AUF 17 (`JavaVersion.VERSION_17` in beiden
-        # `build.gradle.kts`) — das bleibt so. 17 ist das Ziel des erzeugten
-        # Bytecodes, 21 ist das JDK, das Gradle selbst ausführt; das eine sagt
-        # nichts über das andere.
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
-        with:
-          distribution: temurin
-          java-version: '21'
-
-      - name: Android — bauen, prüfen, linten
-        id: androidbau
-        if: steps.bereiche.outputs.android == 'ja'
-        # 0 Lint-Fehler und 0 Fehlschläge; der Rückgabewert von Gradle trägt
-        # beides. Das Android-SDK bringt der Läufer mit (ANDROID_HOME ist
-        # gesetzt); ist es das ausnahmsweise nicht, wird der Schritt
-        # AUSDRÜCKLICH übersprungen und sagt es.
-        working-directory: android
-        run: |
-          if [ -z "${ANDROID_HOME:-}" ] && [ -z "${ANDROID_SDK_ROOT:-}" ]; then
-            echo "::warning::Android-SDK fehlt auf diesem Läufer — Bauläufe ÜBERSPRUNGEN, nicht bestanden."
-            echo '**Android: ÜBERSPRUNGEN** (kein SDK auf dem Läufer) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          chmod +x ./gradlew
-          ./gradlew --no-daemon build
-
-      - name: Android — Berichte des Fehlschlags mitnehmen
-        # WARUM ES DIESEN SCHRITT GIBT (gemessen 20.09.2026, Lauf #98). Der
-        # Android-Schritt meldete „Execution failed for task
-        # ':handy:testDebugUnitTest'" und danach nur noch den Rat, es mit
-        # `--info` zu versuchen. WELCHER Prüffall gefallen war, stand nirgends
-        # — die Kette weiß es, schreibt es in `build/reports/tests/` und wirft
-        # den Läufer danach weg. Ein roter Lauf, der seinen Gegenstand nicht
-        # nennt, kostet einen zweiten Lauf, nur um ihn zu erfahren.
-        #
-        # `if: failure()` UND NICHT `always()`: Bei Grün gibt es nichts zu
-        # lesen, und jedes Artefakt kostet Speicherplatz und Zeit.
-        # `reports/**` trägt beides — die HTML-Berichte der Prüffälle UND die
-        # Lint-Ergebnisse (`lint-results-*.html`), die daneben liegen;
-        # `test-results/**` die JUnit-XML für maschinelles Lesen.
-        #
-        # AN DEN ANDROID-SCHRITT GEBUNDEN, nicht an `failure()` allein: Ein
-        # Fehlschlag weiter oben (Wortliste, `php -l`) überspringt den
-        # Android-Bau, und dann gibt es keinen Ordner `build/` — das Artefakt
-        # wäre leer und die Warnung darüber verwirrend.
-        if: failure() && steps.androidbau.outcome == 'failure'
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-        with:
-          name: android-berichte
-          path: |
-            android/*/build/reports/**
-            android/*/build/test-results/**
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Uhr Stufe I — für alle Zielgeräte übersetzen
-        if: steps.bereiche.outputs.uhr == 'ja'
-        # BRAUCHT `CIQ_GERAETE_URL`. Die Adresse steht bewusst nicht im
-        # Repositorium (`tools/uhr-pruefstand/LIESMICH.md`, Abschnitt
-        # „Quelle"): Es ist öffentlich, die Dateien gehören Garmin. Sie kommt
-        # als Umgebungsgeheimnis herein; fehlt sie, wird der Schritt
-        # ÜBERSPRUNGEN UND GESAGT — nie ein stilles Grün (E-P5a-13).
-        env:
-          CIQ_GERAETE_URL: ${{ secrets.CIQ_GERAETE_URL }}
-        run: |
-          # ZURÜCK AUF DAS JDK DES LÄUFERS (E-KH-24). Lief der Android-Schritt
-          # vorher, hat `setup-java` JAVA_HOME und PATH global auf Java 21
-          # umgestellt. `monkeyc` ist ein Shell-Vorspann, der `java` vom PATH
-          # nimmt — er bekäme die 21 ungefragt mit. Dieser Schritt übersetzt
-          # für alle Zielgeräte und dauert rund 11 Minuten (Lauf 35840201595,
-          # mit den Archiven des Prüfstands; davor 38); ein Fehlschlag
-          # darin, verursacht von einer Änderung am Android-Bau, wäre teuer und
-          # schwer zuzuordnen. Also ausdrücklich zurück, und gesagt, worauf.
-          if [ -n "${JAVA_HOME_LAEUFER:-}" ]; then
-            export JAVA_HOME="$JAVA_HOME_LAEUFER"
-            export PATH="$JAVA_HOME/bin:$PATH"
-          fi
-          echo "Uhr übersetzt mit: $(java -version 2>&1 | head -1)"
-          if [ -z "${CIQ_GERAETE_URL:-}" ]; then
-            echo "::warning::CIQ_GERAETE_URL nicht gesetzt — Uhr Stufe I ÜBERSPRUNGEN, nicht bestanden."
-            echo '**Uhr Stufe I: ÜBERSPRUNGEN** (kein `CIQ_GERAETE_URL`) — nicht gemessen.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          # `aufbau-uebersetzen` UND NICHT `aufbau` (16.09.2026): Stufe I
-          # uebersetzt nur. `aufbau` holt zusaetzlich die
-          # Simulator-Bibliotheken (webkit2gtk, xvfb, xdotool) per
-          # apt-get — das braucht auf einem Laeufer `sudo`, laedt .deb-
-          # Pakete nach und kostet Minuten fuer etwas, das hier nie
-          # startet. Der erste echte Lauf ist genau daran gescheitert:
-          # "FEHLER: apt-get fehlgeschlagen".
-          CIQ_ZIELE=alle tools/uhr-pruefstand/pruefstand.sh aufbau-uebersetzen
-          python3 tools/uhr-pruefstand/geraeteklassen.py "$HOME/.Garmin/ConnectIQ/Devices" \
-                  --vertreter 5 --liste /tmp/vertreter.txt --alle-liste /tmp/auswahl.txt
-          tools/uhr-pruefstand/pruefstand.sh reihe /tmp/auswahl.txt
-
-  # ---------------------------------------------------------------------------
-  # EIGENER AUFTRAG, WEIL DIENSTBEHÄLTER JOB-WEIT SIND. GitHub bindet
-  # `services:` an den Auftrag, nicht an den Schritt; eine Matrix über zwei
-  # Datenbankfassungen geht deshalb nur als eigener Auftrag. Er kostet nichts,
-  # was Stufe 1 verlangsamt: Beide Läufe starten parallel zur `pruefung`.
-  #
-  # WOGEGEN (Backlog Nr. 238). Am 20.09.2026 scheiterte die Einrichtung auf
-  # dem neuen Staging-Webspace an `1064 … near 'manual TINYINT(1) …'` — MySQL
-  # führt MANUAL von 8.4.0 bis 8.4.10 als reserviertes Wort. Dahinter lag ein
-  # zweiter Fehler, den erst das Beheben des ersten sichtbar machte:
-  # `DEFAULT UTC_TIMESTAMP()` ohne Klammern, von MySQL auf JEDER Fassung
-  # abgewiesen. Die Anwendung ließ sich seit Web 20.16.5 auf MySQL überhaupt
-  # nicht einrichten.
-  #
-  # BEIDE HATTEN DIESELBE URSACHE, und sie ist nicht SQL: Entwickelt und
-  # geprüft wurde gegen MariaDB, ausgeliefert wird gegen MySQL. Deshalb steht
-  # hier eine MATRIX und kein einzelner Lauf — eine Fassung belegt nichts über
-  # die andere, und genau diese Verwechslung war der Fehler.
-  #
-  # DIE BEIDEN FASSUNGEN SIND NICHT BELIEBIG GEWÄHLT:
-  #   mysql:8.4.0    die Fassung, an der es gescheitert ist (und die letzte,
-  #                  die MANUAL noch reserviert — ab 8.4.11 ist es wieder frei)
-  #   mariadb:10.6   die dokumentierte Untergrenze (`docs/Technik.md` 7,
-  #                  `plattform_lib.php` PLATTFORM_MARIADB_MIN)
+  # Fassungen bewusst fest: mysql:8.4.0 reserviert MANUAL (Nr. 238), mariadb:10.6 ist PLATTFORM_MARIADB_MIN — nicht anheben.
   schema:
     name: Schema gegen ${{ matrix.db.name }}
     needs: schon-gemessen
+    # Wie bei Stufe 1: scheitert „Schon gemessen?", misst dieser Job trotzdem, statt still zu entfallen.
     if: ${{ !cancelled() && needs.schon-gemessen.outputs.messen != 'nein' }}
     runs-on: ubuntu-latest
     strategy:
-      # KEIN `fail-fast`. Scheitert eine Fassung, will man wissen, ob die
-      # andere auch scheitert — das ist der Unterschied zwischen „unser
-      # Schema ist kaputt" und „unser Schema passt zu einer Fassung nicht".
       fail-fast: false
       matrix:
         db:
           - name: MySQL 8.4.0
             image: mysql:8.4.0
             klient: mysql
-            pass_env: MYSQL_ROOT_PASSWORD
-            # UEBER TCP, NICHT UEBER DEN SOCKET (23.09.2026, PR #77, Lauf
-            # 35840034467). Das Abbild faehrt zum Einrichten erst einen
-            # TEMPORAEREN Server hoch — nur Socket, „port: 0" im Protokoll —,
-            # beendet ihn und startet dann den echten. `mysqladmin ping` ohne
-            # Host fragt den Socket und meldete den temporaeren als gesund
-            # (08:57:20); die Probe verband sich 08:57:24,45 mit „MySQL server
-            # has gone away", der echte Server stand erst 08:57:24,58. Ueber
-            # TCP antwortet nur der echte.
+            # Nur über TCP: Über den Socket meldet sich schon der temporäre Einrichtungsserver gesund (F-TB-12).
             gesund: mysqladmin ping -h 127.0.0.1 --protocol=tcp -uroot -pschemaprobe
           - name: MariaDB 10.6
             image: mariadb:10.6
             klient: mariadb
-            pass_env: MARIADB_ROOT_PASSWORD
             gesund: healthcheck.sh --connect --innodb_initialized
     services:
       db:
         image: ${{ matrix.db.image }}
         env:
-          # Der Name der Variablen unterscheidet sich zwischen den Abbildern;
-          # das jeweils andere wird schlicht ignoriert.
           MYSQL_ROOT_PASSWORD: schemaprobe
           MARIADB_ROOT_PASSWORD: schemaprobe
         ports:
@@ -863,11 +285,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Datenbank-Klient bereitstellen
-        # Der Läufer bringt den `mysql`-Klienten mit, den `mariadb`-Klienten
-        # nicht immer. Er wird nur nachgeladen, wenn er fehlt — und wenn das
-        # scheitert, scheitert der Schritt, statt still auf den anderen
-        # Klienten auszuweichen (ein Lauf mit dem falschen Klienten misst
-        # etwas anderes, als er behauptet).
         run: |
           if command -v ${{ matrix.db.klient }} >/dev/null 2>&1; then
             echo "${{ matrix.db.klient }} ist da: $(${{ matrix.db.klient }} --version)"
@@ -878,16 +295,7 @@ jobs:
           fi
 
       - name: Selbstprobe — zählt die Probe einen Fehlschlag überhaupt?
-        # Zuerst, aus demselben Grund wie beim Migrationsregister: Ein grüner
-        # Lauf einer Prüfung, die immer grün meldet, sieht genauso aus wie
-        # einer, der nichts gefunden hat.
-        #
-        # `--klient` MUSS MIT, obwohl die Selbstprobe keine Datenbank braucht:
-        # Sie prüft unter anderem, ob der Klient aufrufbar ist, und ohne den
-        # Schalter prüft sie den VORGABEWERT `mariadb` statt den, mit dem der
-        # Lauf darunter arbeitet. Im ersten Kettenlauf ist genau das passiert
-        # — der MySQL-Auftrag wurde rot gemeldet, weil auf dem Läufer kein
-        # `mariadb` liegt, während der eigentliche Lauf grün gewesen wäre.
+        # --klient auch hier: Ohne ihn prüft die Selbstprobe den Vorgabewert mariadb, den der MySQL-Läufer nicht hat.
         run: php tools/schemaprobe/probe.php --selbstprobe --klient ${{ matrix.db.klient }}
 
       - name: Schemaprobe — schema.sql und die Migrationen
