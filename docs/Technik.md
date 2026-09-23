@@ -707,7 +707,8 @@ Daten erst nach Server-Bestätigung.
 │                          nicht fehl: ein Mangel wird mit Zahl gemeldet
 └── .github/workflows/     die Auslieferungskette (P5a/AP1, Abschnitt 6)
     ├── pruefung.yml       Stufe 1 ohne Installation: Arbeitszweige beim
-    │                      Pull Request, main bei jedem Push
+    │                      Pull Request, main bei jedem Push; liest den
+    │                      Prüfbericht gegen (PK-05)
     ├── auslieferung.yml   WANN ausgeliefert wird: Staging (Push auf main),
     │                      Stufe 2, Produktion (Tag, Pflichtfreigabe,
     │                      Backup-Tor), Zeiger
@@ -8990,7 +8991,7 @@ Vier Arbeitsläufe unter `.github/workflows/`:
 
 | Datei | Was |
 |---|---|
-| `pruefung.yml` | **Stufe 1** — jeder Pull Request, dazu jeder Push auf `main` (seit 21.09.2026; vorher jeder Push auf jedem Zweig) |
+| `pruefung.yml` | **Stufe 1** — jeder Pull Request, dazu jeder Push auf `main` (seit 21.09.2026; vorher jeder Push auf jedem Zweig); seit PK-05 die Gegenlesung des Prüfberichts (6.2) |
 | `auslieferung.yml` | **wann**: Jobs `staging`, `stufe2`, `produktion`, `Rückfallstand (Staging)` und `zeiger` |
 | `ausliefern-lauf.yml` | **was**: die Schrittfolge, einmal, für beide Umgebungen |
 | `integritaet.yml` | die Wache; läuft nach einem **Produktiv**-Deploy und täglich |
@@ -9125,172 +9126,91 @@ Auslieferungs-Tags — deren Signatur liegt außerhalb der CI (E-S4-16).
 ### 6.2 Stufe 1 — was ohne Installation messbar ist
 
 `pruefung.yml`, **bei jedem Pull Request und bei jedem Push auf `main`**.
+Ein Push auf einen Arbeitszweig löst seit dem 21.09.2026 keinen Lauf mehr
+aus (Vorgriff auf PK-05): Vorher erzeugte jeder Push **zwei** Läufe namens
+`Stufe 1`, und der Zweigschutz wartete auf den langsameren — 56 statt einer
+Minute (PR #69, #70).
 
-> **Seit dem 21.09.2026 löst ein Push auf einen Arbeitszweig keinen Lauf mehr
-> aus** (Vorgriff auf PK-05 des Konzepts PK). Vorher stand dort
-> `branches: ['**']`, und jeder Push erzeugte **zwei** Läufe, die beide
-> `Stufe 1` heißen: Der über `pull_request` vergleicht gegen den gemeinsamen
-> Vorfahren von Zweig und `main` und lässt Uhr und Android weg, wenn
-> `watch/` und `android/` nicht berührt sind — **rund eine Minute**. Der über `push` findet bei einem neuen Zweig
-> oder einem Merge-Commit keinen Vergleichsstand, misst im Zweifel alles und
-> braucht **rund 56 Minuten**. Der Zweigschutz wartet auf den Namen, also auf
-> den langsameren. Gemessen an PR #69 (Läufe 192 und 193) und PR #70
-> (Lauf 186).
->
-> Auf `main` bleibt der Push-Auslöser und ist dort richtig: Es gibt keinen
-> Pull Request mehr, gegen den zu vergleichen wäre, und die Bereichserkennung
-> misst ohnehin alles.
+**Seit PK-05 ist Stufe 1 die Gegenlesung des Prüfstands** (Station C,
+`docs/Pruefablauf.md` 2.3 und 5). Sie wiederholt nicht, was der Prüfstand
+gemessen hat, sondern fährt die billigen Riegel und hält deren Zahlen dem
+Prüfbericht in der Nachricht des PR-Kopfs entgegen. Android und Uhr baut sie
+**nicht mehr**: Das tut der Prüfstand, wenn `android/` oder `watch/` berührt
+ist, und der Bericht sagt es — sagt er „nicht berührt", obwohl der PR dort
+etwas ändert, ist das Tor rot. Bis PK-05 baute Stufe 1 beides selbst, mit
+eigener Bereichserkennung, eigenem JDK und bis zu 42 Minuten Laufzeit; die
+Datei hatte 988 Zeilen, heute 337.
 
-Die Schritte:
+Die Schritte des Jobs `Stufe 1`, in dieser Reihenfolge. **Die Zahlen stehen
+nicht hier**, sondern in der `LIESMICH.md` des Werkzeugs
+(`docs/Pruefablauf.md` 6.11) — dieser Abschnitt trug bis Web 20.21.1 eine
+Bilderzahl, die längst nicht mehr stimmte.
 
-| Schritt | Sollwert |
+| Schritt | Grün heißt |
 |---|---|
-| Fassungen nennen (Web, Uhr, Android) | drei Nummern in der Zusammenfassung — **kein** Sollwert, eine Auskunft |
-| Welche Bereiche sind berührt? | `android=ja\|nein`, `uhr=ja\|nein` — eine Auskunft, kein Sollwert (siehe unten) |
-| `php -l` über `server/` und `tools/` | 0 Fehler |
-| `bash tools/quelltext/pruefen.sh textprobe` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen |
-| `bash tools/quelltext/pruefen.sh vollstaendigkeit --hoechstens N` | **genau N** — die Schwelle, nicht null (die Zahl steht in `tools/pruefstand/pruefablauf.json`, nicht hier — dieser Eintrag stand bis Web 20.21.1 auf 366, während die Kette längst mit 377 lief) |
+| Fassungen nennen (Web, Uhr, Android) | eine Auskunft — aber eine unlesbare Fassung ist rot |
+| `php -l` über `server/` und `tools/` | 0 Fehler, und mindestens eine Datei gelesen; die Zahl der versionierten `server/`-Dateien geht in die Gegenlesung (`syntax-php`) |
+| `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle acht Prüfungen grün (`tools/quelltext/LIESMICH.md`) |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
-| `tools/kettenaufrufe/pruefen.py` | 0 Befunde, 0 ungeprüft, Selbstprobe 10/10 |
-| `tools/kette/tor.py --selbstprobe` | 11 erfüllt, 0 offen |
+| Umgebungswert eine Ebene höher | alle sechs Namen leer (6.5, E-KH-28) |
+| `tools/kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | Selbstprobe vollständig, 0 Befunde; jeder ungeprüfte Aufruf benannt |
+| `tools/kette/tor.py`, `download_lib.mjs`, `tools/kette/freigabe.py`, je `--selbstprobe` | jede Lage erfüllt |
+| Python-Werkzeuge übersetzen | 0 Syntaxfehler |
 | Backlog-Nummern (`grep … uniq -d`) | leer |
-| `bash tools/quelltext/pruefen.sh installweiche` | 0 Befunde, Selbstprobe 8/8 |
-| `bash tools/quelltext/pruefen.sh migrationsregister` | 0 Befunde, Selbstprobe 4/4 |
-| `tools/schemaprobe/probe.php` (eigener Auftrag, Matrix) | **19 Erwartungen, 0 Fehlschläge** je Fassung — MySQL 8.4.0 und MariaDB 10.6; Selbstprobe 4/4 |
-| `bash tools/quelltext/pruefen.sh csp` | 0 Befunde, Selbstprobe 10/10 |
-| `bash tools/quelltext/pruefen.sh sitzungshaertung` | 0 Befunde, Selbstprobe 12/12 |
-| `bash tools/quelltext/pruefen.sh jobregister` | 0 Befunde, Selbstprobe 9/9 (Schritt 16, Nr. 208) |
-| `php tools/zaehlung/zaehlen.php` | 38 Registerzeilen, **0 über der Decke**; Selbstprobe 34/34 (Schritt 15, R83) |
-| `php tools/spaltenregister/pruefen.php` | **1 Befund, Selbstprobe 15/16** — siehe unten (Schritt 15 AP6) |
-| Java 21 (`actions/setup-java`) | Temurin 21 für den Android-Schritt — **nur wenn `android/` berührt ist**; eine Festlegung, kein Sollwert |
-| `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge — **nur wenn `android/` berührt ist** |
-| Berichte des Android-Fehlschlags (`actions/upload-artifact`) | Artefakt `android-berichte` — **nur bei `failure()`**; bei Grün nichts |
-| Uhr Stufe I (`pruefstand.sh aufbau-uebersetzen`) | übersetzt für alle Zielgeräte — **nur wenn `watch/` oder `tools/uhr-pruefstand/` berührt ist** |
+| Handbuch und „Was ist NAdoku" rendern | beide rendern, 0 Bilder aus fremder Quelle |
+| `tools/spaltenregister/pruefen.php`, `tools/zaehlung/zaehlen.php`, je mit Selbstprobe | 0 Befunde, 0 Zeilen über der Decke |
+| `tools/proben/proben.sh rechtstexte` | 0 Fehlschläge |
+| **Prüfbericht gegenlesen** (überall außer auf `main`) | `bericht.py lesen` rc 0: Baum, Stufe, Flächen, alle Riegel, keine rote und keine nicht gemessene Probe |
 
-> **`tools/quelltext/` `jobregister` hängt seit Kette II in `pruefung.yml`**
-> (neben `sitzungshaertung`, ohne Bedingung) — Schritt 16 hatte es gebaut
-> und bei Kette II angemeldet, weil es `.github/` nicht anfasst (Backlog
-> Nr. 208). **Damit ist der Punkt ganz erledigt:** Nicht nur die erzeugte
-> Beschreibung im Katalog kann nicht mehr altern, sondern auch das Register
-> in diesem Dokument — es wird bei jedem Push nachgezählt statt nur, wenn es
-> jemand fährt. Genau davor warnte Nr. 208 („sonst wandert das Problem nur
-> eine Ebene weiter").
+Daneben, als eigener Job mit Matrix: **`Schema gegen …`** —
+`tools/schemaprobe/probe.php` gegen MySQL 8.4.0 und MariaDB 10.6, je mit
+Selbstprobe. Er ist **keine Pflichtprüfung** des Rulesets; ein roter
+Schemalauf hält einen Merge heute nicht auf (Q-PK-07).
 
-> **`tools/spaltenregister/` hängt in Stufe 1 und ist dort grün** —
-> **Selbstprobe 16 von 16, Lauf 0 Befunde**, beide Rückgabewert 0
-> (nachgemessen 23.09.2026).
->
-> **Es war zwei Tage lang rot, und das gehört hierher**, weil es zeigt,
-> wofür die Selbstprobe da ist. Zwei Befunde, beide aus Schritt 15 selbst:
-> `start_sort` stand in der Abbildung von `api/suchindex.php`, aber nicht
-> im Register — genau das Feld, das AP9 für die Sortierung des
-> Nachtdienstes eingeführt hatte. Und der Selbstprobefall „mf_spalten:
-> Alias an" erwartete `uhr_gesperrt AS manual` **ohne Backticks**, während
-> der Merge den Fix aus Web 20.26.3 nach `mf_spalten()` gezogen hatte. Der
-> Fall hat damit genau das getan, wofür es ihn gibt: angeschlagen, als
-> sich die erzeugte Zeichenkette änderte.
->
-> Behoben von Schritt 15 selbst (`f1bc9e6`), nach dem Stand, den PK-04
-> vorweggenommen hatte — deshalb stand hier zwischenzeitlich „ROT".
-> Backlog Nr. 282, erledigt.
->
->     php tools/zaehlung/zaehlen.php --selbstprobe
->     php tools/zaehlung/zaehlen.php
->
-> **Bis dahin misst es nur, wer es fährt.** Genau das ist die Lage, gegen die
-> es gebaut wurde: `edbak_groesse_text()` ist auf 43 Aufrufe in zehn Dateien
-> gewachsen, ohne dass es jemandem auffiel (R83). Ein Register, das niemand
-> fährt, wiederholt den Fehler eine Ebene höher.
+> **Die Gegenlesung ist streng** (E-PK-42): Der Baum im Bericht muss der des
+> PR-Kopfs sein. Nach einem fremden Merge ist „Update branch" deshalb der
+> falsche Knopf — sein Merge-Commit trägt keinen Bericht. Der Weg steht in
+> `docs/Pruefablauf.md` 5.3. Auf `main` liest niemand gegen: Dort misst der
+> Lauf entweder selbst oder verweist über `Schon gemessen?` auf den grünen
+> PR-Lauf mit demselben Baum. **Ein Handlauf auf einem Zweig liest gegen**
+> (E-PK-43): Sonst setzte ein Handlauf auf dem PR-Kopf ein grünes
+> `Stufe 1` ohne Gegenlesung — der Hotfix-Weg (6.6b) braucht deshalb einen
+> Bericht im Hotfix-Commit.
 
-> **Die Reihenfolge ist die des Arbeitslaufs**, und sie hat einen Grund: Was
-> ohne Netz und ohne SDK läuft, läuft zuerst. Ein Syntaxfehler soll nicht erst
-> nach dem Android-Build auffallen, der Minuten braucht.
->
-> **Der Android-Schritt lädt seine Berichte nur bei Rot hoch** (seit Android
-> 0.15.1). Grund: Am 20.09.2026 meldete er „264 tests completed, 1 failed"
-> und nannte den Fehlschlag nirgends erreichbar — die Log-API liest vom Ende,
-> und dort standen 9000 Zeilen CloseGuard-Ausgabe für elf Sekunden. Der
-> Name stand im HTML-Bericht unter
-> `android/handy/build/reports/tests/…/index.html`, und der starb mit dem
-> Läufer. Das Artefakt trägt jetzt `reports/**` (Prüffälle **und** Lint) und
-> `test-results/**` (JUnit-XML). Bei Grün gibt es nichts zu lesen.
->
-> **`setup-java` wirkt global auf alle folgenden Schritte** — auch auf den
-> Uhr-Schritt, der danach rund 11 Minuten übersetzt (seit den Archiven des
-> Prüfstands; davor 38) und `java` vom PATH
-> nimmt. Der Uhr-Schritt setzt deshalb ausdrücklich auf das JDK des Läufers
-> zurück, dessen Wert der Schritt „Fassungen nennen" vorher in
-> `JAVA_HOME_LAEUFER` festhält (E-KH-24). Wer die Reihenfolge der Schritte
-> ändert, prüft diese Kopplung mit.
->
+> **`tools/quelltext/` `jobregister` hängt seit Kette II in Stufe 1** — seit
+> PK-05 als Teil von `pruefen.sh alle`. Schritt 16 hatte es gebaut, weil die
+> erzeugte Beschreibung im Katalog sonst altert (Backlog Nr. 208, „sonst
+> wandert das Problem nur eine Ebene weiter"). Es wird bei jedem PR
+> nachgezählt statt nur, wenn es jemand fährt.
+
+> **`tools/spaltenregister/` war zwei Tage lang rot, und das gehört
+> hierher**, weil es zeigt, wofür die Selbstprobe da ist. Zwei Befunde, beide
+> aus Schritt 15 selbst: `start_sort` stand in der Abbildung von
+> `api/suchindex.php`, aber nicht im Register, und der Selbstprobefall
+> „mf_spalten: Alias an" erwartete `uhr_gesperrt AS manual` **ohne
+> Backticks**, während der Merge den Fix aus Web 20.26.3 nach `mf_spalten()`
+> gezogen hatte. Behoben von Schritt 15 selbst (`f1bc9e6`); Backlog Nr. 282,
+> erledigt.
+
 > **`tools/kettenaufrufe/` ist das einzige Prüfmittel, das die KETTE prüft**
-> und nicht die Anwendung. Es liest jeden `run:`-Block der drei Arbeitsläufe,
-> findet die darin aufgerufenen Werkzeuge und hält jeden Schalter gegen die
-> Schnittstelle, die im Quelltext des Werkzeugs steht — ohne eines
-> auszuführen. Grund: Drei Kettenschritte sind am 16./17.09.2026 beim jeweils
-> **ersten** echten Lauf gescheitert, alle drei mit gültigem YAML (Nr. 217).
-> Seine Grenze steht in seiner `LIESMICH.md` und gehört dazu: Es prüft
-> Schnittstellen, nicht Verhalten.
-
-> **Warum dort eine Schwelle steht und keine Null.** Dieses Werkzeug misst
-> einen **Altbestand** aus P3 — Unicode-Zeichen im Markup, `style=`-Attribute
-> in JavaScript, Emoji —, der nicht in einem Zug verschwindet. „0 Befunde" ist
-> ein Ziel, kein erreichbarer Zustand; der Stand lag schon bei der Einführung
-> dieses Laufs bei 340.
->
-> **Bis Web 20.8.0 verlangte der Schritt trotzdem `exit 0`** und war damit bei
-> **jedem** Push rot — ein Tor, das immer rot ist, sagt nichts mehr und wird
-> abgeschaltet. Die Schwelle wirkt seither in **beide** Richtungen: Wächst der
-> Altbestand, ist das ein Befund; **schrumpft** er, ebenfalls — dann ist die
-> Zahl im Arbeitslauf nachzuziehen, sonst bekommt er stillschweigend wieder
-> Luft.
-
-#### Android und Uhr laufen nur mit, wenn sie berührt sind
-
-**Gemessen am 17.09.2026:** Der Lauf brauchte 42 min 28 s — davon 7:15 der
-Android-Bau und **34:46** das Übersetzen der Uhr-App für alle Zielgeräte. Die
-übrigen dreizehn Schritte zusammen: **23 Sekunden**. Und von den letzten 60
-Commits auf `main` fasst **keiner** `android/` an und **einer** `watch/`.
-59 von 60 Läufen messen also 42 Minuten lang Code, den niemand angefasst hat.
-
-Der Schritt „Welche Bereiche sind berührt?" setzt deshalb zwei Ausgaben, an
-denen die beiden teuren Schritte per `if:` hängen. **Drei Eigenschaften machen
-den Sprung unkritisch** — wer eine davon entfernt, macht aus einer
-Beschleunigung eine Lücke:
-
-| | |
-|---|---|
-| **`main` misst alles — wenn es misst** | Der schlimmste Fehler des Filters wäre, fälschlich zu überspringen; auf `main` kann das nicht passieren. **Ob** auf `main` gemessen wird, entscheidet seit dem 23.09.2026 der Job `Schon gemessen?` davor am Baum: Hat ein grüner PR-Lauf denselben Baum gemessen, verweist der Lauf auf ihn (Konzept TB). Das Produktionstor verlangt einen grünen Stufe-1-Lauf auf demselben **Baum**, und ein PR-Lauf zählt (6.4). |
-| **Im Zweifel wird gemessen** | Neuer Zweig (`before` ist `0000…`), Force-Push (das Vorher ist unerreichbar), fehlende Historie, `workflow_dispatch` — jeder dieser Wege endet bei „alles". Getragen wird das von **zwei Schichten, jede für sich ausreichend**: der Erreichbarkeitsprüfung (`git cat-file`) und dem Fehlerzweig von `git diff`. Nachgemessen am 17.09.2026: Entwaffnet man eine der beiden, bleibt die Lage richtig; entwaffnet man **beide**, fällt sie um. |
-| **Die Auslassung nennt ihren Gegenstand** | Ein übersprungener Schritt läuft nicht und kann selbst nichts melden. Deshalb schreibt der **Erkennungsschritt** die Zeile: „**Uhr Stufe I: NICHT BERÜHRT** — 0 von 12 geänderten Dateien liegen unter `watch/` oder `tools/uhr-pruefstand/` (gegenüber `98a64f1`); nicht gemessen." Dieselbe Bauform wie beim fehlenden SDK oder fehlender `CIQ_GERAETE_URL`. |
-
-Dazu zwei Feinheiten: Der Uhr-Schritt hängt **auch an `tools/uhr-pruefstand/`**
-— wer den Prüfstand ändert, fährt ihn. Und eine Änderung an `pruefung.yml`
-selbst fährt **beides**, sonst prüft niemand den Prüfschritt.
-
-> **Die Grenze, die nicht verschoben wird: Der Filter gilt für Android und
-> Uhr.** Beide werden von der Kette **nicht ausgeliefert** — der FTPS-Schritt
-> lädt `server/` hoch, die Signatur der Apps liegt außerhalb der CI
-> (E-S4-16); eine ausgelassene Messung erreicht hier keinen Server. Für einen
-> `server/`-Schritt gilt das **nicht**: Der entscheidet über ausgelieferten
-> Code, und eine Bedingung, die darüber entscheidet, gehört in ein Werkzeug
-> mit `--selbstprobe` — das Backup-Tor ist das Muster (E-P5a-12). Wer diesen
-> Filter auf PHP-Syntax, CSP oder Sitzungshärtung ausdehnt, ändert seine
-> Natur. Und wenn die Kette eines Tages die Apps selbst ausliefert
-> (`server/apk/` ist der Verteilweg, 4.97g), ist er neu zu bewerten.
+> und nicht die Anwendung. Es liest jeden `run:`-Block der Arbeitsläufe und
+> die Aufrufe in `tools/pruefstand/pruefablauf.json`, findet die darin
+> aufgerufenen Werkzeuge und hält jeden Schalter gegen die Schnittstelle, die
+> im Quelltext des Werkzeugs steht — ohne eines auszuführen. Grund: Drei
+> Kettenschritte sind am 16./17.09.2026 beim jeweils **ersten** echten Lauf
+> gescheitert, alle drei mit gültigem YAML (Nr. 217). Seine Grenze steht in
+> seiner `LIESMICH.md` und gehört dazu: Es prüft Schnittstellen, nicht
+> Verhalten.
 
 **Rot heißt kein Merge** — das entscheidet aber nicht die Datei, sondern der
 Zweigschutz auf `main`. **Seine Pflichtprüfung heißt `Stufe 1`**, nach dem
 Namen des **Jobs**, nicht nach dem des Arbeitslaufs („Prüfung") und nicht
 nach dem Dateinamen; wer sie anders einträgt, hängt sie an nichts
 (Rahmenplan 6b). Er ist seit dem **21.09.2026** gesetzt — bis dahin war der
-Lauf eine Auskunft und keine Schranke.
-
-**Kein stilles Überspringen.** Der Uhr-Prüfstand braucht `CIQ_GERAETE_URL`,
-und die steht bewusst nicht im Repositorium. Fehlt sie, sagt der Schritt das
-mit einer Warnung und einer Zeile in der Zusammenfassung — ein Schritt, der
-ohne seine Voraussetzung grün meldet, ist schlimmer als ein roter: Er sieht
-aus wie eine Prüfung.
+Lauf eine Auskunft und keine Schranke. Denselben Namen suchen das
+Produktionstor in `ausliefern-lauf.yml` (es liefert `tools/kette/freigabe.py`
+die Zahl der grünen `Stufe 1`-Jobs) und der Job `Schon gemessen?`; ein
+umbenannter Job hängt alle drei still ab.
 
 ### 6.3 Stufe 2 — was eine Installation braucht
 
@@ -9620,7 +9540,7 @@ sondern an den **Umgebungen**:
 |---|---|---|
 | Umgebung `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `STAGING_URL` |
 | Umgebung `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `PRODUKTION_URL` |
-| Repositorium | `CIQ_GERAETE_URL` (Stufe 1) | `WACHE_BASIS` |
+| Repositorium | `CIQ_GERAETE_URL` — seit PK-05 von keinem Arbeitslauf gelesen (Q-PK-08) | `WACHE_BASIS` |
 
 `FTP_SERVER` ist der **nackte Hostname**, ohne Protokoll und ohne Pfad.
 
@@ -9981,7 +9901,12 @@ und schreibt dessen Dateinamen neben den Tag in die Laufzusammenfassung
    Der Zweigname muss mit `hotfix/` anfangen — der Schrägstrich gehört dazu,
    `hotfix-schnell` ist keiner. Dann der Fix, und **eine eigene
    Korrekturversion** in `server/version.php`; der Changelog nennt den
-   Hotfix.
+   Hotfix. **Vor dem Commit den Prüfstand fahren** (`bash
+   tools/pruefstand/pruefen.sh`) und den Bericht in die Commit-Nachricht
+   schreiben — seit PK-05 liest Stufe 1 auch beim Handlauf auf einem Zweig
+   gegen (E-PK-43). Gemessen wird gegen `main`; weil die Fassungen dort
+   auseinanderliegen, heißt die Stufe meist „neben" — das ist mehr, nicht
+   weniger.
 
 4. **Handlauf auf Staging, Stufe 2 grün.** Actions → „Auslieferung" → *Run
    workflow* → Zweig `hotfix/…` → **alle Kästchen leer**. Der Job
@@ -9992,7 +9917,8 @@ und schreibt dessen Dateinamen neben den Tag in die Laufzusammenfassung
 5. **Tag und Freigabe.** `git tag web-v20.26.3 && git push origin web-v20.26.3`.
    Das Tor der grünen Läufe prüft jetzt dreierlei: grüner Stufe-1-Lauf auf
    demselben **Baum** (ein Handlauf von `pruefung.yml` auf dem Hotfix-Zweig
-   liefert ihn), grüner `staging`-Job auf **diesem** Commit, und
+   liefert ihn, wenn der Commit den Bericht aus Schritt 3 trägt), grüner
+   `staging`-Job auf **diesem** Commit, und
    **Abstammung vom Zeiger**.
    Dann die Pflichtfreigabe. Nach dem Lauf rückt der Zeiger `produktion` auf
    den Hotfix nach.
@@ -10016,6 +9942,7 @@ und schreibt dessen Dateinamen neben den Tag in die Laufzusammenfassung
 | Dasselbe, obwohl richtig abgezweigt | Der Zeiger ist inzwischen weitergerückt (eine andere Auslieferung dazwischen). Neu abzweigen und Schritt 4 wiederholen |
 | „Abstammung: nein (Vergleich: — nicht ermittelt —)" | Der Zweig `produktion` fehlt. Er ist kein Arbeitszweig und wird nur vom Job `zeiger` bewegt (6.6a) |
 | Der Handlauf auf `hotfix/*` zählt nicht | Der Job `staging` war übersprungen oder rot. Übersprungen ist nicht geprüft (B5) |
+| Der Handlauf von `pruefung.yml` auf `hotfix/*` ist rot: „Kein Prüfbericht in der Nachricht" | Der Hotfix-Commit trägt keinen Bericht — Schritt 3, Prüfstand fahren, Commit mit Bericht darüber (E-PK-43) |
 | Der Rückfallstand heißt `unbekannt` | Die Anlage hat keinen Komplett-Stand gemeldet. Der Job ist dann **rot** — ein Stand, dessen Namen niemand kennt, ist keiner |
 
 **Der Rückfallstand blockiert die Auslieferung nicht** (E-KH-30). Scheitert

@@ -26,11 +26,13 @@ Nichts. Kein Netz, keine Datenbank, keine Installation.
 **0 Befunde.** Die zweite Zahl ist „ungeprüft": Aufrufe, deren Werkzeug
 keine erkennbare Schnittstelle hat. **Sie ist kein Beiwerk** — der
 Stilvergleich stand darin und war kaputt (F-PK-20), `uhr-stufe1` stand
-nicht einmal darin und war es auch (F-PK-21). Stand 22.09.2026: **81
-Aufrufe, 0 Befunde, 2 ungeprüft**. `--probe` fährt die Selbstprobe.
+nicht einmal darin und war es auch (F-PK-21). Stand 23.09.2026: **75
+Aufrufe, 0 Befunde, 2 ungeprüft**; `--probe` → **13 von 13** Fällen.
 
 ## Was es nicht kann
 
-**Pflichtargumente sieht es nicht.** Ein Unterbefehl, den es gibt, gilt als
-richtig — auch wenn er ohne sein Argument sofort abbricht (F-PK-21). Und es
-misst nur die Form: Ob ein Aufruf das Richtige tut, sagt erst ein Lauf.
+**Pflichtargumente sieht es nur halb.** Bei Python-Werkzeugen mit argparse
+kennt es seit PK-05 die Unterbefehle und deren Pflichtschalter (F-PK-32);
+Positionsargumente und die Pflichtargumente eines Shell-Unterbefehls sieht es
+nicht (F-PK-21). Und es misst nur die Form — ob ein Aufruf das Richtige tut, sagt
+erst ein Lauf.

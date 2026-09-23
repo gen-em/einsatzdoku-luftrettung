@@ -6,19 +6,24 @@ und eine abhakbare Prüfliste. Angelegt mit PK-M1; fortgeschrieben mit PK-01.
 
 ## 0. Was nicht geprüft werden konnte
 
-**Stand nach PK-03.** Keines der drei Pakete ändert eine Zeile
-Anwendungscode oder eine Zeile der Kette: PK-01 schreibt Dokumente und
-eine Deny-Liste, PK-02 und PK-03 bauen Werkzeuge. Deshalb ist die Liste
-kurz — aber sie ist nicht leer, und sie steht hier vorn und nicht in
-einer Fußnote.
+**Stand nach PK-05.** PK-05 ändert die Kette selbst (`pruefung.yml`), und
+genau das lässt sich in der Arbeitsumgebung nur zur Hälfte belegen: Die
+Schritte sind örtlich nachgestellt, der echte Lauf auf GitHub kommt erst mit
+dem PR. Die sechs PK-05-Zeilen stehen oben; darunter der Stand nach PK-03.
 
 | Was | Warum nicht | Wann dann |
 |---|---|---|
+| ~~PK-05: Stufe 1 auf GitHub, mit Bericht und ohne~~ | **Nachgeholt am 23.09.2026 an PR #81:** mit Bericht grün in 76 s (P-PK-29), ohne Bericht rot (P-PK-30), Handlauf ohne Bericht rot (P-PK-31) — `steps.*.outcome` und `head.sha \|\| github.sha` wertet GitHub aus wie örtlich nachgestellt. **Nicht auf GitHub gesehen:** der Umgebungswert-Schritt im belegten Fall (örtlich nachgestellt) und „falscher Baum" (örtlich nachgestellt). | erledigt |
+| **PK-05: Die Lücke „Handlauf auf dem PR-Zweig"** | Geschlossen auf Verdacht (E-PK-43). Ob das Ruleset den jüngeren Check genommen hätte, ist **nicht gemessen** — und nach der Änderung auch nicht mehr messbar, weil der Handlauf jetzt selbst gegenliest. Messbar bleibt, dass er es tut. | am eigenen PR (P-PK-31) |
+| **PK-05: Der Push-Weg auf `main`** | Erst nach dem Merge durch die Betreiberin zu sehen. | nach dem Merge (P-PK-32) |
+| **PK-05: „gebaut" über einen echten Bau** | Dieser PR berührt weder `android/` noch `watch/`. Die neuen Flächenwerte („gebaut", „rot", „nicht-gemessen") sind an der Funktion und in der Selbstprobe belegt, nicht an einem Lauf mit SDK. | beim ersten PR, der `android/` oder `watch/` berührt (P-PK-34) |
+| **PK-05: Die Nebenstufe grün** | Gemessen, und sie ist es nicht: 9 von 36 Proben rot (5o, F-PK-40). Die Ursachen sind nur nach dem Ende des Protokolls eingeordnet, nicht untersucht. | Korrekturpaket vor P5c (E-PK-45, Nr. 292) |
+| **PK-05: Die Schemaprobe als Pflichtprüfung** | Kein Werkzeug, sondern eine Einstellung im Ruleset — Sache der Betreiberin (Q-PK-07). | nach Antwort auf Q-PK-07 |
 | **Die Kette auf einem echten Lauf** | PK-01 ändert `.github/workflows/` nicht. Dass `pruefung.yml` und `auslieferung.yml` nach den Änderungen unverändert grün laufen, belegt erst der nächste Push — und der gehört zum Phasen-PR, nicht zum Paket. | beim Phasen-PR |
 | **Die Wirksamkeit der Deny-Liste für *andere* Instanzen** | Gemessen ist sie in **dieser** Sitzung. Solange PK-01 nicht gemergt ist, liegt die Datei nur auf dem Arbeitszweig; eine Instanz, die `main` auscheckt, hat den Riegel nicht. | nach dem Merge des Phasen-PR |
 | **Ob die Deny-Liste einen *durchgeführten* Merge verhindert** | Nicht messbar, und zwar grundsätzlich: Die Regel nimmt das Werkzeug ganz aus dem Zusammenhang, es gibt also keinen abgewiesenen Aufruf. Gemessen wird die Abwesenheit mit Gegenprobe (3). | — (Messvorschrift steht in 3.1) |
 | **Die Browserprüfung** | PK-01 fasst keine Oberfläche an — keine Datei unter `server/`, kein Stylesheet, kein Markup. Es gibt nichts zu sehen. | — |
-| **Ein Lauf der Kette gegen die neuen Werkzeuge** | `pruefung.yml` ruft weiterhin die Einzelwerkzeuge, nicht `pruefablauf.json`. Dass beide dieselben Zahlen liefern, ist nicht gemessen. | PK-05 |
+| **Ein Lauf der Kette gegen die neuen Werkzeuge** | `pruefung.yml` ruft seit PK-05 `quelltext/pruefen.sh alle` und liest den Bericht gegen, dessen Zahlen aus `pruefablauf.json` kommen. Örtlich gleich (Tor-Schritt nachgestellt); auf GitHub steht es aus. | am PR von PK-05 (P-PK-29) |
 | ~~Der Bau der Uhr-App~~ | **Nachgeholt am 21.09.2026.** SDK 9.2.0, 1332 Schriftdateien, 99 von 99 Manifest-Geräten, 173 mit `compiler.json`, 0 fehlende Simulatorbibliotheken; Stufe I **99 übersetzt / 0 fehlgeschlagen**. **P-PK-11 ist vollständig.** Was dabei auffiel, steht in F-PK-19 und F-PK-21. | erledigt |
 | **Die meisten Aufrufe in `pruefablauf.json`** | Von **40** eingetragenen Proben sind **17 über den Prüfstand gefahren** worden (15 grün, 2 rot — davon einer ein Verdrahtungsfehler, einer ein echter Befund). Die übrigen 23 stehen eingetragen und sind nie ausgeführt. `tools/kettenaufrufe/` hält sie gegen die Schnittstelle ihres Werkzeugs (0 Befunde) — das ist etwas anderes als ein Lauf. | beim ersten Paket, das die jeweilige Fläche berührt |
 | ~~Der lange Lauf mit Bilderlauf und Bedienprobe~~ | **Nachgeholt am 21.09.2026** — erster Lauf 15 Proben, 13 grün, 2 rot, 0 nicht gemessen, rc 1; **Gegenprobe nach den Korrekturen: 15 grün, 0 rot, 0 nicht gemessen, rc 0**. Bilderlauf **496 Einzelbilder / 62 Kontaktbögen / Überlauf 0 / Knöpfe falscher Höhe 0 / 162 Karten, 0 außerhalb `main.inhalt`**, Bedienprobe grün. Die zwei roten sind **F-PK-20** und behoben. | erledigt |
@@ -60,6 +65,13 @@ einer Fußnote.
 | P-PK-26 | Der Import des GuteSeele-Layouts findet seine Spalten noch (E-PK-39) | eine Excel-Datei im GuteSeele-Format importieren, Schritt 2 ansehen | alle 13 Spalten erkannt, **`Pilot` zugeordnet** | die Spalte `Pilot` bleibt leer — dann hat jemand den Spaltennamen gegendert, und der Import scheitert **still** |  **offen** — der gefährlichste Fall des Pakets, weil er nicht meldet |
 | P-PK-27 | Die Kartenebene „Wandern" und ihre Lizenz (Backlog Nr. 280, PK-04/5d) | von einem Rechner mit Netzzugang: `wiki.openstreetmap.org/wiki/OpenHikingMap` und `openmaps.fr` aufrufen und die Nutzungsbedingungen lesen | die Bedingungen decken eine Nutzung wie diese — dann Zeile in `docs/Lizenzen.md` füllen | sie decken sie nicht; dann wird die Ebene ausgebaut | **offen** — **in dieser Arbeitsumgebung nicht prüfbar**: beide Abrufe HTTP 403 am Ausgangsproxy (5l) |
 | P-PK-28 | Die Android-Zeile bekommt ihre Versionsstufe nachgereicht (F-PK-29, Backlog Nr. 284, E-PK-40) | beim nächsten Android-Paket: `android/version.properties` hochstufen, Kopfabsatz schreiben, Changelog-Zeile mit Präfix `Android` ergänzen, `android/werkzeuge/emulator.sh` starten und die Seite Einstellungen → Rechtliches ansehen und bedienen | die Nummer steigt, der Changelog führt eine `[Android …]`-Zeile, und ein Bild zeigt „von der BetreiberIn des Servers" auf dem gelaufenen Gerät | die Nummer bleibt auf `0.15.1`, oder der Emulator wird wieder still übersprungen statt als Befund mit Zahl gemeldet | **offen** — bewusst zurückgestellt (E-PK-40); bis dahin tragen zwei Stände des Handy-Moduls dieselbe Nummer |
+| P-PK-29 | Stufe 1 auf dem PR von PK-05 ist grün, mit dem Bericht aus dem letzten Commit (PK-05) | PR öffnen; den Lauf „Prüfung" zum Kopf-Commit öffnen, Job `Stufe 1`, Schritt „Prüfbericht gegenlesen" | grün; die Zusammenfassung zeigt „Prüfbericht in Ordnung: Stufe klein, Baum …"; Job **unter zwei Minuten** | der Schritt ist übersprungen (dann greift die Bedingung nicht), oder rot mit „Baum-Hash passt nicht" (dann stimmt die Baumbildung nicht mit GitHubs Checkout überein) | **erledigt 23.09.2026** — PR #81, Lauf 35886807495 auf `a701271`: Schritt 18 „Prüfbericht gegenlesen" **ausgeführt und grün**, Meldung „Prüfbericht in Ordnung: Stufe klein, Baum 620bfee…, 16 Zahlen"; Job `Stufe 1` **76 s**, ganzer Lauf 81 s; Schema beide grün (37 s) |
+| P-PK-30 | Gegenversuch: ein Commit ohne Bericht ist rot (PK-05) | auf dem PR-Zweig einen Commit ohne Bericht pushen (die Instanz tut das und nimmt ihn danach mit einem Commit mit Bericht zurück) | Stufe 1 **rot** am Schritt „Prüfbericht gegenlesen", Meldung „Kein Prüfbericht in der Nachricht" samt Weg, auch in der Zusammenfassung | grün — dann liest das Tor nichts | **erledigt 23.09.2026** — Commit `d48bc58` ohne Bericht, Lauf 35887059485: Stufe 1 **rot** an Schritt 18, „Kein Prüfbericht in der Nachricht — der Block fehlt ganz" und der Weg; die übrigen 17 Schritte grün. Zurückgenommen mit dem nächsten Commit, der den Bericht trägt |
+| P-PK-31 | Ein Handlauf auf dem PR-Zweig liest gegen (E-PK-43, F-PK-35) | Actions → „Prüfung" → *Run workflow* → Zweig des PR | Job `Stufe 1` führt den Schritt „Prüfbericht gegenlesen" aus (nicht übersprungen) | der Schritt steht als übersprungen — dann setzt ein Handlauf ein grünes `Stufe 1` ohne Gegenlesung | **erledigt 23.09.2026** — Handlauf auf `d48bc58` (ohne Bericht), Lauf 35887334029, Ereignis `workflow_dispatch`: Schritt 18 **ausgeführt und rot**. Vor E-PK-43 wäre derselbe Lauf grün gewesen. Ob das Ruleset einen solchen grünen Handlauf dem roten PR-Lauf vorgezogen hätte, bleibt ungemessen — die Frage ist mit dieser Änderung gegenstandslos |
+| P-PK-32 | Nach dem Merge verweist der Push-Lauf auf `main` (TB, mit PK-05 unverändert) | den PR von PK-05 mergen; den Lauf „Prüfung" auf `main` öffnen | `Schon gemessen?` findet den grünen PR-Lauf mit demselben Baum, `Stufe 1` und `Schema gegen …` übersprungen, Verweis in der Zusammenfassung | `Stufe 1` misst neu (dann fand er den PR-Lauf nicht) oder ist rot | **offen** — misst die Betreiberin |
+| P-PK-33 | Die Nebenstufe gegen eine echte `server/`-Änderung (PK-05/1) | `bash tools/pruefstand/pruefen.sh` auf dem ersten Zweig mit Nebensprung (P5c AP1) | Stufe „neben" ohne `--stufe` erkannt; 36 Proben; Bericht ohne rote Probe | „klein" (dann liest die Stufe nicht aus dem Arbeitsbestand) oder eine rote Probe, die niemand erklären kann | **offen** — Vorab-Messung 23.09.2026 (5o): 36 Proben, **9 rot**, 1 266 s; zuerst das Korrekturpaket (E-PK-45, Nr. 292), dann mit P5c AP1 |
+| P-PK-34 | „gebaut" nach einem echten Bau (E-PK-44) | beim ersten PR mit `android/` oder `watch/`: Prüfstand mit SDK fahren, Bericht ansehen, Stufe 1 ansehen | Bericht `handy=gebaut` bzw. `uhr=gebaut`, Tor grün; ohne SDK „nicht-gemessen" und Tor rot | „gebaut" ohne Bau, oder Tor grün mit „nicht-gemessen" | **offen** |
+| P-PK-35 | Nach einem fremden Merge: der Weg aus `Pruefablauf.md` 5.3 (E-PK-42) | wenn ein anderer PR vor diesem gemergt wird: örtlich `git merge --no-commit origin/main`, Prüfstand, Merge-Commit mit Bericht | Stufe 1 grün auf dem Merge-Commit | rot mit „Baum-Hash passt nicht" — dann misst der Prüfstand im Merge-Zustand nicht den Baum, den der Commit bekommt | **örtlich erledigt 23.09.2026** — PR #80 wurde während PK-05 gemergt; Merge-Commit `5671d24` mit Bericht, **Baum `b12426a` = Baum des Commits**, 18 Proben grün in 706 s, Tor-Schritt örtlich grün. Dabei gefunden: F-PK-39. Auf GitHub belegt es P-PK-29 |
 
 ## 2. Messprotokoll P-PK-01 (21.09.2026)
 
@@ -1336,6 +1348,122 @@ Fächerung **lesend** war. Die Regel bleibt: Wer fächert, fasst die
 gefächerten Dateien selbst nicht an, solange der Lauf läuft — bei einer
 schreibenden Fächerung geht sonst die eigene Änderung verloren, bei einer
 lesenden misst die Gegenprobe zwei verschiedene Stände.
+
+## 5o. Messprotokoll PK-05 — das Tor liest den Bericht gegen (23.09.2026)
+
+Zweig `claude/pk05-tor-umbauen`, abgezweigt von `main` `57d3608`; nach dem
+Merge von PR #80 auf `43959bd` nachgezogen (`5671d24`). Fächerung nach
+E-PK-41: zwei lesende Agenten für die Fallen-Inventur, einer für die
+Gegenlesung von 05/3. Alle Messungen seriell, in der Arbeitsumgebung.
+
+### Die Stufe wird wieder erkannt (05/1, F-PK-30)
+
+| Messung | vorher | nachher |
+|---|---|---|
+| Muster gegen `server/version.php` von heute | trifft nicht (`False`) | trifft |
+| `--stufe-ermitteln` gegen `9257ff9` (20.36.0) | „klein · kein Versionssprung" | „neben · Nebenstufe 20.36.0 -> 20.37.x" |
+| nicht committeter Nebensprung im Arbeitsbestand (F-PK-33, Nachtrag) | „klein" (las `HEAD`) | „neben" |
+| unlesbare Fassung | „klein" | rot, rc 2 |
+| `auswahl.py --selbstprobe` | 11 / 0 | **23 / 0** |
+| Proben für `server/index.php`: klein / neben / haupt | jede Stufe wie „klein" — die Stufe wurde nie erkannt, und „neben" hatte kein Muster | **2 / 22 / 26** (plus 14 Riegel) |
+
+### Die Gegenlesung (05/2 und Nachtrag)
+
+`bericht.py lesen --selbstprobe`: **13 Lagen, 0 Fehlschläge** (11 rote,
+2 grüne; vorher 6). Jede rote Lage ist ein eigener Fall, der nur eine
+Sache ändert: Baum, Stufe, unlesbare Stufe, Handy „nicht berührt", Uhr
+„nicht berührt", Handy „rot", Uhr-Prüfstand „nicht-gemessen", Riegel mit
+anderer Zahl, rote Probe, nicht gemessene Probe, kein Bericht.
+
+**Der Tor-Schritt, örtlich nachgestellt** (der `run:`-Block aus dem YAML
+gezogen und unter `bash -eo pipefail` gefahren):
+
+| Fall | Ergebnis |
+|---|---|
+| Kopf-Commit ohne Bericht | rc 1, „Kein Prüfbericht in der Nachricht", Weg genannt, auch in der Zusammenfassung |
+| Bericht mit fremdem Baum (05/2) | rc 1, „Baum-Hash passt nicht" und „syntax-php: Bericht php:487/0, im Tor gemessen php:486/0" |
+| Merge-Commit `5671d24` mit seinem Bericht | **rc 0**, „Prüfbericht in Ordnung: Stufe klein, Baum b12426a…, 20 Zahlen" |
+| derselbe, aber ein Riegelschritt fehlt (`KONTRASTE` leer) | rc 1, „Riegel ‚kontraste': Bericht 0, im Tor gemessen nicht-gelaufen" |
+
+**Der Umgebungswert-Schritt** (auf eine Schleife gekürzt), ebenso
+nachgestellt: alle sechs leer → rc 0; `FTP_PASSWORD` und `FTP_ZIELPFAD`
+belegt → rc 1, beide genannt, Zusammenfassung geschrieben.
+
+### Ausgeräumt und gekürzt (05/3)
+
+| Messung | Zahl |
+|---|---|
+| `pruefung.yml` | **988 → 337** Zeilen (nach 05/3: 314; der Nachtrag brachte 23) |
+| Jobs / Schritte | `Schon gemessen?` 2 · `Stufe 1` **24 → 17** · `Schema gegen …` 4 |
+| Kommentarzeilen | **20** ganze Zeilen (Kopf 2, Fallensätze 18) und **7** Zeilenkommentare — vorher 525 Zeilen Prosa |
+| `uses:` mit SHA / fremd gesamt | **10 / 10** (vorher 12 / 12) — gezählt mit den Befehlen aus `CLAUDE.md` 3 |
+| `kettenaufrufe --probe` | **13 von 13** Fällen (vorher 10) |
+| `kettenaufrufe` | **75** Aufrufe, **0** Befunde, **2** ungeprüft (`stilvergleich`, `messstand` in `pruefablauf.json`, unverändert) |
+| YAML | lädt (`yaml.safe_load`) |
+
+**Die Gegenlesung von 05/3** (ein Agent, nur lesend, 53 Kommentarblöcke der
+alten Fassung gegen 18 der neuen): 18 Punkte — 2 „muss" (Handlauf,
+Flächen), 9 „sollte", 7 Hinweise. Umgesetzt: alle außer einem Hinweis
+(`echo "…$(klient --version)"` im Schema-Job, folgenlos, weil die
+Selbstprobe mit `--klient` den Klienten schon prüft; der Schema-Job bleibt
+nach Plan unverändert). **Einen Fallensatz hatte die Instanz selbst falsch
+geschrieben**, bevor die Gegenlesung ihn fand: `freigabe.py` suche den
+Jobnamen — tatsächlich sucht ihn `ausliefern-lauf.yml` und gibt
+`freigabe.py` nur die Zahl.
+
+### Der Merge von PR #80 — der Weg aus 5.3, zum ersten Mal (P-PK-35)
+
+PR #80 wurde während PK-05 gemergt. Gegangen wie vorgeschrieben: örtlich
+`git merge --no-commit origin/main` (ein Konflikt, `docs/CHANGELOG.md`,
+beide Einträge behalten), Prüfstand ohne `--stufe`, Merge-Commit mit
+Bericht. **18 Proben grün, 0 rot, 0 nicht gemessen, 706 s; Baum im Bericht
+`b12426a` = Baum des Commits.** Die 18 statt 14 sind F-PK-39: Im
+Merge-Zustand zählte der Prüfstand die `server/`-Dateien aus PR #80 als
+berührt. Behoben in `6d6d58c`, nachgestellt in einem Wegwerf-Arbeitsbaum
+(alt 55 berührt, 6 unter `server/`; neu 15, 0).
+
+**Was dabei ebenfalls auffiel:** Vor dem Merge ließ sich die örtliche
+Anlage auf diesem Zweig nicht neu einrichten — das ist Backlog Nr. 288, auf
+`main` seit Web 20.37.3 behoben. Die Instanz hatte mit `hochfahren.sh --neu`
+die bestehende Anlage abgeräumt, bevor sie das wusste; ein Messlauf der
+Nebenstufe gegen die leere Anlage (19 rote Proben) ist verworfen und zählt
+nirgends.
+
+### Die Nebenstufe, zum ersten Mal gemessen (F-PK-40, E-PK-45)
+
+Auf frischer Anlage (`hochfahren.sh --neu`, 12 s, Web 20.37.3), danach
+`pruefen.sh --stufe neben --datei server/index.php --ohne-hochfahren`:
+**36 Proben (14 Riegel, 22 Proben gegen die Anlage), 27 grün, 9 rot,
+0 nicht gemessen, 1 266 s.** Das Ziel aus `Pruefablauf.md` 2 ist 15 Minuten.
+
+| Probe | Ende des Protokolls | Einordnung |
+|---|---|---|
+| `versandprobe` | „Aufruf: php probe.php <wurzel der gegenstellen>" | Verdrahtung — das Argument fehlt im Läufer (bekannt, P-PK-23) |
+| `spaltenregister-wegprobe` | „WEGWERFKONTO: unbound variable" | Verdrahtung — seit E-PK-46 „nicht gemessen: Umgebungswert fehlt", weiter nicht grün |
+| `freigabeprobe` | „Zielkonto nicht gefunden" | Verdrahtung oder Referenzbestand — die Probe erwartet ein Konto, das die Anlage nicht hat |
+| `kreislauf-csv` | 1 271 erwartete Abweichungen, darunter „Anderer Notarzt" → „Andere NotärztIn" | Referenz veraltet — die Hausform aus PK-04/5b steht in der Anwendung, nicht in der Referenz |
+| `wiederherstellung` | 110 Erwartungen, 2 nicht erfüllt | ungeklärt — F-PK-18, seit PK-03 bekannt |
+| `gpxprobe` | 92 Erwartungen, 3 nicht erfüllt | ungeklärt |
+| `wartungsprobe` | 67 Erwartungen, 1 nicht erfüllt | ungeklärt |
+| `mailprobe` | 41 Prüfungen, 1 Befund („Pflichtwerte im Beispielsatz") | ungeklärt — vermutlich veraltete Erwartung nach P5b |
+| `browserprobe-csp` | 3 CSP-Meldungen in der Konsole | ungeklärt |
+
+**Grün waren:** alle 14 Riegel, Bilderlauf (acht Breiten), Bedienprobe,
+`ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `geraeteprobe`,
+`kopplungsprobe`, `ratenprobe`, `fristprobe`, `abmelde-probe`,
+`containerprobe`, `kreislauf-edbak`.
+
+**Warum das ein Befund von PK-05 ist:** Keine dieser Proben lief bis PK-05 in
+einer Stufe, die ein Tor las — die Stufe hieß immer „klein" (F-PK-30), und
+Lage 5 gab es nicht. Mit beidem zusammen wäre schon der erste Nebensprung,
+P5c AP1, am Tor rot. Entschieden (E-PK-45): ein Korrekturpaket vor P5c,
+Backlog Nr. 292; eine Ausnahmeliste für Lage 5 ist nicht gewählt.
+**Eingeordnet ist hier nur nach dem Ende des Protokolls**, nicht nach der
+Ursache — das ist die Arbeit des Korrekturpakets.
+
+Die Messung hat eine Datei im Repositorium verändert
+(`tools/proben/csp-browser/kopfzeilen.png`); sie ist zurückgesetzt, weil sie
+nicht zu PK-05 gehört.
 
 ## 6. Befunde der Umsetzung
 

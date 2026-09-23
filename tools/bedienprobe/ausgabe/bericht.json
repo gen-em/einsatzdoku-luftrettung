@@ -597,7 +597,7 @@
       "punkt": "MR-02",
       "was": "Das Blatt fährt herauf und wieder hinunter — und ist danach wirklich weg",
       "soll": "bei 390 px: Fahrtdauer > 0; kurz nach dem Öffnen unterwegs (nicht schon oben), danach Unterkante = Fensterunterkante; nach der Rückfahrt hidden=true",
-      "ist": "Fahrtdauer 240 ms · unterwegs 442 px unter der Ruhelage · offen Unterkante 900/900 · während der Rückfahrt hidden=false · danach hidden=true",
+      "ist": "Fahrtdauer 240 ms · unterwegs 389 px unter der Ruhelage · offen Unterkante 900/900 · während der Rückfahrt hidden=false · danach hidden=true",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,

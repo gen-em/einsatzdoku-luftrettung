@@ -905,7 +905,7 @@ class Bericht:
                 return 1
             if self.befunde < self.grenze:
                 print('UNTER DER SCHWELLE: %d statt %d — %d weniger. Bitte die '
-                      'Schwelle in .github/workflows/pruefung.yml nachziehen, '
+                      'Schwelle im Aufruf (--hoechstens) nachziehen, '
                       'sonst bekommt der Altbestand stillschweigend wieder Luft.'
                       % (self.befunde, self.grenze, self.grenze - self.befunde))
                 return 1

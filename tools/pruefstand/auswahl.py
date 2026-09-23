@@ -73,32 +73,79 @@ def treffer(dateien, stufe, a):
     return muster, proben
 
 
-def stufe_aus_version(basis):
-    def fassung(ref):
-        t = git('show', f'{ref}:server/version.php')
-        m = re.search(r"WEB_VERSION'?\s*,\s*'([0-9]+)\.([0-9]+)\.([0-9]+)", t)
-        return tuple(int(x) for x in m.groups()) if m else None
-    alt, neu = fassung(basis), fassung('HEAD')
-    if not alt or not neu or alt == neu:
-        return 'klein', 'kein Versionssprung' if alt == neu else 'Fassung nicht lesbar'
+# DIE FASSUNG STEHT EINMAL GELESEN — hier; `bericht.py` holt sie von hier.
+# Bis PK-05 las jede der beiden Dateien selbst, beide mit demselben Muster
+# `WEB_VERSION', '…'` (der Schreibweise von `define()`). Die Datei trägt seit
+# Web 20.8.0 `const WEB_VERSION = '…';` — das Muster traf nie, die Stufe hieß
+# still „klein", und die rote Lage „Stufe zu klein" konnte nie anschlagen
+# (F-PK-30). Deshalb: Wer die Fassung nicht lesen kann, sagt es und hört auf.
+FASSUNG_RE = re.compile(r"WEB_VERSION'?\s*[,=]\s*'([0-9]+)\.([0-9]+)\.([0-9]+)'")
+UNLESBAR = 'unlesbar'
+
+
+def fassung_aus_text(t):
+    m = FASSUNG_RE.search(t or '')
+    return tuple(int(x) for x in m.groups()) if m else None
+
+
+def fassung(ref):
+    return fassung_aus_text(git('show', f'{ref}:server/version.php'))
+
+
+def stufe_aus_fassungen(alt, neu):
+    """(stufe, grund) — stufe ist UNLESBAR, wenn eine Seite fehlt."""
+    if not alt or not neu:
+        return UNLESBAR, 'Fassung in server/version.php nicht lesbar'
+    txt = f"{'.'.join(map(str, alt))} -> {'.'.join(map(str, neu))}"
+    if alt == neu:
+        return 'klein', 'kein Versionssprung'
     if neu[0] != alt[0]:
-        return 'haupt', f"Hauptstufe {'.'.join(map(str, alt))} -> {'.'.join(map(str, neu))}"
+        return 'haupt', f'Hauptstufe {txt}'
     if neu[1] != alt[1]:
-        return 'neben', f"Nebenstufe {'.'.join(map(str, alt))} -> {'.'.join(map(str, neu))}"
-    return 'klein', f"Korrekturstufe {'.'.join(map(str, alt))} -> {'.'.join(map(str, neu))}"
+        return 'neben', f'Nebenstufe {txt}'
+    return 'klein', f'Korrekturstufe {txt}'
+
+
+def fassung_arbeitsbestand():
+    try:
+        with open(os.path.join(WURZEL, 'server', 'version.php'), encoding='utf-8') as f:
+            return fassung_aus_text(f.read())
+    except OSError:
+        return None
+
+
+def stufe_aus_version(basis, commit=None):
+    """commit=None heißt: der ARBEITSBESTAND, wie beim Baum-Hash. Gemessen wird
+    vor dem Commit; wer die Fassung aus HEAD liest, sieht den Sprung nicht, der
+    erst mit dem Bericht committet wird — und das Tor meldet „Stufe zu klein"
+    (F-PK-33)."""
+    neu = fassung_arbeitsbestand() if commit is None else fassung(commit)
+    return stufe_aus_fassungen(fassung(basis), neu)
 
 
 def beruehrte(basis):
+    """Was diese Arbeit gegenüber `basis` ändert: der Zweig seit dem gemeinsamen
+    Vorfahren, dazu der Arbeitsbestand — aber nur Dateien, die im
+    Arbeitsbestand WIRKLICH anders sind als in `basis`, und neue Dateien.
+
+    WARUM DER ABGLEICH MIT `basis`: Mitten in einem Merge von `origin/main`
+    (Pruefablauf.md 5.3) zeigt `git status` jede Datei, die `main` mitbringt,
+    als geändert gegenüber HEAD. Berührt hat sie diese Arbeit nicht; im Tor
+    zählt der Unterschied gegen `main` (F-PK-39)."""
     roh = git('diff', '--name-only', f'{basis}...HEAD') + git('status', '--porcelain')
-    aus = set()
+    neu, aus = set(), set()
     for z in roh.splitlines():
         z = z.strip()
         if not z:
             continue
-        if z[:2].strip() in ('M', 'A', 'D', 'R', '??', 'MM', 'AM'):
+        if z.startswith('??'):
+            neu.add(z[2:].strip())
+            continue
+        if z[:2].strip() in ('M', 'A', 'D', 'R', 'MM', 'AM'):
             z = z.split(None, 1)[-1]
         aus.add(z.split(' -> ')[-1])
-    return sorted(p for p in aus if p)
+    anders = set(git('diff', '--name-only', basis).splitlines())
+    return sorted(p for p in (aus & anders) | neu if p)
 
 
 def abdeckung(a):
@@ -111,7 +158,7 @@ def abdeckung(a):
         ids = [m['id'] for m in a['muster'] if passt(d, m['pfade'])]
         if not ids:
             ohne.append(d)
-        elif ids == [AUFFANG] or set(ids) == {AUFFANG, 'mengen'}:
+        elif set(ids) <= {AUFFANG, 'nebenstufe', 'mengen'}:
             nur_auffang.append(d)
     melde(f'Dateien unter server/ (versioniert, ohne vendor): {len(dateien)}')
     melde(f'  ohne jedes Muster:                 {len(ohne)}')
@@ -145,16 +192,36 @@ def selbstprobe(a):
         melde(f"  [{'ok  ' if ok else 'FEHL'}] {name}")
         fehl += 0 if ok else 1
 
-    # Die Stufengrenze: „mengen" darf bei klein NICHT greifen.
-    _, proben_klein = treffer(['server/index.php'], 'klein', a)
-    _, proben_haupt = treffer(['server/index.php'], 'haupt', a)
-    for name, bed in [('„mengen" greift bei klein nicht', 'messstand' not in proben_klein),
-                      ('„mengen" greift bei haupt',       'messstand' in proben_haupt)]:
+    # Die Stufengrenzen: „nebenstufe" erst ab neben, „mengen" erst ab haupt.
+    _, klein = treffer(['server/index.php'], 'klein', a)
+    _, neben = treffer(['server/index.php'], 'neben', a)
+    _, haupt = treffer(['server/index.php'], 'haupt', a)
+    grenzen = [('bei klein kein Kreislauf',            'kreislauf-csv' not in klein),
+               ('bei neben beide Kreisläufe',          {'kreislauf-csv', 'kreislauf-edbak'} <= set(neben)),
+               ('bei neben die Bedienprobe',           'bedienprobe' in neben),
+               ('bei neben kein Messstand',            'messstand' not in neben),
+               ('bei haupt Messstand und Schemaprobe', {'messstand', 'schemaprobe'} <= set(haupt)),
+               ('bei haupt alles von neben',           set(neben) <= set(haupt))]
+
+    # Die Fassung — gegen die ECHTE Schreibweise der Datei, nicht gegen eine
+    # ausgedachte. Genau das fehlte, als das Muster nie traf (F-PK-30).
+    echt = open(os.path.join(WURZEL, 'server', 'version.php'), encoding='utf-8').read()
+    grenzen += [
+        ('die Fassung dieser Datei ist lesbar',  fassung_aus_text(echt) is not None),
+        ("const WEB_VERSION = '1.2.3'",          fassung_aus_text("const WEB_VERSION = '1.2.3';") == (1, 2, 3)),
+        ("define('WEB_VERSION', '1.2.3')",       fassung_aus_text("define('WEB_VERSION', '1.2.3');") == (1, 2, 3)),
+        ('20.37.2 -> 20.37.3 heißt klein',       stufe_aus_fassungen((20, 37, 2), (20, 37, 3))[0] == 'klein'),
+        ('20.36.0 -> 20.37.0 heißt neben',       stufe_aus_fassungen((20, 36, 0), (20, 37, 0))[0] == 'neben'),
+        ('20.37.3 -> 21.0.0 heißt haupt',        stufe_aus_fassungen((20, 37, 3), (21, 0, 0))[0] == 'haupt'),
+        ('gleiche Fassung heißt klein',          stufe_aus_fassungen((1, 2, 3), (1, 2, 3))[0] == 'klein'),
+        ('unlesbar heißt unlesbar, nicht klein', stufe_aus_fassungen(None, (1, 2, 3))[0] == UNLESBAR),
+    ]
+    for name, bed in grenzen:
         melde(f"  [{'ok  ' if bed else 'FEHL'}] {name}")
         fehl += 0 if bed else 1
 
     melde()
-    melde(f'{len(faelle) + 2} Lagen, {fehl} Fehlschlaege.')
+    melde(f'{len(faelle) + len(grenzen)} Lagen, {fehl} Fehlschlaege.')
     return 1 if fehl else 0
 
 
@@ -183,9 +250,14 @@ def main():
     if args.stufe_ermitteln:
         stufe, grund = stufe_aus_version(args.basis)
         melde(f'{stufe}\t{grund}')
-        return 0
+        return 2 if stufe == UNLESBAR else 0
 
-    stufe = args.stufe or stufe_aus_version(args.basis)[0]
+    stufe = args.stufe
+    if not stufe:
+        stufe, grund = stufe_aus_version(args.basis)
+        if stufe == UNLESBAR:
+            melde(f'Die Stufe lässt sich nicht bestimmen: {grund}.')
+            return 2
     dateien = args.datei or beruehrte(args.basis)
     muster, proben = treffer(dateien, stufe, a)
     riegel = a['riegel']['proben']
