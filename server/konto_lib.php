@@ -78,7 +78,17 @@ declare(strict_types=1);
  * stimmt — aber die vierte zieht nur um, wenn die Bibliothek ohne
  * Konfiguration ladbar ist. Waere sie es nicht, bliebe `install.php` als
  * fuenfte Fassung stehen, und zwar genau die, der die Transaktionsklammer
- * fehlte. */
+ * fehlte.
+ *
+ * UND ALLES, WAS DIE FUNKTIONEN HIER AUF DEM WEG DES EINRICHTERS RUFEN, muss
+ * deshalb OHNE diese Weiche geladen sein. Seit Schritt 15 legt
+ * `konto_anlegen()` das Konto in `db_transaktion()` an — und die stand in
+ * `db.php`, also hinter der Weiche. Von Web 20.30.0 bis 20.37.2 scheiterte
+ * jede Neueinrichtung an „Call to undefined function db_transaktion()"
+ * (Backlog Nr. 288). Der Rahmen steht seither in `transaktion_lib.php`, die
+ * nichts laedt, und wird unten UNBEDINGT eingebunden. Wer hier eine weitere
+ * Funktion aus einer bedingt geladenen Datei ruft, prueft den Einrichter mit
+ * `bash tools/sandbox/hochfahren.sh --neu`. */
 if (is_file(__DIR__ . '/config.php')) {
     require_once __DIR__ . '/db.php';
     require_once __DIR__ . '/protokoll_lib.php';
@@ -88,6 +98,7 @@ if (is_file(__DIR__ . '/config.php')) {
     require_once __DIR__ . '/konten_einstellungen_lib.php';
 }
 require_once __DIR__ . '/email_lib.php';
+require_once __DIR__ . '/transaktion_lib.php';   // db_transaktion(), auch ohne config.php (Nr. 288)
 
 /* ---- Zustaende ----------------------------------------------------------- */
 

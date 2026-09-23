@@ -2040,9 +2040,16 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   min-height:100vh;min-height:100dvh;
   display:flex;flex-direction:column;
 }
+/* SPALTENRICHTUNG (Web 20.37.3, Backlog Nr. 289). Bis dahin stand hier die
+ * Vorgabe `row`, und das war gleichgueltig, solange `.anmeldung` nur die Karte
+ * enthielt. Seit Web 20.23.0 steht in `login.php` die Fusszeile
+ * `.fuss-anmeldung` als zweites Kind daneben — und landete NEBEN der Karte
+ * statt darunter; bei 390 px drueckte sie die Karte auf rund 200 px. Fuer die
+ * Seiten mit nur der Karte aendert sich nichts: Sie bleibt waagerecht und
+ * senkrecht mittig, jetzt ueber `justify-content` statt `align-items`. */
 .anmeldung{
   flex:1 1 auto;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:var(--abstand-5) var(--abstand-3);
 }
 .anmeldung-karte{

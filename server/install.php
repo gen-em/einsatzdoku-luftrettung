@@ -375,7 +375,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * DIE EIGENE VERBINDUNG WIRD UEBERGEBEN. `konto_lib.php` faellt
              * ohne `$pdo` auf `db()` zurueck, und `db()` verlangt
              * `config.php` — die es hier noch nicht gibt, weil sie erst
-             * unten geschrieben wird. Deshalb der sechste Parameter. */
+             * unten geschrieben wird. Deshalb der sechste Parameter.
+             *
+             * DIE KLAMMER SELBST (`db_transaktion()`) kommt aus
+             * `transaktion_lib.php`, die `konto_lib.php` ohne Konfiguration
+             * laedt. Bis Web 20.37.2 stand sie in `db.php`, und hier brach
+             * jede Neueinrichtung ab (Nr. 288). */
             require_once __DIR__ . '/konto_lib.php';
             $angelegt = konto_anlegen($adminEmail, '', 'betreiberin',
                                       'einrichtung', 'aktiv', $pdo);

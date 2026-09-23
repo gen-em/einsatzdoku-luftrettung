@@ -1,0 +1,725 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=1440">
+<title>P5c · Mockup M-P5c-02 (d) — Bus-Faktor</title>
+<link rel="stylesheet" href="../../../../server/assets/style.css">
+<style>
+/* ---- Mockup-Rahmen (nicht Teil der Anwendung) ---------------------------- */
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.5}
+.mock-kopf{padding:20px 24px 4px}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau);line-height:1.2}
+.mock-kopf p{margin:0;color:var(--gedaempft);font-size:var(--groesse-2)}
+.reihe{padding:14px 24px 6px}
+.reihe > h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0 0 2px;color:var(--dunkelblau)}
+.reihe > .unter{margin:0 0 10px;color:var(--gedaempft);font-size:var(--groesse-2);max-width:1180px}
+.frames{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+.frame-huelle{flex:0 0 auto;max-width:100%}
+.frame-titel{display:inline-block;background:var(--dunkelblau);color:#fff;font-size:11px;line-height:1.4;padding:2px 10px;border-radius:8px 8px 0 0}
+.frame{position:relative;overflow:hidden;border-radius:0 var(--radius) var(--radius) var(--radius);background:var(--rauch);box-shadow:0 8px 24px rgba(26,46,77,.10)}
+.notiz{padding:6px 24px 26px;max-width:1180px}
+.notiz h3{font-family:var(--schrift-kopf);font-size:var(--groesse-4);margin:12px 0 4px;color:var(--dunkelblau)}
+.notiz ul{margin:0 0 8px 20px;padding:0}
+.notiz li{margin:0 0 4px;font-size:var(--groesse-2);line-height:1.45}
+.notiz code{font-family:var(--schrift-fest);font-size:12px;background:var(--schnee);padding:0 4px;border-radius:4px}
+/* Das Gerüst im Rahmen: nichts klebt, nichts ist an die Fensterhöhe gebunden. */
+.frame .kopf{position:static}
+.frame .leiste{position:static;height:auto;align-self:stretch}
+.frame .rahmen{min-height:0}
+.frame .anmeldung-body{min-height:0}
+.frame .fuss{margin-top:0}
+/* ---- Nur im Mockup, nicht Teil des Vorschlags -------------------------- */
+
+.frame-kurz::after{content:"";position:absolute;left:0;right:0;bottom:0;height:60px;background:linear-gradient(to bottom,transparent,#EDE9DF)}
+
+/* ---- Vorschlag für style.css (neu mit P5c, M-P5c-02) ------------------- */
+
+/* Nichts. Beide Zeilen sind .zeile mit .plakette aus dem Vorrat (Design.md 9); status_z() liefert sie. */
+</style></head><body><svg style="display:none" aria-hidden="true"><symbol id="s-abmelden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" /> <path d="M9 12h12l-3 -3" /> <path d="M18 15l3 -3" /></symbol><symbol id="s-aktualisieren" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" /> <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" /></symbol><symbol id="s-balken" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -6" /> <path d="M15 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -10" /> <path d="M9 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -14" /> <path d="M4 20h14" /></symbol><symbol id="s-datenbank" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a8 3 0 1 0 16 0a8 3 0 1 0 -16 0" /> <path d="M4 6v6a8 3 0 0 0 16 0v-6" /> <path d="M4 12v6a8 3 0 0 0 16 0v-6" /></symbol><symbol id="s-gruppe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /> <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /> <path d="M16 3.13a4 4 0 0 1 0 7.75" /> <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" /></symbol><symbol id="s-haus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l-2 0l9 -9l9 9l-2 0" /> <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" /> <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" /></symbol><symbol id="s-hilfe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /> <path d="M12 17l0 .01" /> <path d="M12 13.5a1.5 1.5 0 0 1 1 -1.5a2.6 2.6 0 1 0 -3 -4" /></symbol><symbol id="s-kalender" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12" /> <path d="M16 3v4" /> <path d="M8 3v4" /> <path d="M4 11h16" /> <path d="M11 15h1" /> <path d="M12 15v3" /></symbol><symbol id="s-kolben" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3l6 0" /> <path d="M10 9l4 0" /> <path d="M10 3v6l-4 11a.7 .7 0 0 0 .5 1h11a.7 .7 0 0 0 .5 -1l-4 -11v-6" /></symbol><symbol id="s-lupe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /> <path d="M21 21l-6 -6" /></symbol><symbol id="s-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z" /> <path d="M3 7l9 6l9 -6" /></symbol><symbol id="s-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l16 0" /> <path d="M4 12l16 0" /> <path d="M4 18l16 0" /></symbol><symbol id="s-profil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /> <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></symbol><symbol id="s-schliessen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-12 12" /> <path d="M6 6l12 12" /></symbol><symbol id="s-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v2a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z" /> <path d="M3 15a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v2a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z" /> <path d="M7 8l0 .01" /> <path d="M7 16l0 .01" /></symbol><symbol id="s-sicherung" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2" /> <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" /> <path d="M10 12l4 0" /></symbol><symbol id="s-sortieren" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l4 -4l4 4m-4 -4v14" /> <path d="M21 15l-4 4l-4 -4m4 4v-14" /></symbol><symbol id="s-standort" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /> <path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></symbol><symbol id="s-status" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8l4 -16l3 8h4" /></symbol><symbol id="s-tausch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10h14l-4 -4" /> <path d="M17 14h-14l4 4" /></symbol><symbol id="s-uhr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a3 3 0 0 1 3 -3h6a3 3 0 0 1 3 3v6a3 3 0 0 1 -3 3h-6a3 3 0 0 1 -3 -3v-6" /> <path d="M9 18v3h6v-3" /> <path d="M9 6v-3h6v3" /></symbol><symbol id="s-uhrzeit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /> <path d="M12 7v5l3 3" /></symbol><symbol id="s-warnung" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4" /> <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0" /> <path d="M12 16h.01" /></symbol><symbol id="s-winkel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6" /></symbol><symbol id="s-zahnrad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" /> <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></symbol><symbol id="s-ziel-fern" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1" /> <path d="M9 15l3 -3l3 3" /> <path d="M12 12l0 9" /></symbol></svg>
+<div class="mock-kopf"><h1>M-P5c-02 (d) — Bus-Faktor und Umgebungswarnung</h1><p>E-P5c-05, -16, -44, -55, -56, -63, -64 · aus dem HTML-Stand der örtlichen Installation (Web 20.37.1) · <strong>freigegeben 23.09.2026</strong> (Zeile „Umgebung" nach der Durchsicht geändert)</p></div><div class="reihe"><h2>1 · Betrieb → Status als einzige BetreiberIn (heute die Lage jeder frisch eingerichteten Anlage)</h2><p class="unter">Zwei neue Zeilen oben in der Karte „Server", beide orange; die Zahl über den Karten, der Zähler am Menüpunkt und die Gruppenzahl „Betrieb" ziehen mit (eine Erhebung, <code>status_zaehlen()</code>). Die Karte „Was hier gilt" ist schon weg (E-P5c-49).</p><div class="frames"><div class="frame-huelle" style="width:1392px"><span class="frame-titel">betrieb_status.php · Rolle BetreiberIn · Präfix gesetzt, Etikett nicht</span><div class="frame frame-kurz" style="max-height:1330px">
+
+<header class="kopf">
+  <div class="kopf-innen">
+        <button type="button" class="knopf knopf-symbol kopf-menue" data-schublade="auf" aria-expanded="false" aria-controls="leiste" aria-label="Menü öffnen">
+      <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-menu"></use></svg>    </button>
+    
+    <a class="kopf-marke" href="index.php">
+            <img src="../../../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="" width="54" height="34">
+      <span class="kopf-name">Gen-EM NAdoku</span>
+      <span class="kopf-nutzer">admin@gen-em.org</span>    </a>
+
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+              <a class="kopf-punkt" href="index.php">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span>Startseite</span>
+        </a>
+        <a class="kopf-punkt" href="suche.php">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-lupe"></use></svg><span>Suche</span>
+        </a>
+                <a class="knopf knopf-symbol kopf-hilfe" href="hilfe.php" aria-label="Hilfe und Handbuch">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-hilfe"></use></svg>        </a>
+        <a class="knopf knopf-symbol kopf-zahnrad aktiv" href="einstellungen.php" aria-label="Einstellungen" aria-current="page">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-zahnrad"></use></svg>        </a>
+          </nav>
+  </div>
+</header>
+<div class="schleier" data-schublade="zu" hidden=""></div>
+<div class="rahmen">
+      <aside class="leiste" id="leiste" aria-label="Bereichsmenü" tabindex="-1">
+    <div class="leiste-kopf nur-schublade">
+      <button type="button" class="knopf knopf-symbol" data-schublade="zu" aria-label="Menü schließen">
+        <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-schliessen"></use></svg>      </button>
+      <span class="kopf-name">Gen-EM NAdoku</span>
+    </div>
+    <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche">
+      <a class="eintrag" href="index.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span class="eintrag-text">Startseite</span>
+      </a>
+      <a class="eintrag" href="suche.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-lupe"></use></svg><span class="eintrag-text">Suche</span>
+      </a>
+    </nav>
+    <div class="leiste-liste" data-menue="">
+                      <details class="akkordeon leiste-gruppe" open="" data-gruppe="einstellungen">
+          <summary class="akkordeon-zeile">
+            <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>            <span class="akkordeon-text">Einstellungen<span class="gruppen-zahl" aria-hidden="true"> · 5</span></span>
+          </summary>
+          <div class="akkordeon-inhalt">
+                                        <a class="eintrag" href="einstellungen.php?t=profil">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-profil"></use></svg><span class="eintrag-text">Profil</span>
+                              </a>
+                                        <a class="eintrag" href="einstellungen.php?t=geraete">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-uhr"></use></svg><span class="eintrag-text">Geräte</span>
+                              </a>
+                                        <a class="eintrag" href="einstellungen.php?t=standorte">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-standort"></use></svg><span class="eintrag-text">Standorte</span>
+                              </a>
+                                        <a class="eintrag" href="einstellungen.php?t=backup">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-sicherung"></use></svg><span class="eintrag-text">Backup</span>
+                              </a>
+                                        <a class="eintrag" href="import.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-tausch"></use></svg><span class="eintrag-text">Import / Export</span>
+                              </a>
+                      </div>
+        </details>
+                      <details class="akkordeon leiste-gruppe" data-gruppe="verwaltung">
+          <summary class="akkordeon-zeile">
+            <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>            <span class="akkordeon-text">Verwaltung<span class="gruppen-zahl" aria-hidden="true"> · 4</span></span>
+          </summary>
+          <div class="akkordeon-inhalt">
+                                        <a class="eintrag" href="admin_users.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-gruppe"></use></svg><span class="eintrag-text">NutzerInnen</span>
+                              </a>
+                                        <a class="eintrag" href="admin_sicherungen.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-sicherung"></use></svg><span class="eintrag-text">Konto-Backups</span>
+                <span class="zaehler zaehler-orange" aria-label="2 offen">2</span>              </a>
+                                        <a class="eintrag" href="admin_installation.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-haus"></use></svg><span class="eintrag-text">Installation</span>
+                              </a>
+                                        <a class="eintrag" href="admin_demo.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kolben"></use></svg><span class="eintrag-text">Demo-Konto</span>
+                              </a>
+                      </div>
+        </details>
+                      <details class="akkordeon leiste-gruppe" open="" data-gruppe="betrieb">
+          <summary class="akkordeon-zeile">
+            <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>            <span class="akkordeon-text">Betrieb<span class="gruppen-zahl" aria-hidden="true"> · 9</span></span>
+          </summary>
+          <div class="akkordeon-inhalt">
+                                        <a class="eintrag aktiv" href="betrieb_status.php" aria-current="page">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-status"></use></svg><span class="eintrag-text">Status</span>
+                <span class="zaehler zaehler-orange" aria-label="7 offen">7</span>              </a><div class="eintrag-unterliste"><a class="eintrag-unter hier" href="#k-server" title="Server">Server</a><a class="eintrag-unter" href="#k-mail" title="E-Mail">E-Mail</a><a class="eintrag-unter hier" href="#k-jobs" title="Hintergrundjobs">Hintergrundjobs</a><a class="eintrag-unter" href="#k-backups" title="Backups">Backups</a><a class="eintrag-unter" href="#k-plattform" title="Plattform">Plattform</a><a class="eintrag-unter" href="#k-protokoll" title="Betriebsprotokoll">Betriebsprotokoll</a></div>
+                                        <a class="eintrag" href="betrieb_statistik.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg><span class="eintrag-text">Statistik</span>
+                              </a>
+                                        <a class="eintrag" href="betrieb_updates.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-aktualisieren"></use></svg><span class="eintrag-text">Updates</span>
+                              </a>
+                                        <a class="eintrag" href="betrieb_jobs.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-uhrzeit"></use></svg><span class="eintrag-text">Hintergrundjobs</span>
+                              </a>
+                                        <a class="eintrag" href="betrieb_server.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-server"></use></svg><span class="eintrag-text">Servereinstellungen</span>
+                              </a>
+                                        <a class="eintrag" href="admin_komplettsicherung.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-datenbank"></use></svg><span class="eintrag-text">Komplett-Backup</span>
+                              </a>
+                                        <a class="eintrag" href="admin_sicherungsziele.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-ziel-fern"></use></svg><span class="eintrag-text">Backup-Ziele</span>
+                              </a>
+                      </div>
+        </details>
+          </div>
+    <div class="leiste-fuss">
+      <a class="eintrag eintrag-leise" href="logout.php" data-confirm="Wirklich abmelden?" data-confirm-ok="Abmelden" data-confirm-tone="normal">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-abmelden"></use></svg><span class="eintrag-text">Abmelden</span>
+      </a>
+    </div>
+  </aside>
+  <main class="inhalt" id="inhalt">
+    <a class="rueckweg nur-schublade" href="einstellungen.php"><svg class="symbol symbol-links" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg><span>Einstellungen</span></a>
+
+  <div class="titelzeile">
+      <div class="titelzeile-haupt">
+    <div class="titelzeile-text">
+      <h1>Status</h1>
+    </div>
+          <div class="titelzeile-aktionen"><a class="knopf knopf-neutral" href="betrieb_sicherheit.php"><span>Sicherheit</span></a><a class="knopf knopf-neutral" href="betrieb_status.php"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-sortieren"></use></svg><span>Aktualisieren</span></a></div>
+      </div>
+      <p class="titelzeile-unter">Was diese Installation gerade meldet. Geändert wird auf der Seite, auf die die Zeile führt — hier wird nur geprüft.</p>
+  </div>
+
+  
+  <div class="meldung meldung-warn" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-warnung"></use></svg><p>7 Punkte brauchen Aufmerksamkeit. Sie stehen unten rot beziehungsweise orange; jede Zeile führt dorthin, wo sich etwas ändern lässt.</p></div>
+    <form method="post" action="betrieb_status.php" id="f-testmail" hidden="">
+    <input type="hidden" name="csrf" value="1dda7e8f885cf0267708d0d0b6c452a323bb56ddac88ac4799b412172db79663"><input type="hidden" name="action" value="testmail">
+  </form>
+
+  <div class="form-raster">
+  <div class="form-spalte">
+                <section class="karte" id="k-server">
+  <div class="karte-kopf">
+    <h2 class="karte-titel">Server</h2>
+  </div>
+  <div class="karte-inhalt">
+                        <div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_updates.php"><span class="zeile-haupt">Serverbetrieb</span></a>
+    <span class="zeile-klein">Offen für alle Konten</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">offen</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Umgebung</span>
+    <span class="zeile-klein">Mails tragen den Betreff-Präfix „[Staging]", die Oberfläche trägt kein Etikett. app.umgebung fehlt in der config.php</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-orange">Präfix ohne Etikett</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="admin_users.php"><span class="zeile-haupt">Verwaltungskonten</span></a>
+    <span class="zeile-klein">Ein handlungsfähiges Konto, und es ist das einer BetreiberIn. Fällt es aus, kommt niemand mehr an Verwaltung und Betrieb</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-orange">nur 1</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_updates.php"><span class="zeile-haupt">Updates</span></a>
+    <span class="zeile-klein">Alles aktuell · 60 ausgeführt · zuletzt 2026_09_20_uhr_gesperrt</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">aktuell</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Serverschlüssel</span>
+    <span class="zeile-klein">Kennung 4c8556f1 — Komplett-Backups, Konto-Backups und Backup-Ziele können versiegeln</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">vorhanden</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Server-Anteil</span>
+    <span class="zeile-klein">Kennung 885870db — 1 Konto/Konten auf dem aktuellen Anteil. Jedes Konto stellt beim nächsten Anmelden von selbst um. Das Demo-Konto bleibt ohne Anteil und zählt hier nicht mit</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">in Ordnung</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Schlüsselableitung</span>
+    <span class="zeile-klein">Alle Konten rechnen mit einer Rundenzahl, die diese Fassung anbietet (600000)</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">in Ordnung</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_server.php"><span class="zeile-haupt">Datenbank</span></a>
+    <span class="zeile-klein">6,3 MB · Dateien 11,5 MB · gemessen gerade eben</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">erreichbar</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Verbindungen</span>
+    <span class="zeile-klein">Keine abgewiesene Verbindung seit Beginn der Zählung · persistente Verbindungen sind aus</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">in Ordnung</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_jobs.php"><span class="zeile-haupt">Gerätemodelle</span></a>
+    <span class="zeile-klein">325 Teilenummern · zuletzt nachgelöst 23.09.2026 11:08 Uhr · 0 nachgezogen, 0 unbekannt (Handys und fremde Modelle, sie bleiben unberührt)</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">aktuell</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">PHP und Zeitzone</span>
+    <span class="zeile-klein">8.4.19 · Anzeige in UTC · gespeichert wird UTC</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-neutral">cli-server</span></div>
+</div>
+        </div>
+</section>
+                <section class="karte" id="k-mail">
+  <div class="karte-kopf">
+    <h2 class="karte-titel">E-Mail</h2>
+    <button type="submit" class="karte-aktion karte-aktion-blau" form="f-testmail"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-mail"></use></svg><span>Testmail an mich</span></button>
+  </div>
+  <div class="karte-inhalt">
+                        <div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">SMTP</span>
+    <span class="zeile-klein">Eingerichtet in der config.php</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">eingerichtet</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Letzter Versand</span>
+    <span class="zeile-klein">Seit dem Ausrollen dieser Fassung wurde nichts versendet — oder es ist noch keine Mail angefallen</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-neutral">kein Versand</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Warteschlange</span>
+    <span class="zeile-klein">Nichts liegt an</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">leer</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Antwort und Versand</span>
+    <span class="zeile-klein">Diese PHP-Anbindung kennt weder fastcgi_finish_request noch litespeed_finish_request. Im ungünstigen Fall verrät die Dauer von „Passwort vergessen", ob es zu einer Adresse ein Konto gibt</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-orange">nicht sicher</span></div>
+</div>
+        </div>
+</section>
+      </div>
+  <div class="form-spalte">
+          <section class="karte" id="k-jobs">
+  <div class="karte-kopf">
+    <h2 class="karte-titel">Hintergrundjobs</h2>
+  </div>
+  <div class="karte-inhalt">
+        <div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_jobs.php"><span class="zeile-haupt">Auslöser</span></a>
+    <span class="zeile-klein">huckepack an einer Anfrage · zuletzt gerade eben. Der Huckepack-Weg läuft höchstens alle fünf Minuten und nur, wenn jemand eine Seite aufruft — für einen gewachsenen Bestand zu wenig</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-orange">huckepack</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_jobs.php"><span class="zeile-haupt">Post zustellen</span></a>
+    <span class="zeile-klein">Zuletzt gelaufen gerade eben</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">in Ordnung</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_jobs.php"><span class="zeile-haupt">Aufräumen</span></a>
+    <span class="zeile-klein">Zuletzt gelaufen gerade eben</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">in Ordnung</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_jobs.php"><span class="zeile-haupt">Beantragte Löschungen ausführen</span></a>
+    <span class="zeile-klein">Zuletzt gelaufen gerade eben</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">in Ordnung</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_jobs.php"><span class="zeile-haupt">Verfallene Registrierungen löschen</span></a>
+    <span class="zeile-klein">Zuletzt gelaufen gerade eben</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">in Ordnung</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_jobs.php"><span class="zeile-haupt">GPS-Daten verdichten</span></a>
+    <span class="zeile-klein">Rückstand — zuletzt gelaufen gerade eben</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-orange">55 offen</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_jobs.php"><span class="zeile-haupt">GPS-Daten ausdünnen</span></a>
+    <span class="zeile-klein">Zuletzt gelaufen gerade eben</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">in Ordnung</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_jobs.php"><span class="zeile-haupt">Backups aller Konten</span></a>
+    <span class="zeile-klein">Zuletzt gelaufen gerade eben</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">in Ordnung</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_jobs.php"><span class="zeile-haupt">Backups versenden</span></a>
+    <span class="zeile-klein">Zuletzt gelaufen gerade eben</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">in Ordnung</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_jobs.php"><span class="zeile-haupt">Komplett-Backup der Installation</span></a>
+    <span class="zeile-klein">Zuletzt gelaufen gerade eben</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">in Ordnung</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_jobs.php"><span class="zeile-haupt">Gerätemodelle nachlösen</span></a>
+    <span class="zeile-klein">Zuletzt gelaufen gerade eben</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">in Ordnung</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_jobs.php"><span class="zeile-haupt">Verwaiste GPS-Daten</span></a>
+    <span class="zeile-klein">Rückstand — zuletzt gelaufen gerade eben</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-orange">224 offen</span></div>
+</div>
+        </div>
+</section>
+          <section class="karte" id="k-backups">
+  <div class="karte-kopf">
+    <h2 class="karte-titel">Backups</h2>
+  </div>
+  <div class="karte-inhalt">
+        <div class="zeile">
+  <div class="zeile-text">
+    <a href="admin_komplettsicherung.php"><span class="zeile-haupt">Komplett-Backup</span></a>
+    <span class="zeile-klein">Kein Stand vorhanden, und es ist kein Plan gesetzt. Das ist eine Entscheidung — gegen „der Webspace ist weg" hilft dann nichts</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-neutral">kein Plan</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="admin_sicherungen.php"><span class="zeile-haupt">Konto-Backups</span></a>
+    <span class="zeile-klein">0 überfällig, 2 nie gesichert — von 2 Konten</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-orange">2 offen</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="admin_sicherungsziele.php"><span class="zeile-haupt">Backup-Ziele</span></a>
+    <span class="zeile-klein">Kein Ziel eingetragen. Die Konto-Backups liegen damit auf demselben Server, dessen Ausfall der Grund für ein Backup wäre</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-neutral">keines</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_server.php"><span class="zeile-haupt">Speicher der Backups</span></a>
+    <span class="zeile-klein">0 % der Speichergrenze belegt · 0 KB von 2,00 GB · Warnschwellen 70, 90 %</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">0 %</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_server.php"><span class="zeile-haupt">Ablage</span></a>
+    <span class="zeile-klein">/home/user/einsatzdoku-luftrettung/server/sicherungen · 0 Pakete in 0 Ordnern</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">beschreibbar</span></div>
+</div>
+        </div>
+</section>
+      </div>  </div>
+      <details class="karte karte-klappbar" id="k-plattform">
+  <summary class="karte-kopf">
+    <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>
+    <h2 class="karte-titel">Plattform</h2>
+    <span class="karte-vorschau">Muss · Empfohlen · gemessen</span>
+  </summary>
+  <div class="karte-inhalt">
+    <p class="feld-hinweis"><strong>Dieselbe Liste, die <code>install.php</code>
+       vor der Einrichtung prüft.</strong> <em>Muss</em>: Fehlt es, läuft die
+       Anwendung nicht — die Zeile steht rot. <em>Empfohlen</em>: Die Anwendung
+       läuft vollständig, nur langsamer oder mit einem Handgriff mehr — die
+       Zeile steht als Hinweis und <strong>färbt die Ampel nicht</strong>.
+       Erfüllte Empfehlungen stehen nicht einzeln da; die letzte Zeile nennt
+       ihre Zahl.</p>
+    <div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">PHP-Version</span>
+    <span class="zeile-klein">Gebraucht: ≥ 8.2 · gemessen: 8.4.19 — In Herstellerpflege.</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">8.4.19</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">PHP-Erweiterungen</span>
+    <span class="zeile-klein">Gebraucht: pdo_mysql, openssl, mbstring, zip, zlib · gemessen: alle 5 vorhanden</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">alle 5 vorhanden</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">memory_limit</span>
+    <span class="zeile-klein">Gebraucht: ≥ 64 MB · gemessen: -1 (unbegrenzt) — PHP-Speicherspitze je Anfrage (Z3: 64 MB)</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">-1 (unbegrenzt)</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">max_execution_time</span>
+    <span class="zeile-klein">Gebraucht: ≥ 30 s · gemessen: 30 s — Laufzeit je Anfrage (Z3: 30 s)</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">30 s</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">post_max_size</span>
+    <span class="zeile-klein">Gebraucht: ≥ 2 MB · gemessen: 8M (8 MB) — Größe eines Uploads (Z3: 2 MB)</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">8M (8 MB)</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">upload_max_filesize</span>
+    <span class="zeile-klein">Gebraucht: ≥ 2 MB · gemessen: 2M (2 MB) — Größe einer hochgeladenen Datei (Z3: 2 MB)</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">2M (2 MB)</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Anwendungswurzel</span>
+    <span class="zeile-klein">Gebraucht: beschreibbar · gemessen: beschreibbar — `wartung.lock` und bei der Einrichtung `config.php` und `install.lock` · /home/user/einsatzdoku-luftrettung/server</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">beschreibbar</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Ablage der Sicherungen</span>
+    <span class="zeile-klein">Gebraucht: beschreibbar · gemessen: beschreibbar — Konto-Backups und Komplett-Stände · /home/user/einsatzdoku-luftrettung/server/sicherungen</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">beschreibbar</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Temporäres Verzeichnis</span>
+    <span class="zeile-klein">Gebraucht: beschreibbar · gemessen: beschreibbar — Die Backups bauen ihre ZIP-Dateien dort · /tmp</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">beschreibbar</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Sitzungsablage</span>
+    <span class="zeile-klein">Gebraucht: eigenes Verzeichnis, fuer andere gesperrt · gemessen: eigenes Verzeichnis, 0700, 26 Dateien — Die Anwendung legt ihre Sitzungen selbst ab. Eigenes Verzeichnis: vorhanden, 0700. Der Dateiname einer Sitzungsdatei IST die Sitzungskennung - wer sie liest, ist angemeldet. Wirksam: /home/user/einsatzdoku-luftrettung/server/.sitzungen</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">eigenes Verzeichnis, 0700, 26 Dateien</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Freier Platz</span>
+    <span class="zeile-klein">Gebraucht: nicht bestimmbar · gemessen: 28,5 GB — Es gibt noch kein Komplett-Backup, gegen das sich rechnen ließe.</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-neutral">nicht messbar</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">HTTPS</span>
+    <span class="zeile-klein">Gebraucht: ja · gemessen: nein (localhost) — Die Sitzungscookies tragen `secure`. Über HTTP sendet der Browser sie nicht, und die Anmeldung scheitert stumm. Ausnahme: localhost — Browser behandeln es als sicheren Kontext, und so läuft der Prüfstand.</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">nein (localhost)</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Datenbank</span>
+    <span class="zeile-klein">Gebraucht: MySQL ≥ 8.0 oder MariaDB ≥ 10.6 · gemessen: MariaDB 10.11.14 — Das Schema ist InnoDB mit utf8mb4; der Code benutzt weder Fensterfunktionen noch CTEs. Die Untergrenze bestimmt deshalb die Herstellerpflege, nicht ein Merkmal.</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">MariaDB 10.11.14</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Verbindungsgrenze</span>
+    <span class="zeile-klein">Gebraucht: ≥ 10 · gemessen: 151 (aus max_connections) — Die Anwendung hält genau EINE Verbindung je Anfrage, keine persistenten; der Huckepack-Job läuft auf der Verbindung der Anfrage, die ihn trägt.</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">151 (aus max_connections)</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <a href="betrieb_server.php"><span class="zeile-haupt">Kontingent der Datenbank</span></a>
+    <span class="zeile-klein">Gebraucht: &lt; 90 % von 10 GB · gemessen: 6,3 MB von 10 GB · 0 % — Kein Hoster macht das DB-Kontingent abfragbar — es ist deshalb eine ANGABE (Vorgabe 10 GB, Z2) und wird mit denselben Schwellen gewarnt wie der Webspace: 70, 90 %. Die Größe selbst kommt aus der täglichen Messung im Aufräumjob.</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">6,3 MB von 10 GB · 0 %</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">SMTP</span>
+    <span class="zeile-klein">Gebraucht: eingerichtet · gemessen: eingerichtet — Ob der Server auch antwortet, sagt „Testmail an mich" auf dieser Seite — hier wird nichts angewählt, damit ein hängender Mailserver nicht jeden Seitenaufruf hält.</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">eingerichtet</span></div>
+</div>
+<div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Empfohlen insgesamt</span>
+    <span class="zeile-klein">7 von 7 erfüllt. Eine Abweichung steht oben als Hinweis; sie färbt die Ampel nicht — die Anwendung läuft vollständig, nur langsamer oder mit einem Handgriff mehr</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-neutral">7/7</span></div>
+</div>
+    </div>
+</details>
+
+      <section class="karte" id="k-protokoll">
+  <div class="karte-kopf">
+    <h2 class="karte-titel">Betriebsprotokoll</h2>
+    <span class="plakette plakette-blau">0 Einträge</span>
+  </div>
+  <div class="karte-inhalt">
+    <p class="feld-hinweis"><strong>Was hier gezählt wird, sind
+       Betriebsereignisse</strong> — Konten, Post, Jobs, Sicherungen. <strong>Kein
+       Zugriffsprotokoll:</strong> Dass jemand einen Einsatz geöffnet, gelesen
+       oder exportiert hat, steht hier nicht und soll hier nicht stehen. Sperren
+       und Angriffsversuche stehen getrennt unter <em>Sicherheit</em>, weil sie
+       IP-Adressen führen und nach 30 Tagen verfallen.</p>
+              <div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Verwaltung</span>
+    <span class="zeile-klein">Das Audit — 365 Tage, einstellbar unter Servereinstellungen → Konten</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-neutral">0 heute · 0 gesamt</span></div>
+</div>
+          <div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">E-Mail</span>
+    <span class="zeile-klein">verfällt nach 30 Tagen</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-neutral">0 heute · 0 gesamt</span></div>
+</div>
+          <div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Jobs</span>
+    <span class="zeile-klein">verfällt nach 30 Tagen</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-neutral">0 heute · 0 gesamt</span></div>
+</div>
+          <div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Sicherung</span>
+    <span class="zeile-klein">verfällt nach 30 Tagen</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-neutral">0 heute · 0 gesamt</span></div>
+</div>
+          <div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Ziele</span>
+    <span class="zeile-klein">verfällt nach 30 Tagen</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-neutral">0 heute · 0 gesamt</span></div>
+</div>
+          <div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">System</span>
+    <span class="zeile-klein">verfällt nach 30 Tagen</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-neutral">0 heute · 0 gesamt</span></div>
+</div>
+        <p class="feld-hinweis"><strong>Lesen lässt sich das Protokoll noch
+       nicht.</strong> Die Reiter mit Filter, Archiv und Download kommen mit dem
+       nächsten Schritt; bis dahin belegt diese Karte, dass geschrieben
+       wird.</p>
+    </div>
+
+
+  
+
+  </section></main>
+</div>
+<footer class="fuss-seite">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.37.1</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+
+
+
+
+
+
+
+</div></div></div></div><div class="reihe"><h2>2 · Die Zeile „Verwaltungskonten" in allen Fällen</h2><p class="unter">Handlungsfähig = aktiv und, bei Pflichtrollen, mit Zweitfaktor (E-P5c-56). Orange, sobald weniger als zwei BetreiberInnen handlungsfähig sind; die Zahl der Verwaltungskonten wählt nur den Text (Befund in den Anmerkungen).</p><div class="frames"><div class="frame-huelle" style="width:684px"><span class="frame-titel">Fall 1 · eine BetreiberIn, sonst niemand</span><div class="frame"><div style="padding:16px"><section class="karte"><div class="karte-kopf"><h2 class="karte-titel">Server</h2></div><div class="karte-inhalt"><div class="zeile">
+  <div class="zeile-text">
+    <a href="admin_users.php"><span class="zeile-haupt">Verwaltungskonten</span></a>
+    <span class="zeile-klein">Ein handlungsfähiges Konto, und es ist das einer BetreiberIn. Fällt es aus, kommt niemand mehr an Verwaltung und Betrieb</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-orange">nur 1</span></div>
+</div>
+</div></section></div></div></div><div class="frame-huelle" style="width:684px"><span class="frame-titel">Fall 2 · eine BetreiberIn und eine Admin</span><div class="frame"><div style="padding:16px"><section class="karte"><div class="karte-kopf"><h2 class="karte-titel">Server</h2></div><div class="karte-inhalt"><div class="zeile">
+  <div class="zeile-text">
+    <a href="admin_users.php"><span class="zeile-haupt">Verwaltungskonten</span></a>
+    <span class="zeile-klein">2 handlungsfähig, davon 1 BetreiberIn. Die Verwaltung ist vertreten, der Betrieb nicht</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-orange">1 BetreiberIn</span></div>
+</div>
+</div></section></div></div></div><div class="frame-huelle" style="width:684px"><span class="frame-titel">Fall 3 · zwei BetreiberInnen, eine ohne Zweitfaktor</span><div class="frame"><div style="padding:16px"><section class="karte"><div class="karte-kopf"><h2 class="karte-titel">Server</h2></div><div class="karte-inhalt"><div class="zeile">
+  <div class="zeile-text">
+    <a href="admin_users.php"><span class="zeile-haupt">Verwaltungskonten</span></a>
+    <span class="zeile-klein">2 BetreiberInnen, handlungsfähig ist 1 — die andere hat noch keinen Zweitfaktor</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-orange">1 BetreiberIn</span></div>
+</div>
+</div></section></div></div></div><div class="frame-huelle" style="width:684px"><span class="frame-titel">Ruhe · zwei BetreiberInnen und eine Admin, alle handlungsfähig</span><div class="frame"><div style="padding:16px"><section class="karte"><div class="karte-kopf"><h2 class="karte-titel">Server</h2></div><div class="karte-inhalt"><div class="zeile">
+  <div class="zeile-text">
+    <a href="admin_users.php"><span class="zeile-haupt">Verwaltungskonten</span></a>
+    <span class="zeile-klein">3 handlungsfähig, davon 2 BetreiberInnen</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">vertreten</span></div>
+</div>
+</div></section></div></div></div></div></div><div class="reihe"><h2>3 · Die Zeile „Umgebung" in allen Fällen</h2><p class="unter">Warnt, wenn der Betreff-Präfix gesetzt ist und das Etikett nicht, und bei einer Farbe außerhalb der geschlossenen Liste (E-P5c-05, -55). Nie abgeleitet — die Zeile liest nur, was in der config.php steht.</p><div class="frames"><div class="frame-huelle" style="width:684px"><span class="frame-titel">Präfix ohne Etikett</span><div class="frame"><div style="padding:16px"><section class="karte"><div class="karte-kopf"><h2 class="karte-titel">Server</h2></div><div class="karte-inhalt"><div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Umgebung</span>
+    <span class="zeile-klein">Mails tragen den Betreff-Präfix „[Staging]", die Oberfläche trägt kein Etikett. app.umgebung fehlt in der config.php</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-orange">Präfix ohne Etikett</span></div>
+</div>
+</div></section></div></div></div><div class="frame-huelle" style="width:684px"><span class="frame-titel">unbekannte Farbe</span><div class="frame"><div style="padding:16px"><section class="karte"><div class="karte-kopf"><h2 class="karte-titel">Server</h2></div><div class="karte-inhalt"><div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Umgebung</span>
+    <span class="zeile-klein">Etikett „Staging" mit der Farbe „lila" — bekannt ist nur „rot". Die Kopfleiste steht deshalb rot</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-orange">Farbe unbekannt</span></div>
+</div>
+</div></section></div></div></div><div class="frame-huelle" style="width:684px"><span class="frame-titel">Staging, richtig eingerichtet</span><div class="frame"><div style="padding:16px"><section class="karte"><div class="karte-kopf"><h2 class="karte-titel">Server</h2></div><div class="karte-inhalt"><div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Umgebung</span>
+    <span class="zeile-klein">Staging-Umgebung zum Testen, nicht für den Echtbetrieb. Kopfleiste rot, Mails mit „[Staging]" im Betreff</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">Staging</span></div>
+</div>
+</div></section></div></div></div><div class="frame-huelle" style="width:684px"><span class="frame-titel">Produktiv, richtig eingerichtet (kein Etikett gesetzt)</span><div class="frame"><div style="padding:16px"><section class="karte"><div class="karte-kopf"><h2 class="karte-titel">Server</h2></div><div class="karte-inhalt"><div class="zeile">
+  <div class="zeile-text">
+    <span class="zeile-haupt">Umgebung</span>
+    <span class="zeile-klein">Produktivumgebung für den Echtbetrieb. Kopfleiste blau, Mails ohne Präfix</span>
+  </div>
+  <div class="zeile-plaketten"><span class="plakette plakette-blau">Produktiv</span></div>
+</div>
+</div></section></div></div></div></div></div><div class="notiz"><h3>Anmerkungen</h3><ul>
+<li><strong>Keine neue Darstellung.</strong> Beide Zeilen sind gewöhnliche <code>status_z()</code>-Zeilen; das Markup oben ist
+wörtlich das, was <code>betrieb_status.php</code> heute je Zeile zeichnet. Kein Stylesheet-Vorschlag.</li>
+<li><strong>Ort: Karte „Server", oben</strong> (Vorschlag). Eine eigene Karte „Konten" für eine Zeile wäre mehr Seite als Auskunft.
+„Verwaltungskonten" führt auf NutzerInnen; „Umgebung" führt nirgends hin — sie steht allein in der config.php, wie SMTP.</li>
+<li><strong>Befund — der Menüzähler zählt Orange mit.</strong> <code>status_lib.php</code>: „Status — orange + rot der Ampel".
+E-P5c-44 wählt Orange statt Rot, damit der Zähler auf einer Anlage mit einer BetreiberIn nicht dauerhaft steht — er steht aber auch
+in Orange dauerhaft, auf „1" statt auf einer roten „1". Reihe 1 zeigt es am Menüpunkt: 7 statt 5. <strong>Entschieden
+23.09.2026: bleibt orange</strong>, der Zähler darf stehen (Q-P5c-30, E-P5c-63).</li>
+<li><strong>Befund — die zwei Bedingungen aus E-P5c-16 sind eine.</strong> Wer weniger als zwei handlungsfähige Verwaltungskonten hat,
+hat auch weniger als zwei handlungsfähige BetreiberInnen. Die Ampel hängt also nur an „zwei BetreiberInnen handlungsfähig";
+die Zahl der Verwaltungskonten wählt Fall 1 oder Fall 2. Die Abnahme von AP5 („2 handlungsfähige → keiner") ist entsprechend zu
+lesen: 2 BetreiberInnen → keiner, 1 BetreiberIn und 1 Admin → Orange.</li>
+<li>Den Fall „keine handlungsfähige BetreiberIn" zeigt die Seite nie: Wer sie sieht, ist eine angemeldete BetreiberIn, und die kommt
+nur mit Zweitfaktor herein (E-P5c-15).</li>
+<li><strong>„Umgebung" steht immer da</strong>, gleichwertig in beiden Richtungen: Die Plakette nennt die Umgebung — den Namen aus
+<code>app.umgebung</code> bzw. „Produktiv", wenn keiner gesetzt ist —, der Satz sagt, wofür sie da ist. Beide blau: Richtig
+eingerichtet ist beides. Wer die Zeile nur im Fehlerfall zeigt, lässt nicht sehen, dass das Etikett richtig leer ist
+(Durchsicht 23.09.2026).</li>
+<li><strong>„Produktiv" ist die Lesart eines leeren Etiketts</strong>, keine Ableitung aus Domain oder Zweig (E-P5c-05 bleibt): Ohne
+<code>app.umgebung</code> verhält sich die Anlage wie die Produktivanlage — blaue Kopfleiste, kein Präfix, kein Streifen —, und
+genau das sagt die Zeile.</li>
+<li>Die übrigen Zeilen sind aus der örtlichen Installation (Web 20.37.1) abgegriffen, mit ihren tatsächlichen Werten.</li></ul></div></body></html>

@@ -251,8 +251,9 @@ return [
 /* ---- AP5: Transaktion und Kindtabellen ---------------------------------- */
 
 ['kennung' => 'Z16', 'paket' => 'AP5',
- 'beschreibung' => 'beginTransaction( ausserhalb db.php',
- 'grund' => 'db_transaktion() in db.php (E-ZE-20). NEUN namentliche Ausnahmen, '
+ 'beschreibung' => 'beginTransaction( ausserhalb transaktion_lib.php',
+ 'grund' => 'db_transaktion() in transaktion_lib.php (E-ZE-20; bis Web 20.37.2 in '
+          . 'db.php, umgezogen wegen Nr. 288). NEUN namentliche Ausnahmen, '
           . 'freigegeben vom Auftraggeber am 22.09.2026 (H-ZE-4 ausgesetzt; das '
           . 'Konzept liess acht zu). DREI wegen GROESSE oder Vertrag: ingest.php '
           . '(Geraetevertrag, Deadlock-Behandlung Nr. 210 in Schritt 18; vorab '
@@ -268,7 +269,7 @@ return [
           . 'ODER wirft; diese sechs rollen mittendrin zurueck und machen dann '
           . 'etwas anderes weiter.',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php',
- 'ausser' => ['server/db.php'],
+ 'ausser' => ['server/transaktion_lib.php'],
  'regel' => ['art' => 'methode', 'namen' => ['beginTransaction']],
  'start' => 33, 'decke_jetzt' => 9, 'decke_ziel' => 9],
 

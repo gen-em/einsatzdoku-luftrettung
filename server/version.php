@@ -7259,5 +7259,28 @@ declare(strict_types=1);
  *   gruenen PR-Lauf mit demselben Baum und geht auf, ohne auf den Push-Lauf
  *   auf `main` zu warten — der verweist seit TB ohnehin nur noch. Ausgeliefert
  *   wird dieselbe Anwendung wie 20.37.1, mit neuer Nummer in der Fusszeile.
+ *
+ * 20.37.3 — EINE NEUE ANLAGE LAESST SICH WIEDER EINRICHTEN (Backlog
+ *   Nr. 288), UND DIE ANMELDESEITE STELLT IHRE VERWEISE UNTER DIE KARTE
+ *   (Nr. 289). Beide gefunden am 23.09.2026 beim Bau der Mockup-Runde
+ *   M-P5c-02, beide KORREKTUR: kein Feld, keine Tabelle, keine Migration.
+ *
+ *   NR. 288. Seit 20.30.0 (Schritt 15/AP5) legt `konto_anlegen()` das Konto
+ *   in `db_transaktion()` an. Der Rahmen stand in `db.php`, und
+ *   `konto_lib.php` laedt `db.php` nur, wenn `config.php` schon da ist —
+ *   waehrend der Einrichtung ist sie es nicht. Jede Neueinrichtung endete
+ *   mit „Call to undefined function db_transaktion()", und zwar NACHDEM das
+ *   Schema angelegt war. Bemerkt hat es keine Stufe der Kette, weil keine
+ *   eine Anlage einrichtet; bemerkt hat es `hochfahren.sh --neu`. Der Rahmen
+ *   steht jetzt in `transaktion_lib.php`, die nichts laedt; `konto_lib.php`
+ *   und `db.php` binden sie ein. Registerzeile Z16 nimmt die neue Datei aus
+ *   statt `db.php`, die Decke bleibt 9.
+ *
+ *   NR. 289. `.anmeldung` war ein Flex-Behaelter in Zeilenrichtung, und seit
+ *   20.23.0 steht in `login.php` neben der Karte ein zweites Kind: die vier
+ *   Verweise „Was ist NAdoku?", Handbuch, Impressum, Datenschutz. Sie
+ *   standen rechts neben der Karte und drueckten sie bei 390 px auf rund
+ *   200 px. Jetzt Spaltenrichtung; die fuenf uebrigen Seiten der Huelle
+ *   tragen nur die Karte und sehen aus wie vorher.
  */
-const WEB_VERSION = '20.37.2';
+const WEB_VERSION = '20.37.3';

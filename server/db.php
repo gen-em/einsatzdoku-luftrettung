@@ -19,6 +19,10 @@ require_once __DIR__ . '/email_lib.php';
  * Vorgabe, statt dass die Datei mit einem Fatal abbricht. */
 require_once __DIR__ . '/konfig_lib.php';
 require_once __DIR__ . '/format_lib.php';   // fmt_local() u. a. (Schritt 15/AP7)
+/* Der Transaktionsrahmen `db_transaktion()` (Schritt 15/AP5, E-ZE-20). Stand
+ * bis Web 20.37.2 hier; eigene Datei, weil der Einrichter ihn ohne
+ * `config.php` braucht und diese Datei ohne sie abbricht (Nr. 288). */
+require_once __DIR__ . '/transaktion_lib.php';
 
 /* UND `db.php` VERLANGT `config.php` WEITERHIN HART.
  *
@@ -158,68 +162,6 @@ function stammdaten_dup_global(string $table, string $col, string $val,
     $st = db()->prepare($sql);
     $st->execute($params);
     return (bool)$st->fetchColumn();
-}
-
-/* ---- EIN TRANSAKTIONSRAHMEN (Schritt 15/AP5, E-ZE-20) --------------------
- *
- * 33 Stellen in 22 Dateien schrieben denselben Rahmen von Hand, und der
- * Tokenizer hat sie in drei Bauformen sortiert:
- *
- *   19x beginnen, versuchen, bestaetigen, bei Fehler zurueckrollen und
- *       WEITERGEBEN — zwoelf werfen weiter, sieben antworten selbst
- *       (`json_fehler()`, `json_out()`);
- *   12x dasselbe, aber der `catch` SCHLUCKT und setzt stattdessen eine
- *       Meldung fuer die Seite;
- *    2x gar kein `try` — `beginTransaction()`, arbeiten, `commit()`. Bricht
- *       es dazwischen ab, bleibt die Transaktion offen, bis PHP sie beim
- *       Verbindungsabbau still zurueckrollt.
- *
- * WAS DABEI AUSEINANDERGELAUFEN IST, ist nicht die Absicht, sondern die
- * Sorgfalt: 14 der 42 `rollBack()`-Aufrufe stehen hinter einer Wache
- * (`inTransaction()` oder ein eigener Merker), 28 nicht. Ein `rollBack()` auf
- * einer Verbindung ohne offene Transaktion wirft — und zwar AUS DEM CATCH
- * HERAUS, womit die urspruengliche Ausnahme verlorengeht und im Protokoll
- * „There is no active transaction" steht statt des Grundes. Dieser Rahmen
- * fragt deshalb IMMER nach.
- *
- * VERSCHACHTELUNGSFEST, UND ZWAR ASYMMETRISCH: PDO kennt keine echten
- * verschachtelten Transaktionen; ein zweites `beginTransaction()` wirft. Wer
- * schon in einer fremden Transaktion steht, oeffnet deshalb keine eigene —
- * und bestaetigt und verwirft dann auch nichts. Das Zurueckrollen bleibt dem
- * ueberlassen, der begonnen hat; die Ausnahme kommt als Ausnahme heraus, und
- * er entscheidet. Neun Dateien hatten diesen Merker schon selbst gebaut
- * (`$eigeneTransaktion` in `backup_lib.php` erklaert ihn im Kommentar) — jetzt
- * steht er einmal.
- *
- * DIE AUSNAHME, NAMENTLICH: `ingest.php`. Sein Rahmen spannt sich ueber 670
- * Zeilen, gehoert zum Geraetevertrag und bekommt in Schritt 18 eine
- * Deadlock-Behandlung (Backlog Nr. 210). Schritt 15 fasst ihn nicht an.
- */
-
-/**
- * Einen Rumpf in einer Transaktion laufen lassen.
- *
- * @template T
- * @param callable(PDO):T $fn bekommt dieselbe Verbindung uebergeben
- * @return T der Rueckgabewert des Rumpfs, unveraendert durchgereicht
- * @throws Throwable jede Ausnahme des Rumpfs, nach dem Zurueckrollen
- */
-function db_transaktion(PDO $pdo, callable $fn): mixed {
-    $eigene = !$pdo->inTransaction();
-    if ($eigene) { $pdo->beginTransaction(); }
-    try {
-        $ergebnis = $fn($pdo);
-        if ($eigene) { $pdo->commit(); }
-        return $ergebnis;
-    } catch (Throwable $ex) {
-        /* NUR DIE EIGENE, UND NUR WENN SIE NOCH STEHT. Der zweite Teil ist
-         * kein Uebereifer: Ein DDL-Befehl (`ALTER`, `CREATE`) bestaetigt in
-         * MySQL still, und der Rumpf darf selbst zurueckgerollt haben. In
-         * beiden Faellen wuerfe `rollBack()` hier eine ZWEITE Ausnahme und
-         * verdeckte die erste. */
-        if ($eigene && $pdo->inTransaction()) { $pdo->rollBack(); }
-        throw $ex;
-    }
 }
 
 /* `stammdaten_dup_personal_count()` STAND HIER BIS S9/AP5b. Sie zaehlte, wie
