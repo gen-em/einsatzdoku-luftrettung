@@ -9164,8 +9164,9 @@ Bilderzahl, die längst nicht mehr stimmte.
 
 Daneben, als eigener Job mit Matrix: **`Schema gegen …`** —
 `tools/schemaprobe/probe.php` gegen MySQL 8.4.0 und MariaDB 10.6, je mit
-Selbstprobe. Er ist **keine Pflichtprüfung** des Rulesets; ein roter
-Schemalauf hält einen Merge heute nicht auf (Q-PK-07).
+Selbstprobe. **Er wird Pflichtprüfung** (E-PK-47): Die BetreiberIn trägt
+„Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" ins Ruleset ein
+— bis dahin hält ein roter Schemalauf einen Merge nicht auf.
 
 > **Die Gegenlesung ist streng** (E-PK-42): Der Baum im Bericht muss der des
 > PR-Kopfs sein. Nach einem fremden Merge ist „Update branch" deshalb der
@@ -9540,7 +9541,7 @@ sondern an den **Umgebungen**:
 |---|---|---|
 | Umgebung `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `STAGING_URL` |
 | Umgebung `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `PRODUKTION_URL` |
-| Repositorium | `CIQ_GERAETE_URL` — seit PK-05 von keinem Arbeitslauf gelesen (Q-PK-08) | `WACHE_BASIS` |
+| Repositorium | `CIQ_GERAETE_URL` — seit PK-05 von keinem Arbeitslauf gelesen; bleibt bis PK-08 (E-PK-48) | `WACHE_BASIS` |
 
 `FTP_SERVER` ist der **nackte Hostname**, ohne Protokoll und ohne Pfad.
 

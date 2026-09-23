@@ -41,7 +41,7 @@ nicht gibt.
 | `pruefablauf.json`, die Tabelle Berührung → Probe (4) | **gebaut mit PK-03**, Tabelle erzeugt |
 | Der Prüfbericht (5) | **gebaut mit PK-03**, seit PK-05 Selbstprobe 13 Lagen / 0 Fehlschläge |
 | Seine Gegenlesung im Tor (5.1) | **gebaut mit PK-05** |
-| Station C in der beschriebenen Form (2) | **gebaut mit PK-05** — nur die Schemaprobe ist noch keine Pflichtprüfung (2.3, Q-PK-07) |
+| Station C in der beschriebenen Form (2) | **gebaut mit PK-05** — die Schemaprobe wird Pflichtprüfung, sobald das Ruleset es trägt (E-PK-47) |
 | Station D in der beschriebenen Form (2) | entsteht mit **PK-06** |
 
 Bis dahin gilt für Station D, was in `.github/workflows/auslieferung.yml`
@@ -85,7 +85,7 @@ nur sie beantworten kann.
 |---|---|---|---|---|
 | **A Arbeit** | während der Entwicklung | die Instanz in der Arbeitsumgebung | Browser, Emulator, Uhr-Simulator, die Proben, die zur Änderung gehören | nach Bedarf |
 | **B Prüfstand** | vor dem Pull Request, **ein Befehl** | dieselbe Instanz | örtliche Installation hochfahren, Referenzbestand, die Proben der Stufe, Bau der Apps (unsigniert), die billigen Riegel; auf Anforderung die Plattformprobe gegen Staging. Ergebnis ist der **Prüfbericht** (5) | klein 5 min, neben 15 min, haupt 45 min |
-| **C Tor** | beim Pull Request und auf `main` | GitHub | die billigen Riegel als Gegenlesung des Berichts, Schemaprobe gegen MySQL 8.4.0 und MariaDB 10.6, Bericht passt zum Baum und zur Berührung. **Rot in `Stufe 1` heißt kein Merge** (die Schemaprobe ist noch keine Pflichtprüfung, Q-PK-07); der Merge ist Sache der BetreiberIn | 1 bis 2 min |
+| **C Tor** | beim Pull Request und auf `main` | GitHub | die billigen Riegel als Gegenlesung des Berichts, Schemaprobe gegen MySQL 8.4.0 und MariaDB 10.6, Bericht passt zum Baum und zur Berührung. **Rot in `Stufe 1` heißt kein Merge** — und in der Schemaprobe ebenso, sobald das Ruleset sie trägt (E-PK-47); der Merge ist Sache der BetreiberIn | 1 bis 2 min |
 | **D Staging** | nach dem Merge | GitHub | Auslieferung (unverändert), dann drei Schritte: Antwortprobe, Punktdateien, **ein** Kreislauf `edbak` als Gegenlesung auf PHP 8.3 beim Hoster | unter 10 min |
 | **E Produktiv** | beim Tag, nach Freigabe | GitHub | dieselbe Auslieferung, Backup-Tor, Fassungsprüfung, Integritätswache; App-Tags bauen und signieren einmal | wie heute |
 
