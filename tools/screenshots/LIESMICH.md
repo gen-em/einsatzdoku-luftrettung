@@ -461,6 +461,112 @@ meldet **zweimal Null**. Vor jeder Messung wird jetzt gewartet, bis
 `--knopf` in `:root` steht; ist es nach fünf Sekunden nicht da, steht das als
 Fehler im Bericht statt als grüne Zahl.
 
+## Bildvergleich — hat sich ein Pixel bewegt?
+
+`vergleichen.py` daneben beantwortet die Frage, die der Bilderlauf selbst
+**nicht** beantwortet. Überlauf, Konsolenfehler und Knopfhöhen sagen nichts
+darüber, ob eine Seite anders aussieht als gestern: 0/0/0 meldet auch eine
+Seite, die ein anderes Datum zeigt.
+
+```
+python3 tools/screenshots/vergleichen.py <vorher> [<nachher>]
+python3 tools/screenshots/vergleichen.py <vorher> --erwartet 46-betrieb-updates
+```
+
+**Zwei Vergleiche, und der wichtigere ist der Text.**
+
+| | |
+|---|---|
+| **Bild** | SHA-256 je Einzelbild. Streng, aber laut — er meldet jede Schriftrasterung mit |
+| **Text** | `document.body.innerText` je Seite und Breite, zeilenweise. Das ist die Frage, die ein Formatierungsumbau stellt: *Steht ein Buchstabe anders da als vorher?* |
+
+**Warum beide — mit der Zahl, die es entschieden hat.** Gemessen am 22.09.2026
+auf **unverändertem** Code: **303 von 496 Bildern** wichen ab. Ursache war
+nicht die Anwendung, sondern der **Countdown im Demo-Banner** („in etwa
+43 188 Minuten"), der auf jeder Seite des Demo-Kontos steht und in Echtzeit
+herunterzählt — ein Kasten von 43 × 19 Pixeln, der 303 Bilder unbrauchbar
+machte. Ein Bildvergleich kann so eine Zeile nicht benennen; er sieht nur
+Pixel, und wer die Seite ganz ausnimmt, nimmt 1 200 andere Zeilen mit aus.
+Der Textvergleich sieht die Zeile.
+
+Der Bildvergleich bleibt daneben stehen: Er findet, was **kein** Text ist —
+eine verrutschte Spalte, ein anderer Abstand, eine Farbe.
+
+> **Über eine Versionsstufe hinweg kann der Bildvergleich nicht null werden**,
+> und das ist keine Schwäche, sondern Arithmetik: Die Versionsnummer steht in
+> der Fußzeile **jeder** Seite, und jedes Arbeitspaket stuft sie hoch
+> (`CLAUDE.md` 2.1). Damit ändert sich jedes einzelne Bild. Wer ein Paket mit
+> Versionsstufe belegen will, fährt `--nur-text`; der Bildvergleich ist dann
+> für den **nächsten** Lauf ohne Stufe wieder brauchbar.
+
+### Drei Vergleiche, und nur einer ist der Befund
+
+| | misst | ist ein |
+|---|---|---|
+| **Bild** | SHA-256 je Einzelbild | Zahl mit Rauschen (Fußzeile, Uhrzeiten) |
+| **Zeile** | `innerText` Zeile für Zeile | **Zahl, kein Befund** — zwischen zwei Läufen ändern sich Werte zwangsläufig: eine Datenbank wächst, ein Alter läuft weiter |
+| **Form** | dieselbe Zeile, jede Ziffernfolge durch `#` ersetzt | **der Befund** |
+
+**Warum die Form das richtige Maß ist.** Ein Formatierungsumbau darf die
+*Schreibweise* nicht ändern; die *Werte* ändern sich ohnehin. Aus „1,0 MB" und
+„1,3 MB" wird beide Male `#,# MB` — aus „2,00 GB" und „2 GB" dagegen
+`#,## GB` und `# GB`, und genau das ist der Unterschied, den ein solches
+Paket ausschließen muss. Auch „gerade eben" gegen „vor 1 Minuten" bleibt
+sichtbar, weil die Wörter verschieden sind.
+
+**Was die Form nicht sieht:** eine Änderung, die *nur* Ziffern betrifft — etwa
+eine andere Rundung bei gleicher Stellenzahl. Dafür stehen die Rechnungen je
+Funktion.
+
+**Deshalb braucht der Zeilenvergleich keine Ausnahmeliste**, der Formvergleich
+dagegen schon: In Schritt 15 AP7 waren es nach dem Umstieg auf die Form noch
+**zwei** Einträge (ein Zufallstoken, eine Gerätekennung) statt der sieben, die
+der Zeilenvergleich gebraucht hätte. Eine kurze Ausnahmeliste ist keine
+Bequemlichkeit — sie ist der Beleg, dass das Maß zur Frage passt.
+
+Voreinstellung für `<nachher>` ist `ausgabe/`. `--nur-text` lässt den
+Bildvergleich außer Wertung, `--selbstprobe` hält das Werkzeug gegen sieben
+Fälle mit Sollwert.
+
+**Die Reihenfolge ist nicht wahlfrei, und sie ist der ganze Trick:** Jeder Lauf
+löscht den vorigen (`rmSync` auf `ausgabe/`, siehe *Grenzen*). Wer vergleichen
+will, sichert den ersten Lauf weg, **bevor** er die Änderung baut. Danach ist es
+zu spät.
+
+```
+cp -r tools/screenshots/ausgabe /tmp/bilder_vor    # VOR der Änderung
+…  bauen …
+node tools/screenshots/aufnehmen.mjs
+python3 tools/screenshots/vergleichen.py /tmp/bilder_vor
+```
+
+**Zwei Arten, eine Abweichung zu erklären, und sie sind nicht dasselbe:**
+
+| | |
+|---|---|
+| `ausnahmen.json`, Abschnitt `zeitabhaengig` | **dauerhaft, ganze Seite, nur Bild.** Die Seite ändert sich zwischen zwei Läufen, ohne dass jemand etwas geändert hätte |
+| `ausnahmen.json`, Abschnitt `zeilenmuster` | **dauerhaft, einzelne Zeile, nur Text.** Ein regulärer Ausdruck auf die Textzeile — so bleibt der Rest der Seite in der Messung. Hier steht heute genau ein Eintrag: der Demo-Countdown |
+| `--erwartet <seite>` | **für diesen einen Lauf.** Die Abweichung ist die beabsichtigte Folge der Änderung, die gerade gebaut wurde |
+
+Für beide gilt die Regel des Hauses: **Eine Ausnahme ohne Treffer ist selbst ein
+Befund.** Sonst wächst die Liste zu, und der Vergleich meldet eine Null, die
+nichts mehr gemessen hat.
+
+**Was ein Bitvergleich nicht kann:** Er sagt, **dass** sich etwas geändert hat,
+nicht **was**. Eine gemeldete Datei wird angesehen — das Werkzeug ersetzt den
+Blick nicht, es sagt nur, wohin er gehört. Und er ist **streng**: Eine
+Abweichung von einem Pixel in einer Schriftrasterung zählt wie eine
+verschobene Spalte.
+
+**Der Textvergleich ist kein echter Diff**, und das mit Absicht: Er stellt die
+Zeilen stumpf nebeneinander. Eine eingefügte Zeile verschiebt alles dahinter
+und erzeugt lauter Abweichungen — das ist die richtige Lautstärke für einen
+Umbau, der keinen Buchstaben ändern darf, denn der fügt auch keine Zeile ein.
+
+**`texte/` entsteht erst seit Schritt 15 AP7.** Ein älterer weggesicherter Lauf
+hat den Ordner nicht; der Vergleich sagt dann ausdrücklich **„NICHT
+GEMESSEN"** statt eine Null zu melden.
+
 ## Grenzen
 
 - **Nur Chromium.** WebKit (Safari, iOS) und Gecko (Firefox) stehen in der
@@ -481,6 +587,11 @@ Fehler im Bericht statt als grüne Zahl.
   nicht zur Laufzeit. Was erst zur Laufzeit dazukommt, sieht weiterhin
   niemand: Eine Content-Security-Policy schickt die Anwendung nicht
   (**Nr. 181**).
+- **Der Bilderlauf misst nicht, ob der Text stimmt.** Überlauf, Konsolenfehler
+  und Knopfhöhen melden **0/0/0**, auch wenn aus „2,00 GB" ein „2 GB"
+  geworden ist. Dafür gibt es seit Schritt 15 AP7 den Textvergleich
+  (`vergleichen.py`) — die Zahl 0/0/0 allein ist **kein** Beleg dafür, dass
+  sich nichts geändert hat.
 - **Jeder Lauf löscht den vorigen.** `ausgabe/` wird beim Start geräumt
   (`rmSync`). Zwei Läufe zu vergleichen geht nur, wenn der erste Bericht
   vorher weggesichert wurde — sonst ist seine Zahl hinterher unbelegbar. In

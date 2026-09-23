@@ -30,7 +30,8 @@ require_once __DIR__ . '/konten_einstellungen_lib.php';
  * WARUM EIN PARAMETER GENUEGT — UND KEINE SITZUNG
  * ---------------------------------------------------------------------------
  *
- * `pw_handling.php` fuehrt eine eigene Sitzung (`pw_session_start()`), und
+ * `pw_handling.php` fuehrt eine eigene Sitzung (`sitzung_starten('passwort')`,
+ * seit Web 20.27.0; davor `pw_session_start()`), und
  * der naheliegende Weg waere, den Stand dort abzulegen. Er ist nicht
  * genommen: Diese Seite muesste dafuer dieselbe Sitzung oeffnen, also
  * Sitzungsnamen, Cookie-Parameter und `use_strict_mode` nachbauen — eine

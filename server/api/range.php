@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';
+require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten_sql() (Schritt 15/AP6)
 
 /**
  * Einsaetze eines Jahres oder Monats — Grundlage der Zeitraum-Uebersicht.
@@ -16,7 +17,7 @@ require_once __DIR__ . '/../auth_guard.php';
  * Gelesen wird dabei nichts Fremdes (die Abfrage haengt an $userId), aber
  * ein lesender Endpunkt, der POST beantwortet, ist eine Einladung, die
  * niemand aussprechen wollte. */
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_out(['error' => 'method'], 405); }
+api_methode('GET');
 
 $jahr  = (string)($_GET['y'] ?? '');
 $monat = (string)($_GET['m'] ?? '');
@@ -55,11 +56,10 @@ try {
      * Sie war die einzige Verwenderin von `p9_at` hier -- und eine
      * korrelierte Unterabfrage je Zeile fuer einen Wert, der als Spalte
      * danebensteht. */
-    $st = db()->prepare('SELECT m.id, m.day_id, d.day, d.kind, d.vehicle_typ,
-                               m.started_at, m.ended_at,
-                           m.distance_m,
-                           m.winch, m.bergwacht, m.secondary, m.winch_cycles,
-                           m.false_alarm, m.site_ele_m, m.pat_blob
+    /* Die `missions`-Spalten aus dem Register (Schritt 15/AP6); die drei
+     * Diensttag-Spalten stehen daneben — sie gehoeren zu `days`. */
+    $st = db()->prepare('SELECT ' . mf_spalten_sql('range', 'm.')
+                         . ', d.day, d.kind, d.vehicle_typ
                          FROM missions m
                          JOIN days d ON d.id = m.day_id
                          WHERE m.user_id = ? AND d.day BETWEEN ? AND ?
@@ -92,6 +92,17 @@ try {
              * gefahren wurde, und genau das steuert die Felder. */
             'day_typ'    => $m['vehicle_typ'] !== null ? (string)$m['vehicle_typ'] : null,
             'start_hhmm' => fmt_local($m['started_at']),
+            /* CHRONOLOGISCHER SORTIERSCHLUESSEL (Schritt 15 AP9b, E-ZE-32).
+             * `start_hhmm` allein taugt nicht zum Sortieren: Ein Dienst ueber
+             * Mitternacht -- laut Handbuch „der klassische Fall" -- hat
+             * Einsaetze um 23:50 und um 01:10, und als Zeichenkette steht
+             * 01:10 davor. `day` hilft dabei nicht ueberall: In api/day.php
+             * und api/range.php ist es der DIENSTTAG, und der ist fuer beide
+             * derselbe. Also schickt der Server den Zeitpunkt, nach dem
+             * sortiert werden soll -- in Ortszeit, damit er zu `start_hhmm`
+             * passt, und als 'Y-m-d H:i', weil eine Zeichenkette in diesem
+             * Format in derselben Reihenfolge sortiert wie der Zeitpunkt. */
+            'start_sort' => fmt_local($m['started_at'], 'Y-m-d H:i'),
             'duration_s' => $dur,
             'distance_m' => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,
             'winch'      => (int)$m['winch'] === 1,
@@ -156,17 +167,31 @@ try {
      * Alttag enthaelt — und die Aenderung saehe richtig aus, waehrend sie nur
      * die Altlast zeigt.
      *
-     * SEIT DEM DEMO-AUSBAU IST DAS EINE LUECKE UND KEINE HERLEITUNG MEHR
-     * (Backlog Nr. 198). Ein Rettungsmittel des Typs Bergwacht darf die
-     * Faehigkeiten auch bodengebunden fuehren (`veh_caps_erlaubt()`); sein
-     * Diensttag traegt sie dann in `day_capabilities`, und diese Abfrage
-     * uebergeht ihn. Das Einsatzformular zeigt die Windenfelder trotzdem
-     * (es fragt `day_capabilities` ohne Artfilter, mission_fields.php) — die
-     * Zeitraumuebersicht wertet sie nur nicht aus. Die beiden Windenkacheln
-     * gibt es ausserdem nur im LUFT-Kachelsatz; sie in den Bodensatz zu
-     * nehmen ist eine Gestaltungsentscheidung (zehn Kacheln in vier Spalten)
-     * und braucht eine Freigabe mit Mockup. Bis dahin bleibt die Zeile, und
-     * dieser Absatz sagt, was sie kostet.
+     * DER ARTFILTER IST SEIT SCHRITT 15 AP9 DIE REGEL, NICHT MEHR NUR EINE
+     * HERLEITUNG AUS DER MIGRATION (E-ZE-31, 22.09.2026). Hier stand bis
+     * dahin, seit dem Demo-Ausbau sei er eine LUECKE (Backlog Nr. 198): Ein
+     * Rettungsmittel des Typs Bergwacht darf die Faehigkeiten auch
+     * bodengebunden fuehren (`veh_caps_erlaubt()`), sein Diensttag traegt sie
+     * dann in `day_capabilities`, und diese Abfrage uebergeht ihn.
+     *
+     * Der Auftraggeber hat das entschieden, und zwar so: Die AUSWERTUNG —
+     * Kacheln und Tabellenspalten in Tages- und Zeitraumuebersicht — folgt
+     * der BETRIEBSART und der Faehigkeit; die BEARBEITUNG (einsatz_form.php,
+     * einsatz.php) folgt der Faehigkeit allein, auch bodengebunden. Das
+     * Einsatzformular zeigt die Windenfelder also weiterhin, und die Haken
+     * bleiben eintragbar; ausgewertet werden sie in der Zeitraumuebersicht
+     * nicht. Vorgelegt wurden dafuer die Zahlen des Bestands: vier
+     * bodengebundene Bergwacht-Diensttage mit Faehigkeiten, zwei davon mit
+     * einem dokumentierten Windeneinsatz.
+     *
+     * Die SUCHE macht es anders — sie fragt `day_capabilities` OHNE
+     * Artfilter (api/suchindex.php). Auch das ist entschieden: Sie sucht im
+     * ganzen Bestand, nicht in einem Zeitraum.
+     *
+     * Was die beiden Windenkacheln angeht, bleibt es dabei: Sie gibt es nur
+     * im LUFT-Kachelsatz, und sie in den Bodensatz zu nehmen waere eine
+     * Gestaltungsentscheidung (zehn Kacheln in vier Spalten) mit Mockup.
+     * Nach E-ZE-31 steht diese Frage nicht mehr an.
      *
      * BERGWACHT FAEHRT MIT, obwohl heute keine Kachel daran haengt. Der
      * Schluessel spannt sich ueber VEHICLE_CAPABILITIES auf und waechst mit

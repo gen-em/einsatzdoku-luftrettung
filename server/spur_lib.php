@@ -1385,11 +1385,11 @@ function spur_teilen(PDO $pdo, string $quelleTyp, int $quelleId,
      * schneidet und vermerkt den Schnitt — das muss zusammen gelten oder gar
      * nicht. PDO kennt keine verschachtelten Transaktionen; ein blindes
      * `beginTransaction()` wuerfe hier. Allein aufgerufen (Probe, Konsole)
-     * soll die Funktion aber trotzdem in sich abgesichert sein, deshalb der
-     * Schalter statt „Transaktion ist Sache des Aufrufers". */
-    $eigene = !$pdo->inTransaction();
-    if ($eigene) { $pdo->beginTransaction(); }
-    try {
+     * soll die Funktion aber trotzdem in sich abgesichert sein — seit
+     * Schritt 15/AP5 uebernimmt `db_transaktion()` diese Unterscheidung. */
+    db_transaktion($pdo, function (PDO $pdo) use ($zielTyp, $zielId, $zielPunkte, $zielStufe,
+                                                  $zielOriginal, $quelleTyp, $quelleId,
+                                                  $bleiben, $stand, $sperrgrenze): void {
         /* ERST DAS ZIEL, DANN DIE QUELLE. Bricht es dazwischen ab, steht der
          * Einsatz mit seiner Spur da und das Segment traegt sie noch —
          * doppelt, aber vollstaendig. Umgekehrt waeren die Punkte weg. */
@@ -1409,11 +1409,7 @@ function spur_teilen(PDO $pdo, string $quelleTyp, int $quelleId,
         spur_blob_schreiben($pdo, $quelleTyp, $quelleId,
             spur_kodieren($bleiben, (int)$stand['stufe'], $sperrgrenze),
             (int)$stand['stufe'], $sperrgrenze, count($bleiben));
-        if ($eigene) { $pdo->commit(); }
-    } catch (Throwable $e) {
-        if ($eigene) { $pdo->rollBack(); }
-        throw $e;
-    }
+    });
 
     return ['genommen' => count($wandern), 'geblieben' => count($bleiben),
             'ziel_gesamt' => count($zielPunkte),

@@ -115,6 +115,22 @@ else
 fi
 cd "$WURZEL"
 
+echo "== 6a. Handbuch und Bilder nach server/doku kopieren"
+# WAS DIE AUSLIEFERUNGSKETTE TUT UND DIESES SKRIPT BIS WEB 20.27.0 NICHT.
+# Der FTPS-Schritt laedt nur `server/` hoch; `docs/` liegt daneben. Deshalb
+# kopiert `ausliefern-lauf.yml` Handbuch, "Was ist NAdoku" und `docs/bilder/`
+# vor dem Sync nach `server/doku/`. Eine lokal eingerichtete Anlage bekam
+# diesen Schritt nicht -- und dann fehlen dem Handbuch drei Bilder.
+#
+# DAS IST NICHT KOSMETIK: Der Bilderlauf meldete dafuer **48 Konsolenfehler**
+# (drei fehlende Bilder x 16 Breiten) und ging mit Rueckgabe 1 aus. Wer die
+# Zahl nicht zuordnen kann, sucht sie in der eigenen Aenderung. Gemessen am
+# 21.09.2026 in Schritt 15 AP2; nach dem Kopierschritt 0. Backlog Nr. 255.
+mkdir -p "$SERVER/doku"
+cp "$WURZEL/docs/Handbuch.md" "$WURZEL/docs/Was-ist-NAdoku.md" "$SERVER/doku/"
+if [ -d "$WURZEL/docs/bilder" ]; then cp -r "$WURZEL/docs/bilder" "$SERVER/doku/"; fi
+echo "   Handbuch, Was-ist-NAdoku und $(ls "$WURZEL/docs/bilder" 2>/dev/null | wc -l) Bilder"
+
 echo "== 7. Demo-Konto aus der Fixture anlegen"
 # demo_anlegen() ist derselbe Weg wie der Knopf im Adminbereich
 # (admin_demo.php, Aktion demo_anlegen) -- kein zweiter Weg, den niemand pflegt.

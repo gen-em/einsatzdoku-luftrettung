@@ -14,6 +14,1037 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.37.0] — 2026-09-22
+
+**Eine Einsatztabelle.** Schritt 15 AP9b (Zentralisierung, R83; Backlog
+Nr. 57, E-ZE-01/-08, E-ZE-32 bis -34).
+
+### Was der Befund war
+
+Drei Seiten zeigen dieselbe Tabelle — Tagesübersicht, Suche,
+Zeitraumübersicht —, und bis heute bauten sie **zwei** Erzeuger:
+`assets/missiontable.js` für Suche und Zeitraum, und `index.php` noch einmal
+von Hand. Der Kommentar an der Dauerspalte sagte es seit S3 ausdrücklich:
+„Dass es zwei Aufbauten für dieselbe Tabelle gibt, ist der eigentliche Fund"
+(F-S3-A).
+
+### Geändert
+
+`index.php` bezieht Kopf, Zeilen, Kacheln, Sortierung und Sortierblatt aus
+dem Modul. Gezählt:
+
+| | vorher | nachher |
+|---|---|---|
+| Zeilenerzeugung `tr.innerHTML` in `index.php` | 1 | **0** |
+| Spaltenlisten für Einsatztabellen | 4 | **1** |
+| Sortierblatt-Erzeuger | 3 | **1** |
+
+Die vier Spaltenlisten waren: der handgeschriebene `<thead>` in `index.php`
+(acht Spalten), `DAY_COLS`, die `switch`-Leiter in `sortVal()` — und die des
+Moduls, die geblieben ist.
+
+**Drei Dinge sehen auf der Tagesübersicht anders aus**, alle drei entschieden
+(E-ZE-34, Backlog Nr. 57): Der Kopf heißt **„Sekundär­transport"** mit weichem
+Trennzeichen statt „Sekundär<br>Transport" mit hartem Umbruch —
+„Sekundärtransport" ist *ein* Wort, und der harte Umbruch trennte es ohne
+Bindestrich. Das **Alter** steht rechtsbündig wie in den beiden anderen
+Tabellen. Die **Haken** stehen in der Reihenfolge Winde, Bergwacht,
+Sekundärtransport.
+
+**Was das Modul dafür gelernt hat:** die Spalte **„Nr."** (E-ZE-33) — keine
+Zierspalte, sondern die Verbindung zur Karte, deren Pins und Popups
+„Einsatz <Nr.>" heißen; die **chronologische Sortierung** (E-ZE-32); den
+**Gleichstand nach der Einsatznummer**; und ein **Sortierblatt, das nach dem
+Umstellen auch zeichnet**.
+
+### Behoben
+
+**Der Nachtdienst kippte die Sortierung.** Das Modul sortierte „Beginn" über
+die *Zeichenkette* `start_hhmm`; bei einem Dienst über Mitternacht — laut
+Handbuch „der klassische Fall" — stand damit 01:10 vor 23:50. Still: keine
+Meldung, keine Lücke, nur eine falsche Reihenfolge, die richtig aussieht.
+Die drei Endpunkte liefern jetzt `start_sort` (`Y-m-d H:i` in Ortszeit). Der
+Bestand hat keinen solchen Diensttag, der Fall war also zu **bauen**:
+mit Schlüssel 21:10 · 22:30 · 23:50 · 00:20 · 01:10 · 02:40, ohne ihn
+00:20 · 01:10 · 02:40 · 21:10 · 22:30 · 23:50.
+
+**Das mobile Sortierblatt von Suche und Zeitraumübersicht stellte um, ohne
+neu zu zeichnen.** `setSort()` setzte Schlüssel und Richtung und rief
+`zeichne()` nicht; die Seiten taten es auch nicht. Es funktionierte nur auf
+der Tagesübersicht, weil die von Hand nachzeichnete. **Unter 720 px ist das
+Blatt der einzige Weg zu sortieren.**
+
+**Dasselbe Blatt zeigte `Sekundär&shy;transport` als rohe Entität.** Die alte
+Zeile streifte nur *Tags* ab (`/<[^>]*>/g`), und ein `&shy;` ist kein Tag;
+`esc()` machte aus dem `&` dann ein `&amp;`. Beide Fehler sind älter als
+dieses Paket und wären mit dem Zusammenzug auf die Tagesübersicht
+gewandert.
+
+### Was bewusst so bleibt
+
+**Der Feldkatalog behält seinen Griff — und er reicht jetzt weiter.** Der
+Katalog bestimmt, **welche** Hakenspalten es gibt (`day_col`), das Modul,
+**wie** sie aussehen und in welcher **Reihenfolge** sie stehen. Der Preis
+gehört gesagt: `day_col` heißt ab jetzt „Spalte in **jeder**
+Einsatztabelle" und nicht mehr „Spalte in der Tagesübersicht". Wer den
+Schlüssel an einem Feld entfernt, nimmt die Spalte auch aus Suche und
+Zeitraumübersicht.
+
+**`ohne: ['fehl']`** ist die einzige Abweichung, die die Tagesübersicht noch
+braucht: Sie führt den Fehleinsatz bewusst nicht (er steht im Einsatz selbst
+und auf der Kachel). Alles andere entscheidet das Modul von selbst — die
+Artspalte fällt weg, weil ein Diensttag eine Art hat, die Datumsspalte, weil
+er ein Datum hat.
+
+**Ohne `KATALOG_SPALTEN` bleibt alles, wie es ist.** Eine Seite, die die
+Liste nicht setzt, bekommt die drei Spalten unverändert — derselbe benannte
+Rückfall wie bei `setFaehigkeiten()`. Eine Zentrale, die bei fehlender
+Zuarbeit still etwas *weglässt*, ist schlimmer als gar keine.
+
+## [Web 20.36.0] — 2026-09-22
+
+**Die Suche folgt der Fähigkeit auch in ihren Filtern.** Schritt 15 AP9a
+(Nachtrag; Entscheidung E-ZE-35).
+
+### Was der Befund war
+
+Web 20.35.0 hat die **Spalten** der Suchtabelle an die Fähigkeit gehängt und
+die **Filter** beim Bestand gelassen — als ausdrücklich benannte Grenze, nicht
+aus Versehen. Der Auftraggeber hat sie aufgehoben: „Suche immer möglich,
+sobald Fähigkeiten vorkommen."
+
+Die alte Regel (`spaltenMitBestand()`, seit S3) zeigt einen Filter nur, wenn
+**irgendein** Einsatz zu seiner Spalte etwas führt. In einem Bestand mit
+eingerichteter, aber nie benutzter Winde verschwand damit der ganze Block
+**„Bergrettung"** — acht Filter —, und **„Winde: nein" ließ sich nicht
+suchen**. Der Filter fehlte genau dann, wenn man ihn zum Nachweis einer Null
+gebraucht hätte.
+
+### Geändert
+
+`KATALOG_CAP` bildet Spalte auf Fähigkeit ab — **erzeugt** aus `cap_gate` im
+Feldkatalog und **auf die Unterfelder vererbt**: `winch_cycles` steht unter
+`winch` und braucht keinen eigenen Eintrag. Keine zweite Liste, die man beim
+nächsten Feld nachzupflegen vergisst; dieselbe Überlegung wie bei
+`KATALOG_ART`. Felder **ohne** Fähigkeit folgen unverändert dem Bestand — die
+Regel aus S3 bleibt, sie bekommt nur eine Ausnahme mit Herkunft.
+
+Die Ausnahme für geteilte Links bleibt ebenfalls: Ein Filter, den ein
+Fragment gesetzt hat, wird gezeigt, auch wenn weder Fähigkeit noch Bestand
+ihn rechtfertigen.
+
+### Geprüft
+
+Drei Zustände, je acht Filter und der Block „Bergrettung":
+
+| Zustand | vorher | nachher |
+|---|---|---|
+| Fähigkeit ja, Haken ja | 8, Block da | **8, Block da** |
+| Fähigkeit **nein**, Haken ja (abgefangene Antwort) | 8, Block da | **0, Block weg** |
+| Fähigkeit ja, Haken **nirgends** | **0, Block weg** | **8, Block da** |
+
+**0 Konsolenfehler.**
+
+## [Web 20.35.0] — 2026-09-22
+
+**Winde und Bergwacht: die Auswertung folgt der Betriebsart, die Bearbeitung
+der Fähigkeit.** Schritt 15 AP9a (Zentralisierung, R83; Entscheidung E-ZE-31).
+
+Dies ist eine **Funktionsänderung mit ausdrücklicher Freigabe**, kein Umbau.
+Wer nur die Zentralisierungsarbeit erwartet, liest hier etwas anderes — und
+das ist Absicht: Der Umbau der Tagestabelle hätte eine Zusage gegeben, die
+heute niemand einhält.
+
+### Was der Befund war
+
+`cap_gate` steht seit Web 5.10.0 im Feldkatalog und sagt: „Dieses Feld gibt es
+nur, wenn der Diensttag diese Fähigkeit trägt." Ausgewertet wurde es an genau
+einer Stelle — im Einsatzformular. Die **Tagesübersicht bekam es nie zu
+sehen**: Sie zieht ihre Spalten aus `mf_tagesspalten()`, und diese Funktion
+nimmt keinen Parameter, kennt keinen Diensttag und speichert ihr Ergebnis
+statisch. Gemessen am 22.09.2026: **alle 69 Diensttage des Referenzbestands
+trugen die Windenspalte**, auch ein NEF ohne Winde. Die Zeichenfolge
+`capabilit` kam in `index.php` **nullmal** vor.
+
+Aufgefallen ist das erst, als vier lesende Agenten unabhängig voneinander
+denselben Befund meldeten — der erste Prüffall des geplanten Pakets („NEF-Tag
+ohne Fähigkeit → keine Windenspalte") konnte gar nicht fehlschlagen, weil er
+eine Zusage prüfte, die es nicht gab.
+
+### Geändert
+
+**Zwei Orte, zwei Regeln** — der Unterschied zwischen *erfassen* und
+*auswerten*:
+
+| Ort | Regel |
+|---|---|
+| **Einsatzbearbeitung** (`einsatz_form.php`, `einsatz.php`) | Winde und Bergwacht erscheinen, wenn das **Einsatzmittel** die Fähigkeit trägt — **unverändert**, auch bodengebunden |
+| **Tagesübersicht**, **Zeitraumübersicht** | Kacheln **und** Tabellenspalten nur, wenn der Diensttag **luftgebunden** ist **und** die Fähigkeit trägt |
+| **Suche** | nach Fähigkeit, über **Luft und Boden** |
+
+`mf_tagesspalten()` liefert dafür die Fähigkeit jeder Spalte mit (`cap`) —
+**gefiltert wird sie nicht dort**: Die Funktion kennt keinen Diensttag und
+soll auch keinen kennen. Geliefert wird die Bedingung, angewendet wird sie im
+Browser. Der Tabellenkopf entsteht mit dem richtigen Startzustand aus PHP,
+damit beim Seitenaufbau keine zwei leeren Spalten aufblitzen; die Entscheidung
+fällt trotzdem in `dayColsSetzen()`, weil `loadDay()` auch ohne Seitenwechsel
+wieder anläuft — nach dem Schneiden einer Spur und nach dem Speichern der
+Tagesdaten, und beim Speichern kann sich das Rettungsmittel geändert haben.
+
+In `assets/missiontable.js` bekommt `nurWenn` ein zweites Argument: die
+Fähigkeiten der Ansicht, gesetzt mit `setFaehigkeiten()`. **Ohne diesen Aufruf
+gilt weiter der Bestand.** Das ist kein Vergessen, sondern der Rückfall — eine
+Seite, die das Modul einbindet und die Fähigkeiten nicht kennt, soll ihre
+Spalten nicht stillschweigend verlieren.
+
+`api/suchindex.php` liefert die Fähigkeiten des Bestands neu mit
+(`faehigkeiten`), **ohne Artfilter**. `api/range.php` **behält** seinen
+`d.kind = 'air'`-Filter: Er war als Lücke gemeldet (Backlog Nr. 198) und ist
+mit dieser Entscheidung genau die Regel. Die beiden Endpunkte machen jetzt
+absichtlich Verschiedenes, und beide sagen im Kommentar, warum.
+
+### Was das kostet — vorgelegt und entschieden
+
+Im Bestand stehen **vier bodengebundene Bergwacht-Diensttage mit
+Fähigkeiten, zwei davon mit einem dokumentierten Windeneinsatz**. Diese Haken
+bleiben eintragbar und in der Einsatzbearbeitung sichtbar, **erscheinen aber
+nicht mehr in der Tagestabelle**. Der Auftraggeber hat das nach Vorlage dieser
+Zahlen so entschieden.
+
+### Was bewusst stehen bleibt
+
+**Die Kacheln unter 720 px.** Ihre Plaketten zeigen einen *tatsächlich
+gesetzten* Haken, keine vorgehaltene Spalte. Eine Spalte ist Platz, eine
+Plakette ist ein Befund — vorhandene Daten zu verbergen hat niemand
+entschieden, und es wäre etwas anderes als das, was entschieden wurde.
+
+**Die Sichtbarkeit der Filterblöcke in der Suche.** Sie folgt seit S3 dem
+Bestand und einer eigenen, katalogabgeleiteten Regel. Sie auf die Fähigkeit
+umzustellen wäre eine weitere Funktionsänderung; sie steht nicht in E-ZE-31
+und wird darum nicht nebenbei mitgemacht.
+
+### Geprüft
+
+Fünf Diensttage des Demo-Bestands, je vier Zahlen (sichtbare Köpfe, versteckte
+Köpfe, Zellen der ersten Zeile, Einträge des Sortierblatts): **11/0/11/10** am
+Lufttag mit Fähigkeit, **9/2/9/8** an den vier übrigen — vorher **11** an allen
+fünf. Zeitraumübersicht: der bodengebundene Tab verliert zwei Spalten
+(10 → 8), Luft- und Mischtab unverändert. Gegenprobe zur Suche: mit
+abgefangener Antwort `faehigkeiten = {false, false}` verschwinden beide
+Spalten, obwohl im Bestand **7 Einsätze mit Winden- und 15 mit
+Bergwachthaken** stehen — die Fähigkeit entscheidet, nicht das Datum.
+**0 Konsolenfehler.**
+
+## [Web 20.34.0] — 2026-09-22
+
+**Vier Zentralen im Browser.** Schritt 15 AP8b bis AP8f (Zentralisierung, R83).
+
+### Hinzugefügt
+
+**`server/assets/api.js`** (`EdApi.postJson`, `EdApi.postForm`) — der eine Weg,
+auf dem der Browser etwas an den Server schickt. Liefert
+`{ ok, status, daten, meldung }` und **wirft nie**; ein Netzfehler kommt als
+`status: 0` zurück.
+
+**`EdHtml.meldung(ton, text, o)`** in `server/assets/html.js` — das eine
+Meldungs-Markup. Fünf Töne, geschlossene Liste, Wurf bei einem sechsten.
+
+**`EdFormat` bekommt Tag, Dauer und Strecke** (`tag`, `tagKurz`, `spanne`,
+`dauer`, `dauerUhr`, `minuten`, `km`, `kmSumme`).
+
+**`EdPat.listeLaden(liste, o)`** — der Auftakt der drei Anzeigeseiten:
+Schlüssel holen, Sperrbanner setzen, entschlüsseln, zählen.
+
+### Was der Befund war
+
+Zwanzig Sendestellen in neun Dateien, und der **Aufruf** war an allen
+zeichengleich: POST, genau zwei Kopfzeilen, `JSON.stringify`. Auseinander
+gingen sie erst **hinter** dem `fetch`, und zwar auf sieben Achsen:
+
+| Achse | Befund |
+|---|---|
+| Was gilt als Erfolg | **vier** Regeln — 8 von 15 prüften `res.ok` gar nicht |
+| Antwort ist kein JSON | **zwei** Politiken — neun werfen, vier liefern `null` |
+| Woraus die Meldung entsteht | **sechs** Vorrangketten |
+| Satzbau | **fünf** Muster |
+| Wo der Text erscheint | **sieben** Wege |
+| Netzfehler | **14 von 15** zeigten „Failed to fetch" — englisch |
+| Statuscode im Text | sechs ja, neun nein; **null** verzweigen auf einen Code |
+
+Bei den Meldungen dasselbe Bild: **sieben** eigenständige Nachbauten, **keine
+zwei gleich**, und **drei** verschiedene Ton-zu-Symbol-Tabellen mit drei
+Umfängen. Dass das ein Defekt war und kein Geschmack, steht in `import_ui.js`
+selbst: Zwanzig Zeilen unter der eigenen Tabelle stand die Erfolgsmeldung von
+Hand gebaut da, mit `edSymbol('haken')` ausgeschrieben — weil die eigene
+Tabelle für `ok` den Kreis-i geliefert hätte. **Eine Umgehung ist der Beweis
+für den Defekt.**
+
+### Geändert — der Satzbau, und zwar überall
+
+Er lautet jetzt `<Vorgang> ist fehlgeschlagen: <Grund>`. Das ist eine bewusste,
+sichtbare Änderung und vom Auftraggeber entschieden. Drei Folgen:
+
+**Der Vorgangsname steht genau einmal.** Wo der Aufrufer ihn bisher im `catch`
+anhängte („Import fehlgeschlagen: " + …), ist der Präfix dort entfallen.
+
+**`error` erscheint nicht mehr als Satz.** Es trägt Maschinenwörter — `leer`,
+`format`, `zu_gross`, `method` —, und sechs Stellen setzten es bis heute
+unverändert in den Fließtext. „Der Import ist fehlgeschlagen: format" sagt
+niemandem etwas. Es steht jetzt als Kennung in der Klammer eines Ersatzsatzes.
+
+**`hinweis` und `text` kommen in die Kette.** `hinweis` lasen bisher **4 von
+15** Stellen — und genau dort steht der Satz zu `post_max_size`, den der Server
+bei einem zu großen Upload schickt. Derselbe zu große POST zeigte an einer
+Stelle den vollen Hinweis und an einer anderen „HTTP 400". `text` ist dasselbe
+unter anderem Namen: Zwei Endpunkte nennen ihr Satzfeld so (**9 Stellen** gegen
+**32** mit `meldung`, keiner schickt beides). Ohne diese Zeile hätten zwei
+Dateien weiter an der Zentrale vorbeigegriffen — beide taten es, beide Griffe
+sind fort.
+
+### Geändert — drei Schreibweisen, jede gemessen
+
+**Die Minute einer Dauer ist immer zweistellig.** Die Tabellenfassung schrieb
+seit Web 4.0.0 „1h 06min", die Fassung der Einsatzansicht „1h 6min". Gemessen
+über 0 bis 1440 Minuten: **231 von 1441 Werten (16,0 %)** liefen auseinander.
+Der Kommentar über der zweiten behauptete, die Schreibweise sei „projektweit
+dieselbe"; seine beiden Beispiele waren gerade die, bei denen es zufällig
+stimmte.
+
+**„60min" gibt es nicht mehr.** Die Tabellenfassung rechnete Stunden und
+Minuten **getrennt** und erzeugte damit bei 3599 s ein „60min", bei 7199 s ein
+„1h 60min". Gemessen: **720 von 86 400 Sekundenwerten (0,83 %)**. Jetzt wird
+zuerst auf ganze Minuten gerundet und dann geteilt.
+
+**Die Streckensumme trägt überall den Tausenderpunkt.** Die Startseite rechnete
+als einzige ohne `toLocaleString` und schrieb „1633 km", während Suche und
+Zeitraumübersicht „1.633 km" zeigten — dieselbe Zahl, zwei Schreibweisen, drei
+Seiten derselben Anwendung.
+
+### Behoben, als Nebenwirkung der Zentrale
+
+- **Eine 500 mit wohlgeformtem JSON gilt nicht mehr als Erfolg.** Acht von
+  fünfzehn Stellen prüften `res.ok` nicht; am schlimmsten beim
+  Dublettenabgleich des Imports, der dann wortlos gegen einen leeren Bestand
+  weiterlief (Backlog Nr. 270).
+- **Das Speichern eines Diensttags hatte kein `try/catch`.** Bei Netzausfall
+  gab es eine unbehandelte Ablehnung, und die Zeile blieb auf „Speichern…"
+  stehen. Jetzt steht dort ein deutscher Satz.
+- **`api.js` und `format.js` stehen im `<head>`, nicht in der Immer-Liste.**
+  Der erste Anlauf legte sie ans Seitenende, mit dem Satz, das trage schon,
+  weil jeder Aufruf in einem Zuhörer stecke. Ein gegenlesender Agent hat den
+  Satz mit Zeilennummern widerlegt: Auf `einstellungen.php` und `import.php`
+  steht diese Liste **nach** den Seitenskripten, und dort läuft `unlock.js`
+  seinen Sendeweg zur **Ladezeit**. `EdApi` wäre undefiniert gewesen, der
+  `ReferenceError` wäre in einen absichtlich stillen `catch` gefallen — die
+  KDF-Anhebung hätte auf zwei Seiten wortlos aufgehört zu laufen.
+
+### Was bewusst nicht bei null endet
+
+Vier Zählzeilen enden über null, jede mit ausgeschriebener Begründung im
+Register (Entscheidung des Auftraggebers: „ehrliche Zahl statt runder Null"):
+
+| Zeile | Start | Ende | Was dort steht |
+|---|---|---|---|
+| Z28 `'X-CSRF'` | 15 | **1** | die Zentrale selbst |
+| Z29 Feld `csrf` | 5 | **2** | die Zentrale, plus ein Fehlalarm des Musters |
+| Z34 Formatierer | 14 | **5** | dünne Weiterleitungen, die je einen anderen **Leerwert** binden |
+| Z36 `entschluessleListe` | 4 | **1** | `einstellungen.php` — teilt den Aufruf, nicht den Rahmen |
+| Z37 Meldungs-Markup | 8 | **4** | zweimal die Zentrale, eine leere Hülle, ein Fehlalarm |
+| Z35 `L.map(` | 4 | **0** | — |
+
+Die fünf bei Z34 sind kein zweiter Rechenweg: Der Leerwert ist bei `EdFormat`
+ein **Parameter** — das war die Lehre aus AP7, wo ein fester Frühausstieg aus
+„– um –" ein „–" machte. Diese fünf binden ihn je Zusammenhang: „kein Ende",
+den Leerstring, einen Gedankenstrich als Markup, `null`. Sie aufzulösen hieße,
+den Leerwert an fünfzehn Aufrufstellen zu wiederholen statt an fünf.
+
+### Am Prüfmittel
+
+**`tools/cspprobe/` sah JavaScript-Kommentare nicht.** Für PHPs Tokenizer ist
+alles zwischen `?>` und `<?php` ein Stück `T_INLINE_HTML`; ein JS-Kommentar
+steckt mittendrin. Schreibt jemand darin `<script src>` als Fließtext — und das
+tut er, sobald er erklärt, woher ein Baustein kommt —, meldete die Probe ein
+Skript ohne Nonce, das es nicht gibt. Genau das ist hier passiert. Die Probe
+hängt in Stufe 1; ein Fehlalarm färbt die Kette rot, ohne dass etwas falsch
+wäre. Blockkommentare im Rumpf eines `<script>` werden jetzt ausgeräumt, mit
+zwei neuen Fällen in der Selbstprobe — darunter einer, der belegt, dass ein
+echtes Skript **hinter** einem Kommentar weiter gefunden wird.
+
+## [Web 20.33.0] — 2026-09-22
+
+**Eine Karte entsteht an einer Stelle.** Schritt 15 AP8a (Zentralisierung, R83).
+
+### Hinzugefügt
+
+**`EdKarte.anlegen(el, o)`** in `server/assets/map_layers.js` — die eine Stelle,
+an der eine Leaflet-Karte entsteht. Dort steht jetzt, was auf vier Seiten gleich
+war: `L.map`, `setView`, `attachBaseLayers`, `attachFullscreenControl` und, auf
+Wunsch, `attachGroessenControl`.
+
+### Geändert
+
+`einsatz.php`, `index.php`, `tag_spuren.php` und `zeitraum.php` bauen ihre Karte
+nicht mehr selbst auf. **Zählzeile Z35: 4 → 0.**
+
+### Was der Befund war
+
+Vier Seiten, dieselben vier Zeilen, **drei verschiedene Reihenfolgen**. Gemessen
+am 22.09.2026: 4 von 4 riefen `attachBaseLayers()`, 4 von 4
+`attachFullscreenControl()`, 1 von 4 `attachGroessenControl()` — und **keine**
+setzte auch nur eine der üblichen Leaflet-Optionen: kein `zoomControl`, kein
+`attributionControl`, kein `scrollWheelZoom`, keine Zoomgrenzen an der Karte.
+Alle vier leben von den Vorgaben. Der gemeinsame Teil war also fast alles.
+
+Wirklich unterschiedlich waren drei Sachen, und alle drei sind Parameter
+geworden:
+
+| Parameter | Warum | Vorgabe |
+|---|---|---|
+| `mitte` / `zoom` | Zwei Ausschnitte bei vier Seiten: `[47.7, 10.3]`/9 gegen `[48.5, 10.5]`/7 | **keine** — siehe unten |
+| `groesse` | Der dritte Kartenknopf gehört nur der Tagesübersicht (Backlog Nr. 45) | `false` |
+| `leaflet` | `{ preferCanvas: true }` gilt nur der Zeitraumansicht (mehrere hundert Pins) | keine Optionen |
+
+**`mitte` und `zoom` haben ausdrücklich keinen Vorgabewert.** Ein Vorgabewert
+zöge die beiden Ausschnitte auf einen, und Zoom 7 gegen Zoom 9 ist der Faktor 4
+in der Fläche — eine Karte, die still am falschen Ort steht, fällt niemandem
+auf. Wer sie weglässt, bekommt jetzt einen Wurf.
+
+### Eine sichtbare Änderung, benannt und nachgemessen
+
+**Auf der Tagesübersicht kommt `setView()` jetzt zuerst statt zuletzt.** Drei
+der vier Seiten setzten den Ausschnitt schon vor den Ebenen; `index.php` setzte
+ihn danach. Das Argument für „zuerst" stand die ganze Zeit ausgeschrieben in den
+Kommentaren von `einsatz.php` und `zeitraum.php`: Ohne festen Ausschnitt gilt
+die Karte Leaflet als nicht bereit — es nimmt eine Ebene zwar entgegen, rechnet
+ihre Bildschirmposition aber nicht aus, und ein späteres `setStyle()` auf so
+einen Pin scheitert mit „this._point is undefined". Genau das stand beim Aufbau
+der Zeitraumansicht in der Konsole. Die Mehrheit und das Argument zeigen in
+dieselbe Richtung; die Tagesübersicht zieht mit.
+
+Nachgemessen: **496 Seiten im Formvergleich, 0 Befunde außerhalb des
+CSP-Verstoßprotokolls** (dazu unten), **Klickprobe 48 von 48**, und die vier
+Karten im Browser einzeln angesehen — Behälter da, Kacheln geladen,
+Ebenenumschalter da, Vollbildknopf da, Größenknopf **nur** auf der
+Tagesübersicht, **0 Konsolenfehler**.
+
+### Was bewusst stehen bleibt
+
+Der ausdrückliche `map.invalidateSize()` der Zeitraumansicht vor `fitBounds()`.
+Ihr Kartenbehälter trägt `hidden`, die Karte entsteht also in einer Fläche der
+Größe 0, und der `ResizeObserver` aus `attachBaseLayers()` kommt asynchron. Wer
+den Ruf für „jetzt überflüssig" hält, weil die Zentrale ja beobachtet, macht die
+Kacheln auf der Zeitraumansicht wieder grau.
+
+`assets/ortswahl.js` bleibt draußen: ein Modul, keine Seite.
+
+### Zum Prüfprotokoll: die 41 Textbefunde waren keine
+
+Der Formvergleich meldete 41 Abweichungen, alle acht Breiten einer einzigen
+Seite — `betrieb_server.php`, das CSP-Verstoßprotokoll. Nachgesehen in der
+Datenbank: **drei Zeilen, alle vom 21.09.2026 erstellt**, keine neue. Die Seite
+sortiert nach dem letzten Auftreten, und im Nachlauf ist der
+`photon.komoot.io`-Verstoß erneut aufgetreten und nach oben gerutscht. Dieselben
+drei Verstoßarten vorher wie nachher, nur in anderer Reihenfolge.
+
+Der **Bildvergleich** meldete daneben 295 abweichende Bilder. Auch die gehören
+nicht hierher: Zwischen Grundlinie und Nachlauf ist die Klickprobe gelaufen und
+hat den Demo-Bestand verändert (Rettungsmittel, Besatzung, Zielklinik, ein
+gelöschter Standort, eine aufgehobene Sperre). Öffentliche Seiten ohne
+Anmeldung sind bitgleich geblieben — geprüft an drei Seiten in zwei Breiten.
+Genau dafür gibt es den Formvergleich: Werte verschwinden, Schreibweisen
+bleiben.
+
+## [Web 20.32.1] — 2026-09-22
+
+**„263 KB MB" — ein Literal, das den Umbau überlebt hat.** Nachtrag zu
+20.32.0.
+
+### Behoben
+
+**Die Fertigmeldung des Sicherns nannte die Einheit zweimal.** In
+`einstellungen.php` stand bis 20.32.0 `(blob.size / 1048576).toFixed(1)`, und
+dahinter, als Text im Satz, ein festes „ MB" — richtig so, denn die Rechnung
+lieferte immer Megabyte und nie eine Einheit. 20.32.0 hat die Rechnung durch
+`EdFormat.groesse()` ersetzt; die bringt ihre Einheit mit. Das Literal blieb
+stehen, und die Meldung las sich „… in 3 Teilen — 263 KB MB."
+
+Das Literal ist fort, und die Variable heißt nicht mehr `mb`: Sie trägt
+keine Megabyte mehr, sondern eine fertige Größenangabe. Der Name war die
+zweite Hälfte desselben Fehlers — er hat beim Gegenlesen niemanden
+stutzig gemacht, weil er zur alten Rechnung passte.
+
+### Warum es keine Prüfung gefunden hat
+
+Der Formvergleich von 20.32.0 hat 496 Seiten in acht Breiten auf abweichende
+**Schreibweisen** geprüft und 0 gefunden. Er konnte diesen Fehler nicht
+sehen: Er nimmt auf, was eine aufgerufene Seite anzeigt, und dieser Satz
+entsteht erst, nachdem jemand tatsächlich eine Sicherung geschrieben hat.
+Auch die 328 771 Einzelvergleiche des edbak-Kreislaufs blieben grün — sie
+prüfen den **Inhalt** der Sicherungsdatei, nicht den Satz darüber.
+
+Gefunden wurde er im **Protokoll** des Kreislaufs, das die Meldung mitschreibt.
+Daraus folgt nichts Großes, aber etwas Konkretes: Meldungstexte, die erst nach
+einer Aktion entstehen, haben in diesem Projekt kein maschinelles Auge. Wer
+einen davon umbaut, liest ihn einmal ganz — im Protokoll oder im Browser.
+
+Nachgesehen wurde dabei nach weiteren Stellen desselben Musters: Alle
+Aufrufstellen der sechs neuen Formatierer mit Einheit (`groesse_text()`,
+`groesse_kurz_text()`, `groesse_paar_text()`, `prozent_text()`,
+`prozent_wert()`, `zahl_text()`) sind durchgesehen, ebenso die beiden
+`EdFormat`-Aufrufe — es war die eine Stelle.
+
+## [Web 20.32.0] — 2026-09-22
+
+**Zeit und Zahl: eine Stelle, an der Text entsteht.** Schritt 15 AP7
+(Zentralisierung, R83).
+
+### Hinzugefügt
+
+**`server/format_lib.php`** — dreizehn Funktionen für alles, was aus einer Zahl
+oder einem Zeitpunkt lesbaren Text macht: `groesse_text()`,
+`groesse_kurz_text()`, `groesse_paar_text()`, `zahl_text()`, `prozent_wert()`,
+`prozent_text()`, `datum_text()`, `datum_zeit_text()`, `datum_stunde_text()`,
+`zeit_relativ()`, `heute_lokal()`, `iso_utc()`, `iso_utc_lesen()`. Dazu
+`fmt_local()`, die aus `db.php` hierhergezogen ist.
+
+**`server/assets/format.js`** (`EdFormat`) — dieselben Regeln für den Browser.
+Heute zwei Funktionen, genau die mit einem Verbraucher; AP8 baut sie aus.
+
+### Was der Befund war
+
+**Zwölf Sachen an 197 Stellen**, und drei davon gab es mehrfach:
+
+| Sache | Fassungen vorher |
+|---|---|
+| Bytes | **vier** — `edbak_groesse_text()` (42 Aufrufe in 10 Dateien), `apk_groesse()`, `plattform_groesse()` und eine Inline-Zeile in JavaScript |
+| Zahl | **eine**, und die lag in einer **Seite** (`stat_zahl()` in `betrieb_statistik.php`) |
+| Anteil | **keine** — zehn Handrechnungen, drei Rundungen, fünf Bauarten für „keine Bezugsgröße" |
+| relative Zeit | **zwei**, auseinandergelaufen |
+
+`plattform_groesse()` trug im Kopf den Satz „dieselbe Schreibweise wie
+`edbak_groesse_text()`" — **und das stimmte nie**: vierte Stufe „B",
+abgeschnittene Nachkommanullen, GB mit einer statt zwei Nachkommastellen. Aus
+2 GB wurde dort „2 GB" und daneben „2,00 GB". Dieselben Bytes sahen je nach
+Seite anders aus.
+
+**Zwei Dateien luden für acht Zeilen Zahlenformatierung rund 2 600 Zeilen
+Backup-Fachbibliothek** samt deren Krypto- und Prüfschicht. Und eine dritte,
+`betrieb_sicherheit.php`, rief `edbak_groesse_text()`, **ohne sie je
+einzubinden** — die Funktion war nur da, weil das Menü `status_lib.php`
+nachlädt. Das ist der Beleg, aus dem R83 entstanden ist.
+
+### Nachgerechnet, nicht begutachtet
+
+Jede neue Funktion ist gegen ihre Vorgängerin gemessen:
+
+| | |
+|---|---|
+| `groesse_text` gegen `edbak_groesse_text()` | 3 017 Byte-Werte, **0 Abweichungen** |
+| `groesse_kurz_text` gegen `plattform_groesse()` | 3 017 Werte, **0** |
+| `zahl_text` gegen `stat_zahl()` | 28 Fälle, **0** |
+| `prozent_text` gegen `stat_anteil()` | 6 030 Fälle, **0** |
+| `zeit_relativ` gegen `status_alter()` | 10 811 Zeitpunkte, **0** |
+| `iso_utc`/`iso_utc_lesen` hin und zurück | 5 000 Zeitstempel, **0** |
+| `EdFormat.groesse` (JS) gegen `groesse_text` (PHP) | 2 014 Werte, **0** |
+
+### Geändert
+
+**`fmt_local()` zieht aus `db.php` nach `format_lib.php`**, unter demselben
+Namen — alle 113 Aufrufer merken nichts. Der Grund ist zwingend: `datum_text()`
+baut auf ihr auf, und `format_lib.php` darf die Datenbankdatei **nicht** laden,
+weil `install.php` sie über `plattform_lib.php` erreicht, **bevor es eine
+`config.php` gibt**. `local_to_utc()` bleibt in `db.php`: Sie liest einen
+Formularwert, um damit zu **rechnen** — das ist die andere Richtung.
+
+**Zwei Funktionen für den Anteil, nicht eine.** Fünf der zehn Handrechnungen
+runden **ab**, weil sie eine Schwelle auslösen; drei kaufmännisch, weil sie nur
+gelesen werden. Eine gemeinsame Funktion ohne diesen Schalter verschöbe den
+Auslösezeitpunkt der Speicher-Warnmail um bis zu einen Prozentpunkt.
+
+**Der Trenner wird angehängt, nicht ins Format geschrieben.** Die naheliegende
+Bauform `fmt_local($x, 'd.m.Y' . $trenner . 'H:i')` geht für die drei heutigen
+Trenner zufällig gut, weil keiner einen Buchstaben enthält. Der erste mit einem
+Buchstaben würde still zu Formatzeichen — aus „ um " würde `u`
+(Mikrosekunden) und `m` (Monat). **Und so einer stand schon im Bestand.**
+
+### Drei sichtbare Folgen, alle benannt und entschieden
+
+1. **Die Altersangabe auf Betrieb → Updates** (E-ZE-23). Die Inline-Kopie dort
+   war von `status_alter()` abgewichen — lückenlos nachgerechnet über 0 bis
+   200 000 Sekunden: **1 890 Sekundenwerte** lieferten anderen Text, in genau
+   zwei Bändern. Unter 90 s steht jetzt „gerade eben" statt „vor 1 Minuten",
+   zwischen 3 600 und 5 399 s „vor 60 … 90 Minuten" statt „vor 1 Stunden".
+   Dazu: Die Kopie fing eine unlesbare Zeitmarke nicht ab und hätte „vor
+   20 718 Tagen" gezeigt; jetzt steht dort „unbekannt".
+2. **„Heute" rechnet in der App-Zeitzone** statt in der der `php.ini`
+   (F-ZE-1). Auf einem Server in UTC war „heute" zwischen 0 und 2 Uhr Ortszeit
+   **gestern** — und genau dieser Wert belegte das Datumsfeld eines neuen
+   Diensttags vor.
+3. **Die Größenangabe der heruntergeladenen Sicherungsdatei** (E-ZE-26). Die
+   Inline-Zeile rechnete immer in MB; `EdFormat.groesse()` hat drei Stufen.
+   Unter 1 MiB steht jetzt „312 KB" statt „0,3 MB", ab 1 GiB „1,00 GB" statt
+   „1.024,0 MB".
+
+### Bewusst nicht geändert
+
+**Zwölf Stellen bleiben namentlich stehen**, jede mit Grund im Register:
+
+- **Vier Formular- und Vergleichswerte in `betrieb_server.php`.** Drei davon
+  liest derselbe POST-Zweig mit `is_numeric()` und `(float)` wieder ein; der
+  **Punkt** als Dezimaltrenner ist dort Bedingung eines Vergleichs, nicht
+  Geschmack. Eine Umstellung machte das Formular unabschickbar — zu merken
+  erst beim Speichern.
+- **Zwei CSS-Längen**, die bewusst gar nicht runden. Ein gerundeter Strich
+  wanderte um bis zu einen Prozentpunkt.
+- **Drei Stellen in `wartung_lib.php`.** Deren Dateikopf sagt zu, **nichts** zu
+  laden — sie trägt den Wartungsmodus gerade dann, wenn der Rest ersetzt wird.
+- **Zwei Zeitstempel ohne Zonenumrechnung** (`admin_installation.php`,
+  `rechtstexte_lib.php`) und **eine `sprintf`-Größe** mit Punkt statt Komma
+  (`gpx_lib.php`). Alle drei wären eine weitere sichtbare Textänderung.
+
+## [Web 20.31.0] — 2026-09-22
+
+**Das Spaltenregister von `missions`.** Schritt 15 AP6 (Zentralisierung, R83).
+
+### Hinzugefügt
+
+**`mf_missions_register()` und `mf_spalten()` in `mission_fields_lib.php`.**
+`missions` hat 41 Spalten, und **zwölf Stellen** führten eine eigene Liste
+davon — Export, Backup, Backup-Wiederherstellung, die beiden Import-Anweisungen
+samt ihrer Werteliste, der Uhr-Eingang, das Schneiden, der Suchindex und die
+Zeitraumansicht. Jede in ihrer eigenen Reihenfolge, und **keine sagte, warum
+eine Spalte fehlt.**
+
+Was das kostet, stand im Bestand und nicht in einer Befürchtung:
+
+- Die tote Altspalte `other_resources` ging **jahrelang in jedes Backup**,
+  weil dort `SELECT *` stand — ein Feld, das seit der Migration 2026_07
+  niemand mehr füllte und das beim Einspielen verworfen wurde.
+- `site_ele_m` steht im Backup, aber **in keiner Einspielliste** — weder in
+  den Grundspalten noch unter den Zusatzspalten aus dem Feldkatalog. Der Wert
+  kommt trotzdem wieder, weil die Wiederherstellung ihn nach dem Bestätigen
+  aus den Phasenkoordinaten **neu rechnet**. Das ist ein Unterschied, den man
+  sehen können muss: Ein Backup trägt die Höhe nicht zurück, es stellt sie
+  wieder her — steht in der Datei eine Höhe, die zu den Koordinaten nicht
+  passt, gewinnt die Rechnung.
+
+Das Register führt jetzt jede Spalte **genau einmal** und sagt je Zweck, ob
+sie dabei ist — und an welcher Stelle. Neun Zwecke: `export`, `backup`,
+`backup_restore`, `import_neu`, `import_aendern`, `ingest_neu`, `schnitt_neu`,
+`suchindex`, `range`. Wo eine Spalte in einem Zweck fehlt, steht der Grund
+daneben (`mf_missions_gruende()`); eine Spalte ohne Zweck **und** ohne Grund
+ist ein Befund.
+
+**Warum die Position mitgeführt wird** und nicht einfach die
+Registerreihenfolge gilt: Die Listen sind in Menge **und** Reihenfolge
+eingefroren. Eine geänderte Reihenfolge ändert die Spaltenfolge im
+CSV-Export — also in einer Datei, die Menschen aufheben. `mf_spalten()`
+verlangt deshalb je Zweck eine lückenlose Positionsfolge ab 0 und bricht bei
+einer doppelten oder fehlenden Position ab, statt eine stillschweigend kürzere
+Liste zu liefern.
+
+**`tools/spaltenregister/pruefen.php`** hält `schema.sql` gegen das Register
+(beide Richtungen) und prüft die Vollständigkeit der drei verbliebenen
+Abbildungen. Der Lauf hängt in Stufe 1 und kostet nichts.
+
+**`tools/spaltenregister/wegprobe.py`** fährt die zwei Anweisungen, die kein
+Kreislauf abdeckt: den Schnitt und den UPDATE-Zweig des Imports. Sie
+**schreibt** — sie gehört an ein Wegwerfkonto, nie an die Demo.
+
+### Geändert
+
+**Neun Anweisungen kommen aus dem Register**, und alle neun sind Zeichen für
+Zeichen dieselben wie vorher — nachgemessen, nicht angenommen. Wo Werte fest
+im Satz stehen, hängt die Wertform seither an der **Spalte** statt an ihrer
+Stelle im Satz:
+
+| Stelle | Wertform |
+|---|---|
+| `api/import_commit.php` (INSERT) | `uhr_gesperrt = 1`, `origin = 'import'` |
+| `api/import_commit.php` (UPDATE) | `COALESCE(?, spalte)` für die vier Felder unter der Export-Schranke (A9/P10), `uhr_gesperrt = 1`, `edited = 1` |
+| `api/schneiden.php` | `final = 1`, `uhr_gesperrt = 1`, `origin = 'schnitt'` |
+| `api/export_data.php` | `NULL AS spalte` statt `x.spalte`, wenn das Flag fehlt |
+
+Wer ein Feld unter die Export-Schranke nimmt, trägt es jetzt an **einer**
+Stelle ein statt an dreien.
+
+**Zwei Wertelisten verlieren ihre Positionsbindung.** In `backup_lib.php`
+standen die Spalten oben und die Werte darunter; in `api/import_commit.php`
+stand eine **namenlose** Werteliste, die auf zwei Anweisungen mit 31 und 28
+Spalten passen musste. Beide Kommentare warnten davor, dass ein Einschub
+stumm alle Werte dahinter verschiebt — und diese Warnung war die einzige
+Sicherung, die es gab. Passiert ist es nie. Jetzt trägt jeder Wert seinen
+Spaltennamen, und das Register ordnet zu; die **Schreibreihenfolge** im
+Quelltext bleibt dabei die alte, weil `pruef_text()` und `pruef_zahl()` ihre
+Beanstandungen an den Prüfbericht anhängen und eine Umsortierung den Bericht
+umsortiert hätte.
+
+### Bewusst nicht geändert
+
+**Drei Abbildungen bleiben von Hand.** `api/export_data.php`,
+`api/import_commit.php` und `api/suchindex.php` bilden eine Datenbankzeile auf
+fremde Schlüssel ab (oder umgekehrt) und rechnen dabei **jeden Wert einzeln**
+um — nach Ortszeit, auf eine Länge, in eine Beschriftung. Ein `implode()` über
+Spaltennamen kann das nicht, und eine erzwungene Erzeugung wäre eine
+Abstraktion, die mehr verbirgt als sie spart.
+
+Stattdessen belegt die Vollständigkeitsprobe, dass jede von ihnen **genau**
+die Registerspalten ihres Zwecks führt. Eine Ausnahme braucht eine Begründung
+im Feld (`abgeleitet` für eine verarbeitete Spalte ohne eigenen Schlüssel,
+`fremd` für einen Schlüssel aus einer anderen Tabelle) — und eine Ausnahme,
+die nichts mehr trifft, ist selbst ein Befund. Sonst wächst die Liste zu und
+die Probe misst nichts mehr.
+
+**`api/mission.php` bekommt keinen Zweck.** Es liest `SELECT *` und gibt die
+Zeile weiter, wie sie ist. Ein Zweck wäre dort eine Liste, die niemand
+braucht — und die beim nächsten Spaltenzuwachs vergessen würde.
+
+## [Web 20.30.0] — 2026-09-22
+
+**Ein Transaktionsrahmen, vier Kindtabellen.** Schritt 15 AP5
+(Zentralisierung, R83).
+
+### Hinzugefügt
+
+**`db_transaktion($pdo, $fn)` in `db.php`.** Dreiunddreißig
+Transaktionsrahmen in zweiundzwanzig Dateien schrieben denselben Ablauf von
+Hand. Der Tokenizer hat sie in drei Bauformen sortiert — mit einem regulären
+Ausdruck ging das nicht: Drei Anläufe ergaben drei verschiedene Verteilungen,
+weil geschweifte Klammern in Kommentaren und Zeichenketten mitzählen.
+
+| Bauform | Anzahl |
+|---|---|
+| beginnen · versuchen · bestätigen · bei Fehler zurückrollen und **weitergeben** | 19 |
+| dasselbe, aber der `catch` **schluckt** und setzt eine Meldung | 12 |
+| **gar kein `try`** | 2 |
+
+**24 Rahmen ziehen um.** Der Helfer ist verschachtelungsfest und dabei
+**asymmetrisch**: Wer schon in einer fremden Transaktion steht, öffnet keine
+eigene — und bestätigt und verwirft dann auch nichts. Das Zurückrollen bleibt
+dem überlassen, der begonnen hat.
+
+**Und er fragt vor dem `rollBack()` nach, ob die Transaktion noch steht.** Das
+ist kein Übereifer: Von 42 `rollBack()`-Aufrufen standen **14** hinter einer
+Wache und **28** nicht. Ein `rollBack()` ohne offene Transaktion wirft — und
+zwar *aus dem `catch` heraus*, womit die ursprüngliche Ausnahme verlorengeht
+und im Protokoll „There is no active transaction" steht statt des Grundes.
+
+**Vier Funktionen für die Kindtabellen in `einsatz_lib.php`**:
+`einsatz_phasen_ersetzen()`, `einsatz_reas_ersetzen()`,
+`einsatz_rettungsmittel_ersetzen()`, `einsatz_besatzung_ersetzen()`. Phasen,
+Reanimation, Rettungsmittel und Besatzung wurden auf **fünf** Wegen
+geschrieben — Formular, CSV-Import, Uhr-Eingang, Backup-Wiederherstellung und
+Schneiden —, zusammen **dreißig** Anweisungen. Jetzt null außerhalb der
+Bibliothek.
+
+Die fünf Wege hatten nicht dieselbe Form: Das Backup schreibt in einen
+**gerade erst angelegten** Einsatz und hat nichts zu löschen, das Schneiden
+fügt im einen Zweig ein und löscht im anderen. Dafür **zwei Schalter statt
+zweier Funktionsformen** — `loeschen` (Vorgabe `true`) und, nur für die
+Besatzung, `ignorieren` für das `INSERT IGNORE` des Backups. Eine leere Liste
+mit `loeschen => true` **ist** das Löschen; das ist der Zweig des Schneidens.
+
+**Sie prüfen nichts.** Was gültig ist, entscheidet weiter der Aufrufer — das
+Formular über `validate_lib.php`, Import und Backup über `pruef_*()`, die Uhr
+über `ingest.php`. Eine Prüfpolitik in den vier Funktionen wäre eine sechste,
+die neben den vorhandenen stünde und mit ihnen auseinanderliefe.
+
+**`einsatz_anweisung()` hält die vorbereiteten Anweisungen vor**, je
+Verbindung und SQL-Text. `db.php` setzt `ATTR_EMULATE_PREPARES => false`, also
+ist **jedes** `prepare()` ein Roundtrip zum Server. `api/import_commit.php`
+bereitete seine sieben Anweisungen deshalb einmal vor und führte sie je
+Einsatz aus — bis zu 3 000-mal; ohne Zwischenspeicher wären daraus bis zu
+21 000 Roundtrips geworden. Nachgemessen am csv-Kreislauf: **41,78 s und
+41,31 s gegen 41,71 s und 41,47 s** davor, also dieselbe Streuung.
+
+### Behoben
+
+**Ein latenter Fehler in `einsatz_form.php`.** Hinter dem `commit()` standen
+noch die Höhenermittlung und die Rettungsmittel-Zeilen — **innerhalb
+desselben `try`**, dessen `catch` ein unbedingtes `$pdo->rollBack()` hatte.
+Warf eine der beiden, rollte der `catch` eine **bereits bestätigte**
+Transaktion zurück; das wirft seinerseits, und statt „Speichern
+fehlgeschlagen." gab es eine 500. Der Rahmen endet jetzt dort, wo er
+hingehört.
+
+### Unverändert — und das ist die Aussage
+
+**Neun Transaktionsrahmen bleiben, namentlich.** Drei wegen Größe oder
+Vertrag: `ingest.php` (Gerätevertrag, Deadlock-Behandlung in Schritt 18),
+`backup_lib.php` (Rumpf **1153 Zeilen, 145 Variablen**) und
+`api/import_commit.php` (**542 Zeilen, 78 Variablen**) — eine `use`-Liste mit
+145 Einträgen ist kein Zentralisieren, sondern ein Rewrite mit 145
+Gelegenheiten, still etwas zu ändern. Sechs wegen Bauform: `pair.php`
+(Gerätevertrag), `jobs_lib.php`, `diensttag_zusammenfuehren.php`,
+`api/day.php`, `api/kdf_upgrade.php` und `api/schneiden.php` — sie rollen
+**mitten** im `try` zurück und machen dann etwas anderes weiter, kehren also
+normal zurück oder antworten selbst. `db_transaktion()` setzt voraus, dass der
+Rumpf durchläuft **oder** wirft.
+
+Die Registerzeile Z16 führt alle neun mit Grund; sie ist auf 9 gesetzt und
+schlägt an, sobald ein zehnter dazukäme.
+
+## [Web 20.29.0] — 2026-09-21
+
+**Vier Sachen, die an einer Stelle stehen statt an siebenundvierzig.**
+Schritt 15 AP4 (Zentralisierung, R83).
+
+### Hinzugefügt
+
+**Vier weitere `app_state`-Helfer in `db.php`.** `app_state_mehrere()` (eine
+Abfrage statt n), `app_state_setzen_mehrere()`, `app_state_loeschen()` und
+`app_state_einmalig()`. Gemessen waren es **27 Stellen in 17 Dateien**, die
+die Tabelle unmittelbar per SQL ansprachen; jetzt sind es **2**. Was die 27
+unterschied, war nie die Sache, sondern die Antwort auf die Frage „was, wenn
+`app_state` fehlt?" — mal `try/catch` mit `null`, mal ohne, mal mit
+`error_log`. Das ist kein seltener Zustand: Es ist der Zustand **jeder**
+Anlage zwischen Deploy und `update.php`.
+
+`app_state_einmalig()` ist der Sonderfall und der Grund, warum es eine eigene
+Funktion braucht: Die beiden Servergeheimnisse (`salt_secret`, `reg_secret`)
+benutzten schon `INSERT IGNORE`. Zwei gleichzeitige Anfragen erzeugen beide
+einen Wert, aber nur **einer** darf gewinnen — mit `ON DUPLICATE KEY UPDATE`
+gewänne der letzte, und die Pseudo-Salts änderten sich unter der Hand.
+
+**`geraet_virtuell_sicherstellen()`, `geraet_virtuell_kennung()`,
+`geraete_echt_sql($alias)` und `GERAET_VIRTUELL_MUSTER`.** Der Block „gibt es
+das virtuelle Gerät ‚Manuelle Einträge' schon? sonst anlegen" stand
+**viermal** — zweimal als eigene Funktion (`schnitt_geraet()`,
+`gpx_import_geraet()`), zweimal eingebettet, jedes Mal mit demselben
+zwanzigzeiligen Kommentar darüber, der erklärt, warum `user_id` **in** die
+Abfrage gehört. Die Kennung selbst stand an sieben Stellen. Jetzt an einer;
+die beiden Einzelfunktionen entfallen.
+
+**`einsatz_lib.php` mit `einsatz_laden($id, $userId, $o)`.** „Einen Einsatz
+per Kennung holen und dabei prüfen, dass er dem angemeldeten Konto gehört"
+stand **zwölfmal in neun Dateien**. Der Unterschied war nie die Sache,
+sondern die Spaltenliste und die Behandlung des Papierkorbs — mal
+`deleted_at IS NULL`, mal `IS NOT NULL`, mal gar nicht. Genau das sind jetzt
+die beiden Optionen `spalten` und `papierkorb`.
+
+**`db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()` in `db.php`.** Die
+drei Fragen ans Schema standen doppelt: privat in `migration_lib.php` und
+noch einmal handgeschrieben in vier Dateien, die `migration_lib.php` nicht
+laden — `ingest.php` sagte das sogar im Kommentar dazu. Die privaten `_hat_*`
+reichen jetzt nur noch durch, damit die 42 gelaufenen Migrationen unverändert
+bleiben (E-ZE-04).
+
+Sie nehmen ein `PDO`, und zwar zwingend: `tools/schemaprobe/` lässt
+Migrationen gegen ein **frisch angelegtes** Schema laufen, also gegen eine
+andere Verbindung als `db()`. Ein Helfer, der sich seine Verbindung selbst
+holte, fragte dort das falsche Schema — und zwar lautlos, denn `DATABASE()`
+hätte geantwortet.
+
+### Geändert
+
+**Vier Rollenvergleiche von Hand** (`=== 'betreiberin'`) in `admin_user.php`
+und `admin_users.php` rufen jetzt `rolle_ist_betreiberin()`.
+
+**`EDBAK_MARKE_MAX` ist jetzt `APP_STATE_MAX`** statt einer zweiten
+Konstante mit derselben 190. Beide beschreiben die Spaltenbreite von
+`app_state.v`; zwei Zahlen waren zwei Gelegenheiten, beim nächsten
+Schemawechsel eine davon zu vergessen. Der Name bleibt —
+`tools/wiederherstellungs-probe/` prüft gegen ihn.
+
+**Die Längenprüfung von `app_state` steht an einer Stelle**
+(`app_state_zu_lang()`). Sie muss in PHP stehen und nicht nur im Schema:
+Je nach Serverbetriebsart kürzt MySQL zu lange Werte **still** statt sie
+abzuweisen, und eine stille Kürzung ist hier das Schlimmste von allem — ein
+halbes JSON, das beim nächsten Lesen als „kein Auftrag" durchgeht.
+
+### Unverändert — und das ist die Aussage
+
+**`jobs.php` fragt `app_state` weiter selbst.** Der Endpunkt gehört zum
+Gerätevertrag und antwortet bei unerreichbarer Datenbank mit
+`500 {"error":"datenbank"}`. `app_state_lesen()` fängt und liefert `null` —
+daraus wäre ein „Token falsch" geworden, also eine andere Antwort an ein
+Gerät. Ebenso bleibt `job_aufraeumen_schritte()`: Es löscht mit einem Verbund
+auf `users`, das ist kein Schlüsselzugriff.
+
+**Zwei der zwölf Einsatz-Abfragen bleiben.** `trash_restore_mission()` fragt
+den Einsatz **und** den Löschzustand seines Diensttags in einem Verbund mit
+`days` — eine Entscheidung, die zusammen getroffen werden muss. Und in
+`api/import_commit.php` ist die Abfrage eine **einmal vorbereitete**
+Anweisung, die in der Import-Schleife bis zu 3000-mal ausgeführt wird; ein
+Funktionsaufruf je Zeile bereitete sie 3000-mal neu vor.
+
+## [Web 20.28.0] — 2026-09-21
+
+**Ein Eingang für die Endpunkte, eine Meldung über die Umleitung.**
+Schritt 15 AP3 (Zentralisierung, R83).
+
+### Hinzugefügt
+
+**`api_methode()` und `api_rumpf()` in `db.php` — der Eingang der
+Endpunkte.** Einundzwanzig Dateien unter `server/api/` fingen mit derselben
+Handarbeit an: Methode prüfen, Rumpf lesen, „leer?", „ist das ein
+JSON-Objekt?". Vier Handgriffe, und sie waren auseinandergelaufen. Siebzehn
+Dateien antworteten `'method'`, drei `'methode'`; acht sagten `'payload'`,
+drei `'format'`; den Hinweis auf `post_max_size` gab es in **drei** Fassungen.
+Und acht Endpunkte hatten gar keinen Leer-Zweig: Ein leerer POST endete dort
+in `payload` — also in „dein JSON ist falsch" für eine Anfrage, die gar keins
+mitgebracht hatte. Gemessen: **12 → 1** Rumpf-Lesestellen unter `api/` (die
+eine ist `api/csp_bericht.php`, benannte Ausnahme), **17 → 0**
+Methodenprüfungen, **11 → 0** Handprüfungen auf „kein JSON-Objekt",
+**3 → 0** Fassungen des `post_max_size`-Hinweises.
+
+**Warum zwei Funktionen und nicht eine.** Das Konzept sah *einen* Aufruf vor,
+der Methode und Rumpf zusammen erledigt. Das geht nicht, ohne Verhalten zu
+ändern: Zwischen beiden steht in allen elf Rumpf-Dateien `csrf_check()`. Ein
+zusammengefasster Aufruf hätte das Rumpflesen **vor** die Token-Prüfung
+geschoben — ein Aufrufer ohne gültiges Token bekäme dann `leer` oder `format`
+statt `csrf`, und in `api/kdf_upgrade.php` liefe er am Demo-Ausstieg vorbei,
+der zwischen csrf und Rumpf steht (200 würde zu 400). Genau diese Klasse von
+Fehler hat das Projekt am 13.09.2026 schon einmal behoben. Zwei Funktionen
+halten die Reihenfolge, und die `csrf_check()`-Zeile bleibt, wo sie ist.
+
+**`flash_setzen()` und `flash_holen()` in `session_lib.php`.** Meldungen, die
+eine Umleitung überdauern, lagen in **zwei** Sitzungsschlüsseln
+(`flash_notice`, `flash_error`) und wurden auf drei Seiten von Hand gesetzt
+und mit `unset()` wieder weggeräumt — 22 Stellen. Der Ton ist aber eine
+Eigenschaft der Meldung, keine eigene Ablage: Zwei Schlüssel heißen, dass
+beide gleichzeitig gesetzt sein können, und dann entscheidet die Reihenfolge
+des Auslesens, was jemand sieht. Jetzt trägt **ein** Schlüssel `flash` beides.
+
+### Geändert
+
+**Die Fehlerschlüssel des API-Eingangs sind einheitlich** (F-ZE-5). `method`
+(405), `leer` (400, mit dem einen `post_max_size`-Hinweis), `format` (400,
+Rumpf ist kein JSON-Objekt). `payload` verschwindet aus `api/`. Gemessen an
+einer laufenden Anlage: **19 von 46 Zellen** antworten anders als vorher —
+acht `payload` → `format`, sechs `payload` → `leer`, zwei `format` → `leer`,
+drei `methode` → `method`. Das ist der Grund, warum es diese Änderung gibt,
+und es ist ohne Folge für die Oberfläche: **kein JavaScript wertet einen
+dieser Schlüssel aus**, nachgemessen über alle 40 Skripte — der einzige
+Vergleich auf `error` gilt `maintenance`.
+
+**Die Geräte-Endpunkte sind nicht angefasst.** `ingest.php`, `pair.php`,
+`auth_salt.php`, `jobs.php` und `gpx.php` behalten `payload` und `too_large`
+zeichengleich; der JSON-Vertrag und die Android-Prüffälle hängen daran.
+
+**Keine Größengrenze für den Rumpf.** `api_rumpf()` kennt die Option
+`max_bytes`, hat aber **keinen Vorgabewert** und bekommt in diesem Paket von
+niemandem einen. Eine Grenze gab es unter `api/` bisher an keiner Stelle, und
+ein Konto-Backup kann zweistellig megabytegroß sein; `app.max_body_bytes`
+(512 KB) ist die Grenze des **Geräte**-Eingangs, nicht die der
+Weboberfläche. Eine Vorgabe hätte hier eine Prüfung eingeführt, die es nicht
+gab.
+
+**`api/adminbackup_freigabe.php` prüft die Methode jetzt vorn statt am
+Dateiende.** Beide Zweige der Datei enden in `json_out()`, die Prüfung war
+deshalb eine Auffangzeile nach ihnen. Erreichbar ist derselbe Satz Methoden —
+sie steht nur dort, wo man sie sucht.
+
+### Behoben
+
+**Vier Dateien unter `api/` antworteten auf eine falsche Methode anders als
+die übrigen siebzehn** (Backlog Nr. 256). `rueckfrage.php`,
+`schluessel_erneuern.php` und `schluesselblatt_pruefen.php` schrieben ihre
+405 mit `echo json_encode(['error' => 'methode'])` selbst, am gemeinsamen
+`json_out()` vorbei und mit deutschem Schlüssel. Sie rufen jetzt
+`api_methode()` wie alle anderen. `api/csp_bericht.php` bleibt bei seiner
+stummen 204 — das ist Absicht und im Konzept namentlich ausgenommen: Ein
+Berichts-Endpunkt sagt dem meldenden Browser nichts.
+
+Weil diese 405 jetzt durch `json_out()` geht, trägt sie zusätzlich
+`X-Content-Type-Options: nosniff`, `Referrer-Policy`, HSTS und
+`Cache-Control: no-store` — Kopfzeilen, die **dazukommen**, keine, die
+wegfallen. Es sind genau die, die diese drei Dateien seit Web 20.9.1
+ohnehin tragen müssten. Für ihre **übrigen** 19 Antworten fehlen sie
+weiterhin; das steht als Backlog Nr. 258.
+
+## [Web 20.27.0] — 2026-09-21
+
+**Eine Stelle für die Konfiguration, eine für die Sitzung.** Schritt 15 AP2
+(Zentralisierung, R83).
+
+### Hinzugefügt
+
+**`konfig_lib.php` — der eine Leser für `config.php`.** `konfig('app.timezone')`
+statt `global $CFG`, `konfig('server_key', '')` statt eines zweiten `require`
+derselben Datei. Die Konfiguration lag bis hierher an **zwei** Stellen
+gleichzeitig: `db.php` las sie beim Laden in die globale `$CFG`, und fünf
+weitere Dateien lasen sie bei Bedarf noch einmal von der Platte — `smtp.php`
+dreimal, und der Kommentar dort warnte selbst davor, dass zwei Ladevorgänge
+zwei verschiedene Stände sehen können. Gemessen waren es **7 Lesestellen in
+5 Dateien und 46 `$CFG`-Zugriffe in 11 Dateien**; jetzt **1 und 0**.
+
+Der Leser **lädt selbst nichts**, und das ist Bedingung, nicht Sparsamkeit:
+`install.php` läuft auf einer Anlage ohne `config.php`, und `sitzung_lib.php`
+wird aus `db.php` heraus gerufen, *während* diese lädt. Zöge der Leser etwas
+nach, das `db.php` erreicht, liefe `sitzung_ablage()` in einer halb geladenen
+`db.php` — und `require_once` verdeckte den Zyklus, statt ihn zu melden.
+
+**`sitzung_starten()` — der eine Sitzungsstart.** Vier Arten (`app`,
+`lesend`, `einrichtung`, `passwort`) mit genau den Cookie-Parametern, die
+vorher über neun Dateien verstreut standen. Statt neun `session_start()` in
+vier Fassungen gibt es jetzt **einen**, in `sitzung_lib.php`.
+
+### Geändert
+
+**Die drei öffentlichen Seiten starten keine Sitzung mehr für jeden
+Besucher.** Handbuch, „Was ist NAdoku" und die Rechtstexte sind ohne
+Anmeldung erreichbar und fragten die Sitzung bisher nur, um den angemeldeten
+Kopf zeigen zu können — **starteten** sie dabei aber für jeden, auch für
+jeden Bot. Seit Web 20.26.0 landete jede davon als Datei in `.sitzungen/`.
+Jetzt startet die Art `lesend` nur, wenn ein Sitzungscookie da ist. **Für
+Angemeldete ändert sich nichts**; ihr Browser schickt das Cookie, die Sitzung
+startet, der Kopf sieht aus wie vorher. Das ist die einzige sichtbare Folge
+dieses Pakets.
+
+**`sitzung_ablage()` wird jetzt von `sitzung_starten()` gerufen**, nicht mehr
+aus `db.php` und `install.php`. Folge: Die Ablage wird nur noch eingerichtet,
+wenn wirklich eine Sitzung startet — ein API-Aufruf ohne Sitzung fasst
+`.sitzungen/` gar nicht mehr an.
+
+**Die Sitzungshärtung prüft schärfer.** Bisher: „steht `use_strict_mode` vor
+jedem `session_start()`". Jetzt zusätzlich: „es gibt **genau einen** Aufruf,
+und er steht in `sitzung_lib.php`". Der Zugewinn ist der zweite Teil — ein
+neuer Sitzungsstart *mit* Härtung war vorher grün und hätte die
+Cookie-Parameter trotzdem neu erfinden müssen. Genau so sind die neun
+entstanden.
+
+### Entfernt
+
+**`PW_SESSION_NAME` und `pw_session_start()` aus `pw_handling.php`.** Der Name
+steht jetzt in `sitzung_lib.php` neben der Tabelle der vier Arten, die ihn
+braucht; der Start heißt `sitzung_starten('passwort')`. Die Parameter sind
+dieselben. **Die globale `$CFG`** ist ersatzlos fort.
+
+### Was bewusst stehen bleibt
+
+**Die Drift bei `secure`.** Zwei Arten setzen es fest, zwei machen es von
+HTTPS abhängig. Das anzugleichen wäre eine Sicherheitsentscheidung und keine
+Zentralisierung — sie gehört zu Schritt 18 (Backlog **Nr. 251**). Was sich
+ändert, ist dass man die Drift jetzt *sieht*: Sie steht in einer Tabelle
+statt in neun Dateien.
+
+**`db.php` verlangt `config.php` weiterhin hart.** Der Leser toleriert die
+fehlende Datei, `db.php` erbt das nicht. Ohne diese Prüfung wäre aus dem
+klaren Befund „config.php fehlt" eine PDO-Ausnahme auf einem leeren DSN
+geworden — also „Datenbank nicht erreichbar" für ein Problem, das nichts mit
+der Datenbank zu tun hat.
+
+### Geprüft
+
+`konfig_lib` **13 von 13** Fällen (Punktpfad, oberste Ebene, fehlende Datei,
+Merker und Verwurf). Sitzungsarten: **16 Zellen** (4 Arten × `secure`,
+`samesite`, `httponly`, Name), **0 Abweichungen**, Härtung in allen vier
+wirksam. F-ZE-2: ohne Cookie keine Sitzung, mit Cookie eine — beides
+gemessen. Ladezyklus **7 von 7** (`konfig_lib` und `sitzung_lib` ziehen beim
+Laden keine Datei nach, `plattform_lib` erreicht `db.php` nicht — über
+`get_included_files()`, nicht durch Lesen). Sitzungshärtung **0 Befunde,
+Selbstprobe 12/12**. Zählung **38 Zeilen, 0 über der Decke**; `php -l` über
+134 Dateien **0 Fehler**; Wortliste 0/0, Vollständigkeit 398 unverändert.
+
+### Offen
+
+**Nicht im Browser geprüft** — in der Arbeitsumgebung liegt keine
+Installation. Die Wege Anmeldung, Abmelden, Passwort-Reset, Handbuch
+angemeldet, `install.php` und `wiederherstellen.php` stehen in
+`docs/konzepte/Pruefdokument-Zentralisierung.md`.
+
+---
 ## [Werkzeug: Stufe 2 misst nur noch die Anlage, und die Läufe warten aufeinander] — 2026-09-21
 
 **Der erste Tag durch die neue Kette kam nicht durch, und der Grund lag nicht

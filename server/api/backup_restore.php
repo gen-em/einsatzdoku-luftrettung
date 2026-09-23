@@ -13,17 +13,11 @@ require_once __DIR__ . '/../backup_lib.php';
  * Antwort: { ok: true, stats: {...} }
  */
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_out(['error' => 'method'], 405); }
+api_methode();
 csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
 
-$raw = file_get_contents('php://input');
-if ($raw === '' || $raw === false) {
-    json_out(['error' => 'leer', 'hinweis' =>
-        'Es kamen keine Daten an — evtl. begrenzt der Server die Upload-Größe (post_max_size).'], 400);
-}
-
-$data = json_decode($raw, true);
-if (!is_array($data) || ($data['format'] ?? '') !== 'einsatzdoku-backup') {
+$data = api_rumpf();
+if (($data['format'] ?? '') !== 'einsatzdoku-backup') {
     json_out(['error' => 'format'], 400);
 }
 

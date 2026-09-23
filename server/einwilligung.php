@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/einwilligung_lib.php';
 require_once __DIR__ . '/protokoll_lib.php';
+require_once __DIR__ . '/format_lib.php';   // datum_text() fuer die Fassungsdaten
 
 /**
  * DAS EINWILLIGUNGSTOR (P5b/AP4, E-P5b-05, -15).
@@ -121,7 +122,7 @@ ui_seite_start(['titel' => 'Zustimmung nötig']);
           <p class="feld-hinweis">
             <?php if ($alt !== null): ?>
               Bisher angenommen: Fassung vom
-              <?= e(fmt_local((string)$alt, 'd.m.Y')) ?>.
+              <?= e(datum_text((string)$alt)) ?>.
             <?php endif; ?>
             <a href="<?= e(RT_SEITEN[$schluessel]) ?>" target="_blank" rel="noopener">Text
                lesen</a> — er öffnet sich in einem neuen Fenster, damit du
@@ -142,7 +143,7 @@ ui_seite_start(['titel' => 'Zustimmung nötig']);
             <input type="checkbox" name="ew[<?= e($schluessel) ?>]" value="1"
                    <?= !empty($_POST['ew'][$schluessel]) ? 'checked' : '' ?>>
             <span><?= rt_haken_satz($schluessel,
-                      $s !== null ? fmt_local((string)$s, 'd.m.Y') : null) ?></span>
+                      $s !== null ? datum_text((string)$s) : null) ?></span>
           </label>
           <p class="feld-hinweis"><?= $art['art'] === 'annahme'
               ? 'Ohne diese Annahme geht es nicht weiter.'

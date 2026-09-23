@@ -40,7 +40,16 @@ Daten erst nach Server-Bestätigung.
 ├── server/                komplette Web-App (wird per FTPS deployt)
 │   ├── version.php        WEB_VERSION (einzige Stelle für die Versionsnummer)
 │   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc),
-│   │                       Einstieg der Wartung huckepack (run_cleanup_if_due)
+│   │                       Einstieg der Wartung huckepack (run_cleanup_if_due).
+│   │                       Verlangt config.php hart — die globale $CFG gibt
+│   │                       es seit Web 20.27.0 nicht mehr
+│   ├── konfig_lib.php     Der EINE Leser fuer config.php (Schritt 15 AP2,
+│   │                       E-ZE-02/-14): konfig('app.timezone'),
+│   │                       konfig_alles(), konfig_verwerfen(). Punktpfad,
+│   │                       Merker in einer static, fehlende Datei = Vorgabe.
+│   │                       LAEDT SELBST NICHTS — Bedingung, nicht
+│   │                       Sparsamkeit: install.php und sitzung_lib.php
+│   │                       brauchen ihn, ohne db.php zu laden
 │   ├── ui.php             Seitenhülle (ui_seite_start/-_ende), Kopf-/Seitenleisten,
 │   │                       Fußzeile, Meldungszeile, Abbruchseite, Krypto-Rüstzeug
 │   ├── auth_guard.php     Session/Rollen (Rolle+Existenz je Anfrage aus der DB,
@@ -53,12 +62,21 @@ Daten erst nach Server-Bestätigung.
 │   ├── einsatz.php        Einsatzansicht · einsatz_form.php Nachtragen/Bearbeiten
 │   ├── zeitraum.php       Jahres-/Monatsübersicht (Karte, Statistik, Tabelle)
 │   ├── suche.php          Suche über den gesamten Bestand (filtert im Browser, s. u.)
+│   ├── format_lib.php     Die EINE Stelle, an der aus einem Wert ein Text
+│   │                       fuer Menschen wird (Schritt 15 AP7, ab Web
+│   │                       20.32.0): Groesse, Zahl, Anteil, Datum, Uhrzeit,
+│   │                       relative Zeit, die ISO-UTC-Marke und „heute".
+│   │                       Laedt NUR konfig_lib.php — install.php erreicht
+│   │                       sie ueber plattform_lib.php, bevor es eine
+│   │                       config.php gibt. fmt_local() liegt seither hier
 │   ├── mission_fields.php Zentraler Feldkatalog der Zusatzfelder
 │   ├── mission_fields_lib.php  Abgeleitete Sichten auf den Feldkatalog
 │   │                       (mf_tagesspalten() = Spalten der Tagestabelle,
 │   │                        mf_optionen() = Wert/Beschriftung eines Auswahlfelds,
 │   │                        mf_ort_spalten() = Koordinatenspalten eines Ortsfelds,
-│   │                        mf_show_if() + mf_gates_erfuellt() = Sichtbarkeit)
+│   │                        mf_show_if() + mf_gates_erfuellt() = Sichtbarkeit,
+│   │                        mf_missions_register() + mf_spalten() = das
+│   │                        Spaltenregister von `missions`, Schritt 15 AP6)
 │   ├── tageszuordnung_lib.php  Einsatz verschieben · Datum eines Tages ändern
 │   ├── einsatz_verschieben.php  die zugehörige Seite
 │   ├── einstellungen.php  Profil/Standorte/Backup/Geräte (Reiter `?t=`)
@@ -91,6 +109,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       · diensttag_zusammenfuehren.php  mehrfach gestartete Dienste
 │   │                         wieder zu einem Diensttag vereinen
 │   ├── diensttag_lib.php  Diensttage anlegen, zuordnen, einfrieren, auflisten
+│   ├── einsatz_lib.php    Einsatz per Kennung laden, mit Besitzprüfung und
+│   │                       Papierkorb-Option (Schritt 15/AP4, ab Web 20.29.0);
+│   │                       dazu seit Web 20.30.0 die vier Kindtabellen
+│   │                       (Phasen, Reanimation, Rettungsmittel, Besatzung)
 │   ├── nachbearbeitung.php + nachbearbeitung_lib.php  einmalige Nachträge nach der Migration
 │   ├── einsatz_loeschen.php · diensttag_loeschen.php · papierkorb.php  Löschen mit Vorschau
 │   ├── ingest.php         Uhr-/Fremdquellen-Endpunkt (Auth, Idempotenz)
@@ -293,7 +315,9 @@ Daten erst nach Server-Bestätigung.
 │   │                       Zwischenablage mit Rückfall auf Markieren; ohne
 │   │                       JavaScript bleibt der Wert lesbar und markierbar
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
-│   │                       gelöschtes Konto, Passwortwechsel)
+│   │                       gelöschtes Konto, Passwortwechsel); dazu seit
+│   │                       Web 20.28.0 flash_setzen()/flash_holen() — die
+│   │                       Meldung, die eine Umleitung überdauert
 │   ├── sitzung_lib.php    WO die Sitzungen liegen — nicht, wie sie enden
 │   │                       (Schritt 16, E-SA-01 bis -07; Backlog Nr. 241).
 │   │                       Legt `.sitzungen/` mit 0700 an, richtet
@@ -632,10 +656,14 @@ Daten erst nach Server-Bestätigung.
 │   │                      Sammelmail und „Sperre aufheben" (P5a/AP6). Greift
 │   │                      die Bibliothek unmittelbar an und datiert stufe_bis
 │   │                      zurueck, statt 24 h zu warten (s. LIESMICH.md)
-│   ├── sitzungshaertung/  steht vor jedem session_start() die Haertung
-│   │                      `session.use_strict_mode`? (P5a/AP4a, Nr. 205).
-│   │                      Tokenizer statt grep; Selbstprobe 8 Faelle. Laeuft
-│   │                      in Stufe 1 (s. LIESMICH.md)
+│   ├── sitzungshaertung/  gibt es GENAU EINEN session_start(), steht er in
+│   │                      sitzung_lib.php, und steht die Haertung
+│   │                      `session.use_strict_mode` davor? (P5a/AP4a,
+│   │                      Nr. 205; verschaerft mit Schritt 15 AP2,
+│   │                      E-ZE-13 — jeder weitere Aufruf ist ein Befund,
+│   │                      auch ein gehaerteter). Tokenizer statt grep;
+│   │                      Selbstprobe 12 Faelle. Laeuft in Stufe 1
+│   │                      (s. LIESMICH.md)
 │   ├── cspprobe/          traegt die Content-Security-Policy noch? (P5a/AP4)
 │   │                      Fuenf Regeln: Inline-`<script>` ohne Nonce,
 │   │                      `<style>`-Block, Ereignis-Attribut,
@@ -777,6 +805,17 @@ Daten erst nach Server-Bestätigung.
 │   │                      steht in der LIESMICH).
 │   │                      kontrast.py rechnet die Kontraste der Token nach
 │   │                      (s. LIESMICH.md)
+│   ├── spaltenregister/   hält `schema.sql` gegen `mf_missions_register()`
+│   │                      (beide Richtungen) und misst die Vollständigkeit der
+│   │                      drei Abbildungen, die von Hand bleiben — jede muss
+│   │                      genau die Registerspalten ihres Zwecks führen, jede
+│   │                      Ausnahme eine Begründung im Feld, und eine Ausnahme
+│   │                      ohne Treffer ist selbst ein Befund. pruefen.php
+│   │                      hängt in Stufe 1 und ist rein lesend. wegprobe.py
+│   │                      fährt die zwei Anweisungen, die kein Kreislauf
+│   │                      abdeckt (Schnitt, UPDATE-Zweig des Imports) — sie
+│   │                      SCHREIBT und gehört an ein Wegwerfkonto
+│   │                      (Schritt 15 AP6, E-ZE-22; s. Dateikopf)
 │   ├── spurprobe/         prüft den Rundlauf des Blob-Formats SPUR1 über den
 │   │                      ganzen Referenzbestand: Punkte → Blob → Punkte, dazu
 │   │                      Kopf, Ablehnung fremder Fassungen und die Frage, ob
@@ -848,10 +887,20 @@ Daten erst nach Server-Bestätigung.
 │   │                      Ein Handgriff und kein Automatismus — die Zusage
 │   │                      „keine fremde Quelle zur Laufzeit" kennt keine
 │   │                      Ausnahme (s. LIESMICH.md)
-│   └── wortliste/         zählt nach, ob sichtbare Texte und normative
+│   ├── wortliste/         zählt nach, ob sichtbare Texte und normative
 │                          Dokumentation neutral von Land und Luft sprechen:
 │                          Sperrliste, Ausnahmeliste mit Begründungen, drei
 │                          Zahlen je Bereich (s. LIESMICH.md)
+│   └── zaehlung/          hält fest, dass jede Sache ihre EINE Stelle behält
+│                          (Schritt 15, R83, E-ZE-24): je Muster eine
+│                          Registerzeile mit einer Decke, gemessen mit dem
+│                          PHP-Tokenizer in drei Sichten — Code ohne
+│                          Kommentare, dasselbe ohne Zeichenketteninhalt, und
+│                          das JavaScript (`.js` ganz, aus `.php` die
+│                          <script>-Blöcke). Liegt ein Ist-Wert über der
+│                          Decke, schlägt der Lauf an. Eine Decke wird nicht
+│                          angehoben, ohne dass es im Konzept steht
+│                          (s. LIESMICH.md)
 ├── .claude/hooks/session-start.sh  beschafft beim Containerstart, was der
 │                          Pruefstand braucht und das Abbild nicht mitbringt:
 │                          MariaDB, ImageMagick, rsvg-convert, Python-
@@ -1185,7 +1234,7 @@ Konto und ist dort lesbar.
 Schutz am nötigsten braucht, lädt `auth_guard.php` nicht. In `auth_guard.php`
 bleibt `csrf_check()`, der Abbruchweg der angemeldeten Seiten. Das Token
 entsteht **faul** — `session_lib.php` wird eingebunden, bevor
-`session_start()` gelaufen ist.
+`sitzung_starten()` gelaufen ist.
 
 Zwei Eigenschaften der Prüfung am Anmeldeformular: Sie steht **vor** allen
 Zählern, damit ein abgelaufenes Formular keine Ratenstrafe auslöst (es ist
@@ -1383,14 +1432,42 @@ Sonderfall im Formular. Formaterkennung/Parser liegt in
 die Plus-Code-Dekodierung nutzt die gevendorte Bibliothek
 `assets/openlocationcode.js` (`google/open-location-code`, Apache-2.0).
 
+**Eine Karte entsteht über `EdKarte.anlegen(el, o)`** (`assets/map_layers.js`,
+seit Web 20.33.0, Schritt 15 AP8a). Die Funktion macht, was auf allen
+Kartenseiten gleich war: `L.map(el, o.leaflet)`, `setView(o.mitte, o.zoom)`,
+`attachBaseLayers`, `attachFullscreenControl` — und bei `o.groesse`
+zusätzlich `attachGroessenControl`. Sie gibt die Karte zurück.
+
+| Parameter | Bedeutung | Vorgabe |
+|---|---|---|
+| `el` | Behälter-ID oder Element, 1:1 an `L.map()` | — |
+| `mitte` | `[lat, lon]` des Ausgangsausschnitts | **keine** (Wurf) |
+| `zoom` | Zoomstufe des Ausgangsausschnitts | **keine** (Wurf) |
+| `groesse` | dritter Kartenknopf (`attachGroessenControl`) | `false` |
+| `leaflet` | Optionsobjekt, 1:1 an `L.map()` | keine Optionen |
+
+`mitte` und `zoom` haben **keinen** Vorgabewert, und das ist Absicht: Die vier
+Kartenseiten benutzen zwei verschiedene Ausschnitte (`[47.7, 10.3]`/Zoom 9 auf
+Einsatzansicht und Tagesspuren, `[48.5, 10.5]`/Zoom 7 auf Tagesübersicht und
+Zeitraum). Ein Vorgabewert zöge sie auf einen, und eine Karte, die still am
+falschen Ort steht, fällt niemandem auf.
+
+**`setView()` kommt zuerst**, vor den Ebenen. Ohne festen Ausschnitt gilt die
+Karte Leaflet als nicht bereit: Es nimmt eine Ebene entgegen, rechnet ihre
+Bildschirmposition aber nicht aus, und ein späteres `setStyle()` scheitert mit
+„this._point is undefined". Bis Web 20.32.1 setzte `index.php` den Ausschnitt
+als einzige zuletzt.
+
 **Karten-Controls (`assets/map_fullscreen.js`, `assets/map_layers.js`, ab Web
 2.5.0):** Beide Dateien exportieren je eine Funktion
 (`attachFullscreenControl(map)` / `attachBaseLayers(map)`) und kapseln ihren
 Zustand vollständig in Closures — keine globalen Variablen, damit mehrere
-Karten pro Seite (aktuell max. eine) nicht kollidieren würden. Alle drei
-Kartenseiten (`index.php`, `einsatz.php`, `zeitraum.php`) rufen dieselben
-zwei Funktionen auf, kein Duplikat-Code je Seite; `tag_spuren.php` und der
-Ortswahl-Dialog (`assets/ortswahl.js`) rufen `attachBaseLayers` ebenfalls.
+Karten pro Seite (aktuell max. eine) nicht kollidieren würden. Die vier
+Kartenseiten (`index.php`, `einsatz.php`, `tag_spuren.php`, `zeitraum.php`)
+rufen sie seit Web 20.33.0 nicht mehr selbst, sondern über `EdKarte.anlegen()`;
+der Ortswahl-Dialog (`assets/ortswahl.js`) ruft `attachBaseLayers` weiter
+unmittelbar — er ist ein Modul, keine Seite, und legt seine Karte in einem
+Dialog an.
 
 `attachFullscreenControl` nutzt primär die native Fullscreen-API auf dem
 Karten-Container (inkl. `webkit`-Präfix); wo diese für beliebige Elemente
@@ -1853,6 +1930,12 @@ Dieselbe Mechanik tragen zwei weitere Filter: **`cap_gate`** prüft die
 eingefrorenen Fähigkeiten (`day_capabilities`) und steuert damit Winde und
 Bergwacht, **`kind_gate`** die Art des Diensttags. Alle drei laufen über
 `mf_gates_erfuellt()`.
+**`cap_gate` gilt im Formular ohne Rücksicht auf die Betriebsart** — auch ein
+bodengebundener Bergwacht-Dienst bekommt seine Windenfelder. Das ist die
+*Bearbeitung*; die *Auswertung* in Tages- und Zeitraumübersicht folgt seit
+Web 20.35.0 einer engeren Regel (E-ZE-31; siehe „Zeitraum-API" weiter unten
+in diesem Abschnitt). Wer nur eine der
+beiden Stellen liest, hält die andere für einen Fehler.
 **Nicht gerenderte Felder wären ein Datenverlust-Pfad** — der Browser sendet
 sie dann nicht mit, und `readField()` liest fehlend als leer und überschreibt
 den Bestand mit NULL. Deshalb wird immer gerendert und nur versteckt (`hidden`
@@ -1927,14 +2010,31 @@ nicht auftaucht, aber mitzählt.
 Objekt über `VEHICLE_CAPABILITIES`, heute `{winch, bergwacht}`, mit
 Wahrheitswerten. Es sagt, welche Fähigkeiten die **Luft**-Diensttage des
 Zeitraums tragen, gerechnet als `GROUP BY` über `day_capabilities` mit Join
-auf `days`. **Seit Web 20.3.0 ist „Luft" dabei eine Lücke und keine
-Herleitung mehr** (Backlog Nr. 198): Ein bodengebundener Bergwacht-Diensttag
-trägt die Fähigkeiten ebenfalls, wird hier aber übergangen — das
-Einsatzformular zeigt seine Windenfelder, die Zeitraumübersicht zählt sie
-nicht. Die Zeitraumübersicht entscheidet daran über die beiden
-Windenkacheln, statt sie aus der Einsatzliste zu erschließen: „null
+auf `days`. Die Zeitraumübersicht entscheidet daran über die beiden
+Windenkacheln — und **seit Web 20.35.0 auch über die beiden Tabellenspalten**
+(E-ZE-31) —, statt sie aus der Einsatzliste zu erschließen: „null
 Windeneinsätze" ist eine Aussage über den Dienst, „Winde nicht eingerichtet"
 eine über die Stammdaten, und bis dahin waren beide nicht zu unterscheiden.
+
+**„Luft" ist seit Web 20.35.0 die Regel und nicht mehr eine Lücke.** Hier
+stand bis dahin, der Artfilter sei seit Web 20.3.0 eine Lücke (Backlog
+Nr. 198), weil ein bodengebundener Bergwacht-Diensttag die Fähigkeiten
+ebenfalls trägt und hier übergangen wird. Das ist entschieden worden, und
+zwar so: Die **Auswertung** — Kacheln und Tabellenspalten in Tages- und
+Zeitraumübersicht — folgt der Betriebsart **und** der Fähigkeit; die
+**Bearbeitung** (`einsatz_form.php`, `einsatz.php`) folgt der Fähigkeit
+allein, auch bodengebunden. Das Einsatzformular zeigt die Windenfelder
+eines solchen Tages also weiter, die Haken bleiben eintragbar — ausgewertet
+werden sie in Tages- und Zeitraumübersicht nicht. Vorgelegt wurden dafür die
+Zahlen des Bestands: vier bodengebundene Bergwacht-Diensttage mit
+Fähigkeiten, zwei davon mit einem dokumentierten Windeneinsatz.
+
+**Die Suche macht es anders, und das ist ebenfalls entschieden.**
+`api/suchindex.php` liefert seit Web 20.35.0 dasselbe `faehigkeiten`-Objekt,
+aber **ohne Artfilter** — sie sucht im ganzen Bestand, nicht in einem
+Zeitraum, und ein bodengebundener Bergwacht-Dienst ist genauso ein Treffer
+wie ein luftgebundener. Wer die eine Abfrage ändert, ändert nicht
+selbstverständlich die andere mit.
 
 Drei Bedingungen der Abfrage sind nicht verhandelbar. `day_capabilities`
 führt **weder `user_id` noch `deleted_at`** — der Join auf `days` trägt
@@ -1970,6 +2070,15 @@ kann darin nicht suchen. Zusätzlich wäre ein Suchbegriff wie ein Nachname
 selbst schon ein Patientendatum — er darf den Browser gar nicht verlassen.
 `api/suchindex.php` nimmt deshalb **keine Suchparameter entgegen**; es liefert
 den kompletten aktiven Bestand der angemeldeten Person.
+
+**Seit Web 20.35.0 kommt `faehigkeiten` mit** (Schritt 15 AP9a, E-ZE-31) —
+dasselbe flache Objekt über `VEHICLE_CAPABILITIES` wie in `api/range.php`,
+aber **ohne Artfilter**: Es sagt, welche Fähigkeiten im Bestand überhaupt
+eingerichtet sind, luft- wie bodengebunden. Die Suchtabelle entscheidet
+daran über die Spalten „Winde" und „Bergwacht", statt sie aus der Treffer- oder
+Bestandsliste zu erschließen. Der Unterschied ist genau der Fall, den man
+sucht: „null Windeneinsätze" ist etwas anderes als „Winde nicht
+eingerichtet", und wer nachtragen will, muss die Spalte sehen.
 
 Mengengerüst: erwartet werden 50–80 Einsätze pro Jahr, nach zwei Jahrzehnten
 also unter etwa 1 600 Datensätze — für einen einmaligen Abruf je Sitzung
@@ -2079,13 +2188,32 @@ Blöcke bei einem geteilten Link leiten sich alle aus `FILTER` ab. Die Gruppen
 sind `einsatz`, `patient`, `transport`, `wer` und `bergrettung`; der Freitext
 steht in der Hauptspalte und hat keine Gruppe.
 
-Zwei Sichtbarkeitsregeln, beide gegen den **gesamten** Bestand geprüft (nicht
-gegen die Trefferliste — sonst hüpfte die Spalte beim Tippen):
-`GRUPPE_NUR_WENN` blendet einen ganzen Block aus (derzeit `bergrettung`),
-`FELD_NUR_WENN` ein einzelnes Feld (derzeit `fe` = Fehleinsatz). Letzteres kam
-mit Web 7.0.0 dazu: Der Fehleinsatz steht jetzt in einem Block, der bleiben
-muss. Beide Regeln haben dieselbe Ausnahme — ein Filter aus einem geteilten
-Link bleibt sichtbar, auch wenn der eigene Bestand nichts dazu hat.
+**Die Sichtbarkeit entsteht aus dem Feldkatalog, nicht aus zwei Listen.**
+Bis S3 standen hier `GRUPPE_NUR_WENN` (ein ganzer Block) und `FELD_NUR_WENN`
+(ein einzelnes Feld) — zwei handgepflegte Listen, also genau der
+Einzelfall-Wildwuchs, den der Katalog abschaffen soll. Seither trägt jeder
+Filter, der zu einer Katalogspalte gehört, sie als `spalte`; sichtbar ist er,
+wenn der **gesamte** Bestand zu dieser Spalte etwas führt (nicht die
+Trefferliste — sonst hüpfte die Spalte beim Tippen). Ein Filter **ohne**
+Spalte — Zeitraum, Uhrzeit, Wochentag, Strecke, Dauer, Alter, Standort,
+Rettungsmittel, Besatzung — ist immer sinnvoll und steht immer da. Ein
+**Block** verschwindet, wenn alle seine Filter verschwunden sind; er braucht
+keine eigene Bedingung mehr.
+
+**Eine Ausnahme mit Herkunft: Felder an einer Fähigkeit** (ab Web 20.36.0,
+E-ZE-35). `KATALOG_CAP` bildet Spalte auf Fähigkeit ab — erzeugt aus
+`cap_gate` und **auf die Unterfelder vererbt**, sodass `winch_cycles` unter
+`winch` ohne eigenen Eintrag mitgeht. Ein solches Feld folgt der **Fähigkeit**
+statt dem Bestand: Winde und Bergwacht sind durchsuchbar, sobald irgendein
+Diensttag die Fähigkeit führt — luft- wie bodengebunden. Vorher fiel der Block
+`bergrettung` in einem Bestand mit eingerichteter, aber nie benutzter Winde
+ganz weg, und damit war auch **„Winde: nein"** nicht zu suchen; der Filter
+fehlte gerade in dem Fall, für den man ihn braucht.
+
+Die Ausnahme für geteilte Links gilt weiter — ein Filter, den ein Fragment
+gesetzt hat, bleibt sichtbar, auch wenn weder Fähigkeit noch Bestand ihn
+rechtfertigen. `gruppenSichtbarkeit()` läuft deshalb beim Start **nach**
+`fragmentLesen()` und erneut nach „Filter zurücksetzen".
 
 **Layout (ab Web 9.5.0, O6).** Die Filter stehen in der **gemeinsamen**
 `.leiste` — derselben, die sonst die Diensttage trägt; `suche.php` ruft
@@ -2217,24 +2345,64 @@ ohne dass sich ein Filter geändert hätte. Seit Web 9.5.0 steht sie als
 Filter; `onAfterDraw` bekommt dafür als dritten Wert die sortierte Liste, aus
 der die Streckensumme fällt.
 
-**Filterblöcke nach Bestand (`GRUPPE_NUR_WENN` in `suche.php`, ab Web 5.10.0).**
-Ein Eintrag je Block: die Bedingung, unter der er gebraucht wird (heute `winde`,
-`bergwacht` und seit Web 6.2.0 `einsatz`). Geprüft wird der **gesamte** Bestand,
-nicht die aktuelle Trefferliste — sonst verschwände ein Block, sobald ein
-anderer Filter die betreffenden Einsätze gerade ausschliesst, und die Spalte
-spränge beim Tippen. Ein Block, in dem ein Filter gesetzt ist (geteilter Link),
-bleibt sichtbar; `gruppenSichtbarkeit()` läuft deshalb beim Start **nach**
-`fragmentLesen()` und erneut nach „Filter zurücksetzen".
+**Filterblöcke: seit S3 katalogabgeleitet.** Der Abschnitt zur Suche weiter
+oben beschreibt die geltende Regel und die Fähigkeits-Ausnahme aus Web 20.36.0.
+Hier stand bis dahin `GRUPPE_NUR_WENN` — eine handgepflegte Liste mit einem
+Eintrag je Block, die es seit S3 nicht mehr gibt.
 
 **Spalten nach Bestand (`nurWenn` in `assets/missiontable.js`, ab Web 6.2.0).**
 Dieselbe Überlegung eine Ebene tiefer: Eine Spalte, die im ganzen Bestand leer
 bleibt, kostet auf schmalen Geräten Platz und sagt nichts. `nurWenn` bekommt den
 Bestand und entscheidet, ob die Spalte überhaupt erscheint — heute `art` (mehr
-als eine Art vorhanden), `winch`, `bw` und `fehl`. Welche Liste der Bestand ist,
+als eine Art vorhanden), `col` und `fehl`. Welche Liste der Bestand ist,
 sagt die Seite mit `setSpaltenBestand()`: `suche.php` setzt ihn **einmal** auf
-den Gesamtbestand (sonst käme und ginge die Windenspalte beim Tippen),
+den Gesamtbestand (sonst käme und ginge die Spalte beim Tippen),
 `zeitraum.php` bei jedem Tabwechsel auf die Einsätze des Tabs. Ohne den Aufruf
-gilt die Trefferliste selbst. **Sortiert** wird weiterhin über alle Spalten,
+gilt die Trefferliste selbst.
+
+**Seit Web 20.37.0 baut das Modul alle drei Tabellen** (Schritt 15 AP9b,
+Backlog Nr. 57). `index.php` hatte bis dahin einen eigenen Erzeuger: einen
+handgeschriebenen `<thead>`, `DAY_COLS`, eine `switch`-Leiter in `sortVal()`
+und ein eigenes Sortierblatt. Gezählt: Zeilenerzeugung `tr.innerHTML`
+**1 → 0**, Spaltenlisten **4 → 1**, Sortierblatt-Erzeuger **3 → 1**.
+
+Der Vorspann steht in **`ui_tabellen_bootstrap()`** (`ui.php`) und setzt
+`ART_SYMBOLE`, `TYP_SYMBOLE` und `KATALOG_SPALTEN`; er muss **vor**
+`assets/missiontable.js` stehen. Die drei Hakenspalten gleicht das Modul
+gegen `KATALOG_SPALTEN` ab: **Der Katalog bestimmt, welche es gibt
+(`day_col`), das Modul, wie sie aussehen und in welcher Reihenfolge**
+(E-ZE-34). Damit heißt `day_col` ab jetzt „Spalte in **jeder**
+Einsatztabelle" und nicht mehr „Spalte in der Tagesübersicht" — wer den
+Schlüssel entfernt, nimmt die Spalte auch aus Suche und Zeitraumübersicht.
+Ohne `KATALOG_SPALTEN` bleiben die drei Spalten unverändert; das ist ein
+benannter Rückfall, damit eine Seite ohne Vorspann nicht still Spalten
+verliert.
+
+`opts.ohne` nennt die Spalten, die eine Seite **nicht** führt —
+`index.php` gibt `['fehl', 'day']` an. Beides ist ausdrücklich, nicht
+geraten: `day` stand in einem Zwischenstand als `nurWenn` („nur bei mehreren
+Tagen") im Modul, und das nahm der **Zeitraumübersicht** ihre Datumsspalte,
+sobald alle Treffer eines Monats auf einen Tag fielen — während sie weiter
+nach ihr sortierte. Gefunden hat das der Bildvergleich.
+
+**`start_sort` sortiert chronologisch** (E-ZE-32). `api/day.php`,
+`api/range.php` und `api/suchindex.php` liefern seit Web 20.37.0 den
+Zeitpunkt als `Y-m-d H:i` in Ortszeit. `start_hhmm` allein taugt nicht:
+Bei einem Dienst über Mitternacht steht 01:10 als Zeichenkette vor 23:50,
+und `day` hilft nicht überall — in `api/day.php` und `api/range.php` ist es
+der **Diensttag**, für beide Einsätze derselbe. Bei Gleichstand entscheidet
+`_no`, in beiden Richtungen. Das **mobile Sortierblatt** baut ebenfalls das
+Modul (`opts.sortblatt`, `opts.sortlabel`); bis Web 20.37.0 stellte es auf
+Suche und Zeitraumübersicht um, **ohne neu zu zeichnen**.
+
+**`winch` und `bw` folgen seit Web 20.35.0 nicht mehr dem Bestand, sondern der
+Fähigkeit** (E-ZE-31). `nurWenn` bekommt dafür ein **zweites** Argument, das
+die Seite mit `setFaehigkeiten()` setzt: `zeitraum.php` reicht die
+Luft-Fähigkeiten des Zeitraums durch und im Bodentab ausdrücklich `{false,
+false}`, `suche.php` die Fähigkeiten des ganzen Bestands ohne Artfilter.
+**Ohne den Aufruf gilt weiter der Bestand** — das ist ein benannter Rückfall
+und kein Vergessen: Eine Seite, die das Modul einbindet und die Fähigkeiten
+nicht kennt, soll ihre Spalten nicht stillschweigend verlieren. **Sortiert** wird weiterhin über alle Spalten,
 auch über verborgene: Ein geteilter Link kann nach einer Spalte sortieren, die
 der eigene Bestand nicht zeigt — die Reihenfolge stimmt dann trotzdem, nur der
 Pfeil hat keinen Kopf.
@@ -2921,9 +3089,62 @@ fehlten außerdem `nosniff` und `Referrer-Policy`.
 
 **Eine Ausnahme, benannt:** `wartung_lib.php` setzt seinen Satz weiter selbst.
 Die Wartungsseite ist ausdrücklich ohne Datenbank gebaut und darf `db.php`
-nicht laden — `no-store` steht dort trotzdem. `grep -rn "Content-Type:
-application/json" server/` trifft seither genau zwei Codezeilen: `db.php` und
-`wartung_lib.php`.
+nicht laden — `no-store` steht dort trotzdem.
+
+> **Hier stand bis Web 20.28.0, `grep -rn "Content-Type: application/json"
+> server/` treffe „genau zwei Codezeilen".** Gemessen sind es **sechs**: zwei
+> in `wartung_lib.php`, eine in `db.php` — und drei in `api/rueckfrage.php`,
+> `api/schluessel_erneuern.php` und `api/schluesselblatt_pruefen.php`, die
+> ihre Antworten mit `echo json_encode()` selbst schreiben und deshalb weder
+> `nosniff` noch `no-store` setzen. Das ist derselbe Mangel, den Web 20.9.1
+> an sieben anderen Stellen behoben hat; diese drei arbeiten über `$_POST`
+> und sind damals niemandem als „JSON-Endpunkt" aufgefallen. Backlog
+> **Nr. 258**.
+
+### Der Eingang der Endpunkte (ab Web 20.28.0)
+
+Einundzwanzig Dateien unter `server/api/` fingen mit derselben Handarbeit an.
+Seit Schritt 15 AP3 gibt es dafür zwei Funktionen in `db.php`, neben
+`json_out()`:
+
+| Funktion | tut | antwortet selbst mit |
+|---|---|---|
+| `api_methode($erlaubt = 'POST')` | prüft `$_SERVER['REQUEST_METHOD']` gegen eine Methode oder eine Liste | **405** `method` |
+| `api_rumpf($o = [])` | liest `php://input`, prüft „leer" und „ist ein JSON-Objekt", gibt das Feld zurück | **400** `leer` (mit dem einen `post_max_size`-Hinweis), **400** `format`, **413** `zu_gross` nur wenn `max_bytes` gesetzt ist |
+
+**Die Reihenfolge ist der Grund für zwei Funktionen und nicht eine.** In
+allen elf Dateien mit Rumpf steht dazwischen eine dritte Zeile:
+
+```
+api_methode();   ->   csrf_check();   ->   $b = api_rumpf();
+```
+
+Ein Aufruf, der Methode und Rumpf zusammenfasst, schöbe das Rumpflesen vor
+die Token-Prüfung: Ein Aufrufer ohne gültiges Token bekäme `leer` oder
+`format` statt `csrf`, und in `api/kdf_upgrade.php` liefe er am
+Demo-Ausstieg vorbei, der zwischen csrf und Rumpf steht. **CSRF gehört aus
+einem zweiten Grund nicht in den Eingang:** Ein Endpunkt ohne Sitzung (10c
+AP6, `api/health.php`) braucht `api_methode()` und sonst nichts.
+
+**`max_bytes` hat keinen Vorgabewert.** Unter `api/` gab es an keiner Stelle
+eine Grenze für die Rumpfgröße, und ein Konto-Backup kann zweistellig
+megabytegroß sein. `app.max_body_bytes` (512 KB) ist die Grenze des
+**Geräte**-Eingangs in `ingest.php`, nicht die der Weboberfläche.
+
+**Inhaltliche Prüfungen bleiben beim Aufrufer**, mit ihren eigenen
+Schlüsseln: ob `$b['eintraege']` da ist, ob `$data['format']` den richtigen
+Wert hat, ob die Liste zu lang ist. Der Eingang beantwortet nur, ob
+überhaupt ein Objekt angekommen ist.
+
+**Eine Ausnahme, namentlich:** `api/csp_bericht.php` liest `php://input`
+weiter selbst und antwortet auf alles mit einer stummen **204**. Ein
+Berichts-Endpunkt sagt dem meldenden Browser nichts — weder über die
+Methode noch über den Rumpf.
+
+**Die Geräte-Endpunkte sind nicht beteiligt.** `ingest.php`, `pair.php`,
+`auth_salt.php`, `jobs.php` und `gpx.php` liegen nicht unter `api/` und
+behalten ihre Fehlerschlüssel (`payload`, `too_large`) zeichengleich — der
+JSON-Vertrag und die Android-Prüffälle hängen daran.
 
 Die nur **lesenden** Endpunkte (`range`, `suchindex`, `mission`) weisen seit
 4.5.2 alles außer GET mit 405 ab; `day.php` kennt GET und POST und weist alles
@@ -5201,6 +5422,59 @@ sobald wieder Klartext hereinkommt: eine eingespielte Sicherung mit Nutzlast 10,
 ein CSV-Import einer alten Datei, das Zurücksetzen des Demo-Kontos. Der
 abgeleitete Zustand kennt diesen Fall von selbst.
 
+### 4.98a Eine Stelle je Sache — und das Register, das es nachzählt
+
+**R83, gebaut in Schritt 15 (Zentralisierung), Stand Web 20.34.0.** Die
+Anwendung hatte für eine Reihe von Sachen mehrere Eingänge — nicht als
+Entwurf, sondern weil sie gewachsen ist. Schritt 15 hat sie
+zusammengeführt und, wichtiger, ein **Maß** dafür angelegt.
+
+| Sache | Der eine Weg | Was es vorher gab |
+|---|---|---|
+| Konfiguration lesen | `konfig('schluessel')` | `$CFG` an 46 Stellen, `config.php` siebenmal eingebunden |
+| Sitzung starten | `sitzung_starten()` | 9 `session_start()` |
+| API-Eingang | `api_methode()`, `api_rumpf()` | 12 eigene `php://input`, 17 eigene Fehlerschlüssel |
+| Flash-Meldung | `flash_setzen()` / `flash_holen()` | 22 direkte `$_SESSION['flash…']` |
+| Schema fragen | `db_hat_tabelle/spalte/index()` | 9 eigene `information_schema` |
+| Transaktion | `db_transaktion()` | 33 eigene `beginTransaction()` |
+| Kindtabellen eines Einsatzes | `einsatz_lib.php` | 30 eigene `INSERT`/`DELETE` |
+| Spalten von `missions` | `mf_spalten($zweck)` | 12 Handlisten |
+| Zahl, Größe, Zeit (PHP) | `format_lib.php` | 4 Byte-Formatierer, 2 Zeitformen, 27 `number_format` |
+| Zahl, Größe, Zeit (Browser) | `EdFormat` | 14 benannte Formatierer in 5 Dateien |
+| Anfrage an den Server | `EdApi.postJson/.postForm` | 20 Sendestellen, 7 Achsen Unterschied |
+| Meldung im Browser | `EdHtml.meldung()` | 7 Nachbauten, 3 Ton-Tabellen |
+| Karte anlegen | `EdKarte.anlegen()` | 4 Präambeln in 3 Reihenfolgen |
+| Patientenliste laden | `EdPat.listeLaden()` | 3 gleichlautende Auftakte |
+
+**Das Register ist `tools/zaehlung/register.php`.** Es führt je Sache eine
+Zeile mit einer **Decke** — wie viele Stellen es höchstens geben darf — und
+zählt mit dem **Tokenizer**, nicht mit `grep`: Ein Aufruf in einem Kommentar
+oder in einer Zeichenkette zählt nicht, ein Methodenaufruf `->date(` auch
+nicht. Der Stufe-1-Schritt „Zentralisierung — hält jede Sache ihre eine
+Stelle?" fährt es bei jedem Push, mit vorgeschalteter Selbstprobe (34 Fälle
+mit Sollwert).
+
+**Drei Dinge, die man dem Register nicht ansieht und wissen muss:**
+
+**Nicht jede Decke ist null.** Vier Zeilen enden begründet darüber
+(E-ZE-27 bis -30): Die Zentrale selbst zählt mit; ein Zählmuster schlägt
+falsch an (eine Parameterweitergabe, die wie ein Formularfeld aussieht; ein
+`<p class="meldung">`, das gar keine Meldung ist); oder eine dünne
+Weiterleitung bindet einen **Leerwert** je Zusammenhang, und ihn aufzulösen
+hieße, ihn an fünfzehn Aufrufstellen zu wiederholen statt an fünf. Jede
+dieser Decken trägt den Grund ausgeschrieben im Register.
+
+**Das Register ist eine Liste, kein Spürsinn.** Es sieht keine Sache, für
+die niemand eine Zeile angelegt hat.
+
+**Die Zeilen messen verschieden scharf.** Die Zeile für die Formatierer im
+Browser zählt über eine **Namensliste** — einen neu erfundenen Formatierer
+unter neuem Namen sieht sie nicht. Die sechste Kilometerfassung des Bestands
+(`assets/luftlinie.js`) hat erst eine Gegenprobe über das Muster der
+**Rechnung** gefunden, und eine dritte Dauer-Schreibweise in
+`assets/schneiden.js` steht aus demselben Grund noch (Backlog Nr. 273). Wer
+etwas zentralisiert, zählt am Ende einmal unabhängig nach.
+
 ### 4.99 Gemeinsame Bausteine
 
 Die Anwendung hat vier unabhängige Schreibwege in dieselben Tabellen. Die
@@ -5266,10 +5540,28 @@ Die Bausteine im Einzelnen:
 | Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn nach derselben Frist ablaufen wie die Sitzung — **gleitend wie sie**: Jeder Treffer erneuert den Zeitstempel (R44, seit Web 12.9.0). Vorher war es eine feste Frist ab dem Entsperren, und genau daraus entstand der Entsperrdialog mitten in der Arbeit. **Muss vor `unlock.js` geladen werden.** |
 | Fehlerantwort der Endpunkte | `db.php` | `json_fehler()` protokolliert den vollen Ausnahmetext und gibt nach außen nur eine achtstellige Kennung. `fehler_kennung()` für Stellen mit eigener Antwortform (`ingest.php`). |
 | Zeitrechnung | `db.php` | **`TIMESTAMP` und `DATETIME` verhalten sich verschieden, und das ist bei jeder Zeitspalte mitzudenken.** `TIMESTAMP` rechnet MySQL beim Schreiben in UTC um und beim Lesen zurück — der gespeicherte Wert ist unabhängig von der Sitzungszone immer richtig (`pair_sessions.erstellt_am`, `devices.last_seen`/`created_at`, `users.created_at`, `missions.created_at`, `deleted_refs`). `DATETIME` speichert unverändert, was dasteht; dort entscheidet die Sitzungszone (`rate_limits`, `password_resets.expires_at`, sowie die Einsatz- und Papierkorbzeiten — Letztere werden aber über `local_to_utc()` bzw. `UTC_TIMESTAMP()` befüllt und waren nie zonenabhängig). |
-| Zeitrechnung | `db.php` | Die Verbindung steht seit Web 4.5.2 ausdrücklich auf UTC (`SET time_zone = '+00:00'`). Ohne das käme die Zeitrechnung von `NOW()` aus einer Hoster-Einstellung, und `NOW()` und `UTC_TIMESTAMP()` liefen um den Zonenversatz auseinander. Der Unterschied im Code bleibt: `UTC_TIMESTAMP()` für den Papierkorb (90-Tage-Frist, `TRASH_DAYS`), `NOW()` für Kurzlebiges (Ratenschutz, Token, Kopplungssitzungen). Die **Anzeige** rechnet in PHP nach `$CFG['app']['timezone']` um. |
+| Zeitrechnung | `db.php` | Die Verbindung steht seit Web 4.5.2 ausdrücklich auf UTC (`SET time_zone = '+00:00'`). Ohne das käme die Zeitrechnung von `NOW()` aus einer Hoster-Einstellung, und `NOW()` und `UTC_TIMESTAMP()` liefen um den Zonenversatz auseinander. Der Unterschied im Code bleibt: `UTC_TIMESTAMP()` für den Papierkorb (90-Tage-Frist, `TRASH_DAYS`), `NOW()` für Kurzlebiges (Ratenschutz, Token, Kopplungssitzungen). Die **Anzeige** rechnet in PHP nach `konfig('app.timezone')` um (bis Web 20.26.2: `$CFG['app']['timezone']`). |
 | Sitzungsende | `session_lib.php` | Eine Fassung für Abmelden, Ablauf, gelöschtes Konto **und** Passwortwechsel; räumt die Schlüssel im Browser und nennt den Grund. `session_verwerfen()` für Abrufe, die JSON erwarten. |
+| Meldung über eine Umleitung | `session_lib.php` | `flash_setzen($ton, $text)` und `flash_holen()` (liest **und** löscht), Töne `notice` und `error`, Sitzungsschlüssel `flash`. Ab Web 20.28.0; vorher setzten drei Seiten `$_SESSION['flash_notice']` und `$_SESSION['flash_error']` an 22 Stellen von Hand. **Ein** Schlüssel statt zwei: Der Ton ist eine Eigenschaft der Meldung, und bei zwei Schlüsseln entscheidet die Reihenfolge des Auslesens, was jemand sieht. |
+| Eingang der Endpunkte | `db.php` | `api_methode($erlaubt)` und `api_rumpf($o)` — Methodenprüfung (405 `method`) und Rumpf als JSON-Objekt (400 `leer`/`format`). Ab Web 20.28.0. **Zwei Funktionen, weil `csrf_check()` dazwischen steht**; Einzelheiten im Abschnitt „Der Eingang der Endpunkte". |
 | E-Mail-Adressen | `server/email_lib.php` | Eine Fassung für Normalisierung (`email_normalisieren()`), Prüfung (`email_pruefen()`) und Dublettenerkennung (`ist_dublettenfehler()`). **Ohne Abhängigkeiten**, damit `install.php` sie vor der Ersteinrichtung laden kann. |
 | Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |
+| Schlüssel/Wert-Ablage | `db.php` | `app_state_lesen()`, `app_state_setzen()`, dazu ab Web 20.29.0 `app_state_mehrere()` (eine Abfrage statt n), `app_state_setzen_mehrere()`, `app_state_loeschen()` und `app_state_einmalig()` (`INSERT IGNORE`, dann zurücklesen — für die beiden Servergeheimnisse, bei denen von zwei gleichzeitigen Anfragen nur **eine** gewinnen darf). Die Längenprüfung gegen `APP_STATE_MAX` steht in `app_state_zu_lang()`. **Zwei Stellen fragen weiter selbst:** `jobs.php` (Gerätevertrag — es antwortet `500 datenbank`, wo der Helfer `null` liefert) und `job_aufraeumen_schritte()` (Verbund auf `users`). |
+| Virtuelles Gerät | `db.php` | `geraet_virtuell_sicherstellen($pdo, $userId)` — holen oder anlegen, an einer Stelle statt an vier. Dazu `geraet_virtuell_kennung()`, `geraet_virtuell()` (für Listen im Speicher), `GERAETE_ECHT_SQL` und `geraete_echt_sql($alias)` für Abfragen mit Tabellenalias sowie `GERAET_VIRTUELL_MUSTER` für die eine Abfrage, die das `LIKE`-Muster bindet. Ab Web 20.29.0. |
+| Einsatz laden | `einsatz_lib.php` | `einsatz_laden($id, $userId, ['spalten' => …, 'papierkorb' => 'nein'\|'ja'\|'egal'])`. Die Besitzprüfung steht **in** der Abfrage; die drei Fehlerfälle (gibt es nicht · gehört jemand anderem · falsche Seite des Papierkorbs) sind bewusst nicht unterscheidbar. Ab Web 20.29.0; zwei Stellen bleiben namentlich außen vor (siehe Dateikopf). |
+| Transaktionsrahmen | `db.php` | `db_transaktion($pdo, $fn)` — beginnen, den Rumpf laufen lassen, bestätigen; bei jedem `Throwable` zurückrollen und **weiterwerfen**. **Verschachtelungsfest und asymmetrisch:** Wer schon in einer fremden Transaktion steht, öffnet keine eigene und bestätigt und verwirft dann auch nichts. Vor dem `rollBack()` wird nachgefragt, ob sie noch steht — ein DDL bestätigt in MySQL still, und der Rumpf darf selbst zurückgerollt haben; sonst verdeckte eine zweite Ausnahme die erste. Ab Web 20.30.0; **neun Rahmen bleiben namentlich außen vor**, die Registerzeile Z16 führt sie mit Grund. |
+| Kindtabellen eines Einsatzes | `einsatz_lib.php` | `einsatz_phasen_ersetzen()`, `einsatz_reas_ersetzen()`, `einsatz_rettungsmittel_ersetzen()`, `einsatz_besatzung_ersetzen()` — fünf Schreibwege (Formular, CSV-Import, Uhr-Eingang, Backup, Schneiden), dreißig Anweisungen, jetzt null außerhalb. Schalter `loeschen` (Vorgabe `true`; das Backup schreibt in einen gerade angelegten Einsatz) und `ignorieren` (dessen `INSERT IGNORE`). **Sie prüfen nichts** — was gültig ist, entscheidet der Aufrufer. Ab Web 20.30.0. |
+| Vorbereitete Anweisung | `einsatz_lib.php` (`einsatz_anweisung()`) | Eine `PDOStatement` je Verbindung und SQL-Text. Nötig, weil `db.php` `ATTR_EMULATE_PREPARES => false` setzt: Jedes `prepare()` ist ein Roundtrip, und der CSV-Import führt seine Anweisungen bis zu 3 000-mal aus. Die Verbindung wird **mitgehalten**, nicht nur ihre Objektkennung — eine freigegebene PDO gäbe ihre `spl_object_id` an die nächste weiter. |
+| Zahl, Größe, Anteil, Datum, Zeit | `format_lib.php` | `zahl_text()` · `groesse_text()` (drei Stufen: GB zwei, MB eine, KB null Nachkommastellen) · `groesse_kurz_text()` (mit Stufe „B", abgeschnittenen Nullen und `unbegrenzt` — eine **andere** Schreibweise, keine zweite Fassung) · `groesse_paar_text($ist, $grenze)` (gemeinsame Einheit: „3 von 250 MB") · `prozent_wert($teil, $ganz, 'ab'\|'kauf')` und `prozent_text()` · `datum_text()` · `datum_zeit_text($utc, $trenner)` · `datum_stunde_text()` · `zeit_relativ()` · `heute_lokal()` · `iso_utc()` / `iso_utc_lesen()`. Ab Web 20.32.0. **Sie lädt nur `konfig_lib.php`** — `install.php` erreicht sie über `plattform_lib.php`, bevor es eine `config.php` gibt. **Zwölf Stellen bleiben namentlich außen vor**, die Registerzeilen Z22–Z26 führen sie mit Grund. |
+| Ortszeit | `format_lib.php` (`fmt_local()`) | **Stand bis Web 20.31.0 in `db.php`**, Name und Verhalten unverändert — alle 113 Aufrufer in 37 Dateien merken nichts, weil `db.php` die neue Datei lädt. Umgezogen, weil `datum_text()` und `datum_zeit_text()` darauf aufbauen. `local_to_utc()` **bleibt in `db.php`**: Sie liest einen Formularwert, um damit zu rechnen — die andere Richtung. |
+| Zwei Trenner für Datum und Zeit | `format_lib.php` | `datum_zeit_text($utc, $trenner)` hängt den Trenner **nach** dem Formatieren an, statt ihn ins Format-Literal zu schreiben. Sonst würde der erste Trenner mit einem Buchstaben still zu Formatzeichen (` um ` ergäbe `u` = Mikrosekunden, `m` = Monat) — und so einer steht schon im Bestand. Drei Trenner sind im Umlauf (Leerzeichen 25×, Mittelpunkt 11×, Komma 1×); die Vereinheitlichung entscheidet 10c AP9 und findet dafür **eine** Stelle statt 41. |
+| Formatierer im Browser | `assets/format.js` (`EdFormat`) | **Zahl und Größe** (`zahl()`, `groesse()`) — dieselben Regeln wie `format_lib.php`, über 2 014 Byte-Werte Zeichen für Zeichen geprüft. **Tag, Dauer und Strecke** seit Web 20.34.0 (`tag()`, `tagKurz()`, `spanne()`, `dauer()`, `dauerUhr()`, `minuten()`, `km()`, `kmSumme()`) — dafür gibt es **keine** PHP-Entsprechung: Dort geht es um UTC-Zeitstempel mit Zonenumrechnung, hier um einen nackten Tagesstring und um Dauern, die serverseitig nicht entstehen. **Der Leerwert ist überall ein Parameter**, kein fester Wert — die Lehre aus AP7, wo ein fester Frühausstieg aus „– um –“ ein „–“ machte. Sechs verschiedene Leer-Antworten waren im Bestand gemessen worden. **Die Datei steht im `<head>`** (`ui_seite_start()`), damit die Ladereihenfolge keine Frage mehr ist. **Fünf dünne Weiterleitungen bleiben** (Z34), jede bindet einen anderen Leerwert. |
+| Spalten von `missions` | `mission_fields_lib.php` | `mf_missions_register()` führt jede der 41 Spalten **genau einmal** und sagt je Zweck, ob sie dabei ist und an welcher **Position**; `mf_spalten($zweck, $präfix, $alias)` erzeugt die Liste, `mf_spalten_sql()` den SQL-Text. Neun Zwecke: `export` · `backup` · `backup_restore` · `import_neu` · `import_aendern` · `ingest_neu` · `schnitt_neu` · `suchindex` · `range`. Die Position wird mitgeführt, weil die Listen in Menge **und** Reihenfolge eingefroren sind — eine andere Reihenfolge ändert die Spaltenfolge im CSV-Export. `mf_spalten()` verlangt je Zweck eine lückenlose Folge ab 0. Fehlt eine Spalte in einem Zweck, steht der Grund in `mf_missions_gruende()`. Ab Web 20.31.0. |
+| Feste Werte in einer erzeugten Anweisung | (Aufrufseite) | Wo Werte fest im Satz stehen, hängt die Wertform an der **Spalte**, nicht an ihrer Stelle: `['uhr_gesperrt' => '1', 'origin' => "'import'"]`, `COALESCE(?, spalte)` für die vier Felder unter der Export-Schranke (A9/P10), `NULL AS spalte` im Export ohne personenbezogene Angaben. Wer ein Feld unter die Schranke nimmt, trägt es an **einer** Stelle ein. |
+| Schema fragen | `db.php` | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()` — sie nehmen ein `PDO`, **zwingend**: `tools/schemaprobe/` lässt Migrationen gegen ein frisch angelegtes Schema laufen, also gegen eine andere Verbindung als `db()`. Die privaten `_hat_*` in `migration_lib.php` reichen seit Web 20.29.0 nur noch durch (E-ZE-04: gelaufene Migrationen werden nicht umgebaut). |
+| Anfrage an den Server | `assets/api.js` (`EdApi`) | `EdApi.postJson(url, daten, o)` und `EdApi.postForm(url, felder, o)`, seit Web 20.34.0. Beide liefern `{ ok, status, daten, meldung }` und **werfen nie** — ein Netzfehler kommt als `status: 0`. Sie hängen das CSRF-Token selbst an (Kopfzeile bzw. Feld) und bauen den **einen** Satzbau `<Vorgang> ist fehlgeschlagen: <Grund>`. Vorrangkette des Grundes: `meldung` → `text` → `hinweis` → Ersatzsatz mit Kennung. **`error` steht nicht in der Kette** — es trägt Maschinenwörter, keine Sätze, und erscheint nur als Kennung in der Klammer. **`ok` ist ein Transport-Urteil**: Es prüft `daten.ok !== false`, nicht `=== true`, weil die lesenden Endpunkte gar kein `ok` schicken — wer ein fachliches `ok` braucht, prüft `a.daten.ok` mit. **Die Array-Regel von `postForm` ist sicherheitsrelevant**: Ein Feldwert, der ein Array ist, geht als `name[]` hinaus; ohne die Klammern liest PHP eine Zeichenkette, `is_array()` schlägt fehl, und die Schlüsselblatt-Rückfrage zählt einen Fehlversuch. **Die Datei steht im `<head>`** — nicht in der Immer-Liste, weil `ui_geruest_ende()` auf `einstellungen.php` und `import.php` **nach** den Seitenskripten steht und `unlock.js` dort zur Ladezeit sendet. |
+| Meldung im Browser | `assets/html.js` (`EdHtml.meldung`) | `EdHtml.meldung(ton, text, o)`, seit Web 20.34.0 — zeichengleich mit `ui_meldung_markup()` in `ui.php`; 200 von 200 Prüffällen ergaben denselben DOM-Baum. **Fünf Töne, geschlossene Liste, Wurf beim sechsten**, genau wie PHP. `o.auftakt` (fetter Vorspann, maskiert), `o.knopf` (fertiges Markup, unmaskiert), `o.roh` (Text **nicht** maskieren — ein benanntes Loch mit genau einem Verbraucher, der Erfolgsmeldung des Imports mit Link und Umbruch). Vorher: sieben eigenständige Nachbauten, keine zwei gleich, drei verschiedene Ton-zu-Symbol-Tabellen. **Die Tonklasse wird zusammengesetzt** — `tools/vollstaendigkeit/` sieht sie deshalb nicht und meldet `.meldung-ok` und `.meldung-schutz` als Regel ohne Markup. Das ist kein Befund, sondern die Eigenschaft des Bausteins. |
+| Auftakt der Patientenanzeige | `assets/patient.js` (`EdPat.listeLaden`) | `EdPat.listeLaden(liste, o)`, seit Web 20.34.0: Schlüssel holen, Sperrbanner nach der Regel setzen (sichtbar genau dann, wenn kein Schlüssel da ist **und** die Liste überhaupt einen `pat_blob` enthält), entschlüsseln, zählen. Gibt `{ ck, zahl }` zurück und **entscheidet nicht**: Tagesansicht und Zeitraum kehren bei fehlendem Schlüssel zurück, die **Suche nicht** — sie muss ihre Trefferliste auch gesperrt zeigen und dabei den Altersfilter sperren. `zeigeUnlesbar()` ruft der Aufrufer **nach** seiner Schleife. **`einstellungen.php` bleibt draußen** (Z36 endet bei 1): Es teilt nur den Aufruf, arbeitet mit Fenstern zu 250 aus einem Bestand von tausenden, und `hinweisUnlesbar()` wertet die **ganze** Liste aus — über ein Fenster gesagt wäre der Satz falsch. |
 | Maskierung | `assets/html.js` (`EdHtml.escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). Seit Web 4.6.0 in einer eigenen Datei statt in `missiontable.js` — die wird nur von zwei Seiten geladen, gebraucht wird die Maskierung auf fünf. `EdMissionTable.escape`/`.esc` bleiben als Weiterleitung. **Nicht dasselbe** wie `xmlEscape()` in `export.js`: GPX ist XML mit eigenen Regeln. |
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Backup-Lauf) und schreibt je Einsatz `_pat` und `_patState`. |
 | Migrationsschutz | `migration_lib.php` (`migrationen_inhalt_zaehlen()`) | Destruktive Migrationen tragen `zerstoert` (Klartext, was verlorenginge) und optional `inhalt` (Spalten, deren Inhalt die Ausführung blockiert). Eine blockierte Migration hält die Kette **nicht** an — sie hat nichts getan, anders als ein Fehler. |
@@ -8046,10 +8338,19 @@ die auseinanderläuft.
 > Deren beide `require_once` liegen im Rumpf einer Funktion — eines davon
 > stand bis Web 20.25.0 auf Spalte 0 eingerückt und sah damit aus wie ein
 > Aufruf auf oberster Ebene. Auf oberster Ebene zöge es über `mail_lib.php`
-> **`db.php` nach**, und weil `db.php` `sitzung_ablage()` während des eigenen
-> Ladens ruft, liefe die Funktion dann in einer halb geladenen `db.php`.
-> `require_once` meldete den Zyklus nicht, sondern kehrte still zurück. Die
-> Einrückung ist berichtigt und trägt jetzt einen Kommentar, der das sagt.
+> **`db.php` nach**, und die Funktion liefe dann in einer halb geladenen
+> `db.php`. `require_once` meldete den Zyklus nicht, sondern kehrte still
+> zurück. Die Einrückung ist berichtigt und trägt jetzt einen Kommentar, der
+> das sagt.
+>
+> **Seit Web 20.27.0 ist der Zyklus kürzer, aber nicht fort** (Schritt 15
+> AP2, E-ZE-06): `db.php` ruft `sitzung_ablage()` nicht mehr beim eigenen
+> Laden — das tut jetzt `sitzung_starten()`, unmittelbar bevor PHP die
+> Sitzungsdatei anlegt. Die Bedingung bleibt trotzdem dieselbe: **Kein Weg
+> aus `sitzung_lib.php` oder `plattform_lib.php` darf `db.php` erreichen**,
+> denn `sitzung_starten()` wird aus Seiten gerufen, die `db.php` geladen
+> haben. Nachgemessen über `get_included_files()`: `plattform_lib.php` zieht
+> `email_lib.php` und `php_mindest.php` nach, `db.php` nicht.
 
 ### 5b.6 Die zwei Kontingente und ihre Warnung
 
@@ -8099,17 +8400,31 @@ keine Kopfzeilen; und HSTS war ein Jahr, fest verdrahtet.
 | `kopf_nonce_attr()` | jedes Inline-`<script>` | ` nonce="…"` |
 | `https_tor()` | `auth_guard.php`, `login.php` — **vor** `session_start()` | 301 auf HTTPS, wenn HSTS an ist |
 
-**Und vor jedem `session_start()` steht seit Web 20.9.1
+**Und vor dem `session_start()` steht seit Web 20.9.1
 `ini_set('session.use_strict_mode', '1')`** (E-P5a-38, Backlog Nr. 205).
 Ohne die Zeile übernimmt PHP eine Sitzungskennung, die der Browser mitbringt,
 auch wenn es sie nie vergeben hat — Session-Fixation. Sie stand bis dahin an
 genau **zwei** Stellen (`install.php`, `wiederherstellen.php`), ausgerechnet
 den beiden Wegen, die **keine** Anmeldesitzung tragen.
 
-`tools/sitzungshaertung/` zählt in Stufe 1 nach, mit dem Tokenizer: **7 echte
-`session_start()`-Aufrufe, 0 ohne Härtung**, Selbstprobe 8/8. Was sie *nicht*
-messen kann, ist ob die Einstellung **wirkt** — das misst nur eine laufende
-Installation (Befehl in der dortigen `LIESMICH.md`).
+**Seit Web 20.27.0 heißt „vor dem" wörtlich einen** (Schritt 15 AP2,
+E-ZE-12/-13): Es gibt in `server/` genau **einen** `session_start()`, und er
+steht in `sitzung_starten()` in `sitzung_lib.php`. Vorher waren es **neun in
+neun Dateien und vier Fassungen** — mit vier verschiedenen Sätzen
+Cookie-Parameter, deren Unterschied nirgends aufgeschrieben war. Die vier
+**Arten** (`app`, `lesend`, `einrichtung`, `passwort`) stehen jetzt als
+Tabelle neben der Funktion.
+
+`tools/sitzungshaertung/` zählt in Stufe 1 nach, mit dem Tokenizer, und prüft
+seither vier Dinge statt einem: **genau ein Aufruf** · **er steht in
+`sitzung_lib.php`** · **die Härtung steht in den zwölf Zeilen davor** ·
+**jeder weitere Aufruf ist ein Befund, auch ein gehärteter**. Gemessen:
+**1 Aufruf, 0 Befunde**, Selbstprobe 12/12. Der vierte Punkt ist der
+eigentliche Zugewinn — ein neuer Sitzungsstart *mit* Härtung war unter der
+alten Prüfung grün und hätte die Cookie-Parameter trotzdem neu erfinden
+müssen. Genau so sind die neun entstanden. Was sie *nicht* messen kann, ist
+ob die Einstellung **wirkt** — das misst nur eine laufende Installation
+(Befehl in der dortigen `LIESMICH.md`).
 
 Weil beide Wege durch *eine* Stelle gehen, bekommt jede Seite und jede
 API-Antwort die Kopfzeilen — gleich auf welchem Webserver.
@@ -9058,25 +9373,38 @@ Die Schritte:
 | `tools/cspprobe/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `tools/sitzungshaertung/pruefen.php` | 0 Befunde, Selbstprobe 8/8 |
 | `tools/jobregister/pruefen.php` | 0 Befunde, Selbstprobe 9/9 (Schritt 16, Nr. 208) |
+| `tools/zaehlung/zaehlen.php` | 38 Registerzeilen, **0 über der Decke**; Selbstprobe 33/33 — **noch nicht eingehängt**, siehe unten |
 | Java 21 (`actions/setup-java`) | Temurin 21 für den Android-Schritt — **nur wenn `android/` berührt ist**; eine Festlegung, kein Sollwert |
 | `./gradlew build` unter `android/` | 0 Lint-Fehler, 0 Fehlschläge — **nur wenn `android/` berührt ist** |
 | Berichte des Android-Fehlschlags (`actions/upload-artifact`) | Artefakt `android-berichte` — **nur bei `failure()`**; bei Grün nichts |
 | Uhr Stufe I (`pruefstand.sh aufbau-uebersetzen`) | übersetzt für alle Zielgeräte — **nur wenn `watch/` oder `tools/uhr-pruefstand/` berührt ist** |
 
-> **`tools/jobregister/` liegt vor und hängt noch nicht in `pruefung.yml`**
-> (Schritt 16, Backlog Nr. 208). Schritt 16 fasst `.github/` nicht an — die
-> Änderung ist bei Kette II angemeldet, zusammen mit dem achten
-> Schutzlistenpfad. Einzuhängen ist sie neben `sitzungshaertung`, mit zwei
-> Zeilen und ohne Bedingung:
+> **`tools/jobregister/` hängt seit Kette II in `pruefung.yml`** (Z. 643/644,
+> neben `sitzungshaertung`, ohne Bedingung) — Schritt 16 hatte es gebaut und
+> bei Kette II angemeldet, weil es `.github/` nicht anfasst (Backlog Nr. 208).
+> **Damit ist der Punkt ganz erledigt:** Nicht nur die erzeugte Beschreibung
+> im Katalog kann nicht mehr altern, sondern auch das Register in diesem
+> Dokument — es wird bei jedem Push nachgezählt statt nur, wenn es jemand
+> fährt. Genau davor warnte Nr. 208 („sonst wandert das Problem nur eine
+> Ebene weiter").
 >
->     php tools/jobregister/pruefen.php --selbstprobe
->     php tools/jobregister/pruefen.php
+> *Berichtigt am 21.09.2026 (Schritt 15 AP1, beim Holen von `main`): Hier
+> stand noch „liegt vor und hängt noch nicht", während die Zeile in der
+> Tabelle darüber die Bedingung schon nicht mehr trug und der Aufruf in
+> `pruefung.yml` steht. Gemessen, nicht fortgeschrieben.*
+
+> **`tools/zaehlung/` liegt seit Schritt 15 AP1 vor und hängt noch nicht in
+> `pruefung.yml`** — eingehängt wird es in **AP10** desselben Schritts,
+> zusammen mit dem Eintrag in `tools/kettenaufrufe`. Zwei Zeilen, neben
+> `sitzungshaertung`, ohne Bedingung:
 >
-> **Bis dahin ist der Punkt nur halb erledigt**: Die erzeugte Beschreibung im
-> Katalog kann nicht mehr altern, das Register in diesem Dokument schon —
-> es wird nur eben nachgezählt, sobald es jemand fährt. Genau das ist die
-> Lage, vor der Nr. 208 warnt („sonst wandert das Problem nur eine Ebene
-> weiter"), und deshalb steht sie hier und nicht in einer Fußnote.
+>     php tools/zaehlung/zaehlen.php --selbstprobe
+>     php tools/zaehlung/zaehlen.php
+>
+> **Bis dahin misst es nur, wer es fährt.** Genau das ist die Lage, gegen die
+> es gebaut wurde: `edbak_groesse_text()` ist auf 43 Aufrufe in zehn Dateien
+> gewachsen, ohne dass es jemandem auffiel (R83). Ein Register, das niemand
+> fährt, wiederholt den Fehler eine Ebene höher.
 
 > **Die Reihenfolge ist die des Arbeitslaufs**, und sie hat einen Grund: Was
 > ohne Netz und ohne SDK läuft, läuft zuerst. Ein Syntaxfehler soll nicht erst
@@ -11095,7 +11423,7 @@ getroffen haben.
 
 **`logo_src()`** ist die Fassung für die beiden Seiten **ohne** Sitzung
 (Anmeldung, Passwort setzen). Sie folgt seit Web 9.10.0 ebenfalls der Wahl;
-`$CFG['app']['logo_path']` gewinnt nur noch, wenn dort eine **fremde** Datei
+`konfig('app.logo_path')` gewinnt nur noch, wenn dort eine **fremde** Datei
 steht (F-P3-AN). `pw_handling.php` lädt dafür `session_lib.php`.
 
 **Der Platzhalterhinweis** an der Logo-Karte fragt die Datei, nicht eine
@@ -11166,10 +11494,25 @@ aus einem Fehler eine Unsichtbarkeit.
 
 `rechtstext_seite.php` lädt **nicht** `auth_guard.php` — der leitet
 Nichtangemeldete auf die Anmeldung um, und das ist bei einem Impressum falsch.
-Sie ruft stattdessen selbst `session_start()` (das nimmt ein vorhandenes Cookie
-an und meldet niemanden an) und liest die Rolle **aus der Datenbank**, nicht aus
-der Sitzung — dieselbe Regel wie im Guard (M1-05): Eine zurückgenommene
+Sie ruft stattdessen `sitzung_starten('lesend')` (das nimmt ein vorhandenes
+Cookie an und meldet niemanden an) und liest die Rolle **aus der Datenbank**,
+nicht aus der Sitzung — dieselbe Regel wie im Guard (M1-05): Eine zurückgenommene
 Adminrolle würde sonst bis zur nächsten Anmeldung weitergelten.
+
+> **Sie legt dabei seit Web 20.27.0 keine Sitzung mehr an** (Schritt 15 AP2,
+> F-ZE-2). Die Art `lesend` startet **nur, wenn ein Sitzungscookie da ist** —
+> und das gilt für alle drei Seiten dieser Bauart: `rechtstext_seite.php`,
+> `doku_seite.php` (Handbuch, „Was ist NAdoku") und `notfallblatt.php`.
+>
+> **Vorher bekam jeder Besucher eine Sitzung**, auch jeder Bot, und seit
+> Web 20.26.0 landete jede davon als Datei in `server/.sitzungen/`. Das
+> Konzept der Sitzungsablage hatte behauptet, die drei Seiten prüfen auf das
+> Cookie; nachgemessen am 20.09.2026 taten sie es nicht. **Für Angemeldete
+> ändert sich nichts** — ihr Browser schickt das Cookie, die Sitzung startet,
+> der angemeldete Kopf sieht aus wie vorher.
+>
+> **Wer Dateien in `.sitzungen/` zählt, rechnet das ein:** Die Zahl auf der
+> Statusseite fällt seither, ohne dass jemand etwas gelöscht hätte.
 
 Ohne `config.php` leitet sie auf `install.php` um, wie `login.php` es tut. Ein
 Impressum ist das erste, was jemand auf einer frischen Installation aufruft — es

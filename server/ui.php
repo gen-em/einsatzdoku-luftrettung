@@ -96,6 +96,45 @@ function ui_seite_start(array $o): void
         $zeilen[] = '<link rel="stylesheet" href="' . ui_asset('assets/style.css') . '">';
     }
     $zeilen[] = ui_favicon();
+
+    /* `assets/api.js` (EdApi) STEHT IM KOPF, und zwar auf JEDER Seite —
+     * Schritt 15 AP8b.
+     *
+     * ES STAND ZUERST IN DER IMMER-LISTE von ui_geruest_ende(), mit dem
+     * Kommentar, das trage schon, weil jeder EdApi-Aufruf in einem Zuhoerer
+     * stecke. DIESE ANNAHME WAR FALSCH, und ein Gegenleser hat sie mit
+     * Zeilennummern widerlegt: Auf `einstellungen.php` und `import.php`
+     * steht `ui_geruest_ende()` NACH den Seitenskripten (Z. 4672 bzw. 354),
+     * und auf genau diesen beiden laeuft `unlock.js` seinen Sendeweg zur
+     * LADEZEIT — `ck()` bzw. `sperrstatus()` fuehren ueber
+     * `ensureContentKey()` nach `loeseVormerkung()`. `EdApi` waere dort
+     * undefiniert gewesen, und der ReferenceError waere in einen
+     * ABSICHTLICH STILLEN catch gefallen: Die KDF-Anhebung haette auf zwei
+     * Seiten aufgehoert zu laufen, ohne dass irgendwo etwas erschienen
+     * waere.
+     *
+     * Im Kopf gibt es die Frage nicht mehr. Die Datei haengt an nichts
+     * (kein DOM, kein anderes Skript), legt nur `window.EdApi` an und ist
+     * klein genug, dass ihr Abruf den Seitenaufbau nicht aufhaelt.
+     *
+     * WER EINEN WEITEREN BAUSTEIN HIERHER ZIEHT, pruefe beides nach: Haengt
+     * er wirklich an nichts, und braucht ihn wirklich jede Seite? Der Kopf
+     * ist kein Ablageplatz, sondern die Antwort auf eine Reihenfolgefrage. */
+    $zeilen[] = '<script src="' . ui_asset('assets/api.js') . '"></script>';
+
+    /* `assets/format.js` (EdFormat) STEHT AUS DEMSELBEN GRUND HIER
+     * (Schritt 15 AP8d). Es setzt `window.EdFormat` und haengt an nichts.
+     * Seine Verbraucher sind ueber die Seiten verstreut -- die
+     * Einsatztabelle (`missiontable.js`, auf Suche und Zeitraum), die
+     * Einsatzansicht, die Startseite, der Export --, und
+     * `missiontable.js` liest seine Abhaengigkeiten zur LADEZEIT.
+     * Dieselbe Falle also wie bei `api.js`, nur eine Datei weiter; im Kopf
+     * gibt es sie nicht.
+     *
+     * DIE REGEL, nach der beide hier stehen: Wer `window.X` setzt, an
+     * nichts haengt und von mehr als einer Seite gebraucht wird, gehoert
+     * in den Kopf. Alles andere in die Immer-Liste oder zur Seite. */
+    $zeilen[] = '<script src="' . ui_asset('assets/format.js') . '"></script>';
     $zeilen[] = '</head>';
 
     $klasse = (string)($o['klasse'] ?? '');
@@ -569,6 +608,11 @@ function ui_geruest_ende(array $o = []): void
     echo "  </main>\n</div>\n";
     ui_fuss_seite($o);
 
+    /* `api.js` STAND HIER EINEN NACHMITTAG LANG und gehoert nicht hierher —
+     * es steht jetzt im <head> (ui_seite_start()). Warum, sagt der Kommentar
+     * dort. Kurz: Diese Liste kommt auf zwei Seiten NACH den Seitenskripten,
+     * und auf genau diesen beiden ruft `unlock.js` seinen Sendeweg zur
+     * LADEZEIT. */
     $skripte = ['assets/symbol.js', 'assets/schublade.js', 'assets/blatt.js',
                 'assets/confirm.js'];
     if (ui_hat_tagesleiste()) { $skripte[] = 'assets/daylist.js'; }
@@ -2524,6 +2568,51 @@ function ui_ortsfeld(array $o): void
              value="<?= e((string)($o['lon'] ?? '')) ?>">
       </div>
 <?php }
+
+/**
+ * Die Vorgaben, die `assets/missiontable.js` braucht — EINMAL, fuer alle
+ * drei Seiten mit einer Einsatztabelle (Schritt 15 AP9b).
+ *
+ * Bis dahin standen `ART_SYMBOLE` und `TYP_SYMBOLE` wortgleich in
+ * `suche.php` und `zeitraum.php`, und `index.php` hatte statt dessen seine
+ * eigene Liste `DAY_COLS`. Drei Seiten, drei Vorspaenne, eine Tabelle —
+ * genau die Bauform, die Schritt 15 abschafft.
+ *
+ * `KATALOG_SPALTEN` ist `mf_tagesspalten()`, also die Felder mit 'day_col'
+ * aus `mission_fields.php`. Das Modul gleicht seine Hakenspalten dagegen ab:
+ * Der Katalog bestimmt, WELCHE es gibt, das Modul, wie sie aussehen und in
+ * welcher Reihenfolge sie stehen (E-ZE-34). `label` darf Auszeichnung
+ * tragen und geht deshalb unmaskiert hinaus — der Wert stammt aus einer
+ * Datei des Projekts, nie aus einer Eingabe.
+ *
+ * MUSS VOR `assets/missiontable.js` STEHEN. Das Modul fragt die drei Namen
+ * erst beim Zeichnen ab und traegt fuer jeden einen benannten Rueckfall,
+ * aber ein Vorspann, der nach dem Modul kommt, ist ein Vorspann, der beim
+ * ersten Zeichnen fehlt.
+ */
+function ui_tabellen_bootstrap(): void
+{
+    /* Die Funktion holt sich, was sie braucht -- wie ui_days_sidebar() mit
+     * diensttag_lib.php. `zeitraum.php` bindet mission_fields_lib.php nicht
+     * ein und muss es auch nicht: Wer einen Baustein ruft, soll nicht dessen
+     * Abhaengigkeiten kennen muessen. */
+    require_once __DIR__ . '/diensttag_lib.php';
+    require_once __DIR__ . '/mission_fields_lib.php';
+
+    $spalten = array_map(
+        static fn(array $dc): array => ['col' => $dc['col'], 'art' => $dc['art'],
+                                        'label' => $dc['label'], 'klasse' => $dc['klasse'],
+                                        'cap' => $dc['cap']],
+        mf_tagesspalten());
+    ?>
+<script<?= kopf_nonce_attr() ?>>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
+        /* Die Zeichen der Diensttag-TYPEN daneben (E-S9-13, Web 16.0.0) — sonst
+           zeichnet diese Tabelle die Betriebsart, waehrend die Leiste den Typ
+           zeichnet. Dieselbe Quelle wie auf der Serverseite. */
+        const TYP_SYMBOLE = <?= json_js(dt_typ_symbole(), JSON_UNESCAPED_UNICODE) ?>;
+        const KATALOG_SPALTEN = <?= json_js($spalten, JSON_UNESCAPED_UNICODE) ?>;</script>
+<?php
+}
 
 /**
  * Ruestzeug der Ende-zu-Ende-Verschluesselung: die Skripte und die Werte,

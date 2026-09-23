@@ -2,8 +2,11 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/validate_lib.php';
+require_once __DIR__ . '/einsatz_lib.php';
 require_once __DIR__ . '/mission_fields_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
+/* `heute_lokal()` — AUSDRUECKLICH, nicht ueber `db.php` geerbt (Schritt 15 AP7). */
+require_once __DIR__ . '/format_lib.php';
 $FIELDS = require __DIR__ . '/mission_fields.php';
 
 $id = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
@@ -19,12 +22,9 @@ $editing = $id > 0;
  * ueber „+ Diensttag anlegen". */
 $dayId = 0;
 if ($editing) {
-    $dq = db()->prepare('SELECT day_id FROM missions
-                         WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
-    $dq->execute([$id, $userId]);
-    $w = $dq->fetchColumn();
-    if ($w === false) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
-    $dayId = $w === null ? 0 : (int)$w;
+    $mTag = einsatz_laden($id, $userId, ['spalten' => 'day_id']);
+    if ($mTag === null) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
+    $dayId = $mTag['day_id'] === null ? 0 : (int)$mTag['day_id'];
 } else {
     $dayId = (int)($_GET['d'] ?? $_POST['day_id'] ?? 0);
 }
@@ -102,9 +102,7 @@ $error = null;
 /* ---- Bestehenden Einsatz laden (nur eigene!) ------------------------------ */
 $mission = null; $phases = [];
 if ($editing) {
-    $st = db()->prepare('SELECT * FROM missions WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
-    $st->execute([$id, $userId]);
-    $mission = $st->fetch();
+    $mission = einsatz_laden($id, $userId);
     if (!$mission) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
     $ph = db()->prepare('SELECT phase, occurred_at FROM mission_phases
                          WHERE mission_id = ? ORDER BY occurred_at');
@@ -519,104 +517,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * Kombinationen. */
         if (!$error) {
 
-        $pdo = db(); $pdo->beginTransaction();
         try {
-            if ($editing) {
-                $set = 'started_at = ?, ended_at = ?, uhr_gesperrt = 1, edited = 1';
-                foreach ($fieldCols as $c) { $set .= ", `$c` = ?"; }
-                $pdo->prepare("UPDATE missions SET $set WHERE id = ? AND user_id = ?")
-                    ->execute(array_merge([$startedAt, $endedAt], $fieldVals, [$id, $userId]));
-            } else {
-                // Virtuelles Geraet "Manuelle Einträge" (deaktiviert: kann nie hochladen)
-                $devKey = 'manual-' . $userId;
-                /* Die Nutzerkennung gehoert IN die Abfrage (M3-12/M6-09).
-                 *
-                 * Gesucht wurde allein ueber device_id. Dass 'manual-<id>' die
-                 * Zugehoerigkeit im Namen traegt, machte die Abfrage praktisch
-                 * richtig — aber nur, weil eine Zeichenkette zufaellig dasselbe
-                 * aussagt wie eine Spalte. Steht die Bedingung nicht in der Abfrage,
-                 * gibt es auch nichts, was sie durchsetzt: Ein spaeter geaendertes
-                 * Namensschema, ein Tippfehler beim Zusammenbauen des Schluessels,
-                 * und die gefundene Zeile gehoert jemand anderem. Das Ergebnis waere
-                 * ein Einsatz am Geraet einer fremden Person.
-                 *
-                 * user_id ist ausserdem die Spalte, auf der die Fremdschluessel und
-                 * alle uebrigen Abfragen dieser Datei arbeiten. Eine Ausnahme davon
-                 * faellt bei der Durchsicht nicht auf. */
-                $q = $pdo->prepare('SELECT id FROM devices WHERE device_id = ? AND user_id = ?');
-                $q->execute([$devKey, $userId]);
-                $devId = $q->fetchColumn();
-                if ($devId === false) {
-                    $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
-                                   VALUES (?,?,?,?,0)')
-                        ->execute([$userId, $devKey,
-                                   geraet_schluessel_hash(bin2hex(random_bytes(24))),
-                                   'Manuelle Einträge']);
-                    $devId = (int)$pdo->lastInsertId();
+            /* DER RAHMEN ENDET HIER, NICHT ERST AM `catch` (Schritt 15/AP5).
+             * Hinter dem frueheren `commit()` standen noch die Hoehenermittlung
+             * und die Rettungsmittel-Zeilen — INNERHALB desselben `try`, dessen
+             * `catch` ein unbedingtes `$pdo->rollBack()` hatte. Warf eine der
+             * beiden, rollte der `catch` eine BEREITS BESTAETIGTE Transaktion
+             * zurueck: Das wirft seinerseits, und die urspruengliche Ausnahme
+             * ging verloren. `db_transaktion()` schliesst den Rahmen dort, wo er
+             * hingehoert; was danach kommt, laeuft ohne ihn. */
+            $id = db_transaktion(db(), function (PDO $pdo) use ($crewVals, $dayId, $editing,
+                                                               $endedAt, $fieldCols, $fieldVals,
+                                                               $id, $readField, $reaSitzungen,
+                                                               $rows, $startedAt, $userId): int {
+                if ($editing) {
+                    $set = 'started_at = ?, ended_at = ?, uhr_gesperrt = 1, edited = 1';
+                    foreach ($fieldCols as $c) { $set .= ", `$c` = ?"; }
+                    $pdo->prepare("UPDATE missions SET $set WHERE id = ? AND user_id = ?")
+                        ->execute(array_merge([$startedAt, $endedAt], $fieldVals, [$id, $userId]));
+                } else {
+                    // Virtuelles Geraet "Manuelle Einträge" (deaktiviert: kann nie hochladen)
+                    $devId = geraet_virtuell_sicherstellen($pdo, $userId);
+                    $cols = 'user_id, device_id, client_ref, day_id, started_at, ended_at, final, uhr_gesperrt, origin';
+                    $qms  = "?,?,?,?,?,?,1,1,'manual'";
+                    foreach ($fieldCols as $c) { $cols .= ", `$c`"; $qms .= ',?'; }
+                    $pdo->prepare("INSERT INTO missions ($cols) VALUES ($qms)")
+                        ->execute(array_merge(
+                            [$userId, (int)$devId, 'man-' . uniqid(), $dayId, $startedAt, $endedAt],
+                            $fieldVals));
+                    $id = (int)$pdo->lastInsertId();
                 }
-                $cols = 'user_id, device_id, client_ref, day_id, started_at, ended_at, final, uhr_gesperrt, origin';
-                $qms  = "?,?,?,?,?,?,1,1,'manual'";
-                foreach ($fieldCols as $c) { $cols .= ", `$c`"; $qms .= ',?'; }
-                $pdo->prepare("INSERT INTO missions ($cols) VALUES ($qms)")
-                    ->execute(array_merge(
-                        [$userId, (int)$devId, 'man-' . uniqid(), $dayId, $startedAt, $endedAt],
-                        $fieldVals));
-                $id = (int)$pdo->lastInsertId();
-            }
 
-            /* ---- Abweichende Besatzung (mission_crew) ----------------------
-             *
-             * VOLLSTAENDIG ERSETZEN, wie Phasen und Reanimationen: Ein Rollenfeld,
-             * das geleert wurde, muss seine Zeile verlieren — sonst blieb der alte
-             * Name als Abweichung stehen, obwohl im Formular nichts mehr stand.
-             *
-             * Geschrieben werden nur BELEGTE Rollen. Eine Zeile mit name = NULL
-             * hat in `mission_crew` keine Bedeutung: Anders als bei `day_crew`,
-             * wo die Zeilenmenge den Rollensatz bildet (E8), ist hier jede Zeile
-             * eine Abweichung — und keine Abweichung ist keine Zeile. Ohne
-             * gesetzten Haken raeumt $readField die Werte ohnehin ab
-             * (Checkbox-Unterfelder), es bleibt dann nichts uebrig. */
-            $pdo->prepare('DELETE FROM mission_crew WHERE mission_id = ?')->execute([$id]);
-            $insC = $pdo->prepare('INSERT INTO mission_crew (mission_id, role_code, name)
-                                   VALUES (?,?,?)');
-            foreach ($crewVals as $role => $name) {
-                if ($name === null || trim((string)$name) === '') { continue; }
-                $insC->execute([$id, $role, mb_substr(trim((string)$name), 0, 120)]);
-            }
+                /* ---- Abweichende Besatzung (mission_crew) ----------------------
+                 *
+                 * VOLLSTAENDIG ERSETZEN, wie Phasen und Reanimationen: Ein Rollenfeld,
+                 * das geleert wurde, muss seine Zeile verlieren — sonst blieb der alte
+                 * Name als Abweichung stehen, obwohl im Formular nichts mehr stand.
+                 *
+                 * Geschrieben werden nur BELEGTE Rollen. Eine Zeile mit name = NULL
+                 * hat in `mission_crew` keine Bedeutung: Anders als bei `day_crew`,
+                 * wo die Zeilenmenge den Rollensatz bildet (E8), ist hier jede Zeile
+                 * eine Abweichung — und keine Abweichung ist keine Zeile. Ohne
+                 * gesetzten Haken raeumt $readField die Werte ohnehin ab
+                 * (Checkbox-Unterfelder), es bleibt dann nichts uebrig. */
+                $besatzung = [];
+                foreach ($crewVals as $role => $name) {
+                    if ($name === null || trim((string)$name) === '') { continue; }
+                    $besatzung[(string)$role] = mb_substr(trim((string)$name), 0, 120);
+                }
+                einsatz_besatzung_ersetzen($pdo, $id, $besatzung);
 
-            /* Der Diensttag muss den Einsatz umschliessen (JSON-Vertrag 4.4).
-             * Ein nachgetragener Einsatz um 00:40 verlaengert den Dienst bis
-             * dahin; ohne das laege er ausserhalb des Zeitraums seines eigenen
-             * Dienstes. */
-            dt_zeitraum_fortschreiben($pdo, $dayId, $startedAt, $endedAt);
+                /* Der Diensttag muss den Einsatz umschliessen (JSON-Vertrag 4.4).
+                 * Ein nachgetragener Einsatz um 00:40 verlaengert den Dienst bis
+                 * dahin; ohne das laege er ausserhalb des Zeitraums seines eigenen
+                 * Dienstes. */
+                dt_zeitraum_fortschreiben($pdo, $dayId, $startedAt, $endedAt);
 
-            // Phasen vollstaendig ersetzen
-            $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?')->execute([$id]);
-            $ins = $pdo->prepare('INSERT INTO mission_phases (mission_id, phase, occurred_at) VALUES (?,?,?)');
-            foreach ($rows as $r) { $ins->execute([$id, $r[0], $r[1]]); }
+                // Phasen vollstaendig ersetzen
+                $phasen = [];
+                foreach ($rows as $r) { $phasen[] = ['phase' => $r[0], 'occurred_at' => $r[1]]; }
+                einsatz_phasen_ersetzen($pdo, $id, $phasen);
 
-            /* Reanimationen ebenso vollstaendig ersetzen (A4.3). Die Ereignisse
-             * raeumt der Fremdschluessel mit ab (ON DELETE CASCADE), sie
-             * brauchen kein eigenes DELETE. Beim Nachtragen laeuft das DELETE
-             * ins Leere — das ist billiger als eine Fallunterscheidung, die
-             * beim naechsten Umbau vergessen wuerde.
-             *
-             * Ein ueber dieses Formular gespeicherter Einsatz traegt danach
-             * uhr_gesperrt = 1; ingest.php ruehrt seine Reanimationen dann nicht
-             * an. Eine nachliefernde Uhr kann die hier eingetragenen Zeiten
-             * also nicht ueberschreiben. */
-            $pdo->prepare('DELETE FROM resus_sessions WHERE mission_id = ?')->execute([$id]);
-            if ($reaSitzungen) {
-                $insS = $pdo->prepare('INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)');
-                $insE = $pdo->prepare('INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
+                /* Reanimationen ebenso vollstaendig ersetzen (A4.3). Die Ereignisse
+                 * raeumt der Fremdschluessel mit ab (ON DELETE CASCADE), sie
+                 * brauchen kein eigenes DELETE. Beim Nachtragen laeuft das DELETE
+                 * ins Leere — das ist billiger als eine Fallunterscheidung, die
+                 * beim naechsten Umbau vergessen wuerde.
+                 *
+                 * Ein ueber dieses Formular gespeicherter Einsatz traegt danach
+                 * uhr_gesperrt = 1; ingest.php ruehrt seine Reanimationen dann nicht
+                 * an. Eine nachliefernde Uhr kann die hier eingetragenen Zeiten
+                 * also nicht ueberschreiben. */
+                $reas = [];
                 foreach ($reaSitzungen as $sitz) {
-                    $insS->execute([$id, $sitz['start']]);
-                    $sid = (int)$pdo->lastInsertId();
-                    foreach ($sitz['ereignisse'] as $e2) { $insE->execute([$sid, $e2[0], $e2[1]]); }
+                    $reas[] = ['started_at' => $sitz['start'], 'events' => $sitz['ereignisse']];
                 }
-            }
+                einsatz_reas_ersetzen($pdo, $id, $reas);
 
-            $pdo->commit();
+                return $id;
+            });
 
             // Einsatzort-Hoehe neu ermitteln: Der Track bleibt unveraendert,
             // aber die Phasenzeiten (Referenz Phase 5/6) koennen sich gerade
@@ -634,14 +613,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $name = mb_substr(trim((string)$name), 0, 120);
                 if ($name !== '' && !in_array($name, $sauber, true)) { $sauber[] = $name; }
             }
-            db()->prepare('DELETE FROM mission_resources WHERE mission_id = ?')->execute([$id]);
-            $insR = db()->prepare('INSERT INTO mission_resources (mission_id, name) VALUES (?, ?)');
-            foreach ($sauber as $name) { $insR->execute([$id, $name]); }
+            einsatz_rettungsmittel_ersetzen(db(), $id, $sauber);
 
             header('Location: einsatz.php?id=' . $id . ($editing ? '' : '&nachtrag=1'));
             exit;
         } catch (Throwable $ex) {
-            $pdo->rollBack();
             $error = 'Speichern fehlgeschlagen.';
         }
 
@@ -764,7 +740,10 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
         $unterTeile[] = (string)$tag['base_name'];
     }
     if ($day !== (string)$tag['day']) {
-        $unterTeile[] = 'Einsatzdatum ' . date('d.m.Y', strtotime($day));
+        /* `$day` ist ein KALENDERTAG ('Y-m-d'), keine UTC-Marke — deshalb der
+           Umsteller aus `diensttag_lib.php` und nicht `datum_text()`: er
+           dreht nur das Muster um und rechnet keine Zone (Schritt 15 AP7). */
+        $unterTeile[] = 'Einsatzdatum ' . dt_datum_lesbar($day);
     }
     $unter = e(implode(' · ', $unterTeile));
     if ($tag['kind'] === null) {
@@ -1313,7 +1292,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
         </div>
         <div class="fld-reihe">
           <label>Geburtsdatum<?= $SCHLOSS ?>
-            <input type="date" id="pat_dob" max="<?= e(date('Y-m-d')) ?>"></label>
+            <input type="date" id="pat_dob" max="<?= e(heute_lokal()) ?>"></label>
           <label>Alter<?= $SCHLOSS ?>
             <input type="number" id="pat_age" min="0" max="120" step="1">
             <span class="feld-klein-inline" id="agehint"></span></label>

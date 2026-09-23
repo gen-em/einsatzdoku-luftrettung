@@ -195,10 +195,8 @@ function demo_fixture_laden(): array
 function demo_id(): ?int
 {
     try {
-        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
-        $st->execute([DEMO_K_USER]);
-        $v = $st->fetchColumn();
-        if ($v === false || $v === null || (int)$v <= 0) { return null; }
+        $v = app_state_lesen(DEMO_K_USER);
+        if ($v === null || (int)$v <= 0) { return null; }
         // Gegenprobe: Steht das Konto ueberhaupt noch? Eine verwaiste Kennung
         // waere schlimmer als keine — sie zeigte auf eine spaeter neu
         // vergebene ID und damit auf ein fremdes Konto.
@@ -241,10 +239,7 @@ function demo_ist_demo(?int $userId): bool
 function demo_letzter_reset(): int
 {
     try {
-        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
-        $st->execute([DEMO_K_RESET]);
-        $v = $st->fetchColumn();
-        return $v === false || $v === null ? 0 : (int)$v;
+        return (int)(app_state_lesen(DEMO_K_RESET) ?? 0);
     } catch (Throwable $ex) {
         return 0;
     }
@@ -252,9 +247,7 @@ function demo_letzter_reset(): int
 
 function demo_reset_marke_setzen(?int $wann = null): void
 {
-    db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
-                   ON DUPLICATE KEY UPDATE v = VALUES(v)')
-        ->execute([DEMO_K_RESET, (string)($wann ?? time())]);
+    app_state_setzen(DEMO_K_RESET, (string)($wann ?? time()));
 }
 
 /** Sekunden bis zum naechsten faelligen Reset (0 = jetzt faellig). */
@@ -321,8 +314,9 @@ function demo_anlegen(): array
             . 'Bitte zuerst im Adminbereich entfernen.');
     }
 
-    $pdo->beginTransaction();
-    try {
+    /* Der Rumpf liefert Kennung und Zahlen zurueck; `db_transaktion()` reicht
+     * sie unveraendert durch. */
+    [$id, $stats] = db_transaktion($pdo, function (PDO $pdo) use ($k, $fx): array {
         $pdo->prepare('INSERT INTO users (email, name, password_hash, kdf_salt, kdf_iter,
                                           pat_wrap_pw, pat_wrap_rc, pat_key_check,
                                           role, account_key)
@@ -341,15 +335,11 @@ function demo_anlegen(): array
                 $k['account_key'] ?? null,
             ]);
         $id = (int)$pdo->lastInsertId();
-        $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
-                       ON DUPLICATE KEY UPDATE v = VALUES(v)')
-            ->execute([DEMO_K_USER, (string)$id]);
-        $stats = demo_bestand_einspielen($pdo, $id, $fx);
-        $pdo->commit();
-    } catch (Throwable $ex) {
-        $pdo->rollBack();
-        throw $ex;
-    }
+        /* `app_state_setzen()` nimmt `db()` — dieselbe statische Verbindung
+         * wie `$pdo` hier, also DIESELBE offene Transaktion (E-ZE-17). */
+        app_state_setzen(DEMO_K_USER, (string)$id);
+        return [$id, demo_bestand_einspielen($pdo, $id, $fx)];
+    });
     demo_reset_marke_setzen();
     return ['user_id' => $id] + $stats;
 }
@@ -377,8 +367,7 @@ function demo_zuruecksetzen(): array
     $fx = demo_fixture_laden();
     $pdo = db();
 
-    $pdo->beginTransaction();
-    try {
+    $stats = db_transaktion($pdo, function (PDO $pdo) use ($id, $fx): array {
         demo_bestand_loeschen($pdo, $id);
 
         /* Konto- und Schluesselmaterial ueberschreiben. `session_epoch` wird
@@ -398,12 +387,8 @@ function demo_zuruecksetzen(): array
                 $k['pat_key_check'] ?? null, $k['account_key'] ?? null, $id,
             ]);
 
-        $stats = demo_bestand_einspielen($pdo, $id, $fx);
-        $pdo->commit();
-    } catch (Throwable $ex) {
-        $pdo->rollBack();
-        throw $ex;
-    }
+        return demo_bestand_einspielen($pdo, $id, $fx);
+    });
     demo_reset_marke_setzen();
     return $stats;
 }
@@ -576,19 +561,12 @@ function demo_entfernen(): void
 {
     $id = demo_id();
     if ($id === null) { return; }
-    $pdo = db();
-    $pdo->beginTransaction();
-    try {
+    db_transaktion(db(), function (PDO $pdo) use ($id): void {
         /* Reihenfolge: erst der Bestand, dann die Kontozeile, ZULETZT die
          * Kennzeichnung. Andersherum verloere demo_bestand_loeschen() seinen
          * Riegel mitten im Vorgang — er haengt an genau dieser Kennzeichnung. */
         demo_bestand_loeschen($pdo, $id);
         $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
-        $pdo->prepare('DELETE FROM app_state WHERE k IN (?, ?)')
-            ->execute([DEMO_K_USER, DEMO_K_RESET]);
-        $pdo->commit();
-    } catch (Throwable $ex) {
-        $pdo->rollBack();
-        throw $ex;
-    }
+        app_state_loeschen(DEMO_K_USER, DEMO_K_RESET);   // dieselbe Verbindung, dieselbe Transaktion
+    });
 }

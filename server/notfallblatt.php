@@ -57,6 +57,7 @@ declare(strict_types=1);
 if (!is_file(__DIR__ . '/config.php')) { header('Location: install.php'); exit; }
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/format_lib.php';   // datum_text() fuer die Zeitmarke des Blatts
 
 /* Wie beim Schluesselblatt: Diese Seite zeigt ein Geheimnis. Sie gehoert in
  * keinen Zwischenspeicher und in keine fremde Adresszeile. */
@@ -96,15 +97,10 @@ $code = nb_code((string)($_POST['code'] ?? ''));
  * Erstvergabe-Fall (noch keine Sitzung) nimmt den gesendeten Wert, und der
  * muss dann eine Adresse sein. */
 $konto = '';
-$angemeldet = false;
-if (session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params([
-        'httponly' => true, 'secure' => !empty($_SERVER['HTTPS']),
-        'samesite' => 'Strict', 'path' => '/',
-    ]);
-    ini_set('session.use_strict_mode', '1');
-    @session_start();
-}
+/* Siehe `doku_seite.php` — Art `lesend`, seit Web 20.27.0 nur mit Cookie
+ * (F-ZE-2). Der Erstvergabe-Fall (noch keine Sitzung) bleibt genau der
+ * Fall, in dem hier nichts startet und der gesendete Wert gilt. */
+sitzung_starten('lesend');
 $angemeldet = !empty($_SESSION['user_id']);
 if ($angemeldet) {
     try {
@@ -123,7 +119,7 @@ if ($konto === '') {
  * und bricht erst an der Zeile darunter ab. */
 require_once __DIR__ . '/instanz_lib.php';
 $adresse = app_url();
-$jetzt   = fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y');
+$jetzt   = datum_text(gmdate('Y-m-d H:i:s'));
 $h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 
 $v = static function (string $rel): string {

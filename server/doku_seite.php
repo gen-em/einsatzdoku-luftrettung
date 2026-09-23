@@ -60,15 +60,12 @@ $mitVerzeichnis = $dokuName === 'handbuch';
 $seitenTitel    = $dokuName === 'handbuch' ? 'Handbuch' : 'Was ist NAdoku?';
 
 /* ---- Laeuft eine Sitzung? Nur fragen, nicht erzwingen. ------------------- */
-$angemeldet = false;
-if (session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params([
-        'httponly' => true, 'secure' => !empty($_SERVER['HTTPS']),
-        'samesite' => 'Strict', 'path' => '/',
-    ]);
-    ini_set('session.use_strict_mode', '1');
-    @session_start();
-}
+/* NUR FRAGEN, NICHT ERZWINGEN — und seit Web 20.27.0 auch nicht mehr
+ * ANLEGEN: Die Art `lesend` startet nur, wenn ein Sitzungscookie da ist
+ * (F-ZE-2). Diese Seite ist ohne Anmeldung erreichbar; bis dahin bekam JEDER
+ * Besucher eine Sitzung und seit Schritt 16 eine Datei in `.sitzungen/`,
+ * auch jeder Bot. Fuer Angemeldete aendert sich nichts. */
+sitzung_starten('lesend');
 $angemeldet = !empty($_SESSION['user_id']);
 
 $seite = doku_seite($dokuName);

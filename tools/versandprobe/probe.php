@@ -53,21 +53,27 @@ if ($echt) {
 const HOST     = '127.0.0.1';
 const PASSWORT = 'geheim-probe-2026';
 
-/* Ein $CFG, bevor irgendetwas aus server/ geladen wird: serverkrypto_lib.php
- * liest den Serverschlüssel daraus.
+/* DER SERVERSCHLÜSSEL FÜR DIESEN LAUF (Web 20.27.0 neu gefasst).
  *
- * Liegt eine örtliche `config.php`, wird sie GELESEN (für den Zugang zur
- * Datenbank in Teil 10), aber NICHT GESCHRIEBEN: Der Serverschlüssel für
- * diesen Lauf entsteht hier und ist nach dem Lauf wieder fort. Eine Probe,
- * die eine Konfiguration verändert, ist keine Probe mehr, sondern ein
- * Eingriff.
+ * Bis Web 20.26.3 stand hier eine globale `$CFG`, die vor `server/` gesetzt
+ * wurde; `serverkrypto_lib.php` las den Schlüssel daraus. Die Globale ist
+ * mit Schritt 15 AP2 entfallen — die Anwendung liest über `konfig()` aus der
+ * Datei, und eine Zuweisung an `$CFG` erreicht niemanden mehr. Sie
+ * scheitert nicht, sie tut nur nichts; fünf Erwartungen dieser Probe standen
+ * danach still auf „nicht erfüllt".
+ *
+ * DER SATZ VON FRÜHER GILT WEITER — nur anders durchgesetzt. Hier stand:
+ * „Eine Probe, die eine Konfiguration verändert, ist keine Probe mehr,
+ * sondern ein Eingriff." Es gibt jetzt keinen Weg mehr, der die Datei nicht
+ * anfasst. Was bleibt, ist dafür zu sorgen, dass der Eingriff **nicht
+ * überlebt**: `konfig_stellen()` legt den vorigen Stand zurück — auch bei
+ * einer Ausnahme, auch bei `exit` (`register_shutdown_function`).
  *
  * Ohne config.php laufen die Teile 1 bis 9 trotzdem — die Adapter brauchen
  * keine Installation. Teil 10 sagt dann, dass er ausfällt, statt zu schweigen. */
-$konfig = __DIR__ . '/../../server/config.php';
-$CFG = is_file($konfig) ? (array)(require $konfig) : ['db' => [], 'app' => [], 'smtp' => []];
-$CFG['server_key'] = bin2hex(random_bytes(32));
+require_once __DIR__ . '/../konfig_stellen.php';
 require_once __DIR__ . '/../../server/sicherungsziel_lib.php';
+$zurueckSK = konfig_stellen(['server_key' => bin2hex(random_bytes(32))]);
 
 echo "Gegenstellen: " . GEGEN . " (FTP " . P_FTP . ", FTPS " . P_FTPS
      . ", SFTP " . P_SFTP . ", Nutzer " . NUTZER . ")\n";
@@ -105,14 +111,13 @@ $roh = base64_decode(substr($p, strlen(SK_PRAEFIX)), true);
 $kaputt = SK_PRAEFIX . base64_encode(substr((string)$roh, 0, -1) . 'X');
 pruef('Eine veränderte Chiffre wird abgewiesen', sk_oeffnen($kaputt, 'ziel:7:pass') === null);
 pruef('Müll wird abgewiesen', sk_oeffnen('nichts', 'z') === null);
-$alt = $CFG['server_key'];
-$CFG['server_key'] = bin2hex(random_bytes(32)); serverschluessel(true);
+$zurueck1 = konfig_stellen(['server_key' => bin2hex(random_bytes(32))]);
 pruef('Ein anderer Serverschlüssel öffnet nicht', sk_oeffnen($p, 'ziel:7:pass') === null);
-$CFG['server_key'] = 'zu-kurz'; serverschluessel(true);
+konfig_stellen(['server_key' => 'zu-kurz']);
 pruef('Ein unbrauchbarer Eintrag gilt als „kein Schlüssel"', !serverschluessel_da());
 pruef('Ohne Schlüssel wirft das Versiegeln, statt Klartext zu speichern',
       faengt(fn() => sk_versiegeln('x', 'z')) !== null);
-$CFG['server_key'] = $alt; serverschluessel(true);
+$zurueck1();
 $lang = str_repeat('A', 100000);
 pruef('100 000 Zeichen gehen unverändert durch',
       sk_oeffnen(sk_versiegeln($lang, 'z'), 'z') === $lang);
@@ -373,13 +378,12 @@ pruef('Ein falsches Passwort meldet sich als solches', $e['ok'] === false
 /* Ein Ziel, dessen Geheimnis mit einem ANDEREN Serverschlüssel versiegelt
  * wurde — der Fall „config.php neu aufgesetzt, Schlüssel vergessen". */
 $fremd = zielAttrappe(300, 'ftps', P_FTPS, null);
-$alt = $CFG['server_key'];
-$CFG['server_key'] = bin2hex(random_bytes(32)); serverschluessel(true);
+$zurueck2 = konfig_stellen(['server_key' => bin2hex(random_bytes(32))]);
 $e = sz_verbindung_pruefen($fremd);
 pruef('Ein fremder Serverschlüssel wird benannt, nicht verschwiegen',
       $e['ok'] === false && str_contains($e['meldung'], 'ANDEREN Serverschlüssel'),
       mb_substr($e['meldung'], 0, 60));
-$CFG['server_key'] = $alt; serverschluessel(true);
+$zurueck2();
 
 /* ======================================================================
  * Teil 10 — Die Ziele in der Datenbank

@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/adminbackup_lib.php';   // Ablagezahlen, Grenze, Schwellen, Marken
+require_once __DIR__ . '/format_lib.php';        // iso_utc(), prozent_wert(), groesse_text()
 
 /**
  * SPEICHER DER INSTALLATION (S8/AP2, E-S8-18, Mockup 07 Fassung 2).
@@ -119,7 +120,7 @@ function speicher_messen(PDO $pdo): array
     $datei = speicher_dateien_bytes();
     edbak_marke_setzen(SPEICHER_K_DB, (string)$db);
     edbak_marke_setzen(SPEICHER_K_DATEIEN, (string)$datei);
-    edbak_marke_setzen(SPEICHER_K_STAND, gmdate('Y-m-d\TH:i:s\Z'));
+    edbak_marke_setzen(SPEICHER_K_STAND, iso_utc());
     return ['datenbank' => $db, 'dateien' => $datei];
 }
 
@@ -210,7 +211,10 @@ function speicher_uebersicht(): array
             'komplett' => $komp,
             'summe'    => $backups,
             'bezug'    => $grenze,
-            'prozent'  => $grenze > 0 ? (int)floor($backups * 100 / $grenze) : 0,
+            /* ABGERUNDET, nicht kaufmaennisch: Dieselbe Zahl ist Anzeige UND
+             * Grenzwert — `speicher_ton()` entscheidet an ihr die Farbe. Mit
+             * 'kauf' zeigte die Plakette 90 %, waehrend der Ton noch blau ist. */
+            'prozent'  => prozent_wert($backups, $grenze, 'ab'),
         ],
         'gesamt'    => [
             'datenbank' => $db,
@@ -219,7 +223,7 @@ function speicher_uebersicht(): array
             'komplett'  => $komp,
             'summe'     => $gesamt,
             'bezug'     => $webspace,
-            'prozent'   => $webspace > 0 ? (int)floor($gesamt * 100 / $webspace) : 0,
+            'prozent'   => prozent_wert($gesamt, $webspace, 'ab'),   // abgerundet, siehe oben
         ],
         'ablage'    => ['ok' => $ablageOk, 'grund' => $ablageGrund,
                         'pfad' => edbak_wurzel()],
@@ -313,7 +317,9 @@ function speicher_kontingente_melden(): array
 
     foreach ($kontingente as $k => $c) {
         if ((int)$c['bezug'] <= 0) { continue; }         // keine Angabe, keine Warnung
-        $proz  = (int)floor($c['ist'] * 100 / $c['bezug']);
+        /* ABGERUNDET: Der Wert loest die Schwelle aus — die Warnmail soll
+         * erst kommen, wenn die Schwelle wirklich erreicht ist. */
+        $proz  = prozent_wert($c['ist'], $c['bezug'], 'ab');
         $alt   = array_map('intval', (array)($gemeldet[$k] ?? []));
         /* UNTERSCHRITTENE SCHWELLEN VERGESSEN — sonst waere die Warnung ein
          * einmaliges Ereignis im Leben einer Installation. */
@@ -343,8 +349,8 @@ function speicher_kontingente_melden(): array
                 if (mail_einreihen('speicher_kontingent', $m, [
                         'titel'      => $c['titel'],
                         'prozent'    => $s,
-                        'belegt'     => edbak_groesse_text($c['ist']),
-                        'kontingent' => edbak_groesse_text((int)$c['bezug']),
+                        'belegt'     => groesse_text($c['ist']),
+                        'kontingent' => groesse_text((int)$c['bezug']),
                         'rat'        => $c['rat'],
                     ]) !== MAIL_ABGELEHNT) {
                     $ok = true;

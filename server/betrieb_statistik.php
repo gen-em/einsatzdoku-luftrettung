@@ -4,6 +4,8 @@ require_once __DIR__ . '/auth_guard.php';
 require_betreiberin();
 require_once __DIR__ . '/geraete_lib.php';
 require_once __DIR__ . '/demo_lib.php';
+require_once __DIR__ . '/format_lib.php';   // zahl_text(), prozent_text(), prozent_wert(),
+                                            // datum_zeit_text(), heute_lokal() (Schritt 15/AP7)
 
 /**
  * BETRIEB -> STATISTIK (S8/AP4, Mockup 04 Fassung 2).
@@ -49,13 +51,6 @@ require_once __DIR__ . '/demo_lib.php';
 /* ---- Zeitraeume: eine Stelle, drei Spalten ------------------------------ */
 const STAT_ZEITRAEUME = [7 => '7 Tage', 30 => '30 Tage', 180 => '6 Monate'];
 
-/** Anteil als Prozentzeichenkette — oder leer, wenn es keine Bezugsgröße gibt. */
-function stat_anteil(int $teil, int $ganz): string
-{
-    if ($ganz <= 0) { return ''; }
-    return (string)(int)round($teil * 100 / $ganz) . ' %';
-}
-
 /**
  * Anteil und Erklärung zu EINER Kleinzeile — ohne führenden Gedankenstrich,
  * wenn es keinen Anteil gibt. „— Ingest gesperrt" liest sich wie ein
@@ -65,12 +60,6 @@ function stat_klein(string $anteil, string $text = ''): string
 {
     $teile = array_values(array_filter([$anteil, $text], static fn($x) => $x !== ''));
     return implode(' — ', $teile);
-}
-
-/** Zahl mit Tausenderpunkt. */
-function stat_zahl(int|float $n, int $stellen = 0): string
-{
-    return number_format((float)$n, $stellen, ',', '.');
 }
 
 $pdo = db();
@@ -98,7 +87,7 @@ $ohneGeraet = (int)$st->fetchColumn();
 $st = $pdo->prepare('SELECT geraet_art, geraet_modell, geraet_teil, active, last_seen,
                             created_at, user_id
                      FROM devices WHERE user_id <> ? AND device_id NOT LIKE ?');
-$st->execute([$demoId, 'manual-%']);
+$st->execute([$demoId, GERAET_VIRTUELL_MUSTER]);
 $geraete = $st->fetchAll();
 $geraeteZahl = count($geraete);
 
@@ -234,7 +223,7 @@ usort($modelle, static function (array $a, array $b) use ($sort, $richtung): int
  * ein Werkzeug, das UTF-8 erkennt.
  */
 if (($_GET['export'] ?? '') === 'csv') {
-    $name = 'geraetemodelle-' . date('Y-m-d') . '.csv';
+    $name = 'geraetemodelle-' . heute_lokal() . '.csv';
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $name . '"');
     $out = fopen('php://output', 'w');
@@ -243,8 +232,8 @@ if (($_GET['export'] ?? '') === 'csv') {
                    'NutzerInnen', 'Anteil NutzerInnen %'], ';', '"', '');
     foreach ($modelle as $m) {
         fputcsv($out, [$m['name'], $m['hersteller'], $m['art'],
-                       $m['geraete'], $geraeteZahl > 0 ? (int)round($m['geraete'] * 100 / $geraeteZahl) : 0,
-                       $m['nutzer'],  $kontenZahl  > 0 ? (int)round($m['nutzer']  * 100 / $kontenZahl)  : 0],
+                       $m['geraete'], prozent_wert($m['geraete'], $geraeteZahl, 'kauf'),
+                       $m['nutzer'],  prozent_wert($m['nutzer'],  $kontenZahl,  'kauf')],
                  ';', '"', '');
     }
     fclose($out);
@@ -276,7 +265,7 @@ ui_seite_start(['titel' => 'Statistik']);
 
   <?php ui_titelzeile([
       'titel' => 'Statistik',
-      'unter' => 'Stand ' . e(fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y · H:i')) . ' Uhr · '
+      'unter' => 'Stand ' . e(datum_zeit_text(gmdate('Y-m-d H:i:s'), ' · ')) . ' Uhr · '
                . '<strong>ohne Demo-Konto</strong> · rein lesend',
   ]); ?>
 
@@ -290,11 +279,11 @@ ui_seite_start(['titel' => 'Statistik']);
   <?= wartung_balken() ?>
 
   <div class="kennzahl-raster kennzahl-raster-4">
-    <?= ui_kennzahl(['wert' => stat_zahl($kontenZahl), 'label' => 'Konten',
+    <?= ui_kennzahl(['wert' => zahl_text($kontenZahl), 'label' => 'Konten',
                      'href' => 'admin_users.php']) ?>
-    <?= ui_kennzahl(['wert' => stat_zahl($geraeteZahl), 'label' => 'Geräte']) ?>
-    <?= ui_kennzahl(['wert' => stat_zahl($einsaetzeGesamt), 'label' => 'Einsätze gesamt']) ?>
-    <?= ui_kennzahl(['wert' => stat_zahl($einsaetze[30] ?? 0),
+    <?= ui_kennzahl(['wert' => zahl_text($geraeteZahl), 'label' => 'Geräte']) ?>
+    <?= ui_kennzahl(['wert' => zahl_text($einsaetzeGesamt), 'label' => 'Einsätze gesamt']) ?>
+    <?= ui_kennzahl(['wert' => zahl_text($einsaetze[30] ?? 0),
                      'label' => 'Einsätze in 30 Tagen']) ?>
   </div>
 
@@ -308,11 +297,11 @@ ui_seite_start(['titel' => 'Statistik']);
       <?php foreach (['betreiberin' => 'BetreiberInnen', 'admin' => 'Admins',
                       'user' => 'NutzerInnen'] as $r => $t): ?>
         <?php ui_zeile(['text' => $t,
-                        'klein' => stat_anteil($nachRolle[$r], $kontenZahl),
+                        'klein' => prozent_text($nachRolle[$r], $kontenZahl),
                         'plaketten' => ui_plakette((string)$nachRolle[$r])]); ?>
       <?php endforeach; ?>
       <?php ui_zeile(['text' => 'Ohne Gerät',
-                      'klein' => stat_klein(stat_anteil($ohneGeraet, $kontenZahl),
+                      'klein' => stat_klein(prozent_text($ohneGeraet, $kontenZahl),
                                             'sie tragen von Hand nach'),
                       'plaketten' => ui_plakette((string)$ohneGeraet)]); ?>
 
@@ -326,8 +315,8 @@ ui_seite_start(['titel' => 'Statistik']);
                             'angelegt' => 'Neu angelegt'] as $k => $t): ?>
               <tr><th scope="row"><?= e($t) ?></th>
                 <?php foreach (array_keys(STAT_ZEITRAEUME) as $tage): ?>
-                  <td class="zahl-spalte"><?= stat_zahl($kontenZeit[$k][$tage]) ?>
-                    <span class="zeile-klein"><?= e(stat_anteil($kontenZeit[$k][$tage], $kontenZahl)) ?></span></td>
+                  <td class="zahl-spalte"><?= zahl_text($kontenZeit[$k][$tage]) ?>
+                    <span class="zeile-klein"><?= e(prozent_text($kontenZeit[$k][$tage], $kontenZahl)) ?></span></td>
                 <?php endforeach; ?>
               </tr>
             <?php endforeach; ?>
@@ -337,7 +326,7 @@ ui_seite_start(['titel' => 'Statistik']);
     <?php ui_karte_ende(); ?>
 
     <?php ui_karte_start(['titel' => 'Einsätze', 'id' => 'k-einsaetze',
-                          'zahl' => stat_zahl($einsaetzeGesamt) . ' gesamt']); ?>
+                          'zahl' => zahl_text($einsaetzeGesamt) . ' gesamt']); ?>
       <div class="tabelle-scroll">
         <table class="tabelle">
           <thead><tr><th>&nbsp;</th>
@@ -346,27 +335,27 @@ ui_seite_start(['titel' => 'Statistik']);
           <tbody>
             <tr><th scope="row">Einsätze</th>
               <?php foreach (array_keys(STAT_ZEITRAEUME) as $tage): ?>
-                <td class="zahl-spalte"><?= stat_zahl($einsaetze[$tage]) ?></td>
+                <td class="zahl-spalte"><?= zahl_text($einsaetze[$tage]) ?></td>
               <?php endforeach; ?>
             </tr>
             <tr><th scope="row">NutzerInnen mit Einsatz</th>
               <?php foreach (array_keys(STAT_ZEITRAEUME) as $tage): ?>
-                <td class="zahl-spalte"><?= stat_zahl($aktive[$tage]) ?>
-                  <span class="zeile-klein"><?= e(stat_anteil($aktive[$tage], $kontenZahl)) ?></span></td>
+                <td class="zahl-spalte"><?= zahl_text($aktive[$tage]) ?>
+                  <span class="zeile-klein"><?= e(prozent_text($aktive[$tage], $kontenZahl)) ?></span></td>
               <?php endforeach; ?>
             </tr>
             <tr><th scope="row">Ø je aktiver NutzerIn
                 <span class="zeile-klein">mit Einsatz im Zeitraum</span></th>
               <?php foreach (array_keys(STAT_ZEITRAEUME) as $tage): ?>
                 <td class="zahl-spalte"><?= $aktive[$tage] > 0
-                    ? stat_zahl($einsaetze[$tage] / $aktive[$tage], 1) : '—' ?></td>
+                    ? zahl_text($einsaetze[$tage] / $aktive[$tage], 1) : '—' ?></td>
               <?php endforeach; ?>
             </tr>
             <tr><th scope="row">Ø je NutzerIn gesamt
                 <span class="zeile-klein">alle <?= $kontenZahl ?> Konten</span></th>
               <?php foreach (array_keys(STAT_ZEITRAEUME) as $tage): ?>
                 <td class="zahl-spalte"><?= $kontenZahl > 0
-                    ? stat_zahl($einsaetze[$tage] / $kontenZahl, 1) : '—' ?></td>
+                    ? zahl_text($einsaetze[$tage] / $kontenZahl, 1) : '—' ?></td>
               <?php endforeach; ?>
             </tr>
           </tbody>
@@ -383,24 +372,24 @@ ui_seite_start(['titel' => 'Statistik']);
     <?php ui_karte_start(['titel' => 'Geräte', 'id' => 'k-geraete',
                           'zahl' => 'von ' . $geraeteZahl]); ?>
       <?php ui_zeile(['text' => 'Garmin-Uhren',
-                      'klein' => stat_anteil($nachArt['uhr'], $geraeteZahl),
+                      'klein' => prozent_text($nachArt['uhr'], $geraeteZahl),
                       'plaketten' => ui_plakette((string)$nachArt['uhr'])]); ?>
       <?php ui_zeile(['text' => 'Android-Handys',
-                      'klein' => stat_anteil($nachArt['handy'], $geraeteZahl),
+                      'klein' => prozent_text($nachArt['handy'], $geraeteZahl),
                       'plaketten' => ui_plakette((string)$nachArt['handy'])]); ?>
       <?php if ($nachArt['sonstiges'] > 0): ?>
         <?php ui_zeile(['text' => 'Sonstige',
-                        'klein' => stat_anteil($nachArt['sonstiges'], $geraeteZahl),
+                        'klein' => prozent_text($nachArt['sonstiges'], $geraeteZahl),
                         'plaketten' => ui_plakette((string)$nachArt['sonstiges'])]); ?>
       <?php endif; ?>
       <?php if ($nachArt['unbekannt'] > 0): ?>
         <?php ui_zeile(['text' => 'Ohne Angabe',
-                        'klein' => stat_klein(stat_anteil($nachArt['unbekannt'], $geraeteZahl),
+                        'klein' => stat_klein(prozent_text($nachArt['unbekannt'], $geraeteZahl),
                                               'ältere Fassungen melden nichts über sich'),
                         'plaketten' => ui_plakette((string)$nachArt['unbekannt'])]); ?>
       <?php endif; ?>
       <?php ui_zeile(['text' => 'Deaktiviert',
-                      'klein' => stat_klein(stat_anteil($deaktiviert, $geraeteZahl),
+                      'klein' => stat_klein(prozent_text($deaktiviert, $geraeteZahl),
                                             'Ingest gesperrt, Daten bleiben'),
                       'plaketten' => ui_plakette((string)$deaktiviert,
                           ['ton' => $deaktiviert > 0 ? 'orange' : 'neutral'])]); ?>
@@ -415,8 +404,8 @@ ui_seite_start(['titel' => 'Statistik']);
                             'gekoppelt' => 'Gekoppelt'] as $k => $t): ?>
               <tr><th scope="row"><?= e($t) ?></th>
                 <?php foreach (array_keys(STAT_ZEITRAEUME) as $tage): ?>
-                  <td class="zahl-spalte"><?= stat_zahl($geraeteZeit[$k][$tage]) ?>
-                    <span class="zeile-klein"><?= e(stat_anteil($geraeteZeit[$k][$tage], $geraeteZahl)) ?></span></td>
+                  <td class="zahl-spalte"><?= zahl_text($geraeteZeit[$k][$tage]) ?>
+                    <span class="zeile-klein"><?= e(prozent_text($geraeteZeit[$k][$tage], $geraeteZahl)) ?></span></td>
                 <?php endforeach; ?>
               </tr>
             <?php endforeach; ?>
@@ -459,10 +448,10 @@ ui_seite_start(['titel' => 'Statistik']);
                 <td><?= e($m['name']) ?></td>
                 <td><?= e($m['hersteller']) ?></td>
                 <td><?= e($m['art']) ?></td>
-                <td class="zahl-spalte"><?= stat_zahl($m['geraete']) ?></td>
-                <td class="zahl-spalte"><?= e(stat_anteil($m['geraete'], $geraeteZahl)) ?></td>
-                <td class="zahl-spalte"><?= stat_zahl($m['nutzer']) ?></td>
-                <td class="zahl-spalte"><?= e(stat_anteil($m['nutzer'], $kontenZahl)) ?></td>
+                <td class="zahl-spalte"><?= zahl_text($m['geraete']) ?></td>
+                <td class="zahl-spalte"><?= e(prozent_text($m['geraete'], $geraeteZahl)) ?></td>
+                <td class="zahl-spalte"><?= zahl_text($m['nutzer']) ?></td>
+                <td class="zahl-spalte"><?= e(prozent_text($m['nutzer'], $kontenZahl)) ?></td>
               </tr>
             <?php endforeach; ?>
           </tbody>

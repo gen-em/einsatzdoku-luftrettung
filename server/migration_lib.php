@@ -56,30 +56,28 @@ function _geraete_mit_datumsname(PDO $pdo): array
  * Installationen, die an unterschiedlichen Punkten stehen koennen. Die vier
  * Auskuenfte stehen deshalb hier und nicht als wiederholtes SQL im Ablauf.
  */
+/* DIE DREI REICHEN SEIT WEB 20.28.0 NUR NOCH DURCH (Schritt 15/AP4,
+ * E-ZE-04). Der Rumpf steht in `db.php` als `db_hat_tabelle()`,
+ * `db_hat_spalte()` und `db_hat_index()`; dort finden ihn auch die vier
+ * Dateien, die `migration_lib.php` nicht laden.
+ *
+ * DIE NAMEN BLEIBEN, weil 42 gelaufene Migrationen sie rufen und E-ZE-04
+ * sagt: Gelaufene Migrationen werden nicht umgebaut. NEUE Migrationen rufen
+ * `db_hat_*()` unmittelbar. */
+
 function _hat_tabelle(PDO $pdo, string $tabelle): bool
 {
-    $q = $pdo->prepare("SELECT COUNT(*) FROM information_schema.tables
-                        WHERE table_schema = DATABASE() AND table_name = ?");
-    $q->execute([$tabelle]);
-    return (int)$q->fetchColumn() > 0;
+    return db_hat_tabelle($pdo, $tabelle);
 }
 
 function _hat_spalte(PDO $pdo, string $tabelle, string $spalte): bool
 {
-    $q = $pdo->prepare("SELECT COUNT(*) FROM information_schema.columns
-                        WHERE table_schema = DATABASE()
-                          AND table_name = ? AND column_name = ?");
-    $q->execute([$tabelle, $spalte]);
-    return (int)$q->fetchColumn() > 0;
+    return db_hat_spalte($pdo, $tabelle, $spalte);
 }
 
 function _hat_index(PDO $pdo, string $tabelle, string $index): bool
 {
-    $q = $pdo->prepare("SELECT COUNT(*) FROM information_schema.statistics
-                        WHERE table_schema = DATABASE()
-                          AND table_name = ? AND index_name = ?");
-    $q->execute([$tabelle, $index]);
-    return (int)$q->fetchColumn() > 0;
+    return db_hat_index($pdo, $tabelle, $index);
 }
 
 /**
@@ -496,8 +494,14 @@ function migrationen_katalog(): array
         'web'   => '2.0.0',
         'label' => 'Tageszuordnung: Tag = lokales Datum des Einsatz-/Segmentbeginns (Wechsel 0:00); Bestand wird neu zugeordnet',
         'run'   => function (PDO $pdo): void {
-            global $CFG;
-            $tz  = new DateTimeZone($CFG['app']['timezone'] ?? 'Europe/Berlin');
+            /* MIT UMGESTELLT, OBWOHL E-ZE-04 GELAUFENE MIGRATIONEN IN RUHE
+             * LAESST: Hier stand `global $CFG`, und die Globale gibt es seit
+             * Web 20.27.0 nicht mehr. Stehen geblieben waere die Zeile nicht
+             * neutral — sie fiele auf `Europe/Berlin` zurueck, und zwar
+             * STILL. Auf einer Anlage mit anderer Zeitzone ordnete diese
+             * Migration die Tage dann falsch zu. Das waere eine
+             * Verhaltensaenderung, und E-ZE-10 laesst keine zu. */
+            $tz  = new DateTimeZone((string)konfig('app.timezone', 'Europe/Berlin'));
             $utc = new DateTimeZone('UTC');
             foreach (['missions', 'rest_segments'] as $tab) {
                 $rows = $pdo->query("SELECT id, day, started_at FROM `$tab`")->fetchAll(PDO::FETCH_ASSOC);

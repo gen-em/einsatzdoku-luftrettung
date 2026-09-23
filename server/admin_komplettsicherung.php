@@ -4,6 +4,7 @@ require_once __DIR__ . '/auth_guard.php';
 require_admin();
 require_once __DIR__ . '/komplett_lib.php';
 require_once __DIR__ . '/jobs_lib.php';
+require_once __DIR__ . '/format_lib.php';  /* groesse_text(), zahl_text() — ausdruecklich, nicht ueber die Ladekette. */
 
 /**
  * KOMPLETT-BACKUP — die ganze Installation als versiegelter SQL-Dump
@@ -107,9 +108,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                 komp_zustand_setzen($z);
                 if (($z['stand'] ?? '') === 'fertig') {
                     $notice = 'Das Komplett-Backup ist fertig: '
-                            . number_format((int)$z['zeilen'], 0, ',', '.') . ' Zeilen aus '
+                            . zahl_text((int)$z['zeilen']) . ' Zeilen aus '
                             . (int)$z['tabellen'] . ' Tabellen, '
-                            . edbak_groesse_text((int)$z['bytes']) . '.';
+                            . groesse_text((int)$z['bytes']) . '.';
                     if (($z['verdraengt'] ?? []) !== []) {
                         $notice .= ' Verdrängt wurde: ' . implode(', ', (array)$z['verdraengt']) . '.';
                     }
@@ -236,10 +237,10 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                                                ['ton' => 'neutral'])]);
       }
       ui_zeile(['text' => 'Zeilen geschrieben',
-                'plaketten' => ui_plakette(number_format((int)($z['zeilen'] ?? 0), 0, ',', '.'),
+                'plaketten' => ui_plakette(zahl_text((int)($z['zeilen'] ?? 0)),
                                            ['ton' => 'neutral'])]);
       ui_zeile(['text' => 'Bisherige Größe (unversiegelt, gepackt)',
-                'plaketten' => ui_plakette(edbak_groesse_text((int)($z['roh_bytes'] ?? 0)),
+                'plaketten' => ui_plakette(groesse_text((int)($z['roh_bytes'] ?? 0)),
                                            ['ton' => 'neutral'])]);
       ui_zeile(['text' => 'Begonnen',
                 'klein' => 'Ein Lauf darf über mehrere Aufräumläufe gehen.',
@@ -256,10 +257,10 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                                            ['ton' => 'blau'])]);
       ui_zeile(['text' => 'Umfang',
                 'plaketten' => ui_plakette(
-                    number_format((int)($z['zeilen'] ?? 0), 0, ',', '.') . ' Zeilen',
+                    zahl_text((int)($z['zeilen'] ?? 0)) . ' Zeilen',
                     ['ton' => 'neutral'])
                   . ui_plakette((int)($z['tabellen'] ?? 0) . ' Tabellen', ['ton' => 'neutral'])
-                  . ui_plakette(edbak_groesse_text((int)($z['bytes'] ?? 0)), ['ton' => 'neutral'])]);
+                  . ui_plakette(groesse_text((int)($z['bytes'] ?? 0)), ['ton' => 'neutral'])]);
       if (($z['verdraengt'] ?? []) !== []) {
           ui_zeile(['text' => 'Verdrängt',
                     'klein' => implode(', ', (array)$z['verdraengt']),
@@ -308,7 +309,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                        . 'Web 15.1.0 unter Betrieb → Servereinstellungen, '
                        . 'zusammen mit der Belegung nach Art.',
               'href' => 'betrieb_server.php',
-              'plaketten' => ui_plakette(edbak_groesse_text((int)$zahlen['komplett_bytes']),
+              'plaketten' => ui_plakette(groesse_text((int)$zahlen['komplett_bytes']),
                                          ['ton' => 'neutral'])]);
     ui_zeile(['text' => 'Wartet auf den nächsten Lauf',
               'klein' => $plan === 'aus'
@@ -345,13 +346,13 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
             'text'  => edbak_zeitpunkt_text((string)$s['zeit']),
             'klein' => $s['datei'] . ' · '
                      . (isset($k['zeilen'])
-                        ? number_format((int)$k['zeilen'], 0, ',', '.') . ' Zeilen aus '
+                        ? zahl_text((int)$k['zeilen']) . ' Zeilen aus '
                           . (int)($k['tabellen'] ?? 0) . ' Tabellen · Web '
                           . (string)($k['web'] ?? '?') . ' · Migrationsstand '
                           . ((string)($k['migration'] ?? '') !== ''
                              ? (string)$k['migration'] : 'keiner')
                         : 'Der Dateikopf ist nicht lesbar.'),
-            'plaketten' => ui_plakette(edbak_groesse_text((int)$s['groesse']), ['ton' => 'neutral'])
+            'plaketten' => ui_plakette(groesse_text((int)$s['groesse']), ['ton' => 'neutral'])
                          . ($nr === 0 ? ui_plakette('jüngster', ['ton' => 'blau']) : ''),
             'aktionen' => ui_zeilenaktionen(['eintraege' => [
                 ['text' => 'Herunterladen', 'symbol' => 'tausch',

@@ -300,13 +300,12 @@ const EdUnlock = (() => {
           nutzlast.wrap_pw   = await EdCrypto.huelleBauen(dkNeu, ck, kennung);
           nutzlast.key_check = await EdCrypto.contentKeyCheck(ck);
         }
-        const r = await fetch('api/kdf_upgrade.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-          body: JSON.stringify(nutzlast)
-        });
-        const d = await r.json().catch(() => ({}));
-        if (d && d.ok) {
+        /* OHNE `o.vorgang` (Schritt 15 AP8): Diese Stelle zeigt NICHTS an --
+         * der Kommentar im catch unten sagt, warum. Ein Satzanfang waere der
+         * Anfang eines Satzes, den niemand liest. `EdApi` wird zur AUFRUFZEIT
+         * gelesen, nie zur Ladezeit. */
+        const antwort = await EdApi.postJson('api/kdf_upgrade.php', nutzlast);
+        if (antwort.ok) {
           /* Erst JETZT den neuen Datenschlüssel übernehmen — der Server hat
            * bestätigt. Andersherum stünde im Browser ein Schlüssel, zu dem
            * die gespeicherte Hülle nicht passt (M2-07). */
@@ -339,7 +338,19 @@ const EdUnlock = (() => {
          * Person weder verständlich noch handhabbar.
          *
          * Der Datenschlüssel bleibt in diesem Fall der ALTE, und die Hülle
-         * der Seite passt weiterhin zu ihm. */
+         * der Seite passt weiterhin zu ihm.
+         *
+         * Seit AP8 wirft die Sendestelle selbst NICHT mehr: Ein Fehlschlag
+         * kommt als `antwort.ok === false` zurueck, und die fertige Meldung
+         * von `EdApi` wird hier bewusst nicht gelesen.
+         *
+         * WAS IN DIESEM catch LANDET, ist damit vor allem eines: die
+         * Krypto-Schritte darueber. Eine abschliessende Aufzaehlung ist es
+         * nicht, und die erste Fassung dieses Kommentars behauptete genau
+         * das -- ein Gegenleser hat es gefunden. Alles, was in diesem
+         * Rumpf wirft, landet hier und verschwindet. Wer hier einen
+         * stillen Ausfall sucht, sucht deshalb nicht nur bei der
+         * Verschluesselung. */
       }
     }
     EdCrypto.vergissAbleitungen();
@@ -405,17 +416,16 @@ const EdUnlock = (() => {
         }
         if (!posten.length) { return; }       // nur Unlesbare — weitere Runden bringen nichts
 
-        const a = await fetch('api/pat_anheben.php', {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-          body: JSON.stringify({ missions: posten })
-        });
+        /* OHNE `o.vorgang`: still, siehe Kopf. Das `credentials: 'same-origin'`
+           dieser Stelle faellt weg -- es ist seit 2017 der Vorgabewert von
+           fetch, und die Adresse ist ohnehin die eigene. Ein Unterschied im
+           Quelltext, keiner im Verhalten. */
+        const a = await EdApi.postJson('api/pat_anheben.php', { missions: posten });
         if (!a.ok) { return; }
-        const erg = await a.json();
+        const erg = a.daten;   // bei `ok` nie null, immer ein Objekt
         /* Kein Fortschritt trotz Posten: Dann greift die Wache je Zeile (ein
            anderes Fenster war schneller) — eine weitere Runde liefe endlos. */
-        if (!erg || !erg.angehoben) { return; }
+        if (!erg.angehoben) { return; }
       }
     } catch (e) {
       /* still: siehe Kopf */

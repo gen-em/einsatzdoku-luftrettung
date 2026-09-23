@@ -43,8 +43,22 @@ declare(strict_types=1);
  *            Breiten- oder Sonderregel in style.css, wenn eine Spalte eine
  *            braucht. Die Ausrichtung kommt nicht von hier: Hakenspalten
  *            (`art` = 'check') erhalten im Markup zusaetzlich `haken-spalte`.
+ *   'cap'    Faehigkeit aus 'cap_gate', sonst ''. Seit Schritt 15 AP9.
  *
- * @return list<array{col:string,art:string,label:string,klasse:string}>
+ * WOZU 'cap' DA IST -- und wozu nicht. Diese Funktion FILTERT NICHT. Sie
+ * kennt keinen Diensttag (sie nimmt keinen Parameter und cacht statisch),
+ * und sie soll auch keinen kennen: Die Tagesuebersicht wechselt den Tag
+ * OHNE Seitenwechsel, die Entscheidung faellt also ohnehin im Browser.
+ * Geliefert wird die Bedingung, angewendet wird sie dort.
+ *
+ * Bis Schritt 15 AP9 fiel die Bedingung unterwegs heraus: 'cap_gate' stand
+ * im Katalog, `mf_gates_erfuellt()` wertete es aus -- aber nur fuer das
+ * Einsatzformular. Die Tagestabelle bekam es nie zu sehen, und so trugen
+ * ALLE 69 Diensttage des Referenzbestands die Windenspalte, auch die ohne
+ * Winde. Die Regel, die jetzt gilt, steht in E-ZE-31: Anzeige nach
+ * Betriebsart UND Faehigkeit, Bearbeitung nach Faehigkeit allein.
+ *
+ * @return list<array{col:string,art:string,label:string,klasse:string,cap:string}>
  */
 function mf_tagesspalten(): array
 {
@@ -82,6 +96,7 @@ function mf_tagesspalten(): array
                     'art'    => $dc === 'check' ? 'check' : 'text',
                     'label'  => (string)($f['day_label'] ?? $f['label'] ?? $col),
                     'klasse' => 'c-dc-' . $col,
+                    'cap'    => (string)($f['cap_gate'] ?? ''),
                 ];
             }
             if (!empty($f['children']) && is_array($f['children'])) {
@@ -331,4 +346,230 @@ function mf_gates_erfuellt(array $f, array $rollen, ?string $kind, array $faehig
     if ($cap !== '' && !in_array($cap, $faehigkeiten, true)) { return false; }
 
     return true;
+}
+
+/* ---- DAS SPALTENREGISTER VON `missions` (Schritt 15/AP6, E-ZE-22) --------
+ *
+ * `missions` hat 41 Spalten, und sieben Stellen fuehrten eine eigene Liste
+ * davon: der Export, das Backup, die beiden Import-Anweisungen, der
+ * Suchindex, die Zeitraumansicht und die Einsatzansicht (letztere mit
+ * `SELECT *`). Elf Handlisten, jede in ihrer eigenen Reihenfolge, und keine
+ * sagte, warum eine Spalte fehlt.
+ *
+ * WAS DAS KOSTET, steht in `backup_lib.php`: Die tote Altspalte
+ * `other_resources` ging jahrelang in jedes Backup, weil dort `SELECT *`
+ * stand — ein Feld, das seit Monaten niemand mehr fuellte und das beim
+ * Einspielen verworfen wurde.
+ *
+ * UND `site_ele_m` STEHT IM BACKUP, ABER IN KEINER EINSPIELLISTE — weder im
+ * Zweck `backup_restore` noch unter den `$extraCols` aus dem Feldkatalog.
+ * Der Wert kommt trotzdem wieder, weil `edbak_restore()` ihn nach dem
+ * Bestaetigen aus den Phasenkoordinaten NEU RECHNET
+ * (`compute_site_elevation()`). Das ist ein Unterschied, den man sehen
+ * koennen muss: Ein Backup TRAEGT die Hoehe nicht zurueck, es stellt sie
+ * wieder her. Steht in der Datei eine Hoehe, die zu den Koordinaten nicht
+ * passt, gewinnt die Rechnung. Begruendung in `backup_lib.php`, Kopf.
+ *
+ * JETZT FUEHRT DAS REGISTER JEDE SPALTE GENAU EINMAL und sagt je Zweck, ob
+ * sie dabei ist — und an welcher Stelle. Die Zahl ist die Position in der
+ * erzeugten Liste; `mf_spalten()` sortiert danach. Ein Alias steht als
+ * `[Position, 'name']` daneben (`uhr_gesperrt AS manual`).
+ *
+ * WARUM DIE POSITIONEN MITGEFUEHRT WERDEN und nicht einfach die
+ * Registerreihenfolge gilt: Die sieben Listen sind in Menge UND Reihenfolge
+ * eingefroren (`tools/spaltenregister/`). Eine geaenderte Reihenfolge
+ * aendert die Spaltenfolge im CSV-Export — also eine Datei, die Menschen
+ * aufheben. `mf_spalten()` prueft, dass die Positionen je Zweck eine
+ * lueckenlose Folge ab 0 sind; eine doppelte oder fehlende faellt sofort auf.
+ *
+ * `api_mission` fehlt als Zweck: `api/mission.php` liest `SELECT *` und
+ * gibt die Zeile weiter, wie sie ist. Ein Zweck waere dort eine Liste, die
+ * niemand braucht — und die beim naechsten Spaltenzuwachs vergessen wuerde.
+ */
+
+/**
+ * Jede Spalte von `missions` mit ihren Zwecken.
+ *
+ * @return array<string, array<string, int|array{0:int,1:string}>>
+ */
+function mf_missions_register(): array
+{
+    return [
+    'id' => ['export' => 0, 'suchindex' => 0, 'range' => 0],
+    'user_id' => ['import_neu' => 0, 'ingest_neu' => 0, 'schnitt_neu' => 0,
+                  'backup_restore' => 0],
+    'device_id' => ['import_neu' => 1, 'ingest_neu' => 1, 'schnitt_neu' => 1],
+    'client_ref' => ['backup' => 0, 'import_neu' => 2, 'ingest_neu' => 2, 'schnitt_neu' => 2,
+                     'backup_restore' => 1],
+    'day_id' => ['export' => 1, 'backup' => 1, 'import_neu' => 3, 'import_aendern' => 0,
+                 'suchindex' => 1, 'range' => 1, 'ingest_neu' => 3, 'schnitt_neu' => 3,
+                 'backup_restore' => 2],
+    'started_at' => ['export' => 2, 'backup' => 2, 'import_neu' => 4, 'import_aendern' => 1,
+                     'suchindex' => 2, 'range' => 2, 'ingest_neu' => 4, 'schnitt_neu' => 4,
+                     'backup_restore' => 3],
+    'ended_at' => ['export' => 3, 'backup' => 3, 'import_neu' => 5, 'import_aendern' => 2,
+                   'suchindex' => 20, 'range' => 3, 'ingest_neu' => 5, 'schnitt_neu' => 5,
+                   'backup_restore' => 4],
+    'distance_m' => ['export' => 4, 'backup' => 4, 'import_neu' => 14, 'import_aendern' => 9,
+                     'suchindex' => 3, 'range' => 4, 'ingest_neu' => 6, 'backup_restore' => 9],
+    'ascent_m' => ['export' => 5, 'backup' => 5, 'import_neu' => 15, 'import_aendern' => 10,
+                   'ingest_neu' => 7, 'backup_restore' => 10],
+    'site_ele_m' => ['export' => 28, 'backup' => 6, 'import_neu' => 13, 'import_aendern' => 8,
+                     'range' => 10],
+    'final' => ['export' => 6, 'backup' => 7, 'import_neu' => 6, 'import_aendern' => 3,
+                'ingest_neu' => 8, 'schnitt_neu' => 6, 'backup_restore' => 8],
+    'letzter_punkt_am' => [],
+    'uhr_gesperrt' => ['export' => [7, 'manual'], 'backup' => [8, 'manual'], 'import_neu' => 7,
+                       'import_aendern' => 26, 'schnitt_neu' => 7, 'backup_restore' => 5],
+    'origin' => ['export' => 8, 'backup' => 9, 'import_neu' => 8, 'ingest_neu' => 9,
+                 'schnitt_neu' => 8, 'backup_restore' => 6],
+    'edited' => ['export' => 9, 'backup' => 10, 'import_aendern' => 27, 'backup_restore' => 7],
+    'geraet_art' => ['export' => 10, 'backup' => 11, 'ingest_neu' => 10, 'schnitt_neu' => 9,
+                     'backup_restore' => 11],
+    'geraet_modell' => ['export' => 11, 'backup' => 12, 'ingest_neu' => 11, 'schnitt_neu' => 10,
+                        'backup_restore' => 12],
+    'transport_mode' => ['export' => 14, 'backup' => 14, 'import_neu' => 25,
+                         'import_aendern' => 20, 'suchindex' => 4],
+    'na_escort' => ['export' => 15, 'backup' => 15, 'import_neu' => 26, 'import_aendern' => 21,
+                    'suchindex' => 5],
+    'transport_dest' => ['export' => 12, 'backup' => 13, 'import_neu' => 9,
+                         'import_aendern' => 4, 'suchindex' => 6],
+    'dest_lat' => ['export' => 18, 'backup' => 18, 'import_neu' => 28, 'import_aendern' => 23],
+    'dest_lon' => ['export' => 19, 'backup' => 19, 'import_neu' => 29, 'import_aendern' => 24],
+    'schockraum' => ['export' => 26, 'backup' => 26, 'import_neu' => 16, 'import_aendern' => 11,
+                     'suchindex' => 7],
+    'false_alarm' => ['export' => 16, 'backup' => 16, 'import_neu' => 27,
+                      'import_aendern' => 22, 'suchindex' => 8, 'range' => 9],
+    'start_src' => ['export' => 17, 'backup' => 17, 'import_neu' => 30, 'import_aendern' => 25],
+    'winch' => ['export' => 13, 'backup' => 20, 'import_neu' => 10, 'import_aendern' => 5,
+                'suchindex' => 9, 'range' => 5],
+    'winch_cycles' => ['export' => 20, 'backup' => 21, 'import_neu' => 18,
+                       'import_aendern' => 13, 'suchindex' => 10, 'range' => 8],
+    'winch_cycles_pat' => ['export' => 21, 'backup' => 22, 'import_neu' => 19,
+                           'import_aendern' => 14, 'suchindex' => 11],
+    'winch_airload' => ['export' => 22, 'backup' => 23, 'import_neu' => 20,
+                        'import_aendern' => 15, 'suchindex' => 12],
+    'bergwacht' => ['export' => 23, 'backup' => 24, 'import_neu' => 21, 'import_aendern' => 16,
+                    'suchindex' => 13, 'range' => 6],
+    'secondary' => ['export' => 25, 'backup' => 25, 'import_neu' => 17, 'import_aendern' => 12,
+                    'suchindex' => 16, 'range' => 7],
+    'bw_unit' => ['export' => 24, 'backup' => 27, 'import_neu' => 22, 'import_aendern' => 17,
+                  'suchindex' => 14],
+    'bw_info' => ['export' => 29, 'backup' => 28, 'import_neu' => 23, 'import_aendern' => 18,
+                  'suchindex' => 15],
+    'other_ema' => ['export' => 30, 'backup' => 29, 'import_neu' => 24, 'import_aendern' => 19,
+                    'suchindex' => 17],
+    'other_resources' => [],
+    'crew_override' => ['export' => 27, 'backup' => 30, 'import_neu' => 11,
+                        'import_aendern' => 6, 'suchindex' => 18],
+    'pat_blob' => ['export' => 31, 'backup' => 31, 'import_neu' => 12, 'import_aendern' => 7,
+                   'suchindex' => 19, 'range' => 11],
+    'notes' => [],
+    'created_at' => ['backup' => 32],
+    'deleted_at' => ['backup' => 33, 'backup_restore' => 13],
+    'deleted_with_day' => ['backup' => 34, 'backup_restore' => 14],
+    ];
+}
+
+/** Grund, warum eine Spalte in einem Zweck fehlt — oder ueberhaupt nirgends steht. */
+function mf_missions_gruende(): array
+{
+    return [
+        'id' =>
+            'Interner Verweis. Er gilt nur in DIESER Datenbank; ein Backup soll sich auch in eine andere einspielen lassen.',
+        'user_id' =>
+            'Interner Verweis (wie id). Beim Einspielen setzt ihn das Zielkonto.',
+        'device_id' =>
+            'Interner Verweis (wie id). Der Import haengt seine Einsaetze an das virtuelle Geraet des Zielkontos.',
+        'letzter_punkt_am' =>
+            'Fortsetzungsmarke der GPS-Daten, ein Betriebswert. Er gehoert zum Stand der Uebertragung, nicht zum Einsatz — ein Export oder Backup traegt ihn nie.',
+        'other_resources' =>
+            'TOTE ALTSPALTE. Seit der Migration 2026_07 liegen die weiteren Rettungsmittel als Zeilen in mission_resources und werden als \'resources\' gesichert. Die Spalte wurde damals nur nicht geloescht.',
+        'notes' =>
+            'Seit Web 19.0.0 liegt die Einsatznotiz im pat_blob und faellt mit ihm unter die Export-Schranke (S9/AP7). Die Spalte traegt nur noch Altbestand, den api/pat_anheben.php abraeumt.',
+        'created_at' =>
+            'Im Backup enthalten (die Datei soll den Bestand vollstaendig abbilden), im Export nicht: Dort steht der Anlegezeitpunkt der DATEI im Kopf, und zwei Zeitpunkte gleichen Namens nebeneinander wurden verwechselt.',
+        'deleted_at' =>
+            'Nur im Backup. Ein Export ist eine Auswertung des BESTANDES; der Papierkorb gehoert nicht hinein.',
+        'deleted_with_day' =>
+            'Wie deleted_at.',
+        'site_ele_m' =>
+            'Im Export nur mit personenbezogenen Angaben (A9): Die Hoehe des Einsatzortes ist eine Ortsangabe. Im suchindex nicht, weil die Suche sie nicht anbietet.',
+        'bw_info' =>
+            'Im Export nur mit personenbezogenen Angaben (A9).',
+        'other_ema' =>
+            'Im Export nur mit personenbezogenen Angaben (A9).',
+        'pat_blob' =>
+            'Im Export nur mit personenbezogenen Angaben (A9). Chiffretext — der Server sieht ihn nie im Klartext.',
+        'origin' =>
+            'Beim Aendern nicht: Ein Import einer Jahresliste darf die Herkunft eines bestehenden Einsatzes nicht ueberschreiben.',
+        'edited' =>
+            'Beim Anlegen nicht (ein neuer Einsatz ist nicht bearbeitet), beim Aendern fest auf 1.',
+        'geraet_art' =>
+            'Nur Export und Backup: Die Geraetekennung entsteht beim Koppeln und wird nicht importiert.',
+        'geraet_modell' =>
+            'Wie geraet_art.',
+        'client_ref' =>
+            'Im Export nicht: Er ist die Kennung, unter der die Uhr denselben Einsatz wiedererkennt, und damit ein Betriebswert.',
+        'ascent_m' =>
+            'Im suchindex und range nicht: Beide zeigen den Steigungsmeter nicht an.',
+    ];
+}
+
+/**
+ * Die Spaltenliste eines Zwecks — fertig fuer ein `SELECT`, `INSERT` oder `UPDATE`.
+ *
+ * @param string $zweck `export` · `backup` · `import_neu` · `import_aendern` ·
+ *                      `suchindex` · `range`
+ * @param string $praefix Tabellenalias mit Punkt (`'x.'`, `'m.'`) oder leer
+ * @param bool   $alias   Alias mitschreiben (`uhr_gesperrt AS manual`) — fuer
+ *                        `INSERT`/`UPDATE` ist er falsch und muss weg
+ * @return list<string>
+ */
+function mf_spalten(string $zweck, string $praefix = '', bool $alias = true): array
+{
+    $reihen = [];
+    foreach (mf_missions_register() as $spalte => $zwecke) {
+        if (!isset($zwecke[$zweck])) { continue; }
+        $e = $zwecke[$zweck];
+        $nr = is_array($e) ? $e[0] : $e;
+        /* DER ALIAS STEHT IN BACKTICKS, IMMER (Web 20.26.3, hierher gezogen
+         * beim Merge von Schritt 15). `manual` ist auf MySQL 8.4.0 bis
+         * 8.4.10 auch als ALIAS ein reserviertes Wort; ohne die Backticks
+         * antwortete der Export dort mit 1064, und die Sicherung kam nie an
+         * (Staging, MySQL 8.4.10, Kennung 097D7622, Nr. 267).
+         *
+         * Die Backticks stehen HIER und nicht im Register, und das ist
+         * Absicht: Sie sind eine Eigenschaft des SQL-Texts, nicht des
+         * Spaltennamens — `mf_spalten()` ist die einzige Stelle, die SQL
+         * daraus macht. Wer sie ins Register schriebe, muesste sie bei jedem
+         * neuen Alias von Hand mitschreiben und wuerde es beim naechsten
+         * reservierten Wort wieder vergessen. Ein Backtick um einen
+         * gewoehnlichen Bezeichner kostet nichts. */
+        $as = (is_array($e) && $alias) ? ' AS `' . $e[1] . '`' : '';
+        if (isset($reihen[$nr])) {
+            throw new RuntimeException("mf_spalten($zweck): Position $nr ist doppelt vergeben — "
+                . "'{$reihen[$nr]}' und '$spalte'.");
+        }
+        $reihen[$nr] = $praefix . $spalte . $as;
+    }
+    if ($reihen === []) {
+        throw new InvalidArgumentException("mf_spalten: unbekannter Zweck '$zweck'.");
+    }
+    ksort($reihen);
+    /* LUECKENLOS AB 0. Eine fehlende Position hiesse, dass jemand eine Spalte
+     * aus einem Zweck genommen hat, ohne die uebrigen nachzuziehen — die
+     * Liste waere dann kuerzer, als das Register behauptet, und das faellt
+     * sonst erst an der Spaltenzahl einer Exportdatei auf. */
+    if (array_keys($reihen) !== range(0, count($reihen) - 1)) {
+        throw new RuntimeException("mf_spalten($zweck): Die Positionen sind nicht "
+            . 'lueckenlos ab 0: ' . implode(', ', array_keys($reihen)) . '.');
+    }
+    return array_values($reihen);
+}
+
+/** Die Spaltenliste eines Zwecks als SQL-Text. */
+function mf_spalten_sql(string $zweck, string $praefix = '', bool $alias = true): string
+{
+    return implode(', ', mf_spalten($zweck, $praefix, $alias));
 }

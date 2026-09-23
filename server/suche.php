@@ -359,13 +359,11 @@ ui_seite_start(['titel' => 'Suche']);
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
-<?php /* Artsymbole für die Spalte „Art" der Einsatztabelle — dieselben wie in
-         der Tagesleiste, aus dt_art_symbole() (Befund P9). */ ?>
-<script<?= kopf_nonce_attr() ?>>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
-        /* Die Zeichen der Diensttag-TYPEN daneben (E-S9-13, Web 16.0.0) — sonst
-           zeichnet diese Tabelle die Betriebsart, waehrend die Leiste den Typ
-           zeichnet. Dieselbe Quelle wie auf der Serverseite. */
-        const TYP_SYMBOLE = <?= json_js(dt_typ_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
+<?php /* Vorspann der Einsatztabelle (Artsymbole, Typsymbole, Katalogspalten)
+         — seit Schritt 15 AP9b an EINER Stelle, ui_tabellen_bootstrap() in
+         ui.php. Hier standen diese Zeilen wortgleich in zwei Dateien.
+         Er muss VOR assets/missiontable.js stehen. */
+      ui_tabellen_bootstrap(); ?>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <?php /* Boolesche Freitextsuche (Baustein B10, Web 7.0.0). Eigene Datei, weil
@@ -377,6 +375,9 @@ ui_seite_start(['titel' => 'Suche']);
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>
 let missions = [];        // gesamter Bestand aus api/suchindex.php
+/* Welche Fähigkeiten im Bestand überhaupt eingerichtet sind — Luft UND Boden
+   (E-ZE-31). Steuert die Spalten „Winde" und „Bergwacht" der Tabelle. */
+let faehig = { winch: false, bergwacht: false };
 let entsperrt = false;    // geschuetzte Angaben verfuegbar?
 
 /* ZWEI AUSWAHLLISTEN MIT FESTEM WERTEVORRAT (Web 6.2.0).
@@ -418,6 +419,30 @@ const KATALOG_ART = <?php
     };
     $sammle($FELDER);
     echo json_js($arten, JSON_UNESCAPED_UNICODE);
+?>;
+/* WELCHE SPALTE AN WELCHER FAEHIGKEIT HAENGT (Schritt 15 AP9a).
+   Aus 'cap_gate' im Katalog, VERERBT AUF DIE UNTERFELDER: `winch_cycles`
+   steht unter `winch` und haengt damit an derselben Faehigkeit, ohne einen
+   eigenen Eintrag zu brauchen. Dieselbe Ueberlegung wie bei KATALOG_ART --
+   keine zweite Liste, die man beim naechsten Feld nachzupflegen vergisst.
+
+   WOZU. Die Sichtbarkeit der Filter folgte seit S3 ALLEIN dem Bestand: Wo
+   kein Einsatz einen Haken trug, verschwand der Filter. Fuer die
+   Bergrettungsfelder war das zu eng -- ein Bestand mit eingerichteter
+   Winde, in dem noch niemand gewindet hat, liess sich nach der Winde gar
+   nicht durchsuchen, auch nicht nach „nein". Genau das soll die Suche
+   koennen, sobald die Faehigkeit vorkommt. */
+const KATALOG_CAP = <?php
+    $caps = [];
+    $sammleCap = function (array $felder, string $erbe) use (&$sammleCap, &$caps): void {
+        foreach ($felder as $col => $f) {
+            $cap = (string)($f['cap_gate'] ?? '') ?: $erbe;
+            if ($cap !== '' && mf_ist_spalte($f)) { $caps[$col] = $cap; }
+            if (!empty($f['children'])) { $sammleCap($f['children'], $cap); }
+        }
+    };
+    $sammleCap($FELDER, '');
+    echo json_js($caps, JSON_UNESCAPED_UNICODE);
 ?>;
 const TRANSPORT_OPTIONEN = <?php
     $taOpt = [];
@@ -914,8 +939,15 @@ function gruppenSichtbarkeit() {
 
   FILTER.forEach(f => {
     if (!f.gruppe) { return; }                 // das Freitextfeld
+    /* EIN FELD AN EINER FAEHIGKEIT FOLGT DER FAEHIGKEIT, NICHT DEM BESTAND
+       (Schritt 15 AP9a). Winde und Bergwacht sind durchsuchbar, sobald die
+       Faehigkeit im Bestand vorkommt -- luft- wie bodengebunden, denn die
+       Suche sucht im ganzen Bestand. Ohne diese Zeile fiel der Block
+       „Bergrettung" an einem Bestand mit eingerichteter, aber nie benutzter
+       Winde ganz weg, und „Winde: nein" war nicht zu suchen. */
+    const cap = f.spalte ? KATALOG_CAP[f.spalte] : undefined;
     const zeigen = !f.spalte
-                || bestand.has(f.spalte)
+                || (cap ? !!faehig[cap] : bestand.has(f.spalte))
                 || wertLesen(f) !== '';
     if (zeigen) { sichtbar[f.gruppe] = true; }
     if (!f.spalte) { return; }                 // immer da, nichts zu schalten
@@ -957,7 +989,13 @@ const tabelle = EdMissionTable.erzeuge({
   hervor: maskiert => EdSuchtext.hervor(maskiert, trefferworte),
   sortKey: 'day', sortAsc: false,   // neueste zuerst
   seite: ZEILEN_JE_SEITE,
-  onSortChange: () => { fragmentSchreiben(); sortLabel(); },
+  /* Das mobile Sortierblatt und seine Beschriftung baut seit Schritt 15
+     AP9b das Modul (dieselben 22 Zeilen standen in zeitraum.php). Was hier
+     bleibt, gehoert zu DIESER Seite: Der Sortierschluessel steht im
+     Fragment, damit ein geteilter Link ihn mitbringt. */
+  sortblatt: document.getElementById('sortliste'),
+  sortlabel: document.getElementById('sortlabel'),
+  onSortChange: () => fragmentSchreiben(),
   /* Die Ergebniszeile entsteht HIER und nicht in anwenden(): Auch das
      Nachladen zeichnet neu, ohne dass ein Filter sich geändert hätte. Stünde
      der Text dort, bliebe nach dem ersten Klick auf „Weitere 200 anzeigen"
@@ -976,8 +1014,12 @@ const tabelle = EdMissionTable.erzeuge({
     const km = zeilen.reduce((s, m) => s + (m.distance_m || 0), 0);
     const teile = [gefiltert ? `${gesamt} von ${missions.length}` : String(gesamt)];
     /* Ganze Kilometer: Die Summe ueber Dutzende Einsaetze auf 100 m genau
-       anzugeben behauptet eine Genauigkeit, die keine Aussage traegt. */
-    if (km > 0) { teile.push(Math.round(km / 1000).toLocaleString('de-DE') + ' km'); }
+       anzugeben behauptet eine Genauigkeit, die keine Aussage traegt.
+       Gerechnet wird sie in EdFormat (Schritt 15 AP8d, R83); DIE EINHEIT
+       BLEIBT HIER, weil kmSumme() die nackte Zahl liefert -- nicht jede
+       Aufrufstelle setzt eine. Kein Leerwert: `km > 0` schliesst den
+       Leerfall vor dem Aufruf aus. */
+    if (km > 0) { teile.push(EdFormat.kmSumme(km) + ' km'); }
     if (gezeigt < gesamt) { teile.push(`${gezeigt} angezeigt`); }
     $('trefferzahl').textContent = teile.join(' · ');
 
@@ -998,9 +1040,17 @@ function plakettenText(f, wert) {
     return wert.split(',').map(v => WOCHENTAGE[v] || v).join(', ');
   }
   if (f.art === 'segment') { return `${f.titel}: ${wert === 'j' ? 'ja' : 'nein'}`; }
+  /* Die beiden Datumsfilter zeigen ihren Tag deutsch. Gerechnet wird das seit
+     Schritt 15 AP8d in EdFormat und nicht mehr hier: Die Zerlegung an dieser
+     Stelle machte aus einem ISO-Zeitstempel still '14T10:00:00Z.08.2026' und
+     warf bei null.
+     LEERWERT IST `wert` SELBST. Erreichbar ist der Leerfall nicht -- die
+     Aufrufstelle nimmt nur Filter mit `wertLesen(f) !== ''`, und ein
+     Datumsfeld (`type=date`) gibt ohnehin nur '' oder einen gueltigen Tag
+     heraus. Steht dort trotzdem einmal etwas Unbrauchbares, erscheint es
+     wortwoertlich auf der Plakette statt halb zerlegt. */
   if (f.kurz === 'dv' || f.kurz === 'db') {
-    const [y, m, d] = wert.split('-');
-    return `${f.titel} ${d}.${m}.${y}`;
+    return `${f.titel} ${EdFormat.tag(wert, wert)}`;
   }
   /* Auswahlfelder zeigen ihre BESCHRIFTUNG, nicht ihren Wert: 'air' heisst
      „luftgebunden" (siehe ART_OPTIONEN). */
@@ -1050,37 +1100,6 @@ function zeigeFilterzustand(treffer) {
     treffer === 1 ? '1 Treffer zeigen' : `${treffer} Treffer zeigen`;
 }
 
-/** Beschriftung des Sortierknopfs: Spalte und Richtung im Klartext. */
-function sortLabel() {
-  const sp = tabelle.spalten().find(s => s.key === tabelle.sortKey);
-  /* Beim Datum sagt „neueste zuerst" mehr als „absteigend" (Mockup 28) —
-     überall sonst ist die Richtung selbst die Auskunft. Mobil bleibt nur der
-     Spaltenname stehen, daneben zeigt der Pfeil die Richtung. */
-  const richtung = tabelle.sortKey === 'day'
-    ? (tabelle.sortAsc ? 'älteste zuerst' : 'neueste zuerst')
-    : (tabelle.sortAsc ? 'aufsteigend' : 'absteigend');
-  $('sortlabel').innerHTML = sp
-    ? esc(sp.label) + '<span class="nur-ab-720">, ' + esc(richtung) + '</span>'
-    : esc(richtung);
-  // Das Blatt fuehrt dieselben Spalten wie der Kopf — keine zweite Liste.
-  const liste = $('sortliste');
-  liste.innerHTML = '';
-  tabelle.spalten().forEach(sp2 => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    const aktiv = sp2.key === tabelle.sortKey;
-    b.className = 'blatt-zeile' + (aktiv ? ' aktiv' : '');
-    b.innerHTML = '<span>' + esc(sp2.label) + '</span>'
-      + (aktiv ? edSymbol('pfeil-hoch', tabelle.sortAsc ? '' : 'symbol-oben', richtung) : '');
-    b.addEventListener('click', () => {
-      tabelle.setSort(sp2.key, aktiv ? !tabelle.sortAsc : true);
-      fragmentSchreiben();
-      sortLabel();
-      if (window.edBlatt) { edBlatt.zu(); }
-    });
-    liste.appendChild(b);
-  });
-}
 
 function anwenden() {
   const q = $('f-q').value;
@@ -1094,9 +1113,16 @@ function anwenden() {
 /* ---- Geschützte Angaben --------------------------------------------- */
 
 async function entschluesselePat() {
-  const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+  /* KEIN FRUEHER AUSSTIEG, anders als auf Tages- und Zeitraumuebersicht.
+     Diese Seite muss ihre Trefferliste auch GESPERRT zeigen und dabei den
+     Altersfilter sperren — sonst saehe er benutzbar aus und lieferte
+     stumm nichts. Genau deshalb gibt EdPat.listeLaden() zurueck, statt zu
+     entscheiden (Schritt 15 AP8f). */
+  const { ck, zahl } = await EdPat.listeLaden(missions, {
+    wrap: PAT_WRAP, salt: KDF_SALT, iter: KDF_ITER,
+    banner: $('lockbanner'),
+  });
   entsperrt = !!ck;
-  $('lockbanner').hidden = entsperrt || !missions.some(m => m.pat_blob);
   $('f-av').disabled = $('f-ab').disabled = !entsperrt;
   $('lab-av').classList.toggle('feld-gesperrt', !entsperrt);
   $('lab-ab').classList.toggle('feld-gesperrt', !entsperrt);
@@ -1107,7 +1133,6 @@ async function entschluesselePat() {
      * auch nicht aussehen wie einer ohne Angaben. Beides entscheidet EdPat,
      * nicht diese Seite (M6-06, Baustein B8). _pat setzt die Schleife dort
      * bereits; hier bleibt nur, was die Suche daraus macht. */
-    const zahl = await EdPat.entschluessleListe(missions, ck);
     for (const m of missions) {
       if (m._patState !== 'ok') { continue; }
       const o = m._pat;
@@ -1204,6 +1229,10 @@ function verdrahten() {
     const d = await r.json();
     if (d.error) { throw new Error(d.meldung || d.error); }
     missions = d.missions || [];
+    /* Vorgabe `false`, damit eine alte Antwort ohne den Schluessel die beiden
+       Spalten versteckt statt sie falsch zu zeigen — dieselbe Ueberlegung wie
+       in zeitraum.php. */
+    faehig = Object.assign({ winch: false, bergwacht: false }, d.faehigkeiten || {});
   } catch (e) {
     $('loaderror').textContent = 'Der Einsatzbestand konnte nicht geladen werden: ' + e.message;
     $('loaderrorbox').hidden = false;
@@ -1217,8 +1246,15 @@ function verdrahten() {
   /* Welche Spalten die Tabelle zeigt, entscheidet der GESAMTE Bestand und
      nicht die Trefferliste (A13d) — sonst käme und ginge die Windenspalte
      beim Tippen im Suchfeld. Der Aufruf steht deshalb hier, einmal, und nicht
-     in anwenden(). */
+     in anwenden().
+
+     WINDE UND BERGWACHT FOLGEN SEIT SCHRITT 15 AP9 DER FÄHIGKEIT (E-ZE-31),
+     und zwar über LUFT UND BODEN — anders als in der Zeitraumübersicht. Die
+     Suche sucht im ganzen Bestand; ein bodengebundener Bergwacht-Dienst ist
+     genauso ein Treffer wie ein Hubschrauber. `api/suchindex.php` liefert die
+     Fähigkeiten deshalb ohne Artfilter. */
   tabelle.setSpaltenBestand(missions);
+  tabelle.setFaehigkeiten(faehig);
   // Erst die Auswahllisten füllen, dann das Fragment anwenden — sonst hätten
   // die <select> die gespeicherten Werte noch gar nicht zur Auswahl.
   fragmentLesen();
@@ -1226,7 +1262,6 @@ function verdrahten() {
   gruppenOeffnen();   // Blöcke aus einem geteilten Link sichtbar machen
   missions.forEach(baueHeuhaufen);
   anwenden();
-  sortLabel();
 
   // Auch ohne Wrap aufrufen: dann liefert EdUnlock sofort null, es erscheint
   // kein Dialog, und der Altersfilter wird korrekt als unbenutzbar markiert.

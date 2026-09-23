@@ -655,10 +655,7 @@ function sz_tabelle_da(): bool
 {
     require_once __DIR__ . '/db.php';
     try {
-        $q = db()->query("SELECT COUNT(*) FROM information_schema.tables
-                          WHERE table_schema = DATABASE()
-                            AND table_name = 'backup_targets'");
-        return (int)$q->fetchColumn() > 0;
+        return db_hat_tabelle(db(), 'backup_targets');
     } catch (Throwable $e) {
         return false;
     }
@@ -1327,10 +1324,7 @@ function sz_dateien_tabelle_da(): bool
 {
     require_once __DIR__ . '/db.php';
     try {
-        $q = db()->query("SELECT COUNT(*) FROM information_schema.tables
-                           WHERE table_schema = DATABASE()
-                             AND table_name = 'sicherungsziel_dateien'");
-        return (int)$q->fetchColumn() > 0;
+        return db_hat_tabelle(db(), 'sicherungsziel_dateien');
     } catch (Throwable $e) { return false; }
 }
 

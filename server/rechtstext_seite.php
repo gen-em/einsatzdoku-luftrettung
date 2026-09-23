@@ -49,18 +49,11 @@ $titel = RT_TEXTE[$rtSchluessel];
  * schneller und an dieser Stelle falsch: Eine zurückgenommene Adminrolle
  * würde bis zur nächsten Anmeldung weiter gelten. */
 $istAdmin = false;
-if (session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params([
-        'httponly' => true, 'secure' => !empty($_SERVER['HTTPS']),
-        'samesite' => 'Strict', 'path' => '/',
-    ]);
-    /* `use_strict_mode` — siehe `auth_guard.php` (E-P5a-38, Nr. 205). Diese
-     * Seite ERZWINGT keine Anmeldung, sie FRAGT nur; die Zeile steht
-     * trotzdem, damit die Regel keine Ausnahme hat, an der sie später
-     * jemand aufhängt. */
-    ini_set('session.use_strict_mode', '1');
-    @session_start();
-}
+/* Siehe `doku_seite.php`: nur fragen, und seit Web 20.27.0 nur, wenn ein
+ * Cookie da ist (F-ZE-2, Art `lesend`). Die Haertung steht weiterhin davor —
+ * sie steht jetzt in `sitzung_starten()`, damit die Regel keine Ausnahme
+ * hat, an der sie später jemand aufhängt. */
+sitzung_starten('lesend');
 if (!empty($_SESSION['user_id'])) {
     try {
         $st = db()->prepare('SELECT role FROM users WHERE id = ?');

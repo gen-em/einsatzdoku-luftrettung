@@ -42,7 +42,9 @@ declare(strict_types=1);
  */
 
 $wurzel = dirname(__DIR__, 2) . '/server';
-require_once $wurzel . '/config.php';
+/* `config.php` wird NICHT mehr von Hand geladen (Web 20.27.0): `db.php`
+ * bringt `konfig_lib.php` mit, und der Rueckgabewert dieses `require` wurde
+ * ohnehin weggeworfen. */
 require_once $wurzel . '/db.php';
 require_once $wurzel . '/spur_lib.php';
 require_once $wurzel . '/jobs_lib.php';
@@ -1154,7 +1156,12 @@ pruefe($mies['code'] === 400 && $zaehlerLesen('ingest', 'id:' . $nachbarKennung)
 
 $gross = senden(['kind' => 'mission', 'client_ref' => 'probe-bremse-gross',
                  'day' => gmdate('Y-m-d'), 'started_at' => gmdate('Y-m-d\TH:i:s\Z'),
-                 'fuell' => str_repeat('x', (int)$CFG['app']['max_body_bytes'] + 1000),
+                 /* `konfig()` statt `$CFG` (Web 20.27.0, Schritt 15 AP2). Hier
+                  * stand die globale `$CFG`, und die gibt es nicht mehr:
+                  * `(int)null` ist 0, der „zu grosse" Rumpf war damit 1000
+                  * Byte gross, und die Erwartung „413 zaehlt nicht" bekam
+                  * eine 200. Ein Prueffall, der still das Gegenteil misst. */
+                 'fuell' => str_repeat('x', (int)konfig('app.max_body_bytes') + 1000),
                  'track' => ['seq_from' => 0, 'points' => []]], $nachbarKennung, $nachbarKey);
 pruefe($gross['code'] === 413 && $zaehlerLesen('ingest', 'id:' . $nachbarKennung) === [],
        '413 `too_large` zaehlt NICHT — es ist eine Groesse, kein Rateversuch',

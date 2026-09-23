@@ -63,7 +63,16 @@
    *   anteile     { kennung: hex } — die ausgelieferten Anteile. Welcher
    *               davon gebraucht wird, sagt das Präfix von `wrapPw`; diese
    *               Funktion bekommt deshalb KEINE Zielkennung.
-   *   csrf        Token für den Endpunkt
+   *   csrf        WIRD NICHT MEHR GELESEN -- und bleibt trotzdem stehen.
+   *               Seit Schritt 15 (AP8) geht Schritt 5 ueber
+   *               `EdApi.postForm()`, und das setzt das Feld `csrf` selbst,
+   *               aus der globalen `CSRF`. Genau daher nehmen ihn auch die
+   *               beiden Aufrufer -- dieselbe Quelle, derselbe Wert, also
+   *               zeichengleich. Gestrichen wird der Parameter dennoch
+   *               nicht: Das waere eine Schnittstellenaenderung an einer
+   *               Komponente mit zwei Verbrauchern, und dieses Paket aendert
+   *               kein Verhalten. Wer ihn weiter uebergibt, liegt nicht
+   *               falsch, sondern wirkungslos.
    * @returns {Promise<string>} der neue Wiederherstellungscode
    * @throws {Error} mit einer Meldung, die man anzeigen kann
    */
@@ -121,22 +130,28 @@
     const wrapRc = await EdCrypto.encrypt(rk, ck);
 
     /* ---- 5: senden ------------------------------------------------------ */
-    const leib = new URLSearchParams();
-    leib.set('csrf', o.csrf);
-    leib.set('token', k.authToken);
-    leib.set('wrap_rc', wrapRc);
+    /* UEBER EdApi (Schritt 15, AP8). Das Feld `csrf` haengt EdApi selbst an,
+     * die Erfolgsregel (HTTP UND Fachschluessel) liegt dort, und ein
+     * Netzfehler kommt als `status: 0` zurueck statt als Wurf -- der Aufrufer
+     * sieht dadurch einen deutschen Satz, wo bisher der Browsertext
+     * „Failed to fetch" stand.
+     *
+     * EdApi NICHT beim Laden in eine Variable nehmen: Auf einstellungen.php
+     * kommt `api.js` spaeter als diese Datei (siehe Kopf von assets/api.js).
+     * Hier steht der Zugriff in der Funktion und damit erst beim Klick. */
+    const antw = await EdApi.postForm('api/schluessel_erneuern.php', {
+      token:   k.authToken,
+      wrap_rc: wrapRc,
+    }, { vorgang: 'Die Erneuerung' });
 
-    const antw = await fetch('api/schluessel_erneuern.php', {
-      method: 'POST', credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: leib.toString(),
-    });
-    let daten = {};
-    try { daten = await antw.json(); } catch (e) { /* gleich Fehler unten */ }
-
-    if (!antw.ok || !daten.ok) {
-      throw new Error(daten.text || 'Die Erneuerung ist fehlgeschlagen ('
-                                  + antw.status + ').');
+    if (!antw.ok) {
+      /* DER SATZ KOMMT FERTIG AUS EdApi. Dieser Endpunkt nennt sein
+       * Satzfeld `text` statt `meldung`; die Vorrangkette in
+       * `grund()` (assets/api.js) liest es seit AP8 mit, und der
+       * Vorgangsname steht davor. Hier stand bis zum Gegenlesen ein
+       * eigener Griff auf `antw.daten.text`, der genau diesen
+       * Vorgangsnamen wieder verlor. */
+      throw new Error(antw.meldung);
     }
 
     /* ---- 6 ------------------------------------------------------------- */

@@ -376,7 +376,25 @@ jobs:
         #
         # Die drei anderen Gruppen stehen unveraendert: 50 ohne Gegenstueck,
         # 10 style="...", 8 Emoji — dieses Paket hat keine davon hinzugefuegt.
-        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 398
+        #
+        # 396 MIT SCHRITT 15: -2, und das Werkzeug hat die Senkung selbst
+        # eingefordert. Beide Male ist ein AUSLASSUNGSZEICHEN aus einem
+        # geloeschten Kommentar verschwunden, kein Befund behoben:
+        #   AP8b bis AP8f (Web 20.34.0)  -1  server/einstellungen.php
+        #   AP9b           (Web 20.37.0)  -1  server/index.php
+        # Nachgezaehlt gegen denselben Lauf auf dem Stand davor, nicht
+        # geschaetzt: Die Zeile „Unicode-Zeichen als Symbol im Markup" geht
+        # von 330 auf 328, alle uebrigen Zeilen des Berichts sind Zeile fuer
+        # Zeile gleich.
+        #
+        # WARUM DAS EINEN ROTEN LAUF WERT WAR: Die Pruefung meldet auch
+        # UNTERSCHREITUNGEN und bricht ab („Bitte die Schwelle nachziehen,
+        # sonst bekommt der Altbestand stillschweigend wieder Luft"). Genau
+        # das ist hier passiert — Web 20.34.0 hat die Zahl gesenkt und die
+        # Schwelle stehen lassen, und der Lauf war seither rot. Eine Decke,
+        # die ueber dem Bestand schwebt, ist keine Decke, sondern ein
+        # Vorschuss auf den naechsten Zuwachs.
+        run: python3 tools/vollstaendigkeit/pruefen.py --hoechstens 396
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py
@@ -621,6 +639,61 @@ jobs:
         run: |
           php tools/migrationsregister/pruefen.php --selbstprobe
           php tools/migrationsregister/pruefen.php
+
+      - name: Spaltenregister — schema.sql gegen mf_missions_register()
+        # `missions` hat 41 Spalten, und neun Zwecke brauchen eine Auswahl
+        # davon. Eine NEUE Spalte, die niemand ins Register einträgt, fehlt
+        # still in Export und Backup — sie taucht in keiner erzeugten Liste
+        # auf, und auffallen würde es erst, wenn jemand eine Sicherung
+        # zurückspielt und etwas vermisst. Der Schritt prüft beide
+        # Richtungen und zusätzlich, dass die Positionen jedes Zwecks eine
+        # lückenlose Folge ab 0 sind (Schritt 15/AP6, E-ZE-22).
+        #
+        # Teil 2 misst die drei Abbildungen, die NICHT erzeugt werden können,
+        # weil sie jeden Wert einzeln umrechnen: Führt jede genau die
+        # Registerspalten ihres Zwecks? Ohne diesen Teil wäre das Register
+        # nur dort die Wahrheit, wo es ohnehin SQL erzeugt.
+        #
+        # `wegprobe.py` daneben läuft hier NICHT: Sie schreibt (schneidet
+        # einen Einsatz, überschreibt einen zweiten) und braucht eine
+        # Installation mit Bestand. Stufe 1 hat keine.
+        #
+        # Selbstprobe zuerst, wie beim Migrationsregister darueber: Ein
+        # gruener Lauf einer Pruefung, die immer gruen meldet, sieht genauso
+        # aus wie einer, der nichts gefunden hat.
+        run: |
+          php tools/spaltenregister/pruefen.php --selbstprobe
+          php tools/spaltenregister/pruefen.php
+
+      - name: Zentralisierung — hält jede Sache ihre eine Stelle?
+        # SCHRITT 15 / AP10 (R83). Das Register in `tools/zaehlung/register.php`
+        # führt je Sache EINE Zeile mit einer Decke: wie viele Stellen es
+        # höchstens geben darf. Der Schritt schlägt an, sobald eine Zeile
+        # über ihre Decke steigt — also sobald jemand eine zweite Stelle
+        # einbaut, wo es eine geben soll.
+        #
+        # WARUM EINE DECKE UND KEINE NULL. Nicht jede Zeile endet bei null,
+        # und das ist Absicht: Vier Zeilen aus AP8 stehen begründet darüber
+        # (E-ZE-27 bis -30). Was dort steht, ist die Zentrale selbst, ein
+        # Fehlalarm des Zählmusters oder eine benannte Vorgabe je
+        # Zusammenhang. Wer eine Zeile auf null zwingt, ohne die Stelle zu
+        # verstehen, bekommt eine grüne Zahl und eine schlechtere Anwendung
+        # — deshalb trägt jede Decke im Register den ausgeschriebenen Grund
+        # und nicht nur den Wert.
+        #
+        # WAS ER NICHT SIEHT: Eine Sache, für die niemand eine Zeile
+        # angelegt hat. Das Register ist eine Liste, kein Spürsinn. Und die
+        # Zeilen messen verschieden scharf — Z34 etwa zählt über eine
+        # NAMENSLISTE und sieht einen neu erfundenen Formatierer nicht; die
+        # sechste km-Fassung des Bestands hat erst eine Gegenprobe über das
+        # Muster der RECHNUNG gefunden (AP8d).
+        #
+        # Selbstprobe zuerst, wie überall hier: 34 Fälle mit Sollwert,
+        # darunter die drei, an denen ein `grep` scheitert (Aufruf im
+        # Kommentar, Aufruf in einer Zeichenkette, Methodenaufruf `->date(`).
+        run: |
+          php tools/zaehlung/zaehlen.php --selbstprobe
+          php tools/zaehlung/zaehlen.php
 
       - name: CSP — Inline-Skripte ohne Nonce
         # Seit Web 20.7.0 gilt `script-src 'self' 'nonce-…'` ohne

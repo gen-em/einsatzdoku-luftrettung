@@ -93,8 +93,11 @@ arbeiten, nicht erneut kollidieren:
 > Auftraggeber am 20.09.2026.
 
 **250 bis 259 sind für Schritt 15 reserviert** (Zentralisierung,
-`docs/konzepte/Konzept-Zentralisierung.md`, eingespielt am 20.09.2026). Vier
-Nummern sind vergeben, **sechs bleiben frei für Funde der Umsetzung** — nach
+`docs/konzepte/Konzept-Zentralisierung.md`, eingespielt am 20.09.2026; das
+Konzept ist mit dem Abschluss von Schritt 15 am 22.09.2026 gelöscht — die
+Git-Historie behält es, die Zusammenfassung steht im Rahmenplan Abschnitt 8).
+Vier
+Nummern waren vergeben, **sechs blieben frei für Funde der Umsetzung** — nach
 derselben Überlegung wie bei 241–249: Ein Paket, das erst beim Bauen neue
 Punkte findet, soll sie anhängen können, ohne mit dem nächsten Zweig zu
 kollidieren.
@@ -105,7 +108,29 @@ kollidieren.
 | 251 | Cookie-Attribut `secure` der Sitzung — zwei Arten HTTPS-abhängig, zwei fest | Schritt 18 |
 | 252 | Gelaufene Migrationen fragen das Schema 57× von Hand | P8 (R66) |
 | 253 | Datum-Zeit-Trenner vereinheitlichen | 10c AP9 |
-| 254–259 | frei — Reserve für Funde der Umsetzung von Schritt 15 | Schritt 15 |
+| 254 | Ratenprobe erwartet fünf Töpfe mit Leiter — es sind sechs | erledigt 21.09.2026 |
+| 255 | `lokal_einrichten.sh` kopiert Handbuch und Bilder nicht nach `server/doku/` | behoben 21.09.2026 |
+| 256 | Vier `api/`-Dateien antworten auf eine falsche Methode anders als die übrigen | erledigt 21.09.2026 |
+| 257 | Fünf Prüfwerkzeuge hingen an der globalen `$CFG` | erledigt 21.09.2026 |
+| 258 | Drei `api/`-Dateien antworten am `json_out()` vorbei | Backlog-Runde / 10c AP6 |
+| 259 | GPX-Probe wird durch den Demo-Reset blind (4/95, Kernvergleich 0 von 204) | Backlog-Runde |
+
+**Die Spanne ist damit voll.** Der Fund von AP6 — *die tote Spalte
+`missions.other_resources` löschen* — hat deshalb eine Nummer außerhalb der
+Spanne bekommen.
+
+> **Und er hat sie beim Merge ein zweites Mal gewechselt, von 267 auf 276.**
+> Der Zweig von Schritt 15 hat am 22.09.2026 die Nummern **267 und 268**
+> vergeben; `main` hatte sie am 21.09.2026 unabhängig davon ebenfalls
+> vergeben (Alias `AS manual` auf MySQL 8.4 und die zwei Staging-Läufe).
+> Zwei Zweige, die gleichzeitig „die nächste freie Nummer" nehmen, nehmen
+> dieselbe — und gemerkt hat es erst der Prüfschritt „Backlog — keine
+> Nummer zweimal" beim Merge. **`main` behält seine beiden**, weil dort die
+> Verweise aus Changelog, Technik und den PK-Dokumenten hängen; die beiden
+> vom Zweig sind **276** (tote Spalte, AP6) und **277** (`await fetch` ohne
+> `catch` in `einstellungen.php`, AP8). Wer eine Nummer vergibt, während ein
+> zweiter Zweig offen ist, prüft sie gegen **`origin/main`** und nicht gegen
+> den eigenen Stand.
 
 > **Keiner der vier gehört in Schritt 15 selbst**, und das ist kein Versehen:
 > 250 ändert Wege durch die Anwendung, 251 und 252 hängen an späteren
@@ -749,110 +774,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 ---
 
 
-57. **Die Tagesübersicht baut ihre Einsatztabelle ein zweites Mal.**
-    *Aufgenommen 02.09.2026 als F-S3-A (S3/AP5).*
-    `assets/missiontable.js` führt die Spaltendefinitionen der drei
-    Einsatztabellen an **einer** Stelle; `index.php` baut seine Zeilen daneben
-    noch einmal selbst zusammen (`tr.innerHTML = …`). Die beiden sind
-    auseinandergelaufen: Die Dauerspalte trug in `missiontable.js` seit
-    F-N1-G die Klasse `zeit-spalte`, in `index.php` nicht — deshalb brach
-    „1h 06min" dort um. **Die Folge ist behoben** (die Klasse steht jetzt in
-    beiden), **die Ursache nicht**: Solange es zwei Aufbauten gibt, kommt die
-    nächste Änderung wieder nur an einem an, und es fällt wieder erst
-    jemandem im Browser auf.
-    Nicht in S3 gemacht, weil die Vereinheitlichung Sortierung, Sortierblatt
-    und die Kachelform berührt — das ist ein eigenes Paket, kein Nachklapp.
-
-    **Nachgemessen am 12.09.2026 (Backlog-Runde 2) — der Punkt ist größer als
-    er dasteht, und zwei seiner Angaben stimmen nicht.** Er bleibt offen: Was
-    hier zu tun wäre, braucht ein Mockup und eine Freigabe und passt damit
-    nicht in eine Backlog-Runde. Damit der nächste Anlauf nicht wieder bei
-    null anfängt, steht hier, was gemessen ist.
-
-    *Was am Text oben nicht stimmt:*
-
-    - *„`missiontable.js` führt die Spaltendefinitionen der drei
-      Einsatztabellen an einer Stelle."* Es sind **zwei** Tabellen
-      (`suche.php`, `zeitraum.php`). Die dritte hat sie **nie** von dort
-      bezogen: `index.php` baut Kopf, Zellen und Sortierschlüssel selbst, in
-      **drei** getrennten Listen. Von `missiontable.js` holt sie nur
-      Zellbausteine. Es sind also zwei Erzeuger und **vier** Spaltenlisten —
-      sechs, wenn man `api/range.php` und `api/suchindex.php` mitzählt, die
-      `winch`/`bergwacht`/`secondary`/`false_alarm` hart im SELECT führen,
-      während `api/day.php` sie aus `mf_tagesspalten()` zieht.
-    - *„weil die Vereinheitlichung … die Kachelform berührt."* Tut sie nicht
-      mehr. Seit E-P3-32 baut `index.php` seine Kacheln bereits über
-      `EdMissionTable.kachel()`, wortgleich zu den anderen beiden. Von den
-      drei genannten Hindernissen sind zwei übrig — und eines davon, das
-      **Sortierblatt**, ist selbst dreifach vorhanden (`index.php` baut es aus
-      den `th`, `suche.php` und `zeitraum.php` je aus `tabelle.spalten()`).
-
-    *Fünf Driften, vier davon sichtbar* (der Eintrag nennt nur die eine
-    behobene):
-
-    1. **Spaltensatz:** drei Spalten nur im Modul, eine nur in `index.php`.
-    2. **Sekundärtransport:** ein Wort mit weichem Trennstrich gegen zwei
-       Zeilen mit hartem `<br>` — Kopfhöhe **42 gegen 64 px**.
-    3. **Ausrichtung:** Alter zentriert gegen rechtsbündig, Beginn zentriert
-       gegen links. Die Entscheidung dazu fiel in **derselben Sitzung**, in
-       der dieser Punkt aufgenommen wurde (S3/AP5 Block I) — sie wurde am
-       zweiten Aufbau getroffen und erreichte den ersten nie. Der Punkt hat
-       sich beim Aufschreiben also selbst wiederholt.
-    4. **Hakenreihenfolge:** Sekundär-Bergwacht-Winde gegen
-       Winde-Bergwacht-Sekundär, genau umgekehrt.
-    5. Die Dauerspalte — behoben, wie oben beschrieben.
-
-    *Und eine Falle, die „nur den Erzeuger zusammenführen, 0 Pixel bewegen
-    sich" widerlegt:* Die beiden Sortierungen behandeln **Gleichstände**
-    verschieden. `index.php` multipliziert den Stichentscheid mit der
-    Richtung, `missiontable.js` verlässt sich auf die stabile Sortierung.
-    Nachgerechnet mit sechs gleichwertigen Zeilen: heute absteigend
-    6,5,4,3,2,1 — über das Modul 1,2,3,4,5,6. Ein zweiter Klick auf
-    „Sekundärtransport" dreht an einem NEF-Tag heute alle sechs Zeilen und
-    täte es danach nicht mehr. Dazu setzt `missiontable.js` `sortable` auf
-    **jeden** Kopf, woran `cursor:pointer` und ein Hover hängen.
-
-    *Was daraus folgt:* **Schritt 0 ist eine Freigabe, keine Codearbeit.** Drei
-    Fragen müssen vorher beantwortet sein — Beschriftung, Ausrichtung,
-    Hakenreihenfolge —, und jede Antwort ändert eine der beiden Seiten
-    sichtbar. Danach der Erzeuger (rund 110 Zeilen JS und 21 Zeilen PHP
-    entfallen), danach die Liste aus dem Feldkatalog, soweit er sie trägt: Er
-    kennt heute **3 von 13** Spalten, und nur für die Tagesübersicht —
-    `day_col` heißt wörtlich das. Vier Spalten können gar nicht aus ihm
-    kommen, weil sie keine Spalten von `missions` sind. Geschätzt
-    zweieinhalb bis drei Tage. Zuordnung: eigenes Paket, nicht Backlog-Runde.
-
-    **Entschieden am 12.09.2026: Das gemeinsame Modul (`assets/missiontable.js`)
-    ist die Vorlage.** Beschriftung der Spalte „Sekundärtransport",
-    Ausrichtung von Alter und Beginn und die Reihenfolge der Haken folgen
-    ihm; `index.php` zieht nach. Die drei Freigabefragen aus Schritt 0 sind
-    damit beantwortet; es bleibt ein eigenes Paket.
-
-    > **Bindende Nebenbedingung — am Code belegt und wichtiger, als sie
-    > klingt.** Die bedingte Anzeige von Winde und Bergwacht läuft über
-    > `cap_gate` im Feldkatalog (`mission_fields.php`): Ein Feld erscheint
-    > nur, wenn der Diensttag die passende Fähigkeit trägt. `index.php` holt
-    > seine Spalten über `mf_tagesspalten()` und bekommt das Verhalten
-    > geschenkt. **Suche und Zeitraumübersicht tun das nicht** —
-    > `api/range.php` und `api/suchindex.php` führen `winch`, `bergwacht`,
-    > `secondary` und `false_alarm` hart im SELECT.
-    >
-    > Genau die Eigenschaft, die erhalten bleiben soll, sitzt heute auf der
-    > Seite, die weichen soll. Sie muss beim Zusammenführen **ausdrücklich**
-    > mitgenommen werden — als erster Prüffall des Pakets. Geht sie verloren,
-    > fällt das erst an einem NEF-Tag auf, an dem plötzlich Windenspalten
-    > stehen — und dann sieht es aus wie ein neuer Fehler, nicht wie ein
-    > verlorener Vertrag.
-
-
-    **Zuordnung (20.09.2026): Schritt 15 AP9** — mit dem Konzept
-    Zentralisierung. Dort kommen zwei Dinge dazu, die hier fehlten:
-    **E-ZE-01** (die Gleichstände — was passiert, wenn zwei Einsätze
-    dieselbe Sortiergröße haben; `sortable` entscheidet das heute
-    stillschweigend anders als der Aufbau in `index.php`) und **F-ZE-6**
-    (der **Spaltensatz je Seite** ist nicht derselbe — die drei Tabellen
-    zeigen verschiedene Spalten, und das muss eine Vereinheitlichung
-    abbilden, statt es einzuebnen).
 62. **Logodateien tragen teilweise wieder die alten Farbwerte.**
     *Bis zum 02.09.2026 trug dieser Punkt die Nummer 49. Sie war durch die
     Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
@@ -1984,6 +1905,29 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     die Daten werden also erfasst und nur nicht ausgewertet.
 
     Wer das später ändern will, findet die beiden Stellen oben benannt.
+
+    **Nachtrag 22.09.2026 (Schritt 15 AP9a, E-ZE-31): der Artfilter ist jetzt
+    die Regel, nicht mehr eine zu enge Formulierung.** Dieser Punkt nannte
+    `d.kind = 'air'` „nur zu eng formuliert" und schlug
+    `d.kind = 'air' OR d.vehicle_typ = 'bergwacht'` als tragfähige Bedingung
+    vor. Der Auftraggeber hat anders entschieden: Die **Auswertung** —
+    Kacheln und Tabellenspalten in Tages- und Zeitraumübersicht — folgt der
+    **Betriebsart und der Fähigkeit**, die **Bearbeitung** der Fähigkeit
+    allein. Die vorgeschlagene Bedingung wird damit **nicht** umgesetzt, und
+    zwar nicht aus Aufwand, sondern weil sie der Entscheidung widerspricht.
+
+    **Was sich dadurch ändert, geht über diesen Punkt hinaus:** Die
+    Tagesübersicht wertete `cap_gate` bis Web 20.35.0 überhaupt nicht aus und
+    zeigte die Windenspalte an **allen** Diensttagen. Sie tut es jetzt — nach
+    derselben Regel. Die **Suche** folgt der Fähigkeit über **Luft und
+    Boden** (`api/suchindex.php`, ohne Artfilter): Sie sucht im ganzen
+    Bestand, nicht in einem Zeitraum.
+
+    **Der Preis steht weiterhin oben und ist jetzt größer:** Die Haken
+    bodengebundener Bergwacht-Diensttage erscheinen weder in der Zeitraum-
+    noch in der Tagestabelle. Vier solche Tage stehen im Bestand, zwei davon
+    mit einem dokumentierten Windeneinsatz. Erfasst und in der
+    Einsatzbearbeitung sichtbar bleiben sie.
 199. **Die Nummer 5 fehlt im Backlog, obwohl der Changelog sie unter
     *Erledigt* verortet.**
     *Aufgenommen 15.09.2026 (Gegenlesen des Merges von PR #47 in den
@@ -2051,7 +1995,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     **Die Zahlen von 16.09.2026 gelten nicht mehr** (FF-6). Nachgemessen am
     20.09.2026 an `origin/main` `862ca7f`; **maßgeblich ist Abschnitt 1 von
-    `docs/konzepte/Konzept-Zentralisierung.md`**, nicht die Zahlen hier.
+    **Schritt 15** — gemessen am 20.09.2026 an `862ca7f`, nicht die Zahlen
+    hier. Das Konzept ist mit dem Abschluss gelöscht; die Vorher/Nachher-Werte
+    je Zeile führt `tools/zaehlung/register.php`, die Zusammenfassung steht im
+    Rahmenplan Abschnitt 8.
     Die Zuordnung je Paket:
 
     | Paket | Sache | gehört zu |
@@ -2148,13 +2095,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
       Fassungen. **Der CSRF-Teil ist auf dem P5a-Zweig erledigt** (AP4,
       Nr. 67: 12 Dateien auf `csrf_check()`, 0 inline). Übrig: Methode,
       Rumpf, Fehlerschlüssel → `api_eingang()`.
+      **Erledigt mit Schritt 15 AP3** (Web 20.28.0) — als **zwei**
+      Funktionen `api_methode()` und `api_rumpf()`, nicht als eine:
+      `csrf_check()` steht in allen elf Rumpf-Dateien dazwischen.
     - Sitzungsstart (`session_set_cookie_params` + `session_start`) 7× in
       drei Varianten. → `sitzung_starten($art)` in `session_lib.php`
       (Nr. 205 setzt vorab nur `use_strict_mode`).
+      **Erledigt mit Schritt 15 AP2** (Web 20.27.0) — gemessen waren es
+      **neun** Starts in vier Fassungen, und die Funktion liegt in
+      `sitzung_lib.php` (Schritt 16), nicht in `session_lib.php`.
     - Flash-Meldung über die Sitzung in `einstellungen.php`,
       `nachbearbeitung.php`, `papierkorb.php`. → `flash_setzen()`/
       `flash_holen()`, daraus `post_ende()` für Admin-Seiten, die heute
       nicht umleiten.
+      **Erledigt mit Schritt 15 AP3** (Web 20.28.0) — `post_ende()` wird
+      ausdrücklich **nicht** gebaut (F-ZE-4), es steht als **Nr. 250**.
     - Verzögerte JSON-Fehlerantwort der unangemeldeten Endpunkte:
       `pair.php` sauber (`abweisen()`/`antworten()`/`gesperrt()`),
       `auth_salt.php` 4× und `jobs.php` 3× inline. → nach
@@ -3121,6 +3076,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Tabelle und keine Suche, und dann lässt sich entscheiden, welche der
     vier Arten die richtige ist.
 
+    **Eingetreten am 21.09.2026 (Web 20.27.0, Schritt 15 AP2).** Die Tabelle
+    heißt `SITZUNG_ARTEN` und steht in `sitzung_lib.php` neben
+    `sitzung_starten()`. Fest auf `true`: `app` und `passwort`. Von HTTPS
+    abhängig: `lesend` und `einrichtung` — also die beiden Arten, die auf
+    einer Anlage laufen können, deren HTTPS-Lage die Einrichterin erst
+    herstellt. Die Entscheidung für Schritt 18 ist damit **eine Zeile in
+    einer Tabelle**, nicht mehr eine Suche über neun Dateien.
+
 252. **Gelaufene Migrationen fragen das Schema 57× von Hand.**
     *Aufgenommen 20.09.2026 (Konzept Zentralisierung, E-ZE-04).* Zugeordnet:
     **P8** (R66, neues Migrationsregister).
@@ -3142,6 +3105,93 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     mal nur ein Leerzeichen. Nach Schritt 15 AP7 steht die Formatierung an
     einer Stelle (`format_lib.php`) — dann ist es eine Zeile statt einer
     Suche, und deshalb wartet es bis dahin.
+
+259. **Die GPX-Probe wird durch den Demo-Reset blind — 4 von 95 Erwartungen
+    fallen, und ihr Kernvergleich läuft gar nicht.** *Aufgenommen
+    21.09.2026 (Schritt 15 AP3).* Zugeordnet: **Backlog-Runde** oder das
+    Paket, das `tools/referenzdatensatz/` als Nächstes anfasst.
+
+    `tools/gpxprobe/probe.php` hält den Referenzexport vom 15.09.2026 gegen
+    die GPX-Dateien des Demo-Kontos. Auf einer Anlage, deren Demo-Konto
+    zwischenzeitlich zurückgesetzt wurde (`app_state.demo_letzter_reset`,
+    alle 30 Minuten), haben die Einsätze neue Kennungen: **„190 von 204 ohne
+    Gegenstück"**. Es folgen drei weitere Fehlschläge, die daran hängen.
+
+    **Das Schlimme ist nicht der rote Punkt, sondern der stille:** Der
+    punktweise Vergleich meldet „**0 von 204 Dateien verglichen (0
+    Einzelvergleiche, 0 Abweichungen)**". Eine Null, die nichts gemessen hat,
+    steht neben Nullen, die etwas gemessen haben — genau der Fall, vor dem
+    `CLAUDE.md` 6 warnt („Eine grüne Zahl ist erst dann ein Beleg, wenn sie
+    das Gemessene benennt"). Die Probe **sagt** es immerhin dazu; sie meldet
+    aber nicht, dass ihr Hauptteil damit nichts mehr prüft.
+
+    **Vorschlag:** Entweder die Probe hält den Reset auf und setzt das
+    Demo-Konto selbst aus der Fixture zurück, oder sie legt sich wie die
+    anderen Proben ein eigenes Konto an. Bis dahin gilt: Wer `gpxprobe`
+    fährt, prüft zuerst `demo_letzter_reset`.
+
+    **`jobs_pause()` ist dafür das falsche Mittel, und das ist der Teil, der
+    Zeit kostet.** *(Nachgetragen 21.09.2026, Schritt 15 AP4.)* Der
+    Demo-Reset hängt **nicht** an der Jobschlange, sondern an
+    `auth_guard.php` Z. 482: `if (demo_ist_demo($userId)) {
+    demo_reset_wenn_faellig(); }` — er läuft bei **jeder Anmeldung des
+    Demo-Kontos**, sobald `DEMO_RESET_SEKUNDEN` (1800) um sind. Eine
+    angehaltene Jobschlange ändert daran nichts. Das richtige Mittel steht
+    in `tools/klickprobe/LIESMICH.md` und gilt für jede Probe, die gegen
+    das Demo-Konto misst:
+
+    ```sql
+    UPDATE app_state SET v = UNIX_TIMESTAMP() WHERE k = 'demo_letzter_reset';
+    ```
+
+    Das verschiebt den nächsten Reset um volle 30 Minuten. Ein Lauf, der
+    länger dauert, braucht die Zeile erneut — oder ein eigenes Konto.
+
+    *In Schritt 15 AP3 nachgemessen:* **95/4 vor und nach dem Paket
+    identisch** (`git stash` gegengemessen) — der Befund liegt nicht am Code.
+
+    **Die Klickprobe hat dasselbe Problem und löst es richtig.** Sie lief am
+    21.09.2026 in einen Demo-Reset (42 von 48 Wegen) und schrieb darunter:
+    „Der Demo-Reset lief um 20:36:04 UTC mitten in diesem Lauf. Verfehlte
+    Wege sind verdächtig — bitte wiederholen." Mit `jobs_pause(3000)` davor
+    waren es **48 von 48**. Das ist das Vorbild: Wer gegen den Demo-Bestand
+    misst, hält entweder die Jobs an oder sagt hinterher, dass er es nicht
+    getan hat.
+
+258. **Drei Dateien unter `api/` antworten am `json_out()` vorbei.**
+    *Aufgenommen 21.09.2026 (Schritt 15 AP3).* Zugeordnet:
+    **Backlog-Runde** oder 10c AP6.
+
+    `rueckfrage.php`, `schluessel_erneuern.php` und
+    `schluesselblatt_pruefen.php` schreiben ihre Antworten mit
+    `header('Content-Type: application/json; charset=utf-8')` und
+    `echo json_encode(...); exit;` — **19 Stellen**. AP3 hat ihre
+    Methodenprüfung auf `api_methode()` gezogen (Nr. 256); der Rest steht
+    noch.
+
+    **Was daran hängt:** `json_out()` ruft `json_kopf()`, und das setzt
+    `kopfzeilen_json()` (`X-Content-Type-Options: nosniff`,
+    `Referrer-Policy`, HSTS) und `Cache-Control: no-store`. Die 19 Stellen
+    setzen nichts davon. Genau derselbe Mangel ist mit Web 20.9.1 an sieben
+    anderen Stellen behoben worden (Nr. 203) — diese drei Dateien waren
+    damals nicht dabei, weil sie über `$_POST` arbeiten und niemandem als
+    „JSON-Endpunkt" aufgefallen sind.
+
+    **Praktische Folge heute: gering.** Keine der 19 Antworten trägt Daten,
+    die ein Zwischenspeicher ausliefern dürfte — es sind Quittungen (`ok`),
+    Fehlerkennungen und ein Prüfergebnis. `nosniff` fehlt allerdings, und
+    das ist bei `Content-Type: application/json` die Zeile, auf die es
+    ankommt.
+
+    **Warum nicht in AP3 erledigt:** AP3 zentralisiert den **Eingang**, nicht
+    den Ausgang. Ein Umbau auf `json_out()` verändert an jeder der 19 Stellen
+    die gesendeten Kopfzeilen — das ist eine sichtbare Änderung und wäre eine
+    sechste neben den fünf benannten (E-ZE-10).
+
+    *Nebenbefund:* `docs/Technik.md` behauptete, `grep -rn "Content-Type:
+    application/json" server/` treffe „genau zwei Codezeilen". Gemessen sind
+    es **sechs** — zwei in `wartung_lib.php`, eine in `db.php` und diese
+    drei. Der Satz ist mit AP3 berichtigt worden.
 
 260. **Zwei Code-Kommentare in `server/` sagen „beider FTPS-Schritte" — seit
     Kette II/AP5 ist es einer.** *Aufgenommen 21.09.2026 (Kette II, AP5).*
@@ -3316,6 +3366,186 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Kette zu falschen Schlüssen brachte. Hier gilt dasselbe, nur auf der
     Statusseite.
 
+276. **Die tote Spalte `missions.other_resources` löschen.** *Aufgenommen
+    22.09.2026 (Schritt 15 AP6).* Zugeordnet: **P8 (R66)** — es ist eine
+    Migration. Priorität: niedrig.
+
+    Seit der Migration `2026_07` liegen die weiteren Rettungsmittel als
+    **Zeilen** in `mission_resources` und werden als `resources` gesichert.
+    Die Spalte `missions.other_resources` wurde damals nur **nicht
+    gelöscht**. Sie wird seither von nichts mehr gefüllt und von nichts mehr
+    gelesen.
+
+    **Was sie gekostet hat, bevor sie auffiel:** Bis das Backup seine
+    Spaltenliste bekam, stand dort `SELECT *` — die tote Spalte ging
+    **jahrelang in jede Sicherungsdatei** und wurde beim Einspielen wieder
+    verworfen. Niemand hat das bemerkt, weil eine Spalte, die überall
+    mitläuft, nirgends stört.
+
+    **Sie ist nicht verloren, und das ist der Grund, warum dieser Punkt
+    niedrige Priorität hat:** Das Spaltenregister
+    (`mf_missions_register()` in `server/mission_fields_lib.php`) führt sie
+    seit Web 20.31.0 mit **genau dieser Begründung** in
+    `mf_missions_gruende()`, und `tools/spaltenregister/pruefen.php` schlägt
+    an, wenn jemand die Begründung entfernt, ohne die Spalte zu löschen. Der
+    Zustand ist damit festgehalten statt vergessen.
+
+    **Beim Löschen mitzudenken:** Die Migration ist **destruktiv** und
+    braucht deshalb einen `zerstoert`-Eintrag (Klartext, was verlorenginge)
+    und einen `inhalt`-Eintrag, der die Ausführung blockiert, solange die
+    Spalte irgendwo noch Werte trägt — `migrationen_inhalt_zaehlen()` in
+    `server/migration_lib.php` ist dafür gebaut. Und der Registereintrag
+    fällt mit der Spalte; die Zeile in `mf_missions_gruende()` wird dann
+    gestrichen, nicht umgeschrieben.
+
+    **Nummer 267 und nicht 260:** Die für Schritt 15 angemeldete Spanne
+    250–259 ist voll (254 bis 259 sind Funde von AP2 bis AP5), und 260 bis
+    266 sind inzwischen von Kette II vergeben worden. Der Auftraggeber hat am
+    22.09.2026 „260 nehmen" gesagt; 260 war zu diesem Zeitpunkt bereits
+    belegt, deshalb die nächste freie.
+
+277. **`einstellungen.php` — ein `await fetch` ohne eigenes `catch` steht vor
+    der Erfolgsmeldung.** Gefunden bei der AP8-Vermessung am 22.09.2026
+    (Schritt 15), in der Funktion, die den Wiederherstellungsschlüssel
+    abschließt (bei Aufnahme Zeile 4158). Der Aufruf liegt im großen `try`
+    des Knopfes; bricht das Netz genau dort, springt der Ablauf in den
+    äußeren `catch`, und die Person liest eine Fehlermeldung zu einem
+    Vorgang, der auf dem Server bereits durchgelaufen sein kann.
+    **Nicht in Schritt 15 behoben** (E-ZE-10: das Paket ändert kein
+    Verhalten). Beim Anfassen mitzudenken: Der Satz muss sagen, dass der
+    Zustand unklar ist, nicht dass es fehlgeschlagen ist.
+
+269. **`assets/schluesselblatt.js` — bei Netzausfall eine stille Sackgasse.**
+    Gefunden bei derselben Vermessung. Der Prüfknopf setzt `disabled = true`
+    **vor** dem Senden, und die Wiederfreigabe liegt im `.then`. Wirft das
+    `fetch`, fängt niemand: Der Knopf bleibt tot, das Fehlerfeld leer, der
+    Dialog offen. Die Person kann weder weiter noch erkennen, warum.
+    Zwei Aufrufer sind betroffen (Prüfen und Antworten). **Nicht in
+    Schritt 15 behoben.** Beim Anfassen mitzudenken: `EdApi.postForm()` aus
+    AP8c liefert im Netzfehler ein `{ ok: false, status: 0 }` statt zu
+    werfen — damit ist die Stelle danach mit drei Zeilen zu heilen.
+
+270. **`assets/import_ui.js` — eine 500 mit wohlgeformtem JSON gilt als
+    Erfolg.** Gefunden bei derselben Vermessung (bei Aufnahme Zeile 258).
+    Der Bestandsabgleich vor dem Import prüft nur `d.error`, nicht `res.ok`.
+    Antwortet der Server mit Status 500 und einem JSON-Rumpf ohne
+    `error`-Schlüssel, läuft der Dublettenabgleich **wortlos** gegen einen
+    leeren Bestand weiter — und meldet keine einzige Dublette, obwohl der
+    Bestand voll ist. Der Fehler ist still: Die Vorschau sieht richtig aus.
+    **Nicht in Schritt 15 behoben.** Von den 15 JSON-Sendestellen prüfen
+    **acht** `res.ok` nicht; diese hier ist die mit der schlimmsten Folge,
+    weil ihr Ergebnis eine Entscheidung der Person trägt.
+
+
+271. **Die leere Meldungshülle im Schnittblock trägt kein Symbol — und ihr
+    Ton bleibt „info", auch wenn ein Fehler darin steht.** Gefunden bei der
+    AP8-Vermessung (Schritt 15, 22.09.2026) in `assets/schneiden.js`. Die
+    Stelle erzeugt keine Meldung, sondern einen *Platz* für eine:
+    `<div class="meldung meldung-info" role="status" data-vorher><p></p></div>`,
+    später dreimal per `textContent` befüllt. Zwei Abweichungen vom Baustein:
+    **kein Symbol** (`EdHtml.meldung()` setzt eines ein — das wäre eine
+    sichtbare Änderung im Schnittblock), und **der Ton wechselt nie**, so dass
+    Sätze wie „Das Ende liegt vor dem Beginn." in blauer Hinweisfläche stehen
+    statt in roter. Das zweite ist fachlich falsch. **Nicht in Schritt 15
+    behoben** (E-ZE-10: das Paket ändert kein Verhalten); die Zählzeile Z37
+    endet deshalb bei 4 statt 0. Beim Anfassen mitzudenken: Der Anker
+    `data-vorher` hängt am Wrapper, den `EdHtml.meldung()` nicht mit
+    Attributen versieht — entweder bekommt die Funktion einen Weg dafür, oder
+    der Anker wandert nach innen.
+
+272. **`<p class="meldung">` im Entsperrdialog ist gar keine Meldung.**
+    Gefunden bei derselben Vermessung, in `assets/unlock.js`. Dort steht ein
+    Absatz mit der Klasse `meldung` — **ohne** Tonklasse, **ohne** Symbol,
+    **ohne** `role`. Er trägt den Namen des Bausteins, ist aber keiner; das
+    Zählmuster von Z37 hält ihn trotzdem für einen. Zwei Folgen: Die Zeile
+    zählt einen Nachbau, den es nicht gibt (Z37 endet bei 4), und der Absatz
+    bekommt aus `style.css` Regeln, die für einen Kasten gedacht sind.
+    **Nicht in Schritt 15 behoben:** Ihn auf den Baustein umzustellen gäbe
+    ihm einen farbigen Kasten mit Symbol — eine sichtbare Änderung im
+    Entsperrdialog, und die war nicht beauftragt.
+
+273. **Eine dritte Schreibweise für Dauern, die kein Zählmittel sieht.**
+    Gefunden in Schritt 15 AP8d, aber **nicht** von der Zählzeile Z34: Die
+    misst über eine Namensliste und kennt `dauer()` in `assets/schneiden.js`
+    nicht. Gefunden hat sie erst eine Gegenprobe über das Muster der
+    *Rechnung* (`Math.floor(s / 3600)`). Die Funktion schreibt
+    **„1 h 6 min" mit Leerzeichen**, während der Rest der Anwendung seit
+    AP8d durchgängig „1h 06min" schreibt; dazu trägt sie denselben
+    Rundungsfehler, den AP8d in `EdFormat.dauer()` behoben hat (getrennte
+    Rechnung von Stunden und Minuten erzeugt bei 3599 s ein „60min").
+    **Nicht umgestellt**, weil es eine sichtbare Änderung im Schnittblock
+    wäre und die drei sichtbaren Änderungen von AP8d einzeln freigegeben
+    wurden — diese war nicht darunter. Beim Anfassen: `EdFormat.dauer(s)`
+    genügt, der Leerwert ist dort nicht erreichbar (`Math.max(0, …)`).
+
+274. **Die Vollständigkeitsprüfung kann eine zusammengesetzte Klasse nicht
+    sehen — und das trifft jetzt zwei Meldungstöne.** Seit Web 20.34.0 baut
+    `EdHtml.meldung()` die Tonklasse zusammen (`'meldung meldung-' + ton`),
+    wie es `ui_meldung_markup()` in PHP seit jeher tut. `tools/vollstaendigkeit/`
+    meldet `.meldung-ok` und `.meldung-schutz` deshalb als „Regel im
+    Stylesheet, im Markup nicht gefunden". Beide Regeln werden benutzt; das
+    Werkzeug kann es nur nicht belegen. `meldung-schutz` stand aus demselben
+    Grund schon vorher in der Liste. **Kein Befund, aber ein blinder Fleck:**
+    Verschwände eine der beiden Regeln aus `style.css`, meldete es niemand.
+    Der Kommentar in `ui_meldung_markup()` sagt genau das („das kann nur
+    diese Stelle selbst prüfen"). Möglicher Weg: Das Werkzeug liest die
+    Tonliste aus der Funktion und trägt die daraus gebildeten Klassen als
+    belegt ein.
+275. **Der Referenzdatensatz kennt keinen Dienst über Mitternacht — und das
+    ist laut Handbuch „der klassische Fall".**
+    *Aufgenommen 22.09.2026 (Schritt 15 AP9b).*
+    Nachgezählt über `CONVERT_TZ` in Ortszeit: **0 von 20** aktiven
+    Diensttagen des Demo-Kontos haben Einsätze auf zwei Kalendertagen; über
+    alle fünf Konten ist es ebenso. Der Bestand deckt damit genau den Fall
+    nicht ab, an dem sich Datum, Uhrzeit und Sortierung unterscheiden.
+
+    **Was das gekostet hat, ist schon bezahlt.** In AP9b sortierte das
+    Einsatztabellen-Modul „Beginn" über die *Zeichenkette* `start_hhmm`;
+    bei einem Dienst über Mitternacht stand damit 01:10 vor 23:50. Der
+    Fehler war Jahre alt und kein Prüfmittel konnte ihn finden — es gab
+    nichts zu messen. Belegt wurde er, indem die Antwort von `api/day.php`
+    im Browser abgefangen und ein Nachtdienst **gebaut** wurde. Eine Probe,
+    die ihre eigenen Daten erfindet, misst den Browser und nicht die
+    Anlage: Ob `api/day.php`, `api/range.php` und `api/suchindex.php` den
+    Schlüssel `start_sort` für einen **echten** Nachtdienst richtig rechnen,
+    ist bis heute gelesen und nicht gefahren.
+
+    **Was zu tun ist.** Dem Demo-Konto **zehn Einsätze über Nacht**
+    hinzufügen, verteilt auf mindestens zwei Diensttage, sodass jeder davon
+    Einsätze **vor und nach** Mitternacht trägt — etwa 22:40, 23:55, 00:20,
+    01:10, 02:35. Mindestens einer der Tage luftgebunden, einer
+    bodengebunden, damit Tages-, Zeitraum- und Suchtabelle den Fall alle
+    drei sehen. Der Diensttag bleibt dabei **ein** Tag: `days.day` ist der
+    Dienstbeginn, die Einsätze nach Mitternacht liegen kalendarisch auf dem
+    Folgetag. Genau diese Unterscheidung ist der Prüfwert.
+
+    **Woran der Bestand danach etwas taugt:**
+
+    - Tagesübersicht, Sortierung nach „Beginn" aufsteigend: 22:40 steht
+      **vor** 00:20.
+    - Suche: `day` ist das **echte** Einsatzdatum (`api/suchindex.php`
+      rechnet es aus `started_at`), `dienst_day` der Diensttag — bei einem
+      Nachteinsatz sind sie **verschieden**, und die Suche zeigt beides.
+      Heute ist das nirgends zu sehen.
+    - Zeitraumübersicht: Ein Nachteinsatz taucht unter dem Diensttag auf,
+      nicht unter dem Kalendertag — `api/range.php` nimmt `days.day`.
+    - Der Bilderlauf bekommt eine Seite, auf der die drei Datumsbegriffe
+      auseinanderfallen.
+
+    *Abnahme:* Nach dem Einspielen des Referenzdatensatzes liefert
+    `SELECT COUNT(*) FROM days d WHERE (SELECT COUNT(DISTINCT
+    DATE(CONVERT_TZ(m.started_at,'UTC','Europe/Berlin'))) FROM missions m
+    WHERE m.day_id=d.id AND m.deleted_at IS NULL) > 1` **mindestens 2**.
+    *Fehlschlag:* 0 — dann liegen die neuen Einsätze doch alle auf einem
+    Kalendertag.
+
+    *Hinweis zur Umsetzung:* Der Referenzdatensatz liegt in
+    `tools/referenzdatensatz/`; die Einsätze kommen über den normalen
+    Einspielweg, nicht per SQL von Hand. Wer die Zeiten setzt, rechnet
+    daran, dass `started_at` in **UTC** steht und die Anlage in
+    `Europe/Berlin` anzeigt — eine Sommerzeitgrenze mitten im Dienst wäre
+    ein eigener, ebenfalls ungeprüfter Fall.
+
 
 ## Erledigt
 
@@ -3323,6 +3553,280 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
 
+57. **Die Tagesübersicht baut ihre Einsatztabelle ein zweites Mal.**
+    *Aufgenommen 02.09.2026 als F-S3-A (S3/AP5).*
+    `assets/missiontable.js` führt die Spaltendefinitionen der drei
+    Einsatztabellen an **einer** Stelle; `index.php` baut seine Zeilen daneben
+    noch einmal selbst zusammen (`tr.innerHTML = …`). Die beiden sind
+    auseinandergelaufen: Die Dauerspalte trug in `missiontable.js` seit
+    F-N1-G die Klasse `zeit-spalte`, in `index.php` nicht — deshalb brach
+    „1h 06min" dort um. **Die Folge ist behoben** (die Klasse steht jetzt in
+    beiden), **die Ursache nicht**: Solange es zwei Aufbauten gibt, kommt die
+    nächste Änderung wieder nur an einem an, und es fällt wieder erst
+    jemandem im Browser auf.
+    Nicht in S3 gemacht, weil die Vereinheitlichung Sortierung, Sortierblatt
+    und die Kachelform berührt — das ist ein eigenes Paket, kein Nachklapp.
+
+    **Nachgemessen am 12.09.2026 (Backlog-Runde 2) — der Punkt ist größer als
+    er dasteht, und zwei seiner Angaben stimmen nicht.** Er bleibt offen: Was
+    hier zu tun wäre, braucht ein Mockup und eine Freigabe und passt damit
+    nicht in eine Backlog-Runde. Damit der nächste Anlauf nicht wieder bei
+    null anfängt, steht hier, was gemessen ist.
+
+    *Was am Text oben nicht stimmt:*
+
+    - *„`missiontable.js` führt die Spaltendefinitionen der drei
+      Einsatztabellen an einer Stelle."* Es sind **zwei** Tabellen
+      (`suche.php`, `zeitraum.php`). Die dritte hat sie **nie** von dort
+      bezogen: `index.php` baut Kopf, Zellen und Sortierschlüssel selbst, in
+      **drei** getrennten Listen. Von `missiontable.js` holt sie nur
+      Zellbausteine. Es sind also zwei Erzeuger und **vier** Spaltenlisten —
+      sechs, wenn man `api/range.php` und `api/suchindex.php` mitzählt, die
+      `winch`/`bergwacht`/`secondary`/`false_alarm` hart im SELECT führen,
+      während `api/day.php` sie aus `mf_tagesspalten()` zieht.
+    - *„weil die Vereinheitlichung … die Kachelform berührt."* Tut sie nicht
+      mehr. Seit E-P3-32 baut `index.php` seine Kacheln bereits über
+      `EdMissionTable.kachel()`, wortgleich zu den anderen beiden. Von den
+      drei genannten Hindernissen sind zwei übrig — und eines davon, das
+      **Sortierblatt**, ist selbst dreifach vorhanden (`index.php` baut es aus
+      den `th`, `suche.php` und `zeitraum.php` je aus `tabelle.spalten()`).
+
+    *Fünf Driften, vier davon sichtbar* (der Eintrag nennt nur die eine
+    behobene):
+
+    1. **Spaltensatz:** drei Spalten nur im Modul, eine nur in `index.php`.
+    2. **Sekundärtransport:** ein Wort mit weichem Trennstrich gegen zwei
+       Zeilen mit hartem `<br>` — Kopfhöhe **42 gegen 64 px**.
+    3. **Ausrichtung:** Alter zentriert gegen rechtsbündig, Beginn zentriert
+       gegen links. Die Entscheidung dazu fiel in **derselben Sitzung**, in
+       der dieser Punkt aufgenommen wurde (S3/AP5 Block I) — sie wurde am
+       zweiten Aufbau getroffen und erreichte den ersten nie. Der Punkt hat
+       sich beim Aufschreiben also selbst wiederholt.
+    4. **Hakenreihenfolge:** Sekundär-Bergwacht-Winde gegen
+       Winde-Bergwacht-Sekundär, genau umgekehrt.
+    5. Die Dauerspalte — behoben, wie oben beschrieben.
+
+    *Und eine Falle, die „nur den Erzeuger zusammenführen, 0 Pixel bewegen
+    sich" widerlegt:* Die beiden Sortierungen behandeln **Gleichstände**
+    verschieden. `index.php` multipliziert den Stichentscheid mit der
+    Richtung, `missiontable.js` verlässt sich auf die stabile Sortierung.
+    Nachgerechnet mit sechs gleichwertigen Zeilen: heute absteigend
+    6,5,4,3,2,1 — über das Modul 1,2,3,4,5,6. Ein zweiter Klick auf
+    „Sekundärtransport" dreht an einem NEF-Tag heute alle sechs Zeilen und
+    täte es danach nicht mehr. Dazu setzt `missiontable.js` `sortable` auf
+    **jeden** Kopf, woran `cursor:pointer` und ein Hover hängen.
+
+    *Was daraus folgt:* **Schritt 0 ist eine Freigabe, keine Codearbeit.** Drei
+    Fragen müssen vorher beantwortet sein — Beschriftung, Ausrichtung,
+    Hakenreihenfolge —, und jede Antwort ändert eine der beiden Seiten
+    sichtbar. Danach der Erzeuger (rund 110 Zeilen JS und 21 Zeilen PHP
+    entfallen), danach die Liste aus dem Feldkatalog, soweit er sie trägt: Er
+    kennt heute **3 von 13** Spalten, und nur für die Tagesübersicht —
+    `day_col` heißt wörtlich das. Vier Spalten können gar nicht aus ihm
+    kommen, weil sie keine Spalten von `missions` sind. Geschätzt
+    zweieinhalb bis drei Tage. Zuordnung: eigenes Paket, nicht Backlog-Runde.
+
+    **Entschieden am 12.09.2026: Das gemeinsame Modul (`assets/missiontable.js`)
+    ist die Vorlage.** Beschriftung der Spalte „Sekundärtransport",
+    Ausrichtung von Alter und Beginn und die Reihenfolge der Haken folgen
+    ihm; `index.php` zieht nach. Die drei Freigabefragen aus Schritt 0 sind
+    damit beantwortet; es bleibt ein eigenes Paket.
+
+    > **Bindende Nebenbedingung — am Code belegt und wichtiger, als sie
+    > klingt.** Die bedingte Anzeige von Winde und Bergwacht läuft über
+    > `cap_gate` im Feldkatalog (`mission_fields.php`): Ein Feld erscheint
+    > nur, wenn der Diensttag die passende Fähigkeit trägt. `index.php` holt
+    > seine Spalten über `mf_tagesspalten()` und bekommt das Verhalten
+    > geschenkt. **Suche und Zeitraumübersicht tun das nicht** —
+    > `api/range.php` und `api/suchindex.php` führen `winch`, `bergwacht`,
+    > `secondary` und `false_alarm` hart im SELECT.
+    >
+    > Genau die Eigenschaft, die erhalten bleiben soll, sitzt heute auf der
+    > Seite, die weichen soll. Sie muss beim Zusammenführen **ausdrücklich**
+    > mitgenommen werden — als erster Prüffall des Pakets. Geht sie verloren,
+    > fällt das erst an einem NEF-Tag auf, an dem plötzlich Windenspalten
+    > stehen — und dann sieht es aus wie ein neuer Fehler, nicht wie ein
+    > verlorener Vertrag.
+
+
+    **Zuordnung (20.09.2026): Schritt 15 AP9** — mit dem Konzept
+    Zentralisierung. Dort kommen zwei Dinge dazu, die hier fehlten:
+    **E-ZE-01** (die Gleichstände — was passiert, wenn zwei Einsätze
+    dieselbe Sortiergröße haben; `sortable` entscheidet das heute
+    stillschweigend anders als der Aufbau in `index.php`) und **F-ZE-6**
+    (der **Spaltensatz je Seite** ist nicht derselbe — die drei Tabellen
+    zeigen verschiedene Spalten, und das muss eine Vereinheitlichung
+    abbilden, statt es einzuebnen).
+
+    **ERLEDIGT am 22.09.2026 — Schritt 15 AP9b, Web 20.37.0.**
+    `index.php` bezieht Kopf, Zeilen, Kacheln, Sortierung und Sortierblatt
+    aus `assets/missiontable.js`. Gezählt: Zeilenerzeugung `tr.innerHTML`
+    **1 → 0**, Spaltenlisten für Einsatztabellen **4 → 1**,
+    Sortierblatt-Erzeuger **3 → 1**.
+
+    **Die vier Freigabefragen sind entschieden** (E-ZE-31 bis E-ZE-34):
+    Beschriftung, Ausrichtung, Hakenreihenfolge und Gleichstände folgen dem
+    Modul; die Spalte „Nr." bleibt und das Modul lernt sie; die Sortierung
+    nach „Beginn" bleibt chronologisch; Winde und Bergwacht folgen der
+    Fähigkeit und der Betriebsart (AP9a, Web 20.35.0).
+
+    **Der Feldkatalog hat seinen Griff behalten** — der vierte Fund der
+    Vermessung. Das Modul gleicht seine Hakenspalten gegen
+    `KATALOG_SPALTEN` ab: Der Katalog bestimmt, **welche** es gibt
+    (`day_col`), das Modul, **wie** sie aussehen und in welcher Reihenfolge.
+    Preis, benannt: `day_col` heißt ab jetzt „Spalte in **jeder**
+    Einsatztabelle".
+
+    **Drei Fehler kamen dabei ans Licht, alle älter als das Paket:**
+    Das Modul sortierte „Beginn" über die *Zeichenkette* `start_hhmm` und
+    stellte damit bei einem Dienst über Mitternacht 01:10 vor 23:50; das
+    mobile Sortierblatt von Suche und Zeitraumübersicht stellte um, **ohne
+    neu zu zeichnen** (unter 720 px ist es der einzige Weg zu sortieren);
+    und dasselbe Blatt zeigte `Sekundär&shy;transport` als rohe Entität.
+
+    **Nachgemessen:** Formvergleich über 56 Seiten — nach Abzug von
+    Countdown, Versionszeile und dem einen beabsichtigten Kopfwechsel sind
+    **0 von 56** Seiten noch abweichend. Suche und Zeitraumübersicht
+    **0/0/0**. Nachtdienst gebaut (der Bestand hat keinen): mit
+    `start_sort` 21:10 · 22:30 · 23:50 · 00:20 · 01:10 · 02:40, ohne ihn
+    00:20 · 01:10 · 02:40 · 21:10 · 22:30 · 23:50. Gleichstände: zwei
+    Einsätze mit 51 min bleiben in **beiden** Richtungen 3 vor 4.
+    0 Konsolenfehler.
+
+    **Eine Zwischenfassung hat der Bildvergleich abgefangen**, und sie wäre
+    still geblieben: „Datumsspalte nur bei mehreren Tagen" als `nurWenn` im
+    Modul nahm der **Zeitraumübersicht** die Spalte, sobald alle Treffer
+    eines Monats auf einen Tag fielen — während sie weiter nach ihr
+    sortierte. Die Spalte steht jetzt in `opts.ohne` von `index.php`: Eine
+    Seite, die eine Spalte nicht will, sagt es; das Modul rät es nicht.
+
+257. **Fünf Prüfwerkzeuge hingen an der globalen `$CFG` — und meldeten nach
+    ihrem Wegfall 30 Erwartungen als „nicht erfüllt", ohne dass die
+    Anwendung einen Fehler hatte.** *Aufgenommen und erledigt am 21.09.2026
+    (Schritt 15, Nachtrag zu AP2).*
+
+    AP2 hat die globale `$CFG` entfernt; die Anwendung liest seither über
+    `konfig()` aus der Datei. **Die Registerzeile Z04 bestätigte 46 → 0 und
+    der Umbau galt als erledigt** — sie mass aber nur `server/`. Unter
+    `tools/` lasen oder setzten fünf Proben dieselbe Globale weiter. Eine
+    Zuweisung an `$CFG` scheitert nicht; sie tut nur nichts.
+
+    | Werkzeug | Erwartungen | vorher offen | nachher |
+    |---|---|---|---|
+    | `ingestprobe` | 83 | 1 | 0 |
+    | `anteilprobe` | 55 | 22 | 0 |
+    | `versandprobe` | 135 | 5 | 0 |
+    | `wiederherstellungs-probe` | 104 → **111** | 1 (+7 übersprungen) | 0 |
+    | `komplettprobe` | 64 | 1 | 0 |
+
+    Die Wiederherstellungsprobe zeigt den Schaden am deutlichsten: Sie
+    **übersprang Teil 12 ganz** und meldete dafür einen einzelnen Fehlschlag.
+    Sieben Erwartungen wurden gar nicht gemessen.
+
+    *Behoben:* `tools/konfig_stellen.php` — eine Stelle, fünf Verbraucher.
+    Sie geht denselben Weg wie die Anwendung (`config.php` schreiben,
+    `konfig_verwerfen()`) und legt den **Urstand bytegleich** zurück, auch
+    bei einem Abbruch. Ausdrücklich **nicht** gebaut wurde eine Hintertür in
+    `konfig_lib.php` „nur für Proben": Das wäre ein zweiter Weg in
+    Produktionscode.
+
+    *Zwei Fehler beim Bauen des Helfers, beide gemessen und behoben:* Die
+    Abbruchsicherung war **je Aufruf** angemeldet — Abschlussfunktionen
+    laufen in Anmeldereihenfolge, also legte die äußere den Urstand zurück
+    und eine spätere schrieb ihren Zwischenstand darüber. Nach einem Lauf der
+    `versandprobe` stand ein **zufälliger `server_key`** in der `config.php`;
+    damit wären die versiegelten Sicherungsziele nicht mehr zu öffnen
+    gewesen. Und der erste Rückweg schrieb einen `var_export` statt der
+    Bytes — der **Kopfkommentar des Installers** („niemals ins Git-Repo
+    committen") war danach fort. Jetzt: eine Sicherung je Pfad, und
+    zurückgelegt werden die Bytes.
+
+    *Die eigentliche Lehre steht in der Registerzeile:* Z04 misst seit heute
+    `server/` **und** `tools/`. Die Zeile zählt eine Globale, die es
+    **nirgends** mehr geben darf — ein Bereich, der fehlt, meldet keine Null,
+    sondern gar nichts (`CLAUDE.md` 6, in eigener Sache).
+
+256. **Vier Dateien unter `api/` antworten auf eine falsche Methode anders
+    als die übrigen siebzehn.** *Aufgenommen 21.09.2026 bei der Vorbereitung
+    von Schritt 15 AP3, am selben Tag berichtigt.* **Erledigt am 21.09.2026**
+    (Schritt 15 AP3).
+
+    **Der Eintrag stand zuerst falsch hier.** Er behauptete, vier Dateien
+    prüften die Anfragemethode **nicht**, und schloss das daraus, dass die
+    Registerzeile Z06 sie nicht zählte. Nachgemessen in den Dateien selbst:
+    **Alle 21 prüfen die Methode.** Z06 zählte drei davon nur deshalb nicht,
+    weil ihr Fehlerschlüssel `methode` heißt statt `method` — deutsche statt
+    englischer Schreibung, dieselbe Sache. Ein `GET` ist nirgends in den
+    Rumpf gelaufen.
+
+    **Der tatsächliche Befund** war eine Drift in zwei Richtungen:
+    `rueckfrage.php`, `schluessel_erneuern.php` und
+    `schluesselblatt_pruefen.php` antworteten mit
+    `http_response_code(405); echo json_encode(['error' => 'methode']); exit;`
+    — anderer Schlüssel, anderer Ausgabeweg. `csp_bericht.php` antwortet mit
+    einer stummen **204**, und das ist Absicht: Ein Berichts-Endpunkt sagt
+    dem meldenden Browser nichts.
+
+    **Behoben:** Die drei rufen jetzt `api_methode()` wie alle anderen; der
+    Schlüssel heißt überall `method`. Kein JavaScript wertet ihn aus
+    (nachgemessen über alle 40 Skripte), die Änderung fällt damit unter
+    F-ZE-5. `csp_bericht.php` bleibt unberührt — E-ZE-15 nimmt sie
+    namentlich aus. Der Rest ihres Ausgabewegs steht als **Nr. 258**.
+
+    *Die Lehre:* Eine Registerzeile, die nicht zählt, belegt **nicht**, dass
+    es die Sache nicht gibt — sie belegt, dass das Muster nicht greift. Wer
+    aus einer Null auf einen Befund schließt, ohne in die Dateien zu sehen,
+    schreibt einen falschen Eintrag, und eine Entscheidung darauf ist
+    gegenstandslos.
+
+254. **Die Ratenprobe erwartet fünf Töpfe mit Leiter — es sind sechs.**
+    *Aufgenommen 21.09.2026 beim ersten Lauf der Probe gegen eine lokal
+    eingerichtete Anlage (Schritt 15 AP2).* **Erledigt am 21.09.2026** (Schritt 15 AP2).
+
+    `tools/ratenprobe/probe.php` prüft `Genau fuenf Toepfe haben eine Leiter`
+    gegen die Liste `ingest, ingest_ip, login, login_ip, salt`. Gemessen sind
+    **sechs**: `blatt, ingest, ingest_ip, login, login_ip, salt`. Der Topf
+    `blatt` (Schlüsselblatt-Prüfung) ist mit **Web 20.24.0** (P5b/AP9)
+    dazugekommen, die Erwartung der Probe stammt aus **Web 20.11.0**.
+
+    **Der Befund ist die Probe, nicht der Code.** `RATE_GRENZEN` ist in
+    Ordnung; die Probe zählt einen Bestand, der gewachsen ist, gegen eine von
+    Hand geführte Zahl — genau die Bauform, vor der diese Datei sonst warnt
+    (siehe die Warnung zu gezählten Werten im Kopf). Lauf am 21.09.2026:
+    **50 Prüfungen, 1 Befund**, und dieser eine ist es.
+
+    **Warum er einen Monat unbemerkt blieb:** Die Ratenprobe braucht eine
+    laufende Installation und hängt nicht in Stufe 1. Zwischen Web 20.24.0
+    und heute hat sie niemand gefahren.
+
+    *Behoben am 21.09.2026:* Die Liste `TOEPFE_MIT_LEITER` ist jetzt der
+    Sollwert, **und die Zahl im Satz rechnet sich aus ihr** — bis dahin
+    stand dieselbe Zahl zweimal da, einmal als Wort und einmal als
+    Aufzählung. Wer einen Topf ergänzt, ergänzt die Liste; der Satz stimmt
+    von selbst. Lauf danach: **50 Prüfungen, 0 Befunde.**
+
+255. **`lokal_einrichten.sh` richtet eine Anlage ein, deren Handbuch drei
+    kaputte Bilder hat.** *Aufgenommen 21.09.2026 (Schritt 15 AP2).*
+    **Erledigt am selben Tag** — der Eintrag bleibt wegen der Zahl.
+
+    Der FTPS-Schritt lädt nur `server/` hoch; `docs/` liegt daneben. Deshalb
+    kopiert `ausliefern-lauf.yml` `docs/Handbuch.md`,
+    `docs/Was-ist-NAdoku.md` und `docs/bilder/` vor dem Sync nach
+    `server/doku/`. **Das lokale Einrichten tat das nicht** — es gibt den
+    Schritt in der Kette, und nur dort.
+
+    **Was das kostete:** Der Bilderlauf gegen die lokal eingerichtete Anlage
+    meldete **48 Konsolenfehler** und ging mit Rückgabe 1 aus — drei fehlende
+    Bilder (`tagesuebersicht-desktop.png`, `tagesuebersicht-mobil.png`,
+    `schublade-mobil.png`) mal 16 Breiten. Nach dem Kopierschritt: **0**.
+    Eine Instanz, die die Zahl nicht zuordnen kann, sucht sie in der eigenen
+    Änderung; das hat hier eine Dreiviertelstunde gekostet.
+
+    Der Kommentar in `doku_lib.php` sagt den Fall wörtlich voraus („Wer selbst
+    hostet und nur `docs/` neben `server/` legt, bekommt den TEXT und keine
+    BILDER"). Er stand nur nicht dort, wo man ihn sucht, wenn der Bilderlauf
+    rot wird. Der Kopierschritt steht jetzt als Schritt 6a im Skript, mit der
+    Zahl 48 im Kommentar.
 268. **Zwei Staging-Läufe zugleich, und der Bilderlauf ohne Demo-Konto —
     kein Tag kam durch die Kette.** *Aufgenommen und erledigt 21.09.2026
     (Vorgriff auf PK-06, Konzept PK).*
@@ -3371,7 +3875,10 @@ zutreffen.
 
     *Erledigt am 20.09.2026 in Web 20.26.0 (Schritt 16, PR #61):
     `server/sitzung_lib.php` legt `.sitzungen/` mit 0700 an, gerufen an
-    zwei Stellen (`db.php`, `install.php`); Rückfall auf den Hosterpfad
+    zwei Stellen (`db.php`, `install.php` — **seit Web 20.27.0 nur noch aus
+    `sitzung_starten()`**, Schritt 15 AP2/E-ZE-06: Die Ablage wird
+    eingerichtet, wenn eine Sitzung startet, und nicht mehr bei jeder
+    Anfrage, die `db.php` lädt); Rückfall auf den Hosterpfad
     mit Anzeige; vierter Schreibort (Empfohlen) und Prüfpunkt
     „Sitzungsablage" (Muss, dreiwertig) in `plattform_pruefen()`;
     Aufräumteil „Sitzungsdateien" (nur `sess_*`). Gemessen: 2

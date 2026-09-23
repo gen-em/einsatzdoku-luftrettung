@@ -98,7 +98,7 @@ require_once __DIR__ . '/../serverkrypto_lib.php'; // anteil_ausgeliefert(), hue
  * duerfte — deshalb meldet der Browser einen Fehlschlag auch nicht.
  */
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_out(['error' => 'method'], 405); }
+api_methode();
 
 /* Formular-Token zuerst — die Begruendung der Reihenfolge steht im
  * Kopfkommentar. auth_guard.php hat das Sitzungstoken bereits angelegt, also
@@ -121,8 +121,7 @@ csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
  * Fehler stuende dort als Stoerung, wo es keine gibt. */
 if (demo_ist_demo($userId)) { json_out(['ok' => true, 'uebersprungen' => 'demo']); }
 
-$b = json_decode((string)file_get_contents('php://input'), true);
-if (!is_array($b)) { json_out(['error' => 'format'], 400); }
+$b = api_rumpf();
 
 $altToken = (string)($b['alt_token'] ?? '');
 $neuToken = (string)($b['neu_token'] ?? '');

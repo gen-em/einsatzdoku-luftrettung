@@ -128,16 +128,11 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
-<?php /* Die Artsymbole VOR der Tabelle setzen — sie stammen aus
-         dt_art_symbole() (diensttag_lib.php) und sind damit dieselben wie in
-         der Tagesleiste. Gleiches Muster wie CREW_ROLLEN in import.php
-         (Befund P9); assets/missiontable.js führt einen Rückfall, falls die
-         Vorgabe fehlt. */ ?>
-<script<?= kopf_nonce_attr() ?>>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
-        /* Die Zeichen der Diensttag-TYPEN daneben (E-S9-13, Web 16.0.0) — sonst
-           zeichnet diese Tabelle die Betriebsart, waehrend die Leiste den Typ
-           zeichnet. Dieselbe Quelle wie auf der Serverseite. */
-        const TYP_SYMBOLE = <?= json_js(dt_typ_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
+<?php /* Vorspann der Einsatztabelle (Artsymbole, Typsymbole, Katalogspalten)
+         — seit Schritt 15 AP9b an EINER Stelle, ui_tabellen_bootstrap() in
+         ui.php. Hier standen diese Zeilen wortgleich in zwei Dateien.
+         Er muss VOR assets/missiontable.js stehen. */
+      ui_tabellen_bootstrap(); ?>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
@@ -152,22 +147,23 @@ const MONAT = <?= json_js($monat) ?>;
 // Karte bleibt ausgeblendet (CSS [hidden]), bis feststeht, dass mindestens
 // ein Pin gezeichnet wird — preferCanvas fuer performantes Rendering bei
 // mehreren hundert Einsaetzen.
-const map = L.map('rangemap', { preferCanvas: true });
-/* AUSGANGSAUSSCHNITT SETZEN, BEVOR EIN PIN DAZUKOMMT.
+/* Die Karte entsteht ueber EdKarte.anlegen() (Schritt 15 AP8).
  *
- * Ohne ihn gilt die Karte als "noch nicht bereit": Leaflet nimmt eine Ebene
- * dann zwar entgegen, stellt sie aber zurueck (whenReady) und rechnet ihre
- * Bildschirmposition NICHT aus. Ein spaeteres setStyle() auf so einen Pin
- * scheitert mit "this._point is undefined" — genau das stand beim Aufbau der
- * Zeitraumansicht in der Browser-Konsole, weil die Hervorhebung nach jedem
- * Neuzeichnen der Tabelle ueber alle Pins laeuft, waehrend fitBounds() erst
- * danach kommt.
+ * DER AUSGANGSAUSSCHNITT STEHT, BEVOR EIN PIN DAZUKOMMT — EdKarte setzt ihn
+ * als erstes, vor den Ebenen. Ohne ihn gilt die Karte als "noch nicht
+ * bereit": Leaflet nimmt eine Ebene dann zwar entgegen, stellt sie aber
+ * zurueck (whenReady) und rechnet ihre Bildschirmposition NICHT aus. Ein
+ * spaeteres setStyle() auf so einen Pin scheitert mit "this._point is
+ * undefined" — genau das stand beim Aufbau der Zeitraumansicht in der
+ * Browser-Konsole, weil die Hervorhebung nach jedem Neuzeichnen der Tabelle
+ * ueber alle Pins laeuft, waehrend fitBounds() erst danach kommt.
+ * Der Ausschnitt ist ein Platzhalter; fitBounds() ueberschreibt ihn, sobald
+ * die Pins stehen.
  *
- * index.php loest das seit jeher mit derselben Zeile. Der Ausschnitt ist ein
- * Platzhalter; fitBounds() ueberschreibt ihn, sobald die Pins stehen. */
-map.setView([48.5, 10.5], 7);   // Fallback, bis Daten da sind
-attachBaseLayers(map);
-attachFullscreenControl(map);
+ * `preferCanvas` geht als `leaflet` durch: mehrere hundert Pins. Es ist die
+ * einzige Leaflet-Option im ganzen Bestand, und sie gilt nur hier. */
+const map = EdKarte.anlegen('rangemap',
+  { mitte: [48.5, 10.5], zoom: 7, leaflet: { preferCanvas: true } });
 
 let missions = [];
 let bases    = [];        // Standorte der Diensttage des Zeitraums (E-P3-40)
@@ -207,15 +203,27 @@ const FARBE_NORMAL = token('--blau');
    Ebene laesst sich leeren, ohne die Karte selbst anzufassen. */
 const pinLayer = L.layerGroup().addTo(map);
 
-// Formatierung und Ortsauswertung teilen sich beide Uebersichten; die
-// Definitionen stehen in assets/missiontable.js.
+/* Formatierung und Ortsauswertung teilen sich beide Uebersichten; die
+ * Definitionen stehen in assets/missiontable.js.
+ *
+ * WARUM TAG UND DAUER WEITER VON DORT KOMMEN und nicht unmittelbar aus
+ * EdFormat: Seit Schritt 15 AP8d sind `fmtTag` und `fmtDur` dort nur noch
+ * Weiterleitungen -- aber sie tragen den LEERWERT der Tabelle ('' fuer den
+ * Tag, 'kein Ende' fuer die Dauer). Wer hier EdFormat.tag/.dauer naehme,
+ * muesste ihn ein zweites Mal hinschreiben, und die beiden Uebersichten
+ * liefen beim naechsten Mal auseinander.
+ *
+ * Die vier Zuweisungen lesen `EdMissionTable` zur LADEZEIT. Das traegt:
+ * `assets/missiontable.js` steht als <script src> ueber diesem Block, sein
+ * `const EdMissionTable = (() => { ... })()` ist beim Auswerten dieser
+ * Zeilen also fertig. Nachgesehen nach dem Umbau von missiontable.js --
+ * `fmtTag`, `fmtDur`, `esc` und `extractOrt` stehen dort weiterhin in der
+ * Rueckgabe. */
 const esc        = EdMissionTable.esc;
 const fmtTag     = EdMissionTable.fmtTag;
 const fmtDur     = EdMissionTable.fmtDur;
 const extractOrt = EdMissionTable.extractOrt;
 function fmtDe1(n){ return n.toFixed(1).replace('.', ','); }
-
-function fmtKmDe(meter){ return (meter / 1000).toFixed(1).replace('.', ',') + ' km'; }
 
 /* ====================================================================
  * KACHELN JE TAB (Abschnitt 3.7.2, E32/E33).
@@ -246,15 +254,25 @@ function fmtKmDe(meter){ return (meter / 1000).toFixed(1).replace('.', ',') + ' 
    Vorher lieferte eine einzige Funktion "61,0 km" am Stück; der Baustein
    (ui_kennzahl / .kennzahl-einheit) setzt die Einheit aber kleiner, und das
    geht nur, wenn sie ein eigenes Element ist. */
-function wertKm(meter){ return (meter / 1000).toFixed(1).replace('.', ','); }
 
 /* SUMMEN OHNE NACHKOMMA, EINZELWERTE MIT (Mockup 30: „486 km" für die Summe,
    „61,0 km" für die längste Strecke). Eine Summe über Dutzende Einsätze auf
    100 m genau anzugeben behauptet eine Genauigkeit, die die Einzelwerte nicht
-   haben — dieselbe Regel wie im Kopf der Trefferliste (O6). Die
-   Tausendertrennung kommt von toLocaleString, damit „1.633" nicht als
-   Kommazahl gelesen wird. */
-function wertKmSumme(meter){ return Math.round(meter / 1000).toLocaleString('de-DE'); }
+   haben — dieselbe Regel wie im Kopf der Trefferliste (O6).
+
+   DIE RECHNUNG STEHT SEIT SCHRITT 15 AP8d IN DER ZENTRALE `EdFormat`
+   (assets/format.js), nicht mehr hier: `EdFormat.km(m, { einheit: false })`
+   fuer den Einzelwert, `EdFormat.kmSumme(m)` fuer die Summe. Den
+   Tausenderpunkt bringt `kmSumme()` mit, damit „1.633" nicht als Kommazahl
+   gelesen wird -- diese Seite hatte ihn schon, die Startseite nicht, und
+   genau das war der Grund fuer die Zentrale. Die beiden Formatierer, die
+   hier standen (`wertKm`, `wertKmSumme`), sind damit entfallen; ein dritter
+   (`fmtKmDe`) hatte keinen einzigen Aufrufer und ist mitgegangen.
+
+   OHNE LEERWERT, und das ist nachgesehen statt angenommen: Die Einzelwerte
+   stehen hinter `k.maxKm.wert != null`, die Summe rechnet auf `k.km`, das
+   bei 0 beginnt und eine Zahl bleibt. Ein Leerwert waere hier eine Antwort
+   auf einen Fall, den es nicht gibt. */
 function wertGanz(n){ return Number(n).toLocaleString('de-DE'); }
 
 /* Die acht Kacheln des bodengebundenen Rettungsdienstes. Höchster Einsatzort
@@ -275,9 +293,9 @@ const KACHELN_BODEN = [
      obwohl der Haken auch luftgebunden zur Verfügung steht. */
   { id: 'fehl',         label: 'Fehleinsätze',                 wert: k => String(k.fehl) },
   { id: 'totalkm',      label: 'Einsatzkilometer gesamt', mobil: true,
-    wert: k => wertKmSumme(k.km), einheit: 'km' },
+    wert: k => EdFormat.kmSumme(k.km), einheit: 'km' },
   { id: 'maxkm',        label: 'Längste Einsatzstrecke',  extrem: 'maxKm',
-    wert: k => k.maxKm.wert != null ? wertKm(k.maxKm.wert) : '–',
+    wert: k => k.maxKm.wert != null ? EdFormat.km(k.maxKm.wert, { einheit: false }) : '–',
     einheit: k => k.maxKm.wert != null ? 'km' : '' },
   /* OHNE Einheit: fmtDur() liefert „1h 28min" — die Einheit steckt schon im
      Wert. Das Mockup schreibt „0:58 h"; die Anwendung schreibt Dauern seit
@@ -307,9 +325,9 @@ const KACHELN_LUFT = [
   { id: 'avgmissions',  label: 'Ø Einsätze / Flugtag',         wert: k => k.tage > 0 ? fmtDe1(k.n / k.tage) : '–' },
   { id: 'secondary',    label: 'Sekundärtransporte',           wert: k => String(k.sek) },
   { id: 'totalkm',      label: 'Flugkilometer gesamt', mobil: true,
-    wert: k => wertKmSumme(k.km), einheit: 'km' },
+    wert: k => EdFormat.kmSumme(k.km), einheit: 'km' },
   { id: 'maxkm',        label: 'Längste Flugstrecke',   extrem: 'maxKm',
-    wert: k => k.maxKm.wert != null ? wertKm(k.maxKm.wert) : '–',
+    wert: k => k.maxKm.wert != null ? EdFormat.km(k.maxKm.wert, { einheit: false }) : '–',
     einheit: k => k.maxKm.wert != null ? 'km' : '' },
   { id: 'maxdauer',     label: 'Längste Einsatzdauer',  extrem: 'maxDauer',
     wert: k => k.maxDauer.wert != null ? fmtDur(k.maxDauer.wert) : '–' },
@@ -441,7 +459,10 @@ function zeichneStatistik(liste, tage){
       if (traeger) {
         const tag = document.createElement('span');
         tag.className = 'kennzahl-tag';
-        tag.textContent = ' · ' + fmtTagKurz(traeger.day);
+        /* Kurz: „14.08." — das Jahr steht im Seitentitel. OHNE Leerwert,
+           weil keiner ankommt: `day` stammt aus api/range.php und damit aus
+           `days.day` (DATE NOT NULL), ist also immer ein gueltiger ISO-Tag. */
+        tag.textContent = ' · ' + EdFormat.tagKurz(traeger.day);
         lab.appendChild(tag);
       }
       tile.dataset.mid = k[def.extrem].mid;
@@ -460,12 +481,6 @@ function zeichneStatistik(liste, tage){
   knopf.hidden = verdeckt <= 0;
   knopf.querySelector('span').textContent = 'Weitere Statistik (' + verdeckt + ')';
   setzeMehrStatistik(mehrOffen);
-}
-
-/** Tag eines Extremwerts, kurz: „14.08." — das Jahr steht im Seitentitel. */
-function fmtTagKurz(iso){
-  const t = String(iso || '');
-  return t.length >= 10 ? t.slice(8, 10) + '.' + t.slice(5, 7) + '.' : t;
 }
 
 let mehrOffen = false;
@@ -551,7 +566,12 @@ const tabelle = EdMissionTable.erzeuge({
   kacheln: document.getElementById('rangekacheln'),
   kachelOpts: { artDatum: true, knapp: true },
   sortKey: 'day', sortAsc: true,
-  onSortChange: () => sortLabel(),
+  /* Das mobile Sortierblatt und seine Beschriftung baut seit Schritt 15
+     AP9b das Modul. Hier standen 22 Zeilen, die in suche.php zeichengleich
+     noch einmal standen — und ein Klick darin stellte um, ohne dass sich
+     etwas bewegte: setSort() zeichnete nicht, und diese Seite auch nicht. */
+  sortblatt: document.getElementById('sortliste'),
+  sortlabel: document.getElementById('sortlabel'),
   onAfterDraw: (gesamt, gezeigt, zeilen) => {
     document.getElementById('leer').hidden = gesamt > 0;
     document.getElementById('rangetable').hidden = gesamt === 0;
@@ -564,42 +584,16 @@ const tabelle = EdMissionTable.erzeuge({
     const teile = [String(gesamt)];
     /* Ganze Kilometer, wie in der Suche: Die Summe über Dutzende Einsätze auf
        100 m genau anzugeben behauptet eine Genauigkeit, die keine Aussage
-       trägt. */
-    if (km > 0) { teile.push(Math.round(km / 1000).toLocaleString('de-DE') + ' km'); }
+       trägt. Gerechnet wird in `EdFormat.kmSumme()`; die Einheit bleibt
+       hier, weil die Zentrale die nackte Zahl liefert. Kein Leerwert: `km`
+       ist eine Summe und steht hinter `km > 0`. */
+    if (km > 0) { teile.push(EdFormat.kmSumme(km) + ' km'); }
     document.getElementById('einsatzzahl').textContent = teile.join(' · ');
 
     wendeHervorhebungAn(fixierteMid);
   }
 });
 
-/* Sortierknopf und -blatt — dasselbe Markup und dieselbe Bedienung wie auf
-   der Suchseite (E-P3-32). Unter 720 px gibt es keinen Tabellenkopf, über den
-   sich sortieren ließe; das Blatt ist dort der einzige Weg. */
-function sortLabel(){
-  const sp = tabelle.spalten().find(x => x.key === tabelle.sortKey);
-  const richtung = tabelle.sortKey === 'day'
-    ? (tabelle.sortAsc ? 'älteste zuerst' : 'neueste zuerst')
-    : (tabelle.sortAsc ? 'aufsteigend' : 'absteigend');
-  document.getElementById('sortlabel').innerHTML = sp
-    ? esc(sp.label) + '<span class="nur-ab-720">, ' + esc(richtung) + '</span>'
-    : esc(richtung);
-  const liste = document.getElementById('sortliste');
-  liste.innerHTML = '';
-  tabelle.spalten().forEach(sp2 => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    const aktiv = sp2.key === tabelle.sortKey;
-    b.className = 'blatt-zeile' + (aktiv ? ' aktiv' : '');
-    b.innerHTML = '<span>' + esc(sp2.label) + '</span>'
-      + (aktiv ? edSymbol('pfeil-hoch', tabelle.sortAsc ? '' : 'symbol-oben', richtung) : '');
-    b.addEventListener('click', () => {
-      tabelle.setSort(sp2.key, aktiv ? !tabelle.sortAsc : true);
-      sortLabel();
-      if (window.edBlatt) { edBlatt.zu(); }
-    });
-    liste.appendChild(b);
-  });
-}
 
 /* ====================================================================
  * Tabs nach Art (Abschnitt 3.7.1).
@@ -640,14 +634,15 @@ function zeigeNeutralHinweis(){
       ? 'Ein Diensttag dieses Zeitraums ist mitgezählt, aber noch keiner Art zugeordnet'
       : `${n} Diensttage dieses Zeitraums sind mitgezählt, aber noch keiner Art zugeordnet`)
     + ' — ihnen fehlt Standort oder Rettungsmittel.';
-  /* Derselbe Meldungs-Baustein wie überall (ui_meldung_markup), hier im
-     Browser gebaut: Ob der Hinweis nötig ist, weiß erst die Antwort. */
-  box.innerHTML = '<div class="meldung meldung-warn" role="status">'
-    + edSymbol('warnung', 'symbol-gross')
-    + '<p>' + esc(text) + '</p>'
-    + '<div class="meldung-aktion">'
-    + '<a class="knopf knopf-neutral" href="nachbearbeitung.php">'
-    + '<span>Zuordnung nachtragen</span></a></div></div>';
+  /* Derselbe Meldungs-Baustein wie ueberall, seit Schritt 15 ueber
+     EdHtml.meldung() -- das Browser-Gegenstueck zu ui_meldung_markup().
+     Gebaut wird er hier, weil erst die Antwort weiss, ob der Hinweis noetig
+     ist. Der Knopf bleibt von Hand geschrieben: Zu ui_knopf() gibt es kein
+     JS-Gegenstueck. Er geht unmaskiert durch, genau wie beim PHP-Baustein. */
+  box.innerHTML = EdHtml.meldung('warn', text, {
+    knopf: '<a class="knopf knopf-neutral" href="nachbearbeitung.php">'
+         + '<span>Zuordnung nachtragen</span></a>'
+  });
   box.hidden = false;
 }
 
@@ -668,10 +663,21 @@ function zeichne(){
   const liste = gefiltert();
   zeichneSegment();
   zeigeNeutralHinweis();
-  /* Die Spaltensichtbarkeit der Tabelle richtet sich nach DIESER Liste: Im
-     bodengebundenen Tab gibt es keine Windeneinsaetze, also auch keine
-     Windenspalte (A13d). */
+  /* Die Spaltensichtbarkeit der Tabelle richtet sich nach DIESER Liste
+     (A13d) — mit EINER Ausnahme: Winde und Bergwacht folgen seit Schritt 15
+     AP9 der FAEHIGKEIT, nicht dem Bestand (E-ZE-31). Die Kacheln oben machen
+     es seit E-S9-04 genauso; hier stand bis jetzt `liste.some(m => m.winch)`,
+     und dadurch zeigte dieselbe Seite die Kachel „Winden-Cycles" und keine
+     Windenspalte, sobald im Zeitraum niemand gewindet hatte.
+
+     IM BODENGEBUNDENEN TAB BLEIBEN BEIDE SPALTEN WEG, auch wenn ein
+     bodengebundener Diensttag die Faehigkeit traegt. `faehig` zaehlt ohnehin
+     nur die LUFT-Tage (api/range.php filtert auf `d.kind = 'air'`) — die
+     ausdrueckliche Null hier sagt es trotzdem, damit der Tab nicht von einer
+     Eigenschaft der Abfrage abhaengt, die man ihm nicht ansieht. */
   tabelle.setSpaltenBestand(liste);
+  tabelle.setFaehigkeiten(ansicht === 'ground'
+    ? { winch: false, bergwacht: false } : faehig);
   tabelle.setData(liste);
   zeichneStatistik(liste, tageDerAnsicht());
   zeichneKarte(liste);
@@ -785,9 +791,11 @@ document.getElementById('artwahl').addEventListener('change', ev => {
 
 function zeigeFehler(msg){
   const box = document.getElementById('loaderror');
-  box.innerHTML = '<div class="meldung meldung-fehler" role="alert">'
-    + edSymbol('warnung', 'symbol-gross')
-    + '<p><strong>Nicht geladen.</strong> ' + esc(msg) + '</p></div>';
+  /* Auftakt und Grund gehen durch EdHtml.meldung() -- dasselbe Markup wie
+     ui_meldung_markup(). Der Auftakt wird dort maskiert; am Literal
+     'Nicht geladen.' aendert das nichts. Und die Wortwahl bleibt: PHPs
+     Vorgabe heisst 'Nicht gespeichert.', hier geht es ums Laden. */
+  box.innerHTML = EdHtml.meldung('fehler', msg, { auftakt: 'Nicht geladen.' });
   box.hidden = false;
 }
 
@@ -831,7 +839,6 @@ function zeigeFehler(msg){
     tageGesamt === 1 ? '1 Diensttag' : tageGesamt + ' Diensttage';
 
   zeichne();
-  sortLabel();
   // Die Ansicht von Anfang an ins Fragment schreiben, nicht erst beim ersten
   // Wechsel: Sonst zeigte ein sofort kopierter Link auf keine bestimmte.
 
@@ -843,12 +850,14 @@ function zeigeFehler(msg){
  * dessen Knopf diese Funktion erneut aufruft. Ein zweiter Durchlauf ist
  * gefahrlos: ohne Schluessel wurde vorher kein Pin gezeichnet. */
 async function entschluesselePat(){
-  const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
-  const banner = document.getElementById('lockbanner');
-  if (!ck) { banner.hidden = !missions.some(m => m.pat_blob); return; }
-  banner.hidden = true;
-  // Entschluesseln und zaehlen an einer Stelle (M6-06, Baustein B8).
-  const zahl = await EdPat.entschluessleListe(missions, ck);
+  /* Schluessel, Banner, Entschluesseln und Zaehlen: EdPat.listeLaden()
+     (Schritt 15 AP8f). Der Nachlauf bleibt hier — diese Seite vermerkt
+     die Koordinate nur und ueberlaesst das Zeichnen dem Tab. */
+  const { ck, zahl } = await EdPat.listeLaden(missions, {
+    wrap: PAT_WRAP, salt: KDF_SALT, iter: KDF_ITER,
+    banner: document.getElementById('lockbanner'),
+  });
+  if (!ck) { return; }
   for (const m of missions) {
     if (m._patState !== 'ok') { continue; }
     const o = m._pat;

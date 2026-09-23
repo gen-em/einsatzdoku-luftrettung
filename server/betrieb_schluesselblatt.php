@@ -4,6 +4,7 @@ require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/instanz_lib.php';
 require_betreiberin();
 require_once __DIR__ . '/serverkrypto_lib.php';
+require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Zeitmarke des Blatts
 
 /**
  * DAS SCHLÜSSELBLATT — die einzige Seite, die die Geheimnisse ZEIGT
@@ -53,10 +54,9 @@ header('Pragma: no-cache');
 header('Referrer-Policy: no-referrer');
 header('X-Robots-Tag: noindex, nofollow, noarchive');
 
-global $CFG;
-$skHex = (string)($CFG['server_key'] ?? '');
-$anHex = (string)($CFG['kdf_anteil'] ?? '');
-$anAlt = (string)($CFG['kdf_anteil_alt'] ?? '');
+$skHex = (string)konfig('server_key', '');
+$anHex = (string)konfig('kdf_anteil', '');
+$anAlt = (string)konfig('kdf_anteil_alt', '');
 
 $eintraege = [];
 if (preg_match('/^[0-9a-f]{64}$/i', $skHex)) {
@@ -88,7 +88,7 @@ if (preg_match('/^[0-9a-f]{64}$/i', $anAlt)) {
 }
 
 $adresse = app_url();
-$jetzt   = fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y, H:i');
+$jetzt   = datum_zeit_text(gmdate('Y-m-d H:i:s'), ', ');
 
 /* Erkennungswert wie `asset()`, aber diese Seite lädt db.php ohnehin — der
  * Aufruf steht hier trotzdem ausgeschrieben, damit sie ohne `ui.php` auskommt

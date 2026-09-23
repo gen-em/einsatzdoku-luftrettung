@@ -3,6 +3,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_betreiberin();
 require_once __DIR__ . '/ratelimit_lib.php';
+// BEHEBUNG, NICHT FORMSACHE (AP7, R83): Bis Web 20.31.0 rief diese Seite
+// edbak_groesse_text(), ohne adminbackup_lib.php je einzubinden — die Funktion
+// war nur da, weil ui_seite_start() das Menue baut und
+// ui_einstellungen_punkte() dafuer status_lib.php nachlaedt. Aus genau diesem
+// Befund ist dieses Paket entstanden; jetzt haengt die Seite an der Sache selbst.
+require_once __DIR__ . '/format_lib.php';
 
 /**
  * BETRIEB -> STATUS -> SICHERHEIT (P5a/AP8, E-P5a-08).
@@ -197,7 +203,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
             'klein' => ($sp['art'] === 'konto' ? 'Kontokennung' : 'Anschluss')
                      . ' · Topf ' . $sp['topf']
                      . ' · Stufe ' . $sp['stufe']
-                     . ' · bis ' . fmt_local($sp['bis'], 'd.m.Y H:i') . ' Uhr ('
+                     . ' · bis ' . datum_zeit_text($sp['bis']) . ' Uhr ('
                      . $restText($sp['rest']) . ')'
                      . ' · ' . $sp['versuche'] . ' Fehlversuche im Fenster',
             'plaketten' => ui_plakette('Stufe ' . $sp['stufe'],
@@ -251,7 +257,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
       <?php foreach ($phasen as $p): ?>
         <?php ui_zeile([
             'text'  => 'Stufe ' . $p['stufe'] . ' erreicht',
-            'klein' => fmt_local($p['zeitpunkt'], 'd.m.Y H:i') . ' Uhr'
+            'klein' => datum_zeit_text($p['zeitpunkt']) . ' Uhr'
                      . ($p['versuche'] !== null
                         ? ' · ' . $p['versuche'] . ' Fehlversuche je 15 Minuten' : ''),
             'plaketten' => ui_plakette('Stufe ' . $p['stufe'], ['ton' => 'orange']),
@@ -281,7 +287,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
             'text'  => $g['name'],
             'klein' => $g['anzahl'] . ' abgewiesene Anmeldungen'
                      . ($g['seit'] !== null
-                        ? ' seit ' . fmt_local($g['seit'], 'd.m.Y H:i') . ' Uhr' : ''),
+                        ? ' seit ' . datum_zeit_text($g['seit']) . ' Uhr' : ''),
             'plaketten' => ui_plakette((string)$g['anzahl'], ['ton' => 'orange']),
         ]); ?>
       <?php endforeach; ?>
@@ -294,7 +300,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
         <?php ui_zeile([
             'text'  => $merkmalText((string)$z['merkmal']),
             'klein' => ($z['topf'] === 'ingest' ? 'Gerätekennung' : 'Anschluss')
-                     . ' · ' . fmt_local($z['zeitpunkt'], 'd.m.Y H:i') . ' Uhr'
+                     . ' · ' . datum_zeit_text($z['zeitpunkt']) . ' Uhr'
                      . ' · Stufe ' . $z['stufe'],
             'plaketten' => ui_plakette($z['art'] === 'aufgehoben' ? 'aufgehoben' : 'gesperrt',
                 ['ton' => $z['art'] === 'aufgehoben' ? 'neutral' : 'orange']),
@@ -337,11 +343,11 @@ ui_seite_start(['titel' => 'Sicherheit']);
         ?>
         <?php ui_zeile([
             'text'  => $merkmalText((string)($z['merkmal'] ?? '')),
-            'klein' => fmt_local($z['zeitpunkt'], 'd.m.Y H:i') . ' Uhr'
+            'klein' => datum_zeit_text($z['zeitpunkt']) . ' Uhr'
                      . ($z['topf'] !== null ? ' · Topf ' . $z['topf'] : '')
                      . ($z['stufe'] > 0 ? ' · Stufe ' . $z['stufe'] : '')
                      . ($z['bis'] !== null
-                        ? ' · bis ' . fmt_local($z['bis'], 'd.m.Y H:i') . ' Uhr' : '')
+                        ? ' · bis ' . datum_zeit_text($z['bis']) . ' Uhr' : '')
                      . ($z['wer'] !== null && $z['wer'] !== ''
                         ? ' · durch ' . $z['wer'] : ''),
             'plaketten' => ui_plakette($was, ['ton' => $ton]),
@@ -385,8 +391,8 @@ ui_seite_start(['titel' => 'Sicherheit']);
         <?php ui_zeile([
             'text'  => (string)($z['ziel'] ?? '—') . ' · ' . (string)$z['ordner'],
             'klein' => (string)$z['datei'] . ' · '
-                     . edbak_groesse_text((int)$z['bytes']) . ' · '
-                     . fmt_local((string)$z['geloescht_am'], 'd.m.Y H:i') . ' Uhr'
+                     . groesse_text((int)$z['bytes']) . ' · '
+                     . datum_zeit_text((string)$z['geloescht_am']) . ' Uhr'
                      . ((string)($z['grund'] ?? '') !== ''
                         ? ' · ' . (string)$z['grund'] : ''),
             'plaketten' => ui_plakette('entfernt', ['ton' => 'neutral']),
@@ -417,7 +423,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
     ]); ?>
     <?php ui_zeile([
         'text'  => $mailregel['zuletzt'] !== null
-                 ? 'Zuletzt gemeldet am ' . fmt_local($mailregel['zuletzt'], 'd.m.Y H:i') . ' Uhr'
+                 ? 'Zuletzt gemeldet am ' . datum_zeit_text($mailregel['zuletzt']) . ' Uhr'
                  : 'Bisher wurde nichts gemeldet',
         'klein' => $mailregel['ziele'] === []
                  ? 'Es ist keine Empfängeradresse zu ermitteln — weder eine '

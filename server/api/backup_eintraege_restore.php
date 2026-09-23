@@ -32,17 +32,11 @@ require_once __DIR__ . '/../backup_lib.php';
  * liesse sich ein Einsatz an den Diensttag eines FREMDEN Kontos haengen.
  */
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_out(['error' => 'method'], 405); }
+api_methode();
 csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
 
-$roh = file_get_contents('php://input');
-if ($roh === '' || $roh === false) {
-    json_out(['error' => 'leer', 'hinweis' =>
-        'Es kamen keine Daten an — evtl. begrenzt der Server die Upload-Größe '
-      . '(post_max_size, client_max_body_size).'], 400);
-}
-$b = json_decode($roh, true);
-if (!is_array($b) || !isset($b['eintraege']) || !is_array($b['eintraege'])) {
+$b = api_rumpf();
+if (!isset($b['eintraege']) || !is_array($b['eintraege'])) {
     json_out(['error' => 'payload'], 400);
 }
 

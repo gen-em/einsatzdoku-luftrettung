@@ -14,21 +14,11 @@ require_once __DIR__ . '/session_lib.php';
  * `https_tor()` sagt es stattdessen. */
 https_tor();
 
-session_set_cookie_params([
-    'httponly' => true, 'secure' => true, 'samesite' => 'Strict', 'path' => '/',
-]);
-/* `use_strict_mode` VOR `session_start()` (P5a/AP4a, E-P5a-38, Backlog
- * Nr. 205). Ohne das uebernimmt PHP eine Sitzungskennung, die der Browser
- * mitbringt, auch wenn es sie nie vergeben hat — wer eine Kennung setzen
- * kann (ueber einen Link, eine fremde Seite auf derselben Domain, ein
- * gesetztes Cookie), kennt damit die Sitzung, in der sich gleich jemand
- * anmeldet. Das ist Session-Fixation, und der Schutz dagegen hing bis
- * Web 20.9.1 an der `php.ini` des Hosters.
- *
- * `install.php` und `wiederherstellen.php` setzten die Zeile seit jeher —
- * ausgerechnet die beiden Wege, die KEINE Anmeldesitzung tragen. */
-ini_set('session.use_strict_mode', '1');
-session_start();
+/* Cookie-Parameter, Haertung und Start stehen seit Web 20.27.0 an EINER
+ * Stelle: `sitzung_starten()` in `sitzung_lib.php` (Schritt 15 AP2,
+ * E-ZE-12). Vorher standen sie hier und in acht weiteren Dateien, in vier
+ * Fassungen. Die Art `app` ist die Anmeldesitzung: `secure` fest, `Strict`. */
+sitzung_starten('app');
 
 if (empty($_SESSION['user_id'])) {
     header('Location: login.php');

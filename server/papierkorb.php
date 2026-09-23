@@ -2,7 +2,9 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/trash_lib.php';
+require_once __DIR__ . '/einsatz_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
+require_once __DIR__ . '/format_lib.php';   // datum_text(), datum_zeit_text() (AP7)
 
 /**
  * Aktionen des Papierkorbs. Wiederherstellen laeuft direkt (harmlos,
@@ -40,9 +42,9 @@ if ($isPost && $action === 'restore_mission' && $id > 0) {
      * Die Meldung geht ueber die Sitzung, weil danach umgeleitet wird. */
     $ergebnis = trash_restore_mission($userId, $id);
     if ($ergebnis === 'tag_im_papierkorb') {
-        $_SESSION['flash_error'] =
+        flash_setzen('error',
             'Der Diensttag dieses Einsatzes liegt ebenfalls im Papierkorb. '
-          . 'Stelle zuerst den Diensttag wieder her — der Einsatz bleibt so lange hier.';
+          . 'Stelle zuerst den Diensttag wieder her — der Einsatz bleibt so lange hier.');
         header('Location: papierkorb.php'); exit;
     }
     header('Location: index.php'); exit;
@@ -97,9 +99,7 @@ if (!$zeigeListe && $istTag) {
      * oben zaehlt nur die geloeschten; sie war damit zu klein. */
     $aktiv = trash_aktiv_am_tag($userId, $dayId);
 } elseif (!$zeigeListe) {
-    $st = db()->prepare('SELECT * FROM missions WHERE id = ? AND user_id = ? AND deleted_at IS NOT NULL');
-    $st->execute([$id, $userId]);
-    $m = $st->fetch();
+    $m = einsatz_laden($id, $userId, ['papierkorb' => 'ja']);
     if (!$m) { header('Location: papierkorb.php'); exit; }
 }
 
@@ -111,11 +111,11 @@ $trashMissions = $zeigeListe ? trash_list_missions($userId) : [];
  * Zurueckholen eines Einsatzes abgelehnt werden kann (Backlog Nr. 33): Nach
  * einer Umleitung ist eine Variable weg, und eine Handlung, die nichts tut
  * und nichts sagt, ist die schlechteste von beidem. */
-$fehler = null;
-if (!empty($_SESSION['flash_error'])) {
-    $fehler = (string)$_SESSION['flash_error'];
-    unset($_SESSION['flash_error']);
-}
+/* Diese Seite hinterlegt nur Fehler und leitet auf sich selbst um; ein
+ * Hinweis kann hier also nicht ankommen. Der Ton wird trotzdem geprueft —
+ * eine Erfolgsmeldung im Fehlerkasten waere schlimmer als keine. */
+$flashPk = flash_holen();
+$fehler  = ($flashPk !== null && $flashPk['ton'] === 'error') ? $flashPk['text'] : null;
 
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
@@ -150,7 +150,7 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
               $klein[] = dt_rm_kurz($t) !== '' ? dt_rm_kurz($t) : 'ohne Rettungsmittel';
               $klein[] = (int)$t['einsaetze'] === 1
                        ? '1 Einsatz' : (int)$t['einsaetze'] . ' Einsätze';
-              $klein[] = 'gelöscht am ' . fmt_local((string)$t['deleted_at'], 'd.m.Y H:i');
+              $klein[] = 'gelöscht am ' . datum_zeit_text((string)$t['deleted_at']);
         ?>
           <?php /* Das POST-Formular steht EINMAL und versteckt; der Knopf der
                    Zeile und der des Aktionsblatts zeigen beide über `form`
@@ -193,11 +193,11 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
             <input type="hidden" name="id" value="<?= $mid ?>">
           </form>
           <?php
-            $bez = 'Einsatz vom ' . fmt_local((string)$t['started_at'], 'd.m.Y')
+            $bez = 'Einsatz vom ' . datum_text((string)$t['started_at'])
                  . ', ' . fmt_local((string)$t['started_at']) . ' Uhr';
             ui_zeile([
               'text'  => $bez,
-              'klein' => 'gelöscht am ' . fmt_local((string)$t['deleted_at'], 'd.m.Y H:i'),
+              'klein' => 'gelöscht am ' . datum_zeit_text((string)$t['deleted_at']),
               'aktionen' => ui_zeilenaktionen([
                   'titel' => $bez,
                   'eintraege' => [
@@ -222,7 +222,7 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
 
     <?php ui_karte_start(['titel' => $istTag
         ? 'Diensttag ' . dt_lesbar($tag, true)
-        : 'Einsatz vom ' . fmt_local((string)$m['started_at'], 'd.m.Y')
+        : 'Einsatz vom ' . datum_text((string)$m['started_at'])
           . ', ' . fmt_local((string)$m['started_at']) . ' Uhr']); ?>
 
       <?php if ($istTag): ?>
@@ -279,7 +279,7 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
             . 'Wer einen davon behalten will, verschiebt ihn vorher an einen '
             . 'anderen Diensttag.') ?>
         <?php foreach ($aktiv['einsaetze'] as $a):
-              $abez = 'Einsatz vom ' . fmt_local((string)$a['started_at'], 'd.m.Y')
+              $abez = 'Einsatz vom ' . datum_text((string)$a['started_at'])
                     . ', ' . fmt_local((string)$a['started_at']) . ' Uhr';
               ui_zeile([
                   'text' => $abez,

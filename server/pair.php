@@ -89,6 +89,7 @@ require_once __DIR__ . '/ratelimit_lib.php';
 require_once __DIR__ . '/smtp.php';
 require_once __DIR__ . '/geraete_lib.php';
 require_once __DIR__ . '/kopplung_lib.php';
+require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Mailfelder (Schritt 15/AP7)
 
 /* DIE KOPFZEILEN SETZT `db.php` (P5a/AP4a, Nr. 203) — `json_out()`,
  * `json_roh_out()` oder, wo die Antwort nicht das Ende ist, `json_kopf()`.
@@ -331,7 +332,7 @@ if ($sitzung !== null) {
                     'geraet'    => geraet_bezeichnung($frisch['geraet_art'],
                                        $frisch['geraet_modell'], $frisch['geraet_teil']),
                     'geraet_id' => (string)$frisch['device_id'],
-                    'zeitpunkt' => fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y H:i'),
+                    'zeitpunkt' => datum_zeit_text(gmdate('Y-m-d H:i:s')),
                 ]);
             }
         } catch (Throwable $ex) {
@@ -435,7 +436,7 @@ try {
     if ($mail !== false && $mail !== null && $mail !== '') {
         mail_einreihen('geraet_getrennt', (string)$mail, [
             'geraet_id' => $devId,
-            'zeitpunkt' => fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y H:i'),
+            'zeitpunkt' => datum_zeit_text(gmdate('Y-m-d H:i:s')),
         ]);
     }
 } catch (Throwable $ex) {

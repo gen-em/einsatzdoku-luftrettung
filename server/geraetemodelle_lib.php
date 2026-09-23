@@ -166,21 +166,18 @@ function gm_nachaufloesen(PDO $pdo, int $block, bool $schreiben,
      * Sperren ueber Sekunden und wird beim Zeitablauf zurueckgerollt — dann
      * waere die Arbeit des Blocks weg, den man gerade geschafft hat.
      *
-     * `inTransaction()`, weil der Aufrufer schon eine offen haben kann. */
-    $eigene = !$pdo->inTransaction();
-    if ($eigene) { $pdo->beginTransaction(); }
-    try {
+     * Der Aufrufer kann schon eine offen haben; `db_transaktion()` erkennt
+     * das und oeffnet dann keine zweite (E-ZE-20). */
+    $raus['geschrieben'] += db_transaktion($pdo, function (PDO $pdo) use ($raus): int {
         $up = $pdo->prepare('UPDATE devices SET geraet_art = ?, geraet_modell = ?
                               WHERE id = ?');
+        $n = 0;
         foreach ($raus['kandidaten'] as $k) {
             $up->execute([$k['art'], $k['modell'], $k['id']]);
-            $raus['geschrieben']++;
+            $n++;
         }
-        if ($eigene) { $pdo->commit(); }
-    } catch (Throwable $ex) {
-        if ($eigene && $pdo->inTransaction()) { $pdo->rollBack(); }
-        throw $ex;
-    }
+        return $n;
+    });
     return $raus;
 }
 

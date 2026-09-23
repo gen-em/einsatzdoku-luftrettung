@@ -92,7 +92,10 @@ declare(strict_types=1);
  * huckepack-Weg auslösen und damit den Job aus dem Job heraus starten.
  */
 
-require_once __DIR__ . '/config.php';
+/* BIS WEB 20.26.3 STAND HIER `require_once __DIR__ . '/config.php';` —
+ * und der Rueckgabewert wurde weggeworfen. Die Zeile war ein Ueberbleibsel:
+ * `db.php` lud die Datei ohnehin. Mit Schritt 15 AP2 liest sie `konfig()`,
+ * einmal und fuer alle. */
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/jobs_lib.php';
 

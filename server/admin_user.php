@@ -12,6 +12,9 @@ require_once __DIR__ . '/adminbackup_lib.php';
 require_once __DIR__ . '/smtp.php';       // Passwort zuruecksetzen
 require_once __DIR__ . '/demo_lib.php';   // Demo-Konto erkennen (S3/AP10)
 require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste (S6)
+// Groesse, Datum und Fuellstand kommen aus der einen Stelle (AP7, R83) — und
+// zwar ausdruecklich hier eingebunden, nicht ueber eine Ladekette geerbt.
+require_once __DIR__ . '/format_lib.php';
 
 /**
  * KONTOSEITE — die Drehscheibe eines Kontos (E-P3-41, P3/O9).
@@ -136,13 +139,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $rollenwechsel = ($role !== $rolleAlt);
         if ($rollenwechsel && !ist_betreiberin()
-            && ($role === 'betreiberin' || $rolleAlt === 'betreiberin')) {
+            && (rolle_ist_betreiberin($role) || rolle_ist_betreiberin($rolleAlt))) {
             $error = 'Die Rolle „BetreiberIn" vergibt und entzieht nur eine BetreiberIn — '
                    . 'die Rolle wurde nicht geändert.';
         } elseif ($rollenwechsel && $uid === $userId && !rolle_darf_verwalten($role)) {
             $error = 'Du kannst dir nicht selbst die Verwaltungsrechte entziehen — '
                    . 'die Rolle wurde nicht geändert.';
-        } elseif ($rollenwechsel && $role !== 'betreiberin'
+        } elseif ($rollenwechsel && !rolle_ist_betreiberin($role)
                   && ist_letzte_betreiberin(db(), $uid, $rolleAlt)) {
             $error = 'Das ist das letzte Konto mit der Rolle „BetreiberIn". '
                    . 'Es lässt sich nicht zurückstufen — lege zuerst eine zweite '
@@ -576,7 +579,7 @@ if (!$u) { ui_abbruch(404, 'NutzerIn nicht gefunden.', ['zurueck' => 'admin_user
 $dv = db()->prepare('SELECT id, device_id, label, active, created_at, last_seen,
                             geraet_art, geraet_modell, geraet_teil
                      FROM devices
-                     WHERE user_id = ? AND device_id NOT LIKE \'manual-%\' ORDER BY created_at');
+                     WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . ' ORDER BY created_at');
 $dv->execute([$uid]);
 $devices = $dv->fetchAll();
 
@@ -631,10 +634,10 @@ $rolleGesperrt = $istLetzteBetreiberin
     || (!ist_betreiberin() && rolle_ist_betreiberin($u['role'] ?? null));
 $unterTeile = [e((string)$u['email']), e($rolleText)];
 if (!empty($u['created_at'])) {
-    $unterTeile[] = 'seit ' . e(fmt_local($u['created_at'], 'd.m.Y'));
+    $unterTeile[] = 'seit ' . e(datum_text($u['created_at']));
 }
 $unterTeile[] = 'zuletzt angemeldet '
-    . (!empty($u['last_login']) ? e(fmt_local($u['last_login'], 'd.m.Y')) : '—');
+    . (!empty($u['last_login']) ? e(datum_text($u['last_login'])) : '—');
 
 ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
 ?>
@@ -864,11 +867,11 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                      ? 'Löschung beantragt'
                      : 'Gesperrt: ' . (string)$u['gesperrt_grund'],
             'klein' => ($u['gesperrt_seit'] ?? null)
-                     ? 'seit ' . fmt_local((string)$u['gesperrt_seit'], 'd.m.Y · H:i') . ' Uhr'
+                     ? 'seit ' . datum_zeit_text((string)$u['gesperrt_seit'], ' · ') . ' Uhr'
                      : '',
             'plaketten' => ($u['loeschung_am'] ?? null)
                 ? ui_plakette('löscht sich am '
-                    . fmt_local((string)$u['loeschung_am'], 'd.m.Y'), ['ton' => 'rot'])
+                    . datum_text((string)$u['loeschung_am']), ['ton' => 'rot'])
                 : '']); ?>
       <?php endif; ?>
 
@@ -940,8 +943,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                        . $fuell['grenze_einsaetze'], ['ton' => 'neutral'])]); ?>
       <?php ui_zeile(['text' => 'Speicher',
           'klein' => 'Einsätze samt GPS-Daten und Ruhesegmenten, geschätzt',
-          'plaketten' => ui_plakette((int)round($fuell['bytes'] / 1048576) . ' von '
-                       . (int)round($fuell['grenze_bytes'] / 1048576) . ' MB',
+          'plaketten' => ui_plakette(groesse_paar_text($fuell['bytes'], $fuell['grenze_bytes']),
                        ['ton' => 'neutral'])]); ?>
       <form method="post">
         <?= csrf_field() ?><input type="hidden" name="action" value="konto_grenzen">
@@ -987,9 +989,9 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
            arbeitet diese NutzerIn? Der Werdegang (gekoppelt, zuletzt gesehen)
            steht dahinter. */
         $klein[] = geraet_bezeichnung($d['geraet_art'], $d['geraet_modell'], $d['geraet_teil']);
-        if (!empty($d['created_at'])) { $klein[] = 'gekoppelt ' . fmt_local($d['created_at'], 'd.m.Y'); }
+        if (!empty($d['created_at'])) { $klein[] = 'gekoppelt ' . datum_text($d['created_at']); }
         $klein[] = 'zuletzt gesehen ' . (!empty($d['last_seen'])
-            ? fmt_local($d['last_seen'], 'd.m.Y') : 'nie');
+            ? datum_text($d['last_seen']) : 'nie');
         /* DIE GERAETEKENNUNG BLEIBT SICHTBAR (Mockup 40: „Venu 3S ·
            4F2A…91"). Sie stand bis Web 9.7.2 als eigene Tabellenspalte da
            und ist das Einzige, woran sich eine Uhr in einer Rückfrage
@@ -1060,7 +1062,10 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
               if ((string)$pk['datei'] === $fDatei) { $fZeit = edbak_zeitpunkt_text($pk['erzeugt']); break; }
           }
           $fSeit = !empty($freigabe['erstellt'])
-              ? fmt_local(str_replace(['T', 'Z'], [' ', ''], (string)$freigabe['erstellt']), 'd.m.Y')
+              /* Ohne str_replace: fmt_local() liest das abschliessende 'Z' selbst
+                 als UTC-Bezeichner. Nachgemessen ueber 3 000 ISO-Marken (2000 bis
+                 2035): 0 Abweichungen. */
+              ? datum_text((string)$freigabe['erstellt'])
               : null;
           /* ui_meldung_markup() maskiert seinen Text — Fettdruck geht nur
              ueber den Auftakt, und der ist genau die eine Angabe, die man

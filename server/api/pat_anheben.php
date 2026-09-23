@@ -102,12 +102,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     json_out(['missions' => $liste, 'offen' => (int)$offenQ->fetchColumn()]);
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_out(['error' => 'method'], 405); }
+api_methode();
 
 csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
 
-$b = json_decode((string)file_get_contents('php://input'), true);
-if (!is_array($b) || !isset($b['missions']) || !is_array($b['missions'])) {
+$b = api_rumpf();
+if (!isset($b['missions']) || !is_array($b['missions'])) {
     json_out(['error' => 'format'], 400);
 }
 if (count($b['missions']) > PAT_ANHEBEN_GRENZE) { json_out(['error' => 'zu_viele'], 400); }
@@ -131,9 +131,9 @@ foreach ($b['missions'] as $m) {
     ];
 }
 
-$angehoben = 0; $uebersprungen = 0;
 try {
-    $pdo->beginTransaction();
+    [$angehoben, $uebersprungen] = db_transaktion($pdo, function (PDO $pdo) use ($posten, $userId): array {
+    $angehoben = 0; $uebersprungen = 0;
     $upd = $pdo->prepare('UPDATE missions
                              SET pat_blob = ?, notes = NULL
                            WHERE id = ? AND user_id = ?
@@ -143,9 +143,9 @@ try {
         $upd->execute([$p['blob'], $p['id'], $userId, $p['blob_alt']]);
         if ($upd->rowCount() === 1) { $angehoben++; } else { $uebersprungen++; }
     }
-    $pdo->commit();
+    return [$angehoben, $uebersprungen];
+    });
 } catch (Throwable $e) {
-    if ($pdo->inTransaction()) { $pdo->rollBack(); }
     json_out(['error' => 'schreiben'], 500);
 }
 

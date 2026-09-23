@@ -24,7 +24,7 @@ entsteht mit AP1), Mockups in `konzept-p5c/mockups/`.
 > | Offen | nichts — die Mockup-Runde ist vollständig entschieden (zuletzt die Form der Übersicht, 20.09.2026). **F-P5c-1 bis -4** gelten mit der Freigabe. **F-P5c-5 bis -7** (2.5) sind Korrekturen der Konzeptinstanz **nach** der Freigabe — zur Kenntnis und zum Widerspruch; F-P5c-7 (Ort des Protokolls) wird im Mockup M-P5c-01 ohnehin sichtbar |
 > | Umsetzung | nicht begonnen; **nach Schritt 16 und Schritt 15** (Einschub 20.09.2026). Reihenfolge AP1 → AP2 … AP11 (3.0); die Mockup-Runde liegt bereits vor |
 > | Fable-Schritte der Umsetzung | **einer, erledigt 20.09.2026**: Mockup-Runde M-P5c-01 (Protokoll, Statistik, Menü und Übersicht, Rechtstext-Vorschau, Druckseiten; die Zeitraum-Zählung ist entfallen). In der Umsetzung selbst bleibt **kein** Fable-Schritt |
-> | Nummern | keine Rahmenplan-Fassung aus diesem Konzept. Backlog **243–246, 248, 249** stehen im Einschub vom 20.09.2026 (Weg A: feste Nummern, die Kette-II-Instanz reserviert 241–249 im Backlog-Kopf, bevor sie einspielt); Abschnitt 7 und 8 übernimmt die einspielende Instanz — **beide sind am 20.09.2026 nach der Mockup-Runde fortgeschrieben** (198, 192, 244, Fahrplanzeile); ist der Einschub schon eingespielt, sind diese Zeilen nachzutragen. **Abgeglichen mit `Konzept-Zentralisierung.md` (Schritt 15, freigegeben 20.09.2026):** der eine Satz in AP3 steht hier bereits in der dort verlangten Fassung; 3.0 verweist auf die Andockstellen |
+> | Nummern | keine Rahmenplan-Fassung aus diesem Konzept. Backlog **243–246, 248, 249** stehen im Einschub vom 20.09.2026 (Weg A: feste Nummern, die Kette-II-Instanz reserviert 241–249 im Backlog-Kopf, bevor sie einspielt); Abschnitt 7 und 8 übernimmt die einspielende Instanz — **beide sind am 20.09.2026 nach der Mockup-Runde fortgeschrieben** (198, 192, 244, Fahrplanzeile); ist der Einschub schon eingespielt, sind diese Zeilen nachzutragen. **Abgeglichen mit Schritt 15 (Zentralisierung, gebaut 22.09.2026):** der eine Satz in AP3 steht hier bereits in der verlangten Fassung; die Andockstellen stehen seit dem Abschluss von Schritt 15 am Ende dieses Dokuments |
 
 > **Stand der Umsetzung**
 >
@@ -560,11 +560,13 @@ Reiter System braucht die Seite); **AP2 vor AP7 und AP9** (der Baustein
 nach AP2/AP7 (Texte der neuen Seiten sind mit zu
 überarbeiten); AP10 zuletzt; AP11 Abschluss.
 
-**Was 10c nach Schritt 15 vorfindet** (nachgetragen 20.09.2026; Quelle:
-`Konzept-Zentralisierung.md`, freigegeben 20.09.2026, **Abschnitt 6
-„Andockstellen für 10c"** — maßgeblich ist der Stand dort nach dessen AP10).
-Die Tabelle dort nennt je 10c-Paket, welche Helfer bestehen (`konfig()`,
-`sitzung_starten()`, `api_eingang()`, `format_lib.php`, `db_transaktion()`,
+**Was 10c nach Schritt 15 vorfindet** — die Tabelle steht **am Ende dieses
+Dokuments**, Abschnitt „Andockstellen aus Schritt 15". Sie stand bis zum
+22.09.2026 im Konzept Zentralisierung; das ist mit AP10 abgeschlossen und
+gelöscht worden, und die Andockstellen sind hierher gezogen, gegen den
+gebauten Stand nachgezogen (Web 20.27.0 bis 20.37.0). Sie nennt je
+10c-Paket, welche Helfer bestehen (`konfig()`, `sitzung_starten()`,
+`api_methode()`/`api_rumpf()`, `format_lib.php`, `db_transaktion()`,
 `flash_setzen()` …). **Drei Punkte ändern den Zuschnitt hier:**
 (1) **AP3 baut kein Zählmittel** — siehe dort (E-ZE-03).
 (2) **AP2 löst `zip_lib.php` heraus** (R83: das Protokoll-Archiv ist der
@@ -612,7 +614,7 @@ Kennungssuche (nur BetreiberIn, F-P5c-6). **Abnahme:** `error_log(`-
 **Aufrufe** in `server/` → **≤ 2** (Behandler-Rückfall) — gezählt **ohne
 Kommentare und Zeichenketten**; das Zählmittel besteht seit Schritt 15
 (`tools/zaehlung/`, Zeile Z38); AP3 setzt dessen Decke auf 2 (Nr. 248) —
-*berichtigt 20.09.2026 nach E-ZE-03, `Konzept-Zentralisierung.md` Abschnitt 9;
+*berichtigt 20.09.2026 nach E-ZE-03 (Schritt 15, Zentralisierung);
 hier stand „das Zählmittel entsteht hier und geht in Stufe 1".* Ein blankes `grep -c` zählt Kommentarzeilen mit und
 bliebe nach der Umstellung über 2, sobald ein Kommentar die Herkunft nennt; eine provozierte Ausnahme erscheint im Reiter System
 mit Kennung, die Fehlerseite zeigt dieselbe Kennung; Sitzungs-, Anfrage-
@@ -787,3 +789,65 @@ und pausieren (K8)" ist damit gegenstandslos.
   entsprechend fortgeschrieben.
 - Nr. 192: mit AP7 als „erledigt sich" führen (eine Zählung statt zweier
   Namen).
+
+---
+
+# Andockstellen aus Schritt 15 — was 10c vorfindet
+
+> **Herkunft.** Dieser Abschnitt stand bis zum 22.09.2026 als Abschnitt 6 in
+> `docs/konzepte/Konzept-Zentralisierung.md`. Schritt 15 ist abgeschlossen
+> (Rahmenplan Abschnitt 8), und ein abgeschlossenes Konzept wird gelöscht —
+> die Andockstellen aber braucht 10c noch. Sie stehen deshalb hier, beim
+> Verbraucher, **gegen den gebauten Stand nachgezogen** (AP1 bis AP10,
+> Web 20.27.0 bis 20.37.0). Wo „**gebaut**" steht, ist der Helfer da und
+> trägt den genannten Namen; wo es fehlt, ist die Zusage aus dem Konzept
+> gemeint und nicht mehr.
+>
+> **Was Schritt 15 NICHT gebaut hat und 10c selbst bauen muss**, steht in
+> den Zeilen mit „10c" in der letzten Spalte — vor allem `zip_lib.php`
+> (R83, 10c AP2 ist der zweite Verbraucher) und die Decke der Registerzeile
+> **Z38** für `error_log(` (Übergabezahl **75**, nicht 77 — die Rechnung
+> steht im Changelog zu Web 20.29.0).
+
+
+Bezug: `Konzept-P5c-Rollen-Sicherheit-Betriebslage.md`, AP1–AP11. **Zusage**
+heißt: Name, Datei und Signatur gelten; ändert die Umsetzung von 15 etwas
+daran, steht es nach AP10 hier.
+
+| 10c-Paket | braucht | findet vor | aus |
+|---|---|---|---|
+| **AP1 Banner** | Umgebungsetikett aus `config.php` | **gebaut (Web 20.27.0):** **`konfig('app.umgebung')`**; der Mail-Präfix kommt aus demselben Leser (`konfig('mail.betreff_praefix')`) — die Statuswarnung „Präfix ohne Etikett" vergleicht zwei `konfig()`-Werte | AP2 |
+| | Banner auf jeder Seite | `ui_seite_start()` ist **eine** Stelle (46 Aufrufe, 43 Dateien). **Nicht darüber laufen** und einzeln zu entscheiden: `install.php`, die Störungs- und Wartungsseiten in `wartung_lib.php`, `kopfzeilen_lib.php`, die Druckseiten `betrieb_schluesselblatt.php` und `notfallblatt.php`, `gpx_lib.php` — Schritt 15 fasst diese Hüllen nicht an | Bestand |
+| **AP2 Protokollseite, Archiv** | Schreibweg | `protokoll()` in `protokoll_lib.php` (13 Aufrufe, 8 Dateien) — von 15 **unberührt** | Bestand |
+| | Rollengatter je Reiter | `require_admin()`/`require_betreiberin()` (`auth_guard.php`), `rolle_*()` (`db.php`); **0 Rollenvergleiche von Hand** außerhalb `db.php` | AP4, **gebaut** (Z13 4 → 0) |
+| | Zeile, Filter, Archivliste | `datum_zeit_text()`, `zeit_relativ()`, `zahl_text()`, `groesse_text()` aus `format_lib.php` | AP7, **gebaut** (Web 20.32.0) |
+| | Archivtakt, Fristen | `app_state_lesen()`, `app_state_setzen()`, `app_state_mehrere()`, `app_state_setzen_mehrere()`, `app_state_loeschen()` | AP4, **gebaut** |
+| | Archivlauf | `db_transaktion()` | AP5, **gebaut** (Web 20.30.0) |
+| | ZIP schreiben | **R83: 10c AP2 ist der zweite Verbraucher und löst heraus.** Heute 4× `new ZipArchive` allein in `adminbackup_lib.php`; Schritt 15 baut **nichts**, nennt aber den Ort: **`zip_lib.php`** (neu, dort), `adminbackup_lib.php` zieht im selben Paket um. Registerzeile dafür legt 10c an | Bestand |
+| **AP3 Fehlerprotokoll** | Zahl der umzustellenden Aufrufe | **Übergabezahl** aus AP10 (Start 77 in 32 Dateien; Schritt 15 stellt keinen um) | E-ZE-05 |
+| | Zählmittel und Stufe-1-Schritt | `tools/zaehlung/`, Zeile **Z38**; 10c AP3 setzt die Decke auf **2** — Nr. 248 ist damit eine Registerzeile, kein neues Werkzeug | AP1, AP10 |
+| | Behandler „früh in `db.php`" | der frühe Teil von `db.php` trägt nach AP2: `konfig_lib.php` laden, `wartung_tor()`. **Der `sitzung_ablage()`-Aufruf aus Schritt 16 steht dort nicht mehr** (E-ZE-06) | AP2 |
+| | JSON-Fehler mit Kennung | `json_fehler()` (`db.php`, 18 Aufrufe, 14 Dateien) — unberührt; `api_rumpf()` fängt **keine** Ausnahmen | AP3 |
+| **AP4 Support-Rolle** | eine Andockstelle | `ROLLEN`, `rolle_darf_verwalten()` in `db.php` — `rolle_darf_support()` kommt daneben; **kein** Handvergleich mehr in `admin_user.php`/`admin_users.php` | AP4, **gebaut**: die vier Vergleiche rufen jetzt `rolle_ist_betreiberin()` |
+| | „je Handlung, nicht je Seite" | Der POST-Verteiler der Verwaltungsseiten (`$_POST['action']`) ist von 15 **nicht** zentralisiert (Beifang, E-ZE-07) — 10c AP4 trifft ihn je Seite | — |
+| | Meldungen nach Handlungen | `flash_setzen(string $ton, string $text): void` und `flash_holen(): ?array` in **`session_lib.php`**, Töne `notice` und `error`, Sitzungsschlüssel `flash`. `flash_holen()` liest **und** löscht | AP3, **gebaut** |
+| **AP5 Zweitfaktor** | Sitzung und Tor | **`sitzung_starten('app')`** ist der einzige Weg in die Anmeldesitzung (`login.php`, `auth_guard.php`, `session_beenden()`); das Tor für Pflichtrollen dockt in `auth_guard.php` **nach** dem Sitzungsstart an, neben dem Einwilligungstor (E-P5b-15) | AP2 |
+| | Geheimnis einmalig, Einstellungen | `app_state_einmalig(string $k, callable $erzeuger): string` (`INSERT IGNORE`, dann zurücklesen), `konfig()` | AP4, AP2, **beide gebaut** |
+| **AP6 Health** | Eingang ohne Sitzung | **`api_methode('GET')`** aus `db.php` — lädt **kein** `auth_guard.php`. **Der Name hat sich in AP3 geändert** (AP3-a): aus dem einen `api_eingang()` sind `api_methode()` und `api_rumpf()` geworden, weil `csrf_check()` dazwischen steht. `api/health.php` braucht nur die erste | AP3, **gebaut** |
+| | Token, Dauer, Zustand | `konfig('betrieb.health_token')`, `rate_gleiche_dauer()` (Bestand), `migrationen_ausstehend()` (Bestand), `wartung_tor()` antwortet vorher mit 503 | AP2, **gebaut** (Web 20.27.0) |
+| **AP7 Betriebslage** | Zahlen und Anteile | `zahl_text()`, `prozent_text()`, `zeit_relativ()` | AP7, **gebaut** (Web 20.32.0) |
+| | „je echtem Gerät" | `geraete_echt_sql(string $alias = '')`, `GERAET_VIRTUELL_MUSTER`, dazu `geraet_virtuell_kennung()` und `geraet_virtuell_sicherstellen(PDO $pdo, int $userId)` | AP4, **gebaut** |
+| | Migration für den Index | Regel „nur über `db_hat_index(PDO $pdo, string $tabelle, string $index)`"; Registerzeile Z15 (Decke seit AP4 **54**) schlägt sonst an | AP4 **gebaut**, AP10 |
+| **AP8 R39-Rest** | Migration mit Vorzählung | `db_hat_spalte(PDO $pdo, string $tabelle, string $spalte)`; `migrationen_inhalt_zaehlen()` (Bestand) | AP4, **gebaut** |
+| | Besatzung am Diensttag | `einsatz_besatzung_ersetzen()` besteht für **Einsätze**; die Diensttag-Besatzung (`day_crew`) ist von 15 nicht berührt | AP5 |
+| **AP9 Aufräumen** | Datum-Zeit-Trenner | **übernimmt die Vereinheitlichung aus F-ZE-3**: nach 15 steht der Trenner an **einer** Stelle (`datum_zeit_text()`), 11 Aufrufer übergeben ` · ` — die Entscheidung ist danach eine Zeile | AP7 |
+| | JS von `einstellungen.php` | sechs JSON-POSTs laufen über `EdApi`; Textarbeit dort trifft kein Fehlerschema mehr je Knopf | AP8, **gebaut** (Web 20.34.0) |
+| **AP10 Bounce** | Betreff-Schlüssel, Postfach | `mail_einreihen()` ist **eine** Stelle (`mail_lib.php`; 19 Aufrufe, 14 Dateien) — der Schlüssel `[NAdoku #<id>]` entsteht dort; `konfig('mail.postfach')` | Bestand, AP2 |
+| **AP11 Abschluss** | — | Das Register läuft in Stufe 1: Neuer 10c-Code, der eine zweite Stelle baut, macht die Kette rot. **Decken werden nicht angehoben, ohne dass es im Konzept steht** | AP10 |
+
+**Andockstellen zu Schritt 16** (gemergt, `main` `fd99989`): `sitzung_lib.php`
+besteht mit `sitzung_ablage()`; die zwei Aufrufstellen (`db.php` Z. 586,
+`install.php` Z. 144) entfallen in AP2. FF-2 besteht an diesem Stand fort: Bis
+AP2 legt jeder anonyme Abruf einer lesenden Seite eine Datei in `.sitzungen/`
+an — auch die Messschritte und der Bilderlauf der Kette. Wer dort Dateien
+zählt, rechnet das ein.

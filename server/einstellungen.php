@@ -20,6 +20,7 @@ require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste
 require_once __DIR__ . '/kopplung_lib.php';  // Kopplungssitzungen: Code suchen, beanspruchen (S5)
 require_once __DIR__ . '/ratelimit_lib.php'; // Topf `pair_code` an der Code-Eingabe (S5, E-S5-16)
 require_once __DIR__ . '/geocoder_lib.php'; // Adresssuche: beide Schalter (S9/AP2, E-S9-05)
+require_once __DIR__ . '/format_lib.php';   // datum_text(), datum_zeit_text(), groesse_text(), groesse_paar_text() (AP7)
 
 /* OHNE `t` DIE ÜBERSICHT (E-P3-11, P3/O2).
  *
@@ -324,8 +325,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $termin = konto_loeschung_beantragen($userId);
                 mail_einreihen('loeschung_beantragt', (string)$z['email'],
-                               ['termin' => fmt_local($termin, 'd.m.Y') . ' um '
-                                          . fmt_local($termin, 'H:i') . ' Uhr',
+                               /* ZWEI AUFRUFE UND NICHT datum_zeit_text($x, ' um '): Die Funktion
+                                 * steigt bei leerem Wert frueh aus und liefert EINEN
+                                 * Gedankenstrich; hier standen immer ZWEI ('– um –').
+                                 * Zeichengleichheit geht vor Kuerze (E-ZE-10). */
+                               ['termin' => datum_text($termin) . ' um '
+                                            . fmt_local($termin) . ' Uhr',
                                 'link'   => app_url('/login.php')]);
                 /* SOFORT ABMELDEN. Das Konto ist ab jetzt gesperrt; die
                  * Sitzung stehen zu lassen hiesse, dass die naechste Seite
@@ -411,9 +416,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             // Passwort und Huelle gemeinsam — sonst entstuende ein Konto, das
             // sich zwar anmelden laesst, dessen Angaben aber unlesbar waeren.
-            $pdo = db();
-            $pdo->beginTransaction();
             try {
+                $_SESSION['epoch'] = db_transaktion(db(), function (PDO $pdo) use (
+                        $newTok, $newSalt, $newIter, $userId, $patReady, $wrapPw, $keyChk): int {
                 /* Sitzungszaehler mit erhoehen (M1-09/D6).
                  *
                  * Wer sein Passwort wechselt, weil er Missbrauch vermutet,
@@ -461,7 +466,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare('UPDATE password_resets SET used_at = NOW()
                                WHERE user_id = ? AND used_at IS NULL')
                     ->execute([$userId]);
-                $pdo->commit();
 
                 /* Die EIGENE Sitzung zieht den neuen Stand mit und bleibt
                  * bestehen (Abnahmekriterium A5: "alle ANDEREN Sitzungen").
@@ -470,7 +474,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * kein Sicherheitsgewinn, sondern nur laestig. */
                 $st2 = $pdo->prepare('SELECT session_epoch FROM users WHERE id = ?');
                 $st2->execute([$userId]);
-                $_SESSION['epoch'] = (int)$st2->fetchColumn();
+                return (int)$st2->fetchColumn();
+                });
 
                 $notice = 'Passwort geändert. Alle anderen offenen Sitzungen dieses '
                         . 'Kontos sind damit beendet; noch offene Links zum '
@@ -479,7 +484,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * den neuen Datenschluessel uebernehmen. */
                 $pwGewechselt = true;
             } catch (Throwable $ex) {
-                $pdo->rollBack();
                 $error = 'Passwortwechsel fehlgeschlagen. Es wurde nichts geändert.';
             }
         }
@@ -607,8 +611,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      * sie hat auch nichts im Verlauf des Browsers zu suchen. */
                     rate_erfolg('pair_code', $koppelKonto);
                     $_SESSION['pair_warten'] = (string)$sitzung['device_id'];
-                    $_SESSION['flash_notice'] = 'Der Code ist deinem Konto zugeordnet. '
-                                              . 'Bestätige jetzt am Gerät mit Ja.';
+                    flash_setzen('notice', 'Der Code ist deinem Konto zugeordnet. '
+                                        . 'Bestätige jetzt am Gerät mit Ja.');
                     header('Location: einstellungen.php?t=geraete#koppeln');
                     exit;
                 }
@@ -623,8 +627,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $kw = (string)($_SESSION['pair_warten'] ?? '');
         if ($kw !== '') { pair_sitzung_verwerfen(db(), $kw, $userId); }
         unset($_SESSION['pair_warten']);
-        $_SESSION['flash_notice'] = 'Die Kopplung ist abgebrochen. Wenn du das Gerät doch '
-                                  . 'verbinden willst, hol dir dort einen neuen Code.';
+        flash_setzen('notice', 'Die Kopplung ist abgebrochen. Wenn du das Gerät doch '
+                            . 'verbinden willst, hol dir dort einen neuen Code.');
         header('Location: einstellungen.php?t=geraete#koppeln');
         exit;
     }
@@ -805,9 +809,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $geloest = 0;
         } else {
             $bleiben = stammdaten_ohne_standortpflicht($bid, $userId);
-            $pdo = db();
-            $pdo->beginTransaction();
             try {
+                $geloest = db_transaktion(db(), function (PDO $pdo) use ($bid, $userId): int {
                 $geloest = stammdaten_standort_loesen($bid, $userId);
                 $pdo->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "base" AND item_id = ?')
                     ->execute([$userId, $bid]);
@@ -841,9 +844,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ->execute([$userId, $bid]);
                 $pdo->prepare('DELETE FROM bases WHERE id = ? AND user_id = ?')
                     ->execute([$bid, $userId]);
-                $pdo->commit();
+                return $geloest;
+                });
             } catch (PDOException $ex) {
-                if ($pdo->inTransaction()) { $pdo->rollBack(); }
                 $error = 'Der Standort konnte nicht gelöscht werden.';
                 $geloest = 0;
             }
@@ -908,9 +911,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rollen = $rm['roles'];
             $caps   = $rm['caps'];
 
-            $pdo = db();
-            $pdo->beginTransaction();
             try {
+                $vid = db_transaktion(db(), function (PDO $pdo) use ($vid, $userId, $rm,
+                                                                     $rollen, $caps): int {
                 if ($vid > 0) {
                     $pdo->prepare('UPDATE vehicles SET name = ?, kurz = ?, kind = ?, typ = ?, base_id = ?
                                    WHERE id = ? AND user_id = ?')
@@ -937,10 +940,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare('DELETE FROM vehicle_capabilities WHERE vehicle_id = ?')->execute([$vid]);
                 $insC = $pdo->prepare('INSERT IGNORE INTO vehicle_capabilities (vehicle_id, capability) VALUES (?,?)');
                 foreach ($caps as $c) { $insC->execute([$vid, $c]); }
-                $pdo->commit();
+                return $vid;
+                });
                 $zielId = $vid;
             } catch (PDOException $ex) {
-                if ($pdo->inTransaction()) { $pdo->rollBack(); }
                 $error = ist_dublettenfehler($ex)
                     ? 'Diese Bezeichnung existiert bereits.'
                     : 'Das Rettungsmittel konnte nicht gespeichert werden.';
@@ -1173,21 +1176,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * `:target` und mit der Neuladen-Warnung des Browsers. */
     if ($abschnitt !== null
         && ($zielId !== null || $baseNeu !== null || $notice !== null || $error !== null)) {
-        if ($notice !== null) { $_SESSION['flash_notice'] = $notice; }
-        if ($error !== null) { $_SESSION['flash_error'] = $error; }
+        /* NUR EINES VON BEIDEN KANN GESETZT SEIN — nachgelesen fuer jeden der
+         * 24 Handlungszweige (Schritt 15/AP3): Jeder ist eine if/elseif/else-Kette
+         * oder ein try/catch, und der Demo-Riegel oben setzt `$action = ''`.
+         * Deshalb traegt EIN Sitzungsschluessel, was vorher zwei trugen. */
+        if ($error !== null)       { flash_setzen('error', $error); }
+        elseif ($notice !== null)  { flash_setzen('notice', $notice); }
         header('Location: ' . $zurueckZiel . '#' . $abschnitt);
         exit;
     }
 }
 
 // Meldung/Fehler aus der Umleitung uebernehmen
-if (!empty($_SESSION['flash_notice'])) {
-    $notice = $_SESSION['flash_notice'];
-    unset($_SESSION['flash_notice']);
-}
-if (!empty($_SESSION['flash_error'])) {
-    $error = $_SESSION['flash_error'];
-    unset($_SESSION['flash_error']);
+$flash = flash_holen();
+if ($flash !== null) {
+    if ($flash['ton'] === 'error') { $error = $flash['text']; }
+    else                           { $notice = $flash['text']; }
 }
 
 /* ---- Wartet dieses Konto gerade auf ein Gerät? (S5, E-S5-53) --------------
@@ -1662,8 +1666,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                        . $fuell['grenze_einsaetze'], ['ton' => 'neutral'])]); ?>
       <?php ui_zeile(['text' => 'Speicher',
           'klein' => 'Einsätze samt GPS-Daten und Ruhesegmenten, geschätzt',
-          'plaketten' => ui_plakette((int)round($fuell['bytes'] / 1048576) . ' von '
-                       . (int)round($fuell['grenze_bytes'] / 1048576) . ' MB',
+          'plaketten' => ui_plakette(groesse_paar_text($fuell['bytes'], $fuell['grenze_bytes']),
                        ['ton' => 'neutral'])]); ?>
       <?php if ($fuell['voll']): ?>
         <?= ui_meldung_markup('warn', 'Die Grenze ist erreicht. Der Server nimmt '
@@ -2951,10 +2954,12 @@ ui_seite_start(['titel' => 'Einstellungen',
                                'guete' => true, 'einzug' => '    ']); ?>
     <?php /* patient.js liefert die gemeinsame Entschluesselungsschleife
              (Baustein B8), die der Backup-Lauf seit Web 4.6.0 benutzt. */ ?>
-    <?php /* html.js liefert EdHtml.escape() — melde() setzt fremden Text in
-             eine Meldung, und der muss maskiert sein: In „Import
-             fehlgeschlagen: …" steckt eine Fehlermeldung, die aus einer
-             fremden Datei stammen kann. */ ?>
+    <?php /* html.js liefert EdHtml.meldung() UND EdHtml.escape() -- melde()
+             baut sein Markup seit Schritt 15 AP8 darueber, und die Maskierung
+             steckt dort mit drin. Dass sie noetig ist, bleibt wahr: In dem
+             Satz, den melde() nach einem gescheiterten Einspielen zeigt,
+             steckt eine Fehlermeldung, die aus einer fremden Datei stammen
+             kann. */ ?>
     <script src="<?= asset('assets/html.js') ?>"></script>
     <script src="<?= asset('assets/patient.js') ?>"></script>
     <?php /* zip.js: Seit Containerfassung 4 (S2/AP5) ist ein Backup ein
@@ -3003,22 +3008,27 @@ ui_seite_start(['titel' => 'Einstellungen',
       if (!el) { return; }
       if (!text) { el.innerHTML = ''; return; }
       if (!ton) { el.textContent = text; return; }
-      /* SYMBOLE WIE IM BAUSTEIN, nicht ungefähr wie im Baustein.
-       * ui_meldung_markup() (ui.php) führt die Tabelle
-       * ['fehler'=>'warnung','warn'=>'warnung','ok'=>'haken','info'=>'hinweis'],
-       * Design.md 9.5 schreibt sie vor. Dieser Nachbau ließ `warn` in den
-       * Sonst-Zweig fallen und zeigte das Hinweiszeichen — bei genau den
-       * Meldungen, die auffallen sollen. Erreichbar ist der Ton auf dieser
-       * Seite an drei Stellen: unlesbare geschützte Angaben oder eine nicht
-       * mitgesicherte Spur beim Sichern, abgelehnte Spuren beim Einspielen,
-       * dasselbe auf dem Freigabeweg. (Zwei davon kamen mit S2 dazu; als der
-       * Fehler gefunden wurde, war es noch eine.) */
-      const symbole = { fehler: 'warnung', warn: 'warnung', ok: 'haken', info: 'hinweis' };
-      const sym = symbole[ton] || 'hinweis';
-      el.innerHTML = '<div class="meldung meldung-' + ton + '" role="'
-        + (ton === 'fehler' ? 'alert' : 'status') + '">'
-        + edSymbol(sym, 'symbol-gross')
-        + '<p>' + EdHtml.escape(text) + '</p></div>';
+      /* DAS MARKUP KOMMT AUS EdHtml.meldung() (Schritt 15 AP8e, Z37).
+       *
+       * Hier stand ein eigener Nachbau mit EIGENER Ton-zu-Symbol-Tabelle,
+       * und die hatte VIER Eintraege: `schutz` fehlte. Ein Nachbau, der
+       * dieselbe Tabelle noch einmal fuehrt, laeuft frueher oder spaeter
+       * auseinander -- dieser hier hat es schon einmal getan und liess
+       * `warn` in den Sonst-Zweig fallen, also das Hinweiszeichen bei genau
+       * den Meldungen, die auffallen sollen. Behoben wurde das damals HIER
+       * und nicht an der einen Stelle; jetzt gibt es die eine Stelle.
+       * EdHtml.meldung() ist zeichengleich mit ui_meldung_markup()
+       * (server/ui.php) und fuehrt die vollen FUENF Toene.
+       *
+       * WAS DAS FUER DIESE SEITE HEISST: Die 21 Aufrufstellen uebergeben
+       * 'fehler' (16), 'warn' (2) und drei Mal 'warn' oder 'ok' aus einer
+       * Bedingung -- also nie einen Ton ausserhalb der fuenf. Der Wurf von
+       * EdHtml.meldung() bei unbekanntem Ton kann hier heute nicht
+       * ausloesen; er ist ein Riegel fuer den naechsten Aufrufer.
+       *
+       * WO der Satz erscheint, bleibt hier: melde() setzt das Markup in
+       * sein Zielelement. Genau dafuer gibt es die Funktion weiterhin. */
+      el.innerHTML = EdHtml.meldung(ton, text);
     }
 
     /* Liefert den Inhaltsschluessel; ist er gesperrt, bietet EdUnlock den
@@ -3310,18 +3320,23 @@ ui_seite_start(['titel' => 'Einstellungen',
                  noch einmal geholt — nicht abgebrochen, denn es ist kein
                  Fehler, sondern eine Grenze. */
               for (let versuch = 0; rest.length && versuch < 10; versuch++) {
-                const a = await fetch('api/backup_spuren.php', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-                  body: JSON.stringify({ owner_type: art, ids: rest }),
-                });
+                /* OHNE `vorgang`, und das ist kein Versehen. Dieser Wurf
+                   laeuft in den catch des ganzen Exportwegs (weiter unten),
+                   und DER traegt den Vorgangsnamen -- einmal, fuer alle
+                   Fehlerquellen dieses Knopfes. Mit einem zweiten hier
+                   stuende in der Anzeige „Der Export ist fehlgeschlagen:
+                   Das Laden der GPS-Daten ist fehlgeschlagen: ...", also
+                   zwei Fehlgeschlagen-Klauseln hintereinander. Gefunden
+                   beim Gegenlesen; die uebrigen inneren Wuerfe dieses Wegs
+                   tragen aus demselben Grund seit jeher keinen. */
+                const a = await EdApi.postJson('api/backup_spuren.php',
+                  { owner_type: art, ids: rest });
                 if (!a.ok) {
-                  let grund = 'HTTP ' + a.status;
-                  try { const j = await a.json(); grund = j.meldung || j.error || grund; } catch (e2) {}
-                  throw new Error('Die GPS-Daten konnten nicht geladen werden (' + grund
-                                + '). Es wurde KEINE Datei erzeugt.');
+                  /* Den Grund baut EdApi; der Folgesatz bleibt hier, weil er
+                     ein Zustandsbericht ist und kein Fehlertext. */
+                  throw new Error(a.meldung + ' Es wurde KEINE Datei erzeugt.');
                 }
-                const spuren = (await a.json()).spuren || {};
+                const spuren = (a.daten && a.daten.spuren) || {};
                 const nochOffen = [];
                 for (const [idText, s] of Object.entries(spuren)) {
                   const id = Number(idText);
@@ -3390,13 +3405,27 @@ ui_seite_start(['titel' => 'Einstellungen',
         a.click();
         URL.revokeObjectURL(url);
 
-        const mb = (blob.size / 1048576).toFixed(1).replace('.', ',');
+        /* EdFormat.groesse() statt eigener Rechnung (Schritt 15/AP7, E-ZE-26).
+           Hier stand (blob.size / 1048576).toFixed(1) — IMMER in MB, ohne
+           Tausenderpunkt, also eine vierte Fassung desselben Formatierers und
+           die einzige im Browser. EdFormat hat die dreistufige Regel der
+           PHP-Seite; unter 1 MiB steht deshalb jetzt "312 KB" statt "0,3 MB"
+           und ab 1 GiB "1,00 GB" statt "1.024,0 MB". Das ist die sechste
+           benannte Ausnahme von E-ZE-10 und ausdruecklich entschieden.
+
+           DIE EINHEIT BRINGT EdFormat SELBST MIT. Das Literal " MB" hinter
+           der Variablen musste deshalb weg; beim ersten Umbau blieb es
+           stehen, und die Fertigmeldung sagte "263 KB MB" (gemessen im
+           edbak-Kreislauf am 22.09.2026). Aus demselben Grund heisst die
+           Variable nicht mehr `mb`: Sie traegt keine Megabyte mehr,
+           sondern eine fertige Groessenangabe. */
+        const groesse = EdFormat.groesse(blob.size);
         melde(expState, `Fertig: ${kopf.eintraege_gesamt} Einträge `
           + `(davon ${n} mit geschützten Angaben), `
           + `${(kopf.days || []).length} Diensttage, `
           + `${spurenGesamt} Aufzeichnungen mit ${punkteGesamt.toLocaleString('de-DE')} Punkten `
           + `in ${gesamt} ${gesamt === 1 ? 'Teil' : 'Teilen'} `
-          + `— ${mb} MB.`
+          + `— ${groesse}.`
           /* DASS DIE DATEI DA IST, MUSS DASTEHEN (Rückmeldung nach P3).
            *
            * Der Download läuft ohne Dialog und ohne Ton durch; wer nicht
@@ -3434,7 +3463,12 @@ ui_seite_start(['titel' => 'Einstellungen',
              reiner Erfolg: Die Datei ist vollständig bis auf das Genannte. */
           (unlesbar || fehlerhaft.length) ? 'warn' : 'ok');
       } catch (e) {
-        melde(expState, 'Export fehlgeschlagen: ' + e.message, 'fehler');
+        /* DER EINE VORGANGSNAME DIESES WEGES. Er stand hier schon immer,
+           nur in der alten Form „Export fehlgeschlagen: "; seit AP8 traegt
+           er den einheitlichen Satzbau. Die inneren Wuerfe -- EdApi-Fehler,
+           Manifestpruefung, der Satz nach zehn Anlaeufen -- nennen ihn
+           deshalb nicht noch einmal. */
+        melde(expState, 'Der Export ist fehlgeschlagen: ' + e.message, 'fehler');
       }
     });
 
@@ -3757,13 +3791,10 @@ ui_seite_start(['titel' => 'Einstellungen',
         }
 
         impState.textContent = fassung4 ? 'Kopf wird übertragen…' : 'Daten werden übertragen…';
-        const res = await fetch('api/backup_restore.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-          body: JSON.stringify(data)
-        });
-        const out = await res.json();
-        if (!out.ok) { throw new Error(out.meldung || out.hinweis || out.error || 'unbekannt'); }
+        const res = await EdApi.postJson('api/backup_restore.php', data,
+                                         { vorgang: 'Das Einspielen' });
+        if (!res.ok) { throw new Error(res.meldung); }
+        const out = res.daten;
         const s = out.stats;
 
         /* ---- Die Einträge in Fenstern (S2/AP5b) -------------------------
@@ -3783,17 +3814,15 @@ ui_seite_start(['titel' => 'Einstellungen',
               + `(Teil ${i + 1} von ${fassung4.eintragsteile.length})…`;
             const teil = await fassung4.teilOeffnen(ti);
             await patUmschluesseln(teil.missions);
-            const a = await fetch('api/backup_eintraege_restore.php', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-              body: JSON.stringify({ eintraege: teil, day_map: dayMap }),
-            });
-            const o = await a.json();
-            if (!o.ok) {
-              throw new Error('Die Einträge konnten nicht übertragen werden ('
-                + (o.meldung || o.hinweis || o.error || 'HTTP ' + a.status) + '). '
-                + 'Was bis hierher übertragen wurde, ist eingespielt.');
+            const a = await EdApi.postJson('api/backup_eintraege_restore.php',
+              { eintraege: teil, day_map: dayMap },
+              { vorgang: 'Das Übertragen der Einträge' });
+            if (!a.ok) {
+              /* Zustandsbericht, kein Fehlertext -- bleibt beim Aufrufer. */
+              throw new Error(a.meldung
+                + ' Was bis hierher übertragen wurde, ist eingespielt.');
             }
+            const o = a.daten;
             /* Summieren, nicht überschreiben. */
             for (const k of ['missions', 'missions_skipped', 'rests', 'rests_skipped',
                              'stammdaten', 'stammdaten_skipped', 'days']) {
@@ -3850,17 +3879,15 @@ ui_seite_start(['titel' => 'Einstellungen',
             let happen = [], groesse = 0;
             const senden = async () => {
               if (!happen.length) { return; }
-              const a = await fetch('api/backup_spuren_restore.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-                body: JSON.stringify({ spuren: happen }),
-              });
-              const o = await a.json();
-              if (!o.ok) {
-                throw new Error('Die GPS-Daten konnten nicht übertragen werden ('
-                  + (o.meldung || o.hinweis || o.error || 'HTTP ' + a.status) + '). '
-                  + 'Der übrige Bestand ist bereits eingespielt.');
+              const a = await EdApi.postJson('api/backup_spuren_restore.php',
+                { spuren: happen },
+                { vorgang: 'Das Übertragen der GPS-Daten' });
+              if (!a.ok) {
+                /* Zustandsbericht, kein Fehlertext -- bleibt beim Aufrufer. */
+                throw new Error(a.meldung
+                  + ' Der übrige Bestand ist bereits eingespielt.');
               }
+              const o = a.daten;
               spurenGeschrieben += o.geschrieben || 0;
               spurenUebersprungen += o.uebersprungen || 0;
               for (const x of (o.abgelehnt || [])) {
@@ -3904,7 +3931,13 @@ ui_seite_start(['titel' => 'Einstellungen',
         melde(impState, 'Import fertig: ' + restoreBericht(s, zusatz) + spurText,
               spurenAbgelehnt.length || ohneZiel ? 'warn' : 'ok');
       } catch (e) {
-        melde(impState, 'Import fehlgeschlagen: ' + e.message, 'fehler');
+        /* OHNE PRAEFIX (Schritt 15 AP8, R2). Den Satzanfang setzt jetzt
+           EdApi ueber `o.vorgang` -- „Das Einspielen ist fehlgeschlagen:
+           ..." Ein zusaetzliches „Import fehlgeschlagen: " davor haette den
+           Vorgang zweimal im selben Satz stehen lassen. Fehler, die NICHT
+           vom Server kommen (falsches Backup-Passwort, beschaedigtes
+           Archiv), bringen ihren eigenen vollstaendigen Satz mit. */
+        melde(impState, e.message, 'fehler');
       }
     });
 
@@ -4042,15 +4075,16 @@ ui_seite_start(['titel' => 'Einstellungen',
           }
           return a.json();
         };
-        const senden = async (adresse, rumpf) => {
-          const a = await fetch(adresse, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-            body: JSON.stringify(rumpf),
-          });
-          const o = await a.json();
-          if (!o.ok) { throw new Error(o.meldung || o.hinweis || o.error || 'unbekannt'); }
-          return o;
+        /* DER VORGANGSNAME KOMMT VON DER AUFRUFSTELLE (Schritt 15 AP8, R2).
+           Dieser Helfer bedient drei Endpunkte an vier Stellen; welcher
+           Vorgang gerade laeuft, weiss nur die Aufrufstelle. Vorerst sagen
+           alle vier „Das Einspielen" -- das ist der Satz, den der aeussere
+           catch bisher davorhing. Vorschlag fuer eine feinere Benennung
+           steht im Paketbericht. */
+        const senden = async (adresse, rumpf, vorgang) => {
+          const a = await EdApi.postJson(adresse, rumpf, { vorgang: vorgang });
+          if (!a.ok) { throw new Error(a.meldung); }
+          return a.daten;
         };
 
         let s = null;
@@ -4073,7 +4107,8 @@ ui_seite_start(['titel' => 'Einstellungen',
            * Schlüssel. Sie werden am Ende GENANNT, mit Zahl und in Orange. */
           fgState.textContent = 'Kopf wird übertragen…';
           const kopf = await holeTeil('kopf.json');
-          const out0 = await senden('api/backup_restore.php', kopf);
+          const out0 = await senden('api/backup_restore.php', kopf,
+                                    'Das Einspielen');
           s = out0.stats;
           const dayMap = out0.day_map || {};
           let karte = Object.assign({}, out0.spur_karte || {});
@@ -4085,7 +4120,8 @@ ui_seite_start(['titel' => 'Einstellungen',
             const teil = await holeTeil(name);
             await umschluesseln(teil.missions);
             const o = await senden('api/backup_eintraege_restore.php',
-                                   { eintraege: teil, day_map: dayMap });
+                                   { eintraege: teil, day_map: dayMap },
+                                   'Das Einspielen');
             Object.assign(karte, o.spur_karte || {});
             for (const [k, v] of Object.entries(o.stats || {})) {
               if (typeof v === 'number') { s[k] = (s[k] || 0) + v; }
@@ -4101,7 +4137,8 @@ ui_seite_start(['titel' => 'Einstellungen',
             let happen = [], groesse = 0;
             const schicken = async () => {
               if (!happen.length) { return; }
-              const o = await senden('api/backup_spuren_restore.php', { spuren: happen });
+              const o = await senden('api/backup_spuren_restore.php',
+                                     { spuren: happen }, 'Das Einspielen');
               spurenGeschrieben += o.geschrieben || 0;
               happen = []; groesse = 0;
             };
@@ -4132,15 +4169,30 @@ ui_seite_start(['titel' => 'Einstellungen',
           fgState.textContent = braucht
             ? `${um} Einsätze umgeschlüsselt. Daten werden übertragen…`
             : 'Daten werden übertragen…';
-          const out = await senden('api/backup_restore.php', daten);
+          const out = await senden('api/backup_restore.php', daten,
+                                   'Das Einspielen');
           s = out.stats;
         }
 
-        await fetch('api/adminbackup_freigabe.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-          body: JSON.stringify({ eingeloest: true })
-        });
+        /* HIER WIRD EIN FEHLER BEWAHRT, NICHT BEHOBEN -- Backlog Nr. 277.
+         *
+         * Die Antwort wird auch jetzt NICHT gelesen: kein Blick auf den
+         * Status, kein Blick auf den Rumpf. Eine 500 laeuft also weiterhin
+         * durch, und die Erfolgsmeldung darunter erscheint, obwohl die
+         * Freigabe nicht als eingeloest vermerkt ist. Ein Netzfehler
+         * dagegen warf bisher aus dem `fetch` heraus in den aeusseren
+         * catch -- und meldete das Einspielen als fehlgeschlagen, obwohl
+         * es vollstaendig durchgelaufen war.
+         *
+         * EdApi wirft NIE. Damit dieses Paket kein Verhalten aendert
+         * (E-ZE-10), bildet die Stelle den alten Wurf nach: `status === 0`
+         * heisst, die Anfrage kam gar nicht durch -- genau der Fall, in dem
+         * `fetch` bisher warf. Ein HTTP-Fehler wirft weiterhin nicht.
+         * Wer Nr. 277 loest, streicht die `status === 0`-Zeile und liest
+         * stattdessen `frei.ok`. */
+        const frei = await EdApi.postJson('api/adminbackup_freigabe.php',
+                                          { eingeloest: true });
+        if (frei.status === 0) { throw new Error(frei.meldung); }
         const zusatz = (s.spuren_uebernommen !== undefined
                           ? ` ${s.spuren_uebernommen} Aufzeichnungen übernommen.` : '')
                      + (unlesbar
@@ -4151,7 +4203,13 @@ ui_seite_start(['titel' => 'Einstellungen',
               unlesbar || s.spuren_ohne_ziel ? 'warn' : 'ok');
         document.getElementById('freigabebtn').disabled = true;
       } catch (e) {
-        melde(fgState, 'Einspielen fehlgeschlagen: ' + e.message, 'fehler');
+        /* OHNE PRAEFIX (Schritt 15 AP8, R2). Den Satzanfang setzt jetzt
+           EdApi ueber den Vorgangsnamen, den `senden()` durchreicht --
+           „Das Einspielen ist fehlgeschlagen: ..." Ein zweites
+           „Einspielen fehlgeschlagen: " davor stuende doppelt. Was nicht
+           vom Server kommt (der Teil-Lader darueber, die Umschluesselung),
+           bringt seinen eigenen vollstaendigen Satz mit. */
+        melde(fgState, e.message, 'fehler');
       }
     });
     </script>
@@ -4325,9 +4383,9 @@ ui_seite_start(['titel' => 'Einstellungen',
                damit die haeufigste Auskunft ohne Aussage; „deaktiviert" sagt
                jetzt die Plakette. */
             $klein = geraet_bezeichnung($d['geraet_art'], $d['geraet_modell'], $d['geraet_teil'])
-                   . ' · gekoppelt ' . fmt_local($d['created_at'], 'd.m.Y')
+                   . ' · gekoppelt ' . datum_text($d['created_at'])
                    . ' · zuletzt gemeldet '
-                   . ($d['last_seen'] ? fmt_local($d['last_seen'], 'd.m.Y H:i') : 'nie');
+                   . ($d['last_seen'] ? datum_zeit_text($d['last_seen']) : 'nie');
             /* ABGEWIESENE ANMELDUNGEN (Web 20.11.0, P5a/AP7, E-P5a-02).
                Seit die Mengenbremse in `ingest.php` steht, sperrt sich eine
                Uhr mit veraltetem Schluessel selbst aus. Ohne diese Zeile stuende
@@ -4346,7 +4404,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             if ($abgewiesen > 0) {
                 $klein .= ' · ' . $abgewiesen . ' abgewiesen'
                         . (($d['abgewiesen_seit'] ?? null) !== null
-                           ? ' seit ' . fmt_local($d['abgewiesen_seit'], 'd.m.Y H:i') : '');
+                           ? ' seit ' . datum_zeit_text($d['abgewiesen_seit']) : '');
             }
             ?>
         <form method="post" id="f-dev-<?= $did ?>" class="nur-vorlesen"
@@ -4499,8 +4557,8 @@ ui_seite_start(['titel' => 'Einstellungen',
           <?php foreach ($apks as $apk): ?>
             <?php ui_zeile([
                 'text'  => 'NAdoku' . ($apk['version'] !== null ? ' ' . $apk['version'] : ''),
-                'klein' => 'APK · ' . apk_groesse($apk['groesse'])
-                         . ' · Stand ' . fmt_local(gmdate('Y-m-d H:i:s', $apk['stand']), 'd.m.Y'),
+                'klein' => 'APK · ' . groesse_text($apk['groesse'])
+                         . ' · Stand ' . datum_text(gmdate('Y-m-d H:i:s', $apk['stand'])),
                 'aktionen' => ui_knopf(['text' => 'Herunterladen', 'art' => 'leise',
                     'href' => 'apk.php?d=' . rawurlencode($apk['datei'])]),
             ]); ?>
@@ -4629,4 +4687,5 @@ ui_seite_start(['titel' => 'Einstellungen',
          (`ui_codeblock_lang()`, Geräte-Reiter): Er blendet den Knopf ein und
          kopiert. Ohne das Skript bleibt der Wert lesbar und der Knopf
          verborgen — ein Knopf, der nichts tut, wäre schlechter als keiner. */ ?>
-<?php ui_seite_ende(['skripte' => ['assets/kopieren.js']]); ?>
+<?php /* `assets/format.js` kommt seit AP8d aus dem Kopf (ui_seite_start()) */
+      ui_seite_ende(['skripte' => ['assets/kopieren.js']]); ?>

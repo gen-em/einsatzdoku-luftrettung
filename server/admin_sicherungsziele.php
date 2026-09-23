@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_admin();
 require_once __DIR__ . '/sicherungsziel_lib.php';
-require_once __DIR__ . '/adminbackup_lib.php';   // edbak_groesse_text()
+require_once __DIR__ . '/format_lib.php';        // groesse_text(), datum_text(), datum_zeit_text()
 
 /**
  * BACKUP-ZIELE — wohin die Backups geschoben werden (E-S2-22, S2/AP7).
@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                   - (microtime(true) - $anfang), 5.0);
         $satz = $e['gesendet'] . ($e['gesendet'] === 1 ? ' Datei' : ' Dateien')
               . ' an ' . $e['ziele'] . ($e['ziele'] === 1 ? ' Ziel' : ' Ziele')
-              . ' gesendet (' . edbak_groesse_text($e['bytes']) . ').'
+              . ' gesendet (' . groesse_text($e['bytes']) . ').'
               /* DER VERMERK STEHT IM ERFOLGSSATZ, nicht im Fehlerkasten
                * (S10/AP4, E-S10-U-09): Ein übergangenes Ziel ist keine
                * Störung, sondern eine Ansage. Er nennt die Namen, weil „1
@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               . ((int)($e['geloescht'] ?? 0) > 0
                   ? ' Auf den Zielen entfernt: ' . (int)$e['geloescht']
                     . ((int)$e['geloescht'] === 1 ? ' alte Sicherung (' : ' alte Sicherungen (')
-                    . edbak_groesse_text((int)($e['geloescht_bytes'] ?? 0))
+                    . groesse_text((int)($e['geloescht_bytes'] ?? 0))
                     . ') — nach der Aufbewahrungsregel des jeweiligen Ziels.'
                   : '')
               . ((int)($e['nicht_wieder'] ?? 0) > 0
@@ -309,7 +309,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                 'klein' => $bestand['dateien'] === 0
                     ? 'Dort liegt nichts von hier — entweder ist noch nichts gesendet '
                     . 'worden, oder es liegt unter einem anderen Pfad.'
-                    : edbak_groesse_text((int)$bestand['bytes']) . ' in '
+                    : groesse_text((int)$bestand['bytes']) . ' in '
                     . (int)$bestand['ordner'] . ' Ordner'
                     . ((int)$bestand['ordner'] === 1 ? '' : 'n'),
                 'plaketten' => ui_plakette((string)(int)$bestand['dateien'] . ' '
@@ -318,14 +318,14 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
       if ($bestand['aeltester'] !== null) {
           ui_zeile(['text' => 'Ältester Stand',
                     'klein' => 'Der jüngste ist von '
-                             . fmt_local((string)$bestand['juengster'], 'd.m.Y · H:i') . ' Uhr',
+                             . datum_zeit_text((string)$bestand['juengster'], ' · ') . ' Uhr',
                     'plaketten' => ui_plakette(
-                        fmt_local((string)$bestand['aeltester'], 'd.m.Y'), ['ton' => 'neutral'])]);
+                        datum_text((string)$bestand['aeltester']), ['ton' => 'neutral'])]);
       }
       ui_zeile(['text' => 'Fremde Dateien',
                 'klein' => (int)$bestand['fremd'] === 0
                     ? 'Auf diesem Ziel liegt nichts, was nicht von hier stammt.'
-                    : edbak_groesse_text((int)$bestand['fremd_bytes'])
+                    : groesse_text((int)$bestand['fremd_bytes'])
                     . ' — diese Anwendung fasst sie nie an, auch nicht mit '
                     . 'eingeschalteter Aufbewahrungsregel.',
                 'plaketten' => ui_plakette((string)(int)$bestand['fremd'],
@@ -481,7 +481,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
             /* NICHT noch einmal „zuletzt in Ordnung" — das steht schon als
                Plakette daneben. Bei 390 px umfliesst die Kleinzeile die
                Plaketten, und jedes doppelte Wort kostet dort eine Zeile. */
-            $klein .= ' · ' . fmt_local((string)$z['letzter_erfolg'], 'd.m.Y · H:i') . ' Uhr';
+            $klein .= ' · ' . datum_zeit_text((string)$z['letzter_erfolg'], ' · ') . ' Uhr';
         }
         ?>
         <form method="post" id="zp-<?= (int)$z['id'] ?>" hidden>
@@ -568,7 +568,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
             ui_zeile(['text' => $tot ? 'Zuletzt übergangen' : 'Zuletzt gescheitert',
                       'klein' => (string)$z['letzter_fehler'],
                       'plaketten' => ui_plakette(
-                          fmt_local((string)$z['letzter_lauf'], 'd.m.Y · H:i'),
+                          datum_zeit_text((string)$z['letzter_lauf'], ' · '),
                           ['ton' => $tot ? 'orange' : 'rot'])]);
         }
         ?>

@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
+require_once __DIR__ . '/../auth_guard.php';
+require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten() (Schritt 15/AP6)   // liefert $userId
 require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 
 /**
@@ -283,22 +284,28 @@ function export_meta(array $b, int $userId): never
     /* `notes` steht hier NICHT mehr (S9/AP7): Die Notiz liegt im `pat_blob`
      * und faellt mit ihm — die Schranke wirkt fuer sie also weiter, aber ueber
      * den Blob statt ueber eine eigene Spalte. */
-    $einsPersCols = $pers
-        ? 'x.site_ele_m, x.bw_info, x.other_ema, x.pat_blob'
-        : 'NULL AS site_ele_m, NULL AS bw_info, NULL AS other_ema,
-           NULL AS pat_blob';
+    /* SPALTEN AUS DEM REGISTER (Schritt 15/AP6, E-ZE-22), Zweck `export`.
+     * Die vier Felder unter der Schranke kommen als `NULL AS spalte` zurueck,
+     * wenn das Flag fehlt — die Form haengt an der SPALTE und nicht an ihrer
+     * Stelle im SELECT. Wer ein Feld unter die Schranke nimmt, traegt es in
+     * `$schranke` ein; die Liste selbst bleibt die des Registers. */
+    $schranke = ['site_ele_m', 'bw_info', 'other_ema', 'pat_blob'];
+    $einsCols = [];
+    foreach (mf_spalten('export') as $sp) {
+        $einsCols[] = (!$pers && in_array($sp, $schranke, true)) ? "NULL AS $sp" : "x.$sp";
+    }
+    /* `d.day` kommt aus `days` und steht deshalb in keinem Register von
+     * `missions`. Sein Platz ist hinter `day_id` — dort stand er immer, und
+     * die Reihenfolge einer SELECT-Liste ist das, was ein Leser vergleicht. */
+    array_splice($einsCols, 2, 0, 'd.day');
     $st = $pdo->prepare(
-        "SELECT x.id, x.day_id, d.day, x.started_at, x.ended_at,
-                x.distance_m, x.ascent_m,
-                x.final, x.uhr_gesperrt AS `manual`, x.origin, x.edited,
-                x.geraet_art, x.geraet_modell,
-                x.transport_dest, x.winch,
-                x.transport_mode, x.na_escort, x.false_alarm,
-                x.start_src, x.dest_lat, x.dest_lon,
-                x.winch_cycles, x.winch_cycles_pat, x.winch_airload, x.bergwacht,
-                x.bw_unit, x.secondary, x.schockraum,
-                x.crew_override,
-                $einsPersCols
+        /* DER ALIAS `manual` STEHT IN BACKTICKS (Web 20.26.3, Nr. 267) —
+         * jetzt aus mf_spalten(), nicht mehr von Hand. Auf MySQL 8.4.0 bis
+         * 8.4.10 ist `manual` auch als ALIAS ein reserviertes Wort; ohne die
+         * Backticks antwortete der Export dort mit 1064. Die Behebung lag
+         * bis zum Merge von Schritt 15 in dieser Zeile; sie steht jetzt an
+         * der einen Stelle, die aus dem Register SQL macht. */
+        'SELECT ' . implode(', ', $einsCols) . "
          FROM missions x
          JOIN days d ON d.id = x.day_id
          WHERE x.user_id = ?$whereEins
@@ -555,13 +562,10 @@ function export_track(array $b, int $userId): never
 }
 
 try {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        json_out(['error' => 'method'], 405);
-    }
+    api_methode();
     csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
 
-    $b = json_decode(file_get_contents('php://input'), true);
-    if (!is_array($b)) { json_out(['error' => 'payload'], 400); }
+    $b = api_rumpf();
 
     $action = (string)($b['action'] ?? '');
     if ($action === 'meta') { export_meta($b, $userId); }

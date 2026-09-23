@@ -122,21 +122,14 @@ function konten_einstellungen(bool $neuLesen = false): array
         KONTEN_K_DEMO_ANMELDUNG   => '1',
     ];
 
-    try {
-        $marken = array_keys($vorgaben);
-        $platz  = implode(',', array_fill(0, count($marken), '?'));
-        $st = db()->prepare('SELECT k, v FROM app_state WHERE k IN (' . $platz . ')');
-        $st->execute($marken);
-        foreach ($st->fetchAll(PDO::FETCH_KEY_PAIR) as $k => $v) {
-            /* EIN LEERER WERT IST EIN WERT, ein fehlender nicht. Die
-             * Aufbewahrung „unbegrenzt" ist der leere String — sie darf nicht
-             * auf die Vorgabe zurueckfallen, sonst liesse sie sich nie
-             * einschalten. Deshalb `!== null` und nicht `!== ''`. */
-            if ($v !== null) { $vorgaben[$k] = (string)$v; }
-        }
-    } catch (Throwable $ex) {
-        /* Tabelle fehlt (Migration noch nicht gelaufen) — die Vorgaben
-         * gelten, und das ist die richtige Antwort. */
+    /* EIN LEERER WERT IST EIN WERT, ein fehlender nicht. Die Aufbewahrung
+     * „unbegrenzt" ist der leere String — sie darf nicht auf die Vorgabe
+     * zurueckfallen, sonst liesse sie sich nie einschalten. `app_state_mehrere()`
+     * liefert nur die GEFUNDENEN Zeilen zurueck; genau das ist der Unterschied.
+     * Fehlt die Tabelle (Migration noch nicht gelaufen), kommt ein leeres Feld
+     * und die Vorgaben gelten — die richtige Antwort. */
+    foreach (app_state_mehrere(array_keys($vorgaben)) as $k => $v) {
+        $vorgaben[$k] = $v;
     }
 
     /* Eine Betriebsart, die es nicht gibt, faellt auf die Vorgabe zurueck

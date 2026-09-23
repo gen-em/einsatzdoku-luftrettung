@@ -4,6 +4,7 @@ require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/spur_lib.php';
 require_once __DIR__ . '/gpx_lib.php';
+require_once __DIR__ . '/format_lib.php';   // datum_text() fuer den Diensttag im Rueckweg
 
 /**
  * Die Spuren eines Diensttages, einzeln abrufbar (S2/AP4, E-S2-09).
@@ -134,7 +135,7 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
   <div class="titelzeile">
     <a class="rueckweg" href="index.php?d=<?= $dayId ?>">
       <?= ui_symbol('winkel', 'symbol-links') ?><span>Diensttag
-        <?= e(fmt_local($tag['day'] . ' 12:00:00', 'd.m.Y')) ?></span>
+        <?= e(datum_text($tag['day'] . ' 12:00:00')) ?></span>
     </a>
     <div class="titelzeile-haupt">
       <div class="titelzeile-text">
@@ -267,10 +268,9 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
 <script<?= kopf_nonce_attr() ?>>
 const SPUREN = <?= json_js($spuren, JSON_UNESCAPED_UNICODE) ?>;
 
-const map = L.map('map');
-map.setView([47.7, 10.3], 9);
-attachBaseLayers(map);
-attachFullscreenControl(map);
+/* Die Karte entsteht ueber EdKarte.anlegen() (Schritt 15 AP8); Ausschnitt
+   wie in der Einsatzansicht. */
+const map = EdKarte.anlegen('map', { mitte: [47.7, 10.3], zoom: 9 });
 
 const linien = [];
 const bounds = [];
