@@ -404,7 +404,7 @@
     function aktionZelle(z, dup) {
         var w = S.wahlZeile[z.srcRow] || {};
         if (z.status === 'error') {
-            return '<td><label class="imp-skip"><input type="checkbox" class="imp-skipbox" ' +
+            return '<td><label><input type="checkbox" class="imp-skipbox" ' +
                 'data-row="' + z.srcRow + '"' + (w.skip ? ' checked' : '') +
                 '> überspringen</label></td>';
         }
@@ -495,11 +495,16 @@
     }
 
     function zeileHtml(z, dup, m) {
-        var klasse = 'imp-row imp-' + z.status;
-        if (dup) { klasse += ' imp-dupe'; }
-        if ((S.wahlZeile[z.srcRow] || {}).skip) { klasse += ' imp-skipped'; }
+        /* KEIN Klassenattribut mehr an der Vorschauzeile (PK-04/5e). Es trug
+         * `imp-row imp-<status>` und bei Bedarf `imp-dupe` und `imp-skipped` --
+         * fuenf Klassen, von denen KEINE eine Regel im Stylesheet hat und keine
+         * als Selektor gelesen wird. Der Zustand steht seit F-MR-1 in einer
+         * PLAKETTE (orange fuer die abweichende Crew, rot fuer „nicht
+         * zuordenbar"), nicht in der Zeilenfarbe; gefiltert wird ueber
+         * `z.status` und `dublette(m)`, nicht ueber CSS. Uebrig blieb ein
+         * Attribut, das niemand liest. */
         var hinweise = z.issues.map(function (i) { return i.spalte + ': ' + i.text; }).join(' | ');
-        return '<tr class="' + klasse + '"' + (hinweise ? ' title="' + esc(hinweise) + '"' : '') + '>' +
+        return '<tr' + (hinweise ? ' title="' + esc(hinweise) + '"' : '') + '>' +
             '<td class="dash">' + z.srcRow + (m && m.crew_override ? ' <span title="abweichende Besatzung">*</span>' : '') + '</td>' +
             anzeigeSpalten().map(function (s) { return zelle(z, s); }).join('') +
             aktionZelle(z, dup) + '</tr>';

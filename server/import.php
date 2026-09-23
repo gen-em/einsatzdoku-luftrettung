@@ -129,8 +129,9 @@ ui_seite_start(['titel' => 'Import / Export']);
                           'optionen' => ['alle' => 'Alle Zeilen',
                                          'probleme' => 'Nur Probleme',
                                          'dubletten' => 'Nur Dubletten']]); ?>
-        <p class="feld-klein">Gelb = Hinweis, Rot = Fehler. Zellen sind direkt
-           änderbar; nach jeder Änderung wird die Zeile neu geprüft. Fehlerhafte
+        <p class="feld-klein">Zellen sind direkt änderbar; nach jeder Änderung
+           wird die Zeile neu geprüft. Was auffällt, steht als Plakette in der
+           Zeile — orange für einen Hinweis, rot für einen Fehler. Fehlerhafte
            Zeilen blockieren nur sich selbst — entweder korrigieren oder
            überspringen.</p>
         <?php /* `imp-roll` macht den Rollbereich zum Groessencontainer, damit die
@@ -203,7 +204,7 @@ ui_seite_start(['titel' => 'Import / Export']);
             'Gesperrt — geschützte Angaben lassen sich gerade nicht entschlüsseln. '
           . 'Ein Export ohne personenbezogene Angaben bleibt möglich.', null, 'warn', '        ',
             ['knopf' => ui_knopf(['text' => 'Entsperren', 'art' => 'neutral', 'typ' => 'button',
-                                  'klasse' => 'unlockbtn', 'attr' => ' id="exp_pat_unlock"'])]); ?>
+                                  'attr' => ' id="exp_pat_unlock"'])]); ?>
       </div>
 
       <?php /* Vorbelegt auf AN (A6.4, Web 5.7.0). In dieser Datei stehen die

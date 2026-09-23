@@ -1531,6 +1531,19 @@ input[type=file].feld-eingabe{line-height:calc(var(--knopf) - 2*var(--strich))}
  * Kasten. */
 select.feld-eingabe{contain:paint}
 .feld-klein{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-1)}
+/* Die Beschriftung eines GESPERRTEN Feldes -- gedaempft wie ihr eigenes
+   Eingabefeld. `suche.php` schaltet sie an die Beschriftung des Altersfilters,
+   solange die Patientendaten nicht entsperrt sind (`classList.toggle`).
+
+   SIE STAND SEIT P3 OHNE REGEL DA, und der Schalter tat deshalb nichts:
+   Das Eingabefeld wurde `disabled` und vom Browser grau gefaerbt, die
+   Beschriftung daneben blieb schwarz. Kaputt war nichts -- den Zustand
+   zeigen schon `disabled` und der Hinweis `alterlock` --, aber eine
+   Beschriftung, die anders aussieht als das Feld, zu dem sie gehoert,
+   ist eine Ungereimtheit. Gefunden von der Vollstaendigkeitspruefung
+   (PK-04/5e, Backlog Nr. 278), nachgetragen mit dem VORHANDENEN Token
+   und ohne neue Darstellung (CLAUDE.md 5). */
+.feld-gesperrt{color:var(--gedaempft)}
 .feld-reihe{display:flex;flex-wrap:wrap;gap:var(--abstand-3)}
 .feld-reihe > .feld{flex:1 1 12rem;min-width:0}
 

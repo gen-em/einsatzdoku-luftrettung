@@ -1231,6 +1231,110 @@ auch eine Seite, auf der „der NutzerIn" im Nominativ steht. Die Grammatik hat
 die Gegenlesung gemessen (5l), und der Rest steht als **P-PK-24** für den
 Browser.
 
+## 5n. Messprotokoll PK-04/5e — die 18 Klassen (23.09.2026)
+
+### Das Ergebnis: die Vollständigkeit misst gegen null
+
+`python3 tools/quelltext/vollstaendigkeit.py` **ohne `--hoechstens`:
+„Keine Befunde." (rc 0).** Die Schwelle ist aus `pruefablauf.json`
+entfernt — E-PK-16 erreicht. Der Weg: **398 → 18 → 0**.
+
+| Gruppe | vorher | nachher |
+|---|---|---|
+| ohne Gegenstück | **18** | **0** |
+| `ohne-regel.md`: Eintrag ungenutzt | 0 → 6 (Folge meiner Arbeit) | **0** |
+| auf der Streichliste, aber noch im Markup | 0 → 2 (dito) | **0** |
+| Streichliste gesamt | 159 | **176** |
+| mit Regel im neuen Stylesheet | 43 | **44** |
+
+### Wie entschieden wurde: je Klasse ein Agent, dann eine Gegenprobe
+
+**36 Agenten, 3,4 Mio. Token, 852 Werkzeugaufrufe, 61 Minuten.** Die
+Untersuchung war rein lesend; der Umbau danach seriell (E-PK-35).
+
+| Urteil | Zahl | was folgte |
+|---|---|---|
+| **toter Rest** | 8 | aus dem Markup entfernt — nichts sieht anders aus |
+| **Skriptanker / Bezeichner** | 6 | Streichliste mit `[bleibt]` — eine Regel wäre falsch |
+| **ersatzlos ersetzt** | 3 | Streichliste mit dem Baustein, der sie ablöst |
+| **fehlende Regel** | 1 | `.feld-gesperrt{color:var(--gedaempft)}` |
+
+**17 von 18 Urteilen halten der unabhängigen Gegenprobe stand.** Eines
+kippt: `imp-skipped`, vom Erst-Urteil „fehlende Regel" auf **„toter
+Rest"** — und damit auf das, was ich nach eigener Messung ohnehin getan
+hatte. Die Gegenproben meldeten zusammen **27 übersehene Fundstellen**,
+keine davon urteilsentscheidend.
+
+### Warum die Gegenprobe hier mehr war als eine Bestätigung
+
+Sie hat die **Prämisse** des ersten Agenten widerlegt, nicht nur seine
+Zahlen nachgezählt. Sein Argument lautete: `imp-skipped` steht in
+`vollstaendigkeit-vorher-klassen.txt`, deren Kopf sagt „erhoben aus den
+Selektoren" — **also** gab es eine Regel, und ihr Verlust ist der Fehler.
+Die Gegenprobe zeigt am eigenen Bestand, dass das nicht folgt:
+
+- `imp-table` steht in derselben Liste — die Streichliste sagt dazu
+  ausdrücklich „Die Klasse hatte selbst **nie eine Regel**".
+- `imp-warn` steht in derselben Liste — „Stand **nicht** im alten
+  Stylesheet".
+
+Und sie benennt den Unterschied zu einem echten Fund: „Der Zustand hat
+bereits eine sichtbare Darstellung — das gesetzte Häkchen in der
+Aktionszelle. Das ist der Unterschied zu `imp-warn`: dort stand eine
+Warnung als Fließtext, also eine Aussage **ohne** Darstellung."
+
+### Meine erste Einschätzung war zu sechs Neunteln falsch
+
+Und der Grund gehört aufgeschrieben: **ein naives `grep` findet keine
+Klasse, die zur Laufzeit zusammengebaut wird.**
+
+| Klasse | mein erster Griff | tatsächlich |
+|---|---|---|
+| `imp-dupe`, `imp-skipped` | „nirgends" | `klasse += ' imp-dupe'` |
+| `loc-inline` | „nirgends" | `'klasse' => 'loc-inline'` über einen Baustein |
+| `phase-marker` | „nirgends" | `className:` an einem Leaflet-Icon |
+| `patfields`, `unlockbtn` | „nirgends" | leben als **`id`**, nicht als Klasse |
+
+Dieselbe Falle hat einen Streichlisten-Eintrag falsch begründet:
+`imp-error` trug „steht in keiner PHP-, JS- oder CSS-Datei unter
+`server/`" — `import_ui.js` 398 baut ihn aber aus `'imp-' + problem.level`
+zusammen. Berichtigt.
+
+### Die eine nachgetragene Regel, und warum sie keine neue Darstellung ist
+
+`suche.php` 1127/1128 schaltet `feld-gesperrt` an die Beschriftung des
+Altersfilters, solange die Patientendaten gesperrt sind — **und es gab
+keine Regel, der Schalter tat nichts.** Kaputt war deshalb nichts: Der
+Zustand steht schon zweimal da (`disabled` am Feld, Hinweis `alterlock`).
+Aber eine Beschriftung, die anders aussieht als ihr eigenes Feld, ist eine
+Ungereimtheit. **Ein vorhandenes Token, keine neue Farbe, keine neue
+Skala** — `CLAUDE.md` 5: „bis dahin werden vorhandene Bausteine
+verwendet". Vom Auftraggeber am 23.09.2026 so entschieden, nachdem ich die
+drei Wege vorgelegt hatte.
+
+### Ein Satz in der Anwendung war veraltet, nicht gebrochen
+
+Ich hatte gemeldet, `import.php` halte eine Zusage nicht ein: „Gelb =
+Hinweis, Rot = Fehler", und keine Farbe erscheint. **Das war falsch
+herum.** Die Zeilenfärbung ist mit F-MR-1 **absichtlich** durch Plaketten
+ersetzt worden (`style.css` 4199: „Eine zweite Darstellung für dieselbe
+Aussage wäre eine Darstellung zu viel"); `imp-warn` und `imp-error` stehen
+seither auf der Streichliste, und die Vorschau zeigt die Plaketten
+wirklich. Veraltet war **der Satz**. Er nennt jetzt, was zu sehen ist.
+
+### Was dieses Teilstück über die Fächerung lehrt
+
+**Die Gegenprobe hat mitbekommen, dass ich ihr unter den Händen
+arbeite** — und hat es richtig behandelt: „Mein erster Griff fand
+`import_ui.js:500` mit `klasse += ' imp-skipped'`; mein zweiter fand dort
+einen Kommentar. Ich führe das als **Fundstelle, nicht als Beweis**."
+
+Das ist dieselbe Gefahr wie in 5l, nur diesmal ohne Schaden, weil die
+Fächerung **lesend** war. Die Regel bleibt: Wer fächert, fasst die
+gefächerten Dateien selbst nicht an, solange der Lauf läuft — bei einer
+schreibenden Fächerung geht sonst die eigene Änderung verloren, bei einer
+lesenden misst die Gegenprobe zwei verschiedene Stände.
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in

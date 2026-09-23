@@ -3563,44 +3563,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ein eigener, ebenfalls ungeprüfter Fall.
 
 
-278. **Achtzehn Klassen stehen im Markup und haben in keinem Stylesheet
-    eine Regel.**
-    *Gemessen 22.09.2026 mit PK-04/1b; nicht behoben.*
-    Die Vollständigkeitsprüfung meldete 50 Klassen „ohne Gegenstück". 32
-    davon sind eingetragen und begründet (6 gehören Leaflet, 26 kommen
-    nirgends mehr vor). **Die restlichen 18 stehen im Markup, ohne dass
-    irgendein Stylesheet sie kennt:**
 
-    `actions` `chip` `chips` `feld-gesperrt` `filtergruppen` `gefahr`
-    `imp-cell` `imp-dupe` `imp-row` `imp-skip` `imp-skipped` `leer`
-    `loc-inline` `patfields` `phase-marker` `showif` `unlockbtn`
-    `wochentage`
-
-    Jede ist entweder ein **toter Markup-Rest** (dann gehört sie aus dem
-    Markup heraus) oder eine **fehlende Regel** (dann gehört sie ins
-    Stylesheet). Beides ändert `server/` und gehört deshalb in **PK-04
-    Teilstück 5**; solange sie stehen, steht die Schwelle der
-    Vollständigkeit auf 18 statt auf null.
-
-    **Nicht geraten, was welche ist:** Das braucht je einen Blick auf die
-    Stelle, und ein falsch entfernter Markup-Rest ist ein stiller
-    Darstellungsfehler.
-
-279. **Vierzehn Zeichen stehen im Markup, wo ein Symbol hingehört.**
-    *Gemessen 22.09.2026 mit PK-04/1b; nicht behoben.* Rest aus Nr. 227,
-    nachdem die Typografie aus der Zeichenliste gefallen ist:
-
-    `✕` (4×), `×` (5×), `✓` (2×), `★` (2×), `⚠` (1×) in zwölf Dateien —
-    `einsatz_form.php`, `mission_fields.php`, `mission_fields_lib.php`,
-    `nachbearbeitung_lib.php`, `plattform_lib.php`, `suche.php`,
-    `validate_lib.php`, `version.php`, `import_ui.js`, `missiontable.js`,
-    `ortsfeld.js`.
-
-    **Ein Teil davon steht in Kommentaren** (`version.php` im Kopftext) und
-    ist damit kein Befund, sondern Prosa. Die Prüfung kann das nicht
-    trennen, solange **Nr. 184** offen ist — deshalb ist die Zählung ein
-    Hinweis und kein Befund. Wer die echten ersetzt, fasst `server/` an:
-    **PK-04 Teilstück 5.**
 
 280. **Die Kartenquelle OpenHikingMap steht in keiner Lizenzliste.**
     *Gefunden 22.09.2026 von der neuen Regelklasse `netz` (PK-04/1c);
@@ -9687,4 +9650,62 @@ zutreffen.
     vorweggenommener Merge findet echte Fehler, aber er findet auch
     Fehler, die die andere Seite gerade selbst behebt. Wer so misst, sieht
     vor dem Melden noch einmal nach, ob der Zweig weitergelaufen ist.
+
+278. **Achtzehn Klassen des alten Stylesheets hatten weder eine Regel noch
+    einen Eintrag auf der Streichliste.**
+    *Gemessen 22.09.2026 mit PK-04/1b, **erledigt 23.09.2026 mit PK-04/5e**.*
+    Sie waren der letzte Grund, warum die Vollständigkeitsprüfung gegen eine
+    Schwelle lief statt gegen null.
+
+    **Je Klasse ein Agent, danach eine unabhängige Gegenprobe** (E-PK-35).
+    Das Ergebnis war nicht eine Sorte, sondern vier:
+
+    | Urteil | Zahl | was daraus folgte |
+    |---|---|---|
+    | toter Rest | **8** | aus dem Markup entfernt, nichts sieht anders aus |
+    | Skriptanker / Bezeichner | **6** | Streichliste mit `[bleibt]` — eine Regel wäre falsch |
+    | ersatzlos ersetzt | **3** | Streichliste mit dem Baustein, der sie ablöst |
+    | fehlende Regel | **1** | `.feld-gesperrt{color:var(--gedaempft)}` nachgetragen |
+
+    **Meine erste Einschätzung war zu sechs Neunteln falsch**, und der Grund
+    ist lehrreich: Ein naives `grep` findet keine Klasse, die zur **Laufzeit**
+    zusammengebaut wird. `imp-dupe`, `imp-skipped`, `loc-inline` und
+    `phase-marker` sah ich als „nirgends mehr" — sie entstehen aber aus
+    `klasse += ' imp-dupe'`, `'klasse' => 'loc-inline'` und
+    `className: 'phase-marker'`. `patfields` und `unlockbtn` leben als **ID**,
+    nicht als Klasse.
+
+    **Die eine nachgetragene Regel ist die kleinste mögliche:**
+    `suche.php` schaltet `feld-gesperrt` an die Beschriftung des
+    Altersfilters, solange die Patientendaten gesperrt sind — und es gab
+    keine Regel, der Schalter tat nichts. Kaputt war nichts (der Zustand
+    steht schon im `disabled`-Feld und im Hinweis `alterlock`), aber eine
+    Beschriftung, die anders aussieht als ihr eigenes Feld, ist eine
+    Ungereimtheit. Ein **vorhandenes** Token, keine neue Darstellung.
+
+    **Die Vollständigkeit misst seither gegen null**, ohne `--hoechstens`
+    (E-PK-16). Der Weg: 398 → 18 (PK-04/1b) → **0**.
+
+279. **Vierzehn Zeichen standen im Markup, wo ein Symbol hingehört.**
+    *Gemessen 22.09.2026 mit PK-04/1b, **erledigt 23.09.2026 mit PK-04/5** —
+    und zwar durch Nachsehen, nicht durch Ändern.*
+    **Der Punkt war falsch formuliert.** Alle vierzehn sind einzeln im Satz
+    gelesen worden:
+
+    | Sorte | Zahl | Beispiel |
+    |---|---|---|
+    | Kommentar, der ein Symbol **beschreibt** | **9** | `suche.php` „Plaketten mit ✕"; `version.php` „das Kennzeichen der Vorbelegung (★)" |
+    | **Multiplikationszeichen** in sichtbarem Text | **5** | „≥ 2× größtes Komplett-Backup", „(3×)" |
+    | Zeichen, das **statt** eines Symbols steht | **0** | — |
+
+    Die fünf `×` sind typografisch richtig — das Multiplikationszeichen ist
+    nicht der Buchstabe x. **Die acht Emoji ebenso:** Sie stehen in
+    `pwquality.js` 146/147 in einem Kommentar, der erklärt, warum nach
+    **Graphemen** statt nach UTF-16-Einheiten gezählt wird („Passwort😀😀😀😀x
+    ging als „gut" durch"). Ohne sie erklärt der Absatz nichts mehr.
+
+    **22 von 22 Hinweisen sind begründet.** Das ist genau Nr. 184 („die
+    Prüfung kann Prosa nicht von einem Symbol unterscheiden") und der Grund,
+    warum PK-04/1b die Zählung vom **Befund** zum **Hinweis** gemacht hat.
+    Der Beleg dafür stand bis dahin aus.
 

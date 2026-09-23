@@ -16,9 +16,9 @@
       "braucht": "nichts"
     },
     "vollstaendigkeit": {
-      "aufruf": "bash tools/quelltext/pruefen.sh vollstaendigkeit --hoechstens 18",
+      "aufruf": "bash tools/quelltext/pruefen.sh vollstaendigkeit",
       "braucht": "nichts",
-      "bemerkung": "Die Schwelle steht HIER und sonst nirgends; der Laeufer in tools/quelltext/ LIEST sie von hier. PK-04/1b hat sie von 398 auf 18 gebracht (Typografie aus der Zeichenliste, 32 Streichlisteneintraege, vier style-Ausnahmen). Die verbliebenen 18 sind Klassen im Markup ohne Regel (Backlog Nr. 278) und lassen sich nur in server/ aufloesen -- PK-04 Teilstueck 5 nimmt die Schwelle dann ganz weg (E-PK-16)."
+      "bemerkung": "DIE SCHWELLE IST WEG (PK-04/5e, E-PK-16). Sie stand zuletzt auf 18 und davor auf 398; gemessen wird jetzt gegen NULL, ohne Schalter. Der Weg dorthin: 1b nahm die Typografie aus der Zeichenliste und machte die Symbolzaehlung zum Hinweis (398 -> 18), 5e loeste die letzten 18 auf -- eine Regel nachgetragen (`.feld-gesperrt`), acht tote Klassennamen aus dem Markup entfernt, siebzehn Streichlisten-Eintraege mit Grund. Wer die Schwelle wieder einfuehrt, fuehrt einen Altbestand wieder ein."
     },
     "linkprobe": {
       "aufruf": "bash tools/quelltext/pruefen.sh linkprobe",

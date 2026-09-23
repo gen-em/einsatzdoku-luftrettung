@@ -2040,7 +2040,6 @@ ui_seite_start(['titel' => 'Einstellungen',
                   $ORTSFELDER[] = 'sdbase'; ?>
             <?php ui_ortsfeld([
                     'praefix' => 'sdbase', 'feld' => false, 'ortswahl' => true,
-                    'klasse' => 'loc-inline',
                     'such_hinweis' => 'Lage (optional)',
                     'lat_name' => 'lat', 'lon_name' => 'lon',
                     'lat' => (string)($editBase['lat'] ?? ''),

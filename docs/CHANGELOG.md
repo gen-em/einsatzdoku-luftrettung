@@ -54,6 +54,27 @@ Korrekturstufe des Pakets.
   den Umzügen von PK-04. Neun davon von Hand, weil die stumpfe Ersetzung
   verliert, welches Werkzeug gemeint war.
 
+### Behoben (Fortsetzung)
+
+- **Die Beschriftung des Altersfilters sah nicht gesperrt aus, obwohl sie es
+  war.** `suche.php` schaltet `feld-gesperrt` an das `<label>`, solange die
+  Patientendaten nicht entsperrt sind — und seit dem Redesign in P3 gab es
+  dafür keine Regel mehr, der Schalter tat nichts. Kaputt war nichts: Der
+  Zustand steht schon im `disabled`-Feld und im Hinweis daneben. Aber eine
+  Beschriftung, die anders aussieht als ihr eigenes Feld, ist eine
+  Ungereimtheit. Eine Zeile, ein **vorhandenes** Token.
+- **Acht Klassennamen standen ohne Wirkung im Markup.** `imp-row`,
+  `imp-dupe`, `imp-skipped`, `imp-skip`, `filtergruppen`, `loc-inline`,
+  `unlockbtn` (als Klasse) und `wochentage` hatten keine Regel und wurden
+  von keinem Selektor gelesen. Bei der Importvorschau ist damit das **ganze
+  Klassenattribut der Zeile** entfallen — es trug fünf Namen, von denen
+  keiner etwas tat.
+- **Der Hinweistext des Imports beschrieb ein Aussehen, das es nicht mehr
+  gibt.** Dort stand „Gelb = Hinweis, Rot = Fehler"; die Zeilenfärbung ist
+  aber mit F-MR-1 **absichtlich** durch Plaketten ersetzt worden („eine
+  zweite Darstellung für dieselbe Aussage wäre eine Darstellung zu viel").
+  Der Satz nennt jetzt, was zu sehen ist.
+
 ### Bewusst nicht geändert
 
 **Was aus dem Haus geht, folgt nicht der Hausform** (E-PK-39): die

@@ -36,16 +36,10 @@ gegen die sie schützt.
 | `plakette-` | [bleibt] Bruchstück von `` `plakette plakette-${ton}` `` (einsatz.php:417). |
 | `pwq-` | [bleibt] Bruchstück von `'pwstaerke pwq-' + ergebnis.staerke` (pwquality.js:206). |
 | `nb-veh` | [bleibt] Skriptanker am Rettungsmittel-Auswahlfeld der Nachbearbeitung; das Aussehen kommt aus `.feld-eingabe`, das am selben Element steht. Im Quelltext ausdrücklich als solcher vermerkt (`nachbearbeitung.php:259`). |
-| `showif` | [bleibt] Skriptanker: `einsatz_form.php:1642` sammelt `.showif`, um abhängige Felder ein- und auszublenden. Ein Behälter ohne eigenes Aussehen. |
 | `parentcheck` | [bleibt] Skriptanker am Elternkästchen einer Feldgruppe; das Aussehen kommt aus `.schalter-box` am selben Element. |
-| `feld-gesperrt` | [bleibt] Zustandsmarke, die `suche.php:960` per `classList.toggle` setzt und wieder nimmt. Sie steuert kein Aussehen, sondern merkt sich eines. |
-| `filtergruppen` | [bleibt] Behälter der Filterleiste; das Aussehen kommt aus `.leiste-liste` am selben Element (`suche.php:76`). |
-| `wochentage` | [bleibt] Zusatzname an einer Segmentgruppe; das Aussehen kommt aus `.segment .segment-mehrfach` am selben Element (`suche.php:103`). |
 | `tag-form` | [bleibt] Kennzeichnung des Diensttag-Formulars für die Skripte; die Gestaltung liegt bei `.tag-form-fuss` und den Feldbausteinen darin. |
 | `fld` | [bleibt] Beschriftung im Einsatzformular (`<label class="fld">`); das Aussehen kommt aus der Elementregel für `label` in Abschnitt 17 (Grundformen). Der Name ist der Rest einer Namensfamilie, deren übrige Glieder (`fld-reihe`) Regeln haben. |
 | `karte-block-phasen` | [bleibt] Skriptanker an der Phasenkarte (`einsatz.php:128`); das Aussehen kommt aus `.karte` am selben Element. |
-| `imp-cell` | [bleibt] Skriptanker; `import_ui.js:811` unterscheidet über `classList.contains` die Zelltypen der Importtabelle. Das Aussehen kommt aus `.tabelle` und den Eingabe-Grundformen. |
-| `imp-skip` | [bleibt] Wie `imp-cell` — Beschriftung um das Überspringen-Kästchen. |
 | `imp-skipbox` | [bleibt] Wie `imp-cell` — das Kästchen selbst, gelesen in `import_ui.js:814`. |
 | `imp-dup` | [bleibt] Wie `imp-cell` — Auswahlfeld für Dubletten, gelesen in `import_ui.js:819`. |
 | `imp-daymode` | [bleibt] Wie `imp-cell` — Auswahlfeld für den Umgang mit abweichender Besatzung, gelesen in `import_ui.js:824`. |

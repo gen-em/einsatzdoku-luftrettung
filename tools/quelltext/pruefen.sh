@@ -31,18 +31,17 @@ starter() {   # starter <name> — womit die Datei gefahren wird
     esac
 }
 
-# DIE SCHWELLE STEHT IN pruefablauf.json UND NIRGENDS SONST (CLAUDE.md 6).
-# Der Läufer liest sie von dort, statt sie ein zweites Mal zu führen — eine
-# Zahl an zwei Stellen altert an einer davon unbemerkt. **PK-04/1c hat sie
-# von 398 auf 18 gebracht, nicht auf null** — die verbliebenen 18 sind
-# Klassen im Markup ohne Regel und lassen sich nur in `server/` auflösen.
-# Teilstück 5 nimmt sie dann ganz weg, und diese Funktion fällt mit.
+# DIE VOLLSTAENDIGKEIT MISST SEIT PK-04/5e GEGEN NULL (E-PK-16). Es gibt
+# keine Schwelle mehr: `pruefablauf.json` ruft sie ohne `--hoechstens` auf,
+# und das Werkzeug meldet jeden Befund. Diese Funktion reicht eine Schwelle
+# aus der Ablaufdatei nach, FALLS dort wieder eine steht -- sie tut heute
+# nichts, und das ist der Zustand, den sie halten soll.
 #
-# BIS ZUM 22.09.2026 GRIFF DAS NUR BEI `alle`, und die Kette ruft EINZELN
-# auf. Sie musste die Zahl deshalb selbst führen, und dieser Kopfkommentar
-# behauptete trotzdem „und nirgends sonst". Ein Satz, der eine Regel
-# beschreibt, die der Code daneben nicht durchsetzt, ist schlimmer als kein
-# Satz: Er wird geglaubt. Jetzt greift die Vorgabe auf BEIDEN Wegen.
+# WAS SIE BIS DAHIN WAR: die eine Stelle fuer eine Zahl, die vorher an zwei
+# stand. PK-04/1c senkte den Bestand von 398 auf 18 und zog die Ablaufdatei
+# nach; die Kette blieb auf 398 und war seither rot, ohne dass es auffiel
+# (F-PK-23). Bis zum 22.09.2026 griff die Vorgabe ausserdem nur bei `alle`,
+# und die Kette ruft EINZELN auf.
 zusatz() {
     [ "$1" = vollstaendigkeit ] || return 0
     python3 - <<'PY'

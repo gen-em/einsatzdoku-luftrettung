@@ -470,7 +470,6 @@ function sd_dialog_zielklinik(array $o): void
                      'attr' => ' maxlength="' . SD_ZIEL_MAX . '" data-fuell="name"']); ?>
       <?php ui_ortsfeld([
               'praefix' => $pre, 'feld' => false, 'ortswahl' => true,
-              'klasse' => 'loc-inline',
               'such_hinweis' => 'Lage (freiwillig)',
               'lat_name' => 'lat', 'lon_name' => 'lon',
               'lat' => (string)($w['lat'] ?? ''),
