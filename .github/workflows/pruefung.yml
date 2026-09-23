@@ -357,9 +357,9 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: PHP-Syntax über server/
-        # `php -l` je Datei. Ein Syntaxfehler in einer Datei, die nur auf einem
-        # selten begangenen Weg geladen wird, fällt sonst erst dort auf — und
-        # „dort" heisst nach einem Deploy auf Produktiv.
+        # `php -l` je Datei unter server/ und tools/. Die Zahl für die
+        # Gegenlesung zählt wie der Prüfstand: versionierte Dateien unter server/.
+        id: php
         run: |
           set -e
           n=0
@@ -367,65 +367,21 @@ jobs:
             php -l "$f" > /dev/null
             n=$((n+1))
           done < <(find server tools -name '*.php' -type f)
-          echo "PHP-Dateien ohne Syntaxfehler: $n"
-          echo "PHP-Syntax: $n Dateien, 0 Fehler" >> "$GITHUB_STEP_SUMMARY"
+          s=$(git ls-files 'server/*.php' 'server/**/*.php' | wc -l)
+          echo "PHP-Dateien ohne Syntaxfehler: $n (davon versioniert unter server/: $s)"
+          echo "zahl=php:$s/0" >> "$GITHUB_OUTPUT"
 
-      - name: Wortliste — sind Land und Luft neutral benannt?
-        # Erwartet werden null Treffer ausserhalb der Ausnahmeliste UND null
-        # ungenutzte Ausnahmen; beides steckt im Rückgabewert.
+      - name: Quelltext — acht Prüfungen, ein Läufer
+        # Textprobe, Vollständigkeit, Linkprobe, Installweiche, Sitzungshärtung,
+        # CSP, Jobregister, Migrationsregister (E-PK-18: die Linkprobe ist neu im
+        # Tor). Die fünf mit Selbstprobe fahren sie vorher.
         run: |
-          # DER RUECKGABEWERT WIRD AUFGEFANGEN, NICHT VERSCHLUCKT.
-          #
-          # Bis zum 16.09.2026 stand hier `wortliste.py | tee …`. Ohne
-          # `pipefail` ist der Wert einer Pipe der des LETZTEN Glieds, und
-          # `tee` gibt immer 0 — dieser Schritt konnte NIE ROT WERDEN.
-          #
-          # `pipefail` steht jetzt oben, und damit wuerde die Pipe richtig rot.
-          # Nur: Bei `bash -e` bricht der Block dann an DIESER Zeile ab, und
-          # die Zusammenfassung unten bliebe leer — ausgerechnet in dem Lauf,
-          # in dem man sie lesen will. Deshalb der Umweg ueber `$rc`: erst
-          # schreiben, dann scheitern.
+          bash tools/quelltext/pruefen.sh --selbstprobe
           rc=0
-          bash tools/quelltext/pruefen.sh textprobe > /tmp/wortliste.txt 2>&1 || rc=$?
-          cat /tmp/wortliste.txt
-          {
-            echo '```'
-            tail -20 /tmp/wortliste.txt
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-          if [ "$rc" -ne 0 ]; then
-            echo "::error::Wortliste: Treffer außerhalb der Ausnahmen, ungenutzte Ausnahmen oder durchgerutschte Fallen (Rückgabewert $rc)."
-            exit "$rc"
-          fi
-
-      - name: Vollständigkeit des Stylesheets
-        # GEGEN EINE SCHWELLE, NICHT GEGEN NULL. Das Werkzeug misst einen
-        # ALTBESTAND: Klassen im Markup ohne Regel im Stylesheet,
-        # `style=`-Attribute in PHP/JS, Toene ohne Regel. „0 Befunde" ist ein
-        # Ziel, kein erreichbarer Zustand — der Schritt verlangte anfangs
-        # `exit 0` und war damit bei JEDEM Push rot; ein Tor, das immer rot
-        # ist, sagt nichts mehr.
-        #
-        # Die Schwelle wirkt in BEIDE Richtungen: Waechst der Altbestand, ist
-        # das ein Befund. Schrumpft er, ebenfalls — dann ist sie nachzuziehen,
-        # sonst bekommt er stillschweigend wieder Luft.
-        #
-        # DIE ZAHL STEHT HIER NICHT MEHR (PK-04, Grundsatz 1: jede Pruefung
-        # hat genau eine Stelle). Sie steht in `tools/pruefstand/
-        # pruefablauf.json` und nirgends sonst; der Laeufer liest sie von
-        # dort — seit PK-04 auch beim Einzelaufruf, den dieser Schritt macht.
-        #
-        # BIS ZUM 22.09.2026 STAND SIE AN BEIDEN STELLEN, und genau das ist
-        # eingetreten, wogegen die Regel gerichtet ist: Teilstueck 1c hat den
-        # Bestand von 398 auf 18 gebracht und die Ablaufdatei nachgezogen —
-        # hier blieb 398 stehen. Der Lauf war seither rot wegen
-        # UNTERSCHREITUNG, und aufgefallen ist es erst beim Abgleich mit
-        # Schritt 15, der dieselbe Zeile anfasste. Eine Zahl an zwei Stellen
-        # altert an einer davon unbemerkt.
-        #
-        # Wie die Zahl zustande kommt, steht in der Bemerkung der Ablaufdatei
-        # und im Commit — nicht hier (CLAUDE.md 6, Grundsatz 6).
-        run: bash tools/quelltext/pruefen.sh vollstaendigkeit
+          bash tools/quelltext/pruefen.sh alle > /tmp/quelltext.txt 2>&1 || rc=$?
+          cat /tmp/quelltext.txt
+          { echo '```'; tail -20 /tmp/quelltext.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit "$rc"
 
       - name: Kontraste der Token
         run: python3 tools/screenshots/kontrast.py
@@ -653,24 +609,6 @@ jobs:
           fi
           exit $fehler
 
-      - name: Die Weiche in install.php — traegt sie noch?
-        # `install.php` beginnt mit einer Versionspruefung. Die nuetzt nur,
-        # solange die Datei auf der alten Fassung ueberhaupt noch UEBERSETZT
-        # werden kann — PHP uebersetzt eine Datei ganz, bevor es die erste
-        # Zeile ausfuehrt. Eine `match`-Anweisung weiter unten, und die
-        # Besucherin auf PHP 8.0 bekommt statt der Erklaerung einen Parse
-        # Error. Gemessen wird mit dem Tokenizer, nicht mit `grep`.
-        run: |
-          php tools/quelltext/installweiche.php --selbstprobe
-          bash tools/quelltext/pruefen.sh installweiche
-
-      - name: Migrationsregister — schema.sql gegen migration_lib.php
-        # Selbstprobe zuerst: Ein grüner Lauf einer Prüfung, die immer grün
-        # meldet, sieht genauso aus wie einer, der nichts gefunden hat.
-        run: |
-          php tools/quelltext/migrationsregister.php --selbstprobe
-          bash tools/quelltext/pruefen.sh migrationsregister
-
       - name: Spaltenregister — schema.sql gegen mf_missions_register()
         # `missions` hat 41 Spalten, und neun Zwecke brauchen eine Auswahl
         # davon. Eine NEUE Spalte, die niemand ins Register einträgt, fehlt
@@ -726,47 +664,27 @@ jobs:
           php tools/zaehlung/zaehlen.php --selbstprobe
           php tools/zaehlung/zaehlen.php
 
-      - name: CSP — Inline-Skripte ohne Nonce
-        # Seit Web 20.7.0 gilt `script-src 'self' 'nonce-…'` ohne
-        # `'unsafe-inline'`. Ein vergessener Nonce legt eine Seite STILL
-        # lahm: kein PHP-Fehler, kein Protokolleintrag — der Knopf tut
-        # nichts, und die Meldung steht in der Konsole derjenigen, der es
-        # passiert. Gemessen mit dem Tokenizer über ein Markup-Bild, weil
-        # `<script src="<?= asset(…) ?>">` in drei Stücke zerfällt und ein
-        # naives `grep` deshalb null von 108 Stellen fände.
-        run: |
-          php tools/quelltext/csp.php --selbstprobe
-          bash tools/quelltext/pruefen.sh csp
+      - name: Rechtstexte — hält der Filter die Angriffe ab?
+        # E-PK-18: reine Funktion, Sekunden. Bis PK-05 lief sie nirgends in der Kette.
+        run: bash tools/proben/proben.sh rechtstexte
 
-      - name: Sitzungshärtung — `use_strict_mode` vor jedem `session_start()`
-        # Die Zeile ist unscheinbar und steht neben dem Aufruf, den sie
-        # schuetzt. Ein neuer Weg, der sie vergisst, sieht genauso aus wie
-        # einer, der sie hat — und es passiert nichts, was auffiele. Bis
-        # Web 20.9.1 stand sie an genau zwei Stellen, und zwar ausgerechnet
-        # den beiden, die KEINE Anmeldesitzung tragen (Backlog Nr. 205).
-        # Gemessen mit dem Tokenizer, nicht mit `grep`: Die erste Fassung
-        # dieser Pruefung meldete zwei Befunde, und beide waren Kommentare.
+      - name: Prüfbericht gegenlesen — passt er zu diesem Stand?
+        # E-PK-05/06: Das Tor wiederholt nicht, es liest gegen. Streng (E-PK-42):
+        # Der Baum im Bericht ist der Baum des PR-Kopfs. „Update branch" schreibt
+        # einen Commit ohne Bericht -- rot, und die Meldung sagt den Weg.
+        # Die Riegel davor sind grün, sonst liefe dieser Schritt nicht; ihre
+        # Zahl ist also 0 wie im Prüfstand. --alle-riegel hält die Liste gleich.
+        if: github.event_name == 'pull_request'
+        env:
+          KOPF: ${{ github.event.pull_request.head.sha }}
+          PHP_ZAHL: ${{ steps.php.outputs.zahl }}
         run: |
-          php tools/quelltext/sitzungshaertung.php --selbstprobe
-          bash tools/quelltext/pruefen.sh sitzungshaertung
-
-      - name: Jobregister — steht in Technik.md noch, was in jobs_lib.php steht?
-        # ZUARBEIT AUS SCHRITT 16 (Backlog Nr. 208). Das Werkzeug liegt seit
-        # Web 20.26.0 vor und hing nicht — Schritt 16 fasst `.github/` nicht
-        # an, deshalb hängt es hier.
-        #
-        # WOGEGEN: Die Tabelle „Der Katalog" in `docs/Technik.md` 4.97a wurde
-        # VON HAND gegen `server/jobs_lib.php` gepflegt, und sie lief
-        # auseinander — gemessen vor der Behebung: 11 Jobs im Code gegen 9 im
-        # Register, 16 Räumschritte gegen „dreizehn". Eine Dokumentation, die
-        # in der Zahl irrt, ist schlimmer als keine: Sie wird geglaubt.
-        #
-        # OHNE BEDINGUNG UND OHNE INSTALLATION. Es liest beide Seiten mit dem
-        # PHP-Tokenizer und rechnet in Millisekunden — es gibt keinen Grund,
-        # es an eine Bereichserkennung zu hängen.
-        run: |
-          php tools/quelltext/jobregister.php --selbstprobe
-          bash tools/quelltext/pruefen.sh jobregister
+          python3 tools/pruefstand/bericht.py lesen --commit "$KOPF" --basis origin/main --alle-riegel \
+            --riegel "syntax-php=$PHP_ZAHL" --riegel wortliste=0 --riegel vollstaendigkeit=0 \
+            --riegel linkprobe=0 --riegel installweiche=0 --riegel sitzungshaertung=0 \
+            --riegel cspprobe=0 --riegel jobregister=0 --riegel migrationsregister=0 \
+            --riegel kontraste=0 --riegel kettenaufrufe=0 --riegel zaehlung=0 \
+            --riegel spaltenregister=0 --riegel rechtstexte=0
 
       - name: Java 21 für die Android-Module
         if: steps.bereiche.outputs.android == 'ja'

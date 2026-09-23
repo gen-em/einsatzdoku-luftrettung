@@ -98,18 +98,39 @@ def schalter_py(quelle: str) -> tuple[set[str], set[str], bool]:
     """
     bekannt, pflicht = set(), set()
     gefunden = False
-    for m in re.finditer(r'add_argument\(\s*([\'"])(--[\w-]+)\1(.*?)\)',
+    unter = set(unterbefehle_py(quelle).values())
+    for m in re.finditer(r'(\w+)\.add_argument\(\s*([\'"])(--[\w-]+)\2(.*?)\)',
                          quelle, re.S):
         gefunden = True
-        bekannt.add(m.group(2))
-        if re.search(r'required\s*=\s*True', m.group(3)):
-            pflicht.add(m.group(2))
+        bekannt.add(m.group(3))
+        # Ein Pflichtschalter EINES UNTERBEFEHLS ist keiner des Werkzeugs —
+        # er zählt nur, wenn der Aufruf diesen Unterbefehl nennt (F-PK-32).
+        if re.search(r'required\s*=\s*True', m.group(4)) and m.group(1) not in unter:
+            pflicht.add(m.group(3))
     if not gefunden:
         # Handparser: '--x' in sys.argv / sys.argv[i] == '--x' / argv.index('--x')
         hand = set(re.findall(r'[\'"](--[\w-]+)[\'"]', quelle))
         if hand and re.search(r'sys\.argv|\bargv\b', quelle):
             return hand, set(), True
     return bekannt, pflicht, gefunden
+
+
+def unterbefehle_py(quelle: str) -> dict[str, str]:
+    """{Unterbefehl: Variablenname} aus den `add_parser`-Aufrufen von argparse."""
+    return {m.group(2): m.group(1) for m in re.finditer(
+        r'(\w+)\s*=\s*\w+\.add_parser\(\s*[\'"]([\w-]+)[\'"]', quelle)}
+
+
+def pflicht_je_befehl_py(quelle: str) -> dict[str, set[str]]:
+    """{Unterbefehl: seine Pflichtschalter}. Bis PK-05 zählte `required=True` im
+    Unterbefehl `schreiben` von `bericht.py` für JEDEN Aufruf, auch für
+    `bericht.py lesen` — ein Fehlalarm im Tor (F-PK-32)."""
+    je = {}
+    for befehl, var in unterbefehle_py(quelle).items():
+        je[befehl] = {m.group(1) for m in re.finditer(
+            re.escape(var) + r'\.add_argument\(\s*[\'"](--[\w-]+)[\'"]([^)]*?)required\s*=\s*True',
+            quelle, re.S)}
+    return je
 
 
 def schalter_mjs(quelle: str) -> tuple[set[str], set[str], bool]:
@@ -266,6 +287,15 @@ def pruefe_block(lauf: str, schritt: str, block: str) -> tuple[list[str], list[s
                 ab.append(f'{lauf} · {schritt}: {rel} kennt {name} nicht — '
                           f'bekannt: {" ".join(sorted(bekannt)) or "(keine)"}')
 
+        if endung == '.py':
+            je = pflicht_je_befehl_py(quelle)
+            if je:
+                wort = next((t for t in teile if not t.startswith('-')), None)
+                if wort not in je:
+                    ab.append(f'{lauf} · {schritt}: {rel} kennt den Befehl '
+                              f'"{wort}" nicht — bekannt: {" ".join(sorted(je))}')
+                else:
+                    pflicht = pflicht | je[wort]
         for p in sorted(pflicht - benutzt):
             ab.append(f'{lauf} · {schritt}: {rel} verlangt {p}, der Aufruf '
                       f'uebergibt es nicht')
@@ -356,6 +386,12 @@ def selbstprobe() -> int:
          'node tools/screenshots/aufnehmen.mjs --basis "$U" --admin "$K" --admin-pw "$P"'),
         ('GEGENPROBE: ein gueltiger Unterbefehl des Pruefstands', False,
          'tools/uhr-pruefstand/pruefstand.sh aufbau-uebersetzen'),
+        ('bericht.py schreiben ohne sein Pflichtargument --stufe', True,
+         'python3 tools/pruefstand/bericht.py schreiben --konfiguration web'),
+        ('bericht.py mit einem Unterbefehl, den es nicht gibt', True,
+         'python3 tools/pruefstand/bericht.py pruefen --commit "$K"'),
+        ('GEGENPROBE: bericht.py lesen braucht --stufe nicht (F-PK-32)', False,
+         'python3 tools/pruefstand/bericht.py lesen --commit "$K" --basis origin/main'),
         ('GEGENPROBE: eine Zeile ohne Werkzeugaufruf', False,
          'echo "nichts zu sehen" >> "$GITHUB_STEP_SUMMARY"'),
         ('GEGENPROBE: ein auskommentierter Aufruf', False,

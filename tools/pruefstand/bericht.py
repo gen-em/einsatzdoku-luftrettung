@@ -38,9 +38,17 @@ KOPF_RE = re.compile(
     r'Konfiguration\s+(?P<konf>[a-z]+)\s*$')
 PAAR_RE = re.compile(r'([a-zA-Z][\w-]*)=(\S+)')
 
-# Die Flächen, die als „nicht berührt" gemeldet werden dürfen — und das
-# Muster aus pruefablauf.json, das ihre Berührung erkennt.
-FLAECHEN = {'handy': 'android', 'uhr': 'uhr'}
+# Die Flächen, die als „nicht berührt" gemeldet werden dürfen — und der
+# ORDNER, dessen Berührung sie verrät. Bis PK-05 stand hier `'uhr': 'uhr'`:
+# ein Ordner, den es nicht gibt (die Uhr liegt unter `watch/`), und Lage 3
+# konnte für die Uhr nie anschlagen (F-PK-31). `pruefen.sh` sagt `uhr:watch`.
+FLAECHEN = {'handy': 'android', 'uhr': 'watch'}
+
+# DER WEG NACH EINEM FREMDEN MERGE (E-PK-42). Das Tor ist streng: Der Baum im
+# Bericht muss der Baum des geprüften Commits sein. „Update branch" auf GitHub
+# schreibt einen Merge-Commit ohne Bericht — also rot, mit diesem Weg.
+WEG = ('Weg (Pruefablauf.md 5): örtlich `git merge --no-commit origin/main` (statt „Update branch"), '
+       'dann `bash tools/pruefstand/pruefen.sh`, dann den Commit mit dem Bericht in der Nachricht schreiben.')
 
 
 def melde(t=''):
@@ -191,11 +199,20 @@ def lesen(args):
     else:
         text = git('log', '-1', '--format=%B', args.commit)
     bericht = zerlegen(text)
-    schlecht = pruefen(bericht, basis=args.basis, commit=args.commit)
+    riegel = dict(p.split('=', 1) for p in args.riegel)
+    schlecht = []
+    if args.alle_riegel:
+        # JEDER RIEGEL AUS pruefablauf.json LÄUFT AUCH IM TOR — sonst gäbe es zwei
+        # Listen, und die im Tor würde still kürzer.
+        for r in lade_ablauf()['riegel']['proben']:
+            if r not in riegel:
+                schlecht.append(f'Riegel „{r}" steht in pruefablauf.json, läuft aber nicht im Tor.')
+    schlecht += pruefen(bericht, basis=args.basis, commit=args.commit, riegel=riegel)
     if schlecht:
         melde('Der Prüfbericht trägt nicht:')
         for s in schlecht:
             melde(f'  ! {s}')
+        melde(WEG)
         return 1
     melde(f"Prüfbericht in Ordnung: Stufe {bericht['stufe']}, Baum {bericht['baum']}, "
           f"Konfiguration {bericht['konfiguration']}, {len(bericht['werte'])} Zahlen.")
@@ -228,6 +245,9 @@ def selbstprobe():
     faelle.append(('rot (3) — berührte Fläche als „nicht berührt" gemeldet',
                    zerlegen(guter), dict(baum='abc1234',
                                          dateien=['android/handy/src/Main.kt'], riegel={}), 1))
+    faelle.append(('rot (3b) — die Uhr berührt und als „nicht berührt" gemeldet',
+                   zerlegen(guter), dict(baum='abc1234',
+                                         dateien=['watch/source/App.mc'], riegel={}), 1))
     faelle.append(('rot (4) — Riegel meldet eine andere Zahl',
                    zerlegen(guter), dict(baum='abc1234', dateien=[],
                                          riegel={'vollstaendigkeit': '399'}), 1))
@@ -300,6 +320,10 @@ def main():
     l.add_argument('--basis')
     l.add_argument('--datei')
     l.add_argument('--selbstprobe', action='store_true')
+    l.add_argument('--riegel', action='append', default=[], metavar='name=wert',
+                   help='eine Zahl, die das Tor selbst gemessen hat (Lage 4)')
+    l.add_argument('--alle-riegel', action='store_true',
+                   help='jeder Riegel aus pruefablauf.json muss als --riegel kommen')
     l.set_defaults(fn=lesen)
 
     d = u.add_parser('erzeugen-doku')
