@@ -211,25 +211,26 @@ geraetedateien() {
     # Zusammenfassung). Ist es dagegen DA und kaputt, ist das rot: Ein
     # Rueckfall wuerde dann eine falsch gepackte Bereitstellung verdecken.
     if [ "$voll" -eq 1 ] || [ -n "${fehlende// /}" ]; then
-        if archiv_holen devices.tar.gz "$GARMIN_HOME/Devices"; then
+        if archiv_holen devices.tar Devices; then
             [ -n "$(ls "$GARMIN_HOME"/Devices/*/compiler.json 2>/dev/null)" ] || fehler \
-"devices.tar.gz enthaelt keine Geraete auf oberster Ebene.
-   Erwartet wird <geraet>/compiler.json, nicht Devices/<geraet>/... —
-   gepackt wird mit: tar czf devices.tar.gz -C Devices .  (LIESMICH.md)"
+"devices.tar liegt entpackt nicht als Devices/<geraet>/compiler.json vor.
+   Gepackt wird im Ordner ~/.Garmin/ConnectIQ mit: tar cf devices.tar Devices
+   (LIESMICH.md, Abschnitt Archive)"
             touch "$GARMIN_HOME/Devices/.vollstaendig"
             voll=0; fehlende=""
         else
-            rueckfall_melden devices.tar.gz
+            rueckfall_melden devices.tar
         fi
     fi
     if [ "$schriften_fehlen" -eq 1 ]; then
-        if archiv_holen fonts.tar.gz "$GARMIN_HOME/Fonts"; then
+        if archiv_holen fonts.tar Fonts; then
             [ -n "$(find "$GARMIN_HOME/Fonts" -maxdepth 1 -name '*.cft' -print -quit)" ] || fehler \
-"fonts.tar.gz enthaelt keine Schriften (*.cft) auf oberster Ebene.
-   Gepackt wird mit: tar czf fonts.tar.gz -C Fonts .  (LIESMICH.md)"
+"fonts.tar liegt entpackt nicht als Fonts/*.cft vor.
+   Gepackt wird im Ordner ~/.Garmin/ConnectIQ mit: tar cf fonts.tar Fonts
+   (LIESMICH.md, Abschnitt Archive)"
             schriften_fehlen=0
         else
-            rueckfall_melden fonts.tar.gz
+            rueckfall_melden fonts.tar
         fi
     fi
 
@@ -271,15 +272,25 @@ geraetedateien() {
     fi
 }
 
-# Holt "$GERAETE_URL/<name>" und entpackt es nach <ziel>.
+# Holt "$GERAETE_URL/<name>" und entpackt es nach $GARMIN_HOME/<ordner>.
 #   0 = geholt und entpackt
 #   1 = nicht da (jede Antwort ausser 200) -> der Aufrufer faellt zurueck
 #   rot = da, aber nicht zu entpacken
 # Die Datei landet erst in $BASIS und wird GANZ geholt, bevor tar sie
 # anfasst: `curl | tar` liesse bei einem abgerissenen Abruf einen halben
 # Baum stehen, und der Rueckfall fuellte ihn dann ohne Marke auf.
+#
+# ZWEI PACKWEISEN WERDEN ANGENOMMEN, weil beide naheliegen: mit dem Ordner
+# (`tar cf devices.tar Devices`, so liegt es auf dem Server) und ohne
+# (`tar cf devices.tar -C Devices .`). Der erste Eintrag entscheidet; traegt
+# er den Ordnernamen, faellt diese eine Ebene weg. Was danach nicht an der
+# erwarteten Stelle liegt, faengt die Pruefung im Aufrufer — rot, nicht
+# still eine Ebene zu tief (dieselbe Falle wie bei --cut-dirs oben).
+# `tar -x` erkennt eine Kompression selbst; ein gzip-Archiv unter dem Namen
+# ginge also auch.
 archiv_holen() {
-    local name="$1" ziel="$2" code
+    local name="$1" ordner="$2" code erster
+    local ziel="$GARMIN_HOME/$ordner"
     local datei="$BASIS/$name"
     mkdir -p "$BASIS" "$ziel"
     melde "$name holen"
@@ -291,7 +302,10 @@ archiv_holen() {
         return 1
     fi
     printf '   %s MB\n' "$(( $(stat -c%s "$datei") / 1048576 ))"
-    tar -xzf "$datei" -C "$ziel" \
+    erster=$(tar -tf "$datei" 2>/dev/null | head -1 || true)
+    local ebene=0
+    case "$erster" in "$ordner"/*) ebene=1 ;; "./$ordner"/*) ebene=2 ;; esac
+    tar -xf "$datei" -C "$ziel" --strip-components="$ebene" \
         || { rm -f "$datei"; fehler "$name ist abrufbar, laesst sich aber nicht entpacken"; }
     rm -f "$datei"
 }
@@ -441,36 +455,6 @@ reihe() {
     # fehlt dann einfach. Geraete, deren Icon exakt passt, bauen durch; der
     # Ausfall sieht deshalb nach einem Geraeteproblem aus und ist keins.
     export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
-
-    # ERST ALLE UEBERSETZEN, DANN ALLE AUSWERTEN (23.09.2026). Nacheinander
-    # brauchte die Reihe 7 min 36 s fuer 99 Geraete (Lauf #253), und der
-    # Laeufer hat vier Kerne, von denen `monkeyc` einen nutzt. Jeder Aufruf
-    # schreibt nur in seine eigenen Dateien — `$g.prg` samt Beiwerk und
-    # `reihe_$g.txt` —, deshalb stoeren sich parallele Aufrufe nicht.
-    #
-    # Die Auswertung bleibt seriell und in der Reihenfolge der Liste: Die
-    # Tabelle sieht aus wie vorher, und parallel entstandene Ausgaben mischen
-    # sich nicht. CIQ_PARALLEL=1 ist der alte Ablauf.
-    #
-    # Das alte Kompilat wird VORHER geloescht. Nacheinander war das egal;
-    # jetzt liegt zwischen Uebersetzen und Nachsehen die ganze Reihe, und ein
-    # Kompilat aus einem frueheren Lauf zaehlte sonst als Groesse eines
-    # Aufrufs, der keines erzeugt hat.
-    local parallel="${CIQ_PARALLEL:-$(nproc 2>/dev/null || echo 1)}"
-    case "$parallel" in ''|*[!0-9]*|0) fehler "CIQ_PARALLEL muss eine Zahl ab 1 sein, nicht '$parallel'" ;; esac
-    local anzahl
-    anzahl=$(grep -c . "$liste" || true)
-    melde "Uebersetzen: $anzahl Geraete, $parallel gleichzeitig"
-    while read -r g; do
-        [ -z "$g" ] && continue
-        [ -f "$GARMIN_HOME/Devices/$g/compiler.json" ] || continue
-        rm -f "$AUSGABE/$g.prg"
-        monkeyc -f "$WURZEL/watch/monkey.jungle" -d "$g" -o "$AUSGABE/$g.prg" \
-                -y "$SCHLUESSEL" -w "$@" >"$BASIS/reihe_$g.txt" 2>&1 </dev/null &
-        while [ "$(jobs -rp | wc -l)" -ge "$parallel" ]; do wait -n || true; done
-    done < "$liste"
-    wait || true
-
     local ok=0 mangel=0 fehlend=0
     printf '%-26s %5s %6s %10s  %s\n' "Gerät" "Warn" "Fehler" "Größe" "Anmerkung"
     printf '%s\n' "----------------------------------------------------------------------"
@@ -481,6 +465,8 @@ reihe() {
             fehlend=$((fehlend+1)); continue
         fi
         local log="$BASIS/reihe_$g.txt"
+        monkeyc -f "$WURZEL/watch/monkey.jungle" -d "$g" -o "$AUSGABE/$g.prg" \
+                -y "$SCHLUESSEL" -w "$@" >"$log" 2>&1 || true
         sed -i '/JAVA_TOOL_OPTIONS/d' "$log" 2>/dev/null || true
         local w e sz
         w=$(grep -c 'WARNING' "$log" || true)
@@ -724,13 +710,11 @@ Befehle:
 Umgebungsvariablen:
   CIQ_SDK_VERSION   SDK-Fassung (Vorgabe 9.2.0)
   CIQ_GERAETE_URL   Quelle fuer Devices/ und Fonts/ — ohne sie kein Aufbau;
-                    zuerst devices.tar.gz und fonts.tar.gz, fehlen sie,
+                    zuerst devices.tar und fonts.tar, fehlen sie,
                     einzeln (langsam, mit Warnung)
   CIQ_ZIELE         Zielgeraete (Vorgabe: fenix6pro fr945 venu3s);
                     "alle" holt beim Aufbau den ganzen Geraetebestand —
                     noetig fuer reihe und geraeteklassen.py
-  CIQ_PARALLEL      gleichzeitige Uebersetzungen in reihe (Vorgabe:
-                    Zahl der Kerne; 1 = nacheinander)
   CIQ_WARTEZEIT     Sekunden je Geraet in bildreihe (Vorgabe 26)
   CIQ_BASIS         Ablage (Vorgabe ~/.ciq-pruefstand)
 ENDE

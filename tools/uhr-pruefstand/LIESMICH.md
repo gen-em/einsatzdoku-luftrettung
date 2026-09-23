@@ -81,23 +81,29 @@ Hinweis ab, statt stillschweigend halb zu laufen.
 
 ```bash
 cd ~/.Garmin/ConnectIQ
-tar czf devices.tar.gz -C Devices .
-tar czf fonts.tar.gz   -C Fonts   .
+tar cf devices.tar Devices
+tar cf fonts.tar   Fonts
 # beide Dateien direkt unter die Adresse aus CIQ_GERAETE_URL legen
 ```
 
-Das Skript versucht **zuerst** `devices.tar.gz` und `fonts.tar.gz`, je eine
-Anfrage. Der Grund ist gemessen (Lauf #253 auf `main`, 23.09.2026): `wget -r`
-brauchte **23 min 14 s** für die Gerätedateien und **7 min 32 s** für die
-rund 1,2 GB Schriften — die kleineren Gerätedateien dreimal so lange wie die
-großen Schriften. Die Zeit geht an die **Zahl der Anfragen**, nicht an die
-Datenmenge, und ein Archiv ist eine.
+Das Skript versucht **zuerst** `devices.tar` und `fonts.tar`, je eine
+Anfrage. Der Grund ist gemessen: `wget -r` brauchte in Lauf #253 auf `main`
+**23 min 14 s** für die Gerätedateien und **7 min 32 s** für die rund 1,2 GB
+Schriften — die kleineren Gerätedateien dreimal so lange wie die großen
+Schriften. Die Zeit geht an die **Zahl der Anfragen**, nicht an die
+Datenmenge. Über die Archive (326 MB und 1 207 MB) dauerte derselbe Aufbau
+am 23.09.2026 in einer Claude-Code-Sitzung **1 min 0 s** — mit demselben
+Bestand: 173 Geräte, 1 332 Schriftdateien.
 
-- **`-C Devices .` und nicht `Devices/`.** Das Archiv trägt die Geräte auf
-  oberster Ebene (`./fenix7/compiler.json`). Wer `tar czf devices.tar.gz
-  Devices` packt, bekommt eine Ebene zu viel — dieselbe Falle wie oben bei
-  `--cut-dirs`. Das Skript prüft das nach dem Entpacken und bricht **rot**
-  ab, statt einen Baum eine Ebene zu tief liegen zu lassen.
+- **Ungepackt reicht.** Die Schriften lassen sich kaum verdichten, und
+  `tar -x` erkennt eine Kompression selbst — ein mit `czf` gepacktes Archiv
+  unter demselben Namen ginge ebenso.
+- **Mit oder ohne Ordner.** `tar cf devices.tar Devices` (Einträge
+  `Devices/fenix7/…`) und `tar cf devices.tar -C Devices .` (Einträge
+  `./fenix7/…`) werden beide angenommen; der erste Eintrag entscheidet. Liegt
+  nach dem Entpacken trotzdem kein `Devices/<gerät>/compiler.json` bzw. kein
+  `Fonts/*.cft` da — etwa weil eine Ebene zu viel gepackt wurde —, bricht das
+  Skript **rot** ab, statt einen Baum eine Ebene zu tief liegen zu lassen.
 - **Immer der ganze Bestand**, nicht nur die Geräte des Manifests.
   `geraeteklassen.py` wendet die Auswahlregeln auf alles an, was daliegt, und
   nur so fällt in Stufe 1 auf, dass ein neues Garmin-Gerät ins Manifest
