@@ -34,7 +34,7 @@ die Werkzeug-Einträge vom 22.09.2026.
 > | | |
 > |---|---|
 > | Stand | **23.09.2026 — Konzept geschrieben, nichts umgesetzt.** TB-M1 ist erledigt (die Betreiberin hat „Require branches to be up to date before merging" am 23.09.2026 gesetzt; vorher war es nicht gesetzt, Q-TB-03). Kein PR offen. |
-> | Entschieden | E-TB-01 bis E-TB-09 (Abschnitt 3), Q-TB-01 bis -03 beantwortet. |
+> | Entschieden | E-TB-01 bis E-TB-09 (Abschnitt 3), Q-TB-01 bis -04 beantwortet. |
 > | Nächstes | **TB-01** — `freigabe.py` lernt den Baum. |
 > | Hakt | nichts. **Zur Kenntnis:** Der gescheiterte Lauf 35834341392 (Tag `web-v20.37.1`) lässt sich **schon vor** dieser Umsetzung wiederholen, sobald der Push-Lauf 35834129884 auf `main` grün ist — er ist mit dem alten Tor zufrieden, weil dann ein Lauf mit derselben SHA existiert. TB verhindert das **nächste** Warten, nicht dieses. |
 >
@@ -99,7 +99,7 @@ am Transport, am Backup-Tor oder an der Abstammungsprüfung (E-KH-15), keine
 | F-TB-04 | **Ein `pull_request`-Lauf prüft nicht den Zweig-Commit, sondern den Probe-Merge** (`refs/pull/N/merge`) mit dem `main` zum Zeitpunkt des Laufs; die Bereichserkennung sagt das selbst („Bei einem PR checkt die Aktion den MERGE-Commit aus"). Die Lauf-API nennt nur `head_sha` (den Zweig-Commit). Ohne Zusatzannahme ist Baum(`head_sha`) **nicht** beweisbar der geprüfte Baum. | Mit TB-M1 wird es beweisbar (Abschnitt 2.2, E-TB-03). |
 | F-TB-05 | **„Require branches to be up to date before merging" war nicht gesetzt.** Die Maske in `Rahmenplan.md` 6b führt das Unterfeld nicht; `Pruefablauf.md` 2.3 nennt es nicht. Die Betreiberin hat es am 23.09.2026 nachgesehen und gesetzt (TB-M1, Q-TB-03). | Maske und 2.3 nachziehen (TB-04). |
 | F-TB-06 | **Die Lehre aus F-KH-U-35 gilt auch hier:** Ein Lauf ist „success", wenn kein Job rot ist — ein **übersprungener** Job `Stufe 1` macht den Lauf nicht rot. Wer nach TB-03 Läufe auf `main` zählt, bei denen `Stufe 1` planmäßig übersprungen wurde, zählt einen Verweis als Messung. | Das Tor **und** der Verweis prüfen die Job-Conclusion, nicht die Lauf-Conclusion (E-TB-05). |
-| F-TB-07 | **Zwei Namen für ein Ruleset.** `Rahmenplan.md` 6b nennt es „main geschützt", `Pruefablauf.md` 2.3 und Konzept PK „Main Protect". | TB-04 vereinheitlicht auf den Namen, der bei GitHub steht; die Betreiberin nennt ihn (Q-TB-04, offen). |
+| F-TB-07 | **Zwei Namen für ein Ruleset.** `Rahmenplan.md` 6b nennt es „main geschützt", `Pruefablauf.md` 2.3 und Konzept PK „Main Protect". Bei GitHub heißt es **„Main Protect"** (Q-TB-04, Betreiberin 23.09.2026). | TB-04 berichtigt `Rahmenplan.md` 6b auf „Main Protect". |
 
 ---
 
@@ -276,7 +276,7 @@ Prüfwert in einem Dokument.
 | Q-TB-01 | A + B, mit Variante (i) für den Push-Lauf auf `main`? | **Ja.** |
 | Q-TB-02 | Als Paket im PK-Konzept oder eigenes Konzept? | **Eigenes Konzept**, wird sofort von einer anderen Instanz umgesetzt. |
 | Q-TB-03 | Ist „Require branches to be up to date before merging" gesetzt? | **War nicht gesetzt; jetzt gesetzt** (TB-M1). Kein PR offen. |
-| Q-TB-04 | Wie heißt das Ruleset mit der PR-Pflicht bei GitHub wirklich — „main geschützt" oder „Main Protect"? (F-TB-07) | **offen** — die umsetzende Instanz fragt, bevor sie TB-04 schreibt. |
+| Q-TB-04 | Wie heißt das Ruleset mit der PR-Pflicht bei GitHub wirklich — „main geschützt" oder „Main Protect"? (F-TB-07) | **„Main Protect".** `Rahmenplan.md` 6b ist zu berichtigen (TB-04). |
 
 ---
 
@@ -363,7 +363,7 @@ dieser Umsetzung.**
 - `docs/Rahmenplan.md` 6b: Maske um die Zeile „— Require branches to be up
   to date before merging | ☑" ergänzen, dazu eine vierte Falle: „Der PR
   muss `main` enthalten — nach einem fremden Merge ‚Update branch' und
-  Stufe 1 neu." Ruleset-Name nach Q-TB-04 vereinheitlichen (F-TB-07).
+  Stufe 1 neu." Name der Maske auf **„Main Protect"** berichtigen (F-TB-07, Q-TB-04).
 - `docs/Technik.md` 6 (Kette): der Satz zum Tor.
 - `docs/CHANGELOG.md`: ein Eintrag `[Werkzeug: …]`, erklärende Prosa mit
   dem Anlass (Lauf 35834341392) und dem Preis (das Fenster, der PR nach
@@ -403,4 +403,4 @@ Neue Befunde `F-TB-08 …`, neue Fragen `Q-TB-05 …`, neue Entscheidungen
 
 | Nr. | Aus | Befund / Frage | Folge |
 |---|---|---|---|
-| Q-TB-04 | Konzept | Name des Rulesets bei GitHub (F-TB-07) | vor TB-04 klären |
+| — | | *noch keine* | |
