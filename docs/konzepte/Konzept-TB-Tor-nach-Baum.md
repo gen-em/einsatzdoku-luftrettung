@@ -33,17 +33,17 @@ die Werkzeug-Einträge vom 22.09.2026.
 >
 > | | |
 > |---|---|
-> | Stand | **23.09.2026 — Konzept geschrieben, nichts umgesetzt.** TB-M1 ist erledigt (die Betreiberin hat „Require branches to be up to date before merging" am 23.09.2026 gesetzt; vorher war es nicht gesetzt, Q-TB-03). Kein PR offen. |
+> | Stand | **23.09.2026 — TB-01 erledigt, TB-02 in Arbeit.** Zweig `claude/serene-goldberg-wnn60k` (trägt daneben die Archive des Uhr-Prüfstands — eigenes Thema, nicht TB). TB-M1 ist erledigt (die Betreiberin hat „Require branches to be up to date before merging" am 23.09.2026 gesetzt; vorher war es nicht gesetzt, Q-TB-03). |
 > | Entschieden | E-TB-01 bis E-TB-09 (Abschnitt 3), Q-TB-01 bis -04 beantwortet. |
-> | Nächstes | **TB-01** — `freigabe.py` lernt den Baum. |
-> | Hakt | nichts. **Zur Kenntnis:** Der gescheiterte Lauf 35834341392 (Tag `web-v20.37.1`) lässt sich **schon vor** dieser Umsetzung wiederholen, sobald der Push-Lauf 35834129884 auf `main` grün ist — er ist mit dem alten Tor zufrieden, weil dann ein Lauf mit derselben SHA existiert. TB verhindert das **nächste** Warten, nicht dieses. |
+> | Nächstes | **TB-02** — das Tor holt Bäume. |
+> | Hakt | nichts. **Zwischen TB-01 und TB-02 ist `kettenaufrufe` rot** (F-TB-08) — gewollt, und kein PR ist offen, der es sähe. **Zur Kenntnis:** Der gescheiterte Lauf 35834341392 (Tag `web-v20.37.1`) lässt sich **schon vor** dieser Umsetzung wiederholen, sobald der Push-Lauf 35834129884 auf `main` grün ist — er ist mit dem alten Tor zufrieden, weil dann ein Lauf mit derselben SHA existiert. TB verhindert das **nächste** Warten, nicht dieses. |
 >
 > **Stand der Umsetzung**
 >
 > | Paket | Stand | Commit | Abnahmezahlen |
 > |---|---|---|---|
 > | TB-M1 „Up to date" im Ruleset | **gesetzt 23.09.2026** (Betreiberin) | — | war nicht gesetzt → gesetzt; kein PR offen |
-> | TB-01 `freigabe.py` lernt den Baum | offen | | |
+> | TB-01 `freigabe.py` lernt den Baum | **erledigt 23.09.2026** | siehe Zweig | Selbstprobe 52/0 (vorher 32/0); drei eingebaute Fehler: 3, 2, 1 offen |
 > | TB-02 Das Tor holt Bäume | offen | | |
 > | TB-03 Der Push-Lauf auf `main` sagt, wo schon gemessen ist | offen | | |
 > | TB-04 Dokumente und Kommentare | offen | | |
@@ -403,4 +403,6 @@ Neue Befunde `F-TB-08 …`, neue Fragen `Q-TB-05 …`, neue Entscheidungen
 
 | Nr. | Aus | Befund / Frage | Folge |
 |---|---|---|---|
-| — | | *noch keine* | |
+| F-TB-08 | TB-01 | **`kettenaufrufe` liest die Schnittstelle aus dem Quelltext** (`add_argument`) — es „kennt den neuen Aufruf" also von selbst, und sobald `--stufe1` in `freigabe.py` fehlt, meldet es den alten Aufruf in `ausliefern-lauf.yml` als Befund. Zwischen TB-01 und TB-02 ist Stufe 1 damit rot. | Gewollt: Es zeigt genau die Stelle, die TB-02 ändert. TB-01 und TB-02 gehen in **einem** PR; die Erwartung in `tools/kettenaufrufe/` braucht keine eigene Änderung. |
+| F-TB-09 | TB-01 | **Das Protokoll wäre mit dem Fenster von 50 Läufen eine Zeilenwand.** 49 Zeilen „anderer Baum" verdecken die eine, auf die es ankommt. | `urteil()` nennt nur Läufe mit passendem Baum oder unklarem Baum einzeln, die übrigen als Zahl („davon mit anderem Baum: 49"). Selbstprobe-Lage dafür. |
+| E-TB-10 | TB-01 | **`stufe1_ok` zählt nur als echtes `true`.** Eine Zeichenkette „success" wäre ein Fehler im Arbeitslauf (der Schritt soll ein Boolean liefern), und ein Fehler im Arbeitslauf öffnet das Tor nicht (E-TB-04). | Selbstprobe-Lage. |
