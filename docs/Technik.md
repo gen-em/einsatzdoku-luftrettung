@@ -9160,7 +9160,7 @@ Bilderzahl, die längst nicht mehr stimmte.
 | Handbuch und „Was ist NAdoku" rendern | beide rendern, 0 Bilder aus fremder Quelle |
 | `tools/spaltenregister/pruefen.php`, `tools/zaehlung/zaehlen.php`, je mit Selbstprobe | 0 Befunde, 0 Zeilen über der Decke |
 | `tools/proben/proben.sh rechtstexte` | 0 Fehlschläge |
-| **Prüfbericht gegenlesen** (überall außer auf `main`) | `bericht.py lesen` rc 0: Baum, Stufe, Flächen, alle Riegel und keine rote Probe |
+| **Prüfbericht gegenlesen** (überall außer auf `main`) | `bericht.py lesen` rc 0: Baum, Stufe, Flächen, alle Riegel, keine rote und keine nicht gemessene Probe |
 
 Daneben, als eigener Job mit Matrix: **`Schema gegen …`** —
 `tools/schemaprobe/probe.php` gegen MySQL 8.4.0 und MariaDB 10.6, je mit

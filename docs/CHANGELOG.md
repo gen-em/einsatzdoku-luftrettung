@@ -65,12 +65,15 @@ Konzept PK, Paket PK-05. Keine Versionsstufe: berührt sind nur `tools/`,
   bekommt „nicht-gelaufen" statt einer stehen gebliebenen 0. Bis dahin las kein
   Arbeitslauf den Bericht — deshalb ist der `.gitattributes`-Fehler vom 23.09.2026 (ein
   Bericht, der zu keinem Baum passte) niemandem aufgefallen.
-- **Fünf Lagen statt vier** (E-PK-44). Lage 3 verlangt bei einer berührten
-  Fläche „gebaut", nicht nur „nicht ‚nicht berührt'". Neu ist Lage 5: Eine
-  rote Probe im Bericht ist rot. Der Prüfstand druckt den Bericht auch nach
-  einem roten Lauf, und ein Commit mit `kreislauf-edbak=1` wäre sonst
-  durchgegangen, solange die billigen Riegel stimmten. Die Selbstprobe hat
-  **12 Lagen** (10 rote, 2 grüne; vorher 6).
+- **Fünf Lagen statt vier** (E-PK-44, -46). Lage 3 verlangt bei einer
+  berührten Fläche „gebaut", nicht nur „nicht ‚nicht berührt'". Neu ist
+  Lage 5: Eine rote **oder nicht gemessene** Probe im Bericht ist rot. Der
+  Prüfstand druckt den Bericht auch nach einem roten Lauf, und ein Commit mit
+  `kreislauf-edbak=1` wäre sonst durchgegangen, solange die billigen Riegel
+  stimmten; eine nicht gemessene Probe stand bis dahin gar nicht im Bericht.
+  Fehlt ein Umgebungswert, den ein Aufruf nennt, heißt die Probe jetzt „nicht
+  gemessen" statt mit „unbound variable" abzustürzen, und der Lauf endet mit
+  rc 1. Die Selbstprobe hat **13 Lagen** (11 rote, 2 grüne; vorher 6).
 - **Ein Handlauf auf einem Zweig liest ebenfalls gegen** (E-PK-43). Sonst
   hätte ein Handlauf auf dem PR-Kopf ein grünes `Stufe 1` ohne Gegenlesung
   gesetzt. Nur auf `main` liest niemand gegen. Der Hotfix-Weg braucht
@@ -110,6 +113,12 @@ Konzept PK, Paket PK-05. Keine Versionsstufe: berührt sind nur `tools/`,
   aus der Zeit vor Konzept TB; `Schon gemessen?` und der Schema-Job sind
   zusammen rund 125 Zeilen und bleiben, wie sie sind, und die Bindung der
   Riegel an ihre Schritte hat die Gegenlesung um rund 20 Zeilen verlängert.
+- **Die Nebenstufe ist heute rot, und das ist ein Befund, keine
+  Nebenwirkung.** Gemessen auf frischer Anlage: 36 Proben in 1 266 s, 9 rot
+  (Backlog Nr. 292) — drei Verdrahtungsfehler des Prüfstands, eine veraltete
+  Referenz, fünf ungeklärte. Bis PK-05 lief keine davon in einer Stufe, die
+  ein Tor las. Sie werden in einem eigenen Paket vor P5c behoben (E-PK-45),
+  nicht aus Lage 5 ausgenommen.
 - **Der Schema-Job bleibt, und er ist keine Pflichtprüfung.** Ein roter
   Schemalauf hält einen Merge heute nicht auf; ob er es soll, entscheidet
   die Betreiberin im Ruleset (Q-PK-07).

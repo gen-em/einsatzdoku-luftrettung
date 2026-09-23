@@ -39,7 +39,7 @@ nicht gibt.
 | Arbeitsumgebung in vier Ausbaustufen | **gebaut mit PK-02** (`Sandbox-Setup.md` 2); `web`, `plattform` und `android` gemessen, **`uhr` noch nicht** |
 | Station B, der Prüfstand-Befehl, die drei Stufen (3) | **gebaut und gemessen mit PK-03** |
 | `pruefablauf.json`, die Tabelle Berührung → Probe (4) | **gebaut mit PK-03**, Tabelle erzeugt |
-| Der Prüfbericht (5) | **gebaut mit PK-03**, seit PK-05 Selbstprobe 12 Lagen / 0 Fehlschläge |
+| Der Prüfbericht (5) | **gebaut mit PK-03**, seit PK-05 Selbstprobe 13 Lagen / 0 Fehlschläge |
 | Seine Gegenlesung im Tor (5.1) | **gebaut mit PK-05** |
 | Station C in der beschriebenen Form (2) | **gebaut mit PK-05** — nur die Schemaprobe ist noch keine Pflichtprüfung (2.3, Q-PK-07) |
 | Station D in der beschriebenen Form (2) | entsteht mit **PK-06** |
@@ -117,9 +117,11 @@ Prüfbericht (5).
 
 **Was nicht laufen kann, wird gezählt und benannt, nicht übersprungen**
 (E-KH-12): Fehlt das Android-SDK, `CIQ_GERAETE_URL` oder das Modul
-`plattform`, meldet der Lauf die Probe als *nicht gemessen* — mit Grund —
-und sagt am Ende „n rot, m nicht gemessen, k grün". Eine übersprungene
-Probe, die grün meldet, gibt es nicht.
+`plattform` oder ein Umgebungswert, den der Aufruf nennt, meldet der Lauf
+die Probe als *nicht gemessen* — mit Grund —, sagt am Ende „n rot, m nicht
+gemessen, k grün" und endet mit rc 1. **Seit PK-05 steht sie auch im
+Bericht**, als `name=nicht-gemessen`, und das Tor liest sie als rot
+(E-PK-46). Eine übersprungene Probe, die grün meldet, gibt es nicht.
 
 Station B ist die geprüfte Partei. Ihr Bericht ist ein **Nachweis**, kein
 Riegel — was das heißt und wo die Grenze liegt, steht in 5.2.
@@ -242,8 +244,11 @@ und hat eine eigene Freigabe.
 *Gebaut mit PK-03, berichtigt mit PK-05.* Die Zeiten aus PK-03 (klein/neben/haupt
 = 26,8 / 25 / 22 s) sind **dreimal derselbe Umfang**: Bis PK-05 las der
 Befehl die Fassung nicht (F-PK-30) und kam immer auf „klein", und „neben"
-hatte kein eigenes Muster. Eine Messung der Nebenstufe steht im Prüfdokument
-PK.
+hatte kein eigenes Muster. **Die Nebenstufe, gemessen am 23.09.2026** auf
+frischer Anlage mit einer berührten Datei unter `server/`: **36 Proben,
+1 266 s** — über dem Ziel von 15 Minuten —, und **9 davon rot** (Backlog
+Nr. 292, vor P5c zu beheben, E-PK-45). Das Protokoll steht im Prüfdokument PK,
+5o.
 
 Der Umfang richtet sich nach der Versionsstufe in `server/version.php` im
 Unterschied gegen `main` (Zählweise in `CLAUDE.md` 2) und nach der
@@ -331,7 +336,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 ## 5. Der Prüfbericht
 
 *Erzeugung gebaut mit PK-03, Gegenlesung im Tor mit PK-05 (`bericht.py`,
-Selbstprobe 12 Lagen / 0).*
+Selbstprobe 13 Lagen / 0).*
 
 Der Prüfstand schreibt am Ende einen Block, der in die Commit-Nachricht
 gehört und maschinell lesbar ist:
@@ -362,9 +367,10 @@ Prüfstand: neben · Baum a1b2c3d… · Konfiguration web
   ungegengelesen bleibt. Jeder Wert hängt am Ausgang seines Schritts: Wer
   einen Riegelschritt streicht, bekommt „nicht-gelaufen" statt einer stehen
   gebliebenen 0.
-- Eine **Probe** meldet im Bericht etwas anderes als 0 (E-PK-44). Der
-  Prüfstand druckt den Bericht auch nach einem roten Lauf; ein roter Lauf ist
-  kein Nachweis.
+- Eine **Probe** meldet im Bericht etwas anderes als 0 — rot oder
+  `nicht-gemessen` (E-PK-44, -46). Der Prüfstand druckt den Bericht auch
+  nach einem roten Lauf; ein roter Lauf ist kein Nachweis, ein übersprungener
+  auch nicht.
 
 Dazu rot, ohne eigene Lage: **kein Bericht** in der Nachricht des PR-Kopfs.
 Die Meldung sagt dann, wie er hineinkommt.

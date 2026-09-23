@@ -110,7 +110,7 @@ def flaechen_aus_lauf(zahlen, dateien):
     for flaeche, (_, probe) in FLAECHEN.items():
         if not flaeche_beruehrt(flaeche, dateien):
             aus[flaeche] = 'nicht-beruehrt'
-        elif probe not in zahlen:
+        elif probe not in zahlen or zahlen[probe] == 'nicht-gemessen':
             aus[flaeche] = 'nicht-gemessen'
         else:
             aus[flaeche] = 'gebaut' if zahlen[probe] == '0' else 'rot'
@@ -212,14 +212,19 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
             schlecht.append(
                 f"Riegel „{name}\": Bericht {gemeldet}, im Tor gemessen {zahl}.")
 
-    # (5) Eine rote Probe im Bericht (E-PK-44). Der Prüfstand druckt den
-    # Bericht auch nach einem roten Lauf; ohne diese Lage käme ein Commit mit
-    # „kreislauf-edbak=1" durch, solange die billigen Riegel stimmen. Riegel
-    # und Flächen haben ihre eigene Lage.
+    # (5) Eine rote oder nicht gemessene Probe im Bericht (E-PK-44, -46). Der
+    # Prüfstand druckt den Bericht auch nach einem roten Lauf; ohne diese Lage
+    # käme ein Commit mit „kreislauf-edbak=1" durch, solange die billigen
+    # Riegel stimmen. Überspringen ist rot (E-KH-12). Riegel und Flächen haben
+    # ihre eigene Lage.
     eigene = set(riegel_namen if riegel_namen is not None else lade_ablauf()['riegel']['proben'])
     eigene |= set(riegel or {}) | set(FLAECHEN)
     for name, wert in bericht['werte'].items():
-        if name not in eigene and wert != '0':
+        if name in eigene or wert == '0':
+            continue
+        if wert == 'nicht-gemessen':
+            schlecht.append(f"Probe „{name}\" ist nicht gemessen — Überspringen ist rot (E-KH-12).")
+        else:
             schlecht.append(f"Probe „{name}\" meldet {wert} — ein roter Lauf ist kein Nachweis.")
     return schlecht
 
@@ -303,6 +308,9 @@ def selbstprobe():
                                          riegel={'vollstaendigkeit': '1'}, riegel_namen=namen), 1))
     faelle.append(('rot (5) — eine rote Probe im Bericht',
                    zerlegen(guter.replace('kreislauf-edbak=0', 'kreislauf-edbak=1')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('rot (5b) — eine nicht gemessene Probe im Bericht',
+                   zerlegen(guter.replace('spurprobe=0', 'spurprobe=nicht-gemessen')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
     faelle.append(('rot (2b) — Versionsstufe nicht lesbar',
                    zerlegen(guter), dict(baum='abc1234', dateien=[], riegel={},

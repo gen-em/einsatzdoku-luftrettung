@@ -79,15 +79,24 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', sep='\t')")
         zeile "?     $name — steht nicht unter \"proben\" in pruefablauf.json"; fehl=$((fehl+1)); continue
     fi
     # KEIN STILLES ÜBERSPRINGEN (E-KH-12). Was nicht laufen kann, wird
-    # GEZÄHLT und benannt — nicht weggelassen.
+    # GEZÄHLT und benannt — und steht seit E-PK-46 als „nicht-gemessen" im
+    # Bericht, wo das Tor es als rot liest. Bis dahin fehlte es dort ganz.
+    ohne() { zeile "--    $name — $1"; nicht=$((nicht+1)); ZAHL[$name]=nicht-gemessen; }
     case "$braucht" in
       android) [ -d "${ANDROID_HOME:-/opt/android-sdk}/platforms/android-36" ] || {
-                 zeile "--    $name — Ausbaustufe android fehlt"; nicht=$((nicht+1)); continue; } ;;
-      uhr)     [ -n "${CIQ_GERAETE_URL:-}" ] || {
-                 zeile "--    $name — CIQ_GERAETE_URL fehlt"; nicht=$((nicht+1)); continue; } ;;
+                 ohne "Ausbaustufe android fehlt"; continue; } ;;
+      uhr)     [ -n "${CIQ_GERAETE_URL:-}" ] || { ohne "CIQ_GERAETE_URL fehlt"; continue; } ;;
       plattform) docker image inspect mysql:8.4.0 >/dev/null 2>&1 || {
-                 zeile "--    $name — Modul plattform steht nicht"; nicht=$((nicht+1)); continue; } ;;
+                 ohne "Modul plattform steht nicht"; continue; } ;;
     esac
+    # Ein Umgebungswert, den der Aufruf nennt und der fehlt, ist eine fehlende
+    # Voraussetzung, kein Absturz: `set -u` machte daraus „unbound variable"
+    # und eine rote Probe (spaltenregister-wegprobe, 23.09.2026).
+    leer=""
+    for v in $(printf '%s' "$befehl" | grep -oE '\$\{?[A-Z_][A-Z0-9_]*' | tr -d '${' | sort -u); do
+        [ -n "${!v:-}" ] || leer="$leer $v"
+    done
+    [ -z "$leer" ] || { ohne "Umgebungswert fehlt:$leer"; continue; }
     if [ "$name" = syntax-php ]; then
         n=0; s=0
         # Gezählt wird, was `add -A` in den Baum legt (bericht.py baum_hash): auch
@@ -118,4 +127,6 @@ python3 "$HIER/bericht.py" "${args[@]}"
 
 melde "$fehl rot, $nicht nicht gemessen, $(( ${#PROBEN[@]} - fehl - nicht )) grün"
 [ "$nicht" -gt 0 ] && zeile "Was nicht gemessen werden konnte, gehört in das Prüfdokument — an den Anfang."
-exit $([ "$fehl" -gt 0 ] && echo 1 || echo 0)
+# Nicht gemessen ist nicht grün (E-KH-12, E-PK-46): Der Bericht trägt es, und
+# das Tor liest es als rot — dann soll es der Lauf auch sein.
+exit $([ "$fehl" -gt 0 ] || [ "$nicht" -gt 0 ] && echo 1 || echo 0)

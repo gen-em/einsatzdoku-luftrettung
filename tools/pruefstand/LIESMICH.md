@@ -27,9 +27,9 @@ für `uhr-stufe1` `CIQ_GERAETE_URL`, für die Schemaprobe das Modul
 
 ## Erwartete Zahl
 
-`bericht.py lesen --selbstprobe` → **12 Lagen / 0**, `auswahl.py
+`bericht.py lesen --selbstprobe` → **13 Lagen / 0**, `auswahl.py
 --selbstprobe` → **23 / 0**, `--abdeckung` → **0 Dateien ohne Muster**.
-`pruefen.sh` → 0 rot, 0 nicht gemessen, rc 0; klein ohne `server/` **13 Proben**.
+`pruefen.sh` → 0 rot, 0 nicht gemessen, rc 0 (sonst rc 1); klein ohne `server/` **14**.
 
 ## Was es nicht kann
 
