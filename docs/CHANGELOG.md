@@ -30,10 +30,22 @@ Konzept PK, Paket PK-05. Keine Versionsstufe: berührt sind nur `tools/`,
   unlesbare Fassung ist rot, nicht „klein". Gemessen gegen einen echten
   Nebensprung (20.36.0 → heute): vorher „klein · kein Versionssprung",
   jetzt „neben".
+- **Die Fassung kam aus dem letzten Commit, nicht aus dem Gemessenen.**
+  Der Prüfstand misst vor dem Commit; ein Versionssprung, der erst mit dem
+  Bericht committet wird, war für ihn unsichtbar, und das Tor hätte „Stufe zu
+  klein" gemeldet (F-PK-33). Er liest jetzt den Arbeitsbestand, wie der
+  Baum-Hash. Die PHP-Zählung ebenso: auch neue, noch nicht vorgemerkte
+  Dateien, keine gelöschten (F-PK-37).
 - **Die Uhr war für die Gegenlesung nie berührt.** Die Fläche `uhr` hing am
   Pfad `uhr/`; die App liegt unter `watch/` (F-PK-31). Ein Bericht mit
   „uhr=nicht berührt" wäre auch dann durchgegangen, wenn der PR die Uhr
-  änderte.
+  änderte. Der Uhr-Prüfstand gehört wieder dazu — die alte
+  Bereichserkennung hatte ihn, das Muster in `pruefablauf.json` nicht
+  (F-PK-36).
+- **„gebaut" hieß nur „berührt".** Der Prüfstand schrieb `handy=gebaut`
+  aus dem Diff, auch nach einem roten Bau oder einem, der mangels SDK nie
+  lief (F-PK-34). Jetzt schreibt `bericht.py` die Flächen selbst, aus
+  Berührung **und** Bau: „gebaut", „rot" oder „nicht-gemessen".
 - **`kettenaufrufe` meldete `bericht.py lesen` als falsch**, weil es die
   Pflichtschalter aller Unterbefehle jedem Aufruf abverlangte — `--stufe`
   gehört nur zu `schreiben` (F-PK-32). Es kennt jetzt die Unterbefehle von
@@ -45,10 +57,21 @@ Konzept PK, Paket PK-05. Keine Versionsstufe: berührt sind nur `tools/`,
   Schritt ruft `bericht.py lesen` gegen die Nachricht des PR-Kopfs und hält
   den Bericht gegen den Baum, die Versionsstufe, die berührten Flächen und
   die Zahlen der billigen Riegel, die das Tor selbst misst. **Jeder** Riegel
-  aus `pruefablauf.json` muss dabei kommen (`--alle-riegel`); ein neuer
-  Riegel bleibt so nicht still ungegengelesen. Bis dahin las kein
+  aus `pruefablauf.json` muss dabei kommen (`--alle-riegel`), und jeder Wert
+  hängt am Ausgang seines Schritts — wer einen Riegelschritt streicht,
+  bekommt „nicht-gelaufen" statt einer stehen gebliebenen 0. Bis dahin las kein
   Arbeitslauf den Bericht — deshalb ist der `.gitattributes`-Fehler vom 23.09.2026 (ein
   Bericht, der zu keinem Baum passte) niemandem aufgefallen.
+- **Fünf Lagen statt vier** (E-PK-44). Lage 3 verlangt bei einer berührten
+  Fläche „gebaut", nicht nur „nicht ‚nicht berührt'". Neu ist Lage 5: Eine
+  rote Probe im Bericht ist rot. Der Prüfstand druckt den Bericht auch nach
+  einem roten Lauf, und ein Commit mit `kreislauf-edbak=1` wäre sonst
+  durchgegangen, solange die billigen Riegel stimmten. Die Selbstprobe hat
+  **12 Lagen** (10 rote, 2 grüne; vorher 6).
+- **Ein Handlauf auf einem Zweig liest ebenfalls gegen** (E-PK-43). Sonst
+  hätte ein Handlauf auf dem PR-Kopf ein grünes `Stufe 1` ohne Gegenlesung
+  gesetzt. Nur auf `main` liest niemand gegen. Der Hotfix-Weg braucht
+  deshalb einen Bericht im Hotfix-Commit (`Technik.md` 6.6b, Schritt 3).
 - **Android, Uhr und die Bereichserkennung sind aus Stufe 1 heraus.** Beides
   baut der Prüfstand, wenn es berührt ist, und der Bericht sagt es. Mit ihnen
   gehen Java 21, das Hochladen der Android-Berichte und der Rücksprung auf
@@ -63,11 +86,15 @@ Konzept PK, Paket PK-05. Keine Versionsstufe: berührt sind nur `tools/`,
   Kreisläufe, die Bedienprobe und den Bilderlauf in acht Breiten; der
   Bilderlauf bekommt die ermittelte Stufe, statt fest `--stufe klein`.
   Messstand, Anteil- und Verbindungsprobe bleiben der Hauptstufe.
-- **`pruefung.yml` hat 314 statt 988 Zeilen.** Die Kommentarprosa ist
+- **`pruefung.yml` hat 337 statt 988 Zeilen.** Die Kommentarprosa ist
   gelöscht (E-PK-07); stehen geblieben ist ein Satz je Falle, die sonst
-  jemand wieder einbaut — `pipefail`, der Jobname als Kupplung, ein
+  jemand wieder einbaut — `pipefail`, Job- und Dateiname als Kupplung, ein
   übersprungener Job, den das Ruleset als grün zählt, die festen
-  Datenbankfassungen.
+  Datenbankfassungen. Zwei Schritte sind dabei strenger geworden: „Fassungen
+  nennen" ist rot, wenn eine Fassung unlesbar ist, und die Python-Werkzeuge
+  werden übersetzt (`compile`) statt nur zerlegt (`ast.parse`) — das fängt
+  auch ein `return` außerhalb einer Funktion. `pull_request` hört nur noch
+  auf `main`, weil die Gegenlesung gegen `main` liest.
 
 ### Bewusst so
 
@@ -78,7 +105,8 @@ Konzept PK, Paket PK-05. Keine Versionsstufe: berührt sind nur `tools/`,
   Prüfstand fahren, den Merge-Commit mit dem Bericht schreiben.
 - **Unter 250 Zeilen ist `pruefung.yml` nicht gekommen.** Die Zahl stammt
   aus der Zeit vor Konzept TB; `Schon gemessen?` und der Schema-Job sind
-  zusammen rund 125 Zeilen und bleiben, wie sie sind.
+  zusammen rund 125 Zeilen und bleiben, wie sie sind, und die Bindung der
+  Riegel an ihre Schritte hat die Gegenlesung um rund 20 Zeilen verlängert.
 - **Der Schema-Job bleibt, und er ist keine Pflichtprüfung.** Ein roter
   Schemalauf hält einen Merge heute nicht auf; ob er es soll, entscheidet
   die Betreiberin im Ruleset (Q-PK-07).

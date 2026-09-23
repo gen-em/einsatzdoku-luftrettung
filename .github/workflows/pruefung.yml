@@ -4,8 +4,9 @@ name: Prüfung
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]    # nur main: Ein Push-Lauf auf dem Arbeitszweig hieße auch „Stufe 1" und liefe neben dem PR-Lauf her
   pull_request:
+    branches: [ main ]    # die Gegenlesung liest gegen origin/main
   workflow_dispatch:
 
 permissions:
@@ -26,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      actions: read       # fehlt es, scheitert die Abfrage, und jeder Push auf main misst still neu
+      actions: read       # die Läufe und ihre Jobs lesen; ohne das Recht kann die Abfrage scheitern, und jeder Push auf main misst still neu
     outputs:
       messen: ${{ steps.vergleich.outputs.messen }}
     steps:
@@ -81,7 +82,7 @@ jobs:
 
           messen "kein grüner PR-Lauf mit Baum \`${baum:0:7}\` unter den letzten $FENSTER"
 
-  # Der Jobname „Stufe 1" ist Kupplung: Das Ruleset, das Produktionstor in ausliefern-lauf.yml und „Schon gemessen?" suchen ihn wörtlich.
+  # Jobname „Stufe 1" und Dateiname pruefung.yml sind Kupplung: Das Ruleset, das Produktionstor in ausliefern-lauf.yml und „Schon gemessen?" suchen sie wörtlich.
   pruefung:
     name: Stufe 1
     needs: schon-gemessen
@@ -95,7 +96,7 @@ jobs:
           fetch-depth: 0    # die Gegenlesung braucht origin/main und den PR-Kopf
 
       - name: Fassungen nennen — was misst hier eigentlich?
-        # Erst zuweisen, dann ausgeben: Ein Fehler in `$(…)` als echo-Argument bliebe grün.
+        # Erst zuweisen, dann ausgeben: Ein Fehler in `$(…)` als echo-Argument bliebe grün — eine unlesbare Fassung ist rot (F-PK-30).
         run: |
           web=$(php -r "require 'server/version.php'; echo WEB_VERSION;")
           uhr=$(grep -oE 'APP_VERSION *= *"[0-9.]+"' watch/source/Const.mc | grep -oE '[0-9.]+')
@@ -122,7 +123,9 @@ jobs:
           echo "zahl=php:$s/0" >> "$GITHUB_OUTPUT"
 
       - name: Quelltext — acht Prüfungen, ein Läufer
+        id: quelltext
         # Selbstprobe zuerst: Eine Prüfung, die kaputt ist und darum nichts findet, meldete sonst grün.
+        # Erst ausgeben, dann scheitern: Unter -e bräche der Block vor `cat` ab, und das Protokoll bliebe leer.
         run: |
           bash tools/quelltext/pruefen.sh --selbstprobe
           rc=0
@@ -132,10 +135,12 @@ jobs:
           exit "$rc"
 
       - name: Kontraste der Token
+        id: kontraste
         run: python3 tools/screenshots/kontrast.py
 
       - name: Liegt ein Umgebungswert eine Ebene höher noch einmal?
         # Läuft absichtlich in einem Job ohne `environment:` — nur dort ist ein Wert eine Ebene höher sichtbar.
+        # Nur BELEGT/leer ausgeben: vars maskiert GitHub nicht, und das Protokoll ist öffentlich.
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -157,6 +162,7 @@ jobs:
           echo "Kein Umgebungswert liegt doppelt. Die Geheimnisprüfung der Kette kann fehlschlagen — und das ist ihr Zweck."
 
       - name: Kettenaufrufe — passt jeder Aufruf zu seinem Werkzeug?
+        id: kettenaufrufe
         run: |
           python3 tools/kettenaufrufe/pruefen.py --probe
           python3 tools/kettenaufrufe/pruefen.py
@@ -220,32 +226,49 @@ jobs:
           exit $fehler
 
       - name: Spaltenregister — schema.sql gegen mf_missions_register()
+        id: spaltenregister
         run: |
           php tools/spaltenregister/pruefen.php --selbstprobe
           php tools/spaltenregister/pruefen.php
 
       - name: Zentralisierung — hält jede Sache ihre eine Stelle?
+        id: zaehlung
         run: |
           php tools/zaehlung/zaehlen.php --selbstprobe
           php tools/zaehlung/zaehlen.php
 
       - name: Rechtstexte — hält der Filter die Angriffe ab?
+        id: rechtstexte
         run: bash tools/proben/proben.sh rechtstexte
 
       - name: Prüfbericht gegenlesen — passt er zu diesem Stand?
-        # Streng (E-PK-42): Baum im Bericht = Baum des PR-Kopfs; nach „Update branch" rot, die Meldung sagt den Weg.
-        # Die Riegel davor sind grün, sonst liefe dieser Schritt nicht; --alle-riegel hält die Liste gleich.
-        if: github.event_name == 'pull_request'
+        # Überall außer auf main, auch beim Handlauf auf einem Zweig: Sonst setzte ein Handlauf auf dem PR-Kopf ein grünes „Stufe 1" ohne Gegenlesung (E-PK-43).
+        # Streng (E-PK-42): Baum im Bericht = Baum des Kopfs; nach „Update branch" rot, die Meldung sagt den Weg.
+        # Jeder Riegelwert hängt am Ausgang seines Schritts: Wer einen Riegelschritt streicht, bekommt „nicht-gelaufen" statt einer stehen gebliebenen 0.
+        if: github.ref != 'refs/heads/main'
         env:
-          KOPF: ${{ github.event.pull_request.head.sha }}
+          KOPF: ${{ github.event.pull_request.head.sha || github.sha }}
           PHP_ZAHL: ${{ steps.php.outputs.zahl }}
+          QUELLTEXT: ${{ steps.quelltext.outcome }}
+          KONTRASTE: ${{ steps.kontraste.outcome }}
+          KETTENAUFRUFE: ${{ steps.kettenaufrufe.outcome }}
+          SPALTENREGISTER: ${{ steps.spaltenregister.outcome }}
+          ZAEHLUNG: ${{ steps.zaehlung.outcome }}
+          RECHTSTEXTE: ${{ steps.rechtstexte.outcome }}
         run: |
+          r() { [ "$1" = success ] && echo 0 || echo nicht-gelaufen; }
+          q=$(r "$QUELLTEXT")
+          rc=0
           python3 tools/pruefstand/bericht.py lesen --commit "$KOPF" --basis origin/main --alle-riegel \
-            --riegel "syntax-php=$PHP_ZAHL" --riegel wortliste=0 --riegel vollstaendigkeit=0 \
-            --riegel linkprobe=0 --riegel installweiche=0 --riegel sitzungshaertung=0 \
-            --riegel cspprobe=0 --riegel jobregister=0 --riegel migrationsregister=0 \
-            --riegel kontraste=0 --riegel kettenaufrufe=0 --riegel zaehlung=0 \
-            --riegel spaltenregister=0 --riegel rechtstexte=0
+            --riegel "syntax-php=${PHP_ZAHL:-nicht-gelaufen}" --riegel "wortliste=$q" --riegel "vollstaendigkeit=$q" \
+            --riegel "linkprobe=$q" --riegel "installweiche=$q" --riegel "sitzungshaertung=$q" \
+            --riegel "cspprobe=$q" --riegel "jobregister=$q" --riegel "migrationsregister=$q" \
+            --riegel "kontraste=$(r "$KONTRASTE")" --riegel "kettenaufrufe=$(r "$KETTENAUFRUFE")" \
+            --riegel "zaehlung=$(r "$ZAEHLUNG")" --riegel "spaltenregister=$(r "$SPALTENREGISTER")" \
+            --riegel "rechtstexte=$(r "$RECHTSTEXTE")" > /tmp/gegenlesung.txt 2>&1 || rc=$?
+          cat /tmp/gegenlesung.txt
+          { echo '### Prüfbericht'; echo '```'; cat /tmp/gegenlesung.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit "$rc"
 
   # Fassungen bewusst fest: mysql:8.4.0 reserviert MANUAL (Nr. 238), mariadb:10.6 ist PLATTFORM_MARIADB_MIN — nicht anheben.
   schema:

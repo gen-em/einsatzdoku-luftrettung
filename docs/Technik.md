@@ -9117,7 +9117,7 @@ Prüfbericht in der Nachricht des PR-Kopfs entgegen. Android und Uhr baut sie
 ist, und der Bericht sagt es — sagt er „nicht berührt", obwohl der PR dort
 etwas ändert, ist das Tor rot. Bis PK-05 baute Stufe 1 beides selbst, mit
 eigener Bereichserkennung, eigenem JDK und bis zu 42 Minuten Laufzeit; die
-Datei hatte 988 Zeilen, heute 314.
+Datei hatte 988 Zeilen, heute 337.
 
 Die Schritte des Jobs `Stufe 1`, in dieser Reihenfolge. **Die Zahlen stehen
 nicht hier**, sondern in der `LIESMICH.md` des Werkzeugs
@@ -9126,7 +9126,7 @@ Bilderzahl, die längst nicht mehr stimmte.
 
 | Schritt | Grün heißt |
 |---|---|
-| Fassungen nennen (Web, Uhr, Android) | eine Auskunft, kein Sollwert |
+| Fassungen nennen (Web, Uhr, Android) | eine Auskunft — aber eine unlesbare Fassung ist rot |
 | `php -l` über `server/` und `tools/` | 0 Fehler, und mindestens eine Datei gelesen; die Zahl der versionierten `server/`-Dateien geht in die Gegenlesung (`syntax-php`) |
 | `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle acht Prüfungen grün (`tools/quelltext/LIESMICH.md`) |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
@@ -9138,7 +9138,7 @@ Bilderzahl, die längst nicht mehr stimmte.
 | Handbuch und „Was ist NAdoku" rendern | beide rendern, 0 Bilder aus fremder Quelle |
 | `tools/spaltenregister/pruefen.php`, `tools/zaehlung/zaehlen.php`, je mit Selbstprobe | 0 Befunde, 0 Zeilen über der Decke |
 | `tools/proben/proben.sh rechtstexte` | 0 Fehlschläge |
-| **Prüfbericht gegenlesen** (nur beim Pull Request) | `bericht.py lesen` rc 0: Baum, Stufe, Fläche und alle Riegel passen |
+| **Prüfbericht gegenlesen** (überall außer auf `main`) | `bericht.py lesen` rc 0: Baum, Stufe, Flächen, alle Riegel und keine rote Probe |
 
 Daneben, als eigener Job mit Matrix: **`Schema gegen …`** —
 `tools/schemaprobe/probe.php` gegen MySQL 8.4.0 und MariaDB 10.6, je mit
@@ -9150,8 +9150,10 @@ Schemalauf hält einen Merge heute nicht auf (Q-PK-07).
 > falsche Knopf — sein Merge-Commit trägt keinen Bericht. Der Weg steht in
 > `docs/Pruefablauf.md` 5.3. Auf `main` liest niemand gegen: Dort misst der
 > Lauf entweder selbst oder verweist über `Schon gemessen?` auf den grünen
-> PR-Lauf mit demselben Baum. Ein Handlauf (`workflow_dispatch`) liest
-> ebenfalls nicht gegen.
+> PR-Lauf mit demselben Baum. **Ein Handlauf auf einem Zweig liest gegen**
+> (E-PK-43): Sonst setzte ein Handlauf auf dem PR-Kopf ein grünes
+> `Stufe 1` ohne Gegenlesung — der Hotfix-Weg (6.6b) braucht deshalb einen
+> Bericht im Hotfix-Commit.
 
 > **`tools/quelltext/` `jobregister` hängt seit Kette II in Stufe 1** — seit
 > PK-05 als Teil von `pruefen.sh alle`. Schritt 16 hatte es gebaut, weil die
@@ -9877,7 +9879,12 @@ und schreibt dessen Dateinamen neben den Tag in die Laufzusammenfassung
    Der Zweigname muss mit `hotfix/` anfangen — der Schrägstrich gehört dazu,
    `hotfix-schnell` ist keiner. Dann der Fix, und **eine eigene
    Korrekturversion** in `server/version.php`; der Changelog nennt den
-   Hotfix.
+   Hotfix. **Vor dem Commit den Prüfstand fahren** (`bash
+   tools/pruefstand/pruefen.sh`) und den Bericht in die Commit-Nachricht
+   schreiben — seit PK-05 liest Stufe 1 auch beim Handlauf auf einem Zweig
+   gegen (E-PK-43). Gemessen wird gegen `main`; weil die Fassungen dort
+   auseinanderliegen, heißt die Stufe meist „neben" — das ist mehr, nicht
+   weniger.
 
 4. **Handlauf auf Staging, Stufe 2 grün.** Actions → „Auslieferung" → *Run
    workflow* → Zweig `hotfix/…` → **alle Kästchen leer**. Der Job
@@ -9888,7 +9895,8 @@ und schreibt dessen Dateinamen neben den Tag in die Laufzusammenfassung
 5. **Tag und Freigabe.** `git tag web-v20.26.3 && git push origin web-v20.26.3`.
    Das Tor der grünen Läufe prüft jetzt dreierlei: grüner Stufe-1-Lauf auf
    demselben **Baum** (ein Handlauf von `pruefung.yml` auf dem Hotfix-Zweig
-   liefert ihn), grüner `staging`-Job auf **diesem** Commit, und
+   liefert ihn, wenn der Commit den Bericht aus Schritt 3 trägt), grüner
+   `staging`-Job auf **diesem** Commit, und
    **Abstammung vom Zeiger**.
    Dann die Pflichtfreigabe. Nach dem Lauf rückt der Zeiger `produktion` auf
    den Hotfix nach.
@@ -9912,6 +9920,7 @@ und schreibt dessen Dateinamen neben den Tag in die Laufzusammenfassung
 | Dasselbe, obwohl richtig abgezweigt | Der Zeiger ist inzwischen weitergerückt (eine andere Auslieferung dazwischen). Neu abzweigen und Schritt 4 wiederholen |
 | „Abstammung: nein (Vergleich: — nicht ermittelt —)" | Der Zweig `produktion` fehlt. Er ist kein Arbeitszweig und wird nur vom Job `zeiger` bewegt (6.6a) |
 | Der Handlauf auf `hotfix/*` zählt nicht | Der Job `staging` war übersprungen oder rot. Übersprungen ist nicht geprüft (B5) |
+| Der Handlauf von `pruefung.yml` auf `hotfix/*` ist rot: „Kein Prüfbericht in der Nachricht" | Der Hotfix-Commit trägt keinen Bericht — Schritt 3, Prüfstand fahren, Commit mit Bericht darüber (E-PK-43) |
 | Der Rückfallstand heißt `unbekannt` | Die Anlage hat keinen Komplett-Stand gemeldet. Der Job ist dann **rot** — ein Stand, dessen Namen niemand kennt, ist keiner |
 
 **Der Rückfallstand blockiert die Auslieferung nicht** (E-KH-30). Scheitert

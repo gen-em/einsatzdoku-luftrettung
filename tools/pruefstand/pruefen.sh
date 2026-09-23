@@ -90,8 +90,12 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', sep='\t')")
     esac
     if [ "$name" = syntax-php ]; then
         n=0; s=0
-        while IFS= read -r d; do n=$((n+1)); php -l "$d" >/dev/null 2>&1 || s=$((s+1)); done \
-            < <(git -C "$WURZEL" ls-files 'server/*.php' 'server/**/*.php')
+        # Gezählt wird, was `add -A` in den Baum legt (bericht.py baum_hash): auch
+        # neue, noch nicht vorgemerkte Dateien, keine gelöschten (F-PK-37).
+        while IFS= read -r d; do
+            [ -f "$WURZEL/$d" ] || continue
+            n=$((n+1)); php -l "$WURZEL/$d" >/dev/null 2>&1 || s=$((s+1))
+        done < <(git -C "$WURZEL" ls-files -co --exclude-standard 'server/*.php' 'server/**/*.php')
         ZAHL[$name]="php:$n/$s"; [ "$s" -eq 0 ] && zeile "ok    $name  $n/$s" \
             || { zeile "ROT   $name  $n/$s"; fehl=$((fehl+1)); }
         continue
@@ -105,16 +109,11 @@ done
 
 # ---- 5. Bericht -----------------------------------------------------------
 melde "Bericht"
-args=(schreiben --stufe "$STUFE" --konfiguration "$([ "$STUFE" = haupt ] && echo alles || echo web)")
+# Die Flächen leitet bericht.py aus Berührung UND Bau ab — „gebaut" nur nach
+# einem grünen Bau (F-PK-34, E-PK-44).
+args=(schreiben --stufe "$STUFE" --basis "$BASIS"
+      --konfiguration "$([ "$STUFE" = haupt ] && echo alles || echo web)")
 for k in "${!ZAHL[@]}"; do args+=(--zahl "$k=${ZAHL[$k]}"); done
-for f in handy:android uhr:watch; do
-    name=${f%%:*}; ordner=${f##*:}
-    if git -C "$WURZEL" diff --name-only "$BASIS...HEAD" -- "$ordner" | grep -q .; then
-        args+=(--flaeche "$name=gebaut")
-    else
-        args+=(--flaeche "$name=nicht-beruehrt")
-    fi
-done
 python3 "$HIER/bericht.py" "${args[@]}"
 
 melde "$fehl rot, $nicht nicht gemessen, $(( ${#PROBEN[@]} - fehl - nicht )) grün"

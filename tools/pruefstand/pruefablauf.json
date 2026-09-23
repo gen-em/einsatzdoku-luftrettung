@@ -512,7 +512,8 @@
       "id": "uhr",
       "ab": "klein",
       "pfade": [
-        "watch/**"
+        "watch/**",
+        "tools/uhr-pruefstand/**"
       ],
       "proben": [
         "uhr-stufe1"

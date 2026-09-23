@@ -39,7 +39,7 @@ nicht gibt.
 | Arbeitsumgebung in vier Ausbaustufen | **gebaut mit PK-02** (`Sandbox-Setup.md` 2); `web`, `plattform` und `android` gemessen, **`uhr` noch nicht** |
 | Station B, der Prüfstand-Befehl, die drei Stufen (3) | **gebaut und gemessen mit PK-03** |
 | `pruefablauf.json`, die Tabelle Berührung → Probe (4) | **gebaut mit PK-03**, Tabelle erzeugt |
-| Der Prüfbericht (5) | **gebaut mit PK-03**, seit PK-05 Selbstprobe 8 Lagen / 0 Fehlschläge |
+| Der Prüfbericht (5) | **gebaut mit PK-03**, seit PK-05 Selbstprobe 12 Lagen / 0 Fehlschläge |
 | Seine Gegenlesung im Tor (5.1) | **gebaut mit PK-05** |
 | Station C in der beschriebenen Form (2) | **gebaut mit PK-05** — nur die Schemaprobe ist noch keine Pflichtprüfung (2.3, Q-PK-07) |
 | Station D in der beschriebenen Form (2) | entsteht mit **PK-06** |
@@ -85,7 +85,7 @@ nur sie beantworten kann.
 |---|---|---|---|---|
 | **A Arbeit** | während der Entwicklung | die Instanz in der Arbeitsumgebung | Browser, Emulator, Uhr-Simulator, die Proben, die zur Änderung gehören | nach Bedarf |
 | **B Prüfstand** | vor dem Pull Request, **ein Befehl** | dieselbe Instanz | örtliche Installation hochfahren, Referenzbestand, die Proben der Stufe, Bau der Apps (unsigniert), die billigen Riegel; auf Anforderung die Plattformprobe gegen Staging. Ergebnis ist der **Prüfbericht** (5) | klein 5 min, neben 15 min, haupt 45 min |
-| **C Tor** | beim Pull Request und auf `main` | GitHub | die billigen Riegel als Gegenlesung des Berichts, Schemaprobe gegen MySQL 8.4.0 und MariaDB 10.6, Bericht passt zum Baum und zur Berührung. **Rot heißt kein Merge**; der Merge ist Sache der BetreiberIn | 1 bis 2 min |
+| **C Tor** | beim Pull Request und auf `main` | GitHub | die billigen Riegel als Gegenlesung des Berichts, Schemaprobe gegen MySQL 8.4.0 und MariaDB 10.6, Bericht passt zum Baum und zur Berührung. **Rot in `Stufe 1` heißt kein Merge** (die Schemaprobe ist noch keine Pflichtprüfung, Q-PK-07); der Merge ist Sache der BetreiberIn | 1 bis 2 min |
 | **D Staging** | nach dem Merge | GitHub | Auslieferung (unverändert), dann drei Schritte: Antwortprobe, Punktdateien, **ein** Kreislauf `edbak` als Gegenlesung auf PHP 8.3 beim Hoster | unter 10 min |
 | **E Produktiv** | beim Tag, nach Freigabe | GitHub | dieselbe Auslieferung, Backup-Tor, Fassungsprüfung, Integritätswache; App-Tags bauen und signieren einmal | wie heute |
 
@@ -126,7 +126,8 @@ Riegel — was das heißt und wo die Grenze liegt, steht in 5.2.
 
 ### 2.3 Station C — das Tor
 
-Beim Pull Request und auf `main`, nirgends sonst. **Pushes sind Pushes**:
+Beim Pull Request und auf `main` — dazu beim Handlauf, und der liest auf
+einem Zweig ebenso gegen wie ein PR (E-PK-43). **Pushes sind Pushes**:
 Ein Push auf einen Arbeitszweig löst keine Prüfung aus, und es gibt keinen
 Riegel davor und keinen Hook.
 
@@ -178,18 +179,20 @@ Wer die versionierte Deny-Liste ändert, hebt Lage 2 ebenfalls auf; das fällt
 im Pull Request auf, weil `.claude/settings.json` dann in der Berührung
 steht.
 
-**Heutiger Umfang** (gemessen am 21.09.2026 an `main` `08e032e`): Der
-Arbeitslauf `pruefung.yml` heißt „Prüfung" und führt zwei Jobs — `Stufe 1`
-mit **24** Schritten und `Schema gegen …` mit **4**, zusammen **28**. Seit
-dem 23.09.2026 steht ein dritter davor, **`Schon gemessen?`** (Konzept TB):
+**Heutiger Umfang** (gezählt am 23.09.2026 am Quelltext, nach PK-05): Der
+Arbeitslauf `pruefung.yml` heißt „Prüfung" und führt drei Jobs —
+**`Schon gemessen?`** mit **2** Schritten, `Stufe 1` mit **17** und
+`Schema gegen …` mit **4**; bis PK-05 waren es in `Stufe 1` **24**. Den
+ersten brachte Konzept TB am 23.09.2026:
 Auf einem PR sagt er „messen"; beim Push auf `main` sucht er den grünen
 PR-Lauf mit demselben Baum und lässt `Stufe 1` und `Schema gegen …` dann
 aus, mit einem Verweis auf Lauf, Commit und Zeitpunkt in der
 Zusammenfassung. Das Produktionstor zählt Stufe 1 seither nach Baum und Job,
-nicht nach Commit. **PK-05** nimmt dem Lauf den Bau der Apps und die
-Bereichserkennung ab und setzt die Gegenlesung des Berichts an ihre Stelle. Der Jobname `Stufe 1` bleibt dabei
-unverändert — der Zweigschutz nennt ihn beim Namen, und ein umbenannter Job
-hängt die Pflichtprüfung still ab.
+nicht nach Commit. **PK-05** hat dem Lauf den Bau der Apps und die
+Bereichserkennung abgenommen und die Gegenlesung des Berichts an ihre Stelle
+gesetzt (5.1). Der Jobname `Stufe 1` ist dabei unverändert geblieben — der
+Zweigschutz nennt ihn beim Namen, und ein umbenannter Job hängt die
+Pflichtprüfung still ab.
 
 ### 2.4 Station D — Staging
 
@@ -264,7 +267,7 @@ läuft bei `haupt` und bei `--gegen staging` deshalb **gegen MySQL 8.4.0**,
 nicht nur gegen MariaDB.
 
 **Eine Hauptstufe, die mit `--stufe klein` gefahren wurde, fällt im Tor
-auf** — das ist eine der vier roten Lagen in 5.1.
+auf** — das ist eine der fünf roten Lagen in 5.1.
 
 ---
 
@@ -328,7 +331,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 ## 5. Der Prüfbericht
 
 *Erzeugung gebaut mit PK-03, Gegenlesung im Tor mit PK-05 (`bericht.py`,
-Selbstprobe 8 Lagen / 0).*
+Selbstprobe 12 Lagen / 0).*
 
 Der Prüfstand schreibt am Ende einen Block, der in die Commit-Nachricht
 gehört und maschinell lesbar ist:
@@ -340,7 +343,7 @@ Prüfstand: neben · Baum a1b2c3d… · Konfiguration web
   handy=nicht berührt  uhr=nicht berührt
 ```
 
-### 5.1 Vier Lagen, in denen das Tor rot wird
+### 5.1 Fünf Lagen, in denen das Tor rot wird
 
 - Der **Baum-Hash** ist nicht der Baum des Commits. Das fängt den Fehler,
   der in O9c passiert ist: gemessen wurde vor der letzten Änderung, gemeldet
@@ -349,12 +352,19 @@ Prüfstand: neben · Baum a1b2c3d… · Konfiguration web
   steht in 5.3.
 - Die **Stufe** ist kleiner, als die Versionsstufe im Unterschied verlangt —
   oder die Versionsstufe ist nicht lesbar.
-- Eine **berührte** Fläche ist als „nicht berührt" gemeldet: `handy` gegen
-  `android/`, `uhr` gegen `watch/`.
+- Eine **berührte** Fläche steht nicht auf „gebaut": `handy` gegen
+  `android/`, `uhr` gegen `watch/` und `tools/uhr-pruefstand/`. „gebaut"
+  schreibt der Prüfstand nur nach einem grünen Bau, sonst „rot" oder
+  „nicht-gemessen" (E-PK-44) — bis PK-05 genügte ihm die Berührung.
 - Ein **billiger Riegel** liefert im Tor eine andere Zahl als der Bericht.
   Das Tor übergibt **jeden** Riegel aus `pruefablauf.json` (`--alle-riegel`);
   fehlt einer im Aufruf, ist das rot, damit ein neuer Riegel nicht still
-  ungegengelesen bleibt.
+  ungegengelesen bleibt. Jeder Wert hängt am Ausgang seines Schritts: Wer
+  einen Riegelschritt streicht, bekommt „nicht-gelaufen" statt einer stehen
+  gebliebenen 0.
+- Eine **Probe** meldet im Bericht etwas anderes als 0 (E-PK-44). Der
+  Prüfstand druckt den Bericht auch nach einem roten Lauf; ein roter Lauf ist
+  kein Nachweis.
 
 Dazu rot, ohne eigene Lage: **kein Bericht** in der Nachricht des PR-Kopfs.
 Die Meldung sagt dann, wie er hineinkommt.

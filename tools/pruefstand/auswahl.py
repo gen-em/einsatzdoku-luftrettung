@@ -106,8 +106,21 @@ def stufe_aus_fassungen(alt, neu):
     return 'klein', f'Korrekturstufe {txt}'
 
 
-def stufe_aus_version(basis, commit='HEAD'):
-    return stufe_aus_fassungen(fassung(basis), fassung(commit))
+def fassung_arbeitsbestand():
+    try:
+        with open(os.path.join(WURZEL, 'server', 'version.php'), encoding='utf-8') as f:
+            return fassung_aus_text(f.read())
+    except OSError:
+        return None
+
+
+def stufe_aus_version(basis, commit=None):
+    """commit=None heißt: der ARBEITSBESTAND, wie beim Baum-Hash. Gemessen wird
+    vor dem Commit; wer die Fassung aus HEAD liest, sieht den Sprung nicht, der
+    erst mit dem Bericht committet wird — und das Tor meldet „Stufe zu klein"
+    (F-PK-33)."""
+    neu = fassung_arbeitsbestand() if commit is None else fassung(commit)
+    return stufe_aus_fassungen(fassung(basis), neu)
 
 
 def beruehrte(basis):

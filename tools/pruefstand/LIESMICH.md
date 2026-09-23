@@ -17,7 +17,7 @@ python3 tools/pruefstand/bericht.py lesen [--commit C] [--basis B] [--riegel n=w
 Anlage hoch, läuft die Riegel und die Proben, die zur Berührung gehören, und
 **erzeugt** den Prüfbericht für die Commit-Nachricht. `auswahl.py` beantwortet
 „welche Probe zu welcher Datei" aus `pruefablauf.json`. `bericht.py lesen` ist
-die Gegenlesung in Stufe 1 (PK-05): vier rote Lagen, Riegelzahlen als `--riegel`.
+die Gegenlesung in Stufe 1 (PK-05): fünf rote Lagen, Riegelzahlen als `--riegel`.
 
 ## Was es braucht
 
@@ -27,7 +27,7 @@ für `uhr-stufe1` `CIQ_GERAETE_URL`, für die Schemaprobe das Modul
 
 ## Erwartete Zahl
 
-`bericht.py lesen --selbstprobe` → **8 Lagen / 0**, `auswahl.py
+`bericht.py lesen --selbstprobe` → **12 Lagen / 0**, `auswahl.py
 --selbstprobe` → **23 / 0**, `--abdeckung` → **0 Dateien ohne Muster**.
 `pruefen.sh` → 0 rot, 0 nicht gemessen, rc 0; klein ohne `server/` **13 Proben**.
 

@@ -2,7 +2,7 @@
 """Der Prüfbericht — erzeugen, gegenlesen, als Tabelle ausgeben.
 
     python3 tools/pruefstand/bericht.py schreiben --stufe neben --konfiguration web \\
-        --zahl syntax=php:511/0 --zahl bilderlauf=62/0/0/0 --flaeche handy=nicht-beruehrt
+        --zahl syntax-php=php:486/0 --zahl bilderlauf=0 --basis origin/main
     python3 tools/pruefstand/bericht.py lesen [--commit HEAD] [--datei -]
     python3 tools/pruefstand/bericht.py lesen --selbstprobe
     python3 tools/pruefstand/bericht.py erzeugen-doku
@@ -12,7 +12,7 @@ selbst kam nicht zum Laufen (fehlende Datei, unbekannter Schalter, kein Git).
 
 MIT EINEM WERKZEUG UND NICHT MIT EINER SHELL-ZEILE (E-P5a-12): Eine Zeile,
 die einen Wert aus Text zieht, ist die Stelle, an der ein Riegel still
-durchlässt. Hier ist jede der vier roten Lagen eine Funktion mit einem
+durchlässt. Hier ist jede der fünf roten Lagen eine Funktion mit einem
 Prüffall in `--selbstprobe`.
 
 Anlass: O9c — gemessen wurde vor der letzten Änderung, gemeldet wurde die
@@ -29,7 +29,7 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 WURZEL = os.path.dirname(os.path.dirname(HIER))
 ABLAUF = os.path.join(HIER, 'pruefablauf.json')
 sys.path.insert(0, HIER)
-from auswahl import UNLESBAR, fassung, stufe_aus_fassungen  # noqa: E402 — die EINE Lesestelle (F-PK-30)
+from auswahl import UNLESBAR, beruehrte, fassung, stufe_aus_fassungen  # noqa: E402 — die EINE Lesestelle (F-PK-30)
 
 STUFEN = ['klein', 'neben', 'haupt']
 KOPF_RE = re.compile(
@@ -38,17 +38,25 @@ KOPF_RE = re.compile(
     r'Konfiguration\s+(?P<konf>[a-z]+)\s*$')
 PAAR_RE = re.compile(r'([a-zA-Z][\w-]*)=(\S+)')
 
-# Die Flächen, die als „nicht berührt" gemeldet werden dürfen — und der
-# ORDNER, dessen Berührung sie verrät. Bis PK-05 stand hier `'uhr': 'uhr'`:
-# ein Ordner, den es nicht gibt (die Uhr liegt unter `watch/`), und Lage 3
-# konnte für die Uhr nie anschlagen (F-PK-31). `pruefen.sh` sagt `uhr:watch`.
-FLAECHEN = {'handy': 'android', 'uhr': 'watch'}
+# Die Flächen: die ORDNER, deren Berührung sie verrät, und die PROBE, die sie
+# baut. EINE Stelle für Schreiben und Lesen. Bis PK-05 stand hier
+# `'uhr': 'uhr'` — ein Ordner, den es nicht gibt, und Lage 3 konnte für die
+# Uhr nie anschlagen (F-PK-31). Der Uhr-Prüfstand gehört dazu, wie in der
+# alten Bereichserkennung (F-PK-36).
+FLAECHEN = {'handy': (('android',), 'android-bau'),
+            'uhr': (('watch', 'tools/uhr-pruefstand'), 'uhr-stufe1')}
+
+
+def flaeche_beruehrt(flaeche, dateien):
+    ordner = FLAECHEN[flaeche][0]
+    return any(d.startswith(o + '/') for o in ordner for d in dateien)
 
 # DER WEG NACH EINEM FREMDEN MERGE (E-PK-42). Das Tor ist streng: Der Baum im
 # Bericht muss der Baum des geprüften Commits sein. „Update branch" auf GitHub
 # schreibt einen Merge-Commit ohne Bericht — also rot, mit diesem Weg.
-WEG = ('Weg (Pruefablauf.md 5): örtlich `git merge --no-commit origin/main` (statt „Update branch"), '
-       'dann `bash tools/pruefstand/pruefen.sh`, dann den Commit mit dem Bericht in der Nachricht schreiben.')
+WEG = ('Weg: `bash tools/pruefstand/pruefen.sh` auf genau diesem Stand fahren und den Bericht in die '
+       'Nachricht des Kopf-Commits schreiben. Nach einem fremden Merge vorher örtlich '
+       '`git merge --no-commit origin/main` statt „Update branch" (Pruefablauf.md 5.3).')
 
 
 def melde(t=''):
@@ -94,9 +102,25 @@ def baum_hash(commit='HEAD'):
     return baum
 
 
+def flaechen_aus_lauf(zahlen, dateien):
+    """„gebaut" NUR nach einem grünen Bau (F-PK-34). Bis PK-05 schrieb
+    `pruefen.sh` „gebaut", sobald der Ordner berührt war — auch nach einem
+    roten Bau oder einem, der mangels SDK nie lief."""
+    aus = {}
+    for flaeche, (_, probe) in FLAECHEN.items():
+        if not flaeche_beruehrt(flaeche, dateien):
+            aus[flaeche] = 'nicht-beruehrt'
+        elif probe not in zahlen:
+            aus[flaeche] = 'nicht-gemessen'
+        else:
+            aus[flaeche] = 'gebaut' if zahlen[probe] == '0' else 'rot'
+    return aus
+
+
 def schreiben(args):
     zahlen = dict(p.split('=', 1) for p in args.zahl)
-    flaechen = dict(p.split('=', 1) for p in args.flaeche)
+    flaechen = flaechen_aus_lauf(zahlen, beruehrte(args.basis)) if args.basis else {}
+    flaechen.update(dict(p.split('=', 1) for p in args.flaeche))
     baum = args.baum or baum_hash()
     zeilen = [f'Prüfstand: {args.stufe} · Baum {baum} · Konfiguration {args.konfiguration}']
     if zahlen:
@@ -143,8 +167,8 @@ def beruehrt(basis, commit):
 
 
 def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=None,
-            stufe_verlangt=None):
-    """Die vier roten Lagen. Gibt eine Liste von Beanstandungen zurück."""
+            stufe_verlangt=None, riegel_namen=None):
+    """Die fünf roten Lagen. Gibt eine Liste von Beanstandungen zurück."""
     schlecht = []
     if bericht is None:
         return ['Kein Prüfbericht in der Nachricht — der Block fehlt ganz.']
@@ -168,15 +192,16 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
                 f"Stufe zu klein: Bericht „{bericht['stufe']}\", die Versionsstufe verlangt "
                 f"„{verlangt}\".")
 
-    # (3) Berührte Fläche als „nicht berührt" gemeldet
+    # (3) Berührte Fläche ohne grünen Bau. Verlangt ist „gebaut" — nicht
+    # „alles außer nicht berührt": Ein roter oder nie gelaufener Bau ist
+    # kein Bau (F-PK-34).
     liste = dateien if dateien is not None else (beruehrt(basis, commit) if basis else [])
-    for flaeche, ordner in FLAECHEN.items():
-        wert = bericht['werte'].get(flaeche, '')
-        gemeldet_frei = wert.replace('-', ' ').lower().startswith('nicht')
-        wirklich = any(d.startswith(ordner + '/') for d in liste)
-        if wirklich and gemeldet_frei:
+    for flaeche, (ordner, _) in FLAECHEN.items():
+        wert = bericht['werte'].get(flaeche)
+        if flaeche_beruehrt(flaeche, liste) and wert != 'gebaut':
+            wo = ' oder '.join(o + '/' for o in ordner)
             schlecht.append(
-                f"„{flaeche}={wert}\", aber {ordner}/ ist berührt — der Bau fehlt.")
+                f"„{flaeche}={wert or '(fehlt)'}\", aber {wo} ist berührt — ein grüner Bau fehlt.")
 
     # (4) Billiger Riegel mit anderer Zahl
     for name, zahl in (riegel or {}).items():
@@ -186,6 +211,16 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
         elif gemeldet != str(zahl):
             schlecht.append(
                 f"Riegel „{name}\": Bericht {gemeldet}, im Tor gemessen {zahl}.")
+
+    # (5) Eine rote Probe im Bericht (E-PK-44). Der Prüfstand druckt den
+    # Bericht auch nach einem roten Lauf; ohne diese Lage käme ein Commit mit
+    # „kreislauf-edbak=1" durch, solange die billigen Riegel stimmen. Riegel
+    # und Flächen haben ihre eigene Lage.
+    eigene = set(riegel_namen if riegel_namen is not None else lade_ablauf()['riegel']['proben'])
+    eigene |= set(riegel or {}) | set(FLAECHEN)
+    for name, wert in bericht['werte'].items():
+        if name not in eigene and wert != '0':
+            schlecht.append(f"Probe „{name}\" meldet {wert} — ein roter Lauf ist kein Nachweis.")
     return schlecht
 
 
@@ -222,7 +257,7 @@ def lesen(args):
 # ------------------------------------------------------------ Selbstprobe
 
 def selbstprobe():
-    """Vier rote Lagen und eine grüne — jede einzeln, mit Namen.
+    """Fünf rote Lagen und eine grüne — jede einzeln, mit Namen.
 
     EINE SELBSTPROBE, DIE NUR DEN GRÜNEN FALL FÄHRT, BELEGT NICHTS: Sie
     würde auch dann grün melden, wenn `pruefen()` immer eine leere Liste
@@ -230,33 +265,51 @@ def selbstprobe():
     ist erst grün, wenn jede von ihnen WIRKLICH rot wird.
     """
     guter = ('Prüfstand: neben · Baum abc1234 · Konfiguration web\n'
-             '  syntax=php:511/0  wortliste=0/0/0  vollstaendigkeit=398\n'
+             '  syntax-php=php:486/0  wortliste=0  vollstaendigkeit=0\n'
+             '  spurprobe=0  kreislauf-edbak=0  bilderlauf=0\n'
              '  handy=nicht-beruehrt  uhr=nicht-beruehrt\n')
+    gebaut = guter.replace('handy=nicht-beruehrt', 'handy=gebaut') + '  android-bau=0\n'
+    namen = ['syntax-php', 'wortliste', 'vollstaendigkeit']
     faelle = []
 
     faelle.append(('grün — Bericht passt zu allem',
                    zerlegen(guter), dict(baum='abc1234', dateien=['server/index.php'],
-                                         riegel={'vollstaendigkeit': '398'}), 0))
+                                         riegel={'vollstaendigkeit': '0'}, riegel_namen=namen), 0))
+    faelle.append(('grün (3) — Handy berührt und grün gebaut',
+                   zerlegen(gebaut), dict(baum='abc1234', dateien=['android/handy/src/Main.kt'],
+                                          riegel={}, riegel_namen=namen), 0))
     faelle.append(('rot (1) — Baum-Hash passt nicht',
-                   zerlegen(guter), dict(baum='9999999', dateien=[], riegel={}), 1))
+                   zerlegen(guter), dict(baum='9999999', dateien=[], riegel={}, riegel_namen=namen), 1))
     faelle.append(('rot (2) — Stufe kleiner als verlangt',
                    zerlegen(guter.replace('neben', 'klein')),
-                   dict(baum='abc1234', dateien=[], riegel={}, stufe_verlangt='haupt'), 1))
+                   dict(baum='abc1234', dateien=[], riegel={}, stufe_verlangt='haupt',
+                        riegel_namen=namen), 1))
     faelle.append(('rot (3) — berührte Fläche als „nicht berührt" gemeldet',
-                   zerlegen(guter), dict(baum='abc1234',
-                                         dateien=['android/handy/src/Main.kt'], riegel={}), 1))
+                   zerlegen(guter), dict(baum='abc1234', dateien=['android/handy/src/Main.kt'],
+                                         riegel={}, riegel_namen=namen), 1))
     faelle.append(('rot (3b) — die Uhr berührt und als „nicht berührt" gemeldet',
-                   zerlegen(guter), dict(baum='abc1234',
-                                         dateien=['watch/source/App.mc'], riegel={}), 1))
+                   zerlegen(guter), dict(baum='abc1234', dateien=['watch/source/App.mc'],
+                                         riegel={}, riegel_namen=namen), 1))
+    faelle.append(('rot (3c) — Handy berührt, Bau rot',
+                   zerlegen(gebaut.replace('handy=gebaut', 'handy=rot')),
+                   dict(baum='abc1234', dateien=['android/handy/src/Main.kt'], riegel={},
+                        riegel_namen=namen), 1))
+    faelle.append(('rot (3d) — Uhr-Prüfstand berührt, Bau nicht gemessen',
+                   zerlegen(guter.replace('uhr=nicht-beruehrt', 'uhr=nicht-gemessen')),
+                   dict(baum='abc1234', dateien=['tools/uhr-pruefstand/pruefstand.sh'], riegel={},
+                        riegel_namen=namen), 1))
     faelle.append(('rot (4) — Riegel meldet eine andere Zahl',
                    zerlegen(guter), dict(baum='abc1234', dateien=[],
-                                         riegel={'vollstaendigkeit': '399'}), 1))
+                                         riegel={'vollstaendigkeit': '1'}, riegel_namen=namen), 1))
+    faelle.append(('rot (5) — eine rote Probe im Bericht',
+                   zerlegen(guter.replace('kreislauf-edbak=0', 'kreislauf-edbak=1')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
     faelle.append(('rot (2b) — Versionsstufe nicht lesbar',
                    zerlegen(guter), dict(baum='abc1234', dateien=[], riegel={},
-                                         stufe_verlangt=UNLESBAR), 1))
+                                         stufe_verlangt=UNLESBAR, riegel_namen=namen), 1))
     faelle.append(('rot (0) — gar kein Bericht in der Nachricht',
                    zerlegen('Ein Commit ganz ohne Block.\n'),
-                   dict(baum='abc1234', dateien=[], riegel={}), 1))
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
 
     fehl = 0
     for name, bericht, kw, erwartet in faelle:
@@ -273,8 +326,9 @@ def selbstprobe():
             fehl += 1
 
     melde()
+    gruen = sum(1 for f in faelle if f[3] == 0)
     melde(f'{len(faelle)} Lagen, {fehl} Fehlschlaege.  '
-          f'({len(faelle) - 1} rote, 1 gruene)')
+          f'({len(faelle) - gruen} rote, {gruen} gruene)')
     return 1 if fehl else 0
 
 
@@ -313,6 +367,7 @@ def main():
     s.add_argument('--baum')
     s.add_argument('--zahl', action='append', default=[], metavar='name=wert')
     s.add_argument('--flaeche', action='append', default=[], metavar='name=wert')
+    s.add_argument('--basis', help='Flächen aus Berührung und Bau ableiten (F-PK-34)')
     s.set_defaults(fn=schreiben)
 
     l = u.add_parser('lesen')
