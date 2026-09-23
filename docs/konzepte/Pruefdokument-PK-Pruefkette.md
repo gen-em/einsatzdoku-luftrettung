@@ -54,6 +54,10 @@ einer Fußnote.
 | P-PK-06 | Die neuen Dokumente laufen durch die Wortliste (B-S4-06) | `wortliste.py --bereich c`; nachsehen, dass beide Dateien in `BEREICHE["c"]` stehen | beide Dateien werden gelesen, 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | der Lauf meldet 0 und hat keine Zeile der neuen Dokumente angesehen | **erledigt 21.09.2026** (3.3) |
 | P-PK-22 | Das Spaltenregister aus Schritt 15 wird in Stufe 1 grün (F-PK-27, Backlog Nr. 282) | `php tools/spaltenregister/pruefen.php --selbstprobe` und ohne Schalter, auf `main` nach dem Merge von PR #74 | Selbstprobe **16 von 16**, Lauf **0 Befunde** | `start_sort` fehlt weiter im Register, oder der Fall „mf_spalten: Alias an" bleibt rot — dann ist Stufe 1 rot und die Kette liefert nicht aus | **erledigt 23.09.2026** — von Schritt 15 selbst behoben (`f1bc9e6`), nachgemessen 16/16 und 0 Befunde, beide rc 0 (5h) |
 | P-PK-23 | Die vier Schlüssellagen-Proben laufen nach dem Merge von PR #74 auf `main` (F-PK-24) | `php tools/proben/anteil/probe.php`, `…/komplett/probe.php`, `…/wiederherstellung/probe.php`, `…/versand/probe.php <wurzel>` | anteil 55/55 · komplett 64/0 · wiederherstellung 110/2 (unverändert F-PK-18) · versand wie vor dem Merge | eine Probe stirbt mit `Failed opening required …konfig_stellen.php` — dann ist die Pfadtiefe wieder falsch | **drei erledigt 22.09.2026 im Arbeitszweig** (5h); `versand` steht aus, sie braucht den Wurzelpfad der Gegenstellen als Argument |
+| P-PK-24 | Die Hausform im Browser: die Oberfläche liest sich rund (PK-04/5b, E-PK-26) | örtliche Anlage: Anmeldung, Diensttag anlegen, Einsatz bearbeiten, Verwaltung → NutzerInnen, Betrieb → Status, Einstellungen → Rettungsmittel | jeder sichtbare Satz steht in der Hausform **und ist grammatisch richtig** — „die NutzerIn", nicht „der NutzerIn" | ein falscher Artikel, ein nicht mitgezogenes Pronomen, oder eine Beschriftung, die im Handbuch anders heißt als auf der Seite | **offen** — nur im Browser zu sehen; die Textprobe misst das Wort, nicht den Satz |
+| P-PK-25 | Die fünf Rollenbeschriftungen sind UNVERÄNDERT (E-PK-39) | Einstellungen → Rettungsmittel: die Häkchen der Besatzungsrollen; dann einen Einsatz als CSV und als Excel exportieren und die Kopfzeile ansehen | Oberfläche und Datei zeigen **Pilot 1, Pilot 2, HEMS-TC, Flugretter, Fahrer, Praktikant** — ohne Binnen-I | irgendwo steht „PilotIn 1"; dann trägt eine ausgelieferte Datei eine Überschrift, die die Empfängerin nicht erwartet |  **offen** — die Rücknahme ist zweimal nötig gewesen (5l), das gehört im Browser bestätigt |
+| P-PK-26 | Der Import des GuteSeele-Layouts findet seine Spalten noch (E-PK-39) | eine Excel-Datei im GuteSeele-Format importieren, Schritt 2 ansehen | alle 13 Spalten erkannt, **`Pilot` zugeordnet** | die Spalte `Pilot` bleibt leer — dann hat jemand den Spaltennamen gegendert, und der Import scheitert **still** |  **offen** — der gefährlichste Fall des Pakets, weil er nicht meldet |
+| P-PK-27 | Die Kartenebene „Wandern" und ihre Lizenz (Backlog Nr. 280, PK-04/5d) | von einem Rechner mit Netzzugang: `wiki.openstreetmap.org/wiki/OpenHikingMap` und `openmaps.fr` aufrufen und die Nutzungsbedingungen lesen | die Bedingungen decken eine Nutzung wie diese — dann Zeile in `docs/Lizenzen.md` füllen | sie decken sie nicht; dann wird die Ebene ausgebaut | **offen** — **in dieser Arbeitsumgebung nicht prüfbar**: beide Abrufe HTTP 403 am Ausgangsproxy (5l) |
 
 ## 2. Messprotokoll P-PK-01 (21.09.2026)
 
@@ -1173,6 +1177,59 @@ geblieben.
 
 Die Gegenlesung ist damit **kein Formalismus**: Von acht Befunden waren drei
 echte Fehler, darunter der, den kein Prüfmittel gefunden hätte.
+
+## 5m. Messprotokoll — die Anwendung nach der Hausform (23.09.2026)
+
+**Der eigentliche Riskopunkt dieser Änderung ist nicht die Logik, sondern die
+Wortlänge.** „BetreiberIn" ist zwei Zeichen länger als „Betreiber",
+„AdministratorIn" drei länger als „Administrator" — und bei 360 px läuft
+sowas über. Deshalb ist der Bilderlauf hier kein Formalismus.
+
+### Dass die Logik unberührt ist, ist belegt, nicht behauptet
+
+`git diff origin/main...HEAD -- server/` über alle geänderten Zeilen mit
+PHP-/JS-Anweisungsmerkmalen (`;` am Ende, `=>`, `function `, `= `) gefiltert:
+**Jede einzelne ist eine Zeichenkette oder die Versionskonstante.** Kein
+Variablenname, kein Funktionsname, kein Feldschlüssel, kein Operator.
+
+Dazu die vier Bezeichnerproben über den ganzen Diff („was steht nur in den
+alten Zeilen" gegen „was steht nur in den neuen"): PHP-Variablen **0/0**,
+Funktionsaufrufe **0/0**, Feldschlüssel **0/0**, CSS-Klassen **0/0**.
+
+### Die Anlage läuft und meldet die neue Fassung
+
+| | |
+|---|---|
+| `bash tools/sandbox/hochfahren.sh` | rc 0 |
+| `https://127.0.0.1:8443/login.php` | **HTTP 200, Fassung v20.37.1** |
+| `registrieren.php`, `impressum.php` | HTTP 200, Hausform sichtbar |
+
+Gerendert gelesen, nicht nur im Quelltext: „Wende dich an die **BetreiberIn**
+— **sie** kann dir ein Konto anlegen." Das Pronomen zieht mit.
+
+### Der Bilderlauf, kleine Stufe
+
+`node tools/screenshots/aufnehmen.mjs --stufe klein`, rc 0:
+
+| | |
+|---|---|
+| Einzelbilder | **186** aus **62** Seiten, drei Breiten |
+| Kontaktbögen | 62 |
+| **Überlauf** | **0** |
+| Konsolenfehler | **0** |
+| Knöpfe falscher Höhe | **0** (Zeiger, 44/36 px) |
+| Karten im Seitengerüst | 162 geprüft, **0** außerhalb `main.inhalt` |
+| Bildgleichheit | 186 Bilder gelesen, **0** Seiten mit gleichen Bildern über mehrere Breiten |
+
+**Die letzte Zeile ist die Gegenprobe aus PK-04/1b**, und sie hat hier zum
+ersten Mal einen Gegenstand: Hätte der Lauf die Breite nicht wirklich
+umgestellt, wären die drei Bilder je Seite identisch und alle Zahlen darüber
+wertlos.
+
+**Was der Bilderlauf NICHT belegt:** ob der Text *richtig* ist. 0/0/0 meldet
+auch eine Seite, auf der „der NutzerIn" im Nominativ steht. Die Grammatik hat
+die Gegenlesung gemessen (5l), und der Rest steht als **P-PK-24** für den
+Browser.
 
 ## 6. Befunde der Umsetzung
 
