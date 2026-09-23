@@ -20,6 +20,7 @@ eine abhakbare Prüfliste. Angelegt mit RP-01.
 | P-RP-03 | Die Wegprobe läuft am edbak-Umlaufkonto | `python3 tools/referenzdatensatz/vergleich/kreislauf.py --art edbak --frisch`, dann `python3 tools/spaltenregister/wegprobe.py` | Kreislauf 0 unerklärt; Wegprobe 34/0 | „Kein Ruhesegment mit genug GPS-Punkten" (falsches Konto) oder „Konto … nicht gefunden" (Kreislauf nicht gefahren) | **erledigt 23.09.2026** — 328 771 Vergleiche, 0 unerklärt, 31 s; Wegprobe 34/0 in 3 s |
 | P-RP-04 | `nach` zieht die Voraussetzung mit | `python3 tools/pruefstand/auswahl.py --stufe neben --datei server/index.php --nur-proben` | `kreislauf-edbak` steht vor `spaltenregister-wegprobe` | die Wegprobe steht vor dem Kreislauf, oder er fehlt | **erledigt 23.09.2026** — Selbstprobe 27/0, Liste geprüft |
 | P-RP-07 | Die neue csv-Referenz trägt die Hausform | `unzip -p tools/referenzdatensatz/referenz/*csv*.zip felder.csv \| grep -c "NotärztIn"` | mindestens 1 | 0 — dann ist wieder eine Referenz von vor der Hausform eingecheckt | **erledigt 23.09.2026** |
+| P-RP-08 | Die Wiederherstellungsprobe misst den Auftrag auch auf frischer Anlage | `hochfahren.sh --neu`, dann `bash tools/proben/proben.sh wiederherstellung` | Teil 10: „hoert dann auf" grün, **WIEDERAUFNAHME gemessen** (nicht „nicht messbar"); danach 0 Konten `probe-auftrag-%` | „2 erledigt, 0 offen" — dann fehlen die Zusatzkonten; oder „nicht messbar" | **erledigt 23.09.2026** auf einer Anlage mit mehr Konten; auf frischer Anlage kommt es mit P-RP-06 |
 | P-RP-05 | Ein zweiter Prüfstandlauf auf derselben Anlage bricht nicht an den Kreisläufen ab (F-RP-11) | `pruefen.sh --stufe neben --datei server/index.php --ohne-hochfahren` zweimal hintereinander | beide Läufe erreichen den Vergleich | „Konto besteht schon" im zweiten Lauf | **offen** — RP-05 |
 | P-RP-06 | Die Nebenstufe ist grün | `hochfahren.sh --neu`, dann `pruefen.sh --stufe neben --datei server/index.php --ohne-hochfahren` | 36 Proben, 0 rot, 0 nicht gemessen, Zeit je Probe in jeder Zeile | eine rote Probe, oder eine ohne Zeit | **offen** — RP-05 |
 
@@ -56,4 +57,20 @@ csv-Umlaufkonto zugewiesen, das keine GPS-Punkte trägt.
 
 **Nicht übernommen:** die mit erzeugte edbak-Referenz. Die alte ist grün
 (0 unerklärt in RP-01), und E-RP-01 betrifft nur das csv-Archiv.
+
+## 4. Messprotokoll RP-03 (23.09.2026)
+
+| Mittel | Zahl |
+|---|---|
+| `proben.sh wiederherstellung` | **111 / 0**, 1 s (vorher 110 / 2) |
+| Teil 10 | Auftrag 5 von 5 Konten; knapper Schub „2 erledigt, 3 von 5 offen"; Zeiger `cur=2`; Wiederaufnahme `cur 2 -> 4`, gut+feh 2 -> 3; Rückstand 2 |
+| Zusatzkonten danach | 0 Zeilen `probe-auftrag-%` |
+
+**Urteil: Erwartung, nicht Anwendung.** `edbak_auftrag_schub()` hört auf,
+sobald die Uhr unter die Reserve fällt; die Probe gab ihr Zeit für zwei
+Konten, und eine frische Anlage hat genau zwei. Kein Fehler in `server/`,
+keine Versionsstufe.
+
+**Nebenbei gefunden (F-RP-14, nicht behoben):** Die Freigabeprobe lässt je
+Lauf das Sicherungspaket ihrer Quelle unter `server/sicherungen/` liegen.
 

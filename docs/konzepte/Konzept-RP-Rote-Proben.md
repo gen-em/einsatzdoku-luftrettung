@@ -15,10 +15,10 @@ entsteht mit RP-01. Zweig `claude/rp-rote-proben`, von `main` `b329ac3`.
 >
 > | | |
 > |---|---|
-> | Stand | **23.09.2026 — RP-01 und RP-02 erledigt.** Acht der neun Proben sind einzeln grün; offen ist nur `wiederherstellung` (RP-03). |
+> | Stand | **23.09.2026 — RP-01 bis RP-03 erledigt.** Alle neun Proben sind einzeln grün. **Keine davon war ein Fehler der Anwendung** — RP bleibt ohne Versionsstufe. |
 > | Entschieden | E-PK-45 (Paket vor P5c, keine Ausnahmeliste), E-PK-46 (nicht gemessen ist rot) — aus Konzept PK. **E-RP-01 bis -04** vom Auftraggeber am 23.09.2026 (Abschnitt 4) |
 > | Offen | nichts |
-> | Nächstes | **RP-03** — `wiederherstellung`: Anwendung oder Erwartung |
+> | Nächstes | **RP-04 und RP-05** — eine volle Nebenstufe auf frischer Anlage mit Zeit je Probe; daraus die Dauer |
 
 ---
 
@@ -52,7 +52,8 @@ lief keine davon in einer Stufe, die ein Tor las; deshalb fiel keiner auf.
 | F-RP-11 | Kreisläufe im Prüfstand | (gefunden in RP-01) | Der Prüfstand rief beide Kreisläufe **ohne `--frisch`** auf; auf einer Anlage, die nicht frisch ist, bricht der zweite Lauf ab, weil das Umlaufkonto schon besteht | `tools/` (Verdrahtung) |
 | F-RP-12 | `gpxprobe` (hinter F-RP-01) | „190 von 204 ohne Gegenstück", „0 von 204 verglichen" | Erst mit dem richtigen Pfad erreicht: Die Referenz vom 15.09. ist älter als der Demo-Bestand — dieselbe Ursache wie F-RP-06 | `tools/` (Referenz, E-RP-01) |
 | F-RP-13 | `browserprobe-csp` | (Hinweis, RP-02) | Die Probe überschreibt bei jedem Lauf ein **eingechecktes** Bildschirmfoto (`tools/proben/csp-browser/kopfzeilen.png`). Im Prüfstand landet es im gemessenen Baum und damit im Commit | `tools/` — Entscheidung in RP-05 |
-| F-RP-10 | `wiederherstellung` | „Ein knapper Schub sichert wenigstens ein Konto und hört dann auf" (2 erledigt, 0 offen) und „Der Zeiger steht auf dem zuletzt gesicherten Konto" (`cur=—`) | **ungeklärt** — seit PK-03 bekannt (F-PK-18). Entweder ist der „knappe Schub" auf dieser Anlage nicht knapp (Erwartung) oder der Job hört nicht auf (Anwendung) | offen |
+| F-RP-14 | `freigabeprobe` (Quelle) | (Hinweis, RP-03) | Beim Aufräumen löscht `vorbereiten.php` die Zeile der Quelle, nicht ihr Sicherungspaket: je Lauf ein verwaister Ordner unter `server/sicherungen/` (drei gezählt am 23.09.2026). Macht nichts rot und liegt nur in der Arbeitsumgebung (`.gitignore`) — **nicht** in RP behoben | `tools/` — Backlog-Kandidat |
+| F-RP-10 | `wiederherstellung` | „Ein knapper Schub sichert wenigstens ein Konto und hört dann auf" (2 erledigt, 0 offen) und „Der Zeiger steht auf dem zuletzt gesicherten Konto" (`cur=—`) | **Erwartung** (geklärt in RP-03): Der Schub bekommt Zeit für zwei Konten, eine frische Anlage hat genau zwei mit Kontokennung — er sicherte beide, „hört dann auf" konnte nicht stimmen. Die Anwendung arbeitet richtig (`edbak_auftrag_schub()`) | `tools/` |
 
 **Dauer:** Der Prüfstand schreibt keine Zeit je Probe. Welche Probe die
 1 266 s trägt, ist nicht gemessen.
@@ -86,6 +87,14 @@ lief keine davon in einer Stufe, die ein Tor las; deshalb fiel keiner auf.
 | `mailprobe` | Beispielsatz um `termin`, `einsaetze`, `speicher` ergänzt (F-RP-04) — **41 / 0**, 18 s |
 | `browserprobe-csp` | Report-Only **ohne** `frame-ancestors`, scharf **mit** — zwei Zeilen statt einer falschen (F-RP-05) — **34 / 34**, 25 s |
 | csv-Referenz (E-RP-01) | neu erzeugt auf frischer Anlage direkt nach dem Einrichten (`referenz_export.mjs`, 26 s); **nur das csv-Archiv** übernommen, die edbak-Referenz bleibt (sie war grün). Gleicher Umfang: 204 GPX, 101 Einsätze, 209 Dateien. `kreislauf-csv` **10 922 Vergleiche, 0 unerklärt**, 48 s; keine Ausnahmeregel dazu |
+
+**Stand RP-03 (23.09.2026, erledigt; Prüfdokument 4):** Teil 10 der
+Wiederherstellungsprobe legt zwei Konten mit Kontokennung **hinter** den
+Bestand (mit ihren eigenen Helfern `$konto`/`$weg`, wie Teil 8 und 12) und
+räumt sie danach weg. Damit sind Schub **und** Wiederaufnahme auch auf einer
+frischen Anlage messbar, statt dort als „nicht messbar" durchzugehen.
+**111 / 0**, 1 s; Zusatzkonten danach 0. Die Zusatzkonten stehen am Ende der
+Warteschlange und werden nicht gesichert — keine Pakete, keine Reste.
 
 **Eigener Fehler, im Konzept:** Das Kurzkonzept wies der Wegprobe das
 Umlaufkonto des **csv**-Kreislaufs zu. Gemessen: „Kein Ruhesegment mit genug

@@ -1086,6 +1086,21 @@ $sicherAuftrag = $markeVorher($pdo, 'adminbackup_auftrag');
 $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute(['adminbackup_auftrag']);
 $c = &edbak_marken_speicher(); $c = [];
 
+/* ZWEI KONTEN MEHR, NUR FUER DIESEN TEIL (RP-03, F-RP-10). Die Pruefung
+ * braucht mehr Konten mit Kontokennung, als der knappe Schub schafft, und
+ * danach noch zwei offene fuer die Wiederaufnahme. Eine frische Anlage hat
+ * genau ZWEI (Verwaltung und Demo): Der Schub sicherte beide, und „hoert
+ * dann auf" konnte nicht stimmen — rot seit PK-03 (F-PK-18), ohne dass die
+ * Anwendung falsch war. Sie stehen HINTER dem Bestand (hoehere id) und gehen
+ * nach dem Teil wieder. */
+$zusatz10 = [];
+foreach (['probe-auftrag-1@example.invalid', 'probe-auftrag-2@example.invalid'] as $m) {
+    $u = $konto($m);
+    $pdo->prepare('UPDATE users SET account_key = ? WHERE id = ?')
+        ->execute([bin2hex(random_bytes(8)), $u]);
+    $zusatz10[] = $u;
+}
+
 $a10 = edbak_auftrag_starten();
 $kontenMitKennung = (int)$pdo->query("SELECT COUNT(*) FROM users
     WHERE account_key IS NOT NULL AND account_key <> ''")->fetchColumn();
@@ -1171,6 +1186,7 @@ $sag('Sein Rueckstand ist die Zahl der offenen Konten',
      is_array($aR)
        ? (string)job_adminbackup_rueckstand($pdo, [])
        : 'kein Auftrag offen -> null (richtig)');
+foreach ($zusatz10 as $u) { $weg($u); }
 $sag('Der Rahmen misst jetzt auch den Speicher, nicht nur die Zeit',
      function_exists('jobs_speicher_knapp') && !jobs_speicher_knapp(),
      'Deckel ' . JOB_SPEICHER_DECKEL_MB . ' MB, belegt '
