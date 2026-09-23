@@ -7219,5 +7219,31 @@ declare(strict_types=1);
  *   wie sie aussehen und in welcher Reihenfolge sie stehen. Preis, und er
  *   gehoert gesagt: 'day_col' heisst ab jetzt „Spalte in JEDER
  *   Einsatztabelle" und nicht mehr „Spalte in der Tagesuebersicht".
+ *
+ * 20.37.1 — DIE HAUSFORM, EINMAL DURCH (PK-04/5, E-PK-26). Sichtbarer Text
+ *   in der ganzen Anwendung steht jetzt im grossen Binnen-I: „die NutzerIn",
+ *   „die BetreiberIn", „eine AdministratorIn", „die NotärztIn". Es ist eine
+ *   KORREKTURSTUFE und kein Umbau — kein Feld, keine Tabelle, kein Weg durch
+ *   die Anwendung aendert sich; es aendern sich Woerter, und zwar 492 davon
+ *   ueber 45 Dateien unter `server/` und die normative Dokumentation.
+ *
+ *   WAS AUSDRUECKLICH NICHT MITGEHT, weil es aus dem Haus geht (E-PK-39):
+ *   die Spaltenueberschriften der exportierten CSV- und Excel-Dateien
+ *   (`Pilot 1`, `Flugretter`, `Fahrer`, `Praktikant` aus CREW_ROLES), die
+ *   Spaltennamen des fremden Importprofils und der Titel in Zelle F1. Wer
+ *   eine Datei weitergibt, gibt sie so weiter, wie die Empfaengerin sie
+ *   erwartet. Ebenso wenig die BEZEICHNER: `betreiberin` bleibt der
+ *   Rollenname im Code, `$nutzer` die Variable.
+ *
+ *   DAZU ZWEI KLEINE BERICHTIGUNGEN. `config.example.php` zeigte
+ *   `example.de` als Beispiel — das ist KEINE reservierte Domaene (RFC 2606
+ *   reserviert example.com/net/org und die TLDs .invalid/.test/.example/
+ *   .localhost), und die Vorlage richtete damit auch SMTP auf eine fremde
+ *   Domaene. Alle vier Stellen stehen auf `.invalid`. Und die
+ *   Kartenquelle OpenHikingMap (`tile.openmaps.fr`) war in der
+ *   Content-Security-Policy freigeschaltet, ohne je in `docs/Lizenzen.md`
+ *   zu stehen; sie steht jetzt dort — mit der Lizenzspalte ausdruecklich
+ *   als UNGEPRUEFT, weil der Abruf aus der Arbeitsumgebung mit HTTP 403
+ *   scheitert und eine Vermutung dort nichts zu suchen hat.
  */
-const WEB_VERSION = '20.37.0';
+const WEB_VERSION = '20.37.1';

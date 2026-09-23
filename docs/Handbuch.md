@@ -422,7 +422,7 @@ wiederzufinden. Auf dem Bildschirm steht er bewusst nicht: Solche Texte nennen
 Interna der Datenbank, die niemanden etwas angehen.
 
 **Groß- und Kleinschreibung der E-Mail-Adresse spielt keine Rolle.**
-`Max@Beispiel.de` und `max@beispiel.de` sind dasselbe Konto.
+`Max@Example.invalid` und `max@example.invalid` sind dasselbe Konto.
 
 **Der Link aus der E-Mail braucht Cookies.** Beim ersten Öffnen nimmt die Seite
 ihn aus der Adresszeile — er soll weder im Verlauf des Browsers noch in
@@ -612,7 +612,7 @@ unten:
   wenn noch Schritte offen sind.
 
 Erledigte Schritte bleiben mit einem Haken stehen und zeigen, was du angelegt
-hast — „Kempten — Wache Nord" statt der Erklärung, die du nicht mehr brauchst.
+hast — „Hochkreuth — Wache Nord" statt der Erklärung, die du nicht mehr brauchst.
 Sind alle drei erledigt, verschwindet die Karte von selbst.
 
 ### 3.1c Was dein Konto hält (seit Web 20.21.0)
@@ -787,8 +787,8 @@ Pro Tag:
 
   Welche **Besatzungsrollen** im Formular stehen, ergibt sich aus dem
   gewählten Rettungsmittel: luftgebunden
-  PilotIn 1, PilotIn 2, HEMS-TC, FlugretterIn und Sonstige,
-  bodengebunden FahrerIn, PraktikantIn und Sonstige.
+  Pilot 1, Pilot 2, HEMS-TC, Flugretter und Sonstige,
+  bodengebunden Fahrer, Praktikant und Sonstige.
   Ein Diensttag ohne Rettungsmittel zeigt keine Rollen — trag Standort und
   Rettungsmittel nach, dann erscheinen sie.
 
@@ -1399,7 +1399,7 @@ dann ein Eintrag in der Vorschlagsliste (z. B. „Koordinaten übernehmen
 sucht keine Adresse. Erst mit seiner Auswahl werden Koordinaten und Pin
 übernommen. **Das Textfeld wird dabei geleert** — es
 gehört ab dann der Bezeichnung, die du selbst einträgst (z. B. „Talstation
-Nebelhorn", „Wanderweg 401, Ostrachtal"). Ohne diese Bezeichnung lässt sich
+Felsberg", „Wanderweg 401, Moosachtal"). Ohne diese Bezeichnung lässt sich
 der Einsatz nicht speichern; in den Listen stünde sonst nur eine Zahlenreihe
 statt eines Ortsnamens. Bei einem Adressvorschlag bleibt es beim gewohnten
 Verhalten: Das Label steht im Feld und gilt als Bezeichnung.
@@ -1409,7 +1409,7 @@ Die vier Formate:
 - **Grad/Dezimalminuten**, z. B. `47°43.57'N 010°19.02'E`
 - **Grad/Minuten/Sekunden**, z. B. `47°39'11.6"N 10°21'34.3"E`
 - **Plus Code** (Open Location Code), aber nur als **Vollcode**,
-  z. B. `8FWH4HJM+7Q` — Kurzformen (z. B. `4HJM+7Q Kempten`) werden
+  z. B. `8FWH4HJM+7Q` — Kurzformen (z. B. `4HJM+7Q Hochkreuth`) werden
   erkannt, aber nicht als Vorschlag angeboten; die Statuszeile weist dann
   darauf hin, den Vollcode einzugeben (in der Karten-App ohne Ortsangabe
   kopieren). Werte außerhalb des gültigen Bereichs (z. B. eine Breite über
@@ -1462,7 +1462,7 @@ ohne Transport wäre ein Widerspruch in den Daten.
 Dazu die weiteren Zusatzfelder: **Fehleinsatz / Storno / Abbruch** (ein Haken,
 ohne Unterauswahl), **Windeneinsatz** (Haken öffnet Cycles,
 Cycles mit PatientIn, Luftverladung), **Bergwacht** (Haken öffnet Bereitschaft
-aus den Stammdaten plus Namen/Infos), Sekundärtransport, Andere
+aus den Stammdaten plus Namen/Infos), Sekundärtransport, weitere
 NotärztIn, **Weitere Rettungsmittel** (Abschnitt 9.2) und Notizen.
 
 **Winde und Bergwacht erscheinen nur**, wenn das Rettungsmittel des Diensttags
@@ -1490,8 +1490,8 @@ ist oft niemand, der regelmäßig auf diesem Rettungsmittel arbeitet. Die
 Vorschläge bleiben die bequeme Abkürzung, sie sind nur keine Schranke mehr.
 
 Gezeigt werden **nur die Rollen, die der Diensttag führt** — dieselben, die auch
-oben in den Diensttag-Daten stehen. Ein NEF zeigt FahrerIn, PraktikantIn und
-Sonstige, ein Hubschrauber mit PilotIn 1 und HEMS-TC nur diese beiden. Ein
+oben in den Diensttag-Daten stehen. Ein NEF zeigt Fahrer, Praktikant und
+Sonstige, ein Hubschrauber mit Pilot 1 und HEMS-TC nur diese beiden. Ein
 Diensttag ohne Rettungsmittel zeigt keine. Steht in einer eigentlich nicht
 vorgesehenen Rolle bereits ein Eintrag — etwa weil der Diensttag nachträglich auf
 ein anderes Rettungsmittel umgestellt wurde —, bleibt sie sichtbar, damit du sie
@@ -1785,8 +1785,8 @@ Diagnose, Einsatzort, Transportziel, Beschreibung des Einsatzorts,
 Bergwacht-Bereitschaft und -Infos, weitere NotärztIn, weitere Rettungsmittel,
 Standort, Rettungsmittel, Besatzung und Notizen. Groß- und Kleinschreibung spielt
 keine Rolle, Wortteile genügen. Gibst du mehrere Wörter ein, müssen **alle**
-vorkommen — aber nicht im selben Feld. „müller kempten" findet also auch einen
-Einsatz, bei dem Müller die Besatzung und Kempten das Transportziel ist. Das
+vorkommen — aber nicht im selben Feld. „müller hochkreuth" findet also auch einen
+Einsatz, bei dem Müller die Besatzung und Hochkreuth das Transportziel ist. Das
 Geburtsdatum findest du in beiden Schreibweisen, „12.03.1985" ebenso wie
 „1985-03-12".
 
@@ -1800,7 +1800,7 @@ wie bisher.
 | `sturz ODER fraktur` | mindestens einer (`OR` und <code>&#124;</code> ebenso) |
 | `bergwacht -winde` | der erste ja, der zweite nicht (`NICHT`, `NOT`, `!` ebenso) |
 | `"zwei wörter"` | genau diese Folge, Leerzeichen eingeschlossen |
-| `(sturz ODER fraktur) oberstdorf` | Klammern binden zusammen |
+| `(sturz ODER fraktur) sonnenau` | Klammern binden zusammen |
 
 Ohne Klammern bindet **UND stärker als ODER**: `a b ODER c` heißt
 `(a UND b) ODER c` — die Lesart, die man aus Suchmasken kennt. Ein Minus zählt
@@ -2468,7 +2468,7 @@ Option versprach.
   Personen. Das Transportziel ist zusammen mit Datum und Uhrzeit trotzdem ein
   Hinweis auf eine bestimmte Aufnahme; die Entscheidung, es zu behalten, ist
   bewusst getroffen und steht deshalb hier.
-- **Weitere Rettungsmittel** („RTW Kempten") — Organisationskennungen.
+- **Weitere Rettungsmittel** („RTW Talwang") — Organisationskennungen.
 - Der **Verlauf einer Reanimation** ohne Angabe, wen sie betraf. Ohne ihn
   entfiele der Grund, Reanimationen überhaupt zu erfassen.
 - Die **Zeitpunkte** der Phasen. Sie tragen Alarmzeit, Endzeit und Dauer.
@@ -2556,7 +2556,7 @@ Zwei Feinheiten:
 - Enthält der Name Umlaute oder Leerzeichen, werden sie umgeschrieben
   (`Philipp Müller` → `philipp-mueller`), weil nicht jedes Betriebssystem und
   nicht jedes Programm damit zurechtkommt. Bei einer E-Mail-Adresse entfallen
-  `@` und Punkte ebenso (`max@gen-em.de` → `max-gen-em-de`).
+  `@` und Punkte ebenso (`max@example.invalid` → `max-example-invalid`).
 
 Bedenke beim Weitergeben: Die Kontokennung steht damit auch im Dateinamen.
 
@@ -2874,7 +2874,7 @@ Zu einem **Standort** lassen sich Koordinaten hinterlegen — freiwillig. Sie si
 die Quelle des Abfahrtorts „Standort" (Abschnitt 4.3). Erfasst werden sie im
 Feld **„Lage (optional)"** unter dem Namen: Adresse suchen, Koordinatenpaar
 oder Plus Code eintippen, der Vorschlag darunter übernimmt sie. Der **Name**
-bleibt dabei unberührt — „Standort Kempten" ist keine Adresse, und die Suche
+bleibt dabei unberührt — „Standort Hochkreuth" ist keine Adresse, und die Suche
 schreibt nur die Koordinaten. Seit Web 15.8.0 steht neben dem Feld auch der
 **Pin-Knopf** mit „Meine Position übernehmen" und dem Kartendialog (4.3) —
 bis dahin gab es ihn nur im Einsatzformular, und eine Lage ließ sich hier nur
@@ -2901,8 +2901,8 @@ Diese Wahl entscheidet über alles Weitere:
 
 | Art | Wählbare Rollen | Fähigkeiten |
 |---|---|---|
-| Luftgebunden | PilotIn 1, PilotIn 2, HEMS-TC, FlugretterIn, Sonstige | Winde, Bergwacht — zwei getrennte Häkchen |
-| Bodengebunden | FahrerIn, PraktikantIn, Sonstige | keine — außer beim Typ Bergwacht (9.1a) |
+| Luftgebunden | Pilot 1, Pilot 2, HEMS-TC, Flugretter, Sonstige | Winde, Bergwacht — zwei getrennte Häkchen |
+| Bodengebunden | Fahrer, Praktikant, Sonstige | keine — außer beim Typ Bergwacht (9.1a) |
 
 **Die Art ist Pflicht und nicht vorbelegt** (seit Web 7.0.0). Vorher stand
 „luftgebunden" von selbst da — an einem Standort mit NEF war das die falsche

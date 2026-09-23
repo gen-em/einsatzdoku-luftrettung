@@ -1245,8 +1245,8 @@ Skript.
 ```
 
 **Platzhalter tragen ausschließlich Phantasienamen** (E-S3-13). Ein
-Platzhalter ist ein Beispiel, kein Vorschlag: Steht dort „z. B. Standort
-Kempten", liest ein Teil der NutzerInnen das als die erwartete Antwort und
+Platzhalter ist ein Beispiel, kein Vorschlag: Steht dort der Name der echten
+Station, liest ein Teil der NutzerInnen das als die erwartete Antwort und
 ein anderer als Aussage darüber, wer diese Anwendung betreibt. Beides ist
 falsch. Orte, Personen, Kliniken und Rettungsmittel in Platzhaltern sind
 deshalb **erfunden** — erkennbar erfunden, nicht bloß ein anderer echter

@@ -170,17 +170,17 @@
     {
       "id": "hausform-weiblich",
       "klasse": "hausform",
-      "regex": "\\b(Nutzer|Benutzer|Betreiber|Administrator|Anwender|Entwickler|Bearbeiter|Mitarbeiter|Leser|Prüfer|Pruefer)(in|innen)\\b",
+      "regex": "\\b(Nutzer|Benutzer|Betreiber|Administrator|Anwender|Entwickler|Bearbeiter|Mitarbeiter)(in|innen)\\b",
       "ersatz": "Binnen-I: NutzerIn, NutzerInnen",
-      "grund": "E-PK-26: Hausform ist das grosse Binnen-I. Die rein weibliche Einzelform ist eine der beiden Formen, die heute nebeneinander stehen. GROSS GESCHRIEBEN GEMESSEN (PK-04/5, E-PK-36): Ohne den Schalter liest die Probe ohne Ruecksicht auf Gross- und Kleinschreibung und trifft damit ZWEIERLEI, das kein Befund ist — die BEZEICHNER (`betreiberin` ist der Rollenname im Code, `$nutzer` eine Variable; 1233 solcher Stellen im Bestand) und DIE HAUSFORM SELBST (`BetreiberIn` matcht als `Betreiber`+`In`≈`in`). Das zweite ist der schlimmere Fehler: Die Regel zaehlte HOCH, je mehr man repariert — AVV.md ging beim Umbau von 22 auf 47. Eine Regel, die den Fehler nicht von der Loesung unterscheidet, misst nichts. PREIS: Ein kleingeschriebenes Rollenwort in SICHTBAREM Text faellt durch; im deutschen Fliesstext sind Substantive gross.",
+      "grund": "E-PK-26: Hausform ist das grosse Binnen-I. Die rein weibliche Einzelform ist eine der beiden Formen, die heute nebeneinander stehen. GROSS GESCHRIEBEN GEMESSEN (PK-04/5, E-PK-36): Ohne den Schalter liest die Probe ohne Ruecksicht auf Gross- und Kleinschreibung und trifft damit ZWEIERLEI, das kein Befund ist — die BEZEICHNER (`betreiberin` ist der Rollenname im Code, `$nutzer` eine Variable; 1233 solcher Stellen im Bestand) und DIE HAUSFORM SELBST (`BetreiberIn` matcht als `Betreiber`+`In`≈`in`). Das zweite ist der schlimmere Fehler: Die Regel zaehlte HOCH, je mehr man repariert — AVV.md ging beim Umbau von 22 auf 47. Eine Regel, die den Fehler nicht von der Loesung unterscheidet, misst nichts. PREIS: Ein kleingeschriebenes Rollenwort in SICHTBAREM Text faellt durch; im deutschen Fliesstext sind Substantive gross. LESER UND PRUEFER SIND MIT PK-04/5 HERAUSGENOMMEN, aus demselben Grund wie `Helfer`: Gemessen ueber den Bestand stehen sie 126-mal fuer einen PROGRAMMTEIL (der eine Leser fuer config.php, die vier Leser des Backup-Formats, der Freitext-Pruefer) und 9-mal fuer einen Menschen -- und diese neun sind generisch („sie sagt einem Leser, was in der Datei stehen kann\"), wo die Hausform nichts gewinnt. Sie in der Liste zu lassen haette ZWOELF Ausnahmen gekostet und keinen Fehler gefunden. E-PK-38.",
       "gross": true
     },
     {
       "id": "hausform-maennlich",
       "klasse": "hausform",
-      "regex": "\\b(Nutzer|Benutzer|Betreiber|Administrator|Anwender|Entwickler|Bearbeiter|Mitarbeiter|Leser|Prüfer|Pruefer)(|n|s)\\b",
+      "regex": "\\b(Nutzer|Benutzer|Betreiber|Administrator|Anwender|Entwickler|Bearbeiter|Mitarbeiter)(|n|s)\\b",
       "ersatz": "Binnen-I: NutzerIn, NutzerInnen",
-      "grund": "E-PK-26: dieselbe Rolle in maennlicher Form. `NutzerInnen` trifft nicht, weil nach `Nutzer` keine Wortgrenze steht. GROSS GESCHRIEBEN GEMESSEN (PK-04/5, E-PK-36): Ohne den Schalter liest die Probe ohne Ruecksicht auf Gross- und Kleinschreibung und trifft damit ZWEIERLEI, das kein Befund ist — die BEZEICHNER (`betreiberin` ist der Rollenname im Code, `$nutzer` eine Variable; 1233 solcher Stellen im Bestand) und DIE HAUSFORM SELBST (`BetreiberIn` matcht als `Betreiber`+`In`≈`in`). Das zweite ist der schlimmere Fehler: Die Regel zaehlte HOCH, je mehr man repariert — AVV.md ging beim Umbau von 22 auf 47. Eine Regel, die den Fehler nicht von der Loesung unterscheidet, misst nichts. PREIS: Ein kleingeschriebenes Rollenwort in SICHTBAREM Text faellt durch; im deutschen Fliesstext sind Substantive gross.",
+      "grund": "E-PK-26: dieselbe Rolle in maennlicher Form. `NutzerInnen` trifft nicht, weil nach `Nutzer` keine Wortgrenze steht. GROSS GESCHRIEBEN GEMESSEN (PK-04/5, E-PK-36): Ohne den Schalter liest die Probe ohne Ruecksicht auf Gross- und Kleinschreibung und trifft damit ZWEIERLEI, das kein Befund ist — die BEZEICHNER (`betreiberin` ist der Rollenname im Code, `$nutzer` eine Variable; 1233 solcher Stellen im Bestand) und DIE HAUSFORM SELBST (`BetreiberIn` matcht als `Betreiber`+`In`≈`in`). Das zweite ist der schlimmere Fehler: Die Regel zaehlte HOCH, je mehr man repariert — AVV.md ging beim Umbau von 22 auf 47. Eine Regel, die den Fehler nicht von der Loesung unterscheidet, misst nichts. PREIS: Ein kleingeschriebenes Rollenwort in SICHTBAREM Text faellt durch; im deutschen Fliesstext sind Substantive gross. LESER UND PRUEFER SIND MIT PK-04/5 HERAUSGENOMMEN, aus demselben Grund wie `Helfer`: Gemessen ueber den Bestand stehen sie 126-mal fuer einen PROGRAMMTEIL (der eine Leser fuer config.php, die vier Leser des Backup-Formats, der Freitext-Pruefer) und 9-mal fuer einen Menschen -- und diese neun sind generisch („sie sagt einem Leser, was in der Datei stehen kann\"), wo die Hausform nichts gewinnt. Sie in der Liste zu lassen haette ZWOELF Ausnahmen gekostet und keinen Fehler gefunden. E-PK-38.",
       "gross": true
     },
     {
@@ -209,9 +209,9 @@
     {
       "id": "netz-fremd",
       "klasse": "netz",
-      "regex": "https?://(?:www\\.)?(?!@@LIZENZEN@@)[a-z0-9.-]+",
+      "regex": "https?://(?:www\\.)?(?!(?:[a-z0-9.-]+\\.)?example\\.(?:invalid|com|net|org)\\b)(?![a-z0-9.-]*\\.(?:invalid|test|example|localhost)\\b)(?!localhost\\b|127\\.0\\.0\\.1|\\[?::1\\]?|0\\.0\\.0\\.0|host/)(?!@@LIZENZEN@@)[a-z0-9.-]+",
       "ersatz": "keine fremde Adresse in sichtbarem Text",
-      "grund": "Erlaubt ist, was in `docs/Lizenzen.md` als Adresse steht. `@@LIZENZEN@@` wird BEIM LAUF aus dieser Datei ersetzt — eine Kopie hier ginge beim naechsten vendorierten Bestandteil auseinander, ohne dass etwas anschlaegt.",
+      "grund": "Erlaubt ist, was in `docs/Lizenzen.md` als Adresse steht. `@@LIZENZEN@@` wird BEIM LAUF aus dieser Datei ersetzt — eine Kopie hier ginge beim naechsten vendorierten Bestandteil auseinander, ohne dass etwas anschlaegt. ERWEITERT (PK-04/5d): Drei Sorten fielen vorher als Befund an, obwohl sie KEINE fremde Quelle sind. (1) RFC-2606-Formen -- `einsatz.example.invalid` in der Konfigurationsvorlage. (2) Die eigene Maschine -- `127.0.0.1`, `localhost`, `::1`. (3) Ein PLATZHALTER statt eines Hosts: `https://host//pw_handling.php` in Technik.md zeigt, wie ein doppelter Schraegstrich entsteht, und `host` ist dort kein Name, sondern die Luecke. Eine Regel gegen fremde Quellen, die die eigene Maschine meldet, kostet Ausnahmen ohne Gegenwert.",
       "quelle": "lizenzen"
     },
     {

@@ -229,7 +229,11 @@
       "id": "guteseele-jahresliste",
       "zeile": "Christoph-17-Jahresliste",
       "klasse": "D",
-      "begruendung": "Der Name, unter dem das Fremdformat im Handbuch eingefuehrt ist. Er benennt die Datei, nicht ein Rettungsmittel dieser Installation."
+      "begruendung": "Der Name, unter dem das FREMDFORMAT im Handbuch eingefuehrt ist. Er benennt die Datei, nicht ein Rettungsmittel dieser Installation -- dieselbe Ueberlegung wie beim `exportTitle`, den der Auftraggeber am 23.09.2026 stehen lassen wollte (E-PK-39). BEIDES HAENGT ZUSAMMEN, und das ist der Grund, warum diese Ausnahme wieder gilt: Der Namenslauf von PK-04/5c hatte sie auf „Alpenfalke-1-Jahresliste\" umgestellt, waehrend `exportTitle` weiter „Einsatzdokumentation Christoph 17\" in Zelle F1 schreibt. Das Handbuch haette die Liste dann unter einem Namen beschrieben, den die erzeugte Datei nicht traegt. Zwei Stellen zurueckgenommen. TRUG BIS PK-04/5c KEIN `muster`-FELD und galt damit nur fuer die Klasse `luft` -- sie meldete „gegriffen\", erklaerte aber die `name-real`-Treffer nicht. Derselbe Fehler, den 1c an 89 von 100 Regeln behoben hat; diese hier ist durchgerutscht, weil sie damals keinen name-real-Treffer hatte. TRIFFT ZWEI MUSTER: `name-real` (die Namensliste) und `christoph` (ein eigenes Muster der Klasse `luft`). Wer nur eines nennt, laesst das andere durch -- und die Ausnahme meldet trotzdem „gegriffen\".",
+      "muster": [
+        "name-real",
+        "christoph"
+      ]
     },
     {
       "id": "umbenennungstabelle",
@@ -297,13 +301,6 @@
       "zeile": "Flugmodus",
       "klasse": "Homonym",
       "begruendung": "Der Flugmodus ist eine Einstellung des Geraets. Mit der Einsatzart hat er nichts zu tun."
-    },
-    {
-      "id": "backup-beispielwerte",
-      "datei": "docs/Backup-Format.md",
-      "zeile": "Christoph 17",
-      "klasse": "D",
-      "begruendung": "Beispielwerte im JSON-Schema des Backups. Das Feld `kind` daneben zeigt beide Arten (`air|ground`); der Name ist Fuellwert, nicht Aussage. D5 erwartet in dieser Datei ausdruecklich keine Aenderung."
     },
     {
       "id": "vertrag-payload-limit",
@@ -686,24 +683,14 @@
       "zeile": "demo@gen-em\\.org"
     },
     {
-      "id": "technik-konfig-lib-leser",
-      "datei": "docs/Technik.md",
-      "zeile": "Der EINE Leser fuer config\\.php",
-      "klasse": "Homonym",
-      "muster": [
-        "hausform-maennlich"
-      ],
-      "begruendung": "E-PK-26 regelt die Hausform fuer ROLLEN VON MENSCHEN (NutzerIn, BetreiberIn). `konfig_lib.php` ist der eine Leser fuer `config.php` -- ein Stueck Code, kein Mensch, und `LeserIn` waere hier sinnlos. Die Sperrliste kann das nicht unterscheiden, weil sie am Wort misst und nicht am Gemeinten. Eingetragen 22.09.2026 beim Zusammenfuehren von Schritt 15 (PR #74), der die Zeile mitbringt."
-    },
-    {
       "id": "format-spaltennamen-fremd",
       "klasse": "Bestand",
       "muster": [
         "hausform-rollen-maennlich",
         "hausform-rollen-weiblich"
       ],
-      "zeile": "expectedHeaders|exportOrder|reviewColumns|columns:|'Pilot':|^\\s*'[^']+'(, *'[^']+')+\\],?\\s*$|'Pilot 1', 'Einsatznummer'",
-      "begruendung": "E-PK-39: SPALTENNAMEN EINER FREMDEN DATEI. Das Importprofil „GuteSeele\" gleicht seine Spalten gegen die Kopfzeile einer Excel-Datei ab, die nicht aus diesem Haus kommt. Wird „Pilot\" hier zu „PilotIn\", findet der Import die Spalte nicht mehr -- und zwar still, weil eine fehlende Spalte leer bleibt statt zu scheitern. Dieselbe Ueberlegung wie beim `exportTitle` (Auftraggeber 23.09.2026): Was gegen etwas ausserhalb des Hauses passen muss, folgt dessen Wortlaut, nicht unserem. ERWEITERT: Die Listen sind MEHRZEILIG -- `expectedHeaders` steht in Zeile 111, der Treffer `'Pilot'` in Zeile 113. Eine Ausnahme, die nur die erste Zeile kennt, laesst die Fortsetzung durch. Deshalb faengt das Muster zusaetzlich jede Zeile, die NUR aus Zeichenketten und Kommata besteht -- die Form einer Spaltenliste."
+      "zeile": "expectedHeaders|exportOrder|reviewColumns|columns:|'Pilot':|^\\s*'[^']+'(, *'[^']+')+\\],?\\s*$|'Pilot 1', 'Einsatznummer'|Transport, Winde, HEMS, Pilot, Einsatz-Nr|`HEMS` und `Pilot` als|auch `HEMS` und `Pilot`",
+      "begruendung": "E-PK-39: SPALTENNAMEN EINER FREMDEN DATEI. Das Importprofil „GuteSeele\" gleicht seine Spalten gegen die Kopfzeile einer Excel-Datei ab, die nicht aus diesem Haus kommt. Wird „Pilot\" hier zu „PilotIn\", findet der Import die Spalte nicht mehr -- und zwar still, weil eine fehlende Spalte leer bleibt statt zu scheitern. Dieselbe Ueberlegung wie beim `exportTitle` (Auftraggeber 23.09.2026): Was gegen etwas ausserhalb des Hauses passen muss, folgt dessen Wortlaut, nicht unserem. ERWEITERT: Die Listen sind MEHRZEILIG -- `expectedHeaders` steht in Zeile 111, der Treffer `'Pilot'` in Zeile 113. Eine Ausnahme, die nur die erste Zeile kennt, laesst die Fortsetzung durch. Deshalb faengt das Muster zusaetzlich jede Zeile, die NUR aus Zeichenketten und Kommata besteht -- die Form einer Spaltenliste. Dazu drei Stellen in `docs/Export-Format.md` (680, 684, 692), die die Spaltenfolge des GuteSeele-Layouts AUFZAEHLEN. Sie beschreiben die fremde Kopfzeile; gegendert wuerden sie etwas anderes beschreiben, als in der Datei steht."
     },
     {
       "id": "format-spaltennamen-eigen",
@@ -732,18 +719,20 @@
         "hausform-rollen-maennlich",
         "hausform-rollen-weiblich"
       ],
-      "zeile": "'label' *=> *'(Pilot|Flugretter|Fahrer|Praktikant)|p1: 'Pilot 1'|Pilot 1, Pilot 2|Fahrer, Praktikant|Pilot 1 und HEMS-TC|Besatzung Fahrer, Praktikant|bodengebunden Fahrer",
-      "begruendung": "E-PK-39: DIE FUENF ROLLENBESCHRIFTUNGEN SIND SPALTENUEBERSCHRIFTEN. `CREW_ROLES` in db.php 912 liefert sie ueber `crew_rolle_text()`, und sie stehen als Spalten 14 bis 19 in jeder CSV- und Excel-Ausgabe (docs/Export-Format.md 181-186). Sie gehen mit der Datei aus dem Haus -- derselbe Fall wie der `exportTitle`, den der Auftraggeber am 23.09.2026 stehen lassen wollte. WICHTIG: Die Tabelle steht DREIMAL -- in `db.php` und als Rueckfallwert in `import_profiles.js` 62 und `import_ui.js` 334, falls der Server keine liefert. Wer eine aendert, aendert alle drei, sonst zeigt der Import andere Rollennamen als die Anwendung. ERWEITERT am 23.09.2026, weil mein eigener Faecherungsauftrag die Ausnahme nur fuer `Export-Format.md` benannt hatte: Der Handbuch-Agent hat die Aufzaehlung „Pilot 1, Pilot 2, HEMS-TC, Flugretter\" gegendert und damit beschrieben, was die Oberflaeche NICHT zeigt. 15 Stellen zurueckgenommen. Ein Auftrag, der eine dateiuebergreifende Regel nur an EINER Datei nennt, laesst sie an allen anderen durch -- und der Agent kann es nicht wissen."
+      "zeile": "'label' *=> *'(Pilot|Flugretter|Fahrer|Praktikant)|p1: 'Pilot 1'|Pilot 1, Pilot 2|Fahrer, Praktikant|Pilot 1 und HEMS-TC|Besatzung Fahrer, Praktikant|bodengebunden Fahrer|Fahrer und Praktikant dazugekommen",
+      "begruendung": "E-PK-39: DIE FUENF ROLLENBESCHRIFTUNGEN SIND SPALTENUEBERSCHRIFTEN. `CREW_ROLES` in db.php 912 liefert sie ueber `crew_rolle_text()`, und sie stehen als Spalten 14 bis 19 in jeder CSV- und Excel-Ausgabe (docs/Export-Format.md 181-186). Sie gehen mit der Datei aus dem Haus -- derselbe Fall wie der `exportTitle`, den der Auftraggeber am 23.09.2026 stehen lassen wollte. WICHTIG: Die Tabelle steht DREIMAL -- in `db.php` und als Rueckfallwert in `import_profiles.js` 62 und `import_ui.js` 334, falls der Server keine liefert. Wer eine aendert, aendert alle drei, sonst zeigt der Import andere Rollennamen als die Anwendung. ERWEITERT am 23.09.2026, weil mein eigener Faecherungsauftrag die Ausnahme nur fuer `Export-Format.md` benannt hatte: Der Handbuch-Agent hat die Aufzaehlung „Pilot 1, Pilot 2, HEMS-TC, Flugretter\" gegendert und damit beschrieben, was die Oberflaeche NICHT zeigt. 15 Stellen zurueckgenommen. Ein Auftrag, der eine dateiuebergreifende Regel nur an EINER Datei nennt, laesst sie an allen anderen durch -- und der Agent kann es nicht wissen. Dazu die Stelle in `Export-Format.md` 537, die ERKLAERT, dass Fahrer und Praktikant als Spalten dazugekommen sind -- sie nennt die Ueberschriften."
     },
     {
-      "id": "zusammensetzung-bindestrich-ellipse",
+      "id": "zusammensetzung-bindestrich",
       "klasse": "Homonym",
       "muster": [
+        "hausform-maennlich",
+        "hausform-weiblich",
         "hausform-rollen-maennlich",
         "hausform-rollen-weiblich"
       ],
-      "zeile": "(Patienten|Notarzt|Piloten|Kollegen|Fahrer|Praktikanten)- (oder|und|bzw\\.)",
-      "begruendung": "ZUSAMMENSETZUNG IN ELLIPSE. „Patienten- oder Einsatzdaten\" ist die verkuerzte Form von „Patientendaten oder Einsatzdaten\" -- das Wort vor dem Bindestrich ist ein BESTIMMUNGSWORT, kein Mensch, und Zusammensetzungen werden nach E-PK-26 nicht zerlegt. Das Muster misst an der Wortgrenze und kann den Bindestrich nicht vom Satzende unterscheiden; `Patientendaten` in einem Wort trifft es dagegen korrekt nicht. E-PK-38."
+      "zeile": "(Nutzer|Benutzer|Betreiber|Administrator|Anwender|Entwickler|Bearbeiter|Mitarbeiter|Notarzt|Pilot|Patient|Kollege|Flugretter|Fahrer|Praktikant)(?:en|n|s)?\\*{0,2}-\\s*(?:[A-ZÄÖÜ]|oder\\b|und\\b|bzw\\.)",
+      "begruendung": "ZUSAMMENSETZUNG MIT BINDESTRICH. Steht das Rollenwort VOR dem Bindestrich, ist es das BESTIMMUNGSWORT einer Zusammensetzung und kein Mensch: `Betreiber-Rueckfrage` ist die Rueckfrage an die BetreiberIn, `Entwickler-Schluessel` der Schluessel zum Uebersetzen, `Nutzer-Backup` das Backup einer NutzerIn, `Betreiber-Konten` deren Konten. E-PK-26 sagt, Zusammensetzungen werden nicht zerlegt -- `BetreiberIn-Rueckfrage` waere keine Hausform, sondern Kauderwelsch. Dasselbe gilt fuer die ELLIPSE: „Patienten- oder Einsatzdaten\" ist die verkuerzte Form von „Patientendaten oder Einsatzdaten\".\n\nZWEI FASSUNGEN DES MUSTERS HABEN NICHT GETROFFEN, beide gemessen: Die Ellipse traegt ein LEERZEICHEN nach dem Bindestrich, und in Markdown steht die Fettung ZWISCHEN Wort und Bindestrich („Bei der **Betreiber**-Rueckfrage\"). Ein Muster, das die Schreibweise des Dokuments nicht kennt, laesst genau dort durch, wo der Text betont wird."
     },
     {
       "id": "zugangsdaten-benutzername",
@@ -752,8 +741,8 @@
         "hausform-maennlich",
         "hausform-weiblich"
       ],
-      "zeile": "Datenbank-Host, -Name und -Benutzer|'label' => 'Benutzer'|Rechnername, Datenbankname, Nutzer",
-      "begruendung": "DAS FELD, NICHT DIE PERSON. „Benutzer\" ist hier die Beschriftung des Anmeldenamens fuer die Datenbank bzw. fuer SMTP, und „Nutzer\" in der Wiederherstellung steht neben Rechnername und Datenbankname -- es ist ein Zugangsdatum, das der Serverbetrieb vergibt, und heisst in jeder Datenbankoberflaeche so. `BenutzerIn` waere dort falsch: Ein Datenbankkonto ist kein Mensch. Dieselbe Unterscheidung wie bei `Leser` (Programmteil) und `Helfer` (Hilfsfunktion). E-PK-26."
+      "zeile": "Datenbank-Host, -Name und -Benutzer|'label' => 'Benutzer'|Rechnername, Datenbankname, Nutzer|Rechnername, Nutzer, Passwort|hat seinen Nutzer|Nutzer des Tokens",
+      "begruendung": "DAS FELD, NICHT DIE PERSON. „Benutzer\" ist hier die Beschriftung des Anmeldenamens fuer die Datenbank bzw. fuer SMTP, und „Nutzer\" in der Wiederherstellung steht neben Rechnername und Datenbankname -- es ist ein Zugangsdatum, das der Serverbetrieb vergibt, und heisst in jeder Datenbankoberflaeche so. `BenutzerIn` waere dort falsch: Ein Datenbankkonto ist kein Mensch. Dieselbe Unterscheidung wie bei `Leser` (Programmteil) und `Helfer` (Hilfsfunktion). E-PK-26. ERWEITERT (PK-04/5): Dieselbe Unterscheidung trifft drei weitere Stellen. „`ACCESS_NETWORK_STATE` hat seinen Nutzer\" -- das ist der Programmteil, der die Berechtigung VERWENDET. „alle Nutzer des Tokens\" sind die Regeln im Stylesheet, die es lesen. Und „Rechnername, Nutzer, Passwort\" ist die Aufzaehlung der Zugangsdaten eines Backup-Ziels."
     },
     {
       "id": "pwquality-schwachliste",
@@ -767,12 +756,41 @@
     {
       "id": "exporttitel-guteseele",
       "klasse": "Bestand",
-      "datei": "server/assets/import_profiles.js",
       "muster": [
         "name-real"
       ],
-      "zeile": "exportTitle",
-      "begruendung": "Vom Auftraggeber entschieden am 23.09.2026: stehen lassen. Der Wert wird NIE verglichen, sondern in Zelle F1 der exportierten Excel-Datei geschrieben (`export.js` 496) -- er ist der Kopf eines Dokuments, das die Betreiberin aus dem Haus gibt, und das Profil heisst gerade deshalb so, weil es dieses eine Layout bedient. PREIS, benannt: Das oeffentliche Repositorium nennt die reale Kennung an dieser einen Stelle weiter. Der saubere Weg waere ein Wert in den Einstellungen -- das ist eine neue Funktion mit Feld, Migration und Handbuchabschnitt und gehoert in ein eigenes Paket."
+      "zeile": "exportTitle|Titelzeile in F1",
+      "begruendung": "Vom Auftraggeber entschieden am 23.09.2026: stehen lassen. Der Wert wird NIE verglichen, sondern in Zelle F1 der exportierten Excel-Datei geschrieben (`export.js` 496) -- er ist der Kopf eines Dokuments, das die Betreiberin aus dem Haus gibt, und das Profil heisst gerade deshalb so, weil es dieses eine Layout bedient. PREIS, benannt: Das oeffentliche Repositorium nennt die reale Kennung an dieser einen Stelle weiter. Der saubere Weg waere ein Wert in den Einstellungen -- das ist eine neue Funktion mit Feld, Migration und Handbuchabschnitt und gehoert in ein eigenes Paket. GILT FUER BEIDE STELLEN: den Wert in `import_profiles.js` und die Zeile in `docs/Export-Format.md`, die BESCHREIBT, was in Zelle F1 steht. Eine Doku, die einen anderen Titel nennt als die Datei traegt, ist falsch -- deshalb haengen die beiden zusammen und stehen unter derselben Ausnahme."
+    },
+    {
+      "id": "messstand-eigene-adresse",
+      "klasse": "Homonym",
+      "muster": [
+        "mail-fremd"
+      ],
+      "zeile": "messstand@gen-em\\.org",
+      "begruendung": "EINE ADRESSE DES PROJEKTS, kein Beispiel. `tools/messstand/` legt ein Konto unter dieser Adresse an, um einen Bestand von 5000 Einsaetzen herzustellen. E-PK-27 nennt `demo@gen-em.org` als die eine echte Adresse in Texten -- gemeint war damit, dass BEISPIELE keine echte Domaene nennen. Diese hier ist kein Beispiel, sondern die Angabe, welches Konto das Werkzeug benutzt; `example.invalid` waere dort schlicht falsch."
+    },
+    {
+      "id": "notarzt-als-name",
+      "klasse": "Homonym",
+      "muster": [
+        "hausform-rollen-maennlich"
+      ],
+      "zeile": "Notarzt-Erweiterung|Konzept-Notarzt|„Notarzt\\\"|'Notarzt'|Notarzt\\\" in der Testmail",
+      "begruendung": "NAME, NICHT ROLLE. Drei Sorten: (1) „Notarzt-Erweiterung\" ist der Name eines Arbeitspakets aus Web 6.0.0 und steht so in der Historie -- ein Paketname wird nicht gegendert. (2) `„Notarzt\"` in Anfuehrungszeichen im Handbuch nennt das WORT, das jemand als Passwort waehlen koennte; die Sperrliste schwacher Passwoerter enthaelt es, und der Satz zaehlt auf, was dort steht (E-PK-37: ein Wort, das ALS WORT genannt wird). (3) „Einsatzdokumentation Notarzt\" in der Testmail ist der Instanzname, ein Eigenname."
+    },
+    {
+      "id": "wortnennung-hausform",
+      "klasse": "Homonym",
+      "muster": [
+        "hausform-maennlich",
+        "hausform-weiblich",
+        "hausform-rollen-maennlich",
+        "hausform-rollen-weiblich"
+      ],
+      "zeile": "`Betreiber` \\+ `In`|`BetreiberIn`|`Betreiberin`|`betreiberin`|`\\$nutzer`",
+      "begruendung": "EIN WORT, DAS ALS WORT GENANNT WIRD (E-PK-37, vom Auftraggeber bestaetigt). `docs/Pruefablauf.md` 6.6 erklaert, warum `BetreiberIn` als `Betreiber`+`In` durch ein Muster ohne `gross` rutscht. Wird diese Stelle gegendert, sagt der Satz etwas anderes als das, was er beschreibt -- und die Erklaerung wird unlesbar. Dasselbe gilt ueberall, wo ein Text die GEFUNDENE Form aufzaehlt."
     }
   ]
 }

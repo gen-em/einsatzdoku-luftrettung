@@ -41,7 +41,7 @@ ein Export „ohne Patientendaten" ihn trotzdem — nur in einer anderen Spalte 
 |---|---|
 | `transport_dest` | Eine Einrichtung, keine Person. Zusammen mit Datum und Uhrzeit ist es ein Hinweis auf eine bestimmte Aufnahme — das ist der Grund, aus dem es hier ausdrücklich benannt und nicht stillschweigend eingeordnet wird. |
 | `bw_unit` | Dieselbe Klasse: eine Einheit, kein Name. Die Namen der Bergwacht stehen in `bw_info`, und das fällt unter die Schranke. |
-| `weitere_rettungsmittel` | Organisationskennungen wie „RTW Kempten". Das Feld ist Freitext und trägt damit denselben Vorbehalt wie die Notizen; entschieden wurde trotzdem für „bleibt enthalten", weil es der Sache nach eine Betriebsangabe ist. |
+| `weitere_rettungsmittel` | Organisationskennungen wie „RTW Talwang". Das Feld ist Freitext und trägt damit denselben Vorbehalt wie die Notizen; entschieden wurde trotzdem für „bleibt enthalten", weil es der Sache nach eine Betriebsangabe ist. |
 | `rea_json` | Der Verlauf einer Reanimation ohne Angabe, wen sie betraf. Ohne ihn wäre der Grund entfallen, Reanimationen überhaupt zu erfassen. |
 | `crew_abweichend` | Sagt nur, **dass** die Besatzung an diesem Einsatz von der des Diensttags abwich, nicht wer geflogen ist. Ohne ihn ließe sich nicht erkennen, dass die leeren Namensspalten leer *gemacht* wurden. |
 | Zeitpunkte der Phasen | Sie tragen Alarmzeit, Endzeit und Dauer — ohne sie bliebe von der Datei nichts Auswertbares übrig. |
@@ -113,9 +113,9 @@ keine Marker — sie sind Teil des Formats und werden vom Rückimport gesucht.
 **Bereinigung von `<konto>`:** Kleinbuchstaben, Umlaute nach deutscher Lesart
 ausgeschrieben (`ä`→`ae`, `ß`→`ss`), übrige Akzente auf den Grundbuchstaben
 zurückgeführt, alles Weitere zu `-` zusammengezogen, auf 40 Zeichen gekürzt.
-Aus `max@gen-em.de` wird so `max-gen-em-de` — die Punkte müssen weg, sonst
-sieht der Name nach mehrfacher Dateiendung aus. Bleibt von Name und Adresse
-nichts übrig, steht `konto` da.
+Aus `max@example.invalid` wird so `max-example-invalid` — die Punkte müssen
+weg, sonst sieht der Name nach mehrfacher Dateiendung aus. Bleibt von Name
+und Adresse nichts übrig, steht `konto` da.
 
 ---
 

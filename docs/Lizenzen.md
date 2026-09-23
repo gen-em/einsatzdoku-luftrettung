@@ -21,6 +21,15 @@ Sie verlangt die Herausgabe des Quelltexts auch dann, wenn die Software nicht
 *ausgeliefert*, sondern nur über ein Netz *betrieben* wird. Genau das ist der
 Normalfall dieser Anwendung.
 
+**Und die Anwendung erfüllt das sichtbar:** Die Fußzeile jeder Seite verlinkt
+den Lizenztext im Quelltextverzeichnis —
+`https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE`,
+gesetzt in `ui_fuss_seite()` (`server/ui.php`). Das ist **kein
+Fremdbestandteil und keine Laufzeitquelle**: Es wird nichts von dort geladen,
+es ist ein Verweis. Es steht hier, weil die AGPL genau diesen Verweis
+verlangt — und weil die Regelklasse `netz` sonst zu Recht fragt, was eine
+fremde Adresse im Markup zu suchen hat.
+
 **Die Lizenzen mischen sich nicht.** Fremdbestandteile behalten ihre eigene
 Lizenz — die Symbole bleiben MIT, Leaflet bleibt BSD-2, die Schriften bleiben
 OFL. Keine dieser Lizenzen verlangt, dass der Anwendungscode ihre Bedingungen
@@ -223,7 +232,40 @@ Ebenen stehen zur Wahl (`server/assets/map_layers.js`):
 |---|---|---|
 | Standard | `tile.openstreetmap.org` | **ODbL** — © OpenStreetMap-Mitwirkende |
 | Topografisch | `tile.opentopomap.org` | **CC-BY-SA**, Daten © OpenStreetMap-Mitwirkende |
+| Wandern | `tile.openmaps.fr` (OpenHikingMap) | **ungeprüft** — siehe den Absatz darunter |
 | Luftbild | `server.arcgisonline.com` (Esri World Imagery) | Esri-Nutzungsbedingungen |
+
+**Die Namensnennung verweist auf** `wiki.openstreetmap.org`,
+`www.openstreetmap.org`, `opentopomap.org`, `openmaps.fr` und `www.esri.com`.
+Das sind Links im Attributionsband, keine Kachelquellen — abgerufen wird von
+ihnen nichts.
+
+> **Die Zeile „Wandern" ist unvollständig, und das steht hier statt einer
+> Vermutung.** Die Ebene wurde mit `map_layers.js` eingebaut und in der
+> Content-Security-Policy freigeschaltet (`kopfzeilen_lib.php` 183), **ohne
+> je in dieser Liste zu stehen** — gefunden am 22.09.2026 von der neuen
+> Regelklasse `netz` (PK-04/1c, Backlog Nr. 280).
+>
+> **Was belegt ist**, weil es im Quelltext steht: Die Kacheln kommen von
+> `https://tile.openmaps.fr/openhikingmap/{z}/{x}/{y}.png`, und das
+> Attributionsband nennt „© OpenHikingMap · © OpenStreetMap" samt einem
+> Spendenlink.
+>
+> **Was NICHT belegt ist:** unter welchen Bedingungen die BetreiberIn die
+> Kacheln bereitstellt. Ein Eintrag in dieser Liste behauptet mehr als das
+> Attributionsband — er nennt Rechteinhaber und Bedingungen. **Der Versuch,
+> es nachzusehen, ist am 23.09.2026 gescheitert:** Die Arbeitsumgebung lässt
+> beide Abrufe nicht durch, `wiki.openstreetmap.org` und `openmaps.fr` je
+> mit **HTTP 403 am CONNECT-Tunnel** des Ausgangsproxys. Pflicht ist der
+> Versuch, nicht der Erfolg (`CLAUDE.md` 6) — die Zahl steht hier, die
+> Vermutung nicht.
+>
+> **Zu tun bleibt zweierlei** (Nr. 280): die Bedingungen von einem Rechner
+> mit Netzzugang nachsehen und hier eintragen — oder, wenn sie eine Nutzung
+> wie diese nicht decken, die Ebene ausbauen. Bis dahin ist die Zusage
+> „keine fremde Quelle zur Laufzeit" an dieser Stelle **eingehalten, aber
+> nicht belegt**: Die Quelle ist bekannt und aufgeschrieben, ihre Erlaubnis
+> nicht.
 
 Die **Namensnennung steht in der Karte selbst** — Leaflet zeigt sie unten
 rechts, und `map_layers.js` setzt sie je Ebene. Das ist keine Höflichkeit,

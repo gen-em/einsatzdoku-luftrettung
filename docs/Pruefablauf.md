@@ -466,10 +466,49 @@ Begründung** — kein Ausblenden.
 > (`watch/` — Ressourcen **und** Quelltext) seit S5/C, die Rechtstexte seit
 > P5b. **Damit läuft jeder Client durch die Liste.**
 
-Mit **PK-04** wird die Wortliste zur **Textprobe** erweitert (fünf
-Regelklassen: Luftbegriffe, Hausform, E-Mail-Adressen, Adressen im Netz,
-Namen und Rufnamen) und läuft dann einmal im Tor statt bei jeder
-Textänderung von Hand. Bis dahin gilt dieser Abschnitt unverändert.
+**Seit PK-04 ist die Wortliste die Textprobe** (E-PK-08): fünf Regelklassen
+statt einer, und sie läuft **einmal im Tor** statt bei jeder Textänderung von
+Hand.
+
+| Klasse | Was sie misst | Ziel |
+|---|---|---|
+| `luft` | Land- und Luftbegriffe (das ursprüngliche Maß) | 0 |
+| `hausform` | **18 Rollenwörter** im großen Binnen-I (E-PK-26, E-PK-38) | 0 |
+| `adressen` | E-Mail-Adressen außerhalb der von RFC 2606 reservierten Formen; `demo@gen-em.org` ist die eine erlaubte (E-PK-27) | 0 |
+| `netz` | Adressen im Netz, die nicht in `docs/Lizenzen.md` stehen | 0 |
+| `namen` | reale Orts- und Rufnamen (E-P1-02) | 0 |
+
+**Rot ist nur ein NEUER Treffer.** Der Altbestand steht mit Zahl in
+`textprobe-altbestand.json`, je (Datei, Muster); wer eine Stelle bereinigt,
+zieht ihn mit `--altbestand-schreiben` nach. So hält der Lauf auf, was
+hinzukommt, ohne bei jeder Änderung den ganzen Altbestand zu verlangen.
+
+> **Zwei Eigenschaften, ohne die eine Zahl aus dieser Probe nichts
+> bedeutet** — beide in PK-04/5 gemessen und behoben:
+>
+> **Ein Muster ohne `"gross": true` liest ohne Rücksicht auf Groß- und
+> Kleinschreibung.** Für `hausform` war das doppelt falsch: Es traf die
+> **Bezeichner** (`betreiberin` ist der Rollenname im Code, `$nutzer` eine
+> Variable — **1 233** kleingeschriebene Treffer gegen 913 großgeschriebene)
+> und es traf **die Hausform selbst**, weil `BetreiberIn` als
+> `Betreiber` + `In` durchgeht. Die Regel zählte damit hoch, je mehr man
+> reparierte: `AVV.md` ging von 22 auf 47, während 44 Stellen richtig
+> umgestellt wurden. Wer ein Muster für sichtbaren Text schreibt, setzt den
+> Schalter.
+>
+> **Eine Ausnahme ohne `muster`-Feld gilt nur für die Klasse `luft`.** Sie
+> meldet trotzdem „gegriffen" und sieht damit aus wie eine wirksame Ausnahme.
+> PK-04/1c hat das an 89 von 100 Regeln behoben; zwei sind durchgerutscht,
+> weil sie damals keinen Treffer der neuen Klassen hatten, und sind in 5c
+> aufgefallen. Wer eine Ausnahme für eine andere Klasse schreibt, nennt ihr
+> Muster.
+
+**Was die Zahl `hausform = 0` bedeutet — und was nicht.** Sie misst 18
+Wörter in fünf Bereichen: `server/*.php`, `server/api/*.php` (sichtbarer
+Text **ohne Kommentare**), `server/assets/*.js`, die Android- und
+Uhr-Ressourcen und 14 normative Dokumente. **Nicht** gemessen werden
+`Rahmenplan.md`, `Backlog.md`, `CHANGELOG.md`, `docs/konzepte/**` und **alle
+Kommentare**. Wer die Zahl zitiert, zitiert diesen Absatz mit.
 
 ### 6.7 Die Prüfmittel laufen zuletzt, nicht zwischendurch
 

@@ -14,6 +14,61 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.37.1] — 2026-09-23
+
+**Die Hausform, einmal durch.** PK-04 Teilstück 5 (E-PK-26); die einzige
+Korrekturstufe des Pakets.
+
+### Geändert
+
+- **Sichtbarer Text steht jetzt im großen Binnen-I** — „die NutzerIn", „die
+  BetreiberIn", „eine AdministratorIn", „die NotärztIn". Es ändert sich kein
+  Feld, keine Tabelle und kein Weg durch die Anwendung; es ändern sich
+  Wörter, und zwar **492 über 45 Dateien** unter `server/` und die normative
+  Dokumentation. Die Grammatik zieht mit: Binnen-I nimmt das feminine Genus,
+  und Artikel, Pronomen und Adjektive im selben Satz folgen.
+- **Die Hausform gilt für achtzehn Rollenwörter statt elf** (E-PK-38).
+  Hinzugekommen sind `Notarzt`, `Pilot`, `Patient`, `Kollege`, `Flugretter`,
+  `Fahrer` und `Praktikant`. Bis dahin hieß „null Treffer" **„null von elf"**
+  und nicht „der Text steht in der Hausform".
+- **`config.example.php` zeigt Beispieladressen unter `.invalid`.** Dort
+  stand `example.de` — **keine reservierte Domäne**: RFC 2606 reserviert
+  `example.com/net/org` und die TLDs `.invalid`, `.test`, `.example`,
+  `.localhost`. `example.de` ist registrierbar, und die Vorlage richtete
+  damit auch SMTP (`mail.example.de`, `noreply@example.de`) auf eine fremde
+  Domäne. Vier Stellen.
+- **Beispieldaten in der Dokumentation nennen keine reale Station mehr**
+  (E-P1-02). Die erfundene Geografie des Referenzbestands wird jetzt auch
+  dort benutzt: Hochkreuth, Sonnenau, Alpenfalke 1, Bergklinik Sonnenau.
+
+### Behoben
+
+- **Die Kartenquelle OpenHikingMap stand in keiner Lizenzliste.**
+  `tile.openmaps.fr` wird von `map_layers.js` geladen und war in der
+  Content-Security-Policy freigeschaltet — in `docs/Lizenzen.md` fehlte sie.
+  Sie steht jetzt dort, **die Lizenzspalte ausdrücklich als „ungeprüft"**:
+  Der Versuch, die Bedingungen nachzusehen, scheitert aus der
+  Arbeitsumgebung mit **HTTP 403** am Ausgangsproxy, und eine Vermutung hat
+  in einer Lizenzliste nichts zu suchen. Was zu tun bleibt, steht daneben.
+- **Sechzig tote Verweise auf Werkzeugordner** in `server/`-Kommentaren, aus
+  den Umzügen von PK-04. Neun davon von Hand, weil die stumpfe Ersetzung
+  verliert, welches Werkzeug gemeint war.
+
+### Bewusst nicht geändert
+
+**Was aus dem Haus geht, folgt nicht der Hausform** (E-PK-39): die
+Spaltenüberschriften der exportierten CSV- und Excel-Dateien (`Pilot 1`,
+`Flugretter`, `Fahrer`, `Praktikant` aus `CREW_ROLES`), die Spaltennamen des
+fremden Importprofils und der Titel in Zelle F1. Eine Datei, die jemand
+weitergibt, trägt die Überschriften, die die Empfängerin erwartet — und ein
+Importprofil, dessen Spalte `PilotIn` heißt, findet die Spalte `Pilot` nicht
+mehr, **still**, weil eine fehlende Spalte leer bleibt statt zu scheitern.
+
+Ebenso wenig die **Bezeichner**: `betreiberin` bleibt der Rollenname im Code,
+`$nutzer` die Variable. Und die Begriffe des Gesetzes im AVV
+(„Verantwortlicher", „Auftragsverarbeiter") sind Wortlaut der DSGVO, nicht
+Wortwahl des Hauses.
+
 ## [Werkzeug: Schritt 15 vorweggenommen zusammengeführt] — 2026-09-22
 
 ### Behoben
