@@ -19,6 +19,7 @@ eine abhakbare Prüfliste. Angelegt mit RP-01.
 | P-RP-02 | Die Freigabeprobe braucht keinen Kreislauf mehr | auf einer frischen Anlage **allein**: `bash tools/proben/proben.sh freigabe` | 16/0; „Konto umlauf-freigabe@… angelegt" und „… geloescht"; danach keine Zeile mit dieser Adresse in `users` | „Zielkonto nicht gefunden", oder das Konto bleibt stehen | **erledigt 23.09.2026** — 16/0 in 17 s, danach 0 Zeilen |
 | P-RP-03 | Die Wegprobe läuft am edbak-Umlaufkonto | `python3 tools/referenzdatensatz/vergleich/kreislauf.py --art edbak --frisch`, dann `python3 tools/spaltenregister/wegprobe.py` | Kreislauf 0 unerklärt; Wegprobe 34/0 | „Kein Ruhesegment mit genug GPS-Punkten" (falsches Konto) oder „Konto … nicht gefunden" (Kreislauf nicht gefahren) | **erledigt 23.09.2026** — 328 771 Vergleiche, 0 unerklärt, 31 s; Wegprobe 34/0 in 3 s |
 | P-RP-04 | `nach` zieht die Voraussetzung mit | `python3 tools/pruefstand/auswahl.py --stufe neben --datei server/index.php --nur-proben` | `kreislauf-edbak` steht vor `spaltenregister-wegprobe` | die Wegprobe steht vor dem Kreislauf, oder er fehlt | **erledigt 23.09.2026** — Selbstprobe 27/0, Liste geprüft |
+| P-RP-07 | Die neue csv-Referenz trägt die Hausform | `unzip -p tools/referenzdatensatz/referenz/*csv*.zip felder.csv \| grep -c "NotärztIn"` | mindestens 1 | 0 — dann ist wieder eine Referenz von vor der Hausform eingecheckt | **erledigt 23.09.2026** |
 | P-RP-05 | Ein zweiter Prüfstandlauf auf derselben Anlage bricht nicht an den Kreisläufen ab (F-RP-11) | `pruefen.sh --stufe neben --datei server/index.php --ohne-hochfahren` zweimal hintereinander | beide Läufe erreichen den Vergleich | „Konto besteht schon" im zweiten Lauf | **offen** — RP-05 |
 | P-RP-06 | Die Nebenstufe ist grün | `hochfahren.sh --neu`, dann `pruefen.sh --stufe neben --datei server/index.php --ohne-hochfahren` | 36 Proben, 0 rot, 0 nicht gemessen, Zeit je Probe in jeder Zeile | eine rote Probe, oder eine ohne Zeit | **offen** — RP-05 |
 
@@ -41,3 +42,18 @@ eine abhakbare Prüfliste. Angelegt mit RP-01.
 liefen nach der Probe weiter (Kindprozesse von `gegenstellen.py`; jetzt
 eigene Prozessgruppe), und das Kurzkonzept hatte der Wegprobe das
 csv-Umlaufkonto zugewiesen, das keine GPS-Punkte trägt.
+
+## 3. Messprotokoll RP-02 (23.09.2026)
+
+| Mittel | Zahl |
+|---|---|
+| `proben.sh gpx` (Texte + neue Referenz) | 95 / 0, 2 s (vorher 95 / 4) |
+| `proben.sh wartung` | 67 / 0, 1 s |
+| `proben.sh mail` | 41 Prüfungen, 0 Befunde, 18 s |
+| `proben.sh csp-browser` | 34 / 34, 25 s — neu: „Report-Only: ohne frame-ancestors", „Scharf: frame-ancestors none" |
+| `referenz_export.mjs` auf frischer Anlage | 26 s, 0 Konsolenfehler; 204 GPX, 101 Einsätze, 209 Dateien (wie die alte) |
+| `kreislauf.py --art csv --frisch` gegen die neue Referenz | 10 922 Vergleiche, 1 271 erwartet, **0 unerklärt**, 48 s |
+
+**Nicht übernommen:** die mit erzeugte edbak-Referenz. Die alte ist grün
+(0 unerklärt in RP-01), und E-RP-01 betrifft nur das csv-Archiv.
+

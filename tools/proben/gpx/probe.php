@@ -671,9 +671,9 @@ foreach ($eigene as $stufe => $e) {
            || str_contains($seite['leib'], 'art=mission&id=' . $e['id']),
            'Auch der Einsatz (Stufe ' . $stufe . ') steht in der Liste', 'Einsatz ' . $e['id']);
 }
-pruefe(str_contains($seite['leib'], 'keine Spur'),
+pruefe(str_contains($seite['leib'], 'keine GPS-Daten'),   // seit E-S9-03 „GPS-Daten" statt „Spur" (F-RP-02)
        'Ein Eintrag ohne Spur steht da, aber ohne Abruf',
-       'Plakette „keine Spur" gefunden');
+       'Plakette „keine GPS-Daten" gefunden');
 pruefe(substr_count($seite['leib'], 'data-spur=') >= 4,
        'Jede Zeile ist mit der Karte verknuepfbar',
        substr_count($seite['leib'], 'data-spur=') . ' Zeilen mit data-spur');
@@ -782,7 +782,7 @@ pruefe(count($mitDuenn) === 1 && count($mitRoh) === 2,
        count($mitDuenn) . '× ausgeduennt, ' . count($mitRoh) . '× Original');
 
 $kopf = gpx_kopf_desc($r['leib']);
-pruefe(str_contains($kopf, '3 Spuren') && str_contains($kopf, 'teils ausgedünnt'),
+pruefe(str_contains($kopf, '3 Aufzeichnungen') && str_contains($kopf, 'teils ausgedünnt'),   // „Aufzeichnung" statt „Spur" (F-RP-02)
        'Der Kopf sagt, was die Datei als Ganzes ist', $kopf);
 
 preg_match('/filename="([^"]*)"/', $r['kopf'], $mm);

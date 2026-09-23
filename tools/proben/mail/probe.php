@@ -169,6 +169,11 @@ $beispiel = [
     'pakete'     => 42,
     'ordner'     => 7,
     'rat'        => 'Alte Pakete loeschen.',
+    // Seit P5b: Loeschantrag (termin) und Kontomenge (einsaetze, speicher).
+    // Fehlten sie hier, meldete die Probe rot, ohne dass ein Text falsch war (F-RP-04).
+    'termin'     => '23.10.2026',
+    'einsaetze'  => '1 234 von 1 500',
+    'speicher'   => '412 MB von 500 MB',
 ];
 $fehlend = [];
 foreach ($katalog as $k => $e) {

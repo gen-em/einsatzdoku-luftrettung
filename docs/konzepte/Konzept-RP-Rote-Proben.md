@@ -15,10 +15,10 @@ entsteht mit RP-01. Zweig `claude/rp-rote-proben`, von `main` `b329ac3`.
 >
 > | | |
 > |---|---|
-> | Stand | **23.09.2026 — RP-01 erledigt.** Versand, Freigabe, Wegprobe grün; GPX findet ihre Referenz; die Kreisläufe laufen wiederholbar; der Prüfstand schreibt die Zeit je Probe. |
+> | Stand | **23.09.2026 — RP-01 und RP-02 erledigt.** Acht der neun Proben sind einzeln grün; offen ist nur `wiederherstellung` (RP-03). |
 > | Entschieden | E-PK-45 (Paket vor P5c, keine Ausnahmeliste), E-PK-46 (nicht gemessen ist rot) — aus Konzept PK. **E-RP-01 bis -04** vom Auftraggeber am 23.09.2026 (Abschnitt 4) |
 > | Offen | nichts |
-> | Nächstes | **RP-02** — veraltete Erwartungen und die csv-Referenz (E-RP-01) |
+> | Nächstes | **RP-03** — `wiederherstellung`: Anwendung oder Erwartung |
 
 ---
 
@@ -51,6 +51,7 @@ lief keine davon in einer Stufe, die ein Tor las; deshalb fiel keiner auf.
 | F-RP-09 | `versandprobe` | „Aufruf: php probe.php <wurzel>" | Braucht laufende Gegenstellen; `gegenstellen.py` stellt FTP, FTPS und SFTP als Nachbau **ohne root** hin, der Prüfstand startet sie nicht | `tools/` (Verdrahtung) |
 | F-RP-11 | Kreisläufe im Prüfstand | (gefunden in RP-01) | Der Prüfstand rief beide Kreisläufe **ohne `--frisch`** auf; auf einer Anlage, die nicht frisch ist, bricht der zweite Lauf ab, weil das Umlaufkonto schon besteht | `tools/` (Verdrahtung) |
 | F-RP-12 | `gpxprobe` (hinter F-RP-01) | „190 von 204 ohne Gegenstück", „0 von 204 verglichen" | Erst mit dem richtigen Pfad erreicht: Die Referenz vom 15.09. ist älter als der Demo-Bestand — dieselbe Ursache wie F-RP-06 | `tools/` (Referenz, E-RP-01) |
+| F-RP-13 | `browserprobe-csp` | (Hinweis, RP-02) | Die Probe überschreibt bei jedem Lauf ein **eingechecktes** Bildschirmfoto (`tools/proben/csp-browser/kopfzeilen.png`). Im Prüfstand landet es im gemessenen Baum und damit im Commit | `tools/` — Entscheidung in RP-05 |
 | F-RP-10 | `wiederherstellung` | „Ein knapper Schub sichert wenigstens ein Konto und hört dann auf" (2 erledigt, 0 offen) und „Der Zeiger steht auf dem zuletzt gesicherten Konto" (`cur=—`) | **ungeklärt** — seit PK-03 bekannt (F-PK-18). Entweder ist der „knappe Schub" auf dieser Anlage nicht knapp (Erwartung) oder der Job hört nicht auf (Anwendung) | offen |
 
 **Dauer:** Der Prüfstand schreibt keine Zeit je Probe. Welche Probe die
@@ -75,6 +76,16 @@ lief keine davon in einer Stufe, die ein Tor las; deshalb fiel keiner auf.
 | `gpxprobe` | Pfad berichtigt; die Referenz wird gefunden — dahinter F-RP-12 |
 | `spaltenregister-wegprobe` | Konto und Passwort aus `kreislauf.py` (`umlauf_konto()`, `UMLAUF_PASSWORT`), keine Zugänge in `pruefablauf.json`; `nach` zieht den edbak-Kreislauf mit und stellt ihn davor (`auswahl.py --selbstprobe` **27 / 0**). Gemessen: Kreislauf 328 771 Vergleiche, 0 unerklärt, 31 s; Wegprobe **34 / 0**, 3 s |
 | Zeit je Probe | steht in jeder Zeile des Prüfstands und in der Schlusszeile |
+
+**Stand RP-02 (23.09.2026, erledigt; Prüfdokument 3):**
+
+| Teil | Ergebnis |
+|---|---|
+| `gpxprobe` | „3 Aufzeichnungen" und „keine GPS-Daten" statt „Spur" (F-RP-02); mit der neuen Referenz auch F-RP-12 — **95 / 0**, 2 s |
+| `wartungsprobe` | „BetreiberIn ist informiert" (F-RP-03) — **67 / 0**, 1 s |
+| `mailprobe` | Beispielsatz um `termin`, `einsaetze`, `speicher` ergänzt (F-RP-04) — **41 / 0**, 18 s |
+| `browserprobe-csp` | Report-Only **ohne** `frame-ancestors`, scharf **mit** — zwei Zeilen statt einer falschen (F-RP-05) — **34 / 34**, 25 s |
+| csv-Referenz (E-RP-01) | neu erzeugt auf frischer Anlage direkt nach dem Einrichten (`referenz_export.mjs`, 26 s); **nur das csv-Archiv** übernommen, die edbak-Referenz bleibt (sie war grün). Gleicher Umfang: 204 GPX, 101 Einsätze, 209 Dateien. `kreislauf-csv` **10 922 Vergleiche, 0 unerklärt**, 48 s; keine Ausnahmeregel dazu |
 
 **Eigener Fehler, im Konzept:** Das Kurzkonzept wies der Wegprobe das
 Umlaufkonto des **csv**-Kreislaufs zu. Gemessen: „Kein Ruhesegment mit genug

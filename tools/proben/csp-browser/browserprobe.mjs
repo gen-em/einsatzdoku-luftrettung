@@ -68,7 +68,10 @@ ok('script-src mit Nonce, ohne unsafe-inline',
    /script-src 'self' 'nonce-[^']+'/.test(csp) && !csp.includes("script-src 'self' 'unsafe-inline'"));
 ok('style-src self + style-src-attr unsafe-inline',
    csp.includes("style-src 'self'") && csp.includes("style-src-attr 'unsafe-inline'"));
-ok('frame-ancestors none', csp.includes("frame-ancestors 'none'"));
+/* frame-ancestors NUR in der scharfen Fassung (Nr. 224): In einer
+ * Report-Only-Kopfzeile ignoriert der Browser sie und warnt in der Konsole.
+ * Bis RP-02 verlangte diese Zeile sie hier und war rot (F-RP-05). */
+ok('Report-Only: ohne frame-ancestors (Nr. 224)', !csp.includes('frame-ancestors'));
 ok('X-Content-Type-Options', kopf['x-content-type-options'] === 'nosniff');
 ok('X-Frame-Options', kopf['x-frame-options'] === 'DENY');
 ok('Referrer-Policy', (kopf['referrer-policy'] || '').includes('strict-origin'));
@@ -178,6 +181,7 @@ const r2 = await seite.goto(`${BASIS}/index.php`, { waitUntil: 'domcontentloaded
 const h2 = r2.headers();
 ok('Scharf: Kopfzeile heisst jetzt Content-Security-Policy',
    'content-security-policy' in h2 && !('content-security-policy-report-only' in h2));
+ok('Scharf: frame-ancestors none', (h2['content-security-policy'] || '').includes("frame-ancestors 'none'"));
 
 /* Ein eingeschleustes fremdes Skript — wird es blockiert? */
 const geladen = await seite.evaluate(() => new Promise(aufl => {
