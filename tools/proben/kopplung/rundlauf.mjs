@@ -241,7 +241,7 @@ try {
 await seite.goto(`${BASIS}/login.php`, { waitUntil: 'networkidle' });
 await seite.fill('input[name="email"]', DEMO.email);
 await seite.fill('input[name="password"]', DEMO.pw);
-await seite.click('button[type="submit"]');
+await seite.click('#loginform button[type="submit"]');
 await seite.waitForURL(u => !u.pathname.endsWith('/login.php'), { timeout: 90000 });
 pruefe(!seite.url().includes('login.php'), 'Anmeldung am Demo-Konto', seite.url().replace(BASIS, ''));
 

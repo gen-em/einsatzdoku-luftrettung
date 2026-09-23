@@ -81,6 +81,7 @@ ui_kopf(['menue' => false, 'zurueck' => $zurueck]);
 ?>
 <div class="rahmen rahmen-lesespalte">
   <main class="inhalt">
+  <?php ui_hinweise(); ?>
     <h1><?= e($titel) ?></h1>
 
     <?php ui_karte_start([]); ?>

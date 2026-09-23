@@ -204,7 +204,7 @@ async function anmelden(rolle) {
   await seite.fill('input[name="password"]', konto.pw);
   await Promise.all([
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
-    seite.click('button[type="submit"]'),
+    seite.click('#loginform button[type="submit"]'),
   ]);
   if (seite.url().includes('login.php')) {
     throw new Error(`Anmeldung als ${konto.email} gescheitert. Läuft die lokale `
@@ -293,7 +293,7 @@ async function neuAnmelden(r) {
   await r.seite.fill('input[name="password"]', konto.pw);
   await Promise.all([
     r.seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
-    r.seite.click('button[type="submit"]'),
+    r.seite.click('#loginform button[type="submit"]'),
   ]);
 }
 
@@ -400,6 +400,19 @@ async function kasten(rolle, weg, breite) {
      * nichts aus der Mengenbremse.
      */
     async rolle(name) { return kasten(name, weg, breite); },
+
+    /**
+     * ABMELDEN UND NEU ANMELDEN, in derselben Rolle und demselben Kontext
+     * (P5c/AP1). Die Ankuendigung laesst sich je SITZUNG wegklicken und
+     * kommt beim naechsten Anmelden wieder (E-P5c-13) — belegen laesst sich
+     * das nur mit einer neuen Sitzung im selben Browser. Ein zweiter
+     * Kontext waere eine zweite Sitzung, aber keine NEU-Anmeldung: Er haette
+     * die alte nie gesehen.
+     */
+    async neuAnmelden() {
+      await r.seite.goto(`${BASIS}/logout.php`, { waitUntil: 'domcontentloaded' });
+      await neuAnmelden(r);
+    },
 
     /**
      * Den KONTOSCHALTER der Adresssuche stellen (Profil → Datenschutz).

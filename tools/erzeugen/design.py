@@ -268,6 +268,9 @@ def bausteine_lesen() -> list[dict]:
         'ui_leiste_einstellungen': 'leiste-liste',
         'ui_einstellungen_uebersicht': 'uebersicht-block',
         'ui_ortsfeld': 'ortsfeld-zeile',
+        # P5c/AP1: Variante des Hinweisstreifens bzw. der Meldung (Design.md 9.36).
+        'ui_umgebung_hinweis': 'hinweis-umgebung',
+        'ui_ankuendigung': 'meldung-ankuendigung',
         'ui_seite_start': '', 'ui_seite_ende': '', 'ui_favicon': '',
         'ui_krypto_bootstrap': '', 'ui_logo': '',
     }

@@ -761,6 +761,19 @@ img,svg,video{max-width:100%;height:auto}
  * Der negative Rand des Zahnrads zieht nur den letzten Knopf an die Kante;
  * dieser hier braucht ihn nicht. */
 .kopf-hilfe.aktiv{background:var(--auf-dunkel-flaeche);border-radius:var(--radius)}
+/* KOPFLEISTE EINER ANLAGE MIT ETIKETT (.kopf-umgebung) — Variante der
+ * Kopfleiste (P5c/AP1, E-P5c-05, -55, -59; M-P5c-02 a). Gesetzt von ui_kopf(),
+ * wenn `app.umgebung` einen Namen traegt; die Farbe ist eine geschlossene
+ * Liste, heute nur `rot`. Weiss auf --rot 4,78 : 1.
+ * Der aktive Punkt: --orange haette auf Rot 2,10 : 1 und fiele unter die
+ * 3 : 1 aus WCAG 1.4.11. --orange-hell bleibt in der Familie „hier stehst du"
+ * und traegt 4,12 : 1 (Variante A, Q-P5c-26).
+ * Der Name traegt auf Dunkelblau --sand (8,15 : 1); auf Rot waeren es
+ * 2,86 : 1. --schnee traegt 4,68 : 1 und bleibt durch Gewicht 400 gegen 600
+ * der Marke untergeordnet. */
+.kopf-umgebung{background:var(--rot)}
+.kopf-umgebung .kopf-punkt.aktiv{border-bottom-color:var(--orange-hell)}
+.kopf-umgebung .kopf-nutzer{color:var(--schnee)}
 
 /* ---- Rahmen: Leiste und Inhalt als Einheit, zentriert -------------------- */
 .rahmen{
@@ -2080,6 +2093,29 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   font-size:var(--groesse-2);
 }
 .demo-hinweis .symbol{color:var(--orange-tief)}
+
+/* ---- Die Reihe der Hinweise (.hinweise) — P5c/AP1, E-P5c-55 --------------
+ * Umgebung → Ankündigung → Demo → Datenschutz, an der Stelle des
+ * Demo-Hinweises (ui_hinweise()). EIN BEHÄLTER STATT VIER AUSSENABSTÄNDEN:
+ * .demo-hinweis und .meldung bringen je --abstand-5 nach unten mit; gestapelt
+ * ergäbe das 32-px-Lücken zwischen Zeilen, die zusammengehören. */
+.hinweise{display:flex;flex-direction:column;gap:var(--abstand-2);margin-bottom:var(--abstand-5)}
+.hinweise > .demo-hinweis,.hinweise > .meldung{margin-bottom:0}
+/* Umgebungszeile — Variante des Hinweisstreifens im Ton der Fehlermeldung:
+ * Rot-tief auf Rosa 6,27 : 1. Nicht wegklickbar, wie der Demo-Hinweis. */
+.hinweis-umgebung{background:var(--rosa);color:var(--rot-tief)}
+.hinweis-umgebung .symbol{color:var(--rot-tief)}
+/* Ankündigung — die vorhandene .meldung (info/warn); das Kreuz steht in
+ * .meldung-aktion. Die Klasse benennt den Verwender. Das Kreuz bleibt oben
+ * rechts, auch auf dem Handy: .meldung bricht sonst um, sobald der Text seine
+ * Mindestbreite (16rem) nicht bekommt, und das Kreuz landete allein in einer
+ * Zeile unten links. */
+.meldung-ankuendigung{flex-wrap:nowrap;align-items:flex-start}
+.meldung-ankuendigung p{flex:1 1 auto}
+.meldung-ankuendigung .meldung-aktion{margin:calc(var(--abstand-2) * -1) calc(var(--abstand-2) * -1) 0 0}
+.meldung-ankuendigung .meldung-aktion .knopf-symbol{color:inherit}
+/* Anmeldeseiten: dieselbe Reihe über der Karte, so breit wie die Karte. */
+.anmeldung .hinweise{width:100%;max-width:var(--anmeldekarte);margin-bottom:var(--abstand-4)}
 
 
 /* == 14. TABELLE UND KACHEL ================================================

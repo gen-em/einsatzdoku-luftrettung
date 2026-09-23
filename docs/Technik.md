@@ -57,7 +57,19 @@ Daten erst nach Server-Bestätigung.
 │   │                       Sparsamkeit: install.php und sitzung_lib.php
 │   │                       brauchen ihn, ohne db.php zu laden
 │   ├── ui.php             Seitenhülle (ui_seite_start/-_ende), Kopf-/Seitenleisten,
-│   │                       Fußzeile, Meldungszeile, Abbruchseite, Krypto-Rüstzeug
+│   │                       Fußzeile, Meldungszeile, Abbruchseite, Krypto-Rüstzeug,
+│   │                       seit Web 20.38.0 die Reihe der Streifen über dem
+│   │                       Inhalt (ui_hinweise(): Umgebung, Ankündigung, Demo,
+│   │                       Datenschutz)
+│   ├── umgebung_lib.php   Das Umgebungsetikett aus config.php (umgebung(),
+│   │                       umgebung_praefix(), UMGEBUNG_FARBEN; P5c/AP1,
+│   │                       E-P5c-05). LAEDT NUR konfig_lib.php — die
+│   │                       Seitenhülle zieht es auch im Einrichter nach
+│   ├── ankuendigung_lib.php  Ankündigung (drei app_state-Zeilen) und Rundmail
+│   │                       an die erreichbaren Konten (P5c/AP1, E-P5c-13)
+│   ├── ankuendigung.php   Das × im Streifen: merkt in der Sitzung, dass DIESE
+│   │                       Ankündigung geschlossen ist. Ohne auth_guard —
+│   │                       der Streifen steht auch über der Anmeldung
 │   ├── auth_guard.php     Session/Rollen (Rolle+Existenz je Anfrage aus der DB,
 │   │                       Sitzungszähler, ist_admin(), csrf_check())
 │   ├── auth_salt.php      KDF-Salt (mit Pseudo-Salt gegen User-Enumeration)
@@ -321,6 +333,9 @@ Daten erst nach Server-Bestätigung.
 │   ├── assets/kopieren.js  Der Knopf „kopieren" an einem Wertekasten —
 │   │                       Zwischenablage mit Rückfall auf Markieren; ohne
 │   │                       JavaScript bleibt der Wert lesbar und markierbar
+│   ├── assets/ankuendigung.js  Schließt die Ankündigung ohne Neuladen, wo die
+│   │                       Seite ein Token trägt (sonst schickt das Formular
+│   │                       selbst ab), und zählt im Formular die Byte mit
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
 │   │                       gelöschtes Konto, Passwortwechsel); dazu seit
 │   │                       Web 20.28.0 flash_setzen()/flash_holen() — die
@@ -2648,19 +2663,30 @@ Warnung vor der vollen Platte. `smtp_versand_vermerken(false)` hielt nur fest,
 von `smtp_send()` ist sie selbst.
 
 ```
-mail_einreihen($schluessel, $empfaenger, $daten)
+mail_einreihen($schluessel, $empfaenger, $daten, $sofort = true)
    → Katalogeintrag suchen, Pflichtwerte prüfen, Adresse prüfen
    → überholte Zeilen derselben Art an dieselbe Adresse schließen
    → Zeile in mail_warteschlange
-   → EINEN Versuch sofort
+   → EINEN Versuch sofort — außer bei $sofort = false
    → 'zugestellt' | 'wartet' | 'abgelehnt'
 ```
 
-**Der Katalog** (`mail_katalog()`) führt **zehn** Einträge mit `art`, `frist`,
-`pflicht`, `betreff` und `text`. Der Name der Installation kommt aus
-`instanz_name()`, die Kontaktzeile aus `instanz_kontakt()` — über
-`mail_rahmen()`, den alle zehn benutzen. Vorher gab es acht Mailtexte mit
-handgeschriebener Grußformel, und einer davon fehlte das „Gen-EM" im Betreff.
+**Nur einreihen** (`$sofort = false`, seit Web 20.38.0, F-P5c-29) gibt es für
+die Rundmail: Der sofortige Versuch kostet bis zu `MAIL_BUDGET_S` je
+Nachricht, und eine Rundmail an vierzig Konten hätte den Seitenaufruf bis zu
+200 s aufgehalten. Die Antwort ist dann `wartet` oder `abgelehnt`, nie
+`zugestellt`; der Job trägt die Zeilen hinaus, zehn je Lauf
+(`MAIL_JE_LAUF`). Es ist ein Parameter an derselben Funktion, keine zweite:
+Prüfung, Präfix, Frist und das Schließen überholter Zeilen bleiben eine
+Stelle.
+
+**Der Katalog** (`mail_katalog()`) führt **zwanzig** Einträge mit `art`,
+`frist`, `pflicht`, `betreff` und `text` (hier stand bis Web 20.37.3 „zehn",
+der Stand von Web 20.8.0 — P5b hatte neun dazugebracht, 20.38.0 bringt
+`rundmail`). Der Name der Installation kommt aus `instanz_name()`, die
+Kontaktzeile aus `instanz_kontakt()` — über `mail_rahmen()`, den alle
+benutzen. Vorher gab es acht Mailtexte mit handgeschriebener Grußformel, und
+einer davon fehlte das „Gen-EM" im Betreff.
 
 **Die Leiter**: `MAIL_LEITER = [300, 1800, 7200, 28800, 86400]` — der Abstand
 **zum vorigen Versuch**, nicht zum Einreihen. Fünf Versuche über 24 Stunden.
@@ -5371,6 +5397,7 @@ Die Bausteine im Einzelnen:
 | Wiederherstellungsschlüssel | `assets/crypto.js` (`pruefeRecoveryCode()`) | Prüft Länge und Alphabet **vor** der Ableitung und unterscheidet Tippfehler von falschem Zettel. Ohne die Prüfung entsteht aus einer krummen Eingabe klaglos ein falscher Schlüssel, und die Meldung lautet in beiden Fällen „passt nicht". |
 | Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. Seit Web 4.7.0 an allen fünf Stellen eingebunden: Erstvergabe, Zurücksetzen, Passwortwechsel, Backup-Passwort, Export-Archivpasswort. Vorher lag der Baustein ungenutzt neben `minlength`-Attributen. |
 | Seitenhülle | `ui.php` (`ui_seite_start()`, `ui_seite_ende()`) | Ab Web 7.1.0. Doctype, `<head>`, Eröffnung und Abschluss des `<body>` — vorher 28-mal von Hand, mit zwei Schreibweisen des Viewports und zwei Titeltrennern. **Der Tab-Titel lautet seit Web 15.3.1 „&lt;Seite&gt; — Gen-EM NAdoku"** (vorher „— Einsatzdoku"); die zweite Stelle, die einen Titel selbst setzt, ist die Wartungsseite in `wartung_lib.php`. Leaflet-CSS nur auf Kartenseiten und **vor** `style.css`, damit eigene Regeln die des Kartenwerks überschreiben. **Ohne Abhängigkeit auf oberster Ebene**, damit `install.php` sie vor der Ersteinrichtung laden kann; `asset()`, `e()` und `favicon_tags()` werden über `ui_asset()`/`ui_e()`/`ui_favicon()` nur benutzt, wo es sie gibt. **`install.php` lädt sie seit Web 9.10.1 am Dateianfang** — vorher stand das `require_once` in `render_page()` selbst, und weil die Aufrufer ihr Argument mit `ui_meldung_markup()` und `ui_knopf()` bauen (PHP wertet Argumente vor dem Aufruf aus), endete jeder Zweig in „Call to undefined function". Der Einrichter war damit seit Web 9.1.0 unbenutzbar (F-P3-AR). |
+| Streifen über dem Inhalt | `ui.php` (`ui_hinweise()`), `umgebung_lib.php`, `ankuendigung_lib.php` | Ab Web 20.38.0 (P5c/AP1, E-P5c-55). **Eine Reihe, vier Streifen, feste Reihenfolge:** Umgebung → Ankündigung → Demo → Datenschutz. Sie steht an der Stelle des Demo-Hinweises (`ui_leiste_ende()`), nicht unter der Kopfleiste — dort verschob ein Streifen seit jeher die klebende Leiste (F-P3-G). Die Seiten ohne Gerüst rufen `ui_hinweise()` selbst als erstes Kind ihres `<main>`, die Anmeldeseiten über der Karte; `einwilligung.php` ohne den Datenschutz-Streifen, dessen Ziel sie ist. **Das Etikett** kommt aus `konfig('app.umgebung')` über `umgebung()` — nie abgeleitet, geschlossene Farbliste — und wirkt an drei Stellen: Titelvorsatz in `ui_seite_start()` (und in `stoerung_seite_html()` für Wartung und Überlast), Klasse `.kopf-umgebung` in `ui_kopf()`, Streifen. **Die Ankündigung** liegt in drei `app_state`-Zeilen (`ankuendigung_text`, `_ton`, `_bis`); das × ist ein Formular an `ankuendigung.php` (ohne `auth_guard`, weil der Streifen auch über der Anmeldung steht), das in der Sitzung die **Kennung** dieser Ankündigung merkt — eine neue erscheint wieder. `login.php` löscht die Marke beim Anmelden, weil `session_regenerate_id()` die Daten behält. Kein × ohne Sitzung (lesende Seiten ohne Cookie) und nicht in der eigenen Sitzung der Setzseite. `assets/ankuendigung.js` schließt ohne Neuladen, wo es `CSRF` gibt, und steht **hinter** der Reihe, damit die Reihe mit ihrem letzten Streifen verschwinden kann. |
 | Krypto-Rüstzeug der Seiten | `ui.php` (`ui_krypto_bootstrap()`) | Ab Web 7.2.0. Die Verweise auf `crypto.js`, `keyguard.js` und `unlock.js` samt `PAT_WRAP`, `KDF_SALT`, `KDF_ITER` und `KDF_ITER_ZIEL`; wahlweise `PAT_KEY_CHECK`, `CSRF` und `pwquality.js`. Vorher acht Blöcke in sieben Dateien — mit zwei Namen für dieselbe Hülle. Ein **zweiter Aufruf im selben Seitenaufbau gibt nichts aus und schreibt ins Fehlerlog**: Zwei Einbindungen von `crypto.js` wären ein `SyntaxError`, der das ganze zweite Skript verwirft. |
 | Meldungszeile | `ui.php` (`ui_meldung()`) | Ab Web 7.2.0. Hinweis- und Fehlerzeile über dem Inhalt, vorher 21-mal in 13 Dateien. Der Ton (`info`/`ok`) ist Parameter, weil der Bestand beide kennt: `ok` meldet einen Vollzug (Stammdaten, Nachbearbeitung). |
 | Abbruchseite | `ui.php` (`ui_abbruch()`) | Ab Web 7.2.0. Statt `exit('… nicht gefunden.')` eine richtige Seite mit Kopfleiste und Rückweg — 16 Stellen, darunter `require_admin()` und `csrf_check()` in `auth_guard.php`. Wortlaut und HTTP-Code unverändert; der API-Zweig von `require_admin()` antwortet weiter mit JSON. |
@@ -10454,6 +10481,27 @@ füllen.
 Nur wer hier steht, darf `X-Forwarded-For` **und** `X-Forwarded-Proto` setzen.
 Leer lassen, wenn die Anwendung direkt am Netz hängt — ein zu weiter Eintrag
 lässt jeden seine eigene Adresse behaupten und hebelt den Ratenschutz aus.
+
+**Eine Testanlage kennzeichnen (seit Web 20.38.0, einmalig je Anlage,
+E-P5c-05):** In der `config.php` **der Testanlage** — nie auf Produktiv —
+unter `app` das Etikett, und daneben den Betreff-Vorsatz der Mails:
+
+```php
+'app'  => [ /* … */ 'umgebung' => ['name' => 'Staging', 'farbe' => 'rot'] ],
+'mail' => ['betreff_praefix' => '[Staging]'],
+```
+
+Danach trägt jede Seite „[Staging]" im Titel, eine rote Kopfleiste und den
+Streifen „Staging — Testdaten, kein Echtbetrieb"; die Wartungs- und die
+Überlastseite sowie Notfall- und Schlüsselblatt nur den Titel. `farbe` ist eine geschlossene Liste
+(`UMGEBUNG_FARBEN` in `server/umgebung_lib.php`, heute nur `rot`). **Nie
+abgeleitet** — kein Blick auf Domain oder Zweig; ohne Eintrag verhält sich
+die Anlage wie die Produktivanlage. **Prüfen:** Betrieb → Status, Karte
+„Server", Zeile „Umgebung" — blau mit „Staging" bzw. „Produktiv"; orange,
+wenn der Vorsatz ohne Etikett steht oder die Farbe unbekannt ist. Beide
+Schlüssel stehen auskommentiert in `config.example.php`. `config.php` wird
+zur Laufzeit nicht geschrieben; die Zeile kommt per FTP hinauf, und bis der
+OPcache des Hosters die Datei neu liest, können einige Sekunden vergehen.
 
 **Code-Update mit DB-Änderung ausrollen:** pushen (Deploy läuft automatisch)
 → als BetreiberIn **Betrieb → Updates** aufrufen → nach dem Lauf muss die

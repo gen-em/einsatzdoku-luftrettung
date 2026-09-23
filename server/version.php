@@ -7282,5 +7282,42 @@ declare(strict_types=1);
  *   standen rechts neben der Karte und drueckten sie bei 390 px auf rund
  *   200 px. Jetzt Spaltenrichtung; die fuenf uebrigen Seiten der Huelle
  *   tragen nur die Karte und sehen aus wie vorher.
+ *
+ * 20.38.0 — STAGING SIEHT NICHT MEHR AUS WIE PRODUKTIV, UND EINE WARTUNG
+ *   LAESST SICH ANKUENDIGEN (P5c/AP1, Backlog Nr. 243, R38). Das erste
+ *   Paket von Schritt 10c, eine NEBENSTUFE: kein Feld, keine Tabelle, keine
+ *   Migration — die Ankuendigung liegt in drei `app_state`-Zeilen.
+ *
+ *   DAS ETIKETT. `config.php` kann `app.umgebung` tragen
+ *   (`['name' => 'Staging', 'farbe' => 'rot']`); dann steht vor jedem
+ *   Seitentitel „[Staging] ", die Kopfleiste ist rot statt dunkelblau, und
+ *   ueber dem Inhalt steht „Staging — Testdaten, kein Echtbetrieb". NIE
+ *   ABGELEITET: Weder Domain noch Zweig setzen es, und ohne Eintrag
+ *   verhaelt sich die Anlage wie die Produktivanlage. Die Statusseite sagt
+ *   beides in einer Zeile „Umgebung" und warnt orange, wenn Mails „[Staging]"
+ *   tragen und die Oberflaeche nicht, oder wenn eine Farbe ausserhalb der
+ *   geschlossenen Liste steht. Der aktive Kopfpunkt wird auf Rot in
+ *   `--orange-hell` gestrichen: Das gewohnte Orange haette dort 2,10 : 1.
+ *
+ *   DIE ANKUENDIGUNG. Betrieb → Servereinstellungen, Karte „Ankuendigung":
+ *   ein Satz bis 190 Byte, Ton, Ende. Sie steht ueber jeder Seite — auch
+ *   ueber der Anmeldung —, laesst sich je Sitzung wegklicken und kommt beim
+ *   naechsten Anmelden wieder, bis sie ablaeuft. Die vier Streifen stehen in
+ *   EINER Reihe (`ui_hinweise()`) an der Stelle des Demo-Hinweises:
+ *   Umgebung, Ankuendigung, Demo, Datenschutz.
+ *
+ *   DIE RUNDMAIL. Derselbe Text geht auf Knopfdruck an alle erreichbaren
+ *   Konten (aktiv, mit Passwort, nicht das Demo-Konto), hoechstens einmal je
+ *   Tag, mit Rueckfrage und einem Protokolleintrag. `mail_einreihen()` hat
+ *   dafuer gelernt, NUR einzureihen: Der sofortige Versuch kostet bis zu
+ *   5 s je Nachricht, und vierzig davon in einem Seitenaufruf waeren eine
+ *   Seite, die nicht antwortet.
+ *
+ *   NEBENBEI: Die Pruefwerkzeuge klickten beim Anmelden „den ersten
+ *   Absendeknopf der Seite". Mit einer Ankuendigung ist das ihr Kreuz — sie
+ *   zielen jetzt auf das Anmeldeformular (24 Stellen in 20 Dateien).
+ *   `config.example.php` nennt die Kontaktadresse unter Verwaltung →
+ *   Installation, wo sie steht, und nicht mehr unter den
+ *   Servereinstellungen, wo sie nie stand.
  */
-const WEB_VERSION = '20.37.3';
+const WEB_VERSION = '20.38.0';

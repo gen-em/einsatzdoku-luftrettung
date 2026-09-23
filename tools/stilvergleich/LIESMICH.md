@@ -6,7 +6,8 @@ Hat sich am Erscheinungsbild etwas geändert, das niemand wollte?
 ## Aufruf
 
 ```bash
-bash tools/stilvergleich/gegen.sh [<ref>]     # Vorgabe: origin/main
+bash tools/stilvergleich/gegen.sh [<ref>]              # Vorgabe: origin/main
+bash tools/stilvergleich/gegen.sh --schreiben [<ref>]  # Messung als geplant.txt ablegen
 ```
 
 `gegen.sh` holt den Vergleichsstand aus git, baut die vier Proben und fährt
@@ -28,8 +29,18 @@ Dateien, nicht eine laufende Anlage. `NODE_PATH` setzt `gegen.sh`, weil
 
 ## Erwartete Zahl
 
-**0 Abweichungen.** Zuletzt gemessen 21.09.2026: **40 989 Elementmessungen,
-0 Abweichungen, 175 Eigenschaften je Element** (Chromium).
+**Genau die Abweichungen in `geplant.txt` — ohne Datei 0** (seit P5c/AP1,
+F-P5c-72; `docs/Pruefablauf.md` 6.10). Jede Abweichung wird zur Signatur
+„Probe · Element <Elternteil> : Eigenschaften"; der Lauf ist grün, wenn die
+gemessenen Signaturen und die Datei gleich sind, und nennt sonst jede
+ungeplante und jede nicht gemessene Zeile. Die Datei wird im Pull Request
+gelesen und nach dem Merge geleert.
+
+Zuletzt gemessen 23.09.2026 (P5c/AP1, gegen `origin/main`): **41 483
+Elementmessungen, 546 Abweichungen in 30 Signaturen, alle 30 geplant**
+(Chromium). Gegenproben: eine Zeile gestrichen → 1 ungeplant, rot; eine
+erfundene dazu → 1 nicht gemessen, rot. Davor, ohne gewollte Änderung:
+21.09.2026, 40 989 Elementmessungen, 0 Abweichungen.
 
 ## Was es nicht kann
 

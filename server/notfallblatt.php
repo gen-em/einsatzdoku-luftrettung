@@ -118,6 +118,9 @@ if ($konto === '') {
  * wie ich zuerst geschrieben hatte. Die Seite laedt sonst ohne Fehler
  * und bricht erst an der Zeile darunter ab. */
 require_once __DIR__ . '/instanz_lib.php';
+/* Der Vorsatz „[Staging] " im Titel (P5c/AP1, E-P5c-70): Das Blatt baut
+ * seine Huelle selbst und laeuft nicht durch `ui_seite_start()`. */
+require_once __DIR__ . '/umgebung_lib.php';
 $adresse = app_url();
 $jetzt   = datum_text(gmdate('Y-m-d H:i:s'));
 $h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
@@ -136,7 +139,7 @@ kopfzeilen_seite();
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Notfallblatt<?= $adresse !== '' ? ' — ' . $h($adresse) : '' ?></title>
+<title><?= $h(umgebung_praefix()) ?>Notfallblatt<?= $adresse !== '' ? ' — ' . $h($adresse) : '' ?></title>
 <link rel="stylesheet" href="<?= $h($v('assets/style.css')) ?>">
 </head>
 <body class="blatt-seite">

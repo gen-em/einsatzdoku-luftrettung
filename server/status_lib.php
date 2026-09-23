@@ -176,6 +176,47 @@ function status_erhebung(): array
         $wAktiv ? 'Wartung' : 'offen',
         'betrieb_updates.php');
 
+    /* ---- Umgebung (P5c/AP1, E-P5c-05, -55, -64) -------------------------
+     *
+     * STEHT IMMER DA, in beiden Richtungen gleichwertig. Die Plakette nennt
+     * die Umgebung — den Namen aus `app.umgebung`, sonst „Produktiv" —, der
+     * Satz sagt, wofuer sie da ist. Wer die Zeile nur im Fehlerfall zeigt,
+     * laesst nicht sehen, dass ein leeres Etikett RICHTIG leer ist.
+     *
+     * „PRODUKTIV" IST DIE LESART EINES LEEREN ETIKETTS, keine Ableitung aus
+     * Domain oder Zweig: Ohne `app.umgebung` verhaelt sich die Anlage wie
+     * die Produktivanlage, und genau das sagt die Zeile.
+     *
+     * ZWEI WARNFAELLE, beide orange: Der Betreff-Praefix ist gesetzt und das
+     * Etikett nicht (die Mails sagen „Staging", die Oberflaeche nicht), und
+     * eine Farbe ausserhalb der geschlossenen Liste. */
+    require_once __DIR__ . '/umgebung_lib.php';
+    require_once __DIR__ . '/mail_lib.php';
+    $umgebung = umgebung();
+    $praefix  = trim(mail_praefix());
+    $mailSatz = $praefix !== '' ? 'Mails mit „' . $praefix . '" im Betreff' : 'Mails ohne Präfix';
+    if ($umgebung === null && $praefix !== '') {
+        $server[] = status_z('Umgebung',
+            'Mails tragen den Betreff-Präfix „' . $praefix . '", die Oberfläche trägt '
+            . 'kein Etikett. app.umgebung fehlt in der config.php',
+            'orange', 'Präfix ohne Etikett');
+    } elseif ($umgebung !== null && !$umgebung['farbe_bekannt']) {
+        $server[] = status_z('Umgebung',
+            'Etikett „' . $umgebung['name'] . '" mit der Farbe „' . $umgebung['farbe_roh']
+            . '" — bekannt ist nur „' . implode('", „', UMGEBUNG_FARBEN) . '". Die '
+            . 'Kopfleiste steht deshalb ' . $umgebung['farbe'],
+            'orange', 'Farbe unbekannt');
+    } elseif ($umgebung !== null) {
+        $server[] = status_z('Umgebung',
+            $umgebung['name'] . '-Umgebung zum Testen, nicht für den Echtbetrieb. '
+            . 'Kopfleiste ' . $umgebung['farbe'] . ', ' . $mailSatz,
+            'blau', $umgebung['name']);
+    } else {
+        $server[] = status_z('Umgebung',
+            'Produktivumgebung für den Echtbetrieb. Kopfleiste blau, ' . $mailSatz,
+            'blau', 'Produktiv');
+    }
+
     $offen = (int)$lauf['offen'];
     $server[] = status_z('Updates',
         $offen > 0

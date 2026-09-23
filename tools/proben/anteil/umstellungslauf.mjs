@@ -152,7 +152,7 @@ async function anmelden(mail, pass) {
   await seite.goto(BASIS + '/login.php', { waitUntil: 'domcontentloaded' });
   await seite.fill('input[name="email"]', mail);
   await seite.fill('input[name="password"]', pass);
-  await seite.click('button[type="submit"], input[type="submit"]');
+  await seite.click('#loginform button[type="submit"]');
   try {
     /* `waitUntil: 'commit'` — die Anmeldung ist vorbei, sobald die Antwort
      * da ist. Die Vorgabe `'load'` wartet auf JEDE Unterressource, und dazu

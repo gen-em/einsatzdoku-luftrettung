@@ -317,12 +317,13 @@
       "ab": "klein",
       "pfade": [
         "server/mail_lib.php",
-        "server/email_lib.php"
+        "server/email_lib.php",
+        "server/ankuendigung_lib.php"
       ],
       "proben": [
         "mailprobe"
       ],
-      "anlass": "smtp_letzter_fehler()"
+      "anlass": "smtp_letzter_fehler(); Rundmail F-P5c-29"
     },
     {
       "id": "sicherungsziel",
@@ -468,7 +469,8 @@
       "id": "stylesheet",
       "ab": "klein",
       "pfade": [
-        "server/assets/style.css"
+        "server/assets/style.css",
+        "tools/stilvergleich/**"
       ],
       "proben": [
         "stilvergleich",

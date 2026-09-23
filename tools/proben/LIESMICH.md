@@ -13,7 +13,7 @@ bash tools/proben/proben.sh <name> [zusatz…]   # alle · --liste
 `ingest` Annahme und Prüfschicht · `spur` beide Spurablagen ·
 `jobs` Hintergrundjobs und Register · `kopplung` Handy und Uhr ·
 `wartung` Wartungsmodus und Torwächter · `raten` Ratenschutz ·
-`mail` Versand und Fehlerweg · `versand` Sicherungsziele ·
+`mail` Versand, Fehlerweg und Rundmail · `versand` Sicherungsziele ·
 `komplett` Komplettsicherung · `wiederherstellung` Rückweg ·
 `gpx` Export gegen das Schema · `geraete` Gerätevertrag ·
 `verbindung` Verbindungsgrenze · `anteil` Server-Anteil ·

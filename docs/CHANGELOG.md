@@ -14,6 +14,95 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.38.0] — 2026-09-23
+
+**Staging sieht nicht mehr aus wie Produktiv, und eine Wartung lässt sich
+ankündigen.** P5c/AP1 (Schritt 10c), Backlog Nr. 243, R38. Nebenstufe: kein
+Feld, keine Tabelle, keine Migration — `update.php` ist nicht fällig. Auf
+Staging braucht es eine Zeile in `config.php` (unten, und Rahmenplan 6).
+
+### Neu
+
+- **Web: Das Umgebungsetikett** (E-P5c-05, -55, -59). Steht in `config.php`
+  `'app' => ['umgebung' => ['name' => 'Staging', 'farbe' => 'rot']]`, trägt
+  jede Seite den Titelvorsatz „[Staging]", jede Kopfleiste ist rot statt
+  dunkelblau, und über dem Inhalt steht „Staging — Testdaten, kein
+  Echtbetrieb". Bis hierher sahen beide Anlagen gleich aus; wer zwei Reiter
+  offen hatte, sah den Unterschied nur in der Adresszeile. **Nie
+  abgeleitet:** Weder Domain noch Zweig setzen das Etikett. Eine Ableitung
+  rät, und eine falsch geratene Anlage trüge das falsche Etikett mit voller
+  Überzeugung. Ohne Eintrag verhält sich die Anlage wie die Produktivanlage.
+  **Der aktive Kopfpunkt** ist auf Rot in `--orange-hell` gestrichen: Das
+  gewohnte Orange hätte dort 2,10 : 1 und fiele unter die 3 : 1, die ein
+  Bedienzustand braucht; `--orange-hell` hält 4,12 : 1 und bleibt in der
+  Farbe, die in der Anwendung „hier stehst du" heißt.
+- **Web: Die Zeile „Umgebung" auf der Statusseite** (E-P5c-64), oben in der
+  Karte „Server", **immer** — mit der Plakette „Staging" bzw. „Produktiv"
+  und einem Satz, wofür die Anlage da ist. Wer die Zeile nur im Fehlerfall
+  zeigt, lässt nicht sehen, dass ein leeres Etikett richtig leer ist.
+  Orange wird sie in zwei Fällen: Mails tragen den Betreff-Präfix
+  „[Staging]", die Oberfläche aber kein Etikett — und eine Farbe außerhalb
+  der geschlossenen Liste (die Kopfleiste steht dann trotzdem rot).
+- **Web: Die Ankündigung** (E-P5c-13, -55, -60). Betrieb →
+  Servereinstellungen, Karte „Ankündigung", zuoberst: ein Text bis 190 Byte
+  (das Feld zählt mit; Umlaute zählen doppelt), Ton „Hinweis" oder
+  „Warnung", sichtbar bis Datum und Uhrzeit. Sie steht als Streifen über
+  jeder Seite, **auch über der Anmeldung** — eine angekündigte Wartung
+  betrifft den, der sich gerade anmelden will, am meisten. Sie lässt sich
+  wegklicken, **je Sitzung**: Beim nächsten Anmelden steht sie wieder da, bis
+  sie abläuft. Gemerkt wird das in der Sitzung und nicht im Browser, weil ein
+  Cookie das Abmelden überlebte. Keine Migration: drei `app_state`-Zeilen.
+- **Web: Die Rundmail** (E-P5c-13, -56). „Als Rundmail senden …" schickt den
+  Ankündigungstext an alle **erreichbaren** Konten — aktiv, mit gesetztem
+  Passwort, nicht das Demo-Konto. Die Rückfrage nennt die Zahl; höchstens
+  eine je Tag; ein Eintrag im Protokoll (Reiter Verwaltung), einer für die
+  ganze Rundmail und keiner je Empfänger. Die Rundmail speichert vorher,
+  damit hinausgeht, was im Feld steht.
+
+### Geändert
+
+- **Web: Die vier Streifen über dem Inhalt stehen in einer Reihe**
+  (`ui_hinweise()`): Umgebung, Ankündigung, Demo, Datenschutz — an der
+  Stelle des Demo-Hinweises und nicht unter der Kopfleiste, wo ein Streifen
+  seit P3 die klebende Leiste verschob. Die Seiten ohne Gerüst
+  (Anmeldeseiten, Handbuch, Rechtstexte, Wiederherstellung, Einrichter,
+  Fehlerseite) rufen dieselbe Reihe; die Wartungs- und die Überlastseite
+  tragen nur den Titelvorsatz, ebenso Notfall- und Schlüsselblatt — deren
+  Umgebungszeile auf dem Blatt kommt mit dem Umbau der Blätter (E-P5c-70).
+  Dass die Blätter dazugehören, hat erst der Bilderlauf mit Etikett gezeigt:
+  24 Titel ohne Vorsatz auf drei Seiten, die ihre Hülle selbst bauen. Kein neuer Baustein: Die Umgebungszeile ist
+  der Hinweisstreifen im Ton der Fehlermeldung, die Ankündigung die
+  vorhandene Meldung mit einem Kreuz.
+- **Web: `mail_einreihen()` kann nur einreihen** (F-P5c-29). Der sofortige
+  Versuch kostet bis zu 5 s je Nachricht; eine Rundmail an vierzig Konten
+  hätte den Seitenaufruf bis zu 200 s aufgehalten. Es ist ein Parameter an
+  derselben Funktion und keine zweite — Prüfung, Präfix und Frist bleiben
+  eine Stelle.
+- **Werkzeug: Die Anmeldung der Prüfwerkzeuge zielt auf das Formular.** 24
+  Stellen in 20 Dateien klickten „den ersten Absendeknopf der Seite". Mit
+  einer Ankündigung ist das ihr Kreuz, und das Werkzeug hätte sie
+  geschlossen, statt sich anzumelden — gemessen beim ersten Lauf dieses
+  Pakets. Auf Staging, gegen das Stufe 2 läuft, hätte eine gesetzte
+  Ankündigung genügt.
+- **Werkzeug: Der Stilvergleich kennt eine Liste der geplanten
+  Abweichungen** (`tools/stilvergleich/geplant.txt`, F-P5c-72).
+  `Pruefablauf.md` 6.10 verlangt seit PK-01, eine gewollte
+  Gestaltungsänderung gegen eine solche Liste zu halten; gebaut war nur die
+  Null. Seit PK-05 den Prüfbericht gegenliest, hätte deshalb jede Änderung
+  an `style.css` das Tor rot gemacht — dieses Paket war das erste, das es
+  traf. Grün ist der Lauf jetzt, wenn Messung und Liste gleich sind, in
+  beiden Richtungen; die Datei wird im Pull Request gelesen und nach dem
+  Merge geleert. **Bewusst ohne Werte:** Eine Signatur nennt Element und
+  Eigenschaft, nicht die Pixel — sonst müsste die Liste bei jeder neuen
+  Regel neu geschrieben werden, weil die Katalogprobe mitwächst.
+
+### Behoben
+
+- **Web: `config.example.php` schickte zur Kontaktadresse nach Betrieb →
+  Servereinstellungen**, wo sie nie stand; sie steht unter Verwaltung →
+  Installation. Neu in der Vorlage: `app.umgebung` und
+  `mail.betreff_praefix`, beide auskommentiert.
+
 ## [Werkzeug: Die Nebenstufe ist grün (Konzept RP)] — 2026-09-23
 
 Konzept RP, Backlog Nr. 292. Keine Versionsstufe: berührt sind nur `tools/`

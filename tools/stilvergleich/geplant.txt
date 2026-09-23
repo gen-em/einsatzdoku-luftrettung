@@ -1,0 +1,38 @@
+# Stilvergleich — geplante Abweichungen (docs/Pruefablauf.md 6.10).
+# Geschrieben mit `bash tools/stilvergleich/gegen.sh --schreiben`, gegen den
+# Vergleichsstand des Laufs. Je Zeile: Probe, Element <Elternteil>, die
+# Eigenschaften, die sich aendern. Diese Datei wird im Pull Request GELESEN —
+# jede Zeile ist eine Aussage: „das soll sich aendern". Nach dem Merge ist
+# sie leer zu machen (der naechste Lauf meldet sonst ihre Zeilen als
+# „geplant, aber nicht gemessen").
+
+katalog.html  body <html>  :  height
+katalog.html  div <body>  :  height
+katalog.html  div <div>  :  height
+katalog.html  div.anmeldung <div>  :  height
+katalog.html  div.demo-hinweis <div.hinweise>  :  margin, margin-bottom, min-height, min-width
+katalog.html  div.hinweis-umgebung <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline
+katalog.html  div.hinweise <div.anmeldung>  :  column-gap, display, flex-direction, gap, margin, margin-bottom, max-width, width
+katalog.html  div.hinweise <div>  :  column-gap, display, flex-direction, gap, margin, margin-bottom
+katalog.html  div.kartenfilter-lupe <div>  :  bottom, inset, top
+katalog.html  div.kartenfilter-x <div>  :  bottom, inset, top
+katalog.html  div.kopf-nutzer <div.kopf-umgebung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline
+katalog.html  div.kopf-punkt.aktiv <div.kopf-umgebung>  :  border-bottom, border-bottom-color, border-color
+katalog.html  div.kopf-umgebung <div>  :  background
+katalog.html  div.meldung <div.hinweise>  :  margin, margin-bottom, min-height, min-width
+katalog.html  div.meldung-aktion <div.meldung-ankuendigung>  :  margin, margin-right, margin-top, width
+katalog.html  div.meldung-ankuendigung <div>  :  align-items
+katalog.html  div.nur-vorlesen <div>  :  bottom, inset, top
+katalog.html  div.suchfeld-lupe <div>  :  bottom, inset, top
+katalog.html  div.suchfeld-x <div>  :  bottom, inset, top
+katalog.html  div.symbol <div.hinweis-umgebung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline, stroke
+katalog.html  div.vorschlaege <div>  :  bottom, inset, top
+katalog.html  html <->  :  height
+katalog.html  input.schalter-box <div>  :  bottom, inset, top
+katalog.html  input.segment-box <div>  :  bottom, inset, top
+katalog.html  input.wahl-box <div>  :  bottom, inset, top
+katalog.html  p <div.meldung-ankuendigung>  :  flex
+seiten.html  div.demo-hinweis.hinweis-umgebung <aside.leisteX>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline
+seiten.html  div.hinweise <h2.uebersicht-block>  :  column-gap, display, flex-direction, gap, margin, margin-bottom
+seiten.html  p <div.demo-hinweis.hinweis-umgebung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline
+seiten.html  strong <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, color, outline

@@ -12,11 +12,31 @@ return [
         'logo_path' => 'assets/images/gen-em_logo_helicopter.svg',  // Logo auf Login- und Einrichtungsseite
         'max_body_bytes' => 524288,                   // 512 KB Ingest-Limit
         // Die KONTAKTADRESSE und die BETREIBERMAIL stehen NICHT hier, sondern
-        // unter Betrieb -> Servereinstellungen (P5a/AP5, E-P5a-40). Grund:
-        // config.php wird zur Laufzeit nicht geschrieben — was hier steht,
-        // laesst sich nur ueber FTP aendern. Eine Adresse, die in jeder Mail
-        // steht, muss eine BetreiberIn selbst umstellen koennen.
+        // unter Verwaltung -> Installation (P5a/AP5, E-P5a-40; bis Web 20.37.3
+        // stand hier „Betrieb -> Servereinstellungen", und dort sind sie
+        // nie gewesen). Grund: config.php wird zur Laufzeit nicht geschrieben
+        // — was hier steht, laesst sich nur ueber FTP aendern. Eine Adresse,
+        // die in jeder Mail steht, muss eine BetreiberIn selbst umstellen
+        // koennen.
+        //
+        // ---- Umgebungsetikett (P5c/AP1, E-P5c-05) ----------------------
+        // NUR AUF EINER ANLAGE, DIE NICHT DIE PRODUKTIVANLAGE IST. Leer oder
+        // fehlend heisst: keine Kennzeichnung — die Anlage verhaelt sich wie
+        // die Produktivanlage, und die Statusseite sagt „Produktiv". Gesetzt,
+        // traegt jede Seite den Titelvorsatz „[Staging]", eine rote
+        // Kopfleiste und die Zeile „Staging — Testdaten, kein Echtbetrieb".
+        // Nie abgeleitet: Weder Domain noch Zweig setzen es, nur diese Zeile.
+        // `farbe` ist eine geschlossene Liste, heute nur 'rot'.
+        //
+        //   'umgebung' => ['name' => 'Staging', 'farbe' => 'rot'],
     ],
+    // ---- Betreff-Vorsatz der Mails (P5a, E-PP-09) -------------------------
+    // Auf Staging '[Staging]': Jede Mail dieser Anlage traegt ihn vorn im
+    // Betreff. Gehoert mit dem Etikett oben zusammen — steht der Vorsatz und
+    // das Etikett nicht, warnt Betrieb -> Status („Praefix ohne Etikett").
+    //
+    //   'mail' => ['betreff_praefix' => '[Staging]'],
+
     'smtp' => [                                       // z. B. eigener Stalwart-Server
         'host' => 'mail.example.invalid',
         'port' => 465,                                // implizites TLS (SMTPS)

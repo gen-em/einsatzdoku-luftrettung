@@ -427,6 +427,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             // Alte Sitzungsbremse aufraeumen: Auf Rechnern, die vor dieser
             // Fassung angemeldet waren, liegen die beiden Werte noch herum.
             unset($_SESSION['login_fails'], $_SESSION['login_last'], $_SESSION['role']);
+            /* DIE ANKUENDIGUNG KOMMT MIT JEDER ANMELDUNG WIEDER (P5c/AP1,
+             * E-P5c-13). Wer sie auf DIESER Seite geschlossen hat, schloss sie
+             * fuer die Sitzung vor dem Anmelden — und `session_regenerate_id()`
+             * oben behaelt die Daten. Ohne diese Zeile truege das Schliessen in
+             * die Anmeldung hinueber. */
+            require_once __DIR__ . '/ankuendigung_lib.php';
+            unset($_SESSION[ANKUENDIGUNG_SITZUNG]);
             /* LOGO-WAHL EINMAL AUFLOESEN (E-P3-20). Bei „wechselnd" faellt
                hier der Wuerfel — je Anmeldung, nicht je Seitenaufruf; sonst
                spraenge das Logo beim Blaettern. */
@@ -491,6 +498,7 @@ require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
 ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
 ?>
 <main class="anmeldung">
+ <?php ui_hinweise(); ?>
  <div class="anmeldung-karte">
   <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
   <h1 class="anmeldung-titel"><?= e(instanz_kurz()) ?></h1>

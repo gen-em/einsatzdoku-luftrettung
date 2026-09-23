@@ -1,7 +1,7 @@
 # Klickprobe — Bericht
 
 Lauf gegen `https://127.0.0.1:8443` — 1280 px als Zeigergerät (Sollhöhe 36 px).
-**48 von 48 Wegen erfüllt**, 0 verfehlt.
+**50 von 50 Wegen erfüllt**, 0 verfehlt.
 
 | Weg | Paket | Prüfpunkt | Breite | Soll | Ist | |
 |---|---|---|--:|---|---|---|
@@ -45,6 +45,8 @@ Lauf gegen `https://127.0.0.1:8443` — 1280 px als Zeigergerät (Sollhöhe 36 p
 | `ap6-adhoc-speichern-und-finden` | AP6 | E-S9-10 | 1280 px (36) | Nach dem Neuladen: Auswahl „adhoc", Name und Typ zurück, Standortkennung aus dem Treffer, 0 Rollenfelder; der Name steht in der Tagesliste | **Kennung aus dem Treffer „3" · nach dem Neuladen Auswahl „adhoc", Name „KP Aushilfe 12/1", Typ sonstiges, Betriebsart ground, Standortkennung „3", Rollenfelder 0 · Name in der Tagesliste: true** | erfüllt |
 | `ap6-namen-ueberleben-den-umweg` | AP6 | F-S9-U-34 | 1280 px (36) | Die Namen stehen nach dem Umweg unverändert im Formular und in der Leseansicht | **3 Namen vorher (Selma Ibrahimović, Ronja Pfeil, Dr. Hanna Kestner) · nach dem Umweg über das Tagesfahrzeug (0 Rollenfelder) alle wieder da: true** | erfüllt |
 | `ap6-einsatzformular-ohne-rollen-am-adhoc-tag` | AP6 | Frage 11 (a) + 3b | 1280 px (36) | Vorher die Rollen des Rettungsmittels, nachher 0 — und die Namen stehen weiter in der Leseansicht des Tages | **Einsatzformular: 3 Rollen am Tag mit Rettungsmittel (driver, trainee, other), 0 am Tag mit „Anderem Rettungsmittel" · 3 Namen in der Leseansicht: true** | erfüllt |
+| `betrieb-server-ankuendigung` | P5c-AP1 | E-P5c-13 | 1280 px (36) | Gesetzt erscheint der Streifen; weggeklickt ist er auch auf der nächsten Seite fort; nach Neuanmeldung wieder da; entfernt fort | **gesetzt sichtbar · weggeklickt fort, auch auf Status · neu angemeldet wieder da · entfernt fort** | erfüllt |
+| `betrieb-server-rundmail` | P5c-AP1 | E-P5c-13 | 1280 px (36) | Die Rückfrage nennt die Zahl der erreichbaren Konten; Abbrechen sendet nichts und schreibt nichts ins Protokoll | **Rückfrage „…1 erreichbare Konten…" · Protokoll 1 → 1** | erfüllt |
 | `da-faehigkeiten-nach-typ` | AP0 | DA-01 | 1280 px (36) | 7 von 7 Kombinationen: Häkchen sichtbar genau bei Standard/Luft, Bergwacht/Luft, Bergwacht/Boden und Sonstiges/Luft; Kleinzeile „bei diesem Typ auch bodengebunden" nur bei Typ Bergwacht; je zwei Häkchen | **7 von 7 Kombinationen wie erwartet** | erfüllt |
 | `da-windenkacheln-am-bodendienst` | AP3 | DA-02 | 1280 px (36) | Gruppe „Bergrettung" vorhanden; Windeneinsatz gesetzt, Cycles 1, Cycles mit Patient 1, Luftverladung gesetzt, Bereitschaft „Bergwacht Felsgrat" | **Gruppe sichtbar: true · Winde 1, Cycles 1, mit Patient 1, Luftverladung 1 · Bergwacht 1, Bereitschaft „Bergwacht Felsgrat"** | erfüllt |
 | `da-tag-ohne-standort` | AP3 | DA-03 | 1280 px (36) | Standortfeld leer oder fehlend · 0 Rollenfelder · Transportziel mit Koordinate, aber ohne Vorschlagsliste | **base_name null · Art „Veranstaltung, bodengebunden" · Zeile „Standort" in der Leseansicht: false (Zeilen: Rettungsmittel, Notizen) · 0 Rollenfelder · Transportziel im Einsatz gefunden: true · Karte: true** | erfüllt |

@@ -46,6 +46,51 @@ $notice = null; $error = null;
  * Konten-Zweig und wird unten in der Karte gezeigt. */
 $demoFrage = false;
 
+/* ---- Ankuendigung und Rundmail (P5c/AP1, E-P5c-13, -55) ------------------
+ *
+ * EIN FORMULAR, DREI KNOEPFE: Speichern, Rundmail, Entfernen. Die Rundmail
+ * SPEICHERT ZUERST, und das ist der Punkt: Was im Feld steht, ist das, was
+ * hinausgeht. Wer den Text aendert und gleich „Als Rundmail senden" drueckt,
+ * soll nicht die alte Fassung verschickt haben.
+ *
+ * `$ankForm` haelt bei einem Fehler, was eingegeben war — ein abgewiesenes
+ * Formular, das die Eingabe verwirft, laesst sie ein zweites Mal tippen. */
+require_once __DIR__ . '/ankuendigung_lib.php';
+$ankForm = null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST'
+    && in_array($_POST['action'] ?? '', ['ankuendigung', 'rundmail', 'ankuendigung_weg'], true)) {
+    csrf_check();
+    if ($_POST['action'] === 'ankuendigung_weg') {
+        ankuendigung_entfernen();
+        $notice = 'Ankündigung entfernt — der Streifen erscheint auf keiner Seite mehr.';
+    } else {
+        $ankForm = ['text' => (string)($_POST['ank_text'] ?? ''),
+                    'ton'  => (string)($_POST['ank_ton'] ?? 'info'),
+                    'tag'  => trim((string)($_POST['ank_bis'] ?? '')),
+                    'zeit' => trim((string)($_POST['ank_bis_zeit'] ?? ''))];
+        require_once __DIR__ . '/validate_lib.php';
+        $bisUtc = pruef_ortszeit_zu_utc($ankForm['tag'], $ankForm['zeit'], 0, 'Sichtbar bis');
+        if ($bisUtc === null) {
+            $error = 'Bitte bei „Sichtbar bis" ein Datum und eine Uhrzeit (HH:MM) angeben.';
+        } else {
+            $error = ankuendigung_setzen($ankForm['text'], $ankForm['ton'],
+                                         (int)iso_utc_lesen($bisUtc));
+        }
+        if ($error === null) {
+            $ankForm = null;
+            if ($_POST['action'] === 'rundmail') {
+                $r = rundmail_senden();
+                if ($r['ok']) { $notice = $r['meldung']; } else { $error = $r['meldung']; }
+            } else {
+                $a = ankuendigung();
+                $notice = 'Ankündigung gespeichert — sie steht bis '
+                        . datum_zeit_text(iso_utc($a['bis'] ?? time()), ', ')
+                        . ' über jeder Seite.';
+            }
+        }
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speicher') {
     csrf_check();
     $teile = [];
@@ -620,10 +665,98 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
   <?php if ($error !== null): ?><?= ui_meldung_markup('fehler', $error) ?><?php endif; ?>
 
 
+  <?php /* ---- Ankündigung (P5c/AP1, E-P5c-13, -55; Bild M-P5c-02 a) ---------
+       ZUOBERST, wie im freigegebenen Bild: Sie ist die Karte, für die eine
+       BetreiberIn diese Seite am häufigsten aufschlägt, und sie ist kurz.
+       Die Schlüssel folgen unmittelbar darunter — ihre rote Lage steht
+       zusätzlich auf der Statusseite und am Menüzähler.
+
+       DREI KNÖPFE IN EINEM FORMULAR, jeder mit eigenem `action`. Die
+       Rückfrage hängt deshalb am Rundmail-KNOPF und nicht am Formular
+       (confirm.js: „Wenn EIN Formular mehrere Absendeknöpfe hat …").
+
+       DER BYTEZÄHLER zählt Byte, nicht Zeichen — `app_state` fasst 190
+       (E-P5c-55). Den ersten Stand rechnet der Server, das Mitzählen
+       `assets/ankuendigung.js`; ohne Skript steht der Stand beim Laden. */ ?>
+  <?php
+    $ankGesp = ankuendigung_gespeichert();
+    $ankWert = $ankForm ?? ($ankGesp !== null
+        ? ['text' => $ankGesp['text'], 'ton' => $ankGesp['ton'],
+           'tag'  => fmt_local(iso_utc($ankGesp['bis']), 'Y-m-d'),
+           'zeit' => fmt_local(iso_utc($ankGesp['bis']), 'H:i')]
+        : ['text' => '', 'ton' => 'info', 'tag' => '', 'zeit' => '']);
+    $ankRest = APP_STATE_MAX - strlen(trim((string)preg_replace('/\s+/u', ' ', $ankWert['text'])));
+    $rundZuletzt = app_state_lesen(RUNDMAIL_K_ZULETZT);
+    $rundHeute   = rundmail_heute_gesendet() !== null;
+    $rundZahl    = count(rundmail_empfaenger());
+  ?>
+  <?php ui_karte_start(['titel' => 'Ankündigung', 'id' => 'k-ankuendigung',
+      'plakette' => $ankGesp === null
+          ? ui_plakette('keine', ['ton' => 'neutral'])
+          : ($ankGesp['abgelaufen']
+              ? ui_plakette('abgelaufen', ['ton' => 'neutral'])
+              : ui_plakette('sichtbar bis ' . datum_zeit_text(iso_utc($ankGesp['bis']), ', '),
+                            ['ton' => $ankGesp['ton'] === 'warn' ? 'orange' : 'blau']))]); ?>
+    <p class="feld-hinweis">Ein Streifen über jeder Seite, bis er abläuft.
+       <a href="hilfe.php#12-8-ankuendigung-und-rundmail">Wie er wirkt</a></p>
+    <form method="post" action="betrieb_server.php">
+      <?= csrf_field() ?>
+      <?php /* VON HAND, NICHT DURCH ui_feld: Der Zähler darunter braucht eine
+               Kennung (`aria-describedby`, `data-bytezaehler`), und ui_feld
+               gibt seiner Kleinzeile keine. */ ?>
+      <div class="feld">
+        <label class="feld-label" for="f-ank_text">Text</label>
+        <textarea class="feld-eingabe feld-mehrzeilig" id="f-ank_text" name="ank_text" rows="3"
+                  data-bytegrenze="<?= APP_STATE_MAX ?>" data-bytezaehler="f-ank_rest"
+                  aria-describedby="f-ank_rest"><?= e($ankWert['text']) ?></textarea>
+        <p class="feld-klein" id="f-ank_rest"><?= $ankRest >= 0
+            ? 'Noch ' . $ankRest . ' von ' . APP_STATE_MAX . ' Byte — Umlaute zählen doppelt.'
+            : (-$ankRest) . ' Byte zu viel — erlaubt sind ' . APP_STATE_MAX
+              . ', Umlaute zählen doppelt.' ?></p>
+      </div>
+      <?php ui_feld(['name' => 'ank_ton', 'label' => 'Ton', 'art' => 'select',
+          'optionen' => ANKUENDIGUNG_TOENE, 'wert' => $ankWert['ton']]); ?>
+      <?php ui_feld(['name' => 'ank_bis', 'label' => 'Sichtbar bis', 'art' => 'date',
+          'wert' => $ankWert['tag']]); ?>
+      <?php /* Textfeld mit der Klasse `zeitfeld` statt type="time" — native
+               Zeitfelder zeigen je nach Systemsprache AM/PM (E1); die Maske
+               haengt an der Klasse (assets/zeitfeld.js). */ ?>
+      <div class="feld">
+        <label class="feld-label" for="f-ank_bis_zeit">Uhrzeit
+          <span class="feld-klein-inline">HH:MM</span></label>
+        <input class="feld-eingabe zeitfeld" type="text" id="f-ank_bis_zeit" name="ank_bis_zeit"
+               value="<?= e($ankWert['zeit']) ?>" placeholder="z. B. 21:00" autocomplete="off">
+        <p class="feld-klein">Danach verschwindet der Streifen von selbst.</p>
+      </div>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer',
+                      'name' => 'action', 'wert' => 'ankuendigung']) ?>
+        <?= ui_knopf(['text' => 'Als Rundmail senden …', 'symbol' => 'mail', 'art' => 'neutral',
+                      'name' => 'action', 'wert' => 'rundmail',
+                      'attr' => $rundHeute ? ' disabled' : ' data-confirm-titel="Rundmail senden?"'
+                          . ' data-confirm="' . e('Der Ankündigungstext geht an ' . $rundZahl
+                              . ' erreichbare Konten — alle mit gesetztem Passwort, ohne das '
+                              . 'Demo-Konto. Die Mails laufen über die Warteschlange; das kann '
+                              . 'einige Minuten dauern. Heute ist danach keine zweite Rundmail '
+                              . 'mehr möglich.') . '"'
+                          . ' data-confirm-ok="' . e('An ' . $rundZahl . ' Konten senden') . '"'
+                          . ' data-confirm-tone="normal"']) ?>
+        <?php if ($ankGesp !== null): ?>
+          <?= ui_knopf(['text' => 'Entfernen', 'art' => 'leise',
+                        'name' => 'action', 'wert' => 'ankuendigung_weg']) ?>
+        <?php endif; ?>
+      </div>
+      <p class="feld-klein"><?= $rundZuletzt !== null && $rundZuletzt !== ''
+          ? 'Letzte Rundmail: ' . e(datum_zeit_text($rundZuletzt, ', '))
+          : 'Noch keine Rundmail' ?> · höchstens eine je Tag<?= $rundHeute
+          ? ' — heute ist sie schon hinausgegangen' : '' ?>.</p>
+    </form>
+  <?php ui_karte_ende(); ?>
+
   <?php /* ---- Die Schlüssel des Servers (S10, E-S10-12) -------------------
-       SIE STEHT ZUERST, VOR DEM SPEICHER. Die übrigen Karten dieser Seite
-       melden Einstellungen; diese hier kann melden, dass sich niemand mehr
-       anmelden kann. Eine rote Zeile unter einem Speicherbalken wird später
+       SIE STEHT VOR DEM SPEICHER (seit P5c unter der Ankündigung). Die
+       übrigen Karten dieser Seite melden Einstellungen; diese hier kann
+       melden, dass sich niemand mehr anmelden kann. Eine rote Zeile unter einem Speicherbalken wird später
        gesehen als eine darüber.
 
        GEZEIGT WIRD NIE DER WERT, immer nur die KENNUNG (acht Hexzeichen aus
@@ -1371,4 +1504,4 @@ document.querySelectorAll('.speicher-balken [data-breite]').forEach(function (el
 </script>
 
 <?php ui_geruest_ende(); ?>
-<?php ui_seite_ende(); ?>
+<?php ui_seite_ende(['skripte' => ['assets/zeitfeld.js', 'assets/ankuendigung.js']]); ?>

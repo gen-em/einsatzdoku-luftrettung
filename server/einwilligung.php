@@ -86,6 +86,9 @@ ui_seite_start(['titel' => 'Zustimmung nötig']);
 ?>
 <div class="rahmen rahmen-lesespalte">
   <main class="inhalt">
+  <?php /* Ohne den Datenschutz-Streifen: Diese Seite IST der Weg, auf den er
+           zeigt, und er stuende ueber seinem eigenen Ziel. */ ?>
+  <?php ui_hinweise(false); ?>
     <h1>Bevor es weitergeht</h1>
     <?php ui_meldung($notice, $error); ?>
 

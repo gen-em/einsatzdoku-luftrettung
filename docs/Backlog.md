@@ -78,7 +78,7 @@ arbeiten, nicht erneut kollidieren:
 |---|---|---|
 | 241 | Sitzungsablage — PHP-Sitzungen im geteilten Hosterverzeichnis | Schritt 16 |
 | 242 | Sitzungsbindung per Cookie-Token | Schritt 18 |
-| 243 | Staging-Umgebungsbanner | 10c AP1 |
+| 243 | Staging-Umgebungsbanner | erledigt 23.09.2026 (Web 20.38.0) |
 | 244 | Einstellungen-Übersicht: Bereiche als Gliederung erkennbar | 10c AP9 |
 | 245 | Erklärtext-Regel und Überarbeitung aller Texte in Verwaltung und Betrieb | 10c AP9 |
 | 246 | Schlüsselblatt und Notfallblatt: Druckseite | 10c AP9 |
@@ -138,12 +138,13 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **292** und trägt seine
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **293** und trägt seine
 Spanne hier ein, bevor er pusht. *(Bis zum 23.09.2026 stand hier 283; 283 bis
 285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
 Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
-Tag, **290 und 291** die Korrekturstufe Web 20.37.3 — nachgesehen auf
-`origin/main` und in den offenen Pull Requests.)*
+Tag, **290 und 291** die Korrekturstufe Web 20.37.3, **292** PK-05 (das
+Korrekturpaket RP) — nachgesehen auf `origin/main` und in den offenen Pull
+Requests. Hier stand nach dem Merge von RP noch 292; nachgezogen mit P5c/AP1.)*
 
 **Und sieht vorher nach — auf `origin/main` UND in die offenen Pull
 Requests.** Der Satz darüber beschreibt keinen Riegel, sondern eine Hoffnung:
@@ -938,6 +939,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     dafür gilt die Vorbedingung unverändert. Auch die Lücke oben bleibt
     wahr: Die Wear-OS-Uhr koppelt nicht und erscheint als `handy`; die
     Statistik-Seite sagt es dazu.
+
+    **Vermerk 23.09.2026 (Konzept P5c, E-P5c-45):** Die Vorbedingung oben
+    gilt **nicht** für die Summenzählung der Herkunft je Einsatz — sie zählt
+    eine vorhandene Spalte, nur für die BetreiberIn sichtbar, und
+    identifiziert schwächer als die Modelltabelle, die seit Web 15.3.0 ohne
+    diese Bedingung läuft. **Die User-Agent-Hälfte ist gestrichen** (R36):
+    Browser-Zugriffe werden nicht gezählt, „Rechner" erscheinen also nicht.
+    Zuordnung: **10c AP7**.
     **Die Modelltabelle steht** (Web 12.9.1): 325 Teilenummern auf 173
     Modelle, davon 28 keine Uhren. Eine Zählung nach `geraet_art` trägt damit
     — aber nur für Geräte, die **nach** dem Füllen gekoppelt haben. Ältere
@@ -1204,6 +1213,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     **Zuordnung (20.09.2026): 10c, AP5** — dort wird der Zweitfaktor konkretisiert: Pflicht für Admin, BetreiberIn und Support, Angebot für alle übrigen (E-P5c-15, F-P5c-1).
 
+    **Berichtigt 23.09.2026 (E-P5c-41, -42):** **QR-Code statt
+    `otpauth://`-Text** — aus der vendorierten Bibliothek `qrcode-generator`,
+    das SVG baut die Anwendung selbst; der Text steht daneben. **Zehn**
+    Ersatzcodes statt acht, gehasht, unabhängig vom Serverschlüssel.
+    **„Gerät 30 Tage merken" kommt nicht mit 10c**, sondern mit dem
+    Cookie-Token aus Nr. 242 in Schritt 18 — zwei Cookie-Mechanismen werden nur
+    einmal gebaut. Zuordnung bleibt **10c AP5**.
+
 146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.**
     *Aufgenommen 06.09.2026 (R78).* Drei Fragen, keine Fehler: **Argon2id
     statt PBKDF2** (WASM-Fremdbestandteil gegen GPU-Resistenz; nach S10
@@ -1361,7 +1378,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     bricht die Änderung ab, und MySQL kennt kein Zurückrollen von
     Schemaänderungen — die Installation bliebe auf halbem Weg stehen. Die
     geschlossene Tür aus S9 sorgt dafür, dass diese Null von da an hält;
-    vorhandene Einträge lassen sich über die Verwaltung noch löschen.
+    ~~vorhandene Einträge lassen sich über die Verwaltung noch löschen.~~
+    **Berichtigt 23.09.2026 (E-P5c-48):** Das stimmt seit S9/AP5b nicht mehr —
+    die Seite dafür ist gestrichen. Der Fall **tritt aber nicht auf**: Auf der
+    einen laufenden Anlage sind alle zentralen Einträge gelöscht (Auskunft des
+    Auftraggebers). Die Migration **zählt trotzdem vorher** und blockiert mit
+    Torwächter-Meldung, wenn sie etwas findet — das schützt eine Anlage, in
+    die jemand eine alte Sicherung einspielt. Die Vorzählung ist eine eigene
+    Vorbedingung auf `user_id IS NULL`; `migrationen_inhalt_zaehlen()` zählt
+    das Gegenteil. Ein eigener Runbook-Abschnitt entfällt.
 
     *Abnahme („keine Überbleibsel"):* `grep -rn "zentral" server/` nennt
     keine Stammdatenstelle mehr; `grep -rn "user_bases" server/ docs/` ist
@@ -1407,6 +1432,12 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     tut. Kein dritter Zustand.
 
     **Zuordnung (20.09.2026): 10c, AP8** (R39-Rest, E-P5c-19).
+
+    **Entschieden 23.09.2026 (E-P5c-47): Weg (b)** — der Tag bietet alle
+    Rollen der gewählten Betriebsart an. Geraten ist das nicht: Die
+    Betriebsart wird im Dialog ausdrücklich gewählt (`adhoc_kind` in
+    `index.php`), und `CREW_ROLES` trägt `kind` air/ground/both. Abnahme etwa:
+    „Tag Luft zeigt p1, p2, hems, fr, other". Zuordnung bleibt **10c AP8**.
 
 170. **Kein Prüfmittel misst, ob die Kennzeichnung vollständig ist.**
     *Aufgenommen 10.09.2026 nach zwei Rückmeldungen zu Web 19.1.0 (behoben
@@ -1665,6 +1696,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Weg:** `GERAETE_ECHT_SQL` in beide Abfragen der Statistikseite; die
     beiden handgeschriebenen Zwillinge in `admin_users.php` und
     `admin_user.php` filtern zwar richtig, gehören aber in denselben Griff.
+
+    **Zuordnung (23.09.2026): 10c AP7** — als Beifang, weil AP7 die
+    Statistikseite ohnehin umbaut (E-P5c-46).
     Danach steht das Muster an einer Stelle statt an vieren. *Abnahme:* Ein
     Konto ohne gekoppeltes Gerät, aber mit einem Handeintrag steht in „Ohne
     Gerät"; die Kachel „Geräte" ändert sich dabei nicht. Zuordnung:
@@ -1724,6 +1758,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Entscheidung in einer Backlog-Runde, Umsetzung P5** — wie bei Nr. 122.
 
     **Zuordnung (20.09.2026): 10c, AP7** — die Zählung heißt dort sichtbar „Bestand" (E-P5c-18).
+    *(Überholt, vermerkt 23.09.2026: Die Zählung heißt nicht „Bestand" — der
+    Absatz darunter gilt.)*
 
 
     **Zuordnung (20.09.2026): erledigt sich mit 10c AP7.** Dort entsteht
@@ -1904,6 +1940,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     kleines Paket mit Mockup.
 
     **Zuordnung (20.09.2026): 10c, AP9** — Kacheln nach Typ, Mockup mit der 10c-Runde (E-P5c-20).
+    *(Überholt, vermerkt 23.09.2026: Der Punkt wird nicht umgesetzt — der
+    Absatz darunter gilt.)*
 
 
     **Wird NICHT umgesetzt — entschieden am 20.09.2026 (E-P5c-27, in der
@@ -1985,6 +2023,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nach P5a, mit dem Konto-Lebenszyklus (10b) oder als Backlog-Runde.
 
     **Zuordnung (20.09.2026): 10c, AP10** (Bounce-Postfach, E-P5c-21, F-P5c-3).
+    *(Überholt, vermerkt 23.09.2026 — der Absatz darunter gilt.)*
+
+    **Wird NICHT umgesetzt — entschieden am 23.09.2026 (E-P5c-51); AP10
+    entfällt.** Die Anwendung versendet nur, „zugestellt" heißt „vom
+    SMTP-Server des Hosters angenommen". Einen späteren Rückläufer könnte sie
+    nur über ein Postfach lesen, und dafür bräuchte es IMAP — seit PHP 8.4
+    nicht mehr im Kern, ein eigener Client wäre ein Paket für sich. Der Nutzen
+    ist klein: Jede Adresse ist bei Registrierung oder Einladung über einen
+    Link bestätigt worden, und bei wenigen Konten sieht die BetreiberIn die
+    Rückläufer im Postfach der Absenderadresse (Handbuch 12.8). Wie bei
+    Nr. 198: geschlossen, aber nicht nach *Erledigt*, weil nichts erledigt
+    wurde.
 
 201. **`Retry-After` in Uhr und Handy auswerten.**
     *Aufgenommen 15.09.2026 (Konzept P5a, Befund 1.7).* Beide Clients
@@ -2930,24 +2980,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Reset-Fluss; Wechselwirkung mit `users.session_epoch`) und gehört nicht
     in einen Verzeichniswechsel.
 
-243. **Ein Umgebungsbanner, damit Staging nicht für Produktiv gehalten wird.**
-    *Aufgenommen 20.09.2026 (E-P5c-05).* Zugeordnet: **10c, AP1**.
-
-    `config.php` bekommt `app.umgebung = ['name' => 'Staging',
-    'farbe' => 'rot']`, Vorgabe leer. Ist es gesetzt: Kopfleiste in
-    **Newroz-Rot** statt Dunkelblau, darunter die Zeile „Staging —
-    Testdaten, kein Echtbetrieb", Seitentitel mit Präfix „[Staging]".
-
-    **Nie abgeleitet** — nicht aus Domain, Zweig oder Kette. Eine Ableitung
-    wäre bequem und falsch: Sie stimmte genau so lange, bis jemand eine
-    zweite Anlage unter derselben Domain aufsetzt. Die Statusseite warnt,
-    wenn `mail.betreff_praefix` gesetzt ist und `app.umgebung` nicht — das
-    ist der Fall, in dem die Mails schon „Staging" sagen und die Oberfläche
-    noch nicht.
-
-    **Derselbe Baustein** trägt das Ankündigungsbanner (E-P5c-13); zwei
-    Banner wären zwei Stellen, die auseinanderlaufen.
-
 244. **Einstellungen-Übersicht: die drei Bereiche sind als Gliederung nicht
     erkennbar.** *Aufgenommen 18.09.2026, präzisiert 20.09.2026
     (Auftraggeber).* Zugeordnet: **10c, AP9**.
@@ -2965,7 +2997,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Kopf. **Der Fable-Schritt ist damit erledigt** — es braucht kein weiteres
     Mockup.
 
-    **Entschieden:** zuerst ein Mockup mit einer klaren
+    *(Überholt, vermerkt 23.09.2026 — der Absatz „Berichtigt am 20.09.2026"
+    darüber gilt; einen Fable-Schritt gibt es nicht mehr:)* Entschieden:
+    zuerst ein Mockup mit einer klaren
     **Überschriftenzeile je Bereich** (Bricolage, Abstand davor, Linie);
     trägt das nicht, bekommt jeder Bereich eine **eigene Karte** mit seiner
     Liste. Fable-Schritt (Mockup), Umsetzung klein; das Mockup läuft mit den
@@ -3028,7 +3062,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     Gesucht ist ein Vorgang unter Betrieb: neuen Schlüssel erzeugen, alles
     Versiegelte **umhüllen** (Adminpakete, Zugänge der Sicherungsziele,
-    Protokoll-Archive, Wiederanlaufpaket), neues Schlüsselblatt, Eintrag im
+    Protokoll-Archive, Wiederanlaufpaket, **die Zweitfaktor-Geheimnisse** aus
+    10c AP5 — ergänzt 23.09.2026), neues Schlüsselblatt, Eintrag im
     Protokoll, und **der Nachweis der Öffenbarkeit vor dem Verwerfen des
     alten Schlüssels** — das ist der Schritt, dessen Fehlen den Vorgang
     gefährlich macht. Auslöser: Verdacht, dass das Blatt in falsche Hände
@@ -3058,6 +3093,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     20.09.2026 an `862ca7f` **77 Aufrufe in 32 Dateien**. Die Zahl ist in
     vier Tagen um 35 gestiegen — genau deshalb braucht es einen Zähler und
     keine Vorsatzerklärung.
+
+    **Berichtigt 23.09.2026 (Konzept P5c, E-P5c-58):** Die Übergabezahl aus
+    Schritt 15 ist **75** (Tokenizer, ohne Kommentare und Zeichenketten), die
+    Decke nach AP3 **2** (Helfer-Rückfall und `protokoll_fehler_vermerken()`).
+    **Der Behandler wird nicht von einer Registerzeile geprüft**, sondern von
+    einer Regel in `tools/quelltext/`: genau ein `set_exception_handler(` und
+    ein `set_error_handler(` in `db.php`. Das Register kennt nur Decken — ein
+    entfernter Behandler bliebe dort grün.
 
 249. **TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes
     verliert.** *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).*
@@ -3125,6 +3168,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     mal nur ein Leerzeichen. Nach Schritt 15 AP7 steht die Formatierung an
     einer Stelle (`format_lib.php`) — dann ist es eine Zeile statt einer
     Suche, und deshalb wartet es bis dahin.
+
+    **Berichtigt 23.09.2026:** Gemeint ist ` · ` (Mittelpunkt mit
+    Leerzeichen), kein Gedankenstrich. **Entschieden: das Komma** (Konzept
+    P5c, E-P5c-37). Es ist auch nicht „eine Zeile": rund 18 Stellen in 11
+    Dateien (F-P5c-11). Zuordnung: **10c AP2** (die neue Protokollzeile
+    schreibt schon mit Komma) **und AP9** (die Vorgabe und die übrigen
+    Stellen).
 
 259. **Die GPX-Probe wird durch den Demo-Reset blind — 4 von 95 Erwartungen
     fallen, und ihr Kernvergleich läuft gar nicht.** *Aufgenommen
@@ -3444,6 +3494,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Schritt 15 behoben.** Beim Anfassen mitzudenken: `EdApi.postForm()` aus
     AP8c liefert im Netzfehler ein `{ ok: false, status: 0 }` statt zu
     werfen — damit ist die Stelle danach mit drei Zeilen zu heilen.
+
+    **Zuordnung (23.09.2026): 10c AP9** — als Beifang (E-P5c-46).
 
 270. **`assets/import_ui.js` — eine 500 mit wohlgeformtem JSON gilt als
     Erfolg.** Gefunden bei derselben Vermessung (bei Aufnahme Zeile 258).
@@ -9954,3 +10006,37 @@ zutreffen.
     Wiederherstellungsprobe hatte zu wenige Konten. **Nebenstufe auf frischer
     Anlage: 36 grün, 0 rot, 0 nicht gemessen, 1 239 s**; das Ziel ist seither
     rund 21 min (E-RP-05). Prüfliste: `docs/konzepte/Pruefdokument-RP-Rote-Proben.md`.
+
+243. **Ein Umgebungsbanner, damit Staging nicht für Produktiv gehalten wird.**
+    *Aufgenommen 20.09.2026 (E-P5c-05).* Zugeordnet: **10c, AP1**.
+    **Erledigt 23.09.2026 mit Web 20.38.0 (P5c/AP1)** — siehe unten.
+
+    `config.php` bekommt `app.umgebung = ['name' => 'Staging',
+    'farbe' => 'rot']`, Vorgabe leer. Ist es gesetzt: Kopfleiste in
+    **Newroz-Rot** statt Dunkelblau, darunter die Zeile „Staging —
+    Testdaten, kein Echtbetrieb", Seitentitel mit Präfix „[Staging]".
+
+    **Nie abgeleitet** — nicht aus Domain, Zweig oder Kette. Eine Ableitung
+    wäre bequem und falsch: Sie stimmte genau so lange, bis jemand eine
+    zweite Anlage unter derselben Domain aufsetzt. Die Statusseite warnt,
+    wenn `mail.betreff_praefix` gesetzt ist und `app.umgebung` nicht — das
+    ist der Fall, in dem die Mails schon „Staging" sagen und die Oberfläche
+    noch nicht.
+
+    **Derselbe Baustein** trägt das Ankündigungsbanner (E-P5c-13); zwei
+    Banner wären zwei Stellen, die auseinanderlaufen.
+
+    **Erledigt mit Web 20.38.0.** Gebaut wie beschrieben, mit drei
+    Abweichungen, die die Mockup-Runde M-P5c-02 entschieden hat: Die Zeile
+    steht **nicht unter der Kopfleiste**, sondern in der Reihe der Streifen an
+    der Stelle des Demo-Hinweises (unter der Kopfleiste verschob ein Streifen
+    die klebende Leiste, F-P3-G). Die Farbe heißt `--rot` (der Name
+    „Newroz-Rot" steht nur noch im Rahmenplan-Archiv). Und der aktive
+    Kopfpunkt wird auf Rot in `--orange-hell` gestrichen, weil das gewohnte
+    Orange dort 2,10 : 1 hätte (E-P5c-59). Die Statusseite zeigt die Zeile
+    „Umgebung" **immer**, nicht nur als Warnung (E-P5c-64). Der eine
+    Baustein trägt auch die Ankündigung (E-P5c-13). Gemessen: Titelvorsatz,
+    rote Kopfleiste und Streifen auf Anmelde-, Start-, Status- und
+    Servereinstellungsseite; alle vier Fälle der Statuszeile; Kontraste
+    **25 Paare, 0 verfehlt**. Auf Staging ist die Zeile in der `config.php`
+    nachzutragen (Rahmenplan 6).

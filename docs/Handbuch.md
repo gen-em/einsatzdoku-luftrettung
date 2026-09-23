@@ -327,6 +327,25 @@ sieht die Karten nicht. Ein Sprung schließt sie.
 Die **Diensttage-Leiste** begleitet alle Inhaltsseiten — auch Einsatzansicht
 und Formular. Sie ist nach Jahr und Monat gruppiert (Abschnitt 4.4).
 
+**Streifen über dem Inhalt** (seit Web 20.38.0 in einer Reihe). Bis zu vier
+stehen dort, immer in derselben Reihenfolge:
+
+1. **Die Umgebung** — nur auf einer Testanlage: „Staging — Testdaten, kein
+   Echtbetrieb". Dazu ist dort die **Kopfleiste rot** statt dunkelblau, und
+   vor jedem Seitentitel im Browser steht „[Staging]". Auf der Anlage für den
+   Echtbetrieb gibt es nichts davon. Wer eine rote Leiste sieht, trägt dort
+   keine echten Einsätze ein.
+2. **Eine Ankündigung** der BetreiberIn, etwa eine Wartung. Sie steht auch
+   über der Anmeldung. Das **×** rechts blendet sie aus, bis du dich abmeldest;
+   beim nächsten Anmelden steht sie wieder da, bis sie abläuft (Abschnitt
+   **12.8**).
+3. **Der Demo-Hinweis** — nur im Demo-Konto (Abschnitt 3.2).
+4. **Der Hinweis auf eine neue Datenschutzerklärung**, bis du sie
+   angesehen hast.
+
+Umgebung, Demo-Hinweis und Datenschutz lassen sich nicht wegklicken: Sie
+sagen etwas, das beim nächsten Besuch noch genauso gilt.
+
 **Handlungen an einer Zeile** — bearbeiten, verschieben, löschen — stehen am
 Schreibtisch als Knöpfe am rechten Zeilenrand. Auf schmalen Geräten steht dort
 **ein** Knopf mit drei Punkten (**⋯**); er öffnet ein Blatt von unten, in dem
@@ -4031,6 +4050,18 @@ solange, rechnet jede Anmeldung zweimal). Das Demo-Konto zählt dort nicht
 mit: Es bleibt auf der Rundenzahl seiner Fixture, und der Altwert bleibt
 deshalb in der Liste, bis der Referenzbestand neu gebaut ist.
 
+**Die Zeile „Umgebung"** (seit Web 20.38.0) steht oben in der Karte
+**Server**, und zwar immer. Ihre Plakette nennt die Anlage: den Namen aus dem
+Eintrag `app.umgebung` in der `config.php` — auf der Testanlage „Staging" —
+oder **„Produktiv"**, wenn dort keiner steht. Das ist keine Vermutung über die
+Adresse, sondern die Lesart eines leeren Eintrags: Ohne Etikett verhält sich
+die Anlage wie die für den Echtbetrieb, und genau das sagt die Zeile. Sie
+wird **orange** in zwei Fällen: Die Mails tragen den Betreff-Präfix
+„[Staging]", die Oberfläche aber kein Etikett — dann fehlt `app.umgebung` in
+der `config.php`. Oder das Etikett nennt eine Farbe, die die Anwendung nicht
+kennt; die Kopfleiste steht dann trotzdem rot. Einstellen lässt sich beides
+nur in der `config.php` (`docs/Technik.md`, Runbook).
+
 **Eine Testmail an dich selbst.** Im Kopf der Karte **E-Mail** steht seit
 Web 19.3.0 der Knopf **„Testmail an mich"**. Er schickt eine kurze Nachricht
 über den regulären Versandweg an die Adresse, mit der du angemeldet bist —
@@ -4459,9 +4490,18 @@ Adresse ungültig; ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
 
 ### 12.5 Servereinstellungen
 
+#### Karte „Ankündigung" (seit Web 20.38.0)
+
+Ganz oben: Hier setzt du den Streifen, der über jeder Seite steht, und
+verschickst ihn auf Wunsch als Rundmail. Beschrieben in Abschnitt **12.8**.
+
 #### Karte „Schlüssel des Servers" (seit Web 20.1.0)
 
-**Zuoberst auf der Seite, und das ist Absicht.** Diese Installation hat zwei
+**Gleich unter der Ankündigung, und das ist Absicht.** Bis Web 20.37.3
+stand sie zuoberst; die Ankündigung ist darüber gerückt, weil sie die Karte
+ist, für die man diese Seite am häufigsten aufschlägt, und weil sie kurz ist.
+Eine rote Lage der Schlüssel steht zusätzlich auf der Statusseite und am
+Menüzähler. Diese Installation hat zwei
 Geheimnisse, und beide stehen in `config.php` — nicht in der Datenbank:
 
 - der **Serverschlüssel** versiegelt, was der Server ohne Browser lesen können
@@ -4819,6 +4859,66 @@ Was dabei zu wissen ist:
 Für dein Konto ändert sich dadurch nichts: Der Inhalt des Backups bleibt
 verschlüsselt, und ohne deinen Wiederherstellungsschlüssel ist er auch dort
 nicht zu öffnen.
+
+### 12.8 Ankündigung und Rundmail
+
+Seit Web 20.38.0 kann die BetreiberIn unter **Betrieb →
+Servereinstellungen**, Karte **Ankündigung**, einen Satz über jede Seite
+stellen — eine Wartung, einen Umzug, eine Frist. Bis dahin erfuhr davon nur,
+wer fragte.
+
+**Was die Karte will:**
+
+- **Text** — höchstens **190 Byte**. Das Feld zählt mit. Byte und nicht
+  Zeichen, weil der Speicher so bemessen ist: Ein „ü" sind zwei. Für einen
+  Streifen über jeder Seite ist das die richtige Länge; was länger ist,
+  gehört in eine Mail oder ins Handbuch. Zeilenumbrüche werden zu
+  Leerzeichen, der Streifen ist ein Absatz. Hat der Text mehr als einen
+  Satz, steht der erste fett — er ist der, den man beim Vorbeiscrollen liest.
+- **Ton** — *Hinweis* (blau) oder *Warnung* (orange).
+- **Sichtbar bis** — Datum und Uhrzeit (HH:MM). Danach verschwindet der
+  Streifen von selbst; ein Ende in der Vergangenheit wird abgewiesen, weil
+  die Ankündigung sonst nie erschiene.
+
+**Wo sie steht:** über dem Inhalt jeder Seite, in der Reihe der Streifen
+(Abschnitt 3), und **auch über der Anmeldung** — wer sich gerade anmelden
+will, ist von einer Wartung am meisten betroffen. Die Plakette im Kopf der
+Karte sagt, bis wann sie sichtbar ist, oder „abgelaufen", oder „keine".
+
+**Wegklicken:** Das **×** blendet sie aus — **für diese Sitzung**. Wer sich
+abmeldet und wieder anmeldet, sieht sie wieder, bis sie abläuft. Eine
+**neue** Ankündigung (anderer Text, anderer Ton oder anderes Ende) erscheint
+auch bei denen, die die alte geschlossen haben. Ruft jemand das Handbuch
+oder einen Rechtstext direkt auf, ohne vorher auf der Anmeldeseite gewesen zu
+sein, steht sie dort ohne × — es gibt dann keine Sitzung, in der das
+Ausblenden gemerkt werden könnte.
+
+**Entfernen** nimmt sie sofort von allen Seiten.
+
+**Als Rundmail senden …** schickt den Text zusätzlich per Mail — an alle
+**erreichbaren** Konten: aktiv, mit gesetztem Passwort, ohne das
+Demo-Konto. Ein Konto, das seine Einladung nie angenommen hat, bekommt keine
+Ankündigung für eine Anwendung, die es nicht benutzt. Vorher kommt eine
+Rückfrage mit der Zahl der Empfänger. Drei Dinge gelten:
+
+1. **Der Knopf speichert zuerst.** Was im Feld steht, geht hinaus — auch wenn
+   du den Text eben erst geändert hast.
+2. **Die Mails laufen über die Warteschlange**, zehn je Durchgang der
+   Hintergrundjobs. Auf einer Anlage ohne Cron laufen die Jobs nur, wenn
+   jemand eine Seite aufruft; bis alle hinaus sind, können einige Minuten
+   vergehen. Der Stand steht unter **Betrieb → Status**, Karte *E-Mail*.
+3. **Höchstens eine Rundmail je Tag** (Kalendertag der Anlage). Danach ist der
+   Knopf bis Mitternacht gesperrt, und die Zeile darunter sagt es.
+
+Im Protokoll steht **ein** Eintrag je Rundmail — wer sie wann an wie viele
+Konten geschickt hat, nicht an wen.
+
+**Rückläufer sieht die Anwendung nicht.** „Zugestellt" heißt: Der
+Mailserver des Hosters hat die Nachricht angenommen. Kommt sie später
+zurück, weil es die Adresse nicht mehr gibt, landet der Rückläufer im
+Postfach der Absenderadresse (`smtp.from` in der `config.php`). Die sollte
+deshalb ein echtes Postfach sein, das die BetreiberIn liest — die Anwendung
+selbst liest keines (Backlog Nr. 200, nicht umgesetzt).
 
 ---
 

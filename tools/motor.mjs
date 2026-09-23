@@ -204,7 +204,7 @@ export async function anmelden(seite, { basis, konto, pass, frist = 90000 }) {
   await seite.goto(`${wurzel}/login.php`, { waitUntil: 'domcontentloaded' });
   await seite.fill('input[name="email"]', konto);
   await seite.fill('input[name="password"]', pass);
-  await seite.click('button[type="submit"]');
+  await seite.click('#loginform button[type="submit"]');
   let meldung = '';
   try {
     await seite.waitForFunction(

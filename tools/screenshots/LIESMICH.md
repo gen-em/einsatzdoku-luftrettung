@@ -11,12 +11,16 @@ python3 tools/screenshots/kontrast.py        # Kontrast gegen die Fläche
 python3 tools/screenshots/vergleichen.py <vorher>   # hat sich ein Pixel bewegt?
 ```
 
-`--nur <name>` filtert Seiten, `--finger` misst gegen 44 px.
+`--nur <name>` filtert Seiten, `--finger` misst gegen 44 px, `--etikett Staging`
+misst auf jeder Seite den Titelvorsatz „[Staging] " und die rote Kopfleiste
+(P5c/AP1; die Lage stellt der Aufrufer in `config.php` her). **Ohne** den
+Schalter misst er die Gegenrichtung: kein Vorsatz, keine rote Leiste.
 
 ## Was es misst
 
 Überlauf, **Konsolenfehler**, Knopfhöhen gegen die Sollwerte aus
-`CLAUDE.md` 5, Karten außerhalb von `main.inhalt` — und seit PK-04 die
+`CLAUDE.md` 5, Karten außerhalb von `main.inhalt`, seit P5c/AP1 das
+**Umgebungsetikett** (Titel und Kopfleiste, je Seite und Breite) — und seit PK-04 die
 **Bildgleichheit**: Acht identische Dateien wären acht Bilder, bei denen
 alles grün meldet, ohne dass die Breite je umgestellt wurde.
 

@@ -163,7 +163,7 @@ async function tabAnmelden(konto, passwort) {
   await tab.goto(BASIS + '/login.php', { waitUntil: 'domcontentloaded' });
   await tab.fill('input[name="email"]', konto);
   await tab.fill('input[name="password"]', passwort);
-  await tab.click('button[type="submit"], input[type="submit"]');
+  await tab.click('#loginform button[type="submit"]');
   await tab.waitForURL(u => !String(u).includes('login.php'),
                        { timeout: 120000, waitUntil: 'commit' });
   await tab.goto(BASIS + '/suche.php', { waitUntil: 'domcontentloaded' });
@@ -237,7 +237,7 @@ try {
   await p.goto(BASIS + '/login.php', { waitUntil: 'domcontentloaded' });
   await p.fill('input[name="email"]', ADMIN);
   await p.fill('input[name="password"]', ADMIN_PW);
-  await p.click('button[type="submit"], input[type="submit"]');
+  await p.click('#loginform button[type="submit"]');
   await p.waitForURL(u => !String(u).includes('login.php'),
                      { timeout: 120000, waitUntil: 'commit' });
 

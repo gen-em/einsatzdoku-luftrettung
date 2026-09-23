@@ -25,7 +25,7 @@ async function versuch(mail, pw) {
   await seite.fill('input[name="password"]', pw);
   await Promise.all([
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {}),
-    seite.click('button[type="submit"]'),
+    seite.click('#loginform button[type="submit"]'),
   ]);
   const drin = !seite.url().includes('login.php');
   const text = drin ? '' : (await seite.locator('body').innerText()).replace(/\s+/g, ' ');

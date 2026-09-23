@@ -84,7 +84,11 @@ function ui_seite_start(array $o): void
             . (defined('WEB_VERSION') ? ui_e(WEB_VERSION) : '') . '">',
         '<head>',
         '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
-        '<title>' . ui_e((string)$o['titel']) . ' — ' . ui_e(ui_instanz_kurz()) . '</title>',
+        /* DER VORSATZ „[Staging] " (P5c/AP1, E-P5c-05): Der Reiter im Browser
+         * ist oft das Einzige, was man von einer Seite sieht, und zwei Reiter
+         * mit derselben Beschriftung sind zwei Anlagen, die man verwechselt. */
+        '<title>' . ui_e(ui_umgebung_praefix() . (string)$o['titel']) . ' — '
+            . ui_e(ui_instanz_kurz()) . '</title>',
     ];
     if (!empty($o['kopf'])) {
         $zeilen[] = rtrim((string)$o['kopf'], "\n");
@@ -200,6 +204,27 @@ function ui_instanz_kurz(): string
 {
     if (function_exists('instanz_kurz')) { return instanz_kurz(); }
     return defined('INSTANZ_KURZ_VORGABE') ? INSTANZ_KURZ_VORGABE : 'Gen-EM NAdoku';
+}
+
+/**
+ * Das Etikett dieser Anlage (P5c/AP1, E-P5c-05) — `umgebung()`, oder `null`.
+ *
+ * `umgebung_lib.php` laedt nur `konfig_lib.php`, und die laedt nichts; beide
+ * vertragen den Einrichter vor `config.php` (dann gibt es kein Etikett). Das
+ * `require_once` steht trotzdem HIER und nicht oben in der Datei: Diese Datei
+ * hat auf oberster Ebene keine Abhaengigkeit, und das bleibt so.
+ */
+function ui_umgebung(): ?array
+{
+    require_once __DIR__ . '/umgebung_lib.php';
+    return umgebung();
+}
+
+/** „[Staging] " oder leer — siehe `umgebung_praefix()`. */
+function ui_umgebung_praefix(): string
+{
+    require_once __DIR__ . '/umgebung_lib.php';
+    return umgebung_praefix();
 }
 
 /** Favicon-Verweise — favicon_tags() aus db.php, wo es sie gibt (s. ui_asset()). */
@@ -426,8 +451,14 @@ function ui_kopf(array $o = []): void
     $aktiv  = (string)($o['aktiv'] ?? '');
     $menue  = ($o['menue'] ?? true) !== false;
     $zurueck = $o['zurueck'] ?? null;
+    /* DIE FARBE DER UMGEBUNG (P5c/AP1, E-P5c-05, -55, -59). Eine Stelle fuer
+     * jede Seite mit Kopfleiste. `farbe` ist eine geschlossene Liste, und
+     * heute steht darin nur `rot` — ein unbekannter Wert kommt aus
+     * `umgebung()` schon als `rot` zurueck und steht auf der Statusseite. */
+    $umgebung = ui_umgebung();
+    $kopfKlasse = 'kopf' . ($umgebung !== null ? ' kopf-umgebung' : '');
     ?>
-<header class="kopf">
+<header class="<?= $kopfKlasse ?>">
   <div class="kopf-innen">
     <?php if ($menue): ?>
     <button type="button" class="knopf knopf-symbol kopf-menue" data-schublade="auf"
@@ -582,8 +613,7 @@ function ui_leiste_ende(): void
 {
     echo "  </aside>\n";
     echo '  <main class="inhalt" id="inhalt">' . "\n";
-    ui_demo_hinweis();
-    ui_datenschutz_hinweis();
+    ui_hinweise();
 }
 
 
@@ -1192,6 +1222,127 @@ function ui_fuss_seite(array $o = []): void
 
 
 /* ---------------------------------------------------------------------------
+ * DIE HINWEISE ÜBER DEM INHALT  (.hinweise)  — P5c/AP1, E-P5c-55, M-P5c-02
+ *
+ * VIER STREIFEN, IN DIESER REIHENFOLGE: Umgebung → Ankündigung → Demo →
+ * Datenschutz. Vom Allgemeinen zum Eigenen: welche Anlage, was auf ihr
+ * geschieht, was für dieses Konto gilt.
+ *
+ * EIN BEHÄLTER STATT VIER AUSSENABSTÄNDEN. `.demo-hinweis` und `.meldung`
+ * bringen je einen Abstand nach unten mit; gestapelt ergäbe das Lücken
+ * zwischen Zeilen, die zusammengehören. Die Reihe setzt ihren eigenen
+ * Abstand und nimmt den der Kinder zurück (style.css).
+ *
+ * AN DER STELLE DES DEMO-HINWEISES, nicht unter der Kopfleiste: Dort
+ * verschob ein Streifen die klebende Leiste (F-P3-G), und der Platz ist seit
+ * P3 geräumt. Die rote Kopfleiste kennzeichnet jede Seite mit Kopfleiste
+ * ohnehin; die Zeile sagt, was Rot heißt.
+ *
+ * DIE SEITEN OHNE GERÜST rufen diese Funktion selbst, als erstes Kind ihres
+ * `<main>` — die Anmeldeseiten über der Karte (E-P5c-60), die übrigen über
+ * dem Text. Ohne Streifen gibt sie nichts aus, auch keinen leeren Behälter.
+ *
+ * `$datenschutz = false` nur auf `einwilligung.php`: Die Seite ist das Ziel,
+ * auf das der Datenschutz-Streifen zeigt.
+ * ------------------------------------------------------------------------ */
+function ui_hinweise(bool $datenschutz = true): void
+{
+    ob_start();
+    ui_umgebung_hinweis();
+    $kreuz = ui_ankuendigung();
+    ui_demo_hinweis();
+    if ($datenschutz) { ui_datenschutz_hinweis(); }
+    $innen = (string)ob_get_clean();
+    if (trim($innen) === '') { return; }
+    echo '<div class="hinweise">' . "\n" . $innen . "</div>\n";
+    /* DAS SKRIPT STEHT HINTER DER REIHE, nicht darin: `ankuendigung.js`
+     * nimmt die Reihe mit ihrem letzten Streifen weg und zaehlt dafuer ihre
+     * Kinder. Ein <script> darin waere ein Kind, das nie verschwindet — die
+     * leere Reihe bliebe mit ihrem Aussenabstand stehen (gemessen beim
+     * ersten Lauf). */
+    if ($kreuz) {
+        echo '<script src="' . ui_e(ui_asset('assets/ankuendigung.js')) . '" defer></script>' . "\n";
+    }
+}
+
+/**
+ * DER UMGEBUNGSSTREIFEN  (.demo-hinweis.hinweis-umgebung)
+ *
+ * Eine Variante des Hinweisstreifens im Ton der Fehlermeldung (Rot-tief auf
+ * Rosa, 6,27 : 1) — kein neuer Baustein (M-P5c-02, E-P5c-66). Nicht
+ * wegklickbar, aus demselben Grund wie der Demo-Hinweis: Wer eine Pause
+ * macht und zurückkommt, soll wieder sehen, wo er ist.
+ */
+function ui_umgebung_hinweis(): void
+{
+    $u = ui_umgebung();
+    if ($u === null) { return; }
+    ?>
+<div class="demo-hinweis hinweis-umgebung" role="status">
+  <?= ui_symbol('server', 'symbol-gross') ?>
+  <p><strong><?= ui_e($u['name']) ?></strong> — Testdaten, kein Echtbetrieb.</p>
+</div>
+<?php }
+
+/**
+ * DIE ANKÜNDIGUNG  (.meldung.meldung-ankuendigung)  — E-P5c-13, -60
+ *
+ * Gibt zurück, ob ein Kreuz dasteht — dann braucht die Seite das Skript
+ * (ui_hinweise() bindet es hinter der Reihe ein).
+ *
+ * Die vorhandene Meldung in ihrem Ton (info/warn), mit einem Kreuz in der
+ * Aktionsspalte. Das Kreuz ist ein FORMULAR und kein Knopf mit Skript: Es
+ * geht damit auch dort, wo kein Skript das Token kennt (Anmeldeseite);
+ * `assets/ankuendigung.js` macht daraus, wo es kann, ein Schließen ohne
+ * Neuladen.
+ *
+ * KEIN KREUZ OHNE SITZUNG. Die lesenden Seiten (Handbuch, Rechtstexte)
+ * starten ohne Cookie keine, und die Setzseite hat eine eigene
+ * (`sitzung_starten('passwort')`, E-ZE-12) — ein Kreuz dort schlösse in
+ * einer Sitzung, die die nächste Seite nicht liest. Der Streifen steht dann
+ * ohne Kreuz da; schließen lässt er sich auf jeder anderen Seite.
+ *
+ * DER ERSTE SATZ WIRD FETT, wie im Bild (M-P5c-02 a): „Wartung am Dienstag,
+ * 30.09.2026, 20:00 bis 21:00." ist der Satz, den man beim Vorbeiscrollen
+ * lesen soll. Erkannt wird er an einem Satzzeichen mit Leerzeichen und
+ * Großbuchstaben dahinter, frühestens nach zwölf Zeichen — sonst bräche
+ * „z. B. Wartung" hinter dem „z.". Ein einziger Satz bleibt ganz normal.
+ */
+function ui_ankuendigung(): bool
+{
+    if (!function_exists('app_state_mehrere')) { return false; }   // Einrichter: keine Datenbank
+    require_once __DIR__ . '/ankuendigung_lib.php';
+    $a = ankuendigung();
+    if ($a === null || ankuendigung_weggeklickt($a)) { return false; }
+
+    $auftakt = '';
+    $text = $a['text'];
+    if (preg_match('/^(.{12,}?[.!?])\s+(?=\p{Lu})(.+)$/su', $text, $m)) {
+        $auftakt = $m[1];
+        $text = $m[2];
+    }
+
+    $kreuz = '';
+    $sitzungApp = session_status() === PHP_SESSION_ACTIVE
+        && !(defined('PW_SESSION_NAME') && session_name() === PW_SESSION_NAME)
+        && function_exists('csrf_field');
+    if ($sitzungApp) {
+        $seite = basename((string)($_SERVER['SCRIPT_NAME'] ?? 'index.php'));
+        $abfrage = (string)($_SERVER['QUERY_STRING'] ?? '');
+        $kreuz = '<form method="post" action="ankuendigung.php" data-ankuendigung-weg>'
+               . csrf_field()
+               . '<input type="hidden" name="zurueck" value="'
+               . ui_e($seite . ($abfrage !== '' ? '?' . $abfrage : '')) . '">'
+               . ui_knopf(['art' => 'symbol', 'symbol' => 'schliessen',
+                           'titel' => 'Ankündigung ausblenden'])
+               . '</form>';
+    }
+    echo ui_meldung_markup($a['ton'], $text, $auftakt, $kreuz, 'meldung-ankuendigung'), "\n";
+    return $kreuz !== '';
+}
+
+
+/* ---------------------------------------------------------------------------
  * DEMO-HINWEIS  (.demo-hinweis)
  *
  * DAUERHAFT, nicht wegklickbar. Ein Hinweis, den man einmal schließt, ist beim
@@ -1212,12 +1363,20 @@ function ui_fuss_seite(array $o = []): void
  * ------------------------------------------------------------------------ */
 function ui_demo_hinweis(): void
 {
+    /* ERST DIE SITZUNG, DANN DIE BIBLIOTHEK (P5c/AP1, F-P5c-71). Seit die
+     * Streifen auch auf den Seiten ohne Gerüst stehen, läuft diese Funktion
+     * im Einrichter — dort gibt es noch keine `config.php`, und
+     * `demo_lib.php` zieht `db.php`, das ohne sie wirft. Ohne Anmeldung gibt
+     * es kein Demo-Konto; die Frage braucht dann keine Datenbank. Die zweite
+     * Wache ist dieselbe wie in `ui_ankuendigung()`: keine Datenbank geladen,
+     * kein Streifen, der eine braucht. */
+    $uid = $_SESSION['user_id'] ?? null;
+    if ($uid === null || !function_exists('db')) { return; }
     if (!function_exists('demo_ist_demo')) {
         if (!is_file(__DIR__ . '/demo_lib.php')) { return; }
         require_once __DIR__ . '/demo_lib.php';
     }
-    $uid = $_SESSION['user_id'] ?? null;
-    if (!demo_ist_demo($uid === null ? null : (int)$uid)) { return; }
+    if (!demo_ist_demo((int)$uid)) { return; }
     $rest = demo_reset_in();
     ?>
 <div class="demo-hinweis" role="status">
@@ -1311,9 +1470,16 @@ function ui_meldung(?string $hinweis, ?string $fehler = null,
     echo implode("\n" . $einzug, $zeilen), "\n";
 }
 
-/** Markup einer einzelnen Meldung. Auch von den JS-Erzeugern nachgebaut. */
+/**
+ * Markup einer einzelnen Meldung. Auch von den JS-Erzeugern nachgebaut.
+ *
+ * `$klasse` BENENNT EINEN VERWENDER, keine Variante (P5c/AP1): Die
+ * Ankündigung trägt `meldung-ankuendigung`, damit ihr Kreuz oben rechts
+ * stehen bleibt, statt beim Umbruch allein in eine Zeile zu fallen
+ * (style.css). Ton und Symbol bleiben die geschlossene Liste unten.
+ */
 function ui_meldung_markup(string $ton, string $text, string $auftakt = '',
-                           string $knopf = ''): string
+                           string $knopf = '', string $klasse = ''): string
 {
     /* FUENF TOENE, UND DIE LISTE IST GESCHLOSSEN (Design.md 9.5). Ein Ton,
      * den es nicht gibt, ergab bis S3 eine Klasse ohne Regel im Stylesheet —
@@ -1330,7 +1496,8 @@ function ui_meldung_markup(string $ton, string $text, string $auftakt = '',
             . implode(', ', array_keys($symbole)) . '.');
     }
     $sym = $symbole[$ton];
-    $m = '<div class="meldung meldung-' . ui_e($ton) . '" role="' . ($ton === 'fehler' ? 'alert' : 'status') . '">';
+    $m = '<div class="meldung meldung-' . ui_e($ton) . ($klasse !== '' ? ' ' . ui_e($klasse) : '')
+       . '" role="' . ($ton === 'fehler' ? 'alert' : 'status') . '">';
     $m .= ui_symbol($sym, 'symbol-gross');
     $m .= '<p>';
     if ($auftakt !== '') { $m .= '<strong>' . ui_e($auftakt) . '</strong> '; }
@@ -2314,6 +2481,7 @@ function ui_abbruch(int $code, string $text, array $o = []): never
     ui_kopf(['menue' => false, 'zurueck' => ['text' => $wort, 'href' => $ziel]]);
     echo '<div class="rahmen rahmen-lesespalte">' . "\n";
     echo '  <main class="inhalt">' . "\n";
+    ui_hinweise();
     echo '    <div class="text">' . "\n";
     echo '      <h1>' . ui_e($titel) . "</h1>\n";
     echo '      ' . ui_meldung_markup('fehler', $text) . "\n";

@@ -447,6 +447,24 @@ function mail_katalog(): array
                 . "mehrere Registrierungen eingehen."),
         ],
 
+        /* DIE RUNDMAIL (P5c/AP1, E-P5c-13). Der Kern ist der Text der
+         * Ankuendigung, woertlich — die BetreiberIn hat ihn geschrieben, und
+         * der Streifen zeigt denselben. Die FRIST IST EIN TAG: Die Rundmail
+         * wird nur eingereiht (`$sofort = false`), und auf einer Anlage ohne
+         * Cron traegt der Huckepack-Job sie erst hinaus, wenn jemand eine
+         * Seite aufruft. Eine Wartungsankuendigung, die zwei Tage spaeter
+         * ankommt, ist keine mehr. Art `konto`: Sie geht an die Konten, nicht
+         * an die Verwaltung. */
+        'rundmail' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['text'],
+            'betreff' => fn(array $d): string => 'Ankündigung — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                wordwrap((string)$d['text'], 78),
+                "Diese Nachricht ging an alle Konten der " . $n . ",\n"
+                . "die sich anmelden können. Dieselbe Ankündigung steht bis zu ihrem Ablauf\n"
+                . "über jeder Seite der Anwendung."),
+        ],
+
         'testmail' => [
             'art' => 'betrieb', 'frist' => 3600, 'pflicht' => [],
             /* DIE TESTMAIL BEKOMMT DENSELBEN RAHMEN wie jede andere, und das
@@ -514,19 +532,30 @@ function mail_praefix(): string
 }
 
 /**
- * Eine Nachricht einreihen UND sofort versuchen.
+ * Eine Nachricht einreihen UND sofort versuchen — oder nur einreihen.
  *
  * @param string $schluessel Eintrag aus `mail_katalog()`
  * @param string $empfaenger Eine Adresse
  * @param array  $daten      Die Pflichtwerte des Eintrags
+ * @param bool   $sofort     `false` = nur einreihen; der Job traegt sie hinaus
  * @return string MAIL_ZUGESTELLT | MAIL_WARTET | MAIL_ABGELEHNT
+ *
+ * NUR EINREIHEN (P5c/AP1, F-P5c-29) gibt es fuer die Rundmail: Der sofortige
+ * Versuch kostet bis zu MAIL_BUDGET_S je Nachricht, und vierzig Empfaenger
+ * in einem Seitenaufruf waeren bis zu 200 s. Es ist EIN Parameter an DIESER
+ * Funktion und keine zweite: Pruefung, Praefix, Frist und das Schliessen
+ * ueberholter Zeilen muessen fuer beide Wege dieselben sein. Mit `false`
+ * ist die Antwort `MAIL_WARTET` oder `MAIL_ABGELEHNT`, nie `ZUGESTELLT` —
+ * und auch der Rueckfall ohne Warteschlange versucht dann nicht (die Zeile
+ * fehlt, also `ABGELEHNT`).
  *
  * WIRFT NICHT BEI EINEM FEHLENDEN PFLICHTWERT, sondern schreibt ins
  * Fehlerprotokoll und gibt `MAIL_ABGELEHNT` zurueck. Eine Ausnahme mitten im
  * Anlegen eines Kontos riesse den ganzen Vorgang mit — und die Mail ist
  * nicht der Vorgang. Der Fehler ist trotzdem einer und steht als solcher da.
  */
-function mail_einreihen(string $schluessel, string $empfaenger, array $daten = []): string
+function mail_einreihen(string $schluessel, string $empfaenger, array $daten = [],
+                        bool $sofort = true): string
 {
     $katalog = mail_katalog();
     if (!isset($katalog[$schluessel])) {
@@ -591,10 +620,12 @@ function mail_einreihen(string $schluessel, string $empfaenger, array $daten = [
          * an der fehlenden Warteschlange scheitert. */
         error_log('mail: Warteschlange nicht verfuegbar (' . $ex->getMessage()
                 . ') — es wird ohne sie versucht');
+        if (!$sofort) { return MAIL_ABGELEHNT; }
         return smtp_send($empfaenger, $betreff, $text, MAIL_BUDGET_S)
             ? MAIL_ZUGESTELLT : MAIL_ABGELEHNT;
     }
 
+    if (!$sofort) { return MAIL_WARTET; }
     return mail_zeile_versuchen($id) ? MAIL_ZUGESTELLT : MAIL_WARTET;
 }
 

@@ -96,7 +96,7 @@ async function anmelden(mail, pw) {
   await seite.fill('input[name="password"]', pw);
   await Promise.all([
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
-    seite.click('button[type="submit"]'),
+    seite.click('#loginform button[type="submit"]'),
   ]);
   if (seite.url().includes('login.php')) {
     const t = await seite.locator('body').innerText().catch(() => '');
@@ -535,7 +535,7 @@ if (schritte.includes('sperren')) {
   await seite.goto(`${basis}/logout.php`, { waitUntil: 'domcontentloaded' }).catch(() => {});
   await seite.goto(`${basis}/reset_request.php`, { waitUntil: 'domcontentloaded' });
   await seite.fill('input[name="email"]', demo);
-  await seite.click('button[type="submit"]');
+  await seite.click('form:not([data-ankuendigung-weg]) button[type="submit"]');
   await seite.waitForTimeout(1500);
   ergebnis.reset_request = (await seite.locator('body').innerText()).slice(0, 200);
   await seite.screenshot({ path: `${ordner}/05-sperren.png` });

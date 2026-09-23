@@ -62,7 +62,7 @@ try {
    * der die Falle beschreiben soll, nennt die Funktion, die hineinfuehrt.) */
   await Promise.all([
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
-    seite.click('button[type="submit"]'),
+    seite.click('#loginform button[type="submit"]'),
   ]);
   pruef('Anmeldung', !seite.url().includes('login.php'), seite.url());
 

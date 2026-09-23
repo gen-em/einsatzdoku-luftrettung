@@ -315,7 +315,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/komplett_lib.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02 |
 | `server/gpx_lib.php`, `server/*export*.php`, `server/assets/export.js` | klein | `gpxprobe` | Nr. 130 |
 | `server/geraete_lib.php`, `server/pair.php`, `server/geraete*.php` | klein | `geraeteprobe`, `kopplungsprobe` | Edge, das sich "uhr" nennt; Nr. 178, 180 |
-| `server/mail_lib.php`, `server/email_lib.php` | klein | `mailprobe` | smtp_letzter_fehler() |
+| `server/mail_lib.php`, `server/email_lib.php`, `server/ankuendigung_lib.php` | klein | `mailprobe` | smtp_letzter_fehler(); Rundmail F-P5c-29 |
 | `server/sicherungsziel_lib.php`, `server/admin_sicherungsziele.php` | klein | `versandprobe` | halb englische Meldungen |
 | `server/ratelimit_lib.php` | klein | `ratenprobe` | Stufe fiel nie zurueck |
 | `server/wartung_lib.php`, `server/auth_guard.php` | klein | `wartungsprobe` | F-S8-P-04, Nr. 171 |
@@ -327,7 +327,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/schema.sql`, `server/migration_lib.php`, `server/update.php` | klein | `migrationsregister`, `schemaprobe` | Nr. 238; Hausregel dreimal vergessen |
 | `server/install.php`, `server/plattform_lib.php` | klein | `installweiche` | PP-1 |
 | `docs/rechtstexte/*.md`, `server/nutzungsbedingungen.php`, `server/avv.php`, `server/datenschutz.php` | klein | `rechtstexte` | P3/O10 |
-| `server/assets/style.css` | klein | `stilvergleich`, `bilderlauf`, `kontraste` | P0/A3 |
+| `server/assets/style.css`, `tools/stilvergleich/**` | klein | `stilvergleich`, `bilderlauf`, `kontraste` | P0/A3 |
 | `server/*.php`, `server/assets/*.js` | klein | `bilderlauf`, `bedienprobe` | Nr. 185, 225; PS-2 |
 | `.github/workflows/*.yml`, `tools/**` | klein | `kettenaufrufe` | Nr. 217 |
 | `android/**` | klein | `android-bau` | E-PK-02 |
@@ -643,6 +643,21 @@ gehalten; **jede Abweichung darüber hinaus ist unbeabsichtigt und wird
 geklärt, bevor committet wird.** Wer eine Null erwartet, wo eine Liste
 richtig ist, schaltet das Werkzeug beim ersten beabsichtigten Umbau ab.
 
+**Die Liste steht seit P5c/AP1 in einer Datei** (F-P5c-72):
+`tools/stilvergleich/geplant.txt`, je Zeile eine Signatur — Probe, Element
+mit Elternteil, die Namen der Eigenschaften, die sich ändern (ohne Werte,
+vereinigt über alle Breiten). Grün ist der Lauf, wenn Messung und Liste
+**gleich** sind: Eine ungeplante Abweichung ist rot, und eine geplante, die
+nicht gemessen wird, auch — sonst verdeckte eine veraltete Liste beim
+nächsten Mal eine ungewollte Änderung. Geschrieben wird sie mit
+`bash tools/stilvergleich/gegen.sh --schreiben`, **gelesen im Pull
+Request**: Jede Zeile ist die Aussage „das soll sich ändern". Fehlt die
+Datei oder ist sie leer, gilt die Null. **Nach dem Merge wird sie
+geleert**; wer das vergisst, bekommt beim nächsten Lauf die Zeilen als
+„geplant, aber nicht gemessen" genannt. Bis dahin war gebaut, was hier
+steht, nur als Null: Jede gewollte Gestaltungsänderung machte seit PK-05
+den Prüfbericht rot (Lage 5).
+
 **Er ersetzt die Browserprüfung nicht:** Er misst statisches Markup, keine
 Bedienzustände. Er beantwortet die eine Frage, die der Bilderlauf nicht
 beantwortet — hat sich ein berechneter Stil geändert, der nicht sollte —,
@@ -660,10 +675,10 @@ hier steht, ist nur, **was grün heißt**:
 |---|---|
 | `tools/quelltext/` `textprobe` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen |
 | `tools/quelltext/` `vollstaendigkeit` | 0 Befunde — ohne Schwelle seit PK-04/5e (E-PK-16) |
-| `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt` |
+| `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1) |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
-| `tools/stilvergleich/` | die Liste deckt sich mit der Liste der geplanten Änderungen (6.10) |
+| `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |
 
 PK-04 hat zwei davon geändert: E-PK-16 hat der Vollständigkeit die
 Symbolzählung und ihre Schwelle genommen, E-PK-08 hat die Wortliste zur

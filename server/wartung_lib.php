@@ -414,11 +414,18 @@ function stoerung_seite_html(string $titel, string $innen): string
     };
     $h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 
+    /* NUR DER VORSATZ „[Staging] ", keine Farbe und kein Streifen (P5c/AP1,
+     * E-P5c-55): Diese Seiten haben keine Kopfleiste, die rot werden
+     * koennte, und sie sollen so wenig wie moeglich voraussetzen. Das
+     * Etikett kommt aus `config.php` allein — `umgebung_lib.php` laedt nur
+     * `konfig_lib.php`, keine Datenbank. */
+    require_once __DIR__ . '/umgebung_lib.php';
+
     return '<!doctype html>' . "\n"
       . '<html lang="de">' . "\n"
       . '<head>' . "\n"
       . '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' . "\n"
-      . '<title>' . $h($titel) . '</title>' . "\n"
+      . '<title>' . $h(umgebung_praefix() . $titel) . '</title>' . "\n"
       . '<link rel="stylesheet" href="' . $h($v('assets/style.css')) . '">' . "\n"
       . '</head>' . "\n"
       . '<body>' . "\n"

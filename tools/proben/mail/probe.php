@@ -174,6 +174,8 @@ $beispiel = [
     'termin'     => '23.10.2026',
     'einsaetze'  => '1 234 von 1 500',
     'speicher'   => '412 MB von 500 MB',
+    // Seit P5c/AP1: der Text der Ankuendigung fuer die Rundmail.
+    'text'       => 'Wartung am Dienstag, 20:00 bis 21:00.',
 ];
 $fehlend = [];
 foreach ($katalog as $k => $e) {
@@ -453,6 +455,114 @@ pruef('Kein "@" im erzeugten Protokoll', !str_contains($log, 'geheimer.empfaenge
       strlen($log) . ' Byte Protokoll, ' . substr_count($log, "\n") . ' Zeilen');
 pruef('Aber eine Kennung', (bool)preg_match('/\[[0-9A-F]{8}\]/', $log),
       trim(str_replace("\n", ' | ', $log)));
+
+/* ======================================================================== */
+abschnitt('14  Rundmail — nur einreihen, an alle erreichbaren, einmal je Tag');
+
+/* ANLASS: P5c/AP1, F-P5c-29. `mail_einreihen()` versuchte jede Nachricht
+ * sofort, bis zu MAIL_BUDGET_S je Stueck; eine Rundmail an vierzig Konten
+ * haette den Seitenaufruf bis zu 200 s aufgehalten. Gemessen wird deshalb
+ * GEGEN EINEN SCHWEIGENDEN SERVER: Versuchte die Rundmail doch sofort, hinge
+ * dieser Abschnitt je Empfaenger fuenf Sekunden. */
+require_once $wurzel . '/server/konto_lib.php';
+require_once $wurzel . '/server/ankuendigung_lib.php';
+require_once $wurzel . '/server/demo_lib.php';
+
+$probeKonten = [];
+$neuesKonto = static function (string $mail, string $status, bool $passwort) use (&$probeKonten): int {
+    $k = konto_anlegen($mail, '', 'user', 'einladung', $status);
+    if ($passwort) {
+        db()->prepare("UPDATE users SET password_hash = 'probe' WHERE id = ?")->execute([$k['id']]);
+    }
+    $probeKonten[] = $k['id'];
+    return $k['id'];
+};
+try {
+    foreach (['rund-1', 'rund-2', 'rund-3'] as $n) {
+        $neuesKonto($n . '@mailprobe.invalid', 'aktiv', true);
+    }
+    $neuesKonto('rund-ohne-passwort@mailprobe.invalid', 'aktiv', false);
+    $neuesKonto('rund-unbestaetigt@mailprobe.invalid', 'unbestaetigt', true);
+    $gesperrt = $neuesKonto('rund-gesperrt@mailprobe.invalid', 'aktiv', true);
+    $pdo->prepare("UPDATE users SET status = 'gesperrt' WHERE id = ?")->execute([$gesperrt]);
+
+    $ziele = rundmail_empfaenger();
+    $N = count($ziele);
+    $drin = array_values(array_filter($ziele, static fn($m) => str_starts_with($m, 'rund-')));
+    sort($drin);
+    pruef('Erreichbar: die drei aktiven mit Passwort, sonst keins der Probe',
+          $drin === ['rund-1@mailprobe.invalid', 'rund-2@mailprobe.invalid', 'rund-3@mailprobe.invalid'],
+          implode(', ', $drin));
+    $demoId = demo_id();
+    $demoMail = null;
+    if ($demoId !== null) {
+        $st = $pdo->prepare('SELECT email FROM users WHERE id = ?');
+        $st->execute([$demoId]);
+        $demoMail = (string)$st->fetchColumn();
+    }
+    pruef('Das Demo-Konto ist nicht darunter',
+          $demoMail === null || !in_array($demoMail, $ziele, true),
+          $demoMail === null ? 'kein Demo-Konto auf dieser Anlage' : $demoMail);
+
+    app_state_loeschen(RUNDMAIL_K_ZULETZT);
+    ankuendigung_setzen('Mailprobe: Wartung am Dienstag. Die Anwendung ist kurz nicht erreichbar.',
+                        'warn', time() + 3600);
+    $protokollVorher = (int)$pdo->query("SELECT COUNT(*) FROM protokoll_ereignisse
+                                         WHERE art = 'rundmail'")->fetchColumn();
+
+    mp_gegenstelle('stumm');
+    $pdo->exec('DELETE FROM mail_warteschlange');
+    $t0 = microtime(true);
+    $r  = rundmail_senden();
+    $d  = microtime(true) - $t0;
+    pruef('Rundmail meldet Erfolg mit der Zahl der Erreichbaren',
+          $r['ok'] && $r['zahl'] === $N, $r['zahl'] . ' von ' . $N . ' — ' . $r['meldung']);
+    pruef('Nur eingereiht: gegen einen schweigenden Server unter 1 s',
+          $d < 1.0, sprintf('%.2f s fuer %d Empfaenger (sofort versucht: bis %d s)',
+                            $d, $N, $N * MAIL_BUDGET_S));
+    $zeilen = $pdo->query("SELECT zustand, versuche, art, betreff, text FROM mail_warteschlange
+                           WHERE schluessel = 'rundmail'")->fetchAll(PDO::FETCH_ASSOC);
+    $offenOhneVersuch = count(array_filter($zeilen,
+        static fn($z) => $z['zustand'] === 'offen' && (int)$z['versuche'] === 0));
+    pruef('N Zeilen, alle offen und unversucht', count($zeilen) === $N && $offenOhneVersuch === $N,
+          count($zeilen) . ' Zeilen, ' . $offenOhneVersuch . ' offen ohne Versuch');
+    pruef('Betreff und Rumpf tragen die Ankuendigung',
+          $zeilen !== [] && str_contains((string)$zeilen[0]['betreff'], 'Ankündigung')
+          && str_contains((string)$zeilen[0]['text'], 'Mailprobe: Wartung am Dienstag'),
+          (string)($zeilen[0]['betreff'] ?? '-'));
+
+    /* Der Job traegt sie hinaus — zehn je Lauf, also so oft, bis nichts
+     * mehr offen ist (hoechstens N/10 + 2 Laeufe, sonst haengt etwas). */
+    mp_gegenstelle('ok');
+    $pdo->exec("UPDATE mail_warteschlange SET naechster_versuch = UTC_TIMESTAMP()
+                WHERE schluessel = 'rundmail'");
+    $laeufe = 0;
+    do {
+        $laeufe++;
+        $tj = microtime(true);
+        mail_job($pdo, [], static fn(): float => 30.0 - (microtime(true) - $tj));
+        $offen = (int)$pdo->query("SELECT COUNT(*) FROM mail_warteschlange
+                                   WHERE schluessel = 'rundmail' AND zustand = 'offen'")->fetchColumn();
+    } while ($offen > 0 && $laeufe <= intdiv($N, MAIL_JE_LAUF) + 2);
+    $zu = (int)$pdo->query("SELECT COUNT(*) FROM mail_warteschlange
+                            WHERE schluessel = 'rundmail' AND zustand = 'zugestellt'")->fetchColumn();
+    pruef('Die Gegenstelle hat alle N angenommen', $zu === $N,
+          $zu . ' von ' . $N . ' zugestellt in ' . $laeufe . ' Joblaeufen');
+
+    $zweite = rundmail_senden();
+    $danach = (int)$pdo->query("SELECT COUNT(*) FROM mail_warteschlange
+                                WHERE schluessel = 'rundmail'")->fetchColumn();
+    pruef('Eine zweite Rundmail am selben Tag wird abgewiesen',
+          !$zweite['ok'] && $danach === $N, $zweite['meldung']);
+    $protokollNachher = (int)$pdo->query("SELECT COUNT(*) FROM protokoll_ereignisse
+                                          WHERE art = 'rundmail'")->fetchColumn();
+    pruef('Genau ein Protokolleintrag', $protokollNachher - $protokollVorher === 1,
+          $protokollVorher . ' -> ' . $protokollNachher);
+} finally {
+    foreach ($probeKonten as $id) { konto_loeschen($id); }
+    ankuendigung_entfernen();
+    app_state_loeschen(RUNDMAIL_K_ZULETZT);
+}
 
 /* ======================================================================== */
 $pdo->exec('DELETE FROM mail_warteschlange');

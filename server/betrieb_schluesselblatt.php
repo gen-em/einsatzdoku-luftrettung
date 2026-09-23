@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/instanz_lib.php';
+require_once __DIR__ . '/umgebung_lib.php';   // Vorsatz im Titel (P5c/AP1, E-P5c-70)
 require_betreiberin();
 require_once __DIR__ . '/serverkrypto_lib.php';
 require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Zeitmarke des Blatts
@@ -116,7 +117,7 @@ kopfzeilen_seite();
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Schlüsselblatt — <?= e(instanz_kurz()) ?></title>
+<title><?= e(umgebung_praefix()) ?>Schlüsselblatt — <?= e(instanz_kurz()) ?></title>
 <link rel="stylesheet" href="<?= $h($v('assets/style.css')) ?>">
 </head>
 <body class="blatt-seite">

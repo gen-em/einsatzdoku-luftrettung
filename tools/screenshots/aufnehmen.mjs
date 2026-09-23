@@ -96,6 +96,17 @@ const MOTOR  = motorWahl(argv);
  * `wartungAn()`. Ohne Token bleibt es beim lokalen Weg. */
 const JOBS_TOKEN = wert('--jobs-token', '');
 
+/* DAS UMGEBUNGSETIKETT (P5c/AP1, E-P5c-05). Mit `--etikett Staging` misst
+ * der Lauf auf JEDER Seite, ob der Titel mit „[Staging] " beginnt und ob die
+ * Kopfleiste — wo es eine gibt — `kopf-umgebung` traegt. Ohne den Schalter
+ * misst er die Gegenrichtung: kein Vorsatz, keine rote Leiste. Anlass: Die
+ * Abnahme von AP1 verlangt „Praefix auf allen Seiten, Kopfleiste rot auf
+ * allen Seiten mit Kopfleiste" — ein Bild zeigt die Farbe, aber keines den
+ * Seitentitel, und 58 Seiten von Hand aufzurufen ist keine Messung.
+ * Die Lage selbst stellt der Aufrufer her (`app.umgebung` in `config.php`);
+ * dieser Lauf schreibt nichts. */
+const ETIKETT = wert('--etikett', '');
+
 /* UNBEKANNTE SCHALTER SIND EIN FEHLER, KEIN SCHWEIGEN (16.09.2026).
  *
  * `wert()` sucht sich seine Kennzeichnung aus argv und laesst alles andere
@@ -111,9 +122,9 @@ const JOBS_TOKEN = wert('--jobs-token', '');
  * Liste, weil motorWahl() sie aus demselben argv liest. */
 const BEKANNT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
                          '--klein', '--finger', '--nur', '--stufe', '--selbstprobe',
-                         '--motor', '--jobs-token']);
+                         '--motor', '--jobs-token', '--etikett']);
 const MIT_WERT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
-                          '--nur', '--motor', '--jobs-token', '--stufe']);
+                          '--nur', '--motor', '--jobs-token', '--stufe', '--etikett']);
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
   if (!a.startsWith('--')) continue;
@@ -467,7 +478,7 @@ async function anmeldenAuf(seite, rolle) {
   await seite.fill('input[name="password"]', konto.pw);
   await Promise.all([
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
-    seite.click('button[type="submit"]'),
+    seite.click('#loginform button[type="submit"]'),
   ]);
   if (seite.url().includes('login.php')) { return false; }
 
@@ -506,7 +517,7 @@ async function anmeldenAuf(seite, rolle) {
     }
     await Promise.all([
       seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {}),
-      seite.click('button[type="submit"]'),
+      seite.click('form:not([data-ankuendigung-weg]) button[type="submit"]'),
     ]);
     if (seite.url().includes('einwilligung.php')) { return false; }
   }
@@ -981,7 +992,8 @@ async function gehZu(rolle, adresse, zielPfad) {
 }
 
 /* ---- Eine Aufnahme --------------------------------------------------------- */
-const bericht = { basis: BASIS, skala: SKALA, seiten: [], knopf: [], stand: new Date().toISOString() };
+const bericht = { basis: BASIS, skala: SKALA, seiten: [], knopf: [], etikett: [],
+                  etikettGeprueft: { titel: 0, kopf: 0 }, stand: new Date().toISOString() };
 /* Aufnahmen, bei denen die Sitzung mitten im Lauf neu aufgebaut werden
  * musste (Demo-Reset), und solche, die deshalb GAR NICHT entstanden. */
 const verlorene = [];
@@ -1324,6 +1336,8 @@ for (const eintrag of liste) {
          nichts ueber, es liegt nur falsch), die Konsole bleibt still, die
          Knopfhoehen stimmen. Die Profilseite meldete zehn Tage lang drei
          Nullen und war kaputt; gefunden wurde es beim ANSEHEN eines Bildes. */
+      titel: document.title,
+      kopf: (document.querySelector('header.kopf') || {}).className || null,
       ausbruch: Array.from(document.querySelectorAll('section.karte, details.karte'))
         .filter(el => !el.closest('main.inhalt'))
         .map(el => ((el.querySelector('h2, h3') || {}).textContent || '(ohne Titel)')
@@ -1417,6 +1431,24 @@ for (const eintrag of liste) {
       karten: mass.karten || 0,
       konsole: rolle.fehler.slice(),
     });
+    /* DAS ETIKETT — je Seite und Breite, in beiden Richtungen (s. `ETIKETT`).
+     * Eine Seite, die auf die Anmeldung umleitete, hat kein Bild und zaehlt
+     * hier auch nicht: Ihr Titel waere der der Anmeldeseite. */
+    if (!hin.abbruch && typeof mass.titel === 'string') {
+      const vorsatz = ETIKETT ? `[${ETIKETT}] ` : '';
+      bericht.etikettGeprueft.titel++;
+      const titelOk = ETIKETT ? mass.titel.startsWith(vorsatz) : !mass.titel.startsWith('[');
+      if (!titelOk) {
+        bericht.etikett.push({ seite: eintrag.name, breite: b, was: 'Titel', ist: mass.titel });
+      }
+      if (mass.kopf !== null) {
+        bericht.etikettGeprueft.kopf++;
+        const rot = /\bkopf-umgebung\b/.test(mass.kopf);
+        if (rot !== !!ETIKETT) {
+          bericht.etikett.push({ seite: eintrag.name, breite: b, was: 'Kopfleiste', ist: mass.kopf });
+        }
+      }
+    }
     for (const k of mass.knoepfe) {
       /* ZWEI SOLLWERTE (E-S8-09). 36 px gilt nur, wo beides zutrifft:
        * Zeigergeraet UND mindestens 1024 px — dieselbe Bedingung wie im
@@ -1483,7 +1515,9 @@ md += `| Breiten | ${BREITEN.map(x => x.b).join(', ')} |\n`;
 md += `| Einzelbilder | ${bilderZahl} |\n`;
 md += `| Waagerechter Überlauf | **${gesamtUeberlauf}** von ${bilderZahl} |\n`;
 md += `| Konsolenfehler | **${gesamtKonsole}** |\n`;
-md += `| Knöpfe mit falscher Höhe | **${bericht.knopf.length}** |\n\n`;
+md += `| Knöpfe mit falscher Höhe | **${bericht.knopf.length}** |\n`;
+md += `| Etikett ${ETIKETT ? '„' + ETIKETT + '“' : '(keins erwartet)'} | **${bericht.etikett.length}** Abweichungen `
+   + `(${bericht.etikettGeprueft.titel} Titel, ${bericht.etikettGeprueft.kopf} Kopfleisten geprüft) |\n\n`;
 md += `## Je Seite\n\n| Seite | Gruppe | Überlauf bei | Verursacher | Konsole |\n|---|---|---|---|---|\n`;
 for (const s of bericht.seiten) {
   const breit = s.breiten.filter(x => x.ueberlauf);
@@ -1591,6 +1625,14 @@ if (gelesen === 0 && bilderZahl > 0) {
 }
 for (const d of doppelte) console.log(`  ${d}`);
 
+console.log(`Etikett ${ETIKETT ? '„' + ETIKETT + '“' : '(keins erwartet)'}: `
+  + `${bericht.etikettGeprueft.titel} Titel und ${bericht.etikettGeprueft.kopf} Kopfleisten geprüft · `
+  + `${bericht.etikett.length} Abweichungen`);
+for (const e of bericht.etikett.slice(0, 20)) {
+  console.log(`  ${e.seite} @ ${e.breite}: ${e.was} „${e.ist}“`);
+}
+if (bericht.etikett.length > 20) console.log(`  … und ${bericht.etikett.length - 20} weitere`);
+
 console.log(`Bericht: ${join(AUSGABE, 'bericht.md')}`);
 
 await browser.close();
@@ -1602,4 +1644,5 @@ if (wartungHaengt) {
 }
 process.exit(gesamtUeberlauf === 0 && gesamtKonsole === 0
              && bericht.knopf.length === 0 && ausgefallen.length === 0
+             && bericht.etikett.length === 0
              && !wartungHaengt ? 0 : 1);

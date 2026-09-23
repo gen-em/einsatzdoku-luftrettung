@@ -33,9 +33,9 @@ Umsetzung.
 > | | |
 > |---|---|
 > | Stand | **23.09.2026 — Fassung 2.** Fassung 1 (20.09.2026, gegen `862ca7f`, Web 20.25.0) freigegeben, Mockup-Runde M-P5c-01 freigegeben. Am 23.09.2026 gegen `8fd4553` (Web 20.37.1, nach Schritt 15, 16 und PK-01 bis -04) abgeglichen: 139 Rohbefunde, 16 davon in der Gegenlesung widerlegt; 21 Fragen dem Auftraggeber vorgelegt und am selben Tag beantwortet (Q-P5c-05 bis -25, 2.7). Daraus **E-P5c-31 bis -58** und **F-P5c-15 bis -58**. Nachgezogen auf `main` `8ae873c` (PK-04 gemergt, Konzept TB). **Mockup-Runde M-P5c-02** am 23.09.2026 gebaut und freigegeben: **F-P5c-59 bis -63**, **Q-P5c-26 bis -30**, **E-P5c-59 bis -66** (2.8). |
-> | Entschieden | E-P5c-01 bis **E-P5c-66**; Q-P5c-01 bis **-30** beantwortet. **M-P5c-02 freigegeben am 23.09.2026** (2.8, 6.2) |
+> | Entschieden | E-P5c-01 bis **E-P5c-66**; Q-P5c-01 bis **-30** beantwortet. **M-P5c-02 freigegeben am 23.09.2026** (2.8, 6.2). Aus der Umsetzung: **E-P5c-67 bis -74** (2.9, ohne eigene Frage — wer eine davon anders will, sagt es) |
 > | Offen | Nichts. Die beiden Fehler aus der Runde M-P5c-02 außerhalb von P5c — Backlog **288** (Neueinrichtung scheiterte seit Web 20.30.0) und **289** (Anmeldeseite) — sind mit der Korrekturstufe **Web 20.37.3** behoben (23.09.2026, F-P5c-62, -63); ihre Prüfliste steht in `Pruefdokument-Korrektur-288-289.md` |
-> | Umsetzung | nicht begonnen; **nach PK-05** (E-P5c-32) **und nach dem Korrekturpaket für die neun roten Proben der Nebenstufe** (Konzept PK, E-PK-45, Backlog Nr. 292) — **gebaut mit Konzept RP am 23.09.2026**: Die Nebenstufe ist auf frischer Anlage grün (36 / 0 / 0, rund 21 min, E-RP-05). F-P5c-49 ist mit PK-05/1 erledigt. Reihenfolge AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 → AP11 (3.0); **AP10 entfällt** |
+> | Umsetzung | **läuft seit 23.09.2026. AP1 erledigt** (Web 20.38.0; Befunde F-P5c-64 bis -72, alle behoben oder als Prüfmittelfalle benannt). **Als Nächstes: AP2.** — Vorgeschichte: **nach PK-05** (E-P5c-32) **und nach dem Korrekturpaket für die neun roten Proben der Nebenstufe** (Konzept PK, E-PK-45, Backlog Nr. 292) — **gebaut mit Konzept RP am 23.09.2026**: Die Nebenstufe ist auf frischer Anlage grün (36 / 0 / 0, rund 21 min, E-RP-05). F-P5c-49 ist mit PK-05/1 erledigt. Reihenfolge AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 → AP11 (3.0); **AP10 entfällt** |
 > | Fable-Schritte | **keine.** M-P5c-01 ist am 20.09.2026 mit Fable gefahren; M-P5c-02 fährt Opus (Q-P5c-08) |
 > | Nummern | Backlog **286** (Admin-Tor, AP2) und **287** (Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb, Schritt 17) mit dieser Fassung eingetragen; **288** und **289** mit der Mockup-Runde M-P5c-02 (beide erledigt mit Web 20.37.3, das **290** und **291** vergibt); der Kopf des Backlogs nennt **292** als nächste freie Nummer. Alle übrigen Einträge in Rahmenplan und Backlog stehen als Einschub in 7 und 8 und werden **mit AP1** eingespielt (F-P5c-50) |
 >
@@ -44,7 +44,7 @@ Umsetzung.
 > | Paket | Stand | Versionsstufe (Vorschlag) | Prüfstand | Migration | Commit | Abnahmezahlen |
 > |---|---|---|---|---|---|---|
 > | M-P5c-02 Mockup-Runde | **erledigt — freigegeben 23.09.2026** | — (nur `docs/`) | — | — | | Überlauf 0 in 6 Bildschirmdateien; QR 2 von 2 gelesen; Codeblatt 1 Seite (74 %); Blätter auf Staging je 1 Seite (93 %, 71 %; Härtefall 1013 von 1017 px); Kontraste 8 von 8 gleich mit `kontrast.py` |
-> | AP1 Banner und Ankündigung | offen | Neben | neben | nein | | |
+> | AP1 Banner und Ankündigung | **erledigt 23.09.2026** | Neben — **Web 20.38.0** | neben (Bericht im Commit `P5c-AP1`) | nein | | Mailprobe **50 / 0** (vorher 41) · Bedienwege der Seite **2 / 2**, Bedienprobe gesamt 50 · Bilderlauf mit Etikett **496 Bilder, 0/0/0/0**, Etikett 496 Titel + 424 Kopfleisten, nach F-P5c-70 **0 Abweichungen** · Kontraste **25 Paare, 0 verfehlt** (Orange hell auf Rot 4,12) · Register **38 Zeilen, 0 über der Decke** · Statuszeile „Umgebung" 4 von 4 Fällen |
 > | AP2 Protokollseite und Archiv | offen | Neben | neben | nein | | |
 > | AP3 Fehlerprotokoll | offen | Neben | neben | nein | | |
 > | AP4 Support-Rolle | offen | Neben | **haupt** | **ja** (ENUM `users.role`) | | |
@@ -1156,6 +1156,80 @@ die Karte „Zweitfaktor" nach „Wiederherstellungsschlüssel", Support
 einspaltig mit Knöpfen weg statt ausgegraut, beide Statuszeilen oben in der
 Karte „Server", die Umgebungszeile auf den Blättern.
 
+
+### 2.9 Aus der Umsetzung (E-P5c-67 bis …)
+
+*Festlegungen, die beim Bauen gefallen sind — ohne eigene Frage an den
+Auftraggeber, weil sie aus Konzept, Bild und Bestand folgen. Wer eine davon
+anders will, sagt es; sie stehen hier, damit das nachvollziehbar bleibt.*
+
+**E-P5c-67 — Das Kreuz der Ankündigung ist ein Formular** (AP1). Es schickt an
+`ankuendigung.php` (POST mit Token, **ohne** `auth_guard.php` — der Streifen
+steht auch über der Anmeldung, E-P5c-60), das in der Sitzung die **Kennung**
+dieser Ankündigung merkt; eine neue (anderer Text, Ton oder Ende) erscheint
+wieder. Ohne Skript kommt die Seite zurück, mit `assets/ankuendigung.js`
+verschwindet der Streifen ohne Neuladen — aber nur, wo es `CSRF` gibt: Ein
+Token von Hand an `EdApi` vorbei wäre ein zweiter Transport (Register Z29).
+`login.php` löscht die Marke beim Anmelden, weil `session_regenerate_id()`
+die Daten behält; sonst trüge ein Schließen auf der Anmeldeseite in die
+Sitzung danach. **Kein Kreuz ohne Sitzung** (lesende Seiten ohne Cookie) und
+nicht in der eigenen Sitzung der Setzseite (`EDPWSESS`).
+
+**E-P5c-68 — Die Rundmail speichert zuerst, und die Tagesmarke steht vor dem
+Einreihen** (AP1). „Als Rundmail senden …" nimmt, was im Feld steht, nicht
+den alten Stand. Die Marke `rundmail_zuletzt` wird gesetzt, bevor die erste
+Zeile eingereiht wird: Ein zweiter Klick findet sie schon vor; scheitert
+danach alles, muss die Rundmail morgen wiederholt werden — lieber das als
+zwei an einem Tag. „Je Tag" ist der Kalendertag der Anlage. Nach einer
+Rundmail ist der Knopf bis Mitternacht gesperrt, die Zeile darunter sagt es.
+Katalogeintrag: Art `konto`, **Frist ein Tag** — auf einer Anlage ohne Cron
+trägt der Huckepack-Job sie erst hinaus, wenn jemand eine Seite aufruft.
+
+**E-P5c-69 — Die Karte „Ankündigung" steht zuoberst** (AP1), wie im
+freigegebenen Bild; die Karte „Schlüssel des Servers" rückt eine Stelle
+nach unten. Ihre rote Lage steht zusätzlich auf der Statusseite und am
+Menüzähler. Handbuch 12.5 und der Kommentar in `betrieb_server.php` sagen
+es.
+
+**E-P5c-70 — Welche eigenen Hüllen den Vorsatz tragen** (AP1; die
+Andockstellen nannten sie „einzeln zu entscheiden"). **Ja:** Wartungs- und
+Überlastseite, beide über `stoerung_seite_html()` — dort steht der Vorsatz
+einmal; **und Schlüssel- und Notfallblatt, aber nur der Titel** — die
+Umgebungszeile auf dem Blatt bekommen sie mit **AP9** (E-P5c-50).
+**Nein, in AP1:** die Seite „Nur über HTTPS" (`kopfzeilen_lib.php`) und
+„PHP zu alt" (`install.php`) — sie erscheinen vor allem anderen und tragen
+kaum je eine Anlage mit Etikett; `apk.php` (ein Download). *Berichtigt im
+selben Paket:* Hier stand zuerst, auch der Titel der Blätter komme erst mit
+AP9. Der Bilderlauf mit Etikett hat die beiden Seiten als einzige
+Abweichungen gezählt (F-P5c-70); eine Zeile je Datei ist kein Grund, eine
+gemessene Lücke drei Pakete lang stehen zu lassen.
+
+**E-P5c-71 — Der erste Satz der Ankündigung wird fett** (AP1), wie im Bild —
+erkannt an Satzzeichen, Leerzeichen und Großbuchstaben dahinter, frühestens
+nach zwölf Zeichen, damit „z. B. Wartung" nicht hinter dem „z." bricht. Ein
+einzelner Satz bleibt ganz normal.
+
+**E-P5c-72 — `einwilligung.php` trägt die Reihe ohne den Datenschutz-Streifen**
+(AP1): Die Seite ist das Ziel, auf das er zeigt.
+
+**E-P5c-73 — Ein Etikett ohne `farbe` ist rot, ohne Warnung** (AP1). Heute
+gibt es eine Farbe; wer sie weglässt, meint sie. Ein Etikett ohne `name`
+gilt als keins.
+
+**E-P5c-74 — Die Liste der geplanten Stilabweichungen ist eine Datei** (AP1,
+F-P5c-72; eine Entscheidung an der Prüfkette, nicht an der Anwendung).
+`tools/stilvergleich/geplant.txt`, je Zeile eine Signatur aus Probe, Element
+mit Elternteil und den Namen der geänderten Eigenschaften — **ohne Werte**,
+weil die Katalogprobe mit jeder Regel wächst und eine Liste aus Pixeln bei
+jedem Satz neu zu schreiben wäre. Grün heißt **Gleichheit**: auch eine
+geplante, nicht gemessene Zeile ist rot. Geschrieben mit
+`gegen.sh --schreiben`, gelesen im Pull Request, nach dem Merge geleert.
+**Warum ohne Rückfrage:** `Pruefablauf.md` 6.10 beschreibt genau diese Liste;
+gebaut war sie nicht, und ohne sie wäre kein Paket mit Gestaltung (AP1, AP2,
+AP5, AP7, AP9) durchs Tor gekommen. Die Alternative — den Stilvergleich im
+Bericht als „erwartet rot" durchzuwinken — hätte Lage 5 aufgeweicht. **Wer
+das anders will, sagt es**; es betrifft auch Konzept PK.
+
 ---
 
 ## 3. Arbeitspakete
@@ -1279,6 +1353,48 @@ Verwaltung → Installation). **Buchführung:** Einschub 7 und 8 einspielen.
   Karte.
 - **Prüfpunkte der BetreiberIn** (Prüfdokument): Staging rot nach dem Merge,
   Produktiv blau nach dem Tag, Rundmail in einem echten Postfach angekommen.
+
+**Umsetzung — erledigt am 23.09.2026, Web 20.38.0.**
+
+*Was gebaut ist.* `umgebung_lib.php` liest das Etikett (nie abgeleitet,
+`UMGEBUNG_FARBEN` = `['rot']`); `ui_seite_start()` setzt den Vorsatz,
+`ui_kopf()` die Klasse `kopf-umgebung`, `ui_hinweise()` die Reihe der vier
+Streifen an der Stelle des Demo-Hinweises — auch in den zwölf Dateien ohne
+Gerüst. Wartungs-, Überlastseite und die beiden Blätter tragen den Vorsatz
+im Titel (E-P5c-70). `ankuendigung_lib.php` hält Ankündigung und Rundmail
+(drei `app_state`-Schlüssel plus Tagesmarke), `ankuendigung.php` nimmt das
+Kreuz entgegen (E-P5c-67), `assets/ankuendigung.js` schließt ohne Neuladen
+und zählt Bytes. Karte „Ankündigung" zuoberst in den Servereinstellungen
+(E-P5c-69), Statuszeile „Umgebung" in vier Fällen, `mail_einreihen()` mit
+`$sofort = false`, Katalogeintrag `rundmail`, ein Protokolleintrag je
+Rundmail. Einschub 7 und 8 eingespielt (Rahmenplan Fassung 108, Backlog
+Kopf 293, Nr. 243 erledigt).
+
+*Was dabei schiefging und wie es gelöst ist.* **F-P5c-64:** Die
+Prüfwerkzeuge klickten beim Anmelden das Kreuz der Ankündigung — 24 Stellen
+in 20 Dateien zielen jetzt auf `#loginform`. **F-P5c-65:** Das Skript stand
+in der Reihe und hielt sie nach dem Schließen am Leben — es steht dahinter.
+**F-P5c-66 bis -68:** Buchführung, die schon vorher falsch stand (erzeugte
+Tabellen in `Design.md`, „zehn" Mailvorlagen in `Technik.md`, Backlog-Kopf
+292). **F-P5c-69:** Der OPcache zeigt eine eben geschriebene `config.php`
+bis zu zwei Sekunden nicht — kein Fehler der Anwendung, der Umschalter
+wartet. **F-P5c-70:** Der Bilderlauf mit Etikett fand die beiden Blätter
+ohne Vorsatz; behoben im Paket. **F-P5c-71:** Die Neueinrichtung vor dem
+Prüfstand scheiterte, weil der Demo-Streifen im Einrichter die Datenbank
+laden wollte — derselbe Fehler wie Nr. 288, diesmal gefangen, bevor er
+`main` erreichte. **F-P5c-72:** Der erste Prüfstand war 36 grün, 1 rot —
+der Stilvergleich, weil es die Liste der geplanten Abweichungen aus
+`Pruefablauf.md` 6.10 nur als Satz gab. Gebaut (E-P5c-74), 30 Signaturen,
+alle aus AP1. **Ungeklärt:** Der erste Bilderlauf mit
+Etikett lief zehnmal langsamer und wurde abgebrochen; Einzelmessungen und
+der zweite Lauf waren normal (Prüfdokument 3).
+
+*Entscheidungen.* E-P5c-67 bis -74 (2.9); E-P5c-74 ist eine an der
+Prüfkette (Liste der geplanten Stilabweichungen, F-P5c-72). Keine Decke im Register
+angehoben; `error_log(` bleibt bei 75 von 77.
+
+*Zahlen.* Stand der Umsetzung im Statusblock; Prüfbericht in der
+Commit-Nachricht; Messprotokoll im Prüfdokument, Abschnitt 1.
 
 ### AP2 — Protokollseite und Archiv (E-P5c-02, -03, -10, -11, -22, -25, -26, -31, -37, -38, -39, -57; Bild: M-P5c-01a)
 
@@ -1714,6 +1830,15 @@ angegebenen Kennung (A-, B-, … = Bereich und laufende Nummer).*
 | F-P5c-61 | *(M-P5c-02)* `notfallblatt.php` schickt zweimal nach „Einstellungen → Konto" (Z. 169, 213); das freigegebene M-P5c-01f trägt den Fehler mit | AP9, Abnahme |
 | F-P5c-62 | *(M-P5c-02)* **Neueinrichtung scheitert seit Web 20.30.0:** `konto_anlegen()` ruft `db_transaktion()`, `konto_lib.php` lädt `db.php` nur mit `config.php`; `hochfahren.sh --neu` scheitert in Schritt 4 | **Backlog 288** — behoben mit Web 20.37.3 |
 | F-P5c-63 | *(M-P5c-02)* Die Anmeldeseite stellt die vier Verweise neben die Karte (`.anmeldung` in Zeilenrichtung) — bei 390 px ist die Karte rund 200 px breit; seit Web 20.23.0 | **Backlog 289** — behoben mit Web 20.37.3 |
+| F-P5c-64 | *(AP1)* **Die Prüfwerkzeuge meldeten sich an, indem sie „den ersten Absendeknopf der Seite" klickten** (`button[type="submit"]`, 24 Stellen in 20 Dateien). Mit einer Ankündigung steht deren Kreuz im DOM vor „Anmelden" — der erste Schnelltest hat die Ankündigung geschlossen statt sich anzumelden. Auf Staging, gegen das Stufe 2 läuft, hätte eine gesetzte Ankündigung genügt | behoben in AP1: `#loginform button[type="submit"]`; zwei Nicht-Anmeldestellen (Einwilligung, Passwort-Reset) auf `form:not([data-ankuendigung-weg])` |
+| F-P5c-65 | *(AP1)* Der erste Bau stellte das `<script>` der Ankündigung **in** die Reihe `.hinweise`. Nach dem Schließen blieb die Reihe mit dem Skript als einzigem Kind und ihrem Außenabstand stehen (gemessen: 1 leerer Behälter) | behoben: das Skript steht hinter der Reihe (`ui_hinweise()`), gemessen 0 Behälter |
+| F-P5c-66 | *(AP1)* Die erzeugten Tabellen in `Design.md` standen auf einem älteren Stand (Bausteine 40 statt 44 Funktionen, `ui_tabellen_bootstrap()` aus Schritt 15 fehlte; Verwendungszahlen); die Kontrasttabelle 3.4 führte 21 Paare, das Werkzeug 22 | nachgezogen in AP1 (Design.md 12, Fassung 20.38.0) |
+| F-P5c-67 | *(AP1)* `Technik.md` 4.99 nannte den Mailkatalog mit „zehn" Einträgen (Stand 20.8.0); es sind 19, mit AP1 20 | berichtigt in AP1 |
+| F-P5c-68 | *(AP1)* Der Kopf des Backlogs nannte nach dem Merge von RP noch **292** als nächste freie Nummer — 292 ist seit PK-05 vergeben | berichtigt in AP1 (293) |
+| F-P5c-70 | *(AP1)* Der Bilderlauf mit Etikett zählte **24 Abweichungen** in 496 Titeln: Notfallblatt (zwei Seiten) und Schlüsselblatt bauen ihre Hülle selbst, und ihr `<title>` trug den Vorsatz nicht — E-P5c-70 hatte ihn auf AP9 verschoben | behoben in AP1 (`umgebung_praefix()` in beiden Titeln), nachgemessen: 24 Titel, 0 Abweichungen |
+| F-P5c-72 | *(AP1, Prüfkette)* **Der Prüfstand ließ keine gewollte Gestaltungsänderung durch.** Der Stilvergleich gab bei jeder Abweichung 1 zurück; `Pruefablauf.md` 6.10 verlangt seit PK-01, die Abweichungen gegen eine Liste der geplanten zu halten — die gab es nicht als Datei. Seit PK-05 heißt ein roter Stilvergleich im Bericht: Stufe 1 rot (Lage 5). Gemessen am ersten Lauf dieses Pakets: 1 rot (Stilvergleich, 546 Abweichungen), 36 grün | behoben in AP1 (E-P5c-74): `tools/stilvergleich/geplant.txt`, Gleichheit in beiden Richtungen, gegengeprobt (Zeile gestrichen → rot, Zeile erfunden → rot) |
+| F-P5c-71 | *(AP1)* **Die Neueinrichtung scheiterte mit 500** — dieselbe Art Fehler wie Nr. 288: `install.php` ruft seit AP1 `ui_hinweise()`, und `ui_demo_hinweis()` lud `demo_lib.php` und damit `db.php`, das ohne `config.php` wirft. Gefunden von `hochfahren.sh --neu` vor dem Prüfstand, nicht von einem Lauf auf der eingerichteten Anlage | behoben in AP1: erst die Sitzung (ohne Anmeldung kein Demo-Konto), dann `function_exists('db')` wie in `ui_ankuendigung()`; `hochfahren.sh --neu` danach rc 0, Nachweis „v20.38.0" |
+| F-P5c-69 | *(AP1, Prüfmittel)* Wer `config.php` in einem Prozess schreibt und die Anlage **in derselben Sekunde** abfragt, sieht den alten Stand: Der OPcache des PHP-Servers prüft Zeitstempel höchstens alle zwei Sekunden. Gemessen an der Statuszeile: Der Fall „Farbe unbekannt" zeigte beim ersten Lauf den vorigen Fall | kein Anwendungsfehler; der Umschalter für Bilderlauf und Statusmessung wartet 3 s (Prüfdokument) |
 
 ---
 
@@ -1789,6 +1914,11 @@ Scan mit einer echten Authenticator-App (beides Prüfpunkte der Umsetzung).
 
 ## 7. Einschub Rahmenplan (mit AP1; Fassung vergibt die einspielende Instanz)
 
+*Eingespielt mit AP1 als Rahmenplan-Fassung 108 (23.09.2026). Der Text
+unten bleibt als Auftrag stehen; wo die Fassung davon abweicht, steht es im
+Rahmenplan selbst (M1 war am 21.09.2026 schon erreicht, die Reihenfolge
+heißt dort „10c (läuft) → 17 → 18 …").*
+
 - **Fahrplan (Abschnitt 3):** PK und TB in die Reihenfolge — „… → 15 → **TB →
   PK-05** → 10c → 17 → 18 …" (PK-06 bis -08 daneben); Voraussetzung 10c
   „Schritte 16 und 15; **PK-05**; Freigabe M-P5c-02". Die veralteten Sätze
@@ -1819,6 +1949,9 @@ Scan mit einer echten Authenticator-App (beides Prüfpunkte der Umsetzung).
 - **Abschnitt 10:** eine Zeile.
 
 ## 8. Einschub Backlog (mit AP1, außer 286 bis 289 und dem Kopf)
+
+*Eingespielt mit AP1 (23.09.2026). Der Kopf nennt seither **293** — 292
+hatte PK-05 schon vergeben (F-P5c-68); Nr. 243 steht unter *Erledigt*.*
 
 - **Mit dieser Fassung eingetragen:** Nr. **286** (Admin-Tor, → 10c AP2),
   Nr. **287** (Karten „Was hier gilt" auf `import.php`, `einsatz_form.php`,

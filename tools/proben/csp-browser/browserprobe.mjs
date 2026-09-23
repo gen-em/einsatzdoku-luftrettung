@@ -99,7 +99,7 @@ ok('Inline-Skripte der Anmeldeseite tragen alle einen Nonce',
 await seite.fill('input[name="email"]', ADMIN.email);
 await seite.fill('input[name="password"]', ADMIN.pw);
 await Promise.all([ seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
-                    seite.click('button[type="submit"]') ]);
+                    seite.click('#loginform button[type="submit"]') ]);
 ok('Anmeldung als BetreiberIn', !seite.url().includes('login.php'), seite.url());
 
 /* ---- 3. JSON-Antwort traegt die Kopfzeilen ------------------------------ */

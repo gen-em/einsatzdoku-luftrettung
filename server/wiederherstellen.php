@@ -57,6 +57,7 @@ require_once __DIR__ . '/instanz_lib.php';
     ui_seite_start(['titel' => 'Installation wiederherstellen']);
     ui_kopf(['menue' => false]);
     echo '<div class="rahmen rahmen-lesespalte">' . "\n  <main class=\"inhalt\">\n";
+    ui_hinweise();
     ui_karte_start(['titel' => 'Diese Installation ist noch nicht eingerichtet']);
     echo '<p class="feld-hinweis">Es gibt keine <code>config.php</code>. Ohne sie ist '
        . 'weder ein Datenbankzugang noch der Serverschlüssel bekannt. Entweder die '
@@ -538,6 +539,7 @@ ui_kopf(['menue' => false]);
 ?>
 <div class="rahmen rahmen-lesespalte">
   <main class="inhalt">
+  <?php ui_hinweise(); ?>
 
   <?php ui_titelzeile([
       'titel' => 'Installation wiederherstellen',
