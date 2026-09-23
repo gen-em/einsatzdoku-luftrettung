@@ -62,12 +62,28 @@ tun?".*
 
 ### Der Prüfstand (Station B, `bash tools/pruefstand/pruefen.sh --basis origin/main`)
 
-Stufe **klein** (Korrektursprung), 37 berührte Dateien, 6 Muster, **18 Proben:
-17 grün, 1 rot (Stilvergleich, oben), 0 nicht gemessen.**
+Stufe **klein** (Korrektursprung), 37 berührte Dateien, 6 Muster, 18 Proben.
+**Dreimal gefahren — und einmal davon mit drei verfehlten Wegen:**
+
+| Lauf | Anlage | Ergebnis |
+|---|---|---|
+| 1 | frisch aus `hochfahren.sh --neu` | 17 grün, Stilvergleich 1 (geplant); `syntax-php` 486/0 — `transaktion_lib.php` war beim Start noch nicht eingecheckt, und die Probe liest `git ls-files` |
+| 2 | **dieselbe Anlage** nach Lauf 1 | 16 grün, Stilvergleich 1, **Bedienprobe 45 von 48** — verfehlt `ap4-ohne-standort-sichtbar` (12 statt 4 in „Ohne Standort", 13 statt 10 insgesamt), `ap4-zuordnen-friert-ein` und `ap4a-kurzname-im-band` (beide Zeitüberschreitung). Die Probe meldet selbst: **„Der Demo-Reset lief um 10:45:36 UTC mitten in diesem Lauf. Verfehlte Wege sind verdächtig — bitte wiederholen."** |
+| 3 | **frisch** aus `hochfahren.sh --neu` | **17 grün**, Stilvergleich 1 (geplant); **Bedienprobe 48 von 48**, `syntax-php` 487/0 |
+
+**Zu Lauf 2:** Keiner der drei Wege berührt Einrichtung oder Anmeldehülle.
+**Eine Vermutung ist gemessen und widerlegt:** dass der Demo-Reset
+standortlose Rettungsmittel verdoppelt — zwei Resets von Hand
+(`demo_zuruecksetzen()`), vorher und nachher je **4 von 10**. Bleibt die
+Erklärung der Probe selbst: ein Reset mitten im Lauf, auf einer Anlage, auf
+der schon ein Lauf Spuren hinterlassen hat. Der Bericht in der
+Commit-Nachricht stammt aus einem Lauf auf frischer Anlage.
+
+Die Zahlen von Lauf 3:
 
 | Probe | Zahl |
 |---|---|
-| `syntax-php` | **486 / 0** |
+| `syntax-php` | **487 / 0** |
 | `zaehlung` | 38 Zeilen, 0 über der Decke |
 | `wortliste` (Textprobe) | **0 Treffer**, 108 Regeln, 108 gegriffen, 0 ungenutzt |
 | `linkprobe` | **122 Verweise, 0 Abweichungen** |
@@ -126,6 +142,9 @@ Prüfbericht der Commit-Nachricht.*
   Messung — sie vergleicht Kästen, keine Bilder.
 - **Der Bilderlauf vergleicht nicht mit einem früheren Stand**; er sagt
   „kein Überlauf, keine Fehler", nicht „sieht aus wie vorher".
+- **Die Bedienprobe braucht eine frische Anlage.** Ein zweiter Lauf auf
+  derselben Datenbank, dazu ein Demo-Reset mitten hinein, verfehlte drei
+  Wege (Abschnitt 1, Lauf 2). Wer sie wiederholt, richtet vorher neu ein.
 - **Die Lese-Agenten** der Abklärung haben den Weg des Einrichters in einer
   Kopie mit SQLite nachgestellt; beweiskräftig ist allein `hochfahren.sh
   --neu` gegen MariaDB.
