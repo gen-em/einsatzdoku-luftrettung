@@ -84,7 +84,10 @@ dort `staging.nadoku.gen-em.org` im selben Tarif — das ist der Stand bis zum
 19.09.2026.
 
 Davor stehen zwei Prüftore: Stufe 1 (`pruefung.yml`, ohne Installation) und
-Stufe 2 (gegen Staging). **Der Produktionslauf verlangt einen grünen
+Stufe 2 (gegen Staging). **Stufe 1 liest seit PK-05 den Prüfbericht gegen**
+(`docs/Pruefablauf.md` 5): Ein PR ohne Bericht aus dem Prüfstand, oder mit
+einem Bericht über einen anderen Baum, ist rot. Android und Uhr baut dort
+niemand mehr — das tut der Prüfstand, und der Bericht sagt es. **Der Produktionslauf verlangt einen grünen
 Stufe-1-Lauf auf demselben Baum** — ein grüner PR-Lauf zählt, ein Lauf mit
 übersprungener Stufe 1 nicht; fehlt er, bricht er ab, statt ungeprüft
 auszuliefern (Konzept TB, seit dem 23.09.2026; bis dahin „auf demselben
@@ -104,8 +107,11 @@ ein grüner PR-Lauf denselben Baum gemessen hat** (Job `Schon gemessen?`,
 Konzept TB). Beweisbar ist das, weil im Ruleset „Main Protect" **„Require
 branches to be up to date before merging"** gesetzt ist: Ein PR muss den
 Kopf von `main` enthalten, sonst lässt er sich nicht mergen. **Preis:** Nach
-einem fremden Merge heißt es bei jedem offenen PR „Update branch", und Stufe 1
-läuft darauf neu.
+einem fremden Merge muss jeder offene PR `main` aufnehmen — und seit PK-05
+**nicht über „Update branch"**: Der Merge-Commit dieses Knopfs trägt keinen
+Bericht, und Stufe 1 wird rot (E-PK-42). Der Weg steht in
+`docs/Pruefablauf.md` 5.3: örtlich mergen, Prüfstand fahren, den
+Merge-Commit mit dem Bericht schreiben.
 
 **Bis Web 20.3.0 stand hier das Gegenteil**, und es stimmte: Ein Push auf
 `main` mit Änderungen unter `server/` lud sofort auf den Produktivserver, ohne
@@ -138,10 +144,9 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   ab. Ein Prüfschritt, der sich selbst überspringt, meldet grün, ohne
   gemessen zu haben.
 - **Jede fremde `uses:`-Zeile hängt an einer 40-stelligen Commit-SHA**
-  (E-KH-10), die Version als Kommentar daneben — **zwölf sind es** (zehn bis
-  AP7; der Job `Rückfallstand (Staging)` bringt einen weiteren
-  `actions/checkout` mit, der Job `Schon gemessen?` aus Konzept TB noch
-  einen). Die zwei **lokalen** (`./.github/workflows/…`)
+  (E-KH-10), die Version als Kommentar daneben — **zehn sind es** (zwölf bis
+  PK-05; mit dem Android-Bau sind `actions/setup-java` und
+  `actions/upload-artifact` aus `pruefung.yml` gegangen). Die zwei **lokalen** (`./.github/workflows/…`)
   tragen keine und können es nicht: Ein lokaler Pfad nimmt keinen Ref und
   läuft immer auf dem Commit des Aufrufers. Wer eine Aktion aktualisiert,
   tauscht SHA **und** Kommentar. **Die Zahl ist kein Prüfwert, sondern eine

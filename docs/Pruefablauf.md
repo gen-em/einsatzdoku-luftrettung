@@ -1,6 +1,6 @@
 # Prüfablauf — jede Prüfung einmal, an ihrer Stelle
 
-*Stand: 21.09.2026 · Arbeitsumgebung: `Sandbox-Setup.md` · Architektur und
+*Stand: 23.09.2026 · Arbeitsumgebung: `Sandbox-Setup.md` · Architektur und
 Betrieb: `Technik.md` · Steuerung: `Rahmenplan.md` · Arbeitsanweisung:
 `CLAUDE.md`.*
 
@@ -21,8 +21,8 @@ derselbe Export in Sekunden gescheitert. Nicht die Kette war falsch — der
 
 ## 0. Was schon gilt und was noch entsteht
 
-Dieses Dokument beschreibt die Prüfkette vollständig. **Gebaut ist sie zur
-Hälfte** — die Stationen A und B stehen, das Tor und Staging folgen. Die
+Dieses Dokument beschreibt die Prüfkette vollständig. **Gebaut sind die
+Stationen A, B und C**; Staging folgt mit PK-06. Die
 Spalte **Stand** sagt bei jedem Stück, woran man ist; ein Stück ohne „gilt"
 oder „gebaut" ist eine Vorgabe an das genannte Paket, keine Beschreibung der
 Gegenwart. Wer das verwechselt, meldet eine Prüfung als gefahren, die es
@@ -39,14 +39,13 @@ nicht gibt.
 | Arbeitsumgebung in vier Ausbaustufen | **gebaut mit PK-02** (`Sandbox-Setup.md` 2); `web`, `plattform` und `android` gemessen, **`uhr` noch nicht** |
 | Station B, der Prüfstand-Befehl, die drei Stufen (3) | **gebaut und gemessen mit PK-03** |
 | `pruefablauf.json`, die Tabelle Berührung → Probe (4) | **gebaut mit PK-03**, Tabelle erzeugt |
-| Der Prüfbericht (5) | **gebaut mit PK-03**, Selbstprobe 6 Lagen / 0 Fehlschläge |
-| Seine Gegenlesung im Tor (5.1) | entsteht mit **PK-05** |
-| Station C in der beschriebenen Form (2) | entsteht mit **PK-05** |
+| Der Prüfbericht (5) | **gebaut mit PK-03**, seit PK-05 Selbstprobe 8 Lagen / 0 Fehlschläge |
+| Seine Gegenlesung im Tor (5.1) | **gebaut mit PK-05** |
+| Station C in der beschriebenen Form (2) | **gebaut mit PK-05** — nur die Schemaprobe ist noch keine Pflichtprüfung (2.3, Q-PK-07) |
 | Station D in der beschriebenen Form (2) | entsteht mit **PK-06** |
 
-Bis dahin gilt für Station C, was in `.github/workflows/pruefung.yml` steht,
-und für Station D, was in `.github/workflows/auslieferung.yml` steht.
-Abschnitt 2 nennt bei beiden den heutigen Umfang mit Zahl.
+Bis dahin gilt für Station D, was in `.github/workflows/auslieferung.yml`
+steht; Abschnitt 2.4 nennt den heutigen Umfang mit Zahl.
 
 ---
 
@@ -237,13 +236,18 @@ und hat eine eigene Freigabe.
 
 ## 3. Die drei Stufen des Prüfstands
 
-*Gebaut mit PK-03; gemessen klein/neben/haupt = 26,8 / 25 / 22 s auf
-einem Zweig ohne `server/`-Änderung.*
+*Gebaut mit PK-03, berichtigt mit PK-05.* Die Zeiten aus PK-03 (klein/neben/haupt
+= 26,8 / 25 / 22 s) sind **dreimal derselbe Umfang**: Bis PK-05 las der
+Befehl die Fassung nicht (F-PK-30) und kam immer auf „klein", und „neben"
+hatte kein eigenes Muster. Eine Messung der Nebenstufe steht im Prüfdokument
+PK.
 
 Der Umfang richtet sich nach der Versionsstufe in `server/version.php` im
 Unterschied gegen `main` (Zählweise in `CLAUDE.md` 2) und nach der
 Berührung. Der Befehl bestimmt die Stufe selbst und **sagt sie**; `--stufe`
-überschreibt und steht im Bericht.
+überschreibt und steht im Bericht. **Ist die Fassung in einem der beiden
+Stände nicht lesbar, ist das rot** und nicht „klein" — eine Stufe, die aus
+nichts gelesen wird, misst gegen nichts.
 
 | Stufe | Auslöser | Umfang |
 |---|---|---|
@@ -280,9 +284,10 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
   („kennt `--format` nicht", „verlangt `--art`"); nach der Berichtigung 0.
   Genau dieser Fehler war beim ersten Lauf drin.
 - **Der Prüfstand meldet, wenn eine Datei unter `server/` kein Muster
-  trifft.** Gemessen: **262 versionierte Dateien, 0 ohne Muster**; 87 treffen
-  nur das Auffangmuster und haben damit keine eigene Probe — das ist eine
-  Aussage, kein Fehler.
+  trifft.** Gemessen am 23.09.2026: **267 versionierte Dateien, 0 ohne
+  Muster**; 87 treffen nur das Auffangmuster und die beiden Stufenmuster
+  (`nebenstufe`, `mengen`) und haben damit keine eigene Probe — das ist
+  eine Aussage, kein Fehler.
 
 <!-- ERZEUGT von tools/pruefstand/bericht.py erzeugen-doku — nicht von Hand ändern. -->
 
@@ -313,16 +318,17 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `.github/workflows/*.yml`, `tools/**` | klein | `kettenaufrufe` | Nr. 217 |
 | `android/**` | klein | `android-bau` | E-PK-02 |
 | `watch/**` | klein | `uhr-stufe1` | E-PK-02 |
-| `server/**` | haupt | `messstand`, `kreislauf-csv`, `kreislauf-edbak`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 |
+| `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). |
+| `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
 
-**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `installweiche`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`.
+**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `installweiche`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`.
 
 ---
 
 ## 5. Der Prüfbericht
 
-*Erzeugung gebaut mit PK-03 (`bericht.py`, Selbstprobe 6 Lagen / 0). Die
-Gegenlesung im Tor entsteht mit PK-05.*
+*Erzeugung gebaut mit PK-03, Gegenlesung im Tor mit PK-05 (`bericht.py`,
+Selbstprobe 8 Lagen / 0).*
 
 Der Prüfstand schreibt am Ende einen Block, der in die Commit-Nachricht
 gehört und maschinell lesbar ist:
@@ -338,10 +344,20 @@ Prüfstand: neben · Baum a1b2c3d… · Konfiguration web
 
 - Der **Baum-Hash** ist nicht der Baum des Commits. Das fängt den Fehler,
   der in O9c passiert ist: gemessen wurde vor der letzten Änderung, gemeldet
-  wurde die Zahl von davor.
-- Die **Stufe** ist kleiner, als die Versionsstufe im Unterschied verlangt.
-- Eine **berührte** Fläche ist als „nicht berührt" gemeldet.
+  wurde die Zahl von davor. **Streng** (E-PK-42): Der Baum des PR-Kopfs muss
+  es sein, nicht der eines Vorfahren — der Weg nach einem fremden Merge
+  steht in 5.3.
+- Die **Stufe** ist kleiner, als die Versionsstufe im Unterschied verlangt —
+  oder die Versionsstufe ist nicht lesbar.
+- Eine **berührte** Fläche ist als „nicht berührt" gemeldet: `handy` gegen
+  `android/`, `uhr` gegen `watch/`.
 - Ein **billiger Riegel** liefert im Tor eine andere Zahl als der Bericht.
+  Das Tor übergibt **jeden** Riegel aus `pruefablauf.json` (`--alle-riegel`);
+  fehlt einer im Aufruf, ist das rot, damit ein neuer Riegel nicht still
+  ungegengelesen bleibt.
+
+Dazu rot, ohne eigene Lage: **kein Bericht** in der Nachricht des PR-Kopfs.
+Die Meldung sagt dann, wie er hineinkommt.
 
 Das Tor liest den Bericht mit einem Werkzeug, nicht mit einer Shell-Zeile
 (`bericht.py lesen`, mit Selbstprobe) — aus dem Grund, der unter E-P5a-12
@@ -359,6 +375,25 @@ nicht gab, kommt durch.
 Zwei Dinge halten die Grenze klein, und sie sind der ganze Grund, warum das
 tragbar ist: Der Block wird vom Befehl **erzeugt** und nicht geschrieben,
 und der Merge bleibt ein Mensch, der den Block liest.
+
+### 5.3 Nach einem fremden Merge — nicht „Update branch"
+
+Das Ruleset verlangt, dass ein PR den Kopf von `main` enthält (2.3). Der Knopf
+„Update branch" schreibt dafür einen Merge-Commit **ohne Bericht** und mit
+einem Baum, den der Prüfstand nie gesehen hat — Stufe 1 ist danach **rot**,
+und das ist gewollt (E-PK-42): Ein Stand aus zwei Zweigen ist ein neuer
+Stand. Der Weg, der grün wird:
+
+1. `git fetch origin main && git merge --no-commit origin/main` — Konflikte
+   lösen, nichts committen.
+2. `bash tools/pruefstand/pruefen.sh` — misst genau diesen Baum, samt allem,
+   was der Lauf selbst schreibt.
+3. `git add -A`, den Merge-Commit mit dem Bericht als Nachricht schreiben,
+   pushen.
+
+So trägt der Merge-Commit selbst den Bericht, und es braucht keinen
+Leer-Commit dafür. Wer doch „Update branch" gedrückt hat, holt den Commit
+herunter und fährt ab Schritt 2 mit einem eigenen Commit darüber.
 
 ---
 
@@ -600,23 +635,22 @@ hier steht, ist nur, **was grün heißt**:
 | Mittel | grün heißt |
 |---|---|
 | `tools/quelltext/` `textprobe` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen |
-| `tools/quelltext/` `vollstaendigkeit` | auf der Schwelle oder darunter — **die Schwelle steht im Aufruf in `pruefablauf.json`** und wird hier nicht wiederholt |
+| `tools/quelltext/` `vollstaendigkeit` | 0 Befunde — ohne Schwelle seit PK-04/5e (E-PK-16) |
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt` |
-| `tools/kettenaufrufe/` | 0/0 |
+| `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die Liste deckt sich mit der Liste der geplanten Änderungen (6.10) |
 
-**PK-04 ändert zwei davon** (E-PK-16 nimmt der Vollständigkeit die
-Symbolzählung und ihre Schwelle; E-PK-08 erweitert die Wortliste zur
-Textprobe). **Bis dahin gilt diese Tabelle unverändert** — insbesondere läuft
-die Vollständigkeit weiter gegen die Schwelle, die in `pruefung.yml` steht.
+PK-04 hat zwei davon geändert: E-PK-16 hat der Vollständigkeit die
+Symbolzählung und ihre Schwelle genommen, E-PK-08 hat die Wortliste zur
+Textprobe erweitert.
 
 *Warum hier keine Zahl steht:* `docs/Technik.md` 6.2 trug die Zahl des
 Bilderlaufs ein zweites Mal und stand bis Web 20.21.1 auf 366, während die
 Kette längst mit 377 lief. Eine Schwelle hat genau einen Ort, und das ist
 der Aufruf, der sie anwendet — seit PK-03 `tools/pruefstand/pruefablauf.json`.
-**Bis PK-05 steht sie noch ein zweites Mal in `pruefung.yml`**; dort liest
-die Kette sie dann aus derselben Datei.
+In `pruefung.yml` steht seit PK-05 keine Schwelle mehr; die Zahlen dort misst
+das Tor selbst und hält sie dem Bericht entgegen.
 
 ---
 

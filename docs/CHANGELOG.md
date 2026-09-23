@@ -14,6 +14,75 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Stufe 1 liest den Prüfbericht gegen (PK-05)] — 2026-09-23
+
+Konzept PK, Paket PK-05. Keine Versionsstufe: berührt sind nur `tools/`,
+`.github/` und `docs/`.
+
+### Behoben
+
+- **Der Prüfstand kam seit PK-03 immer auf „klein".** `auswahl.py` und
+  `bericht.py` suchten die Fassung als `WEB_VERSION', '…'` — so stand sie
+  vor Web 20.8.0 in `version.php`, seitdem steht dort
+  `const WEB_VERSION = '…';`. Das Muster traf nie, die Stufe hieß immer
+  „klein", und die rote Lage „Stufe zu klein" konnte nie anschlagen
+  (F-PK-30). Die Lesefunktion steht jetzt einmal, in `auswahl.py`; eine
+  unlesbare Fassung ist rot, nicht „klein". Gemessen gegen einen echten
+  Nebensprung (20.36.0 → heute): vorher „klein · kein Versionssprung",
+  jetzt „neben".
+- **Die Uhr war für die Gegenlesung nie berührt.** Die Fläche `uhr` hing am
+  Pfad `uhr/`; die App liegt unter `watch/` (F-PK-31). Ein Bericht mit
+  „uhr=nicht berührt" wäre auch dann durchgegangen, wenn der PR die Uhr
+  änderte.
+- **`kettenaufrufe` meldete `bericht.py lesen` als falsch**, weil es die
+  Pflichtschalter aller Unterbefehle jedem Aufruf abverlangte — `--stufe`
+  gehört nur zu `schreiben` (F-PK-32). Es kennt jetzt die Unterbefehle von
+  argparse; drei neue Fälle in der Selbstprobe (13 von 13).
+
+### Geändert
+
+- **Stufe 1 liest den Prüfbericht gegen, statt zu wiederholen.** Ein neuer
+  Schritt ruft `bericht.py lesen` gegen die Nachricht des PR-Kopfs und hält
+  den Bericht gegen den Baum, die Versionsstufe, die berührten Flächen und
+  die Zahlen der billigen Riegel, die das Tor selbst misst. **Jeder** Riegel
+  aus `pruefablauf.json` muss dabei kommen (`--alle-riegel`); ein neuer
+  Riegel bleibt so nicht still ungegengelesen. Bis dahin las kein
+  Arbeitslauf den Bericht — deshalb ist der `.gitattributes`-Fehler vom 23.09.2026 (ein
+  Bericht, der zu keinem Baum passte) niemandem aufgefallen.
+- **Android, Uhr und die Bereichserkennung sind aus Stufe 1 heraus.** Beides
+  baut der Prüfstand, wenn es berührt ist, und der Bericht sagt es. Mit ihnen
+  gehen Java 21, das Hochladen der Android-Berichte und der Rücksprung auf
+  das JDK des Läufers — und zwei der zwölf fremden `uses:`-Zeilen.
+- **Acht Quelltextprüfungen sind ein Schritt** (`quelltext/pruefen.sh
+  --selbstprobe`, dann `alle`). Damit läuft die Linkprobe zum ersten Mal im
+  Tor, und die Rechtstextprobe kommt als eigener Schritt dazu — die beiden
+  Riegel, die E-PK-18 vermisst hatte.
+- **Die Stufe „neben" gibt es jetzt.** Bis PK-05 hatte sie kein eigenes
+  Muster und maß dasselbe wie „klein". Jetzt fährt sie bei einer Änderung
+  unter `server/` alle Proben gegen die örtliche Installation, beide
+  Kreisläufe, die Bedienprobe und den Bilderlauf in acht Breiten; der
+  Bilderlauf bekommt die ermittelte Stufe, statt fest `--stufe klein`.
+  Messstand, Anteil- und Verbindungsprobe bleiben der Hauptstufe.
+- **`pruefung.yml` hat 314 statt 988 Zeilen.** Die Kommentarprosa ist
+  gelöscht (E-PK-07); stehen geblieben ist ein Satz je Falle, die sonst
+  jemand wieder einbaut — `pipefail`, der Jobname als Kupplung, ein
+  übersprungener Job, den das Ruleset als grün zählt, die festen
+  Datenbankfassungen.
+
+### Bewusst so
+
+- **Streng, auch wenn es Arbeit kostet** (E-PK-42): Der Baum im Bericht muss
+  der des PR-Kopfs sein. Nach einem fremden Merge ist „Update branch" damit
+  der falsche Knopf — sein Merge-Commit trägt keinen Bericht, und Stufe 1
+  wird rot. Der Weg steht in `docs/Pruefablauf.md` 5.3: örtlich mergen,
+  Prüfstand fahren, den Merge-Commit mit dem Bericht schreiben.
+- **Unter 250 Zeilen ist `pruefung.yml` nicht gekommen.** Die Zahl stammt
+  aus der Zeit vor Konzept TB; `Schon gemessen?` und der Schema-Job sind
+  zusammen rund 125 Zeilen und bleiben, wie sie sind.
+- **Der Schema-Job bleibt, und er ist keine Pflichtprüfung.** Ein roter
+  Schemalauf hält einen Merge heute nicht auf; ob er es soll, entscheidet
+  die Betreiberin im Ruleset (Q-PK-07).
+
 ## [Web 20.37.2] — 2026-09-23
 
 **Eine Nummer, damit das neue Tor einmal echt gefragt wird.** Unter
