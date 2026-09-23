@@ -233,6 +233,10 @@ $abbildungen = [
      'day'          => 'Das Einsatzdatum in Ortszeit, aus started_at gerechnet (E14).',
      'dienst_day'   => 'Das Datum des Diensttags daneben, aus days.day.',
      'start_hhmm'   => 'Beginn in Ortszeit, aus started_at.',
+     'start_sort'   => 'Chronologischer Sortierschluessel (Y-m-d H:i in '
+                     . 'Ortszeit), aus started_at — Schritt 15 AP9b, E-ZE-32. '
+                     . 'start_hhmm allein taugt nicht: Bei einem Dienst ueber '
+                     . 'Mitternacht steht 01:10 als Zeichenkette vor 23:50.',
      'start_min'    => 'Minuten seit Mitternacht, aus start_hhmm.',
      'duration_s'   => 'Dauer, aus started_at und ended_at.',
      'crew'         => 'Effektive Besatzung aus day_crew und mission_crew.',
@@ -395,10 +399,23 @@ PHP;
     $lueckenhaft = false;
     try {
         /* `export` mit einem Alias: Der Alias muss mitkommen, wenn er darf,
-         * und wegbleiben, wenn nicht. */
+         * und wegbleiben, wenn nicht.
+         *
+         * IN BACKTICKS, und die gehoeren zur Erwartung (Web 20.26.3,
+         * Nr. 267). `manual` ist auf MySQL 8.4.0 bis 8.4.10 auch als ALIAS
+         * ein reserviertes Wort; ohne die Backticks antwortete der Export
+         * dort mit 1064. Die Behebung lag bis zum Merge von Schritt 15 in
+         * `backup_lib.php` und `api/export_data.php`; seit das Register
+         * beide Listen liefert, steht sie in `mf_spalten()`.
+         *
+         * DIESE ZEILE IST DER RIEGEL DAVOR, dass sie wieder verschwindet.
+         * Sie hat angeschlagen, als der Merge den Fix verschob, und das ist
+         * genau ihre Aufgabe: Wer die Backticks streicht, faellt hier auf
+         * und nicht erst auf einer MySQL-8.4-Anlage. */
         $mit  = mf_spalten('export', '', true);
         $ohneAlias = mf_spalten('export', '', false);
-        $pruefe('mf_spalten: Alias an', in_array('uhr_gesperrt AS manual', $mit, true), true);
+        $pruefe('mf_spalten: Alias an, in Backticks',
+                in_array('uhr_gesperrt AS `manual`', $mit, true), true);
         $pruefe('mf_spalten: Alias aus', in_array('uhr_gesperrt', $ohneAlias, true), true);
         $pruefe('mf_spalten: Praefix', mf_spalten('range', 'm.')[0], 'm.id');
     } catch (Throwable $ex) {
