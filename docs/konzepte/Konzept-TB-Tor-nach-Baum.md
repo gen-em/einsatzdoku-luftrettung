@@ -33,9 +33,9 @@ die Werkzeug-Einträge vom 22.09.2026.
 >
 > | | |
 > |---|---|
-> | Stand | **23.09.2026 — TB-01 bis TB-04 erledigt, TB-05 in Arbeit.** Zweig `claude/serene-goldberg-wnn60k` (trägt daneben die Archive des Uhr-Prüfstands — eigenes Thema, nicht TB). TB-M1 ist erledigt (die Betreiberin hat „Require branches to be up to date before merging" am 23.09.2026 gesetzt; vorher war es nicht gesetzt, Q-TB-03). |
+> | Stand | **23.09.2026 — TB-01 bis TB-04 erledigt, TB-05 bis auf die Belege nach dem Merge erledigt; PR offen.** Zweig `claude/serene-goldberg-wnn60k` (trägt daneben die Archive des Uhr-Prüfstands — eigenes Thema, nicht TB). TB-M1 ist erledigt (die Betreiberin hat „Require branches to be up to date before merging" am 23.09.2026 gesetzt; vorher war es nicht gesetzt, Q-TB-03). |
 > | Entschieden | E-TB-01 bis E-TB-09 (Abschnitt 3), Q-TB-01 bis -04 beantwortet. |
-> | Nächstes | **TB-05** — Abschluss: PR öffnen, P-TB-03 an der Lauf-Nummer belegen. |
+> | Nächstes | P-TB-03 an der Lauf-Nummer des PR-Laufs belegen; **nach dem Merge** P-TB-05 und P-TB-06, dann Erledigt-Zeile in `Rahmenplan.md` 8 und Konzept löschen (`CLAUDE.md` 7). |
 > | Hakt | nichts. `kettenaufrufe` ist seit TB-02 wieder bei 0 Befunden (F-TB-08). **Zur Kenntnis:** Der gescheiterte Lauf 35834341392 (Tag `web-v20.37.1`) lässt sich **schon vor** dieser Umsetzung wiederholen, sobald der Push-Lauf 35834129884 auf `main` grün ist — er ist mit dem alten Tor zufrieden, weil dann ein Lauf mit derselben SHA existiert. TB verhindert das **nächste** Warten, nicht dieses. |
 >
 > **Stand der Umsetzung**
@@ -47,7 +47,7 @@ die Werkzeug-Einträge vom 22.09.2026.
 > | TB-02 Das Tor holt Bäume | **erledigt 23.09.2026** | siehe Zweig | `kettenaufrufe` 88 Aufrufe, 0 Befunde; `--stufe1 ` 0-mal; Schritt 7 gegen eine `gh`-Attrappe in vier Lagen: 0, 1, 1, 1 wie erwartet |
 > | TB-03 Der Push-Lauf auf `main` sagt, wo schon gemessen ist | **erledigt 23.09.2026** (im PR zu belegen: P-TB-03; nach dem Merge: P-TB-05) | siehe Zweig | Verweis-Job gegen eine `gh`-Attrappe in 7 Lagen richtig; `uses:` mit SHA 12 von 12 (vorher 11); `kettenaufrufe` 88/0 |
 > | TB-04 Dokumente und Kommentare | **erledigt 23.09.2026** | siehe Zweig | Linkprobe 122/0; Textprobe 0 Treffer, 0 ungenutzt; `demselben Commit` 0 Treffer außerhalb der Geschichte |
-> | TB-05 Abschluss | offen | | |
+> | TB-05 Abschluss | **PR offen** 23.09.2026; Belege nach dem Merge ausstehend | siehe Zweig | Quelltextprüfungen 8/8 grün; Backlog Nr. 285 nach *Erledigt*, 0 doppelte Nummern |
 
 ---
 

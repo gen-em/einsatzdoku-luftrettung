@@ -43,6 +43,8 @@ eines davon erst nach dem Merge:
 | Konzept | Lauf-API, `pruefung.yml`: Läufe zu `10a942c` | 1 (`push`, `in_progress` seit 07:53:45 UTC); zu `f356a44`: 1 (`pull_request`, `success`, 07:09–07:51 UTC) | 23.09.2026 |
 | TB-01 | `python3 tools/kette/freigabe.py --selbstprobe` | **52 erfüllt, 0 offen** (vorher 32); zwanzig neue Lagen | 23.09.2026 |
 | TB-01 | Gegenprobe: drei Fehler in Kopien von `freigabe.py` eingebaut — Job-Prüfung aus, Baumvergleich aus, Zielbaum-Prüfung aus | **3, 2 und 1 offen** — jeder fällt auf | 23.09.2026 |
+| TB-05 | `bash tools/quelltext/pruefen.sh alle` | **8 von 8 grün** | 23.09.2026 |
+| TB-05 | Backlog „keine Nummer zweimal" (derselbe `grep` wie in `pruefung.yml`) | **0 doppelte** | 23.09.2026 |
 | TB-04 | `bash tools/quelltext/pruefen.sh linkprobe` | **122 Verweise, 0 Abweichungen** | 23.09.2026 |
 | TB-04 | `bash tools/quelltext/pruefen.sh textprobe` | **0 Treffer, 108 Regeln, 0 ungenutzt** | 23.09.2026 |
 | TB-04 | `grep -rn "demselben Commit" CLAUDE.md docs/*.md` ohne Changelog | **0** (der eine Satz in `CLAUDE.md` 3, der den alten Stand nennt, steht über einen Zeilenumbruch und ist Geschichte) | 23.09.2026 |
