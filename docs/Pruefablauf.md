@@ -402,7 +402,9 @@ Stand. Der Weg, der grün wird:
    pushen.
 
 So trägt der Merge-Commit selbst den Bericht, und es braucht keinen
-Leer-Commit dafür. Wer doch „Update branch" gedrückt hat, holt den Commit
+Leer-Commit dafür. Berührt ist dabei nur, was diese Arbeit gegen `main`
+ändert — nicht, was `main` mitbringt (F-PK-39). Zum ersten Mal gegangen
+beim Merge von PR #80 in PK-05 (`5671d24`). Wer doch „Update branch" gedrückt hat, holt den Commit
 herunter und fährt ab Schritt 2 mit einem eigenen Commit darüber.
 
 ---

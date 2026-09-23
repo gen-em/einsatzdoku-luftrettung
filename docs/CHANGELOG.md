@@ -35,7 +35,10 @@ Konzept PK, Paket PK-05. Keine Versionsstufe: berührt sind nur `tools/`,
   Bericht committet wird, war für ihn unsichtbar, und das Tor hätte „Stufe zu
   klein" gemeldet (F-PK-33). Er liest jetzt den Arbeitsbestand, wie der
   Baum-Hash. Die PHP-Zählung ebenso: auch neue, noch nicht vorgemerkte
-  Dateien, keine gelöschten (F-PK-37).
+  Dateien, keine gelöschten (F-PK-37). Und mitten in einem Merge von
+  `main` zählt als berührt nur, was diese Arbeit gegen `main` ändert — vorher
+  auch alles, was `main` mitbrachte (F-PK-39, gefunden beim ersten Gang des
+  neuen Wegs, dem Merge von PR #80).
 - **Die Uhr war für die Gegenlesung nie berührt.** Die Fläche `uhr` hing am
   Pfad `uhr/`; die App liegt unter `watch/` (F-PK-31). Ein Bericht mit
   „uhr=nicht berührt" wäre auch dann durchgegangen, wenn der PR die Uhr
