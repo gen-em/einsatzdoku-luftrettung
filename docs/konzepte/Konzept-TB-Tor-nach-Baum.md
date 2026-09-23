@@ -33,21 +33,21 @@ die Werkzeug-Einträge vom 22.09.2026.
 >
 > | | |
 > |---|---|
-> | Stand | **23.09.2026 — Konzept geschrieben, nichts umgesetzt.** TB-M1 ist erledigt (die Betreiberin hat „Require branches to be up to date before merging" am 23.09.2026 gesetzt; vorher war es nicht gesetzt, Q-TB-03). Kein PR offen. |
+> | Stand | **23.09.2026 — TB-01 bis TB-04 erledigt, TB-05 bis auf die Belege nach dem Merge erledigt; PR offen.** Zweig `claude/serene-goldberg-wnn60k` (trägt daneben die Archive des Uhr-Prüfstands — eigenes Thema, nicht TB). TB-M1 ist erledigt (die Betreiberin hat „Require branches to be up to date before merging" am 23.09.2026 gesetzt; vorher war es nicht gesetzt, Q-TB-03). |
 > | Entschieden | E-TB-01 bis E-TB-09 (Abschnitt 3), Q-TB-01 bis -04 beantwortet. |
-> | Nächstes | **TB-01** — `freigabe.py` lernt den Baum. |
-> | Hakt | nichts. **Zur Kenntnis:** Der gescheiterte Lauf 35834341392 (Tag `web-v20.37.1`) lässt sich **schon vor** dieser Umsetzung wiederholen, sobald der Push-Lauf 35834129884 auf `main` grün ist — er ist mit dem alten Tor zufrieden, weil dann ein Lauf mit derselben SHA existiert. TB verhindert das **nächste** Warten, nicht dieses. |
+> | Nächstes | P-TB-03 ist belegt (Lauf 35840201595). **Nach dem Merge** P-TB-05 und P-TB-06, dann Erledigt-Zeile in `Rahmenplan.md` 8 und Konzept löschen (`CLAUDE.md` 7). |
+> | Hakt | nichts. `kettenaufrufe` ist seit TB-02 wieder bei 0 Befunden (F-TB-08). **Zur Kenntnis:** Der gescheiterte Lauf 35834341392 (Tag `web-v20.37.1`) lässt sich **schon vor** dieser Umsetzung wiederholen, sobald der Push-Lauf 35834129884 auf `main` grün ist — er ist mit dem alten Tor zufrieden, weil dann ein Lauf mit derselben SHA existiert. TB verhindert das **nächste** Warten, nicht dieses. |
 >
 > **Stand der Umsetzung**
 >
 > | Paket | Stand | Commit | Abnahmezahlen |
 > |---|---|---|---|
 > | TB-M1 „Up to date" im Ruleset | **gesetzt 23.09.2026** (Betreiberin) | — | war nicht gesetzt → gesetzt; kein PR offen |
-> | TB-01 `freigabe.py` lernt den Baum | offen | | |
-> | TB-02 Das Tor holt Bäume | offen | | |
-> | TB-03 Der Push-Lauf auf `main` sagt, wo schon gemessen ist | offen | | |
-> | TB-04 Dokumente und Kommentare | offen | | |
-> | TB-05 Abschluss | offen | | |
+> | TB-01 `freigabe.py` lernt den Baum | **erledigt 23.09.2026** | siehe Zweig | Selbstprobe 52/0 (vorher 32/0); drei eingebaute Fehler: 3, 2, 1 offen |
+> | TB-02 Das Tor holt Bäume | **erledigt 23.09.2026** | siehe Zweig | `kettenaufrufe` 88 Aufrufe, 0 Befunde; `--stufe1 ` 0-mal; Schritt 7 gegen eine `gh`-Attrappe in vier Lagen: 0, 1, 1, 1 wie erwartet |
+> | TB-03 Der Push-Lauf auf `main` sagt, wo schon gemessen ist | **erledigt 23.09.2026** (im PR zu belegen: P-TB-03; nach dem Merge: P-TB-05) | siehe Zweig | Verweis-Job gegen eine `gh`-Attrappe in 7 Lagen richtig; `uses:` mit SHA 12 von 12 (vorher 11); `kettenaufrufe` 88/0 |
+> | TB-04 Dokumente und Kommentare | **erledigt 23.09.2026** | siehe Zweig | Linkprobe 122/0; Textprobe 0 Treffer, 0 ungenutzt; `demselben Commit` 0 Treffer außerhalb der Geschichte |
+> | TB-05 Abschluss | **PR offen** 23.09.2026; Belege nach dem Merge ausstehend | siehe Zweig | Quelltextprüfungen 8/8 grün; Backlog Nr. 285 nach *Erledigt*, 0 doppelte Nummern |
 
 ---
 
@@ -403,4 +403,11 @@ Neue Befunde `F-TB-08 …`, neue Fragen `Q-TB-05 …`, neue Entscheidungen
 
 | Nr. | Aus | Befund / Frage | Folge |
 |---|---|---|---|
-| — | | *noch keine* | |
+| F-TB-08 | TB-01 | **`kettenaufrufe` liest die Schnittstelle aus dem Quelltext** (`add_argument`) — es „kennt den neuen Aufruf" also von selbst, und sobald `--stufe1` in `freigabe.py` fehlt, meldet es den alten Aufruf in `ausliefern-lauf.yml` als Befund. Zwischen TB-01 und TB-02 ist Stufe 1 damit rot. | Gewollt: Es zeigt genau die Stelle, die TB-02 ändert. TB-01 und TB-02 gehen in **einem** PR; die Erwartung in `tools/kettenaufrufe/` braucht keine eigene Änderung. |
+| F-TB-09 | TB-01 | **Das Protokoll wäre mit dem Fenster von 50 Läufen eine Zeilenwand.** 49 Zeilen „anderer Baum" verdecken die eine, auf die es ankommt. | `urteil()` nennt nur Läufe mit passendem Baum oder unklarem Baum einzeln, die übrigen als Zahl („davon mit anderem Baum: 49"). Selbstprobe-Lage dafür. |
+| F-TB-10 | TB-02 | **Der Probelauf der Kette ist nicht gefahren.** Er überspringt Schritt 7 (E-KH-08) und belegte nur die YAML-Syntax — die belegt `yaml.safe_load` ebenso, ohne einen Lauf auf der Anlage auszulösen. Stattdessen ist der **Bash-Text des Schritts** aus der YAML gezogen und gegen eine `gh`-Attrappe gefahren worden, unter `bash -eo pipefail` wie in der Kette. | Die Abrufe selbst (Felder `.tree.sha`, `.jobs[].name`) belegt erst P-TB-06. |
+| E-TB-11 | TB-03 | **Die Jobs danach laufen, wenn NICHT ausdrücklich `nein` dasteht** — `if: !cancelled() && needs.schon-gemessen.outputs.messen != 'nein'`, nicht `== 'ja'`. Scheitert der Verweis-Job selbst (Läufer weg, Syntaxfehler), ist seine Ausgabe leer; mit `== 'ja'` würde `Stufe 1` dann übersprungen und die Pflichtprüfung des Rulesets fehlte. So misst der Lauf, und der Fehler steht rot daneben (E-TB-04 in der Form des Jobs). | Abweichung vom Wortlaut in 2.4 (`== 'ja'`); dieselbe Absicht, eine Lücke weniger. |
+| E-TB-12 | TB-03 | **Der eigene Baum per Auscheckschritt, nicht aus dem Ereignis.** `github.event.head_commit.tree_id` stünde im Push-Ereignis ohne Auschecken bereit; genommen ist trotzdem `git rev-parse HEAD^{tree}` wie im Konzept (2.4) und wie am Tor — eine Quelle für dieselbe Tatsache an beiden Stellen. Der Auscheckschritt läuft nur beim Push auf `main` und flach. | Ein `actions/checkout` mehr: 12 statt 11 SHA-Zeilen (`CLAUDE.md` 3, TB-04). |
+| F-TB-11 | TB-04 | **Drei weitere Stellen trugen die alte Zahl oder den alten Satz**, die das Konzept nicht nannte: „elf" SHA-Zeilen in `Technik.md` 6 (neben `CLAUDE.md` 3), „32 Lagen" in `Technik.md` 6 und der Hotfix-Ablauf in `Technik.md` (Schritt 5: „grüner Stufe-1-Lauf" ohne Baum). Dazu stand in `Pruefablauf.md` 2.3 noch „läuft heute noch bei jedem Push auf jedem Zweig" — seit dem 21.09.2026 falsch. | Alle nachgezogen. |
+| F-TB-12 | TB-05 | **Im ersten PR-Lauf (35840034467) wurde `Schema gegen MySQL 8.4.0` rot** — „MySQL server has gone away". Nicht TB, aber in einer Datei, die TB anfasst: Der Gesundheitscheck `mysqladmin ping` fragte den Socket und meldete den **temporären** Einrichtungsserver des Abbilds als gesund; die Probe verband sich, während der echte Server gerade startete (Abstand 0,13 s). Ein Wettlauf, der bis dahin nur deshalb nicht auffiel, weil er meist gewonnen wurde. | Gesundheitscheck über TCP (`-h 127.0.0.1 --protocol=tcp`) — darauf antwortet nur der echte Server. Nicht örtlich nachgestellt (kein Docker-Dienst im Container); **belegt im PR-Lauf 35840201595: grün in 35 s.** |
+| E-TB-10 | TB-01 | **`stufe1_ok` zählt nur als echtes `true`.** Eine Zeichenkette „success" wäre ein Fehler im Arbeitslauf (der Schritt soll ein Boolean liefern), und ein Fehler im Arbeitslauf öffnet das Tor nicht (E-TB-04). | Selbstprobe-Lage. |

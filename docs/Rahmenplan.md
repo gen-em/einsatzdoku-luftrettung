@@ -2238,7 +2238,7 @@ ruleset*:
 
 | Feld | Wert |
 |---|---|
-| Name | `main geschützt` |
+| Name | `Main Protect` (bis zum 23.09.2026 stand hier `main geschützt` — bei GitHub hieß es nie so, F-TB-07) |
 | Enforcement status | **Active** (nicht „Evaluate" — das misst nur) |
 | Target branches | *Add target* → **Include default branch** |
 | Restrict deletions | ☑ |
@@ -2246,6 +2246,7 @@ ruleset*:
 | Require a pull request before merging | ☑ |
 | — Required approvals | **0** |
 | Require status checks to pass | ☑ → *Add checks* → **`Stufe 1`** |
+| — Require branches to be up to date before merging | ☑ (gesetzt 23.09.2026, Konzept TB) |
 | Bypass list | **leer lassen** |
 
 Drei Fallen dabei:
@@ -2260,6 +2261,11 @@ Drei Fallen dabei:
 3. **Die Bypass-Liste hebt alles auf.** Wer sich dort einträgt — auch als
    „Organization admin" —, kann weiterhin direkt auf `main` pushen. Dann ist
    der Zweigschutz eine Absichtserklärung.
+4. **Der PR muss `main` enthalten.** Nach einem fremden Merge heißt es
+   „Update branch", und Stufe 1 läuft auf dem nachgezogenen Stand neu. Das ist
+   der Preis dafür, dass der Merge-Commit denselben Baum hat wie das
+   Geprüfte — und darauf verlassen sich das Produktionstor und der Verweis
+   auf `main` (Konzept TB).
 
 **Der klassische Weg** (*Settings → Branches → Add branch protection rule*)
 tut dasselbe und bleibt gültig; Rulesets sind das, was GitHub heute anbietet,

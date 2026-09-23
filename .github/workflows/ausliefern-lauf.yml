@@ -368,8 +368,16 @@ jobs:
         # laeuft.
         if: ${{ inputs.umgebung == 'produktion' && !inputs.probelauf }}
         # Ein Tag darf nur ausliefern, was auf Staging schon stand und dort
-        # grün war (E-P5a-13). Gefragt wird nach dem COMMIT, nicht nach dem
-        # Zweig: Ein Tag kann auf einem Stand sitzen, der nie auf `main` war.
+        # grün war (E-P5a-13). Für STAGING wird nach dem COMMIT gefragt, nicht
+        # nach dem Zweig: Ein Tag kann auf einem Stand sitzen, der nie auf
+        # `main` war.
+        #
+        # FÜR STUFE 1 NACH DEM BAUM (Konzept TB, seit dem 23.09.2026). Ein
+        # PR-Lauf trägt die SHA des Zweigs, nie die des Merge-Commits — nach
+        # der SHA gefragt, wartete das Tor auf einen zweiten Lauf über
+        # denselben Inhalt (Lauf 35834341392, F-TB-01). Und nach dem JOB
+        # `Stufe 1`, nicht nach dem Lauf: Der Push-Lauf auf `main` ist grün,
+        # auch wenn er nur verweist statt misst (F-TB-06).
         #
         # SEIT AP7 ENTSCHEIDET `tools/kette/freigabe.py`, nicht dieser Schritt.
         # Hier werden nur noch die TATSACHEN geholt -- welche Laeufe es gab, wie
@@ -384,8 +392,52 @@ jobs:
         run: |
           sha="${GITHUB_SHA}"
           echo "Commit: $sha"
-          pruef=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/pruefung.yml/runs?head_sha=$sha&status=success" \
-                   --jq '.workflow_runs | length' 2>/dev/null || echo 0)
+
+          # STUFE 1: WELCHE GRÜNEN LÄUFE HABEN DIESEN BAUM? (Konzept TB 2.3)
+          #
+          # Der Baum des Tag-Commits aus dem Arbeitsverzeichnis — der
+          # Auscheckschritt liegt davor, flach genügt (E-TB-03). Der Baum
+          # jedes Lauf-Commits aus der API. Ein leerer Wert zählt im Werkzeug
+          # nie (E-TB-04), `|| true` ist also kein Durchwinken.
+          #
+          # FENSTER 50 IST EINE KOSTENGRENZE, KEIN SICHERHEITSWERT (E-TB-09):
+          # höchstens 50 Baum-Abrufe, die Jobs nur bei Treffern. Liegt der
+          # grüne Lauf weiter zurück, bleibt das Tor zu — dann hilft ein
+          # Handlauf von `pruefung.yml` auf diesem Stand.
+          FENSTER=50
+          baum=$(git rev-parse 'HEAD^{tree}' 2>/dev/null || true)
+          echo "Baum des Tag-Commits: ${baum:-— nicht ermittelt —}"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/pruefung.yml/runs?status=success&per_page=$FENSTER" \
+             --jq '[.workflow_runs[] | {id, event, head_branch, head_sha}]' > s1roh.json 2>/dev/null \
+             || echo '[]' > s1roh.json
+          : > s1.jsonl
+          geholt=0; treffer=0; gescheitert=0
+          declare -A baeume=()
+          for zeile in $(jq -r '.[] | "\(.id):\(.head_sha)"' s1roh.json); do
+            lauf="${zeile%%:*}"; kopf="${zeile#*:}"
+            geholt=$((geholt+1))
+            if [ -z "${baeume[$kopf]+x}" ]; then
+              baeume[$kopf]=$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$kopf" \
+                                --jq '.tree.sha' 2>/dev/null || true)
+              [ -n "${baeume[$kopf]}" ] || gescheitert=$((gescheitert+1))
+            fi
+            lb="${baeume[$kopf]}"
+            ok=false
+            if [ -n "$lb" ] && [ "$lb" = "$baum" ]; then
+              treffer=$((treffer+1))
+              # DER JOBNAME AUF GLEICHHEIT, wie beim Staging-Job unten. Er ist
+              # zugleich die Pflichtprüfung des Rulesets — wer ihn umbenennt,
+              # ändert diese Zeile mit, sonst zählt sie still null.
+              n=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$lauf/jobs" \
+                    --jq '[.jobs[] | select(.name == "Stufe 1") | select(.conclusion == "success")] | length' \
+                    2>/dev/null || echo 0)
+              [ "${n:-0}" -ge 1 ] && ok=true
+            fi
+            jq -c --argjson id "$lauf" --arg baum "$lb" --argjson ok "$ok" \
+               '.[] | select(.id == $id) | . + {baum: $baum, stufe1_ok: $ok}' s1roh.json >> s1.jsonl
+          done
+          jq -s '.' s1.jsonl > stufe1.json
+          echo "Stufe 1: $geholt Läufe geholt, $treffer mit Baum ${baum:0:7}, $gescheitert Baum-Abrufe gescheitert"
 
           # STAMMT DIESER COMMIT VOM ZEIGER `produktion` AB? (AP7, E-KH-15)
           #
@@ -448,7 +500,8 @@ jobs:
           python3 tools/kette/freigabe.py urteil \
             --laeufe laeufe.json \
             --vergleich "${vergleich:-}" \
-            --stufe1 "${pruef:-0}"
+            --baum "${baum:-}" \
+            --stufe1-laeufe stufe1.json
 
       - name: Adressvergleich — meint die Kette dieselbe Anlage wie die Wache?
         # NUR AUF PRODUKTIV, denn `WACHE_BASIS` beschreibt Produktiv: Die

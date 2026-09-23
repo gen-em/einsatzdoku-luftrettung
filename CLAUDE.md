@@ -85,8 +85,10 @@ dort `staging.nadoku.gen-em.org` im selben Tarif — das ist der Stand bis zum
 
 Davor stehen zwei Prüftore: Stufe 1 (`pruefung.yml`, ohne Installation) und
 Stufe 2 (gegen Staging). **Der Produktionslauf verlangt einen grünen
-Stufe-1-Lauf auf demselben Commit** — fehlt er, bricht er ab, statt ungeprüft
-auszuliefern.
+Stufe-1-Lauf auf demselben Baum** — ein grüner PR-Lauf zählt, ein Lauf mit
+übersprungener Stufe 1 nicht; fehlt er, bricht er ab, statt ungeprüft
+auszuliefern (Konzept TB, seit dem 23.09.2026; bis dahin „auf demselben
+Commit", und ein Tag wartete auf einen zweiten Lauf über denselben Inhalt).
 
 **Stufe 1 läuft seit dem 21.09.2026 auf Arbeitszweigen nur noch beim Pull
 Request, auf `main` bei jedem Push** (Vorgriff auf PK-05). Bis dahin stand
@@ -96,6 +98,14 @@ er gegen den gemeinsamen Vorfahren vergleicht) und einen langsamen über
 `push` (rund 56 Minuten, weil er ohne Vergleichsstand im Zweifel alles
 misst). Der Zweigschutz wartet auf den Namen, also auf den langsameren. Wer
 eine ältere Quelle liest, findet dort „jeder Push, jeder Zweig".
+
+**Auf `main` verweist der Lauf seit dem 23.09.2026, statt zu messen, wenn
+ein grüner PR-Lauf denselben Baum gemessen hat** (Job `Schon gemessen?`,
+Konzept TB). Beweisbar ist das, weil im Ruleset „Main Protect" **„Require
+branches to be up to date before merging"** gesetzt ist: Ein PR muss den
+Kopf von `main` enthalten, sonst lässt er sich nicht mergen. **Preis:** Nach
+einem fremden Merge heißt es bei jedem offenen PR „Update branch", und Stufe 1
+läuft darauf neu.
 
 **Bis Web 20.3.0 stand hier das Gegenteil**, und es stimmte: Ein Push auf
 `main` mit Änderungen unter `server/` lud sofort auf den Produktivserver, ohne
@@ -128,9 +138,10 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   ab. Ein Prüfschritt, der sich selbst überspringt, meldet grün, ohne
   gemessen zu haben.
 - **Jede fremde `uses:`-Zeile hängt an einer 40-stelligen Commit-SHA**
-  (E-KH-10), die Version als Kommentar daneben — **elf sind es** (zehn bis
+  (E-KH-10), die Version als Kommentar daneben — **zwölf sind es** (zehn bis
   AP7; der Job `Rückfallstand (Staging)` bringt einen weiteren
-  `actions/checkout` mit). Die zwei **lokalen** (`./.github/workflows/…`)
+  `actions/checkout` mit, der Job `Schon gemessen?` aus Konzept TB noch
+  einen). Die zwei **lokalen** (`./.github/workflows/…`)
   tragen keine und können es nicht: Ein lokaler Pfad nimmt keinen Ref und
   läuft immer auf dem Commit des Aufrufers. Wer eine Aktion aktualisiert,
   tauscht SHA **und** Kommentar. **Die Zahl ist kein Prüfwert, sondern eine
