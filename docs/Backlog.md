@@ -9749,7 +9749,7 @@ zutreffen.
 
 285. **Das Produktionstor zählt Stufe-1-Läufe nach SHA und wartet deshalb
     auf eine Messung, die es schon gibt.**
-    *Aufgenommen 23.09.2026; Konzept `docs/konzepte/Konzept-TB-Tor-nach-Baum.md`.*
+    *Aufgenommen 23.09.2026; Konzept TB (mit dem Abschluss gelöscht, Historie `a72c7df`).*
     Der Tag `web-v20.37.1` auf dem Merge-Commit `10a942c` ist am Tor
     gescheitert (Lauf 35834341392: „Kein grüner Stufe-1-Lauf auf diesem
     Commit"), obwohl Stufe 1 auf dem Zweig-Commit `f356a44` grün war und
@@ -9770,3 +9770,5 @@ zutreffen.
     messen. **Offen, weil nur die echte Anlage es zeigt:** P-TB-05 (der erste
     Verweis auf `main` nach dem Merge) und P-TB-06 (der erste Tag ohne
     Warten) — `docs/konzepte/Pruefdokument-TB-Tor-nach-Baum.md`.
+    **P-TB-05 belegt am 23.09.2026** (Lauf 35844072753, 18 s statt rund
+    41 min); P-TB-06 bleibt offen bis zum nächsten echten Tag.
