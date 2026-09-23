@@ -12,6 +12,21 @@ declare(strict_types=1);
  * laesst (Backlog Nr. 9). WEB_VERSION bleibt dort der Rueckfall, wenn eine
  * Datei nicht gefunden wird.
  *
+ * DIESER KOPF IST EINE ERZAEHLUNG, KEIN VERZEICHNIS. Er sagt zu jeder
+ * Hauptnummer, wofuer sie steht, und nennt dabei die Pruefmittel unter den
+ * Namen, die sie DAMALS trugen. Mit PK-04 sind 48 Werkzeugordner zu 17
+ * geworden: `tools/vollstaendigkeit/` und `tools/wortliste/` liegen als
+ * `vollstaendigkeit.py` und `textprobe.py` in `tools/quelltext/`, die zwanzig
+ * Proben unter `tools/proben/<name>/`, die Erzeuger in `tools/erzeugen/`,
+ * `tools/klickprobe/` heisst `tools/bedienprobe/`. **22 Pfade in diesem Kopf
+ * zeigen deshalb ins Leere, und sie bleiben so.** Sie hier nachzuziehen
+ * hiesse, die Erzaehlung umzuschreiben statt sie fortzuschreiben — und an
+ * mehreren Stellen wuerde sie dabei falsch: „tools/pruefkonten/ legt 300
+ * Konten an" wird durch „tools/erzeugen/ legt 300 Konten an" nicht richtiger,
+ * sondern unbestimmter. Ueberall SONST in `server/` sind die Verweise
+ * nachgezogen; dort sind es Wegweiser und keine Geschichte. Wer aus diesem
+ * Kopf heraus ein Werkzeug sucht, nimmt die Tabelle in `docs/Technik.md` 2.
+ *
  * Zaehlweise (nach dem Muster "Haupt.Neben.Korrektur"):
  *   Haupt      grundlegende Umbauten, die ein bewusstes Vorgehen verlangen
  *              (z. B. Datenmodell, Verschluesselung, Migrationen)

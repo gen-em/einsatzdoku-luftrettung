@@ -30,7 +30,7 @@
         'Die Datei enthält personenbezogene Angaben im Klartext. Ab dem ' +
         'Speichern schützt die Verschlüsselung dieser Anwendung die Daten nicht ' +
         'mehr — Name, Geburtsdatum, Diagnose und Einsatzort der PatientIn, ' +
-        'dazu die Namen der Besatzung, Bergwacht-Angaben, der andere Notarzt, ' +
+        'dazu die Namen der Besatzung, Bergwacht-Angaben, die andere NotärztIn, ' +
         'die Notizen und die Koordinaten des Einsatzortes stehen lesbar in der ' +
         'Datei. Bewahre sie entsprechend auf und gib sie nicht unverschlüsselt weiter.';
 
@@ -847,12 +847,12 @@
             { feld: 'secondary', typ: '0/1', einheit: '', beschreibung: 'Sekundärtransport', get: function (c) { return c.m.secondary; } },
             { feld: 'winch', typ: '0/1', einheit: '', beschreibung: 'Windeneinsatz', get: function (c) { return c.m.winch; } },
             { feld: 'winch_cycles', typ: 'int', einheit: '', beschreibung: 'Windenzyklen gesamt (Formular: „Cycles")', get: function (c) { return numOrEmpty(c.m.winch_cycles); } },
-            { feld: 'winch_cycles_pat', typ: 'int', einheit: '', beschreibung: 'Windenzyklen mit PatientIn (Formular: „Cycles mit Patient")', get: function (c) { return numOrEmpty(c.m.winch_cycles_pat); } },
+            { feld: 'winch_cycles_pat', typ: 'int', einheit: '', beschreibung: 'Windenzyklen mit PatientIn (Formular: „Cycles mit PatientIn")', get: function (c) { return numOrEmpty(c.m.winch_cycles_pat); } },
             { feld: 'winch_airload', typ: '0/1', einheit: '', beschreibung: 'Luftverladung', get: function (c) { return c.m.winch_airload; } },
             { feld: 'bergwacht', typ: '0/1', einheit: '', beschreibung: 'Bergwacht beteiligt', get: function (c) { return c.m.bergwacht; } },
             { feld: 'bw_unit', typ: 'text', einheit: '', beschreibung: 'Bergwacht-Einheit', get: function (c) { return orEmpty(c.m.bw_unit); } },
             { feld: 'bw_info', typ: 'text', einheit: '', beschreibung: 'Bergwacht: Namen / Infos', pers: true, get: function (c) { return orEmpty(c.m.bw_info); } },
-            { feld: 'other_ema', typ: 'text', einheit: '', beschreibung: 'Anderer Notarzt', pers: true, get: function (c) { return orEmpty(c.m.other_ema); } },
+            { feld: 'other_ema', typ: 'text', einheit: '', beschreibung: 'Andere NotärztIn', pers: true, get: function (c) { return orEmpty(c.m.other_ema); } },
             { feld: 'weitere_rettungsmittel', typ: 'text', einheit: '', beschreibung: 'mission_resources.name, mit | verkettet', get: function (c) { return pipeList(c.m.resources); } },
             { feld: 'notizen', typ: 'text', einheit: '', beschreibung: 'pat_blob.notes', pers: true, get: function (c) { return c.pat ? orEmpty(c.pat.notes) : ''; } },
 
@@ -1005,7 +1005,7 @@
             '  - Besatzung: die des Diensttags (tag_crew_*) und die tatsächliche',
             '    des Einsatzes (crew_*), ebenso im Blatt Diensttage',
             '  - weitere Namen: bw_info (Bergwacht: Namen / Infos), other_ema',
-            '    (anderer Notarzt)',
+            '    (andere NotärztIn)',
             '  - Freitext: notizen beim Diensttag (die des Einsatzes stehen oben',
             '    bei den Patientendaten — sie sind seit Web 19 verschlüsselt)',
             '  - Ortsangaben: die Koordinaten der Phasen (Phase 4 = Ankunft',
@@ -1016,7 +1016,7 @@
             'vorhanden und leer:',
             '  - Patientendaten (pat_-Spalten)',
             '  - Besatzung (tag_crew_*, crew_*, auch im Blatt Diensttage)',
-            '  - bw_info (Bergwacht: Namen / Infos) und other_ema (anderer Notarzt)',
+            '  - bw_info (Bergwacht: Namen / Infos) und other_ema (andere NotärztIn)',
             '  - notizen bei Einsatz und Diensttag',
             '  - Koordinaten der Phasen und hoehe_einsatzort_m',
             '  - GPS-Daten als GPX (der Ordner tracks/ fehlt vollständig)',

@@ -10,14 +10,14 @@
 > und ist nicht Teil des Repositoriums; diese Bausteine werden dort
 > **eingearbeitet**, nicht ersetzt. Jeder Baustein nennt, welche
 > Festlegung ihn verlangt. Beim Einspielen `stand_am` neu setzen — die
-> Nutzerinnen sehen dann den Hinweis „zur Kenntnis genommen" (E-P5b-05).
+> NutzerInnen sehen dann den Hinweis „zur Kenntnis genommen" (E-P5b-05).
 
 ## B1 — Registrierung und Konto (E-P5b-01 bis -03, -13, -16)
 
 Bei der Registrierung verarbeiten wir deine E-Mail-Adresse, deinen Namen
 und ein Passwort (nur als Hash). Wir senden eine Bestätigungsmail;
 unbestätigte Registrierungen werden nach 48 Stunden gelöscht. Ist die
-Freischaltung durch den Betreiber eingestellt, bleibt die Registrierung
+Freischaltung durch die BetreiberIn eingestellt, bleibt die Registrierung
 bis zur Freischaltung oder bis zum Ablauf der auf der Registrierungsseite
 genannten Frist gespeichert und wird dann gelöscht; darüber informieren
 wir per Mail. Adressen bekannter Wegwerfanbieter werden abgewiesen; die
@@ -42,7 +42,7 @@ Gerätedaten zählen wir fehlgeschlagene Versuche je Konto, je IP-Adresse
 und je Gerätekennung und sperren bei Häufung zeitweise (10 bis 60
 Minuten, gestuft). Dafür verarbeiten wir deine IP-Adresse. **Sperren und
 Sperrversuche** speichern wir mit IP-Adresse für **30 Tage**; danach werden
-sie gelöscht. Über Sperren der höchsten Stufe wird der Betreiber per
+sie gelöscht. Über Sperren der höchsten Stufe wird die BetreiberIn per
 Sammelmeldung informiert. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO
 (Sicherheit des Dienstes). IP-Adressen werden an keiner anderen Stelle
 gespeichert.
@@ -79,7 +79,7 @@ Kontoseite. Ab 80 % der Grenze senden wir einen Hinweis.
 
 Wir speichern, wann wir dich zuletzt gefragt haben, ob du dein Notfallblatt
 noch hast, und deine Antwort (Ja / Nein / später) — nicht den Schlüssel
-selbst, den der Betreiber nie erhält. Erneuerst du den Schlüssel, geschieht
+selbst, den die BetreiberIn nie erhält. Erneuerst du den Schlüssel, geschieht
 das in deinem Browser; der Server erhält nur den neu verpackten
 Datenschlüssel.
 
@@ -99,7 +99,7 @@ Tage aufbewahrt.
 
 ## B10 — Sicherungen (E-P5a-03, S10)
 
-Der Betreiber erstellt Sicherungen der gesamten Installation; sie sind mit
+Die BetreiberIn erstellt Sicherungen der gesamten Installation; sie sind mit
 einem Serverschlüssel versiegelt und können auf auswärtige Sicherungsziele
 (SFTP/FTPS) übertragen werden [Anbieter und Ort]. Verschlüsselte
 Einsatzdaten bleiben in Sicherungen verschlüsselt. Nach der Löschung deines
@@ -117,7 +117,7 @@ Eine Übermittlung in Drittländer findet nicht statt.
 betrieben von der komoot GmbH, Potsdam). Die Anfrage geht nicht über
 unseren Server — wir sehen sie nicht. Übermittelt werden die getippte
 Adresse bzw. die Koordinate, sonst nichts. **Du kannst die Adresssuche in
-deinen Einstellungen abschalten**; der Betreiber der Installation kann sie
+deinen Einstellungen abschalten**; die BetreiberIn der Installation kann sie
 für alle abschalten oder einen anderen Dienst eintragen.
 
 ## B12 — Verschlüsselung, Klartext und Standortdaten (R41, E-P5b-25)
@@ -137,7 +137,7 @@ Reanimation und die Notizen des Diensttags. Freitextfelder, die im
 Klartext liegen, sind in der Oberfläche als solche gekennzeichnet.
 
 **Das Wichtigste an diesem Abschnitt ist der nächste Satz.** Die Phasen 4
-und 5 sind Ankunft am Einsatzort und Ankunft bei der Patientin. **Aus der
+und 5 sind Ankunft am Einsatzort und Ankunft bei der PatientIn. **Aus der
 GPS-Daten und diesen Koordinaten lässt sich der Einsatzort
 rekonstruieren — auch wenn die Adresse verschlüsselt ist.** Wer Zugang zur Datenbank
 hätte, sähe Ort, Zeitpunkt, Zielklinik und Reanimationsverlauf als
@@ -169,7 +169,7 @@ annimmst.
 
 *Prüfhinweise:* (a) B4 ist die Fortschreibung der Zusage aus `schema.sql`
 und `Technik.md` (V1, 16.09.2026). (b) B3 nennt die Sperrleiter aus P5a;
-Zahlen sind Vorgaben, bei anderer Einstellung des Betreibers anpassen.
+Zahlen sind Vorgaben, bei anderer Einstellung der BetreiberIn anpassen.
 (c) Rechtsgrundlagen sind Vorschläge. (d) Mit S11 ändert sich die Liste
 der Klartextdaten — dann neue Fassung; **B12 ist der Baustein, der dann
 als erster anzufassen ist**. (e) B12 und B13 sind am 17.09.2026 nach
@@ -177,5 +177,5 @@ E-P5b-25 ergänzt worden. B12 setzt um, was R41 verlangt („Die
 Datenschutzerklärung nennt ehrlich die Grenze der E2E"); zu prüfen ist,
 ob die Rechtsgrundlage für GPS-Daten und Positionen zutreffend gewählt ist.
 (f) Die Angaben zur Adresssuche in B11 beschreiben eine Abfrage, die
-unmittelbar aus dem Browser der Nutzerin geht; die datenschutzrechtliche
+unmittelbar aus dem Browser der NutzerIn geht; die datenschutzrechtliche
 Einordnung ist offen (siehe AVV, Anlage IV Nr. 4).

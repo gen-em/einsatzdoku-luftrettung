@@ -1525,7 +1525,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
       <p class="feld-hinweis">
         <strong>„Klartext — keine Patientendaten"</strong> steht an den
         Freitextfeldern, die unverschlüsselt gespeichert werden: die
-        Bergwacht-Angaben, der weitere Notarzt, die Besatzungsnamen und die
+        Bergwacht-Angaben, die weitere NotärztIn, die Besatzungsnamen und die
         Notizen des <em>Diensttags</em>. Dort gehören keine Angaben zu einer
         Person hinein.
       </p>
@@ -2069,7 +2069,7 @@ document.getElementById('pat_dob').addEventListener('change', () => { korrigiere
 zeigeAlter();
 
 const BEZ_FEHLT = 'Bezeichnung fehlt — bitte zu den Koordinaten einen Namen '
-  + 'eintragen (z. B. „Talstation Nebelhorn“).';
+  + 'eintragen (z. B. „Talstation Felsberg“).';
 
 document.getElementById('missionform').addEventListener('submit', async ev => {
   const f = ev.target;
@@ -2259,7 +2259,7 @@ document.getElementById('addrea').addEventListener('click', ev => {
    * Browser feuert kein `click`. Die Liste schloss, uebernommen wurde nichts.
    * Am Finger fiel es nicht auf (ein Tipp ist kuerzer), an der Maus staendig.
    *
-   * Gemessen vor der Behebung mit tools/klickprobe/ (300 ms gehaltene Maus):
+   * Gemessen vor der Behebung mit tools/bedienprobe/ (300 ms gehaltene Maus):
    * 0 von 3 Uebernahmen — und im ersten Durchgang verschwand sogar ein
    * bereits gewaehltes Rettungsmittel, weil unter dem Zeiger nach dem
    * Verstecken der Liste das Kreuz eines Chips lag und DAS den Klick bekam.

@@ -190,7 +190,7 @@ kopfzeilen_seite();
 
       <h2>Was dieses Blatt kann — und was ohne es verloren ist</h2>
       <p>Deine Patientendaten verschlüsselt der Browser mit einem Schlüssel,
-         der aus deinem Passwort entsteht. Der Betreiber hat diesen Schlüssel
+         der aus deinem Passwort entsteht. Die BetreiberIn hat diesen Schlüssel
          nicht. Vergisst du dein Passwort, ist dieses Blatt der
          <strong>einzige</strong> Weg zurück: Mit dem
          Wiederherstellungsschlüssel setzt du ein neues Passwort und behältst

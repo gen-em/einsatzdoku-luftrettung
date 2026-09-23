@@ -8,7 +8,7 @@ require_once __DIR__ . '/instanz_lib.php';   // nur fuer INSTANZ_KURZ_VORGABE �
  * ausser der Administration schliessen.
  *
  * WOZU. Ein Update laeuft heute so: Push auf `main`, FTPS laedt `server/`
- * hoch, danach ruft eine Administratorin `update.php` und laesst die
+ * hoch, danach ruft eine AdministratorIn `update.php` und laesst die
  * Migration laufen. Zwischen der ersten und der letzten hochgeladenen Datei
  * stehen alte und neue nebeneinander, und zwischen dem Hochladen und der
  * Migration erwartet neuer Code Tabellen, die es noch nicht gibt. In diesem
@@ -106,7 +106,7 @@ const WARTUNG_RETRY_S = 300;
  *   jobs.php             der Token-Weg. Das Komplett-Backup der Kette laeuft
  *                        WAEHREND der Wartung — genau dann ist es
  *                        konsistent, weil niemand sonst schreibt.
- *   login.php            damit eine abgemeldete Administratorin hineinkommt.
+ *   login.php            damit eine abgemeldete AdministratorIn hineinkommt.
  *                        Was danach geschieht, entscheidet login.php selbst
  *                        (E-S5W-09): Admin weiter, alles andere sofort
  *                        wieder abgemeldet und auf die Wartungsseite.
@@ -462,7 +462,7 @@ function wartung_seite_html(bool $rueckweg = true): string
                        . 'Datenbank ist noch nicht nachgezogen. Die Anwendung hat '
                        . 'deshalb selbst geschlossen — das ist kein Fehler, sondern '
                        . 'die Vorsorge dagegen, dass jemand in eine halb umgebaute '
-                       . 'Datenbank schreibt. Die Betreiberin ist informiert.',
+                       . 'Datenbank schreibt. Die BetreiberIn ist informiert.',
         'kette'       => 'Eine Auslieferung laeuft gerade. Sie schaltet die Wartung '
                        . 'hinterher von selbst wieder aus.',
         default       => '',
@@ -896,7 +896,7 @@ function ueberlast_seite_html(): string
  * GEDRAENGEL IST AUCH KEIN DEFEKT          P5a/AP9, E-P5a-52 (Fund der Probe)
  * --------------------------------------------------------------------------
  *
- * GEFUNDEN AM 16.09.2026 von `tools/verbindungsprobe/`, und zwar nebenbei:
+ * GEFUNDEN AM 16.09.2026 von `tools/proben/verbindung/`, und zwar nebenbei:
  * Zwanzig Uploads desselben Geraets auf denselben Diensttag, gleichzeitig
  * abgeschickt, ergaben **zwoelfmal HTTP 500** — Ursache
  * `SQLSTATE[40001] 1213 Deadlock found when trying to get lock; try

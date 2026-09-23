@@ -1665,7 +1665,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
          * Nutzlast 9 waere sie schlicht falsch gewesen. Sie nennt jetzt die
          * EIGENSCHAFT statt der Zahl — die gilt fuer 8, 9 und jede weitere
          * Fassung ohne Punktlisten. Wer den Wortlaut aendert, aendert
-         * `tools/wiederherstellungs-probe/` mit: Teil 7 sucht diesen Text
+         * `tools/proben/wiederherstellung/` mit: Teil 7 sucht diesen Text
          * als Zeichenkette, und die beiden stehen weit auseinander. */
         $spurWiderspruch = function (string $typ, array $eintrag) use ($pruef, $nutzlast): void {
             $liste = $eintrag['track'] ?? null;

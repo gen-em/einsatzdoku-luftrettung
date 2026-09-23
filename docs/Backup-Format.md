@@ -891,7 +891,7 @@ in Abschnitt 3.
   **nicht** exportiert. Beim Import werden Einträge, die zentral bereits
   (case-insensitiv) vorhanden sind, still übersprungen und in der
   Ergebnismeldung gezählt — diese Regel gilt unverändert. Gepflegt wurden sie
-  von einer Administratorin (seit Version 3); **seit Web 18.0.0 gibt es dafür
+  von einer AdministratorIn (seit Version 3); **seit Web 18.0.0 gibt es dafür
   keine Seite mehr** (Rahmenplan R39), es kann also nur noch Altbestand sein.
 - **`origin`** (seit Version 4): Herkunft des Einsatzes, wird beim Anlegen
   einmalig gesetzt und nie wieder geändert. **Sechs Werte seit Web 14.0.0**
@@ -985,7 +985,7 @@ Reihenfolge:
    geschehen ist, nicht auf halbem Weg.
 2. **Kern senden** (`api/backup_restore.php`). Der Server legt an wie bisher
    und liefert die **Spurkarte** zurück: `spur_ref` → angelegter Datensatz.
-   Sie steht getrennt von der Rückmeldung an die Nutzerin — sie ist eine
+   Sie steht getrennt von der Rückmeldung an die NutzerIn — sie ist eine
    Arbeitsangabe für den nächsten Zug, keine Auskunft.
 3. **Spurteile senden** (`api/backup_spuren_restore.php`), in Häppchen von
    höchstens 1,5 MB. Der Server prüft Eigentum und Blob, schreibt über

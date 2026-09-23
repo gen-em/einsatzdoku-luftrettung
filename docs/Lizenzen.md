@@ -142,7 +142,7 @@ wird — jede andere Seite rührt sie nicht an.
 **Warum ein zweiter Markdown-Renderer neben `rt_html()`.** Das Projekt hat
 seit P3 einen eigenen, handgeschriebenen: Er kennt Überschriften, Listen und
 geprüfte Links, und das ist kein Mangel, sondern die Zusage (E-P3-38) — sein
-Text kommt aus der Datenbank und wird von einer Administratorin getippt, jede
+Text kommt aus der Datenbank und wird von einer AdministratorIn getippt, jede
 Erweiterung wäre dort eine Vertragsänderung. Das Handbuch braucht Tabellen,
 Codeblöcke, Zitate, Fettung und Bilder; keines davon kann `rt_html()`, und
 keines davon soll es können. Zwei Renderer sind zwei Angriffsflächen — der
@@ -511,8 +511,8 @@ Backlog Nr. 230.
 - **Die Logos** (`server/assets/images/gen-em_logo_*.svg`) sind eigene
   Dateien des Projekts und stehen unter der Projektlizenz. Regeln für ihren
   Einsatz: `docs/Design.md`, Kapitel 2.
-- **Der Inhalt von Impressum und Datenschutzerklärung** ist Sache des
-  Betreibers. Die Anwendung liefert keinen Text mit (R32); sie stellt nur die
+- **Der Inhalt von Impressum und Datenschutzerklärung** ist Sache der
+  BetreiberIn. Die Anwendung liefert keinen Text mit (R32); sie stellt nur die
   Seiten und den Editor.
 
 ---

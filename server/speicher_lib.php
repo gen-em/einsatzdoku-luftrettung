@@ -264,7 +264,7 @@ function speicher_ton(int $prozent, array $schwellen): string
  *    Backups, seit S8 vorhanden — WIRD IM BETRIEB VON NIEMANDEM AUFGERUFEN.
  *    Nachgemessen am 15.09.2026: `grep -rn "schwellen_melden" --include=*.php`
  *    findet die Definition und einen Aufruf in
- *    `tools/wiederherstellungs-probe/probe.php`. Sonst nichts. Die Funktion
+ *    `tools/proben/wiederherstellung/probe.php`. Sonst nichts. Die Funktion
  *    ist geschrieben, geprueft und tot — dieselbe Klasse Fehler wie Backlog
  *    Nr. 89 („Dieser Job lief von Web 12.2.0 bis 12.9.2 nie"). Sie wird hier
  *    mitgerufen, statt eine zweite Mechanik danebenzustellen.

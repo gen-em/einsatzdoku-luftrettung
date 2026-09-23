@@ -690,10 +690,11 @@ function migrationen_katalog(): array
                                 AND table_name = 'missions' AND column_name = 'mission_no'");
             return (int)$q->fetchColumn() === 0;
         },
-        // Vom Betreiber bestaetigt: In der Produktivinstanz ist keine einzige
-        // Einsatznummer belegt — die Spalte kann deshalb verlustfrei entfernt
-        // werden, ohne vorherige Ueberfuehrung in den pat_blob (dazu braeuchte
-        // der Server ohnehin den Schluessel, den er nach Bauart nicht hat).
+        // Von der BetreiberIn bestaetigt: In der Produktivinstanz ist keine
+        // einzige Einsatznummer belegt — die Spalte kann deshalb verlustfrei
+        // entfernt werden, ohne vorherige Ueberfuehrung in den pat_blob (dazu
+        // braeuchte der Server ohnehin den Schluessel, den er nach Bauart
+        // nicht hat).
         'sql'   => [
             "ALTER TABLE missions DROP COLUMN mission_no",
         ],
@@ -724,7 +725,7 @@ function migrationen_katalog(): array
             // spaetere Bearbeitung rueckwirkend nicht mehr feststellen; sie
             // starten deshalb bewusst mit edited = 0 (nicht im Changelog oder
             // Handbuch zu erwaehnen — der betroffene Bestand ist ueberschaubar
-            // und dem Betreiber bekannt. Diese Begruendung bleibt hier stehen,
+            // und der BetreiberIn bekannt. Diese Begruendung bleibt hier stehen,
             // damit sie spaeter nicht versehentlich als Fehler "korrigiert" wird).
             "UPDATE missions SET edited = 1
                WHERE uhr_gesperrt = 1 AND client_ref NOT LIKE 'man-%' AND client_ref NOT LIKE 'imp-%'",
@@ -1699,7 +1700,7 @@ function migrationen_katalog(): array
              *
              * `letzter_fehler` steht hier und nicht nur im Fehlerprotokoll des
              * Webspace: Auf geteiltem Hosting kommt an dieses Protokoll nicht
-             * jede Betreiberin heran, und ein dauerhaft scheiternder Job soll
+             * jede BetreiberIn heran, und ein dauerhaft scheiternder Job soll
              * auf der Wartungsseite auffallen. */
             "CREATE TABLE jobs (
                job             VARCHAR(32) NOT NULL PRIMARY KEY,
@@ -1802,7 +1803,7 @@ function migrationen_katalog(): array
              * fuer SFTP. Er ist der einzige Schutz gegen einen untergeschobenen
              * Server, den dieses Projekt ueberhaupt haben kann: FTPS ueber
              * ext/ftp prueft kein Zertifikat (nachgewiesen in
-             * tools/versandprobe/), FTP ist im Klartext. Steht hier nichts,
+             * tools/proben/versand/), FTP ist im Klartext. Steht hier nichts,
              * wird der Fingerabdruck beim naechsten „Verbindung pruefen"
              * uebernommen; steht etwas, und der Server zeigt einen anderen,
              * bricht die Verbindung ab.
@@ -2636,7 +2637,7 @@ function migrationen_katalog(): array
              * gesperrt. Sobald die Sperre ablaeuft und der Aufraeumjob die
              * Zeile wegnimmt, ist nichts mehr da. Dieselbe Luecke wie bei
              * `jobs.letzter_fehler` vor Web 20.8.0: Man sieht, was JETZT
-             * ansteht, nie, dass es wiederkehrt. Eine Betreiberin, die
+             * ansteht, nie, dass es wiederkehrt. Eine BetreiberIn, die
              * morgens nachsieht, ob in der Nacht jemand an der Tuer war,
              * findet heute nichts.
              *
@@ -2915,7 +2916,7 @@ function migrationen_katalog(): array
             /* `stand_am` WIRD DATETIME (Fehlerfund F3 des Konzepts).
              *
              * Es war `DATE`. Damit waeren zwei Aenderungen am selben Tag
-             * EINE Fassung — und die Nutzerin, die die erste angenommen hat,
+             * EINE Fassung — und die NutzerIn, die die erste angenommen hat,
              * gaelte als Annehmerin der zweiten. Genau das darf eine
              * Fassungskennung nicht.
              *
@@ -2928,7 +2929,7 @@ function migrationen_katalog(): array
              * denkt in Tagen, nicht in Sekunden; die Uhrzeit entsteht nur,
              * wenn zwei Fassungen am selben Tag auseinandergehalten werden
              * muessen — und dann setzt sie der Speicherweg, nicht die
-             * Betreiberin. */
+             * BetreiberIn. */
             'ALTER TABLE rechtstexte MODIFY stand_am DATETIME NULL',
 
             /* DIE EINWILLIGUNGEN JE KONTO (E-P5b-15).
@@ -3135,7 +3136,7 @@ function migrationen_katalog(): array
          * `CHANGE` UND NICHT `RENAME COLUMN`. Zwei Gruende, beide praktisch:
          * Der Katalog kennt `CHANGE` schon dreimal (vehicles.registration,
          * days.aircraft_id, crew_presets.role) und `RENAME COLUMN` kein
-         * einziges Mal -- und `tools/migrationsregister/pruefen.php` rechnet
+         * einziges Mal -- und `tools/quelltext/migrationsregister.php` rechnet
          * den Katalog durch, um ihn gegen schema.sql zu halten. Seine
          * DDL-Simulation versteht ADD, DROP, CHANGE und RENAME TABLE; ein
          * `RENAME COLUMN` liefe durch sie hindurch, ohne die Spalte

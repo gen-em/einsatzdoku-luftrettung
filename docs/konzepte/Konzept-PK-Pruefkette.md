@@ -27,7 +27,7 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 > | | |
 > |---|---|
 > | Stand | **22.09.2026 — PK-01 bis PK-03 erledigt, PK-04 in Arbeit (Teilstücke 1a bis 4 von 5 erledigt, Teilstück 5 in Arbeit).** **Schritt 15 (PR #74) ist vorweggenommen hereingezogen** — der Merge war vor dem eigentlichen Merge nach `main` nötig, weil er drei Proben STILL gebrochen hätte (F-PK-24); aufgelöst und nachgemessen in Prüfdokument 5h. `main` ist hereingezogen (`a1c6494`): beide Vorgriffe sind gemergt, **M1 der Kette II ist erreicht**. Offen bleibt P-PK-11 zur Hälfte: die Ausbaustufe `uhr` ist gebaut, aber nicht abgenommen; `android` ist es (Bau in 7m 19s, 0 Lint-Fehler, 670 Prüffälle / 0). Umsetzung läuft auf `claude/serene-dijkstra-bcpbjy` (von `main` `08e032e`); das Konzept ist mit seiner Historie vom Konzeptzweig dorthin übernommen, ebenso der Inhalt von PR #70. Freigegeben vom Auftraggeber (Z5) ohne Änderungen; Z1, Z2, Z3 erledigt; P-PK-02 vorgezogen und erledigt. |
-> | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **vom Auftraggeber bestätigt am 21.09.2026**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. |
+> | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **vom Auftraggeber bestätigt am 21.09.2026**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. **E-PK-34** (die Rechtstexte werden beim Binnen-I mitgenommen) und **E-PK-35** (die Fächerungszeile für PK) sind am 22.09.2026 entschieden — Abschnitt 3.1a. |
 > | Nächstes | **PK-04/5** — die Bereinigung in `server/`. **Vom Auftraggeber freigegeben am 22.09.2026**, nachdem Schritt 15 durch ist. **Parallelitätsregel aus der Konzeptfassung auf `main`, hier nachgetragen:** PK-01 bis PK-03 laufen neben Schritt 15; **PK-04 bis PK-06 erst, wenn kein Schritt-15-Paket in einem offenen PR steht.** Nachgesehen am 22.09.2026: **kein offener PR** — die Regel war während PK-04/1a bis 4 erfüllt, aber ich kannte sie nicht, als ich anfing. Die beiden Vorgriffe (PR #71 zu PK-05, PR #72 zu PK-06) sind auf `main`. |
 > | Kette II | **M1 ist am 21.09.2026 erreicht** — Tag `web-v20.26.3` auf `a1c6494`, Lauf **35654132667** Versuch 2, Produktiv meldet **20.26.3**, **Migrationen von Hand ausgeführt, Wartung beendet, Status „Alles läuft"**, Zeiger `produktion` auf `a1c6494`. Im Übrigen wird Kette II nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
 > | Hakt | **Stufe 1 ist rot, und nicht wegen PK:** `tools/spaltenregister/pruefen.php` aus Schritt 15 meldet 1 Befund (`start_sort` fehlt im Register) und Selbstprobe **15 von 16** (Alias `uhr_gesperrt AS manual`) — auf dem Stand von Schritt 15 selbst nachgemessen, vor dem Merge. Backlog Nr. 282, Prüfpunkt P-PK-22. Sonst nichts. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); Stufe 2 hat ihn nach dem Merge bestätigt: Kreisläufe csv und edbak **104 s grün** gegen Staging mit **MySQL 8.4.10** (Lauf 35639445224, Versuch 2, Schritt 5) — im Lauf davor, ohne den Fix, derselbe Schritt nach **15 min 51 s rot**. Der Tag `web-v20.26.3` folgt darauf (Z2a). **Nr. 267 ist auf beiden Anlagen bestätigt:** Staging mit MySQL 8.4.10 im Kreislauf edbak (104 s), Produktiv mit MariaDB im Produktivlauf. **Der Export von Hand auf Produktiv steht als Gegenprobe noch aus** — er ist kein Beleg, weil der Fehler dort nie auftrat, aber er ist die einzige Messung, die den Weg durch die Oberfläche geht. Der erste Tag war am Tor hängengeblieben (F-PK-04); nach dem Vorgriff auf PK-06 (PR #72) ging er durch. **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
@@ -808,6 +808,114 @@ Konzepts eine Auskunft (1.2); deshalb vor der Freigabe.
 | 3 | `tools/erzeugen/` — sechs Erzeuger | nein | **erledigt** |
 | 4 | Bedienprobe nach Seiten (E-PK-15), Bilderlauf abgestuft (E-PK-14), LIESMICH-Form | nein | **erledigt bis auf E-PK-15** (die Wege tragen weiter Paketnamen) |
 | **5** | Bereinigung in `server/` — Binnen-I, Prüfkonten, Symbole | **ja** | **zuletzt** |
+
+**E-PK-34 — die Rechtstexte werden beim Binnen-I mitgenommen.** 83 der 492
+Stellen liegen in `docs/rechtstexte/`: AVV 48, Nutzungsbedingungen 27,
+Datenschutz-Ergänzung 8. Fast alle sind „Betreiber" (47) und „Betreibers"
+(7) — und dort ist das kein Stilwort, sondern eine in §1 in
+Anführungszeichen **definierte Vertragspartei**. Vorgelegt am 22.09.2026 mit
+drei Wegen (ausnehmen, mitnehmen, nur den AVV ausnehmen); **der Auftraggeber
+hat „mitnehmen" gewählt.** Die Hausform gilt damit ohne Sonderfall, und die
+Regelklasse `hausform` kann wirklich auf null.
+
+**Was ausdrücklich NICHT umgestellt wird:** die Begriffe des Gesetzes —
+„Verantwortlicher", „Auftragsverarbeiter", „betroffene Person". Sie stehen
+13-mal im AVV und sind Wortlaut der DSGVO, nicht Wortwahl des Hauses. Die
+Sperrliste trifft sie ohnehin nicht (ihre Wortliste kennt `Betreiber`,
+`Nutzer` und neun weitere, aber keinen dieser drei) — **sie bleiben also von
+selbst stehen, und das ist ein glücklicher Zufall und keine Vorkehrung.**
+Wer die Wortliste erweitert, prüft diesen Absatz.
+
+**E-PK-36 — die Textprobe misst die Hausform groß geschrieben.** Beide
+`hausform`-Muster tragen jetzt `"gross": true`. **Ohne den Schalter war die
+Regel für ihren Zweck untauglich**, und zwar aus zwei Gründen, von denen der
+zweite der schwerere ist:
+
+| | |
+|---|---|
+| Sie traf **Bezeichner** | `betreiberin` ist der Rollenname im Code (`db.php` 1195: „'betreiberin' und nicht 'operator'"), `$nutzer` eine Variable. **1 233 kleingeschriebene Treffer** im Repositorium gegen 913 großgeschriebene. |
+| Sie traf **die Hausform selbst** | `BetreiberIn` matcht als `Betreiber` + `In` ≈ `in`. Die Regel zählte damit **hoch, je mehr man repariert** — `AVV.md` ging beim Umbau von 22 auf 47. |
+
+Eine Regel, die den Fehler nicht von der Lösung unterscheidet, misst nichts.
+Nachgerechnet: Mit `gross: true` trifft sie `Betreiberin` ✓ und `Betreiber` ✓,
+aber `BetreiberIn` ✗ und `betreiberin` ✗ — genau den Fehler und sonst nichts.
+**Preis, benannt:** Ein kleingeschriebenes Rollenwort in *sichtbarem* Text
+fällt durch; im deutschen Fließtext sind Substantive groß.
+
+**E-PK-37 — Zitate werden mitgegendert** (Auftraggeber, 23.09.2026). Ein
+zitierter Satz aus dem Backlog, aus einem Konzept oder aus der Anwendung folgt
+der Hausform. **Zwei Dinge bleiben ausgenommen**, und beide sind keine
+Ausnahme vom Gendern, sondern etwas anderes als ein Zitat:
+
+- **Die Begriffe des Gesetzes** („Verantwortlicher", „Auftragsverarbeiter",
+  „betroffene Person") — vom Auftraggeber mit E-PK-34 ausgenommen.
+- **Ein Wort, das als Wort genannt wird.** Wo ein Satz aufzählt, *was*
+  gefunden wurde — „fast alle sind „Betreiber" (47) und „Betreibers" (7)" —,
+  sagte er gegendert das Gegenteil: dass der Fund bereits die Hausform war.
+  Das betrifft die Sperrliste, jede Befundtabelle und die Absätze hier.
+  Vorgelegt und vom Auftraggeber bestätigt.
+
+**E-PK-38 — die Hausform gilt für achtzehn Wörter, nicht für elf**
+(Auftraggeber, 23.09.2026, Lesart 2). Bis dahin kannte die Sperrliste elf
+Rollenwörter, und „hausform = 0" hieß deshalb **„0 von elf"**, nicht „der
+Text steht in der Hausform". Sieben kommen dazu: `Notarzt`, `Pilot`,
+`Patient`, `Kollege`, `Flugretter`, `Fahrer`, `Praktikant`.
+
+**Vier Wörter sind ausdrücklich NICHT aufgenommen**, jedes mit Grund:
+
+| Wort | Vorkommen | Warum nicht |
+|---|---|---|
+| `Helfer` | 47 | In diesem Projekt eine **Hilfsfunktion im Code** — „PDO, Helfer", „wo der Helfer `null` liefert". Dieselbe Falle wie `Leser`. |
+| `Besatzungsmitglied` | 10 | Sächlich, schon geschlechtsneutral. |
+| `Verantwortlicher` | 8 | Wortlaut der DSGVO (E-PK-34). |
+| `Auftragsverarbeiter` | 8 | Ebenso. |
+
+**Zusammensetzungen fallen von selbst heraus**, weil das Muster an der
+Wortgrenze misst: `Patientendaten` (96), `Notarzteinsatz` (8),
+`Pilotenwechsel` (9) treffen nicht. Nur die **Ellipse mit Bindestrich**
+(„Patienten- oder Einsatzdaten") braucht eine Ausnahme, weil dort eine
+Wortgrenze steht.
+
+**E-PK-39 — was aus dem Haus geht, folgt nicht der Hausform.** Drei Sorten
+Text bleiben ungegendert, und die Begründung ist dieselbe:
+
+1. **Spaltennamen einer fremden Datei.** Das Importprofil „GuteSeele" gleicht
+   seine Spalten gegen die Kopfzeile einer Excel-Datei ab, die nicht aus
+   diesem Haus kommt. Wird `'Pilot'` zu `'PilotIn'`, findet der Import die
+   Spalte nicht mehr — **und zwar still**, weil eine fehlende Spalte leer
+   bleibt statt zu scheitern.
+2. **Spaltenüberschriften der eigenen Ausgabe.** Die fünf Rollenbeschriftungen
+   aus `CREW_ROLES` stehen als Spalten 14 bis 19 in jeder CSV- und
+   Excel-Datei, die diese Anwendung erzeugt. **Die Tabelle steht dreimal** —
+   in `db.php` und als Rückfallwert in `import_profiles.js` 62 und
+   `import_ui.js` 334; wer eine ändert, ändert alle drei.
+3. **Der `exportTitle`** („Einsatzdokumentation Christoph 17 - {jahr}"), vom
+   Auftraggeber am 23.09.2026 so entschieden — daraus folgen 1 und 2.
+
+**Und der Projektname** „Einsatzdokumentation Notarzt" ist ein Eigenname; er
+steht in der Fußzeile der Anmeldeseite, im Kopf jedes Komplett-Backups und
+als Vorgabe des Instanznamens.
+
+**Was die Datenbank angeht, war die Sorge unbegründet:** Gespeichert wird
+`role_code` (`p1`, `fr`, `driver`, `trainee`), nicht die Beschriftung
+(`db.php` 1037). Eine Änderung an den Labels bräuchte also keine Migration —
+sie scheitert an Punkt 2, nicht am Datenmodell.
+
+**E-PK-35 — die Fächerungszeile für PK** (`CLAUDE.md` 7, beschlossen in
+Schritt 15 als E-ZE-25: ohne Zeile wird nicht gefächert). Für PK gilt:
+
+| Paket | Gefächert | Seriell |
+|---|---|---|
+| PK-01 bis PK-03 | nichts — abgeschlossen, ohne Fächerung gefahren | alles |
+| **PK-04/1a bis 4** | nichts — ebenso abgeschlossen | alles |
+| **PK-04/5** | **(a) die Untersuchung der 18 Klassen und 14 Symbolzeichen** — rein lesend, je Fundstelle eine Frage, keine Nebenwirkung; **(b) der Umbau je Datei** beim Binnen-I und den Adressen: rund 50 Dateien, jede von genau einem Agenten | die Prüfläufe · `server/version.php` · `docs/CHANGELOG.md` · dieses Konzept · das Prüfdokument |
+| PK-05 bis PK-08 | offen — wird bei Beginn des Pakets entschieden | |
+
+**Die Regel dahinter, und warum sie hier greift:** Eine Datei hat genau
+einen Agenten. Binnen-I, Adressen und Rufnamen liegen teils in derselben
+Datei — sie werden deshalb **nicht** als drei Fächerungen nach Regelklasse
+gefahren, sondern als **eine** nach Datei. Drei Agenten auf `Handbuch.md`
+wären drei Fassungen derselben Datei, und die letzte gewinnt.
 
 **Teilstück 5 kommt zuletzt**, entschieden vom Auftraggeber am 21.09.2026:
 Schritt 15 (Zentralisierung) arbeitet parallel in `server/`, und rund 190

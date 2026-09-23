@@ -172,21 +172,39 @@
       "klasse": "hausform",
       "regex": "\\b(Nutzer|Benutzer|Betreiber|Administrator|Anwender|Entwickler|Bearbeiter|Mitarbeiter|Leser|Prüfer|Pruefer)(in|innen)\\b",
       "ersatz": "Binnen-I: NutzerIn, NutzerInnen",
-      "grund": "E-PK-26: Hausform ist das grosse Binnen-I. Die rein weibliche Einzelform ist eine der beiden Formen, die heute nebeneinander stehen."
+      "grund": "E-PK-26: Hausform ist das grosse Binnen-I. Die rein weibliche Einzelform ist eine der beiden Formen, die heute nebeneinander stehen. GROSS GESCHRIEBEN GEMESSEN (PK-04/5, E-PK-36): Ohne den Schalter liest die Probe ohne Ruecksicht auf Gross- und Kleinschreibung und trifft damit ZWEIERLEI, das kein Befund ist — die BEZEICHNER (`betreiberin` ist der Rollenname im Code, `$nutzer` eine Variable; 1233 solcher Stellen im Bestand) und DIE HAUSFORM SELBST (`BetreiberIn` matcht als `Betreiber`+`In`≈`in`). Das zweite ist der schlimmere Fehler: Die Regel zaehlte HOCH, je mehr man repariert — AVV.md ging beim Umbau von 22 auf 47. Eine Regel, die den Fehler nicht von der Loesung unterscheidet, misst nichts. PREIS: Ein kleingeschriebenes Rollenwort in SICHTBAREM Text faellt durch; im deutschen Fliesstext sind Substantive gross.",
+      "gross": true
     },
     {
       "id": "hausform-maennlich",
       "klasse": "hausform",
       "regex": "\\b(Nutzer|Benutzer|Betreiber|Administrator|Anwender|Entwickler|Bearbeiter|Mitarbeiter|Leser|Prüfer|Pruefer)(|n|s)\\b",
       "ersatz": "Binnen-I: NutzerIn, NutzerInnen",
-      "grund": "E-PK-26: dieselbe Rolle in maennlicher Form. `NutzerInnen` trifft nicht, weil nach `Nutzer` keine Wortgrenze steht."
+      "grund": "E-PK-26: dieselbe Rolle in maennlicher Form. `NutzerInnen` trifft nicht, weil nach `Nutzer` keine Wortgrenze steht. GROSS GESCHRIEBEN GEMESSEN (PK-04/5, E-PK-36): Ohne den Schalter liest die Probe ohne Ruecksicht auf Gross- und Kleinschreibung und trifft damit ZWEIERLEI, das kein Befund ist — die BEZEICHNER (`betreiberin` ist der Rollenname im Code, `$nutzer` eine Variable; 1233 solcher Stellen im Bestand) und DIE HAUSFORM SELBST (`BetreiberIn` matcht als `Betreiber`+`In`≈`in`). Das zweite ist der schlimmere Fehler: Die Regel zaehlte HOCH, je mehr man repariert — AVV.md ging beim Umbau von 22 auf 47. Eine Regel, die den Fehler nicht von der Loesung unterscheidet, misst nichts. PREIS: Ein kleingeschriebenes Rollenwort in SICHTBAREM Text faellt durch; im deutschen Fliesstext sind Substantive gross.",
+      "gross": true
+    },
+    {
+      "id": "hausform-rollen-maennlich",
+      "klasse": "hausform",
+      "gross": true,
+      "regex": "\\b(Notarzt|Notärzt|Pilot|Patient|Kolleg|Flugretter|Fahrer|Praktikant)(|e|n|s|en|es)\\b",
+      "ersatz": "Binnen-I: NotärztIn, PilotIn, PatientIn, KollegIn, FlugretterIn, FahrerIn, PraktikantIn",
+      "grund": "E-PK-38 (Lesart 2, Auftraggeber 23.09.2026): Die Hausform galt bis dahin fuer ELF Woerter, und „hausform = 0\" hiess deshalb „0 von elf\", nicht „der Text ist in der Hausform\". Sieben weitere Rollen kommen im Bestand vor und sind Menschen. NICHT aufgenommen, jeweils mit Grund: `Helfer` (47 Stellen, aber in diesem Projekt eine HILFSFUNKTION im Code -- „PDO, Helfer\", „wo der Helfer null liefert\"; dieselbe Falle wie `Leser`), `Besatzungsmitglied` (saechlich, schon neutral), `Verantwortlicher` und `Auftragsverarbeiter` (Wortlaut der DSGVO, E-PK-34). ZUSAMMENSETZUNGEN FALLEN VON SELBST HERAUS, weil das Muster an der Wortgrenze misst: `Patientendaten` (96), `Notarzteinsatz` (8), `Pilotenwechsel` (9) treffen nicht. Die vier Rollenbeschriftungen aus CREW_ROLES (Pilot 1, Flugretter, Fahrer, Praktikant) sind reine ANZEIGE -- die Datenbank haelt `role_code`, nicht das Label (db.php 1037). Gendern ist deshalb ohne Migration moeglich."
+    },
+    {
+      "id": "hausform-rollen-weiblich",
+      "klasse": "hausform",
+      "gross": true,
+      "regex": "\\b(Notärzt|Pilot|Patient|Kolleg|Flugretter|Fahrer|Praktikant)(in|innen)\\b",
+      "ersatz": "Binnen-I: NotärztIn, NotärztInnen usw.",
+      "grund": "E-PK-38 (Lesart 2, Auftraggeber 23.09.2026): Die Hausform galt bis dahin fuer ELF Woerter, und „hausform = 0\" hiess deshalb „0 von elf\", nicht „der Text ist in der Hausform\". Sieben weitere Rollen kommen im Bestand vor und sind Menschen. NICHT aufgenommen, jeweils mit Grund: `Helfer` (47 Stellen, aber in diesem Projekt eine HILFSFUNKTION im Code -- „PDO, Helfer\", „wo der Helfer null liefert\"; dieselbe Falle wie `Leser`), `Besatzungsmitglied` (saechlich, schon neutral), `Verantwortlicher` und `Auftragsverarbeiter` (Wortlaut der DSGVO, E-PK-34). ZUSAMMENSETZUNGEN FALLEN VON SELBST HERAUS, weil das Muster an der Wortgrenze misst: `Patientendaten` (96), `Notarzteinsatz` (8), `Pilotenwechsel` (9) treffen nicht. Die vier Rollenbeschriftungen aus CREW_ROLES (Pilot 1, Flugretter, Fahrer, Praktikant) sind reine ANZEIGE -- die Datenbank haelt `role_code`, nicht das Label (db.php 1037). Gendern ist deshalb ohne Migration moeglich."
     },
     {
       "id": "mail-fremd",
       "klasse": "adressen",
-      "regex": "\\b[A-Za-z0-9._%+-]+@(?!example\\.invalid\\b)[A-Za-z0-9.-]+\\.[A-Za-z]{2,}",
+      "regex": "\\b[A-Za-z0-9._%+-]+@(?!(?:[A-Za-z0-9.-]+\\.)?example\\.(?:invalid|com|net|org)\\b)(?![A-Za-z0-9.-]*\\.(?:invalid|test|example|localhost)\\b)[A-Za-z0-9.-]+\\.[A-Za-z]{2,}",
       "ersatz": "example.invalid — ausser demo@gen-em.org",
-      "grund": "E-PK-27: `demo@gen-em.org` ist die einzige echte Adresse; alles andere gehoert nach `example.invalid`. Die Ausnahme fuer demo@ steht in der Ausnahmeliste, nicht im Muster — so faellt sie auf, wenn jemand sie streicht."
+      "grund": "E-PK-27: `demo@gen-em.org` ist die einzige echte Adresse; alles andere gehoert nach `example.invalid`. Die Ausnahme fuer demo@ steht in der Ausnahmeliste, nicht im Muster — so faellt sie auf, wenn jemand sie streicht. ERWEITERT (PK-04/5c): Erlaubt sind jetzt ALLE von RFC 2606 reservierten Formen -- example.com/net/org und die TLDs .invalid, .test, .example, .localhost. Vorher stand hier nur `example.invalid`, und das meldete `name@klinik.example` als Befund, obwohl `.example` genauso reserviert ist. Der Punkt der Regel ist nicht EINE Schreibweise, sondern dass keine Adresse getroffen wird, die jemandem GEHOEREN kann. `example.de` ist genau das -- registrierbar, und eine Vorlage, die SMTP dorthin richtet, richtet es auf eine fremde Domain."
     },
     {
       "id": "netz-fremd",

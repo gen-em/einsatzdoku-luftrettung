@@ -256,7 +256,7 @@ function reset_token_ausstellen(int $userId, int $laufzeitS, ?PDO $pdo = null): 
  * Den Status eines Kontos aendern, mit Pruefung des Uebergangs.
  *
  * @param string|null $grund nur bei `gesperrt` — er steht in der Meldung, die
- *                           die Nutzerin sieht, und im Protokoll
+ *                           die NutzerIn sieht, und im Protokoll
  * @return bool `false`, wenn der Uebergang nicht erlaubt ist oder das Konto
  *              nicht existiert. Dann ist NICHTS geaendert.
  */
@@ -328,7 +328,7 @@ function konto_status(int $userId): ?string
 }
 
 /**
- * Der Satz, den eine Nutzerin zu ihrem Status zu lesen bekommt.
+ * Der Satz, den eine NutzerIn zu ihrem Status zu lesen bekommt.
  *
  * An EINER Stelle, weil er an drei erscheint: Anmeldeseite, Sperrseite und
  * — gekuerzt — im JSON-Rumpf von `ingest.php`.
@@ -434,7 +434,7 @@ function adresse_bestaetigen(string $token): array
     return ['ok' => true, 'grund' => '', 'alt' => $alt, 'neu' => $neu];
 }
 
-/** Eine vorgemerkte Adresse verwerfen (Abbruch durch die Nutzerin). */
+/** Eine vorgemerkte Adresse verwerfen (Abbruch durch die NutzerIn). */
 function adresse_vormerkung_loeschen(int $userId): void
 {
     db()->prepare('UPDATE users SET email_neu = NULL, email_neu_token_hash = NULL,

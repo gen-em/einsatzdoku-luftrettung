@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Unbekannte Stammdatenart. Es wurde nichts geändert.';
         } elseif ($zentral && !ist_admin()) {
             // Zentrale Eintraege gehoeren den Admins (nachbearbeitung_lib.php).
-            $error = 'Systemweite Standorte lassen sich nur von einer Administratorin '
+            $error = 'Systemweite Standorte lassen sich nur von einer AdministratorIn '
                    . 'zuordnen. Es wurde nichts geändert.';
         } else {
             /* Der Zielstandort muss zur Zeile passen: Ein ZENTRALER Eintrag
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * Handlung aendert das SCHEMA und gilt fuer alle Konten. Sie gehoert
          * deshalb hier abgesichert, nicht nur dort verborgen. */
         if (!ist_admin()) {
-            $error = 'Diesen Schritt führt eine Administratorin aus — er ändert das '
+            $error = 'Diesen Schritt führt eine AdministratorIn aus — er ändert das '
                    . 'Datenbankschema und gilt für alle Konten. Es wurde nichts geändert.';
         } else {
             $e = nb_notnull_ziehen();
@@ -399,7 +399,7 @@ ui_seite_start(['titel' => 'Zuordnung nachtragen']);
             </div>
           </form>
         <?php else: ?>
-          <p class="feld-hinweis">Diesen letzten Schritt führt eine Administratorin
+          <p class="feld-hinweis">Diesen letzten Schritt führt eine AdministratorIn
              aus — er ändert das Datenbankschema und gilt für alle Konten.</p>
         <?php endif; ?>
       <?php endif; ?>

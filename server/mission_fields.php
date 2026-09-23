@@ -442,7 +442,7 @@ return [
                 'options' => ['0','1','2','3','4','5','6','7','8'],
             ],
             'winch_cycles_pat' => [
-                'label' => 'Cycles mit Patient', 'type' => 'select',
+                'label' => 'Cycles mit PatientIn', 'type' => 'select',
                 'options' => ['0','1','2','3','4','5','6','7','8'],
             ],
             'winch_airload' => [ 'label' => 'Luftverladung', 'type' => 'checkbox' ],
@@ -463,7 +463,7 @@ return [
          * las sich, als sei der eigene ersetzt worden; gemeint ist ein
          * zusaetzlicher, der ebenfalls am Einsatz war — dieselbe Logik wie bei
          * „Weitere Rettungsmittel" direkt darueber. */
-        'label' => 'Weiterer Notarzt', 'type' => 'text', 'max' => 190,
+        'label' => 'Weitere NotärztIn', 'type' => 'text', 'max' => 190,
         'gruppe' => 'mittel',
         'hinweis' => $mf_hinweis_klartext,
     ],

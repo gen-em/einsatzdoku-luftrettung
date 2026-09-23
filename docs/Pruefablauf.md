@@ -86,7 +86,7 @@ nur sie beantworten kann.
 |---|---|---|---|---|
 | **A Arbeit** | während der Entwicklung | die Instanz in der Arbeitsumgebung | Browser, Emulator, Uhr-Simulator, die Proben, die zur Änderung gehören | nach Bedarf |
 | **B Prüfstand** | vor dem Pull Request, **ein Befehl** | dieselbe Instanz | örtliche Installation hochfahren, Referenzbestand, die Proben der Stufe, Bau der Apps (unsigniert), die billigen Riegel; auf Anforderung die Plattformprobe gegen Staging. Ergebnis ist der **Prüfbericht** (5) | klein 5 min, neben 15 min, haupt 45 min |
-| **C Tor** | beim Pull Request und auf `main` | GitHub | die billigen Riegel als Gegenlesung des Berichts, Schemaprobe gegen MySQL 8.4.0 und MariaDB 10.6, Bericht passt zum Baum und zur Berührung. **Rot heißt kein Merge**; der Merge ist Sache der Betreiberin | 1 bis 2 min |
+| **C Tor** | beim Pull Request und auf `main` | GitHub | die billigen Riegel als Gegenlesung des Berichts, Schemaprobe gegen MySQL 8.4.0 und MariaDB 10.6, Bericht passt zum Baum und zur Berührung. **Rot heißt kein Merge**; der Merge ist Sache der BetreiberIn | 1 bis 2 min |
 | **D Staging** | nach dem Merge | GitHub | Auslieferung (unverändert), dann drei Schritte: Antwortprobe, Punktdateien, **ein** Kreislauf `edbak` als Gegenlesung auf PHP 8.3 beim Hoster | unter 10 min |
 | **E Produktiv** | beim Tag, nach Freigabe | GitHub | dieselbe Auslieferung, Backup-Tor, Fassungsprüfung, Integritätswache; App-Tags bauen und signieren einmal | wie heute |
 
@@ -134,7 +134,7 @@ Riegel davor und keinen Hook.
 **Der Riegel ist der Zweigschutz, und er gilt seit dem 21.09.2026.** Zwei
 Rulesets auf `main`: „Main Protect" (Pull-Request-Pflicht, Pflichtprüfung
 `Stufe 1`, kein Force-Push, kein Löschen, Bypass leer) und „Main
-Merge-Recht" (Restrict updates, Bypass nur die Betreiberin, Modus „pull
+Merge-Recht" (Restrict updates, Bypass nur die BetreiberIn, Modus „pull
 requests only"). Die Maske und die drei Fallen dabei stehen in
 `Rahmenplan.md` 6b.
 
@@ -146,7 +146,7 @@ requests only"). Die Maske und die drei Fallen dabei stehen in
 **Und der Zweigschutz allein reicht nicht.** Gemessen am 21.09.2026
 (F-PK-01): Das Ruleset weist das Konto ab, unter dem die Arbeitsumgebung
 pusht — aber die GitHub-Werkzeuge in Claude Code sprechen mit dem Anschluss
-der Betreiberin und handeln als sie; ein Merge über die Schnittstelle ging
+der BetreiberIn und handeln als sie; ein Merge über die Schnittstelle ging
 durch. Deshalb drei Lagen statt einer:
 
 1. **Das Ruleset** — Riegel gegen Git und gegen jede fremde Anwendung.
@@ -214,7 +214,7 @@ Station B.
 
 ### 2.5 Station E — Produktiv
 
-Beim Tag `web-vX.Y.Z`, nach der Pflichtfreigabe durch die Betreiberin und
+Beim Tag `web-vX.Y.Z`, nach der Pflichtfreigabe durch die BetreiberIn und
 nach dem Backup-Tor. Der Ablauf steht in `Technik.md` 6; PK ändert ihn
 nicht. Dazu gehören der Zeiger-Zweig `produktion` und die Integritätswache,
 die gegen ihn vergleicht.
@@ -571,10 +571,10 @@ Jedes Konzept führt ein Kürzel; daraus leiten sich alle Nummern ab:
 | Form | Was | Beispiel |
 |---|---|---|
 | `XX-NN Schlagwort` | Arbeitspaket | `PK-03 Prüfstand-Befehl` |
-| `XX-MN` | Meilenstein der Betreiberin | `PK-M1` |
+| `XX-MN` | Meilenstein der BetreiberIn | `PK-M1` |
 | `E-XX-NN` | Entscheidung | `E-PK-04` |
 | `F-XX-NN` | **Befund** — etwas, das gemessen anders ist als angenommen | `F-PK-01` |
-| `Q-XX-NN` | **Frage an die Betreiberin**, mit ihrer Antwort im Konzept | `Q-PK-01` |
+| `Q-XX-NN` | **Frage an die BetreiberIn**, mit ihrer Antwort im Konzept | `Q-PK-01` |
 | `P-XX-NN` | Prüfpunkt im Prüfdokument | `P-PK-03` |
 
 Nummern sind **zweistellig** und werden **nie wiederverwendet**.
@@ -601,7 +601,7 @@ Prüfung sucht, die es nicht gibt, findet sie hier zusammen mit dem Grund.
 | **Deploy, Anmeldung, `update.php` in einem Zug** | Kein Prüfmittel fährt diesen Weg. Backlog **Nr. 234**. PK-06 legt den benannten Platz dafür in Station D an und **füllt ihn nicht** — ein leerer Platz mit Namen ist ehrlicher als ein Schritt, der sich selbst überspringt. |
 | **Echte Geräte** | Der Uhr-Simulator und der Android-Emulator sind Rechenmodelle. Der echte Data Layer, der echte Schlüsselspeicher und das Eingabeverhalten eines gekoppelten Geräts sind darin nicht enthalten; was das im Einzelnen heißt, steht in `android/LIESMICH.md` und in `Geraete-Eingabe.md`. |
 | **Echte Sicherungsziele** | Ein Ziel, das wirklich außer Haus schreibt, wird nicht angefahren. Geprüft wird die Bibliothek, nicht die Gegenstelle. |
-| **Mailversand** | Die Arbeitsumgebung erreicht nur Port 443 — kein SMTP, kein IMAP. Geprüft wird die Warteschlange und der Katalog; ob eine Nachricht ankommt, sieht nur die Betreiberin. |
+| **Mailversand** | Die Arbeitsumgebung erreicht nur Port 443 — kein SMTP, kein IMAP. Geprüft wird die Warteschlange und der Katalog; ob eine Nachricht ankommt, sieht nur die BetreiberIn. |
 | **Apache des Hosters** | Punktdateien und `.well-known` hängen an einer `.htaccess`, die es örtlich nicht gibt. Das misst **allein** Station D. |
 | **Plattformverhalten von Produktiv** | Staging liegt seit dem 20.09.2026 bei einem anderen Hoster und auf einer anderen Datenbank (2.4). Die Plattformmatrix der Hauptstufe (3) ist der Ersatz, nicht Station D. |
 | **Der Bericht aus Station B** | Kein Riegel, ein Nachweis (5.2). |

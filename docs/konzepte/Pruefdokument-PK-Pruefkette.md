@@ -867,6 +867,191 @@ Beides auf dem Stand von Schritt 15 **selbst** nachgemessen, vor dem Merge,
 also kein Merge-Schaden. Die Prüfung hängt in Stufe 1 — **die Kette ist damit
 rot, bis Schritt 15 es behebt.** Backlog Nr. 282, Prüfpunkt **P-PK-22**.
 
+## 5i. Messprotokoll PK-04/5a — die toten Werkzeugverweise (22./23.09.2026)
+
+### Die Zahl im Konzept war zu klein
+
+Das Konzept nannte **19 Stellen in 9 Dateien**. Gemessen sind es **60 in 28
+Dateien** — die 19 stammten vom Stand nach Teilstück 1a, und die Umzüge 2, 3
+und 4 haben nachgelegt. Die Zahl wurde nicht fortgeschrieben; sie stand in
+einem Absatz, den seither niemand angefasst hat.
+
+### Die Zuordnung kommt aus git, nicht aus dem Gedächtnis
+
+`git diff --name-status -M90% a1c6494 HEAD -- tools/` liefert **78
+Umbenennungen**, daraus **35 Ordnerzuordnungen**. Ersetzt wurde nur, wo der
+alte Pfad **nicht mehr existiert** — damit kann ein noch gültiger Pfad nicht
+versehentlich mitwandern.
+
+### Was dabei schiefging, und was es gekostet hätte
+
+**Die Ordnerersetzung ist für Prosa zu stumpf.** Wo ein *benanntes Werkzeug*
+zu einem *Sammelordner* wurde, verliert sie, welches gemeint war:
+
+| vorher | stumpf ersetzt | richtig |
+|---|---|---|
+| `tools/pruefkonten/ legt 300 Konten an` | `tools/erzeugen/ legt 300 Konten an` | der Ordner legt nichts an — `tools/erzeugen/pruefkonten.php` tut es |
+| `Die Wortliste (tools/wortliste/)` | `Die Wortliste (tools/quelltext/)` | `tools/quelltext/textprobe.py` |
+| `tools/vollstaendigkeit/ liest diese Datei` | `tools/quelltext/ liest diese Datei` | `tools/quelltext/vollstaendigkeit.py` |
+
+**Neun solcher Stellen** sind von Hand nachgezogen worden, jede einzeln im
+Satz gelesen. Der Unterschied ist nicht Kosmetik: Ein Verweis, der auf einen
+Ordner mit acht Prüfungen zeigt, beantwortet die Frage nicht, für die er da
+steht.
+
+### `server/version.php` ist zurückgenommen worden
+
+Die Ersetzung traf dort **21 Stellen** — und alle liegen im Kopfkommentar,
+der zu jeder Hauptnummer erzählt, wofür sie steht (`CLAUDE.md` 2.1:
+„diese Erzählung **fortschreiben**"). Eine Erzählung über Web 12.9.1 nennt
+die Werkzeuge unter den Namen, die sie **damals** trugen; sie umzuschreiben
+macht sie an mehreren Stellen falsch (siehe Tabelle oben).
+
+**Stehen gelassen, aber nicht stillschweigend:** Ein Absatz am Kopf der Datei
+sagt jetzt, dass **22 Pfade dort ins Leere zeigen**, warum das so bleibt, und
+wo man stattdessen nachsieht (`docs/Technik.md` 2).
+
+### Abnahme
+
+| | |
+|---|---|
+| tote Werkzeugpfade in `server/` **außerhalb** `version.php` | **60 → 0** |
+| in `version.php` (Geschichte, bewusst) | **22**, benannt im Dateikopf |
+| berührte Dateien | 27 |
+| `php -l` / `node --check` der berührten Dateien | **0 Fehler** |
+
+Gemessen mit demselben Befehl vorher und nachher: jeder `tools/…`-Pfad aus
+`server/` gegen `[ -e ]` gehalten — nicht mit einer Liste, die ich geführt
+hätte.
+
+## 5j. Messprotokoll PK-04/5 — die 14 Symbolzeichen und die 8 Emoji (23.09.2026)
+
+**Ergebnis vorweg: es gibt nichts zu bereinigen, und Backlog Nr. 279 ist in
+seiner Formulierung falsch.** Sie lautet „Vierzehn Zeichen stehen im Markup,
+wo ein Symbol hingehört". Alle vierzehn sind einzeln im Satz gelesen worden:
+
+| Sorte | Zahl | Beispiel |
+|---|---|---|
+| **Kommentar, der ein Symbol beschreibt** | **9** | `suche.php:317` „Die gesetzten Filter als blaue Plaketten mit ✕"; `version.php:82` „das Kennzeichen der Vorbelegung (★)"; `missiontable.js:47` „⚠ vorhanden, aber nicht lesbar" |
+| **Multiplikationszeichen in sichtbarem Text** | **5** | `plattform_lib.php:506` „≥ 2× größtes Komplett-Backup"; `validate_lib.php:290` „($n×)"; `nachbearbeitung_lib.php:359` „3× Fahrzeug" |
+| **Zeichen, das statt eines Symbols steht** | **0** | — |
+
+Die fünf `×` sind **typografisch richtig**: Das Multiplikationszeichen ist
+nicht der Buchstabe x, und ein Symbol aus dem Symbolsatz wäre hier falsch.
+
+**Die acht Emoji ebenso.** Sie stehen alle in `pwquality.js:146/147`, in
+einem Kommentar, der erklärt, warum nach **Graphemen** und nicht nach
+UTF-16-Einheiten gezählt wird: „die erste Fassung sah in „😀😀😀😀" keine
+Wiederholung, sondern acht verschiedene Zeichen — „Passwort😀😀😀😀x" ging
+als „gut" durch". Ohne die Emoji erklärt der Absatz nichts mehr.
+
+**22 von 22 Hinweisen sind begründet.** Das ist genau Backlog Nr. 184 („die
+Prüfung kann Prosa nicht von einem Symbol unterscheiden") und der Grund,
+warum PK-04/1b die Zählung vom **Befund** zum **Hinweis** gemacht hat. Der
+Beleg dafür stand bis heute aus — hier ist er.
+
+## 5k. Messprotokoll PK-04/5b — das Binnen-I, gefächert (23.09.2026)
+
+### Was vorweg gesagt gehört
+
+**Das Prüfmittel war für seinen Zweck untauglich, und das ist erst beim
+Reparieren aufgefallen.** Die Textprobe liest ohne Rücksicht auf Groß- und
+Kleinschreibung, solange ein Muster nicht `"gross": true` setzt — und beide
+`hausform`-Muster setzten es nicht. Folge:
+
+| | gemessen |
+|---|---|
+| kleingeschriebene Treffer im Bestand (fast alle **Bezeichner**) | **1 233** |
+| großgeschriebene | 913 |
+| `BetreiberIn` (die **Lösung**) als Treffer von `hausform-weiblich` | **ja** — `Betreiber` + `In` ≈ `in` |
+| `AVV.md` beim Umbau | **22 → 47**, obwohl 44 Stellen richtig umgestellt worden waren |
+
+Die Regel zählte hoch, je mehr man reparierte. Behoben mit E-PK-36;
+nachgerechnet an vier Formen:
+
+| | `Betreiberin` (Fehler) | `Betreiber` (Fehler) | `BetreiberIn` (Lösung) | `betreiberin` (Bezeichner) |
+|---|---|---|---|---|
+| vorher | trifft | trifft | **trifft** | **trifft** |
+| nachher | trifft | trifft | — | — |
+
+### Die Fächerung
+
+**15 Eimer, 43 Dateien, eine Datei bei genau einem Agenten** (E-PK-35; die
+Regel dahinter: Binnen-I, Adressen und Namen liegen teils in derselben Datei,
+also wird nach **Datei** gefächert und nicht nach Regelklasse — drei Agenten
+auf `Handbuch.md` wären drei Fassungen, und die letzte gewinnt).
+
+| | Zahl |
+|---|---|
+| Treffer vor dem Umbau (groß gezählt, über die 43 Dateien) | **245** |
+| danach | **44** |
+| davon richtig stehen gelassen | 44 |
+| `hausform` gesamt, nach E-PK-36 | **434 → 27** |
+| nach Aufnahme der sieben neuen Wörter (E-PK-38) | 130, davon 34 begründet ausgenommen → **96** |
+| in `server/` am Ende | **0** |
+
+### Gegenproben gegen den schlimmsten Fehler
+
+Ein Umbau an sichtbarem Text darf keinen Bezeichner anfassen. Gemessen über
+den ganzen Diff, jeweils „was steht nur in den alten Zeilen" gegen „was steht
+nur in den neuen":
+
+| Bezeichnerart | verschwunden | erfunden |
+|---|---|---|
+| PHP-Variablen | **0** | **0** |
+| Funktionsaufrufe | **0** | **0** |
+| Feldschlüssel (`'x' =>`) | **0** | **0** |
+| CSS-Klassen (`class="…"`) | **0** | **0** |
+
+Dazu `php -l` über 37 berührte Dateien und `node --check` über 3: **0 Fehler**.
+
+**Eine fünfte Messung war wertlos und wird hier trotzdem genannt:** Der
+Versuch, SQL-Spalten über `[a-z_]+\.[a-z_]+` zu zählen, traf Dateinamen
+(`erzeugen.py`, `pruefen.php`) aus der Pfadberichtigung in 5a. Eine Null
+daraus hätte nichts belegt.
+
+### Der strukturelle Befund über die Fächerung selbst
+
+**Eine Fächerung nach Datei findet keine dateiübergreifende Konsistenz.**
+`server/rechtstext_seite.php` sagt jetzt „Die BetreiberIn dieser Installation
+hat …"; `docs/Handbuch.md` **zitierte** diesen Satz in der alten Fassung.
+Beide lagen bei verschiedenen Agenten, und keiner sah beide. Kein Agent hat
+einen Fehler gemacht — die **Aufteilung** hat ihn erzeugt.
+
+Gefunden mit einem eigenen Abgleich: alle alten sichtbaren Zeichenketten aus
+dem `server/`-Diff gegen `docs/` halten. **Und der erste Lauf dieses Abgleichs
+meldete eine grüne Zahl ohne Gegenstand** — er normalisierte den Leerraum,
+ließ aber die Blockzitat-Marke stehen, und aus
+
+    „Der Betreiber dieser
+    > Installation hat noch kein Impressum hinterlegt."
+
+wurde `Der Betreiber dieser > Installation hat`, was auf nichts passte.
+Behoben; danach:
+
+| | |
+|---|---|
+| geprüfte alte Zeichenketten | **15** |
+| veraltete Zitate in **lebenden** Dokumenten | **1** (`docs/Handbuch.md`, nachgezogen) |
+| in Geschichte (Changelog, erledigte Konzepte) | **4**, bleiben |
+
+### Was die Zahl „hausform = 0" bedeutet — und was nicht
+
+Sie misst **achtzehn Wörter** in **fünf Bereichen**: `server/*.php`,
+`server/api/*.php` (sichtbarer Text **ohne Kommentare**),
+`server/assets/*.js`, die Android- und Uhr-Ressourcen und **14 normative
+Dokumente**. Nicht gemessen werden `Rahmenplan.md`, `Backlog.md`,
+`CHANGELOG.md`, `docs/konzepte/**` und **alle Kommentare**. Der Umbau hat die
+Kommentare mitgenommen, aber **das Prüfmittel kann es nicht bestätigen** —
+wer die Zahl zitiert, zitiert diesen Absatz mit.
+
+**Ein Dokument fehlte im Messbereich, und das war derselbe Fehler noch
+einmal:** `docs/Was-ist-NAdoku.md` wird **ausgeliefert** (`hochfahren.sh`
+kopiert sie nach `server/doku/`, `doku_lib.php` rendert sie als Seite
+`was-ist-nadoku`) und stand nicht in Bereich c. Sie trug zwei Treffer, die
+niemand sah. Eingetragen; die Null darüber war keine Aussage über diese
+Datei, sondern über ihr Fehlen in der Liste.
+
 ## 6. Befunde der Umsetzung
 
 **Zur Nummernvergabe, damit niemand darüber stolpert.** `F-PK-NN` meint in

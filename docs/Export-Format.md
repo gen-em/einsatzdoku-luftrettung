@@ -17,7 +17,7 @@ sendet der Server die betroffenen Felder gar nicht erst mit — siehe
 Der Export kennt **eine** Schranke. Sie heißt seit Web 5.8.0
 „Personenbezogene Angaben einschließen"; bis dahin hieß sie „Patientendaten
 einschließen" und deckte nur die `pat_`-Felder ab. Alles andere ging immer mit
-— auch Angaben, die nicht dem Patienten gehören, aber trotzdem einer Person.
+— auch Angaben, die nicht der PatientIn gehören, aber trotzdem einer Person.
 
 Unter der Schranke stehen:
 
@@ -25,7 +25,7 @@ Unter der Schranke stehen:
 |---|---|
 | Patientendaten | `pat_mission_no`, `pat_nachname`, `pat_vorname`, `pat_geburtsdatum`, `pat_alter`, `pat_diagnose`, `pat_ort_adresse`, `pat_ort_lat`, `pat_ort_lon`, `pat_ort_beschreibung` |
 | Besatzung | `tag_crew_*` und `crew_*` (Einsätze) sowie `crew_*` (Diensttage) — je Rolle des Katalogs eine Spalte, siehe 3.8 |
-| Weitere Namen | `bw_info` („Bergwacht: Namen / Infos"), `other_ema` (anderer Notarzt) |
+| Weitere Namen | `bw_info` („Bergwacht: Namen / Infos"), `other_ema` (andere NotärztIn) |
 | Freitext | `notizen` (Diensttag). Die `notizen` des **Einsatzes** stehen seit Web 19 im verschlüsselten Block und fallen mit ihm — die Schranke wirkt für sie also weiter, nur über den `pat_blob` statt über eine eigene Spalte |
 | Ort des Geschehens | `phase_02_lat/lon` … `phase_09_lat/lon`, `hoehe_einsatzort_m`, GPX-Spuren unter `tracks/` |
 
@@ -214,7 +214,7 @@ Dateien aus beiden Arten dieselbe Form haben.
 Die Spalte bleibt damit auch bei unbekannten Personen gefüllt. Das CSV
 unterscheidet die beiden Fälle, siehe 3.7.
 
-**Bewusst nicht in Excel (Standard)** (nur im CSV): Anderer Notarzt, Beschreibung
+**Bewusst nicht in Excel (Standard)** (nur im CSV): Andere NotärztIn, Beschreibung
 Einsatzort, Höhenmeter, alle Phasen außer Alarmierung und Endzeit, sämtliche
 Koordinaten, Reanimationsdokumentation, Tracks, Ruhezeiten, die Herkunft des
 Datensatzes und — seit Web 14.1.0 — die **Geräteangaben** (`geraet_art`,
@@ -575,12 +575,12 @@ Besatzungsspalten sind personenbezogen.
 | `secondary` | 0/1 | — | nein | Sekundärtransport |
 | `winch` | 0/1 | — | nein | Windeneinsatz |
 | `winch_cycles` | int | — | nein | Windenzyklen gesamt (Formular: „Cycles") |
-| `winch_cycles_pat` | int | — | nein | Windenzyklen mit PatientIn (Formular: „Cycles mit Patient") |
+| `winch_cycles_pat` | int | — | nein | Windenzyklen mit PatientIn (Formular: „Cycles mit PatientIn") |
 | `winch_airload` | 0/1 | — | nein | Luftverladung |
 | `bergwacht` | 0/1 | — | nein | Bergwacht beteiligt |
 | `bw_unit` | text | — | nein | Bergwacht-Einheit |
 | `bw_info` | text | — | **ja** | Bergwacht: Namen / Infos |
-| `other_ema` | text | — | **ja** | Anderer Notarzt |
+| `other_ema` | text | — | **ja** | Andere NotärztIn |
 | `weitere_rettungsmittel` | text | — | nein | mission_resources.name, mit \| verkettet |
 | `notizen` | text | — | **ja** | pat_blob.notes — **verschlüsselt** (seit Web 19.0.0); ohne entsperrte Sitzung bleibt die Spalte leer, auch mit gesetztem Haken |
 | `pat_mission_no` | text | — | **ja** | Einsatznummer (pat_blob.mission_no) |

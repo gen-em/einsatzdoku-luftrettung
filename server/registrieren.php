@@ -125,7 +125,7 @@ $fristTage  = konten_reg_frist_tage();
 
 /* WELCHE TEXTE GELTEN GERADE (Backlog Nr. 231). Einmal gelesen und sowohl
  * fuer die Pruefung als auch fuer das Markup benutzt: Wuerden beide Seiten
- * getrennt fragen, koennte die Betreiberin zwischen Anzeige und Absenden
+ * getrennt fragen, koennte die BetreiberIn zwischen Anzeige und Absenden
  * einen Text in Kraft setzen, und das Formular verlangte einen Haken, den es
  * nie gezeigt hat. */
 $ewInKraft = einwilligung_in_kraft();
@@ -206,7 +206,7 @@ if ($offen && $_SERVER['REQUEST_METHOD'] === 'POST') {
                      * einzige Schreibweg lag am Tor beim Login.
                      *
                      * HIER UND NICHT ERST AM TOR, weil hier der Vertrag
-                     * geschlossen wird. Die Nutzerin erklaert mit dem Absenden
+                     * geschlossen wird. Die NutzerIn erklaert mit dem Absenden
                      * ihren Willen; das Tor ist dafuer da, eine NEUE Fassung
                      * nachzuholen, nicht die erste zu erheben. Stuende hier
                      * nichts, beantwortete sie dieselben Fragen zweimal.
@@ -224,7 +224,7 @@ if ($offen && $_SERVER['REQUEST_METHOD'] === 'POST') {
                      * Der Rueckgabewert wird bewusst nicht geprueft: Die
                      * Schleife laeuft ohnehin nur ueber das, was in Kraft
                      * war, als das Formular gebaut wurde — und hat die
-                     * Betreiberin einen Text inzwischen zurueckgezogen, ist
+                     * BetreiberIn einen Text inzwischen zurueckgezogen, ist
                      * das kein Fall fuer eine Fehlermeldung an die
                      * Registrierende, sondern einer fuer das Tor beim ersten
                      * Login. */
@@ -280,7 +280,7 @@ $unterzeile = match ($art) {
              es NICHT gibt. */ ?>
     <?= ui_meldung_markup('info',
         'Diese Installation nimmt Registrierungen nur auf Einladung an. '
-      . 'Wende dich an die Betreiberin — sie kann dir ein Konto anlegen.') ?>
+      . 'Wende dich an die BetreiberIn — sie kann dir ein Konto anlegen.') ?>
     <p class="anmeldung-neben"><a href="login.php">Zur Anmeldung</a></p>
 
   <?php elseif ($done): ?>
@@ -295,7 +295,7 @@ $unterzeile = match ($art) {
     <?php endif; ?>
 
     <?= ui_meldung_markup('info', $mitFrei
-        ? 'Nach der Bestätigung deiner Adresse prüft der Betreiber die '
+        ? 'Nach der Bestätigung deiner Adresse prüft die BetreiberIn die '
           . 'Registrierung — in der Regel innerhalb von ' . $fristTage . ' Tagen. '
           . 'Wegwerfadressen werden nicht angenommen.'
         : 'Nach der Bestätigung deiner Adresse legst du dein Passwort fest und '
@@ -308,7 +308,7 @@ $unterzeile = match ($art) {
                      'attr' => ' autofocus autocomplete="email"']); ?>
       <?php ui_feld(['name' => 'name', 'label' => 'Name',
                      'wert' => (string)($_POST['name'] ?? ''),
-                     'platzhalter' => 'Wie Kolleginnen dich kennen',
+                     'platzhalter' => 'Wie KollegInnen dich kennen',
                      'klein' => 'Steht in der Kopfleiste und auf deinen Einsätzen. '
                               . 'Lässt sich später ändern.',
                      'attr' => ' maxlength="120" autocomplete="name"']); ?>

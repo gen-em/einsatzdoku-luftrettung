@@ -134,7 +134,7 @@ Daten erst nach Server-Bestätigung.
 │   ├── gpx_lib.php        GPX 1.1 aus einer oder mehreren Spuren — die
 │   │                       EINZIGE Stelle, die GPX schreibt (4.97b)
 │   ├── gpx.php            der Abruf. Bewusst NICHT unter api/: Ein Link, den
-│   │                       eine Nutzerin anklickt, braucht bei Sitzungsende
+│   │                       eine NutzerIn anklickt, braucht bei Sitzungsende
 │   │                       die Anmeldeseite und kein JSON (4.97b)
 │   ├── tag_spuren.php     die Spuren eines Diensttages, einzeln oder mehrere
 │   │                       auf einmal abrufbar: Karte plus chronologische
@@ -1393,7 +1393,7 @@ aus dem Kontostand — nie aus dem, was der Browser mitschickt:
 Geschrieben wird in beiden Fällen in **einer Transaktion**. Passt der Schlüssel
 nicht, bricht der Vorgang im Browser ab, bevor etwas gesendet wird — das Konto
 bleibt unverändert. Denselben Weg nutzt auch `install.php`: Der Installer legt
-den Administrator **ohne** Passwort an und zeigt auf der Erfolgsseite den
+die AdministratorIn **ohne** Passwort an und zeigt auf der Erfolgsseite den
 Einmal-Link.
 
 **Backup (portabel):** Der Browser holt den Bestand in Stücken:
@@ -1933,7 +1933,7 @@ Suchfeld. Die Parameternamen sind Teil bereits verschickter Links und dürfen
 | `wd` | Wochentage (`1`=Mo … `7`=So, kommagetrennt) | `c1`…`c5` | Besatzung P1, P2, HEMS, FR, Sonstige |
 | `wi` | Windeneinsatz (`j`/`n`) | `crew_driver`, `crew_trainee` | Besatzung Fahrer, Praktikant |
 | `cv` / `cb` | Cycles von / bis | `rm` | Weiteres Rettungsmittel |
-| `pv` / `pb` | Cycles mit Patient von / bis | `av` / `ab` | Alter von / bis |
+| `pv` / `pb` | Cycles mit PatientIn von / bis | `av` / `ab` | Alter von / bis |
 | `lv` | Luftverladung (`j`/`n`) | `kv` / `kb` | Strecke von / bis (km) |
 | `bw` | Bergwacht (`j`/`n`) | `ev` / `eb` | Einsatzdauer von / bis (min) |
 | `bu` | Bergwacht-Bereitschaft | `s` | Sortierspalte |
@@ -3293,7 +3293,7 @@ Spur sieht aus wie eine ganze; eine abgelehnte sieht man.
 Diese Anwendung hat bewusst **keinen Cron als Voraussetzung**: Sie soll auf
 einfachem Webspace laufen, und dort gibt es oft keinen. Der einzige Zeitgeber
 war bis Web 10.0.0 `run_cleanup_if_due()` — huckepack auf der Anfrage der
-ersten Nutzerin des Tages. Das trug, solange die Arbeit klein war.
+ersten NutzerIn des Tages. Das trug, solange die Arbeit klein war.
 
 Mit S2 bleibt sie das nicht. Schon die damalige Waisenprüfung war ein
 Anti-Join über die ganze Spurtabelle und kostete gemessen **4,07 s bei
@@ -3630,7 +3630,7 @@ Zwei Fehler steckten hier beim ersten Anlauf, beide beim Messen aufgefallen:
 `betrieb_jobs.php` zeigt je Job letzten Lauf, Auslöser, Rückstand und letzten
 Fehler. `letzter_fehler` steht in der Tabelle und nicht nur im
 Fehlerprotokoll: Auf geteiltem Hosting kommt an dieses Protokoll nicht jede
-Betreiberin heran, und ein dauerhaft scheiternder Job soll auffallen. Die
+BetreiberIn heran, und ein dauerhaft scheiternder Job soll auffallen. Die
 Wartung bleibt **gegenüber der Anfrage still** — sie darf keine Seite
 kaputtmachen.
 
@@ -3661,7 +3661,7 @@ denselben Bestand.
 
 #### Warum serverseitig — und warum das die erste ausgelieferte Datei ist
 
-Bis Web 10.2.0 entstand **jede** Datei, die auf der Platte einer Nutzerin
+Bis Web 10.2.0 entstand **jede** Datei, die auf der Platte einer NutzerIn
 landet, im Browser aus einem Blob. Das hat einen Grund und keinen Zufall: Ihr
 Inhalt ist Ende-zu-Ende verschlüsselt, der Server **kann** ihn nicht
 zusammensetzen.
@@ -3691,7 +3691,7 @@ entscheidet **allein am Pfad**: Enthält er `/api/`, gilt die Anfrage als
 `fetch()` eines Skripts und bekommt bei abgelaufener Sitzung JSON 401 statt
 der Anmeldeseite. Diese Annahme stimmte, solange nichts in der Oberfläche nach
 `api/` **verlinkte** — der GPX-Abruf ist der erste `<a href>`, den eine
-Nutzerin selbst anklickt. Nach einer Mittagspause hätte sie
+NutzerIn selbst anklickt. Nach einer Mittagspause hätte sie
 `{"error":"session_ende"}` im Browserfenster gesehen.
 
 #### Drei Schranken, die es NICHT gibt — und warum
@@ -3850,7 +3850,7 @@ ist. Ab Web 12.1.0 gehen sie auf eine **Gegenstelle**.
 #### Der Name
 
 **Backup-Ziel**, nicht Transportziel. `transport_dests` gibt es seit Web 4;
-das sind die Zielkliniken einer Patientin, gepflegt unter Stammdaten. Zwei
+das sind die Zielkliniken einer PatientIn, gepflegt unter Stammdaten. Zwei
 Dinge unter einem Wort, zwei Klicks voneinander entfernt — das lässt sich in
 einer Fehlermeldung nicht mehr auflösen (Konzept-S2, F-S2-G).
 
@@ -4040,10 +4040,10 @@ kennt kein `MLSD` und fährt damit als einziges den Rückfall auf `NLST` +
 `SIZE`; pyftpdlib fährt den Hauptweg. Gegen die echten Server: FTP 0,35 s,
 FTPS 1,85 s, SFTP 0,68 s für dieselben 64 Pakete, 64 von 64 byteweise gleich.
 
-**Der Grundpfad bedeutet je Protokoll etwas anderes.** vsftpd sperrt den
-Nutzer in sein Heimverzeichnis — dort ist `/` die Wurzel. OpenSSH tut das
+**Der Grundpfad bedeutet je Protokoll etwas anderes.** vsftpd sperrt die
+NutzerIn in ihr Heimverzeichnis — dort ist `/` die Wurzel. OpenSSH tut das
 nicht — dort ist `/` die Wurzel des Dateisystems. Ein Ziel mit „Pfad = /" legt
-seine Backups bei SFTP also dorthin, wohin der Nutzer im Dateisystem
+seine Backups bei SFTP also dorthin, wohin die NutzerIn im Dateisystem
 zeigt, und nicht in ein Heimverzeichnis.
 
 Was sie nicht prüfen kann — ein echtes Ziel im Internet —, steht an erster
@@ -4205,7 +4205,7 @@ mit 320 000 im Kopf auch nach der Anhebung lesbar.
 
 - **Herunterladen** gibt den Dump **unverschlüsselt** als `.sql.gz` — die
   Fassung für `mysql` und phpMyAdmin (E-S2-20). Sie geht an die
-  Administratorin, die sich eben angemeldet hat und ohnehin jede Zeile dieser
+  AdministratorIn, die sich eben angemeldet hat und ohnehin jede Zeile dieser
   Datenbank sehen kann.
 - **Versiegelt herunterladen** liefert dieselbe Datei unter einer Passphrase.
   Sie wird nicht doppelt verschlüsselt, sondern Block für Block *umgesiegelt*;
@@ -4705,7 +4705,7 @@ Der zweite ist der, den man vergisst. Dasselbe Muster wie `config.php` und
 `sicherungen/`, inklusive der doppelten Schreibweise: Die Action prüft
 Datei- und Verzeichnismuster getrennt.
 
-Hochgeladen wird per FTPS durch die Betreiberin.
+Hochgeladen wird per FTPS durch die BetreiberIn.
 
 #### Der Ordner selbst ist seit Web 15.6.0 gesperrt
 
@@ -6714,7 +6714,7 @@ unbemerkt nichts schreibt, ist keines.
 
 Der Mittelweg hat **drei Stufen, und alle drei müssen da sein**:
 
-1. `error_log()` mit der Kennung `protokoll:` — für die Betreiberin, die ins
+1. `error_log()` mit der Kennung `protokoll:` — für die BetreiberIn, die ins
    Serverprotokoll sieht.
 2. Der Zähler `protokoll_fehler` in `app_state` — er überlebt die Anfrage.
 3. Der Hinweis auf **Betrieb → Status** — er fällt jemandem auf, der nicht
@@ -7297,7 +7297,7 @@ hingewiesen hat, musste den Haken „Ich nehme die Vereinbarung zur
 Auftragsverarbeitung (AVV) an" setzen, während `avv.php` daneben den Leertext
 zeigte. `einwilligung_in_kraft()` beantwortet die Frage jetzt für beide
 Seiten; **Prüfung und Markup ziehen aus derselben Liste**, sonst könnte die
-Betreiberin zwischen Anzeige und Absenden einen Text in Kraft setzen und das
+BetreiberIn zwischen Anzeige und Absenden einen Text in Kraft setzen und das
 Formular verlangte einen Haken, den es nie gezeigt hat. Backlog Nr. 231.
 
 #### Wo die Annahme entsteht
@@ -7664,7 +7664,7 @@ der Vergleich kostet nichts, und ein Merker sorgt dafür, dass die Meldung
 einmal entsteht statt alle zehn Sekunden.
 
 **Ein zweiter Benachrichtigungskanal, weil Android die Einstellungen eines
-Kanals nach dem Anlegen der Nutzerin überlässt.** Der Kanal „Aufzeichnung"
+Kanals nach dem Anlegen der NutzerIn überlässt.** Der Kanal „Aufzeichnung"
 ist bewusst `LOW` und stumm; eine Warnung, die spürbar sein muss, kann nicht
 an einer Einstellung hängen, die für die Dauermeldung gemacht wurde.
 
@@ -7877,7 +7877,7 @@ Vergleich beider Auskünfte nebeneinander — steht in **Abschnitt 6.3a**.
 
 Es gibt keine dritte Stufe. Was weder Muss noch Empfohlen ist, wird **nicht
 vorausgesetzt** — namentlich der DDoS-Grundschutz des Hosters und die
-Verschlüsselung at rest. Beides ist eine Empfehlung an den Betreiber, keine
+Verschlüsselung at rest. Beides ist eine Empfehlung an die BetreiberIn, keine
 Anforderung an die Plattform.
 
 ### 5b.1 Eine Funktion, zwei Leser
@@ -8006,7 +8006,7 @@ Wert also nur **gesetzt**, nicht per `php_admin_value` **gesperrt**.
 
 **Sie gehört nicht ins Repositorium.** Der Pfad ist anlagenabhängig, und
 E-PP-04 sagt: Ein Hosterwechsel ändert `config.php`, keine Codezeile. Sie ist
-ein **Handgriff der Betreiberin**, und er steht als solcher im Runbook
+ein **Handgriff der BetreiberIn**, und er steht als solcher im Runbook
 (Abschnitt 7). Zwei Bedingungen: `.user.ini` wirkt nur bei CGI/FastCGI, und
 sie greift erst nach `user_ini.cache_ttl` (Vorgabe 300 s). Gegen Abruf über
 die Adresszeile deckt sie dieselbe Punktregel wie `.sitzungen/` selbst.
@@ -8310,7 +8310,7 @@ nicht behält; wer seit Jahren produktiv läuft, will die 365 Tage.
 
 `rate_ip()` rechnete mit `REMOTE_ADDR`. Hinter einem Reverse Proxy, einem
 Loadbalancer oder einem DDoS-Schutz ist das die Adresse **des Proxys** — der
-Ratenschutz zählte damit alle Nutzerinnen als eine und hätte sie gemeinsam
+Ratenschutz zählte damit alle NutzerInnen als eine und hätte sie gemeinsam
 ausgesperrt.
 
 `netz_client_ip()` wertet `X-Forwarded-For` aus, **aber nur**, wenn
@@ -8318,7 +8318,7 @@ ausgesperrt.
 (Adressen oder CIDR, IPv4 und IPv6; der Vergleich läuft byteweise über
 `inet_pton`). Die Liste ist **leer vorgegeben** — wer hier einträgt, sagt
 „von diesen Adressen glaube ich der Kopfzeile", und das ist eine Aussage über
-die eigene Netztopologie, die nur die Betreiberin treffen kann. Ohne Eintrag
+die eigene Netztopologie, die nur die BetreiberIn treffen kann. Ohne Eintrag
 rechnet alles wie vor 20.7.0.
 
 Genommen wird der **letzte** Eintrag der Kette, nicht der erste: Den ersten
@@ -8439,8 +8439,8 @@ in der Datenbank stehen.
 ### 5d.6 Zwei Adressen der Installation (Web 20.9.0, E-P5a-40)
 
 Dieselbe Fehlerklasse wie beim Namen, eine Fassung später gefunden: In
-**sieben** Mailtexten stand dieselbe persönliche Adresse des Entwicklers, fest
-im Quelltext. Eine fremde Betreiberin verwies ihre NutzerInnen an einen
+**sieben** Mailtexten stand dieselbe persönliche Adresse der EntwicklerIn, fest
+im Quelltext. Eine fremde BetreiberIn verwies ihre NutzerInnen an einen
 Unbekannten.
 
 | Funktion | `app_state` | Wofür | Wenn leer |
@@ -8532,7 +8532,7 @@ Prüffall, aus dem man den Suchbegriff entfernt, prüft nichts.
 
 **Es sind Vorgaben, keine Festverdrahtungen** — beide Clients nehmen eine
 andere Adresse an, und die Uhr zeigt das Feld in Garmin Connect. Eine
-Betreiberin, die diese Anwendung aufsetzt, baut ihre Apps ohnehin selbst
+BetreiberIn, die diese Anwendung aufsetzt, baut ihre Apps ohnehin selbst
 (Signatur, Store-Eintrag); dabei setzt sie die Vorgabe. Sie auf
 `nadoku.beispieldomain.de` zu ziehen hieße, dass die App **dieser**
 Installation ab Werk ins Leere zeigt — und kostete je eine eigene
@@ -8653,7 +8653,7 @@ das Konto, nicht die Adresse**.
 
 Für die Betriebsseite gibt es `rate_sperre_aufheben($topf, $merkmal, $wer)`.
 **Nicht `rate_erfolg()`**: Jene bildet die Merkmale aus dem *Aufrufer* — auf
-der Betriebsseite wäre das die IP der Administratorin; der Knopf löschte ihre
+der Betriebsseite wäre das die IP der AdministratorIn; der Knopf löschte ihre
 eigene Zeile, meldete Erfolg, und die Sperre bliebe stehen.
 
 #### 5e.6 Das Fenster zwischen Deploy und `update.php`
@@ -8813,7 +8813,7 @@ Spalten und ruft jetzt `sicherheit_bremse_geraete()`.
 
 `rate_sperre_aufheben($topf, $merkmal, $wer)`, über POST mit CSRF-Token.
 **Nicht `rate_erfolg()`**: Jene bildet die Merkmale aus dem *Aufrufer* — das
-wäre die Adresse der Administratorin; der Knopf löschte ihre eigene Zeile,
+wäre die Adresse der AdministratorIn; der Knopf löschte ihre eigene Zeile,
 meldete Erfolg, und die Sperre bliebe stehen. `$wer` ist die Kontokennung der
 Handelnden; ohne sie bliebe die Spalte `wer` leer, und das Ereignis
 „aufgehoben" sagte nicht, wer aufgehoben hat.
@@ -9601,7 +9601,7 @@ sondern an den **Umgebungen**:
 > **BEHOBEN am 21.09.2026** (Prüfpunkt 22, F-KH-U-34). Es waren drei
 > *Repository secrets*, zwei Monate alt und damit älter als die Umstellung
 > auf Umgebungen — Reste, die beim Umzug liegen geblieben sind;
-> Organisationsgeheimnisse gab es keine. Die Betreiberin hat sie gelöscht,
+> Organisationsgeheimnisse gab es keine. Die BetreiberIn hat sie gelöscht,
 > die Gegenprobe ist gefahren (Lauf 35566000648: die Zielprobe schreibt,
 > holt zurück, vergleicht und löscht — mit den reinen Umgebungswerten).
 > **Der erste Schritt kann damit wieder fehlschlagen.**
@@ -9924,7 +9924,7 @@ und schreibt dessen Dateinamen neben den Tag in die Laufzusammenfassung
 2. **Staging auf den Stand des Tags zurücksetzen.** Die Laufzusammenfassung
    der Auslieferung dieses Tags nennt den Dateinamen des Komplett-Standes.
    Einspielen über **Betrieb → Wiederherstellen** (`wiederherstellen.php`),
-   als angemeldete Administratorin.
+   als angemeldete AdministratorIn.
    **Die Kette setzt nichts aus der Ferne zurück** (E-KH-16): Eine
    Wiederherstellung ist der einschneidendste Vorgang, den die Anwendung
    kennt, und sie bleibt dort, wo die Anwendung sie hingelegt hat.
@@ -10471,7 +10471,7 @@ endgültig ist.
 
 **Hinter einem Reverse Proxy (nach Web 20.7.0):** Steht die Anwendung hinter
 einem Reverse Proxy, Loadbalancer oder DDoS-Schutz, ist `REMOTE_ADDR` die
-Adresse *des Proxys* — der Ratenschutz zählt dann alle Nutzerinnen als eine
+Adresse *des Proxys* — der Ratenschutz zählt dann alle NutzerInnen als eine
 und sperrt sie **gemeinsam** aus. Abhilfe: in `config.php` den Block `netz`
 füllen.
 
@@ -10716,7 +10716,7 @@ und Konten mit `edka1:`-Hülle kommen nicht an ihre geschützten Angaben.
 *Was ausdrücklich **nicht** passiert:* „Passwort falsch". Die Meldung
 unterscheidet gegenüber der NutzerIn nicht zwischen „fehlt" und „anderer
 Wert" (dieselbe Linie wie `sk_oeffnen()`); den Unterschied sieht die
-Betreiberin auf Status und Karte. Konten mit `edk1:`-Hülle — darunter das
+BetreiberIn auf Status und Karte. Konten mit `edk1:`-Hülle — darunter das
 Demo-Konto — sind von alledem nicht betroffen und melden sich weiter an.
 
 **Zeile „Schlüsselableitung" auf Betrieb → Status (seit Web 5.0.1; bis
@@ -11193,8 +11193,8 @@ liegen — sie ersetzen den Platzhalter 1:1 (gleicher Name, gleicher `viewBox`).
 ### Installation: Logo, Impressum und Datenschutz (R32, seit Web 9.11.0;
 Seite seit Web 15.2.0)
 
-**Die Anwendung liefert keinen Rechtstext mit.** Was darin steht, ist Sache des
-Betreibers; die Anwendung stellt zwei öffentliche Seiten, einen Editor und die
+**Die Anwendung liefert keinen Rechtstext mit.** Was darin steht, ist Sache der
+BetreiberIn; die Anwendung stellt zwei öffentliche Seiten, einen Editor und die
 Verweise in jeder Fußzeile. Der Leerzustand ist die Auslieferung.
 
 **Aus „Rechtstexte" ist mit Web 15.2.0 „Installation" geworden** (E-S8-05).

@@ -306,7 +306,7 @@ ui_seite_start(['titel' => 'Suche']);
         <li><code>bergwacht -winde</code> — der erste ja, der zweite nicht
           (<code>NICHT</code>, <code>NOT</code> und <code>!</code> gehen auch)</li>
         <li><code>"zwei wörter"</code> — genau diese Folge</li>
-        <li><code>(sturz ODER fraktur) oberstdorf</code> — Klammern binden
+        <li><code>(sturz ODER fraktur) hochkreuth</code> — Klammern binden
           zusammen; ohne sie bindet UND stärker als ODER</li>
       </ul>
       <p class="feld-hinweis">Groß- und Kleinschreibung spielt nirgends eine

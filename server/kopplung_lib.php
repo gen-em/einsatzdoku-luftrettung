@@ -6,7 +6,7 @@ require_once __DIR__ . '/email_lib.php';   // ist_dublettenfehler()
 /**
  * KOPPLUNGSSITZUNGEN (Web 13.0.0, S5 / R49) — die Schicht zwischen dem
  * Endpunkt (pair.php), der Geraeteseite (einstellungen.php) und der
- * Kopplungsprobe (tools/kopplungsprobe/).
+ * Kopplungsprobe (tools/proben/kopplung/).
  *
  * WARUM EINE EIGENE DATEI. Drei Stellen greifen auf dieselbe Tabelle zu, und
  * zwei Regeln daran duerfen nirgends verschieden ausgelegt werden:

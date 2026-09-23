@@ -29,7 +29,7 @@ require_once __DIR__ . '/serverkrypto_lib.php';
  *          für die Zugangsdaten selbst nie — sie sind im Klartext mitzulesen.
  *          Die Oberfläche sagt das an der Stelle, an der man FTP auswählt.
  *   FTPS   verschlüsselt die Leitung, aber `ext/ftp` PRÜFT DAS ZERTIFIKAT
- *          NICHT. Nachgewiesen in `tools/versandprobe/` gegen einen Server mit
+ *          NICHT. Nachgewiesen in `tools/proben/versand/` gegen einen Server mit
  *          selbst ausgestelltem Zertifikat ohne jede Vertrauenskette: Die
  *          Verbindung kommt zustande. Schutz gegen Mitlesen also ja, Schutz
  *          gegen einen untergeschobenen Server nein.
@@ -92,7 +92,7 @@ function sz_protokoll_erlaubt(string $prot): bool
 }
 
 /**
- * Ein Fehler auf dem Weg zum Ziel — mit einem Satz, der einer Betreiberin
+ * Ein Fehler auf dem Weg zum Ziel — mit einem Satz, der einer BetreiberIn
  * etwas sagt.
  *
  * Kein `RuntimeException` von der Stange: Jeder Aufrufer will diese eine Art
@@ -143,7 +143,7 @@ interface Zielweg
  * Aus einer PHP-Warnung einen Satz machen, den man beantworten kann.
  *
  * Die Originalmeldung bleibt in Klammern stehen. Das ist Absicht: Der
- * verständliche Satz ist für die Betreiberin, der englische Rest für den Fall,
+ * verständliche Satz ist für die BetreiberIn, der englische Rest für den Fall,
  * dass der verständliche Satz danebenliegt. Eine Meldung, die das Original
  * wegwirft, ist bei einem seltenen Fehler wertlos.
  */
@@ -211,7 +211,7 @@ function sz_name_gueltig(string $name): bool
 /**
  * Grundpfad und Rest zu einem fernen Pfad zusammensetzen.
  *
- * Er heisst `grundpfad` und nicht `basis`: Die Wortliste (`tools/wortliste/`)
+ * Er heisst `grundpfad` und nicht `basis`: Die Textprobe (`tools/quelltext/textprobe.py`, bis PK-04 „Wortliste")
  * führt „Basis" als Luftbegriff — gemeint ist dort die Luftrettungsstation.
  * Hier wäre es dasselbe Wort in einer völlig anderen Bedeutung, und eine
  * Ausnahme dafuer einzutragen hiesse, die Liste um einen Fall zu erweitern,
@@ -366,7 +366,7 @@ final class ZielFtp implements Zielweg
     {
         /* FTP und FTPS haben nichts, womit sich ein Server wiedererkennen
          * liesse: FTP ist im Klartext, und `ext/ftp` prüft bei FTPS kein
-         * Zertifikat (nachgewiesen in tools/versandprobe/). Hier `null`
+         * Zertifikat (nachgewiesen in tools/proben/versand/). Hier `null`
          * zurückzugeben ist die ehrliche Antwort — eine erfundene Prüfsumme
          * wäre schlimmer als keine. */
         return null;
@@ -405,7 +405,7 @@ final class ZielFtp implements Zielweg
             /* `$rat` springt nur ein, wenn PHP GAR NICHTS gesagt hat. Genau
              * das tut `ftp_connect()` auf einem geschlossenen Port: Es gibt
              * `false` zurück und schweigt. Die Meldung hiess dann „kam nicht
-             * zustande." und liess die Betreiberin ohne den nächsten Schritt
+             * zustande." und liess die BetreiberIn ohne den nächsten Schritt
              * stehen (Versandprobe, Teil 8). */
             throw new ZielFehler($was . ($warnung !== null
                 ? ' ' . sz_klartext($warnung)
@@ -616,7 +616,7 @@ final class ZielSftp implements Zielweg
  * `SHA256:` plus base64 ohne Füllzeichen — dasselbe, was
  * `ssh-keyscan host | ssh-keygen -lf -` ausgibt. Das ist der Punkt: Wer den
  * Fingerabdruck in der Oberfläche vergleichen soll, muss ihn irgendwo her
- * haben, und diese eine Zeile hat jede Administratorin schon einmal gesehen.
+ * haben, und diese eine Zeile hat jede AdministratorIn schon einmal gesehen.
  */
 function sz_fingerabdruck(string $hostschluessel): string
 {
@@ -1687,7 +1687,7 @@ function sz_loeschungen(int $tage = SZ_PROTOKOLL_TAGE, int $hoechstens = 50): ar
  * SIE FRAGT DIE ZIELE NICHT — sie liest das Protokoll. Eine Statusseite, die
  * drei FTP-Verbindungen aufbaut, laedt zehn Sekunden; dieselbe Ueberlegung
  * wie bei `sz_versand_rueckstand()`. Was sie damit NICHT sieht: eine
- * Betreiberin, die von Hand aufgeraeumt hat. Der Hinweis sagt deshalb
+ * BetreiberIn, die von Hand aufgeraeumt hat. Der Hinweis sagt deshalb
  * „es ist nie etwas entfernt worden" und nicht „dort liegt zu viel".
  *
  * @return list<array{name:string,seit:string,dateien:int,bytes:int}>

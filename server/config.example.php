@@ -7,7 +7,7 @@ return [
         'pass' => 'CHANGE_ME',
     ],
     'app' => [
-        'base_url'  => 'https://einsatz.example.de',  // ohne Slash am Ende
+        'base_url'  => 'https://einsatz.example.invalid',  // ohne Slash am Ende
         'timezone'  => 'Europe/Berlin',               // Anzeige; Speicherung ist UTC
         'logo_path' => 'assets/images/gen-em_logo_helicopter.svg',  // Logo auf Login- und Einrichtungsseite
         'max_body_bytes' => 524288,                   // 512 KB Ingest-Limit
@@ -18,11 +18,11 @@ return [
         // steht, muss eine BetreiberIn selbst umstellen koennen.
     ],
     'smtp' => [                                       // z. B. eigener Stalwart-Server
-        'host' => 'mail.example.de',
+        'host' => 'mail.example.invalid',
         'port' => 465,                                // implizites TLS (SMTPS)
-        'user' => 'noreply@example.de',
+        'user' => 'noreply@example.invalid',
         'pass' => 'CHANGE_ME',
-        'from' => 'noreply@example.de',
+        'from' => 'noreply@example.invalid',
         'from_name' => 'Gen-EM NAdoku',
     ],
     // ---- Netz: vertrauenswuerdige Proxys (P5a/AP4, E-P5a-17) ----------

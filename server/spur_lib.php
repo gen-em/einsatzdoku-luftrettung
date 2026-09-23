@@ -1497,7 +1497,7 @@ function schnitt_vermerken(PDO $pdo, int $userId, string $quelleTyp, int $quelle
  * schreiben hiesse, sie beim Einspielen zwangslaeufig verwerfen zu lassen.
  * Er wird gezaehlt zurueckgemeldet, damit das nicht stumm geschieht.
  *
- * DIE SORTIERUNG IST FEST (`mission_id, id`). `tools/spurprobe/` vergleicht
+ * DIE SORTIERUNG IST FEST (`mission_id, id`). `tools/proben/spur/` vergleicht
  * zwei vollstaendige Sicherungen desselben Kontos auf Gleichheit; eine
  * Reihenfolge, die von der Speicherlage abhaengt, machte diese Probe rot,
  * ohne dass jemand die Ursache im Backup vermutete.

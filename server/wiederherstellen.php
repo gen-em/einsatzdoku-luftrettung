@@ -23,7 +23,7 @@ declare(strict_types=1);
  *      deren Kennung eintragen kann, hat Zugriff auf das Verzeichnis. Ohne
  *      ihn wäre die Seite in dem Zeitfenster zwischen „Datenbank leer" und
  *      „erstes Konto angelegt" für jede Person im Netz offen — und wer dort
- *      einen eigenen Dump einspielte, wäre danach der Administrator dieser
+ *      einen eigenen Dump einspielte, wäre danach die AdministratorIn dieser
  *      Installation.
  *
  *   3. DIE DATEI KOMMT AUS `sicherungen/eingang/`, NICHT AUS EINEM FORMULAR.
@@ -36,7 +36,7 @@ declare(strict_types=1);
  * Migrationslauf im Anschluss vor; er läuft hier trotzdem nicht mit, und
  * zwar aus dem Grund, aus dem `update.php` seit M6-01 zweistufig ist —
  * Migrationen können Spalten löschen, und deshalb steht zwischen Anzeigen und
- * Ausführen ein Knopf und eine angemeldete Administratorin. Eine Seite ohne
+ * Ausführen ein Knopf und eine angemeldete AdministratorIn. Eine Seite ohne
  * Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese Absicherung
  * heraus. Stattdessen sagt die Seite am Ende, ob der Dump aus einer anderen
  * Fassung stammt, und schickt zur Wartung. Im Runbook steht derselbe Schritt.

@@ -661,7 +661,7 @@ Festbreitenschrift, die ohnehin nicht schön umbricht, ist es richtig.
 > Adressen im Fließtext — gemessen als `<p>` mit `scrollWidth` 350 gegen
 > `clientWidth` 302.
 >
-> Der Text stammt von der **Betreiberin**, nicht aus dem Repositorium. Sie
+> Der Text stammt von der **BetreiberIn**, nicht aus dem Repositorium. Sie
 > soll eine Adresse hinschreiben dürfen, ohne zu wissen, wie breit ein Handy
 > ist. Die Regel gehört deshalb an den Baustein und nicht in eine Anleitung
 > für das Schreiben von Rechtstexten.
@@ -918,7 +918,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | eine Handlung, die löscht | `ui_knopf(['art' => 'gefahr'])`, im Blatt `blatt-gefahr` | roten Text |
 | eine Rückfrage in **einem Satz** | `data-confirm="…"` (`assets/confirm.js`) | ein eigener Dialog |
 | eine Rückfrage mit **Aufstellung** | eine eigene Seite mit Karte und Zeilen | einen Dialog mit viel Text |
-| dem Nutzer etwas sagen | `ui_meldung()` / `ui_meldung_markup($ton, …)` | ein `<p>` in Rot |
+| der NutzerIn etwas sagen | `ui_meldung()` / `ui_meldung_markup($ton, …)` | ein `<p>` in Rot |
 | einen Zustand an einer Zeile zeigen | `ui_plakette($text, ['ton' => …])` | ein farbiges Wort |
 | eine Zahl groß zeigen | `ui_kennzahl()` | eine Überschrift mit Zahl |
 | ein Eingabefeld mit Beschriftung | `ui_feld()` | `<label>Text <input></label>` |
@@ -2452,8 +2452,8 @@ Oberlinie (`--strich-stark`), damit die Gruppe sichtbar beginnt.
 Warnung „abweichende Crew" war Fließtext und bekam in Variante B des Mockups
 eine eigene Regel; freigegeben ist Variante A — die vorhandene
 `.plakette-orange` mit dem Symbol `warnung`, in Rot (`.plakette-rot`) für die
-Gruppe „Nicht zuordenbar". Das ist dieselbe Form wie überall sonst, und ein
-Leser erkennt sie ohne Lernen. **Die eine Abweichung:** In dieser Kopfzeile
+Gruppe „Nicht zuordenbar". Das ist dieselbe Form wie überall sonst, und eine
+LeserIn erkennt sie ohne Lernen. **Die eine Abweichung:** In dieser Kopfzeile
 darf die Plakette **umbrechen** (`white-space:normal`) — sie trägt hier einen
 Satz, keine Vokabel, und wäre bei 360 px sonst breiter als das Gerät.
 

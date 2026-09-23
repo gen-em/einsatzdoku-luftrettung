@@ -142,6 +142,14 @@ BEREICHE: dict[str, dict] = {
             # Datei jung ist, sondern weil ihn niemand eingetragen hat.
             "docs/Pruefablauf.md",
             "docs/Sandbox-Setup.md",
+            # `Was-ist-NAdoku.md` STEHT HIER SEIT PK-04/5, und dass sie gefehlt
+            # hat, ist derselbe Fehler noch einmal: Sie wird AUSGELIEFERT --
+            # `hochfahren.sh` kopiert sie nach `server/doku/`, `doku_lib.php`
+            # rendert sie als Seite `was-ist-nadoku`. Damit ist sie sichtbarer
+            # Text wie das Handbuch, und sie trug zwei Treffer, die niemand
+            # sah, weil der Bereich sie nicht las. Die Null darueber war keine
+            # Aussage ueber diese Datei, sondern ueber ihr Fehlen in der Liste.
+            "docs/Was-ist-NAdoku.md",
             # DIE RECHTSTEXTE GEHOEREN HIERHER, seit 17.09.2026 (P5b, E-P5b-25).
             # Sie sind Entwuerfe in `docs/`, aber ihr Ziel ist die Tabelle
             # `rechtstexte`, und von dort rendern `nutzungsbedingungen.php`,

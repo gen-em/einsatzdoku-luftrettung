@@ -198,12 +198,6 @@
       "begruendung": "RTH neben NEF, NAW und RTW: Fahrzeugtypen, nebeneinander genannt (E-P2-14). RTH bezeichnet Luftfahrt und bleibt."
     },
     {
-      "id": "rollenaufzaehlung",
-      "zeile": "Pilot 1, Pilot 2, HEMS-TC, Flugretter",
-      "klasse": "F",
-      "begruendung": "Aufzaehlung der vier Luftrollen im Handbuch. Fachrollen; sie erscheinen nur an luftgebundenen Rettungsmitteln."
-    },
-    {
       "id": "rolle-am-rettungsmittel",
       "zeile": "ein Hubschrauber mit Pilot 1 und HEMS-TC|weil ein Hubschrauber eine Winde|Windenhaken Jahre später am Hubschrauber",
       "klasse": "F",
@@ -700,6 +694,85 @@
         "hausform-maennlich"
       ],
       "begruendung": "E-PK-26 regelt die Hausform fuer ROLLEN VON MENSCHEN (NutzerIn, BetreiberIn). `konfig_lib.php` ist der eine Leser fuer `config.php` -- ein Stueck Code, kein Mensch, und `LeserIn` waere hier sinnlos. Die Sperrliste kann das nicht unterscheiden, weil sie am Wort misst und nicht am Gemeinten. Eingetragen 22.09.2026 beim Zusammenfuehren von Schritt 15 (PR #74), der die Zeile mitbringt."
+    },
+    {
+      "id": "format-spaltennamen-fremd",
+      "klasse": "Bestand",
+      "muster": [
+        "hausform-rollen-maennlich",
+        "hausform-rollen-weiblich"
+      ],
+      "zeile": "expectedHeaders|exportOrder|reviewColumns|columns:|'Pilot':|^\\s*'[^']+'(, *'[^']+')+\\],?\\s*$|'Pilot 1', 'Einsatznummer'",
+      "begruendung": "E-PK-39: SPALTENNAMEN EINER FREMDEN DATEI. Das Importprofil „GuteSeele\" gleicht seine Spalten gegen die Kopfzeile einer Excel-Datei ab, die nicht aus diesem Haus kommt. Wird „Pilot\" hier zu „PilotIn\", findet der Import die Spalte nicht mehr -- und zwar still, weil eine fehlende Spalte leer bleibt statt zu scheitern. Dieselbe Ueberlegung wie beim `exportTitle` (Auftraggeber 23.09.2026): Was gegen etwas ausserhalb des Hauses passen muss, folgt dessen Wortlaut, nicht unserem. ERWEITERT: Die Listen sind MEHRZEILIG -- `expectedHeaders` steht in Zeile 111, der Treffer `'Pilot'` in Zeile 113. Eine Ausnahme, die nur die erste Zeile kennt, laesst die Fortsetzung durch. Deshalb faengt das Muster zusaetzlich jede Zeile, die NUR aus Zeichenketten und Kommata besteht -- die Form einer Spaltenliste."
+    },
+    {
+      "id": "format-spaltennamen-eigen",
+      "klasse": "Bestand",
+      "muster": [
+        "hausform-rollen-maennlich",
+        "hausform-rollen-weiblich"
+      ],
+      "datei": "docs/Export-Format.md",
+      "zeile": "^\\| *[0-9]+ *\\| *(Pilot|Flugretter|Fahrer|Praktikant)|^\\| *(Pilot|Flugretter|Fahrer|Praktikant)[^|]*\\| *`",
+      "begruendung": "E-PK-39, zweiter Teil: DIE SPALTENUEBERSCHRIFTEN DER EIGENEN AUSGABE. Sie stehen so in jeder CSV- und Excel-Datei, die diese Anwendung erzeugt, und gehen mit ihr aus dem Haus -- an Verwaltungen, an Kooperationspartner, in Jahreslisten, die jemand fortschreibt. Der Auftraggeber hat denselben Fall beim `exportTitle` entschieden: stehen lassen. Diese Tabelle DOKUMENTIERT die Ueberschriften; sie zu gendern, ohne die Ausgabe zu aendern, waere eine falsche Dokumentation, und beides zu aendern waere die Entscheidung, die dort anders gefallen ist."
+    },
+    {
+      "id": "projektname-notarzt",
+      "klasse": "Homonym",
+      "muster": [
+        "hausform-rollen-maennlich"
+      ],
+      "zeile": "Einsatzdokumentation Notarzt",
+      "begruendung": "EIGENNAME, kein Rollenwort. „Einsatzdokumentation Notarzt\" ist der Name dieses Projekts -- er steht in der Fusszeile der Anmeldeseite, im Kopf jedes Komplett-Backups und als Vorgabe des Instanznamens. Ein Eigenname wird nicht gegendert; „Einsatzdokumentation NotärztIn\" waere ein anderes Produkt. E-PK-38."
+    },
+    {
+      "id": "rollenbeschriftungen-export",
+      "klasse": "Bestand",
+      "muster": [
+        "hausform-rollen-maennlich",
+        "hausform-rollen-weiblich"
+      ],
+      "zeile": "'label' *=> *'(Pilot|Flugretter|Fahrer|Praktikant)|p1: 'Pilot 1'|Pilot 1, Pilot 2|Fahrer, Praktikant|Pilot 1 und HEMS-TC|Besatzung Fahrer, Praktikant|bodengebunden Fahrer",
+      "begruendung": "E-PK-39: DIE FUENF ROLLENBESCHRIFTUNGEN SIND SPALTENUEBERSCHRIFTEN. `CREW_ROLES` in db.php 912 liefert sie ueber `crew_rolle_text()`, und sie stehen als Spalten 14 bis 19 in jeder CSV- und Excel-Ausgabe (docs/Export-Format.md 181-186). Sie gehen mit der Datei aus dem Haus -- derselbe Fall wie der `exportTitle`, den der Auftraggeber am 23.09.2026 stehen lassen wollte. WICHTIG: Die Tabelle steht DREIMAL -- in `db.php` und als Rueckfallwert in `import_profiles.js` 62 und `import_ui.js` 334, falls der Server keine liefert. Wer eine aendert, aendert alle drei, sonst zeigt der Import andere Rollennamen als die Anwendung. ERWEITERT am 23.09.2026, weil mein eigener Faecherungsauftrag die Ausnahme nur fuer `Export-Format.md` benannt hatte: Der Handbuch-Agent hat die Aufzaehlung „Pilot 1, Pilot 2, HEMS-TC, Flugretter\" gegendert und damit beschrieben, was die Oberflaeche NICHT zeigt. 15 Stellen zurueckgenommen. Ein Auftrag, der eine dateiuebergreifende Regel nur an EINER Datei nennt, laesst sie an allen anderen durch -- und der Agent kann es nicht wissen."
+    },
+    {
+      "id": "zusammensetzung-bindestrich-ellipse",
+      "klasse": "Homonym",
+      "muster": [
+        "hausform-rollen-maennlich",
+        "hausform-rollen-weiblich"
+      ],
+      "zeile": "(Patienten|Notarzt|Piloten|Kollegen|Fahrer|Praktikanten)- (oder|und|bzw\\.)",
+      "begruendung": "ZUSAMMENSETZUNG IN ELLIPSE. „Patienten- oder Einsatzdaten\" ist die verkuerzte Form von „Patientendaten oder Einsatzdaten\" -- das Wort vor dem Bindestrich ist ein BESTIMMUNGSWORT, kein Mensch, und Zusammensetzungen werden nach E-PK-26 nicht zerlegt. Das Muster misst an der Wortgrenze und kann den Bindestrich nicht vom Satzende unterscheiden; `Patientendaten` in einem Wort trifft es dagegen korrekt nicht. E-PK-38."
+    },
+    {
+      "id": "zugangsdaten-benutzername",
+      "klasse": "Homonym",
+      "muster": [
+        "hausform-maennlich",
+        "hausform-weiblich"
+      ],
+      "zeile": "Datenbank-Host, -Name und -Benutzer|'label' => 'Benutzer'|Rechnername, Datenbankname, Nutzer",
+      "begruendung": "DAS FELD, NICHT DIE PERSON. „Benutzer\" ist hier die Beschriftung des Anmeldenamens fuer die Datenbank bzw. fuer SMTP, und „Nutzer\" in der Wiederherstellung steht neben Rechnername und Datenbankname -- es ist ein Zugangsdatum, das der Serverbetrieb vergibt, und heisst in jeder Datenbankoberflaeche so. `BenutzerIn` waere dort falsch: Ein Datenbankkonto ist kein Mensch. Dieselbe Unterscheidung wie bei `Leser` (Programmteil) und `Helfer` (Hilfsfunktion). E-PK-26."
+    },
+    {
+      "id": "pwquality-schwachliste",
+      "klasse": "Homonym",
+      "datei": "server/assets/pwquality.js",
+      "muster": [
+        "name-real"
+      ],
+      "begruendung": "DIE LISTE MUSS DIE ECHTEN WOERTER ENTHALTEN -- das ist ihr Zweck. `pwquality.js` haelt eine Sperrliste schwacher Passwoerter, und `christoph`, `bayern`, `muenchen` stehen dort, WEIL jemand sie als Passwort waehlen wuerde. Sie durch erfundene Namen zu ersetzen, hiesse die Pruefung abschalten und dabei gruen melden: Die Anwendung liesse „christoph2026\" dann durch. E-P1-02 schuetzt die Dokumentation davor, die reale Station zu benennen; eine Sperrliste BENENNT nicht, sie WEHRT AB."
+    },
+    {
+      "id": "exporttitel-guteseele",
+      "klasse": "Bestand",
+      "datei": "server/assets/import_profiles.js",
+      "muster": [
+        "name-real"
+      ],
+      "zeile": "exportTitle",
+      "begruendung": "Vom Auftraggeber entschieden am 23.09.2026: stehen lassen. Der Wert wird NIE verglichen, sondern in Zelle F1 der exportierten Excel-Datei geschrieben (`export.js` 496) -- er ist der Kopf eines Dokuments, das die Betreiberin aus dem Haus gibt, und das Profil heisst gerade deshalb so, weil es dieses eine Layout bedient. PREIS, benannt: Das oeffentliche Repositorium nennt die reale Kennung an dieser einen Stelle weiter. Der saubere Weg waere ein Wert in den Einstellungen -- das ist eine neue Funktion mit Feld, Migration und Handbuchabschnitt und gehoert in ein eigenes Paket."
     }
   ]
 }
