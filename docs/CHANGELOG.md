@@ -14,6 +14,28 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.37.2] — 2026-09-23
+
+**Eine Nummer, damit das neue Tor einmal echt gefragt wird.** Unter
+`server/` ändert sich nichts außer `version.php`; ausgeliefert wird dieselbe
+Anwendung wie 20.37.1, mit neuer Nummer in der Fußzeile.
+
+### Geändert
+
+- **Die Stufe ist ein Prüfmittel, keine Funktion.** Das Produktionstor
+  vergleicht seit Konzept TB Baum statt Commit (Eintrag darunter). Belegen
+  lässt sich das nur an einem echten Tag: Die Tag-Prüfung davor verlangt
+  genau `web-v<WEB_VERSION>`, und `web-v20.37.1` lag schon auf Produktiv.
+  Zwei Tags ohne passende Fassung — `web-v20.37.1-test` und `web-v20.37.2`
+  auf `eefffca` — sind genau dort abgewiesen worden, einen Schritt vor dem
+  Tor. Das war richtig, sagte aber nichts über das Tor.
+
+### Bewusst so
+
+- **Keine Funktion mitgenommen.** Eine Auslieferung, deren Zweck das Messen
+  der Kette ist, sollte nicht zugleich etwas an der Anwendung ändern — sonst
+  weiß man bei einem Fehler nicht, welches von beiden ihn verursacht hat.
+
 ## [Werkzeug: Das Produktionstor vergleicht Baum statt Commit] — 2026-09-23
 
 Konzept TB, Backlog Nr. 285.
