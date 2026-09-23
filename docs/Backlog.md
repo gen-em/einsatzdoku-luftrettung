@@ -138,8 +138,12 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **283** und trägt seine
-Spanne hier ein, bevor er pusht.
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **292** und trägt seine
+Spanne hier ein, bevor er pusht. *(Bis zum 23.09.2026 stand hier 283; 283 bis
+285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
+Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
+Tag, **290 und 291** die Korrekturstufe Web 20.37.3 — nachgesehen auf
+`origin/main` und in den offenen Pull Requests.)*
 
 **Und sieht vorher nach — auf `origin/main` UND in die offenen Pull
 Requests.** Der Satz darüber beschreibt keinen Riegel, sondern eine Hoffnung:
@@ -3676,6 +3680,82 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Nachzuziehen beim nächsten Android-Paket**, zusammen: Nummer,
     Kopfabsatz, Changelog-Zeile und ein Emulatorlauf, der die
     Rechtstexte-Seite zeigt. Abnahme als **P-PK-28**.
+
+286. **Ein Admin erreicht Komplett-Backup und Backup-Ziele — samt
+    Klartext-Dump der ganzen Datenbank.**
+    *Aufgenommen 23.09.2026 im Abgleich des Konzepts P5c (F-P5c-15), von Hand
+    nachgeprüft.* R75 und der Kopf der Rollen in `db.php` behalten
+    Komplett-Backup und Backup-Ziele der BetreiberIn vor, und das Menü zeigt
+    beide Seiten nur ihr. **Die Seiten selbst fragen aber nur
+    `require_admin()`** (`admin_komplettsicherung.php` und
+    `admin_sicherungsziele.php`, je Z. 4; das Wort „betreiberin" kommt in
+    beiden Dateien nicht vor). Per Direktaufruf liefert
+    `action=herunterladen` jedem Admin über `komp_ausgeben_klar()` den
+    Klartext-Dump — mit Passwort-Hashes und versiegelten Zugängen; dazu
+    kommen die sieben Handlungen der Backup-Ziele. `admin_sicherungen.php`
+    verlinkt Admins sogar dorthin.
+
+    **Vorhergesagt und nie nachgemessen:** Das Prüfdokument S8 führt P-01
+    als „teilweise" mit der Auflage, nach AP5 zu wiederholen — „dann muss ein
+    Admin dort 403 bekommen". Die Wiederholung hat nie stattgefunden.
+
+    **Warum es heute nicht brennt:** Es gibt kein Konto mit der Rolle admin
+    (Auskunft der BetreiberIn, 23.09.2026; die Migration von S8 hat alle
+    Admins zu BetreiberInnen gemacht). **Bis zur Behebung legt niemand ein
+    Admin-Konto an.**
+
+    *Behebung:* `require_betreiberin()` an beiden Stellen, der Verweis in
+    `admin_sicherungen.php` nur für die BetreiberIn, Nachtrag in
+    `Technik.md`. *Abnahme:* die Rollenprobe (`tools/proben/rollen/`, Anlass
+    dieser Punkt) — 13 Handlungen, Admin 403, BetreiberIn 200. *Fehlschlag:*
+    ein Admin bekommt auf einer der beiden Seiten 200. **Zuordnung: 10c AP2**
+    (E-P5c-31).
+
+287. **Die Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb.**
+    *Aufgenommen 23.09.2026 (Konzept P5c, E-P5c-49).* R74 (5) schrieb
+    Erklärtext „einheitlich als EINE zugeklappte Karte ‚Was hier gilt' am
+    Seitenende" vor. E-P5c-06 (jünger) sagt: je Karte höchstens ein Satz,
+    alles Erklärende ins Handbuch. 10c AP9 räumt die acht Karten unter
+    Verwaltung und Betrieb ab. **Drei Seiten außerhalb tragen die Karte
+    ebenfalls:** `import.php`, `einsatz_form.php`, `wiederherstellen.php`.
+    Sie liegen nicht im Umfang von 10c, und bis zu ihrer Umstellung gelten
+    dort zwei Regeln nebeneinander.
+
+    *Abnahme:* 0 Karten „Was hier gilt" in `server/`, der Inhalt im Handbuch,
+    jede Karte der drei Seiten mit Verweis auf ihre Sprungmarke. *Fehlschlag:*
+    `grep -l "Was hier gilt" server/*.php` findet eine Seite (außer
+    Kommentaren in `version.php`). **Zuordnung: Schritt 17.**
+
+290. **Keine Stufe der Kette richtet eine Anlage ein.**
+    *Aufgenommen 23.09.2026 mit Web 20.37.3 (Anlass: Nr. 288).* Nr. 288 hat
+    elf Fassungen lang (20.30.0 bis 20.37.2) jede Neueinrichtung gebrochen,
+    und keine Stufe hat es gesehen: Stufe 1 richtet keine Anlage ein, Stufe 2
+    läuft gegen das eingerichtete Staging, und eine vorhandene örtliche
+    Installation überspringt den Schritt. Bemerkt hat es `hochfahren.sh
+    --neu`, und das fährt nur, wer es ausdrücklich will.
+
+    *Weg (zu entscheiden):* ein Stufe-1-Schritt, der `install.php` gegen eine
+    leere Datenbank laufen lässt und den Einrichtungslink verlangt — oder
+    kleiner, ein Schritt, der `konto_lib.php` ohne `config.php` lädt und jede
+    Funktion auf dem Weg des Einrichters als vorhanden verlangt. *Abnahme:*
+    der Schritt wird rot, wenn man c3b5bff nachstellt (den Rahmen zurück nach
+    `db.php`). *Fehlschlag:* grün auf diesem Stand. `docs/Pruefablauf.md`
+    führt ihn mit „Anlass: Nr. 288".
+
+291. **Eine gescheiterte Einrichtung hinterlässt ein halbes Schema.**
+    *Aufgenommen 23.09.2026 mit Web 20.37.3, gemessen.* `install.php` spielt
+    `schema.sql` ein (Z. 352) und legt danach das Konto an. Scheitert
+    danach etwas, stehen die Tabellen — `schema.sql` legt 41 von 42 ohne
+    `IF NOT EXISTS` an —, und der nächste Versuch auf derselben Datenbank
+    bricht an ihnen ab. Die Meldung rät dabei in jedem Fall „eine leere
+    Datenbank verwenden", auch beim ersten Fehlschlag, der mit der Datenbank
+    nichts zu tun hatte (so bei Nr. 288). Eine Transaktion hilft hier nicht:
+    DDL bestätigt in MySQL still.
+
+    *Weg (zu entscheiden):* entweder den Rat nur geben, wenn der Fehler vom
+    Schema kommt, oder das Konto vor dem Schema prüfen lassen, was geht. Klein,
+    kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
+    **Zuordnung: Backlog-Runde.**
 
 ## Erledigt
 
@@ -9774,3 +9854,64 @@ zutreffen.
     41 min). **P-TB-06 belegt am 23.09.2026** mit Web 20.37.2 (Lauf
     35852217360): Das Tor hat den PR-Lauf gleichen Baums anerkannt und
     ausgeliefert, ohne auf `main` zu warten.
+
+288. **Eine neue Anlage lässt sich seit Web 20.30.0 nicht einrichten.**
+    *Aufgenommen 23.09.2026 beim Bau der Mockup-Runde M-P5c-02 (F-P5c-62),
+    gemessen.* `install.php` legt die erste BetreiberIn über
+    `konto_anlegen()` an. Das ruft seit c3b5bff (Schritt 15, AP5)
+    `db_transaktion()` auf — `konto_lib.php` lädt `db.php` aber nur, wenn
+    `config.php` schon da ist (Z. 82), und während der Einrichtung ist sie es
+    nicht, weil sie erst danach geschrieben wird. Die Funktion fehlt, der
+    Einrichter fängt die Ausnahme und zeigt „Call to undefined function
+    db_transaktion()" (`hochfahren.sh` fasst das als „Einrichten
+    gescheitert" zusammen). Der Kopf
+    von `konto_lib.php` begründet das bedingte Laden ausgerechnet damit, dass
+    der Einrichter die Bibliothek ohne Konfiguration laden können muss.
+
+    **Wen es trifft:** jede Neueinrichtung — eine neue Anlage, ein
+    Hosterwechsel, ein Neuanfang nach Verlust — und Station B der
+    Prüfkette: `hochfahren.sh --neu` scheitert in Schritt 4 („Einrichtungslink
+    nicht gefunden"). **Warum es niemand gemerkt hat:** Stufe 1 richtet keine
+    Anlage ein, und eine vorhandene örtliche Installation überspringt den
+    Schritt.
+
+    *Behebung:* `db_transaktion()` dort verfügbar machen, wo der Einrichter es
+    braucht, ohne `db()` zu laden — etwa `db.php` ohne Konfiguration ladbar
+    machen oder die Transaktionsklammer in eine eigene Datei ziehen, die
+    `konto_lib.php` immer lädt. *Abnahme:* `bash tools/sandbox/hochfahren.sh
+    --neu` grün, danach die Anmeldung über den Einrichtungslink. *Fehlschlag:*
+    „Einrichten gescheitert" auf einer leeren Datenbank. **Zuordnung: eigene
+    Korrekturstufe, vor P5c** — sie hält Station B auf, die jedes Paket von
+    P5c braucht.
+
+    **Erledigt 23.09.2026 mit Web 20.37.3.** `db_transaktion()` steht in
+    `transaktion_lib.php`, die nichts lädt; `konto_lib.php` und `db.php`
+    binden sie ein, Registerzeile Z16 nimmt die neue Datei aus (Decke 9).
+    Vorher nachgestellt: `hochfahren.sh --neu` RC 1 in Schritt 4, die Seite
+    meldet „Call to undefined function db_transaktion()". Nachher: RC 0 bis
+    zum Ende — Einrichtungslink, Passwort im Browser gesetzt, Demo-Konto mit
+    106 Einsätzen eingespielt. Den Riegel in der Kette führt Nr. 290, das
+    halbe Schema nach einem Fehlschlag Nr. 291. Prüfliste:
+    `docs/konzepte/Pruefdokument-Korrektur-288-289.md`.
+
+289. **Die Anmeldeseite stellt die vier Verweise neben die Karte statt
+    darunter.**
+    *Aufgenommen 23.09.2026 beim Bau der Mockup-Runde M-P5c-02 (F-P5c-63),
+    im Bild gemessen.* `.anmeldung` ist ein Flex-Behälter in
+    Zeilenrichtung, und `nav.fuss-anmeldung` steht darin hinter der Karte
+    (`login.php` Z. 553). Der Kommentar dort will die Verweise „direkt unter
+    das Anmeldeformular". Am
+    Rechner stehen sie rechts neben der Karte, bei 390 px drücken sie die
+    Karte auf rund 200 px zusammen. Seit d3832e4 (Web 20.23.0).
+
+    *Behebung:* `.anmeldung` in Spaltenrichtung, die Verweise unter der
+    Karte. *Abnahme:* Anmeldeseite bei 390 und 1440 px — Karte in voller
+    Breite (`--anmeldekarte`), Verweise darunter; Bilderlauf ohne Überlauf.
+    *Fehlschlag:* ein Verweis steht auf gleicher Höhe wie die Karte. Die
+    Mockup-Runde M-P5c-02 (a) zeigt den berichtigten Stand. **Zuordnung:
+    eigene Korrekturstufe, zusammen mit Nr. 288**, spätestens P5c AP1 (die
+    Anmeldeseite bekommt dort die Streifen).
+
+    **Erledigt 23.09.2026 mit Web 20.37.3.** `.anmeldung` in
+    Spaltenrichtung (`flex-direction:column`); `Design.md` 10.1 sagt es.
+    Gemessen im Prüfdokument `docs/konzepte/Pruefdokument-Korrektur-288-289.md`.

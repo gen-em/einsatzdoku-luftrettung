@@ -1,0 +1,646 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=400">
+<title>P5c · Mockup M-P5c-02 (a) — Banner · Handy 400</title>
+<link rel="stylesheet" href="../../../../server/assets/style.css">
+<style>
+/* ---- Mockup-Rahmen (nicht Teil der Anwendung) ---------------------------- */
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.5}
+.mock-kopf{padding:16px 12px 4px}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:18px;margin:0 0 4px;color:var(--dunkelblau);line-height:1.2}
+.mock-kopf p{margin:0;color:var(--gedaempft);font-size:var(--groesse-2)}
+.reihe{padding:12px 12px 6px}
+.reihe > h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0 0 2px;color:var(--dunkelblau)}
+.reihe > .unter{margin:0 0 10px;color:var(--gedaempft);font-size:var(--groesse-2);max-width:1180px}
+.frames{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+.frame-huelle{flex:0 0 auto;max-width:100%}
+.frame-titel{display:inline-block;background:var(--dunkelblau);color:#fff;font-size:11px;line-height:1.4;padding:2px 10px;border-radius:8px 8px 0 0}
+.frame{position:relative;overflow:hidden;border-radius:0 var(--radius) var(--radius) var(--radius);background:var(--rauch);box-shadow:0 8px 24px rgba(26,46,77,.10)}
+.notiz{padding:6px 12px 22px;max-width:1180px}
+.notiz h3{font-family:var(--schrift-kopf);font-size:var(--groesse-4);margin:12px 0 4px;color:var(--dunkelblau)}
+.notiz ul{margin:0 0 8px 20px;padding:0}
+.notiz li{margin:0 0 4px;font-size:var(--groesse-2);line-height:1.45}
+.notiz code{font-family:var(--schrift-fest);font-size:12px;background:var(--schnee);padding:0 4px;border-radius:4px}
+/* Das Gerüst im Rahmen: nichts klebt, nichts ist an die Fensterhöhe gebunden. */
+.frame .kopf{position:static}
+.frame .leiste{display:none}  /* Schublade, wie auf dem Gerät zu */
+.frame .rahmen{min-height:0}
+.frame .anmeldung-body{min-height:0}
+.frame .fuss{margin-top:0}
+/* ---- Nur im Mockup, nicht Teil des Vorschlags -------------------------- */
+
+/* Behebung von Befund Nr. 289 (Anmeldeseite): .anmeldung ist ein Flex-Behälter in Zeilenrichtung, und die
+   Verweiszeile steht seit Web 20.23.0 NEBEN der Karte. Hier vorweggenommen, damit das Bild die Form zeigt,
+   um die es geht; die Behebung ist ein eigener Punkt, nicht Teil dieses Vorschlags. */
+.anmeldung{flex-direction:column}
+/* Rahmen gekürzt: Die Seite läuft darunter unverändert weiter. */
+.frame-kurz{max-height:980px}
+.frame-kurz-hoch{max-height:1100px}
+.frame-kurz::after{content:"";position:absolute;left:0;right:0;bottom:0;height:60px;background:linear-gradient(to bottom,transparent,#EDE9DF)}
+.frame .schleier{display:none}
+/* Kopfleisten-Vergleich: nur die Leiste */
+.nur-kopf .kopf{position:static}
+/* Die Rückfrage steht im Bild offen und nicht modal. */
+.frame dialog.mock-offen{position:static;display:block;margin:0;max-width:520px;box-shadow:var(--schatten-hoch)}
+
+/* ---- Vorschlag für style.css (neu mit P5c, M-P5c-02) ------------------- */
+
+/* KOPFLEISTE EINER NICHT-PRODUKTIVEN UMGEBUNG (.kopf-umgebung) — Variante der Kopfleiste (E-P5c-05, -55).
+   Gesetzt von ui_kopf(), wenn konfig('app.umgebung') einen Namen trägt; 'farbe' ist eine geschlossene
+   Liste, heute nur 'rot'. Weiß auf --rot 4,78 : 1. */
+.kopf-umgebung{background:var(--rot)}
+/* Der aktive Punkt: Orange auf Rot hätte 2,10 : 1 (WCAG 1.4.11 verlangt 3 : 1). --orange-hell bleibt in der
+   Orange-Familie („hier stehst du") und trägt 4,12 : 1. Variante B wäre --auf-dunkel (4,78 : 1). */
+.kopf-umgebung .kopf-punkt.aktiv{border-bottom-color:var(--orange-hell)}
+/* Der Name im Kopf trägt auf Dunkelblau --sand (8,15 : 1), auf Rot wären es 2,86 : 1. --schnee trägt 4,68 : 1;
+   untergeordnet bleibt er durch Gewicht 400 gegen 600 der Marke. */
+.kopf-umgebung .kopf-nutzer{color:var(--schnee)}
+/* HINWEISSTREIFEN — die Reihe über dem Inhalt (E-P5c-55). Umgebung → Ankündigung → Demo → Datenschutz.
+   Ein Behälter statt vier Außenabständen: .demo-hinweis und .meldung bringen je --abstand-5 nach unten mit,
+   gestapelt ergäbe das 32-px-Lücken zwischen Zeilen, die zusammengehören. */
+.hinweise{display:flex;flex-direction:column;gap:var(--abstand-2);margin-bottom:var(--abstand-5)}
+.hinweise > .demo-hinweis,.hinweise > .meldung{margin-bottom:0}
+/* Umgebungszeile — Variante des vorhandenen Hinweisstreifens (.demo-hinweis), Ton der Fehlermeldung:
+   Rot-tief auf Rosa 6,27 : 1. Nicht wegklickbar (wie der Demo-Hinweis). */
+.hinweis-umgebung{background:var(--rosa);color:var(--rot-tief)}
+.hinweis-umgebung .symbol{color:var(--rot-tief)}
+/* Ankündigung: vorhandene .meldung (info/warn); der Schließen-Knopf steht in .meldung-aktion.
+   Die Klasse benennt nur den Verwender (Wegklicken je Sitzung, ankuendigung.js). */
+.meldung-ankuendigung .meldung-aktion .knopf-symbol{color:inherit}
+/* Das × bleibt oben rechts, auch auf dem Handy: .meldung bricht sonst um, sobald der Text seine
+   Mindestbreite (16rem) nicht bekommt, und das × landet allein in einer Zeile unten links. */
+.meldung-ankuendigung{flex-wrap:nowrap;align-items:flex-start}
+.meldung-ankuendigung p{flex:1 1 auto}
+.meldung-ankuendigung .meldung-aktion{margin:calc(var(--abstand-2) * -1) calc(var(--abstand-2) * -1) 0 0}
+/* Anmeldeseiten: dieselbe Reihe über der Karte, so breit wie die Karte. */
+.anmeldung .hinweise{width:100%;max-width:var(--anmeldekarte);margin-bottom:var(--abstand-4)}
+</style></head><body><svg style="display:none" aria-hidden="true"><symbol id="s-balken" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -6" /> <path d="M15 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -10" /> <path d="M9 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -14" /> <path d="M4 20h14" /></symbol><symbol id="s-bergwacht" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18l-6.921 -14.612a2.3 2.3 0 0 0 -4.158 0l-6.921 14.612" /> <path d="M7.5 11l2 2.5l2.5 -2.5l2 3l2.5 -2" /></symbol><symbol id="s-einsatzort" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /> <path d="M12.794 21.322a2 2 0 0 1 -2.207 -.422l-4.244 -4.243a8 8 0 1 1 13.59 -4.616" /> <path d="M16 19h6" /> <path d="M19 16v6" /></symbol><symbol id="s-fahrzeug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /> <path d="M15 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /> <path d="M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5" /> <path d="M6 10h4m-2 -2v4" /></symbol><symbol id="s-haus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l-2 0l9 -9l9 9l-2 0" /> <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" /> <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" /></symbol><symbol id="s-hilfe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /> <path d="M12 17l0 .01" /> <path d="M12 13.5a1.5 1.5 0 0 1 1 -1.5a2.6 2.6 0 1 0 -3 -4" /></symbol><symbol id="s-hubschrauber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l1 2h6" /> <path d="M12 9a2 2 0 0 0 -2 2v3c0 1.1 .9 2 2 2h7a2 2 0 0 0 2 -2c0 -3.31 -3.13 -5 -7 -5h-2" /> <path d="M13 9l0 -3" /> <path d="M5 6l15 0" /> <path d="M15 9.1v3.9h5.5" /> <path d="M15 19l0 -3" /> <path d="M19 19l-8 0" /></symbol><symbol id="s-kalender" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12" /> <path d="M16 3v4" /> <path d="M8 3v4" /> <path d="M4 11h16" /> <path d="M11 15h1" /> <path d="M12 15v3" /></symbol><symbol id="s-karte" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18.5l-3 -1.5l-6 3v-13l6 -3l6 3l6 -3v7.5" /> <path d="M9 4v13" /> <path d="M15 7v5.5" /> <path d="M21.121 20.121a3 3 0 1 0 -4.242 0c.418 .419 1.125 1.045 2.121 1.879c1.051 -.89 1.759 -1.516 2.121 -1.879" /> <path d="M19 18v.01" /></symbol><symbol id="s-karte-breit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8l-4 4l4 4" /> <path d="M17 8l4 4l-4 4" /> <path d="M3 12l18 0" /></symbol><symbol id="s-karte-gross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l4 -4l4 4" /> <path d="M8 17l4 4l4 -4" /> <path d="M12 3l0 18" /></symbol><symbol id="s-kolben" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3l6 0" /> <path d="M10 9l4 0" /> <path d="M10 3v6l-4 11a.7 .7 0 0 0 .5 1h11a.7 .7 0 0 0 .5 -1l-4 -11v-6" /></symbol><symbol id="s-korb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l16 0" /> <path d="M10 11l0 6" /> <path d="M14 11l0 6" /> <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /> <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></symbol><symbol id="s-lupe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /> <path d="M21 21l-6 -6" /></symbol><symbol id="s-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l16 0" /> <path d="M4 12l16 0" /> <path d="M4 18l16 0" /></symbol><symbol id="s-ordner-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19h-7a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v3.5" /> <path d="M16 19h6" /> <path d="M19 16v6" /></symbol><symbol id="s-pfeil-hoch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14" /> <path d="M18 11l-6 -6" /> <path d="M6 11l6 -6" /></symbol><symbol id="s-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14" /> <path d="M5 12l14 0" /></symbol><symbol id="s-punkte" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /> <path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /> <path d="M18 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></symbol><symbol id="s-schliessen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-12 12" /> <path d="M6 6l12 12" /></symbol><symbol id="s-schloss" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6" /> <path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" /> <path d="M8 11v-4a4 4 0 1 1 8 0v4" /></symbol><symbol id="s-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v2a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z" /> <path d="M3 15a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v2a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z" /> <path d="M7 8l0 .01" /> <path d="M7 16l0 .01" /></symbol><symbol id="s-sortieren" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l4 -4l4 4m-4 -4v14" /> <path d="M21 15l-4 4l-4 -4m4 4v-14" /></symbol><symbol id="s-stift" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" /> <path d="M13.5 6.5l4 4" /></symbol><symbol id="s-veranstaltung" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l0 2" /> <path d="M15 11l0 2" /> <path d="M15 17l0 2" /> <path d="M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-3a2 2 0 0 0 0 -4v-3a2 2 0 0 1 2 -2" /></symbol><symbol id="s-vollbild" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8v-2a2 2 0 0 1 2 -2h2" /> <path d="M4 16v2a2 2 0 0 0 2 2h2" /> <path d="M16 4h2a2 2 0 0 1 2 2v2" /> <path d="M16 20h2a2 2 0 0 0 2 -2v-2" /></symbol><symbol id="s-warnung" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4" /> <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0" /> <path d="M12 16h.01" /></symbol><symbol id="s-winkel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6" /></symbol><symbol id="s-zahnrad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" /> <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></symbol></svg>
+<div class="mock-kopf"><h1>M-P5c-02 (a) — Banner · Handy</h1><p>bei 376 px</p></div><div class="reihe"><h2>1 · Tagesübersicht auf Staging</h2><p class="unter">Drei Streifen gestapelt; der Datenschutz-Hinweis käme als vierter.</p><div class="frames"><div class="frame-huelle" style="width:376px"><span class="frame-titel">index.php · Demo · Staging</span><div class="frame frame-kurz">
+
+<header class="kopf kopf-umgebung">
+  <div class="kopf-innen">
+        <button type="button" class="knopf knopf-symbol kopf-menue" data-schublade="auf" aria-expanded="false" aria-controls="leiste" aria-label="Menü öffnen">
+      <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-menu"></use></svg>    </button>
+    
+    <a class="kopf-marke" href="index.php">
+            <img src="../../../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="" width="54" height="34">
+      <span class="kopf-name">Gen-EM NAdoku</span>
+      <span class="kopf-nutzer">Demo NutzerIn</span>    </a>
+
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+              <a class="kopf-punkt aktiv" href="index.php" aria-current="page">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span>Startseite</span>
+        </a>
+        <a class="kopf-punkt" href="suche.php">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-lupe"></use></svg><span>Suche</span>
+        </a>
+                <a class="knopf knopf-symbol kopf-hilfe" href="hilfe.php" aria-label="Hilfe und Handbuch">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-hilfe"></use></svg>        </a>
+        <a class="knopf knopf-symbol kopf-zahnrad" href="einstellungen.php" aria-label="Einstellungen">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-zahnrad"></use></svg>        </a>
+          </nav>
+  </div>
+</header>
+<div class="schleier" data-schublade="zu" hidden=""></div>
+<div class="rahmen">
+      <aside class="leiste" id="leiste" aria-label="Bereichsmenü" tabindex="-1">
+    <div class="leiste-kopf nur-schublade">
+      <button type="button" class="knopf knopf-symbol" data-schublade="zu" aria-label="Menü schließen">
+        <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-schliessen"></use></svg>      </button>
+      <span class="kopf-name">Gen-EM NAdoku</span>
+    </div>
+    <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche">
+      <a class="eintrag aktiv" href="index.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span class="eintrag-text">Startseite</span>
+      </a>
+      <a class="eintrag" href="suche.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-lupe"></use></svg><span class="eintrag-text">Suche</span>
+      </a>
+    </nav>
+    <h2 class="leiste-kopfzeile">Diensttage</h2>
+    <div class="leiste-liste">
+                            <details class="akkordeon" open="">
+                    <summary class="akkordeon-zeile">
+            <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>            <span class="akkordeon-text">2026</span>
+            <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026" aria-label="Jahresübersicht 2026" title="Jahresübersicht">
+              <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg>            </a>
+          </summary>
+          <div class="akkordeon-inhalt">
+                                  <details class="akkordeon akkordeon-monat" open="">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">Dezember</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=12" aria-label="Monatsübersicht Dezember" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag aktiv" href="index.php?d=21" aria-current="page" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">27.12.2026</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">November</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=11" aria-label="Monatsübersicht November" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=20" title="Alpenfalke 2 — luftgebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>luftgebunden</title><use href="#s-hubschrauber"></use></svg>                  <span class="eintrag-text">21.11.2026</span>
+                                      <span class="eintrag-neben">Alpenfalke 2</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">Oktober</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=10" aria-label="Monatsübersicht Oktober" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=19" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">24.10.2026</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">September</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=09" aria-label="Monatsübersicht September" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=18" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">27.09.2026</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=17" title="Alpenfalke 2 — luftgebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>luftgebunden</title><use href="#s-hubschrauber"></use></svg>                  <span class="eintrag-text">12.09.2026</span>
+                                      <span class="eintrag-neben">Alpenfalke 2</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">August</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=08" aria-label="Monatsübersicht August" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=16" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">16.08.2026</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=15" title="Bergwachtnotarzt Sonnenau — Bergwacht, bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>Bergwacht, bodengebunden</title><use href="#s-bergwacht"></use></svg>                  <span class="eintrag-text">01.08.2026</span>
+                                      <span class="eintrag-neben kurz">BW-NA</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">Juli</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=07" aria-label="Monatsübersicht Juli" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=14" title="Konzert von Karl Marx — Veranstaltung, bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>Veranstaltung, bodengebunden</title><use href="#s-veranstaltung"></use></svg>                  <span class="eintrag-text">06.07.2026 19:30</span>
+                                      <span class="eintrag-neben">Konzert</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=13" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">06.07.2026 07:00</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=12" title="Alpenfalke 1 — luftgebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>luftgebunden</title><use href="#s-hubschrauber"></use></svg>                  <span class="eintrag-text">05.07.2026</span>
+                                      <span class="eintrag-neben">Alpenfalke 1</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">Juni</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=06" aria-label="Monatsübersicht Juni" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=11" title="Boxkampf Rainer Maria Rilke — Veranstaltung, bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>Veranstaltung, bodengebunden</title><use href="#s-veranstaltung"></use></svg>                  <span class="eintrag-text">14.06.2026 19:30</span>
+                                      <span class="eintrag-neben">Boxkampf</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=10" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">14.06.2026 07:00</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">Mai</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=05" aria-label="Monatsübersicht Mai" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=9" title="Alpenfalke 1 — luftgebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>luftgebunden</title><use href="#s-hubschrauber"></use></svg>                  <span class="eintrag-text">10.05.2026</span>
+                                      <span class="eintrag-neben">Alpenfalke 1</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">April</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=04" aria-label="Monatsübersicht April" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=8" title="VEF Talwang 76/2 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">18.04.2026</span>
+                                      <span class="eintrag-neben kurz">VEF</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">März</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=03" aria-label="Monatsübersicht März" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=7" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">28.03.2026 20:00</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=6" title="Alpenfalke 1 — luftgebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>luftgebunden</title><use href="#s-hubschrauber"></use></svg>                  <span class="eintrag-text">28.03.2026 06:30</span>
+                                      <span class="eintrag-neben">Alpenfalke 1</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=5" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">07.03.2026</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">Februar</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=02" aria-label="Monatsübersicht Februar" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=3" title="Bergwachtnotarzt Sonnenau — Bergwacht, bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>Bergwacht, bodengebunden</title><use href="#s-bergwacht"></use></svg>                  <span class="eintrag-text">14.02.2026</span>
+                                      <span class="eintrag-neben kurz">BW-NA</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=2" title="Alpenfalke 1 — luftgebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>luftgebunden</title><use href="#s-hubschrauber"></use></svg>                  <span class="eintrag-text">08.02.2026</span>
+                                      <span class="eintrag-neben">Alpenfalke 1</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">Januar</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=01" aria-label="Monatsübersicht Januar" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=1" title="Alpenfalke 1 — luftgebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>luftgebunden</title><use href="#s-hubschrauber"></use></svg>                  <span class="eintrag-text">17.01.2026</span>
+                                      <span class="eintrag-neben">Alpenfalke 1</span>
+                                  </a>
+                            </div>
+            </details>
+                    </div>
+        </details>
+          </div>
+        <div class="leiste-fuss">
+                  <a class="eintrag eintrag-anlegen" href="diensttag_neu.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-plus"></use></svg><span class="eintrag-text">Diensttag anlegen</span>
+      </a>
+      <a class="eintrag eintrag-leise" href="papierkorb.php" title="Papierkorb">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-korb"></use></svg><span class="eintrag-text">Papierkorb</span>
+      </a>
+    </div>
+  </aside>
+  <main class="inhalt" id="inhalt">
+<div class="hinweise"><div class="demo-hinweis hinweis-umgebung" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-server"></use></svg><p><strong>Staging</strong> — Testdaten, kein Echtbetrieb.</p></div><div class="meldung meldung-warn meldung-ankuendigung" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-warnung"></use></svg><p><strong>Wartung am Dienstag, 30.09.2026, 20:00 bis 21:00.</strong> Die Anwendung ist in dieser Zeit nicht erreichbar; Einsätze auf Uhr und Handy werden danach übertragen.</p><div class="meldung-aktion"><button type="button" class="knopf knopf-symbol" aria-label="Ankündigung ausblenden"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-schliessen"></use></svg></button></div></div><div class="demo-hinweis" role="status">
+  <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kolben"></use></svg>  <p><strong>Demo-Konto.</strong> Alle Daten hier sind <strong>frei
+  erfunden</strong>. Ausprobieren ist ausdrücklich erwünscht — ändern,
+  anlegen, löschen, Gerät koppeln. Der Bestand wird
+  <strong>alle 30&nbsp;Minuten</strong> auf den Ausgangsstand
+  zurückgesetzt, das nächste Mal in etwa 28&nbsp;Minuten.
+  <strong>Bitte niemals echte Patienten- oder Einsatzdaten erfassen.</strong></p>
+</div></div>
+        <section class="karte erststart">
+  <div class="karte-kopf">
+    <h2 class="karte-titel">Willkommen — drei Schritte, dann geht es los</h2>
+  </div>
+  <div class="karte-inhalt">
+
+          <div class="zeile erststart-zeile">
+  <div class="zeile-vorn"><span class="erststart-nr erststart-nr-kann">1</span></div>
+  <div class="zeile-text">
+    <span class="zeile-haupt">Standort anlegen</span>
+    <span class="zeile-klein">Optional — ein Ort, dem deine Rettungsmittel zugeordnet sind (Wache, Klinik).</span>
+  </div>
+  <div class="zeile-aktionen"><a class="knopf knopf-neutral" href="einstellungen.php?t=standorte"><span>Anlegen</span></a></div>
+</div>
+          <div class="zeile erststart-zeile">
+  <div class="zeile-vorn"><span class="erststart-nr">2</span></div>
+  <div class="zeile-text">
+    <span class="zeile-haupt">Rettungsmittel anlegen</span>
+    <span class="zeile-klein">Womit du fährst oder fliegst: Name, Typ, Standort.</span>
+  </div>
+  <div class="zeile-aktionen"><a class="knopf knopf-primaer" href="einstellungen.php?t=standorte"><span>Anlegen</span></a></div>
+</div>
+          <div class="zeile erststart-zeile">
+  <div class="zeile-vorn"><span class="erststart-nr">3</span></div>
+  <div class="zeile-text">
+    <span class="zeile-haupt">Uhr oder Handy koppeln</span>
+    <span class="zeile-klein">Die App erfasst Einsätze unterwegs und gleicht sie hier ab. Anleitung im Handbuch.</span>
+  </div>
+  <div class="zeile-aktionen"><a class="knopf knopf-primaer" href="einstellungen.php?t=geraete"><span>Koppeln</span></a></div>
+</div>
+  
+    <form method="post" class="erststart-fuss">
+    <input type="hidden" name="csrf" value="67790a5b54d94247711f94a5346c1e1a3ba306bb2d7e05abf4c9225d8ce1fcf9">    <input type="hidden" name="action" value="erststart">
+    <label class="erststart-nie">
+      <input type="checkbox" name="nie" value="1">
+      <span>nicht mehr zeigen</span>
+    </label>
+    <button class="knopf knopf-leise" type="submit"><span>Später</span></button>  </form>
+
+  </div>
+</section>
+                <div class="meldung meldung-warn" role="status">
+        <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-warnung"></use></svg>        <p>
+          2 neue Geräte wurden          mit deinem Konto verbunden:
+                    Uhr Luftdienst (Referenz) · fēnix 7 / quatix 7 (23.09.2026 11:05), Handy Bodendienst (Referenz) · Samsung SM-S921B (23.09.2026 11:05).
+          Warst du das nicht, entferne
+          die Geräte unter
+          <a href="einstellungen.php?t=geraete">Einstellungen → Geräte</a>.
+        </p>
+        <div class="meldung-aktion">
+          <form method="post" action="index.php">
+            <input type="hidden" name="csrf" value="67790a5b54d94247711f94a5346c1e1a3ba306bb2d7e05abf4c9225d8ce1fcf9"><input type="hidden" name="action" value="geraete_ok">
+            <button class="knopf knopf-neutral" type="submit"><span>Verstanden, das war ich</span></button>          </form>
+        </div>
+      </div>
+                <div class="titelzeile">
+      <div class="titelzeile-haupt">
+        <div class="titelzeile-text">
+          <h1 id="daytitle"><span class="wtag-lang">Sonntag</span><span class="wtag-kurz">So</span>, 27.12.2026</h1>
+        </div>
+        <div class="titelzeile-aktionen" id="dayaktionen">
+          <div class="aktionen"><button type="button" class="knopf knopf-neutral aktionen-knopf" aria-expanded="false" aria-controls="dayblatt" data-blatt="dayblatt"><svg class="symbol symbol-gross nur-schmal" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-punkte"></use></svg><span class="nur-breit">Aktionen</span><svg class="symbol nur-breit" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg></button><div class="blatt" id="dayblatt" hidden=""><div class="blatt-griff" aria-hidden="true"></div><h2 class="blatt-titel">Diensttag 27.12.2026</h2><div class="blatt-liste"><a class="blatt-zeile blatt-anlegen" href="einsatz_form.php?d=21" id="addmission-menu"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-plus"></use></svg><span>Einsatz nachtragen</span></a><a class="blatt-zeile" href="#tagdaten" data-tagdaten-bearbeiten=""><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-stift"></use></svg><span>Diensttag-Daten bearbeiten</span></a><a class="blatt-zeile" href="diensttag_datum.php?d=21" id="daydatelink"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span>Datum ändern</span></a><a class="blatt-zeile" href="diensttag_zusammenfuehren.php?d=21" id="daymergelink"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-ordner-plus"></use></svg><span>Anderen Diensttag aufnehmen</span></a><a class="blatt-zeile" href="tag_spuren.php?d=21" id="dayspurenlink"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-karte"></use></svg><span>GPS-Daten als GPX</span></a><a class="blatt-zeile" href="#" id="daygpximport"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-karte"></use></svg><span>GPX importieren</span></a><a class="blatt-zeile blatt-gefahr" href="diensttag_loeschen.php?d=21" id="daydellink"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-korb"></use></svg><span>Tag löschen</span></a></div><button type="button" class="knopf knopf-leise blatt-abbrechen" data-blatt-zu=""><span>Abbrechen</span></button></div></div>        </div>
+      </div>
+      <p class="titelzeile-unter" id="dayunter">NEF Talwang 76/1 · Notarztstandort Talwang · Dienstbeginn 07:00</p>
+    </div>
+    <div class="meldung meldung-fehler" id="loaderrorbox" role="alert" hidden="">
+      <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-warnung"></use></svg><p id="loaderror"></p>
+    </div>
+    <div class="tag-raster">
+        <section class="karte karte-daten" id="tagdaten">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Diensttag-Daten</h2>
+        <a class="karte-aktion karte-aktion-blau" href="#tagdaten" id="tagdatenknopf" data-tagdaten-bearbeiten="" aria-expanded="false">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-stift"></use></svg><span>Bearbeiten</span>
+        </a>
+      </div>
+      <div class="karte-inhalt">
+        <div class="tag-lese" id="taglese"><div class="tagfeld tagfeld-doppelt"><dt>Standort</dt><dd>Notarztstandort Talwang</dd></div><div class="tagfeld tagfeld-doppelt"><dt>Rettungsmittel</dt><dd>NEF Talwang 76/1</dd></div><div class="tagfeld tagfeld-breit"><dt>Besatzung</dt><dd>Fahrer Selma Ibrahimović · Praktikant Ronja Pfeil · Sonstige Dr. Hanna Kestner</dd></div><div class="tagfeld tagfeld-breit"><dt>Notizen</dt><dd>Letzter Dienst des Jahres; das Gerät wurde am Ende nicht abgemeldet — das letzte Ruhesegment blieb offen.</dd></div></div>
+        <form id="dayform" class="tag-form" hidden="" data-dirty-track="" data-submit-on-ctrl-enter="">
+        <label id="basefeld">Standort
+          <select name="base_id" id="basesel">
+            <option value="">–</option>
+                          <option value="1">Bergwachtstation Sonnenau</option>
+                          <option value="2">Luftrettungsstation Hochkreuth</option>
+                          <option value="3">Notarztstandort Talwang</option>
+                      </select>
+        </label>
+        <label>Rettungsmittel
+                    <select name="vehicle_id" id="vehsel">
+            <option value="">–</option>
+                          <option value="1" data-base="2" data-kind="air">
+                Alpenfalke 1 · Luftrettungsstation Hochkreuth</option>
+                          <option value="2" data-base="2" data-kind="air">
+                Alpenfalke 2 · Luftrettungsstation Hochkreuth</option>
+                          <option value="3" data-base="2" data-kind="air">
+                Bergwacht Hochkreuth · Luftrettungsstation Hochkreuth</option>
+                          <option value="4" data-base="1" data-kind="ground">
+                Bergwachtnotarzt Sonnenau · Bergwachtstation Sonnenau</option>
+                          <option value="5" data-base="0" data-kind="ground">
+                Boxkampf Rainer Maria Rilke</option>
+                          <option value="6" data-base="0" data-kind="ground">
+                Konzert von Karl Marx</option>
+                          <option value="7" data-base="3" data-kind="ground">
+                NEF Talwang 76/1 · Notarztstandort Talwang</option>
+                          <option value="8" data-base="0" data-kind="ground">
+                Reserve Talwang</option>
+                          <option value="9" data-base="0" data-kind="ground">
+                Sanitätsdienst Seefest</option>
+                          <option value="10" data-base="3" data-kind="ground">
+                VEF Talwang 76/2 · Notarztstandort Talwang</option>
+                                    <option value="adhoc">Anderes Rettungsmittel …</option>
+          </select>
+        </label>
+                <div class="schalter-abhaengig" id="adhocfelder" hidden="">
+          <label>Bezeichnung
+            <input type="text" name="adhoc_name" id="adhoc-name" maxlength="64" autocomplete="off" placeholder="z. B. RTW Aushilfe 12/1"></label>
+          <label>Typ
+            <select name="adhoc_typ" id="adhoc-typ">
+                              <option value="standard">Standard</option>
+                              <option value="bergwacht">Bergwacht</option>
+                              <option value="veranstaltung">Veranstaltung</option>
+                              <option value="sonstiges">Sonstiges</option>
+                          </select>
+          </label>
+          <div class="vehkind" id="adhoc-kind">
+            <span class="feld-label">Betriebsart
+              <span class="feld-klein-inline" data-adhoc-fest="" hidden="">bei diesem Typ fest</span></span>
+            <label><input type="radio" name="adhoc_kind" value="air" class="vehkind-radio">
+              luftgebunden</label>
+            <label><input type="radio" name="adhoc_kind" value="ground" class="vehkind-radio">
+              bodengebunden</label>
+          </div>
+                    <label class="feld-vorschlag" id="adhoc-basefeld">Standort
+            <input type="text" name="adhoc_base_name" id="adhoc-base" maxlength="120" autocomplete="off" placeholder="Auswahl oder freier Text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="adhoc-base-vorschlaege">
+            <input type="hidden" name="adhoc_base_id" id="adhoc-base-id" value=""><ul class="vorschlaege" hidden="" role="listbox" id="adhoc-base-vorschlaege"></ul></label>
+          <p class="feld-hinweis">Dieses Rettungsmittel wird nur an diesem Diensttag
+            gespeichert — es entsteht kein Stammdatensatz, und es gibt keine
+            Besatzungsrollen.</p>
+        </div>
+                <div id="crewfields"><label data-role="driver" class="feld-vorschlag">Fahrer<input type="text" name="crew_driver" maxlength="120" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="crew_driver-vorschlaege"><ul class="vorschlaege" hidden="" role="listbox" id="crew_driver-vorschlaege"></ul></label><label data-role="trainee" class="feld-vorschlag">Praktikant<input type="text" name="crew_trainee" maxlength="120" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="crew_trainee-vorschlaege"><ul class="vorschlaege" hidden="" role="listbox" id="crew_trainee-vorschlaege"></ul></label><label data-role="other" class="feld-vorschlag">Sonstige<input type="text" name="crew_other" maxlength="120" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="crew_other-vorschlaege"><ul class="vorschlaege" hidden="" role="listbox" id="crew_other-vorschlaege"></ul></label></div>
+        <p class="feld-hinweis" id="crewhint" hidden=""></p>
+        <p class="feld-hinweis" id="sd-hint" hidden="">
+          Noch keine Standorte hinterlegt — unter
+          <a href="einstellungen.php?t=standorte">Einstellungen → Standorte</a> anlegen.</p>
+                <label>Notizen <span class="feld-klein-inline">Klartext — keine Patientendaten</span>
+          <textarea name="notes" rows="3" maxlength="2000"></textarea></label>
+        <div class="tag-form-fuss">
+          <button class="knopf knopf-primaer" type="submit"><span>Speichern</span></button>          <span id="savestate" class="feld-klein-inline" role="status"></span>
+        </div>
+      </form>
+      </div>
+    </section>
+            
+        <div class="geo-spalte"><div id="map" class="geo leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom" tabindex="0"><div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(0px, 0px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 1; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 19; transform: translate3d(0px, 0px, 0px) scale(1);"></div></div></div><div class="leaflet-pane leaflet-overlay-pane"><svg pointer-events="none" class="leaflet-zoom-animated" width="439" height="192" viewBox="-37 -16 439 192" style="transform: translate3d(-37px, -16px, 0px);"><g><path class="leaflet-interactive" stroke="#6E6459" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M135 24L135 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L135 24"></path><path class="leaflet-interactive" stroke="#6E6459" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M228 119L228 118L228 118L228 118L228 117L228 117L228 116L228 115L228 114L228 113L228 112L228 111L229 109L228 109L227 108L225 108L223 107L222 107L220 107L218 107L216 107L214 107L213 107L212 106L210 105L210 103L210 101L209 100L209 98L209 96L208 94L208 93L208 91L208 89L207 87L207 85L207 84L207 82L207 80L207 78L207 77L207 75L207 73L208 71L208 69L208 68L208 66L208 64L208 62L208 61L208 59L208 57L207 55L207 54L206 52L205 51L204 49L203 48L201 47L200 45L199 44L197 43L196 42L195 40L194 39L192 38L191 37L190 35L188 34L187 33L186 32L185 30L183 29L182 28L181 27L180 25L182 26L181 27L180 29L179 30L178 31L177 33L175 33L174 34L172 33L170 33L169 32L167 31L165 31L164 30L162 30L160 31L159 32L157 33L156 33L154 32L153 31L152 29L150 29L149 28L147 27L145 27L144 27L143 26L141 25L140 25L139 25L138 25L137 25L136 25L136 25L135 24L135 24L134 24L134 24L134 24L135 24L135 24L134 24L135 24L134 24L135 24L135 24L135 24L134 24L135 24L134 24L134 24L135 24L134 24L135 24"></path><path class="leaflet-interactive" stroke="#6E6459" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M228 119L228 118L228 118L228 118L228 117L228 117L228 116L228 115L228 114L228 113L228 112L228 111L229 109L228 109L227 108L225 108L223 107L222 107L220 107L218 107L216 107L214 107L213 107L212 106L210 105L210 103L210 101L209 100L209 98L209 96L208 94L208 93L208 91L208 89L207 87L207 85L207 84L207 82L207 80L207 78L207 77L207 75L207 73L208 71L208 69L208 68L208 66L208 64L208 62L208 61L208 59L208 57L207 55L207 54L206 52L205 51L204 49L203 48L201 47L200 45L199 44L197 43L196 42L195 40L194 39L192 38L191 37L190 35L188 34L187 33L186 32L185 30L183 29L182 28L181 27L180 25L182 26L181 27L180 29L179 30L178 31L177 33L175 33L174 34L172 33L170 33L169 32L167 31L165 31L164 30L162 30L160 31L159 32L157 33L156 33L154 32L153 31L152 29L150 29L149 28L147 27L145 27L144 27L143 26L141 25L140 25L139 25L138 25L137 25L136 25L136 25L135 24L135 24L134 24L134 24L134 24L135 24L135 24L134 24L134 24L135 24L135 24L135 24L135 24L135 24L134 24L134 24L135 24L134 24"></path><path class="leaflet-interactive" stroke="#6E6459" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M228 119L228 118L228 118L228 118L228 117L228 117L228 116L228 115L228 114L228 113L228 112L228 111L229 109L228 109L227 108L225 108L223 107L222 107L220 107L218 107L216 107L214 107L213 107L212 106L210 105L210 103L210 101L209 100L209 98L209 96L208 94L208 93L208 91L208 89L207 87L207 85L207 84L207 82L207 80L207 78L207 77L207 75L207 73L208 71L208 69L208 68L208 66L208 64L208 62L208 61L208 59L208 57L207 55L207 54L206 52L205 51L204 49L203 48L201 47L200 45L199 44L197 43L196 42L195 40L194 39L192 38L191 37L190 35L188 34L187 33L186 32L185 30L183 29L182 28L181 27L180 25L182 26L181 27L180 29L179 30L178 31L177 33L175 33L174 34L172 33L170 33L169 32L167 31L165 31L164 30L162 30L160 31L159 32L157 33L156 33L154 32L153 31L152 29L150 29L149 28L147 27L145 27L144 27L143 26L141 25L140 25L139 25L138 25L137 25L136 25L136 25L135 24L135 24L134 24L134 24L134 24L134 24L135 24L134 24L134 24L134 24L135 24L134 24L135 24L135 24L134 24L135 24L134 24L135 24L135 24"></path><path class="leaflet-interactive" stroke="#6E6459" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M135 24L135 24L134 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24"></path><path class="leaflet-interactive" stroke="#6E6459" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M228 119L228 118L228 118L228 118L228 117L228 117L228 116L228 115L228 114L228 113L228 112L228 111L229 109L228 109L227 108L225 108L223 107L222 107L220 107L218 107L216 107L214 107L213 107L212 106L210 105L210 103L210 101L209 100L209 98L209 96L208 94L208 93L208 91L208 89L207 87L207 85L207 84L207 82L207 80L207 78L207 77L207 75L207 73L208 71L208 69L208 68L208 66L208 64L208 62L208 61L208 59L208 57L207 55L207 54L206 52L205 51L204 49L203 48L201 47L200 45L199 44L197 43L196 42L195 40L194 39L192 38L191 37L190 35L188 34L187 33L186 32L185 30L183 29L182 28L181 27L180 25L182 26L181 27L180 29L179 30L178 31L177 33L175 33L174 34L172 33L170 33L169 32L167 31L165 31L164 30L162 30L160 31L159 32L157 33L156 33L154 32L153 31L152 29L150 29L149 28L147 27L145 27L144 27L143 26L141 25L140 25L139 25L138 25L137 25L136 25L136 25L135 24L135 24L134 24L134 24L134 24L135 24L135 24L134 24L134 24"></path><path class="leaflet-interactive" stroke="#6E6459" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L134 24L134 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24"></path><path class="leaflet-interactive" stroke="#FF8F1F" stroke-opacity="1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M135 24L134 24L134 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 25L136 25L136 25L137 25L137 25L138 25L138 25L139 25L140 25L141 25L142 25L143 26L143 26L144 27L145 27L146 27L147 27L147 27L148 28L149 28L150 28L151 29L151 29L152 30L153 30L153 31L154 32L155 32L155 33L156 33L155 34L155 35L154 36L154 36L155 37L156 37L156 38L157 38L158 38L159 39L160 39L160 40L161 40L162 40L163 41L163 41L164 41L165 42L166 42L167 42L168 42L168 42L168 43L168 44L168 45L169 46L169 46L170 46L171 46L170 47L170 48L171 48L172 48L172 49L173 50L174 50L174 51L175 51L175 52L176 53L177 53L178 53L178 54L179 54L180 55L180 55L181 56L182 56L183 56L183 57L184 57L184 57L185 57L185 57L186 57L186 57L186 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L187 57L188 57L188 57L189 57L189 57L189 57L190 57L190 57L191 57L191 57L192 57L192 57L193 57L193 57L194 58L194 58L194 59L194 60L194 60L194 61L194 62L194 62L194 63L194 64L194 65L194 65L194 66L194 67L194 67L195 68L195 69L195 70L194 70L194 71L194 72L195 72L195 73L195 74L194 75L194 75L194 76L194 77L194 77L194 78L194 79L194 80L194 80L194 81L194 82L194 82L194 83L194 84L194 85L194 85L194 86L194 87L193 87L193 88L193 89L193 90L193 90L194 91L194 92L194 92L195 93L195 93L195 94L196 95L196 95L196 96L197 97L197 97L198 98L198 98L199 99L199 99L200 100L200 100L201 101L201 101L202 102L202 102L202 103L203 104L203 104L204 105L204 105L205 106L205 106L206 107L207 107L207 107L208 108L208 108L209 108L209 107L210 107L211 107L212 107L212 107L213 107L214 107L215 107L215 107L216 107L217 107L217 107L218 107L219 107L220 107L220 107L221 107L222 107L222 107L223 107L224 107L225 108L225 108L226 108L227 108L227 108L228 109L229 109L229 110L229 110L228 111L228 112L228 112L228 113L228 114L228 114L228 115L228 115L228 116L228 116L228 117L228 117L228 117L228 118L228 118L228 118L228 118L228 118L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 118L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 118L228 119L228 119L228 119L228 119"></path><path class="leaflet-interactive" stroke="#4280E5" stroke-opacity="1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M135 24L135 24L135 24L134 24L134 24L135 24L135 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 25L136 25L136 25L137 25L137 25L138 25L138 25L139 25L139 25L140 25L141 25L141 25L142 26L143 26L143 26L144 27L145 27L145 27L146 27L147 27L147 27L148 27L149 28L149 28L150 28L151 29L151 29L152 29L152 30L153 30L153 31L154 31L154 32L155 32L155 33L156 34L155 34L155 34L154 35L154 36L154 36L155 37L156 37L156 37L157 38L157 38L158 38L159 39L159 39L160 39L161 40L161 40L162 40L163 41L163 41L164 41L164 42L165 42L166 42L167 42L167 42L168 42L168 43L168 43L168 44L168 45L168 45L169 46L170 46L170 46L171 46L171 47L170 47L171 48L171 48L172 48L172 49L173 49L173 50L174 50L174 51L175 51L175 52L176 52L176 53L177 53L177 53L178 54L179 54L179 54L180 55L180 55L180 56L180 57L180 57L181 57L182 57L182 57L183 57L183 58L184 58L184 58L184 58L185 58L185 59L185 59L186 59L186 59L186 59L186 60L186 59L185 59L186 60L186 59L186 59L186 60L185 60L185 60L186 60L186 59L186 59L186 59L186 60L186 60L186 59L185 60L186 60L186 59L185 59L186 60L186 59L186 60L186 60L186 60L186 59L186 59L186 59L186 60L186 60L186 60L185 60L186 60L186 59L186 59L185 59L186 60L186 60L186 59L185 59L186 60L185 60L186 59L186 60L186 60L186 60L185 59L186 60L186 59L186 60L186 59L186 59L186 59L186 59L185 59L185 59L185 58L184 58L184 58L183 58L183 58L183 58L182 57L182 57L182 57L181 57L181 57L180 57L180 57L180 56L181 56L181 56L182 56L182 56L183 57L183 57L184 57L185 57L185 57L186 57L186 57L187 57L188 57L188 57L189 57L189 57L190 57L191 57L191 57L192 57L192 57L193 57L194 57L194 58L194 58L194 59L194 59L194 60L194 60L194 61L194 62L194 62L194 63L194 64L194 64L194 65L194 65L194 66L194 66L194 67L194 68L195 68L195 69L195 69L194 70L194 71L194 71L195 72L195 72L195 73L195 74L195 74L194 75L194 75L194 76L194 77L194 77L194 78L194 78L194 79L194 80L194 80L194 81L194 81L194 82L194 83L194 83L194 84L194 84L194 85L194 86L194 86L194 87L193 87L193 88L193 88L193 89L193 90L193 90L194 91L194 91L194 92L194 92L195 93L195 93L195 94L196 94L196 95L196 95L196 96L197 97L197 97L197 97L198 98L198 98L199 99L199 99L200 99L200 100L201 100L201 101L201 101L202 102L202 102L202 103L203 103L203 104L203 104L204 105L204 105L205 106L205 106L205 106L206 107L206 107L207 107L208 107L208 108L208 108L209 108L209 107L210 107L211 107L211 107L212 107L212 107L213 107L214 107L214 107L215 107L215 107L216 107L217 107L217 107L218 107L218 107L219 107L220 107L220 107L221 107L221 107L222 107L223 107L223 107L224 107L224 108L225 108L226 108L226 108L227 108L227 108L228 109L228 109L229 109L229 110L229 110L228 111L228 111L228 112L228 112L228 113L228 113L228 114L228 114L228 115L228 115L228 115L228 116L228 116L228 116L228 117L228 117L228 118L228 118L228 118L228 118L228 118L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 118L228 119L228 119L228 119L228 119L228 119L228 119L228 118L228 119L228 119L228 119L228 119L228 118L228 119L228 119L228 119L228 119"></path><path class="leaflet-interactive" stroke="#D63338" stroke-opacity="1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M134 24L134 24L135 24L135 24L135 24L135 24L135 24L134 24L134 24L135 24L134 24L135 24L135 24L135 24L135 24L135 25L136 25L136 25L137 25L137 25L138 25L138 25L139 25L140 25L141 25L142 25L143 26L143 26L145 27L146 27L147 27L148 28L149 28L151 29L152 29L153 30L154 31L155 32L156 33L156 33L158 32L159 32L160 31L161 30L163 30L164 30L165 30L167 31L168 32L169 32L170 33L172 33L173 34L174 33L176 33L177 33L178 32L179 31L180 29L181 29L182 29L183 30L184 31L185 32L186 33L187 33L188 34L189 35L190 36L191 37L192 38L193 39L194 40L195 41L196 42L197 43L198 44L199 45L200 46L201 47L202 48L203 49L204 50L205 51L206 52L207 54L207 55L208 56L208 58L208 59L208 60L208 62L208 63L208 65L208 66L208 67L208 69L207 70L207 72L207 73L207 74L207 76L207 77L207 78L207 80L207 81L207 83L207 84L207 85L207 87L207 88L207 90L208 91L208 92L208 94L208 95L209 96L209 98L209 99L209 101L210 102L210 103L210 105L210 106L210 107L210 109L209 109L209 108L210 107L211 107L212 107L214 107L215 107L217 107L218 107L219 107L221 107L222 107L224 107L225 108L226 108L228 108L229 109L229 110L228 112L228 113L228 114L228 115L228 116L228 117L228 118L228 119L228 120L229 120L230 120L230 120L231 120L231 120L232 120L232 119L232 119L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 118L232 119L232 119L232 119L232 119L232 119L232 119L232 119L232 119L232 119L232 119L232 119L232 119L232 119L232 119L232 119L232 120L232 120L232 120L232 120L231 120L231 120L231 120L231 120L231 120L231 120L231 120L231 120L231 120L231 120L231 120L231 120L231 120L231 120L230 120L230 120L230 120L230 120L230 120L230 120L230 120L230 120L230 120L230 120L230 120L230 120L230 120L230 120L230 120L229 120L229 120L229 120L229 120L229 120L229 120L229 120L229 120L229 120L229 120L229 120L229 120L229 120L229 120L228 120L228 120L228 120L228 120L228 120L228 120L228 120L228 120L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 118L228 119L228 119L228 118L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119"></path><path class="leaflet-interactive" stroke="#1A2E4D" stroke-opacity="1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M135 24L135 24L134 24L134 24L134 24L135 24L135 24L134 24L135 24L135 24L135 24L135 24L135 24L136 25L136 25L136 25L137 25L138 25L139 25L139 25L140 25L141 25L142 26L143 26L144 27L146 27L147 27L148 28L149 28L151 29L152 30L153 31L154 32L155 33L156 33L158 32L159 31L160 31L162 30L163 30L165 30L166 31L168 31L169 32L170 33L172 33L173 34L175 33L176 33L178 32L179 31L180 30L181 29L182 29L184 30L185 31L186 32L187 33L188 34L189 35L190 36L192 37L193 39L194 40L195 41L196 42L197 43L198 44L199 45L200 46L202 47L203 48L204 50L205 51L206 52L206 53L207 55L208 56L208 58L208 59L208 61L208 62L208 64L208 66L208 67L208 69L207 70L207 72L207 73L207 75L207 77L207 78L207 80L207 81L207 83L207 84L207 86L207 87L207 89L208 91L208 92L208 94L208 95L209 97L209 98L209 100L209 101L210 103L210 104L210 106L210 107L210 109L209 109L209 108L210 107L212 107L213 107L215 107L217 107L218 107L220 107L221 107L223 107L224 108L226 108L227 108L229 109L229 111L228 112L228 114L228 115L228 117L227 118L227 119L226 120L225 121L224 120L223 120L222 120L222 121L222 122L221 123L222 123L222 123L223 123L223 124L223 124L224 123L224 123L224 123L224 123L224 123L224 123L224 123L224 123L223 123L224 123L224 123L224 123L223 123L224 123L224 123L224 123L224 123L224 123L224 123L223 124L223 124L223 123L222 123L222 123L221 123L221 123L220 123L220 123L220 124L220 124L220 124L220 125L220 125L220 125L220 126L220 126L220 127L220 127L220 127L220 128L220 128L220 129L220 129L220 130L220 130L220 131L220 131L220 132L221 132L221 133L220 133L220 134L220 134L219 134L219 135L218 135L218 136L217 136L217 136L216 135L216 135L215 135L215 134L215 133L215 133L215 132L214 132L214 131L214 130L214 130L214 129L214 129L214 128L214 127L214 127L214 126L214 126L214 125L214 124L214 124L214 123L214 122L213 122L213 121L213 121L213 120L213 119L213 119L213 118L213 118L213 117L213 116L212 116L212 115L212 115L212 114L212 113L211 113L211 112L211 112L211 111L211 111L211 110L211 109L211 109L211 108L211 107L210 107L210 106L210 106L210 105L210 104L210 104L210 103L210 103L210 102L210 101L210 101L209 100L209 100L209 99L209 98L209 98L209 97L209 96L209 96L209 95L208 95L208 94L208 93L208 93L208 92L208 92L208 91L208 90L208 90L208 89L207 89L207 88L207 87L207 87L207 86L207 86L207 85L207 84L207 84L207 83L207 82L207 82L207 81L207 81L207 80L207 79L207 79L207 78L207 78L207 77L207 76L207 76L207 75L207 74L207 74L207 73L207 73L208 72L208 71L208 71L208 70L208 70L208 69L208 68L208 68L208 67L208 66L208 66L208 65L208 65L208 64L208 63L208 63L208 62L208 62L208 61L208 60L208 60L208 59L208 58L208 58L208 57L208 57L208 56L208 55L207 55L207 54L207 54L207 53L206 53L206 52L206 52L205 51L205 51L205 50L204 50L204 49L203 49L203 48L202 48L202 47L202 47L201 47L201 46L200 46L200 45L199 45L199 44L199 44L198 44L198 43L197 43L197 42L196 42L196 41L195 41L195 41L195 40L194 40L194 39L193 39L193 38L192 38L192 38L191 37L191 37L191 36L190 36L190 35L189 35L189 34L188 34L188 34L187 33L187 33L187 32L186 32L186 31L185 31L185 31L184 30L184 30L183 29L183 29L183 28L182 28L182 28L181 27L181 27L181 26L180 26L180 25L181 25L182 25L182 26L182 26L181 27L181 27L181 28L180 28L180 29L180 29L180 30L179 30L179 31L179 31L178 32L178 32L177 32L177 33L176 33L176 33L175 33L174 34L174 34L173 34L172 34L172 33L171 33L171 33L170 33L170 33L169 32L169 32L168 32L167 31L167 31L166 31L166 31L165 30L165 30L164 30L163 30L163 30L162 30L161 30L161 30L160 31L160 31L159 31L159 32L158 32L158 32L157 33L157 33L156 33L156 33L155 33L155 32L154 32L154 31L153 31L153 31L152 30L152 30L152 29L151 29L150 29L150 28L149 28L149 28L148 28L148 27L147 27L147 27L146 27L146 27L145 27L145 27L144 27L144 27L143 26L143 26L143 26L142 26L142 25L141 25L141 25L141 25L140 25L140 25L139 25L139 25L139 25L138 25L138 25L138 25L137 25L137 25L137 25L136 25L136 25L135 25L135 24L135 24L134 24L134 24L134 24L134 24L134 24L134 24L135 24"></path><path class="leaflet-interactive" stroke="#C25A00" stroke-opacity="1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M135 24L135 24L135 24L135 24L135 24L135 24L134 24L135 24L134 24L134 24L134 24L135 24L135 24L135 25L136 25L136 25L137 25L137 25L138 25L139 25L140 25L140 25L141 25L142 26L143 26L144 27L145 27L147 27L148 27L149 28L150 29L152 29L153 30L154 31L155 32L156 33L156 33L158 32L159 32L160 31L161 30L163 30L164 30L165 30L167 31L168 32L169 32L170 33L172 33L173 34L174 33L176 33L177 33L178 32L179 31L180 29L181 29L182 29L183 30L184 31L185 32L186 33L187 34L188 34L189 35L190 36L191 37L192 38L193 39L194 40L195 41L196 42L197 43L198 44L199 45L200 46L201 47L202 48L203 49L204 50L205 51L206 53L207 54L207 55L208 56L208 58L208 59L208 60L208 62L208 63L208 65L208 66L208 67L208 69L207 70L207 72L207 73L207 74L207 76L207 77L207 79L207 80L207 81L207 83L207 84L207 86L207 87L207 88L207 90L208 91L208 93L208 94L208 95L209 97L209 98L209 99L209 101L210 102L210 104L210 105L210 106L210 108L210 109L209 109L209 108L210 107L211 107L213 107L214 107L215 107L217 107L218 107L219 107L221 107L222 107L223 107L224 107L225 108L226 108L226 108L227 108L228 108L228 109L229 109L229 109L229 110L229 110L229 111L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 111L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 111L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 110L228 111L228 111L228 111L229 111L229 111L228 111L228 111L228 111L228 111L228 111L228 111L228 111L228 111L228 111L228 112L228 112L228 112L228 112L228 112L228 112L228 112L228 112L228 112L228 112L228 112L228 113L228 113L228 113L228 113L228 113L228 113L228 113L228 113L228 113L228 113L228 113L228 114L228 114L228 114L228 114L228 114L228 114L228 114L228 114L228 114L228 114L228 115L228 115L228 115L228 115L228 115L228 115L228 115L228 115L228 115L228 115L228 115L228 116L228 116L228 116L228 116L228 116L228 116L228 116L228 116L228 116L228 116L228 116L228 117L228 117L228 117L228 117L228 117L228 117L228 117L228 117L228 117L228 117L228 117L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 118L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 119L228 118L228 119L228 119L228 119L228 119"></path><path class="leaflet-interactive" stroke="#1F4E9C" stroke-opacity="0.9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 7" fill="none" d="M359 134L402 118"></path></g></svg></div><div class="leaflet-pane leaflet-shadow-pane"></div><div class="leaflet-pane leaflet-marker-pane"><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" title="Notarztstandort Talwang" style="margin-left: -15px; margin-top: -15px; width: 30px; height: 30px; transform: translate3d(135px, 24px, 0px); z-index: 524;"><span class="geo-schild"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-haus"></use></svg></span></span></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(187px, 58px, 0px); z-index: 458;"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-einsatzort"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(187px, 60px, 0px); z-index: 460;"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-einsatzort"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(231px, 118px, 0px); z-index: 518;"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-einsatzort"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(224px, 122px, 0px); z-index: 522;"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-einsatzort"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(228px, 110px, 0px); z-index: 510;"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-einsatzort"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(414px, 114px, 0px); z-index: 514;"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-einsatzort"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" style="margin-left: -6px; margin-top: -6px; width: 12px; height: 12px; transform: translate3d(359px, 134px, 0px); z-index: 134;"><span class="geo-punkt" style="background:#1F4E9C"></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(209px, 98px, 0px); z-index: 398;"><span class="geo-pfeil" style="transform:rotate(180deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(208px, 91px, 0px); z-index: 391;"><span class="geo-pfeil" style="transform:rotate(0deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(150px, 29px, 0px); z-index: 329;"><span class="geo-pfeil" style="transform:rotate(270deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div></div><div class="leaflet-pane leaflet-tooltip-pane"></div><div class="leaflet-pane leaflet-popup-pane"></div><div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(277072px, 183262px, 0px) scale(1024);"></div></div><div class="leaflet-control-container"><div class="leaflet-top leaflet-left"><div class="leaflet-control-zoom leaflet-bar leaflet-control"><a class="leaflet-control-zoom-in" href="#" title="Zoom in" role="button" aria-label="Zoom in" aria-disabled="false"><span aria-hidden="true">+</span></a><a class="leaflet-control-zoom-out" href="#" title="Zoom out" role="button" aria-label="Zoom out" aria-disabled="false"><span aria-hidden="true">−</span></a></div><div class="leaflet-bar map-ctrl-fs leaflet-control"><a class="" href="#" title="Vollbild" aria-label="Vollbild"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" role="img"><title>Vollbild</title><use href="#s-vollbild"></use></svg></a></div><div class="leaflet-bar map-ctrl-groesse karte-groesse leaflet-control"><a class="" href="#" role="button" title="Karte vergrößern" aria-label="Karte vergrößern" aria-pressed="false"><svg class="symbol symbol-gross symbol-hoch" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-karte-gross"></use></svg><svg class="symbol symbol-gross symbol-breit" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-karte-breit"></use></svg></a></div></div><div class="leaflet-top leaflet-right"><div class="leaflet-control-layers leaflet-control" aria-haspopup="true"><a class="leaflet-control-layers-toggle" href="#" title="Layers" role="button"></a><section class="leaflet-control-layers-list"><div class="leaflet-control-layers-base"><label><span><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers_35" checked="checked"><span> Standard</span></span></label><label><span><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers_35"><span> Wanderkarte (OpenHikingMap)</span></span></label><label><span><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers_35"><span> Topographisch (OpenTopoMap)</span></span></label><label><span><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers_35"><span> Satellitenbild (Esri)</span></span></label></div><div class="leaflet-control-layers-separator" style="display: none;"></div><div class="leaflet-control-layers-overlays"></div></section></div></div><div class="leaflet-bottom leaflet-left"></div><div class="leaflet-bottom leaflet-right"><div class="leaflet-control-attribution leaflet-control"><a href="https://leafletjs.com" title="A JavaScript library for interactive maps"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" class="leaflet-attribution-flag"><path fill="#4C7BE1" d="M0 0h12v4H0z"></path><path fill="#FFD500" d="M0 4h12v3H0z"></path><path fill="#E0BC00" d="M0 7h12v1H0z"></path></svg> Leaflet</a> <span aria-hidden="true">|</span> © OpenStreetMap</div></div></div></div></div>
+
+    <section class="karte karte-einsaetze" id="einsatzliste">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Einsätze</h2>
+        <span class="karte-zahl" id="mzahl">6 · 59 km</span>
+                <button type="button" class="karte-sortieren nur-unter-720" data-blatt="sortblatt" aria-expanded="false" aria-controls="sortblatt">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>Sortieren</title><use href="#s-sortieren"></use></svg>        </button>
+        <a class="karte-aktion karte-aktion-orange" id="addmission" href="einsatz_form.php?d=21">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-plus"></use></svg><span>Nachtragen</span>
+        </a>
+      </div>
+      <div class="karte-inhalt">
+                <div class="meldung meldung-info" id="lockbanner" role="status" hidden="">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-schloss"></use></svg>          <p>Geschützte Angaben sind gesperrt — Einsatzort, Alter und Diagnose
+             bleiben verborgen, bis die Verschlüsselung entsperrt ist.</p>
+          <div class="meldung-aktion">
+            <button class="knopf knopf-neutral" type="button" id="unlockbtn"><span>Entsperren</span></button>          </div>
+        </div>
+
+                <div class="tabelle-scroll nur-ab-720">
+                    <table class="tabelle" id="missions">
+            <thead><tr><th class="sortable streifen-spalte" data-key="col" data-label=""></th><th class="sortable mitte-spalte" data-key="no" data-label="Nr.">Nr.</th><th class="sortable" data-key="start" data-label="Beginn">Beginn<span class="arrow"> <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>aufsteigend</title><use href="#s-pfeil-hoch"></use></svg></span></th><th class="sortable zahl-spalte" data-key="dur" data-label="Dauer">Dauer</th><th class="sortable" data-key="site" data-label="Einsatzort">Einsatzort</th><th class="sortable zahl-spalte" data-key="age" data-label="Alter">Alter</th><th class="sortable" data-key="dx" data-label="Diagnose">Diagnose</th><th class="sortable haken-spalte" data-key="sec" data-label="Sekundär­transport">Sekundär­transport</th><th class="sortable zahl-spalte" data-key="km" data-label="km">km</th></tr></thead>
+            <tbody><tr class="clickable" data-mid="101" tabindex="0" role="link"><td class="streifen-spalte"><span class="streifen" style="background:#FF8F1F"></span></td><td class="mitte-spalte">1</td><td>07:13</td><td class="zahl-spalte zeit-spalte">57min</td><td class="">Auwiesen</td><td class="zahl-spalte ">61</td><td class="">Schädel-Hirn-Trauma bei Motorradunfall</td><td class="haken-spalte"></td><td class="zahl-spalte">8,9</td></tr><tr class="clickable" data-mid="102" tabindex="0" role="link"><td class="streifen-spalte"><span class="streifen" style="background:#4280E5"></span></td><td class="mitte-spalte">2</td><td>08:36</td><td class="zahl-spalte zeit-spalte">1h 15min</td><td class="">Auwiesen</td><td class="zahl-spalte ">30</td><td class="">Schädel-Hirn-Trauma bei Motorradunfall</td><td class="haken-spalte"></td><td class="zahl-spalte">9,9</td></tr><tr class="clickable" data-mid="103" tabindex="0" role="link"><td class="streifen-spalte"><span class="streifen" style="background:#D63338"></span></td><td class="mitte-spalte">3</td><td>10:15</td><td class="zahl-spalte zeit-spalte">1h 32min</td><td class="">Steinach im Tal</td><td class="zahl-spalte ">45</td><td class="">Schädel-Hirn-Trauma bei Motorradunfall</td><td class="haken-spalte"></td><td class="zahl-spalte">10,5</td></tr><tr class="clickable" data-mid="104" tabindex="0" role="link"><td class="streifen-spalte"><span class="streifen" style="background:#1A2E4D"></span></td><td class="mitte-spalte">4</td><td>12:12</td><td class="zahl-spalte zeit-spalte">54min</td><td class="">Steinach im Tal</td><td class="zahl-spalte ">92</td><td class="">Hypertensive Entgleisung</td><td class="haken-spalte"></td><td class="zahl-spalte">20,2</td></tr><tr class="clickable" data-mid="105" tabindex="0" role="link"><td class="streifen-spalte"><span class="streifen" style="background:#C25A00"></span></td><td class="mitte-spalte">5</td><td>13:31</td><td class="zahl-spalte zeit-spalte">1h 25min</td><td class="">Steinach im Tal</td><td class="zahl-spalte ">89</td><td class="">Akutes Abdomen</td><td class="haken-spalte"></td><td class="zahl-spalte">9,7</td></tr><tr class="clickable" data-mid="106" tabindex="0" role="link"><td class="streifen-spalte"><span class="streifen" style="background:#1F4E9C"></span></td><td class="mitte-spalte">6</td><td>15:11</td><td class="zahl-spalte zeit-spalte">55min</td><td class="">Felsgrat</td><td class="zahl-spalte ">29</td><td class="">Rippenprellung nach Sturz, ambulant belassen</td><td class="haken-spalte"></td><td class="zahl-spalte"><span class="dash">–</span></td></tr></tbody>
+          </table>
+        </div>
+        <div class="kachelliste nur-unter-720" id="missionskacheln"><a class="kachel" href="einsatz.php?id=101"><span class="kachel-streifen" style="background:#FF8F1F"></span><span class="kachel-zeit">07:13</span><span class="kachel-rumpf"><span class="kachel-kopf"><span class="kachel-ort">Auwiesen</span><span class="kachel-km">9 km</span></span><span class="kachel-dx">Schädel-Hirn-Trauma bei Motorradunfall</span><span class="kachel-fuss">57min · 61 J.</span></span></a><a class="kachel" href="einsatz.php?id=102"><span class="kachel-streifen" style="background:#4280E5"></span><span class="kachel-zeit">08:36</span><span class="kachel-rumpf"><span class="kachel-kopf"><span class="kachel-ort">Auwiesen</span><span class="kachel-km">10 km</span></span><span class="kachel-dx">Schädel-Hirn-Trauma bei Motorradunfall</span><span class="kachel-fuss">1h 15min · 30 J.</span></span></a><a class="kachel" href="einsatz.php?id=103"><span class="kachel-streifen" style="background:#D63338"></span><span class="kachel-zeit">10:15</span><span class="kachel-rumpf"><span class="kachel-kopf"><span class="kachel-ort">Steinach im Tal</span><span class="kachel-km">10 km</span></span><span class="kachel-dx">Schädel-Hirn-Trauma bei Motorradunfall</span><span class="kachel-fuss">1h 32min · 45 J.</span></span></a><a class="kachel" href="einsatz.php?id=104"><span class="kachel-streifen" style="background:#1A2E4D"></span><span class="kachel-zeit">12:12</span><span class="kachel-rumpf"><span class="kachel-kopf"><span class="kachel-ort">Steinach im Tal</span><span class="kachel-km">20 km</span></span><span class="kachel-dx">Hypertensive Entgleisung</span><span class="kachel-fuss">54min · 92 J.</span></span></a><a class="kachel" href="einsatz.php?id=105"><span class="kachel-streifen" style="background:#C25A00"></span><span class="kachel-zeit">13:31</span><span class="kachel-rumpf"><span class="kachel-kopf"><span class="kachel-ort">Steinach im Tal</span><span class="kachel-km">10 km</span></span><span class="kachel-dx">Akutes Abdomen</span><span class="kachel-fuss">1h 25min · 89 J.</span></span></a><a class="kachel" href="einsatz.php?id=106"><span class="kachel-streifen" style="background:#1F4E9C"></span><span class="kachel-zeit">15:11</span><span class="kachel-rumpf"><span class="kachel-kopf"><span class="kachel-ort">Felsgrat</span><span class="kachel-km"></span></span><span class="kachel-dx">Rippenprellung nach Sturz, ambulant belassen</span><span class="kachel-fuss">55min · 29 J.</span></span></a></div>
+        <p id="empty" class="feld-hinweis" hidden="">Für diesen Tag sind keine Einsätze dokumentiert.</p>
+      </div>
+    </section>
+    </div>
+        <section class="karte" id="ruheliste">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Ruhesegmente</h2>
+        <span class="karte-zahl" id="rzahl">7</span>
+      </div>
+      <div class="karte-inhalt">
+        <p class="feld-hinweis">Aufzeichnung zwischen den Einsätzen. Wurde
+           während eines Einsatzes kein Knopf gedrückt, schneide ihn hier aus
+           dem Segment heraus — der übrige Zeitraum bleibt als Ruhesegment
+           stehen.</p>
+        <div id="ruhezeilen"><div class="zeile" data-ruhezeile="113"><div class="zeile-text"><span class="zeile-haupt">07:00 – 07:13 Uhr</span><span class="zeile-klein">Ruhesegment Nr. 113 · 13 min · 14 Punkte</span></div><div class="zeile-aktionen"><div class="zeile-knoepfe"><button class="knopf knopf-neutral" type="button" data-schnitt-auf="113" aria-expanded="false"><span>Schneiden</span></button></div></div></div><div class="zeile" data-ruhezeile="114"><div class="zeile-text"><span class="zeile-haupt">08:10 – 08:36 Uhr</span><span class="zeile-klein">Ruhesegment Nr. 114 · 26 min · 131 Punkte</span></div><div class="zeile-aktionen"><div class="zeile-knoepfe"><button class="knopf knopf-neutral" type="button" data-schnitt-auf="114" aria-expanded="false"><span>Schneiden</span></button></div></div></div><div class="zeile" data-ruhezeile="115"><div class="zeile-text"><span class="zeile-haupt">09:51 – 10:15 Uhr</span><span class="zeile-klein">Ruhesegment Nr. 115 · 24 min · 129 Punkte</span></div><div class="zeile-aktionen"><div class="zeile-knoepfe"><button class="knopf knopf-neutral" type="button" data-schnitt-auf="115" aria-expanded="false"><span>Schneiden</span></button></div></div></div><div class="zeile" data-ruhezeile="116"><div class="zeile-text"><span class="zeile-haupt">11:47 – 12:12 Uhr</span><span class="zeile-klein">Ruhesegment Nr. 116 · 25 min · 130 Punkte</span></div><div class="zeile-aktionen"><div class="zeile-knoepfe"><button class="knopf knopf-neutral" type="button" data-schnitt-auf="116" aria-expanded="false"><span>Schneiden</span></button></div></div></div><div class="zeile" data-ruhezeile="117"><div class="zeile-text"><span class="zeile-haupt">13:06 – 13:31 Uhr</span><span class="zeile-klein">Ruhesegment Nr. 117 · 25 min · 26 Punkte</span></div><div class="zeile-aktionen"><div class="zeile-knoepfe"><button class="knopf knopf-neutral" type="button" data-schnitt-auf="117" aria-expanded="false"><span>Schneiden</span></button></div></div></div><div class="zeile" data-ruhezeile="118"><div class="zeile-text"><span class="zeile-haupt">14:56 – 15:11 Uhr</span><span class="zeile-klein">Ruhesegment Nr. 118 · 15 min · 120 Punkte</span></div><div class="zeile-aktionen"><div class="zeile-knoepfe"><button class="knopf knopf-neutral" type="button" data-schnitt-auf="118" aria-expanded="false"><span>Schneiden</span></button></div></div></div><div class="zeile" data-ruhezeile="119"><div class="zeile-text"><span class="zeile-haupt">16:06 – offen Uhr</span><span class="zeile-klein">Ruhesegment Nr. 119 · 175 Punkte · läuft noch</span></div><div class="zeile-aktionen"><div class="zeile-knoepfe"><button class="knopf knopf-neutral" type="button" data-schnitt-auf="119" aria-expanded="false"><span>Schneiden</span></button></div></div></div></div>
+      </div>
+    </section>
+
+            <dialog class="dialog" id="gpxdialog" aria-labelledby="gpx-titel">
+      <div class="dialog-kopf"><h2 id="gpx-titel">GPX importieren</h2></div>
+      <div class="dialog-inhalt">
+        <p id="gpx-tagsatz"></p>
+        <div class="feld">
+          <label class="feld-label" for="gpx-datei">GPX-Datei</label>
+          <input class="feld-eingabe" type="file" id="gpx-datei" accept=".gpx,application/gpx+xml">
+          <p class="feld-klein">GPX mit Zeitstempeln je Punkt. Eine Datei ohne
+             Zeiten wird abgelehnt — ohne sie gibt es keine Reihenfolge und
+             kein Schneiden.</p>
+        </div>
+        <div class="feld">
+          <span class="feld-label">Übernehmen als</span>
+          <div class="wahlliste" role="radiogroup" aria-label="Übernehmen als">
+            <input type="radio" class="wahl-box" id="gpx-ruhe" name="gpx-ziel" value="ruhe" checked="">
+            <label class="wahl-zeile" for="gpx-ruhe">
+              <span class="wahl-punkt" aria-hidden="true"></span>
+              <span class="wahl-text">Ruhesegment</span>
+              <span class="wahl-zusatz">die ganze Aufzeichnung; Einsätze danach herausschneiden</span>
+            </label>
+            <input type="radio" class="wahl-box" id="gpx-einsatz" name="gpx-ziel" value="einsatz">
+            <label class="wahl-zeile" for="gpx-einsatz">
+              <span class="wahl-punkt" aria-hidden="true"></span>
+              <span class="wahl-text">Einsatz</span>
+              <span class="wahl-zusatz">die Datei ist genau ein Einsatz; Phasenzeiten danach im Einsatz</span>
+            </label>
+          </div>
+        </div>
+        <div class="meldung meldung-fehler" id="gpx-fehler" role="alert" hidden="">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-warnung"></use></svg><p></p>
+        </div>
+      </div>
+      <div class="dialog-fuss">
+        <button class="knopf knopf-leise" type="button" id="gpx-abbrechen">
+          <span>Abbrechen</span></button>
+        <button class="knopf knopf-primaer" type="button" id="gpx-los" disabled="">
+          <span>Importieren</span></button>
+      </div>
+    </dialog>
+
+    <div class="blatt" id="sortblatt" hidden="">
+      <div class="blatt-griff" aria-hidden="true"></div>
+      <h2 class="blatt-titel">Sortieren</h2>
+      <div class="blatt-liste" id="sortliste"><button type="button" class="blatt-zeile"><span>Nr.</span></button><button type="button" class="blatt-zeile aktiv"><span>Beginn</span><svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>aufsteigend</title><use href="#s-pfeil-hoch"></use></svg></button><button type="button" class="blatt-zeile"><span>Dauer</span></button><button type="button" class="blatt-zeile"><span>Einsatzort</span></button><button type="button" class="blatt-zeile"><span>Alter</span></button><button type="button" class="blatt-zeile"><span>Diagnose</span></button><button type="button" class="blatt-zeile"><span>Sekundär­transport</span></button><button type="button" class="blatt-zeile"><span>km</span></button></div>
+      <button type="button" class="knopf knopf-leise blatt-abbrechen" data-blatt-zu="">
+        <span>Abbrechen</span></button>
+    </div>
+
+
+  </main>
+</div>
+<footer class="fuss-seite">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.37.1</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div></div></div></div><div class="reihe"><h2>2 · Anmeldeseite auf Staging</h2><p class="unter">Die Reihe so breit wie die Karte.</p><div class="frames"><div class="frame-huelle" style="width:376px"><span class="frame-titel">login.php · Staging</span><div class="frame"><div class="anmeldung-body">
+<main class="anmeldung"><div class="hinweise"><div class="demo-hinweis hinweis-umgebung" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-server"></use></svg><p><strong>Staging</strong> — Testdaten, kein Echtbetrieb.</p></div><div class="meldung meldung-warn meldung-ankuendigung" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-warnung"></use></svg><p><strong>Wartung am Dienstag, 30.09.2026, 20:00 bis 21:00.</strong> Die Anwendung ist in dieser Zeit nicht erreichbar; Einsätze auf Uhr und Handy werden danach übertragen.</p><div class="meldung-aktion"><button type="button" class="knopf knopf-symbol" aria-label="Ankündigung ausblenden"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-schliessen"></use></svg></button></div></div></div>
+ <div class="anmeldung-karte">
+  <img src="../../../../server/assets/images/gen-em_logo_helicopter.svg" alt="" class="anmeldung-logo">
+  <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
+  <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+          <form method="post" autocomplete="on" id="loginform" data-sperre-rest="0">
+        <input type="hidden" name="csrf" value="8151b7edd2f3aeb3b0c86184002bf80a52edce3c1d71c9e62b757df2cf362ee3">    <input type="hidden" name="tokens" id="toks">
+    <label>E-Mail
+      <input type="email" name="email" required="" autofocus="" autocomplete="username">
+    </label>
+    <label>Passwort
+      <input type="password" name="password" required="" autocomplete="current-password">
+    </label>
+    <div class="listen-form-fuss">
+      <button class="knopf knopf-primaer knopf-breit" type="submit"><span>Anmelden</span></button>    </div>
+  </form>
+  <p class="anmeldung-neben"><a href="reset_request.php">Passwort vergessen?</a>
+          </p>
+    <p class="zustandszeile" id="loginstate"></p>
+ </div>
+
+  <nav class="fuss-anmeldung" aria-label="Über diese Anwendung">
+   <a href="ueber.php">Was ist NAdoku?</a>
+   <a href="hilfe.php">Handbuch</a>
+   <a href="impressum.php">Impressum</a>
+   <a href="datenschutz.php">Datenschutz</a>
+ </nav>
+</main>
+
+
+
+<footer class="fuss-seite fuss-dunkel">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.37.1</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+
+
+</div></div></div></div></div><div class="notiz"><p>Anmerkungen: siehe Desktop-Datei.</p></div></body></html>

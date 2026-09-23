@@ -14,6 +14,69 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.37.3] — 2026-09-23
+
+**Eine neue Anlage lässt sich wieder einrichten, und die Anmeldeseite stellt
+ihre Verweise unter die Karte.** Backlog Nr. 288 und 289, beide gefunden beim
+Bau der Mockup-Runde M-P5c-02. Korrekturstufe: kein Feld, keine Tabelle,
+keine Migration — `update.php` ist nicht fällig.
+
+### Behoben
+
+- **Web: Die Einrichtung einer neuen Anlage scheiterte seit Web 20.30.0**
+  (Nr. 288). `install.php` legt die erste BetreiberIn über `konto_anlegen()`
+  an, und das läuft seit Schritt 15 in `db_transaktion()`. Der Rahmen stand in
+  `db.php` — und `konto_lib.php` lädt `db.php` nur, wenn `config.php` schon
+  da ist. Während der Einrichtung ist sie es nicht, sie wird erst danach
+  geschrieben. Die Seite meldete „Call to undefined function
+  db_transaktion()". Betroffen war jede Neueinrichtung: eine neue Anlage, ein
+  Hosterwechsel, ein Neuanfang nach Verlust — und die örtliche
+  Arbeitsumgebung, deren `hochfahren.sh --neu` in Schritt 4 abbrach. **Der
+  Rahmen steht jetzt in `transaktion_lib.php`**, die nichts lädt;
+  `konto_lib.php` bindet sie unbedingt ein, `db.php` ebenfalls, sodass jeder
+  bisherige Aufrufer sie ohne Änderung findet. Die Registerzeile Z16 nimmt die
+  neue Datei aus statt `db.php`; ihre Decke bleibt 9.
+- **Web: Auf der Anmeldeseite standen die vier Verweise neben der Karte**
+  (Nr. 289). „Was ist NAdoku?", Handbuch, Impressum und Datenschutz sollen
+  unter der Karte stehen — so sagen es der Kommentar in `login.php` und der
+  im Stylesheet. `.anmeldung` ordnete ihre Kinder aber nebeneinander an, und
+  seit Web 20.23.0 hat sie auf der Anmeldeseite zwei. Am Rechner standen die
+  Verweise rechts der Karte, bei 390 px drückten sie die Karte auf rund
+  200 px zusammen. `.anmeldung` stapelt jetzt untereinander. Die fünf
+  übrigen Seiten der Anmeldehülle tragen nur die Karte und sehen aus wie
+  vorher — gemessen: 10 von 10 Karten (fünf Seiten, 390 und 1440 px) auf den
+  Pixel gleich mit dem Stylesheet von 20.37.2.
+- **Werkzeug: Seit PK-04/2 passte kein Prüfbericht zu seinem Commit.**
+  `.gitattributes` nimmt das GPX-Schema von der Zeilenend-Umwandlung aus,
+  damit seine SHA-256-Summe stimmt — unter dem alten Pfad
+  `tools/gpxprobe/`. Mit PK-04/2 zog die Datei nach `tools/proben/gpx/`, die
+  Ausnahme nicht. Der Prüfstand bildet seinen Baum-Hash mit `git add -A`, das
+  die 788 CRLF dann auf LF normalisierte; der Hash im Bericht wich deshalb
+  bei jedem Commit ab. Aufgefallen ist es nicht, weil kein Workflow den
+  Bericht gegenliest. Der Pfad ist berichtigt; danach ist der Baum des
+  Prüfstands gleich dem des Index.
+
+### Für die BetreiberIn
+
+- **Wer zwischen Web 20.30.0 und 20.37.2 eine Anlage einzurichten versucht
+  hat, leert die Datenbank vor dem nächsten Versuch.** Der Einrichter legt das
+  Schema an, bevor er das Konto anlegt; gescheitert ist er erst danach. Ein
+  zweiter Versuch auf derselben Datenbank bricht an den vorhandenen Tabellen
+  ab. Bestehende Anlagen betrifft das nicht — sie richten sich nie neu ein.
+
+### Bewusst so
+
+- **Kein Rückfall hinter `function_exists()`.** Die Erfolgsseite des
+  Einrichters lädt `db.php` nach, sobald `config.php` steht. Eine zweite
+  Definition bräche dort mit „Cannot redeclare" ab — nachdem `config.php`
+  und `install.lock` geschrieben sind: Die Anlage wäre gesperrt, und der
+  Einrichtungslink erschiene nie. Beide laden deshalb dieselbe Datei.
+- **Noch kein Riegel in der Kette.** Keine Stufe richtet eine Anlage ein;
+  das ist der Grund, warum Nr. 288 elf Fassungen lang unbemerkt blieb
+  (20.30.0 bis 20.37.2).
+  Ein Prüfschritt dafür ist ein eigener Punkt (Nr. 290) und nicht Teil dieser
+  Korrektur.
+
 ## [Web 20.37.2] — 2026-09-23
 
 **Eine Nummer, damit das neue Tor einmal echt gefragt wird.** Unter

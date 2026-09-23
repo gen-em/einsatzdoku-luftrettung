@@ -1,0 +1,932 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=1440">
+<title>P5c · Mockup M-P5c-02 (a) — Banner: Umgebung und Ankündigung</title>
+<link rel="stylesheet" href="../../../../server/assets/style.css">
+<style>
+/* ---- Mockup-Rahmen (nicht Teil der Anwendung) ---------------------------- */
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.5}
+.mock-kopf{padding:20px 24px 4px}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau);line-height:1.2}
+.mock-kopf p{margin:0;color:var(--gedaempft);font-size:var(--groesse-2)}
+.reihe{padding:14px 24px 6px}
+.reihe > h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0 0 2px;color:var(--dunkelblau)}
+.reihe > .unter{margin:0 0 10px;color:var(--gedaempft);font-size:var(--groesse-2);max-width:1180px}
+.frames{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+.frame-huelle{flex:0 0 auto;max-width:100%}
+.frame-titel{display:inline-block;background:var(--dunkelblau);color:#fff;font-size:11px;line-height:1.4;padding:2px 10px;border-radius:8px 8px 0 0}
+.frame{position:relative;overflow:hidden;border-radius:0 var(--radius) var(--radius) var(--radius);background:var(--rauch);box-shadow:0 8px 24px rgba(26,46,77,.10)}
+.notiz{padding:6px 24px 26px;max-width:1180px}
+.notiz h3{font-family:var(--schrift-kopf);font-size:var(--groesse-4);margin:12px 0 4px;color:var(--dunkelblau)}
+.notiz ul{margin:0 0 8px 20px;padding:0}
+.notiz li{margin:0 0 4px;font-size:var(--groesse-2);line-height:1.45}
+.notiz code{font-family:var(--schrift-fest);font-size:12px;background:var(--schnee);padding:0 4px;border-radius:4px}
+/* Das Gerüst im Rahmen: nichts klebt, nichts ist an die Fensterhöhe gebunden. */
+.frame .kopf{position:static}
+.frame .leiste{position:static;height:auto;align-self:stretch}
+.frame .rahmen{min-height:0}
+.frame .anmeldung-body{min-height:0}
+.frame .fuss{margin-top:0}
+/* ---- Nur im Mockup, nicht Teil des Vorschlags -------------------------- */
+
+/* Behebung von Befund Nr. 289 (Anmeldeseite): .anmeldung ist ein Flex-Behälter in Zeilenrichtung, und die
+   Verweiszeile steht seit Web 20.23.0 NEBEN der Karte. Hier vorweggenommen, damit das Bild die Form zeigt,
+   um die es geht; die Behebung ist ein eigener Punkt, nicht Teil dieses Vorschlags. */
+.anmeldung{flex-direction:column}
+/* Rahmen gekürzt: Die Seite läuft darunter unverändert weiter. */
+.frame-kurz{max-height:760px}
+.frame-kurz-hoch{max-height:1100px}
+.frame-kurz::after{content:"";position:absolute;left:0;right:0;bottom:0;height:60px;background:linear-gradient(to bottom,transparent,#EDE9DF)}
+.frame .schleier{display:none}
+/* Kopfleisten-Vergleich: nur die Leiste */
+.nur-kopf .kopf{position:static}
+/* Die Rückfrage steht im Bild offen und nicht modal. */
+.frame dialog.mock-offen{position:static;display:block;margin:0;max-width:520px;box-shadow:var(--schatten-hoch)}
+
+/* ---- Vorschlag für style.css (neu mit P5c, M-P5c-02) ------------------- */
+
+/* KOPFLEISTE EINER NICHT-PRODUKTIVEN UMGEBUNG (.kopf-umgebung) — Variante der Kopfleiste (E-P5c-05, -55).
+   Gesetzt von ui_kopf(), wenn konfig('app.umgebung') einen Namen trägt; 'farbe' ist eine geschlossene
+   Liste, heute nur 'rot'. Weiß auf --rot 4,78 : 1. */
+.kopf-umgebung{background:var(--rot)}
+/* Der aktive Punkt: Orange auf Rot hätte 2,10 : 1 (WCAG 1.4.11 verlangt 3 : 1). --orange-hell bleibt in der
+   Orange-Familie („hier stehst du") und trägt 4,12 : 1. Variante B wäre --auf-dunkel (4,78 : 1). */
+.kopf-umgebung .kopf-punkt.aktiv{border-bottom-color:var(--orange-hell)}
+/* Der Name im Kopf trägt auf Dunkelblau --sand (8,15 : 1), auf Rot wären es 2,86 : 1. --schnee trägt 4,68 : 1;
+   untergeordnet bleibt er durch Gewicht 400 gegen 600 der Marke. */
+.kopf-umgebung .kopf-nutzer{color:var(--schnee)}
+/* HINWEISSTREIFEN — die Reihe über dem Inhalt (E-P5c-55). Umgebung → Ankündigung → Demo → Datenschutz.
+   Ein Behälter statt vier Außenabständen: .demo-hinweis und .meldung bringen je --abstand-5 nach unten mit,
+   gestapelt ergäbe das 32-px-Lücken zwischen Zeilen, die zusammengehören. */
+.hinweise{display:flex;flex-direction:column;gap:var(--abstand-2);margin-bottom:var(--abstand-5)}
+.hinweise > .demo-hinweis,.hinweise > .meldung{margin-bottom:0}
+/* Umgebungszeile — Variante des vorhandenen Hinweisstreifens (.demo-hinweis), Ton der Fehlermeldung:
+   Rot-tief auf Rosa 6,27 : 1. Nicht wegklickbar (wie der Demo-Hinweis). */
+.hinweis-umgebung{background:var(--rosa);color:var(--rot-tief)}
+.hinweis-umgebung .symbol{color:var(--rot-tief)}
+/* Ankündigung: vorhandene .meldung (info/warn); der Schließen-Knopf steht in .meldung-aktion.
+   Die Klasse benennt nur den Verwender (Wegklicken je Sitzung, ankuendigung.js). */
+.meldung-ankuendigung .meldung-aktion .knopf-symbol{color:inherit}
+/* Das × bleibt oben rechts, auch auf dem Handy: .meldung bricht sonst um, sobald der Text seine
+   Mindestbreite (16rem) nicht bekommt, und das × landet allein in einer Zeile unten links. */
+.meldung-ankuendigung{flex-wrap:nowrap;align-items:flex-start}
+.meldung-ankuendigung p{flex:1 1 auto}
+.meldung-ankuendigung .meldung-aktion{margin:calc(var(--abstand-2) * -1) calc(var(--abstand-2) * -1) 0 0}
+/* Anmeldeseiten: dieselbe Reihe über der Karte, so breit wie die Karte. */
+.anmeldung .hinweise{width:100%;max-width:var(--anmeldekarte);margin-bottom:var(--abstand-4)}
+.kopf-variante-b .kopf-punkt.aktiv{border-bottom-color:var(--auf-dunkel)}
+</style></head><body><svg style="display:none" aria-hidden="true"><symbol id="s-abmelden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" /> <path d="M9 12h12l-3 -3" /> <path d="M18 15l3 -3" /></symbol><symbol id="s-aktualisieren" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" /> <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" /></symbol><symbol id="s-balken" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -6" /> <path d="M15 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -10" /> <path d="M9 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -14" /> <path d="M4 20h14" /></symbol><symbol id="s-bergwacht" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18l-6.921 -14.612a2.3 2.3 0 0 0 -4.158 0l-6.921 14.612" /> <path d="M7.5 11l2 2.5l2.5 -2.5l2 3l2.5 -2" /></symbol><symbol id="s-datenbank" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a8 3 0 1 0 16 0a8 3 0 1 0 -16 0" /> <path d="M4 6v6a8 3 0 0 0 16 0v-6" /> <path d="M4 12v6a8 3 0 0 0 16 0v-6" /></symbol><symbol id="s-einsatzort" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /> <path d="M12.794 21.322a2 2 0 0 1 -2.207 -.422l-4.244 -4.243a8 8 0 1 1 13.59 -4.616" /> <path d="M16 19h6" /> <path d="M19 16v6" /></symbol><symbol id="s-fahrzeug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /> <path d="M15 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /> <path d="M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5" /> <path d="M6 10h4m-2 -2v4" /></symbol><symbol id="s-gruppe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /> <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /> <path d="M16 3.13a4 4 0 0 1 0 7.75" /> <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" /></symbol><symbol id="s-haus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l-2 0l9 -9l9 9l-2 0" /> <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" /> <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" /></symbol><symbol id="s-hilfe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /> <path d="M12 17l0 .01" /> <path d="M12 13.5a1.5 1.5 0 0 1 1 -1.5a2.6 2.6 0 1 0 -3 -4" /></symbol><symbol id="s-hinweis" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /> <path d="M12 9h.01" /> <path d="M11 12h1v4h1" /></symbol><symbol id="s-hubschrauber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l1 2h6" /> <path d="M12 9a2 2 0 0 0 -2 2v3c0 1.1 .9 2 2 2h7a2 2 0 0 0 2 -2c0 -3.31 -3.13 -5 -7 -5h-2" /> <path d="M13 9l0 -3" /> <path d="M5 6l15 0" /> <path d="M15 9.1v3.9h5.5" /> <path d="M15 19l0 -3" /> <path d="M19 19l-8 0" /></symbol><symbol id="s-kalender" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12" /> <path d="M16 3v4" /> <path d="M8 3v4" /> <path d="M4 11h16" /> <path d="M11 15h1" /> <path d="M12 15v3" /></symbol><symbol id="s-karte" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18.5l-3 -1.5l-6 3v-13l6 -3l6 3l6 -3v7.5" /> <path d="M9 4v13" /> <path d="M15 7v5.5" /> <path d="M21.121 20.121a3 3 0 1 0 -4.242 0c.418 .419 1.125 1.045 2.121 1.879c1.051 -.89 1.759 -1.516 2.121 -1.879" /> <path d="M19 18v.01" /></symbol><symbol id="s-karte-breit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8l-4 4l4 4" /> <path d="M17 8l4 4l-4 4" /> <path d="M3 12l18 0" /></symbol><symbol id="s-karte-gross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l4 -4l4 4" /> <path d="M8 17l4 4l4 -4" /> <path d="M12 3l0 18" /></symbol><symbol id="s-kolben" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3l6 0" /> <path d="M10 9l4 0" /> <path d="M10 3v6l-4 11a.7 .7 0 0 0 .5 1h11a.7 .7 0 0 0 .5 -1l-4 -11v-6" /></symbol><symbol id="s-korb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l16 0" /> <path d="M10 11l0 6" /> <path d="M14 11l0 6" /> <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /> <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></symbol><symbol id="s-lupe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /> <path d="M21 21l-6 -6" /></symbol><symbol id="s-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z" /> <path d="M3 7l9 6l9 -6" /></symbol><symbol id="s-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l16 0" /> <path d="M4 12l16 0" /> <path d="M4 18l16 0" /></symbol><symbol id="s-ordner-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19h-7a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v3.5" /> <path d="M16 19h6" /> <path d="M19 16v6" /></symbol><symbol id="s-pfeil-hoch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14" /> <path d="M18 11l-6 -6" /> <path d="M6 11l6 -6" /></symbol><symbol id="s-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14" /> <path d="M5 12l14 0" /></symbol><symbol id="s-profil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /> <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></symbol><symbol id="s-punkte" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /> <path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /> <path d="M18 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></symbol><symbol id="s-schliessen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-12 12" /> <path d="M6 6l12 12" /></symbol><symbol id="s-schloss" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6" /> <path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" /> <path d="M8 11v-4a4 4 0 1 1 8 0v4" /></symbol><symbol id="s-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v2a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z" /> <path d="M3 15a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v2a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z" /> <path d="M7 8l0 .01" /> <path d="M7 16l0 .01" /></symbol><symbol id="s-sicherung" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2" /> <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" /> <path d="M10 12l4 0" /></symbol><symbol id="s-sortieren" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l4 -4l4 4m-4 -4v14" /> <path d="M21 15l-4 4l-4 -4m4 4v-14" /></symbol><symbol id="s-standort" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /> <path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></symbol><symbol id="s-status" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8l4 -16l3 8h4" /></symbol><symbol id="s-stift" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" /> <path d="M13.5 6.5l4 4" /></symbol><symbol id="s-tausch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10h14l-4 -4" /> <path d="M17 14h-14l4 4" /></symbol><symbol id="s-uhr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a3 3 0 0 1 3 -3h6a3 3 0 0 1 3 3v6a3 3 0 0 1 -3 3h-6a3 3 0 0 1 -3 -3v-6" /> <path d="M9 18v3h6v-3" /> <path d="M9 6v-3h6v3" /></symbol><symbol id="s-uhrzeit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /> <path d="M12 7v5l3 3" /></symbol><symbol id="s-veranstaltung" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l0 2" /> <path d="M15 11l0 2" /> <path d="M15 17l0 2" /> <path d="M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-3a2 2 0 0 0 0 -4v-3a2 2 0 0 1 2 -2" /></symbol><symbol id="s-vollbild" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8v-2a2 2 0 0 1 2 -2h2" /> <path d="M4 16v2a2 2 0 0 0 2 2h2" /> <path d="M16 4h2a2 2 0 0 1 2 2v2" /> <path d="M16 20h2a2 2 0 0 0 2 -2v-2" /></symbol><symbol id="s-warnung" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4" /> <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0" /> <path d="M12 16h.01" /></symbol><symbol id="s-winkel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6" /></symbol><symbol id="s-zahnrad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" /> <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></symbol><symbol id="s-ziel-fern" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1" /> <path d="M9 15l3 -3l3 3" /> <path d="M12 12l0 9" /></symbol></svg>
+<div class="mock-kopf"><h1>M-P5c-02 (a) — Banner: Umgebung und Ankündigung</h1><p>E-P5c-05, -13, -55, -56 · aus dem HTML-Stand der örtlichen Installation (Web 20.37.1) · <strong>freigegeben 23.09.2026</strong></p></div><div class="reihe"><h2>1 · Tagesübersicht auf Staging, Demo-Konto — alle vier Streifen</h2><p class="unter">Die Reihe steht an der Stelle des Demo-Hinweises, im Inhalt und nicht zwischen Kopfleiste und Gerüst (F-P3-G). Reihenfolge Umgebung → Ankündigung → Demo → Datenschutz; die Ankündigung lässt sich je Sitzung wegklicken, die übrigen drei nicht. Seitentitel im Browser: „[Staging] Tagesübersicht — Gen-EM NAdoku".</p><div class="frames"><div class="frame-huelle" style="width:1392px"><span class="frame-titel">index.php · Demo-Konto · Staging · Titel „[Staging] Tagesübersicht — Gen-EM NAdoku"</span><div class="frame frame-kurz">
+
+<header class="kopf kopf-umgebung">
+  <div class="kopf-innen">
+        <button type="button" class="knopf knopf-symbol kopf-menue" data-schublade="auf" aria-expanded="false" aria-controls="leiste" aria-label="Menü öffnen">
+      <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-menu"></use></svg>    </button>
+    
+    <a class="kopf-marke" href="index.php">
+            <img src="../../../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="" width="54" height="34">
+      <span class="kopf-name">Gen-EM NAdoku</span>
+      <span class="kopf-nutzer">Demo NutzerIn</span>    </a>
+
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+              <a class="kopf-punkt aktiv" href="index.php" aria-current="page">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span>Startseite</span>
+        </a>
+        <a class="kopf-punkt" href="suche.php">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-lupe"></use></svg><span>Suche</span>
+        </a>
+                <a class="knopf knopf-symbol kopf-hilfe" href="hilfe.php" aria-label="Hilfe und Handbuch">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-hilfe"></use></svg>        </a>
+        <a class="knopf knopf-symbol kopf-zahnrad" href="einstellungen.php" aria-label="Einstellungen">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-zahnrad"></use></svg>        </a>
+          </nav>
+  </div>
+</header>
+<div class="schleier" data-schublade="zu" hidden=""></div>
+<div class="rahmen">
+      <aside class="leiste" id="leiste" aria-label="Bereichsmenü" tabindex="-1">
+    <div class="leiste-kopf nur-schublade">
+      <button type="button" class="knopf knopf-symbol" data-schublade="zu" aria-label="Menü schließen">
+        <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-schliessen"></use></svg>      </button>
+      <span class="kopf-name">Gen-EM NAdoku</span>
+    </div>
+    <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche">
+      <a class="eintrag aktiv" href="index.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span class="eintrag-text">Startseite</span>
+      </a>
+      <a class="eintrag" href="suche.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-lupe"></use></svg><span class="eintrag-text">Suche</span>
+      </a>
+    </nav>
+    <h2 class="leiste-kopfzeile">Diensttage</h2>
+    <div class="leiste-liste">
+                            <details class="akkordeon" open="">
+                    <summary class="akkordeon-zeile">
+            <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>            <span class="akkordeon-text">2026</span>
+            <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026" aria-label="Jahresübersicht 2026" title="Jahresübersicht">
+              <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg>            </a>
+          </summary>
+          <div class="akkordeon-inhalt">
+                                  <details class="akkordeon akkordeon-monat" open="">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">Dezember</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=12" aria-label="Monatsübersicht Dezember" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag aktiv" href="index.php?d=21" aria-current="page" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">27.12.2026</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">November</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=11" aria-label="Monatsübersicht November" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=20" title="Alpenfalke 2 — luftgebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>luftgebunden</title><use href="#s-hubschrauber"></use></svg>                  <span class="eintrag-text">21.11.2026</span>
+                                      <span class="eintrag-neben">Alpenfalke 2</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">Oktober</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=10" aria-label="Monatsübersicht Oktober" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=19" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">24.10.2026</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">September</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=09" aria-label="Monatsübersicht September" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=18" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">27.09.2026</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=17" title="Alpenfalke 2 — luftgebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>luftgebunden</title><use href="#s-hubschrauber"></use></svg>                  <span class="eintrag-text">12.09.2026</span>
+                                      <span class="eintrag-neben">Alpenfalke 2</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">August</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=08" aria-label="Monatsübersicht August" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=16" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">16.08.2026</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=15" title="Bergwachtnotarzt Sonnenau — Bergwacht, bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>Bergwacht, bodengebunden</title><use href="#s-bergwacht"></use></svg>                  <span class="eintrag-text">01.08.2026</span>
+                                      <span class="eintrag-neben kurz">BW-NA</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">Juli</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=07" aria-label="Monatsübersicht Juli" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=14" title="Konzert von Karl Marx — Veranstaltung, bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>Veranstaltung, bodengebunden</title><use href="#s-veranstaltung"></use></svg>                  <span class="eintrag-text">06.07.2026 19:30</span>
+                                      <span class="eintrag-neben">Konzert</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=13" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">06.07.2026 07:00</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=12" title="Alpenfalke 1 — luftgebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>luftgebunden</title><use href="#s-hubschrauber"></use></svg>                  <span class="eintrag-text">05.07.2026</span>
+                                      <span class="eintrag-neben">Alpenfalke 1</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">Juni</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=06" aria-label="Monatsübersicht Juni" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=11" title="Boxkampf Rainer Maria Rilke — Veranstaltung, bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>Veranstaltung, bodengebunden</title><use href="#s-veranstaltung"></use></svg>                  <span class="eintrag-text">14.06.2026 19:30</span>
+                                      <span class="eintrag-neben">Boxkampf</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=10" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">14.06.2026 07:00</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">Mai</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=05" aria-label="Monatsübersicht Mai" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=9" title="Alpenfalke 1 — luftgebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>luftgebunden</title><use href="#s-hubschrauber"></use></svg>                  <span class="eintrag-text">10.05.2026</span>
+                                      <span class="eintrag-neben">Alpenfalke 1</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">April</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=04" aria-label="Monatsübersicht April" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=8" title="VEF Talwang 76/2 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">18.04.2026</span>
+                                      <span class="eintrag-neben kurz">VEF</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">März</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=03" aria-label="Monatsübersicht März" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=7" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">28.03.2026 20:00</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=6" title="Alpenfalke 1 — luftgebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>luftgebunden</title><use href="#s-hubschrauber"></use></svg>                  <span class="eintrag-text">28.03.2026 06:30</span>
+                                      <span class="eintrag-neben">Alpenfalke 1</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=5" title="NEF Talwang 76/1 — bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>bodengebunden</title><use href="#s-fahrzeug"></use></svg>                  <span class="eintrag-text">07.03.2026</span>
+                                      <span class="eintrag-neben">NEF Talwang 76/1</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">Februar</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=02" aria-label="Monatsübersicht Februar" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=3" title="Bergwachtnotarzt Sonnenau — Bergwacht, bodengebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>Bergwacht, bodengebunden</title><use href="#s-bergwacht"></use></svg>                  <span class="eintrag-text">14.02.2026</span>
+                                      <span class="eintrag-neben kurz">BW-NA</span>
+                                  </a>
+                              <a class="eintrag" href="index.php?d=2" title="Alpenfalke 1 — luftgebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>luftgebunden</title><use href="#s-hubschrauber"></use></svg>                  <span class="eintrag-text">08.02.2026</span>
+                                      <span class="eintrag-neben">Alpenfalke 1</span>
+                                  </a>
+                            </div>
+            </details>
+                                  <details class="akkordeon akkordeon-monat">
+              <summary class="akkordeon-zeile">
+                <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>                <span class="akkordeon-text">Januar</span>
+                <a class="akkordeon-uebersicht" href="zeitraum.php?y=2026&amp;m=01" aria-label="Monatsübersicht Januar" title="Monatsübersicht"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+                              <a class="eintrag" href="index.php?d=1" title="Alpenfalke 1 — luftgebunden">
+                  <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>luftgebunden</title><use href="#s-hubschrauber"></use></svg>                  <span class="eintrag-text">17.01.2026</span>
+                                      <span class="eintrag-neben">Alpenfalke 1</span>
+                                  </a>
+                            </div>
+            </details>
+                    </div>
+        </details>
+          </div>
+        <div class="leiste-fuss">
+                  <a class="eintrag eintrag-anlegen" href="diensttag_neu.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-plus"></use></svg><span class="eintrag-text">Diensttag anlegen</span>
+      </a>
+      <a class="eintrag eintrag-leise" href="papierkorb.php" title="Papierkorb">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-korb"></use></svg><span class="eintrag-text">Papierkorb</span>
+      </a>
+    </div>
+  </aside>
+  <main class="inhalt" id="inhalt">
+<div class="hinweise"><div class="demo-hinweis hinweis-umgebung" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-server"></use></svg><p><strong>Staging</strong> — Testdaten, kein Echtbetrieb.</p></div><div class="meldung meldung-warn meldung-ankuendigung" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-warnung"></use></svg><p><strong>Wartung am Dienstag, 30.09.2026, 20:00 bis 21:00.</strong> Die Anwendung ist in dieser Zeit nicht erreichbar; Einsätze auf Uhr und Handy werden danach übertragen.</p><div class="meldung-aktion"><button type="button" class="knopf knopf-symbol" aria-label="Ankündigung ausblenden"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-schliessen"></use></svg></button></div></div><div class="demo-hinweis" role="status">
+  <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kolben"></use></svg>  <p><strong>Demo-Konto.</strong> Alle Daten hier sind <strong>frei
+  erfunden</strong>. Ausprobieren ist ausdrücklich erwünscht — ändern,
+  anlegen, löschen, Gerät koppeln. Der Bestand wird
+  <strong>alle 30&nbsp;Minuten</strong> auf den Ausgangsstand
+  zurückgesetzt, das nächste Mal in etwa 29&nbsp;Minuten.
+  <strong>Bitte niemals echte Patienten- oder Einsatzdaten erfassen.</strong></p>
+</div><div class="demo-hinweis" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-hinweis"></use></svg><p><strong>Die Datenschutzerklärung hat eine neue Fassung.</strong> Sie sagt, was mit deinen Daten geschieht — was verschlüsselt liegt, was im Klartext, wie lange und warum. <a href="einwilligung.php">Ansehen und bestätigen</a>; bis dahin bleibt dieser Hinweis stehen. <strong>Gesperrt wird dafür nichts</strong> — eine Kenntnisnahme ist keine Zustimmung.</p></div></div>
+        <section class="karte erststart">
+  <div class="karte-kopf">
+    <h2 class="karte-titel">Willkommen — drei Schritte, dann geht es los</h2>
+  </div>
+  <div class="karte-inhalt">
+
+          <div class="zeile erststart-zeile">
+  <div class="zeile-vorn"><span class="erststart-nr erststart-nr-kann">1</span></div>
+  <div class="zeile-text">
+    <span class="zeile-haupt">Standort anlegen</span>
+    <span class="zeile-klein">Optional — ein Ort, dem deine Rettungsmittel zugeordnet sind (Wache, Klinik).</span>
+  </div>
+  <div class="zeile-aktionen"><a class="knopf knopf-neutral" href="einstellungen.php?t=standorte"><span>Anlegen</span></a></div>
+</div>
+          <div class="zeile erststart-zeile">
+  <div class="zeile-vorn"><span class="erststart-nr">2</span></div>
+  <div class="zeile-text">
+    <span class="zeile-haupt">Rettungsmittel anlegen</span>
+    <span class="zeile-klein">Womit du fährst oder fliegst: Name, Typ, Standort.</span>
+  </div>
+  <div class="zeile-aktionen"><a class="knopf knopf-primaer" href="einstellungen.php?t=standorte"><span>Anlegen</span></a></div>
+</div>
+          <div class="zeile erststart-zeile">
+  <div class="zeile-vorn"><span class="erststart-nr">3</span></div>
+  <div class="zeile-text">
+    <span class="zeile-haupt">Uhr oder Handy koppeln</span>
+    <span class="zeile-klein">Die App erfasst Einsätze unterwegs und gleicht sie hier ab. Anleitung im Handbuch.</span>
+  </div>
+  <div class="zeile-aktionen"><a class="knopf knopf-primaer" href="einstellungen.php?t=geraete"><span>Koppeln</span></a></div>
+</div>
+  
+    <form method="post" class="erststart-fuss">
+    <input type="hidden" name="csrf" value="2f4d8e34ec1e4201e6fa38964f8d4520be25708dcd9b56183779a3955f224bb8">    <input type="hidden" name="action" value="erststart">
+    <label class="erststart-nie">
+      <input type="checkbox" name="nie" value="1">
+      <span>nicht mehr zeigen</span>
+    </label>
+    <button class="knopf knopf-leise" type="submit"><span>Später</span></button>  </form>
+
+  </div>
+</section>
+                <div class="meldung meldung-warn" role="status">
+        <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-warnung"></use></svg>        <p>
+          2 neue Geräte wurden          mit deinem Konto verbunden:
+                    Uhr Luftdienst (Referenz) · fēnix 7 / quatix 7 (23.09.2026 11:05), Handy Bodendienst (Referenz) · Samsung SM-S921B (23.09.2026 11:05).
+          Warst du das nicht, entferne
+          die Geräte unter
+          <a href="einstellungen.php?t=geraete">Einstellungen → Geräte</a>.
+        </p>
+        <div class="meldung-aktion">
+          <form method="post" action="index.php">
+            <input type="hidden" name="csrf" value="2f4d8e34ec1e4201e6fa38964f8d4520be25708dcd9b56183779a3955f224bb8"><input type="hidden" name="action" value="geraete_ok">
+            <button class="knopf knopf-neutral" type="submit"><span>Verstanden, das war ich</span></button>          </form>
+        </div>
+      </div>
+                <div class="titelzeile">
+      <div class="titelzeile-haupt">
+        <div class="titelzeile-text">
+          <h1 id="daytitle"><span class="wtag-lang">Sonntag</span><span class="wtag-kurz">So</span>, 27.12.2026</h1>
+        </div>
+        <div class="titelzeile-aktionen" id="dayaktionen">
+          <div class="aktionen"><button type="button" class="knopf knopf-neutral aktionen-knopf" aria-expanded="false" aria-controls="dayblatt" data-blatt="dayblatt"><svg class="symbol symbol-gross nur-schmal" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-punkte"></use></svg><span class="nur-breit">Aktionen</span><svg class="symbol nur-breit" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg></button><div class="blatt" id="dayblatt" hidden=""><div class="blatt-griff" aria-hidden="true"></div><h2 class="blatt-titel">Diensttag 27.12.2026</h2><div class="blatt-liste"><a class="blatt-zeile blatt-anlegen" href="einsatz_form.php?d=21" id="addmission-menu"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-plus"></use></svg><span>Einsatz nachtragen</span></a><a class="blatt-zeile" href="#tagdaten" data-tagdaten-bearbeiten=""><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-stift"></use></svg><span>Diensttag-Daten bearbeiten</span></a><a class="blatt-zeile" href="diensttag_datum.php?d=21" id="daydatelink"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span>Datum ändern</span></a><a class="blatt-zeile" href="diensttag_zusammenfuehren.php?d=21" id="daymergelink"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-ordner-plus"></use></svg><span>Anderen Diensttag aufnehmen</span></a><a class="blatt-zeile" href="tag_spuren.php?d=21" id="dayspurenlink"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-karte"></use></svg><span>GPS-Daten als GPX</span></a><a class="blatt-zeile" href="#" id="daygpximport"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-karte"></use></svg><span>GPX importieren</span></a><a class="blatt-zeile blatt-gefahr" href="diensttag_loeschen.php?d=21" id="daydellink"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-korb"></use></svg><span>Tag löschen</span></a></div><button type="button" class="knopf knopf-leise blatt-abbrechen" data-blatt-zu=""><span>Abbrechen</span></button></div></div>        </div>
+      </div>
+      <p class="titelzeile-unter" id="dayunter">NEF Talwang 76/1 · Notarztstandort Talwang · Dienstbeginn 07:00</p>
+    </div>
+    <div class="meldung meldung-fehler" id="loaderrorbox" role="alert" hidden="">
+      <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-warnung"></use></svg><p id="loaderror"></p>
+    </div>
+    <div class="tag-raster">
+        <section class="karte karte-daten" id="tagdaten">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Diensttag-Daten</h2>
+        <a class="karte-aktion karte-aktion-blau" href="#tagdaten" id="tagdatenknopf" data-tagdaten-bearbeiten="" aria-expanded="false">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-stift"></use></svg><span>Bearbeiten</span>
+        </a>
+      </div>
+      <div class="karte-inhalt">
+        <div class="tag-lese" id="taglese"><div class="tagfeld tagfeld-doppelt"><dt>Standort</dt><dd>Notarztstandort Talwang</dd></div><div class="tagfeld tagfeld-doppelt"><dt>Rettungsmittel</dt><dd>NEF Talwang 76/1</dd></div><div class="tagfeld tagfeld-breit"><dt>Besatzung</dt><dd>Fahrer Selma Ibrahimović · Praktikant Ronja Pfeil · Sonstige Dr. Hanna Kestner</dd></div><div class="tagfeld tagfeld-breit"><dt>Notizen</dt><dd>Letzter Dienst des Jahres; das Gerät wurde am Ende nicht abgemeldet — das letzte Ruhesegment blieb offen.</dd></div></div>
+        <form id="dayform" class="tag-form" hidden="" data-dirty-track="" data-submit-on-ctrl-enter="">
+        <label id="basefeld">Standort
+          <select name="base_id" id="basesel">
+            <option value="">–</option>
+                          <option value="1">Bergwachtstation Sonnenau</option>
+                          <option value="2">Luftrettungsstation Hochkreuth</option>
+                          <option value="3">Notarztstandort Talwang</option>
+                      </select>
+        </label>
+        <label>Rettungsmittel
+                    <select name="vehicle_id" id="vehsel">
+            <option value="">–</option>
+                          <option value="1" data-base="2" data-kind="air">
+                Alpenfalke 1 · Luftrettungsstation Hochkreuth</option>
+                          <option value="2" data-base="2" data-kind="air">
+                Alpenfalke 2 · Luftrettungsstation Hochkreuth</option>
+                          <option value="3" data-base="2" data-kind="air">
+                Bergwacht Hochkreuth · Luftrettungsstation Hochkreuth</option>
+                          <option value="4" data-base="1" data-kind="ground">
+                Bergwachtnotarzt Sonnenau · Bergwachtstation Sonnenau</option>
+                          <option value="5" data-base="0" data-kind="ground">
+                Boxkampf Rainer Maria Rilke</option>
+                          <option value="6" data-base="0" data-kind="ground">
+                Konzert von Karl Marx</option>
+                          <option value="7" data-base="3" data-kind="ground">
+                NEF Talwang 76/1 · Notarztstandort Talwang</option>
+                          <option value="8" data-base="0" data-kind="ground">
+                Reserve Talwang</option>
+                          <option value="9" data-base="0" data-kind="ground">
+                Sanitätsdienst Seefest</option>
+                          <option value="10" data-base="3" data-kind="ground">
+                VEF Talwang 76/2 · Notarztstandort Talwang</option>
+                                    <option value="adhoc">Anderes Rettungsmittel …</option>
+          </select>
+        </label>
+                <div class="schalter-abhaengig" id="adhocfelder" hidden="">
+          <label>Bezeichnung
+            <input type="text" name="adhoc_name" id="adhoc-name" maxlength="64" autocomplete="off" placeholder="z. B. RTW Aushilfe 12/1"></label>
+          <label>Typ
+            <select name="adhoc_typ" id="adhoc-typ">
+                              <option value="standard">Standard</option>
+                              <option value="bergwacht">Bergwacht</option>
+                              <option value="veranstaltung">Veranstaltung</option>
+                              <option value="sonstiges">Sonstiges</option>
+                          </select>
+          </label>
+          <div class="vehkind" id="adhoc-kind">
+            <span class="feld-label">Betriebsart
+              <span class="feld-klein-inline" data-adhoc-fest="" hidden="">bei diesem Typ fest</span></span>
+            <label><input type="radio" name="adhoc_kind" value="air" class="vehkind-radio">
+              luftgebunden</label>
+            <label><input type="radio" name="adhoc_kind" value="ground" class="vehkind-radio">
+              bodengebunden</label>
+          </div>
+                    <label class="feld-vorschlag" id="adhoc-basefeld">Standort
+            <input type="text" name="adhoc_base_name" id="adhoc-base" maxlength="120" autocomplete="off" placeholder="Auswahl oder freier Text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="adhoc-base-vorschlaege">
+            <input type="hidden" name="adhoc_base_id" id="adhoc-base-id" value=""><ul class="vorschlaege" hidden="" role="listbox" id="adhoc-base-vorschlaege"></ul></label>
+          <p class="feld-hinweis">Dieses Rettungsmittel wird nur an diesem Diensttag
+            gespeichert — es entsteht kein Stammdatensatz, und es gibt keine
+            Besatzungsrollen.</p>
+        </div>
+                <div id="crewfields"><label data-role="driver" class="feld-vorschlag">Fahrer<input type="text" name="crew_driver" maxlength="120" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="crew_driver-vorschlaege"><ul class="vorschlaege" hidden="" role="listbox" id="crew_driver-vorschlaege"></ul></label><label data-role="trainee" class="feld-vorschlag">Praktikant<input type="text" name="crew_trainee" maxlength="120" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="crew_trainee-vorschlaege"><ul class="vorschlaege" hidden="" role="listbox" id="crew_trainee-vorschlaege"></ul></label><label data-role="other" class="feld-vorschlag">Sonstige<input type="text" name="crew_other" maxlength="120" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="crew_other-vorschlaege"><ul class="vorschlaege" hidden="" role="listbox" id="crew_other-vorschlaege"></ul></label></div>
+        <p class="feld-hinweis" id="crewhint" hidden=""></p>
+        <p class="feld-hinweis" id="sd-hint" hidden="">
+          Noch keine Standorte hinterlegt — unter
+          <a href="einstellungen.php?t=standorte">Einstellungen → Standorte</a> anlegen.</p>
+                <label>Notizen <span class="feld-klein-inline">Klartext — keine Patientendaten</span>
+          <textarea name="notes" rows="3" maxlength="2000"></textarea></label>
+        <div class="tag-form-fuss">
+          <button class="knopf knopf-primaer" type="submit"><span>Speichern</span></button>          <span id="savestate" class="feld-klein-inline" role="status"></span>
+        </div>
+      </form>
+      </div>
+    </section>
+            
+        <div class="geo-spalte"><div id="map" class="geo leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom" tabindex="0"><div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(0px, 0px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 1; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 19; transform: translate3d(0px, 0px, 0px) scale(1);"></div></div></div><div class="leaflet-pane leaflet-overlay-pane"><svg pointer-events="none" class="leaflet-zoom-animated" width="1378" height="360" viewBox="-115 -30 1378 360" style="transform: translate3d(-114.948px, -30.4616px, 0px) scale(1);"><g><path class="leaflet-interactive" stroke="#6E6459" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M477 38L477 38L477 37L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38"></path><path class="leaflet-interactive" stroke="#6E6459" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M663 227L664 227L664 226L665 226L665 225L664 223L664 222L664 220L664 218L664 216L664 214L665 212L666 209L664 207L661 206L658 205L655 205L651 204L648 204L644 204L641 204L637 204L633 204L632 202L629 200L628 196L627 193L627 189L626 186L625 182L625 179L624 175L624 172L623 168L623 164L622 161L622 157L622 154L622 150L622 147L622 143L623 139L623 136L623 132L624 129L624 125L624 122L625 118L625 115L625 111L625 107L624 104L623 101L622 97L620 94L618 91L616 88L613 86L611 83L608 81L605 78L603 76L600 73L598 71L595 68L593 66L590 63L588 61L585 58L582 56L580 53L577 51L575 48L572 46L570 43L569 40L572 41L570 44L568 47L567 50L565 53L562 55L559 57L555 57L552 57L548 56L545 54L542 52L539 51L535 50L532 51L528 51L525 53L522 55L519 56L516 54L514 51L511 49L508 47L505 46L502 44L499 43L496 43L493 42L491 41L488 40L486 41L484 40L482 40L481 40L479 39L478 39L477 39L476 39L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38"></path><path class="leaflet-interactive" stroke="#6E6459" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M663 227L664 227L664 226L665 226L665 225L664 223L664 222L664 220L664 218L664 216L664 214L665 212L666 209L664 207L661 206L658 205L655 205L651 204L648 204L644 204L641 204L637 204L633 204L632 202L629 200L628 196L627 193L627 189L626 186L625 182L625 179L624 175L624 172L623 168L623 164L622 161L622 157L622 154L622 150L622 147L622 143L623 139L623 136L623 132L624 129L624 125L624 122L625 118L625 115L625 111L625 107L624 104L623 101L622 97L620 94L618 91L616 88L613 86L611 83L608 81L605 78L603 76L600 73L598 71L595 68L593 66L590 63L588 61L585 58L582 56L580 53L577 51L575 48L572 46L570 43L569 40L572 41L570 44L568 47L567 50L565 53L562 55L559 57L555 57L552 57L548 56L545 54L542 52L539 51L535 50L532 51L528 51L525 53L522 55L519 56L516 54L514 51L511 49L508 47L505 46L502 44L499 43L496 43L493 42L491 41L488 40L486 41L484 40L482 40L481 40L479 39L478 39L477 39L476 39L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38"></path><path class="leaflet-interactive" stroke="#6E6459" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M663 227L664 227L664 226L665 226L665 225L664 223L664 222L664 220L664 218L664 216L664 214L665 212L666 209L664 207L661 206L658 205L655 205L651 204L648 204L644 204L641 204L637 204L633 204L632 202L629 200L628 196L627 193L627 189L626 186L625 182L625 179L624 175L624 172L623 168L623 164L622 161L622 157L622 154L622 150L622 147L622 143L623 139L623 136L623 132L624 129L624 125L624 122L625 118L625 115L625 111L625 107L624 104L623 101L622 97L620 94L618 91L616 88L613 86L611 83L608 81L605 78L603 76L600 73L598 71L595 68L593 66L590 63L588 61L585 58L582 56L580 53L577 51L575 48L572 46L570 43L569 40L572 41L570 44L568 47L567 50L565 53L562 55L559 57L555 57L552 57L548 56L545 54L542 52L539 51L535 50L532 51L528 51L525 53L522 55L519 56L516 54L514 51L511 49L508 47L505 46L502 44L499 43L496 43L493 42L491 41L488 40L486 41L484 40L482 40L481 40L479 39L478 39L477 39L476 39L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38"></path><path class="leaflet-interactive" stroke="#6E6459" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M477 37L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 37"></path><path class="leaflet-interactive" stroke="#6E6459" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M663 227L664 227L664 226L665 226L665 225L664 223L664 222L664 220L664 218L664 216L664 214L665 212L666 209L664 207L661 206L658 205L655 205L651 204L648 204L644 204L641 204L637 204L633 204L632 202L629 200L628 196L627 193L627 189L626 186L625 182L625 179L624 175L624 172L623 168L623 164L622 161L622 157L622 154L622 150L622 147L622 143L623 139L623 136L623 132L624 129L624 125L624 122L625 118L625 115L625 111L625 107L624 104L623 101L622 97L620 94L618 91L616 88L613 86L611 83L608 81L605 78L603 76L600 73L598 71L595 68L593 66L590 63L588 61L585 58L582 56L580 53L577 51L575 48L572 46L570 43L569 40L572 41L570 44L568 47L567 50L565 53L562 55L559 57L555 57L552 57L548 56L545 54L542 52L539 51L535 50L532 51L528 51L525 53L522 55L519 56L516 54L514 51L511 49L508 47L505 46L502 44L499 43L496 43L493 42L491 41L488 40L486 41L484 40L482 40L481 40L479 39L478 39L477 39L476 39L477 38L477 38L477 38L477 38L477 38L477 38"></path><path class="leaflet-interactive" stroke="#6E6459" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M477 38L477 38L477 38L477 38L477 38L477 38L477 37L477 38L477 37L477 37L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 37L477 38L477 37L477 38L477 37L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 37L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L478 38L477 38L477 37L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 37L477 38L477 38L477 38L477 38L477 37L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 37L477 38L477 37L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 37L477 38L477 38L477 38L477 38L477 38L477 37L477 38L477 38L477 38L477 38L477 38L477 38L477 37L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 37L477 38L477 38L477 38L477 37L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 37L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 37L477 38L477 38L477 38L477 38L477 38L477 38L477 37L477 38L477 38L477 38L477 38"></path><path class="leaflet-interactive" stroke="#FF8F1F" stroke-opacity="1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L478 38L479 39L479 39L480 39L481 40L482 40L484 40L485 40L486 41L488 40L490 40L492 41L493 42L495 43L496 43L498 43L500 43L501 44L503 45L505 45L506 46L508 47L509 48L511 48L512 49L513 51L515 52L516 53L517 54L518 56L519 57L518 58L517 59L517 61L516 62L518 63L519 64L521 65L522 66L524 67L526 67L527 68L529 69L530 70L532 71L533 72L535 72L536 73L538 73L540 74L542 74L543 74L544 75L545 76L545 78L544 80L545 81L547 82L548 82L550 83L549 84L549 86L550 86L552 87L553 88L554 89L555 90L556 92L558 93L559 94L560 95L561 96L563 97L565 97L566 98L568 99L569 100L570 101L572 102L573 103L574 104L575 104L576 104L577 104L578 104L579 104L580 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L582 104L582 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L581 104L582 104L582 104L583 104L584 104L585 104L586 104L586 104L587 104L588 105L589 105L590 104L591 104L592 104L594 104L595 104L596 105L596 106L596 108L597 109L597 110L597 112L597 113L597 115L597 116L596 118L596 119L596 121L596 122L596 123L597 125L597 126L597 128L597 129L597 131L597 132L597 133L597 135L597 136L597 138L597 139L596 140L596 142L596 143L596 145L596 146L595 148L595 149L595 151L595 152L595 153L595 155L596 156L596 158L596 159L596 161L596 162L595 163L595 165L595 166L594 168L595 169L595 170L595 172L596 173L596 174L597 176L598 177L599 178L599 179L600 181L601 182L601 183L602 184L603 185L604 186L606 187L607 188L608 189L609 190L610 191L610 192L611 194L612 195L613 196L614 197L615 198L616 199L616 201L617 202L619 202L620 203L621 204L622 204L624 205L625 206L626 206L627 205L628 205L630 205L631 205L633 205L634 204L636 204L637 204L639 204L640 204L641 204L643 204L644 204L646 204L647 204L649 204L650 204L652 204L653 204L654 205L656 205L657 205L659 206L660 206L661 206L663 207L664 207L665 208L666 209L665 211L665 212L665 213L664 215L664 216L664 217L664 218L664 219L664 220L664 221L664 222L664 223L664 224L665 224L665 225L665 226L664 226L664 226L664 227L663 227L663 227L664 227L664 227L664 227L664 227L663 227L664 227L664 227L664 227L663 227L663 227L664 227L664 227L664 227L663 227L663 227L663 227L664 227L664 227L663 227L664 227L664 227L663 227L663 227L664 227L663 227"></path><path class="leaflet-interactive" stroke="#4280E5" stroke-opacity="1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L478 38L478 39L479 39L480 39L480 39L481 40L482 40L483 40L484 40L485 40L486 41L488 40L489 40L491 41L492 41L493 42L494 43L496 43L497 43L499 43L500 43L501 44L503 44L504 45L505 46L506 46L508 47L509 47L510 48L512 49L513 50L514 51L515 52L516 53L517 54L518 55L519 56L519 57L518 58L517 59L517 60L516 62L517 62L518 63L519 64L520 65L522 66L523 66L524 67L526 67L527 68L528 69L529 69L531 70L532 71L533 72L534 72L536 73L537 73L538 73L540 74L541 74L543 74L544 74L545 75L545 77L545 78L544 79L545 81L546 82L547 82L548 82L550 82L549 84L548 85L549 86L551 86L552 86L552 88L553 89L554 90L555 91L556 92L557 93L558 94L559 95L560 96L562 96L563 97L564 97L566 98L567 98L568 99L568 101L568 102L569 103L568 105L570 105L571 105L572 105L573 105L574 105L575 106L576 106L577 107L577 107L578 107L579 107L579 108L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 109L579 108L579 108L579 107L578 107L577 107L576 106L576 106L575 106L574 105L574 105L573 105L572 104L571 104L571 105L570 105L569 105L569 103L569 102L570 102L571 102L572 102L573 103L574 103L575 104L576 104L577 104L578 104L580 104L581 104L582 104L583 104L584 104L586 104L587 104L588 105L589 105L590 104L592 104L593 104L594 104L595 104L596 105L596 106L596 108L597 109L597 110L597 111L597 112L597 113L597 115L597 116L596 117L596 118L596 119L596 121L596 122L596 123L597 124L597 125L597 127L597 128L597 129L597 130L597 131L597 133L597 134L597 135L597 136L597 137L597 138L597 140L596 141L596 142L596 143L596 144L596 145L596 147L595 148L595 149L595 150L595 151L595 153L595 154L595 155L596 156L596 157L596 159L596 160L596 161L596 162L595 163L595 164L595 166L594 167L594 168L595 169L595 170L595 172L595 173L596 174L597 175L597 176L598 177L599 178L599 179L600 180L600 181L601 182L601 183L602 184L603 185L604 186L605 186L606 187L607 188L608 189L608 190L609 191L610 192L610 193L611 194L612 194L613 195L613 196L614 197L615 198L615 199L616 200L617 201L618 202L619 203L620 203L621 204L622 204L623 205L624 205L625 206L626 206L627 205L628 205L629 205L630 205L632 205L633 205L634 205L635 204L636 204L638 204L639 204L640 204L641 204L642 204L644 204L645 204L646 204L647 204L648 204L650 204L651 204L652 204L653 204L654 205L656 205L657 205L658 205L659 206L660 206L661 206L663 207L664 207L665 207L665 208L666 210L665 211L665 212L665 213L664 214L664 215L664 216L664 217L664 218L664 219L664 219L664 220L664 221L664 222L664 222L664 223L664 223L665 225L665 226L665 226L664 226L664 227L664 227L664 227L663 227L664 227L663 227L664 227L664 227L663 227L664 227L664 227L663 227L664 227L663 227L664 227L664 227L664 227L663 227L664 227L663 227L664 227L664 227L664 227L663 227L663 227L663 227L663 227L663 227L663 227L663 227L663 227L663 227L663 227L663 227L664 227L663 227L664 227L663 227"></path><path class="leaflet-interactive" stroke="#D63338" stroke-opacity="1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L478 38L479 39L479 39L480 39L481 40L482 40L483 40L485 40L486 41L488 40L490 40L491 41L493 42L495 43L497 43L499 43L502 44L504 45L507 46L509 47L511 49L513 51L515 53L517 55L519 57L521 56L523 55L525 53L528 52L530 51L533 50L536 50L539 51L541 52L544 53L546 55L549 56L551 57L554 57L557 57L560 56L562 55L564 53L566 51L568 49L570 49L573 48L575 49L577 51L579 53L581 55L583 57L585 59L587 61L589 63L591 65L593 67L595 69L597 71L599 73L601 74L603 76L605 78L607 80L609 82L611 84L613 86L615 88L617 90L618 93L620 95L621 97L622 100L623 103L624 105L624 108L624 111L624 114L624 116L624 119L624 122L624 125L623 127L623 130L623 133L622 136L622 139L622 141L622 144L622 147L622 150L622 153L622 155L622 158L622 161L622 164L622 166L623 169L623 172L624 175L624 177L625 180L625 183L626 186L626 188L627 191L627 194L628 197L628 199L628 202L629 205L628 208L626 209L625 206L627 205L630 205L633 205L636 204L638 204L641 204L644 204L647 204L650 204L652 204L655 205L658 205L660 206L663 207L665 208L665 211L665 213L664 216L664 218L664 220L664 222L665 224L665 226L664 228L664 229L666 229L667 229L668 229L669 229L670 229L671 229L671 228L671 228L671 227L671 226L671 226L672 226L671 226L671 226L671 226L672 226L671 226L672 226L671 226L672 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L672 226L671 226L671 226L672 226L671 226L671 226L672 226L671 226L671 226L671 226L672 226L671 226L672 226L671 226L671 226L672 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L672 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L672 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 226L671 227L671 227L671 227L671 227L671 227L671 227L671 227L671 227L671 227L671 228L671 228L671 228L671 228L671 228L671 228L671 228L671 228L671 229L671 229L671 229L671 229L671 229L671 229L671 229L671 229L671 229L671 229L670 229L670 229L670 229L670 229L670 229L670 229L670 229L670 229L669 229L669 229L669 229L669 229L669 229L669 229L669 229L668 229L668 229L668 229L668 229L668 229L668 229L668 229L667 229L667 229L667 229L667 229L667 229L667 229L667 229L666 229L666 229L666 229L666 229L666 229L666 229L666 229L665 229L665 229L665 229L665 229L665 229L665 229L665 229L665 229L664 229L664 229L664 229L664 229L664 229L664 229L664 229L664 228L664 228L664 228L664 228L664 228L664 228L664 228L664 228L664 227L664 227L664 227L664 227L664 227L664 227L664 227L665 226L664 226L664 226L664 226L664 226L664 226L664 226L664 226L664 226L664 226L664 227L664 227L664 227L664 227L664 227L664 227L664 227L664 227L664 227L664 227L663 227L663 227L663 227L663 227L663 227L663 227L664 227L664 227L663 227L664 227L664 227L663 227L664 227L663 227L664 227L663 227L663 227L663 227L664 227L664 227L663 227L664 227L663 227L664 227L664 227L663 227L663 227L664 227L663 227L664 227L664 227L663 227L664 227L663 227L664 227L664 227L663 227L663 227L664 227L664 227L663 227L664 227L663 227L664 227L664 227L664 227"></path><path class="leaflet-interactive" stroke="#1A2E4D" stroke-opacity="1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L478 39L479 39L480 39L481 40L482 40L484 40L485 40L487 41L488 40L490 41L492 41L494 43L497 43L499 43L502 44L504 45L507 46L510 48L512 50L514 52L517 54L519 56L521 57L523 55L526 53L528 51L531 51L534 50L538 51L541 52L543 53L546 54L549 56L552 57L555 57L558 57L561 56L564 54L566 52L567 49L570 49L573 48L575 50L578 52L580 54L582 56L584 58L587 61L589 63L591 65L593 67L595 69L598 71L600 74L602 76L604 78L607 80L609 82L611 85L613 87L615 89L617 92L619 94L621 97L622 100L623 103L624 106L624 109L624 112L624 115L624 118L624 121L624 124L623 127L623 131L623 134L622 137L622 140L622 143L622 146L622 149L622 152L622 156L622 159L622 162L622 165L623 168L623 171L624 174L624 177L625 180L625 183L626 186L626 190L627 193L628 196L628 199L628 202L629 205L628 208L625 208L626 206L629 205L632 205L635 204L638 204L641 204L644 204L647 204L650 204L654 204L657 205L660 206L663 207L665 208L665 211L664 214L664 217L664 220L663 223L663 226L661 228L660 230L658 231L656 231L653 231L652 231L651 232L651 234L651 235L651 237L652 237L653 237L654 237L655 237L655 236L655 236L655 235L655 235L655 235L655 235L655 235L655 235L655 235L655 235L655 235L655 235L655 235L655 235L655 235L655 236L655 236L655 236L655 237L655 237L654 237L653 237L653 237L652 237L651 237L650 237L649 236L649 237L648 238L648 238L648 239L648 240L648 240L648 241L648 242L648 243L647 243L647 244L647 245L647 246L647 247L647 248L648 249L648 249L648 250L648 251L649 252L649 253L649 254L649 255L649 256L648 257L647 258L646 259L646 260L645 261L644 261L643 262L641 262L640 261L640 260L639 259L638 258L638 257L637 256L637 254L637 253L637 252L637 251L637 250L636 248L636 247L636 246L636 245L636 243L636 242L636 241L636 240L636 239L635 237L635 236L635 235L635 234L635 232L635 231L634 230L634 229L634 228L634 226L634 225L633 224L633 223L633 222L632 220L632 219L631 218L631 217L631 216L630 215L630 213L630 212L629 211L629 210L629 209L629 207L629 206L629 205L629 204L629 202L629 201L629 200L628 199L628 198L628 196L628 195L628 194L627 193L627 191L627 190L627 189L626 188L626 187L626 185L626 184L625 183L625 182L625 181L625 179L625 178L624 177L624 176L624 174L624 173L624 172L623 171L623 170L623 168L623 167L623 166L623 165L623 163L622 162L622 161L622 160L622 159L622 157L622 156L622 155L622 154L622 152L622 151L622 150L622 149L622 147L622 146L622 145L622 144L622 143L622 141L623 140L623 139L623 138L623 136L623 135L623 134L623 133L623 131L623 130L624 129L624 128L624 127L624 125L624 124L624 123L624 122L624 120L625 119L625 118L625 117L625 116L625 114L625 113L625 112L625 111L625 109L625 108L625 107L624 106L624 104L624 103L624 102L623 101L623 100L622 99L622 98L621 96L621 95L620 94L619 93L619 92L618 91L617 90L616 89L615 88L615 87L614 87L613 86L612 85L611 84L610 83L609 82L609 81L608 80L607 80L606 79L605 78L604 77L603 76L602 75L601 74L601 74L600 73L599 72L598 71L597 70L596 69L595 68L594 68L594 67L593 66L592 65L591 64L590 63L589 62L588 62L587 61L586 60L586 59L585 58L584 57L583 56L582 56L581 55L580 54L579 53L578 52L578 51L577 50L576 50L575 49L574 48L573 47L572 46L571 45L571 44L570 43L569 42L569 41L569 40L570 40L571 40L572 41L572 43L571 44L570 44L569 45L569 46L568 47L567 48L567 49L567 50L566 51L565 52L564 53L563 54L562 55L561 55L560 56L559 56L558 57L557 57L555 57L554 57L553 57L552 57L551 57L549 56L548 56L547 55L546 54L545 54L544 53L543 53L542 52L541 52L539 51L538 51L537 51L536 50L535 50L533 50L532 50L531 51L530 51L529 51L527 52L526 52L525 53L524 54L523 54L522 55L521 56L520 56L519 56L518 56L517 55L516 54L516 53L515 52L514 51L513 50L512 49L511 49L510 48L509 47L508 47L507 46L506 46L505 45L504 45L503 44L502 44L501 44L500 43L499 43L498 43L497 43L496 43L495 43L494 42L493 42L492 41L492 41L491 41L490 40L489 40L488 40L488 40L487 41L486 41L485 40L485 40L484 40L484 40L483 40L482 40L481 40L480 39L479 39L479 39L478 39L477 39L477 39L476 38L476 38L477 38L477 38L477 38L477 38"></path><path class="leaflet-interactive" stroke="#C25A00" stroke-opacity="1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L477 38L478 38L479 39L480 39L481 39L482 40L483 40L484 40L486 40L487 41L489 40L491 41L493 42L494 43L497 43L499 43L501 44L504 45L506 46L509 47L511 49L513 51L515 53L517 55L519 57L521 56L523 55L525 53L528 52L530 51L533 50L536 50L539 51L541 52L544 53L546 54L549 56L551 57L554 57L557 57L560 56L562 55L564 53L566 51L568 49L570 49L573 48L575 49L577 51L579 53L581 55L583 57L585 59L587 61L589 63L591 65L593 67L595 69L597 71L599 73L601 75L603 77L605 78L607 80L609 82L611 84L613 86L615 88L617 90L618 93L620 95L621 97L622 100L623 103L624 105L624 108L624 111L624 114L624 117L624 119L624 122L623 125L623 128L623 131L623 133L622 136L622 139L622 142L622 144L622 147L622 150L622 153L622 156L622 158L622 161L622 164L622 167L623 170L623 172L624 175L624 178L625 181L625 183L626 186L626 189L627 192L627 194L628 197L628 200L628 203L629 205L628 208L625 208L625 206L628 205L631 205L633 205L636 204L639 204L642 204L644 204L647 204L649 204L652 204L654 204L656 205L657 205L659 206L661 206L662 207L663 207L665 207L665 208L666 209L665 210L665 210L665 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L664 211L665 211L665 211L665 211L665 211L665 211L665 211L665 211L665 211L665 212L665 212L665 212L665 212L665 212L665 213L665 213L665 213L665 213L665 213L665 213L664 214L664 214L664 214L664 214L664 214L664 215L664 215L664 215L664 215L664 215L664 215L664 216L664 216L664 216L664 216L664 216L664 217L664 217L664 217L664 217L664 217L664 218L664 218L664 218L664 218L664 218L664 218L664 219L664 219L664 219L664 219L664 219L664 220L664 220L664 220L664 220L664 220L664 221L664 221L664 221L664 221L664 221L664 221L664 222L664 222L664 222L664 222L664 222L664 223L664 223L664 223L664 223L664 223L664 223L664 224L664 224L665 224L665 224L665 224L665 225L665 225L665 225L665 225L665 225L665 225L665 226L665 226L665 226L665 226L664 226L664 226L664 226L664 226L664 226L664 226L664 226L664 227L664 227L664 227L664 227L664 227L664 227L664 227L664 227L664 227L663 227L663 227L663 227L663 227L664 227L663 227L664 227L664 227L663 227L664 227L663 227L663 227L663 227L664 227L664 227L664 227L664 227L664 227L664 227L663 227L664 227L663 227L664 227L663 227L664 227L663 227L664 227L663 227L664 227L664 227L664 227L663 227L663 227L663 227L663 227L663 227L663 227L663 227L663 227L664 227L663 227L664 227L663 227"></path><path class="leaflet-interactive" stroke="#1F4E9C" stroke-opacity="0.9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 7" fill="none" d="M926 258L1036 219"></path></g></svg></div><div class="leaflet-pane leaflet-shadow-pane"></div><div class="leaflet-pane leaflet-marker-pane"><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" title="Notarztstandort Talwang" style="margin-left: -15px; margin-top: -15px; width: 30px; height: 30px; transform: translate3d(477px, 38px, 0px); z-index: 538;"><span class="geo-schild"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-haus"></use></svg></span></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(577px, 104px, 0px); z-index: 404;"><span class="geo-pfeil" style="transform:rotate(90deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(625px, 206px, 0px); z-index: 506;"><span class="geo-pfeil" style="transform:rotate(135deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(568px, 105px, 0px); z-index: 405;"><span class="geo-pfeil" style="transform:rotate(207deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(599px, 179px, 0px); z-index: 479;"><span class="geo-pfeil" style="transform:rotate(135deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(595px, 69px, 0px); z-index: 369;"><span class="geo-pfeil" style="transform:rotate(135deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(628px, 196px, 0px); z-index: 496;"><span class="geo-pfeil" style="transform:rotate(162deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(664px, 227px, 0px); z-index: 527;"><span class="geo-pfeil" style="transform:rotate(90deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(594px, 68px, 0px); z-index: 368;"><span class="geo-pfeil" style="transform:rotate(135deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(628px, 195px, 0px); z-index: 495;"><span class="geo-pfeil" style="transform:rotate(162deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(645px, 261px, 0px); z-index: 561;"><span class="geo-pfeil" style="transform:rotate(270deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(623px, 134px, 0px); z-index: 434;"><span class="geo-pfeil" style="transform:rotate(0deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(564px, 53px, 0px); z-index: 353;"><span class="geo-pfeil" style="transform:rotate(225deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(595px, 69px, 0px); z-index: 369;"><span class="geo-pfeil" style="transform:rotate(135deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated" style="margin-left: -10px; margin-top: -10px; width: 20px; height: 20px; transform: translate3d(628px, 196px, 0px); z-index: 496;"><span class="geo-pfeil" style="transform:rotate(162deg)"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-pfeil-hoch"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(581px, 105px, 0px); z-index: 505;"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-einsatzort"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(581px, 109px, 0px); z-index: 509;"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-einsatzort"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(671px, 226px, 0px); z-index: 626;"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-einsatzort"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(655px, 235px, 0px); z-index: 635;"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-einsatzort"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(664px, 211px, 0px); z-index: 611;"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-einsatzort"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(1036px, 219px, 0px); z-index: 619;"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-einsatzort"></use></svg></span></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" style="margin-left: -6px; margin-top: -6px; width: 12px; height: 12px; transform: translate3d(926px, 258px, 0px); z-index: 258;"><span class="geo-punkt" style="background:#1F4E9C"></span></div></div><div class="leaflet-pane leaflet-tooltip-pane"></div><div class="leaflet-pane leaflet-popup-pane"></div><div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(554144px, 366524px, 0px) scale(2048);"></div></div><div class="leaflet-control-container"><div class="leaflet-top leaflet-left"><div class="leaflet-control-zoom leaflet-bar leaflet-control"><a class="leaflet-control-zoom-in" href="#" title="Zoom in" role="button" aria-label="Zoom in" aria-disabled="false"><span aria-hidden="true">+</span></a><a class="leaflet-control-zoom-out" href="#" title="Zoom out" role="button" aria-label="Zoom out" aria-disabled="false"><span aria-hidden="true">−</span></a></div><div class="leaflet-bar map-ctrl-fs leaflet-control"><a class="" href="#" title="Vollbild" aria-label="Vollbild"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" role="img"><title>Vollbild</title><use href="#s-vollbild"></use></svg></a></div><div class="leaflet-bar map-ctrl-groesse karte-groesse leaflet-control"><a class="" href="#" role="button" title="Karte vergrößern" aria-label="Karte vergrößern" aria-pressed="false"><svg class="symbol symbol-gross symbol-hoch" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-karte-gross"></use></svg><svg class="symbol symbol-gross symbol-breit" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-karte-breit"></use></svg></a></div></div><div class="leaflet-top leaflet-right"><div class="leaflet-control-layers leaflet-control" aria-haspopup="true"><a class="leaflet-control-layers-toggle" href="#" title="Layers" role="button"></a><section class="leaflet-control-layers-list"><div class="leaflet-control-layers-base"><label><span><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers_47" checked="checked"><span> Standard</span></span></label><label><span><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers_47"><span> Wanderkarte (OpenHikingMap)</span></span></label><label><span><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers_47"><span> Topographisch (OpenTopoMap)</span></span></label><label><span><input type="radio" class="leaflet-control-layers-selector" name="leaflet-base-layers_47"><span> Satellitenbild (Esri)</span></span></label></div><div class="leaflet-control-layers-separator" style="display: none;"></div><div class="leaflet-control-layers-overlays"></div></section></div></div><div class="leaflet-bottom leaflet-left"></div><div class="leaflet-bottom leaflet-right"><div class="leaflet-control-attribution leaflet-control"><a href="https://leafletjs.com" title="A JavaScript library for interactive maps"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" class="leaflet-attribution-flag"><path fill="#4C7BE1" d="M0 0h12v4H0z"></path><path fill="#FFD500" d="M0 4h12v3H0z"></path><path fill="#E0BC00" d="M0 7h12v1H0z"></path></svg> Leaflet</a> <span aria-hidden="true">|</span> © OpenStreetMap</div></div></div></div></div>
+
+    <section class="karte karte-einsaetze" id="einsatzliste">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Einsätze</h2>
+        <span class="karte-zahl" id="mzahl">6 · 59 km</span>
+                <button type="button" class="karte-sortieren nur-unter-720" data-blatt="sortblatt" aria-expanded="false" aria-controls="sortblatt">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>Sortieren</title><use href="#s-sortieren"></use></svg>        </button>
+        <a class="karte-aktion karte-aktion-orange" id="addmission" href="einsatz_form.php?d=21">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-plus"></use></svg><span>Nachtragen</span>
+        </a>
+      </div>
+      <div class="karte-inhalt">
+                <div class="meldung meldung-info" id="lockbanner" role="status" hidden="">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-schloss"></use></svg>          <p>Geschützte Angaben sind gesperrt — Einsatzort, Alter und Diagnose
+             bleiben verborgen, bis die Verschlüsselung entsperrt ist.</p>
+          <div class="meldung-aktion">
+            <button class="knopf knopf-neutral" type="button" id="unlockbtn"><span>Entsperren</span></button>          </div>
+        </div>
+
+                <div class="tabelle-scroll nur-ab-720">
+                    <table class="tabelle" id="missions">
+            <thead><tr><th class="sortable streifen-spalte" data-key="col" data-label=""></th><th class="sortable mitte-spalte" data-key="no" data-label="Nr.">Nr.</th><th class="sortable" data-key="start" data-label="Beginn">Beginn<span class="arrow"> <svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>aufsteigend</title><use href="#s-pfeil-hoch"></use></svg></span></th><th class="sortable zahl-spalte" data-key="dur" data-label="Dauer">Dauer</th><th class="sortable" data-key="site" data-label="Einsatzort">Einsatzort</th><th class="sortable zahl-spalte" data-key="age" data-label="Alter">Alter</th><th class="sortable" data-key="dx" data-label="Diagnose">Diagnose</th><th class="sortable haken-spalte" data-key="sec" data-label="Sekundär­transport">Sekundär­transport</th><th class="sortable zahl-spalte" data-key="km" data-label="km">km</th></tr></thead>
+            <tbody><tr class="clickable" data-mid="101" tabindex="0" role="link"><td class="streifen-spalte"><span class="streifen" style="background:#FF8F1F"></span></td><td class="mitte-spalte">1</td><td>07:13</td><td class="zahl-spalte zeit-spalte">57min</td><td class="">Auwiesen</td><td class="zahl-spalte ">61</td><td class="">Schädel-Hirn-Trauma bei Motorradunfall</td><td class="haken-spalte"></td><td class="zahl-spalte">8,9</td></tr><tr class="clickable" data-mid="102" tabindex="0" role="link"><td class="streifen-spalte"><span class="streifen" style="background:#4280E5"></span></td><td class="mitte-spalte">2</td><td>08:36</td><td class="zahl-spalte zeit-spalte">1h 15min</td><td class="">Auwiesen</td><td class="zahl-spalte ">30</td><td class="">Schädel-Hirn-Trauma bei Motorradunfall</td><td class="haken-spalte"></td><td class="zahl-spalte">9,9</td></tr><tr class="clickable" data-mid="103" tabindex="0" role="link"><td class="streifen-spalte"><span class="streifen" style="background:#D63338"></span></td><td class="mitte-spalte">3</td><td>10:15</td><td class="zahl-spalte zeit-spalte">1h 32min</td><td class="">Steinach im Tal</td><td class="zahl-spalte ">45</td><td class="">Schädel-Hirn-Trauma bei Motorradunfall</td><td class="haken-spalte"></td><td class="zahl-spalte">10,5</td></tr><tr class="clickable" data-mid="104" tabindex="0" role="link"><td class="streifen-spalte"><span class="streifen" style="background:#1A2E4D"></span></td><td class="mitte-spalte">4</td><td>12:12</td><td class="zahl-spalte zeit-spalte">54min</td><td class="">Steinach im Tal</td><td class="zahl-spalte ">92</td><td class="">Hypertensive Entgleisung</td><td class="haken-spalte"></td><td class="zahl-spalte">20,2</td></tr><tr class="clickable" data-mid="105" tabindex="0" role="link"><td class="streifen-spalte"><span class="streifen" style="background:#C25A00"></span></td><td class="mitte-spalte">5</td><td>13:31</td><td class="zahl-spalte zeit-spalte">1h 25min</td><td class="">Steinach im Tal</td><td class="zahl-spalte ">89</td><td class="">Akutes Abdomen</td><td class="haken-spalte"></td><td class="zahl-spalte">9,7</td></tr><tr class="clickable" data-mid="106" tabindex="0" role="link"><td class="streifen-spalte"><span class="streifen" style="background:#1F4E9C"></span></td><td class="mitte-spalte">6</td><td>15:11</td><td class="zahl-spalte zeit-spalte">55min</td><td class="">Felsgrat</td><td class="zahl-spalte ">29</td><td class="">Rippenprellung nach Sturz, ambulant belassen</td><td class="haken-spalte"></td><td class="zahl-spalte"><span class="dash">–</span></td></tr></tbody>
+          </table>
+        </div>
+        <div class="kachelliste nur-unter-720" id="missionskacheln"><a class="kachel" href="einsatz.php?id=101"><span class="kachel-streifen" style="background:#FF8F1F"></span><span class="kachel-zeit">07:13</span><span class="kachel-rumpf"><span class="kachel-kopf"><span class="kachel-ort">Auwiesen</span><span class="kachel-km">9 km</span></span><span class="kachel-dx">Schädel-Hirn-Trauma bei Motorradunfall</span><span class="kachel-fuss">57min · 61 J.</span></span></a><a class="kachel" href="einsatz.php?id=102"><span class="kachel-streifen" style="background:#4280E5"></span><span class="kachel-zeit">08:36</span><span class="kachel-rumpf"><span class="kachel-kopf"><span class="kachel-ort">Auwiesen</span><span class="kachel-km">10 km</span></span><span class="kachel-dx">Schädel-Hirn-Trauma bei Motorradunfall</span><span class="kachel-fuss">1h 15min · 30 J.</span></span></a><a class="kachel" href="einsatz.php?id=103"><span class="kachel-streifen" style="background:#D63338"></span><span class="kachel-zeit">10:15</span><span class="kachel-rumpf"><span class="kachel-kopf"><span class="kachel-ort">Steinach im Tal</span><span class="kachel-km">10 km</span></span><span class="kachel-dx">Schädel-Hirn-Trauma bei Motorradunfall</span><span class="kachel-fuss">1h 32min · 45 J.</span></span></a><a class="kachel" href="einsatz.php?id=104"><span class="kachel-streifen" style="background:#1A2E4D"></span><span class="kachel-zeit">12:12</span><span class="kachel-rumpf"><span class="kachel-kopf"><span class="kachel-ort">Steinach im Tal</span><span class="kachel-km">20 km</span></span><span class="kachel-dx">Hypertensive Entgleisung</span><span class="kachel-fuss">54min · 92 J.</span></span></a><a class="kachel" href="einsatz.php?id=105"><span class="kachel-streifen" style="background:#C25A00"></span><span class="kachel-zeit">13:31</span><span class="kachel-rumpf"><span class="kachel-kopf"><span class="kachel-ort">Steinach im Tal</span><span class="kachel-km">10 km</span></span><span class="kachel-dx">Akutes Abdomen</span><span class="kachel-fuss">1h 25min · 89 J.</span></span></a><a class="kachel" href="einsatz.php?id=106"><span class="kachel-streifen" style="background:#1F4E9C"></span><span class="kachel-zeit">15:11</span><span class="kachel-rumpf"><span class="kachel-kopf"><span class="kachel-ort">Felsgrat</span><span class="kachel-km"></span></span><span class="kachel-dx">Rippenprellung nach Sturz, ambulant belassen</span><span class="kachel-fuss">55min · 29 J.</span></span></a></div>
+        <p id="empty" class="feld-hinweis" hidden="">Für diesen Tag sind keine Einsätze dokumentiert.</p>
+      </div>
+    </section>
+    </div>
+        <section class="karte" id="ruheliste">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Ruhesegmente</h2>
+        <span class="karte-zahl" id="rzahl">7</span>
+      </div>
+      <div class="karte-inhalt">
+        <p class="feld-hinweis">Aufzeichnung zwischen den Einsätzen. Wurde
+           während eines Einsatzes kein Knopf gedrückt, schneide ihn hier aus
+           dem Segment heraus — der übrige Zeitraum bleibt als Ruhesegment
+           stehen.</p>
+        <div id="ruhezeilen"><div class="zeile" data-ruhezeile="113"><div class="zeile-text"><span class="zeile-haupt">07:00 – 07:13 Uhr</span><span class="zeile-klein">Ruhesegment Nr. 113 · 13 min · 14 Punkte</span></div><div class="zeile-aktionen"><div class="zeile-knoepfe"><button class="knopf knopf-neutral" type="button" data-schnitt-auf="113" aria-expanded="false"><span>Schneiden</span></button></div></div></div><div class="zeile" data-ruhezeile="114"><div class="zeile-text"><span class="zeile-haupt">08:10 – 08:36 Uhr</span><span class="zeile-klein">Ruhesegment Nr. 114 · 26 min · 131 Punkte</span></div><div class="zeile-aktionen"><div class="zeile-knoepfe"><button class="knopf knopf-neutral" type="button" data-schnitt-auf="114" aria-expanded="false"><span>Schneiden</span></button></div></div></div><div class="zeile" data-ruhezeile="115"><div class="zeile-text"><span class="zeile-haupt">09:51 – 10:15 Uhr</span><span class="zeile-klein">Ruhesegment Nr. 115 · 24 min · 129 Punkte</span></div><div class="zeile-aktionen"><div class="zeile-knoepfe"><button class="knopf knopf-neutral" type="button" data-schnitt-auf="115" aria-expanded="false"><span>Schneiden</span></button></div></div></div><div class="zeile" data-ruhezeile="116"><div class="zeile-text"><span class="zeile-haupt">11:47 – 12:12 Uhr</span><span class="zeile-klein">Ruhesegment Nr. 116 · 25 min · 130 Punkte</span></div><div class="zeile-aktionen"><div class="zeile-knoepfe"><button class="knopf knopf-neutral" type="button" data-schnitt-auf="116" aria-expanded="false"><span>Schneiden</span></button></div></div></div><div class="zeile" data-ruhezeile="117"><div class="zeile-text"><span class="zeile-haupt">13:06 – 13:31 Uhr</span><span class="zeile-klein">Ruhesegment Nr. 117 · 25 min · 26 Punkte</span></div><div class="zeile-aktionen"><div class="zeile-knoepfe"><button class="knopf knopf-neutral" type="button" data-schnitt-auf="117" aria-expanded="false"><span>Schneiden</span></button></div></div></div><div class="zeile" data-ruhezeile="118"><div class="zeile-text"><span class="zeile-haupt">14:56 – 15:11 Uhr</span><span class="zeile-klein">Ruhesegment Nr. 118 · 15 min · 120 Punkte</span></div><div class="zeile-aktionen"><div class="zeile-knoepfe"><button class="knopf knopf-neutral" type="button" data-schnitt-auf="118" aria-expanded="false"><span>Schneiden</span></button></div></div></div><div class="zeile" data-ruhezeile="119"><div class="zeile-text"><span class="zeile-haupt">16:06 – offen Uhr</span><span class="zeile-klein">Ruhesegment Nr. 119 · 175 Punkte · läuft noch</span></div><div class="zeile-aktionen"><div class="zeile-knoepfe"><button class="knopf knopf-neutral" type="button" data-schnitt-auf="119" aria-expanded="false"><span>Schneiden</span></button></div></div></div></div>
+      </div>
+    </section>
+
+            <dialog class="dialog" id="gpxdialog" aria-labelledby="gpx-titel">
+      <div class="dialog-kopf"><h2 id="gpx-titel">GPX importieren</h2></div>
+      <div class="dialog-inhalt">
+        <p id="gpx-tagsatz"></p>
+        <div class="feld">
+          <label class="feld-label" for="gpx-datei">GPX-Datei</label>
+          <input class="feld-eingabe" type="file" id="gpx-datei" accept=".gpx,application/gpx+xml">
+          <p class="feld-klein">GPX mit Zeitstempeln je Punkt. Eine Datei ohne
+             Zeiten wird abgelehnt — ohne sie gibt es keine Reihenfolge und
+             kein Schneiden.</p>
+        </div>
+        <div class="feld">
+          <span class="feld-label">Übernehmen als</span>
+          <div class="wahlliste" role="radiogroup" aria-label="Übernehmen als">
+            <input type="radio" class="wahl-box" id="gpx-ruhe" name="gpx-ziel" value="ruhe" checked="">
+            <label class="wahl-zeile" for="gpx-ruhe">
+              <span class="wahl-punkt" aria-hidden="true"></span>
+              <span class="wahl-text">Ruhesegment</span>
+              <span class="wahl-zusatz">die ganze Aufzeichnung; Einsätze danach herausschneiden</span>
+            </label>
+            <input type="radio" class="wahl-box" id="gpx-einsatz" name="gpx-ziel" value="einsatz">
+            <label class="wahl-zeile" for="gpx-einsatz">
+              <span class="wahl-punkt" aria-hidden="true"></span>
+              <span class="wahl-text">Einsatz</span>
+              <span class="wahl-zusatz">die Datei ist genau ein Einsatz; Phasenzeiten danach im Einsatz</span>
+            </label>
+          </div>
+        </div>
+        <div class="meldung meldung-fehler" id="gpx-fehler" role="alert" hidden="">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-warnung"></use></svg><p></p>
+        </div>
+      </div>
+      <div class="dialog-fuss">
+        <button class="knopf knopf-leise" type="button" id="gpx-abbrechen">
+          <span>Abbrechen</span></button>
+        <button class="knopf knopf-primaer" type="button" id="gpx-los" disabled="">
+          <span>Importieren</span></button>
+      </div>
+    </dialog>
+
+    <div class="blatt" id="sortblatt" hidden="">
+      <div class="blatt-griff" aria-hidden="true"></div>
+      <h2 class="blatt-titel">Sortieren</h2>
+      <div class="blatt-liste" id="sortliste"><button type="button" class="blatt-zeile"><span>Nr.</span></button><button type="button" class="blatt-zeile aktiv"><span>Beginn</span><svg class="symbol" viewBox="0 0 24 24" focusable="false" role="img"><title>aufsteigend</title><use href="#s-pfeil-hoch"></use></svg></button><button type="button" class="blatt-zeile"><span>Dauer</span></button><button type="button" class="blatt-zeile"><span>Einsatzort</span></button><button type="button" class="blatt-zeile"><span>Alter</span></button><button type="button" class="blatt-zeile"><span>Diagnose</span></button><button type="button" class="blatt-zeile"><span>Sekundär­transport</span></button><button type="button" class="blatt-zeile"><span>km</span></button></div>
+      <button type="button" class="knopf knopf-leise blatt-abbrechen" data-blatt-zu="">
+        <span>Abbrechen</span></button>
+    </div>
+
+
+  </main>
+</div>
+<footer class="fuss-seite">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.37.1</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div></div></div></div><div class="reihe"><h2>2 · Die Kopfleiste im Vergleich</h2><p class="unter">Oben heute (Produktiv), darunter Staging. Der aktive Punkt „Startseite": Orange auf Rot hätte 2,10 : 1 — <strong>Variante A</strong> --orange-hell (4,12 : 1, bleibt „hier stehst du" in Orange), <strong>Variante B</strong> Weiß (4,78 : 1).</p><div class="frames"><div class="frame-huelle" style="width:1392px"><span class="frame-titel">heute · Produktiv · aktiver Punkt Orange auf Dunkelblau 5,97 : 1</span><div class="frame"><div class="nur-kopf"><header class="kopf">
+  <div class="kopf-innen">
+        <button type="button" class="knopf knopf-symbol kopf-menue" data-schublade="auf" aria-expanded="false" aria-controls="leiste" aria-label="Menü öffnen">
+      <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-menu"></use></svg>    </button>
+    
+    <a class="kopf-marke" href="index.php">
+            <img src="../../../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="" width="54" height="34">
+      <span class="kopf-name">Gen-EM NAdoku</span>
+      <span class="kopf-nutzer">admin@gen-em.org</span>    </a>
+
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+              <a class="kopf-punkt aktiv" href="index.php" aria-current="page">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span>Startseite</span>
+        </a>
+        <a class="kopf-punkt" href="suche.php">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-lupe"></use></svg><span>Suche</span>
+        </a>
+                <a class="knopf knopf-symbol kopf-hilfe" href="hilfe.php" aria-label="Hilfe und Handbuch">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-hilfe"></use></svg>        </a>
+        <a class="knopf knopf-symbol kopf-zahnrad" href="einstellungen.php" aria-label="Einstellungen">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-zahnrad"></use></svg>        </a>
+          </nav>
+  </div>
+</header></div></div></div><div class="frame-huelle" style="width:1392px"><span class="frame-titel">Staging · Variante A (Empfehlung) · aktiver Punkt --orange-hell auf --rot 4,12 : 1</span><div class="frame"><div class="nur-kopf"><header class="kopf kopf-umgebung">
+  <div class="kopf-innen">
+        <button type="button" class="knopf knopf-symbol kopf-menue" data-schublade="auf" aria-expanded="false" aria-controls="leiste" aria-label="Menü öffnen">
+      <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-menu"></use></svg>    </button>
+    
+    <a class="kopf-marke" href="index.php">
+            <img src="../../../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="" width="54" height="34">
+      <span class="kopf-name">Gen-EM NAdoku</span>
+      <span class="kopf-nutzer">admin@gen-em.org</span>    </a>
+
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+              <a class="kopf-punkt aktiv" href="index.php" aria-current="page">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span>Startseite</span>
+        </a>
+        <a class="kopf-punkt" href="suche.php">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-lupe"></use></svg><span>Suche</span>
+        </a>
+                <a class="knopf knopf-symbol kopf-hilfe" href="hilfe.php" aria-label="Hilfe und Handbuch">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-hilfe"></use></svg>        </a>
+        <a class="knopf knopf-symbol kopf-zahnrad" href="einstellungen.php" aria-label="Einstellungen">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-zahnrad"></use></svg>        </a>
+          </nav>
+  </div>
+</header></div></div></div><div class="frame-huelle" style="width:1392px"><span class="frame-titel">Staging · Variante B · aktiver Punkt Weiß auf --rot 4,78 : 1</span><div class="frame"><div class="nur-kopf"><header class="kopf kopf-umgebung kopf-variante-b">
+  <div class="kopf-innen">
+        <button type="button" class="knopf knopf-symbol kopf-menue" data-schublade="auf" aria-expanded="false" aria-controls="leiste" aria-label="Menü öffnen">
+      <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-menu"></use></svg>    </button>
+    
+    <a class="kopf-marke" href="index.php">
+            <img src="../../../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="" width="54" height="34">
+      <span class="kopf-name">Gen-EM NAdoku</span>
+      <span class="kopf-nutzer">admin@gen-em.org</span>    </a>
+
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+              <a class="kopf-punkt aktiv" href="index.php" aria-current="page">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span>Startseite</span>
+        </a>
+        <a class="kopf-punkt" href="suche.php">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-lupe"></use></svg><span>Suche</span>
+        </a>
+                <a class="knopf knopf-symbol kopf-hilfe" href="hilfe.php" aria-label="Hilfe und Handbuch">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-hilfe"></use></svg>        </a>
+        <a class="knopf knopf-symbol kopf-zahnrad" href="einstellungen.php" aria-label="Einstellungen">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-zahnrad"></use></svg>        </a>
+          </nav>
+  </div>
+</header></div></div></div></div></div><div class="reihe"><h2>3 · Anmeldeseite auf Staging</h2><p class="unter">Ohne Kopfleiste: Die Umgebung trägt allein die Zeile über der Karte (und der Titel „[Staging] Anmelden"). Die Ankündigung steht auch hier — eine Wartung betrifft auch, wer sich gerade anmelden will.</p><div class="frames"><div class="frame-huelle" style="width:1392px"><span class="frame-titel">login.php · Staging · Titel „[Staging] Anmelden — Gen-EM NAdoku"</span><div class="frame"><div class="anmeldung-body">
+<main class="anmeldung"><div class="hinweise"><div class="demo-hinweis hinweis-umgebung" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-server"></use></svg><p><strong>Staging</strong> — Testdaten, kein Echtbetrieb.</p></div><div class="meldung meldung-warn meldung-ankuendigung" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-warnung"></use></svg><p><strong>Wartung am Dienstag, 30.09.2026, 20:00 bis 21:00.</strong> Die Anwendung ist in dieser Zeit nicht erreichbar; Einsätze auf Uhr und Handy werden danach übertragen.</p><div class="meldung-aktion"><button type="button" class="knopf knopf-symbol" aria-label="Ankündigung ausblenden"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-schliessen"></use></svg></button></div></div></div>
+ <div class="anmeldung-karte">
+  <img src="../../../../server/assets/images/gen-em_logo_helicopter.svg" alt="" class="anmeldung-logo">
+  <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
+  <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+          <form method="post" autocomplete="on" id="loginform" data-sperre-rest="0">
+        <input type="hidden" name="csrf" value="dd5cf9d8dcc6af15214019ccba3a73bac1fbb2c9e6aa264e0a0f0ed4fbcd619d">    <input type="hidden" name="tokens" id="toks">
+    <label>E-Mail
+      <input type="email" name="email" required="" autofocus="" autocomplete="username">
+    </label>
+    <label>Passwort
+      <input type="password" name="password" required="" autocomplete="current-password">
+    </label>
+    <div class="listen-form-fuss">
+      <button class="knopf knopf-primaer knopf-breit" type="submit"><span>Anmelden</span></button>    </div>
+  </form>
+  <p class="anmeldung-neben"><a href="reset_request.php">Passwort vergessen?</a>
+          </p>
+    <p class="zustandszeile" id="loginstate"></p>
+ </div>
+
+  <nav class="fuss-anmeldung" aria-label="Über diese Anwendung">
+   <a href="ueber.php">Was ist NAdoku?</a>
+   <a href="hilfe.php">Handbuch</a>
+   <a href="impressum.php">Impressum</a>
+   <a href="datenschutz.php">Datenschutz</a>
+ </nav>
+</main>
+
+
+
+<footer class="fuss-seite fuss-dunkel">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.37.1</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+
+
+</div></div></div></div></div><div class="reihe"><h2>4 · Betrieb → Servereinstellungen: Karte „Ankündigung" und die Rückfrage vor der Rundmail</h2><p class="unter">Aus vorhandenen Bausteinen (Feld, Auswahl, Kartenfuß, Rückfrage aus confirm.js). Die Rückfrage nennt die Empfängerzahl; „erreichbar" heißt Status aktiv, Passwort gesetzt, nicht das Demo-Konto (E-P5c-56).</p><div class="frames"><div class="frame-huelle" style="width:1392px"><span class="frame-titel">betrieb_server.php · BetreiberIn · Staging · die übrigen Karten der Seite folgen darunter</span><div class="frame frame-kurz frame-kurz-hoch">
+
+<header class="kopf kopf-umgebung">
+  <div class="kopf-innen">
+        <button type="button" class="knopf knopf-symbol kopf-menue" data-schublade="auf" aria-expanded="false" aria-controls="leiste" aria-label="Menü öffnen">
+      <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-menu"></use></svg>    </button>
+    
+    <a class="kopf-marke" href="index.php">
+            <img src="../../../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="" width="54" height="34">
+      <span class="kopf-name">Gen-EM NAdoku</span>
+      <span class="kopf-nutzer">admin@gen-em.org</span>    </a>
+
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+              <a class="kopf-punkt" href="index.php">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span>Startseite</span>
+        </a>
+        <a class="kopf-punkt" href="suche.php">
+          <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-lupe"></use></svg><span>Suche</span>
+        </a>
+                <a class="knopf knopf-symbol kopf-hilfe" href="hilfe.php" aria-label="Hilfe und Handbuch">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-hilfe"></use></svg>        </a>
+        <a class="knopf knopf-symbol kopf-zahnrad aktiv" href="einstellungen.php" aria-label="Einstellungen" aria-current="page">
+          <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-zahnrad"></use></svg>        </a>
+          </nav>
+  </div>
+</header>
+<div class="schleier" data-schublade="zu" hidden=""></div>
+<div class="rahmen rahmen-lesespalte">
+      <aside class="leiste" id="leiste" aria-label="Bereichsmenü" tabindex="-1">
+    <div class="leiste-kopf nur-schublade">
+      <button type="button" class="knopf knopf-symbol" data-schublade="zu" aria-label="Menü schließen">
+        <svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-schliessen"></use></svg>      </button>
+      <span class="kopf-name">Gen-EM NAdoku</span>
+    </div>
+    <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche">
+      <a class="eintrag" href="index.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kalender"></use></svg><span class="eintrag-text">Startseite</span>
+      </a>
+      <a class="eintrag" href="suche.php">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-lupe"></use></svg><span class="eintrag-text">Suche</span>
+      </a>
+    </nav>
+    <div class="leiste-liste" data-menue="">
+                      <details class="akkordeon leiste-gruppe" open="" data-gruppe="einstellungen">
+          <summary class="akkordeon-zeile">
+            <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>            <span class="akkordeon-text">Einstellungen<span class="gruppen-zahl" aria-hidden="true"> · 5</span></span>
+          </summary>
+          <div class="akkordeon-inhalt">
+                                        <a class="eintrag" href="einstellungen.php?t=profil">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-profil"></use></svg><span class="eintrag-text">Profil</span>
+                              </a>
+                                        <a class="eintrag" href="einstellungen.php?t=geraete">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-uhr"></use></svg><span class="eintrag-text">Geräte</span>
+                              </a>
+                                        <a class="eintrag" href="einstellungen.php?t=standorte">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-standort"></use></svg><span class="eintrag-text">Standorte</span>
+                              </a>
+                                        <a class="eintrag" href="einstellungen.php?t=backup">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-sicherung"></use></svg><span class="eintrag-text">Backup</span>
+                              </a>
+                                        <a class="eintrag" href="import.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-tausch"></use></svg><span class="eintrag-text">Import / Export</span>
+                              </a>
+                      </div>
+        </details>
+                      <details class="akkordeon leiste-gruppe" data-gruppe="verwaltung">
+          <summary class="akkordeon-zeile">
+            <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>            <span class="akkordeon-text">Verwaltung<span class="gruppen-zahl" aria-hidden="true"> · 4</span></span>
+          </summary>
+          <div class="akkordeon-inhalt">
+                                        <a class="eintrag" href="admin_users.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-gruppe"></use></svg><span class="eintrag-text">NutzerInnen</span>
+                              </a>
+                                        <a class="eintrag" href="admin_sicherungen.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-sicherung"></use></svg><span class="eintrag-text">Konto-Backups</span>
+                <span class="zaehler zaehler-orange" aria-label="2 offen">2</span>              </a>
+                                        <a class="eintrag" href="admin_installation.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-haus"></use></svg><span class="eintrag-text">Installation</span>
+                              </a>
+                                        <a class="eintrag" href="admin_demo.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-kolben"></use></svg><span class="eintrag-text">Demo-Konto</span>
+                              </a>
+                      </div>
+        </details>
+                      <details class="akkordeon leiste-gruppe" open="" data-gruppe="betrieb">
+          <summary class="akkordeon-zeile">
+            <svg class="symbol akkordeon-winkel" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg>            <span class="akkordeon-text">Betrieb<span class="gruppen-zahl" aria-hidden="true"> · 7</span></span>
+          </summary>
+          <div class="akkordeon-inhalt">
+                                        <a class="eintrag" href="betrieb_status.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-status"></use></svg><span class="eintrag-text">Status</span>
+                <span class="zaehler zaehler-orange" aria-label="5 offen">5</span>              </a>
+                                        <a class="eintrag" href="betrieb_statistik.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-balken"></use></svg><span class="eintrag-text">Statistik</span>
+                              </a>
+                                        <a class="eintrag" href="betrieb_updates.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-aktualisieren"></use></svg><span class="eintrag-text">Updates</span>
+                              </a>
+                                        <a class="eintrag" href="betrieb_jobs.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-uhrzeit"></use></svg><span class="eintrag-text">Hintergrundjobs</span>
+                              </a>
+                                        <a class="eintrag aktiv" href="betrieb_server.php" aria-current="page">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-server"></use></svg><span class="eintrag-text">Servereinstellungen</span>
+                              </a><div class="eintrag-unterliste"><a class="eintrag-unter hier" href="#k-schluessel" title="Schlüssel des Servers">Schlüssel des Servers</a><a class="eintrag-unter" href="#k-speicher" title="Speicher">Speicher</a><a class="eintrag-unter" href="#k-kopfzeilen" title="Sicherheitskopfzeilen">Sicherheitskopfzeilen</a><a class="eintrag-unter" href="#k-konten" title="Konten">Konten</a><a class="eintrag-unter" href="#k-ratenschutz" title="Ratenschutz">Ratenschutz</a><a class="eintrag-unter" href="#k-adresssuche" title="Adresssuche">Adresssuche</a><a class="eintrag-unter" href="#k-gilt" title="Was hier gilt">Was hier gilt</a></div>
+                                        <a class="eintrag" href="admin_komplettsicherung.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-datenbank"></use></svg><span class="eintrag-text">Komplett-Backup</span>
+                              </a>
+                                        <a class="eintrag" href="admin_sicherungsziele.php">
+                <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-ziel-fern"></use></svg><span class="eintrag-text">Backup-Ziele</span>
+                              </a>
+                      </div>
+        </details>
+          </div>
+    <div class="leiste-fuss">
+      <a class="eintrag eintrag-leise" href="logout.php" data-confirm="Wirklich abmelden?" data-confirm-ok="Abmelden" data-confirm-tone="normal">
+        <svg class="symbol" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-abmelden"></use></svg><span class="eintrag-text">Abmelden</span>
+      </a>
+    </div>
+  </aside>
+  <main class="inhalt" id="inhalt"><div class="hinweise"><div class="demo-hinweis hinweis-umgebung" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-server"></use></svg><p><strong>Staging</strong> — Testdaten, kein Echtbetrieb.</p></div></div>
+    <a class="rueckweg nur-schublade" href="einstellungen.php"><svg class="symbol symbol-links" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-winkel"></use></svg><span>Einstellungen</span></a>
+
+  <div class="titelzeile">
+      <div class="titelzeile-haupt">
+    <div class="titelzeile-text">
+      <h1>Servereinstellungen</h1>
+    </div>
+      </div>
+  </div>
+  
+    
+
+      
+  <section class="karte" id="k-ankuendigung">
+   <div class="karte-kopf">
+    <h2 class="karte-titel">Ankündigung</h2>
+    <span class="plakette plakette-orange">sichtbar bis 30.09.2026, 21:00</span>
+   </div>
+   <div class="karte-inhalt">
+    <p class="feld-hinweis">Ein Streifen über jeder Seite, bis er abläuft. <a href="hilfe.php#11-7-ankuendigung">Wie er wirkt</a></p>
+    <form method="post" action="betrieb_server.php">
+     <div class="feld">
+      <label class="feld-label" for="f-ank_text">Text</label>
+      <textarea class="feld-eingabe feld-mehrzeilig" id="f-ank_text" name="ank_text" rows="3">Wartung am Dienstag, 30.09.2026, 20:00 bis 21:00. Die Anwendung ist in dieser Zeit nicht erreichbar.</textarea>
+      <p class="feld-klein">Noch 84 von 190 Byte — Umlaute zählen doppelt.</p>
+     </div>
+     <div class="feld">
+      <label class="feld-label" for="f-ank_ton">Ton</label>
+      <select class="feld-eingabe" id="f-ank_ton" name="ank_ton">
+       <option value="info">Hinweis — blau</option>
+       <option value="warn" selected>Warnung — orange</option>
+      </select>
+     </div>
+     <div class="feld">
+      <label class="feld-label" for="f-ank_bis">Sichtbar bis</label>
+      <input class="feld-eingabe" type="text" id="f-ank_bis" name="ank_bis" value="30.09.2026">
+     </div>
+     <div class="feld zeitfeld">
+      <label class="feld-label" for="f-ank_bis_zeit">Uhrzeit <span class="feld-klein-inline">HH:MM</span></label>
+      <input class="feld-eingabe" type="text" id="f-ank_bis_zeit" name="ank_bis_zeit" value="21:00" autocomplete="off">
+      <p class="feld-klein">Danach verschwindet der Streifen von selbst.</p>
+     </div>
+     <div class="listen-form-fuss">
+      <button class="knopf knopf-primaer" type="submit"><span>Speichern</span></button>
+      <button class="knopf knopf-neutral" type="button"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="#s-mail"></use></svg><span>Als Rundmail senden …</span></button>
+      <button class="knopf knopf-leise" type="button"><span>Entfernen</span></button>
+     </div>
+     <p class="feld-klein">Letzte Rundmail: 22.09.2026, 18:05 · höchstens eine je Tag.</p>
+    </form>
+   </div>
+  </section>
+</main>
+</div>
+<footer class="fuss-seite">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a>
+            <span class="fuss-version">v20.37.1</span></p>
+    <p class="fuss-zeile fuss-rechts"><a href="impressum.php">Impressum</a>
+    <a href="datenschutz.php">Datenschutz</a></p>
+  </footer>
+
+
+
+
+
+
+
+</div></div></div></div><div class="reihe"><h2>5 · Die Rückfrage vor der Rundmail</h2><p class="unter">Der vorhandene Dialog aus confirm.js (Titel überschreibbar mit data-confirm-titel, Knopf normal statt Gefahr).</p><div class="frames"><div class="frame-huelle" style="width:560px"><span class="frame-titel">Rückfrage · offen</span><div class="frame"><div style="padding:24px">  <dialog class="dialog mock-offen" role="alertdialog" open>
+   <div class="dialog-kopf"><h2>Rundmail senden?</h2></div>
+   <div class="dialog-inhalt"><p>Der Ankündigungstext geht an <strong>37 erreichbare Konten</strong> — alle mit gesetztem Passwort, ohne das Demo-Konto. Die Mails laufen über die Warteschlange; das kann einige Minuten dauern. Heute ist danach keine zweite Rundmail mehr möglich.</p></div>
+   <div class="dialog-fuss">
+    <button type="button" class="knopf knopf-leise">Abbrechen</button>
+    <button type="button" class="knopf knopf-primaer">An 37 Konten senden</button>
+   </div>
+  </dialog></div></div></div></div></div><div class="notiz"><h3>Anmerkungen</h3><ul>
+<li><strong>Kein neuer Baustein für die Streifen.</strong> Die Umgebungszeile ist eine Variante des vorhandenen Hinweisstreifens
+(<code>.demo-hinweis</code>, der auch den Datenschutz-Hinweis trägt) im Ton der Fehlermeldung (Rot-tief auf Rosa 6,27 : 1); die Ankündigung
+ist die vorhandene <code>.meldung</code> (info/warn) mit dem Schließen-Knopf in <code>.meldung-aktion</code>. Neu sind nur der Behälter
+<code>.hinweise</code> (Abstand zwischen den Streifen) und <code>.kopf-umgebung</code>.</li>
+<li><strong>Warum nicht unter der Kopfleiste:</strong> Der Platz ist seit P3 geräumt — ein Hinweis dort verschob die klebende Leiste
+(F-P3-G). Die rote Kopfleiste kennzeichnet ohnehin jede Seite mit Kopfleiste; die Zeile sagt, was Rot heißt.</li>
+<li><strong>Der aktive Kopfpunkt</strong> (Reihe 2): <strong>entschieden 23.09.2026: A</strong> (E-P5c-59). A bleibt beim Orange, das in der Anwendung „hier
+stehst du" heißt; B ist kräftiger. Der Hover-Strich (Weiß 35 %) hat auf Rot 1,69 : 1 und auf Dunkelblau ebenfalls wenig — er bleibt,
+wie er ist, weil er kein Zustand ist, sondern eine Rückmeldung unter dem Zeiger.</li>
+<li><strong>Der Name im Kopf</strong> (admin@…) steht auf Dunkelblau in --sand (8,15 : 1); auf Rot wären es 2,86 : 1 — auf Staging trägt er --schnee (4,68 : 1).</li>
+<li><strong>Anmeldeseite</strong> (Reihe 3): Das Bild zeigt die Verweiszeile unter der Karte. Auf dem heutigen Stand steht sie
+<strong>neben</strong> der Karte und drückt sie bei 390 px auf rund 200 px zusammen — Befund, Backlog Nr. 289; hier im Rahmen
+„nur im Mockup" vorweggenommen.</li>
+<li><strong>Ankündigung</strong>: drei <code>app_state</code>-Schlüssel, Text höchstens 190 Byte (<code>APP_STATE_MAX</code>) — die Karte
+zählt mit. Die Rundmail verschickt den Ankündigungstext; höchstens eine je Tag. Der Verweis zeigt auf den Handbuch-Abschnitt am
+Ende von Kapitel 11 (Sprungmarke ist ein Platzhalter).</li>
+<li><strong>„Sichtbar bis"</strong> ist im Bau ein Datumsfeld <code>type="date"</code> wie in der Suche und beim Geburtsdatum, die
+Uhrzeit ein Maskenfeld <code>zeitfeld</code> wie im Einsatzformular. Im Bild steht das Datum als Textfeld, weil Chromium in dieser
+Umgebung Datumsfelder in US-Form zeichnet (09/30/2026) — das Bild soll zeigen, was eine deutsche Bedienerin sieht.</li>
+<li><strong>Entschieden 23.09.2026:</strong> (1) Variante A des aktiven Kopfpunkts (E-P5c-59); (2) die Ankündigung steht auch auf der Anmeldeseite (E-P5c-60).</li>
+<li>Alle Zahlen, Namen und Texte sind erfunden; die Seiten sind aus der örtlichen Installation (Web 20.37.1) abgegriffen und nur um das
+Neue ergänzt.</li></ul></div></body></html>
