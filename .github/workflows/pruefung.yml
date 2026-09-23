@@ -24,7 +24,11 @@ name: Prüfung
 #
 # Auf `main` bleibt der Push-Auslöser, und dort ist er richtig: Es gibt keinen
 # Pull Request mehr, gegen den man vergleichen könnte, und die
-# Bereichserkennung misst dort ohnehin alles.
+# Bereichserkennung misst dort alles — WENN der Lauf misst. Ob er misst,
+# entscheidet seit dem 23.09.2026 der Job `Schon gemessen?` davor am BAUM
+# (Konzept TB): Hat ein grüner PR-Lauf denselben Baum gemessen, verweist der
+# Lauf auf `main` auf ihn, statt 42 bis 56 Minuten lang dasselbe noch einmal
+# zu messen.
 #
 # WAS SIE NICHT IST. Kein Ersatz für die Browserprüfung (`CLAUDE.md` 6) und
 # kein Ersatz für Stufe 2: Kreisläufe, Bilderlauf und Messstand brauchen eine
@@ -81,8 +85,101 @@ defaults:
     shell: bash -eo pipefail {0}
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # SCHON GEMESSEN? (Konzept TB, TB-03, E-TB-06.) Ein Merge-Commit auf `main`
+  # hat mit „Require branches to be up to date" im Ruleset denselben BAUM wie
+  # der Zweig-Commit, auf dem der PR-Lauf grün war (Konzept TB 2.2). Der
+  # Push-Lauf maß dann 42 bis 56 Minuten lang Byte für Byte noch einmal, was
+  # schon gemessen war. Dieser Job sucht den PR-Lauf mit demselben Baum; hat
+  # er einen, dessen Job `Stufe 1` grün war, misst der Lauf hier nicht und
+  # sagt in der Zusammenfassung, WO gemessen wurde — Lauf, Commit, Zeitpunkt.
+  # Eine Auslassung, die ihren Gegenstand nennt, ist kein stilles
+  # Überspringen (`CLAUDE.md` 6).
+  #
+  # WARUM DAS BASH SEIN DARF UND KEIN WERKZEUG MIT SELBSTPROBE (E-TB-08). Die
+  # Grenze aus der Bereichserkennung gilt: Eine Bedingung, die über
+  # AUSGELIEFERTEN Code entscheidet, gehört in ein Werkzeug. Diese entscheidet
+  # nur, ob der Lauf sich wiederholt. Das Produktionstor holt seine Tatsachen
+  # selbst und zählt einen Lauf mit übersprungenem `Stufe 1` nicht
+  # (`freigabe.py`, E-TB-05) — ein Irrtum HIER kann das Tor nicht öffnen,
+  # nur schließen (E-TB-07).
+  #
+  # IM ZWEIFEL MESSEN (E-TB-04). Kein Push auf `main`, kein Baum, eine
+  # gescheiterte Abfrage, kein Treffer — alles heißt `messen=ja`. Und die
+  # Jobs danach laufen, wenn hier NICHT ausdrücklich `nein` steht (E-TB-11):
+  # Ein kaputter Verweis-Job lässt messen, statt die Messung auszusperren.
+  schon-gemessen:
+    name: Schon gemessen?
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read       # die Läufe und ihre Jobs lesen
+    outputs:
+      messen: ${{ steps.vergleich.outputs.messen }}
+    steps:
+      - name: Code auschecken
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        # Flach genügt: gebraucht wird nur der eigene Baum.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Baum gegen die grünen PR-Läufe halten
+        id: vergleich
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          messen() {
+            echo "messen=ja" >> "$GITHUB_OUTPUT"
+            echo "Messen: ja — $1"
+            echo "**Schon gemessen?** Nein — $1. Stufe 1 misst." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          }
+
+          # EIN PR MISST IMMER. Das ist der Fall, den das Ruleset prüft.
+          if [ "$GITHUB_EVENT_NAME" != "push" ] || [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            messen "kein Push auf \`main\` ($GITHUB_EVENT_NAME)"
+          fi
+
+          baum=$(git rev-parse 'HEAD^{tree}' 2>/dev/null || true)
+          [ -n "$baum" ] || messen "eigener Baum nicht ermittelt"
+          echo "Eigener Baum: $baum"
+
+          # FENSTER 30 IST EINE KOSTENGRENZE (E-TB-09): höchstens 30
+          # Baum-Abrufe, die Jobs nur beim Treffer. Der passende PR-Lauf ist
+          # fast immer der jüngste.
+          FENSTER=30
+          gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/pruefung.yml/runs?event=pull_request&status=success&per_page=$FENSTER" \
+             --jq '.workflow_runs[] | "\(.id) \(.head_sha)"' > kandidaten.txt 2>/dev/null \
+             || messen "Liste der PR-Läufe nicht abrufbar"
+          echo "Kandidaten: $(grep -c . kandidaten.txt || true) grüne PR-Läufe"
+
+          while read -r lauf kopf; do
+            [ -n "$lauf" ] || continue
+            lb=$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$kopf" --jq '.tree.sha' 2>/dev/null || true)
+            [ "$lb" = "$baum" ] || continue
+            # DER JOB, NICHT DER LAUF (E-TB-05, F-TB-06): Ein Lauf ist grün,
+            # auch wenn `Stufe 1` darin übersprungen wurde.
+            fertig=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$lauf/jobs" \
+                       --jq '[.jobs[] | select(.name == "Stufe 1") | select(.conclusion == "success") | .completed_at][0] // empty' \
+                       2>/dev/null || true)
+            if [ -n "$fertig" ]; then
+              echo "messen=nein" >> "$GITHUB_OUTPUT"
+              zeile="Baum \`${baum:0:7}\` bereits gemessen: Lauf $lauf (\`pull_request\`, \`${kopf:0:7}\`), Job \`Stufe 1\` grün am ${fertig/T/ } — nicht noch einmal gemessen."
+              echo "Messen: nein — $zeile"
+              echo "**Schon gemessen?** Ja. $zeile Lauf: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/$lauf" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "Lauf $lauf: gleicher Baum, aber Job \`Stufe 1\` nicht grün — zählt nicht"
+          done < kandidaten.txt
+
+          messen "kein grüner PR-Lauf mit Baum \`${baum:0:7}\` unter den letzten $FENSTER"
+
   pruefung:
     name: Stufe 1
+    # NACH DEM VERWEIS-JOB, und nur dann nicht, wenn er ausdrücklich `nein`
+    # sagt (TB-03, E-TB-11). Der Jobname bleibt `Stufe 1` — er ist die
+    # Pflichtprüfung des Rulesets und der Name, den das Produktionstor zählt.
+    needs: schon-gemessen
+    if: ${{ !cancelled() && needs.schon-gemessen.outputs.messen != 'nein' }}
     runs-on: ubuntu-latest
     steps:
       - name: Code auschecken
@@ -135,11 +232,14 @@ jobs:
         #
         # DREI EIGENSCHAFTEN MACHEN DEN SPRUNG UNKRITISCH:
         #
-        # (1) AUF `main` WIRD IMMER ALLES GEMESSEN. Der schlimmste Fehler
-        #     dieses Schritts waere, faelschlich zu ueberspringen; auf `main`
-        #     kann das nicht passieren. Und `main` ist der Stand, den ein Tag
-        #     ausliefert — Tor 3 des Produktionslaufs verlangt einen gruenen
-        #     Stufe-1-Lauf auf genau diesem Commit.
+        # (1) AUF `main` WIRD ALLES GEMESSEN — WENN GEMESSEN WIRD. Der
+        #     schlimmste Fehler dieses Schritts waere, faelschlich zu
+        #     ueberspringen; auf `main` kann das nicht passieren. OB auf
+        #     `main` gemessen wird, entscheidet der Job `Schon gemessen?`
+        #     davor am Baum (Konzept TB). Bis zum 23.09.2026 stand hier, das
+        #     Produktionstor verlange einen gruenen Lauf auf GENAU DIESEM
+        #     COMMIT — seither verlangt es einen auf demselben BAUM, und ein
+        #     gruener PR-Lauf zaehlt (E-TB-02).
         # (2) IM ZWEIFEL WIRD GEMESSEN. Jeder Weg, auf dem der
         #     Vergleichsstand nicht zu ermitteln ist — neuer Zweig,
         #     Force-Push, fehlende Historie, `workflow_dispatch` —, endet bei
@@ -796,6 +896,8 @@ jobs:
   #                  `plattform_lib.php` PLATTFORM_MARIADB_MIN)
   schema:
     name: Schema gegen ${{ matrix.db.name }}
+    needs: schon-gemessen
+    if: ${{ !cancelled() && needs.schon-gemessen.outputs.messen != 'nein' }}
     runs-on: ubuntu-latest
     strategy:
       # KEIN `fail-fast`. Scheitert eine Fassung, will man wissen, ob die
