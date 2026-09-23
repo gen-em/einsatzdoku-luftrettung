@@ -1,0 +1,796 @@
+{
+  "name": "wortliste-ausnahmen",
+  "beschreibung": "Erwartete Treffer der Sperrliste: Stellen, an denen ein luftgebundener Begriff bleiben soll. Je Eintrag die Fundort-Klasse aus dem Konzept P2, Abschnitt 5.1, und der Grund. Die Regeln werden der Reihe nach geprueft; die erste passende erklaert den Treffer. Deshalb steht das Besondere oben und das Allgemeine unten. Klasse `Homonym` ist keine Fundort-Klasse: Sie steht fuer Stellen, an denen das Wort etwas anderes bedeutet (die „Maschine\" ist ein Rechner, der „Flugmodus\" eine Einstellung des Geraets).",
+  "regeln": [
+    {
+      "id": "schwachwortliste",
+      "datei": "server/assets/pwquality.js",
+      "klasse": "F",
+      "begruendung": "Die Liste haeufiger Passwoerter nennt `hubschrauber`, `christoph` und `luftrettung`, weil genau diese Woerter in der Luftrettung als Passwort naheliegen. Ein Streichen schwaechte die Pruefung. P2 ergaenzt die bodengebundenen Gegenstuecke (E-P2-18), streicht aber nichts."
+    },
+    {
+      "id": "luftrettungs-kacheln",
+      "datei": "server/zeitraum.php",
+      "von": "KACHELN_LUFT = \\[",
+      "bis": "^\\];",
+      "klasse": "F",
+      "begruendung": "Die zehn Kacheln des Luftrettungs-Reiters behalten ihre Flugterminologie (E32, bestaetigt in E-P2-04). Der Reiter ist per Definition luftgebunden; „Flugtage\" ist dort die richtige Beschriftung, nicht die bequeme."
+    },
+    {
+      "id": "rollenkatalog-db",
+      "datei": "server/db.php",
+      "zeile": "'label'\\s*=>\\s*'(Pilot|HEMS-TC|Flugretter)",
+      "klasse": "F",
+      "begruendung": "CREW_ROLES: Pilot 1, Pilot 2, HEMS-TC und Flugretter sind Fachrollen der Luftrettung und heissen so. Der Katalog trennt sauber nach `kind`; an einem bodengebundenen Rettungsmittel erscheinen sie gar nicht."
+    },
+    {
+      "id": "update-migrationen",
+      "datei": "server/migration_lib.php",
+      "klasse": "E",
+      "begruendung": "Migrationsbeschriftungen und SQL frueherer Schemafassungen. Sie beschreiben, was eine Migration DAMALS getan hat — eine Umbenennung machte die Beschreibung falsch. Entfallen mit R11 (Uebergabeliste an P6, Konzept 10.3). DIE DATEI HAT SICH GEAENDERT: Bis Web 15.0.0 lag der Katalog in `server/update.php`; seit S8/AP2 steht er in `server/migration_lib.php`, weil zwei Aufrufer ihn brauchen — die neue Seite Betrieb → Updates und der Notausgang auf der Kommandozeile. Der Regelname bleibt, die Fundstelle nicht."
+    },
+    {
+      "id": "config-beispiel",
+      "datei": "server/config.example.php",
+      "klasse": "E",
+      "begruendung": "`dbname=hems`, `user=hems` im Installationsbeispiel. Aendert sich mit der Umbenennung in P6 (Uebergabeliste 10.3); eine Aenderung jetzt wuerde bestehende Installationsanleitungen brechen, ohne etwas sichtbar zu machen."
+    },
+    {
+      "id": "repo-link",
+      "zeile": "github\\.com/gen-em/einsatzdoku-luftrettung",
+      "klasse": "E",
+      "begruendung": "Fusszeilen-Link auf das Repositorium (login.php, pw_handling.php, ui.php). Der Reponame wandert mit R11 in P6; ein falscher Link jetzt waere schlechter als ein alter Name."
+    },
+    {
+      "id": "flugtage-altfeld",
+      "zeile": "\\['flugtage'\\]|\\.flugtage\\b",
+      "klasse": "D",
+      "begruendung": "`flugtage` als Feldname in Backups und Umfangsangaben aelterer Fassungen. Der Code liest ihn als Zweitnamen (`diensttage ?? flugtage`), damit alte Dateien lesbar bleiben."
+    },
+    {
+      "id": "besatzung-kurznamen",
+      "datei": "docs/Technik.md",
+      "zeile": "Besatzung P1, P2, HEMS, FR",
+      "klasse": "D",
+      "begruendung": "Erlaeuterung der Suchparameter `c1`…`c5`. Die Kurznamen sind Vertragsbestandteil verschickter Links (R5). Steht bewusst VOR der allgemeinen Regel zum Rollencode: Deren Muster fuer die Katalogaufzaehlung („p2, hems\") passt seit der Nacharbeit auch auf diese Zeile, und dann stuende hier die falsche Begruendung (E-P2-20)."
+    },
+    {
+      "id": "rollencode-hems",
+      "zeile": "(['\"`])hems\\1|crew_hems|dayCrew\\.hems|hems\\s+TINYINT|p2, hems",
+      "klasse": "D",
+      "begruendung": "Rollencode `hems`, Spalte `crew_hems`/`tag_crew_hems`, Schluessel in CSV, Excel und Backup, sowie die Aufzaehlung des Katalogs („p1, p2, hems, fr …\") in der Format-Doku. Gespeicherte und vertragliche Namen bleiben (R5, E-P2-11); ein Umbenennen machte jede vorhandene Datei unlesbar. Die Aufzaehlung kam mit der Nacharbeit dazu (F-P2-J): Vorher stand dort `tc`, ein Code, den es nie gegeben hat — das Muster fand ihn nicht, weil er kein Luftwort ist."
+    },
+    {
+      "id": "rollenbeschriftung-vorgabe",
+      "zeile": "p1: 'Pilot 1', p2: 'Pilot 2'",
+      "klasse": "F",
+      "begruendung": "Notvorgabe der Rollenbeschriftungen in den JS-Bausteinen, falls CREW_LABELS nicht mitgeliefert wurde. Dieselben Fachrollen wie im Katalog."
+    },
+    {
+      "id": "alt-phasen-schluessel",
+      "datei": "server/assets/import_profiles.js",
+      "zeile": "ALT_PHASE_SLUGS",
+      "klasse": "D",
+      "begruendung": "`abflug` und `landung_krankenhaus` sind die Spaltenschluessel bis Web 5.10.0. Der Rueckimport muss sie erkennen, sonst verliert eine alte Exportdatei ihre Alarm- und Klinikzeit."
+    },
+    {
+      "id": "profil-felder",
+      "datei": "server/assets/*.js",
+      "zeile": "^\\s*'[^']*'\\s*[,:\\]]|expectedHeaders|reviewColumns|exportTitle",
+      "klasse": "D",
+      "begruendung": "Kopfzeilen und Spaltenschluessel der Import-Profile sowie die Spaltenbeschriftungen des Fremdformats. Sie muessen alte und fremde Dateien WIEDERERKENNEN — die Beschriftung einer Excel-Spalte ist ein Formatfeld (E-P2-11)."
+    },
+    {
+      "id": "beispielpaar-luft-boden",
+      "zeile": "Hubschrauberdienst am Tag",
+      "klasse": "F",
+      "begruendung": "„ein Hubschrauberdienst am Tag und ein NEF-Nachtdienst am Abend\" nennt beide Arten nebeneinander — genau das, was E-P2-14 verlangt. Hier bezeichnet „Hubschrauber\" tatsaechlich Luftfahrt."
+    },
+    {
+      "id": "handbuch-uhrkapitel",
+      "datei": "docs/Handbuch.md",
+      "abschnitt": "^## 2\\. Die Uhr-App",
+      "klasse": "G",
+      "begruendung": "Kapitel 2 beschreibt die Garmin-App als Gegenstand: unterstuetzte Modelle, Tastenwege je Uhr, Oberflaechen. Dort ist Garmin nicht eine von mehreren Plattformen, sondern die beschriebene Sache (E-P2-15). Abschnitt 2.0 ist zugleich die Tabelle, auf die die geraetefreien Texte verweisen (E-P2-02)."
+    },
+    {
+      "id": "handbuch-luftreiter",
+      "datei": "docs/Handbuch.md",
+      "abschnitt": "^### 4\\.4",
+      "klasse": "F",
+      "begruendung": "Beschreibt den Luftrettungs-Reiter und begruendet dessen Wortwahl. Bleibt unveraendert (E-P2-04); ohne diesen Abschnitt waere nicht erklaert, warum eine Kachel „Flugtage\" heisst und die daneben „Diensttage\"."
+    },
+    {
+      "id": "technik-uhrkapitel",
+      "datei": "docs/Technik.md",
+      "abschnitt": "^## 5\\. Uhr-App",
+      "klasse": "G",
+      "begruendung": "Kapitel 5 samt Build-Absaetzen beschreibt das Connect-IQ-Projekt, seine Tastenprofile und die Bauziele `fenix6pro`, `fr945`, `venu3s`. Plattformspezifisch, also bleibt Garmin (E-P2-15)."
+    },
+    {
+      "id": "uhr-tastennamen",
+      "bereich": "e",
+      "datei": "watch/source-tasten5/DeviceProfile.mc",
+      "muster": [
+        "taste-start"
+      ],
+      "klasse": "G",
+      "begruendung": "DeviceProfile.mc IST der plattformspezifische Teil der Uhr-App: Die Datei haelt je Tastenprofil die Beschriftungen, die auf dem Gehaeuse stehen — „START“ auf Fenix und Forerunner, „Action“ auf der Venu 3s (source-tasten3, deshalb dort kein Treffer). Genau diese Trennung sieht E-P2-02 vor: geraetefreier Ablauf, Garmin-Weg als benannter Zusatz. Die Oberflaechen setzen den Namen ueber Input.lSelectHold() ein und kennen ihn nicht selbst; wer ihn hier ersetzte, schriebe eine Bedienanweisung auf ein echtes Geraet, die dort nicht ausfuehrbar waere. Nur `taste-start` — DOWN und BACK stehen in dieser Datei nicht, und eine Regel auf Vorrat greift nicht und faellt als ungenutzt auf."
+    },
+    {
+      "id": "connect-iq-rueckruf",
+      "zeile": "von Connect IQ bekommt",
+      "klasse": "G",
+      "begruendung": "Die Signatur des Rueckrufs — `(code, data)` ohne Kopfzeilen — ist eine Eigenschaft der Garmin-Plattform und nicht der Uhr im Allgemeinen. Sie ist der GRUND, warum `ingest.php` seit Web 20.11.0 ein `Retry-After` schickt, das kein Geraet dieses Projekts liest (P5a/AP7, E-P5a-01). Ein geraetefreies „die Uhr bekommt keine Kopfzeilen\" waere hier keine Neutralitaet, sondern eine falsche Verallgemeinerung: Ein Wear-OS-Client koennte sie lesen. Dieselbe Ueberlegung wie `garmin-zusatz-kopplung` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST. Zwei Stellen, docs/Technik.md 5e.7 und docs/JSON-Vertrag.md 5."
+    },
+    {
+      "id": "connect-iq-projekt",
+      "zeile": "Connect-IQ-Projekt|Connect-IQ-Probe",
+      "klasse": "G",
+      "begruendung": "`watch/` und `tools/uhr-pruefstand/eingabe-probe/` SIND Connect-IQ-Projekte. Der Begriff bezeichnet hier die Sache, nicht die Einstellungen der Uhr-App."
+    },
+    {
+      "id": "garmin-zusatz-kopplung",
+      "datei": "server/einstellungen.php",
+      "von": "Auf Garmin-Uhren:",
+      "bis": "</p>",
+      "klasse": "G",
+      "begruendung": "Der Tastenweg der Kopplung als ausdruecklicher Zusatz mit genannter Plattform (E-P2-02). Er steht getrennt vom geraetefreien Ablauf darueber, weil er nur fuer Fenix und Forerunner gilt; die Venu 3s hat weder START noch DOWN. Die Tabelle je Uhr steht im Handbuch, Abschnitt 2.0."
+    },
+    {
+      "id": "app-installieren-plattformen",
+      "datei": "server/einstellungen.php",
+      "von": "ui_karte_start\\(\\['titel' => 'App installieren'",
+      "bis": "ui_karte_ende\\(\\); \\?>",
+      "klasse": "G",
+      "begruendung": "Die Karte „App installieren\" auf dem Geraete-Reiter (S8/AP6, Mockup 10) nennt die Plattformen, WEIL der Weg zur App je Plattform ein anderer ist: Die Uhr-App kommt aus dem Connect-IQ-Store, die Handy- und Wear-OS-App aus dem Play Store, und das APK ist der Rueckfall fuer den zweiten Fall. Ein geraetefreies „Store\" waere hier keine Neutralitaet, sondern eine Anleitung, der niemand folgen kann. Dieselbe Ueberlegung wie `garmin-zusatz-kopplung` (E-P2-02) und `statistik-hersteller-garmin`: genannt wird die Plattform dort, wo sie die Sache IST."
+    },
+    {
+      "id": "handbuch-app-installieren",
+      "datei": "docs/Handbuch.md",
+      "abschnitt": "^### 10\\.1 Die App installieren",
+      "klasse": "G",
+      "begruendung": "Der Handbuch-Abschnitt „Die App installieren\" nennt die Plattformen, WEIL der Weg zur App je Plattform ein anderer ist: Connect-IQ-Store fuer die Uhr, Play Store fuer Handy und Wear OS, APK als Rueckfall. Ein geraetefreies „Store\" waere hier keine Neutralitaet, sondern eine Anleitung, der niemand folgen kann. Gegenstueck zu `app-installieren-plattformen` fuer den Code."
+    },
+    {
+      "id": "statistik-hersteller-garmin",
+      "datei": "server/betrieb_statistik.php",
+      "klasse": "G",
+      "begruendung": "Die Statistik ZAEHLT Hersteller — sie beschreibt nicht die Bedienung, sondern das, was tatsaechlich gekoppelt ist. „Garmin-Uhren“ gegen „Android-Handys“ ist genau die Unterscheidung, um die es dort geht; ein geraetefreies „Uhren“ waere hier keine Neutralitaet, sondern eine geloeschte Information. Drei Stellen: die Ableitung des Herstellers aus der Geraeteart (art = 'uhr' -> Garmin, weil die Wear-OS-App bauartbedingt nicht koppelt, E-S4-11), die Zeile der Geraetekarte und die Fussnote, die die Ableitung erklaert. Dieselbe Ueberlegung wie `garmin-zusatz-kopplung` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST."
+    },
+    {
+      "id": "handbuch-statistik-garmin",
+      "datei": "docs/Handbuch.md",
+      "abschnitt": "^### 12\\.2 Statistik",
+      "klasse": "G",
+      "begruendung": "Der Handbuch-Abschnitt 12.2 „Statistik“ (bis S8/AP8 „Betrieb → Statistik“) beschreibt eine Zaehlung von Herstellern. „Garmin-Uhren“ gegen „Android-Handys“ ist genau die Unterscheidung, um die es dort geht; ein geraetefreies „Uhren“ waere keine Neutralitaet, sondern eine geloeschte Information. Zwei Stellen: die Aufzaehlung der Geraetearten und der Kasten, der die Herstellerableitung erklaert. Dieselbe Begruendung wie `statistik-hersteller-garmin` fuer den Code."
+    },
+    {
+      "id": "garmin-zusatz",
+      "zeile": "bei Garmin\\b",
+      "klasse": "G",
+      "begruendung": "Der Garmin-Zusatz in Klammern: In plattformuebergreifenden Texten heisst es „Einstellungen der Uhr-App\", und dahinter steht, wo das auf der derzeitigen Plattform zu finden ist (E-P2-15). Ohne den Zusatz waere die Anweisung nicht ausfuehrbar."
+    },
+    {
+      "id": "readme-schnellstart-uhr",
+      "datei": "README.md",
+      "von": "\\*\\*Uhr \\(Garmin, Connect IQ\\):",
+      "bis": "Tastenwege je Uhr in 2\\.0",
+      "klasse": "G",
+      "begruendung": "Der Bauabschnitt des Schnellstarts beschreibt das Connect-IQ-Projekt: SDK, Bauziele fenix6pro/fr945/venu3s, der Pfad GARMIN/Apps/ auf dem Geraet. Das ist plattformspezifisch und wird ausdruecklich als solches eingeleitet (E-P2-15). Der Kopplungsteil darin ist geraetefrei formuliert."
+    },
+    {
+      "id": "plattform-ersteinfuehrung",
+      "zeile": "derzeit (für )?Garmin|Forerunner 945, Venu 3s",
+      "klasse": "G",
+      "begruendung": "Ersteinfuehrung der Plattform: „eine Uhr-App (derzeit für Garmin-Uhren: Fenix 6 Pro, Forerunner 945, Venu 3s)\" im README und im Handbuch, „Uhr-App (derzeit Garmin, Monkey C)\" im Architekturbild der Technik-Doku. Genau diese Form sieht E-P2-15 vor — sie nennt die Plattform als die derzeitige, nicht als die einzig moegliche."
+    },
+    {
+      "id": "besatzungswechsel-beispiel",
+      "zeile": "Pilotenwechsel oder Fahrerwechsel",
+      "klasse": "F",
+      "begruendung": "Der Besatzungswechsel im laufenden Dienst wird mit beiden Beispielen genannt (E-P2-14). „Pilotenwechsel\" allein setzte voraus, dass das Rettungsmittel ein Hubschrauber ist; hier steht der Fahrerwechsel daneben."
+    },
+    {
+      "id": "fahrzeugtypen",
+      "zeile": "RTH, NEF, NAW|RTW, NEF, RTH|RTH, NEF oder",
+      "klasse": "F",
+      "begruendung": "RTH neben NEF, NAW und RTW: Fahrzeugtypen, nebeneinander genannt (E-P2-14). RTH bezeichnet Luftfahrt und bleibt."
+    },
+    {
+      "id": "rolle-am-rettungsmittel",
+      "zeile": "ein Hubschrauber mit Pilot 1 und HEMS-TC|weil ein Hubschrauber eine Winde|Windenhaken Jahre später am Hubschrauber",
+      "klasse": "F",
+      "begruendung": "Saetze, in denen „Hubschrauber\" tatsaechlich das luftgebundene Rettungsmittel meint und dem NEF gegenuebergestellt wird. Winde und Windenhaken sind Faehigkeiten luftgebundener Rettungsmittel."
+    },
+    {
+      "id": "rollenkatalog-tabelle",
+      "datei": "docs/Export-Format.md",
+      "zeile": "^\\| (Pilot 1|Pilot 2|HEMS-TC|Flugretter) \\|",
+      "klasse": "F",
+      "begruendung": "Der Rollenkatalog in Abschnitt 3.8: Beschriftung (Fachrolle, F) neben Rollencode und Spaltennamen (D). Beides bleibt."
+    },
+    {
+      "id": "excel-spaltentabelle",
+      "datei": "docs/Export-Format.md",
+      "abschnitt": "^## 2\\. Excel",
+      "zeile": "^\\|\\s*\\d+\\s*\\|",
+      "klasse": "D",
+      "begruendung": "Die Spaltentabelle des Excel-Standardformats nennt Formatfelder. Ihre Beschriftungen werden beim Rueckimport wiedererkannt und aendern sich nicht (E-P2-11) — was sich in P2 aendert, ist nur, dass die Tabelle wieder stimmt (F-P2-B)."
+    },
+    {
+      "id": "guteseele-format",
+      "datei": "docs/Export-Format.md",
+      "abschnitt": "^## 4\\. Excel \\(GuteSeele\\)",
+      "klasse": "D",
+      "begruendung": "Beschreibung eines FREMDEN Formats. Titelzeile, Spaltennamen und Besatzungsspalten stammen nicht aus dieser Anwendung; sie zu neutralisieren hiesse, die Datei nicht mehr zu beschreiben."
+    },
+    {
+      "id": "guteseele-jahresliste",
+      "zeile": "Christoph-17-Jahresliste",
+      "klasse": "D",
+      "begruendung": "Der Name, unter dem das FREMDFORMAT im Handbuch eingefuehrt ist. Er benennt die Datei, nicht ein Rettungsmittel dieser Installation -- dieselbe Ueberlegung wie beim `exportTitle`, den der Auftraggeber am 23.09.2026 stehen lassen wollte (E-PK-39). BEIDES HAENGT ZUSAMMEN, und das ist der Grund, warum diese Ausnahme wieder gilt: Der Namenslauf von PK-04/5c hatte sie auf „Alpenfalke-1-Jahresliste\" umgestellt, waehrend `exportTitle` weiter „Einsatzdokumentation Christoph 17\" in Zelle F1 schreibt. Das Handbuch haette die Liste dann unter einem Namen beschrieben, den die erzeugte Datei nicht traegt. Zwei Stellen zurueckgenommen. TRUG BIS PK-04/5c KEIN `muster`-FELD und galt damit nur fuer die Klasse `luft` -- sie meldete „gegriffen\", erklaerte aber die `name-real`-Treffer nicht. Derselbe Fehler, den 1c an 89 von 100 Regeln behoben hat; diese hier ist durchgerutscht, weil sie damals keinen name-real-Treffer hatte. TRIFFT ZWEI MUSTER: `name-real` (die Namensliste) und `christoph` (ein eigenes Muster der Klasse `luft`). Wer nur eines nennt, laesst das andere durch -- und die Ausnahme meldet trotzdem „gegriffen\".",
+      "muster": [
+        "name-real",
+        "christoph"
+      ]
+    },
+    {
+      "id": "umbenennungstabelle",
+      "datei": "docs/Export-Format.md",
+      "von": "Was seit Web 6\\.0\\.0 neu oder anders heißt",
+      "bis": "^\\*\\*Die beiden Phasenspalten",
+      "klasse": "C",
+      "begruendung": "Die Tabelle sagt Zeile fuer Zeile, welcher alte Name durch welchen neuen ersetzt wurde. Ohne die alten Namen erklaert sie nichts mehr (E-P2-10)."
+    },
+    {
+      "id": "dateiname-umbenannt",
+      "datei": "docs/Export-Format.md",
+      "von": "Auch der Dateiname hat sich geändert",
+      "bis": "luftrettungsdokumentation_",
+      "klasse": "C",
+      "begruendung": "Nennt den alten Dateipraefix ausdruecklich als den alten. Wer eine Datei von 2025 vor sich hat, findet hier, warum sie anders heisst."
+    },
+    {
+      "id": "vertrag-umbenannte-phasen",
+      "datei": "docs/JSON-Vertrag.md",
+      "von": "Zwei Beschriftungen sind mit Vertrag 1\\.3 neutral geworden",
+      "bis": "andere stattfindet",
+      "klasse": "C",
+      "begruendung": "Der Absatz sagt ausdruecklich, dass Phase 3 „Abflug\" und Phase 7 „Landung Krankenhaus\" HIESSEN und warum sie es nicht mehr tun. Ohne die alten Namen erklaert er nichts. Der Versionsmarker steht eine Zeile vor dem Treffer, deshalb eine eigene Regel statt des allgemeinen Musters."
+    },
+    {
+      "id": "sicherung-version6",
+      "datei": "docs/Backup-Format.md",
+      "zeile": "Version 6 \\(seit Web 6\\.0\\.0\\)",
+      "klasse": "C",
+      "begruendung": "Die Versionsgeschichte des Backup-Formats: „Version 6 war der Umbau auf Diensttage: Der Flugtag ist …\". Historische Erklaerung, kein heutiger Wortlaut."
+    },
+    {
+      "id": "rollenbeschriftung-hems-tc",
+      "zeile": "HEMS-TC",
+      "klasse": "F",
+      "begruendung": "„HEMS-TC\" ist die Beschriftung der Fachrolle im Katalog (CREW_LABELS, db.php) und damit auch die Beschriftung der zugehoerigen Exportspalte und des Suchfilters. Sie bezeichnet Luftfahrt und bleibt. Steht bewusst NACH den besonderen Regeln zu Rollenaufzaehlung und Rollenkatalog-Tabelle, damit deren Begruendungen weiter greifen."
+    },
+    {
+      "id": "historische-nennung",
+      "zeile": "bis (Web|Uhr|Vertrag|Version)\\b|hieß\\b|hiess\\b",
+      "klasse": "C",
+      "begruendung": "Historische Nennung mit Versionsangabe (E-P2-10). Der alte Begriff steht nur in einem Satz, der ausdruecklich sagt, dass er alt ist — solche Saetze erklaeren alte Exporte und Backups und bleiben. Das Muster fragt nach „bis Web …\" und „hiess\", NICHT nach „seit Web\": „seit\" beschreibt meist den heutigen Zustand und wuerde Zeilen freigeben, die gar nichts Historisches sagen — so waere „Eine Flugspur endet am Einsatzort (seit Web 5.8.0, A9)\" durchgerutscht. Die zwei Stellen, deren Versionsangabe wirklich in der Zeile davor steht, haben eigene Regeln."
+    },
+    {
+      "id": "basis-als-bezeichner",
+      "zeile": "\\$basis\\b|const basis\\b|\\bbasis\\)|nurWenn\\(basis\\b",
+      "klasse": "E",
+      "begruendung": "`$basis` in db.php ist der Pfad-Praefix der Installation, `basis` in missiontable.js der Datenbestand, gegen den die Spaltenwahl entscheidet. Bezeichner im Code (Klasse E) — und obendrein Homonyme: mit dem Standort hat keiner der beiden zu tun. Der vierte Teil stand bis zum 22.09.2026 auf `nurWenn\\(basis\\)` mit schliessender Klammer und griff nicht mehr, sobald `nurWenn` ein zweites Argument bekam (Schritt 15 AP9a). Eine Ausnahme, die an der Stelligkeit eines Aufrufs haengt, misst nicht den Begriff, sondern den Zufall."
+    },
+    {
+      "id": "basis-als-grundlage",
+      "zeile": "Basis-URL|Basis der Linienfarbe|Basis fuer|Basis für|AS IS.{0,3}BASIS|Basis-Kartenlayer",
+      "klasse": "Homonym",
+      "begruendung": "„Basis\" im Sinne von Grundlage: die Basis-URL der Installation, die Basis einer Farbmischung, der Basis-Kartenlayer, die Lizenzformel „AS IS BASIS\". Mit dem Standort hat keine dieser Stellen zu tun."
+    },
+    {
+      "id": "maschine-als-rechner",
+      "zeile": "auf der Maschine|\\| (Antwort, )?Maschinen \\|",
+      "klasse": "Homonym",
+      "begruendung": "„Maschine\" meint hier den Rechner (Runbook) bzw. die maschinelle Zielgruppe eines Formats — nicht das Rettungsmittel. Ausdruecklich so in der Wortliste, Abschnitt 5.2. Die Zeilenkoepfe „Antwort, Maschinen\" in Technik.md 4.99c und 5e stellen JSON-Antworten den Seiten gegenueber; 4.99c lag bis P5a/AP9 zufaellig im Uhr-Kapitel und war darueber erklaert, 5e liegt es nicht — die Regel nennt den Fall seither selbst."
+    },
+    {
+      "id": "flugmodus",
+      "zeile": "Flugmodus",
+      "klasse": "Homonym",
+      "begruendung": "Der Flugmodus ist eine Einstellung des Geraets. Mit der Einsatzart hat er nichts zu tun."
+    },
+    {
+      "id": "vertrag-payload-limit",
+      "datei": "docs/JSON-Vertrag.md",
+      "zeile": "Connect-IQ-Payload-Limit",
+      "klasse": "E",
+      "begruendung": "Die Grenze ist plattformbedingt begruendet. Der Vertrag soll sie plattformneutral begruenden — das ist Vertragsreview (R12) und gehoert nach P6 (Uebergabeliste 10.3), nicht in eine Wortersetzung."
+    },
+    {
+      "id": "symbolname-hubschrauber",
+      "datei": "server/diensttag_lib.php",
+      "zeile": "'symbol'\\s*=>\\s*'hubschrauber'",
+      "klasse": "Homonym",
+      "begruendung": "Der Wert benennt eine DATEI, die einen Hubschrauber zeigt (assets/images/symbole/hubschrauber.svg) — nicht die Einsatzart. Die Einsatzart steht in derselben Zeile daneben und heisst 'luftgebunden'. Ein Bild eines Hubschraubers anders zu benennen waere keine neutrale Sprache, sondern eine falsche Beschriftung (P3/O2, E-P3-18)."
+    },
+    {
+      "id": "symbolname-hubschrauber-js",
+      "datei": "server/assets/missiontable.js",
+      "zeile": "symbol:\\s*'hubschrauber'",
+      "klasse": "Homonym",
+      "begruendung": "Rueckfallliste zu dt_art_symbole(); dieselbe Begruendung wie dort — der Wert benennt die Symboldatei, nicht die Einsatzart."
+    },
+    {
+      "id": "handbuch-artzeichen",
+      "datei": "docs/Handbuch.md",
+      "zeile": "ein Hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Das Handbuch beschreibt, WIE das Artzeichen aussieht: ein Hubschrauber steht fuer luftgebunden, ein Rettungswagen fuer bodengebunden. Beide Arten sind in derselben Zeile gleichrangig genannt (E-P2-14); das Wort bezeichnet die Zeichnung, nicht den Einsatz."
+    },
+    {
+      "id": "technik-logodateien",
+      "datei": "docs/Technik.md",
+      "zeile": "je Hubschrauber und Fahrzeug",
+      "klasse": "Homonym",
+      "begruendung": "Verzeichnisbaum: Es liegen zwei Logodateien, eine mit einem Hubschrauber und eine mit einem Fahrzeug. Der Satz nennt beide gleichrangig und beschreibt Dateien, nicht Einsatzarten."
+    },
+    {
+      "id": "logowahl-standard",
+      "datei": "server/session_lib.php",
+      "zeile": "LOGO_STANDARD_VORGABE = 'hubschrauber'",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Seit O9c ist der Standard der Installation einstellbar (Wartung); dies ist nur noch die Vorbelegung, solange nichts gesetzt wurde."
+    },
+    {
+      "id": "logowahl-liste",
+      "datei": "server/session_lib.php",
+      "zeile": "LOGO_WAHLEN = \\['', 'hubschrauber', 'fahrzeug', 'wechselnd'\\]",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Die Liste nennt beide Werte nebeneinander."
+    },
+    {
+      "id": "logowahl-wuerfel",
+      "datei": "server/session_lib.php",
+      "zeile": "random_int\\(0, 1\\) === 1 \\? 'fahrzeug' : 'hubschrauber'",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Der Wuerfel entscheidet zwischen genau diesen beiden."
+    },
+    {
+      "id": "logowahl-standardlesen",
+      "datei": "server/session_lib.php",
+      "zeile": "\\$v === 'fahrzeug' \\|\\| \\$v === 'hubschrauber'",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Diese Zeile liest den in der Wartung gesetzten Standard der Installation (O9c) und laesst beide Werte gleichrangig zu."
+    },
+    {
+      "id": "logowahl-pruefung",
+      "datei": "server/session_lib.php",
+      "zeile": "\\$w === 'hubschrauber' \\|\\| \\$w === 'fahrzeug'",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Die Pruefung laesst beide Werte gleichrangig zu."
+    },
+    {
+      "id": "logowahl-standardwurf",
+      "datei": "server/session_lib.php",
+      "zeile": "\\$gemerkt !== 'hubschrauber' && \\$gemerkt !== 'fahrzeug'",
+      "klasse": "Homonym",
+      "begruendung": "Seit Web 9.14.0 kann auch die INSTALLATION 'wechselnd' als Standard waehlen (F-N1-C). logo_standard_aufgeloest() merkt sich den Wurf je Sitzung und prueft dabei, ob der gemerkte Wert eines der beiden BILDER ist. Wie bei logowahl-pruefung: Der Wert benennt eine Bilddatei, nicht die Einsatzart, und beide stehen gleichrangig nebeneinander."
+    },
+    {
+      "id": "logowahl-standardname",
+      "datei": "server/einstellungen.php",
+      "zeile": "\\$standardName = LOGO_STANDARD",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Die Zeile nennt beide Bezeichnungen als die zwei moeglichen."
+    },
+    {
+      "id": "logowahl-option",
+      "datei": "server/einstellungen.php",
+      "zeile": "'hubschrauber' => \\['text' => 'Hubschrauber \\(RTH\\)'\\]",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Die Beschriftung der Wahlmoeglichkeit; die Zeile darunter nennt das Fahrzeug."
+    },
+    {
+      "id": "handbuch-logowahl-zwei",
+      "datei": "docs/Handbuch.md",
+      "zeile": "bringt zwei Logos mit — einen Hubschrauber und ein Fahrzeug",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart."
+    },
+    {
+      "id": "handbuch-logowahl-zeile",
+      "datei": "docs/Handbuch.md",
+      "zeile": "\\*\\*Hubschrauber \\(RTH\\)\\*\\* \\| immer der Hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Die Zeile darunter nennt das Fahrzeug."
+    },
+    {
+      "id": "handbuch-logostandard-vorher",
+      "datei": "docs/Handbuch.md",
+      "zeile": "stattdessen immer den Hubschrauber, gleich wie der Standard",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Der Halbsatz erklaert den Fund F-P3-AN: Bis Web 9.9.0 zeigte die Anmeldeseite immer dasselbe BILD, statt dem eingestellten Standard zu folgen. Ohne die Nennung waere nicht gesagt, was falsch war."
+    },
+    {
+      "id": "technik-logostandard-appstate",
+      "datei": "docs/Technik.md",
+      "zeile": "`logo_standard` = Logo dieser Installation",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Die Zeile der Tabellenuebersicht nennt den WERT des Schluessels `app_state.logo_standard` und beide Moeglichkeiten nebeneinander."
+    },
+    {
+      "id": "technik-logostandard-vorgabe",
+      "datei": "docs/Technik.md",
+      "zeile": "`LOGO_STANDARD_VORGABE` in `session_lib.php`",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Die Zeile nennt die Vorbelegung der Logo-Wahl, solange die Installation nichts gesetzt hat — ein Bildname, keine Einsatzart."
+    },
+    {
+      "id": "technik-logostandard-wahl",
+      "datei": "docs/Technik.md",
+      "zeile": "`hubschrauber`, `fahrzeug`, `wechselnd`",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Die Zeile zaehlt die vier moeglichen Werte von `users.logo_wahl` auf; Hubschrauber und Fahrzeug stehen darin gleichrangig nebeneinander."
+    },
+    {
+      "id": "technik-logowahl-spalte",
+      "datei": "docs/Technik.md",
+      "zeile": "sonst `hubschrauber` / `fahrzeug` / `wechselnd`",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt den WERT der Wahl, nicht die Einsatzart."
+    },
+    {
+      "id": "technik-logowahl-aufloesen",
+      "datei": "docs/Technik.md",
+      "zeile": "ein `hubschrauber` oder `fahrzeug`",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt den WERT der Wahl, nicht die Einsatzart."
+    },
+    {
+      "id": "design-bildmarke",
+      "datei": "docs/Design.md",
+      "zeile": "Hubschrauber, (farbig|wei\\u00df)|Hubschrauber, Fahrzeug|ist der Hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Drei Stellen in Kapitel 2.3, das die beiden BILDMARKEN und die Wahl zwischen ihnen beschreibt: die beiden Dateizeilen der Logotabelle, die Aufzaehlung der Wahlmoeglichkeiten und der Rueckfall. 'Hubschrauber' benennt dort ein Bild und einen Wert der Einstellung, nicht die Einsatzart — die heisst in derselben Richtlinie durchgaengig 'luftgebunden'. Eine Bildbeschreibung zu neutralisieren, waehrend das Bild einen Hubschrauber zeigt, waere eine falsche Beschriftung (dieselbe Begruendung wie symbolname-hubschrauber). Der Ausdruck ist bewusst eng: Ein blosses 'Hubschrauber' haette jede weitere Stelle mitgedeckt, auch eine, die die Einsatzart meint."
+    },
+    {
+      "id": "design-symbolvorrat",
+      "datei": "docs/Design.md",
+      "zeile": "hubschrauber.svg",
+      "klasse": "Homonym",
+      "begruendung": "Zeile der erzeugten Symboltabelle (Kapitel 8). Sie nennt DATEINAME und Tabler-Quellnamen ('helicopter') — beides sind Bezeichner, keine Beschreibung einer Einsatzart."
+    },
+    {
+      "id": "design-beispieltext",
+      "datei": "docs/Design.md",
+      "zeile": "Luftrettungsstation Hochkreuth",
+      "klasse": "Homonym",
+      "begruendung": "Beispielmarkup in Kapitel 9.2. Der Text stammt aus dem erfundenen Referenzdatensatz und ist der EIGENNAME eines Standorts, kein Gattungsbegriff — genauso wie 'Notarztstandort Talwang' daneben."
+    },
+    {
+      "id": "design-wahlzusatz",
+      "datei": "docs/Design.md",
+      "zeile": "zurzeit Hubschrauber \\(RTH\\)",
+      "klasse": "Homonym",
+      "begruendung": "Woertliches Zitat des Zusatztextes der Wahlliste (Mockup 13). Er nennt den Wert der Logo-Wahl; das Beispiel steht hier, weil genau seine Laenge die Umbruchregel unter 480 px begruendet."
+    },
+    {
+      "id": "lizenzen-garmin",
+      "datei": "docs/Lizenzen.md",
+      "zeile": "Connect-IQ-SDK von Garmin",
+      "klasse": "E",
+      "begruendung": "Garmin ist der Hersteller des SDK, mit dem die Uhr-App gebaut wird — eine Lizenzangabe nennt den Rechteinhaber beim Namen. Das ist keine Aussage ueber die Einsatzart."
+    },
+    {
+      "id": "android-bildmarke-alt",
+      "datei": "android/*/src/main/res/values/strings.xml",
+      "zeile": "^\\s*Bildmarke Rettungshubschrauber\\s*$",
+      "klasse": "Homonym",
+      "begruendung": "Der Alternativtext der Luft-Bildmarke in beiden Android-Modulen. Er beschreibt ein BILD, das einen Hubschrauber zeigt, nicht die Einsatzart — dieselbe Lage und dieselbe Begründung wie design-bildmarke und symbolname-hubschrauber. Eine Bildbeschreibung zu neutralisieren, während das Bild einen Hubschrauber zeigt, wäre eine falsche Beschriftung — und sie wird vorgelesen, also gerade dort gehört, wo niemand das Bild sieht. Der Ausdruck ist an den vollständigen Text gebunden und nicht an das Wort: Ein bloßes „Hubschrauber“ deckte jede weitere Stelle mit ab, auch eine, die die Einsatzart meint. (Gegen den TEXT und nicht gegen den Schlüsselnamen, weil die Wortliste eine XML-Datei ohne ihre Tags sieht — sichtbarer Text ist genau das, was zwischen ihnen steht.)"
+    },
+    {
+      "id": "android-logowahl",
+      "datei": "android/*/src/main/res/values/strings.xml",
+      "zeile": "^\\s*RTH\\s*$",
+      "klasse": "Homonym",
+      "begruendung": "Die Beschriftung der Logo-Wahl in der App: „RTH“, mit „NEF“ als Gegenstück in derselben Datei. Sie benennt, WELCHES BILD gewählt ist; beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Dieselbe Lage wie logowahl-option in server/einstellungen.php, nur in der App. Der Ausdruck verlangt, dass die ganze Zeile aus „RTH“ besteht — ein RTH in einem Satz wäre etwas anderes und bliebe ein Treffer."
+    },
+    {
+      "id": "technik-nachloesejob",
+      "datei": "docs/Technik.md",
+      "abschnitt": "^#### Der Nachlöse-Job",
+      "klasse": "G",
+      "begruendung": "Derselbe Gegenstand wie `technik-geraetekennung`, nur eine Ebene weiter: Der Nachloese-Job (P5a/AP11) loest TEILENUMMERN auf, und die gibt es nur bei Garmin — eine Connect-IQ-App laeuft nirgendwo sonst. Der Absatz erklaert, warum die Selbstauskunft „uhr\" der Tabelle unterliegt, und das ist eine Aussage ueber die Garmin-Plattform, keine ueber Uhren im Allgemeinen. Plattformspezifisch wie Kapitel 5 (E-P2-15)."
+    },
+    {
+      "id": "technik-geraetekennung",
+      "datei": "docs/Technik.md",
+      "abschnitt": "^### Was ein Gerät beim Koppeln über sich meldet",
+      "klasse": "G",
+      "begruendung": "Der Abschnitt beschreibt, was ein GARMIN-Geraet beim Koppeln sendet und wie der Server seine Teilenummer aufloest (R42, S6). Garmin ist hier der Gegenstand und nicht die bequeme Abkuerzung fuer „Uhr\": Die Teilenummer gibt es nur dort, die Geraetedateien gehoeren Garmin, und der Modellname („Venu 3S\") ist ein Produktname, kein Einsatzbegriff. Plattformspezifisch wie Kapitel 5 (E-P2-15)."
+    },
+    {
+      "id": "vertrag-kopplung-geraeteblock",
+      "datei": "docs/JSON-Vertrag.md",
+      "abschnitt": "^## 1a\\. Kopplung",
+      "klasse": "G",
+      "begruendung": "Abschnitt 1a beschreibt seit Vertragsfassung 1.4 ZWEI Kopplungsformen und muss dafuer beide Plattformen beim Namen nennen — die Garmin-Uhr sendet eine Teilenummer, das Handy Hersteller und Modell. Ein plattformneutraler Wortlaut koennte den Unterschied gar nicht ausdruecken, um den es geht. Der Modellname im Beispiel („Venu 3S\") ist ein Produktname."
+    },
+    {
+      "id": "vertrag-geltungsbereich-clients",
+      "datei": "docs/JSON-Vertrag.md",
+      "zeile": "die Garmin-Uhr, seit S4 auch die Android-Handy-App",
+      "klasse": "G",
+      "begruendung": "Der Geltungsbereich zaehlt auf, WELCHE Clients gegen diesen Vertrag sprechen. Die Aufzaehlung nennt beide gleichrangig; „die Uhr\" allein waere hier falsch, weil es seit S4 zwei sind."
+    },
+    {
+      "id": "vertrag-praefixe-erzeuger",
+      "datei": "docs/JSON-Vertrag.md",
+      "zeile": "\\| Garmin-Uhr-App \\|",
+      "klasse": "G",
+      "begruendung": "Die Praefixtabelle des Abschnitts 8 nennt je Praefix den ERZEUGER. Seit Fassung 1.4 stehen dort drei Clients nebeneinander (Garmin-Uhr-App, Android-Handy-App, Wear-OS-App); „Uhr-App\" allein waere seither mehrdeutig — es gibt zwei Uhr-Apps."
+    },
+    {
+      "id": "lizenzen-modelltabelle",
+      "datei": "docs/Lizenzen.md",
+      "abschnitt": "^## 7a\\. Die Modelltabelle",
+      "klasse": "E",
+      "begruendung": "Wie `lizenzen-garmin`: Eine Lizenzangabe nennt den Rechteinhaber beim Namen. Der Abschnitt grenzt ab, was aus Garmins Connect-IQ-Geraetedateien uebernommen wird und was nicht — ohne den Namen des Rechteinhabers waere das keine Abgrenzung."
+    },
+    {
+      "id": "lizenzen-verlauf-modelltabelle",
+      "datei": "docs/Lizenzen.md",
+      "zeile": "Abschnitt 7a: die erzeugte Modelltabelle",
+      "klasse": "E",
+      "begruendung": "Die Zeile des Aenderungsverlaufs fasst Abschnitt 7a zusammen und nennt dieselbe Herkunft. Eigene Regel, weil der Verlauf am Dateiende und damit ausserhalb des Abschnitts steht."
+    },
+    {
+      "id": "technik-runbook-selbstauskunft",
+      "datei": "docs/Technik.md",
+      "zeile": "Garmin-App sendet dort fest",
+      "klasse": "G",
+      "begruendung": "Runbook-Eintrag zur unaufgeloesten Teilenummer. Der Satz sagt, dass GENAU DIESE App `art` fest auf \"uhr\" setzt und die Angabe deshalb ungeprueft ist — die Aussage haengt an der Plattform und liesse sich nicht plattformneutral treffen."
+    },
+    {
+      "id": "geraetemodelle-erzeugt",
+      "datei": "server/geraetemodelle.php",
+      "klasse": "G",
+      "begruendung": "Die erzeugte Modelltabelle (tools/erzeugen/ (geraetemodelle)). Sie enthaelt oeffentliche Produktnamen von Garmin — „Forerunner\", „Venu\", „fēnix\", „Edge\" —, und die sind hier die Sache selbst und keine Formulierung, die sich ersetzen liesse: Der Server loest damit die Teilenummer auf, die eine Uhr beim Koppeln sendet (JSON-Vertrag 1a, R42). DATEIWEIT und nicht je Zeile: Der Bestand wechselt mit jedem Lauf des Erzeugers; ein Muster auf einzelne Namen waere danach entweder unvollstaendig oder ungenutzt, und beides ist ein Fehlschlag. Zur gemeldeten Zahl: Sie ist KLEINER als der Bestand — Garmin schreibt „fēnix\" mit Makron, das Sperrmuster lautet \\bfenix und trifft diese Zeilen nicht. Wer die Zahl liest, weiss das besser."
+    },
+    {
+      "id": "herkunft-wertevorrat-garmin",
+      "zeile": "Garmin-Uhr-App",
+      "klasse": "G",
+      "begruendung": "Der Wertevorrat der Herkunft (R64, E-R64-02) fuehrt EINEN Wert je Client-App, und `uhr` IST die Garmin-App — daneben stehen `handy` (Android-App) und `wear` (Wear-OS-App). Genau das ist die Aussage: Eine kuenftige App eines anderen Uhrenherstellers bekommt einen EIGENEN Wert und wird nicht unter `uhr` einsortiert, weil sonst jede Auswertung, die auf `uhr` filtert, rueckwirkend mehrdeutig wuerde. Wer hier „Uhr-App\" schriebe, naehme dem Wert genau die Unterscheidung, fuer die es ihn gibt — und zwar in einem Text, der drei Uhren nebeneinander erklaeren muss. Das ist der plattformspezifische Fall aus E-P2-15, nur an einer neuen Stelle: in der Beschriftungstabelle selbst (assets/export.js, Export-Format.md 3.6 und 3.8, Handbuch 4.2). Der Wortlaut ist absichtlich ueberall derselbe, damit diese eine Regel reicht und keine zweite auf Vorrat entsteht."
+    },
+    {
+      "id": "technik-abgrenzung-beide-uhren",
+      "datei": "docs/Technik.md",
+      "zeile": "Die Garmin-Uhr hält es genauso",
+      "klasse": "G",
+      "begruendung": "Steht im Android-Kapitel (5a), nicht im Uhr-Kapitel, und dort ist der Markenname die Unterscheidung: Das Kapitel spricht ueber die Wear-OS-Uhr, der Satz vergleicht mit der Connect-IQ-Uhr (SyncView.mc gegen Track.mc). 'Uhr-App' waere hier zweideutig, und zwar genau an der Stelle, an der es auf den Unterschied ankommt. Aufgenommen 03.09.2026 mit S5 Paket E."
+    },
+    {
+      "id": "logowahl-installation",
+      "datei": "server/admin_installation.php",
+      "zeile": "'hubschrauber' => 'Hubschrauber \\(RTH\\)',",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Bis Web 15.0.0 deckte die dateiweite Ausnahme `update-migrationen` diese Zeile mit ab; seit S8/AP2 steht der Migrationskatalog woanders, und seit S8/AP3 steht die Logo-Karte auf der Seite „Installation“. Es ist jetzt EINE Zeile: Die Konstante INSTALLATION_LOGOS ist die einzige Stelle mit den drei Werten — Rueckmeldung und Segmentwahl lesen beide aus ihr."
+    },
+    {
+      "id": "handbuch-logowahl-installation",
+      "datei": "docs/Handbuch.md",
+      "zeile": "\\*\\*Das Logo\\*\\* darunter wählt zwischen",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz benennt, WELCHES BILD zur Wahl steht — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Dieselbe Begruendung wie `logowahl-installation` fuer den Code (server/admin_installation.php); der Handbuch-Abschnitt „Installation“ (11.3) ist mit S8/AP3 entstanden und beschreibt dieselbe Bedienung. Der Anker hiess bis Web 20.8.0 „Das Logo links waehlt zwischen\"; seit der Karte „Name\" (P5a/AP5) steht das Logo DARUNTER statt links, und der Satz wurde entsprechend umgeschrieben."
+    },
+    {
+      "id": "spur-fachbegriff-code",
+      "datei": "server/spur_lib.php",
+      "muster": "spur",
+      "klasse": "F",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist. CLAUDE.md 4 nennt ihn namentlich: „Spuren nur über spur_lib.php“. Diese Datei IST der Fachbegriff: Ihre Meldungen („Spur-Blob laesst sich nicht entpacken“, „Index liegt ausserhalb der Spur“) beschreiben das Speicherformat und erreichen eine NutzerIn nur als Ausnahme, die etwas Kaputtes meldet — dort ist die praezise Bezeichnung richtiger als die freundliche."
+    },
+    {
+      "id": "spurteil-sicherungsformat",
+      "muster": "spur",
+      "klasse": "F",
+      "zeile": "Spurteil",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist. CLAUDE.md 4 nennt ihn namentlich: „Spuren nur über spur_lib.php“. „Spurteil“ ist der NAME DER DATEI im Sicherungsarchiv (docs/Backup-Format.md), nicht eine Beschreibung. Wer ein Archiv oeffnet, sieht ihn dort stehen; eine Meldung, die ihn anders nennt als das Verzeichnis, hilft niemandem beim Suchen. Das Backup-Format ist von E-S9-03 ausdruecklich ausgenommen."
+    },
+    {
+      "id": "spur-gpx-fachbegriff",
+      "datei": "server/tag_spuren.php",
+      "muster": "spur",
+      "klasse": "Homonym",
+      "zeile": "eine eigene Spur",
+      "begruendung": "Hier ist „Spur“ der Fachbegriff des GPX-FORMATS: Eine GPX-Datei enthaelt Tracks, und der Satz erklaert genau das — „jede Aufzeichnung bleibt darin eine eigene Spur“. Ein Kartenprogramm nennt sie so; die Anwendung waere die einzige, die es anders schriebe."
+    },
+    {
+      "id": "spur-fachdokument-technik",
+      "bereich": "c",
+      "datei": "docs/Technik.md",
+      "muster": "spur",
+      "klasse": "F",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist; CLAUDE.md 4 nennt ihn namentlich. docs/Technik.md beschreibt das Verfahren, nicht die Bedienung — E-S9-03 nennt sie ausdruecklich als ausgenommen. Das Handbuch dagegen ist umgestellt: `grep -c Spur docs/Handbuch.md` = 0 (vorher 41 Zeilen)."
+    },
+    {
+      "id": "spur-fachdokument-jsonvertrag",
+      "bereich": "c",
+      "datei": "docs/JSON-Vertrag.md",
+      "muster": "spur",
+      "klasse": "F",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist; CLAUDE.md 4 nennt ihn namentlich. docs/JSON-Vertrag.md ist ein Vertrag: Seine Namen stehen in Antworten, die Geraete lesen. E-S9-03 nennt ihn ausdruecklich als ausgenommen. Das Handbuch dagegen ist umgestellt: `grep -c Spur docs/Handbuch.md` = 0 (vorher 41 Zeilen)."
+    },
+    {
+      "id": "spur-fachdokument-backupformat",
+      "bereich": "c",
+      "datei": "docs/Backup-Format.md",
+      "muster": "spur",
+      "klasse": "F",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist; CLAUDE.md 4 nennt ihn namentlich. docs/Backup-Format.md beschreibt Dateinamen und Felder im Archiv („Spurteil“). E-S9-03 nennt es ausdruecklich als ausgenommen. Das Handbuch dagegen ist umgestellt: `grep -c Spur docs/Handbuch.md` = 0 (vorher 41 Zeilen)."
+    },
+    {
+      "id": "spur-fachdokument-exportformat",
+      "bereich": "c",
+      "datei": "docs/Export-Format.md",
+      "muster": "spur",
+      "klasse": "F",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist; CLAUDE.md 4 nennt ihn namentlich. docs/Export-Format.md nennt Tabellen und Spalten des Exports — dieselbe Begruendung wie beim Backup-Format. Das Handbuch dagegen ist umgestellt: `grep -c Spur docs/Handbuch.md` = 0 (vorher 41 Zeilen)."
+    },
+    {
+      "id": "spur-fachdokument-design",
+      "bereich": "c",
+      "datei": "docs/Design.md",
+      "muster": "spur",
+      "klasse": "F",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist; CLAUDE.md 4 nennt ihn namentlich. docs/Design.md nennt Zeichenklassen und Bausteine (`.geo-schild`, Spurfarben `--spur-1..8`), also Code, nicht Anzeige. Das Handbuch dagegen ist umgestellt: `grep -c Spur docs/Handbuch.md` = 0 (vorher 41 Zeilen)."
+    },
+    {
+      "id": "spur-handbuch-zitat-alt",
+      "bereich": "c",
+      "datei": "docs/Handbuch.md",
+      "muster": "spur",
+      "klasse": "C",
+      "zeile": "Bis dahin hie|„Spur · 852 Punkte",
+      "begruendung": "Ein ZITAT des alten Wortlauts, mit Versionsangabe: „Seit Web 15.9.0 steht keine Zahl mehr darin. Bis dahin hiess sie „Spur · 852 Punkte“ bzw. „Spur ausgeduennt · 113 von 443 Punkten“.“ Dieselbe Klasse wie bei `abflug` („Saetze mit Versionsangabe bleiben“): Wer nachliest, warum die Plakette heute anders heisst, braucht den alten Namen — sonst findet er die Stelle nicht wieder. Ohne dieses eine Zitat ist das Handbuch frei von „Spur“."
+    },
+    {
+      "id": "handbuch-geraete-verlust-garmin",
+      "datei": "docs/Handbuch.md",
+      "von": "\\*\\*Uhr verloren\\? Sofort trennen\\.\\*\\*",
+      "bis": "^\\*\\*„Entkoppeln\\\" hiess",
+      "klasse": "G",
+      "begruendung": "Der Kasten zum Geraeteverlust (Abschnitt 10, Backlog Nr. 134) sagt, dass der Zugangsschluessel auf der GARMIN-Uhr im Klartext liegt. Das ist keine Plattformnennung aus Bequemlichkeit, sondern die Sache selbst: Genau dieser Satz gilt fuer die Garmin-Uhr und NICHT fuer die Wear-OS-Uhr, die weder Serveradresse noch Schluessel kennt (E-S4-11) -- der Kasten sagt das im letzten Absatz ausdruecklich. Ein geraetefreies „Uhr“ waere hier keine Neutralitaet, sondern eine falsche Warnung an alle, die eine Wear-OS-Uhr tragen. Dieselbe Ueberlegung wie `statistik-hersteller-garmin` und `garmin-zusatz-kopplung` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST."
+    },
+    {
+      "id": "technik-uhrvorgabe-garmin",
+      "datei": "docs/Technik.md",
+      "zeile": "sichtbar in Garmin Connect|die Uhr zeigt das Feld in Garmin Connect",
+      "klasse": "G",
+      "begruendung": "Technik.md 5d.8 begruendet, warum die Vorgabe-Serveradresse der Uhr-App auf gen-em.org stehen BLEIBT (E-P5a-42, Auftraggeber 16.09.2026). Die Begruendung IST die Plattform: Das Feld steht in Garmin Connect und ist dort von jeder Betreiberin aenderbar — deshalb ist die Vorgabe eine Vorgabe und keine Festverdrahtung. Ohne den Namen waere der Satz „die Uhr zeigt das Feld irgendwo\" und begruendete gar nichts; die Wear-OS-Uhr hat dieses Feld ausdruecklich NICHT (E-S4-11, sie kennt weder Adresse noch Schluessel). Dieselbe Ueberlegung wie `statistik-hersteller-garmin` und `handbuch-geraete-verlust-garmin` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST."
+    },
+    {
+      "id": "mail-demo-konto",
+      "klasse": "Bestand",
+      "muster": [
+        "mail-fremd"
+      ],
+      "begruendung": "E-PK-27: `demo@gen-em.org` ist die EINE echte Adresse, die in Texten, Werkzeugen und Doku stehen darf. Sie steht als Ausnahme hier und nicht im Muster — so faellt es auf, wenn jemand sie streicht, statt dass die Regel lautlos eine Adresse weniger kennt.",
+      "zeile": "demo@gen-em\\.org"
+    },
+    {
+      "id": "format-spaltennamen-fremd",
+      "klasse": "Bestand",
+      "muster": [
+        "hausform-rollen-maennlich",
+        "hausform-rollen-weiblich"
+      ],
+      "zeile": "expectedHeaders|exportOrder|reviewColumns|columns:|'Pilot':|^\\s*'[^']+'(, *'[^']+')+\\],?\\s*$|'Pilot 1', 'Einsatznummer'|Transport, Winde, HEMS, Pilot, Einsatz-Nr|`HEMS` und `Pilot` als|auch `HEMS` und `Pilot`",
+      "begruendung": "E-PK-39: SPALTENNAMEN EINER FREMDEN DATEI. Das Importprofil „GuteSeele\" gleicht seine Spalten gegen die Kopfzeile einer Excel-Datei ab, die nicht aus diesem Haus kommt. Wird „Pilot\" hier zu „PilotIn\", findet der Import die Spalte nicht mehr -- und zwar still, weil eine fehlende Spalte leer bleibt statt zu scheitern. Dieselbe Ueberlegung wie beim `exportTitle` (Auftraggeber 23.09.2026): Was gegen etwas ausserhalb des Hauses passen muss, folgt dessen Wortlaut, nicht unserem. ERWEITERT: Die Listen sind MEHRZEILIG -- `expectedHeaders` steht in Zeile 111, der Treffer `'Pilot'` in Zeile 113. Eine Ausnahme, die nur die erste Zeile kennt, laesst die Fortsetzung durch. Deshalb faengt das Muster zusaetzlich jede Zeile, die NUR aus Zeichenketten und Kommata besteht -- die Form einer Spaltenliste. Dazu drei Stellen in `docs/Export-Format.md` (680, 684, 692), die die Spaltenfolge des GuteSeele-Layouts AUFZAEHLEN. Sie beschreiben die fremde Kopfzeile; gegendert wuerden sie etwas anderes beschreiben, als in der Datei steht."
+    },
+    {
+      "id": "format-spaltennamen-eigen",
+      "klasse": "Bestand",
+      "muster": [
+        "hausform-rollen-maennlich",
+        "hausform-rollen-weiblich"
+      ],
+      "datei": "docs/Export-Format.md",
+      "zeile": "^\\| *[0-9]+ *\\| *(Pilot|Flugretter|Fahrer|Praktikant)|^\\| *(Pilot|Flugretter|Fahrer|Praktikant)[^|]*\\| *`",
+      "begruendung": "E-PK-39, zweiter Teil: DIE SPALTENUEBERSCHRIFTEN DER EIGENEN AUSGABE. Sie stehen so in jeder CSV- und Excel-Datei, die diese Anwendung erzeugt, und gehen mit ihr aus dem Haus -- an Verwaltungen, an Kooperationspartner, in Jahreslisten, die jemand fortschreibt. Der Auftraggeber hat denselben Fall beim `exportTitle` entschieden: stehen lassen. Diese Tabelle DOKUMENTIERT die Ueberschriften; sie zu gendern, ohne die Ausgabe zu aendern, waere eine falsche Dokumentation, und beides zu aendern waere die Entscheidung, die dort anders gefallen ist."
+    },
+    {
+      "id": "projektname-notarzt",
+      "klasse": "Homonym",
+      "muster": [
+        "hausform-rollen-maennlich"
+      ],
+      "zeile": "Einsatzdokumentation Notarzt",
+      "begruendung": "EIGENNAME, kein Rollenwort. „Einsatzdokumentation Notarzt\" ist der Name dieses Projekts -- er steht in der Fusszeile der Anmeldeseite, im Kopf jedes Komplett-Backups und als Vorgabe des Instanznamens. Ein Eigenname wird nicht gegendert; „Einsatzdokumentation NotärztIn\" waere ein anderes Produkt. E-PK-38."
+    },
+    {
+      "id": "rollenbeschriftungen-export",
+      "klasse": "Bestand",
+      "muster": [
+        "hausform-rollen-maennlich",
+        "hausform-rollen-weiblich"
+      ],
+      "zeile": "'label' *=> *'(Pilot|Flugretter|Fahrer|Praktikant)|p1: 'Pilot 1'|Pilot 1, Pilot 2|Fahrer, Praktikant|Pilot 1 und HEMS-TC|Besatzung Fahrer, Praktikant|bodengebunden Fahrer|Fahrer und Praktikant dazugekommen",
+      "begruendung": "E-PK-39: DIE FUENF ROLLENBESCHRIFTUNGEN SIND SPALTENUEBERSCHRIFTEN. `CREW_ROLES` in db.php 912 liefert sie ueber `crew_rolle_text()`, und sie stehen als Spalten 14 bis 19 in jeder CSV- und Excel-Ausgabe (docs/Export-Format.md 181-186). Sie gehen mit der Datei aus dem Haus -- derselbe Fall wie der `exportTitle`, den der Auftraggeber am 23.09.2026 stehen lassen wollte. WICHTIG: Die Tabelle steht DREIMAL -- in `db.php` und als Rueckfallwert in `import_profiles.js` 62 und `import_ui.js` 334, falls der Server keine liefert. Wer eine aendert, aendert alle drei, sonst zeigt der Import andere Rollennamen als die Anwendung. ERWEITERT am 23.09.2026, weil mein eigener Faecherungsauftrag die Ausnahme nur fuer `Export-Format.md` benannt hatte: Der Handbuch-Agent hat die Aufzaehlung „Pilot 1, Pilot 2, HEMS-TC, Flugretter\" gegendert und damit beschrieben, was die Oberflaeche NICHT zeigt. 15 Stellen zurueckgenommen. Ein Auftrag, der eine dateiuebergreifende Regel nur an EINER Datei nennt, laesst sie an allen anderen durch -- und der Agent kann es nicht wissen. Dazu die Stelle in `Export-Format.md` 537, die ERKLAERT, dass Fahrer und Praktikant als Spalten dazugekommen sind -- sie nennt die Ueberschriften."
+    },
+    {
+      "id": "zusammensetzung-bindestrich",
+      "klasse": "Homonym",
+      "muster": [
+        "hausform-maennlich",
+        "hausform-weiblich",
+        "hausform-rollen-maennlich",
+        "hausform-rollen-weiblich"
+      ],
+      "zeile": "(Nutzer|Benutzer|Betreiber|Administrator|Anwender|Entwickler|Bearbeiter|Mitarbeiter|Notarzt|Pilot|Patient|Kollege|Flugretter|Fahrer|Praktikant)(?:en|n|s)?\\*{0,2}-\\s*(?:[A-ZÄÖÜ]|oder\\b|und\\b|bzw\\.)",
+      "begruendung": "ZUSAMMENSETZUNG MIT BINDESTRICH. Steht das Rollenwort VOR dem Bindestrich, ist es das BESTIMMUNGSWORT einer Zusammensetzung und kein Mensch: `Betreiber-Rueckfrage` ist die Rueckfrage an die BetreiberIn, `Entwickler-Schluessel` der Schluessel zum Uebersetzen, `Nutzer-Backup` das Backup einer NutzerIn, `Betreiber-Konten` deren Konten. E-PK-26 sagt, Zusammensetzungen werden nicht zerlegt -- `BetreiberIn-Rueckfrage` waere keine Hausform, sondern Kauderwelsch. Dasselbe gilt fuer die ELLIPSE: „Patienten- oder Einsatzdaten\" ist die verkuerzte Form von „Patientendaten oder Einsatzdaten\".\n\nZWEI FASSUNGEN DES MUSTERS HABEN NICHT GETROFFEN, beide gemessen: Die Ellipse traegt ein LEERZEICHEN nach dem Bindestrich, und in Markdown steht die Fettung ZWISCHEN Wort und Bindestrich („Bei der **Betreiber**-Rueckfrage\"). Ein Muster, das die Schreibweise des Dokuments nicht kennt, laesst genau dort durch, wo der Text betont wird."
+    },
+    {
+      "id": "zugangsdaten-benutzername",
+      "klasse": "Homonym",
+      "muster": [
+        "hausform-maennlich",
+        "hausform-weiblich"
+      ],
+      "zeile": "Datenbank-Host, -Name und -Benutzer|'label' => 'Benutzer'|Rechnername, Datenbankname, Nutzer|Rechnername, Nutzer, Passwort|hat seinen Nutzer|Nutzer des Tokens",
+      "begruendung": "DAS FELD, NICHT DIE PERSON. „Benutzer\" ist hier die Beschriftung des Anmeldenamens fuer die Datenbank bzw. fuer SMTP, und „Nutzer\" in der Wiederherstellung steht neben Rechnername und Datenbankname -- es ist ein Zugangsdatum, das der Serverbetrieb vergibt, und heisst in jeder Datenbankoberflaeche so. `BenutzerIn` waere dort falsch: Ein Datenbankkonto ist kein Mensch. Dieselbe Unterscheidung wie bei `Leser` (Programmteil) und `Helfer` (Hilfsfunktion). E-PK-26. ERWEITERT (PK-04/5): Dieselbe Unterscheidung trifft drei weitere Stellen. „`ACCESS_NETWORK_STATE` hat seinen Nutzer\" -- das ist der Programmteil, der die Berechtigung VERWENDET. „alle Nutzer des Tokens\" sind die Regeln im Stylesheet, die es lesen. Und „Rechnername, Nutzer, Passwort\" ist die Aufzaehlung der Zugangsdaten eines Backup-Ziels."
+    },
+    {
+      "id": "pwquality-schwachliste",
+      "klasse": "Homonym",
+      "datei": "server/assets/pwquality.js",
+      "muster": [
+        "name-real"
+      ],
+      "begruendung": "DIE LISTE MUSS DIE ECHTEN WOERTER ENTHALTEN -- das ist ihr Zweck. `pwquality.js` haelt eine Sperrliste schwacher Passwoerter, und `christoph`, `bayern`, `muenchen` stehen dort, WEIL jemand sie als Passwort waehlen wuerde. Sie durch erfundene Namen zu ersetzen, hiesse die Pruefung abschalten und dabei gruen melden: Die Anwendung liesse „christoph2026\" dann durch. E-P1-02 schuetzt die Dokumentation davor, die reale Station zu benennen; eine Sperrliste BENENNT nicht, sie WEHRT AB."
+    },
+    {
+      "id": "exporttitel-guteseele",
+      "klasse": "Bestand",
+      "muster": [
+        "name-real"
+      ],
+      "zeile": "exportTitle|Titelzeile in F1",
+      "begruendung": "Vom Auftraggeber entschieden am 23.09.2026: stehen lassen. Der Wert wird NIE verglichen, sondern in Zelle F1 der exportierten Excel-Datei geschrieben (`export.js` 496) -- er ist der Kopf eines Dokuments, das die Betreiberin aus dem Haus gibt, und das Profil heisst gerade deshalb so, weil es dieses eine Layout bedient. PREIS, benannt: Das oeffentliche Repositorium nennt die reale Kennung an dieser einen Stelle weiter. Der saubere Weg waere ein Wert in den Einstellungen -- das ist eine neue Funktion mit Feld, Migration und Handbuchabschnitt und gehoert in ein eigenes Paket. GILT FUER BEIDE STELLEN: den Wert in `import_profiles.js` und die Zeile in `docs/Export-Format.md`, die BESCHREIBT, was in Zelle F1 steht. Eine Doku, die einen anderen Titel nennt als die Datei traegt, ist falsch -- deshalb haengen die beiden zusammen und stehen unter derselben Ausnahme."
+    },
+    {
+      "id": "messstand-eigene-adresse",
+      "klasse": "Homonym",
+      "muster": [
+        "mail-fremd"
+      ],
+      "zeile": "messstand@gen-em\\.org",
+      "begruendung": "EINE ADRESSE DES PROJEKTS, kein Beispiel. `tools/messstand/` legt ein Konto unter dieser Adresse an, um einen Bestand von 5000 Einsaetzen herzustellen. E-PK-27 nennt `demo@gen-em.org` als die eine echte Adresse in Texten -- gemeint war damit, dass BEISPIELE keine echte Domaene nennen. Diese hier ist kein Beispiel, sondern die Angabe, welches Konto das Werkzeug benutzt; `example.invalid` waere dort schlicht falsch."
+    },
+    {
+      "id": "notarzt-als-name",
+      "klasse": "Homonym",
+      "muster": [
+        "hausform-rollen-maennlich"
+      ],
+      "zeile": "Notarzt-Erweiterung|Konzept-Notarzt|„Notarzt\\\"|'Notarzt'|Notarzt\\\" in der Testmail",
+      "begruendung": "NAME, NICHT ROLLE. Drei Sorten: (1) „Notarzt-Erweiterung\" ist der Name eines Arbeitspakets aus Web 6.0.0 und steht so in der Historie -- ein Paketname wird nicht gegendert. (2) `„Notarzt\"` in Anfuehrungszeichen im Handbuch nennt das WORT, das jemand als Passwort waehlen koennte; die Sperrliste schwacher Passwoerter enthaelt es, und der Satz zaehlt auf, was dort steht (E-PK-37: ein Wort, das ALS WORT genannt wird). (3) „Einsatzdokumentation Notarzt\" in der Testmail ist der Instanzname, ein Eigenname."
+    },
+    {
+      "id": "wortnennung-hausform",
+      "klasse": "Homonym",
+      "muster": [
+        "hausform-maennlich",
+        "hausform-weiblich",
+        "hausform-rollen-maennlich",
+        "hausform-rollen-weiblich"
+      ],
+      "zeile": "`Betreiber` \\+ `In`|`BetreiberIn`|`Betreiberin`|`betreiberin`|`\\$nutzer`",
+      "begruendung": "EIN WORT, DAS ALS WORT GENANNT WIRD (E-PK-37, vom Auftraggeber bestaetigt). `docs/Pruefablauf.md` 6.6 erklaert, warum `BetreiberIn` als `Betreiber`+`In` durch ein Muster ohne `gross` rutscht. Wird diese Stelle gegendert, sagt der Satz etwas anderes als das, was er beschreibt -- und die Erklaerung wird unlesbar. Dasselbe gilt ueberall, wo ein Text die GEFUNDENE Form aufzaehlt."
+    }
+  ]
+}

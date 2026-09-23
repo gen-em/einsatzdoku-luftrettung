@@ -36,8 +36,8 @@ desto weniger musst du verantworten.
 
 Weil niemand außer dir den Schlüssel hat, gibt es einen
 **Wiederherstellungsschlüssel**, den nur du bekommst. Verlierst du ihn und
-vergisst dein Passwort, kann niemand die Daten mehr öffnen — auch der
-Betreiber nicht. NAdoku sagt dir das bei der Einrichtung und fragt dich
+vergisst dein Passwort, kann niemand die Daten mehr öffnen — auch die
+BetreiberIn nicht. NAdoku sagt dir das bei der Einrichtung und fragt dich
 später, ob du ihn noch hast.
 
 **Im Klartext — für uns lesbar, weil die Anwendung damit rechnet:** Zeiten und
@@ -46,7 +46,7 @@ Rettungsmittel und Standort, die Namen deiner Besatzung, das Transportziel,
 der Verlauf einer Reanimation und die Notizen des Diensttags.
 
 Der wichtigste Satz auf dieser Seite ist der nächste. Zwei der Einsatzphasen
-sind die Ankunft am Einsatzort und die Ankunft bei der Patientin: **Aus den
+sind die Ankunft am Einsatzort und die Ankunft bei der PatientIn: **Aus den
 GPS-Daten und diesen Koordinaten lässt sich der Einsatzort rekonstruieren —
 auch wenn die Adresse verschlüsselt ist.** Die Verschlüsselung schützt die
 Identität, nicht das Geschehen. Wer das nicht will, koppelt kein Gerät und
@@ -58,8 +58,8 @@ Datenschutzerklärung dieser Installation.
 ## Was es nicht ist
 
 Kein Produkt einer Firma. NAdoku ist freie Software unter der AGPL und wird
-von Gen-EM betrieben, einer Gruppe von Notärzten. Es gibt keine Werbung, und
-**der Betreiber gibt deine Daten an niemanden weiter und wertet sie nicht
+von Gen-EM betrieben, einer Gruppe von NotärztInnen. Es gibt keine Werbung, und
+**die BetreiberIn gibt deine Daten an niemanden weiter und wertet sie nicht
 aus** — weder selbst noch durch Dritte.
 
 Es gibt aber auch keine Hotline: Hilfe steht im Handbuch, und was dort fehlt,

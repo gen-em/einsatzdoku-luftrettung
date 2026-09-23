@@ -5,7 +5,7 @@ declare(strict_types=1);
  * KONFIG STELLEN — eine Lage in `config.php` herstellen und wieder zuruecknehmen
  * ===========================================================================
  *
- *     require_once __DIR__ . '/../konfig_stellen.php';
+ *     require_once __DIR__ . '/../../konfig_stellen.php';   // aus tools/proben/<name>/
  *
  *     $zurueck = konfig_stellen(['kdf_anteil' => null]);   // Anteil weg
  *     … pruefen …
@@ -34,6 +34,15 @@ declare(strict_types=1);
  * EINE STELLE, FUENF VERBRAUCHER — dieselbe Ueberlegung wie bei
  * `tools/motor.mjs`: fuenfmal geschrieben waere sie viermal richtig und
  * einmal falsch.
+ *
+ * DIE TIEFE IST ZWEI, NICHT EINS. Die vier Proben liegen seit PK-04/2 unter
+ * `tools/proben/<name>/`, nicht mehr flach unter `tools/`. Der `../`-Zaehler
+ * im `require_once` ist deshalb die Stelle, die bei einem Umzug bricht — und
+ * zwar STILL, denn git fuehrt eine Umbenennung und eine Aenderung ohne
+ * Konflikt zusammen. Drei der vier Aufrufe sind am 22.09.2026 genau so
+ * gebrochen: kein Konflikt, kein Hinweis, `require_once` auf eine Datei, die
+ * es unter dem gerechneten Pfad nicht gibt. Wer eine Probe verschiebt, zaehlt
+ * hier nach; `php -r` mit `realpath()` ueber alle vier ist eine Zeile.
  *
  * WAS SIE NICHT TUT:
  *

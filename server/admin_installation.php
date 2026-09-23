@@ -474,7 +474,7 @@ ui_seite_start(['titel' => 'Installation']);
                 . 'der Versuche gespeichert. Diese Angaben dienen ausschließlich '
                 . 'der Abwehr von Angriffen, werden nicht ausgewertet und nach '
                 . '**30 Tagen automatisch gelöscht**. Eine laufende Sperre kann '
-                . 'die Betreiberin vorzeitig aufheben; auch das wird mit '
+                . 'die BetreiberIn vorzeitig aufheben; auch das wird mit '
                 . 'Zeitpunkt vermerkt.' . "\n\n"
                 . 'Hinweis: Sicherungskopien der Datenbank können diese Angaben '
                 . 'enthalten, solange die Sicherung aufbewahrt wird.',
@@ -517,7 +517,7 @@ ui_seite_start(['titel' => 'Installation']);
            unten nichts davon sieht, haelt den Editor fuer kaputt. */ ?>
   <p class="feld-hinweis">Impressum und Datenschutzerklärung sind
      <strong>ohne Anmeldung</strong> erreichbar und in jeder Fußzeile verlinkt.
-     Der Inhalt ist Sache des Betreibers; die Anwendung liefert keinen Text mit.
+     Der Inhalt ist Sache der BetreiberIn; die Anwendung liefert keinen Text mit.
      Die Vorschau zeigt den zuletzt <strong>gespeicherten</strong> Stand — sie
      entsteht auf dem Server, mit demselben Renderer wie die öffentliche Seite.</p>
 

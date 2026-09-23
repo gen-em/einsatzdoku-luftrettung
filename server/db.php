@@ -905,7 +905,7 @@ const PHASE_LABELS = [
  * 'kind' = 'air' | 'ground' | 'both'. "Sonstige" ist ausdruecklich DIESELBE
  * Rolle bei beiden Arten (E6) und nicht zwei gleichnamige.
  *
- * DIE NOTAERZTIN IST KEINE ROLLE — sie ist die Nutzerin.
+ * DIE NOTAERZTIN IST KEINE ROLLE — sie ist die NutzerIn.
  *
  * Die Reihenfolge im Array ist die Anzeigereihenfolge.
  */
@@ -2019,7 +2019,7 @@ function run_cleanup_if_due(): void {
      * Zeitbudget. Der Grund ist gemessen: Die alte Waisenpruefung war ein
      * Anti-Join ueber die ganze Tabelle und kostete bei 9,46 Mio. Zeilen
      * **4,07 Sekunden** — in genau dieser Anfrage. Bei der Zielmenge Z2
-     * (190 Mio. Zeilen) waeren es Minuten, und die erste Nutzerin des Tages
+     * (190 Mio. Zeilen) waeren es Minuten, und die erste NutzerIn des Tages
      * saehe eine haengende Seite, ohne zu erfahren, warum.
      *
      * WARUM ES DIESEN WEG WEITERHIN GIBT. Eine frisch aufgesetzte

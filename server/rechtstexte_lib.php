@@ -327,7 +327,7 @@ function rt_saeubern(string $t): string
  *
  * REIN UND OHNE DATENBANK: Diese Funktion ist die eine Stelle, die geprüft
  * werden muss, und sie lässt sich einzeln durchspielen — siehe
- * `tools/rechtstexte/`.
+ * `tools/proben/rechtstexte/`.
  *
  * WAS SIE KENNT (E-P3-38, mehr nicht):
  *   `#` und `##`  →  <h2>          (die Seite hat ihr <h1> aus der Titelzeile)

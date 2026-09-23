@@ -1,281 +1,36 @@
-# Referenzdatensatz (Phase P1)
+# Referenzdatensatz
 
-Ein vollständiger, erfundener Beispielbestand für die Einsatzdokumentation —
-und die Werkzeuge, ihn zu erzeugen, einzuspielen, zu exportieren und gegen
-einen Vergleichsstand zu halten.
+Ein **erfundener** Beispielbestand, der zwei Aufgaben hat: Demo-Konto auf
+dem Produktivserver und Regressionsreferenz. **Anlass: F-P1-I, Nr. 174** —
+ohne festen Bestand misst jeder Lauf etwas anderes.
 
-Er hat zwei Aufgaben, und die zweite ist der Grund für die erste:
+## Aufruf
 
-1. **Demo-Konto** auf der Produktivinstallation — vorzeigbar und
-   ausprobierbar (`demo@gen-em.org`).
-2. **Regressionsreferenz** — kanonische Exporte, gegen die sich jede spätere
-   Änderung halten lässt. Ein Beispielbestand, den niemand prüft, veraltet;
-   einer, der bei jedem Lauf verglichen wird, nicht.
-
-Das Projekt hat **keine automatisierten Tests**. Was es stattdessen haben
-kann, ist ein Referenzzustand und ein Werkzeug, das jede Abweichung davon mit
-einer Zahl benennt.
-
----
-
-## Was hier liegt
-
-| Ordner | Inhalt | eigene Anleitung |
-|---|---|---|
-| `quelldaten/` | die Wahrheit: 21 Diensttage, 103 Einsätze als JSON, dazu die zwei Geräteblöcke, die drei Schnitte, Schema und Prüfung | `quelldaten/FORMAT.md` |
-| `generator/` | erzeugt daraus Ingest-Payloads, Formulardaten, CSV und GPX | `generator/LIESMICH.md` |
-| `einspielen/` | spielt alles über die **regulären** Wege ein (kein SQL) | `einspielen/LIESMICH.md` |
-| `browser/` | was es nur im Browser gibt: CSV-Import, P-07, Exporte, Demo-Abnahme | `browser/LIESMICH.md` |
-| `referenz/` | die eingecheckten Referenz-Exporte (CSV-Archiv und `.edbak`) | — |
-| `vergleich/` | Vergleichswerkzeug und Kreislauftests | `vergleich/LIESMICH.md` |
-| `fixture/` | erzeugt `server/demo/fixture.json.gz` für die Demo-Funktion, `riegelprobe.php` misst ihre beiden Riegel | — |
-| `docs/konzepte/erledigt/Konzept-P1.md` (seit Rahmenplan Fassung 16 dort, nicht mehr in diesem Ordner) | Konzept, Entscheidungen, Abdeckungsmatrix, Prüfprotokoll, Fehlerfunde | — |
-
-**Nichts davon wird ausgeliefert.** `tools/` ist vom Deploy ausgenommen; nur
-`server/demo/fixture.json.gz` geht mit, und die entsteht hier.
-
----
-
-## Der Bestand in Zahlen
-
-| | |
-|---|---|
-| Diensttage | 21 (20 aktiv, 1 im Papierkorb) — **2 davon ohne Standort** |
-| Einsätze | **106** (101 aktiv, 5 im Papierkorb) — 103 aus den Quelldaten plus die drei geschnittenen, die erst auf dem Server entstehen |
-| Ruhesegmente | 119 (114 aktiv) |
-| Spurpunkte | 63 752 |
-| Stammdaten | 3 Standorte (**alle mit Koordinate**), **10 Rettungsmittel — davon 4 OHNE Standort**, 15 Besatzungs-Vorbelegungen, 13 Rollen-Vorbelegungen, 12 Zielkliniken, 6 Bergwacht-Bereitschaften, 10 weitere Rettungsmittel |
-| Geräte | 2 — dazu entsteht beim Nachtragen und beim Import das virtuelle „Manuelle Einträge" (`manual-<konto>`), also 3 Zeilen in `devices` |
-| Herkunft der Einsätze | Uhr 39, Handy 49, Wear 4, manuell 7, Import 4, Schnitt 3 |
-
-**Die vier Rettungsmittel ohne Standort sind kein Schmuck, sondern der
-zweite von zwei Fällen** (E-S9-18): „Sanitätsdienst Seefest", „Reserve
-Talwang", „Boxkampf Rainer Maria Rilke" und „Konzert von Karl Marx" tragen
-`base_id = NULL`, und nur dadurch deckt der Bestand ab, was S9/AP4
-ausdrücklich erlaubt — Bergwacht, Veranstaltung und Sonstiges brauchen
-keinen Standort. Bis zum 13.09.2026 fehlte der Fall: Nicht in den
-Quelldaten, die ihn seit Web 16.0.0 tragen, sondern im **Einspielweg**
-(Backlog Nr. 174, Einzelheiten im Changelog zu Web 19.3.1). Wer die Zahl
-4 hier auf 0 fallen sieht, hat denselben Fehler wieder.
-
-**Seit dem Demo-Ausbau gibt es den Fall auch einen Schritt weiter oben: zwei
-Diensttage ohne Standort** (D20, D21 — die beiden Veranstaltungsdienste).
-Ein Rettungsmittel ohne Standort ist eine Stammdatenzeile; ein Diensttag
-ohne Standort ist ein **Weg durch die Anwendung**: kein Standortfeld im
-Formular, kein Standortschild an der Spur, keine Rollen-Vorbelegung, und
-die Spur beginnt dort, wo der Dienst begonnen hat, statt an einer Wache.
-Wer die Zahl 2 hier auf 0 fallen sieht, hat den Weg verloren, nicht nur
-eine Zeile.
-
-Die Verteilung ist ungleich, mit Häufungen — acht luft- und dreizehn
-bodengebundene Diensttage, im Schnitt gut fünf Einsätze je Tag.
-
-**Alle Namen sind erfunden.** Keine realen Rufnamen, keine „Christoph"-Kennung,
-keine echten Orte. `quelldaten/pruefen.py` prüft das bei jedem Lauf gegen eine
-Liste — und zwar nur über die **Daten**, nicht über die Erklärtexte daneben.
-
----
-
-## Die drei Läufe
-
-### 1. Bestand erzeugen und prüfen
-
-```
-python3 quelldaten/pruefen.py       # Schema, Sachlogik, Abdeckungsmatrix
-python3 generator/erzeugen.py       # Payloads, Formulardaten, CSV, GPX
-python3 generator/pruefen.py        # Vertragsgrenzen, Folge, Krypto, Spur, CSV
+```bash
+python3 tools/referenzdatensatz/quelldaten/pruefen.py    # die Quelle prüfen
+python3 tools/referenzdatensatz/einspielen/einspielen.py # Bestand herstellen
+python3 tools/referenzdatensatz/vergleich/kreislauf.py --art csv|edbak
 ```
 
-Beide Prüfungen nennen ihre Zahl. Eine Prüfung ohne Zahl ist keine.
+## Was es misst
 
-### 2. Einspielen
+`pruefen.py` hält die Quelldaten gegen ihre Matrix: Deckt der Bestand jeden
+Fall ab, den er abdecken soll? Der **Kreislauf** exportiert, importiert und
+vergleicht Feld für Feld — er beantwortet „kommt heraus, was hineinging?".
 
-```
-sh   einspielen/lokal_starten.sh                     # MariaDB, PHP, TLS davor
-python3 einspielen/einspielen.py --stufen konto
-php  einspielen/demo_kennzeichnen.php                # VOR dem ersten Anmelden
-node einspielen/passwort_setzen.mjs '<Link>' nadokudemo0815
-python3 einspielen/einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste,schneiden
-node browser/csv_import.mjs                          # die vier CSV-Einsätze
-```
+## Was es braucht
 
-Dauer rund vier Minuten. **Alles über die regulären Wege** — `ingest.php`,
-`api/day.php`, `einsatz_form.php`, die Weboberfläche. Keine Zeile per SQL.
+`pruefen.py` nichts. Einspielen und Kreislauf brauchen eine Installation;
+der Kreislauf gegen Staging zusätzlich `STAGING_*` und `JOBS_TOKEN`.
 
-**Die dritte Zeile ist neu und sie ist nicht wahlfrei.** Sie trägt das frisch
-angelegte Konto in `app_state.demo_user_id` ein und setzt die Reset-Marke weit
-in die Zukunft. Ohne sie stellt `unlock.js` beim **ersten** Anmelden still auf
-die Hülle mit Server-Anteil um (`edka1:`), und `fixture/erzeugen.php` hält am
-Ende der dritten Runde an — richtigerweise, siehe „Der Riegel auf der
-Schlüsselhülle". Bis zum Demo-Ausbau stand die Reihenfolge nur als Satz in
-diesem Dokument; jetzt steht sie als Befehl in der Folge. Die Marke in der
-Zukunft verhindert außerdem, dass ein Demo-Reset mitten in den vier Minuten
-losläuft und den halb aufgebauten Bestand wegräumt.
+## Erwartete Zahl
 
-### 3. Exportieren und vergleichen
+**0 Befunde, keine offene Matrixzeile.** Der Kreislauf: **0 Abweichungen**
+bei 21 Diensttagen und 106 Einsätzen. Gegen Staging mit MySQL 8.4.10
+zuletzt **104 s grün** (21.09.2026, Nr. 267).
 
-```
-node browser/referenz_export.mjs                     # beide Referenzdateien
-python3 vergleich/vergleichen.py --art csv   a.zip b.zip
-python3 vergleich/vergleichen.py --art edbak a.edbak b.edbak --passwort …
-python3 vergleich/kreislauf.py --art edbak --frisch  # ganzer Umlauf
-```
+## Was es nicht kann
 
----
-
-## Regressionslauf — die Kurzform
-
-Nach einer Änderung an der Anwendung:
-
-1. `python3 vergleich/kreislauf.py --art edbak --frisch`
-2. `python3 vergleich/kreislauf.py --art csv --frisch`
-3. Bericht lesen: **unerklärte Abweichungen müssen null sein**; erwartete
-   stehen mit Begründung daneben.
-
-Läuft der Vergleich gegen die **Demo-Installation**, vorher zurücksetzen
-(Adminbereich oder den 30-Minuten-Reset abwarten). Sonst misst der Vergleich
-Besucheränderungen und nennt sie Regression.
-
----
-
-## Wenn der lokale Bestand verlorengeht
-
-Er ist vollständig reproduzierbar — Abschnitt „Die drei Läufe" von vorn. Das
-ist keine Notfallanleitung, sondern der reguläre Weg; er wurde in dieser Phase
-dreimal gefahren, zweimal davon ungeplant.
-
-**Was dabei nicht identisch wiederkommt:** interne Kennungen, `created_at` und
-die **Gerätekennungen** (`dev-…`). Nur die internen Kennungen nimmt die
-Normalisierung weg; `created_at` wird seit Web 8.0.0 verglichen (es kommt beim
-Einspielen wieder zurück), und die Gerätekennungen stehen im Backup
-unter `days[].refs[].device_id`. Wer den Referenzstand neu aufbaut, erzeugt
-deshalb auch die Referenz-Exporte und die Fixture neu.
-
-**Und die Reihenfolge zählt:** Wer eine Quelldatei ändert, fährt die betroffene
-Einspielstufe erneut, **bevor** er exportiert. Der Datensatz ist
-deterministisch — aber nur, wenn man ihn auch erzeugt. In dieser Phase ist
-genau das einmal schiefgegangen (Fund F-P1-J).
-
----
-
-## Demo-Fixture
-
-```
-php fixture/erzeugen.php [email] [ziel.json.gz]
-```
-
-Erzeugt `server/demo/fixture.json.gz` aus dem Referenzkonto: Konto- und
-Schlüsselmaterial, die **echten** Geräte und den Bestand **mit** Papierkorb
-(Format 2). Das virtuelle Gerät „Manuelle Einträge" bleibt draußen — es
-trägt die Kontonummer im Namen und entsteht im Zielkonto bei Bedarf von
-selbst (seit Web 8.0.1; vorher brach das Anlegen des Demo-Kontos ab, sobald
-eine Installation beide Bestände führte). Das
-Nachlauf-Drehbuch ist mit Web 8.0.0 entfallen — das Backup führt gelöschte
-Einträge jetzt selbst, und das Einspielen bringt sie als Papierkorb zurück.
-Die Mechanik steht in `docs/Technik.md` 4.99a.
-
-Danach im Adminbereich unter **Demo-Konto** anlegen oder zurücksetzen.
-
-### Der Riegel auf der Schlüsselhülle (S10)
-
-```
-php fixture/riegelprobe.php [negativkonto]       # erwartet 4 von 4
-```
-
-`erzeugen.php` bricht ab, wenn die Hülle des Demo-Kontos **nicht** `edk1:`
-trägt. Der Grund ist die Reise, die die Fixture antritt: Sie wird auf der
-**Produktiv**installation eingespielt, und die führt einen **anderen**
-Server-Anteil. Eine Hülle mit Anteil (`edka1:<kennung>:`) wäre dort nicht zu
-öffnen — das Demo-Konto käme herein und sähe nichts, alle 30 Minuten aufs
-Neue und ohne Meldung.
-
-**Wann der Riegel beim Neubau zuschlägt — und warum das richtig ist.** Die
-drei Läufe melden sich mehrfach mit echtem Chromium als `demo@gen-em.org` an
-(`browser/csv_import.mjs`, `browser/referenz_export.mjs`), und `unlock.js`
-stellt beim ersten Anmelden still auf `edka1:` um. Dass das Demo-Konto
-verschont bleibt, hängt an einer einzigen Zeile: `api/kdf_upgrade.php`
-überspringt es, **sofern** `app_state.demo_user_id` auf dieses Konto zeigt
-(`demo_ist_demo()`, E-P1-19). Wer den Bestand neu aufbaut und sich anmeldet,
-**bevor** das Konto als Demo-Konto vermerkt ist, hat danach eine
-`edka1:`-Hülle — und `erzeugen.php` hält an. Das ist der Riegel bei der
-Arbeit, nicht sein Fehler.
-
-**Genau das ist im Demo-Ausbau passiert, und deshalb gibt es jetzt
-`einspielen/demo_kennzeichnen.php`.** Der Satz „die Reihenfolge setzt das
-Demo-Konto vor die Browserläufe" stand hier seit S10 — aber der Adminbereich
-kann das Konto erst dann als Demo-Konto anlegen, wenn es **eine Fixture
-gibt**, und die entsteht erst am Ende. Die Anweisung war also nicht
-ausführbar, und der Riegel hat beim ersten Neubau danach zugeschlagen. Das
-kleine Skript löst den Knoten von der anderen Seite: Es vermerkt die
-Kontonummer unmittelbar nach `--stufen konto` in `app_state`, ohne Fixture
-und ohne Adminbereich.
-
-Dieselbe Bauart wie der Riegel auf `KDF_ITER_ZIEL` daneben (Backlog Nr. 155).
-`riegelprobe.php` misst **beide** Richtungen; ein Riegel, der immer zuschlägt,
-ist so kaputt wie einer, der es nie tut. Der Negativfall stellt **nichts** nach,
-sondern zeigt `erzeugen.php` auf ein Konto des Referenzbestands, das seine
-`edka1:`-Hülle regulär beim Anmelden bekommen hat — die Datenbank bleibt
-unberührt. (Warum das wichtig ist: In S10/AP3 hat ein nachgestellter
-Hüllenwechsel ein Konto dauerhaft ausgesperrt, F-S10-AP3-08.)
-
-### Öffnet der Prüfstand beide Hüllenfassungen? (S10)
-
-```
-python3 einspielen/sitzungsprobe.py              # erwartet 2 von 2
-```
-
-`sitzung.py` **stellt nicht um** (E-S10-15) — sie liest, was dasteht. Der
-Bestand führt deshalb auf absehbare Zeit beide Fassungen nebeneinander, und
-jede Probe, die sich anmeldet, hängt daran, dass beide aufgehen. Gemessen wird
-nicht „eine Ausnahme blieb aus", sondern der Inhaltsschlüssel gegen
-`users.pat_key_check` — dieselbe Rechnung wie `EdCrypto.contentKeyCheck()`.
-Tragen beide Konten dasselbe Präfix, meldet die Probe das als eigenen Befund
-statt als grüne Zwei.
-
----
-
-## Zugangsdaten
-
-| | |
-|---|---|
-| Demo-Konto | `demo@gen-em.org` / `nadokudemo0815` |
-| Backup-Passwort der Referenz-`.edbak` | `nadokudemo0815` |
-
-Beide sind **planmäßig öffentlich** und stehen auch im Handbuch. Sie schützen
-nichts: Der Bestand ist erfunden, und das Konto setzt sich alle 30 Minuten
-zurück.
-
-**Davon getrennt** — und *nicht* öffentlich gemeint, sondern nur örtlich:
-
-| | |
-|---|---|
-| Umlaufkonten der Kreisläufe | `umlauf-csv@gen-em.org`, `umlauf-edbak@gen-em.org` / `umlaufpruefung2026` |
-
-Sie entstehen auf der Prüfinstallation und leben nur dort; `vergleich/kreislauf.py`
-und `einspielen/sitzungsprobe.py` führen sie als Vorgabe. **Sie tragen seit S10
-die Hüllenfassung `edka1:`** — sie haben sich im Browser angemeldet und dabei
-still umgestellt, und genau deshalb sind sie der Gegenpart zum Demo-Konto,
-wenn eine Probe beide Fassungen messen will.
-
----
-
-## Was dieser Datensatz absichtlich enthält
-
-Er soll nicht schön sein, sondern **vollständig**. Die Abdeckungsmatrix in
-`docs/konzepte/erledigt/Konzept-P1.md` Abschnitt 5 führt 78 Zeilen; jede ist mindestens einem Einsatz
-zugewiesen. Darunter:
-
-- drei Herkünfte (Uhr, Formular, Import)
-- ein Dienst über Mitternacht, zwei Dienste an einem Kalendertag, ein
-  Diensttag ohne Einsatz
-- alle Phasen 2–9, Mehrfachphasen, unvollständige Phasen, ein nicht
-  abgeschlossener Einsatz
-- alle **neun** speicherbaren Reanimations-Ereignisarten (nicht zehn — siehe
-  Fund F-P1-F)
-- alle vier Abfahrtortregeln, Winde nur am windenfähigen Rettungsmittel
-- MEZ **und** MESZ einschließlich der Zeitumstellungen 2026
-- Sonderzeichen, Formel-Anfangszeichen und **Angriffswerte** in geschützten
-  Freitextfeldern (R20)
-
-Die Angriffswerte sind kein Scherz: Sie haben in dieser Phase ein echtes
-Cross-Site-Scripting gefunden (F-P1-I, ausgeliefert als Web 7.2.1).
+**Die Geographie ist echt, die Namen sind erfunden** — `VERBOTENE_NAMEN`
+(E-P1-02) hält reale Rufnamen und Orte heraus, und die Textprobe liest
+dieselbe Liste. Der Bestand misst keine Mengen; dafür ist der Messstand da.

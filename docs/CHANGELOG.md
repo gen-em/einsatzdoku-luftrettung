@@ -14,6 +14,608 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.37.1] — 2026-09-23
+
+**Die Hausform, einmal durch.** PK-04 Teilstück 5 (E-PK-26); die einzige
+Korrekturstufe des Pakets.
+
+### Geändert
+
+- **Sichtbarer Text steht jetzt im großen Binnen-I** — „die NutzerIn", „die
+  BetreiberIn", „eine AdministratorIn", „die NotärztIn". Es ändert sich kein
+  Feld, keine Tabelle und kein Weg durch die Anwendung; es ändern sich
+  Wörter, und zwar **492 über 45 Dateien** unter `server/` und die normative
+  Dokumentation. Die Grammatik zieht mit: Binnen-I nimmt das feminine Genus,
+  und Artikel, Pronomen und Adjektive im selben Satz folgen.
+- **Die Hausform gilt für achtzehn Rollenwörter statt elf** (E-PK-38).
+  Hinzugekommen sind `Notarzt`, `Pilot`, `Patient`, `Kollege`, `Flugretter`,
+  `Fahrer` und `Praktikant`. Bis dahin hieß „null Treffer" **„null von elf"**
+  und nicht „der Text steht in der Hausform".
+- **`config.example.php` zeigt Beispieladressen unter `.invalid`.** Dort
+  stand `example.de` — **keine reservierte Domäne**: RFC 2606 reserviert
+  `example.com/net/org` und die TLDs `.invalid`, `.test`, `.example`,
+  `.localhost`. `example.de` ist registrierbar, und die Vorlage richtete
+  damit auch SMTP (`mail.example.de`, `noreply@example.de`) auf eine fremde
+  Domäne. Vier Stellen.
+- **Beispieldaten in der Dokumentation nennen keine reale Station mehr**
+  (E-P1-02). Die erfundene Geografie des Referenzbestands wird jetzt auch
+  dort benutzt: Hochkreuth, Sonnenau, Alpenfalke 1, Bergklinik Sonnenau.
+
+### Behoben
+
+- **Die Kartenquelle OpenHikingMap stand in keiner Lizenzliste.**
+  `tile.openmaps.fr` wird von `map_layers.js` geladen und war in der
+  Content-Security-Policy freigeschaltet — in `docs/Lizenzen.md` fehlte sie.
+  Sie steht jetzt dort, **die Lizenzspalte ausdrücklich als „ungeprüft"**:
+  Der Versuch, die Bedingungen nachzusehen, scheitert aus der
+  Arbeitsumgebung mit **HTTP 403** am Ausgangsproxy, und eine Vermutung hat
+  in einer Lizenzliste nichts zu suchen. Was zu tun bleibt, steht daneben.
+- **Sechzig tote Verweise auf Werkzeugordner** in `server/`-Kommentaren, aus
+  den Umzügen von PK-04. Neun davon von Hand, weil die stumpfe Ersetzung
+  verliert, welches Werkzeug gemeint war.
+
+### Behoben (Fortsetzung)
+
+- **Die Beschriftung des Altersfilters sah nicht gesperrt aus, obwohl sie es
+  war.** `suche.php` schaltet `feld-gesperrt` an das `<label>`, solange die
+  Patientendaten nicht entsperrt sind — und seit dem Redesign in P3 gab es
+  dafür keine Regel mehr, der Schalter tat nichts. Kaputt war nichts: Der
+  Zustand steht schon im `disabled`-Feld und im Hinweis daneben. Aber eine
+  Beschriftung, die anders aussieht als ihr eigenes Feld, ist eine
+  Ungereimtheit. Eine Zeile, ein **vorhandenes** Token.
+- **Acht Klassennamen standen ohne Wirkung im Markup.** `imp-row`,
+  `imp-dupe`, `imp-skipped`, `imp-skip`, `filtergruppen`, `loc-inline`,
+  `unlockbtn` (als Klasse) und `wochentage` hatten keine Regel und wurden
+  von keinem Selektor gelesen. Bei der Importvorschau ist damit das **ganze
+  Klassenattribut der Zeile** entfallen — es trug fünf Namen, von denen
+  keiner etwas tat.
+- **Der Hinweistext des Imports beschrieb ein Aussehen, das es nicht mehr
+  gibt.** Dort stand „Gelb = Hinweis, Rot = Fehler"; die Zeilenfärbung ist
+  aber mit F-MR-1 **absichtlich** durch Plaketten ersetzt worden („eine
+  zweite Darstellung für dieselbe Aussage wäre eine Darstellung zu viel").
+  Der Satz nennt jetzt, was zu sehen ist.
+
+### Bewusst nicht geändert
+
+**Was aus dem Haus geht, folgt nicht der Hausform** (E-PK-39): die
+Spaltenüberschriften der exportierten CSV- und Excel-Dateien (`Pilot 1`,
+`Flugretter`, `Fahrer`, `Praktikant` aus `CREW_ROLES`), die Spaltennamen des
+fremden Importprofils und der Titel in Zelle F1. Eine Datei, die jemand
+weitergibt, trägt die Überschriften, die die Empfängerin erwartet — und ein
+Importprofil, dessen Spalte `PilotIn` heißt, findet die Spalte `Pilot` nicht
+mehr, **still**, weil eine fehlende Spalte leer bleibt statt zu scheitern.
+
+Ebenso wenig die **Bezeichner**: `betreiberin` bleibt der Rollenname im Code,
+`$nutzer` die Variable. Und die Begriffe des Gesetzes im AVV
+(„Verantwortlicher", „Auftragsverarbeiter") sind Wortlaut der DSGVO, nicht
+Wortwahl des Hauses.
+
+## [Werkzeug: Schritt 15 vorweggenommen zusammengeführt] — 2026-09-22
+
+### Behoben
+
+- **Drei von vier Proben wären beim Merge von Schritt 15 still gebrochen.**
+  Schritt 15 schafft die globale `$CFG` ab und legt `tools/konfig_stellen.php`
+  an; vier Proben laden sie mit `require_once __DIR__ .
+  '/../konfig_stellen.php'` — ein Pfad, der annimmt, die Probe liege **eine**
+  Ebene unter `tools/`. PK-04/2 hat sie **zwei** Ebenen tief gelegt. Git sieht
+  eine Umbenennung und eine Änderung und führt beides ohne Konflikt zusammen:
+  Bei einer der vier hielt der Merge an, bei dreien nicht. Heraus käme ein
+  `require_once` auf eine Datei, die es unter dem gerechneten Pfad nicht gibt,
+  und das ist ein Fatal Error.
+  Jetzt `../../` in allen vier, nachgemessen mit `realpath()` **und** mit drei
+  tatsächlichen Läufen: anteil **55 von 55**, komplett **64 Erwartungen / 0**,
+  wiederherstellung **110 / 2** — die zwei sind der bekannte Befund F-PK-18,
+  kein Regress.
+- **Der Verzeichnisbaum in `docs/Technik.md` war nach PK-04/4 veraltet.**
+  `klickprobe/` heißt `bedienprobe/`, `eingabe-probe/` und `netzprobe/` liegen
+  unter `uhr-pruefstand/` — und `pruefstand/` fehlte ganz, schon länger.
+  Aufgefallen ist es beim Auflösen der Baumkonflikte, nicht von einem
+  Prüfmittel. Gegengelesen mit einem Abgleich Baum gegen Platte: **17 gegen
+  17, keine Abweichung.**
+- **Zwei neue Prüfungen hingen in der Kette, aber nicht im Prüfablauf.**
+  Schritt 15 hat `zaehlung` und `spaltenregister` in `pruefung.yml`
+  eingehängt; in `tools/pruefstand/pruefablauf.json` standen sie nicht, waren
+  also örtlich gar nicht zu fahren. Grundsatz 2 sagt das Gegenteil: Was
+  Fehler *findet*, läuft in der Arbeitsumgebung; das Tor liest gegen. Beide
+  sind jetzt Riegel (14 statt 12), dazu `spaltenregister-wegprobe` als eigene
+  Probe — sie schreibt und gehört an ein Wegwerfkonto, deshalb **nicht** in
+  Stufe 1.
+
+### Geändert
+
+- **Die Backlog-Nummern 269, 270 und 271 sind zu 278, 279 und 280 geworden.**
+  Schritt 15 hat sie zeitgleich vergeben; `Backlog.md` meldet dabei keinen
+  Konflikt, weil die Einträge an verschiedenen Stellen stehen. Dieselbe Sorte
+  Kollision wie bei Nr. 268 — dritter Fall im September. Die Regel in der
+  Datei sagt jetzt nicht nur, wo die nächste Zählung beginnt, sondern **warum
+  das nicht reicht**: Wer eine Nummer vergibt, sieht in die offenen Pull
+  Requests, nicht nur auf `main`.
+
+### Bekannt
+
+- **`tools/spaltenregister/pruefen.php` ging zwei Tage lang rot in Stufe 1**
+  und ist es nicht mehr. Gemessen wurde es auf dem Stand von Schritt 15
+  selbst: 1 Befund (`start_sort` stand in der Abbildung von
+  `api/suchindex.php`, aber nicht im Register) und Selbstprobe **15 von 16**
+  (der Alias `uhr_gesperrt AS manual`). Notiert als Backlog Nr. 282, damit es
+  nicht untergeht — eine Prüfung, die rot in die Kette geht, ist kein Riegel,
+  sondern ein Geräusch, das nach zwei Läufen weggeklickt wird.
+  **Behoben hat es Schritt 15 selbst** (`f1bc9e6`), in einem Commit nach dem
+  Stand, den PK-04 vorweggenommen hatte. Nachgemessen am 23.09.2026 auf dem
+  Zweig: **Selbstprobe 16 von 16, Lauf 0 Befunde**, beide rc 0. Nr. 282 ist
+  erledigt.
+
+## [Werkzeug: Die Vollständigkeits-Schwelle steht nur noch an einer Stelle] — 2026-09-22
+
+### Behoben
+
+- **Stufe 1 war rot, und niemand hat es gemerkt.** `pruefung.yml` gab dem
+  Vollständigkeitswerkzeug `--hoechstens 398` mit, während der Bestand seit
+  PK-04/1c bei **18** liegt. Das Werkzeug meldet Unterschreitungen
+  ausdrücklich als Befund — „sonst bekommt der Altbestand stillschweigend
+  wieder Luft" — und gab Rückgabewert 1 zurück. Der Schritt gibt jetzt gar
+  keine Zahl mehr.
+- **Der Grund war ein halb umgesetzter Vorsatz.** Der Läufer
+  `tools/quelltext/pruefen.sh` liest die Schwelle aus
+  `tools/pruefstand/pruefablauf.json`, damit sie genau eine Stelle hat
+  (Grundsatz 1). Das griff aber nur im Zweig `alle` — und die Kette ruft
+  **einzeln** auf. Sie musste die Zahl deshalb selbst führen, während der
+  Kopfkommentar des Läufers daneben behauptete, sie stehe „nirgends sonst".
+  Ein Satz, der eine Regel beschreibt, die der Code daneben nicht
+  durchsetzt, ist schlimmer als kein Satz: Er wird geglaubt. Die Vorgabe
+  greift jetzt auf beiden Wegen; eine von der Aufruferin mitgegebene Zahl
+  hat weiter Vorrang.
+- **Aufgefallen ist es erst beim Abgleich mit Schritt 15**, der dieselbe
+  Zeile anfasste. Zwei Pakete, die unabhängig voneinander dieselbe Zahl
+  pflegen, sind der Beleg dafür, dass sie dort nicht hingehört.
+
+### Geändert
+
+- **Die Fundgeschichte der Zahl ist aus `pruefung.yml` heraus** (79
+  Kommentarzeilen, die den Weg von 340 über 367, 372, 387, 388 auf 398
+  erzählten). Sie beschrieb einen Bestand, den es seit 1c nicht mehr gibt,
+  und stand an einer Stelle, an der die Zahl selbst nicht mehr steht.
+  Geschichte gehört in den Commit (CLAUDE.md 6, Grundsatz 6).
+
+## [Werkzeug: Fünfzehn Werkzeugordner statt achtundvierzig] — 2026-09-22
+
+### Geändert
+
+- **Drei Zusammenlegungen schließen E-PK-24 ab** (PK-04/4): `klickprobe`
+  heißt jetzt **`bedienprobe`**, `netzprobe` und `eingabe-probe` liegen unter
+  `uhr-pruefstand/`. Damit sind es **15 Werkzeugordner** — das Ziel der
+  Inventur. Die Bedienprobe läuft unverändert: 48 von 48 Wegen erfüllt.
+- **Alle 15 `LIESMICH.md` haben die Fünf-Abschnitte-Form** (E-PK-25): Aufruf,
+  was es misst, was es braucht, erwartete Zahl, was es nicht kann — je
+  höchstens 40 Zeilen. Zusammen **574 Zeilen** statt 7 206. Was dabei
+  herausfällt, sind Fundgeschichten und Fehlanläufe; die stehen in den
+  Commits, wo sie hingehören, und nicht in einer Anleitung, die niemand zu
+  Ende liest.
+- **Der Bilderlauf ist abgestuft** (E-PK-14): `--stufe klein|neben|haupt` —
+  berührte Seiten in drei Breiten, alle Seiten in acht, alle drei Engines.
+  **Die Risikoliste ist entfallen.** Sie nannte zehn Seiten mit Merkmalen,
+  bei denen Engines auseinandergehen können, und war eine von Hand gepflegte
+  Liste, die in eine Richtung altert — der einzige WebKit-Fund des Projekts
+  (Nr. 185) lag auf einer Seite, die nicht darauf stand.
+
+### Hinzugefügt
+
+- **Eine Gegenprobe gegen doppelte Bilder.** Acht Breiten je Seite sind acht
+  Dateien; stellt das Werkzeug die Breite nicht wirklich um, sind es acht
+  identische, bei denen alles grün meldet. Verglichen werden die Prüfsummen
+  **je Seite** — zwei Seiten dürfen gleich aussehen, acht Breiten derselben
+  nicht.
+
+### Behoben
+
+- **Die neue Gegenprobe las zuerst nichts.** Sie sah im Ordner `seiten/`
+  nach, der Ordner heißt `einzeln/` — und meldete „0 mit gleichen Bildern",
+  ohne eine Datei geöffnet zu haben. Eine grüne Zahl ohne Gegenstand, in
+  genau der Prüfung, die gegen grüne Zahlen ohne Gegenstand gebaut wurde.
+  Sie nennt jetzt, **wie viele Bilder sie gelesen hat**.
+
+Werkzeuge und Dokumentation, keine Datei unter `server/` — **keine
+Versionsstufe**.
+
+## [Werkzeug: Die Erzeuger bekommen einen eigenen Ordner] — 2026-09-22
+
+### Geändert
+
+- **`tools/erzeugen/` löst sechs Werkzeugordner ab** (PK-04/3, E-PK-24):
+  `design`, `logos`, `uhr-bilder`, `geraetemodelle` (samt
+  `nachaufloesen`), `wegwerfdomains`, `pruefkonten`. Sie **prüfen nichts**,
+  sie stellen Dateien her — und standen bisher zwischen den Prüfmitteln, als
+  wären sie welche. Werkzeugordner 22 → **17**, LIESMICH-Zeilen 3 820 →
+  **3 310**.
+- **Der Läufer hat bewusst kein `alle`.** Diese Befehle schreiben in das
+  Repositorium: Tabellen in `docs/Design.md`, Favicons, Gerätebilder, eine
+  Domänenliste, einen Kontenbestand. Gesammelt gefahren ergäben sie einen
+  Commit mit sechs unzusammenhängenden Änderungen, und niemand wüsste
+  hinterher, welche davon gewollt war. Jeder wird einzeln und auf Zuruf
+  gefahren — der Grund steht im Läufer, nicht nur hier.
+- **`wegwerfdomains` bekommt seine Anleitung.** Es war der einzige Ordner
+  ohne `LIESMICH.md`.
+- **Eine Ausnahme der Textprobe ist ausgetragen**
+  (`technik-werkzeugbaum-geraetemodelle`): Sie deckte einen Baumeintrag in
+  `docs/Technik.md`, den dieses Paket entfernt hat. Die Probe hat das selbst
+  gemeldet („1 ungenutzt") und den Lauf dafür rot gemacht — so ist sie
+  gebaut.
+
+Werkzeuge und Dokumentation, keine Datei unter `server/` — **keine
+Versionsstufe**.
+
+## [Werkzeug: Zwanzig Proben unter einem Läufer] — 2026-09-22
+
+### Geändert
+
+- **`tools/proben/` löst zwanzig Werkzeugordner ab** (PK-04/2, E-PK-24).
+  Jede Probe hatte ihre eigene Aufrufkonvention — `probe.php`, `pruefe.mjs`,
+  `probe.mjs`, `pruefen.php`, je nachdem, wer sie geschrieben hatte. Jetzt
+  `bash tools/proben/proben.sh <name>`, und `pruefablauf.json` zeigt nur
+  noch auf den Namen. Werkzeugordner 41 → **22**, LIESMICH-Zeilen 6 261 →
+  **3 820**.
+  **Die Messungen sind unverändert, und das ist am Rückgabewert
+  nachgewiesen** — nicht an der Ausgabe: Diese Proben legen Konten an und
+  nennen Zeitstempel, von 19 Vergleichen waren nur 2 bytegleich. Vorher 13
+  grün und 6 rot, nachher dieselben 13 und dieselben 6.
+- **`versand` fährt `alle` nicht mit** — sie verlangt einen Pfad als
+  Argument. Sie steht mit **Grund** im Läufer und wird in der Schlusszeile
+  als „1 ausgelassen" gezählt, statt still zu fehlen.
+
+### Behoben
+
+- **Drei Fehler, die der Umzug erzeugt hat, und alle drei gemessen statt
+  gelesen.** Die Verzeichnistiefe (`dirname(__DIR__, 2)` zeigte auf
+  `tools/` statt auf die Wurzel — 19 Dateien); zwei Node-Proben, die ihre
+  Probeseite über den alten Pfad luden und sich als Zeitüberschreitung
+  tarnten; und `container`, das den Leser des Referenzdatensatzes nicht mehr
+  fand (`ModuleNotFoundError: No module named 'lesen'`, mitten im Lauf nach
+  den ersten grünen Zeilen). Der Letzte war der einzige echte Regress und
+  fiel nur durch den Vergleich der Rückgabewerte auf.
+
+### Nebenbei
+
+- **`kettenaufrufe` meldet statt 18 nur noch 2 ungeprüfte Aufrufe.** Es
+  konnte an zwanzig verschiedenen Aufrufkonventionen keine Schnittstelle
+  erkennen; der Läufer hat eine. Zwanzig Aufrufe, die das Werkzeug vorher
+  nur zählen konnte, prüft es jetzt.
+
+Werkzeuge und Dokumentation, keine Datei unter `server/` — **keine
+Versionsstufe**.
+
+## [Werkzeug: Aus der Wortliste wird eine Textprobe mit fünf Regelklassen] — 2026-09-22
+
+### Hinzugefügt
+
+- **Vier neue Regelklassen** neben den Luftbegriffen (PK-04/1c, E-PK-08):
+  **Hausform** (Binnen-I, E-PK-26), **E-Mail-Adressen** (E-PK-27),
+  **Adressen im Netz** (Erlaubnisliste aus `docs/Lizenzen.md`) und **reale
+  Namen und Orte** (`VERBOTENE_NAMEN` aus dem Referenzdatensatz, E-P1-02).
+  Sperrliste 23 → 28 Muster. Gemessen: 442 Treffer Hausform, 38 Namen, 11
+  Netz, 9 Adressen; die Luftbegriffe stehen bei 0.
+- **Zwei Listen werden gelesen, nicht kopiert.** `@@NAMEN@@` und
+  `@@LIZENZEN@@` werden beim Lauf aus ihrer Quelle gefüllt. Eine zweite
+  Liste ginge beim nächsten Eintrag auseinander, und zwar lautlos: Der
+  Referenzdatensatz prüfte weiter gegen seine, die Textprobe gegen eine
+  ältere. **Fehlt eine Quelle, bricht der Lauf ab** — ein leeres Muster
+  träfe alles oder nichts.
+- **Rot ist nur ein neuer Treffer.** `textprobe-altbestand.json` hält je
+  (Datei, Muster) den Stand vom Einführungstag: 500 Treffer in 79 Paaren.
+  Ohne diese Datei wäre die Probe von der ersten Minute an rot und bliebe es,
+  bis jemand ein paar hundert Stellen angefasst hat — und eine Prüfung, die
+  dauerhaft rot ist, liest nach der zweiten Woche niemand mehr. Gezählt wird
+  **je Datei**, nicht je Zeilennummer; eine Zeilennummer verschiebt sich bei
+  jeder Einfügung darüber.
+
+### Geändert
+
+- **Eine Ausnahme ohne Musterfilter gilt nur noch für die Luftbegriffe.**
+  89 der 100 Ausnahmen sind für sie geschrieben („dieser Abschnitt erklärt
+  die Garmin-Uhr und darf `Flug` sagen") — mit den neuen Klassen hätten sie
+  stillschweigend auch fremde Adressen, reale Ortsnamen und jede Rollenform
+  gedeckt. **Gemessen beim Bauen:** Ein Probesatz mit drei Verstößen landete
+  im Block einer Handbuch-Ausnahme und war damit erklärt.
+- **`CLAUDE.md` 9:** Die Pflicht, die Wortliste bei jeder Textänderung von
+  Hand zu fahren, fällt. Sie läuft im Tor.
+
+### Behoben
+
+- **Die Erlaubnisliste las die Hälfte ihrer Quelle nicht.** `Lizenzen.md`
+  nennt Dienste teils als volle Adresse, teils als Rechnernamen in
+  Rückstrichen — die Kartentabelle tut Letzteres. Die erste Fassung las nur
+  die Adressen und meldete jede Kartenquelle als unerlaubt, obwohl alle drei
+  seit P0 dort stehen.
+
+Werkzeuge und Dokumentation, keine Datei unter `server/` — **keine
+Versionsstufe**.
+
+## [Werkzeug: Die Vollständigkeit misst wieder Symbole statt Satzzeichen] — 2026-09-22
+
+### Geändert
+
+- **Die Zeichenliste der Symbolprüfung trägt die Typografie nicht mehr**
+  (PK-04/1b, E-PK-16, Backlog Nr. 227). Sie enthielt `…` `→` `←` `«` `»`
+  `‹` `›` `⋯` — Satzzeichen, die in jedem zweiten Hilfetext vorkommen
+  („Betrieb → Servereinstellungen", „Daten werden geladen…"). **Gemessen:
+  330 Treffer fielen auf 14.** Eine Zahl, die zu 96 Prozent aus
+  Gedankenstrichen besteht, ist keine Messung; die echten Symbole standen
+  zwischen ihnen und fielen niemandem auf.
+- **Symbol- und Emoji-Zählung sind Hinweis statt Befund.** Beide Zahlen
+  stehen weiter da, halten aber keinen Lauf mehr auf. Grund: Ein Teil der 14
+  steht in **Kommentaren** (`version.php` im Kopftext, `pwquality.js` in der
+  Erklärung zur Graphemzerlegung), und die Prüfung kann das nicht trennen,
+  solange Nr. 184 offen ist. Ein Befund, der sich nicht abstellen lässt,
+  ohne die Sache zu verschlechtern, ist ein Hinweis. Die 14 stehen als
+  Nr. 279 im Backlog — damit ist nicht gesagt, dass sie in Ordnung sind.
+- **Zweiunddreißig Klassen sind in die Streichliste eingetragen**: sechs
+  gehören Leaflet (ihre Regel liegt in `vendor/leaflet.css`), 26 kommen am
+  22.09.2026 in keiner Datei unter `server/` mehr vor. Der Grund ist in
+  beiden Gruppen **gemessen und nicht erinnert** — es steht dort, wo die
+  Klasse heute vorkommt, nicht wodurch sie ersetzt wurde.
+- **Die Schwelle der Vollständigkeit steht auf 18 statt 398.** Sie fällt
+  nicht ganz, und der Grund steht im Backlog: Die verbliebenen 18 sind
+  Klassen, die im Markup stehen und in keinem Stylesheet eine Regel haben
+  (Nr. 278). Jede ist entweder ein toter Markup-Rest oder eine fehlende
+  Regel; beides ändert `server/`.
+
+### Behoben
+
+- **Eine Ausnahmeliste, die nichts tat.** Der Parameter `frei` in
+  `befund()` stand in der Signatur, wurde übergeben — und dann verworfen.
+  Eine Ausnahme für `style="…"` ließ sich eintragen, und sie wirkte nicht:
+  Der Treffer blieb ein Befund, der Eintrag stand wirkungslos da. Jetzt
+  filtert `frei` gegen den **Wert** des Treffers (nicht gegen die ganze
+  Zeile — sonst verankerte `^` am Dateipfad und kein Muster mit `^` griffe
+  je). Damit sind die zehn `style="…"`-Treffer erklärt: Alle zehn sind
+  **berechnete Laufzeitwerte** — eine Farbe aus den Daten, ein Drehwinkel,
+  Prozentbreiten. Die Muster verlangen das Anführungszeichen hinter dem
+  Doppelpunkt, damit ein festes `left: 12px` ein Befund bleibt;
+  **gegengeprüft**: ein eingefügtes `left:12px` und ein `color:#abc` wurden
+  gemeldet, die berechneten nicht.
+- **Ein kaputtes Ausnahmemuster beendete den Lauf**, statt ein Befund zu
+  sein. Beim Schreiben der ersten Einträge hat ein `\|` in einer
+  Markdown-Zelle den ganzen Lauf mit `re.error` abgebrochen, ohne eine
+  einzige Prüfung zu melden — die Tabellenzeile wird an **jedem** `|`
+  zerlegt, auch am escapeten, und das Muster kam halbiert an. Jetzt meldet
+  das Werkzeug das Muster als Befund und misst weiter.
+
+Werkzeuge und Dokumentation, keine Datei unter `server/` — **keine
+Versionsstufe**.
+
+## [Werkzeug: Acht Quelltextprüfungen unter einem Läufer] — 2026-09-21
+
+### Geändert
+
+- **`tools/quelltext/` löst acht Werkzeugordner ab** (PK-04/1a, E-PK-24).
+  Installweiche, Sitzungshärtung, CSP-Quelltextprüfung, Jobregister,
+  Migrationsregister, Linkprobe, Vollständigkeit und die Wortliste (jetzt
+  `textprobe`) lagen in acht Ordnern mit acht Anleitungen und acht
+  Aufrufkonventionen. Das Problem war nie die Messung, sondern der Aufwand
+  drumherum: Wer eine Prüfung dazunahm, schrieb eine neunte Anleitung.
+  Jetzt ein Ordner, ein Läufer (`bash tools/quelltext/pruefen.sh
+  <name>|alle|--selbstprobe`), ein LIESMICH.
+  **Die Messungen selbst sind unverändert, und das ist nachgewiesen statt
+  zugesagt:** Alle acht Ausgaben sind vor und nach dem Umzug abgelegt und
+  gegeneinander gehalten worden — **8 von 8 bytegleich**.
+  Die Schwelle der Vollständigkeit führt der Läufer nicht selbst, sondern
+  **liest sie** aus `tools/pruefstand/pruefablauf.json`; eine Zahl an zwei
+  Stellen altert an einer davon unbemerkt.
+
+### Entfernt
+
+- **`tools/s5-anker/` und `tools/maskierungs-probe/`** (Streichliste der
+  Inventur). Der S5-Anker war seit Längerem rot — acht seiner 52 Anker zeigten
+  auf Stellen, die es nicht mehr gibt — und wurde von keiner Kette aufgerufen;
+  seine Aufgabe ist getan. Die Maskierungsprobe misst einen Fall, der im
+  Referenzdatensatz liegt. Die Git-Historie behält beide.
+
+### Behoben
+
+- **Eine Prüfung übersprang sich stillschweigend.**
+  `tools/referenzdatensatz/quelldaten/pruefen.py` las die Sperrliste mit
+  `if sperr.exists():` — fehlte die Datei, meldete der Lauf grün, ohne eine
+  einzige Gerätebeschriftung angesehen zu haben. Der Umzug der Liste hätte
+  genau das ausgelöst. Pfad nachgezogen **und** das Überspringen beseitigt:
+  Fehlt die Liste, ist es jetzt ein Befund. Es bleibt bewusst stehen, dass
+  die Liste **gelesen** und nicht kopiert wird — eine zweite Liste ginge beim
+  nächsten Eintrag auseinander.
+
+Werkzeuge und Dokumentation, keine Datei unter `server/` — **keine
+Versionsstufe** (`CLAUDE.md` 2: drei Zählungen, drei Auslieferungen).
+
+## [Werkzeug: Das Muster `station` faellt aus der Sperrliste] — 2026-09-21
+
+**Angewiesen vom Auftraggeber.** Konzept PK gliedert die Pruefkette in fuenf
+*Stationen* — Haltepunkte auf dem Weg vom Quelltext zum Produktivserver.
+Das ist ein Homonym zum Luftrettungs-Begriff, den P2 ersetzt hat: Dort meint
+*Station* den Standort eines Rettungsmittels, und die Anwendung sagt dafuer
+seit Web 6.x durchgehend *Standort*.
+
+**PK-01 hatte das mit einer Ausnahme je Datei geloest** — Klasse Homonym,
+gebunden an `docs/Pruefablauf.md`. Das traegt, verlangt aber fuer jedes
+weitere Dokument der Pruefkette eine neue Begruendung, und die Begruendung
+waere jedesmal dieselbe. Das Muster faellt deshalb ganz, die Ausnahme mit ihm.
+
+**Der Preis, und er wird benannt statt verschwiegen:** *Station* im Sinn des
+Luftrettungs-Standorts faellt jetzt durch **kein** Muster mehr. Wer kuenftig
+einen sichtbaren Text schreibt, in dem *Station* den Standort meint, wird von
+der Wortliste nicht mehr aufgehalten. Der Geschwisterbegriff `basis` bleibt in
+der Liste und deckt den haeufigeren Fall weiter ab.
+
+**Gemessen:** Sperrliste **24 → 23 Muster**, Ausnahmeliste **100 → 99 Regeln**,
+Lauf danach **0 Treffer ausserhalb der Ausnahmen, 0 ungenutzte Ausnahmen,
+0 durchgerutschte Fallen** bei 99 von 99 gegriffenen Regeln. Die drei
+verbliebenen Vorkommen unter `server/` sind Kommentare, die die Wortliste
+ohnehin nicht liest; das vierte ist ein Sperrwort der Passwortguete und von
+einer anderen Ausnahme gedeckt.
+
+## [Werkzeug: Ein Befehl vor dem Pull Request — Station B steht (PK-03)] — 2026-09-21
+
+**Bis hierher wusste man, welche Probe zu einer Änderung gehört, oder man
+wusste es nicht.** Die Zuordnung stand in zwanzig Anleitungen, in `CLAUDE.md`
+6 noch einmal kürzer, und im Zweifel im Gedächtnis dessen, der das Werkzeug
+gebaut hatte. `tools/pruefstand/pruefablauf.json` ist jetzt die eine Stelle:
+je Muster auf Dateipfade die Proben und die Stufe, ab der sie laufen.
+
+**`pruefen.sh` fährt daraus einen Lauf.** Er ermittelt die Stufe aus dem
+Versionssprung gegen `main` und **sagt sie**, fährt die örtliche Anlage hoch,
+läuft die zwölf billigen Riegel und die Proben der Berührung, und **erzeugt**
+am Ende den Prüfbericht für die Commit-Nachricht. Gemessen: Stufe klein auf
+einem Zweig ohne `server/`-Änderung — **13 Proben, 0 rot, 0 nicht gemessen,
+26,8 s**.
+
+**Was nicht laufen kann, wird gezählt und benannt.** Fehlt das Android-SDK,
+`CIQ_GERAETE_URL` oder das Modul `plattform`, meldet der Lauf die Probe als
+*nicht gemessen*, mit Grund, und die Schlusszeile lautet „n rot, m nicht
+gemessen, k grün". Eine übersprungene Probe, die grün meldet, gibt es nicht
+(E-KH-12).
+
+**Der Prüfbericht hängt am Baum-Hash des Arbeitsbestands**, nicht am Commit —
+das ist der O9c-Fehler, gegen den es ihn gibt: gemessen wurde vor der letzten
+Änderung, gemeldet wurde die Zahl von davor. `bericht.py lesen` prüft vier
+rote Lagen (Baum, Stufe, als „nicht berührt" gemeldete Fläche, abweichende
+Riegelzahl), und seine Selbstprobe fährt **fünf rote und eine grüne durch
+dieselbe Funktion** — eine Selbstprobe, die den Fall daneben nachbaut, prüft
+ihren Nachbau.
+
+**`tools/kettenaufrufe/` liest die Zuordnung mit, und das hat sich sofort
+gelohnt.** Beim ersten Lauf standen zwei Aufrufe falsch darin: `--format`
+statt `--art` beim Kreislauf, und ein `./gradlew` ohne Wechsel nach
+`android/`. Gegenprobe mit wieder eingebautem Fehler: **2 Befunde** mit Namen
+(„kennt `--format` nicht", „verlangt `--art`"), nach der Berichtigung 0.
+Derselbe Fehler, der in der Kette dreimal zum ersten echten Lauf gebraucht
+hat (Nr. 217), kostet hier eine Sekunde.
+
+**Und die Abdeckung ist gemessen, nicht behauptet:** 262 versionierte Dateien
+unter `server/`, **0 ohne Muster**; 87 treffen nur das Auffangmuster und
+haben damit keine eigene Probe. Das ist eine Aussage über den Bestand, kein
+Fehler — aber eine, die man sehen soll, statt sie zu vermuten.
+
+**Ein Befund dabei, der nicht vom Prüfstand kommt:** Die
+Wiederherstellungsprobe meldet auf einer frisch eingerichteten örtlichen
+Anlage **2 von 110 Erwartungen nicht erfüllt** (ein knapper Schub sichert
+kein Konto; der Zeiger steht auf keinem). Ob das eine fehlende Voraussetzung
+ist — kein Sicherungsziel eingetragen — oder ein Fehler der Anwendung, ist
+**nicht geklärt**. Es steht im Prüfdokument, nicht in einer Fußnote.
+
+## [Werkzeug: Ein Beschaffer statt zweier — und WebKit startet wieder (PK-02)] — 2026-09-21
+
+**Zwei Skripte beschafften dasselbe mit zwei verschiedenen Listen, und keins
+von beiden war vollständig.** `.claude/hooks/session-start.sh` zog sechs
+Systembibliotheken, `tools/containeraufbau/aufbau.sh` vier andere — **keine
+davon dieselbe**. In der Frage, ob die Playwright-Engines nachzuladen sind,
+widersprachen sich die beiden Dateien ausdrücklich. Welche Arbeitsmittel eine
+Sitzung vorfand, hing davon ab, welche zuletzt jemand gepflegt hatte.
+
+**Entschieden hat es nicht die Abwägung, sondern Playwright selbst.** Beim
+Startversuch nennt es die fehlenden Pakete beim Namen, und es sind die vier
+aus `aufbau.sh`. Nachgemessen in einer Sitzung, in der der Hook bereits
+gelaufen war: seine sechs Pakete installiert, die vier anderen nicht — und
+**WebKit startete nicht**. Nach dem Nachziehen: 3 von 3 Engines, WebKit 26.0.
+Die Engine-Dateien liegen ohnehin im Abbild; `playwright install` zöge nur
+eine zweite, abweichende Fassung daneben.
+
+**Das ist der gefährliche Fall, nicht der ärgerliche.** Ein Dreimotorenlauf
+ohne WebKit ist ein Zweimotorenlauf, und er meldet dieselbe grüne Zahl.
+
+**Neu: `tools/sandbox/`** mit drei Befehlen. `aufbauen.sh` beschafft und misst
+nach — zehn Stücke, die drei Engines **einzeln**, acht Umgebungswerte mit
+ihrer Länge und nie mit ihrem Wert. `hochfahren.sh` richtet die örtliche
+Anlage ein oder startet sie, mit **einem** Rückgabewert und einer Schlusszeile,
+die den Gegenstand nennt (Adresse, HTTP-Code, gemeldete Fassung).
+`plattform.sh` stellt PHP 8.3.33 und drei weitere Datenbankfassungen bereit.
+`tools/containeraufbau/` ist entfernt, der Hook ruft nur noch `aufbauen.sh web`.
+
+**Die Plattformmatrix steht und misst 4 × 19/0** — MariaDB 10.11.14 und
+10.6.28, MySQL 8.0.46 und 8.4.0, zusammen in 29,7 s. Drei Dinge daran waren
+anders als geplant: Der Docker-Dienst **läuft nicht von selbst**; die
+Drosselung von Docker Hub trägt den vorgesehenen Umweg über Ubuntu-Pakete
+**nicht** (vier Abrufe und ein Bau liefen ohne 429 durch, deshalb ist der
+Umweg nicht gebaut worden); und das PHP-Abbild braucht die
+**Zertifizierungsstellen des Wirts** — die des Agent-Proxys allein genügt
+nicht, der Verkehr des Behälters läuft über das Egress-Gateway.
+
+**`tools/motor.mjs` kommt jetzt nach draußen, ohne die Prüfung abzuschalten.**
+Die Browser kennen die Zertifizierungsstelle des Proxys nicht — **zwei von
+dreien**, nicht nur Chromium, wie bislang angenommen (Firefox meldet
+`SEC_ERROR_UNKNOWN_ISSUER`). `ignoreHTTPSErrors` wäre die kurze und die
+falsche Antwort: Ein Prüfmittel, das jedes Zertifikat nimmt, kann die
+Prüfanlage nicht mehr von einer untergeschobenen unterscheiden. Stattdessen
+führt `route.fetch()` die Anfrage im Node-Prozess aus, der die Stelle kennt —
+geprüft wird weiter, nur woanders. **Örtliche Adressen laufen bewusst NICHT
+darüber**: Der Node-Stack schickt auch `127.0.0.1` durch den Proxy, und mit
+Umleitung scheiterte die örtliche Anlage in allen drei Engines.
+
+**Und der Schlüsselblatt-Dialog wird weggeklickt.** Er erscheint alle drei
+Monate nach der Anmeldung und legte bisher jedes Werkzeug lahm, das sich
+anmeldet. Zwei Messungen haben dabei zwei naheliegende Griffe widerlegt: Der
+Dialog öffnet sich **nach** der Anmeldung (t=0 zu, t=2 s offen, in allen drei
+Engines) — wer sofort nachsieht, meldet „kein Dialog". Und die **Adresse
+bleibt `/login.php`**: Nach der Anmeldung steht die Tagesübersicht dort, es
+gibt keine Umleitung. Das verlässliche Merkmal ist das Verschwinden des
+Passwortfeldes. Abgenommen mit 6 von 6 — drei Engines, örtlich und gegen die
+Prüfanlage.
+
+## [Werkzeug: Der Prüfablauf bekommt ein Dokument, und `CLAUDE.md` 6 wird kurz (PK-01)] — 2026-09-21
+
+**Das Problem war nicht, dass zu wenig geprüft wird, sondern dass niemand an
+einer Stelle nachlesen konnte, was wo läuft.** `CLAUDE.md` 6 war auf 166
+Zeilen angewachsen und führte Regeln, Werkzeugbeschreibungen, Prüfzahlen und
+Geschichte durcheinander; daneben stand dieselbe Pflicht noch einmal im
+Rahmenplan, ein drittes Mal in einer `LIESMICH.md`, und die Zahl des
+Bilderlaufs zusätzlich in `Technik.md`. Zwei Fassungen derselben Regel altern
+getrennt — das ist nicht Redundanz, sondern eine Verabredung, dass die
+nächste Instanz rät.
+
+**Zwei neue Dokumente, und die alten Stellen werden zu Verweisen.**
+`docs/Pruefablauf.md` sagt, wo welche Prüfung läuft: sieben Grundsätze, fünf
+Stationen von der Arbeit bis Produktiv, drei Stufen des Prüfstands, die Form
+des Prüfberichts, die Regeln für Prüfmittel — und ein Abschnitt „was nicht
+geprüft wird", weil eine benannte Lücke besser ist als eine unbemerkte.
+`docs/Sandbox-Setup.md` sagt, was die Arbeitsumgebung mitbringt, was
+nachgeholt wird und was sie **nicht** kann; der letzte Teil ist der
+wichtigste, denn eine Umgebung, von der man etwas Falsches annimmt, erzeugt
+Messwerte, die nach einer Prüfung aussehen.
+
+**`CLAUDE.md` 6 steht jetzt bei 58 Zeilen statt 166** und enthält keine
+einzige Prüfzahl mehr. Was dort noch steht, sind die sieben Grundsätze, vier
+Sätze, die beim Arbeiten im Kopf sein müssen, und drei Verweise. Die
+Kürzung ist **nicht** das Ziel gewesen, sondern die Folge: Jede
+Werkzeugerzählung, die dort stand, steht seither an genau einer Stelle.
+
+**Acht Stellen wären dabei beinahe verlorengegangen**, weil sie nur in
+`CLAUDE.md` 6 standen und nirgends sonst — darunter der Auslöser des
+Stilvergleichs (seine eigene `LIESMICH.md` sagt bis heute nicht, wann er zu
+fahren ist), der Auslöser der Kettenaufrufe, der Satz, dass Muster über
+*gelieferte* Antworten von der Tag-Rumpf-Regel ausgenommen sind, und das
+Verbot von Backtick-Namen mit Leerzeichen unterhalb von DEX 040. Sie stehen
+jetzt in `Pruefablauf.md`. Die Reihenfolge war dabei zwingend: erst das neue
+Dokument schreiben, dann das alte kürzen.
+
+**Eine Zahl ist dabei berichtigt worden.** `CLAUDE.md` 6 nannte vier
+Werkzeuge, die auf das lange Tag-Muster durchgesehen seien, und zählte dabei
+`tools/wortliste/` mit (das die kurze Form mit Begründung trägt) und
+`tools/wartungsprobe/` nicht (das die lange trägt). Die Zahl stimmte, die
+Liste nicht — nachgemessen sind es `integritaetswache`, `vollstaendigkeit`,
+`stilvergleich` und `wartungsprobe`.
+
+**Der Merge-Riegel hat eine zweite Lage bekommen.** Am selben Tag war
+gemessen worden, dass der Zweigschutz auf `main` gegen Git hält, aber nicht
+gegen den Werkzeugweg: Die GitHub-Werkzeuge handeln unter der Identität der
+Betreiberin, und ein Ruleset kann sie nicht von ihr unterscheiden. Deshalb
+sperrt `.claude/settings.json` jetzt `mcp__github__merge_pull_request` und
+`mcp__github__enable_pr_auto_merge`, und `CLAUDE.md` 8 sagt den Satz dazu:
+eine Instanz mergt nie. Gemessen wurde die **Abwesenheit** der beiden
+Werkzeuge mit Gegenprobe an drei anderen desselben Anschlusses — ein
+ausgefallener Anschluss sähe sonst aus wie ein wirksamer Riegel.
+
+**Bewusst stehen geblieben:** die Wortliste als Pflicht bei jeder
+Textänderung und die Vollständigkeit mit ihrer heutigen Schwelle. Beide baut
+erst PK-04 um; sie jetzt schon herabzustufen hieße, sie zwischen zwei
+Paketen ganz abzuschaffen. Ebenso stehen geblieben ist die Kette selbst —
+PK-01 ändert keine Zeile unter `.github/`.
+
 ## [Web 20.37.0] — 2026-09-22
 
 **Eine Einsatztabelle.** Schritt 15 AP9b (Zentralisierung, R83; Backlog

@@ -525,7 +525,7 @@ function rate_bremse_schwellen(): array
  * Einstellungen.
  *
  * `RATE_GRENZEN` BLEIBT EINE KONSTANTE und wird NICHT durch eine Funktion
- * ersetzt. `tools/kopplungsprobe/probe.php` liest sie an acht Stellen
+ * ersetzt. `tools/proben/kopplung/probe.php` liest sie an acht Stellen
  * unmittelbar; sie prueft damit die VORGABEN, und das soll sie auch. Wer die
  * Konstante wegnimmt, bricht die Probe still.
  *
@@ -589,7 +589,7 @@ function rate_global_misserfolg(): void
  * @return array{stufe:int, sekunden:float, versuche:int}
  *         stufe 0 = gar nicht.
  *
- * `$frisch` UMGEHT DEN MERKER — nur fuer `tools/ratenprobe/`. Der Merker ist
+ * `$frisch` UMGEHT DEN MERKER — nur fuer `tools/proben/raten/`. Der Merker ist
  * je Anfrage richtig (die Lage aendert sich in einer Seitenanfrage nicht),
  * aber eine Probe, die in einem Prozess zehn Lagen nacheinander herstellt,
  * bekaeme sonst zehnmal die erste.
@@ -868,7 +868,7 @@ function rate_leiter_anwenden(PDO $pdo, string $topf, string $merkmal, array $gr
          * beim zehnten war die Frist deshalb nie abgelaufen: Die Stufe fiel
          * NIE zurueck, und ein Konto, das vor einem halben Jahr einmal die
          * vierte Sprosse erreicht hatte, bekam beim naechsten Tippfehler
-         * sofort wieder 60 Minuten. Gefunden von `tools/ratenprobe/`,
+         * sofort wieder 60 Minuten. Gefunden von `tools/proben/raten/`,
          * Abschnitt 4 — im Betrieb waere es niemandem aufgefallen, weil
          * nichts bricht und die Sperre ja „funktioniert".
          *

@@ -41,7 +41,7 @@ gemessene** Erwartungen mit Grund.
 >   hintereinander reichen. Der Lauf liest den Grund von der Anmeldeseite
 >   („wieder ab HH:MM Uhr") und überspringt den Abschnitt, statt einen
 >   Stapel roter Zeilen zu melden. Dieselbe Lösung wie in
->   `tools/anteilprobe/umstellungslauf.mjs` (F-11).
+>   `tools/proben/anteil/umstellungslauf.mjs` (F-11).
 >
 > Wer sofort weitermessen muss, leert den Topf über den Weg der Anwendung:
 > `rate_erfolg('demo')` und `rate_erfolg('demog')` mit gesetztem

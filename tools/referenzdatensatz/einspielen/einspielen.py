@@ -306,7 +306,7 @@ def stufe_geraet(lauf: Lauf) -> None:
     NICHTS setzt den Topf zurueck (kein `rate_erfolg('pair_start')` im Baum).
     Zwei Geraete je Lauf heisst zehn Laeufe je zehn Minuten. Wer beim
     Entwickeln oefter fahren muss, raeumt den Topf so ab, wie es
-    `tools/kopplungsprobe/probe.php` tut -- hier steht kein SQL (R4).
+    `tools/proben/kopplung/probe.php` tut -- hier steht kein SQL (R4).
     """
     s = lauf.demo_sitzung()
     if lauf.zustand.get("geraete"):

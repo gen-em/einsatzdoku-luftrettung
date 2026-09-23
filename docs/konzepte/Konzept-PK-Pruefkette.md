@@ -26,23 +26,23 @@ Paket nach `CLAUDE.md` 2. Pakete, die nur `tools/`, `docs/`, `.claude/` und
 >
 > | | |
 > |---|---|
-> | Stand | **21.09.2026 — FREIGEGEBEN vom Auftraggeber (Z5), ohne Änderungen.** Z1 und Z2 erledigt; P-PK-02 vorgezogen und erledigt. Kein Paket begonnen — die Umsetzung startet mit PK-01 auf einem neuen Zweig. |
-> | Entschieden | **E-PK-01 bis -30** — alle im Gespräch vom 21.09.2026 entschieden oder bestätigt (Abschnitt 3.1). Die offenen Fragen F-PK-1 bis -6 der ersten Fassung sind beantwortet (Abschnitt 3.2). |
-> | Nächstes | **PK-01** (Umsetzungsinstanz, Opus). **M1 der Kette II ist erreicht** (21.09.2026, Z2a): Tag `web-v20.26.3` auf `a1c6494`, Lauf 35654132667 Versuch 2, Produktiv meldet 20.26.3, Migrationen von Hand ausgeführt, Wartung beendet, Status „Alles läuft", Zeiger `produktion` auf `a1c6494`. Die beiden Vorgriffe (PR #71 zu PK-05, PR #72 zu PK-06) sind auf `main`. **Parallelität:** PK-01 bis PK-03 laufen neben Schritt 15; PK-04 bis PK-06 erst, wenn kein Schritt-15-Paket in einem offenen PR steht (Abschnitt 4.0). |
-> | Kette II | wird nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
-> | Hakt | nichts mehr: Der HTTP 500 beim `.edbak`-Export auf Staging (`097D7622`) ist am 21.09.2026 **in der Sandbox reproduziert und behoben** (Web 20.26.3, PR #69, Nr. 267) — P-PK-02 vorgezogen, siehe 1.5. Bestätigt am 21.09.2026 durch Stufe 2 gegen Staging (MySQL 8.4.10, Kreislauf edbak grün in 104 s) und durch den Produktivlauf. |
+> | Stand | **23.09.2026 — PK-01 bis PK-04 erledigt.** Die beiden Prüfmittel der Station A messen gegen null: **Textprobe 492 → 0** (Altbestand 0 in 0 Paaren, keine Schwelle) und **Vollständigkeit 398 → 0** (Schwelle entfernt). Schritt 15 ist gemergt und hereingezogen. Offen bleibt P-PK-11 zur Hälfte (Ausbaustufe `uhr` gebaut, nicht abgenommen). Umsetzung auf `claude/serene-dijkstra-bcpbjy`. **Nächstes: PK-05.** |
+> | Entschieden | **E-PK-01 bis -30** aus dem Gespräch vom 21.09.2026 (Abschnitt 3.1); Q-PK-01 bis -06 beantwortet (3.2) — bis zum 21.09.2026 hießen sie F-PK-1 bis -6. **Neu aus der Umsetzung: E-PK-31** (`Technik.md` 2a wird abgelöst statt danebengestellt) und **E-PK-32** (Modul `plattform` über Docker statt Ubuntu-Paketen unter `/opt`) — beide **vom Auftraggeber bestätigt am 21.09.2026**, Prüfdokument 7. **E-PK-33** (das Muster `station` fällt aus der Sperrliste) ist vom Auftraggeber angewiesen; der Preis steht im Prüfdokument. **E-PK-34** (die Rechtstexte werden beim Binnen-I mitgenommen) und **E-PK-35** (die Fächerungszeile für PK) sind am 22.09.2026 entschieden — Abschnitt 3.1a. **E-PK-40** (die Android-Zeile aus 5b behält ihre Versionsstufe vorerst nicht) ist am 23.09.2026 angewiesen — gegen die Empfehlung der Instanz; Befund F-PK-29, Backlog Nr. 284, Abnahme P-PK-28. |
+> | Nächstes | **PK-05 — das Tor umbauen.** Android, Uhr und die Bereichserkennung aus `pruefung.yml` heraus, die Gegenlesung des Prüfberichts hinein, ein Aufruf `quelltext/pruefen.sh alle` statt sieben Schritten, die Datei unter 250 Zeilen. Der Auslöser ist seit PR #71 erledigt. |
+> | Kette II | **M1 ist am 21.09.2026 erreicht** — Tag `web-v20.26.3` auf `a1c6494`, Lauf **35654132667** Versuch 2, Produktiv meldet **20.26.3**, **Migrationen von Hand ausgeführt, Wartung beendet, Status „Alles läuft"**, Zeiger `produktion` auf `a1c6494`. Im Übrigen wird Kette II nicht abgebrochen, sondern übergeben: Abschnitt 9 sagt, was bleibt, was PK übernimmt und was entfällt. |
+> | Hakt | **Ein Befund offen, bewusst zurückgestellt:** Die eine Android-Zeile aus 5b (`strings.xml`, Hausform) ist ausgelieferter Code und hat weder Versionsstufe noch Changelog-Zeile noch Emulatorlauf bekommen (F-PK-29). Der Auftraggeber hat am 23.09.2026 entschieden, sie stehen zu lassen und die drei Pflichten beim nächsten Android-Paket nachzuziehen (E-PK-40, Nr. 284, P-PK-28) — die Instanz hatte das Nachziehen im selben PR empfohlen. Aufgefallen ist es **nicht durch ein Prüfmittel**, sondern durch die Nachfrage des Auftraggebers; die Fächerung von 5b lief über Wort-Eimer statt über Auslieferungsbereiche. Im Übrigen: **Das Spaltenregister aus Schritt 15 ist grün** — es war zwei Tage rot (Backlog Nr. 282), und Schritt 15 hat es selbst behoben (`f1bc9e6`, nach dem Stand, den PK-04 vorweggenommen hatte). Nachgemessen am 23.09.2026: Selbstprobe **16 von 16**, Lauf **0 Befunde**, beide rc 0; P-PK-22 erledigt. Der HTTP 500 beim `.edbak`-Export (`097D7622`) ist reproduziert und behoben (Web 20.26.3, PR #69, Nr. 267; P-PK-02, siehe 1.5); Stufe 2 hat ihn nach dem Merge bestätigt: Kreisläufe csv und edbak **104 s grün** gegen Staging mit **MySQL 8.4.10** (Lauf 35639445224, Versuch 2, Schritt 5) — im Lauf davor, ohne den Fix, derselbe Schritt nach **15 min 51 s rot**. Der Tag `web-v20.26.3` folgt darauf (Z2a). **Nr. 267 ist auf beiden Anlagen bestätigt:** Staging mit MySQL 8.4.10 im Kreislauf edbak (104 s), Produktiv mit MariaDB im Produktivlauf. **Der Export von Hand auf Produktiv steht als Gegenprobe noch aus** — er ist kein Beleg, weil der Fehler dort nie auftrat, aber er ist die einzige Messung, die den Weg durch die Oberfläche geht. Der erste Tag war am Tor hängengeblieben (F-PK-04); nach dem Vorgriff auf PK-06 (PR #72) ging er durch. **Zu beachten:** PR #70 ist noch offen, sein Inhalt liegt aber schon auf dem Arbeitszweig — wird er zuerst gemergt, kann `Pruefdokument-PK-Pruefkette.md` beim Phasen-PR einen kleinen Konflikt zeigen; die Fassung des Arbeitszweigs ist die umfassendere. |
 >
 > **Stand der Umsetzung**
 >
 > | Paket | Stand | Version | Commit | Abnahmezahlen |
 > |---|---|---|---|---|
 > | PK-M1 Zweigschutz und Merge-Recht | **gesetzt und gemessen 21.09.2026** (zwei Rulesets); Befund F-PK-01 | — | PR #67 (Messung), PR #70 (Nachmessung) | (b) abgewiesen; (a) durchgegangen unter der Identität der Betreiberin; (c) mit PR #70 |
-> | PK-01 Regeldokumente | offen | | | |
-> | PK-02 Sandbox-Setup | offen | | | |
-> | PK-03 Prüfstand-Befehl | offen | | | |
-> | PK-04 Werkzeuge zusammenlegen und bereinigen | offen | | | |
+> | PK-01 Regeldokumente | **erledigt 21.09.2026** | keine (nur `docs/`, `CLAUDE.md`, `.claude/`, `tools/`) | *wird beim Commit eingetragen* | `CLAUDE.md` 6: **58** Zeilen (vorher 166), Ziel <60 · Doppelstellen **1/1/1** normativ (Emulator, Tag-Rumpf, Wortliste) · Deny-Liste **2 von 2** gesperrt bei **3 von 3** Gegenproben · Wortliste **0/0/0** bei 100 Regeln, 100 gegriffen (mit den zwei neuen Dokumenten in Bereich c) · Vollständigkeit **398, auf der Schwelle** · Kettenaufrufe **43/0/0** · neu: `Pruefablauf.md` **561** Zeilen, `Sandbox-Setup.md` **306** — **Stand bei Abschluss von PK-01**; PK-02, PK-03 und der Nachtrag haben nachgetragen, heute sind es **620** und **384** (`wc -l`, 21.09.2026 abends) · Befunde **F-PK-07 bis -13** |
+> | PK-02 Sandbox-Setup | **erledigt 21.09.2026**, P-PK-11 offen | keine (nur `tools/`, `.claude/`, `docs/`) | *wird beim Commit eingetragen* | `aufbauen.sh web`: 10 von 10 Stücken, **3 von 3 Engines** (WebKit startete vorher nicht), 8 von 8 Umgebungswerten · `hochfahren.sh`: HTTP **200**, Fassung 20.26.2, 106 Einsätze, rc 0 · `plattform.sh alles`: **4 × 19/0** in **29,7 s** · Weg nach draußen: **6 von 6** angemeldet (3 Engines × örtlich und Prüfanlage), Dialog 6 von 6 geschlossen, ohne `ignoreHTTPSErrors` nach draußen · Befunde **F-PK-14 bis -17**, E-PK-32 |
+> | PK-03 Prüfstand-Befehl | **erledigt 21.09.2026** | keine (nur `tools/`, `docs/`) | *wird beim Commit eingetragen* | Stufen klein/neben/haupt: **26,8 / 25 / 22 s**, je 13 Proben, 0 rot, 0 nicht gemessen · `bericht.py --selbstprobe` **6 Lagen / 0** (5 rote, 1 grüne) · `auswahl.py --selbstprobe` **11 / 0** · Abdeckung **262 Dateien, 0 ohne Muster** · `kettenaufrufe` liest die Zuordnung mit: mit eingebautem Fehler **2 Befunde**, ohne **0** (82 Aufrufe, 0 Befunde, 18 ungeprüft) · Befund **F-PK-18** |
+> | PK-04 Werkzeuge zusammenlegen und bereinigen | **erledigt (21.–23.09.2026)** | **Web 20.37.1** (Teilstück 5, die einzige Korrekturstufe des Pakets) | | `tools/quelltext/`: **8 Ausgaben bytegleich** vor und nach dem Umzug · Läufer **8 von 8 grün**, Selbstproben **5 von 5** · Ordner **49 → 41** · LIESMICH **7 191 → 6 261** Zeilen · Prüfstand klein **13 grün / 0 rot / 0 nicht gemessen** · kettenaufrufe **82 / 0 / 18**. **1b:** Vollständigkeit **398 → 18** Befunde; Symbolzählung **330 → 14** und vom Befund zum Hinweis; **32** Streichlisteneinträge; `style="…"` **10 → 0** über vier Ausnahmen, gegengeprüft (eingefügtes `left:12px` und `color:#abc` gemeldet, berechnete nicht); Backlog **227 erledigt, 269 und 270 neu**. **1c:** Sperrliste **23 → 28** Muster in **5 Regelklassen**; Altbestand **500** Treffer in **79** (Datei, Muster)-Paaren; Gegenproben in **beide** Richtungen grün (neuer Satz → 3 neue Treffer, rc 1; eine bereinigte Stelle → „Altbestand austragen", rc 1); **89 von 100** Ausnahmen waren stillschweigend auf die neuen Klassen ausgeweitet und sind jetzt an `luft` gebunden; Backlog **271** neu. **2:** 20 Werkzeuge nach `tools/proben/<name>/`, ein Läufer; Ordner **41 → 22**, LIESMICH **6 261 → 3 820** Zeilen in 21 Dateien; **kein Regress** (13 von 19 grün, dieselben 6 roten wie vorher); `kettenaufrufe` **ungeprüft 18 → 2**. **3:** sechs Erzeuger flach in `tools/erzeugen/`, ein Läufer **ohne `alle`** (sie schreiben ins Repositorium); Ordner **22 → 17**, LIESMICH **3 820 → 3 310** Zeilen in 17 Dateien. **4:** drei Zusammenlegungen (klickprobe → bedienprobe, netzprobe und eingabe-probe → uhr-pruefstand) — **Ordner 17 → 15, das Ziel aus E-PK-24 ist erreicht**; Bilderlauf mit `--stufe klein|neben|haupt` und **ohne Risikoliste** (E-PK-14), dazu die md5-Gegenprobe gegen doppelte Bilder; **alle 15 LIESMICH auf die Fünf-Abschnitte-Form**, zusammen **574 Zeilen** (von 7 206; Ziel unter 1 000). Bedienprobe **48 von 48 Wegen**. **Offen aus 4: E-PK-15** — die Wege nach Seiten ordnen  **5a:** tote Werkzeugverweise in `server/` **60 → 0** außerhalb `version.php` (dort bleiben **22** als Geschichte, benannt im Dateikopf); die Zuordnung aus `git diff -M90%` (78 Umbenennungen), neun Stellen von Hand, weil die Ordnerersetzung verliert, welches Werkzeug gemeint war. **5b:** Binnen-I **434 → 0**; 15 + 6 Eimer gefächert, je Datei ein Agent, danach Gegenlesung (**357** gegengelesene Zeilen, **8 Befunde, 3 echt**). Gegenproben gegen angefasste Bezeichner: PHP-Variablen **0/0**, Funktionsaufrufe **0/0**, Feldschlüssel **0/0**, CSS-Klassen **0/0**. **5c/5d:** Namen **38 → 0**, Adressen **9 → 0**, Netzquellen **11 → 0**; Gegenlesung fand **3 echte Fehler, zwei davon in meiner Vorgabe**, dazu **8 reale Namen in `server/`-Kommentaren**, die das Prüfmittel nicht liest (Nr. 283). **Textprobe gesamt 492 → 0**, Altbestand **0 Treffer in 0 Paaren** — E-PK-26 erreicht, keine Schwelle. **Entscheidungen E-PK-34 bis -39.**  **5e:** die 18 Klassen, je eine untersucht und unabhängig gegengeprüft (36 Agenten, 3,4 Mio. Token, 852 Werkzeugaufrufe, 61 min) — **17 von 18 Urteilen halten**, eines kippt auf das, was die eigene Messung schon gezeigt hatte. Vier Sorten statt einer: **8 toter Rest** (aus dem Markup), **6 Skriptanker** (Streichliste mit `[bleibt]`), **3 ersatzlos ersetzt**, **1 fehlende Regel** (`.feld-gesperrt`, ein vorhandenes Token, vom Auftraggeber entschieden). **Vollständigkeit 398 → 18 → 0, Schwelle entfernt** (E-PK-16). |
 > | PK-05 Tor umbauen | offen | | | |
-> | PK-06 Staging verschlanken | offen | | | |
+> | PK-06 Staging verschlanken | offen — **trägt seit dem 21.09.2026 abends drei Nachträge**: F-PK-02 (Gruppe je Umgebung über den Lauf), F-PK-03 (Job-Pause, von derselben Gruppe miterledigt), F-PK-04 (Bilderlauf ohne Vorgabekonto), dazu F-PK-11 | | | Abnahme zusätzlich P-PK-18 und P-PK-19 |
 > | PK-07 Abschluss | offen | | | |
 > | PK-08 App-Auslieferung mit Signatur | offen (nach PK-07, eigene Freigabe) | | | |
 > | PK-M2 Erster Durchlauf der neuen Kette | offen (Betreiberin) | | | |
@@ -604,14 +604,25 @@ wird aber nicht vorausgesetzt.
 
 ### 3.2 Beantwortete Fragen der ersten Fassung
 
+**Eigenes Kürzel `Q-PK-NN`, seit dem 21.09.2026.** Bis dahin trugen diese
+sechs Zeilen `F-PK-1` bis `-6` — einstellig, während die Befunde zweistellig
+ab `F-PK-01` zählen. Damit standen `F-PK-1` und `F-PK-01` nebeneinander und
+meinten Verschiedenes; die Umsetzung ließ deshalb 02 bis 06 frei und begann
+bei `F-PK-07`. **Die Fragen heißen jetzt `Q-PK-01` bis `-06`**, die Nummern
+02 bis 06 sind für Befunde frei und belegt (Abschnitt 6). `F-XX-NN` meint
+von hier an **nur noch Befunde**; `Q-XX-NN` ist in `docs/Pruefablauf.md` 7
+und `CLAUDE.md` 7 eingetragen. **Wer eine ältere Quelle liest** — einen
+Commit, ein Protokoll, eine alte Sitzung —, findet dort `F-PK-1` bis `-6`
+und meint diese Tabelle.
+
 | Nr. | Frage | Antwort des Auftraggebers (21.09.2026) |
 |---|---|---|
-| F-PK-1 | E-PK-13 bis -22 so entscheiden? | ja, wie besprochen (E-PK-13 berichtigt, -14 ohne Risikoliste, -15 als Umbau) |
-| F-PK-2 | Android und Uhr im Tor? | ganz raus; Signatur bei GitHub hinter der Freigabe (E-PK-23) |
-| F-PK-3 | Streichliste und Zusammenlegungen? | ja; dazu die drei Zusammenlegungen (E-PK-24) |
-| F-PK-4 | Hausform? | Binnen-I (E-PK-26) |
-| F-PK-5 | Prüfkonten unter `gen-em.org`? | nur `demo@gen-em.org`, alles andere `example.invalid` (E-PK-27) |
-| F-PK-6 | Stilvergleich? | behalten (E-PK-28) |
+| Q-PK-01 | E-PK-13 bis -22 so entscheiden? | ja, wie besprochen (E-PK-13 berichtigt, -14 ohne Risikoliste, -15 als Umbau) |
+| Q-PK-02 | Android und Uhr im Tor? | ganz raus; Signatur bei GitHub hinter der Freigabe (E-PK-23) |
+| Q-PK-03 | Streichliste und Zusammenlegungen? | ja; dazu die drei Zusammenlegungen (E-PK-24) |
+| Q-PK-04 | Hausform? | Binnen-I (E-PK-26) |
+| Q-PK-05 | Prüfkonten unter `gen-em.org`? | nur `demo@gen-em.org`, alles andere `example.invalid` (E-PK-27) |
+| Q-PK-06 | Stilvergleich? | behalten (E-PK-28) |
 
 ### 3.3 Inventur — 48 Werkzeuge, ein Urteil je Werkzeug
 
@@ -690,7 +701,7 @@ Risikoliste dieselben.
 | PK-02 | Sandbox-Setup | E-PK-12, -30 | PK-01 | `tools/sandbox/`, `.claude/hooks/`, `tools/containeraufbau/` (weg), `motor.mjs` | — |
 | PK-03 | Prüfstand-Befehl | E-PK-05, -06, -11, -19, -29 | PK-02 | `tools/pruefstand/` | erster Prüfpunkt: edbak-500 lokal reproduzieren |
 | PK-04 | Werkzeuge zusammenlegen und bereinigen | E-PK-03, -08, -14, -15, -16, -22, -24, -25, -26, -27, -28 | PK-03 | `tools/` (drei Sammelordner, Streichliste, Textprobe, Bedienprobe, Bilderlauf); Binnen-I- und Adressbereinigung in `server/`-Texten und `docs/` | Binnen-I und Adressen berühren sichtbare Texte → **Korrekturstufe Web** |
-| PK-05 | Tor umbauen | E-PK-04, -07, -13, -18, -20 | PK-04, PK-M1 | `pruefung.yml` | — |
+| PK-05 | Tor umbauen | E-PK-04, -07, -13, -18, -20 | PK-04, PK-M1 | `pruefung.yml` | **Auslöser bereits umgestellt** (Vorgriff 21.09.2026, PR #71); der Rest offen |
 | PK-06 | Staging verschlanken | E-PK-01, -07, -17, -21 | PK-05 | `auslieferung.yml` (`stufe2`), Kommentare in `ausliefern-lauf.yml`, `integritaet.yml` | — |
 | PK-07 | Abschluss | — | PK-06 | `Technik.md` 6, `CLAUDE.md`, Rahmenplan, Backlog, Prüfdokument; Erledigt-Zeile Kette II | Freigabe |
 | PK-08 | App-Auslieferung mit Signatur | E-PK-23 | PK-07, eigene Freigabe | `auslieferung.yml` (Jobs `android`, `uhr`), Umgebung `produktion` (zwei Geheimnisse), `Technik.md` 4.97g | Freigabe vor dem ersten Tag |
@@ -786,6 +797,150 @@ Konzepts eine Auskunft (1.2); deshalb vor der Freigabe.
 
 ### PK-04 — Werkzeuge zusammenlegen und bereinigen
 
+**Fünf Teilstücke, eines nach dem anderen** (Gliederung vom 21.09.2026):
+
+| Nr. | Was | `server/` | Stand |
+|---|---|---|---|
+| **1a** | `tools/quelltext/` — acht Werkzeuge unter einen Läufer | nein | **erledigt** |
+| 1b | Vollständigkeit ohne Symbolzählung gegen null (E-PK-16) | nein | **erledigt** (Schwelle 398 → **18**, nicht null — Begründung unten) |
+| 1c | Textprobe mit fünf Regelklassen (E-PK-08) | nein | **erledigt** |
+| 2 | `tools/proben/` — 20 Werkzeuge unter einen Rahmen | nein | **erledigt** |
+| 3 | `tools/erzeugen/` — sechs Erzeuger | nein | **erledigt** |
+| 4 | Bedienprobe nach Seiten (E-PK-15), Bilderlauf abgestuft (E-PK-14), LIESMICH-Form | nein | **erledigt bis auf E-PK-15** (die Wege tragen weiter Paketnamen) |
+| **5** | Bereinigung in `server/` — Binnen-I, Prüfkonten, Symbole | **ja** | **zuletzt** |
+
+**E-PK-34 — die Rechtstexte werden beim Binnen-I mitgenommen.** 83 der 492
+Stellen liegen in `docs/rechtstexte/`: AVV 48, Nutzungsbedingungen 27,
+Datenschutz-Ergänzung 8. Fast alle sind „Betreiber" (47) und „Betreibers"
+(7) — und dort ist das kein Stilwort, sondern eine in §1 in
+Anführungszeichen **definierte Vertragspartei**. Vorgelegt am 22.09.2026 mit
+drei Wegen (ausnehmen, mitnehmen, nur den AVV ausnehmen); **der Auftraggeber
+hat „mitnehmen" gewählt.** Die Hausform gilt damit ohne Sonderfall, und die
+Regelklasse `hausform` kann wirklich auf null.
+
+**Was ausdrücklich NICHT umgestellt wird:** die Begriffe des Gesetzes —
+„Verantwortlicher", „Auftragsverarbeiter", „betroffene Person". Sie stehen
+13-mal im AVV und sind Wortlaut der DSGVO, nicht Wortwahl des Hauses. Die
+Sperrliste trifft sie ohnehin nicht (ihre Wortliste kennt `Betreiber`,
+`Nutzer` und neun weitere, aber keinen dieser drei) — **sie bleiben also von
+selbst stehen, und das ist ein glücklicher Zufall und keine Vorkehrung.**
+Wer die Wortliste erweitert, prüft diesen Absatz.
+
+**E-PK-36 — die Textprobe misst die Hausform groß geschrieben.** Beide
+`hausform`-Muster tragen jetzt `"gross": true`. **Ohne den Schalter war die
+Regel für ihren Zweck untauglich**, und zwar aus zwei Gründen, von denen der
+zweite der schwerere ist:
+
+| | |
+|---|---|
+| Sie traf **Bezeichner** | `betreiberin` ist der Rollenname im Code (`db.php` 1195: „'betreiberin' und nicht 'operator'"), `$nutzer` eine Variable. **1 233 kleingeschriebene Treffer** im Repositorium gegen 913 großgeschriebene. |
+| Sie traf **die Hausform selbst** | `BetreiberIn` matcht als `Betreiber` + `In` ≈ `in`. Die Regel zählte damit **hoch, je mehr man repariert** — `AVV.md` ging beim Umbau von 22 auf 47. |
+
+Eine Regel, die den Fehler nicht von der Lösung unterscheidet, misst nichts.
+Nachgerechnet: Mit `gross: true` trifft sie `Betreiberin` ✓ und `Betreiber` ✓,
+aber `BetreiberIn` ✗ und `betreiberin` ✗ — genau den Fehler und sonst nichts.
+**Preis, benannt:** Ein kleingeschriebenes Rollenwort in *sichtbarem* Text
+fällt durch; im deutschen Fließtext sind Substantive groß.
+
+**E-PK-37 — Zitate werden mitgegendert** (Auftraggeber, 23.09.2026). Ein
+zitierter Satz aus dem Backlog, aus einem Konzept oder aus der Anwendung folgt
+der Hausform. **Zwei Dinge bleiben ausgenommen**, und beide sind keine
+Ausnahme vom Gendern, sondern etwas anderes als ein Zitat:
+
+- **Die Begriffe des Gesetzes** („Verantwortlicher", „Auftragsverarbeiter",
+  „betroffene Person") — vom Auftraggeber mit E-PK-34 ausgenommen.
+- **Ein Wort, das als Wort genannt wird.** Wo ein Satz aufzählt, *was*
+  gefunden wurde — „fast alle sind „Betreiber" (47) und „Betreibers" (7)" —,
+  sagte er gegendert das Gegenteil: dass der Fund bereits die Hausform war.
+  Das betrifft die Sperrliste, jede Befundtabelle und die Absätze hier.
+  Vorgelegt und vom Auftraggeber bestätigt.
+
+**E-PK-38 — die Hausform gilt für achtzehn Wörter, nicht für elf**
+(Auftraggeber, 23.09.2026, Lesart 2). Bis dahin kannte die Sperrliste elf
+Rollenwörter, und „hausform = 0" hieß deshalb **„0 von elf"**, nicht „der
+Text steht in der Hausform". Sieben kommen dazu: `Notarzt`, `Pilot`,
+`Patient`, `Kollege`, `Flugretter`, `Fahrer`, `Praktikant`.
+
+**Vier Wörter sind ausdrücklich NICHT aufgenommen**, jedes mit Grund:
+
+| Wort | Vorkommen | Warum nicht |
+|---|---|---|
+| `Helfer` | 47 | In diesem Projekt eine **Hilfsfunktion im Code** — „PDO, Helfer", „wo der Helfer `null` liefert". Dieselbe Falle wie `Leser`. |
+| `Besatzungsmitglied` | 10 | Sächlich, schon geschlechtsneutral. |
+| `Verantwortlicher` | 8 | Wortlaut der DSGVO (E-PK-34). |
+| `Auftragsverarbeiter` | 8 | Ebenso. |
+
+**Zusammensetzungen fallen von selbst heraus**, weil das Muster an der
+Wortgrenze misst: `Patientendaten` (96), `Notarzteinsatz` (8),
+`Pilotenwechsel` (9) treffen nicht. Nur die **Ellipse mit Bindestrich**
+(„Patienten- oder Einsatzdaten") braucht eine Ausnahme, weil dort eine
+Wortgrenze steht.
+
+**E-PK-39 — was aus dem Haus geht, folgt nicht der Hausform.** Drei Sorten
+Text bleiben ungegendert, und die Begründung ist dieselbe:
+
+1. **Spaltennamen einer fremden Datei.** Das Importprofil „GuteSeele" gleicht
+   seine Spalten gegen die Kopfzeile einer Excel-Datei ab, die nicht aus
+   diesem Haus kommt. Wird `'Pilot'` zu `'PilotIn'`, findet der Import die
+   Spalte nicht mehr — **und zwar still**, weil eine fehlende Spalte leer
+   bleibt statt zu scheitern.
+2. **Spaltenüberschriften der eigenen Ausgabe.** Die fünf Rollenbeschriftungen
+   aus `CREW_ROLES` stehen als Spalten 14 bis 19 in jeder CSV- und
+   Excel-Datei, die diese Anwendung erzeugt. **Die Tabelle steht dreimal** —
+   in `db.php` und als Rückfallwert in `import_profiles.js` 62 und
+   `import_ui.js` 334; wer eine ändert, ändert alle drei.
+3. **Der `exportTitle`** („Einsatzdokumentation Christoph 17 - {jahr}"), vom
+   Auftraggeber am 23.09.2026 so entschieden — daraus folgen 1 und 2.
+
+**Und der Projektname** „Einsatzdokumentation Notarzt" ist ein Eigenname; er
+steht in der Fußzeile der Anmeldeseite, im Kopf jedes Komplett-Backups und
+als Vorgabe des Instanznamens.
+
+**Was die Datenbank angeht, war die Sorge unbegründet:** Gespeichert wird
+`role_code` (`p1`, `fr`, `driver`, `trainee`), nicht die Beschriftung
+(`db.php` 1037). Eine Änderung an den Labels bräuchte also keine Migration —
+sie scheitert an Punkt 2, nicht am Datenmodell.
+
+**E-PK-35 — die Fächerungszeile für PK** (`CLAUDE.md` 7, beschlossen in
+Schritt 15 als E-ZE-25: ohne Zeile wird nicht gefächert). Für PK gilt:
+
+| Paket | Gefächert | Seriell |
+|---|---|---|
+| PK-01 bis PK-03 | nichts — abgeschlossen, ohne Fächerung gefahren | alles |
+| **PK-04/1a bis 4** | nichts — ebenso abgeschlossen | alles |
+| **PK-04/5** | **(a) die Untersuchung der 18 Klassen und 14 Symbolzeichen** — rein lesend, je Fundstelle eine Frage, keine Nebenwirkung; **(b) der Umbau je Datei** beim Binnen-I und den Adressen: rund 50 Dateien, jede von genau einem Agenten | die Prüfläufe · `server/version.php` · `docs/CHANGELOG.md` · dieses Konzept · das Prüfdokument |
+| PK-05 bis PK-08 | offen — wird bei Beginn des Pakets entschieden | |
+
+**Die Regel dahinter, und warum sie hier greift:** Eine Datei hat genau
+einen Agenten. Binnen-I, Adressen und Rufnamen liegen teils in derselben
+Datei — sie werden deshalb **nicht** als drei Fächerungen nach Regelklasse
+gefahren, sondern als **eine** nach Datei. Drei Agenten auf `Handbuch.md`
+wären drei Fassungen derselben Datei, und die letzte gewinnt.
+
+**Teilstück 5 kommt zuletzt**, entschieden vom Auftraggeber am 21.09.2026:
+Schritt 15 (Zentralisierung) arbeitet parallel in `server/`, und rund 190
+breit gestreute Textänderungen wären dort die größte Konfliktfläche, die es
+gibt. Die vier Teilstücke davor fassen `server/` nicht an.
+
+**Abweichung in 1b, benannt:** E-PK-16 verlangt die Vollständigkeit „gegen
+**null**". Erreicht sind **18**. Die Symbolzählung ist weg (330 → 14, und
+vom Befund zum Hinweis), 32 Klassen sind in der Streichliste, die zehn
+`style="…"` sind als berechnete Werte erklärt. **Die verbliebenen 18 sind
+Klassen, die im Markup stehen und in keinem Stylesheet eine Regel haben**
+(Backlog Nr. 278) — jede ist entweder ein toter Markup-Rest oder eine
+fehlende Regel, und beides ändert `server/`. Sie gehören damit in
+**Teilstück 5**, das die Schwelle dann ganz wegnimmt. Bis dahin ist die
+Schwelle 18 ein **Riegel** und keine Zahl, die alles durchlässt — das war
+sie bei 398.
+
+**Offen aus 1a, gehört zu Teilstück 5:** **19 Stellen in 9 Dateien unter
+`server/`** verweisen im Kommentar auf die alten Werkzeugordner
+(`tools/wortliste/`, `tools/vollstaendigkeit/` und weitere). Sie sind mit dem
+Umzug tot; berichtigt werden sie in Teilstück 5, weil jede Änderung an
+`server/` dorthin gehört. Die Dateien: `assets/style.css`, `assets/symbol.js`,
+`betrieb_server.php`, `install.php`, `jobs_lib.php`, `migration_lib.php`,
+`sicherungsziel_lib.php`, `stammdaten_ui.php`, `version.php`.
+
 - Die drei Sammelordner nach E-PK-24, Streichliste und Aufgehen nach 3.3,
   jede LIESMICH auf die Fünf-Abschnitte-Form (E-PK-25).
 - `quelltext/`: Textprobe mit fünf Regelklassen (E-PK-08), Vollständigkeit
@@ -804,28 +959,87 @@ Konzepts eine Auskunft (1.2); deshalb vor der Freigabe.
 
 ### PK-05 — Tor umbauen
 
-- `pruefung.yml`: Auslöser `pull_request` und `push: main`; Android, Uhr und
-  Bereichserkennung raus; Bericht-Gegenlesung rein; Aufruf von `quelltext/`
-  statt sieben Einzelschritten; Vollständigkeit gegen null; Kommentare auf je
-  einen Satz. Der Jobname `Stufe 1` bleibt (der Zweigschutz nennt ihn).
+> **Der Auslöser ist bereits umgestellt** — Vorgriff vom 21.09.2026, PR #71,
+> Zweig `claude/pk-vorgriff-stufe1-ausloeser`. `push: branches: ['**']` steht
+> auf `branches: [ main ]`; `pull_request` und `workflow_dispatch` unverändert,
+> die Bereichserkennung unverändert, der Jobname `Stufe 1` unverändert.
+> **Das Paket bleibt offen**: Android, Uhr, die Bereichserkennung, die
+> Gegenlesung des Berichts und die Kürzung der Datei sind nicht Teil des
+> Vorgriffs. Grund für das Vorziehen: Jeder Push erzeugte zwei Läufe desselben
+> Namens, und der Zweigschutz wartete auf den langsameren — 56 statt 1 Minute
+> (Backlog Nr. 278, Abnahme P-PK-17).
+
+**Was bleibt** (der Auslöser ist erledigt, alles andere nicht):
+
+- Android, Uhr und die Bereichserkennung aus `pruefung.yml` heraus.
+- Die **Gegenlesung des Prüfberichts** rein (E-PK-05, E-PK-06).
+- Der **Aufruf von `quelltext/`** statt der Einzelschritte. *Teilweise
+  erledigt mit PK-04/1a:* Die zwölf Aufrufe zeigen auf den Läufer, stehen
+  aber noch als sieben getrennte Schritte da; ein Schritt
+  `pruefen.sh alle` wird es erst hier.
+- Der **Kopfkommentar** — er nennt Bilderlauf und Messstand noch als
+  Staging-Schritte; seit PR #72 sind sie es nicht mehr.
+- **Vollständigkeit gegen null** (E-PK-16) — kommt mit PK-04/1b, nicht hier.
+- Die Datei **unter 250 Zeilen**; der Jobname `Stufe 1` bleibt (der
+  Zweigschutz nennt ihn).
 - **Abnahme:** PR ohne Bericht → rot mit Ansage; Bericht gegen falschen Baum →
   rot; passender Bericht → grün in **unter zwei Minuten** (gemessen);
-  `pruefung.yml` unter 250 Zeilen (heute 834); `kettenaufrufe` 0/0.
+  `pruefung.yml` unter 250 Zeilen (**heute 873**, am 22.09.2026 gezählt — die
+  Zahl 834 im Konzept ist der Stand vor den beiden Vorgriffen);
+  `kettenaufrufe` 0/0.
 
 ### PK-06 — Staging verschlanken
 
 - `stufe2`: drei Schritte plus der leere Platz für Nr. 234; Zeitgrenze
   20 min; Cache, wo tragfähig; Kommentare auf einen Satz. `ausliefern-lauf.yml`
   und `integritaet.yml`: nur Kommentare, kein Schritt ändert sich.
-- **Vorgezogen am 21.09.2026** (Einschub 1, Abschnitt 8): die drei Schritte
-  und die Zeitgrenze (E-PK-17) sowie eine `concurrency`-Gruppe je Umgebung,
-  wartend statt abbrechend. Für PK-06 bleiben: der Platz für Nr. 234
-  (E-PK-21), der Cache, die Kommentare, `integritaet.yml`, der
-  Kopfkommentar von `pruefung.yml` (fällt mit PK-05).
+- **Dazu die drei Nachträge vom Abend des 21.09.2026** (Abschnitt 6;
+  Messwerte im Prüfdokument 6.1). Sie gehören sachlich zu PK-01, werden aber
+  hier behoben, weil sie `auslieferung.yml` anfassen:
+  1. **[F-PK-02]** Eine **`concurrency`-Gruppe je Umgebung über den Lauf**,
+     nicht über einen Job. `ausliefern-lauf.yml` hat schon eine — sie reiht
+     die Abgleiche, aber `stufe2` steht außerhalb, und genau dort entstand
+     der Schaden.
+     **`cancel-in-progress: false` für beide Umgebungen.** Hier stand bis zum
+     21.09.2026 abends „Staging abbrechen, der jüngste Stand gewinnt"; **das
+     war falsch, und der Grund steht seit AP5 im Quelltext:** Ein
+     abgebrochener Staging-Abgleich hinterlässt eine Zustandsdatei, die einen
+     Server beschreibt, den es so nicht gibt — der nächste Lauf überträgt
+     dann alles neu oder, schlimmer, übersieht Änderungen (E-KH-11). Warten
+     löst F-PK-03 genauso; es kostet nur Zeit statt Richtigkeit.
+  2. **[F-PK-03]** Damit erledigt sich die Job-Pause mit: Kein Backup-Tor
+     läuft mehr in die 1 800 s des Nachbarlaufs. **Eine Maßnahme, zwei
+     Anlässe** — keine zweite Änderung.
+  3. **[F-PK-04]** Der Bilderlauf verlässt Stufe 2 (E-PK-01). **Es wird kein
+     Konto mit Vorgabekennwort auf Staging angelegt**; im Prüfstand kommt das
+     Demo-Konto aus der Fixture. Bis dahin ist Stufe 2 nach einem Merge
+     **planmäßig rot am Schritt 6** — wer sie rot sieht, hat nichts kaputt
+     gemacht.
+  4. **[F-PK-11]** `CLAUDE.md` 3 sagt zur Ausnahmeliste „acht Pfade … jeder
+     steht dort zweimal". Zweimal stehen nur die drei Verzeichnisse.
+> **Der Vorgriff ist gemergt** — PR #72, Merge-Commit `a1c6494`, andere
+> Instanz. Stufe 2 fährt drei Schritte (Antwortprobe, Punktdateien,
+> Kreislauf edbak), Zeitgrenze 20 min, `concurrency`-Gruppe je Umgebung über
+> den **Lauf** mit `cancel-in-progress: false`. Damit sind **F-PK-02, -03
+> und -04 behoben** und Nr. 267 bestätigt. Gemessen: Stufe 2 als Ganzes
+> **grün in 107 s** (Run 72 auf `a1c6494`).
+
+**Was bleibt:**
+
+- Der **leere Platz für Nr. 234** (E-PK-21) — angelegt, nicht gefüllt.
+- Der **Cache der Aktionen**, wo tragfähig.
+- **Kommentare auf einen Satz**, in `auslieferung.yml` und
+  `ausliefern-lauf.yml`.
+- **`integritaet.yml`** — nur Kommentare, kein Schritt ändert sich.
+- **F-PK-11**: `CLAUDE.md` 3 sagt zur Ausnahmeliste „acht Pfade … jeder
+  steht dort zweimal"; zweimal stehen nur die drei Verzeichnisse.
 - **Abnahme:** Push auf `main` → Staging grün, Stufe 2 grün, zusammen unter
   zehn Minuten; Stufe 2 mit falschem `STAGING_PASS` → rot **innerhalb einer
   Minute** mit dem Grund; alle vier Arbeitsläufe zusammen unter 1 200 Zeilen
-  (heute 2 830).
+  (heute 2 830). **Dazu:** zwei Merges innerhalb einer Minute → der zweite
+  Staging-Lauf bricht den ersten ab, **kein** Lauf steht 13 min im Backup-Tor
+  (P-PK-18); Stufe 2 grün **ohne** ein Konto mit Vorgabekennwort auf Staging
+  (P-PK-19).
 
 ### PK-07 — Abschluss
 
@@ -888,10 +1102,38 @@ ist.
 
 ---
 
-## 6. Offene Fragen
+## 6. Offene Fragen und Befunde der Umsetzung
 
-Keine. F-PK-1 bis -6 sind beantwortet (3.2). Was die Umsetzung selbst
-aufwirft, trägt sie als F-PK-07 ff. hier ein.
+Die beantworteten Fragen der ersten Konzeptfassung heißen seit dem
+21.09.2026 **`Q-PK-01` bis `-06`** (3.2) und nicht mehr `F-PK-1` bis `-6`;
+`F-XX-NN` meint hier nur noch **Befunde**. Damit zählt dieser Abschnitt
+lückenlos ab **F-PK-01**: 01 aus PK-M1, **02 bis 04 aus dem Nachtrag vom
+Abend des 21.09.2026**, ab 07 die Befunde der Pakete. **05 und 06 sind frei**
+und werden nicht nachbelegt — die Lücke ist billiger als eine Nummer, die
+zweimal etwas bedeutet. **Ausführlich mit Messwerten im Prüfdokument,
+Abschnitt 6** — hier die Kurzfassung mit der Folge:
+
+| Nr. | Aus | Befund | Folge |
+|---|---|---|---|
+| **F-PK-02** | PK-01 (Nachtrag) | **Der Auslieferungslauf hat keine Gruppe — nur sein Job `ausliefern` hat eine** (`ausliefern-lauf.yml`, E-KH-11/B4). Zwei Merges in 28 s (PR #70 18:35:47, PR #69 18:36:15 UTC) erzeugten zwei überlappende Läufe (**35639395259**, **35639445224**). | **PK-06:** eine Gruppe je Umgebung über den **Lauf**; laufende **Staging**-Läufe abbrechen, den **Produktiv**lauf **nie**. |
+| **F-PK-03** | PK-01 (Nachtrag) | **Die Job-Pause der Stufe 2 legt den Nachbarlauf lahm.** `kreislauf.py:345` hält die Jobs 1 800 s an; das Backup-Tor des Nachbarn wartete 40 Aufrufe auf `fertig`, bekam „angehalten bis 19:06:50" und schloss nach 13 min — **Lauf 69 Versuch 1 rot, keine Datei übertragen**. | Keine eigene Maßnahme: **die Gruppe aus F-PK-02 löst es mit.** Eine Maßnahme, zwei Anlässe. |
+| **F-PK-04** | PK-01 (Nachtrag) | **Der Bilderlauf meldet sich an Staging mit dem eingebauten Vorgabekennwort als `demo@gen-em.org` an; das Konto gibt es auf der neuen Anlage nicht.** Lauf 69 Versuch 2, Stufe 2 Schritt 6, nach 11 s. **Der Schritt war auf der neuen Anlage nie grün.** **Z7 der Kette II** (nicht die Z7 dieses Konzepts) hatte Demo-Konto, Referenzbestand und Messstand-Konto vorgesehen; gebucht wurde Z7 als erfüllt mit Komplett-Backup und `JOBS_TOKEN` — die drei Konten-Punkte wurden nie nachgemessen. | **Kein Konto mit Vorgabekennwort auf Staging anlegen.** Der Schritt fällt mit **E-PK-01** aus Stufe 2 heraus und wandert in den Prüfstand (Demo-Konto aus der Fixture). Bis **PK-06** ist Stufe 2 nach einem Merge **planmäßig rot am Schritt 6**; die Kreisläufe davor sind der Nachweis. |
+| F-PK-07 | PK-01 | Die Abnahme „je genau eine Fundstelle" ist wörtlich nicht erfüllbar (Emulator allein: 131 Treffer in 19 Dateien, fast alle Geschichte). | Gemessen wird **eine normative Fundstelle**, mit benanntem Befehl und Ausschlussliste. So gemessen: 1/1/1. |
+| F-PK-08 | PK-01 | Vier Zahlen aus 1.1 sind veraltet (PR #68): `tools/` **45 016**, Kette **2 863**, Kommentar **1 535**, Stufe 1 **28** Schritte. Eine ist falsch: „Werkzeuge mit Selbstprobe 28" — gemessen **13**. | 1.1 bleibt als Befund vom 21.09.2026 stehen; **PK-04 misst die Selbstproben neu und nennt den Befehl**. Die Begründung von E-PK-24 trägt auch bei 13. |
+| F-PK-09 | PK-01 | Die drei Mailwerte heißen buchstäblich `_MAIL_URL`, `_MAIL_USER`, `_MAIL_PASS` — führender Unterstrich, kein Präfix. Die Schreibweise in 1.4 liest sich als gemeinsames Präfix. | `Sandbox-Setup.md` 4 schreibt alle sieben Namen aus. 7 von 7 gesetzt. |
+| F-PK-10 | PK-01 | `session-start.sh` und `containeraufbau/aufbau.sh` widersprechen einander beim Nachladen der Engines und führen **zwei disjunkte** Bibliothekslisten (6 gegen 4 Pakete). | **Mit PK-02 gemessen entschieden:** die vier, die Playwright selbst nennt; Engines nicht nachladen. Danach 3 von 3. |
+| F-PK-11 | PK-01 | `CLAUDE.md` 3 sagt zur Ausnahmeliste „acht Pfade … jeder steht dort zweimal". Zweimal stehen nur die drei Verzeichnisse; die fünf Dateien je einmal (14 Zeilen). | **PK-06** berichtigt es mit, weil es den Auslieferungsweg anfasst. |
+| F-PK-12 | PK-01 | `Technik.md` „2a" steht physisch unter „## 4. Zentrale Abläufe". | **PK-07** löst die Fehlstellung mit auf. |
+| F-PK-13 | PK-01 | `.claude/settings.local.json` rangiert über der geteilten Datei und steht nicht in `.gitignore` — ein Weg um die Deny-Liste, der im Pull Request nicht erscheint. | In `Pruefablauf.md` 2.3 benannt. Ob die Datei in `.gitignore` gehört, entscheidet die Betreiberin (Z9). |
+| **F-PK-14** | PK-02 | **Nicht nur Chromium misstraut der Proxy-Stelle — Firefox auch.** Konzept 1.4 nennt allein Chromium. Gemessen gegen die Prüfanlage: Chromium `ERR_CERT_AUTHORITY_INVALID`, **Firefox `SEC_ERROR_UNKNOWN_ISSUER`**, WebKit HTTP 200 (Systemspeicher), Node HTTP 200. | `kontextMachen()` legt die Umleitung auf **jeden** nicht-örtlichen Kontext, nicht nur auf Chromium. |
+| **F-PK-15** | PK-02 | **Das PHP-8.3-Abbild braucht die Zertifizierungsstellen des Wirts.** Das Rezept in Konzept 1.3 nennt nur die Umstellung der Debian-Quellen auf HTTPS; damit allein scheitert `apt-get update` im Behälter mit `certificate verify failed`. Gemessen: die Stelle des Agent-Proxys **allein genügt nicht** — der Verkehr läuft über das Egress-Gateway. | `plattform.sh` kopiert alle Stellen aus `/usr/local/share/ca-certificates/` in den Bauplatz (ohne die je Behälter erzeugte Prüfstands-Stelle). Bau danach 47 s. |
+| **F-PK-16** | PK-02 | **Die Drosselung von Docker Hub trägt den Umweg aus E-PK-30 nicht.** Vier Abrufe (`mysql:8.4.0`, `mariadb:10.6`, `mysql:8.0`, `php:8.3.33-cli`) und ein Bau liefen ohne einen einzigen 429 durch. | Der vorgesehene Weg über Ubuntu-Pakete unter `/opt` ist **nicht gebaut worden** (E-PK-32). Tritt die Drosselung später auf, ist das ein Befund mit Zahl — nicht die Voraussetzung eines Umwegs. |
+| **F-PK-17** | PK-02 | **Zwei Betriebsdinge, die kein Dokument sagte:** Der Docker-Dienst **läuft nicht von selbst** (`dial unix /var/run/docker.sock: no such file`), und der Einstiegspunkt von MySQL startet den Dienst **nach** der Einrichtung neu — ein Ping gelingt schon vorher, und die Schemaprobe lief prompt in „MySQL server has gone away". | Beides steht in `Sandbox-Setup.md` 2.2 und in der `LIESMICH.md`; `plattform.sh` wartet auf eine echte Abfrage statt auf ein Ping. |
+| **F-PK-18** | PK-03 | **Die Wiederherstellungsprobe meldet auf einer frisch eingerichteten örtlichen Anlage 2 von 110 Erwartungen nicht erfüllt.** Gefunden vom Prüfstand, ohne danach zu suchen. | **Nicht geklärt**: fehlende Voraussetzung (kein Sicherungsziel) oder Fehler der Anwendung. Gehört **nicht** in ein PK-Paket, sondern in eine eigene Korrekturstufe. Prüfpunkt P-PK-16. |
+| **F-PK-19** | PK-02 | **Der Beschaffer meldete grün, ohne die Uhr anzusehen.** `aufbauen.sh uhr` lief mit rc 0 und „Arbeitsumgebung vollständig", obwohl der Uhr-Prüfstand mit `Illegal option -o pipefail` abbrach: `sh` statt `bash`, und die Rückgabewerte der Teilfunktionen wurden verworfen. | Behoben: `bash` an beiden Stellen (auch in `pruefablauf.json`), jeder Teil zählt seinen Fehlschlag, der Nachweis prüft stufenabhängige Stücke. **Grundsatz 7 im eigenen Werkzeug.** |
+| **F-PK-20** | PK-03 | **Zwei Proben der Zuordnung waren rot, ohne zu messen.** Bilderlauf: 48 Konsolenfehler aus drei Bildern, die örtlich niemand nach `server/doku/` kopierte (die Kette tut es). Stilvergleich: `proben.py` **ohne Argumente** aufgerufen — das baut nur die Proben; der Vergleich ist `stilvergleich.js` und braucht den alten Stand, dazu `NODE_PATH`, weil er als CJS an `motor.mjs` vorbeigeht. | Behoben: `hochfahren.sh` kopiert wie die Kette (48 → **0**); neu `tools/stilvergleich/gegen.sh` (**40 989 Elementmessungen, 0 Abweichungen**). **Der Stilvergleich war einer der „18 ungeprüft" von `kettenaufrufe`** — die Zahl ist kein Beiwerk. `stilvergleich.js` auf den Motor heben: **PK-04**. |
+| **F-PK-21** | PK-03 | **`kettenaufrufe` prüft Namen, nicht Vollständigkeit.** `uhr-stufe1` stand nicht einmal unter den 18 Ungeprüften, galt also als grün — und bricht mit „Listendatei fehlt" ab. `reihe` gibt es, das Pflichtargument sieht die Prüfung nicht. | **Die 18 sind nicht die ungewissen Aufrufe, sondern die eingeräumt ungewissen.** Eine Schnittstellenprüfung ersetzt keinen Lauf; die 18 werden einzeln gefahren. Ob das Werkzeug Pflichtargumente lernen soll: **PK-04**. |
+| **F-PK-22** | PK-03 | **Die 18 „ungeprüften" Aufrufe einzeln gefahren: 17 davon, denn `stilvergleich` war behoben und `uhr-stufe1` stand nie in der Liste. Kein einziger ist falsch verdrahtet** — 15 laufen, 2 scheitern an einem fehlenden Prüfkonto. Ertrag: **11 grün (690 genannte Erwartungen), 4 rot mit Sachbefund** — `gpxprobe` 95/4, `mailprobe`, `ratenprobe` und das bekannte `wiederherstellung` 110/2. | **Die Sorge nach drei Treffern war falsch, gemessen statt vermutet.** Die vier roten liegen in `server/` und sind **nicht** behoben worden: eigene Korrekturstufe, Prüfpunkt **P-PK-20**. Die zwei fehlenden Konten (`umlauf-edbak@`, `messstand@`) sind eine Lücke im Referenzbestand und berühren **E-PK-27** — festgehalten, nicht angefasst. |
 
 ---
 
@@ -901,13 +1143,14 @@ aufwirft, trägt sie als F-PK-07 ff. hier ein.
 |---|---|---|---|
 | Z1 | PK-M1: Zweigschutz und Merge-Recht setzen; danach die drei Messungen aus P-PK-01 durch eine Claude-Instanz | **vor dem Push dieses Konzepts** | **erledigt 21.09.2026** — (c) mit dem Merge von PR #70 |
 | Z2 | Den Kette-II-Zweig per PR mergen (PR #68, mit Übergabevermerk), damit PK-06 nicht kollidiert | vor der Freigabe | **erledigt 21.09.2026** (PR #68 gemergt) |
-| Z2a | **PR #69 (Web 20.26.3) mergen** — der edbak-Fix; danach Stufe 2 auf `main` beobachten, dann Tag `web-v20.26.3` und Freigabe = **M1 der Kette II** | nach Stufe 1 grün | **erledigt 21.09.2026** — der Tag brauchte vorher den Vorgriff auf PK-06 (Einschub 1): Das Tor verlangt einen als Ganzes grünen Staging-Lauf, und den gab es auf der neuen Anlage erst ohne Bilderlauf. Produktiv 20.24.2 → 20.26.3, Migrationen von Hand, Zeiger auf `a1c6494` |
+| Z2a | **PR #69 (Web 20.26.3) mergen** — der edbak-Fix; danach Stufe 2 auf `main` beobachten, dann Tag `web-v20.26.3` und Freigabe = **M1 der Kette II** | nach Stufe 1 grün | **erledigt 21.09.2026.** Kreisläufe 104 s grün gegen MySQL 8.4.10; der erste Tag blieb am Tor hängen (F-PK-04), nach dem Vorgriff auf PK-06 ging er durch: Lauf **35654132667** Versuch 2, Produktiv meldet **20.26.3**, Zeiger auf `a1c6494`. **M1 der Kette II erreicht.** |
 | Z3 | Umgebungswerte der Cloud-Umgebung: die sieben Namen aus 1.4 vollständig und in Anführungszeichen; Netzregel mit Docker Hub und `deb.debian.org` | — | **erledigt 21.09.2026** |
 | Z4 | Staging: Mailversand reparieren (Webspace-Protokoll), Backup-Ziel eintragen | vor PK-M2 | **erledigt 22.09.2026** — Mailversand geht, Sicherungsziel eingetragen, Konto-Backup gelaufen (`097D7622` war schon ohne das Protokoll geklärt, 1.5) |
 | Z5 | Freigabe dieses Konzepts | nach Z1, Z2 | **erteilt 21.09.2026** |
 | Z6 | PK-08: Upload-Schlüssel und Connect-IQ-Schlüssel als Geheimnisse der Umgebung `produktion` — fünf Namen, festgelegt 22.09.2026: `APK_SPEICHER_B64` (`nadoku-auslieferung.jks`, Base64), `APK_SPEICHER_PASSWORT`, `APK_SCHLUESSEL_NAME` (`nadoku`), `APK_SCHLUESSEL_PASSWORT`, `UHR_ENTWICKLERSCHLUESSEL_B64` (`developer_key.der`, Base64). Der Keystore liegt bei der Betreiberin vor; der Connect-IQ-Schlüssel wird **einmal neu erzeugt** (auf dem Rechner der Betreiberin, nicht in der Sandbox) und ab dann für jede Uhr-Fassung verwendet | vor PK-08 | **erledigt 22.09.2026** — alle fünf Geheimnisse liegen in der Umgebung `produktion`; Keystore und Uhr-Schlüssel (`.der` und `.pem`) verwahrt die Betreiberin. Behälter- und Schlüsselpasswort des Keystores sind dasselbe (mit `keytool -certreq` geprüft) |
 | Z7 | PK-M2: einen echten PR durch die neue Kette mergen | nach PK-06 | offen |
 | Z8 | Freigabe des Abschlusses | nach PK-07 | offen |
+| Z9 | Kleine Entscheidung (F-PK-13): Soll `.claude/settings.local.json` in `.gitignore`? Ein Eintrag macht sie unsichtbar; kein Eintrag lässt sie wenigstens als unverfolgte Datei auffallen. Heute steht sie **nicht** darin und es gibt sie nicht | mit PK-07 | offen |
 
 ---
 
@@ -925,7 +1168,26 @@ in Stufe 2, gebaut ist er nicht"; „edbak-Export auf Staging antwortet 500
 nach PK; „Mailversand auf Staging fehlgeschlagen" (Z4); „App-Signatur in der
 Kette" (PK-08, ersetzt den Nachtrag zu Nr. 100).
 
-**`CLAUDE.md` 7:** die Benennungsregel E-PK-09.
+**Nr. 281 (neu, nach Erledigt) — „Stufe 1 lief bei jedem Push doppelt".**
+**Die Nummer war bis zum 21.09.2026 abends die 268, und das war eine
+Kollision:** Der Zweig `claude/pk-06-vorgriff-stufe2` (PR #72, andere
+Instanz) hat die 268 zeitgleich in `docs/Backlog.md` eingetragen, für die
+überlappenden Staging-Läufe und den Bilderlauf ohne Demo-Konto. **Dort steht
+sie in der Datei, hier stand sie nur in diesem Konzept** — also weicht dieser
+Einschub. Ursache ist der Satz in `Backlog.md`: „Jeder weitere Zweig, der
+Nummern vergibt, beginnt bei 267." Zwei Zweige, die gleichzeitig arbeiten,
+beginnen dann beide dort. Der Satz beschreibt keinen Riegel, sondern eine
+Hoffnung; **wer eine Nummer vergibt, sieht vorher auf `origin/main` und auf
+die offenen Pull Requests nach.**
+
+`pruefung.yml` trug `push: branches: ['**']` **und** `pull_request`; jeder
+Push auf einen Arbeitszweig erzeugte zwei Läufe desselben Namens `Stufe 1` —
+einen über `pull_request` (rund 1 min, vergleicht gegen den gemeinsamen
+Vorfahren) und einen über `push` (rund 56 min, ohne Vergleichsstand misst er
+alles). Der Zweigschutz wartet auf den Namen, also auf den langsameren.
+Gemessen an PR #69 (Läufe 192, 193) und PR #70 (Lauf 186). **Erledigt mit dem
+Vorgriff auf PK-05** (PR #71, 21.09.2026): `branches: [ main ]`. Die Abnahme —
+nur noch **ein** Lauf je Arbeitszweig-Push — steht als **P-PK-17** offen.
 
 **Einschub 1 — Vorgriff auf PK-06 (21.09.2026, PR nach PR #70, Backlog
 Nr. 268).** Anlass: Der erste Tag durch Kette II (`web-v20.26.3`, Lauf
@@ -948,6 +1210,8 @@ in 31 s, Kreisläufe csv und edbak gegen MySQL 8.4.10 grün in 104 s — der
 Beleg für Nr. 267 auf der echten Anlage. **Folge für M1:** Der Tag wandert
 auf den Commit des Vorgriff-Merges; `web-v20.26.3` auf `807f462` wird
 gelöscht und neu gesetzt, er hat nie ausgeliefert.
+
+**`CLAUDE.md` 7:** die Benennungsregel E-PK-09.
 
 ---
 

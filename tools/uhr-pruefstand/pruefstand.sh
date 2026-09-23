@@ -187,10 +187,10 @@ geraetedateien() {
 
     [ -n "$GERAETE_URL" ] || fehler \
 "Geraetedateien fehlen und CIQ_GERAETE_URL ist nicht gesetzt.
-   Erwartet wird eine Adresse mit Verzeichnisauflistung, unter der Devices/
-   und Fonts/ aus ~/.Garmin/ConnectIQ abrufbar sind. Die Adresse steht nicht
-   im Repositorium — sie kommt von der Projektleitung. Siehe LIESMICH.md,
-   Abschnitt Quelle."
+   Erwartet wird eine Adresse, unter der devices.tar und fonts.tar liegen
+   (oder, langsamer, Devices/ und Fonts/ mit Verzeichnisauflistung). Die
+   Adresse steht nicht im Repositorium — sie kommt von der Projektleitung.
+   Siehe LIESMICH.md, Abschnitt „Was es braucht“."
 
     # ERST DAS ARCHIV, DANN DIE EINZELDATEIEN (23.09.2026, gemessen in Lauf
     # #253 auf `main`). `wget -r` holt jede Datei einzeln, nacheinander und
@@ -215,7 +215,7 @@ geraetedateien() {
             [ -n "$(ls "$GARMIN_HOME"/Devices/*/compiler.json 2>/dev/null)" ] || fehler \
 "devices.tar liegt entpackt nicht als Devices/<geraet>/compiler.json vor.
    Gepackt wird im Ordner ~/.Garmin/ConnectIQ mit: tar cf devices.tar Devices
-   (LIESMICH.md, Abschnitt Archive)"
+   (LIESMICH.md, „Was es braucht“)"
             touch "$GARMIN_HOME/Devices/.vollstaendig"
             voll=0; fehlende=""
         else
@@ -227,7 +227,7 @@ geraetedateien() {
             [ -n "$(find "$GARMIN_HOME/Fonts" -maxdepth 1 -name '*.cft' -print -quit)" ] || fehler \
 "fonts.tar liegt entpackt nicht als Fonts/*.cft vor.
    Gepackt wird im Ordner ~/.Garmin/ConnectIQ mit: tar cf fonts.tar Fonts
-   (LIESMICH.md, Abschnitt Archive)"
+   (LIESMICH.md, „Was es braucht“)"
             schriften_fehlen=0
         else
             rueckfall_melden fonts.tar
@@ -314,7 +314,7 @@ archiv_holen() {
 # gruen, aber er ist nicht der vorgesehene, und wer nur auf die Farbe sieht,
 # merkt sonst nie, dass die Archive fehlen.
 rueckfall_melden() {
-    local text="$1 fehlt unter CIQ_GERAETE_URL — Rueckfall auf Einzeldateien (langsam). Packen: tools/uhr-pruefstand/LIESMICH.md, Abschnitt Quelle."
+    local text="$1 fehlt unter CIQ_GERAETE_URL — Rueckfall auf Einzeldateien (langsam). Packen: tools/uhr-pruefstand/LIESMICH.md, Abschnitt „Was es braucht“."
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
         echo "::warning::$text"
         [ -n "${GITHUB_STEP_SUMMARY:-}" ] \
@@ -358,7 +358,7 @@ bauen() {
     # Grafikumgebung. Ohne sie endet der Lauf in einem AWTError statt in einer
     # ERROR-Zeile. `reihe` setzt headless, `bauen` tat es bis zum 03.09.2026
     # nicht — und `umgebung` leert JAVA_TOOL_OPTIONS sogar ausdruecklich.
-    # Aufgefallen an `bauen venu3s tools/eingabe-probe/monkey.jungle`; Geraete,
+    # Aufgefallen an `bauen venu3s tools/uhr-pruefstand/eingabe-probe/monkey.jungle`; Geraete,
     # deren Icon exakt passt (fenix6pro, fr945), bauen ohne die Zeile durch,
     # und deshalb sah der Ausfall nach einem Geraeteproblem aus.
     export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"

@@ -249,7 +249,7 @@ function kopf_nonce(): string
  * ES STEHT AN JEDEM INLINE-`<script>`, und zwar an jedem einzelnen. Ein
  * vergessener Block faellt in der Report-Only-Phase als Bericht auf und nach
  * dem Scharfschalten als tote Seite — deshalb zaehlt Stufe 1 des Prueftors
- * sie nach (`tools/cspprobe/`).
+ * sie nach (`tools/proben/csp-browser/`).
  */
 function kopf_nonce_attr(): string
 {

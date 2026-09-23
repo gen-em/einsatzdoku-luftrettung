@@ -1,327 +1,44 @@
-# Bildaufnahme aller Seiten in acht Breiten
+# Bilderlauf
 
-Entstanden in P3 (Konzept, Anlage F). Zusammen mit
-`tools/vollstaendigkeit/` ersetzt sie den Stilvergleich für die Dauer der
-Phase.
-
-> ## Drei Engines, und wann welche fährt
->
-> Seit dem 14.09.2026 beschafft der Startvorgang **Chromium, Firefox und
-> WebKit** (`.claude/hooks/session-start.sh`, Backlog Nr. 183); seit AP3b der
-> Mockup-Runde fährt der Bilderlauf alle drei — `--motor chromium|firefox|webkit`,
-> Vorgabe Chromium. Die Wahl und die Firefox-Voreinstellung stehen in
-> `tools/motor.mjs`, einmal für alle drei Prüfmittel.
->
-> **Die Empfehlung ist gestaffelt, und zwar aus einer Zahl heraus:** Der volle
-> Lauf misst **62** Seiten in acht Breiten und braucht je Motor rund zehn Minuten
-> (gemessen 17.09.2026: **496** Bilder; vor P5b waren es 50 und 400). Dreimal voll sind eine gute halbe
-> Stunde nach **jedem** Arbeitspaket, und das Meiste davon ist Wiederholung.
-> Deshalb:
->
-> ```
-> node tools/screenshots/aufnehmen.mjs                               # Chromium, voll
-> node tools/screenshots/aufnehmen.mjs --motor firefox --risiko --nur 13-,35-
-> node tools/screenshots/aufnehmen.mjs --motor webkit  --risiko --nur 13-,35-
-> ```
->
-> `--risiko` nimmt zu den mit `--nur` gewählten Seiten die **Risikoliste**
-> hinzu: zehn Seiten, jede mit einem CSS-Merkmal, bei dem die Engines
-> auseinandergehen können (Container-Abfrage, `:has()`, `dvh`,
-> `position:sticky`, `dialog`). Die Liste steht im Kopf von `aufnehmen.mjs`,
-> je Zeile mit ihrem Grund; wer ein solches Merkmal neu einbaut, trägt seine
-> Seite dort ein. Ein Name, den `seiten.json` nicht kennt, ist ein Abbruch —
-> eine Risikoliste, die sich still kürzt, meldet eine schmeichelhafte Null.
->
-> **Was der dreifache Lauf am ersten Tag gefunden hat** (also nicht bloß eine
-> Vorsichtsmaßnahme): `import.php` lief bei 360 px **nur in WebKit** um 6 px
-> über — `scrollWidth` 366 gegen `innerWidth` 360, und kein einziges Element
-> ragte hinaus. Ursache war der längste Eintrag eines Auswahlfeldes, den
-> WebKit in den Überlauf des Kastens rechnet (Nr. 185, behoben mit
-> `select.feld-eingabe{contain:paint}`).
->
-> > **Die vierte Zahl: Karten außerhalb von `main.inhalt`** (Nr. 225, seit
-> Web 20.21.1). Der Lauf zählt je Seite, wie viele Karten nicht im
-> Seitengerüst hängen, und nennt sie beim Titel:
->
-> ```
-> Karten im Seitengerüst: 254 geprüft · 0 außerhalb von main.inhalt (Nr. 225)
-> ```
->
-> **Sie steht da, weil die drei anderen Zahlen einen echten Schaden zehn Tage
-> lang nicht gesehen haben.** Ein `ui_karte_ende()` zu viel schloss auf der
-> Profilseite `div.rahmen` mit; vier Karten lagen danach direkt am `body`, über
-> die volle Fensterbreite, unter der Seitenleiste hindurch. `scrollWidth` blieb
-> trotzdem gleich `innerWidth` — es lief nichts über, es lag nur falsch —, die
-> Konsole blieb still, die Knopfhöhen stimmten. **Drei Nullen neben einer
-> kaputten Seite**, in allen drei Engines.
->
-> Gefunden wurde es beim **Ansehen** eines Bildes. Gegenprobe mit wieder
-> eingebautem Fehler: dieselben drei Nullen, und „6 Karten geprüft · **4
-> außerhalb** von main.inhalt".
->
-> Die Zahl nennt beide Seiten — „n geprüft · m außerhalb". Eine Seite ohne
-> Karten meldete sonst dieselbe Null wie eine geprüfte.
-
-> **Scheitert die Anmeldung, steht die Meldung der Seite dabei.** Der
-> häufigste Grund ist nicht ein falsches Passwort, sondern der **Ratenschutz**:
-> Wer den Lauf mehrmals kurz hintereinander startet, stolpert über den
-> Demo-Topf („vorübergehend gesperrt — wieder ab HH:MM"). Das ist richtiges
-> Verhalten der Anwendung; auf dem Prüfstand räumt
-> `DELETE FROM rate_limits` den Topf.
-
-Vier Dinge, die man beim Messen über Engines wissen muss:
->
-> - **Der Browser kommt über `PLAYWRIGHT_BROWSERS_PATH`** (Vorgabe
->   `/opt/pw-browsers`) und heißt in Playwright `chromium`, `firefox` oder
->   `webkit`. Gemessen am 14.09.2026: 141.0.7390.37, 142.0.1, 26.0.
-> - **Headless Firefox meldet ohne Voreinstellung „kein Zeiger, kein Hover".**
->   Damit ist der ganze Media-Block der 36-px-Bedienhöhe unsichtbar und der
->   Lauf meldet ab 1024 px falsche Knopfhöhen. `tools/motor.mjs` setzt
->   deshalb `ui.primaryPointerCapabilities` und `ui.allPointerCapabilities`
->   auf `6` (fein + Hover) — **außer** im Fingerlauf, wo `hasTouch` in allen
->   drei Motoren von selbst `pointer:coarse` ergibt.
-> - **`waitUntil: 'load'` hängt in Firefox**, solange die Kartenkacheln nicht
->   erreichbar sind — es wartet auf sie, Chromium nicht. Entweder
->   `domcontentloaded` nehmen oder die Kacheln abfangen (dieses Werkzeug tut
->   Letzteres bereits, siehe `kachelAntwort`).
-> - **Maße weichen um wenige Pixel ab.** Dieselbe Kopfzeile maß bei 400 px
->   231 px (Chromium), 232 px (Firefox) und 233 px (WebKit) — Schriftmetrik,
->   kein Befund. Ein Vergleich über Engines braucht eine Toleranz, kein
->   `===`.
->
-> **Und ein Satz zurückgenommen, dann halb wiederaufgenommen:** Bis AP3b
-> stand hier, Firefox melde die `latin-ext`-Schriftabrufe als Konsolenfehler
-> (`NS_BINDING_ABORTED`) und ein Rauschfilter müsse das kennen. Gemessen über
-> fünf Seiten in acht Breiten meldeten damals alle drei Motoren **je 0**, und
-> der Filter ist deshalb nicht eingebaut worden.
->
-> **In S10/AP3 ist die Null nicht mehr gekommen.** Firefox meldete auf
-> `43b-sicherungsziele` bei 360 px zwei bis drei abgebrochene Schriftabrufe
-> (`status=2152398850` — das ist `NS_BINDING_ABORTED` als Zahl). Die Ursache
-> liegt nicht im Stylesheet: **`php -S` bedient eine Anfrage nach der
-> anderen.** Läuft daneben noch etwas — ein zweiter Motor, eine Probe —,
-> stehen die Schriftabrufe in der Schlange, und Firefox bricht sie ab, sobald
-> die Seite fertig gezeichnet ist. Chromium und WebKit tun das nicht.
->
-> **Die Zahl ist damit lastabhängig, und das ist die Auskunft.** Belegt in
-> S10/AP3 durch eine Gegenprobe auf **demselben Stand vor und nach** der
-> Änderung: 3 Fehler vorher, 2 nachher, dieselbe Seite, derselbe Motor. Wer
-> hier eine Zahl über 0 sieht, liest **zuerst den Wortlaut** im Bericht: Steht
-> dort `downloadable font: download failed`, ist es diese Schlange; steht dort
-> etwas anderes, ist es ein Befund. Es ist weiterhin **kein Filter** eingebaut
-> — ein Filter machte aus einer lesbaren Auskunft eine schmeichelhafte Null.
->
-> **WebKit hier ist nicht Safari.** Derselbe Kern, anderer Unterbau —
-> Schriften, Textrasterung, Systemintegration. Für „läuft das in Safari" ist
-> es ein starkes Indiz, kein Beweis.
-
-## Der Wartungsmodus — und wo er herkommt
-
-Zwei Einträge in `seiten.json` tragen `"wartung": true` und brauchen die
-Installation im Wartungsmodus: `07-wartungsseite` (erwartet **503**) und
-`46a-betrieb-updates-wartung` (der Balken im Adminbereich).
-
-**Den Weg entscheidet das Token, nicht der Ort** — der Ort entscheidet nur,
-ob das Fehlen des Tokens ein Problem ist:
-
-| `--jobs-token` | Weg |
-|---|---|
-| **gesetzt** | `jobs.php?aktion=wartung_an`, gefahren von `tools/kette/tor.py` — gleich, wo die Installation steht |
-| **nicht gesetzt** | die Datei `server/wartung.lock`, wie seit jeher |
-
-Liegt die Installation **nicht auf diesem Rechner** und fehlt das Token, wirkt
-die Datei dort nicht. Dann fallen diese beiden Seiten **aus**: Der Lauf sagt
-es vorweg, misst die übrigen achtundvierzig, nennt die zwei beim Namen und
-endet **rot** — eine ausgefallene Aufnahme geht in den Rückgabewert.
-
-**Warum Ausfallen und kein Abbruch.** Zwei von fünfzig Seiten hängen am
-Wartungsmodus; die anderen achtundvierzig sind messbar, und ein Abbruch würfe
-sie weg. Dasselbe gilt, wenn das Token falsch ist oder die Leitung im Lauf
-abreißt — der Grund steht dann bei der Seite.
-
-**Was ohne Wartungsmodus passiert wäre.** `index.php` antwortet dann mit
-**302** zur Anmeldung statt mit 503, und der Lauf legte acht Bilder der
-Anmeldeseite ab. Bei `07-wartungsseite` fiel das auf, weil die Bilder
-ausblieben; bei `46a` **nicht** — dort entstehen acht Bilder ohne
-Wartungsbalken, und der Lauf meldet „kein Überlauf". Eine stille Fehlmessung
-ist schlimmer als eine laute (Backlog Nr. 220, gemessen am 17.09.2026).
-
-**Und wenn das Ausschalten misslingt, ist der Lauf rot** — auch bei sonst
-sauberem Ergebnis. Die Merkung bleibt dabei stehen, damit es nach jeder
-folgenden Seite und am Prozessende noch einmal versucht wird; ein einmaliger
-Schluckauf heilt sich so von selbst. Eine Installation, die nach einem
-Bilderlauf geschlossen bleibt, darf nicht in einem grünen Lauf untergehen.
-
-**Eine fremde Wartung wird auf beiden Wegen nicht angefasst** — liegt sie
-schon an, rührt der Lauf sie nicht an und schaltet sie am Ende auch nicht ab.
-Der ferne Weg fragt dafür `aktion=zustand`.
-
-**Ein Unterschied, den man im Bild sieht:** Der Wartungsbalken nennt den
-Urheber. Über die Datei steht dort `Bilderlauf`, über die Leitung `kette` —
-`wartung_einschalten('kette')` ist die eine Stelle, die der Token-Weg kennt.
-Für die gemessenen Größen (Überlauf, Konsole, Knopfhöhen) ist das folgenlos;
-wer zwei Abzüge nebeneinanderlegt, sieht ein Wort Unterschied.
-
-## Warum es sie gibt
-
-Ein Redesign, das „voll mobiltauglich auf allen Seiten" verspricht, muss das
-auf allen Seiten belegen — und zwar bei jeder Breite, nicht bei der einen,
-die gerade offen war. **50** Seiten mal acht Breiten sind **400** Bilder (Stand 16.09.2026; die 50. kam mit P5a/AP8 dazu — `betrieb_sicherheit.php`); von Hand
-macht das niemand zweimal. (Die Zahl stand hier lange bei „30 Seiten … 240
-Bilder" und war schon vor S9/AP5b falsch — `seiten.json` führte 46 Seiten,
-ein voller Lauf machte 368 Bilder. Sie ist seither zweimal nachgezogen
-worden: beim Streichen der beiden Admin-Stammdatenseiten und beim
-Demo-Ausbau, der drei Seiten dazugelegt hat. Maßgeblich ist immer
-`seiten.json`, nicht dieser Satz.)
-
-**Drei Seiten zeigen ausdrücklich den Sonderfall, nicht den Regelfall**
-(Demo-Ausbau): `10a-tagesuebersicht-ohne-standort` einen Diensttag **ohne
-Standort**, `10b-tagesuebersicht-luftlinie` einen, dessen Einsätze
-Koordinaten, aber keine Spur haben (gestrichelte Luftlinien), und
-`12a-einsatzansicht-winde` einen **bodengebundenen** Bergwachteinsatz mit
-Windenkacheln. Die drei Platzhalter suchen ihren Tag über den **Inhalt** —
-kein `base_name`, keine Spurpunkte, `winch` an einem Bergwachttag am Boden —
-und nicht über eine Kennung oder einen Namen: Kennungen wandern bei jedem
-Neubau des Referenzbestands. Findet sich der Fall nicht, bleibt der
-Platzhalter `null`, und die Seite wird **nicht** fotografiert; sie steht dann
-im Lauf als „NICHT AUFGELÖST". Das ist die richtige Antwort — ein Bestand
-ohne diese Fälle soll keine Bilder liefern, die so aussehen, als hätte er
-sie.
-
-**Eine Seite braucht ihre Parameter.** Steht in `seiten.json` ein Pfad, den
-die Anwendung ohne Abfrageteil ablehnt, fotografiert das Werkzeug die Seite,
-auf die sie umleitet — und meldet für sie brav „kein Überlauf". Genau das ist
-mit `zeitraum.php` passiert: Ohne `?y=` leitet sie auf die Startseite um, und
-der Kontaktbogen „14-zeitraum" zeigte acht Bilder der Tagesübersicht (F-P3-AH,
-P3/O7). Wer eine Seite aufnimmt, prüft **einmal am Bild**, dass es die
-gemeinte ist.
-
-**Und es prüft, ob es die richtige Seite vor sich hat.** Bis Web 9.10.1 tat es
-das nicht, und der Preis war hoch: Der Lauf meldete „31 Seiten, 0 Überlauf,
-0 Konsolenfehler" — 22 dieser 31 Seiten waren Bilder der **Anmeldeseite**.
-176 von 248 Einzelbildern, byteweise identisch. Zwei Ursachen, beide behoben
-(F-P3-AQ):
-
-- **Die Sitzung stirbt mitten im Lauf.** Das Demo-Konto setzt sich alle 30
-  Minuten zurück und erhöht dabei die Sitzungs-Epoche; `auth_guard.php`
-  beendet daraufhin jede offene Sitzung — und der Lauf löst den fälligen Reset
-  durch seine **eigenen** Anfragen aus. Die Prüfung stand einmal, direkt nach
-  dem Anmelden; danach hat nichts mehr hingesehen. Jetzt wird nach **jedem**
-  Seitenaufruf geprüft, bei Bedarf neu angemeldet und einmal wiederholt.
-- **Ein Platzhalter, der sich nicht auflösen lässt**, ergibt kein Bild mehr.
-  Vorher fiel er auf `index.php` zurück oder fehlte ganz — dann wurde
-  `__FORMULAR__` als Adresse aufgerufen, und der Server antwortete mit **200**
-  und der Startseite.
-- **Ein abweichender Statuscode** ergibt kein Bild mehr (seit O11). Erwartet
-  werden 200; eine Seite, die es anders meint, sagt das in `seiten.json` mit
-  `"status": 404`. Der Fund dahinter: `diensttag_zusammenfuehren.php` stand
-  ohne Parameter in der Liste, lieferte 404 mit der Abbruchseite — und acht
-  Bilder davon galten als „kein Überlauf" (F-P3-AV).
-
-In beiden Fällen entsteht jetzt **kein Bild**, sondern ein Fehler, und der
-Rückgabewert ist ≠ 0. Ein fehlendes Bild ist eine Auskunft; ein falsches ist
-eine Lüge, die durch jede weitere Prüfung durchmarschiert.
-
-**Die einfachste Gegenprobe** — sie hätte den Fehler jederzeit gefunden:
-
-```
-cd tools/screenshots/ausgabe/einzeln
-ls *.png | wc -l                                  # 248
-md5sum *.png | cut -d' ' -f1 | sort -u | wc -l    # muss dieselbe Zahl sein
-```
-
-Stehen dort zwei verschiedene Zahlen, zeigen mehrere Seiten dasselbe Bild.
-
-Das Werkzeug **misst** dabei mit, statt nur zu fotografieren. Drei Zahlen,
-die sonst niemand nachhält:
-
-- **waagerechter Überlauf** (`scrollWidth > innerWidth`) je Seite und Breite —
-  der Prüfpunkt P-P3-06;
-- **Konsolenfehler** je Seite und Breite — gezählt werden Konsolenmeldungen
-  vom Typ `error`, die `istRauschen()` durchlässt, **und jede** `pageerror`
-  (eine nicht abgefangene JavaScript-Ausnahme). Die zweite Sorte läuft
-  absichtlich **nicht** durch den Rauschfilter: Eine Ausnahme im eigenen Code
-  ist nie Rauschen. Wer die Zahl liest, liest also zwei Dinge in einer;
-- **Knopfhöhen**: jedes `.knopf` muss so hoch sein, wie es die **emulierte
-  Eingabeart** verlangt (P-P3-04, seit Web 15.5.0 zwei Sollwerte):
-  **44 px** am Fingergerät und unter 1024 px, **36 px** am Zeigergerät ab
-  1024 px (E-S8-09/R76). Benannte Ausnahme bleibt der Filterknopf neben dem
-  48-px-Suchfeld der Suche.
-
-Die Kontraste der Token rechnet `kontrast.py` daneben (P-P3-05).
-
-## Voraussetzung
-
-Eine laufende lokale Installation mit dem Referenzdatensatz und dem
-Demo-Konto:
-
-```
-sh tools/referenzdatensatz/einspielen/lokal_starten.sh
-```
-
-Wie sie entsteht, steht in `tools/referenzdatensatz/LIESMICH.md`.
+Nimmt jede Seite in mehreren Breiten auf und misst, was ein Bild allein
+nicht zeigt. **Anlass: Nr. 185, Nr. 225.**
 
 ## Aufruf
 
-```
-node tools/screenshots/aufnehmen.mjs                  # alles
-node tools/screenshots/aufnehmen.mjs --nur 10-,12-    # nur diese Seiten
-node tools/screenshots/aufnehmen.mjs --risiko         # dazu die Risikoliste
-node tools/screenshots/aufnehmen.mjs --motor firefox  # Gecko statt Chromium
-node tools/screenshots/aufnehmen.mjs --motor webkit   # WebKit statt Chromium
-node tools/screenshots/aufnehmen.mjs --klein          # 1× statt 2×
-node tools/screenshots/aufnehmen.mjs --finger         # als Fingergerät
-node tools/screenshots/aufnehmen.mjs --selbstprobe    # nur die Rauschprobe
-python3 tools/screenshots/kontrast.py                 # Kontraste der Token
+```bash
+node tools/screenshots/aufnehmen.mjs --stufe klein|neben|haupt
+python3 tools/screenshots/kontrast.py        # Kontrast gegen die Fläche
+python3 tools/screenshots/vergleichen.py <vorher>   # hat sich ein Pixel bewegt?
 ```
 
-`--selbstprobe` prüft nur `istRauschen()` gegen **fünfzehn** gebaute Fälle und
-endet mit ≠ 0, wenn einer davon anders eingestuft wird als erwartet. Sie
-braucht **keinen laufenden Browser und keinen Server** — das Playwright-Modul
-muss aber vorhanden sein, weil die Datei es an ihrem Kopf lädt; ohne
-Installation bricht sie mit `ERR_MODULE_NOT_FOUND` ab. Sie **löscht die
-Ausgabe nicht** — alle anderen Aufrufe tun das (siehe Grenzen).
+`--nur <name>` filtert Seiten, `--finger` misst gegen 44 px.
 
-### Trägt jede Klasse einen Fall?
+## Was es misst
 
-Die Probe selbst braucht eine Gegenprobe, und zwar aus einem gemessenen Grund:
-Ihr **erster** Entwurf hatte zehn Fälle und meldete **10 von 10 auch dann, wenn
-man Klasse 1 oder Klasse 3 aus `istRauschen()` löschte** — alle verwerfenden
-Fälle trugen einen Kachelgastgeber in der URL, also fing sie Klasse 1, und fiel
-die weg, fing sie Klasse 3. Die Probe belegte damit die Unterscheidung nicht,
-um die es ging; sie bestätigte sich selbst. Die Fälle 11 bis 13 lösen das auf.
+Überlauf, **Konsolenfehler**, Knopfhöhen gegen die Sollwerte aus
+`CLAUDE.md` 5, Karten außerhalb von `main.inhalt` — und seit PK-04 die
+**Bildgleichheit**: Acht identische Dateien wären acht Bilder, bei denen
+alles grün meldet, ohne dass die Breite je umgestellt wurde.
 
-Nachgemessen wird es, indem man jede Klasse einzeln herausnimmt — die Probe
-muss **jedes Mal rot** werden:
+**Drei Stufen** (E-PK-14): klein = berührte Seiten, drei Breiten, Chromium ·
+neben = alle Seiten, acht Breiten · haupt = alle drei Engines. Die
+Risikoliste ist entfallen — der einzige WebKit-Fund lag auf einer Seite,
+die nicht darauf stand.
 
-```
-S=/tmp/mut; mkdir -p $S; cp tools/screenshots/seiten.json $S/
-lauf() { cp tools/screenshots/aufnehmen.mjs $S/a.mjs; eval "$2"
-         printf '%-34s' "$1"; node $S/a.mjs --selbstprobe | tail -1; }
-lauf "unverändert"           "true"
-lauf "Klasse 1 gelöscht"     "sed -i '/FREMDE_QUELLEN.test(text)/d' \$S/a.mjs"
-lauf "Klasse 2 gelöscht"     "sed -i '/nur ein Statuscode/,+2d' \$S/a.mjs"
-lauf "Klasse-2-Schranke weg"  "sed -i 's/&& !VERBINDUNGSCODES.test(text))/)/' \$S/a.mjs"
-lauf "Klasse 3 gelöscht"     "sed -i \"/herkunft(ort) === 'fremd'/d\" \$S/a.mjs"
-lauf "herkunft: keine→fremd" "sed -i \"s/if (!o || o === 'null') return 'keine';/if (false) return 'keine';/\" \$S/a.mjs"
-```
+## Was es braucht
 
-Gemessen am 13.09.2026: **15 von 15** unverändert, und **14 von 15** in allen
-fünf Mutationen; dazu die sechste von Hand — den `catch`-Zweig von
-`herkunft()` auf `'fremd'` gestellt, ebenfalls **14 von 15** (das ist der Fall
-`<anonymous>`). Bleibt eine grün, ist der zugehörige Fall verlorengegangen.
+Eine Installation, Chromium (haupt: alle drei Engines) und für die
+Wartungsseiten ein `--jobs-token`. **Ohne Token bricht der Lauf ab.**
 
-Rückgabewert ≠ 0, sobald Überlauf, Konsolenfehler oder ein Knopf mit falscher
-Höhe gefunden wird.
+## Erwartete Zahl
 
-### Zeiger oder Finger
+Voller Lauf: **496 Einzelbilder, 62 Kontaktbögen, Überlauf 0, Knöpfe
+falscher Höhe 0, 162 Karten / 0 außerhalb**.
 
-Ohne `--finger` läuft der Browser als **Zeigergerät** — das ist der Regelfall
-an einem Bildschirm ab 1024 px, und die Bilder sollen den Regelfall zeigen.
-Mit `--finger` läuft derselbe Lauf als **Fingergerät**; dort gelten überall
-44 px. Beide Läufe messen alles, nur der Sollwert der Knopfhöhe unterscheidet
-sich. Das Konzept S8 beschrieb es andersherum (Finger als Regel, Zeiger als
-Zugabe); gedreht wurde es aus dem genannten Grund.
+## Was es nicht kann
+
+Es bedient nichts (dafür `tools/bedienprobe/`) und vergleicht nicht mit
+einem früheren Stand (dafür der Stilvergleich).
 
 > **Ein Fund, den man kennen muss, wenn man hier etwas ändert.** Die
 > Eingabeart hält nicht von selbst: `hasTouch` am Playwright-Kontext setzt
@@ -379,7 +96,7 @@ Sie sprechen mit `pair.php`, wie eine Uhr es täte. Der Code wird je Schritt
 **einmal** geholt und über alle acht Breiten wiederverwendet — der
 Ratenschutz-Topf `pair_start` lässt zwanzig Aufrufe je zehn Minuten und Adresse
 zu, ein Lauf mit einer Sitzung je Breite bräuchte sechzehn davon. Wer im selben
-Zeitfenster `tools/kopplungsprobe/rundlauf.mjs` fährt, kann den Topf trotzdem
+Zeitfenster `tools/proben/kopplung/rundlauf.mjs` fährt, kann den Topf trotzdem
 füllen; dann meldet der Schritt es ausdrücklich, statt ein Bild des falschen
 Zustands aufzunehmen. Zurück bleibt eine Sitzung, die nach zehn Minuten
 verfällt — eine Gerätezeile entsteht nie, denn das Gerät sagt in diesem Lauf
@@ -580,7 +297,7 @@ GEMESSEN"** statt eine Null zu melden.
 - **Ein Verbindungsfehler auf einer fremden Adresse bleibt stumm.** Die dritte
   Rauschklasse verwirft ihn — sie kann nicht wissen, ob die Adresse überhaupt
   abgerufen werden durfte. Hier stand zuerst, das messe
-  `tools/vollstaendigkeit/`; **als es hier stand, war das falsch** — dessen
+  `tools/quelltext/vollstaendigkeit.py`; **als es hier stand, war das falsch** — dessen
   Gruppe 5 kannte zwei Zusagen, und kein Werkzeug zählte „keine fremde Quelle
   zur Laufzeit" nach. **Seit dem 13.09.2026 tut es das** (Backlog Nr. 179,
   Prüfung `fremde Quelle`, 15 Ausnahmen mit Grund) — aber **am Quelltext**,

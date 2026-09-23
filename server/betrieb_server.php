@@ -1068,7 +1068,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
      * VOR dem Ratenschutz und nach den Kopfzeilen: Was diese Installation
      * mit Konten TUT, steht vor dem, womit sie sich WEHRT. Beides gehoert
      * auf diese Seite (R74/E-S8-12 — was alle trifft, steht im Betrieb),
-     * aber die Betriebsart ist die Frage, die eine Betreiberin zuerst
+     * aber die Betriebsart ist die Frage, die eine BetreiberIn zuerst
      * stellt.
      * ------------------------------------------------------------------- */ ?>
   <?php require_once __DIR__ . '/konten_einstellungen_lib.php';
@@ -1094,7 +1094,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                Regel im Stylesheet — der Kasten stand ungestaltet da, ohne
                jede Fehlermeldung. `ui_meldung_markup()` wirft bei einem
                unbekannten Ton; wer von Hand baut, hat diesen Schutz nicht.
-               Gefunden hat es `tools/vollstaendigkeit/`. */ ?>
+               Gefunden hat es `tools/quelltext/vollstaendigkeit.py`. */ ?>
       <div class="meldung meldung-info" role="status">
         <?= ui_symbol('hinweis', 'symbol-gross') ?>
         <?php /* EIN ABSATZ, NICHT ZWEI. `.meldung` ist eine Flexzeile —

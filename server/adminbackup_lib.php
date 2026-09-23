@@ -136,7 +136,7 @@ function edbak_teil_siegeln(string $klartext, string $kennung,
  * der sich nicht öffnen lässt, gibt `null` — und das heisst genau eines:
  * Dieser Teil gehört nicht zu diesem Server, diesem Konto, diesem Paket oder
  * diesem Namen. Welches davon, unterscheidet die Funktion bewusst nicht
- * (dieselbe Linie wie `sk_oeffnen()`); was die Betreiberin braucht, ist der
+ * (dieselbe Linie wie `sk_oeffnen()`); was die BetreiberIn braucht, ist der
  * Satz an der Oberfläche.
  */
 function edbak_teil_oeffnen(string $roh, string $kennung,
@@ -1404,7 +1404,7 @@ function edbak_marke_lesen(string $k): ?string
  * die Spaltenbreite von `app_state.v`, und die kennt `APP_STATE_MAX` in
  * `db.php`. Zwei Konstanten mit derselben 190 waren zwei Gelegenheiten, beim
  * naechsten Schemawechsel eine davon zu vergessen. Der Name bleibt —
- * `tools/wiederherstellungs-probe/` prueft gegen ihn. */
+ * `tools/proben/wiederherstellung/` prueft gegen ihn. */
 const EDBAK_MARKE_MAX = APP_STATE_MAX;
 
 function edbak_marke_setzen(string $k, string $v): bool
@@ -2238,7 +2238,7 @@ function edbak_erinnerung(): array
  * Server sieht ihn nicht offen, und er wird auch nicht umgeschluesselt. Wer
  * ein Paket in ein ANDERES Konto spielt, bekommt die geschuetzten Angaben
  * deshalb unlesbar — dafuer gibt es den Freigabeweg, auf dem der Browser der
- * Nutzerin sie mit ihrem eigenen Schluessel neu verschluesselt (E20).
+ * NutzerIn sie mit ihrem eigenen Schluessel neu verschluesselt (E20).
  *
  * Rueckgabe: [bool $ok, ?string $meldung, ?array $stats].
  */
@@ -2273,7 +2273,7 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
      * „Fehlt" und „lässt sich nicht öffnen" sind zwei Lagen mit zwei
      * Handgriffen: Das eine ist ein kaputtes Paket, das andere ein Paket von
      * einem anderen Server — oder ein umbenanntes. Eine gemeinsame Meldung
-     * schickte die Betreiberin in die falsche Richtung. */
+     * schickte die BetreiberIn in die falsche Richtung. */
     $mRoh = $zip->getFromName('manifest.json');
     if ($mRoh === false) {
         $zip->close();

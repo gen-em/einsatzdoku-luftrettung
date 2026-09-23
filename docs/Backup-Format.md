@@ -515,7 +515,7 @@ seit Web 4.1.2 auch:
     // Standorte tragen seit Version 6 optionale Koordinaten (Quelle des
     // Abfahrtorts "Standort"). Der NAME bleibt der portable Schlüssel, an dem
     // alle übrigen Stammdaten hängen.
-    "bases":        [ { "name": "Kempten", "lat": 47.72, "lon": 10.31,
+    "bases":        [ { "name": "Hochkreuth", "lat": 47.72, "lon": 10.31,
                         "is_default": 1 } ],
 
     // Rettungsmittel (bis Version 5: "aircraft" mit der Spalte "registration"
@@ -537,19 +537,19 @@ seit Web 4.1.2 auch:
     // `base_ref` darf bei jedem Typ AUSSER `standard` null sein: Diese
     // Rettungsmittel brauchen keinen Standort. Der dritte Eintrag unten zeigt
     // den Fall — ohne Standort, ohne Rollen-Vorlagen, ohne Fähigkeiten.
-    "vehicles":     [ { "name": "Christoph 17", "kurz": null,
+    "vehicles":     [ { "name": "Alpenfalke 1", "kurz": null,
                         "typ": "standard", "kind": "air",
-                        "base_ref": "Kempten",
+                        "base_ref": "Hochkreuth",
                         "roles": ["fr", "hems", "other", "p1", "p2"],
                         "capabilities": ["winch", "bergwacht"],
                         "is_default": 1 },
-                      { "name": "NEF Kempten 1", "kurz": null,
+                      { "name": "NEF Hochkreuth 1", "kurz": null,
                         "typ": "standard", "kind": "ground",
-                        "base_ref": "Kempten",
+                        "base_ref": "Hochkreuth",
                         "roles": ["driver", "other", "trainee"],
                         "capabilities": [],
                         "is_default": 0 },
-                      { "name": "Sanitätsdienst Allgäuer Festwoche",
+                      { "name": "Sanitätsdienst Seefest",
                         "kurz": "SanD Fest",
                         "typ": "veranstaltung", "kind": "ground",
                         "base_ref": null,
@@ -569,11 +569,11 @@ seit Web 4.1.2 auch:
     // Alle übrigen Stammdaten tragen ihren Standort (base_ref). Ohne ihn ließe
     // sich nach dem Einspielen nicht entscheiden, zu welchem Standort eine
     // Zielklinik gehört.
-    "crew_presets": [ { "role_code": "p1", "name": "…", "base_ref": "Kempten" } ],
-    "bw_units":     [ { "name": "Bereitschaft Oberstdorf", "base_ref": "Kempten" } ],
-    "resources":    [ { "name": "RTW Kempten 21/83", "base_ref": "Kempten" } ],
-    "transport_dests": [ { "name": "Klinikum Kempten", "lat": 47.72, "lon": 10.31,
-                           "base_ref": "Kempten" } ]
+    "crew_presets": [ { "role_code": "p1", "name": "…", "base_ref": "Hochkreuth" } ],
+    "bw_units":     [ { "name": "Bergwacht Sonnenau", "base_ref": "Hochkreuth" } ],
+    "resources":    [ { "name": "RTW Talwang 21/83", "base_ref": "Hochkreuth" } ],
+    "transport_dests": [ { "name": "Bergklinik Sonnenau", "lat": 47.72, "lon": 10.31,
+                           "base_ref": "Hochkreuth" } ]
   },
 
   // Diensttage (bis Version 5: Flugtage, mit dem Datum als Schlüssel).
@@ -589,7 +589,7 @@ seit Web 4.1.2 auch:
     "started_at": "2026-07-19 05:00:00",  // DATETIME, UTC
     "ended_at":   "2026-07-19 17:30:00",
     "kind": "air",                        // null = neutral, noch nicht zugeordnet
-    "vehicle_name": "Christoph 17",       // eingefroren
+    "vehicle_name": "Alpenfalke 1",       // eingefroren
     // Typ und Kurzname gehören zur SELBEN Momentaufnahme (E8) und stehen seit
     // Nutzlast 10 hier. Beide null, wenn der Tag kein Rettungsmittel führt;
     // `vehicle_kurz` auch dann, wenn das Rettungsmittel keinen Kurznamen hat.
@@ -598,9 +598,9 @@ seit Web 4.1.2 auch:
     // Einfrieren gerade ausschließt.
     "vehicle_typ": "standard",            // eingefroren, null = kein Rettungsmittel
     "vehicle_kurz": null,                 // eingefroren, null = kein Kurzname
-    "base_name": "Kempten",               // eingefroren
+    "base_name": "Hochkreuth",            // eingefroren
     "base_lat": 47.72, "base_lon": 10.31, // eingefroren
-    "vehicle_ref": "Christoph 17", "base_ref": "Kempten",   // Stammdaten-Verweis
+    "vehicle_ref": "Alpenfalke 1", "base_ref": "Hochkreuth",   // Stammdaten-Verweis
     "notes": "…",
 
     // PAPIERKORB (seit Version 7). null = aktiv; ein Zeitstempel = der Tag
@@ -683,11 +683,11 @@ seit Web 4.1.2 auch:
     // ja verschlüsselt). Beim Import werden sie mit dem Inhaltsschlüssel des
     // Zielkontos verschlüsselt und als `pat_blob` gespeichert.
     "pat": { "dx": "Polytrauma", "age": 41, "mission_no": "2026-0042",
-             "loc": { "addr": "Ringstr. 18, 87439 Kempten",
+             "loc": { "addr": "Ringstr. 18, 87411 Hochkreuth",
                       "lat": 47.72, "lon": 10.31 },
              "site_desc": "Zufahrt über Forstweg, letzte 300 m zu Fuß",
              "notes": "Landeplatz durch die Feuerwehr freigeräumt.\nRTW …",
-             "start": { "addr": "Wache Kempten", "lat": 47.72, "lon": 10.31 } },
+             "start": { "addr": "Wache Hochkreuth", "lat": 47.72, "lon": 10.31 } },
                                             // site_desc seit Version 5,
                                             // start seit Version 6 (manueller
                                             // Abfahrtort, nur bei
@@ -891,7 +891,7 @@ in Abschnitt 3.
   **nicht** exportiert. Beim Import werden Einträge, die zentral bereits
   (case-insensitiv) vorhanden sind, still übersprungen und in der
   Ergebnismeldung gezählt — diese Regel gilt unverändert. Gepflegt wurden sie
-  von einer Administratorin (seit Version 3); **seit Web 18.0.0 gibt es dafür
+  von einer AdministratorIn (seit Version 3); **seit Web 18.0.0 gibt es dafür
   keine Seite mehr** (Rahmenplan R39), es kann also nur noch Altbestand sein.
 - **`origin`** (seit Version 4): Herkunft des Einsatzes, wird beim Anlegen
   einmalig gesetzt und nie wieder geändert. **Sechs Werte seit Web 14.0.0**
@@ -985,7 +985,7 @@ Reihenfolge:
    geschehen ist, nicht auf halbem Weg.
 2. **Kern senden** (`api/backup_restore.php`). Der Server legt an wie bisher
    und liefert die **Spurkarte** zurück: `spur_ref` → angelegter Datensatz.
-   Sie steht getrennt von der Rückmeldung an die Nutzerin — sie ist eine
+   Sie steht getrennt von der Rückmeldung an die NutzerIn — sie ist eine
    Arbeitsangabe für den nächsten Zug, keine Auskunft.
 3. **Spurteile senden** (`api/backup_spuren_restore.php`), in Häppchen von
    höchstens 1,5 MB. Der Server prüft Eigentum und Blob, schreibt über

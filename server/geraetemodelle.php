@@ -3,7 +3,7 @@ declare(strict_types=1);
 /**
  * Teilenummer -> [Modellname, Geraeteart]. ERZEUGT — NICHT VON HAND AENDERN.
  *
- *     python3 tools/geraetemodelle/erzeugen.py ~/.Garmin/ConnectIQ/Devices
+ *     python3 tools/erzeugen/geraetemodelle.py ~/.Garmin/ConnectIQ/Devices
  *
  * Wozu: Die Garmin-Uhr kennt ihren Modellnamen nicht und sendet beim Koppeln
  * ihre Teilenummer (JSON-Vertrag 1a, R42). `geraete_lib.php` loest sie hier

@@ -168,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $notice = geocoder_konto_setzen($userId, !empty($_POST['adresssuche']))
                 ? 'Datenschutz gespeichert.'
                 : 'Der Schalter konnte nicht gespeichert werden — die Spalte '
-                . 'fehlt noch. Eine Administratorin muss update.php aufrufen.';
+                . 'fehlt noch. Eine AdministratorIn muss update.php aufrufen.';
         } else {
             $notice = 'Es gab nichts zu ändern.';
         }
@@ -252,7 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     /* ZWEI NACHRICHTEN, UND BEIDE SIND NOETIG. Die eine
                      * fragt (an die NEUE Adresse — nur wer sie liest, kann
                      * bestaetigen), die andere warnt (an die ALTE — sie ist
-                     * die einzige, die im Missbrauchsfall noch der Nutzerin
+                     * die einzige, die im Missbrauchsfall noch der NutzerIn
                      * gehoert). */
                     mail_einreihen('adresse_bestaetigen', $email,
                                    ['link' => $link, 'alt' => $altAdresse]);
@@ -267,7 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 logo_sitzung_setzen($logo);
                 /* DIE MELDUNG SAGT, DASS DIE ADRESSE NOCH NICHT GILT
                  * (P5b/AP5). Ein blosses „Profil gespeichert." waere hier
-                 * die gefaehrlichste aller Auskuenfte: Die Nutzerin
+                 * die gefaehrlichste aller Auskuenfte: Die NutzerIn
                  * schlösse daraus, sie könne sich ab jetzt mit der neuen
                  * Adresse anmelden — und stünde beim nächsten Mal vor einer
                  * Anmeldung, die sie nicht kennt. */
@@ -1471,7 +1471,7 @@ ui_seite_start(['titel' => 'Einstellungen',
              alte Zettel wird damit ungueltig, und genau das ist gewollt. */ ?>
     <?php ui_karte_start(['titel' => 'Wiederherstellungsschlüssel']); ?>
       <p>Er öffnet deine verschlüsselten Daten, wenn du dein Passwort
-         vergessen hast — der Betreiber kann das nicht. Du hast ihn einmal
+         vergessen hast — die BetreiberIn kann das nicht. Du hast ihn einmal
          bekommen, beim Einrichten deines Kontos, auf dem
          <strong>Notfallblatt</strong>.</p>
       <p class="feld-hinweis">Verloren? Dann erzeuge einen neuen. Das alte
@@ -1687,7 +1687,7 @@ ui_seite_start(['titel' => 'Einstellungen',
 
     <?php /* ---- Konto löschen (P5b/AP5, E-P5b-16) ------------------------
        *
-       * WARUM ES DIESEN WEG GIBT: Bis Web 20.19.0 konnte eine Nutzerin ihr
+       * WARUM ES DIESEN WEG GIBT: Bis Web 20.19.0 konnte eine NutzerIn ihr
        * Konto nicht selbst loeschen — sie musste die Verwaltung bitten, und
        * die loeschte sofort und unwiderruflich. Beides ist falsch herum:
        * Ueber die eigenen Daten entscheidet, wem sie gehoeren, und eine
@@ -1754,7 +1754,7 @@ ui_seite_start(['titel' => 'Einstellungen',
        *
        * ZENTRALE EINTRÄGE bleiben sichtbar und unveränderlich und tragen hier
        * das Kennzeichen „systemweit". Bis S9/AP5b pflegte sie eine
-       * Administratorin (`admin_stammdaten.php`); die Seite ist mit dem Modell
+       * AdministratorIn (`admin_stammdaten.php`); die Seite ist mit dem Modell
        * gestrichen (Rahmenplan R39). **Niemand pflegt sie mehr.** Steht in
        * einer Anlage noch ein zentraler Eintrag, dann ist er von hier aus
        * sichtbar, aber weder änderbar noch löschbar — er braucht einen Eingriff
@@ -2035,12 +2035,11 @@ ui_seite_start(['titel' => 'Einstellungen',
             <?php /* Koordinaten optional (E37/E39). Sie sind die Quelle des
                      Abfahrtorts „Standort" und werden beim Anlegen eines
                      Diensttags eingefroren (E8). Mit GETRENNTEM Suchfeld:
-                     „Standort Kempten" ist keine Adresse, und eine Suche im
+                     „Standort Talwang" ist keine Adresse, und eine Suche im
                      Namensfeld schriebe den Namen weg. */
                   $ORTSFELDER[] = 'sdbase'; ?>
             <?php ui_ortsfeld([
                     'praefix' => 'sdbase', 'feld' => false, 'ortswahl' => true,
-                    'klasse' => 'loc-inline',
                     'such_hinweis' => 'Lage (optional)',
                     'lat_name' => 'lat', 'lon_name' => 'lon',
                     'lat' => (string)($editBase['lat'] ?? ''),
@@ -2173,7 +2172,7 @@ ui_seite_start(['titel' => 'Einstellungen',
          daran haengt. Die Formulare stehen EINMAL und versteckt, das
          Aktionsmenue zeigt ueber `form` darauf (ui_zeilenaktionen). */
       /* `dt_bases()` liefert `zentral`, nicht `user_id` — ein zentraler
-         Standort wird von einer Administratorin gepflegt und traegt hier
+         Standort wird von einer AdministratorIn gepflegt und traegt hier
          die Plakette „systemweit" statt eines Aktionsmenues. */
       $sBid     = (int)$seiteB['id'];
       $sZentral = (bool)($seiteB['zentral'] ?? false);
@@ -3869,7 +3868,7 @@ ui_seite_start(['titel' => 'Einstellungen',
              800 kB, also unter nginx' Vorgabe von 1 MB.
 
              DIE ZAHL STEHT AN ZWEI ORTEN, und das ist bekannt: hier und im
-             Endpunkt. `tools/wiederherstellungs-probe/` hält sie zusammen. */
+             Endpunkt. `tools/proben/wiederherstellung/` hält sie zusammen. */
           const HAPPEN = 800 * 1024;      // unter nginx' Vorgabe von 1 MB
           const HAPPEN_ZAHL = 500;
           for (const [i, teilIndex] of fassung4.spurteile.entries()) {

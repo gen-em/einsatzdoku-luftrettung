@@ -470,7 +470,7 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
      * Staging-Anlage war dieser Satz nachweislich falsch: Das Verzeichnis war
      * angelegt und beschreibbar, nur hat die Anlage den gesetzten Pfad nicht
      * uebernommen. Eine Ursache zu drucken, die man nicht gemessen hat, ist
-     * schlimmer als keine — sie schickt die Betreiberin auf die Suche nach
+     * schlimmer als keine — sie schickt die BetreiberIn auf die Suche nach
      * einem Schreibrecht, das nicht fehlt.
      *
      * DIE LAGE DES VERZEICHNISSES STEHT MIT IN DIESER ZEILE, und das ist
@@ -659,7 +659,7 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
         $proxys === []
             ? 'Leer heißt: Der Ratenschutz rechnet mit REMOTE_ADDR, wie bisher. '
             . 'Steht die Anwendung hinter einem Proxy, zählen sonst ALLE '
-            . 'Nutzerinnen als eine — und werden gemeinsam ausgesperrt.'
+            . 'NutzerInnen als eine — und werden gemeinsam ausgesperrt.'
             : 'Nur von diesen Adressen wird X-Forwarded-For ausgewertet.',
         'netz.vertrauenswuerdige_proxys');
 

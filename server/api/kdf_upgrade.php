@@ -234,7 +234,7 @@ try {
 }
 
 /* Die Antwort sagt, WAS geschehen ist — nicht nur, dass etwas geschah. Der
- * Browser wertet es heute nicht aus; der Prüfstand tut es (`tools/anteilprobe/`),
+ * Browser wertet es heute nicht aus; der Prüfstand tut es (`tools/proben/anteil/`),
  * und ein Mitschnitt im Netzwerkfenster wird damit lesbar. */
 json_out(['ok' => true, 'iter' => $neuIter,
           'huelle' => $huellenwechsel ? ($neuKennung ?? 'edk1') : 'unveraendert']);

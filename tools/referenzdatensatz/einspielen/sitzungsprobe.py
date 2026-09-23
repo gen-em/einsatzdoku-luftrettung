@@ -47,7 +47,7 @@ WENN DIE PROBE MELDET „beide Konten tragen dasselbe Praefix": Das ist kein
 Fehler der Anwendung, sondern eine fehlende Voraussetzung — der Bestand fuehrt
 dann keine zwei Fassungen mehr. Herzustellen mit
 
-    python3 tools/anteilprobe/huelle_stellen.py <konto> <passwort> edk1
+    python3 tools/proben/anteil/huelle_stellen.py <konto> <passwort> edk1
 
 Die Probe sagt es als eigenen Befund und nicht als gruene Zahl; eine Zahl, die
 zweimal dasselbe gemessen hat, ist keine 2 von 2.
@@ -141,7 +141,7 @@ p_neu = messen(NEU[0], NEU[1], "edka1:")
 # ist erst dann ein Beleg, wenn sie das Gemessene benennt."
 if p_alt and p_neu and p_alt == p_neu:
     print(f"\n  ACHTUNG: Beide Konten tragen {p_alt} — es wurde nur EINE Fassung "
-          f"gemessen.\n  Voraussetzung herstellen mit tools/anteilprobe/huelle_stellen.py.")
+          f"gemessen.\n  Voraussetzung herstellen mit tools/proben/anteil/huelle_stellen.py.")
     offen += 1
     gesamt += 1
 

@@ -299,7 +299,7 @@
     <string name="einstellungen_recht">Rechtliches</string>
     <string name="datenschutz">Datenschutzerklärung</string>
     <string name="impressum">Impressum</string>
-    <string name="recht_hinweis">Öffnet die Seite im Browser. Beide Texte stammen von der Betreiberin des Servers, mit dem diese App spricht.</string>
+    <string name="recht_hinweis">Öffnet die Seite im Browser. Beide Texte stammen von der BetreiberIn des Servers, mit dem diese App spricht.</string>
     <string name="recht_kein_browser">Auf diesem Gerät ist kein Browser eingerichtet.</string>
     <string name="zurueck">Zurück</string>
 

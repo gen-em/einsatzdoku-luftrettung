@@ -31,7 +31,7 @@ declare(strict_types=1);
  * dauerhaft auf "unbekannt" — und zwar unwiederbringlich, weil die Teilenummer
  * dann nirgends mehr stuende. Mit ihr laesst sich jede Zeile spaeter erneut
  * aufloesen — und zwar wirklich:
- * `php tools/geraetemodelle/nachaufloesen.php` tut genau das (E-S6-6). Ohne
+ * `php tools/erzeugen/geraetemodelle-nachaufloesen.php` tut genau das (E-S6-6). Ohne
  * dieses Werkzeug waere die dritte Spalte eine Zusage ohne Programm; besonders
  * `geraet_art` haengt daran, denn dort steht bis zum Nachaufloesen die
  * ungepruefte Selbstauskunft. Sie ist ausserdem die einzige Spalte, die die BEHAUPTUNG des
@@ -47,7 +47,7 @@ declare(strict_types=1);
  */
 /* Die erzeugte Modelltabelle. Die Abfrage davor ist kein Zierrat: Sie laesst
  * eine Probe eine EIGENE Tabelle setzen, bevor diese Datei geladen wird
- * (tools/geraeteprobe/). Ohne sie liefe jede Probe der Aufloesung gegen den
+ * (tools/proben/geraete/). Ohne sie liefe jede Probe der Aufloesung gegen den
  * jeweils ausgelieferten Bestand — und was heute gruen ist, waere nach dem
  * naechsten Lauf des Erzeugers rot, ohne dass sich am Code etwas geaendert
  * haette. */
@@ -248,7 +248,7 @@ function geraet_block_lesen(mixed $block): array
  * @return array{modell: string, art: ?string}|null  null = nicht in der Tabelle
  *
  * Die Tabelle steht in `geraetemodelle.php` und ist ERZEUGT
- * (`tools/geraetemodelle/`). Sie ist absichtlich stumpf: ein Schluessel, ein
+ * (`tools/erzeugen/geraetemodelle.py`). Sie ist absichtlich stumpf: ein Schluessel, ein
  * Wert, keine Musterzerlegung der Teilenummer. Die Struktur "006-BXXXX-00"
  * sieht nach einem Muster aus, ist aber keines, aus dem sich ein Modellname
  * herleiten liesse — nur die Gerätedateien wissen es.
@@ -256,7 +256,7 @@ function geraet_block_lesen(mixed $block): array
 function geraet_modell_aufloesen(string $teil, ?array $tabelle = null): ?array
 {
     /* `$tabelle` IST DIE NAHT FUER DIE PROBE (P5a/AP11). Ohne sie muesste
-     * `tools/geraeteprobe/` gegen den AUSGELIEFERTEN Bestand messen — 325
+     * `tools/proben/geraete/` gegen den AUSGELIEFERTEN Bestand messen — 325
      * Teilenummern, die sich mit dem naechsten Lauf des Erzeugers aendern
      * koennen, und damit gegen eine bewegliche Zielscheibe. Die Probe setzt
      * deshalb schon heute eine eigene, kleine Tabelle (sie definiert

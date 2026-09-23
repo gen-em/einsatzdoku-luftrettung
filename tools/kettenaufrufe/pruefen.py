@@ -52,6 +52,12 @@ import sys
 
 WURZEL = pathlib.Path(__file__).resolve().parents[2]
 LAEUFE = sorted((WURZEL / '.github' / 'workflows').glob('*.yml'))
+# SEIT PK-03 AUCH DIE ZUORDNUNG DES PRUEFSTANDS. Sie fuehrt dieselbe Art von
+# Aufruf wie ein Kettenschritt — und sie ist beim ersten Lauf an genau
+# denselben Fehlern gescheitert (`--format` statt `--art`, ein `./gradlew`
+# im falschen Verzeichnis). Wer einen Aufruf dort aendert, faehrt dieses
+# Werkzeug davor.
+PRUEFABLAUF = WURZEL / 'tools' / 'pruefstand' / 'pruefablauf.json'
 
 # Ein Aufruf sieht so aus: ein Starter (python3/node/php/bash) und danach ein
 # Pfad, der auf ein Werkzeug dieses Projekts zeigt -- oder der Pfad allein.
@@ -288,9 +294,21 @@ def lauf() -> int:
             alle_hin += hin
             ges += n
 
-    melde('Werkzeugaufrufe der Arbeitslaeufe gegen ihre Schnittstellen')
+    proben = 0
+    if PRUEFABLAUF.exists():
+        import json
+        a = json.loads(PRUEFABLAUF.read_text(encoding='utf-8'))
+        for name, d in a.get('proben', {}).items():
+            ab, hin, n = pruefe_block('pruefablauf.json', name, d['aufruf'])
+            alle_ab += ab
+            alle_hin += hin
+            ges += n
+            proben += 1
+
+    melde('Werkzeugaufrufe der Arbeitslaeufe und des Pruefstands gegen ihre Schnittstellen')
     melde()
     melde(f'  Arbeitslaeufe:      {len(LAEUFE)}')
+    melde(f'  Proben (pruefablauf.json): {proben}')
     melde(f'  Aufrufe geprueft:   {ges}')
     melde(f'  Befunde:            {len(alle_ab)}')
     melde(f'  ungeprueft:         {len(alle_hin)}')

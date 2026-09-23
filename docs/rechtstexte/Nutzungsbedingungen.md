@@ -12,20 +12,20 @@
 > „angenommen" bestätigt; eine neue Fassung sperrt den nächsten Login bis
 > zur Annahme (Konzept P5b, E-P5b-05).
 
-**Stand:** [Datum der Inkraftsetzung] · **Betreiber:** Gen-EM GbR,
+**Stand:** [Datum der Inkraftsetzung] · **BetreiberIn:** Gen-EM GbR,
 [Anschrift], [Vertretungsberechtigte] — Kontakt: [E-Mail-Adresse aus dem
 Impressum]
 
 ## 1. Worum es geht
 
-1.1 NAdoku ist eine Anwendung, mit der Nutzerinnen und Nutzer ihre
-eigenen Einsätze im Rettungsdienst dokumentieren — Zeiten, Orte,
+1.1 NAdoku ist eine Anwendung, mit der NutzerInnen ihre eigenen
+Einsätze im Rettungsdienst dokumentieren — Zeiten, Orte,
 Rettungsmittel, Besatzung, Verlauf und patientenbezogene Angaben — und
 auswerten. Sie besteht aus einer Weboberfläche und optionalen Apps für
 Uhren und Android-Geräte.
 
 1.2 Diese Bedingungen gelten für die Nutzung der Installation unter
-[Adresse der Installation] („Dienst"), die die Gen-EM GbR („Betreiber")
+[Adresse der Installation] („Dienst"), die die Gen-EM GbR („BetreiberIn")
 betreibt. Für andere Installationen der freien Software NAdoku gelten sie
 nicht.
 
@@ -50,7 +50,7 @@ Entscheidung.** 2.2 betrifft das Dokumentieren, nicht das Weitergeben: Du
 kannst deine Daten jederzeit exportieren und weitergeben, an wen du willst
 — etwa eine Jahresliste an deinen Standort. Ob du das darfst, richtet sich
 nach den für dich geltenden Vorgaben (Berufsrecht, Arbeitsvertrag,
-Schweigepflicht, Datenschutz). Der Betreiber prüft das nicht und kann es
+Schweigepflicht, Datenschutz). Die BetreiberIn prüft das nicht und kann es
 nicht prüfen.
 
 2.4 Mit der Registrierung sicherst du zu, dass du zu dem Kreis nach 2.1
@@ -62,9 +62,9 @@ von dir verlangt, und ist kein Einsatzprotokoll der Leitstelle. Er tritt
 neben sie, nicht an ihre Stelle.
 
 2.6 **Du entscheidest, welche Angaben du einträgst.** Der Dienst verlangt
-keine Angabe, die eine Patientin oder einen Patienten identifizierbar
-macht: Name, Geburtsdatum, Alter, Diagnose, Einsatznummer, Einsatzort und
-seine Beschreibung sind sämtlich **freiwillig**. Ein Einsatz lässt sich
+keine Angabe, die eine PatientIn identifizierbar macht: Name,
+Geburtsdatum, Alter, Diagnose, Einsatznummer, Einsatzort und seine
+Beschreibung sind sämtlich **freiwillig**. Ein Einsatz lässt sich
 allein aus Zeiten dokumentieren. Je weniger du einträgst, desto weniger
 musst du verantworten.
 
@@ -75,7 +75,7 @@ müssen zutreffen; die Adresse muss dich erreichen, weil der Dienst
 Sicherheitsmitteilungen dorthin sendet (Abschnitt 5.4).
 
 3.2 Je nach Einstellung der Installation ist die Registrierung offen,
-offen mit Freischaltung durch den Betreiber oder nur auf Einladung
+offen mit Freischaltung durch die BetreiberIn oder nur auf Einladung
 möglich. Bei Freischaltung besteht kein Anspruch darauf; nicht
 freigeschaltete Registrierungen verfallen nach der auf der
 Registrierungsseite genannten Frist.
@@ -87,9 +87,9 @@ Konto).
 
 3.4 **Wiederherstellungsschlüssel.** Die patientenbezogenen Angaben
 verschlüsselt dein Browser mit einem Schlüssel, der aus deinem Passwort
-abgeleitet wird; der Betreiber kann sie nicht lesen (Abschnitt 4). Bei der
+abgeleitet wird; die BetreiberIn kann sie nicht lesen (Abschnitt 4). Bei der
 Einrichtung erhältst du einmalig einen Wiederherstellungsschlüssel. **Ohne
-Passwort und ohne diesen Schlüssel kann niemand — auch der Betreiber nicht
+Passwort und ohne diesen Schlüssel kann niemand — auch die BetreiberIn nicht
 — deine verschlüsselten Daten wiederherstellen.** Du bist dafür
 verantwortlich, ihn sicher aufzubewahren (Notfallblatt). Der Dienst fragt
 dich in Abständen, ob du ihn noch hast; du kannst ihn jederzeit erneuern,
@@ -100,7 +100,7 @@ gekoppeltes Gerät sendet, wird deinem Konto zugerechnet.
 
 ## 4. Verschlüsselung und ihre Grenzen
 
-4.1 Angaben, die Patientinnen und Patienten betreffen, werden **im Browser
+4.1 Angaben, die PatientInnen betreffen, werden **im Browser
 verschlüsselt**, bevor sie den Dienst erreichen; der Dienst speichert nur
 den verschlüsselten Wert. Die genaue Abgrenzung, welche Angaben
 verschlüsselt sind und welche im Klartext verarbeitet werden (etwa Zeiten,
@@ -109,8 +109,8 @@ der Datenschutzerklärung. Sie ist Teil dieser Bedingungen, soweit sie den
 Umfang der Verarbeitung beschreibt.
 
 4.2 Du trägst keine Angaben in Felder ein, die als **Klartext** gekennzeichnet
-sind, die Patientinnen oder Patienten identifizierbar machen. Die
-Oberfläche kennzeichnet diese Felder.
+sind, die PatientInnen identifizierbar machen. Die Oberfläche
+kennzeichnet diese Felder.
 
 4.3 Ein Demo-Konto mit erfundenen Einsätzen kann öffentlich zugänglich
 sein; für dieses Konto gilt die Verschlüsselungszusage ausdrücklich nicht
@@ -126,8 +126,8 @@ Einsatzort rekonstruieren** — die Verschlüsselung der Adresse verbirgt ihn
 nicht. Wer das nicht will, zeichnet keine GPS-Daten auf und trägt den
 Einsatz von Hand nach.
 
-4.5 **Schweigepflicht.** Soweit du dem Betreiber Angaben zugänglich
-machst, die deiner ärztlichen Schweigepflicht unterliegen, ist er
+4.5 **Schweigepflicht.** Soweit du der BetreiberIn Angaben zugänglich
+machst, die deiner ärztlichen Schweigepflicht unterliegen, ist sie
 mitwirkende Person im Sinne des § 203 Abs. 3 Satz 2 StGB. Die
 Verpflichtung dazu steht in der Vereinbarung zur Auftragsverarbeitung,
 die du bei der Registrierung annimmst (dort Abschnitt A.7).
@@ -147,7 +147,7 @@ des Dienstes.
 5.3 **Mengen.** Je Konto gelten Grenzen für die Zahl der Einsätze und den
 Speicherplatz; sie stehen auf deiner Kontoseite. Ab 80 % erhältst du einen
 Hinweis, bei 100 % nimmt der Dienst keine neuen Einsätze mehr an, bis Platz
-geschaffen oder die Grenze vom Betreiber erhöht ist. Gekoppelte Geräte
+geschaffen oder die Grenze von der BetreiberIn erhöht ist. Gekoppelte Geräte
 halten ihre Daten in dieser Zeit lokal vor.
 
 5.4 Der Dienst sendet dir Mitteilungen, die für den Betrieb deines Kontos
@@ -156,14 +156,14 @@ nach Abschnitt 7). Werbung gibt es nicht.
 
 ## 6. Datensicherung
 
-6.1 Der Betreiber sichert den Dienst regelmäßig nach dem Stand der
+6.1 Die BetreiberIn sichert den Dienst regelmäßig nach dem Stand der
 Technik, **ohne Zusage** einer bestimmten Sicherungshäufigkeit oder
 Wiederherstellungszeit.
 
 6.2 **Du bist für die Sicherung deiner eigenen Daten verantwortlich.** Der
 Dienst bietet dir dafür jederzeit einen vollständigen Export und
-verschlüsselte Konto-Backups (Einstellungen → Konto). Sicherungen des
-Betreibers enthalten deine verschlüsselten Daten nur verschlüsselt; sie
+verschlüsselte Konto-Backups (Einstellungen → Konto). Sicherungen der
+BetreiberIn enthalten deine verschlüsselten Daten nur verschlüsselt; sie
 ersetzen deine eigene Sicherung nicht.
 
 ## 7. Verfügbarkeit, Änderungen, Einstellung des Dienstes
@@ -172,29 +172,30 @@ ersetzen deine eigene Sicherung nicht.
 zur Verfügbarkeit. Wartungsarbeiten werden, wo möglich, angekündigt; ein
 Wartungsmodus kann den Dienst vorübergehend sperren.
 
-7.2 Der Betreiber kann den Dienst weiterentwickeln und Funktionen ändern
+7.2 Die BetreiberIn kann den Dienst weiterentwickeln und Funktionen ändern
 oder entfernen. Änderungen, die den Kern (Abschnitt 1.1) oder die
 Verschlüsselung (Abschnitt 4) berühren, werden vorher angekündigt.
 
-7.3 Der Betreiber kann den Dienst **einstellen**. Er kündigt das mindestens
-**drei Monate** vorher an deine hinterlegte Adresse an und hält den Export
-bis zum Ende der Frist offen. Nach Ablauf werden alle Daten gelöscht.
+7.3 Die BetreiberIn kann den Dienst **einstellen**. Sie kündigt das
+mindestens **drei Monate** vorher an deine hinterlegte Adresse an und hält
+den Export bis zum Ende der Frist offen. Nach Ablauf werden alle Daten
+gelöscht.
 
 ## 8. Haftung
 
-8.1 Der Dienst wird unentgeltlich erbracht. Der Betreiber haftet daher **nur
-für Vorsatz und grobe Fahrlässigkeit**.
+8.1 Der Dienst wird unentgeltlich erbracht. Die BetreiberIn haftet daher
+**nur für Vorsatz und grobe Fahrlässigkeit**.
 
 8.2 Unberührt bleibt die Haftung für Schäden aus der Verletzung des Lebens,
 des Körpers oder der Gesundheit, für arglistig verschwiegene Mängel und
 nach dem Produkthaftungsgesetz.
 
-8.3 Der Betreiber haftet nicht für den Verlust von Daten, die du nicht nach
+8.3 Die BetreiberIn haftet nicht für den Verlust von Daten, die du nicht nach
 Abschnitt 6.2 gesichert hast, und nicht für Daten, die wegen Verlust von
 Passwort **und** Wiederherstellungsschlüssel unzugänglich sind (Abschnitt
 3.4).
 
-8.4 Du stellst den Betreiber von Ansprüchen Dritter frei, die daraus
+8.4 Du stellst die BetreiberIn von Ansprüchen Dritter frei, die daraus
 entstehen, dass du Daten gespeichert hast, zu deren Speicherung du nicht
 berechtigt warst (Abschnitt 2.4), oder dass du den Dienst entgegen
 Abschnitt 2.2 im Auftrag genutzt hast, soweit du das zu vertreten hast.
@@ -206,19 +207,19 @@ Das Konto wird sofort gesperrt und nach einer **Frist von 30 Tagen**
 endgültig gelöscht; bis dahin kannst du die Löschung durch Anmelden
 widerrufen. Exportiere vorher, was du behalten willst.
 
-9.2 Der Betreiber kann dein Konto sperren, wenn du gegen diese Bedingungen
+9.2 Die BetreiberIn kann dein Konto sperren, wenn du gegen diese Bedingungen
 verstößt, wenn dein Konto missbraucht wird oder wenn die Sicherheit des
-Dienstes es erfordert. Er teilt dir den Grund mit, soweit das die Sicherheit
-nicht gefährdet. Bei schwerwiegenden Verstößen kann er das Konto nach
-Ankündigung löschen.
+Dienstes es erfordert. Sie teilt dir den Grund mit, soweit das die
+Sicherheit nicht gefährdet. Bei schwerwiegenden Verstößen kann sie das Konto
+nach Ankündigung löschen.
 
 9.3 Nach der endgültigen Löschung werden deine Daten aus dem laufenden
-Betrieb entfernt; in Sicherungen des Betreibers verbleiben sie
+Betrieb entfernt; in Sicherungen der BetreiberIn verbleiben sie
 verschlüsselt bis zu deren regulärem Ablauf (Datenschutzerklärung).
 
 ## 10. Änderungen dieser Bedingungen
 
-10.1 Der Betreiber kann diese Bedingungen ändern, wenn sich die
+10.1 Die BetreiberIn kann diese Bedingungen ändern, wenn sich die
 Rechtslage, der Dienst oder die Betriebsbedingungen ändern. Eine neue
 Fassung wird dir beim nächsten Anmelden mit Datum vorgelegt; die Nutzung
 setzt die Annahme voraus.
@@ -233,7 +234,7 @@ v3. Der Quelltext ist unter [Adresse des Repositoriums] verfügbar. Du kannst
 die Software selbst betreiben; für eine eigene Installation gelten diese
 Bedingungen nicht.
 
-11.2 Aus der Lizenz folgen keine Ansprüche gegen den Betreiber dieses
+11.2 Aus der Lizenz folgen keine Ansprüche gegen die BetreiberIn dieses
 Dienstes, die über diese Bedingungen hinausgehen.
 
 ## 12. Schlussbestimmungen
@@ -242,13 +243,13 @@ Dienstes, die über diese Bedingungen hinausgehen.
 bleiben zwingende Vorschriften des Staates ihres gewöhnlichen Aufenthalts
 unberührt.
 
-12.2 Ist die Nutzerin oder der Nutzer Unternehmer im Sinne des § 14 BGB,
-ist Gerichtsstand [Sitz der GbR].
+12.2 Ist die NutzerIn Unternehmer im Sinne des § 14 BGB, ist
+Gerichtsstand [Sitz der GbR].
 
 12.3 Sollte eine Bestimmung unwirksam sein, bleibt der Rest wirksam.
 
 12.4 Datenschutz: Die Datenschutzerklärung dieser Installation beschreibt,
-welche Daten der Betreiber verarbeitet. Soweit du im Dienst
+welche Daten die BetreiberIn verarbeitet. Soweit du im Dienst
 personenbezogene Daten Dritter verarbeitest, für die du Verantwortliche
 oder Verantwortlicher bist, gilt zusätzlich die Vereinbarung zur
 Auftragsverarbeitung, die du bei der Registrierung annimmst.
@@ -258,15 +259,15 @@ Auftragsverarbeitung, die du bei der Registrierung annimmst.
 *Hinweise für die Prüfung (nicht Teil des Textes):* (a) **Abschnitt 2 ist
 am 17.09.2026 nach E-P5b-25 neu gefasst worden.** Die private Nutzung ist
 jetzt Pflicht (2.2) und nicht mehr nur zugesichert; 2.4 verschiebt die
-Verantwortung für die Rechtmäßigkeit weiterhin zur Nutzerin — prüfen, ob
+Verantwortung für die Rechtmäßigkeit weiterhin zur NutzerIn — prüfen, ob
 eine Zusicherung genügt oder eine Belehrung nötig ist. **Zu prüfen ist
 außerdem, ob 2.2 durchsetzbar ist:** Der Dienst kann private von
 dienstlicher Nutzung technisch nicht unterscheiden; die Klausel wirkt nur
-im Vertragsverhältnis. Der Betreiber hat sie am 17.09.2026 in Kenntnis
+im Vertragsverhältnis. Die BetreiberIn hat sie am 17.09.2026 in Kenntnis
 dessen als harte Fassung gewählt.
 (b) 8.1 stützt sich auf den Rechtsgedanken der §§ 521, 599 BGB für
 unentgeltliche Leistungen; 8.2 hält § 309 Nr. 7 BGB ein. (c) 7.3 drei Monate
-sind eine Setzung des Betreibers. (d) 4.1 verweist auf die
+sind eine Setzung der BetreiberIn. (d) 4.1 verweist auf die
 Datenschutzerklärung; mit S11 (Verschlüsselung von GPS-Daten, Koordinaten,
 Reanimation, Zielklinik) ändert sich die Abgrenzung — dann neue Fassung
 beider Texte. (e) 12.2 nur, wenn die GbR selbst Kaufmann oder Unternehmer

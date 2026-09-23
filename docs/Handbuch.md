@@ -422,7 +422,7 @@ wiederzufinden. Auf dem Bildschirm steht er bewusst nicht: Solche Texte nennen
 Interna der Datenbank, die niemanden etwas angehen.
 
 **Groß- und Kleinschreibung der E-Mail-Adresse spielt keine Rolle.**
-`Max@Beispiel.de` und `max@beispiel.de` sind dasselbe Konto.
+`Max@Example.invalid` und `max@example.invalid` sind dasselbe Konto.
 
 **Der Link aus der E-Mail braucht Cookies.** Beim ersten Öffnen nimmt die Seite
 ihn aus der Adresszeile — er soll weder im Verlauf des Browsers noch in
@@ -539,13 +539,13 @@ braucht, wendet sich an die BetreiberIn.
 
 ### 3.1d Selbst ein Konto anlegen (seit Web 20.22.0)
 
-**Ob das geht, entscheidet die Betreiberin.** Drei Betriebsarten:
+**Ob das geht, entscheidet die BetreiberIn.** Drei Betriebsarten:
 
 | Einstellung | Was passiert |
 |---|---|
 | **nur auf Einladung** (Vorgabe) | Es gibt keine Registrierungsseite zum Ausfüllen. Die Verwaltung legt Konten an; du bekommst eine Einladungsmail. |
 | **offen** | Du legst dir selbst ein Konto an und kannst sofort loslegen. |
-| **offen mit Freischaltung** | Du legst dir selbst ein Konto an; die Betreiberin schaltet es frei, bevor du hereinkommst. |
+| **offen mit Freischaltung** | Du legst dir selbst ein Konto an; die BetreiberIn schaltet es frei, bevor du hereinkommst. |
 
 Steht die Registrierung offen, führt auf der Anmeldeseite ein Verweis
 **„Neu hier? Konto anlegen"** dorthin. Steht sie nicht offen, fehlt er — er
@@ -556,7 +556,7 @@ führte sonst auf eine Seite, die absagt.
 1. **Adresse, Name und die Häkchen** eintragen. Die Häkchen sind
    Nutzungsbedingungen, Vereinbarung zur Auftragsverarbeitung und
    Datenschutzerklärung; sie sind Pflicht, jeder Text ist verlinkt. **Es sind
-   nicht immer drei:** Gezeigt wird, was die Betreiberin hinterlegt hat. Fehlt
+   nicht immer drei:** Gezeigt wird, was die BetreiberIn hinterlegt hat. Fehlt
    ein Text noch, kannst du ihn nicht annehmen — dann steht sein Häkchen auch
    nicht da, und du wirst beim ersten Anmelden danach gefragt, sobald er
    eingespielt ist. Deine Antworten werden mit der Fassung und dem Zeitpunkt
@@ -612,7 +612,7 @@ unten:
   wenn noch Schritte offen sind.
 
 Erledigte Schritte bleiben mit einem Haken stehen und zeigen, was du angelegt
-hast — „Kempten — Wache Nord" statt der Erklärung, die du nicht mehr brauchst.
+hast — „Hochkreuth — Wache Nord" statt der Erklärung, die du nicht mehr brauchst.
 Sind alle drei erledigt, verschwindet die Karte von selbst.
 
 ### 3.1c Was dein Konto hält (seit Web 20.21.0)
@@ -1247,8 +1247,8 @@ in dieser Reihenfolge:
    als **Schalter**; die Detailfelder eines eingeschalteten Schalters
    (Cycles, Bereitschaft …) erscheinen eingerückt hinter einer orangen Linie
 3. **Transport** — Transportart, NA-Begleitung, Transportziel, Schockraum
-4. **Weitere Rettungsmittel** — Rettungsmittel (RTW, NEF, RTH …), weiterer
-   Notarzt
+4. **Weitere Rettungsmittel** — Rettungsmittel (RTW, NEF, RTH …), weitere
+   NotärztIn
 5. **Abweichende Besatzung** — zugeklappt mit der Vorschau „vom Diensttag";
    mit gespeicherter Abweichung offen
 6. **Notizen** — seit Web 19 **verschlüsselt** wie die Patientendaten
@@ -1262,8 +1262,8 @@ sieht nur Chiffretext. Es steht an Name, Geburtsdatum, Alter, Diagnose,
 Einsatznummer, Einsatzort samt Beschreibung — und seit Web 19 an den
 **Notizen des Einsatzes**. Die Kleinzeile **„Klartext — keine
 Patientendaten"** heißt das Gegenteil: Dieses Feld wird unverschlüsselt
-gespeichert. Sie steht an den Bergwacht-Angaben, am weiteren Notarzt, an den
-Besatzungsnamen — und am Notizfeld des **Diensttags**, das weiterhin Klartext
+gespeichert. Sie steht an den Bergwacht-Angaben, an der weiteren NotärztIn, an
+den Besatzungsnamen — und am Notizfeld des **Diensttags**, das weiterhin Klartext
 ist. Die zugeklappte Karte **„Was hier gilt"** am Ende des Formulars erklärt
 beides in drei Sätzen.
 
@@ -1296,7 +1296,7 @@ Folgetag zugerechnet. Der Block steht seit Web 7.0.0 **unten**, direkt über
 der Reanimation: Beim Bearbeiten — dem häufigeren Fall — stehen die Phasen
 meist schon vollständig da und schoben alles andere nach unten.
 
-**NA-Begleitung ist bei „Luft" vorbelegt.** Ein Lufttransport ohne Notarzt an
+**NA-Begleitung ist bei „Luft" vorbelegt.** Ein Lufttransport ohne NotärztIn an
 Bord ist die Ausnahme. Der Haken setzt sich, sobald du „Luft" wählst — und nur,
 solange du ihn nicht selbst angefasst hast: Deine ausdrückliche Entscheidung
 gilt danach dauerhaft.
@@ -1399,7 +1399,7 @@ dann ein Eintrag in der Vorschlagsliste (z. B. „Koordinaten übernehmen
 sucht keine Adresse. Erst mit seiner Auswahl werden Koordinaten und Pin
 übernommen. **Das Textfeld wird dabei geleert** — es
 gehört ab dann der Bezeichnung, die du selbst einträgst (z. B. „Talstation
-Nebelhorn", „Wanderweg 401, Ostrachtal"). Ohne diese Bezeichnung lässt sich
+Felsberg", „Wanderweg 401, Moosachtal"). Ohne diese Bezeichnung lässt sich
 der Einsatz nicht speichern; in den Listen stünde sonst nur eine Zahlenreihe
 statt eines Ortsnamens. Bei einem Adressvorschlag bleibt es beim gewohnten
 Verhalten: Das Label steht im Feld und gilt als Bezeichnung.
@@ -1409,7 +1409,7 @@ Die vier Formate:
 - **Grad/Dezimalminuten**, z. B. `47°43.57'N 010°19.02'E`
 - **Grad/Minuten/Sekunden**, z. B. `47°39'11.6"N 10°21'34.3"E`
 - **Plus Code** (Open Location Code), aber nur als **Vollcode**,
-  z. B. `8FWH4HJM+7Q` — Kurzformen (z. B. `4HJM+7Q Kempten`) werden
+  z. B. `8FWH4HJM+7Q` — Kurzformen (z. B. `4HJM+7Q Hochkreuth`) werden
   erkannt, aber nicht als Vorschlag angeboten; die Statuszeile weist dann
   darauf hin, den Vollcode einzugeben (in der Karten-App ohne Ortsangabe
   kopieren). Werte außerhalb des gültigen Bereichs (z. B. eine Breite über
@@ -1454,16 +1454,16 @@ dieselbe Größe.
 
 **Transport.** Die **Transportart** (Luft, Boden, Ambulant) — bis Web 6.3.0
 schlicht „Transport" — steuert, was darunter erscheint: Bei Luft und Boden die **NA-Begleitung**, die **Zielklinik** samt
-Koordinaten und den **Schockraum**; bei „Ambulant" — die Patientin wurde nicht
+Koordinaten und den **Schockraum**; bei „Ambulant" — die PatientIn wurde nicht
 transportiert — entfallen alle drei. Ein zuvor eingetragenes Transportziel wird
 dabei geleert, und die Änderung ist sichtbar: Ein Transportziel an einem Einsatz
 ohne Transport wäre ein Widerspruch in den Daten.
 
 Dazu die weiteren Zusatzfelder: **Fehleinsatz / Storno / Abbruch** (ein Haken,
 ohne Unterauswahl), **Windeneinsatz** (Haken öffnet Cycles,
-Cycles mit Patient, Luftverladung), **Bergwacht** (Haken öffnet Bereitschaft
-aus den Stammdaten plus Namen/Infos), Sekundärtransport, Anderer
-Notarzt, **Weitere Rettungsmittel** (Abschnitt 9.2) und Notizen.
+Cycles mit PatientIn, Luftverladung), **Bergwacht** (Haken öffnet Bereitschaft
+aus den Stammdaten plus Namen/Infos), Sekundärtransport, weitere
+NotärztIn, **Weitere Rettungsmittel** (Abschnitt 9.2) und Notizen.
 
 **Winde und Bergwacht erscheinen nur**, wenn das Rettungsmittel des Diensttags
 sie führt (Abschnitt 9.1a) — unabhängig davon, ob der Tag luft- oder
@@ -1782,11 +1782,11 @@ dieselbe Spaltenliste, die am Schreibtisch der Tabellenkopf ist.
 
 **Suchbegriff.** Das obere Feld durchsucht Einsatznummer, Name, Geburtsdatum,
 Diagnose, Einsatzort, Transportziel, Beschreibung des Einsatzorts,
-Bergwacht-Bereitschaft und -Infos, weiteren Notarzt, weitere Rettungsmittel,
+Bergwacht-Bereitschaft und -Infos, weitere NotärztIn, weitere Rettungsmittel,
 Standort, Rettungsmittel, Besatzung und Notizen. Groß- und Kleinschreibung spielt
 keine Rolle, Wortteile genügen. Gibst du mehrere Wörter ein, müssen **alle**
-vorkommen — aber nicht im selben Feld. „müller kempten" findet also auch einen
-Einsatz, bei dem Müller die Besatzung und Kempten das Transportziel ist. Das
+vorkommen — aber nicht im selben Feld. „müller auwiesen" findet also auch einen
+Einsatz, bei dem Müller die Besatzung und Auwiesen das Transportziel ist. Das
 Geburtsdatum findest du in beiden Schreibweisen, „12.03.1985" ebenso wie
 „1985-03-12".
 
@@ -1800,7 +1800,7 @@ wie bisher.
 | `sturz ODER fraktur` | mindestens einer (`OR` und <code>&#124;</code> ebenso) |
 | `bergwacht -winde` | der erste ja, der zweite nicht (`NICHT`, `NOT`, `!` ebenso) |
 | `"zwei wörter"` | genau diese Folge, Leerzeichen eingeschlossen |
-| `(sturz ODER fraktur) oberstdorf` | Klammern binden zusammen |
+| `(sturz ODER fraktur) sonnenau` | Klammern binden zusammen |
 
 Ohne Klammern bindet **UND stärker als ODER**: `a b ODER c` heißt
 `(a UND b) ODER c` — die Lesart, die man aus Suchmasken kennt. Ein Minus zählt
@@ -1838,7 +1838,7 @@ Die Filter liegen seit Web 7.0.0 in fünf Blöcken, die danach schneiden,
 | **Bergrettung** | Bergwacht, Bereitschaft, Winde samt Cycles und Luftverladung |
 
 Vorher waren es sechs, darunter ein Block „Werte" mit Alter, Strecke und Dauer —
-das war nie ein Gegenstand, sondern eine Datenart. Alter gehört zur Patientin,
+das war nie ein Gegenstand, sondern eine Datenart. Alter gehört zur PatientIn,
 Strecke und Dauer zum Einsatz. Die Kurznamen in geteilten Links sind unverändert
 geblieben, alte Links funktionieren also weiter.
 
@@ -1968,7 +1968,7 @@ verloren ist, und wo er hingehört (nicht in die Schublade neben dem Rechner
 und nicht in dieselbe Tasche wie das Handy).
 
 **Dieses Blatt lässt sich später nicht erneut drucken.** Der Schlüssel entsteht
-in deinem Browser und wird nirgends gespeichert — auch nicht beim Betreiber.
+in deinem Browser und wird nirgends gespeichert — auch nicht bei der BetreiberIn.
 Es gibt ihn nur in dem Moment, in dem er angezeigt wird. Wer sein Blatt
 verliert, erzeugt einen **neuen** Schlüssel (siehe unten); das alte Blatt wird
 damit ungültig.
@@ -2377,12 +2377,12 @@ Zwei Sonderfälle werden dabei erkannt:
 
   **„Überschreiben" löscht nichts, was die Datei nicht kennt** (seit Web
   5.8.0). Liefert die Datei zu einem Feld nichts, bleibt der gespeicherte Wert
-  stehen. Das betrifft die Besatzung, Bergwacht-Infos, den weiteren Notarzt, die
-  Notizen, die Höhe des Einsatzortes, die Patientendaten und die Koordinaten der
-  Phasen — also genau die Angaben, die ein Export **ohne** personenbezogene
-  Angaben leer lässt. Vorher hätte ein solcher Rückimport sie im Bestand
-  gelöscht. Die Kehrseite: Ein Feld lässt sich per Import nicht mehr gezielt
-  **leeren**; das geht im Einsatzformular.
+  stehen. Das betrifft die Besatzung, Bergwacht-Infos, die weitere NotärztIn,
+  die Notizen, die Höhe des Einsatzortes, die Patientendaten und die
+  Koordinaten der Phasen — also genau die Angaben, die ein Export **ohne**
+  personenbezogene Angaben leer lässt. Vorher hätte ein solcher Rückimport sie
+  im Bestand gelöscht. Die Kehrseite: Ein Feld lässt sich per Import nicht mehr
+  gezielt **leeren**; das geht im Einsatzformular.
 - **Abweichende Besatzung.** Als Besatzung des Diensttags gilt die des ersten
   Einsatzes des Tages. Steht bei einem späteren Einsatz jemand anderes — der
   klassische Pilotenwechsel oder Fahrerwechsel im laufenden Dienst —, trägt
@@ -2451,7 +2451,7 @@ ab. Seit Web 5.8.0 deckt er **alles** ab, was auf einen Menschen zeigt:
   Einsatzort mit Adresse und Koordinaten,
 - die **Besatzung** — die des Diensttags und die tatsächliche des Einsatzes,
   auch im Blatt *Diensttage*,
-- **Bergwacht: Namen / Infos** und den **weiteren Notarzt**,
+- **Bergwacht: Namen / Infos** und die **weitere NotärztIn**,
 - die **Notizen** von Einsatz und Diensttag,
 - die **Koordinaten der Phasen** (Phase 4 ist „Ankunft Einsatzort", Phase 5
   „Ankunft PatientIn" — das *ist* der Einsatzort), die **Höhe des
@@ -2468,7 +2468,7 @@ Option versprach.
   Personen. Das Transportziel ist zusammen mit Datum und Uhrzeit trotzdem ein
   Hinweis auf eine bestimmte Aufnahme; die Entscheidung, es zu behalten, ist
   bewusst getroffen und steht deshalb hier.
-- **Weitere Rettungsmittel** („RTW Kempten") — Organisationskennungen.
+- **Weitere Rettungsmittel** („RTW Talwang") — Organisationskennungen.
 - Der **Verlauf einer Reanimation** ohne Angabe, wen sie betraf. Ohne ihn
   entfiele der Grund, Reanimationen überhaupt zu erfassen.
 - Die **Zeitpunkte** der Phasen. Sie tragen Alarmzeit, Endzeit und Dauer.
@@ -2556,7 +2556,7 @@ Zwei Feinheiten:
 - Enthält der Name Umlaute oder Leerzeichen, werden sie umgeschrieben
   (`Philipp Müller` → `philipp-mueller`), weil nicht jedes Betriebssystem und
   nicht jedes Programm damit zurechtkommt. Bei einer E-Mail-Adresse entfallen
-  `@` und Punkte ebenso (`max@gen-em.de` → `max-gen-em-de`).
+  `@` und Punkte ebenso (`max@example.invalid` → `max-example-invalid`).
 
 Bedenke beim Weitergeben: Die Kontokennung steht damit auch im Dateinamen.
 
@@ -2702,7 +2702,7 @@ Auf der Seite steht je offenem Eintrag ein kleiner Block:
   und die Wahl eines Standorts.
 
 Ganz unten steht **„Standortbezug verbindlich machen"**. Diesen letzten
-Schritt führt eine Administratorin aus: Er ändert das Datenbankschema und gilt
+Schritt führt eine AdministratorIn aus: Er ändert das Datenbankschema und gilt
 für **alle** Konten — er geht deshalb erst, wenn in *keinem* Konto mehr etwas
 offen ist. Danach verschwindet die Seite von selbst.
 
@@ -2874,7 +2874,7 @@ Zu einem **Standort** lassen sich Koordinaten hinterlegen — freiwillig. Sie si
 die Quelle des Abfahrtorts „Standort" (Abschnitt 4.3). Erfasst werden sie im
 Feld **„Lage (optional)"** unter dem Namen: Adresse suchen, Koordinatenpaar
 oder Plus Code eintippen, der Vorschlag darunter übernimmt sie. Der **Name**
-bleibt dabei unberührt — „Standort Kempten" ist keine Adresse, und die Suche
+bleibt dabei unberührt — „Standort Hochkreuth" ist keine Adresse, und die Suche
 schreibt nur die Koordinaten. Seit Web 15.8.0 steht neben dem Feld auch der
 **Pin-Knopf** mit „Meine Position übernehmen" und dem Kartendialog (4.3) —
 bis dahin gab es ihn nur im Einsatzformular, und eine Lage ließ sich hier nur
@@ -2911,8 +2911,8 @@ Windenfelder erschienen. Ohne Auswahl wird die Eingabe abgewiesen. Die Rollen
 darunter erscheinen erst, wenn die Art feststeht, und bleiben freiwillig: Ein
 Rettungsmittel ohne angehakte Rolle lässt sich anlegen.
 
-Angehakt werden die Rollen, die tatsächlich besetzt werden. Die Notärztin selbst
-ist keine Rolle — sie ist die Nutzerin. Winde und Bergwacht sind zwei getrennte
+Angehakt werden die Rollen, die tatsächlich besetzt werden. Die NotärztIn selbst
+ist keine Rolle — sie ist die NutzerIn. Winde und Bergwacht sind zwei getrennte
 Häkchen, weil ein Hubschrauber eine Winde führen kann, ohne in einer
 Bergwachtkooperation zu stehen, und umgekehrt.
 
@@ -3126,7 +3126,7 @@ Play-Tests und die Adresse der Uhr-App im Store liegen noch nicht vor. Ein
 Knopf, der ins Leere führte, wäre schlechter als keiner.
 
 **Ohne Play Store: das APK von Hand.** Darunter klappt ein Fach auf, in dem
-die App-Datei liegt, sofern die Betreiberin eine hinterlegt hat: Fassung,
+die App-Datei liegt, sofern die BetreiberIn eine hinterlegt hat: Fassung,
 Größe, Stand und die **SHA-256-Prüfsumme** mit einem Knopf „Kopieren" — wer
 der Seite nicht traut, rechnet sie an der heruntergeladenen Datei nach. Beim
 ersten Öffnen fragt Android nach, ob Installationen aus dieser Quelle erlaubt
@@ -3229,7 +3229,7 @@ Unter **Einstellungen** (Knopf unter der Dienstkarte) steht unten die Karte
 **„Rechtliches"** mit zwei Knöpfen: **Datenschutzerklärung** und
 **Impressum**. Beide öffnen die entsprechende Seite **im Browser** — dieselbe,
 die auch in der Weboberfläche steht, denn beide Texte stammen von der
-Betreiberin des Servers, mit dem die App spricht. Eine Anmeldung ist dafür
+BetreiberIn des Servers, mit dem die App spricht. Eine Anmeldung ist dafür
 nicht nötig.
 
 Die App zeigt die Seiten bewusst nicht in sich selbst: Sie hat keinen
@@ -3816,7 +3816,7 @@ beide dürfen leer bleiben:
 > ein `noreply@`. Die Kontaktadresse ist die, an die man *antworten* soll.
 
 **Warum es das gibt:** Bis Web 20.8.0 stand in **sieben** Mailtexten dieselbe
-fest eingebaute Adresse — die des Entwicklers. Wer diese Anwendung für eine
+fest eingebaute Adresse — die der EntwicklerIn. Wer diese Anwendung für eine
 andere Organisation aufsetzt, verwies seine NutzerInnen an jemanden, den sie
 nicht kennen.
 
@@ -3835,9 +3835,9 @@ Anmeldung** erreichbar und in jeder Fußzeile verlinkt. Sie teilen sich eine
 Speichern-Leiste, und die nennt, **was** ungespeichert ist.
 
 > **Die Anwendung liefert keinen Text mit.** Was in Impressum und
-> Datenschutzerklärung steht, ist Sache des Betreibers — eine mitgelieferte
+> Datenschutzerklärung steht, ist Sache der BetreiberIn — eine mitgelieferte
 > Datenschutzerklärung wäre eine Rechtsauskunft, die dieses Projekt nicht geben
-> kann. Solange nichts hinterlegt ist, zeigen die Seiten: „Der Betreiber dieser
+> kann. Solange nichts hinterlegt ist, zeigen die Seiten: „Die BetreiberIn dieser
 > Installation hat noch kein Impressum hinterlegt." Als Verwaltung siehst du
 > dort zusätzlich den Weg hierher.
 
@@ -3909,7 +3909,7 @@ die nicht stattfindet, wäre falsch.
 
 #### Nutzungsbedingungen und Auftragsverarbeitung (seit Web 20.19.0)
 
-**Zwei Texte, die deine Nutzerinnen annehmen müssen** — anders als Impressum
+**Zwei Texte, die deine NutzerInnen annehmen müssen** — anders als Impressum
 und Datenschutzerklärung.
 
 **Der Unterschied ist kein Rang, sondern die Rechtsnatur.** Ein Vertrag kommt
@@ -4727,8 +4727,8 @@ dazugekommen (12.5). Die vier:
 
 1. die Datei `config.php` selbst,
 2. der **Serverschlüssel** darin — er öffnet das Komplett-Backup,
-3. der **Server-Anteil** darin — er gehört zum Passwort *jeder* Nutzerin,
-4. der **Zugang zum Backup-Ziel** (Rechner, Nutzer, Passwort oder Schlüssel).
+3. der **Server-Anteil** darin — er gehört zum Passwort *jeder* NutzerIn,
+4. der **Zugang zum Backup-Ziel** (Rechner, Nutzername, Passwort oder Schlüssel).
 
 Der Unterschied zwischen 2 und 3 ist wichtig: Ohne den **Serverschlüssel**
 lässt sich ein Komplett-Backup nicht mehr öffnen — das ist endgültig. Ohne den

@@ -349,7 +349,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
        WAS BLEIBT, IST DER VERWEIS. Ohne Schlüssel lässt sich hier kein Ziel
        anlegen, und wer davorsteht, muss wissen wohin. Eine Seite, die eine
        Voraussetzung nennt, ohne den Weg dorthin zu zeigen, schickt die
-       Betreiberin auf die Suche. */ ?>
+       BetreiberIn auf die Suche. */ ?>
   <?php if (!$schluesselDa): ?>
     <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt', 'id' => 'k-schluessel-fehlt']); ?>
       <p class="feld-hinweis">Die Zugangsdaten der Ziele werden verschlüsselt in
@@ -559,7 +559,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
             /* DER FEHLER STEHT DA, BIS ER WEG IST. Ein Versand, der seit drei
                Wochen scheitert, ist sonst nur im Fehlerprotokoll des Webspace
                zu sehen — und an das kommt auf geteiltem Hosting nicht jede
-               Betreiberin heran. */
+               BetreiberIn heran. */
             /* „GESCHEITERT" IST BEI EINEM ÜBERGANGENEN ZIEL DAS FALSCHE
                WORT (S10/AP4). Es ist nichts schiefgegangen — es wurde
                absichtlich nichts versucht. Der Vermerk steht in derselben
@@ -740,7 +740,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
     <p class="feld-hinweis"><strong>FTPS verschlüsselt, prüft aber nichts.</strong> Die
        PHP-Erweiterung <code>ftp</code> nimmt jedes Zertifikat an, auch ein selbst
        ausgestelltes ohne Vertrauenskette (nachgemessen in
-       <code>tools/versandprobe/</code>). Schutz gegen Mitlesen: ja. Schutz gegen
+       <code>tools/proben/versand/</code>). Schutz gegen Mitlesen: ja. Schutz gegen
        einen untergeschobenen Server: nein.</p>
     <?php /* NICHT GESTRICHEN, SONDERN UMGESCHRIEBEN (S10/AP4, E-S10-U-16).
              Dieser Absatz rechtfertigte FTP („es steht hier, weil es auf

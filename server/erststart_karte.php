@@ -51,7 +51,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/einstieg_lib.php';
 
 /* Was steht schon da? Nur fuer die Kleinzeile der erledigten Schritte —
- * „Kempten — Wache Nord" statt der Erklaerung, die man nicht mehr braucht.
+ * „Hochkreuth — Wache Nord" statt der Erklaerung, die man nicht mehr braucht.
  * Eine Abfrage je Zeile und nur fuer die erledigten. */
 $ersteZeile = static function (string $tabelle, int $uid): ?string {
     try {

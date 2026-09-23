@@ -88,7 +88,7 @@ ui_kopf(['menue' => false, 'zurueck' => $zurueck]);
         <?php /* DER LEERZUSTAND IST EINE GUELTIGE ANTWORT, kein Fehler — die
                  Anwendung liefert keinen Rechtstext mit. Deshalb der Ton
                  „info" und nicht „warn": Für eine Besucherin ist das eine
-                 Auskunft über den Betreiber, keine Störung. */ ?>
+                 Auskunft über die BetreiberIn, keine Störung. */ ?>
         <?php /* AUS DEM KATALOG (P5b/AP4). Hier stand ein ZWEIWERTIGER
                  ternaerer Ausdruck, und das war die eine Stelle, an der ein
                  dritter Schluessel stillschweigend falsch geantwortet
@@ -96,7 +96,7 @@ ui_kopf(['menue' => false, 'zurueck' => $zurueck]);
                  „noch keine Datenschutzerklaerung hinterlegt". Kein Fehler,
                  keine Meldung — nur ein falscher Satz. */ ?>
         <?= ui_meldung_markup('info',
-            'Der Betreiber dieser Installation hat '
+            'Die BetreiberIn dieser Installation hat '
             . (RT_LEERTEXT[$rtSchluessel] ?? 'diesen Text noch nicht hinterlegt.')) ?>
         <?php if ($istAdmin): ?>
           <p class="feld-hinweis">Du bist mit Verwaltungsrechten angemeldet und
@@ -109,7 +109,7 @@ ui_kopf(['menue' => false, 'zurueck' => $zurueck]);
                    dieser Anwendung. rt_html() maskiert seine Eingabe
                    vollständig, bevor es Struktur erkennt, und erzeugt
                    ausschliesslich h2/h3/p/br/ul/ol/li/a mit href — geprüft
-                   in tools/rechtstexte/. */ ?>
+                   in tools/proben/rechtstexte/. */ ?>
           <?= rt_html($text['inhalt']) ?>
           <?= rt_stand_markup($text['stand']) ?>
         </div>

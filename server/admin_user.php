@@ -304,7 +304,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 default    => 'Der Kontostatus wurde geändert.',
             };
 
-            /* ---- FREISCHALTUNG: die Nutzerin erfaehrt es (P5b/AP3, E-P5b-02)
+            /* ---- FREISCHALTUNG: die NutzerIn erfaehrt es (P5b/AP3, E-P5b-02)
              *
              * NUR `wartet` -> `aktiv`. Beim Entsperren (`gesperrt` -> `aktiv`)
              * geht keine Mail: Wer gesperrt war, weiss in aller Regel warum,
@@ -319,7 +319,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 require_once __DIR__ . '/mail_lib.php';
                 mail_einreihen('freigeschaltet', (string)($u['email'] ?? ''),
                                ['link' => app_url('/login.php')]);
-                $notice = 'Das Konto ist freigeschaltet. Die Nutzerin bekommt eine '
+                $notice = 'Das Konto ist freigeschaltet. Die NutzerIn bekommt eine '
                         . 'Mail und kann sich ab sofort anmelden.';
             }
             /* Die Zeile neu lesen — die Karte darunter zeigt sonst den
@@ -916,9 +916,9 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
             <input type="hidden" name="id" value="<?= $uid ?>">
             <input type="hidden" name="status" value="gesperrt">
             <?php ui_feld(['name' => 'grund', 'label' => 'Grund',
-                'label_zusatz' => 'erscheint im Protokoll, nicht bei der Nutzerin',
+                'label_zusatz' => 'erscheint im Protokoll, nicht bei der NutzerIn',
                 'attr' => 'maxlength="64" placeholder="z. B. auf eigenen Wunsch"',
-                'klein' => 'Die Nutzerin sieht nur, dass das Konto gesperrt ist, und den '
+                'klein' => 'Die NutzerIn sieht nur, dass das Konto gesperrt ist, und den '
                          . 'Hinweis, sich an die Verwaltung zu wenden. Den Grund '
                          . 'hier liest die Verwaltung.']); ?>
             <div class="listen-form-fuss">

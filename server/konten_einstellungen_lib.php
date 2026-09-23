@@ -196,7 +196,7 @@ const WEGWERF_DATEI = __DIR__ . '/wegwerfdomains.txt';
  * teurer als die Datei.
  *
  * KEINE NORMALISIERUNG AUSSER KLEINSCHREIBUNG. Die Liste ist durchgehend
- * klein, ohne Kommentar-, Leer- und Doppelzeilen — `tools/wegwerfdomains/`
+ * klein, ohne Kommentar-, Leer- und Doppelzeilen — `tools/erzeugen/wegwerfdomains.py`
  * prueft das bei jedem Nachziehen und schreibt nicht, wenn es nicht
  * stimmt. Was hier zusaetzlich abgefangen wuerde, verdeckte dort einen
  * Fehler.

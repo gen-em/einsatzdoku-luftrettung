@@ -193,7 +193,7 @@ ICON_GRUND = 40
 KACHEL_GRUND = 73       # Stufe des Bezugsgeräts, liegt in watch/resources
 
 # Vier Stufen über die zehn vorkommenden Displayhöhen. Muss mit KACHELN in
-# tools/uhr-bilder/erzeugen.sh übereinstimmen — dort steht auch, warum es
+# tools/erzeugen/uhr-bilder.sh übereinstimmen — dort steht auch, warum es
 # vier sind und nicht drei, fünf oder zehn.
 KACHEL_STUFEN = [(240, 60), (280, 73), (390, 101), (10**6, 118)]
 

@@ -1,0 +1,280 @@
+{
+  "name": "wortliste-p2",
+  "beschreibung": "Sperrliste der Phase P2 (Terminologie). Jedes Muster stammt aus der Wortliste im Konzept, Abschnitt 5.2, und traegt dort seine Begruendung. Ein Treffer in Klasse A (sichtbare Web-Texte) oder B (normative Dokumentation) ist ein Fehler; ein Treffer in den Klassen C bis H ist keiner und steht in ausnahmen.json. Die Muster sind ohne Ruecksicht auf Gross- und Kleinschreibung zu lesen, ausser wo `gross` gesetzt ist.",
+  "muster": [
+    {
+      "id": "flug",
+      "regex": "\\bflug",
+      "ersatz": "Diensttag, Kilometer, Track, Phasenzeiten, Aufzeichnung — je nach Bedeutung",
+      "grund": "Sammelmuster fuer Flugtag, Flugkilometer, Flugstrecke, Flugspur, Flugzeiten, Flugrolle, Flugretter. Die Wortgrenze davor haelt „Abflug“ heraus; der hat ein eigenes Muster, weil er einen eigenen Ersatz hat.",
+      "klasse": "luft"
+    },
+    {
+      "id": "abflug",
+      "regex": "\\babflug",
+      "ersatz": "Ausrücken",
+      "grund": "Phase 3 heisst seit Web 6.0.0 „Ausrücken“. Die CSV-Spalte hiess bis dahin phase_03_abflug — Saetze mit Versionsangabe bleiben (Klasse C).",
+      "klasse": "luft"
+    },
+    {
+      "id": "landung",
+      "regex": "\\blandung",
+      "ersatz": "Ankunft Klinik",
+      "grund": "Phase 7 heisst seit Web 6.0.0 „Ankunft Klinik“. „Landung Krankenhaus“ ist der alte Name.",
+      "klasse": "luft"
+    },
+    {
+      "id": "hubschrauber",
+      "regex": "hubschrauber",
+      "ersatz": "Rettungsmittel — als Fahrzeugtyp neben RTW/NEF: RTH",
+      "grund": "Das eigene Rettungsmittel ist nicht notwendig ein Hubschrauber. Als Typbezeichnung neben RTW und NEF bleibt RTH.",
+      "klasse": "luft"
+    },
+    {
+      "id": "heli",
+      "regex": "\\bheli",
+      "ersatz": "—",
+      "grund": "Fasst Logo-Dateinamen (gen-em_logo_helicopter) und englische Kurzformen. Die Wortgrenze haelt „naheliegend“ heraus.",
+      "klasse": "luft"
+    },
+    {
+      "id": "luftrettung",
+      "regex": "luftrettung",
+      "ersatz": "Einsatzdokumentation Notarzt (als Produktname); sonst Kontext pruefen",
+      "grund": "Als Produktbezeichnung ersetzt; als Einsatzart und als Name des Reiters in der Zeitraumuebersicht bleibt der Begriff (Klasse F).",
+      "klasse": "luft"
+    },
+    {
+      "id": "luftrettung-net",
+      "regex": "luftrettung\\.net",
+      "ersatz": "nadoku.beispieldomain.de",
+      "grund": "Die Produktivdomain wird in Web und Dokumentation nicht mehr genannt; jede Installation hat ihren eigenen Server (E-P2-03).",
+      "klasse": "luft"
+    },
+    {
+      "id": "hems",
+      "regex": "hems",
+      "ersatz": "Einsatzdoku (als Produktname)",
+      "grund": "Als Produktname ersetzt. Die Rolle HEMS-TC, der Rollencode `hems`, die Spalte crew_hems und die Einstiegsklasse HemsApp bleiben (Klassen D, E, F).",
+      "klasse": "luft"
+    },
+    {
+      "id": "pilot",
+      "regex": "pilot",
+      "ersatz": "Besatzung; in Beispielen „Pilot oder Fahrer“",
+      "grund": "Pilot 1 und Pilot 2 sind Fachrollen und bleiben (Klasse F). Als Beispiel fuer einen Besatzungswechsel steht daneben der Fahrerwechsel (E-P2-14).",
+      "klasse": "luft"
+    },
+    {
+      "id": "rth",
+      "regex": "\\brth\\b",
+      "ersatz": "—",
+      "grund": "Fahrzeugtyp; bleibt und wird neben NEF, NAW und RTW genannt. Das Muster steht in der Liste, weil die Basiszahl des Rahmenplans hier 65 Treffer zaehlte — 90-mal war es „dorthin“, „northeast“ oder „earth“ (siehe fallen).",
+      "klasse": "luft"
+    },
+    {
+      "id": "maschine",
+      "regex": "\\bmaschinen?\\b",
+      "ersatz": "Rettungsmittel",
+      "grund": "„Maschine“ als Rettungsmittel ist ersetzt. „Maschine“ als Rechner (Technik 7, lokal_starten.sh) bleibt; „maschinell“ und „maschinenlesbar“ faengt die Wortgrenze ab.",
+      "klasse": "luft"
+    },
+    {
+      "id": "basis",
+      "regex": "\\bbasis\\b",
+      "ersatz": "Standort",
+      "grund": "„Basis\" ist der Ausdruck der Luftrettung fuer den Standort; bodengebunden heisst die Einrichtung Wache. Die Anwendung sagt seit Web 6.x durchgehend „Standort\". Aufgenommen in der Umsetzung (F-P2-O): Die Wortliste fuehrte den Begriff als „bereits ersetzt\", im Handbuch stand er noch.",
+      "klasse": "luft"
+    },
+    {
+      "id": "christoph",
+      "regex": "christoph",
+      "ersatz": "„z. B. Christoph 17 oder NEF Kempten 1“",
+      "grund": "Als einziges Beispiel eines Rettungsmittelnamens luftlastig. Beide Arten werden nebeneinander genannt (E-P2-14).",
+      "klasse": "luft"
+    },
+    {
+      "id": "garmin",
+      "regex": "garmin",
+      "ersatz": "Uhr, Uhr-App; bei Ersteinfuehrung „derzeit für Garmin-Uhren (Connect IQ)“",
+      "grund": "In plattformspezifischen Teilen bleibt Garmin der Gegenstand (Klasse G). In plattformuebergreifenden Texten heisst es „Uhr“ (E-P2-15).",
+      "klasse": "luft"
+    },
+    {
+      "id": "connect-iq",
+      "regex": "connect[- ]?iq",
+      "ersatz": "Einstellungen der Uhr-App (bei Garmin: Connect IQ)",
+      "grund": "Wie garmin. Das Verzeichnis watch/ IST ein Connect-IQ-Projekt — dort bleibt der Begriff.",
+      "klasse": "luft"
+    },
+    {
+      "id": "garmin-connect",
+      "regex": "garmin connect",
+      "ersatz": "Einstellungen der Uhr-App (bei Garmin: Garmin Connect)",
+      "grund": "Wie garmin; eigenes Muster, weil der Ersatz ein anderer ist.",
+      "klasse": "luft"
+    },
+    {
+      "id": "fenix",
+      "regex": "fenix",
+      "ersatz": "Uhr; bei Ersteinfuehrung „Garmin-Uhren (Fenix 6 Pro, Forerunner 945, Venu 3s)“",
+      "grund": "Das README nannte die Fenix 6 Pro als „die“ Uhr, obwohl das Handbuch drei Modelle kennt.",
+      "klasse": "luft"
+    },
+    {
+      "id": "forerunner",
+      "regex": "forerunner",
+      "ersatz": "wie fenix",
+      "grund": "Wie fenix.",
+      "klasse": "luft"
+    },
+    {
+      "id": "venu",
+      "regex": "venu",
+      "ersatz": "wie fenix",
+      "grund": "Wie fenix.",
+      "klasse": "luft"
+    },
+    {
+      "id": "taste-start",
+      "regex": "\\bSTART\\b",
+      "gross": true,
+      "ersatz": "gerätefreier Ablauf; Garmin-Weg in Klammern (E-P2-02)",
+      "grund": "Tastenname. Nur in Grossbuchstaben gesucht — „Start“ und „starten“ sind gewoehnliche Woerter. Im Handbuch, Kapitel 2, bleiben die Tastennamen (Klasse G): dort steht die Tabelle je Uhr.",
+      "klasse": "luft"
+    },
+    {
+      "id": "taste-down",
+      "regex": "\\bDOWN\\b",
+      "gross": true,
+      "ersatz": "wie taste-start",
+      "grund": "Wie taste-start. Grossschreibung haelt „Drop-down“ und „Countdown“ heraus.",
+      "klasse": "luft"
+    },
+    {
+      "id": "taste-back",
+      "regex": "\\bBACK\\b",
+      "gross": true,
+      "ersatz": "wie taste-start",
+      "grund": "Wie taste-start.",
+      "klasse": "luft"
+    },
+    {
+      "id": "spur",
+      "regex": "\\bSpur(?:en|punkte?|daten|teile?n?)?\\b",
+      "ersatz": "GPS-Daten — in der Mehrzahl und ohne Zahl; „Aufzeichnung“, wo eine einzelne gemeint ist",
+      "grund": "Aufgestellt in S9/AP3 (E-S9-03, PS-9, Backlog Nr. 110). „Spur“ ist der Fachbegriff des Projekts und bleibt, wo er Fachbegriff ist: im Code (spur_lib.php, spur_*), in docs/Technik.md, im JSON-Vertrag und im Sicherungsformat — CLAUDE.md 4 nennt ihn dort namentlich. Was eine NutzerIn LIEST, heisst „GPS-Daten“: Sie weiss, was ein GPS ist, und „Spur“ liest sich wie eine Faehrte.\nGROSSGESCHRIEBEN, und das ist der Kern des Musters: Es soll das deutsche Substantiv im Fliesstext treffen, nicht den Bezeichner. `$spuren`, `spur_lesen()`, `SPUR.n` und `spurteile.length` sind Code und keine Anzeige; klein- und grossgeschrieben zugleich zu suchen ergab beim ersten Versuch 472 Treffer, von denen keine zwanzig eine Anzeige waren.",
+      "gross": true,
+      "klasse": "luft"
+    },
+    {
+      "id": "hausform-weiblich",
+      "klasse": "hausform",
+      "regex": "\\b(Nutzer|Benutzer|Betreiber|Administrator|Anwender|Entwickler|Bearbeiter|Mitarbeiter)(in|innen)\\b",
+      "ersatz": "Binnen-I: NutzerIn, NutzerInnen",
+      "grund": "E-PK-26: Hausform ist das grosse Binnen-I. Die rein weibliche Einzelform ist eine der beiden Formen, die heute nebeneinander stehen. GROSS GESCHRIEBEN GEMESSEN (PK-04/5, E-PK-36): Ohne den Schalter liest die Probe ohne Ruecksicht auf Gross- und Kleinschreibung und trifft damit ZWEIERLEI, das kein Befund ist — die BEZEICHNER (`betreiberin` ist der Rollenname im Code, `$nutzer` eine Variable; 1233 solcher Stellen im Bestand) und DIE HAUSFORM SELBST (`BetreiberIn` matcht als `Betreiber`+`In`≈`in`). Das zweite ist der schlimmere Fehler: Die Regel zaehlte HOCH, je mehr man repariert — AVV.md ging beim Umbau von 22 auf 47. Eine Regel, die den Fehler nicht von der Loesung unterscheidet, misst nichts. PREIS: Ein kleingeschriebenes Rollenwort in SICHTBAREM Text faellt durch; im deutschen Fliesstext sind Substantive gross. LESER UND PRUEFER SIND MIT PK-04/5 HERAUSGENOMMEN, aus demselben Grund wie `Helfer`: Gemessen ueber den Bestand stehen sie 126-mal fuer einen PROGRAMMTEIL (der eine Leser fuer config.php, die vier Leser des Backup-Formats, der Freitext-Pruefer) und 9-mal fuer einen Menschen -- und diese neun sind generisch („sie sagt einem Leser, was in der Datei stehen kann\"), wo die Hausform nichts gewinnt. Sie in der Liste zu lassen haette ZWOELF Ausnahmen gekostet und keinen Fehler gefunden. E-PK-38.",
+      "gross": true
+    },
+    {
+      "id": "hausform-maennlich",
+      "klasse": "hausform",
+      "regex": "\\b(Nutzer|Benutzer|Betreiber|Administrator|Anwender|Entwickler|Bearbeiter|Mitarbeiter)(|n|s)\\b",
+      "ersatz": "Binnen-I: NutzerIn, NutzerInnen",
+      "grund": "E-PK-26: dieselbe Rolle in maennlicher Form. `NutzerInnen` trifft nicht, weil nach `Nutzer` keine Wortgrenze steht. GROSS GESCHRIEBEN GEMESSEN (PK-04/5, E-PK-36): Ohne den Schalter liest die Probe ohne Ruecksicht auf Gross- und Kleinschreibung und trifft damit ZWEIERLEI, das kein Befund ist — die BEZEICHNER (`betreiberin` ist der Rollenname im Code, `$nutzer` eine Variable; 1233 solcher Stellen im Bestand) und DIE HAUSFORM SELBST (`BetreiberIn` matcht als `Betreiber`+`In`≈`in`). Das zweite ist der schlimmere Fehler: Die Regel zaehlte HOCH, je mehr man repariert — AVV.md ging beim Umbau von 22 auf 47. Eine Regel, die den Fehler nicht von der Loesung unterscheidet, misst nichts. PREIS: Ein kleingeschriebenes Rollenwort in SICHTBAREM Text faellt durch; im deutschen Fliesstext sind Substantive gross. LESER UND PRUEFER SIND MIT PK-04/5 HERAUSGENOMMEN, aus demselben Grund wie `Helfer`: Gemessen ueber den Bestand stehen sie 126-mal fuer einen PROGRAMMTEIL (der eine Leser fuer config.php, die vier Leser des Backup-Formats, der Freitext-Pruefer) und 9-mal fuer einen Menschen -- und diese neun sind generisch („sie sagt einem Leser, was in der Datei stehen kann\"), wo die Hausform nichts gewinnt. Sie in der Liste zu lassen haette ZWOELF Ausnahmen gekostet und keinen Fehler gefunden. E-PK-38.",
+      "gross": true
+    },
+    {
+      "id": "hausform-rollen-maennlich",
+      "klasse": "hausform",
+      "gross": true,
+      "regex": "\\b(Notarzt|Notärzt|Pilot|Patient|Kolleg|Flugretter|Fahrer|Praktikant)(|e|n|s|en|es)\\b",
+      "ersatz": "Binnen-I: NotärztIn, PilotIn, PatientIn, KollegIn, FlugretterIn, FahrerIn, PraktikantIn",
+      "grund": "E-PK-38 (Lesart 2, Auftraggeber 23.09.2026): Die Hausform galt bis dahin fuer ELF Woerter, und „hausform = 0\" hiess deshalb „0 von elf\", nicht „der Text ist in der Hausform\". Sieben weitere Rollen kommen im Bestand vor und sind Menschen. NICHT aufgenommen, jeweils mit Grund: `Helfer` (47 Stellen, aber in diesem Projekt eine HILFSFUNKTION im Code -- „PDO, Helfer\", „wo der Helfer null liefert\"; dieselbe Falle wie `Leser`), `Besatzungsmitglied` (saechlich, schon neutral), `Verantwortlicher` und `Auftragsverarbeiter` (Wortlaut der DSGVO, E-PK-34). ZUSAMMENSETZUNGEN FALLEN VON SELBST HERAUS, weil das Muster an der Wortgrenze misst: `Patientendaten` (96), `Notarzteinsatz` (8), `Pilotenwechsel` (9) treffen nicht. Die vier Rollenbeschriftungen aus CREW_ROLES (Pilot 1, Flugretter, Fahrer, Praktikant) sind reine ANZEIGE -- die Datenbank haelt `role_code`, nicht das Label (db.php 1037). Gendern ist deshalb ohne Migration moeglich."
+    },
+    {
+      "id": "hausform-rollen-weiblich",
+      "klasse": "hausform",
+      "gross": true,
+      "regex": "\\b(Notärzt|Pilot|Patient|Kolleg|Flugretter|Fahrer|Praktikant)(in|innen)\\b",
+      "ersatz": "Binnen-I: NotärztIn, NotärztInnen usw.",
+      "grund": "E-PK-38 (Lesart 2, Auftraggeber 23.09.2026): Die Hausform galt bis dahin fuer ELF Woerter, und „hausform = 0\" hiess deshalb „0 von elf\", nicht „der Text ist in der Hausform\". Sieben weitere Rollen kommen im Bestand vor und sind Menschen. NICHT aufgenommen, jeweils mit Grund: `Helfer` (47 Stellen, aber in diesem Projekt eine HILFSFUNKTION im Code -- „PDO, Helfer\", „wo der Helfer null liefert\"; dieselbe Falle wie `Leser`), `Besatzungsmitglied` (saechlich, schon neutral), `Verantwortlicher` und `Auftragsverarbeiter` (Wortlaut der DSGVO, E-PK-34). ZUSAMMENSETZUNGEN FALLEN VON SELBST HERAUS, weil das Muster an der Wortgrenze misst: `Patientendaten` (96), `Notarzteinsatz` (8), `Pilotenwechsel` (9) treffen nicht. Die vier Rollenbeschriftungen aus CREW_ROLES (Pilot 1, Flugretter, Fahrer, Praktikant) sind reine ANZEIGE -- die Datenbank haelt `role_code`, nicht das Label (db.php 1037). Gendern ist deshalb ohne Migration moeglich."
+    },
+    {
+      "id": "mail-fremd",
+      "klasse": "adressen",
+      "regex": "\\b[A-Za-z0-9._%+-]+@(?!(?:[A-Za-z0-9.-]+\\.)?example\\.(?:invalid|com|net|org)\\b)(?![A-Za-z0-9.-]*\\.(?:invalid|test|example|localhost)\\b)[A-Za-z0-9.-]+\\.[A-Za-z]{2,}",
+      "ersatz": "example.invalid — ausser demo@gen-em.org",
+      "grund": "E-PK-27: `demo@gen-em.org` ist die einzige echte Adresse; alles andere gehoert nach `example.invalid`. Die Ausnahme fuer demo@ steht in der Ausnahmeliste, nicht im Muster — so faellt sie auf, wenn jemand sie streicht. ERWEITERT (PK-04/5c): Erlaubt sind jetzt ALLE von RFC 2606 reservierten Formen -- example.com/net/org und die TLDs .invalid, .test, .example, .localhost. Vorher stand hier nur `example.invalid`, und das meldete `name@klinik.example` als Befund, obwohl `.example` genauso reserviert ist. Der Punkt der Regel ist nicht EINE Schreibweise, sondern dass keine Adresse getroffen wird, die jemandem GEHOEREN kann. `example.de` ist genau das -- registrierbar, und eine Vorlage, die SMTP dorthin richtet, richtet es auf eine fremde Domain."
+    },
+    {
+      "id": "netz-fremd",
+      "klasse": "netz",
+      "regex": "https?://(?:www\\.)?(?!(?:[a-z0-9.-]+\\.)?example\\.(?:invalid|com|net|org)\\b)(?![a-z0-9.-]*\\.(?:invalid|test|example|localhost)\\b)(?!localhost\\b|127\\.0\\.0\\.1|\\[?::1\\]?|0\\.0\\.0\\.0|host/)(?!@@LIZENZEN@@)[a-z0-9.-]+",
+      "ersatz": "keine fremde Adresse in sichtbarem Text",
+      "grund": "Erlaubt ist, was in `docs/Lizenzen.md` als Adresse steht. `@@LIZENZEN@@` wird BEIM LAUF aus dieser Datei ersetzt — eine Kopie hier ginge beim naechsten vendorierten Bestandteil auseinander, ohne dass etwas anschlaegt. ERWEITERT (PK-04/5d): Drei Sorten fielen vorher als Befund an, obwohl sie KEINE fremde Quelle sind. (1) RFC-2606-Formen -- `einsatz.example.invalid` in der Konfigurationsvorlage. (2) Die eigene Maschine -- `127.0.0.1`, `localhost`, `::1`. (3) Ein PLATZHALTER statt eines Hosts: `https://host//pw_handling.php` in Technik.md zeigt, wie ein doppelter Schraegstrich entsteht, und `host` ist dort kein Name, sondern die Luecke. Eine Regel gegen fremde Quellen, die die eigene Maschine meldet, kostet Ausnahmen ohne Gegenwert.",
+      "quelle": "lizenzen"
+    },
+    {
+      "id": "name-real",
+      "klasse": "namen",
+      "regex": "\\b(@@NAMEN@@)\\b",
+      "ersatz": "erfundener Name oder Ort",
+      "grund": "Die realen Rufnamen und Orte aus `tools/referenzdatensatz/quelldaten/pruefen.py` (`VERBOTENE_NAMEN`, E-P1-02). `@@NAMEN@@` wird BEIM LAUF von dort gelesen; eine zweite Liste ginge beim naechsten Eintrag auseinander.",
+      "quelle": "namen"
+    }
+  ],
+  "fallen": [
+    {
+      "wort": "dorthin",
+      "regex": "dorthin",
+      "grund": "Enthaelt „rth“. Der Rahmenplan zaehlte diese Stellen als Treffer und kam so auf 65 statt 2."
+    },
+    {
+      "wort": "northeast",
+      "regex": "northeast",
+      "grund": "Enthaelt „rth“ (Kartenlogik, Himmelsrichtungen)."
+    },
+    {
+      "wort": "earth",
+      "regex": "earth",
+      "grund": "Enthaelt „rth“ (Erdradius in der Luftlinienrechnung)."
+    },
+    {
+      "wort": "maschinell",
+      "regex": "maschinell",
+      "grund": "Enthaelt „maschine“, meint aber die Pruefung, nicht das Rettungsmittel."
+    },
+    {
+      "wort": "maschinenlesbar",
+      "regex": "maschinenlesbar",
+      "grund": "Wie maschinell."
+    },
+    {
+      "wort": "naheliegend",
+      "regex": "naheliegend",
+      "grund": "Enthaelt „heli“."
+    },
+    {
+      "wort": "Drop-down",
+      "regex": "drop-?down",
+      "grund": "Enthaelt „down“; kein Tastenname."
+    },
+    {
+      "wort": "Countdown",
+      "regex": "countdown",
+      "grund": "Enthaelt „down“; kein Tastenname."
+    },
+    {
+      "wort": "Markdown",
+      "regex": "markdown",
+      "grund": "Enthaelt „down“; kein Tastenname."
+    }
+  ],
+  "klassen": {
+    "luft": "Luftbegriffe — Land und Luft neutral benennen (P2)",
+    "hausform": "Hausform Binnen-I (E-PK-26)",
+    "adressen": "E-Mail-Adressen (E-PK-27)",
+    "netz": "Adressen im Netz — Erlaubnisliste aus docs/Lizenzen.md",
+    "namen": "Reale Namen und Rufnamen (E-P1-02)"
+  }
+}
