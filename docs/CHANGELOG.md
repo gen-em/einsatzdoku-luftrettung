@@ -46,6 +46,15 @@ keine Migration — `update.php` ist nicht fällig.
   übrigen Seiten der Anmeldehülle tragen nur die Karte und sehen aus wie
   vorher — gemessen: 10 von 10 Karten (fünf Seiten, 390 und 1440 px) auf den
   Pixel gleich mit dem Stylesheet von 20.37.2.
+- **Werkzeug: Seit PK-04/2 passte kein Prüfbericht zu seinem Commit.**
+  `.gitattributes` nimmt das GPX-Schema von der Zeilenend-Umwandlung aus,
+  damit seine SHA-256-Summe stimmt — unter dem alten Pfad
+  `tools/gpxprobe/`. Mit PK-04/2 zog die Datei nach `tools/proben/gpx/`, die
+  Ausnahme nicht. Der Prüfstand bildet seinen Baum-Hash mit `git add -A`, das
+  die 788 CRLF dann auf LF normalisierte; der Hash im Bericht wich deshalb
+  bei jedem Commit ab. Aufgefallen ist es nicht, weil kein Workflow den
+  Bericht gegenliest. Der Pfad ist berichtigt; danach ist der Baum des
+  Prüfstands gleich dem des Index.
 
 ### Für die BetreiberIn
 

@@ -1,8 +1,13 @@
 * text=auto eol=lf
-# Das vendorierte GPX-1.1-Schema wird BYTEWEISE geprueft: `tools/gpxprobe/`
+# Das vendorierte GPX-1.1-Schema wird BYTEWEISE geprueft: `tools/proben/gpx/`
 # rechnet vor jedem Lauf seine SHA-256-Summe nach, weil ein Schemalauf gegen
 # ein veraendertes Schema nichts belegt. Die Regel `* text=auto eol=lf` oben
 # schriebe die 788 CRLF der Originaldatei auf LF um — die Summe stimmte dann
 # auf diesem Rechner (die Arbeitskopie bleibt, wie sie kam) und auf jedem
 # frisch geklonten NICHT. Also: unangetastet lassen.
-tools/gpxprobe/gpx11.xsd -text
+tools/proben/gpx/gpx11.xsd -text
+# DER PFAD FOLGT DER DATEI. Bis 23.09.2026 stand hier noch
+# `tools/gpxprobe/gpx11.xsd` — die Datei war mit PK-04/2 (f7d12ad) nach
+# `tools/proben/gpx/` gezogen, die Ausnahme nicht. Folge: Der Pruefstand
+# bildet seinen Baum-Hash mit `git add -A`, das die 788 CRLF auf LF
+# normalisierte, und kein Pruefbericht passte mehr zu seinem Commit.

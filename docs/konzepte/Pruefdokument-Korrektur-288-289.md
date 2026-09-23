@@ -112,6 +112,14 @@ Prüfbericht der Commit-Nachricht.*
   Tabellen ohne `IF NOT EXISTS`). → **Nr. 291.**
 - **`Pruefdokument-Zentralisierung.md` A-7** meldete die Einrichtung als
   gelaufen; AP5 hat den Weg danach gebrochen. Dort nachgetragen.
+- **Kein Prüfbericht passte seit PK-04/2 zu seinem Commit — behoben.**
+  Gefunden, als `bericht.py lesen` den Bericht dieser Stufe abwies: Baum im
+  Bericht `9a973fc`, Baum des Commits `2ea1371`; der Unterschied war genau
+  `tools/proben/gpx/gpx11.xsd`, 788 Zeilen, nur Zeilenenden. `.gitattributes`
+  nahm die Datei unter ihrem alten Pfad `tools/gpxprobe/` aus. Pfad
+  berichtigt; danach Baum des Prüfstands = Baum des Index (`e09d779` beim
+  Nachmessen). Kein Workflow liest den Bericht gegen — deshalb blieb es seit
+  dem 22.09.2026 stumm.
 - **Zwei Hinweise aus der lesenden Abklärung, NICHT nachgeprüft** (dort als
   „vermutet" geführt): Die Verbindung des Einrichters setzt keine Zeitzone
   (`SET time_zone`), `pw_handling.php` prüft den Ablauf des Links dagegen in
