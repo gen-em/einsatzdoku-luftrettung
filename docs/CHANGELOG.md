@@ -109,7 +109,8 @@ Konzept PK, Paket PK-05. Keine Versionsstufe: berührt sind nur `tools/`,
   der falsche Knopf — sein Merge-Commit trägt keinen Bericht, und Stufe 1
   wird rot. Der Weg steht in `docs/Pruefablauf.md` 5.3: örtlich mergen,
   Prüfstand fahren, den Merge-Commit mit dem Bericht schreiben.
-- **Unter 250 Zeilen ist `pruefung.yml` nicht gekommen.** Die Zahl stammt
+- **Unter 250 Zeilen ist `pruefung.yml` nicht gekommen**, und die
+  Betreiberin hat 337 als Abnahme angenommen (E-PK-49). Die Zahl stammt
   aus der Zeit vor Konzept TB; `Schon gemessen?` und der Schema-Job sind
   zusammen rund 125 Zeilen und bleiben, wie sie sind, und die Bindung der
   Riegel an ihre Schritte hat die Gegenlesung um rund 20 Zeilen verlängert.
@@ -119,9 +120,9 @@ Konzept PK, Paket PK-05. Keine Versionsstufe: berührt sind nur `tools/`,
   Referenz, fünf ungeklärte. Bis PK-05 lief keine davon in einer Stufe, die
   ein Tor las. Sie werden in einem eigenen Paket vor P5c behoben (E-PK-45),
   nicht aus Lage 5 ausgenommen.
-- **Der Schema-Job bleibt, und er ist keine Pflichtprüfung.** Ein roter
-  Schemalauf hält einen Merge heute nicht auf; ob er es soll, entscheidet
-  die Betreiberin im Ruleset (Q-PK-07).
+- **Der Schema-Job bleibt, und er wird Pflichtprüfung** (E-PK-47). Bis
+  die Betreiberin ihn im Ruleset einträgt, hält ein roter Schemalauf einen
+  Merge nicht auf.
 
 ## [Web 20.37.3] — 2026-09-23
 
