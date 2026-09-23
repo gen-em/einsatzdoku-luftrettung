@@ -178,7 +178,7 @@
     "spaltenregister": {
       "aufruf": "php tools/spaltenregister/pruefen.php",
       "braucht": "nichts",
-      "bemerkung": "Schritt 15/AP6 (E-ZE-22). schema.sql gegen mf_missions_register(), beide Richtungen, dazu die drei Abbildungen, die von Hand bleiben. Rein lesend. STAND 22.09.2026: ROT -- 1 Befund (start_sort fehlt im Register) und Selbstprobe 15/16 (Alias uhr_gesperrt AS manual). Backlog Nr. 282."
+      "bemerkung": "Schritt 15/AP6 (E-ZE-22). schema.sql gegen mf_missions_register(), beide Richtungen, dazu die drei Abbildungen, die von Hand bleiben. Rein lesend. STAND 23.09.2026: GRUEN -- Selbstprobe 16 von 16, Lauf 0 Befunde. Sie war zwei Tage rot (start_sort fehlte im Register; der Selbstprobefall erwartete den Alias ohne Backticks) und ist von Schritt 15 selbst behoben worden (f1bc9e6). Backlog Nr. 282, erledigt."
     },
     "spaltenregister-wegprobe": {
       "aufruf": "python3 tools/spaltenregister/wegprobe.py --konto \"$WEGWERFKONTO\" --passwort \"$WEGWERFPASSWORT\"",

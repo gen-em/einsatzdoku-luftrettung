@@ -9138,22 +9138,23 @@ Die Schritte:
 > jemand fährt. Genau davor warnte Nr. 208 („sonst wandert das Problem nur
 > eine Ebene weiter").
 
-> **`tools/spaltenregister/` hängt in Stufe 1 und ist dort heute ROT.**
-> Zwei Befunde, beide aus Schritt 15 selbst, beide am 22.09.2026 auf dessen
-> eigenem Stand nachgemessen (Backlog Nr. 282):
+> **`tools/spaltenregister/` hängt in Stufe 1 und ist dort grün** —
+> **Selbstprobe 16 von 16, Lauf 0 Befunde**, beide Rückgabewert 0
+> (nachgemessen 23.09.2026).
 >
-> - **`php tools/spaltenregister/pruefen.php` — 1 Befund.** `start_sort`
->   steht in der Abbildung von `api/suchindex.php`, aber nicht im Register.
->   Das ist genau das Feld, das AP9 für die Sortierung des Nachtdienstes
->   eingeführt hat; die Registerzeile dazu fehlt.
-> - **`--selbstprobe` — 15 von 16.** Der Fall „mf_spalten: Alias an"
->   erwartet `uhr_gesperrt AS manual` in `mf_spalten('export', '', true)`
->   und bekommt ihn nicht. Der Alias ist keine Kosmetik: `backup_lib.php`
->   225 nennt ihn Pflicht (Nr. 238), weil das Einspielen sonst das Feld
->   nicht mehr findet.
+> **Es war zwei Tage lang rot, und das gehört hierher**, weil es zeigt,
+> wofür die Selbstprobe da ist. Zwei Befunde, beide aus Schritt 15 selbst:
+> `start_sort` stand in der Abbildung von `api/suchindex.php`, aber nicht
+> im Register — genau das Feld, das AP9 für die Sortierung des
+> Nachtdienstes eingeführt hatte. Und der Selbstprobefall „mf_spalten:
+> Alias an" erwartete `uhr_gesperrt AS manual` **ohne Backticks**, während
+> der Merge den Fix aus Web 20.26.3 nach `mf_spalten()` gezogen hatte. Der
+> Fall hat damit genau das getan, wofür es ihn gibt: angeschlagen, als
+> sich die erzeugte Zeichenkette änderte.
 >
-> Eine Prüfung, die rot in die Kette geht, ist kein Riegel, sondern ein
-> Geräusch, das nach zwei Läufen weggeklickt wird.
+> Behoben von Schritt 15 selbst (`f1bc9e6`), nach dem Stand, den PK-04
+> vorweggenommen hatte — deshalb stand hier zwischenzeitlich „ROT".
+> Backlog Nr. 282, erledigt.
 >
 >     php tools/zaehlung/zaehlen.php --selbstprobe
 >     php tools/zaehlung/zaehlen.php

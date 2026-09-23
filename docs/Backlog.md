@@ -3643,28 +3643,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Nummern vergibt, beginnt bei 267" beschreibt keinen Riegel, sondern eine
     Hoffnung.*
 
-282. **Das Spaltenregister geht rot in Stufe 1.**
-    *Gemessen 22.09.2026 auf dem Stand von Schritt 15 selbst (PR #74),
-    vor dem Merge; nicht behoben.*
-    `tools/spaltenregister/pruefen.php` hängt seit Schritt 15 AP6 als
-    Prüfschritt in `pruefung.yml` und meldet dort zwei Dinge:
-
-    - **1 Befund.** `start_sort` steht in der Abbildung von
-      `api/suchindex.php`, aber nicht in `mf_missions_register()`. Das ist
-      genau das Feld, das AP9 für die Sortierung des Nachtdienstes
-      eingeführt hat — die Registerzeile dazu fehlt.
-    - **Selbstprobe 15 von 16.** Der Fall „mf_spalten: Alias an" erwartet
-      `uhr_gesperrt AS manual` in `mf_spalten('export', '', true)` und
-      bekommt ihn nicht. Der Alias ist keine Kosmetik: `backup_lib.php` 225
-      nennt ihn Pflicht (Nr. 238), weil das Einspielen das Feld sonst nicht
-      mehr findet.
-
-    **Beides liegt in `server/`** und gehört zu Schritt 15, nicht zu PK —
-    hier steht es, damit es nicht untergeht. Eine Prüfung, die rot in die
-    Kette geht, ist kein Riegel, sondern ein Geräusch, das nach zwei Läufen
-    weggeklickt wird (Grundsatz 7).
-
-
 ## Erledigt
 
 
@@ -9648,3 +9626,32 @@ zutreffen.
     44 zu 44. Genau so ein Fünfzeiler ist das Prüfmittel, das dieser Punkt
     oben verlangt — er gehört in Stufe 1 der Kette, nicht in eine Sitzung, die
     zufällig hinsieht.
+
+282. **Das Spaltenregister ging rot in Stufe 1.**
+    *Gemessen 22.09.2026 auf dem Stand von Schritt 15 selbst (PR #74), vor
+    dem Merge. **Erledigt 23.09.2026** — von Schritt 15 selbst behoben.*
+    `tools/spaltenregister/pruefen.php` hängt seit Schritt 15 AP6 als
+    Prüfschritt in `pruefung.yml` und meldete dort zwei Dinge:
+
+    - **1 Befund.** `start_sort` stand in der Abbildung von
+      `api/suchindex.php`, aber nicht in `mf_missions_register()` — genau
+      das Feld, das AP9 für die Sortierung des Nachtdienstes eingeführt
+      hatte.
+    - **Selbstprobe 15 von 16.** Der Fall „mf_spalten: Alias an" erwartete
+      `uhr_gesperrt AS manual` **ohne Backticks**, während der Merge den
+      Fix aus Web 20.26.3 nach `mf_spalten()` gezogen hatte. Der Fall hat
+      damit getan, wofür es ihn gibt: angeschlagen, als sich die erzeugte
+      Zeichenkette änderte.
+
+    **Behoben von Schritt 15 selbst** (`f1bc9e6`) — in einem Commit nach
+    dem Stand `1513615`, den PK-04 für seinen vorweggenommenen Merge
+    benutzt hatte. Genau deshalb sah PK-04 den Befund: Wer einen Merge
+    vorwegnimmt, nimmt den Stand eines **Zeitpunkts** vorweg, nicht den
+    Endstand des Zweigs. Nach `git merge origin/main` nachgemessen:
+    **Selbstprobe 16 von 16, Lauf 0 Befunde**, beide Rückgabewert 0.
+
+    *Die Lehre steht nicht im Befund, sondern im Weg dorthin:* Ein
+    vorweggenommener Merge findet echte Fehler, aber er findet auch
+    Fehler, die die andere Seite gerade selbst behebt. Wer so misst, sieht
+    vor dem Melden noch einmal nach, ob der Zweig weitergelaufen ist.
+

@@ -52,7 +52,7 @@ einer Fußnote.
 | P-PK-19 | Stufe 2 kommt ohne Konto mit Vorgabekennwort aus (F-PK-04) | nach PK-06: Push auf `main`, Stufe 2 ansehen | Stufe 2 grün; der Bilderlauf läuft im **Prüfstand** gegen die örtliche Anlage (Demo-Konto aus der Fixture) | Stufe 2 meldet wieder `Anmeldung als demo@gen-em.org gescheitert`, oder jemand hat das Konto auf Staging angelegt | **offen** — bis dahin ist Stufe 2 nach einem Merge **planmäßig rot am Schritt 6** |
 | P-PK-21 | Ein Push auf `main` erzeugt genau **einen** Auslieferungslauf, dessen Stufe 2 **als Ganzes** grün ist (Folge aus F-PK-02 bis -04) | auf `main` mergen, dann die Läufe von `auslieferung.yml` zu diesem Commit ansehen | **genau 1 Lauf**; Stufe 2 grün in **unter drei Minuten** (gemessen 21.09.2026: Run 72 auf `a1c6494`, **107 s**) | zwei gleichzeitig laufende Staging-Läufe · ein Stufe-2-Job mit **mehr als vier** Schritten inkl. Checkout · ein rotes Backup-Tor mit „angehalten bis" | **offen** — misst die Betreiberin |
 | P-PK-06 | Die neuen Dokumente laufen durch die Wortliste (B-S4-06) | `wortliste.py --bereich c`; nachsehen, dass beide Dateien in `BEREICHE["c"]` stehen | beide Dateien werden gelesen, 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | der Lauf meldet 0 und hat keine Zeile der neuen Dokumente angesehen | **erledigt 21.09.2026** (3.3) |
-| P-PK-22 | Das Spaltenregister aus Schritt 15 wird in Stufe 1 grün (F-PK-27, Backlog Nr. 282) | `php tools/spaltenregister/pruefen.php --selbstprobe` und ohne Schalter, auf `main` nach dem Merge von PR #74 | Selbstprobe **16 von 16**, Lauf **0 Befunde** | `start_sort` fehlt weiter im Register, oder der Fall „mf_spalten: Alias an" bleibt rot — dann ist Stufe 1 rot und die Kette liefert nicht aus | **offen** — gehört zu Schritt 15, nicht zu PK; hier steht es, damit es nicht untergeht |
+| P-PK-22 | Das Spaltenregister aus Schritt 15 wird in Stufe 1 grün (F-PK-27, Backlog Nr. 282) | `php tools/spaltenregister/pruefen.php --selbstprobe` und ohne Schalter, auf `main` nach dem Merge von PR #74 | Selbstprobe **16 von 16**, Lauf **0 Befunde** | `start_sort` fehlt weiter im Register, oder der Fall „mf_spalten: Alias an" bleibt rot — dann ist Stufe 1 rot und die Kette liefert nicht aus | **erledigt 23.09.2026** — von Schritt 15 selbst behoben (`f1bc9e6`), nachgemessen 16/16 und 0 Befunde, beide rc 0 (5h) |
 | P-PK-23 | Die vier Schlüssellagen-Proben laufen nach dem Merge von PR #74 auf `main` (F-PK-24) | `php tools/proben/anteil/probe.php`, `…/komplett/probe.php`, `…/wiederherstellung/probe.php`, `…/versand/probe.php <wurzel>` | anteil 55/55 · komplett 64/0 · wiederherstellung 110/2 (unverändert F-PK-18) · versand wie vor dem Merge | eine Probe stirbt mit `Failed opening required …konfig_stellen.php` — dann ist die Pfadtiefe wieder falsch | **drei erledigt 22.09.2026 im Arbeitszweig** (5h); `versand` steht aus, sie braucht den Wurzelpfad der Gegenstellen als Argument |
 
 ## 2. Messprotokoll P-PK-01 (21.09.2026)
@@ -859,13 +859,26 @@ Zeile deckt ausdrücklich `server/` **und** `tools/` ab.
 | `php -l` über `tools/` und `server/` | **169 Dateien, 0 Syntaxfehler** |
 | Verzeichnisbaum `Technik.md` gegen die Platte | **17 gegen 17, keine Abweichung** |
 
-### Was rot bleibt und nicht meines ist
+### Was rot war und nicht meines war — inzwischen behoben
 
-`php tools/spaltenregister/pruefen.php` — **1 Befund** (`start_sort` fehlt im
-Register) und **Selbstprobe 15 von 16** (Alias `uhr_gesperrt AS manual`).
-Beides auf dem Stand von Schritt 15 **selbst** nachgemessen, vor dem Merge,
-also kein Merge-Schaden. Die Prüfung hängt in Stufe 1 — **die Kette ist damit
-rot, bis Schritt 15 es behebt.** Backlog Nr. 282, Prüfpunkt **P-PK-22**.
+`php tools/spaltenregister/pruefen.php` meldete **1 Befund** (`start_sort`
+fehlte im Register) und **Selbstprobe 15 von 16** (Alias
+`uhr_gesperrt AS manual`). Beides auf dem Stand von Schritt 15 **selbst**
+nachgemessen, vor dem Merge, also kein Merge-Schaden.
+
+**Behoben von Schritt 15 selbst**, in `f1bc9e6` — einem Commit, der nach dem
+Stand `1513615` entstand, den PK-04 vorweggenommen hatte. Genau deshalb sah
+PK-04 den Befund: Wer einen Merge vorwegnimmt, nimmt den Stand eines
+Zeitpunkts vorweg, nicht den Endstand des Zweigs. Nach `git merge origin/main`
+am 23.09.2026, nachgemessen auf beiden Wegen:
+
+| | |
+|---|---|
+| `--selbstprobe` | **16 von 16**, rc 0 |
+| ohne Schalter | **0 Befunde**, rc 0 |
+
+Backlog Nr. 282 ist damit erledigt, **P-PK-22 ebenfalls** — ohne dass PK-04
+fremden Code anfassen musste.
 
 ## 5i. Messprotokoll PK-04/5a — die toten Werkzeugverweise (22./23.09.2026)
 

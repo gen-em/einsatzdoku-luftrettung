@@ -58,13 +58,17 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
 ### Bekannt
 
-- **`tools/spaltenregister/pruefen.php` geht rot in Stufe 1**, und zwar auf
-  dem Stand von Schritt 15 selbst: 1 Befund (`start_sort` steht in der
-  Abbildung von `api/suchindex.php`, aber nicht im Register) und Selbstprobe
-  **15 von 16** (der Alias `uhr_gesperrt AS manual` fehlt). Beides liegt in
-  `server/` und gehört zu Schritt 15. Steht als Backlog Nr. 282, damit es
+- **`tools/spaltenregister/pruefen.php` ging zwei Tage lang rot in Stufe 1**
+  und ist es nicht mehr. Gemessen wurde es auf dem Stand von Schritt 15
+  selbst: 1 Befund (`start_sort` stand in der Abbildung von
+  `api/suchindex.php`, aber nicht im Register) und Selbstprobe **15 von 16**
+  (der Alias `uhr_gesperrt AS manual`). Notiert als Backlog Nr. 282, damit es
   nicht untergeht — eine Prüfung, die rot in die Kette geht, ist kein Riegel,
   sondern ein Geräusch, das nach zwei Läufen weggeklickt wird.
+  **Behoben hat es Schritt 15 selbst** (`f1bc9e6`), in einem Commit nach dem
+  Stand, den PK-04 vorweggenommen hatte. Nachgemessen am 23.09.2026 auf dem
+  Zweig: **Selbstprobe 16 von 16, Lauf 0 Befunde**, beide rc 0. Nr. 282 ist
+  erledigt.
 
 ## [Werkzeug: Die Vollständigkeits-Schwelle steht nur noch an einer Stelle] — 2026-09-22
 
