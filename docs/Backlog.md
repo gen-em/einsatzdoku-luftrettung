@@ -3757,35 +3757,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
     **Zuordnung: Backlog-Runde.**
 
-292. **Neun von 36 Proben der Nebenstufe sind rot — und seit PK-05 macht
-    jede davon das Tor rot.**
-    *Aufgenommen 23.09.2026 mit PK-05 (Konzept PK, F-PK-40), gemessen.* Die
-    Stufe „neben" gibt es erst seit PK-05; vorher maß jede Stufe wie „klein"
-    (F-PK-30). Gefahren auf frischer örtlicher Anlage (`hochfahren.sh --neu`,
-    Web 20.37.3), `pruefen.sh --stufe neben --datei server/index.php`:
-    **36 Proben, 27 grün, 9 rot, 0 nicht gemessen, 1 266 s** (Ziel 15 min).
-    Mit Lage 5 (E-PK-44) ist jeder Bericht mit einer roten Probe ein rotes
-    Tor — **der erste Nebensprung, P5c AP1, käme so nicht durch.** Die neun,
-    grob eingeordnet am Ende ihres Protokolls:
-
-    - **Verdrahtung des Prüfstands** (3): `versandprobe` braucht den
-      Wurzelpfad der Gegenstellen als Argument (bekannt, P-PK-23);
-      `spaltenregister-wegprobe` braucht `WEGWERFKONTO`/`WEGWERFPASSWORT`
-      (seit PK-05 „nicht gemessen" statt Absturz, aber weiter nicht grün);
-      `freigabeprobe` endet mit „Zielkonto nicht gefunden".
-    - **Referenz veraltet** (1): `kreislauf-csv` — die Hausform aus PK-04/5b
-      („Andere NotärztIn") steht in der Anwendung, nicht in der Referenz.
-    - **Inhaltlich, ungeklärt** (5): `wiederherstellung` 110/2 (F-PK-18,
-      seit PK-03 bekannt), `gpxprobe` 92/3, `wartungsprobe` 67/1,
-      `mailprobe` 41/1 (Pflichtwerte im Beispielsatz), `browserprobe-csp`.
-      Je Probe zu klären: Fehler der Anwendung oder veraltete Erwartung
-      (P-PK-20).
-
-    *Weg (entschieden, E-PK-45):* ein eigenes Korrekturpaket **vor P5c AP1**,
-    auf eigenem Zweig nach dem PR von PK-05. Eine Liste bekannter roter
-    Proben, die Lage 5 ausnimmt, war die Gegenoption und ist nicht gewählt — sie
-    wäre ein Filter vor dem Riegel. **Zuordnung: Korrekturpaket vor P5c.**
-
 ## Erledigt
 
 
@@ -9944,3 +9915,42 @@ zutreffen.
     **Erledigt 23.09.2026 mit Web 20.37.3.** `.anmeldung` in
     Spaltenrichtung (`flex-direction:column`); `Design.md` 10.1 sagt es.
     Gemessen im Prüfdokument `docs/konzepte/Pruefdokument-Korrektur-288-289.md`.
+
+292. **Neun von 36 Proben der Nebenstufe sind rot — und seit PK-05 macht
+    jede davon das Tor rot.**
+    *Aufgenommen 23.09.2026 mit PK-05 (Konzept PK, F-PK-40), gemessen.* Die
+    Stufe „neben" gibt es erst seit PK-05; vorher maß jede Stufe wie „klein"
+    (F-PK-30). Gefahren auf frischer örtlicher Anlage (`hochfahren.sh --neu`,
+    Web 20.37.3), `pruefen.sh --stufe neben --datei server/index.php`:
+    **36 Proben, 27 grün, 9 rot, 0 nicht gemessen, 1 266 s** (Ziel 15 min).
+    Mit Lage 5 (E-PK-44) ist jeder Bericht mit einer roten Probe ein rotes
+    Tor — **der erste Nebensprung, P5c AP1, käme so nicht durch.** Die neun,
+    grob eingeordnet am Ende ihres Protokolls:
+
+    - **Verdrahtung des Prüfstands** (3): `versandprobe` braucht den
+      Wurzelpfad der Gegenstellen als Argument (bekannt, P-PK-23);
+      `spaltenregister-wegprobe` braucht `WEGWERFKONTO`/`WEGWERFPASSWORT`
+      (seit PK-05 „nicht gemessen" statt Absturz, aber weiter nicht grün);
+      `freigabeprobe` endet mit „Zielkonto nicht gefunden".
+    - **Referenz veraltet** (1): `kreislauf-csv` — die Hausform aus PK-04/5b
+      („Andere NotärztIn") steht in der Anwendung, nicht in der Referenz.
+    - **Inhaltlich, ungeklärt** (5): `wiederherstellung` 110/2 (F-PK-18,
+      seit PK-03 bekannt), `gpxprobe` 92/3, `wartungsprobe` 67/1,
+      `mailprobe` 41/1 (Pflichtwerte im Beispielsatz), `browserprobe-csp`.
+      Je Probe zu klären: Fehler der Anwendung oder veraltete Erwartung
+      (P-PK-20).
+
+    *Weg (entschieden, E-PK-45):* ein eigenes Korrekturpaket **vor P5c AP1**,
+    auf eigenem Zweig nach dem PR von PK-05. Eine Liste bekannter roter
+    Proben, die Lage 5 ausnimmt, war die Gegenoption und ist nicht gewählt — sie
+    wäre ein Filter vor dem Riegel. **Zuordnung: Korrekturpaket vor P5c.**
+
+    **Erledigt 23.09.2026 mit Konzept RP** (Zweig `claude/rp-rote-proben`,
+    ohne Versionsstufe — keiner der neun war ein Fehler der Anwendung).
+    Verdrahtung (RP-01): Versandprobe startet ihre Gegenstellen selbst,
+    Freigabeprobe bringt ihr eigenes Konto mit, Wegprobe am edbak-Umlaufkonto
+    über `nach`, Kreisläufe mit `--frisch`, GPX-Pfad. Erwartungen (RP-02):
+    Texte, Beispielsatz, CSP nur scharf, csv-Referenz erneuert. RP-03: Die
+    Wiederherstellungsprobe hatte zu wenige Konten. **Nebenstufe auf frischer
+    Anlage: 36 grün, 0 rot, 0 nicht gemessen, 1 239 s**; das Ziel ist seither
+    rund 21 min (E-RP-05). Prüfliste: `docs/konzepte/Pruefdokument-RP-Rote-Proben.md`.

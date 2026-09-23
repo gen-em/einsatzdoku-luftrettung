@@ -51,8 +51,8 @@ lief keine davon in einer Stufe, die ein Tor las; deshalb fiel keiner auf.
 | F-RP-09 | `versandprobe` | „Aufruf: php probe.php <wurzel>" | Braucht laufende Gegenstellen; `gegenstellen.py` stellt FTP, FTPS und SFTP als Nachbau **ohne root** hin, der Prüfstand startet sie nicht | `tools/` (Verdrahtung) |
 | F-RP-11 | Kreisläufe im Prüfstand | (gefunden in RP-01) | Der Prüfstand rief beide Kreisläufe **ohne `--frisch`** auf; auf einer Anlage, die nicht frisch ist, bricht der zweite Lauf ab, weil das Umlaufkonto schon besteht | `tools/` (Verdrahtung) |
 | F-RP-12 | `gpxprobe` (hinter F-RP-01) | „190 von 204 ohne Gegenstück", „0 von 204 verglichen" | Erst mit dem richtigen Pfad erreicht: Die Referenz vom 15.09. ist älter als der Demo-Bestand — dieselbe Ursache wie F-RP-06 | `tools/` (Referenz, E-RP-01) |
-| F-RP-13 | `browserprobe-csp` | (Hinweis, RP-02) | Die Probe überschreibt bei jedem Lauf ein **eingechecktes** Bildschirmfoto (`tools/proben/csp-browser/kopfzeilen.png`). Im Prüfstand landet es im gemessenen Baum und damit im Commit | `tools/` — Entscheidung in RP-05 |
-| F-RP-14 | `freigabeprobe` (Quelle) | (Hinweis, RP-03) | Beim Aufräumen löscht `vorbereiten.php` die Zeile der Quelle, nicht ihr Sicherungspaket: je Lauf ein verwaister Ordner unter `server/sicherungen/` (drei gezählt am 23.09.2026). Macht nichts rot und liegt nur in der Arbeitsumgebung (`.gitignore`) — **nicht** in RP behoben | `tools/` — Backlog-Kandidat |
+| F-RP-13 | `browserprobe-csp` | (Hinweis, RP-02) | Die Probe überschreibt bei jedem Lauf ein **eingechecktes** Bildschirmfoto (`tools/proben/csp-browser/kopfzeilen.png`). Im Prüfstand landet es im gemessenen Baum und damit im Commit | **behoben (E-RP-06):** Vorgabe `/tmp/csp-kopfzeilen.png`, die Datei ist ausgetragen |
+| F-RP-14 | `freigabeprobe` (Quelle) | (Hinweis, RP-03) | Beim Aufräumen löscht `vorbereiten.php` die Zeile der Quelle, nicht ihr Sicherungspaket: je Lauf ein verwaister Ordner unter `server/sicherungen/` (drei gezählt am 23.09.2026). Macht nichts rot und liegt nur in der Arbeitsumgebung (`.gitignore`) | **behoben (E-RP-06):** die Quelle geht über `edbak_konto_ordner_loeschen()` mit ihrem Paket; Ordner vor und nach einem Lauf 9 → 9 |
 | F-RP-10 | `wiederherstellung` | „Ein knapper Schub sichert wenigstens ein Konto und hört dann auf" (2 erledigt, 0 offen) und „Der Zeiger steht auf dem zuletzt gesicherten Konto" (`cur=—`) | **Erwartung** (geklärt in RP-03): Der Schub bekommt Zeit für zwei Konten, eine frische Anlage hat genau zwei mit Kontokennung — er sicherte beide, „hört dann auf" konnte nicht stimmen. Die Anwendung arbeitet richtig (`edbak_auftrag_schub()`) | `tools/` |
 
 **Dauer:** Der Prüfstand schreibt keine Zeit je Probe. Welche Probe die
@@ -125,6 +125,12 @@ Einzeländerung in je einer Probe; die Ursachen sind schon gelesen.
 - **E-RP-02** (Q-RP-02): Die Freigabeprobe legt **ihr eigenes Konto** an und räumt es weg.
 - **E-RP-03** (Q-RP-03): **Keine Fächerung** in RP.
 - **E-RP-04**: Das Kurzkonzept wird so umgesetzt, RP-01 bis RP-05 nacheinander.
+- **E-RP-05** (Q-RP-04, 23.09.2026): **Die Nebenstufe hat als Ziel rund 21
+  Minuten.** Gemessen 1 239 s; Bilderlauf 769 s und Bedienprobe 261 s laufen
+  absichtlich nacheinander. Weniger Breiten wären schneller und dünner —
+  nicht gewählt.
+- **E-RP-06** (23.09.2026): **F-RP-13 und F-RP-14 werden in RP behoben**, nicht
+  ins Backlog gelegt.
 
 ## 5. Was dieses Konzept nicht klärt
 

@@ -261,7 +261,12 @@ await seite.evaluate(() => {
 });
 await seite.waitForTimeout(2500);
 
-const BILD = wert('--bild', 'tools/proben/csp-browser/kopfzeilen.png');
+/* DAS BILD GEHT NACH /tmp, nicht ins Repositorium (RP, F-RP-13): Die Vorgabe
+ * war eine eingecheckte Datei, die jeder Lauf ueberschrieb -- im Pruefstand
+ * landete sie im gemessenen Baum und damit in jedem Commit. */
+const { tmpdir } = await import('node:os');
+const BILD = wert('--bild', tmpdir() + '/csp-kopfzeilen.png');
+console.log(`Bild: ${BILD}`);
 await seite.screenshot({ path: BILD });
 
 /* ---- Bericht ------------------------------------------------------------ */
