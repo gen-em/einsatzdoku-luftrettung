@@ -3639,6 +3639,44 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bis dahin gilt: **`namen = 0` heißt „null im sichtbaren Text", nicht
     „null im Repositorium".** Steht so in `docs/Pruefablauf.md` 6.6.
 
+284. **Eine ausgelieferte Android-Zeile ohne Versionsstufe, ohne
+    Changelog-Zeile und ohne Emulatorlauf.**
+    *Aufgenommen 23.09.2026 auf Nachfrage des Auftraggebers zu PK-04/5b;
+    die Zeile bleibt stehen, die drei Pflichten werden nachgezogen (E-PK-40).*
+    `android/handy/src/main/res/values/strings.xml` trägt seit PK-04/5b
+    `recht_hinweis` in der Hausform („von der BetreiberIn des Servers"), und
+    das ist **ausgelieferter Code des Handy-Moduls**. Damit greift
+    `CLAUDE.md` 2 — „drei Zählungen, drei Auslieferungen" —, und drei Dinge
+    sind unterblieben:
+
+    - **`android/version.properties` steht unverändert auf `0.15.1`.**
+      Fällig wäre 0.15.2 gewesen; den Präzedenzfall führt die Datei selbst
+      mit 0.14.1 („fünf Sätze, keine Funktion").
+    - **Der Changelog hat keine Zeile mit dem Präfix `Android`**, nur
+      `[Web 20.37.1]`. Die Regel steht im Kopf von `version.properties`.
+    - **Der Emulator ist nicht gelaufen.** `docs/Pruefablauf.md` 6.9
+      verlangt ihn bei **jeder** Änderung an einem der beiden Module,
+      angesehen, bedient und mit Bildern belegt. Pflicht ist dort der
+      Versuch, nicht der Erfolg — auch ein gescheiterter Start wäre ein
+      Befund mit Zahl gewesen.
+
+    **Wie es passiert ist:** Die Fächerung von 5b lief über
+    Wort-Eimer, nicht über Auslieferungsbereiche. Ein Agent hat die Datei
+    als eine von 434 Fundstellen behandelt, und keine Stufe danach hat
+    gefragt, welchem der drei Auslieferungsstränge sie angehört. Die
+    Textprobe misst Bereich `d` (Android-Strings) mit und ist grün — sie
+    prüft das Wort, nicht die Versionspflicht.
+
+    **Der Preis, solange es offen ist:** Zwei verschiedene Stände des
+    Handy-Moduls tragen dieselbe Nummer `0.15.1` — genau das, was
+    `version.properties` „zwei Wahrheiten über denselben Stand" nennt. Ein
+    APK aus diesem Stand ist von einem APK aus dem vorherigen nicht an der
+    Fassung zu unterscheiden.
+
+    **Nachzuziehen beim nächsten Android-Paket**, zusammen: Nummer,
+    Kopfabsatz, Changelog-Zeile und ein Emulatorlauf, der die
+    Rechtstexte-Seite zeigt. Abnahme als **P-PK-28**.
+
 ## Erledigt
 
 
