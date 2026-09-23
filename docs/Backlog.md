@@ -9851,7 +9851,9 @@ zutreffen.
     Verweis auf `main` nach dem Merge) und P-TB-06 (der erste Tag ohne
     Warten) — `docs/konzepte/Pruefdokument-TB-Tor-nach-Baum.md`.
     **P-TB-05 belegt am 23.09.2026** (Lauf 35844072753, 18 s statt rund
-    41 min); P-TB-06 bleibt offen bis zum nächsten echten Tag.
+    41 min). **P-TB-06 belegt am 23.09.2026** mit Web 20.37.2 (Lauf
+    35852217360): Das Tor hat den PR-Lauf gleichen Baums anerkannt und
+    ausgeliefert, ohne auf `main` zu warten.
 
 288. **Eine neue Anlage lässt sich seit Web 20.30.0 nicht einrichten.**
     *Aufgenommen 23.09.2026 beim Bau der Mockup-Runde M-P5c-02 (F-P5c-62),
