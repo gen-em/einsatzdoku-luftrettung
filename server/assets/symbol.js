@@ -10,7 +10,7 @@
  *
  * Deshalb: EINE Zeichenkette, zwei Erzeuger. Wer eine der beiden Funktionen
  * aendert, aendert die andere mit; die Vollstaendigkeitspruefung
- * (tools/vollstaendigkeit/) meldet jeden Inline-Pfad, der daran vorbeigeht.
+ * (tools/quelltext/vollstaendigkeit.py) meldet jeden Inline-Pfad, der daran vorbeigeht.
  *
  * ERKENNUNGSWERT. PHP kennt die Aenderungszeit der Datei, der Browser nicht.
  * Beide benutzen deshalb WEB_VERSION; die Seite gibt sie als data-Attribut am

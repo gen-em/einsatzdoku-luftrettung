@@ -278,7 +278,7 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   `spur_lesen_viele()`, `spur_zahlen()`, `spur_naechste_seq()`,
   `spur_loeschen()`, `spur_zeit_verschieben()`. Ein neuer Verbraucher, der
   daran vorbeigeht, ist ein Fehler. Format und Begründung:
-  `docs/Technik.md`, Abschnitt 4.97; Nachweis: `php tools/spurprobe/probe.php`.
+  `docs/Technik.md`, Abschnitt 4.97; Nachweis: `php tools/proben/spur/probe.php`.
 
 - **Eine Stelle je Sache — und ein Register, das es nachzählt** (R83,
   Schritt 15). Fünf Wege haben seither genau einen Eingang, und wer daneben
@@ -339,174 +339,66 @@ Oberflächenänderung anfängt, liest zuerst dort. Kurz:
 - Spaltenbreiten in Tabellen nie über `:nth-child` — sie zählen Spalten ab und
   rutschen beim Streichen einer Spalte still auf die falsche. Klassen benutzen.
 - Die Tabellen in `Design.md` (Token, Schwellen, Symbole, Bausteine) sind
-  **erzeugt**: `python3 tools/design/tabellen.py alle`. Wer eine davon von Hand
+  **erzeugt**: `python3 tools/erzeugen/design.py alle`. Wer eine davon von Hand
   ändert, ändert sie an der falschen Stelle.
 
 ## 6. Prüfen
 
-Es gibt **keine automatisierten Tests**. Geprüft wird durch Lesen und im
-Browser. Für Änderungen an der Oberfläche `/chrome` nutzen: Seite öffnen,
-Konsole lesen, den Weg durchklicken, den die Änderung betrifft — und die
-Fassungen mitprüfen, die dieselbe Regel benutzen (die Anwendung teilt sich
-Bausteine; eine Änderung an `.btn-plain` trifft ein Dutzend Stellen).
+Es gibt **keine automatisierten Tests** für Web und Uhr; die Android-Module
+haben welche. Geprüft wird durch Lesen, im Browser, im Emulator und im
+Simulator. **Wo welche Prüfung läuft, mit welchem Mittel und ab welcher
+Stufe, steht in `docs/Pruefablauf.md`** — das ist die eine Stelle dafür. Die
+Arbeitsumgebung, ihre Ausbaustufen, die sieben Umgebungswerte und was sie
+**nicht** kann: `docs/Sandbox-Setup.md`.
 
-Wenn eine Änderung nicht im Browser überprüft werden konnte, das **sagen**,
-statt sie als erledigt zu melden.
+**Die sieben Grundsätze** (ausgeführt in `docs/Pruefablauf.md` 1):
 
-**Uhr-Code** wird mit `tools/uhr-pruefstand/` geprüft: übersetzen für alle
-Zielgeräte (Stufe I) und im Simulator starten (Stufe II). Der Aufbau braucht
-eine Adresse in `CIQ_GERAETE_URL`, die nicht im Repositorium steht. Sie liegt
-seit dem 03.09.2026 in den **Umgebungsvariablen der Arbeitsumgebung** und ist
-in einer eingerichteten Umgebung bereits gesetzt — prüfen mit
-`[ -n "$CIQ_GERAETE_URL" ]`, und nur erfragen, wenn sie fehlt. Anleitung in
-der dortigen `LIESMICH.md`.
+1. **Jede Prüfung hat genau eine Stelle.** Sie steht dort — nicht in einem
+   Kommentar, nicht im Gedächtnis.
+2. **Arbeit örtlich, Riegel in der Kette.** Was Fehler *findet*, läuft in der
+   Arbeitsumgebung; was Fehler *aufhält*, im Tor. Die Anlage misst nur, was
+   nur die Anlage zeigen kann.
+3. **Zweimal nur die Gegenlesung.** Sonst wird nichts zweimal gemessen.
+4. **Der Umfang folgt der Änderung, nicht dem Kalender.**
+5. **Ein Prüfmittel braucht einen Fehler** — eine Zeile „Anlass: Nr. …".
+   Ohne sie steht es auf der Streichliste.
+6. **Geschichte steht im Commit, nicht im Werkzeug.**
+7. **Kein stilles Überspringen, keine grüne Zahl ohne Gegenstand.**
 
-**Während P3 (Oberflächen-Redesign) treten zwei Werkzeuge an die Stelle des
-Stilvergleichs**, weil er dort die falsche Frage stellt (Begründung in
-`tools/stilvergleich/LIESMICH.md`):
+Vier Sätze, die beim Arbeiten im Kopf sein müssen:
 
-- `tools/vollstaendigkeit/` — Ist etwas verlorengegangen (jede Klasse des
-  alten Stylesheets hat eine Regel oder steht mit Begründung auf der
-  Streichliste), und steht jeder Wert an der einen Stelle (`:root`)?
-- `tools/screenshots/` — **62** Seiten in acht Breiten von 360 bis 1920 px (Stand 17.09.2026, gemessen: 496 Bilder — die Zahl steht in `seiten.json` und wächst mit jeder neuen Seite; P5b hat zwölf Seiten hinzugefügt), mit
-  gemessenem waagerechtem Überlauf, Konsolenfehlern und Knopfhöhen; dazu
-  `kontrast.py` für die Kontraste der Token.
+- **Die Prüfmittel laufen zuletzt**, nach der letzten Änderung — erst Code,
+  dann Dokumentation, dann die Mittel. Ein Werkzeug, das davor lief, misst
+  einen Stand, den es nicht mehr gibt.
+- **Eine grüne Zahl ist erst dann ein Beleg, wenn sie das Gemessene
+  benennt.** Dazusagen, **was** gemessen wurde, und im Zweifel eine
+  unabhängige Gegenprobe fahren.
+- **Was nicht geprüft werden konnte, wird gesagt**, statt als erledigt
+  gemeldet zu werden — und im Prüfdokument an den Anfang, nicht in eine
+  Fußnote.
+- **Pflicht ist der Versuch, nicht der Erfolg.** Ein Prüfmittel, das in
+  diesem Container nicht läuft, ist ein **Befund mit Zahl** — welches
+  Abbild, welche Fassung, welche Meldung —, kein stillschweigend
+  übersprungener Punkt.
 
-Beide nach **jedem** Arbeitspaket, nicht erst am Ende. Ab P4 wacht der
-Stilvergleich wieder.
+Drei Regeln haben schon Schaden angerichtet, als sie nirgends standen. Sie
+stehen ausgeführt in `docs/Pruefablauf.md` und **nur dort**; hier steht, dass
+es sie gibt und wo:
 
-**Stilvergleich bei CSS-Umbauten.** Für jede Änderung an
-`server/assets/style.css`, die Regeln verschiebt, zusammenführt, entfernt
-oder deren Reihenfolge berührt, wird der Stilvergleich angewendet
-(`tools/stilvergleich/`, Anleitung in der dortigen `LIESMICH.md`):
-Kaskadenvergleich plus berechnete Stile in Chromium über mehrere
-Fensterbreiten, Vergleichsstand aus Git. Bei einer **beabsichtigten**
-Gestaltungsänderung ist das Ergebnis keine Null, sondern eine Liste — sie
-wird gegen die Liste der geplanten Änderungen gehalten; jede Abweichung
-darüber hinaus ist unbeabsichtigt und wird geklärt, bevor committet wird.
-Der Stilvergleich ersetzt die Browserprüfung nicht: Er misst statisches
-Markup, keine Bedienzustände.
+- **Markup aus einer Quelldatei lesen** — welches Muster, warum die kurze
+  Form dreimal Schaden angerichtet hat, und wann sie ausnahmsweise richtig
+  ist: `Pruefablauf.md` 6.4.
+- **Sichtbarer Text und die Wortliste** — welche Bereiche sie liest, was grün
+  heißt, und warum ein neues Verzeichnis oder Dokument im selben Paket
+  eingetragen wird: `Pruefablauf.md` 6.6.
+- **Android-Änderung und der Emulator** — was er belegt, was der Bilderlauf
+  stattdessen belegt, und was gilt, wenn er nicht startet:
+  `Pruefablauf.md` 6.9.
 
-**Wortliste bei jeder Textänderung.** Für jede Änderung an einem sichtbaren
-Text — der Weboberfläche, **der Android-Apps** oder der normativen
-Dokumentation — wird `tools/wortliste/` gefahren (Anleitung in der dortigen
-`LIESMICH.md`): Es zählt nach, ob Land und Luft neutral benannt sind. Erwartet
-werden null Treffer außerhalb der Ausnahmeliste und null ungenutzte Ausnahmen;
-ein Luftbegriff, der bleiben soll, braucht einen Eintrag mit Begründung — kein
-Ausblenden.
-
-> **Jeder sichtbare Text der Anwendung läuft durch die Wortliste — gleich, in
-> welchem Client er steht.** Ein Bereich fehlt nicht, weil ein Verzeichnis
-> jung ist; er fehlt, weil ihn niemand eingetragen hat. Wer einen Client
-> hinzufügt, trägt seine Textdateien im selben Paket ein, in dem der Client
-> entsteht. **Ein Lauf, der einen Client übergeht, meldet keine Null — er
-> meldet gar nichts.**
->
-> Aufgestellt in S4 (B-S4-06), nachdem der Lauf nach dem letzten Android-Paket
-> 0 Treffer meldete, ohne eine Zeile der App angesehen zu haben. Bereich `d`
-> (Android) steht seither in der Liste, Bereich `e` (`watch/` — Ressourcen
-> **und** Monkey C) seit S5/C. **Damit läuft jeder Client durch die Liste**;
-> die Regel hat keine offene Stelle mehr, an der sie nur ein Vorsatz wäre.
-
-**Die Android-Apps prüfen sich selbst — `./gradlew build` im Ordner
-`android/`** (mit `ANDROID_HOME=/opt/android-sdk`). Anders als Web und
-Garmin-Uhr haben sie automatisierte Prüffälle (JUnit/Robolectric), und die
-laufen ohne Gerät: gegen ein echtes SQLite, gegen eine Attrappe des Data
-Layer und, wo eine lokale Installation steht, gegen `ingest.php` selbst.
-
-**Was nur auf einem Android-System geht, steht in `src/androidTest/`** — der
-echte `AndroidKeyStore` und die Erreichbarkeit der Wearable-API. Diese Fälle
-gehen **an Gradle vorbei** (`adb shell am instrument`, Befehlsfolge in
-`android/LIESMICH.md`): `connectedAndroidTest` scheitert auf einem
-softwareemulierten Gerät an einer ddmlib-Zeitgrenze. Und **Backtick-Namen mit
-Leerzeichen** sind dort verboten — D8 lehnt sie unterhalb von DEX 040 ab, das
-Modul steht auf `minSdk = 26`. Die Bilder des Prüflaufs entstehen über
-Robolectric im NATIVE-Modus, nicht über `captureToImage()` (das hängt sich
-auf) — sie zeigen das **gerechnete** Bild und sind damit etwas anderes als
-die Abzüge vom Emulator (nächster Absatz). Erwartet werden **0 Lint-Fehler**
-und **0 Fehlschläge**; Warnungen werden gezählt und nicht stummgeschaltet.
-Was das alles NICHT ersetzt, steht in `android/LIESMICH.md` und beginnt mit
-dem echten Data Layer.
-
-**Der Emulator läuft mit — wie der Simulator bei der Garmin-Uhr.**
-Angewiesen am 03.09.2026. Die Uhr hat seit jeher zwei Stufen: übersetzen
-(Stufe I) und im Simulator starten (Stufe II). Für Android galt bislang nur
-Stufe I. Das ändert sich: Bei **jeder** Änderung an einem der beiden
-Android-Module wird der Emulator gestartet, die Änderung darin **angesehen
-und bedient**, und beides mit **Bildern belegt**. Werkzeug:
-`android/werkzeuge/emulator.sh` (`aufbauen`, `start`, `legen`, `bild`, `aus`),
-Anleitung und Zahlen in `android/LIESMICH.md`.
-
-Drei Sätze, damit die Regel nicht ins Leere greift:
-
-- **Der Bilderlauf ersetzt ihn nicht, und er ersetzt den Bilderlauf nicht.**
-  Robolectric zeichnet das gerechnete Bild: deterministisch, Dutzende Abzüge
-  in Sekunden, aber ohne laufendes Programm. Der Emulator zeigt das
-  gelaufene: Systemleisten, echte Schriftrasterung, rundes Glas,
-  Bedienzustände, und was nach einem Druck auf einen Knopf passiert. Was der
-  eine sieht, sieht der andere nicht — deshalb laufen beide.
-- **Pflicht ist der Versuch, nicht der Erfolg.** Der Emulator ist eine
-  Eigenschaft des Wegwerf-Containers. Läuft er nicht, ist das ein **Befund
-  mit Zahl** — welches Abbild, welche Fassung, welche Meldung —, kein
-  stillschweigend übersprungener Punkt; er gehört dann im Prüfdokument an den
-  Anfang, unter „was nicht geprüft werden konnte und warum". Und **bevor**
-  man ihn abschreibt, wird `-accel off` versucht: Am 03.09.2026 stand in
-  `android/LIESMICH.md`, das x86_64-Abbild brauche KVM — es braucht es nicht,
-  ohne KVM übersetzt QEMU selbst. Der Satz verwechselte „startet nicht ohne
-  Weiteres" mit „geht nicht" und kostete ein ganzes Paket ohne Stufe II.
-- **Er läuft am Ende des Arbeitspakets**, mit den übrigen Prüfmitteln. Ohne
-  KVM rechnet **ein** Kern; Boot und Aufspielen liegen in Minuten, nicht
-  Sekunden. Wer ihn nach jeder Datei anwirft, verbraucht die Zeit, die die
-  Änderung selbst gebraucht hätte.
-
-**Die Prüfmittel laufen zuletzt, nicht zwischendurch.** Erst der Code, dann
-die Dokumentation, **dann** Wortliste, Vollständigkeit, Kontraste und
-Bilderlauf. Ein Werkzeug, das vor der letzten Änderung lief, misst einen Stand,
-den es nicht mehr gibt — in O9c stand die Wortliste dadurch auf fünf Treffern,
-gemeldet worden waren null (Web 9.10.1).
-
-**Eine grüne Zahl ist erst dann ein Beleg, wenn sie das Gemessene benennt.**
-Der Bilderlauf meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten
-die Anmeldeseite (F-P3-AQ). Bei jedem Prüfmittel dazusagen, **was** es
-gemessen hat, und im Zweifel eine unabhängige Gegenprobe fahren; für den
-Bilderlauf steht sie in seiner `LIESMICH.md`.
-
-**Wer Markup aus einer Quelldatei liest, liest den Tag-Rumpf so — und zwar in
-JEDEM Tag-Muster:**
-
-```
-(?:<\?(?:php\b|=).*?\?>|[^>])*
-```
-
-Ein `[^>]*` endet am ersten `>`, und in einer PHP-Quelle ist das oft das `>`
-eines `?>` mitten im Tag: `<script<?= kopf_nonce_attr() ?>>`,
-`<form data-sperre-rest="<?= (int)$rest ?>">`. Der Tag bricht dann mitten im
-PHP-Ausdruck ab. **Für HTML beendet `?>` kein Tag; für ein Muster über den
-Quelltext schon.** Was das anrichtet, hängt am Muster: Die Integritätswache
-wurde bei jedem Lauf grundlos rot (Fund 23), sie wurde für den Angriff blind,
-für den es sie gibt (Fund 27), und in `SRC_RE` wäre ein Fremdskript weder als
-Block noch als Verweis gezählt worden — unsichtbar (Nr. 218).
-
-**Drei Anläufe an derselben Stelle, und beim zweiten wurde das Nachbarmuster
-zwanzig Zeilen weiter übersehen.** Deshalb gilt die Regel nicht für `<script>`,
-sondern für jedes Tag, das ein Werkzeug aus dem Quelltext liest — geprüft sind
-`tools/integritaetswache/`, `tools/vollstaendigkeit/`, `tools/stilvergleich/`
-und `tools/wortliste/`. Wo die kurze Form richtig ist, weil die PHP-Inseln
-vorher ausgeräumt wurden, **steht das als Kommentar daneben** (so in
-`tools/wortliste/zerlegen.py`) — sonst wird sie beim nächsten Durchgang
-„mitkorrigiert".
-
-Muster über **gelieferte** Antworten (Serverausgabe, `tools/referenzdatensatz/`)
-sind davon nicht betroffen: Dort ist das PHP bereits ausgeführt.
-
-**Die Kette prüft sich selbst — `tools/kettenaufrufe/`.** Jeder Werkzeugaufruf
-in `.github/workflows/` wird gegen die tatsächliche Schnittstelle des
-aufgerufenen Werkzeugs gehalten, ohne es auszuführen. Der Lauf hängt in Stufe 1
-und kostet nichts. Grund: Am 16./17.09.2026 sind drei Kettenschritte beim
-jeweils **ersten** echten Lauf gescheitert, alle drei mit gültigem YAML und
-sauberer Shell-Syntax (Backlog Nr. 217). Wer einen Aufruf in der Kette ändert,
-fährt das Werkzeug davor; wer ein Werkzeug umbenennt oder seine Schalter
-ändert, ebenfalls.
+**Keine Prüfzahl steht in dieser Datei.** Sie steht in der `LIESMICH.md` des
+Werkzeugs und in `docs/Pruefablauf.md` 6.11. Eine Zahl an zwei Stellen altert
+an einer davon unbemerkt: `docs/Technik.md` nannte bis Web 20.21.1 noch 366
+Bilder, während die Kette längst mit 377 lief.
 
 ## 7. Konzept und Umsetzung
 
@@ -545,6 +437,15 @@ R62). Innerhalb von Claude Code gilt:
   („39 447 Elementmessungen, keine Abweichung“ statt „unverändert“), und
   **was nicht geprüft werden konnte, wird gesagt, nicht weggelassen** — an den
   Anfang, nicht in eine Fußnote.
+- **Benennung.** Jedes Konzept führt ein Kürzel; daraus leiten sich alle
+  Nummern ab: `XX-NN Schlagwort` für Arbeitspakete, `XX-MN` für Meilensteine
+  der Betreiberin, `E-XX-NN` für Entscheidungen, `F-XX-NN` für **Befunde**,
+  `Q-XX-NN` für **Fragen an die Betreiberin**, `P-XX-NN` für Prüfpunkte.
+  Nummern sind **zweistellig** und werden **nie wiederverwendet**; die
+  Commit-Nachricht beginnt mit dem Paket (`PK-03: …`). **`F` und `Q` waren
+  bis zum 21.09.2026 ein Kürzel** („Befunde und offene Fragen") — wer eine
+  ältere Quelle liest, findet Fragen dort als `F-…`. Die Tabelle steht in
+  `docs/Pruefablauf.md` 7.
 
 **Modellwahl:** Standard für die Umsetzung ist **Opus**, ohne Nachfrage.
 Sieht das Konzept für einen Schritt ausdrücklich **Fable** vor, vor Beginn
@@ -576,12 +477,26 @@ bleiben sie seriell; sonst überschreiben sie sich gegenseitig.
 
 Ein Commit je abgeschlossenem Arbeitspaket, deutsche Nachricht. Die Historie
 nennt bislang nur die Version (`web v7.0.2`); besser ist Version **und** ein
-Satz zur Sache. **Der Arbeitszweig wird nach jedem Arbeitspaket gepusht**
-(Rahmenplan K7, R62) — das deployt nichts, solange es nicht `main` ist, und
-andere Instanzen sehen Stand und laufendes Paket. **Auf `main` kommt eine
-Phase einmal, am Ende, nach ausdrücklicher Bestätigung** — ein Push dorthin
-deployt sofort (Abschnitt 3). Nicht committen: `config.php`, Build-Ausgaben
-der Uhr (`watch/bin/`, `*.prg`), Sicherungen.
+Satz zur Sache — bei einem Konzept beginnt sie mit dem Paket (Abschnitt 7).
+**Der Arbeitszweig wird nach jedem Arbeitspaket gepusht** (Rahmenplan K7,
+R62) — das deployt nichts, solange es nicht `main` ist, und andere Instanzen
+sehen Stand und laufendes Paket.
+
+**Eine Instanz mergt nie.** Sie öffnet am Ende der Phase einen Pull Request;
+die Betreiberin mergt ihn. Auf `main` kommt eine Phase einmal, am Ende, nach
+ausdrücklicher Bestätigung — und ein Push dorthin ist seit dem 21.09.2026
+ohnehin gesperrt (Zweigschutz, `docs/Pruefablauf.md` 2.3). Das gilt auch für
+den Weg über ein Werkzeug: `mcp__github__merge_pull_request` und
+`mcp__github__enable_pr_auto_merge` stehen in der Deny-Liste von
+`.claude/settings.json`. Der Grund ist gemessen (F-PK-01): Die
+GitHub-Werkzeuge handeln unter der Identität der Betreiberin, und ein Ruleset
+kann sie deshalb nicht von ihr unterscheiden — ein Merge über die
+Schnittstelle ging durch. **Wer die Deny-Liste ändert, hebt diesen Riegel
+auf**; das fällt im Pull Request auf, weil die Datei dann in der Berührung
+steht.
+
+Nicht committen: `config.php`, Build-Ausgaben der Uhr (`watch/bin/`,
+`*.prg`), Sicherungen.
 
 ## 9. Pflegepflichten
 
@@ -600,17 +515,19 @@ nicht später, nicht „in P6":
   in `docs/konzepte/erledigt/Konzept-S1-Sicherung-Import.md` und
   `…/Konzept-S2-Mengen-Spuren-Sicherung.md` (Protokoll, nicht mehr
   fortgeschrieben).
-- **Begriffe und Texte:** `tools/wortliste/` laufen lassen; Handbuch an
-  der betroffenen Stelle nachziehen.
+- **Begriffe und Texte:** Handbuch an der betroffenen Stelle nachziehen.
+  Die Textprobe **von Hand zu fahren ist seit PK-04/1c nicht mehr nötig** —
+  sie läuft im Tor und meldet nur **neue** Treffer (E-PK-08).
 - **Fremdbestandteile** (Bibliotheken, Schriften, Symbole, Dienste):
   `docs/Lizenzen.md`.
 - **Android-App** (`android/`): `android/LIESMICH.md` (Bauanleitung,
   Entscheidungen, Prüfstand), `docs/Technik.md` 5a (wie es zusammenhängt),
   `docs/Lizenzen.md` 6a (Fremdbestandteile — die Liste selbst steht in
   `android/gradle/libs.versions.toml`), `docs/Geraete-Eingabe.md` (Wear-Teil).
-- **Prüfmittel:** nach jedem Paket `tools/vollstaendigkeit/`,
-  `tools/screenshots/` (berührte Seiten) und `tools/wortliste/`; der
-  Stilvergleich wacht ab P4 wieder.
+- **Prüfmittel:** welches Mittel welche Berührung beantwortet, steht in
+  `docs/Pruefablauf.md` — dort und nur dort. Hier stand bis PK-01 eine
+  zweite, kürzere Liste; sie nannte den Stilvergleich als „ab P4 wieder",
+  und P4 ist mit O12 vorbei.
 
 **Stand der Umsetzung:** erledigt mit O12. `docs/Design.md` und
 `docs/Lizenzen.md` stehen; `docs/Branding.md` ist damit abgelöst und aus dem

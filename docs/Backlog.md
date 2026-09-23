@@ -138,8 +138,17 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **267** und trägt seine
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **283** und trägt seine
 Spanne hier ein, bevor er pusht.
+
+**Und sieht vorher nach — auf `origin/main` UND in die offenen Pull
+Requests.** Der Satz darüber beschreibt keinen Riegel, sondern eine Hoffnung:
+Zwei Zweige, die gleichzeitig arbeiten, beginnen beide bei derselben Zahl, und
+diese Datei meldet dabei **keinen Konflikt**, weil die Einträge an
+verschiedenen Stellen stehen. Im September 2026 ist genau das dreimal
+passiert — Nr. 268 (PR #72), dann 269 bis 271 gleich dreifach (PR #74); der
+Werdegang steht bei Nr. 281. Eine Zahl, die schon auf einem ungemergten Zweig
+steht, ist vergeben.
 
 **Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
 und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
@@ -2440,7 +2449,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 227. **Die Symbolregel zählt Typografie und findet deshalb keine Symbole
     mehr.**
-    *Gemessen 17.09.2026 auf dem P5b-Zweig; nicht behoben.*
+    *Gemessen 17.09.2026 auf dem P5b-Zweig; **erledigt am 22.09.2026 mit
+    PK-04/1b**.* Die Zeichenliste trägt die Typografie nicht mehr
+    (`… → ← « » ‹ › ⋯` sind raus); von **330** Treffern blieben **14**.
+    Symbol- und Emoji-Zählung sind außerdem vom Befund zum **Hinweis**
+    geworden: Ein Teil der 14 steht in Kommentaren, und die Prüfung kann das
+    nicht trennen, solange Nr. 184 offen ist. Die 14 selbst stehen als
+    Nr. 279. **Der Vorschlag unten ist umgesetzt, die Messung bleibt stehen**
+    — sie ist die Begründung.
     `tools/vollstaendigkeit/` prüft „Unicode-Zeichen als Symbol im Markup" —
     gemeint sind Zeichen, die **statt eines Symbols** stehen (`▸ ✓ ⚠ ★ ●`).
     In der Zeichenliste stehen aber auch **`…` und `→`**, und die sind in
@@ -3546,6 +3562,120 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `Europe/Berlin` anzeigt — eine Sommerzeitgrenze mitten im Dienst wäre
     ein eigener, ebenfalls ungeprüfter Fall.
 
+
+
+
+280. **Die Kartenquelle OpenHikingMap steht in keiner Lizenzliste.**
+    *Gefunden 22.09.2026 von der neuen Regelklasse `netz` (PK-04/1c);
+    nicht behoben.*
+    `server/assets/map_layers.js` lädt Kacheln von `tile.openmaps.fr`, und
+    `server/kopfzeilen_lib.php` erlaubt den Host in der
+    Content-Security-Policy. **In `docs/Lizenzen.md` steht er nicht** — die
+    Kartentabelle dort nennt `tile.openstreetmap.org`,
+    `tile.opentopomap.org` und `server.arcgisonline.com`, aber nicht diesen.
+
+    Das ist genau die Lücke, gegen die die Zusage „keine fremde Quelle zur
+    Laufzeit" geschrieben ist: Eine Quelle, die läuft und die niemand
+    aufgeschrieben hat.
+
+    **Nicht nebenbei eingetragen:** Welche Lizenz für die Kacheln gilt, sagt
+    das Attributionsband im Code („© OpenHikingMap · © OpenStreetMap"), aber
+    ein Eintrag in `Lizenzen.md` behauptet mehr als das — er nennt
+    Rechteinhaber und Bedingungen. Das gehört nachgesehen, nicht
+    abgeschrieben.
+
+
+281. **Stufe 1 lief bei jedem Push auf einem Arbeitszweig doppelt.**
+    *Aufgenommen 21.09.2026 (PK-01), erledigt mit dem Vorgriff auf PK-05.*
+    `pruefung.yml` trug `push: branches: ['**']` **und** `pull_request`;
+    jeder Push auf einen Arbeitszweig erzeugte zwei Läufe desselben Namens
+    `Stufe 1` — einen über `pull_request` (rund 1 min, vergleicht gegen den
+    gemeinsamen Vorfahren) und einen über `push` (rund 56 min, ohne
+    Vergleichsstand misst er alles). Der Zweigschutz wartet auf den Namen,
+    also auf den langsameren. Gemessen an PR #69 (Läufe 192, 193) und
+    PR #70 (Lauf 186).
+
+    **Erledigt** mit PR #71 (21.09.2026): `branches: [ main ]`. Die Abnahme
+    — nur noch **ein** Lauf je Arbeitszweig-Push — steht als **P-PK-17**
+    offen und gehört ins Prüfdokument, nicht hierher.
+
+    *Diese Nummer war zweimal in Bewegung: zuerst die 268 (Kollision mit
+    PR #72), dann die 269 (Kollision mit Schritt 15, PR #74). Beide Male
+    hatte ein paralleler Zweig die Nummer in `Backlog.md` stehen, während
+    sie hier nur im Konzept stand. Der Satz „Jeder weitere Zweig, der
+    Nummern vergibt, beginnt bei 267" beschreibt keinen Riegel, sondern eine
+    Hoffnung.*
+
+283. **Die Textprobe liest die Kommentare in `server/` nicht — und dort
+    standen reale Ortsnamen.**
+    *Gefunden 23.09.2026 von der Gegenlesung in PK-04/5c; die acht Stellen
+    sind bereinigt, die Lücke im Prüfmittel nicht.*
+    Bereich `a` der Textprobe ist als „`server/*.php`, `server/api/*.php`
+    (sichtbare Texte, **ohne Kommentare**)" definiert, und das ist für vier
+    der fünf Regelklassen richtig: Ein Kommentar ist kein sichtbarer Text,
+    und die Luftbegriffe, die Hausform und die Adressen gehören dort nicht
+    gemessen.
+
+    **Für `namen` ist es falsch.** E-P1-02 richtet sich nicht gegen den
+    *sichtbaren* Text, sondern gegen das **öffentliche Repositorium**, das
+    die reale Station benennt — und ein Kommentar steht genauso darin.
+    Gemessen mit `grep`: **acht Stellen** in `server/` trugen „Kempten",
+    „Christoph 17" oder eine Ortskennung, alle in Kommentaren, alle für die
+    Textprobe unsichtbar.
+
+    **Die schärfste davon ist `einstellungen.php` 2038.** Dort stand
+    „Standort Kempten" **sechs Zeilen unter dem Platzhalter, der mit E-S3-13
+    auf „Standort Talwang" berichtigt worden war** — das Paket, das laut
+    `version.php` 1840 „elf Stellen getauscht" hat. Der Kommentar daneben
+    ist nicht mitgetauscht worden und hat den realen Ort seither getragen.
+
+    **Zu entscheiden ist, wie die Lücke geschlossen wird**, und beides hat
+    einen Preis:
+    - Bereich `a` um die Kommentare erweitern: Dann misst die Klasse `namen`
+      vollständig — aber die anderen vier messen Kommentare mit, und ihre
+      Null ist keine mehr. Vermutlich braucht es einen Bereich je Klasse.
+    - Eine eigene, schmale Prüfung nur für `namen` über den ganzen Baum.
+
+    Bis dahin gilt: **`namen = 0` heißt „null im sichtbaren Text", nicht
+    „null im Repositorium".** Steht so in `docs/Pruefablauf.md` 6.6.
+
+284. **Eine ausgelieferte Android-Zeile ohne Versionsstufe, ohne
+    Changelog-Zeile und ohne Emulatorlauf.**
+    *Aufgenommen 23.09.2026 auf Nachfrage des Auftraggebers zu PK-04/5b;
+    die Zeile bleibt stehen, die drei Pflichten werden nachgezogen (E-PK-40).*
+    `android/handy/src/main/res/values/strings.xml` trägt seit PK-04/5b
+    `recht_hinweis` in der Hausform („von der BetreiberIn des Servers"), und
+    das ist **ausgelieferter Code des Handy-Moduls**. Damit greift
+    `CLAUDE.md` 2 — „drei Zählungen, drei Auslieferungen" —, und drei Dinge
+    sind unterblieben:
+
+    - **`android/version.properties` steht unverändert auf `0.15.1`.**
+      Fällig wäre 0.15.2 gewesen; den Präzedenzfall führt die Datei selbst
+      mit 0.14.1 („fünf Sätze, keine Funktion").
+    - **Der Changelog hat keine Zeile mit dem Präfix `Android`**, nur
+      `[Web 20.37.1]`. Die Regel steht im Kopf von `version.properties`.
+    - **Der Emulator ist nicht gelaufen.** `docs/Pruefablauf.md` 6.9
+      verlangt ihn bei **jeder** Änderung an einem der beiden Module,
+      angesehen, bedient und mit Bildern belegt. Pflicht ist dort der
+      Versuch, nicht der Erfolg — auch ein gescheiterter Start wäre ein
+      Befund mit Zahl gewesen.
+
+    **Wie es passiert ist:** Die Fächerung von 5b lief über
+    Wort-Eimer, nicht über Auslieferungsbereiche. Ein Agent hat die Datei
+    als eine von 434 Fundstellen behandelt, und keine Stufe danach hat
+    gefragt, welchem der drei Auslieferungsstränge sie angehört. Die
+    Textprobe misst Bereich `d` (Android-Strings) mit und ist grün — sie
+    prüft das Wort, nicht die Versionspflicht.
+
+    **Der Preis, solange es offen ist:** Zwei verschiedene Stände des
+    Handy-Moduls tragen dieselbe Nummer `0.15.1` — genau das, was
+    `version.properties` „zwei Wahrheiten über denselben Stand" nennt. Ein
+    APK aus diesem Stand ist von einem APK aus dem vorherigen nicht an der
+    Fassung zu unterscheiden.
+
+    **Nachzuziehen beim nächsten Android-Paket**, zusammen: Nummer,
+    Kopfabsatz, Changelog-Zeile und ein Emulatorlauf, der die
+    Rechtstexte-Seite zeigt. Abnahme als **P-PK-28**.
 
 ## Erledigt
 
@@ -9530,3 +9660,90 @@ zutreffen.
     44 zu 44. Genau so ein Fünfzeiler ist das Prüfmittel, das dieser Punkt
     oben verlangt — er gehört in Stufe 1 der Kette, nicht in eine Sitzung, die
     zufällig hinsieht.
+
+282. **Das Spaltenregister ging rot in Stufe 1.**
+    *Gemessen 22.09.2026 auf dem Stand von Schritt 15 selbst (PR #74), vor
+    dem Merge. **Erledigt 23.09.2026** — von Schritt 15 selbst behoben.*
+    `tools/spaltenregister/pruefen.php` hängt seit Schritt 15 AP6 als
+    Prüfschritt in `pruefung.yml` und meldete dort zwei Dinge:
+
+    - **1 Befund.** `start_sort` stand in der Abbildung von
+      `api/suchindex.php`, aber nicht in `mf_missions_register()` — genau
+      das Feld, das AP9 für die Sortierung des Nachtdienstes eingeführt
+      hatte.
+    - **Selbstprobe 15 von 16.** Der Fall „mf_spalten: Alias an" erwartete
+      `uhr_gesperrt AS manual` **ohne Backticks**, während der Merge den
+      Fix aus Web 20.26.3 nach `mf_spalten()` gezogen hatte. Der Fall hat
+      damit getan, wofür es ihn gibt: angeschlagen, als sich die erzeugte
+      Zeichenkette änderte.
+
+    **Behoben von Schritt 15 selbst** (`f1bc9e6`) — in einem Commit nach
+    dem Stand `1513615`, den PK-04 für seinen vorweggenommenen Merge
+    benutzt hatte. Genau deshalb sah PK-04 den Befund: Wer einen Merge
+    vorwegnimmt, nimmt den Stand eines **Zeitpunkts** vorweg, nicht den
+    Endstand des Zweigs. Nach `git merge origin/main` nachgemessen:
+    **Selbstprobe 16 von 16, Lauf 0 Befunde**, beide Rückgabewert 0.
+
+    *Die Lehre steht nicht im Befund, sondern im Weg dorthin:* Ein
+    vorweggenommener Merge findet echte Fehler, aber er findet auch
+    Fehler, die die andere Seite gerade selbst behebt. Wer so misst, sieht
+    vor dem Melden noch einmal nach, ob der Zweig weitergelaufen ist.
+
+278. **Achtzehn Klassen des alten Stylesheets hatten weder eine Regel noch
+    einen Eintrag auf der Streichliste.**
+    *Gemessen 22.09.2026 mit PK-04/1b, **erledigt 23.09.2026 mit PK-04/5e**.*
+    Sie waren der letzte Grund, warum die Vollständigkeitsprüfung gegen eine
+    Schwelle lief statt gegen null.
+
+    **Je Klasse ein Agent, danach eine unabhängige Gegenprobe** (E-PK-35).
+    Das Ergebnis war nicht eine Sorte, sondern vier:
+
+    | Urteil | Zahl | was daraus folgte |
+    |---|---|---|
+    | toter Rest | **8** | aus dem Markup entfernt, nichts sieht anders aus |
+    | Skriptanker / Bezeichner | **6** | Streichliste mit `[bleibt]` — eine Regel wäre falsch |
+    | ersatzlos ersetzt | **3** | Streichliste mit dem Baustein, der sie ablöst |
+    | fehlende Regel | **1** | `.feld-gesperrt{color:var(--gedaempft)}` nachgetragen |
+
+    **Meine erste Einschätzung war zu sechs Neunteln falsch**, und der Grund
+    ist lehrreich: Ein naives `grep` findet keine Klasse, die zur **Laufzeit**
+    zusammengebaut wird. `imp-dupe`, `imp-skipped`, `loc-inline` und
+    `phase-marker` sah ich als „nirgends mehr" — sie entstehen aber aus
+    `klasse += ' imp-dupe'`, `'klasse' => 'loc-inline'` und
+    `className: 'phase-marker'`. `patfields` und `unlockbtn` leben als **ID**,
+    nicht als Klasse.
+
+    **Die eine nachgetragene Regel ist die kleinste mögliche:**
+    `suche.php` schaltet `feld-gesperrt` an die Beschriftung des
+    Altersfilters, solange die Patientendaten gesperrt sind — und es gab
+    keine Regel, der Schalter tat nichts. Kaputt war nichts (der Zustand
+    steht schon im `disabled`-Feld und im Hinweis `alterlock`), aber eine
+    Beschriftung, die anders aussieht als ihr eigenes Feld, ist eine
+    Ungereimtheit. Ein **vorhandenes** Token, keine neue Darstellung.
+
+    **Die Vollständigkeit misst seither gegen null**, ohne `--hoechstens`
+    (E-PK-16). Der Weg: 398 → 18 (PK-04/1b) → **0**.
+
+279. **Vierzehn Zeichen standen im Markup, wo ein Symbol hingehört.**
+    *Gemessen 22.09.2026 mit PK-04/1b, **erledigt 23.09.2026 mit PK-04/5** —
+    und zwar durch Nachsehen, nicht durch Ändern.*
+    **Der Punkt war falsch formuliert.** Alle vierzehn sind einzeln im Satz
+    gelesen worden:
+
+    | Sorte | Zahl | Beispiel |
+    |---|---|---|
+    | Kommentar, der ein Symbol **beschreibt** | **9** | `suche.php` „Plaketten mit ✕"; `version.php` „das Kennzeichen der Vorbelegung (★)" |
+    | **Multiplikationszeichen** in sichtbarem Text | **5** | „≥ 2× größtes Komplett-Backup", „(3×)" |
+    | Zeichen, das **statt** eines Symbols steht | **0** | — |
+
+    Die fünf `×` sind typografisch richtig — das Multiplikationszeichen ist
+    nicht der Buchstabe x. **Die acht Emoji ebenso:** Sie stehen in
+    `pwquality.js` 146/147 in einem Kommentar, der erklärt, warum nach
+    **Graphemen** statt nach UTF-16-Einheiten gezählt wird („Passwort😀😀😀😀x
+    ging als „gut" durch"). Ohne sie erklärt der Absatz nichts mehr.
+
+    **22 von 22 Hinweisen sind begründet.** Das ist genau Nr. 184 („die
+    Prüfung kann Prosa nicht von einem Symbol unterscheiden") und der Grund,
+    warum PK-04/1b die Zählung vom **Befund** zum **Hinweis** gemacht hat.
+    Der Beleg dafür stand bis dahin aus.
+

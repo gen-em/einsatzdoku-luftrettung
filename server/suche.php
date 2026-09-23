@@ -73,7 +73,7 @@ ui_seite_start(['titel' => 'Suche']);
       <?php };
     ?>
 
-    <div class="leiste-liste filtergruppen">
+    <div class="leiste-liste">
       <?php /* ---- FILTERGRUPPEN (Schnitt aus Web 7.0.0, Gestalt aus P3/O6) ---
                Die Spalte hatte sechs Blöcke, und drei davon liessen sich nicht
                erklären: „Zeit" enthielt Datum und Uhrzeit, „Werte" Alter,
@@ -115,7 +115,7 @@ ui_seite_start(['titel' => 'Suche']);
             <?php /* Mehrfachwahl in der Gestalt der Segmentwahl: dieselben
                      Tasten, aber Kästchen statt Radioknöpfen — mehrere Tage
                      gleichzeitig sind der Regelfall. */ ?>
-            <div class="segment segment-mehrfach wochentage" id="f-wd" role="group"
+            <div class="segment segment-mehrfach" id="f-wd" role="group"
                  aria-label="Wochentage">
               <?php foreach ([1 => 'Mo', 2 => 'Di', 3 => 'Mi', 4 => 'Do',
                               5 => 'Fr', 6 => 'Sa', 7 => 'So'] as $nr => $kurz): ?>
@@ -306,7 +306,7 @@ ui_seite_start(['titel' => 'Suche']);
         <li><code>bergwacht -winde</code> — der erste ja, der zweite nicht
           (<code>NICHT</code>, <code>NOT</code> und <code>!</code> gehen auch)</li>
         <li><code>"zwei wörter"</code> — genau diese Folge</li>
-        <li><code>(sturz ODER fraktur) oberstdorf</code> — Klammern binden
+        <li><code>(sturz ODER fraktur) hochkreuth</code> — Klammern binden
           zusammen; ohne sie bindet UND stärker als ODER</li>
       </ul>
       <p class="feld-hinweis">Groß- und Kleinschreibung spielt nirgends eine

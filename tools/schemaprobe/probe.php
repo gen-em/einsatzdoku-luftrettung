@@ -108,7 +108,7 @@ function pruefe(string $was, bool $ok, string $detail = ''): void
  *
  * Ein gruener Lauf einer Pruefung, die immer gruen meldet, sieht genauso aus
  * wie einer, der nichts gefunden hat (dieselbe Begruendung wie bei
- * `tools/migrationsregister/`). Die Selbstprobe braucht keine Datenbank: Sie
+ * `tools/quelltext/ (migrationsregister)`). Die Selbstprobe braucht keine Datenbank: Sie
  * prueft, dass `pruefe()` einen Fehlschlag auch als solchen zaehlt, und dass
  * `schema.sql` und `migration_lib.php` ueberhaupt dort liegen, wo die Probe
  * sie sucht. */

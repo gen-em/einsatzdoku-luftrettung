@@ -645,7 +645,7 @@ function jobs_token(bool $neu = false): string
  * danebengeschrieben — sie kann nicht mehr altern. Die Registerzeile in
  * `docs/Technik.md` bleibt Prosa, weil sie mehr sagt als eine Liste; sie
  * wird aber nachgezaehlt, und zwar in Stufe 1 der Kette
- * (`tools/jobregister/pruefen.php`). Damit wandert das Problem nicht nur eine
+ * (`tools/quelltext/jobregister.php`). Damit wandert das Problem nicht nur eine
  * Ebene weiter, wie Nr. 208 es befuerchtet.
  *
  * DIE SCHLUESSEL SIND SICHTBARER TEXT, und das war nicht immer so: Sie
@@ -935,7 +935,7 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
          * gibt es seit S8 und deckt die Speichergrenze der Backups ab —
          * ABER NIEMAND HAT SIE JE GERUFEN. Nachgemessen am 15.09.2026:
          * `grep -rn "schwellen_melden" --include=*.php` findet die Definition
-         * und einen Aufruf in `tools/wiederherstellungs-probe/probe.php`,
+         * und einen Aufruf in `tools/proben/wiederherstellung/probe.php`,
          * sonst nichts. Geschrieben, geprueft, tot — dieselbe Klasse Fehler
          * wie Backlog Nr. 89 („Dieser Job lief von Web 12.2.0 bis 12.9.2
          * nie"). Der Aufruf steht jetzt hier, wo er hingehoert.

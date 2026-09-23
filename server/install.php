@@ -135,7 +135,7 @@ $schemaPath = __DIR__ . '/schema.sql';
  * PHP-8-Code und steht deshalb HINTER der Weiche oben — wie `ui.php` und
  * `plattform_lib.php` auch (5b.4).
  *
- * UND VOR `session_set_cookie_params()`, nicht dazwischen: `tools/sitzungshaertung/`
+ * UND VOR `session_set_cookie_params()`, nicht dazwischen: `tools/quelltext/sitzungshaertung.php`
  * misst, dass `use_strict_mode` hoechstens zwoelf Zeilen vor dem
  * Sitzungsstart steht. Ein Kommentarblock zwischen jenen beiden Zeilen
  * schoebe die Haertung aus dem Fenster und machte Stufe 1 der Kette rot —
@@ -174,7 +174,7 @@ $setupLink = '';
  * WAS DIESE SEITE OHNE IHN IST
  * Ein unangemeldeter Endpunkt, der eine Datenbank einrichtet, das erste
  * Konto anlegt und einen Einrichtungslink dafuer ausgibt. Wer eine frisch
- * hochgeladene Installation vor ihrer Betreiberin findet, richtet sie ein —
+ * hochgeladene Installation vor ihrer BetreiberIn findet, richtet sie ein —
  * und ist die BetreiberIn. Das Zeitfenster ist kurz, aber es ist genau das
  * Fenster, in dem niemand hinsieht.
  *
@@ -182,7 +182,7 @@ $setupLink = '';
  * Die Seite legt eine Datei mit einer Zufallskennung an und verlangt diese
  * Kennung im Formular. Wer sie nennen kann, hat Zugriff auf das Verzeichnis —
  * und wer den hat, koennte die Anwendung ohnehin beliebig veraendern. Der
- * Nachweis kostet den Betreiber einen Blick in den Dateimanager seines
+ * Nachweis kostet die BetreiberIn einen Blick in den Dateimanager ihres
  * Hosters und den Angreifer den Angriff.
  *
  * DIE KENNUNG STEHT IM DATEINAMEN, nicht nur im Inhalt. Das ist der
@@ -206,7 +206,7 @@ $setupLink = '';
  * sie an eine Sitzung gebunden waere. Eine vorhandene Datei wird deshalb
  * uebernommen statt ersetzt. Das haelt zugleich einen Aerger fern, den die
  * Sitzungsfassung geoeffnet haette: Wer die Datei bei jedem Aufruf neu
- * schreiben liesse, koennte einem Betreiber mitten in der Einrichtung die
+ * schreiben liesse, koennte einer BetreiberIn mitten in der Einrichtung die
  * Kennung unter den Haenden wegziehen.
  */
 $nachweisMuster = 'install-nachweis-';
@@ -342,7 +342,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * Es war die einzige Stelle im ganzen Projekt, an der ein
              * unangemeldeter Aufruf jede Tabelle der Datenbank haette leeren
              * koennen — abgesichert durch nichts als die Annahme, dass diese
-             * Seite nur einmal und nur vom Betreiber aufgerufen wird.
+             * Seite nur einmal und nur von der BetreiberIn aufgerufen wird.
              *
              * Ersetzt wurde es NICHT durch eine Sicherheitsabfrage, sondern
              * gestrichen: Im Betrieb wird es nicht gebraucht. Wer eine

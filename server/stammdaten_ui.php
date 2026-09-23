@@ -326,7 +326,7 @@ function sd_dialog_rettungsmittel(array $o): void
         <?php /* ZWEI KLEINZEILEN IM MARKUP, nicht eine im Skript. Welche gilt,
                  haengt am Typ (`VEHICLE_TYPEN[...]['faehigkeiten']`) — aber
                  beide Saetze sind sichtbarer Text und muessen deshalb hier
-                 stehen, wo `tools/wortliste/` sie sieht. */ ?>
+                 stehen, wo `tools/quelltext/textprobe.py` sie sieht. */ ?>
         <span class="feld-label">Fähigkeiten <span class="feld-klein-inline"
               data-veh-caps-luft>nur luftgebunden</span><span class="feld-klein-inline"
               data-veh-caps-immer hidden>bei diesem Typ auch bodengebunden</span></span>
@@ -470,7 +470,6 @@ function sd_dialog_zielklinik(array $o): void
                      'attr' => ' maxlength="' . SD_ZIEL_MAX . '" data-fuell="name"']); ?>
       <?php ui_ortsfeld([
               'praefix' => $pre, 'feld' => false, 'ortswahl' => true,
-              'klasse' => 'loc-inline',
               'such_hinweis' => 'Lage (freiwillig)',
               'lat_name' => 'lat', 'lon_name' => 'lon',
               'lat' => (string)($w['lat'] ?? ''),

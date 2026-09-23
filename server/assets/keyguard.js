@@ -36,7 +36,7 @@
  * entpackt eine Zeile weiter unten ohne Passwort daraus neu. Der Fristablauf
  * kostete also ein STILLES NEU-ENTPACKEN, alle 30 Minuten, egal wie
  * durchgehend gearbeitet wurde — gemessen: 17 statt 1 über acht Stunden
- * (`tools/fristprobe/`). Der Dialog fällt an einer anderen Stelle: wenn
+ * (`tools/proben/frist/`). Der Dialog fällt an einer anderen Stelle: wenn
  * `contentKey()` null liefert, also bei fehlendem `edk` oder nicht passender
  * Hülle — neuer Tab, Browser-Neustart, Passwort-Reset. **Das bleibt so**, und
  * der Tab-Fall ist ausdrücklich gewollt.

@@ -15,8 +15,8 @@ declare(strict_types=1);
  * haelt den Schluessel bereit, mit dem sich jede Zeile spaeter erneut
  * aufloesen laesst.
  *
- * WARUM AUS DEM SKRIPT EINE BIBLIOTHEK WURDE. `tools/geraetemodelle/
- * nachaufloesen.php` kann es seit Web 12.9.1 — aber nur ueber die
+ * WARUM AUS DEM SKRIPT EINE BIBLIOTHEK WURDE. `tools/erzeugen/
+ * geraetemodelle-nachaufloesen.php` kann es seit Web 12.9.1 — aber nur ueber die
  * Kommandozeile, und **auf einem Webspace ohne SSH gibt es diesen Weg
  * nicht**. Dort holten die betroffenen Geraete ihre Angabe erst bei der
  * naechsten Kopplung nach, also womoeglich nie. Die Zahl, die Backlog Nr. 80

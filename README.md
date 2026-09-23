@@ -27,7 +27,7 @@ liegt auf dem Server, damit die Rücksetzung funktioniert. Näheres im Handbuch
 (Abschnitt 3.2) und in `docs/Technik.md` 4.99a.
 
 **Einen Demo-Knopf auf der Anmeldeseite gibt es bewusst nicht** — die
-Zugangsdaten stehen hier und im Handbuch, und das genügt. Eine Betreiberin
+Zugangsdaten stehen hier und im Handbuch, und das genügt. Eine BetreiberIn
 kann die Demo-Anmeldung seit Web 20.18.0 **abschalten** (Betrieb →
 Servereinstellungen → Konten); der Bestand bleibt dabei liegen, abgeschaltet
 wird nur der Weg hinein.

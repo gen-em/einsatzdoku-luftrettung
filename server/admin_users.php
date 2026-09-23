@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $action = $_POST['action'] ?? '';
 
-    /* ---- Nutzer anlegen (M1-10) ----------------------------------------
+    /* ---- NutzerIn anlegen (M1-10) --------------------------------------
      *
      * DREI DINGE WAREN HIER FALSCH, UND ZWAR ALLE DREI AN DERSELBEN STELLE:
      *
@@ -767,7 +767,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
         <p>Das Konto entsteht ohne Passwort; die Person bekommt einen Link, mit dem
            sie es selbst setzt. Der Link ist 24 Stunden gültig.</p>
         <?php ui_feld(['name' => 'email', 'label' => 'E-Mail (Anmeldung)', 'art' => 'email',
-                       'pflicht' => true, 'attr' => 'placeholder="neue@adresse.de"']); ?>
+                       'pflicht' => true, 'attr' => 'placeholder="neue@example.invalid"']); ?>
         <div class="fld-reihe">
           <?php ui_feld(['name' => 'name', 'label' => 'Name',
                          'attr' => 'maxlength="120" placeholder="z. B. Vorname Nachname"',
@@ -818,7 +818,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
   'use strict';
   /* DER SCHLUESSEL TRAEGT DIE KENNUNG DER ANGEMELDETEN PERSON. sessionStorage
      gilt fuer den TAB, nicht fuer die Anmeldung: Meldet sich in demselben Tab
-     eine andere Administratorin an, saehe sie sonst die Auswahl ihrer
+     eine andere AdministratorIn an, saehe sie sonst die Auswahl ihrer
      Vorgaengerin — angehakte Kaestchen, die sie nie gesetzt hat, an einer
      Leiste, die zum Sichern einlaedt. Verschiedene Installationen trennt der
      Browser ohnehin: sessionStorage haengt am Ursprung. */

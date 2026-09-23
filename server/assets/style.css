@@ -38,7 +38,7 @@
    O2 setzt die Bausteine darauf. Ein Zwischenstand, in dem die Anwendung roh
    aussieht, ist eingeplant (Konzept, O2 Punkt 6).
 
-   PRÜFMITTEL. tools/vollstaendigkeit/ liest diese Datei und meldet jeden
+   PRÜFMITTEL. tools/quelltext/vollstaendigkeit.py liest diese Datei und meldet jeden
    Hexwert, jede Schriftgröße und jedes Pixelmaß außerhalb von :root, dazu
    jede Klasse des alten Stylesheets, die weder eine neue Regel noch einen
    Eintrag auf der Streichliste hat. Der Stilvergleich (tools/stilvergleich/)
@@ -1531,6 +1531,19 @@ input[type=file].feld-eingabe{line-height:calc(var(--knopf) - 2*var(--strich))}
  * Kasten. */
 select.feld-eingabe{contain:paint}
 .feld-klein{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-1)}
+/* Die Beschriftung eines GESPERRTEN Feldes -- gedaempft wie ihr eigenes
+   Eingabefeld. `suche.php` schaltet sie an die Beschriftung des Altersfilters,
+   solange die Patientendaten nicht entsperrt sind (`classList.toggle`).
+
+   SIE STAND SEIT P3 OHNE REGEL DA, und der Schalter tat deshalb nichts:
+   Das Eingabefeld wurde `disabled` und vom Browser grau gefaerbt, die
+   Beschriftung daneben blieb schwarz. Kaputt war nichts -- den Zustand
+   zeigen schon `disabled` und der Hinweis `alterlock` --, aber eine
+   Beschriftung, die anders aussieht als das Feld, zu dem sie gehoert,
+   ist eine Ungereimtheit. Gefunden von der Vollstaendigkeitspruefung
+   (PK-04/5e, Backlog Nr. 278), nachgetragen mit dem VORHANDENEN Token
+   und ohne neue Darstellung (CLAUDE.md 5). */
+.feld-gesperrt{color:var(--gedaempft)}
 .feld-reihe{display:flex;flex-wrap:wrap;gap:var(--abstand-3)}
 .feld-reihe > .feld{flex:1 1 12rem;min-width:0}
 
@@ -2542,7 +2555,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   flex:0 0 auto;width:var(--abstand-1);
   border-radius:var(--radius-rund);
   /* Die Farbe kommt je Einsatz aus den Spur-Token (style-Attribut aus JS —
-   * ein Wert, kein Stil; die Ausnahme steht in tools/vollstaendigkeit). */
+   * ein Wert, kein Stil; die Ausnahme steht in tools/quelltext/vollstaendigkeit-ausnahmen.md). */
 }
 .kachel-zeit{
   flex:0 0 auto;

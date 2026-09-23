@@ -264,7 +264,7 @@ bauen() {
     # Grafikumgebung. Ohne sie endet der Lauf in einem AWTError statt in einer
     # ERROR-Zeile. `reihe` setzt headless, `bauen` tat es bis zum 03.09.2026
     # nicht — und `umgebung` leert JAVA_TOOL_OPTIONS sogar ausdruecklich.
-    # Aufgefallen an `bauen venu3s tools/eingabe-probe/monkey.jungle`; Geraete,
+    # Aufgefallen an `bauen venu3s tools/uhr-pruefstand/eingabe-probe/monkey.jungle`; Geraete,
     # deren Icon exakt passt (fenix6pro, fr945), bauen ohne die Zeile durch,
     # und deshalb sah der Ausfall nach einem Geraeteproblem aus.
     export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"

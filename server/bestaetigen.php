@@ -66,8 +66,8 @@ $fristTage = konten_reg_frist_tage();
 
   <?php if ($stand === 'wartet'): ?>
     <?= ui_meldung_markup('ok',
-        'Deine Registrierung wartet jetzt auf die Freischaltung durch den '
-      . 'Betreiber. Du bekommst eine Mail, sobald das Konto frei ist — in der '
+        'Deine Registrierung wartet jetzt auf die Freischaltung durch die '
+      . 'BetreiberIn. Du bekommst eine Mail, sobald das Konto frei ist — in der '
       . 'Regel innerhalb von ' . $fristTage . ' Tagen; danach verfällt die '
       . 'Registrierung und kann neu gestellt werden.',
         'Adresse bestätigt.') ?>

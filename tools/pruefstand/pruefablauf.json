@@ -1,0 +1,537 @@
+{
+  "fassung": 1,
+  "beschreibung": "Berührung -> Probe. Die EINE Zuordnung: welche geänderte Datei welche Probe auslöst und ab welcher Stufe. docs/Pruefablauf.md 4 wird hieraus erzeugt; tools/kettenaufrufe/ liest dieselbe Datei mit. Wer eine Probe an eine Berührung hängt, ändert sie hier und nirgends sonst.",
+  "stufen": [
+    "klein",
+    "neben",
+    "haupt"
+  ],
+  "proben": {
+    "syntax-php": {
+      "aufruf": "php -l",
+      "braucht": "nichts"
+    },
+    "wortliste": {
+      "aufruf": "bash tools/quelltext/pruefen.sh textprobe",
+      "braucht": "nichts"
+    },
+    "vollstaendigkeit": {
+      "aufruf": "bash tools/quelltext/pruefen.sh vollstaendigkeit",
+      "braucht": "nichts",
+      "bemerkung": "DIE SCHWELLE IST WEG (PK-04/5e, E-PK-16). Sie stand zuletzt auf 18 und davor auf 398; gemessen wird jetzt gegen NULL, ohne Schalter. Der Weg dorthin: 1b nahm die Typografie aus der Zeichenliste und machte die Symbolzaehlung zum Hinweis (398 -> 18), 5e loeste die letzten 18 auf -- eine Regel nachgetragen (`.feld-gesperrt`), acht tote Klassennamen aus dem Markup entfernt, siebzehn Streichlisten-Eintraege mit Grund. Wer die Schwelle wieder einfuehrt, fuehrt einen Altbestand wieder ein."
+    },
+    "linkprobe": {
+      "aufruf": "bash tools/quelltext/pruefen.sh linkprobe",
+      "braucht": "nichts"
+    },
+    "installweiche": {
+      "aufruf": "bash tools/quelltext/pruefen.sh installweiche",
+      "braucht": "nichts"
+    },
+    "sitzungshaertung": {
+      "aufruf": "bash tools/quelltext/pruefen.sh sitzungshaertung",
+      "braucht": "nichts"
+    },
+    "cspprobe": {
+      "aufruf": "bash tools/quelltext/pruefen.sh csp",
+      "braucht": "nichts"
+    },
+    "jobregister": {
+      "aufruf": "bash tools/quelltext/pruefen.sh jobregister",
+      "braucht": "nichts"
+    },
+    "migrationsregister": {
+      "aufruf": "bash tools/quelltext/pruefen.sh migrationsregister",
+      "braucht": "nichts"
+    },
+    "rechtstexte": {
+      "aufruf": "bash tools/proben/proben.sh rechtstexte",
+      "braucht": "nichts"
+    },
+    "kettenaufrufe": {
+      "aufruf": "python3 tools/kettenaufrufe/pruefen.py",
+      "braucht": "nichts"
+    },
+    "kontraste": {
+      "aufruf": "python3 tools/screenshots/kontrast.py",
+      "braucht": "nichts"
+    },
+    "ingestprobe": {
+      "aufruf": "bash tools/proben/proben.sh ingest",
+      "braucht": "installation"
+    },
+    "spurprobe": {
+      "aufruf": "bash tools/proben/proben.sh spur",
+      "braucht": "installation"
+    },
+    "jobprobe": {
+      "aufruf": "bash tools/proben/proben.sh jobs",
+      "braucht": "installation"
+    },
+    "komplettprobe": {
+      "aufruf": "bash tools/proben/proben.sh komplett",
+      "braucht": "installation"
+    },
+    "wiederherstellung": {
+      "aufruf": "bash tools/proben/proben.sh wiederherstellung",
+      "braucht": "installation"
+    },
+    "gpxprobe": {
+      "aufruf": "bash tools/proben/proben.sh gpx",
+      "braucht": "installation"
+    },
+    "geraeteprobe": {
+      "aufruf": "bash tools/proben/proben.sh geraete",
+      "braucht": "installation"
+    },
+    "kopplungsprobe": {
+      "aufruf": "bash tools/proben/proben.sh kopplung",
+      "braucht": "installation"
+    },
+    "mailprobe": {
+      "aufruf": "bash tools/proben/proben.sh mail",
+      "braucht": "installation"
+    },
+    "versandprobe": {
+      "aufruf": "bash tools/proben/proben.sh versand",
+      "braucht": "installation"
+    },
+    "ratenprobe": {
+      "aufruf": "bash tools/proben/proben.sh raten",
+      "braucht": "installation"
+    },
+    "wartungsprobe": {
+      "aufruf": "bash tools/proben/proben.sh wartung",
+      "braucht": "installation"
+    },
+    "verbindungsprobe": {
+      "aufruf": "bash tools/proben/proben.sh verbindung",
+      "braucht": "installation"
+    },
+    "anteilprobe": {
+      "aufruf": "bash tools/proben/proben.sh anteil",
+      "braucht": "installation"
+    },
+    "freigabeprobe": {
+      "aufruf": "bash tools/proben/proben.sh freigabe",
+      "braucht": "installation"
+    },
+    "fristprobe": {
+      "aufruf": "bash tools/proben/proben.sh frist",
+      "braucht": "installation"
+    },
+    "abmelde-probe": {
+      "aufruf": "bash tools/proben/proben.sh abmelden",
+      "braucht": "installation"
+    },
+    "containerprobe": {
+      "aufruf": "bash tools/proben/proben.sh container",
+      "braucht": "installation"
+    },
+    "browserprobe-csp": {
+      "aufruf": "bash tools/proben/proben.sh csp-browser",
+      "braucht": "installation"
+    },
+    "bedienprobe": {
+      "aufruf": "node tools/bedienprobe/probe.mjs",
+      "braucht": "installation"
+    },
+    "bilderlauf": {
+      "aufruf": "node tools/screenshots/aufnehmen.mjs --stufe klein",
+      "braucht": "installation",
+      "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920), Chromium. Neben und haupt setzen --stufe neben bzw. haupt; die Risikoliste ist entfallen."
+    },
+    "stilvergleich": {
+      "aufruf": "bash tools/stilvergleich/gegen.sh",
+      "braucht": "nichts",
+      "bemerkung": "proben.py allein baut nur die vier Proben und gibt ohne Argumente seine Anleitung aus; der Vergleich ist stilvergleich.js und braucht den alten Stand (F-PK-20). braucht=nichts, weil der Vergleich gegen zwei Stylesheets laeuft, nicht gegen die Anlage."
+    },
+    "messstand": {
+      "aufruf": "node tools/messstand/browserprobe.mjs",
+      "braucht": "installation"
+    },
+    "kreislauf-csv": {
+      "aufruf": "python3 tools/referenzdatensatz/vergleich/kreislauf.py --art csv",
+      "braucht": "installation"
+    },
+    "kreislauf-edbak": {
+      "aufruf": "python3 tools/referenzdatensatz/vergleich/kreislauf.py --art edbak",
+      "braucht": "installation"
+    },
+    "schemaprobe": {
+      "aufruf": "php tools/schemaprobe/probe.php --datenbank nadoku_probe",
+      "braucht": "plattform"
+    },
+    "android-bau": {
+      "aufruf": "cd android && ANDROID_HOME=${ANDROID_HOME:-/opt/android-sdk} ./gradlew build",
+      "braucht": "android"
+    },
+    "uhr-stufe1": {
+      "aufruf": "bash tools/uhr-pruefstand/pruefstand.sh reihe",
+      "braucht": "uhr"
+    },
+    "zaehlung": {
+      "aufruf": "php tools/zaehlung/zaehlen.php",
+      "braucht": "nichts",
+      "bemerkung": "Schritt 15/AP10 (R83). Je Sache eine Registerzeile mit einer Decke; der Lauf schlaegt an, sobald eine Zeile darueber steigt. Haengt seit Schritt 15 auch in pruefung.yml -- hier steht er, damit er sich OERTLICH fahren laesst, bevor jemand pusht (Grundsatz 2: was Fehler findet, laeuft in der Arbeitsumgebung)."
+    },
+    "spaltenregister": {
+      "aufruf": "php tools/spaltenregister/pruefen.php",
+      "braucht": "nichts",
+      "bemerkung": "Schritt 15/AP6 (E-ZE-22). schema.sql gegen mf_missions_register(), beide Richtungen, dazu die drei Abbildungen, die von Hand bleiben. Rein lesend. STAND 23.09.2026: GRUEN -- Selbstprobe 16 von 16, Lauf 0 Befunde. Sie war zwei Tage rot (start_sort fehlte im Register; der Selbstprobefall erwartete den Alias ohne Backticks) und ist von Schritt 15 selbst behoben worden (f1bc9e6). Backlog Nr. 282, erledigt."
+    },
+    "spaltenregister-wegprobe": {
+      "aufruf": "python3 tools/spaltenregister/wegprobe.py --konto \"$WEGWERFKONTO\" --passwort \"$WEGWERFPASSWORT\"",
+      "braucht": "installation",
+      "bemerkung": "Schritt 15/AP6. Faehrt die zwei Anweisungen, die kein Kreislauf abdeckt (Schnitt, UPDATE-Zweig des Imports). Sie SCHREIBT -- schneidet einen Einsatz, ueberschreibt einen zweiten -- und gehoert deshalb an ein WEGWERFKONTO, nicht an die Demo und nicht an den Referenzbestand. Laeuft aus demselben Grund NICHT in Stufe 1. Die Zugangsdaten stehen in zwei Umgebungswerten und nicht in dieser Datei (CLAUDE.md 4, E-PK-27): ein eingecheckter Zugang ist ein Zugang."
+    }
+  },
+  "riegel": {
+    "beschreibung": "Die billigen Riegel. Sie laufen in JEDER Stufe und werden im Tor gegengelesen (docs/Pruefablauf.md 5.1). Kein Muster, keine Bedingung -- sie kosten zusammen rund 25 s.",
+    "proben": [
+      "syntax-php",
+      "wortliste",
+      "vollstaendigkeit",
+      "kontraste",
+      "linkprobe",
+      "installweiche",
+      "sitzungshaertung",
+      "cspprobe",
+      "jobregister",
+      "migrationsregister",
+      "rechtstexte",
+      "kettenaufrufe",
+      "zaehlung",
+      "spaltenregister"
+    ]
+  },
+  "muster": [
+    {
+      "id": "grundlage",
+      "ab": "klein",
+      "pfade": [
+        "server/**"
+      ],
+      "proben": [],
+      "anlass": "Auffangmuster: Jede Datei unter server/ laeuft durch die billigen Riegel. Sie traegt KEINE eigene Probe -- wer hier landet und sonst nirgends, hat keine zugeordnete Probe, und der Pruefstand sagt das."
+    },
+    {
+      "id": "spur",
+      "ab": "klein",
+      "pfade": [
+        "server/spur_lib.php",
+        "server/tag_spuren.php",
+        "server/api/spur*.php"
+      ],
+      "proben": [
+        "spurprobe",
+        "containerprobe"
+      ],
+      "anlass": "int gegen float (S2)"
+    },
+    {
+      "id": "ingest",
+      "ab": "klein",
+      "pfade": [
+        "server/ingest.php",
+        "server/validate_lib.php"
+      ],
+      "proben": [
+        "ingestprobe"
+      ],
+      "anlass": "stiller Datenverlust bei \"ok\""
+    },
+    {
+      "id": "jobs",
+      "ab": "klein",
+      "pfade": [
+        "server/jobs_lib.php",
+        "server/jobs.php"
+      ],
+      "proben": [
+        "jobprobe",
+        "jobregister"
+      ],
+      "anlass": "Huckepack 18 s; Nr. 208"
+    },
+    {
+      "id": "backup",
+      "ab": "klein",
+      "pfade": [
+        "server/backup_lib.php",
+        "server/adminbackup_*.php",
+        "server/import*.php"
+      ],
+      "proben": [
+        "wiederherstellung",
+        "containerprobe",
+        "kreislauf-edbak"
+      ],
+      "anlass": "Nr. 31, 33, 34, 35"
+    },
+    {
+      "id": "komplett",
+      "ab": "klein",
+      "pfade": [
+        "server/komplett_lib.php"
+      ],
+      "proben": [
+        "komplettprobe"
+      ],
+      "anlass": "count(null), F-S10-AP4-02"
+    },
+    {
+      "id": "gpx",
+      "ab": "klein",
+      "pfade": [
+        "server/gpx_lib.php",
+        "server/*export*.php",
+        "server/assets/export.js"
+      ],
+      "proben": [
+        "gpxprobe"
+      ],
+      "anlass": "Nr. 130"
+    },
+    {
+      "id": "geraete",
+      "ab": "klein",
+      "pfade": [
+        "server/geraete_lib.php",
+        "server/pair.php",
+        "server/geraete*.php"
+      ],
+      "proben": [
+        "geraeteprobe",
+        "kopplungsprobe"
+      ],
+      "anlass": "Edge, das sich \"uhr\" nennt; Nr. 178, 180"
+    },
+    {
+      "id": "mail",
+      "ab": "klein",
+      "pfade": [
+        "server/mail_lib.php",
+        "server/email_lib.php"
+      ],
+      "proben": [
+        "mailprobe"
+      ],
+      "anlass": "smtp_letzter_fehler()"
+    },
+    {
+      "id": "sicherungsziel",
+      "ab": "klein",
+      "pfade": [
+        "server/sicherungsziel_lib.php",
+        "server/admin_sicherungsziele.php"
+      ],
+      "proben": [
+        "versandprobe"
+      ],
+      "anlass": "halb englische Meldungen"
+    },
+    {
+      "id": "ratelimit",
+      "ab": "klein",
+      "pfade": [
+        "server/ratelimit_lib.php"
+      ],
+      "proben": [
+        "ratenprobe"
+      ],
+      "anlass": "Stufe fiel nie zurueck"
+    },
+    {
+      "id": "wartung",
+      "ab": "klein",
+      "pfade": [
+        "server/wartung_lib.php",
+        "server/auth_guard.php"
+      ],
+      "proben": [
+        "wartungsprobe"
+      ],
+      "anlass": "F-S8-P-04, Nr. 171"
+    },
+    {
+      "id": "datenbank",
+      "ab": "klein",
+      "pfade": [
+        "server/db.php"
+      ],
+      "proben": [
+        "verbindungsprobe"
+      ],
+      "anlass": "Nr. 210"
+    },
+    {
+      "id": "krypto",
+      "ab": "klein",
+      "pfade": [
+        "server/serverkrypto_lib.php",
+        "server/auth_salt.php",
+        "server/assets/unlock.js",
+        "server/assets/crypto.js"
+      ],
+      "proben": [
+        "anteilprobe",
+        "containerprobe"
+      ],
+      "anlass": "S10-Kern, F-S10-AP3-03"
+    },
+    {
+      "id": "freigabe",
+      "ab": "klein",
+      "pfade": [
+        "server/*freigabe*.php",
+        "server/*schluessel*.php"
+      ],
+      "proben": [
+        "freigabeprobe"
+      ],
+      "anlass": "F-S2-F"
+    },
+    {
+      "id": "sitzung",
+      "ab": "klein",
+      "pfade": [
+        "server/sitzung_lib.php",
+        "server/session_lib.php",
+        "server/assets/keyguard.js"
+      ],
+      "proben": [
+        "fristprobe",
+        "abmelde-probe",
+        "sitzungshaertung"
+      ],
+      "anlass": "R44; Nr. 22; Nr. 205"
+    },
+    {
+      "id": "kopfzeilen",
+      "ab": "klein",
+      "pfade": [
+        "server/kopfzeilen_lib.php"
+      ],
+      "proben": [
+        "cspprobe",
+        "browserprobe-csp"
+      ],
+      "anlass": "15.09.: Meldeweg tot"
+    },
+    {
+      "id": "migration",
+      "ab": "klein",
+      "pfade": [
+        "server/schema.sql",
+        "server/migration_lib.php",
+        "server/update.php"
+      ],
+      "proben": [
+        "migrationsregister",
+        "schemaprobe"
+      ],
+      "anlass": "Nr. 238; Hausregel dreimal vergessen"
+    },
+    {
+      "id": "install",
+      "ab": "klein",
+      "pfade": [
+        "server/install.php",
+        "server/plattform_lib.php"
+      ],
+      "proben": [
+        "installweiche"
+      ],
+      "anlass": "PP-1"
+    },
+    {
+      "id": "rechtstext",
+      "ab": "klein",
+      "pfade": [
+        "docs/rechtstexte/*.md",
+        "server/nutzungsbedingungen.php",
+        "server/avv.php",
+        "server/datenschutz.php"
+      ],
+      "proben": [
+        "rechtstexte"
+      ],
+      "anlass": "P3/O10"
+    },
+    {
+      "id": "stylesheet",
+      "ab": "klein",
+      "pfade": [
+        "server/assets/style.css"
+      ],
+      "proben": [
+        "stilvergleich",
+        "bilderlauf",
+        "kontraste"
+      ],
+      "anlass": "P0/A3"
+    },
+    {
+      "id": "oberflaeche",
+      "ab": "klein",
+      "pfade": [
+        "server/*.php",
+        "server/assets/*.js"
+      ],
+      "proben": [
+        "bilderlauf",
+        "bedienprobe"
+      ],
+      "anlass": "Nr. 185, 225; PS-2"
+    },
+    {
+      "id": "kette",
+      "ab": "klein",
+      "pfade": [
+        ".github/workflows/*.yml",
+        "tools/**"
+      ],
+      "proben": [
+        "kettenaufrufe"
+      ],
+      "anlass": "Nr. 217"
+    },
+    {
+      "id": "android",
+      "ab": "klein",
+      "pfade": [
+        "android/**"
+      ],
+      "proben": [
+        "android-bau"
+      ],
+      "anlass": "E-PK-02"
+    },
+    {
+      "id": "uhr",
+      "ab": "klein",
+      "pfade": [
+        "watch/**"
+      ],
+      "proben": [
+        "uhr-stufe1"
+      ],
+      "anlass": "E-PK-02"
+    },
+    {
+      "id": "mengen",
+      "ab": "haupt",
+      "pfade": [
+        "server/**"
+      ],
+      "proben": [
+        "messstand",
+        "kreislauf-csv",
+        "kreislauf-edbak",
+        "schemaprobe"
+      ],
+      "anlass": "F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4"
+    }
+  ]
+}

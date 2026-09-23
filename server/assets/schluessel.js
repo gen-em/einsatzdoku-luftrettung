@@ -81,7 +81,7 @@
       /* Siehe Kopf: ohne Maßstab keine Erneuerung. */
       throw new Error('Für dieses Konto ist keine Prüfsumme des '
                     + 'Inhaltsschlüssels hinterlegt. Die Erneuerung ist hier '
-                    + 'nicht möglich — bitte an den Betreiber wenden.');
+                    + 'nicht möglich — bitte an die BetreiberIn wenden.');
     }
 
     /* ---- 1 + 2: Passwort -> Datenschlüssel -> Inhaltsschlüssel ------------ */
@@ -116,7 +116,7 @@
     if (chk !== o.keyCheck) {
       throw new Error('Der entpackte Schlüssel passt nicht zur hinterlegten '
                     + 'Prüfsumme. Es wurde NICHTS geändert — bitte die Seite '
-                    + 'neu laden und den Betreiber verständigen.');
+                    + 'neu laden und die BetreiberIn verständigen.');
     }
 
     /* ---- 4: neuer Code, neue Hülle -------------------------------------- */

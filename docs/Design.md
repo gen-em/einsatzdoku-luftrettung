@@ -9,7 +9,7 @@ eigenen Regeln in `docs/Uhr-Layout_Regeln.md`; wo es um Marke und Logo geht,
 gilt Kapitel 2 auch für sie.
 
 > **Die technische Wahrheit steht im Stylesheet.** Was hier als Wert steht,
-> ist entweder *erzeugt* (Kapitel 4, 7, 8, 9 — `tools/design/tabellen.py`
+> ist entweder *erzeugt* (Kapitel 4, 7, 8, 9 — `tools/erzeugen/design.py`
 > liest sie aus den Quellen) oder *Herkunft* (Kapitel 2: woher ein Markenwert
 > stammt). Im Code wird ausschließlich über die Token aus `:root` in
 > `server/assets/style.css` zugegriffen. Ein Hexwert gehört nie in eine Regel.
@@ -157,7 +157,7 @@ und das ist es, was das Auge in einer Zeile vergleicht.
 >
 > **Und XML verbietet `--` im Kommentar.** Eine SVG mit einem doppelten
 > Bindestrich im Kommentar ist ungültig; der Browser zeigt sein
-> Platzhalterbild, und `tools/logos/erzeugen.mjs` fotografierte es früher
+> Platzhalterbild, und `tools/erzeugen/logos.mjs` fotografierte es früher
 > klaglos als Favicon. Das Werkzeug bricht heute ab (S3/AP11).
 
 **Drei Ebenen der Wahl**, und sie greifen in dieser Reihenfolge:
@@ -339,7 +339,7 @@ niemand sie aus Versehen weiterreicht:
 ## 4. Token
 
 **Diese Tabelle ist erzeugt, nicht abgeschrieben.**
-`python3 tools/design/tabellen.py token` liest sie aus `:root` in
+`python3 tools/erzeugen/design.py token` liest sie aus `:root` in
 `server/assets/style.css`. Der Grund ist derselbe wie bei jeder
 abgeschriebenen Zahl: Sie stimmt am Tag des Abschreibens und danach nie
 wieder — und eine Gestaltungsrichtlinie, deren Farbwerte von denen der
@@ -350,7 +350,7 @@ Die Gliederung stammt ebenfalls aus dem Stylesheet: Es ordnet seinen
 Werkzeug übernimmt sie, statt eine zweite Gliederung danebenzustellen, die
 auseinanderlaufen kann.
 
-<!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
+<!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
 101 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
@@ -661,7 +661,7 @@ Festbreitenschrift, die ohnehin nicht schön umbricht, ist es richtig.
 > Adressen im Fließtext — gemessen als `<p>` mit `scrollWidth` 350 gegen
 > `clientWidth` 302.
 >
-> Der Text stammt von der **Betreiberin**, nicht aus dem Repositorium. Sie
+> Der Text stammt von der **BetreiberIn**, nicht aus dem Repositorium. Sie
 > soll eine Adresse hinschreiben dürfen, ohne zu wissen, wie breit ein Handy
 > ist. Die Regel gehört deshalb an den Baustein und nicht in eine Anleitung
 > für das Schreiben von Rechtstexten.
@@ -750,7 +750,7 @@ Dazu **eine** Ausnahme nach unten: `@media (max-width:479px)` lässt in der
 Wahlliste den Zusatz unter den Text rutschen — „zurzeit Hubschrauber (RTH)"
 neben „Standard der Installation" sprengt sonst jede Zeile.
 
-<!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
+<!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
 | Abfrage | Regelblöcke |
 |---|--:|
@@ -831,7 +831,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 
 ### Der Vorrat
 
-<!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
+<!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
 | Datei | Herkunft (Tabler-Name) | Nennungen im Code |
 |---|---|--:|
@@ -918,7 +918,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | eine Handlung, die löscht | `ui_knopf(['art' => 'gefahr'])`, im Blatt `blatt-gefahr` | roten Text |
 | eine Rückfrage in **einem Satz** | `data-confirm="…"` (`assets/confirm.js`) | ein eigener Dialog |
 | eine Rückfrage mit **Aufstellung** | eine eigene Seite mit Karte und Zeilen | einen Dialog mit viel Text |
-| dem Nutzer etwas sagen | `ui_meldung()` / `ui_meldung_markup($ton, …)` | ein `<p>` in Rot |
+| der NutzerIn etwas sagen | `ui_meldung()` / `ui_meldung_markup($ton, …)` | ein `<p>` in Rot |
 | einen Zustand an einer Zeile zeigen | `ui_plakette($text, ['ton' => …])` | ein farbiges Wort |
 | eine Zahl groß zeigen | `ui_kennzahl()` | eine Überschrift mit Zahl |
 | ein Eingabefeld mit Beschriftung | `ui_feld()` | `<label>Text <input></label>` |
@@ -946,7 +946,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | eine **lange Liste durchsuchen** | `ui_kartenfilter()` — ab sechs Einträgen, filtert im Browser (9.32) | ein zweites `.suchfeld` (das ist 48 px hoch und gehört der Seitensuche) |
 | an das **Ende eines langen Abschnitts** einen Rückweg | `ui_nach_oben()` (9.33) | einen gedämpften Textverweis ohne `.knopf` |
 
-<!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
+<!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
 | Baustein | Klasse | Regel im Stylesheet | `ui.php` |
 |---|---|---|--:|
@@ -1245,8 +1245,8 @@ Skript.
 ```
 
 **Platzhalter tragen ausschließlich Phantasienamen** (E-S3-13). Ein
-Platzhalter ist ein Beispiel, kein Vorschlag: Steht dort „z. B. Standort
-Kempten", liest ein Teil der NutzerInnen das als die erwartete Antwort und
+Platzhalter ist ein Beispiel, kein Vorschlag: Steht dort der Name der echten
+Station, liest ein Teil der NutzerInnen das als die erwartete Antwort und
 ein anderer als Aussage darüber, wer diese Anwendung betreibt. Beides ist
 falsch. Orte, Personen, Kliniken und Rettungsmittel in Platzhaltern sind
 deshalb **erfunden** — erkennbar erfunden, nicht bloß ein anderer echter
@@ -2091,7 +2091,7 @@ eine Nummer: Backlog Nr. 102. Ein Mausklick ist `mousedown` → `blur` →
 `mouseup` → `click`; wer die Taste länger hält als der Blur-Aufschub (150 ms),
 findet den Eintrag beim `mouseup` schon versteckt, und `click` fällt nie.
 Gemessen bei 300 ms gehaltener Maus: vorher 0 von 3 Übernahmen, nachher 3 von
-3 (`tools/klickprobe/`).
+3 (`tools/bedienprobe/`).
 
 **Ob eine Gruppenzeile erscheint, entscheidet der Aufrufer** — er setzt
 `titel` oder lässt ihn weg. Die Regel ist nicht mechanisch: Das Besatzungsfeld
@@ -2452,8 +2452,8 @@ Oberlinie (`--strich-stark`), damit die Gruppe sichtbar beginnt.
 Warnung „abweichende Crew" war Fließtext und bekam in Variante B des Mockups
 eine eigene Regel; freigegeben ist Variante A — die vorhandene
 `.plakette-orange` mit dem Symbol `warnung`, in Rot (`.plakette-rot`) für die
-Gruppe „Nicht zuordenbar". Das ist dieselbe Form wie überall sonst, und ein
-Leser erkennt sie ohne Lernen. **Die eine Abweichung:** In dieser Kopfzeile
+Gruppe „Nicht zuordenbar". Das ist dieselbe Form wie überall sonst, und eine
+LeserIn erkennt sie ohne Lernen. **Die eine Abweichung:** In dieser Kopfzeile
 darf die Plakette **umbrechen** (`white-space:normal`) — sie trägt hier einen
 Satz, keine Vokabel, und wäre bei 360 px sonst breiter als das Gerät.
 
@@ -2651,10 +2651,10 @@ lief, misst einen Stand, den es nicht mehr gibt.
 | `tools/vollstaendigkeit/pruefen.py` | Ist etwas verlorengegangen? Steht jeder Wert an der einen Stelle? |
 | `tools/screenshots/aufnehmen.mjs` | Sieht es in allen acht Breiten so aus, wie es soll? Überlauf, Konsolenfehler, Knopfhöhen. |
 | `tools/screenshots/kontrast.py` | Erreicht jedes Farbpaar der Token seinen Sollwert? |
-| `tools/design/tabellen.py` | Erzeugt die Tabellen dieses Dokuments aus den Quellen. |
+| `tools/erzeugen/design.py` | Erzeugt die Tabellen dieses Dokuments aus den Quellen. |
 | `tools/wortliste/wortliste.py` | Sprechen Oberfläche und Dokumentation neutral von Land und Luft? |
 | `tools/stilvergleich/` | Hat sich am Erscheinungsbild etwas geändert, das nicht geplant war? |
-| `tools/klickprobe/probe.mjs` | Tut ein Bedienelement, was es soll — wenn man es **bedient**? Je Weg eine Zahl. |
+| `tools/bedienprobe/probe.mjs` | Tut ein Bedienelement, was es soll — wenn man es **bedient**? Je Weg eine Zahl. |
 
 **Der Stilvergleich hat während P3 geruht** und ist in O12 neu geeicht: Die
 Frage „hat sich etwas geändert?" ist in einer Phase, in der sich alles ändert,

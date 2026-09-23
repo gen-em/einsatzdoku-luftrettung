@@ -49,7 +49,7 @@
       };
     }
     // Kurzform: in der Praxis ueblicherweise mit angehaengtem Referenzort
-    // kopiert (z. B. aus einer Karten-App: "4HJM+7Q Kempten"). Da hier keine
+    // kopiert (z. B. aus einer Karten-App: "4HJM+7Q Hochkreuth"). Da hier keine
     // Koordinaten gesetzt werden (nur ein Hinweistext), ist die Erkennung
     // bewusst toleranter — geprueft wird das erste Leerraum-getrennte Token.
     if (OpenLocationCode.isValid(s) && OpenLocationCode.isShort(s)) {

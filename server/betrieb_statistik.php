@@ -11,7 +11,7 @@ require_once __DIR__ . '/format_lib.php';   // zahl_text(), prozent_text(), proz
  * BETRIEB -> STATISTIK (S8/AP4, Mockup 04 Fassung 2).
  *
  * WOZU. „Wie viele Konten hat diese Installation, was fuer Geraete koppeln
- * sich, wird sie ueberhaupt benutzt?" — Fragen, die eine Betreiberin einmal
+ * sich, wird sie ueberhaupt benutzt?" — Fragen, die eine BetreiberIn einmal
  * im Quartal stellt und auf die es bisher keine Antwort gab. Die
  * NutzerInnen-Liste zaehlt Konten, die Geraeteseite zaehlt je Konto; die
  * Summe ueber alles zog niemand.

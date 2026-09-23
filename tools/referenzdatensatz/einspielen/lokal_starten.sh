@@ -68,7 +68,7 @@ curl -s --noproxy '*' -o /dev/null -w "PHP-Server: HTTP %{http_code}\n" "http://
 # blankes HTTP geht es auch nicht -- da laesst der Simulator die Anfrage zwar
 # hinaus (der Server sieht sie), gibt der App die Antwort aber nicht: sie
 # bekommt -1001 SECURE_CONNECTION_REQUIRED. Gemessen am 03.09.2026 mit
-# tools/netzprobe/ (F-S5-11); mit CA im Systemspeicher kam 405 von pair.php
+# tools/uhr-pruefstand/netzprobe/ (F-S5-11); mit CA im Systemspeicher kam 405 von pair.php
 # durch, also die echte Antwort.
 #
 # Fuer alles andere aendert sich nichts: curl -k gilt weiter, und ein
