@@ -2,7 +2,7 @@
 
 *Zum Konzept `Konzept-BR-Bestandsriegel.md`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Konzept, Abschnitt 9.
-Stand: BR-01 bis BR-03 erledigt, 24.09.2026.*
+Stand: BR-01 bis BR-04 erledigt, 24.09.2026 — Merge offen.*
 
 ---
 
@@ -38,6 +38,7 @@ Stand: BR-01 bis BR-03 erledigt, 24.09.2026.*
 | BR-03 | `kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | nach F-BR-17 auch Befehlsersetzungen am Zeilenende | **18 von 18**; **84** Aufrufe, 0 Befunde, 2 ungeprüft |
 | BR-03 | `proben.sh wiederherstellung` normal / ohne Zusatzkonten | Teil 11 meldet „nicht gemessen" rot (F-BR-04) | **111 / 0**, rc 0 / **rc 1** |
 | BR-03 | `aufbauen.sh web` | `cmark-gfm` in der Ausbaustufe | **11 von 11** Stücken |
+| BR-04 | `git merge-tree` gegen den P5c-Zweig (`f7729c2`), dann `bestand.py --wurzel` über den zusammengeführten Baum | was P5c nach dem Aufnehmen tun muss (Konzept 8.1) | **4** Dateien mit Konflikt; danach **1** Befund (Anlass der Protokollprobe); Zählung 40 Zeilen / 0 über der Decke; `kettenaufrufe` 86 / 0 |
 
 Im Browser ist nichts zu prüfen: BR berührt weder `server/` noch eine
 Android- oder Uhr-Oberfläche.
@@ -107,6 +108,11 @@ Android- oder Uhr-Oberfläche.
   *Scheitern erkennbar an:* „Kein grüner Stufe-1-Lauf auf diesem Baum" bei
   einem Stand, dessen PR grün war — das Tor schließt dann (sicher), aber
   die Suche liest falsch.
+- [ ] **P-BR-09 — Das Runbook trägt.** *Weg:* beim nächsten neuen
+  Prüfmittel (etwa auf P5c) nur `Pruefablauf.md` 6.12 befolgen.
+  *Erwartet:* `bestand` und `kettenaufrufe` beim ersten Lauf 0 Befunde.
+  *Scheitern erkennbar an:* ein Schritt, den 6.12 nicht nennt und den erst
+  Stufe 1 meldet — dann gehört er in 6.12.
 ---
 
 ## 4. Grenzen der Prüfmittel

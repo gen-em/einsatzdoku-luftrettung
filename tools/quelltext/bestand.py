@@ -14,7 +14,7 @@ höchstens 40 Zeilen, Streichliste. Drei Tage nach PK-04 standen die Zahlen
 unter den Regeln, und niemand hatte es gemerkt, weil es niemand zählte. Eine
 Regel ohne Messung ist eine Hoffnung.
 
-WAS ER MISST — sechs Regeln, jede mit Namen im Befund:
+WAS ER MISST — sieben Regeln, jede mit Namen im Befund:
 
   form       jede LIESMICH.md unter tools/, auch in Unterordnern (E-BR-04):
              genau die fünf Abschnitte aus 6.2 in dieser Reihenfolge,
@@ -35,7 +35,7 @@ WAS ER MISST — sechs Regeln, jede mit Namen im Befund:
 
 WAS ER NICHT MISST, und das ist die benannte Grenze: den Inhalt einer
 Anleitung, ob der Anlass zur Probe passt, ob ein Werkzeug überflüssig ist.
-Das bleibt Lesearbeit (docs/Pruefablauf.md 6.12). Die Anlass-SPALTE in
+Das bleibt Lesearbeit (docs/Pruefablauf.md 6.1). Die Anlass-SPALTE in
 pruefablauf.json und in der Tabelle der Quelltextprüfungen misst er nicht —
 nur die Zeile (E-BR-07).
 

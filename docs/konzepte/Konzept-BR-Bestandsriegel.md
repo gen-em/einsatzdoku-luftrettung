@@ -223,6 +223,19 @@ was eine Entscheidung offen ließ, damit ein Mittel es messen kann.
   24.09.2026, je einzeln): Rechtstexte-Probe (Nr. 311), Stilvergleich
   (Nr. 312), Kopplungsprobe (Nr. 313). `Pruefablauf.md` 6.1 trägt das mit
   „oder hätte fangen müssen".
+- **E-BR-19 — Grundsatz 5 in `CLAUDE.md` 6 bekommt einen Satz, keinen
+  Absatz** (BR-04). Abschnitt 3 sagt „`CLAUDE.md` 6 bekommt keinen neuen
+  Absatz". Dort stand aber derselbe Satz wie in `Pruefablauf.md` 1: „Ohne
+  sie steht es auf der Streichliste." Nach BR ist das falsch — ohne die
+  Zeile ist Stufe 1 rot. Zwei gleichlautende Sätze, von denen einer
+  berichtigt wird, widersprechen einander; berichtigt sind beide, mit
+  „Backlog-Nummer" und „ist Stufe 1 rot". Preis: `CLAUDE.md` steht in der
+  Berührung des PR.
+- **E-BR-20 — Die Fassung des Rahmenplans ist 112, nicht 108** (BR-04).
+  `main` steht auf 107; der P5c-Zweig hat 108 bis 111 vergeben (gemessen an
+  `f7729c2`). Dieselbe Regel wie bei den Backlog-Nummern: Eine Zahl auf
+  einem ungemergten Zweig ist vergeben. Beim Zusammenführen kollidiert nur
+  die Kopfzeile „Fassung …", und dort gilt die höhere.
 
 ## 5. Fragen an die Betreiberin
 
@@ -337,6 +350,40 @@ Dazu, weil es beim Merge sonst rot wird: Jede neue `LIESMICH.md` (etwa
 `tools/proben/rollen/`) hat die fünf Abschnitte aus `Pruefablauf.md` 6.2,
 höchstens 40 Zeilen und eine Zeile `Anlass: Nr. …`; die schon angefasste
 `tools/bedienprobe/LIESMICH.md` bleibt unter 40.
+
+### 8.1 Nachtrag zum Abschluss (BR-04, 24.09.2026) — gemessen, nicht vermutet
+
+P5c hat die Übergabe als Nachtrag zur Fassung 2 übernommen (E-P5c-86 bis
+-90, Backlog 295 bis 298 auf seinem Zweig). Was nach dem Aufnehmen von BR
+bleibt, ist **gemessen**: Probemerge mit `git merge-tree` des BR-Stands
+gegen `claude/p5c-mockups-konzept-4yeomf` an `f7729c2`, dann der Riegel über
+den zusammengeführten Baum (`bestand.py --wurzel`).
+
+1. **Vier Dateien kollidieren, alle zeilenweise.** `docs/Backlog.md` (Kopf
+   der Nummernvergabe und die Einträge), `docs/CHANGELOG.md` (zwei Einträge
+   oben), `docs/Rahmenplan.md` (Kopfzeile „Fassung 111" gegen „112" und die
+   Verlaufszeilen, E-BR-20) — Buchführung, beide Seiten behalten. Und
+   `tools/screenshots/LIESMICH.md`: BR-02 hat sie auf die Form gebracht, P5c
+   hat darin Zahlen geändert. **Die BR-Fassung nehmen und die Zahlen von P5c
+   einsetzen**; 40 Zeilen bleiben die Grenze.
+2. **Danach genau ein Befund:** `tools/proben/protokoll/probe.php` Zeile 7,
+   „Anlass: F-P5c-18 und F-P5c-19" — eine Befund-Kennung statt einer
+   Backlog-Nummer (E-BR-07). Abhilfe: eine Nummer aus der Spanne des
+   P5c-Zweigs (299 bis 303 sind frei) anlegen und in die Zeile schreiben.
+   Alles andere hält die Form: `rollen` trägt `Anlass: Nr. 286`, die vier
+   Anleitungen, die P5c angefasst hat, sind unter 40.
+3. **`tools/konfig_stellen.php` liegt jetzt in `tools/sandbox/`.** Git führt
+   den Umzug mit den Änderungen von P5c an den vier Proben ohne Konflikt
+   zusammen; die neuen Proben von P5c binden die Datei nicht ein. Wer ab
+   jetzt eine Probe schreibt, die sie braucht, schreibt
+   `require_once __DIR__ . '/../../sandbox/konfig_stellen.php';`.
+4. **Nummern.** BR hat Backlog 293 und 304 bis 313, Rahmenplan-Fassung 112.
+   Die nächste freie Backlog-Nummer außerhalb beider Spannen ist **314**.
+5. **Stufe 1 hat 15 Schritte und liest 17 Riegel gegen.** Wer auf P5c einen
+   Riegel ergänzt, folgt `Pruefablauf.md` 6.12, Schritt 5. Auf dem
+   zusammengeführten Baum sind die zwei anderen Bestandsmittel grün:
+   Zählung 40 Zeilen, 0 über der Decke; `kettenaufrufe` 86 Aufrufe,
+   0 Befunde.
 
 ## 9. Umsetzung — Protokoll
 

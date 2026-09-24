@@ -376,8 +376,8 @@ Arbeitsumgebung, ihre Ausbaustufen, die sieben Umgebungswerte und was sie
    nur die Anlage zeigen kann.
 3. **Zweimal nur die Gegenlesung.** Sonst wird nichts zweimal gemessen.
 4. **Der Umfang folgt der Änderung, nicht dem Kalender.**
-5. **Ein Prüfmittel braucht einen Fehler** — eine Zeile „Anlass: Nr. …".
-   Ohne sie steht es auf der Streichliste.
+5. **Ein Prüfmittel braucht einen Fehler** — eine Zeile „Anlass: Nr. …"
+   mit einer Backlog-Nummer. Ohne sie ist Stufe 1 rot (seit Konzept BR).
 6. **Geschichte steht im Commit, nicht im Werkzeug.**
 7. **Kein stilles Überspringen, keine grüne Zahl ohne Gegenstand.**
 

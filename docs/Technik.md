@@ -611,15 +611,16 @@ Daten erst nach Server-Bestätigung.
 │   │                      steht (Grundsatz 1). `pruefen.sh` fährt sie je
 │   │                      Stufe, `auswahl.py` wählt nach Berührung aus,
 │   │                      `bericht.py` schreibt die Zahlen (s. LIESMICH.md)
-│   ├── quelltext/         neun Prüfungen, die nur Quelltext lesen und im
+│   ├── quelltext/         elf Prüfungen, die nur Quelltext lesen und im
 │   │                      Tor laufen (PK-04, E-PK-24): installweiche,
 │   │                      sitzungshaertung, csp, jobregister,
 │   │                      migrationsregister, linkprobe,
 │   │                      vollstaendigkeit, textprobe und — seit Konzept
 │   │                      BR — bestand, der den Werkzeugbestand unter
-│   │                      tools/ gegen Pruefablauf.md 6 hält. Ein Läufer
-│   │                      (`pruefen.sh <name>|alle|--selbstprobe`), ein
-│   │                      LIESMICH. Vorher acht Ordner.
+│   │                      tools/ gegen Pruefablauf.md 6 hält, pysyntax und
+│   │                      handbuch (bis BR-03 eigene Tor-Schritte). Ein
+│   │                      Läufer (`pruefen.sh <name>|alle|--selbstprobe`),
+│   │                      ein LIESMICH. Vorher acht Ordner.
 │   ├── referenzdatensatz/ erfundener Beispielbestand (21 Diensttage,
 │   │   │                  106 Einsätze) — Demo-Konto UND Regressionsreferenz
 │   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu die zwei

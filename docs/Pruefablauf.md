@@ -64,7 +64,8 @@ steht; Abschnitt 2.4 nennt den heutigen Umfang mit Zahl.
    Anlage geht; eine Hauptstufe auch Mengen und die Plattformmatrix (3).
 5. **Ein Prüfmittel braucht einen Fehler.** Jedes Werkzeug nennt in einer
    Zeile, welchen Fehler es gefangen hat oder hätte fangen müssen, als
-   Verweis auf eine Nummer. Ohne diese Zeile steht es auf der Streichliste.
+   Verweis auf eine Backlog-Nummer (6.1). Ohne diese Zeile ist Stufe 1 rot
+   (seit Konzept BR; bis dahin stand es „auf der Streichliste").
 6. **Geschichte steht im Commit, nicht im Werkzeug.** Eine Anleitung sagt,
    was das Werkzeug tut; was es einmal gefunden hat, sagen Commit-Nachricht,
    Backlog und Changelog.
@@ -438,10 +439,23 @@ herunter und fährt ab Schritt 2 mit einem eigenen Commit darüber.
 ### 6.1 Ein Prüfmittel braucht einen Fehler
 
 Jedes Werkzeug nennt in einer Zeile „Anlass: Nr. …", welchen Fehler es
-gefangen hat oder hätte fangen müssen. Ohne diese Zeile steht es auf der
-Streichliste. Der Grund ist nicht Buchhaltung: Ein Prüfmittel ohne
-gefundenen Fehler misst entweder etwas, das nicht kaputtgeht, oder es misst
-daneben — und beides kostet bei jedem Lauf Zeit.
+gefangen hat oder hätte fangen müssen. Der Grund ist nicht Buchhaltung: Ein
+Prüfmittel ohne gefundenen Fehler misst entweder etwas, das nicht
+kaputtgeht, oder es misst daneben — und beides kostet bei jedem Lauf Zeit.
+
+**Ein Anlass ist eine Backlog-Nummer** (E-BR-07). Eine Befund-Kennung
+(`F-XX-NN`) und eine Entscheidung (`E-XX-NN`) stehen in einem Konzept, das
+am Ende gelöscht wird; ein Kürzel wie `PP-1` oder `O9c` sagt der nächsten
+Instanz nichts. Wer ein Prüfmittel anlegt, legt deshalb **zuerst** die
+Nummer an — auch für einen Fehler, der im selben Paket behoben wird: Der
+Eintrag wandert dann nach *Erledigt* und bleibt zitierbar. Ausgenommen ist
+die Spalte „Anlass" der Zuordnung in `pruefablauf.json` (4): Sie beschreibt
+die Berührung, nicht das Werkzeug. Und ein Erzeuger, der keinen Fehler
+fangen kann, trägt genau `Anlass: entfällt — Erzeuger (E-BR-05)`.
+
+**Seit Konzept BR misst `bestand` die Zeile** (6.2): Ohne sie ist Stufe 1
+rot. Bis dahin kam ein Werkzeug ohne Zeile „auf die Streichliste", und die
+führte niemand — vor BR trugen 0 von 20 Proben die Zeile.
 
 ### 6.2 Die Anleitung: fünf Abschnitte, höchstens 40 Zeilen
 
@@ -703,6 +717,65 @@ der Aufruf, der sie anwendet — seit PK-03 `tools/pruefstand/pruefablauf.json`.
 In `pruefung.yml` steht seit PK-05 keine Schwelle mehr; die Zahlen dort misst
 das Tor selbst und hält sie dem Bericht entgegen.
 
+### 6.12 Ein neues Prüfmittel
+
+In dieser Reihenfolge. Was `bestand` misst, ist markiert; den Aufruf aus
+Schritt 5 hält `kettenaufrufe` gegen das Werkzeug. Beide laufen in jeder
+Stufe und im Tor.
+
+1. **Die Backlog-Nummer anlegen** (6.1). In `docs/Backlog.md` hinten
+   anhängen, mit der nächsten freien Nummer aus dem Kopf der Datei — vorher
+   auf `origin/main` **und** auf den offenen Arbeitszweigen nachsehen, ob
+   jemand sie schon genommen hat. Keine Zeile darf dort mit einer Zahl und
+   einem Punkt beginnen, die keine Nummer ist (`bestand`, Regel `backlog`).
+2. **Den Ort wählen** — keine Datei lose unter `tools/` (`bestand`, `lose`):
+   - Liest es nur Quelltext und kann einen Merge aufhalten →
+     `tools/quelltext/<name>.py` oder `.php`, der Name in `NAMEN` von
+     `tools/quelltext/pruefen.sh` (bei `.py` auch in `starter()` dort),
+     eine Zeile mit Anlass in der Tabelle von `tools/quelltext/LIESMICH.md`.
+   - Braucht es die laufende Anlage → `tools/proben/<name>/` und eine Zeile
+     in `RUF` von `tools/proben/proben.sh`. Der Kopfkommentar der Datei, die
+     `RUF` startet, trägt eine Zeile, die mit `Anlass: Nr. …` beginnt
+     (` * Anlass: Nr. 304 — …`; `bestand`, `probe`).
+   - Sonst ein eigener Ordner `tools/<ordner>/`.
+3. **Die Anleitung in der Form** — für einen eigenen Ordner neu, sonst die
+   des Sammelordners nachziehen. `LIESMICH.md` mit genau den fünf
+   Abschnitten aus 6.2 in dieser Reihenfolge (`## Aufruf`, `## Was es
+   misst`, `## Was es braucht`, `## Erwartete Zahl`, `## Was es nicht
+   kann`), höchstens 40 Zeilen, und — für einen eigenen Ordner — genau eine
+   Zeile, die mit `Anlass: Nr. …` beginnt; `**Anlass: Nr. …**` zählt auch
+   (`bestand`, `form`, `anleitung`, `anlass`). Geschichte gehört in die
+   Commit-Nachricht (Grundsatz 6).
+4. **Eine Selbstprobe, wenn es aufhält** (6.3): `--selbstprobe` mit je
+   einem eingebauten Fehler und einer Gegenprobe. Eine Quelltextprüfung
+   trägt ihren Namen dann auch in `SELBST` von `tools/quelltext/pruefen.sh`.
+5. **Die Zeile in `tools/pruefstand/pruefablauf.json`.** Unter `proben` der
+   Name mit `aufruf` und `braucht` (`nichts`, `installation`, `plattform`,
+   `android` oder `uhr`). Dann **eines** von beiden:
+   - ein Eintrag unter `muster` — `pfade`, ab welcher Stufe (`ab`), `anlass`
+     —, wenn es nur bei einer Berührung laufen soll; muss es nach einer
+     anderen Probe laufen, `nach` (4);
+   - oder der Name in `riegel.proben`, wenn es in jeder Stufe laufen und im
+     Tor gegengelesen werden soll. Dann braucht es in
+     `.github/workflows/pruefung.yml` einen Schritt, der es fährt, und in
+     „Prüfbericht gegenlesen" ein `--riegel "<name>=…"` — sonst ist Stufe 1
+     rot (`--alle-riegel`). Eine Quelltextprüfung fährt der vorhandene
+     Schritt „Quelltext" schon mit — die Zahl in seinem Namen zieht man
+     nach —, das `--riegel` braucht sie trotzdem.
+   Ein Ordner, der hier nicht steht, muss in einem Arbeitslauf, in
+   `tools/pruefstand/pruefen.sh` oder in `docs/Sandbox-Setup.md` genannt
+   sein (`bestand`, `inventur`).
+6. **Die Tabelle in 4 erzeugen:** `python3 tools/pruefstand/bericht.py
+   erzeugen-doku` und die Ausgabe ab der Zeile `<!-- ERZEUGT … -->`
+   einsetzen. Nie von Hand.
+7. **Die Riegel grün:** `bash tools/quelltext/pruefen.sh bestand` und
+   `python3 tools/kettenaufrufe/pruefen.py`, beide **0 Befunde**. Die
+   Sollzahl des neuen Mittels steht in seiner Anleitung, nicht hier (6.11);
+   ein neuer Riegel bekommt in 6.11 eine Zeile dazu, was grün heißt.
+
+Danach läuft es wie jedes andere: Der Prüfstand wählt es nach der Berührung
+aus, der Bericht nennt seine Zahl, und das Tor liest den Bericht gegen (5).
+
 ---
 
 ## 7. Benennung
@@ -754,6 +827,9 @@ Prüfung sucht, die es nicht gibt, findet sie hier zusammen mit dem Grund.
 Konzept PK, freigegeben am 21.09.2026 (E-PK-01 bis -30). Die Zahlen dieses
 Dokuments sind am 21.09.2026 an `main` `08e032e` gemessen; wo eine Zahl aus
 dem Konzept abweicht, gilt die hier genannte, weil sie jünger ist.
+Fortgeschrieben mit Konzept RP (23.09.2026) und Konzept BR (24.09.2026:
+Riegel `bestand`, `pysyntax`, `handbuch`, 6.1 und 6.12); deren Zahlen sind
+an ihrem Tag gemessen und stehen, wo sie gelten.
 
 Der Werdegang — welches Paket was gebaut hat, welche Fehlanläufe es gab —
 steht nicht hier, sondern in den Commit-Nachrichten der PK-Pakete, im

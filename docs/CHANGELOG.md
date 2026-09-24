@@ -17,7 +17,7 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 ## [Werkzeug: Der Bestandsriegel (Konzept BR)] — 2026-09-24
 
 Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
-`docs/` und `.github/`, wie bei RP (`CLAUDE.md` 2).
+`docs/`, `.github/` und ein Satz in `CLAUDE.md`, wie bei RP (`CLAUDE.md` 2).
 
 ### Neu
 
@@ -47,8 +47,23 @@ Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
   Lauf einen Fehler im Riegel selbst gefunden: Bei einer Probe, die über eine
   Funktion startet, nahm er den ersten Aufruf im Rumpf — und hielt damit
   eine Gegenstelle für die Probe, sobald sie oben stand.
+- **Der Weg für ein neues Prüfmittel steht an einer Stelle** (BR-04):
+  `Pruefablauf.md` 6.12, sieben Schritte in der Reihenfolge, in der sie zu
+  tun sind — Backlog-Nummer, Ort, Anleitung, Selbstprobe, Zeile in
+  `pruefablauf.json`, Tabelle erzeugen, Riegel grün. Bis dahin lagen die
+  Teile auf fünf Abschnitte verteilt, und wer ein Werkzeug anlegte, fand den
+  fehlenden erst, wenn Stufe 1 rot war. Der Riegel nennt die Stelle, sobald
+  er einen Befund meldet.
 
 ### Geändert
+
+- **Ein Anlass ist eine Backlog-Nummer** (E-BR-07, `Pruefablauf.md` 6.1).
+  Grundsatz 5 sagte „Nummer" und meinte die dauerhafte; im Bestand standen
+  Befund-Kennungen und Kürzel, die mit ihrem Konzept gelöscht werden. Wer ein
+  Prüfmittel anlegt, legt jetzt zuerst die Nummer an. Grundsatz 5 sagt dazu
+  nicht mehr „steht auf der Streichliste", sondern „ist Stufe 1 rot" — in
+  `Pruefablauf.md` 1 und im gleichlautenden Satz in `CLAUDE.md` 6, sonst
+  hätten die beiden Stellen einander widersprochen.
 
 - **`tools/kettenaufrufe/` kennt die Namen der Sammelläufer.** Bis dahin las
   es die Unterbefehle eines Shell-Werkzeugs nur aus `case "$befehl"` und sah
@@ -117,6 +132,21 @@ Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
 - **Veraltete Zahlen und Schalter in den Anleitungen:** `vergleichen.py
   --selbstprobe` fährt 14 Fälle, nicht „sieben"; die Zählung 34, nicht 29;
   `tor.py` kennt `--token`, kein `--jobs-token`.
+
+### Bewusst so
+
+- **Der Riegel misst Form, nicht Inhalt** (E-BR-03). Ob eine Anleitung
+  stimmt und ob die Nummer in der Anlass-Zeile den richtigen Fehler nennt,
+  sieht er nicht; eine vorhandene, aber falsche Nummer ist für ihn grün. Das
+  Prüfdokument nimmt dafür eine Stichprobe von Hand.
+- **Tote Werkzeugpfade in Dokumenten hält kein Mittel auf.** BR hat 26
+  davon von Hand gefunden und berichtigt (F-BR-13). Eine Regel dafür hätte
+  eine andere Quelle als `tools/` — das ist eine Frage an die Betreiberin,
+  keine Entscheidung eines Pakets.
+- **Die Steuerdokumente misst BR nicht.** `Backlog.md`, `Rahmenplan.md`
+  und `CLAUDE.md` sind dieselbe Sorte Bestand wie `tools/` vor PK; ein
+  Riegel über erzählenden Text ist ein anderes Werkzeug und Sache eines
+  eigenen Konzepts (auf dem P5c-Zweig als Konzept SD angelegt).
 
 ## [Werkzeug: Die Nebenstufe ist grün (Konzept RP)] — 2026-09-23
 

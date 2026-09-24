@@ -3764,28 +3764,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
     **Zuordnung: Backlog-Runde.**
 
-293. **Der Werkzeugbestand unter `tools/` hat keinen Riegel.**
-    *Aufgenommen 24.09.2026 mit Konzept BR, gemessen an `main` `f4fe4a0`.*
-    Konzept PK hat den Durchlauf einer Änderung als Riegel gebaut und den
-    Bestand als Regel gelassen: Grundsatz 5 (die Anlass-Zeile), die Form der
-    Anleitung mit fünf Abschnitten und höchstens 40 Zeilen
-    (`Pruefablauf.md` 6.2), die Streichliste. Kein Mittel maß eine davon,
-    und drei Tage nach PK-04 standen die Zahlen darunter: vier Anleitungen
-    über 40 Zeilen, acht Unteranleitungen mit zusammen 1 120 Zeilen, die
-    PK-04 nie gezählt hat, ein Werkzeug ohne Anleitung — und keine der
-    zwanzig Proben trägt die Anlass-Zeile, die `tools/proben/LIESMICH.md`
-    ihrem Kopfkommentar zuschreibt. Die Handzählung im Konzept fand eine;
-    sie war ein Prüffall, der das Wort „Anlass" im Text trägt. Der erste
-    Lauf des Riegels fand **57 Befunde** in sechs Regeln.
-
-    *Weg (Konzept BR):* `tools/quelltext/bestand.py` als neunte
-    Quelltextprüfung im Tor (BR-01), der Altbestand auf null im selben Pull
-    Request (BR-02; E-BR-01: keine Decke, keine Ausnahmeliste). *Abnahme:*
-    `bestand` meldet 0 Befunde, die Selbstprobe baut je Regel einen Fehler
-    ein und findet ihn. *Fehlschlag:* eine Anleitung mit 41 Zeilen oder eine
-    Probe ohne Anlass-Zeile, und Stufe 1 bleibt grün. **Zuordnung: Konzept
-    BR.**
-
 ## Erledigt
 
 
@@ -10079,3 +10057,41 @@ zutreffen.
     Web 13.0.0) prüft `pair.php` gegen den JSON-Vertrag und die
     Antwortgleichheit — beide 401-Zweige 0,351 s, Rümpfe byteweise gleich.
     Nachweis: `tools/proben/kopplung/probe.php`.
+
+293. **Der Werkzeugbestand unter `tools/` hat keinen Riegel.**
+    *Aufgenommen 24.09.2026 mit Konzept BR, gemessen an `main` `f4fe4a0`.*
+    Konzept PK hat den Durchlauf einer Änderung als Riegel gebaut und den
+    Bestand als Regel gelassen: Grundsatz 5 (die Anlass-Zeile), die Form der
+    Anleitung mit fünf Abschnitten und höchstens 40 Zeilen
+    (`Pruefablauf.md` 6.2), die Streichliste. Kein Mittel maß eine davon,
+    und drei Tage nach PK-04 standen die Zahlen darunter: vier Anleitungen
+    über 40 Zeilen, acht Unteranleitungen mit zusammen 1 120 Zeilen, die
+    PK-04 nie gezählt hat, ein Werkzeug ohne Anleitung — und keine der
+    zwanzig Proben trägt die Anlass-Zeile, die `tools/proben/LIESMICH.md`
+    ihrem Kopfkommentar zuschreibt. Die Handzählung im Konzept fand eine;
+    sie war ein Prüffall, der das Wort „Anlass" im Text trägt. Der erste
+    Lauf des Riegels fand **57 Befunde** in sechs Regeln.
+
+    *Weg (Konzept BR):* `tools/quelltext/bestand.py` als neunte
+    Quelltextprüfung im Tor (BR-01), der Altbestand auf null im selben Pull
+    Request (BR-02; E-BR-01: keine Decke, keine Ausnahmeliste). *Abnahme:*
+    `bestand` meldet 0 Befunde, die Selbstprobe baut je Regel einen Fehler
+    ein und findet ihn. *Fehlschlag:* eine Anleitung mit 41 Zeilen oder eine
+    Probe ohne Anlass-Zeile, und Stufe 1 bleibt grün. **Zuordnung: Konzept
+    BR.**
+
+    **Erledigt 24.09.2026 mit Konzept BR** (Zweig `claude/br-bestandsriegel`,
+    ohne Versionsstufe — berührt sind nur `tools/`, `docs/`, `.github/` und
+    ein Satz in `CLAUDE.md`). BR-01: `tools/quelltext/bestand.py`, die
+    neunte Quelltextprüfung, mit Selbstprobe je Regel. BR-02: der
+    Altbestand von **57 Befunden auf 0** — zwanzig Anlass-Zeilen in den
+    Probenköpfen, 25 Anleitungen mit zusammen 972 statt 2 144 Zeilen, zehn
+    nachgetragene Anlässe (Nr. 304 bis 313), `konfig_stellen.php` nach
+    `tools/sandbox/`. BR-03: die drei Tor-Schritte, die Station B nie fuhr,
+    als Quelltextprüfungen (Regel `backlog`, `pysyntax`, `handbuch`;
+    **17 Riegel statt 14**), eine Baumsuche statt zweier
+    (`tools/kette/baumsuche.py`), der Selbstüberspringer der
+    Wiederherstellungsprobe rot. BR-04: der Weg für ein neues Prüfmittel
+    (`Pruefablauf.md` 6.12) und der Satz „Ein Anlass ist eine
+    Backlog-Nummer" (6.1). Prüfliste:
+    `docs/konzepte/Pruefdokument-BR-Bestandsriegel.md`.
