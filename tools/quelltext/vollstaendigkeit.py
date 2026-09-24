@@ -210,22 +210,125 @@ def ohne_php_js_kommentare(text, ist_php):
     eigenen Code gibt es davon keines (nachgesehen am 13.09.2026) -- aber die
     Unterscheidung kostet nichts und nimmt der naechsten Fassung eine Falle.
 
-    WAS ER NICHT KANN: Heredoc/Nowdoc (`<<<`) und Regex-Literale mit `//`
-    darin. Beides kommt im eigenen Code nicht vor (nachgesehen; die Treffer
-    liegen alle unter server/vendor/, und das ist ausgenommen). Wer das
-    aendert, erweitert diesen Abtaster -- oder die Pruefung liest Kommentar
-    fuer Code.
+    IN PHP-DATEIEN NUR DIE CODE-BEREICHE (Backlog Nr. 184). Bis BV-01 ging
+    der Abtaster auch durch das HTML einer Seite -- und dort gibt es keine
+    Zeichenketten, wohl aber Anfuehrungszeichen im Fliesstext. Ein einzelnes
+    ungepaartes `"` schickte ihn in den Zeichenketten-Modus, aus dem er erst
+    beim naechsten herauskam; in `einsatz_form.php` verschluckte das die
+    Kommentare eines ganzen Skriptblocks. Das Ergebnis waren falsche
+    NEGATIVE: Was im verschluckten Bereich stand, fanden die Zusagen nicht,
+    und die Gruppe meldete trotzdem 0. Seither liest er eine PHP-Datei so,
+    wie PHP und der Browser sie lesen: HTML bleibt unberuehrt, abgetastet
+    werden `<?php … ?>`, `<?= … ?>`, `<script> … </script>` und
+    `<style> … </style>` -- jeder mit den Regeln seiner Sprache.
+
+    DREI GRENZEN, DIE SPRACHEN SETZEN, NICHT ICH: Ein `//`- oder
+    `#`-Kommentar in PHP endet am Zeilenende ODER am `?>`. Ein Skriptblock
+    endet am `</script`, auch mitten in einer JS-Zeichenkette oder einem
+    JS-Kommentar -- der Browser sucht nur nach diesem Wort. Und ein
+    `<?php` oder `<?=` mitten in einer JS-Zeichenkette ist PHP, denn PHP
+    laeuft vor dem Browser.
+
+    ZEICHENKETTEN MIT `'` UND `"` ENDEN IN JS UND CSS AM ZEILENENDE. Dort
+    kann eine solche Zeichenkette nicht ueber die Zeile laufen (ausser mit
+    `\\` davor, und das faengt die Escape-Regel). Ein Anfuehrungszeichen in
+    einem Regex-Literal kostet damit hoechstens eine Zeile, nicht den Rest
+    der Datei. In PHP duerfen Zeichenketten ueber Zeilen laufen, und sie
+    tun es (SQL) -- dort bleibt es beim alten Verhalten.
+
+    WAS ER NICHT KANN: Heredoc/Nowdoc (`<<<`), Regex-Literale mit `//`
+    darin, und ein PHP-Block, der in einem JS-Zeilenkommentar beginnt und
+    ueber dessen Zeilenende hinausreicht. Nichts davon kommt im eigenen
+    Code vor (nachgesehen; die Heredoc- und Regex-Treffer liegen alle unter
+    server/vendor/, und das ist ausgenommen). Wer das aendert, erweitert
+    diesen Abtaster -- oder die Pruefung liest Kommentar fuer Code.
     """
     aus = []
+    if not ist_php:
+        _abtasten(text, 0, 'js', aus, False)
+        return ''.join(aus)
     i, n = 0, len(text)
     while i < n:
+        # HTML-Modus: bis zum naechsten Anfang eines Code-Bereichs, und den
+        # oeffnenden Tag selbst unveraendert mitnehmen.
+        treffer = [m for m in (_PHP_AUF.search(text, i), _SKRIPT_AUF.search(text, i),
+                               _STIL_AUF.search(text, i)) if m]
+        if not treffer:
+            aus.append(text[i:])
+            break
+        m = min(treffer, key=lambda t: t.start())
+        aus.append(text[i:m.end()])
+        if m.re is _PHP_AUF:
+            i = _abtasten(text, m.end(), 'php', aus, False)
+        elif m.re is _SKRIPT_AUF:
+            i = _abtasten(text, m.end(), 'js', aus, True)
+        else:
+            i = _abtasten(text, m.end(), 'css', aus, True)
+    return ''.join(aus)
+
+
+_PHP_AUF    = re.compile(r'<\?(?:php\b|=)', re.I)
+_SKRIPT_AUF = re.compile(r'<script\b' + TAG_REST + r'>', re.I | re.S)
+_STIL_AUF   = re.compile(r'<style\b' + TAG_REST + r'>', re.I | re.S)
+_BLOCK_ZU   = {'js': re.compile(r'</script\b', re.I), 'css': re.compile(r'</style\b', re.I)}
+
+
+def _leer(stueck):
+    """Ein Stueck Kommentar durch Leerzeichen ersetzen, Umbrueche behalten."""
+    return ''.join(z if z == '\n' else ' ' for z in stueck)
+
+
+def _abtasten(text, i, sprache, aus, eingebettet):
+    """Ab `i` Code einer Sprache abtasten, Kommentare leeren, `aus` fuellen.
+
+    `sprache` ist 'php', 'js' oder 'css'. Rueckgabe: die Stelle, an der der
+    Bereich endet -- hinter `?>` (PHP), VOR `</script`/`</style` (eingebettet;
+    den schliessenden Tag nimmt der HTML-Modus mit), oder das Dateiende.
+    """
+    n = len(text)
+    zu = _BLOCK_ZU.get(sprache) if eingebettet else None
+    quoten = ('"', "'") if sprache == 'css' else ('"', "'", '`')
+
+    def grenze(k):
+        """Endet der Bereich hier? (nur `?>` in PHP, `</script` eingebettet)"""
+        if sprache == 'php':
+            return text.startswith('?>', k)
+        return bool(zu and text[k] == '<' and zu.match(text, k))
+
+    def php_innen(k):
+        """Beginnt an `k` ein PHP-Stueck in eingebettetem JS oder CSS?"""
+        if sprache != 'php' and eingebettet and text[k] == '<':
+            m = _PHP_AUF.match(text, k)
+            if m:
+                aus.append(m.group(0))
+                return _abtasten(text, m.end(), 'php', aus, False)
+        return None
+
+    while i < n:
+        if grenze(i):
+            if sprache == 'php':
+                aus.append('?>')
+                return i + 2
+            return i
+        k = php_innen(i)
+        if k is not None:
+            i = k
+            continue
         c = text[i]
-        if c in ('"', "'", '`'):
+        if c in quoten:
             ende = c
             aus.append(c); i += 1
             while i < n:
                 if text[i] == '\\' and i + 1 < n:
                     aus.append(text[i]); aus.append(text[i+1]); i += 2; continue
+                if zu and text[i] == '<' and zu.match(text, i):
+                    return i
+                k = php_innen(i)
+                if k is not None:
+                    i = k
+                    continue
+                if text[i] == '\n' and sprache != 'php' and ende != '`':
+                    break
                 aus.append(text[i])
                 if text[i] == ende:
                     i += 1; break
@@ -234,15 +337,28 @@ def ohne_php_js_kommentare(text, ist_php):
         if c == '/' and i + 1 < n and text[i+1] == '*':
             j = text.find('*/', i + 2)
             j = n if j < 0 else j + 2
-            aus.append(''.join(z if z == '\n' else ' ' for z in text[i:j]))
+            if zu:
+                m = zu.search(text, i + 2, j)
+                if m:
+                    j = m.start()
+            aus.append(_leer(text[i:j]))
             i = j; continue
-        if (c == '/' and i + 1 < n and text[i+1] == '/') or (c == '#' and ist_php):
+        if sprache != 'css' and ((c == '/' and i + 1 < n and text[i+1] == '/')
+                                 or (c == '#' and sprache == 'php')):
             j = text.find('\n', i)
             j = n if j < 0 else j
+            if sprache == 'php':
+                k = text.find('?>', i, j)
+                if k >= 0:
+                    j = k
+            elif zu:
+                m = zu.search(text, i, j)
+                if m:
+                    j = m.start()
             aus.append(' ' * (j - i))
             i = j; continue
         aus.append(c); i += 1
-    return ''.join(aus)
+    return i
 
 
 def liste_lesen(name, spalten=1):
@@ -431,9 +547,9 @@ def pruefung_werte(bericht):
 # dritten Mal (Backlog Nr. 227).
 #
 # WER EIN ZEICHEN HIER EINTRAEGT, prueft vorher, ob es in Fliesstext
-# vorkommen kann. Kommt es vor, gehoert es nicht hierher: Die Pruefung kann
-# Kommentare nicht ausblenden (der Abtaster versagt in PHP mit HTML,
-# Backlog Nr. 184), und jeder Prosatreffer waere ein Falschbefund.
+# vorkommen kann. Kommt es vor, gehoert es nicht hierher: Kommentare blendet
+# die Pruefung seit BV-01 aus (Backlog Nr. 184), sichtbaren Fliesstext
+# nicht -- und jeder Prosatreffer dort waere ein Falschbefund.
 UNICODE_SYMBOLE = ('▸▾▴▿▲▼◂◃►◄✓✔✗✘✕✖×⚠★☆◌●○◆■□↑↓⌄⌃⌃⚙⋮❯❮'
                    '⇧⇩⊕⊖⊗✎✓')
 
@@ -469,19 +585,25 @@ def pruefung_symbole(bericht):
 
     for pfad in quelldateien():
         t = lies(pfad)
-        # ESCAPE-FOLGEN AUFLOESEN, KOMMENTARE NICHT AUSBLENDEN — und das
-        # zweite ist eine Entscheidung, keine Auslassung (Web 19.4.2).
+        # ESCAPE-FOLGEN AUFLOESEN UND KOMMENTARE AUSBLENDEN -- das zweite
+        # erst seit BV-01 (Backlog Nr. 184), und der Weg dahin gehoert dazu.
         #
-        # Naheliegend waere gewesen, hier `ohne_php_js_kommentare()` aus
-        # Gruppe 5 dazwischenzuschalten: Von 255 Treffern stehen rund 250 in
-        # Kommentaren oder in Fliesstext, die Zahl faellt damit auf 108.
-        # Nachgemessen am 14.09.2026 taugt der Abtaster dafuer aber nicht: In
-        # einer PHP-Datei mit HTML schickt ihn ein ungepaartes `"` im
-        # Fliesstext in den Zeichenketten-Modus, und er verschluckt alles bis
-        # zum naechsten — in `einsatz_form.php` ab Zeile 1547 ganze 800
-        # Zeilen am Stueck. Eine kleinere Zahl, die durch Wegsehen entsteht,
-        # ist schlechter als eine grosse, die alles zeigt. Backlog Nr. 184.
-        markup = escapes_aufloesen(t)
+        # Bis dahin stand hier die Entscheidung dagegen (Web 19.4.2): Der
+        # Abtaster verlor in PHP-Dateien mit HTML die Spur -- ein
+        # ungepaartes `"` im Fliesstext schickte ihn in den
+        # Zeichenketten-Modus --, und eine kleinere Zahl, die durch Wegsehen
+        # entsteht, ist schlechter als eine grosse, die alles zeigt. Seit
+        # BV-01 tastet er nur die Code-Bereiche ab. GEMESSEN beim Umstellen
+        # (24.09.2026): Unicode-Symbole 14 -> 5, Emoji 8 -> 0; alle 17
+        # weggefallenen standen in Kommentaren (einzeln gelesen), die 5
+        # bleibenden sind das Malzeichen im sichtbaren Text („3× …"), das
+        # Nr. 279 als Typografie gelesen hat.
+        #
+        # NUR FUER DIE ZEICHEN. Die Verweise auf Symboldateien und die
+        # Inline-SVG liest die Pruefung weiter aus dem ganzen Quelltext:
+        # Ein Verweis im Kommentar zaehlt dort seit jeher mit, und das zu
+        # aendern waere eine andere Entscheidung als die von Nr. 184.
+        markup = escapes_aufloesen(ohne_php_js_kommentare(t, pfad.endswith('.php')))
         istr_ui = pfad.endswith('ui.php')
         istr_js = pfad.endswith(os.sep + 'symbol.js')
         # TAG_REST statt `[^>]*` (CLAUDE.md 6, Backlog Nr. 218): `t` ist die
@@ -518,16 +640,17 @@ def pruefung_symbole(bericht):
     # Zusagenliste aus Gruppe 5 waere der richtige Ort — nur bliebe dann eine
     # Liste mit rund hundert Eintraegen fuer „…" und „→", und die liest
     # niemand. Solange die Zahl aus Typografie besteht, ist sie eine ZAHL und
-    # kein Befund je Zeile; wer sie klein bekommen will, braucht zuerst
-    # Nr. 184 (der Abtaster) und dann eine engere Zeichenliste.
+    # kein Befund je Zeile; klein geworden ist sie mit Nr. 184 (BV-01), eine
+    # engere Zeichenliste haette sie nicht kleiner gemacht.
     # HINWEIS UND NICHT BEFUND (PK-04/1b, E-PK-16). Beide Zahlen stehen
     # weiter da — eine Messung, die man behalten kann, wirft man nicht weg —,
-    # aber sie halten keinen Lauf mehr auf. Der Grund ist die Kommentarfrage
-    # oben: Von den 14 verbliebenen Symbolzeichen und den 8 Emoji steht ein
-    # Teil in KOMMENTAREN (`version.php` im Kopftext, `pwquality.js` in der
-    # Erklaerung zur Graphemzerlegung), und die Pruefung kann das nicht
-    # trennen, solange Nr. 184 offen ist. Ein Befund, der sich nicht abstellen
-    # laesst, ohne die Sache zu verschlechtern, ist ein Hinweis.
+    # aber sie halten keinen Lauf auf. Der Grund war die Kommentarfrage oben:
+    # Von den damals 14 Symbolzeichen und 8 Emoji standen 17 in KOMMENTAREN
+    # (`version.php` im Kopftext, `pwquality.js` in der Erklaerung zur
+    # Graphemzerlegung). Seit BV-01 fallen sie heraus; es bleiben 5 Mal-
+    # zeichen im sichtbaren Text. Hinweis bleibt es trotzdem: Ein Befund, der
+    # sich an Typografie entzuendet, laesst sich nicht abstellen, ohne die
+    # Sache zu verschlechtern.
     #
     # WAS DAMIT NICHT GESAGT IST: dass die 14 in Ordnung sind. Sie gehoeren
     # in Symboldateien und stehen als Rest im Backlog (Nr. 279).

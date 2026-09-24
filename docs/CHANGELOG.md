@@ -14,6 +14,47 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Vorgriff auf Backlog-Runde 4 (Konzept BV)] — 2026-09-24
+
+Konzept BV, parallel zu P5c: Backlog-Punkte, die keine Datei von P5c
+berühren. Keine Versionsstufe — berührt sind nur `tools/` und `docs/`
+(`CLAUDE.md` 2). Nichts unter `server/`: Dort vergibt P5c die Web-Fassungen,
+und Rahmenplan 4 lässt `server/` ohnehin auf das laufende Paket warten.
+
+### Behoben
+
+- **Der Kommentar-Abtaster der Vollständigkeitsprüfung verlor in
+  PHP-Dateien mit HTML die Spur** (Backlog Nr. 184, BV-01). Er ging auch
+  durch das HTML einer Seite, und dort galt ihm `#` als PHP-Kommentar und
+  `//` als JS-Kommentar — ein `href="#…"` oder ein `http://` im Text leerte
+  den Rest der Zeile. In JavaScript brachte ihn ein `"` in einem
+  Regex-Literal aus dem Tritt. Beides erzeugt falsche **Negative**: Was
+  geleert wird, finden die drei Zusagen-Prüfungen nicht, und die Gruppe
+  meldet trotzdem 0. Jetzt liest er eine PHP-Datei so, wie PHP und der
+  Browser sie lesen — HTML bleibt unberührt, abgetastet werden
+  `<?php … ?>`, `<?= … ?>`, `<script>` und `<style>` nach den Regeln ihrer
+  Sprache —, und in JS und CSS endet eine `'`- oder `"`-Kette am
+  Zeilenende. **Der erste Lauf fand, was vorher verschluckt war:** die
+  GPX-Namensraumadresse in `export.js`, eine Kennung und keine
+  Laufzeitquelle, jetzt mit Grund in der Ausnahmeliste (18 → 19). Die
+  Gegenprobe mit einem eingeschleusten `<a href="#" onclick="return
+  confirm(…)">` findet der alte Abtaster nicht, der neue schon.
+- **Die Symbolprüfung zählte Zeichen in Kommentaren mit** (BV-01). Sie tat
+  es mit Absicht: Solange der Abtaster unzuverlässig war, war eine große
+  ehrliche Zahl besser als eine kleine durch Wegsehen. Mit dem neuen
+  Abtaster blendet sie Kommentare aus — Unicode-Symbole 14 → 5, Emoji
+  8 → 0; alle 17 weggefallenen standen in Kommentaren, die fünf bleibenden
+  sind das Malzeichen im sichtbaren Text. Es bleibt ein Hinweis, kein
+  Befund.
+
+### Bewusst so
+
+- **Der Abtaster kennt weiter kein Heredoc und keine Regex-Literale mit
+  `//`**, und ein PHP-Block, der in einem JS-Zeilenkommentar beginnt und
+  über dessen Ende reicht, bringt ihn aus dem Tritt. Nichts davon kommt im
+  eigenen Code vor; die Grenze steht im Docstring, damit die nächste Fassung
+  sie findet.
+
 ## [Werkzeug: Der Bestandsriegel (Konzept BR)] — 2026-09-24
 
 Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,

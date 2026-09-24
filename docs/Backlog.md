@@ -139,8 +139,15 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **319** und trägt seine
-Spanne hier ein, bevor er pusht. *(Bis zum 23.09.2026 stand hier 283; 283 bis
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **339** und trägt seine
+Spanne hier ein, bevor er pusht. **Vergeben und reserviert (24.09.2026,
+nachgesehen auf `origin/main` `ba2ec57`, höchste 318, und auf dem P5c-Zweig
+`3576a97`):** **319 bis 328** der P5c-Zweig `claude/p5c-mockups-konzept-4yeomf`
+(zweite Spanne, dort eingetragen beim Aufnehmen von BR); **329 bis 333**
+Konzept BV, der Vorgriff auf Backlog-Runde 4 (Zweig
+`claude/intelligent-carson-q8f7ag`); **334 bis 338** die Android-Runde AR
+(eigene Instanz, Zweig bei der Vergabe noch nicht angelegt). *(Bis
+zum 24.09.2026 stand hier 319. Bis zum 23.09.2026 stand hier 283; 283 bis
 285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
 Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
 Tag, **290 und 291** die Korrekturstufe Web 20.37.3, **292** das
@@ -1518,38 +1525,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Wirkung auf Code, Daten oder Oberfläche** — deshalb bleibt der Punkt offen
     statt zurückgezogen: Er kostet nichts, solange niemand ihn anfasst, und er
     ist mit der nächsten größeren Rahmenplan-Pflege in einem Zug zu machen.
-
-184. **Der Kommentar-Abtaster der Prüfmittel verliert in PHP-Dateien mit HTML die Spur.**
-    *Aufgenommen 14.09.2026 in AP2 der Mockup-Runde, als die Symbolprüfung ihn
-    benutzen wollte.* `ohne_php_js_kommentare()` in
-    `tools/vollstaendigkeit/pruefen.py` (Backlog-Runde 3, Nr. 47/58) geht
-    zeichenweise durch die Datei und merkt sich, ob es gerade in einer
-    Zeichenkette steht. In einer **PHP-Datei mit HTML** trifft es dabei auf
-    Anführungszeichen im Fließtext, die kein String sind — und ein einzelnes
-    ungepaartes `"` schickt es in den Zeichenketten-Modus, aus dem es erst
-    beim nächsten herauskommt.
-    **Gemessen** an `server/einsatz_form.php`: ab Zeile 1547 verschluckt es
-    **rund 800 Zeilen am Stück**; der Kommentar in Zeile 1613 wird nicht mehr
-    erkannt. Von 2350 Zeilen werden 853 geleert — der Rest bleibt stehen, ohne
-    dass irgendetwas meldet.
-    **Die Folge sind falsche NEGATIVE, und die sind teurer als falsche
-    positive:** Die drei Zusagen-Prüfungen (`native Dialoge`, `Seite ohne
-    Gerüst`, `fremde Quelle`) suchen ihre Muster in genau diesem Text. Was im
-    verschluckten Bereich steht, wird nicht gefunden — und die Gruppe meldet
-    trotzdem **0**. Genau die Sorte grüner Zahl, gegen die `CLAUDE.md` 6
-    warnt.
-    *Warum AP2 ihn nicht benutzt hat:* Mit Ausblenden fiele die Symbolzahl von
-    252 auf 108. Eine kleinere Zahl, die durch Wegsehen entsteht, ist
-    schlechter als eine große, die alles zeigt — deshalb zählt die
-    Symbolprüfung weiterhin den ganzen Quelltext.
-    **Weg:** Für `.php`-Dateien nur **innerhalb** der Bereiche abtasten, die
-    wirklich Code sind — `<?php … ?>`, `<?= … ?>` und `<script> … </script>`;
-    alles dazwischen ist HTML, dort gibt es keine Zeichenketten und keine
-    `//`-Kommentare. *Abnahme:* An `einsatz_form.php` werden die Kommentare ab
-    Zeile 1547 wieder erkannt (geleerte Zeilen deutlich über 853); die drei
-    Zusagen-Prüfungen bleiben bei 0 Befunden **und** finden eine testweise
-    eingeschleuste `confirm(`-Stelle im bisher verschluckten Bereich.
-    Zuordnung: **Backlog-Runde**.
 
 187. **Alle „Anhebungs"-Wege werden mit NaDoku 1.0 abgeschafft.**
     *Aufgenommen 14.09.2026 (S10/AP3) auf Anweisung des Auftraggebers.* Ab 1.0
@@ -10211,3 +10186,59 @@ zutreffen.
     `backup_spuren_restore.php` löst seither `spurprobe` und
     `containerprobe` aus. Die Selbstprobe von `auswahl.py` hat dafür einen
     Fall, der ohne den Pfad fehlschlägt (28 Lagen, gegengeprobt: 1 rot).
+
+184. **Der Kommentar-Abtaster der Prüfmittel verliert in PHP-Dateien mit HTML die Spur.**
+    *Aufgenommen 14.09.2026 in AP2 der Mockup-Runde, als die Symbolprüfung ihn
+    benutzen wollte; **erledigt 24.09.2026 mit Konzept BV (BV-01).*** `ohne_php_js_kommentare()` in
+    `tools/vollstaendigkeit/pruefen.py` (Backlog-Runde 3, Nr. 47/58) geht
+    zeichenweise durch die Datei und merkt sich, ob es gerade in einer
+    Zeichenkette steht. In einer **PHP-Datei mit HTML** trifft es dabei auf
+    Anführungszeichen im Fließtext, die kein String sind — und ein einzelnes
+    ungepaartes `"` schickt es in den Zeichenketten-Modus, aus dem es erst
+    beim nächsten herauskommt.
+    **Gemessen** an `server/einsatz_form.php`: ab Zeile 1547 verschluckt es
+    **rund 800 Zeilen am Stück**; der Kommentar in Zeile 1613 wird nicht mehr
+    erkannt. Von 2350 Zeilen werden 853 geleert — der Rest bleibt stehen, ohne
+    dass irgendetwas meldet.
+    **Die Folge sind falsche NEGATIVE, und die sind teurer als falsche
+    positive:** Die drei Zusagen-Prüfungen (`native Dialoge`, `Seite ohne
+    Gerüst`, `fremde Quelle`) suchen ihre Muster in genau diesem Text. Was im
+    verschluckten Bereich steht, wird nicht gefunden — und die Gruppe meldet
+    trotzdem **0**. Genau die Sorte grüner Zahl, gegen die `CLAUDE.md` 6
+    warnt.
+    *Warum AP2 ihn nicht benutzt hat:* Mit Ausblenden fiele die Symbolzahl von
+    252 auf 108. Eine kleinere Zahl, die durch Wegsehen entsteht, ist
+    schlechter als eine große, die alles zeigt — deshalb zählt die
+    Symbolprüfung weiterhin den ganzen Quelltext.
+    **Weg:** Für `.php`-Dateien nur **innerhalb** der Bereiche abtasten, die
+    wirklich Code sind — `<?php … ?>`, `<?= … ?>` und `<script> … </script>`;
+    alles dazwischen ist HTML, dort gibt es keine Zeichenketten und keine
+    `//`-Kommentare. *Abnahme:* An `einsatz_form.php` werden die Kommentare ab
+    Zeile 1547 wieder erkannt (geleerte Zeilen deutlich über 853); die drei
+    Zusagen-Prüfungen bleiben bei 0 Befunden **und** finden eine testweise
+    eingeschleuste `confirm(`-Stelle im bisher verschluckten Bereich.
+    Zuordnung: **Backlog-Runde**.
+
+    **Erledigt (BV-01, 24.09.2026).** Der Abtaster liest eine PHP-Datei jetzt
+    so, wie PHP und der Browser sie lesen: HTML bleibt unberührt, abgetastet
+    werden `<?php … ?>`, `<?= … ?>`, `<script>` und `<style>`, jeder nach den
+    Regeln seiner Sprache (ein PHP-Zeilenkommentar endet auch am `?>`, ein
+    Skriptblock am `</script`); in JS und CSS enden `'`- und `"`-Ketten am
+    Zeilenende. **Die Beschreibung oben war nur zur Hälfte richtig.** Am
+    heutigen Stand verschluckte der alte Abtaster keine 800 Zeilen am Stück —
+    in `einsatz_form.php` leert der neue 877 statt 851 Zeilen, über alle 179
+    Dateien 47 856 statt 47 555, in 21 Dateien anders. Die falschen
+    **Negative** kamen aus zwei Quellen, die der Eintrag nicht nannte: `#`
+    und `//` im **HTML** galten als Kommentaranfang (`href="#…"`, `http://` im
+    Text — 7 Zeilen, alle einzeln gelesen), und ein `"` in einem
+    **Regex-Literal** (`/[;"\r\n]/` in `export.js`) brachte ihn in JS aus dem
+    Tritt. Gefunden hat das der erste Lauf: Die Zusage „fremde Quelle" meldete
+    `export.js` mit der GPX-Namensraumadresse, die bis dahin verschluckt war
+    (eingetragen in `vollstaendigkeit-zusagen.md`, 18 → 19 Ausnahmen).
+    *Abnahme:* Zusagen 0 Befunde; eingeschleustes
+    `<a href="#" onclick="return confirm(…)">` — alt 3, neu 4 von 4 gefunden
+    (nicht eingecheckt); derselbe Lauf auf dem P5c-Stand `3576a97` mit
+    zusammengeführter Ausnahmeliste 0 Befunde. **Dazu genommen:** Die
+    Symbolprüfung blendet Kommentare jetzt aus (Unicode 14 → 5, Emoji 8 → 0;
+    alle 17 weggefallenen standen in Kommentaren) — der Grund, es nicht zu
+    tun, war dieser Punkt.
