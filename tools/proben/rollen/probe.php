@@ -48,7 +48,13 @@ declare(strict_types=1);
  *
  * DIE KONTEN UND SITZUNGEN LEGT SIE SELBST AN (Muster Wartungsprobe; die
  * Anmeldung leitet das Token im Browser per PBKDF2 ab und ist mit `curl`
- * nicht nachzubilden). Ein Konto `rollenprobe-*@probe.invalid` je Rolle, dazu
+ * nicht nachzubilden). Seit P5c/AP5 tragen die Konten der Pflichtrollen
+ * `totp_seit`, sonst führte das Einrichtungstor des Zweitfaktors jede ihrer
+ * Anfragen auf `zweitfaktor.php` (Begründung bei „Konten" unten). Die beiden
+ * Zeilen `totp_zuruecksetzen` der Matrix versteht die Probe ohne Sonderfall:
+ * Das Tor der Handlung steht in `admin_user.php` vor `csrf_check()`, ein
+ * Admin am Konto eines Admins bekommt also 403, am Konto einer NutzerIn die
+ * Token-Ablehnung. Ein Konto `rollenprobe-*@probe.invalid` je Rolle, dazu
  * drei Zielkonten (`ziel`, `zieladmin`, `neu` im Status „unbestätigt") und
  * ein Gerät — nicht die Sandbox, und nicht vorhandene Konten: Eine Probe, die
  * von einem vorher angelegten Konto abhängt, ist nach `hochfahren.sh --neu`
@@ -140,6 +146,28 @@ function sitzung_anlegen(int $uid, int $epoch): array
 
 /* ---- Konten ------------------------------------------------------------------ */
 
+/* DIE PFLICHTROLLEN BEKOMMEN `totp_seit` (P5c/AP5, E-P5c-43, F-P5c-33).
+ *
+ * Seit AP5 führt `auth_guard.php` Support, Admin und BetreiberIn ohne
+ * Zweitfaktor auf `zweitfaktor.php` — jede Seite mit 302, die API mit 403.
+ * Ohne diese Zeile mäße die Probe für drei von vier Spalten das
+ * Einrichtungstor statt des Rollentors: Jede Zelle stünde auf
+ * „unerwartet 302", und keine sagte etwas über die Matrix.
+ *
+ * DAS SCHALTET DIE PFLICHT NICHT AB. Das Tor fragt allein `totp_seit`, und
+ * genau diesen Zustand hinterlässt eine abgeschlossene Einrichtung. Die
+ * Sitzungen entstehen hier ohnehin von Hand, also hinter dem Code-Schritt
+ * von `login.php` — so wie sie hinter der Passwortableitung entstehen. Ob
+ * die Anmeldung den Code verlangt, ist nicht Gegenstand dieser Probe,
+ * sondern der Zweitfaktorprobe. Ein Geheimnis braucht es dafür nicht: Die
+ * Seiten dieser Probe fragen es nie ab, und `einstellungen.php` zeigt ohne
+ * es nur einen Hinweis.
+ *
+ * WELCHE ROLLEN, SAGT `rolle_braucht_zweitfaktor()` — nicht eine Liste hier.
+ * Wer die Menge in `db.php` ändert, ändert sie für die Probe mit. Ohne die
+ * Spalte (vor `update.php`) schweigt das Tor, und die Zeile entfällt. */
+$mitZweitfaktor = db_hat_spalte($pdo, 'users', 'totp_seit');
+
 $konten = [];
 foreach ($rollen as $rolle) {
     $mail = 'rollenprobe-' . $rolle . '@probe.invalid';
@@ -147,6 +175,9 @@ foreach ($rollen as $rolle) {
     $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                    VALUES (?, ?, ?, '', '', 320000)")->execute([$mail, 'Rollenprobe ' . $rolle, $rolle]);
     $id = (int)$pdo->lastInsertId();
+    if ($mitZweitfaktor && rolle_braucht_zweitfaktor($rolle)) {
+        $pdo->prepare('UPDATE users SET totp_seit = UTC_TIMESTAMP() WHERE id = ?')->execute([$id]);
+    }
     $epoch = (int)$pdo->query('SELECT session_epoch FROM users WHERE id = ' . $id)->fetchColumn();
     $konten[$rolle] = ['id' => $id, 'mail' => $mail] + sitzung_anlegen($id, $epoch);
 }

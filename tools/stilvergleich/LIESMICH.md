@@ -31,8 +31,10 @@ Dateien, nicht eine laufende Anlage. `NODE_PATH` setzt `gegen.sh`, weil
 
 **Genau die Signaturen in `geplant.txt` — ohne Datei 0** (`Pruefablauf.md`
 6.10); gelesen im Pull Request, nach dem Merge geleert. Gemessen 24.09.2026
-gegen `origin/main`: **42 575 Elementmessungen, 54 Signaturen, alle
-geplant** (Chromium).
+gegen `origin/main` (P5c/AP5): **44 954 Elementmessungen, 128 Signaturen**
+(Chromium). Die 74 neuen sind die Bausteine des Zweitfaktors und das
+Druckblatt; außerhalb davon ändern sich nur Dokumenthöhe und die Lage
+absolut gesetzter Elemente darunter (Konzept P5c, Bericht AP5).
 
 ## Was es nicht kann
 

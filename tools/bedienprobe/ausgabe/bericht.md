@@ -1,7 +1,7 @@
 # Klickprobe — Bericht
 
 Lauf gegen `https://127.0.0.1:8443` — 1280 px als Zeigergerät (Sollhöhe 36 px).
-**52 von 52 Wegen erfüllt**, 0 verfehlt.
+**54 von 54 Wegen erfüllt**, 0 verfehlt.
 
 | Weg | Paket | Prüfpunkt | Breite | Soll | Ist | |
 |---|---|---|--:|---|---|---|
@@ -53,10 +53,12 @@ Lauf gegen `https://127.0.0.1:8443` — 1280 px als Zeigergerät (Sollhöhe 36 p
 | `da-windenkacheln-am-bodendienst` | AP3 | DA-02 | 1280 px (36) | Gruppe „Bergrettung" vorhanden; Windeneinsatz gesetzt, Cycles 1, Cycles mit Patient 1, Luftverladung gesetzt, Bereitschaft „Bergwacht Felsgrat" | **Gruppe sichtbar: true · Winde 1, Cycles 1, mit Patient 1, Luftverladung 1 · Bergwacht 1, Bereitschaft „Bergwacht Felsgrat"** | erfüllt |
 | `da-tag-ohne-standort` | AP3 | DA-03 | 1280 px (36) | Standortfeld leer oder fehlend · 0 Rollenfelder · Transportziel mit Koordinate, aber ohne Vorschlagsliste | **base_name null · Art „Veranstaltung, bodengebunden" · Zeile „Standort" in der Leseansicht: false (Zeilen: Rettungsmittel, Notizen) · 0 Rollenfelder · Transportziel im Einsatz gefunden: true · Karte: true** | erfüllt |
 | `da-bergwachtkarte-ohne-besatzung` | AP3 | DA-04 | 1280 px (36) | Karte „Bergwacht" vorhanden (AP0: die Fähigkeit darf dort geführt werden), Besatzungskarte ohne Anlegen-Weg (Typ Bergwacht hat keine Rollen-Vorlagen) | **Bergwacht-Karte sichtbar: true mit 3 Bereitschaften · Besatzung anlegbar: false · 1 Rettungsmittel am Standort** | erfüllt |
+| `einstellungen-profil-zweitfaktor` | P5c-AP5 | E-P5c-53 | 1280 px (36) | eingeschaltet mit 10 Codes; danach falscher Code und derselbe Code abgewiesen, der nächste → Startseite; nach „Zurück zur Anmeldung" Vormerkfach belegt → leer | **eingeschaltet, 10 Codes · falscher Code abgewiesen · derselbe Code abgewiesen (im Fenster, Abstand 0 Schritt) · nächster Code → index.php · Vormerkfach belegt → leer** | erfüllt |
 | `mr-oeffner-markiert` | AP4 | MR-01 | 1280 px (36) | 5 von 5 Öffnern: Fläche --orange-hell, Schrift --orange-tief, aria-expanded=true; nach dem Schließen alle zurück und der Fokus wieder am Knopf | **5 von 5 Öffnern markiert und sauber zurückgestellt** | erfüllt |
 | `mr-blatt-faehrt-auf` | AP4 | MR-02 | 1280 px (36) | bei 390 px: Fahrtdauer > 0; kurz nach dem Öffnen unterwegs (nicht schon oben), danach Unterkante = Fensterunterkante; nach der Rückfahrt hidden=true | **Fahrtdauer 240 ms · unterwegs 389 px unter der Ruhelage · offen Unterkante 900/900 · während der Rückfahrt hidden=false · danach hidden=true** | erfüllt |
 | `mr-schreibtisch-ohne-fahrt` | AP4 | MR-03 | 1280 px (36) | bei 1280 px: Fahrtdauer 0 ms; nach Escape ist es binnen 60 ms hidden (nicht erst nach der Fahrtdauer) | **Fahrtdauer 0 ms · offen hidden=false, Fläche rgb(255, 235, 214) · 60 ms nach Escape hidden=true** | erfüllt |
 | `p5a-ap8-sperre-aufheben` | P5a-AP8 | E-P5a-08 | 1280 px (36) | Die Sperre steht in der Karte, die Rückfrage kommt, nach dem Bestätigen ist die Zeile fort, die Datenbankzeile auch — und ein Ereignis „aufgehoben" trägt den Namen der handelnden Person | **Zeilen mit Prüfmerkmal: 1 → 0; rate_limits: 1 → 0; Ereignis „aufgehoben" durch „admin@gen-em.org"; Meldung: „Die Sperre ist aufgehoben. Der Vorgang steht unten in den Ereignissen "** | erfüllt |
+| `zweitfaktor-einrichten` | P5c-AP5 | E-P5c-87 | 1280 px (36) | QR gelesen = otpauth-Adresse; nach dem Code 10 Codes; „Weiter" gesperrt, mit Haken frei; danach die Startseite | **QR = Adresse · 10 Codes · Weiter gesperrt → frei · index.php** | erfüllt |
 
 ## Bemerkungen
 

@@ -73,7 +73,9 @@ def lauf(befehl: list[str], **kw) -> subprocess.CompletedProcess:
 
 def schritt_konto(a) -> None:
     import kreislauf
-    admin = (a.admin_email, a.admin_passwort)
+    # Drei Stuecke: Adresse, Passwort, Geheimnis des Zweitfaktors (leer =
+    # Umgebung/Sandbox) -- die Form, die `kreislauf.py` erwartet.
+    admin = (a.admin_email, a.admin_passwort, a.admin_totp)
     if a.frisch:
         weg = kreislauf.konto_loeschen(a.basis, admin, KONTO, praefix=PRAEFIX)
         melde(f"  Vorhandenes Messstandkonto {'entfernt' if weg else 'nicht vorhanden'}.")
@@ -146,6 +148,13 @@ def main() -> int:
                         f"'{PRAEFIX}')")
     p.add_argument("--admin-email", default="admin@gen-em.org")
     p.add_argument("--admin-passwort", default="pruefstandzugang2026")
+    # Das Geheimnis des Zweitfaktors (P5c/AP5, E-P5c-43) -- derselbe Schalter
+    # wie in `kreislauf.py`: leer heisst `NADOKU_TOTP`, sonst das der Sandbox.
+    # Der Schritt `konto` meldet sich bis zu dreimal als Admin an; jede
+    # Anmeldung verbraucht einen Zeitschritt, die dritte wartet deshalb
+    # womoeglich bis zu 30 s (Kopf von `tools/zweitfaktor/totp.php`).
+    p.add_argument("--admin-totp", default="",
+                   help="Geheimnis des Zweitfaktors des Admin-Kontos (Base32)")
     a = p.parse_args()
 
     pathlib.Path(a.ausgabe).mkdir(parents=True, exist_ok=True)

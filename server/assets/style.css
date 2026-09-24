@@ -4522,3 +4522,117 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   .protokoll-liste .zeile-aktionen{width:var(--symbol-gross)}
 }
 .archiv-liste .zeile-plaketten{justify-content:flex-end}
+
+
+/* ===========================================================================
+ * 32  ZWEITFAKTOR UND DRUCKBLATT              (P5c/AP5, E-P5c-08, -41, -66)
+ *
+ * NEUE BAUSTEINE, freigegeben mit M-P5c-02b (23.09.2026, E-P5c-66) und — für
+ * das Druckblatt — mit M-P5c-01f (20.09.2026). Die Regeln sind die aus dem
+ * Abschnitt „Vorschlag für style.css" der Mockups, unverändert.
+ * ======================================================================== */
+
+/* QR-CODE (.qr) — E-P5c-41. Die Modulmatrix kommt aus qrcode-generator (MIT,
+ * vendoriert, kein Netz); das SVG baut `assets/qr.js`: ein Pfad, Klassen statt
+ * style="…", Token statt Hexwerten. Halbe Anmeldekarte breit (200 px): 53
+ * Module bei Fehlerstufe M für eine übliche Adresse, rund 3,3 px je Modul. */
+.qr{display:block;width:calc(var(--anmeldekarte) / 2);max-width:100%;height:auto;flex:0 0 auto}
+.qr-grund{fill:var(--schnee)}
+.qr-modul{fill:var(--asphalt)}
+/* Einrichtung: QR links, Text rechts ab 720 px; darunter gestapelt, der QR
+ * zuerst. In der Anmeldekarte (Einrichtungstor) immer gestapelt, mittig. */
+.zweitfaktor-einrichtung{display:grid;gap:var(--abstand-4);align-items:start;margin-bottom:var(--abstand-4)}
+@media (min-width:720px){.zweitfaktor-einrichtung{grid-template-columns:auto minmax(0,1fr)}}
+.anmeldung .zweitfaktor-einrichtung{grid-template-columns:1fr;justify-items:center;text-align:center}
+.zweitfaktor-einrichtung .codeblock{text-align:left}
+/* Das Geheimnis bricht nur zwischen den Vierergruppen um — .codeblock-wert
+ * trägt break-all für Werte ohne Leerzeichen. */
+.zweitfaktor-einrichtung .codeblock-wert{word-break:normal}
+/* Codefeld: dieselbe Schrift und Sperrung wie der Codeblock, damit Abschreiben
+ * und Eintippen gleich aussehen. */
+.feld-code .feld-eingabe{font-family:var(--schrift-fest);font-size:var(--groesse-5);letter-spacing:.06em}
+/* WIEDERHERSTELLUNGSCODES (.codeblock-liste) — Erweiterung des Codeblocks:
+ * zehn nummerierte Werte in zwei Spalten, Schrift wie .codeblock-wert. Die
+ * Nummer hilft beim Abhaken auf dem Blatt. */
+.codeblock-liste{
+  list-style:none;margin:var(--abstand-2) 0 var(--abstand-3);padding:0;counter-reset:code;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-1) var(--abstand-4);
+  font-family:var(--schrift-fest);font-size:var(--groesse-4);font-weight:600;color:var(--dunkelblau);letter-spacing:.06em;
+}
+.codeblock-liste li{counter-increment:code;white-space:nowrap}
+.codeblock-liste li::before{content:counter(code) ".";display:inline-block;min-width:2.2em;color:var(--gedaempft);font-weight:400;letter-spacing:0}
+/* Zwischenüberschrift in der Anmeldekarte (Code-Schritt, Einrichtungstor). */
+.anmeldung-schritt{font-size:var(--groesse-5);margin:0 0 var(--abstand-2)}
+
+/* DRUCKBLATT (.blatt-druck) — EIN Baustein für Codeblatt, Schlüsselblatt und
+ * Notfallblatt (E-P5c-08, Nr. 246). Das Codeblatt ist sein erster Verwender;
+ * die beiden anderen Blätter ziehen in AP9 nach. `.blatt-wert` bleibt für den
+ * Bildschirm-Dialog.
+ *
+ * `@page` GILT FÜR JEDE GEDRUCKTE SEITE, nicht nur für das Blatt — eine
+ * Seitenregel lässt sich nicht an eine Klasse binden, und ein benannter
+ * Seitentyp (`page:`) trägt nicht in jedem Browser, der hier druckt. Bis
+ * hierher gab es keine Vorgabe; gedruckt wird in dieser Anwendung ohnehin nur
+ * auf den Blättern. */
+@page{size:A4;margin:14mm 18mm}
+.blatt-druck{font-size:var(--groesse-3);line-height:1.45;color:var(--asphalt)}
+.blatt-kopf{display:flex;align-items:center;gap:var(--abstand-3);
+  padding-bottom:var(--abstand-2);margin-bottom:var(--abstand-3);
+  border-bottom:var(--strich-stark) solid var(--dunkelblau)}
+.blatt-kopf img{height:11mm;width:auto;flex:0 0 auto}
+.blatt-marke{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-6);color:var(--dunkelblau);line-height:var(--zeile-eng);min-width:0;overflow-wrap:anywhere}
+.blatt-kopf-rechts{margin-left:auto;flex:0 1 45%;min-width:0;overflow-wrap:anywhere;text-align:right;font-size:var(--groesse-2);color:var(--gedaempft);line-height:1.4}
+/* `break-word` AN DER ÜBERSCHRIFT: „Wiederherstellungscodes" ist bei 360 px
+ * breiter als die Spalte (345 gegen 328 px, Bilderlauf P5c/AP5) und hat
+ * keine Stelle, an der ein Browser von sich aus umbricht. Dieselbe Härte wie
+ * `.text` (Backlog Nr. 221) — sie greift nur, wenn das Wort sonst überliefe;
+ * auf A4 nie. */
+.blatt-druck h1{font-size:var(--groesse-titel);margin:0 0 var(--abstand-2);overflow-wrap:break-word}
+.blatt-druck h2{font-size:var(--groesse-4);margin:var(--abstand-3) 0 var(--abstand-1)}
+.blatt-druck p,.blatt-druck li{margin:0 0 var(--abstand-1);font-size:var(--groesse-2)}
+.blatt-druck ol{margin:0 0 0 var(--abstand-5);padding:0;list-style:decimal}
+/* Die Warnung braucht auf Papier einen Rand: Flächen druckt der Browser in
+ * der Vorgabe nicht. */
+.blatt-druck .meldung{border:var(--strich) solid var(--linie-stark);margin:0 0 var(--abstand-3);padding-top:var(--abstand-2);padding-bottom:var(--abstand-2)}
+/* DIE KACHEL: Rahmen, Rauch, Feste Schrift. Der Rahmen trägt die Aussage —
+ * die Fläche ist Zugabe für den Bildschirm und für den, der
+ * „Hintergrundgrafiken" mitdruckt. */
+.blatt-kachel{border:var(--strich-stark) solid var(--dunkelblau);border-radius:var(--radius);
+  background:var(--rauch);padding:var(--abstand-2) var(--abstand-4);margin:0 0 var(--abstand-2);
+  break-inside:avoid;page-break-inside:avoid}
+.blatt-kachel-kopf{display:flex;align-items:baseline;justify-content:space-between;gap:var(--abstand-3);flex-wrap:wrap}
+.blatt-kachel-name{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);color:var(--dunkelblau)}
+.blatt-kachel-neben{font-size:var(--groesse-2);color:var(--gedaempft)}
+.blatt-kachel > p{font-size:var(--groesse-2);margin:0}
+.blatt-fuss{margin-top:var(--abstand-3);padding-top:var(--abstand-2);border-top:var(--strich) solid var(--linie);
+  font-size:var(--groesse-1);color:var(--gedaempft);display:flex;justify-content:space-between;gap:var(--abstand-3)}
+/* AM BILDSCHIRM sieht das Blatt aus wie das Blatt: A4 mit den Rändern aus @page.
+ * `max-width:100%`, weil A4 794 px breit ist und die Regel ab 720 px greift:
+ * Bei 768 px stand das Blatt 26 px über (Bilderlauf in Firefox und WebKit,
+ * P5c/AP5). Ab 794 px ändert die Grenze nichts. */
+@media screen{ .blatt-druck{padding:var(--abstand-4);background:var(--schnee)} }
+@media screen and (min-width:720px){
+  .blatt-druck{box-sizing:border-box;width:210mm;max-width:100%;min-height:297mm;padding:14mm 18mm;margin:var(--abstand-5) auto;
+    border:var(--strich) solid var(--linie);box-shadow:var(--schatten)}
+}
+@media print{ .blatt-kachel{background:none} }
+/* DIE UMGEBUNGSZEILE DES DRUCKBLATTS (E-P5c-50, M-P5c-02e) — steht nur, wenn
+ * app.umgebung gesetzt ist, direkt unter dem Kopf. Text und Rahmen, keine
+ * Fläche: Das Blatt muss auch schwarzweiß sagen, dass es nicht zur
+ * Produktivanlage gehört. */
+.blatt-umgebung{margin:0 0 var(--abstand-3);padding:var(--abstand-1) var(--abstand-3);
+  border:var(--strich-stark) solid var(--rot-tief);border-radius:var(--radius-klein);
+  font-size:var(--groesse-3);color:var(--rot-tief)}
+/* DIE CODELISTE DES CODEBLATTS (.blatt-codes) — zehn Einmalcodes, nummeriert,
+ * mit einem Kästchen zum Abhaken. Zwei Spalten; die Nummer steht davor, nicht
+ * darüber, weil ein Code acht Zeichen hat und nicht vier. DAS KÄSTCHEN STEHT
+ * VORN (order:-1, E-P5c-65): Am Zeilenende stand das der linken Spalte direkt
+ * vor der Nummer der rechten und schien zu ihr zu gehören. */
+.blatt-codes{list-style:none;margin:var(--abstand-2) 0;padding:0;counter-reset:code;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-2) var(--abstand-5)}
+.blatt-codes li{counter-increment:code;display:flex;align-items:center;gap:var(--abstand-3);margin:0;
+  font-family:var(--schrift-fest);font-size:var(--groesse-5);font-weight:600;letter-spacing:.08em;line-height:1.25}
+.blatt-codes li::before{content:counter(code);min-width:1.5em;text-align:right;
+  font-family:var(--schrift-text);font-weight:400;font-size:var(--groesse-2);letter-spacing:0;color:var(--gedaempft)}
+.blatt-codes li::after{content:"";order:-1;width:1em;height:1em;flex:0 0 auto;
+  border:var(--strich) solid var(--linie-stark);border-radius:var(--radius-klein)}

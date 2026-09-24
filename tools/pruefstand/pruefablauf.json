@@ -205,6 +205,11 @@
       "nach": [
         "kreislauf-edbak"
       ]
+    },
+    "zweitfaktorprobe": {
+      "aufruf": "bash tools/proben/proben.sh zweitfaktor",
+      "braucht": "installation",
+      "bemerkung": "RFC-6238-Vektoren 6/6, Code-Schritt über HTTP, Einrichtungstor, Demo-Reset, Bus-Faktor (P5c/AP5). Setzt den Demo-Bestand einmal zurück."
     }
   },
   "stufenregeln": [
@@ -364,6 +369,25 @@
         "rollenprobe"
       ],
       "anlass": "Nr. 286, Nr. 149"
+    },
+    {
+      "id": "zweitfaktor",
+      "ab": "klein",
+      "pfade": [
+        "server/login.php",
+        "server/auth_guard.php",
+        "server/totp_lib.php",
+        "server/zweitfaktor.php",
+        "server/zweitfaktor_teile.php",
+        "server/codeblatt.php",
+        "server/status_lib.php",
+        "server/demo_lib.php",
+        "tools/zweitfaktor/**"
+      ],
+      "proben": [
+        "zweitfaktorprobe"
+      ],
+      "anlass": "F-P5c-31 (Code vor der Sitzung), F-P5c-37 (kein Code gilt zweimal), E-P5c-54 (Demo-Reset)"
     },
     {
       "id": "protokoll",
@@ -613,9 +637,10 @@
         "kreislauf-edbak",
         "spaltenregister-wegprobe",
         "protokollprobe",
-        "rollenprobe"
+        "rollenprobe",
+        "zweitfaktorprobe"
       ],
-      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90)."
+      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket."
     },
     {
       "id": "mengen",

@@ -1214,6 +1214,33 @@ function rolle_ist_support(?string $rolle): bool
     return rolle_normieren($rolle) === 'support';
 }
 
+/**
+ * Muss diese Rolle einen Zweitfaktor haben (P5c/AP5, E-P5c-15)? Support,
+ * Admin und BetreiberIn — jede Rolle, die fremde Konten sieht. Dieselbe Menge
+ * wie `rolle_darf_support()`, und das ist kein Zufall: Wer an fremde Konten
+ * herankommt, sichert den eigenen Zugang doppelt. Ein eigener Name, weil die
+ * Frage eine andere ist; wer die eine Menge aendert, soll die andere sehen.
+ */
+function rolle_braucht_zweitfaktor(?string $rolle): bool
+{
+    return rolle_darf_support($rolle);
+}
+
+/**
+ * Darf `$wer` den Zweitfaktor eines Kontos der Rolle `$ziel` zuruecksetzen?
+ * (P5c/AP5, E-P5c-42): die BetreiberIn fuer alle Rollen, ein Admin nur fuer
+ * Konten der Rolle user. Support-, Admin- und BetreiberIn-Konten setzt allein
+ * die BetreiberIn zurueck — der Zweitfaktor schuetzt dort Rechte, die ein
+ * Admin selbst nicht hat oder die ihm gleichen. Das eigene Konto schliesst der
+ * Aufrufer aus.
+ */
+function rolle_darf_zweitfaktor_zuruecksetzen(?string $wer, ?string $ziel): bool
+{
+    $wer = rolle_normieren($wer);
+    return $wer === 'betreiberin'
+        || ($wer === 'admin' && rolle_normieren($ziel) === 'user');
+}
+
 /** Darf diese Rolle den Bereich Betrieb sehen und bedienen? */
 function rolle_ist_betreiberin(?string $rolle): bool
 {

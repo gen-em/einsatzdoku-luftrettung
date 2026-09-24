@@ -57,6 +57,76 @@ function status_z(string $text, string $klein, string $ton, string $plakette,
 }
 
 /**
+ * Die handlungsfähigen Verwaltungskonten — die Zählung hinter der Zeile
+ * „Verwaltungskonten" (P5c/AP5, E-P5c-56). Handlungsfähig: `status =
+ * 'aktiv'` und ein eingeschalteter Zweitfaktor; ohne dessen Spalten (vor
+ * `update.php`) zählt jedes aktive Konto. Eigene Funktion, damit die
+ * Zweitfaktorprobe die Zählung selbst prüfen kann und nicht den Satz, der
+ * vom Bestand der Anlage abhängt.
+ *
+ * @return array{verwaltung:int, betreiberinnen:int, betreiberinnen_aktiv:int}
+ */
+function status_verwaltungskonten(PDO $pdo): array
+{
+    require_once __DIR__ . '/totp_lib.php';
+    $zf = totp_spalten_da($pdo) ? 'totp_seit IS NOT NULL' : '1';
+    $zeilen = $pdo->query("SELECT role, status = 'aktiv' AS aktiv, $zf AS zf
+                             FROM users WHERE " . ROLLEN_VERWALTUNG_SQL)->fetchAll(PDO::FETCH_ASSOC);
+    $n = ['verwaltung' => 0, 'betreiberinnen' => 0, 'betreiberinnen_aktiv' => 0];
+    foreach ($zeilen as $z) {
+        $hf = (int)$z['aktiv'] === 1 && (int)$z['zf'] === 1;
+        $n['verwaltung'] += $hf ? 1 : 0;
+        if (rolle_ist_betreiberin($z['role'])) {
+            $n['betreiberinnen'] += $hf ? 1 : 0;
+            $n['betreiberinnen_aktiv'] += (int)$z['aktiv'] === 1 ? 1 : 0;
+        }
+    }
+    return $n;
+}
+
+/**
+ * Die Zeile „Verwaltungskonten" aus der Zählung — Text, Ton und Plakette,
+ * ohne Datenbank. Eigene Funktion, damit die Zweitfaktorprobe die Tabelle
+ * der Fälle (Konzept P5c, AP5) mit gesetzten Zahlen prüfen kann statt nur
+ * mit dem Bestand, den die Anlage gerade hat.
+ *
+ * @param array{verwaltung:int, betreiberinnen:int, betreiberinnen_aktiv:int} $n
+ */
+function status_verwaltungszeile(array $n): array
+{
+    ['verwaltung' => $bfVerw, 'betreiberinnen' => $bfBetr,
+     'betreiberinnen_aktiv' => $bfBetrAktiv] = $n;
+    if ($bfBetr >= 2) {
+        return status_z('Verwaltungskonten',
+            $bfVerw . ' handlungsfähig, davon ' . $bfBetr . ' BetreiberInnen',
+            'blau', 'vertreten', 'admin_users.php');
+    }
+    if ($bfBetr === 0) {
+        return status_z('Verwaltungskonten',
+            'Keine BetreiberIn ist handlungsfähig'
+            . ($bfBetrAktiv > 0 ? ' — ' . $bfBetrAktiv . ' ohne Zweitfaktor' : ''),
+            'orange', 'keine BetreiberIn', 'admin_users.php');
+    }
+    if ($bfBetrAktiv > 1) {
+        return status_z('Verwaltungskonten',
+            $bfBetrAktiv . ' BetreiberInnen, handlungsfähig ist 1 — '
+            . ($bfBetrAktiv === 2 ? 'die andere hat' : 'die anderen haben')
+            . ' noch keinen Zweitfaktor',
+            'orange', '1 BetreiberIn', 'admin_users.php');
+    }
+    if ($bfVerw >= 2) {
+        return status_z('Verwaltungskonten',
+            $bfVerw . ' handlungsfähig, davon 1 BetreiberIn. Die Verwaltung ist '
+            . 'vertreten, der Betrieb nicht',
+            'orange', '1 BetreiberIn', 'admin_users.php');
+    }
+    return status_z('Verwaltungskonten',
+        'Ein handlungsfähiges Konto, und es ist das einer BetreiberIn. Fällt es '
+        . 'aus, kommt niemand mehr an Verwaltung und Betrieb',
+        'orange', 'nur 1', 'admin_users.php');
+}
+
+/**
  * Alles, was die Statusseite zeigt — als Liste von Karten mit Zeilen.
  *
  * Rückgabe unter 'karten': je Karte ['titel', 'id', 'zeilen'], und jede
@@ -216,6 +286,28 @@ function status_erhebung(): array
             'Produktivumgebung für den Echtbetrieb. Kopfleiste blau, ' . $mailSatz,
             'blau', 'Produktiv');
     }
+
+    /* ---- Verwaltungskonten: der Bus-Faktor (P5c/AP5, E-P5c-16, -44, -56,
+     *      -63; M-P5c-02d Bild 2) ------------------------------------------
+     *
+     * HANDLUNGSFAEHIG heisst: `status = 'aktiv'` und — Admin und BetreiberIn
+     * sind Pflichtrollen — ein eingeschalteter Zweitfaktor (E-P5c-56). Ein
+     * Konto ohne ihn landet nach der Anmeldung im Einrichtungstor und kann
+     * bis dahin nichts; `betreiberinnen_zahl()` zaehlt dagegen jedes Konto
+     * der Rolle, auch gesperrte, und bleibt fuer seinen Zweck (die letzte
+     * BetreiberIn schuetzen) unveraendert.
+     *
+     * DIE AMPEL HAENGT ALLEIN AN DEN BETREIBERINNEN (F-P5c-60): Wer weniger
+     * als zwei handlungsfaehige Verwaltungskonten hat, hat auch weniger als
+     * zwei handlungsfaehige BetreiberInnen. Die Zahl der Verwaltungskonten
+     * waehlt nur den Text. ORANGE, NICHT ROT (E-P5c-44, -63): Rot hiesse
+     * „es arbeitet nicht", und jede frisch eingerichtete Anlage stuende
+     * dauerhaft rot. Der Menuezaehler zaehlt Orange mit, und das ist gewollt.
+     *
+     * OHNE DIE SPALTEN DES ZWEITFAKTORS (vor `update.php`) zaehlt jedes
+     * aktive Konto als handlungsfaehig — das Einrichtungstor schweigt dann
+     * ebenfalls. */
+    $server[] = status_verwaltungszeile(status_verwaltungskonten($pdo));
 
     $offen = (int)$lauf['offen'];
     $server[] = status_z('Updates',

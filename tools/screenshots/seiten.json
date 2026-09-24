@@ -8,6 +8,15 @@
       "pfad": "login.php"
     },
     {
+      "name": "01a-anmeldung-code",
+      "gruppe": "Öffentlich",
+      "rolle": "aus",
+      "pfad": "login.php",
+      "vorher": [
+        "code-schritt"
+      ]
+    },
+    {
       "name": "02-passwort-vergessen",
       "gruppe": "Öffentlich",
       "rolle": "aus",
@@ -257,6 +266,21 @@
       "gruppe": "Einstellungen",
       "rolle": "demo",
       "pfad": "einstellungen.php?t=profil"
+    },
+    {
+      "name": "30a-einstellungen-profil-zweitfaktor",
+      "gruppe": "Einstellungen",
+      "rolle": "admin",
+      "pfad": "einstellungen.php?t=profil"
+    },
+    {
+      "name": "30b-codeblatt",
+      "gruppe": "Einstellungen",
+      "rolle": "admin",
+      "pfad": "codeblatt.php",
+      "vorher": [
+        "codeblatt"
+      ]
     },
     {
       "name": "31-einstellungen-standorte",

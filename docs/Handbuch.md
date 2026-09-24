@@ -425,6 +425,11 @@ alten Zahl steht, rechnet die Anmeldung beides durch und braucht dafür etwa die
 doppelte Zeit. Das hört von selbst auf: Beim ersten Anmelden wird das Konto
 still nachgezogen, danach ist es wieder eine Rechnung. Zu tun ist nichts.
 
+**Mit Zweitfaktor kommt nach dem Passwort ein zweiter Schritt** (seit Web
+20.42.0): Die Seite fragt nach dem sechsstelligen Code aus der App auf deinem
+Handy. Für Support, Admin und BetreiberIn ist er Pflicht, für alle anderen ein
+Angebot — alles dazu in 3.1f.
+
 **Nach mehreren Fehlversuchen wird die Anmeldung vorübergehend gesperrt.** Die
 Meldung nennt, ab wann es wieder geht. Die Sperre gilt für das Konto, nicht für
 den Browser: Ein anderes Gerät oder ein neues Fenster hilft nicht. Sobald die
@@ -674,8 +679,9 @@ Unter dem Zahnrad → **Profil**, ganz unten. **Du brauchst niemanden zu fragen.
 
 **Was passiert:** Dein Konto wird sofort gesperrt und nach **30 Tagen**
 endgültig gelöscht. In dieser Zeit genügt eine **Anmeldung**, und die Löschung
-ist zurückgenommen — einen Knopf dafür brauchst du nicht. Eine Nachricht mit
-dem Termin geht an deine Adresse.
+ist zurückgenommen — einen Knopf dafür brauchst du nicht. Mit Zweitfaktor
+zählt die Anmeldung erst mit dem Code (3.1f); das Passwort allein nimmt
+nichts zurück. Eine Nachricht mit dem Termin geht an deine Adresse.
 
 **Warum die Anmeldung und kein Link:** Ein Link, der ohne Passwort wirkt, wäre
 genau das, was jemand bräuchte, der deine Löschung verhindern will, um weiter
@@ -695,6 +701,72 @@ alles nach. Lässt du es laufen, ist es mit dem Konto fort.
 
 **Das Demo-Konto lässt sich nicht löschen** — es setzt sich ohnehin alle 30
 Minuten selbst zurück.
+
+### 3.1f Zweitfaktor
+
+*Seit Web 20.42.0.* Zusätzlich zum Passwort ein **sechsstelliger Code aus
+einer App auf deinem Handy** — einer Authenticator-App, wie es sie von vielen
+Anbietern gibt, oft auch im Passwortverwalter. Der Code wechselt alle 30
+Sekunden. Wer dein Passwort abgefischt hat, kommt damit allein nicht mehr
+herein.
+
+**Für wen.** Für **Support, Admin und BetreiberIn Pflicht**, für alle anderen
+ein Angebot. Im Demo-Konto lässt er sich nicht einschalten — dessen
+Zugangsdaten sind öffentlich. Wer eine der drei Rollen hat und noch keinen
+Zweitfaktor, landet nach der Anmeldung auf der Seite **„Zweitfaktor
+einrichten"**: Bis er steht, geht keine andere Seite auf, nur Abmelden.
+
+**Einrichten.** Unter **Einstellungen → Profil**, Karte **„Zweitfaktor"** →
+**„Einrichten"**. Drei Wege in die App, nimm den, der passt:
+
+1. den **QR-Code scannen** — am Rechner, die App auf dem Handy,
+2. **„In der Authenticator-App öffnen"** — am Handy, wenn du die Seite dort
+   geöffnet hast,
+3. das **Geheimnis von Hand eintragen** — die Vierergruppen unter „Oder von
+   Hand eintragen", zeitbasiert, sechs Ziffern, 30 Sekunden.
+
+Dann den Code aus der App ins Feld **„Code aus der App"** und **„Einschalten"**.
+**Eingeschaltet wird erst mit einem richtigen Code** — wer das Scannen
+abbricht, sperrt sich nicht aus. Ein Neuladen der Seite behält das Geheimnis;
+„Abbrechen" verwirft es.
+
+**Die zehn Wiederherstellungscodes** erscheinen **genau einmal**, direkt nach
+dem Einschalten. Drucke sie mit **„Codeblatt drucken"** (eine A4-Seite, mit
+Kästchen zum Abhaken) oder schreib sie ab. Jeder Code gilt **einmal**, wenn
+das Handy fehlt. Gespeichert ist nur ein Prüfwert je Code — das Blatt lässt
+sich **nicht nachdrucken**. Bewahre es getrennt vom Handy auf. **„Neue Codes
+erzeugen"** gibt dir zehn neue; die alten und ein gedrucktes Blatt gelten dann
+nicht mehr. Die Karte zeigt, wie viele noch offen sind („8 von 10").
+
+**Anmelden.** Nach dem Passwort fragt die Seite nach dem **Code aus der App**;
+Leerzeichen sind egal. Du hast dafür **fünf Minuten**, danach beginnt die
+Anmeldung von vorn. **Jeder Code gilt einmal:** Meldest du dich zweimal kurz
+hintereinander an, nimm beim zweiten Mal den nächsten Code der App.
+**Kein Handy zur Hand?** „Wiederherstellungscode verwenden" und einen Code vom
+Blatt eintippen. **„Zurück zur Anmeldung"** bricht ab. Nach **fünf falschen
+Codes** ist die Anmeldung dieses Kontos eine Viertelstunde gesperrt, bei
+Wiederholung länger; die Meldung nennt, ab wann es wieder geht.
+
+**Ausschalten** geht nur, wo er kein Muss ist: Karte → **„Ausschalten"**.
+Für Support, Admin und BetreiberIn gibt es den Knopf nicht; dort **setzt die
+Verwaltung zurück** (11.1) — die BetreiberIn für alle Rollen, ein Admin nur
+für NutzerInnen, und niemand am eigenen Konto. Du bekommst dann eine Mail, und
+der Schritt steht im Protokoll.
+
+**Handy weg und die Codes auch?** Dann setzt die Verwaltung den Zweitfaktor
+zurück; danach meldest du dich nur mit dem Passwort an und richtest ihn neu
+ein. Einen Weg ohne die Verwaltung gibt es nicht.
+
+**Nach einem Umzug der Anlage auf einen anderen Serverschlüssel** — etwa nach
+einer Wiederherstellung aus einem Komplett-Backup — lässt sich das Geheimnis
+nicht mehr öffnen. Die Anmeldung sagt es und nimmt dann nur noch
+Wiederherstellungscodes; die Karte im Profil sagt es auch. Richte ihn danach
+neu ein (bei Pflichtrollen: erst zurücksetzen lassen).
+
+**Was er schützt und was nicht.** Er schützt die **Anmeldung** gegen ein
+gestohlenes Passwort. Gegen den Angriff auf eine gestohlene Datenbank hilft
+er nicht — dagegen steht der Server-Anteil (Abschnitt 5). Ein „Gerät 30 Tage
+merken" gibt es nicht; der Code wird bei jeder Anmeldung gefragt.
 
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
@@ -3350,6 +3422,7 @@ Darunter:
 | Karte | Was dort steht |
 |---|---|
 | **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. Wird die **Adresse** geändert, geht seit Web 15.6.0 eine Nachricht an die **alte** — sie ist die einzige, die im Missbrauchsfall noch der Besitzerin gehört (3.1a). Im Kartenkopf führt **„Im Protokoll“** auf alles, was dieses Konto getan hat oder was ihm geschah (11.7). |
+| **Zweitfaktor** | Seit Web 20.42.0, nach „Status": an oder aus, seit wann, wie viele Wiederherstellungscodes noch offen sind. **„Zurücksetzen …"** (mit Rückfrage) nimmt Geheimnis und Codes weg; die Person meldet sich danach nur mit dem Passwort an und richtet ihn neu ein — bei Pflichtrollen gleich bei der nächsten Anmeldung. Sie bekommt eine Mail, der Schritt steht im Protokoll. **Wer darf:** die BetreiberIn für alle Rollen, ein Admin nur für NutzerInnen; das **eigene** Konto nicht — das setzt eine andere BetreiberIn zurück. Der Support sieht die Karte nicht. |
 | **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
 | **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
@@ -3606,6 +3679,10 @@ trauen, trifft jemand anderes.
 
 **Wer den Support vergibt:** jeder Admin und jede BetreiberIn — er hat weniger
 Rechte als ein Admin.
+
+**Für Support, Admin und BetreiberIn ist der Zweitfaktor Pflicht** (seit Web
+20.42.0, 3.1f). Wer eine dieser Rollen bekommt und noch keinen hat, richtet
+ihn bei der nächsten Anmeldung ein — vorher geht keine andere Seite auf.
 
 Warum die BetreiberIn eine eigene Rolle ist: Eine Fehlbedienung in der
 Verwaltung trifft **ein** Konto, eine im Betrieb die **ganze Installation**. Wer den Wartungsmodus
@@ -4030,7 +4107,9 @@ abgeschaltet, und in **jeder Zahl der Statistik** (12.2) bleibt es außen vor.
 
 Unter **Verwaltung → Protokoll** steht, was im Betrieb geschehen ist: Konten
 angelegt, freigeschaltet, gesperrt, gelöscht; Rollen und Adressen geändert;
-Setz-Links ausgestellt; Bestätigungen erneut gesendet; Geräte umgeschaltet
+Setz-Links ausgestellt; Bestätigungen erneut gesendet; Zweitfaktor
+eingeschaltet, ausgeschaltet, zurückgesetzt, Codes erneuert und
+Anmeldungen mit einem Wiederherstellungscode; Geräte umgeschaltet
 oder entkoppelt; Wartung gefahren;
 Migrationen ausgeführt; Backups erzeugt, geladen, eingespielt; Post
 versandt; Jobs gelaufen.
@@ -4229,6 +4308,20 @@ wird **orange** in zwei Fällen: Die Mails tragen den Betreff-Präfix
 der `config.php`. Oder das Etikett nennt eine Farbe, die die Anwendung nicht
 kennt; die Kopfleiste steht dann trotzdem rot. Einstellen lässt sich beides
 nur in der `config.php` (`docs/Technik.md`, Runbook).
+
+**Die Zeile „Verwaltungskonten"** (seit Web 20.42.0) steht darunter und sagt,
+ob die Anlage **vertreten** ist. Gezählt werden **handlungsfähige** Konten
+mit Rolle Admin oder BetreiberIn: aktiv und mit eingerichtetem Zweitfaktor
+(3.1f) — ein Konto ohne ihn kann nach der Anmeldung nichts, bevor er steht.
+Sie ist **orange**, solange **weniger als zwei BetreiberInnen** handlungsfähig
+sind, und der Satz sagt, woran es liegt: nur ein Konto überhaupt („Fällt es
+aus, kommt niemand mehr an Verwaltung und Betrieb"), ein Admin als
+Vertretung der Verwaltung, aber nicht des Betriebs, oder eine zweite
+BetreiberIn ohne Zweitfaktor. Blau „vertreten" ab zwei handlungsfähigen
+BetreiberInnen. **Orange und nicht rot**, weil jede neue Anlage mit genau
+einer BetreiberIn beginnt — es arbeitet ja. Der Zähler am Menüpunkt „Status"
+zählt die Zeile mit und steht deshalb auf einer Anlage mit einer BetreiberIn
+dauerhaft auf mindestens 1; das ist gewollt, bis eine Vertretung da ist.
 
 **Eine Testmail an dich selbst.** Im Kopf der Karte **E-Mail** steht seit
 Web 19.3.0 der Knopf **„Testmail an mich"**. Er schickt eine kurze Nachricht

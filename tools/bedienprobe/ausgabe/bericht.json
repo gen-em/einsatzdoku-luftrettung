@@ -627,6 +627,18 @@
       "bemerkung": ""
     },
     {
+      "name": "einstellungen-profil-zweitfaktor",
+      "paket": "P5c-AP5",
+      "punkt": "E-P5c-53",
+      "soll": "eingeschaltet mit 10 Codes; danach falscher Code und derselbe Code abgewiesen, der nächste → Startseite; nach „Zurück zur Anmeldung\" Vormerkfach belegt → leer",
+      "ist": "eingeschaltet, 10 Codes · falscher Code abgewiesen · derselbe Code abgewiesen (im Fenster, Abstand 0 Schritt) · nächster Code → index.php · Vormerkfach belegt → leer",
+      "breite": 1280,
+      "eingabeart": "zeiger",
+      "bedienhoehe": 36,
+      "ok": true,
+      "bemerkung": ""
+    },
+    {
       "name": "mr-oeffner-markiert",
       "paket": "AP4",
       "punkt": "MR-01",
@@ -671,6 +683,18 @@
       "punkt": "E-P5a-08",
       "soll": "Die Sperre steht in der Karte, die Rückfrage kommt, nach dem Bestätigen ist die Zeile fort, die Datenbankzeile auch — und ein Ereignis „aufgehoben\" trägt den Namen der handelnden Person",
       "ist": "Zeilen mit Prüfmerkmal: 1 → 0; rate_limits: 1 → 0; Ereignis „aufgehoben\" durch „admin@gen-em.org\"; Meldung: „Die Sperre ist aufgehoben. Der Vorgang steht unten in den Ereignissen \"",
+      "breite": 1280,
+      "eingabeart": "zeiger",
+      "bedienhoehe": 36,
+      "ok": true,
+      "bemerkung": ""
+    },
+    {
+      "name": "zweitfaktor-einrichten",
+      "paket": "P5c-AP5",
+      "punkt": "E-P5c-87",
+      "soll": "QR gelesen = otpauth-Adresse; nach dem Code 10 Codes; „Weiter\" gesperrt, mit Haken frei; danach die Startseite",
+      "ist": "QR = Adresse · 10 Codes · Weiter gesperrt → frei · index.php",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,

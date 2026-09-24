@@ -78,6 +78,16 @@ $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$mail]);
 $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                VALUES (?, 'Protokollprobe', 'betreiberin', '', '', 320000)")->execute([$mail]);
 $uid = (int)$pdo->lastInsertId();
+/* MIT `totp_seit` (P5c/AP5, E-P5c-43, F-P5c-33). Eine BetreiberIn ohne
+ * Zweitfaktor schickt `auth_guard.php` auf `zweitfaktor.php`; Download und
+ * Kennungssuche (Teile 5 und 7) bekämen 302 statt der Seite und mäßen das
+ * Tor statt des Protokolls. Das ist kein Abschalten der Pflicht: Das Tor
+ * fragt allein `totp_seit`, und die Sitzung unten entsteht ohnehin hinter
+ * der Anmeldung — den Code-Schritt prüft die Zweitfaktorprobe. Ohne die
+ * Spalte (vor `update.php`) schweigt das Tor, und die Zeile entfällt. */
+if (db_hat_spalte($pdo, 'users', 'totp_seit')) {
+    $pdo->prepare('UPDATE users SET totp_seit = UTC_TIMESTAMP() WHERE id = ?')->execute([$uid]);
+}
 $epoch = (int)$pdo->query('SELECT session_epoch FROM users WHERE id = ' . $uid)->fetchColumn();
 $sid = 'protokollprobe' . bin2hex(random_bytes(10));
 $csrf = bin2hex(random_bytes(16));

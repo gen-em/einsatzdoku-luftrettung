@@ -131,6 +131,14 @@ cp "$WURZEL/docs/Handbuch.md" "$WURZEL/docs/Was-ist-NAdoku.md" "$SERVER/doku/"
 if [ -d "$WURZEL/docs/bilder" ]; then cp -r "$WURZEL/docs/bilder" "$SERVER/doku/"; fi
 echo "   Handbuch, Was-ist-NAdoku und $(ls "$WURZEL/docs/bilder" 2>/dev/null | wc -l) Bilder"
 
+echo "== 6b. Zweitfaktor des Pruefkontos mit bekanntem Geheimnis"
+# SEIT P5c/AP5 (E-P5c-43). Das Pruefkonto ist eine BetreiberIn, und fuer sie
+# ist der Zweitfaktor Pflicht: Ohne ihn landete jedes Werkzeug nach der
+# Anmeldung im Einrichtungstor. Das Geheimnis ist das der Sandbox; die
+# Rechner unter tools/zweitfaktor/ kennen es. Kein Schalter, der die Pflicht
+# abschaltet -- das Konto hat einen echten Zweitfaktor.
+php "$WURZEL/tools/zweitfaktor/pruefkonto.php" "$ADMIN"
+
 echo "== 7. Demo-Konto aus der Fixture anlegen"
 # demo_anlegen() ist derselbe Weg wie der Knopf im Adminbereich
 # (admin_demo.php, Aktion demo_anlegen) -- kein zweiter Weg, den niemand pflegt.

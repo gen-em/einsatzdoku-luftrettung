@@ -37,6 +37,10 @@
  * Schalter `finger`.
  */
 
+/* Der Code-Rechner des Zweitfaktors — einer je Sprache, nicht je Werkzeug
+ * (E-P5c-43). Gebraucht wird er unten in `codeSchritt()`. */
+import { naechsterCode } from './zweitfaktor/totp.mjs';
+
 export const MOTOREN = ['chromium', 'firefox', 'webkit'];
 
 /* Fein + Hover als Gecko-Bitmaske. Siehe Kopfkommentar — 2 allein genügt
@@ -193,28 +197,168 @@ export async function blattDialogSchliessen(seite, { frist = 8000 } = {}) {
  *     etwas, das nie eintritt, und meldet dann „nicht angemeldet", während
  *     der Seitentitel „Tagesübersicht" lautet.
  *
- *  Das verlässliche Merkmal ist das Verschwinden des Passwortfeldes.
- *  Gemessene Dauer danach: 1,1 s.
+ *  Bis P5c/AP5 hieß es hier: Das verlässliche Merkmal ist das Verschwinden
+ *  des Passwortfeldes (gemessene Dauer danach: 1,1 s). ALLEIN IST ES DAS
+ *  NICHT MEHR, und daraus folgt ein dritter falscher Griff — nicht
+ *  gemessen, sondern aus `login.php` und `auth_guard.php` gelesen:
  *
- *  Gibt `dialog` zurück (lag der Schlüsselblatt-Dialog davor?) und im
- *  Fehlerfall den Zustandstext der Seite — „angemeldet: nein" allein sagt
- *  nicht, woran es lag. */
+ *  3. NICHT NUR AUF DAS PASSWORTFELD SEHEN (F-P5c-33). Auch der Code-Schritt
+ *     des Zweitfaktors hat keines, und das Einrichtungstor ebenso wenig. Wer
+ *     nur darauf sieht, meldet für ein Konto mit Zweitfaktor „angemeldet",
+ *     steht in Wahrheit vor der Frage nach dem Code — und misst von da an die
+ *     Anmeldeseite. Genau das ist F-P3-AQ: eine grüne Zahl über Bildern der
+ *     Anmeldeseite.
+ *
+ *  Gewartet wird deshalb auf einen von DREI Ausgängen (`nachDemPasswort()`
+ *  darunter):
+ *    - der Code-Schritt (`#codeform` da): Code rechnen, eintragen, absenden
+ *      — `codeSchritt()`;
+ *    - angemeldet: weder Passwortfeld noch `#codeform`, und die Seite ist
+ *      nicht das Einrichtungstor;
+ *    - das Passwortfeld bleibt: gescheitert, nach Ablauf der Frist.
+ *
+ *  Gibt `dialog` zurück (lag der Schlüsselblatt-Dialog davor?), `code` (kam
+ *  ein Code-Schritt?) und im Fehlerfall den Zustandstext der Seite —
+ *  „angemeldet: nein" allein sagt nicht, woran es lag. */
 export async function anmelden(seite, { basis, konto, pass, frist = 90000 }) {
   const wurzel = basis.replace(/\/$/, '');
   await seite.goto(`${wurzel}/login.php`, { waitUntil: 'domcontentloaded' });
   await seite.fill('input[name="email"]', konto);
   await seite.fill('input[name="password"]', pass);
   await seite.click('#loginform button[type="submit"]');
-  let meldung = '';
-  try {
-    await seite.waitForFunction(
-      () => !document.querySelector('input[name="password"]'), null, { timeout: frist });
-  } catch {
-    meldung = (await seite.locator('#state, .feld-fehler, [role="alert"]')
-      .allTextContents().catch(() => [])).join(' ').replace(/\s+/g, ' ').trim()
-      || '(kein Zustandstext — die Seite rechnet noch oder das Feld blieb stehen)';
-  }
-  const angemeldet = (await seite.locator('input[name="password"]').count()) === 0;
+  const { angemeldet, code, meldung } = await nachDemPasswort(seite, { frist });
   const dialog = angemeldet ? await blattDialogSchliessen(seite) : false;
-  return { angemeldet, dialog, url: seite.url(), meldung };
+  return { angemeldet, dialog, url: seite.url(), meldung, code };
+}
+
+/* ===========================================================================
+ * Der Code-Schritt des Zweitfaktors (P5c/AP5, E-P5c-43, F-P5c-33)
+ * ===========================================================================
+ *
+ * WAS SICH GEÄNDERT HAT. Ein Konto mit eingeschaltetem Zweitfaktor bekommt
+ * nach dem richtigen Passwort KEINE Sitzung, sondern eine Weiterleitung (303)
+ * zurück auf `login.php`, die dann nach dem Code fragt (`#codeform`). Das
+ * Prüfkonto `admin@gen-em.org` ist eine BetreiberIn und hat deshalb einen —
+ * mit bekanntem Geheimnis, damit die Werkzeuge den Code selbst rechnen
+ * können (`tools/zweitfaktor/totp.mjs`). Jedes Werkzeug, das sich mit ihm
+ * anmeldet, muss diesen Schritt gehen. Er steht hier und nicht in jedem
+ * Werkzeug, aus demselben Grund wie die Firefox-Voreinstellung oben: in
+ * jedem Werkzeug einzeln geschrieben, stünde er früher oder später in einem
+ * falsch.
+ *
+ * DAS EINRICHTUNGSTOR IST KEIN ERFOLG. Eine Pflichtrolle (Support, Admin,
+ * BetreiberIn) OHNE Zweitfaktor bekommt zwar eine Sitzung, landet aber auf
+ * `zweitfaktor.php`, und keine andere Seite ist erreichbar. Kein
+ * Passwortfeld, kein Code-Formular, und die Adresse enthält nicht einmal
+ * `login.php` — nach jedem der alten Merkmale also „angemeldet", und jede
+ * folgende Messung mäße das Tor. Es wird deshalb ausdrücklich als Scheitern
+ * gemeldet, und zwar mit dem Weg hinaus.
+ *
+ * AN DER ADRESSE, UND HIER IST DAS RICHTIG (anders als Griff 2 oben):
+ * `auth_guard.php` schickt per `Location` dorthin, die Adresse wechselt also
+ * wirklich. */
+export const EINRICHTUNGSTOR_MELDUNG = 'Einrichtungstor des Zweitfaktors (zweitfaktor.php): '
+  + 'Prüfkonto ohne Zweitfaktor — `php tools/zweitfaktor/pruefkonto.php` fahren';
+
+/** Steht die Seite im Einrichtungstor des Zweitfaktors? */
+export function istEinrichtungstor(seite) {
+  try { return new URL(seite.url()).pathname.endsWith('/zweitfaktor.php'); } catch { return false; }
+}
+
+/* Die Meldung der Seite in einer Zeile — Zustandszeile, Feldfehler,
+ * Meldung. Der Code-Schritt trägt seine („Der Code passt nicht.") in
+ * derselben `[role="alert"]` wie das Passwortformular. */
+async function seitenMeldung(seite) {
+  return (await seite.locator('#state, .feld-fehler, [role="alert"]')
+    .allTextContents().catch(() => [])).join(' ').replace(/\s+/g, ' ').trim();
+}
+
+/** Geht den Code-Schritt, wenn die Seite ihn zeigt, und sieht danach nach,
+ *  ob das Einrichtungstor im Weg steht.
+ *
+ *  FÜR WERKZEUGE MIT EIGENEM ANMELDEWEG. Sie schicken das Passwort selbst ab
+ *  und warten selbst (meist `waitForNavigation`); danach rufen sie dies —
+ *  und ERST DANN ihre eigene Prüfung, etwa auf `login.php` in der Adresse.
+ *  Zeigt die Seite keinen Code-Schritt, bleibt es bei der Torprüfung; ein
+ *  Konto ohne Zweitfaktor kostet es also nichts.
+ *
+ *  `ok` HEISST „DER ZWEITE FAKTOR STEHT NICHT IM WEG", NICHT „ANGEMELDET".
+ *  Ein falsches Passwort lässt `ok` stehen; das erkennt das Werkzeug wie
+ *  bisher. `code` sagt, ob ein Code verlangt wurde, `meldung` im
+ *  Fehlerfall, woran es lag. Die Funktion wirft nicht.
+ *
+ *  EIN ZWEITER VERSUCH, KEIN DRITTER. Der Server nimmt keinen Zeitschritt
+ *  zweimal (E-P5c-54). Der Rechner führt dafür einen Zähler über alle
+ *  Prozesse (Kopf von `tools/zweitfaktor/totp.php`) — aber er sieht nur, was
+ *  über ihn lief: einen Code von Hand oder einen Rechner mit anderem
+ *  `TMPDIR` nicht. Erscheint `#codeform` nach dem Absenden wieder, ist das
+ *  meist genau dieser Fall, und der nächste Code löst ihn. Ein dritter
+ *  Versuch wäre keine Abhilfe mehr, sondern ein Schritt auf die Sperre nach
+ *  fünf Fehlversuchen zu, die dann auch den nächsten Lauf träfe. */
+export async function codeSchritt(seite, { frist = 30000 } = {}) {
+  let code = false;
+  try {
+    if (await seite.locator('#codeform').count() > 0) {
+      code = true;
+      for (let versuch = 0; versuch < 2; versuch++) {
+        await seite.fill('#codeform input[name="code"]', await naechsterCode());
+        /* Ein schlichtes POST ohne Skript davor — anders als beim
+         * Passwortformular (Griff 1 oben) ist `waitForNavigation` hier also
+         * richtig. Richtiger Code: 302 auf `index.php`; falscher: dieselbe
+         * Seite mit `#codeform` und Meldung. */
+        await Promise.all([
+          seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: frist }),
+          seite.click('#codeform button[type="submit"]'),
+        ]);
+        if (await seite.locator('#codeform').count() === 0) { break; }
+      }
+      if (await seite.locator('#codeform').count() > 0) {
+        return { ok: false, code, meldung: 'Code-Schritt: zweimal abgewiesen — '
+          + ((await seitenMeldung(seite)) || 'ohne Meldung der Seite') };
+      }
+      /* ZURÜCK AUF DEM PASSWORTFORMULAR heißt: gesperrt nach fünf
+       * Fehlversuchen, oder die halbe Anmeldung (fünf Minuten) ist
+       * abgelaufen. Beides ist kein „angemeldet", auch wenn kein
+       * `#codeform` mehr dasteht. */
+      if (await seite.locator('input[name="password"]').count() > 0) {
+        return { ok: false, code, meldung: 'Code-Schritt: zurück auf dem Passwortformular — '
+          + ((await seitenMeldung(seite)) || 'ohne Meldung der Seite') };
+      }
+    }
+  } catch (e) {
+    return { ok: false, code,
+             meldung: 'Code-Schritt: ' + String((e && e.message) || e).split('\n')[0] };
+  }
+  if (istEinrichtungstor(seite)) { return { ok: false, code, meldung: EINRICHTUNGSTOR_MELDUNG }; }
+  return { ok: true, code, meldung: '' };
+}
+
+/** Wartet nach dem Absenden des Passworts auf einen der drei Ausgänge
+ *  (Kommentar über `anmelden()`) und geht den Code-Schritt, wenn er kommt.
+ *  Für Werkzeuge, die das Passwort selbst abschicken, aber nicht selbst
+ *  warten; `anmelden()` ist dasselbe mit dem Aufruf der Seite davor und dem
+ *  Schlüsselblatt-Dialog danach. Rückgabe `{ angemeldet, code, meldung }`.
+ *
+ *  `document.readyState` GEHÖRT IN DIE BEDINGUNG. Ein Dokument, das der
+ *  Browser noch liest, hat womöglich weder Passwortfeld noch `#codeform` und
+ *  sähe aus wie „angemeldet" — ein halb gelesener Code-Schritt genauso wie
+ *  eine halb gelesene Fehlerseite. Die Bedingung sieht deshalb erst hin,
+ *  wenn das Dokument gelesen ist; auf Bilder und Kartenkacheln (`load`)
+ *  wartet sie nicht. */
+export async function nachDemPasswort(seite, { frist = 90000 } = {}) {
+  try {
+    await seite.waitForFunction(() => document.readyState !== 'loading'
+      && (!!document.querySelector('#codeform')
+          || !document.querySelector('input[name="password"]')),
+      null, { timeout: frist });
+  } catch {
+    return { angemeldet: false, code: false, meldung: (await seitenMeldung(seite))
+      || '(kein Zustandstext — die Seite rechnet noch oder das Feld blieb stehen)' };
+  }
+  const zf = await codeSchritt(seite);
+  if (!zf.ok) { return { angemeldet: false, code: zf.code, meldung: zf.meldung }; }
+  const angemeldet =
+    (await seite.locator('input[name="password"], #codeform').count()) === 0;
+  return { angemeldet, code: zf.code,
+           meldung: angemeldet ? '' : ((await seitenMeldung(seite)) || '(ohne Meldung der Seite)') };
 }

@@ -35,8 +35,13 @@ def main() -> int:
     p.add_argument("--basis", default="https://127.0.0.1:8443")
     p.add_argument("--admin-email", default=kreislauf.ADMIN_VORGABE[0])
     p.add_argument("--admin-passwort", default=kreislauf.ADMIN_VORGABE[1])
+    # Das Geheimnis des Zweitfaktors (P5c/AP5, E-P5c-43) -- derselbe Schalter
+    # wie in `kreislauf.py`, mit derselben Bedeutung: leer heisst
+    # `NADOKU_TOTP`, sonst das der Sandbox.
+    p.add_argument("--admin-totp", default="",
+                   help="Geheimnis des Zweitfaktors des Admin-Kontos (Base32)")
     a = p.parse_args()
-    admin = (a.admin_email, a.admin_passwort)
+    admin = (a.admin_email, a.admin_passwort, a.admin_totp)
     try:
         weg = kreislauf.konto_loeschen(a.basis, admin, a.konto)
         if a.befehl == "loeschen":

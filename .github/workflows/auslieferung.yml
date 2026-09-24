@@ -246,6 +246,12 @@ jobs:
       STAGING_URL:   ${{ vars.STAGING_URL }}
       STAGING_KONTO: ${{ secrets.STAGING_KONTO }}
       STAGING_PASS:  ${{ secrets.STAGING_PASS }}
+      # DAS GEHEIMNIS DES ZWEITFAKTORS DES PRUEFKONTOS (P5c/AP5, E-P5c-43),
+      # Base32, wie es das Einrichtungstor auf Staging zeigt. Das Pruefkonto
+      # hat Verwaltungsrechte, und fuer sie ist der Zweitfaktor Pflicht; ohne
+      # das Geheimnis kaeme der Kreislauf nicht ueber den Code-Schritt. Kein
+      # Schalter, der die Pflicht abschaltet — der Kreislauf rechnet den Code.
+      STAGING_TOTP:  ${{ secrets.STAGING_TOTP }}
       # DERSELBE NAME WIE IM JOB `produktion`, ANDERER WERT. Beide Jobs lesen
       # ihn aus IHRER Umgebung (`environment:`) — `stufe2` aus `staging`,
       # `produktion` aus `produktion`. Das Token gehoert der jeweiligen
@@ -384,6 +390,11 @@ jobs:
             echo '**Kreislauf: NICHT GEMESSEN** (kein Prüfkonto) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
+          if [ -z "${STAGING_TOTP:-}" ]; then
+            echo "::error::STAGING_TOTP fehlt — das Prüfkonto hat Verwaltungsrechte und damit einen Pflicht-Zweitfaktor (P5c/AP5). Ohne das Geheimnis kommt der Kreislauf nicht über den Code-Schritt, und ÜBERSPRINGEN IST ROT (E-KH-12). Das Geheimnis zeigt das Einrichtungstor auf Staging (Base32)."
+            echo '**Kreislauf: NICHT GEMESSEN** (kein `STAGING_TOTP`) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
           # ALLE RIEGEL VOR DER ERSTEN INSTALLATION. Der JOBS_TOKEN-Riegel
           # stand zuerst hinter pip, npm und dem Chromium-Download: Fehlte das
           # Token UND brach der Download ab (Netz, Spiegel, Rate-Limit), wurde
@@ -457,6 +468,7 @@ jobs:
                     --basis "$STAGING_URL" \
                     --admin-email "$STAGING_KONTO" \
                     --admin-passwort "$STAGING_PASS" \
+                    --admin-totp "$STAGING_TOTP" \
                     --jobs-token "$JOBS_TOKEN" \
               || { echo "::error::Kreislauf $art gegen Staging gescheitert."; exit 1; }
           done

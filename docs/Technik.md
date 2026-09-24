@@ -71,9 +71,21 @@ Daten erst nach Server-Bestätigung.
 │   │                       Ankündigung geschlossen ist. Ohne auth_guard —
 │   │                       der Streifen steht auch über der Anmeldung
 │   ├── auth_guard.php     Session/Rollen (Rolle+Existenz je Anfrage aus der DB,
-│   │                       Sitzungszähler, ist_admin(), csrf_check())
+│   │                       Sitzungszähler, ist_admin(), csrf_check()); seit
+│   │                       Web 20.42.0 das Einrichtungstor des Zweitfaktors
+│   │                       und 401 JSON für die API ohne Anmeldung (4.99q)
+│   ├── totp_lib.php       Der Zweitfaktor: RFC 6238, Geheimnis versiegelt,
+│   │                       Wiederherstellungscodes gehasht (P5c/AP5, 4.99q)
+│   ├── zweitfaktor.php    Das Einrichtungstor für Pflichtrollen, in der
+│   │                       Anmeldehülle (E-P5c-61)
+│   ├── zweitfaktor_teile.php  QR, Geheimnis, Codefeld und Codeliste — EIN
+│   │                       Markup für Tor und Profilkarte
+│   ├── codeblatt.php      die zehn Wiederherstellungscodes auf Papier
+│   │                       (`.blatt-druck`). SPEICHERT NICHTS — nicht
+│   │                       nachdruckbar
 │   ├── auth_salt.php      KDF-Salt (mit Pseudo-Salt gegen User-Enumeration)
-│   ├── login/logout/reset_request.php   Auth-Flows
+│   ├── login/logout/reset_request.php   Auth-Flows; login.php seit Web 20.42.0
+│   │                       mit dem Code-Schritt VOR der Sitzung (4.99q)
 │   ├── pw_handling.php    Passwortvergabe über Einmal-Link: Erstvergabe (erzeugt
 │   │                      Inhalts- + Wiederherstellungsschlüssel) und Reset
 │   ├── index.php          Tagesübersicht (Karte + Tabelle)
@@ -492,6 +504,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       in PHP; kein Zeichen liegt als Inline-Pfad im Code)
 │   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0 ·
 │   │                      zipjs.min.js — zip.js 2.8.34, BSD-3-Clause (ZIP + AES-256) ·
+│   │                      qrcode.js — qrcode-generator 2.0.4, MIT (nur die Modulmatrix
+│   │                       des QR-Codes; das SVG baut assets/qr.js) ·
 │   │                      leaflet/ — Leaflet 1.9.4, BSD-2-Clause (Karten; CSS, JS, images/);
 │   │                      alle lokal vendoriert (kein CDN), Herkunft und SHA-256 im Dateikopf
 │   │   └── fonts/         Bricolage Grotesque 500/600 und Open Sans 400/600/700 als woff2,
@@ -574,7 +588,18 @@ Daten erst nach Server-Bestätigung.
 │   │                      läuft gegen `attrappe.mjs` — der Prüfstand hat
 │   │                      dorthin keinen Netzzugang, und ohne feste
 │   │                      Trefferzahl wäre jeder Sollwert geraten. Braucht
-│   │                      die lokale Installation (s. LIESMICH.md)
+│   │                      die lokale Installation (s. LIESMICH.md).
+│   │                      `vendor/jsQR.js` (1.4.0, Apache-2.0) liest den
+│   │                      QR-Code des Zweitfaktors aus einem Abzug — nur
+│   │                      Prüfwerkzeug (E-P5c-87). `probekonto.mjs` legt
+│   │                      ein Konto mit bekanntem Passwort an, für Wege,
+│   │                      die weder Prüf- noch Demo-Konto brauchen können
+│   │                      (Zweitfaktor einrichten); es liegt neben `wege/`,
+│   │                      weil der Läufer dort jede Datei als Wegdatei lädt
+│   ├── zweitfaktor/       das Prüfkonto mit bekanntem Geheimnis
+│   │                      (`pruefkonto.php`) und EIN Code-Rechner je Sprache
+│   │                      (`totp.php`, `totp.mjs`, `totp.py`) mit gemeinsamem
+│   │                      Zähler — kein Code gilt zweimal (E-P5c-43)
 │   ├── schemaprobe/       läuft `schema.sql` und der Migrationskatalog auf
 │   │                      der Datenbank, gegen die sie laufen sollen? Vier
 │   │                      Installationsfälle, 19 Erwartungen, gegen eine
@@ -765,7 +790,8 @@ Daten erst nach Server-Bestätigung.
 
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
-| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige |
+| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.99q |
+| `totp_codes` | Die Wiederherstellungscodes des Zweitfaktors (seit Web 20.42.0, P5c/AP5): `user_id`, `hash` (`password_hash()`), `benutzt_am` (NULL = offen). **Nicht am Serverschlüssel** (E-P5c-42) — sie sind der Rückweg für genau den Fall, dass das Geheimnis nicht mehr zu öffnen ist. `ON DELETE CASCADE` mit dem Konto. Angenommen wird atomar (`UPDATE … WHERE benutzt_am IS NULL`, gültig bei `rowCount() = 1`) |
 | Backup | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist im Backup, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | **Seit Web 20.17.0 schreibt nur noch `konto_lib.php` hierher** (P5b/AP2, Backlog Nr. 202 Paket 1) — nachweisbar mit `grep -rn "INSERT INTO password_resets" server/`. Die Laufzeiten stehen als `TOKEN_EINLADUNG_S` / `TOKEN_RESET_S` statt als SQL-Literale, und „höchstens ein gültiger Token je Konto" gilt damit an **allen vier** Stellen statt an zweien. Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname, **VARCHAR(191)** — die Gerätedateien liefern Sammelnamen bis 153 Zeichen; die zunächst gewählten 64 waren geraten und sind mit Web 12.9.1 nachgezogen) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Seit Web 20.11.0 dazu **`abgewiesen_seit`** (der **erste** Fehlversuch einer Serie, nicht der letzte) und **`abgewiesen_anzahl`** — der Vermerk der Mengenbremse aus P5a/AP7 (Abschnitt 5e.7). Beide werden beim nächsten gelungenen Upload geleert; ein Vermerk, der stehenbleibt, nachdem neu gekoppelt wurde, ist eine Falschmeldung. **Und seit Web 20.12.0 nach 30 Tagen auch ohne Upload** (Schritt `Geraetevermerke` im Aufräumjob): Den gelungenen Upload gibt es nicht mehr, wenn das Gerät ausgemustert ist — ohne den Schritt trüge ein verlorenes Gerät seine orange Plakette für immer. Siehe Abschnitt 5 |
@@ -797,7 +823,7 @@ Daten erst nach Server-Bestätigung.
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
 | `protokoll_ereignisse` | Das **Betriebsprotokoll** (seit Web 20.16.5, P5b/AP1, V1). `reiter` = `verwaltung` / `email` / `jobs` / `sicherung` / `ziele` / `system`, dazu `art` (die maschinelle Kennung, nach der die Protokollseite filtert; Wort und Ton dazu im Katalog `PROTOKOLL_ARTEN`), `urheber_user_id` / `urheber_art`, `betroffen_user_id`, `text` und `daten` (JSON). **Betriebsereignisse, keine Datenzugriffe** — dass jemand einen Einsatz geöffnet, gelesen oder exportiert hat, steht hier nicht und soll hier nicht stehen. **Kein Fremdschlüssel auf `users`**, und das ist der wichtigste Satz dieser Zeile: Der häufigste Verwaltungseintrag ist „Konto gelöscht"; mit CASCADE löschte die Kontolöschung ihren eigenen Eintrag, mit RESTRICT verhinderte der Eintrag die Löschung. `urheber_user_id` ist **`0` und nicht NULL**, wenn kein Mensch gehandelt hat — `urheber_art` sagt, welche Art von Niemand (`cli` / `job`). **Zwei Fristen:** `verwaltung` 365 Tage (einstellbar 90–1095), alle übrigen 30 Tage fest; der Job `aufraeumen` räumt beide in einem Schritt. Die Seite Verwaltung → Protokoll (seit Web 20.39.0) liest sie zusammen mit fünf weiteren Tabellen, der Job `protokoll_archiv` archiviert sie. Siehe 4.99g |
 | `konto_einwilligungen` | Welche Fassung eines Rechtstextes dieses Konto angenommen hat (seit Web 20.19.0, P5b/AP4). `(user_id, schluessel)` als Primärschlüssel — **eine Zeile je Konto und Dokument, nicht je Annahme**; eine neue überschreibt die alte. `stand_am` ist die **angenommene** Fassung, der Vergleich gegen `rechtstexte.stand_am` ist die ganze Prüfung. Der Verlauf steht im Protokoll und überlebt dort die Kontolöschung; `ON DELETE CASCADE` ist hier richtig, weil eine Einwilligung ohne Konto keinen Gegenstand hat. Siehe 4.99j |
-| `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **Die Folge ist benannt:** `komp_tabellen()` zählt seine Tabellen über `SHOW FULL TABLES` und hat keine Ausnahmeliste — diese Tabelle liegt damit in **jeder** Komplettsicherung, und die 30-Tage-Frist gilt in der laufenden Datenbank, nicht im versiegelten Abzug. Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09). **Gelesen wird sie seit Web 20.12.0 über `sicherheit_ereignisse()`** und gezeigt auf Betrieb → Status → Sicherheit (5e.8); geschrieben wird nur an den **fünf Töpfen mit Leiter** — die übrigen neun sperren ohne Protokollzeile |
+| `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **Die Folge ist benannt:** `komp_tabellen()` zählt seine Tabellen über `SHOW FULL TABLES` und hat keine Ausnahmeliste — diese Tabelle liegt damit in **jeder** Komplettsicherung, und die 30-Tage-Frist gilt in der laufenden Datenbank, nicht im versiegelten Abzug. Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09). **Gelesen wird sie seit Web 20.12.0 über `sicherheit_ereignisse()`** und gezeigt auf Betrieb → Status → Sicherheit (5e.8); geschrieben wird nur an den **Töpfen mit Leiter** (`'leiter' => true` in `RATE_GRENZEN`; seit Web 20.42.0 sieben, mit `totp`) — die übrigen sperren ohne Protokollzeile. *Hier stand „fünf" und „neun"; seit Web 20.11.0 waren es sechs mit Leiter, gezählt am 24.09.2026* |
 | `mail_warteschlange` | Jede ausgehende Nachricht, eine Zeile (seit Web 20.8.0, P5a/AP5). `schluessel` = Eintrag aus `mail_katalog()`, `art` = `konto`/`geraet`/`betrieb` (das wird in P5c der Reiter im Protokoll), `zustand` = `offen` / `zugestellt` / `unzustellbar` / `zu_spaet` / `ueberholt`, `versuche`, `naechster_versuch`, `gueltig_bis` (ein Reset-Link gilt eine Stunde), `fehler` = Grund **samt Kennung**. **Was beim Endzustand geleert wird, hängt vom Zustand ab** (E-P5a-39): `zugestellt`, `zu_spaet` und `ueberholt` verlieren Adresse, Betreff und Rumpf — es bleibt „eine Nachricht dieser Art ging zu dieser Zeit hinaus". Bei `unzustellbar` **bleibt die Adresse stehen**, weil „die Einladung an X kam nie an" ohne X wertlos ist; der Rumpf fällt trotzdem, wegen des Tokens darin. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `job_laeufe` | Verlauf der Hintergrundjobs (seit Web 20.8.0), eine Zeile je Lauf, der etwas getan hat oder scheiterte — ein Leerlauf schreibt nichts, sonst füllte sich die Tabelle mit Nichts. `job`, `zeitpunkt`, `ausloeser`, `erledigt`, `fehler`. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
@@ -7163,6 +7189,8 @@ Seite leitet nur auf `admin_installation.php` weiter.
 | Kontoseite: Gerät deaktivieren | `POST admin_user.php?id={ziel} action=device_aus` | 403 | durch | durch | durch |
 | Kontoseite: Gerät entkoppeln | `POST admin_user.php?id={ziel} action=device_delete` | 403 | 403 | durch | durch |
 | Kontoseite: Setz-Link an einen Admin | `POST admin_user.php?id={admin} action=pw_reset` | 403 | 403 | durch | durch |
+| Kontoseite: Zweitfaktor zurücksetzen | `POST admin_user.php?id={ziel} action=totp_zuruecksetzen` | 403 | 403 | durch | durch |
+| Kontoseite: Zweitfaktor eines Admins zurücksetzen | `POST admin_user.php?id={admin} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch |
 | Konto-Backups: die Seite | `GET admin_sicherungen.php` | 403 | 403 | 200 | 200 |
 | Konto-Backups: Regeln | `POST admin_sicherungen.php action=regeln` | 403 | 403 | durch | durch |
 | Konto-Backups: alle sichern | `POST admin_sicherungen.php action=sichern_alle` | 403 | 403 | durch | durch |
@@ -7199,6 +7227,116 @@ dass die Rolle die Handlung erreicht, nicht, was sie dort tut:
   nicht ab (403, das Gerät bleibt); ein Konto löscht er nicht (403, das Konto
   bleibt). Die Bestätigung einer Registrierung geht erneut hinaus und
   schreibt `verifikation_gesendet`, ohne den Link zu zeigen.
+
+### 4.99q Der Zweitfaktor (ab Web 20.42.0, P5c/AP5)
+
+*E-P5c-15, -41 bis -43, -53, -54, -56, -61; Mockups M-P5c-02b und -02c.*
+TOTP nach RFC 6238 — HMAC-SHA1 über den Zeitschritt, 30 s, sechs Ziffern,
+ein Schritt Toleranz nach beiden Seiten. **Pflicht** für Support, Admin und
+BetreiberIn (`rolle_braucht_zweitfaktor()`), **Angebot** für NutzerInnen,
+**gesperrt** im Demo-Konto. Alles Rechnen und Speichern steht in
+`totp_lib.php`; Datenmodell in Abschnitt 3 (`users.totp_*`, `totp_codes`),
+Migration `2026_09_24_zweitfaktor`.
+
+**Die Code-Abfrage steht VOR der Sitzung** (E-P5c-53, F-P5c-31). Nach dem
+richtigen Passwort setzt `login.php` für ein Konto mit Zweitfaktor **nicht**
+`user_id`, sondern den halben Stand `$_SESSION['totp_halb']` (Konto, Adresse,
+Frist **fünf Minuten**) und leitet mit 303 auf sich selbst um; die Seite zeigt
+dann den Code-Schritt. `user_id` und `session_regenerate_id()` kommen erst
+mit einem gültigen Code (`anmeldung_vollenden()`). Damit ist die halbe
+Anmeldung für jede andere Seite und jeden Endpunkt schlicht „nicht
+angemeldet" — **ohne dass einer von ihnen davon weiß**. Seit derselben
+Fassung antwortet `auth_guard.php` einem API-Aufruf ohne `user_id` mit
+**401 JSON** (`error: session_ende`, `grund: nicht_angemeldet`) statt einer
+Weiterleitung, der `fetch()` gefolgt wäre.
+
+**Nach dem Code wird das Konto noch einmal gelesen** (`login_zeile()`,
+`login_zugang()`): In den fünf Minuten kann es gesperrt oder die Wartung
+eingeschaltet worden sein. **Die Selbstlöschung nimmt erst die ganze
+Anmeldung zurück**, nicht schon das Passwort (`$vollstaendig`): Wer nur das
+Passwort hat, darf die Löschung nicht aufheben.
+
+**Das Vormerkfach.** Der Passwortschritt legt die abgeleiteten Hälften im
+`sessionStorage` ab (`merkeAbleitungen`, S10); abgeholt werden sie von der
+ersten angemeldeten Seite. Der Code-Schritt lädt kein `unlock.js`. Endet der
+halbe Stand ohne Anmeldung — „Zurück zur Anmeldung" (`?abbrechen=1`),
+abgelaufen, gesperrt —, räumt die Passwortseite das Fach
+(`EdCrypto.vergissAbleitungen()`).
+
+**Kein Code gilt zweimal.** `totp_schritt` hält den zuletzt angenommenen
+Zeitschritt; angenommen wird nur ein späterer, atomar in der Bedingung des
+`UPDATE`. Ohne das wäre derselbe Code wegen der Toleranz rund 90 Sekunden
+lang wiederholbar. Wiederherstellungscodes: zehn, je acht Zeichen aus
+`TOTP_CODE_ZEICHEN` (ohne 0, 1, I, L, O, U), gespeichert mit
+`password_hash()`, angenommen mit `benutzt_am` — ebenfalls atomar. Eine
+Anmeldung mit Code schreibt `totp_code_benutzt` ins Protokoll, mit dem Konto
+als Urheber.
+
+**Der Ratentopf `totp`** (fünf Versuche je 15 Minuten, mit Leiter) zählt je
+Konto, nicht je Adresse — wer hier steht, hat das Passwort schon. App-Code und
+Wiederherstellungscode zählen in denselben Topf. Ist er gesperrt, entsteht der
+halbe Stand gar nicht erst.
+
+**Das Einrichtungstor** (`auth_guard.php`, E-P5c-61): Eine Pflichtrolle ohne
+`totp_seit` landet auf `zweitfaktor.php` — einer eigenen Seite in der
+Anmeldehülle, nicht im Gerüst —, die API antwortet 403 JSON. Offen bleiben
+nur `zweitfaktor.php` und `logout.php`; das Einwilligungstor steht danach und
+lässt `zweitfaktor.php` durch, sonst schickten die beiden Tore einander im
+Kreis. **Stumm in drei Fällen**, und jeder ist ein Riegel: Die Spalten fehlen
+(Deploy vor `update.php`), die Wartung ist an (die BetreiberIn muss
+`betrieb_updates.php` immer erreichen), kein Serverschlüssel (die Einrichtung
+verweigert ohne ihn — ein Tor, dessen einzige Tür verschlossen ist, sperrte
+die BetreiberIn aus, die ihn nachtragen soll).
+
+**Einrichten** (Tor und Profilkarte, gemeinsame Teile in
+`zweitfaktor_teile.php`): `totp_einrichtung_beginnen()` legt ein neues
+Geheimnis versiegelt ab, **ohne** `totp_seit`; eine angefangene Einrichtung
+behält ihr Geheimnis beim Neuladen. `totp_einrichtung_abschliessen()` setzt
+`totp_seit` erst mit einem passenden Code und liefert die zehn Codes — sie
+stehen **genau einmal** in der Antwort auf diesen POST. Der QR-Code entsteht
+im Browser (`assets/qr.js` aus `qrcode-generator`, 9.38 in `Design.md`),
+daneben die otpauth-Adresse als Verweis und das Geheimnis in Base32. Das
+Codeblatt (`codeblatt.php`, `.blatt-druck`) bekommt die Codes per POST und
+speichert nichts.
+
+**Zurücksetzen** (Kontoseite, E-P5c-42): die BetreiberIn für alle Rollen, ein
+Admin nur für Konten der Rolle user (`rolle_darf_zweitfaktor_zuruecksetzen()`,
+geprüft **vor** dem Formular-Token wie jedes Rollentor, E-P5c-85); das eigene
+Konto nicht. `totp_abschalten()` leert Geheimnis, Zeitschritt und Codes und
+schreibt `totp_zurueckgesetzt`; die Mail `totp_zurueckgesetzt` geht an die
+Kontoadresse. **Selbst ausschalten** geht nur ohne Pflicht. Der Demo-Reset
+leert die Spalten (`demo_zweitfaktor_leeren()`, gerufen aus
+`demo_zuruecksetzen()`).
+
+**Der Rückweg über den Wiederherstellungsschlüssel fehlt, mit Absicht**
+(E-P5c-104, F-P5c-106): E-P5c-42 sah ihn vor, geprüft gegen
+`pat_key_check` — einen Wert, den jeder Datenbankabzug enthält. Er kommt
+fälschungssicher mit dem Einschubkonzept RW. Bis dahin: Codes und
+Verwaltung.
+
+**Der Bus-Faktor** (E-P5c-16, -56): Die Zeile „Verwaltungskonten" auf Betrieb
+→ Status zählt **handlungsfähige** Konten — `status = 'aktiv'` und ein
+eingeschalteter Zweitfaktor (`status_verwaltungskonten()`). Orange, solange
+weniger als zwei BetreiberInnen handlungsfähig sind (E-P5c-44, -63). Text,
+Ton und Plakette wählt `status_verwaltungszeile()` aus den drei Zahlen, ohne
+Datenbank — damit die Probe die Lagen mit gesetzten Zahlen prüfen kann
+(E-P5c-113).
+
+**Prüfkonten** (E-P5c-43): Das Sandbox-Prüfkonto bekommt einen echten
+Zweitfaktor mit bekanntem Geheimnis (`tools/zweitfaktor/pruefkonto.php`,
+Schritt 6b von `lokal_einrichten.sh`); die Werkzeuge rechnen den Code mit
+**einem Rechner je Sprache** (`tools/zweitfaktor/totp.{php,mjs,py}`) und
+teilen einen Zähler, weil der Server keinen Code zweimal annimmt. Auf Staging
+reicht die Kette das Secret `STAGING_TOTP` an den Kreislauf durch. **Kein
+Konfigurationsschalter**, der die Pflicht abschaltet.
+
+**Nachweis:** `bash tools/proben/proben.sh zweitfaktor` — RFC-Vektoren 6/6,
+Code-Schritt über HTTP, Tor, Rückzug der Selbstlöschung, Demo-Reset,
+Bus-Faktor samt der Tabelle seiner Lagen. Dazu zwei Bedienwege
+(`tools/bedienprobe/wege/zweitfaktor.mjs`: QR-Code mit jsQR gelesen gleich
+der angezeigten Adresse; `wege/einstellungen_profil.mjs`: einschalten,
+falscher, wiederholter und richtiger Code, Vormerkfach nach dem Abbruch
+leer).
 
 ### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
 
@@ -10995,6 +11133,35 @@ gibt es auf einfachem Webspace nicht. **So kommt man heraus:**
 > BetreiberIn. Nachgestellt in P5c/AP4 mit dem neuen Code auf dem alten
 > Schema: Anmeldung 200, `betrieb_updates.php` 200 mit der Migration in der
 > Liste, danach `update.php` durch.
+>
+> **Für den Zweitfaktor (Web 20.42.0) ebenso:** Das Einrichtungstor schweigt,
+> solange die Spalten fehlen und solange die Wartung an ist — und nach dem
+> Deploy ist die Wartung an, bis jemand `update.php` gefahren hat. Die
+> BetreiberIn kommt also ohne Zweitfaktor an Betrieb → Updates.
+
+**Notweg: Die einzige BetreiberIn hat Handy und Codes verloren** (seit Web
+20.42.0, E-P5c-42). Zurücksetzen kann nur eine **andere** BetreiberIn — gibt
+es keine, führt kein Weg über die Oberfläche hinein. Im Datenbankwerkzeug des
+Hosters, mit der Kennung des Kontos:
+
+```sql
+UPDATE users SET totp_geheimnis = NULL, totp_seit = NULL, totp_schritt = NULL
+ WHERE id = <Kennung>;
+DELETE FROM totp_codes WHERE user_id = <Kennung>;
+```
+
+Danach mit dem Passwort anmelden; das Einrichtungstor verlangt sofort einen
+neuen Zweitfaktor. **Im Protokoll steht dieser Weg nicht** — er geht an der
+Anwendung vorbei. Wer ihn benutzt, trägt es in die Betriebsakte ein. Der
+Fall, dass die einzige BetreiberIn **auch** den Datenbankzugang verloren hat,
+ist Backlog Nr. 249 (Schritt 18). Die Bus-Faktor-Zeile auf Betrieb → Status
+steht genau deshalb orange, bis es eine zweite BetreiberIn gibt.
+
+**Notweg: Nach einem Wiederanlauf mit anderem Serverschlüssel** lässt sich
+kein Zweitfaktor-Geheimnis mehr öffnen (es ist mit dem alten versiegelt). Die
+Anmeldung nimmt dann nur noch Wiederherstellungscodes — sie hängen nicht am
+Schlüssel (E-P5c-42). Wer keine mehr hat, wird von einer BetreiberIn
+zurückgesetzt, die einzige BetreiberIn über den SQL-Weg oben.
 
 **Neue Zusatzfelder für Einsätze:** 1) Migration in `migration_lib.php`
 (`migrationen_katalog()`) ergänzen

@@ -255,6 +255,22 @@ const RATE_GRENZEN = [
      * ist der Sinn des Hinweises „Betrieb -> Schluesselblatt neu drucken". */
     'blatt' => ['max' => 3, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
 
+    /* DER CODE-SCHRITT DER ANMELDUNG (P5c/AP5, E-P5c-53).
+     *
+     * FUENF VERSUCHE JE KONTO, MIT LEITER. Sechs Ziffern sind eine Million
+     * Moeglichkeiten; mit drei gueltigen Fenstern trifft ein Rateversuch mit
+     * 3 zu 1 000 000. Fuenf Versuche je Viertelstunde, danach die Leiter —
+     * bei der zweiten Sprosse eine Stunde —, machen das Raten aussichtslos,
+     * ohne jemanden auszusperren, der sich zweimal vertippt oder eine
+     * Minute zu spaet schaut.
+     *
+     * JE KONTO UND NICHT JE ADRESSE. Wer hier steht, hat das Passwort schon;
+     * gezaehlt wird, wie oft an DIESEM Konto der zweite Faktor fehlt. Ein
+     * gesperrter Code-Schritt sperrt die Anmeldung dieses Kontos, nicht die
+     * der Klinik hinter demselben NAT. Wiederherstellungscodes zaehlen in
+     * denselben Topf — sonst waere er mit ihnen zu umgehen. */
+    'totp' => ['max' => 5, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
+
     /* DER GLOBALE ZAEHLER SPERRT NIE (E-P5a-05). `max` steht auf der
      * groesstmoeglichen Zahl, damit die Sperrbedingung in `rate_misserfolg()`
      * fuer diesen Topf niemals wahr wird — eine globale Sperre waere ein

@@ -33,9 +33,9 @@ Umsetzung.
 > | | |
 > |---|---|
 > | Stand | **23.09.2026 — Fassung 2.** Fassung 1 (20.09.2026, gegen `862ca7f`, Web 20.25.0) freigegeben, Mockup-Runde M-P5c-01 freigegeben. Am 23.09.2026 gegen `8fd4553` (Web 20.37.1, nach Schritt 15, 16 und PK-01 bis -04) abgeglichen: 139 Rohbefunde, 16 davon in der Gegenlesung widerlegt; 21 Fragen dem Auftraggeber vorgelegt und am selben Tag beantwortet (Q-P5c-05 bis -25, 2.7). Daraus **E-P5c-31 bis -58** und **F-P5c-15 bis -58**. Nachgezogen auf `main` `8ae873c` (PK-04 gemergt, Konzept TB). **Mockup-Runde M-P5c-02** am 23.09.2026 gebaut und freigegeben: **F-P5c-59 bis -63**, **Q-P5c-26 bis -30**, **E-P5c-59 bis -66** (2.8). |
-> | Entschieden | E-P5c-01 bis **E-P5c-66**; Q-P5c-01 bis **-30** beantwortet. **M-P5c-02 freigegeben am 23.09.2026** (2.8, 6.2). Aus der Umsetzung: **E-P5c-67 bis -85** (2.9) — ohne eigene Frage bis auf drei aus AP2, **Q-P5c-31 bis -33**, beantwortet am 24.09.2026 (Adressen bleiben im Archiv, erstes Archiv ab dem ältesten Eintrag, aktiver Reiter in `--orange-tief`). **Nachtrag zu Fassung 2 aus der Zuarbeit von Konzept BR: E-P5c-86 bis -90, Q-P5c-34 bis -37** (2.10, 24.09.2026) Aus AP3: **E-P5c-91 bis -97** (2.9), ohne Frage. Aus AP4: **E-P5c-98 bis -103** (2.9), ohne Frage. Vor AP5: **Q-P5c-38** (Rückweg beim Zweitfaktor, C als Einschub RW) und **E-P5c-104** (24.09.2026). |
-> | Offen | **Einschubkonzept RW** — der Rückweg beim Zweitfaktor über den Wiederherstellungsschlüssel, fälschungssicher (Q-P5c-38, E-P5c-104). Entsteht in einer eigenen Sitzung, Grundlage `Vorbereitung-RW-Zweitfaktor-Rueckweg.md`; die Umsetzung spielt seinen Einschub hier ein und baut es vor AP11. Sonst nichts: Die beiden Fehler aus der Runde M-P5c-02 außerhalb von P5c — Backlog 288 und 289 — sind mit Web 20.37.3 behoben (F-P5c-62, -63) |
-> | Umsetzung | **läuft seit 23.09.2026. AP1 erledigt** (Web 20.38.0; Befunde F-P5c-64 bis -72, alle behoben oder als Prüfmittelfalle benannt). **AP2 erledigt** (Web 20.39.0, 24.09.2026; Befunde F-P5c-73 bis -88, alle behoben, eine davon als Frage vorgelegt). **AP3 erledigt** (Web 20.40.0, 24.09.2026; Befunde F-P5c-89 bis -98, alle behoben; F-P5c-91 lässt eine Lücke im Tor offen, benannt). **AP4 erledigt** (Web 20.41.0, 24.09.2026, **mit Migration** — nach dem Deploy `update.php`, die Wartung bleibt an; Befunde F-P5c-99 bis -105; -99 bis -102 und -104 behoben, der doppelte Löschweg hinter -99 steht als Backlog Nr. 299, **-103 ist eine Lücke der Prüfkette** — die Hauptstufe fährt weder PHP 8.3 noch den Kreislauf je Datenbank noch Firefox und WebKit, Nr. 300; für AP4 von Hand gefahren). **In Arbeit: AP5, ohne den Schlüssel-Rückweg** (E-P5c-104); die Zuarbeit „`pat_key_check IS NULL` zählen" ist erledigt (0 Konten auf beiden Anlagen, F-P5c-106). — Vorgeschichte: **nach PK-05** (E-P5c-32) **und nach dem Korrekturpaket für die neun roten Proben der Nebenstufe** (Konzept PK, E-PK-45, Backlog Nr. 292) — **gebaut mit Konzept RP am 23.09.2026**: Die Nebenstufe ist auf frischer Anlage grün (36 / 0 / 0, rund 21 min, E-RP-05). F-P5c-49 ist mit PK-05/1 erledigt. Reihenfolge AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 → AP11 (3.0); **AP10 entfällt** **SD-00 eingespielt mit Fassung 111, Backlog Nr. 294** (Konzept SD, 24.09.2026 — die Nummer 293 hat Konzept BR); seither gilt `CLAUDE.md` 2 Punkt 5: im Rahmenplan keine Paketabsätze mehr. |
+> | Entschieden | E-P5c-01 bis **E-P5c-66**; Q-P5c-01 bis **-30** beantwortet. **M-P5c-02 freigegeben am 23.09.2026** (2.8, 6.2). Aus der Umsetzung: **E-P5c-67 bis -85** (2.9) — ohne eigene Frage bis auf drei aus AP2, **Q-P5c-31 bis -33**, beantwortet am 24.09.2026 (Adressen bleiben im Archiv, erstes Archiv ab dem ältesten Eintrag, aktiver Reiter in `--orange-tief`). **Nachtrag zu Fassung 2 aus der Zuarbeit von Konzept BR: E-P5c-86 bis -90, Q-P5c-34 bis -37** (2.10, 24.09.2026) Aus AP3: **E-P5c-91 bis -97** (2.9), ohne Frage. Aus AP4: **E-P5c-98 bis -103** (2.9), ohne Frage. Vor AP5: **Q-P5c-38** (Rückweg beim Zweitfaktor, C als Einschub RW) und **E-P5c-104** (24.09.2026). Aus AP5: **E-P5c-105 bis -114** (2.9), ohne Frage — darunter eine gegen das Konzept: `STAGING_TOTP` nach dem Merge statt davor (E-P5c-105). |
+> | Offen | **Einschubkonzept RW** — der Rückweg beim Zweitfaktor über den Wiederherstellungsschlüssel, fälschungssicher (Q-P5c-38, E-P5c-104). Entsteht in einer eigenen Sitzung, Grundlage `Vorbereitung-RW-Zweitfaktor-Rueckweg.md`; die Umsetzung spielt seinen Einschub hier ein und baut es vor AP11. **Nach dem Merge:** die Zuarbeit `STAGING_TOTP` (E-P5c-105, Rahmenplan 6) — der erste Stufe-2-Lauf ist bis dahin rot mit Ansage. Sonst nichts: Die beiden Fehler aus der Runde M-P5c-02 außerhalb von P5c — Backlog 288 und 289 — sind mit Web 20.37.3 behoben (F-P5c-62, -63) |
+> | Umsetzung | **läuft seit 23.09.2026. AP1 erledigt** (Web 20.38.0; Befunde F-P5c-64 bis -72, alle behoben oder als Prüfmittelfalle benannt). **AP2 erledigt** (Web 20.39.0, 24.09.2026; Befunde F-P5c-73 bis -88, alle behoben, eine davon als Frage vorgelegt). **AP3 erledigt** (Web 20.40.0, 24.09.2026; Befunde F-P5c-89 bis -98, alle behoben; F-P5c-91 lässt eine Lücke im Tor offen, benannt). **AP4 erledigt** (Web 20.41.0, 24.09.2026, **mit Migration** — nach dem Deploy `update.php`, die Wartung bleibt an; Befunde F-P5c-99 bis -105; -99 bis -102 und -104 behoben, der doppelte Löschweg hinter -99 steht als Backlog Nr. 299, **-103 ist eine Lücke der Prüfkette** — die Hauptstufe fährt weder PHP 8.3 noch den Kreislauf je Datenbank noch Firefox und WebKit, Nr. 300; für AP4 von Hand gefahren). **AP5 erledigt** (Web 20.42.0, 24.09.2026, **mit Migration** — nach dem Deploy `update.php`, die Wartung bleibt an; ohne den Schlüssel-Rückweg, E-P5c-104; Befunde F-P5c-107 bis -117, alle behoben oder berichtigt — -113 war eine Gegenprobe von mir, -115 ein Termin im Konzept, der nicht ging). **Als Nächstes: AP6** (Health) — AP5b (RW) wartet auf das Einschubkonzept und kommt vor AP11. — Vorgeschichte: **nach PK-05** (E-P5c-32) **und nach dem Korrekturpaket für die neun roten Proben der Nebenstufe** (Konzept PK, E-PK-45, Backlog Nr. 292) — **gebaut mit Konzept RP am 23.09.2026**: Die Nebenstufe ist auf frischer Anlage grün (36 / 0 / 0, rund 21 min, E-RP-05). F-P5c-49 ist mit PK-05/1 erledigt. Reihenfolge AP1 → AP2 → AP3 → AP4 → AP5 → AP6 → AP7 → AP8 → AP9 → AP11 (3.0); **AP10 entfällt** **SD-00 eingespielt mit Fassung 111, Backlog Nr. 294** (Konzept SD, 24.09.2026 — die Nummer 293 hat Konzept BR); seither gilt `CLAUDE.md` 2 Punkt 5: im Rahmenplan keine Paketabsätze mehr. |
 > | Fable-Schritte | **keine.** M-P5c-01 ist am 20.09.2026 mit Fable gefahren; M-P5c-02 fährt Opus (Q-P5c-08) |
 > | Nummern | Backlog **286** (Admin-Tor, AP2) und **287** (Karten „Was hier gilt" außerhalb von Verwaltung und Betrieb, Schritt 17) mit dieser Fassung eingetragen; **288** und **289** mit der Mockup-Runde M-P5c-02 (beide erledigt mit Web 20.37.3, das **290** und **291** vergibt); der Kopf des Backlogs nennt **292** als nächste freie Nummer. Alle übrigen Einträge in Rahmenplan und Backlog stehen als Einschub in 7 und 8 und werden **mit AP1** eingespielt (F-P5c-50) **Seit 24.09.2026: Spanne 294–303** — 294 Konzept SD, 295–298 Anlässe aus dem Nachtrag BR (E-P5c-86), **299** und **300** aus AP4 (zwei Löschwege; die halbe Plattformmatrix), 301–303 frei; 293 gehört BR. |
 >
@@ -48,7 +48,7 @@ Umsetzung.
 > | AP2 Protokollseite und Archiv | **erledigt 24.09.2026** | Neben — **Web 20.39.0** | neben (Bericht im Commit `P5c-AP2`) | nein | | Rollenprobe **87 / 0** (28 Zeilen × 3 Rollen + Rollenwechsel; Gegenprobe altes Tor: 8 rot) · Protokollprobe **21 / 0** (entsiegelt 0 IP, 0 Adressen in Sicherheit und E-Mail) · Komplettprobe **67 / 0**, Wiederherstellung **111 / 0** · Versandprobe **141 / 0** (Teil 13 neu; Gegenprobe 2 von 3 Archiven gelöscht) · Bilderlauf **520 Bilder aus 65 Seiten, 0/0/0/0**, 167 Karten · Bedienprobe **52 / 52**, davon die Seite **2 / 2** (Zeilenhöhe 68,4 = 68,4 px; ohne Gegenregel 12 px niedriger) · Zeilenhöhe über `motor.mjs` 1440 px 68,39 = 68,39, 390 px 110,98 = 110,98 · Register **40 Zeilen, 0 über der Decke** · Stilvergleich **54 geplant, 54 gemessen, 0 ungeplant** · Kontraste **25 Paare, 0 verfehlt** |
 > | AP3 Fehlerprotokoll | **erledigt 24.09.2026** | Neben — **Web 20.40.0** | neben (Bericht im Commit `P5c-AP3`) | nein | | `error_log(` **75 → 2** (Z38, Decke 2) · Protokollprobe **36 / 0** (neu Teil 7: 15, Gegenprobe Puffer rot) · Ingestprobe **86 / 0** (neu Teil 11: 3) · Mailprobe **51 / 0** · Kopplungsprobe **76 / 0** · Verbindungsprobe **24 / 0** (3 von 3; Gegenprobe rot) · Riegel `behandler` Selbstprobe **9 / 9**, Gegenprobe rot · Quelltext **9 von 9**, Selbstproben **6 von 6** · Schemaprobe **4 × 19 / 0** · Riegelprobe **10 / 0** · Kollation der Kennungssuche auf **4** Engines gemessen |
 > | AP4 Support-Rolle | **erledigt 24.09.2026** | Neben — **Web 20.41.0** | **haupt** (Bericht im Commit `P5c-AP4`; Stufenregel `migration`) | **ja** (ENUM `users.role`) | | Rollenprobe **279 / 0** (65 Zeilen × 4 Rollen = 260 Zellen, Rollenwechsel 3, Support 16; Gegenprobe `device_toggle` für den Support und Link-Sperre aus: **4 rot**) · Protokollprobe **36 / 0** · Wartungsprobe **67 / 0** · Mailprobe **51 / 0** · Schemaprobe **4 × 19 / 0** · Migrationsregister **0 Befunde** · Stufenregel Selbstprobe **35 / 0**, gegen den Stand → `haupt` · Register **40 Zeilen, 0 über der Decke** · Quelltext **9 von 9** · vor `update.php`: Anmeldung 200 mit Wartungshinweis, `betrieb_updates.php` 200 mit der Migration, danach ENUM mit 4 Werten, Wartung an · **unter PHP 8.3.33 von Hand** (F-P5c-103): Rollenprobe **279 / 0**, Migration über Betrieb → Updates angewendet, Wartung an · **Bilderlauf von Hand in Firefox 142 und WebKit 26**: je **520 Bilder**, Überlauf 0, Knöpfe 0, Karten 167/167; Konsolenfehler 1 und 16 ohne Befund an einer Seite (F-P5c-105) · **Messstand** (F-P5c-104) von Hand **9 min 38 s**, 5050 Einsätze, 0 Fehler · Stilvergleich **55 geplant** (eine Zeile für `.form-raster-einspaltig`) |
-> | AP5 Zweitfaktor und Bus-Faktor | offen | Neben | **haupt** | **ja** (TOTP-Spalten, Codetabelle) | | |
+> | AP5 Zweitfaktor und Bus-Faktor | **erledigt 24.09.2026** | Neben — **Web 20.42.0** | **haupt** (Bericht im Commit `P5c-AP5`; Stufenregel `migration`) | **ja** (drei Spalten an `users`, `totp_codes`) | | Zweitfaktorprobe **44 / 0** (RFC 6238 **6 / 6**, sechs Lagen des Bus-Faktors; Gegenprobe Reset ohne Aufruf: rot) · Bedienwege **2 / 2** (QR = Adresse mit jsQR; Profil: falsch, wiederholt, richtig, Vormerkfach belegt → leer), **Gegenproben 2 rot** · Rollenprobe **287 / 0** (67 Zeilen × 4) · Wartungsprobe **67 / 0** · Protokollprobe **36 / 0** · Ratenprobe **50 / 0** (**7** Töpfe mit Leiter) · Mailprobe **51 / 0** · Wache Selbstprobe **43 / 0**, Sandbox kein Unterschied · Kettenaufrufe **79 / 0** · vor `update.php`: Anmeldung ohne Code, `betrieb_updates.php` 200, danach Spalten da, Wartung an, Tor greift · **unter PHP 8.3.33 von Hand**: Migration über die Seite, Zweitfaktor 43 / 0, Rollen 287 / 0, Wartung 67 / 0, Wege 2 / 2 · **Bilderlauf der vier Seiten in Chromium, Firefox, WebKit** je 32 Bilder, 0 / 0 / 0 (nach F-P5c-112) · Codeblatt-PDF **1 Seite** · Stilvergleich **128 Signaturen**, kein bestehendes Element geändert · `api/` ohne Anmeldung **401** (Nr. 211) |
 > | AP5b Rückweg über den Wiederherstellungsschlüssel (Einschub RW) | **wartet auf das Einschubkonzept** | Neben | haupt | **ja** (Schlüsselpaar) | | |
 > | AP6 Health | offen | Neben | neben | nein | | |
 > | AP7 Statistik mit drei Reitern | offen | Neben | **haupt** | **ja** (Index) | | |
@@ -1443,6 +1443,91 @@ gilt Alternative B:** Einmal-Codes und das Zurücksetzen durch die Verwaltung;
 wer Gerät **und** Codes verliert, braucht die Verwaltung. Eingeplant wird RW
 als eigenes Paket vor AP11 (Arbeitsname AP5b), mit eigener Migration.
 
+**E-P5c-105 — `STAGING_TOTP` kommt nach dem Merge, nicht davor** (AP5,
+F-P5c-115; ändert die Reihenfolge aus E-P5c-43). Das Geheimnis des
+Prüfkontos entsteht erst, wenn Staging diese Fassung fährt und das Konto
+dort das Einrichtungstor durchläuft; vor dem Merge gibt es nichts
+einzutragen. Die Kette bleibt dabei streng: Fehlt das Secret, ist Stufe 2
+rot und sagt, woher es kommt (E-KH-12) — der erste Lauf nach dem Merge ist
+also rot mit Ansage. Die Reihenfolge steht in Rahmenplan 6. Kein Schalter,
+der die Pflicht für das Prüfkonto abschaltet (E-P5c-43 bleibt).
+
+**E-P5c-106 — Jeder Aufruf unter `api/` ohne Anmeldung bekommt 401 als
+JSON** (AP5, F-P5c-108, Backlog Nr. 211). E-P5c-53 verlangte 401 für die
+halbe Anmeldung; gebaut ist es für **jeden** Aufruf ohne `user_id`, weil
+die halbe Anmeldung genau das ist — eine Sitzung ohne `user_id` — und eine
+zweite Unterscheidung „halb oder gar nicht" an dieser Stelle nichts
+schützt. Antwort wie bei einer abgelaufenen Sitzung: `session_ende`, Grund
+`nicht_angemeldet`. Seiten leiten weiter wie bisher.
+
+**E-P5c-107 — Das Einrichtungstor ist in einem dritten Fall stumm und steht
+vor dem Einwilligungstor** (AP5, E-P5c-53 ausgeführt). E-P5c-53 nannte zwei
+Fälle (Spalten fehlen, Wartung an); dazu kommt: **kein Serverschlüssel**.
+Ohne ihn verweigert die Einrichtung (E-P5c-54), und ein Tor, dessen einzige
+Tür verschlossen ist, sperrte genau die BetreiberIn aus, die den Schlüssel
+nachtragen soll. Das Tor steht **vor** dem Einwilligungstor, und jenes lässt
+`zweitfaktor.php` durch — sonst schickte das eine Tor auf die Seite des
+anderen. Die Abfrage läuft nur für die Pflichtrollen und nicht über
+`$WACHE_SPALTEN`: Dort risse eine fehlende Spalte den Rückfall der
+Lebenszyklus-Spalten mit.
+
+**E-P5c-108 — Die halbe Anmeldung prüft, aber sie wirkt nicht** (AP5,
+F-P5c-109). Nach dem Passwort prüft `login.php` Kontostatus und Wartung
+wie bisher (`login_zugang()`), damit ein gesperrtes Konto nicht erst nach
+dem Code erfährt, dass es gesperrt ist. **Wirkungen** — die Rücknahme einer
+Selbstlöschung, die neue Sitzung, der Protokolleintrag eines benutzten
+Wiederherstellungscodes — kommen erst mit dem Code. Ein Passwort allein
+darf an einem Konto mit Zweitfaktor nichts verändern.
+
+**E-P5c-109 — Das Vormerkfach räumt ein fester Block; die Wache kennt
+bedingte Formulare** (AP5, F-P5c-111). Der Code-Schritt (`#codeform`) steht
+nur mit halber Anmeldung da, also nie, wenn die Integritätswache liest; und
+ein Inline-Block, den PHP nur nach einem Abbruch ausgibt, wäre für sie
+ebenso fremd. Deshalb: **ein fester Block** auf der Passwortseite, der am
+Datenattribut `#loginform[data-vergessen]` entscheidet, und in `wache.py`
+eine **enge Liste** `BEDINGTE_FORMULARE` — genau `<form method="post"
+id="codeform">`: Fehlen darf es, steht es da, muss es gleich sein. Eine
+allgemeine Ausnahme für „manchmal fehlendes Markup" wäre eine Tür für jedes
+eingeschleuste Formular.
+
+**E-P5c-110 — Das Codeblatt speichert nichts** (AP5, E-P5c-41 ausgeführt).
+Die Codes kommen per POST aus dem Formular der Seite, die sie gerade zeigt
+(Profilkarte oder Tor, Ziel `_blank`), das Konto aus der Sitzung; gespeichert
+ist je Code nur der Hash. Ein Nachdruck ist deshalb unmöglich, und das
+Blatt sagt es. Die Umgebungszeile (E-P5c-50) steht darauf wie auf den
+anderen Blättern.
+
+**E-P5c-111 — Die drei Code-Rechner teilen einen Zähler** (AP5, E-P5c-43
+ausgeführt). Zwei Werkzeuge, die im selben Zeitschritt anmelden, bekämen
+denselben Code, und der zweite scheiterte am Wiederholungsschutz — ein
+roter Lauf ohne Fehler. Die Rechner (PHP, Node, Python) schreiben den
+zuletzt ausgegebenen Schritt in eine Datei unter `$TMPDIR` je Geheimnis,
+unter einer Sperre mit `O_EXCL`, und warten, wenn der nächste Schritt noch
+in der Zukunft liegt. Die Sandbox hat zehn **feste** Wiederherstellungscodes
+(`PRFA2345` …), damit Proben einen verbrauchen können; `pruefkonto.php`
+verweigert außerhalb von `127.0.0.1`/`localhost`.
+
+**E-P5c-112 — „Abbrechen" räumt nur eine angefangene Einrichtung; eine
+angefangene wird wiederverwendet** (AP5). Derselbe Aufruf an einem
+eingeschalteten Zweitfaktor schaltete ihn ab, und ein Knopf „Abbrechen"
+darf das nie. Öffnet jemand das Tor oder die Karte erneut, bevor er den
+Code bestätigt hat, bleibt das angefangene Geheimnis stehen — ein schon
+gescannter QR-Code bleibt gültig.
+
+**E-P5c-113 — Die Zeile „Verwaltungskonten" ist eine reine Funktion der
+Zählung** (AP5, F-P5c-114). `status_verwaltungszeile()` nimmt die drei
+Zahlen aus `status_verwaltungskonten()` und gibt Text, Ton und Plakette;
+so prüft die Zweitfaktorprobe die Tabelle der Lagen mit gesetzten Zahlen,
+nicht nur die eine Lage, die der Bestand der Anlage gerade hat. Ohne die
+Spalten des Zweitfaktors zählt jedes aktive Konto als handlungsfähig.
+
+**E-P5c-114 — Wege der Bedienprobe legen ihr Konto selbst an**
+(AP5). Das Prüfkonto hat seinen Zweitfaktor, das Demo-Konto darf keinen
+haben; wer das Einrichten bedient, braucht ein drittes Konto mit bekanntem
+Passwort. `tools/bedienprobe/probekonto.mjs` legt es an, gibt einen eigenen
+Kontext und räumt ab — neben `wege/`, weil der Läufer dort jede Datei als
+Wegdatei lädt.
+
 | Nr. | Frage | Vorschlag | Entscheidung |
 |---|---|---|---|
 | Q-P5c-31 | *(AP2)* Adressen im Text der Verwaltung: ins Archiv wie gespeichert, oder herausnehmen wie bei Sicherheit | wie gespeichert | **Adressen bleiben** (24.09.2026) — E-P5c-75 |
@@ -2038,6 +2123,86 @@ Prüfstand `haupt`.
   Authenticator-App (Scan und Abtippen), Codeblatt aus Chromium und Firefox
   gedruckt, Station D grün mit `STAGING_TOTP`.
 
+**Bericht AP5 (24.09.2026).**
+
+*Was gebaut ist.* **Der Kern** ist `totp_lib.php`: RFC 6238 (SHA-1, 30 s,
+sechs Stellen, ±1 Schritt), das Geheimnis versiegelt mit Zweck
+`totp|<Konto>`, `totp_schritt` gegen Wiederholung, zehn Codes mit
+`password_hash()` nicht am Serverschlüssel. Migration
+`2026_09_24_zweitfaktor` (erst die Tabelle, dann die Spalten, `skip` fragt
+beides). **Der Anmeldeweg:** `login.php` in Prüfen und Vollenden geteilt —
+`login_zeile()`, `login_zugang($u, $t0, $vollstaendig)`,
+`anmeldung_vollenden()`, `login_code_sperre()` —, nach dem Passwort nur der
+halbe Stand `totp_halb` (fünf Minuten) und 303, der Code-Schritt wie
+M-P5c-02b Bild 3 mit „Wiederherstellungscode verwenden" und „Zurück zur
+Anmeldung", Topf `totp` mit Leiter. `auth_guard.php`: 401 als JSON ohne
+Anmeldung (E-P5c-106), das Einrichtungstor vor dem Einwilligungstor
+(E-P5c-107). **Die Seiten:** `zweitfaktor.php` (Tor, Bild 1 und 2),
+`zweitfaktor_teile.php` für Tor und Profilkarte gemeinsam, die Karte unter
+Einstellungen → Profil (Karte a bis d), `codeblatt.php` auf dem neuen
+`.blatt-druck` (E-P5c-110), `qr.js` auf `qrcode-generator` 2.0.4,
+`zweitfaktor.js` für den Haken. **Die Verwaltung:** Karte auf der
+Kontoseite, `rolle_darf_zweitfaktor_zuruecksetzen()`, Mail
+`totp_zurueckgesetzt`, Protokoll `totp_code_benutzt`; Demo-Sperre und
+Demo-Reset. **Der Bus-Faktor:** `status_verwaltungskonten()` und
+`status_verwaltungszeile()`, die Zeile nach „Umgebung" mit den vier Sätzen
+aus M-P5c-02d. **Die Werkzeuge:** `tools/zweitfaktor/` (Rechner je Sprache
+mit gemeinsamem Zähler, `pruefkonto.php`), Schritt 6b in
+`lokal_einrichten.sh`, alle Werkzeuge mit Anmeldung über den Code-Schritt,
+`STAGING_TOTP` in Stufe 2, die Zweitfaktorprobe, zwei Bedienwege, jsQR
+unter `tools/bedienprobe/vendor/`, drei neue Seiten im Bilderlauf
+(`01a-anmeldung-code`, `30a-einstellungen-profil-zweitfaktor`,
+`30b-codeblatt`). **Die Wache** liest die Hülle aus `ui.php` mit und kennt
+`#codeform` als bedingtes Formular.
+
+*Was dabei schiefging und wie es gelöst ist.* **F-P5c-108:** Beim Messen
+„API mit halber Anmeldung → 401" kam 302 — die Weiterleitung stand vor
+jeder Frage nach JSON, seit jeher (Nr. 211). **F-P5c-109:** Beim Teilen von
+`login.php` gesehen, dass die Rücknahme der Selbstlöschung am Passwort
+hing. **F-P5c-110:** Beim Lesen der Wache für den Code-Schritt gesehen, dass
+sie Produktiv seit Web 20.34.0 täglich rot meldete — zwei Skripte der Hülle,
+die sie nicht kannte. **F-P5c-111:** Dieselbe Wache wäre am Code-Schritt
+rot geworden; der erste Entwurf gab den Räumblock nur bedingt aus.
+**F-P5c-112:** Der Bilderlauf fand zwei Überläufe am Codeblatt, den
+zweiten erst in Firefox. **F-P5c-113:** Meine erste Gegenprobe zum
+Wiederholungsschutz war unvollständig. **F-P5c-114:** Beim Abgleich der
+Abnahme vor dem Commit fehlten der Bedienweg auf der Profilseite und die
+Tabelle des Bus-Faktors; beides nachgebaut. **F-P5c-115:** Die Zuarbeit
+`STAGING_TOTP` stand mit einem Termin, zu dem es das Geheimnis noch nicht
+gibt. **F-P5c-116:** Drei billige Riegel waren rot, alle an meinem Code —
+ein Rollenvergleich von Hand, eine Namensraumadresse, eine Seite ohne
+Gerüst. **F-P5c-117:** Der erste Prüfstand war in einer Probe rot, und
+verursacht hatte es meine eigene: Die Zweitfaktorprobe löste einen
+Demo-Reset aus, und die GPX-Probe danach fand ihre Referenz nicht mehr.
+Dazu **F-P5c-107**, ein Fehler im freigegebenen Bild
+(verschachteltes Formular), gebaut nach der Karte daneben.
+
+*Entscheidungen.* E-P5c-105 bis -114 (2.9), ohne eigene Frage. **Über das
+Konzept hinaus:** 401 für jeden Aufruf ohne Anmeldung, nicht nur den halben
+(E-P5c-106); das Tor auch ohne Serverschlüssel stumm (E-P5c-107).
+**Gegen das Konzept:** `STAGING_TOTP` nach dem Merge statt davor
+(E-P5c-105) — es ging nicht anders.
+
+*Fächerung* (Zeile AP5 in 3.2). **Gefächert: (2)**, die Werkzeuge je
+Sprache — drei Agenten (Node, Python, PHP), nachdem die Rechner und ihre
+Schnittstelle standen; sie haben die Werkzeuge mit Anmeldung auf den
+Code-Schritt umgestellt, ich habe jede Datei gegengelesen und die Proben
+seriell gefahren. **Nicht gefächert: (1) und (3).** `totp_lib.php` entstand
+zusammen mit Migration und Code-Schritt, die ohnehin seriell standen, und das
+Vendoring war eine Datei mit Kopf und ein Eintrag in `Lizenzen.md` — ein
+Agent hätte mehr Übergabe gekostet als Arbeit.
+
+*Nicht gebaut, und warum.* **Der Rückweg über den
+Wiederherstellungsschlüssel** kommt mit RW (E-P5c-104). **„Gerät 30 Tage
+merken"** mit Nr. 242 in Schritt 18, **der Fall der einzigen BetreiberIn
+ohne Gerät und Codes** bleibt Nr. 249. **Die Bedienwege in Firefox und
+WebKit** bleiben bei Nr. 300; von Hand gefahren ist der Bilderlauf der
+neuen Seiten in beiden.
+
+*Zahlen.* Stand der Umsetzung im Statusblock; Prüfbericht in der
+Commit-Nachricht; Messprotokoll im Prüfdokument, Abschnitt 1d; Prüfliste
+P-P5c-20 bis -28.
+
 ### AP6 — Health (E-P5c-17, -52)
 
 **Inhalt.** `api/health.php` über `api_methode('GET')`, Token mit
@@ -2351,6 +2516,17 @@ angegebenen Kennung (A-, B-, … = Bereich und laufende Nummer).*
 | F-P5c-104 | *(AP4, Prüfmittel)* **Der Messstand scheiterte im Prüfstand an einem Konto, das niemand angelegt hatte.** `pruefablauf.json` rief `browserprobe.mjs` allein auf; sie meldet sich als `messstand@gen-em.org` an, und das legt nur `messen.py` im Schritt `konto` an. Im ersten Lauf der Hauptstufe: Anmeldung gescheitert, danach **1086 s** in sieben Zeitgrenzen, `messstand=1`. Die Anmerkung „Zuarbeit der Betreiberin" (F-PK-22) war für die örtliche Anlage überholt — gemessen: `messen.py --frisch` legt Konto und Bestand selbst an | behoben: Aufruf `python3 tools/messstand/messen.py --frisch`; von Hand **9 min 38 s, 5050 Einsätze, sieben Messungen ohne Fehler, Rückgabewert 0**; `tools/messstand/LIESMICH.md` und Nr. 295 berichtigt |
 | F-P5c-105 | *(AP4, Prüfmittel)* **In WebKit löst jedes Bild des Bilderlaufs einen CSP-Bericht aus, und auf den Wartungsseiten wird daraus ein „Konsolenfehler".** `page.screenshot()` von Playwright setzt ein eigenes Stylesheet ein (Cursor verbergen); Chromium umgeht dabei die Richtlinie, WebKit nicht. Die CSP (nur berichtend) meldet `style-src-elem` an `api/csp_bericht.php` — auf gewöhnlichen Seiten geht das durch, während der Wartung antwortet der Endpunkt 503. Gemessen: 16 Konsolenfehler, alle auf `46a-betrieb-updates-wartung` und `07-wartungsseite`, je Breite einer; nachgestellt mit einem Einzelbild — WebKit 1 Bericht, Chromium und Firefox 0. Nebenwirkung: Ein Bilderlauf in WebKit füllt die Tabelle der CSP-Berichte mit Einträgen, die keine Seite verursacht hat | **benannt, nicht behoben** — kein Fehler der Anwendung; gehört zu Nr. 300, wo der Bilderlauf in drei Engines gebaut wird (Weg dort: `caret: 'initial'` in WebKit oder die Berichte des Laufs herausfiltern). Für AP4 gezählt als 0 echte Befunde |
 | F-P5c-106 | *(vor AP5)* **Der Prüfwert `pat_key_check` beweist nicht, dass jemand den Wiederherstellungsschlüssel kennt.** Er ist `SHA-256('edk-ckchk:' + ck)` und liegt in der Datenbank; der Server vergleicht ihn mit dem, was der Browser schickt. Wer einen Datenbankabzug hat, legt ihn vor. Beim Passwort-Zurücksetzen unschädlich (ohne den echten Schlüssel entsteht nur eine unbrauchbare Hülle) — beim Zweitfaktor nach E-P5c-42 hieße es: Postfach und Abzug genügen, um Passwort **und** Zweitfaktor zurückzusetzen. Gefunden beim Lesen für die Zuarbeit aus Rahmenplan 6; gezählt: Staging 0 von 4, Produktiv 1 von 2 ohne Prüfwert (die BetreiberIn — nach ihrem Passwortwechsel am selben Tag 0 von 2) | E-P5c-42, dritter Punkt, aufgehoben; Q-P5c-38 → **Einschubkonzept RW** (E-P5c-104) |
+| F-P5c-107 | *(AP5, Bild)* **Im Einrichtungstor zeigt M-P5c-02b den Knopf „Codeblatt drucken" schmal, auf der Profilkarte (b) breit.** Im Mockup stand das Druckformular im Tor verschachtelt in einem anderen Formular, und der HTML-Parser hat das innere verworfen — die schmale Form ist ein Fehler des Bildes, keine Gestaltung | gebaut wie Karte (b): das vorhandene Druckformular `.rf-druck` in voller Breite des Codeblocks, beide Orte gleich; `Design.md` 9.38 sagt es |
+| F-P5c-108 | *(AP5)* **Ein Aufruf unter `api/` mit halber Anmeldung bekam 302 statt 401** — gegen E-P5c-53. `auth_guard.php` leitete jeden Aufruf ohne `user_id` auf `login.php` um, bevor es fragte, ob das Gegenüber JSON erwartet; so seit jeher (Backlog Nr. 211). Mit dem Code-Schritt ist die Sitzung ohne `user_id` kein Randfall mehr. Gefunden beim Messen des Abnahmepunkts „API mit halber Anmeldung → 401" | behoben (E-P5c-106): 401 als JSON für jeden Aufruf ohne Anmeldung; Nr. 211 erledigt, `curl …/api/day.php` → 401 |
+| F-P5c-109 | *(AP5)* **Die Rücknahme einer Selbstlöschung geschah schon nach dem Passwort.** `login.php` nahm sie gleich hinter der Passwortprüfung zurück. Mit dem Code-Schritt hieße das: Wer nur das Passwort eines Kontos mit Zweitfaktor hat, hält dessen Löschung auf — eine Wirkung ohne vollständige Anmeldung. Gefunden beim Aufteilen von `login.php` in Prüfen und Vollenden | behoben (E-P5c-108): `login_zugang($u, $t0, $vollstaendig)` nimmt erst mit dem Code zurück; die Zweitfaktorprobe prüft beide Seiten (nach dem Passwort noch gesperrt, nach dem Code zurückgenommen) |
+| F-P5c-110 | *(Betrieb, Prüfmittel)* **Die Integritätswache meldete seit Web 20.34.0 jeden Tag `assets/api.js` und `assets/format.js` als zusätzlich.** Seit Schritt 15 (AP8) gibt `ui_seite_start()` beide im Kopf jeder Seite aus; die Wache kannte nur die Quelle der Seite selbst. Gesehen an Lauf 124 gegen Produktiv (24.09.2026), beim Lesen der Wache für den Code-Schritt. Kein Angriff, aber eine Wache, die täglich rot ist, schaut bald niemand mehr an | behoben: `huelle_srcs()` liest die Skripte der Hülle aus demselben Vergleichsstand (`ui.php`), keine feste Liste; Selbstprobe mit neuen Fällen, gegen die Sandbox kein Unterschied |
+| F-P5c-111 | *(AP5, Prüfmittel)* **Die Wache wäre mit dem Code-Schritt rot geworden, bevor ein Angriff kam.** Sie verlangt jedes Formular und jeden Inline-Block der Quelle auf der ausgelieferten Seite. Der Code-Schritt (`#codeform`) steht nur mit halber Anmeldung da, und der erste Entwurf gab den Block, der das Vormerkfach räumt, nur nach einem Abbruch aus — beides sieht die Wache nie. Gefunden vor dem ersten Lauf, beim Lesen von `wache.py` | behoben (E-P5c-109): fester Block mit `data-vergessen`, `BEDINGTE_FORMULARE` für genau `#codeform`; Selbstprobe 43 / 0 |
+| F-P5c-112 | *(AP5)* **Das Codeblatt lief am Bildschirm zweimal über.** Bei 360 px war „Wiederherstellungscodes" breiter als die Spalte (345 gegen 328 px), bei 768 px das A4-Blatt 26 px breiter als das Fenster — seine Regel greift ab 720 px, A4 ist 794 px breit. **Die zweite Stelle fand erst der Lauf in Firefox:** Die Stufe `klein` misst in Chromium drei Breiten, 768 ist keine davon | behoben: `overflow-wrap:break-word` an der Überschrift (wie `.text`, Nr. 221), `max-width:100%` am A4-Blatt; danach Chromium, Firefox, WebKit je 32 Bilder, Überlauf 0; PDF eine Seite |
+| F-P5c-113 | *(AP5, Prüfmittel)* **Die erste Gegenprobe zum Wiederholungsschutz blieb grün.** Abgeschaltet waren der Vergleich mit `totp_schritt` und die Bedingung im `UPDATE`; der wiederholte Code wurde trotzdem abgewiesen. Grund: MySQL meldet für ein `UPDATE` auf denselben Wert null geänderte Zeilen, und `rowCount() === 1` ist damit ein dritter Riegel | kein Fehler der Anwendung — drei Riegel statt zwei. Die Gegenprobe schaltet jetzt alle drei ab und ist rot („derselbe Code angenommen"); der Weg misst das Fenster **nach** der Antwort, damit „abgewiesen" nicht die Uhr war |
+| F-P5c-114 | *(AP5)* **Zwei Abnahmepunkte waren beim Abgleich vor dem Abschluss nicht gebaut.** Der Bedienweg `wege/einstellungen_profil.mjs` (einschalten, falscher und wiederholter Code, Vormerkfach) fehlte — gebaut war nur der Weg durch das Tor —, und die Tabelle „Rollenmix → Ton" des Bus-Faktors prüfte die Probe nur an der einen Lage, die der Bestand hatte | nachgebaut: der Weg `einstellungen-profil-zweitfaktor` mit zwei Gegenproben (E-P5c-114), `status_verwaltungszeile()` als reine Funktion und sechs Lagen in der Zweitfaktorprobe (E-P5c-113) |
+| F-P5c-115 | *(AP5)* **E-P5c-43 verlangte `STAGING_TOTP` vor dem Merge — das geht nicht.** Das Geheimnis entsteht erst, wenn Staging die neue Fassung fährt und das Prüfkonto das Tor durchläuft. Die Zuarbeit in Rahmenplan 6 stand mit diesem Termin seit Fassung 108 | E-P5c-105: nach dem Merge, in fünf Schritten; der erste Stufe-2-Lauf ist rot mit Ansage. Rahmenplan 6 berichtigt, Fassung 113 |
+| F-P5c-116 | *(AP5)* **Drei billige Riegel waren rot, bevor der Prüfstand lief.** Register **Z13**: ein Rollenvergleich von Hand (`$z['role'] === 'betreiberin'`) in `status_verwaltungskonten()`. Vollständigkeit „fremde Quelle" und Textprobe `netz`: die SVG-Namensraumadresse in `qr.js`, eine Kennung und kein Abruf, aber eine absolute Adresse im Quelltext. Vollständigkeit „Seite ohne Gerüst": `zweitfaktor.php` in der Anmeldehülle | behoben: `rolle_ist_betreiberin()`; `qr.js` nimmt den Namensraum vom `<svg>` im Markup (`svg.namespaceURI`) statt ihn hinzuschreiben — ohne Ausnahme; `zweitfaktor.php` als begründete Ausnahme neben `einwilligung.php` („ein Tor, kein Ziel"). Danach Quelltext **9 von 9**, Register **40 Zeilen, 0 über der Decke**, QR weiter = Adresse |
+| F-P5c-117 | *(AP5, Prüfmittel)* **Meine Zweitfaktorprobe machte im Prüfstand die GPX-Probe blind.** Teil 6 rief `demo_zuruecksetzen()`, um zu sehen, dass der Reset den Zweitfaktor leert. Der Reset spielt den Demo-Bestand neu ein, die Einsätze bekommen neue Nummern — und die GPX-Probe, die danach läuft, fand zu **204 von 204** Referenzdateien kein Gegenstück (das Bild aus Nr. 259). Erster Prüfstand: **44 grün, 1 rot**. Einzeln gefahren fiel es nicht auf, weil die GPX-Probe dort nicht danach lief | behoben: `demo_zweitfaktor_leeren()` als eigener Schritt in `demo_lib.php`; die Probe misst ihn und am Quelltext **ohne Kommentare**, dass der Reset ihn genau einmal ruft. **Gegenprobe:** Aufruf auskommentiert → „0 Aufrufe im Code", rot. Zweitfaktorprobe **44 / 0**; zweiter Prüfstand auf frischer Anlage |
 
 | F-P5c-69 | *(AP1, Prüfmittel)* Wer `config.php` in einem Prozess schreibt und die Anlage **in derselben Sekunde** abfragt, sieht den alten Stand: Der OPcache des PHP-Servers prüft Zeitstempel höchstens alle zwei Sekunden. Gemessen an der Statuszeile: Der Fall „Farbe unbekannt" zeigte beim ersten Lauf den vorigen Fall | kein Anwendungsfehler; der Umschalter für Bilderlauf und Statusmessung wartet 3 s (Prüfdokument) |
 

@@ -98,6 +98,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * Seite einem Support mit falschem Token jede Handlung gleich — und die
      * Rollenprobe koennte nicht sehen, welche er ueberhaupt erreicht. */
     handlung_erlaubt($action, SUPPORT_HANDLUNGEN);
+    /* DER ZWEITFAKTOR EINES KONTOS MIT RECHTEN (P5c/AP5, E-P5c-42): Ein
+     * Admin setzt nur Konten der Rolle user zurueck — ebenfalls vor dem
+     * Token, aus demselben Grund wie die Zeile darueber. */
+    if ($action === 'totp_zuruecksetzen'
+        && !rolle_darf_zweitfaktor_zuruecksetzen($userRole, $u['role'] ?? null)) {
+        ui_abbruch(403, 'Kein Zugriff — den Zweitfaktor von Konten mit Rechten setzt '
+                      . 'nur die BetreiberIn zurück.');
+    }
     csrf_check();
     if (demo_ist_demo($uid) && in_array($action, DEMO_GESPERRT, true)) {
         $error = 'Das Demo-Konto wird über den Reiter „Demo-Konto“ verwaltet — '
@@ -437,6 +445,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = 'Die Bestätigung konnte NICHT verschickt werden'
                    . (ist_support() ? ' — bitte an einen Admin oder die BetreiberIn wenden.' : '.');
+        }
+    }
+
+    /* ---- Zweitfaktor zuruecksetzen (P5c/AP5, E-P5c-42) -------------------
+     *
+     * Geheimnis, Zeitschritt und Codes weg; `totp_abschalten()` schreibt den
+     * Protokolleintrag `totp_zurueckgesetzt`. Die Mail geht an die
+     * Kontoadresse — wer nicht darum gebeten hat, soll es erfahren.
+     *
+     * NICHT DAS EIGENE KONTO: Wer sich selbst den Zweitfaktor wegnehmen
+     * kann, braucht fuer eine uebernommene Sitzung nur einen Klick, um die
+     * zweite Schranke dauerhaft zu entfernen. Die Profilkarte kennt fuer
+     * Pflichtrollen deshalb auch kein „Ausschalten". */
+    if ($action === 'totp_zuruecksetzen') {
+        require_once __DIR__ . '/totp_lib.php';
+        if ($uid === $userId) {
+            $error = 'Den eigenen Zweitfaktor setzt eine andere BetreiberIn zurück.';
+        } elseif (!totp_an($uid)) {
+            $error = 'Der Zweitfaktor dieses Kontos ist nicht eingeschaltet — es gibt '
+                   . 'nichts zurückzusetzen.';
+        } else {
+            totp_abschalten($uid, 'verwaltung');
+            require_once __DIR__ . '/mail_lib.php';
+            $zustellung = mail_einreihen('totp_zurueckgesetzt', (string)$u['email'],
+                                         ['link' => app_url('/login.php')]);
+            $notice = 'Der Zweitfaktor ist zurückgesetzt. '
+                    . ($zustellung === MAIL_ZUGESTELLT
+                        ? 'Die Person hat eine Mail bekommen.'
+                        : ($zustellung === MAIL_WARTET
+                            ? 'Die Mail an die Person steht in der Warteschlange.'
+                            : 'Die Mail an die Person konnte NICHT verschickt werden.'));
         }
     }
 
@@ -1098,6 +1137,51 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         <?php endif; ?>
       <?php endif; ?>
     <?php ui_karte_ende(); ?>
+
+    <?php /* ---- Zweitfaktor (P5c/AP5, E-P5c-42, M-P5c-02c Bild 5) ---------
+             Eine Karte nach „Status". Zuruecksetzen: die BetreiberIn fuer
+             alle Rollen, ein Admin fuer Konten der Rolle user
+             (`rolle_darf_zweitfaktor_zuruecksetzen()`); das eigene Konto
+             nicht — dort gilt die Profilkarte. Der Support sieht die Karte
+             nicht; das Demo-Konto kann keinen Zweitfaktor haben. Ohne die
+             Spalten (vor `update.php`) gibt es nichts zu zeigen. */
+          require_once __DIR__ . '/totp_lib.php';
+          $zfZ = totp_zustand($uid);
+          if (!$nurSupport && !$istDemo && !$zfZ['fehlt']):
+            $zfDarf = $uid !== $userId
+                   && rolle_darf_zweitfaktor_zuruecksetzen($userRole, $u['role'] ?? null);
+            $zfWer  = trim((string)($u['name'] ?? '')) !== '' ? (string)$u['name'] : (string)$u['email']; ?>
+    <?php ui_karte_start(['titel' => 'Zweitfaktor', 'id' => 'karte-zweitfaktor',
+        'plakette' => $zfZ['an'] ? ui_plakette('an', ['ton' => 'blau']) : ui_plakette('aus')]); ?>
+      <?php if ($zfZ['an']): ?>
+        <?php ui_zeile(['text' => 'Eingeschaltet',
+            'klein' => 'seit ' . datum_zeit_text($zfZ['seit'], ', ') . ' · Wiederherstellungscodes: '
+                     . $zfZ['codes_offen'] . ' von ' . $zfZ['codes_alle']]); ?>
+        <?php if ($zfDarf): ?>
+        <form method="post">
+          <?= csrf_field() ?><input type="hidden" name="action" value="totp_zuruecksetzen">
+          <input type="hidden" name="id" value="<?= $uid ?>">
+          <div class="listen-form-fuss">
+            <?= ui_knopf(['text' => 'Zurücksetzen …', 'art' => 'neutral',
+                'attr' => ' data-confirm-titel="Zweitfaktor zurücksetzen?" data-confirm-ok="Zurücksetzen"'
+                        . ' data-confirm-tone="normal" data-confirm="' . e($zfWer . ' meldet sich danach nur '
+                        . 'mit dem Passwort an und richtet den Zweitfaktor neu ein. Die alten Codes und '
+                        . 'das Blatt gelten nicht mehr. Die Person bekommt eine Mail, und der Schritt '
+                        . 'steht im Protokoll.') . '"']) ?>
+          </div>
+        </form>
+        <?php endif; ?>
+        <p class="feld-klein"><?= $uid === $userId
+            ? 'Dein eigenes Konto — den Zweitfaktor verwaltest du unter Einstellungen → Profil; zurücksetzen kann ihn eine andere BetreiberIn.'
+            : 'Für Konten der Rolle user auch Admins; für Admin, Support und BetreiberIn nur die BetreiberIn.' ?></p>
+      <?php else: ?>
+        <?php ui_zeile(['text' => 'Nicht eingeschaltet',
+            'klein' => rolle_braucht_zweitfaktor($u['role'] ?? null)
+                ? 'Für diese Rolle Pflicht — eingerichtet wird er bei der nächsten Anmeldung.'
+                : 'Ein Angebot — die Person schaltet ihn selbst unter Einstellungen → Profil ein.']); ?>
+      <?php endif; ?>
+    <?php ui_karte_ende(); ?>
+    <?php endif; ?>
 
     <?php /* ---- Was das Konto halten darf (P5b/AP6, Nr. 37, 48) ----------
              DER SUPPORT SIEHT DIE MENGEN, NICHT DAS FORMULAR (M-P5c-02c):

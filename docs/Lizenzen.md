@@ -68,6 +68,7 @@ Alle unter `server/assets/vendor/`.
 | **Leaflet** | 1.9.4 | BSD-2-Clause | `vendor/leaflet/leaflet.js`, `leaflet.css`, `images/` | Die Karten auf Tagesübersicht, Einsatzansicht, Zeitraum und in der Ortswahl |
 | **SheetJS Community Edition** (`xlsx`) | 0.18.5 | Apache-2.0 | `vendor/xlsx.full.min.js` | Excel-Export und -Import; läuft **im Browser**, die Datei entsteht dort |
 | **zip.js** | 2.8.34 | BSD-3-Clause | `vendor/zipjs.min.js` | Das verschlüsselte Archiv des Exports |
+| **qrcode-generator** (Kazuhiko Arase) | 2.0.4 | MIT | `vendor/qrcode.js` | Der QR-Code beim Einrichten des Zweitfaktors (seit Web 20.42.0, E-P5c-41). Gebraucht wird **nur die Modulmatrix**; das SVG baut `assets/qr.js` selbst, mit Klassen und Token |
 
 **Prüfsummen** (SHA-256, wie im Dateikopf vermerkt):
 
@@ -76,9 +77,15 @@ Alle unter `server/assets/vendor/`.
 | `leaflet.js` | `db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a` |
 | `xlsx.full.min.js` | `c9506197caf809a075b6dee1da0d36fb19da7158ffe8a88e7b0c96c5d8623c99` |
 | `zipjs.min.js` | `52351e49074131fca386e6b13913e1c0bad5e66af7a2b87a815c0d0ca8714982` |
+| `qrcode.js` | `79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c` (ohne den Herkunftskopf) |
 
-Alle drei sind über das npm-Paketarchiv bezogen (`npm pack <paket>@<version>`)
-und unverändert übernommen. Leaflet bringt fünf PNG-Dateien mit
+Alle vier sind über das npm-Paketarchiv bezogen (`npm pack <paket>@<version>`)
+und unverändert übernommen; `qrcode.js` trägt oben einen Herkunftskopf, die
+Prüfsumme gilt für die Datei darunter.
+
+**Warum der QR-Code nicht von einem Dienst kommt:** Er trägt das Geheimnis des
+Zweitfaktors. Ein fremder Erzeuger — ein Diagrammdienst, eine Bild-API — sähe
+es und könnte fortan jeden Code des Kontos rechnen. Leaflet bringt fünf PNG-Dateien mit
 (`vendor/leaflet/images/`) — Marker, Markerschatten und das Ebenensymbol; sie
 gehören zur Bibliothek und stehen unter derselben Lizenz.
 
@@ -440,6 +447,16 @@ Die Bauwerkzeuge (Gradle, das Android-Gradle-Plugin, der Kotlin-Compiler)
 sind Entwicklungsumgebung wie Playwright und Pillow — die Fassungen stehen in
 `android/gradle/libs.versions.toml`.
 
+### 7.0 Der QR-Decoder jsQR (seit Web 20.42.0)
+
+**jsQR** 1.4.0 (Cosmo Wolfe), **Apache-2.0**, liegt unter
+`tools/bedienprobe/vendor/jsQR.js`, die Lizenz daneben (`jsQR-LICENSE`).
+Bezogen über das npm-Paketarchiv (`npm pack jsqr@1.4.0`), Datei
+`dist/jsQR.js`, SHA-256 `bc40c8a15196236b2314db0856f72ca0b49980cd5413b8c852a7349f5fee0859`
+(ohne den Herkunftskopf). **Nur Prüfwerkzeug** (E-P5c-41, -87): Der Bedienweg
+„Zweitfaktor einrichten" liest damit den QR-Code aus einem Abzug und hält den
+Inhalt gegen die angezeigte otpauth-Adresse. Zur Laufzeit wird er nie geladen.
+
 ### 7.1 Das GPX-1.1-Schema (seit Web 10.3.0)
 
 Eine Ausnahme von „hier steht nur, was ausgeliefert wird" — sie steht
@@ -563,6 +580,7 @@ Backlog Nr. 230.
 
 | Fassung | Was |
 |---|---|
+| Web 20.42.0 (P5c/AP5) | Abschnitt 3: **qrcode-generator** 2.0.4 (MIT) für den QR-Code des Zweitfaktors (E-P5c-41, hebt SP-11 in diesem Punkt auf). Nur die Modulmatrix; das SVG baut die Anwendung. Abschnitt 7.0: **jsQR** 1.4.0 (Apache-2.0) als Prüfwerkzeug unter `tools/bedienprobe/vendor/` (E-P5c-87). Beide mit Herkunft und SHA-256 im Dateikopf. |
 | Web 20.39.0 (P5c/AP2) | Abschnitt 5: **ein neues Zeichen**, Tabler Icons **„list"** (MIT), Outline, Strich 2 im 24-px-Raster wie der übrige Vorrat — `protokoll.svg`. Es trägt den Menüpunkt Verwaltung → Protokoll; jeder Punkt der Einstellungsleiste trägt ein Zeichen, und der Vorrat hatte keines für eine Ereignisliste. **57 → 58 Dateien.** Die Zahl in Abschnitt 5 stand noch bei **56** und war damit schon vor diesem Paket um ein Zeichen hinter dem Ordner zurück; gezählt am 24.09.2026: 58 `.svg` im Ordner. Kein neuer Fremdbestandteil und kein neuer Laufzeitdienst: derselbe Satz, aus dem die übrigen kommen. |
 | Web 19.3.0 (Backlog-Runde 2) | Abschnitt 5: **ein neues Zeichen**, Tabler Icons **„mail"** (MIT), Outline, Strich 2 im 24-px-Raster wie der übrige Vorrat — `mail.svg`. Es trägt den Knopf „Testmail an mich" auf Betrieb → Status (Backlog Nr. 120). **52 → 53 Dateien.** Kein neuer Fremdbestandteil und kein neuer Laufzeitdienst: derselbe Satz, aus dem die 52 kommen. Gebraucht wurde es, weil der Vorrat kein Zeichen für „E-Mail" hatte (gemessen: 0 Treffer) und alle elf vorhandenen Kopfaktionen eines tragen — eine textnackte wäre eine neue Darstellung gewesen. |
 | Web 16.0.0 (S9/AP4) | Abschnitt 5: `veranstaltung.svg` trägt jetzt Tabler Icons **„ticket“** statt „building-stadium“ — dieselbe Quelle, dieselbe Lizenz, eine andere Zeichnung. Grund ist die Lesbarkeit im Kartenschild: Gemessen am 07.09.2026 hält „ticket“ seine eine Binnenfläche von 96 px bis herunter auf 16 px unverändert, während „building-stadium“ bei 18 px zwei seiner vier Binnenflächen auf einen einzelnen Pixel verliert und bei 16 px zwei ganz schließt; der Deckungsgrad liegt bei 33 statt 26 Prozent. M-S9-02 hatte „ticket“ selbst empfohlen und „building-stadium“ bei 20 px „einen Klumpen“ genannt. **Die Zahl der Dateien bleibt 52.** |

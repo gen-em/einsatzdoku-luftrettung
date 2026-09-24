@@ -14,6 +14,221 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.42.0] — 2026-09-24
+
+**Der Zweitfaktor.** P5c/AP5 (Schritt 10c), R38, Backlog Nr. 141; E-P5c-15,
+-41 bis -43, -53, -54, -56, -61, -63, -65. Nebenstufe **mit Migration**: drei
+Spalten an `users` (`totp_geheimnis`, `totp_seit`, `totp_schritt`) und die
+Tabelle `totp_codes`. **Nach dem Deploy muss eine BetreiberIn `update.php`
+ausführen** (Betrieb → Updates); bis dahin schließt der Torwächter die
+Anlage, und **die Wartung bleibt danach an**, bis sie jemand ausschaltet.
+Solange die Spalten fehlen, schweigt der Zweitfaktor ganz — keine
+Code-Abfrage, kein Tor —, sonst käme niemand mehr an `betrieb_updates.php`.
+**Danach landet jedes Konto mit der Rolle Support, Admin oder BetreiberIn
+bei der nächsten Anmeldung im Einrichtungstor**; mit einer Authenticator-App
+zur Hand ist das in zwei Minuten erledigt.
+
+**Stufe 2 ist nach dem Merge einmal rot, und das ist die Ansage** (E-P5c-105).
+Das Prüfkonto auf Staging hat Verwaltungsrechte und damit einen
+Pflicht-Zweitfaktor; der Kreislauf braucht sein Geheimnis als Secret
+`STAGING_TOTP`. Das Geheimnis entsteht erst, wenn Staging diese Fassung
+fährt — eintragen lässt es sich also nicht vorher, wie E-P5c-43 es
+vorsah. Die Reihenfolge steht in `docs/Rahmenplan.md` Abschnitt 6.
+
+### Neu
+
+- **Web: Zweitfaktor nach RFC 6238** (E-P5c-15) — Pflicht für Support, Admin
+  und BetreiberIn, Angebot für alle übrigen, gesperrt im Demo-Konto, dessen
+  Zugangsdaten öffentlich sind. Bis hierher war das Passwort Anmeldung und
+  Datenschlüssel zugleich, und wer es abfischte, hatte beides (Krypto-Review
+  K-5). SHA-1, 30 Sekunden, sechs Ziffern, ein Zeitschritt Spiel nach jeder
+  Seite. Das Geheimnis liegt mit dem Serverschlüssel versiegelt, Zweck
+  `totp|<Konto>` — es lässt sich nicht an ein anderes Konto umhängen. **Kein
+  Code gilt zweimal:** `totp_schritt` hält den zuletzt angenommenen
+  Zeitschritt; ohne ihn wäre ein mitgelesener Code rund 90 Sekunden lang
+  ein zweites Mal gut. Eingeschaltet ist der Zweitfaktor erst nach einem
+  bestätigten Code — ein Konto, dessen App nie einen geliefert hat, sperrt
+  sich nicht selbst aus.
+- **Web: Die Code-Abfrage steht vor der Sitzung** (E-P5c-53, M-P5c-02b
+  Bild 3). Nach dem Passwort gibt es nur einen halben Stand, fünf Minuten
+  lang; `user_id` und die neue Sitzungskennung kommen erst mit dem Code.
+  Damit ist eine halbe Anmeldung für jede Seite und jeden Endpunkt unter
+  `api/` schlicht „nicht angemeldet", ohne dass einer davon den Zweitfaktor
+  kennen muss — ein Tor **nach** der Sitzung hätte 20 Endpunkte und sechs
+  Stellen außerhalb von `auth_guard.php` einzeln absichern müssen. Der
+  Code-Schritt lädt kein `unlock.js`, und wer ihn abbricht, dem räumt die
+  Anmeldeseite die abgeleiteten Schlüsselhälften aus dem Vormerkfach. Statt
+  des Codes geht ein **Wiederherstellungscode**. Raten bremst der eigene
+  Topf `totp` mit Leiter, der siebte.
+- **Web: Das Einrichtungstor `zweitfaktor.php`** (E-P5c-61, M-P5c-02b
+  Bild 1 und 2), in der Anmeldehülle. Eine Pflichtrolle ohne Zweitfaktor
+  erreicht keine andere Seite, die API antwortet ihr 403 als JSON; offen
+  bleiben nur die Einrichtung und das Abmelden. **Stumm in drei Fällen**,
+  und jeder ist ein Riegel und kein Entgegenkommen: Die Spalten fehlen, die
+  Wartung ist an, oder es gibt keinen Serverschlüssel — dann verweigert die
+  Einrichtung, und ein Tor mit verschlossener Tür sperrte genau die
+  BetreiberIn aus, die den Schlüssel nachtragen soll. Das Tor steht **vor**
+  dem Einwilligungstor: Die Zustimmung einer Sitzung, die nicht sicher der
+  Kontoinhaberin gehört, ist nichts wert.
+- **Web: Die Karte „Zweitfaktor" unter Einstellungen → Profil**
+  (M-P5c-02b, Karte a bis d). Einrichten mit QR-Code, dem
+  `otpauth://`-Verweis als Knopf (auf dem Handy öffnet er die App) und dem
+  Geheimnis in Vierergruppen zum Abtippen; danach die Zeilen „Eingeschaltet"
+  und „Wiederherstellungscodes N von 10", neue Codes erzeugen, ausschalten —
+  das Letzte nur ohne Pflicht. „Abbrechen" räumt nur eine **angefangene**
+  Einrichtung; an einem eingeschalteten Zweitfaktor schaltete derselbe
+  Aufruf ihn ab, und ein Knopf „Abbrechen" darf das nie. Lässt sich das
+  Geheimnis auf dieser Anlage nicht öffnen (anderer Serverschlüssel nach
+  einem Wiederanlauf), sagt die Karte es, statt dass es erst beim nächsten
+  Anmelden auffällt.
+- **Web: Der QR-Code** (E-P5c-41). `qrcode-generator` 2.0.4 (Kazuhiko Arase,
+  MIT) ist vendoriert und liefert nur die Modulmatrix; das SVG baut
+  `assets/qr.js` selbst, mit Klassen statt `style="…"` — die
+  Inhaltsrichtlinie bleibt, wie sie ist. Das hebt SP-11 auf („der Text
+  genügt"): Gescannt wird im Normalfall, gerade bei den Pflichtrollen.
+- **Web: Zehn Wiederherstellungscodes und das Codeblatt** (E-P5c-42, -65).
+  Je acht Zeichen aus einem Vorrat ohne verwechselbare Zeichen, gespeichert
+  mit `password_hash()`, einmal sichtbar. **Sie hängen nicht am
+  Serverschlüssel** — sie sind der Rückweg für genau den Fall, dass er
+  fehlt. `codeblatt.php` druckt sie auf eine A4-Seite, mit einem Kästchen
+  vor jedem Code; es ist der erste Verwender des neuen Druckblatts
+  `.blatt-druck` (`Design.md` 9.39, freigegeben mit M-P5c-01f und -02).
+  Das Blatt nimmt die Codes aus dem Formular der Seite, die sie gerade
+  zeigt, und das Konto aus der Sitzung; gespeichert wird nichts, und
+  nachdrucken lässt es sich deshalb nicht — das Blatt sagt es.
+- **Web: Zurücksetzen durch die Verwaltung** (E-P5c-42) auf der Kontoseite:
+  die BetreiberIn für alle Rollen, ein Admin für NutzerInnen, der Support
+  nie, **niemand am eigenen Konto**. Die Mail `totp_zurueckgesetzt` geht
+  immer an die Kontoadresse — wer das Zurücksetzen nicht erbeten hat,
+  erfährt so, dass die zweite Schranke gefallen ist. Im Protokoll
+  `totp_zurueckgesetzt`, und neu **`totp_code_benutzt`** (orange), sobald
+  sich jemand mit einem Wiederherstellungscode anmeldet.
+- **Web: Die Zeile „Verwaltungskonten" unter Betrieb → Status** — der
+  Bus-Faktor (E-P5c-16, -44, -56, -63; M-P5c-02d). Handlungsfähig ist ein
+  aktives Konto mit eingeschaltetem Zweitfaktor; wer im Einrichtungstor
+  hängt, kann nichts. Orange, solange weniger als zwei BetreiberInnen
+  handlungsfähig sind, mit vier Sätzen für die vier Lagen. **Orange und
+  nicht Rot:** Jede neue Anlage hat genau eine BetreiberIn, und Rot hieße
+  dort dauerhaft „es arbeitet nicht".
+- **Werkzeug: Ein Code-Rechner je Sprache** (E-P5c-43), `tools/zweitfaktor/`:
+  `totp.php`, `totp.mjs`, `totp.py`, dazu `pruefkonto.php`, das dem
+  Prüfkonto der Sandbox ein bekanntes Geheimnis und zehn bekannte Codes
+  gibt (`lokal_einrichten.sh`, Schritt 6b). **Die drei teilen einen
+  Zähler** unter einer Sperre: Zwei Werkzeuge, die im selben Zeitschritt
+  anmelden, bekämen sonst denselben Code, und der zweite scheiterte am
+  Wiederholungsschutz. Alle Werkzeuge, die sich anmelden, gehen jetzt über
+  den Code-Schritt, und der Bilderlauf erkennt das Einrichtungstor als
+  gescheiterte Anmeldung — sonst fotografierte er es unter dem Namen jeder
+  Admin-Seite (die Falle aus F-P3-AQ, diesmal mit einem Tor). Kein
+  Schalter schaltet die Pflicht für Prüfläufe ab: Ein Schalter, der auf
+  Produktiv nie an sein darf und den nichts daran hindert, schwächt die
+  Zusage.
+- **Werkzeug: Zweitfaktorprobe** (`tools/proben/zweitfaktor/`, 44
+  Prüfungen) und **zwei Bedienwege**: `zweitfaktor-einrichten` liest den
+  QR-Code mit jsQR 1.4.0 (Apache-2.0, nur Prüfwerkzeug unter
+  `tools/bedienprobe/vendor/`) aus einem Abzug und hält ihn gegen die
+  angezeigte Adresse; `einstellungen-profil-zweitfaktor` schaltet ein, meldet
+  sich mit falschem, mit wiederholtem und mit richtigem Code an und bricht
+  den Code-Schritt einmal ab.
+
+### Geändert
+
+- **Web: Ein Aufruf unter `api/` ohne Anmeldung bekommt 401 als JSON statt
+  einer Weiterleitung** (E-P5c-106, F-P5c-108, Backlog Nr. 211). Bis hierher
+  folgte `fetch()` der Umleitung auf `login.php` und bekam HTML, wo es JSON
+  erwartete; der Aufrufer sah einen Syntaxfehler statt „nicht angemeldet".
+  Mit dem Code-Schritt ist das kein Randfall mehr, sondern der Normalfall
+  einer halben Anmeldung: Es gibt eine Sitzung, aber keine `user_id`. Die
+  Antwort ist dieselbe wie bei einer abgelaufenen Sitzung
+  (`session_ende`, Grund `nicht_angemeldet`).
+- **Web: Das Schlüsselblatt** nennt die Zweitfaktor-Geheimnisse unter dem,
+  was am Serverschlüssel hängt — wer ihn verliert, verliert sie, und die
+  Wiederherstellungscodes tragen dann die Anmeldung.
+- **Kette: `STAGING_TOTP`** — Stufe 2 reicht das Geheimnis an den Kreislauf
+  (`--admin-totp`). Fehlt es, ist der Lauf rot und sagt, woher es kommt:
+  Überspringen ist rot (E-KH-12).
+
+### Behoben
+
+- **Web: Die Selbstlöschung wurde schon mit dem Passwort zurückgenommen**
+  (F-P5c-109). Wer sich während der Frist anmeldet, nimmt die eigene
+  Löschung zurück — das stand bisher gleich hinter der Passwortprüfung. Mit
+  dem Code-Schritt hieße das: Wer nur das Passwort hat, hält die Löschung
+  eines fremden Kontos auf. Zurückgenommen wird jetzt erst mit der ganzen
+  Anmeldung.
+- **Werkzeug: Die Integritätswache meldete seit Web 20.34.0 jeden Tag zwei
+  Skripte als zusätzlich** (F-P5c-110). Seit Schritt 15 stehen
+  `assets/api.js` und `assets/format.js` im Kopf **jeder** Seite —
+  ausgegeben von `ui.php`, nicht von der Seite selbst. Die Wache kannte nur
+  die Quelle der Seite und meldete beide als fremd — gesehen an Lauf 124
+  gegen Produktiv (24.09.2026). Eine Wache, die jeden Tag rot ist, schaut
+  bald niemand mehr an. Sie liest die Hülle jetzt aus demselben Vergleichsstand wie die Seite
+  (`huelle_srcs()`), nicht aus einer festen Liste, die der nächsten
+  Änderung an `ui.php` hinterherliefe. **Und sie kennt bedingtes Markup**
+  (F-P5c-111): Das Formular des Code-Schritts steht nur mit halber
+  Anmeldung da, also nie, wenn die Wache liest. `BEDINGTE_FORMULARE` nimmt
+  genau `<form method="post" id="codeform">` aus — fehlen darf es, steht es
+  da, muss es gleich sein. Das Räumen des Vormerkfachs ist dafür ein
+  **fester** Block, der an einem Datenattribut entscheidet, statt eines
+  Blocks, den PHP nur manchmal ausgibt.
+
+### Nachweis
+
+**Zweitfaktorprobe 44 / 0:** RFC 6238 Anhang B **6 / 6** (die achtstelligen
+Werte modulo 10⁶), Wiederholung und Schreibweisen, das Tor samt 403 der API,
+der Code-Schritt über HTTP (falsch, Wiederherstellungscode einmal gut und
+dann nicht, Sperre nach fünf Fehlversuchen, Vormerkfach), Selbstlöschung,
+Demo-Reset — gemessen an seinem Schritt, nicht am ganzen Reset (F-P5c-117) —
+und die Tabelle des Bus-Faktors: sechs Lagen mit gesetzten Zahlen, dazu die
+Zählung am Bestand. **Rollenprobe 287 / 0** (67 Zeilen × 4 Rollen,
+zwei davon neu: `totp_zuruecksetzen` für ein NutzerInnen- und ein
+Admin-Konto). **Wartungsprobe 67 / 0**, **Protokollprobe 36 / 0**,
+**Ratenprobe 50 / 0** mit genau **7** Töpfen mit Leiter, **Mailprobe 51 / 0**
+(der Katalog samt neuer Vorlage). **Bedienwege 2 / 2**, beide mit Gegenprobe:
+Wiederholungsschutz ab → „derselbe Code angenommen", Räumen des Vormerkfachs
+ab → „belegt → belegt". Die erste Gegenprobe war unvollständig und blieb grün
+(F-P5c-113): Ein `UPDATE` auf denselben Wert meldet in MySQL null geänderte
+Zeilen, und schon das wies den Code ab — ein dritter Riegel, den erst das
+Abschalten aller drei zeigte. **Wache:** Selbstprobe 43 / 0, gegen die Sandbox
+kein Unterschied.
+
+**Vor `update.php`** nachgestellt: Spalten und Tabelle entfernt, Eintrag der
+Migration und gemerkter Katalog-Hash verworfen. Die Anmeldung der
+BetreiberIn geht ohne Code-Schritt, die erste angemeldete Anfrage schaltet
+die Wartung ein, `betrieb_updates.php` 200 mit der Migration, Status 200
+(jedes aktive Konto zählt als handlungsfähig, „nur 1"), Statistik 200.
+`php server/update.php` legt drei Spalten und die Tabelle an, **die Wartung
+bleibt an**; nach dem Ausschalten landet die BetreiberIn im
+Einrichtungstor. **Unter PHP 8.3.33 von Hand** (F-P5c-103, Nr. 300): dieselbe
+Migration über Betrieb → Updates, danach Zweitfaktorprobe 43 / 0,
+Rollenprobe 287 / 0, Wartungsprobe 67 / 0, Bedienwege 2 / 2, keine
+PHP-Meldung im Protokoll des Behälters. **Backlog Nr. 211:**
+`curl …/api/day.php?day=2026-01-01` → 401 mit `{"error":"session_ende",…}`.
+
+**Bilderlauf der vier Seiten in drei Motoren** (Anmeldung, Code-Schritt,
+Profilkarte, Codeblatt; je 8 Breiten): Chromium, Firefox und WebKit je **32
+Bilder, Überlauf 0, Konsolenfehler 0, Knöpfe 0**. Zweimal war es anders
+(F-P5c-112): Die Überschrift „Wiederherstellungscodes" war bei 360 px breiter
+als die Spalte (345 gegen 328 px) — jetzt `overflow-wrap:break-word` wie
+`.text` —, und das A4-Blatt stand bei 768 px 26 px über, weil seine Regel ab
+720 px greift und A4 794 px breit ist — jetzt `max-width:100%`. Die zweite
+Stelle hat erst der Lauf in Firefox gefunden: Der Chromium-Lauf der Stufe
+`klein` misst 768 px gar nicht. Das Codeblatt als PDF: **eine Seite**.
+
+**Der erste Prüfstand war in einer Probe rot, und die Ursache war eine
+andere Probe** (F-P5c-117): Die Zweitfaktorprobe prüfte den Demo-Reset,
+indem sie ihn auslöste; der Reset spielt den Demo-Bestand mit neuen
+Nummern ein, und die GPX-Probe danach fand zu 204 von 204 Referenzdateien
+kein Gegenstück. Jetzt misst sie den Schritt selbst
+(`demo_zweitfaktor_leeren()`) und am Quelltext, dass der Reset ihn ruft.
+
+**Was fehlt, mit Absicht:** der Rückweg über den Wiederherstellungsschlüssel
+— E-P5c-42 sah ihn gegen `pat_key_check` vor, einen Wert, den jeder
+Datenbankabzug enthält (F-P5c-106); er kommt fälschungssicher mit dem
+Einschubkonzept RW (E-P5c-104). „Gerät 30 Tage merken" kommt mit dem
+Cookie-Token aus Nr. 242 in Schritt 18, und der Fall „die einzige
+BetreiberIn verliert Gerät und Codes" bleibt Nr. 249, ebenfalls Schritt 18.
+
 ## [Web 20.41.0] — 2026-09-24
 
 **Die vierte Rolle: Support.** P5c/AP4 (Schritt 10c), R38, E-P5c-14, -40,

@@ -235,6 +235,17 @@ in der Dokumentation steht, ist keiner mehr.
 | `_MAIL_PASS` | dessen Passwort | gesetzt, 20 Zeichen |
 | `CIQ_GERAETE_URL` | Gerätedateien des Uhr-SDK | gesetzt, 33 Zeichen |
 
+> **Der Zweitfaktor des Prüfkontos (seit Web 20.42.0) ist kein Wert dieser
+> Tabelle.** In der Sandbox rechnen die Werkzeuge mit dem Geheimnis der
+> Sandbox, das `tools/zweitfaktor/pruefkonto.php` beim Einrichten einträgt
+> (`lokal_einrichten.sh`, Schritt 6b). **`NADOKU_TOTP` muss hier leer
+> bleiben** — ist es gesetzt, rechnen die Rechner mit diesem Geheimnis, und
+> die Anmeldung an der Sandbox scheitert am Code-Schritt; die Meldung nennt
+> die Quelle. Gegen Staging reicht die Kette das Secret `STAGING_TOTP`
+> durch (`tools/zweitfaktor/LIESMICH.md`); aus der Arbeitsumgebung heraus
+> gibt es dafür keinen Wert, und die Staging-Werkzeuge nehmen es als
+> Schalter (`--admin-totp`).
+
 > **Die drei Mailwerte tragen einen führenden Unterstrich und kein Präfix.**
 > Sie heißen `_MAIL_URL`, `_MAIL_USER`, `_MAIL_PASS` — nicht
 > `NADOKU_STAGING_MAIL_URL`. Wer die Kurzschreibweise `NADOKU_STAGING_URL,

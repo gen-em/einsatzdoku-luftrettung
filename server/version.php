@@ -7437,5 +7437,46 @@ declare(strict_types=1);
  *   kennt `support`. `db_spalte_typ()` fragt den vollen Typ einer Spalte.
  *   Eine neue Migration hebt den Pruefstand von selbst auf die Hauptstufe
  *   (Stufenregel, E-P5c-88).
+ *
+ * 20.42.0 — DER ZWEITFAKTOR (P5c/AP5, R38, Nr. 141; E-P5c-15, -41 bis -43,
+ *   -53, -54, -56, -61). Nebenstufe MIT MIGRATION: drei Spalten an `users`
+ *   (`totp_geheimnis`, `totp_seit`, `totp_schritt`) und die Tabelle
+ *   `totp_codes`. Nach dem Deploy `update.php`; die Wartung bleibt an, bis
+ *   es gelaufen ist. Bis dahin schweigt der Zweitfaktor ganz — ohne die
+ *   Spalten fragt die Anmeldung keinen Code, und das Tor laesst durch.
+ *
+ *   TOTP NACH RFC 6238, PFLICHT FUER SUPPORT, ADMIN UND BETREIBERIN, ANGEBOT
+ *   FUER ALLE UEBRIGEN, GESPERRT IM DEMO-KONTO. Das Geheimnis liegt
+ *   versiegelt mit dem Serverschluessel, Zweck `totp|<user_id>`; zehn
+ *   Wiederherstellungscodes liegen als `password_hash()` und haengen
+ *   bewusst NICHT an ihm — sie sind der Rueckweg fuer genau den Fall, dass
+ *   er fehlt. Kein Code gilt zweimal: `totp_schritt` haelt den zuletzt
+ *   angenommenen Zeitschritt.
+ *
+ *   DIE CODE-ABFRAGE STEHT VOR DER SITZUNG. Nach dem Passwort gibt es nur
+ *   den halben Stand `totp_halb` (fuenf Minuten), `user_id` erst mit dem
+ *   Code — damit ist die halbe Anmeldung fuer jede Seite und jeden
+ *   Endpunkt schlicht „nicht angemeldet", ohne dass einer davon weiss. Ein
+ *   API-Aufruf ohne Anmeldung bekommt dafuer jetzt 401 als JSON statt einer
+ *   Weiterleitung. Die Selbstloeschung nimmt erst die ganze Anmeldung
+ *   zurueck, nicht das Passwort allein. Pflichtrollen ohne Zweitfaktor
+ *   landen im Einrichtungstor `zweitfaktor.php`, in der Anmeldehuelle;
+ *   stumm, solange die Spalten fehlen, die Wartung an ist oder kein
+ *   Serverschluessel eingetragen ist.
+ *
+ *   EINRICHTEN, ZURUECKSETZEN, ZAEHLEN. Profilkarte und Tor mit QR-Code
+ *   (`qrcode-generator` 2.0.4, MIT, vendoriert — nur die Modulmatrix, das
+ *   SVG baut die Anwendung), Verweis und Geheimnis zum Abtippen; die Codes
+ *   einmal sichtbar und als Codeblatt druckbar — dem ersten Verwender des
+ *   Druckblatts `.blatt-druck`. Die Verwaltung setzt zurueck: die
+ *   BetreiberIn fuer alle Rollen, ein Admin fuer NutzerInnen, niemand am
+ *   eigenen Konto; Mail an die Kontoadresse, Eintrag im Protokoll. Betrieb
+ *   → Status zaehlt handlungsfaehige Verwaltungskonten (Bus-Faktor, orange
+ *   unter zwei BetreiberInnen).
+ *
+ *   WAS FEHLT, MIT ABSICHT: der Rueckweg ueber den
+ *   Wiederherstellungsschluessel. E-P5c-42 sah ihn gegen `pat_key_check` vor
+ *   — einen Wert, den jeder Datenbankabzug enthaelt (F-P5c-106). Er kommt
+ *   faelschungssicher mit dem Einschubkonzept RW.
  */
-const WEB_VERSION = '20.41.0';
+const WEB_VERSION = '20.42.0';

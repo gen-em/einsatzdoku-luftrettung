@@ -13,6 +13,8 @@
  *   schritte: Kommaliste aus anlegen,lesen,veraendern,reset,sperren
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
+/* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs (P5c/AP5). */
+import { codeSchritt } from '../../motor.mjs';
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
@@ -98,6 +100,17 @@ async function anmelden(mail, pw) {
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
     seite.click('#loginform button[type="submit"]'),
   ]);
+  /* DER ZWEITFAKTOR (P5c/AP5, E-P5c-43). Die Administration dieses Laufs ist
+   * das Prüfkonto, eine BetreiberIn mit Zweitfaktor; nach dem Passwort fragt
+   * `login.php` nach dem Code. `codeSchritt()` geht ihn. Das Einrichtungstor
+   * meldet er als Scheitern — seine Adresse enthält `login.php` nicht, und
+   * der Riegel darunter läse sonst das Tor statt der Kontoliste. Der Grund
+   * wird gesagt, weil er auf der Seite nicht steht. */
+  const zf = await codeSchritt(seite);
+  if (!zf.ok) {
+    melde(`Anmeldung als ${mail}: ${zf.meldung}`);
+    return false;
+  }
   if (seite.url().includes('login.php')) {
     const t = await seite.locator('body').innerText().catch(() => '');
     const m = t.match(/vorübergehend gesperrt[^.]*?(\d{1,2}:\d{2})/i);

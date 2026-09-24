@@ -1208,26 +1208,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     kein neuer Befund, sondern ein Grund mehr, Branch-Schutz und 2FA nicht
     weiter zu schieben.
 
-141. **Zweitfaktor für alle Konten.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-5).* Passwort ist
-    Anmeldung **und** Datenschlüssel; Phishing genügt für alles. R38 sieht
-    TOTP nur für Admin-Konten vor. **Entschieden (R78):** für alle Konten
-    angeboten, für Admins Pflicht; Geheimnis serverseitig versiegelt
-    (`sk_versiegeln()`), `otpauth://`-Text statt QR-Fremdbestandteil, acht
-    Ersatzcodes gehasht, „Gerät 30 Tage merken". Schützt die Anmeldung,
-    nicht den Offline-Angriff (dafür S10). Zuordnung: **P5** (erweitert
-    R38).
-
-    **Zuordnung (20.09.2026): 10c, AP5** — dort wird der Zweitfaktor konkretisiert: Pflicht für Admin, BetreiberIn und Support, Angebot für alle übrigen (E-P5c-15, F-P5c-1).
-
-    **Berichtigt 23.09.2026 (E-P5c-41, -42):** **QR-Code statt
-    `otpauth://`-Text** — aus der vendorierten Bibliothek `qrcode-generator`,
-    das SVG baut die Anwendung selbst; der Text steht daneben. **Zehn**
-    Ersatzcodes statt acht, gehasht, unabhängig vom Serverschlüssel.
-    **„Gerät 30 Tage merken" kommt nicht mit 10c**, sondern mit dem
-    Cookie-Token aus Nr. 242 in Schritt 18 — zwei Cookie-Mechanismen werden nur
-    einmal gebaut. Zuordnung bleibt **10c AP5**.
-
 146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.**
     *Aufgenommen 06.09.2026 (R78).* Drei Fragen, keine Fehler: **Argon2id
     statt PBKDF2** (WASM-Fremdbestandteil gegen GPU-Resistenz; nach S10
@@ -2365,30 +2345,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     werden — er ändert nicht, was bei einem Deadlock geschieht. Wer beides
     in einem Paket macht, kann hinterher nicht sagen, welche der beiden
     Änderungen die Probe grün gemacht hat.
-211. **Ein `/api/`-Aufruf ohne Sitzung bekommt eine Weiterleitung statt
-    einer JSON-Antwort.** `auth_guard.php` prüft in Zeile 33
-    `empty($_SESSION['user_id'])` und antwortet mit
-    `header('Location: login.php')` — **vor** jeder Unterscheidung, ob das
-    Gegenüber JSON erwartet. `ist_api_aufruf()` gibt es, aber es wird erst
-    weiter unten benutzt, für die Fälle „Sitzung abgelaufen" und „Rolle reicht
-    nicht" (dort korrekt: 401 bzw. 403 als JSON).
-
-    **Die Folge ist klein, aber sie ist eine Unwahrheit:** Ein Werkzeug oder
-    ein Skript, das einen Endpunkt kalt aufruft, bekommt HTTP 302 und danach
-    die HTML-Anmeldeseite — und wird daran hängenbleiben, statt „nicht
-    angemeldet" zu lesen. Im Betrieb tritt das selten auf: Die Aufrufe des
-    Browsers kommen aus einer angemeldeten Seite, und eine **ablaufende**
-    Sitzung fängt der richtige Zweig ab.
-
-    **Zu tun:** Die Weiterleitung in Zeile 33 an `ist_api_aufruf()` vorbei
-    nicht mehr unbedingt machen, sondern denselben JSON-Weg nehmen wie
-    `sitzung_beenden_passend()` — 401 mit einem lesbaren Grund.
-    *Abnahme:* `curl -s -o /dev/null -w '%{http_code}' <basis>/api/day.php?day=2026-01-01`
-    liefert **401** und `{"error":…}` statt 302.
-    *Aufgenommen 16.09.2026 in P5a/AP9, gefunden beim Bau der
-    Verbindungsprobe: Sie wollte einen `/api/`-Endpunkt unter Überlast messen
-    und bekam eine 302, weil die Anfrage die Datenbank nie erreichte.*
-
 212. **Zwei Erwartungen der Wiederherstellungsprobe sind auf einer leeren
     Installation rot — ohne dass etwas kaputt ist.** *Aufgenommen 16.09.2026
     in P5a/AP10, nachgemessen gegen den unveränderten Stand: dieselben zwei.*
@@ -3058,6 +3014,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Eigenes Paket mit eigener Prüfung; **nicht P5**. Bis dahin steht im
     Betreiberhandbuch: Der Schlüssel wird nicht gewechselt, das Blatt wird
     gehütet (Quartalsrückfrage E-P5b-10).
+
+    *Vermerk 24.09.2026 (P5c/AP5, Web 20.42.0):* **Die Zweitfaktor-Geheimnisse
+    gibt es jetzt** — `users.totp_geheimnis`, versiegelt mit Zweck
+    `totp|<Konto>`. Ein Wechsel, der sie nicht umhüllt, lässt jede
+    Code-Anmeldung scheitern; die Konten kämen dann nur noch mit
+    Wiederherstellungscodes hinein, und die Profilkarte meldet „Das Geheimnis
+    lässt sich auf dieser Anlage nicht öffnen". Der Notweg bis dahin steht im
+    Runbook (`Technik.md` 7, Zweitfaktor).
 
 249. **TOTP-Reset, wenn die einzige BetreiberIn Zweitgerät und Codes
     verliert.** *Aufgenommen 20.09.2026 (Konzept P5c, Abschnitt 8).*
@@ -3773,20 +3737,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Protokollreiter — nimmt der Bilderlauf nicht auf; belegt ist sie nur
     über die Rollenprobe (Menü, Liste, Reiter) und im Prüfdokument von Hand.
     **Zuordnung: 10c (Messungen); Umbau: nächste Backlog-Runde.**
-
-298. **Kein Prüfmittel liest den QR-Code, den die Anwendung zeigt.**
-    *Aufgenommen 24.09.2026 aus Konzept P5c (AP5), als Anlass des Decoders
-    nach der Zuarbeit von Konzept BR (E-BR-07).* 10c AP5 zeigt das Geheimnis
-    des Zweitfaktors als QR-Code, gezeichnet aus der Modulmatrix einer
-    vendorierten Bibliothek. Ob der Code die angezeigte otpauth-Adresse
-    trägt, sieht niemand: Ein falsch kodierter Code sähe auf jedem Bild
-    richtig aus und ließe das Einrichten am Handy scheitern. Die
-    Mockup-Runde M-P5c-02 hat ihn von Hand gelesen (2 von 2). *Weg:* der
-    Bedienweg „Zweitfaktor einrichten" in `tools/bedienprobe/` liest einen
-    Abzug des Codes mit `jsqr` (Apache-2.0, vendoriert in
-    `tools/bedienprobe/vendor/` mit Herkunft und SHA-256, `Lizenzen.md`) und
-    vergleicht ihn mit der angezeigten Adresse (E-P5c-87). **Zuordnung: 10c
-    AP5.**
 
 299. **Die Kontoseite löscht ein Konto an `konto_loeschen()` vorbei.**
     *Aufgenommen 24.09.2026 aus Konzept P5c (AP4, F-P5c-99).* Es gibt zwei
@@ -10206,3 +10156,91 @@ zutreffen.
     kein zweiter Ausnahme-Behandler anderswo. Gegenprobe: Behandler
     entfernt → Rückgabewert 1. Die Wirkung misst die Protokollprobe
     (Teil 7) und die Ingestprobe (Teil 11).
+
+141. **Zweitfaktor für alle Konten.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-5).* Passwort ist
+    Anmeldung **und** Datenschlüssel; Phishing genügt für alles. R38 sieht
+    TOTP nur für Admin-Konten vor. **Entschieden (R78):** für alle Konten
+    angeboten, für Admins Pflicht; Geheimnis serverseitig versiegelt
+    (`sk_versiegeln()`), `otpauth://`-Text statt QR-Fremdbestandteil, acht
+    Ersatzcodes gehasht, „Gerät 30 Tage merken". Schützt die Anmeldung,
+    nicht den Offline-Angriff (dafür S10). Zuordnung: **P5** (erweitert
+    R38).
+
+    **Zuordnung (20.09.2026): 10c, AP5** — dort wird der Zweitfaktor konkretisiert: Pflicht für Admin, BetreiberIn und Support, Angebot für alle übrigen (E-P5c-15, F-P5c-1).
+
+    **Berichtigt 23.09.2026 (E-P5c-41, -42):** **QR-Code statt
+    `otpauth://`-Text** — aus der vendorierten Bibliothek `qrcode-generator`,
+    das SVG baut die Anwendung selbst; der Text steht daneben. **Zehn**
+    Ersatzcodes statt acht, gehasht, unabhängig vom Serverschlüssel.
+    **„Gerät 30 Tage merken" kommt nicht mit 10c**, sondern mit dem
+    Cookie-Token aus Nr. 242 in Schritt 18 — zwei Cookie-Mechanismen werden nur
+    einmal gebaut. Zuordnung bleibt **10c AP5**.
+
+    **Erledigt mit Web 20.42.0 am 24.09.2026 (P5c/AP5).** TOTP nach RFC 6238,
+    Pflicht für Support, Admin und BetreiberIn, Angebot für alle übrigen,
+    gesperrt im Demo-Konto; die Code-Abfrage steht vor der Sitzung
+    (E-P5c-53), Pflichtrollen ohne Zweitfaktor landen im Einrichtungstor
+    `zweitfaktor.php`. QR-Code aus `qrcode-generator` 2.0.4, zehn
+    Wiederherstellungscodes mit `password_hash()`, nicht am
+    Serverschlüssel; Zurücksetzen durch die Verwaltung. Nachweis:
+    Zweitfaktorprobe 44 / 0 (RFC-Vektoren 6 / 6), zwei Bedienwege.
+    **Zwei Stücke stehen noch aus, beide woanders:** der Rückweg über den
+    Wiederherstellungsschlüssel kommt mit dem Einschubkonzept RW
+    (E-P5c-104) — die Fassung gegen `pat_key_check` war fälschbar
+    (F-P5c-106) —, und „Gerät 30 Tage merken" mit dem Cookie-Token aus
+    Nr. 242 in Schritt 18.
+
+211. **Ein `/api/`-Aufruf ohne Sitzung bekommt eine Weiterleitung statt
+    einer JSON-Antwort.** `auth_guard.php` prüft in Zeile 33
+    `empty($_SESSION['user_id'])` und antwortet mit
+    `header('Location: login.php')` — **vor** jeder Unterscheidung, ob das
+    Gegenüber JSON erwartet. `ist_api_aufruf()` gibt es, aber es wird erst
+    weiter unten benutzt, für die Fälle „Sitzung abgelaufen" und „Rolle reicht
+    nicht" (dort korrekt: 401 bzw. 403 als JSON).
+
+    **Die Folge ist klein, aber sie ist eine Unwahrheit:** Ein Werkzeug oder
+    ein Skript, das einen Endpunkt kalt aufruft, bekommt HTTP 302 und danach
+    die HTML-Anmeldeseite — und wird daran hängenbleiben, statt „nicht
+    angemeldet" zu lesen. Im Betrieb tritt das selten auf: Die Aufrufe des
+    Browsers kommen aus einer angemeldeten Seite, und eine **ablaufende**
+    Sitzung fängt der richtige Zweig ab.
+
+    **Zu tun:** Die Weiterleitung in Zeile 33 an `ist_api_aufruf()` vorbei
+    nicht mehr unbedingt machen, sondern denselben JSON-Weg nehmen wie
+    `sitzung_beenden_passend()` — 401 mit einem lesbaren Grund.
+    *Abnahme:* `curl -s -o /dev/null -w '%{http_code}' <basis>/api/day.php?day=2026-01-01`
+    liefert **401** und `{"error":…}` statt 302.
+    *Aufgenommen 16.09.2026 in P5a/AP9, gefunden beim Bau der
+    Verbindungsprobe: Sie wollte einen `/api/`-Endpunkt unter Überlast messen
+    und bekam eine 302, weil die Anfrage die Datenbank nie erreichte.*
+
+    **Erledigt mit Web 20.42.0 am 24.09.2026 (P5c/AP5, E-P5c-106,
+    F-P5c-108).** Mit dem Code-Schritt des Zweitfaktors wurde der Randfall
+    zum Normalfall: Eine halbe Anmeldung hat eine Sitzung, aber keine
+    `user_id`. `auth_guard.php` antwortet einem Aufruf unter `api/` jetzt
+    mit 401 und `{"error":"session_ende","grund":"nicht_angemeldet",…}`,
+    einer Seite weiter mit der Weiterleitung. Abnahme wie oben:
+    `curl …/api/day.php?day=2026-01-01` → **401**.
+
+298. **Kein Prüfmittel liest den QR-Code, den die Anwendung zeigt.**
+    *Aufgenommen 24.09.2026 aus Konzept P5c (AP5), als Anlass des Decoders
+    nach der Zuarbeit von Konzept BR (E-BR-07).* 10c AP5 zeigt das Geheimnis
+    des Zweitfaktors als QR-Code, gezeichnet aus der Modulmatrix einer
+    vendorierten Bibliothek. Ob der Code die angezeigte otpauth-Adresse
+    trägt, sieht niemand: Ein falsch kodierter Code sähe auf jedem Bild
+    richtig aus und ließe das Einrichten am Handy scheitern. Die
+    Mockup-Runde M-P5c-02 hat ihn von Hand gelesen (2 von 2). *Weg:* der
+    Bedienweg „Zweitfaktor einrichten" in `tools/bedienprobe/` liest einen
+    Abzug des Codes mit `jsqr` (Apache-2.0, vendoriert in
+    `tools/bedienprobe/vendor/` mit Herkunft und SHA-256, `Lizenzen.md`) und
+    vergleicht ihn mit der angezeigten Adresse (E-P5c-87). **Zuordnung: 10c
+    AP5.**
+
+    **Erledigt mit Web 20.42.0 am 24.09.2026 (P5c/AP5).** Der Bedienweg
+    `zweitfaktor-einrichten` (`tools/bedienprobe/wege/zweitfaktor.mjs`)
+    nimmt einen Abzug des `svg.qr`, liest ihn mit jsQR 1.4.0 auf einer
+    leeren Seite — die Inhaltsrichtlinie der Anwendung lässt kein fremdes
+    Skript zu, und das bleibt so — und vergleicht Zeichen für Zeichen mit
+    dem `otpauth://`-Verweis daneben: gleich, in Chromium unter PHP 8.4 und
+    8.3.

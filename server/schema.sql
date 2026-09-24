@@ -24,7 +24,7 @@ CREATE TABLE users (
   pat_wrap_pw   TEXT NULL,                           -- Inhaltsschluessel, passwortverpackt (Pflicht-Verschlüsselung)
   pat_wrap_rc   TEXT NULL,                           -- Inhaltsschluessel, mit Wiederherstellungsschluessel verpackt
   pat_key_check CHAR(32) NULL,                       -- Pruefsumme des Inhaltsschluessels (im Browser gerechnet); NULL = Altbestand
-  role          ENUM('user','admin','betreiberin','support') NOT NULL DEFAULT 'user',  -- BetreiberIn ⊇ Admin ⊇ NutzerIn (R75); Support daneben, enger (E-P5c-14)
+  role          ENUM('user','admin','betreiberin','support') NOT NULL DEFAULT 'user',  -- BetreiberIn ⊇ Admin ⊇ Support ⊇ NutzerIn (R75, E-P5c-14)
   session_epoch INT UNSIGNED NOT NULL DEFAULT 0,     -- wird beim Passwortwechsel erhoeht; beendet offene Sitzungen
   account_key   CHAR(16) NULL UNIQUE,                -- Ordnername der Admin-Sicherung; einmalig vergeben, danach unveraenderlich (E17)
   logo_wahl     VARCHAR(20) NOT NULL DEFAULT '',     -- '' = Standard der Installation, sonst 'hubschrauber' | 'fahrzeug' | 'wechselnd' (E-P3-20)
@@ -77,11 +77,30 @@ CREATE TABLE users (
   -- weil „spaeter" sonst durch Abmelden zurueckgesetzt und damit unbegrenzt
   -- waere.
   rueckfrage_verschoben TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  -- ZWEITFAKTOR (P5c/AP5, E-P5c-54). Das Geheimnis versiegelt mit dem
+  -- Serverschluessel, Zweck `totp|<id>`; eingeschaltet erst mit `totp_seit`
+  -- (nach einem bestaetigten Code); `totp_schritt` ist der letzte angenommene
+  -- Zeitschritt — kein Code gilt zweimal.
+  totp_geheimnis VARCHAR(200) NULL,
+  totp_seit      DATETIME NULL,
+  totp_schritt   BIGINT UNSIGNED NULL,
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   -- Fuer die Verfalljobs, nicht fuer die Anzeige: „alle Konten in einem
   -- Zustand, deren Frist abgelaufen ist" waere sonst ein Vollscan je Joblauf.
   INDEX idx_status_loeschung (status, loeschung_am),
   INDEX idx_email_neu_token (email_neu_token_hash)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- WIEDERHERSTELLUNGSCODES DES ZWEITFAKTORS (P5c/AP5, E-P5c-42). Zehn je
+-- Konto, mit password_hash() — sie haengen NICHT am Serverschluessel und
+-- sind deshalb der Rueckweg, wenn das Geheimnis nicht mehr zu oeffnen ist.
+CREATE TABLE totp_codes (
+  id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id    INT UNSIGNED NOT NULL,
+  hash       VARCHAR(255) NOT NULL,
+  benutzt_am DATETIME NULL,
+  KEY idx_konto (user_id),
+  CONSTRAINT fk_totp_codes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE password_resets (
@@ -1043,4 +1062,5 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- frische Anlage hat nichts umzubenennen; die Migration ist ausschliesslich
   -- fuer Bestandsdatenbanken da, die die Spalte noch als `manual` fuehren.
   ('2026_09_20_uhr_gesperrt', 'skipped'),
-  ('2026_09_24_rolle_support', 'skipped');
+  ('2026_09_24_rolle_support', 'skipped'),
+  ('2026_09_24_zweitfaktor', 'skipped');

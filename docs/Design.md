@@ -942,6 +942,8 @@ für eine Rückfrage — nicht für ein neues Element.
 | einen Erklärabsatz oben auf der Seite | `<p class="seiten-erklaerung">` — **einen**, keine zwei | zwei Absätze Vorrede |
 | einen Knopf am Ende eines Formulars | `ui_knopf()` in `<div class="listen-form-fuss">` | einen blanken `<button>` |
 | einen **Wert zum Abschreiben oder Kopieren** (Kennung, Schlüssel, Prüfsumme, Adresse) | `ui_codeblock_lang()` — beide Stufen und wann welche: 9.18 | ein `<code>` im Fließtext |
+| eine **Liste von Einmalcodes** zeigen oder einen **Code eintippen** lassen | `.codeblock-liste` im Codeblock, `ui_feld([… 'klasse' => 'feld-code'])`: 9.38 | eine Tabelle, ein Feld in Normalschrift |
+| eine Seite, die **gedruckt** wird (genau eine A4-Seite) | `.blatt-druck`: 9.39 | das Gerüst mit `@media print` |
 | eine **Füllung gegen eine Grenze** zeigen | `.speicher-balken` mit seinen drei Schwellen (9.19) | ein `<progress>` oder ein eigener Balken |
 | eine **Zahl an einem Menüpunkt** („hier ist etwas zu tun") | `ui_zaehler()` — drei Töne wie die Ampel (9.25) | eine Zahl in Klammern hinter dem Text |
 | mehrere Karten **nebeneinander** | einen der drei Wege aus 9.26 — und lies dort erst, welcher | ein eigenes Raster je Seite |
@@ -2735,6 +2737,79 @@ die Rückfrage bei ungespeichertem Text in den Rechtstexten (AP9,
 **Kein neues Token, kein neuer Farbwert.** Neues Symbol dieses Pakets ist
 `protokoll.svg` (Kapitel 8) — für den Menüpunkt, nicht für den Reiter; ein
 Reiter trägt kein Zeichen.
+
+### 9.38 Zweitfaktor: QR-Code, Einrichtung, Codefeld, Codeliste (`.qr`, `.zweitfaktor-einrichtung`, `.feld-code`, `.codeblock-liste`, `.anmeldung-schritt`)
+
+*Seit Web 20.42.0 (P5c/AP5, E-P5c-41). **Neue Bausteine**, freigegeben mit
+der Mockup-Runde M-P5c-02 (b), 23.09.2026 (E-P5c-66).*
+
+**Zweck:** die Einrichtung des Zweitfaktors (Karte „Zweitfaktor" unter
+Einstellungen → Profil und das Einrichtungstor `zweitfaktor.php`) und der
+Code-Schritt der Anmeldung. Tor und Karte teilen ihre Teile über
+`zweitfaktor_teile.php` (`zf_einrichtung()`, `zf_codes()`) — eine Stelle,
+damit beide dieselben drei Wege in die App zeigen: scannen, am Handy öffnen,
+abtippen.
+
+| Teil | Darstellung |
+|---|---|
+| `.qr` | SVG, halbe Anmeldekarte breit (`calc(var(--anmeldekarte) / 2)`, 200 px); `max-width:100%` |
+| `.qr-grund` / `.qr-modul` | `fill: var(--schnee)` / `fill: var(--asphalt)` — ein Rechteck, ein Pfad |
+| `.zweitfaktor-einrichtung` | Raster: QR links, Text rechts ab 720 px; darunter gestapelt, der QR zuerst. In `.anmeldung` immer gestapelt und mittig |
+| `.feld-code` | an der Hülle `.feld`: Eingabe in der festen Schrift, `--groesse-5`, Sperrung `.06em` — wie der Codeblock, damit Abschreiben und Eintippen gleich aussehen |
+| `.codeblock-liste` | Erweiterung des Codeblocks: zehn nummerierte Codes in zwei Spalten, Schrift wie `.codeblock-wert` (`--groesse-4`, 600, `--dunkelblau`), Nummer gedämpft |
+| `.anmeldung-schritt` | Zwischenüberschrift in der Anmeldekarte (Code-Schritt, Einrichtungstor), `--groesse-5` |
+
+**Nur die Modulmatrix kommt aus der Bibliothek** (`qrcode-generator`,
+`docs/Lizenzen.md` 3). Das SVG baut `assets/qr.js` im Browser aus
+`data-qr` — ein Rechteck `.qr-grund`, ein Pfad `.qr-modul`, Farben über die
+Token, kein `style="…"`. Der Server gibt ein leeres, verborgenes `<svg>` aus;
+ohne JavaScript bleibt es verborgen, und die beiden anderen Wege daneben
+tragen allein. Fehlerstufe M, vier Module Ruhezone.
+
+**Kein neues Token, kein neuer Farbwert, keine neue Größe:** 200 px ist die
+halbe Anmeldekarte, die Sperrung die des Codeblocks.
+
+**„Weiter" erst nach dem Haken** (Einrichtungstor, Schritt 2): Der Knopf
+steht im Markup frei und wird von `assets/zweitfaktor.js` gesperrt, bis
+„Ich habe die Codes gesichert." angehakt ist — umgekehrt wäre das Tor ohne
+Skript eine Sackgasse.
+
+**Der Druckknopf „Codeblatt drucken"** ist das vorhandene Druckformular
+`.rf-druck` im Codeblock (wie beim Wiederherstellungsschlüssel), volle
+Breite des Kastens. Im Einrichtungstor zeigt das Mockup ihn schmal — dort
+stand das Formular im Mockup verschachtelt in einem anderen, und der Parser
+hat es verworfen; die Karte (b) desselben Mockups zeigt die richtige
+Darstellung (F-P5c-107).
+
+### 9.39 Druckblatt (`.blatt-druck`)
+
+*Seit Web 20.42.0 (P5c/AP5, E-P5c-08). **Neuer Baustein**, freigegeben mit
+M-P5c-01f (20.09.2026), die Codeliste mit M-P5c-02 (b), die Umgebungszeile
+mit M-P5c-02 (e).*
+
+**Zweck:** eine Seite, die gedruckt wird — **genau eine A4-Seite**. Erster
+Verwender ist das **Codeblatt** des Zweitfaktors (`codeblatt.php`);
+Schlüssel- und Notfallblatt ziehen in AP9 nach. Die Seite baut ihre Hülle
+selbst (kein Gerüst), `<body class="blatt-seite">`, darin `<main class="blatt-druck">`.
+
+| Teil | Darstellung |
+|---|---|
+| `.blatt-kopf` | Bildmarke (11 mm hoch) + `.blatt-marke` (Kurzname der Installation, Kopfschrift `--groesse-6`) links, `.blatt-kopf-rechts` (Adresse, Konto, Druckzeit; `--groesse-2`, gedämpft) rechts; darunter `--strich-stark` in `--dunkelblau` |
+| `.blatt-umgebung` | nur mit `app.umgebung`: Rahmen `--strich-stark` in `--rot-tief`, Text in `--rot-tief` — ohne Fläche, weil der Browser Flächen nicht druckt (E-P5c-50) |
+| `.blatt-druck h1` / `h2` | `--groesse-titel` / `--groesse-4` |
+| `.blatt-druck .meldung` | die vorhandene Meldung, auf Papier mit Rand `--strich` in `--linie-stark` |
+| `.blatt-kachel` | Rahmen `--strich-stark` in `--dunkelblau`, Fläche `--rauch` (im Druck ohne), nicht umbrechend; Kopf mit `.blatt-kachel-name` und `.blatt-kachel-neben` |
+| `.blatt-codes` | zehn Einmalcodes in zwei Spalten, feste Schrift `--groesse-5`, Sperrung `.08em`; davor die Nummer, **davor das Kästchen** zum Abhaken (E-P5c-65) |
+| `.blatt-fuss` | Blattname · Installation · Webversion · Lizenz, rechts „Seite 1 von 1" |
+
+**`@page` gilt für jede gedruckte Seite** (A4, 14 mm / 18 mm): Eine
+Seitenregel lässt sich nicht an eine Klasse binden, und ein benannter
+Seitentyp trägt nicht in jedem Browser. Bis Web 20.41 gab es keine Vorgabe.
+Am Bildschirm sieht das Blatt ab 720 px aus wie das Blatt — 210 mm breit,
+mit denselben Rändern.
+
+**Gemessen:** Codeblatt als PDF aus Chromium ohne Hintergrundgrafiken:
+**1 Seite**.
 
 ## 10. Seitentypen und das Rezept für eine neue Seite
 

@@ -57,6 +57,7 @@ declare -A RUF=(
   [wiederherstellung]="php tools/proben/wiederherstellung/probe.php"
   [gpx]="php tools/proben/gpx/probe.php"
   [geraete]="php tools/proben/geraete/probe.php"
+  [zweitfaktor]="php tools/proben/zweitfaktor/probe.php"
   [verbindung]="php tools/proben/verbindung/probe.php"
   [anteil]="php tools/proben/anteil/probe.php"
   [rechtstexte]="php tools/proben/rechtstexte/pruefen.php"

@@ -72,6 +72,9 @@ if ($tab === 'standort') {
     }
 }
 $notice = null; $error = null; $pwGewechselt = false; $newKey = null;
+/* Zweitfaktor (P5c/AP5): die Codes, einmal in der Antwort auf den POST, der
+ * sie erzeugt hat, und die Meldungen der Karte — [Auftakt, Text]. */
+$zfCodes = null; $zfMeldung = null; $zfFehler = null;
 
 /* DER TON DER HINWEISZEILE (S5 Paket B). Bis hierher war er fest 'info'. Die
  * abgeschlossene Kopplung ist aber ein Vollzug und kein Hinweis — sie bekommt
@@ -338,6 +341,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * aussieht statt nach der Folge des eigenen Klicks. */
                 session_beenden('gesperrt');
             }
+        }
+    }
+
+    /* ---- Zweitfaktor (P5c/AP5, E-P5c-15, -41, -54; M-P5c-02b Bild 2) ----
+     *
+     * FUENF HANDLUNGEN, EINE KARTE: einrichten beginnen, einschalten (mit
+     * einem bestaetigten Code), abbrechen, neue Codes, ausschalten.
+     *
+     * DIE CODES ERSCHEINEN GENAU EINMAL — in der Antwort auf den POST, der sie
+     * erzeugt hat. „Einschalten" und „Neue Codes" leiten deshalb NICHT um;
+     * nach einer Umleitung gaebe es sie nicht mehr, gespeichert ist nur ihr
+     * Pruefwert. Die drei anderen leiten um, wie jede Handlung ohne
+     * Einmal-Anzeige.
+     *
+     * AUSSCHALTEN NUR OHNE PFLICHT (E-P5c-15). Fuer Support, Admin und
+     * BetreiberIn setzt ihn allein die Verwaltung zurueck (E-P5c-42); der
+     * Knopf fehlt dort, und diese Pruefung haelt auch den handgebauten POST
+     * ab.
+     *
+     * ABBRECHEN RAEUMT NUR EINE ANGEFANGENE EINRICHTUNG. Derselbe Aufruf an
+     * einem eingeschalteten Zweitfaktor schaltete ihn ab — ein Knopf
+     * „Abbrechen" darf das nie. */
+    if (str_starts_with((string)$action, 'zf_')) {
+        require_once __DIR__ . '/totp_lib.php';
+        $zfZustand = totp_zustand($userId);
+        $zfPflicht = rolle_braucht_zweitfaktor($userRole);
+        $zfZurueck = null;                       // [ton, text] fuer die Umleitung
+        if ($action === 'zf_beginnen') {
+            $b = totp_einrichtung_beginnen($userId);
+            $zfZurueck = $b['ok'] ? ['', ''] : ['error', match ($b['grund'] ?? '') {
+                'demo'             => 'Im Demo-Konto lässt sich der Zweitfaktor nicht '
+                                    . 'einschalten — die Zugangsdaten sind öffentlich.',
+                'an'               => 'Der Zweitfaktor ist schon eingeschaltet.',
+                'serverschluessel' => 'Auf dieser Anlage ist kein Serverschlüssel '
+                                    . 'eingetragen; ohne ihn lässt sich das Geheimnis '
+                                    . 'nicht sicher speichern.',
+                default            => 'Die Einrichtung ist gerade nicht möglich — '
+                                    . 'eine AdministratorIn muss update.php aufrufen.',
+            }];
+        } elseif ($action === 'zf_einschalten') {
+            $r = totp_einrichtung_abschliessen($userId, (string)($_POST['code'] ?? ''));
+            if ($r['ok']) {
+                $zfCodes = $r['codes'];
+                $zfMeldung = ['Eingeschaltet.', 'Ab der nächsten Anmeldung fragt die '
+                            . 'Anwendung nach dem Code.'];
+            } elseif (($r['grund'] ?? '') === 'code') {
+                $zfFehler = ['Der Code passt nicht.', 'Er gilt 30 Sekunden — den '
+                           . 'nächsten aus der App nehmen. Passt keiner, stimmt oft die '
+                           . 'Uhrzeit des Handys nicht.'];
+            } else {
+                $zfZurueck = ['error', 'Es gibt keine angefangene Einrichtung — bitte neu beginnen.'];
+            }
+        } elseif ($action === 'zf_abbrechen') {
+            if ($zfZustand['angefangen']) { totp_abschalten($userId, 'selbst'); }
+            $zfZurueck = ['', ''];
+        } elseif ($action === 'zf_codes_neu') {
+            $zfCodes = totp_codes_erneuern($userId);
+            if ($zfCodes !== null) {
+                $zfMeldung = ['Neue Codes erzeugt.', 'Die alten gelten ab jetzt nicht mehr.'];
+            } else {
+                $zfZurueck = ['error', 'Der Zweitfaktor ist nicht eingeschaltet.'];
+            }
+        } elseif ($action === 'zf_ausschalten') {
+            if ($zfPflicht) {
+                $zfZurueck = ['error', 'Für deine Rolle ist der Zweitfaktor Pflicht — '
+                            . 'ausschalten geht nicht.'];
+            } else {
+                totp_abschalten($userId, 'selbst');
+                $zfZurueck = ['notice', 'Zweitfaktor ausgeschaltet. Die Anmeldung fragt '
+                            . 'wieder nur nach dem Passwort.'];
+            }
+        }
+        if ($zfZurueck !== null) {
+            if ($zfZurueck[0] !== '') { flash_setzen($zfZurueck[0], $zfZurueck[1]); }
+            header('Location: einstellungen.php?t=profil#k-zweitfaktor');
+            exit;
         }
     }
 
@@ -1488,6 +1567,101 @@ ui_seite_start(['titel' => 'Einstellungen',
                       'typ' => 'button', 'attr' => ' data-schluessel-auf']) ?>
       </div>
     <?php ui_karte_ende(); ?>
+
+    <?php /* ---- DIE KARTE „ZWEITFAKTOR" (P5c/AP5, M-P5c-02b Bild 1 und 2) --
+             Nach „Wiederherstellungsschlüssel", wie im Mockup (E-P5c-66).
+             Vier Zustände: aus → wird eingerichtet → an (die Codes einmal
+             sichtbar) → an. Die Teile, die das Einrichtungstor mit ihr
+             teilt, stehen in `zweitfaktor_teile.php`.
+
+             OHNE DIE SPALTEN KEINE KARTE: Zwischen Deploy und `update.php`
+             gibt es nichts einzuschalten, und eine Karte, deren einziger
+             Knopf eine Fehlermeldung ausloest, ist schlechter als keine. */
+          require_once __DIR__ . '/zweitfaktor_teile.php';
+          $zf = totp_zustand($userId);
+          $zfPflicht = rolle_braucht_zweitfaktor($userRole);
+          $zfLeer = static function (int $n): string {
+              return ['keiner', 'einer', 'zwei', 'drei', 'vier', 'fünf', 'sechs',
+                      'sieben', 'acht', 'neun', 'zehn'][$n] ?? (string)$n;
+          };
+          if (!$zf['fehlt']):
+            $zfRoh = $zf['angefangen'] && $zfCodes === null ? totp_geheimnis($userId) : null;
+            $zfPlakette = $zf['an'] ? ui_plakette('an', ['ton' => 'blau'])
+                        : ($zfRoh !== null ? ui_plakette('wird eingerichtet', ['ton' => 'orange'])
+                                           : ui_plakette('aus'));
+            ui_karte_start(['titel' => 'Zweitfaktor', 'id' => 'k-zweitfaktor',
+                            'plakette' => $zfPlakette]); ?>
+<?php if ($zfCodes !== null): ?>
+      <?php ui_meldung($zfMeldung[1], null, 'ok', '      ', ['auftakt' => $zfMeldung[0]]); ?>
+      <?php zf_codes($zfCodes); ?>
+<?php elseif ($zfRoh !== null): ?>
+      <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor">
+        <?= csrf_field() ?>
+        <?php if ($zfFehler !== null): ?>
+        <?php ui_meldung(null, $zfFehler[1], 'info', '        ', ['auftakt_fehler' => $zfFehler[0]]); ?>
+        <?php endif; ?>
+        <?php zf_einrichtung($zfRoh, (string)($row['email'] ?? '')); ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Einschalten', 'art' => 'primaer', 'symbol' => 'haken',
+                        'name' => 'action', 'wert' => 'zf_einschalten']) ?>
+          <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'name' => 'action',
+                        'wert' => 'zf_abbrechen', 'attr' => ' formnovalidate']) ?>
+        </div>
+      </form>
+<?php else: ?>
+      <p>Zusätzlich zum Passwort ein sechsstelliger Code aus einer App auf deinem Handy. <a href="hilfe.php#3-1f-zweitfaktor">Wie das geht</a></p>
+<?php if ($zf['an']):
+        $zfBenutzt = max(0, $zf['codes_alle'] - $zf['codes_offen']);
+        ui_zeile(['text' => 'Eingeschaltet', 'klein' => 'seit ' . datum_zeit_text($zf['seit'], ', ')]);
+        ui_zeile(['text' => 'Wiederherstellungscodes',
+                  'klein' => $zfLeer($zfBenutzt) . ' benutzt — neue Codes machen die alten ungültig',
+                  'plaketten' => ui_plakette($zf['codes_offen'] . ' von ' . $zf['codes_alle'],
+                                             ['ton' => 'blau'])]);
+        /* DAS GEHEIMNIS IST NICHT ZU OEFFNEN, wenn die Anlage einen anderen
+           Serverschluessel hat als bei der Einrichtung (Wiederanlauf,
+           eingespieltes Komplett-Backup). Die Anmeldung geht dann nur noch
+           mit Wiederherstellungscodes; das soll hier stehen und nicht erst
+           beim naechsten Anmelden auffallen. */
+        if (totp_geheimnis($userId) === null) {
+            ui_meldung(null, $zfPflicht
+                ? 'Die Verwaltung muss ihn zurücksetzen; danach richtest du ihn neu ein.'
+                : 'Schalte ihn aus und richte ihn neu ein.', 'info', '      ',
+                ['auftakt_fehler' => 'Das Geheimnis lässt sich auf dieser Anlage nicht öffnen.']);
+        }
+        if ($zfPflicht): ?>
+      <p class="feld-klein">Für die Rolle <?= e(rolle_text($userRole)) ?> Pflicht — ausschalten geht nicht; zurücksetzen kann <?=
+        rolle_ist_betreiberin($userRole) ? 'eine andere BetreiberIn' : 'eine BetreiberIn' ?>.</p>
+<?php endif; ?>
+      <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor">
+        <?= csrf_field() ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Neue Codes erzeugen', 'art' => 'neutral', 'name' => 'action',
+                        'wert' => 'zf_codes_neu',
+                        'attr' => ' data-confirm="Neue Codes erzeugen? Die bisherigen gelten danach nicht mehr — auch die auf einem gedruckten Codeblatt." data-confirm-ok="Neue Codes erzeugen" data-confirm-tone="normal"']) ?>
+          <?php if (!$zfPflicht): ?>
+          <?= ui_knopf(['text' => 'Ausschalten', 'art' => 'leise', 'name' => 'action',
+                        'wert' => 'zf_ausschalten',
+                        'attr' => ' data-confirm="Zweitfaktor ausschalten? Die Anmeldung fragt danach wieder nur nach dem Passwort; die Codes werden ungültig." data-confirm-ok="Ausschalten"']) ?>
+          <?php endif; ?>
+        </div>
+      </form>
+<?php elseif (demo_ist_demo($userId)): ?>
+      <p class="feld-hinweis">Im Demo-Konto lässt sich der Zweitfaktor nicht einschalten — die Zugangsdaten sind öffentlich und müssen es bleiben.</p>
+<?php else: ?>
+      <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor">
+        <?= csrf_field() ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Einrichten', 'art' => 'primaer', 'name' => 'action',
+                        'wert' => 'zf_beginnen']) ?>
+        </div>
+      </form>
+<?php endif; ?>
+<?php endif; ?>
+    <?php ui_karte_ende(); ?>
+    <?php foreach (ZF_SKRIPTE as $zfSkript): ?>
+    <script src="<?= asset($zfSkript) ?>"></script>
+    <?php endforeach; ?>
+<?php endif; ?>
 
     <dialog class="dialog" id="dlg-schluessel" data-schluessel>
       <?php require __DIR__ . '/schluessel_teile.php'; ?>

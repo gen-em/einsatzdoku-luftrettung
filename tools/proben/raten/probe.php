@@ -371,8 +371,12 @@ abschnitt('10  Welche Toepfe eine Leiter haben — und welche ausdruecklich nich
  *
  * `blatt` (Schluesselblatt-Pruefung, S10) HAT eine Leiter, und das ist
  * richtig: Wer die Vierergruppen raet, soll nach drei Fehlversuchen laenger
- * warten. Anmeldung und Anwendung bleiben dabei offen. */
-const TOEPFE_MIT_LEITER = ['blatt', 'ingest', 'ingest_ip', 'login', 'login_ip', 'salt'];
+ * warten. Anmeldung und Anwendung bleiben dabei offen.
+ *
+ * `totp` (Code-Schritt der Anmeldung, P5c/AP5, E-P5c-53) hat eine: Fuenf
+ * falsche Codes je Konto, dann waechst die Sperre — sechs Ziffern duerfen
+ * nicht zu erraten sein. */
+const TOEPFE_MIT_LEITER = ['blatt', 'ingest', 'ingest_ip', 'login', 'login_ip', 'salt', 'totp'];
 
 $mitLeiter = []; $ohne = [];
 foreach (RATE_GRENZEN as $topf => $g) {

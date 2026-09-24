@@ -347,6 +347,30 @@ function demo_anlegen(): array
 /* ------------------------------------------------------------- Zuruecksetzen */
 
 /**
+ * Den Zweitfaktor des Demo-Kontos leeren — ein Schritt von
+ * `demo_zuruecksetzen()` (P5c/AP5, E-P5c-54).
+ *
+ * WARUM ES IHN GIBT: Einschalten ist im Demo-Konto gesperrt; steht trotzdem
+ * einer da — ein Konto, das erst nachtraeglich zum Demo-Konto wurde, oder ein
+ * handgebauter POST an der Sperre vorbei —, sperrte er die naechste
+ * Besucherin aus. Vorabfrage auf die Spalte: Vor `update.php` gibt es sie
+ * nicht, und der Reset laeuft auch dann.
+ *
+ * WARUM EINE EIGENE FUNKTION (F-P5c-117): Die Zweitfaktorprobe soll diesen
+ * Schritt messen, ohne den ganzen Reset zu fahren. Der spielt den
+ * Demo-Bestand neu ein, die Einsaetze bekommen neue Nummern — und die
+ * GPX-Probe, die im Pruefstand danach laeuft, fand ihre Referenz nicht mehr
+ * (204 von 204 ohne Gegenstueck).
+ */
+function demo_zweitfaktor_leeren(PDO $pdo, int $id): void
+{
+    if (!db_hat_spalte($pdo, 'users', 'totp_seit')) { return; }
+    $pdo->prepare('UPDATE users SET totp_geheimnis = NULL, totp_seit = NULL,
+                          totp_schritt = NULL WHERE id = ?')->execute([$id]);
+    $pdo->prepare('DELETE FROM totp_codes WHERE user_id = ?')->execute([$id]);
+}
+
+/**
  * Demo-Konto auf den Ausgangsstand bringen.
  *
  * Loescht ALLES, was am Konto haengt — auch, was Besucher angelegt haben:
@@ -386,6 +410,9 @@ function demo_zuruecksetzen(): array
                 $k['pat_wrap_pw'] ?? null, $k['pat_wrap_rc'] ?? null,
                 $k['pat_key_check'] ?? null, $k['account_key'] ?? null, $id,
             ]);
+        /* DER ZWEITFAKTOR FAELLT MIT (P5c/AP5, E-P5c-54) — siehe
+         * `demo_zweitfaktor_leeren()`. */
+        demo_zweitfaktor_leeren($pdo, $id);
 
         return demo_bestand_einspielen($pdo, $id, $fx);
     });

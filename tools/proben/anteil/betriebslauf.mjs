@@ -27,7 +27,7 @@ const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import('file://' + MODUL);
 const pw = PW.default ?? PW;
-const { motorWahl, starten } = await import(
+const { motorWahl, starten, nachDemPasswort } = await import(
   'file:///home/user/einsatzdoku-luftrettung/tools/motor.mjs');
 
 const WURZEL = '/home/user/einsatzdoku-luftrettung';
@@ -140,6 +140,24 @@ const text = () => p.evaluate(() => document.body.innerText.replace(/\s+/g, ' ')
  * `form.submit()` ginge am Zuhörer vorbei, misst dann aber einen Weg, den
  * niemand geht. Der Prüfstand drückt deshalb den Knopf und beantwortet den
  * Dialog, wie es eine Betreiberin täte. */
+/** Nach dem Absenden des Passworts: warten, den Code-Schritt des
+ * Zweitfaktors gehen und bei einem Fehlschlag ABBRECHEN (P5c/AP5, E-P5c-43).
+ *
+ * Hier stand `waitForURL(… !login.php)`. Seit dem Zweitfaktor steht die
+ * Seite nach dem Passwort des Admin-Kontos WIEDER unter `login.php` und
+ * fragt nach dem Code — das Warten liefe 120 Sekunden ins Leere. Und das
+ * Einrichtungstor (`zweitfaktor.php`) hätte es durchgelassen, obwohl von
+ * dort keine Seite erreichbar ist, die dieser Lauf messen will.
+ * `nachDemPasswort()` (motor.mjs) kennt beide.
+ *
+ * ES WIRFT, WIE VORHER DIE ZEITGRENZE. Ein Fehlschlag soll den Lauf beenden
+ * und das `finally` `config.php` zurücklegen lassen — nur jetzt mit einem
+ * Grund statt „Timeout 120000ms exceeded". */
+async function angemeldetOderAbbruch(tab, konto) {
+  const a = await nachDemPasswort(tab, { frist: 120000 });
+  if (!a.angemeldet) { throw new Error(`Anmeldung als ${konto} gescheitert — ${a.meldung}`); }
+}
+
 /** In einer EIGENEN SITZUNG anmelden und auf eine Seite gehen, die den
  * Inhaltsschlüssel braucht.
  *
@@ -164,8 +182,7 @@ async function tabAnmelden(konto, passwort) {
   await tab.fill('input[name="email"]', konto);
   await tab.fill('input[name="password"]', passwort);
   await tab.click('#loginform button[type="submit"]');
-  await tab.waitForURL(u => !String(u).includes('login.php'),
-                       { timeout: 120000, waitUntil: 'commit' });
+  await angemeldetOderAbbruch(tab, konto);
   await tab.goto(BASIS + '/suche.php', { waitUntil: 'domcontentloaded' });
   await tab.waitForFunction(
     () => typeof EdCrypto !== 'undefined' && typeof EdUnlock !== 'undefined',
@@ -238,8 +255,7 @@ try {
   await p.fill('input[name="email"]', ADMIN);
   await p.fill('input[name="password"]', ADMIN_PW);
   await p.click('#loginform button[type="submit"]');
-  await p.waitForURL(u => !String(u).includes('login.php'),
-                     { timeout: 120000, waitUntil: 'commit' });
+  await angemeldetOderAbbruch(p, ADMIN);
 
   /* ---- 1. Der Regelfall: bereit ---------------------------------------- */
   teil('1. Zustand „bereit" — Karte, Status und Blatt nennen DIESELBE Kennung');

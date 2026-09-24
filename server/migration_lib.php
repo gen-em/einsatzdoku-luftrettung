@@ -3199,6 +3199,46 @@ function migrationen_katalog(): array
                MODIFY role ENUM('user','admin','betreiberin','support') NOT NULL DEFAULT 'user'",
         ],
     ],
+    [
+        'id'    => '2026_09_24_zweitfaktor',
+        'web'   => '20.42',
+        'label' => 'Zweitfaktor: Geheimnis, letzter Zeitschritt, Wiederherstellungscodes (P5c/AP5)',
+        /* DER ZWEITFAKTOR (E-P5c-54). Drei Spalten an `users` und eine Tabelle.
+         *
+         * `totp_geheimnis` traegt das versiegelte Geheimnis (`edsk1:` …, rund
+         * 90 Zeichen); `totp_seit` ist erst nach einem bestaetigten Code
+         * gesetzt — ein Geheimnis ohne `totp_seit` ist eine angefangene
+         * Einrichtung und schaltet nichts ein; `totp_schritt` haelt den
+         * letzten angenommenen Zeitschritt, damit kein Code zweimal gilt.
+         *
+         * `totp_codes` haengt NICHT am Serverschluessel (E-P5c-42): Sie sind
+         * der Rueckweg fuer genau den Fall, dass er fehlt. `ON DELETE CASCADE`,
+         * weil ein Code ohne Konto nichts mehr bedeutet — anders als ein
+         * Protokolleintrag, der die Loeschung ueberleben soll.
+         *
+         * ERST DIE TABELLE, DANN DIE SPALTEN, und `skip` fragt nach beidem.
+         * Scheitert das zweite Stueck, laeuft beim naechsten Aufruf das erste
+         * dank `IF NOT EXISTS` ohne Fehler durch. Bis beides steht, ist der
+         * Zweitfaktor stumm (`totp_spalten_da()`, E-P5c-53): keine
+         * Code-Abfrage, kein Tor. */
+        'skip'  => function (PDO $pdo): bool {
+            return db_hat_spalte($pdo, 'users', 'totp_seit') && db_hat_tabelle($pdo, 'totp_codes');
+        },
+        'sql'   => [
+            "CREATE TABLE IF NOT EXISTS totp_codes (
+               id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               user_id    INT UNSIGNED NOT NULL,
+               hash       VARCHAR(255) NOT NULL,
+               benutzt_am DATETIME NULL,
+               KEY idx_konto (user_id),
+               CONSTRAINT fk_totp_codes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            "ALTER TABLE users
+               ADD COLUMN totp_geheimnis VARCHAR(200) NULL,
+               ADD COLUMN totp_seit      DATETIME NULL,
+               ADD COLUMN totp_schritt   BIGINT UNSIGNED NULL",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

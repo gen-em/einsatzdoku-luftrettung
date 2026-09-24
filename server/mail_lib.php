@@ -442,6 +442,33 @@ function mail_katalog(): array
                 . "Link passiert nichts, und zum genannten Zeitpunkt wird die Anfrage gelöscht."),
         ],
 
+        /* DER ZWEITFAKTOR IST ZURUECKGESETZT (P5c/AP5, E-P5c-42). Die Mail
+         * geht an die Kontoadresse, und zwar IMMER — auch dann, wenn die
+         * Person selbst darum gebeten hat. Wer sie NICHT erbeten hat, erfaehrt
+         * so, dass an seinem Konto die zweite Schranke gefallen ist; das ist
+         * der Zweck, nicht die Bestaetigung. */
+        'totp_zurueckgesetzt' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
+            'betreff' => fn(array $d): string => 'Zweitfaktor zurückgesetzt — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "die Verwaltung der " . $n . " hat den Zweitfaktor deines Kontos
+"
+                . "zurückgesetzt. Die Anmeldung fragt ab jetzt nur nach dem Passwort; deine
+"
+                . "Wiederherstellungscodes und ein gedrucktes Codeblatt gelten nicht mehr.
+
+"
+                . "Richte ihn nach der nächsten Anmeldung unter Einstellungen → Profil neu ein —
+"
+                . "für Support, Admin und BetreiberIn geschieht das beim Anmelden von selbst:
+
+"
+                . $d['link'],
+                "Falls du darum nicht gebeten hast, melde dich bitte umgehend bei der Verwaltung
+"
+                . "und ändere dein Passwort."),
+        ],
+
         'registrierung_verfallen' => [
             'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
             'betreff' => fn(array $d): string => 'Registrierung verfallen — ' . $n,

@@ -21,6 +21,17 @@ https_tor();
 sitzung_starten('app');
 
 if (empty($_SESSION['user_id'])) {
+    /* EIN DATENABRUF OHNE ANMELDUNG BEKOMMT 401 ALS JSON (P5c/AP5,
+     * E-P5c-53), keine Weiterleitung. Bis Web 20.41 folgte `fetch()` der
+     * Umleitung auf `login.php` und bekam HTML, wo es JSON erwartet — der
+     * Aufrufer sah einen Syntaxfehler statt „nicht angemeldet". Mit dem
+     * Code-Schritt ist das der Normalfall einer halben Anmeldung: Es gibt
+     * eine Sitzung, aber keine `user_id`. */
+    if (ist_api_aufruf()) {
+        json_out(['error'   => 'session_ende',
+                  'grund'   => 'nicht_angemeldet',
+                  'meldung' => 'Nicht angemeldet. Bitte neu anmelden.'], 401);
+    }
     header('Location: login.php');
     exit;
 }
@@ -264,6 +275,60 @@ if ($kontoStatus === 'unbestaetigt' || $kontoStatus === 'wartet') {
     sitzung_beenden_passend('gesperrt');
 }
 
+/* ---- Das Einrichtungstor des Zweitfaktors (P5c/AP5, E-P5c-53, -61) -------
+ *
+ * WER: Support, Admin und BetreiberIn (`rolle_braucht_zweitfaktor()`) ohne
+ * eingeschalteten Zweitfaktor. Sie landen auf `zweitfaktor.php`, bis er
+ * steht — keine andere Seite ist erreichbar, die API antwortet 403 als JSON.
+ * Offen bleiben nur die Einrichtung selbst und das Abmelden.
+ *
+ * DIE CODE-ABFRAGE STEHT NICHT HIER, sondern in `login.php`, VOR der
+ * Sitzung. Dieses Tor betrifft nur die Einrichtung: Wer eine Sitzung hat,
+ * hat den Code schon gegeben oder hat noch keinen Zweitfaktor.
+ *
+ * STUMM IN DREI FAELLEN, und jeder ist ein Riegel, kein Entgegenkommen:
+ *   - Die Spalten fehlen (Deploy vor `update.php`, E-P5c-36). Ohne Anmeldung
+ *     kein `betrieb_updates.php`, ohne das keine Migration.
+ *   - Die Wartung ist an (E-P5c-53). Die BetreiberIn muss
+ *     `betrieb_updates.php` immer erreichen.
+ *   - Es gibt keinen Serverschluessel. Die Einrichtung verweigert ohne ihn
+ *     (E-P5c-54); ein Tor, dessen einzige Tuer verschlossen ist, sperrte
+ *     genau die BetreiberIn aus, die den Schluessel nachtragen soll.
+ *
+ * EINE ABFRAGE, NUR FUER DIE PFLICHTROLLEN, und nicht in `$WACHE_SPALTEN`:
+ * Dort risse eine fehlende Spalte den Rueckfall fuer die Lebenszyklus-
+ * Spalten mit, und die NutzerInnen — die meisten Anfragen — zahlten fuer
+ * eine Frage, die sie nicht betrifft.
+ *
+ * VOR DEM EINWILLIGUNGSTOR, und jenes laesst `zweitfaktor.php` durch. Sonst
+ * schickte das eine Tor auf die Seite des anderen und umgekehrt, und die
+ * Anfrage liefe im Kreis. Erst der Zweitfaktor, dann die Zustimmung: Die
+ * Zustimmung einer Sitzung, die nicht sicher der Kontoinhaberin gehoert,
+ * ist nichts wert. */
+if (rolle_braucht_zweitfaktor($row['role'] ?? null) && !wartung_aktiv()
+    && !in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')),
+                 ['zweitfaktor.php', 'logout.php'], true)) {
+    try {
+        $zf = db()->prepare('SELECT totp_seit IS NOT NULL FROM users WHERE id = ?');
+        $zf->execute([$userId]);
+        $zweitfaktorFehlt = (int)$zf->fetchColumn() === 0;
+    } catch (Throwable) {
+        $zweitfaktorFehlt = false;           // Spalten fehlen: stumm (s. o.)
+    }
+    if ($zweitfaktorFehlt) {
+        require_once __DIR__ . '/serverkrypto_lib.php';
+        if (serverschluessel_da()) {
+            if (ist_api_aufruf()) {
+                json_out(['error'   => 'zweitfaktor',
+                          'meldung' => 'Für deine Rolle ist der Zweitfaktor Pflicht. '
+                                     . 'Richte ihn zuerst ein.'], 403);
+            }
+            header('Location: zweitfaktor.php');
+            exit;
+        }
+    }
+}
+
 /* ---- Das Einwilligungstor (P5b/AP4, E-P5b-05, -15) -----------------------
  *
  * WAS ES SPERRT UND WAS NICHT. Fehlt die Annahme der aktuellen Fassung von
@@ -297,7 +362,7 @@ if (!ist_api_aufruf()) {
         /* Die Ausnahmeliste ist kurz und steht hier, nicht in einer
          * Konstante: Sie gehoert zum Tor und wird mit ihm gelesen. */
         $offen = ['einwilligung.php', 'logout.php', 'import.php',
-                  'export.php', 'einstellungen.php'];
+                  'export.php', 'einstellungen.php', 'zweitfaktor.php'];
         if (!in_array($hier, $offen, true)) {
             header('Location: einwilligung.php');
             exit;

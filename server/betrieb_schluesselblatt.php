@@ -64,9 +64,16 @@ if (preg_match('/^[0-9a-f]{64}$/i', $skHex)) {
     $eintraege[] = ['name' => 'Serverschlüssel',
                     'eintrag' => 'server_key',
                     'hex' => $skHex,
+                    /* SEIT WEB 20.42.0 AUCH DIE ZWEITFAKTOR-GEHEIMNISSE (E-P5c-42):
+                     * Ohne diesen Schlüssel prüft die Anmeldung keinen Code aus
+                     * der App mehr — es bleiben die Wiederherstellungscodes, die
+                     * NICHT an ihm hängen, und das Zurücksetzen durch die
+                     * Verwaltung. */
                     'wozu' => 'Versiegelt die Zugangsdaten der Backup-Ziele, das '
-                            . 'Komplett-Backup und die Konto-Backups. Ohne ihn '
-                            . 'lässt sich keine versiegelte Sicherung mehr öffnen.'];
+                            . 'Komplett-Backup, die Konto-Backups und die Geheimnisse '
+                            . 'des Zweitfaktors. Ohne ihn lässt sich keine versiegelte '
+                            . 'Sicherung mehr öffnen, und die Anmeldung nimmt nur noch '
+                            . 'Wiederherstellungscodes.'];
 }
 if (preg_match('/^[0-9a-f]{64}$/i', $anHex)) {
     $eintraege[] = ['name' => 'Server-Anteil',

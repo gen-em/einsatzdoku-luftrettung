@@ -80,7 +80,7 @@ if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_US
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
-const { motorWahl, starten } = await import(
+const { motorWahl, starten, codeSchritt } = await import(
   new URL('../motor.mjs', import.meta.url).href);
 
 const HIER = dirname(fileURLToPath(import.meta.url));
@@ -206,6 +206,16 @@ async function anmelden(rolle) {
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
     seite.click('#loginform button[type="submit"]'),
   ]);
+  /* DER CODE-SCHRITT DES ZWEITFAKTORS (P5c/AP5, E-P5c-43). Das Pruefkonto
+   * `admin@gen-em.org` ist eine BetreiberIn mit Zweitfaktor; nach dem
+   * Passwort fragt `login.php` nach dem Code. `codeSchritt()` (motor.mjs)
+   * geht ihn — und meldet das Einrichtungstor als Scheitern: Dessen Adresse
+   * enthaelt `login.php` nicht, und ohne diese Pruefung liefe jeder Admin-Weg
+   * auf `zweitfaktor.php` statt auf seiner Seite (F-P5c-33). */
+  const zf = await codeSchritt(seite);
+  if (!zf.ok) {
+    throw new Error(`Anmeldung als ${konto.email} gescheitert — ${zf.meldung}`);
+  }
   if (seite.url().includes('login.php')) {
     throw new Error(`Anmeldung als ${konto.email} gescheitert. Läuft die lokale `
       + 'Installation (sh tools/referenzdatensatz/einspielen/lokal_starten.sh)? '
@@ -295,6 +305,13 @@ async function neuAnmelden(r) {
     r.seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
     r.seite.click('#loginform button[type="submit"]'),
   ]);
+  /* Derselbe Code-Schritt wie in `anmelden()`. Ein gescheiterter wirft
+   * hier, statt dem Aufrufer eine Seite zu hinterlassen, die er nach der
+   * Adresse fuer angemeldet hielte (das Einrichtungstor). */
+  const zf = await codeSchritt(r.seite);
+  if (!zf.ok) {
+    throw new Error(`Neuanmeldung als ${konto.email} gescheitert — ${zf.meldung}`);
+  }
 }
 
 async function kasten(rolle, weg, breite) {

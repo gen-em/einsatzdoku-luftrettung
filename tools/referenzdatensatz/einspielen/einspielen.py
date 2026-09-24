@@ -91,7 +91,7 @@ def melde(text: str) -> None:
 
 
 # ---------------------------------------------------------------- 1. Konto
-def stufe_konto(lauf: Lauf, admin: tuple[str, str]) -> None:
+def stufe_konto(lauf: Lauf, admin: tuple[str, ...]) -> None:
     """Demo-Konto ueber den REGULAEREN Einladungsweg anlegen (E-P1-10).
 
     Nicht per SQL und nicht mit einem Sonderendpunkt: Das Konto entsteht so,
@@ -853,6 +853,13 @@ def main() -> int:
     p.add_argument("--stufen", default=",".join(ALLE_STUFEN))
     p.add_argument("--admin-email", default="admin@gen-em.org")
     p.add_argument("--admin-passwort", default="pruefstandzugang2026")
+    # Das Geheimnis des Zweitfaktors (P5c/AP5, E-P5c-43): Das Admin-Konto ist
+    # eine Pflichtrolle. Leer heisst `NADOKU_TOTP`, sonst das der Sandbox --
+    # gegen eine andere Anlage (`--basis`) gehoert deren Geheimnis hierher.
+    # Das Demo-Konto braucht keines; nur die Stufe `konto` meldet sich als
+    # Admin an.
+    p.add_argument("--admin-totp", default="",
+                   help="Geheimnis des Zweitfaktors des Admin-Kontos (Base32)")
     p.add_argument("--zustand", default=str(HIER / "lauf.json"))
     p.add_argument("--konto", default=None,
                    help="abweichendes Zielkonto (Kreislaufpruefung B5)")
@@ -871,7 +878,8 @@ def main() -> int:
         p.error(f"Unbekannte Stufe(n): {', '.join(unbekannt)}")
 
     funktionen = {
-        "konto": lambda: stufe_konto(lauf, (a.admin_email, a.admin_passwort)),
+        "konto": lambda: stufe_konto(lauf, (a.admin_email, a.admin_passwort,
+                                             a.admin_totp)),
         "stammdaten": lambda: stufe_stammdaten(lauf),
         "geraet": lambda: stufe_geraet(lauf),
         "ingest": lambda: stufe_ingest(lauf),
