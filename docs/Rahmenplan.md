@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 112 (24.09.2026)** — dieses Dokument steuert das Programm:
+**Fassung 114 (24.09.2026)** — dieses Dokument steuert das Programm:
 Reihenfolge, Status, programmweite Entscheidungen. Es hält nur, was für die
 nächsten Schritte gebraucht wird. Der eingefrorene Altbestand — die
 Fassungsvermerke, die Phasentexte mit ihren Umsetzungsblöcken und die 50
@@ -1861,6 +1861,7 @@ damit „nach v1.0" verlassen — dort stehen noch **acht**: 50, 51, 52, 55,
 | 264 | Die Fremd-Aktion des Transports ablösen | **erst auf Auslöser** (erneute Abbrüche, Bedarf an Wiederaufnahme, Ende der Pflege) | Einschub 21.09.2026 (Kette II, Abschnitt 8); niedrig. Kette II/AP4 hat sich bewusst für den kleinsten Eingriff entschieden |
 | 290 | Keine Stufe der Kette richtet eine Anlage ein | **Backlog-Runde** (oder das nächste Paket, das die Kette anfasst) | Fassung 105 (Korrekturstufe Web 20.37.3, Anlass Nr. 288); Weg zu entscheiden — Einrichtungslauf gegen leere Datenbank oder Ladeprobe von `konto_lib.php` ohne `config.php` |
 | 291 | Eine gescheiterte Einrichtung hinterlässt ein halbes Schema, der Rat „leere Datenbank“ steht auch bei fremden Fehlern | **Backlog-Runde** | Fassung 105 (Korrekturstufe Web 20.37.3); niedrig, kein Datenrisiko |
+| 318 | `pysyntax` sieht ungültige Escape-Folgen nicht, zwei Werkzeuge tragen welche | **Backlog-Runde** (Vorschlag; oder das nächste Paket, das `tools/quelltext/` anfasst) | Fassung 114 (Abschluss BR, gefunden im Log von P-BR-01); niedrig — heute `SyntaxWarning` im Tor, in einer künftigen Python-Fassung `SyntaxError` |
 
 ## 6. Offene Abnahmen und Zuarbeiten
 
@@ -1959,6 +1960,8 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | **Prüfliste P5b — die Punkte aus `docs/konzepte/Pruefdokument-P5b-Konto-und-Registrierung.md`**, darunter **P9.4 und P9.5** als die beiden wichtigsten: einen neuen Wiederherstellungsschlüssel erzeugen und danach **an einem Prüfkonto** über „Passwort vergessen" belegen, dass der **neue** Schlüssel die Daten öffnet und der **alte** nicht mehr. Dazu die Registrierung in allen drei Betriebsarten, das Einwilligungstor, die Selbstlöschung mit Karenz und die Betreiber-Rückfrage zum Schlüsselblatt. **Abschnitt 0 des Prüfdokuments** sagt zuerst, was auf dem Prüfstand *nicht* herzustellen war — vor allem: die Fristen der Rückfragen sind nie abgelaufen, sondern gestellt worden (Nr. 232) | Schritt 10b | **fällig nach dem Merge** |
 | **Freigabe des P5b-Abschlusses** — danach ist das Konzept gelöscht (K9); das **Prüfdokument bleibt**, bis seine Prüfliste abgehakt ist | Schritt 10b | **vorgelegt 17.09.2026** |
 | **Prüfliste TB — P-TB-07** (`docs/konzepte/Pruefdokument-TB-Tor-nach-Baum.md`): beim nächsten Fall zweier offener PRs „Update branch" nach dem ersten Merge sehen. **P-TB-06 erfüllt 23.09.2026** mit Web 20.37.2 (Lauf 35852217360): Schritt 7 erkennt den PR-Lauf gleichen Baums an, den Verweis-Lauf auf `main` nicht; ausgeliefert, Zeiger auf `1139ce7` | Konzept TB | nächster Fall |
+| **Prüfliste BR** (`docs/konzepte/Pruefdokument-BR-Bestandsriegel.md`) — belegt sind P-BR-01, -02, -04, -07 und -13. **Offen:** **P-BR-05 und -06** (Stichprobe, ob die Anlass-Zeilen den richtigen Fehler nennen, und die zehn nachgetragenen Einträge Nr. 304–313 lesen — der Riegel misst die Form, nicht den Inhalt), **P-BR-08** (beim nächsten Tag: Das Produktionstor findet den grünen Stufe-1-Lauf über `baumsuche.py`), **P-BR-09** (beim nächsten neuen Prüfmittel: `Pruefablauf.md` 6.12 trägt allein); freiwillig P-BR-03, -10, -11 und -12 | Konzept BR | P-BR-08 beim nächsten Web-Tag, P-BR-09 beim nächsten Prüfmittel, der Rest jederzeit |
+| **Offene Fragen aus Konzept BR** (dort Abschnitt 7; das Konzept ist gelöscht, letzter Stand `d4e96e6`). (1) Soll `kettenaufrufe` Pflicht-Positionsargumente lernen? `uhr-stufe1` stand ohne Geräteliste von PK-03 bis BR-04 in der Zuordnung (Nr. 316); bis dahin verlangt `Pruefablauf.md` 6.12, den Aufruf einmal von Hand zu fahren. (2) Soll ein Riegel tote Werkzeugpfade in den normativen Dokumenten zählen? BR hat 26 von Hand gefunden, nichts hält neue auf. (3) Braucht der erzählende Bestand — `Backlog.md`, `Rahmenplan.md`, `CLAUDE.md` — eine eigene Messung? Berührt sich mit Konzept SD (Nr. 294, auf dem P5c-Zweig). (4) `bericht.py erzeugen-doku` maskiert kein `\|` in einer Zelle — nötig erst, wenn eine Zelle eines trägt; `bestand` beglaubigt sonst eine kaputte Zeile | Konzept BR | Entscheidung der Betreiberin, keine Frist |
 | **Prüfliste Korrektur 288/289 — vier Punkte** (`docs/konzepte/Pruefdokument-Korrektur-288-289.md`): nach dem Merge von **Web 20.37.3** die Anmeldeseite von Staging am Handy und am Rechner ansehen — die vier Verweise stehen **unter** der Karte, die Karte ist so breit wie sonst; die übrigen Seiten der Anmeldehülle unverändert. Die Neueinrichtung selbst ist örtlich belegt (`hochfahren.sh --neu` RC 0); auf einer echten Anlage wird sie erst beim nächsten Hosterwechsel gebraucht | Nr. 288, 289 | **fällig nach dem Merge** |
 
 ### 6a. Staging einrichten — die Reihenfolge, in der es geht
@@ -3374,6 +3377,52 @@ TCP. **Auf demselben Zweig:** der Uhr-Prüfstand holt Gerätedateien und
 Schriften als zwei Archive — der Uhr-Schritt in Stufe 1 dauert **10:54 statt
 38:27 min**.
 
+### BR — der Bestandsriegel · nur Werkzeug · 24.09.2026 (Backlog Nr. 293)
+
+**Was PK als Regel ließ, wird gemessen — und der Weg für ein neues
+Prüfmittel meldet jeden ausgelassenen Schritt.** Konzept
+`Konzept-BR-Bestandsriegel.md` (24.09.2026, E-BR-01 bis -23, F-BR-01 bis
+-26, Q-BR-01 bis -14, BR-01 bis BR-05, kein Fable-Schritt) — **mit dem
+Abschluss gelöscht**, die Git-Historie behält es (letzter Stand `d4e96e6`);
+das Prüfdokument **bleibt**, bis seine Prüfliste abgehakt ist. Umsetzung
+Opus auf `claude/br-bestandsriegel`, gemergt als **PR #85** (`ce42213`),
+der Abschluss mit Q-BR-14 auf demselben Zweig, neu von `main`. **Keine
+Versionsstufe** — nur `tools/`, `.github/`, `docs/` und ein Satz in
+`CLAUDE.md`.
+
+**Was sich geändert hat.** `tools/quelltext/bestand.py`, die elfte
+Quelltextprüfung und ein Riegel ohne Decke (E-BR-01), misst den Bestand
+unter `tools/` in **elf Regeln**: Form und Länge jeder Anleitung, eine
+Anlass-Zeile mit Backlog-Nummer je Ordner und je Probe, jeder Ordner
+gerufen, keine lose Datei, keine Backlog-Nummer doppelt — und seit BR-05
+das Einhängen (`selbst`, `zeile`, `ablauf`, `tabelle`, Nr. 315). Gelesen
+wird mit den echten Werkzeugen (`cmark-gfm`, `token_get_all`,
+`bash … --liste`, `auswahl.passt()` und `.treffer()`, E-BR-22), nachdem
+drei Gegenprüfrunden gezeigt hatten, dass eigene Leser nicht konvergieren.
+Der Altbestand ist im selben Zweig bereinigt: **57 Befunde → 0**, 25
+Anleitungen mit 972 statt 2 144 Zeilen, zehn Anlässe als Nr. 304–313
+nachgetragen. Drei Tor-Schritte, die Station B nie fuhr, sind Riegel
+(**17 statt 14**), die Baumsuche steht einmal (`tools/kette/baumsuche.py`).
+`Pruefablauf.md` 6.12 „Ein neues Prüfmittel" nennt bei jedem Schritt das
+Mittel, das sein Fehlen meldet, 6.1 den Satz „Ein Anlass ist eine
+Backlog-Nummer" (auch Grundsatz 5 in `CLAUDE.md` 6).
+
+**Nebenbei gefunden und behoben:** Der Prüfstand meldete grün, wenn sein
+Bericht nicht entstand (Nr. 314); die Uhr-Probe des Prüfstands lief seit
+PK-03 nie (Nr. 316, F-PK-21); `kettenaufrufe` prüfte in einer Kette nur den
+ersten Befehl; die Selbstprobe der Textprobe lief nirgends; ein Pfad der
+Zuordnung traf seit PK-03 keine Datei (Nr. 317) — an seiner Stelle lösen
+seit Q-BR-14 die Spur-Endpunkte `server/api/backup_spuren*.php` die
+Spurprobe aus (E-BR-23).
+
+**Prüfzahlen des Abschlusses:** Prüfstand **0 rot, 0 nicht gemessen, 19
+grün**, Handy und Uhr gebaut (Baum `73ff930`); `bestand` 0 Befunde,
+Selbstprobe **140 / 0** mit **85 von 85** Befundstellen, Mutationsmessung
+**83 von 83** rot; vier adversariale Gegenprüfrunden mit 29, 30, 27 und 21
+echten Mängeln — die realistischen und mindestens „mittleren" behoben, der
+Rest im Kopf von `bestand.py` als Grenze benannt. **Belegt an echten
+Läufen:** **P-BR-01, -02 und -13** am PR-Lauf 36037964804 (Stufe 1 mit 15 Schritten, „9 von 9 Selbstproben grün“, `bestand` 140 / 0, „11 von 11 Prüfungen grün“, „Prüfbericht in Ordnung … 21 Zahlen“; der Quelltext-Schritt 28 s), **P-BR-07** am Push-Lauf 36038550112 auf `main` („Baum `73ff930` bereits gemessen: Lauf 36037964804“, Stufe 1 übersprungen, **17 s**), **P-BR-04** örtlich (1 Befund, rc 1). **Offen** (Abschnitt 6): die übrige Prüfliste.
+
 ### P5b — Konto und Registrierung · Web 20.15.3 bis 20.24.0 · 16.–17.09.2026 (Schritt 10b, R82)
 
 **Ein Konto entsteht jetzt von selbst, lebt einen Zyklus und geht von selbst
@@ -3557,6 +3606,7 @@ P5c.
 
 | Fassung | Datum | Was |
 |---|---|---|
+| **114** | **24.09.2026** | **Konzept BR ist gemergt (PR #85, `ce42213`) und abgeschlossen.** Erledigt-Zeile in Abschnitt 8, die Prüfliste BR und die vier offenen Fragen aus dem Konzept in Abschnitt 6, Nr. 318 in Abschnitt 5; das Konzept ist gelöscht (letzter Stand `d4e96e6`), das Prüfdokument bleibt. **Q-BR-14 ist beantwortet:** Die Spur-Endpunkte `server/api/backup_spuren*.php` lösen die Spurprobe aus (E-BR-23, Nr. 317). **Belegt an echten Läufen:** P-BR-01, -02 und -13 am PR-Lauf 36037964804, P-BR-07 am Push-Lauf 36038550112 auf `main` (Baum bereits gemessen, Stufe 1 übersprungen, 17 s). **Neu: Nr. 318** — `pysyntax` sieht ungültige Escape-Folgen nicht; im Tor stehen zwei `SyntaxWarning`, gezählt als 0 Befunde. **Fassungsnummer:** 113 trägt der P5c-Zweig, diese Fassung nimmt 114 (E-BR-20). **Die 112 steht zweimal:** BR hat sie um 08:12 vergeben (`c5fc807`), der P5c-Zweig um 11:38 (`42c644c`); seit dem Merge trägt `main` die von BR, und P5c nummeriert seine beim Aufnehmen von `main` um. Nur `tools/pruefstand/` und `docs/` — keine Versionsstufe. |
 | **112** | **24.09.2026** | **Konzept BR ist gebaut: Der Werkzeugbestand unter `tools/` hat einen Riegel.** Zweig `claude/br-bestandsriegel`, Backlog Nr. 293, ohne Versionsstufe. `tools/quelltext/bestand.py` hält jede Anleitung an die Form aus `Pruefablauf.md` 6.2, jeden Ordner und jede Probe an eine Anlass-Zeile mit Backlog-Nummer und jeden Ordner an einen Aufruf — gegen null, ohne Decke und ohne Ausnahmeliste. Der Altbestand ist im selben Zweig bereinigt (**57 Befunde → 0**; zehn Anlässe als Nr. 304–313 nachgetragen). Drei Tor-Schritte, die Station B nie fuhr, sind Riegel geworden (**17 statt 14**), und die Baumsuche steht einmal (`tools/kette/baumsuche.py`). Neu: `Pruefablauf.md` 6.12 „Ein neues Prüfmittel" und der Satz „Ein Anlass ist eine Backlog-Nummer" (6.1, auch Grundsatz 5 in `CLAUDE.md` 6). Die Gegenlesung des Runbooks durch Befolgen fand Nr. 314 (der Prüfstand meldete grün ohne Bericht — behoben) und Nr. 315 (vier Schritte beim Einhängen misst niemand — auf Anweisung der Betreiberin als Paket BR-05 gleich mitgebaut: `bestand` misst jetzt elf statt sieben Regeln, gelesen mit den echten Werkzeugen nach vier adversarialen Gegenprüfrunden; dabei gefunden: Nr. 317, ein Pfad der Zuordnung, der seit PK-03 keine Datei traf); der erste volle Prüfstand fand Nr. 316 (die Uhr-Probe lief seit PK-03 nie, F-PK-21 — behoben). **Fassungsnummer:** 108 bis 111 liegen auf dem P5c-Zweig; diese Fassung nimmt 112, damit beim Zusammenführen keine Nummer doppelt steht. **Merge offen**; die Erledigt-Zeile in Abschnitt 8 folgt nach der Freigabe. |
 | **107** | **23.09.2026** | **Konzept RP ist gebaut: Die Nebenstufe ist grün, und der Weg zu P5c AP1 ist frei.** Korrekturpaket aus E-PK-45, Zweig `claude/rp-rote-proben`, Backlog Nr. 292. **Neun von 36 Proben waren rot, keine davon ein Fehler der Anwendung:** vier nicht verdrahtet (Versand ohne Gegenstellen, Freigabe am Konto eines Kreislaufs, der später lief, Wegprobe ohne Konto, GPX mit falschem Pfad), vier mit veralteten Erwartungen (Spur/Aufzeichnung, Hausform, P5b-Mails, `frame-ancestors` nur scharf) samt einer csv-Referenz von vor der Hausform, eine mit zu wenigen Konten (Wiederherstellung). Dazu liefen die Kreisläufe im Prüfstand nur einmal (`--frisch` fehlte). **Ergebnis:** Nebenstufe auf frischer Anlage **36 grün, 0 rot, 0 nicht gemessen, 1 239 s**; `proben.sh alle` **20 von 20** (vorher 13 von 19). **Steuerungsrelevant:** Das Ziel der Nebenstufe ist **rund 21 Minuten, nicht 15** (E-RP-05) — Bilderlauf 769 s und Bedienprobe 261 s laufen mit Grund nacheinander. Der Prüfstand schreibt jetzt die Zeit je Probe, und Voraussetzungen zwischen Proben stehen erklärt in `pruefablauf.json` (`nach`). Entscheidungen E-RP-01 bis -06. **Nur `tools/` und `docs/`** — keine Versionsstufe |
 | **106** | **23.09.2026** | **PK-05 ist gebaut: Stufe 1 liest den Prüfbericht gegen, statt zu wiederholen.** Konzept PK, Zweig `claude/pk05-tor-umbauen`, PR #81; **Live-Abnahme gefahren:** mit Bericht grün in 76 s, ohne Bericht rot, Handlauf ohne Bericht rot. **Das Tor** hält den Bericht aus der Nachricht des PR-Kopfs gegen Baum, Versionsstufe, berührte Flächen, die Zahlen der billigen Riegel und — neu — gegen rote oder nicht gemessene Proben (fünf Lagen, E-PK-44, -46); Android, Uhr und die Bereichserkennung sind heraus, `pruefung.yml` hat **337 statt 988** Zeilen (Ziel <250 verfehlt, abgenommen mit E-PK-49). **Steuerungsrelevant sind drei Dinge.** Erstens: **Die Stufenerkennung des Prüfstands traf seit PK-03 nie** (F-PK-30) — jede Messung hieß „klein", auch die der Nebenstufen; die Zeiten aus PK-03 sind dreimal derselbe Umfang. Zweitens: **E-PK-42 macht „Update branch" zum falschen Knopf.** Nach einem fremden Merge holt der PR `main` örtlich herein, fährt den Prüfstand und schreibt den Merge-Commit mit dem Bericht (`Pruefablauf.md` 5.3); PK-05 selbst ist diesen Weg nach dem Merge von PR #80 als Erstes gegangen (P-PK-35, Merge-Commit `5671d24`: 18 Proben grün, Baum passt) — und hat dabei einen Fehler des Prüfstands im Merge-Zustand gefunden und behoben (F-PK-39). Drittens: **Eine Nebenstufe ist ab jetzt eine echte Nebenstufe** — 36 Proben gegen die örtliche Anlage statt 14 Riegel —, und **mit Lage 5 wird jede rote Probe zum roten Tor.** Gemessen auf frischer Anlage: **9 von 36 rot, 1 266 s** (F-PK-40, Backlog Nr. 292) — drei Verdrahtungsfehler des Prüfstands, eine veraltete Referenz, fünf ungeklärte. **Damit ändert sich die Reihenfolge (E-PK-45): Vor P5c AP1 kommt ein Korrekturpaket für diese neun**, auf eigenem Zweig; eine Ausnahmeliste für Lage 5 ist nicht gewählt. **E-PK-43:** Ein Handlauf auf einem Zweig liest ebenfalls gegen; der Hotfix-Weg braucht einen Bericht im Hotfix-Commit (`Technik.md` 6.6b). **Drei Fragen an die Betreiberin, am selben Tag beantwortet:** Die Schemaprobe wird Pflichtprüfung (E-PK-47, das Ruleset setzt die Betreiberin), `CIQ_GERAETE_URL` bleibt bis PK-08 (E-PK-48), 337 Zeilen sind abgenommen (E-PK-49). Prüfzahlen: `bericht.py` 13 Lagen / 0, `auswahl.py` 23 / 0, Abdeckung 267 / 0, `kettenaufrufe` 13/13 und 75 / 0 / 2, `uses:` 10 von 10 an einer SHA. **Nur `tools/`, `.github/` und `docs/`** — keine Versionsstufe |

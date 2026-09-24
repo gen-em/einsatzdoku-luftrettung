@@ -139,14 +139,15 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **318** und trägt seine
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **319** und trägt seine
 Spanne hier ein, bevor er pusht. *(Bis zum 23.09.2026 stand hier 283; 283 bis
 285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
 Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
 Tag, **290 und 291** die Korrekturstufe Web 20.37.3, **292** das
-Korrekturpaket RP. **293 und 304 bis 317** vergibt Konzept BR (24.09.2026,
+Korrekturpaket RP. **293 und 304 bis 318** vergibt Konzept BR (24.09.2026,
 Zweig `claude/br-bestandsriegel`; 304 bis 313 sind die nachgetragenen Anlässe
-aus E-BR-17 und E-BR-18, 314 bis 317 Funde aus BR-04 und BR-05); die Spanne **294 bis 303** hat der P5c-Zweig
+aus E-BR-17 und E-BR-18, 314 bis 317 Funde aus BR-04 und BR-05, 318 ein Fund
+des Abschlusses); die Spanne **294 bis 303** hat der P5c-Zweig
 `claude/p5c-mockups-konzept-4yeomf` am selben Tag reserviert — 294 Konzept
 SD, 295 bis 298 die Anlässe aus der Zuarbeit von BR, 299 bis 303 frei für
 Funde der Umsetzung. Nachgesehen auf `origin/main` und auf allen offenen
@@ -3763,6 +3764,27 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Schema kommt, oder das Konto vor dem Schema prüfen lassen, was geht. Klein,
     kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
     **Zuordnung: Backlog-Runde.**
+
+318. **`pysyntax` sieht ungültige Escape-Folgen nicht, und zwei Werkzeuge
+    tragen welche.** *Aufgenommen 24.09.2026 mit dem Abschluss von Konzept BR,
+    gefunden beim Belegen von P-BR-01 im Log des PR-Laufs 36037964804.* Im Tor
+    meldet Python (ab 3.12) `SyntaxWarning: invalid escape sequence` für
+    `tools/kettenaufrufe/pruefen.py:247` (`` \` `` im Docstring von
+    `pruefe_block()`) und `tools/referenzdatensatz/generator/erzeugen.py:94`
+    (`\d`), und `pysyntax` zählt trotzdem „57 Python-Werkzeuge geprüft, 0 mit
+    Syntaxfehler". Örtlich (Python 3.11) ist es nur eine unterdrückte
+    `DeprecationWarning`. Gemessen mit `python3 -W error`: **2 von 60**
+    versionierten Python-Dateien. Beide Stellen sind älter als BR (Nr. 217
+    und S4). Eine künftige Python-Fassung macht daraus einen
+    `SyntaxError`, und dann bricht das Werkzeug ab, statt zu prüfen.
+
+    *Weg:* beide Zeichenketten roh schreiben oder den Rückstrich
+    verdoppeln; `pysyntax` übersetzt mit Warnungen als Fehler
+    (`SyntaxWarning` und `DeprecationWarning`) und bekommt dafür einen Fall
+    in seiner Selbstprobe. *Abnahme:* die Selbstprobe rot mit einer Datei,
+    die `"\d"` enthält; `pysyntax` im Tor ohne Warnung. Klein, kein Risiko
+    für die Anwendung. **Zuordnung: Backlog-Runde** (Vorschlag; oder das
+    nächste Paket, das `tools/quelltext/` anfasst).
 
 ## Erledigt
 
@@ -10182,6 +10204,10 @@ zutreffen.
     und blieb grün. *Behoben:* Pfad gestrichen — die Auswahl ändert sich
     nicht (`--abdeckung` vorher wie nachher); der Selbstprobenfall prüft
     einen Glob gegen eine versionierte Datei; `bestand` hält seither jeden
-    Pfad gegen den Baum (Regel `ablauf`). *Offen:* ob
-    `server/api/backup_spuren*.php` die Spurprobe auslösen soll — eine
-    Frage der Zuordnung an die Betreiberin (Konzept BR, Q-BR-14).
+    Pfad gegen den Baum (Regel `ablauf`). *Entschieden 24.09.2026 von der
+    Betreiberin (Konzept BR, Q-BR-14):* `server/api/backup_spuren*.php`
+    steht im Muster `spur` — PK-03 hatte die Endpunkte gemeint und den
+    Dateinamen verfehlt. Eine Berührung von `backup_spuren.php` oder
+    `backup_spuren_restore.php` löst seither `spurprobe` und
+    `containerprobe` aus. Die Selbstprobe von `auswahl.py` hat dafür einen
+    Fall, der ohne den Pfad fehlschlägt (28 Lagen, gegengeprobt: 1 rot).

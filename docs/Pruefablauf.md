@@ -321,7 +321,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | Berührung | ab Stufe | Proben | Anlass |
 |---|---|---|---|
 | `server/**` | klein | — (nur die Riegel) | Auffangmuster: Jede Datei unter server/ laeuft durch die billigen Riegel. Sie traegt KEINE eigene Probe -- wer hier landet und sonst nirgends, hat keine zugeordnete Probe, und der Pruefstand sagt das. |
-| `server/spur_lib.php`, `server/tag_spuren.php` | klein | `spurprobe`, `containerprobe` | int gegen float (S2) |
+| `server/spur_lib.php`, `server/tag_spuren.php`, `server/api/backup_spuren*.php` | klein | `spurprobe`, `containerprobe` | int gegen float (S2) |
 | `server/ingest.php`, `server/validate_lib.php` | klein | `ingestprobe` | stiller Datenverlust bei "ok" |
 | `server/jobs_lib.php`, `server/jobs.php` | klein | `jobprobe`, `jobregister` | Huckepack 18 s; Nr. 208 |
 | `server/backup_lib.php`, `server/adminbackup_*.php`, `server/import*.php` | klein | `wiederherstellung`, `containerprobe`, `kreislauf-edbak` | Nr. 31, 33, 34, 35 |

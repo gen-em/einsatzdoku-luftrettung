@@ -1,8 +1,12 @@
 # Prüfdokument BR — Der Bestandsriegel
 
-*Zum Konzept `Konzept-BR-Bestandsriegel.md`. Beantwortet „was muss **ich**
-noch tun?" — das Protokoll „ist es belegt?" steht im Konzept, Abschnitt 9.
-Stand: BR-01 bis BR-05 erledigt, 24.09.2026 — Merge offen.*
+*Gehörte zu `Konzept-BR-Bestandsriegel.md` — **mit dem Abschluss am
+24.09.2026 gelöscht**, letzter Stand in der Historie unter `d4e96e6`; die
+Erledigt-Zeile steht in `Rahmenplan.md` 8, die offene Prüfliste in 6.
+Beantwortet „was muss **ich** noch tun?" — das Protokoll „ist es belegt?"
+stand im Konzept, Abschnitt 9. Dieses Dokument bleibt, bis seine Prüfliste
+abgehakt ist. Stand: gemergt als PR #85 (`ce42213`), abgeschlossen
+24.09.2026; belegt sind P-BR-01, -02, -04, -07 und -13.*
 
 ---
 
@@ -10,11 +14,11 @@ Stand: BR-01 bis BR-05 erledigt, 24.09.2026 — Merge offen.*
 
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
-| **Der Riegel in Stufe 1 auf GitHub** | Stufe 1 läuft erst beim Pull Request. Örtlich gefahren sind derselbe Läufer, dieselbe Selbstprobe und dieselbe Gegenlesung (`bericht.py lesen`); ob der Schritt im Tor mit dem Bericht übereinstimmt, zeigt erst der PR. | P-BR-01 |
+| ~~**Der Riegel in Stufe 1 auf GitHub**~~ | **Belegt nach dem Merge** (PR-Lauf 36037964804, P-BR-01, -13). Bis dahin liefen derselbe Läufer, dieselbe Selbstprobe und dieselbe Gegenlesung nur örtlich; ob der Schritt im Tor mit dem Bericht übereinstimmt, konnte erst der PR zeigen. | P-BR-01 |
 | **Ob jede Anlass-Zeile den richtigen Fehler nennt** | Der Riegel misst die Zeile, nicht ihren Inhalt (E-BR-03). Zwölf Nummern sind von Agenten mit Beleg vorgeschlagen und von der Instanz gegengelesen, fünf davon einzeln nachgelesen; zehn Einträge (304–313) sind neu geschrieben. Eine zweite, unabhängige Lesung hat es nicht gegeben. | P-BR-05 |
 | **Uhr-Prüfstand nach der Kürzung seiner Anleitung** | Die Befehle sind unverändert übernommen; gefahren wird `uhr-stufe1` mit dem Prüfstand vor dem PR (BR-04), weil `tools/uhr-pruefstand/` berührt ist. | P-BR-02 |
 | **Die zweite Fassung des Runbooks 6.12** (BR-04) | Die Gegenlesung durch Befolgen hat die **erste** Fassung geprüft und fünf Lücken und drei falsche Aussagen gefunden (F-BR-19). Die zweite Fassung beantwortet jede davon, ist aber nicht noch einmal von einer unabhängigen Instanz befolgt worden. | P-BR-09 |
-| **Die Baumsuche gegen die echte GitHub-Schnittstelle** (BR-03) | In dieser Umgebung gibt es kein `gh`. Belegt ist die Logik über die Selbstprobe mit nachgebauten Antworten (11 / 0) und die Aufrufe über `kettenaufrufe` (0 Befunde); nicht belegt ist, dass die echte Antwort die Form hat, die die Selbstprobe annimmt. Die Felder sind dieselben, die die Bash-Schleife vorher las. | P-BR-07, P-BR-08 |
+| **Die Baumsuche gegen die echte GitHub-Schnittstelle** (BR-03) | In dieser Umgebung gibt es kein `gh`. Belegt ist die Logik über die Selbstprobe mit nachgebauten Antworten (11 / 0) und die Aufrufe über `kettenaufrufe` (0 Befunde); nicht belegt ist, dass die echte Antwort die Form hat, die die Selbstprobe annimmt. Die Felder sind dieselben, die die Bash-Schleife vorher las. **Seit dem Merge zur Hälfte belegt:** „Schon gemessen?" hat den PR-Lauf gefunden (P-BR-07); das Produktionstor zeigt sich erst beim nächsten Tag. | P-BR-08 |
 | **Ein roter Riegel hält wirklich einen Merge auf** | Das hieße, einen PR mit einem eingebauten Fehler zu öffnen. Belegt ist es an zwei Stellen, die zusammen tragen: Die Selbstprobe baut je Befundstelle einen Fehler ein (seit BR-05 140 / 0), und das Tor liest jeden Riegel aus `pruefablauf.json` gegen den Bericht (`--alle-riegel`, P-PK-29 bis -32). | P-BR-03, P-BR-11, P-BR-12 (freiwillig) |
 | **Eine fünfte Gegenprüfrunde** (BR-05) | Nicht gefahren, nach dem Abbruchkriterium aus E-BR-22: Runde 4 fand keine Randschreibweise mehr, sondern Lücken im Umfang; was realistisch und mindestens „mittel" war, ist behoben. Ob eine fünfte Runde gegen die Fassung mit diesen Behebungen etwas fände, ist **nicht gemessen** — vier Runden haben 29, 30, 27 und 21 echte Mängel gefunden, und die Zahl fällt nicht auf null, weil jede Runde den neuen Umfang mitprüft. | — |
 | **Die Grenzen aus Runde 4** (BR-05) | Benannt, nicht gebaut (Konzept 7, Kopf von `bestand.py`): `getopt()` mit Optionen in einer Konstanten, Unterordner von `tools/quelltext/`, ein Hilfsmodul mit dem Schalter als Datum (rot zu Unrecht), Konstanten in `auswahl.py` mit einer Muster-id, `Nr. 12a` und „bis", eine Endmarke unter der Tabelle (rot). Keine davon ist heute im Bestand. | — |
@@ -52,6 +56,11 @@ Stand: BR-01 bis BR-05 erledigt, 24.09.2026 — Merge offen.*
 | BR-05 | `bestand.py` am Bestand und an einer Kopie mit fünf eingebauten Fehlern | elf Regeln; Fläche, Aufruf der Selbstproben, Code-Spanne mit `\|`, alte Riegelzeile, `&shy;` | **0 Befunde**; je genau der erwartete Befund, unverändert 0 |
 | BR-05 | `pruefen.sh --selbstprobe`, `pruefen.sh alle` | nach F-BR-23 mit der Textprobe | **9 von 9**; **11 von 11** |
 | BR-05 | `kettenaufrufe --probe`, dann ohne Schalter; `auswahl.py --selbstprobe`, `--abdeckung` | `NAMEN` zeilenweise; der tote Pfad (F-BR-24) | **21 von 21**, 85 / 0 / 2 ungeprüft; **27 / 0**, Abdeckung vorher wie nachher (0 / 87) |
+| Abschluss | Q-BR-14: `auswahl.py --selbstprobe`, dazu gegen die Zuordnung ohne den neuen Pfad | `server/api/backup_spuren*.php` im Muster `spur` | **28 / 0**; ohne den Pfad **1 rot** (der neue Fall) |
+| Abschluss | `bestand.py` vor und nach `erzeugen-doku` | die Tabelle in 4 nach der Änderung der Zuordnung | vorher **1 Befund** `tabelle-abweichung`, danach **0** |
+| Abschluss | PR-Lauf 36037964804, Job `Stufe 1` (Log gelesen über die GitHub-Schnittstelle; der Direktabruf des Log-Archivs ist in dieser Umgebung gesperrt) | P-BR-01, -13 | 15 Schritte; „9 von 9", „11 von 11", `FEHL` 0-mal; „Prüfbericht in Ordnung … 21 Zahlen" |
+| Abschluss | Push-Lauf 36038550112 auf `main` | P-BR-07 | Verweis auf Lauf 36037964804, `Stufe 1` übersprungen, **17 s** |
+| Abschluss | `python3 -W error` über alle versionierten Python-Dateien | ungültige Escape-Folgen (Nr. 318) | **2 von 60**, beide in `tools/`, beide älter als BR |
 
 Im Browser ist nichts zu prüfen: BR berührt weder `server/` noch eine
 Android- oder Uhr-Oberfläche.
@@ -60,7 +69,7 @@ Android- oder Uhr-Oberfläche.
 
 ## 3. Prüfliste
 
-- [ ] **P-BR-01 — Stufe 1 fährt die drei neuen Riegel und liest sie gegen.**
+- [x] **P-BR-01 — Stufe 1 fährt die drei neuen Riegel und liest sie gegen.**
   *Weg:* im PR von BR den Lauf „Prüfung" → Job `Stufe 1` öffnen.
   *Erwartet:* 15 Schritte; „cmark-gfm bereitstellen" grün; „Quelltext —
   elf Prüfungen, ein Läufer" zeigt „9 von 9 Selbstproben grün" und
@@ -71,7 +80,15 @@ Android- oder Uhr-Oberfläche.
   `cmark-gfm` fehlt), oder „Riegel „syntax-py" steht in pruefablauf.json,
   läuft aber nicht im Tor", oder „Riegel „bestand": Bericht …, im Tor
   gemessen …".
-- [ ] **P-BR-02 — Der Bericht im Kopf-Commit nennt `bestand=0`.**
+  **Erfüllt 24.09.2026, PR-Lauf 36037964804** (Kopf `7f4106a`): Job
+  `Stufe 1` grün mit 15 Schritten, darunter „cmark-gfm bereitstellen — für
+  die Quelltextprüfungen `handbuch` und `bestand`" (10 s); „Python-Werkzeuge",
+  „Backlog" und „Handbuch rendern" gibt es nicht mehr. Im Log „9 von 9
+  Selbstproben grün", „11 von 11 Prüfungen grün", `FEHL` 0-mal, und
+  „Prüfbericht in Ordnung: Stufe klein, Baum 73ff930…, Konfiguration web,
+  21 Zahlen." **Nebenfund:** zwei `SyntaxWarning` über der Zeile von
+  `pysyntax` — Nr. 318.
+- [x] **P-BR-02 — Der Bericht im Kopf-Commit nennt `bestand=0`.**
   *Weg:* `git log -1` auf dem PR-Kopf.
   *Erwartet:* ein Block `Prüfstand: …` mit `bestand=0`, `syntax-py=0` und
   `handbuch=0` unter den Riegeln, `uhr-stufe1=0` und `uhr=gebaut` (BR-02
@@ -79,17 +96,23 @@ Android- oder Uhr-Oberfläche.
   (BR-02 berührt `android/LIESMICH.md`).
   *Scheitern erkennbar an:* eine der drei mit 1 oder 2, eine fehlt im
   Block, oder `uhr=nicht-gemessen`.
+  **Erfüllt 24.09.2026:** Der Kopf `7f4106a` trägt `bestand=0`,
+  `syntax-py=0`, `handbuch=0`, `uhr-stufe1=0`, `android-bau=0`,
+  `handy=gebaut` und `uhr=gebaut` (Baum `73ff930`).
 - [ ] **P-BR-03 (freiwillig) — Ein eingebauter Fehler macht Stufe 1 rot.**
   *Weg:* auf einem Wegwerfzweig eine Zeile an `tools/kette/LIESMICH.md`
   hängen, bis sie 41 Zeilen hat, Prüfstand fahren, PR öffnen.
   *Erwartet:* Stufe 1 rot, Befund `form · tools/kette/LIESMICH.md: 41
   Zeilen, erlaubt sind 40`. *Scheitern erkennbar an:* Stufe 1 grün.
-- [ ] **P-BR-04 — `kettenaufrufe` meldet einen vertippten Namen.**
+- [x] **P-BR-04 — `kettenaufrufe` meldet einen vertippten Namen.**
   *Weg:* in `tools/pruefstand/pruefablauf.json` örtlich
   `pruefen.sh bestand` in `pruefen.sh bestnd` ändern,
   `python3 tools/kettenaufrufe/pruefen.py` fahren, zurücksetzen.
   *Erwartet:* 1 Befund „kennt den Befehl "bestnd" nicht".
   *Scheitern erkennbar an:* 0 Befunde.
+  **Erfüllt 24.09.2026** (örtlich, auf `ce42213`): 85 Aufrufe, **1 Befund**
+  „tools/quelltext/pruefen.sh kennt den Befehl "bestnd" nicht", rc 1;
+  zurückgesetzt 0 Befunde.
 
 - [ ] **P-BR-05 — Stichprobe: Passt die Anlass-Zeile zur Probe?**
   *Weg:* drei Proben wählen (Vorschlag: `ingest`, `geraete`, `anteil`), die
@@ -103,7 +126,7 @@ Android- oder Uhr-Oberfläche.
   *Erwartet:* Je Eintrag Fehler oder Risiko, Fundstelle, Fassung und
   Nachweis. *Scheitern erkennbar an:* eine Fundstelle, die es nicht gibt,
   oder ein Eintrag, den die Betreiberin anders zugeordnet hätte.
-- [ ] **P-BR-07 — „Schon gemessen?" verweist nach dem Merge.**
+- [x] **P-BR-07 — „Schon gemessen?" verweist nach dem Merge.**
   *Weg:* nach dem Merge von BR den Lauf „Prüfung" auf `main` öffnen, Job
   „Schon gemessen?".
   *Erwartet:* Er findet den grünen PR-Lauf mit demselben Baum („gemessen
@@ -114,6 +137,11 @@ Android- oder Uhr-Oberfläche.
   obwohl der PR grün war. Dann misst Stufe 1 selbst (sicher, aber rund eine
   Stunde), und die Antwort der Schnittstelle hat eine andere Form, als die
   Selbstprobe annimmt.
+  **Erfüllt 24.09.2026, Push-Lauf 36038550112** (Merge `ce42213`): „Stufe 1:
+  1 Läufe geholt, 1 mit Baum 73ff930, 0 Baum-Abrufe gescheitert (Fenster
+  30)", dann „Messen: nein — Baum `73ff930` bereits gemessen: Lauf
+  36037964804 (`pull_request`, `7f4106a`), Job `Stufe 1` grün"; `Stufe 1`
+  und `Schema gegen …` übersprungen, Lauf **17 s**.
 - [ ] **P-BR-08 — Das Produktionstor findet Stufe 1 beim nächsten Tag.**
   *Weg:* beim nächsten Tag `web-v…` den Lauf „Auslieferung" → Job
   `produktion`, Schritt der Freigabe.
@@ -154,13 +182,17 @@ Android- oder Uhr-Oberfläche.
   zur Fläche uhr, aber kein Muster ab Stufe klein wählt dafür uhr-stufe1
   aus". *Scheitern erkennbar an:* Stufe 1 grün — dann wäre jede spätere
   Berührung von `tools/uhr-pruefstand/` eine Sackgasse (`uhr=nicht-gemessen`).
-- [ ] **P-BR-13 — Die Laufzeit der Selbstprobe im Tor.** *Weg:* im PR von
+- [x] **P-BR-13 — Die Laufzeit der Selbstprobe im Tor.** *Weg:* im PR von
   BR, Job `Stufe 1`, Schritt „Quelltext — elf Prüfungen", die Zeile der
   Selbstprobe von `bestand`.
   *Erwartet:* „140 Fälle, 0 Fehlschläge … 85 von 85 Befundstellen
   gefallen", örtlich rund 20 s. *Scheitern erkennbar an:* ein Fall
   `[FEHL]`, der örtlich grün war — dann liest ein Werkzeug im Tor anders
   (`cmark-gfm`- oder PHP-Fassung), und das gehört als Befund ins Konzept.
+  **Erfüllt 24.09.2026, PR-Lauf 36037964804:** „140 Fälle, 0 Fehlschläge
+  (117 mit eingebautem Fehler, 23 Gegenproben; 85 von 85 Befundstellen
+  gefallen)", im Tor rund **16 s** (örtlich 22 s); kein `[FEHL]`. Der ganze
+  Quelltext-Schritt 28 s.
 ---
 
 ## 4. Grenzen der Prüfmittel

@@ -86,7 +86,8 @@ Aufrufs sieht er so wenig wie kettenaufrufe — der Aufruf wird einmal von
 Hand gefahren (6.12, Nr. 316). Eine Selbstprobe, die ein gemeinsamer Rahmen
 auswertet (E-PK-24, nicht gebaut), sieht er nicht. Der Erzeuger der Tabelle
 maskiert kein `|` und kein `*` — was er ausgibt, beglaubigt der Riegel.
-Aus Runde 4 benannt statt gebaut (Konzept BR 7): Den Schalter liest er nur
+Aus Runde 4 benannt statt gebaut (Konzept BR, Abschnitt 7 — gelöscht, in der
+Historie unter d4e96e6): Den Schalter liest er nur
 als Zeichenkette in der Datei selbst — in einer Konstanten für getopt() oder
 in einem Hilfsmodul sieht er ihn nicht; Unterordner von tools/quelltext/
 durchsucht er nicht nach fremden Selbstproben; Konstanten in auswahl.py, die
