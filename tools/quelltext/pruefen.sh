@@ -6,6 +6,7 @@
 # Aufruf:  bash tools/quelltext/pruefen.sh <name> [zusatz…]
 #          bash tools/quelltext/pruefen.sh alle
 #          bash tools/quelltext/pruefen.sh --selbstprobe
+#          bash tools/quelltext/pruefen.sh --liste   # je Name der Befehl, dazu SELBST
 #
 # Namen:   installweiche sitzungshaertung csp jobregister migrationsregister
 #          linkprobe vollstaendigkeit textprobe bestand pysyntax handbuch
@@ -20,11 +21,13 @@ cd "$WURZEL" || exit 1
 
 NAMEN=(installweiche sitzungshaertung csp jobregister migrationsregister
        linkprobe vollstaendigkeit textprobe bestand pysyntax handbuch)
-# Die acht mit eingebauter Selbstprobe. `linkprobe` und `vollstaendigkeit`
+# Die neun mit eingebauter Selbstprobe. `linkprobe` und `vollstaendigkeit`
 # haben keine und hatten vor dem Umzug auch keine — das ist kein Rückschritt,
 # sondern ein Rest, den E-PK-24 mit dem gemeinsamen Rahmen erst noch einlöst.
-SELBST=(installweiche sitzungshaertung csp jobregister migrationsregister bestand
-        pysyntax handbuch)
+# `textprobe` hatte eine, hinter `--probe`, und sie lief bis BR-05 nirgends —
+# `bestand` (Regel `selbst`) hält die Liste seither gegen den Code.
+SELBST=(installweiche sitzungshaertung csp jobregister migrationsregister textprobe
+        bestand pysyntax handbuch)
 
 starter() {   # starter <name> — womit die Datei gefahren wird
     case "$1" in
@@ -74,6 +77,14 @@ fall="${1:-}"
 [ -z "$fall" ] && { echo "Name fehlt. Namen: ${NAMEN[*]} · alle · --selbstprobe" >&2; exit 2; }
 
 case "$fall" in
+  --liste)
+    # Maschinenlesbar, für den Bestandsriegel (BR-05): So sieht BASH die
+    # Listen — mit Kommentaren, `+=` und Anführungszeichen, wie sie gelten.
+    # Bis dahin las der Riegel die Listen mit eigenen Mustern nach, und jede
+    # Gegenprüfrunde fand eine Schreibweise, die er anders las als bash.
+    for n in "${NAMEN[@]}"; do printf 'NAME\t%s\t%s\n' "$n" "$(starter "$n")"; done
+    for n in "${SELBST[@]}"; do printf 'SELBST\t%s\n' "$n"; done
+    ;;
   --selbstprobe)
     fehl=0
     for n in "${SELBST[@]}"; do

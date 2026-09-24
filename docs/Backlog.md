@@ -139,14 +139,14 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **317** und trägt seine
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **318** und trägt seine
 Spanne hier ein, bevor er pusht. *(Bis zum 23.09.2026 stand hier 283; 283 bis
 285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
 Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
 Tag, **290 und 291** die Korrekturstufe Web 20.37.3, **292** das
-Korrekturpaket RP. **293 und 304 bis 316** vergibt Konzept BR (24.09.2026,
+Korrekturpaket RP. **293 und 304 bis 317** vergibt Konzept BR (24.09.2026,
 Zweig `claude/br-bestandsriegel`; 304 bis 313 sind die nachgetragenen Anlässe
-aus E-BR-17 und E-BR-18, 314 bis 316 Funde aus BR-04); die Spanne **294 bis 303** hat der P5c-Zweig
+aus E-BR-17 und E-BR-18, 314 bis 317 Funde aus BR-04 und BR-05); die Spanne **294 bis 303** hat der P5c-Zweig
 `claude/p5c-mockups-konzept-4yeomf` am selben Tag reserviert — 294 Konzept
 SD, 295 bis 298 die Anlässe aus der Zuarbeit von BR, 299 bis 303 frei für
 Funde der Umsetzung. Nachgesehen auf `origin/main` und auf allen offenen
@@ -3763,28 +3763,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Schema kommt, oder das Konto vor dem Schema prüfen lassen, was geht. Klein,
     kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
     **Zuordnung: Backlog-Runde.**
-
-315. **Vier Schritte beim Einhängen eines Prüfmittels misst niemand.**
-    *Aufgenommen 24.09.2026 mit Konzept BR (BR-04, F-BR-19), gemessen von
-    der Gegenlesung des Runbooks `Pruefablauf.md` 6.12.* Eine unabhängige
-    Instanz hat zwei Attrappen eingehängt und je einen Schritt weggelassen.
-    Rot wurden fehlende Anlass-Zeile, `RUF`-Zeile, Backlog-Nummer, Name in
-    `NAMEN` oder `starter()` und das `--riegel` im Tor. **Grün blieb alles**
-    bei vier anderen: (1) eine Quelltextprüfung mit Selbstprobe, die nicht in
-    `SELBST` steht — ihre Selbstprobe läuft nirgends; (2) eine
-    Quelltextprüfung ohne Zeile in der Tabelle von
-    `tools/quelltext/LIESMICH.md` — ihr Anlass steht nirgends; (3) eine
-    Probe unter `proben` in `pruefablauf.json`, die in keinem Muster und
-    keinem Riegel steht — sie läuft nie; (4) die Tabelle in
-    `Pruefablauf.md` 4, nicht neu erzeugt — nichts vergleicht sie mit
-    `erzeugen-doku`, obwohl sie „nicht von Hand ändern" trägt.
-
-    *Weg (zu entscheiden):* die vier als Regeln in `bestand` (1, 2, 3) und
-    als Vergleich in `bericht.py` oder `bestand` (4). Jede ist eine Zeile
-    Zählung gegen eine Liste, die es schon gibt. Bis dahin nennt 6.12 sie
-    als Schritte, die man gegenliest. *Abnahme:* je Lücke ein Fall in der
-    Selbstprobe, der rot wird. **Zuordnung: Frage an die Betreiberin — eine
-    Erweiterung des Riegels, keine Fehlerbehebung; nicht in BR.**
 
 ## Erledigt
 
@@ -10146,3 +10124,64 @@ zutreffen.
     Werkzeugs — Liste schreiben, dann `reihe`. *Nachweis:* von Hand
     99 übersetzt, 0 fehlgeschlagen, 0 ohne Gerätedatei, rc 0, rund 10 min.
     Der Lauf im Prüfstand steht im Bericht des Kopf-Commits von BR.
+
+315. **Vier Schritte beim Einhängen eines Prüfmittels misst niemand.**
+    *Aufgenommen 24.09.2026 mit Konzept BR (BR-04, F-BR-19), gemessen von
+    der Gegenlesung des Runbooks `Pruefablauf.md` 6.12.* Eine unabhängige
+    Instanz hat zwei Attrappen eingehängt und je einen Schritt weggelassen.
+    Rot wurden fehlende Anlass-Zeile, `RUF`-Zeile, Backlog-Nummer, Name in
+    `NAMEN` oder `starter()` und das `--riegel` im Tor. **Grün blieb alles**
+    bei vier anderen: (1) eine Quelltextprüfung mit Selbstprobe, die nicht in
+    `SELBST` steht — ihre Selbstprobe läuft nirgends; (2) eine
+    Quelltextprüfung ohne Zeile in der Tabelle von
+    `tools/quelltext/LIESMICH.md` — ihr Anlass steht nirgends; (3) eine
+    Probe unter `proben` in `pruefablauf.json`, die in keinem Muster und
+    keinem Riegel steht — sie läuft nie; (4) die Tabelle in
+    `Pruefablauf.md` 4, nicht neu erzeugt — nichts vergleicht sie mit
+    `erzeugen-doku`, obwohl sie „nicht von Hand ändern" trägt.
+
+    *Weg (zu entscheiden):* die vier als Regeln in `bestand` (1, 2, 3) und
+    als Vergleich in `bericht.py` oder `bestand` (4). Jede ist eine Zeile
+    Zählung gegen eine Liste, die es schon gibt. Bis dahin nennt 6.12 sie
+    als Schritte, die man gegenliest. *Abnahme:* je Lücke ein Fall in der
+    Selbstprobe, der rot wird. **Zuordnung: Frage an die Betreiberin (Q-BR-13) —
+    entschieden am 24.09.2026: in BR mitbauen.**
+
+    **Erledigt 24.09.2026 mit Konzept BR, Paket BR-05** (Zweig
+    `claude/br-bestandsriegel`, ohne Versionsstufe). Vier Regeln mehr in
+    `tools/quelltext/bestand.py`, elf statt sieben: `selbst` (Selbstprobe im
+    Code ⇔ Name in `SELBST`; die Datei, die `starter()` startet, gibt es),
+    `zeile` (je Name genau eine Tabellenzeile mit Anlass, keine Zeile ohne
+    Namen), `ablauf` (jede Probe hängt an Muster, Riegel oder `nach`, jeder
+    genannte Name existiert, jedes Muster hat seine fünf Felder und eine
+    Stufe als `ab`) und `tabelle` (Abschnitt 4 ist die Ausgabe von
+    `erzeugen-doku`; der Riegel ruft den Erzeuger, statt ihn nachzubauen).
+    Am Bestand ein Befund, und der war echt: Die Selbstprobe der Textprobe
+    (21 Fälle hinter `--probe`) lief nirgends — jetzt `--selbstprobe`, in
+    `SELBST`, 9 von 9. Die erste Fassung der Regeln hat eine adversariale
+    Gegenprobe durch unabhängige Instanzen nicht bestanden (29 echte
+    Mängel, F-BR-22); die zweite liest Code, Tabellen, Bash-Listen und die
+    Ablaufdatei so, wie ihre Verbraucher sie lesen — seit der vierten
+    Fassung mit den echten Werkzeugen (`cmark-gfm`, `token_get_all`,
+    `bash … --liste`, `auswahl.passt()`). Die vierte Runde (21 Mängel) hat
+    den Umfang geschlossen: Wird `pruefen.sh --selbstprobe` überhaupt
+    gerufen, wählt jede Datei einer Fläche des Berichts deren Bauprobe aus,
+    steht eine veraltete Kopie der Tabelle irgendwo. Selbstprobe 140 Fälle,
+    jede der 85 Befundstellen fällt (Konzept BR, Protokoll BR-05). Nebenbei gefunden:
+    Nr. 317. `Pruefablauf.md` 6.12 nennt bei jedem
+    Schritt das Mittel, das ihn meldet — „niemand" steht dort nicht mehr.
+
+317. **Ein Pfad in der Zuordnung des Prüfstands traf seit PK-03 keine
+    Datei.** *Aufgenommen und behoben 24.09.2026 mit Konzept BR (BR-05,
+    F-BR-24), gefunden von der Gegenprobe des Bestandsriegels.* Das Muster
+    `spur` in `tools/pruefstand/pruefablauf.json` nannte
+    `server/api/spur*.php`; eine solche Datei gab es nie (`git log --all`).
+    Die Spur-Endpunkte der Schnittstelle heißen
+    `server/api/backup_spuren*.php` und lösen keine Spurprobe aus. Die
+    Selbstprobe von `auswahl.py` prüfte den Pfad gegen eine erfundene Datei
+    und blieb grün. *Behoben:* Pfad gestrichen — die Auswahl ändert sich
+    nicht (`--abdeckung` vorher wie nachher); der Selbstprobenfall prüft
+    einen Glob gegen eine versionierte Datei; `bestand` hält seither jeden
+    Pfad gegen den Baum (Regel `ablauf`). *Offen:* ob
+    `server/api/backup_spuren*.php` die Spurprobe auslösen soll — eine
+    Frage der Zuordnung an die Betreiberin (Konzept BR, Q-BR-14).

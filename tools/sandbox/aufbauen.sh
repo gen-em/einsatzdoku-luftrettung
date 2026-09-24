@@ -38,7 +38,8 @@ apt_holen() {   # apt_holen <paket…> — nur was fehlt, erst ohne, dann mit up
 
 teil_web() {
     melde "Systempakete"
-    # cmark-gfm seit BR-03: die Quelltextprüfung `handbuch` (F-BR-03).
+    # cmark-gfm seit BR-03: die Quelltextprüfung `handbuch` (F-BR-03), seit
+    # BR-05 auch `bestand` — er liest Tabellen so, wie GitHub sie zeigt.
     apt_holen mariadb-server librsvg2-bin imagemagick socat unzip wget curl cmark-gfm \
         || zeile "ACHTUNG: apt-get fehlgeschlagen — Prüfmittel unvollständig"
 

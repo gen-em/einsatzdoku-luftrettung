@@ -63,8 +63,71 @@ Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
   Absturz, während `bestand` und `kettenaufrufe` grün blieben. 6.12 nennt
   jetzt die Form eines Backlog-Eintrags, beide JSON-Einträge vollständig,
   die 40-Zeilen-Falle der Sammelanleitungen (beide stehen bei 40 von 40)
-  und bei jedem Schritt, welches Mittel sein Fehlen meldet — und bei vier
-  Schritten, dass es **keines** tut (Backlog Nr. 315).
+  und bei jedem Schritt, welches Mittel sein Fehlen meldet.
+- **Der Riegel misst jetzt auch das Einhängen** (BR-05, Nr. 315). Bei vier
+  Schritten meldete die Gegenlesung: kein Mittel merkt das Fehlen — eine
+  Selbstprobe, die nicht in `SELBST` steht und darum nirgends läuft; eine
+  Quelltextprüfung ohne Zeile in ihrer Tabelle; eine Probe, die an keinem
+  Muster und keinem Riegel hängt und darum nie läuft; und die Tabelle in
+  `Pruefablauf.md` 4, die „erzeugt, nicht von Hand" heißt, ohne dass
+  jemand das prüfte. Vier Regeln mehr in `bestand`, elf statt sieben:
+  `selbst`, `zeile`, `ablauf`, `tabelle`. `ablauf` fängt nebenbei das
+  unvollständige Muster, an dem der Prüfstand mit `KeyError` abstürzte.
+  `tabelle` ruft den Erzeuger selbst auf, statt ihn nachzubauen — sonst
+  stünde die Tabelle an zwei Stellen. Entschieden hat es die Betreiberin
+  (Q-BR-13); BR hatte es als Erweiterung des Riegels erst herausgehalten.
+- **Die vier Regeln sind adversarial gegengeprüft** — von unabhängigen
+  Instanzen, die sie täuschen sollten, jeder Fund von einer weiteren
+  nachgestellt. Die erste Fassung hielt nicht: **29 echte Mängel**. Die
+  Anlass-Spalte wurde nach Position statt nach Überschrift gelesen; ein
+  Kommentar mit `'--selbstprobe'` galt als Auswertung; zwei Waisen, die
+  einander per `nach` nennen, galten als eingehängt; ein Kreis in `nach`,
+  an dem der Prüfstand abbricht, blieb grün; ein zweiter, veralteter
+  Tabellenblock blieb unbemerkt. Die zweite und dritte Fassung bauten
+  bessere Leser — und jede Runde fand die nächste Randschreibweise: ein
+  Heredoc, ein `?>` im Kommentar, eine Tabelle unter einem zweizeiligen
+  Listenpunkt, `NAMEN` in Anführungszeichen. **Die Nachbauten
+  konvergierten nicht** (Runde 2: 30 neue, Runde 3: 27 neue echte Mängel).
+- **Deshalb liest der Riegel jetzt mit den echten Werkzeugen** (E-BR-22):
+  Tabellen über `cmark-gfm` — wie GitHub —, PHP über `token_get_all` — wie
+  PHP —, die Listen der Läufer über `bash … --liste` — wie bash; dafür hat
+  `pruefen.sh` den Modus `--liste` —, Pfadmuster über `auswahl.passt()` —
+  wie der Prüfstand. Eine Quelltextprüfung in einer anderen Sprache als
+  Python oder PHP ist ein Befund, keine Schätzung. Und eine
+  Mutationsmessung hatte gezeigt, dass sich 23 von 67 Befundstellen
+  streichen ließen, ohne dass die Selbstprobe es merkte: Jede Befundstelle
+  trägt jetzt eine Kennung, und die Selbstprobe schlägt an, wenn eine in
+  keinem Fall fällt. Preis: `bestand` braucht `cmark-gfm` und `php` (beide
+  im Tor vor dem Schritt und in der Ausbaustufe `web`).
+- **Die vierte Runde fand keine Randschreibweise mehr, sondern Lücken im
+  Umfang** — 21 echte Mängel, sieben davon realistisch und mindestens
+  „mittel" (fünf Ursachen, zwei doppelt gemeldet). Dazu hat sie fünf
+  Mängel früherer Runden als nicht behoben nachgemessen. Zu sind die
+  sieben und vier der fünf; der fünfte — eine Endmarke unter der Tabelle
+  zählt als zweiter Block — ist rot, nicht still, und als Grenze benannt.
+  `SELBST` ist nur eine Liste: Steht
+  `pruefen.sh --selbstprobe` in keinem Workflow, läuft keine Selbstprobe,
+  und alles darunter blieb grün. Eine Fläche des Berichts, deren Bauprobe
+  das Muster für eine ihrer Dateien nicht auswählt, machte jede Berührung
+  dort zur Sackgasse — das Tor verlangt `uhr=gebaut`, und kein Lauf liefert
+  es; der Riegel fragt jetzt `auswahl.treffer()` für jede Datei der Fläche.
+  Ein `auswahl.py`, das ein Geschwistermodul einbindet, galt als fehlend.
+  Ein Byte kaputtes UTF-8 in einer PHP-Zeichenkette ließ `json_encode`
+  scheitern und leerte den Leser für alle Dateien. Die alte Riegelzeile mit
+  einer Probe weniger war nicht gleich, sondern alt, und blieb unbemerkt —
+  jetzt zählt der Anfang einer Zeile. Und ein `|` ohne `\` in einer
+  Code-Spanne verschob die Spalten der Quelltext-Tabelle; GitHub wirft den
+  Rest weg. Kleiner: `--` und ein weicher Trennstrich galten als Anlass, die
+  Kreissuche brach an tausend `nach` ab, mehrere Befundstellen teilten
+  sich eine Kennung, und die Tabellenprüfung hing an `ablauf` — ein Komma zu
+  viel in der Ablaufdatei ließ sie still ausfallen; jetzt ist sie eine
+  eigene Gruppe. Die Selbstprobe baut veraltete Tabellen mit dem echten
+  Erzeuger aus einer geänderten Ablaufdatei, statt Text im Ausgabeformat zu
+  ersetzen — eine regelgerechte Formatänderung des Erzeugers hätte die Kopie
+  sonst still der aktuellen gleich gemacht. Was die Runde sonst fand, steht
+  als benannte Grenze im Kopf von `bestand.py` und im Konzept; **eine fünfte
+  Runde gibt es nicht** (E-BR-22). Selbstprobe **140 Fälle, 85 von 85
+  Befundstellen**, rund 20 s.
 
 ### Geändert
 
@@ -156,6 +219,25 @@ Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
   Jetzt zerlegt es die Zeile an `&&`, `||`, `|` und `;`. 85 statt 84
   Aufrufe, 0 Befunde; Selbstprobe 20 von 20, darunter ein Fall, den die
   alte Fassung still durchließ.
+- **Ein Pfad in der Zuordnung traf seit PK-03 keine Datei** (BR-05, Nr. 317,
+  der erste Treffer der Pfadprüfung). Das Muster `spur` nannte
+  `server/api/spur*.php`; die Datei gab es nie, die Spur-Endpunkte heißen
+  `server/api/backup_spuren*.php`. Die Selbstprobe von `auswahl.py` prüfte
+  den Pfad gegen eine erfundene Datei und war darum grün. Gestrichen — die
+  Auswahl ändert sich nicht; ob die beiden Endpunkte die Spurprobe
+  auslösen sollen, entscheidet die Betreiberin.
+- **Die Selbstprobe der Textprobe lief nirgends** (BR-05, gefunden von der
+  Gegenprobe des Bestandsriegels). `textprobe.py` hat seit P2 eine
+  Selbstprobe des Zerlegers (21 Fälle) — hinter `--probe`. Der Läufer ruft
+  `--selbstprobe`, und nur für die Namen in `SELBST`; `textprobe` stand
+  nicht darin. Jetzt heißt der Schalter auch `--selbstprobe`, der Name steht
+  in `SELBST`: **9 von 9** Selbstproben statt 8. Die erste Fassung der
+  Regel `selbst` hatte es übersehen, weil sie nur nach `--selbstprobe`
+  suchte — genau die Lücke, gegen die sie gebaut war.
+- **`kettenaufrufe` las `NAMEN=(…)` bis zur ersten Klammer** (BR-05). Ein
+  Kommentar mit Klammer in der Liste zerlegte sie, und ein Name aus
+  `NAMEN+=(…)` galt als unbekannt. Jetzt zeilenweise und kommentarfest, wie
+  im Bestandsriegel; Selbstprobe 21 von 21.
 - **`cmark-gfm --validate-utf8` prüft die Kodierung nicht** (F-BR-16). Es
   ersetzt kaputte Bytes still durch U+FFFD und endet mit 0 — der Tor-Schritt
   hätte ein Handbuch mit kaputter Kodierung grün gemeldet. Gefunden von der
@@ -176,12 +258,10 @@ Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
   stimmt und ob die Nummer in der Anlass-Zeile den richtigen Fehler nennt,
   sieht er nicht; eine vorhandene, aber falsche Nummer ist für ihn grün. Das
   Prüfdokument nimmt dafür eine Stichprobe von Hand.
-- **Vier Schritte beim Einhängen misst niemand** (Nr. 315): eine
-  Selbstprobe, die nicht in `SELBST` steht, eine Quelltextprüfung ohne
-  Tabellenzeile, eine Probe an keinem Muster und keinem Riegel, und die
-  Tabelle in `Pruefablauf.md` 4, wenn sie nicht neu erzeugt wird. Sie als
-  Regeln zu bauen, wäre eine Erweiterung des Riegels und keine Behebung —
-  das entscheidet die Betreiberin. Bis dahin nennt 6.12 sie beim Namen.
+- **Positionsargumente sieht kein Mittel.** `kettenaufrufe` prüft Namen
+  und Schalter eines Aufrufs, `bestand` die Einträge; ob `reihe` seine
+  Liste bekommt, zeigt erst ein Lauf. Deshalb sagt 6.12, Schritt 7: den
+  Aufruf einmal von Hand fahren (Nr. 316).
 - **Tote Werkzeugpfade in Dokumenten hält kein Mittel auf.** BR hat 26
   davon von Hand gefunden und berichtigt (F-BR-13). Eine Regel dafür hätte
   eine andere Quelle als `tools/` — das ist eine Frage an die Betreiberin,

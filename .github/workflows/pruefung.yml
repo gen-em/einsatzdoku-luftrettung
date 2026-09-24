@@ -111,7 +111,7 @@ jobs:
           echo "PHP-Dateien ohne Syntaxfehler: $n (davon versioniert unter server/: $s)"
           echo "zahl=php:$s/0" >> "$GITHUB_OUTPUT"
 
-      - name: cmark-gfm bereitstellen — für die Quelltextprüfung `handbuch`
+      - name: cmark-gfm bereitstellen — für die Quelltextprüfungen `handbuch` und `bestand`
         run: sudo apt-get update -qq && sudo apt-get install -y -qq cmark-gfm
 
       - name: Quelltext — elf Prüfungen, ein Läufer

@@ -19,10 +19,10 @@ entsteht mit BR-01. **Zweig der Umsetzung:** `claude/br-bestandsriegel`, von
 >
 > | | |
 > |---|---|
-> | Stand | **24.09.2026 — gebaut, Pull Request offen** auf `claude/br-bestandsriegel` (von `main` `f4fe4a0`, Konzept per Vorspulen übernommen; der Konzeptzweig ist gelöscht). **BR-01 bis BR-04 erledigt** — der Riegel steht, der Altbestand ist bereinigt (**57 → 0 Befunde**, `proben.sh alle` 20 von 20), die Reste aus PK, TB und RP sind aufgeräumt (17 Riegel statt 14, eine Baumsuche statt zweier), und der Weg für ein neues Prüfmittel steht in `Pruefablauf.md` 6.12 — **gegengelesen durch Befolgen** (Protokoll in Abschnitt 9). |
-> | Entschieden | **E-BR-01 bis E-BR-10**, alle von der Betreiberin am 24.09.2026 (Abschnitt 4); Q-BR-01 bis -07 beantwortet, alle wie empfohlen (Abschnitt 5). **Aus der Umsetzung: E-BR-11 bis -16** (4.1, zur Kenntnis — keine ändert eine Entscheidung der Betreiberin). **E-BR-17 und -18** von der Betreiberin am 24.09.2026 auf Q-BR-08 bis -12 (5.1). |
-> | Befunde der Umsetzung | **F-BR-07 bis -21** (2.1). Zwei davon verschieben den Rahmen: Die Handzählung aus Abschnitt 2 war zu grob (F-BR-07: 57 Befunde statt rund 35, **20** Anlass-Zeilen statt 19) — und **P5c ist weiter als angenommen** (F-BR-11: AP2 ist gebaut, E-BR-02 „Merge vor P5c AP2" ist damit überholt; was P5c nach dem Aufnehmen tun muss, ist gemessen). |
-> | Offen | nichts, was BR aufhält. **Q-BR-13** an die Betreiberin (die vier stillen Schritte beim Einhängen, Nr. 315). Die Zuarbeiten an P5c (Q-BR-05, -06) hat P5c übernommen; was P5c nach dem Aufnehmen tun muss, ist **gemessen** (8.1: vier Dateien mit Konflikt, danach ein Befund). |
+> | Stand | **24.09.2026 — gebaut, Pull Request offen** auf `claude/br-bestandsriegel` (von `main` `f4fe4a0`, Konzept per Vorspulen übernommen; der Konzeptzweig ist gelöscht). **BR-01 bis BR-05 erledigt** — der Riegel steht, der Altbestand ist bereinigt (**57 → 0 Befunde**, `proben.sh alle` 20 von 20), die Reste aus PK, TB und RP sind aufgeräumt (17 Riegel statt 14, eine Baumsuche statt zweier), und der Weg für ein neues Prüfmittel steht in `Pruefablauf.md` 6.12 — **gegengelesen durch Befolgen** (Protokoll in Abschnitt 9). Seit BR-05 meldet jeden Schritt dort ein Mittel: `bestand` misst **elf** Regeln, mit den echten Werkzeugen, nach **vier** adversarialen Gegenprüfrunden. |
+> | Entschieden | **E-BR-01 bis E-BR-10**, alle von der Betreiberin am 24.09.2026 (Abschnitt 4); Q-BR-01 bis -07 beantwortet, alle wie empfohlen (Abschnitt 5). **Aus der Umsetzung: E-BR-11 bis -16** (4.1, zur Kenntnis — keine ändert eine Entscheidung der Betreiberin). **E-BR-17 und -18** von der Betreiberin am 24.09.2026 auf Q-BR-08 bis -12 (5.1). **E-BR-19, -20** aus BR-04 (4.1). **E-BR-21** von der Betreiberin am 24.09.2026 auf Q-BR-13: die vier stillen Schritte in BR, als BR-05. **E-BR-22** aus BR-05 (4.1): echte Werkzeuge statt Nachbau, und nach Runde 4 ist Schluss. |
+> | Befunde der Umsetzung | **F-BR-07 bis -26** (2.1). Zwei davon verschieben den Rahmen: Die Handzählung aus Abschnitt 2 war zu grob (F-BR-07: 57 Befunde statt rund 35, **20** Anlass-Zeilen statt 19) — und **P5c ist weiter als angenommen** (F-BR-11: AP2 ist gebaut, E-BR-02 „Merge vor P5c AP2" ist damit überholt; was P5c nach dem Aufnehmen tun muss, ist gemessen). |
+> | Offen | nichts, was BR aufhält. **Q-BR-13** ist beantwortet und als **BR-05** gebaut (E-BR-21, Nr. 315). **Q-BR-14** an die Betreiberin: soll `server/api/backup_spuren*.php` die Spurprobe auslösen? Die Zuarbeiten an P5c (Q-BR-05, -06) hat P5c übernommen; was P5c nach dem Aufnehmen tun muss, ist **gemessen** (8.1: vier Dateien mit Konflikt, danach ein Befund). |
 > | Nächstes | **Freigabe des Abschlusses** durch die Betreiberin, dann Erledigt-Zeile in `Rahmenplan.md` 8, Konzept löschen; das Prüfdokument bleibt bis zum Abhaken. |
 
 ---
@@ -89,6 +89,11 @@ Workflow-Dateien durch TB oder RP; das Tor selbst (P-PK-29 bis -32).
 | F-BR-19 | **Das Runbook trug in der ersten Fassung nicht** (BR-04, Abnahme laut Abschnitt 3). Die unabhängige Instanz brauchte **5** Sprünge in andere Abschnitte und **4** weitere Dateien (`Backlog.md`, `pysyntax.py`, `pruefablauf.json`, `pruefung.yml`). Drei Aussagen waren falsch: Die Klammer zur Regel `backlog` (sie misst Dopplungen, nicht „keine Zeile mit Zahl und Punkt"); das Muster mit nur `pfade`, `ab`, `anlass` (`auswahl.py` liest `id` und `proben` — `KeyError`, während `bestand` und `kettenaufrufe` grün bleiben); `nach` beim Muster statt beim Proben-Eintrag. Und **vier Schritte meldet kein Mittel**: Name fehlt in `SELBST`, Tabellenzeile der Quelltextprüfung fehlt, Probe an keinem Muster und keinem Riegel, Tabelle in 4 nicht neu erzeugt. | 6.12 neu geschrieben: Form eines Backlog-Eintrags, beide JSON-Einträge vollständig, die 40-Zeilen-Falle, Rückgabewerte, das Ende des erzeugten Blocks, und je Schritt das Mittel, das sein Fehlen meldet — oder „niemand". Die vier Lücken als **Backlog Nr. 315** (offen) und **Q-BR-13**. |
 | F-BR-20 | **Die Uhr-Probe des Prüfstands lief seit PK-03 nie** (BR-04). Der erste volle Prüfstand vor dem PR: `uhr-stufe1` **rot nach 0 s**, „Listendatei fehlt". `pruefablauf.json` rief `pruefstand.sh reihe` ohne die Geräteliste auf, die erst `geraeteklassen.py` schreibt. Bekannt seit PK-03 als **F-PK-21** („ob `kettenaufrufe` Pflichtargumente lernen soll: PK-04"), behoben nie. Unsichtbar, weil seit PK-05 kein PR `tools/uhr-pruefstand/` berührt hatte — BR-02 tut es, und das Tor verlangt dann `uhr=gebaut`. **Ohne Behebung wäre der PR von BR rot.** | Behoben in BR-04, **Backlog Nr. 316**: der Aufruf ist die Kette aus der Anleitung des Werkzeugs. Von Hand gemessen: 99 übersetzt, 0 fehlgeschlagen, 0 ohne Gerätedatei, rc 0, 9 min 56 s. Runbook 6.12, Schritt 7: den Aufruf einmal von Hand fahren. |
 | F-BR-21 | **`kettenaufrufe` prüfte in einer Kette nur den ersten Befehl** (BR-04). Gegenprobe am neuen Aufruf von `uhr-stufe1`: `geraeteklassen.py --alle-listee` → 1 Befund, `pruefstand.sh reihee` hinter `&&` → **0**. Je Zeile ein Aufruf, jedes Wort dahinter ihm zugerechnet — die Schalter des zweiten Befehls wären dem ersten angelastet worden. | Die Zeile wird an `&&`, `\|\|`, `\|`, `;` zerlegt. Selbstprobe 18 → 20 (ein roter Fall, eine Gegenprobe); gegen die alte Fassung gefahren: sie zählte je Kette 1 Aufruf und übersah beide Tippfehler. 85 statt 84 Aufrufe, 0 Befunde. |
+| F-BR-22 | **Die erste Fassung der vier Regeln hielt der Gegenprobe nicht stand** (BR-05). Fünf Angreifer (je Regel einer, dazu Querwirkungen), jeder Fund von einem weiteren Agenten in eigener Kopie nachgestellt: **30 Funde, 29 reproduziert und echt** (3 hoch, 22 mittel, 4 niedrig; der eine nicht echte: Der Erzeuger maskiert kein `\|` in einer Zelle — ein Mangel des Erzeugers, nicht des Riegels). Die tragenden: `zeile` las die Anlass-Spalte nach Position (vierte Spalte, fehlende Zelle, `\|\|`); `selbst` hielt einen Kommentar mit `'--selbstprobe'` für eine Auswertung und sah weder `getopt()` noch Dateien außerhalb von `NAMEN`; `bash_liste` zerbrach an einem Kommentar mit Klammer und übersah `NAMEN+=`; `ablauf` prüfte „irgendwo genannt" statt „erreichbar" (Waisen, die einander per `nach` halten; `nach` an einem Riegel), sah keinen Kreis in `nach`, keinen doppelten Schlüssel, `pfade` als Zeichenkette nicht und glaubte `stufen` aus der JSON; `tabelle` verglich nur den ersten Block, fand die Kopfzeile auch in einem Codeblock, hing an einer festen Endzeile und verdoppelte einen relativen `--wurzel`. | Zweite Fassung: Zeichenketten über den Tokenizer bzw. einen PHP-Zustandsautomaten, Tabellen nach GFM mit Spalte über die Überschrift, Bash-Listen zeilenweise, `pruefablauf.json` über Erreichbarkeit mit Kreis-, Typ- und Dublettenprüfung, Stufen aus `auswahl.py`, Tabellenblock nach Anfang und Länge der Erzeugerausgabe, außerhalb von Codeblöcken, genau einmal. Je Fund ein Fall in der Selbstprobe (65). Zweite Runde siehe Protokoll BR-05. |
+| F-BR-23 | **Die Selbstprobe der Textprobe lief nirgends — im heutigen Bestand** (BR-05, der eine „hoch"-Fund, der kein konstruierter Fall war). `textprobe.py` hat eine Selbstprobe des Zerlegers mit 21 Fällen hinter `--probe`; `pruefen.sh --selbstprobe` ruft `--selbstprobe`, nur für `SELBST`, und `textprobe` stand nicht darin. Die erste Fassung von `selbst` suchte nur `--selbstprobe` und sah es nicht. | `textprobe.py` nimmt `--selbstprobe` (und weiter `--probe`), `textprobe` steht in `SELBST`: **9 von 9** Selbstproben, darunter 21/21 des Zerlegers. `selbst` meldet eine Selbstprobe hinter `--probe` seither als Befund. |
+| F-BR-24 | **Ein Pfad in `pruefablauf.json` traf seit PK-03 keine Datei** (BR-05, Runde 3, der zweite Fund am heutigen Bestand). Muster `spur` nannte `server/api/spur*.php`; `git log --all` kennt keine solche Datei, die Spur-Endpunkte heißen `server/api/backup_spuren*.php`. Von 55 Pfaden in 27 Mustern traf genau dieser keine der versionierten Dateien. Die Selbstprobe von `auswahl.py` hielt ihn gegen eine erfundene Datei (`server/api/spurteil.php`) und war darum grün. | Den toten Pfad gestrichen — die Auswahl ändert sich nicht (`auswahl.py --abdeckung` vorher wie nachher 0 ohne Muster, 87 nur Auffang). Der Fall in `auswahl.py` prüft jetzt einen Glob gegen eine versionierte Datei. **Backlog Nr. 317.** Ob `server/api/backup_spuren*.php` die Spurprobe auslösen soll: **Q-BR-14**. `bestand` hält jeden Pfad gegen den Baum (`ablauf-pfad-trifft-nie`). |
+| F-BR-25 | **Drei Runden, und die Nachbauten konvergierten nicht** (BR-05). Runde 2 fand 30 neue echte Mängel, Runde 3 weitere 27 (18 „mittel"; hier stand bis zum Abschluss von BR-05 „16", nachgezählt an den Urteilen der Nachstellung) — immer eine neue Randschreibweise, die der eigene Markdown-, PHP- oder Bash-Leser anders las als das Original (Heredoc, `?>` im Kommentar, Tabelle unter einem zweizeiligen Listenpunkt, HTML-Kommentar in der Tabelle, `NAMEN` in Anführungszeichen, `RUF+=`). Dazu zeigte eine Mutationsmessung: **23 von 67 Befundstellen** ließen sich streichen, ohne dass die Selbstprobe es merkte. | **E-BR-22**: echte Werkzeuge statt Nachbau, Befundstellen mit Kennung, die Selbstprobe verlangt jede. Vierte Fassung: 117 Fälle, **72 von 72 Befundstellen** gefallen; nach Runde 4 (F-BR-26): 140 Fälle, **85 von 85**. |
+| F-BR-26 | **Die vierte Runde fand Lücken im Umfang, keine Randschreibweise mehr** (BR-05, gegen die vierte Fassung). 24 Funde, jeder in eigener Kopie nachgestellt: **21 echt**, davon **7 realistisch und mindestens „mittel"** — fünf Ursachen, zwei doppelt gemeldet: (1) `SELBST` wird geprüft, aber nicht, ob `pruefen.sh --selbstprobe` überhaupt jemand ruft — ohne die eine Zeile in `pruefung.yml` läuft keine Selbstprobe, und alles bleibt grün; (2) eine Fläche des Berichts (`FLAECHEN` in `bericht.py`), deren Bauprobe umbenannt oder deren Ordner aus dem Muster gefallen ist — das Tor verlangt `uhr=gebaut`, kein Lauf liefert es; (3) `auswahl.py` mit einem Geschwistermodul galt als „fehlt" (`modul_aus()` ohne `sys.path`), die Selbstprobe fiel in 111 von 117 Fällen; (4) ein PHP-Literal mit kaputtem UTF-8 (`"\xC3\x28"`, die Hausform solcher Prüffälle) ließ `json_encode` scheitern und leerte den Leser für alle Dateien; (5) `tabelle-kopie` fing nur eine WORTGLEICHE alte Zeile — die echte alte Riegelzeile unterscheidet sich immer. Dazu **fünf Mängel früherer Runden**, als nicht behoben nachgemessen: ein `\|` ohne `\` in einer Code-Spanne der Quelltexttabelle (GitHub wirft die Zellen über der Kopfzeile weg, die Anlass-Spalte zeigte fremden Text); eine regelgerecht geänderte Kopfzeile des Erzeugers galt als „kein Block"; drei Befundstellen ließen sich streichen, weil der Absturzfänger und je zwei Stellen dieselbe Kennung trugen; der Erzeuger, am Grundbestand gescheitert, brach die Selbstprobe mit Traceback ab; eine Endmarke unter der Tabelle zählt als zweiter Block. 14 echte „niedrig" oder nicht realistische Funde. | Die sieben und vier der fünf behoben, je mit Fall in der Selbstprobe: Befund `selbst-tor`; `ablauf-flaeche` und `-flaeche-probe` über `auswahl.treffer()` für **jede** Datei der Fläche, ab der kleinsten Stufe; `modul_aus()` mit Ordner in `sys.path`; `JSON_INVALID_UTF8_SUBSTITUTE`; Kopie am Anfang einer Zeile erkannt (die ersten zwei Zellen, der fette Vorsatz); `zeile-zellen` über die rohe Zeile; Block auch an der genauen Kopfzeile der Ausgabe; eine Kennung je Stelle, eigene für den Fänger, und ein Haken, der ihn auslöst; Erzeugerfehler rc 2 mit Meldung. Von den 14 kleinen sind sechs mitgenommen (`--` und `&shy;` als leer, Kreissuche ohne Rekursion, `tabelle` als eigene Gruppe — ein Komma zu viel in der Ablaufdatei ließ sie still ausfallen —, veraltete Tabellen der Selbstprobe mit dem echten Erzeuger, der Hinweis auf `SCHLUESSEL`, drei Fälle gegen Mutanten). Der Rest und die Endmarke sind **Grenzen** (Abschnitt 7, Kopf von `bestand.py`). **Keine fünfte Runde** (E-BR-22). |
 
 ## 3. Arbeitspakete
 
@@ -98,8 +103,9 @@ Workflow-Dateien durch TB oder RP; das Tor selbst (P-PK-29 bis -32).
 | **BR-02 Der Altbestand** | F-BR-01 und F-BR-02 auf null: **19 Anlass-Zeilen** in den Probenköpfen (die Nummer aus Backlog, Changelog oder der Zuordnungstabelle in `Pruefablauf.md` 4, die je Probe schon einen Anlass nennt); `screenshots`, `zaehlung`, `uhr-pruefstand`, `kette` auf die Form — was Geschichte ist, geht in die Commit-Nachricht (Grundsatz 6), was Anleitung eines Unter-Skripts ist, in dessen Kopf; `erzeugen` bekommt seine Zeile (E-BR-05); `spaltenregister` eine Anleitung; die acht Unteranleitungen (E-BR-04) und die zwei losen Dateien (E-BR-03 (4)). | die genannten Ordner unter `tools/` | `bestand.py` **0 Befunde**; jede gestrichene Zeile hat ihren Platz (Commit, Kopf) oder war Geschichte; `proben.sh alle` 20 von 20 unverändert grün |
 | **BR-03 Die Reste aus PK, TB und RP** | F-BR-03: die drei Tor-Schritte bekommen je eine Zeile in `pruefablauf.json` (`riegel`) und einen Aufruf in Station B — der Backlog-Schritt als Teil von `bestand.py` (er zählt Bestand), die zwei anderen als `pruefen.sh`-Namen oder als Zeile in `pruefstand/pruefen.sh`; jeder mit Anlass. F-BR-04: der `true`-Zweig wird **rot** („nicht gemessen"), wie E-PK-46 es verlangt. F-BR-05 (b), (c), (d): je ein Satz an der richtigen Stelle. F-BR-05 (a) nach E-BR-09. | `tools/proben/wiederherstellung/`, `tools/pruefstand/`, `docs/Pruefablauf.md` 1, 3, 4; `tools/kette/` und beide Workflows (E-BR-09) | Stufe 1 auf dem PR grün mit **17** Riegeln im Bericht statt 14; die Wiederherstellungsprobe auf einer Anlage mit weniger als zwei offenen Konten **rot**, nicht grün |
 | **BR-04 Das Runbook und der Abschluss** | `Pruefablauf.md` **6.12 „Ein neues Prüfmittel"**: fünf Zeilen, in der Reihenfolge, in der sie zu tun sind (Backlog-Nummer → Ordner oder Sammelordner → Anleitung in der Form → Zeile in `pruefablauf.json` → Tabelle 4 erzeugen → Riegel grün). Dazu in 6.1 der Satz **„Ein Anlass ist eine Backlog-Nummer"** (E-BR-07). `CLAUDE.md` 6 bekommt keinen neuen Absatz — nur der Verweis „Regeln für Prüfmittel: `Pruefablauf.md` 6" steht dort schon. Backlog Nr. 293 nach Erledigt, die Nummernregel im Kopf von `Backlog.md` auf die nächste freie Zahl, Changelog (Präfix `Web`, ohne Versionsstufe — wie RP), Prüfdokument, PR. Die zwei Fragen an P5c (Q-BR-05, -06) mit Antwort ins P5c-Konzept übertragen — das tut P5c selbst, BR schreibt nicht in ein fremdes Konzept. | `docs/Pruefablauf.md` 6, `docs/Backlog.md`, `docs/CHANGELOG.md`, `docs/Rahmenplan.md` 10 | Stufe 1 grün; `bestand.py` 0; Runbook von einer Instanz gegengelesen, die es nicht geschrieben hat: Kann sie daraus ein Prüfmittel anlegen, ohne eine zweite Stelle zu lesen? |
+| **BR-05 Die vier stillen Schritte** *(nachgetragen am 24.09.2026 auf Anweisung der Betreiberin, Q-BR-13)* | Nr. 315 als vier Regeln in `bestand.py`: `selbst` (Selbstprobe im Code ⇔ Name in `SELBST`, die Datei, die `starter()` startet, gibt es), `zeile` (je Name in `NAMEN` genau eine Tabellenzeile mit nicht leerer Anlass-Spalte, keine Zeile ohne Namen), `ablauf` (jede Probe hängt an Muster, Riegel oder `nach`; jeder genannte Name existiert; jedes Muster hat seine fünf Felder und eine Stufe als `ab`), `tabelle` (Abschnitt 4 = Ausgabe von `erzeugen-doku`, der Riegel ruft den Erzeuger). Selbstprobe je Regel; Runbook 6.12 ohne „niemand". | `tools/quelltext/bestand.py`, `docs/Pruefablauf.md` 6, `tools/quelltext/LIESMICH.md`, Buchführung | `bestand` 0 Befunde in **elf** Regeln; Selbstprobe mit je mindestens einem roten Fall je neuer Regel; eine unabhängige, adversariale Gegenprobe findet keinen Weg, eine der vier Lücken still offen zu lassen — oder was sie findet, ist behoben oder als Grenze benannt |
 
-**Reihenfolge:** BR-01 → BR-02 → BR-03 → BR-04, je ein Commit mit
+**Reihenfolge:** BR-01 → BR-02 → BR-03 → BR-04 (→ BR-05), je ein Commit mit
 Paketpräfix, Push nach jedem Paket (`CLAUDE.md` 7, 8). BR-01 zuerst, weil erst
 das Mittel sagt, ob die Zahl aus Abschnitt 2 vollständig war — und weil BR-02
 gegen das Mittel misst, nicht gegen eine Liste im Konzept.
@@ -112,6 +118,7 @@ gegen das Mittel misst, nicht gegen eine Liste im Konzept.
 | BR-02 | **die 19 Anlass-Zeilen**, je Datei ein Agent, der die Nummer aus Backlog, Changelog und `git log -- <datei>` liest und die eine Zeile setzt; danach Gegenlesung durch die Instanz (Muster PK-04/5b) | die Anleitungen — erzählender Text, ein Ton (`CLAUDE.md` 7); die Unteranleitungen und losen Dateien |
 | BR-03 | — | alles: kleine Änderungen an je einer Stelle |
 | BR-04 | — | alles: Text |
+| BR-05 | **die Gegenprobe der vier neuen Regeln** — lesend und in je einer eigenen Kopie des Baums, ohne die örtliche Anlage: je Regel ein Agent, der versucht, sie zu täuschen (ein Fehler, den sie still durchlässt; ein Bestand, den sie zu Unrecht rot meldet), danach ein Agent, der jeden Fund unabhängig nachstellt. Eingetragen von der Instanz am 24.09.2026 bei eingeschaltetem Ultracode, weil `CLAUDE.md` 7 ohne diese Zeile keine Fächerung erlaubt | der Umbau — alle vier Regeln stehen in **einer** Datei (`bestand.py`); Dokumente, Changelog, Konzept — erzählender Text; der Prüfstand — Prüfarbeit an der einen Anlage |
 
 **Modell:** Opus in jedem Paket; kein Schritt sieht Fable vor.
 
@@ -235,6 +242,28 @@ was eine Entscheidung offen ließ, damit ein Mittel es messen kann.
   berichtigt wird, widersprechen einander; berichtigt sind beide, mit
   „Backlog-Nummer" und „ist Stufe 1 rot". Preis: `CLAUDE.md` steht in der
   Berührung des PR.
+- **E-BR-21 — Die vier stillen Schritte werden in BR gemessen** (Q-BR-13,
+  von der Betreiberin am 24.09.2026): als Paket BR-05 im offenen PR, nicht
+  als Folgepaket. Die vier Regeln stehen in `bestand.py` — derselbe Riegel,
+  dieselbe Selbstprobe, keine zwölfte Quelltextprüfung. `tabelle` ruft
+  `bericht.py erzeugen-doku`, statt die Tabelle nachzubauen: Der Erzeuger ist
+  die eine Stelle, der Riegel vergleicht nur. Die Anlass-Spalte der
+  Quelltexttabelle bleibt von E-BR-07 ausgenommen; `zeile` verlangt nur,
+  dass sie nicht leer ist.
+- **E-BR-22 — Der Riegel liest mit den echten Werkzeugen, nicht mit
+  Nachbauten** (BR-05, aus der Gegenprobe, F-BR-25). Tabellen über
+  `cmark-gfm` (wie GitHub), PHP über `token_get_all` (wie PHP), die Listen
+  der Läufer über `bash … --liste` (wie bash; `pruefen.sh` bekommt dafür den
+  Modus `--liste`), Pfadmuster über `auswahl.passt()` (wie der Prüfstand).
+  Eine Quelltextprüfung in einer anderen Sprache als Python oder PHP ist ein
+  Befund („nicht messbar"), keine Schätzung — heute gibt es keine. **Preis:**
+  `bestand` braucht `cmark-gfm` und `php`; beide stehen im Tor vor dem
+  Quelltext-Schritt und in der Ausbaustufe `web`; fehlt eines, ist das ein
+  Befund der Regel, nicht grün. Die Selbstprobe braucht rund 20 s statt 2 s.
+  Jede Befundstelle trägt eine Kennung, und die Selbstprobe schlägt an, wenn
+  eine in keinem Fall fällt. **Abbruchkriterium der Gegenprobe:** nach
+  diesem Umbau eine letzte Runde; was sie noch findet und nicht realistisch
+  und mindestens „mittel" ist, wird als Grenze benannt, nicht gejagt.
 - **E-BR-20 — Die Fassung des Rahmenplans ist 112, nicht 108** (BR-04).
   `main` steht auf 107; der P5c-Zweig hat 108 bis 111 vergeben (gemessen an
   `f7729c2`). Dieselbe Regel wie bei den Backlog-Nummern: Eine Zahl auf
@@ -267,7 +296,7 @@ was eine Entscheidung offen ließ, damit ein Mittel es messen kann.
   in Abschnitt 8; P5c trägt den Nachtrag selbst in sein Konzept ein.
 - **E-BR-10** (Q-BR-07): Fächerung nur für die Anlass-Zeilen.
 
-### 5.1 Fragen aus der Umsetzung (BR-02, BR-04)
+### 5.1 Fragen aus der Umsetzung (BR-02, BR-04, BR-05)
 
 Die Nachschlagearbeit für die Anlass-Zeilen (E-BR-10, 20 Agenten, Gegenlesung
 durch die Instanz) hat ergeben: **12 Proben** haben eine Backlog-Nummer, die
@@ -281,7 +310,8 @@ vorausgesetzt, dass die Nummer „schon da" ist.
 | **Q-BR-10** | **Rechtstexte-Probe** (`tools/proben/rechtstexte/pruefen.php`). Vorsorglich mit `rt_html()` gebaut (P3/O10, R32): 81 Angriffsproben und eine Positivliste der Tags. Ein Fund ist nicht verbucht. Sie ist ein **Riegel** — sie läuft in jeder Stufe und im Tor. | **Behalten, neue Nummer** → Nr. 311, E-BR-18. Vorschlag war ein Erledigt-Eintrag für das Risiko, das sie hütet: „`rt_html()` ist der eine Weg, auf dem aus einer Eingabe HTML wird — eine Lücke dort wäre ein eingeschleustes Skript auf den öffentlichen Rechtstextseiten". Streichen hieße, den einzigen Nachweis dieses Wegs aus dem Tor zu nehmen. |
 | **Q-BR-11** | **Stilvergleich** (`tools/stilvergleich/`). Anlass „P0/A3 — ein Umbau des Stylesheets ohne Netz und doppelten Boden". In Gebrauch (P5c AP2: 54 geplant, 54 gemessen, 0 ungeplant; `Pruefablauf.md` 6.10 regelt ihn), aber kein verbuchter Fund einer **ungeplanten** Änderung. | **Behalten, neue Nummer** → Nr. 312, E-BR-18. Vorschlag war ein Erledigt-Eintrag „Ein Umbau des Stylesheets ändert einen berechneten Stil, den niemand ändern wollte". Er ist das einzige Mittel für diese Frage; der Bilderlauf beantwortet sie nicht (6.10). |
 | **Q-BR-12** | **Kopplungsprobe** (`tools/proben/kopplung/probe.php`). Prüft `pair.php` gegen den JSON-Vertrag, dazu die **Antwortgleichheit** der Fehlerzweige (beide 401 in 0,351 s, Rümpfe byteweise gleich). Die einzige Nummer im Umfeld, Nr. 178, beschreibt einen Fehler der Probe selbst, und zwar in `rundlauf.mjs`. | **Behalten, neue Nummer** → Nr. 313, E-BR-18. Vorschlag war ein Erledigt-Eintrag „Die Fehlerzweige der Kopplung dürfen nicht verraten, welche Kennungen es gibt". Die Kopplung ist der eine Weg, auf dem ein Gerät ohne Anmeldung zu Zugangsdaten kommt. |
-| **Q-BR-13** | *(aus BR-04, offen — hält BR nicht auf)* Vier Schritte beim Einhängen eines Prüfmittels meldet **kein** Mittel (F-BR-19, Nr. 315): Name nicht in `SELBST`, keine Tabellenzeile der Quelltextprüfung, Probe an keinem Muster und keinem Riegel, Tabelle in `Pruefablauf.md` 4 nicht neu erzeugt. (a) als Regeln in `bestand` bzw. als Vergleich mit `erzeugen-doku` bauen — in einem eigenen kleinen Paket nach BR; oder (b) gegenlesen lassen, wie 6.12 es jetzt sagt? | **offen.** Empfehlung (a): Jede ist eine Zählung gegen eine Liste, die es schon gibt, und die Gegenlesung hat gezeigt, dass eine Instanz genau diese vier auslässt. Nicht in BR, weil es den Riegel erweitert, statt einen Fehler zu beheben. |
+| **Q-BR-13** | *(aus BR-04)* Vier Schritte beim Einhängen eines Prüfmittels meldet **kein** Mittel (F-BR-19, Nr. 315): Name nicht in `SELBST`, keine Tabellenzeile der Quelltextprüfung, Probe an keinem Muster und keinem Riegel, Tabelle in `Pruefablauf.md` 4 nicht neu erzeugt. (a) als Regeln in `bestand` bzw. als Vergleich mit `erzeugen-doku` bauen — in einem eigenen kleinen Paket nach BR; oder (b) gegenlesen lassen, wie 6.12 es jetzt sagt? | **(a), in BR — von der Betreiberin am 24.09.2026** („setz 315 direkt mit um"). → **E-BR-21**, Paket **BR-05**. Die Empfehlung war (a), aber in einem Folgepaket; die Betreiberin hat den kürzeren Weg gewählt — der PR war noch offen, und ein zweiter Durchlauf von Prüfstand und Tor hätte dasselbe gekostet. |
+| **Q-BR-14** | *(aus BR-05, offen — hält BR nicht auf)* Der Pfad `server/api/spur*.php` im Muster `spur` traf nie eine Datei (F-BR-24) und ist gestrichen. Die Spur-Endpunkte der Schnittstelle heißen `server/api/backup_spuren.php` und `backup_spuren_restore.php`; heute lösen sie nur das Auffangmuster und `oberflaeche` aus, keine Spurprobe. Soll (a) eine Berührung dieser beiden Dateien `spurprobe` und `containerprobe` auslösen (Pfad `server/api/backup_spuren*.php` ins Muster `spur`), oder (b) bleibt es so? | **offen.** Empfehlung (a): PK-03 wollte die Schnittstelle der Spuren an die Spurprobe hängen und hat sich im Dateinamen geirrt. Aber welche Probe eine Berührung auslöst, ist eine Zuordnung und keine Fehlerbehebung; BR hat nur gestrichen, was nie griff. |
 
 ## 6. Der Preis der Parallelität — und was P5c davon merkt
 
@@ -308,9 +338,34 @@ vorausgesetzt, dass die Nummer „schon da" ist.
 
 ## 7. Was dieses Konzept nicht klärt
 
-- **Ob der Riegel die vier stillen Schritte beim Einhängen messen soll**
-  (F-BR-19, Q-BR-13, Nr. 315). Die Gegenlesung von 6.12 hat sie gefunden;
-  bis zur Antwort nennt 6.12 sie beim Namen.
+- **Ein `|` in einer Zelle der erzeugten Tabelle.** `bericht.py
+  erzeugen-doku` maskiert es nicht; eine Probe, ein Pfad oder ein Anlass mit
+  `|` ergäbe eine kaputte Tabellenzeile, und `tabelle` beglaubigte sie, weil
+  sie Byte für Byte der Ausgabe entspricht (Gegenprobe BR-05, als Mangel des
+  Erzeugers eingestuft, nicht des Riegels). Heute steht in keiner Zelle ein
+  `|`. Das gehört in den Erzeuger, wenn es gebraucht wird.
+- **Positionsargumente eines Aufrufs.** Weder `kettenaufrufe` noch `bestand`
+  sieht, ob ein Aufruf die Argumente bekommt, die sein Werkzeug verlangt —
+  `uhr-stufe1` stand so von PK-03 bis BR-04 in der Datei (F-BR-20, F-PK-21).
+  6.12 verlangt deshalb, den Aufruf einmal von Hand zu fahren. Ob
+  `kettenaufrufe` Pflicht-Positionsargumente lernen soll, ist offen, seit
+  PK-03 („PK-04") — eine Frage an die Betreiberin, kein Paket von BR.
+- **Was die vierte Gegenprüfrunde fand und nicht gebaut ist** (F-BR-26,
+  E-BR-22: nicht realistisch oder unter „mittel"). Benannt im Kopf von
+  `bestand.py`, damit niemand sie für gemessen hält: Den Schalter
+  `--selbstprobe` sieht `selbst` nur als Zeichenkette in der Datei selbst —
+  in einer Konstanten für `getopt()` nicht; Unterordner von
+  `tools/quelltext/` durchsucht es nicht nach fremden Selbstproben; ein
+  Hilfsmodul, das den Schalter als Datum trägt oder selbst einen hat, gilt
+  als Datei mit Selbstprobe (rot zu Unrecht, nicht still). Konstanten in
+  `auswahl.py`, die eine Muster-id nennen (`AUFFANG = 'grundlage'`), gleicht
+  `ablauf` nicht ab. `Nr. 12a` liest `anlass` als Nr. 12, und was nach „bis"
+  oder „/" steht, nicht mehr. Eine Endmarke unter der erzeugten Tabelle zählt
+  als zweiter Block (rot). Zwei Gegenproben der Selbstprobe ändern den
+  Erzeuger selbst und greifen dafür in seinen Text; ändert er sich, melden
+  sie „Anker fehlt" — rot und benannt, kein Absturz. Und die Gegenlesung im
+  Tor (`--alle-riegel`) prüft, ob eine `--riegel`-Zeile da ist, nicht, ob ein
+  Schritt die Probe fährt — das ist Stufe 1, nicht `bestand`.
 - **Ob der Riegel auch tote Werkzeugpfade in Dokumenten zählen soll**
   (F-BR-13). BR hat 26 davon von Hand gefunden und berichtigt; kein Mittel
   hält neue auf. Das wäre eine siebte Regel mit eigener Quelle — den
@@ -533,7 +588,7 @@ anlegt.
 | Was | Mittel | Zahl |
 |---|---|---|
 | Selbstproben der Quelltextprüfungen | `pruefen.sh --selbstprobe` | **8 von 8** (neu: `pysyntax` 3/0, `handbuch` 5/0; `bestand` 24/0 mit 7 Regeln) |
-| Alle Quelltextprüfungen | `pruefen.sh alle` | **11 von 11** — 56 Python-Werkzeuge ohne Syntaxfehler, 2 Dokumente rendern |
+| Alle Quelltextprüfungen | `pruefen.sh alle` | **11 von 11** — 56 Python-Werkzeuge ohne Syntaxfehler (gemessen, bevor `baumsuche.py` entstand; der Commit trägt 57 — nachgezählt in BR-05), 2 Dokumente rendern |
 | Die Baumsuche | `baumsuche.py --selbstprobe` | **11 von 11** |
 | Kettenaufrufe | `--probe`, dann ohne Schalter | **18 von 18**; **84** Aufrufe (vorher 81), 0 Befunde, 2 ungeprüft |
 | Die Wiederherstellungsprobe | `proben.sh wiederherstellung` auf der örtlichen Anlage | normal **111 / 0**, rc 0; Gegenprobe ohne die Zusatzkonten: **rc 1**, „NICHT GEMESSEN" rot (vorher grün) |
@@ -633,3 +688,98 @@ ausgeschlossen und nach der Gegenlesung entfernt. Der Hook der Sitzung
 verlangte vor dem Ende der Gegenlesung einen Commit — daher der
 Zwischenstand `c5fc807`.
 
+### BR-05 Die vier stillen Schritte — erledigt 24.09.2026
+
+**Gebaut.** Nr. 315 als vier Regeln in `tools/quelltext/bestand.py`, elf
+statt sieben — derselbe Riegel, dieselbe Selbstprobe (E-BR-21):
+
+- **`selbst`** — eine Quelltextprüfung, deren Code `--selbstprobe`
+  auswertet, steht in `SELBST`, und umgekehrt; eine Selbstprobe hinter
+  `--probe` oder in einer Datei außerhalb von `NAMEN` ist ein Befund; die
+  Datei, die `starter()` startet, gibt es und ist Python oder PHP; und
+  `pruefen.sh --selbstprobe` steht in einem Workflow oder einem Aufruf
+  (Runde 4).
+- **`zeile`** — je Name genau eine Zeile in der Tabelle von
+  `tools/quelltext/LIESMICH.md`, so wie GitHub sie zeigt, mit Anlass; keine
+  Zeile ohne Namen, mit fremdem Namen oder mit mehr Zellen als die
+  Kopfzeile.
+- **`ablauf`** — `pruefablauf.json` so, wie `auswahl.py` und das Tor es
+  lesen: jede Probe erreichbar, jeder Name definiert, kein Kreis in `nach`,
+  keine Schlüssel, die niemand liest, jedes Muster vollständig mit Pfaden,
+  die eine Datei treffen, jede Probe der Läufer aufgerufen, und jede Datei
+  einer Fläche des Berichts wählt ab der kleinsten Stufe ihre Bauprobe aus.
+- **`tabelle`** — Abschnitt 4 von `Pruefablauf.md` ist genau einmal die
+  Ausgabe von `erzeugen-doku`, in Abschnitt 4, und nirgends steht eine
+  veraltete Kopie; eine eigene Gruppe, unabhängig von `ablauf`.
+
+Gelesen wird mit den echten Werkzeugen (E-BR-22): `cmark-gfm`,
+`token_get_all`, `bash … --liste` (neuer Modus in `pruefen.sh`),
+`auswahl.passt()` und `auswahl.treffer()`, `FLAECHEN` aus dem geladenen
+`bericht.py`. Jede Befundstelle hat eine Kennung (85), die Selbstprobe
+verlangt jede; das Auffangnetz je Gruppe hat eine eigene und einen Haken,
+der es auslöst.
+
+**Am heutigen Bestand gefunden und behoben** — die zwei Funde, die kein
+konstruierter Fall waren: Die Selbstprobe der Textprobe lief nirgends
+(F-BR-23: `--selbstprobe`, in `SELBST`, 9 von 9), und ein Pfad der
+Zuordnung traf seit PK-03 keine Datei (F-BR-24, Nr. 317; die Frage, was
+dort stehen soll, ist Q-BR-14). Dazu drei Lesefehler anderer Werkzeuge, die
+dieselbe Gegenprobe zeigte: `pysyntax` sah Pfade mit Umlaut nicht (`git
+ls-files` ohne `-z`), `kettenaufrufe` las `NAMEN=(…)` bis zur ersten
+Klammer und übersah `NAMEN+=` (jetzt zeilenweise, 21 von 21), und die
+Selbstprobe von `auswahl.py` prüfte den toten Pfad gegen eine erfundene
+Datei.
+
+**Die Gegenprobe — die Abnahme aus Abschnitt 3.** Gefächert nach der
+Zeile in Abschnitt 3: je Runde fünf Angreifer in je einer eigenen Kopie
+des Baums (je Regel einer, dazu Querwirkungen), jeder Fund von einem
+weiteren Agenten unabhängig nachgestellt; ab Runde 2 dazu je Gruppe die
+Nachmessung der offenen Funde. Umbau, Dokumente und Prüfarbeit seriell.
+
+| Runde | gegen | gemeldet | echt | Folge |
+|---|---|---|---|---|
+| 1 | erste Fassung (eigene Leser) | 30 | **29** (3 hoch, 22 mittel) | zweite Fassung, F-BR-22 |
+| 2 | zweite Fassung | 30 neue | **30** (13 mittel) | dritte Fassung |
+| 3 | dritte Fassung | 29 neue | **27** (18 mittel) | Nachbauten konvergieren nicht: E-BR-22, vierte Fassung mit den echten Werkzeugen (F-BR-25) |
+| 4 | vierte Fassung | 24 neue, dazu 9 Nachmessungen | **21** (1 hoch, 6 mittel), alle 7 davon realistisch (5 Ursachen); 5 frühere als nicht behoben | alle 7 und 4 der 5 behoben, 6 der kleinen mitgenommen, der Rest Grenze (F-BR-26, Abschnitt 7); **keine fünfte Runde** |
+
+**Gemessen** (örtlich, vor dem Prüfstand):
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| Selbstprobe | `bestand.py --selbstprobe` | **140 Fälle, 0 Fehlschläge** (117 mit eingebautem Fehler, 23 Gegenproben); **85 von 85** Befundstellen gefallen; 22 s |
+| Mutationsmessung | jede der 80 Befundstellen und die 3 Rückgaben in `anlass_pruefen()` einzeln stumm, je die ganze Selbstprobe; Kontrolle unverändert im selben Aufbau | **83 von 83** Mutanten rot (rc 1, je mindestens ein `[FEHL]`), 0 überlebt; Kontrolle 140 / 0. In Runde 4 überlebten 6 von 81 |
+| Riegel am Bestand | `bestand.py` | **0 Befunde in elf Regeln**: 17 Ordner, 25 Anleitungen, 20 Proben, 11 Quelltextprüfungen (9 mit Selbstprobe), `pruefablauf.json` 46 Proben / 27 Muster / 17 Riegel; 0,4 s |
+| Gegenprobe am echten Bestand | Kopie des Baums, je ein eingebauter Fehler | Ordner `tools/uhr-pruefstand/**` aus dem Muster `uhr` → `ablauf-flaeche` + `tabelle-abweichung`; `--selbstprobe` aus `pruefung.yml` → `selbst-tor`; `a\|b` in einer Code-Spanne → `zeile-zellen`; alte Riegelzeile ohne `bestand` → `tabelle-kopie`; Anlass `&shy;` → `zeile-anlass-leer`; unverändert **0** |
+| Rest aus Runde 3 (Kopfzeile) | Kopfzeile des Erzeugers geändert, Tabelle neu erzeugt | Riegel **0**, Selbstprobe **140 / 0**, kein „Anker fehlt" |
+| F-BR-23 | `pruefen.sh --selbstprobe` | **9 von 9**, darunter die Textprobe mit 21 / 21 |
+| F-BR-24 | `auswahl.py --abdeckung` vorher / nachher; `--selbstprobe` | je 0 ohne Muster, 87 nur Auffang; **27 / 0** |
+| Quelltextprüfungen | `pruefen.sh alle` | **11 von 11**; 57 Python-Werkzeuge ohne Syntaxfehler |
+| `kettenaufrufe` | `--probe`, dann ohne Schalter | **21 von 21**; 85 Aufrufe, 0 Befunde, 2 benannt ungeprüft |
+| Übrige | Zählung; `bericht.py lesen --selbstprobe`; `baumsuche`; `freigabe`; `git diff --check` | 38 Zeilen / 0 über der Decke; 13 / 0; 11 / 0; 52 / 0; sauber |
+
+**Der Prüfstand läuft zuletzt**, nach dieser Zeile; sein Bericht steht in
+der Nachricht des Paket-Commits.
+
+**Probleme und wie sie gelöst wurden.** Die ersten drei Fassungen bauten
+Leser nach, und jede Runde fand die nächste Randschreibweise — das war
+kein Fleiß-, sondern ein Bauartproblem, und E-BR-22 hat es so gelöst: Wer
+liest, wie das Original liest, kann sich nicht anders verlesen. Preis ist
+die Laufzeit der Selbstprobe (2 s → rund 20 s) und zwei Werkzeuge mehr im
+Tor. Die Mutationsmessungen der Runden 3 und 4 zeigten, dass die
+Selbstprobe Kennungen zählte, nicht Stellen: Drei Stellen teilten sich
+eine Kennung mit dem Auffangnetz. Jetzt hat jede Stelle ihre eigene, und
+die Messung ist wiederholt (oben). Nach dem Umbau der Runde 4 fielen neun
+Fälle der Selbstprobe — jeder geprüft, keiner ein Fehler des Riegels:
+Ohne `auswahl.py` lädt `bericht.py` nicht, also ist `FLAECHEN` wirklich
+unlesbar; die Muster-id zeigt die Tabelle gar nicht; und seit `tabelle`
+eine eigene Gruppe ist, meldet sie ihr Teil auch dann, wenn `ablauf` früh
+aufhört. Die Erwartungen sind nachgezogen, mit dem Grund im Namen des
+Falls. Die Selbstprobe baute veraltete Tabellen durch Textersatz im
+Ausgabeformat (`| neben |`); eine regelgerechte Formatänderung des
+Erzeugers hätte sie still der aktuellen gleich gemacht. Jetzt erzeugt sie
+sie mit dem echten Erzeuger aus einer geänderten Ablaufdatei — belegt mit
+einer geänderten Kopfzeile des Erzeugers: 140 / 0 ohne einen „Anker
+fehlt". Der Hook der Sitzung verlangte mehrmals Commit und Push; beides
+wartet bis zum Paket-Commit mit Bericht, weil ein Zwischenstand ohne
+Bericht in Stufe 1 rot wäre.

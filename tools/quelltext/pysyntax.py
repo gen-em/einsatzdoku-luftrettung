@@ -29,10 +29,12 @@ WURZEL = os.path.dirname(os.path.dirname(HIER))
 
 
 def dateien(wurzel):
-    r = subprocess.run(['git', '-C', wurzel, 'ls-files', '-co', '--exclude-standard', '--', 'tools'],
+    # `-z`: sonst stünde ein Pfad mit Umlaut in Anführungszeichen mit
+    # Oktalfolgen da und wäre unsichtbar (Gegenprobe des Bestandsriegels, BR-05).
+    r = subprocess.run(['git', '-C', wurzel, 'ls-files', '-z', '-co', '--exclude-standard', '--', 'tools'],
                        capture_output=True, text=True)
     if r.returncode == 0:
-        return sorted(p for p in r.stdout.splitlines()
+        return sorted(p for p in r.stdout.split('\0')
                       if p.endswith('.py') and os.path.isfile(os.path.join(wurzel, p)))
     aus = []
     for ordner, _, namen in os.walk(os.path.join(wurzel, 'tools')):

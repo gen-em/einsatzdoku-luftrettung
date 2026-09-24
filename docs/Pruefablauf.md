@@ -321,7 +321,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | Berührung | ab Stufe | Proben | Anlass |
 |---|---|---|---|
 | `server/**` | klein | — (nur die Riegel) | Auffangmuster: Jede Datei unter server/ laeuft durch die billigen Riegel. Sie traegt KEINE eigene Probe -- wer hier landet und sonst nirgends, hat keine zugeordnete Probe, und der Pruefstand sagt das. |
-| `server/spur_lib.php`, `server/tag_spuren.php`, `server/api/spur*.php` | klein | `spurprobe`, `containerprobe` | int gegen float (S2) |
+| `server/spur_lib.php`, `server/tag_spuren.php` | klein | `spurprobe`, `containerprobe` | int gegen float (S2) |
 | `server/ingest.php`, `server/validate_lib.php` | klein | `ingestprobe` | stiller Datenverlust bei "ok" |
 | `server/jobs_lib.php`, `server/jobs.php` | klein | `jobprobe`, `jobregister` | Huckepack 18 s; Nr. 208 |
 | `server/backup_lib.php`, `server/adminbackup_*.php`, `server/import*.php` | klein | `wiederherstellung`, `containerprobe`, `kreislauf-edbak` | Nr. 31, 33, 34, 35 |
@@ -457,9 +457,10 @@ fangen kann, trägt genau `Anlass: entfällt — Erzeuger (E-BR-05)`.
 Probe: Ohne sie ist Stufe 1 rot. Bis dahin kam ein Werkzeug ohne Zeile
 „auf die Streichliste", und die führte niemand — vor BR trugen 0 von 20
 Proben die Zeile. Eine Quelltextprüfung hat keinen eigenen Ordner: Ihr
-Anlass steht in der Tabelle von `tools/quelltext/LIESMICH.md`, und diese
-Spalte misst niemand (Backlog Nr. 315) — sie wird gegengelesen (6.12,
-Schritt 2).
+Anlass steht in der Tabelle von `tools/quelltext/LIESMICH.md`. `bestand`
+verlangt dort je Prüfung genau eine Zeile mit nicht leerer Anlass-Spalte
+(Regel `zeile`, seit BR-05), liest die Spalte aber nicht als Backlog-Nummer
+(E-BR-07).
 
 ### 6.2 Die Anleitung: fünf Abschnitte, höchstens 40 Zeilen
 
@@ -490,6 +491,26 @@ dass außer `motor.mjs` keine Datei lose unter `tools/` liegt. Er misst gegen
 null, **ohne Decke und ohne Ausnahmeliste** (E-BR-01). Die Anlass-Zeile
 beginnt mit `Anlass:`; eine Zeile, in der das Wort mitten im Satz steht,
 findet man nur, wenn man sie sucht, und zählt deshalb nicht.
+
+**Seit BR-05 misst er auch das Einhängen** (Nr. 315): dass eine
+Quelltextprüfung mit Selbstprobe in `SELBST` steht und ihre Zeile in der
+Tabelle hat, dass jede Probe in `pruefablauf.json` an einem Muster, am
+Riegel oder an einem `nach` hängt und jedes Muster vollständig ist, und dass
+die Tabelle in 4 die Ausgabe ihres Erzeugers ist. Das waren die vier
+Schritte, die die Gegenlesung von 6.12 auslassen konnte, ohne dass ein Mittel
+es merkte. Dazu zwei, die erst die vierte Gegenprüfrunde fand: dass
+`pruefen.sh --selbstprobe` in einem Workflow oder einem Aufruf überhaupt
+steht, und dass jede Datei einer Fläche des Berichts (`android/`, `watch/`,
+`tools/uhr-pruefstand/`) schon in der kleinsten Stufe ihre Bauprobe
+auswählt — sonst verlangt das Tor „gebaut", und kein Lauf liefert es.
+**Gelesen wird mit den echten Werkzeugen** (E-BR-22): Tabellen über
+`cmark-gfm`, PHP über `token_get_all`, die Listen der Läufer über
+`bash … --liste`, Pfadmuster und Auswahl über `auswahl.passt()` und
+`auswahl.treffer()` — drei Gegenprüfrunden haben gezeigt, dass eigene
+Nachbauten jede Runde eine andere Randschreibweise anders lesen. Jede
+Befundstelle hat eine Kennung, und die Selbstprobe von `bestand` schlägt an,
+wenn eine in keinem Fall fällt. Was er nicht sieht, steht im Kopf von
+`bestand.py`.
 
 *Gemessen am 24.09.2026 mit `bestand`: 25 Anleitungen mit zusammen 972
 Zeilen, alle in der Form, 0 Befunde. Vor Konzept BR waren es 24 Anleitungen
@@ -705,7 +726,7 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `vollstaendigkeit` | 0 Befunde — ohne Schwelle seit PK-04/5e (E-PK-16) |
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt` |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
-| `tools/quelltext/` `bestand` | 0 Befunde in allen sieben Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
+| `tools/quelltext/` `bestand` | 0 Befunde in allen elf Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01) |
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die Liste deckt sich mit der Liste der geplanten Änderungen (6.10) |
@@ -724,10 +745,11 @@ das Tor selbst und hält sie dem Bericht entgegen.
 ### 6.12 Ein neues Prüfmittel
 
 In dieser Reihenfolge. In Klammern steht, welches Mittel einen
-ausgelassenen Schritt meldet; **„niemand"** heißt: Er bleibt grün, und nur
-Gegenlesen fängt ihn (Backlog Nr. 315). Die Zuordnung ist gemessen: Eine
-Instanz, die diesen Abschnitt nicht geschrieben hat, hat danach zwei
-Attrappen eingehängt und je einen Schritt weggelassen (BR-04, F-BR-19).
+ausgelassenen Schritt meldet. **Seit BR-05 meldet jeden Schritt ein Mittel**
+(Backlog Nr. 315); was keines sehen kann, steht in Schritt 7. Die Zuordnung
+ist gemessen: Eine Instanz, die diesen Abschnitt nicht geschrieben hat, hat
+danach zwei Attrappen eingehängt und je einen Schritt weggelassen (BR-04,
+F-BR-19) — vier davon blieben damals grün.
 
 1. **Die Backlog-Nummer anlegen** (6.1). Am **Ende von *Offen*** in
    `docs/Backlog.md`, also direkt vor `## Erledigt`, mit der nächsten
@@ -755,8 +777,8 @@ Attrappen eingehängt und je einen Schritt weggelassen (BR-04, F-BR-19).
      (fehlt er: `kettenaufrufe`), bei `.py` auch in `starter()` dort
      (fehlt er: der Läufer meldet eine grüne Prüfung weniger). Dazu eine
      Zeile in der Tabelle von `tools/quelltext/LIESMICH.md` mit Name,
-     Gegenstand und Anlass (fehlt sie: **niemand**), und die Nummer in die
-     Anlass-Zeile derselben Datei.
+     Gegenstand und Anlass (fehlt sie oder ihr Anlass: `bestand`, `zeile`),
+     und die Nummer in die Anlass-Zeile derselben Datei.
    - **Braucht es die laufende Anlage** → `tools/proben/<name>/`, eine
      Zeile in `RUF` von `tools/proben/proben.sh` (fehlt sie: `bestand`,
      `probe`). Der Kopfkommentar der Datei, die `RUF` startet, trägt eine
@@ -781,10 +803,12 @@ Attrappen eingehängt und je einen Schritt weggelassen (BR-04, F-BR-19).
    gelaufen (etwas fehlt — nie still grün). Vorlage:
    `tools/quelltext/pysyntax.py`. Eine Quelltextprüfung trägt ihren Namen
    dann auch in `SELBST` von `tools/quelltext/pruefen.sh` (fehlt er:
-   **niemand** — die Selbstprobe läuft dann nirgends).
+   `bestand`, `selbst` — sonst liefe die Selbstprobe nirgends; ebenso,
+   wenn `pruefen.sh --selbstprobe` aus `pruefung.yml` verschwindet).
 5. **Die Zeile in `tools/pruefstand/pruefablauf.json`.** Unter `proben` ein
-   Eintrag; der Schlüssel ist der Name im Bericht und darf vom Namen im
-   Läufer abweichen (`cspprobe` ruft `pruefen.sh csp`):
+   Eintrag (fehlt er für eine Probe aus `RUF` oder einen Namen aus `NAMEN`:
+   `bestand`, `ablauf`); der Schlüssel ist der Name im Bericht und darf vom
+   Namen im Läufer abweichen (`cspprobe` ruft `pruefen.sh csp`):
 
    ```json
    "attrappe": {"aufruf": "bash tools/proben/proben.sh attrappe",
@@ -792,14 +816,21 @@ Attrappen eingehängt und je einen Schritt weggelassen (BR-04, F-BR-19).
    ```
 
    `braucht` ist `nichts`, `installation`, `plattform`, `android` oder
-   `uhr`; `nach` nur, wenn es eine andere Probe voraussetzt (4). Der
+   `uhr` (ein anderer Wert: `bestand`, `ablauf` — die Vorabprüfung entfiele
+   still); `nach` nur, wenn es eine andere Probe voraussetzt (4), nie im
+   Kreis und nie an einem Riegel. Der
    `aufruf` darf eine Kette sein (`a && b`, wie bei `uhr-stufe1`);
-   `kettenaufrufe` prüft seit BR-04 jeden Teil. Dann
-   **eines** von beiden (fehlt beides: **niemand** — es läuft nie):
+   `kettenaufrufe` prüft seit BR-04 jeden Teil. Ein **neuer Schlüssel**,
+   den ein Werkzeug liest, gehört auch in `SCHLUESSEL` von
+   `tools/quelltext/bestand.py` (sonst: `bestand`, `ablauf` — „das liest
+   niemand"). Dann
+   **eines** von beiden (fehlt beides: `bestand`, `ablauf` — sonst liefe es
+   nie):
    - ein Eintrag unter `muster`, wenn es nur bei einer Berührung laufen
-     soll. Alle fünf Felder sind Pflicht; fehlt eines, stürzt die Auswahl
-     des Prüfstands oder die Tabellenerzeugung aus Schritt 6 ab, während
-     `bestand` und `kettenaufrufe` grün bleiben:
+     soll. Alle fünf Felder sind Pflicht, `ab` ist eine Stufe aus
+     `auswahl.py`, jeder Pfad steht relativ zur Wurzel ohne `/` vorn und
+     hinten (sonst: `bestand`, `ablauf` — bis BR-05 stürzte erst der
+     Prüfstand daran ab oder das Muster griff nie):
 
      ```json
      {"id": "attrappe", "ab": "klein", "pfade": ["server/attrappe*.php"],
@@ -820,16 +851,16 @@ Attrappen eingehängt und je einen Schritt weggelassen (BR-04, F-BR-19).
 6. **Die Tabelle in 4 erzeugen:** `python3 tools/pruefstand/bericht.py
    erzeugen-doku`. Die Ausgabe ersetzt in Abschnitt 4 den Block von der
    Zeile `<!-- ERZEUGT … -->` bis einschließlich der Zeile „**Die billigen
-   Riegel laufen in jeder Stufe …**". Nie von Hand (fehlt der Schritt:
-   **niemand**).
+   Riegel laufen in jeder Stufe …**". Nie von Hand (fehlt der Schritt oder
+   ist die Tabelle von Hand geändert: `bestand`, `tabelle`).
 7. **Die Riegel grün:** `bash tools/quelltext/pruefen.sh bestand`,
    `python3 tools/kettenaufrufe/pruefen.py` und
    `bash tools/quelltext/pruefen.sh --selbstprobe`, alle **0 Befunde** bzw.
    alle grün. Die Sollzahl des neuen Mittels steht in seiner Anleitung,
    nicht hier (6.11); ein neuer Riegel bekommt in 6.11 eine Zeile dazu, was
-   grün heißt. Dann die vier Schritte mit „niemand" gegenlesen — und den
-   `aufruf` **einmal von Hand fahren**: `kettenaufrufe` prüft Namen und
-   Schalter, keine Positionsargumente. `uhr-stufe1` stand so von PK-03 bis
+   grün heißt. Dann den `aufruf` **einmal von Hand fahren**: `kettenaufrufe`
+   prüft Namen und Schalter, `bestand` die Einträge — keines von beiden
+   Positionsargumente. `uhr-stufe1` stand so von PK-03 bis
    BR-04 in der Datei und brach nach 0 s ab (Nr. 316).
 
 Danach läuft es wie jedes andere: Der Prüfstand wählt es nach der Berührung

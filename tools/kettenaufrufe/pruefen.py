@@ -161,6 +161,30 @@ LESER = {'.py': schalter_py, '.mjs': schalter_mjs, '.js': schalter_mjs,
          '.sh': schalter_sh, '.php': schalter_php}
 
 
+def namen_liste(quelle: str) -> list[str]:
+    """Die Woerter aller `NAMEN=(…)` und `NAMEN+=(…)`, zeilenweise und
+    kommentarfest -- dieselbe Lesart wie `bash_liste()` in
+    tools/quelltext/bestand.py. Bis BR-05 las hier ein Muster bis zur ersten
+    `)`: Ein Kommentar mit Klammer in der Liste zerlegte sie, und ein Name
+    aus `NAMEN+=(…)` galt als unbekannt (Gegenprobe des Bestandsriegels)."""
+    woerter: list[str] = []
+    offen = False
+    for zeile in quelle.split('\n'):
+        rest = zeile
+        if not offen:
+            m = re.match(r'^\s*NAMEN(\+?)=\(', rest)
+            if not m:
+                continue
+            if not m.group(1):
+                woerter = []
+            rest, offen = rest[m.end():], True
+        rest = re.sub(r'(^|\s)#.*$', '', rest)
+        if ')' in rest:
+            rest, offen = rest[:rest.index(')')], False
+        woerter += rest.split()
+    return woerter
+
+
 def befehle_sh(quelle: str) -> set[str]:
     """Unterbefehle eines Shell-Werkzeugs: die Zweige seines case-Verteilers
     (`case "$befehl"` oder `case "$fall"`) und bei den Sammellaeufern unter
@@ -178,9 +202,7 @@ def befehle_sh(quelle: str) -> set[str]:
     if m:
         for zweig in re.finditer(r'^\s*([\w|-]+)\)', m.group(1), re.M):
             namen |= {t for t in zweig.group(1).split('|') if t and t != '*'}
-    liste = re.search(r'^NAMEN=\((.*?)\)', quelle, re.S | re.M)
-    if liste:
-        namen |= set(liste.group(1).split())
+    namen |= set(namen_liste(quelle))
     ruf = re.search(r'declare -A RUF=\((.*?)\n\)', quelle, re.S)
     if ruf:
         namen |= set(re.findall(r'\[([\w-]+)\]=', ruf.group(1)))
@@ -456,10 +478,17 @@ def selbstprobe() -> int:
         if not ok and ab:
             for a in ab:
                 melde(f'         {a}')
+    # Die Lesart der Namensliste, unmittelbar (BR-05): ein Kommentar mit
+    # Klammer darin und ein angehaengtes `NAMEN+=(…)`.
+    liste = namen_liste('NAMEN=(eins   # die erste (siehe unten)\n       zwei)\nNAMEN+=(drei)\n')
+    ok = liste == ['eins', 'zwei', 'drei']
+    gut += ok
+    melde(f'  [{"ok " if ok else "FEHL"}] {"NAMEN mit Kommentar (Klammer) und NAMEN+= (BR-05)":<52} '
+          f'{" ".join(liste)}')
     melde()
-    melde(f'  -> {gut} von {len(faelle)} Faellen erwartungsgemaess, '
-          f'{len(faelle) - gut} nicht.')
-    return 0 if gut == len(faelle) else 2
+    melde(f'  -> {gut} von {len(faelle) + 1} Faellen erwartungsgemaess, '
+          f'{len(faelle) + 1 - gut} nicht.')
+    return 0 if gut == len(faelle) + 1 else 2
 
 
 def main() -> int:

@@ -19,12 +19,12 @@ Satz wie „das Rettungsmittel landet am Einsatzort" enthaelt kein Sperrwort
 und ist trotzdem von der Luft her gedacht. Dafuer gibt es kein Werkzeug,
 nur Lesen (Konzept P2, Paket D4, Schritt 11).
 
-Aufruf:
-    python3 wortliste.py                  # alle Bereiche
-    python3 wortliste.py --bereich a      # nur die PHP-Dateien des Servers
-    python3 wortliste.py --alle           # auch die erklaerten Treffer zeigen
-    python3 wortliste.py --probe          # Selbstprobe des Zerlegers
-    python3 wortliste.py --bericht /tmp/w.txt
+Aufruf (ueblich ueber den Laeufer: bash tools/quelltext/pruefen.sh textprobe):
+    python3 tools/quelltext/textprobe.py                  # alle Bereiche
+    python3 tools/quelltext/textprobe.py --bereich a      # nur die PHP-Dateien des Servers
+    python3 tools/quelltext/textprobe.py --alle           # auch die erklaerten Treffer zeigen
+    python3 tools/quelltext/textprobe.py --selbstprobe    # Selbstprobe des Zerlegers (auch --probe)
+    python3 tools/quelltext/textprobe.py --bericht /tmp/w.txt
 
 Rueckgabewert: 0 = sauber, 1 = Treffer ausserhalb der Ausnahmen oder
 ungenutzte Ausnahmen, 2 = Fehler (fehlende Datei, unbrauchbare Regel,
@@ -593,7 +593,10 @@ def main() -> int:
                    help="nur diesen Bereich prüfen (mehrfach möglich)")
     p.add_argument("--alle", action="store_true",
                    help="auch die durch Ausnahmen erklärten Treffer auflisten")
-    p.add_argument("--probe", action="store_true",
+    # `--selbstprobe` ist der Name, den der Läufer ruft (pruefen.sh, SELBST);
+    # bis BR-05 hieß der Schalter nur `--probe`, und die Selbstprobe lief
+    # nirgends (Nr. 315, gefunden von der Gegenprobe des Bestandsriegels).
+    p.add_argument("--selbstprobe", "--probe", dest="probe", action="store_true",
                    help="Selbstprobe des Zerlegers fahren und beenden")
     p.add_argument("--sperrliste", default=str(HIER / "textprobe-sperrliste.json"))
     p.add_argument("--ausnahmen", default=str(HIER / "textprobe-ausnahmen.json"))
