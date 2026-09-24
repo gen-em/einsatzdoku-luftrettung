@@ -125,7 +125,8 @@ Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
   Erzeuger aus einer geänderten Ablaufdatei, statt Text im Ausgabeformat zu
   ersetzen — eine regelgerechte Formatänderung des Erzeugers hätte die Kopie
   sonst still der aktuellen gleich gemacht. Was die Runde sonst fand, steht
-  als benannte Grenze im Kopf von `bestand.py` und im Konzept; **eine fünfte
+  als benannte Grenze im Kopf von `bestand.py`, die offenen Fragen in
+  `Rahmenplan.md` 6; **eine fünfte
   Runde gibt es nicht** (E-BR-22). Selbstprobe **140 Fälle, 85 von 85
   Befundstellen**, rund 20 s.
 
