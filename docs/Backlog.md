@@ -138,8 +138,12 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **293** und trägt seine
-Spanne hier ein, bevor er pusht. *(Bis zum 23.09.2026 stand hier 283; 283 bis
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **304** und trägt seine
+Spanne hier ein, bevor er pusht. **Vergeben und reserviert (24.09.2026,
+nachgesehen auf `origin/main`, höchste 292, und auf dem Konzeptzweig von
+BR):** **293** Konzept BR (Umsetzung auf `claude/br-bestandsriegel`, noch
+nicht gemergt); **294–303** der P5c-Zweig `claude/p5c-mockups-konzept-4yeomf`
+— 294 Konzept SD (Sammelpunkt), 295–303 für P5c. *(Bis zum 23.09.2026 stand hier 283; 283 bis
 285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
 Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
 Tag, **290 und 291** die Korrekturstufe Web 20.37.3, **292** PK-05 (das
@@ -1543,6 +1547,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     statt zurückgezogen: Er kostet nichts, solange niemand ihn anfasst, und er
     ist mit der nächsten größeren Rahmenplan-Pflege in einem Zug zu machen.
 
+    **Erledigt sich mit Konzept SD** (Sammelnummer 294).
+
 184. **Der Kommentar-Abtaster der Prüfmittel verliert in PHP-Dateien mit HTML die Spur.**
     *Aufgenommen 14.09.2026 in AP2 der Mockup-Runde, als die Symbolprüfung ihn
     benutzen wollte.* `ohne_php_js_kommentare()` in
@@ -1808,6 +1814,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     dasselbe wie Abschnitt 5. Zuordnung: **Backlog-Runde**,
     gemeinsam mit Nr. 177.
 
+    **Erledigt sich mit Konzept SD** (Sammelnummer 294).
+
 194. **Das Handbuch nennt den Verschlüsselungsumfang dreimal ohne die
     Notizen — einmal davon als Textbaustein für die Datenschutzerklärung.**
     *Aufgenommen 14.09.2026 als Nebenfund der Bestandsaufnahme zu R42.*
@@ -1910,6 +1918,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zuordnung: **Backlog-Runde** — und sinnvollerweise in demselben Griff wie
     **Nr. 188**, das die fehlende Dokumentenprobe führt, und **Nr. 199**:
     Alle drei sind Fehler, die niemand sieht, weil nichts sie misst.
+
+    **Erledigt sich mit Konzept SD** (Sammelnummer 294).
 
 198. **Die Zeitraumübersicht zählt Windendienste nur luftgebunden.**
     *Aufgenommen 14.09.2026 (Demo-Ausbau, AP0.)* Seit Web 20.3.0 darf ein
@@ -2015,6 +2025,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Abnahme:* Entweder `grep -cE '^5\. '` liefert 1, oder die Kopfnotiz
     nennt vier fehlende Nummern statt drei. Zuordnung: **Backlog-Runde** —
     zusammen mit **Nr. 196**, das dieselbe Datei ohnehin in einem Zug anfasst.
+
+    **Erledigt sich mit Konzept SD** (Sammelnummer 294).
 
 200. **Bounce-Postfach: Unzustellbares erkennen, nicht nur zählen.**
     *Aufgenommen 15.09.2026 (Konzept P5a, E-P5a-14; Vorbereitung
@@ -3744,6 +3756,16 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Schema kommt, oder das Konto vor dem Schema prüfen lassen, was geht. Klein,
     kein Datenrisiko — die Anlage ist in diesem Zustand noch leer.
     **Zuordnung: Backlog-Runde.**
+
+294. **Steuerungsdokumente schneiden (Konzept SD).**
+    *Aufgenommen 24.09.2026 mit SD-00 (Rahmenplan Fassung 111).* Anlass:
+    Rahmenplan und Backlog sind auf 3 700 bzw. 10 000 Zeilen gewachsen,
+    weil Steuerung, Register und Protokoll in denselben Dateien stehen und
+    jede Fassung Erzähltext nachzieht. Konzept:
+    `docs/konzepte/Konzept-SD-Steuerungsdokumente.md` (SD-00 bis SD-04; die
+    Schreibregeln aus SD-00 gelten seit Fassung 111). Zeitpunkt: SD-01 bis
+    SD-04 nach dem Merge des 10c-PR, auf eigenem Zweig von `main`.
+    **Zuordnung: SD.** Mit ihm erledigen sich Nr. 177, 193, 196 und 199.
 
 ## Erledigt
 

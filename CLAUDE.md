@@ -29,7 +29,7 @@ Programmentscheidungen: `docs/Rahmenplan.md` (Steuerung) und
 
 ## 2. Was bei jeder Codeänderung mitläuft
 
-Diese vier Punkte sind kein Nachklapp, sondern Teil der Änderung:
+Diese fünf Punkte sind kein Nachklapp, sondern Teil der Änderung:
 
 1. **`server/version.php` hochstufen.** Zählweise `Haupt.Neben.Korrektur`:
    Haupt = grundlegender Umbau (Datenmodell, Verschlüsselung, Migration — oder
@@ -54,6 +54,17 @@ Diese vier Punkte sind kein Nachklapp, sondern Teil der Änderung:
    Punkte werden nicht gelöscht, sondern nach *Erledigt* verschoben und behalten
    ihre Nummer. Neue Punkte hängen hinten an. Die Nummern 4, 6 und 7 bleiben
    dauerhaft frei.
+5. **Rahmenplan schreiben — an vier Anlässen, sonst nicht.** (1) Ein
+   Schritt beginnt oder endet (Fahrplanzeile, Erledigt-Eintrag). (2) Eine
+   Programmentscheidung fällt (R-Nummer). (3) Die Reihenfolge ändert sich.
+   (4) Eine Zuarbeit entsteht oder ist erledigt (Abschnitt 6). Alles
+   innerhalb eines Schritts — Arbeitspakete, Befunde, Messungen,
+   Abnahmen — steht im Statusblock des Konzepts und im Prüfdokument, nicht
+   im Rahmenplan. **Eine Berichtigung ist eine Verlaufszeile, nie ein
+   Absatz im Text:** Wer etwas Falsches findet, ersetzt es und schreibt in
+   die Verlaufszeile (Abschnitt 10), was falsch war. Bis zum Schnitt
+   (Konzept SD) ändert sich am Kopf des Rahmenplans nur die
+   Fassungsnummer und der Absatz „Stand".
 
 Welches Dokument zu welcher Änderung gehört, steht in Abschnitt 9
 (Pflegepflichten).
