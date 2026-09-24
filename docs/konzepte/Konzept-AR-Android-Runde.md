@@ -16,11 +16,11 @@ entsteht mit AR-02. Zweig `claude/affectionate-newton-6pzfkc`, von `main`
 >
 > | | |
 > |---|---|
-> | Stand | **24.09.2026 — Konzept vorgelegt und gepusht, wartet auf Bestätigung.** AR-01 (Ausgangsmaß) ist gemessen, ohne eine Zeile Code: Abschnitt 2. Die Spanne 334–338 steht im Kopf von `Backlog.md` |
-> | Entschieden | **E-AR-01 bis -07** aus der Freigabe vom 24.09.2026 (Abschnitt 5) |
-> | Offen | **Q-AR-01 bis -06** (Abschnitt 4), je mit Empfehlung |
-> | Hakt | Maven Central drosselt diesen Container (F-AR-01): Der Ausgangsbau wurde erst im fünften Anlauf grün. Wie die Runde damit baut, entscheidet Q-AR-06 |
-> | Nächstes | nach Bestätigung der Fragen: Antworten in Abschnitt 4 eintragen, dann **AR-02** |
+> | Stand | **24.09.2026 — Fragen beantwortet (E-AR-08 bis -13), wartet auf das Startzeichen für AR-02.** AR-01 (Ausgangsmaß) ist gemessen, ohne eine Zeile Code: Abschnitt 2. Die Spanne 334–338 steht im Kopf von `Backlog.md` |
+> | Entschieden | **E-AR-01 bis -07** aus der Freigabe, **E-AR-08 bis -13** aus den Antworten auf Q-AR-01 bis -06, beide vom 24.09.2026 (Abschnitt 5) |
+> | Offen | nichts |
+> | Hakt | Maven Central drosselt diesen Container (F-AR-01); die Runde baut über Googles Spiegel (E-AR-13) |
+> | Nächstes | **AR-02**, nach dem Startzeichen |
 
 ---
 
@@ -157,6 +157,11 @@ als `default`.
 
 ## 4. Fragen an die Betreiberin
 
+*Alle sechs am 24.09.2026 beantwortet; die Antworten stehen als E-AR-08 bis
+-13 in Abschnitt 5. Die Fragen bleiben mit ihren Empfehlungen stehen, damit
+nachvollziehbar ist, wo die Antwort von der Empfehlung abweicht (Q-AR-01,
+Q-AR-03).*
+
 ### Q-AR-01 — Kommt API 37 mit?
 
 **Zwei Zahlen, zwei Antworten.**
@@ -269,15 +274,26 @@ Aus der Freigabe vom 24.09.2026:
 | **E-AR-06** | Web-Version und Rahmenplan werden nicht angefasst; die Fahrplanzeile schreibt, wer nach dem P5c-Merge `main` aufnimmt |
 | **E-AR-07** | Stummgeschaltet wird nichts. Das Ausgangsmaß wird vor jeder Änderung mit Zahl festgehalten (2.2) |
 
+Aus den Antworten auf Abschnitt 4, 24.09.2026:
+
+| Nr. | Frage | Entscheidung |
+|---|---|---|
+| **E-AR-08** | Q-AR-01 | **`compileSdk` UND `targetSdk` auf 37** — gegen die Empfehlung (nur `compileSdk`). Folge: AR-03 geht die Verhaltensänderungen von Android 17 für Apps mit `targetSdk` 37 durch, Punkt für Punkt gegen den Quelltext beider Module, und hält fest, welche die App trifft und wie sie belegt sind. Der Emulator braucht dafür ein Abbild mit API 37 (nur `google_apis`, Handy; für die Uhr, was das SDK für Wear OS 7 führt) — mit Messung, ob es unter TCG bootet. `minSdk` bleibt (26 / 30) |
+| **E-AR-09** | Q-AR-02 | Nr. 116 über **Weg (c)**: Vollständigkeit je Modul und Rolle, Selbstprobe mit beiden historischen Fehlern, Spalte „Modul" in der Paarliste |
+| **E-AR-10** | Q-AR-03 | **Die unbenutzte Zeichenkette wird ausgetragen UND die drei Texte werden auf `<plurals>` umgebaut** — über die Empfehlung hinaus. Damit bleibt nach AR-03 keine der 14 Warnungen stehen. Robolectric bleibt auf 4.16.1 (`sdk=34`) |
+| **E-AR-11** | Q-AR-04 | **Emulator einmal, in AR-05, beide Module**, am auszuliefernden Stand. AR-02 und AR-03 belegen sich mit Baulauf und Bild-für-Bild-Vergleich gegen den Satz „vorher" |
+| **E-AR-12** | Q-AR-05 | **Zwei Backlog-Nummern**: **334** die Android-Werkzeuge in den Prüfstand (F-AR-05), **335** die Erkennung der Ausbaustufe an Plattform 37 (F-AR-07); umzusetzen nach dem P5c-Merge |
+| **E-AR-13** | Q-AR-06 | **Googles Maven-Central-Spiegel zuerst, Central dahinter**, dazu die erhöhten Wiederholungen — nur in der Arbeitsumgebung, eingerichtet von `aufbauen.sh android`; die Bauskripte im Repositorium bleiben unberührt |
+
 ## 6. Arbeitspakete
 
 | Paket | Was | Berührt | Abnahme |
 |---|---|---|---|
 | **AR-01 Ausgangsmaß** | Arbeitsumgebung, Baulauf, Kette, Prüfmittel am unveränderten Baum (Abschnitt 2); Bilderlauf „vorher" gesichert | nichts | **erledigt** mit diesem Konzept |
 | **AR-02 Bau-Sprache** | Gradle 9 (Prüfsumme auf zwei Wegen, wie `LIESMICH.md` 2.1), AGP 9.4.1, eingebautes Kotlin (`kotlin-android` entfällt), KGP und Compose-Compiler 2.4.20, `gemeinsam/` über `kotlin.directories` (F-AR-08 (2)), `onlyEnableUnitTestForTheTestedBuildType=false` (F-AR-08 (1)), Schalter in `gradle.properties`, die AGP 9 abgeschafft hat. **Bibliotheken und `compileSdk` unverändert** — damit ein Fehler dieses Pakets der Bau-Sprache gehört und nicht einer Bibliothek. Versionsstufe, Kopfabsatz, Changelog-Zeile (E-AR-04). Prüfdokument angelegt | `android/` (Bauskripte, Wrapper, Katalog, `version.properties`), `docs/CHANGELOG.md` | Baulauf grün, **dieselben Prüffallzahlen wie in 2.2 je Bauart**, 0 Lint-Fehler, Warnungen mit Namen; APK Eintrag für Eintrag gegen 2.2 verglichen |
-| **AR-03 Die Kette** | `compileSdk` nach Q-AR-01, BOM, `wear-compose`, `core-ktx`, `lifecycle`, `activity-compose`; die unbenutzte Zeichenkette nach Q-AR-03; was dabei veraltet gemeldet wird, wird **umgestellt statt unterdrückt**. Plattform und Build-Tools in `aufbauen.sh`, F-AR-02, Wiederholungen nach Q-AR-06 | `android/`, `tools/sandbox/aufbauen.sh`, `docs/Sandbox-Setup.md` | Baulauf grün, 0 Lint-Fehler, **0 Fassungshinweise der Kette**; Bilderlauf Bild für Bild gegen „vorher", jede Abweichung angesehen und benannt |
+| **AR-03 Die Kette** | `compileSdk` und `targetSdk` 37 (E-AR-08) samt Durchsicht der Android-17-Verhaltensänderungen, BOM, `wear-compose`, `core-ktx`, `lifecycle`, `activity-compose`; unbenutzte Zeichenkette aus, drei Texte auf `<plurals>` (E-AR-10); was dabei veraltet gemeldet wird, wird **umgestellt statt unterdrückt**. Plattform 37 und Build-Tools in `aufbauen.sh`, F-AR-02, Spiegel und Wiederholungen (E-AR-13) | `android/`, `tools/sandbox/aufbauen.sh`, `docs/Sandbox-Setup.md` | Baulauf grün, 0 Lint-Fehler, **0 Warnungen** (oder jede verbleibende mit Namen und Grund); Durchsicht Android 17 mit Ergebnis je Punkt; Bilderlauf Bild für Bild gegen „vorher", jede Abweichung angesehen und benannt |
 | **AR-04 Kontraste** | `werkzeuge/kontraste.py` nach Q-AR-02, mit Selbstprobe und Anlass-Zeile (Nr. 116); die Befunde des ersten Laufs aufgelöst (F-AR-06) | `android/werkzeuge/`, `android/LIESMICH.md` 6 | Selbstprobe: beide historischen Fehler rot, Gegenprobe grün; Lauf 0 Befunde, 0 Paare unter Zielwert |
-| **AR-05 Abschluss** | Emulatorlauf nach Q-AR-04 (P-PK-28), Dokumente (`LIESMICH.md` 2 und 4, `Technik.md` 5a falls nötig, `Lizenzen.md` 6a, `Sandbox-Setup.md`), Backlog (65 und 284 nach *Erledigt*, 116 offen mit Vermerk, neue Nummern aus der Spanne), Prüfstand-Lauf mit `handy=gebaut`, Prüfdokument mit Prüfliste, PR | `android/`, `docs/` | Bericht über genau diesen Baum mit `handy=gebaut`; Prüfliste abhakbar; PR offen, nicht gemergt |
+| **AR-05 Abschluss** | Emulatorlauf nach E-AR-11 auf API 37 (P-PK-28), Dokumente (`LIESMICH.md` 2 und 4, `Technik.md` 5a falls nötig, `Lizenzen.md` 6a, `Sandbox-Setup.md`), Backlog (65 und 284 nach *Erledigt*, 116 offen mit Vermerk, 334 und 335 neu nach E-AR-12), Prüfstand-Lauf mit `handy=gebaut`, Prüfdokument mit Prüfliste, PR | `android/`, `docs/` | Bericht über genau diesen Baum mit `handy=gebaut`; Prüfliste abhakbar; PR offen, nicht gemergt |
 
 **Fächerung (Ultracode) — je Paket keine.** AR-02 bis AR-05 teilen ein
 Build-Verzeichnis, einen Gradle-Daemon, ein SDK und einen Emulator; zwei
