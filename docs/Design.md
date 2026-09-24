@@ -51,7 +51,7 @@ einfügt.
 ### 1.3 Was bei jeder Gestaltungsänderung mitläuft
 
 1. **Dieses Dokument** — im selben Arbeitspaket, nicht später.
-2. **`tools/vollstaendigkeit/pruefen.py`** — keine Hexwerte außerhalb `:root`,
+2. **`tools/quelltext/vollstaendigkeit.py`** — keine Hexwerte außerhalb `:root`,
    keine Schriftgröße außerhalb der Skala, keine Klasse ohne Regel.
 3. **`tools/screenshots/aufnehmen.mjs`** — die berührten Seiten in allen acht
    Breiten, mit gemessenem Überlauf und Knopfhöhen.
@@ -1202,7 +1202,7 @@ sind **kein Bedienelement** — wer eine anklickbar braucht, nimmt einen Knopf
 > Regel — die Plakette steht dann ohne Hintergrund da, als bloßer Text. Genau
 > das ist passiert: `warn` wurde an drei Stellen übergeben und fiel niemandem
 > auf, weil der Klassenname zusammengesetzt wird (`'plakette-' . $ton`) und als
-> Literal nirgends auftaucht; `tools/vollstaendigkeit/` kann ihn deshalb nicht
+> Literal nirgends auftaucht; `tools/quelltext/` (`vollstaendigkeit`) kann ihn deshalb nicht
 > finden. Behoben mit Web 10.3.0, vermerkt in Backlog Nr. 36.
 >
 > **Und es ist ein zweites Mal passiert — `ok`.** In S10/AP3 beim Gegenlesen
@@ -2620,7 +2620,7 @@ beiden Rechtstextseiten brauchen eine.
 > `break-all` zerschnitte eine Gruppe mitten durch, und dann zählt beim
 > Abtippen niemand mehr nach. Gemessen bei 718 px (210 mm abzüglich Rand) in
 > `media: print`: **16 Gruppen, 0 zerschnitten, 0 waagerechter Überlauf**
-> (`tools/anteilprobe/betriebslauf.mjs`, Abschnitt 2).
+> (`tools/proben/anteil/betriebslauf.mjs`, Abschnitt 2).
 
 ### 10.2 Rezept: eine neue Inhaltsseite
 
@@ -2654,11 +2654,11 @@ lief, misst einen Stand, den es nicht mehr gibt.
 
 | Werkzeug | beantwortet |
 |---|---|
-| `tools/vollstaendigkeit/pruefen.py` | Ist etwas verlorengegangen? Steht jeder Wert an der einen Stelle? |
+| `tools/quelltext/vollstaendigkeit.py` | Ist etwas verlorengegangen? Steht jeder Wert an der einen Stelle? |
 | `tools/screenshots/aufnehmen.mjs` | Sieht es in allen acht Breiten so aus, wie es soll? Überlauf, Konsolenfehler, Knopfhöhen. |
 | `tools/screenshots/kontrast.py` | Erreicht jedes Farbpaar der Token seinen Sollwert? |
 | `tools/erzeugen/design.py` | Erzeugt die Tabellen dieses Dokuments aus den Quellen. |
-| `tools/wortliste/wortliste.py` | Sprechen Oberfläche und Dokumentation neutral von Land und Luft? |
+| `tools/quelltext/textprobe.py` | Sprechen Oberfläche und Dokumentation neutral von Land und Luft? |
 | `tools/stilvergleich/` | Hat sich am Erscheinungsbild etwas geändert, das nicht geplant war? |
 | `tools/bedienprobe/probe.mjs` | Tut ein Bedienelement, was es soll — wenn man es **bedient**? Je Weg eine Zahl. |
 

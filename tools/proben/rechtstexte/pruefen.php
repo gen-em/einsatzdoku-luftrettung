@@ -4,6 +4,8 @@ declare(strict_types=1);
 /**
  * Angriffsprobe für den Rechtstext-Renderer (R32, P3/O10).
  *
+ * Anlass: Nr. 311 — rt_html() ist der eine Weg, auf dem aus einer Eingabe HTML wird
+ *
  * WARUM ES DIESES WERKZEUG GIBT. `rt_html()` (server/rechtstexte_lib.php) ist
  * die einzige Stelle des Projekts, an der aus einer Eingabe HTML wird. Alles
  * andere geht durch e() und erscheint als Text. Diese eine Stelle trägt damit

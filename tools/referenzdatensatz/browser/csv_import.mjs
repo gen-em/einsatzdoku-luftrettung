@@ -8,6 +8,28 @@
  *
  * Aufruf:
  *   node csv_import.mjs [basis] [email] [passwort] [csv-datei] [ausgabeordner]
+ *
+ * VON HAND — dieselbe Strecke, nachpruefbar (Voraussetzung: Einspiellauf
+ * durch, generator/ausgabe/import/einsaetze.csv liegt vor):
+ *   1. Anmelden als demo@gen-em.org; der Inhaltsschluessel muss im Tab sein
+ *      (Warnung „Verschluesselung gesperrt" -> ab- und neu anmelden).
+ *   2. Einstellungen -> Import / Export, Datei waehlen. Erwartet: „CSV
+ *      (Standard)", das Profil export_csv_v1.
+ *   3. Prueftabelle beim ersten Lauf: „6 Zeilen — 2 Diensttage, 4 Einsaetze,
+ *      0 Hinweise, 0 Fehler, 0 Dubletten". Ein HINWEIS sperrt nicht: Die
+ *      Werte fallen still weg, und die Bilanz sagt trotzdem „0 Fehler".
+ *   4. „Import ausfuehren": „4 Einsaetze angelegt"; ein zweiter Lauf meldet
+ *      4 Dubletten und legt nichts an — richtig so.
+ *
+ * ZWEI FALLEN, BEIDE ERLEBT:
+ *   - Der Zonenversatz braucht einen Doppelpunkt. `PARSERS.isoTs` prueft
+ *     gegen `[+-]\d{2}:\d{2}`; Pythons `%z` liefert `+0200`. Endzeit und alle
+ *     acht Phasenzeiten fielen als Hinweis durch. Der Generator setzt den
+ *     Versatz deshalb von Hand (`erzeugen.iso_offset`), und generator/
+ *     pruefen.py haelt die Datei gegen die Parser der Anwendung.
+ *   - Eine Zelle mit `=` am Anfang kommt leer an: SheetJS liest sie als
+ *     Formel. Die Formel-Anfangszeichen des Bestands stehen deshalb auf dem
+ *     Formularweg, nicht auf dem CSV-Weg (F-P1-G).
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 

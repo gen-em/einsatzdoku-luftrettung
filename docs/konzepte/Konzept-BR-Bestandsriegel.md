@@ -19,11 +19,11 @@ entsteht mit BR-01. **Zweig der Umsetzung:** `claude/br-bestandsriegel`, von
 >
 > | | |
 > |---|---|
-> | Stand | **24.09.2026 — Umsetzung läuft** auf `claude/br-bestandsriegel` (von `main` `f4fe4a0`, Konzept per Vorspulen übernommen; der Konzeptzweig ist gelöscht). **BR-01 erledigt** — der Riegel steht und ist **rot mit 57 Befunden**, wie vorgesehen, bis BR-02 den Altbestand bereinigt (Protokoll in Abschnitt 9). |
-> | Entschieden | **E-BR-01 bis E-BR-10**, alle von der Betreiberin am 24.09.2026 (Abschnitt 4); Q-BR-01 bis -07 beantwortet, alle wie empfohlen (Abschnitt 5). **Aus der Umsetzung: E-BR-11 bis -16** (4.1, zur Kenntnis — keine ändert eine Entscheidung der Betreiberin). |
-> | Befunde der Umsetzung | **F-BR-07 bis -11** (2.1). Zwei davon verschieben den Rahmen: Die Handzählung aus Abschnitt 2 war zu grob (F-BR-07: 57 Befunde statt rund 35, **20** Anlass-Zeilen statt 19) — und **P5c ist weiter als angenommen** (F-BR-11: AP2 ist gebaut, E-BR-02 „Merge vor P5c AP2" ist damit überholt; was P5c nach dem Aufnehmen tun muss, ist gemessen). |
+> | Stand | **24.09.2026 — Umsetzung läuft** auf `claude/br-bestandsriegel` (von `main` `f4fe4a0`, Konzept per Vorspulen übernommen; der Konzeptzweig ist gelöscht). **BR-01 und BR-02 erledigt** — der Riegel steht, und der Altbestand ist bereinigt: **57 → 0 Befunde**, `proben.sh alle` 20 von 20 grün (Protokoll in Abschnitt 9). |
+> | Entschieden | **E-BR-01 bis E-BR-10**, alle von der Betreiberin am 24.09.2026 (Abschnitt 4); Q-BR-01 bis -07 beantwortet, alle wie empfohlen (Abschnitt 5). **Aus der Umsetzung: E-BR-11 bis -16** (4.1, zur Kenntnis — keine ändert eine Entscheidung der Betreiberin). **E-BR-17 und -18** von der Betreiberin am 24.09.2026 auf Q-BR-08 bis -12 (5.1). |
+> | Befunde der Umsetzung | **F-BR-07 bis -15** (2.1). Zwei davon verschieben den Rahmen: Die Handzählung aus Abschnitt 2 war zu grob (F-BR-07: 57 Befunde statt rund 35, **20** Anlass-Zeilen statt 19) — und **P5c ist weiter als angenommen** (F-BR-11: AP2 ist gebaut, E-BR-02 „Merge vor P5c AP2" ist damit überholt; was P5c nach dem Aufnehmen tun muss, ist gemessen). |
 > | Offen | nichts, was BR aufhält. **Zwei Zuarbeiten von P5c** (Q-BR-05, -06) — von P5c als Nachtrag zur Fassung 2 übernommen (E-P5c-86 bis -90, Backlog 295–298 auf dem P5c-Zweig). |
-> | Nächstes | **BR-02** — die 20 Anlass-Zeilen sind nachgeschlagen (Fächerung nach E-BR-10, lesend), Gegenlesung und Setzen stehen aus |
+> | Nächstes | **BR-03** — die drei Tor-Schritte nach `pruefablauf.json`, der Selbstüberspringer der Wiederherstellungsprobe, die Baumsuche in `tools/kette/` (E-BR-09) |
 
 ---
 
@@ -79,6 +79,10 @@ Workflow-Dateien durch TB oder RP; das Tor selbst (P-PK-29 bis -32).
 | F-BR-09 | **`kettenaufrufe` sah die Namen der Sammelläufer nicht.** Es las Unterbefehle eines Shell-Werkzeugs nur aus `case "$befehl"`; `quelltext/pruefen.sh` und `proben/proben.sh` verteilen über `case "$fall"` und eine Namensliste. Von **30** Aufrufen mit Namen (28 in `pruefablauf.json`, 2 in den Workflows) prüfte es nur die Schalter — ein vertipptes `pruefen.sh bestnd` wäre erst im Lauf gescheitert. | Behoben in BR-01 („kennt den neuen Aufruf"): liest `NAMEN=(…)`, die Schlüssel von `RUF` und die Zweige von `case "$fall"`. Selbstprobe 13 → **16** Fälle. |
 | F-BR-10 | **`Sandbox-Setup.md` 1 nennt einen Pfad, den es seit PK-04 nicht gibt:** `tools/uhr-bilder/erzeugen.sh` (heute `tools/erzeugen/uhr-bilder.sh`, der Erzeuger, für den ImageMagick und `rsvg-convert` gebraucht werden). Gefunden beim Nachsehen, warum `erzeugen` in der Inventur fehlt. | BR-02 berichtigt den Pfad. Damit steht `tools/erzeugen/` in `Sandbox-Setup.md` — mit Grund, nicht um den Riegel zu bedienen: Die Anlage braucht die zwei Pakete für genau diesen Erzeuger. |
 | F-BR-11 | **P5c ist weiter als in Abschnitt 1 und 6 angenommen.** Auf `claude/p5c-mockups-konzept-4yeomf` ist **AP2 erledigt** (Web 20.39.0, 24.09.2026) — mit der Rollenprobe und einer neuen Protokollprobe unter `tools/proben/`. E-BR-02 („Merge vor P5c AP2") ist damit überholt; der Preis aus Abschnitt 6 fällt einmal an, egal wann BR mergt. **Gemessen** (Riegel gegen den P5c-Stand, 24.09.2026): P5c hat denselben Altbestand wie `main` und darüber **genau zwei eigene Punkte** — `tools/proben/protokoll/probe.php` nennt als Anlass „F-P5c-18 und F-P5c-19" (Befund-Kennungen, E-BR-07), und `tools/screenshots/LIESMICH.md` ist dort auf 321 Zeilen gewachsen, dieselbe Datei, die BR-02 auf die Form bringt (Konflikt, zeilenweise). `tools/proben/rollen/probe.php` trägt ihre Zeile schon in der Form, die BR misst (` * Anlass: Nr. 286 …`). | Keine Änderung an BR. Die zwei Punkte gehen mit dem PR an P5c (Abschnitt 8, Nachtrag). |
+| F-BR-12 | **Zehn Werkzeuge haben keine Backlog-Nummer** (BR-02). Abschnitt 3 setzte voraus, die Nummer stehe „schon" in Backlog, Changelog oder Zuordnungstabelle. Für zwölf Proben stimmt das; sieben haben einen belegten Fehler, der nur als Befund-Kennung, im Changelog oder als R44 überliefert ist, und drei haben keinen verbuchten Fund. In der Gegenlesung verworfen: Nr. 178 für die Kopplungsprobe — ein Fehler der Probe selbst, und zwar in `rundlauf.mjs`, nicht in der Einstiegsdatei. | Q-BR-08 bis -12 an die Betreiberin → E-BR-17, -18; Backlog Nr. 304 bis 313 unter *Erledigt*. |
+| F-BR-13 | **26 Verweise auf Werkzeugpfade, die es seit PK-04 nicht mehr gibt**, in zehn Dokumenten (`README`, `android/LIESMICH`, `Backup-Format`, `Design`, `Geraete-Eingabe`, `JSON-Vertrag`, `Lizenzen`, `Technik`, `Uhr-Layout_Regeln`, `Sandbox-Setup`) und zwei Werkzeugen (`zaehlen.php`, `proben/gpx/probe.php`); dazu drei Verweise auf Abschnitte, die es nicht mehr gibt (`Technik.md` „Die drei Läufe", `pruefstand.sh`, `Technik.md` → Kette). **Eine davon war eine Zusage ohne das genannte Mittel:** `Backup-Format.md` sagte, die Containerprobe sehe nach, ob `_spur_index` vor dem Versiegeln entfernt wird. Sie tut es nicht. | Alle berichtigt. Die Zusage trägt trotzdem — vom Kreislauf `edbak`, nachgemessen: eingesetztes `_spur_index` → 1 unerklärte Meldung, ohne 0. Den Riegel auf tote Pfade in Dokumenten auszudehnen, ist eine neue Regel und keine Entscheidung dieses Konzepts (Abschnitt 7). |
+| F-BR-14 | **Der Umzug von `konfig_stellen.php` wäre still falsch geworden.** Die Datei rechnete ihren Pfad als `dirname(__DIR__) . '/server/config.php'`; unter `tools/sandbox/` zeigt das auf `tools/server/`, und der Rückweg kehrt bei fehlendem Verzeichnis **ohne Meldung** zurück — dieselbe Art Fehler wie F-PK-24. | `dirname(__DIR__, 2)`, mit Kommentar. Die vier Proben, die sie laden, laufen grün. |
+| F-BR-15 | **Die Anleitungen trugen Zahlen und Schalter, die nicht mehr stimmten:** `vergleichen.py --selbstprobe` 14 Fälle statt „sieben", die Zählung 34 statt 29, `tor.py` ohne das genannte `--jobs-token`; `zaehlen.php` verwies auf `tools/wortliste/zerlegen.py`. Genau das, was E-BR-03 nicht misst — der Inhalt einer Anleitung — und was beim Kürzen ohnehin gelesen wird. | Berichtigt beim Kürzen. |
 
 ## 3. Arbeitspakete
 
@@ -206,6 +210,18 @@ was eine Entscheidung offen ließ, damit ein Mittel es messen kann.
   sagt „Präfix `Web` … wie RP", und RP hat `Werkzeug:` geschrieben; „wie RP"
   ist die genauere Angabe.
 
+- **E-BR-17 — Ein Fehler ohne Nummer bekommt eine, nachträglich und unter
+  *Erledigt*** (Q-BR-08, von der Betreiberin am 24.09.2026). Für die sieben
+  Werkzeuge mit belegtem Fehler entsteht je ein Eintrag ab Nr. 304 auf dem
+  BR-Zweig, mit Fundstelle — Changelog, Konzept, Commit. Das ist E-BR-07,
+  rückwärts angewandt: Wer ein Prüfmittel anlegt, legt die Nummer zuerst an;
+  wer es geerbt hat, trägt sie nach.
+- **E-BR-18 — Drei Werkzeuge ohne verbuchten Fund bleiben, mit einer Nummer
+  für das Risiko, das sie hüten** (Q-BR-10 bis -12, von der Betreiberin am
+  24.09.2026, je einzeln): Rechtstexte-Probe (Nr. 311), Stilvergleich
+  (Nr. 312), Kopplungsprobe (Nr. 313). `Pruefablauf.md` 6.1 trägt das mit
+  „oder hätte fangen müssen".
+
 ## 5. Fragen an die Betreiberin
 
 | Nr. | Frage | Empfehlung |
@@ -232,6 +248,21 @@ was eine Entscheidung offen ließ, damit ein Mittel es messen kann.
   in Abschnitt 8; P5c trägt den Nachtrag selbst in sein Konzept ein.
 - **E-BR-10** (Q-BR-07): Fächerung nur für die Anlass-Zeilen.
 
+### 5.1 Fragen aus der Umsetzung (BR-02)
+
+Die Nachschlagearbeit für die Anlass-Zeilen (E-BR-10, 20 Agenten, Gegenlesung
+durch die Instanz) hat ergeben: **12 Proben** haben eine Backlog-Nummer, die
+ihren Fehler nennt; **10 Werkzeuge** haben keine. Abschnitt 3 hatte
+vorausgesetzt, dass die Nummer „schon da" ist.
+
+| Nr. | Frage | Antwort (24.09.2026) |
+|---|---|---|
+| **Q-BR-08** | Sieben Werkzeuge haben einen **belegten** Fehler der Anwendung, aber keine Backlog-Nummer — `spur`, `raten`, `komplett`, `anteil`, `freigabe`, `container`, `frist`; der Fehler steht nur als Befund-Kennung, im Changelog oder als R44. Neue Einträge, eine Sammelnummer oder Kennungen zulassen? | **Neue Erledigt-Einträge** (wie empfohlen) → E-BR-17 |
+| **Q-BR-09** | Drei Werkzeuge haben **keinen** belegten Fehler der Anwendung — Rechtstexte-Probe, Stilvergleich, Kopplungsprobe. Nummer für das Risiko, Streichliste oder einzeln? | **Einzeln vorlegen**, entschieden vor dem Abschluss von BR-02 → Q-BR-10 bis -12 |
+| **Q-BR-10** | **Rechtstexte-Probe** (`tools/proben/rechtstexte/pruefen.php`). Vorsorglich mit `rt_html()` gebaut (P3/O10, R32): 81 Angriffsproben und eine Positivliste der Tags. Ein Fund ist nicht verbucht. Sie ist ein **Riegel** — sie läuft in jeder Stufe und im Tor. | **Behalten, neue Nummer** → Nr. 311, E-BR-18. Vorschlag war ein Erledigt-Eintrag für das Risiko, das sie hütet: „`rt_html()` ist der eine Weg, auf dem aus einer Eingabe HTML wird — eine Lücke dort wäre ein eingeschleustes Skript auf den öffentlichen Rechtstextseiten". Streichen hieße, den einzigen Nachweis dieses Wegs aus dem Tor zu nehmen. |
+| **Q-BR-11** | **Stilvergleich** (`tools/stilvergleich/`). Anlass „P0/A3 — ein Umbau des Stylesheets ohne Netz und doppelten Boden". In Gebrauch (P5c AP2: 54 geplant, 54 gemessen, 0 ungeplant; `Pruefablauf.md` 6.10 regelt ihn), aber kein verbuchter Fund einer **ungeplanten** Änderung. | **Behalten, neue Nummer** → Nr. 312, E-BR-18. Vorschlag war ein Erledigt-Eintrag „Ein Umbau des Stylesheets ändert einen berechneten Stil, den niemand ändern wollte". Er ist das einzige Mittel für diese Frage; der Bilderlauf beantwortet sie nicht (6.10). |
+| **Q-BR-12** | **Kopplungsprobe** (`tools/proben/kopplung/probe.php`). Prüft `pair.php` gegen den JSON-Vertrag, dazu die **Antwortgleichheit** der Fehlerzweige (beide 401 in 0,351 s, Rümpfe byteweise gleich). Die einzige Nummer im Umfeld, Nr. 178, beschreibt einen Fehler der Probe selbst, und zwar in `rundlauf.mjs`. | **Behalten, neue Nummer** → Nr. 313, E-BR-18. Vorschlag war ein Erledigt-Eintrag „Die Fehlerzweige der Kopplung dürfen nicht verraten, welche Kennungen es gibt". Die Kopplung ist der eine Weg, auf dem ein Gerät ohne Anmeldung zu Zugangsdaten kommt. |
+
 ## 6. Der Preis der Parallelität — und was P5c davon merkt
 
 - **Ein Merge, ein Lauf.** Nach dem Merge von BR nimmt der P5c-Zweig `main`
@@ -256,6 +287,12 @@ was eine Entscheidung offen ließ, damit ein Mittel es messen kann.
   P5c-Zweig.
 
 ## 7. Was dieses Konzept nicht klärt
+
+- **Ob der Riegel auch tote Werkzeugpfade in Dokumenten zählen soll**
+  (F-BR-13). BR hat 26 davon von Hand gefunden und berichtigt; kein Mittel
+  hält neue auf. Das wäre eine siebte Regel mit eigener Quelle — den
+  normativen Dokumenten statt `tools/` — und damit eine Frage an die
+  Betreiberin, keine Entscheidung eines Pakets.
 
 - **Ob `bestand.py` die Zahl aus Abschnitt 2 wiederfindet.** Die Zahl ist von
   Hand gezählt (`wc`, `grep -c '^## '`, `grep Anlass`). Findet das Mittel mehr,
@@ -339,4 +376,71 @@ das Löschen ab); die Betreiberin hat ihn selbst gelöscht.
 nachgeschlagen worden — 20 Agenten, je Probe einer, **nur lesend**: Sie
 schlagen Nummer und Beleg vor und ändern keine Datei. Gesetzt wird in BR-02
 nach der Gegenlesung. So stand früh fest, ob eine Probe ohne Backlog-Nummer
-bleibt und eine Frage an die Betreiberin nötig wird.
+bleibt und eine Frage an die Betreiberin nötig wird — sie wurde es (F-BR-12).
+
+### BR-02 Der Altbestand — erledigt 24.09.2026
+
+**Gebaut.** Alle sechs Regeln auf null:
+
+- **probe** (20 → 0): je Einstiegsdatei eine Zeile `Anlass: Nr. …` als
+  eigener Absatz im Kopfkommentar. Zwölf Nummern waren da (ingest 134, jobs
+  37, wartung 171, mail 204, versand 139/49, wiederherstellung 31/33/34/35,
+  gpx 130, verbindung 210, geraete 80, abmelden 22, csp-browser 181); zehn
+  sind nachgetragen (304 bis 313, E-BR-17, -18). `abmelden/pruefe.mjs` war der
+  Sonderfall: Der Kommentar endete in der Einfügezeile mit `*/`; er schließt
+  jetzt in einer eigenen Zeile.
+- **anlass** (12 → 0): Kürzel durch Nummern ersetzt (`PS-2` → Nr. 102,
+  `B6` → Nr. 140, `F-S2-E` → Nr. 37, `P0/A3` → Nr. 312), Zeilen aus der
+  Satzmitte an den Anfang (`kette` Nr. 219, `referenzdatensatz` Nr. 174 und
+  267, `screenshots` Nr. 185 und 225, `uhr-pruefstand` Nr. 13), die zwei
+  Sammelordner mit Nummern aus ihrem Bestand, `zaehlung` Nr. 202 und 257,
+  `erzeugen` die Erzeugerform.
+- **form** (22 → 0): `screenshots` 317 → 40, `zaehlung` 154 → 37,
+  `uhr-pruefstand` 50 → 40, `kette` 44 → 39, die acht Unteranleitungen
+  1 120 → 318. Je Absatz sortiert (Q-BR-02): Anleitung blieb; Format ging
+  nach `Technik.md` (5.2b: Gerätearchive, Simulator und TLS; Runbook:
+  Wiederaufbau des Referenzbestands) oder in den Skriptkopf
+  (`aufnehmen.mjs` Seitenliste, `vergleichen.py` Versionsstufe,
+  `register.php` Felder, `ProbeApp.mc` Präfixe, `erzeugen.py` drei
+  Entscheidungen, `kreislauf.py` drei Läufe und HTTPS, `csv_import.mjs` und
+  `angriffswerte.mjs` die Klickstrecken, `demo_pruefen.mjs` „nicht
+  gemessen"); Geschichte steht in der Commit-Nachricht. **Die meisten
+  Absätze standen schon ein zweites Mal im Skriptkopf** — die Anleitungen
+  hatten sie wiederholt.
+- **anleitung** (1 → 0): `tools/spaltenregister/LIESMICH.md` neu.
+- **inventur** (1 → 0): `Sandbox-Setup.md` nennt den Erzeuger
+  `tools/erzeugen/uhr-bilder.sh` jetzt mit richtigem Pfad (F-BR-10).
+- **lose** (1 → 0): `konfig_stellen.php` nach `tools/sandbox/` (F-BR-14).
+
+Dazu F-BR-13 (26 tote Werkzeugpfade, 3 tote Abschnittsverweise, eine
+Zusage mit falschem Mittel) und F-BR-15 (veraltete Zahlen und Schalter).
+
+**Gemessen.**
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| Der Riegel | `bestand.py` | **0 Befunde** (vorher 57) — 17 Ordner, 25 Anleitungen mit 972 Zeilen (vorher 24 mit 2 144), 20 Proben, 1 lose Datei (`motor.mjs`) |
+| Die Proben nach dem Umzug und den Kopfzeilen | `proben.sh alle` auf frischer Anlage | **20 von 20 grün, 0 ausgelassen** — darunter die vier mit `konfig_stellen.php`: anteil, komplett 64/0, wiederherstellung 111/0, versand 135/0 |
+| Syntax der 20 geänderten Probendateien | `php -l`, `node --check` | 0 Fehler |
+| Die Zusage in `Backup-Format.md` | `vergleiche_edbak()` mit der Referenz, einmal mit eingesetztem `_spur_index` | 1 unerklärte Meldung (`kopf._spur_index zusaetzlich`); ohne Eingriff 0 |
+| Tote Werkzeugpfade in normativen Dokumenten | Pfadprüfung über `docs/*.md`, `README`, `CLAUDE.md`, `android/LIESMICH.md` | 26 → 0 (ausgenommen: SDK-Pfade und der absichtlich geschichtliche `containeraufbau`-Absatz) |
+| Selbstproben, deren Zahl die Anleitungen nennen | `aufnehmen.mjs`, `vergleichen.py`, `zaehlen.php`, `pruefen.php` (Spaltenregister), `download_lib.mjs` je `--selbstprobe` | 15/15, 14/14, 34/34, 16/16, 10/0 |
+| Doppelte Backlog-Nummern | der `grep` aus Stufe 1 | leer (neu: 304 bis 313) |
+
+**Fächerung** (E-BR-10). 20 Agenten, je Probe einer, **nur lesend**; sie
+haben Nummer, Beleg, Zeile und Einfügestelle vorgeschlagen, die Instanz hat
+gegengelesen und gesetzt. Abweichung von E-BR-10 in einem Punkt: Gesetzt hat
+die Instanz, nicht der Agent — so lag jede Zeile vor dem Schreiben bei der
+Gegenlesung. Verworfen wurde ein Vorschlag (Kopplungsprobe → Nr. 178,
+F-BR-12); fünf mit „mittlerer" Sicherheit sind einzeln nachgelesen.
+Nebenbefunde der Agenten, die in F-BR-13 eingegangen sind: die Zusage in
+`Backup-Format.md`, die alten Pfade dort und ein verdrehter Satz in
+`tools/proben/container/lesen_pruefen.py` (ein Pfad statt des alten; behoben).
+
+**Probleme und wie sie gelöst wurden.** F-BR-12 war eine echte Lücke im
+Konzept und ging als zwei Fragen an die Betreiberin (Q-BR-08, -09) und drei
+Einzelfragen (Q-BR-10 bis -12). Beim Wiederaufbau-Weg im Runbook habe ich
+zuerst `lokal_starten.sh` durch `lokal_einrichten.sh` ersetzt — ungeprüft;
+zurückgenommen, weil `lokal_einrichten.sh` selbst schon ein Demo-Konto
+anlegt.
+

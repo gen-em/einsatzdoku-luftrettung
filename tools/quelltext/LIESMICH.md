@@ -1,6 +1,8 @@
 # Quelltextprüfungen
 
 Neun Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24).
+**Anlass: Nr. 148, 205, 208, 238, 293** — je Prüfung in der Tabelle.
+
 ## Aufruf
 
 ```bash
@@ -28,13 +30,11 @@ Nichts — kein Netz, keine Datenbank. `php` und `python3`.
 ## Erwartete Zahl
 
 `alle` → **9 von 9 Prüfungen grün**, `--selbstprobe` → **6 von 6**.
-Die Vollständigkeit misst gegen **0**, ohne Schwelle (PK-04/5e). Die
-Textprobe meldet nur **neue** Treffer — `textprobe-altbestand.json` hält je
-(Datei, Muster) den Stand vom Einführungstag; neu schreiben mit
-`--altbestand-schreiben`, nie von Hand.
+Vollständigkeit und Bestand messen gegen **0**, ohne Schwelle. Die Textprobe
+meldet nur **neue** Treffer gegen `textprobe-altbestand.json` — neu
+schreiben mit `--altbestand-schreiben`, nie von Hand.
 
 ## Was es nicht kann
 
 Nichts, was einen Browser oder eine Anlage braucht — dafür `tools/proben/`.
-`linkprobe` und `vollstaendigkeit` haben keine Selbstprobe; vor dem Umzug
-hatten sie auch keine.
+`linkprobe` und `vollstaendigkeit` haben keine Selbstprobe.

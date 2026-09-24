@@ -4,6 +4,8 @@ declare(strict_types=1);
 /**
  * Wiederherstellungsprobe — Beleg zu E-S1-04, E-S1-19 und Backlog Nr. 31/33/34/35.
  *
+ * Anlass: Nr. 31, 33, 34, 35 — kaputte Datei kippte den Lauf, Waisenkind, Diensttag geraten
+ *
  * WOFUER. Der Papierkorb und der Rueckweg eines Backups haben Grenzfaelle,
  * die sich im Browser nur muehsam herstellen lassen und die man dem Ergebnis
  * nicht ansieht. Vier Teile:
@@ -1483,7 +1485,7 @@ $weg($uid11);
  * ====================================================================== */
 echo "\n  Teil 12 — Der Rueckweg, wenn der Server-Anteil weg ist (S10/AP5)\n";
 require_once $server . '/serverkrypto_lib.php';
-require_once __DIR__ . '/../../konfig_stellen.php';
+require_once __DIR__ . '/../../sandbox/konfig_stellen.php';
 
 /* BIS WEB 20.26.3 WURDE DER ANTEIL IM SPEICHER VERSTELLT (`$CFG`). Die
  * globale `$CFG` ist mit Schritt 15 AP2 entfallen; die Anwendung liest ueber

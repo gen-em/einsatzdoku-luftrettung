@@ -1,8 +1,8 @@
 # Messstand
 
 Was kosten **5000 Einsätze**? Der Bestand wird hergestellt, gemessen und
-gegen die Zielzahlen aus E-S2-24 gehalten. **Anlass: F-S2-E** — die Zahlen
-aus S2 werden nicht einmal geglaubt, sondern nachgerechnet.
+gegen die Zielzahlen aus E-S2-24 gehalten.
+**Anlass: Nr. 37** — wie verhält sich ein Konto, das über Jahre wächst?
 
 ## Aufruf
 

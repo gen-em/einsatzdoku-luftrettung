@@ -505,14 +505,6 @@ Daten erst nach Server-Bestätigung.
 │   │                      Eine Stelle für Bilderlauf, Klickprobe und
 │   │                      Stilvergleich — dreimal geschrieben wäre sie
 │   │                      zweimal richtig und einmal falsch
-│   ├── konfig_stellen.php eine Lage in `config.php` herstellen und wieder
-│   │                      zurücknehmen — vier Proben stellen Schlüssellagen
-│   │                      her, um zu prüfen, was die Anwendung dann tut.
-│   │                      Seit Schritt 15 AP2 gibt es keine globale `$CFG`
-│   │                      mehr; eine Zuweisung daran erreicht niemanden.
-│   │                      Derselbe Weg wie in der Anwendung: Datei
-│   │                      schreiben, dann `konfig_verwerfen()`. Flach wie
-│   │                      motor.mjs, aus demselben Grund (s. Dateikopf)
 │   ├── sandbox/           stellt die Arbeitsumgebung her und fährt sie hoch:
 │   │                      aufbauen.sh (web|android|uhr|plattform|alles),
 │   │                      hochfahren.sh (--neu, --php 8.3), plattform.sh
@@ -522,7 +514,14 @@ Daten erst nach Server-Bestätigung.
 │   │                      ihrer Länge, nie mit ihrem Wert. Ablösung von
 │   │                      containeraufbau/ und dem Beschaffungsteil des
 │   │                      SessionStart-Hooks (PK-02); Ausbaustufen und
-│   │                      Grenzen in docs/Sandbox-Setup.md
+│   │                      Grenzen in docs/Sandbox-Setup.md.
+│   │                      konfig_stellen.php stellt eine Lage in
+│   │                      `config.php` her und nimmt sie wieder zurück —
+│   │                      vier Proben prüfen so, was die Anwendung mit
+│   │                      einem anderen Schlüssel tut. Derselbe Weg wie in
+│   │                      der Anwendung: Datei schreiben, dann
+│   │                      `konfig_verwerfen()`. Bis Konzept BR lag sie lose
+│   │                      unter tools/ (E-BR-03 (4))
 │   ├── bedienprobe/       fährt Bedienwege im Browser und BEDIENT dabei
 │   │                      Elemente (S9, E-S9-16): Playwright wie der
 │   │                      Bilderlauf, aber `mouse.down()` — **300 ms halten** —
@@ -5362,7 +5361,7 @@ Die Bausteine im Einzelnen:
 | Feste Werte in einer erzeugten Anweisung | (Aufrufseite) | Wo Werte fest im Satz stehen, hängt die Wertform an der **Spalte**, nicht an ihrer Stelle: `['uhr_gesperrt' => '1', 'origin' => "'import'"]`, `COALESCE(?, spalte)` für die vier Felder unter der Export-Schranke (A9/P10), `NULL AS spalte` im Export ohne personenbezogene Angaben. Wer ein Feld unter die Schranke nimmt, trägt es an **einer** Stelle ein. |
 | Schema fragen | `db.php` | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()` — sie nehmen ein `PDO`, **zwingend**: `tools/schemaprobe/` lässt Migrationen gegen ein frisch angelegtes Schema laufen, also gegen eine andere Verbindung als `db()`. Die privaten `_hat_*` in `migration_lib.php` reichen seit Web 20.29.0 nur noch durch (E-ZE-04: gelaufene Migrationen werden nicht umgebaut). |
 | Anfrage an den Server | `assets/api.js` (`EdApi`) | `EdApi.postJson(url, daten, o)` und `EdApi.postForm(url, felder, o)`, seit Web 20.34.0. Beide liefern `{ ok, status, daten, meldung }` und **werfen nie** — ein Netzfehler kommt als `status: 0`. Sie hängen das CSRF-Token selbst an (Kopfzeile bzw. Feld) und bauen den **einen** Satzbau `<Vorgang> ist fehlgeschlagen: <Grund>`. Vorrangkette des Grundes: `meldung` → `text` → `hinweis` → Ersatzsatz mit Kennung. **`error` steht nicht in der Kette** — es trägt Maschinenwörter, keine Sätze, und erscheint nur als Kennung in der Klammer. **`ok` ist ein Transport-Urteil**: Es prüft `daten.ok !== false`, nicht `=== true`, weil die lesenden Endpunkte gar kein `ok` schicken — wer ein fachliches `ok` braucht, prüft `a.daten.ok` mit. **Die Array-Regel von `postForm` ist sicherheitsrelevant**: Ein Feldwert, der ein Array ist, geht als `name[]` hinaus; ohne die Klammern liest PHP eine Zeichenkette, `is_array()` schlägt fehl, und die Schlüsselblatt-Rückfrage zählt einen Fehlversuch. **Die Datei steht im `<head>`** — nicht in der Immer-Liste, weil `ui_geruest_ende()` auf `einstellungen.php` und `import.php` **nach** den Seitenskripten steht und `unlock.js` dort zur Ladezeit sendet. |
-| Meldung im Browser | `assets/html.js` (`EdHtml.meldung`) | `EdHtml.meldung(ton, text, o)`, seit Web 20.34.0 — zeichengleich mit `ui_meldung_markup()` in `ui.php`; 200 von 200 Prüffällen ergaben denselben DOM-Baum. **Fünf Töne, geschlossene Liste, Wurf beim sechsten**, genau wie PHP. `o.auftakt` (fetter Vorspann, maskiert), `o.knopf` (fertiges Markup, unmaskiert), `o.roh` (Text **nicht** maskieren — ein benanntes Loch mit genau einem Verbraucher, der Erfolgsmeldung des Imports mit Link und Umbruch). Vorher: sieben eigenständige Nachbauten, keine zwei gleich, drei verschiedene Ton-zu-Symbol-Tabellen. **Die Tonklasse wird zusammengesetzt** — `tools/vollstaendigkeit/` sieht sie deshalb nicht und meldet `.meldung-ok` und `.meldung-schutz` als Regel ohne Markup. Das ist kein Befund, sondern die Eigenschaft des Bausteins. |
+| Meldung im Browser | `assets/html.js` (`EdHtml.meldung`) | `EdHtml.meldung(ton, text, o)`, seit Web 20.34.0 — zeichengleich mit `ui_meldung_markup()` in `ui.php`; 200 von 200 Prüffällen ergaben denselben DOM-Baum. **Fünf Töne, geschlossene Liste, Wurf beim sechsten**, genau wie PHP. `o.auftakt` (fetter Vorspann, maskiert), `o.knopf` (fertiges Markup, unmaskiert), `o.roh` (Text **nicht** maskieren — ein benanntes Loch mit genau einem Verbraucher, der Erfolgsmeldung des Imports mit Link und Umbruch). Vorher: sieben eigenständige Nachbauten, keine zwei gleich, drei verschiedene Ton-zu-Symbol-Tabellen. **Die Tonklasse wird zusammengesetzt** — `tools/quelltext/` (`vollstaendigkeit`) sieht sie deshalb nicht und meldet `.meldung-ok` und `.meldung-schutz` als Regel ohne Markup. Das ist kein Befund, sondern die Eigenschaft des Bausteins. |
 | Auftakt der Patientenanzeige | `assets/patient.js` (`EdPat.listeLaden`) | `EdPat.listeLaden(liste, o)`, seit Web 20.34.0: Schlüssel holen, Sperrbanner nach der Regel setzen (sichtbar genau dann, wenn kein Schlüssel da ist **und** die Liste überhaupt einen `pat_blob` enthält), entschlüsseln, zählen. Gibt `{ ck, zahl }` zurück und **entscheidet nicht**: Tagesansicht und Zeitraum kehren bei fehlendem Schlüssel zurück, die **Suche nicht** — sie muss ihre Trefferliste auch gesperrt zeigen und dabei den Altersfilter sperren. `zeigeUnlesbar()` ruft der Aufrufer **nach** seiner Schleife. **`einstellungen.php` bleibt draußen** (Z36 endet bei 1): Es teilt nur den Aufruf, arbeitet mit Fenstern zu 250 aus einem Bestand von tausenden, und `hinweisUnlesbar()` wertet die **ganze** Liste aus — über ein Fenster gesagt wäre der Satz falsch. |
 | Maskierung | `assets/html.js` (`EdHtml.escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). Seit Web 4.6.0 in einer eigenen Datei statt in `missiontable.js` — die wird nur von zwei Seiten geladen, gebraucht wird die Maskierung auf fünf. `EdMissionTable.escape`/`.esc` bleiben als Weiterleitung. **Nicht dasselbe** wie `xmlEscape()` in `export.js`: GPX ist XML mit eigenen Regeln. |
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Backup-Lauf) und schreibt je Einsatz `_pat` und `_patState`. |
@@ -6217,7 +6216,7 @@ folgt. Ein Bitmap kann `Ui.s()` nicht folgen (`dc.drawBitmap` zeichnet 1:1),
 vorgerasterte Stufen holen das nach. Alle 99 Geräte liegen damit zwischen 25,0
 und 28,8 %; vor Uhr 1.10.3 reichte die Spanne von 15 % bis 34 %, weil die
 Zuordnung an der Symbolgröße hing. Begründung der Stufenzahl:
-`tools/erzeugen/ (uhr-bilder)LIESMICH.md`.
+Kopf von `tools/erzeugen/uhr-bilder.sh`.
 
 Bilder erzeugen: `tools/erzeugen/uhr-bilder.sh`. Die passenden Jungle-Zeilen:
 `tools/uhr-pruefstand/geraeteklassen.py --bloecke`.
@@ -6324,6 +6323,12 @@ eine Anfrage statt tausender, und die Anfragen waren die Zeit: rund 31 min für
 Gerätedateien und Schriften in Lauf #253, 1 min über die Archive. Fehlt ein
 Archiv, fällt es mit einer Warnung auf `wget -r` über die Einzeldateien
 zurück; dafür braucht die Quelle eine eingeschaltete Verzeichnisauflistung.
+Gepackt werden die Archive im Ordner `~/.Garmin/ConnectIQ` mit
+`tar cf devices.tar Devices` und `tar cf fonts.tar Fonts`, **immer über den
+ganzen Bestand** — sonst sieht `geraeteklassen.py` kein neues Gerät. Lässt
+sich ein Archiv nicht entpacken oder liegt es eine Ebene zu tief, ist der
+Lauf rot. **Wer Geräte nachlädt, packt beide Archive neu**; sonst holt die
+Kette ohne Warnung den alten Stand.
 `aufbau` holt nur die drei Zielgeräte — für Stufe I und
 `geraeteklassen.py` braucht es `CIQ_ZIELE=alle`. Fehlen die
 Zeichensätze, übersetzt die App zwar, bricht aber beim ersten Zeichnen mit
@@ -6345,6 +6350,27 @@ welcher App sie gehören**: Am 02.09.2026 legte ein und derselbe Lauf
 Dagegen helfen `einstellungen-leeren` und `speicher-leeren`, die je eine Ablage
 **ganz** räumen. Wer stattdessen die Datei löscht, deren Namen er erwartet,
 trifft womöglich nichts und misst dann den Zustand des vorigen Laufs.
+
+**Der Simulator und TLS** (Netzprobe, F-S5-11). Ob der Simulator einen
+Server auf `127.0.0.1` erreicht, beantwortet `tools/uhr-pruefstand/netzprobe/`
+mit einer Anfrage an `pair.php` (`GET` → 405). Gemessen am 03.09.2026, SDK
+9.2.0, fenix6pro:
+
+| Weg | Konsole der App | Zugriffsprotokoll |
+|---|---|---|
+| `http://127.0.0.1:8080` | **−1001** (`SECURE_CONNECTION_REQUIRED`) | **`[405]: GET /pair.php`** |
+| `https://127.0.0.1:8443`, selbstsigniert | 404 | nichts (`tlsv1 alert unknown ca`) |
+| `https://127.0.0.1:8443`, eigene CA im Systemspeicher | **405** | **`[405]: GET /pair.php`** |
+
+**Die erste Zeile ist die unangenehme:** Über blankes HTTP lässt der
+Simulator die Anfrage hinaus, der Server **führt sie aus**, und die App
+bekommt `−1001`. Wer nur auf den Rücklaufcode sieht, hält den Weg für tot
+und übersieht, dass die Gegenseite gehandelt hat — bei einem schreibenden
+`POST` kein Schönheitsfehler. Die dritte Zeile ist das Rezept in
+`tools/referenzdatensatz/einspielen/lokal_starten.sh`: eine eigene CA, ein
+Serverzertifikat mit `subjectAltName=IP:127.0.0.1`, die CA per
+`update-ca-certificates` im Systemspeicher. Sie entsteht auf der Maschine
+und verlässt sie nicht.
 
 Die Grenzen bleiben die des Simulators, unverändert: keine echte Hardware,
 keine Systemgesten, kein Server. Ein Lauf zeigt, dass es startet und wie es
@@ -9663,7 +9689,7 @@ der Plattform. Das ist der Trennschnitt, den F3 braucht. Zwei Betriebsarten
 — mit und ohne Wiederverwendung der TLS-Sitzung auf dem Datenkanal —, und ob
 `curl` sie tatsächlich wiederverwendet, meldet die Probe **dreiwertig**
 (`JA` / `NEIN` / **`NICHT FESTSTELLBAR`**). Einzelheiten:
-`tools/kette/LIESMICH.md`.
+Kopf von `tools/kette/zielprobe.py`.
 
 **Die Mengenprobe** (`--mengenprobe N`, 1–500) gehört zur selben Datei und
 läuft **in keinem Kettenschritt**. Sie fährt einen einzigen `curl`-Aufruf,
@@ -10174,11 +10200,31 @@ nächsten Anfrage, nicht von einem Zeitdienst. Bleibt die Seite leer, fehlt
 die Fixture; das sagt sie dann auch.
 
 **Demo-Konto nach einem Datensatz-Update auffrischen:** Erst den
-Referenzbestand neu einspielen
-(`tools/referenzdatensatz/LIESMICH.md`, „Die drei Läufe"), dann die Fixture
+Referenzbestand neu einspielen (der nächste Absatz), dann die Fixture
 neu erzeugen, dann ausrollen, dann im Adminbereich zurücksetzen. Die
 Reihenfolge ist wesentlich: Eine Fixture aus einem halb eingespielten Bestand
 sieht vollständig aus und ist es nicht.
+
+**Den Referenzbestand neu aufbauen** — vollständig aus dem Repositorium; kein
+Notweg, sondern der reguläre (Anleitung: `tools/referenzdatensatz/einspielen/`):
+
+```
+sh      tools/referenzdatensatz/einspielen/lokal_starten.sh
+python3 tools/referenzdatensatz/einspielen/einspielen.py --stufen konto
+php     tools/referenzdatensatz/einspielen/demo_kennzeichnen.php
+node    tools/referenzdatensatz/einspielen/passwort_setzen.mjs '<Einrichtungslink>' nadokudemo0815 rc.json
+python3 tools/referenzdatensatz/einspielen/einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste,schneiden
+node    tools/referenzdatensatz/browser/csv_import.mjs
+node    tools/referenzdatensatz/browser/referenz_export.mjs
+```
+
+Rund vier Minuten für den Bestand, dazu je Export einige Minuten für die
+GPX-Dateien. **Nicht identisch** kommen zurück: interne Kennungen (die
+Normalisierung nimmt sie weg), `created_at` der Einsätze und die
+Gerätekennungen (`dev-…`). Ein Vergleich über einen Wiederaufbau hinweg
+zeigt die beiden letzten als Abweichung, und das ist richtig — die Zeilen
+und das Gerät sind neu. Innerhalb eines Umlaufs muss `created_at` dagegen
+wörtlich stimmen.
 
 **Ein Konto mit 5000 Einsätzen herstellen (Mengenprüfung, S2/R35):**
 `cd tools/messstand && python3 messen.py --frisch`. Der Lauf legt das Konto

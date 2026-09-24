@@ -1,6 +1,8 @@
 /* Browserprobe der Content-Security-Policy (P5a/AP4, E-P5a-15).
  * ===========================================================================
  *
+ * Anlass: Nr. 181 — CSP zur Laufzeit; ihr Meldeweg war tot, und „0 Berichte" sagte nichts
+ *
  * WAS SIE MISST, DAS `pruefen.php` NICHT MESSEN KANN. Die Tokenizer-Probe
  * daneben sieht, ob ein `<script>` im Quelltext einen Nonce TRAEGT. Ob er
  * WIRKT, sieht nur ein Browser: Dass `kopf_nonce_attr()` dasteht, heisst

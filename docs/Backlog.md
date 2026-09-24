@@ -138,13 +138,14 @@ Spanne bekommen.
 > was dabei auffällt, aber etwas **anderes** ändert, wird notiert und nicht
 > mitgemacht.
 
-Jeder weitere Zweig, der Nummern vergibt, beginnt bei **304** und trägt seine
+Jeder weitere Zweig, der Nummern vergibt, beginnt bei **314** und trägt seine
 Spanne hier ein, bevor er pusht. *(Bis zum 23.09.2026 stand hier 283; 283 bis
 285 sind seither auf `main`, **286 und 287** vergibt Konzept P5c in seiner
 Fassung 2 vom 23.09.2026, **288 und 289** die Mockup-Runde M-P5c-02 am selben
 Tag, **290 und 291** die Korrekturstufe Web 20.37.3, **292** das
-Korrekturpaket RP. **293** vergibt Konzept BR (24.09.2026, Zweig
-`claude/br-bestandsriegel`); die Spanne **294 bis 303** hat der P5c-Zweig
+Korrekturpaket RP. **293 und 304 bis 313** vergibt Konzept BR (24.09.2026,
+Zweig `claude/br-bestandsriegel`; 304 bis 313 sind die nachgetragenen Anlässe
+aus E-BR-17 und E-BR-18); die Spanne **294 bis 303** hat der P5c-Zweig
 `claude/p5c-mockups-konzept-4yeomf` am selben Tag reserviert — 294 Konzept
 SD, 295 bis 298 die Anlässe aus der Zuarbeit von BR, 299 bis 303 frei für
 Funde der Umsetzung. Nachgesehen auf `origin/main` und auf allen offenen
@@ -9981,3 +9982,99 @@ zutreffen.
     Wiederherstellungsprobe hatte zu wenige Konten. **Nebenstufe auf frischer
     Anlage: 36 grün, 0 rot, 0 nicht gemessen, 1 239 s**; das Ziel ist seither
     rund 21 min (E-RP-05). Prüfliste: `docs/konzepte/Pruefdokument-RP-Rote-Proben.md`.
+
+304. **Die Rundlaufprüfung der Spuren hielt `int` gegen `float` — 175 von
+    181 Spuren sahen verändert aus.** *Nachgetragen 24.09.2026 mit Konzept
+    BR (E-BR-17); gefunden und behoben am 31.08.2026 in S2/AP1, Web 10.0.0.*
+    PHP rechnet `7800 / 10` als `int(780)`, die Rückrechnung aus dem Blob
+    `round(780.0*10)/10` ergibt `float(780.0)`, und `!==` prüft den Typ mit.
+    Keine Koordinate war anders, und trotzdem meldete der erste Lauf 175
+    Abweichungen. Im Betrieb wäre das ein Verdichtungsjob gewesen, der nie
+    eine Zeile löscht. Fundstelle: `docs/konzepte/erledigt/
+    Konzept-S2-Mengen-Spuren-Sicherung.md`, AP1. Nachweis:
+    `tools/proben/spur/probe.php`.
+
+305. **Die Stufe der Sperrleiter wäre nie zurückgefallen.** *Nachgetragen
+    24.09.2026 mit Konzept BR (E-BR-17); gefunden und behoben am 16.09.2026
+    in P5a/AP6, Web 20.10.0 (Commit `214bc04`).* Der Verfall `stufe_bis`
+    wurde nur in dem Zweig aufgefrischt, in dem **nicht** gesperrt wurde —
+    wer einmal auf eine höhere Stufe kam, blieb dort. Dazu hätte Klopfen
+    während einer Sperre die laufende Sperre gelöscht. Gefunden von der
+    Ratenprobe beim Bau. Nachweis: `tools/proben/raten/probe.php`.
+
+306. **Der Neuanlauf des Komplett-Backups lief in ein `count(null)` — genau
+    im Zweig nach einer Wiederherstellung.** *Nachgetragen 24.09.2026 mit
+    Konzept BR (E-BR-17); gefunden und behoben am 01.09.2026 in S2/AP8, Web
+    12.2.0 (F-S2-I).* Fehlte der Baustand, lief die Erstbelegung des
+    Fortsetzungszustands in einen `TypeError`. Das ist der Zweig, der nach
+    einer Wiederherstellung greift — der Augenblick, in dem ein Backup am
+    dringendsten gebraucht wird. Gefunden von Teil 8 der Komplettprobe; der
+    Kommentar in `komplett_lib.php` sagt es. Nachweis:
+    `tools/proben/komplett/probe.php`.
+
+307. **Die Prüfung der Wiederherstellungshülle nahm auch `edka1:` an.**
+    *Nachgetragen 24.09.2026 mit Konzept BR (E-BR-17); gefunden am
+    14.09.2026 im Gegenlesen von S10/AP2, behoben mit Web 20.0.0 (Commit
+    `5a2ef0e`, dort F-2).* `WRAP_RE` prüfte beide Hüllen mit einer Regel und
+    ließ seit Web 19.7.0 das Anteil-Format auch für `pat_wrap_rc` zu. Eine
+    solche Wiederherstellungshülle hinge am Server-Anteil — der Verlust genau
+    des Rückwegs, den `CLAUDE.md` 4 zusagt, und man sähe es dem Feld nicht
+    an. Seither `WRAP_PW_RE` und `WRAP_RC_RE`. Gefunden hat es das Gegenlesen;
+    **fangen müssen** hätte es Teil A3 der Anteilprobe. Nachweis:
+    `tools/proben/anteil/probe.php`.
+
+308. **Die Freigabe eines Backups war für niemanden zu sehen.** *Nachgetragen
+    24.09.2026 mit Konzept BR (E-BR-17); gefunden und behoben am 01.09.2026
+    in S2/AP6, Web 12.0.0 (F-S2-F).* `getElementById('freigabecodelabel')`
+    lieferte `null`, weil die Kennung im Markup fehlte, und der `TypeError`
+    verschwand im leeren `catch` von `freigabeLaden()`. Damit war der einzige
+    Weg tot, ein Backup mit geschützten Angaben in ein neu aufgesetztes Konto
+    zu bringen (E20). Nachweis: `tools/proben/freigabe/probe.mjs`.
+
+309. **Der alte Base64-Wandler brach bei einem Teil von 2 MB ab.**
+    *Nachgetragen 24.09.2026 mit Konzept BR (E-BR-17); gefunden und behoben
+    am 31.08.2026 in S2/AP5, Web 11.0.0.*
+    `btoa(String.fromCharCode(...bytes))` warf ab etwa 2 MB „Maximum call stack
+    size exceeded" — ein Backup-Teil dieser Größe ließ sich nicht schreiben.
+    Die Containerprobe hält den Fall seither fest, zusammen mit der Bindung
+    jedes Teils an sein Backup (vertauschte, fremde, verfälschte Teile).
+    Nachweis: `tools/proben/container/probe.mjs`.
+
+310. **Die Frist des Inhaltsschlüssels lief ab dem Entpacken, nicht ab der
+    letzten Bedienung.** *Nachgetragen 24.09.2026 mit Konzept BR (E-BR-17);
+    behoben am 02.09.2026 in S6, Web 12.9.0 (R44, E-S6-4).* Die Frist in
+    `keyguard.js` war absolut: Wer ohne Pause bediente, bekam in acht
+    Stunden Dienst **17** stille Neu-Entpackungen statt einer. Die im
+    Rahmenplan zu R44 vorgeschriebene Abnahme war vor und nach der Änderung
+    grün und belegte deshalb nichts; die Fristprobe zählt den Unterschied
+    (17 gegen 1). Nachweis: `tools/proben/frist/pruefe.mjs`.
+
+311. **`rt_html()` ist der eine Weg, auf dem aus einer Eingabe HTML wird.**
+    *Aufgenommen 24.09.2026 mit Konzept BR (E-BR-18, Q-BR-10) — ein Risiko,
+    kein Fund.* Alles andere in der Anwendung geht durch `e()` und erscheint
+    als Text. Eine Lücke im Rechtstext-Renderer wäre ein eingeschleustes
+    Skript auf den öffentlichen Rechtstextseiten. Die Angriffsprobe ist mit
+    dem Renderer in P3/O10 entstanden (Web 9.11.0) — 81 Proben und eine
+    Positivliste erlaubter Tags — und läuft seither als Riegel in jeder
+    Stufe und im Tor. Gefangen hat sie nichts; **fangen muss sie** genau
+    diese Lücke. Nachweis: `tools/proben/rechtstexte/pruefen.php`.
+
+312. **Ein Umbau des Stylesheets ändert einen berechneten Stil, den niemand
+    ändern wollte.** *Aufgenommen 24.09.2026 mit Konzept BR (E-BR-18,
+    Q-BR-11) — ein Risiko, kein Fund.* Wer Regeln verschiebt, zusammenführt
+    oder entfernt, ändert die Kaskade; ob danach ein Element anders aussieht,
+    zeigt kein Bild zuverlässig. Der Stilvergleich (seit P0/A3, spätestens
+    Web 7.2.0) hält die berechneten Stile zweier Stylesheets an denselben
+    Elementen gegeneinander, und die Liste gegen die geplanten Änderungen
+    (`Pruefablauf.md` 6.10). Ein ungeplanter Fund ist nicht verbucht;
+    **fangen muss er** genau diesen. Nachweis: `tools/stilvergleich/`.
+
+313. **Die Fehlerzweige der Kopplung dürfen nicht verraten, welche Kennungen
+    es gibt.** *Aufgenommen 24.09.2026 mit Konzept BR (E-BR-18, Q-BR-12) —
+    ein Risiko, kein Fund.* Die Kopplung ist der eine Weg, auf dem ein Gerät
+    ohne Anmeldung Zugangsdaten zu einem Konto bekommt. Unterscheiden sich
+    ihre Fehlerzweige in Länge, Aufbau oder **Dauer**, beantwortet die
+    Antwort die Frage, welche Kennungen es gibt. Die Kopplungsprobe (S5,
+    Web 13.0.0) prüft `pair.php` gegen den JSON-Vertrag und die
+    Antwortgleichheit — beide 401-Zweige 0,351 s, Rümpfe byteweise gleich.
+    Nachweis: `tools/proben/kopplung/probe.php`.

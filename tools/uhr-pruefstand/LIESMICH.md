@@ -1,8 +1,7 @@
 # Uhr-Prüfstand
 
-Connect-IQ-SDK und Simulator auf einem nackten Linux aufbauen, die Uhr-App
-übersetzen und starten. **Anlass:** Wegwerf-Umgebungen, in denen nach jeder
-Sitzung alles fort ist.
+SDK und Simulator auf einem nackten Linux aufbauen, die Uhr-App übersetzen und starten.
+**Anlass: Nr. 13** — ohne Arbeitsplatz war der Uhr-Code blind; 29 Warnungen wurden erst hier eine Zahl.
 
 ## Aufruf
 
@@ -18,26 +17,17 @@ bash tools/uhr-pruefstand/pruefstand.sh bildreihe vertreter.txt bilder
 
 ## Was es misst
 
-**Stufe I** übersetzt für **alle** Zielgeräte (Sekunden je Gerät) und fängt
-fehlende API-Funktionen, fehlende Ressourcen und Speicherbedarf. **Stufe II**
-startet den Simulator für die Vertreter je Geräteklasse und nimmt Bilder auf
-— Layout, Bedienhinweise, Abstürze beim Zeichnen. Daneben liegen
-`netzprobe/` (kommt der Simulator an 127.0.0.1 heran?) und `eingabe-probe/`.
+**Stufe I** übersetzt für **alle** Zielgeräte und fängt fehlende
+API-Funktionen, fehlende Ressourcen und Speicherbedarf. **Stufe II** startet
+den Simulator für die Vertreter je Geräteklasse und nimmt Bilder auf.
+Daneben: `netzprobe/` (erreicht der Simulator 127.0.0.1?) und
+`eingabe-probe/` (welche Tasten kommen an?), je mit eigener Anleitung.
 
 ## Was es braucht
 
-`CIQ_GERAETE_URL` für die Gerätedateien; das SDK holt es selbst. Stufe II
-zusätzlich eine Grafikumgebung (`Xvfb`).
-
-**Unter der Adresse liegen zwei Archive** — `devices.tar` und `fonts.tar`,
-gepackt im Ordner `~/.Garmin/ConnectIQ` mit `tar cf devices.tar Devices` und
-`tar cf fonts.tar Fonts`, **immer der ganze Bestand** (sonst sieht
-`geraeteklassen.py` kein neues Gerät). Je eine Anfrage: 47 s statt rund
-31 min über Einzeldateien (Lauf #253). Fehlt ein Archiv, holt das Skript die
-Einzeldateien per `wget -r` — langsam, mit Warnung, dafür braucht die Quelle
-eine Verzeichnisauflistung. Lässt sich ein Archiv nicht entpacken oder liegt
-es eine Ebene zu tief, ist der Lauf rot. **Wer Geräte nachlädt, packt beide
-Archive neu** — sonst holt die Kette ohne Warnung den alten Stand.
+`CIQ_GERAETE_URL` mit den Archiven `devices.tar` und `fonts.tar` — wie sie
+gepackt werden und was bei einem fehlenden gilt: `docs/Technik.md` 5.2b.
+Das SDK holt es selbst; Stufe II zusätzlich `Xvfb`.
 
 ## Erwartete Zahl
 

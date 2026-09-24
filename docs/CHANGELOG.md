@@ -56,6 +56,39 @@ Konzept BR, Backlog Nr. 293. Keine Versionsstufe: berührt sind nur `tools/`,
   Aufrufe, von denen es nur die Schalter prüfte. Jetzt liest es `NAMEN=(…)`
   und die Schlüssel von `RUF`; ein vertippter Probenname ist ein Befund in
   Stufe 1 statt ein Fehlschlag im Lauf. Selbstprobe 16 von 16.
+- **Der Altbestand steht auf null** (BR-02): 57 → 0 Befunde. 25 Anleitungen
+  mit zusammen 972 Zeilen statt 24 mit 2 144. Sortiert wurde je Absatz: Was
+  Anleitung war, blieb; was ein Format beschreibt — die Archive des
+  Uhr-Prüfstands, das Verhalten des Simulators bei TLS, der Wiederaufbau des
+  Referenzbestands —, steht jetzt in `docs/Technik.md`; was Anleitung eines
+  einzelnen Skripts war, etwa die Klickstrecken von Hand, steht in dessen
+  Kopf; Geschichte steht in der Commit-Nachricht. Die meisten dieser Absätze
+  standen ohnehin schon ein zweites Mal im Skriptkopf.
+- **Jede Probe nennt ihren Anlass mit Backlog-Nummer** — 20 Zeilen, je Probe
+  von einem Agenten nachgeschlagen und danach gegengelesen. Zwölf hatten
+  eine passende Nummer. Für sieben mit belegtem Fehler, der nur als
+  Befund-Kennung oder im Changelog stand, sind die Einträge nachgetragen
+  (Nr. 304 bis 310, E-BR-17). Für drei ohne verbuchten Fund steht das Risiko
+  da, das sie hüten (Nr. 311 bis 313) — je einzeln von der Betreiberin
+  entschieden, weil Grundsatz 5 sie sonst auf die Streichliste setzte.
+- **`konfig_stellen.php` liegt unter `tools/sandbox/`** (E-BR-03 (4)). Ihr
+  Pfad zu `config.php` rechnet jetzt zwei Ebenen hoch: Mit einer hätte der
+  Umzug still auf `tools/server/` gezeigt, und der Rückweg kehrt bei einem
+  fehlenden Verzeichnis ohne Meldung zurück. Die vier Proben, die sie laden,
+  sind grün (`proben.sh alle` 20 von 20).
+
+### Behoben
+
+- **26 Verweise auf Werkzeugpfade, die es seit PK-04 nicht mehr gibt**, in
+  zehn Dokumenten und zwei Werkzeugen, dazu drei Verweise auf Abschnitte, die
+  es nicht mehr gibt. Darunter eine Zusage ohne das genannte Mittel:
+  `Backup-Format.md` schrieb der Containerprobe eine Prüfung zu, die sie
+  nicht macht. Die Zusage trägt trotzdem — der Kreislauf `edbak` vergleicht
+  den ganzen Kern; nachgemessen mit einem eingesetzten `_spur_index`: 1
+  Meldung, ohne ihn 0.
+- **Veraltete Zahlen und Schalter in den Anleitungen:** `vergleichen.py
+  --selbstprobe` fährt 14 Fälle, nicht „sieben"; die Zählung 34, nicht 29;
+  `tor.py` kennt `--token`, kein `--jobs-token`.
 
 ## [Werkzeug: Die Nebenstufe ist grün (Konzept RP)] — 2026-09-23
 

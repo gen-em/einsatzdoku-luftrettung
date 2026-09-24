@@ -2,7 +2,7 @@
 
 *Zum Konzept `Konzept-BR-Bestandsriegel.md`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Konzept, Abschnitt 9.
-Stand: BR-01 erledigt, 24.09.2026.*
+Stand: BR-01 und BR-02 erledigt, 24.09.2026.*
 
 ---
 
@@ -11,6 +11,8 @@ Stand: BR-01 erledigt, 24.09.2026.*
 | Was | Warum nicht | Wo es sich zeigt |
 |---|---|---|
 | **Der Riegel in Stufe 1 auf GitHub** | Stufe 1 läuft erst beim Pull Request. Örtlich gefahren sind derselbe Läufer, dieselbe Selbstprobe und dieselbe Gegenlesung (`bericht.py lesen`); ob der Schritt im Tor mit dem Bericht übereinstimmt, zeigt erst der PR. | P-BR-01 |
+| **Ob jede Anlass-Zeile den richtigen Fehler nennt** | Der Riegel misst die Zeile, nicht ihren Inhalt (E-BR-03). Zwölf Nummern sind von Agenten mit Beleg vorgeschlagen und von der Instanz gegengelesen, fünf davon einzeln nachgelesen; zehn Einträge (304–313) sind neu geschrieben. Eine zweite, unabhängige Lesung hat es nicht gegeben. | P-BR-05 |
+| **Uhr-Prüfstand nach der Kürzung seiner Anleitung** | Die Befehle sind unverändert übernommen; gefahren wird `uhr-stufe1` mit dem Prüfstand vor dem PR (BR-04), weil `tools/uhr-pruefstand/` berührt ist. | P-BR-02 |
 | **Ein roter Riegel hält wirklich einen Merge auf** | Das hieße, einen PR mit einem eingebauten Fehler zu öffnen. Belegt ist es an zwei Stellen, die zusammen tragen: Die Selbstprobe baut je Regel einen Fehler ein (22 / 0), und das Tor liest jeden Riegel aus `pruefablauf.json` gegen den Bericht (`--alle-riegel`, P-PK-29 bis -32). | P-BR-03 (freiwillig) |
 
 ---
@@ -23,6 +25,11 @@ Stand: BR-01 erledigt, 24.09.2026.*
 | BR-01 | `bash tools/quelltext/pruefen.sh --selbstprobe` | die sechs Selbstproben des Läufers | **6 von 6** |
 | BR-01 | `python3 tools/quelltext/bestand.py` | 17 Ordner, 24 Anleitungen, 20 Proben, 2 lose Dateien | **57 Befunde** — rot, gewollt bis BR-02 |
 | BR-01 | `python3 tools/kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | Aufrufe in 4 Workflows und 44 Proben | **16 von 16**; 76 Aufrufe, 0 Befunde, 2 ungeprüft |
+| BR-02 | `python3 tools/quelltext/bestand.py` | derselbe Bestand nach der Bereinigung; 25 Anleitungen mit 972 Zeilen | **0 Befunde** |
+| BR-02 | `bash tools/proben/proben.sh alle` auf frischer Anlage | alle 20 Proben, darunter die vier mit `konfig_stellen.php` aus `tools/sandbox/` | **20 von 20 grün, 0 ausgelassen** |
+| BR-02 | `php -l`, `node --check` | die 20 Probendateien mit neuer Kopfzeile | 0 Fehler |
+| BR-02 | `vergleiche_edbak()` gegen die Referenz, mit und ohne eingesetztes `_spur_index` | die Zusage in `Backup-Format.md` | 1 Meldung / 0 |
+| BR-02 | Pfadprüfung über die normativen Dokumente | Verweise `tools/…` auf Dateien und Ordner | 26 tote → 0 |
 
 Im Browser ist nichts zu prüfen: BR berührt weder `server/` noch eine
 Android- oder Uhr-Oberfläche.
@@ -41,8 +48,10 @@ Android- oder Uhr-Oberfläche.
   oder „Riegel „bestand": Bericht …, im Tor gemessen …".
 - [ ] **P-BR-02 — Der Bericht im Kopf-Commit nennt `bestand=0`.**
   *Weg:* `git log -1` auf dem PR-Kopf.
-  *Erwartet:* ein Block `Prüfstand: …` mit `bestand=0` unter den Riegeln.
-  *Scheitern erkennbar an:* `bestand=1` oder kein `bestand` im Block.
+  *Erwartet:* ein Block `Prüfstand: …` mit `bestand=0` unter den Riegeln
+  und `uhr=gebaut` (BR-02 berührt `tools/uhr-pruefstand/`).
+  *Scheitern erkennbar an:* `bestand=1`, kein `bestand` im Block oder
+  `uhr=nicht-gemessen`.
 - [ ] **P-BR-03 (freiwillig) — Ein eingebauter Fehler macht Stufe 1 rot.**
   *Weg:* auf einem Wegwerfzweig eine Zeile an `tools/kette/LIESMICH.md`
   hängen, bis sie 41 Zeilen hat, Prüfstand fahren, PR öffnen.
@@ -55,6 +64,18 @@ Android- oder Uhr-Oberfläche.
   *Erwartet:* 1 Befund „kennt den Befehl "bestnd" nicht".
   *Scheitern erkennbar an:* 0 Befunde.
 
+- [ ] **P-BR-05 — Stichprobe: Passt die Anlass-Zeile zur Probe?**
+  *Weg:* drei Proben wählen (Vorschlag: `ingest`, `geraete`, `anteil`), die
+  Zeile `Anlass: Nr. …` im Kopf lesen, den Backlog-Eintrag dazu öffnen.
+  *Erwartet:* Der Eintrag beschreibt den Fehler, den die Probe misst oder
+  messen müsste (bei 311–313 das Risiko). *Scheitern erkennbar an:* Ein
+  Eintrag, der eine andere Stelle oder einen Fehler der Probe selbst
+  beschreibt — dann Nummer berichtigen.
+- [ ] **P-BR-06 — Die zehn nachgetragenen Einträge lesen.**
+  *Weg:* `docs/Backlog.md`, *Erledigt*, Nr. 304 bis 313.
+  *Erwartet:* Je Eintrag Fehler oder Risiko, Fundstelle, Fassung und
+  Nachweis. *Scheitern erkennbar an:* eine Fundstelle, die es nicht gibt,
+  oder ein Eintrag, den die Betreiberin anders zugeordnet hätte.
 ---
 
 ## 4. Grenzen der Prüfmittel
@@ -66,6 +87,9 @@ Android- oder Uhr-Oberfläche.
 - **„Gerufen" heißt „genannt".** Die Inventur sucht `tools/<ordner>/` als
   Zeichenkette in vier Quellen; ein Kommentar dort zählt so viel wie ein
   Aufruf.
+- **Die Pfadprüfung über die Dokumente ist kein Werkzeug**, sondern eine
+  Schleife in der Sitzung (Protokoll BR-02). Sie ist nicht im Tor; ob sie
+  eines werden soll, steht in Abschnitt 7 des Konzepts.
 - **Die Einstiegsdatei einer Probe kommt aus `proben.sh`.** Wer eine Probe
   an `RUF` vorbei startet, entzieht sie dem Riegel — der Ordner ohne Eintrag
   ist dann aber ein Befund.

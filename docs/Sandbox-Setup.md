@@ -50,7 +50,7 @@ Speicher.
 | fehlt | wer es braucht |
 |---|---|
 | **MariaDB** | jede Browserprobe, beide Kreisläufe, Bedienprobe, Wartungsprobe, `lokal_einrichten.sh` |
-| **ImageMagick** (`convert`, `compare`) | `tools/uhr-bilder/erzeugen.sh` und jeder Bildvergleich |
+| **ImageMagick** (`convert`, `compare`) | der Erzeuger `tools/erzeugen/uhr-bilder.sh` und jeder Bildvergleich |
 | **rsvg-convert** (`librsvg2-bin`) | dieselbe Kette: SVG nach PNG |
 | **Python `jsonschema`** | `tools/referenzdatensatz/quelldaten/pruefen.py` |
 | **Python `pyftpdlib`, `paramiko`, `pyopenssl`** | die Gegenstellen der Versandprobe (`tools/proben/versand/gegenstellen.py`); ohne `pyopenssl` fehlt FTPS, und alle drei Nachbauten brechen ab (RP-01) |
@@ -215,6 +215,12 @@ Datenbank und denselben TLS-Vorbau. Dafür muss das Abbild stehen
 *Gemessen am 21.09.2026: frische Einrichtung auf einer leeren Datenbank,
 106 Einsätze und 21 Diensttage eingespielt, `login.php` HTTP **200**,
 Fassung 20.26.2, Rückgabewert 0.*
+
+**Eine Lage in `config.php` herstellen** — einen anderen Serverschlüssel,
+keinen Anteil — und wieder zurücknehmen: `tools/sandbox/konfig_stellen.php`.
+Vier Proben binden es ein; es schreibt die Datei und ruft
+`konfig_verwerfen()`, denselben Weg wie die Anwendung, und legt am Ende den
+vorigen Stand zurück, auch nach einem Abbruch.
 
 ---
 

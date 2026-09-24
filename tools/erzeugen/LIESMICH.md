@@ -1,6 +1,7 @@
 # Erzeuger
 
 Sieben Befehle, die Dateien **herstellen** — keine Prüfmittel (E-PK-24).
+Anlass: entfällt — Erzeuger (E-BR-05)
 
 ## Aufruf
 
@@ -8,8 +9,7 @@ Sieben Befehle, die Dateien **herstellen** — keine Prüfmittel (E-PK-24).
 bash tools/erzeugen/erzeugen.sh <name> [zusatz…]   # --liste
 ```
 
-**Kein `alle`:** Diese Befehle schreiben in das Repositorium. Gesammelt
-gefahren ergäben sie einen Commit mit sechs unzusammenhängenden Änderungen.
+**Kein `alle`:** Sie schreiben ins Repositorium, jeder einzeln und auf Zuruf.
 
 ## Was es misst
 

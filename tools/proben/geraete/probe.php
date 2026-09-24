@@ -3,6 +3,8 @@ declare(strict_types=1);
 /**
  * Geräteprobe — hält `geraet_block_lesen()` gegen das, was wirklich ankommt.
  *
+ * Anlass: Nr. 80 — ein Radcomputer, der sich "uhr" nennt, stünde in der Statistik als Uhr
+ *
  *     php tools/proben/geraete/probe.php
  *
  * Rückgabewert: 0 = alle Erwartungen erfüllt · 1 = mindestens eine nicht.

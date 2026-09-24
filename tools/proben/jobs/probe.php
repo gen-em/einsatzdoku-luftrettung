@@ -4,6 +4,8 @@ declare(strict_types=1);
 /**
  * Jobprobe — tut der Job-Rahmen, was er zusagt? (S2/AP2)
  *
+ * Anlass: Nr. 37 — Wartung lag auf der Anfrage (4,07 s); der erste Rueckfall trug bis 18 s
+ *
  * WOFUER. Der Rahmen aus `jobs_lib.php` hat drei Zusagen, und alle drei sind
  * unsichtbar, solange nichts schiefgeht:
  *

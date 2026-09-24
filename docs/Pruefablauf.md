@@ -461,9 +461,9 @@ null, **ohne Decke und ohne Ausnahmeliste** (E-BR-01). Die Anlass-Zeile
 beginnt mit `Anlass:`; eine Zeile, in der das Wort mitten im Satz steht,
 findet man nur, wenn man sie sucht, und zählt deshalb nicht.
 
-*Gemessen am 21.09.2026: 47 Anleitungen mit zusammen 7 206 Zeilen, dazu ein
-Werkzeug ohne Anleitung (`tools/erzeugen/ (wegwerfdomains)`). Die Form wird mit PK-04
-hergestellt.*
+*Gemessen am 24.09.2026 mit `bestand`: 25 Anleitungen mit zusammen 972
+Zeilen, alle in der Form, 0 Befunde. Vor Konzept BR waren es 24 Anleitungen
+mit 2 144 Zeilen und 57 Befunde, am 21.09.2026 vor PK-04 47 mit 7 206.*
 
 ### 6.3 Selbstprobe nur, wo etwas aufgehalten wird
 

@@ -5,6 +5,8 @@ declare(strict_types=1);
  * Wartungsprobe — schliesst der Wartungsmodus, was er schliessen soll, und
  * laesst er offen, was offen bleiben muss? (S5 Paket W, Konzept 6.1)
  *
+ * Anlass: Nr. 171 — Anmeldung im Wartungsmodus scheiterte: auth_salt.php bekam 503
+ *
  * WOFUER. Der Wartungsmodus ist eine Sperre, und eine Sperre hat zwei Arten
  * zu scheitern. Sie kann zu WENIG sperren — dann laeuft eine Uhr waehrend
  * einer Migration in eine halb umgebaute Datenbank und bekommt 500 statt
