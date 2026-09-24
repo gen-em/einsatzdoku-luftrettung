@@ -164,6 +164,22 @@ const WRAP_RC_RE = '#^' . CHIFFRE_PRAEFIX_RE . '[A-Za-z0-9+/=]{20,4000}$#';
 const WRAP_RE    = WRAP_PW_RE;
 
 /**
+ * Das Schlüsselpaar des Rückwegs (Konzept RW, E-RW-05).
+ *
+ * `RW_OEFFENTLICH_RE`: der öffentliche Teil als SPKI in Base64 — für P-256
+ * genau 124 Zeichen; der Spielraum 100 bis 200 lässt einen Kodierer mit
+ * anderer Auffüllung durch, keinen Aufsatz. Ob es wirklich ein P-256-Schlüssel
+ * ist, prüft `rw_oeffentlich_pruefen()`; die Regel hier hält nur die Form.
+ *
+ * `RW_PRIVAT_RE` IST `WRAP_RC_RE`, mit Absicht: Der private Teil liegt unter
+ * dem INHALTSSCHLÜSSEL (`edk1:`) und muss mit dem Wiederherstellungsschlüssel
+ * allein aufgehen — wie `pat_wrap_rc`. Eine `edka1:`-Fassung hinge am
+ * Server-Anteil, und der Rückweg ginge mit dem Anteil verloren.
+ */
+const RW_OEFFENTLICH_RE = '#^[A-Za-z0-9+/]{100,200}={0,2}$#';
+const RW_PRIVAT_RE      = WRAP_RC_RE;
+
+/**
  * Mengenbegrenzungen je Einsatz.
  *
  * Zur Phasenzahl: Mehrfache Eintraege derselben Phasennummer sind

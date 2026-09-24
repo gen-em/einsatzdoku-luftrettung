@@ -7478,5 +7478,18 @@ declare(strict_types=1);
  *   Wiederherstellungsschluessel. E-P5c-42 sah ihn gegen `pat_key_check` vor
  *   — einen Wert, den jeder Datenbankabzug enthaelt (F-P5c-106). Er kommt
  *   faelschungssicher mit dem Einschubkonzept RW.
+ *
+ * 20.43.0 — DER RUECKWEG, GRUNDLAGE (Konzept RW, RW-01; im P5c-Konzept
+ *   AP5b). Nebenstufe MIT MIGRATION: drei Spalten an `users`
+ *   (`rw_oeffentlich`, `rw_privat`, `rw_seit`) fuer das Schluesselpaar, mit
+ *   dem ein Konto spaeter den Zweitfaktor mit dem Wiederherstellungsschluessel
+ *   selbst zuruecksetzt. Nach dem Deploy `update.php`; die Wartung bleibt an.
+ *   Noch entsteht kein Paar und kein Weg steht am Code-Schritt — dieses Paket
+ *   legt nur, was die beiden folgenden brauchen: `rueckweg_lib.php` prueft
+ *   ECDSA-Signaturen (P-256, SHA-256, IEEE-Format) ueber das vendorierte
+ *   phpseclib, baut die Nachricht selbst aus Konto und Herausforderung, und
+ *   sagt mit einem Selbsttest gegen einen festen Browser-Vektor, ob die
+ *   Anlage pruefen kann. Betrieb → Status zeigt es als Zeile
+ *   „Rueckweg-Pruefung".
  */
-const WEB_VERSION = '20.42.0';
+const WEB_VERSION = '20.43.0';

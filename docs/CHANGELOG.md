@@ -14,6 +14,90 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.43.0] — 2026-09-24
+
+**Der Rückweg beim Zweitfaktor, Grundlage.** Konzept RW, Paket RW-01 (im
+P5c-Konzept AP5b); E-RW-03, -04, -05, -11. Nebenstufe **mit Migration**: drei
+Spalten an `users` (`rw_oeffentlich`, `rw_privat`, `rw_seit`). **Nach dem
+Deploy muss eine BetreiberIn `update.php` ausführen** (Betrieb → Updates);
+bis dahin schließt der Torwächter die Anlage, und **die Wartung bleibt danach
+an**, bis sie jemand ausschaltet. Für NutzerInnen ändert sich mit dieser
+Fassung noch nichts: Es entsteht noch kein Schlüsselpaar, und der Weg am
+Code-Schritt kommt erst mit RW-03.
+
+Der Anlass ist F-P5c-106: Der Rückweg, den E-P5c-42 beschlossen hatte,
+prüfte gegen `pat_key_check` — einen Wert, der in der Datenbank steht. Wer
+einen Abzug hatte, hätte ihn vorlegen können. Die Betreiberin hat die
+fälschungssichere Fassung gewählt (Q-P5c-38): ein Schlüsselpaar je Konto,
+dessen privater Teil unter dem Inhaltsschlüssel liegt, und eine Signatur
+über eine Herausforderung des Servers. In der Datenbank steht dann nur, womit
+man prüfen kann, nicht womit man signiert.
+
+### Neu
+
+- **Web: `rueckweg_lib.php` — die Prüfung der Signatur** (E-RW-03, -04).
+  ECDSA über P-256 mit SHA-256, die Signatur im IEEE-Format (die 64 Byte
+  `r‖s`, die WebCrypto liefert), geprüft über das vendorierte phpseclib: Es
+  nimmt `openssl`, wo es geht, und rechnet sonst in reinem PHP — ein Hoster
+  ohne passende Kurve bricht damit nicht, er ist nur langsamer.
+  `openssl_verify()` wird nicht unmittelbar gerufen: Zwei Prüfwege wären zwei
+  Stellen. **Die Nachricht baut der Server selbst** aus Konto und
+  Herausforderung (`nadoku-rw-v1|totp-rueckweg|<Konto>|<Herausforderung>`),
+  nie aus dem, was der Browser schickt — Präfix und Zweck trennen die
+  Domäne, die Kontonummer bindet an das Konto. Ein öffentlicher Teil auf
+  einer anderen Kurve oder mit einem anderen Verfahren (P-384, Ed25519) wird
+  abgewiesen, bevor er je geprüft wird.
+- **Web: Der Selbsttest und die Zeile „Rückweg-Prüfung"** unter Betrieb →
+  Status (E-RW-11). Ob eine Anlage prüfen kann, sieht man ihr sonst nicht an
+  — bis jemand mit verlorenem Handy davorsteht. `rw_selbsttest()` prüft einen
+  festen Vektor aus Chromium (richtig muss durchgehen, eine veränderte
+  Nachricht nicht) und nennt Weg und Dauer; blau „prüft", orange
+  „abgeschaltet". Das Ergebnis merkt sich die Anlage in `app_state` **je
+  Fassung und Plattform** — nach einem Deploy oder einem neuen PHP beim
+  Hoster wird einmal neu getestet, nicht bei jedem Aufruf. **Gemessen:** über
+  openssl rund 20 ms je Prüfung, davon 19 für das Laden des Schlüssels, das
+  phpseclib in reinem PHP erledigt; ohne openssl rund 170 ms.
+- **Web: Die Spalten des Paars** und zwei Prüfregeln in `validate_lib.php`:
+  `RW_OEFFENTLICH_RE` für die Form des öffentlichen Teils, `RW_PRIVAT_RE` ist
+  `WRAP_RC_RE` — der private Teil hängt am Inhaltsschlüssel (`edk1:`) und nie
+  am Server-Anteil, damit er mit dem Wiederherstellungsschlüssel allein
+  aufgeht, wie die Wiederherstellungs-Hülle.
+- **Werkzeug: Rückwegprobe, Teil A** (`tools/proben/rueckweg/`, 27
+  Prüfungen): Selbsttest mit erzwungener Engine, sechs Signaturfälle — echt
+  angenommen; fremd, verändert, zweckfremd, fremdes Konto, verstümmelt
+  abgewiesen —, fremde Kurven, Prüfregeln, die Statuszeile in drei Lagen und
+  die Marke.
+
+### Geändert
+
+- **Werkzeug: Die Bemerkung zur Zweitfaktorprobe in `pruefablauf.json`**
+  sagte noch „setzt den Demo-Bestand einmal zurück" — seit F-P5c-117 misst
+  sie den Schritt, nicht den ganzen Reset.
+
+### Behoben
+
+- **Doku: `Lizenzen.md` 3a nannte phpseclib „nur vom SFTP-Adapter"
+  geladen** (F-RW-11). Seit Web 20.42.0 lädt auch `totp_lib.php` den Lader,
+  für das Base32 des Zweitfaktors aus constant_time_encoding; AP5 hatte das
+  nicht nachgetragen. Jetzt stehen dort alle drei Verwender. Ebenso nannte
+  `Technik.md` 3 „zweiundzwanzig" Proben ohne die Zweitfaktorprobe; gezählt
+  sind es jetzt 24.
+
+### Nachweis
+
+**Rückwegprobe 27 / 0**; Gegenprobe: Kurvenprüfung in
+`rw_oeffentlich_laden()` herausgenommen → **3 rot** (P-384 angenommen, beide
+Kurvenfälle geladen). Selbsttest: openssl rund 20 ms, reines PHP **185 ms**
+(Sollbereich 150–400). **Vor `update.php`** nachgestellt: Spalten und
+Registereintrag entfernt, gemerkter Katalog-Hash verworfen — die erste
+angemeldete Anfrage schaltet die Wartung ein, `betrieb_updates.php` 200 mit
+der Migration, Status 200 mit der Zeile „Rückweg-Prüfung", Anmeldeseite mit
+Wartungshinweis; `update.php` legt die drei Spalten an, die Wartung bleibt
+an. **Unter PHP 8.3.33 von Hand** (Nr. 300): dieselbe Migration über
+Betrieb → Updates, danach die Rückwegprobe im 8.3-Behälter **27 / 0**
+(OpenSSL 3.5.7, reines PHP 168 ms), Status 200, keine PHP-Meldung im
+Protokoll des Behälters.
+
 ## [Web 20.42.0] — 2026-09-24
 
 **Der Zweitfaktor.** P5c/AP5 (Schritt 10c), R38, Backlog Nr. 141; E-P5c-15,

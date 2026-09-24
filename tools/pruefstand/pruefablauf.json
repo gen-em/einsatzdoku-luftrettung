@@ -209,7 +209,12 @@
     "zweitfaktorprobe": {
       "aufruf": "bash tools/proben/proben.sh zweitfaktor",
       "braucht": "installation",
-      "bemerkung": "RFC-6238-Vektoren 6/6, Code-Schritt über HTTP, Einrichtungstor, Demo-Reset, Bus-Faktor (P5c/AP5). Setzt den Demo-Bestand einmal zurück."
+      "bemerkung": "RFC-6238-Vektoren 6/6, Code-Schritt über HTTP, Einrichtungstor, Demo-Reset, Bus-Faktor (P5c/AP5). Den Demo-Reset misst sie an seinem Schritt demo_zweitfaktor_leeren() und nicht am ganzen Reset -- bis F-P5c-117 setzte sie den Demo-Bestand zurueck und machte die GPX-Probe danach blind."
+    },
+    "rueckwegprobe": {
+      "aufruf": "bash tools/proben/proben.sh rueckweg",
+      "braucht": "installation",
+      "bemerkung": "Konzept RW. Teil A (RW-01): Selbsttest beider Engines gegen den festen Browser-Vektor, sechs Signaturfaelle, fremde Kurven, Pruefregeln, Statuszeile in drei Lagen, Marke. Braucht die Datenbank nur fuer die Marke in app_state und stellt sie danach wieder her."
     }
   },
   "stufenregeln": [
@@ -388,6 +393,20 @@
         "zweitfaktorprobe"
       ],
       "anlass": "F-P5c-31 (Code vor der Sitzung), F-P5c-37 (kein Code gilt zweimal), E-P5c-54 (Demo-Reset)"
+    },
+    {
+      "id": "rueckweg",
+      "ab": "klein",
+      "pfade": [
+        "server/rueckweg_lib.php",
+        "server/status_lib.php",
+        "server/vendor/phpseclib3/**",
+        "tools/proben/rueckweg/**"
+      ],
+      "proben": [
+        "rueckwegprobe"
+      ],
+      "anlass": "F-P5c-106 (Rueckweg pruefte gegen einen Wert aus der Datenbank), Konzept RW E-RW-03, -11, -12"
     },
     {
       "id": "protokoll",
@@ -638,9 +657,10 @@
         "spaltenregister-wegprobe",
         "protokollprobe",
         "rollenprobe",
-        "zweitfaktorprobe"
+        "zweitfaktorprobe",
+        "rueckwegprobe"
       ],
-      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket."
+      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in acht Breiten, Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01."
     },
     {
       "id": "mengen",

@@ -1576,6 +1576,13 @@ Serverschlüssel — also genau das, womit sich diese Datei öffnen lässt. Sie
 gehört ins getrennt aufbewahrte Wiederanlaufpaket (`docs/Technik.md`,
 Abschnitt 7).
 
+**Das Schlüsselpaar des Rückwegs reist hier mit, und nur hier** (seit Web
+20.43.0, Konzept RW, E-RW-09): `users.rw_oeffentlich`, `rw_privat` und
+`rw_seit` sind Spalten von `users` und stehen damit im Dump wie jede andere.
+Das Konto-Backup (Abschnitte 1 bis 5) und die Freigabe tragen sie **nicht** —
+beide dienen dem Einspielen in ein anderes Konto, dessen Paar an seinem
+eigenen Inhaltsschlüssel hängt.
+
 ### 6.1 Drei Schichten
 
     1. SQL-Text     ein Statement je Zeile, INSERT-Stapel bis 1 MB

@@ -84,6 +84,13 @@ CREATE TABLE users (
   totp_geheimnis VARCHAR(200) NULL,
   totp_seit      DATETIME NULL,
   totp_schritt   BIGINT UNSIGNED NULL,
+  -- RUECKWEG BEIM ZWEITFAKTOR (Konzept RW, E-RW-05). Der oeffentliche Teil
+  -- eines ECDSA-Paars (P-256, SPKI in Base64) und der private als Chiffretext
+  -- unter dem Inhaltsschluessel (`edk1:`, nie `edka1:`) — ein Abzug kann
+  -- damit pruefen, aber nicht signieren. `rw_seit`: wann es entstand.
+  rw_oeffentlich VARCHAR(255) NULL,
+  rw_privat      TEXT NULL,
+  rw_seit        DATETIME NULL,
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   -- Fuer die Verfalljobs, nicht fuer die Anzeige: „alle Konten in einem
   -- Zustand, deren Frist abgelaufen ist" waere sonst ein Vollscan je Joblauf.
@@ -1063,4 +1070,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- fuer Bestandsdatenbanken da, die die Spalte noch als `manual` fuehren.
   ('2026_09_20_uhr_gesperrt', 'skipped'),
   ('2026_09_24_rolle_support', 'skipped'),
-  ('2026_09_24_zweitfaktor', 'skipped');
+  ('2026_09_24_zweitfaktor', 'skipped'),
+  -- users.rw_* stehen oben schon im Schema (Konzept RW, RW-01).
+  ('2026_09_24_rueckweg_schluesselpaar', 'skipped');

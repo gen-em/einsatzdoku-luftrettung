@@ -3239,6 +3239,34 @@ function migrationen_katalog(): array
                ADD COLUMN totp_schritt   BIGINT UNSIGNED NULL",
         ],
     ],
+    [
+        'id'    => '2026_09_24_rueckweg_schluesselpaar',
+        'web'   => '20.43',
+        'label' => 'Rückweg beim Zweitfaktor: Schlüsselpaar je Konto (Konzept RW)',
+        /* DAS PAAR DES RUECKWEGS (Konzept RW, E-RW-05). Drei Spalten an
+         * `users`, keine Tabelle: Die Herausforderung lebt in der halben
+         * Anmeldesitzung (E-RW-04), nicht in der Datenbank.
+         *
+         * `rw_oeffentlich` ist der oeffentliche Teil (SPKI, Base64, 124
+         * Zeichen fuer P-256), `rw_privat` der private als Chiffretext unter
+         * dem Inhaltsschluessel (`edk1:`, rund 220 Zeichen), `rw_seit` der
+         * Zeitpunkt des Entstehens. Leer heisst: noch kein Paar — es entsteht
+         * beim naechsten Anmelden (E-RW-02).
+         *
+         * EINE ANWEISUNG FUER ALLE DREI: `ALTER TABLE` legt sie gemeinsam an
+         * oder gar nicht, und `skip` fragt nach der letzten. Bis sie steht,
+         * ist der Rueckweg stumm (`rw_spalten_da()`). Nichts wird geloescht —
+         * die Migration ist nicht zerstoerend. */
+        'skip'  => function (PDO $pdo): bool {
+            return db_hat_spalte($pdo, 'users', 'rw_seit');
+        },
+        'sql'   => [
+            "ALTER TABLE users
+               ADD COLUMN rw_oeffentlich VARCHAR(255) NULL,
+               ADD COLUMN rw_privat      TEXT NULL,
+               ADD COLUMN rw_seit        DATETIME NULL",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

@@ -127,6 +127,35 @@ function status_verwaltungszeile(array $n): array
 }
 
 /**
+ * Die Zeile „Rückweg-Prüfung" aus dem Ergebnis des Selbsttests (Konzept RW,
+ * E-RW-11) — ohne Datenbank, damit die Probe die drei Lagen mit gesetzten
+ * Werten prüfen kann.
+ *
+ * BLAU MIT DEM WEG, weil der Weg etwas sagt: `openssl` prüft in Millisekunden,
+ * reines PHP in rund 200 — beides trägt einen Rückweg, den ein Konto einmal
+ * im Jahr geht, aber wer die Zahl sieht, soll nicht raten müssen, warum.
+ * ORANGE, NICHT ROT, wenn der Selbsttest scheitert: Die Anwendung arbeitet,
+ * nur der dritte Weg am Code-Schritt ist aus; Codes und Verwaltung tragen
+ * weiter (E-RW-01, Alternative B als Boden).
+ *
+ * @param array{ok:bool, weg:string, ms:float} $t
+ */
+function status_rueckwegzeile(array $t): array
+{
+    if (!$t['ok']) {
+        return status_z('Rückweg-Prüfung',
+            'Selbsttest fehlgeschlagen — der Rückweg mit dem Wiederherstellungsschlüssel '
+            . 'ist abgeschaltet; Codes und Verwaltung gehen weiter',
+            'orange', 'abgeschaltet');
+    }
+    $weg = $t['weg'] === 'openssl' ? 'openssl' : 'reines PHP';
+    return status_z('Rückweg-Prüfung',
+        'Signaturen des Rückwegs beim Zweitfaktor: ' . $weg . ', '
+        . zahl_text(max(1, (int)round($t['ms']))) . ' ms je Prüfung',
+        'blau', 'prüft');
+}
+
+/**
  * Alles, was die Statusseite zeigt — als Liste von Karten mit Zeilen.
  *
  * Rückgabe unter 'karten': je Karte ['titel', 'id', 'zeilen'], und jede
@@ -308,6 +337,14 @@ function status_erhebung(): array
      * aktive Konto als handlungsfaehig — das Einrichtungstor schweigt dann
      * ebenfalls. */
     $server[] = status_verwaltungszeile(status_verwaltungskonten($pdo));
+
+    /* ---- Rückweg-Prüfung (Konzept RW, E-RW-11) --------------------------
+     *
+     * Kann diese Anlage die Signaturen des Rückwegs prüfen? Das Ergebnis
+     * kommt aus der Marke in `app_state` — der Selbsttest läuft einmal je
+     * Fassung und Plattform, nicht bei jedem Aufbau dieser Seite. */
+    require_once __DIR__ . '/rueckweg_lib.php';
+    $server[] = status_rueckwegzeile(rw_selbsttest_stand());
 
     $offen = (int)$lauf['offen'];
     $server[] = status_z('Updates',

@@ -76,6 +76,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       und 401 JSON für die API ohne Anmeldung (4.99q)
 │   ├── totp_lib.php       Der Zweitfaktor: RFC 6238, Geheimnis versiegelt,
 │   │                       Wiederherstellungscodes gehasht (P5c/AP5, 4.99q)
+│   ├── rueckweg_lib.php   Der Rückweg beim Zweitfaktor über den
+│   │                       Wiederherstellungsschlüssel: ECDSA-Prüfung
+│   │                       (phpseclib), Nachricht, Selbsttest mit Marke
+│   │                       (Konzept RW, 4.99q)
 │   ├── zweitfaktor.php    Das Einrichtungstor für Pflichtrollen, in der
 │   │                       Anmeldehülle (E-P5c-61)
 │   ├── zweitfaktor_teile.php  QR, Geheimnis, Codefeld und Codeliste — EIN
@@ -707,7 +711,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      misst die zwei Riegel darin (Zielrundenzahl,
 │   │                      Hülle bleibt edk1: — sonst wäre das Demo-Konto auf
 │   │                      der Produktivinstallation ausgesperrt, S10)
-│   ├── proben/            zweiundzwanzig Prüfungen gegen die laufende Anlage
+│   ├── proben/            vierundzwanzig Prüfungen gegen die laufende Anlage
 │   │                      (PK-04/2, E-PK-24): ingest, spur, jobs,
 │   │                      kopplung, wartung, raten, mail, versand,
 │   │                      komplett, wiederherstellung, gpx, geraete,
@@ -715,7 +719,13 @@ Daten erst nach Server-Bestätigung.
 │   │                      container, frist, abmelden, csp-browser —
 │   │                      seit Web 20.39.0 dazu rollen (die
 │   │                      Berechtigungsmatrix aus 4.99p) und protokoll
-│   │                      (Quellen, Archiv, Siegel).
+│   │                      (Quellen, Archiv, Siegel), seit Web 20.42.0
+│   │                      zweitfaktor (RFC-Vektoren, Code-Schritt, Tor),
+│   │                      seit Web 20.43.0 rueckweg (Signaturen des
+│   │                      Rückwegs, Selbsttest, Marke; Konzept RW).
+│   │                      Gezählt am 24.09.2026 mit `proben.sh --liste`:
+│   │                      24 — bis dahin stand hier „zweiundzwanzig",
+│   │                      AP5 hatte die Zweitfaktorprobe nicht nachgetragen.
 │   │                      Ein Läufer (`proben.sh <name>|alle|--liste`),
 │   │                      ein LIESMICH. Vorher zwanzig Ordner.
 │   ├── screenshots/       nimmt alle Seiten in acht Breiten von 360 bis 1920 px
@@ -790,7 +800,7 @@ Daten erst nach Server-Bestätigung.
 
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
-| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.99q |
+| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.99q. **Seit Web 20.43.0 das Paar des Rückwegs** (Konzept RW, E-RW-05): `rw_oeffentlich` (öffentlicher Teil eines ECDSA-P-256-Paars, SPKI in Base64, 124 Zeichen), `rw_privat` (der private Teil als Chiffretext unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:` — er muss mit dem Wiederherstellungsschlüssel allein aufgehen, wie `pat_wrap_rc`), `rw_seit` (wann es entstand). Leer heißt: noch kein Paar. Ein Abzug enthält den öffentlichen Teil und einen Chiffretext unter einem Schlüssel, den der Server nie kennt — er kann prüfen, nicht signieren (4.99q) |
 | `totp_codes` | Die Wiederherstellungscodes des Zweitfaktors (seit Web 20.42.0, P5c/AP5): `user_id`, `hash` (`password_hash()`), `benutzt_am` (NULL = offen). **Nicht am Serverschlüssel** (E-P5c-42) — sie sind der Rückweg für genau den Fall, dass das Geheimnis nicht mehr zu öffnen ist. `ON DELETE CASCADE` mit dem Konto. Angenommen wird atomar (`UPDATE … WHERE benutzt_am IS NULL`, gültig bei `rowCount() = 1`) |
 | Backup | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist im Backup, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | **Seit Web 20.17.0 schreibt nur noch `konto_lib.php` hierher** (P5b/AP2, Backlog Nr. 202 Paket 1) — nachweisbar mit `grep -rn "INSERT INTO password_resets" server/`. Die Laufzeiten stehen als `TOKEN_EINLADUNG_S` / `TOKEN_RESET_S` statt als SQL-Literale, und „höchstens ein gültiger Token je Konto" gilt damit an **allen vier** Stellen statt an zweien. Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
@@ -7308,11 +7318,25 @@ Kontoadresse. **Selbst ausschalten** geht nur ohne Pflicht. Der Demo-Reset
 leert die Spalten (`demo_zweitfaktor_leeren()`, gerufen aus
 `demo_zuruecksetzen()`).
 
-**Der Rückweg über den Wiederherstellungsschlüssel fehlt, mit Absicht**
-(E-P5c-104, F-P5c-106): E-P5c-42 sah ihn vor, geprüft gegen
-`pat_key_check` — einen Wert, den jeder Datenbankabzug enthält. Er kommt
-fälschungssicher mit dem Einschubkonzept RW. Bis dahin: Codes und
-Verwaltung.
+**Der Rückweg über den Wiederherstellungsschlüssel entsteht in vier Paketen**
+(Konzept RW, E-P5c-104, F-P5c-106): E-P5c-42 sah ihn gegen `pat_key_check`
+vor — einen Wert, den jeder Datenbankabzug enthält. Die fälschungssichere
+Fassung prüft stattdessen eine **ECDSA-Signatur** (P-256, SHA-256, 64 Byte
+`r‖s`) über eine Herausforderung des Servers gegen den öffentlichen Teil
+eines Paars je Konto (`users.rw_*`, Abschnitt 3); der private Teil liegt
+unter dem Inhaltsschlüssel und lässt sich nur im Browser mit dem
+Wiederherstellungsschlüssel öffnen. **Seit Web 20.43.0 (RW-01)** stehen die
+Spalten, die Prüfung (`rueckweg_lib.php`: `rw_nachricht()` baut
+`nadoku-rw-v1|totp-rueckweg|<Konto>|<Herausforderung>` selbst, `rw_pruefen()`
+über phpseclib) und der **Selbsttest** gegen einen festen Vektor aus
+Chromium: `rw_verfuegbar()` merkt sich sein Ergebnis in `app_state`
+(`rw_selbsttest`) je Fassung und Plattform — neu getestet wird nach einem
+Deploy oder einem neuen PHP/OpenSSL beim Hoster, nicht bei jedem Aufruf.
+Betrieb → Status zeigt es als Zeile „Rückweg-Prüfung" (blau „prüft" mit Weg
+und Dauer — über openssl rund 20 ms je Prüfung, davon 19 für das Laden des
+Schlüssels in reinem PHP; ohne openssl rund 170 ms —, orange
+„abgeschaltet", wenn der Test scheitert). **Noch fehlen** das Entstehen des
+Paars und der Weg am Code-Schritt; bis dahin: Codes und Verwaltung.
 
 **Der Bus-Faktor** (E-P5c-16, -56): Die Zeile „Verwaltungskonten" auf Betrieb
 → Status zählt **handlungsfähige** Konten — `status = 'aktiv'` und ein
@@ -11162,6 +11186,23 @@ kein Zweitfaktor-Geheimnis mehr öffnen (es ist mit dem alten versiegelt). Die
 Anmeldung nimmt dann nur noch Wiederherstellungscodes — sie hängen nicht am
 Schlüssel (E-P5c-42). Wer keine mehr hat, wird von einer BetreiberIn
 zurückgesetzt, die einzige BetreiberIn über den SQL-Weg oben.
+
+**Die Zeile „Rückweg-Prüfung" auf Betrieb → Status steht orange** (seit Web
+20.43.0, Konzept RW): Der Selbsttest hat den festen Vektor nicht bestanden,
+und der Rückweg mit dem Wiederherstellungsschlüssel ist abgeschaltet — die
+Anmeldung bietet ihn nicht an; Codes und Verwaltung gehen weiter. Die
+Meldung im Reiter System nennt den Weg (`openssl` oder `php`). **Erst neu
+testen lassen:** Das Ergebnis steht in `app_state` unter `rw_selbsttest` und
+gilt je Fassung und Plattform; wer es löscht, lässt beim nächsten Aufruf
+der Statusseite neu testen:
+
+```sql
+DELETE FROM app_state WHERE k = 'rw_selbsttest';
+```
+
+Bleibt es orange, ist phpseclib unter `server/vendor/phpseclib3/` beschädigt
+oder unvollständig ausgeliefert — `sha256sum -c phpseclib3.sha256` im Ordner
+`server/vendor` (`docs/Lizenzen.md` 3a) sagt, welche Datei.
 
 **Neue Zusatzfelder für Einsätze:** 1) Migration in `migration_lib.php`
 (`migrationen_katalog()`) ergänzen

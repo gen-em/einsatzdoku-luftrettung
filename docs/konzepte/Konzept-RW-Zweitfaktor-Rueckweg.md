@@ -29,9 +29,9 @@ AP5 nach (3.3) und baut nichts davon ein zweites Mal.
 > | | |
 > |---|---|
 > | Stand | **24.09.2026 — Fassung 1, freigegeben.** Vorbereitung gegen den Code geprüft (F-RW-01 bis -08, mit einer Messung des Signaturwegs in drei Browser-Motoren und vier PHP-Prüfwegen: 12 Prüfungen, 0 Abweichungen). Zehn Fragen vorgelegt und am 24.09.2026 einzeln beantwortet (Q-RW-01 bis -10, 2.1); eine Antwort weicht von der Empfehlung ab (Q-RW-07). **Mockup-Runde M-RW-01 gebaut und freigegeben am 24.09.2026** (7). |
-> | Entschieden | **E-RW-01 bis -14** (2.2). Keine offene Frage. |
-> | Offen | nichts — das Konzept wartet auf die Umsetzung auf dem P5c-Zweig. **Voraussetzung:** AP5 ist gepusht (Spaltennamen, `totp`-Topf, die Rücksetzfunktion). |
-> | Umsetzung | **nicht begonnen.** Reihenfolge RW-01 → RW-02 → RW-03 → RW-04, eines nach dem anderen (4). |
+> | Entschieden | **E-RW-01 bis -14** (2.2). Aus der Umsetzung: **Q-RW-11** (Demo-Konto, 24.09.2026) → **E-RW-15**, ersetzt E-RW-10; **E-RW-16** (Marke des Selbsttests, ohne Frage). Keine offene Frage. |
+> | Offen | nichts. Die Voraussetzung ist erfüllt: AP5 ist gepusht (`262787c`), die Namen stehen in 3.3. |
+> | Umsetzung | **läuft seit 24.09.2026** auf `claude/p5c-mockups-konzept-4yeomf` (Konzept per Cherry-Pick `5fb1d2a`). **RW-01 erledigt** (Web 20.43.0, mit Migration — nach dem Deploy `update.php`, die Wartung bleibt an; Befunde F-RW-09 bis -13). **Als Nächstes: RW-02.** Reihenfolge RW-01 → RW-02 → RW-03 → RW-04 (4). |
 > | Fable-Schritte | **keine.** |
 > | Nummern | Backlog-Nummern vergibt die Umsetzung (Vorbereitung 8); eine Zeile ohne Nummer steht in 9.3. Rahmenplan-Zeilen in 9.2. |
 >
@@ -40,7 +40,7 @@ AP5 nach (3.3) und baut nichts davon ein zweites Mal.
 > | Paket | Stand | Versionsstufe (Vorschlag) | Prüfstand | Migration | Commit | Abnahmezahlen |
 > |---|---|---|---|---|---|---|
 > | M-RW-01 Mockup-Runde | **erledigt — freigegeben 24.09.2026** | — (nur `docs/`) | — | — | | Überlauf 0 px Seite, 0 von 11 und 0 von 4 Rahmen; Knöpfe 16 von 16 zu 36 px (Zeigergerät) und 6 von 6 ≥ 44 px (Handy); 0 fehlende Ressourcen, 0 Konsolenfehler; keine neue Klasse, kein neues Symbol, keine neue Farbe |
-> | RW-01 Grundlage: Prüfung, Migration, Statuszeile | offen | Neben | **haupt** | **ja** (drei Spalten an `users`) | | |
+> | RW-01 Grundlage: Prüfung, Migration, Statuszeile | **erledigt 24.09.2026** | Neben — **Web 20.43.0** | **haupt** (Bericht im Commit `RW-01`; Stufenregel `migration`) | **ja** (`2026_09_24_rueckweg_schluesselpaar`, drei Spalten an `users`) | | Rückwegprobe Teil A **27 / 0**: Selbsttest **2 / 2** (openssl rund 20 ms, reines PHP **185 ms**, im Sollbereich 150–400), sechs Signaturfälle **1 angenommen / 5 abgewiesen**, fremde Kurve und fremdes Verfahren **2 / 2** abgewiesen (dazu die Kurvenprüfung selbst 2 / 2, F-RW-12), Statuszeile **3 / 3** Lagen, Marke: zweimal gefragt **1** Lauf · Gegenprobe Kurvenprüfung heraus: **3 rot** · vor `update.php`: `betrieb_updates.php` 200 mit Migration, Status 200, Wartung an · **unter PHP 8.3.33 von Hand**: Migration über Betrieb → Updates, Probe **27 / 0** (reines PHP 168 ms) · Quelltext **9 von 9**, Register **40 / 0 über der Decke** · Schemaprobe, Migrationsregister: im Prüfstand |
 > | RW-02 Das Paar entsteht: Anmeldung, Karte, Demo | offen | Neben | haupt | nein | | |
 > | RW-03 Der Rückweg am Code-Schritt | offen | Neben | haupt | nein | | |
 > | RW-04 Abschluss: Prüfdokument, Einschübe, Kette | offen | — | haupt | — | | |
@@ -64,7 +64,7 @@ Herausforderung des Servers.
 
 **Im Umfang:** das Schlüsselpaar (Entstehung, Ablage, Erneuern), der Rückweg
 am Code-Schritt der Anmeldung, die Prüfung auf dem Server, die Statuszeile,
-die Kartenzeile im Profil, das Demo-Konto samt Fixture, die Rückwegprobe,
+die Kartenzeile im Profil, das Demo-Konto (ohne Paar, E-RW-15), die Rückwegprobe,
 Handbuch, Technik, Runbook, und die Einschübe in P5c, Rahmenplan und Backlog.
 
 **Nicht im Umfang:** der Zweitfaktor selbst (AP5), das Zurücksetzen durch die
@@ -94,6 +94,16 @@ Die Zahlen der Vorbereitung (Abschnitt 3: 0 Konten ohne Prüfwert auf beiden
 Anlagen) sind für RW ohne Belang — der Prüfwert spielt im Rückweg keine Rolle
 mehr.
 
+### 1.1 Aus der Umsetzung (F-RW-09 ff.)
+
+| Nr. | Befund | Folge |
+|---|---|---|
+| **F-RW-09** | *(vor RW-02)* **E-RW-10 und die Abnahme von RW-02 widersprachen sich.** E-RW-10 lässt das Paar des Demo-Kontos auf dem gewöhnlichen Weg beim Anmelden entstehen, damit der Fixture-Erzeuger es auf der Referenzanlage findet; die Abnahme nennt einen vierten Wert `RW_STAND = 'demo'`. Nach dem Muster von `ANTEIL_STAND = 'demo'` hieße er „nie anlegen" — dann käme nie ein Paar in die Fixture | vorgelegt als **Q-RW-11**; die Betreiberin hat das Demo-Konto ausgenommen — **E-RW-15** ersetzt E-RW-10 |
+| **F-RW-10** | *(RW-01)* **Eine Prüfung über openssl kostet rund 20 ms, nicht 1,5 bis 2.** F-RW-02 hat die Prüfung mit einem schon geladenen Schlüssel gemessen, E-RW-11 nennt als Beispiel „openssl, 2 ms". Gemessen am 24.09.2026: Laden des SPKI durch phpseclib **18,8 ms** (ASN.1 und Punktprüfung in reinem PHP), `verify()` über openssl **0,97 ms**. Jede echte Prüfung lädt den Schlüssel einmal | kein Fehler; die Statuszeile nennt die ehrliche Zahl je Prüfung (rund 20 ms). Der Selbsttest läuft einmal ungemessen vorab, damit das erstmalige Laden der Klassen (rund 15 ms) nicht mitzählt |
+| **F-RW-11** | *(RW-01, aus AP5)* **`Lizenzen.md` 3a sagte, phpseclib werde „nur vom SFTP-Adapter" geladen**, und führte constant_time_encoding nur als Voraussetzung von phpseclib. Seit Web 20.42.0 lädt `totp_lib.php` den Lader und nutzt Base32 daraus; AP5 hatte es nicht nachgetragen. Ebenso nannte `Technik.md` 3 „zweiundzwanzig" Proben ohne die Zweitfaktorprobe | berichtigt mit RW-01: drei Verwender des Laders, 24 Proben (gezählt mit `proben.sh --liste`) |
+| **F-RW-12** | *(RW-01, Prüfmittel)* **Ein Ed25519-SPKI fällt schon an der Formregel**, nicht an der Kurvenprüfung: 60 statt 124 Zeichen, `RW_OEFFENTLICH_RE` verlangt 100 bis 200. Die Probe hätte damit die Kurvenprüfung für Ed25519 nie erreicht | die Probe ruft `rw_oeffentlich_laden()` zusätzlich ohne die Regel; Gegenprobe (Kurvenprüfung heraus) → 3 rot |
+| **F-RW-13** | *(RW-01, aus P5c/AP5)* Die Bemerkung zur Zweitfaktorprobe in `pruefablauf.json` sagte noch „setzt den Demo-Bestand einmal zurück" — seit F-P5c-117 falsch | berichtigt |
+
 ---
 
 ## 2. Entscheidungen
@@ -110,10 +120,11 @@ Einzeln vorgelegt, mit Empfehlung; die Antworten in Fettdruck.
 | Q-RW-04 | Ersetzen und Entfernen | Ersetzen nur ausdrücklich mit Passwort, Protokoll, Mail; beim Ausschalten nicht löschen | **so** — E-RW-06 |
 | Q-RW-05 | Rollen | alle vier, auch BetreiberIn (Nr. 249 teilweise) | **alle vier Rollen** — E-RW-08 |
 | Q-RW-06 | Backups | nicht ins Konto-Backup, nicht in die Freigabe; Komplett-Backup trägt es von selbst | **so** — E-RW-09 |
-| Q-RW-07 | Demo-Konto | kein Paar; Reset leert die Spalten | **abweichend: ein festes Paar aus der Fixture** — E-RW-10 |
+| Q-RW-07 | Demo-Konto | kein Paar; Reset leert die Spalten | **abweichend: ein festes Paar aus der Fixture** — E-RW-10; **in der Umsetzung neu gefasst durch Q-RW-11** |
 | Q-RW-08 | Oberfläche | Mockup M-RW-01, fünf Bilder plus Handybreite | **ja** — 7, E-RW-13 |
 | Q-RW-09 | Beleg auf den Anlagen | Statuszeile mit Selbsttest, Stufe 2 gegen Staging, Prüfpunkt Produktiv | **so** — E-RW-11 |
 | Q-RW-10 | Beleg „Abzug genügt nicht" | Rückwegprobe in zwei Teilen, Abzug-Gegenprobe, Gegenprobe zur alten Fassung | **so** — E-RW-12 |
+| Q-RW-11 | *(Umsetzung, vor RW-02, 24.09.2026)* E-RW-10 lässt das Paar des Demo-Kontos auf dem gewöhnlichen Weg entstehen; die Abnahme von RW-02 nennt einen Wert `RW_STAND = 'demo'`. Hieße er „nie anlegen", käme nie ein Paar in die Fixture. Festes Paar ohne Anlegen, Demo ganz ausnehmen, oder wie E-RW-10? | Demo ausnehmen — der Zweitfaktor ist dort gesperrt, das Paar hätte keinen Verbraucher | **Demo ausnehmen** (Gegenfrage der Betreiberin: „wäre es unkomplizierter, das Demo-Konto vom Paar auszunehmen?") — E-RW-15 |
 
 ### 2.2 Die Entscheidungen (E-RW-01 bis -14)
 
@@ -222,7 +233,7 @@ drei Spalten als Teil von `users` von selbst; `Backup-Format.md` bekommt
 dafür einen Satz. `edbak_restore()` in dasselbe Konto lässt die Spalten
 unberührt.
 
-**E-RW-10 — Das Demo-Konto trägt ein festes Paar aus der Fixture** (Q-RW-07,
+~~**E-RW-10 — Das Demo-Konto trägt ein festes Paar aus der Fixture** (Q-RW-07,
 Antwort der Betreiberin gegen die Empfehlung; R7). Der Fixture-Erzeuger
 (`tools/referenzdatensatz/fixture/erzeugen.php`) kopiert `rw_oeffentlich` und
 `rw_privat` wie `pat_wrap_rc` aus der Datenbank der erzeugenden Anlage — er
@@ -236,7 +247,8 @@ Passwort sperrt). Der Zweitfaktor ist im Demo ohnehin gesperrt (E-P5c-54);
 das Paar hat dort keinen Verbraucher. **Preis:** Die Fixture muss nach RW
 einmal neu erzeugt werden (Zuarbeit, 9.2); bis dahin entsteht auf jeder
 Anlage beim ersten Demo-Anmelden ein Paar, das der nächste Reset auf leer
-setzt — ohne Folgen, weil nichts es liest.
+setzt — ohne Folgen, weil nichts es liest.~~
+**Aufgehoben am 24.09.2026 durch E-RW-15** (Q-RW-11): Das Demo-Konto bekommt kein Paar.
 
 **E-RW-11 — Drei Belege, dass die Anlage prüfen kann** (Q-RW-09, F-RW-01).
 (1) `rw_selbsttest()` in `rueckweg_lib.php` prüft eine feste Beispielsignatur
@@ -280,6 +292,33 @@ neutral); neue Mail: `rueckweg_erneuert` (Art `konto`). Der Anlegeweg nach
 der Anmeldung teilt den Topf `login` (wie `schluessel_erneuern.php`: ein
 Passwortorakel bekommt keinen eigenen Topf).
 
+
+**E-RW-15 — Das Demo-Konto bekommt kein Paar** (Q-RW-11, 24.09.2026;
+ersetzt E-RW-10). Der Zweitfaktor ist im Demo gesperrt (E-P5c-54); ein Paar
+hätte dort keinen Verbraucher, und das feste Paar aus E-RW-10 kostete ein
+Anlegen im Demo auf der Referenzanlage, einen Riegel in `demo_fixture_laden()`
+und eine neu erzeugte Fixture — Aufwand für etwas, das nie benutzt wird.
+Deshalb: `RW_STAND === 'demo'` heißt **nicht anlegen** (wie `ANTEIL_STAND
+'demo'`); `api/rueckweg_anlegen.php` weist das Demo-Konto ab (**403**, mit und
+ohne `ersetzen`); der Demo-Reset leert die Spalten an derselben Stelle wie den
+Zweitfaktor (`demo_zweitfaktor_leeren()`, F-P5c-117); die Karte zeigt die
+Zeile im Demo nicht (dort steht ohnehin nur der Satz der Demo-Sperre). Die
+Fixture und ihr Erzeuger bleiben unverändert, die Zuarbeit „Fixture neu
+erzeugen" entfällt, P-RW-05 prüft nur noch, dass das Demo-Konto kein Paar
+hat. Am Code-Schritt kommt das Demo-Konto nie an, weil es keinen Zweitfaktor
+haben kann.
+
+**E-RW-16 — Die Marke des Selbsttests gilt je Fassung und Plattform, nicht je
+Katalog-Hash** (RW-01, ohne Frage; führt E-RW-11 aus). E-RW-11 nannte „eine
+`app_state`-Marke mit Katalog-Hash, wie das Migrationstor". Der Katalog
+ändert sich nur mit einer Migration — und genau das, was den Selbsttest
+scheitern ließe, ändert ihn nicht: ein neues PHP oder OpenSSL beim Hoster,
+ein Deploy mit neuem phpseclib. Die Marke ist deshalb
+`sha256(WEB_VERSION | PHP_VERSION | OPENSSL_VERSION_TEXT)`; jeder Deploy mit
+Code ändert `WEB_VERSION` ohnehin, auch jeder mit Migration. Die Absicht von
+E-RW-11 bleibt: einmal je Stand, nicht je Seitenaufruf (Probe A6: zweimal
+gefragt, einmal getestet).
+
 ---
 
 ## 3. Bauplan
@@ -297,7 +336,7 @@ Server (api/rueckweg_anlegen.php)
   Sitzung, csrf_check(), rate_erlaubt('login', email)
   password_verify(token, password_hash)         sonst 403, rate_misserfolg('login')
   RW_OEFFENTLICH_RE, RW_PRIVAT_RE, rw_oeffentlich_pruefen(spki)  (lädt, Kurve muss secp256r1 sein)  sonst 400
-  demo_ist_demo() && ersetzen                    → 403 (Demo-Sperre)
+  demo_ist_demo()                                → 403 (kein Paar im Demo, E-RW-15)
   rw_oeffentlich vorhanden && !ersetzen          → 409
   UPDATE users SET rw_oeffentlich=?, rw_privat=?, rw_seit=NOW() WHERE id=?
   protokoll('verwaltung', ersetzen ? 'rueckweg_erneuert' : 'rueckweg_angelegt')
@@ -361,6 +400,22 @@ derselbe Zustand wie ein abgelaufener Code-Schritt.
 - Die Bedienwege `wege/einstellungen_profil.mjs` und den Code-Rechner der
   Werkzeuge (E-P5c-43), die die Rückwegprobe zum Einschalten braucht.
 
+**Nachgelesen am 24.09.2026 gegen AP5 (`262787c`, Web 20.42.0).** Wo das
+Konzept einen Arbeitsnamen trägt, gilt der Name aus AP5 — RW baut nichts
+davon ein zweites Mal:
+
+| Im Konzept | In AP5 | Folge für RW |
+|---|---|---|
+| Spalten des Zweitfaktors | `users.totp_geheimnis`, `totp_seit`, `totp_schritt`; Tabelle `totp_codes(id, user_id, hash, benutzt_am)`; Vorabfrage `totp_spalten_da()`, Zustand `totp_an()` / `totp_zustand()` | RW liest nur `totp_an()`; geschrieben wird über die Rücksetzfunktion |
+| `totp_zuruecksetzen($userId, 'schluessel')` | **`totp_abschalten(int $userId, string $weg): bool`** in `totp_lib.php`, `$weg` heute `'selbst'` \| `'verwaltung'`. Leert Geheimnis, Schritt und Codes in einer Transaktion und schreibt, wenn er an war, `totp_zurueckgesetzt` (Verwaltung) bzw. `totp_ausgeschaltet` (selbst), jeweils mit `['weg' => …]`. **Die Mail schickt der Aufrufer** (`admin_user.php`) | RW-03 ergänzt `$weg = 'schluessel'` → `totp_zurueckgesetzt` mit `['weg' => 'schluessel']` und eigenem Text; `login.php` schickt die Mail wie `admin_user.php`. **Eine** Funktion, drei Aufrufer |
+| halbe Sitzung | `$_SESSION['totp_halb'] = ['konto', 'email', 'bis', 'demo']`, Frist `TOTP_HALB_FRIST_S` (300 s); endet über `?abbrechen=1`, Ablauf oder Sperre mit `$vergessen = true` (Vormerkfach räumen) | Die Herausforderung liegt als `rw_herausforderung` und `rw_bis` in **diesem** Feld — endet der halbe Stand, endet sie mit |
+| Topf `totp` | `rate_erlaubt('totp', null, [rate_merkmal_kennung($email)])`, fünf in 15 min, Leiter; `rate_misserfolg()` / `rate_erfolg()` mit denselben Merkmalen; Sperrmeldung `login_code_sperre()` | Der Signaturversuch zählt mit genau diesen Merkmalen (nicht `rate_erlaubt('totp', $email)`, wie 3.2 skizziert) |
+| Mail `totp_zurueckgesetzt` | Katalog `mail_lib.php`, Art `konto`, Pflicht `link`; Text „die Verwaltung … hat den Zweitfaktor deines Kontos zurückgesetzt" | RW-03 macht den ersten Satz vom Weg abhängig (Wert `weg` in den Daten); der Verwaltungsweg bleibt wörtlich |
+| Code-Schritt | `login.php`, `form#codeform` mit `schritt=code`, `?art=rc` für Wiederherstellungscodes, `?abbrechen=1`; die Integritätswache kennt `#codeform` als bedingtes Formular (`BEDINGTE_FORMULARE`, F-P5c-111) | Ein Formular des Schlüsselschritts ist ebenso bedingt und kommt in dieselbe Liste |
+| Einrichtungstor | `zweitfaktor.php` (E-P5c-61), Teile in `zweitfaktor_teile.php` | Die Meldung „Zweitfaktor zurückgesetzt …" oben im Tor (M-RW-01, Bild 3) |
+| Bedienwege, Rechner | `tools/bedienprobe/wege/einstellungen_profil.mjs` (Weg `einstellungen-profil-zweitfaktor`), `wege/zweitfaktor.mjs`, Hilfsmodul `tools/bedienprobe/probekonto.mjs`; `tools/zweitfaktor/totp.{php,mjs,py}` mit gemeinsamem Zähler (E-P5c-111) | Der neue Weg `wege/einstellungen_profil_rueckweg.mjs` und die Rückwegprobe benutzen `probekonto.mjs` bzw. `naechsterCode()` |
+| Demo | `demo_zweitfaktor_leeren()` in `demo_zuruecksetzen()` (F-P5c-117) | RW-02 schreibt die Paar-Spalten an derselben Stelle zurück, nicht in einer zweiten Funktion |
+
 ### 3.4 Dateien
 
 | Datei | Neu / geändert | Paket |
@@ -375,7 +430,7 @@ derselbe Zustand wie ein abgelaufener Code-Schritt.
 | `server/auth_guard.php`, `server/ui.php` | `$rwStand` → `RW_STAND` in `ui_krypto_bootstrap()`, Rückfall-SELECT | RW-02 |
 | `server/einstellungen.php` | Kartenzeile, Knopf „Rückweg erneuern", Demo-Sperre | RW-02 |
 | `server/protokoll_lib.php`, `server/mail_lib.php` | zwei Arten, eine Mail | RW-02 |
-| `server/demo_lib.php`, `tools/referenzdatensatz/fixture/erzeugen.php`, `server/demo/fixture.json.gz` | Spalten kopieren und zurückschreiben, Riegel; Fixture neu erzeugen ist Zuarbeit | RW-02 |
+| `server/demo_lib.php` | Reset leert die Paar-Spalten in `demo_zweitfaktor_leeren()`; Fixture und Erzeuger **unverändert** (E-RW-15) | RW-02 |
 | `server/login.php` | dritter Weg, Herausforderung, Prüfung, Erfolgskarte, Weiterleitung | RW-03 |
 | `server/adminbackup_lib.php` | **nichts** — Gegenprobe: die Spalten stehen in keiner Spaltenliste des Kontopakets | RW-02 |
 | `tools/proben/rueckweg/` (`probe.mjs`, `probe.php`, `LIESMICH.md`), `proben.sh`, `pruefablauf.json`, `tools/kettenaufrufe/` | Rückwegprobe; Stufe 2 | RW-03 |
@@ -436,7 +491,7 @@ Prüfstand `haupt`.
 `RW_STAND` über `auth_guard.php`/`ui_krypto_bootstrap()` (Rückfall);
 Kartenzeile und „Rückweg erneuern" in `einstellungen.php` (Passwortdialog
 nach dem Muster von `schluessel.js`, Prüfsumme gegen `pat_key_check` vor dem
-Verpacken); Demo-Sperre; Protokollarten, Mail; Fixture-Erzeuger und
+Verpacken); Demo-Sperre (kein Paar im Demo, E-RW-15); Protokollarten, Mail;
 Demo-Reset; Gegenprobe Kontopaket ohne die Spalten; Bedienweg
 `wege/einstellungen_profil_rueckweg.mjs`; Handbuch-Absatz zur Karte.
 
@@ -450,16 +505,20 @@ RW-01 liegt im Unterschied zu `main`).
   geschrieben; `ersetzen` ohne Passwort → **403**; mit Passwort → neuer Wert,
   Protokoll `rueckweg_erneuert` **+1**, Mail **+1**; ohne `ersetzen` bei
   vorhandenem Paar → **409**; öffentlicher Teil auf falscher Kurve → **400**;
-  Demo-Konto „erneuern" → **403**.
+  Demo-Konto an den Endpunkt, mit und ohne `ersetzen` → **403** (E-RW-15).
 - `RW_STAND`: `'da'`, `'fehlt'`, `'spalten'` (Spalten zurückgebaut), `'demo'`
-  — **4 von 4** im Bilderlauf/Rollenprobe als Markup belegt.
+  (nicht anlegen, E-RW-15) — **4 von 4** im Bilderlauf/Rollenprobe als Markup
+  belegt; im Demo nach dem Anmelden **0** Paare.
 - Ratenprobe: der Endpunkt zählt in `login` (Gegenprobe: 10 falsche Token →
   Sperre) — **1 von 1**.
 - Kontopaket: `edbak_build()`-Spaltenlisten enthalten `rw_` **0-mal**; ein
   Kreislauf `edbak` in ein zweites Konto lässt dessen Paar **unverändert**.
-- Fixture: Erzeuger kopiert die Spalten (**2 von 2** vorhanden), Riegel
+- ~~Fixture: Erzeuger kopiert die Spalten (**2 von 2** vorhanden), Riegel
   weist eine `edka1:`-Fassung ab (**1 von 1** rot), Demo-Reset schreibt
-  beide zurück (Wert vor = Wert nach, **2 von 2**).
+  beide zurück (Wert vor = Wert nach, **2 von 2**).~~ Entfällt (E-RW-15).
+  Stattdessen: Demo-Reset leert die drei Spalten (**3 von 3** NULL, gestellt
+  über `demo_zweitfaktor_leeren()`), und der Reset ruft diese Funktion
+  (Zweitfaktorprobe, Teil 6).
 - Register **0 über der Decke** (der Endpunkt ruft `EdApi.postJson()`);
   Textprobe **0 neue**; Rollenprobe grün mit erweiterter Matrix (Endpunkt je
   Rolle: alle vier 200 mit Token, Demo 403 bei `ersetzen`).
@@ -515,7 +574,8 @@ E-P5c-42, Rahmenplan 6, Backlog mit vergebenen Nummern); Nr. 249
 berichtigen; Handbuch, Technik, Changelog gegenlesen (sie verweisen
 aufeinander). **Kein eigener Pull Request:** RW geht mit dem 10c-PR
 (E-P5c-104). Nach dem Merge: `update.php` (die RW-Migration zählt zu den
-Migrationen aus 10c) und die Fixture neu erzeugen (9.2).
+Migrationen aus 10c). ~~und die Fixture neu erzeugen (9.2)~~ — entfällt
+(E-RW-15).
 
 **Abnahme.** Prüfstand `haupt` grün mit dem Bericht im Commit; Prüfdokument
 mit Zahlen zu jedem Punkt aus RW-01 bis RW-03; Einschübe eingespielt (der
@@ -537,7 +597,7 @@ P5c-Statusblock nennt AP5b als erledigt mit Commit).
 | Anlegeweg (Token, 403, 409, 400, Demo, Erneuern, Mail) | Bedienweg `einstellungen_profil_rueckweg.mjs` | RW-02 | 8 / 8 |
 | `RW_STAND` vier Lagen | Rollenprobe (Markup) | RW-02 | 4 / 4 |
 | Kontopaket ohne die Spalten; Kreislauf lässt Paar stehen | Gegenprobe, Kreislauf `edbak` | RW-02 | 0-mal, unverändert |
-| Fixture: kopiert, Riegel, Reset | Riegelprobe, Demo-Reset | RW-02 | 2 / 2, 1 / 1, 2 / 2 |
+| ~~Fixture: kopiert, Riegel, Reset~~ Demo: kein Paar, Reset leert (E-RW-15) | Zweitfaktorprobe Teil 6, Bedienweg | RW-02 | 3 / 3 NULL, Endpunkt 403 |
 | Der echte Rückweg im Browser (user, BetreiberIn, falscher Zettel, Tippfehler) | `probe.mjs` | RW-03 | 4 / 4 |
 | Sechs Fälle gegen den Login-Weg, Abzug-Gegenprobe, alte Fassung | `probe.php` Teil B | RW-03 | 1 / 5, N / 0, rot |
 | Ratenschutz `totp`, Ablauf, Wiederholung | Ratenprobe, `probe.php` | RW-03 | 1 / 1, 1 / 1, 1 / 1 |
@@ -620,7 +680,7 @@ wird danach entfernt.
 | P-RW-02 | Nach dem Merge: der Stufe-2-Lauf zeigt die Rückwegprobe grün | Lauf rot mit dem Namen der Probe |
 | P-RW-03 | Auf Staging mit einem eigenen Konto: Zweitfaktor einschalten, Codes wegwerfen, abmelden, anmelden, „Gerät und Codes verloren?", Zettel eingeben | keine Erfolgskarte; oder die Mail „Zweitfaktor zurückgesetzt" kommt nicht an |
 | P-RW-04 | Dasselbe mit einem **falschen** Zettel (aus einem anderen Konto) | die Seite sagt nicht „passt nicht zu diesem Konto", sondern etwas anderes — oder setzt zurück |
-| P-RW-05 | Nach dem Merge: Demo-Fixture neu erzeugen, Demo → Auf Standard zurücksetzen; danach im Demo anmelden, Profil ansehen | die Karte „Zweitfaktor" ist im Demo gesperrt — sichtbar ist nur, dass der Reset ohne Fehler läuft |
+| P-RW-05 | Nach dem Merge: Demo → „Auf Standard zurücksetzen"; danach im Demo anmelden und Betrieb → Status bzw. die Kontoseite des Demo-Kontos ansehen (E-RW-15) | der Reset läuft mit Fehler; oder im Protokoll steht ein `rueckweg_angelegt` für das Demo-Konto |
 
 ---
 
@@ -730,7 +790,7 @@ erledigt; AP5b eingeplant."
 | Was | Wofür | Wann |
 |---|---|---|
 | ~~**Einschubkonzept RW erstellen lassen** …~~ | 10c (AP5b) | **erledigt 24.09.2026** — `Konzept-RW-Zweitfaktor-Rueckweg.md`, Zweig `claude/nice-lovelace-snlo8m`; AP5b gebaut aus RW-01 bis RW-04 |
-| **Nach dem Merge des 10c-PR: die Demo-Fixture neu erzeugen** (`tools/referenzdatensatz/fixture/erzeugen.php`) und Demo → „Auf Standard zurücksetzen" drücken — sie trägt seit RW das Schlüsselpaar des Demo-Kontos (E-RW-10). Bis dahin entsteht beim ersten Demo-Anmelden ein Paar, das der nächste Reset auf leer setzt; ohne Folgen, weil der Zweitfaktor im Demo gesperrt ist | 10c AP5b | nach dem Merge, mit `update.php` |
+| ~~**Nach dem Merge des 10c-PR: die Demo-Fixture neu erzeugen** …~~ | 10c AP5b | **entfällt** — das Demo-Konto bekommt kein Paar (E-RW-15, Q-RW-11) |
 | **Prüfpunkte P-RW-01 bis -05** (Prüfdokument RW): Statuszeile „Rückweg-Prüfung" auf Produktiv nach dem Tag; ein echter Rückweg mit eigenem Konto auf Staging, einmal mit falschem Zettel; die Mail im Postfach | 10c AP5b | nach Merge und Tag |
 
 ### 9.3 Backlog (Nummern vergibt die Umsetzung)

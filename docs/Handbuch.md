@@ -4323,6 +4323,15 @@ einer BetreiberIn beginnt — es arbeitet ja. Der Zähler am Menüpunkt „Statu
 zählt die Zeile mit und steht deshalb auf einer Anlage mit einer BetreiberIn
 dauerhaft auf mindestens 1; das ist gewollt, bis eine Vertretung da ist.
 
+**Die Zeile „Rückweg-Prüfung"** (seit Web 20.43.0) sagt, ob diese Anlage den
+Rückweg beim Zweitfaktor prüfen kann — den Weg, auf dem jemand mit dem
+Wiederherstellungsschlüssel vom Notfallblatt den eigenen Zweitfaktor
+zurücksetzt, wenn Handy und Codes fehlen. Blau „prüft" mit Weg und Dauer:
+„openssl" ist der schnelle, „reines PHP" der langsamere, beide tragen. Orange
+„abgeschaltet": Der Selbsttest ist gescheitert, der Rückweg wird bei der
+Anmeldung nicht angeboten; Codes und das Zurücksetzen durch die Verwaltung
+gehen weiter. Was dann zu tun ist, steht im Runbook (`docs/Technik.md` 7).
+
 **Eine Testmail an dich selbst.** Im Kopf der Karte **E-Mail** steht seit
 Web 19.3.0 der Knopf **„Testmail an mich"**. Er schickt eine kurze Nachricht
 über den regulären Versandweg an die Adresse, mit der du angemeldet bist —

@@ -105,8 +105,8 @@ Pfaden gehört nicht ins Repositorium.
 
 | Bibliothek | Version | Lizenz | Verzeichnis | wofür |
 |---|---|---|---|---|
-| **phpseclib** | 3.0.57 | MIT | `vendor/phpseclib3/` | Der SFTP-Adapter der Backup-Ziele (S2/AP7) |
-| **constant_time_encoding** | 2.7.0 | MIT | `vendor/ParagonIE/ConstantTime/` | Von phpseclib vorausgesetzt (genau eine Stelle: `Common/Functions/Strings.php`) |
+| **phpseclib** | 3.0.57 | MIT | `vendor/phpseclib3/` | Der SFTP-Adapter der Backup-Ziele (S2/AP7); seit Web 20.43.0 **zweiter Verwender**: die Prüfung der Signaturen des Rückwegs beim Zweitfaktor (`rueckweg_lib.php`, ECDSA P-256 aus `Crypt/EC/`, Konzept RW) |
+| **constant_time_encoding** | 2.7.0 | MIT | `vendor/ParagonIE/ConstantTime/` | Von phpseclib vorausgesetzt (genau eine Stelle: `Common/Functions/Strings.php`); seit Web 20.42.0 auch unmittelbar: Base32 des Zweitfaktor-Geheimnisses (`totp_lib.php`, P5c/AP5) |
 | **Parsedown** | 1.7.4 | MIT | `vendor/Parsedown.php` | Rendert `docs/Handbuch.md` und `docs/Was-ist-NAdoku.md` für `hilfe.php` und `ueber.php` (P5b/AP8) |
 
 Herkunft, Commit-Kennung und die Anleitung zum Austausch stehen in
@@ -131,8 +131,16 @@ Verschärfung: Eine Liste prüft jede Datei, ein Kopfkommentar behauptet etwas
 **Warum überhaupt eine Fremdbibliothek und nicht `ext/ssh2`:** Die Erweiterung
 ist auf geteiltem Webspace praktisch nie vorhanden und lässt sich dort nicht
 nachinstallieren. phpseclib ist reines PHP und läuft überall, wo diese
-Anwendung läuft. Geladen wird es **nur** vom SFTP-Adapter — eine Seite, die
-keine SFTP-Verbindung aufbaut, lädt keine einzige dieser Dateien.
+Anwendung läuft. Geladen wird der Lader `vendor/laden.php` von **drei**
+Stellen: dem SFTP-Adapter (`sicherungsziel_lib.php`, erst beim Aufbau einer
+Verbindung), `totp_lib.php` (Base32, seit Web 20.42.0) und
+`rueckweg_lib.php` (ECDSA, seit Web 20.43.0). Bis Web 20.42.0 stand hier
+„nur vom SFTP-Adapter" — AP5 hatte den zweiten Lader nicht nachgetragen
+(Konzept RW, F-RW-11). **Warum phpseclib und nicht `openssl_verify()`
+unmittelbar für den Rückweg:** phpseclib nimmt `openssl`, wo es geht, und
+rechnet sonst in reinem PHP — ein Hoster ohne passende Kurve bricht damit
+nicht, er ist nur langsamer (rund 170 ms je Prüfung). Zwei Prüfwege wären
+zwei Stellen (E-RW-03).
 
 FTP und FTPS brauchen keine Bibliothek: Sie laufen über die PHP-Erweiterung
 `ftp`, die zum Sprachumfang gehört.
