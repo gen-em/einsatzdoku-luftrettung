@@ -3481,19 +3481,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     wurden — diese war nicht darunter. Beim Anfassen: `EdFormat.dauer(s)`
     genügt, der Leerwert ist dort nicht erreichbar (`Math.max(0, …)`).
 
-274. **Die Vollständigkeitsprüfung kann eine zusammengesetzte Klasse nicht
-    sehen — und das trifft jetzt zwei Meldungstöne.** Seit Web 20.34.0 baut
-    `EdHtml.meldung()` die Tonklasse zusammen (`'meldung meldung-' + ton`),
-    wie es `ui_meldung_markup()` in PHP seit jeher tut. `tools/vollstaendigkeit/`
-    meldet `.meldung-ok` und `.meldung-schutz` deshalb als „Regel im
-    Stylesheet, im Markup nicht gefunden". Beide Regeln werden benutzt; das
-    Werkzeug kann es nur nicht belegen. `meldung-schutz` stand aus demselben
-    Grund schon vorher in der Liste. **Kein Befund, aber ein blinder Fleck:**
-    Verschwände eine der beiden Regeln aus `style.css`, meldete es niemand.
-    Der Kommentar in `ui_meldung_markup()` sagt genau das („das kann nur
-    diese Stelle selbst prüfen"). Möglicher Weg: Das Werkzeug liest die
-    Tonliste aus der Funktion und trägt die daraus gebildeten Klassen als
-    belegt ein.
 275. **Der Referenzdatensatz kennt keinen Dienst über Mitternacht — und das
     ist laut Handbuch „der klassische Fall".**
     *Aufgenommen 22.09.2026 (Schritt 15 AP9b).*
@@ -10242,3 +10229,35 @@ zutreffen.
     Symbolprüfung blendet Kommentare jetzt aus (Unicode 14 → 5, Emoji 8 → 0;
     alle 17 weggefallenen standen in Kommentaren) — der Grund, es nicht zu
     tun, war dieser Punkt.
+
+274. **Die Vollständigkeitsprüfung kann eine zusammengesetzte Klasse nicht
+    sehen — und das trifft jetzt zwei Meldungstöne.** Seit Web 20.34.0 baut
+    `EdHtml.meldung()` die Tonklasse zusammen (`'meldung meldung-' + ton`),
+    wie es `ui_meldung_markup()` in PHP seit jeher tut. `tools/vollstaendigkeit/`
+    meldet `.meldung-ok` und `.meldung-schutz` deshalb als „Regel im
+    Stylesheet, im Markup nicht gefunden". Beide Regeln werden benutzt; das
+    Werkzeug kann es nur nicht belegen. `meldung-schutz` stand aus demselben
+    Grund schon vorher in der Liste. **Kein Befund, aber ein blinder Fleck:**
+    Verschwände eine der beiden Regeln aus `style.css`, meldete es niemand.
+    Der Kommentar in `ui_meldung_markup()` sagt genau das („das kann nur
+    diese Stelle selbst prüfen"). Möglicher Weg: Das Werkzeug liest die
+    Tonliste aus der Funktion und trägt die daraus gebildeten Klassen als
+    belegt ein.
+
+    **Erledigt 24.09.2026 mit Konzept BV (BV-02).** Die Prüfung liest die
+    Töne aus `ui_meldung_markup()` (`$symbole`) und `EdHtml.meldung()`
+    (`MELDUNG_SYMBOLE`), zählt `meldung-<ton>` als belegt und meldet
+    zweierlei als Befund: eine dieser Klassen ohne Regel im Stylesheet und
+    Töne, die nur in einer der beiden Listen stehen. Findet sie eine Liste
+    nicht, ist das ebenfalls ein Befund. Hinweis „im Markup nicht gefunden"
+    **64 → 62**, auf dem P5c-Stand 74 → 72; 0 Befunde. *Gegenprobe* (Kopie,
+    nicht eingecheckt): `.meldung-schutz` umbenannt und ein Ton nur in JS —
+    3 neue Befunde, dazu der bestehende am Aufruf.
+    **Der blinde Fleck war kleiner als oben beschrieben.** „Verschwände eine
+    der beiden Regeln, meldete es niemand" stimmte nicht: Die Tonprüfung am
+    Aufruf („Ton ohne Regel im Stylesheet") hätte jede der fünf Regeln
+    gemeldet, weil jeder Ton mindestens einmal als Literal übergeben wird —
+    gemessen je Ton mit entfernter Regel, alte und neue Fassung gleich
+    viele Treffer an den Aufrufen. Für `schutz` hing das allerdings an
+    **einem einzigen** Aufruf (`tag_spuren.php`). Seit BV-02 hängt es an
+    keinem.

@@ -46,6 +46,16 @@ und Rahmenplan 4 lässt `server/` ohnehin auf das laufende Paket warten.
   8 → 0; alle 17 weggefallenen standen in Kommentaren, die fünf bleibenden
   sind das Malzeichen im sichtbaren Text. Es bleibt ein Hinweis, kein
   Befund.
+- **Die zusammengesetzten Meldungsklassen standen als „im Markup nicht
+  gefunden" da** (Backlog Nr. 274, BV-02). `ui_meldung_markup()` und
+  `EdHtml.meldung()` bauen `meldung-<ton>` zur Laufzeit; `meldung-ok` und
+  `meldung-schutz` steht nirgends als Literal. Die Prüfung liest die Töne
+  jetzt aus beiden Bausteinen, zählt die Klassen als belegt (Hinweis
+  64 → 62) und meldet als Befund, wenn eine davon keine Regel hat oder die
+  beiden Listen auseinanderlaufen. **Der blinde Fleck war kleiner als
+  befürchtet:** Die Tonprüfung am Aufruf hätte jede fehlende Regel schon
+  gemeldet — für `schutz` allerdings nur über einen einzigen Aufruf. Seit
+  BV-02 hängt die Aussage an keinem.
 
 ### Bewusst so
 

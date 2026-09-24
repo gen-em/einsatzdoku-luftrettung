@@ -31,7 +31,7 @@ von `origin/main` `ba2ec57`.
 > | Stand | **24.09.2026 — Fassung 1, freigegeben.** Umfang, Vorgriff und Ausschlüsse von der Betreiberin am 24.09.2026 bestätigt (E-BV-01 bis -04). |
 > | Entschieden | **E-BV-01 bis -08** (Abschnitt 3). Aus der Umsetzung: **E-BV-09** (BV-01, zur Kenntnis — weicht vom Konzepttext ab). |
 > | Offen | **Q-BV-01** (Merge-Zeitpunkt) — Empfehlung „nach P5c", Begründung in 3.1; die Betreiberin hat nach dem Vorteil gefragt, die Antwort steht dort. |
-> | Umsetzung | **BV-00 erledigt** (Konzept, Backlog-Spanne). **BV-01 erledigt** (Nr. 184; Befunde F-BV-07 bis -09). **Als Nächstes: BV-02.** Reihenfolge BV-02 → BV-03 → BV-04 → BV-05. |
+> | Umsetzung | **BV-00 erledigt** (Konzept, Backlog-Spanne). **BV-01 erledigt** (Nr. 184, `b712aca`; Befunde F-BV-07 bis -09). **BV-02 erledigt** (Nr. 274; Befund F-BV-10). **Als Nächstes: BV-03.** Reihenfolge BV-03 → BV-04 → BV-05. |
 > | Fable-Schritte | keine. |
 >
 > **Stand der Umsetzung**
@@ -39,8 +39,8 @@ von `origin/main` `ba2ec57`.
 > | Paket | Stand | Backlog | Dateien | Prüfstand | Commit | Abnahmezahlen |
 > |---|---|---|---|---|---|---|
 > | BV-00 Konzept | **erledigt 24.09.2026** | — | dieses Konzept, `docs/Backlog.md` (Kopf) | klein | | — |
-> | BV-01 Kommentar-Abtaster | **erledigt 24.09.2026** | 184 | `tools/quelltext/vollstaendigkeit.py`, `vollstaendigkeit-zusagen.md` (+1 Ausnahme), `docs/Backlog.md`, `docs/CHANGELOG.md` | klein | | Zusagen **0** Befunde (nach 1 echtem Fund, F-BV-08); geleerte Zeilen **47 555 → 47 856** in 179 Dateien, `einsatz_form.php` **851 → 877**; nur-alt **7** Zeilen, alle Fehlgriffe; Gegenprobe `confirm(` alt **3**, neu **4**; P5c-Abzug `3576a97` **0**; Symbole Unicode **14 → 5**, Emoji **8 → 0**; Textprobe 0 neu |
-> | BV-02 Zusammengesetzte Tonklassen | offen | 274 | `tools/quelltext/vollstaendigkeit.py` | klein | | |
+> | BV-01 Kommentar-Abtaster | **erledigt 24.09.2026** | 184 | `tools/quelltext/vollstaendigkeit.py`, `vollstaendigkeit-zusagen.md` (+1 Ausnahme), `docs/Backlog.md`, `docs/CHANGELOG.md` | klein | `b712aca` | Zusagen **0** Befunde (nach 1 echtem Fund, F-BV-08); geleerte Zeilen **47 555 → 47 856** in 179 Dateien, `einsatz_form.php` **851 → 877**; nur-alt **7** Zeilen, alle Fehlgriffe; Gegenprobe `confirm(` alt **3**, neu **4**; P5c-Abzug `3576a97` **0**; Symbole Unicode **14 → 5**, Emoji **8 → 0**; Textprobe 0 neu |
+> | BV-02 Zusammengesetzte Tonklassen | **erledigt 24.09.2026** | 274 | `tools/quelltext/vollstaendigkeit.py`, `docs/Backlog.md`, `docs/CHANGELOG.md` | klein | | Hinweis „im Markup nicht gefunden" **64 → 62** (P5c-Abzug 74 → 72), **0** Befunde; Tonlisten PHP = JS, **5** Töne; Gegenprobe (Regel weg + Ton nur in JS) **3** neue Befunde; alte gegen neue Fassung je Ton mit entfernter Regel: Aufrufprüfung meldet in **beiden** (F-BV-10) |
 > | BV-03 Herkunft der Altklassen | offen | 40 | `tools/quelltext/vollstaendigkeit-streichliste.md` | klein | | |
 > | BV-04 Drei Doku-Punkte | offen | 214, 194, 150 (Doku-Teil) | `docs/Technik.md`, `docs/Handbuch.md`, `README.md`, `docs/CHANGELOG.md` | klein | | |
 > | BV-05 Austragen und Abschluss | offen | 222, 270, 281, 212 | `docs/Backlog.md`, Prüfdokument | klein | | |
@@ -85,6 +85,7 @@ gewählten Punkten sind gegen diesen Stand nachgemessen (F-BV-02).
 | F-BV-07 | **Nr. 184 beschrieb den Mechanismus nur zur Hälfte** (BV-01). Am heutigen Stand verschluckte der alte Abtaster keine 800 Zeilen am Stück. Die falschen Negative kamen aus zwei Quellen, die der Eintrag nicht nannte: `#` und `//` im **HTML** galten als Kommentaranfang (`href="#…"`, `http://` im Text) — **7** Zeilen, alle einzeln gelesen —, und ein `"` in einem **Regex-Literal** (`/[;"\r\n]/`) brachte ihn in JavaScript aus dem Tritt; das deutsche Schlusszeichen `„…"` im Seiten-HTML tat dasselbe in PHP-Dateien. | Behoben: HTML bleibt unberührt; `'`/`"`-Ketten enden in JS und CSS am Zeilenende. |
 | F-BV-08 | **Der erste Lauf fand, was verschluckt war:** die GPX-Namensraumadresse in `export.js` (`http://www.topografix.com/GPX/1/1`), eine Kennung, die nie abgerufen wird — dieselbe, die für `gpx_lib.php` längst mit Grund in der Ausnahmeliste steht. | Eingetragen in `vollstaendigkeit-zusagen.md` (18 → 19). Eine Datei, die P5c +1 Zeile an anderer Stelle hat; `git merge-file` ohne Konflikt. |
 | F-BV-09 | **Nr. 279, auf die das Konzept für die Symbolprüfung verwies, ist erledigt** (PK-04/5, 23.09.2026). Der einzige Grund, den Abtaster dort nicht zu benutzen, war Nr. 184 selbst — so steht es im Kommentar der Prüfung. | E-BV-09. |
+| F-BV-10 | **Nr. 274 übertrieb die Lücke** (BV-02). „Verschwände eine der beiden Regeln, meldete es niemand" stimmte nicht: Die Tonprüfung am Aufruf hätte jede der fünf Regeln gemeldet, weil jeder Ton mindestens einmal als Literal übergeben wird — gemessen je Ton mit entfernter Regel (ok 17, info 23, warn 21, fehler 21, schutz **1** Treffer an Aufrufen). Für `schutz` hing es an einem einzigen Aufruf (`tag_spuren.php`). | Gebaut wie geplant; der Gewinn ist die Unabhängigkeit vom Aufruf, nicht eine geschlossene Lücke. So steht es im Backlog und im Changelog. |
 
 ## 3. Entscheidungen
 

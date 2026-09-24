@@ -466,9 +466,51 @@ def pruefung_klassen(bericht):
                    ['%s  (%s)' % (k, ', '.join(sorted(sicher[k])[:3])) for k in noch_da])
     bericht.zahl('1 Klassen', 'davon ausdruecklich [bleibt] (Skriptanker, Behaelter)',
                  len([k for k in sicher if k in bleibt]))
+    # ZUSAMMENGESETZTE KLASSEN DER MELDUNG (Backlog Nr. 274, BV-02). Beide
+    # Bausteine bauen die Tonklasse zur Laufzeit (`'meldung-' . $ton`), also
+    # steht `meldung-ok` nirgends als Literal. Bis BV-02 standen die Regeln
+    # deshalb im Hinweis „im Markup nicht gefunden" -- und verschwaende eine
+    # davon aus dem Stylesheet, meldete es niemand. Die Toene sind eine
+    # GESCHLOSSENE Liste in beiden Bausteinen; die Pruefung liest sie dort,
+    # statt sie abzuschreiben, und haelt sie gegeneinander.
+    php_toene, js_toene = meldungstoene()
+    if not php_toene or not js_toene:
+        bericht.fehler('1 Klassen', 'Tonliste der Meldung nicht gefunden '
+                                    '(ui_meldung_markup / EdHtml.meldung)')
+    bericht.befund('1 Klassen', 'Meldungstoene in PHP und JS verschieden',
+                   ['%s (nur %s)' % (t, 'PHP' if t in php_toene else 'JS')
+                    for t in sorted(php_toene ^ js_toene)])
+    zusammengesetzt = {'meldung-' + t for t in php_toene | js_toene}
+    bericht.zahl('1 Klassen', 'zusammengesetzt belegt (meldung-<ton>)', len(zusammengesetzt))
+    bericht.befund('1 Klassen', 'zusammengesetzte Klasse ohne Regel im Stylesheet',
+                   sorted(k for k in zusammengesetzt if k not in jetzt_css))
+
     unbenutzt = sorted(k for k in jetzt_css
-                       if k not in sicher and k not in vermutet)
+                       if k not in sicher and k not in vermutet
+                       and k not in zusammengesetzt)
     bericht.hinweis('1 Klassen', 'Regel im Stylesheet, im Markup nicht gefunden', unbenutzt)
+
+
+def meldungstoene():
+    """Die Toene der Meldung, je aus ihrem Baustein gelesen: (PHP, JS).
+
+    PHP: die Schluessel von `$symbole` in `ui_meldung_markup()` (ui.php).
+    JS:  die Schluessel von `MELDUNG_SYMBOLE` (assets/html.js).
+    Eine leere Menge heisst: nicht gefunden -- der Aufrufer meldet das,
+    statt still mit null weiterzurechnen."""
+    php, js = set(), set()
+    ui = os.path.join(SERVER, 'ui.php')
+    if os.path.exists(ui):
+        m = re.search(r'function\s+ui_meldung_markup\b.*?\$symbole\s*=\s*\[(.*?)\];',
+                      lies(ui), re.S)
+        if m:
+            php = set(re.findall(r"'([a-z]+)'\s*=>", m.group(1)))
+    html = os.path.join(SERVER, 'assets', 'html.js')
+    if os.path.exists(html):
+        m = re.search(r'MELDUNG_SYMBOLE\s*=\s*\{(.*?)\}', lies(html), re.S)
+        if m:
+            js = set(re.findall(r'([a-z]+)\s*:', m.group(1)))
+    return php, js
 
 
 # ============================================================= 2. Werte

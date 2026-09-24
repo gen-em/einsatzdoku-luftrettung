@@ -2,7 +2,7 @@
 
 *Gehört zu `Konzept-BV-Backlog-Vorgriff.md`. Beantwortet „was muss **ich**
 noch tun?" — das Protokoll „ist es belegt?" steht im Statusblock des
-Konzepts. Stand: BV-01 gebaut, 24.09.2026; wird mit jedem Paket
+Konzepts. Stand: BV-02 gebaut, 24.09.2026; wird mit jedem Paket
 fortgeschrieben.*
 
 ---
@@ -31,6 +31,11 @@ fortgeschrieben.*
 | BV-01 | `vollstaendigkeit.py` aus BV auf einem Abzug von P5c `3576a97`, Ausnahmeliste zusammengeführt | wird der Merge rot? | **0 Befunde**; mit P5c-eigener Fassung ebenfalls 0 |
 | BV-01 | Symbolprüfung vorher/nachher, jede weggefallene Fundstelle gelesen | Unicode und Emoji in Kommentaren | Unicode **14 → 5**, Emoji **8 → 0**; 17 von 17 weggefallenen in Kommentaren |
 | BV-01 | `python3 -m py_compile` | Übersetzbarkeit | ok |
+| BV-01 | Prüfstand `pruefen.sh`, Stufe klein, Baum `a49362e` | 17 Riegel und Proben der Berührung | **17 grün, 0 rot, 0 nicht gemessen**, 59 s; `bericht.py lesen` „in Ordnung, 19 Zahlen" |
+| BV-02 | `vollstaendigkeit.py` | Tonlisten, zusammengesetzte Klassen | Töne PHP = JS, **5**; Hinweis „im Markup nicht gefunden" **64 → 62**; **0** Befunde |
+| BV-02 | Gegenprobe auf einer Kopie: `.meldung-schutz` umbenannt, Ton `neu` nur in `MELDUNG_SYMBOLE` | melden die neuen Befunde? | **3** neue Befunde (Listen verschieden 1, Klasse ohne Regel 2), dazu der bestehende am Aufruf |
+| BV-02 | alte gegen neue Fassung, je Ton eine Kopie ohne dessen Regel | hätte die alte Fassung eine fehlende Regel übersehen? | **nein** — die Aufrufprüfung meldet in beiden: ok 17, info 23, warn 21, fehler 21, schutz **1** Treffer (F-BV-10) |
+| BV-02 | `vollstaendigkeit.py` auf dem P5c-Abzug `3576a97` | wird der Merge rot? | **0** Befunde, Hinweis 74 → 72 |
 
 ---
 
