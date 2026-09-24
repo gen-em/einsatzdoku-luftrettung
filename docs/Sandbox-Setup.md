@@ -27,7 +27,8 @@ steht seither ein Verweis hierher.
 | Netzregeln und Grenzen (5, 6) | **gemessen 21.09.2026** |
 | `tools/sandbox/aufbauen.sh`, `hochfahren.sh`, `plattform.sh` | **gebaut und gemessen mit PK-02** |
 | Die Ausbaustufen `web` und `plattform` (2) | **gebaut und gemessen** |
-| Die Ausbaustufen `android` und `uhr` (2) | gebaut, **noch nicht gemessen** — siehe Prüfdokument |
+| Die Ausbaustufe `android` (2) | **gemessen 24.09.2026** (Konzept AR): 22 s, rc 0, 18 von 18 Stücken; seit AR-03 mit Plattform 37.0, JDK-Prüfung und Gradle-Spiegel |
+| Die Ausbaustufe `uhr` (2) | gebaut, **noch nicht gemessen** — siehe Prüfdokument PK |
 | Die Route nach draußen (5.2) | **gebaut und gemessen** in `tools/motor.mjs` |
 | Der Schlüsselblatt-Dialog (5.3) | **gebaut und gemessen**, örtlich und gegen die Prüfanlage |
 | Zwei Beschaffer mit zwei Listen (1.2) | **behoben mit PK-02** — es gibt nur noch einen |
@@ -56,7 +57,7 @@ Speicher.
 | **Python `jsonschema`** | `tools/referenzdatensatz/quelldaten/pruefen.py` |
 | **Python `pyftpdlib`, `paramiko`, `pyopenssl`** | die Gegenstellen der Versandprobe (`tools/proben/versand/gegenstellen.py`); ohne `pyopenssl` fehlt FTPS, und alle drei Nachbauten brechen ab (RP-01) |
 | **Systembibliotheken für Firefox und WebKit** | jede Aussage über die Oberfläche, die für mehr als Chromium gelten soll (Backlog Nr. 183) |
-| **Android-SDK** (Plattform 36, Build-Tools 36.0.0) | `./gradlew build` im Ordner `android/` |
+| **Android-SDK** (Plattformen 37.0 und 36, Build-Tools 36.0.0) | `./gradlew build` im Ordner `android/` |
 | **Uhr-SDK und Gerätedateien** | `tools/uhr-pruefstand/` |
 
 ### 1.1 Warum alle drei Engines dazugehören
@@ -129,7 +130,7 @@ steht**.
 | Stufe | Enthält | Wofür |
 |---|---|---|
 | `web` | MariaDB 10.11, PHP 8.4, **drei** Engines (nachgemessen, nicht angenommen), Python-Pakete, die acht Umgebungswerte geprüft | jede Änderung unter `server/`, `docs/`, `tools/` |
-| `android` | `web` plus Android-SDK 36, JDK 21, Emulator-Abbild | Änderungen unter `android/` |
+| `android` | `web` plus Android-SDK (Plattform 37.0 für den Bau, 36 für die Erkennung im Prüfstand), JDK 21 geprüft, Gradle über Googles Spiegel mit mehr Wiederholungen (5.1). **Kein Emulator-Abbild** — das holt `android/werkzeuge/emulator.sh aufbauen`, mehrere GB, nur für den Emulatorlauf. *Bis zum 24.09.2026 stand hier „Emulator-Abbild"; das Skript hat es nie geholt (Konzept AR, F-AR-02).* | Änderungen unter `android/` |
 | `uhr` | `web` plus Uhr-SDK, Gerätedateien, Simulator-Bibliotheken | Änderungen unter `watch/` |
 | `alles` | alle drei plus das Modul `plattform` | Hauptstufe, Abnahmen |
 | Modul `plattform` | PHP 8.3.33, MariaDB 10.6, MySQL 8.0, MySQL 8.4.0 | Hauptstufe; einzeln nachladbar |
@@ -293,7 +294,19 @@ acht darüber: **Ein eingecheckter Zugang ist ein Zugang.**
 | Docker Hub (drosselt, 429 nach rund acht Abrufen) | `php.net` |
 | `deb.debian.org` **über HTTPS** | jeder Port außer 443 |
 | `cdn.playwright.dev`, `playwright.download.prss.microsoft.com` | |
+| Maven Central — **aber gedrosselt**: `repo.maven.apache.org` 13 von 20 Abrufen `429` (24.09.2026) | |
+| Googles Spiegel `maven-central.storage-download.googleapis.com` (10 von 10) | |
 | Staging und dessen Webmail | |
+
+**Die Drosselung von Maven Central trifft den Android-Bau** (Konzept AR,
+F-AR-01): Der unveränderte Stand baute am 24.09.2026 erst im fünften Anlauf,
+jedes Mal mit `Received status code 429`. Seither schreibt `aufbauen.sh
+android` zwei Dinge — **nur in die Arbeitsumgebung, nicht ins
+Repositorium**: `~/.gradle/init.d/spiegel.gradle` setzt Googles Spiegel vor
+die Quellen des Projekts (Maven Central bleibt als Rückfall dahinter), und
+`~/.gradle/gradle.properties` erhöht die Wiederholungen je Abruf auf zehn.
+Der Spiegel liefert dieselben Dateien — die SHA-1 des Robolectric-Abbilds
+stimmt auf Spiegel, Central und im Cache überein.
 
 Fällt eine dieser Freigaben weg, scheitert die Beschaffung — und das ist
 **ein Befund mit Zahl**, kein stiller Ausfall: welcher Abruf, welche

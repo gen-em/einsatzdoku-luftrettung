@@ -69,6 +69,62 @@ damit der Versionsstempel nicht mitzählt: Manifest, Ressourcen und 161 von
 Kotlin-Builtins und Baseline-Profil, weil die Standardbibliothek von 2.1.21
 auf 2.4.20 geht; `kotlin-tooling-metadata.json` fällt weg.
 
+### Geändert — die Kette dahinter, und Android 17 als Ziel (AR-03)
+
+`compileSdk` und `targetSdk` 36 → **37**; Compose-BOM 2025.06.01 → 2026.09.00
+(Compose 1.8.3 → 1.12.1), `wear-compose` 1.4.1 → 1.7.0, `core-ktx` 1.16.0 →
+1.19.1, `lifecycle` 2.9.1 → 2.11.0, `activity-compose` 1.10.1 → 1.13.0.
+**`compileSdk` war nicht frei wählbar**: BOM, `wear-compose` und `core-ktx`
+tragen `minCompileSdk=37` in ihren Metadaten. **`targetSdk` 37 ist eine
+Entscheidung** (E-AR-08) und der Grund für die Nebennummer: Die App bekommt
+die Regeln von Android 17. Die 17 Verhaltensänderungen sind Punkt für Punkt
+gegen den Quelltext beider Module gehalten — 14 treffen sie nicht, drei
+betreffen den Netzweg (Encrypted Client Hello und Certificate Transparency als
+Vorgabe, die Berechtigung für das lokale Netz) und gehören an ein Gerät.
+
+**Was die Bibliotheken an der Oberfläche verschieben: nichts, das der
+Bilderlauf sieht.** 73 der 78 Bilder sind byteweise gleich, die fünf übrigen
+unterscheiden sich in einem Kästchen von rund 30 × 18 Pixeln — der Zeile
+„Fassung 0.15.1" → „0.16.0". Der Preis steht woanders: Das Handy-APK wächst von
+7,87 auf 9,20 MB, das der Uhr von 19,57 auf 22,74 MB (Compose 1.12 und
+Wear-Compose 1.7 bringen mehr mit). Für eine Uhr ist das viel; der Befund
+B-S4-03 aus S4 gilt weiter.
+
+### Behoben — „Noch 1 Minuten" und „Noch 1 Sekunden"
+
+Lint meldete seit 0.15.0 dreimal `PluralsCandidate`, und die Warnung stand
+als „der Plural ist dort immer richtig" stehen. Für zwei der drei stimmte das
+nicht: Die Restzeit der Kopplung rundet bei genau 60 Sekunden auf eine Minute
+und zählt unter einer Minute bis eins herunter — dort stand „Noch 1 Minuten"
+und „Noch 1 Sekunden". Alle drei Texte stehen jetzt als `<plurals>`, die
+Erinnerung an einen langen Dienst eingeschlossen (sie kommt frühestens nach
+26 Stunden, aber eine spätere Schwelle soll keinen falschen Satz erben). Drei
+Prüffälle in `MehrzahlTest` halten die Singularformen fest. Dazu ist eine
+Zeichenkette ausgetragen, die nirgends mehr angezeigt wurde
+(„Koppel die App mit deinem Konto."), und die Bildschirmmaße für die
+Kopplung liest die App über `LocalResources` statt über den Context — Compose
+1.12 meldet den alten Weg als nicht konfigurationsfest.
+
+**Lint meldet damit in beiden Modulen keine einzige Warnung** — vor der Runde
+waren es 14 im Handy-Modul. Stummgeschaltet ist keine.
+
+### Behoben — der Bilderlauf schrieb zwei Bauarten in einen Ordner
+
+`HandyBildTest` und `UhrBildTest` laufen in `testDebugUnitTest` **und**
+`testReleaseUnitTest`, und beide schrieben nach `build/bilder/`. Liegen blieb,
+was zuletzt fertig war — einmal „Fassung 0.16.0", einmal „0.16.0-pruef", je
+nach Reihenfolge der parallelen Aufgaben. Aufgefallen ist es beim
+Bild-für-Bild-Vergleich dieser Runde, der einen festen Stand braucht. Die
+Bilder liegen jetzt unter `build/bilder/debug/` und `build/bilder/release/`.
+
+### Arbeitsumgebung — `aufbauen.sh android`
+
+Die Ausbaustufe holt Plattform 37.0 (und 36, an der `tools/pruefstand/`
+sie noch erkennt — Backlog Nr. 335), prüft das JDK und schreibt Spiegel und
+Wiederholungen für Gradle; ihr Nachweis nennt 21 Stücke. Das Emulator-Abbild,
+das `Sandbox-Setup.md` ihr bis hierhin zuschrieb, holte sie nie — die Zusage
+ist berichtigt, das Abbild holt `emulator.sh aufbauen`.
+
 ### Behoben — ein Prüffall, der seinen Rückstand nie übergab
 
 Kotlin 2.4 meldete vier neue Warnungen; drei waren Kleinigkeiten (ein

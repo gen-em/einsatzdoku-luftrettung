@@ -3793,6 +3793,39 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     für die Anwendung. **Zuordnung: Backlog-Runde** (Vorschlag; oder das
     nächste Paket, das `tools/quelltext/` anfasst).
 
+334. **Die Prüfwerkzeuge der Android-App hängen an keinem Lauf.**
+    *Aufgenommen 24.09.2026 mit Konzept AR (F-AR-05, E-AR-12).*
+    `android/werkzeuge/kontraste.py`, `farbabgleich.py`, `bildmarken.sh` und
+    `stroeme.py` werden von keinem Workflow, keinem Aufruf in
+    `tools/pruefstand/pruefen.sh` und keiner Zeile in
+    `tools/pruefstand/pruefablauf.json` gerufen — gezählt am 24.09.2026:
+    0 Treffer außerhalb von `android/werkzeuge/`. Der Riegel `kontraste` im
+    Tor ist das Web-Werkzeug `tools/screenshots/kontrast.py`. Was Nr. 116 an
+    `kontraste.py` verbessert hat (Vollständigkeit je Modul und Rolle, mit
+    Selbstprobe), läuft also nur, wenn jemand daran denkt.
+    *Weg:* die vier unter das Muster `android/**` in `pruefablauf.json`
+    hängen (sie brauchen nur Python und die Quellen, `braucht: nichts`),
+    `kontraste.py --selbstprobe` dazu. Nicht in AR, weil
+    `tools/pruefstand/` während P5c dessen Gebiet ist.
+    *Abnahme:* eine Berührung unter `android/` wählt die vier im Prüfstand
+    aus, der Bericht nennt ihre Zahlen. **Zuordnung: nach dem Merge von P5c**,
+    von der Instanz, die `main` aufnimmt, oder der nächsten Backlog-Runde.
+
+335. **Der Prüfstand erkennt die Ausbaustufe `android` an der falschen
+    Plattform.**
+    *Aufgenommen 24.09.2026 mit Konzept AR (F-AR-07, E-AR-12).*
+    `tools/pruefstand/pruefen.sh` prüft vor dem `android-bau`, ob
+    `platforms/android-36` liegt. Seit Android 0.16.0 baut die App gegen
+    **37.0**; die Zeile ist grün, wenn 36 liegt und 37.0 fehlt, und rot, wenn
+    es umgekehrt ist. `tools/sandbox/aufbauen.sh android` installiert
+    deshalb beide Plattformen, damit die Erkennung nicht fehlschlägt — das
+    ist eine Krücke, keine Messung.
+    *Weg:* die Erkennung an die Plattform hängen, die der Bau braucht (am
+    besten aus `compileSdk` gelesen statt fest geschrieben), dann Plattform
+    36 aus `aufbauen.sh` streichen. *Abnahme:* ohne `android-37.0` meldet
+    der Prüfstand „Ausbaustufe android fehlt". **Zuordnung: nach dem Merge
+    von P5c**, zusammen mit Nr. 334.
+
 ## Erledigt
 
 

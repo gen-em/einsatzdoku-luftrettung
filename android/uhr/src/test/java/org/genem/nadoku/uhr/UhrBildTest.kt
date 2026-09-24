@@ -83,7 +83,12 @@ class UhrBildTest {
         val bild = Bitmap.createBitmap(kante, kante, Bitmap.Config.ARGB_8888)
         ansicht.draw(Canvas(bild))
 
-        val ordner = File("build/bilder")
+        /* JE BAUART EIN ORDNER (Android 0.16.0, Konzept AR, F-AR-12). Bis
+         * dahin schrieben `testDebugUnitTest` und `testReleaseUnitTest` beide
+         * nach build/bilder/, und liegen blieb, was zuletzt fertig war --
+         * einmal die eine, einmal die andere Fassungszeile, je nach Reihenfolge
+         * der parallelen Aufgaben. Ein Bildvergleich braucht einen festen Stand. */
+        val ordner = File("build/bilder/${org.genem.nadoku.BuildConfig.BUILD_TYPE}")
         ordner.mkdirs()
         val ziel = File(ordner, "$name.png")
         ziel.outputStream().use { bild.compress(Bitmap.CompressFormat.PNG, 100, it) }

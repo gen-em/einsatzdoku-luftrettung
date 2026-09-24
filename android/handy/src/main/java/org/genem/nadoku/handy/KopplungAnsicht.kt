@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -271,9 +272,10 @@ private fun Kontoanzeige(konto: String) {
 private fun Restzeit(sekunden: Int) {
     if (sekunden <= 0) return
     val text = if (sekunden >= 60) {
-        stringResource(R.string.kopplung_rest_min, (sekunden + 59) / 60)
+        val minuten = (sekunden + 59) / 60
+        pluralStringResource(R.plurals.kopplung_rest_min, minuten, minuten)
     } else {
-        stringResource(R.string.kopplung_rest_sek, sekunden)
+        pluralStringResource(R.plurals.kopplung_rest_sek, sekunden, sekunden)
     }
     Text(text = text, color = Farbe.gedaempft, fontSize = 13.sp)
 }

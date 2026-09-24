@@ -28,7 +28,9 @@ android {
      * andere App: neue Installation, verlorene Daten, verlorene Kopplung.
      * Dieselbe Ansage steht im Manifest der Garmin-Uhr seit Uhr 2.0.0. */
     namespace = "org.genem.nadoku"
-    compileSdk = 36
+    /* 37 seit Android 0.16.0 (Konzept AR, E-AR-08): Compose 1.12, wear-compose
+     * 1.7 und core-ktx 1.19 verlangen es (aar-metadata: minCompileSdk=37). */
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "org.genem.nadoku"
@@ -37,7 +39,9 @@ android {
          * Ab hier verhalten sich Vordergrunddienste mit Benachrichtigungs-
          * kanal stabil; aeltere Geraete sind im Zielkreis nicht zu erwarten. */
         minSdk = 26
-        targetSdk = 36
+        /* 37 seit Android 0.16.0 (E-AR-08): Es gelten die Regeln von Android 17.
+         * Durchsicht der 17 Verhaltensaenderungen: Konzept AR, AR-03. */
+        targetSdk = 37
 
         versionCode = rootProject.extra["nadokuVersionCode"] as Int
         versionName = rootProject.extra["nadokuVersionName"] as String

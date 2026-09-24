@@ -16,11 +16,11 @@ entsteht mit AR-02. Zweig `claude/affectionate-newton-6pzfkc`, von `main`
 >
 > | | |
 > |---|---|
-> | Stand | **24.09.2026 — AR-01 und AR-02 erledigt, AR-03 in Arbeit.** Android **0.16.0** gesetzt (E-AR-04). AGP 9.4.1, Gradle 9.7.1, Kotlin 2.4.20: Baulauf grün, Prüffälle wie vorher, 78 von 78 Bildern byteweise gleich (Protokoll 7) |
+> | Stand | **24.09.2026 — AR-01 bis AR-03 erledigt, AR-04 in Arbeit.** Android **0.16.0**: AGP 9.4.1, Kotlin 2.4.20, API 37, Kette auf dem Stand vom 24.09.; **Lint 0 Fehler / 0 Warnungen** in beiden Modulen (vorher 14), 267/71 Prüffälle grün, 73 von 78 Bildern byteweise gleich, die übrigen fünf nur in der Fassungszeile (Protokoll 7) |
 > | Entschieden | **E-AR-01 bis -07** aus der Freigabe, **E-AR-08 bis -13** aus den Antworten auf Q-AR-01 bis -06, beide vom 24.09.2026 (Abschnitt 5) |
 > | Offen | nichts |
 > | Hakt | Maven Central drosselt diesen Container (F-AR-01); die Runde baut über Googles Spiegel (E-AR-13) |
-> | Nächstes | **AR-03** — `compileSdk`/`targetSdk` 37 und die Bibliotheken |
+> | Nächstes | **AR-04** — `kontraste.py` nach Weg (c) |
 
 ---
 
@@ -155,6 +155,7 @@ als `default`.
 | **F-AR-09** | **Eine unbenutzte Zeichenkette im Handy-Modul.** `sync_fehlt_kopplung` („Koppel die App mit deinem Konto.") steht in `strings.xml` zwischen zwei benutzten Nachbarn der Sync-Anzeige (Nr. 11); keine Kotlin-Zeile ruft sie. `LIESMICH.md` nennt sie in keiner Zählung. Wann ihr Verbraucher wegfiel, gibt die Historie nicht her — die Android-Dateien tragen seit PK-M1 (`5e9333f`) einen umgeschriebenen Werdegang | Q-AR-03 |
 | **F-AR-10** | **Die Vermutung in `LIESMICH.md` 2 ist widerlegt.** Dort steht als Kandidat für die Warnung, die zwischen dem 08. und dem 20.09.2026 dazukam, Robolectric 4.16.1 → 4.17. Robolectric 4.17 ist erschienen, und Lint meldet es **nicht** — der Kandidat war es nicht. Ob es die unbenutzte Zeichenkette aus F-AR-09 war, lässt sich nicht belegen: Der Bericht vom 20.09. starb mit dem Läufer | `LIESMICH.md` 2 wird berichtigt (AR-05) |
 | **F-AR-11** | **Ein Prüffall übergab seinen Rückstand nie** (gefunden in AR-02 durch Kotlin 2.4, „Expression is unused"). `KopplungRundlaufTest.dienst()` reichte `{ rueckstand }` als nachgestellte Lambda; seit Nr. 114 ist der letzte Parameter von `Kopplungsdienst` `raeumen`. Ohne Wirkung — kein Fall setzt einen Rückstand, die App übergibt benannt | **behoben in AR-02** (benanntes Argument) |
+| **F-AR-12** | **Der Bilderlauf schrieb zwei Bauarten in einen Ordner** (gefunden in AR-03). `HandyBildTest` und `UhrBildTest` laufen in `testDebugUnitTest` und `testReleaseUnitTest`, beide nach `build/bilder/`; liegen blieb, was zuletzt fertig war — „Fassung 0.16.0" oder „0.16.0-pruef", je nach Reihenfolge. Gefunden, weil ein Bild zwischen zwei Bauten ohne Grund abwich | **behoben in AR-03** (`build/bilder/<bauart>/`) |
 
 ## 4. Fragen an die Betreiberin
 
@@ -350,3 +351,48 @@ sind weg; dazugekommen sind die drei, die AR-03 auflöst.
 
 **Neuer Befund F-AR-11** (oben beschrieben) — trägt keine eigene
 Backlog-Nummer, weil er im selben Paket behoben ist und im Changelog steht.
+
+### AR-03 — Die Kette (erledigt 24.09.2026)
+
+**Was:** `compileSdk`/`targetSdk` 37 (E-AR-08), BOM 2026.09.00,
+`wear-compose` 1.7.0, `core-ktx` 1.19.1, `lifecycle` 2.11.0,
+`activity-compose` 1.13.0; die drei Zahlentexte als `<plurals>` mit
+`MehrzahlTest` (drei Fälle), die unbenutzte Zeichenkette aus (E-AR-10);
+`LocalResources` statt `LocalContext.current.resources`; Bilderlauf je
+Bauart; `aufbauen.sh android` mit Plattform 37.0, JDK-Prüfung, Spiegel und
+Wiederholungen (E-AR-13, F-AR-02); Backlog Nr. 334 und 335 (E-AR-12);
+`LIESMICH.md` 2, 2.2, 4 und Netzfreigaben, `Lizenzen.md` 6a (samt
+`kotlin-stdlib`, das dort nie stand), `Sandbox-Setup.md` 0, 1, 2, 5.1.
+
+**Die Durchsicht von Android 17** (17 Punkte der offiziellen Liste
+`behavior-changes-17`, gelesen am 24.09.2026, je Punkt ein `grep` über
+`handy/src/main`, `uhr/src/main`, `gemeinsam/`): ohne Treffer 1 Widgets,
+2 MessageQueue-Reflexion, 3 `static final` per Reflexion/JNI, 6 lokales Netz
+(im Anwendungscode), 7 Passwortfelder, 8 SMS, 11 native Bibliotheken,
+12/13 Kontakte, 14 ContentCapture, 16 Ausrichtung und Größe, 17 Bluetooth;
+**Treffer ohne Wirkung:** 4 (das Textfeld ist Compose, kein `TextView`;
+die Änderung ist ein Zusatz für Bildschirmleser), 9 (`PendingIntent` nur aus
+Meldungen, die der Mensch antippt, und für Dienste — keine
+Hintergrund-Activity), 15 (nur Vibration, kein Audio); **am Gerät zu
+belegen:** 5 ECH, 10 Certificate Transparency (beide über den Netzweg der
+App, `HttpURLConnection` zum Server) und — für das Prüf-APK — 6 lokales Netz
+(P-AR-03 bis -05).
+
+**Probleme und Lösungen:**
+
+1. **Compose 1.12 bringt eine neue Lint-Prüfung** (`LocalContextResourcesRead`,
+   `HauptActivity`) — umgestellt auf `LocalResources`.
+2. **Zwei Fehler beim Umbau der Plurale, beide beim Bauen gefunden:** ein
+   `--` in einem XML-Kommentar (AAPT bricht ab) und ein fehlender Import von
+   `org.genem.nadoku.R` im neuen Prüffall. Beide behoben, dazu ein weiches
+   Trennzeichen in einem Kommentar, das ich selbst eingeschleppt hatte.
+3. **Ein Bild wich zwischen zwei Bauten ohne Grund ab** — F-AR-12, behoben.
+   Der Vergleich gegen das Ausgangsmaß läuft seither Release gegen Release;
+   dass „vorher" der Release-Stand war, zeigt dessen Fassungszeile (ohne
+   „-pruef").
+4. **Die Plurale waren mehr als eine Warnung:** „Noch 1 Minuten" und
+   „Noch 1 Sekunden" kamen tatsächlich vor. Die Entscheidung von 0.15.0 („der
+   Plural ist dort immer richtig") stimmte nur für den dritten Text.
+
+**Gemessen:** Prüfdokument 2.
+

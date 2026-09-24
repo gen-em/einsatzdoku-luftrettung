@@ -584,7 +584,11 @@ class AufzeichnungsDienst : LifecycleService() {
         )
         val bau = NotificationCompat.Builder(this, KANAL_WARNUNG)
             .setSmallIcon(R.drawable.symbol_meldung)
-            .setContentTitle(getString(R.string.warnung_dienstdauer_titel, stunden))
+            .setContentTitle(
+                resources.getQuantityString(
+                    R.plurals.warnung_dienstdauer_titel, stunden.toInt(), stunden,
+                ),
+            )
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setContentIntent(

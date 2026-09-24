@@ -25,7 +25,9 @@ android {
     // getrennte Pakete auf getrennten Geraeten; der Data Layer verlangt
     // trotzdem Namens- UND Signaturgleichheit.
     namespace = "org.genem.nadoku"
-    compileSdk = 36
+    /* 37 seit Android 0.16.0 (Konzept AR, E-AR-08): Compose 1.12, wear-compose
+     * 1.7 und core-ktx 1.19 verlangen es (aar-metadata: minCompileSdk=37). */
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "org.genem.nadoku"
@@ -34,7 +36,9 @@ android {
          * Tizen-Modelle fuehren gar keine Android-Apps aus, ein niedrigerer
          * Stand gewaenne also kein einziges Geraet. */
         minSdk = 30
-        targetSdk = 36
+        /* 37 seit Android 0.16.0 (E-AR-08): Es gelten die Regeln von Android 17.
+         * Durchsicht der 17 Verhaltensaenderungen: Konzept AR, AR-03. */
+        targetSdk = 37
 
         /* Der Versatz aus Backlog Nr. 98: Play verlangt je APK unter
          * derselben Anwendungs-ID einen eindeutigen Code. Begruendung des

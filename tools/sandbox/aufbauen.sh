@@ -72,10 +72,11 @@ teil_web() {
 }
 
 teil_android() {
-    if [ -d "$ANDROID_SDK/platforms/android-36" ]; then
+    gradle_bezug
+    if [ -d "$ANDROID_SDK/platforms/android-37.0" ] && [ -d "$ANDROID_SDK/platforms/android-36" ]; then
         melde "Android-SDK liegt bereits"; return 0
     fi
-    melde "Android-SDK beschaffen (Plattform 36, Build-Tools 36.0.0)"
+    melde "Android-SDK beschaffen (Plattformen 37.0 und 36, Build-Tools 36.0.0)"
     mkdir -p "$ANDROID_SDK/cmdline-tools"
     curl -sS -L -o /tmp/cmdtools.zip "$CMDTOOLS_URL" || { zeile "Download fehlgeschlagen"; return 1; }
     unzip -q -o /tmp/cmdtools.zip -d "$ANDROID_SDK/cmdline-tools"
@@ -86,7 +87,48 @@ teil_android() {
         && mv "$ANDROID_SDK/cmdline-tools/cmdline-tools" "$ANDROID_SDK/cmdline-tools/latest"
     local sdkm="$ANDROID_SDK/cmdline-tools/latest/bin/sdkmanager"
     yes | "$sdkm" --licenses >/dev/null 2>&1 || true
-    "$sdkm" "platform-tools" "platforms;android-36" "build-tools;36.0.0" >/dev/null 2>&1
+    # ZWEI PLATTFORMEN (Konzept AR, AR-03). Gebaut wird seit Android 0.16.0
+    # gegen 37.0 (`compileSdk`); 36 bleibt, weil `tools/pruefstand/pruefen.sh`
+    # die Ausbaustufe noch an `platforms/android-36` erkennt (Backlog Nr. 335).
+    # Den Emulator und seine Abbilder holt `android/werkzeuge/emulator.sh
+    # aufbauen` — mehrere GB, die nur der Emulatorlauf braucht (F-AR-02).
+    "$sdkm" "platform-tools" "platforms;android-37.0" "platforms;android-36" \
+        "build-tools;36.0.0" >/dev/null 2>&1
+}
+
+gradle_bezug() {
+    # MAVEN CENTRAL DROSSELT DIESEN CONTAINER (Konzept AR, F-AR-01, E-AR-13):
+    # 13 von 20 Abrufen `429`, der unveränderte Android-Stand baute am
+    # 24.09.2026 erst im fünften Anlauf. Googles Spiegel von Maven Central
+    # kommt deshalb VOR die Quellen des Projekts, Maven Central bleibt
+    # dahinter; dazu mehr Wiederholungen. NUR IN DER ARBEITSUMGEBUNG — die
+    # Bauskripte unter android/ nennen keine neue Quelle.
+    melde "Gradle: Spiegel für Maven Central, Wiederholungen"
+    mkdir -p "$HOME/.gradle/init.d"
+    cat > "$HOME/.gradle/init.d/spiegel.gradle" <<'SPIEGEL'
+// Geschrieben von tools/sandbox/aufbauen.sh (E-AR-13). Nur Arbeitsumgebung.
+beforeSettings { settings ->
+    def spiegel = { repos ->
+        repos.maven {
+            name = 'SpiegelMavenCentral'
+            url = 'https://maven-central.storage-download.googleapis.com/maven2/'
+            content {
+                excludeGroupByRegex 'androidx\\..*'
+                excludeGroupByRegex 'com\\.android\\..*'
+                excludeGroupByRegex 'com\\.google\\.android\\..*'
+            }
+        }
+    }
+    settings.pluginManagement.repositories { spiegel(delegate) }
+    settings.dependencyResolutionManagement.repositories { spiegel(delegate) }
+}
+SPIEGEL
+    local props="$HOME/.gradle/gradle.properties" z
+    touch "$props"
+    for z in systemProp.org.gradle.internal.repository.max.tentatives=10 \
+             systemProp.org.gradle.internal.repository.initial.backoff=500; do
+        grep -q "^${z%%=*}=" "$props" || echo "$z" >> "$props"
+    done
 }
 
 teil_uhr() {
@@ -183,8 +225,12 @@ nachweis() {
     # Lauf `uhr` meldete deshalb „Arbeitsumgebung vollständig", ohne ein
     # einziges Uhr-Stück angesehen zu haben (Grundsatz 7).
     if [ -n "${STUFE_ANDROID:-}" ]; then
+        pruefe "android-sdk     Plattform 37.0" "[ -d \"$ANDROID_SDK/platforms/android-37.0\" ]"
         pruefe "android-sdk     Plattform 36" "[ -d \"$ANDROID_SDK/platforms/android-36\" ]"
         pruefe "android-sdk     Build-Tools 36.0.0" "[ -d \"$ANDROID_SDK/build-tools/36.0.0\" ]"
+        pruefe "jdk             $(java -version 2>&1 | grep -oE 'version "[0-9]+' | tr -d 'version "')" \
+            "java -version 2>&1 | grep -qE 'version \"(17|2[0-9])'"
+        pruefe "gradle-spiegel  init.d/spiegel.gradle" "[ -s \"$HOME/.gradle/init.d/spiegel.gradle\" ]"
     fi
     if [ -n "${STUFE_UHR:-}" ]; then
         pruefe "ciq-sdk         monkeyc" "[ -x \"$CIQ_BASIS_PFAD/sdk/bin/monkeyc\" ]"

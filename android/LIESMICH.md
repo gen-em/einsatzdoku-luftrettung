@@ -46,7 +46,7 @@ Grund, warum die Blöcke B und C parallel zu S2/S3 laufen können.
 | | Stand | Woher |
 |---|---|---|
 | JDK | 21 (im Container), mindestens 17 | `JAVA_HOME` |
-| Android SDK | Plattform 36, Build-Tools 36.0.0 | `ANDROID_HOME` |
+| Android SDK | Plattform 37.0 (und 36, siehe Sandbox-Setup), Build-Tools 36.0.0 | `ANDROID_HOME` |
 | Gradle | 9.7.1 (seit Android 0.16.0; bis dahin 8.14.3) | der Wrapper holt sie selbst |
 
 ```bash
@@ -386,7 +386,10 @@ Bedienung *entscheidet* und was der Funk *zusichert*, nicht was die Uhr
 
 **Zwei Bilderläufe, einer je Modul.** Beide bauen die Ansicht in einer
 Robolectric-Activity auf, messen und zeichnen sie selbst auf eine Bitmap und
-legen PNG unter `<modul>/build/bilder/` ab:
+legen PNG unter `<modul>/build/bilder/<bauart>/` ab — `debug` und `release`
+getrennt, seit Android 0.16.0 (F-AR-12: vorher überschrieb die zuletzt
+fertige Bauart die andere, und die Fassungszeile im Bild hing an der
+Reihenfolge):
 
 ```bash
 ./gradlew :uhr:testDebugUnitTest   --tests '*UhrBildTest*'      #  6 Bilder
@@ -473,7 +476,7 @@ Ein Mockup mit Vorher/Nachher-Bildern liegt unter `mockups/`.
 
 **Was diese Bilder nicht zeigen:** Robolectrics Schriften statt der von Wear OS, keine
 Hardwarebeschleunigung, und **einen** Android-Stand (sdk=34) statt der Spanne
-30 bis 36. Wo das runde Glas zur Frage steht, hilft nur der Emulator.
+30 bis 37. Wo das runde Glas zur Frage steht, hilft nur der Emulator.
 
 ### Das SDK ist im Container nicht vorinstalliert
 
@@ -487,7 +490,7 @@ unzip -q /tmp/cmdline-tools.zip -d /opt/android-sdk/cmdline-tools
 mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest
 yes | /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager \
-  "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+  "platform-tools" "platforms;android-37.0" "platforms;android-36" "build-tools;36.0.0"
 ```
 
 Rund 460 MB. Die Zuarbeitenliste des Konzepts (Abschnitt 9) nennt die
@@ -631,6 +634,14 @@ Adresse leitet auf **`github.com`** weiter (Freigabe
 Wrapper-Lauf. Eine siebte, `downloads.gradle.org`, trägt nur die
 Prüfsummen-Datei; sie war bis zum 07.09.2026 gesperrt und ist seither
 freigegeben — siehe 2.1.
+
+**In diesem Container drosselt Maven Central** (`429 Too Many Requests`,
+13 von 20 Abrufen am 24.09.2026; Konzept AR, F-AR-01). Die Arbeitsumgebung
+setzt deshalb Googles Spiegel `maven-central.storage-download.googleapis.com`
+vor die Quellen des Projekts und erhöht die Wiederholungen — über
+`tools/sandbox/aufbauen.sh android`, **nicht** über die Bauskripte hier:
+`settings.gradle.kts` nennt weiter nur `google()`, `mavenCentral()` und das
+Plugin-Portal. Einzelheiten: `docs/Sandbox-Setup.md` 5.1.
 
 **Eine achte sprach nicht der Baulauf, sondern der Prüflauf — und zwar an
 Gradle vorbei** (bis Android 0.15.1). Robolectric holte sein Android-Abbild
@@ -787,21 +798,32 @@ Nachricht von der Uhr an — und zwar ohne Fehlermeldung.
 
 | | gewählt | warum |
 |---|---|---|
-| `compileSdk` / `targetSdk` | **36** (Android 16) | siehe unten |
+| `compileSdk` / `targetSdk` | **37** (Android 17, seit 0.16.0) | siehe unten |
 | `minSdk` Handy | **26** (Android 8.0) | E-S4-03, mit F-S4-A am 31.08.2026 bestätigt |
 | `minSdk` Uhr | **30** (Wear OS 3) | Galaxy Watch4 aufwärts; ältere Tizen-Modelle führen gar keine Android-Apps aus |
 | Sprachstand | **17** | E-S4-02 |
 | AGP | **9.4.1** (seit 0.16.0) | siehe unten |
 | Kotlin | **2.4.20** (seit 0.16.0) | eingebaut in AGP 9; die Fassung legt die Wurzel fest, der Compose-Compiler wandert mit |
 
-**Warum `targetSdk` 36 und nicht 37.** Das SDK-Verzeichnis führt inzwischen
-`android-37.0`, `-37.1` und `-37.2` — API 37 gibt es nur mit
-**Nebenversionen**, eine schlichte `platforms;android-37` existiert nicht.
-Diese Schreibweise (`compileSdk` + `compileSdkMinor`) beherrscht erst AGP 9.
-API **36** ist die letzte Stufe mit ganzer Nummer, und sie erfüllt genau
-das, wofür E-S4-03 „`targetSdk` aktuell" verlangt: Ab API 34 gelten die
-strengen Regeln für Vordergrunddienste, und die App deklariert
-`FOREGROUND_SERVICE_LOCATION` (ab B3).
+**`compileSdk` und `targetSdk` 37 seit Android 0.16.0** (Konzept AR,
+E-AR-08). Bis 0.15.1 stand hier „Warum `targetSdk` 36 und nicht 37" — API 37
+gibt es nur mit Nebenversionen (`android-37.0`, `-37.1`, `-37.2`), und die
+beherrschte erst AGP 9. Mit AGP 9.4.1 genügt `compileSdk = 37`; es übersetzt
+gegen `platforms/android-37.0`.
+
+**`compileSdk` war nicht frei wählbar:** Compose-BOM 2026.09.00,
+`wear-compose` 1.7.0 und `core-ktx` 1.19.1 tragen in ihren AAR-Metadaten
+`minCompileSdk=37` (F-AR-03). **`targetSdk` 37 ist eine Entscheidung** — es
+schaltet die Regeln von Android 17 für die App ein. Die 17
+Verhaltensänderungen für `targetSdk` 37 sind am 24.09.2026 gegen den
+Quelltext beider Module durchgesehen (Konzept AR, Protokoll AR-03): 14 treffen
+die App nicht (keine Widgets, keine Reflexion, keine native Bibliothek, kein
+Audio, keine Kontakte, keine SMS, keine Ausrichtung im Manifest, kein
+Bluetooth, …); drei betreffen den Netzweg — Encrypted Client Hello und
+Certificate Transparency als Vorgabe, dazu die Berechtigung für das lokale
+Netz — und sind am Gerät zu belegen (`docs/konzepte/Pruefdokument-AR-Android-Runde.md`).
+Google Play verlangt seit dem 31.08.2026 `targetSdk` 36; 37 ist also ein
+Schritt voraus, nicht nachgeholt.
 
 **AGP 9 seit Android 0.16.0 (Konzept AR, Backlog Nr. 65).** Bis 0.15.1
 stand hier „Warum AGP 8.13.2 und nicht 9.x" — AGP 9 sei ein Umbau der
